@@ -257,6 +257,67 @@ spdk_fs_opts_init(struct spdk_blobfs_opts *opts)
 	opts->cluster_sz = SPDK_BLOBFS_DEFAULT_OPTS_CLUSTER_SZ;
 }
 
+static void *
+alloc_cache_memory_buffer(struct spdk_file *context)
+{
+	struct spdk_file *file;
+	void *buf;
+
+	buf = spdk_mempool_get(g_cache_pool);
+	if (buf != NULL) {
+		return buf;
+	}
+
+	pthread_spin_lock(&g_caches_lock);
+	TAILQ_FOREACH(file, &g_caches, cache_tailq) {
+		if (!file->open_for_writing &&
+		    file->priority == SPDK_FILE_PRIORITY_LOW &&
+		    file != context) {
+			break;
+		}
+	}
+	pthread_spin_unlock(&g_caches_lock);
+	if (file != NULL) {
+		cache_free_buffers(file);
+		buf = spdk_mempool_get(g_cache_pool);
+		if (buf != NULL) {
+			return buf;
+		}
+	}
+
+	pthread_spin_lock(&g_caches_lock);
+	TAILQ_FOREACH(file, &g_caches, cache_tailq) {
+		if (!file->open_for_writing && file != context) {
+			break;
+		}
+	}
+	pthread_spin_unlock(&g_caches_lock);
+	if (file != NULL) {
+		cache_free_buffers(file);
+		buf = spdk_mempool_get(g_cache_pool);
+		if (buf != NULL) {
+			return buf;
+		}
+	}
+
+	pthread_spin_lock(&g_caches_lock);
+	TAILQ_FOREACH(file, &g_caches, cache_tailq) {
+		if (file != context) {
+			break;
+		}
+	}
+	pthread_spin_unlock(&g_caches_lock);
+	if (file != NULL) {
+		cache_free_buffers(file);
+		buf = spdk_mempool_get(g_cache_pool);
+		if (buf != NULL) {
+			return buf;
+		}
+	}
+
+	return NULL;
+}
+
 static void
 __initialize_cache(void)
 {
@@ -2011,67 +2072,6 @@ spdk_fs_get_cache_size(void)
 }
 
 static void __file_flush(void *ctx);
-
-static void *
-alloc_cache_memory_buffer(struct spdk_file *context)
-{
-	struct spdk_file *file;
-	void *buf;
-
-	buf = spdk_mempool_get(g_cache_pool);
-	if (buf != NULL) {
-		return buf;
-	}
-
-	pthread_spin_lock(&g_caches_lock);
-	TAILQ_FOREACH(file, &g_caches, cache_tailq) {
-		if (!file->open_for_writing &&
-		    file->priority == SPDK_FILE_PRIORITY_LOW &&
-		    file != context) {
-			break;
-		}
-	}
-	pthread_spin_unlock(&g_caches_lock);
-	if (file != NULL) {
-		cache_free_buffers(file);
-		buf = spdk_mempool_get(g_cache_pool);
-		if (buf != NULL) {
-			return buf;
-		}
-	}
-
-	pthread_spin_lock(&g_caches_lock);
-	TAILQ_FOREACH(file, &g_caches, cache_tailq) {
-		if (!file->open_for_writing && file != context) {
-			break;
-		}
-	}
-	pthread_spin_unlock(&g_caches_lock);
-	if (file != NULL) {
-		cache_free_buffers(file);
-		buf = spdk_mempool_get(g_cache_pool);
-		if (buf != NULL) {
-			return buf;
-		}
-	}
-
-	pthread_spin_lock(&g_caches_lock);
-	TAILQ_FOREACH(file, &g_caches, cache_tailq) {
-		if (file != context) {
-			break;
-		}
-	}
-	pthread_spin_unlock(&g_caches_lock);
-	if (file != NULL) {
-		cache_free_buffers(file);
-		buf = spdk_mempool_get(g_cache_pool);
-		if (buf != NULL) {
-			return buf;
-		}
-	}
-
-	return NULL;
-}
 
 static struct cache_buffer *
 cache_insert_buffer(struct spdk_file *file, uint64_t offset)
