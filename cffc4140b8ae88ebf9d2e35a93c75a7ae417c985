@@ -19,6 +19,29 @@
     },
     {
       "key": {
+        "uuid": "cd299b48_27135a75",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-22T12:17:11Z",
+      "side": 1,
+      "message": "This could be done as:\nVERSION_ID\u003d$(sed \u0027s/\\.//g\u0027 \u003c\u003c\u003c $VERSION_ID)\n\nto avoid echo \u0026 pipe combo.\nKeep in mind for future;)",
+      "range": {
+        "startLine": 87,
+        "startChar": 12,
+        "endLine": 87,
+        "endChar": 47
+      },
+      "revId": "cffc4140b8ae88ebf9d2e35a93c75a7ae417c985",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c19b8610_fae2cb8a",
         "filename": "scripts/pkgdep.sh",
         "patchSetId": 19
