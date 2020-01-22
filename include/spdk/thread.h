@@ -354,6 +354,15 @@ uint32_t spdk_thread_get_timed_poller_count(struct spdk_thread *thread);
 uint32_t spdk_thread_get_paused_poller_count(struct spdk_thread *thread);
 
 /**
+ * Returns number of IO channels associated with the thread.
+ *
+ * \param thread The thread to check.
+ *
+ * \return Number of IO channels associated with the thread.
+ */
+uint32_t spdk_thread_get_io_channel_count(struct spdk_thread *thread);
+
+/**
  * Get count of allocated threads.
  */
 uint32_t spdk_thread_get_count(void);
