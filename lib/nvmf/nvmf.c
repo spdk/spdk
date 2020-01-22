@@ -560,14 +560,14 @@ spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 			SPDK_ERRLOG("The specified trtype %d is unknown. Please make sure that it is properly registered.\n",
 				    trid->trtype);
 		}
-		cb_fn(cb_arg, -EINVAL);
+		cb_fn(cb_arg, NULL);
 		return;
 	}
 
 	rc = spdk_nvmf_transport_listen(transport, trid, cb_fn, cb_arg);
 	if (rc < 0) {
 		SPDK_ERRLOG("Unable to listen on address '%s'\n", trid->traddr);
-		cb_fn(cb_arg, rc);
+		cb_fn(cb_arg, NULL);
 		return;
 	}
 }
