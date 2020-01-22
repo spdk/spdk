@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3c7e1e77_88fa968d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 24
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-22T14:51:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bcd0d2a6_b7b54124",
+      "revId": "ed02fea456c0a8676c6e2a1f6f305e927ea055a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f7c01015_4004ad55",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 24
@@ -33,6 +51,24 @@
       "revId": "ed02fea456c0a8676c6e2a1f6f305e927ea055a9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "12d5dc54_75d1364f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 6348,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-22T14:51:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f7c01015_4004ad55",
+      "revId": "ed02fea456c0a8676c6e2a1f6f305e927ea055a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
