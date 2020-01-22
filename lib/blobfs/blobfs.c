@@ -965,7 +965,11 @@ unload_cb(void *ctx, int bserrno)
 
 	TAILQ_FOREACH_SAFE(file, &fs->files, tailq, tmp) {
 		TAILQ_REMOVE(&fs->files, file, tailq);
-		cache_free_buffers(file);
+		/* it's safe here not to hold the file lock */
+		if (file->tree->present_mask != 0) {
+			spdk_tree_free_buffers(file->tree);
+		}
+		assert(file->tree->present_mask == 0);
 		spdk_thread_send_msg(g_cache_pool_thread, _fs_free_file_from_cache, file);
 	}
 
@@ -1597,7 +1601,13 @@ spdk_fs_delete_file_async(struct spdk_filesystem *fs, const char *name,
 	}
 
 	TAILQ_REMOVE(&fs->files, f, tailq);
-	cache_free_buffers(f);
+
+	/* it's safe here not to hold the file lock */
+	if (f->tree->present_mask != 0) {
+		spdk_tree_free_buffers(f->tree);
+	}
+	assert(f->tree->present_mask == 0);
+
 	blobid = f->blobid;
 	spdk_bs_delete_blob(fs->bs, blobid, blob_delete_cb, req);
 
