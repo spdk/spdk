@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "02527d72_e7e64fcd",
+        "filename": "test/app/nvme_fused/nvme_fused.c",
+        "patchSetId": 52
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-22T19:14:58Z",
+      "side": 1,
+      "message": "What does g_run do?  It gets set immediately to true in main().  So I don\u0027t see why we need it - the value is always true.",
+      "revId": "ed3410de4bd6b78fb84bee0e61853d9e786d95dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f76bbcf7_c4b72831",
+        "filename": "test/app/nvme_fused/nvme_fused.c",
+        "patchSetId": 52
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-22T19:14:58Z",
+      "side": 1,
+      "message": "where is the ctx timeout_tsc used?",
+      "revId": "ed3410de4bd6b78fb84bee0e61853d9e786d95dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "58b83e1d_f11fccce",
+        "filename": "test/app/nvme_fused/nvme_fused.c",
+        "patchSetId": 52
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-22T19:14:58Z",
+      "side": 1,
+      "message": "This rv variable needs to be reworked.  You\u0027ve picked IO_TIMEOUT_S \u003d 5, which just happens to be the period that we\u0027ll send NVMe keep alives on the adminq.  So the test takes forever to actually exit, because we keep sending a keep alive, get the response, reset the timeout for another 5 seconds, etc.\n\nPLEASE reach out when you run into things like this!  We could have helped get to the bottom of this.\n\nI don\u0027t think this is the best way to decide when to exit the poller.  You should keep a counter of the outstanding commands that have been sent.  Once all of them are completed, then exit the poller.  Maybe you also add some kind of 30 or 60 second overall timeout in case one gets hung.  But there\u0027s no need to wait X number of seconds to see if you get another completion.  You already know how many completions you should be expecting.\n\nFor now, you could keep a separate rc variable.  Use rv to add up the number of completions for qp1, qp2 and the adminq.\n\nI would also reduce IO_TIMEOUT_S to 1.",
+      "revId": "ed3410de4bd6b78fb84bee0e61853d9e786d95dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4b3c6d01_2a4e80dd",
+        "filename": "test/app/nvme_fused/nvme_fused.c",
+        "patchSetId": 52
+      },
+      "lineNbr": 324,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-22T19:14:58Z",
+      "side": 1,
+      "message": "so this works, because you\u0027re using a malloc backend on the target\n\nbut really you should be waiting for this write to complete before continuing with the rest of the tests - you aren\u0027t guaranteed that commands are processed in same order that you sent them (even to the same LBA)",
+      "revId": "ed3410de4bd6b78fb84bee0e61853d9e786d95dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c2c9bffe_d614318c",
+        "filename": "test/app/nvme_fused/nvme_fused.c",
+        "patchSetId": 52
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-22T19:14:58Z",
+      "side": 1,
+      "message": "compare I/O\n\na lot more cases of these below (saying \"write\" when it\u0027s actually a different command type)",
+      "revId": "ed3410de4bd6b78fb84bee0e61853d9e786d95dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0d64d446_bf05e6bc",
+        "filename": "test/app/nvme_fused/nvme_fused.c",
+        "patchSetId": 52
+      },
+      "lineNbr": 411,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-22T19:14:58Z",
+      "side": 1,
+      "message": "I did some bisecting, and found that test case #3 + #4 will cause the asserts.  Just #3 or just #4 would not reproduce it.\n\nIt would also be really nice if you broke these test cases up into individual functions.  400 line functions are definitely not SPDK style.  :-)",
+      "revId": "ed3410de4bd6b78fb84bee0e61853d9e786d95dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
