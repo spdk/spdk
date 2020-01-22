@@ -75,6 +75,24 @@
       "revId": "0cd0e5c15c60237a4ca5c4c0cd60661da2504743",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "963ede0e_fa883c33",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2360,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-22T02:14:05Z",
+      "side": 1,
+      "message": "Hi Jim,\n\nThe safest place it in 2068 because we still need to check the value of val in line 2334 and 2344.",
+      "parentUuid": "0776cd74_9566aea4",
+      "revId": "0cd0e5c15c60237a4ca5c4c0cd60661da2504743",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
