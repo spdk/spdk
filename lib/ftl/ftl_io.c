@@ -158,78 +158,28 @@ ftl_io_iovec_len_left(struct ftl_io *io)
 }
 
 static void
-_ftl_io_init_iovec(struct ftl_io *io, const struct iovec *iov, size_t iov_cnt, size_t num_blocks)
+ftl_io_init_iovec(struct ftl_io *io, const struct iovec *iov, size_t iov_cnt, size_t iov_off,
+		  size_t num_blocks)
 {
-	size_t iov_off;
+	size_t offset = 0, num_left;
 
 	io->iov_pos = 0;
-	io->iov_cnt = iov_cnt;
+	io->iov_cnt = 0;
 	io->num_blocks = num_blocks;
 
-	memcpy(io->iov, iov, iov_cnt * sizeof(*iov));
+	while (offset < num_blocks) {
+		assert(io->iov_cnt < FTL_IO_MAX_IOVEC && io->iov_cnt < iov_cnt);
 
-	if (num_blocks == 0) {
-		for (iov_off = 0; iov_off < iov_cnt; ++iov_off) {
-			io->num_blocks += iov[iov_off].iov_len / FTL_BLOCK_SIZE;
-		}
+		num_left = spdk_min(iov[io->iov_cnt].iov_len / FTL_BLOCK_SIZE - iov_off,
+				    num_blocks);
+		io->iov[io->iov_cnt].iov_base = (char *)iov[io->iov_cnt].iov_base +
+						iov_off * FTL_BLOCK_SIZE;
+		io->iov[io->iov_cnt].iov_len = num_left * FTL_BLOCK_SIZE;
+
+		offset += num_left;
+		io->iov_cnt++;
+		iov_off = 0;
 	}
-}
-
-static void _ftl_io_free(struct ftl_io *io);
-
-static int
-ftl_io_add_child(struct ftl_io *io, const struct iovec *iov, size_t iov_cnt)
-{
-	struct ftl_io *child;
-
-	child = ftl_io_alloc_child(io);
-	if (spdk_unlikely(!child)) {
-		return -ENOMEM;
-	}
-
-	_ftl_io_init_iovec(child, iov, iov_cnt, 0);
-
-	if (io->flags & FTL_IO_VECTOR_LBA) {
-		child->lba.vector = io->lba.vector + io->num_blocks;
-	} else {
-		child->lba.single = io->lba.single + io->num_blocks;
-	}
-
-	io->num_blocks += child->num_blocks;
-	return 0;
-}
-
-static int
-ftl_io_init_iovec(struct ftl_io *io, const struct iovec *iov, size_t iov_cnt, size_t num_blocks)
-{
-	struct ftl_io *child;
-	size_t iov_off = 0, iov_left;
-	int rc;
-
-	if (spdk_likely(iov_cnt <= FTL_IO_MAX_IOVEC)) {
-		_ftl_io_init_iovec(io, iov, iov_cnt, num_blocks);
-		return 0;
-	}
-
-	while (iov_off < iov_cnt) {
-		iov_left = spdk_min(iov_cnt - iov_off, FTL_IO_MAX_IOVEC);
-
-		rc = ftl_io_add_child(io, &iov[iov_off], iov_left);
-		if (spdk_unlikely(rc != 0)) {
-			while ((child = LIST_FIRST(&io->children))) {
-				assert(LIST_EMPTY(&child->children));
-				LIST_REMOVE(child, child_entry);
-				_ftl_io_free(child);
-			}
-
-			return -ENOMEM;
-		}
-
-		iov_off += iov_left;
-	}
-
-	assert(io->num_blocks == num_blocks);
-	return 0;
 }
 
 void
@@ -275,6 +225,8 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 	struct ftl_io *io = opts->io;
 	struct ftl_io *parent = opts->parent;
 	struct spdk_ftl_dev *dev = opts->dev;
+	const struct iovec *iov;
+	size_t iov_cnt, iov_off;
 
 	if (!io) {
 		if (parent) {
@@ -302,13 +254,19 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 		} else {
 			io->lba.single = parent->lba.single + parent->pos;
 		}
+
+		iov = &parent->iov[parent->iov_pos];
+		iov_cnt = parent->iov_cnt - parent->iov_pos;
+		iov_off = parent->iov_off;
+	} else {
+		iov = &opts->iovs[0];
+		iov_cnt = opts->iovcnt;
+		iov_off = 0;
 	}
 
-	if (ftl_io_init_iovec(io, opts->iovs, opts->iovcnt, opts->num_blocks)) {
-		if (!opts->io) {
-			ftl_io_free(io);
-		}
-		return NULL;
+	/* Some requests (zone resets) do not use iovecs */
+	if (iov_cnt > 0) {
+		ftl_io_init_iovec(io, iov, iov_cnt, iov_off, opts->num_blocks);
 	}
 
 	if (opts->flags & FTL_IO_VECTOR_LBA) {

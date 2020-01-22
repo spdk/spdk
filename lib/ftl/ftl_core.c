@@ -1183,13 +1183,7 @@ ftl_alloc_io_nv_cache(struct ftl_io *parent, size_t num_blocks)
 	struct ftl_io_init_opts opts = {
 		.dev		= parent->dev,
 		.parent		= parent,
-		.iovs		= {
-			{
-				.iov_base = ftl_io_iovec_addr(parent),
-				.iov_len = num_blocks * FTL_BLOCK_SIZE,
-			}
-		},
-		.iovcnt		= 1,
+		.iovcnt		= 0,
 		.num_blocks	= num_blocks,
 		.flags		= parent->flags | FTL_IO_CACHE,
 	};
@@ -1520,8 +1514,7 @@ ftl_update_l2p(struct spdk_ftl_dev *dev, const struct ftl_rwb_entry *entry,
 }
 
 static struct ftl_io *
-ftl_io_init_child_write(struct ftl_io *parent, struct ftl_addr addr,
-			void *data, void *md, ftl_io_fn cb)
+ftl_io_init_child_write(struct ftl_io *parent, struct ftl_addr addr, ftl_io_fn cb)
 {
 	struct ftl_io *io;
 	struct spdk_ftl_dev *dev = parent->dev;
@@ -1536,14 +1529,7 @@ ftl_io_init_child_write(struct ftl_io *parent, struct ftl_addr addr,
 		.type		= parent->type,
 		.num_blocks	= dev->xfer_size,
 		.cb_fn		= cb,
-		.iovs		= {
-			{
-				.iov_base = data,
-				.iov_len = dev->xfer_size * FTL_BLOCK_SIZE,
-			}
-		},
-		.iovcnt		= 1,
-		.md		= md,
+		.iovcnt		= 0,
 	};
 
 	io = ftl_io_init_internal(&opts);
@@ -1598,8 +1584,7 @@ ftl_submit_child_write(struct ftl_wptr *wptr, struct ftl_io *io)
 	}
 
 	/* Split IO to child requests and release zone immediately after child is completed */
-	child = ftl_io_init_child_write(io, addr, ftl_io_iovec_addr(io),
-					ftl_io_get_md(io), ftl_io_child_write_cb);
+	child = ftl_io_init_child_write(io, addr, ftl_io_child_write_cb);
 	if (!child) {
 		return -EAGAIN;
 	}
