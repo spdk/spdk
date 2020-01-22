@@ -251,7 +251,6 @@ struct spdk_fs_cb_args {
 	} op;
 };
 
-static void cache_free_buffers(struct spdk_file *file);
 static void spdk_fs_io_device_unregister(struct spdk_filesystem *fs);
 static void spdk_fs_free_io_channels(struct spdk_filesystem *fs);
 
@@ -273,6 +272,20 @@ blobfs_cache_pool_need_reclaim(void)
 	}
 
 	return true;
+}
+
+static void
+cache_free_buffers(struct spdk_file *file)
+{
+	BLOBFS_TRACE(file, "free=%s\n", file->name);
+	pthread_spin_lock(&file->lock);
+	if (file->tree->present_mask == 0) {
+		pthread_spin_unlock(&file->lock);
+		return;
+	}
+	spdk_tree_free_buffers(file->tree);
+	file->last = NULL;
+	pthread_spin_unlock(&file->lock);
 }
 
 static int
@@ -2946,20 +2959,6 @@ spdk_file_get_id(struct spdk_file *file, void *id, size_t size)
 	memcpy(id, &file->blobid, sizeof(spdk_blob_id));
 
 	return sizeof(spdk_blob_id);
-}
-
-static void
-cache_free_buffers(struct spdk_file *file)
-{
-	BLOBFS_TRACE(file, "free=%s\n", file->name);
-	pthread_spin_lock(&file->lock);
-	if (file->tree->present_mask == 0) {
-		pthread_spin_unlock(&file->lock);
-		return;
-	}
-	spdk_tree_free_buffers(file->tree);
-	file->last = NULL;
-	pthread_spin_unlock(&file->lock);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("blobfs", SPDK_LOG_BLOBFS)
