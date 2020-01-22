@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "91aa9035_7df721ee",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 697,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-22T14:58:58Z",
+      "side": 1,
+      "message": "I think we should name this \"remaining_clusters_in_et\".  It makes it more clear that this member is used to count down the number of clusters, and doesn\u0027t really represent how many clusters are actually in the extent table.\n\nBut let\u0027s do that in another patch at the end of this series - or rename it in a patch just before this one.  Want to avoid pushing the entire series through the pool again.  :)",
+      "revId": "d991f225e4b38c3ef641382cd81e2277adee3dd3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
