@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "872b96b0_95efc7dd",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-22T17:01:28Z",
+      "side": 1,
+      "message": "I\u0027m pretty sure I needed numactl-devel to run the example apps. What criteria are you using to define \u0027minimal\u0027?",
+      "revId": "e098b5559f4c34f221d5ccd903783fd8675ff2fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
