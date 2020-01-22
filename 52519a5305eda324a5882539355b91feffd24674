@@ -16,6 +16,24 @@
       "revId": "52519a5305eda324a5882539355b91feffd24674",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "86cab5ad_93924d02",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-22T15:31:27Z",
+      "side": 1,
+      "message": "it\u0027s done a lot in crypto and compress UT but only for DPDK functions that couldn\u0027t be easily mocked any other way",
+      "parentUuid": "9f743be1_b9420c50",
+      "revId": "52519a5305eda324a5882539355b91feffd24674",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
