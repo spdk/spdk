@@ -190,6 +190,8 @@ rpc_thread_get_stats(void *arg)
 					     spdk_thread_get_timer_poller_count(thread));
 		spdk_json_write_named_uint32(ctx->w, "paused_poller_count",
 					     spdk_thread_get_paused_poller_count(thread));
+		spdk_json_write_named_uint32(ctx->w, "io_channel_count",
+					     spdk_thread_get_io_channel_count(thread));
 		spdk_json_write_object_end(ctx->w);
 	}
 }
