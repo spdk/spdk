@@ -1592,15 +1592,14 @@ ftl_submit_child_write(struct ftl_wptr *wptr, struct ftl_io *io)
 	wptr->num_outstanding++;
 
 	if (ftl_is_append_supported(dev)) {
-		rc = spdk_bdev_zone_append(dev->base_bdev_desc, ioch->base_ioch,
-					   ftl_io_iovec_addr(child),
-					   ftl_addr_get_zone_slba(dev, addr),
-					   dev->xfer_size, ftl_io_cmpl_cb, child);
-	} else {
-		rc = spdk_bdev_write_blocks(dev->base_bdev_desc, ioch->base_ioch,
-					    ftl_io_iovec_addr(child),
-					    addr.offset,
+		rc = spdk_bdev_zone_appendv(dev->base_bdev_desc, ioch->base_ioch,
+					    child->iov, child->iov_cnt,
+					    ftl_addr_get_zone_slba(dev, addr),
 					    dev->xfer_size, ftl_io_cmpl_cb, child);
+	} else {
+		rc = spdk_bdev_writev_blocks(dev->base_bdev_desc, ioch->base_ioch,
+					     child->iov, child->iov_cnt, addr.offset,
+					     dev->xfer_size, ftl_io_cmpl_cb, child);
 	}
 
 	if (rc) {
