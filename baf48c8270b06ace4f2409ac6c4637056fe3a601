@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1f0d36c7_c0f00d45",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1141,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-22T05:03:33Z",
+      "side": 1,
+      "message": "Separating two ifs for full feature check and param update may be easy to follow.\nAnd this path is not performance critical and spdk_unlikely may not be needed.\nThese are good for you?",
+      "revId": "baf48c8270b06ace4f2409ac6c4637056fe3a601",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
