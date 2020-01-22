@@ -2,6 +2,91 @@
   "comments": [
     {
       "key": {
+        "uuid": "7a0b7909_c33831a5",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3601,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-22T00:22:43Z",
+      "side": 1,
+      "message": "I know we use unsigned int in the RLE replay just above, but really these should be uint32_t.",
+      "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "30386bac_7ed4dfa0",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3639,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-22T00:22:43Z",
+      "side": 1,
+      "message": "uint32_t",
+      "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8402324f_09924ef1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3646,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-22T00:22:43Z",
+      "side": 1,
+      "message": "let\u0027s create a local variable to hold this (length - sizeof(num_clusters)) value - then we can use that variable here and the other two place it\u0027s used below",
+      "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8d5ceecf_66dda7f8",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3679,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-22T00:22:43Z",
+      "side": 1,
+      "message": "I don\u0027t think you need to assert() here - you already did this assert at line 3659.",
+      "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "66048c70_377bd9b6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3680,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-22T00:22:43Z",
+      "side": 1,
+      "message": "Here you do num_extent_pages++, but above (line 3660) you do +\u003d extent_page[i].num_pages.\n\nAbove, instead of just assert(), should we return -EINVAL if num_pages !\u003d 1?  Then you could just do +\u003d 1 there and here, and avoid any discrepencies between the two.",
+      "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2d6e9fbc_feffe02c",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 9
@@ -81,6 +166,24 @@
       "writtenOn": "2020-01-22T00:07:09Z",
       "side": 1,
       "message": "I think changing _spdk_bs_load_replay_md_parse_page() function signature could be a separate patch",
+      "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "30c6c252_65398ba8",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3886,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-22T00:22:43Z",
+      "side": 1,
+      "message": "or just don\u0027t change the function signature unless you really need it (to reduce the number of patches to review for 20.01)",
+      "parentUuid": "456d55dd_19200f3c",
       "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
