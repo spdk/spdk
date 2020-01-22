@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "089d6ffe_f6e260eb",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1531,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-22T05:50:55Z",
+      "side": 1,
+      "message": "use spdk_unlikely to wrap may be better.",
+      "range": {
+        "startLine": 1528,
+        "startChar": 1,
+        "endLine": 1531,
+        "endChar": 2
+      },
+      "revId": "ceed0264d0393f637bb895e8557e2259192e62d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
