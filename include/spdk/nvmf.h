@@ -126,9 +126,9 @@ typedef void (*new_qpair_fn)(struct spdk_nvmf_qpair *qpair, void *cb_arg);
  * Function to be called once the target is listening.
  *
  * \param ctx Context argument passed to this function.
- * \param status 0 if it completed successfully, or negative errno if it failed.
+ * \param trid pointer to a transport id on success, or NULL on failure.
  */
-typedef void (*spdk_nvmf_tgt_listen_done_fn)(void *ctx, int status);
+typedef void (*spdk_nvmf_tgt_listen_done_fn)(void *ctx, const struct spdk_nvme_transport_id *trid);
 
 struct spdk_nvmf_transport_ops {
 	/**
@@ -180,7 +180,7 @@ struct spdk_nvmf_transport_ops {
 	 * Fill out a discovery log entry for a specific listen address.
 	 */
 	void (*listener_discover)(struct spdk_nvmf_transport *transport,
-				  struct spdk_nvme_transport_id *trid,
+				  const struct spdk_nvme_transport_id *trid,
 				  struct spdk_nvmf_discovery_log_page_entry *entry);
 
 	/**
@@ -710,7 +710,7 @@ const char *spdk_nvmf_host_get_nqn(struct spdk_nvmf_host *host);
  * \return 0 on success, or negated errno value on failure.
  */
 int spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
-				     struct spdk_nvme_transport_id *trid);
+				     const struct spdk_nvme_transport_id *trid);
 
 /**
  * Remove the listener from subsystem.

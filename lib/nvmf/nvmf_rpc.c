@@ -623,16 +623,16 @@ nvmf_rpc_listen_resumed(struct spdk_nvmf_subsystem *subsystem,
 }
 
 static void
-nvmf_rpc_tgt_listen(void *cb_arg, int status)
+nvmf_rpc_tgt_listen(void *cb_arg, const struct spdk_nvme_transport_id *trid)
 {
 	struct nvmf_rpc_listener_ctx *ctx = cb_arg;
 
-	if (status) {
+	if (!trid) {
 		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
 		ctx->response_sent = true;
 	} else {
-		if (spdk_nvmf_subsystem_add_listener(ctx->subsystem, &ctx->trid)) {
+		if (spdk_nvmf_subsystem_add_listener(ctx->subsystem, trid)) {
 			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 							 "Invalid parameters");
 			ctx->response_sent = true;

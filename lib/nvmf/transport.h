@@ -57,7 +57,7 @@ void spdk_nvmf_transport_accept(struct spdk_nvmf_transport *transport, new_qpair
 				void *cb_arg);
 
 void spdk_nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport,
-		struct spdk_nvme_transport_id *trid,
+		const struct spdk_nvme_transport_id *trid,
 		struct spdk_nvmf_discovery_log_page_entry *entry);
 
 struct spdk_nvmf_transport_poll_group *spdk_nvmf_transport_poll_group_create(
