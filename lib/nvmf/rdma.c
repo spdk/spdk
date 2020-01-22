@@ -2749,7 +2749,7 @@ success:
 	port->ref++;
 	pthread_mutex_unlock(&rtransport->lock);
 	if (cb_fn != NULL) {
-		cb_fn(cb_arg, 0);
+		cb_fn(cb_arg, &port->trid);
 	}
 	return 0;
 }
@@ -3265,7 +3265,7 @@ spdk_nvmf_rdma_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn,
 
 static void
 spdk_nvmf_rdma_discover(struct spdk_nvmf_transport *transport,
-			struct spdk_nvme_transport_id *trid,
+			const struct spdk_nvme_transport_id *trid,
 			struct spdk_nvmf_discovery_log_page_entry *entry)
 {
 	entry->trtype = SPDK_NVMF_TRTYPE_RDMA;

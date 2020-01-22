@@ -2965,7 +2965,7 @@ out:
 
 struct nvmf_fc_add_rem_listener_ctx {
 	bool add_listener;
-	struct spdk_nvme_transport_id trid;
+	struct spdk_nvmf_fc_nport *port;
 };
 
 static void
@@ -2983,9 +2983,9 @@ nvmf_fc_adm_subsystem_paused_cb(struct spdk_nvmf_subsystem *subsystem, void *cb_
 	struct nvmf_fc_add_rem_listener_ctx *ctx = (struct nvmf_fc_add_rem_listener_ctx *)cb_arg;
 
 	if (ctx->add_listener) {
-		spdk_nvmf_subsystem_add_listener(subsystem, &ctx->trid);
+		spdk_nvmf_subsystem_add_listener(subsystem, &ctx->port->trid);
 	} else {
-		spdk_nvmf_subsystem_remove_listener(subsystem, &ctx->trid);
+		spdk_nvmf_subsystem_remove_listener(subsystem, &ctx->port->trid);
 	}
 	if (spdk_nvmf_subsystem_resume(subsystem, nvmf_fc_adm_subsystem_resume_cb, ctx)) {
 		SPDK_ERRLOG("Failed to resume subsystem: %s\n", subsystem->subnqn);
@@ -3012,7 +3012,7 @@ nvmf_fc_adm_add_rem_nport_listener(struct spdk_nvmf_fc_nport *nport, bool add)
 			ctx = calloc(1, sizeof(struct nvmf_fc_add_rem_listener_ctx));
 			if (ctx) {
 				ctx->add_listener = add;
-				spdk_nvmf_fc_create_trid(&ctx->trid,
+				spdk_nvmf_fc_create_trid(&nport->trid,
 							 nport->fc_nodename.u.wwn,
 							 nport->fc_portname.u.wwn);
 				if (spdk_nvmf_subsystem_pause(subsystem,

@@ -235,11 +235,11 @@ spdk_nvmf_parse_nvmf_tgt(void)
 }
 
 static void
-spdk_nvmf_tgt_listen_done(void *cb_arg, int status)
+spdk_nvmf_tgt_listen_done(void *cb_arg, const struct spdk_nvme_transport_id *trid)
 {
 	/* TODO: Config parsing should wait for this operation to finish. */
 
-	if (status) {
+	if (!trid) {
 		SPDK_ERRLOG("Failed to listen on transport address\n");
 	}
 }

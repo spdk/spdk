@@ -320,9 +320,9 @@ _nvmf_subsystem_remove_listener(struct spdk_nvmf_subsystem *subsystem,
 	struct spdk_nvmf_transport *transport;
 
 	if (stop) {
-		transport = spdk_nvmf_tgt_get_transport(subsystem->tgt, listener->trid.trstring);
+		transport = spdk_nvmf_tgt_get_transport(subsystem->tgt, listener->trid->trstring);
 		if (transport != NULL) {
-			spdk_nvmf_transport_stop_listen(transport, &listener->trid);
+			spdk_nvmf_transport_stop_listen(transport, listener->trid);
 		}
 	}
 
@@ -739,7 +739,7 @@ _spdk_nvmf_subsystem_find_listener(struct spdk_nvmf_subsystem *subsystem,
 	struct spdk_nvmf_listener *listener;
 
 	TAILQ_FOREACH(listener, &subsystem->listeners, link) {
-		if (spdk_nvme_transport_id_compare(&listener->trid, trid) == 0) {
+		if (spdk_nvme_transport_id_compare(listener->trid, trid) == 0) {
 			return listener;
 		}
 	}
@@ -749,7 +749,7 @@ _spdk_nvmf_subsystem_find_listener(struct spdk_nvmf_subsystem *subsystem,
 
 int
 spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
-				 struct spdk_nvme_transport_id *trid)
+				 const struct spdk_nvme_transport_id *trid)
 {
 	struct spdk_nvmf_transport *transport;
 	struct spdk_nvmf_listener *listener;
@@ -775,7 +775,7 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 		return -ENOMEM;
 	}
 
-	listener->trid = *trid;
+	listener->trid = trid;
 	listener->transport = transport;
 
 	TAILQ_INSERT_HEAD(&subsystem->listeners, listener, link);
@@ -827,7 +827,7 @@ spdk_nvmf_subsystem_listener_allowed(struct spdk_nvmf_subsystem *subsystem,
 	}
 
 	TAILQ_FOREACH(listener, &subsystem->listeners, link) {
-		if (spdk_nvme_transport_id_compare(&listener->trid, trid) == 0) {
+		if (spdk_nvme_transport_id_compare(listener->trid, trid) == 0) {
 			return true;
 		}
 	}
@@ -851,7 +851,7 @@ spdk_nvmf_subsystem_get_next_listener(struct spdk_nvmf_subsystem *subsystem,
 const struct spdk_nvme_transport_id *
 spdk_nvmf_listener_get_trid(struct spdk_nvmf_listener *listener)
 {
-	return &listener->trid;
+	return listener->trid;
 }
 
 void

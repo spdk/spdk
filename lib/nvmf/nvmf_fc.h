@@ -187,6 +187,7 @@ struct spdk_nvmf_fc_nport {
 	enum spdk_nvmf_fc_object_state nport_state;
 	struct spdk_nvmf_fc_wwn fc_nodename;
 	struct spdk_nvmf_fc_wwn fc_portname;
+	struct spdk_nvme_transport_id trid;
 
 	/* list of remote ports (i.e. initiators) connected to nport */
 	TAILQ_HEAD(, spdk_nvmf_fc_remote_port_info) rem_port_list;
