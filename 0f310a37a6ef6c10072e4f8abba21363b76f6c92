@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "945c0c61_61a32dee",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 1571,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-22T01:13:15Z",
+      "side": 1,
+      "message": "the first",
+      "range": {
+        "startLine": 1571,
+        "startChar": 54,
+        "endLine": 1571,
+        "endChar": 61
+      },
+      "revId": "0f310a37a6ef6c10072e4f8abba21363b76f6c92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2b5f63f4_b10eff02",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 1573,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-22T01:13:15Z",
+      "side": 1,
+      "message": "the second.\n\ncompare and write is an example?",
+      "range": {
+        "startLine": 1573,
+        "startChar": 55,
+        "endLine": 1573,
+        "endChar": 61
+      },
+      "revId": "0f310a37a6ef6c10072e4f8abba21363b76f6c92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
