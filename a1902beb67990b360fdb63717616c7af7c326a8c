@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "8e1ac3a2_8b62b19f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3080,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-22T12:49:52Z",
+      "side": 1,
+      "message": "Removed as it is superfluous with num_extent_pages.",
+      "range": {
+        "startLine": 3080,
+        "startChar": 0,
+        "endLine": 3080,
+        "endChar": 30
+      },
+      "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7a0b7909_c33831a5",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 9
@@ -16,6 +39,24 @@
       "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6abed2a7_4a7f6153",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3601,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-22T12:49:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7a0b7909_c33831a5",
+      "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -36,6 +77,24 @@
     },
     {
       "key": {
+        "uuid": "6ee5ea42_f4b7806d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3639,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-22T12:49:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "30386bac_7ed4dfa0",
+      "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8402324f_09924ef1",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 9
@@ -50,6 +109,47 @@
       "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3b9eb914_dc91eb58",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3646,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-22T12:49:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8402324f_09924ef1",
+      "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9233d74_72663240",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3653,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-22T12:49:52Z",
+      "side": 1,
+      "message": "This check was removed as we always persist extent table, even when size of a blob is 0.",
+      "range": {
+        "startLine": 3651,
+        "startChar": 0,
+        "endLine": 3653,
+        "endChar": 4
+      },
+      "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -70,6 +170,24 @@
     },
     {
       "key": {
+        "uuid": "39289c61_29732b49",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3679,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-22T12:49:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8d5ceecf_66dda7f8",
+      "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "66048c70_377bd9b6",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 9
@@ -84,6 +202,24 @@
       "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1e11cefd_b8cc9938",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3680,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-22T12:49:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "66048c70_377bd9b6",
+      "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -104,6 +240,24 @@
     },
     {
       "key": {
+        "uuid": "8a036504_de63b50b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3709,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-22T12:49:52Z",
+      "side": 1,
+      "message": "Sure, lets be pedantic ! :D",
+      "parentUuid": "2d6e9fbc_feffe02c",
+      "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dd9dbed2_eefa94e0",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 9
@@ -118,6 +272,24 @@
       "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "062af36e_e8721144",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3856,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-22T12:49:52Z",
+      "side": 1,
+      "message": "Ofc we don\u0027t, sorry.",
+      "parentUuid": "dd9dbed2_eefa94e0",
+      "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -138,6 +310,24 @@
     },
     {
       "key": {
+        "uuid": "1c3038d5_049860ab",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3865,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-22T12:49:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0da73110_764023c1",
+      "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "881f0591_bfe1d75a",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 9
@@ -152,6 +342,24 @@
       "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "70f9befb_14931aef",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3881,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-22T12:49:52Z",
+      "side": 1,
+      "message": "Before I was handling extent page parsing here too, and it didn\u0027t play well with this assignment. Agreed, I\u0027ve now moved it back to original place.",
+      "parentUuid": "881f0591_bfe1d75a",
+      "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -190,6 +398,24 @@
     },
     {
       "key": {
+        "uuid": "4f1b58f1_aa39ac63",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3886,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-22T12:49:52Z",
+      "side": 1,
+      "message": "Unfortunately it is needed, as replay is done for extent_table ctx is accessed. New patch preceding this one was created.",
+      "parentUuid": "30c6c252_65398ba8",
+      "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0b58a43d_13b25e90",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 9
@@ -204,6 +430,24 @@
       "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "19aad73b_a803ed74",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3897,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-22T12:49:52Z",
+      "side": 1,
+      "message": "That\u0027s right. I\u0027ve added comment regarding that.",
+      "parentUuid": "0b58a43d_13b25e90",
+      "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
