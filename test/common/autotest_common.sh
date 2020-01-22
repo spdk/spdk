@@ -578,7 +578,9 @@ function rbd_cleanup() {
 function start_stub() {
 	# Disable ASLR for multi-process testing.  SPDK does support using DPDK multi-process,
 	# but ASLR can still be unreliable in some cases.
-	# We will reenable it again after multi-process testing is complete in kill_stub()
+	# We will reenable it again after multi-process testing is complete in kill_stub().
+	# Save current setting so it can be restored upon calling kill_stub().
+	_randomize_va_space=$(</proc/sys/kernel/randomize_va_space)
 	echo 0 > /proc/sys/kernel/randomize_va_space
 	$rootdir/test/app/stub/stub $1 &
 	stubpid=$!
@@ -596,7 +598,7 @@ function kill_stub() {
 	# Re-enable ASLR now that we are done with multi-process testing
 	# Note: "1" enables ASLR w/o randomizing data segments, "2" adds data segment
 	#  randomizing and is the default on all recent Linux kernels
-	echo 2 > /proc/sys/kernel/randomize_va_space
+	echo "${_randomize_va_space:-2}" > /proc/sys/kernel/randomize_va_space
 }
 
 function run_test() {
