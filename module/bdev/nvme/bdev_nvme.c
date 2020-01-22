@@ -1355,6 +1355,8 @@ bdev_nvme_hotplug(void *arg)
 	if (!g_hotplug_probe_ctx) {
 		memset(&trid_pcie, 0, sizeof(trid_pcie));
 		trid_pcie.trtype = SPDK_NVME_TRANSPORT_PCIE;
+		spdk_nvme_transport_id_populate_trstring(&trid_pcie,
+				spdk_nvme_transport_id_trtype_str(trid_pcie.trtype));
 
 		g_hotplug_probe_ctx = spdk_nvme_probe_async(&trid_pcie, NULL,
 				      hotplug_probe_cb,
