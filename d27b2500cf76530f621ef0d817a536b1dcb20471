@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "016a0453_e7369f9c",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 2140,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-22T07:31:59Z",
+      "side": 1,
+      "message": "I think that the deadlock issue you mentioned that may be related with starvation.\n\nThere should be some fair algorithm fo make different threads can allocate the the cache instead of directly call get spdk_mempool_get.",
+      "range": {
+        "startLine": 2127,
+        "startChar": 2,
+        "endLine": 2140,
+        "endChar": 44
+      },
+      "revId": "d27b2500cf76530f621ef0d817a536b1dcb20471",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
