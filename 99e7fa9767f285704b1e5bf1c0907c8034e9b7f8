@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "73b6b07f_20a01382",
+        "filename": "test/unit/lib/nvmf/ctrlr_bdev.c/ctrlr_bdev_ut.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-22T02:32:14Z",
+      "side": 1,
+      "message": "Can we add blocklen and use it in the following spdk_bdev_get_num_blocks() ?",
+      "revId": "99e7fa9767f285704b1e5bf1c0907c8034e9b7f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3479b3c7_86212b9a",
+        "filename": "test/unit/lib/nvmf/ctrlr_bdev.c/ctrlr_bdev_ut.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-22T02:32:14Z",
+      "side": 1,
+      "message": "Please remove this empty line.",
+      "revId": "99e7fa9767f285704b1e5bf1c0907c8034e9b7f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
