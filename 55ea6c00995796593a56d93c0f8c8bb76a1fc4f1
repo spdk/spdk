@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc1508fd_77fa875c",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-22T02:01:20Z",
+      "side": 1,
+      "message": ", (single comma) ?",
+      "range": {
+        "startLine": 72,
+        "startChar": 53,
+        "endLine": 72,
+        "endChar": 56
+      },
+      "revId": "55ea6c00995796593a56d93c0f8c8bb76a1fc4f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1e74d910_cdf11707",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-22T02:01:20Z",
+      "side": 1,
+      "message": ", or (a single comma + or) ?",
+      "range": {
+        "startLine": 72,
+        "startChar": 78,
+        "endLine": 72,
+        "endChar": 81
+      },
+      "revId": "55ea6c00995796593a56d93c0f8c8bb76a1fc4f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
