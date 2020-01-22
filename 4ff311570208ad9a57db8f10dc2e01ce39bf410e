@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0555ac2f_6223f896",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 3706,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-22T15:07:02Z",
+      "side": 1,
+      "message": "desc-\u003elength will always equal desc_extent-\u003elength (desc is just type and length, desc_extent just extends that with additional fields)\n\nwhat you really need to do is iterate past the desc_extent, to see if another descriptor is after it - look at _spdk_blob_parse_page() as an example for how to iterate to the next descriptor",
+      "revId": "4ff311570208ad9a57db8f10dc2e01ce39bf410e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
