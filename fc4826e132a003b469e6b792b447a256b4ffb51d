@@ -39,6 +39,30 @@
       "revId": "fc4826e132a003b469e6b792b447a256b4ffb51d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d5bb1a99_7c356ada",
+        "filename": "lib/iscsi/iscsi.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-22T02:51:11Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "6ffc7b65_9567bb0a",
+      "range": {
+        "startLine": 168,
+        "startChar": 40,
+        "endLine": 168,
+        "endChar": 42
+      },
+      "revId": "fc4826e132a003b469e6b792b447a256b4ffb51d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
