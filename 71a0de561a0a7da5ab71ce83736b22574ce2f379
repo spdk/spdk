@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2cadf762_cfb8e2c8",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-22T13:48:04Z",
+      "side": 1,
+      "message": "Consider using herestring \u003c\u003c\u003c instead of echo \u0026 pipe combo.\n\n$(jq -r \u0027select(.supported_io_types.unmap \u003d\u003d true) | .name\u0027)\" \u003c\u003c\u003c $bdevs)",
+      "range": {
+        "startLine": 147,
+        "startChar": 7,
+        "endLine": 147,
+        "endChar": 71
+      },
+      "revId": "71a0de561a0a7da5ab71ce83736b22574ce2f379",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
