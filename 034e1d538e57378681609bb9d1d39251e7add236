@@ -16,6 +16,24 @@
       "revId": "034e1d538e57378681609bb9d1d39251e7add236",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3d2642fa_77f49877",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2039,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-01-22T08:45:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b6bd31eb_65360ca4",
+      "revId": "034e1d538e57378681609bb9d1d39251e7add236",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
