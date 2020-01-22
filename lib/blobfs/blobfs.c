@@ -278,20 +278,16 @@ static void
 cache_free_buffers(struct spdk_file *file)
 {
 	BLOBFS_TRACE(file, "free=%s\n", file->name);
-	pthread_spin_lock(&file->lock);
-	if (file->tree->present_mask == 0) {
-		pthread_spin_unlock(&file->lock);
-		return;
-	}
+
 	spdk_tree_free_buffers(file->tree);
 	file->last = NULL;
-	pthread_spin_unlock(&file->lock);
 }
 
 static int
 blobfs_cache_pool_mgmt(void *arg)
 {
 	struct spdk_file *file, *tmp;
+	bool check;
 
 	/* remove the files which don't have cache buffers */
 	TAILQ_FOREACH_SAFE(file, &g_caches, cache_tailq, tmp) {
@@ -308,26 +304,32 @@ blobfs_cache_pool_mgmt(void *arg)
 
 	/* reclaim cache buffer */
 	TAILQ_FOREACH(file, &g_caches, cache_tailq) {
+		check = false;
+		pthread_spin_lock(&file->lock);
 		if (!file->open_for_writing &&
-		    file->priority == SPDK_FILE_PRIORITY_LOW) {
-			break;
+		    file->priority == SPDK_FILE_PRIORITY_LOW &&
+		    file->tree->present_mask) {
+			cache_free_buffers(file);
+			check = true;
 		}
-	}
-	if (file != NULL) {
-		cache_free_buffers(file);
-		if (!blobfs_cache_pool_need_reclaim()) {
+		pthread_spin_unlock(&file->lock);
+
+		if (check && !blobfs_cache_pool_need_reclaim()) {
 			return 1;
 		}
 	}
 
 	TAILQ_FOREACH(file, &g_caches, cache_tailq) {
-		if (!file->open_for_writing) {
-			break;
+		check = false;
+		pthread_spin_lock(&file->lock);
+		if (!file->open_for_writing &&
+		    file->tree->present_mask) {
+			cache_free_buffers(file);
+			check = true;
 		}
-	}
-	if (file != NULL) {
-		cache_free_buffers(file);
-		if (!blobfs_cache_pool_need_reclaim()) {
+		pthread_spin_unlock(&file->lock);
+
+		if (check && !blobfs_cache_pool_need_reclaim()) {
 			return 1;
 		}
 	}
@@ -335,8 +337,11 @@ blobfs_cache_pool_mgmt(void *arg)
 	if (TAILQ_EMPTY(&g_caches)) {
 		return -1;
 	}
+
+	pthread_spin_lock(&file->lock);
 	file = TAILQ_FIRST(&g_caches);
 	cache_free_buffers(file);
+	pthread_spin_unlock(&file->lock);
 
 	return -1;
 }
