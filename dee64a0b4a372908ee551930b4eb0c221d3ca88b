@@ -16,6 +16,24 @@
       "revId": "dee64a0b4a372908ee551930b4eb0c221d3ca88b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1fa5014c_24587a08",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2039,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-01-22T09:58:29Z",
+      "side": 1,
+      "message": "If first of fused commands returned an error (bio-\u003ecpl) the second one should return error as well (cpl). So if the second won\u0027t return error (that is why I added \u0027!\u0027) we deal with unexpected behavior.",
+      "parentUuid": "aa8b6fd8_ad82ef9d",
+      "revId": "dee64a0b4a372908ee551930b4eb0c221d3ca88b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
