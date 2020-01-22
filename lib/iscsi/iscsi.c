@@ -1096,6 +1096,33 @@ iscsi_check_values(struct spdk_iscsi_conn *conn)
 	return 0;
 }
 
+static int
+iscsi_conn_params_update(struct spdk_iscsi_conn *conn)
+{
+	int rc;
+
+	/* update internal variables */
+	rc = spdk_iscsi_copy_param2var(conn);
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_iscsi_copy_param2var() failed\n");
+		if (conn->state < ISCSI_CONN_STATE_EXITING) {
+			conn->state = ISCSI_CONN_STATE_EXITING;
+		}
+		return rc;
+	}
+
+	/* check value */
+	rc = iscsi_check_values(conn);
+	if (rc < 0) {
+		SPDK_ERRLOG("iscsi_check_values() failed\n");
+		if (conn->state < ISCSI_CONN_STATE_EXITING) {
+			conn->state = ISCSI_CONN_STATE_EXITING;
+		}
+	}
+
+	return rc;
+}
+
 /*
  * The response function of spdk_iscsi_op_login
  * return:
@@ -1107,7 +1134,6 @@ iscsi_op_login_response(struct spdk_iscsi_conn *conn,
 			struct spdk_iscsi_pdu *rsp_pdu, struct iscsi_param *params)
 {
 	struct iscsi_bhs_login_rsp *rsph;
-	int rc;
 
 	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 	rsph->version_max = ISCSI_VERSION;
@@ -1140,18 +1166,7 @@ iscsi_op_login_response(struct spdk_iscsi_conn *conn,
 
 	/* after send PDU digest on/off */
 	if (conn->full_feature) {
-		/* update internal variables */
-		rc = spdk_iscsi_copy_param2var(conn);
-		if (rc < 0) {
-			SPDK_ERRLOG("spdk_iscsi_copy_param2var() failed\n");
-			return -1;
-		}
-		/* check value */
-		rc = iscsi_check_values(conn);
-		if (rc < 0) {
-			SPDK_ERRLOG("iscsi_check_values() failed\n");
-			return -1;
-		}
+		return iscsi_conn_params_update(conn);
 	}
 
 	return 0;
@@ -2283,26 +2298,8 @@ static void
 spdk_iscsi_conn_text_pdu_complete(void *arg)
 {
 	struct spdk_iscsi_conn *conn = arg;
-	int rc;
 
-	/* update internal variables */
-	rc = spdk_iscsi_copy_param2var(conn);
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_iscsi_copy_param2var() failed\n");
-		if (conn->state < ISCSI_CONN_STATE_EXITING) {
-			conn->state = ISCSI_CONN_STATE_EXITING;
-		}
-		return;
-	}
-
-	/* check value */
-	rc = iscsi_check_values(conn);
-	if (rc < 0) {
-		SPDK_ERRLOG("iscsi_check_values() failed\n");
-		if (conn->state < ISCSI_CONN_STATE_EXITING) {
-			conn->state = ISCSI_CONN_STATE_EXITING;
-		}
-	}
+	iscsi_conn_params_update(conn);
 }
 
 static int
