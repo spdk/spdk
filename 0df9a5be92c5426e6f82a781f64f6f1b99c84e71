@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "06388ba2_b3caed66",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1126,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-22T21:59:12Z",
+      "side": 1,
+      "message": "The flag is currently on the request, and these particular commands don\u0027t have a request object allocated, so no.\n\nI could move the flag to the PDU if you wanted, but I\u0027d do that in a later patch.",
+      "parentUuid": "70024357_e202cfe4",
+      "revId": "0df9a5be92c5426e6f82a781f64f6f1b99c84e71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "01586f74_be01de64",
         "filename": "lib/nvmf/tcp.c",
         "patchSetId": 4
