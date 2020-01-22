@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "4e0b53ab_f9b3318a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 630,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-22T14:52:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a4f77ce8_37d5a88a",
+      "revId": "9823197040a1075cc057798dee5669ba65b2f80e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ae7389a4_078cf46a",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 18
@@ -54,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "a9df4b00_d6659eba",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 698,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-22T14:52:50Z",
+      "side": 1,
+      "message": "Agreed, originally I though of using this field to keep the remainder of num_clusters/SPDK_EXTENTS_PER_EP. This would be what gets persisted in ET and changed on resize. Finally settled on just persisting num_clusters.\n\nIn such case the num_clusters_in_et is really better suited for spdk_blob.",
+      "parentUuid": "180a9663_89e90959",
+      "revId": "9823197040a1075cc057798dee5669ba65b2f80e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8e33dd01_4a7beea2",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 18
@@ -68,6 +104,24 @@
       "revId": "9823197040a1075cc057798dee5669ba65b2f80e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8fc0b487_7143dfcb",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1317,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-22T14:52:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8e33dd01_4a7beea2",
+      "revId": "9823197040a1075cc057798dee5669ba65b2f80e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
