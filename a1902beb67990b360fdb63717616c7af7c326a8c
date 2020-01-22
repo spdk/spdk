@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2d6e9fbc_feffe02c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3709,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-22T00:07:09Z",
+      "side": 1,
+      "message": "...and first descriptor must be TYPE_EXTENT_PAGE\n\n(this is a really good check - to be truly pedantic, you could also check that there is only one descriptor in the page)",
+      "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dd9dbed2_eefa94e0",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3856,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-22T00:07:09Z",
+      "side": 1,
+      "message": "do we need \"page\" duplicated in the function name?",
+      "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0da73110_764023c1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3865,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-22T00:07:09Z",
+      "side": 1,
+      "message": "\"page_cpl\" instead of \"pages_cpl\"?  we are only reading one page here",
+      "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "881f0591_bfe1d75a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3881,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-22T00:07:09Z",
+      "side": 1,
+      "message": "is moving this line required?",
+      "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "456d55dd_19200f3c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3886,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-22T00:07:09Z",
+      "side": 1,
+      "message": "I think changing _spdk_bs_load_replay_md_parse_page() function signature could be a separate patch",
+      "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b58a43d_13b25e90",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3897,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-22T00:07:09Z",
+      "side": 1,
+      "message": "if I read this right, we are reading the extent_pages in reverse order?\n\nif so, that\u0027s fine, but might be good to add a brief comment explaining why - I\u0027m guessing it\u0027s so you can avoid an extra idx variable in the ctx?",
+      "revId": "a1902beb67990b360fdb63717616c7af7c326a8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
