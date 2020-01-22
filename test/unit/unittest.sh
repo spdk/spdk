@@ -152,15 +152,15 @@ fi
 
 run_test "unittest_include" $valgrind $testdir/include/spdk/histogram_data.h/histogram_ut
 run_test "unittest_bdev" unittest_bdev
-if grep -q '#define SPDK_CONFIG_CRYPTO 1' $rootdir/include/spdk/config.h; then
+if [ $SPDK_TEST_CRYPTO -eq 1 ]; then
 	run_test "unittest_bdev_crypto" $valgrind $testdir/lib/bdev/crypto.c/crypto_ut
 fi
 
-if grep -q '#define SPDK_CONFIG_REDUCE 1' $rootdir/include/spdk/config.h; then
+if [ $SPDK_TEST_REDUCE -eq 1 ]; then
 	run_test "unittest_bdev_reduce" $valgrind $testdir/lib/bdev/compress.c/compress_ut
 fi
 
-if grep -q '#define SPDK_CONFIG_PMDK 1' $rootdir/include/spdk/config.h; then
+if [ $SPDK_TEST_PMDK -eq 1 ]; then
 	run_test "unittest_bdev_pmem" $valgrind $testdir/lib/bdev/pmem/bdev_pmem_ut
 fi
 
@@ -192,10 +192,6 @@ fi
 
 if grep -q '#define SPDK_CONFIG_RDMA 1' $rootdir/include/spdk/config.h; then
 	run_test "unittest_nvmf_rdma" $valgrind $testdir/lib/nvmf/rdma.c/rdma_ut
-fi
-
-if grep -q '#define SPDK_CONFIG_REDUCE 1' $rootdir/config.h; then
-	run_test "unittest_bdev_reduce" $valgrind $testdir/lib/reduce/reduce.c/reduce_ut
 fi
 
 run_test "unittest_scsi" unittest_scsi
