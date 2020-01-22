@@ -1,0 +1,191 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b79f7511_d1700410",
+        "filename": "doc/ftl.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-22T20:16:16Z",
+      "side": 1,
+      "message": "Band -\u003e \"A band\"",
+      "revId": "871d9dbc6b0fb20416f787d95e9f0ae3a244d914",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c02c17b1_088e0da4",
+        "filename": "doc/ftl.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-22T20:16:16Z",
+      "side": 1,
+      "message": "\"the band\" -\u003e \"a band\"",
+      "revId": "871d9dbc6b0fb20416f787d95e9f0ae3a244d914",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f2840ea6_c2428734",
+        "filename": "doc/ftl.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-22T20:16:16Z",
+      "side": 1,
+      "message": "\"on a different\" -\u003e \"on different\"",
+      "revId": "871d9dbc6b0fb20416f787d95e9f0ae3a244d914",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5d6224c3_ecce9f99",
+        "filename": "doc/ftl.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-22T20:16:16Z",
+      "side": 1,
+      "message": "\"are being written\" -\u003e \"are written\"",
+      "revId": "871d9dbc6b0fb20416f787d95e9f0ae3a244d914",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d26a32b3_a4f76040",
+        "filename": "doc/ftl.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-22T20:16:16Z",
+      "side": 1,
+      "message": "\"Similarly\" -\u003e \"Similar\"",
+      "revId": "871d9dbc6b0fb20416f787d95e9f0ae3a244d914",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "455d57d6_5a87690d",
+        "filename": "doc/ftl.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-22T20:16:16Z",
+      "side": 1,
+      "message": "\"implementing\" -\u003e \"implement\"",
+      "revId": "871d9dbc6b0fb20416f787d95e9f0ae3a244d914",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "770883ac_f72b4fb4",
+        "filename": "doc/ftl.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-22T20:16:16Z",
+      "side": 1,
+      "message": "\"requires Open\" -\u003e \"requires an Open\"",
+      "revId": "871d9dbc6b0fb20416f787d95e9f0ae3a244d914",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7c46011d_9160fbc7",
+        "filename": "doc/ftl.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-22T20:16:16Z",
+      "side": 1,
+      "message": "\"SSD following\" -\u003e \"SSD, the following\"",
+      "revId": "871d9dbc6b0fb20416f787d95e9f0ae3a244d914",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3a157c00_89bb8651",
+        "filename": "doc/ftl.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-22T20:16:16Z",
+      "side": 1,
+      "message": "\"emulates zoned\" -\u003e \"emulates a zoned\"",
+      "revId": "871d9dbc6b0fb20416f787d95e9f0ae3a244d914",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bfe62321_3529160f",
+        "filename": "doc/ftl.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-22T20:16:16Z",
+      "side": 1,
+      "message": "\"on top regular\" -\u003e \"\"on top of a regular\"",
+      "revId": "871d9dbc6b0fb20416f787d95e9f0ae3a244d914",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9728a373_df46d903",
+        "filename": "doc/ftl.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-22T20:16:16Z",
+      "side": 1,
+      "message": "\"on to of\" -\u003e \"on top of a\"",
+      "revId": "871d9dbc6b0fb20416f787d95e9f0ae3a244d914",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
