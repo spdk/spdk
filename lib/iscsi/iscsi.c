@@ -1134,6 +1134,8 @@ iscsi_op_login_response(struct spdk_iscsi_conn *conn,
 		rsph->flags &= ~ISCSI_LOGIN_CURRENT_STAGE_MASK;
 		rsph->flags &= ~ISCSI_LOGIN_NEXT_STAGE_MASK;
 	}
+
+	spdk_iscsi_param_free(params);
 	spdk_iscsi_conn_write_pdu(conn, rsp_pdu, spdk_iscsi_conn_pdu_generic_complete, NULL);
 
 	/* after send PDU digest on/off */
@@ -1142,19 +1144,16 @@ iscsi_op_login_response(struct spdk_iscsi_conn *conn,
 		rc = spdk_iscsi_copy_param2var(conn);
 		if (rc < 0) {
 			SPDK_ERRLOG("spdk_iscsi_copy_param2var() failed\n");
-			spdk_iscsi_param_free(params);
 			return -1;
 		}
 		/* check value */
 		rc = iscsi_check_values(conn);
 		if (rc < 0) {
 			SPDK_ERRLOG("iscsi_check_values() failed\n");
-			spdk_iscsi_param_free(params);
 			return -1;
 		}
 	}
 
-	spdk_iscsi_param_free(params);
 	return 0;
 }
 
@@ -2373,12 +2372,12 @@ iscsi_pdu_payload_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 		}
 	}
 
+	spdk_iscsi_param_free(params);
 	SPDK_LOGDUMP(SPDK_LOG_ISCSI, "Negotiated Params", data, data_len);
 
 	/* response PDU */
 	rsp_pdu = spdk_get_pdu(conn);
 	if (rsp_pdu == NULL) {
-		spdk_iscsi_param_free(params);
 		free(data);
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
@@ -2422,7 +2421,6 @@ iscsi_pdu_payload_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 	rc = spdk_iscsi_copy_param2var(conn);
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_iscsi_copy_param2var() failed\n");
-		spdk_iscsi_param_free(params);
 		return -1;
 	}
 
@@ -2430,11 +2428,9 @@ iscsi_pdu_payload_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 	rc = iscsi_check_values(conn);
 	if (rc < 0) {
 		SPDK_ERRLOG("iscsi_check_values() failed\n");
-		spdk_iscsi_param_free(params);
 		return -1;
 	}
 
-	spdk_iscsi_param_free(params);
 	return 0;
 }
 
