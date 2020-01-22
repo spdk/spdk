@@ -34,6 +34,24 @@
       "revId": "7a3adfe868cdc2420914d3090da549e364efda76",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "588e463b_56db36e7",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1433,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-22T04:50:38Z",
+      "side": 1,
+      "message": "thank you",
+      "parentUuid": "7c224681_85bc0242",
+      "revId": "7a3adfe868cdc2420914d3090da549e364efda76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
