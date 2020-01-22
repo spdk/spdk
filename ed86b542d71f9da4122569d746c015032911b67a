@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "64999a11_23c32a53",
+        "filename": "doc/getting_started.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-22T12:44:11Z",
+      "side": 1,
+      "message": "Lets not make this doc more complicated than needed. This document is users first contact with SPDK. Just changing line 15 (couple patches back) to note that optional dependencies have additional switches is fine.\n\n(But don\u0027t change line 21!)",
+      "range": {
+        "startLine": 27,
+        "startChar": 0,
+        "endLine": 33,
+        "endChar": 0
+      },
+      "revId": "ed86b542d71f9da4122569d746c015032911b67a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
