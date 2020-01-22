@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5aa5d6bd_c81741d8",
+        "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1471,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-22T02:24:42Z",
+      "side": 1,
+      "message": "We can remove this empty line.",
+      "range": {
+        "startLine": 1471,
+        "startChar": 0,
+        "endLine": 1471,
+        "endChar": 0
+      },
+      "revId": "c8f255c39f2914369e0028696be7b441b70f1637",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "51bcafa3_a2557854",
+        "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1485,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-22T02:24:42Z",
+      "side": 1,
+      "message": "We can reduce empty line by one.",
+      "revId": "c8f255c39f2914369e0028696be7b441b70f1637",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f1a2a678_5420bb7b",
+        "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1488,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-22T02:24:42Z",
+      "side": 1,
+      "message": "Ditto.",
+      "revId": "c8f255c39f2914369e0028696be7b441b70f1637",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d8db271f_34c6f607",
+        "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1522,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-22T02:24:42Z",
+      "side": 1,
+      "message": "Unnecessary empty line.",
+      "revId": "c8f255c39f2914369e0028696be7b441b70f1637",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
