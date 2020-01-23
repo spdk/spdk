@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e3c9d176_9c576c5b",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 514,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-23T08:44:46Z",
+      "side": 1,
+      "message": "Hi Ben,\n\nI think I don\u0027t understand the above comment and what role the \"found\" variable takes correctly yet, but\nWhy we cannot do the following?\n\nfor (idx \u003d serr-\u003eee_info; idx \u003c\u003d serr-\u003eerr_data; idx++) {\n  TAILQ_FOREACH_SAFE(req, \u0026sock-\u003epending_reqs, internal.link, treq) {\n    if (req-\u003einternal.offset \u003d\u003d idx) {\n      rc \u003d spdk_sock_request_put(sock, req, 0);\n      if (rc \u003d\u003d 0)\n        continue;\n      else\n        return;\n    }\n  }\n}",
+      "revId": "b06d26e31dcd92f65121f07bba81a1eb9c4b6690",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
