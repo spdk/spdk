@@ -132,6 +132,7 @@ struct lba_range {
 	void				*locked_ctx;
 	struct spdk_bdev_channel	*owner_ch;
 	TAILQ_ENTRY(lba_range)		tailq;
+	uint32_t			ref;
 };
 
 static struct spdk_bdev_opts	g_bdev_opts = {
@@ -6118,6 +6119,17 @@ bdev_lock_lba_range_get_channel(struct spdk_io_channel_iter *i)
 			 * range was locked before any I/O could be submitted to the
 			 * new channel.
 			 */
+			range->locked_ctx = ctx->range.locked_ctx;
+			range->ref += 1;
+			ctx->current_range = range;
+			if (ctx->range.owner_ch == ch) {
+				/* This is the range object for the channel that will hold
+				 * the lock.  Store it in the ctx object so that we can easily
+				 * set its owner_ch after the lock is finally acquired.
+				 */
+				ctx->owner_range = range;
+			}
+
 			spdk_for_each_channel_continue(i, 0);
 			return;
 		}
@@ -6132,6 +6144,7 @@ bdev_lock_lba_range_get_channel(struct spdk_io_channel_iter *i)
 	range->length = ctx->range.length;
 	range->offset = ctx->range.offset;
 	range->locked_ctx = ctx->range.locked_ctx;
+	range->ref = 1;
 	ctx->current_range = range;
 	if (ctx->range.owner_ch == ch) {
 		/* This is the range object for the channel that will hold
@@ -6261,8 +6274,11 @@ bdev_unlock_lba_range_get_channel(struct spdk_io_channel_iter *i)
 	TAILQ_FOREACH(range, &ch->locked_ranges, tailq) {
 		if (ctx->range.offset == range->offset &&
 		    ctx->range.length == range->length) {
-			TAILQ_REMOVE(&ch->locked_ranges, range, tailq);
-			free(range);
+			assert(range->ref > 0);
+			if (--range->ref == 0) {
+				TAILQ_REMOVE(&ch->locked_ranges, range, tailq);
+				free(range);
+			}
 			break;
 		}
 	}
