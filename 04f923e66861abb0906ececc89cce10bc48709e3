@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9008cde2_3069bf77",
+        "filename": "lib/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 661,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-23T13:53:35Z",
+      "side": 1,
+      "message": "We can pass better response via RPC.",
+      "range": {
+        "startLine": 661,
+        "startChar": 9,
+        "endLine": 661,
+        "endChar": 27
+      },
+      "revId": "04f923e66861abb0906ececc89cce10bc48709e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "435ebb78_98245ec2",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 762,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-23T13:53:35Z",
+      "side": 1,
+      "message": "This is public API and I don\u0027t think we should assert such condition here. Maybe return EEXIST ?\nEither way - behavior of this API changes, may warrant changes in public header and changelog.",
+      "range": {
+        "startLine": 762,
+        "startChar": 1,
+        "endLine": 762,
+        "endChar": 68
+      },
+      "revId": "04f923e66861abb0906ececc89cce10bc48709e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
