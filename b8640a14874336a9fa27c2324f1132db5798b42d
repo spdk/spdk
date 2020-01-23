@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ec3fb0d0_25aaa4ab",
+        "filename": "doc/containers.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-23T15:40:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9447e2a7_7cd0672a",
+      "revId": "b8640a14874336a9fa27c2324f1132db5798b42d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5f807c99_b219986f",
         "filename": "doc/containers.md",
         "patchSetId": 11
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "56760b03_16b68180",
+        "filename": "doc/containers.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-23T15:40:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5f807c99_b219986f",
+      "revId": "b8640a14874336a9fa27c2324f1132db5798b42d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "48c3611e_9a32b92a",
         "filename": "doc/containers.md",
         "patchSetId": 11
@@ -47,6 +83,24 @@
       "writtenOn": "2020-01-23T04:33:26Z",
       "side": 1,
       "message": "What should this go.sh script include?  Can you just call /app/hello_world directly at the CMD line just below?  Not very familiar with this so these may be really dumb questions 😊",
+      "revId": "b8640a14874336a9fa27c2324f1132db5798b42d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e33520d_9cc4ee36",
+        "filename": "doc/containers.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-23T15:40:37Z",
+      "side": 1,
+      "message": "I\u0027m not sure why but just running the app didn\u0027t work, I\u0027ll add a comment for now and double check if why running a binary didn\u0027t work",
+      "parentUuid": "48c3611e_9a32b92a",
       "revId": "b8640a14874336a9fa27c2324f1132db5798b42d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
