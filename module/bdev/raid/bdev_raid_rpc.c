@@ -83,7 +83,7 @@ static const struct spdk_json_object_decoder rpc_bdev_raid_get_bdevs_decoders[] 
  * registered with bdev as of now and it has encountered any error or user has
  * requested to offline the raid.
  * params:
- * requuest - pointer to json rpc request
+ * request - pointer to json rpc request
  * params - pointer to request parameters
  * returns:
  * none
@@ -242,7 +242,7 @@ static const struct spdk_json_object_decoder rpc_bdev_raid_create_decoders[] = {
  * spdk_rpc_bdev_raid_create function is the RPC for creating RAID bdevs. It takes
  * input as raid bdev name, raid level, strip size in KB and list of base bdev names.
  * params:
- * requuest - pointer to json rpc request
+ * request - pointer to json rpc request
  * params - pointer to request parameters
  * returns:
  * none
@@ -404,7 +404,7 @@ exit:
  * name as input and delete that raid bdev including freeing the base bdev
  * resources.
  * params:
- * requuest - pointer to json rpc request
+ * request - pointer to json rpc request
  * params - pointer to request parameters
  * returns:
  * none

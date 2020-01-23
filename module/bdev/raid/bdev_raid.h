@@ -171,7 +171,7 @@ struct raid_base_bdev_config {
 };
 
 /*
- * raid_bdev_config contains the raid bdev  config related information after
+ * raid_bdev_config contains the raid bdev config related information after
  * parsing the config file
  */
 struct raid_bdev_config {
