@@ -80,8 +80,7 @@ struct nvme_fused_ctrlr {
 };
 
 struct nvme_fused_qp {
-	struct spdk_nvme_qpair          *qpair1;
-	struct spdk_nvme_qpair          *qpair2;
+	struct spdk_nvme_qpair          *qpair[8];
 	int				req_pending;
 	int				req_num;
 	struct nvme_fused_ctx           ctx[1024];
@@ -244,6 +243,7 @@ compare_and_write(void *arg)
 	struct nvme_fused_ctx *ctx;
 	struct nvme_fused_ctx *ctx2;
 	struct nvme_fused_ns *ns_entry = (struct nvme_fused_ns *)arg;
+	int i, j, qpair_number;
 
 	printf("Send NVMe commands.\n");
 	memset(&ns_entry->qp.ctx, 0, sizeof(ns_entry->qp.ctx));
@@ -257,7 +257,7 @@ compare_and_write(void *arg)
 	snprintf(ctx2->write_buf, 0x1000, "%s", "Starting buffer\n");
 
 	ctx2->timeout_tsc = spdk_get_ticks() + IO_TIMEOUT_S * spdk_get_ticks_hz();
-	rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qp.qpair1, ctx2->write_buf,
+	rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qp.qpair[0], ctx2->write_buf,
 				    0, /* LBA start */
 				    1, /* number of LBAs */
 				    nvme_cpl_cb, ctx2, 0);
@@ -284,7 +284,7 @@ compare_and_write(void *arg)
 
 	/* Fused compare and write operation */
 	ctx->timeout_tsc = spdk_get_ticks() + IO_TIMEOUT_S * spdk_get_ticks_hz();
-	rc = spdk_nvme_ns_cmd_compare(ns_entry->ns, ns_entry->qp.qpair1, ctx->cmp_buf,
+	rc = spdk_nvme_ns_cmd_compare(ns_entry->ns, ns_entry->qp.qpair[0], ctx->cmp_buf,
 				      0, /* LBA start */
 				      1, /* number of LBAs */
 				      nvme_fused_first_cpl_cb, ctx, SPDK_NVME_CMD_FUSE_FIRST);
@@ -292,7 +292,7 @@ compare_and_write(void *arg)
 		fprintf(stderr, "starting write I/O failed\n");
 		exit(1);
 	}
-	rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qp.qpair1, ctx->write_buf,
+	rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qp.qpair[0], ctx->write_buf,
 				    0, /* LBA start */
 				    1, /* number of LBAs */
 				    nvme_fused_second_cpl_cb, ctx, SPDK_NVME_CMD_FUSE_SECOND);
@@ -314,7 +314,7 @@ compare_and_write(void *arg)
 	snprintf(ctx2->write_buf, 0x1000, "%s", "Starting buffer\n");
 
 	ctx2->timeout_tsc = spdk_get_ticks() + IO_TIMEOUT_S * spdk_get_ticks_hz();
-	rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qp.qpair1, ctx2->write_buf,
+	rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qp.qpair[0], ctx2->write_buf,
 				    1, /* LBA start */
 				    1, /* number of LBAs */
 				    nvme_cpl_cb, ctx2, 0);
@@ -335,7 +335,7 @@ compare_and_write(void *arg)
 
 	/* First fused compare and write operation */
 	ctx->timeout_tsc = spdk_get_ticks() + IO_TIMEOUT_S * spdk_get_ticks_hz();
-	rc = spdk_nvme_ns_cmd_compare(ns_entry->ns, ns_entry->qp.qpair2, ctx->cmp_buf,
+	rc = spdk_nvme_ns_cmd_compare(ns_entry->ns, ns_entry->qp.qpair[1], ctx->cmp_buf,
 				      1, /* LBA start */
 				      1, /* number of LBAs */
 				      nvme_fused_first_cpl_cb, ctx, SPDK_NVME_CMD_FUSE_FIRST);
@@ -351,7 +351,7 @@ compare_and_write(void *arg)
 	ctx2->done = cmd_done;
 
 	ctx2->timeout_tsc = spdk_get_ticks() + IO_TIMEOUT_S * spdk_get_ticks_hz();
-	rc = spdk_nvme_ns_cmd_read(ns_entry->ns, ns_entry->qp.qpair1, ctx2->cmp_buf,
+	rc = spdk_nvme_ns_cmd_read(ns_entry->ns, ns_entry->qp.qpair[0], ctx2->cmp_buf,
 				   1, /* LBA start */
 				   1, /* number of LBAs */
 				   nvme_cpl_cb, ctx2, 0);
@@ -361,7 +361,7 @@ compare_and_write(void *arg)
 	}
 
 	/* Second part of first fused command */
-	rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qp.qpair2, ctx->write_buf,
+	rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qp.qpair[1], ctx->write_buf,
 				    1, /* LBA start */
 				    1, /* number of LBAs */
 				    nvme_fused_second_cpl_cb, ctx, SPDK_NVME_CMD_FUSE_SECOND);
@@ -373,7 +373,7 @@ compare_and_write(void *arg)
 	/*
 	 * Case 3: fused op pending another fused op (for stress tests purpose only) -- request #4
 	 */
-#if 0
+
 	ctx = fused_ctx_get(ns_entry, &ns_entry->qp);
 	/* Results are unpredictable because we cannot guarantee the order of below operations */
 	ctx->status_first.sc = 0xFF;
@@ -386,7 +386,7 @@ compare_and_write(void *arg)
 
 	/* First fused compare and write operation */
 	ctx->timeout_tsc = spdk_get_ticks() + IO_TIMEOUT_S * spdk_get_ticks_hz();
-	rc = spdk_nvme_ns_cmd_compare(ns_entry->ns, ns_entry->qp.qpair2, ctx->cmp_buf,
+	rc = spdk_nvme_ns_cmd_compare(ns_entry->ns, ns_entry->qp.qpair[1], ctx->cmp_buf,
 				      2, /* LBA start */
 				      1, /* number of LBAs */
 				      nvme_fused_first_cpl_cb, ctx, SPDK_NVME_CMD_FUSE_FIRST);
@@ -406,7 +406,7 @@ compare_and_write(void *arg)
 
 	/* Second fused compare and write operation (reques #5) */
 	ctx2->timeout_tsc = spdk_get_ticks() + IO_TIMEOUT_S * spdk_get_ticks_hz();
-	rc = spdk_nvme_ns_cmd_compare(ns_entry->ns, ns_entry->qp.qpair1, ctx2->cmp_buf,
+	rc = spdk_nvme_ns_cmd_compare(ns_entry->ns, ns_entry->qp.qpair[0], ctx2->cmp_buf,
 				      2, /* LBA start */
 				      1, /* number of LBAs */
 				      nvme_fused_first_cpl_cb, ctx2, SPDK_NVME_CMD_FUSE_FIRST);
@@ -416,7 +416,7 @@ compare_and_write(void *arg)
 	}
 
 	/* Second part of first fused command */
-	rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qp.qpair2, ctx->write_buf,
+	rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qp.qpair[1], ctx->write_buf,
 				    2, /* LBA start */
 				    1, /* number of LBAs */
 				    nvme_fused_second_cpl_cb, ctx, SPDK_NVME_CMD_FUSE_SECOND);
@@ -426,7 +426,7 @@ compare_and_write(void *arg)
 	}
 
 	/* Second part of second fused command */
-	rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qp.qpair1, ctx2->write_buf,
+	rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qp.qpair[0], ctx2->write_buf,
 				    2, /* LBA start */
 				    1, /* number of LBAs */
 				    nvme_fused_second_cpl_cb, ctx2, SPDK_NVME_CMD_FUSE_SECOND);
@@ -434,7 +434,7 @@ compare_and_write(void *arg)
 		fprintf(stderr, "starting write I/O failed\n");
 		exit(1);
 	}
-#endif
+
 	/*
 	 * Case 4: Fused op pending another fused op (request #8)
 	 */
@@ -448,7 +448,7 @@ compare_and_write(void *arg)
 	snprintf(ctx2->write_buf, 0x1000, "%s", "Starting buffer\n");
 
 	ctx2->timeout_tsc = spdk_get_ticks() + IO_TIMEOUT_S * spdk_get_ticks_hz();
-	rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qp.qpair1, ctx2->write_buf,
+	rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qp.qpair[0], ctx2->write_buf,
 				    3, /* LBA start */
 				    1, /* number of LBAs */
 				    nvme_cpl_cb, ctx2, 0);
@@ -469,7 +469,7 @@ compare_and_write(void *arg)
 
 	/* First fused compare and write operation */
 	ctx->timeout_tsc = spdk_get_ticks() + IO_TIMEOUT_S * spdk_get_ticks_hz();
-	rc = spdk_nvme_ns_cmd_compare(ns_entry->ns, ns_entry->qp.qpair2, ctx->cmp_buf,
+	rc = spdk_nvme_ns_cmd_compare(ns_entry->ns, ns_entry->qp.qpair[1], ctx->cmp_buf,
 				      3, /* LBA start */
 				      1, /* number of LBAs */
 				      nvme_fused_first_cpl_cb, ctx, SPDK_NVME_CMD_FUSE_FIRST);
@@ -489,7 +489,7 @@ compare_and_write(void *arg)
 
 	/* Second fused compare and write operation (request #8) */
 	ctx2->timeout_tsc = spdk_get_ticks() + IO_TIMEOUT_S * spdk_get_ticks_hz();
-	rc = spdk_nvme_ns_cmd_compare(ns_entry->ns, ns_entry->qp.qpair1, ctx2->cmp_buf,
+	rc = spdk_nvme_ns_cmd_compare(ns_entry->ns, ns_entry->qp.qpair[0], ctx2->cmp_buf,
 				      3, /* LBA start */
 				      1, /* number of LBAs */
 				      nvme_fused_first_cpl_cb, ctx2, SPDK_NVME_CMD_FUSE_FIRST);
@@ -499,7 +499,7 @@ compare_and_write(void *arg)
 	}
 
 	/* Second part of first fused command */
-	rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qp.qpair2, ctx->write_buf,
+	rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qp.qpair[1], ctx->write_buf,
 				    3, /* LBA start */
 				    1, /* number of LBAs */
 				    nvme_fused_second_cpl_cb, ctx, SPDK_NVME_CMD_FUSE_SECOND);
@@ -509,7 +509,7 @@ compare_and_write(void *arg)
 	}
 
 	/* Second part of second fused command */
-	rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qp.qpair1, ctx2->write_buf,
+	rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qp.qpair[0], ctx2->write_buf,
 				    3, /* LBA start */
 				    1, /* number of LBAs */
 				    nvme_fused_second_cpl_cb, ctx2, SPDK_NVME_CMD_FUSE_SECOND);
@@ -533,7 +533,7 @@ compare_and_write(void *arg)
 	snprintf(ctx->cmp_buf, 0x1000, "%s", "Wrong buffer\n");
 
 	ctx->timeout_tsc = spdk_get_ticks() + IO_TIMEOUT_S * spdk_get_ticks_hz();
-	rc = spdk_nvme_ns_cmd_compare(ns_entry->ns, ns_entry->qp.qpair2, ctx->cmp_buf,
+	rc = spdk_nvme_ns_cmd_compare(ns_entry->ns, ns_entry->qp.qpair[1], ctx->cmp_buf,
 				      4, /* LBA start */
 				      1, /* number of LBAs */
 				      nvme_fused_first_cpl_cb, ctx, SPDK_NVME_CMD_FUSE_FIRST);
@@ -541,7 +541,7 @@ compare_and_write(void *arg)
 		fprintf(stderr, "starting write I/O failed\n");
 		exit(1);
 	}
-	rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qp.qpair2, ctx->write_buf,
+	rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qp.qpair[1], ctx->write_buf,
 				    4, /* LBA start */
 				    1, /* number of LBAs */
 				    nvme_fused_second_cpl_cb, ctx, SPDK_NVME_CMD_FUSE_SECOND);
@@ -564,7 +564,7 @@ compare_and_write(void *arg)
 
 	/* Fused compare and write operation */
 	ctx->timeout_tsc = spdk_get_ticks() + IO_TIMEOUT_S * spdk_get_ticks_hz();
-	rc = spdk_nvme_ns_cmd_compare(ns_entry->ns, ns_entry->qp.qpair1, ctx->cmp_buf,
+	rc = spdk_nvme_ns_cmd_compare(ns_entry->ns, ns_entry->qp.qpair[0], ctx->cmp_buf,
 				      5, /* LBA start */
 				      1, /* number of LBAs */
 				      nvme_fused_first_cpl_cb, ctx, SPDK_NVME_CMD_FUSE_FIRST);
@@ -582,7 +582,7 @@ compare_and_write(void *arg)
 
 	/* Not fused write op (request #11) */
 	ctx2->timeout_tsc = spdk_get_ticks() + IO_TIMEOUT_S * spdk_get_ticks_hz();
-	rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qp.qpair1, ctx2->write_buf,
+	rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qp.qpair[0], ctx2->write_buf,
 				    5, /* LBA start */
 				    1, /* number of LBAs */
 				    nvme_cpl_cb, ctx2, 0);
@@ -593,7 +593,7 @@ compare_and_write(void *arg)
 
 	snprintf(ctx->write_buf, 0x1000, "%s", "Fused\n");
 
-	rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qp.qpair1, ctx->write_buf,
+	rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qp.qpair[0], ctx->write_buf,
 				    5, /* LBA start */
 				    1, /* number of LBAs */
 				    nvme_fused_second_cpl_cb, ctx, SPDK_NVME_CMD_FUSE_SECOND);
@@ -613,7 +613,7 @@ compare_and_write(void *arg)
 
 	/* Not fused compare op (request #12) */
 	ctx2->timeout_tsc = spdk_get_ticks() + IO_TIMEOUT_S * spdk_get_ticks_hz();
-	rc = spdk_nvme_ns_cmd_compare(ns_entry->ns, ns_entry->qp.qpair1, ctx2->cmp_buf,
+	rc = spdk_nvme_ns_cmd_compare(ns_entry->ns, ns_entry->qp.qpair[0], ctx2->cmp_buf,
 				      5, /* LBA start */
 				      1, /* number of LBAs */
 				      nvme_cpl_cb, ctx2, 0);
@@ -635,7 +635,7 @@ compare_and_write(void *arg)
 	ctx->done = compare_and_write_done;
 
 	ctx->timeout_tsc = spdk_get_ticks() + IO_TIMEOUT_S * spdk_get_ticks_hz();
-	rc = spdk_nvme_ns_cmd_compare(ns_entry->ns, ns_entry->qp.qpair1, ctx->cmp_buf,
+	rc = spdk_nvme_ns_cmd_compare(ns_entry->ns, ns_entry->qp.qpair[0], ctx->cmp_buf,
 				      6, /* LBA start */
 				      1, /* number of LBAs */
 				      nvme_fused_first_cpl_cb, ctx, SPDK_NVME_CMD_FUSE_FIRST);
@@ -643,13 +643,91 @@ compare_and_write(void *arg)
 		fprintf(stderr, "starting write I/O failed\n");
 		exit(1);
 	}
-	rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qp.qpair1, ctx->write_buf,
+	rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qp.qpair[0], ctx->write_buf,
 				    7, /* LBA start */
 				    1, /* number of LBAs */
 				    nvme_fused_second_cpl_cb, ctx, SPDK_NVME_CMD_FUSE_SECOND);
 	if (rc != 0) {
 		fprintf(stderr, "starting write I/O failed\n");
 		exit(1);
+	}
+
+	/*
+	 * Case 8: Stress test on 8 qpairs
+	 */
+
+	for (j = 8; j < 11; j++) {
+		/* Prepare device buffer (request #0) */
+		ctx2 = fused_ctx_get(ns_entry, &ns_entry->qp);
+		ctx2->done = cmd_done;
+		ctx2->status_first.sc = SPDK_NVME_SC_SUCCESS;
+		ctx2->status_first.sct = SPDK_NVME_SCT_GENERIC;
+
+		snprintf(ctx2->write_buf, 0x1000, "%s", "Stress test\n");
+
+		ctx2->timeout_tsc = spdk_get_ticks() + IO_TIMEOUT_S * spdk_get_ticks_hz();
+		rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qp.qpair[0], ctx2->write_buf,
+					    j, /* LBA start */
+					    1, /* number of LBAs */
+					    nvme_cpl_cb, ctx2, 0);
+		if (rc != 0) {
+			fprintf(stderr, "starting write I/O failed\n");
+			exit(1);
+		}
+	}
+
+	for (i = 0; i < 16; i++) {
+		qpair_number = rand() % 8;
+
+		ctx = fused_ctx_get(ns_entry, &ns_entry->qp);
+		ctx->status_first.sc = 0xFF;
+		ctx->status_first.sct = 0x6;
+		ctx->status_second.sc = 0xFF;
+		ctx->status_second.sct = 0x6;
+		ctx->done = compare_and_write_done;
+
+		snprintf(ctx->cmp_buf, 0x1000, "%s", "Stress test\n");
+		snprintf(ctx->write_buf, 0x1000, "%s", "Stress test\n");
+
+		ctx->timeout_tsc = spdk_get_ticks() + IO_TIMEOUT_S * spdk_get_ticks_hz();
+		rc = spdk_nvme_ns_cmd_compare(ns_entry->ns, ns_entry->qp.qpair[0], ctx->cmp_buf,
+					      8 + (qpair_number % 4), /* LBA start */
+					      1, /* number of LBAs */
+					      nvme_fused_first_cpl_cb, ctx, SPDK_NVME_CMD_FUSE_FIRST);
+		if (rc != 0) {
+			fprintf(stderr, "starting write I/O failed\n");
+			exit(1);
+		}
+		rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qp.qpair[0], ctx->write_buf,
+					    8 + (qpair_number % 4), /* LBA start */
+					    1, /* number of LBAs */
+					    nvme_fused_second_cpl_cb, ctx, SPDK_NVME_CMD_FUSE_SECOND);
+		if (rc != 0) {
+			fprintf(stderr, "starting write I/O failed\n");
+			exit(1);
+		}
+
+		/* Let's make last few to fail on some of LBA offsets */
+		if (i == 14) {
+			for (j = 8; j < 10; j++) {
+				ctx2 = fused_ctx_get(ns_entry, &ns_entry->qp);
+				ctx2->done = cmd_done;
+				ctx2->status_first.sc = SPDK_NVME_SC_SUCCESS;
+				ctx2->status_first.sct = SPDK_NVME_SCT_GENERIC;
+
+				snprintf(ctx2->write_buf, 0x1000, "%s", "More stress test\n");
+
+				ctx2->timeout_tsc = spdk_get_ticks() + IO_TIMEOUT_S * spdk_get_ticks_hz();
+				rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qp.qpair[0], ctx2->write_buf,
+							    j, /* LBA start */
+							    1, /* number of LBAs */
+							    nvme_cpl_cb, ctx2, 0);
+				if (rc != 0) {
+					fprintf(stderr, "starting write I/O failed\n");
+					exit(1);
+				}
+			}
+		}
 	}
 
 	printf("Done.\n");
@@ -673,7 +751,7 @@ poll_for_completions(void *arg)
 	struct nvme_fused_ns *ns_entry = arg;
 	int32_t rv;
 	uint64_t current_ticks;
-	int i;
+	int i, j;
 
 	if (g_run) {
 
@@ -682,14 +760,11 @@ poll_for_completions(void *arg)
 			compare_and_write(arg);
 		}
 
-		rv = spdk_nvme_qpair_process_completions(ns_entry->qp.qpair1, 0);
-		if (rv < 0) {
-			goto exit_handler;
-		}
-
-		rv = spdk_nvme_qpair_process_completions(ns_entry->qp.qpair2, 0);
-		if (rv < 0) {
-			goto exit_handler;
+		for (j = 0; j < 8; j++) {
+			rv = spdk_nvme_qpair_process_completions(ns_entry->qp.qpair[j], 0);
+			if (rv < 0) {
+				goto exit_handler;
+			}
 		}
 
 		rv = spdk_nvme_ctrlr_process_admin_completions(ns_entry->ctrlr);
@@ -742,16 +817,16 @@ static void
 free_namespaces(void)
 {
 	struct nvme_fused_ns *ns, *tmp;
+	int i;
 
 	TAILQ_FOREACH_SAFE(ns, &g_ns_list, tailq, tmp) {
 
 		cleanup_queue(&ns->qp);
 
-		if (ns->qp.qpair1) {
-			spdk_nvme_ctrlr_free_io_qpair(ns->qp.qpair1);
-		}
-		if (ns->qp.qpair2) {
-			spdk_nvme_ctrlr_free_io_qpair(ns->qp.qpair2);
+		for (i = 0; i < 8; i++) {
+			if (ns->qp.qpair[i]) {
+				spdk_nvme_ctrlr_free_io_qpair(ns->qp.qpair[i]);
+			}
 		}
 
 		TAILQ_REMOVE(&g_ns_list, ns, tailq);
@@ -859,16 +934,17 @@ prepare_qpairs(void)
 {
 	struct spdk_nvme_io_qpair_opts opts;
 	struct nvme_fused_ns *ns_entry;
+	int i;
 
 	TAILQ_FOREACH(ns_entry, &g_ns_list, tailq) {
 		spdk_nvme_ctrlr_get_default_io_qpair_opts(ns_entry->ctrlr, &opts, sizeof(opts));
-		ns_entry->qp.qpair1 = spdk_nvme_ctrlr_alloc_io_qpair(ns_entry->ctrlr, &opts, sizeof(opts));
-		ns_entry->qp.qpair2 = spdk_nvme_ctrlr_alloc_io_qpair(ns_entry->ctrlr, &opts, sizeof(opts));
-		if (ns_entry->qp.qpair1 == NULL || ns_entry->qp.qpair2 == NULL) {
-			fprintf(stderr, "Unable to create a qpair for a namespace\n");
-			return -1;
+		for (i = 0; i < 8; i++) {
+			ns_entry->qp.qpair[i] = spdk_nvme_ctrlr_alloc_io_qpair(ns_entry->ctrlr, &opts, sizeof(opts));
+			if (ns_entry->qp.qpair[i] == NULL) {
+				fprintf(stderr, "Unable to create a qpair for a namespace\n");
+				return -1;
+			}
 		}
-
 	}
 	return 0;
 }
@@ -1060,6 +1136,8 @@ main(int argc, char **argv)
 	if (g_conf_file) {
 		parse_trids();
 	}
+
+	srand(time(NULL));
 
 	rc = spdk_app_start(&opts, begin_fused, NULL);
 
