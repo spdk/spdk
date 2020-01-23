@@ -117,6 +117,38 @@ spdk_nvme_qpair_process_completions().
 @sa spdk_nvme_ns_cmd_read, spdk_nvme_ns_cmd_write, spdk_nvme_ns_cmd_dataset_management,
 spdk_nvme_ns_cmd_flush, spdk_nvme_qpair_process_completions
 
+### Fused operations {#nvme_fuses}
+
+To "fuse" two commands, the first command should have the SPDK_NVME_IO_FLAGS_FUSE_FIRST
+io flag set, and the next one should have the SPDK_NVME_IO_FLAGS_FUSE_SECOND.
+
+In addition, the following rules must be met to execute two commands as an atomic unit:
+
+ - The commands shall be inserted next to each other in the same submission queue.
+ - The LBA range, should be the same for the two commands.
+
+E.g. To send fused compare and write operation user must call spdk_nvme_ns_cmd_compare
+followed with spdk_nvme_ns_cmd_write and make sure no other operations are submitted
+in between on the same queue, like in example below:
+
+~~~
+	rc = spdk_nvme_ns_cmd_compare(ns, qpair, cmp_buf, 0, 1, nvme_fused_first_cpl_cb,
+			NULL, SPDK_NVME_CMD_FUSE_FIRST);
+	if (rc != 0) {
+		...
+	}
+
+	rc = spdk_nvme_ns_cmd_write(ns, qpair, write_buf, 0, 1, nvme_fused_second_cpl_cb,
+			NULL, SPDK_NVME_CMD_FUSE_SECOND);
+	if (rc != 0) {
+		...
+	}
+~~~
+
+The NVMe specification currently defines compare-and-write as a fused operation.
+Support for compare-and-write is reported by the controller flag
+SPDK_NVME_CTRLR_COMPARE_AND_WRITE_SUPPORTED.
+
 ### Scaling Performance {#nvme_scaling}
 
 NVMe queue pairs (struct spdk_nvme_qpair) provide parallel submission paths for
