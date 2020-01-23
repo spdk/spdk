@@ -1360,15 +1360,7 @@ iscsi_fini_done(void *io_device)
 static void
 _iscsi_fini_dev_unreg(struct spdk_io_channel_iter *i, int status)
 {
-	iscsi_check_pools();
-	iscsi_free_pools();
-
 	assert(TAILQ_EMPTY(&g_spdk_iscsi.poll_group_head));
-
-	spdk_iscsi_shutdown_tgt_nodes();
-	spdk_iscsi_init_grps_destroy();
-	spdk_iscsi_portal_grps_destroy();
-	iscsi_auth_groups_destroy();
 
 	spdk_io_device_unregister(&g_spdk_iscsi, iscsi_fini_done);
 }
@@ -1394,6 +1386,14 @@ _iscsi_fini_thread(struct spdk_io_channel_iter *i)
 void
 spdk_shutdown_iscsi_conns_done(void)
 {
+	iscsi_check_pools();
+	iscsi_free_pools();
+
+	spdk_iscsi_shutdown_tgt_nodes();
+	spdk_iscsi_init_grps_destroy();
+	spdk_iscsi_portal_grps_destroy();
+	iscsi_auth_groups_destroy();
+
 	spdk_for_each_channel(&g_spdk_iscsi, _iscsi_fini_thread, NULL, _iscsi_fini_dev_unreg);
 }
 
