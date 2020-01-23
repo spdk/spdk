@@ -607,7 +607,7 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 				 * both should never be at the same time. */
 				return -EINVAL;
 			} else if (blob->extent_table_found &&
-				   desc_extent_table->num_clusters != blob->num_clusters_in_et) {
+				   desc_extent_table->num_clusters != blob->remaining_clusters_in_et) {
 				/* Number of clusters in this ET does not match number
 				 * from previously read EXTENT_TABLE. */
 				return -EINVAL;
@@ -631,7 +631,7 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 			blob->active.extent_pages = tmp;
 			blob->active.extent_pages_array_size = num_extent_pages;
 
-			blob->num_clusters_in_et = desc_extent_table->num_clusters;
+			blob->remaining_clusters_in_et = desc_extent_table->num_clusters;
 
 			/* Extent table entries contain md page numbers for extent pages.
 			 * Zeroes represent unallocated extent pages, those are run-length-encoded.
@@ -696,8 +696,8 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 					return -EINVAL;
 				}
 			}
-			assert(blob->num_clusters_in_et >= cluster_count);
-			blob->num_clusters_in_et -= cluster_count;
+			assert(blob->remaining_clusters_in_et >= cluster_count);
+			blob->remaining_clusters_in_et -= cluster_count;
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_XATTR) {
 			int rc;
 
@@ -1360,14 +1360,14 @@ _spdk_blob_load_cpl_extents_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserr
 			return;
 		} else {
 			/* Thin provisioned blobs can point to unallocated extent pages.
-			 * In this case blob size should be increased by up to the amount left in num_clusters_in_et. */
+			 * In this case blob size should be increased by up to the amount left in remaining_clusters_in_et. */
 
-			sz = spdk_min(blob->num_clusters_in_et, SPDK_EXTENTS_PER_EP);
+			sz = spdk_min(blob->remaining_clusters_in_et, SPDK_EXTENTS_PER_EP);
 			blob->active.num_clusters += sz;
-			blob->num_clusters_in_et -= sz;
+			blob->remaining_clusters_in_et -= sz;
 
 			assert(spdk_blob_is_thin_provisioned(blob));
-			assert(i + 1 < blob->active.num_extent_pages || blob->num_clusters_in_et == 0);
+			assert(i + 1 < blob->active.num_extent_pages || blob->remaining_clusters_in_et == 0);
 
 			tmp = realloc(blob->active.clusters, blob->active.num_clusters * sizeof(*blob->active.clusters));
 			if (tmp == NULL) {
