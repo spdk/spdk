@@ -2532,6 +2532,7 @@ bdev_channel_create(void *io_device, void *ctx_buf)
 		}
 		new_range->length = range->length;
 		new_range->offset = range->offset;
+		new_range->locked_ctx = range->locked_ctx;
 		TAILQ_INSERT_TAIL(&ch->locked_ranges, new_range, tailq);
 	}
 
@@ -6110,7 +6111,9 @@ bdev_lock_lba_range_get_channel(struct spdk_io_channel_iter *i)
 	struct lba_range *range;
 
 	TAILQ_FOREACH(range, &ch->locked_ranges, tailq) {
-		if (range->length == ctx->range.length && range->offset == ctx->range.offset) {
+		if (range->length == ctx->range.length &&
+		    range->offset == ctx->range.offset &&
+		    range->locked_ctx == ctx->range.locked_ctx) {
 			/* This range already exists on this channel, so don't add
 			 * it again.  This can happen when a new channel is created
 			 * while the for_each_channel operation is in progress.
@@ -6260,7 +6263,8 @@ bdev_unlock_lba_range_get_channel(struct spdk_io_channel_iter *i)
 
 	TAILQ_FOREACH(range, &ch->locked_ranges, tailq) {
 		if (ctx->range.offset == range->offset &&
-		    ctx->range.length == range->length) {
+		    ctx->range.length == range->length &&
+		    ctx->range.locked_ctx == range->locked_ctx) {
 			TAILQ_REMOVE(&ch->locked_ranges, range, tailq);
 			free(range);
 			break;
