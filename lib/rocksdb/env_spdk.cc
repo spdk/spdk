@@ -643,6 +643,9 @@ void SpdkInitializeThread(void)
 	struct spdk_thread *thread;
 
 	if (g_fs != NULL) {
+		if (g_sync_args.channel) {
+			spdk_fs_free_thread_ctx(g_sync_args.channel);
+		}
 		thread = spdk_thread_create("spdk_rocksdb", NULL);
 		spdk_set_thread(thread);
 		g_sync_args.channel = spdk_fs_alloc_thread_ctx(g_fs);
