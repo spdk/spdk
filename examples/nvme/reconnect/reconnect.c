@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
  *
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
@@ -113,6 +113,8 @@ static uint32_t g_max_completions;
 static int g_dpdk_mem;
 static bool g_warn;
 static uint32_t g_keep_alive_timeout_in_ms = 0;
+static uint8_t g_transport_retry_count = 4;
+static uint8_t g_transport_ack_timeout = 0; /* disabled */
 
 static const char *g_core_mask;
 
@@ -609,6 +611,8 @@ static void usage(char *program_name)
 	printf("\t[-m max completions per poll]\n");
 	printf("\t\t(default: 0 - unlimited)\n");
 	printf("\t[-i shared memory group ID]\n");
+	printf("\t[-A transport ACK timeout]\n");
+	printf("\t[-R transport retry count]\n");
 	printf("\t");
 	spdk_log_usage(stdout, "-T");
 #ifdef DEBUG
@@ -687,7 +691,7 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:m:o:q:r:k:s:t:w:GM:T:")) != -1) {
+	while ((op = getopt(argc, argv, "c:m:o:q:r:k:s:t:w:A:GM:R:T:")) != -1) {
 		switch (op) {
 		case 'm':
 		case 'o':
@@ -695,7 +699,9 @@ parse_args(int argc, char **argv)
 		case 'k':
 		case 's':
 		case 't':
+		case 'A':
 		case 'M':
+		case 'R':
 			val = spdk_strtol(optarg, 10);
 			if (val < 0) {
 				fprintf(stderr, "Converting a string to integer failed\n");
@@ -720,9 +726,15 @@ parse_args(int argc, char **argv)
 			case 't':
 				g_time_in_sec = val;
 				break;
+			case 'A':
+				g_transport_ack_timeout = val;
+				break;
 			case 'M':
 				g_rw_percentage = val;
 				mix_specified = true;
+				break;
+			case 'R':
+				g_transport_retry_count = val;
 				break;
 			}
 			break;
@@ -918,6 +930,9 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	opts->keep_alive_timeout_ms = spdk_max(opts->keep_alive_timeout_ms,
 					       g_keep_alive_timeout_in_ms);
+
+	opts->transport_retry_count = g_transport_retry_count;
+	opts->transport_ack_timeout = g_transport_ack_timeout;
 
 	return true;
 }
