@@ -209,7 +209,7 @@ spdk_blob_opts_init(struct spdk_blob_opts *opts)
 	opts->thin_provision = false;
 	opts->clear_method = BLOB_CLEAR_WITH_DEFAULT;
 	_spdk_blob_xattrs_init(&opts->xattrs);
-	opts->use_extent_table = false;
+	opts->use_extent_table = true;
 }
 
 void
@@ -1993,13 +1993,13 @@ _spdk_blob_persist_write_extent_pages(spdk_bs_sequence_t *seq, void *cb_arg, int
 		}
 		/* Writing out new extent page for the first time. Either active extent pages is larger
 		 * than clean extent pages or there was no extent page assigned due to thin provisioning. */
-		if (i >= blob->clean.extent_pages_array_size || blob->clean.extent_pages[i] == 0) {
+		if (i >= blob->clean.num_extent_pages ||
+		    (blob->clean.extent_pages != NULL && blob->clean.extent_pages[i] == 0)) {
 			assert(spdk_bit_array_get(blob->bs->used_md_pages, extent_page_id));
 			ctx->next_extent_page = i + 1;
 			_spdk_blob_persist_write_extent_page(extent_page_id, i * SPDK_EXTENTS_PER_EP, ctx);
 			return;
 		}
-		assert(blob->clean.extent_pages[i] != 0);
 	}
 
 	_spdk_blob_persist_generate_new_md(ctx);
@@ -3668,7 +3668,8 @@ _spdk_bs_load_replay_md_parse_page(struct spdk_bs_load_ctx *ctx)
 
 			for (i = 0; i < extent_pages_length / sizeof(desc_extent_table->extent_page[0]); i++) {
 				if (desc_extent_table->extent_page[i].page_idx != 0) {
-					if (desc_extent_table->extent_page[i].num_pages != 1) {
+					if (desc_extent_table->extent_page[i].num_pages != 1 ||
+					    spdk_bit_array_get(ctx->bs->used_md_pages, desc_extent_table->extent_page[i].page_idx)) {
 						return -EINVAL;
 					}
 					num_extent_pages += 1;
@@ -5312,6 +5313,10 @@ _spdk_bs_snapshot_swap_cluster_maps(struct spdk_blob *blob1, struct spdk_blob *b
 	extent_page_temp = blob1->active.extent_pages;
 	blob1->active.extent_pages = blob2->active.extent_pages;
 	blob2->active.extent_pages = extent_page_temp;
+
+	extent_page_temp = blob1->clean.extent_pages;
+	blob1->clean.extent_pages = blob2->clean.extent_pages;
+	blob2->clean.extent_pages = extent_page_temp;
 }
 
 static void
