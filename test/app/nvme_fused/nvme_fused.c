@@ -41,7 +41,7 @@
 #include "spdk/nvme.h"
 #include "spdk/likely.h"
 
-#define IO_TIMEOUT_S 5
+#define IO_TIMEOUT_S 1
 
 char *g_conf_file;
 int g_app_rc;
@@ -104,63 +104,7 @@ static TAILQ_HEAD(, nvme_fused_trid) g_trid_list = TAILQ_HEAD_INITIALIZER(g_trid
 
 struct spdk_poller *g_app_completion_poller;
 static int g_num_active_threads;
-
-static int
-poll_for_completions(void *arg)
-{
-	struct nvme_fused_ns *ns_entry = arg;
-	int32_t rv;
-	uint64_t current_ticks;
-	int i;
-	//int err = 0;
-
-	if (g_run) {
-		rv = spdk_nvme_qpair_process_completions(ns_entry->qp.qpair1, 0);
-		if (rv < 0) {
-			goto exit_handler;
-		}
-
-		rv = spdk_nvme_qpair_process_completions(ns_entry->qp.qpair2, 0);
-		if (rv < 0) {
-			goto exit_handler;
-		}
-
-		rv = spdk_nvme_ctrlr_process_admin_completions(ns_entry->ctrlr);
-		if (rv < 0) {
-			goto exit_handler;
-		}
-
-		current_ticks = spdk_get_ticks();
-		if (rv > 0) {
-			ns_entry->qp.timeout_tsc = current_ticks + IO_TIMEOUT_S * spdk_get_ticks_hz();
-		}
-		if (ns_entry->qp.timeout_tsc < current_ticks) {
-			SPDK_NOTICELOG("Queue IO Timeout\n");
-			goto exit_handler;
-		}
-
-		for (i = 0; i < ns_entry->qp.req_num; i++) {
-			if (ns_entry->qp.ctx[i].is_done) {
-				continue;
-			}
-			if (ns_entry->qp.ctx[i].rv < 0) {
-				goto exit_handler;
-			}
-			if (ns_entry->qp.ctx[i].timeout_tsc < current_ticks/* && ns_entry->qp.req_pending == 0*/) {
-				SPDK_NOTICELOG("Request #%d IO Timeout\n", ns_entry->qp.ctx[i].index);
-				goto exit_handler;
-			}
-		}
-	}
-	return 0;
-
-exit_handler:
-	SPDK_NOTICELOG("Finishing queue IO poller\n");
-	spdk_poller_unregister(&ns_entry->req_poller);
-	__sync_sub_and_fetch(&g_num_active_threads, 1);
-	spdk_thread_exit(ns_entry->thread);
-	return 0;
-}
+static int g_counter;
 
 static void
 nvme_fused_first_cpl_cb(void *cb_arg, const struct spdk_nvme_cpl *cpl)
@@ -291,16 +235,13 @@ fused_ctx_get(struct nvme_fused_ns *ns_entry, struct nvme_fused_qp *qp)
 	return ctx;
 }
 
-static void
-compare_and_write(struct nvme_fused_ns *ns_entry)
+static int
+compare_and_write(void *arg)
 {
 	int rc;
 	struct nvme_fused_ctx *ctx;
 	struct nvme_fused_ctx *ctx2;
-
-	if (!g_run) {
-		return;
-	}
+	struct nvme_fused_ns *ns_entry = (struct nvme_fused_ns *)arg;
 
 	printf("Send NVMe commands.\n");
 	memset(&ns_entry->qp.ctx, 0, sizeof(ns_entry->qp.ctx));
@@ -671,25 +612,105 @@ compare_and_write(struct nvme_fused_ns *ns_entry)
 	}
 
 	printf("Done.\n");
+	return 0;
+}
+
+static void
+cleanup_queue(struct nvme_fused_qp *qp)
+{
+	int i;
+	for (i = 0; i < qp->req_num; i++) {
+		spdk_free(qp->ctx[i].cmp_buf);
+		spdk_free(qp->ctx[i].write_buf);
+	}
+	qp->req_num = 0;
+}
+
+static int
+poll_for_completions(void *arg)
+{
+	struct nvme_fused_ns *ns_entry = arg;
+	int32_t rv;
+	uint64_t current_ticks;
+	int i;
+
+	if (g_run) {
+
+		if (ns_entry->qp.req_pending == 0) {
+			cleanup_queue(&ns_entry->qp);
+			compare_and_write(arg);
+		}
+
+		rv = spdk_nvme_qpair_process_completions(ns_entry->qp.qpair1, 0);
+		if (rv < 0) {
+			goto exit_handler;
+		}
+
+		rv = spdk_nvme_qpair_process_completions(ns_entry->qp.qpair2, 0);
+		if (rv < 0) {
+			goto exit_handler;
+		}
+
+		rv = spdk_nvme_ctrlr_process_admin_completions(ns_entry->ctrlr);
+		if (rv < 0) {
+			goto exit_handler;
+		}
+
+		current_ticks = spdk_get_ticks();
+		if (rv > 0) {
+			ns_entry->qp.timeout_tsc = current_ticks + IO_TIMEOUT_S * spdk_get_ticks_hz();
+		}
+		if (ns_entry->qp.timeout_tsc < current_ticks) {
+			SPDK_NOTICELOG("Queue IO Timeout\n");
+			goto exit_handler;
+		}
+
+		for (i = 0; i < ns_entry->qp.req_num; i++) {
+			if (ns_entry->qp.ctx[i].is_done) {
+				continue;
+			}
+			if (ns_entry->qp.ctx[i].rv < 0) {
+				goto exit_handler;
+			}
+			if (ns_entry->qp.ctx[i].timeout_tsc < current_ticks) {
+				SPDK_NOTICELOG("Request #%d IO Timeout\n", ns_entry->qp.ctx[i].index);
+				goto exit_handler;
+			}
+		}
+	}
+	return 0;
+
+exit_handler:
+
+	g_counter--;
+	if (g_counter > 0) {
+		cleanup_queue(&ns_entry->qp);
+		current_ticks = spdk_get_ticks();
+		ns_entry->qp.timeout_tsc = current_ticks + IO_TIMEOUT_S * spdk_get_ticks_hz();
+		return 0;
+	}
+
+	SPDK_NOTICELOG("Finishing queue IO poller\n");
+	spdk_poller_unregister(&ns_entry->req_poller);
+	__sync_sub_and_fetch(&g_num_active_threads, 1);
+	spdk_thread_exit(ns_entry->thread);
+	return 0;
 }
 
 static void
 free_namespaces(void)
 {
 	struct nvme_fused_ns *ns, *tmp;
-	int i;
 
 	TAILQ_FOREACH_SAFE(ns, &g_ns_list, tailq, tmp) {
+
+		cleanup_queue(&ns->qp);
+
 		if (ns->qp.qpair1) {
 			spdk_nvme_ctrlr_free_io_qpair(ns->qp.qpair1);
 		}
 		if (ns->qp.qpair2) {
 			spdk_nvme_ctrlr_free_io_qpair(ns->qp.qpair2);
-		}
-
-		for (i = 0; i < ns->qp.req_num; i++) {
-			spdk_free(ns->qp.ctx[i].cmp_buf);
-			spdk_free(ns->qp.ctx[i].write_buf);
 		}
 
 		TAILQ_REMOVE(&g_ns_list, ns, tailq);
@@ -811,18 +832,6 @@ prepare_qpairs(void)
 	return 0;
 }
 
-#if 0
-static void
-stop_ns_poller(void *ctx)
-{
-	struct nvme_fused_ns *ns_entry = ctx;
-
-	spdk_poller_unregister(&ns_entry->req_poller);
-	TAILQ_REMOVE(&g_ns_list, ns_entry, tailq);
-	free(ns_entry);
-}
-#endif
-
 static void
 start_ns_poller(void *ctx)
 {
@@ -830,7 +839,6 @@ start_ns_poller(void *ctx)
 
 	ns_entry->qp.timeout_tsc = spdk_get_ticks() + IO_TIMEOUT_S * spdk_get_ticks_hz();
 	ns_entry->req_poller = spdk_poller_register(poll_for_completions, ns_entry, 0);
-	compare_and_write(ns_entry);
 }
 
 static int
@@ -995,6 +1003,8 @@ main(int argc, char **argv)
 {
 	struct spdk_app_opts opts = {};
 	int rc;
+
+	g_counter = 1000;
 
 	spdk_app_opts_init(&opts);
 	opts.name = "nvme_fused";
