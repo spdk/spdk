@@ -655,8 +655,10 @@ nvmf_rpc_listen_paused(struct spdk_nvmf_subsystem *subsystem,
 	struct nvmf_rpc_listener_ctx *ctx = cb_arg;
 
 	if (ctx->op == NVMF_RPC_LISTEN_ADD) {
-		spdk_nvmf_tgt_listen(ctx->tgt, &ctx->trid, nvmf_rpc_tgt_listen, ctx);
-		return;
+		if (!spdk_nvmf_subsystem_find_listener(subsystem, &ctx->trid)) {
+			spdk_nvmf_tgt_listen(ctx->tgt, &ctx->trid, nvmf_rpc_tgt_listen, ctx);
+			return;
+		}
 	} else if (ctx->op == NVMF_RPC_LISTEN_REMOVE) {
 		if (spdk_nvmf_subsystem_remove_listener(subsystem, &ctx->trid)) {
 			SPDK_ERRLOG("Unable to remove listener.\n");
