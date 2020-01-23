@@ -223,10 +223,10 @@ static void
 compare_and_write_stress_done(struct nvme_fused_ctx *ctx)
 {
 	printf("Done request #%d (%d)\n", ctx->index, ctx->rv);
-	printf("[First (qp = %d)] Status: %s\n", ctx->qpair_number,
-	       spdk_nvme_cpl_get_status_string(&ctx->cpl_first.status));
-	printf("[Second (qp = %d)] Status: %s\n", ctx->qpair_number,
-	       spdk_nvme_cpl_get_status_string(&ctx->cpl_second.status));
+	//printf("[First (qp = %d)] Status: %s\n", ctx->qpair_number,
+	//       spdk_nvme_cpl_get_status_string(&ctx->cpl_first.status));
+	//printf("[Second (qp = %d)] Status: %s\n", ctx->qpair_number,
+	//       spdk_nvme_cpl_get_status_string(&ctx->cpl_second.status));
 
 	if (!compare_status(&ctx->cpl_first.status, &ctx->status_first) ||
 	    !compare_status(&ctx->cpl_second.status, &ctx->status_second)) {
@@ -862,7 +862,7 @@ static int
 poll_for_completions(void *arg)
 {
 	struct nvme_fused_ns *ns_entry = arg;
-	int32_t rv;
+	int32_t rc, rv = 0;
 	uint64_t current_ticks;
 	int i, j;
 
@@ -874,16 +874,18 @@ poll_for_completions(void *arg)
 		}
 
 		for (j = 0; j < 8; j++) {
-			rv = spdk_nvme_qpair_process_completions(ns_entry->qp.qpair[j], 0);
-			if (rv < 0) {
+			rc = spdk_nvme_qpair_process_completions(ns_entry->qp.qpair[j], 0);
+			if (rc < 0) {
 				goto exit_handler;
 			}
+			rv += rc;
 		}
 
-		rv = spdk_nvme_ctrlr_process_admin_completions(ns_entry->ctrlr);
-		if (rv < 0) {
+		rc = spdk_nvme_ctrlr_process_admin_completions(ns_entry->ctrlr);
+		if (rc < 0) {
 			goto exit_handler;
 		}
+		rv += rc;
 
 		current_ticks = spdk_get_ticks();
 		if (rv > 0) {
@@ -1235,7 +1237,7 @@ main(int argc, char **argv)
 	struct spdk_app_opts opts = {};
 	int rc;
 
-	g_counter = 1000;
+	g_counter = 10;
 
 	spdk_app_opts_init(&opts);
 	opts.name = "nvme_fused";
