@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9447e2a7_7cd0672a",
+        "filename": "doc/containers.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-23T04:33:26Z",
+      "side": 1,
+      "message": "application",
+      "revId": "b8640a14874336a9fa27c2324f1132db5798b42d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5f807c99_b219986f",
+        "filename": "doc/containers.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-23T04:33:26Z",
+      "side": 1,
+      "message": "hello_world",
+      "revId": "b8640a14874336a9fa27c2324f1132db5798b42d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "48c3611e_9a32b92a",
+        "filename": "doc/containers.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-23T04:33:26Z",
+      "side": 1,
+      "message": "What should this go.sh script include?  Can you just call /app/hello_world directly at the CMD line just below?  Not very familiar with this so these may be really dumb questions 😊",
+      "revId": "b8640a14874336a9fa27c2324f1132db5798b42d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
