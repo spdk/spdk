@@ -16,6 +16,24 @@
       "revId": "1fae5b171640121f799c67b70f12b2935a1c2551",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "628ba4e3_89e0213c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1417,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-23T03:56:26Z",
+      "side": 1,
+      "message": "Oh - now I see that next patch will modify bdev_qos_io_to_limit() so that we only do qos processing for the start phase.\n\nThat alleviates my concern - but I think in that case we should remove the zcopy.start check below.  We should also move the bdev_qos_io_to_limit() changes to this patch.",
+      "parentUuid": "c232870d_03af0a05",
+      "revId": "1fae5b171640121f799c67b70f12b2935a1c2551",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
