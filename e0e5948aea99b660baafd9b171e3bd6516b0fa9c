@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff4da878_b191ddf4",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-23T17:42:36Z",
+      "side": 1,
+      "message": "here\u0027s a pathological case\n\nso this is handling where the size changes up or down; but what happens if it changes from some !\u003d 0 value to 0?\n\ncurrently for ARM, sock-\u003erecv_buf_sz and sz are both 0, so not pipe actually gets created\n\nbut if we have pipe, and then change sz to 0, we\u0027ll still have a pipe, it just won\u0027t be a very effective one 😊\n\nso I think just after line 191, just check if sz \u003d\u003d 0, and if it is, set sock-\u003erecv_buf_sz \u003d 0, destroy the pipe, free the buf and set those members to NULL",
+      "revId": "e0e5948aea99b660baafd9b171e3bd6516b0fa9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "58e9274b_7cd33335",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 707,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-23T17:42:36Z",
+      "side": 1,
+      "message": "I\u0027m just curious - why are you handling this differently here than in spdk_posix_sock_readv() below?  I would expect the two to be handled similarly (i.e. doing a large recv v. a large readv)",
+      "revId": "e0e5948aea99b660baafd9b171e3bd6516b0fa9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "95c048ad_0d16f4d7",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1037,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-23T17:42:36Z",
+      "side": 1,
+      "message": "num_events \u003d\u003d max_events?\n\nI think you need to honor max_events here (similar to how the epoll_wait/kevent call honors max_events)\n\nMAX_EVENTS_PER_POLL is only used so that we can statically allocate the events array on the stack",
+      "revId": "e0e5948aea99b660baafd9b171e3bd6516b0fa9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ce4b6c98_4d689237",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1041,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-23T17:42:36Z",
+      "side": 1,
+      "message": "instead of this loop, could you add a bit to psock, that says whether it\u0027s on the pending_recv TAILQ?\n\nthen in the for loop above, you could skip adding the sock to the socks array if that bit is set, because you know it will get added here\n\nI\u0027m just thinking if we have 16 psocks in the TAILQ, and get 16 events, then there\u0027s a lot of extra looping here (the loop is really cheap, so maybe it doesn\u0027t matter)",
+      "revId": "e0e5948aea99b660baafd9b171e3bd6516b0fa9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
