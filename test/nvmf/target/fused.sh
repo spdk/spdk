@@ -35,7 +35,7 @@ $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPOR
 
 # Note that we chose a consistent seed to ensure that this test is consistent in nightly builds.
 # gdb -q --batch -ex 'set print thread-events off' -ex 'run' -ex 'thread apply all bt' -ex 'quit' --tty=/dev/stdout --args $rootdir/test/app/nvme_fused/nvme_fused -m 0xF0 -r "/var/tmp/nvme_fused" -C $testdir/nvmf_fused.conf -N
-$rootdir/test/app/nvme_fused/nvme_fused -m 0xF0 -r "/var/tmp/nvme_fused" -C $testdir/nvmf_fused.conf -N
+$rootdir/test/app/nvme_fused/nvme_fused -m 0xF0 -r "/var/tmp/nvme_fused" -C $testdir/nvmf_fused.conf -N -t 100 -w 10
 
 
 rm -f $testdir/nvmf_fused.conf
