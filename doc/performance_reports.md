@@ -4,6 +4,7 @@
 
 - [SPDK 19.10 Vhost Performance Report](https://dqtibwqq6s6ux.cloudfront.net/download/performance-reports/SPDK_vhost_perf_report_1910.pdf)
 - [SPDK 19.10 NVMe-oF TCP Performance Report](https://dqtibwqq6s6ux.cloudfront.net/download/performance-reports/SPDK_nvmeof_tcp_perf_report_1910.pdf)
+- [SPDK 19.10 NVMe-oF RDMA Performance Report](https://dqtibwqq6s6ux.cloudfront.net/download/performance-reports/SPDK_nvmeof_rdma_perf_report_1910.pdf)
 
 ## Release 19.07
 
