@@ -16,6 +16,41 @@
       "revId": "b06d26e31dcd92f65121f07bba81a1eb9c4b6690",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7c7d4711_feaa9dc1",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 514,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-23T17:32:51Z",
+      "side": 1,
+      "message": "I got this part by asking Ben offline",
+      "parentUuid": "e3c9d176_9c576c5b",
+      "revId": "b06d26e31dcd92f65121f07bba81a1eb9c4b6690",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "85069cbc_8b237f54",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 931,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-23T17:32:51Z",
+      "side": 1,
+      "message": "Using j separately looks a small fix but putting it together is fine to me",
+      "revId": "b06d26e31dcd92f65121f07bba81a1eb9c4b6690",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
