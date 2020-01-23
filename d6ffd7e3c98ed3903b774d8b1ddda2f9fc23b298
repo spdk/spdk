@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "49d94938_bd597c0a",
+        "filename": "test/bdev/bdevio/bdevio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-23T20:25:07Z",
+      "side": 1,
+      "message": "I think after blockdev_read(), we should CU_ASSERT_EQUAL(g_completion_success, true)?  I think we would expect this to pass.\n\nThen you don\u0027t need to check g_completion_success on line 498.  Just do the block_write_read_data_match() and confirm it returns 0.",
+      "revId": "d6ffd7e3c98ed3903b774d8b1ddda2f9fc23b298",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
