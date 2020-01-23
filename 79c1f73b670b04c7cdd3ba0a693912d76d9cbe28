@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e726e9b2_a7bed34e",
+        "filename": "doc/containers.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-23T17:48:48Z",
+      "side": 1,
+      "message": "application",
+      "revId": "79c1f73b670b04c7cdd3ba0a693912d76d9cbe28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a50e3185_08139592",
+        "filename": "doc/containers.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-23T17:48:48Z",
+      "side": 1,
+      "message": "just for my own understanding (not asking for an extra comment or anything) - we can do ./hello_world (instead of app/hello_world) because WORKDIR is set to /app above?",
+      "revId": "79c1f73b670b04c7cdd3ba0a693912d76d9cbe28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b53ee2aa_7df20f31",
+        "filename": "doc/containers.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-23T17:48:48Z",
+      "side": 1,
+      "message": "privileged\n\n(missed this in last review)",
+      "revId": "79c1f73b670b04c7cdd3ba0a693912d76d9cbe28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
