@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7d262d0a_155bd971",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-23T04:18:11Z",
+      "side": 1,
+      "message": "we should make sure that these bdevperfs are running on dedicated cores - without specifying -m, they will run on core 0 only\n\nplease also make sure they don\u0027t share a core with the vhost target",
+      "revId": "c702b4442b1957933912d66d4c9480c8be7f43ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "20f924a0_c54fa754",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-23T04:18:11Z",
+      "side": 1,
+      "message": "Bdevperf for blk controller\n\n(to match the error message just below)\n\nshould you also order these differently?  kill -0 pid1 before you killprocess pid2, to match the order that you wait\u0027ed just above",
+      "revId": "c702b4442b1957933912d66d4c9480c8be7f43ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "34e4ca6b_822b7609",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-23T04:18:11Z",
+      "side": 1,
+      "message": "why kill -0 here, but killprocess just above?  if there\u0027s a reason, please add a short comment",
+      "revId": "c702b4442b1957933912d66d4c9480c8be7f43ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
