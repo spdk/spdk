@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f8bff0b5_240e1190",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1357,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-23T02:43:21Z",
+      "side": 1,
+      "message": "You can remove line 1357.  The call to spdk_nvme_trid_populate_transport() will take care of setting the trtype to the second parameter.",
+      "revId": "c80c62bf4d82ef702e9e7e60e964614a61ebc94c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
