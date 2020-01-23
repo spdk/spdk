@@ -229,8 +229,10 @@ compare_and_write_done(struct nvme_fused_ctx *ctx)
 	ctx->is_done = true;
 	ctx->qp->req_pending--;
 
-	if (!compare_status(&ctx->cpl_first.status, &ctx->status_first) ||
-	    !compare_status(&ctx->cpl_second.status, &ctx->status_second)) {
+	if ((!compare_status(&ctx->cpl_first.status, &ctx->status_first) &&
+	     ctx->status_first.sc != 0xFF && ctx->status_first.sct != 0x6) ||
+	    (!compare_status(&ctx->cpl_second.status, &ctx->status_second) &&
+	     ctx->status_second.sc != 0xFF && ctx->status_second.sct != 0x6)) {
 
 		printf(" --> [First] Status: %s\n", spdk_nvme_cpl_get_status_string(&ctx->status_first));
 		printf(" --> [Second] Status: %s\n", spdk_nvme_cpl_get_status_string(&ctx->status_second));
@@ -409,14 +411,15 @@ compare_and_write(struct nvme_fused_ns *ns_entry)
 	}
 
 	/*
-	 * Case 3: fused op pending another fused op (first fused op writes data0) -- request #4
+	 * Case 3: fused op pending another fused op (for stress tests purpose only) -- request #4
 	 */
 
 	ctx = fused_ctx_get(ns_entry, &ns_entry->qp);
-	ctx->status_first.sc = SPDK_NVME_SC_SUCCESS;
-	ctx->status_first.sct = SPDK_NVME_SCT_GENERIC;
-	ctx->status_second.sc = SPDK_NVME_SC_SUCCESS;
-	ctx->status_second.sct = SPDK_NVME_SCT_GENERIC;
+	/* Results are unpredictable because we cannot guarantee the order of below operations */
+	ctx->status_first.sc = 0xFF;
+	ctx->status_first.sct = 0x6;
+	ctx->status_second.sc = 0xFF;
+	ctx->status_second.sct = 0x6;
 	ctx->done = compare_and_write_done;
 
 	snprintf(ctx->write_buf, 0x1000, "%s", "Next cmp\n");
@@ -433,10 +436,10 @@ compare_and_write(struct nvme_fused_ns *ns_entry)
 	}
 
 	ctx2 = fused_ctx_get(ns_entry, &ns_entry->qp);
-	ctx2->status_first.sc = SPDK_NVME_SC_SUCCESS;
-	ctx2->status_first.sct = SPDK_NVME_SCT_GENERIC;
-	ctx2->status_second.sc = SPDK_NVME_SC_SUCCESS;
-	ctx2->status_second.sct = SPDK_NVME_SCT_GENERIC;
+	ctx2->status_first.sc = 0xFF;
+	ctx2->status_first.sct = 0x6;
+	ctx2->status_second.sc = 0xFF;
+	ctx2->status_second.sct = 0x6;
 	ctx2->done = compare_and_write_done;
 
 	snprintf(ctx2->cmp_buf, 0x1000, "%s", "Next cmp\n");
