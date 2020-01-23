@@ -1205,7 +1205,7 @@ raid_bdev_create(struct raid_bdev_config *raid_cfg)
 	}
 
 	/* strip_size_kb is from the rpc param.  strip_size is in blocks and used
-	 * intnerally and set later.
+	 * internally and set later.
 	 */
 	raid_bdev->strip_size = 0;
 	raid_bdev->strip_size_kb = raid_cfg->strip_size;
@@ -1407,7 +1407,7 @@ raid_bdev_deconfigure(struct raid_bdev *raid_bdev, raid_bdev_destruct_cb cb_fn,
  *  claimed the base bdev.
  * params:
  * base_bdev - pointer to base bdev pointer
- * _raid_bdev - Referenct to pointer to raid bdev
+ * _raid_bdev - Reference to pointer to raid bdev
  * _base_bdev_slot - Reference to the slot of the base bdev.
  * returns:
  * true - if the raid bdev is found.
