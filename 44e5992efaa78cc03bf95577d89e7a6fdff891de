@@ -16,6 +16,24 @@
       "revId": "44e5992efaa78cc03bf95577d89e7a6fdff891de",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "48c410e9_8ec21148",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 839,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-23T09:02:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ceff3b64_e71d2610",
+      "revId": "44e5992efaa78cc03bf95577d89e7a6fdff891de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
