@@ -38,13 +38,13 @@ function create_vols() {
 
 	# use QAT for lv0, if the test system does not have QAT this will
 	# fail which is what we want
-	$rpc_py set_compress_pmd -p 1
+	$rpc_py compress_set_pmd -p 1
 	$rpc_py bdev_compress_create -b lvs0/lv0 -p /tmp/pmem
 	waitforbdev COMP_lvs0/lv0
 
 	# use ISAL for lv1, if ISAL is for some reason not available this will
 	# fail which is what we want
-	$rpc_py set_compress_pmd -p 2
+	$rpc_py compress_set_pmd -p 2
 	$rpc_py bdev_compress_create -b lvs0/lv1 -p /tmp/pmem
 	waitforbdev COMP_lvs0/lv1
 }

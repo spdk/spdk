@@ -1741,7 +1741,7 @@ vbdev_compress_examine(struct spdk_bdev *bdev)
 }
 
 int
-set_compress_pmd(enum compress_pmd *opts)
+compress_set_pmd(enum compress_pmd *opts)
 {
 	g_opts = *opts;
 

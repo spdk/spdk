@@ -46,7 +46,8 @@ def bdev_compress_delete(client, name):
     return client.call('bdev_compress_delete', params)
 
 
-def set_compress_pmd(client, pmd):
+@deprecated_alias('set_compress_pmd')
+def compress_set_pmd(client, pmd):
     """Set pmd options for the bdev compress.
 
     Args:
@@ -54,7 +55,7 @@ def set_compress_pmd(client, pmd):
     """
     params = {'pmd': pmd}
 
-    return client.call('set_compress_pmd', params)
+    return client.call('compress_set_pmd', params)
 
 
 def bdev_compress_get_orphans(client, name=None):
