@@ -209,7 +209,7 @@ spdk_blob_opts_init(struct spdk_blob_opts *opts)
 	opts->thin_provision = false;
 	opts->clear_method = BLOB_CLEAR_WITH_DEFAULT;
 	_spdk_blob_xattrs_init(&opts->xattrs);
-	opts->use_extent_table = false;
+	opts->use_extent_table = true;
 }
 
 void
@@ -3668,7 +3668,8 @@ _spdk_bs_load_replay_md_parse_page(struct spdk_bs_load_ctx *ctx)
 
 			for (i = 0; i < extent_pages_length / sizeof(desc_extent_table->extent_page[0]); i++) {
 				if (desc_extent_table->extent_page[i].page_idx != 0) {
-					if (desc_extent_table->extent_page[i].num_pages != 1) {
+					if (desc_extent_table->extent_page[i].num_pages != 1 ||
+						spdk_bit_array_get(ctx->bs->used_md_pages, desc_extent_table->extent_page[i].page_idx)) {
 						return -EINVAL;
 					}
 					num_extent_pages += 1;
