@@ -732,9 +732,9 @@ spdk_nvmf_host_get_nqn(struct spdk_nvmf_host *host)
 	return host->nqn;
 }
 
-static struct spdk_nvmf_listener *
-_spdk_nvmf_subsystem_find_listener(struct spdk_nvmf_subsystem *subsystem,
-				   const struct spdk_nvme_transport_id *trid)
+struct spdk_nvmf_listener *
+spdk_nvmf_subsystem_find_listener(struct spdk_nvmf_subsystem *subsystem,
+				  const struct spdk_nvme_transport_id *trid)
 {
 	struct spdk_nvmf_listener *listener;
 
@@ -759,7 +759,7 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 		return -EAGAIN;
 	}
 
-	if (_spdk_nvmf_subsystem_find_listener(subsystem, trid)) {
+	if (spdk_nvmf_subsystem_find_listener(subsystem, trid)) {
 		/* Listener already exists in this subsystem */
 		return 0;
 	}
@@ -795,7 +795,7 @@ spdk_nvmf_subsystem_remove_listener(struct spdk_nvmf_subsystem *subsystem,
 		return -EAGAIN;
 	}
 
-	listener = _spdk_nvmf_subsystem_find_listener(subsystem, trid);
+	listener = spdk_nvmf_subsystem_find_listener(subsystem, trid);
 	if (listener == NULL) {
 		return -ENOENT;
 	}
