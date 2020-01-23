@@ -2748,7 +2748,9 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 success:
 	port->ref++;
 	pthread_mutex_unlock(&rtransport->lock);
-	cb_fn(cb_arg, 0);
+	if (cb_fn != NULL) {
+		cb_fn(cb_arg, 0);
+	}
 	return 0;
 }
 
@@ -2998,7 +3000,7 @@ nvmf_rdma_handle_cm_event_addr_change(struct spdk_nvmf_transport *transport,
 			spdk_nvmf_rdma_stop_listen(transport, &trid);
 		}
 		while (ref > 0) {
-			spdk_nvmf_rdma_listen(transport, &trid);
+			spdk_nvmf_rdma_listen(transport, &trid, NULL, NULL);
 			ref--;
 		}
 	}
