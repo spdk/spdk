@@ -4750,7 +4750,12 @@ blob_thin_prov_rw(void)
 	CU_ASSERT(free_clusters - 1 == spdk_bs_free_cluster_count(bs));
 	/* For thin-provisioned blob we need to write 20 pages plus one page metadata and
 	 * read 0 bytes */
-	CU_ASSERT(g_dev_write_bytes - write_bytes == page_size * 21);
+	if (g_use_extent_table) {
+		/* Add one more page for EXTENT_PAGE write */
+		CU_ASSERT(g_dev_write_bytes - write_bytes == page_size * 22);
+	} else {
+		CU_ASSERT(g_dev_write_bytes - write_bytes == page_size * 21);
+	}
 	CU_ASSERT(g_dev_read_bytes - read_bytes == 0);
 
 	spdk_blob_io_read(blob, channel, payload_read, 4, 10, blob_op_complete, NULL);
@@ -4849,7 +4854,12 @@ blob_thin_prov_rle(void)
 	CU_ASSERT(free_clusters - 1 == spdk_bs_free_cluster_count(bs));
 	/* For thin-provisioned blob we need to write 10 pages plus one page metadata and
 	 * read 0 bytes */
-	CU_ASSERT(g_dev_write_bytes - write_bytes == page_size * 11);
+	if (g_use_extent_table) {
+		/* Add one more page for EXTENT_PAGE write */
+		CU_ASSERT(g_dev_write_bytes - write_bytes == page_size * 12);
+	} else {
+		CU_ASSERT(g_dev_write_bytes - write_bytes == page_size * 11);
+	}
 	CU_ASSERT(g_dev_read_bytes - read_bytes == 0);
 
 	spdk_blob_io_read(blob, channel, payload_read, io_unit, 10, blob_op_complete, NULL);
@@ -5226,7 +5236,12 @@ blob_snapshot_rw(void)
 	/* For a clone we need to allocate and copy one cluster, update one page of metadata
 	 * and then write 10 pages of payload.
 	 */
-	CU_ASSERT(g_dev_write_bytes - write_bytes == page_size * 11 + cluster_size);
+	if (g_use_extent_table) {
+		/* Add one more page for EXTENT_PAGE write */
+		CU_ASSERT(g_dev_write_bytes - write_bytes == page_size * 12 + cluster_size);
+	} else {
+		CU_ASSERT(g_dev_write_bytes - write_bytes == page_size * 11 + cluster_size);
+	}
 	CU_ASSERT(g_dev_read_bytes - read_bytes == cluster_size);
 
 	spdk_blob_io_read(blob, channel, payload_read, 4, 10, blob_op_complete, NULL);
@@ -7728,6 +7743,9 @@ int main(int argc, char **argv)
 	g_use_extent_table = false;
 	CU_basic_run_tests();
 	num_failures = CU_get_number_of_failures();
+	g_use_extent_table = true;
+	CU_basic_run_tests();
+	num_failures += CU_get_number_of_failures();
 	CU_cleanup_registry();
 
 	free(g_dev_buffer);
