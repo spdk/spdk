@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "83e30934_52f8c1b8",
+        "filename": "test/app/nvme_fused/nvme_fused.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 656,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-23T18:28:39Z",
+      "side": 1,
+      "message": "Here\u0027s what I\u0027m thinking would be a really good stress test with 8 queue pairs.  It would operate differently from the other test cases above, but would be a really good test that our logic is working correctly on the target side.  It also avoids randomness, which could make it hard to reproduce issues should they pop up.\n\nThe concept would work with any number of queue pairs.  I\u0027ll explain it with just 3 queue pairs as an example, but we\u0027d want to run it with 8 (or even more!).\n\nStart the test by writing \"Value 0000\" to LBA 0.\nQueue #1 does a compare (\"Value 0000\") and write (\"Value 0001\")\nQueue #2 does a compare (\"Value 0001\") and write (\"Value 0002\")\nQueue #3 does a compare (\"Value 0002\") and write (\"Value 0003\")\n\nQueue #1\u0027s compare and write will succeed.  Then it will do:\ncompare (\"Value 0003\") and write (Value \"0004\")\n\nQueue #2\u0027s compare and write will fail the compare operation at first.  It just keeps submitting it again and again until it passes (after Queue #1\u0027s compare-and-write passes).  Once it passes, it does compare (\"Value 0004\") and write (\"Value 0005\")\n\nand so on and so on.",
+      "revId": "e5dc3f02fa14e5bc7b3c3a8b27fcc9b276d75050",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
