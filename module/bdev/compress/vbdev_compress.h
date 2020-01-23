@@ -76,7 +76,7 @@ enum compress_pmd {
 	COMPRESS_PMD_MAX
 };
 
-int set_compress_pmd(enum compress_pmd *opts);
+int compress_set_pmd(enum compress_pmd *opts);
 
 typedef void (*spdk_delete_compress_complete)(void *cb_arg, int bdeverrno);
 

@@ -164,7 +164,7 @@ a value of 1 tells the driver to use QAT and if not available then the creation 
 the vbdev should fail to create or load.  A value of '2' as shown below tells the module
 to use ISAL and if for some reason it is not available, the vbdev should fail to create or load.
 
-`rpc.py set_compress_pmd -p 2`
+`rpc.py compress_set_pmd -p 2`
 
 To remove a compression vbdev, use the following command which will also delete the PMEM
 file.  If the logical volume is deleted the PMEM file will not be removed and the
