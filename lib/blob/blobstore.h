@@ -543,9 +543,8 @@ _spdk_bs_cluster_to_extent_page(struct spdk_blob *blob, uint64_t cluster_num)
 {
 	uint64_t extent_table_id = _spdk_bs_cluster_to_extent_table_id(cluster_num);
 
-	if (extent_table_id >= blob->active.extent_pages_array_size) {
-		return NULL;
-	}
+	assert(blob->use_extent_table);
+	assert(extent_table_id < blob->active.extent_pages_array_size);
 
 	return &blob->active.extent_pages[extent_table_id];
 }

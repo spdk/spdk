@@ -137,7 +137,7 @@ static int
 _spdk_bs_allocate_cluster(struct spdk_blob *blob, uint32_t cluster_num,
 			  uint64_t *lowest_free_cluster, uint32_t *lowest_free_md_page, bool update_map)
 {
-	uint32_t *extent_page = _spdk_bs_cluster_to_extent_page(blob, cluster_num);
+	uint32_t *extent_page;
 
 	pthread_mutex_lock(&blob->bs->used_clusters_mutex);
 	*lowest_free_cluster = spdk_bit_array_find_first_clear(blob->bs->used_clusters,
@@ -148,16 +148,19 @@ _spdk_bs_allocate_cluster(struct spdk_blob *blob, uint32_t cluster_num,
 		return -ENOSPC;
 	}
 
-	if (extent_page != NULL && *extent_page == 0) {
-		/* No extent_page is allocated for the cluster */
-		*lowest_free_md_page = spdk_bit_array_find_first_clear(blob->bs->used_md_pages,
-				       *lowest_free_md_page);
-		if (*lowest_free_md_page == UINT32_MAX) {
-			/* No more free md pages. Cannot satisfy the request */
-			pthread_mutex_unlock(&blob->bs->used_clusters_mutex);
-			return -ENOSPC;
+	if (blob->use_extent_table) {
+		extent_page = _spdk_bs_cluster_to_extent_page(blob, cluster_num);
+		if (*extent_page == 0) {
+			/* No extent_page is allocated for the cluster */
+			*lowest_free_md_page = spdk_bit_array_find_first_clear(blob->bs->used_md_pages,
+					       *lowest_free_md_page);
+			if (*lowest_free_md_page == UINT32_MAX) {
+				/* No more free md pages. Cannot satisfy the request */
+				pthread_mutex_unlock(&blob->bs->used_clusters_mutex);
+				return -ENOSPC;
+			}
+			_spdk_bs_claim_md_page(blob->bs, *lowest_free_md_page);
 		}
-		_spdk_bs_claim_md_page(blob->bs, *lowest_free_md_page);
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Claiming cluster %lu for blob %lu\n", *lowest_free_cluster, blob->id);
@@ -167,7 +170,7 @@ _spdk_bs_allocate_cluster(struct spdk_blob *blob, uint32_t cluster_num,
 
 	if (update_map) {
 		_spdk_blob_insert_cluster(blob, cluster_num, *lowest_free_cluster);
-		if (extent_page != NULL && *extent_page == 0) {
+		if (blob->use_extent_table && *extent_page == 0) {
 			*extent_page = *lowest_free_md_page;
 		}
 	}
@@ -6345,7 +6348,7 @@ static void
 _spdk_blob_insert_cluster_msg(void *arg)
 {
 	struct spdk_blob_insert_cluster_ctx *ctx = arg;
-	uint32_t *extent_page = _spdk_bs_cluster_to_extent_page(ctx->blob, ctx->cluster_num);
+	uint32_t *extent_page;
 
 	ctx->rc = _spdk_blob_insert_cluster(ctx->blob, ctx->cluster_num, ctx->cluster);
 	if (ctx->rc != 0) {
@@ -6353,11 +6356,15 @@ _spdk_blob_insert_cluster_msg(void *arg)
 		return;
 	}
 
-	if (extent_page == NULL) {
-		/* Extent page are not used, proceed with sync of md that will contain Extents RLE */
+	if (ctx->blob->use_extent_table == false) {
+		/* Extent table is not used, proceed with sync of md that will only use extents_rle. */
 		ctx->blob->state = SPDK_BLOB_STATE_DIRTY;
 		_spdk_blob_sync_md(ctx->blob, _spdk_blob_insert_cluster_msg_cb, ctx);
-	} else if (*extent_page == 0) {
+		return;
+	}
+
+	extent_page = _spdk_bs_cluster_to_extent_page(ctx->blob, ctx->cluster_num);
+	if (*extent_page == 0) {
 		/* Extent page requires allocation.
 		 * It was already claimed in the used_md_pages map and placed in ctx.
 		 * Blob persist will take care of writing out new extent page on disk. */
