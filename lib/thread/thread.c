@@ -50,6 +50,7 @@
 static pthread_mutex_t g_devlist_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static spdk_new_thread_fn g_new_thread_fn = NULL;
+static spdk_exit_thread_fn g_exit_thread_fn = NULL;
 static size_t g_ctx_sz = 0;
 
 struct io_device {
@@ -174,12 +175,16 @@ _get_thread(void)
 }
 
 int
-spdk_thread_lib_init(spdk_new_thread_fn new_thread_fn, size_t ctx_sz)
+spdk_thread_lib_init(spdk_new_thread_fn new_thread_fn, spdk_exit_thread_fn exit_thread_fn,
+		     size_t ctx_sz)
 {
 	char mempool_name[SPDK_MAX_MEMZONE_NAME_LEN];
 
 	assert(g_new_thread_fn == NULL);
 	g_new_thread_fn = new_thread_fn;
+
+	assert(g_exit_thread_fn == NULL);
+	g_exit_thread_fn = exit_thread_fn;
 
 	g_ctx_sz = ctx_sz;
 
@@ -212,6 +217,7 @@ spdk_thread_lib_fini(void)
 	}
 
 	g_new_thread_fn = NULL;
+	g_exit_thread_fn = NULL;
 	g_ctx_sz = 0;
 }
 
@@ -372,6 +378,10 @@ spdk_thread_exit(struct spdk_thread *thread)
 	}
 
 	thread->exit = true;
+
+	if (g_exit_thread_fn) {
+		g_exit_thread_fn(thread);
+	}
 	return 0;
 }
 
