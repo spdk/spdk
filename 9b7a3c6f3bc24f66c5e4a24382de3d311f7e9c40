@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e54b0c45_8790f063",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 667,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-24T19:40:49Z",
+      "side": 1,
+      "message": "should the first clause be \u003c\u003d sizeof(desc_extent-\u003estart_cluster_idx)?\n\nbefore we didn\u0027t have start_cluster_idx, so we only needed to check against 0, but now if length \u003d\u003d 0, that is bad, but also if length \u003d\u003d 4, since that means the cluster_idx[] array is still empty",
+      "revId": "9b7a3c6f3bc24f66c5e4a24382de3d311f7e9c40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c8162583_f880e684",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 3642,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-24T19:40:49Z",
+      "side": 1,
+      "message": "same as above",
+      "revId": "9b7a3c6f3bc24f66c5e4a24382de3d311f7e9c40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
