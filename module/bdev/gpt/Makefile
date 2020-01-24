@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-C_SRCS = gpt.c vbdev_gpt.c
+C_SRCS = gpt.c vbdev_gpt.c vbdev_gpt_rpc.c
 LIBNAME = bdev_gpt
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

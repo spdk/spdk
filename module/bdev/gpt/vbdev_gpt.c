@@ -46,19 +46,36 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 
-#include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
 
 static int vbdev_gpt_init(void);
 static void vbdev_gpt_examine(struct spdk_bdev *bdev);
 static int vbdev_gpt_get_ctx_size(void);
 
+struct gpt_bdevs {
+	struct spdk_bdev		*base_bdev;
+	struct spdk_bdev_part_base	*part_base;
+	TAILQ_ENTRY(gpt_bdevs)	link;
+};
+static TAILQ_HEAD(, gpt_bdevs) g_gpt_bdevs = TAILQ_HEAD_INITIALIZER(g_gpt_bdevs);
+
+static void
+vbdev_gpt_finish(void)
+{
+	struct gpt_bdevs *gpt_bdev;
+
+	while ((gpt_bdev = TAILQ_FIRST(&g_gpt_bdevs))) {
+		TAILQ_REMOVE(&g_gpt_bdevs, gpt_bdev, link);
+		free(gpt_bdev);
+	}
+}
+
 static struct spdk_bdev_module gpt_if = {
 	.name = "gpt",
 	.module_init = vbdev_gpt_init,
 	.get_ctx_size = vbdev_gpt_get_ctx_size,
 	.examine_disk = vbdev_gpt_examine,
-
+	.module_fini = vbdev_gpt_finish,
 };
 SPDK_BDEV_MODULE_REGISTER(gpt, &gpt_if)
 
@@ -91,6 +108,23 @@ struct gpt_io {
 };
 
 static bool g_gpt_disabled;
+
+bool
+vbdev_gpt_release_bdev(struct spdk_bdev	*base_bdev)
+{
+	struct gpt_bdevs *gpt_bdev;
+	struct gpt_base *gpt_base;
+
+	TAILQ_FOREACH(gpt_bdev, &g_gpt_bdevs, link) {
+		if (strcmp(base_bdev->name, gpt_bdev->base_bdev->name) == 0) {
+			gpt_base = spdk_bdev_part_base_get_ctx(gpt_bdev->part_base);
+			spdk_bdev_part_base_hotremove(gpt_bdev->part_base, &gpt_base->parts);
+			return true;
+		}
+	}
+
+	return false;
+}
 
 static void
 spdk_gpt_base_free(void *ctx)
@@ -313,6 +347,8 @@ vbdev_gpt_create_bdevs(struct gpt_base *gpt_base)
 	char *name;
 	struct spdk_bdev *base_bdev;
 	int rc;
+	bool added_bdev = false;
+	struct gpt_bdevs *gpt_bdev;
 
 	gpt = &gpt_base->gpt;
 	num_partition_entries = from_le32(&gpt->header->num_partition_entries);
@@ -360,6 +396,18 @@ vbdev_gpt_create_bdevs(struct gpt_base *gpt_base)
 		}
 		num_partitions++;
 		d->partition_index = i;
+		if (added_bdev == false) {
+			gpt_bdev = calloc(1, sizeof(struct gpt_bdevs));
+			if (!gpt_bdev) {
+				SPDK_ERRLOG("gpt_bdev allocation failure\n");
+				free(d);
+				return -1;
+			}
+			gpt_bdev->base_bdev = base_bdev;
+			gpt_bdev->part_base = gpt_base->part_base;
+			TAILQ_INSERT_TAIL(&g_gpt_bdevs, gpt_bdev, link);
+			added_bdev = true;
+		}
 	}
 
 	return num_partitions;
