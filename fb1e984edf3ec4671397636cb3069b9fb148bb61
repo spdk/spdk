@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "b2c9f6c8_048c5d7a",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-24T07:47:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "16bd5ea9_78b9f20c",
+      "range": {
+        "startLine": 70,
+        "startChar": 21,
+        "endLine": 70,
+        "endChar": 26
+      },
+      "revId": "fb1e984edf3ec4671397636cb3069b9fb148bb61",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d93f29be_e983a1ff",
         "filename": "test/vhost/perf_bench/vhost_perf.sh",
         "patchSetId": 7
@@ -45,6 +69,30 @@
       "revId": "fb1e984edf3ec4671397636cb3069b9fb148bb61",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "355b88bf_77896515",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-24T07:47:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d93f29be_e983a1ff",
+      "range": {
+        "startLine": 73,
+        "startChar": 40,
+        "endLine": 73,
+        "endChar": 43
+      },
+      "revId": "fb1e984edf3ec4671397636cb3069b9fb148bb61",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -92,6 +140,30 @@
       "revId": "fb1e984edf3ec4671397636cb3069b9fb148bb61",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f0cd2bb4_17cf9bcf",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-24T07:47:41Z",
+      "side": 1,
+      "message": "Copy-pasta mistake:)\nDone",
+      "parentUuid": "f6c7d49b_2432a97a",
+      "range": {
+        "startLine": 75,
+        "startChar": 35,
+        "endLine": 75,
+        "endChar": 78
+      },
+      "revId": "fb1e984edf3ec4671397636cb3069b9fb148bb61",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
