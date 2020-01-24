@@ -822,7 +822,7 @@ vtophys_iommu_map_dma(uint64_t vaddr, uint64_t iova, uint64_t size)
 	}
 
 	ret = ioctl(g_vfio.fd, VFIO_IOMMU_MAP_DMA, &dma_map->map);
-	if (ret) {
+	if (ret && errno != EEXIST) {
 		DEBUG_PRINT("Cannot set up DMA mapping, error %d\n", errno);
 		pthread_mutex_unlock(&g_vfio.mutex);
 		free(dma_map);
@@ -864,7 +864,7 @@ vtophys_iommu_unmap_dma(uint64_t iova, uint64_t size)
 
 
 	ret = ioctl(g_vfio.fd, VFIO_IOMMU_UNMAP_DMA, &dma_map->unmap);
-	if (ret) {
+	if (ret && errno != ENOENT) {
 		DEBUG_PRINT("Cannot clear DMA mapping, error %d\n", errno);
 		pthread_mutex_unlock(&g_vfio.mutex);
 		return ret;
