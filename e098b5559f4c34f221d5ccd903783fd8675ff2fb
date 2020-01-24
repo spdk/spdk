@@ -16,6 +16,24 @@
       "revId": "e098b5559f4c34f221d5ccd903783fd8675ff2fb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "43c46146_1aa8d601",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-24T11:44:14Z",
+      "side": 1,
+      "message": "Minimal dependencies was consulted with Tomek and Karol. \nThe numactl-devel are dependencies for DPDK, and as I can remember, dpdk is needed for minimal build, what You can see in next patches in this series.\n\nIn this patch there is only split one install command to divide the minimal dependencies from the developer tools",
+      "parentUuid": "872b96b0_95efc7dd",
+      "revId": "e098b5559f4c34f221d5ccd903783fd8675ff2fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
