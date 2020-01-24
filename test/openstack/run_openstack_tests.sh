@@ -23,7 +23,8 @@ function test_cleanup_trap {
 nvmftestinit
 nvmfappstart "-m 0x3 -p 0 -s 1024"
 trap 'process_shm --id $NVMF_APP_SHM_ID; test_cleanup_trap; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
-$rootdir/scripts/gen_nvme.sh --json | $rpc_py load_subsystem_config
+#$rootdir/scripts/gen_nvme.sh --json | $rpc_py load_subsystem_config
+$rpc_py bdev_malloc_create -b Malloc0 5120 4096
 
 timing_enter run_rpc_proxy
 $rootdir/scripts/rpc_http_proxy.py 127.0.0.1 3333 secret secret &
@@ -33,7 +34,7 @@ timing_exit run_rpc_proxy
 timing_enter configure_spdk
 $rpc_py bdev_get_bdevs
 $rpc_py bdev_lvol_delete_lvstore -l lvs0 || true
-$rpc_py bdev_lvol_create_lvstore Nvme0n1 lvs0
+$rpc_py bdev_lvol_create_lvstore Malloc0 lvs0
 $rpc_py bdev_get_bdevs
 timing_exit configure_spdk
 
