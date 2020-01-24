@@ -152,6 +152,24 @@
       "revId": "cffc4140b8ae88ebf9d2e35a93c75a7ae417c985",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b79b8c8_641ae592",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1017532
+      },
+      "writtenOn": "2020-01-24T16:47:35Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "e7b559c0_e2a74fad",
+      "revId": "cffc4140b8ae88ebf9d2e35a93c75a7ae417c985",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
