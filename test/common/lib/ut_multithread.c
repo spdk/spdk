@@ -80,7 +80,7 @@ allocate_threads(int num_threads)
 	struct spdk_thread *thread;
 	uint32_t i;
 
-	spdk_thread_lib_init(NULL, 0);
+	spdk_thread_lib_init(NULL, NULL, 0);
 
 	g_ut_num_threads = num_threads;
 

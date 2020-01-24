@@ -54,7 +54,7 @@ thread_alloc(void)
 	struct spdk_thread *thread;
 
 	/* No schedule callback */
-	spdk_thread_lib_init(NULL, 0);
+	spdk_thread_lib_init(NULL, NULL, 0);
 	thread = spdk_thread_create(NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
 	spdk_set_thread(thread);
@@ -63,7 +63,7 @@ thread_alloc(void)
 	spdk_thread_lib_fini();
 
 	/* Schedule callback exists */
-	spdk_thread_lib_init(_thread_schedule, 0);
+	spdk_thread_lib_init(_thread_schedule, NULL, 0);
 
 	/* Scheduling succeeds */
 	g_sched_rc = 0;
@@ -546,7 +546,7 @@ thread_name(void)
 	struct spdk_thread *thread;
 	const char *name;
 
-	spdk_thread_lib_init(NULL, 0);
+	spdk_thread_lib_init(NULL, NULL, 0);
 
 	/* Create thread with no name, which automatically generates one */
 	thread = spdk_thread_create(NULL, NULL);
@@ -743,7 +743,7 @@ thread_exit(void)
 	struct spdk_poller poller = {};
 	int rc;
 
-	spdk_thread_lib_init(NULL, 0);
+	spdk_thread_lib_init(NULL, NULL, 0);
 
 	thread = spdk_thread_create(NULL, NULL);
 	spdk_set_thread(thread);
