@@ -45,6 +45,8 @@ extern "C" {
 #include "spdk/thread.h"
 #include "spdk/util.h"
 
+struct spdk_reactor;
+
 struct spdk_event {
 	uint32_t		lcore;
 	spdk_event_fn		fn;
@@ -62,6 +64,7 @@ enum spdk_reactor_state {
 
 struct spdk_lw_thread {
 	TAILQ_ENTRY(spdk_lw_thread)	link;
+	struct spdk_reactor		*reactor;
 };
 
 struct spdk_reactor {
