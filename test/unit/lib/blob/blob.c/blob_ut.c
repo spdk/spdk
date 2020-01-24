@@ -6484,10 +6484,10 @@ blob_delete_snapshot_power_failure(void)
 
 		spdk_bs_delete_blob(bs, snapshotid, blob_op_complete, NULL);
 		poll_threads();
-		CU_ASSERT(g_bserrno != 0);
 
-		spdk_bs_unload(g_bs, bs_op_complete, NULL);
-		poll_threads();
+		/* Do not shut down cleanly. Assumption is that after snapshot deletion
+		 * reports success, changes to both blobs should already persisted. */
+		_spdk_bs_free(bs);
 
 		dev_reset_power_failure_event();
 
@@ -6594,11 +6594,11 @@ blob_create_snapshot_power_failure(void)
 		/* Create snapshot */
 		spdk_bs_create_snapshot(bs, blobid, NULL, blob_op_with_id_complete, NULL);
 		poll_threads();
-		CU_ASSERT(g_bserrno != 0);
 		snapshotid = g_blobid;
 
-		spdk_bs_unload(g_bs, bs_op_complete, NULL);
-		poll_threads();
+		/* Do not shut down cleanly. Assumption is that after create snapshot
+		 * reports success, both blobs should be power-fail safe. */
+		_spdk_bs_free(bs);
 
 		dev_reset_power_failure_event();
 
