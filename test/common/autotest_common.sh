@@ -5,6 +5,7 @@ function xtrace_disable() {
 			XTRACE_DISABLED="yes"
 		fi
 		set +x
+		shopt -u extdebug
         elif [ -z $XTRACE_NESTING_LEVEL ]; then
                 XTRACE_NESTING_LEVEL=1
         else
@@ -30,7 +31,7 @@ function xtrace_enable() {
 alias xtrace_restore=\
 'if [ -z $XTRACE_NESTING_LEVEL ]; then
         if [[ "$PREV_BASH_OPTS" == *"x"* ]]; then
-		XTRACE_DISABLED="no"; PREV_BASH_OPTS=""; set -x; xtrace_enable;
+		XTRACE_DISABLED="no"; PREV_BASH_OPTS=""; shopt -s extdebug; set -x; xtrace_enable;
 	fi
 else
 	XTRACE_NESTING_LEVEL=$((--XTRACE_NESTING_LEVEL));
@@ -644,6 +645,8 @@ function print_backtrace() {
 	# if errexit is not enabled, don't print a backtrace
 	[[ "$-" =~ e ]] || return 0
 
+	local args=("${BASH_ARGV[@]}")
+
 	xtrace_disable
 	echo "========== Backtrace start: =========="
 	echo ""
@@ -651,14 +654,24 @@ function print_backtrace() {
 		local func="${FUNCNAME[$i]}"
 		local line_nr="${BASH_LINENO[$((i - 1))]}"
 		local src="${BASH_SOURCE[$i]}"
-		local bt=""
+		local bt="" cmdline=()
 
 		if [[ -f $src ]]; then
 			bt=$(nl -w 4 -ba -nln $src | grep -B 5 -A 5 "^${line_nr}[^0-9]" | \
 			  sed "s/^/   /g" | sed "s/^   $line_nr /=> $line_nr /g")
 		fi
 
-		echo "in $src:$line_nr -> $func()"
+		# If extdebug set the BASH_ARGC[i], try to fetch all the args
+		if (( BASH_ARGC[i] > 0 )); then
+			# Use argc as index to reverse the stack
+			local argc=${BASH_ARGC[i]} arg
+			for arg in "${args[@]::BASH_ARGC[i]}"; do
+				cmdline[argc--]="[\"$arg\"]"
+			done
+			args=("${args[@]:BASH_ARGC[i]}")
+		fi
+
+		echo "in $src:$line_nr -> $func($(IFS=","; printf '%s\n' "${cmdline[*]:-[]}"))"
 		echo "     ..."
 		echo "${bt:-backtrace unavailable}"
 		echo "     ..."
