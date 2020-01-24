@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b0ba7134_4424d623",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 408,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-24T12:33:29Z",
+      "side": 0,
+      "message": "Shouldn\u0027t you leave this check? Calling ftl_get_io_channel() on any thread other than core should result in an error.",
+      "range": {
+        "startLine": 408,
+        "startChar": 1,
+        "endLine": 408,
+        "endChar": 34
+      },
+      "revId": "77e9507881d59a77b88189537a2d4185fb9f8d6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
