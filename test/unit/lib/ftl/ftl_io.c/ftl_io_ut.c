@@ -75,6 +75,7 @@ setup_device(uint32_t num_threads)
 	dev = calloc(1, sizeof(*dev));
 	SPDK_CU_ASSERT_FATAL(dev != NULL);
 
+	dev->core_thread = spdk_get_thread();
 	dev->ioch = calloc(1, sizeof(*_ioch) + sizeof(struct spdk_io_channel));
 	SPDK_CU_ASSERT_FATAL(dev->ioch != NULL);
 
@@ -110,6 +111,7 @@ free_device(struct spdk_ftl_dev *dev)
 	spdk_io_device_unregister(dev->base_bdev_desc, NULL);
 	free_threads();
 
+	free(dev->ioch_array);
 	free(dev->ioch);
 	free(dev);
 }
@@ -541,6 +543,77 @@ test_multi_generation(void)
 	free_device(dev);
 }
 
+static void
+test_io_channel_create(void)
+{
+	struct spdk_ftl_dev *dev;
+	struct spdk_io_channel *ioch, **ioch_array;
+	struct ftl_io_channel *ftl_ioch;
+	uint32_t ioch_idx;
+
+	dev = setup_device(g_default_conf.max_io_channels + 1);
+
+	ioch = spdk_get_io_channel(dev);
+	CU_ASSERT(ioch != NULL);
+	CU_ASSERT_EQUAL(dev->num_io_channels, 1);
+	spdk_put_io_channel(ioch);
+	poll_threads();
+	CU_ASSERT_EQUAL(dev->num_io_channels, 0);
+
+	ioch_array = calloc(dev->conf.max_io_channels, sizeof(*ioch_array));
+	SPDK_CU_ASSERT_FATAL(ioch != NULL);
+
+	for (ioch_idx = 0; ioch_idx < dev->conf.max_io_channels; ++ioch_idx) {
+		set_thread(ioch_idx);
+		ioch = ioch_array[ioch_idx] = spdk_get_io_channel(dev);
+		SPDK_CU_ASSERT_FATAL(ioch != NULL);
+		poll_threads();
+
+		ftl_ioch = ftl_io_channel_get_ctx(ioch);
+		CU_ASSERT_EQUAL(ftl_ioch->index, ioch_idx);
+	}
+
+	CU_ASSERT_EQUAL(dev->num_io_channels, dev->conf.max_io_channels);
+	set_thread(dev->conf.max_io_channels);
+	ioch = spdk_get_io_channel(dev);
+	CU_ASSERT_EQUAL(dev->num_io_channels, dev->conf.max_io_channels);
+	CU_ASSERT_EQUAL(ioch, NULL);
+
+	for (ioch_idx = 0; ioch_idx < dev->conf.max_io_channels; ioch_idx += 2) {
+		set_thread(ioch_idx);
+		spdk_put_io_channel(ioch_array[ioch_idx]);
+		ioch_array[ioch_idx] = NULL;
+		poll_threads();
+	}
+
+	poll_threads();
+	CU_ASSERT_EQUAL(dev->num_io_channels, dev->conf.max_io_channels / 2);
+
+	for (ioch_idx = 0; ioch_idx < dev->conf.max_io_channels; ioch_idx++) {
+		set_thread(ioch_idx);
+
+		if (ioch_array[ioch_idx] == NULL) {
+			ioch = ioch_array[ioch_idx] = spdk_get_io_channel(dev);
+			SPDK_CU_ASSERT_FATAL(ioch != NULL);
+			poll_threads();
+
+			ftl_ioch = ftl_io_channel_get_ctx(ioch);
+			CU_ASSERT_EQUAL(ftl_ioch->index, ioch_idx);
+		}
+	}
+
+	for (ioch_idx = 0; ioch_idx < dev->conf.max_io_channels; ioch_idx++) {
+		set_thread(ioch_idx);
+		spdk_put_io_channel(ioch_array[ioch_idx]);
+	}
+
+	poll_threads();
+	CU_ASSERT_EQUAL(dev->num_io_channels, 0);
+
+	free(ioch_array);
+	free_device(dev);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -568,6 +641,8 @@ main(int argc, char **argv)
 			       test_child_status) == NULL
 		|| CU_add_test(suite, "test_multi_generation",
 			       test_multi_generation) == NULL
+		|| CU_add_test(suite, "test_io_channel_create",
+			       test_io_channel_create) == NULL
 
 	) {
 		CU_cleanup_registry();

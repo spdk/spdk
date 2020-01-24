@@ -861,7 +861,8 @@ ftl_shutdown_complete(struct spdk_ftl_dev *dev)
 	struct ftl_io_channel *ioch = ftl_io_channel_get_ctx(dev->ioch);
 
 	return !__atomic_load_n(&dev->num_inflight, __ATOMIC_SEQ_CST) &&
-	       LIST_EMPTY(&dev->wptr_list) && TAILQ_EMPTY(&ioch->retry_queue);
+	       dev->num_io_channels == 1 && LIST_EMPTY(&dev->wptr_list) &&
+	       TAILQ_EMPTY(&ioch->retry_queue);
 }
 
 void

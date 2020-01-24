@@ -96,6 +96,9 @@ struct spdk_ftl_conf {
 	/* Use append instead of write */
 	bool					use_append;
 
+	/* Maximum supported number of IO channels */
+	uint32_t				max_io_channels;
+
 	struct {
 		/* Maximum number of concurrent requests */
 		size_t				max_request_cnt;

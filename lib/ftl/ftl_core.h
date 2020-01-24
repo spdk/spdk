@@ -199,6 +199,16 @@ struct spdk_ftl_dev {
 	/* Poller */
 	struct spdk_poller			*core_poller;
 
+	/* IO channel array provides means for retrieving write buffer entries
+	 * from their address stored in L2P.  The address is divided into two
+	 * parts - IO channel offset poining at specific IO channel (within this
+	 * array) and entry offset pointing at specific entry within that IO
+	 * channel.
+	 */
+	struct ftl_io_channel			**ioch_array;
+	TAILQ_HEAD(, ftl_io_channel)		ioch_queue;
+	uint64_t				num_io_channels;
+
 	/* Devices' list */
 	STAILQ_ENTRY(spdk_ftl_dev)		stailq;
 };

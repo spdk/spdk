@@ -121,6 +121,7 @@ static const struct spdk_ftl_conf	g_default_conf = {
 	 * will result in lost data after recovery.
 	 */
 	.allow_open_bands = false,
+	.max_io_channels = 128,
 	.nv_cache = {
 		/* Maximum number of concurrent requests */
 		.max_request_cnt = 2048,
@@ -535,16 +536,6 @@ ftl_dev_init_core_thread(struct spdk_ftl_dev *dev, const struct spdk_ftl_dev_ini
 	return 0;
 }
 
-static void
-ftl_dev_free_thread(struct spdk_ftl_dev *dev)
-{
-	assert(dev->core_poller == NULL);
-
-	spdk_put_io_channel(dev->ioch);
-	dev->core_thread = NULL;
-	dev->ioch = NULL;
-}
-
 static int
 ftl_dev_l2p_alloc(struct spdk_ftl_dev *dev)
 {
@@ -957,14 +948,41 @@ ftl_io_channel_get_ctx(struct spdk_io_channel *ioch)
 	return _ioch->ioch;
 }
 
+static void
+ftl_io_channel_register(void *ctx)
+{
+	struct ftl_io_channel *ioch = ctx;
+	struct spdk_ftl_dev *dev = ioch->dev;
+	uint32_t ioch_index;
+
+	for (ioch_index = 0; ioch_index < dev->conf.max_io_channels; ++ioch_index) {
+		if (dev->ioch_array[ioch_index] == NULL) {
+			dev->ioch_array[ioch_index] = ioch;
+			ioch->index = ioch_index;
+			break;
+		}
+	}
+
+	assert(ioch_index < dev->conf.max_io_channels);
+	TAILQ_INSERT_TAIL(&dev->ioch_queue, ioch, tailq);
+}
+
 static int
 ftl_io_channel_create_cb(void *io_device, void *ctx)
 {
 	struct spdk_ftl_dev *dev = io_device;
 	struct _ftl_io_channel *_ioch = ctx;
 	struct ftl_io_channel *ioch;
+	uint32_t num_io_channels;
 	char mempool_name[32];
 	int rc;
+
+	num_io_channels = __atomic_fetch_add(&dev->num_io_channels, 1, __ATOMIC_SEQ_CST);
+	if (num_io_channels >= dev->conf.max_io_channels) {
+		SPDK_ERRLOG("Reached maximum number of IO channels\n");
+		__atomic_fetch_sub(&dev->num_io_channels, 1, __ATOMIC_SEQ_CST);
+		return -1;
+	}
 
 	ioch = calloc(1, sizeof(*ioch));
 	if (ioch == NULL) {
@@ -1016,6 +1034,9 @@ ftl_io_channel_create_cb(void *io_device, void *ctx)
 	}
 
 	_ioch->ioch = ioch;
+
+	spdk_thread_send_msg(ftl_get_core_thread(dev), ftl_io_channel_register, ioch);
+
 	return 0;
 
 fail_poller:
@@ -1033,26 +1054,57 @@ fail_ioch:
 }
 
 static void
+ftl_io_channel_unregister(void *ctx)
+{
+	struct ftl_io_channel *ioch = ctx;
+	struct spdk_ftl_dev *dev = ioch->dev;
+	uint32_t num_io_channels __attribute__((unused));
+
+	assert(ioch->index < dev->conf.max_io_channels);
+	assert(dev->ioch_array[ioch->index] == ioch);
+
+	dev->ioch_array[ioch->index] = NULL;
+	TAILQ_REMOVE(&dev->ioch_queue, ioch, tailq);
+
+	num_io_channels = __atomic_fetch_sub(&dev->num_io_channels, 1, __ATOMIC_SEQ_CST);
+	assert(num_io_channels > 0);
+
+	spdk_mempool_free(ioch->io_pool);
+	free(ioch);
+}
+
+static void
 ftl_io_channel_destroy_cb(void *io_device, void *ctx)
 {
 	struct _ftl_io_channel *_ioch = ctx;
 	struct ftl_io_channel *ioch = _ioch->ioch;
+	struct spdk_ftl_dev *dev = ioch->dev;
 
 	spdk_poller_unregister(&ioch->poller);
 
-	spdk_mempool_free(ioch->io_pool);
 	spdk_put_io_channel(ioch->base_ioch);
-
 	if (ioch->cache_ioch) {
 		spdk_put_io_channel(ioch->cache_ioch);
 	}
 
-	free(ioch);
+	ioch->base_ioch = NULL;
+	ioch->cache_ioch = NULL;
+
+	spdk_thread_send_msg(ftl_get_core_thread(dev), ftl_io_channel_unregister, ioch);
 }
 
 static int
 ftl_dev_init_io_channel(struct spdk_ftl_dev *dev)
 {
+	dev->ioch_array = calloc(dev->conf.max_io_channels, sizeof(*dev->ioch_array));
+	if (!dev->ioch_array) {
+		SPDK_ERRLOG("Failed to allocate IO channel array\n");
+		return -1;
+	}
+
+	TAILQ_INIT(&dev->ioch_queue);
+	dev->num_io_channels = 0;
+
 	spdk_io_device_register(dev, ftl_io_channel_create_cb, ftl_io_channel_destroy_cb,
 				sizeof(struct _ftl_io_channel),
 				NULL);
@@ -1168,10 +1220,6 @@ ftl_dev_free_sync(struct spdk_ftl_dev *dev)
 
 	spdk_io_device_unregister(dev, NULL);
 
-	if (dev->core_thread) {
-		ftl_dev_free_thread(dev);
-	}
-
 	if (dev->bands) {
 		for (i = 0; i < ftl_get_num_bands(dev); ++i) {
 			free(dev->bands[i].zone_buf);
@@ -1196,6 +1244,8 @@ ftl_dev_free_sync(struct spdk_ftl_dev *dev)
 	ftl_release_bdev(dev->nv_cache.bdev_desc);
 	ftl_release_bdev(dev->base_bdev_desc);
 
+	assert(dev->num_io_channels == 0);
+	free(dev->ioch_array);
 	free(dev->name);
 	free(dev->bands);
 	free(dev->l2p);
@@ -1321,6 +1371,13 @@ static void
 ftl_halt_complete_cb(void *ctx)
 {
 	struct ftl_dev_init_ctx *fini_ctx = ctx;
+	struct spdk_ftl_dev *dev = fini_ctx->dev;
+
+	/* Make sure core IO channel has already been released */
+	if (dev->num_io_channels > 0) {
+		spdk_thread_send_msg(spdk_get_thread(), ftl_halt_complete_cb, ctx);
+		return;
+	}
 
 	ftl_dev_free_sync(fini_ctx->dev);
 	if (fini_ctx->cb_fn != NULL) {
@@ -1328,6 +1385,16 @@ ftl_halt_complete_cb(void *ctx)
 	}
 
 	ftl_dev_free_init_ctx(fini_ctx);
+}
+
+static void
+ftl_put_io_channel_cb(void *ctx)
+{
+	struct ftl_dev_init_ctx *fini_ctx = ctx;
+	struct spdk_ftl_dev *dev = fini_ctx->dev;
+
+	spdk_put_io_channel(dev->ioch);
+	spdk_thread_send_msg(spdk_get_thread(), ftl_halt_complete_cb, ctx);
 }
 
 static void
@@ -1343,7 +1410,7 @@ ftl_nv_cache_header_fini_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb
 	}
 
 	fini_ctx->halt_complete_status = rc;
-	spdk_thread_send_msg(fini_ctx->thread, ftl_halt_complete_cb, fini_ctx);
+	spdk_thread_send_msg(fini_ctx->thread, ftl_put_io_channel_cb, fini_ctx);
 }
 
 static int
@@ -1360,7 +1427,7 @@ ftl_halt_poller(void *ctx)
 						  ftl_nv_cache_header_fini_cb, fini_ctx);
 		} else {
 			fini_ctx->halt_complete_status = 0;
-			spdk_thread_send_msg(fini_ctx->thread, ftl_halt_complete_cb, fini_ctx);
+			spdk_thread_send_msg(fini_ctx->thread, ftl_put_io_channel_cb, fini_ctx);
 		}
 	}
 

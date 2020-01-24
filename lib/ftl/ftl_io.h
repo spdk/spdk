@@ -129,6 +129,8 @@ struct ftl_io_channel {
 	struct spdk_ftl_dev			*dev;
 	/* IO pool element size */
 	size_t					elem_size;
+	/* Index within the IO channel array */
+	uint64_t				index;
 	/* IO pool */
 	struct spdk_mempool			*io_pool;
 	/* Underlying device IO channel */
@@ -140,6 +142,7 @@ struct ftl_io_channel {
 	/* Write completion queue */
 	TAILQ_HEAD(, ftl_io)			write_cmpl_queue;
 	TAILQ_HEAD(, ftl_io)			retry_queue;
+	TAILQ_ENTRY(ftl_io_channel)		tailq;
 };
 
 /* General IO descriptor */
