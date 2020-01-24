@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "dea5a5a1_63c74f84",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-24T12:17:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "55ddf761_d88b7ce9",
+      "range": {
+        "startLine": 101,
+        "startChar": 0,
+        "endLine": 103,
+        "endChar": 61
+      },
+      "revId": "bc524e4aa1a5d5f6da3b45e6fd88aff6a4fe92d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5fd6d1bf_5347238f",
         "filename": "scripts/pkgdep.sh",
         "patchSetId": 12
@@ -71,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "b1426ca8_624907a4",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-24T12:17:34Z",
+      "side": 1,
+      "message": "In series is flag for docs:\nhttps://review.gerrithub.io/c/spdk/spdk/+/481932",
+      "parentUuid": "5fd6d1bf_5347238f",
+      "range": {
+        "startLine": 109,
+        "startChar": 0,
+        "endLine": 110,
+        "endChar": 43
+      },
+      "revId": "bc524e4aa1a5d5f6da3b45e6fd88aff6a4fe92d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0778d3da_77d16c5a",
         "filename": "scripts/pkgdep.sh",
         "patchSetId": 12
@@ -91,6 +139,30 @@
       "revId": "bc524e4aa1a5d5f6da3b45e6fd88aff6a4fe92d7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fa6e6061_9e049852",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-24T12:17:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0778d3da_77d16c5a",
+      "range": {
+        "startLine": 162,
+        "startChar": 0,
+        "endLine": 164,
+        "endChar": 28
+      },
+      "revId": "bc524e4aa1a5d5f6da3b45e6fd88aff6a4fe92d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
