@@ -46,6 +46,30 @@
       "revId": "ac47638359403f7018f932e1d3504dce0543816d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4a79e4e9_c74ee37e",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 22
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-24T13:29:04Z",
+      "side": 1,
+      "message": "My mistake.\nshould be reduce here",
+      "parentUuid": "40c564f1_8353b8f9",
+      "range": {
+        "startLine": 9,
+        "startChar": 12,
+        "endLine": 9,
+        "endChar": 29
+      },
+      "revId": "ac47638359403f7018f932e1d3504dce0543816d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
