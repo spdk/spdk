@@ -312,6 +312,7 @@ _spdk_reactor_run(void *arg)
 	struct spdk_lw_thread	*lw_thread, *tmp;
 	char			thread_name[32];
 	uint64_t		rusage_period = 0;
+	int			rc __attribute__((unused));
 
 	SPDK_NOTICELOG("Reactor started on core %u\n", reactor->lcore);
 
@@ -353,7 +354,8 @@ _spdk_reactor_run(void *arg)
 		thread = spdk_thread_get_from_ctx(lw_thread);
 		TAILQ_REMOVE(&reactor->threads, lw_thread, link);
 		spdk_set_thread(thread);
-		spdk_thread_exit(thread);
+		rc = spdk_thread_exit(thread);
+		assert(rc == 0);
 		spdk_thread_destroy(thread);
 	}
 
