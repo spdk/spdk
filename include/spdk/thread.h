@@ -69,6 +69,13 @@ struct spdk_io_channel_iter;
 typedef int (*spdk_new_thread_fn)(struct spdk_thread *thread);
 
 /**
+ * A function that is called each time a thread is marked as exited.
+ *
+ * \param thread The thread to destroy.
+ */
+typedef void (*spdk_exit_thread_fn)(struct spdk_thread *thread);
+
+/**
  * A function that will be called on the target thread.
  *
  * \param ctx Context passed as arg to spdk_thread_pass_msg().
@@ -186,13 +193,15 @@ struct spdk_io_channel {
  *
  * \param new_thread_fn Called each time a new SPDK thread is created. The implementor
  * is expected to frequently call spdk_thread_poll() on the provided thread.
+ * \param exit_thread_fn Called each time a SPDK thread is marked as exited.
  * \param ctx_sz For each thread allocated, an additional region of memory of
  * size ctx_size will also be allocated, for use by the thread scheduler. A pointer
  * to this region may be obtained by calling spdk_thread_get_ctx().
  *
  * \return 0 on success. Negated errno on failure.
  */
-int spdk_thread_lib_init(spdk_new_thread_fn new_thread_fn, size_t ctx_sz);
+int spdk_thread_lib_init(spdk_new_thread_fn new_thread_fn,
+			 spdk_exit_thread_fn exit_thread_fn, size_t ctx_sz);
 
 /**
  * Release all resources associated with this library.
