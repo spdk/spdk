@@ -40,6 +40,7 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/bdev_module.h"
 #include "spdk/gpt_spec.h"
 
 #define SPDK_GPT_PART_TYPE_GUID SPDK_GPT_GUID(0x7c5222bd, 0x8f5d, 0x4087, 0x9c00, 0xbf9843c7b58c)
@@ -66,5 +67,6 @@ struct spdk_gpt {
 
 int spdk_gpt_parse_mbr(struct spdk_gpt *gpt);
 int spdk_gpt_parse_partition_table(struct spdk_gpt *gpt);
+bool vbdev_gpt_release_bdev(struct spdk_bdev *base_bdev);
 
 #endif  /* SPDK_INTERNAL_GPT_H */
