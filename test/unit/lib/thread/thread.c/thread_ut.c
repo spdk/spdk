@@ -722,6 +722,75 @@ channel_destroy_races(void)
 	CU_ASSERT(TAILQ_EMPTY(&g_threads));
 }
 
+static void
+critical_msg_fn(void *ctx)
+{
+}
+
+static void
+thread_exit(void)
+{
+	struct spdk_thread *thread;
+	struct spdk_io_channel ch = {};
+	struct spdk_poller poller = {};
+	int rc;
+
+	spdk_thread_lib_init(NULL, 0);
+
+	thread = spdk_thread_create(NULL, NULL);
+	spdk_set_thread(thread);
+
+	/* Active poller is registered. */
+	TAILQ_INSERT_TAIL(&thread->active_pollers, &poller, tailq);
+
+	rc = spdk_thread_exit(thread);
+	CU_ASSERT(rc == -EBUSY);
+
+	TAILQ_REMOVE(&thread->active_pollers, &poller, tailq);
+
+	/* IO channel is got on the thread. */
+	TAILQ_INSERT_TAIL(&thread->io_channels, &ch, tailq);
+
+	rc = spdk_thread_exit(thread);
+	CU_ASSERT(rc == -EBUSY);
+
+	TAILQ_REMOVE(&thread->io_channels, &ch, tailq);
+
+	/* Message is pending. */
+	MOCK_SET(spdk_ring_count, 1);
+
+	rc = spdk_thread_exit(thread);
+	CU_ASSERT(rc == -EBUSY);
+
+	MOCK_CLEAR(spdk_ring_count);
+
+	/* Critical message is pending */
+	thread->critical_msg = critical_msg_fn;
+
+	rc = spdk_thread_exit(thread);
+	CU_ASSERT(rc == -EBUSY);
+
+	thread->critical_msg = NULL;
+
+	/* Poller is registered but paused. */
+	TAILQ_INSERT_TAIL(&thread->paused_pollers, &poller, tailq);
+
+	rc = spdk_thread_exit(thread);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(thread->exit == true);
+
+	thread->exit = false;
+	TAILQ_REMOVE(&thread->paused_pollers, &poller, tailq);
+
+	rc = spdk_thread_exit(thread);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(thread->exit == true);
+
+	spdk_thread_destroy(thread);
+
+	spdk_thread_lib_fini();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -748,7 +817,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "for_each_channel_unreg", for_each_channel_unreg) == NULL ||
 		CU_add_test(suite, "thread_name", thread_name) == NULL ||
 		CU_add_test(suite, "channel", channel) == NULL ||
-		CU_add_test(suite, "channel_destroy_races", channel_destroy_races) == NULL
+		CU_add_test(suite, "channel_destroy_races", channel_destroy_races) == NULL ||
+		CU_add_test(suite, "thread_exit", thread_exit) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

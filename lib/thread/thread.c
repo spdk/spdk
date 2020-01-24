@@ -360,14 +360,19 @@ spdk_set_thread(struct spdk_thread *thread)
 	tls_thread = thread;
 }
 
-void
+int
 spdk_thread_exit(struct spdk_thread *thread)
 {
 	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Exit thread %s\n", thread->name);
 
 	assert(tls_thread == thread);
 
+	if (!spdk_thread_is_idle(thread) || !TAILQ_EMPTY(&thread->io_channels)) {
+		return -EBUSY;
+	}
+
 	thread->exit = true;
+	return 0;
 }
 
 void
