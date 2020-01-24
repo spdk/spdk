@@ -42,6 +42,30 @@
     },
     {
       "key": {
+        "uuid": "12b2ca6c_cd34d619",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-24T13:11:23Z",
+      "side": 1,
+      "message": "Thanks\nDone",
+      "parentUuid": "cd299b48_27135a75",
+      "range": {
+        "startLine": 87,
+        "startChar": 12,
+        "endLine": 87,
+        "endChar": 47
+      },
+      "revId": "cffc4140b8ae88ebf9d2e35a93c75a7ae417c985",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c19b8610_fae2cb8a",
         "filename": "scripts/pkgdep.sh",
         "patchSetId": 19
@@ -107,6 +131,24 @@
       "side": 1,
       "message": "Yep, I meant this with use of `(( ))` rather than `[[ ]]`. :) \n\n@Karol Thank you, appreciate it! \\o/",
       "parentUuid": "4f4b304e_2de48ace",
+      "revId": "cffc4140b8ae88ebf9d2e35a93c75a7ae417c985",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7b559c0_e2a74fad",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-24T13:11:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7867a777_8c184c67",
       "revId": "cffc4140b8ae88ebf9d2e35a93c75a7ae417c985",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
