@@ -224,13 +224,17 @@ void spdk_set_thread(struct spdk_thread *thread);
  * Mark the thread as exited, failing all future spdk_thread_poll() calls. May
  * only be called within an spdk poller or message.
  *
+ * Prior to calling this function, all I/O channel references associated with the
+ * thread must be released using spdk_put_io_channel(), all pollers associated with
+ * the thread must be unregistered using spdk_unregister_poller() or paused using
+ * spdk_poller_pause(), and there must be no pending messge to the thread.
+ * Otherwise this function will fail.
  *
  * \param thread The thread to destroy.
  *
- * All I/O channel references associated with the thread must be released using
- * spdk_put_io_channel() prior to calling this function.
+ * \return 0 on success. Negated errno on failure.
  */
-void spdk_thread_exit(struct spdk_thread *thread);
+int spdk_thread_exit(struct spdk_thread *thread);
 
 /**
  * Destroy a thread, releasing all of its resources. May only be called
