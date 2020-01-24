@@ -1200,6 +1200,9 @@ static void
 iscsi_poll_group_destroy(void *io_device, void *ctx_buf)
 {
 	struct spdk_iscsi_poll_group *pg = ctx_buf;
+	struct spdk_io_channel *ch;
+	struct spdk_thread *thread;
+	int rc __attribute__((unused));
 
 	assert(pg->poller != NULL);
 	assert(pg->sock_group != NULL);
@@ -1207,13 +1210,30 @@ iscsi_poll_group_destroy(void *io_device, void *ctx_buf)
 	spdk_sock_group_close(&pg->sock_group);
 	spdk_poller_unregister(&pg->poller);
 	spdk_poller_unregister(&pg->nop_poller);
+
+	ch = spdk_io_channel_from_ctx(pg);
+	thread = spdk_io_channel_get_thread(ch);
+
+	assert(thread == spdk_get_thread());
+
+	rc = spdk_thread_exit(thread);
+	assert(rc == 0);
 }
 
 static void
 _iscsi_init_thread(void *ctx)
 {
+	struct spdk_thread *thread;
 	struct spdk_io_channel *ch;
 	struct spdk_iscsi_poll_group *pg;
+
+	thread = spdk_get_thread();
+	assert(thread != NULL);
+
+	if (spdk_thread_get_thread_id(thread) == spdk_thread_get_group_id(thread)) {
+		/* Skip parent. */
+		return;
+	}
 
 	ch = spdk_get_io_channel(&g_spdk_iscsi);
 	pg = spdk_io_channel_get_ctx(ch);
@@ -1226,11 +1246,40 @@ _iscsi_init_thread(void *ctx)
 static void
 initialize_iscsi_poll_group(spdk_msg_fn cpl)
 {
+	struct spdk_cpuset *app_cpumask, tmp_cpumask = {};
+	uint32_t i;
+	char thread_name[32];
+	struct spdk_thread *parent, *thread;
+	uint64_t group_id;
+
+	parent = spdk_get_thread();
+	assert(parent != NULL);
+
+	group_id = spdk_thread_get_group_id(parent);
+
 	spdk_io_device_register(&g_spdk_iscsi, iscsi_poll_group_create, iscsi_poll_group_destroy,
 				sizeof(struct spdk_iscsi_poll_group), "iscsi_tgt");
 
-	/* Send a message to each thread and create a poll group */
-	spdk_for_each_thread(_iscsi_init_thread, NULL, cpl);
+	/* Create threads for CPU cores active for this application, all created threads will
+	 * be put into the same thread group as parent.
+	 */
+	app_cpumask = spdk_app_get_core_mask();
+
+	SPDK_ENV_FOREACH_CORE(i) {
+		if (!spdk_cpuset_get_cpu(app_cpumask, i)) {
+			continue;
+		}
+
+		spdk_cpuset_zero(&tmp_cpumask);
+		spdk_cpuset_set_cpu(&tmp_cpumask, i, true);
+		snprintf(thread_name, sizeof(thread_name), "iscsi_poll_group_%u", i);
+
+		thread = spdk_thread_create(thread_name, app_cpumask);
+		assert(thread != NULL);
+	}
+
+	/* Send a message to each created thread and create a poll group */
+	spdk_for_each_thread_on_group(_iscsi_init_thread, NULL, cpl, group_id);
 }
 
 static void
