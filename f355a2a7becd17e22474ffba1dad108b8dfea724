@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "52617806_ae2daaef",
+        "filename": "test/app/nvme_fused/nvme_fused.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-01-24T14:15:03Z",
+      "side": 1,
+      "message": "There was a race between completions in regards to accessing g_stress_test_step and increasing it. I had to add mutex here.",
+      "range": {
+        "startLine": 228,
+        "startChar": 2,
+        "endLine": 228,
+        "endChar": 36
+      },
+      "revId": "f355a2a7becd17e22474ffba1dad108b8dfea724",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
