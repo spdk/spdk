@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2e734161_79dd85ca",
+        "filename": "doc/containers.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-24T05:49:27Z",
+      "side": 1,
+      "message": "parameters.",
+      "range": {
+        "startLine": 55,
+        "startChar": 79,
+        "endLine": 55,
+        "endChar": 88
+      },
+      "revId": "cf10c7ccea76baa81d8e006ca1be069f06510da0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "27ed3bef_0205a1f8",
+        "filename": "doc/containers.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-24T05:49:27Z",
+      "side": 1,
+      "message": "duplicated.",
+      "range": {
+        "startLine": 58,
+        "startChar": 9,
+        "endLine": 58,
+        "endChar": 13
+      },
+      "revId": "cf10c7ccea76baa81d8e006ca1be069f06510da0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
