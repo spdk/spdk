@@ -6477,6 +6477,8 @@ blob_delete_snapshot_power_failure(void)
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
 	snapshotid = g_blobid;
+	SPDK_CU_ASSERT_FATAL(spdk_bit_array_get(bs->used_clusters, 1));
+	SPDK_CU_ASSERT_FATAL(!spdk_bit_array_get(bs->used_clusters, 11));
 
 	thresholds.general_threshold = 1;
 	while (!deleted) {
@@ -6497,12 +6499,15 @@ blob_delete_snapshot_power_failure(void)
 		CU_ASSERT(g_bserrno == 0);
 		SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 		bs = g_bs;
+		SPDK_CU_ASSERT_FATAL(spdk_bit_array_get(bs->used_clusters, 1));
+		SPDK_CU_ASSERT_FATAL(!spdk_bit_array_get(bs->used_clusters, 11));
 
 		spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
 		poll_threads();
 		CU_ASSERT(g_bserrno == 0);
 		SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 		blob = g_blob;
+		SPDK_CU_ASSERT_FATAL(spdk_blob_is_thin_provisioned(blob) == true);
 
 		spdk_bs_open_blob(bs, snapshotid, blob_op_with_handle_complete, NULL);
 		poll_threads();
@@ -6518,6 +6523,7 @@ blob_delete_snapshot_power_failure(void)
 			CU_ASSERT(ids[0] == blobid);
 			rc = spdk_blob_get_xattr_value(snapshot, SNAPSHOT_PENDING_REMOVAL, &value, &value_len);
 			CU_ASSERT(rc != 0);
+			SPDK_CU_ASSERT_FATAL(spdk_blob_is_thin_provisioned(snapshot) == false);
 
 			spdk_blob_close(snapshot, blob_op_complete, NULL);
 			poll_threads();
@@ -6543,6 +6549,8 @@ blob_delete_snapshot_power_failure(void)
 		CU_ASSERT(g_bserrno == 0);
 		SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 		bs = g_bs;
+		SPDK_CU_ASSERT_FATAL(spdk_bit_array_get(bs->used_clusters, 1));
+		SPDK_CU_ASSERT_FATAL(!spdk_bit_array_get(bs->used_clusters, 11));
 
 		thresholds.general_threshold++;
 	}
@@ -6586,6 +6594,8 @@ blob_create_snapshot_power_failure(void)
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
 	blobid = g_blobid;
+	SPDK_CU_ASSERT_FATAL(spdk_bit_array_get(bs->used_clusters, 1));
+	SPDK_CU_ASSERT_FATAL(!spdk_bit_array_get(bs->used_clusters, 11));
 
 	thresholds.general_threshold = 1;
 	while (!created) {
@@ -6595,6 +6605,8 @@ blob_create_snapshot_power_failure(void)
 		spdk_bs_create_snapshot(bs, blobid, NULL, blob_op_with_id_complete, NULL);
 		poll_threads();
 		snapshotid = g_blobid;
+		SPDK_CU_ASSERT_FATAL(spdk_bit_array_get(bs->used_clusters, 1));
+		SPDK_CU_ASSERT_FATAL(!spdk_bit_array_get(bs->used_clusters, 11));
 
 		/* Do not shut down cleanly. Assumption is that after create snapshot
 		 * reports success, both blobs should be power-fail safe. */
@@ -6608,6 +6620,8 @@ blob_create_snapshot_power_failure(void)
 		CU_ASSERT(g_bserrno == 0);
 		SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 		bs = g_bs;
+		SPDK_CU_ASSERT_FATAL(spdk_bit_array_get(bs->used_clusters, 1));
+		SPDK_CU_ASSERT_FATAL(!spdk_bit_array_get(bs->used_clusters, 11));
 
 		spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
 		poll_threads();
@@ -6623,6 +6637,8 @@ blob_create_snapshot_power_failure(void)
 		if ((snapshotid != SPDK_BLOBID_INVALID) && (g_bserrno == 0)) {
 			SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 			snapshot = g_blob;
+			SPDK_CU_ASSERT_FATAL(spdk_blob_is_thin_provisioned(blob) == true);
+			SPDK_CU_ASSERT_FATAL(spdk_blob_is_thin_provisioned(snapshot) == false);
 			CU_ASSERT(spdk_blob_get_parent_snapshot(bs, blobid) == snapshotid);
 			count = SPDK_COUNTOF(ids);
 			rc = spdk_blob_get_clones(bs, snapshotid, ids, &count);
@@ -6638,7 +6654,7 @@ blob_create_snapshot_power_failure(void)
 			created = true;
 		} else {
 			CU_ASSERT(spdk_blob_get_parent_snapshot(bs, blobid) == SPDK_BLOBID_INVALID);
-			CU_ASSERT(!(blob->invalid_flags & SPDK_BLOB_THIN_PROV));
+			SPDK_CU_ASSERT_FATAL(spdk_blob_is_thin_provisioned(blob) == false);
 		}
 
 		spdk_blob_close(blob, blob_op_complete, NULL);
@@ -6657,6 +6673,8 @@ blob_create_snapshot_power_failure(void)
 		CU_ASSERT(g_bserrno == 0);
 		SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 		bs = g_bs;
+		SPDK_CU_ASSERT_FATAL(spdk_bit_array_get(bs->used_clusters, 1));
+		SPDK_CU_ASSERT_FATAL(!spdk_bit_array_get(bs->used_clusters, 11));
 
 		thresholds.general_threshold++;
 	}
