@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a15bcfd0_65106471",
+        "filename": "test/app/nvme_fused/nvme_fused.c",
+        "patchSetId": 68
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-24T18:59:47Z",
+      "side": 1,
+      "message": "let\u0027s just call spdk_zmalloc() directly here - we don\u0027t need to try to use cmb io buffer here (I think this was probably taken from nvme/perf app)",
+      "revId": "41b98b1544671096443696affbf1c1624af8d944",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "387ee5eb_1d07e919",
+        "filename": "test/app/nvme_fused/nvme_fused.c",
+        "patchSetId": 68
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-24T18:59:47Z",
+      "side": 1,
+      "message": "ditto",
+      "revId": "41b98b1544671096443696affbf1c1624af8d944",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2fb7f405_70dcb87a",
+        "filename": "test/app/nvme_fused/nvme_fused.c",
+        "patchSetId": 68
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-24T18:59:47Z",
+      "side": 1,
+      "message": "all of these error strings need to match the I/O type that failed (a lot more cases below)",
+      "revId": "41b98b1544671096443696affbf1c1624af8d944",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "723b412f_5fb77c6c",
+        "filename": "test/app/nvme_fused/nvme_fused.c",
+        "patchSetId": 68
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-24T18:59:47Z",
+      "side": 1,
+      "message": "there is a lot of boilerplate (meaning repeated) code for submitting these fused commands - you should be able to create a helper function to do a lot of this work - that function could take the ns_entry, the qpair (or qpair index in the next patch), cmp_buf, write_buf, LBA/number of LBs and status code/types.",
+      "revId": "41b98b1544671096443696affbf1c1624af8d944",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7dcb409d_f67c1d10",
+        "filename": "test/app/nvme_fused/nvme_fused.c",
+        "patchSetId": 68
+      },
+      "lineNbr": 530,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-24T18:59:47Z",
+      "side": 1,
+      "message": "I think this might be clearer:\n\ng_counter--;\nif (g_counter \u003d\u003d 0) {\n  goto exit_handler;\n}",
+      "revId": "41b98b1544671096443696affbf1c1624af8d944",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
