@@ -19,6 +19,20 @@ def bdev_set_options(client, bdev_io_pool_size=None, bdev_io_cache_size=None):
     return client.call('bdev_set_options', params)
 
 
+def gpt_release_bdev(client, name):
+    """Release all GPT bdevs for a given base bdev.
+
+    Args:
+        name: name of the base bdev
+
+    Returns:
+        Name of the base bdev if successful.
+    """
+    params = {'name': name}
+
+    return client.call('gpt_release_bdev', params)
+
+
 @deprecated_alias('construct_compress_bdev')
 def bdev_compress_create(client, base_bdev_name, pm_path):
     """Construct a compress virtual block device.

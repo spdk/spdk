@@ -53,6 +53,15 @@ if __name__ == "__main__":
                               help='Block until subsystems have been initialized')
     p.set_defaults(func=framework_wait_init)
 
+    def gpt_release_bdev(args):
+        print_json(rpc.bdev.gpt_release_bdev(args.client,
+                                             name=args.name))
+
+    p = subparsers.add_parser('gpt_release_bdev',
+                              help='Release all GPT bdevs for a given base bdev.')
+    p.add_argument('name', help='Name of base bdev.')
+    p.set_defaults(func=gpt_release_bdev)
+
     def rpc_get_methods(args):
         print_dict(rpc.rpc_get_methods(args.client,
                                        current=args.current,
