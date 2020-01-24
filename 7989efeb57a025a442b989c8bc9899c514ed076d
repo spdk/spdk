@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c567deb7_b15fc1da",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-24T15:44:40Z",
+      "side": 1,
+      "message": "can we do:\n\n} else {\n  free(status);\n}\n\nIt would be nice to avoid the boilerplate code in each of the callers, where it checks:\n\nif (!status-\u003efailed) {\n   free(status);\n}\n\nI think in each case, we could just free status here before returning, and save some code changes in each of the callers.  It\u0027s possible I missed a case where that wouldn\u0027t work though.",
+      "revId": "7989efeb57a025a442b989c8bc9899c514ed076d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c30118f9_ae1249a4",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 344,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-24T15:44:40Z",
+      "side": 1,
+      "message": "would \"timed_out\" be a better name here?\n\nI think this only gets set to true when the poll times out.  Using \"failed\" here could be understood as a time out or a completion with error status.  I think \"timed_out\" makes it more clear (the comment should be adjusted then too).",
+      "revId": "7989efeb57a025a442b989c8bc9899c514ed076d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
