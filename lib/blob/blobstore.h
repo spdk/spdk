@@ -323,7 +323,9 @@ struct spdk_blob_md_descriptor_extent_page {
 	uint8_t		type;
 	uint32_t	length;
 
-	/* TODO: add indicator for ranges of clusters in this EP */
+	/* First cluster index in this extent page */
+	uint32_t	start_cluster_idx;
+
 	uint32_t        cluster_idx[0];
 };
 
