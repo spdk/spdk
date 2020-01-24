@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "d951f9e2_9d16e1cc",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 1017478
+      },
+      "writtenOn": "2020-01-24T16:47:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "596d7776_aabc9ec5",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ec26c759_71046f26",
         "filename": "include/spdk/nvme_spec.h",
         "patchSetId": 2
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "Done",
       "parentUuid": "ec26c759_71046f26",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2085927e_d778fdda",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1017478
+      },
+      "writtenOn": "2020-01-24T16:47:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ea015494_da92ab54",
       "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -107,6 +143,24 @@
     },
     {
       "key": {
+        "uuid": "e70e00d9_7281ae03",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 365,
+      "author": {
+        "id": 1017478
+      },
+      "writtenOn": "2020-01-24T16:47:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b17edf13_9c258765",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "dd73092f_5fab14a6",
         "filename": "include/spdk/nvme_spec.h",
         "patchSetId": 2
@@ -142,6 +196,24 @@
     },
     {
       "key": {
+        "uuid": "8269c0a0_32efab7f",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 1017478
+      },
+      "writtenOn": "2020-01-24T16:47:06Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ec1baefd_90d69bfd",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e30ed903_075aa9b1",
         "filename": "include/spdk/nvme_spec.h",
         "patchSetId": 2
@@ -171,6 +243,24 @@
       "side": 1,
       "message": "Done",
       "parentUuid": "e30ed903_075aa9b1",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9119ea7_2fb9fb9e",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 479,
+      "author": {
+        "id": 1017478
+      },
+      "writtenOn": "2020-01-24T16:47:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9d838880_509551bf",
       "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -229,6 +319,24 @@
     },
     {
       "key": {
+        "uuid": "9420b848_8c498305",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 3164,
+      "author": {
+        "id": 1017478
+      },
+      "writtenOn": "2020-01-24T16:47:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d023ca25_66788feb",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6f7db61c_9ad45afe",
         "filename": "lib/nvme/nvme_transport.c",
         "patchSetId": 2
@@ -276,6 +384,30 @@
     },
     {
       "key": {
+        "uuid": "e99cb0eb_25e77a31",
+        "filename": "lib/nvme/nvme_transport.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1017478
+      },
+      "writtenOn": "2020-01-24T16:47:06Z",
+      "side": 1,
+      "message": "I removed the #define\u0027s based on Seth\u0027s patch.",
+      "parentUuid": "efcb2b23_65d5a385",
+      "range": {
+        "startLine": 56,
+        "startChar": 54,
+        "endLine": 56,
+        "endChar": 79
+      },
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3980cb77_53f3c469",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 2
@@ -305,6 +437,24 @@
       "side": 1,
       "message": "Done",
       "parentUuid": "3980cb77_53f3c469",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "255a959e_88bc8d4c",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1017478
+      },
+      "writtenOn": "2020-01-24T16:47:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "920491d5_4d96acfc",
       "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -358,6 +508,30 @@
     },
     {
       "key": {
+        "uuid": "317e1e51_30482c39",
+        "filename": "lib/nvmf/muser.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1017478
+      },
+      "writtenOn": "2020-01-24T16:47:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0caa338b_82862f5b",
+      "range": {
+        "startLine": 60,
+        "startChar": 15,
+        "endLine": 60,
+        "endChar": 17
+      },
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f2065603_1de20700",
         "filename": "lib/nvmf/muser.c",
         "patchSetId": 2
@@ -387,6 +561,24 @@
       "side": 1,
       "message": "Not sure about this, as the comment already explains some code is simplified by using the same struct type.",
       "parentUuid": "f2065603_1de20700",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d45b0a67_4fccb714",
+        "filename": "lib/nvmf/muser.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1017478
+      },
+      "writtenOn": "2020-01-24T16:47:06Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "afb14197_a7d09f39",
       "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -493,6 +685,24 @@
     },
     {
       "key": {
+        "uuid": "55cb7f5b_667f0eae",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 721,
+      "author": {
+        "id": 1017478
+      },
+      "writtenOn": "2020-01-24T16:47:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a8db5e3b_b12fb838",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f23abed8_3692704c",
         "filename": "lib/nvmf/transport.h",
         "patchSetId": 2
@@ -513,6 +723,30 @@
       "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "61728dca_06dd00f2",
+        "filename": "lib/nvmf/transport.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1017478
+      },
+      "writtenOn": "2020-01-24T16:47:06Z",
+      "side": 1,
+      "message": "See earlier reply to your comment.",
+      "parentUuid": "f23abed8_3692704c",
+      "range": {
+        "startLine": 230,
+        "startChar": 0,
+        "endLine": 230,
+        "endChar": 69
+      },
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -548,6 +782,24 @@
       "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5472899e_984498ad",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1017478
+      },
+      "writtenOn": "2020-01-24T16:47:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "25b1302d_183a06e2",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
