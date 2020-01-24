@@ -2786,9 +2786,14 @@ _spdk_bs_delete_corrupted_blob(void *cb_arg, int bserrno)
 
 	/* Snapshot and clone have the same copy of cluster map at this point.
 	 * Let's clear cluster map for snpashot now so that it won't be cleared
-	 * for clone later when we remove snapshot. Also set thin provision to
+	 * for clone later when we remove snapshot. Increase the num_free_clusters,
+	 * as it was claimed during replay of metadata. Also set thin provision to
 	 * pass data corruption check */
 	for (i = 0; i < ctx->blob->active.num_clusters; i++) {
+		if (ctx->blob->active.clusters[i] != 0) {
+			assert(spdk_bit_array_get(ctx->bs->used_clusters, ctx->blob->active.clusters[i]));
+			ctx->bs->num_free_clusters++;
+		}
 		ctx->blob->active.clusters[i] = 0;
 	}
 

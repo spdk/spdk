@@ -6450,6 +6450,7 @@ blob_delete_snapshot_power_failure(void)
 	spdk_blob_id ids[3] = {};
 	int rc;
 	bool deleted = false;
+	uint32_t free_clusters;
 
 	dev = init_dev();
 
@@ -6476,6 +6477,8 @@ blob_delete_snapshot_power_failure(void)
 	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
 	snapshotid = g_blobid;
 
+	free_clusters = spdk_bs_free_cluster_count(bs);
+
 	thresholds.general_threshold = 1;
 	while (!deleted) {
 		dev_set_power_failure_thresholds(thresholds);
@@ -6495,6 +6498,7 @@ blob_delete_snapshot_power_failure(void)
 		CU_ASSERT(g_bserrno == 0);
 		SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 		bs = g_bs;
+		SPDK_CU_ASSERT_FATAL(spdk_bs_free_cluster_count(bs) == free_clusters);
 
 		spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
 		poll_threads();
@@ -6541,6 +6545,7 @@ blob_delete_snapshot_power_failure(void)
 		CU_ASSERT(g_bserrno == 0);
 		SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 		bs = g_bs;
+		SPDK_CU_ASSERT_FATAL(spdk_bs_free_cluster_count(bs) == free_clusters);
 
 		thresholds.general_threshold++;
 	}
@@ -6566,6 +6571,7 @@ blob_create_snapshot_power_failure(void)
 	spdk_blob_id ids[3] = {};
 	int rc;
 	bool created = false;
+	uint32_t free_clusters;
 
 	dev = init_dev();
 
@@ -6584,6 +6590,8 @@ blob_create_snapshot_power_failure(void)
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
 	blobid = g_blobid;
+
+	free_clusters = spdk_bs_free_cluster_count(bs);
 
 	thresholds.general_threshold = 1;
 	while (!created) {
@@ -6606,6 +6614,7 @@ blob_create_snapshot_power_failure(void)
 		CU_ASSERT(g_bserrno == 0);
 		SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 		bs = g_bs;
+		SPDK_CU_ASSERT_FATAL(spdk_bs_free_cluster_count(bs) == free_clusters);
 
 		spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
 		poll_threads();
@@ -6655,6 +6664,7 @@ blob_create_snapshot_power_failure(void)
 		CU_ASSERT(g_bserrno == 0);
 		SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 		bs = g_bs;
+		SPDK_CU_ASSERT_FATAL(spdk_bs_free_cluster_count(bs) == free_clusters);
 
 		thresholds.general_threshold++;
 	}
