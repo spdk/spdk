@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "08af85e4_a0bc95d4",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-24T09:41:35Z",
+      "side": 1,
+      "message": "I don\u0027t think we need to pass filename here.\nYou can just generate or pass it to measure_pcm() method.",
+      "range": {
+        "startLine": 49,
+        "startChar": 48,
+        "endLine": 49,
+        "endChar": 66
+      },
+      "revId": "9d213538876f7d1cb96149827e11df2f3e6e92e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5fe75fe0_f1806026",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-24T09:41:35Z",
+      "side": 1,
+      "message": "I think that before running the masurements you should take fio ramp_time into consideration, so that PCM starts measurements at the same time fio starts sending the actual test traffic.\n\nYou could possibly create two separate result files - one for measurements during ramp_time and the other for run_time of fio test.\nThis complicates things a bit but could be useful.",
+      "range": {
+        "startLine": 184,
+        "startChar": 8,
+        "endLine": 184,
+        "endChar": 19
+      },
+      "revId": "9d213538876f7d1cb96149827e11df2f3e6e92e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aed4432b_6dbd21ae",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-24T09:41:35Z",
+      "side": 1,
+      "message": "Should be %s",
+      "range": {
+        "startLine": 185,
+        "startChar": 24,
+        "endLine": 185,
+        "endChar": 27
+      },
+      "revId": "9d213538876f7d1cb96149827e11df2f3e6e92e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d79d7fb7_07d3e8b8",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-24T09:41:35Z",
+      "side": 1,
+      "message": "Running both pcm.x and pcm-memory.x in the same function measure_pcm() will not work as you want.\n\nFrom python docs:\nsubprocess.run() - [...] Run the command described by args. Wait for command to complete, then return a CompletedProcess instance.\n\nSo if .run() waits for the command to finish, then pcm-memory will start first, give the result and pcm.x will then start measurements.\nI think what you want is measure these both things at the same time, so you can:\na) create separate functions measure_pcm and measure_pcm_memory. That way you can start two independent threads in main() for measurements\nb) stick with single measure_pcm() function but use some subprocess method which allows running programs in a subshell. You would then have to use subprocess.communicate to check the outputs and return codes of pcm apps.",
+      "range": {
+        "startLine": 186,
+        "startChar": 8,
+        "endLine": 186,
+        "endChar": 22
+      },
+      "revId": "9d213538876f7d1cb96149827e11df2f3e6e92e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f0b27175_2da121df",
+        "filename": "test/nvmf/nvmf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-24T09:41:35Z",
+      "side": 1,
+      "message": "Unrelated change",
+      "revId": "9d213538876f7d1cb96149827e11df2f3e6e92e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
