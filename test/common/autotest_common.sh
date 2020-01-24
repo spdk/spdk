@@ -651,10 +651,16 @@ function print_backtrace() {
 		local func="${FUNCNAME[$i]}"
 		local line_nr="${BASH_LINENO[$((i - 1))]}"
 		local src="${BASH_SOURCE[$i]}"
+		local bt=""
+
+		if [[ -f $src ]]; then
+			bt=$(nl -w 4 -ba -nln $src | grep -B 5 -A 5 "^${line_nr}[^0-9]" | \
+			  sed "s/^/   /g" | sed "s/^   $line_nr /=> $line_nr /g")
+		fi
+
 		echo "in $src:$line_nr -> $func()"
 		echo "     ..."
-		nl -w 4 -ba -nln $src | grep -B 5 -A 5 "^${line_nr}[^0-9]" | \
-			sed "s/^/   /g" | sed "s/^   $line_nr /=> $line_nr /g"
+		echo "${bt:-backtrace unavailable}"
 		echo "     ..."
 	done
 	echo ""
