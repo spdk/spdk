@@ -44,6 +44,7 @@ fi
 cp $rootdir/scripts/vagrant/local.conf /opt/stack/devstack/local.conf
 
 cd /opt/stack/devstack
+sudo sed -i "s|http://download.cirros-cloud.net|https://download.cirros-cloud.net|g" stackrc
 su -c "./stack.sh" -s /bin/bash stack
 source openrc admin admin
 openstack volume type create SPDK --public
