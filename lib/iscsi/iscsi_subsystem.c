@@ -1200,6 +1200,8 @@ static void
 iscsi_poll_group_destroy(void *io_device, void *ctx_buf)
 {
 	struct spdk_iscsi_poll_group *pg = ctx_buf;
+	struct spdk_io_channel *ch;
+	struct spdk_thread *thread;
 
 	assert(pg->poller != NULL);
 	assert(pg->sock_group != NULL);
@@ -1207,6 +1209,13 @@ iscsi_poll_group_destroy(void *io_device, void *ctx_buf)
 	spdk_sock_group_close(&pg->sock_group);
 	spdk_poller_unregister(&pg->poller);
 	spdk_poller_unregister(&pg->nop_poller);
+
+	ch = spdk_io_channel_from_ctx(pg);
+	thread = spdk_io_channel_get_thread(ch);
+
+	assert(thread == spdk_get_thread());
+
+	spdk_thread_exit(thread);
 }
 
 static void
@@ -1226,11 +1235,43 @@ _iscsi_init_thread(void *ctx)
 static void
 initialize_iscsi_poll_group(spdk_msg_fn cpl)
 {
+	struct spdk_cpuset *app_cpumask;
+	uint32_t i, current_core;
+	char thread_name[32];
+	struct spdk_thread *thread;
+	uint64_t group_id;
+
 	spdk_io_device_register(&g_spdk_iscsi, iscsi_poll_group_create, iscsi_poll_group_destroy,
 				sizeof(struct spdk_iscsi_poll_group), "iscsi_tgt");
 
-	/* Send a message to each thread and create a poll group */
-	spdk_for_each_thread(_iscsi_init_thread, NULL, cpl);
+	/* Create threads for CPU cores active for this application, and put them into
+	 * the same thread group.
+	 */
+	app_cpumask = spdk_app_get_core_mask();
+	current_core = spdk_env_get_current_core();
+
+	assert(spdk_cpuset_get_cpu(app_cpumask, current_core));
+
+	snprintf(thread_name, sizeof(thread_name), "iscsi_poll_group_%u", current_core);
+	thread = spdk_thread_create(thread_name, app_cpumask);
+	assert(thread != NULL);
+
+	group_id = spdk_thread_get_group_id(thread);
+
+	SPDK_ENV_FOREACH_CORE(i) {
+		if (i == current_core || !spdk_cpuset_get_cpu(app_cpumask, i)) {
+			continue;
+		}
+
+		snprintf(thread_name, sizeof(thread_name), "iscsi_poll_group_%u", i);
+		thread = spdk_thread_create(thread_name, app_cpumask);
+		assert(thread != NULL);
+
+		spdk_thread_set_group_id(thread, group_id);
+	}
+
+	/* Send a message to each created thread and create a poll group */
+	spdk_for_each_thread_on_group(_iscsi_init_thread, NULL, cpl, group_id);
 }
 
 static void
