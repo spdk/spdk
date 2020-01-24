@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b2d9f77a_ad3af2ca",
+        "filename": "lib/nvmf/muser.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2258,
+      "author": {
+        "id": 1016781
+      },
+      "writtenOn": "2020-01-24T17:11:30Z",
+      "side": 1,
+      "message": "That is partially addressed with patch below (already merged).\nhttps://review.gerrithub.io/c/spdk/spdk/+/479511 \"nvmf: pass listen done cb to transport specific code\"\n\nSubsystem is stopped during add_listener rpc call and there is a proposition to go around that (WIP).\nhttps://review.gerrithub.io/c/spdk/spdk/+/481409 \"nvmf/ctrlr: introduce ctrlr connect backdoor\"",
+      "range": {
+        "startLine": 2249,
+        "startChar": 0,
+        "endLine": 2258,
+        "endChar": 4
+      },
+      "revId": "45c09399ce6f671576334c723b7c5f232614c014",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
