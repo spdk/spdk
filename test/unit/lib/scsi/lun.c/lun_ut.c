@@ -543,6 +543,11 @@ lun_reset_task_wait_scsi_task_complete(void)
 	lun_destruct(lun);
 
 	CU_ASSERT_EQUAL(g_task_count, 0);
+
+	/* Unregistering poller from thread is done asynchronously. So we have to
+	 * poll thread once here.
+	 */
+	poll_thread(0);
 }
 
 static void
