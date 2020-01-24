@@ -276,7 +276,7 @@ nvmf_init_threads(void)
 	 * SPDK optionally allocates extra memory to be used by the application
 	 * framework. The size of the extra memory allocated is the second parameter.
 	 */
-	spdk_thread_lib_init(nvmf_schedule_spdk_thread, sizeof(struct nvmf_lw_thread));
+	spdk_thread_lib_init(nvmf_schedule_spdk_thread, NULL, sizeof(struct nvmf_lw_thread));
 
 	/* Spawn one system thread per CPU core. The system thread is called a reactor.
 	 * SPDK will spawn lightweight threads that must be mapped to reactors in

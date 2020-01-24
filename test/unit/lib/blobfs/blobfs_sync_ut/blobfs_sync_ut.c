@@ -651,7 +651,7 @@ int main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-	spdk_thread_lib_init(NULL, 0);
+	spdk_thread_lib_init(NULL, NULL, 0);
 
 	thread = spdk_thread_create("test_thread", NULL);
 	spdk_set_thread(thread);

@@ -279,7 +279,7 @@ spdk_init_thread_poll(void *arg)
 	}
 	spdk_unaffinitize_thread();
 
-	spdk_thread_lib_init(NULL, 0);
+	spdk_thread_lib_init(NULL, NULL, 0);
 
 	/* Create an SPDK thread temporarily */
 	rc = spdk_fio_init_thread(&td);

@@ -126,7 +126,8 @@ spdk_reactors_init(void)
 
 	memset(g_reactors, 0, (last_core + 1) * sizeof(struct spdk_reactor));
 
-	spdk_thread_lib_init(spdk_reactor_schedule_thread, sizeof(struct spdk_lw_thread));
+	spdk_thread_lib_init(spdk_reactor_schedule_thread, NULL,
+			     sizeof(struct spdk_lw_thread));
 
 	SPDK_ENV_FOREACH_CORE(i) {
 		spdk_reactor_construct(&g_reactors[i], i);
