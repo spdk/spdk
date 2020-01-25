@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "7747f690_aaa68be3",
+        "filename": "test/app/nvme_fused/nvme_fused.c",
+        "patchSetId": 68
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-25T21:51:35Z",
+      "side": 1,
+      "message": "Unnecessary empty line",
+      "revId": "41b98b1544671096443696affbf1c1624af8d944",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "19d3e424_b43da870",
+        "filename": "test/app/nvme_fused/nvme_fused.c",
+        "patchSetId": 68
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-25T21:51:35Z",
+      "side": 1,
+      "message": "Can we use macro instead of raw number for sc and sct here?",
+      "revId": "41b98b1544671096443696affbf1c1624af8d944",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a15bcfd0_65106471",
         "filename": "test/app/nvme_fused/nvme_fused.c",
         "patchSetId": 68
@@ -81,6 +115,23 @@
       "writtenOn": "2020-01-24T18:59:47Z",
       "side": 1,
       "message": "I think this might be clearer:\n\ng_counter--;\nif (g_counter \u003d\u003d 0) {\n  goto exit_handler;\n}",
+      "revId": "41b98b1544671096443696affbf1c1624af8d944",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b5a7e0de_58d664c8",
+        "filename": "test/nvmf/target/fused.sh",
+        "patchSetId": 68
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-25T21:51:35Z",
+      "side": 1,
+      "message": "Please remove these comment out lines",
       "revId": "41b98b1544671096443696affbf1c1624af8d944",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
