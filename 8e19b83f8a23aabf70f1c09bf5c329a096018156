@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "70c815e2_d0f1a553",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-27T08:09:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b3afc05d_acc698ff",
+      "range": {
+        "startLine": 7,
+        "startChar": 32,
+        "endLine": 7,
+        "endChar": 49
+      },
+      "revId": "8e19b83f8a23aabf70f1c09bf5c329a096018156",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d0ae6358_5d1923b3",
         "filename": "doc/getting_started.md",
         "patchSetId": 4
@@ -45,6 +69,30 @@
       "revId": "8e19b83f8a23aabf70f1c09bf5c329a096018156",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0ce1c9f9_0c3002b1",
+        "filename": "doc/getting_started.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-27T08:09:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d0ae6358_5d1923b3",
+      "range": {
+        "startLine": 34,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 0
+      },
+      "revId": "8e19b83f8a23aabf70f1c09bf5c329a096018156",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "17d807f5_16dbac58",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-27T08:09:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2c615118_3f5da288",
+      "range": {
+        "startLine": 17,
+        "startChar": 11,
+        "endLine": 17,
+        "endChar": 37
+      },
+      "revId": "8e19b83f8a23aabf70f1c09bf5c329a096018156",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a684d81f_3b5aa7c6",
         "filename": "scripts/pkgdep.sh",
         "patchSetId": 4
@@ -91,6 +163,30 @@
       "revId": "8e19b83f8a23aabf70f1c09bf5c329a096018156",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f4296c26_f102a461",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-27T08:09:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a684d81f_3b5aa7c6",
+      "range": {
+        "startLine": 94,
+        "startChar": 32,
+        "endLine": 94,
+        "endChar": 49
+      },
+      "revId": "8e19b83f8a23aabf70f1c09bf5c329a096018156",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "91408dd8_0288b280",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-27T08:09:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e1dc1702_3681d199",
+      "range": {
+        "startLine": 143,
+        "startChar": 31,
+        "endLine": 143,
+        "endChar": 49
+      },
+      "revId": "8e19b83f8a23aabf70f1c09bf5c329a096018156",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eecad638_cff9d219",
         "filename": "scripts/pkgdep.sh",
         "patchSetId": 4
@@ -137,6 +257,30 @@
       "revId": "8e19b83f8a23aabf70f1c09bf5c329a096018156",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e167a27f_4745d5ba",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-27T08:09:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "eecad638_cff9d219",
+      "range": {
+        "startLine": 170,
+        "startChar": 26,
+        "endLine": 170,
+        "endChar": 49
+      },
+      "revId": "8e19b83f8a23aabf70f1c09bf5c329a096018156",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
