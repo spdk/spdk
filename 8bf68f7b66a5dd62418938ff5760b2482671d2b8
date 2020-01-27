@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7ffa61b1_48569134",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 6
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-27T18:16:15Z",
+      "side": 1,
+      "message": "That\u0027s not really the name of the test we remove from Python scripts and there\u0027s already a commit with a very similar name: https://review.gerrithub.io/c/spdk/spdk/+/462464\nI know it\u0027s a nitpick, but let\u0027s fix that to avoid confusion if someone EVER decides to take a look at commit log history;)",
+      "range": {
+        "startLine": 7,
+        "startChar": 11,
+        "endLine": 7,
+        "endChar": 46
+      },
+      "revId": "8bf68f7b66a5dd62418938ff5760b2482671d2b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
