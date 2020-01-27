@@ -6739,7 +6739,7 @@ _spdk_blob_insert_cluster_msg(void *arg)
 		assert(ctx->extent_page == 0);
 		/* Extent page already allocated.
 		 * Every cluster allocation, requires just an update of single extent page. */
-		_spdk_blob_insert_extent(ctx->blob, ctx->extent_page, ctx->cluster_num,
+		_spdk_blob_insert_extent(ctx->blob, *extent_page, ctx->cluster_num,
 					 _spdk_blob_insert_cluster_msg_cb, ctx);
 	}
 }
