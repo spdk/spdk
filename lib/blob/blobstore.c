@@ -137,7 +137,7 @@ static int
 _spdk_bs_allocate_cluster(struct spdk_blob *blob, uint32_t cluster_num,
 			  uint64_t *lowest_free_cluster, uint32_t *lowest_free_md_page, bool update_map)
 {
-	uint32_t *extent_page;
+	uint32_t *extent_page = 0;
 
 	pthread_mutex_lock(&blob->bs->used_clusters_mutex);
 	*lowest_free_cluster = spdk_bit_array_find_first_clear(blob->bs->used_clusters,
