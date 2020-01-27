@@ -426,5 +426,9 @@ int main(int argc, char **argv)
 	printf("Initialization complete.\n");
 	hello_world();
 	cleanup();
+	if (g_vmd) {
+		spdk_vmd_fini();
+	}
+
 	return 0;
 }

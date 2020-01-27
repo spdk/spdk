@@ -173,6 +173,10 @@ of pollers to the application owner.
 `spdk_pipe`, a new utility for buffering data from sockets or files for parsing
 has been added. The public API is available at `include/spdk/pipe.h`.
 
+### vmd
+A new function, `spdk_vmd_fini`, has been added. It releases all resources acquired by the VMD
+library through the `spdk_vmd_init` call.
+
 ### bdev
 
 Added spdk_bdev_io_get_nvme_fused_status function for translating bdev_io status to NVMe status

@@ -138,7 +138,7 @@ struct vmd_pci_device {
  * The VMD adapter
  */
 struct vmd_adapter {
-	struct spdk_pci_device pci;
+	struct spdk_pci_device *pci;
 	uint32_t domain;
 	/* physical and virtual VMD bars */
 	uint64_t cfgbar, cfgbar_size;
