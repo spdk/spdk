@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5d7438ed_1b1f6421",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-27T22:20:05Z",
+      "side": 1,
+      "message": "This space is not necessary.",
+      "range": {
+        "startLine": 167,
+        "startChar": 51,
+        "endLine": 167,
+        "endChar": 52
+      },
+      "revId": "2fb5b8729479eff84f5a55e3b4ecb08b75fdd58c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
