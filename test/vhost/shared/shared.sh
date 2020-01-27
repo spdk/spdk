@@ -10,7 +10,7 @@ rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 function run_spdk_fio() {
 	fio_bdev --ioengine=spdk_bdev \
 	"$rootdir/test/vhost/common/fio_jobs/default_initiator.job" --runtime=10 --rw=randrw \
-	--spdk_mem=1024 --spdk_single_seg=1 --spdk_conf=$testdir/bdev.conf "$@"
+	--spdk_mem=1024 --spdk_single_seg=1 --spdk_json_conf=$testdir/bdev.json "$@"
 }
 
 vhosttestinit

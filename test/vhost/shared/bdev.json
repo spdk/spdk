@@ -1,0 +1,20 @@
+{
+  "subsystems": [
+    {
+      "subsystem": "bdev",
+      "config": [
+        {
+          "method": "bdev_virtio_attach_controller",
+          "params": {
+            "vq_count": 2,
+            "traddr": "Malloc.0",
+            "dev_type": "blk",
+            "vq_size": 512,
+            "name": "VirtioBlk0",
+            "trtype": "user"
+          }
+        }
+      ]
+    }
+  ]
+}
