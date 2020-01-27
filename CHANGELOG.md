@@ -18,6 +18,30 @@ an auxiliary buffer for its own private use. The API is used in the same manner 
 bdev_io primary buffer. 'spdk_bdev_io_put_aux_buf' frees the allocated auxiliary
 buffer.
 
+### blobfs
+
+Added boolean return value for function spdk_fs_set_cache_size to indicate its operation result.
+
+Added `blobfs_set_cache_size` RPC method to set cache size for blobstore filesystem.
+
+### dpdk
+
+Updated DPDK submodule to DPDK 19.11.
+
+### env_dpdk
+
+`spdk_env_dpdk_post_init` now takes a boolean, `legacy_mem`, as an argument.
+
+A new function, `spdk_env_dpdk_dump_mem_stats`, prints information about the memory consumed by DPDK to a file specified by
+the user. A new utility, `scripts/dpdk_mem_info.py` , wraps this function and prints the output in an easy to read way.
+
+### event
+
+The functions `spdk_reactor_enable_framework_monitor_context_switch()` and
+`spdk_reactor_framework_monitor_context_switch_enabled()` have been changed to
+`spdk_framework_enable_context_switch_monitor()` and
+`spdk_framework_context_switch_monitor_enabled()`, respectively.
+
 ### ftl
 
 All NVMe dependencies were removed from ftl library.
@@ -34,21 +58,6 @@ parameter.
 
 `spdk_ftl_punit_range` and `ftl_module_init_opts` structures were removed.
 
-### scsi
-
-`spdk_scsi_lun_get_dif_ctx` now takes an additional argument of type `spdk_scsi_task`.
-
-### sock
-
-Added spdk_sock_writev_async for performing asynchronous writes to sockets. This call will
-never return EAGAIN, instead queueing internally until the data has all been sent. This can
-simplify many code flows that create pollers to continue attempting to flush writes
-on sockets.
-
-Added `impl_name` parameter in spdk_sock_listen and spdk_sock_connect functions. Users may now
-specify the sock layer implementation they'd prefer to use. Valid implementations are currently
-"vpp" and "posix" and NULL, where NULL results in the previous behavior of the functions.
-
 ### isa-l
 
 Updated ISA-L submodule to commit f3993f5c0b6911 which includes implementation and
@@ -56,22 +65,30 @@ optimization for aarch64.
 
 Enabled ISA-L on aarch64 by default in addition to x86.
 
-### thread
+### nvme
 
-`spdk_thread_send_msg` now returns int indicating if the message was successfully
-sent.
+`delayed_pcie_doorbell` parameter in `spdk_nvme_io_qpair_opts` was renamed to `delay_cmd_submit`
+to allow reuse in other transports.
 
-A new function `spdk_thread_send_critical_msg`, has been added to support sending a single message that
-might interrupt execution of the application, e.g. signal handlers.
+Added RDMA WR batching to NVMf RDMA initiator. Send and receive WRs are chained together
+and posted with a single call to ibv_post_send(receive) in the next call to qpair completion
+processing function. Batching is controlled by 'delay_cmd_submit' qpair option.
 
-Two new functions, `spdk_poller_pause`, and `spdk_poller_resume`, have been added to give greater control
-of pollers to the application owner.
+The NVMe-oF initiator now supports plugging out of tree NVMe-oF transports. In order
+to facilitate this feature, several small API changes have been made:
 
-### blobfs
+The `spdk_nvme_transport_id` struct now contains a trstring member used to identify the transport.
+A new function, `spdk_nvme_transport_available_by_name`, has been added.
+A function table, `spdk_nvme_transport_ops`, and macro, `SPDK_NVME_TRANSPORT_REGISTER`, have been added which
+enable registering out of tree transports.
 
-Added boolean return value for function spdk_fs_set_cache_size to indicate its operation result.
+A new function, `spdk_nvme_ns_supports_compare`, allows a user to check whether a given namespace supports the compare
+operation.
 
-Added `blobfs_set_cache_size` RPC method to set cache size for blobstore filesystem.
+A new family of functions, `spdk_nvmf_ns_compare*`, give the user access to submitting compare commands to NVMe namespaces.
+
+A new function, `spdk_nvme_ctrlr_cmd_get_log_page_ext`, gives users more granular control over the command dwords sent in
+log page requests.
 
 ### nvmf
 
@@ -101,36 +118,6 @@ the target expects the initiator to send both the compare command and write comm
 SPDK initiator currently respects this requirement, but this note is included as a flag for other initiators attempting
 compatibility with this version of SPDK.
 
-### util
-
-`spdk_pipe`, a new utility for buffering data from sockets or files for parsing
-has been added. The public API is available at `include/spdk/pipe.h`.
-
-### nvme
-
-`delayed_pcie_doorbell` parameter in `spdk_nvme_io_qpair_opts` was renamed to `delay_cmd_submit`
-to allow reuse in other transports.
-
-Added RDMA WR batching to NVMf RDMA initiator. Send and receive WRs are chained together
-and posted with a single call to ibv_post_send(receive) in the next call to qpair completion
-processing function. Batching is controlled by 'delay_cmd_submit' qpair option.
-
-The NVMe-oF initiator now supports plugging out of tree NVMe-oF transports. In order
-to facilitate this feature, several small API changes have been made:
-
-The `spdk_nvme_transport_id` struct now contains a trstring member used to identify the transport.
-A new function, `spdk_nvme_transport_available_by_name`, has been added.
-A function table, `spdk_nvme_transport_ops`, and macro, `SPDK_NVME_TRANSPORT_REGISTER`, have been added which
-enable registering out of tree transports.
-
-A new function, `spdk_nvme_ns_supports_compare`, allows a user to check whether a given namespace supports the compare
-operation.
-
-A new family of functions, `spdk_nvmf_ns_compare*`, give the user access to submitting compare commands to NVMe namespaces.
-
-A new function, `spdk_nvme_ctrlr_cmd_get_log_page_ext`, gives users more granular control over the command dwords sent in
-log page requests.
-
 ### rpc
 
 A new RPC, `bdev_zone_block_create`, enables creating zone bdevs on a block device.
@@ -155,23 +142,36 @@ A new RPC, `framework_get_reactors`, has been added to retrieve list of all reac
 `nvmf_set_config` now takes an argument to enable passthru of identify commands to base NVMe devices.
 Please see the nvmf section above for more details.
 
-### dpdk
+### scsi
 
-Updated DPDK submodule to DPDK 19.11.
+`spdk_scsi_lun_get_dif_ctx` now takes an additional argument of type `spdk_scsi_task`.
 
-### env_dpdk
+### sock
 
-`spdk_env_dpdk_post_init` now takes a boolean, `legacy_mem`, as an argument.
+Added spdk_sock_writev_async for performing asynchronous writes to sockets. This call will
+never return EAGAIN, instead queueing internally until the data has all been sent. This can
+simplify many code flows that create pollers to continue attempting to flush writes
+on sockets.
 
-A new function, `spdk_env_dpdk_dump_mem_stats`, prints information about the memory consumed by DPDK to a file specified by
-the user. A new utility, `scripts/dpdk_mem_info.py` , wraps this function and prints the output in an easy to read way.
+Added `impl_name` parameter in spdk_sock_listen and spdk_sock_connect functions. Users may now
+specify the sock layer implementation they'd prefer to use. Valid implementations are currently
+"vpp" and "posix" and NULL, where NULL results in the previous behavior of the functions.
 
-### event
+### thread
 
-The functions `spdk_reactor_enable_framework_monitor_context_switch()` and
-`spdk_reactor_framework_monitor_context_switch_enabled()` have been changed to
-`spdk_framework_enable_context_switch_monitor()` and
-`spdk_framework_context_switch_monitor_enabled()`, respectively.
+`spdk_thread_send_msg` now returns int indicating if the message was successfully
+sent.
+
+A new function `spdk_thread_send_critical_msg`, has been added to support sending a single message that
+might interrupt execution of the application, e.g. signal handlers.
+
+Two new functions, `spdk_poller_pause`, and `spdk_poller_resume`, have been added to give greater control
+of pollers to the application owner.
+
+### util
+
+`spdk_pipe`, a new utility for buffering data from sockets or files for parsing
+has been added. The public API is available at `include/spdk/pipe.h`.
 
 ### bdev
 
