@@ -22,7 +22,12 @@ function nvmf_filesystem_create {
 		force=-f
 	fi
 
-	mkfs.${fstype} $force /dev/${nvme_name}p1
+	local i=0
+	while ! mkfs.${fstype} $force /dev/${nvme_name}p1; do
+		[ $i -lt 15 ] || break
+		i=$((i+1))
+		sleep 1
+	done
 
 	mount /dev/${nvme_name}p1 /mnt/device
 	touch /mnt/device/aaa
@@ -30,6 +35,7 @@ function nvmf_filesystem_create {
 	rm /mnt/device/aaa
 	sync
 
+	i=0
 	while ! umount /mnt/device; do
 		[ $i -lt 15 ] || break
 		i=$((i+1))
