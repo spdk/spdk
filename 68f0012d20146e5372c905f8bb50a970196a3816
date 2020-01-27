@@ -22,6 +22,30 @@
       "revId": "68f0012d20146e5372c905f8bb50a970196a3816",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e875128b_859fde72",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1017532
+      },
+      "writtenOn": "2020-01-27T17:07:24Z",
+      "side": 1,
+      "message": "Nice catch! And, yeah, I think it should be fine. Branch updated.",
+      "parentUuid": "28aa184e_c94378ff",
+      "range": {
+        "startLine": 34,
+        "startChar": 51,
+        "endLine": 34,
+        "endChar": 69
+      },
+      "revId": "68f0012d20146e5372c905f8bb50a970196a3816",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
