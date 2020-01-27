@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a02e06e_8208cd18",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-27T15:54:10Z",
+      "side": 1,
+      "message": "This variable is unused, remove it.",
+      "range": {
+        "startLine": 144,
+        "startChar": 30,
+        "endLine": 146,
+        "endChar": 0
+      },
+      "revId": "0e6ce2467296d1b098050d8eb33db0cc0877788e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9575df2b_9f7e2453",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-27T15:54:10Z",
+      "side": 1,
+      "message": "We have to make sure we\u0027re calling this from appropriate thread (the one that scheduled the IO). Currently this is not always the case (e.g. due to retrying the reads).",
+      "range": {
+        "startLine": 147,
+        "startChar": 1,
+        "endLine": 147,
+        "endChar": 29
+      },
+      "revId": "0e6ce2467296d1b098050d8eb33db0cc0877788e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
