@@ -828,22 +828,37 @@ logout_request_timeout(void *arg)
 	return -1;
 }
 
+/* If the connection is running and logout is not requested yet, request logout
+ * to initiator and wait for the logout process to start.
+ */
+static void
+_iscsi_conn_request_logout(void *ctx)
+{
+	struct spdk_iscsi_conn *conn = ctx;
+
+	if (conn->state > ISCSI_CONN_STATE_RUNNING ||
+	    conn->logout_request_timer != NULL) {
+		return;
+	}
+
+	iscsi_send_logout_request(conn);
+
+	conn->logout_request_timer = spdk_poller_register(logout_request_timeout,
+				     conn, ISCSI_LOGOUT_REQUEST_TIMEOUT * 1000000);
+}
+
 static void
 iscsi_conn_request_logout(struct spdk_iscsi_conn *conn)
 {
+	struct spdk_thread *thread;
+
 	if (conn->state == ISCSI_CONN_STATE_INVALID) {
 		/* Move it to EXITING state if the connection is in login. */
 		conn->state = ISCSI_CONN_STATE_EXITING;
 	} else if (conn->state == ISCSI_CONN_STATE_RUNNING &&
 		   conn->logout_request_timer == NULL) {
-		/* If the connection is running and logout is not requested yet,
-		 *  request logout to initiator and wait for the logout process
-		 *  to start.
-		 */
-		iscsi_send_logout_request(conn);
-
-		conn->logout_request_timer = spdk_poller_register(logout_request_timeout,
-					     conn, ISCSI_LOGOUT_REQUEST_TIMEOUT * 1000000);
+		thread = spdk_io_channel_get_thread(spdk_io_channel_from_ctx(conn->pg));
+		spdk_thread_send_msg(thread, _iscsi_conn_request_logout, conn);
 	}
 }
 
