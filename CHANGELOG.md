@@ -2,6 +2,10 @@
 
 ## v20.04: (Upcoming Release)
 
+### vmd
+A new function, `spdk_vmd_fini`, has been added. It releases all resources acquired by the VMD
+library through the `spdk_vmd_init` call.
+
 ## v20.01
 
 ### bdev

@@ -1967,6 +1967,10 @@ unregister_controllers(void)
 		free(entry);
 		entry = next;
 	}
+
+	if (g_vmd) {
+		spdk_vmd_fini();
+	}
 }
 
 static int
