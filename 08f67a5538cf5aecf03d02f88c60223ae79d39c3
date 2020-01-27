@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2017716e_c31fdee1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 888,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-27T16:07:45Z",
+      "side": 1,
+      "message": "entry -\u003e entries?",
+      "revId": "08f67a5538cf5aecf03d02f88c60223ae79d39c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "abc94280_74725aba",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 905,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-27T16:07:45Z",
+      "side": 1,
+      "message": "I\u0027m not sure I understand this, if you break you\u0027re still executing lines 922-926, was that the intent or did you mean to return here? And, sorry I just don\u0027t see it, the caller _spdk_blob_serialize_extent_table() isn\u0027t looking at updated buf and remaining_sz, its setting them at 955 and 956. It seems like 925-926 aren\u0027t doing anything? I know I\u0027m going to hit myself over the head when you explain it :)",
+      "revId": "08f67a5538cf5aecf03d02f88c60223ae79d39c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
