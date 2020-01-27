@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "204bce15_02be6d1b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 6740,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-27T17:54:44Z",
+      "side": 1,
+      "message": "If this is obvious to Ben then cool but I don\u0027t think there\u0027s enough context in the comment to go with the code block beneath is. I kinda follow it after reading the commit message but that will be long gone once this is merged. I\u0027d like to see a comment that more clearly explains relationship between \"original thread\" and \"conflicting thread\" (which you don\u0027t mention in the comment) and the code below...",
+      "revId": "2ae7c7a36686c444f489ff20bc741f2bb752af15",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
