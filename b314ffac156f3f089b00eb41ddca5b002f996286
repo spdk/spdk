@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "902bc478_a4abece4",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 6
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-27T17:51:44Z",
+      "side": 1,
+      "message": "Could really use a good commit message on next patch.\n\nBriefly - what is pcm, what we want to measure and why",
+      "revId": "b314ffac156f3f089b00eb41ddca5b002f996286",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bd78de05_88f2fc69",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-27T17:51:44Z",
+      "side": 1,
+      "message": "A couple of things here:\n\n1) I\u0027d re-organize the order of arguments. Move pcm_dir to first position.\n2) Compared to sar measurements - there is no \"sar count\".\nWhen running sar you would wait a couple of seconds (if sar_delay !\u003d0) and then start measuring X times (sar count) in Y time intervals (sar_interval) - typically 1 measurement every 1 second.\n\nHere you only have pcm_delay (how long to wait before measurements) and pcm_interval - how often to make measurements. What about the count of the samples?",
+      "range": {
+        "startLine": 50,
+        "startChar": 12,
+        "endLine": 50,
+        "endChar": 100
+      },
+      "revId": "b314ffac156f3f089b00eb41ddca5b002f996286",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8be03fcb_5193ac70",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 762,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-27T17:51:44Z",
+      "side": 1,
+      "message": "No such variable in this scope. Also - wrong name.",
+      "range": {
+        "startLine": 762,
+        "startChar": 38,
+        "endLine": 762,
+        "endChar": 51
+      },
+      "revId": "b314ffac156f3f089b00eb41ddca5b002f996286",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3c541e77_3f5c0287",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 768,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-27T17:51:44Z",
+      "side": 1,
+      "message": "No such variable in this scope. Also - wrong name.",
+      "range": {
+        "startLine": 768,
+        "startChar": 38,
+        "endLine": 768,
+        "endChar": 51
+      },
+      "revId": "b314ffac156f3f089b00eb41ddca5b002f996286",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
