@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4d81b7e0_be2db0ea",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-27T18:00:17Z",
+      "side": 1,
+      "message": "I would prefer not to use the ut_ prefix here as it\u0027s generally meant to indicate a mocked variable, you\u0027re not mocking anything this is just a unit test helper function so I think dropping the ut would be more appropriate. I wouldn\u0027t re-spin just for that but if you have to update the ut file again I think it\u0027s worth changing",
+      "revId": "b223dcbefd23d1a98321ea95e5ea30b410f736dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
