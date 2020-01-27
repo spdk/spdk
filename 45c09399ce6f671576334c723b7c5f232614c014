@@ -46,6 +46,30 @@
       "revId": "45c09399ce6f671576334c723b7c5f232614c014",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1d16238e_7f24f735",
+        "filename": "lib/nvmf/muser.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2258,
+      "author": {
+        "id": 1016781
+      },
+      "writtenOn": "2020-01-27T15:03:34Z",
+      "side": 1,
+      "message": "Conceptually correct, you need to defer done callback until it is really done. As soon as you try to do that you will see an issue with \u0027add_qp\u0027, as listen is not \u0027done\u0027 subsystem is still paused. In \u0027connect\u0027 procedure there is a check for subsystem state which would prevent to connect successfully.\n\nSo the second patch tries to go around that but approach is not approved yet. Feedback is welcome ;)",
+      "parentUuid": "704f8cf1_56adbf10",
+      "range": {
+        "startLine": 2249,
+        "startChar": 0,
+        "endLine": 2258,
+        "endChar": 4
+      },
+      "revId": "45c09399ce6f671576334c723b7c5f232614c014",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
