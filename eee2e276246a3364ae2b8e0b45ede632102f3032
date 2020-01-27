@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fb2bb711_f06c96c9",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1382,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-27T17:17:48Z",
+      "side": 1,
+      "message": "a comment here would be good /* memset the region between the original size and the enw total size */",
+      "revId": "eee2e276246a3364ae2b8e0b45ede632102f3032",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
