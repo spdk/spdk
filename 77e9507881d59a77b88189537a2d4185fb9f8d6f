@@ -22,6 +22,30 @@
       "revId": "77e9507881d59a77b88189537a2d4185fb9f8d6f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4a565231_dddffe9b",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 408,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-27T13:12:26Z",
+      "side": 0,
+      "message": "Yes, this check could be useful, but I think we could get rid of the assert below.",
+      "parentUuid": "b0ba7134_4424d623",
+      "range": {
+        "startLine": 408,
+        "startChar": 1,
+        "endLine": 408,
+        "endChar": 34
+      },
+      "revId": "77e9507881d59a77b88189537a2d4185fb9f8d6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

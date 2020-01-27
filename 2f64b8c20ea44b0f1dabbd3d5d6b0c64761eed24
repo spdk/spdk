@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "647f32a3_bb54a456",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 21
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-27T13:12:26Z",
+      "side": 1,
+      "message": "Probably yes, let’s make it in separate patch.",
+      "parentUuid": "6b674be6_e8f89098",
+      "range": {
+        "startLine": 77,
+        "startChar": 0,
+        "endLine": 92,
+        "endChar": 2
+      },
+      "revId": "2f64b8c20ea44b0f1dabbd3d5d6b0c64761eed24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8cdc5dbd_1ef3e74f",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 21
@@ -45,6 +69,30 @@
       "revId": "2f64b8c20ea44b0f1dabbd3d5d6b0c64761eed24",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "69a15603_190a55bf",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 510,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-27T13:12:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8cdc5dbd_1ef3e74f",
+      "range": {
+        "startLine": 510,
+        "startChar": 0,
+        "endLine": 510,
+        "endChar": 19
+      },
+      "revId": "2f64b8c20ea44b0f1dabbd3d5d6b0c64761eed24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
