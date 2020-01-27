@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "78bce012_2c545ee3",
+        "filename": "test/lvol/resize.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-27T18:08:47Z",
+      "side": 1,
+      "message": "I don\u0027t think we really need this.\nLet\u0027s stick to the version from PS5 and just fix the place where the trap is placed in the test function.",
+      "range": {
+        "startLine": 154,
+        "startChar": 0,
+        "endLine": 165,
+        "endChar": 1
+      },
+      "revId": "083c609a0e9ea9cdf19e66f7f4f134e0983b679b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d97293cb_b4fb4fda",
+        "filename": "test/lvol/resize.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-27T18:08:47Z",
+      "side": 1,
+      "message": "Why do we need to set a trap with nbd_stop disks for tests which don\u0027t run NBD?\nThis will cause confusing output in case of error.",
+      "range": {
+        "startLine": 170,
+        "startChar": 5,
+        "endLine": 170,
+        "endChar": 20
+      },
+      "revId": "083c609a0e9ea9cdf19e66f7f4f134e0983b679b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
