@@ -33,6 +33,24 @@
       "revId": "08f67a5538cf5aecf03d02f88c60223ae79d39c3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3ef335dc_048e17f2",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 905,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-27T16:42:01Z",
+      "side": 1,
+      "message": "The caller (_spdk_blob_serialize_extent_table()) is not looking at the remainig_sz/buf. It either allocates another page if we haven\u0027t serialized all extent pages or if we did - passes remaining_sz/buf to its own caller. Allowing for serializing some other descriptor in the remaining space in page.\n\nWe still want to update the next_ep (so _spdk_blob_serialize_extent_table() allocates another page) and desc-\u003elength (so page has saved valid len).\n\nI could change to comment or code around 904, but it would do same thing as it does now:\nif (*remaining_sz \u003c cur_sz  + sizeof(desc-\u003eextent_page[0])) {\n\t/* If we ran out of buffer space, return */\n\t*next_ep \u003d i;\n\tdesc-\u003elength \u003d sizeof(desc-\u003enum_clusters) + sizeof(desc-\u003eextent_page[0]) * et_idx;\n\treturn;\n}\nIf you think this is better, I\u0027ll change it.",
+      "parentUuid": "abc94280_74725aba",
+      "revId": "08f67a5538cf5aecf03d02f88c60223ae79d39c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
