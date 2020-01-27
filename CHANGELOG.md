@@ -130,6 +130,10 @@ The functions `spdk_reactor_enable_framework_monitor_context_switch()` and
 `spdk_framework_enable_context_switch_monitor()` and
 `spdk_framework_context_switch_monitor_enabled()`, respectively.
 
+### vmd
+A new function, `spdk_vmd_fini`, has been added. It releases all resources acquired by the VMD
+library through the `spdk_vmd_init` call.
+
 ## v19.10:
 
 ### rpc

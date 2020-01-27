@@ -681,7 +681,7 @@ vmd_create_new_bus(struct vmd_pci_bus *parent, struct vmd_pci_device *bridge, ui
 	bridge->pci.addr.bus = new_bus->bus_number;
 	bridge->pci.addr.dev = bridge->devfn;
 	bridge->pci.addr.func = 0;
-	bridge->pci.addr.domain = parent->vmd->pci.addr.domain;
+	bridge->pci.addr.domain = parent->vmd->pci->addr.domain;
 
 	return new_bus;
 }
@@ -911,7 +911,7 @@ vmd_dev_init(struct vmd_pci_device *dev)
 	if (vmd_is_supported_device(dev)) {
 		spdk_pci_addr_fmt(bdf, sizeof(bdf), &dev->pci.addr);
 		SPDK_DEBUGLOG(SPDK_LOG_VMD, "Initalizing NVMe device at %s\n", bdf);
-		dev->pci.parent = &dev->bus->vmd->pci;
+		dev->pci.parent = dev->bus->vmd->pci;
 		spdk_pci_hook_device(spdk_pci_nvme_get_driver(), &dev->pci);
 	}
 }
@@ -1118,8 +1118,8 @@ vmd_scan_pcibus(struct vmd_pci_bus *bus)
 	SPDK_DEBUGLOG(SPDK_LOG_VMD, "VMD scan found %u END DEVICES\n", g_end_device_count);
 
 	SPDK_INFOLOG(SPDK_LOG_VMD, "PCIe devices attached to VMD %04x:%02x:%02x:%x...\n",
-		     bus->vmd->pci.addr.domain, bus->vmd->pci.addr.bus,
-		     bus->vmd->pci.addr.dev, bus->vmd->pci.addr.func);
+		     bus->vmd->pci->addr.domain, bus->vmd->pci->addr.bus,
+		     bus->vmd->pci->addr.dev, bus->vmd->pci->addr.func);
 
 	TAILQ_FOREACH(bus_entry, &bus->vmd->bus_list, tailq) {
 		if (bus_entry->self != NULL) {
@@ -1165,7 +1165,7 @@ vmd_enumerate_devices(struct vmd_adapter *vmd)
 	vmd->vmd_bus.vmd = vmd;
 	vmd->vmd_bus.secondary_bus = vmd->vmd_bus.subordinate_bus = 0;
 	vmd->vmd_bus.primary_bus = vmd->vmd_bus.bus_number = 0;
-	vmd->vmd_bus.domain = vmd->pci.addr.domain;
+	vmd->vmd_bus.domain = vmd->pci->addr.domain;
 
 	return vmd_scan_pcibus(&vmd->vmd_bus);
 }
@@ -1213,7 +1213,7 @@ vmd_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 
 	/* map vmd bars */
 	i = vmd_c->count;
-	vmd_c->vmd[i].pci = *pci_dev;
+	vmd_c->vmd[i].pci = pci_dev;
 	vmd_c->vmd[i].vmd_index = i;
 	vmd_c->vmd[i].domain =
 		(pci_dev->addr.bus << 16) | (pci_dev->addr.dev << 8) | pci_dev->addr.func;
@@ -1253,7 +1253,7 @@ spdk_vmd_pci_device_list(struct spdk_pci_addr vmd_addr, struct spdk_pci_device *
 	}
 
 	for (int i = 0; i < MAX_VMD_TARGET; ++i) {
-		if (spdk_pci_addr_compare(&vmd_addr, &g_vmd_container.vmd[i].pci.addr) == 0) {
+		if (spdk_pci_addr_compare(&vmd_addr, &g_vmd_container.vmd[i].pci->addr) == 0) {
 			TAILQ_FOREACH(bus, &g_vmd_container.vmd[i].bus_list, tailq) {
 				TAILQ_FOREACH(dev, &bus->dev_list, tailq) {
 					nvme_list[cnt++] = dev->pci;
@@ -1362,6 +1362,16 @@ int
 spdk_vmd_init(void)
 {
 	return spdk_pci_enumerate(spdk_pci_vmd_get_driver(), vmd_enum_cb, &g_vmd_container);
+}
+
+void
+spdk_vmd_fini(void)
+{
+	uint32_t i;
+
+	for (i = 0; i < g_vmd_container.count; ++i) {
+		spdk_pci_device_detach(g_vmd_container.vmd[i].pci);
+	}
 }
 
 SPDK_LOG_REGISTER_COMPONENT("vmd", SPDK_LOG_VMD)
