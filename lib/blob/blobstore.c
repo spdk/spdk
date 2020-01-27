@@ -652,7 +652,7 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_EXTENT_PAGE) {
 			struct spdk_blob_md_descriptor_extent_page	*desc_extent;
 			unsigned int					i;
-			unsigned int					cluster_count = blob->active.num_clusters;
+			unsigned int					cluster_count = 0;
 			size_t						cluster_idx_length;
 
 			if (blob->extent_rle_found) {
@@ -689,12 +689,13 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 				return -EINVAL;
 			}
 
-			tmp = realloc(blob->active.clusters, cluster_count * sizeof(*blob->active.clusters));
+			tmp = realloc(blob->active.clusters,
+				      (cluster_count + blob->active.num_clusters) * sizeof(*blob->active.clusters));
 			if (tmp == NULL) {
 				return -ENOMEM;
 			}
 			blob->active.clusters = tmp;
-			blob->active.cluster_array_size = cluster_count;
+			blob->active.cluster_array_size = (cluster_count + blob->active.num_clusters);
 
 			for (i = 0; i < cluster_idx_length / sizeof(desc_extent->cluster_idx[0]); i++) {
 				if (desc_extent->cluster_idx[i] != 0) {
