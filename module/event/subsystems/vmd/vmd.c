@@ -100,6 +100,8 @@ spdk_vmd_subsystem_fini(void)
 {
 	spdk_poller_unregister(&g_hotplug_poller);
 
+	spdk_vmd_fini();
+
 	spdk_subsystem_fini_next();
 }
 

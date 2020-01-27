@@ -1817,5 +1817,9 @@ int main(int argc, char **argv)
 		fprintf(stderr, "No NVMe controllers found.\n");
 	}
 
+	if (g_vmd) {
+		spdk_vmd_fini();
+	}
+
 	return 0;
 }
