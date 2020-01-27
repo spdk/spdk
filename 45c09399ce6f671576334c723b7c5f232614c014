@@ -22,6 +22,30 @@
       "revId": "45c09399ce6f671576334c723b7c5f232614c014",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "704f8cf1_56adbf10",
+        "filename": "lib/nvmf/muser.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2258,
+      "author": {
+        "id": 1017478
+      },
+      "writtenOn": "2020-01-27T11:34:47Z",
+      "side": 1,
+      "message": "Right, I see how using the already merged patch can help me fix this the way I explain in the comment: we return from this function before add_qp and call add_qp in handle_connect_rsp where we call cb_fn so that muser_listen really finishes. Correct?\n\nI\u0027m not sure I understand at all the second patch you mention? How does it affect this probme?",
+      "parentUuid": "b2d9f77a_ad3af2ca",
+      "range": {
+        "startLine": 2249,
+        "startChar": 0,
+        "endLine": 2258,
+        "endChar": 4
+      },
+      "revId": "45c09399ce6f671576334c723b7c5f232614c014",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
