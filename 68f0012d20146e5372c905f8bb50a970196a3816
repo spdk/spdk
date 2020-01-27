@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "28aa184e_c94378ff",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2020-01-27T15:00:19Z",
+      "side": 1,
+      "message": "Nitpick - setting extdebug will be in the xtrace output, but unsetting it (shopt -u) will not.\n\nCould we set it here before `set -x` so it\u0027s not printed at all?",
+      "range": {
+        "startLine": 34,
+        "startChar": 51,
+        "endLine": 34,
+        "endChar": 69
+      },
+      "revId": "68f0012d20146e5372c905f8bb50a970196a3816",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
