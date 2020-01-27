@@ -934,6 +934,7 @@ static void spdk_fio_cleanup(struct thread_data *td)
 {
 	struct spdk_fio_thread	*fio_thread = td->io_ops_data;
 	struct spdk_fio_qpair	*fio_qpair, *fio_qpair_tmp;
+	struct spdk_fio_options *fio_options = td->eo;
 
 	fio_qpair = fio_thread->fio_qpair;
 	while (fio_qpair != NULL) {
@@ -959,6 +960,10 @@ static void spdk_fio_cleanup(struct thread_data *td)
 			fio_ctrlr = fio_ctrlr_tmp;
 		}
 		g_ctrlr = NULL;
+
+		if (fio_options->enable_vmd) {
+			spdk_vmd_fini();
+		}
 	}
 	pthread_mutex_unlock(&g_mutex);
 	if (!g_ctrlr) {
