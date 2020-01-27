@@ -459,10 +459,6 @@ _spdk_msg_queue_run_batch(struct spdk_thread *thread, uint32_t max_msgs)
 		} else {
 			spdk_mempool_put(g_spdk_msg_mempool, msg);
 		}
-
-		if (thread->exit) {
-			break;
-		}
 	}
 
 	return count;
@@ -780,6 +776,11 @@ spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx
 	int rc;
 
 	assert(thread != NULL);
+
+	if (spdk_unlikely(thread->exit)) {
+		SPDK_ERRLOG("Thread %s is marked as exited.\n", thread->name);
+		return -EIO;
+	}
 
 	local_thread = _get_thread();
 
