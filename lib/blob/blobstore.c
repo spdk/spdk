@@ -6737,10 +6737,16 @@ _spdk_blob_insert_cluster_msg(void *arg)
 		ctx->blob->state = SPDK_BLOB_STATE_DIRTY;
 		_spdk_blob_sync_md(ctx->blob, _spdk_blob_insert_cluster_msg_cb, ctx);
 	} else {
-		assert(ctx->extent_page == 0);
+		/* It is possible for original thread to allocate extent page for
+		 * different cluster in the same extent page. In such case proceed with
+		 * updating the existing extent page, but release the additional one. */
+		if (ctx->extent_page != 0) {
+			assert(spdk_bit_array_get(ctx->blob->bs->used_md_pages, ctx->extent_page) == true);
+			_spdk_bs_release_md_page(ctx->blob->bs, ctx->extent_page);
+		}
 		/* Extent page already allocated.
 		 * Every cluster allocation, requires just an update of single extent page. */
-		_spdk_blob_insert_extent(ctx->blob, ctx->extent_page, ctx->cluster_num,
+		_spdk_blob_insert_extent(ctx->blob, *extent_page, ctx->cluster_num,
 					 _spdk_blob_insert_cluster_msg_cb, ctx);
 	}
 }
