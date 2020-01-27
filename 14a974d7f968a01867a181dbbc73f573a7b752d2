@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "23357535_4b2e6c72",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 687,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-27T15:44:02Z",
+      "side": 1,
+      "message": "I don\u0027t think we should check this comment in like this, it\u0027s too ambiguous.",
+      "revId": "14a974d7f968a01867a181dbbc73f573a7b752d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
