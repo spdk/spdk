@@ -752,7 +752,6 @@ _spdk_blob_parse_extent_page(struct spdk_blob_md_page *extent_page, struct spdk_
 {
 	assert(blob != NULL);
 	assert(blob->state == SPDK_BLOB_STATE_LOADING);
-	assert(blob->active.clusters == NULL);
 
 	if (_spdk_bs_load_cur_extent_page_valid(extent_page) == false) {
 		return -ENOENT;
@@ -887,8 +886,7 @@ _spdk_blob_serialize_extent_table_entry(const struct spdk_blob *blob,
 	uint32_t extent_page, ep_len;
 
 	/* The buffer must have room for at least one extent page */
-	cur_sz = sizeof(struct spdk_blob_md_descriptor) + sizeof(desc->num_clusters) + sizeof(
-			 desc->extent_page[0]);
+	cur_sz = sizeof(struct spdk_blob_md_descriptor) + sizeof(desc->num_clusters);
 	if (*remaining_sz < cur_sz) {
 		*next_ep = start_ep;
 		return;
@@ -899,14 +897,17 @@ _spdk_blob_serialize_extent_table_entry(const struct spdk_blob *blob,
 
 	desc->num_clusters = blob->active.num_clusters;
 
-	extent_page = blob->active.extent_pages[start_ep];
 	ep_len = 1;
 	et_idx = 0;
-	for (i = start_ep + 1; i < blob->active.num_extent_pages; i++) {
-		/* Extent table entries contain md page offsets for extent pages.
-		 * Zeroes represent unallocated extent pages, which are run-length-encoded.
-		 */
-		if (extent_page == 0 && blob->active.extent_pages[i] == 0) {
+	for (i = start_ep; i < blob->active.num_extent_pages; i++) {
+		if (*remaining_sz < cur_sz  + sizeof(desc->extent_page[0])) {
+			/* If we ran out of buffer space, return */
+			break;
+		}
+
+		extent_page = blob->active.extent_pages[i];
+		if (extent_page == 0 && (i + 1 < blob->active.num_extent_pages &&
+					 blob->active.extent_pages[i + 1] == 0)) {
 			ep_len++;
 			continue;
 		}
@@ -914,24 +915,10 @@ _spdk_blob_serialize_extent_table_entry(const struct spdk_blob *blob,
 		desc->extent_page[et_idx].num_pages = ep_len;
 		et_idx++;
 
-		cur_sz += sizeof(desc->extent_page[et_idx]);
-
-		if (*remaining_sz < cur_sz) {
-			/* If we ran out of buffer space, return */
-			*next_ep = i;
-			break;
-		}
-		extent_page = blob->active.extent_pages[i];
 		ep_len = 1;
+		cur_sz += sizeof(desc->extent_page[et_idx]);
 	}
-
-	if (*remaining_sz >= cur_sz) {
-		desc->extent_page[et_idx].page_idx = extent_page;
-		desc->extent_page[et_idx].num_pages = ep_len;
-		et_idx++;
-
-		*next_ep = blob->active.num_extent_pages;
-	}
+	*next_ep = i;
 
 	desc->length = sizeof(desc->num_clusters) + sizeof(desc->extent_page[0]) * et_idx;
 	*remaining_sz -= sizeof(struct spdk_blob_md_descriptor) + desc->length;
@@ -949,7 +936,7 @@ _spdk_blob_serialize_extent_table(const struct spdk_blob *blob,
 	int					rc;
 
 	last_extent_page = 0;
-	while (last_extent_page < blob->active.num_extent_pages) {
+	while (last_extent_page <= blob->active.num_extent_pages) {
 		_spdk_blob_serialize_extent_table_entry(blob, last_extent_page, &last_extent_page, buf,
 							remaining_sz);
 
