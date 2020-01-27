@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "bf0cbc90_4ba3a243",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2020-01-27T08:34:10Z",
+      "side": 1,
+      "message": "To make your suggestion working, we\u0027ll need to distinguish between return values of spdk_nvme_wait_for_completion_robust_lock function. When it returns -ECANCEL we must not touch the status (as already freed) and when it returns -EIO we should free it. I think that this won\u0027t reduce the amount of boilerplate code but will change the variable which we should check.",
+      "parentUuid": "c567deb7_b15fc1da",
+      "revId": "7989efeb57a025a442b989c8bc9899c514ed076d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c30118f9_ae1249a4",
         "filename": "lib/nvme/nvme_internal.h",
         "patchSetId": 6
@@ -33,6 +51,24 @@
       "revId": "7989efeb57a025a442b989c8bc9899c514ed076d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "15dff27d_093dc5f0",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 344,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2020-01-27T08:34:10Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "c30118f9_ae1249a4",
+      "revId": "7989efeb57a025a442b989c8bc9899c514ed076d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
