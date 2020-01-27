@@ -1,0 +1,8 @@
+Code-Review+2: Jim Harris <james.r.harris@intel.com>
+Code-Review+2: Shuhei Matsumoto <shuhei.matsumoto.xt@hitachi.com>
+Verified+1: SPDK CI Jenkins <sys_sgci@intel.com>
+Submitted-by: Tomasz Zawadzki <tomasz.zawadzki@intel.com>
+Submitted-at: Mon, 27 Jan 2020 17:42:24 +0000
+Reviewed-on: https://review.gerrithub.io/c/spdk/spdk/+/482004
+Project: spdk/spdk
+Branch: refs/heads/master
