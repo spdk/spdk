@@ -752,7 +752,6 @@ _spdk_blob_parse_extent_page(struct spdk_blob_md_page *extent_page, struct spdk_
 {
 	assert(blob != NULL);
 	assert(blob->state == SPDK_BLOB_STATE_LOADING);
-	assert(blob->active.clusters == NULL);
 
 	if (_spdk_bs_load_cur_extent_page_valid(extent_page) == false) {
 		return -ENOENT;
