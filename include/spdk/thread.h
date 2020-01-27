@@ -451,6 +451,7 @@ int spdk_thread_get_stats(struct spdk_thread_stats *stats);
  * \return 0 on success
  * \return -ENOMEM if the message could not be allocated
  * \return -EIO if the message could not be sent to the destination thread
+ * including the case that the destination thread is marked as exited.
  */
 int spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx);
 
