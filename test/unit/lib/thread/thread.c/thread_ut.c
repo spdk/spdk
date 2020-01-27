@@ -722,6 +722,42 @@ channel_destroy_races(void)
 	CU_ASSERT(TAILQ_EMPTY(&g_threads));
 }
 
+static void
+stop_and_reap_msg_for_exitng_thread(void)
+{
+	struct spdk_thread *thread0;
+	bool done1 = false, done2 = false;
+	int rc;
+
+	allocate_threads(2);
+
+	set_thread(0);
+	thread0 = spdk_get_thread();
+
+	/* Sending message to thread 0 will be accepted. */
+	set_thread(1);
+	rc = spdk_thread_send_msg(thread0, send_msg_cb, &done1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(!done1);
+
+	/* Mark thread 1 as exited. */
+	set_thread(0);
+	spdk_thread_exit(thread0);
+
+	/* Sending message to thread 0 will be rejected. */
+	set_thread(1);
+	rc = spdk_thread_send_msg(thread0, send_msg_cb, &done2);
+	CU_ASSERT(rc == -EIO);
+	CU_ASSERT(done2 == false);
+
+	/* Thread 0 will reap pending message. */
+	poll_thread(0);
+	CU_ASSERT(done1 == true);
+	CU_ASSERT(done2 == false);
+
+	free_threads();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -748,7 +784,9 @@ main(int argc, char **argv)
 		CU_add_test(suite, "for_each_channel_unreg", for_each_channel_unreg) == NULL ||
 		CU_add_test(suite, "thread_name", thread_name) == NULL ||
 		CU_add_test(suite, "channel", channel) == NULL ||
-		CU_add_test(suite, "channel_destroy_races", channel_destroy_races) == NULL
+		CU_add_test(suite, "channel_destroy_races", channel_destroy_races) == NULL ||
+		CU_add_test(suite, "stop_and_reap_msg_for_exitng_thread",
+			    stop_and_reap_msg_for_exitng_thread) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
