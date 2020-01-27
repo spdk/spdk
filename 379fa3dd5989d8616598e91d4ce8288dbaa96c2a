@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "31a28ce5_8f1d9dca",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-27T09:57:41Z",
+      "side": 1,
+      "message": "This will result in csv name like:\nmemory_4k_rw_128_pcm.\n\nCan we modify this so that it\u0027s pcm_memory_(restOfName)?",
+      "range": {
+        "startLine": 187,
+        "startChar": 43,
+        "endLine": 187,
+        "endChar": 57
+      },
+      "revId": "379fa3dd5989d8616598e91d4ce8288dbaa96c2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bdbcf020_79d77420",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-27T09:57:41Z",
+      "side": 1,
+      "message": "This will result in csv name like:\ncpu_4k_rw_128_pcm.\n\nCan we modify this so that it\u0027s pcm_cpu_(restOfName)?",
+      "range": {
+        "startLine": 191,
+        "startChar": 36,
+        "endLine": 191,
+        "endChar": 47
+      },
+      "revId": "379fa3dd5989d8616598e91d4ce8288dbaa96c2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "836d43a8_bc5fd5a1",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 761,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-27T09:57:41Z",
+      "side": 1,
+      "message": "I think you could use \"pcm_cpu\" here and just use the whole generated file name for the substitution on line 191",
+      "range": {
+        "startLine": 761,
+        "startChar": 80,
+        "endLine": 761,
+        "endChar": 83
+      },
+      "revId": "379fa3dd5989d8616598e91d4ce8288dbaa96c2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ef7af9ba_c2160816",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 767,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-27T09:57:41Z",
+      "side": 1,
+      "message": "I think you could use \"pcm_memory\" here and just use the whole generated file name for the substitution on line 187",
+      "range": {
+        "startLine": 767,
+        "startChar": 80,
+        "endLine": 767,
+        "endChar": 83
+      },
+      "revId": "379fa3dd5989d8616598e91d4ce8288dbaa96c2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
