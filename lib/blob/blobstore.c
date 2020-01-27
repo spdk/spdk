@@ -1380,7 +1380,7 @@ _spdk_blob_load_cpl_extents_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserr
 				return;
 			}
 			memset(tmp + blob->active.cluster_array_size, 0,
-			       sizeof(*blob->active.clusters) * (sz - blob->active.cluster_array_size));
+			       sizeof(*blob->active.clusters) * (blob->active.num_clusters - blob->active.cluster_array_size));
 			blob->active.clusters = tmp;
 			blob->active.cluster_array_size = blob->active.num_clusters;
 		}
