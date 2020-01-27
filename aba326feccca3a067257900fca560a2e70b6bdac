@@ -16,6 +16,24 @@
       "revId": "aba326feccca3a067257900fca560a2e70b6bdac",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "79ef3106_adcb3b2d",
+        "filename": "test/app/nvme_fused/nvme_fused.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-01-27T15:12:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4fbb1663_e2f636e5",
+      "revId": "aba326feccca3a067257900fca560a2e70b6bdac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
