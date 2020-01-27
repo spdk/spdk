@@ -22,6 +22,30 @@
       "revId": "ed86b542d71f9da4122569d746c015032911b67a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "21de7702_1e3c1cef",
+        "filename": "doc/getting_started.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-27T08:00:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "64999a11_23c32a53",
+      "range": {
+        "startLine": 27,
+        "startChar": 0,
+        "endLine": 33,
+        "endChar": 0
+      },
+      "revId": "ed86b542d71f9da4122569d746c015032911b67a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
