@@ -1,6 +1,6 @@
 ## Running NVMe-OF Performace Testcases
 
-In order to reproduce test cases described in [SPDK NVMe-OF Performance Test Cases](https://dqtibwqq6s6ux.cloudfront.net/download/performance-reports/SPDK_nvmeof_perf_report_18.04.pdf) follow the following instructions.
+In order to reproduce test cases described in [SPDK NVMe-OF Performance Test Cases](https://ci.spdk.io/download/performance-reports/SPDK_nvmeof_perf_report_18.04.pdf) follow the following instructions.
 
 Currently RDMA NIC IP address assignment must be done manually before running the tests.
 
