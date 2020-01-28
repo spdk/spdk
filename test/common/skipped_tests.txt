@@ -9,6 +9,9 @@ ftl_restore_nv_cache
 # Waiting for test refactor
 iscsi_tgt_fio_remote_nvme
 
+# Need to restructure lvol test job
+lvol_backwards_compatibility
+
 # Waiting on significant test rewrite
 nvme_opal
 nvme_opal_bdevio
