@@ -277,7 +277,7 @@ struct raid_bdev_module {
 	/* Handler for R/W requests */
 	void (*submit_rw_request)(struct raid_bdev_io *raid_io);
 
-	/* Handler for requests without payload (flush, unmap) */
+	/* Handler for requests without payload (flush, unmap). Optional. */
 	void (*submit_null_payload_request)(struct raid_bdev_io *raid_io);
 
 	TAILQ_ENTRY(raid_bdev_module) link;

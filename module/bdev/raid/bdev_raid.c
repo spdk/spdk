@@ -488,6 +488,13 @@ _raid_bdev_io_type_supported(struct raid_bdev *raid_bdev, enum spdk_bdev_io_type
 {
 	struct raid_base_bdev_info *base_info;
 
+	if (io_type == SPDK_BDEV_IO_TYPE_FLUSH ||
+	    io_type == SPDK_BDEV_IO_TYPE_UNMAP) {
+		if (raid_bdev->module->submit_null_payload_request == NULL) {
+			return false;
+		}
+	}
+
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
 		if (base_info->bdev == NULL) {
 			assert(false);
