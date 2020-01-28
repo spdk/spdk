@@ -22,6 +22,30 @@
       "revId": "10a30f096a08be7983e2f3ceab352852f94a4f01",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a1570baa_c11aa7e2",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-28T16:12:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6aa3f6c2_f56885dd",
+      "range": {
+        "startLine": 138,
+        "startChar": 40,
+        "endLine": 138,
+        "endChar": 50
+      },
+      "revId": "10a30f096a08be7983e2f3ceab352852f94a4f01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
