@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -604,6 +604,69 @@ spdk_sock_group_close(struct spdk_sock_group **group)
 	*group = NULL;
 
 	return 0;
+}
+
+static inline struct spdk_net_impl *
+spdk_sock_get_impl_by_name(const char *impl_name)
+{
+	struct spdk_net_impl *impl;
+
+	assert(impl_name != NULL);
+	STAILQ_FOREACH(impl, &g_net_impls, link) {
+		if (0 == strcmp(impl_name, impl->name)) {
+			return impl;
+		}
+	}
+
+	return NULL;
+}
+
+int
+spdk_sock_get_opts(const char *impl_name, struct spdk_sock_opts *opts, size_t *len)
+{
+	struct spdk_net_impl *impl;
+
+	if (!impl_name || !opts || !len) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	impl = spdk_sock_get_impl_by_name(impl_name);
+	if (!impl) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	if (!impl->get_opts) {
+		errno = ENOTSUP;
+		return -1;
+	}
+
+	return impl->get_opts(opts, len);
+}
+
+int
+spdk_sock_set_opts(const char *impl_name, const struct spdk_sock_opts *opts, size_t len)
+{
+	struct spdk_net_impl *impl;
+
+	if (!impl_name || !opts) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	impl = spdk_sock_get_impl_by_name(impl_name);
+	if (!impl) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	if (!impl->set_opts) {
+		errno = ENOTSUP;
+		return -1;
+	}
+
+	return impl->set_opts(opts, len);
 }
 
 void

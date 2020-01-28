@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -78,6 +78,10 @@ struct spdk_sock_request {
 };
 
 #define SPDK_SOCK_REQUEST_IOV(req, i) ((struct iovec *)(((uint8_t *)req + sizeof(struct spdk_sock_request)) + (sizeof(struct iovec) * i)))
+
+struct spdk_sock_opts {
+	int dummy;
+};
 
 /**
  * Get client and server addresses of the given socket.
@@ -350,6 +354,28 @@ int spdk_sock_group_close(struct spdk_sock_group **group);
  * \return 0 on success. Negated errno on failure.
  */
 int spdk_sock_get_optimal_sock_group(struct spdk_sock *sock, struct spdk_sock_group **group);
+
+/**
+ * Get current socket options for specific socket type.
+ *
+ * \param impl_name The sock_implementation to use, such as "posix".
+ * \param opts Pointer to allocated spdk_sock_opts structure that will be filled with actual values.
+ * \param len On input specifies size of passed opts structure. On return it is set to actual size that was filled with values.
+ *
+ * \return 0 on success, -1 on failure. errno is set to indicate the reason of failure.
+ */
+int spdk_sock_get_opts(const char *impl_name, struct spdk_sock_opts *opts, size_t *len);
+
+/**
+ * Set socket options for specific socket type.
+ *
+ * \param impl_name The sock_implementation to use, such as "posix".
+ * \param opts Pointer to allocated spdk_sock_opts structure with new options values.
+ * \param len Size of passed opts structure.
+ *
+ * \return 0 on success, -1 on failure. errno is set to indicate the reason of failure.
+ */
+int spdk_sock_set_opts(const char *impl_name, const struct spdk_sock_opts *opts, size_t len);
 
 #ifdef __cplusplus
 }
