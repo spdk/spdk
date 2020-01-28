@@ -1,8 +1,8 @@
 #
 #  BSD LICENSE
 #
-#  Copyright (c) Intel Corporation.
-#  All rights reserved.
+#  Copyright (c) Intel Corporation. All rights reserved.
+#  Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions
@@ -101,6 +101,6 @@ endif
 
 COPY_MODULES_LIST = copy_ioat ioat
 
-EVENT_BDEV_MODULES_LIST = event_bdev event_copy event_vmd
+EVENT_BDEV_MODULES_LIST = event_bdev event_copy event_vmd event_sock
 
 ALL_MODULES_LIST = $(BLOCKDEV_MODULES_LIST) $(COPY_MODULES_LIST) $(SOCK_MODULES_LIST)
