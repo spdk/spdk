@@ -46,7 +46,7 @@ DIRS-$(CONFIG_VHOST) += vhost
 # the subsystem dependency tree defined within the event subsystem C files
 # themselves. Should that tree change, these dependencies should change
 # accordingly.
-DEPDIRS-bdev := accel vmd
+DEPDIRS-bdev := accel vmd sock
 DEPDIRS-iscsi := scsi
 DEPDIRS-nbd := bdev
 DEPDIRS-nvmf := bdev
