@@ -407,45 +407,53 @@ thread_for_each(void)
 static int
 channel_create(void *io_device, void *ctx_buf)
 {
+	int *ch_count = io_device;
+
+	(*ch_count)++;
 	return 0;
 }
 
 static void
 channel_destroy(void *io_device, void *ctx_buf)
 {
+	int *ch_count = io_device;
+
+	(*ch_count)--;
 }
 
 static void
 channel_msg(struct spdk_io_channel_iter *i)
 {
-	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
-	int *count = spdk_io_channel_get_ctx(ch);
+	int *msg_count = spdk_io_channel_iter_get_ctx(i);
 
-	(*count)++;
-
+	(*msg_count)++;
 	spdk_for_each_channel_continue(i, 0);
 }
 
 static void
 channel_cpl(struct spdk_io_channel_iter *i, int status)
 {
+	int *msg_count = spdk_io_channel_iter_get_ctx(i);
+
+	(*msg_count)++;
 }
 
 static void
 for_each_channel_remove(void)
 {
 	struct spdk_io_channel *ch0, *ch1, *ch2;
-	int io_target;
-	int count = 0;
+	int ch_count = 0;
+	int msg_count = 0;
 
 	allocate_threads(3);
 	set_thread(0);
-	spdk_io_device_register(&io_target, channel_create, channel_destroy, sizeof(int), NULL);
-	ch0 = spdk_get_io_channel(&io_target);
+	spdk_io_device_register(&ch_count, channel_create, channel_destroy, sizeof(int), NULL);
+	ch0 = spdk_get_io_channel(&ch_count);
 	set_thread(1);
-	ch1 = spdk_get_io_channel(&io_target);
+	ch1 = spdk_get_io_channel(&ch_count);
 	set_thread(2);
-	ch2 = spdk_get_io_channel(&io_target);
+	ch2 = spdk_get_io_channel(&ch_count);
+	CU_ASSERT(ch_count == 3);
 
 	/*
 	 * Test that io_channel handles the case where we start to iterate through
@@ -458,24 +466,37 @@ for_each_channel_remove(void)
 	 */
 	set_thread(0);
 	spdk_put_io_channel(ch0);
+	CU_ASSERT(ch_count == 3);
 	poll_threads();
-	spdk_for_each_channel(&io_target, channel_msg, &count, channel_cpl);
+	CU_ASSERT(ch_count == 2);
+	spdk_for_each_channel(&ch_count, channel_msg, &msg_count, channel_cpl);
+	CU_ASSERT(msg_count == 0);
 	poll_threads();
+	CU_ASSERT(msg_count == 3);
 
 	/*
 	 * Case #2: Put the I/O channel after spdk_for_each_channel, but before
 	 *  thread 0 is polled.
 	 */
-	ch0 = spdk_get_io_channel(&io_target);
-	spdk_for_each_channel(&io_target, channel_msg, &count, channel_cpl);
+	ch0 = spdk_get_io_channel(&ch_count);
+	CU_ASSERT(ch_count == 3);
+	spdk_for_each_channel(&ch_count, channel_msg, &msg_count, channel_cpl);
 	spdk_put_io_channel(ch0);
-	poll_threads();
+	CU_ASSERT(ch_count == 3);
 
+	poll_threads();
+	CU_ASSERT(ch_count == 2);
+	CU_ASSERT(msg_count == 7);
 	set_thread(1);
 	spdk_put_io_channel(ch1);
+	CU_ASSERT(ch_count == 2);
 	set_thread(2);
 	spdk_put_io_channel(ch2);
-	spdk_io_device_unregister(&io_target, NULL);
+	CU_ASSERT(ch_count == 2);
+	poll_threads();
+	CU_ASSERT(ch_count == 0);
+
+	spdk_io_device_unregister(&ch_count, NULL);
 	poll_threads();
 
 	free_threads();
