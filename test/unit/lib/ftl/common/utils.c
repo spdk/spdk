@@ -74,10 +74,10 @@ test_init_ftl_dev(const struct base_bdev_geometry *geo)
 	SPDK_CU_ASSERT_FATAL(dev != NULL);
 
 	dev->xfer_size = geo->write_unit_size;
-	dev->core_thread.thread = spdk_thread_create("unit_test_thread", NULL);
-	spdk_set_thread(dev->core_thread.thread);
-	dev->core_thread.ioch = calloc(1, sizeof(*dev->core_thread.ioch)
-				       + sizeof(struct ftl_io_channel));
+	dev->core_thread = spdk_thread_create("unit_test_thread", NULL);
+	spdk_set_thread(dev->core_thread);
+	dev->ioch = calloc(1, sizeof(*dev->ioch)
+			   + sizeof(struct ftl_io_channel));
 	dev->num_bands = geo->blockcnt / (geo->zone_size * geo->optimal_open_zones);
 	dev->bands = calloc(dev->num_bands, sizeof(*dev->bands));
 	SPDK_CU_ASSERT_FATAL(dev->bands != NULL);
@@ -135,10 +135,10 @@ void
 test_free_ftl_dev(struct spdk_ftl_dev *dev)
 {
 	SPDK_CU_ASSERT_FATAL(dev != NULL);
-	free(dev->core_thread.ioch);
-	spdk_set_thread(dev->core_thread.thread);
-	spdk_thread_exit(dev->core_thread.thread);
-	spdk_thread_destroy(dev->core_thread.thread);
+	free(dev->ioch);
+	spdk_set_thread(dev->core_thread);
+	spdk_thread_exit(dev->core_thread);
+	spdk_thread_destroy(dev->core_thread);
 	spdk_mempool_free(dev->lba_pool);
 	free(dev->bands);
 	free(dev);
