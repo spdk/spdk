@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -816,6 +816,31 @@ posix_sock_close(void)
 	_sock_close("127.0.0.1", UT_PORT, "posix");
 }
 
+static void
+ut_sock_get_set_opts(void)
+{
+	int rc;
+	size_t len = 0;
+	struct spdk_sock_opts opts = {};
+
+	rc = spdk_sock_get_opts("ut", NULL, &len);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(errno == EINVAL);
+	rc = spdk_sock_get_opts("ut", &opts, NULL);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(errno == EINVAL);
+	rc = spdk_sock_get_opts("ut", &opts, &len);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(errno == ENOTSUP);
+
+	rc = spdk_sock_set_opts("ut", NULL, len);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(errno == EINVAL);
+	rc = spdk_sock_set_opts("ut", &opts, len);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(errno == ENOTSUP);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -838,7 +863,9 @@ main(int argc, char **argv)
 		CU_add_test(suite, "posix_sock_group", posix_sock_group) == NULL ||
 		CU_add_test(suite, "ut_sock_group", ut_sock_group) == NULL ||
 		CU_add_test(suite, "posix_sock_group_fairness", posix_sock_group_fairness) == NULL ||
-		CU_add_test(suite, "posix_sock_close", posix_sock_close) == NULL) {
+		CU_add_test(suite, "posix_sock_close", posix_sock_close) == NULL ||
+		CU_add_test(suite, "ut_sock_get_set_opts", ut_sock_get_set_opts) == NULL
+	) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
