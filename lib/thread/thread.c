@@ -370,6 +370,12 @@ spdk_thread_exit(struct spdk_thread *thread)
 	thread->exit = true;
 }
 
+bool
+spdk_thread_is_exited(struct spdk_thread *thread)
+{
+	return thread->exit;
+}
+
 void
 spdk_thread_destroy(struct spdk_thread *thread)
 {
