@@ -157,6 +157,10 @@ def clear_vmd_subsystem(args, vmd_config):
     pass
 
 
+def clear_sock_subsystem(args, sock_config):
+    pass
+
+
 def call_test_cmd(func):
     def rpc_test_cmd(*args, **kwargs):
         try:

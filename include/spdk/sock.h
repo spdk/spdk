@@ -41,6 +41,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/queue.h"
+#include "spdk/json.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -449,6 +450,13 @@ int spdk_sock_impl_get_opts(const char *impl_name, struct spdk_sock_impl_opts *o
  */
 int spdk_sock_impl_set_opts(const char *impl_name, const struct spdk_sock_impl_opts *opts,
 			    size_t len);
+
+/**
+ * Write socket subsystem configuration into provided JSON context.
+ *
+ * \param w JSON write context
+ */
+void spdk_sock_write_config_json(struct spdk_json_write_ctx *w);
 
 #ifdef __cplusplus
 }
