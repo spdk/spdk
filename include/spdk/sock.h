@@ -41,6 +41,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/queue.h"
+#include "spdk/json.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -379,6 +380,13 @@ int spdk_sock_get_opts(const char *impl_name, struct spdk_sock_opts *opts, size_
  * \return 0 on success, -1 on failure. errno is set to indicate the reason of failure.
  */
 int spdk_sock_set_opts(const char *impl_name, const struct spdk_sock_opts *opts, size_t len);
+
+/**
+ * Write socket subsystem configuration into provided JSON context.
+ *
+ * \param w JSON write context
+ */
+void spdk_sock_write_config_json(struct spdk_json_write_ctx *w);
 
 #ifdef __cplusplus
 }

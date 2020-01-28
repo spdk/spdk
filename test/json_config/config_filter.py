@@ -30,6 +30,7 @@ def filter_methods(do_remove_global_rpcs):
         'bdev_set_options',
         'bdev_nvme_set_options',
         'bdev_nvme_set_hotplug',
+        'sock_set_options',
     ]
 
     data = json.loads(sys.stdin.read())
