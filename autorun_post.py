@@ -144,7 +144,7 @@ def confirmPerPatchTests(test_list, skiplist):
         exit(1)
 
 
-def aggregateCompletedTests(output_dir, repo_dir):
+def aggregateCompletedTests(output_dir, repo_dir, skip_confirm=False):
     test_list = {}
     test_completion_table = []
 
@@ -172,14 +172,15 @@ def aggregateCompletedTests(output_dir, repo_dir):
     printListInformation("Tests", test_list)
     generateTestCompletionTables(output_dir, test_completion_table)
     skipped_tests = getSkippedTests(repo_dir)
-    confirmPerPatchTests(test_list, skipped_tests)
+    if not skip_confirm:
+        confirmPerPatchTests(test_list, skipped_tests)
 
 
-def main(output_dir, repo_dir):
+def main(output_dir, repo_dir, skip_confirm=False):
     generateCoverageReport(output_dir, repo_dir)
     collectOne(output_dir, 'doc')
     collectOne(output_dir, 'ut_coverage')
-    aggregateCompletedTests(output_dir, repo_dir)
+    aggregateCompletedTests(output_dir, repo_dir, skip_confirm)
 
 
 if __name__ == "__main__":
@@ -188,5 +189,7 @@ if __name__ == "__main__":
                         help="The location of your build's output directory")
     parser.add_argument("-r", "--repo_directory", type=str, required=True,
                         help="The location of your spdk repository")
+    parser.add_argument("-s", "--skip_confirm", required=False, action="store_true",
+                        help="Skip checking if all autotest.sh tests were executed.")
     args = parser.parse_args()
-    main(args.directory_location, args.repo_directory)
+    main(args.directory_location, args.repo_directory, args.skip_confirm)
