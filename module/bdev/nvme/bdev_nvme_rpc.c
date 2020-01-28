@@ -646,7 +646,7 @@ spdk_rpc_bdev_nvme_apply_firmware(struct spdk_jsonrpc_request *request,
 	struct spdk_nvme_cmd			*cmd;
 	struct firmware_update_info		*firm_ctx;
 
-	firm_ctx = malloc(sizeof(struct firmware_update_info));
+	firm_ctx = calloc(1, sizeof(struct firmware_update_info));
 	if (!firm_ctx) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Memory allocation error.");
@@ -656,7 +656,7 @@ spdk_rpc_bdev_nvme_apply_firmware(struct spdk_jsonrpc_request *request,
 	TAILQ_INIT(&firm_ctx->desc_head);
 	firm_ctx->request = request;
 
-	firm_ctx->req = malloc(sizeof(struct rpc_apply_firmware));
+	firm_ctx->req = calloc(1, sizeof(struct rpc_apply_firmware));
 	if (!firm_ctx->req) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Memory allocation error.");
