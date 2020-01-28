@@ -182,6 +182,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 			run_test "nvme_cli_cuse" test/nvme/spdk_nvme_cli_cuse.sh
 			run_test "nvme_smartctl_cuse" test/nvme/spdk_smartctl_cuse.sh
 		fi
+		run_test "nvme_rpc" test/nvme/nvme_rpc.sh
 		# Only test hotplug without ASAN enabled. Since if it is
 		# enabled, it catches SEGV earlier than our handler which
 		# breaks the hotplug logic.
