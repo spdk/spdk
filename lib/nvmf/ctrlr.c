@@ -2496,6 +2496,11 @@ spdk_nvmf_ctrlr_process_io_fused_cmd(struct spdk_nvmf_request *req, struct spdk_
 		/* save request of first command to generate response later */
 		req->first_fused_req = first_fused_req;
 		req->qpair->first_fused_req = NULL;
+	} else {
+		SPDK_ERRLOG("Invalid fused command fuse field.\n");
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
 	rc = spdk_nvmf_bdev_ctrlr_compare_and_write_cmd(bdev, desc, ch, req->first_fused_req, req);
