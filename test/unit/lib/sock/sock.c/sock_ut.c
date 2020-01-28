@@ -869,6 +869,87 @@ ut_sock_impl_get_set_opts(void)
 	CU_ASSERT(errno == ENOTSUP);
 }
 
+static void
+posix_sock_impl_get_set_opts(void)
+{
+	int rc;
+	size_t len = 0;
+	struct spdk_sock_impl_opts opts = {};
+	struct spdk_sock_impl_opts long_opts[2];
+
+	rc = spdk_sock_impl_get_opts("posix", NULL, &len);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(errno == EINVAL);
+	rc = spdk_sock_impl_get_opts("posix", &opts, NULL);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(errno == EINVAL);
+
+	/* Check default opts */
+	len = sizeof(opts);
+	rc = spdk_sock_impl_get_opts("posix", &opts, &len);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(len == sizeof(opts));
+	CU_ASSERT(opts.recv_buf_size == MIN_SO_RCVBUF_SIZE);
+	CU_ASSERT(opts.send_buf_size == MIN_SO_SNDBUF_SIZE);
+
+	/* Try to request more opts */
+	len = sizeof(long_opts);
+	rc = spdk_sock_impl_get_opts("posix", long_opts, &len);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(len == sizeof(opts));
+
+	/* Try to request zero opts */
+	len = 0;
+	rc = spdk_sock_impl_get_opts("posix", &opts, &len);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(len == 0);
+
+	rc = spdk_sock_impl_set_opts("posix", NULL, len);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(errno == EINVAL);
+
+	opts.recv_buf_size = 16;
+	opts.send_buf_size = 4;
+	rc = spdk_sock_impl_set_opts("posix", &opts, sizeof(opts));
+	CU_ASSERT(rc == 0);
+	len = sizeof(opts);
+	memset(&opts, 0, sizeof(opts));
+	rc = spdk_sock_impl_get_opts("posix", &opts, &len);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(opts.recv_buf_size == 16);
+	CU_ASSERT(opts.send_buf_size == 4);
+
+	/* Try to set more opts */
+	long_opts[0].recv_buf_size = 4;
+	long_opts[0].send_buf_size = 6;
+	long_opts[1].recv_buf_size = 0;
+	long_opts[1].send_buf_size = 0;
+	rc = spdk_sock_impl_set_opts("posix", long_opts, sizeof(long_opts));
+	CU_ASSERT(rc == 0);
+
+	/* Try to set less opts. Opts in the end should be untouched */
+	opts.recv_buf_size = 5;
+	opts.send_buf_size = 10;
+	rc = spdk_sock_impl_set_opts("posix", &opts, sizeof(opts.recv_buf_size));
+	CU_ASSERT(rc == 0);
+	len = sizeof(opts);
+	memset(&opts, 0, sizeof(opts));
+	rc = spdk_sock_impl_get_opts("posix", &opts, &len);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(opts.recv_buf_size == 5);
+	CU_ASSERT(opts.send_buf_size == 6);
+
+	/* Try to set partial option. It should not be changed */
+	opts.recv_buf_size = 1000;
+	rc = spdk_sock_impl_set_opts("posix", &opts, 1);
+	CU_ASSERT(rc == 0);
+	len = sizeof(opts);
+	memset(&opts, 0, sizeof(opts));
+	rc = spdk_sock_impl_get_opts("posix", &opts, &len);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(opts.recv_buf_size == 5);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -888,6 +969,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, _posix_sock_close);
 	CU_ADD_TEST(suite, sock_get_default_opts);
 	CU_ADD_TEST(suite, ut_sock_impl_get_set_opts);
+	CU_ADD_TEST(suite, posix_sock_impl_get_set_opts);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 
