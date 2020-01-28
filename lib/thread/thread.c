@@ -370,6 +370,9 @@ spdk_set_thread(struct spdk_thread *thread)
 int
 spdk_thread_exit(struct spdk_thread *thread)
 {
+	struct spdk_io_channel *ch;
+	struct spdk_poller *poller;
+
 	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Exit thread %s\n", thread->name);
 
 	assert(tls_thread == thread);
@@ -378,6 +381,32 @@ spdk_thread_exit(struct spdk_thread *thread)
 		SPDK_ERRLOG("thread %s is already marked as exited\n",
 			    thread->name);
 		return -EINVAL;
+	}
+
+	TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
+		if (ch->ref != 0) {
+			SPDK_ERRLOG("thread %s still has active channel for io_device %s\n",
+				    thread->name, ch->dev->name);
+			return -EBUSY;
+		}
+	}
+
+	TAILQ_FOREACH(poller, &thread->active_pollers, tailq) {
+		if (poller->state != SPDK_POLLER_STATE_UNREGISTERED &&
+		    poller->state != SPDK_POLLER_STATE_PAUSING) {
+			SPDK_ERRLOG("thread %s still has active poller %p\n",
+				    thread->name, poller);
+			return -EBUSY;
+		}
+	}
+
+	TAILQ_FOREACH(poller, &thread->timed_pollers, tailq) {
+		if (poller->state != SPDK_POLLER_STATE_UNREGISTERED &&
+		    poller->state != SPDK_POLLER_STATE_PAUSING) {
+			SPDK_ERRLOG("thread %s still has active timed poller %p\n",
+				    thread->name, poller);
+			return -EBUSY;
+		}
 	}
 
 	thread->exit = true;
