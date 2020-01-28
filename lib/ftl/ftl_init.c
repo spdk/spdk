@@ -494,44 +494,38 @@ ftl_init_bands_state(struct spdk_ftl_dev *dev)
 static void
 _ftl_dev_init_core_thread(void *ctx)
 {
-	struct ftl_thread *thread = ctx;
-	struct spdk_ftl_dev *dev = thread->dev;
+	struct spdk_ftl_dev *dev = ctx;
 
-	thread->poller = spdk_poller_register(thread->poller_fn, thread, thread->period_us);
-	if (!thread->poller) {
+	dev->poller = spdk_poller_register(ftl_task_core, dev, 0);
+	if (!dev->poller) {
 		SPDK_ERRLOG("Unable to register poller\n");
 		assert(0);
 	}
 
-	thread->ioch = spdk_get_io_channel(dev);
+	dev->ioch = spdk_get_io_channel(dev);
 }
 
 static int
 ftl_dev_init_core_thread(struct spdk_ftl_dev *dev, const struct spdk_ftl_dev_init_opts *opts)
 {
-	struct ftl_thread *thread = &dev->core_thread;
-
 	if (!opts->core_thread) {
 		return -1;
 	}
 
-	thread->dev = dev;
-	thread->poller_fn = ftl_task_core;
-	thread->thread = opts->core_thread;
-	thread->period_us = 0;
+	dev->core_thread = opts->core_thread;
 
-	spdk_thread_send_msg(opts->core_thread, _ftl_dev_init_core_thread, thread);
+	spdk_thread_send_msg(opts->core_thread, _ftl_dev_init_core_thread, dev);
 	return 0;
 }
 
 static void
-ftl_dev_free_thread(struct spdk_ftl_dev *dev, struct ftl_thread *thread)
+ftl_dev_free_thread(struct spdk_ftl_dev *dev)
 {
-	assert(thread->poller == NULL);
+	assert(dev->poller == NULL);
 
-	spdk_put_io_channel(thread->ioch);
-	thread->thread = NULL;
-	thread->ioch = NULL;
+	spdk_put_io_channel(dev->ioch);
+	dev->core_thread = NULL;
+	dev->ioch = NULL;
 }
 
 static int
@@ -1120,8 +1114,8 @@ ftl_dev_free_sync(struct spdk_ftl_dev *dev)
 
 	spdk_io_device_unregister(dev, NULL);
 
-	if (dev->core_thread.thread) {
-		ftl_dev_free_thread(dev, &dev->core_thread);
+	if (dev->core_thread) {
+		ftl_dev_free_thread(dev);
 	}
 
 	if (dev->bands) {
@@ -1310,7 +1304,7 @@ ftl_halt_poller(void *ctx)
 {
 	struct spdk_ftl_dev *dev = ctx;
 
-	if (!dev->core_thread.poller) {
+	if (!dev->poller) {
 		spdk_poller_unregister(&dev->fini_ctx.poller);
 
 		if (ftl_dev_has_nv_cache(dev)) {

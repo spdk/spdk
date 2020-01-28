@@ -393,14 +393,14 @@ _ftl_io_erase(void *ctx)
 static bool
 ftl_check_core_thread(const struct spdk_ftl_dev *dev)
 {
-	return dev->core_thread.thread == spdk_get_thread();
+	return dev->core_thread == spdk_get_thread();
 }
 
 struct spdk_io_channel *
 ftl_get_io_channel(const struct spdk_ftl_dev *dev)
 {
 	if (ftl_check_core_thread(dev)) {
-		return dev->core_thread.ioch;
+		return dev->ioch;
 	}
 
 	return NULL;
@@ -807,7 +807,7 @@ ftl_wptr_process_shutdown(struct ftl_wptr *wptr)
 static int
 ftl_shutdown_complete(struct spdk_ftl_dev *dev)
 {
-	struct ftl_io_channel *ioch = spdk_io_channel_get_ctx(dev->core_thread.ioch);
+	struct ftl_io_channel *ioch = spdk_io_channel_get_ctx(dev->ioch);
 
 	return !__atomic_load_n(&dev->num_inflight, __ATOMIC_SEQ_CST) &&
 	       LIST_EMPTY(&dev->wptr_list) && TAILQ_EMPTY(&ioch->retry_queue);
@@ -2244,12 +2244,11 @@ ftl_io_channel_poll(void *arg)
 int
 ftl_task_core(void *ctx)
 {
-	struct ftl_thread *thread = ctx;
-	struct spdk_ftl_dev *dev = thread->dev;
+	struct spdk_ftl_dev *dev = ctx;
 
 	if (dev->halt) {
 		if (ftl_shutdown_complete(dev)) {
-			spdk_poller_unregister(&thread->poller);
+			spdk_poller_unregister(&dev->poller);
 			return 0;
 		}
 	}
