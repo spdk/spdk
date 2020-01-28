@@ -257,7 +257,8 @@ _free_thread(struct spdk_thread *thread)
 	}
 
 	TAILQ_FOREACH_SAFE(poller, &thread->paused_pollers, tailq, ptmp) {
-		SPDK_WARNLOG("poller %p still registered at thread exit\n", poller);
+		SPDK_INFOLOG(SPDK_LOG_THREAD, "poller %p still registered at thread exit\n",
+			     poller);
 		assert(thread->paused_poller_count > 0);
 		thread->paused_poller_count--;
 		TAILQ_REMOVE(&thread->paused_pollers, poller, tailq);
@@ -538,10 +539,6 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 				   active_pollers_head, tailq, tmp) {
 		int poller_rc;
 
-		if (thread->exit) {
-			break;
-		}
-
 		if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
 			assert(thread->active_poller_count > 0);
 			thread->active_poller_count--;
@@ -583,10 +580,6 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 
 	TAILQ_FOREACH_SAFE(poller, &thread->timer_pollers, tailq, tmp) {
 		int timer_rc = 0;
-
-		if (thread->exit) {
-			break;
-		}
 
 		if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
 			assert(thread->timer_poller_count > 0);
@@ -870,6 +863,11 @@ spdk_poller_register(spdk_poller_fn fn,
 		return NULL;
 	}
 
+	if (spdk_unlikely(thread->exit)) {
+		SPDK_ERRLOG("thread %s is marked as exited\n", thread->name);
+		return NULL;
+	}
+
 	poller = calloc(1, sizeof(*poller));
 	if (poller == NULL) {
 		SPDK_ERRLOG("Poller memory allocation failed\n");
@@ -995,6 +993,12 @@ spdk_poller_resume(struct spdk_poller *poller)
 		assert(false);
 		return;
 	}
+
+ 	if (spdk_unlikely(thread->exit)) {
+		SPDK_ERRLOG("thread %s is marked as exited\n", thread->name);
+		assert(false);
+		return;
+        }
 
 	/* If a poller is paused it has to be removed from the paused pollers
 	 * list and put on the active / timer list depending on its
