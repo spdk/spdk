@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "eb46c128_e58e695e",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 800,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-28T20:05:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "277be01e_9d0e6306",
+      "revId": "a2b879e8aa803ff25db57a39568db138828b0b2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b9db4e4c_63b2ccc0",
         "filename": "lib/env_dpdk/memory.c",
         "patchSetId": 1
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "66a58b90_6944a2cc",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 837,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-28T20:05:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b9db4e4c_63b2ccc0",
+      "revId": "a2b879e8aa803ff25db57a39568db138828b0b2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d02b4352_d1bfc0f0",
         "filename": "lib/env_dpdk/memory.c",
         "patchSetId": 1
@@ -47,6 +83,24 @@
       "writtenOn": "2020-01-28T19:45:36Z",
       "side": 1,
       "message": "I’m not sure if we should restore ref. count to 1 here. I think do nothing may be ok",
+      "revId": "a2b879e8aa803ff25db57a39568db138828b0b2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a1dc3b32_e6d4e159",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 891,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-28T20:05:08Z",
+      "side": 1,
+      "message": "Yeah, I think that at that point, we still don\u0027t want to keep the reference around. Because the value may or may not be mapped. It\u0027s best to try to re-register the memory with the IOMMU next time we get a registration call.",
+      "parentUuid": "d02b4352_d1bfc0f0",
       "revId": "a2b879e8aa803ff25db57a39568db138828b0b2e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
