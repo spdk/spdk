@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3b40259b_3d50e088",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 825,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-28T09:53:39Z",
+      "side": 1,
+      "message": "This looks good to me. Yet I wonder if we should prevent unmaping that region, instead of ignoring the error code on line 867.",
+      "range": {
+        "startLine": 825,
+        "startChar": 12,
+        "endLine": 825,
+        "endChar": 27
+      },
+      "revId": "372173c915e772515b597b7bf6445e21d7de37df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7edaaef0_2b38fe2d",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1320,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-28T09:53:39Z",
+      "side": 1,
+      "message": "Just checking. As per comment above, this should not be ever mapped twice right ? Thus does not require similar handling as above ?",
+      "range": {
+        "startLine": 1320,
+        "startChar": 2,
+        "endLine": 1320,
+        "endChar": 60
+      },
+      "revId": "372173c915e772515b597b7bf6445e21d7de37df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "442a009b_90a3f9e7",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1368,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-28T09:53:39Z",
+      "side": 1,
+      "message": "Same as above",
+      "range": {
+        "startLine": 1368,
+        "startChar": 2,
+        "endLine": 1368,
+        "endChar": 64
+      },
+      "revId": "372173c915e772515b597b7bf6445e21d7de37df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
