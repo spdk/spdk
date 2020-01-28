@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "92eab22d_2075506e",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-28T21:52:27Z",
+      "side": 1,
+      "message": "Use ${blknames[@]}",
+      "revId": "0c635701ef392310aecbe0a38b21ab804684e49d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f12d9c08_12ee5d5b",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 389,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-28T21:52:27Z",
+      "side": 1,
+      "message": "Check if config is empty and if so display error",
+      "revId": "0c635701ef392310aecbe0a38b21ab804684e49d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
