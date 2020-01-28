@@ -138,8 +138,9 @@ thread_poller(void)
 {
 	struct spdk_poller	*poller = NULL;
 	bool			poller_run = false;
+	struct spdk_thread	*thread;
 
-	allocate_threads(1);
+	allocate_threads(2);
 
 	set_thread(0);
 	MOCK_SET(spdk_get_ticks, 0);
@@ -175,6 +176,26 @@ thread_poller(void)
 
 	spdk_poller_unregister(&poller);
 	CU_ASSERT(poller == NULL);
+
+	/* Test that unregistering I/O channel is reaped even after the
+	 * thread is marked as exited.
+	 */
+	set_thread(1);
+	thread = spdk_get_thread();
+
+	poller = spdk_poller_register(poller_run_done, &poller_run, 0);
+	CU_ASSERT(poller != NULL);
+	CU_ASSERT(spdk_thread_has_pollers(thread) == true);
+	spdk_poller_unregister(&poller);
+	CU_ASSERT(poller == NULL);
+	CU_ASSERT(spdk_thread_has_pollers(thread) == true);
+	spdk_thread_exit(thread);
+
+	poller = spdk_poller_register(poller_run_done, &poller_run, 0);
+	CU_ASSERT(poller == NULL);
+
+	poll_threads();
+	CU_ASSERT(spdk_thread_has_pollers(thread) == false);
 
 	free_threads();
 }
