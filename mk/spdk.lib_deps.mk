@@ -46,7 +46,7 @@ DEPDIRS-rte_vhost :=
 
 DEPDIRS-ioat := log
 DEPDIRS-idxd := log util
-DEPDIRS-sock := log
+DEPDIRS-sock := log $(JSON_LIBS)
 DEPDIRS-util := log
 DEPDIRS-vmd := log
 

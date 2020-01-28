@@ -47,7 +47,7 @@ ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_power.*))
 DPDK_LIB_LIST += -lrte_power
 endif
 
-NVMECLI_SPDK_LIBS = -lspdk_log -lspdk_sock -lspdk_nvme -lspdk_env_dpdk -lspdk_util
+NVMECLI_SPDK_LIBS = -lspdk_log -lspdk_sock -lspdk_nvme -lspdk_env_dpdk -lspdk_util -lspdk_jsonrpc -lspdk_json -lspdk_rpc
 
 ifeq ($(CONFIG_RDMA),y)
 NVMECLI_SPDK_LIBS += -lspdk_rdma

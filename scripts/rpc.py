@@ -2380,6 +2380,27 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('size_in_mb', help='Cache size for blobfs in megabytes.', type=int)
     p.set_defaults(func=blobfs_set_cache_size)
 
+    # sock
+    def sock_impl_get_options(args):
+        print_json(rpc.sock.sock_impl_get_options(args.client,
+                                                  impl_name=args.impl))
+
+    p = subparsers.add_parser('sock_impl_get_options', help="""Get options of socket layer implementation""")
+    p.add_argument('-i', '--impl', help='Socket implementation name, e.g. posix', required=True)
+    p.set_defaults(func=sock_impl_get_options)
+
+    def sock_impl_set_options(args):
+        rpc.sock.sock_impl_set_options(args.client,
+                                       impl_name=args.impl,
+                                       recv_buf_size=args.recv_buf_size,
+                                       send_buf_size=args.send_buf_size)
+
+    p = subparsers.add_parser('sock_impl_set_options', help="""Set options of socket layer implementation""")
+    p.add_argument('-i', '--impl', help='Socket implementation name, e.g. posix', required=True)
+    p.add_argument('-r', '--recv-buf-size', help='Size of receive buffer on socket in bytes', type=int)
+    p.add_argument('-s', '--send-buf-size', help='Size of send buffer on socket in bytes', type=int)
+    p.set_defaults(func=sock_impl_set_options)
+
     def check_called_name(name):
         if name in deprecated_aliases:
             print("{} is deprecated, use {} instead.".format(name, deprecated_aliases[name]), file=sys.stderr)

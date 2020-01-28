@@ -6543,6 +6543,93 @@ Example response:
 }
 ~~~
 
+# Socket layer {#jsonrpc_components_sock}
+
+## sock_impl_get_options {#rpc_sock_impl_get_options}
+
+Get parameters for the socket layer implementation.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+impl_name               | Required | string      | Name of socket implementation, e.g. posix
+
+### Response
+
+Response is an object with current socket layer options for requested implementation.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "sock_impl_get_options",
+  "id": 1,
+  "params": {
+    "impl_name": "posix"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "recv_buf_size": 2097152,
+    "send_buf_size": 2097152
+  }
+}
+~~~
+
+## sock_impl_set_options {#rpc_sock_impl_set_options}
+
+Set parameters for the socket layer implementation.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+impl_name               | Required | string      | Name of socket implementation, e.g. posix
+recv_buf_size           | Optional | number      | Size of socket receive buffer in bytes
+send_buf_size           | Optional | number      | Size of socket send buffer in bytes
+
+### Response
+
+True if socket layer options were set successfully.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "sock_impl_set_options",
+  "id": 1,
+  "params": {
+    "impl_name": "posix",
+    "recv_buf_size": 2097152,
+    "send_buf_size": 2097152
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 # Miscellaneous RPC commands
 
 ## bdev_nvme_send_cmd {#rpc_bdev_nvme_send_cmd}

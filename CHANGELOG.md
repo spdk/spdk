@@ -66,6 +66,8 @@ rpc.py script is deprecated, new parameter `-m` or `--max-io-qpairs-per-ctrlr` i
 Parameter `max_qpairs_per_ctrlr` of `nvmf_create_transport` RPC command accepted by the NVMF target
 is deprecated, new parameter `max_io_qpairs_per_ctrlr` is added.
 
+Added `sock_impl_get_options` and `sock_impl_set_options` RPC methods.
+
 ### sock
 
 Added `spdk_sock_impl_get_opts` and `spdk_sock_impl_set_opts` functions to set/get socket layer configuration
