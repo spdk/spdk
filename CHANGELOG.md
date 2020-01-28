@@ -67,6 +67,8 @@ parameter.
 
 Added `recv_pipe_size` socket layer option. It is used only in posix implementation.
 
+Added `sock_get_options` and `sock_set_options` RPC methods.
+
 ### isa-l
 
 Updated ISA-L submodule to commit f3993f5c0b6911 which includes implementation and
