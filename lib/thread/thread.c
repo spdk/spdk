@@ -1215,6 +1215,12 @@ spdk_get_io_channel(void *io_device)
 		return NULL;
 	}
 
+	if (spdk_unlikely(thread->exit)) {
+		SPDK_ERRLOG("Thread %s is marked as exited\n", thread->name);
+		pthread_mutex_unlock(&g_devlist_mutex);
+		return NULL;
+	}
+
 	TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
 		if (ch->dev == dev) {
 			ch->ref++;
