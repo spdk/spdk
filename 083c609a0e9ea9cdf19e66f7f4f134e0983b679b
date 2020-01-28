@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "9584b209_52a30700",
+        "filename": "test/lvol/resize.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1017532
+      },
+      "writtenOn": "2020-01-28T01:25:09Z",
+      "side": 1,
+      "message": "I would suggest to use `[[ $(foo) \u003d\u003d \"$bar\" ]]` and `(( $(bar) \u003d\u003d foo / eek ))` instead. :) That said, I think it would be nice to call jq only once so there\u0027s no need to use cmd subst inside each test. E.g. https://paste.ofcode.org/39ti7Hd7asDpmVMxa7939ay or similar.",
+      "range": {
+        "startLine": 102,
+        "startChar": 1,
+        "endLine": 107,
+        "endChar": 0
+      },
+      "revId": "083c609a0e9ea9cdf19e66f7f4f134e0983b679b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "78bce012_2c545ee3",
         "filename": "test/lvol/resize.sh",
         "patchSetId": 7
