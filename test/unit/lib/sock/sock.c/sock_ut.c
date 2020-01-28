@@ -841,6 +841,80 @@ ut_sock_get_set_opts(void)
 	CU_ASSERT(errno == ENOTSUP);
 }
 
+static void
+posix_sock_get_set_opts(void)
+{
+	int rc;
+	size_t len = 0;
+	struct spdk_sock_opts opts = {};
+	struct spdk_sock_opts long_opts[2];
+
+	rc = spdk_sock_get_opts("posix", NULL, &len);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(errno == EINVAL);
+	rc = spdk_sock_get_opts("posix", &opts, NULL);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(errno == EINVAL);
+
+	/* Check default opts */
+	len = sizeof(opts);
+	rc = spdk_sock_get_opts("posix", &opts, &len);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(len == sizeof(opts));
+	CU_ASSERT(opts.recv_pipe_size == DEFAULT_RECV_PIPE_SIZE);
+
+	/* Try to request more opts */
+	len = sizeof(long_opts);
+	rc = spdk_sock_get_opts("posix", long_opts, &len);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(len == sizeof(opts));
+
+	/* Try to request zero opts */
+	len = 0;
+	rc = spdk_sock_get_opts("posix", &opts, &len);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(len == 0);
+
+	rc = spdk_sock_set_opts("posix", NULL, len);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(errno == EINVAL);
+
+	opts.recv_pipe_size = 10;
+	rc = spdk_sock_set_opts("posix", &opts, sizeof(opts));
+	CU_ASSERT(rc == 0);
+	len = sizeof(opts);
+	memset(&opts, 0, sizeof(opts));
+	rc = spdk_sock_get_opts("posix", &opts, &len);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(opts.recv_pipe_size == 10);
+
+	/* Try to set more opts */
+	long_opts[0].recv_pipe_size = 100;
+	long_opts[1].recv_pipe_size = 0;
+	rc = spdk_sock_set_opts("posix", long_opts, sizeof(long_opts));
+	CU_ASSERT(rc == 0);
+
+	/* Try to set less opts. Opts in the end should be untouched */
+	opts.recv_pipe_size = 1000;
+	rc = spdk_sock_set_opts("posix", &opts, 0);
+	CU_ASSERT(rc == 0);
+	len = sizeof(opts);
+	memset(&opts, 0, sizeof(opts));
+	rc = spdk_sock_get_opts("posix", &opts, &len);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(opts.recv_pipe_size == 100);
+
+	/* Try to set partial option. It should not be changed */
+	opts.recv_pipe_size = 1000;
+	rc = spdk_sock_set_opts("posix", &opts, 1);
+	CU_ASSERT(rc == 0);
+	len = sizeof(opts);
+	memset(&opts, 0, sizeof(opts));
+	rc = spdk_sock_get_opts("posix", &opts, &len);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(opts.recv_pipe_size == 100);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -864,7 +938,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "ut_sock_group", ut_sock_group) == NULL ||
 		CU_add_test(suite, "posix_sock_group_fairness", posix_sock_group_fairness) == NULL ||
 		CU_add_test(suite, "posix_sock_close", posix_sock_close) == NULL ||
-		CU_add_test(suite, "ut_sock_get_set_opts", ut_sock_get_set_opts) == NULL
+		CU_add_test(suite, "ut_sock_get_set_opts", ut_sock_get_set_opts) == NULL ||
+		CU_add_test(suite, "posix_sock_get_set_opts", posix_sock_get_set_opts) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
