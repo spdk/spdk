@@ -74,23 +74,6 @@ struct ftl_stats {
 	uint64_t				limits[SPDK_FTL_LIMIT_MAX];
 };
 
-struct ftl_thread {
-	/* Owner */
-	struct spdk_ftl_dev			*dev;
-
-	/* Thread on which the poller is running */
-	struct spdk_thread			*thread;
-
-	/* IO channel */
-	struct spdk_io_channel			*ioch;
-	/* Poller */
-	struct spdk_poller			*poller;
-	/* Poller's function */
-	spdk_poller_fn				poller_fn;
-	/* Poller's frequency */
-	uint64_t				period_us;
-};
-
 struct ftl_global_md {
 	/* Device instance */
 	struct spdk_uuid			uuid;
@@ -225,8 +208,12 @@ struct spdk_ftl_dev {
 	/* Manages data relocation */
 	struct ftl_reloc			*reloc;
 
-	/* Threads */
-	struct ftl_thread			core_thread;
+	/* Thread on which the poller is running */
+	struct spdk_thread			*core_thread;
+	/* IO channel */
+	struct spdk_io_channel			*ioch;
+	/* Poller */
+	struct spdk_poller			*poller;
 
 	/* Devices' list */
 	STAILQ_ENTRY(spdk_ftl_dev)		stailq;
@@ -296,7 +283,7 @@ ftl_get_io_channel(const struct spdk_ftl_dev *dev);
 static inline struct spdk_thread *
 ftl_get_core_thread(const struct spdk_ftl_dev *dev)
 {
-	return dev->core_thread.thread;
+	return dev->core_thread;
 }
 
 static inline size_t
