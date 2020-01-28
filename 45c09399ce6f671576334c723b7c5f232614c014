@@ -70,6 +70,30 @@
       "revId": "45c09399ce6f671576334c723b7c5f232614c014",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "02563280_6a801596",
+        "filename": "lib/nvmf/muser.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2258,
+      "author": {
+        "id": 1017478
+      },
+      "writtenOn": "2020-01-28T10:10:22Z",
+      "side": 1,
+      "message": "Indeed, I tried to do it this way and got:\nctrlr.c: 520:spdk_nvmf_ctrlr_connect: *ERROR*: Subsystem \u0027nqn.2019-07.io.spdk.muser:00000000-0000-0000-0000-000000000000\u0027 is not ready",
+      "parentUuid": "1d16238e_7f24f735",
+      "range": {
+        "startLine": 2249,
+        "startChar": 0,
+        "endLine": 2258,
+        "endChar": 4
+      },
+      "revId": "45c09399ce6f671576334c723b7c5f232614c014",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
