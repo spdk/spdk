@@ -246,6 +246,11 @@ spdk_sock_close(struct spdk_sock **_sock)
 		return -1;
 	}
 
+	if (sock->flags.closed) {
+		/* Already closing. */
+		return 0;
+	}
+
 	sock->flags.closed = true;
 
 	if (sock->cb_cnt > 0) {
@@ -332,6 +337,14 @@ spdk_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *req)
 int
 spdk_sock_flush(struct spdk_sock *sock)
 {
+	if (sock == NULL) {
+		return -EBADF;
+	}
+
+	if (sock->flags.closed) {
+		return -EBADF;
+	}
+
 	return sock->net_impl->flush(sock);
 }
 
