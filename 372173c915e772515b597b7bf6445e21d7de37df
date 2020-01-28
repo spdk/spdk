@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "16f4f845_44ec5408",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 825,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-28T16:52:54Z",
+      "side": 1,
+      "message": "I am also concerned about unmapping. Say we have a guest system backed by a 1 1GB hugepage with physical address A. To this guest, we expose two virtio controllers from the same vhost target. The guest will then register that hugepage twice. When DPDK receives it, it will mmap it twice, making two virtual regions of memory in the target point at the same physical hugepage A. Only the first registration will program the IOMMU, but if later that first controller is hot-removed, the IOMMU mapping will also be removed and the second device will no longer be able to do I/O.\n\nSeth and I just discussed and I think the solution here is to keep a memory map in SPDK of iova-\u003erefcnt. Any time an iova is registered, it bumps the refcnt. On unmap, it only destroys the iova if the refcnt becomes 0.",
+      "parentUuid": "3b40259b_3d50e088",
+      "range": {
+        "startLine": 825,
+        "startChar": 12,
+        "endLine": 825,
+        "endChar": 27
+      },
+      "revId": "372173c915e772515b597b7bf6445e21d7de37df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7edaaef0_2b38fe2d",
         "filename": "lib/env_dpdk/memory.c",
         "patchSetId": 1
