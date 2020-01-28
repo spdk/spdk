@@ -1,8 +1,8 @@
 #
 #  BSD LICENSE
 #
-#  Copyright (c) Intel Corporation.
-#  All rights reserved.
+#  Copyright (c) Intel Corporation. All rights reserved.
+#  Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions
@@ -46,7 +46,7 @@ ifeq ($(CONFIG_VHOST_INTERNAL_LIB),y)
 SPDK_LIB_LIST += rte_vhost
 endif
 
-SPDK_LIB_LIST += event_bdev event_copy event_net event_scsi event_vmd event
+SPDK_LIB_LIST += event_bdev event_copy event_net event_scsi event_vmd event_sock event
 SPDK_LIB_LIST += jsonrpc json rpc bdev_rpc bdev scsi copy trace conf
 SPDK_LIB_LIST += thread util log log_rpc app_rpc
 SPDK_LIB_LIST += event_nbd nbd net sock notify

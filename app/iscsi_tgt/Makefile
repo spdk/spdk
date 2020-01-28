@@ -1,8 +1,8 @@
 #
 #  BSD LICENSE
 #
-#  Copyright (c) Intel Corporation.
-#  All rights reserved.
+#  Copyright (c) Intel Corporation. All rights reserved.
+#  Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions
@@ -44,7 +44,7 @@ CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 C_SRCS := iscsi_tgt.c
 
 SPDK_LIB_LIST = $(ALL_MODULES_LIST)
-SPDK_LIB_LIST += event_bdev event_copy event_iscsi event_net event_scsi event_vmd event
+SPDK_LIB_LIST += event_bdev event_copy event_iscsi event_net event_scsi event_vmd event_sock event
 SPDK_LIB_LIST += jsonrpc json rpc bdev_rpc bdev iscsi scsi copy trace conf
 SPDK_LIB_LIST += thread util log log_rpc app_rpc net sock notify
 
