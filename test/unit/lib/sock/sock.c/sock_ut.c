@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -843,6 +843,32 @@ sock_get_default_opts(void)
 	CU_ASSERT(opts.opts_size == (sizeof(opts) + 1));
 }
 
+static void
+ut_sock_impl_get_set_opts(void)
+{
+	int rc;
+	size_t len = 0;
+	/* Use any pointer value for opts. It is never dereferenced in this test */
+	struct spdk_sock_impl_opts *opts = (struct spdk_sock_impl_opts *)0x123456789;
+
+	rc = spdk_sock_impl_get_opts("ut", NULL, &len);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(errno == EINVAL);
+	rc = spdk_sock_impl_get_opts("ut", opts, NULL);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(errno == EINVAL);
+	rc = spdk_sock_impl_get_opts("ut", opts, &len);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(errno == ENOTSUP);
+
+	rc = spdk_sock_impl_set_opts("ut", NULL, len);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(errno == EINVAL);
+	rc = spdk_sock_impl_set_opts("ut", opts, len);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(errno == ENOTSUP);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -861,6 +887,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, posix_sock_group_fairness);
 	CU_ADD_TEST(suite, _posix_sock_close);
 	CU_ADD_TEST(suite, sock_get_default_opts);
+	CU_ADD_TEST(suite, ut_sock_impl_get_set_opts);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 
