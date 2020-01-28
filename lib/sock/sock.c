@@ -662,6 +662,37 @@ spdk_sock_set_opts(const char *impl_name, const struct spdk_sock_opts *opts, siz
 }
 
 void
+spdk_sock_write_config_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_net_impl *impl;
+	struct spdk_sock_opts opts;
+	size_t len;
+
+	assert(w != NULL);
+
+	spdk_json_write_array_begin(w);
+
+	STAILQ_FOREACH(impl, &g_net_impls, link) {
+		if (impl->get_opts) {
+			len = sizeof(opts);
+			if (impl->get_opts(&opts, &len) == 0) {
+				spdk_json_write_object_begin(w);
+				spdk_json_write_named_string(w, "method", "sock_set_options");
+				spdk_json_write_named_object_begin(w, "params");
+				spdk_json_write_named_string(w, "impl_name", impl->name);
+				spdk_json_write_named_uint32(w, "recv_pipe_size", opts.recv_pipe_size);
+				spdk_json_write_object_end(w);
+				spdk_json_write_object_end(w);
+			} else {
+				SPDK_ERRLOG("Failed to get socket options for socket implementation %s\n", impl->name);
+			}
+		}
+	}
+
+	spdk_json_write_array_end(w);
+}
+
+void
 spdk_net_impl_register(struct spdk_net_impl *impl, int priority)
 {
 	struct spdk_net_impl *cur, *prev;
