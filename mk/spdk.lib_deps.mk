@@ -159,3 +159,4 @@ DEPDIRS-event_scsi := event scsi event_bdev
 
 DEPDIRS-event_iscsi := event iscsi event_scsi
 DEPDIRS-event_vhost := event vhost event_scsi
+DEPDIRS-event_sock := sock event
