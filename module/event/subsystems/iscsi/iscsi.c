@@ -77,3 +77,4 @@ static struct spdk_subsystem g_spdk_subsystem_iscsi = {
 
 SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_iscsi);
 SPDK_SUBSYSTEM_DEPEND(iscsi, scsi)
+SPDK_SUBSYSTEM_DEPEND(iscsi, sock)

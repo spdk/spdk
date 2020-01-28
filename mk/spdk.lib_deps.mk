@@ -151,12 +151,12 @@ DEPDIRS-event_copy := copy event
 DEPDIRS-event_net := sock net event
 DEPDIRS-event_vmd := vmd conf $(JSON_LIBS) event log thread
 
-DEPDIRS-event_bdev := bdev event event_copy event_vmd
+DEPDIRS-event_bdev := bdev event event_copy event_vmd event_sock
 
 DEPDIRS-event_nbd := event nbd event_bdev
-DEPDIRS-event_nvmf := $(BDEV_DEPS_CONF_THREAD) event nvme nvmf event_bdev
+DEPDIRS-event_nvmf := $(BDEV_DEPS_CONF_THREAD) event nvme nvmf event_bdev event_sock
 DEPDIRS-event_scsi := event scsi event_bdev
 
-DEPDIRS-event_iscsi := event iscsi event_scsi
+DEPDIRS-event_iscsi := event iscsi event_scsi event_sock
 DEPDIRS-event_vhost := event vhost event_scsi
 DEPDIRS-event_sock := event

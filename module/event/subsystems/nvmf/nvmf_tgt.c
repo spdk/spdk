@@ -566,3 +566,4 @@ static struct spdk_subsystem g_spdk_subsystem_nvmf = {
 
 SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_nvmf)
 SPDK_SUBSYSTEM_DEPEND(nvmf, bdev)
+SPDK_SUBSYSTEM_DEPEND(nvmf, sock)

@@ -81,3 +81,4 @@ static struct spdk_subsystem g_spdk_subsystem_bdev = {
 SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_bdev);
 SPDK_SUBSYSTEM_DEPEND(bdev, copy)
 SPDK_SUBSYSTEM_DEPEND(bdev, vmd)
+SPDK_SUBSYSTEM_DEPEND(bdev, sock)
