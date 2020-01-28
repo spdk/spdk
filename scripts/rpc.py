@@ -2296,6 +2296,25 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('size_in_mb', help='Cache size for blobfs in megabytes.', type=int)
     p.set_defaults(func=blobfs_set_cache_size)
 
+    # sock
+    def sock_get_options(args):
+        print_json(rpc.sock.sock_get_options(args.client,
+                                             impl_name=args.impl))
+
+    p = subparsers.add_parser('sock_get_options', help="""Get options of socket layer implementation""")
+    p.add_argument('-i', '--impl', help='Socket implementation name, e.g. posix', required=True)
+    p.set_defaults(func=sock_get_options)
+
+    def sock_set_options(args):
+        rpc.sock.sock_set_options(args.client,
+                                  impl_name=args.impl,
+                                  recv_pipe_size=args.recv_pipe_size)
+
+    p = subparsers.add_parser('sock_set_options', help="""Set options of socket layer implementation""")
+    p.add_argument('-i', '--impl', help='Socket implementation name, e.g. posix', required=True)
+    p.add_argument('-p', '--recv-pipe-size', help='Size of receive pipe on socket in bytes', type=int)
+    p.set_defaults(func=sock_set_options)
+
     def check_called_name(name):
         if name in deprecated_aliases:
             print("{} is deprecated, use {} instead.".format(name, deprecated_aliases[name]), file=sys.stderr)

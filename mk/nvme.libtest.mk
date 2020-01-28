@@ -1,8 +1,8 @@
 #
 #  BSD LICENSE
 #
-#  Copyright (c) Intel Corporation.
-#  All rights reserved.
+#  Copyright (c) Intel Corporation. All rights reserved.
+#  Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions
@@ -39,7 +39,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 C_SRCS = $(APP:%=%.c)
 
 SPDK_LIB_LIST = $(SOCK_MODULES_LIST)
-SPDK_LIB_LIST += nvme thread util log sock vmd
+SPDK_LIB_LIST += nvme thread util log sock vmd jsonrpc json rpc
 
 ifeq ($(CONFIG_RDMA),y)
 SYS_LIBS += -libverbs -lrdmacm
