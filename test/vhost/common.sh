@@ -36,7 +36,7 @@ function vhosttestinit()
 			echo "Download to $HOME? [yn]"
 			read -r download
 			if [ "$download" = "y" ]; then
-				curl https://dqtibwqq6s6ux.cloudfront.net/download/test_resources/vhost_vm_image.tar.gz | tar xz -C $HOME
+				curl https://ci.spdk.io/download/test_resources/vhost_vm_image.tar.gz | tar xz -C $HOME
 			fi
 		fi
 	fi
