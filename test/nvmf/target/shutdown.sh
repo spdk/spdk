@@ -97,8 +97,8 @@ function nvmf_shutdown_tc3 {
 	# Verify bdevperf exits successfully
 	sleep 1
 	# TODO: Right now the NVMe-oF initiator will not correctly detect broken connections
-	# and so it will never shut down. Just kill it.
-	kill -9 $perfpid || true
+	# and so it will never shut down.
+	killprocess $perfpid
 }
 
 nvmftestinit
