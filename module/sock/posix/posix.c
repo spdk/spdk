@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -1290,6 +1290,40 @@ posix_sock_group_impl_close(struct spdk_sock_group_impl *_group)
 	return rc;
 }
 
+static int
+posix_sock_impl_get_opts(struct spdk_sock_impl_opts *opts, size_t *len)
+{
+	if (!opts || !len) {
+		errno = EINVAL;
+		return -1;
+	}
+
+#define FIELD_OK(field) \
+	offsetof(struct spdk_sock_impl_opts, field) + sizeof(opts->field) <= *len
+
+#undef FIELD_OK
+
+	*len = 0;
+	return 0;
+}
+
+static int
+posix_sock_impl_set_opts(const struct spdk_sock_impl_opts *opts, size_t len)
+{
+	if (!opts) {
+		errno = EINVAL;
+		return -1;
+	}
+
+#define FIELD_OK(field) \
+	offsetof(struct spdk_sock_impl_opts, field) + sizeof(opts->field) <= len
+
+#undef FIELD_OK
+
+	return 0;
+}
+
+
 static struct spdk_net_impl g_posix_net_impl = {
 	.name		= "posix",
 	.getaddr	= posix_sock_getaddr,
@@ -1314,6 +1348,8 @@ static struct spdk_net_impl g_posix_net_impl = {
 	.group_impl_remove_sock = posix_sock_group_impl_remove_sock,
 	.group_impl_poll	= posix_sock_group_impl_poll,
 	.group_impl_close	= posix_sock_group_impl_close,
+	.get_opts	= posix_sock_impl_get_opts,
+	.set_opts	= posix_sock_impl_set_opts,
 };
 
 SPDK_NET_IMPL_REGISTER(posix, &g_posix_net_impl, DEFAULT_SOCK_PRIORITY);
