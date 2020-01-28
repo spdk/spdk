@@ -902,6 +902,22 @@ stop_and_reap_msg_for_exitng_thread(void)
 	free_threads();
 }
 
+static void
+thread_exit(void)
+{
+	struct spdk_thread *thread;
+
+	allocate_threads(1);
+	set_thread(0);
+
+	thread = spdk_get_thread();
+
+	CU_ASSERT(spdk_thread_exit(thread) == 0);
+	CU_ASSERT(spdk_thread_exit(thread) == -EINVAL);
+
+	free_threads();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -931,7 +947,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "channel_destroy_races", channel_destroy_races) == NULL ||
 		CU_add_test(suite, "thread_for_each_on_group", thread_for_each_on_group) == NULL ||
 		CU_add_test(suite, "stop_and_reap_msg_for_exitng_thread",
-			    stop_and_reap_msg_for_exitng_thread) == NULL
+			    stop_and_reap_msg_for_exitng_thread) == NULL ||
+		CU_add_test(suite, "thread_exit", thread_exit) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
