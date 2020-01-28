@@ -18,7 +18,7 @@ test_cache_size=512
 
 source $rootdir/test/common/autotest_common.sh
 
-function on_error_exit() {
+function cleanup() {
 	if [ -n "$blobfs_pid" ]; then
 		killprocess $blobfs_pid
 	fi
@@ -26,8 +26,6 @@ function on_error_exit() {
 	rm -rf $mount_dir
 	rm -f $tmp_file
 	rm -f $conf_file
-	print_backtrace
-	exit 1
 }
 
 function blobfs_start_app {
@@ -122,7 +120,7 @@ function blobfs_fuse_test() {
 	killprocess $blobfs_pid
 }
 
-trap 'on_error_exit;' ERR
+trap 'cleanup' EXIT
 
 # Create one temp file as test bdev
 dd if=/dev/zero of=${tmp_file} bs=4k count=1M
@@ -139,7 +137,3 @@ blobfs_create_test
 # Create dir for FUSE mount
 mkdir -p $mount_dir
 blobfs_fuse_test
-
-
-rm -rf $mount_dir
-rm -f $tmp_file
