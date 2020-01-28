@@ -233,6 +233,15 @@ void spdk_set_thread(struct spdk_thread *thread);
 void spdk_thread_exit(struct spdk_thread *thread);
 
 /**
+ * Returns whether the thread is marked as exited.
+ *
+ * \param thread The thread to query.
+ *
+ * \return true if marked as exited, false otherwise.
+ */
+bool spdk_thread_is_exited(struct spdk_thread *thread);
+
+/**
  * Destroy a thread, releasing all of its resources. May only be called
  * on a thread previously marked as exited.
  *
