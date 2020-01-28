@@ -632,10 +632,11 @@ destroy_cb_2(void *io_device, void *ctx_buf)
 static void
 channel(void)
 {
-	struct spdk_io_channel *ch1, *ch2;
+	struct spdk_io_channel *ch1, *ch2, *ch3;
 	void *ctx;
+	struct spdk_thread *thread;
 
-	allocate_threads(1);
+	allocate_threads(2);
 	set_thread(0);
 
 	spdk_io_device_register(&device1, create_cb_1, destroy_cb_1, sizeof(ctx1), NULL);
@@ -676,8 +677,35 @@ channel(void)
 	poll_threads();
 	CU_ASSERT(g_destroy_cb_calls == 1);
 
-	ch1 = spdk_get_io_channel(&device3);
+	ch3 = spdk_get_io_channel(&device3);
+	CU_ASSERT(ch3 == NULL);
+
+	/* Remaining tests that releasing I/O channel is reaped even after the
+	 * thread is marked as exited.
+	 */
+	set_thread(1);
+
+	g_create_cb_calls = 0;
+	ch1 = spdk_get_io_channel(&device1);
+	CU_ASSERT(g_create_cb_calls == 1);
+	SPDK_CU_ASSERT_FATAL(ch1 != NULL);
+
+	ctx = spdk_io_channel_get_ctx(ch1);
+	CU_ASSERT(*(uint64_t *)ctx == ctx1);
+
+	g_destroy_cb_calls = 0;
+	spdk_put_io_channel(ch1);
+
+	thread = spdk_get_thread();
+	spdk_thread_exit(thread);
+
+	ch1 = spdk_get_io_channel(&device1);
 	CU_ASSERT(ch1 == NULL);
+
+	poll_threads();
+	CU_ASSERT(g_destroy_cb_calls == 1);
+
+	set_thread(0);
 
 	spdk_io_device_unregister(&device1, NULL);
 	poll_threads();
