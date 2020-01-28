@@ -778,13 +778,22 @@ static TAILQ_HEAD(, spdk_vtophys_pci_device) g_vtophys_pci_devices =
 	TAILQ_HEAD_INITIALIZER(g_vtophys_pci_devices);
 
 static struct spdk_mem_map *g_vtophys_map;
+static struct spdk_mem_map *g_phys_ref_map;
 
 #if SPDK_VFIO_ENABLED
 static int
 vtophys_iommu_map_dma(uint64_t vaddr, uint64_t iova, uint64_t size)
 {
 	struct spdk_vfio_dma_map *dma_map;
+	uint64_t refcount;
 	int ret;
+
+	refcount = spdk_mem_map_translate(g_phys_ref_map, iova, NULL);
+	assert(refcount < UINT64_MAX);
+	if (refcount > 0) {
+		spdk_mem_map_set_translation(g_phys_ref_map, iova, size, refcount + 1);
+		return 0;
+	}
 
 	dma_map = calloc(1, sizeof(*dma_map));
 	if (dma_map == NULL) {
@@ -832,6 +841,7 @@ vtophys_iommu_map_dma(uint64_t vaddr, uint64_t iova, uint64_t size)
 out_insert:
 	TAILQ_INSERT_TAIL(&g_vfio.maps, dma_map, tailq);
 	pthread_mutex_unlock(&g_vfio.mutex);
+	spdk_mem_map_set_translation(g_phys_ref_map, iova, size, refcount + 1);
 	return 0;
 }
 
@@ -839,6 +849,7 @@ static int
 vtophys_iommu_unmap_dma(uint64_t iova, uint64_t size)
 {
 	struct spdk_vfio_dma_map *dma_map;
+	uint64_t refcount;
 	int ret;
 
 	pthread_mutex_lock(&g_vfio.mutex);
@@ -852,6 +863,18 @@ vtophys_iommu_unmap_dma(uint64_t iova, uint64_t size)
 		DEBUG_PRINT("Cannot clear DMA mapping for IOVA %"PRIx64" - it's not mapped\n", iova);
 		pthread_mutex_unlock(&g_vfio.mutex);
 		return -ENXIO;
+	}
+
+	refcount = spdk_mem_map_translate(g_phys_ref_map, iova, NULL);
+	assert(refcount < UINT64_MAX);
+	if (refcount > 0) {
+		spdk_mem_map_set_translation(g_phys_ref_map, iova, size, refcount - 1);
+	}
+
+	/* We still have outstanding references, don't clear it. */
+	if (refcount > 1) {
+		pthread_mutex_unlock(&g_vfio.mutex);
+		return 0;
 	}
 
 	/** don't support partial or multiple-page unmap for now */
@@ -1383,9 +1406,20 @@ spdk_vtophys_init(void)
 		.are_contiguous = vtophys_check_contiguous_entries,
 	};
 
+	const struct spdk_mem_map_ops phys_ref_map_ops = {
+		.notify_cb = NULL,
+		.are_contiguous = NULL,
+	};
+
 #if SPDK_VFIO_ENABLED
 	spdk_vtophys_iommu_init();
 #endif
+
+	g_phys_ref_map = spdk_mem_map_alloc(0, &phys_ref_map_ops, NULL);
+	if (g_phys_ref_map == NULL) {
+		DEBUG_PRINT("phys_ref map allocation failed.\n");
+		return -ENOMEM;
+	}
 
 	g_vtophys_map = spdk_mem_map_alloc(SPDK_VTOPHYS_ERROR, &vtophys_map_ops, NULL);
 	if (g_vtophys_map == NULL) {
