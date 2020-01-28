@@ -26,6 +26,11 @@ Two providers are available - verbs (used by default when RDMA is enabled or ena
 using --with-rdma=verbs) and mlx5 Direct Verbs aka DV (enabled by --with-rdma=mlx5_dv).
 Using mlx5_dv requires libmlx5 installed on the system.
 
+### sock
+
+Added `spdk_sock_impl_get_opts` and `spdk_sock_impl_set_opts` functions to set/get socket layer configuration
+options. Options can be set independently for each implementation.
+
 ## v20.04:
 
 IDXD engine support for compare has been added.

@@ -29,6 +29,8 @@
 	spdk_sock_group_poll_count;
 	spdk_sock_group_close;
 	spdk_sock_get_optimal_sock_group;
+	spdk_sock_impl_get_opts;
+	spdk_sock_impl_set_opts;
 
 	# public functions in spdk/net.h
 	spdk_net_framework_register;
