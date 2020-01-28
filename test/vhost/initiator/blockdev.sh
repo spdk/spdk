@@ -82,7 +82,7 @@ function create_bdev_config()
 	$RPC_PY vhost_create_scsi_controller naa.Malloc1.0
 	$RPC_PY vhost_scsi_controller_add_target naa.Malloc1.0 0 Malloc1
 
-	vbdevs=$(discover_bdevs $rootdir $testdir/bdev.conf)
+	vbdevs=$(discover_bdevs $rootdir $testdir/bdev.json "--json")
 	virtio_bdevs=$(jq -r '[.[].name] | join(":")' <<< $vbdevs)
 	virtio_with_unmap=$(jq -r '[.[] | select(.supported_io_types.unmap==true).name]
 	 | join(":")' <<< $vbdevs)
@@ -98,12 +98,11 @@ timing_exit create_bdev_config
 
 timing_enter run_spdk_fio
 run_spdk_fio $testdir/bdev.fio --filename=$virtio_bdevs --section=job_randwrite --section=job_randrw \
-	--section=job_write --section=job_rw --spdk_conf=$testdir/bdev.conf
+	--section=job_write --section=job_rw --spdk_json_conf=$testdir/bdev.json
 timing_exit run_spdk_fio
 
 timing_enter run_spdk_fio_unmap
-run_spdk_fio $testdir/bdev.fio --filename=$virtio_with_unmap --spdk_conf=$testdir/bdev.conf \
-	--spdk_conf=$testdir/bdev.conf
+run_spdk_fio $testdir/bdev.fio --filename=$virtio_with_unmap --spdk_json_conf=$testdir/bdev.json
 timing_exit run_spdk_fio_unmap
 
 $RPC_PY bdev_nvme_detach_controller Nvme0
