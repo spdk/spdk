@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "277be01e_9d0e6306",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 800,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-28T19:45:36Z",
+      "side": 1,
+      "message": "Should we decrement ref. count here?",
+      "revId": "a2b879e8aa803ff25db57a39568db138828b0b2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b9db4e4c_63b2ccc0",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 837,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-28T19:45:36Z",
+      "side": 1,
+      "message": "Ditto",
+      "revId": "a2b879e8aa803ff25db57a39568db138828b0b2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d02b4352_d1bfc0f0",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 891,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-28T19:45:36Z",
+      "side": 1,
+      "message": "I’m not sure if we should restore ref. count to 1 here. I think do nothing may be ok",
+      "revId": "a2b879e8aa803ff25db57a39568db138828b0b2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
