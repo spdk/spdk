@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "2cbb282f_b8b9f880",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 455,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-28T18:16:51Z",
+      "side": 1,
+      "message": "Return type on separate line",
+      "revId": "af32b6238a3190866bf948570bd1443e7f4bd535",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9a825dc5_9adbe6cd",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-28T18:16:51Z",
+      "side": 1,
+      "message": "For function definitions, the return type goes on a separate line. Sometimes astyle messes this up - not sure if that\u0027s the case here.",
+      "revId": "af32b6238a3190866bf948570bd1443e7f4bd535",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "273ff484_74d2279e",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 3
