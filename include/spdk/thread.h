@@ -225,7 +225,9 @@ void spdk_set_thread(struct spdk_thread *thread);
  * only be called within an spdk poller or message.
  *
  * All I/O channel references associated with the thread must be released using
- * spdk_put_io_channel() prior to calling this function.
+ * spdk_put_io_channel(), and all active pollers associated with the thread must
+ * be unregistered or paused by spdk_poller_unregister() or spdk_poller_pause(),
+ * respectively,  prior to calling this function.
  *
  * \param thread The thread to destroy.
  *
