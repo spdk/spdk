@@ -1,5 +1,9 @@
 set -e
 
+if [ $(uname -s) = Linux ]; then
+	modprobe nbd
+fi
+
 function nbd_start_disks() {
 	local rpc_server=$1
 	local bdev_list=($2)
