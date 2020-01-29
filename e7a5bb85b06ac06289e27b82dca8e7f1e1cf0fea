@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b6b78bb3_60212a3f",
+        "filename": "include/spdk/thread.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 360,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-29T21:08:46Z",
+      "side": 1,
+      "message": "Number of io_channels associated with the thread",
+      "revId": "e7a5bb85b06ac06289e27b82dca8e7f1e1cf0fea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
