@@ -58,6 +58,8 @@ specify the sock layer implementation they'd prefer to use. Valid implementation
 Added `spdk_sock_get_opts` and `spdk_sock_set_opts` functions to set/get socket layer configuration
 options. Options can be set independently for each implementation.
 
+Added `recv_pipe_size` socket layer option. It is used only in posix implementation.
+
 ### isa-l
 
 Updated ISA-L submodule to commit f3993f5c0b6911 which includes implementation and

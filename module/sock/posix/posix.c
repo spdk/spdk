@@ -51,6 +51,13 @@
 #define SO_RCVBUF_SIZE (2 * 1024 * 1024)
 #define SO_SNDBUF_SIZE (2 * 1024 * 1024)
 #define IOV_BATCH_SIZE 64
+#ifdef __aarch64__
+/* On ARM systems, this buffering does not help. Disable it. */
+#define DEFAULT_RECV_PIPE_SIZE 0
+#else
+/* This value is purely derived from benchmarks. It seems to work well. */
+#define DEFAULT_RECV_PIPE_SIZE 8192
+#endif
 
 #if defined(SO_ZEROCOPY) && defined(MSG_ZEROCOPY)
 #define SPDK_ZEROCOPY
@@ -75,6 +82,10 @@ struct spdk_posix_sock_group_impl {
 	struct spdk_sock_group_impl	base;
 	int				fd;
 	TAILQ_HEAD(, spdk_posix_sock)	pending_recv;
+};
+
+static struct spdk_sock_opts g_spdk_posix_sock_opts = {
+	.recv_pipe_size = DEFAULT_RECV_PIPE_SIZE
 };
 
 static int
@@ -296,7 +307,7 @@ static struct spdk_posix_sock *
 _spdk_posix_sock_alloc(int fd)
 {
 	struct spdk_posix_sock *sock;
-	int rc, pipe_size;
+	int rc;
 #ifdef SPDK_ZEROCOPY
 	int flag;
 #endif
@@ -309,16 +320,7 @@ _spdk_posix_sock_alloc(int fd)
 
 	sock->fd = fd;
 
-
-#ifdef __aarch64__
-	/* On ARM systems, this buffering does not help. Disable it. */
-	pipe_size = 0;
-#else
-	/* This value is purely derived from benchmarks. It seems to work well. */
-	pipe_size = 8192;
-#endif
-
-	rc = spdk_posix_sock_set_recvbuf(&sock->base, pipe_size);
+	rc = spdk_posix_sock_set_recvbuf(&sock->base, g_spdk_posix_sock_opts.recv_pipe_size);
 	if (rc) {
 		SPDK_ERRLOG("unable to allocate sufficient recvbuf\n");
 		free(sock);
@@ -1210,9 +1212,13 @@ spdk_posix_sock_get_opts(struct spdk_sock_opts *opts, size_t *len)
 #define FIELD_OK(field) \
 	offsetof(struct spdk_sock_opts, field) + sizeof(opts->field) <= *len
 
+	if (FIELD_OK(recv_pipe_size)) {
+		opts->recv_pipe_size = g_spdk_posix_sock_opts.recv_pipe_size;
+	}
+
 #undef FIELD_OK
 
-	*len = 0;
+	*len = spdk_min(*len, sizeof(g_spdk_posix_sock_opts));
 	return 0;
 }
 
@@ -1226,6 +1232,10 @@ spdk_posix_sock_set_opts(const struct spdk_sock_opts *opts, size_t len)
 
 #define FIELD_OK(field) \
 	offsetof(struct spdk_sock_opts, field) + sizeof(opts->field) <= len
+
+	if (FIELD_OK(recv_pipe_size)) {
+		g_spdk_posix_sock_opts.recv_pipe_size = opts->recv_pipe_size;
+	}
 
 #undef FIELD_OK
 
