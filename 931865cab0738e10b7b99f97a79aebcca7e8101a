@@ -22,6 +22,30 @@
       "revId": "931865cab0738e10b7b99f97a79aebcca7e8101a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1dd96ce6_3279a374",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 350,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2020-01-29T12:34:10Z",
+      "side": 1,
+      "message": "Sorry, I just thought it would be more intuitive, because with current approach the group_id is basically random from user\u0027s perspective.",
+      "parentUuid": "aa368f12_0224f9ed",
+      "range": {
+        "startLine": 350,
+        "startChar": 20,
+        "endLine": 350,
+        "endChar": 37
+      },
+      "revId": "931865cab0738e10b7b99f97a79aebcca7e8101a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
