@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "084beb2b_9d90e4a0",
+        "filename": "test/unit/lib/thread/thread.c/thread_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-29T21:24:45Z",
+      "side": 1,
+      "message": "unregistered poller is reaped",
+      "revId": "2c6473eae096b950376d6c2d269217327d27c386",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
