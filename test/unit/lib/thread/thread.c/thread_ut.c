@@ -673,6 +673,13 @@ destroy_cb_2(void *io_device, void *ctx_buf)
 }
 
 static void
+unregister_cb_2(void *io_device)
+{
+	CU_ASSERT(io_device == &device2);
+	g_destroy_cb_calls++;
+}
+
+static void
 channel(void)
 {
 	struct spdk_io_channel *ch1, *ch2, *ch3;
@@ -928,11 +935,11 @@ static void
 thread_exit(void)
 {
 	struct spdk_thread *thread;
-	struct spdk_io_channel *ch1;
+	struct spdk_io_channel *ch1, *ch2;
 	struct spdk_poller *poller1, *poller2;
 	bool poller_run = false;
 
-	allocate_threads(1);
+	allocate_threads(3);
 	set_thread(0);
 
 	thread = spdk_get_thread();
@@ -969,6 +976,37 @@ thread_exit(void)
 	CU_ASSERT(poller_run == false);
 	CU_ASSERT(spdk_thread_get_io_channel_count(thread) == 0);
 	CU_ASSERT(_spdk_thread_has_unpaused_pollers(thread) == false);
+
+	set_thread(1);
+
+	thread = spdk_get_thread();
+	spdk_io_device_register(&device2, create_cb_2, destroy_cb_2, sizeof(ctx2), NULL);
+
+	set_thread(2);
+
+	g_create_cb_calls = 0;
+	ch2 = spdk_get_io_channel(&device2);
+	CU_ASSERT(g_create_cb_calls == 1);
+	CU_ASSERT(ch2 != NULL);
+
+	set_thread(1);
+
+	g_destroy_cb_calls = 0;
+	spdk_io_device_unregister(&device2, unregister_cb_2);
+	poll_threads();
+	CU_ASSERT(g_destroy_cb_calls == 0);
+
+	CU_ASSERT(spdk_thread_exit(thread) == -EBUSY);
+
+	set_thread(2);
+
+	spdk_put_io_channel(ch2);
+	poll_threads();
+	CU_ASSERT(g_destroy_cb_calls == 2);
+
+	set_thread(1);
+
+	CU_ASSERT(spdk_thread_exit(thread) == 0);
 
 	free_threads();
 }
