@@ -150,6 +150,7 @@ struct spdk_thread {
 	uint32_t			active_poller_count;
 	uint32_t			timed_poller_count;
 	uint32_t			paused_poller_count;
+	uint32_t			io_device_delete_count;
 
 	struct spdk_ring		*messages;
 
@@ -261,6 +262,7 @@ _free_thread(struct spdk_thread *thread)
 	assert(thread->active_poller_count == 0);
 	assert(thread->timed_poller_count == 0);
 	assert(thread->paused_poller_count == 0);
+	assert(thread->io_device_delete_count == 0);
 
 	pthread_mutex_lock(&g_devlist_mutex);
 	assert(g_thread_count > 0);
@@ -401,6 +403,11 @@ spdk_thread_exit(struct spdk_thread *thread)
 				    thread->name, poller);
 			return -EBUSY;
 		}
+	}
+
+	if (thread->io_device_delete_count > 0) {
+		SPDK_ERRLOG("I/O device deletion is deferred to thread %s\n", thread->name);
+		return -EBUSY;
 	}
 
 	thread->exit = true;
@@ -1154,9 +1161,22 @@ static void
 _finish_unregister(void *arg)
 {
 	struct io_device *dev = arg;
+	struct spdk_thread *thread;
+
+	thread = spdk_get_thread();
+	if (thread == NULL) {
+		SPDK_ERRLOG("call from non-SPDK thread\n");
+		assert(false);
+		return;
+	}
+
+	assert(thread == dev->unregister_thread);
 
 	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Finishing unregistration of io_device %s (%p) on thread %s\n",
-		      dev->name, dev->io_device, dev->unregister_thread->name);
+		      dev->name, dev->io_device, thread->name);
+
+	assert(thread->io_device_delete_count > 0);
+	thread->io_device_delete_count--;
 
 	dev->unregister_cb(dev->io_device);
 	free(dev);
@@ -1185,6 +1205,12 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 	thread = spdk_get_thread();
 	if (!thread) {
 		SPDK_ERRLOG("called from non-SPDK thread\n");
+		assert(false);
+		return;
+	}
+
+	if (unregister_cb && thread->exit) {
+		SPDK_ERRLOG("Exiting thread %s cannot use callback\n", thread->name);
 		assert(false);
 		return;
 	}
@@ -1219,6 +1245,10 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 
 	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Unregistering io_device %s (%p) from thread %s\n",
 		      dev->name, dev->io_device, thread->name);
+
+	if (unregister_cb) {
+		thread->io_device_delete_count++;
+	}
 
 	if (refcnt > 0) {
 		/* defer deletion */
