@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5adadc13_2fe7cbb5",
+        "filename": "test/app/nvme_fused/nvme_fused.c",
+        "patchSetId": 72
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2020-01-29T14:00:39Z",
+      "side": 1,
+      "message": "Any reason not to use SPDK_ERRLOG? You already use it in line 145",
+      "range": {
+        "startLine": 212,
+        "startChar": 2,
+        "endLine": 212,
+        "endChar": 18
+      },
+      "revId": "edc03033ba235cb067be65eec13c52b885e729fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7b8fd4c7_27882b96",
+        "filename": "test/app/nvme_fused/nvme_fused.c",
+        "patchSetId": 72
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2020-01-29T14:00:39Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 220,
+        "startChar": 2,
+        "endLine": 220,
+        "endChar": 9
+      },
+      "revId": "edc03033ba235cb067be65eec13c52b885e729fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c228155_8cd8a4ea",
+        "filename": "test/app/nvme_fused/nvme_fused.c",
+        "patchSetId": 72
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2020-01-29T14:00:39Z",
+      "side": 1,
+      "message": "Can we have a short comment on why we need this mutex does and what we test below? I\u0027m having a hard time following :/",
+      "revId": "edc03033ba235cb067be65eec13c52b885e729fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "68353815_67cdad40",
+        "filename": "test/app/nvme_fused/nvme_fused.c",
+        "patchSetId": 72
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2020-01-29T14:00:39Z",
+      "side": 1,
+      "message": "magic number? Should we #define it or something?",
+      "range": {
+        "startLine": 256,
+        "startChar": 27,
+        "endLine": 256,
+        "endChar": 29
+      },
+      "revId": "edc03033ba235cb067be65eec13c52b885e729fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "960ee89e_5aaa72de",
+        "filename": "test/nvmf/target/fused.sh",
+        "patchSetId": 72
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2020-01-29T14:00:39Z",
+      "side": 1,
+      "message": "Aren\u0027t we trying to deprecate those config files?\n\nTo make things simpler, you could provide the raw trid here:\n-C \"trtype:$TEST_TRANSPORT adrfam:IPv4 subnqn:nqn.2016-06.io.spdk:cnode1 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT\\\" Nvme0\"\n\nIf you need to use multiple controllers, just provide -C more than once. In the -C parser you could do just spdk_nvme_transport_id_parse() and append trid to the list. This will save you a few lines of code.",
+      "range": {
+        "startLine": 38,
+        "startChar": 76,
+        "endLine": 38,
+        "endChar": 100
+      },
+      "revId": "edc03033ba235cb067be65eec13c52b885e729fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
