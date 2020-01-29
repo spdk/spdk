@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "65fc5ac3_67875b8a",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 464,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2020-01-29T11:26:27Z",
+      "side": 1,
+      "message": "I\u0027m a little confused by the name of this function and return value. I would expect that return value \"true\" means that the validation was successful, but in this case \"true\" means that the validation failed. I would rename this function to e.g. \"spdk_nvmf_is_host_valid\" and return true on success",
+      "range": {
+        "startLine": 464,
+        "startChar": 9,
+        "endLine": 464,
+        "endChar": 13
+      },
+      "revId": "412a7c5a1ea26159326a62b738002c03aa210d03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
