@@ -522,6 +522,14 @@ struct spdk_nvmf_rdma_transport {
 static inline void
 spdk_nvmf_rdma_start_disconnect(struct spdk_nvmf_rdma_qpair *rqpair);
 
+static void
+_poller_submit_sends(struct spdk_nvmf_rdma_transport *rtransport,
+		     struct spdk_nvmf_rdma_poller *rpoller);
+
+static void
+_poller_submit_recvs(struct spdk_nvmf_rdma_transport *rtransport,
+		     struct spdk_nvmf_rdma_poller *rpoller);
+
 static inline int
 spdk_nvmf_rdma_check_ibv_state(enum ibv_qp_state state)
 {
@@ -1102,7 +1110,8 @@ error:
 /* Append the given recv wr structure to the resource structs outstanding recvs list. */
 /* This function accepts either a single wr or the first wr in a linked list. */
 static void
-nvmf_rdma_qpair_queue_recv_wrs(struct spdk_nvmf_rdma_qpair *rqpair, struct ibv_recv_wr *first)
+nvmf_rdma_qpair_queue_recv_wrs(struct spdk_nvmf_rdma_qpair *rqpair, struct ibv_recv_wr *first,
+				struct spdk_nvmf_rdma_transport *rtransport)
 {
 	struct ibv_recv_wr *last;
 
@@ -1121,12 +1130,17 @@ nvmf_rdma_qpair_queue_recv_wrs(struct spdk_nvmf_rdma_qpair *rqpair, struct ibv_r
 		rqpair->resources->recvs_to_post.last->next = first;
 		rqpair->resources->recvs_to_post.last = last;
 	}
+
+	if (!rtransport->transport.opts.wr_batching) {
+		_poller_submit_recvs(rtransport, rqpair->poller);
+	}
 }
 
 /* Append the given send wr structure to the qpair's outstanding sends list. */
 /* This function accepts either a single wr or the first wr in a linked list. */
 static void
-nvmf_rdma_qpair_queue_send_wrs(struct spdk_nvmf_rdma_qpair *rqpair, struct ibv_send_wr *first)
+nvmf_rdma_qpair_queue_send_wrs(struct spdk_nvmf_rdma_qpair *rqpair, struct ibv_send_wr *first,
+				struct spdk_nvmf_rdma_transport *rtransport)
 {
 	struct ibv_send_wr *last;
 
@@ -1143,10 +1157,14 @@ nvmf_rdma_qpair_queue_send_wrs(struct spdk_nvmf_rdma_qpair *rqpair, struct ibv_s
 		rqpair->sends_to_post.last->next = first;
 		rqpair->sends_to_post.last = last;
 	}
+
+	if (!rtransport->transport.opts.wr_batching) {
+		_poller_submit_sends(rtransport, rqpair->poller);
+	}
 }
 
 static int
-request_transfer_in(struct spdk_nvmf_request *req)
+request_transfer_in(struct spdk_nvmf_request *req, struct spdk_nvmf_rdma_transport *rtransport)
 {
 	struct spdk_nvmf_rdma_request	*rdma_req;
 	struct spdk_nvmf_qpair		*qpair;
@@ -1159,14 +1177,15 @@ request_transfer_in(struct spdk_nvmf_request *req)
 	assert(req->xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER);
 	assert(rdma_req != NULL);
 
-	nvmf_rdma_qpair_queue_send_wrs(rqpair, &rdma_req->data.wr);
+	nvmf_rdma_qpair_queue_send_wrs(rqpair, &rdma_req->data.wr, rtransport);
 	rqpair->current_read_depth += rdma_req->num_outstanding_data_wr;
 	rqpair->current_send_depth += rdma_req->num_outstanding_data_wr;
 	return 0;
 }
 
 static int
-request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
+request_transfer_out(struct spdk_nvmf_request *req, int *data_posted,
+			struct spdk_nvmf_rdma_transport *rtransport)
 {
 	int				num_outstanding_data_wr = 0;
 	struct spdk_nvmf_rdma_request	*rdma_req;
@@ -1192,7 +1211,7 @@ request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 	/* queue the capsule for the recv buffer */
 	assert(rdma_req->recv != NULL);
 
-	nvmf_rdma_qpair_queue_recv_wrs(rqpair, &rdma_req->recv->wr);
+	nvmf_rdma_qpair_queue_recv_wrs(rqpair, &rdma_req->recv->wr, rtransport);
 
 	rdma_req->recv = NULL;
 	assert(rqpair->current_recv_depth > 0);
@@ -1210,7 +1229,7 @@ request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 		*data_posted = 1;
 		num_outstanding_data_wr = rdma_req->num_outstanding_data_wr;
 	}
-	nvmf_rdma_qpair_queue_send_wrs(rqpair, first);
+	nvmf_rdma_qpair_queue_send_wrs(rqpair, first, rtransport);
 	/* +1 for the rsp wr */
 	rqpair->current_send_depth += num_outstanding_data_wr + 1;
 
@@ -2132,7 +2151,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			/* We have already verified that this request is the head of the queue. */
 			STAILQ_REMOVE_HEAD(&rqpair->pending_rdma_read_queue, state_link);
 
-			rc = request_transfer_in(&rdma_req->req);
+			rc = request_transfer_in(&rdma_req->req, rtransport);
 			if (!rc) {
 				rdma_req->state = RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER;
 			} else {
@@ -2240,7 +2259,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 		case RDMA_REQUEST_STATE_READY_TO_COMPLETE:
 			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_READY_TO_COMPLETE, 0, 0,
 					  (uintptr_t)rdma_req, (uintptr_t)rqpair->cm_id);
-			rc = request_transfer_out(&rdma_req->req, &data_posted);
+			rc = request_transfer_out(&rdma_req->req, &data_posted, rtransport);
 			assert(rc == 0); /* No good way to handle this currently */
 			if (rc) {
 				rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
@@ -2295,6 +2314,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 #define SPDK_NVMF_RDMA_DEFAULT_BUFFER_CACHE_SIZE 32
 #define SPDK_NVMF_RDMA_DEFAULT_NO_SRQ false
 #define SPDK_NVMF_RDMA_DIF_INSERT_OR_STRIP false
+#define SPDK_NVMF_RDMA_WR_BATCHING true
 
 static void
 spdk_nvmf_rdma_opts_init(struct spdk_nvmf_transport_opts *opts)
@@ -2310,6 +2330,7 @@ spdk_nvmf_rdma_opts_init(struct spdk_nvmf_transport_opts *opts)
 	opts->max_srq_depth =		SPDK_NVMF_RDMA_DEFAULT_SRQ_DEPTH;
 	opts->no_srq =			SPDK_NVMF_RDMA_DEFAULT_NO_SRQ;
 	opts->dif_insert_or_strip =	SPDK_NVMF_RDMA_DIF_INSERT_OR_STRIP;
+	opts->wr_batching =             SPDK_NVMF_RDMA_WR_BATCHING;
 }
 
 const struct spdk_mem_map_ops g_nvmf_rdma_map_ops = {
@@ -2370,7 +2391,8 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		     "  Transport opts:  max_ioq_depth=%d, max_io_size=%d,\n"
 		     "  max_qpairs_per_ctrlr=%d, io_unit_size=%d,\n"
 		     "  in_capsule_data_size=%d, max_aq_depth=%d,\n"
-		     "  num_shared_buffers=%d, max_srq_depth=%d, no_srq=%d\n",
+		     "  num_shared_buffers=%d, max_srq_depth=%d, no_srq=%d,\n"
+		     "  wr_batching=%d\n",
 		     opts->max_queue_depth,
 		     opts->max_io_size,
 		     opts->max_qpairs_per_ctrlr,
@@ -2379,7 +2401,8 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		     opts->max_aq_depth,
 		     opts->num_shared_buffers,
 		     opts->max_srq_depth,
-		     opts->no_srq);
+		     opts->no_srq,
+		     opts->wr_batching);
 
 	/* I/O unit size cannot be larger than max I/O size */
 	if (opts->io_unit_size > opts->max_io_size) {

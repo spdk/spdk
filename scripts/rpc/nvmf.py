@@ -106,7 +106,8 @@ def nvmf_create_transport(client,
                           no_srq=False,
                           c2h_success=True,
                           dif_insert_or_strip=None,
-                          sock_priority=None):
+			  sock_priority=None,
+			  wr_batching=True):
     """NVMf Transport Create options.
 
     Args:
@@ -123,7 +124,7 @@ def nvmf_create_transport(client,
         no_srq: Boolean flag to disable SRQ even for devices that support it - RDMA specific (optional)
         c2h_success: Boolean flag to disable the C2H success optimization - TCP specific (optional)
         dif_insert_or_strip: Boolean flag to enable DIF insert/strip for I/O - TCP specific (optional)
-
+	wq_batching: Boolean flag to disable work requests batching - RDMA specific (optional)
     Returns:
         True or False
     """
@@ -158,6 +159,8 @@ def nvmf_create_transport(client,
         params['dif_insert_or_strip'] = dif_insert_or_strip
     if sock_priority:
         params['sock_priority'] = sock_priority
+    if wr_batching:
+	params['wr_batching'] = wr_batching
     return client.call('nvmf_create_transport', params)
 
 

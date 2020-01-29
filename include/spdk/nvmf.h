@@ -83,6 +83,7 @@ struct spdk_nvmf_transport_opts {
 	bool		no_srq;
 	bool		c2h_success;
 	bool		dif_insert_or_strip;
+	bool            wr_batching;
 	uint32_t	sock_priority;
 };
 
