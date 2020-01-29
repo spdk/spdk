@@ -31,6 +31,8 @@ Using mlx5_dv requires libmlx5 installed on the system.
 Added `spdk_sock_impl_get_opts` and `spdk_sock_impl_set_opts` functions to set/get socket layer configuration
 options. Options can be set independently for each implementation.
 
+Added `recv_buf_size` and 'send_buf_size' socket layer options. They are used only in posix implementation.
+
 ## v20.04:
 
 IDXD engine support for compare has been added.

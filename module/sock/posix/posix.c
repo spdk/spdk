@@ -49,8 +49,8 @@
 
 #define MAX_TMPBUF 1024
 #define PORTNUMLEN 32
-#define SO_RCVBUF_SIZE (2 * 1024 * 1024)
-#define SO_SNDBUF_SIZE (2 * 1024 * 1024)
+#define MIN_SO_RCVBUF_SIZE (2 * 1024 * 1024)
+#define MIN_SO_SNDBUF_SIZE (2 * 1024 * 1024)
 #define IOV_BATCH_SIZE 64
 
 #if defined(SO_ZEROCOPY) && defined(MSG_ZEROCOPY)
@@ -76,6 +76,11 @@ struct spdk_posix_sock_group_impl {
 	struct spdk_sock_group_impl	base;
 	int				fd;
 	TAILQ_HEAD(, spdk_posix_sock)	pending_recv;
+};
+
+static struct spdk_sock_impl_opts g_spdk_posix_sock_impl_opts = {
+	.recv_buf_size = MIN_SO_RCVBUF_SIZE,
+	.send_buf_size = MIN_SO_SNDBUF_SIZE
 };
 
 static int
@@ -263,9 +268,9 @@ posix_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
 		return rc;
 	}
 
-	/* Set kernel buffer size to be at least SO_RCVBUF_SIZE */
-	if (sz < SO_RCVBUF_SIZE) {
-		sz = SO_RCVBUF_SIZE;
+	/* Set kernel buffer size to be at least MIN_SO_RCVBUF_SIZE */
+	if (sz < MIN_SO_RCVBUF_SIZE) {
+		sz = MIN_SO_RCVBUF_SIZE;
 	}
 
 	rc = setsockopt(sock->fd, SOL_SOCKET, SO_RCVBUF, &sz, sizeof(sz));
@@ -284,8 +289,8 @@ posix_sock_set_sendbuf(struct spdk_sock *_sock, int sz)
 
 	assert(sock != NULL);
 
-	if (sz < SO_SNDBUF_SIZE) {
-		sz = SO_SNDBUF_SIZE;
+	if (sz < MIN_SO_SNDBUF_SIZE) {
+		sz = MIN_SO_SNDBUF_SIZE;
 	}
 
 	rc = setsockopt(sock->fd, SOL_SOCKET, SO_SNDBUF, &sz, sizeof(sz));
@@ -428,13 +433,13 @@ retry:
 			continue;
 		}
 
-		sz = SO_RCVBUF_SIZE;
+		sz = g_spdk_posix_sock_impl_opts.recv_buf_size;
 		rc = setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &sz, sizeof(sz));
 		if (rc) {
 			/* Not fatal */
 		}
 
-		sz = SO_SNDBUF_SIZE;
+		sz = g_spdk_posix_sock_impl_opts.send_buf_size;
 		rc = setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &sz, sizeof(sz));
 		if (rc) {
 			/* Not fatal */
@@ -1301,9 +1306,16 @@ posix_sock_impl_get_opts(struct spdk_sock_impl_opts *opts, size_t *len)
 #define FIELD_OK(field) \
 	offsetof(struct spdk_sock_impl_opts, field) + sizeof(opts->field) <= *len
 
+	if (FIELD_OK(recv_buf_size)) {
+		opts->recv_buf_size = g_spdk_posix_sock_impl_opts.recv_buf_size;
+	}
+	if (FIELD_OK(send_buf_size)) {
+		opts->send_buf_size = g_spdk_posix_sock_impl_opts.send_buf_size;
+	}
+
 #undef FIELD_OK
 
-	*len = 0;
+	*len = spdk_min(*len, sizeof(g_spdk_posix_sock_impl_opts));
 	return 0;
 }
 
@@ -1317,6 +1329,13 @@ posix_sock_impl_set_opts(const struct spdk_sock_impl_opts *opts, size_t len)
 
 #define FIELD_OK(field) \
 	offsetof(struct spdk_sock_impl_opts, field) + sizeof(opts->field) <= len
+
+	if (FIELD_OK(recv_buf_size)) {
+		g_spdk_posix_sock_impl_opts.recv_buf_size = opts->recv_buf_size;
+	}
+	if (FIELD_OK(send_buf_size)) {
+		g_spdk_posix_sock_impl_opts.send_buf_size = opts->send_buf_size;
+	}
 
 #undef FIELD_OK
 
