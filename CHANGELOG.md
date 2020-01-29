@@ -24,6 +24,13 @@ Added boolean return value for function spdk_fs_set_cache_size to indicate its o
 
 Added `blobfs_set_cache_size` RPC method to set cache size for blobstore filesystem.
 
+### blobstore
+
+Added new `use_extent_table` option to `spdk_blob_opts` for creating blobs with Extent Table descriptor.
+Using this metadata format, dramatically decreases number of writes required to persist each cluster allocation
+for thin provisioned blobs. Extent Table descriptor is enabled by default.
+See the [Blobstore Programmer's Guide](https://spdk.io/doc/blob.html#blob_pg_cluster_layout) for more details.
+
 ### dpdk
 
 Updated DPDK submodule to DPDK 19.11.
