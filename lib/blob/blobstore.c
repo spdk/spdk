@@ -1443,6 +1443,7 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		/* If EXTENT_TABLE was found, that means support for it should be enabled. */
 		assert(blob->extent_rle_found == false);
 		blob->use_extent_table = true;
+		blob->invalid_flags |= SPDK_BLOB_EXTENT_TABLE;
 	} else {
 		/* If EXTENT_RLE or no extent_* descriptor was found disable support
 		 * for extent table. No extent_* descriptors means that blob has length of 0
