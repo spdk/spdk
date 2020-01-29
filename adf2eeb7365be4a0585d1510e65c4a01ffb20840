@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "71fd7bb7_68e16fb1",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-29T17:06:23Z",
+      "side": 1,
+      "message": "Is there ever a case where req_idx isn\u0027t just the next expected avail_idx? Would it make things easier to track the next expected avail_idx in the virtqueue struct and not pass it into this function at all?",
+      "revId": "adf2eeb7365be4a0585d1510e65c4a01ffb20840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2ec92951_0e08bc25",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-29T17:06:23Z",
+      "side": 1,
+      "message": "This ring is in shared memory, so the guest technically has access to it and can modify it at bad times. I think for security reasons, this needs to copy the descriptor into our process, then sanity check the result.",
+      "revId": "adf2eeb7365be4a0585d1510e65c4a01ffb20840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bcbce7e1_2c9063b5",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 501,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-29T17:06:23Z",
+      "side": 1,
+      "message": "Now that I understand how this works, I see why this was originally called \"enqueue\". Let\u0027s go back to the enqueue name.\n\nInstead of passing in req_idx and last_idx, let\u0027s pass in a count of the number of buffers in the chain.",
+      "revId": "adf2eeb7365be4a0585d1510e65c4a01ffb20840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "88612c54_62f527a4",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 530,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-29T17:06:23Z",
+      "side": 1,
+      "message": "The specification says there are a few more things that must be updated in a used descriptor.\n\n~~~\n/* This marks a descriptor as device write-only (otherwise device read-only). */\n#define VIRTQ_DESC_F_WRITE     2\n\nIn a used descriptor, this bit is used to specify whether any\ndata has been written by the device into any parts of the buffer.\n~~~\n\nBecause the descriptor at last_used_idx may be for some other command, we need to correctly update it with the VIRTQ_DESC_F_WRITE flag here too. Further:\n\n~~~\nIn a used descriptor, Element Address is unused. Element Length\nspecifies the length of the buffer that has been initialized\n(written to) by the device.\n~~~\n\nSo you\u0027ll need to update the length here too or it will have the length from whatever descriptor was here before. If you\u0027re updating flags, len, and id, you may as well also set addr to 0 just to be safe.\n\nThe easiest way to do this may be to have the user pass in the descriptor to the function and then just memcpy it into the slot (minus the flags, which can only be written after a barrier)",
+      "revId": "adf2eeb7365be4a0585d1510e65c4a01ffb20840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
