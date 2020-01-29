@@ -16,6 +16,24 @@
       "revId": "702c8b7a8804a78510b6aab4bd6e182b0cc11c49",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8df4e8eb_e2c1287a",
+        "filename": "include/spdk/thread.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 344,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-29T23:40:50Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "13a5d820_509ce3e4",
+      "revId": "702c8b7a8804a78510b6aab4bd6e182b0cc11c49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
