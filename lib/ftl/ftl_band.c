@@ -1043,11 +1043,14 @@ ftl_band_erase_cb(struct ftl_io *io, void *ctx, int status)
 {
 	struct ftl_zone *zone;
 
+	zone = ftl_band_zone_from_addr(io->band, io->addr);
+	zone->busy = false;
+
 	if (spdk_unlikely(status)) {
 		ftl_erase_fail(io, status);
 		return;
 	}
-	zone = ftl_band_zone_from_addr(io->band, io->addr);
+
 	zone->info.state = SPDK_BDEV_ZONE_STATE_EMPTY;
 	zone->info.write_pointer = zone->info.zone_id;
 }
@@ -1069,8 +1072,11 @@ ftl_band_erase(struct ftl_band *band)
 			continue;
 		}
 
+		zone->busy = true;
+
 		io = ftl_io_erase_init(band, 1, ftl_band_erase_cb);
 		if (!io) {
+			zone->busy = false;
 			rc = -ENOMEM;
 			break;
 		}
@@ -1078,6 +1084,7 @@ ftl_band_erase(struct ftl_band *band)
 		io->addr.offset = zone->info.zone_id;
 		rc = ftl_io_erase(io);
 		if (rc) {
+			zone->busy = false;
 			assert(0);
 			/* TODO: change band's state back to close? */
 			break;
