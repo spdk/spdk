@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -318,27 +318,20 @@ nvme_tcp_qpair_write_pdu(struct nvme_tcp_qpair *tqpair,
 			 nvme_tcp_qpair_xfer_complete_cb cb_fn,
 			 void *cb_arg)
 {
-	int enable_digest;
 	int hlen;
 	uint32_t crc32c;
 	uint32_t mapped_length = 0;
 
 	hlen = pdu->hdr->common.hlen;
-	enable_digest = 1;
-	if (pdu->hdr->common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_IC_REQ ||
-	    pdu->hdr->common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_H2C_TERM_REQ) {
-		/* this PDU should be sent without digest */
-		enable_digest = 0;
-	}
 
 	/* Header Digest */
-	if (enable_digest && tqpair->host_hdgst_enable) {
+	if (g_nvme_tcp_hdgst[pdu->hdr->common.pdu_type] && tqpair->host_hdgst_enable) {
 		crc32c = nvme_tcp_pdu_calc_header_digest(pdu);
 		MAKE_DIGEST_WORD((uint8_t *)pdu->hdr->raw + hlen, crc32c);
 	}
 
 	/* Data Digest */
-	if (pdu->data_len > 0 && enable_digest && tqpair->host_ddgst_enable) {
+	if (pdu->data_len > 0 && g_nvme_tcp_ddgst[pdu->hdr->common.pdu_type] && tqpair->host_ddgst_enable) {
 		crc32c = nvme_tcp_pdu_calc_data_digest(pdu);
 		MAKE_DIGEST_WORD(pdu->data_digest, crc32c);
 	}
@@ -1318,7 +1311,6 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 					  tqpair->host_ddgst_enable)) {
 				data_len += SPDK_NVME_TCP_DIGEST_LEN;
 				pdu->ddgst_enable = true;
-
 			}
 
 			rc = nvme_tcp_read_payload_data(tqpair->sock, pdu);

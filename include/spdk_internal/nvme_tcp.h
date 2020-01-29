@@ -169,6 +169,30 @@ enum nvme_tcp_qpair_state {
 	NVME_TCP_QPAIR_STATE_EXITED = 4,
 };
 
+static const bool g_nvme_tcp_hdgst[] = {
+	[SPDK_NVME_TCP_PDU_TYPE_IC_REQ]         = false,
+	[SPDK_NVME_TCP_PDU_TYPE_IC_RESP]        = false,
+	[SPDK_NVME_TCP_PDU_TYPE_H2C_TERM_REQ]   = false,
+	[SPDK_NVME_TCP_PDU_TYPE_C2H_TERM_REQ]   = false,
+	[SPDK_NVME_TCP_PDU_TYPE_CAPSULE_CMD]    = true,
+	[SPDK_NVME_TCP_PDU_TYPE_CAPSULE_RESP]   = true,
+	[SPDK_NVME_TCP_PDU_TYPE_H2C_DATA]       = true,
+	[SPDK_NVME_TCP_PDU_TYPE_C2H_DATA]       = true,
+	[SPDK_NVME_TCP_PDU_TYPE_R2T]            = true
+};
+
+static const bool g_nvme_tcp_ddgst[] = {
+	[SPDK_NVME_TCP_PDU_TYPE_IC_REQ]         = false,
+	[SPDK_NVME_TCP_PDU_TYPE_IC_RESP]        = false,
+	[SPDK_NVME_TCP_PDU_TYPE_H2C_TERM_REQ]   = false,
+	[SPDK_NVME_TCP_PDU_TYPE_C2H_TERM_REQ]   = false,
+	[SPDK_NVME_TCP_PDU_TYPE_CAPSULE_CMD]    = true,
+	[SPDK_NVME_TCP_PDU_TYPE_CAPSULE_RESP]   = false,
+	[SPDK_NVME_TCP_PDU_TYPE_H2C_DATA]       = true,
+	[SPDK_NVME_TCP_PDU_TYPE_C2H_DATA]       = true,
+	[SPDK_NVME_TCP_PDU_TYPE_R2T]            = false
+};
+
 static uint32_t
 nvme_tcp_pdu_calc_header_digest(struct nvme_tcp_pdu *pdu)
 {
@@ -342,7 +366,6 @@ static int
 nvme_tcp_build_iovs(struct iovec *iov, int iovcnt, struct nvme_tcp_pdu *pdu,
 		    bool hdgst_enable, bool ddgst_enable, uint32_t *_mapped_length)
 {
-	int enable_digest;
 	uint32_t hlen, plen;
 	struct _nvme_tcp_sgl *sgl;
 
@@ -353,17 +376,9 @@ nvme_tcp_build_iovs(struct iovec *iov, int iovcnt, struct nvme_tcp_pdu *pdu,
 	sgl = &pdu->sgl;
 	_nvme_tcp_sgl_init(sgl, iov, iovcnt, 0);
 	hlen = pdu->hdr->common.hlen;
-	enable_digest = 1;
-	if (pdu->hdr->common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_IC_REQ ||
-	    pdu->hdr->common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_IC_RESP ||
-	    pdu->hdr->common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_H2C_TERM_REQ ||
-	    pdu->hdr->common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_C2H_TERM_REQ) {
-		/* this PDU should be sent without digest */
-		enable_digest = 0;
-	}
 
 	/* Header Digest */
-	if (enable_digest && hdgst_enable) {
+	if (g_nvme_tcp_hdgst[pdu->hdr->common.pdu_type] && hdgst_enable) {
 		hlen += SPDK_NVME_TCP_DIGEST_LEN;
 	}
 
@@ -398,7 +413,7 @@ nvme_tcp_build_iovs(struct iovec *iov, int iovcnt, struct nvme_tcp_pdu *pdu,
 	}
 
 	/* Data Digest */
-	if (enable_digest && ddgst_enable) {
+	if (g_nvme_tcp_ddgst[pdu->hdr->common.pdu_type] && ddgst_enable) {
 		plen += SPDK_NVME_TCP_DIGEST_LEN;
 		_nvme_tcp_sgl_append(sgl, pdu->data_digest, SPDK_NVME_TCP_DIGEST_LEN);
 	}
@@ -604,12 +619,8 @@ nvme_tcp_pdu_calc_psh_len(struct nvme_tcp_pdu *pdu, bool hdgst_enable)
 	uint8_t psh_len, pdo, padding_len;
 
 	psh_len = pdu->hdr->common.hlen;
-	/* Only the following five type has header digest */
-	if (((pdu->hdr->common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_CAPSULE_CMD) ||
-	     (pdu->hdr->common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_H2C_DATA) ||
-	     (pdu->hdr->common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_CAPSULE_RESP) ||
-	     (pdu->hdr->common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_C2H_DATA) ||
-	     (pdu->hdr->common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_R2T)) && hdgst_enable) {
+
+	if (g_nvme_tcp_hdgst[pdu->hdr->common.pdu_type] && hdgst_enable) {
 		pdu->has_hdgst = true;
 		psh_len += SPDK_NVME_TCP_DIGEST_LEN;
 		if (pdu->hdr->common.plen > psh_len) {
