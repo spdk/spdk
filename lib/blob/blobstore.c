@@ -5129,6 +5129,9 @@ _spdk_bs_create_blob(struct spdk_blob_store *bs,
 	}
 
 	blob->use_extent_table = opts->use_extent_table;
+	if (blob->use_extent_table) {
+		blob->invalid_flags |= SPDK_BLOB_EXTENT_TABLE;
+	}
 
 	if (!internal_xattrs) {
 		_spdk_blob_xattrs_init(&internal_xattrs_default);
