@@ -7,6 +7,25 @@ source $testdir/nbd_common.sh
 
 rpc_py="$rootdir/scripts/rpc.py"
 conf_file="$testdir/bdev.conf"
+# Make sure the configuration is clean
+:>"$conf_file"
+
+function start_spdk_tgt() {
+	local spdk_cmd
+
+	if [[ -n $spdk_tgt_pid ]] && kill -0 "$spdk_tgt_pid" &>/dev/null; then
+		return 0
+	fi
+
+	if [[ -s $conf_file ]]; then
+		spdk_cmd+=(--config "$conf_file")
+	fi
+
+	"$rootdir/app/spdk_tgt/spdk_tgt" "${spdk_cmd[@]}" &
+	spdk_tgt_pid=$!
+	trap 'killprocess "$spdk_tgt_pid"; exit 1' SIGINT SIGTERM EXIT
+	waitforlisten "$spdk_tgt_pid"
+}
 
 function setup_bdev_conf() {
 # Create a file to be used as an AIO backend
@@ -27,9 +46,10 @@ dd if=/dev/zero of=/tmp/aiofile bs=2048 count=5000
 		[Passthru]
 		  PT Malloc3 TestPT
 
-		[QoS]
-		  Limit_IOPS Malloc0 20000
-		  Limit_BPS Malloc3 100
+		# FIXME: QoS doesn't work properly with json_config: issue 1146
+		# [QoS]
+		#  Limit_IOPS Malloc0 20000
+		#  Limit_BPS Malloc3 100
 
 		[RAID0]
 		  Name raid0
@@ -45,8 +65,15 @@ function setup_nvme_conf() {
 }
 
 function setup_gpt_conf() {
+	# FIXME: Remove this
+	if [[ $1 == reset ]]; then
+		# Make sure that on reset we use ini config only as part_dev_by_gpt()
+		# still depends on it
+		:>"$conf_file"
+	fi
 	setup_nvme_conf
 	if grep -q Nvme0 $conf_file; then
+		[[ $1 == reset ]] && return 0
 		part_dev_by_gpt $conf_file Nvme0n1 $rootdir
 	else
 		return 1
@@ -82,7 +109,7 @@ function setup_rbd_conf() {
 }
 
 function bdev_bounds() {
-	$testdir/bdevio/bdevio -w -s $PRE_RESERVED_MEM -c $conf_file &
+	$testdir/bdevio/bdevio -w -s $PRE_RESERVED_MEM --json "$conf_file" &
 	bdevio_pid=$!
 	trap 'killprocess $bdevio_pid; exit 1' SIGINT SIGTERM EXIT
 	echo "Process bdevio pid: $bdevio_pid"
@@ -110,7 +137,7 @@ function nbd_function_test() {
 		fi
 
 		modprobe nbd
-		$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 -c ${conf} &
+		$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 --json "$conf" &
 		nbd_pid=$!
 		trap 'killprocess $nbd_pid; exit 1' SIGINT SIGTERM EXIT
 		echo "Process nbd pid: $nbd_pid"
@@ -134,11 +161,11 @@ function fio_test_suite() {
 	done
 
 	if [ $RUN_NIGHTLY_FAILING -eq 0 ]; then
-		local fio_params="--ioengine=spdk_bdev --iodepth=8 --bs=4k --runtime=10 $testdir/bdev.fio --spdk_conf=./test/bdev/bdev.conf"
+		local fio_params="--ioengine=spdk_bdev --iodepth=8 --bs=4k --runtime=10 $testdir/bdev.fio --spdk_json_conf=./test/bdev/bdev.conf"
 	else
 		# Use size 192KB which both exceeds typical 128KB max NVMe I/O
 		#  size and will cross 128KB Intel DC P3700 stripe boundaries.
-		local fio_params="--ioengine=spdk_bdev --iodepth=128 --bs=192k --runtime=100 $testdir/bdev.fio --spdk_conf=./test/bdev/bdev.conf"
+		local fio_params="--ioengine=spdk_bdev --iodepth=128 --bs=192k --runtime=100 $testdir/bdev.fio --spdk_json_conf=./test/bdev/bdev.conf"
 	fi
 
 	run_test "bdev_fio_rw_verify" fio_bdev $fio_params --spdk_mem=$PRE_RESERVED_MEM \
@@ -234,7 +261,7 @@ function qos_function_test() {
 
 function qos_test_suite() {
 	# Run bdevperf with QoS disabled first
-	$testdir/bdevperf/bdevperf -z -m 0x2 -q 256 -o 4096 -w randread -t 60 &
+	"$testdir/bdevperf/bdevperf" -z -m 0x2 -q 256 -o 4096 -w randread -t 60 &
 	QOS_PID=$!
 	echo "Process qos testing pid: $QOS_PID"
 	trap 'killprocess $QOS_PID; exit 1' SIGINT SIGTERM EXIT
@@ -289,14 +316,26 @@ if [ -n "$test_type" ]; then
 	esac
 fi
 
-bdevs=$(discover_bdevs $rootdir $conf_file | jq -r '.[] | select(.claimed == false)')
+start_spdk_tgt
+
+# Overwrite ini config with json and use it as such throughout all the tests
+cat <<-CONF >"$conf_file"
+        {"subsystems":[
+        $("$rpc_py" save_subsystem_config -n bdev)
+        ]}
+CONF
+
+
+bdevs=$("$rpc_py" bdev_get_bdevs | jq -r '.[] | select(.claimed == false)')
 bdevs_name=$(echo $bdevs | jq -r '.name')
 bdev_list=($bdevs_name)
 hello_world_bdev=${bdev_list[0]}
+trap - SIGINT SIGTERM EXIT
+killprocess "$spdk_tgt_pid"
 # End bdev configuration
 #-----------------------------------------------------
 
-run_test "bdev_hello_world" $rootdir/examples/bdev/hello_world/hello_bdev -c $conf_file -b $hello_world_bdev
+run_test "bdev_hello_world" $rootdir/examples/bdev/hello_world/hello_bdev --json "$conf_file" -b "$hello_world_bdev"
 run_test "bdev_bounds" bdev_bounds
 run_test "bdev_nbd" nbd_function_test $conf_file "$bdevs_name"
 if [[ $CONFIG_FIO_PLUGIN == y ]]; then
@@ -311,8 +350,8 @@ else
 	exit 1
 fi
 
-run_test "bdev_verify" $testdir/bdevperf/bdevperf -c $conf_file -q 128 -o 4096 -w verify -t 5
-run_test "bdev_write_zeroes" $testdir/bdevperf/bdevperf -c $conf_file -q 128 -o 4096 -w write_zeroes -t 1
+run_test "bdev_verify" $testdir/bdevperf/bdevperf --json "$conf_file" -q 128 -o 4096 -w verify -t 5
+run_test "bdev_write_zeroes" $testdir/bdevperf/bdevperf --json "$conf_file" -q 128 -o 4096 -w write_zeroes -t 1
 
 if [ -z $test_type ]; then
 	run_test "bdev_qos" qos_test_suite
@@ -320,12 +359,13 @@ fi
 
 # Temporarily disabled - infinite loop
 # if [ $RUN_NIGHTLY -eq 1 ]; then
-	# run_test "bdev_reset" $testdir/bdevperf/bdevperf -c $conf_file -q 16 -w reset -o 4096 -t 60
+	# run_test "bdev_reset" $testdir/bdevperf/bdevperf --json "$conf_file" -q 16 -w reset -o 4096 -t 60
 # fi
 
 # Bdev and configuration cleanup below this line
 #-----------------------------------------------------
 if [ "$test_type" = "gpt" ]; then
+	setup_gpt_conf reset
 	part_dev_by_gpt $conf_file Nvme0n1 $rootdir reset
 fi
 
