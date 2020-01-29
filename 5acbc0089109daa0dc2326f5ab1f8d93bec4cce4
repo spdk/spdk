@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7e938f25_ce813f19",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 352,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-29T21:28:38Z",
+      "side": 1,
+      "message": "Your change here is fine, but the long term goal is to eliminate this loop entirely. Instead of having the event framework spawn lightweight threads automatically, applications should spawn them as they need them.",
+      "revId": "5acbc0089109daa0dc2326f5ab1f8d93bec4cce4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
