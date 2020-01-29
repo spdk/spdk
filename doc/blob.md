@@ -318,6 +318,24 @@ form a linked list. The first page in the list will be written in place on updat
 be written to fresh locations. This requires the backing device to support an atomic write size greater than
 or equal to the page size to guarantee that the operation is atomic. See the section on atomicity for details.
 
+### Blob cluster layout {#blob_pg_cluster_layout}
+
+Each blob is an ordered list of clusters, where starting LBA of a cluster is called extent. A blob can be
+thin provisioned, resulting in no extent for some of the clusters. When first write operation occurs
+to the unallocated cluster - new extent is chosen. This information is stored in RAM and on-disk.
+
+There are two extent representations on-disk, dependent on `use_extent_table` (default:true) opts used
+when creating a blob.
+* **use_extent_table=true**: EXTENT_PAGE descriptor is not part of linked list of pages. It contains extents
+that are not run-length encoded. Each extent page is referenced by EXTENT_TABLE descriptor, which is serialized
+as part of linked list of pages.  Extent table is run-length encoding all unallocated extent pages.
+Every new cluster allocation updates a single extent page, in case when extent page was previously allocated.
+Otherwise additionally incurs serializing whole linked list of pages for the blob.
+
+* **use_extent_table=false**: EXTENT_RLE descriptor is serialized as part of linked list of pages.
+Extents pointing to contiguous LBA are run-length encoded, including unallocated extents represented by 0.
+Every new cluster allocation incurs serializing whole linked list of pages for the blob.
+
 ### Sequences and Batches
 
 Internally Blobstore uses the concepts of sequences and batches to submit IO to the underlying device in either
