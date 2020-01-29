@@ -1,0 +1,16 @@
+{
+  "subsystems": [
+    {
+      "subsystem": "bdev",
+      "config": [
+        {
+          "method": "bdev_pmem_create",
+          "params": {
+            "name": "Pmem0",
+            "pmem_file": "/tmp/spdk-pmem-pool"
+          }
+        }
+      ]
+    }
+  ]
+}

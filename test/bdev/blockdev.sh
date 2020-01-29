@@ -6,46 +6,23 @@ source $rootdir/test/common/autotest_common.sh
 source $testdir/nbd_common.sh
 
 rpc_py="$rootdir/scripts/rpc.py"
-conf_file="$testdir/bdev.conf"
+conf_file="$testdir/bdev.json"
+conf_type="--json"
 
 function setup_bdev_conf() {
-# Create a file to be used as an AIO backend
-dd if=/dev/zero of=/tmp/aiofile bs=2048 count=5000
-
-	cat >$conf_file <<-EOF
-		[AIO]
-		  AIO /tmp/aiofile AIO0 2048
-
-		[Malloc]
-		  NumberOfLuns 6
-		  LunSizeInMB 32
-
-		[Split]
-		  Split Malloc1 2
-		  Split Malloc2 8 4
-
-		[Passthru]
-		  PT Malloc3 TestPT
-
-		[QoS]
-		  Limit_IOPS Malloc0 20000
-		  Limit_BPS Malloc3 100
-
-		[RAID0]
-		  Name raid0
-		  StripSize 64
-		  NumDevices 2
-		  RaidLevel 0
-		  Devices Malloc4 Malloc5
-	EOF
+	dd if=/dev/zero of=/tmp/aiofile bs=2048 count=5000
+	cp $testdir/bdev_base.json $conf_file
 }
 
 function setup_nvme_conf() {
-	$rootdir/scripts/gen_nvme.sh >> $conf_file
+	cp $testdir/bdev_nvme_base.json $conf_file
+	nvme_json=$($rootdir/scripts/gen_nvme.sh --json | awk 'NR >= 4' | head -n -2 | sed ':a;N;$!ba;s/\n/\\\n/g')
+	sed -i "s/NEW_BDEVS/$nvme_json/g" $conf_file
 }
 
 function setup_gpt_conf() {
-	setup_nvme_conf
+	conf_type="-c"
+	$rootdir/scripts/gen_nvme.sh > $conf_file
 	if grep -q Nvme0 $conf_file; then
 		part_dev_by_gpt $conf_file Nvme0n1 $rootdir
 	else
@@ -54,20 +31,16 @@ function setup_gpt_conf() {
 }
 
 function setup_crypto_conf() {
-	cat >$conf_file <<-EOF
-		[Malloc]
-		NumberOfLuns 2
-		LunSizeInMB 32
-	EOF
-	$testdir/gen_crypto.sh Malloc0 Malloc1 >> $conf_file
+	cp $testdir/bdev_crypto_base.json $conf_file
+	crypto_json=$($testdir/gen_crypto.sh Malloc0 Malloc1 | sed ':a;N;$!ba;s/\n/\\\n/g')
+	sed -i "s/NEW_BDEVS/$crypto_json/" $conf_file
 }
 
 function setup_pmem_conf() {
 	if hash pmempool; then
 		rm -f /tmp/spdk-pmem-pool
 		pmempool create blk --size=32M 512 /tmp/spdk-pmem-pool
-		echo "[Pmem]" >> $conf_file
-		echo "  Blk /tmp/spdk-pmem-pool Pmem0" >> $conf_file
+		cp $testdir/bdev_pmem_base.json $conf_file
 	else
 		return 1
 	fi
@@ -78,11 +51,13 @@ function setup_rbd_conf() {
 	rbd_setup 127.0.0.1
 	timing_exit rbd_setup
 
-	$rootdir/scripts/gen_rbd.sh >> $conf_file
+	cp $testdir/bdev_nvme_base.json $conf_file
+	rbd_json=$($rootdir/scripts/gen_rbd.sh --json | sed ':a;N;$!ba;s/\n/\\\n/g')
+	sed -i "s/NEW_BDEVS/$rbd_json/" $conf_file
 }
 
 function bdev_bounds() {
-	$testdir/bdevio/bdevio -w -s $PRE_RESERVED_MEM -c $conf_file &
+	$testdir/bdevio/bdevio -w -s $PRE_RESERVED_MEM $conf_type $conf_file &
 	bdevio_pid=$!
 	trap 'killprocess $bdevio_pid; exit 1' SIGINT SIGTERM EXIT
 	echo "Process bdevio pid: $bdevio_pid"
@@ -110,7 +85,7 @@ function nbd_function_test() {
 		fi
 
 		modprobe nbd
-		$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 -c ${conf} &
+		$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 $conf_type ${conf} &
 		nbd_pid=$!
 		trap 'killprocess $nbd_pid; exit 1' SIGINT SIGTERM EXIT
 		echo "Process nbd pid: $nbd_pid"
@@ -134,11 +109,11 @@ function fio_test_suite() {
 	done
 
 	if [ $RUN_NIGHTLY_FAILING -eq 0 ]; then
-		local fio_params="--ioengine=spdk_bdev --iodepth=8 --bs=4k --runtime=10 $testdir/bdev.fio --spdk_conf=./test/bdev/bdev.conf"
+		local fio_params="--ioengine=spdk_bdev --iodepth=8 --bs=4k --runtime=10 $testdir/bdev.fio --spdk_json_conf=$conf_file"
 	else
 		# Use size 192KB which both exceeds typical 128KB max NVMe I/O
 		#  size and will cross 128KB Intel DC P3700 stripe boundaries.
-		local fio_params="--ioengine=spdk_bdev --iodepth=128 --bs=192k --runtime=100 $testdir/bdev.fio --spdk_conf=./test/bdev/bdev.conf"
+		local fio_params="--ioengine=spdk_bdev --iodepth=128 --bs=192k --runtime=100 $testdir/bdev.fio --spdk_json_conf=$conf_file"
 	fi
 
 	run_test "bdev_fio_rw_verify" fio_bdev $fio_params --spdk_mem=$PRE_RESERVED_MEM \
@@ -289,14 +264,14 @@ if [ -n "$test_type" ]; then
 	esac
 fi
 
-bdevs=$(discover_bdevs $rootdir $conf_file | jq -r '.[] | select(.claimed == false)')
+bdevs=$(discover_bdevs $rootdir $conf_file $conf_type | jq -r '.[] | select(.claimed == false)')
 bdevs_name=$(echo $bdevs | jq -r '.name')
 bdev_list=($bdevs_name)
 hello_world_bdev=${bdev_list[0]}
 # End bdev configuration
 #-----------------------------------------------------
 
-run_test "bdev_hello_world" $rootdir/examples/bdev/hello_world/hello_bdev -c $conf_file -b $hello_world_bdev
+run_test "bdev_hello_world" $rootdir/examples/bdev/hello_world/hello_bdev $conf_type $conf_file -b $hello_world_bdev
 run_test "bdev_bounds" bdev_bounds
 run_test "bdev_nbd" nbd_function_test $conf_file "$bdevs_name"
 if [ -d /usr/src/fio ]; then
@@ -311,8 +286,8 @@ else
 	exit 1
 fi
 
-run_test "bdev_verify" $testdir/bdevperf/bdevperf -c $conf_file -q 128 -o 4096 -w verify -t 5
-run_test "bdev_write_zeroes" $testdir/bdevperf/bdevperf -c $conf_file -q 128 -o 4096 -w write_zeroes -t 1
+run_test "bdev_verify" $testdir/bdevperf/bdevperf $conf_type $conf_file -q 128 -o 4096 -w verify -t 5
+run_test "bdev_write_zeroes" $testdir/bdevperf/bdevperf $conf_type $conf_file -q 128 -o 4096 -w write_zeroes -t 1
 
 if [ -z $test_type ]; then
 	run_test "bdev_qos" qos_test_suite

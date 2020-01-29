@@ -1,0 +1,10 @@
+{
+  "subsystems": [
+    {
+      "subsystem": "bdev",
+      "config": [
+        NEW_BDEVS
+      ]
+    }
+  ]
+}
