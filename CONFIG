@@ -81,6 +81,9 @@ CONFIG_ENV=
 # installation.
 CONFIG_DPDK_DIR=
 
+# Force DPDK compilation. Default if using the submodule.
+CONFIG_FORCE_DPDK_BUILD=
+
 # Build SPDK FIO plugin. Requires CONFIG_FIO_SOURCE_DIR set to a valid
 # fio source code directory.
 CONFIG_FIO_PLUGIN=n

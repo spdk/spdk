@@ -33,6 +33,7 @@ function usage()
 	echo " --enable-pgo-capture      Enable generation of profile guided optimization data"
 	echo " --enable-pgo-use          Use previously captured profile guided optimization data"
 	echo " --disable-tests           Disable building of tests"
+	echo " --force-dpdk-build        Force DPDK compilation. Default if using the submodule"
 	echo ""
 	echo "Specifying Dependencies:"
 	echo "--with-DEPENDENCY[=path]   Use the given dependency. Optionally, provide the"
@@ -205,6 +206,9 @@ for i in "$@"; do
 			;;
 		--disable-werror)
 			CONFIG[WERROR]=n
+			;;
+		--force-dpdk-build)
+			CONFIG[FORCE_DPDK_BUILD]=y
 			;;
 		--with-dpdk=*)
 			check_dir "$i"
@@ -406,6 +410,11 @@ fi
 if [[ "${CONFIG[ISAL]}" = "n" ]] && [[ "${CONFIG[REDUCE]}" = "y" ]]; then
 		echo "ERROR Conflicting options: --with-reduce is not compatible with --without-isal."
 		exit 1
+fi
+
+# Force dpdk compilation if using the submodule
+if [ -z "${CONFIG[DPDK_DIR]}" ] || [[ "${CONFIG[DPDK_DIR]}" == "${rootdir}/dpdk/build" ]]; then
+	CONFIG[FORCE_DPDK_BUILD]=y
 fi
 
 if [ -z "${CONFIG[ENV]}" ]; then

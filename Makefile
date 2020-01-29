@@ -49,7 +49,10 @@ DIRS-$(CONFIG_ISAL) += isalbuild
 	uninstall
 
 ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
-ifeq ($(CURDIR)/dpdk/build,$(CONFIG_DPDK_DIR))
+ifeq ($(FORCE_DPDK_BUILD),y)
+DPDKBUILD = dpdkbuild
+DIRS-y += dpdkbuild
+else
 ifneq ($(SKIP_DPDK_BUILD),1)
 DPDKBUILD = dpdkbuild
 DIRS-y += dpdkbuild
@@ -83,8 +86,12 @@ install: all
 uninstall: $(DIRS-y)
 	$(Q)echo "Uninstalled spdk"
 
+ifeq ($(FORCE_DPDK_BUILD),y)
+dpdkbuild: $(DPDK_DEPS)
+else
 ifneq ($(SKIP_DPDK_BUILD),1)
 dpdkbuild: $(DPDK_DEPS)
+endif
 endif
 
 lib: $(DPDKBUILD)
