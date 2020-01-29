@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3b0774ae_ace9d34b",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2020-01-29T05:12:54Z",
+      "side": 1,
+      "message": "Bit",
+      "range": {
+        "startLine": 9,
+        "startChar": 32,
+        "endLine": 9,
+        "endChar": 37
+      },
+      "revId": "b7ca064ff395627be4088122b48c83e6ec426f7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "22884406_54ae911e",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2020-01-29T05:12:54Z",
+      "side": 1,
+      "message": "fuse?",
+      "range": {
+        "startLine": 17,
+        "startChar": 52,
+        "endLine": 17,
+        "endChar": 57
+      },
+      "revId": "b7ca064ff395627be4088122b48c83e6ec426f7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
