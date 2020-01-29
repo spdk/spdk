@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aa368f12_0224f9ed",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 350,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2020-01-29T12:00:32Z",
+      "side": 1,
+      "message": "Shouldn\u0027t a newly created thread inherit group_id of the parent?\nSo that if we create many threads in say a loop, they all get same group id.\n\nIf my assumption is true, then this line should be\n\"thread-\u003egroup_id \u003d spdk_get_thread()-\u003ethread_id\"",
+      "range": {
+        "startLine": 350,
+        "startChar": 20,
+        "endLine": 350,
+        "endChar": 37
+      },
+      "revId": "931865cab0738e10b7b99f97a79aebcca7e8101a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
