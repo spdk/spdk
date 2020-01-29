@@ -46,6 +46,30 @@
       "revId": "931865cab0738e10b7b99f97a79aebcca7e8101a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "64a58afb_fbc0d819",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 350,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-29T22:50:48Z",
+      "side": 1,
+      "message": "Hi Vitaliy,\n\nThanks for proposing alternative good idea.\nThread group will be used to get I/O channel on each dynamically created thread.\nI just wanted to exclude the parent from spdk_for_each_thread_on_group(), and I didn\u0027t inherit parent\u0027s group ID to children\u0027s group ID automatically.\nBut your suggestion gets a good point.\nI\u0027m getting review by Ben about the use case of thread group now.\nIn the mean time, I will focus on your suggestion.\n\nThanks,\nShuhei.",
+      "parentUuid": "1dd96ce6_3279a374",
+      "range": {
+        "startLine": 350,
+        "startChar": 20,
+        "endLine": 350,
+        "endChar": 37
+      },
+      "revId": "931865cab0738e10b7b99f97a79aebcca7e8101a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
