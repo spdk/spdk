@@ -43,6 +43,9 @@ function usage()
 	echo "Valid dependencies are listed below."
 	echo " dpdk                      Build against a custom dpdk version. By default, the dpdk"
 	echo "                           submodule in spdk tree will be used."
+	echo "                           If custom dpdk specified, it is assumed to be already built."
+	echo "                           Building DPDK is controlled by SKIP_DPDK_BUILD flag which defaults to 1 unless using the submodule."
+	echo "                           Note that if SKIP_DPDK_BUILD is 0 then \`make clean\` will remove DPDK directory."
 	echo "                           example: /usr/share/dpdk/x86_64-default-linuxapp-gcc"
 	echo " env                       Use an alternate environment implementation instead of DPDK."
 	echo "                           Implies --without-dpdk."
@@ -465,6 +468,15 @@ else
 	CONFIG[VIRTIO]="n"
 fi
 
+# If DPDK_DIR is not submodule, do not build it by default
+if [ -z "$SKIP_DPDK_BUILD" ]; then
+	if [ -z "${CONFIG[DPDK_DIR]}" ] || [[ "${CONFIG[DPDK_DIR]}" == "${rootdir}/dpdk/build" ]]; then
+		SKIP_DPDK_BUILD=0
+	else
+		SKIP_DPDK_BUILD=1
+	fi
+fi
+
 if [ "${CONFIG[FIO_PLUGIN]}" = "y" ]; then
 	if [ -z "${CONFIG[FIO_SOURCE_DIR]}" ]; then
 		echo "When fio is enabled, you must specify the fio directory using --with-fio=path"
@@ -737,6 +749,11 @@ cp -f $rootdir/CONFIG $rootdir/mk/config.mk
 for key in ${!CONFIG[@]}; do
 	sed -i.bak -r "s#^\s*CONFIG_${key}=.*#CONFIG_${key}\?=${CONFIG[$key]}#g" $rootdir/mk/config.mk
 done
+
+# Copy SKIP_DPDK_BUILD parameter
+echo "
+SKIP_DPDK_BUILD?=${SKIP_DPDK_BUILD}" >> $rootdir/mk/config.mk
+
 # On FreeBSD sed -i 'SUFFIX' - SUFFIX is mandatory. So no way but to delete the backed file.
 rm -f $rootdir/mk/config.mk.bak
 echo "done."
