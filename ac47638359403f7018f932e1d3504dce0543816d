@@ -70,6 +70,30 @@
       "revId": "ac47638359403f7018f932e1d3504dce0543816d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "00f140c8_971860a1",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 22
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-29T13:26:12Z",
+      "side": 1,
+      "message": "Both of those are optional components, see ./configure --with-reduce --with-pmdk. Lets add it for Ubuntu, but I don\u0027t think that moving it to minimal depds is required.",
+      "parentUuid": "4a79e4e9_c74ee37e",
+      "range": {
+        "startLine": 9,
+        "startChar": 12,
+        "endLine": 9,
+        "endChar": 29
+      },
+      "revId": "ac47638359403f7018f932e1d3504dce0543816d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
