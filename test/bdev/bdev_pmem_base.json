@@ -1,0 +1,40 @@
+{
+  "subsystems": [
+    {
+      "subsystem": "copy",
+      "config": null
+    },
+    {
+      "subsystem": "interface",
+      "config": null
+    },
+    {
+      "subsystem": "net_framework",
+      "config": null
+    },
+    {
+      "subsystem": "bdev",
+      "config": [
+        {
+          "method": "bdev_pmem_create",
+          "params": {
+            "name": "Pmem0",
+            "pmem_file": "/tmp/spdk-pmem-pool"
+          }
+        }
+      ]
+    },
+    {
+      "subsystem": "scsi",
+      "config": null
+    },
+    {
+      "subsystem": "nbd",
+      "config": []
+    },
+    {
+      "subsystem": "vhost",
+      "config": []
+    }
+  ]
+}
