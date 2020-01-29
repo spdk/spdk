@@ -22,6 +22,30 @@
       "revId": "12b072cce584551afc51f0958108c51d16b69341",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6866dfe7_7042159b",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-29T07:21:00Z",
+      "side": 1,
+      "message": "No. We generate this file ourselves on line 387, so we\u0027re not affecting any file which is outside of scope of the test files",
+      "parentUuid": "554236e6_0b6d690d",
+      "range": {
+        "startLine": 346,
+        "startChar": 17,
+        "endLine": 346,
+        "endChar": 36
+      },
+      "revId": "12b072cce584551afc51f0958108c51d16b69341",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
