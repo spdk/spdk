@@ -22,6 +22,30 @@
       "revId": "594d2241d94dea6e2a9882f8c69339d0017ff3e7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "af454e5b_8479804a",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-29T15:30:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c80c48f9_0e1893b4",
+      "range": {
+        "startLine": 240,
+        "startChar": 0,
+        "endLine": 249,
+        "endChar": 7
+      },
+      "revId": "594d2241d94dea6e2a9882f8c69339d0017ff3e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
