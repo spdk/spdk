@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "506d61d8_eef27fb4",
+        "filename": "test/lvol/resize.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2020-01-29T10:10:38Z",
+      "side": 1,
+      "message": "I was originally rewriting those tests to bash to make them easier to debug. They were written with xtrace in mind, and single braces with string comparisons seemed to produce cleanest xtrace output. See the comparisons below:\n\n$ [ \"$(echo \"a b\")\" \u003d\u003d \"a b\" ]\n++ echo \u0027a b\u0027\n+ \u0027[\u0027 \u0027a b\u0027 \u003d\u003d \u0027a b\u0027 \u0027]\u0027\n\n$ [[ $(echo \"a b\") \u003d\u003d \"a b\" ]]\n++ echo \u0027a b\u0027\n+ [[ a b \u003d\u003d \\a\\ \\b ]]\n\n$ a\u003d42; b\u003d2;\n$ [ \"$(echo 42)\" \u003d\u003d \"$((a / b))\" ]\n++ echo 42\n+ \u0027[\u0027 42 \u003d\u003d 21 \u0027]\u0027\n\n$ (( $(echo 42) \u003d\u003d $a / $b ))\n++ echo 42\n+ ((  42 \u003d\u003d 42 / 2  ))\n\n\njq is fast enough, so I also sacrifice those few microseconds to run it multiple times to make the output look much nicer. Also, if the test fails, the last xtrace will directly tell you what went wrong.\n\nThinking about this now, I like `((  42 \u003d\u003d 42 / 2  ))` more than `\u0027[\u0027 42 \u003d\u003d 21 \u0027]\u0027` 😜 On the other hand the division could be a bit harder to tackle when we use bigger numbers. I\u0027m probably fine with either",
+      "parentUuid": "9584b209_52a30700",
+      "range": {
+        "startLine": 102,
+        "startChar": 1,
+        "endLine": 107,
+        "endChar": 0
+      },
+      "revId": "083c609a0e9ea9cdf19e66f7f4f134e0983b679b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "78bce012_2c545ee3",
         "filename": "test/lvol/resize.sh",
         "patchSetId": 7
