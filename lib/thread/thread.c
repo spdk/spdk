@@ -1272,9 +1272,16 @@ static void
 _finish_unregister(void *arg)
 {
 	struct io_device *dev = arg;
-	struct spdk_thread *thread = dev->unregister_thread;
+	struct spdk_thread *thread;
 
-	assert(thread == spdk_get_thread());
+	thread = spdk_get_thread();
+	if (thread == NULL) {
+		SPDK_ERRLOG("call from non-SPDK thread\n");
+		assert(false);
+		return;
+	}
+
+	assert(thread == dev->unregister_thread);
 
 	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Finishing unregistration of io_device %s (%p) on thread %s\n",
 		      dev->name, dev->io_device, thread->name);
