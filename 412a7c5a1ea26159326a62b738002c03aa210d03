@@ -22,6 +22,30 @@
       "revId": "412a7c5a1ea26159326a62b738002c03aa210d03",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2c34b338_88eede20",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 464,
+      "author": {
+        "id": 1016781
+      },
+      "writtenOn": "2020-01-29T12:06:31Z",
+      "side": 1,
+      "message": "It think I took name from fc -\u003e \u0027nvmf_fc_ls_validate_host\u0027, but incautiously changed return type and behavior. What you proposed make sense to me, thanks!",
+      "parentUuid": "65fc5ac3_67875b8a",
+      "range": {
+        "startLine": 464,
+        "startChar": 9,
+        "endLine": 464,
+        "endChar": 13
+      },
+      "revId": "412a7c5a1ea26159326a62b738002c03aa210d03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
