@@ -80,7 +80,10 @@ struct spdk_sock_request {
 #define SPDK_SOCK_REQUEST_IOV(req, i) ((struct iovec *)(((uint8_t *)req + sizeof(struct spdk_sock_request)) + (sizeof(struct iovec) * i)))
 
 struct spdk_sock_opts {
-	int dummy;
+	/**
+	 * Size of sock receive pipe that is used for internal buffering.
+	 */
+	uint32_t recv_pipe_size;
 };
 
 /**

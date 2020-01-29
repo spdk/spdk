@@ -65,6 +65,8 @@ parameter.
 
 `spdk_ftl_punit_range` and `ftl_module_init_opts` structures were removed.
 
+Added `recv_pipe_size` socket layer option. It is used only in posix implementation.
+
 ### isa-l
 
 Updated ISA-L submodule to commit f3993f5c0b6911 which includes implementation and
