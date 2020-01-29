@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "35dd99d1_95290159",
+        "filename": "test/lvol/resize.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1017532
+      },
+      "writtenOn": "2020-01-29T18:40:05Z",
+      "side": 1,
+      "message": "Yes, I see your point. :) However, in my mind, [ should be always avoided as it\u0027s not that flexible (and powerful) and easy to use as [[, (( (this is usually how I see it: https://paste.ofcode.org/XWUsVyFw6mBUAem4EchASb) - they just have bigger aptitude for overall maintainability of the code I think. :D\n\nThat said, I am fine with how it is as far as it gets its job done - all of the syntax suggestions are usually more of \"food for thought\" kinda deal than anything else. :)",
+      "parentUuid": "506d61d8_eef27fb4",
+      "range": {
+        "startLine": 102,
+        "startChar": 1,
+        "endLine": 107,
+        "endChar": 0
+      },
+      "revId": "083c609a0e9ea9cdf19e66f7f4f134e0983b679b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "78bce012_2c545ee3",
         "filename": "test/lvol/resize.sh",
         "patchSetId": 7
