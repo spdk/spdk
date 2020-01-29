@@ -1,0 +1,147 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "64d904a1_c1335d48",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-29T13:49:56Z",
+      "side": 1,
+      "message": "As always - please give meaningful commit message. What, why, how, etc.",
+      "revId": "de07b22d4ec9b7b8816b416033c54985fd7b116a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c0b57ebf_35293e94",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 4
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-29T13:49:56Z",
+      "side": 1,
+      "message": "As in create_vbox.sh - let\u0027s remove this for now.",
+      "range": {
+        "startLine": 40,
+        "startChar": 0,
+        "endLine": 41,
+        "endChar": 35
+      },
+      "revId": "de07b22d4ec9b7b8816b416033c54985fd7b116a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "43558b09_078b12a3",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 4
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-29T13:49:56Z",
+      "side": 1,
+      "message": "Keep that.\n\nHowever I think it\u0027d be good to make it an option to use uname/passwd instead of vagrant ssh keys. Why? In case someone doesn\u0027t want/need to build custom spdk box then these steps are not really needed.",
+      "range": {
+        "startLine": 117,
+        "startChar": 0,
+        "endLine": 118,
+        "endChar": 33
+      },
+      "revId": "de07b22d4ec9b7b8816b416033c54985fd7b116a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e001bb0c_eb27b4ef",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 4
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-29T13:49:56Z",
+      "side": 1,
+      "message": "There\u0027s already a script which purpose is (I think at least) similar - vagrant/update.sh.\nIt seems to be pretty outdated, so it might need updates.\nI think it\u0027d be much better to run a single \"config.vm.provision \"shell\" \" step which would do all the work than to pollute the file with lots of new lines.\n\nAlso, I think that we should put this step as part of create_vbox.sh (after vagrant up) instead of here.\n\nLet\u0027s remove changes from this section for now. Think about this suggestion and let me know what you think.",
+      "range": {
+        "startLine": 210,
+        "startChar": 0,
+        "endLine": 213,
+        "endChar": 129
+      },
+      "revId": "de07b22d4ec9b7b8816b416033c54985fd7b116a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "69f15152_c801056e",
+        "filename": "scripts/vagrant/build_box.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-29T13:49:56Z",
+      "side": 1,
+      "message": "Let\u0027s remove this file from commit for now.\nIn further patches we will try to automate this process, so probably there\u0027s no need to put this in a doc file.",
+      "revId": "de07b22d4ec9b7b8816b416033c54985fd7b116a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d81b5d53_bf2904be",
+        "filename": "scripts/vagrant/build_box.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-29T13:49:56Z",
+      "side": 1,
+      "message": "Empty. Remove?",
+      "revId": "de07b22d4ec9b7b8816b416033c54985fd7b116a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c46c70f7_0fd433d6",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-29T13:49:56Z",
+      "side": 1,
+      "message": "Let\u0027s remove this for now.\n\nMy idea for future patches:\nLet\u0027s keep distro selection names the way they are now (fedora29, fedora30, freebsd11, etc, etc...) but we will try to detect if there is a \"spdk version\" of the box available in the system - either in create_vbox.sh script or in the Vagrantfile itself (that\u0027s up for discussion)",
+      "range": {
+        "startLine": 169,
+        "startChar": 0,
+        "endLine": 171,
+        "endChar": 3
+      },
+      "revId": "de07b22d4ec9b7b8816b416033c54985fd7b116a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
