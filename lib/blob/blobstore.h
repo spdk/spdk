@@ -246,7 +246,7 @@ struct spdk_blob_bs_dev {
  * The following data structures exist on disk.
  */
 #define SPDK_BS_INITIAL_VERSION 1
-#define SPDK_BS_VERSION 3 /* current version */
+#define SPDK_BS_VERSION 4 /* current version */
 
 #pragma pack(push, 1)
 
