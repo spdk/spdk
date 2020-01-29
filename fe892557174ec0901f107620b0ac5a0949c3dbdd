@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "05ac060c_7a5a8ec8",
+        "filename": "test/blobfs/blobfs.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1017532
+      },
+      "writtenOn": "2020-01-29T03:38:24Z",
+      "side": 1,
+      "message": "I am a bit torn here. Since all test functions here also try to clean up after themselves, last $blobfs_pid should not be running anymore when cleanup() is called upon a clean exit. In such a scenario though, another call to killprocess() would make the entire build fail since it attempts to exit the whole script with es set to 1 if given process is not running anymore...\n\nTo workaround this, cleanup() could call killprocess() inside a subshell so it could be ignored. Or, $blobfs_pid could be just unset by the test functions if they managed to terminate the process. Oooor, killprocess() could simply NOT to force the whole script to exit if given pid is not available anymore...I mean, isn\u0027t the whole point of this function to make sure that it\u0027s gone|killed? If the process is missing, it should just say so and than just return! :D Or instead of looking up $blobfs_pid, just check directly if there are any jobs still running in the background and if so just send them all to be killed. Or, like here, add some redundancy to make sure that killprocess() can be called safely?\n\nNo idea which path to pursue though, any hints would be appreciated. :)",
+      "revId": "fe892557174ec0901f107620b0ac5a0949c3dbdd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
