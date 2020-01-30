@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "1ecb265a_378e5b31",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 17
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-30T21:51:29Z",
+      "side": 1,
+      "message": "I don\u0027t update the patch only to remove this line.",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 66
+      },
+      "revId": "a0e0fbefed1a4a200308f90737a63c5b3fbda5d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4c56a1a2_64c3e3f4",
         "filename": "lib/thread/thread.c",
         "patchSetId": 17
