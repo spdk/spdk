@@ -37,13 +37,10 @@
 #include <rdma/rdma_cma.h>
 #include <rdma/rdma_verbs.h>
 
-#include "nvmf_internal.h"
-#include "transport.h"
-
 #include "spdk/config.h"
 #include "spdk/thread.h"
-#include "spdk/nvmf.h"
-#include "spdk/nvmf_spec.h"
+#include "spdk/likely.h"
+#include "spdk/nvmf_transport.h"
 #include "spdk/string.h"
 #include "spdk/trace.h"
 #include "spdk/util.h"
