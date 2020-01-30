@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5b53aeae_8538792d",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 466,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-30T18:51:59Z",
+      "side": 1,
+      "message": "Can you make this \"spdk_nvmf_qpair_access_allowed\"? It\u0027s checking both the hostnqn and the listen address on which it\u0027s connecting here, so there may be cases where it\u0027s a \"valid\" host, but it just connected to the wrong listener and this will return false.",
+      "revId": "2d1d6d5453cabadd5761046220d89b89c58bf352",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f91b7f09_c23149e8",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-30T18:51:59Z",
+      "side": 1,
+      "message": "Can you just move this string sanitization into spdk_nvmf_tgt_find_subsystem?",
+      "revId": "2d1d6d5453cabadd5761046220d89b89c58bf352",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
