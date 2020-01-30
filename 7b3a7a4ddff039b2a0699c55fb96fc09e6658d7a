@@ -16,6 +16,24 @@
       "revId": "7b3a7a4ddff039b2a0699c55fb96fc09e6658d7a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3529c82b_d2f706ee",
+        "filename": "isalbuild/Makefile",
+        "patchSetId": 5
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2020-01-30T15:22:34Z",
+      "side": 1,
+      "message": "Done, apparently we do have DEFAULT_CC in mk/cc.mk now.",
+      "parentUuid": "b87a9999_143ec931",
+      "revId": "7b3a7a4ddff039b2a0699c55fb96fc09e6658d7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
