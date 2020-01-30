@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bbee427a_b8dbbc0c",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1576,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2020-01-30T13:57:03Z",
+      "side": 1,
+      "message": "Full, not closed",
+      "revId": "72ab061830496aaac80ebca654a1ab68c425aef1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
