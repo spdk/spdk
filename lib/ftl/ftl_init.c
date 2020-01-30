@@ -945,17 +945,37 @@ ftl_dev_init_zones(struct ftl_dev_init_ctx *init_ctx)
 	return 0;
 }
 
+struct _ftl_io_channel {
+	struct ftl_io_channel *ioch;
+};
+
+struct ftl_io_channel *
+ftl_io_channel_get_ctx(struct spdk_io_channel *ioch)
+{
+	struct _ftl_io_channel *_ioch = spdk_io_channel_get_ctx(ioch);
+
+	return _ioch->ioch;
+}
+
 static int
 ftl_io_channel_create_cb(void *io_device, void *ctx)
 {
 	struct spdk_ftl_dev *dev = io_device;
-	struct ftl_io_channel *ioch = ctx;
+	struct _ftl_io_channel *_ioch = ctx;
+	struct ftl_io_channel *ioch;
 	char mempool_name[32];
 	int rc;
+
+	ioch = calloc(1, sizeof(*ioch));
+	if (ioch == NULL) {
+		SPDK_ERRLOG("Failed to allocate IO channel\n");
+		return -1;
+	}
 
 	rc = snprintf(mempool_name, sizeof(mempool_name), "ftl_io_%p", ioch);
 	if (rc < 0 || rc >= (int)sizeof(mempool_name)) {
 		SPDK_ERRLOG("Failed to create IO channel pool name\n");
+		free(ioch);
 		return -1;
 	}
 
@@ -969,6 +989,7 @@ ftl_io_channel_create_cb(void *io_device, void *ctx)
 					    SPDK_ENV_SOCKET_ID_ANY);
 	if (!ioch->io_pool) {
 		SPDK_ERRLOG("Failed to create IO channel's IO pool\n");
+		free(ioch);
 		return -1;
 	}
 
@@ -994,6 +1015,7 @@ ftl_io_channel_create_cb(void *io_device, void *ctx)
 		goto fail_poller;
 	}
 
+	_ioch->ioch = ioch;
 	return 0;
 
 fail_poller:
@@ -1004,6 +1026,8 @@ fail_cache:
 	spdk_put_io_channel(ioch->base_ioch);
 fail_ioch:
 	spdk_mempool_free(ioch->io_pool);
+	free(ioch);
+
 	return -1;
 
 }
@@ -1011,24 +1035,26 @@ fail_ioch:
 static void
 ftl_io_channel_destroy_cb(void *io_device, void *ctx)
 {
-	struct ftl_io_channel *ioch = ctx;
+	struct _ftl_io_channel *_ioch = ctx;
+	struct ftl_io_channel *ioch = _ioch->ioch;
 
 	spdk_poller_unregister(&ioch->poller);
 
 	spdk_mempool_free(ioch->io_pool);
-
 	spdk_put_io_channel(ioch->base_ioch);
 
 	if (ioch->cache_ioch) {
 		spdk_put_io_channel(ioch->cache_ioch);
 	}
+
+	free(ioch);
 }
 
 static int
 ftl_dev_init_io_channel(struct spdk_ftl_dev *dev)
 {
 	spdk_io_device_register(dev, ftl_io_channel_create_cb, ftl_io_channel_destroy_cb,
-				sizeof(struct ftl_io_channel),
+				sizeof(struct _ftl_io_channel),
 				NULL);
 
 	return 0;

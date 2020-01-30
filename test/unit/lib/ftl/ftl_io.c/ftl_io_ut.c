@@ -34,32 +34,65 @@
 #include "spdk/stdinc.h"
 
 #include "spdk_cunit.h"
-#include "common/lib/test_env.c"
+#include "common/lib/ut_multithread.c"
 
 #include "ftl/ftl_io.c"
+#include "ftl/ftl_init.c"
 
 DEFINE_STUB(ftl_trace_alloc_id, uint64_t, (struct spdk_ftl_dev *dev), 0);
 DEFINE_STUB(spdk_bdev_io_get_append_location, uint64_t, (struct spdk_bdev_io *bdev_io), 0);
 DEFINE_STUB_V(ftl_band_acquire_lba_map, (struct ftl_band *band));
 DEFINE_STUB_V(ftl_band_release_lba_map, (struct ftl_band *band));
+DEFINE_STUB(ftl_io_channel_poll, int, (void *ioch), 0);
+
+struct spdk_io_channel *
+spdk_bdev_get_io_channel(struct spdk_bdev_desc *bdev_desc)
+{
+	return spdk_get_io_channel(bdev_desc);
+}
+
+static int
+channel_create_cb(void *io_device, void *ctx)
+{
+	return 0;
+}
+
+static void
+channel_destroy_cb(void *io_device, void *ctx)
+{}
 
 static struct spdk_ftl_dev *
-setup_device(void)
+setup_device(uint32_t num_threads)
 {
 	struct spdk_ftl_dev *dev;
+	struct _ftl_io_channel *_ioch;
 	struct ftl_io_channel *ioch;
+	int rc;
+
+	allocate_threads(num_threads);
+	set_thread(0);
 
 	dev = calloc(1, sizeof(*dev));
 	SPDK_CU_ASSERT_FATAL(dev != NULL);
-	dev->ioch = calloc(1, sizeof(*ioch) + sizeof(struct spdk_io_channel));
+
+	dev->ioch = calloc(1, sizeof(*_ioch) + sizeof(struct spdk_io_channel));
 	SPDK_CU_ASSERT_FATAL(dev->ioch != NULL);
 
-	ioch = spdk_io_channel_get_ctx(dev->ioch);
+	_ioch = (struct _ftl_io_channel *)(dev->ioch + 1);
+	ioch = _ioch->ioch = calloc(1, sizeof(*ioch));
+	SPDK_CU_ASSERT_FATAL(ioch != NULL);
 
 	ioch->elem_size = sizeof(struct ftl_md_io);
 	ioch->io_pool = spdk_mempool_create("io-pool", 4096, ioch->elem_size, 0, 0);
 
 	SPDK_CU_ASSERT_FATAL(ioch->io_pool != NULL);
+
+	dev->conf = g_default_conf;
+	dev->base_bdev_desc = (struct spdk_bdev_desc *)0xdeadbeef;
+	spdk_io_device_register(dev->base_bdev_desc, channel_create_cb, channel_destroy_cb, 0, NULL);
+
+	rc = ftl_dev_init_io_channel(dev);
+	CU_ASSERT_EQUAL(rc, 0);
 
 	return dev;
 }
@@ -69,8 +102,13 @@ free_device(struct spdk_ftl_dev *dev)
 {
 	struct ftl_io_channel *ioch;
 
-	ioch = spdk_io_channel_get_ctx(dev->ioch);
+	ioch = ftl_io_channel_get_ctx(dev->ioch);
 	spdk_mempool_free(ioch->io_pool);
+	free(ioch);
+
+	spdk_io_device_unregister(dev, NULL);
+	spdk_io_device_unregister(dev->base_bdev_desc, NULL);
+	free_threads();
 
 	free(dev->ioch);
 	free(dev);
@@ -111,8 +149,8 @@ test_completion(void)
 	int req, status = 0;
 	size_t pool_size;
 
-	dev = setup_device();
-	ioch = spdk_io_channel_get_ctx(dev->ioch);
+	dev = setup_device(1);
+	ioch = ftl_io_channel_get_ctx(dev->ioch);
 	pool_size = spdk_mempool_count(ioch->io_pool);
 
 	io = alloc_io(dev, io_complete_cb, &status);
@@ -153,8 +191,8 @@ test_alloc_free(void)
 	int parent_status = -1;
 	size_t pool_size;
 
-	dev = setup_device();
-	ioch = spdk_io_channel_get_ctx(dev->ioch);
+	dev = setup_device(1);
+	ioch = ftl_io_channel_get_ctx(dev->ioch);
 	pool_size = spdk_mempool_count(ioch->io_pool);
 
 	parent = alloc_io(dev, io_complete_cb, &parent_status);
@@ -199,8 +237,8 @@ test_child_requests(void)
 	int status[MAX_CHILDREN + 1], i;
 	size_t pool_size;
 
-	dev = setup_device();
-	ioch = spdk_io_channel_get_ctx(dev->ioch);
+	dev = setup_device(1);
+	ioch = ftl_io_channel_get_ctx(dev->ioch);
 	pool_size = spdk_mempool_count(ioch->io_pool);
 
 	/* Verify correct behaviour when children finish first */
@@ -299,8 +337,8 @@ test_child_status(void)
 	int parent_status, child_status[2];
 	size_t pool_size, i;
 
-	dev = setup_device();
-	ioch = spdk_io_channel_get_ctx(dev->ioch);
+	dev = setup_device(1);
+	ioch = ftl_io_channel_get_ctx(dev->ioch);
 	pool_size = spdk_mempool_count(ioch->io_pool);
 
 	/* Verify the first error is returned by the parent */
@@ -386,8 +424,8 @@ test_multi_generation(void)
 	size_t pool_size;
 	int i, j;
 
-	dev = setup_device();
-	ioch = spdk_io_channel_get_ctx(dev->ioch);
+	dev = setup_device(1);
+	ioch = ftl_io_channel_get_ctx(dev->ioch);
 	pool_size = spdk_mempool_count(ioch->io_pool);
 
 	/* Verify correct behaviour when children finish first */

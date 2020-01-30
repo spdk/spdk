@@ -1032,7 +1032,7 @@ ftl_restore_nv_cache(struct ftl_restore *restore, ftl_restore_fn cb, void *cb_ar
 	size_t alignment;
 	int rc, i;
 
-	ioch = spdk_io_channel_get_ctx(ftl_get_io_channel(dev));
+	ioch = ftl_io_channel_get_ctx(ftl_get_io_channel(dev));
 	bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
 	alignment = spdk_max(spdk_bdev_get_buf_align(bdev), sizeof(uint64_t));
 

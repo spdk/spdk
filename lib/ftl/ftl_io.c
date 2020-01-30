@@ -353,7 +353,7 @@ struct ftl_io *
 ftl_io_user_init(struct spdk_io_channel *_ioch, uint64_t lba, size_t num_blocks, struct iovec *iov,
 		 size_t iov_cnt, spdk_ftl_fn cb_fn, void *cb_ctx, int type)
 {
-	struct ftl_io_channel *ioch = spdk_io_channel_get_ctx(_ioch);
+	struct ftl_io_channel *ioch = ftl_io_channel_get_ctx(_ioch);
 	struct spdk_ftl_dev *dev = ioch->dev;
 	struct ftl_io *io;
 
@@ -388,7 +388,7 @@ _ftl_io_free(struct ftl_io *io)
 		SPDK_ERRLOG("pthread_spin_destroy failed\n");
 	}
 
-	ioch = spdk_io_channel_get_ctx(io->ioch);
+	ioch = ftl_io_channel_get_ctx(io->ioch);
 	spdk_mempool_put(ioch->io_pool, io);
 }
 
@@ -473,7 +473,7 @@ struct ftl_io *
 ftl_io_alloc(struct spdk_io_channel *ch)
 {
 	struct ftl_io *io;
-	struct ftl_io_channel *ioch = spdk_io_channel_get_ctx(ch);
+	struct ftl_io_channel *ioch = ftl_io_channel_get_ctx(ch);
 
 	io = spdk_mempool_get(ioch->io_pool);
 	if (!io) {

@@ -38,6 +38,7 @@
 
 #include "ftl/ftl_core.c"
 #include "ftl/ftl_band.c"
+#include "ftl/ftl_init.c"
 #include "../common/utils.c"
 
 struct base_bdev_geometry g_geo = {
@@ -73,6 +74,12 @@ DEFINE_STUB(spdk_bdev_zone_management, int, (struct spdk_bdev_desc *desc,
 		spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
 DEFINE_STUB(spdk_bdev_io_get_append_location, uint64_t, (struct spdk_bdev_io *bdev_io), 0);
 
+struct spdk_io_channel *
+spdk_bdev_get_io_channel(struct spdk_bdev_desc *bdev_desc)
+{
+	return spdk_get_io_channel(bdev_desc);
+}
+
 struct ftl_io *
 ftl_io_erase_init(struct ftl_band *band, size_t num_blocks, ftl_io_fn cb)
 {
@@ -105,8 +112,9 @@ ftl_io_complete(struct ftl_io *io)
 static void
 setup_wptr_test(struct spdk_ftl_dev **dev, const struct base_bdev_geometry *geo)
 {
-	size_t i;
 	struct spdk_ftl_dev *t_dev;
+	struct _ftl_io_channel *_ioch;
+	size_t i;
 
 	t_dev = test_init_ftl_dev(geo);
 	for (i = 0; i < ftl_get_num_bands(t_dev); ++i) {
@@ -115,18 +123,26 @@ setup_wptr_test(struct spdk_ftl_dev **dev, const struct base_bdev_geometry *geo)
 		ftl_band_set_state(&t_dev->bands[i], FTL_BAND_STATE_FREE);
 	}
 
+	_ioch = (struct _ftl_io_channel *)(t_dev->ioch + 1);
+	_ioch->ioch = calloc(1, sizeof(*_ioch->ioch));
+	SPDK_CU_ASSERT_FATAL(_ioch->ioch != NULL);
+
 	*dev = t_dev;
 }
 
 static void
 cleanup_wptr_test(struct spdk_ftl_dev *dev)
 {
+	struct _ftl_io_channel *_ioch;
 	size_t i;
 
 	for (i = 0; i < ftl_get_num_bands(dev); ++i) {
 		dev->bands[i].lba_map.segments = NULL;
 		test_free_ftl_band(&dev->bands[i]);
 	}
+
+	_ioch = (struct _ftl_io_channel *)(dev->ioch + 1);
+	free(_ioch->ioch);
 
 	test_free_ftl_dev(dev);
 }

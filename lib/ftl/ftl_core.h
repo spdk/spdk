@@ -253,9 +253,9 @@ int	ftl_nv_cache_scrub(struct ftl_nv_cache *nv_cache, spdk_bdev_io_completion_cb
 			   void *cb_arg);
 void	ftl_get_media_events(struct spdk_ftl_dev *dev);
 int	ftl_io_channel_poll(void *arg);
+struct spdk_io_channel *ftl_get_io_channel(const struct spdk_ftl_dev *dev);
+struct ftl_io_channel *ftl_io_channel_get_ctx(struct spdk_io_channel *ioch);
 
-struct spdk_io_channel *
-ftl_get_io_channel(const struct spdk_ftl_dev *dev);
 
 #define ftl_to_addr(address) \
 	(struct ftl_addr) { .offset = (uint64_t)(address) }

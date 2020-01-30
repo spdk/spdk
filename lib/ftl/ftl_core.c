@@ -353,7 +353,7 @@ ftl_submit_erase(struct ftl_io *io)
 	int rc = 0;
 	size_t i;
 
-	ioch = spdk_io_channel_get_ctx(ftl_get_io_channel(dev));
+	ioch = ftl_io_channel_get_ctx(ftl_get_io_channel(dev));
 
 	for (i = 0; i < io->num_blocks; ++i) {
 		if (i != 0) {
@@ -858,7 +858,7 @@ ftl_wptr_process_shutdown(struct ftl_wptr *wptr)
 static int
 ftl_shutdown_complete(struct spdk_ftl_dev *dev)
 {
-	struct ftl_io_channel *ioch = spdk_io_channel_get_ctx(dev->ioch);
+	struct ftl_io_channel *ioch = ftl_io_channel_get_ctx(dev->ioch);
 
 	return !__atomic_load_n(&dev->num_inflight, __ATOMIC_SEQ_CST) &&
 	       LIST_EMPTY(&dev->wptr_list) && TAILQ_EMPTY(&ioch->retry_queue);
@@ -1018,7 +1018,7 @@ ftl_submit_read(struct ftl_io *io)
 	struct ftl_addr addr;
 	int rc = 0, num_blocks;
 
-	ioch = spdk_io_channel_get_ctx(io->ioch);
+	ioch = ftl_io_channel_get_ctx(io->ioch);
 
 	assert(LIST_EMPTY(&io->children));
 
@@ -1221,7 +1221,7 @@ ftl_submit_nv_cache(void *ctx)
 	struct ftl_io_channel *ioch;
 	int rc;
 
-	ioch = spdk_io_channel_get_ctx(io->ioch);
+	ioch = ftl_io_channel_get_ctx(io->ioch);
 	thread = spdk_io_channel_get_thread(io->ioch);
 
 	rc = spdk_bdev_write_blocks_with_md(nv_cache->bdev_desc, ioch->cache_ioch,
@@ -1328,7 +1328,7 @@ ftl_nv_cache_write_header(struct ftl_nv_cache *nv_cache, bool shutdown,
 	struct ftl_io_channel *ioch;
 
 	bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
-	ioch = spdk_io_channel_get_ctx(ftl_get_io_channel(dev));
+	ioch = ftl_io_channel_get_ctx(ftl_get_io_channel(dev));
 
 	memset(hdr, 0, spdk_bdev_get_block_size(bdev));
 
@@ -1350,7 +1350,7 @@ ftl_nv_cache_scrub(struct ftl_nv_cache *nv_cache, spdk_bdev_io_completion_cb cb_
 	struct ftl_io_channel *ioch;
 	struct spdk_bdev *bdev;
 
-	ioch = spdk_io_channel_get_ctx(ftl_get_io_channel(dev));
+	ioch = ftl_io_channel_get_ctx(ftl_get_io_channel(dev));
 	bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
 
 	return spdk_bdev_write_zeroes_blocks(nv_cache->bdev_desc, ioch->cache_ioch, 1,
@@ -1573,7 +1573,7 @@ ftl_submit_child_write(struct ftl_wptr *wptr, struct ftl_io *io)
 	struct ftl_addr		addr;
 	int			rc;
 
-	ioch = spdk_io_channel_get_ctx(io->ioch);
+	ioch = ftl_io_channel_get_ctx(io->ioch);
 
 	if (spdk_likely(!wptr->direct_mode)) {
 		addr = wptr->addr;
@@ -1808,7 +1808,7 @@ ftl_rwb_fill(struct ftl_io *io)
 	struct ftl_addr addr = { .cached = 1 };
 	int flags = ftl_rwb_flags_from_io(io);
 
-	ioch = spdk_io_channel_get_ctx(io->ioch);
+	ioch = ftl_io_channel_get_ctx(io->ioch);
 
 	while (io->pos < io->num_blocks) {
 		if (ftl_io_current_lba(io) == FTL_LBA_INVALID) {

@@ -77,7 +77,7 @@ test_init_ftl_dev(const struct base_bdev_geometry *geo)
 	dev->core_thread = spdk_thread_create("unit_test_thread", NULL);
 	spdk_set_thread(dev->core_thread);
 	dev->ioch = calloc(1, sizeof(*dev->ioch)
-			   + sizeof(struct ftl_io_channel));
+			   + sizeof(struct ftl_io_channel *));
 	dev->num_bands = geo->blockcnt / (geo->zone_size * geo->optimal_open_zones);
 	dev->bands = calloc(dev->num_bands, sizeof(*dev->bands));
 	SPDK_CU_ASSERT_FATAL(dev->bands != NULL);
