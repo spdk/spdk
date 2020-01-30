@@ -38,6 +38,7 @@ display_help() {
 	echo "  --qemu-emulator=<path>          directory path with emulator, default: ${SPDK_QEMU_EMULATOR}"
 	echo "  --vagrantfiles-dir=<path>       directory to put vagrantfile"
 	echo "  -u                              allow password authentication to vagrant box"
+	echo "  -i                              customize box for spdk"
 	echo "  -r dry-run"
 	echo "  -l use a local copy of spdk, don't try to rsync from the host."
 	echo "  -d deploy a test vm by provisioning all prerequisites for spdk autotest"
@@ -77,8 +78,9 @@ NVME_FILE=""
 NVME_AUTO_CREATE=0
 VAGRANTFILE_DIR=""
 VAGRANT_PASSWORD_AUTH=0
+VAGRANT_CUSTOMIZE=0
 
-while getopts ":b:n:s:x:p:u:vcrldh-:" opt; do
+while getopts ":b:n:s:x:p:u:i:vcrldh-:" opt; do
 	case "${opt}" in
 		-)
 		case "${OPTARG}" in
@@ -127,6 +129,9 @@ while getopts ":b:n:s:x:p:u:vcrldh-:" opt; do
 		;;
 		u)
 			VAGRANT_PASSWORD_AUTH=1
+		;;
+		i)
+			VAGRANT_CUSTOMIZE=1
 		;;
 		*)
 			echo "  Invalid argument: -$OPTARG" >&2
@@ -225,6 +230,7 @@ if [ ${VERBOSE} = 1 ]; then
 	echo VHOST_HOST_DIR=$VHOST_HOST_DIR
 	echo VHOST_VM_DIR=$VHOST_VM_DIR
 	echo SPDK_QEMU_EMULATOR=$SPDK_QEMU_EMULATOR
+	echo VAGRANT_CUSTOMIZE=$VAGRANT_CUSTOMIZE
 	echo
 fi
 
@@ -303,6 +309,10 @@ EOF
 		fi
 	fi
 	vagrant up $provider
+	if [ ${VAGRANT_CUSTOMIZE} == 1 ]; then
+		cd ${VAGRANTFILE_DIR}
+		vagrant ssh -c 'sudo spdk_repo/spdk/scripts/vagrant/update.sh'
+	fi
 	echo ""
 	echo "  SUCCESS!"
 	echo ""

@@ -86,14 +86,8 @@ else
 		yum update -y
 		${SPDK_DIR}/scripts/pkgdep.sh
 	elif [ "$DISTRIB_ID" == "Fedora" ]; then
-		if [ "$DISTRIB_RELEASE" = "26" ]; then
-			echo
-			echo "  Run \"${SPDK_DIR}/test/common/config/vm_setup.sh\" to complete setup of Fedora 26"
-			echo
-		else
-			yum check-update
-			yum update -y
-			${SPDK_DIR}/scripts/pkgdep.sh
-		fi
+		dnf update -y
+		${SPDK_DIR}/scripts/pkgdep.sh
+		sudo -u vagrant ${SPDK_DIR}/test/common/config/vm_setup.sh
 	fi
 fi
