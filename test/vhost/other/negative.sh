@@ -80,6 +80,11 @@ if [[ $RUN_NIGHTLY -eq 1 ]]; then
 		error "vhost returned controller that does not exist"
 	fi
 
+	notice "Set coalescing for nonexistent controller"
+	if $rpc_py vhost_controller_set_coalescing nonexistent 1 100; then
+		error "Set coalescing for nonexistent controller should fail"
+	fi
+
 	# General commands
 	notice "Trying to remove nonexistent controller"
 	if $rpc_py vhost_delete_controller unk0 > /dev/null; then
@@ -109,6 +114,11 @@ if [[ $RUN_NIGHTLY -eq 1 ]]; then
 
 	notice "Creating controller naa.0"
 	$rpc_py vhost_create_scsi_controller naa.0
+
+	notice "Pass invalid parameter for vhost_controller_set_coalescing"
+	if $rpc_py vhost_controller_set_coalescing naa.0 -1 100; then
+		error "Set coalescing with invalid parameter should fail"
+	fi
 
 	notice "Adding initial device (0) to naa.0"
 	$rpc_py vhost_scsi_controller_add_target naa.0 0 Malloc0
