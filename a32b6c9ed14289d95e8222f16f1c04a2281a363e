@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "13540a4c_a8878150",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 352,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2020-01-30T07:21:36Z",
+      "side": 1,
+      "message": "It seems that it should be parent-\u003egroup_id. Someone can create parent thread, change it\u0027s ID and than call spdk_thread_create to create several children threads, and in this case children will inherit parent\u0027s thread_id",
+      "range": {
+        "startLine": 352,
+        "startChar": 29,
+        "endLine": 352,
+        "endChar": 39
+      },
+      "revId": "a32b6c9ed14289d95e8222f16f1c04a2281a363e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
