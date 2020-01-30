@@ -1142,6 +1142,44 @@ iscsi_init_complete(int rc)
 	cb_fn(cb_arg, rc);
 }
 
+static void
+iscsi_parse_configuration(void *ctx)
+{
+	int rc;
+
+	rc = spdk_iscsi_parse_portal_grps();
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_iscsi_parse_portal_grps() failed\n");
+		goto end;
+	}
+
+	rc = spdk_iscsi_parse_init_grps();
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_iscsi_parse_init_grps() failed\n");
+		goto end;
+	}
+
+	rc = spdk_iscsi_parse_tgt_nodes();
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_iscsi_parse_tgt_nodes() failed\n");
+	}
+
+	if (g_spdk_iscsi.authfile != NULL) {
+		if (access(g_spdk_iscsi.authfile, R_OK) == 0) {
+			rc = iscsi_parse_auth_info();
+			if (rc < 0) {
+				SPDK_ERRLOG("spdk_iscsi_parse_auth_info() failed\n");
+			}
+		} else {
+			SPDK_INFOLOG(SPDK_LOG_ISCSI, "CHAP secret file is not found in the path %s\n",
+				     g_spdk_iscsi.authfile);
+		}
+	}
+
+end:
+	iscsi_init_complete(rc);
+}
+
 static int
 iscsi_poll_group_poll(void *ctx)
 {
@@ -1224,51 +1262,13 @@ _iscsi_init_thread(void *ctx)
 }
 
 static void
-initialize_iscsi_poll_group(spdk_msg_fn cpl)
+initialize_iscsi_poll_group(void)
 {
 	spdk_io_device_register(&g_spdk_iscsi, iscsi_poll_group_create, iscsi_poll_group_destroy,
 				sizeof(struct spdk_iscsi_poll_group), "iscsi_tgt");
 
 	/* Send a message to each thread and create a poll group */
-	spdk_for_each_thread(_iscsi_init_thread, NULL, cpl);
-}
-
-static void
-iscsi_parse_configuration(void *ctx)
-{
-	int rc;
-
-	rc = spdk_iscsi_parse_portal_grps();
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_iscsi_parse_portal_grps() failed\n");
-		goto end;
-	}
-
-	rc = spdk_iscsi_parse_init_grps();
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_iscsi_parse_init_grps() failed\n");
-		goto end;
-	}
-
-	rc = spdk_iscsi_parse_tgt_nodes();
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_iscsi_parse_tgt_nodes() failed\n");
-	}
-
-	if (g_spdk_iscsi.authfile != NULL) {
-		if (access(g_spdk_iscsi.authfile, R_OK) == 0) {
-			rc = iscsi_parse_auth_info();
-			if (rc < 0) {
-				SPDK_ERRLOG("spdk_iscsi_parse_auth_info() failed\n");
-			}
-		} else {
-			SPDK_INFOLOG(SPDK_LOG_ISCSI, "CHAP secret file is not found in the path %s\n",
-				     g_spdk_iscsi.authfile);
-		}
-	}
-
-end:
-	iscsi_init_complete(rc);
+	spdk_for_each_thread(_iscsi_init_thread, NULL, iscsi_parse_configuration);
 }
 
 static int
@@ -1312,7 +1312,7 @@ iscsi_parse_globals(void)
 		return rc;
 	}
 
-	initialize_iscsi_poll_group(iscsi_parse_configuration);
+	initialize_iscsi_poll_group();
 	return 0;
 }
 
