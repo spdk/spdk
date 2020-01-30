@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dfb4f597_7b796d05",
+        "filename": "doc/blob.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-30T18:24:05Z",
+      "side": 1,
+      "message": "\"Blob cluster layout\" -\u003e \"Blob Cluster Layout\"",
+      "revId": "25d552705ff4460cb447fa26a702a8a5d43be122",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4082e523_53346947",
+        "filename": "doc/blob.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 323,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-30T18:24:05Z",
+      "side": 1,
+      "message": "\"called extent\" -\u003e \"called an extent\"",
+      "revId": "25d552705ff4460cb447fa26a702a8a5d43be122",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ad3099f5_cd638200",
+        "filename": "doc/blob.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 324,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-30T18:24:05Z",
+      "side": 1,
+      "message": "\"When first\" -\u003e \"When the first\"",
+      "revId": "25d552705ff4460cb447fa26a702a8a5d43be122",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bea12205_73b5ea16",
+        "filename": "doc/blob.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-30T18:24:05Z",
+      "side": 1,
+      "message": "\"cluster - new extent\" -\u003e \"cluster a new extent\"",
+      "revId": "25d552705ff4460cb447fa26a702a8a5d43be122",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7f29f5b7_34bf6fa2",
+        "filename": "doc/blob.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-30T18:24:05Z",
+      "side": 1,
+      "message": "\"of linked\" -\u003e \"of the linked\"",
+      "revId": "25d552705ff4460cb447fa26a702a8a5d43be122",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3c4dfa8d_449c2018",
+        "filename": "doc/blob.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-30T18:24:05Z",
+      "side": 1,
+      "message": "\"by EXTENT_TABLE\" -\u003e \"by an EXTENT_TABLE\"",
+      "revId": "25d552705ff4460cb447fa26a702a8a5d43be122",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eb5041fd_7bc13bc1",
+        "filename": "doc/blob.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 331,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-30T18:24:05Z",
+      "side": 1,
+      "message": "\"of linked\" -\u003e \"of the linked\"\n\"Extent table is run-length encoding\" -\u003e \"The Extent table run-length encodes\"",
+      "revId": "25d552705ff4460cb447fa26a702a8a5d43be122",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cdd34123_4b45b290",
+        "filename": "doc/blob.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-30T18:24:05Z",
+      "side": 1,
+      "message": "\"Every new cluster allocation updates a single extent page, in case when extent page was previously allocated. Otherwise additionally incurs serializing whole linked list of pages for the blob.\" I think what you are trying to say is:\n\"In cases where an extent page was previously allocated, a new cluster allocation will result in the update of a single extent page. However if an extent page was not previously allocated, serialization of the complete linked list of pages for the blob is required.\"\n\nIs that right? It was a little confusing for me to read at first, not sure my suggestion helps or not :)",
+      "revId": "25d552705ff4460cb447fa26a702a8a5d43be122",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
