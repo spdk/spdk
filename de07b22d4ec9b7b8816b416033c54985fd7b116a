@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "bae93c93_b42e2ff1",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-30T10:50:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "64d904a1_c1335d48",
+      "revId": "de07b22d4ec9b7b8816b416033c54985fd7b116a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c0b57ebf_35293e94",
         "filename": "scripts/vagrant/Vagrantfile",
         "patchSetId": 4
