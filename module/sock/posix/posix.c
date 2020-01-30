@@ -462,7 +462,7 @@ spdk_posix_sock_close(struct spdk_sock *_sock)
 }
 
 #ifdef SPDK_ZEROCOPY
-static void
+static int
 _sock_check_zcopy(struct spdk_sock *sock)
 {
 	struct spdk_posix_sock *psock = __posix_sock(sock);
@@ -483,7 +483,7 @@ _sock_check_zcopy(struct spdk_sock *sock)
 
 		if (rc < 0) {
 			if (errno == EWOULDBLOCK || errno == EAGAIN) {
-				return;
+				return 0;
 			}
 
 			if (!TAILQ_EMPTY(&sock->pending_reqs)) {
@@ -491,19 +491,19 @@ _sock_check_zcopy(struct spdk_sock *sock)
 			} else {
 				SPDK_WARNLOG("Recvmsg yielded an error!\n");
 			}
-			return;
+			return 0;
 		}
 
 		cm = CMSG_FIRSTHDR(&msgh);
 		if (cm->cmsg_level != SOL_IP || cm->cmsg_type != IP_RECVERR) {
 			SPDK_WARNLOG("Unexpected cmsg level or type!\n");
-			return;
+			return 0;
 		}
 
 		serr = (struct sock_extended_err *)CMSG_DATA(cm);
 		if (serr->ee_errno != 0 || serr->ee_origin != SO_EE_ORIGIN_ZEROCOPY) {
 			SPDK_WARNLOG("Unexpected extended error origin\n");
-			return;
+			return 0;
 		}
 
 		/* Most of the time, the pending_reqs array is in the exact
@@ -521,7 +521,7 @@ _sock_check_zcopy(struct spdk_sock *sock)
 
 					rc = spdk_sock_request_put(sock, req, 0);
 					if (rc < 0) {
-						return;
+						return rc;
 					}
 
 				} else if (found) {
@@ -531,6 +531,8 @@ _sock_check_zcopy(struct spdk_sock *sock)
 
 		}
 	}
+
+	return 0;
 }
 #endif
 
@@ -959,14 +961,22 @@ spdk_posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_eve
 
 	for (i = 0, j = 0; i < num_events; i++) {
 #if defined(__linux__)
+		sock = events[i].data.ptr;
+
 #ifdef SPDK_ZEROCOPY
 		if (events[i].events & EPOLLERR) {
-			_sock_check_zcopy(events[i].data.ptr);
+			rc = _sock_check_zcopy(sock);
+			/* If the socket was closed or removed from
+			 * the group in response to a send ack, don't
+			 * add it to the array here. */
+			if (rc || sock->cb_fn == NULL) {
+				continue;
+			}
 		}
 #endif
 
 		if (events[i].events & EPOLLIN) {
-			socks[j++] = events[i].data.ptr;
+			socks[j++] = sock;
 		}
 
 #elif defined(__FreeBSD__)
