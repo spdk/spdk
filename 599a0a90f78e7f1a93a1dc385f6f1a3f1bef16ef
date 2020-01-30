@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7b6319e8_97a53f4d",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1280,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-30T18:25:03Z",
+      "side": 1,
+      "message": "I think I understand what the thread groups are for now - you need some way to iterate the set of threads that was just created here. But I don\u0027t think the current thread group design is going to work. On initialization, lots of things could be initialized from the \"parent\" thread - we have combination apps (spdk_tgt) that initialize all of the various target applications. So they\u0027d all end up doing this, each spawning their own threads but all in the same group because they inherit the parent id. You could of course allow the application to change the group id to hopefully make iscsi have a unique number, but then how do you guarantee the number you pick is unique? You don\u0027t know what other numbers already exist. I think it\u0027s just a hard design to get right.\n\nInstead, in the loop above, just do this:\n```\nthread \u003d spdk_thread_create(thread_Name, app_cpumask);\nspdk_thread_send_msg(thread, _iscsi_init_thread, ...);\n```\nYou will then need some way to know when to call the cpl function, but you can just stick a refcnt on g_spdk_iscsi and stash the \"initialization\" thread there too. You\u0027ll need a lock or atomic on the refcnt, but this only happens in the initialization path anyway.",
+      "revId": "599a0a90f78e7f1a93a1dc385f6f1a3f1bef16ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
