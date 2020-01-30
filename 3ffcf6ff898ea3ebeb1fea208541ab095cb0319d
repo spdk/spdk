@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aa360f7d_1b2e3b2e",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-30T17:00:20Z",
+      "side": 1,
+      "message": "I don\u0027t think this check can fail, as erase is always called from the core thread. I suggest adding an assertion that we\u0027re on the core thread, getting rid of this function, and calling ftl_submit_erase() directly from ftl_band_erase().",
+      "range": {
+        "startLine": 426,
+        "startChar": 0,
+        "endLine": 428,
+        "endChar": 2
+      },
+      "revId": "3ffcf6ff898ea3ebeb1fea208541ab095cb0319d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
