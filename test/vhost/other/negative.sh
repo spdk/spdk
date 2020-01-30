@@ -68,6 +68,16 @@ if $VHOST_APP -r "$rootdir/app/vhost"; then
 	fail "vhost started with file that is not a socket"
 fi
 
+# Start vhost app with socket that is already in use. App should exit.
+$VHOST_APP -r /var/tmp/vhost_app.sock &
+vhost_app_pid=$!
+waitforlisten $vhost_app_pid /var/tmp/vhost_app.sock
+if $VHOST_APP -r /var/tmp/vhost_app.sock; then
+       killprocess $vhost_app_pid
+       fail "vhost started with socket that is already in use"
+fi
+killprocess $vhost_app_pid
+
 if [[ $RUN_NIGHTLY -eq 1 ]]; then
 	# Run with valid config and try some negative rpc calls
 	notice "==============="
