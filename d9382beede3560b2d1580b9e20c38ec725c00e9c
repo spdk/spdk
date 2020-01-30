@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "6f384df8_e5c07908",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1047,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-30T07:48:10Z",
+      "side": 1,
+      "message": "This is topic for separate patch.",
+      "parentUuid": "275f7de6_e0a26843",
+      "range": {
+        "startLine": 1046,
+        "startChar": 0,
+        "endLine": 1047,
+        "endChar": 20
+      },
+      "revId": "d9382beede3560b2d1580b9e20c38ec725c00e9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4b0b06f7_a169c4e5",
         "filename": "lib/ftl/ftl_band.c",
         "patchSetId": 2
@@ -36,6 +60,24 @@
       "writtenOn": "2020-01-30T07:21:06Z",
       "side": 1,
       "message": "Shouldn\u0027t we also make sure that the zone is not busy when resetting a zone as well?",
+      "revId": "d9382beede3560b2d1580b9e20c38ec725c00e9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9c2c04fb_ad5dd26d",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1083,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-30T07:48:10Z",
+      "side": 1,
+      "message": "This is handled by band state logic. During erase band is set to FTL_BAND_STATE_PREP so it can\u0027t be erased twice.",
+      "parentUuid": "4b0b06f7_a169c4e5",
       "revId": "d9382beede3560b2d1580b9e20c38ec725c00e9c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
