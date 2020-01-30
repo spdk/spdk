@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2e63b2ff_ec800d70",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-30T23:01:17Z",
+      "side": 1,
+      "message": "This doesn\u0027t seem related. Is it required?",
+      "revId": "5386aaf38f13c7bcbc6894e431816d22591413af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
