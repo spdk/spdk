@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "2fcb93ad_93e13a86",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1047,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-30T08:13:15Z",
+      "side": 1,
+      "message": "Perhaps there are some extra changes needed to be able to do that in ftl_core, but we should definitely do that to make sure that there are clear boundaries between the responsibilities of ftl_core/ftl_band.",
+      "parentUuid": "6f384df8_e5c07908",
+      "range": {
+        "startLine": 1046,
+        "startChar": 0,
+        "endLine": 1047,
+        "endChar": 20
+      },
+      "revId": "d9382beede3560b2d1580b9e20c38ec725c00e9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4b0b06f7_a169c4e5",
         "filename": "lib/ftl/ftl_band.c",
         "patchSetId": 2
@@ -81,6 +105,24 @@
       "revId": "d9382beede3560b2d1580b9e20c38ec725c00e9c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3c3631f8_501cd4d0",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1083,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-30T08:13:15Z",
+      "side": 1,
+      "message": "I was talking about unifinished writes, but you\u0027re right, this should be taken core of by the state of the band. Perhaps an assertion in would make sense then?",
+      "parentUuid": "9c2c04fb_ad5dd26d",
+      "revId": "d9382beede3560b2d1580b9e20c38ec725c00e9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
