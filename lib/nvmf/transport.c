@@ -39,6 +39,7 @@
 #include "spdk/config.h"
 #include "spdk/log.h"
 #include "spdk/nvmf.h"
+#include "spdk/nvmf_transport.h"
 #include "spdk/queue.h"
 #include "spdk/util.h"
 

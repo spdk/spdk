@@ -36,6 +36,7 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/nvmf.h"
+#include "spdk/nvmf_transport.h"
 #include "spdk/bdev.h"
 
 typedef enum _spdk_nvmf_request_exec_status {
@@ -56,7 +57,6 @@ void spdk_nvmf_set_custom_admin_cmd_hdlr(uint8_t opc, spdk_nvmf_custom_cmd_hdlr 
 
 void spdk_nvmf_set_passthru_admin_cmd(uint8_t opc, uint32_t forward_nsid);
 
-typedef void (*spdk_nvmf_nvme_passthru_cmd_cb)(struct spdk_nvmf_request *req);
 int spdk_nvmf_bdev_ctrlr_nvme_passthru_admin(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 		struct spdk_io_channel *ch, struct spdk_nvmf_request *req, spdk_nvmf_nvme_passthru_cmd_cb cb_fn);
 
