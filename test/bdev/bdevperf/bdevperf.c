@@ -1189,48 +1189,6 @@ bdevperf_run(void *arg1)
 }
 
 static void
-bdevperf_stop_io_on_core(void *arg1, void *arg2)
-{
-	struct io_target_group *group = arg1;
-	struct io_target *target;
-
-	/* Stop I/O for each block device. */
-	TAILQ_FOREACH(target, &group->targets, link) {
-		end_target(target);
-	}
-}
-
-static void
-spdk_bdevperf_shutdown_cb(void)
-{
-	struct io_target_group *group;
-	struct spdk_event *event;
-
-	g_shutdown = true;
-
-	if (TAILQ_EMPTY(&g_bdevperf.groups)) {
-		spdk_app_stop(0);
-		return;
-	}
-
-	if (g_target_count == 0) {
-		bdevperf_test_done();
-		return;
-	}
-
-	g_shutdown_tsc = spdk_get_ticks() - g_shutdown_tsc;
-
-	/* Send events to stop all I/O on each target group */
-	TAILQ_FOREACH(group, &g_bdevperf.groups, link) {
-		if (!TAILQ_EMPTY(&group->targets)) {
-			event = spdk_event_allocate(group->lcore, bdevperf_stop_io_on_core,
-						    group, NULL);
-			spdk_event_call(event);
-		}
-	}
-}
-
-static void
 rpc_perform_tests_cb(void)
 {
 	struct spdk_json_write_ctx *w;
@@ -1278,6 +1236,48 @@ rpc_perform_tests(struct spdk_jsonrpc_request *request, const struct spdk_json_v
 	}
 }
 SPDK_RPC_REGISTER("perform_tests", rpc_perform_tests, SPDK_RPC_RUNTIME)
+
+static void
+bdevperf_stop_io_on_core(void *arg1, void *arg2)
+{
+	struct io_target_group *group = arg1;
+	struct io_target *target;
+
+	/* Stop I/O for each block device. */
+	TAILQ_FOREACH(target, &group->targets, link) {
+		end_target(target);
+	}
+}
+
+static void
+spdk_bdevperf_shutdown_cb(void)
+{
+	struct io_target_group *group;
+	struct spdk_event *event;
+
+	g_shutdown = true;
+
+	if (TAILQ_EMPTY(&g_bdevperf.groups)) {
+		spdk_app_stop(0);
+		return;
+	}
+
+	if (g_target_count == 0) {
+		bdevperf_test_done();
+		return;
+	}
+
+	g_shutdown_tsc = spdk_get_ticks() - g_shutdown_tsc;
+
+	/* Send events to stop all I/O on each target group */
+	TAILQ_FOREACH(group, &g_bdevperf.groups, link) {
+		if (!TAILQ_EMPTY(&group->targets)) {
+			event = spdk_event_allocate(group->lcore, bdevperf_stop_io_on_core,
+						    group, NULL);
+			spdk_event_call(event);
+		}
+	}
+}
 
 static int
 bdevperf_parse_arg(int ch, char *arg)
