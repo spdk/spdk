@@ -949,25 +949,6 @@ bdevperf_submit_on_group(struct spdk_io_channel_iter *i)
 	spdk_for_each_channel_continue(i, 0);
 }
 
-static void
-bdevperf_usage(void)
-{
-	printf(" -q <depth>                io depth\n");
-	printf(" -o <size>                 io size in bytes\n");
-	printf(" -w <type>                 io pattern type, must be one of (read, write, randread, randwrite, rw, randrw, verify, reset, unmap, flush)\n");
-	printf(" -t <time>                 time in seconds\n");
-	printf(" -M <percent>              rwmixread (100 for reads, 0 for writes)\n");
-	printf(" -P <num>                  number of moving average period\n");
-	printf("\t\t(If set to n, show weighted mean of the previous n IO/s in real time)\n");
-	printf("\t\t(Formula: M = 2 / (n + 1), EMA[i+1] = IO/s * M + (1 - M) * EMA[i])\n");
-	printf("\t\t(only valid with -S)\n");
-	printf(" -S <period>               show performance result in real time every <period> seconds\n");
-	printf(" -T <target>               target bdev\n");
-	printf(" -f                        continue processing I/O even after failures\n");
-	printf(" -z                        start bdevperf, but wait for RPC to start tests\n");
-	printf(" -C                        enable every core to send I/Os to each bdev\n");
-}
-
 /*
  * Cumulative Moving Average (CMA): average of all data up to current
  * Exponential Moving Average (EMA): weighted mean of the previous n data and more weight is given to recent
@@ -1111,6 +1092,257 @@ ret:
 }
 
 static int
+bdevperf_test(void)
+{
+	int rc;
+
+	if (g_target_count == 0) {
+		fprintf(stderr, "No valid bdevs found.\n");
+		return -ENODEV;
+	}
+
+	rc = bdevperf_construct_targets_tasks();
+	if (rc) {
+		return rc;
+	}
+
+	printf("Running I/O for %" PRIu64 " seconds...\n", g_time_in_usec / 1000000);
+	fflush(stdout);
+
+	/* Start a timer to dump performance numbers */
+	g_shutdown_tsc = spdk_get_ticks();
+	if (g_show_performance_real_time) {
+		g_perf_timer = spdk_poller_register(performance_statistics_thread, NULL,
+						    g_show_performance_period_in_usec);
+	}
+
+	/* Iterate target groups to start all I/O */
+	spdk_for_each_channel(&g_bdevperf, bdevperf_submit_on_group, NULL, NULL);
+
+	return 0;
+}
+
+static int
+io_target_group_create(void *io_device, void *ctx_buf)
+{
+	struct io_target_group *group = ctx_buf;
+
+	TAILQ_INIT(&group->targets);
+	group->lcore = spdk_env_get_current_core();
+
+	return 0;
+}
+
+static void
+io_target_group_destroy(void *io_device, void *ctx_buf)
+{
+}
+
+static void
+_bdevperf_init_thread_done(void *ctx)
+{
+	int rc;
+
+	g_master_thread = spdk_get_thread();
+
+	if (g_wait_for_tests) {
+		/* Do not perform any tests until RPC is received */
+		return;
+	}
+
+	bdevperf_construct_targets();
+
+	rc = bdevperf_test();
+	if (rc) {
+		g_run_rc = rc;
+		bdevperf_test_done();
+		return;
+	}
+}
+
+static void
+_bdevperf_init_thread(void *ctx)
+{
+	struct spdk_io_channel *ch;
+	struct io_target_group *group;
+
+	ch = spdk_get_io_channel(&g_bdevperf);
+	group = spdk_io_channel_get_ctx(ch);
+
+	TAILQ_INSERT_TAIL(&g_bdevperf.groups, group, link);
+}
+
+static void
+bdevperf_run(void *arg1)
+{
+	spdk_io_device_register(&g_bdevperf, io_target_group_create, io_target_group_destroy,
+				sizeof(struct io_target_group), "bdevperf");
+
+	/* Send a message to each thread and create a target group */
+	spdk_for_each_thread(_bdevperf_init_thread, NULL, _bdevperf_init_thread_done);
+}
+
+static void
+bdevperf_stop_io_on_group(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *ch;
+	struct io_target_group *group;
+	struct io_target *target;
+
+	ch = spdk_io_channel_iter_get_channel(i);
+	group = spdk_io_channel_get_ctx(ch);
+
+	/* Stop I/O for each block device. */
+	TAILQ_FOREACH(target, &group->targets, link) {
+		end_target(target);
+	}
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static void
+spdk_bdevperf_shutdown_cb(void)
+{
+	g_shutdown = true;
+
+	if (TAILQ_EMPTY(&g_bdevperf.groups)) {
+		spdk_app_stop(0);
+		return;
+	}
+
+	if (g_target_count == 0) {
+		bdevperf_test_done();
+		return;
+	}
+
+	g_shutdown_tsc = spdk_get_ticks() - g_shutdown_tsc;
+
+	/* Send events to stop all I/O on each target group */
+	spdk_for_each_channel(&g_bdevperf, bdevperf_stop_io_on_group, NULL, NULL);
+}
+
+static void
+rpc_perform_tests_cb(void)
+{
+	struct spdk_json_write_ctx *w;
+	struct spdk_jsonrpc_request *request = g_request;
+
+	g_request = NULL;
+
+	if (g_run_rc == 0) {
+		w = spdk_jsonrpc_begin_result(request);
+		spdk_json_write_uint32(w, g_run_rc);
+		spdk_jsonrpc_end_result(request, w);
+	} else {
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "bdevperf failed with error %s", spdk_strerror(-g_run_rc));
+	}
+
+	/* Reset g_run_rc to 0 for the next test run. */
+	g_run_rc = 0;
+}
+
+static void
+rpc_perform_tests(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
+{
+	int rc;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "perform_tests method requires no parameters");
+		return;
+	}
+	if (g_request != NULL) {
+		fprintf(stderr, "Another test is already in progress.\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 spdk_strerror(-EINPROGRESS));
+		return;
+	}
+	g_request = request;
+
+	bdevperf_construct_targets();
+
+	rc = bdevperf_test();
+	if (rc) {
+		g_run_rc = rc;
+		bdevperf_test_done();
+	}
+}
+SPDK_RPC_REGISTER("perform_tests", rpc_perform_tests, SPDK_RPC_RUNTIME)
+
+static int
+bdevperf_parse_arg(int ch, char *arg)
+{
+	long long tmp;
+
+	if (ch == 'w') {
+		g_workload_type = optarg;
+	} else if (ch == 'T') {
+		g_target_bdev_name = optarg;
+	} else if (ch == 'z') {
+		g_wait_for_tests = true;
+	} else if (ch == 'C') {
+		g_every_core_for_each_bdev = true;
+	} else if (ch == 'f') {
+		g_continue_on_failure = true;
+	} else {
+		tmp = spdk_strtoll(optarg, 10);
+		if (tmp < 0) {
+			fprintf(stderr, "Parse failed for the option %c.\n", ch);
+			return tmp;
+		} else if (tmp >= INT_MAX) {
+			fprintf(stderr, "Parsed option was too large %c.\n", ch);
+			return -ERANGE;
+		}
+
+		switch (ch) {
+		case 'q':
+			g_queue_depth = tmp;
+			break;
+		case 'o':
+			g_io_size = tmp;
+			break;
+		case 't':
+			g_time_in_sec = tmp;
+			break;
+		case 'M':
+			g_rw_percentage = tmp;
+			g_mix_specified = true;
+			break;
+		case 'P':
+			g_show_performance_ema_period = tmp;
+			break;
+		case 'S':
+			g_show_performance_real_time = 1;
+			g_show_performance_period_in_usec = tmp * 1000000;
+			break;
+		default:
+			return -EINVAL;
+		}
+	}
+	return 0;
+}
+
+static void
+bdevperf_usage(void)
+{
+	printf(" -q <depth>                io depth\n");
+	printf(" -o <size>                 io size in bytes\n");
+	printf(" -w <type>                 io pattern type, must be one of (read, write, randread, randwrite, rw, randrw, verify, reset, unmap, flush)\n");
+	printf(" -t <time>                 time in seconds\n");
+	printf(" -M <percent>              rwmixread (100 for reads, 0 for writes)\n");
+	printf(" -P <num>                  number of moving average period\n");
+	printf("\t\t(If set to n, show weighted mean of the previous n IO/s in real time)\n");
+	printf("\t\t(Formula: M = 2 / (n + 1), EMA[i+1] = IO/s * M + (1 - M) * EMA[i])\n");
+	printf("\t\t(only valid with -S)\n");
+	printf(" -S <period>               show performance result in real time every <period> seconds\n");
+	printf(" -T <target>               target bdev\n");
+	printf(" -f                        continue processing I/O even after failures\n");
+	printf(" -z                        start bdevperf, but wait for RPC to start tests\n");
+	printf(" -C                        enable every core to send I/Os to each bdev\n");
+}
+
+static int
 verify_test_params(struct spdk_app_opts *opts)
 {
 	/* When RPC is used for starting tests and
@@ -1251,238 +1483,6 @@ verify_test_params(struct spdk_app_opts *opts)
 
 	return 0;
 }
-
-static int
-bdevperf_test(void)
-{
-	int rc;
-
-	if (g_target_count == 0) {
-		fprintf(stderr, "No valid bdevs found.\n");
-		return -ENODEV;
-	}
-
-	rc = bdevperf_construct_targets_tasks();
-	if (rc) {
-		return rc;
-	}
-
-	printf("Running I/O for %" PRIu64 " seconds...\n", g_time_in_usec / 1000000);
-	fflush(stdout);
-
-	/* Start a timer to dump performance numbers */
-	g_shutdown_tsc = spdk_get_ticks();
-	if (g_show_performance_real_time) {
-		g_perf_timer = spdk_poller_register(performance_statistics_thread, NULL,
-						    g_show_performance_period_in_usec);
-	}
-
-	/* Iterate target groups to start all I/O */
-	spdk_for_each_channel(&g_bdevperf, bdevperf_submit_on_group, NULL, NULL);
-
-	return 0;
-}
-
-static int
-io_target_group_create(void *io_device, void *ctx_buf)
-{
-	struct io_target_group *group = ctx_buf;
-
-	TAILQ_INIT(&group->targets);
-	group->lcore = spdk_env_get_current_core();
-
-	return 0;
-}
-
-static void
-io_target_group_destroy(void *io_device, void *ctx_buf)
-{
-}
-
-static void
-_bdevperf_init_thread_done(void *ctx)
-{
-	int rc;
-
-	g_master_thread = spdk_get_thread();
-
-	if (g_wait_for_tests) {
-		/* Do not perform any tests until RPC is received */
-		return;
-	}
-
-	bdevperf_construct_targets();
-
-	rc = bdevperf_test();
-	if (rc) {
-		g_run_rc = rc;
-		bdevperf_test_done();
-		return;
-	}
-}
-
-static void
-_bdevperf_init_thread(void *ctx)
-{
-	struct spdk_io_channel *ch;
-	struct io_target_group *group;
-
-	ch = spdk_get_io_channel(&g_bdevperf);
-	group = spdk_io_channel_get_ctx(ch);
-
-	TAILQ_INSERT_TAIL(&g_bdevperf.groups, group, link);
-}
-
-static void
-bdevperf_run(void *arg1)
-{
-	spdk_io_device_register(&g_bdevperf, io_target_group_create, io_target_group_destroy,
-				sizeof(struct io_target_group), "bdevperf");
-
-	/* Send a message to each thread and create a target group */
-	spdk_for_each_thread(_bdevperf_init_thread, NULL, _bdevperf_init_thread_done);
-}
-
-static void
-bdevperf_stop_io_on_group(struct spdk_io_channel_iter *i)
-{
-	struct spdk_io_channel *ch;
-	struct io_target_group *group;
-	struct io_target *target;
-
-	ch = spdk_io_channel_iter_get_channel(i);
-	group = spdk_io_channel_get_ctx(ch);
-
-	/* Stop I/O for each block device. */
-	TAILQ_FOREACH(target, &group->targets, link) {
-		end_target(target);
-	}
-
-	spdk_for_each_channel_continue(i, 0);
-}
-
-static void
-spdk_bdevperf_shutdown_cb(void)
-{
-	g_shutdown = true;
-
-	if (TAILQ_EMPTY(&g_bdevperf.groups)) {
-		spdk_app_stop(0);
-		return;
-	}
-
-	if (g_target_count == 0) {
-		bdevperf_test_done();
-		return;
-	}
-
-	g_shutdown_tsc = spdk_get_ticks() - g_shutdown_tsc;
-
-	/* Send events to stop all I/O on each target group */
-	spdk_for_each_channel(&g_bdevperf, bdevperf_stop_io_on_group, NULL, NULL);
-}
-
-static int
-bdevperf_parse_arg(int ch, char *arg)
-{
-	long long tmp;
-
-	if (ch == 'w') {
-		g_workload_type = optarg;
-	} else if (ch == 'T') {
-		g_target_bdev_name = optarg;
-	} else if (ch == 'z') {
-		g_wait_for_tests = true;
-	} else if (ch == 'C') {
-		g_every_core_for_each_bdev = true;
-	} else if (ch == 'f') {
-		g_continue_on_failure = true;
-	} else {
-		tmp = spdk_strtoll(optarg, 10);
-		if (tmp < 0) {
-			fprintf(stderr, "Parse failed for the option %c.\n", ch);
-			return tmp;
-		} else if (tmp >= INT_MAX) {
-			fprintf(stderr, "Parsed option was too large %c.\n", ch);
-			return -ERANGE;
-		}
-
-		switch (ch) {
-		case 'q':
-			g_queue_depth = tmp;
-			break;
-		case 'o':
-			g_io_size = tmp;
-			break;
-		case 't':
-			g_time_in_sec = tmp;
-			break;
-		case 'M':
-			g_rw_percentage = tmp;
-			g_mix_specified = true;
-			break;
-		case 'P':
-			g_show_performance_ema_period = tmp;
-			break;
-		case 'S':
-			g_show_performance_real_time = 1;
-			g_show_performance_period_in_usec = tmp * 1000000;
-			break;
-		default:
-			return -EINVAL;
-		}
-	}
-	return 0;
-}
-
-static void
-rpc_perform_tests_cb(void)
-{
-	struct spdk_json_write_ctx *w;
-	struct spdk_jsonrpc_request *request = g_request;
-
-	g_request = NULL;
-
-	if (g_run_rc == 0) {
-		w = spdk_jsonrpc_begin_result(request);
-		spdk_json_write_uint32(w, g_run_rc);
-		spdk_jsonrpc_end_result(request, w);
-	} else {
-		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						     "bdevperf failed with error %s", spdk_strerror(-g_run_rc));
-	}
-
-	/* Reset g_run_rc to 0 for the next test run. */
-	g_run_rc = 0;
-}
-
-static void
-rpc_perform_tests(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
-{
-	int rc;
-
-	if (params != NULL) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "perform_tests method requires no parameters");
-		return;
-	}
-	if (g_request != NULL) {
-		fprintf(stderr, "Another test is already in progress.\n");
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 spdk_strerror(-EINPROGRESS));
-		return;
-	}
-	g_request = request;
-
-	bdevperf_construct_targets();
-
-	rc = bdevperf_test();
-	if (rc) {
-		g_run_rc = rc;
-		bdevperf_test_done();
-	}
-}
-SPDK_RPC_REGISTER("perform_tests", rpc_perform_tests, SPDK_RPC_RUNTIME)
 
 int
 main(int argc, char **argv)
