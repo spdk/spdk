@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0f95944a_405fe7b9",
+        "filename": "module/bdev/raid/bdev_raid.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1208,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-30T09:05:44Z",
+      "side": 1,
+      "message": "internally.",
+      "range": {
+        "startLine": 1208,
+        "startChar": 4,
+        "endLine": 1208,
+        "endChar": 16
+      },
+      "revId": "a872b0a38b87681146b230158538e59a02b08953",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
