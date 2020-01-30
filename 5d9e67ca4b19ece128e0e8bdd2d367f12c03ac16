@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "45855f6e_699a1b21",
+        "filename": "module/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-30T09:03:31Z",
+      "side": 1,
+      "message": "Sorry, vbdev_gpt_release_bdev is hard to get the meaning 😊\nvbdev_gpt_release may be better.\n\nSuffix _bdev is hard to get it.",
+      "range": {
+        "startLine": 113,
+        "startChar": 0,
+        "endLine": 113,
+        "endChar": 22
+      },
+      "revId": "5d9e67ca4b19ece128e0e8bdd2d367f12c03ac16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
