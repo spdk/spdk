@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4959dce7_d8c0659c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-30T09:15:07Z",
+      "side": 1,
+      "message": "\"Pass socket implementation as boot option -N\" or something like that may be intuitive.",
+      "range": {
+        "startLine": 7,
+        "startChar": 17,
+        "endLine": 7,
+        "endChar": 54
+      },
+      "revId": "8b544cfc1452ec7278cd28fd43b0797078ad2539",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc0e2d76_537bff13",
+        "filename": "test/iscsi_tgt/sock/sock.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-30T09:15:07Z",
+      "side": 1,
+      "message": "$2 ?",
+      "range": {
+        "startLine": 69,
+        "startChar": 7,
+        "endLine": 69,
+        "endChar": 8
+      },
+      "revId": "8b544cfc1452ec7278cd28fd43b0797078ad2539",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b491ac3a_c6732e2a",
+        "filename": "test/iscsi_tgt/sock/sock.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-30T09:15:07Z",
+      "side": 1,
+      "message": "specified.",
+      "range": {
+        "startLine": 72,
+        "startChar": 36,
+        "endLine": 72,
+        "endChar": 44
+      },
+      "revId": "8b544cfc1452ec7278cd28fd43b0797078ad2539",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
