@@ -224,7 +224,6 @@ static void
 _ftl_band_set_closed(struct ftl_band *band)
 {
 	struct spdk_ftl_dev *dev = band->dev;
-	struct ftl_zone *zone;
 
 	/* Set the state as free_md() checks for that */
 	band->state = FTL_BAND_STATE_CLOSED;
@@ -234,9 +233,6 @@ _ftl_band_set_closed(struct ftl_band *band)
 
 	if (spdk_likely(band->num_zones)) {
 		LIST_INSERT_HEAD(&dev->shut_bands, band, list_entry);
-		CIRCLEQ_FOREACH(zone, &band->zones, circleq) {
-			zone->info.state = SPDK_BDEV_ZONE_STATE_CLOSED;
-		}
 	} else {
 		LIST_REMOVE(band, list_entry);
 	}
