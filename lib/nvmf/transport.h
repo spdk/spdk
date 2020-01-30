@@ -38,17 +38,7 @@
 
 #include "spdk/nvme.h"
 #include "spdk/nvmf.h"
-
-struct spdk_nvmf_transport {
-	struct spdk_nvmf_tgt			*tgt;
-	const struct spdk_nvmf_transport_ops	*ops;
-	struct spdk_nvmf_transport_opts		opts;
-
-	/* A mempool for transport related data transfers */
-	struct spdk_mempool			*data_buf_pool;
-
-	TAILQ_ENTRY(spdk_nvmf_transport)	link;
-};
+#include "spdk/nvmf_transport.h"
 
 int spdk_nvmf_transport_stop_listen(struct spdk_nvmf_transport *transport,
 				    const struct spdk_nvme_transport_id *trid);
