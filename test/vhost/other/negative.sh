@@ -75,6 +75,11 @@ if [[ $RUN_NIGHTLY -eq 1 ]]; then
 
 	rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
+	# Try to get no existent vhost controller
+	if $rpc_py vhost_get_controllers -n non_existent; then
+	        fail "vhost returned controller that does not exist"
+	fi
+
 	# General commands
 	notice "Trying to remove nonexistent controller"
 	if $rpc_py vhost_delete_controller unk0 > /dev/null; then
