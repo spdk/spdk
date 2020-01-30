@@ -410,27 +410,6 @@ ftl_get_io_channel(const struct spdk_ftl_dev *dev)
 	return NULL;
 }
 
-static int ftl_io_erase(struct ftl_io *io);
-
-static void
-_ftl_io_erase(void *ctx)
-{
-	ftl_io_erase((struct ftl_io *)ctx);
-}
-
-static int
-ftl_io_erase(struct ftl_io *io)
-{
-	struct spdk_ftl_dev *dev = io->dev;
-
-	if (ftl_check_core_thread(dev)) {
-		return ftl_submit_erase(io);
-	}
-
-	spdk_thread_send_msg(ftl_get_core_thread(dev), _ftl_io_erase, io);
-	return 0;
-}
-
 static void
 ftl_erase_fail(struct ftl_io *io, int status)
 {
@@ -489,7 +468,7 @@ ftl_band_erase(struct ftl_band *band)
 
 		zone->busy = true;
 		io->addr.offset = zone->info.zone_id;
-		rc = ftl_io_erase(io);
+		rc = ftl_submit_erase(io);
 		if (rc) {
 			zone->busy = false;
 			assert(0);
