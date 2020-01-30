@@ -63,6 +63,11 @@ if ! $VHOST_APP -t vhost_scsi -h;  then
 	warning "vhost did not started with trace flags enabled but ignoring this as it might not be a debug build"
 fi
 
+# Pass incorrect path to socket. Application should exit.
+if $VHOST_APP -r "$rootdir/app/vhost"; then
+	fail "vhost started with file that is not a socket"
+fi
+
 if [[ $RUN_NIGHTLY -eq 1 ]]; then
 	# Run with valid config and try some negative rpc calls
 	notice "==============="
