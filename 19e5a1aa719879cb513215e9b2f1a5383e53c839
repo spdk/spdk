@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d5a60f8e_0c662dcb",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1082,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2020-01-30T14:56:25Z",
+      "side": 1,
+      "message": "What if we extend the existing call_thread structure with group_id? Anyway, I\u0027m fine with the new structure",
+      "range": {
+        "startLine": 1082,
+        "startChar": 0,
+        "endLine": 1082,
+        "endChar": 29
+      },
+      "revId": "19e5a1aa719879cb513215e9b2f1a5383e53c839",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
