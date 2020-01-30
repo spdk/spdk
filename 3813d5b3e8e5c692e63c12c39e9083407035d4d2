@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "f798e4bd_ecae5cdc",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2020-01-30T13:01:38Z",
+      "side": 1,
+      "message": "My editor displays tabs differently. I\u0027ll correct indent in the next patch",
+      "range": {
+        "startLine": 173,
+        "startChar": 34,
+        "endLine": 175,
+        "endChar": 47
+      },
+      "revId": "3813d5b3e8e5c692e63c12c39e9083407035d4d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a3ec5993_f1c8d589",
         "filename": "include/spdk_internal/nvme_tcp.h",
         "patchSetId": 1
