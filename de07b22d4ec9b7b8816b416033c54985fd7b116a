@@ -42,6 +42,30 @@
     },
     {
       "key": {
+        "uuid": "52b54d6c_95d0dec1",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 4
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-30T10:49:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c0b57ebf_35293e94",
+      "range": {
+        "startLine": 40,
+        "startChar": 0,
+        "endLine": 41,
+        "endChar": 35
+      },
+      "revId": "de07b22d4ec9b7b8816b416033c54985fd7b116a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "43558b09_078b12a3",
         "filename": "scripts/vagrant/Vagrantfile",
         "patchSetId": 4
@@ -62,6 +86,30 @@
       "revId": "de07b22d4ec9b7b8816b416033c54985fd7b116a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7ef2718b_8cfc4a27",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 4
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-30T10:49:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "43558b09_078b12a3",
+      "range": {
+        "startLine": 117,
+        "startChar": 0,
+        "endLine": 118,
+        "endChar": 33
+      },
+      "revId": "de07b22d4ec9b7b8816b416033c54985fd7b116a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -88,6 +136,30 @@
     },
     {
       "key": {
+        "uuid": "b5858833_42400933",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 4
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-30T10:49:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e001bb0c_eb27b4ef",
+      "range": {
+        "startLine": 210,
+        "startChar": 0,
+        "endLine": 213,
+        "endChar": 129
+      },
+      "revId": "de07b22d4ec9b7b8816b416033c54985fd7b116a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "69f15152_c801056e",
         "filename": "scripts/vagrant/build_box.md",
         "patchSetId": 4
@@ -105,6 +177,24 @@
     },
     {
       "key": {
+        "uuid": "6eb840d4_65c352b4",
+        "filename": "scripts/vagrant/build_box.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-30T10:49:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "69f15152_c801056e",
+      "revId": "de07b22d4ec9b7b8816b416033c54985fd7b116a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d81b5d53_bf2904be",
         "filename": "scripts/vagrant/build_box.sh",
         "patchSetId": 4
@@ -119,6 +209,24 @@
       "revId": "de07b22d4ec9b7b8816b416033c54985fd7b116a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c8f0c7ac_b9db1b13",
+        "filename": "scripts/vagrant/build_box.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-30T10:49:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d81b5d53_bf2904be",
+      "revId": "de07b22d4ec9b7b8816b416033c54985fd7b116a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -142,6 +250,30 @@
       "revId": "de07b22d4ec9b7b8816b416033c54985fd7b116a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1bf7a9e9_17de45aa",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-30T10:49:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c46c70f7_0fd433d6",
+      "range": {
+        "startLine": 169,
+        "startChar": 0,
+        "endLine": 171,
+        "endChar": 3
+      },
+      "revId": "de07b22d4ec9b7b8816b416033c54985fd7b116a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
