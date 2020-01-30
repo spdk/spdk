@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e8ecee21_15018275",
+        "filename": "include/spdk_internal/nvmf.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2020-01-30T23:22:37Z",
+      "side": 0,
+      "message": "If we eliminate this include then the custom admin command support will not be working anymore.\nWe need the ability to define custom handlers outside of SPDK.",
+      "revId": "5386aaf38f13c7bcbc6894e431816d22591413af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
