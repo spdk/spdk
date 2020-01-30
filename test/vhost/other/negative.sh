@@ -80,6 +80,18 @@ if [[ $RUN_NIGHTLY -eq 1 ]]; then
 	        fail "vhost returned controller that does not exist"
 	fi
 
+	notice "Set coalescing for non existent bdev"
+	if $rpc_py vhost_controller_set_coalescing non_existent 1 100; then
+		error "Set coalescing for non existent ctrl should fail"
+	fi
+
+	notice "Pass invalid parameter for vhost_controller_set_coalescing"
+	$rpc_py vhost_create_scsi_controller test_ctrl
+	if $rpc_py vhost_controller_set_coalescing test_ctrl -1 100; then
+		error "Set coalescing with invalid parameter should fail"
+	fi
+	$rpc_py vhost_delete_controller test_ctrl
+
 	# General commands
 	notice "Trying to remove nonexistent controller"
 	if $rpc_py vhost_delete_controller unk0 > /dev/null; then
