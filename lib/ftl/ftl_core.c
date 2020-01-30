@@ -681,7 +681,7 @@ ftl_wptr_user_blocks_left(const struct ftl_wptr *wptr)
 	return ftl_band_user_blocks_left(wptr->band, wptr->offset);
 }
 
-static int
+static bool
 ftl_wptr_ready(struct ftl_wptr *wptr)
 {
 	struct ftl_band *band = wptr->band;
@@ -693,14 +693,14 @@ ftl_wptr_ready(struct ftl_wptr *wptr)
 		if (spdk_unlikely(wptr->zone->info.state == SPDK_BDEV_ZONE_STATE_OFFLINE)) {
 			ftl_wptr_advance(wptr, wptr->dev->xfer_size);
 		}
-		return 0;
+		return false;
 	}
 
 	/* If we're in the process of writing metadata, wait till it is */
 	/* completed. */
 	/* TODO: we should probably change bands once we're writing tail md */
 	if (ftl_band_state_changing(band)) {
-		return 0;
+		return false;
 	}
 
 	if (band->state == FTL_BAND_STATE_FULL) {
@@ -711,7 +711,7 @@ ftl_wptr_ready(struct ftl_wptr *wptr)
 			}
 		}
 
-		return 0;
+		return false;
 	}
 
 	if (band->state != FTL_BAND_STATE_OPEN) {
@@ -720,10 +720,10 @@ ftl_wptr_ready(struct ftl_wptr *wptr)
 			assert(false);
 		}
 
-		return 0;
+		return false;
 	}
 
-	return 1;
+	return true;
 }
 
 int
