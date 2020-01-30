@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3f0ef21f_a80590d7",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-30T10:35:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7d262d0a_155bd971",
+      "revId": "c702b4442b1957933912d66d4c9480c8be7f43ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "20f924a0_c54fa754",
         "filename": "test/vhost/hotplug/virtio_hotremove.sh",
         "patchSetId": 41
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "00a3ccfd_3bdfadae",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-30T10:35:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "20f924a0_c54fa754",
+      "revId": "c702b4442b1957933912d66d4c9480c8be7f43ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "34e4ca6b_822b7609",
         "filename": "test/vhost/hotplug/virtio_hotremove.sh",
         "patchSetId": 41
@@ -47,6 +83,24 @@
       "writtenOn": "2020-01-23T04:18:11Z",
       "side": 1,
       "message": "why kill -0 here, but killprocess just above?  if there\u0027s a reason, please add a short comment",
+      "revId": "c702b4442b1957933912d66d4c9480c8be7f43ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8f827751_1ac6c703",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-30T10:35:19Z",
+      "side": 1,
+      "message": "It is needed for hotattach test",
+      "parentUuid": "34e4ca6b_822b7609",
       "revId": "c702b4442b1957933912d66d4c9480c8be7f43ed",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
