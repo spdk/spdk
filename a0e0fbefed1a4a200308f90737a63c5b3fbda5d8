@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4c56a1a2_64c3e3f4",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2020-01-30T13:17:56Z",
+      "side": 1,
+      "message": "We could use the address of the allocated thread structure as a unique identifier, but it is up to you",
+      "range": {
+        "startLine": 171,
+        "startChar": 0,
+        "endLine": 171,
+        "endChar": 32
+      },
+      "revId": "a0e0fbefed1a4a200308f90737a63c5b3fbda5d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
