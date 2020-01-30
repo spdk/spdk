@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a3ec5993_f1c8d589",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2020-01-30T12:56:50Z",
+      "side": 1,
+      "message": "nvme_tcp_build_iovs is called by nvme_tcp_qpair_write_pdu and by spdk_nvmf_tcp_qpair_write_pdu. These functions already check that pdu_type supports header/data digest, so I think we can remove extra check here. I would like to hear other opinions before removing it.",
+      "range": {
+        "startLine": 381,
+        "startChar": 1,
+        "endLine": 381,
+        "endChar": 67
+      },
+      "revId": "3813d5b3e8e5c692e63c12c39e9083407035d4d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
