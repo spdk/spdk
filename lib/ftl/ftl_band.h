@@ -214,11 +214,12 @@ struct ftl_addr ftl_band_tail_md_addr(struct ftl_band *band);
 struct ftl_addr ftl_band_head_md_addr(struct ftl_band *band);
 void		ftl_band_write_failed(struct ftl_band *band);
 int		ftl_band_full(struct ftl_band *band, size_t offset);
-int		ftl_band_erase(struct ftl_band *band);
 int		ftl_band_write_prep(struct ftl_band *band);
 struct ftl_zone *ftl_band_next_operational_zone(struct ftl_band *band,
 		struct ftl_zone *zone);
 size_t		ftl_lba_map_pool_elem_size(struct spdk_ftl_dev *dev);
+void		ftl_band_remove_zone(struct ftl_band *band, struct ftl_zone *zone);
+
 
 static inline int
 ftl_band_empty(const struct ftl_band *band)

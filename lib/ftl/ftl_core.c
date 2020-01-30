@@ -416,6 +416,76 @@ ftl_get_io_channel(const struct spdk_ftl_dev *dev)
 	return NULL;
 }
 
+static void
+ftl_erase_fail(struct ftl_io *io, int status)
+{
+	struct ftl_zone *zone;
+	struct ftl_band *band = io->band;
+	char buf[128];
+
+	SPDK_ERRLOG("Erase failed at addrress: %s, status: %d\n",
+		    ftl_addr2str(io->addr, buf, sizeof(buf)), status);
+
+	zone = ftl_band_zone_from_addr(band, io->addr);
+	zone->info.state = SPDK_BDEV_ZONE_STATE_OFFLINE;
+	ftl_band_remove_zone(band, zone);
+	band->tail_md_addr = ftl_band_tail_md_addr(band);
+}
+
+static void
+ftl_band_erase_cb(struct ftl_io *io, void *ctx, int status)
+{
+	struct ftl_zone *zone;
+
+	zone = ftl_band_zone_from_addr(io->band, io->addr);
+	zone->busy = false;
+
+	if (spdk_unlikely(status)) {
+		ftl_erase_fail(io, status);
+		return;
+	}
+
+	zone->info.state = SPDK_BDEV_ZONE_STATE_EMPTY;
+	zone->info.write_pointer = zone->info.zone_id;
+}
+
+static int
+ftl_band_erase(struct ftl_band *band)
+{
+	struct ftl_zone *zone;
+	struct ftl_io *io;
+	int rc = 0;
+
+	assert(band->state == FTL_BAND_STATE_CLOSED ||
+	       band->state == FTL_BAND_STATE_FREE);
+
+	ftl_band_set_state(band, FTL_BAND_STATE_PREP);
+
+	CIRCLEQ_FOREACH(zone, &band->zones, circleq) {
+		if (zone->info.state == SPDK_BDEV_ZONE_STATE_EMPTY) {
+			continue;
+		}
+
+		io = ftl_io_erase_init(band, 1, ftl_band_erase_cb);
+		if (!io) {
+			rc = -ENOMEM;
+			break;
+		}
+
+		zone->busy = true;
+		io->addr.offset = zone->info.zone_id;
+		rc = ftl_io_erase(io);
+		if (rc) {
+			zone->busy = false;
+			assert(0);
+			/* TODO: change band's state back to close? */
+			break;
+		}
+	}
+
+	return rc;
+}
+
 int
 ftl_io_erase(struct ftl_io *io)
 {
