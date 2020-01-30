@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "275f7de6_e0a26843",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1047,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-30T07:21:06Z",
+      "side": 1,
+      "message": "The zone-\u003ebusy manipulation during writes is performed by ftl_core.c. Can we change the code, so that we could do the same for erases?",
+      "range": {
+        "startLine": 1046,
+        "startChar": 0,
+        "endLine": 1047,
+        "endChar": 20
+      },
+      "revId": "d9382beede3560b2d1580b9e20c38ec725c00e9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4b0b06f7_a169c4e5",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1083,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-30T07:21:06Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we also make sure that the zone is not busy when resetting a zone as well?",
+      "revId": "d9382beede3560b2d1580b9e20c38ec725c00e9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
