@@ -16,6 +16,24 @@
       "revId": "599a0a90f78e7f1a93a1dc385f6f1a3f1bef16ef",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b22e4ed_2a1969b2",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1280,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-30T22:09:01Z",
+      "side": 1,
+      "message": "Hi Ben,\n\nYes, that\u0027s right. OK, I will use reference count local in iSCSI library.\n\nThanks,\nShuhei",
+      "parentUuid": "7b6319e8_97a53f4d",
+      "revId": "599a0a90f78e7f1a93a1dc385f6f1a3f1bef16ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
