@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -102,7 +102,6 @@ struct nvme_tcp_pdu {
 	bool						has_hdgst;
 	bool						ddgst_enable;
 	uint8_t						data_digest[SPDK_NVME_TCP_DIGEST_LEN];
-	int32_t						padding_valid_bytes;
 
 	uint8_t						ch_valid_bytes;
 	uint8_t						psh_valid_bytes;
@@ -122,7 +121,6 @@ struct nvme_tcp_pdu {
 	uint32_t					data_len;
 
 	uint32_t					readv_offset;
-	uint32_t					writev_offset;
 	TAILQ_ENTRY(nvme_tcp_pdu)			tailq;
 	uint32_t					remaining;
 	uint32_t					padding_len;
@@ -353,7 +351,7 @@ nvme_tcp_build_iovs(struct iovec *iov, int iovcnt, struct nvme_tcp_pdu *pdu,
 	}
 
 	sgl = &pdu->sgl;
-	_nvme_tcp_sgl_init(sgl, iov, iovcnt, pdu->writev_offset);
+	_nvme_tcp_sgl_init(sgl, iov, iovcnt, 0);
 	hlen = pdu->hdr->common.hlen;
 	enable_digest = 1;
 	if (pdu->hdr->common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_IC_REQ ||
@@ -405,10 +403,7 @@ nvme_tcp_build_iovs(struct iovec *iov, int iovcnt, struct nvme_tcp_pdu *pdu,
 		_nvme_tcp_sgl_append(sgl, pdu->data_digest, SPDK_NVME_TCP_DIGEST_LEN);
 	}
 
-	/* check the plen for the first time constructing iov */
-	if (!pdu->writev_offset) {
-		assert(plen == pdu->hdr->common.plen);
-	}
+	assert(plen == pdu->hdr->common.plen);
 
 end:
 	if (_mapped_length != NULL) {

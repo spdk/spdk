@@ -116,65 +116,60 @@ test_nvme_tcp_pdu_set_data_buf(void)
 static void
 test_nvme_tcp_build_iovs(void)
 {
+	const uintptr_t pdu_iov_len = 4096;
 	struct nvme_tcp_pdu pdu = {};
-	struct iovec iovs[4] = {};
+	struct iovec iovs[5] = {};
 	uint32_t mapped_length = 0;
 	int rc;
 
 	pdu.hdr = &pdu.hdr_mem;
 	pdu.hdr->common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_CAPSULE_CMD;
 	pdu.hdr->common.hlen = sizeof(struct spdk_nvme_tcp_cmd);
-	pdu.hdr->common.plen = pdu.hdr->common.hlen + SPDK_NVME_TCP_DIGEST_LEN + 4096 * 2 +
+	pdu.hdr->common.plen = pdu.hdr->common.hlen + SPDK_NVME_TCP_DIGEST_LEN + pdu_iov_len * 2 +
 			       SPDK_NVME_TCP_DIGEST_LEN;
-	pdu.data_len = 4096 * 2;
+	pdu.data_len = pdu_iov_len * 2;
 	pdu.padding_len = 0;
 
 	pdu.data_iov[0].iov_base = (void *)0xDEADBEEF;
-	pdu.data_iov[0].iov_len = 4096 * 2;
-	pdu.data_iovcnt = 1;
+	pdu.data_iov[0].iov_len = pdu_iov_len;
+	pdu.data_iov[1].iov_base = (void *)(0xDEADBEEF + pdu_iov_len);
+	pdu.data_iov[1].iov_len = pdu_iov_len;
+	pdu.data_iovcnt = 2;
 
-	rc = nvme_tcp_build_iovs(iovs, 4, &pdu, true, true, &mapped_length);
-	CU_ASSERT(rc == 3);
+	rc = nvme_tcp_build_iovs(iovs, 5, &pdu, true, true, &mapped_length);
+	CU_ASSERT(rc == 4);
 	CU_ASSERT(iovs[0].iov_base == (void *)&pdu.hdr->raw);
 	CU_ASSERT(iovs[0].iov_len == sizeof(struct spdk_nvme_tcp_cmd) + SPDK_NVME_TCP_DIGEST_LEN);
 	CU_ASSERT(iovs[1].iov_base == (void *)0xDEADBEEF);
-	CU_ASSERT(iovs[1].iov_len == 4096 * 2);
-	CU_ASSERT(iovs[2].iov_base == (void *)pdu.data_digest);
-	CU_ASSERT(iovs[2].iov_len == SPDK_NVME_TCP_DIGEST_LEN);
+	CU_ASSERT(iovs[1].iov_len == pdu_iov_len);
+	CU_ASSERT(iovs[2].iov_base == (void *)(0xDEADBEEF + pdu_iov_len));
+	CU_ASSERT(iovs[2].iov_len == pdu_iov_len);
+	CU_ASSERT(iovs[3].iov_base == (void *)pdu.data_digest);
+	CU_ASSERT(iovs[3].iov_len == SPDK_NVME_TCP_DIGEST_LEN);
 	CU_ASSERT(mapped_length == sizeof(struct spdk_nvme_tcp_cmd) + SPDK_NVME_TCP_DIGEST_LEN +
-		  4096 * 2 + SPDK_NVME_TCP_DIGEST_LEN);
+		  pdu_iov_len * 2 + SPDK_NVME_TCP_DIGEST_LEN);
 
-	pdu.writev_offset += sizeof(struct spdk_nvme_tcp_cmd) + SPDK_NVME_TCP_DIGEST_LEN;
+	/* Add a new data_iov entry, update pdu iov count and data length */
+	pdu.data_iov[2].iov_base = (void *)(0xBAADF00D);
+	pdu.data_iov[2].iov_len = 123;
+	pdu.data_iovcnt = 3;
+	pdu.data_len += 123;
+	pdu.hdr->common.plen += 123;
 
-	rc = nvme_tcp_build_iovs(iovs, 6, &pdu, true, true, &mapped_length);
-	CU_ASSERT(rc == 2);
-	CU_ASSERT(iovs[0].iov_base == (void *)0xDEADBEEF);
-	CU_ASSERT(iovs[0].iov_len == 4096 * 2);
-	CU_ASSERT(iovs[1].iov_base == (void *)pdu.data_digest);
-	CU_ASSERT(iovs[1].iov_len == SPDK_NVME_TCP_DIGEST_LEN);
-	CU_ASSERT(mapped_length == 4096 * 2 + SPDK_NVME_TCP_DIGEST_LEN);
-
-	pdu.writev_offset += 4096 * 2;
-
-	rc = nvme_tcp_build_iovs(iovs, 6, &pdu, true, true, &mapped_length);
-	CU_ASSERT(rc == 1);
-	CU_ASSERT(iovs[0].iov_base == (void *)pdu.data_digest);
-	CU_ASSERT(iovs[0].iov_len == SPDK_NVME_TCP_DIGEST_LEN);
-	CU_ASSERT(mapped_length == SPDK_NVME_TCP_DIGEST_LEN);
-
-	pdu.writev_offset += SPDK_NVME_TCP_DIGEST_LEN;
-
-	rc = nvme_tcp_build_iovs(iovs, 6, &pdu, true, true, &mapped_length);
-	CU_ASSERT(rc == 0);
-
-	pdu.writev_offset = 0;
-
-	rc = nvme_tcp_build_iovs(iovs, 2, &pdu, true, true, &mapped_length);
-	CU_ASSERT(rc == 2);
+	rc = nvme_tcp_build_iovs(iovs, 5, &pdu, true, true, &mapped_length);
+	CU_ASSERT(rc == 5);
 	CU_ASSERT(iovs[0].iov_base == (void *)&pdu.hdr->raw);
 	CU_ASSERT(iovs[0].iov_len == sizeof(struct spdk_nvme_tcp_cmd) + SPDK_NVME_TCP_DIGEST_LEN);
 	CU_ASSERT(iovs[1].iov_base == (void *)0xDEADBEEF);
-	CU_ASSERT(iovs[1].iov_len == 4096 * 2);
+	CU_ASSERT(iovs[1].iov_len == pdu_iov_len);
+	CU_ASSERT(iovs[2].iov_base == (void *)(0xDEADBEEF + pdu_iov_len));
+	CU_ASSERT(iovs[2].iov_len == pdu_iov_len);
+	CU_ASSERT(iovs[3].iov_base == (void *)(0xBAADF00D));
+	CU_ASSERT(iovs[3].iov_len == 123);
+	CU_ASSERT(iovs[4].iov_base == (void *)pdu.data_digest);
+	CU_ASSERT(iovs[4].iov_len == SPDK_NVME_TCP_DIGEST_LEN);
+	CU_ASSERT(mapped_length == sizeof(struct spdk_nvme_tcp_cmd) + SPDK_NVME_TCP_DIGEST_LEN +
+		  pdu_iov_len * 2 + SPDK_NVME_TCP_DIGEST_LEN + 123);
 }
 
 struct nvme_tcp_ut_bdev_io {
@@ -410,8 +405,6 @@ test_nvme_tcp_build_iovs_with_md(void)
 	pdu.data_iov[0].iov_len = (512 + 8) * 8;
 	pdu.data_iovcnt = 1;
 
-	pdu.writev_offset = 0;
-
 	rc = nvme_tcp_build_iovs(iovs, 11, &pdu, true, true, &mapped_length);
 	CU_ASSERT(rc == 10);
 	CU_ASSERT(iovs[0].iov_base == (void *)&pdu.hdr->raw);
@@ -436,19 +429,6 @@ test_nvme_tcp_build_iovs_with_md(void)
 	CU_ASSERT(iovs[9].iov_len == SPDK_NVME_TCP_DIGEST_LEN);
 	CU_ASSERT(mapped_length == sizeof(struct spdk_nvme_tcp_cmd) + SPDK_NVME_TCP_DIGEST_LEN +
 		  512 * 8 + SPDK_NVME_TCP_DIGEST_LEN);
-
-	pdu.writev_offset += sizeof(struct spdk_nvme_tcp_cmd) + SPDK_NVME_TCP_DIGEST_LEN +
-			     512 * 6 + 256;
-
-	rc = nvme_tcp_build_iovs(iovs, 11, &pdu, true, true, &mapped_length);
-	CU_ASSERT(rc == 3);
-	CU_ASSERT(iovs[0].iov_base == (void *)(0xDEADBEEF + (520 * 6) + 256));
-	CU_ASSERT(iovs[0].iov_len == 256);
-	CU_ASSERT(iovs[1].iov_base == (void *)(0xDEADBEEF + 520 * 7));
-	CU_ASSERT(iovs[1].iov_len == 512);
-	CU_ASSERT(iovs[2].iov_base == (void *)pdu.data_digest);
-	CU_ASSERT(iovs[2].iov_len == SPDK_NVME_TCP_DIGEST_LEN);
-	CU_ASSERT(mapped_length == 256 + 512 + SPDK_NVME_TCP_DIGEST_LEN);
 }
 
 int main(int argc, char **argv)
