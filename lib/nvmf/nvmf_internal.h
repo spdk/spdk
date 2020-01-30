@@ -46,8 +46,6 @@
 #include "spdk/util.h"
 #include "spdk/thread.h"
 
-#include "spdk_internal/nvmf.h"
-
 enum spdk_nvmf_subsystem_state {
 	SPDK_NVMF_SUBSYSTEM_INACTIVE = 0,
 	SPDK_NVMF_SUBSYSTEM_ACTIVATING,
@@ -56,6 +54,11 @@ enum spdk_nvmf_subsystem_state {
 	SPDK_NVMF_SUBSYSTEM_PAUSED,
 	SPDK_NVMF_SUBSYSTEM_RESUMING,
 	SPDK_NVMF_SUBSYSTEM_DEACTIVATING,
+};
+
+enum spdk_nvmf_request_exec_status {
+	SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE,
+	SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS,
 };
 
 struct spdk_nvmf_tgt {
@@ -321,6 +324,30 @@ void spdk_nvmf_ns_reservation_request(void *ctx);
 void spdk_nvmf_ctrlr_reservation_notice_log(struct spdk_nvmf_ctrlr *ctrlr,
 		struct spdk_nvmf_ns *ns,
 		enum spdk_nvme_reservation_notification_log_page_type type);
+
+int spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr,
+				   struct spdk_nvme_ctrlr_data *cdata);
+
+int spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
+				struct spdk_nvme_cmd *cmd,
+				struct spdk_nvme_cpl *rsp,
+				struct spdk_nvme_ns_data *nsdata);
+
+void spdk_nvmf_set_passthru_admin_cmd(uint8_t opc, uint32_t forward_nsid);
+
+int spdk_nvmf_bdev_ctrlr_nvme_passthru_admin(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+		struct spdk_io_channel *ch, struct spdk_nvmf_request *req, spdk_nvmf_nvme_passthru_cmd_cb cb_fn);
+
+int spdk_nvmf_request_get_bdev(uint32_t nsid,
+			       struct spdk_nvmf_request *req,
+			       struct spdk_bdev **bdev,
+			       struct spdk_bdev_desc **desc,
+			       struct spdk_io_channel **ch);
+struct spdk_nvmf_ctrlr *spdk_nvmf_request_get_ctrlr(struct spdk_nvmf_request *req);
+struct spdk_nvmf_subsystem *spdk_nvmf_request_get_subsystem(struct spdk_nvmf_request *req);
+void spdk_nvmf_request_get_data(struct spdk_nvmf_request *req, void **data, uint32_t *length);
+struct spdk_nvme_cmd *spdk_nvmf_request_get_cmd(struct spdk_nvmf_request *req);
+struct spdk_nvme_cpl *spdk_nvmf_request_get_response(struct spdk_nvmf_request *req);
 
 /*
  * Abort aer is sent on a per controller basis and sends a completion for the aer to the host.

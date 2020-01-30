@@ -45,7 +45,6 @@
 #include "spdk/util.h"
 #include "spdk/version.h"
 
-#include "spdk_internal/nvmf.h"
 #include "spdk_internal/log.h"
 
 #define MIN_KEEP_ALIVE_TIMEOUT_IN_MS 10000
@@ -2745,7 +2744,7 @@ _nvmf_request_exec(struct spdk_nvmf_request *req,
 		   struct spdk_nvmf_subsystem_poll_group *sgroup)
 {
 	struct spdk_nvmf_qpair *qpair = req->qpair;
-	spdk_nvmf_request_exec_status status;
+	enum spdk_nvmf_request_exec_status status;
 
 	nvmf_trace_command(req->cmd, spdk_nvmf_qpair_is_admin_queue(qpair));
 

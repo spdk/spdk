@@ -40,8 +40,6 @@
 #include "spdk/nvme.h"
 #include "spdk/util.h"
 
-#include "spdk_internal/nvmf.h"
-
 enum nvmf_tgt_state {
 	NVMF_TGT_INIT_NONE = 0,
 	NVMF_TGT_INIT_PARSE_CONFIG,

@@ -38,8 +38,9 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/bdev.h"
-#include "spdk_internal/nvmf.h"
 #include "spdk_internal/log.h"
+
+#include "nvmf_internal.h"
 
 static void
 fixup_identify_ctrlr(struct spdk_nvmf_request *req)

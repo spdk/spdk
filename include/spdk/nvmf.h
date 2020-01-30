@@ -1052,6 +1052,10 @@ spdk_nvmf_transport_poll_group_free_stat(struct spdk_nvmf_transport *transport,
  */
 void spdk_nvmf_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks);
 
+typedef int (*spdk_nvmf_custom_cmd_hdlr)(struct spdk_nvmf_request *req);
+void spdk_nvmf_set_custom_admin_cmd_hdlr(uint8_t opc, spdk_nvmf_custom_cmd_hdlr hdlr);
+int spdk_nvmf_custom_identify_hdlr(struct spdk_nvmf_request *req);
+
 #ifdef __cplusplus
 }
 #endif
