@@ -22,6 +22,30 @@
       "revId": "a32b6c9ed14289d95e8222f16f1c04a2281a363e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a5bc3c74_e637e6b5",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 352,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-30T07:28:26Z",
+      "side": 1,
+      "message": "Done. Thank you Alexey, you are right! I will change this to group_id.\n\nThe real reason why I propose not only get_group_id but also set_group_id is to use test/common/lib/ut_multithread.c without any change.\nBut I hope set_group_id will provide better flexibility to user.",
+      "parentUuid": "13540a4c_a8878150",
+      "range": {
+        "startLine": 352,
+        "startChar": 29,
+        "endLine": 352,
+        "endChar": 39
+      },
+      "revId": "a32b6c9ed14289d95e8222f16f1c04a2281a363e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
