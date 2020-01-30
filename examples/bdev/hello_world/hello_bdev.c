@@ -199,9 +199,9 @@ hello_start(void *arg1)
 	SPDK_NOTICELOG("Successfully started the application\n");
 
 	/*
-	 * Get the bdev. There can be many bdevs configured in
-	 * in the configuration file but this application will only
-	 * use the one input by the user at runtime so we get it via its name.
+	 * Get the bdev. There can be many bdevs configured, but this
+	 * application will only use the one input by the user at runtime so
+	 * we get it via its name.
 	 */
 	hello_context->bdev = spdk_bdev_get_by_name(hello_context->bdev_name);
 	if (hello_context->bdev == NULL) {
@@ -262,34 +262,29 @@ main(int argc, char **argv)
 	opts.name = "hello_bdev";
 
 	/*
-	 * The user can provide the config file and bdev name at run time.
-	 * For example, to use Malloc0 in file bdev.conf run with params
-	 * ./hello_bdev -c bdev.conf -b Malloc0
-	 * To use passthru bdev PT0 run with params
-	 * ./hello_bdev -c bdev.conf -b PT0
-	 * If the bdev name is not specified,
-	 * then Malloc0 is used by default
+	 * Parse built-in SPDK command line parameters as well
+	 * as our custom one(s).
 	 */
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, "b:", NULL, hello_bdev_parse_arg,
 				      hello_bdev_usage)) != SPDK_APP_PARSE_ARGS_SUCCESS) {
 		exit(rc);
 	}
-	if (opts.config_file == NULL) {
-		SPDK_ERRLOG("configfile must be specified using -c <conffile> e.g. -c bdev.conf\n");
-		exit(1);
-	}
 	hello_context.bdev_name = g_bdev_name;
 
 	/*
-	 * spdk_app_start() will block running hello_start() until
-	 * spdk_app_stop() is called by someone (not simply when
-	 * hello_start() returns), or if an error occurs during
-	 * spdk_app_start() before hello_start() runs.
+	 * spdk_app_start() will initialize the SPDK framework, call hello_start(),
+	 * and then block until spdk_app_stop() is called (or if an initialization
+	 * error occurs, spdk_app_start() will return with rc even without calling
+	 * hello_start().
 	 */
 	rc = spdk_app_start(&opts, hello_start, &hello_context);
 	if (rc) {
 		SPDK_ERRLOG("ERROR starting application\n");
 	}
+
+	/* At this point either spdk_app_stop() was called, or spdk_app_start()
+	 * failed because of internal error.
+	 */
 
 	/* When the app stops, free up memory that we allocated. */
 	spdk_dma_free(hello_context.buff);
