@@ -1572,6 +1572,10 @@ ftl_io_child_write_cb(struct ftl_io *io, void *ctx, int status)
 	zone->busy = false;
 	zone->info.write_pointer += io->num_blocks;
 
+	if (zone->info.write_pointer == ftl_get_num_blocks_in_band(io->dev)) {
+		zone->info.state = SPDK_BDEV_ZONE_STATE_FULL;
+	}
+
 	/* If some other write on the same band failed the write pointer would already be freed */
 	if (spdk_likely(wptr)) {
 		wptr->num_outstanding--;
