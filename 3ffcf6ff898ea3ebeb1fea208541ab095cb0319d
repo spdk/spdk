@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b6854a92_16bd4861",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 426,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-30T17:05:33Z",
+      "side": 0,
+      "message": "We could probably assert that we\u0027re on the core thread.",
+      "revId": "3ffcf6ff898ea3ebeb1fea208541ab095cb0319d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
