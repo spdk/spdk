@@ -962,6 +962,7 @@ spdk_posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_eve
 #ifdef SPDK_ZEROCOPY
 		if (events[i].events & EPOLLERR) {
 			_sock_check_zcopy(events[i].data.ptr);
+			continue;
 		}
 #endif
 
