@@ -37,8 +37,7 @@
 
 #include "spdk/env.h"
 #include "spdk/assert.h"
-#include "spdk/nvmf.h"
-#include "spdk/nvmf_spec.h"
+#include "spdk/nvmf_transport.h"
 #include "spdk/string.h"
 #include "spdk/trace.h"
 #include "spdk/util.h"
@@ -50,8 +49,6 @@
 
 #include "spdk_internal/log.h"
 
-#include "nvmf_internal.h"
-#include "transport.h"
 #include "nvmf_fc.h"
 #include "fc_lld.h"
 

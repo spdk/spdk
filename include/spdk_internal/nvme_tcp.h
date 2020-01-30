@@ -34,6 +34,7 @@
 #ifndef SPDK_INTERNAL_NVME_TCP_H
 #define SPDK_INTERNAL_NVME_TCP_H
 
+#include "spdk/likely.h"
 #include "spdk/sock.h"
 #include "spdk/dif.h"
 

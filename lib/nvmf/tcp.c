@@ -36,15 +36,11 @@
 #include "spdk/endian.h"
 #include "spdk/assert.h"
 #include "spdk/thread.h"
-#include "spdk/nvmf.h"
-#include "spdk/nvmf_spec.h"
+#include "spdk/nvmf_transport.h"
 #include "spdk/sock.h"
 #include "spdk/string.h"
 #include "spdk/trace.h"
 #include "spdk/util.h"
-
-#include "nvmf_internal.h"
-#include "transport.h"
 
 #include "spdk_internal/assert.h"
 #include "spdk_internal/log.h"
