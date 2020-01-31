@@ -1532,6 +1532,23 @@ nvme_ctrlr_set_num_queues_done(void *arg, const struct spdk_nvme_cpl *cpl)
 			     ctrlr->opts.admin_timeout_ms);
 }
 
+static void
+nvme_ctrlr_update_nvmf_ioccsz(struct spdk_nvme_ctrlr *ctrlr)
+{
+	if (ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_RDMA ||
+	    ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_TCP ||
+	    ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_FC) {
+		if (ctrlr->cdata.nvmf_specific.ioccsz < 4) {
+			SPDK_ERRLOG("Incorrect IOCCSZ %u, the minimum value should be 4\n",
+				    ctrlr->cdata.nvmf_specific.ioccsz);
+			ctrlr->cdata.nvmf_specific.ioccsz = 4;
+			assert(0);
+		}
+		ctrlr->nvmf_ioccsz_bytes = ctrlr->cdata.nvmf_specific.ioccsz * 16 - sizeof(struct spdk_nvme_cmd);
+		ctrlr->nvmf_icdoff = ctrlr->cdata.nvmf_specific.icdoff;
+	}
+}
+
 static int
 nvme_ctrlr_set_num_queues(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -2416,6 +2433,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		break;
 
 	case NVME_CTRLR_STATE_SET_NUM_QUEUES:
+		nvme_ctrlr_update_nvmf_ioccsz(ctrlr);
 		rc = nvme_ctrlr_set_num_queues(ctrlr);
 		break;
 

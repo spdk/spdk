@@ -663,6 +663,12 @@ struct spdk_nvme_ctrlr {
 	/** Controller support flags */
 	uint64_t			flags;
 
+	/** NVMEoF in-capsule data size in bytes */
+	uint32_t			nvmf_ioccsz_bytes;
+
+	/** NVMEoF in-capsule data offset in 16 byte units */
+	uint16_t			nvmf_icdoff;
+
 	/* Cold data (not accessed in normal I/O path) is after this point. */
 
 	union spdk_nvme_cap_register	cap;
