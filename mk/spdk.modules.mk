@@ -101,4 +101,6 @@ endif
 
 COPY_MODULES_LIST = copy_ioat ioat
 
+EVENT_BDEV_MODULES_LIST = event_bdev event_copy event_vmd
+
 ALL_MODULES_LIST = $(BLOCKDEV_MODULES_LIST) $(COPY_MODULES_LIST) $(SOCK_MODULES_LIST)

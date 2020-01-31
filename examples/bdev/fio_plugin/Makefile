@@ -44,6 +44,6 @@ LDFLAGS += -shared -rdynamic -Wl,-z,nodelete
 
 SPDK_LIB_LIST = $(ALL_MODULES_LIST)
 SPDK_LIB_LIST += thread util bdev conf copy rpc jsonrpc json log sock trace notify
-SPDK_LIB_LIST += event event_bdev event_copy event_vmd
+SPDK_LIB_LIST += event $(EVENT_BDEV_MODULES_LIST)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
