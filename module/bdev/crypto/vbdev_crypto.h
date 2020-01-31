@@ -46,8 +46,10 @@ typedef void (*spdk_delete_crypto_complete)(void *cb_arg, int bdeverrno);
 /**
  * Create new crypto bdev.
  *
- * \param bdev_name Bdev on which crypto vbdev will be created.
- * \param bdev_name Vbdev name crypto_pmd key
+ * \param bdev_name Name of the bdev on which the crypto vbdev will be created.
+ * \param vbdev_name Name of the new crypto vbdev.
+ * \param crypto_pmd Name of the polled mode driver to use for this vbdev.
+ * \param key The key to use for this vbdev.
  * \return 0 on success, other on failure.
  */
 int create_crypto_disk(const char *bdev_name, const char *vbdev_name,
