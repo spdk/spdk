@@ -206,10 +206,6 @@ post_completion(struct muser_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 		struct io_q *cq, uint32_t cdw0, uint16_t sc,
 		uint16_t sct);
 
-static void
-muser_nvmf_subsystem_resumed(struct spdk_nvmf_subsystem *subsys, void *cb_arg,
-			     int status);
-
 /*
  * XXX We need a way to extract the queue ID from an io_q, which is already
  * available in muser_qpair->qpair.qid. Currently we store the type of the
@@ -253,11 +249,10 @@ struct muser_ctrlr {
 	/*
 	 * TODO variables that are checked by poll_group_poll to see whether
 	 * commands need to be executed, in addition to checking the doorbells.
-	 * We now have 3 such different commands so we should introduce a queue,
+	 * We now have 2 such different commands so we should introduce a queue,
 	 * or if we're going to have a single outstanding command we should
 	 * group them into a union.
 	 */
-	bool					start; /* start subsys */
 	bool					del_admin_qp; /* del admin qp */
 	sem_t					sem;
 	struct spdk_nvmf_subsystem		*subsys;
@@ -443,72 +438,8 @@ static int
 handle_dbl_access(struct muser_ctrlr *ctrlr, uint32_t *buf,
 		  const size_t count, loff_t pos, const bool is_write);
 
-static bool
-muser_spdk_nvmf_subsystem_is_active(struct muser_ctrlr *ctrlr)
-{
-	return ctrlr->subsys->state == SPDK_NVMF_SUBSYSTEM_ACTIVE;
-}
-
 static void
 destroy_qp(struct muser_ctrlr *ctrlr, uint16_t qid);
-
-/*
- * TODO err is ignored here because handle_admin_q_connect_rsp (the fucntion
- * exectuing this callback) will set err in ctrlr->err. Again, since we now
- * have callbacks we can get rid of ctrlr->err.
- */
-static int
-muser_request_spdk_nvmf_subsystem_resumed(void *cb_arg, int err)
-{
-	assert(cb_arg != NULL);
-	if (sem_post((sem_t *)cb_arg) != 0) {
-		if (err == 0) {
-			err = -errno;
-		}
-	}
-	return err;
-}
-
-static int
-muser_request_spdk_nvmf_subsystem_resume(struct muser_ctrlr *ctrlr)
-{
-	int err;
-
-	assert(ctrlr != NULL);
-
-	SPDK_DEBUGLOG(SPDK_LOG_MUSER, "requesting NVMf subsystem resume\n");
-
-	err = sem_init(&ctrlr->sem, 0, 0);
-	if (err != 0) {
-		return err;
-	}
-	ctrlr->handle_admin_q_connect_rsp_cb_fn = muser_request_spdk_nvmf_subsystem_resumed;
-	ctrlr->handle_admin_q_connect_rsp_cb_arg = &ctrlr->sem;
-
-	ctrlr->start = true;
-	spdk_wmb();
-	do {
-		err = sem_wait(&ctrlr->sem);
-	} while (err != 0 && errno == EINTR);
-
-	if (err != 0) {
-		return err;
-	}
-
-	/*
-	 * If it was stopped then there won't be an admin QP, we need to add it
-	 * however we can't do it here as add_qp must be executed in SPDK
-	 * thread context. muser_do_spdk_nvmf_subsystem_resume calls
-	 * spdk_nvmf_subsystem_resume where in the callback we simply fire the
-	 * semaphore which unblocks the wait above. So we'll have to either
-	 * change that callback to add the queue or issue a do_prop_req here.
-	 * XXX Idea: if add_qp is always expected to follow
-	 * spdk_nvmf_subsystem_resume, then in its callback we can call add_qp
-	 * and in handle_admin_q_connect_rsp we can fire the sem semaphore.
-	 */
-
-	return ctrlr->err ? -1 : 0;
-}
 
 static int
 do_prop_req(struct muser_ctrlr *ctrlr, char *buf, size_t count, loff_t pos,
@@ -566,18 +497,6 @@ read_bar0(void *pvt, char *buf, size_t count, loff_t pos)
 		}
 		memcpy(buf, &csts, count);
 		return 0;
-	}
-
-	/*
-	 * TODO Do we have to check from this thread whether it's active?  Can
-	 * we blindly forward the read and resume the subsystem if required in
-	 * the SPDK thread context?
-	 */
-	if (!muser_spdk_nvmf_subsystem_is_active(ctrlr)) {
-		err = muser_request_spdk_nvmf_subsystem_resume(ctrlr);
-		if (err != 0) {
-			return err;
-		}
 	}
 
 	/*
@@ -1799,18 +1718,6 @@ handle_cc_write(struct muser_ctrlr *ctrlr, uint8_t *buf,
 		cc->bits.shn = 0;
 		SPDK_NOTICELOG("disable controller\n");
 
-	} else if (cc->bits.en == 1 &&
-		   ctrlr->qp[0]->qpair.ctrlr->vcprop.cc.bits.en == 0 &&
-		   !muser_spdk_nvmf_subsystem_is_active(ctrlr)) {
-		/*
-		 * CC.EN == 0 does not necessarily mean that NVMf subsys is
-		 * inactive.  We must first tell the NVMf subsystem to resume
-		 * and then set CC.EN to 1.
-		 */
-		err = muser_request_spdk_nvmf_subsystem_resume(ctrlr);
-		if (err != 0) {
-			return err;
-		}
 	} else if (cc->bits.en == 0 &&
 		   ctrlr->qp[0]->qpair.ctrlr->vcprop.cc.bits.en == 0) {
 		return 0;
@@ -3109,18 +3016,6 @@ handle_cmd_req(struct muser_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 }
 
 static int
-muser_do_spdk_nvmf_subsystem_resume(struct muser_ctrlr *ctrlr)
-{
-	assert(ctrlr != NULL);
-
-	SPDK_DEBUGLOG(SPDK_LOG_MUSER, "resuming NVMf subsystem\n");
-
-	return spdk_nvmf_subsystem_start(ctrlr->subsys,
-					 muser_nvmf_subsystem_resumed,
-					 ctrlr);
-}
-
-static int
 handle_prop_req(struct muser_ctrlr *ctrlr)
 {
 	struct spdk_nvmf_request *req;
@@ -3170,22 +3065,6 @@ check_ctrlr(struct muser_ctrlr *ctrlr)
 	 * operations we need to execute for the other thread (e.g.
 	 * write NVMe registers). Maybe it's best to introduce a queue?
 	 */
-
-	/*
-	 * TODO not sure what is the relationship between subsys and
-	 * ctrlr.
-	 */
-	if (ctrlr->start) {
-
-		/*
-		 * This has to be cleared here, before the caller is
-		 * woken up or the muser_poll_group_poll has a chance to
-		 * run again (and find ctrlr->start set to true...).
-		 */
-		ctrlr->start = false;
-
-		err = muser_do_spdk_nvmf_subsystem_resume(ctrlr);
-	}
 
 	if (ctrlr->del_admin_qp) {
 		ctrlr->del_admin_qp = false;
@@ -3352,41 +3231,6 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_muser = {
 	.qpair_get_peer_trid = muser_qpair_get_peer_trid,
 	.qpair_get_listen_trid = muser_qpair_get_listen_trid,
 };
-
-/* TODO s/resume/start */
-static void
-muser_nvmf_subsystem_resumed(struct spdk_nvmf_subsystem *subsys, void *cb_arg,
-			     int status)
-{
-	struct muser_ctrlr *ctrlr = (struct muser_ctrlr *)cb_arg;
-	int err;
-	struct spdk_nvmf_transport *transport;
-
-	assert(ctrlr != NULL);
-
-	if (status != 0) {
-		ctrlr->err = status;
-		return;
-	}
-
-	SPDK_DEBUGLOG(SPDK_LOG_MUSER, "NVMf subsystem resumed\n");
-
-	transport = spdk_nvmf_tgt_get_transport(subsys->tgt,
-						spdk_nvmf_transport_muser.name);
-	if (transport == NULL) {
-		ctrlr->err = -1;
-		return;
-	}
-
-	err = add_qp(ctrlr, transport, MUSER_DEFAULT_AQ_DEPTH, 0, NULL);
-	if (err != 0) {
-		ctrlr->err = err;
-		err = sem_post(&ctrlr->sem);
-		if (err != 0) {
-			fail_ctrlr(ctrlr);
-		}
-	}
-}
 
 SPDK_NVMF_TRANSPORT_REGISTER(muser, &spdk_nvmf_transport_muser);
 SPDK_LOG_REGISTER_COMPONENT("nvmf_muser", SPDK_LOG_NVMF_MUSER)
