@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b799b34e_ef013fc2",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-31T19:01:45Z",
+      "side": 1,
+      "message": "you could set rc to 0 here, return rc at the bottom instead of 0 and eliminate this attribute",
+      "revId": "966d89ab34987d2f03d6de6afc688ae1190c73b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
