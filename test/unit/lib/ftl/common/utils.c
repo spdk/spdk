@@ -121,7 +121,7 @@ test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id, size_t zone_size)
 
 	for (size_t i = 0; i < ftl_get_num_punits(dev); ++i) {
 		zone = &band->zone_buf[i];
-		zone->info.state = SPDK_BDEV_ZONE_STATE_CLOSED;
+		zone->info.state = SPDK_BDEV_ZONE_STATE_FULL;
 		zone->info.zone_id = zone_size * (id * ftl_get_num_punits(dev) + i);
 		CIRCLEQ_INSERT_TAIL(&band->zones, zone, circleq);
 		band->num_zones++;

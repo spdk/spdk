@@ -235,7 +235,7 @@ _ftl_band_set_closed(struct ftl_band *band)
 	if (spdk_likely(band->num_zones)) {
 		LIST_INSERT_HEAD(&dev->shut_bands, band, list_entry);
 		CIRCLEQ_FOREACH(zone, &band->zones, circleq) {
-			zone->info.state = SPDK_BDEV_ZONE_STATE_CLOSED;
+			zone->info.state = SPDK_BDEV_ZONE_STATE_FULL;
 		}
 	} else {
 		LIST_REMOVE(band, list_entry);
