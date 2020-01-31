@@ -130,6 +130,7 @@ uint8_t g_number_of_claimed_volumes = 0;
 /* Specific to AES_CBC. */
 #define AES_CBC_IV_LENGTH	16
 #define AES_CBC_KEY_LENGTH	16
+#define AES_XTS_KEY_LENGTH	16	/* XTS uses 2 keys, each of this size. */
 
 /* Common for suported devices. */
 #define IV_OFFSET            (sizeof(struct rte_crypto_op) + \
@@ -153,6 +154,8 @@ struct bdev_names {
 	 */
 	uint8_t			*key;		/* key per bdev */
 	char			*drv_name;	/* name of the crypto device driver */
+	char			*cipher;	/* AES_CBC or AES_XTS */
+	uint8_t			*key2;		/* key #2 for AES_XTS, per bdev */
 	TAILQ_ENTRY(bdev_names)	link;
 };
 static TAILQ_HEAD(, bdev_names) g_bdev_names = TAILQ_HEAD_INITIALIZER(g_bdev_names);
@@ -1431,11 +1434,37 @@ vbdev_crypto_insert_name(const char *bdev_name, const char *vbdev_name,
 		goto error_invalid_key;
 	}
 
+	name->cipher = strdup(cipher);
+	if (!name->cipher) {
+		SPDK_ERRLOG("could not allocate name->cipher\n");
+		rc = -ENOMEM;
+		goto error_alloc_cipher;
+	}
+
+	if (strcmp(name->cipher, AES_XTS) == 0) {
+		if (strlen(key2) != AES_XTS_KEY_LENGTH) {
+			SPDK_ERRLOG("invalid AES_XTS key length\n");
+			rc = -EINVAL;
+			goto error_invalid_key2;
+		}
+
+		name->key2 = strdup(key2);
+		if (!name->key2) {
+			SPDK_ERRLOG("could not allocate name->key2\n");
+			rc = -ENOMEM;
+			goto error_alloc_key2;
+		}
+	}
+
 	TAILQ_INSERT_TAIL(&g_bdev_names, name, link);
 
 	return 0;
 
 	/* Error cleanup paths. */
+error_alloc_key2:
+error_invalid_key2:
+	free(name->cipher);
+error_alloc_cipher:
 error_invalid_key:
 	free(name->key);
 error_alloc_key:
@@ -1563,6 +1592,14 @@ vbdev_crypto_finish(void)
 		free(name->key);
 		free(name->bdev_name);
 		free(name->vbdev_name);
+		if (name->cipher != NULL) {
+			free(name->cipher);
+			name->cipher = NULL;
+		}
+		if (name->key2 != NULL) {
+			free(name->key2);
+			name->key2 = NULL;
+		}
 		free(name);
 	}
 
@@ -1735,6 +1772,19 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 				spdk_max(spdk_u32log2(bdev->blocklen), bdev->required_alignment);
 			SPDK_NOTICELOG("QAT in use: Required alignment set to %u\n",
 				       vbdev->crypto_bdev.required_alignment);
+			if (strcmp(name->cipher, AES_CBC) == 0) {
+				SPDK_NOTICELOG("QAT using cipher: AES_CBC\n");
+			} else {
+				SPDK_NOTICELOG("QAT using cipher: AES_XTS\n");
+				/* DPDK expects they keys to be concatenated together. */
+				vbdev->key = realloc(vbdev->key, (AES_XTS_KEY_LENGTH * 2) + 1);
+				if (vbdev->key == NULL) {
+					SPDK_ERRLOG("could not reallocate memory fot XTS keys\n");
+					rc = -ENOMEM;
+					goto error_key_realloc;
+				}
+				memcpy(vbdev->key + AES_XTS_KEY_LENGTH, name->key2, AES_XTS_KEY_LENGTH + 1);
+			}
 		} else {
 			vbdev->crypto_bdev.required_alignment = bdev->required_alignment;
 		}
@@ -1807,8 +1857,13 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 		vbdev->cipher_xform.type = RTE_CRYPTO_SYM_XFORM_CIPHER;
 		vbdev->cipher_xform.cipher.key.data = vbdev->key;
 		vbdev->cipher_xform.cipher.iv.offset = IV_OFFSET;
-		vbdev->cipher_xform.cipher.algo = RTE_CRYPTO_CIPHER_AES_CBC;
-		vbdev->cipher_xform.cipher.key.length = AES_CBC_KEY_LENGTH;
+		if (strcmp(name->cipher, AES_CBC) == 0) {
+			vbdev->cipher_xform.cipher.algo = RTE_CRYPTO_CIPHER_AES_CBC;
+			vbdev->cipher_xform.cipher.key.length = AES_CBC_KEY_LENGTH;
+		} else {
+			vbdev->cipher_xform.cipher.algo = RTE_CRYPTO_CIPHER_AES_XTS;
+			vbdev->cipher_xform.cipher.key.length = AES_XTS_KEY_LENGTH * 2;
+		}
 		vbdev->cipher_xform.cipher.iv.length = AES_CBC_IV_LENGTH;
 
 		vbdev->cipher_xform.cipher.op = RTE_CRYPTO_CIPHER_OP_ENCRYPT;
@@ -1858,6 +1913,7 @@ error_open:
 	TAILQ_REMOVE(&g_vbdev_crypto, vbdev, link);
 	spdk_io_device_unregister(vbdev, NULL);
 	free(vbdev->drv_name);
+error_key_realloc:
 error_drv_name:
 	free(vbdev->key);
 error_alloc_key:
@@ -1892,6 +1948,14 @@ delete_crypto_disk(struct spdk_bdev *bdev, spdk_delete_crypto_complete cb_fn,
 			free(name->vbdev_name);
 			free(name->drv_name);
 			free(name->key);
+			if (name->cipher != NULL) {
+				free(name->cipher);
+				name->cipher = NULL;
+			}
+			if (name->key2 != NULL) {
+				free(name->key2);
+				name->key2 = NULL;
+			}
 			free(name);
 			break;
 		}
