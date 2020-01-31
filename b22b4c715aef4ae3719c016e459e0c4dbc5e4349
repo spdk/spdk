@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "cc4c4bc1_e54cb797",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1794,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-31T14:48:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f0b2081e_76f883e2",
+      "range": {
+        "startLine": 1794,
+        "startChar": 3,
+        "endLine": 1794,
+        "endChar": 67
+      },
+      "revId": "b22b4c715aef4ae3719c016e459e0c4dbc5e4349",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e7b66e3c_0b38d27e",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 10
@@ -36,6 +60,30 @@
       "writtenOn": "2020-01-31T08:26:28Z",
       "side": 1,
       "message": "What is the reason behind swapping the queues? Couldn\u0027t we just do something like:\n\nwhile (!TAILQ_EMPTY(\u0026ch-\u003ecompletion_queue)) {\n io \u003d TAILQ_FIRST(\u0026ch-\u003ecompletion_queue);\n TAILQ_REMOVE(\u0026ch-\u003ecompletion_queue, io, ioch_entry);\n ftl_io_complete(io);\n}",
+      "range": {
+        "startLine": 2248,
+        "startChar": 1,
+        "endLine": 2248,
+        "endChar": 66
+      },
+      "revId": "b22b4c715aef4ae3719c016e459e0c4dbc5e4349",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5084ded1_d7bdc37e",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 2248,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-31T14:48:04Z",
+      "side": 1,
+      "message": "This local copy of IO queue prevents from adding new items to processed queue when IO callback issue another IO operation",
+      "parentUuid": "e7b66e3c_0b38d27e",
       "range": {
         "startLine": 2248,
         "startChar": 1,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "b1adae0a_5bb367eb",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 985,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-31T14:48:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f31bd92d_b2980ff7",
+      "range": {
+        "startLine": 985,
+        "startChar": 2,
+        "endLine": 985,
+        "endChar": 12
+      },
+      "revId": "b22b4c715aef4ae3719c016e459e0c4dbc5e4349",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f904eed9_4106a518",
         "filename": "lib/ftl/ftl_io.h",
         "patchSetId": 10
@@ -82,6 +154,30 @@
       "writtenOn": "2020-01-31T08:26:28Z",
       "side": 1,
       "message": "Similarly to the completion_queue, let\u0027s rename this to write_completion_poller or write_cmpl_poller.",
+      "range": {
+        "startLine": 138,
+        "startChar": 23,
+        "endLine": 138,
+        "endChar": 29
+      },
+      "revId": "b22b4c715aef4ae3719c016e459e0c4dbc5e4349",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "df1b590b_42bdca46",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-31T14:48:04Z",
+      "side": 1,
+      "message": "This poller will be used also for retry queue so I prefer to keep this name generic.",
+      "parentUuid": "f904eed9_4106a518",
       "range": {
         "startLine": 138,
         "startChar": 23,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "da002536_f89795a3",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-31T14:48:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b1803f6d_afdd46e9",
+      "range": {
+        "startLine": 140,
+        "startChar": 24,
+        "endLine": 140,
+        "endChar": 40
+      },
+      "revId": "b22b4c715aef4ae3719c016e459e0c4dbc5e4349",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "78dac78e_8aa1902f",
         "filename": "lib/ftl/ftl_io.h",
         "patchSetId": 10
@@ -137,6 +257,30 @@
       "revId": "b22b4c715aef4ae3719c016e459e0c4dbc5e4349",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7061b7c9_203870da",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-31T14:48:04Z",
+      "side": 1,
+      "message": "This patch should not touch this retry queue - I\u0027m making changes to it in next patch.",
+      "parentUuid": "78dac78e_8aa1902f",
+      "range": {
+        "startLine": 224,
+        "startChar": 0,
+        "endLine": 227,
+        "endChar": 34
+      },
+      "revId": "b22b4c715aef4ae3719c016e459e0c4dbc5e4349",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
