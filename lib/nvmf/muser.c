@@ -103,14 +103,15 @@ enum muser_nvmf_dir {
 struct muser_req;
 struct muser_qpair;
 
-typedef int (*muser_req_end_fn)(struct muser_qpair *, struct muser_req *);
+typedef int (*muser_req_cb_fn)(struct muser_req *req, void *cb_arg);
 
 struct muser_req  {
 	struct spdk_nvmf_request		req;
 	struct spdk_nvme_cpl			*rsp;
 	struct spdk_nvme_cmd			*cmd;
 
-	muser_req_end_fn			end_fn;
+	muser_req_cb_fn				cb_fn;
+	void					*cb_arg;
 
 	TAILQ_ENTRY(muser_req)			link;
 };
@@ -1585,8 +1586,10 @@ consume_admin_req(struct muser_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd)
 }
 
 static int
-handle_cmd_rsp(struct muser_qpair *qpair, struct muser_req *req)
+handle_cmd_rsp(struct muser_req *req, void *cb_arg)
 {
+	struct muser_qpair *qpair = cb_arg;
+
 	assert(qpair != NULL);
 	assert(req != NULL);
 
@@ -2643,7 +2646,7 @@ muser_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 }
 
 static int
-handle_connect_rsp(struct muser_qpair *qpair, struct muser_req *req);
+handle_connect_rsp(struct muser_req *req, void *cb_arg);
 
 /*
  * Called by spdk_nvmf_transport_poll_group_add.
@@ -2697,11 +2700,8 @@ muser_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 		goto out;
 	}
 
-	/*
-	 * TODO If spdk_nvmf_request_exec is guaranteed to synchronously add
-	 * the QP then there's no reason to use completion callbacks.
-	 */
-	muser_req->end_fn = handle_connect_rsp;
+	muser_req->cb_fn = handle_connect_rsp;
+	muser_req->cb_arg = muser_ctrlr;
 
 	SPDK_NOTICELOG("sending connect fabrics command for QID=%#x cntlid=%#x\n",
 		       qpair->qid, data->cntlid);
@@ -2757,9 +2757,10 @@ handle_admin_q_connect_rsp(struct spdk_nvmf_request *req,
  * executed.
  */
 static int
-handle_connect_rsp(struct muser_qpair *qpair, struct muser_req *req)
+handle_connect_rsp(struct muser_req *req, void *cb_arg)
 {
 	int err = 0;
+	struct muser_qpair *qpair = cb_arg;
 
 	assert(qpair != NULL);
 	assert(req != NULL);
@@ -2882,8 +2883,9 @@ handle_prop_get_rsp(struct muser_ctrlr *ctrlr, struct muser_req *req)
 }
 
 static int
-handle_prop_rsp(struct muser_qpair *qpair, struct muser_req *req)
+handle_prop_rsp(struct muser_req *req, void *cb_arg)
 {
+	struct muser_qpair *qpair = cb_arg;
 	int err = 0;
 	bool fire = true;
 
@@ -2925,8 +2927,8 @@ muser_req_done(struct spdk_nvmf_request *req)
 	muser_req = SPDK_CONTAINEROF(req, struct muser_req, req);
 	qpair = SPDK_CONTAINEROF(muser_req->req.qpair, struct muser_qpair, qpair);
 
-	if (muser_req->end_fn != NULL) {
-		if (muser_req->end_fn(qpair, muser_req) != 0) {
+	if (muser_req->cb_fn != NULL) {
+		if (muser_req->cb_fn(muser_req, muser_req->cb_arg) != 0) {
 			fail_ctrlr(qpair->ctrlr);
 		}
 	}
@@ -3110,7 +3112,8 @@ handle_cmd_req(struct muser_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 	}
 
 	muser_req = SPDK_CONTAINEROF(req, struct muser_req, req);
-	muser_req->end_fn = handle_cmd_rsp;
+	muser_req->cb_fn = handle_cmd_rsp;
+	muser_req->cb_arg = SPDK_CONTAINEROF(req->qpair, struct muser_qpair, qpair);
 
 	spdk_nvmf_request_exec(req);
 
@@ -3143,7 +3146,8 @@ handle_prop_req(struct muser_ctrlr *ctrlr)
 	}
 	muser_req = SPDK_CONTAINEROF(req, struct muser_req, req);
 
-	muser_req->end_fn = handle_prop_rsp;
+	muser_req->cb_fn = handle_prop_rsp;
+	muser_req->cb_arg = ctrlr->qp[0];
 
 	req->cmd->prop_set_cmd.opcode = SPDK_NVME_OPC_FABRIC;
 	req->cmd->prop_set_cmd.cid = 0;
