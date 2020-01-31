@@ -1922,6 +1922,79 @@ test_spdk_nvme_ctrlr_set_trid(void)
 	CU_ASSERT(strncmp(ctrlr.trid.trsvcid, "4421", SPDK_NVMF_TRSVCID_MAX_LEN) == 0);
 }
 
+static void
+test_nvme_ctrlr_init_set_nvmf_ioccsz(void)
+{
+	DECLARE_AND_CONSTRUCT_CTRLR();
+	/* equivalent of 4096 bytes */
+	ctrlr.cdata.nvmf_specific.ioccsz = 260;
+	ctrlr.cdata.nvmf_specific.icdoff = 1;
+
+	/* Check PCI trtype, */
+	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+
+	ctrlr.state = NVME_CTRLR_STATE_IDENTIFY;
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_SET_NUM_QUEUES);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_GET_NUM_QUEUES);
+
+	CU_ASSERT(ctrlr.nvmf_ioccsz_bytes == 0);
+	CU_ASSERT(ctrlr.nvmf_icdoff == 0);
+
+	/* Check RDMA trtype, */
+	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
+
+	ctrlr.state = NVME_CTRLR_STATE_IDENTIFY;
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_SET_NUM_QUEUES);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_GET_NUM_QUEUES);
+
+	CU_ASSERT(ctrlr.nvmf_ioccsz_bytes == 4096);
+	CU_ASSERT(ctrlr.nvmf_icdoff == 1);
+	ctrlr.nvmf_ioccsz_bytes = 0;
+	ctrlr.nvmf_icdoff = 0;
+
+	/* Check TCP trtype, */
+	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_TCP;
+
+	ctrlr.state = NVME_CTRLR_STATE_IDENTIFY;
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_SET_NUM_QUEUES);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_GET_NUM_QUEUES);
+
+	CU_ASSERT(ctrlr.nvmf_ioccsz_bytes == 4096);
+	CU_ASSERT(ctrlr.nvmf_icdoff == 1);
+	ctrlr.nvmf_ioccsz_bytes = 0;
+	ctrlr.nvmf_icdoff = 0;
+
+	/* Check FC trtype, */
+	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_FC;
+
+	ctrlr.state = NVME_CTRLR_STATE_IDENTIFY;
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_SET_NUM_QUEUES);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_GET_NUM_QUEUES);
+
+	CU_ASSERT(ctrlr.nvmf_ioccsz_bytes == 0);
+	CU_ASSERT(ctrlr.nvmf_icdoff == 0);
+
+	/* Check CUSTOM trtype, */
+	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_CUSTOM;
+
+	ctrlr.state = NVME_CTRLR_STATE_IDENTIFY;
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_SET_NUM_QUEUES);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_GET_NUM_QUEUES);
+
+	CU_ASSERT(ctrlr.nvmf_ioccsz_bytes == 0);
+	CU_ASSERT(ctrlr.nvmf_icdoff == 0);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1977,6 +2050,8 @@ int main(int argc, char **argv)
 		|| CU_add_test(suite, "test_spdk_nvme_ctrlr_reconnect_io_qpair",
 			       test_spdk_nvme_ctrlr_reconnect_io_qpair) == NULL
 		|| CU_add_test(suite, "test_spdk_nvme_ctrlr_set_trid", test_spdk_nvme_ctrlr_set_trid) == NULL
+		|| CU_add_test(suite, "test_nvme_ctrlr_init_set_nvmf_ioccsz",
+			       test_nvme_ctrlr_init_set_nvmf_ioccsz) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

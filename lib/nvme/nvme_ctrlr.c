@@ -31,6 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <spdk/nvme_spec.h>
 #include "spdk/stdinc.h"
 
 #include "nvme_internal.h"
@@ -1532,6 +1533,16 @@ nvme_ctrlr_set_num_queues_done(void *arg, const struct spdk_nvme_cpl *cpl)
 			     ctrlr->opts.admin_timeout_ms);
 }
 
+static void
+nvme_ctrlr_update_nvmf_ioccsz(struct spdk_nvme_ctrlr *ctrlr)
+{
+	if (ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_RDMA ||
+	    ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_TCP) {
+		ctrlr->nvmf_ioccsz_bytes = ctrlr->cdata.nvmf_specific.ioccsz * 16 - sizeof(struct spdk_nvme_cmd);
+		ctrlr->nvmf_icdoff = ctrlr->cdata.nvmf_specific.icdoff;
+	}
+}
+
 static int
 nvme_ctrlr_set_num_queues(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -2416,6 +2427,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		break;
 
 	case NVME_CTRLR_STATE_SET_NUM_QUEUES:
+		nvme_ctrlr_update_nvmf_ioccsz(ctrlr);
 		rc = nvme_ctrlr_set_num_queues(ctrlr);
 		break;
 
