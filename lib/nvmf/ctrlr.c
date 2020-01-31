@@ -41,11 +41,11 @@
 #include "spdk/thread.h"
 #include "spdk/trace.h"
 #include "spdk/nvme_spec.h"
+#include "spdk/nvmf_cmd.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
 #include "spdk/version.h"
 
-#include "spdk_internal/nvmf.h"
 #include "spdk_internal/log.h"
 
 #define MIN_KEEP_ALIVE_TIMEOUT_IN_MS 10000

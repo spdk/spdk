@@ -38,9 +38,8 @@
 #include "spdk/thread.h"
 #include "spdk/log.h"
 #include "spdk/nvme.h"
+#include "spdk/nvmf_cmd.h"
 #include "spdk/util.h"
-
-#include "spdk_internal/nvmf.h"
 
 enum nvmf_tgt_state {
 	NVMF_TGT_INIT_NONE = 0,
