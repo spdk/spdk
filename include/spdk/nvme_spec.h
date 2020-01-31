@@ -109,7 +109,13 @@ union spdk_nvme_cap_register {
 		/** memory page size maximum */
 		uint32_t mpsmax		: 4;
 
-		uint32_t reserved3	: 8;
+		/** persistent memory region supported */
+		uint32_t pmrs		: 1;
+
+		/** controller memory buffer supported */
+		uint32_t cmbs		: 1;
+
+		uint32_t reserved3	: 6;
 	} bits;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cap_register) == 8, "Incorrect size");
@@ -353,6 +359,11 @@ struct spdk_nvme_registers {
 	} doorbell[1];
 };
 
+#define CC \
+	offsetof(struct spdk_nvme_registers, cc)
+
+#define DOORBELLS 0x1000
+
 /* NVMe controller register space offsets */
 SPDK_STATIC_ASSERT(0x00 == offsetof(struct spdk_nvme_registers, cap),
 		   "Incorrect register offset");
@@ -376,6 +387,9 @@ SPDK_STATIC_ASSERT(0x40 == offsetof(struct spdk_nvme_registers, bpinfo),
 SPDK_STATIC_ASSERT(0x44 == offsetof(struct spdk_nvme_registers, bprsel),
 		   "Incorrect register offset");
 SPDK_STATIC_ASSERT(0x48 == offsetof(struct spdk_nvme_registers, bpmbl),
+		   "Incorrect register offset");
+
+SPDK_STATIC_ASSERT(DOORBELLS == offsetof(struct spdk_nvme_registers, doorbell[0].sq_tdbl),
 		   "Incorrect register offset");
 
 enum spdk_nvme_sgl_descriptor_type {
