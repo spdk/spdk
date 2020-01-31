@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6ae5600c_ccb15b11",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 7
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-31T18:53:20Z",
+      "side": 1,
+      "message": "What do you mean by \"The middle\"?",
+      "revId": "420a0835a84a8be264d996eb5defcc9e302d8ff3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6870d4f9_ddf0077b",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-31T18:53:20Z",
+      "side": 1,
+      "message": "I\u0027m not quite following why this is an INFO now instead of a WARN? Why can we paused the same as unregistered at this point?",
+      "revId": "420a0835a84a8be264d996eb5defcc9e302d8ff3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
