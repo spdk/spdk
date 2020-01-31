@@ -251,9 +251,6 @@ struct muser_ctrlr {
 	lm_ctx_t				*lm_ctx;
 	lm_pci_config_space_t			*pci_config_space;
 
-	/* Needed for adding/removing queue pairs in various callbacks. */
-	struct muser_poll_group			*muser_group;
-
 	/*
 	 * TODO variables that are checked by poll_group_poll to see whether
 	 * commands need to be executed, in addition to checking the doorbells.
@@ -313,7 +310,6 @@ fail_ctrlr(struct muser_ctrlr *ctrlr)
 struct muser_transport {
 	struct spdk_nvmf_transport		transport;
 	pthread_mutex_t				lock;
-	struct muser_poll_group			*group;
 	TAILQ_HEAD(, muser_ctrlr)		ctrlrs;
 
 	TAILQ_HEAD(, muser_qpair)		new_qps;
@@ -1251,8 +1247,7 @@ destroy_qp(struct muser_ctrlr *ctrlr, uint16_t qid)
 		return;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_MUSER, "destroy QP%d=%p, removing from group=%p\n",
-		      qid, qpair, ctrlr->muser_group);
+	SPDK_DEBUGLOG(SPDK_LOG_MUSER, "destroy QP%d=%p\n", qid, qpair);
 
 	/*
 	 * TODO Is it possible for the pointer to be accessed while we're
@@ -2457,9 +2452,6 @@ muser_listen(struct spdk_nvmf_transport *transport,
 		goto out;
 	}
 	muser_ctrlr->cntlid = 0xffff;
-	assert(muser_transport->group != NULL);
-	muser_ctrlr->muser_group = muser_transport->group;
-	muser_ctrlr->muser_group->ctrlr = muser_ctrlr;
 	memcpy(muser_ctrlr->uuid, trid->traddr, sizeof(muser_ctrlr->uuid));
 	memcpy(&muser_ctrlr->trid, trid, sizeof(muser_ctrlr->trid));
 
@@ -2613,7 +2605,6 @@ static struct spdk_nvmf_transport_poll_group *
 muser_poll_group_create(struct spdk_nvmf_transport *transport)
 {
 	struct muser_poll_group *muser_group;
-	struct muser_transport *muser_transport;
 
 	SPDK_DEBUGLOG(SPDK_LOG_MUSER, "create poll group\n");
 
@@ -2624,10 +2615,6 @@ muser_poll_group_create(struct spdk_nvmf_transport *transport)
 	}
 
 	TAILQ_INIT(&muser_group->qps);
-
-	muser_transport = SPDK_CONTAINEROF(transport, struct muser_transport,
-					   transport);
-	muser_transport->group = muser_group;
 
 	return &muser_group->group;
 }
@@ -2669,6 +2656,8 @@ muser_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 
 	SPDK_DEBUGLOG(SPDK_LOG_MUSER, "add QP%d=%p(%p) to poll_group=%p\n",
 		      muser_qpair->qpair.qid, muser_qpair, qpair, muser_group);
+
+	TAILQ_INSERT_TAIL(&muser_group->qps, muser_qpair, link);
 
 	muser_req = get_muser_req(muser_qpair);
 	if (muser_req == NULL) {
@@ -2720,13 +2709,15 @@ muser_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
 			struct spdk_nvmf_qpair *qpair)
 {
 	struct muser_qpair *muser_qpair;
+	struct muser_poll_group *muser_group;
 
 	/* TODO maybe this is where we should delete the I/O queue? */
 	SPDK_DEBUGLOG(SPDK_LOG_MUSER, "remove NVMf QP%d=%p from NVMf poll_group=%p\n",
 		      qpair->qid, qpair, group);
 
 	muser_qpair = SPDK_CONTAINEROF(qpair, struct muser_qpair, qpair);
-	TAILQ_REMOVE(&muser_qpair->ctrlr->muser_group->qps, muser_qpair, link);
+	muser_group = SPDK_CONTAINEROF(group, struct muser_poll_group, group);
+	TAILQ_REMOVE(&muser_group->qps, muser_qpair, link);
 	return 0;
 }
 
@@ -2777,8 +2768,6 @@ handle_connect_rsp(struct muser_req *req, void *cb_arg)
 			goto out;
 		}
 	}
-
-	TAILQ_INSERT_TAIL(&qpair->ctrlr->muser_group->qps, qpair, link);
 
 	if (req->req.cmd->connect_cmd.qid != 0) {
 		err = post_completion(qpair->ctrlr, &req->req.cmd->nvme_cmd,
