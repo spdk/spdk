@@ -78,11 +78,15 @@ struct spdk_nvmf_tgt *g_spdk_nvmf_tgt = NULL;
 
 static enum nvmf_tgt_state g_tgt_state;
 
+static struct spdk_thread *g_tgt_init_thread = NULL;
+
 /* Round-Robin/IP-based tracking of threads to poll group assignment */
 static struct nvmf_tgt_poll_group *g_next_poll_group = NULL;
 
 static TAILQ_HEAD(, nvmf_tgt_poll_group) g_poll_groups = TAILQ_HEAD_INITIALIZER(g_poll_groups);
 static size_t g_num_poll_groups = 0;
+static size_t g_num_creating_poll_groups = 0;
+static pthread_mutex_t g_poll_group_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static struct spdk_poller *g_acceptor_poller = NULL;
 
@@ -319,6 +323,7 @@ nvmf_tgt_destroy_poll_group(void *ctx)
 {
 	struct nvmf_tgt_poll_group *pg, *tpg;
 	struct spdk_thread *thread;
+	int rc __attribute__((unused));
 
 	thread = spdk_get_thread();
 
@@ -329,13 +334,16 @@ nvmf_tgt_destroy_poll_group(void *ctx)
 			free(pg);
 			assert(g_num_poll_groups > 0);
 			g_num_poll_groups--;
+
+			rc = spdk_thread_exit(thread);
+			assert(rc == 0);
 			return;
 		}
 	}
 }
 
 static void
-nvmf_tgt_create_poll_group_done(void *ctx)
+nvmf_tgt_create_poll_groups_done(void *ctx)
 {
 	g_tgt_state = NVMF_TGT_INIT_START_SUBSYSTEMS;
 	nvmf_tgt_advance_state();
@@ -355,11 +363,57 @@ nvmf_tgt_create_poll_group(void *ctx)
 
 	pg->thread = spdk_get_thread();
 	pg->group = spdk_nvmf_poll_group_create(g_spdk_nvmf_tgt);
+
+	pthread_mutex_lock(&g_poll_group_mutex);
 	TAILQ_INSERT_TAIL(&g_poll_groups, pg, link);
 	g_num_poll_groups++;
 
 	if (g_next_poll_group == NULL) {
 		g_next_poll_group = pg;
+	}
+
+	if (--g_num_creating_poll_groups == 0) {
+		pthread_mutex_unlock(&g_poll_group_mutex);
+		spdk_thread_send_msg(g_tgt_init_thread, nvmf_tgt_create_poll_groups_done, NULL);
+	} else {
+		pthread_mutex_unlock(&g_poll_group_mutex);
+	}
+}
+
+static void
+nvmf_tgt_create_poll_groups(void)
+{
+	struct spdk_cpuset tmp_cpumask = {};
+	uint32_t i;
+	char thread_name[32];
+	struct spdk_thread *thread;
+
+	g_tgt_init_thread = spdk_get_thread();
+	assert(g_tgt_init_thread != NULL);
+
+	g_num_creating_poll_groups++;
+
+	SPDK_ENV_FOREACH_CORE(i) {
+		spdk_cpuset_zero(&tmp_cpumask);
+		spdk_cpuset_set_cpu(&tmp_cpumask, i, true);
+		snprintf(thread_name, sizeof(thread_name), "nvmf_tgt_poll_group_%u", i);
+
+		thread = spdk_thread_create(thread_name, &tmp_cpumask);
+		assert(thread != NULL);
+
+		pthread_mutex_lock(&g_poll_group_mutex);
+		g_num_creating_poll_groups++;
+		pthread_mutex_unlock(&g_poll_group_mutex);
+
+		spdk_thread_send_msg(thread, nvmf_tgt_create_poll_group, NULL);
+	}
+
+	pthread_mutex_lock(&g_poll_group_mutex);
+	if (--g_num_creating_poll_groups == 0) {
+		pthread_mutex_unlock(&g_poll_group_mutex);
+		nvmf_tgt_create_poll_groups_done(NULL);
+	} else {
+		pthread_mutex_unlock(&g_poll_group_mutex);
 	}
 }
 
@@ -453,10 +507,10 @@ nvmf_tgt_advance_state(void)
 				SPDK_NOTICELOG("Custom identify ctrlr handler enabled\n");
 				spdk_nvmf_set_custom_admin_cmd_hdlr(SPDK_NVME_OPC_IDENTIFY, spdk_nvmf_custom_identify_hdlr);
 			}
-			/* Send a message to each thread and create a poll group */
-			spdk_for_each_thread(nvmf_tgt_create_poll_group,
-					     NULL,
-					     nvmf_tgt_create_poll_group_done);
+			/* Create threads for active CPU cores, and then send a message to each
+			 * thread and create a poll group.
+			 */
+			nvmf_tgt_create_poll_groups();
 			break;
 		case NVMF_TGT_INIT_START_SUBSYSTEMS: {
 			struct spdk_nvmf_subsystem *subsystem;
