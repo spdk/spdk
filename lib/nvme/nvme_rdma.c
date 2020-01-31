@@ -1509,12 +1509,6 @@ nvme_rdma_build_sgl_inline_request(struct nvme_rdma_qpair *rqpair,
 	return 0;
 }
 
-static inline unsigned int
-nvme_rdma_icdsz_bytes(struct spdk_nvme_ctrlr *ctrlr)
-{
-	return (ctrlr->cdata.nvmf_specific.ioccsz * 16 - sizeof(struct spdk_nvme_cmd));
-}
-
 static int
 nvme_rdma_req_init(struct nvme_rdma_qpair *rqpair, struct nvme_request *req,
 		   struct spdk_nvme_rdma_req *rdma_req)
@@ -1536,8 +1530,7 @@ nvme_rdma_req_init(struct nvme_rdma_qpair *rqpair, struct nvme_request *req,
 		 */
 		if (spdk_nvme_opc_get_data_transfer(req->cmd.opc) ==
 		    SPDK_NVME_DATA_HOST_TO_CONTROLLER &&
-		    req->payload_size <= nvme_rdma_icdsz_bytes(ctrlr) &&
-		    (ctrlr->cdata.nvmf_specific.icdoff == 0)) {
+		    req->payload_size <= ctrlr->ioccsz_bytes && ctrlr->icdoff == 0) {
 			rc = nvme_rdma_build_contig_inline_request(rqpair, rdma_req);
 		} else {
 			rc = nvme_rdma_build_contig_request(rqpair, rdma_req);
@@ -1545,8 +1538,7 @@ nvme_rdma_req_init(struct nvme_rdma_qpair *rqpair, struct nvme_request *req,
 	} else if (nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_SGL) {
 		if (spdk_nvme_opc_get_data_transfer(req->cmd.opc) ==
 		    SPDK_NVME_DATA_HOST_TO_CONTROLLER &&
-		    req->payload_size <= nvme_rdma_icdsz_bytes(ctrlr) &&
-		    ctrlr->cdata.nvmf_specific.icdoff == 0) {
+		    req->payload_size <= ctrlr->ioccsz_bytes && ctrlr->icdoff == 0) {
 			rc = nvme_rdma_build_sgl_inline_request(rqpair, rdma_req);
 		} else {
 			rc = nvme_rdma_build_sgl_request(rqpair, rdma_req);
