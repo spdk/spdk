@@ -16,6 +16,24 @@
       "revId": "5386aaf38f13c7bcbc6894e431816d22591413af",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "058d6c6f_e7483a27",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-31T16:16:22Z",
+      "side": 1,
+      "message": "This file does use a likely and it was only working before because of the include order of other files. When I switched those other files to include the new nvmf_transport.h, which doesn\u0027t have likely.h included, this popped up.",
+      "parentUuid": "2e63b2ff_ec800d70",
+      "revId": "5386aaf38f13c7bcbc6894e431816d22591413af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
