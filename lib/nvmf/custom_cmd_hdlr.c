@@ -38,7 +38,8 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/bdev.h"
-#include "spdk_internal/nvmf.h"
+#include "spdk/nvmf_cmd.h"
+
 #include "spdk_internal/log.h"
 
 static void

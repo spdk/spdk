@@ -40,13 +40,13 @@
 #include "spdk/thread.h"
 #include "spdk/likely.h"
 #include "spdk/nvme.h"
+#include "spdk/nvmf_cmd.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/trace.h"
 #include "spdk/scsi_spec.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
 
-#include "spdk_internal/nvmf.h"
 #include "spdk_internal/log.h"
 
 static bool

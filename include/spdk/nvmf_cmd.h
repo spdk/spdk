@@ -31,8 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPDK_INTERNAL_NVMF_H_
-#define SPDK_INTERNAL_NVMF_H_
+#ifndef SPDK_NVMF_CMD_H_
+#define SPDK_NVMF_CMD_H_
 
 #include "spdk/stdinc.h"
 #include "spdk/nvmf.h"
@@ -72,4 +72,4 @@ struct spdk_nvme_cmd *spdk_nvmf_request_get_cmd(struct spdk_nvmf_request *req);
 struct spdk_nvme_cpl *spdk_nvmf_request_get_response(struct spdk_nvmf_request *req);
 int spdk_nvmf_custom_identify_hdlr(struct spdk_nvmf_request *req);
 
-#endif /* SPDK_INTERNAL_NVMF_H_ */
+#endif /* SPDK_NVMF_CMD_H_ */
