@@ -2,6 +2,13 @@
 
 ## v20.04: (Upcoming Release)
 
+### crypto
+
+Support for AES_XTS was added for QAT pmd only.  The create RPC `bdev_crypto_create`
+has 2 new optional parameters. `cipher` can be AES_CBC for either pmd and this is its
+default if not specified. `key2` is the second key needed for cipher `AES_XTS` and is
+only valid when the cipher is set to `AES_XTS`.
+
 ## v20.01
 
 ### bdev
