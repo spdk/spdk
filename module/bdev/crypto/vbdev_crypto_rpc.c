@@ -73,9 +73,8 @@ spdk_rpc_bdev_crypto_create(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_construct_crypto_decoders,
 				    SPDK_COUNTOF(rpc_construct_crypto_decoders),
 				    &req)) {
-		SPDK_DEBUGLOG(SPDK_LOG_CRYPTO, "spdk_json_decode_object failed\n");
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 "spdk_json_decode_object failed");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
 		goto cleanup;
 	}
 
@@ -132,8 +131,8 @@ spdk_rpc_bdev_crypto_delete(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_delete_crypto_decoders,
 				    SPDK_COUNTOF(rpc_delete_crypto_decoders),
 				    &req)) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 "spdk_json_decode_object failed");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
 		goto cleanup;
 	}
 
