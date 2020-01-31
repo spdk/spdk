@@ -194,12 +194,7 @@ struct spdk_nvmf_ctrlr {
 	char				hostnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 	struct spdk_nvmf_subsystem	*subsys;
 
-	struct {
-		union spdk_nvme_cap_register	cap;
-		union spdk_nvme_vs_register	vs;
-		union spdk_nvme_cc_register	cc;
-		union spdk_nvme_csts_register	csts;
-	} vcprop; /* virtual controller properties */
+	struct spdk_nvme_registers	vcprop; /* virtual controller properties */
 
 	struct spdk_nvmf_ctrlr_feat feat;
 
