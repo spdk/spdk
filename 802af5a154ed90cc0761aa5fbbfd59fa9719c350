@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c17cad57_328dfa33",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-31T12:13:31Z",
+      "side": 1,
+      "message": "Please expand the commit message",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 64
+      },
+      "revId": "802af5a154ed90cc0761aa5fbbfd59fa9719c350",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "99f0d732_8c19aa06",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-31T12:13:31Z",
+      "side": 1,
+      "message": "It is unclear what is happening here. Customize how ?\nWhat is happening later is just calling update.sh, which sets up system and potentially updates dependencies.",
+      "range": {
+        "startLine": 41,
+        "startChar": 41,
+        "endLine": 41,
+        "endChar": 64
+      },
+      "revId": "802af5a154ed90cc0761aa5fbbfd59fa9719c350",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
