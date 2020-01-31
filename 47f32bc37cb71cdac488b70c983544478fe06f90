@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ff30e161_df92a98a",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 813,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-31T14:47:55Z",
+      "side": 1,
+      "message": "I think that user are not allow to start shutdown sequence until all user IO is finished. In such case those queues must be empty.",
+      "parentUuid": "6ec15a46_9355e383",
+      "range": {
+        "startLine": 813,
+        "startChar": 39,
+        "endLine": 813,
+        "endChar": 70
+      },
+      "revId": "47f32bc37cb71cdac488b70c983544478fe06f90",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8dc7b20c_780b3863",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 5
@@ -36,6 +60,30 @@
       "writtenOn": "2020-01-31T09:50:55Z",
       "side": 1,
       "message": "Again, I don\u0027t really see the point in doing this swap. Perhaps if we instead used ftl_io_write/ftl_io_read instead of ftl_rwb_fill/ftl_submit_read it\u0027d make some sense, as we could get rid of the lines 2246-2250 and rely on the submit functions doing putting the requests on the retry queues.",
+      "range": {
+        "startLine": 2233,
+        "startChar": 0,
+        "endLine": 2235,
+        "endChar": 64
+      },
+      "revId": "47f32bc37cb71cdac488b70c983544478fe06f90",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed54ac0b_40d68dc9",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2235,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-31T14:47:55Z",
+      "side": 1,
+      "message": "This local copy of IO queue prevents from adding new items to processed queue when IO callback issue another IO operation. Also ftl_io_write do not return value so we will lost stop condition  for retrying.",
+      "parentUuid": "8dc7b20c_780b3863",
       "range": {
         "startLine": 2233,
         "startChar": 0,
