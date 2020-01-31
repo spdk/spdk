@@ -358,7 +358,7 @@ ftl_submit_erase(struct ftl_io *io)
 	for (i = 0; i < io->num_blocks; ++i) {
 		if (i != 0) {
 			zone = ftl_band_next_zone(band, ftl_band_zone_from_addr(band, addr));
-			assert(zone->info.state == SPDK_BDEV_ZONE_STATE_CLOSED);
+			assert(zone->info.state == SPDK_BDEV_ZONE_STATE_FULL);
 			addr.offset = zone->info.zone_id;
 		}
 
