@@ -2753,7 +2753,7 @@ _nvmf_request_exec(struct spdk_nvmf_request *req,
 		   struct spdk_nvmf_subsystem_poll_group *sgroup)
 {
 	struct spdk_nvmf_qpair *qpair = req->qpair;
-	spdk_nvmf_request_exec_status status;
+	enum spdk_nvmf_request_exec_status status;
 
 	nvmf_trace_command(req->cmd, spdk_nvmf_qpair_is_admin_queue(qpair));
 
