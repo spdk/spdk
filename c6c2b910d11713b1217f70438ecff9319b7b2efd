@@ -45,6 +45,30 @@
       "revId": "c6c2b910d11713b1217f70438ecff9319b7b2efd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d3edf4db_2ba2e9fe",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 478,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2020-01-31T12:16:31Z",
+      "side": 1,
+      "message": "Thanks Tomek,\nYou are right about the way to force the build.\nAnd I also think it is not the clearest way, but I wanted to leave the SKIP_DPDK_BUILD name unchanged for compatibilty (even though it is not documented).\nI think --force-dpdk-build would be the clearest way so implementing that.",
+      "parentUuid": "fee3492b_2c9c1676",
+      "range": {
+        "startLine": 472,
+        "startChar": 0,
+        "endLine": 478,
+        "endChar": 2
+      },
+      "revId": "c6c2b910d11713b1217f70438ecff9319b7b2efd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
