@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "12d9f6bd_0afe3aeb",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-31T17:30:19Z",
+      "side": 1,
+      "message": "you probably don\u0027t need the \u003e 0 asserts above since you have these three here",
+      "revId": "daf8f40c44fb4c30163b12491de7c7f1c8cc2cb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f34e86b3_b94779f0",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 661,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-31T17:30:19Z",
+      "side": 1,
+      "message": "for all these func that return bool you might consider having them call the new functions and returning true/false based on count instead of looking at the lists.",
+      "revId": "daf8f40c44fb4c30163b12491de7c7f1c8cc2cb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
