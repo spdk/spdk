@@ -199,6 +199,7 @@ struct spdk_nvmf_ctrlr {
 		union spdk_nvme_vs_register	vs;
 		union spdk_nvme_cc_register	cc;
 		union spdk_nvme_csts_register	csts;
+		union spdk_nvme_aqa_register	aqa;
 	} vcprop; /* virtual controller properties */
 
 	struct spdk_nvmf_ctrlr_feat feat;
