@@ -38,6 +38,7 @@
 
 #include "spdk/likely.h"
 #include "spdk/nvmf.h"
+#include "spdk/nvmf_cmd.h"
 #include "spdk/nvmf_transport.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/assert.h"
@@ -45,8 +46,6 @@
 #include "spdk/queue.h"
 #include "spdk/util.h"
 #include "spdk/thread.h"
-
-#include "spdk_internal/nvmf.h"
 
 enum spdk_nvmf_subsystem_state {
 	SPDK_NVMF_SUBSYSTEM_INACTIVE = 0,
