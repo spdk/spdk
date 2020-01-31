@@ -22,6 +22,30 @@
       "revId": "0b3a2d1c959a92014b44873c322ac3a3757d0787",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9d5ee936_634197bb",
+        "filename": "test/lvol/resize.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-31T23:33:51Z",
+      "side": 1,
+      "message": "I created test_cleanup function to do cleanup after test in case of success or error.",
+      "parentUuid": "cc0c7f4e_218f7d1d",
+      "range": {
+        "startLine": 143,
+        "startChar": 1,
+        "endLine": 143,
+        "endChar": 80
+      },
+      "revId": "0b3a2d1c959a92014b44873c322ac3a3757d0787",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
