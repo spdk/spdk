@@ -3069,7 +3069,7 @@ spdk_nvme_ctrlr_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	}
 
 	res = nvme_ctrlr_cmd_format(ctrlr, nsid, format, nvme_completion_poll_cb,
-				    &status);
+				    status);
 	if (res) {
 		free(status);
 		return res;
