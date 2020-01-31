@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0f7e6b30_92868f70",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 526,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-31T14:47:21Z",
+      "side": 1,
+      "message": "Move queue should have max size of reloc-\u003emax_qdepth but I will add assert for that.",
+      "parentUuid": "781aa390_f0b25ecb",
+      "range": {
+        "startLine": 526,
+        "startChar": 2,
+        "endLine": 526,
+        "endChar": 20
+      },
+      "revId": "7c243b8880205751f80bf3d175a2e282657526cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "538ac439_9723968b",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 26
@@ -45,6 +69,30 @@
       "revId": "7c243b8880205751f80bf3d175a2e282657526cc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e905accf_d1372e43",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 644,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-31T14:47:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "538ac439_9723968b",
+      "range": {
+        "startLine": 644,
+        "startChar": 1,
+        "endLine": 644,
+        "endChar": 49
+      },
+      "revId": "7c243b8880205751f80bf3d175a2e282657526cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
