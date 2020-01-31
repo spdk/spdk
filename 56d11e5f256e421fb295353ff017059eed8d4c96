@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "486d8e34_76e7b3ba",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2020-01-31T15:04:41Z",
+      "side": 1,
+      "message": "is there any chance we could compile this lib from source?",
+      "range": {
+        "startLine": 118,
+        "startChar": 21,
+        "endLine": 118,
+        "endChar": 37
+      },
+      "revId": "56d11e5f256e421fb295353ff017059eed8d4c96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
