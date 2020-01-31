@@ -766,6 +766,34 @@ nvmf_prop_set_aqa(struct spdk_nvmf_ctrlr *ctrlr, uint64_t value)
 	return true;
 }
 
+static uint64_t
+nvmf_prop_get_asq(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	return ctrlr->vcprop.asq;
+}
+
+static bool
+nvmf_prop_set_asq(struct spdk_nvmf_ctrlr *ctrlr, uint64_t value)
+{
+	ctrlr->vcprop.asq = value;
+
+	return true;
+}
+
+static uint64_t
+nvmf_prop_get_acq(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	return ctrlr->vcprop.acq;
+}
+
+static bool
+nvmf_prop_set_acq(struct spdk_nvmf_ctrlr *ctrlr, uint64_t value)
+{
+	ctrlr->vcprop.acq = value;
+
+	return true;
+}
+
 struct nvmf_prop {
 	uint32_t ofst;
 	uint8_t size;
@@ -788,6 +816,8 @@ static const struct nvmf_prop nvmf_props[] = {
 	PROP(cc,   4, nvmf_prop_get_cc,   nvmf_prop_set_cc),
 	PROP(csts, 4, nvmf_prop_get_csts, NULL),
 	PROP(aqa, 4, nvmf_prop_get_aqa, nvmf_prop_set_aqa),
+	PROP(asq, 8, nvmf_prop_get_asq, nvmf_prop_set_asq),
+	PROP(acq, 8, nvmf_prop_get_acq, nvmf_prop_set_acq),
 };
 
 static const struct nvmf_prop *
