@@ -19,6 +19,13 @@ library through the `spdk_vmd_init` call.
 `--json-ignore-init-errors` command line param has been added to ignore initialization errors
 on JSON config load.
 
+### crypto
+
+Support for AES_XTS was added for the QAT polled mode driver (pmd).  The create RPC
+`bdev_crypto_create` has 2 new optional parameters: cipher and key2. Cipher can be either
+AES_CBC (default) or AES_XTS. AES_XTS isonly valid when using the QAT polled mode driver.
+The key2 parameter is the second key required for AES_XTS.
+
 ## v20.01
 
 ### bdev
