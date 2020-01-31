@@ -240,7 +240,6 @@ io_q_id(struct io_q *q)
 
 struct muser_poll_group {
 	struct spdk_nvmf_transport_poll_group	group;
-	struct muser_ctrlr			*ctrlr;
 	TAILQ_HEAD(, muser_qpair)		qps;
 };
 
@@ -3157,26 +3156,6 @@ handle_prop_req(struct muser_ctrlr *ctrlr)
 	return 0;
 }
 
-static void
-poll_qpair(struct muser_poll_group *group, struct muser_qpair *qpair)
-{
-	struct muser_ctrlr *ctrlr;
-	uint32_t new_tail;
-
-	assert(qpair != NULL);
-
-	ctrlr = qpair->ctrlr;
-
-	new_tail = *tdbl(ctrlr, &qpair->sq);
-	if (sq_head(qpair) != new_tail) {
-		int err = handle_sq_tdbl_write(ctrlr, new_tail, qpair);
-		if (err != 0) {
-			fail_ctrlr(ctrlr);
-			return;
-		}
-	}
-}
-
 static int
 check_ctrlr(struct muser_ctrlr *ctrlr)
 {
@@ -3221,6 +3200,35 @@ check_ctrlr(struct muser_ctrlr *ctrlr)
 	return err;
 }
 
+static void
+poll_qpair(struct muser_poll_group *group, struct muser_qpair *qpair)
+{
+	struct muser_ctrlr *ctrlr;
+	uint32_t new_tail;
+	int err;
+
+	assert(qpair != NULL);
+
+	ctrlr = qpair->ctrlr;
+
+	if (spdk_nvmf_qpair_is_admin_queue(&qpair->qpair)) {
+		err = check_ctrlr(ctrlr);
+		if (err != 0) {
+			fail_ctrlr(ctrlr);
+			return;
+		}
+	}
+
+	new_tail = *tdbl(ctrlr, &qpair->sq);
+	if (sq_head(qpair) != new_tail) {
+		int err = handle_sq_tdbl_write(ctrlr, new_tail, qpair);
+		if (err != 0) {
+			fail_ctrlr(ctrlr);
+			return;
+		}
+	}
+}
+
 /*
  * Called unconditionally, periodically, very frequently from SPDK to ask
  * whether there's work to be done.  This functions consumes requests generated
@@ -3233,19 +3241,12 @@ muser_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 {
 	struct muser_poll_group *muser_group;
 	struct muser_qpair *muser_qpair, *tmp;
-	int err;
 
 	assert(group != NULL);
 
 	spdk_rmb();
 
 	muser_group = SPDK_CONTAINEROF(group, struct muser_poll_group, group);
-
-	err = check_ctrlr(muser_group->ctrlr);
-	if (err != 0) {
-		fail_ctrlr(muser_group->ctrlr);
-		return err;
-	}
 
 	TAILQ_FOREACH_SAFE(muser_qpair, &muser_group->qps, link, tmp) {
 
