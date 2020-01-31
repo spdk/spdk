@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c7ebe80f_ce95826b",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-31T03:24:14Z",
+      "side": 1,
+      "message": "Please rebase to the latest master and move this to 20.04",
+      "revId": "84c3bf54071d6859038da77b3caf3de27b5887f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
