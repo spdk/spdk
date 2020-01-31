@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2687bd8c_97064467",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 1322,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2020-01-31T11:25:19Z",
+      "side": 1,
+      "message": "When can we hit this condition?\nI can only imagine that if the core count was 0, but that is not possible,is it?",
+      "range": {
+        "startLine": 1317,
+        "startChar": 1,
+        "endLine": 1322,
+        "endChar": 2
+      },
+      "revId": "0574e3796c89c149e80fe2d7b968a728c1874efb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
