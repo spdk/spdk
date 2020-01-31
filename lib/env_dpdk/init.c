@@ -271,9 +271,13 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 	 */
 	if (opts->core_mask[0] == '[') {
 		char *l_arg = _sprintf_alloc("-l %s", opts->core_mask + 1);
-		int len = strlen(l_arg);
-		if (l_arg[len - 1] == ']') {
-			l_arg[len - 1] = '\0';
+
+		if (l_arg != NULL) {
+			int len = strlen(l_arg);
+
+			if (l_arg[len - 1] == ']') {
+				l_arg[len - 1] = '\0';
+			}
 		}
 		args = spdk_push_arg(args, &argcount, l_arg);
 	} else {
