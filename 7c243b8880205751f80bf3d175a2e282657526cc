@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "781aa390_f0b25ecb",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 526,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-31T10:25:39Z",
+      "side": 1,
+      "message": "You should make sure that num_moves \u003c\u003d FTL_RELOC_MAX_MOVES.",
+      "range": {
+        "startLine": 526,
+        "startChar": 2,
+        "endLine": 526,
+        "endChar": 20
+      },
+      "revId": "7c243b8880205751f80bf3d175a2e282657526cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "538ac439_9723968b",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 644,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-31T10:25:39Z",
+      "side": 1,
+      "message": "Let\u0027s just do breloc-\u003ereloc-\u003ehalt instead.",
+      "range": {
+        "startLine": 644,
+        "startChar": 1,
+        "endLine": 644,
+        "endChar": 49
+      },
+      "revId": "7c243b8880205751f80bf3d175a2e282657526cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
