@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1fb18d09_e18d4a3f",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-31T11:54:31Z",
+      "side": 1,
+      "message": "Please note that this flag was already present in the Makefile, this patch is documenting it and adding the interaction --with-dpdk.",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 18
+      },
+      "revId": "c6c2b910d11713b1217f70438ecff9319b7b2efd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fee3492b_2c9c1676",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 478,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-31T11:54:31Z",
+      "side": 1,
+      "message": "This makes the whole process unclear (please notice all the negations of negations when describing it here and in configure help).\n\nIf I got it right, using \"./configure --with-dpdk\u003d/path/\" will result in NOT building DPDK and expecting the directory to be already built. This is current behavior before this patch and looks fine to keep.\n\nYet to actually force building on directory outside of submodule one has to use \"SKIP_DPDK_BUILD\u003d0 ./configure --with-dpdk\u003d/path/\". Which sounds exactly like the previous configure line. Is that right ?\n\nThis does not seem clear. The SKIP_DPDK_BUILD itself was not documented so far, and is not conventional way to pass configuration option (like --enable-something or --with-dependency).\n\nI was searching for similar behavior in other SPDK dependencies. Only one where we pass a directory and potentially build is ocf. Where there we build it, unless a library was pointed to directly. Unfortunately we cant take same on same behavior here.\n\nHow about adding --enable or --disable flag to formalize it and rethink the naming/default to make it simpler? Alternatively --force-dpdk-build ?",
+      "range": {
+        "startLine": 472,
+        "startChar": 0,
+        "endLine": 478,
+        "endChar": 2
+      },
+      "revId": "c6c2b910d11713b1217f70438ecff9319b7b2efd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
