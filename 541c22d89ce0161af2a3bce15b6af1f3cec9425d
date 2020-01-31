@@ -22,6 +22,30 @@
       "revId": "541c22d89ce0161af2a3bce15b6af1f3cec9425d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "39e7a294_96fdd37b",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-31T14:47:33Z",
+      "side": 1,
+      "message": "Yes, I should pass status here. Probably we can get rid of ftl_bdev_io struct.",
+      "parentUuid": "7b11bf90_67a82ca5",
+      "range": {
+        "startLine": 146,
+        "startChar": 26,
+        "endLine": 146,
+        "endChar": 27
+      },
+      "revId": "541c22d89ce0161af2a3bce15b6af1f3cec9425d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
