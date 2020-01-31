@@ -124,17 +124,6 @@ struct ftl_nv_cache {
 	pthread_spinlock_t			lock;
 };
 
-struct ftl_init_context {
-	/* User's callback */
-	spdk_ftl_init_fn			cb_fn;
-	/* Callback's argument */
-	void					*cb_arg;
-	/* Thread to call the callback on */
-	struct spdk_thread			*thread;
-	/* Poller to check if the device has been destroyed/initialized */
-	struct spdk_poller			*poller;
-};
-
 struct spdk_ftl_dev {
 	/* Device instance */
 	struct spdk_uuid			uuid;
@@ -147,13 +136,8 @@ struct spdk_ftl_dev {
 	int					initialized;
 	/* Indicates the device is about to be stopped */
 	int					halt;
-
-	/* Status to return for halt completion callback */
-	int					halt_complete_status;
-	/* Initializaton context */
-	struct ftl_init_context			init_ctx;
-	/* Destruction context */
-	struct ftl_init_context			fini_ctx;
+	/* Indicates the device is about to start stopping - use to handle multiple stop request */
+	bool					halt_started;
 
 	/* Underlying device */
 	struct spdk_bdev_desc			*base_bdev_desc;
@@ -247,7 +231,7 @@ struct ftl_nv_cache_header {
 	uint32_t				checksum;
 } __attribute__((packed));
 
-typedef void (*ftl_restore_fn)(struct spdk_ftl_dev *, struct ftl_restore *, int);
+typedef void (*ftl_restore_fn)(struct ftl_restore *, int, void *cb_arg);
 
 void	ftl_apply_limits(struct spdk_ftl_dev *dev);
 void	ftl_io_read(struct ftl_io *io);
@@ -264,9 +248,9 @@ size_t	ftl_tail_md_hdr_num_blocks(void);
 size_t	ftl_vld_map_num_blocks(const struct spdk_ftl_dev *dev);
 size_t	ftl_lba_map_num_blocks(const struct spdk_ftl_dev *dev);
 size_t	ftl_head_md_num_blocks(const struct spdk_ftl_dev *dev);
-int	ftl_restore_md(struct spdk_ftl_dev *dev, ftl_restore_fn cb);
-int	ftl_restore_device(struct ftl_restore *restore, ftl_restore_fn cb);
-void	ftl_restore_nv_cache(struct ftl_restore *restore, ftl_restore_fn cb);
+int	ftl_restore_md(struct spdk_ftl_dev *dev, ftl_restore_fn cb, void *cb_arg);
+int	ftl_restore_device(struct ftl_restore *restore, ftl_restore_fn cb, void *cb_arg);
+void	ftl_restore_nv_cache(struct ftl_restore *restore, ftl_restore_fn cb, void *cb_arg);
 int	ftl_band_set_direct_access(struct ftl_band *band, bool access);
 bool	ftl_addr_is_written(struct ftl_band *band, struct ftl_addr addr);
 int	ftl_flush_active_bands(struct spdk_ftl_dev *dev, spdk_ftl_fn cb_fn, void *cb_arg);
