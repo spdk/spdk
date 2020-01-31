@@ -109,6 +109,7 @@ struct spdk_poller {
 
 	uint64_t			period_ticks;
 	uint64_t			next_run_tick;
+	uint64_t			period_us;
 	spdk_poller_fn			fn;
 	void				*arg;
 	struct spdk_thread		*thread;
@@ -399,8 +400,8 @@ spdk_thread_exit(struct spdk_thread *thread)
 	TAILQ_FOREACH(poller, &thread->timed_pollers, tailq) {
 		if (poller->state != SPDK_POLLER_STATE_UNREGISTERED &&
 		    poller->state != SPDK_POLLER_STATE_PAUSING) {
-			SPDK_ERRLOG("thread %s still has active timed poller %p\n",
-				    thread->name, poller);
+			SPDK_ERRLOG("thread %s still has active timed poller %p (period=%" PRIu64 ")\n",
+				    thread->name, poller, poller->period_us);
 			return -EBUSY;
 		}
 	}
@@ -894,6 +895,7 @@ spdk_poller_register(spdk_poller_fn fn,
 	poller->fn = fn;
 	poller->arg = arg;
 	poller->thread = thread;
+	poller->period_us = period_microseconds;
 
 	if (period_microseconds) {
 		quotient = period_microseconds / SPDK_SEC_TO_USEC;
