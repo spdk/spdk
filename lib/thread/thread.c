@@ -399,8 +399,8 @@ spdk_thread_exit(struct spdk_thread *thread)
 	TAILQ_FOREACH(poller, &thread->timed_pollers, tailq) {
 		if (poller->state != SPDK_POLLER_STATE_UNREGISTERED &&
 		    poller->state != SPDK_POLLER_STATE_PAUSING) {
-			SPDK_ERRLOG("thread %s still has active timed poller %p\n",
-				    thread->name, poller);
+			SPDK_ERRLOG("thread %s still has active timed poller %p (period=%" PRIu64 ")\n",
+				    thread->name, poller, poller->period_ticks);
 			return -EBUSY;
 		}
 	}
