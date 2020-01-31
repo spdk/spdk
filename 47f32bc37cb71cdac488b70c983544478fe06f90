@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6ec15a46_9355e383",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 813,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-31T09:50:55Z",
+      "side": 1,
+      "message": "What about user IO channels? I think we should also check those. Or make sure all of them were freed.",
+      "range": {
+        "startLine": 813,
+        "startChar": 39,
+        "endLine": 813,
+        "endChar": 70
+      },
+      "revId": "47f32bc37cb71cdac488b70c983544478fe06f90",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8dc7b20c_780b3863",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2235,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-31T09:50:55Z",
+      "side": 1,
+      "message": "Again, I don\u0027t really see the point in doing this swap. Perhaps if we instead used ftl_io_write/ftl_io_read instead of ftl_rwb_fill/ftl_submit_read it\u0027d make some sense, as we could get rid of the lines 2246-2250 and rely on the submit functions doing putting the requests on the retry queues.",
+      "range": {
+        "startLine": 2233,
+        "startChar": 0,
+        "endLine": 2235,
+        "endChar": 64
+      },
+      "revId": "47f32bc37cb71cdac488b70c983544478fe06f90",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
