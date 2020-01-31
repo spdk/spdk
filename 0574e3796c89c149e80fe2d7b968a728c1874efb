@@ -22,6 +22,30 @@
       "revId": "0574e3796c89c149e80fe2d7b968a728c1874efb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b89575d_f6cf8bc0",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 1322,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-31T11:53:09Z",
+      "side": 1,
+      "message": "Thank you Vitaliy.\nNever become zero here. \nI had matched for loop with app core map before by mistake.\nThis was the what I added at that time\nI will remove this next Monday.",
+      "parentUuid": "2687bd8c_97064467",
+      "range": {
+        "startLine": 1317,
+        "startChar": 1,
+        "endLine": 1322,
+        "endChar": 2
+      },
+      "revId": "0574e3796c89c149e80fe2d7b968a728c1874efb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
