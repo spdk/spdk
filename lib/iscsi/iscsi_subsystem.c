@@ -50,6 +50,7 @@
 
 struct spdk_iscsi_opts *g_spdk_iscsi_opts = NULL;
 
+static struct spdk_thread *g_init_thread = NULL;
 static spdk_iscsi_init_cb g_init_cb_fn = NULL;
 static void *g_init_cb_arg = NULL;
 
@@ -1238,6 +1239,9 @@ static void
 iscsi_poll_group_destroy(void *io_device, void *ctx_buf)
 {
 	struct spdk_iscsi_poll_group *pg = ctx_buf;
+	struct spdk_io_channel *ch;
+	struct spdk_thread *thread;
+	int rc __attribute__((unused));
 
 	assert(pg->poller != NULL);
 	assert(pg->sock_group != NULL);
@@ -1245,6 +1249,14 @@ iscsi_poll_group_destroy(void *io_device, void *ctx_buf)
 	spdk_sock_group_close(&pg->sock_group);
 	spdk_poller_unregister(&pg->poller);
 	spdk_poller_unregister(&pg->nop_poller);
+
+	ch = spdk_io_channel_from_ctx(pg);
+	thread = spdk_io_channel_get_thread(ch);
+
+	assert(thread == spdk_get_thread());
+
+	rc = spdk_thread_exit(thread);
+	assert(rc == 0);
 }
 
 static void
@@ -1258,17 +1270,46 @@ _iscsi_init_thread(void *ctx)
 
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	TAILQ_INSERT_TAIL(&g_spdk_iscsi.poll_group_head, pg, link);
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	if (--g_spdk_iscsi.refcnt == 0) {
+		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+		spdk_thread_send_msg(g_init_thread, iscsi_parse_configuration, NULL);
+	} else {
+		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	}
 }
 
 static void
 initialize_iscsi_poll_group(void)
 {
+	struct spdk_cpuset tmp_cpumask = {};
+	uint32_t i;
+	char thread_name[32];
+	struct spdk_thread *thread;
+
 	spdk_io_device_register(&g_spdk_iscsi, iscsi_poll_group_create, iscsi_poll_group_destroy,
 				sizeof(struct spdk_iscsi_poll_group), "iscsi_tgt");
 
-	/* Send a message to each thread and create a poll group */
-	spdk_for_each_thread(_iscsi_init_thread, NULL, iscsi_parse_configuration);
+	/* Create threads for CPU cores active for this application, and send a
+	 * message to each thread to create a poll group on it.
+	 */
+	g_init_thread = spdk_get_thread();
+	assert(g_init_thread != NULL);
+	assert(g_spdk_iscsi.refcnt == 0);
+
+	SPDK_ENV_FOREACH_CORE(i) {
+		spdk_cpuset_zero(&tmp_cpumask);
+		spdk_cpuset_set_cpu(&tmp_cpumask, i, true);
+		snprintf(thread_name, sizeof(thread_name), "iscsi_poll_group_%u", i);
+
+		thread = spdk_thread_create(thread_name, &tmp_cpumask);
+		assert(thread != NULL);
+
+		pthread_mutex_lock(&g_spdk_iscsi.mutex);
+		g_spdk_iscsi.refcnt++;
+		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+
+		spdk_thread_send_msg(thread, _iscsi_init_thread, NULL);
+	}
 }
 
 static int
