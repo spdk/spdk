@@ -1367,7 +1367,8 @@ crypto_bdev_ch_destroy_cb(void *io_device, void *ctx_buf)
  * on the global list. */
 static int
 vbdev_crypto_insert_name(const char *bdev_name, const char *vbdev_name,
-			 const char *crypto_pmd, const char *key)
+			 const char *crypto_pmd, const char *key,
+			 const char *cipher, const char *key2)
 {
 	struct bdev_names *name;
 	int rc, j;
@@ -1452,14 +1453,15 @@ error_alloc_bname:
 /* RPC entry point for crypto creation. */
 int
 create_crypto_disk(const char *bdev_name, const char *vbdev_name,
-		   const char *crypto_pmd, const char *key)
+		   const char *crypto_pmd, const char *key,
+		   const char *cipher, const char *key2)
 {
 	struct spdk_bdev *bdev = NULL;
 	int rc = 0;
 
 	bdev = spdk_bdev_get_by_name(bdev_name);
 
-	rc = vbdev_crypto_insert_name(bdev_name, vbdev_name, crypto_pmd, key);
+	rc = vbdev_crypto_insert_name(bdev_name, vbdev_name, crypto_pmd, key, cipher, key2);
 	if (rc) {
 		return rc;
 	}
@@ -1534,8 +1536,9 @@ vbdev_crypto_init(void)
 			return -EINVAL;
 		}
 
+		/* Note: config file options do not support QAT AES_XTS, use RPC */
 		rc = vbdev_crypto_insert_name(conf_bdev_name, conf_vbdev_name,
-					      crypto_pmd, key);
+					      crypto_pmd, key, AES_CBC, NULL);
 		if (rc != 0) {
 			return rc;
 		}
