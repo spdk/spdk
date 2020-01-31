@@ -39,10 +39,10 @@
 #include "spdk/nvmf_transport.h"
 #include "spdk/bdev.h"
 
-typedef enum _spdk_nvmf_request_exec_status {
+enum spdk_nvmf_request_exec_status {
 	SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE,
 	SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS,
-} spdk_nvmf_request_exec_status;
+};
 
 int spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr,
 				   struct spdk_nvme_ctrlr_data *cdata);
