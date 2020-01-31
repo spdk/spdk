@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f0b2081e_76f883e2",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1794,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-31T08:26:28Z",
+      "side": 1,
+      "message": "Let\u0027s declare this at the beginning of the function with all the other declarations.",
+      "range": {
+        "startLine": 1794,
+        "startChar": 3,
+        "endLine": 1794,
+        "endChar": 67
+      },
+      "revId": "b22b4c715aef4ae3719c016e459e0c4dbc5e4349",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e7b66e3c_0b38d27e",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 2248,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-31T08:26:28Z",
+      "side": 1,
+      "message": "What is the reason behind swapping the queues? Couldn\u0027t we just do something like:\n\nwhile (!TAILQ_EMPTY(\u0026ch-\u003ecompletion_queue)) {\n io \u003d TAILQ_FIRST(\u0026ch-\u003ecompletion_queue);\n TAILQ_REMOVE(\u0026ch-\u003ecompletion_queue, io, ioch_entry);\n ftl_io_complete(io);\n}",
+      "range": {
+        "startLine": 2248,
+        "startChar": 1,
+        "endLine": 2248,
+        "endChar": 66
+      },
+      "revId": "b22b4c715aef4ae3719c016e459e0c4dbc5e4349",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f31bd92d_b2980ff7",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 985,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-31T08:26:28Z",
+      "side": 1,
+      "message": "You\u0027re leaking ioch-\u003emempool, ioch-\u003ebase_ioch and potentially ioch-\u003ecache_ioch here.",
+      "range": {
+        "startLine": 985,
+        "startChar": 2,
+        "endLine": 985,
+        "endChar": 12
+      },
+      "revId": "b22b4c715aef4ae3719c016e459e0c4dbc5e4349",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f904eed9_4106a518",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-31T08:26:28Z",
+      "side": 1,
+      "message": "Similarly to the completion_queue, let\u0027s rename this to write_completion_poller or write_cmpl_poller.",
+      "range": {
+        "startLine": 138,
+        "startChar": 23,
+        "endLine": 138,
+        "endChar": 29
+      },
+      "revId": "b22b4c715aef4ae3719c016e459e0c4dbc5e4349",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b1803f6d_afdd46e9",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-31T08:26:28Z",
+      "side": 1,
+      "message": "Since this queue is only used for writes, I think we should rename this to write_completion_queue or, more concise, write_cmpl_queue.",
+      "range": {
+        "startLine": 140,
+        "startChar": 24,
+        "endLine": 140,
+        "endChar": 40
+      },
+      "revId": "b22b4c715aef4ae3719c016e459e0c4dbc5e4349",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "78dac78e_8aa1902f",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-31T08:26:28Z",
+      "side": 1,
+      "message": "I don\u0027t think there\u0027s any way for the IO to be on both queues at the same time. Let\u0027s use the same TAILQ_ENTRY for both retry and completion queues.",
+      "range": {
+        "startLine": 224,
+        "startChar": 0,
+        "endLine": 227,
+        "endChar": 34
+      },
+      "revId": "b22b4c715aef4ae3719c016e459e0c4dbc5e4349",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
