@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "72d3ffec_fd70a91f",
+        "filename": "test/blobfs/blobfs.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2020-01-31T09:32:38Z",
+      "side": 1,
+      "message": "This may not be called if the shell gets a SIGINT or SIGTERM. AFAIR some shells call EXIT trap on SIGINT/SIGTERM, but some don\u0027t.\nSPDK scripts usually do:\n\ntrap \u0027cleanup_something; exit 1\u0027 SIGINT SIGTERM EXIT\n//run something\ntrap - SIGINT SIGTERM EXIT\n//manual cleanup\n\nI believe killprocess is usually called only in the trap and we don\u0027t care if it fails there - it won\u0027t trigger another ERR at that point.",
+      "range": {
+        "startLine": 123,
+        "startChar": 6,
+        "endLine": 123,
+        "endChar": 13
+      },
+      "revId": "2d2160154dae94c40a620ee3a488c3fbf507650c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
