@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "433465a2_aa74c25a",
+        "filename": "doc/system_configuration.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2020-01-31T08:41:53Z",
+      "side": 1,
+      "message": "I replaced this section by a simpler statement that DPDK needs to be \u003e\u003d 18.11\nWe can add a note on how to patch earlier DPDKs later since that requires more effort",
+      "parentUuid": "45a75bea_883b3873",
+      "revId": "07e47ae6a8cbdd7b5dcd135d13300a7edcb412e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6e2e4310_497cc600",
         "filename": "doc/system_configuration.md",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2018-11-15T17:09:31Z",
       "side": 1,
       "message": "I think \"the\" can be removed.",
+      "revId": "07e47ae6a8cbdd7b5dcd135d13300a7edcb412e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22620b13_f7356c19",
+        "filename": "doc/system_configuration.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2020-01-31T08:41:53Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "6e2e4310_497cc600",
       "revId": "07e47ae6a8cbdd7b5dcd135d13300a7edcb412e7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "d8830ff1_8ada48d2",
+        "filename": "doc/system_configuration.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2020-01-31T08:41:53Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ead9a748_03dfb7d5",
+      "revId": "07e47ae6a8cbdd7b5dcd135d13300a7edcb412e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "742f8e9d_28c53463",
         "filename": "doc/system_configuration.md",
         "patchSetId": 3
@@ -64,6 +118,24 @@
       "writtenOn": "2018-11-15T17:09:31Z",
       "side": 1,
       "message": "to IOMMU -\u003e to the IOMMU",
+      "revId": "07e47ae6a8cbdd7b5dcd135d13300a7edcb412e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6da61f82_64388763",
+        "filename": "doc/system_configuration.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2020-01-31T08:41:53Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "742f8e9d_28c53463",
       "revId": "07e47ae6a8cbdd7b5dcd135d13300a7edcb412e7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "03847a11_34745b57",
+        "filename": "doc/system_configuration.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2020-01-31T08:41:53Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ed16aaa3_750fcb0a",
+      "revId": "07e47ae6a8cbdd7b5dcd135d13300a7edcb412e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d55b4515_21336c65",
         "filename": "doc/system_configuration.md",
         "patchSetId": 3
@@ -98,6 +188,24 @@
       "writtenOn": "2018-11-15T17:09:31Z",
       "side": 1,
       "message": "below of what -\u003e below what",
+      "revId": "07e47ae6a8cbdd7b5dcd135d13300a7edcb412e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "62e0ee3a_dd5ab9b7",
+        "filename": "doc/system_configuration.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2020-01-31T08:41:53Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d55b4515_21336c65",
       "revId": "07e47ae6a8cbdd7b5dcd135d13300a7edcb412e7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "3f2d9699_5a7e890f",
+        "filename": "doc/system_configuration.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2020-01-31T08:41:53Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "bd90eabd_1bd43f3a",
+      "revId": "07e47ae6a8cbdd7b5dcd135d13300a7edcb412e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ef2d9bca_d304df5a",
         "filename": "doc/system_configuration.md",
         "patchSetId": 3
@@ -132,6 +258,24 @@
       "writtenOn": "2018-11-15T17:09:31Z",
       "side": 1,
       "message": "logout the -\u003e logout from the target user account.",
+      "revId": "07e47ae6a8cbdd7b5dcd135d13300a7edcb412e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af278b82_f4247283",
+        "filename": "doc/system_configuration.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2020-01-31T08:41:53Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ef2d9bca_d304df5a",
       "revId": "07e47ae6a8cbdd7b5dcd135d13300a7edcb412e7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
