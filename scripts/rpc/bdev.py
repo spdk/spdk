@@ -74,7 +74,7 @@ def bdev_compress_get_orphans(client, name=None):
 
 
 @deprecated_alias('construct_crypto_bdev')
-def bdev_crypto_create(client, base_bdev_name, name, crypto_pmd, key):
+def bdev_crypto_create(client, base_bdev_name, name, crypto_pmd, key, cipher=None, key2=None):
     """Construct a crypto virtual block device.
 
     Args:
@@ -87,7 +87,10 @@ def bdev_crypto_create(client, base_bdev_name, name, crypto_pmd, key):
         Name of created virtual block device.
     """
     params = {'base_bdev_name': base_bdev_name, 'name': name, 'crypto_pmd': crypto_pmd, 'key': key}
-
+    if cipher:
+        params['cipher'] = cipher
+    if key2:
+        params['key2'] = key2
     return client.call('bdev_crypto_create', params)
 
 

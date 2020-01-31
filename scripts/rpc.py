@@ -195,13 +195,17 @@ if __name__ == "__main__":
                                                base_bdev_name=args.base_bdev_name,
                                                name=args.name,
                                                crypto_pmd=args.crypto_pmd,
-                                               key=args.key))
+                                               key=args.key,
+                                               cipher=args.cipher,
+                                               key2=args.key2))
     p = subparsers.add_parser('bdev_crypto_create', aliases=['construct_crypto_bdev'],
                               help='Add a crypto vbdev')
     p.add_argument('base_bdev_name', help="Name of the base bdev")
     p.add_argument('name', help="Name of the crypto vbdev")
     p.add_argument('crypto_pmd', help="Name of the crypto device driver")
     p.add_argument('key', help="Key")
+    p.add_argument('-c', '--cipher', help="cipher to use, AES_CBC or AES_XTS (QAT only)", default="AES_CBC")
+    p.add_argument('-k2', '--key2', help="2nd key for cipher AET_XTS", default=None)
     p.set_defaults(func=bdev_crypto_create)
 
     def bdev_crypto_delete(args):
