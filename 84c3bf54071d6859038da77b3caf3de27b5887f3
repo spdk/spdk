@@ -16,6 +16,24 @@
       "revId": "84c3bf54071d6859038da77b3caf3de27b5887f3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a62f8ac2_8ad7a5a4",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-31T13:06:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c7ebe80f_ce95826b",
+      "revId": "84c3bf54071d6859038da77b3caf3de27b5887f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
