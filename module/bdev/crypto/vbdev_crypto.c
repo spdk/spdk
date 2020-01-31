@@ -1437,6 +1437,7 @@ vbdev_crypto_insert_name(const char *bdev_name, const char *vbdev_name,
 
 	/* Error cleanup paths. */
 error_invalid_key:
+	free(name->key);
 error_alloc_key:
 error_invalid_pmd:
 	free(name->drv_name);
