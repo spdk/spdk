@@ -41,6 +41,7 @@
 #include "spdk/bdev.h"
 #include "spdk/nvme_spec.h"
 #include "spdk/nvmf.h"
+#include "spdk/nvmf_cmd.h"
 #include "spdk/nvmf_spec.h"
 
 #define SPDK_NVMF_MAX_SGL_ENTRIES	16
@@ -54,8 +55,6 @@
 #define SHIFT_4KB			12u
 #define NVMF_DATA_BUFFER_ALIGNMENT	(1u << SHIFT_4KB)
 #define NVMF_DATA_BUFFER_MASK		(NVMF_DATA_BUFFER_ALIGNMENT - 1LL)
-
-typedef void (*spdk_nvmf_nvme_passthru_cmd_cb)(struct spdk_nvmf_request *req);
 
 union nvmf_h2c_msg {
 	struct spdk_nvmf_capsule_cmd			nvmf_cmd;
