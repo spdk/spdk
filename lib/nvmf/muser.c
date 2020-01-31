@@ -2721,62 +2721,6 @@ spdk_nvmf_subsystem_should_stop(union spdk_nvme_cc_register *cc,
 	       ctrlr->vcprop.csts.bits.shst == SPDK_NVME_SHST_NORMAL;
 }
 
-static bool
-handle_cc_write_end(struct muser_ctrlr *ctrlr)
-{
-	union spdk_nvme_cc_register *cc;
-	int err;
-
-	assert(ctrlr != NULL);
-
-	spdk_rmb();
-
-	cc = (union spdk_nvme_cc_register *)ctrlr->prop_req.buf;
-
-	/* spdk_nvmf_subsystem_stop must be executed from SPDK thread context */
-	if (spdk_nvmf_subsystem_should_stop(cc, ctrlr->qp[0]->qpair.ctrlr)) {
-		/* TODO s/pausing/stopping */
-		SPDK_NOTICELOG("pausing NVMf subsystem\n");
-		ctrlr->prop_req.dir = MUSER_NVMF_INVALID;
-		err = spdk_nvmf_subsystem_stop(ctrlr->subsys,
-					       muser_nvmf_subsystem_paused,
-					       ctrlr);
-		if (err != 0) {
-			ctrlr->prop_req.ret = err;
-			return true;
-		}
-		return false;
-	} else if (cc->bits.en == 1 && cc->bits.shn == 0) {
-		ctrlr->prop_req.ret = map_admin_queues(ctrlr);
-	}
-	return true;
-}
-
-/*
- * Returns whether the semaphore should be fired.
- */
-static bool
-handle_prop_set_rsp(struct muser_ctrlr *ctrlr)
-{
-	assert(ctrlr != NULL);
-
-	if (ctrlr->prop_req.pos == CC) {
-		return handle_cc_write_end(ctrlr);
-	}
-	return true;
-}
-
-static void
-handle_prop_get_rsp(struct muser_ctrlr *ctrlr, struct muser_req *req)
-{
-	assert(ctrlr != NULL);
-	assert(req != NULL);
-
-	memcpy(ctrlr->prop_req.buf,
-	       &req->req.rsp->prop_get_rsp.value.u64,
-	       ctrlr->prop_req.count);
-}
-
 static int
 handle_prop_rsp(struct muser_req *req, void *cb_arg)
 {
@@ -2788,10 +2732,43 @@ handle_prop_rsp(struct muser_req *req, void *cb_arg)
 	assert(req != NULL);
 
 	if (qpair->ctrlr->prop_req.dir == MUSER_NVMF_READ) {
-		handle_prop_get_rsp(qpair->ctrlr, req);
+		assert(qpair->ctrlr != NULL);
+		assert(req != NULL);
+
+		memcpy(qpair->ctrlr->prop_req.buf,
+		       &req->req.rsp->prop_get_rsp.value.u64,
+		       qpair->ctrlr->prop_req.count);
 	} else {
 		assert(qpair->ctrlr->prop_req.dir == MUSER_NVMF_WRITE);
-		fire = handle_prop_set_rsp(qpair->ctrlr);
+
+		assert(qpair->ctrlr != NULL);
+
+		if (qpair->ctrlr->prop_req.pos == CC) {
+			union spdk_nvme_cc_register *cc;
+
+			assert(qpair->ctrlr != NULL);
+
+			spdk_rmb();
+
+			cc = (union spdk_nvme_cc_register *)qpair->ctrlr->prop_req.buf;
+
+			/* spdk_nvmf_subsystem_stop must be executed from SPDK thread context */
+			if (spdk_nvmf_subsystem_should_stop(cc, qpair->qpair.ctrlr)) {
+				/* TODO s/pausing/stopping */
+				SPDK_NOTICELOG("pausing NVMf subsystem\n");
+				qpair->ctrlr->prop_req.dir = MUSER_NVMF_INVALID;
+				err = spdk_nvmf_subsystem_stop(qpair->ctrlr->subsys,
+							       muser_nvmf_subsystem_paused,
+							       qpair->ctrlr);
+				if (err != 0) {
+					qpair->ctrlr->prop_req.ret = err;
+				} else {
+					fire = false;
+				}
+			} else if (cc->bits.en == 1 && cc->bits.shn == 0) {
+				qpair->ctrlr->prop_req.ret = map_admin_queues(qpair->ctrlr);
+			}
+		}
 	}
 
 	if (fire) {
@@ -3016,22 +2993,42 @@ handle_cmd_req(struct muser_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 }
 
 static int
-handle_prop_req(struct muser_ctrlr *ctrlr)
+muser_ctrlr_poll(struct muser_ctrlr *ctrlr)
 {
 	struct spdk_nvmf_request *req;
 	struct muser_req *muser_req;
+	int err = 0;
+
+	if (ctrlr == NULL) {
+		return 0;
+	}
+
+	if (ctrlr->del_admin_qp) {
+		ctrlr->del_admin_qp = false;
+		destroy_qp(ctrlr, 0);
+		err = sem_post(&ctrlr->sem);
+	}
+
+	if (ctrlr->prop_req.dir == MUSER_NVMF_INVALID) {
+		return err;
+	}
 
 	assert(ctrlr != NULL);
+
+	/* TODO: This should examine the prop_req and intercept
+	 * register writes that aren't valid for fabrics devices like
+	 * AQA. */
 
 	req = get_nvmf_req(ctrlr->qp[0]);
 	if (req == NULL) {
 		return -1;
 	}
-	muser_req = SPDK_CONTAINEROF(req, struct muser_req, req);
 
+	muser_req = SPDK_CONTAINEROF(req, struct muser_req, req);
 	muser_req->cb_fn = handle_prop_rsp;
 	muser_req->cb_arg = ctrlr->qp[0];
 
+	/* Generate a fake fabrics property set command */
 	req->cmd->prop_set_cmd.opcode = SPDK_NVME_OPC_FABRIC;
 	req->cmd->prop_set_cmd.cid = 0;
 	if (ctrlr->prop_req.dir == MUSER_NVMF_WRITE) {
@@ -3046,41 +3043,13 @@ handle_prop_req(struct muser_ctrlr *ctrlr)
 	req->length = 0;
 	req->data = NULL;
 
-	spdk_nvmf_request_exec(req);
+	spdk_nvmf_request_exec_fabrics(req);
 
-	return 0;
-}
-
-static int
-check_ctrlr(struct muser_ctrlr *ctrlr)
-{
-	int err = 0;
-
-	if (ctrlr == NULL) {
-		return 0;
-	}
-
-	/*
-	 * TODO apart from polling the doorbells, ther are other
-	 * operations we need to execute for the other thread (e.g.
-	 * write NVMe registers). Maybe it's best to introduce a queue?
-	 */
-
-	if (ctrlr->del_admin_qp) {
-		ctrlr->del_admin_qp = false;
-		destroy_qp(ctrlr, 0);
-		err = sem_post(&ctrlr->sem);
-	}
-
-	if (ctrlr->prop_req.dir != MUSER_NVMF_INVALID) {
-		err = handle_prop_req(ctrlr);
-	}
-
-	return err;
+	return 0;;
 }
 
 static void
-poll_qpair(struct muser_poll_group *group, struct muser_qpair *qpair)
+muser_qpair_poll(struct muser_qpair *qpair)
 {
 	struct muser_ctrlr *ctrlr;
 	uint32_t new_tail;
@@ -3091,7 +3060,7 @@ poll_qpair(struct muser_poll_group *group, struct muser_qpair *qpair)
 	ctrlr = qpair->ctrlr;
 
 	if (spdk_nvmf_qpair_is_admin_queue(&qpair->qpair)) {
-		err = check_ctrlr(ctrlr);
+		err = muser_ctrlr_poll(ctrlr);
 		if (err != 0) {
 			fail_ctrlr(ctrlr);
 			return;
@@ -3149,7 +3118,8 @@ muser_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 		if (muser_qpair->del) {
 			continue;
 		}
-		poll_qpair(muser_group, muser_qpair);
+
+		muser_qpair_poll(muser_qpair);
 
 	}
 
