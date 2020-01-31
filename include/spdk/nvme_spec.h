@@ -315,26 +315,26 @@ struct spdk_nvme_registers {
 	union spdk_nvme_cap_register	cap;
 
 	/** version of NVMe specification */
-	union spdk_nvme_vs_register vs;
-	uint32_t	intms;		/* interrupt mask set */
-	uint32_t	intmc;		/* interrupt mask clear */
+	union spdk_nvme_vs_register	vs;
+	uint32_t			intms; /* interrupt mask set */
+	uint32_t			intmc; /* interrupt mask clear */
 
 	/** controller configuration */
 	union spdk_nvme_cc_register	cc;
 
-	uint32_t	reserved1;
-	union spdk_nvme_csts_register	csts;		/* controller status */
-	uint32_t	nssr;		/* NVM subsystem reset */
+	uint32_t			reserved1;
+	union spdk_nvme_csts_register	csts; /* controller status */
+	uint32_t			nssr; /* NVM subsystem reset */
 
 	/** admin queue attributes */
 	union spdk_nvme_aqa_register	aqa;
 
-	uint64_t	asq;		/* admin submission queue base addr */
-	uint64_t	acq;		/* admin completion queue base addr */
+	uint64_t			asq; /* admin submission queue base addr */
+	uint64_t			acq; /* admin completion queue base addr */
 	/** controller memory buffer location */
 	union spdk_nvme_cmbloc_register	cmbloc;
 	/** controller memory buffer size */
-	union spdk_nvme_cmbsz_register cmbsz;
+	union spdk_nvme_cmbsz_register	cmbsz;
 
 	/** boot partition information */
 	union spdk_nvme_bpinfo_register	bpinfo;
@@ -345,7 +345,7 @@ struct spdk_nvme_registers {
 	/** boot partition memory buffer location (must be 4KB aligned) */
 	uint64_t			bpmbl;
 
-	uint32_t	reserved3[0x3ec];
+	uint32_t			reserved3[0x3ec];
 
 	struct {
 		uint32_t	sq_tdbl;	/* submission queue tail doorbell */
