@@ -54,12 +54,29 @@
 #define FTL_NSID		1
 #define FTL_ZONE_INFO_COUNT	64
 
+typedef void (*spdk_ftl_init_fn)(struct spdk_ftl_dev *, void *, int);
+
 struct ftl_dev_init_ctx {
+	/* Owner */
 	struct spdk_ftl_dev		*dev;
+	/* Initial arguments */
 	struct spdk_ftl_dev_init_opts	opts;
+	/* IO channel for zone info retrieving */
 	struct spdk_io_channel		*ioch;
+	/* Buffer for reading zone info  */
 	struct spdk_bdev_zone_info	info[FTL_ZONE_INFO_COUNT];
+	/* Currently read zone */
 	size_t				zone_id;
+	/* User's callback */
+	spdk_ftl_init_fn		cb_fn;
+	/* Callback's argument */
+	void				*cb_arg;
+	/* Thread to call the callback on */
+	struct spdk_thread		*thread;
+	/* Poller to check if the device has been destroyed/initialized */
+	struct spdk_poller		*poller;
+	/* Status to return for halt completion callback */
+	int				halt_complete_status;
 };
 
 static STAILQ_HEAD(, spdk_ftl_dev)	g_ftl_queue = STAILQ_HEAD_INITIALIZER(g_ftl_queue);
@@ -516,56 +533,65 @@ ftl_dev_l2p_alloc(struct spdk_ftl_dev *dev)
 }
 
 static void
-ftl_call_init_complete_cb(void *_ctx)
+ftl_dev_free_init_ctx(struct ftl_dev_init_ctx *init_ctx)
 {
-	struct ftl_init_context *ctx = _ctx;
-	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(ctx, struct spdk_ftl_dev, init_ctx);
-
-	if (ctx->cb_fn != NULL) {
-		ctx->cb_fn(dev, ctx->cb_arg, 0);
+	if (!init_ctx) {
+		return;
 	}
+
+	if (init_ctx->ioch) {
+		spdk_put_io_channel(init_ctx->ioch);
+	}
+
+	free(init_ctx);
 }
 
 static void
-ftl_init_complete(struct spdk_ftl_dev *dev)
+ftl_call_init_complete_cb(void *ctx)
 {
+	struct ftl_dev_init_ctx *init_ctx = ctx;
+	struct spdk_ftl_dev *dev = init_ctx->dev;
+
+	if (init_ctx->cb_fn != NULL) {
+		init_ctx->cb_fn(dev, init_ctx->cb_arg, 0);
+	}
+
+	ftl_dev_free_init_ctx(init_ctx);
+}
+
+static void
+ftl_init_complete(struct ftl_dev_init_ctx *init_ctx)
+{
+	struct spdk_ftl_dev *dev = init_ctx->dev;
+
 	pthread_mutex_lock(&g_ftl_queue_lock);
 	STAILQ_INSERT_HEAD(&g_ftl_queue, dev, stailq);
 	pthread_mutex_unlock(&g_ftl_queue_lock);
 
 	dev->initialized = 1;
 
-	spdk_thread_send_msg(dev->init_ctx.thread, ftl_call_init_complete_cb, &dev->init_ctx);
+	spdk_thread_send_msg(init_ctx->thread, ftl_call_init_complete_cb, init_ctx);
 }
 
 static void
-ftl_init_fail_cb(struct spdk_ftl_dev *dev, void *_ctx, int status)
+ftl_init_fail_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 {
-	struct ftl_init_context *ctx = _ctx;
+	struct ftl_dev_init_ctx *init_ctx = ctx;
 
-	if (ctx->cb_fn != NULL) {
-		ctx->cb_fn(NULL, ctx->cb_arg, -ENODEV);
+	if (init_ctx->cb_fn != NULL) {
+		init_ctx->cb_fn(NULL, init_ctx->cb_arg, -ENODEV);
 	}
 
-	free(ctx);
+	ftl_dev_free_init_ctx(init_ctx);
 }
 
 static int _spdk_ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_init_fn cb_fn, void *cb_arg,
 			      struct spdk_thread *thread);
 
 static void
-ftl_init_fail(struct spdk_ftl_dev *dev)
+ftl_init_fail(struct ftl_dev_init_ctx *ctx)
 {
-	struct ftl_init_context *ctx;
-
-	ctx = malloc(sizeof(*ctx));
-	if (!ctx) {
-		SPDK_ERRLOG("Unable to allocate context to free the device\n");
-		return;
-	}
-
-	*ctx = dev->init_ctx;
-	if (_spdk_ftl_dev_free(dev, ftl_init_fail_cb, ctx, ctx->thread)) {
+	if (_spdk_ftl_dev_free(ctx->dev, ftl_init_fail_cb, ctx, ctx->thread)) {
 		SPDK_ERRLOG("Unable to free the device\n");
 		assert(0);
 	}
@@ -574,57 +600,61 @@ ftl_init_fail(struct spdk_ftl_dev *dev)
 static void
 ftl_write_nv_cache_md_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
-	struct spdk_ftl_dev *dev = cb_arg;
+	struct ftl_dev_init_ctx *init_ctx = cb_arg;
+	struct spdk_ftl_dev *dev = init_ctx->dev;
 
 	spdk_bdev_free_io(bdev_io);
 	if (spdk_unlikely(!success)) {
 		SPDK_ERRLOG("Writing non-volatile cache's metadata header failed\n");
-		ftl_init_fail(dev);
+		ftl_init_fail(init_ctx);
 		return;
 	}
 
 	dev->nv_cache.ready = true;
-	ftl_init_complete(dev);
+	ftl_init_complete(init_ctx);
 }
 
 static void
 ftl_clear_nv_cache_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
-	struct spdk_ftl_dev *dev = cb_arg;
+	struct ftl_dev_init_ctx *init_ctx = cb_arg;
+	struct spdk_ftl_dev *dev = init_ctx->dev;
 	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
 
 	spdk_bdev_free_io(bdev_io);
 	if (spdk_unlikely(!success)) {
 		SPDK_ERRLOG("Unable to clear the non-volatile cache bdev\n");
-		ftl_init_fail(dev);
+		ftl_init_fail(init_ctx);
 		return;
 	}
 
 	nv_cache->phase = 1;
-	if (ftl_nv_cache_write_header(nv_cache, false, ftl_write_nv_cache_md_cb, dev)) {
+	if (ftl_nv_cache_write_header(nv_cache, false, ftl_write_nv_cache_md_cb, init_ctx)) {
 		SPDK_ERRLOG("Unable to write non-volatile cache metadata header\n");
-		ftl_init_fail(dev);
+		ftl_init_fail(init_ctx);
 	}
 }
 
 static void
 _ftl_nv_cache_scrub(void *ctx)
 {
-	struct spdk_ftl_dev *dev = ctx;
+	struct ftl_dev_init_ctx *init_ctx = ctx;
+	struct spdk_ftl_dev *dev = init_ctx->dev;
 	int rc;
 
-	rc = ftl_nv_cache_scrub(&dev->nv_cache, ftl_clear_nv_cache_cb, dev);
+	rc = ftl_nv_cache_scrub(&dev->nv_cache, ftl_clear_nv_cache_cb, init_ctx);
 
 	if (spdk_unlikely(rc != 0)) {
 		SPDK_ERRLOG("Unable to clear the non-volatile cache bdev: %s\n",
 			    spdk_strerror(-rc));
-		ftl_init_fail(dev);
+		ftl_init_fail(init_ctx);
 	}
 }
 
 static int
-ftl_setup_initial_state(struct spdk_ftl_dev *dev)
+ftl_setup_initial_state(struct ftl_dev_init_ctx *init_ctx)
 {
+	struct spdk_ftl_dev *dev = init_ctx->dev;
 	struct spdk_ftl_conf *conf = &dev->conf;
 	size_t i;
 
@@ -648,79 +678,89 @@ ftl_setup_initial_state(struct spdk_ftl_dev *dev)
 	}
 
 	if (!ftl_dev_has_nv_cache(dev)) {
-		ftl_init_complete(dev);
+		ftl_init_complete(init_ctx);
 	} else {
-		spdk_thread_send_msg(ftl_get_core_thread(dev), _ftl_nv_cache_scrub, dev);
+		spdk_thread_send_msg(ftl_get_core_thread(dev), _ftl_nv_cache_scrub, init_ctx);
 	}
 
 	return 0;
 }
 
 static void
-ftl_restore_nv_cache_cb(struct spdk_ftl_dev *dev, struct ftl_restore *restore, int status)
+ftl_restore_nv_cache_cb(struct spdk_ftl_dev *dev, struct ftl_restore *restore, int status,
+			void *cb_arg)
 {
+	struct ftl_dev_init_ctx *init_ctx = cb_arg;
+
 	if (spdk_unlikely(status != 0)) {
 		SPDK_ERRLOG("Failed to restore the non-volatile cache state\n");
-		ftl_init_fail(dev);
+		ftl_init_fail(init_ctx);
 		return;
 	}
 
-	ftl_init_complete(dev);
+	ftl_init_complete(init_ctx);
 }
 
 static void
-ftl_restore_device_cb(struct spdk_ftl_dev *dev, struct ftl_restore *restore, int status)
+ftl_restore_device_cb(struct spdk_ftl_dev *dev, struct ftl_restore *restore, int status,
+		      void *cb_arg)
 {
+	struct ftl_dev_init_ctx *init_ctx = cb_arg;
+
 	if (status) {
 		SPDK_ERRLOG("Failed to restore the device from the SSD\n");
-		ftl_init_fail(dev);
+		ftl_init_fail(init_ctx);
 		return;
 	}
 
 	if (ftl_init_bands_state(dev)) {
 		SPDK_ERRLOG("Unable to finish the initialization\n");
-		ftl_init_fail(dev);
+		ftl_init_fail(init_ctx);
 		return;
 	}
 
 	if (!ftl_dev_has_nv_cache(dev)) {
-		ftl_init_complete(dev);
+		ftl_init_complete(init_ctx);
 		return;
 	}
 
-	ftl_restore_nv_cache(restore, ftl_restore_nv_cache_cb);
+	ftl_restore_nv_cache(restore, ftl_restore_nv_cache_cb, init_ctx);
 }
 
 static void
-ftl_restore_md_cb(struct spdk_ftl_dev *dev, struct ftl_restore *restore, int status)
+ftl_restore_md_cb(struct spdk_ftl_dev *dev, struct ftl_restore *restore, int status, void *cb_arg)
 {
+	struct ftl_dev_init_ctx *init_ctx = cb_arg;
+
 	if (status) {
 		SPDK_ERRLOG("Failed to restore the metadata from the SSD\n");
 		goto error;
 	}
 
 	/* After the metadata is read it should be possible to allocate the L2P */
-	if (ftl_dev_l2p_alloc(dev)) {
+	if (ftl_dev_l2p_alloc(init_ctx->dev)) {
 		SPDK_ERRLOG("Failed to allocate the L2P\n");
 		goto error;
 	}
 
-	if (ftl_restore_device(restore, ftl_restore_device_cb)) {
+	if (ftl_restore_device(restore, ftl_restore_device_cb, init_ctx)) {
 		SPDK_ERRLOG("Failed to start device restoration from the SSD\n");
 		goto error;
 	}
 
 	return;
 error:
-	ftl_init_fail(dev);
+	ftl_init_fail(init_ctx);
 }
 
 static int
-ftl_restore_state(struct spdk_ftl_dev *dev, struct spdk_uuid uuid)
+ftl_restore_state(struct ftl_dev_init_ctx *init_ctx)
 {
-	dev->uuid = uuid;
+	struct spdk_ftl_dev *dev = init_ctx->dev;
 
-	if (ftl_restore_md(dev, ftl_restore_md_cb)) {
+	dev->uuid = init_ctx->opts.uuid;
+
+	if (ftl_restore_md(dev, ftl_restore_md_cb, init_ctx)) {
 		SPDK_ERRLOG("Failed to start metadata restoration from the SSD\n");
 		return -1;
 	}
@@ -750,20 +790,6 @@ ftl_dev_update_bands(struct spdk_ftl_dev *dev)
 }
 
 static void
-ftl_dev_free_init_ctx(struct ftl_dev_init_ctx *init_ctx)
-{
-	if (!init_ctx) {
-		return;
-	}
-
-	if (init_ctx->ioch) {
-		spdk_put_io_channel(init_ctx->ioch);
-	}
-
-	free(init_ctx);
-}
-
-static void
 ftl_dev_init_state(struct ftl_dev_init_ctx *init_ctx)
 {
 	struct spdk_ftl_dev *dev = init_ctx->dev;
@@ -772,26 +798,23 @@ ftl_dev_init_state(struct ftl_dev_init_ctx *init_ctx)
 
 	if (ftl_dev_init_threads(dev, &init_ctx->opts)) {
 		SPDK_ERRLOG("Unable to initialize device threads\n");
-		goto fail;
+		ftl_init_fail(init_ctx);
+		return;
 	}
 
 	if (init_ctx->opts.mode & SPDK_FTL_MODE_CREATE) {
-		if (ftl_setup_initial_state(dev)) {
+		if (ftl_setup_initial_state(init_ctx)) {
 			SPDK_ERRLOG("Failed to setup initial state of the device\n");
-			goto fail;
+			ftl_init_fail(init_ctx);
+			return;
 		}
 	} else {
-		if (ftl_restore_state(dev, init_ctx->opts.uuid)) {
+		if (ftl_restore_state(init_ctx)) {
 			SPDK_ERRLOG("Unable to restore device's state from the SSD\n");
-			goto fail;
+			ftl_init_fail(init_ctx);
+			return;
 		}
 	}
-
-	ftl_dev_free_init_ctx(init_ctx);
-	return;
-fail:
-	ftl_dev_free_init_ctx(init_ctx);
-	ftl_init_fail(dev);
 }
 
 static void ftl_dev_get_zone_info(struct ftl_dev_init_ctx *init_ctx);
@@ -810,8 +833,7 @@ ftl_dev_get_zone_info_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 
 	if (spdk_unlikely(!success)) {
 		SPDK_ERRLOG("Unable to read zone info for zone id: %"PRIu64"\n", init_ctx->zone_id);
-		ftl_dev_free_init_ctx(init_ctx);
-		ftl_init_fail(dev);
+		ftl_init_fail(init_ctx);
 		return;
 	}
 
@@ -863,8 +885,7 @@ ftl_dev_get_zone_info(struct ftl_dev_init_ctx *init_ctx)
 
 	if (spdk_unlikely(rc != 0)) {
 		SPDK_ERRLOG("Unable to read zone info for zone id: %"PRIu64"\n", init_ctx->zone_id);
-		ftl_dev_free_init_ctx(init_ctx);
-		ftl_init_fail(dev);
+		ftl_init_fail(init_ctx);
 	}
 }
 
@@ -1001,14 +1022,16 @@ ftl_lba_map_request_dtor(struct spdk_mempool *mp, void *opaque, void *obj, unsig
 }
 
 static void
-ftl_dev_free_sync(struct spdk_ftl_dev *dev)
+ftl_dev_free_sync(struct ftl_dev_init_ctx *init_ctx)
 {
-	struct spdk_ftl_dev *iter;
+	struct spdk_ftl_dev *iter, *dev = init_ctx->dev;
 	size_t i;
 
 	if (!dev) {
 		return;
 	}
+
+	ftl_dev_free_init_ctx(init_ctx);
 
 	pthread_mutex_lock(&g_ftl_queue_lock);
 	STAILQ_FOREACH(iter, &g_ftl_queue, stailq) {
@@ -1081,6 +1104,9 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn c
 
 	init_ctx->dev = dev;
 	init_ctx->opts = *_opts;
+	init_ctx->cb_fn = cb_fn;
+	init_ctx->cb_arg = cb_arg;
+	init_ctx->thread = spdk_get_thread();
 
 	if (!opts.conf) {
 		opts.conf = &g_default_conf;
@@ -1094,9 +1120,6 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn c
 
 	TAILQ_INIT(&dev->retry_queue);
 	dev->conf = *opts.conf;
-	dev->init_ctx.cb_fn = cb_fn;
-	dev->init_ctx.cb_arg = cb_arg;
-	dev->init_ctx.thread = spdk_get_thread();
 	dev->base_bdev_desc = opts.base_bdev_desc;
 	dev->limit = SPDK_FTL_LIMIT_MAX;
 
@@ -1159,12 +1182,10 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn c
 
 	return 0;
 fail_sync:
-	ftl_dev_free_sync(dev);
-	ftl_dev_free_init_ctx(init_ctx);
+	ftl_dev_free_sync(init_ctx);
 	return rc;
 fail_async:
-	ftl_init_fail(dev);
-	ftl_dev_free_init_ctx(init_ctx);
+	ftl_init_fail(init_ctx);
 	return 0;
 }
 
@@ -1175,28 +1196,20 @@ _ftl_halt_defrag(void *arg)
 }
 
 static void
-ftl_call_fini_complete(struct spdk_ftl_dev *dev, int status)
-{
-	struct ftl_init_context ctx = dev->fini_ctx;
-
-	ftl_dev_free_sync(dev);
-	if (ctx.cb_fn != NULL) {
-		ctx.cb_fn(NULL, ctx.cb_arg, status);
-	}
-}
-
-static void
 ftl_halt_complete_cb(void *ctx)
 {
-	struct spdk_ftl_dev *dev = ctx;
+	struct ftl_dev_init_ctx *fini_ctx = ctx;
 
-	ftl_call_fini_complete(dev, dev->halt_complete_status);
+	ftl_dev_free_sync(fini_ctx);
+	if (fini_ctx->cb_fn != NULL) {
+		fini_ctx->cb_fn(NULL, fini_ctx->cb_arg, fini_ctx->halt_complete_status);
+	}
 }
 
 static void
 ftl_nv_cache_header_fini_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
-	struct spdk_ftl_dev *dev = cb_arg;
+	struct ftl_dev_init_ctx *fini_ctx = cb_arg;
 	int rc = 0;
 
 	spdk_bdev_free_io(bdev_io);
@@ -1205,23 +1218,25 @@ ftl_nv_cache_header_fini_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb
 		rc = -EIO;
 	}
 
-	dev->halt_complete_status = rc;
-	spdk_thread_send_msg(dev->fini_ctx.thread, ftl_halt_complete_cb, dev);
+	fini_ctx->halt_complete_status = rc;
+	spdk_thread_send_msg(fini_ctx->thread, ftl_halt_complete_cb, fini_ctx);
 }
 
 static int
 ftl_halt_poller(void *ctx)
 {
-	struct spdk_ftl_dev *dev = ctx;
+	struct ftl_dev_init_ctx *fini_ctx = ctx;
+	struct spdk_ftl_dev *dev = fini_ctx->dev;
 
 	if (!dev->core_thread.poller && !dev->read_thread.poller) {
-		spdk_poller_unregister(&dev->fini_ctx.poller);
+		spdk_poller_unregister(&fini_ctx->poller);
 
 		if (ftl_dev_has_nv_cache(dev)) {
-			ftl_nv_cache_write_header(&dev->nv_cache, true, ftl_nv_cache_header_fini_cb, dev);
+			ftl_nv_cache_write_header(&dev->nv_cache, true,
+						  ftl_nv_cache_header_fini_cb, fini_ctx);
 		} else {
-			dev->halt_complete_status = 0;
-			spdk_thread_send_msg(dev->fini_ctx.thread, ftl_halt_complete_cb, dev);
+			fini_ctx->halt_complete_status = 0;
+			spdk_thread_send_msg(fini_ctx->thread, ftl_halt_complete_cb, fini_ctx);
 		}
 	}
 
@@ -1231,30 +1246,41 @@ ftl_halt_poller(void *ctx)
 static void
 ftl_add_halt_poller(void *ctx)
 {
-	struct spdk_ftl_dev *dev = ctx;
+	struct ftl_dev_init_ctx *fini_ctx = ctx;
+	struct spdk_ftl_dev *dev = fini_ctx->dev;
+
 	dev->halt = 1;
 
 	_ftl_halt_defrag(dev);
 
-	assert(!dev->fini_ctx.poller);
-	dev->fini_ctx.poller = spdk_poller_register(ftl_halt_poller, dev, 100);
+	assert(!fini_ctx->poller);
+	fini_ctx->poller = spdk_poller_register(ftl_halt_poller, fini_ctx, 100);
 }
 
 static int
 _spdk_ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_init_fn cb_fn, void *cb_arg,
 		   struct spdk_thread *thread)
 {
-	if (dev->fini_ctx.cb_fn != NULL) {
+	struct ftl_dev_init_ctx *fini_ctx;
+
+	if (dev->halt_started) {
+		dev->halt_started = true;
 		return -EBUSY;
 	}
 
-	dev->fini_ctx.cb_fn = cb_fn;
-	dev->fini_ctx.cb_arg = cb_arg;
-	dev->fini_ctx.thread = thread;
+	fini_ctx = calloc(1, sizeof(*fini_ctx));
+	if (!fini_ctx) {
+		return -ENOMEM;
+	}
+
+	fini_ctx->dev = dev;
+	fini_ctx->cb_fn = cb_fn;
+	fini_ctx->cb_arg = cb_arg;
+	fini_ctx->thread = thread;
 
 	ftl_rwb_disable_interleaving(dev->rwb);
 
-	spdk_thread_send_msg(ftl_get_core_thread(dev), ftl_add_halt_poller, dev);
+	spdk_thread_send_msg(ftl_get_core_thread(dev), ftl_add_halt_poller, fini_ctx);
 	return 0;
 }
 

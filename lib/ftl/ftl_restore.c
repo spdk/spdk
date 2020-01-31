@@ -114,6 +114,8 @@ struct ftl_restore {
 	struct spdk_ftl_dev		*dev;
 	/* Completion callback (called for each phase of the restoration) */
 	ftl_restore_fn			cb;
+	/* Completion callback context */
+	void				*cb_arg;
 	/* Number of inflight IOs */
 	unsigned int			num_ios;
 	/* Current band number (index in the below bands array) */
@@ -160,7 +162,7 @@ ftl_restore_free(struct ftl_restore *restore)
 }
 
 static struct ftl_restore *
-ftl_restore_init(struct spdk_ftl_dev *dev, ftl_restore_fn cb)
+ftl_restore_init(struct spdk_ftl_dev *dev, ftl_restore_fn cb, void *cb_arg)
 {
 	struct ftl_restore *restore;
 	struct ftl_restore_band *rband;
@@ -173,6 +175,7 @@ ftl_restore_init(struct spdk_ftl_dev *dev, ftl_restore_fn cb)
 
 	restore->dev = dev;
 	restore->cb = cb;
+	restore->cb_arg = cb_arg;
 	restore->final_phase = false;
 
 	restore->bands = calloc(ftl_get_num_bands(dev), sizeof(*restore->bands));
@@ -208,7 +211,7 @@ ftl_restore_complete(struct ftl_restore *restore, int status)
 	struct ftl_restore *ctx = status ? NULL : restore;
 	bool final_phase = restore->final_phase;
 
-	restore->cb(restore->dev, ctx, status);
+	restore->cb(restore->dev, ctx, status, restore->cb_arg);
 	if (status || final_phase) {
 		ftl_restore_free(restore);
 	}
@@ -365,11 +368,11 @@ ftl_restore_head_md(void *ctx)
 }
 
 int
-ftl_restore_md(struct spdk_ftl_dev *dev, ftl_restore_fn cb)
+ftl_restore_md(struct spdk_ftl_dev *dev, ftl_restore_fn cb, void *cb_arg)
 {
 	struct ftl_restore *restore;
 
-	restore = ftl_restore_init(dev, cb);
+	restore = ftl_restore_init(dev, cb, cb_arg);
 	if (!restore) {
 		return -ENOMEM;
 	}
@@ -1012,7 +1015,7 @@ out:
 }
 
 void
-ftl_restore_nv_cache(struct ftl_restore *restore, ftl_restore_fn cb)
+ftl_restore_nv_cache(struct ftl_restore *restore, ftl_restore_fn cb, void *cb_arg)
 {
 	struct spdk_ftl_dev *dev = restore->dev;
 	struct spdk_bdev *bdev;
@@ -1032,6 +1035,7 @@ ftl_restore_nv_cache(struct ftl_restore *restore, ftl_restore_fn cb)
 
 	restore->final_phase = true;
 	restore->cb = cb;
+	restore->cb_arg = cb_arg;
 
 	for (i = 0; i < FTL_NV_CACHE_RESTORE_DEPTH; ++i) {
 		block = &nvc_restore->block[i];
@@ -1318,13 +1322,14 @@ ftl_restore_tail_md(struct ftl_restore_band *rband)
 }
 
 int
-ftl_restore_device(struct ftl_restore *restore, ftl_restore_fn cb)
+ftl_restore_device(struct ftl_restore *restore, ftl_restore_fn cb, void *cb_arg)
 {
 	struct spdk_ftl_dev *dev = restore->dev;
 	struct ftl_restore_band *rband;
 
 	restore->current = 0;
 	restore->cb = cb;
+	restore->cb_arg = cb_arg;
 	restore->final_phase = dev->nv_cache.bdev_desc == NULL;
 
 	/* If restore_device is called, there must be at least one valid band */
