@@ -93,6 +93,30 @@
       "revId": "0e6ce2467296d1b098050d8eb33db0cc0877788e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e31ef06_2f9fda4b",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-31T09:56:06Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "a4a143e7_af4263da",
+      "range": {
+        "startLine": 147,
+        "startChar": 1,
+        "endLine": 147,
+        "endChar": 29
+      },
+      "revId": "0e6ce2467296d1b098050d8eb33db0cc0877788e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
