@@ -110,8 +110,8 @@ spdk_nvmf_ctrlr_disconnect_qpairs_done(struct spdk_io_channel_iter *i, int statu
 	}
 }
 
-static void
-spdk_nvmf_ctrlr_disconnect_qpairs_on_pg(struct spdk_io_channel_iter *i)
+static int
+_spdk_nvmf_ctrlr_disconnect_qpairs_on_pg(struct spdk_io_channel_iter *i, bool include_admin)
 {
 	int rc = 0;
 	struct spdk_nvmf_ctrlr *ctrlr;
@@ -124,17 +124,28 @@ spdk_nvmf_ctrlr_disconnect_qpairs_on_pg(struct spdk_io_channel_iter *i)
 	group = spdk_io_channel_get_ctx(ch);
 
 	TAILQ_FOREACH_SAFE(qpair, &group->qpairs, link, temp_qpair) {
-		if (qpair->ctrlr == ctrlr) {
+		if (qpair->ctrlr == ctrlr && (include_admin || !spdk_nvmf_qpair_is_admin_queue(qpair))) {
 			rc = spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
 			if (rc) {
 				SPDK_ERRLOG("Qpair disconnect failed\n");
-				goto next_channel;
+				return rc;
 			}
 		}
 	}
 
-next_channel:
-	spdk_for_each_channel_continue(i, rc);
+	return rc;
+}
+
+static void
+spdk_nvmf_ctrlr_disconnect_qpairs_on_pg(struct spdk_io_channel_iter *i)
+{
+	spdk_for_each_channel_continue(i, _spdk_nvmf_ctrlr_disconnect_qpairs_on_pg(i, true));
+}
+
+static void
+spdk_nvmf_ctrlr_disconnect_io_qpairs_on_pg(struct spdk_io_channel_iter *i)
+{
+	spdk_for_each_channel_continue(i, _spdk_nvmf_ctrlr_disconnect_qpairs_on_pg(i, false));
 }
 
 static int
@@ -644,6 +655,22 @@ spdk_nvmf_ctrlr_cmd_connect(struct spdk_nvmf_request *req)
 	return _spdk_nvmf_ctrlr_connect(req);
 }
 
+static void
+spdk_nvmf_ctrlr_cc_reset_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = spdk_io_channel_iter_get_ctx(i);
+
+	if (status < 0) {
+		SPDK_ERRLOG("Fail to disconnect io ctrlr qpairs\n");
+		assert(false);
+	}
+
+	/* Only a subset of the registers are cleared out on a reset */
+	ctrlr->vcprop.cc.raw = 0;
+	ctrlr->vcprop.csts.raw = 0;
+
+}
+
 const struct spdk_nvmf_registers *
 spdk_nvmf_ctrlr_get_regs(struct spdk_nvmf_ctrlr *ctrlr)
 {
@@ -690,8 +717,11 @@ nvmf_prop_set_cc(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
 			ctrlr->vcprop.cc.bits.en = 1;
 			ctrlr->vcprop.csts.bits.rdy = 1;
 		} else {
-			SPDK_ERRLOG("CC.EN transition from 1 to 0 (reset) not implemented!\n");
-			return false;
+			ctrlr->vcprop.cc.bits.en = 0;
+			spdk_for_each_channel(ctrlr->subsys->tgt,
+					      spdk_nvmf_ctrlr_disconnect_io_qpairs_on_pg,
+					      ctrlr,
+					      spdk_nvmf_ctrlr_cc_reset_done);
 		}
 		diff.bits.en = 0;
 	}
