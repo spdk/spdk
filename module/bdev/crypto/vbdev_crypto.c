@@ -1367,7 +1367,8 @@ crypto_bdev_ch_destroy_cb(void *io_device, void *ctx_buf)
  * on the global list. */
 static int
 vbdev_crypto_insert_name(const char *bdev_name, const char *vbdev_name,
-			 const char *crypto_pmd, const char *key)
+			 const char *crypto_pmd, const char *key,
+			 const char *cipher, const char *key2)
 {
 	struct bdev_names *name;
 	int rc, j;
@@ -1452,14 +1453,15 @@ error_alloc_bname:
 /* RPC entry point for crypto creation. */
 int
 create_crypto_disk(const char *bdev_name, const char *vbdev_name,
-		   const char *crypto_pmd, const char *key)
+		   const char *crypto_pmd, const char *key,
+		   const char *cipher, const char *key2)
 {
 	struct spdk_bdev *bdev = NULL;
 	int rc = 0;
 
 	bdev = spdk_bdev_get_by_name(bdev_name);
 
-	rc = vbdev_crypto_insert_name(bdev_name, vbdev_name, crypto_pmd, key);
+	rc = vbdev_crypto_insert_name(bdev_name, vbdev_name, crypto_pmd, key, cipher, key2);
 	if (rc) {
 		return rc;
 	}
@@ -1490,6 +1492,8 @@ vbdev_crypto_init(void)
 	int i;
 	int rc = 0;
 	const char *key = NULL;
+	const char *cipher = NULL;
+	const char *key2 = NULL;
 
 	/* Fully configure both SW and HW drivers. */
 	rc = vbdev_crypto_init_crypto_drivers();
@@ -1534,8 +1538,20 @@ vbdev_crypto_init(void)
 			return -EINVAL;
 		}
 
+		/* These are optional. */
+		cipher = spdk_conf_section_get_nmval(sp, "CRY", i, 4);
+		if (cipher == NULL) {
+			cipher = strdup(AES_CBC);
+			if (cipher == NULL) {
+				SPDK_ERRLOG("crypto configuration error allocating cipher string\n");
+				return -EINVAL;
+			}
+		}
+		key2 = spdk_conf_section_get_nmval(sp, "CRY", i, 5);
+
+		/* Note: config file options do not support QAT AES_XTS, use RPC */
 		rc = vbdev_crypto_insert_name(conf_bdev_name, conf_vbdev_name,
-					      crypto_pmd, key);
+					      crypto_pmd, key, cipher, key2);
 		if (rc != 0) {
 			return rc;
 		}
