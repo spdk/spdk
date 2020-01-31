@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fcae8eee_b6d03479",
+        "filename": "include/spdk/nvmf_transport.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2020-01-31T23:12:28Z",
+      "side": 1,
+      "message": "Or this could be part of include/spdk/nvmf_cmd.h",
+      "revId": "e26b3941e637fb8fc09c98363903157637feab4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
