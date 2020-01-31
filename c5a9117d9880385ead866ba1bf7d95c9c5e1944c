@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a38a346_af6884fd",
+        "filename": "include/spdk/nvmf_cmd.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2020-01-31T23:33:28Z",
+      "side": 1,
+      "message": "I missed that one...\n\n/**\n * Custom identify handler that returns attributes such as the serial and manufacturing number of the underlying NVME device to the initiator.\n *\n * This handler is only executed when there is exactly one NVME namespace attached\n * to the subsystem.\n *\n * \\param req The NVMe-oF request\n *\n * \\return \\ref spdk_nvmf_request_exec_status\n */",
+      "revId": "c5a9117d9880385ead866ba1bf7d95c9c5e1944c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
