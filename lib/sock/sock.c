@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/log.h"
+#include "spdk/likely.h"
 #include "spdk/sock.h"
 #include "spdk_internal/sock.h"
 #include "spdk/queue.h"
@@ -512,7 +513,7 @@ spdk_sock_group_impl_poll_count(struct spdk_sock_group_impl *group_impl,
 				int max_events)
 {
 	struct spdk_sock *socks[MAX_EVENTS_PER_POLL];
-	int num_events, i;
+	int num_events, i, rc;
 
 	if (TAILQ_EMPTY(&group_impl->socks)) {
 		return 0;
@@ -523,13 +524,20 @@ spdk_sock_group_impl_poll_count(struct spdk_sock_group_impl *group_impl,
 		return -1;
 	}
 
+	rc = num_events;
 	for (i = 0; i < num_events; i++) {
 		struct spdk_sock *sock = socks[i];
+
+		/* The sock could be removed from the group_impl */
+		if (spdk_unlikely(sock->group_impl == NULL)) {
+			rc--;
+			continue;
+		}
 
 		assert(sock->cb_fn != NULL);
 		sock->cb_fn(sock->cb_arg, group, sock);
 	}
-	return num_events;
+	return rc;
 }
 
 int
