@@ -197,6 +197,4 @@ struct spdk_nvme_cmd *spdk_nvmf_request_get_cmd(struct spdk_nvmf_request *req);
  */
 struct spdk_nvme_cpl *spdk_nvmf_request_get_response(struct spdk_nvmf_request *req);
 
-int spdk_nvmf_custom_identify_hdlr(struct spdk_nvmf_request *req);
-
 #endif /* SPDK_NVMF_CMD_H_ */

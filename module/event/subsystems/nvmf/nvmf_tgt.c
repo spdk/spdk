@@ -427,6 +427,81 @@ nvmf_tgt_parse_conf_start(void *ctx)
 }
 
 static void
+fixup_identify_ctrlr(struct spdk_nvmf_request *req)
+{
+	uint32_t length;
+	int rc;
+	struct spdk_nvme_ctrlr_data *nvme_cdata;
+	struct spdk_nvme_ctrlr_data nvmf_cdata = {};
+	struct spdk_nvmf_ctrlr *ctrlr = spdk_nvmf_request_get_ctrlr(req);
+	struct spdk_nvme_cpl *rsp = spdk_nvmf_request_get_response(req);
+
+	/* This is the identify data from the NVMe drive */
+	spdk_nvmf_request_get_data(req, (void **)&nvme_cdata, &length);
+
+	/* Get the NVMF identify data */
+	rc = spdk_nvmf_ctrlr_identify_ctrlr(ctrlr, &nvmf_cdata);
+	if (rc != SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+		return;
+	}
+
+	/* Fixup NVMF identify data with NVMe identify data */
+
+	/* Serial Number (SN) */
+	memcpy(&nvmf_cdata.sn[0], &nvme_cdata->sn[0], sizeof(nvmf_cdata.sn));
+	/* Model Number (MN) */
+	memcpy(&nvmf_cdata.mn[0], &nvme_cdata->mn[0], sizeof(nvmf_cdata.mn));
+	/* Firmware Revision (FR) */
+	memcpy(&nvmf_cdata.fr[0], &nvme_cdata->fr[0], sizeof(nvmf_cdata.fr));
+	/* IEEE OUI Identifier (IEEE) */
+	memcpy(&nvmf_cdata.ieee[0], &nvme_cdata->ieee[0], sizeof(nvmf_cdata.ieee));
+	/* FRU Globally Unique Identifier (FGUID) */
+
+	/* Copy the fixed up data back to the response */
+	memcpy(nvme_cdata, &nvmf_cdata, length);
+}
+
+static int
+spdk_nvmf_custom_identify_hdlr(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvme_cmd *cmd = spdk_nvmf_request_get_cmd(req);
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+	struct spdk_io_channel *ch;
+	struct spdk_nvmf_subsystem *subsys;
+	int rc;
+
+	if (cmd->cdw10_bits.identify.cns != SPDK_NVME_IDENTIFY_CTRLR) {
+		return -1; /* continue */
+	}
+
+	subsys = spdk_nvmf_request_get_subsystem(req);
+	if (subsys == NULL) {
+		return -1;
+	}
+
+	/* Only procss this request if it has exactly one namespace */
+	if (spdk_nvmf_subsystem_get_max_nsid(subsys) != 1) {
+		return -1;
+	}
+
+	/* Forward to first namespace if it supports NVME admin commands */
+	rc = spdk_nvmf_request_get_bdev(1, req, &bdev, &desc, &ch);
+	if (rc) {
+		/* No bdev found for this namespace. Continue. */
+		return -1;
+	}
+
+	if (!spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_ADMIN)) {
+		return -1;
+	}
+
+	return spdk_nvmf_bdev_ctrlr_nvme_passthru_admin(bdev, desc, ch, req, fixup_identify_ctrlr);
+}
+
+static void
 nvmf_tgt_advance_state(void)
 {
 	enum nvmf_tgt_state prev_state;
