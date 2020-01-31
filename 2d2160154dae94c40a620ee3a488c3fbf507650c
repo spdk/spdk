@@ -22,6 +22,30 @@
       "revId": "2d2160154dae94c40a620ee3a488c3fbf507650c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "99c2fe8c_c93ab4cc",
+        "filename": "test/blobfs/blobfs.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1017532
+      },
+      "writtenOn": "2020-01-31T10:16:05Z",
+      "side": 1,
+      "message": "But most of the spdk uses only Bash (unless there\u0027s some expectation of having it as a symlink pointing at some other shell but if that\u0027s the case I would say it\u0027s quite unusual) and in this case the trap should be called upon exiting, regardless of what signal triggered it (except the ones that can\u0027t be caught of course), e.g.: https://paste.ofcode.org/PenRYz5qTYREdDVLWEzVUh\n\nIn this case killprocess() exits the script under the condition of not finding the PID, and that, from what I can see, will fail the entire autotest.sh since it sources set -e opt from the common.sh stuff and it intercepts the es from the blobfs.sh.",
+      "parentUuid": "72d3ffec_fd70a91f",
+      "range": {
+        "startLine": 123,
+        "startChar": 6,
+        "endLine": 123,
+        "endChar": 13
+      },
+      "revId": "2d2160154dae94c40a620ee3a488c3fbf507650c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
