@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2246eaf0_e3bbefc2",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2020-01-31T15:02:09Z",
+      "side": 1,
+      "message": "I would be hesitant to run this even on my intel dev machine.\n\nCan we compile nasm from source instead? It\u0027s dead simple and has minimal dependencies.",
+      "range": {
+        "startLine": 100,
+        "startChar": 21,
+        "endLine": 100,
+        "endChar": 51
+      },
+      "revId": "6177a6f31583733608725697cb83982a381c7771",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
