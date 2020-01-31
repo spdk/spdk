@@ -41,6 +41,9 @@
 
 #include "spdk/bdev.h"
 
+#define AESNI_MB "crypto_aesni_mb"
+#define QAT "crypto_qat"
+
 typedef void (*spdk_delete_crypto_complete)(void *cb_arg, int bdeverrno);
 
 /**

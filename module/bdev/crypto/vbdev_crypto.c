@@ -52,8 +52,7 @@
  * sure to use the exact names.
  */
 #define MAX_NUM_DRV_TYPES 2
-#define AESNI_MB "crypto_aesni_mb"
-#define QAT "crypto_qat"
+
 /* The VF spread is the number of queue pairs between virtual functions, we use this to
  * load balance the QAT device.
  */
