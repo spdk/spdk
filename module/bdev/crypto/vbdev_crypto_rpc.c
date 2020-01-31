@@ -39,6 +39,8 @@ struct rpc_construct_crypto {
 	char *name;
 	char *crypto_pmd;
 	char *key;
+	char *cipher;
+	char *key2;
 };
 
 /* Free the allocated memory resource after the RPC handling. */
@@ -49,6 +51,8 @@ free_rpc_construct_crypto(struct rpc_construct_crypto *r)
 	free(r->name);
 	free(r->crypto_pmd);
 	free(r->key);
+	free(r->cipher);
+	free(r->key2);
 }
 
 /* Structure to decode the input parameters for this RPC method. */
@@ -57,6 +61,8 @@ static const struct spdk_json_object_decoder rpc_construct_crypto_decoders[] = {
 	{"name", offsetof(struct rpc_construct_crypto, name), spdk_json_decode_string},
 	{"crypto_pmd", offsetof(struct rpc_construct_crypto, crypto_pmd), spdk_json_decode_string},
 	{"key", offsetof(struct rpc_construct_crypto, key), spdk_json_decode_string},
+	{"cipher", offsetof(struct rpc_construct_crypto, cipher), spdk_json_decode_string, true},
+	{"key2", offsetof(struct rpc_construct_crypto, key2), spdk_json_decode_string, true},
 };
 
 /* Decode the parameters for this RPC method and properly construct the crypto
@@ -78,8 +84,41 @@ spdk_rpc_bdev_crypto_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
+	if (req.cipher == NULL) {
+		req.cipher = strdup(AES_CBC);
+		if (req.cipher == NULL) {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							 "Invalid parameters");
+			goto cleanup;
+		}
+	}
+
+	if (strcmp(req.cipher, AES_XTS) != 0 && strcmp(req.cipher, AES_CBC) != 0) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid cipher");
+		goto cleanup;
+	}
+
+	if (strcmp(req.crypto_pmd, AESNI_MB) == 0 && strcmp(req.cipher, AES_XTS) == 0) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid pmd/cipher");
+		goto cleanup;
+	}
+
+	if (strcmp(req.cipher, AES_XTS) == 0 && req.key2 == NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid key2");
+		goto cleanup;
+	}
+
+	if (strcmp(req.cipher, AES_CBC) == 0 && req.key2 != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid keys");
+		goto cleanup;
+	}
+
 	rc = create_crypto_disk(req.base_bdev_name, req.name,
-				req.crypto_pmd, req.key);
+				req.crypto_pmd, req.key, req.cipher, req.key2);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;
