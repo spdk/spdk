@@ -206,7 +206,7 @@ nvme_tcp_free_reqs(struct nvme_tcp_qpair *tqpair)
 static int
 nvme_tcp_alloc_reqs(struct nvme_tcp_qpair *tqpair)
 {
-	int i;
+	uint16_t i;
 	struct nvme_tcp_req	*tcp_req;
 
 	tqpair->tcp_reqs = calloc(tqpair->num_entries, sizeof(struct nvme_tcp_req));
@@ -383,9 +383,8 @@ nvme_tcp_build_contig_request(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_req
 static int
 nvme_tcp_build_sgl_request(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_req *tcp_req)
 {
-	int rc, iovcnt;
-	uint32_t length;
-	uint64_t remaining_size;
+	int rc;
+	uint32_t length, remaining_size, iovcnt = 0;
 	struct nvme_request *req = tcp_req->req;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "enter\n");
@@ -397,7 +396,6 @@ nvme_tcp_build_sgl_request(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_req *t
 	req->payload.reset_sgl_fn(req->payload.contig_or_cb_arg, req->payload_offset);
 
 	remaining_size = req->payload_size;
-	iovcnt = 0;
 
 	do {
 		rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg, &tcp_req->iov[iovcnt].iov_base,
