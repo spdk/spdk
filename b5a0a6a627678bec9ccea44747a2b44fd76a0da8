@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "137fcc36_e60f28cf",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 1016781
+      },
+      "writtenOn": "2020-01-31T08:31:36Z",
+      "side": 1,
+      "message": "qpair/subsystem shall be pointer to const object but it requires changes in many functions",
+      "range": {
+        "startLine": 468,
+        "startChar": 31,
+        "endLine": 468,
+        "endChar": 99
+      },
+      "revId": "b5a0a6a627678bec9ccea44747a2b44fd76a0da8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
