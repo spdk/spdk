@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1531a544_ab01d7d0",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 494,
+      "author": {
+        "id": 1016781
+      },
+      "writtenOn": "2020-01-31T13:01:09Z",
+      "side": 1,
+      "message": "transport layer cannot just call this function, on completion there is\nTAILQ_REMOVE(\u0026qpair-\u003eoutstanding, req, link) which results in SEGV\n\nto workaround transport layer needs explicitly put req on that list before spdk_nvmf_ctrlr_connect call TAILQ_INSERT_TAIL(\u0026qpair.outstanding, req, link);\n\ncannot use spdk_nvmf_request_exec_fabrics for that as it calls *_ctrlr_cmd_connect with additional checks",
+      "range": {
+        "startLine": 494,
+        "startChar": 0,
+        "endLine": 494,
+        "endChar": 54
+      },
+      "revId": "404efceb21deae5e35ee907cd748c8cd14548d55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
