@@ -16,6 +16,24 @@
       "revId": "4d943359d8d4fbd19794720465e534dfc897d1be",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "91183895_9b04a25a",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-02-01T22:38:48Z",
+      "side": 1,
+      "message": "Yes, that is also good.\nI think the device is already unregistered (it is removed from g_io_devices), and remaining is to be freed. Hence I chose delete_count.",
+      "parentUuid": "3e012e80_815a342a",
+      "revId": "4d943359d8d4fbd19794720465e534dfc897d1be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
