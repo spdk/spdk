@@ -89,6 +89,11 @@ struct spdk_fio_thread {
 };
 
 static bool g_spdk_env_initialized = false;
+static const char *g_json_config_file = NULL;
+static pthread_t g_init_thread_id = 0;
+static pthread_mutex_t g_init_mtx = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t g_init_cond;
+static bool g_poll_loop = true;
 
 static int spdk_fio_init(struct thread_data *td);
 static void spdk_fio_cleanup(struct thread_data *td);
@@ -145,6 +150,11 @@ spdk_fio_bdev_close_targets(void *arg)
 static void
 spdk_fio_cleanup_thread(struct spdk_fio_thread *fio_thread)
 {
+	pthread_mutex_lock(&g_init_mtx);
+	g_poll_loop = false;
+	pthread_cond_signal(&g_init_cond);
+	pthread_mutex_unlock(&g_init_mtx);
+
 	spdk_thread_send_msg(fio_thread->thread, spdk_fio_bdev_close_targets, fio_thread);
 
 	while (!spdk_thread_is_idle(fio_thread->thread)) {
@@ -183,11 +193,6 @@ spdk_fio_calc_timeout(struct spdk_fio_thread *fio_thread, struct timespec *ts)
 		ts->tv_nsec = timeout % SPDK_SEC_TO_NSEC;
 	}
 }
-
-static pthread_t g_init_thread_id = 0;
-static pthread_mutex_t g_init_mtx = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t g_init_cond;
-static bool g_poll_loop = true;
 
 static void
 spdk_fio_bdev_init_done(int rc, void *cb_arg)
@@ -762,10 +767,6 @@ static void fio_init spdk_fio_register(void)
 static void
 spdk_fio_finish_env(void)
 {
-	pthread_mutex_lock(&g_init_mtx);
-	g_poll_loop = false;
-	pthread_cond_signal(&g_init_cond);
-	pthread_mutex_unlock(&g_init_mtx);
 	pthread_join(g_init_thread_id, NULL);
 
 	spdk_thread_lib_fini();
