@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "366c716e_c263dfc1",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 7
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-02-01T22:03:31Z",
+      "side": 1,
+      "message": "I re-wrote the whole commit message.\nThe middle said \"remove breaking from iteration in spdk_thread_poll()\".\nWill you read through the updated commit message?",
+      "parentUuid": "6ae5600c_ccb15b11",
+      "revId": "420a0835a84a8be264d996eb5defcc9e302d8ff3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6870d4f9_ddf0077b",
         "filename": "lib/thread/thread.c",
         "patchSetId": 7
@@ -30,6 +48,24 @@
       "writtenOn": "2020-01-31T18:53:20Z",
       "side": 1,
       "message": "I\u0027m not quite following why this is an INFO now instead of a WARN? Why can we paused the same as unregistered at this point?",
+      "revId": "420a0835a84a8be264d996eb5defcc9e302d8ff3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dfaa5a25_bddfc078",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-02-01T22:03:31Z",
+      "side": 1,
+      "message": "Paused poller don\u0027t run on the thread.\nSo to terminate the thread, it is required at least to unregister or pause all active pollers.\nOf course we can require all pollers must be terminated for thread termination.\nBut I feel that\u0027s too strict.",
+      "parentUuid": "6870d4f9_ddf0077b",
       "revId": "420a0835a84a8be264d996eb5defcc9e302d8ff3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
