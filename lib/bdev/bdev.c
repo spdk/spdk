@@ -5312,6 +5312,7 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Closing descriptor %p for bdev %s on thread %p\n", desc, bdev->name,
 		      spdk_get_thread());
+	SPDK_ERRLOG("Closing descriptor %p for bdev %s on thread %p\n", desc, bdev->name, spdk_get_thread());
 
 	assert(desc->thread == spdk_get_thread());
 
