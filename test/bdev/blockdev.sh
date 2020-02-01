@@ -56,10 +56,10 @@ function setup_gpt_conf() {
 function setup_crypto_conf() {
 	cat >$conf_file <<-EOF
 		[Malloc]
-		NumberOfLuns 2
-		LunSizeInMB 32
+		NumberOfLuns 3
+		LunSizeInMB 16
 	EOF
-	$testdir/gen_crypto.sh Malloc0 Malloc1 >> $conf_file
+	$testdir/gen_crypto.sh Malloc0 Malloc1 Malloc2 >> $conf_file
 }
 
 function setup_pmem_conf() {
