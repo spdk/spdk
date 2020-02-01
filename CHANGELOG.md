@@ -2,6 +2,9 @@
 
 ## v20.04: (Upcoming Release)
 
+### nvme
+The `spdk_nvme_registers` struct has been updated to reflect the nvme 1.4 spec.
+
 ## v20.01
 
 ### bdev

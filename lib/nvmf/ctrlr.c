@@ -659,8 +659,8 @@ static void
 spdk_nvmf_ctrlr_cc_reset_done(struct spdk_io_channel_iter *i, int status)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = spdk_io_channel_iter_get_ctx(i);
-	uintptr_t vcprop_ptr = (uintptr_t)&ctrlr->vcprop;
-	uintptr_t vcprop_len;
+	uint32_t aqa, pmrmsc;
+	uint64_t asq, acq, cmbmsc;
 
 	if (status == 0) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "ctrlr disconnect io qpairs completed successfully\n");
@@ -669,11 +669,17 @@ spdk_nvmf_ctrlr_cc_reset_done(struct spdk_io_channel_iter *i, int status)
 		assert(false);
 	}
 	/* set most of the registers to zero just to be consistent with the spec. */
-	memset(&ctrlr->vcprop, 0, offsetof(struct spdk_nvme_registers, aqa));
-	/* skip aqa, asq, acq */
-	vcprop_ptr = vcprop_ptr + offsetof(struct spdk_nvme_registers, cmbloc);
-	vcprop_len = sizeof(struct spdk_nvme_registers) - offsetof(struct spdk_nvme_registers, cmbloc);
-	memset((void *)vcprop_ptr, 0, vcprop_len);
+	aqa = ctrlr->vcprop.aqa.raw;
+	asq = ctrlr->vcprop.asq;
+	acq = ctrlr->vcprop.acq;
+	cmbmsc = ctrlr->vcprop.cmbmsc;
+	pmrmsc = ctrlr->vcprop.pmrmsc;
+	memset(&ctrlr->vcprop, 0, sizeof(struct spdk_nvme_registers));
+	ctrlr->vcprop.aqa.raw = aqa;
+	ctrlr->vcprop.asq = asq;
+	ctrlr->vcprop.acq = acq;
+	ctrlr->vcprop.cmbmsc = cmbmsc;
+	ctrlr->vcprop.pmrmsc = pmrmsc;
 }
 
 const struct spdk_nvme_registers *

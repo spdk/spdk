@@ -345,7 +345,27 @@ struct spdk_nvme_registers {
 	/** boot partition memory buffer location (must be 4KB aligned) */
 	uint64_t			bpmbl;
 
-	uint32_t			reserved3[0x3ec];
+	/** controller memory buffer memory space control */
+	uint64_t			cmbmsc;
+
+	/** controller memory buffer status */
+	uint32_t			cmbsts;
+
+	uint32_t			reserved3[0x36C];
+
+	/** persistent memory capabilities */
+	uint32_t			pmrcap;
+
+	/** persistent memory region control */
+	uint32_t			pmrctl;
+
+	/** persistent memory region status */
+	uint32_t			pmrsts;
+
+	/** persistent memory region elasticity buffer size */
+	uint32_t			pmrmsc;
+
+	uint32_t			reserved4[0x79];
 
 	struct {
 		uint32_t	sq_tdbl;	/* submission queue tail doorbell */
