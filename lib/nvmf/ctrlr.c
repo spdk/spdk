@@ -663,11 +663,11 @@ nvmf_prop_get_cc(struct spdk_nvmf_ctrlr *ctrlr)
 }
 
 static bool
-nvmf_prop_set_cc(struct spdk_nvmf_ctrlr *ctrlr, uint64_t value)
+nvmf_prop_set_cc(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
 {
 	union spdk_nvme_cc_register cc, diff;
 
-	cc.raw = (uint32_t)value;
+	cc.raw = value;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "cur CC: 0x%08x\n", ctrlr->vcprop.cc.raw);
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "new CC: 0x%08x\n", cc.raw);
@@ -759,8 +759,17 @@ nvmf_prop_get_aqa(struct spdk_nvmf_ctrlr *ctrlr)
 }
 
 static bool
-nvmf_prop_set_aqa(struct spdk_nvmf_ctrlr *ctrlr, uint64_t value)
+nvmf_prop_set_aqa(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
 {
+	union spdk_nvme_aqa_register *aqa;
+
+	aqa = (union spdk_nvme_aqa_register *)&value;
+
+	if (aqa->bits.asqs > ctrlr->vcprop.cap.bits.mqes ||
+	    aqa->bits.acqs > ctrlr->vcprop.cap.bits.mqes) {
+		return false;
+	}
+
 	ctrlr->vcprop.aqa.raw = (uint32_t)value;
 
 	return true;
@@ -773,7 +782,15 @@ nvmf_prop_get_asq(struct spdk_nvmf_ctrlr *ctrlr)
 }
 
 static bool
-nvmf_prop_set_asq(struct spdk_nvmf_ctrlr *ctrlr, uint64_t value)
+nvmf_prop_set_asq(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
+{
+	ctrlr->vcprop.asq = value;
+
+	return true;
+}
+
+static bool
+nvmf_prop_set_asq_upper(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
 {
 	ctrlr->vcprop.asq = value;
 
@@ -787,7 +804,15 @@ nvmf_prop_get_acq(struct spdk_nvmf_ctrlr *ctrlr)
 }
 
 static bool
-nvmf_prop_set_acq(struct spdk_nvmf_ctrlr *ctrlr, uint64_t value)
+nvmf_prop_set_acq(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
+{
+	ctrlr->vcprop.acq = (uint32_t)value;
+
+	return true;
+}
+
+static bool
+nvmf_prop_set_acq_upper(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
 {
 	ctrlr->vcprop.acq = value;
 
@@ -799,36 +824,37 @@ struct nvmf_prop {
 	uint8_t size;
 	char name[11];
 	uint64_t (*get_cb)(struct spdk_nvmf_ctrlr *ctrlr);
-	bool (*set_cb)(struct spdk_nvmf_ctrlr *ctrlr, uint64_t value);
+	bool (*set_cb)(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value);
+	bool (*set_upper_cb)(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value);
 };
 
-#define PROP(field, size, get_cb, set_cb) \
+#define PROP(field, size, get_cb, set_cb, set_upper_cb) \
 	{ \
 		offsetof(struct spdk_nvme_registers, field), \
-		SPDK_NVMF_PROP_SIZE_##size, \
+		size, \
 		#field, \
-		get_cb, set_cb \
+		get_cb, set_cb, set_upper_cb \
 	}
 
 static const struct nvmf_prop nvmf_props[] = {
-	PROP(cap,  8, nvmf_prop_get_cap,  NULL),
-	PROP(vs,   4, nvmf_prop_get_vs,   NULL),
-	PROP(cc,   4, nvmf_prop_get_cc,   nvmf_prop_set_cc),
-	PROP(csts, 4, nvmf_prop_get_csts, NULL),
-	PROP(aqa, 4, nvmf_prop_get_aqa, nvmf_prop_set_aqa),
-	PROP(asq, 8, nvmf_prop_get_asq, nvmf_prop_set_asq),
-	PROP(acq, 8, nvmf_prop_get_acq, nvmf_prop_set_acq),
+	PROP(cap,  8, nvmf_prop_get_cap,  NULL, NULL),
+	PROP(vs,   4, nvmf_prop_get_vs,   NULL, NULL),
+	PROP(cc,   4, nvmf_prop_get_cc,   nvmf_prop_set_cc, NULL),
+	PROP(csts, 4, nvmf_prop_get_csts, NULL, NULL),
+	PROP(aqa, 4, nvmf_prop_get_aqa, nvmf_prop_set_aqa, NULL),
+	PROP(asq, 8, nvmf_prop_get_asq, nvmf_prop_set_asq, nvmf_prop_set_asq_upper),
+	PROP(acq, 8, nvmf_prop_get_acq, nvmf_prop_set_acq, nvmf_prop_set_acq_upper),
 };
 
 static const struct nvmf_prop *
-find_prop(uint32_t ofst)
+find_prop(uint32_t ofst, uint8_t size)
 {
 	size_t i;
 
 	for (i = 0; i < SPDK_COUNTOF(nvmf_props); i++) {
 		const struct nvmf_prop *prop = &nvmf_props[i];
 
-		if (prop->ofst == ofst) {
+		if ((ofst >= prop->ofst) && (ofst + size <= prop->ofst + prop->size)) {
 			return prop;
 		}
 	}
@@ -843,6 +869,7 @@ spdk_nvmf_property_get(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_fabric_prop_get_cmd *cmd = &req->cmd->prop_get_cmd;
 	struct spdk_nvmf_fabric_prop_get_rsp *response = &req->rsp->prop_get_rsp;
 	const struct nvmf_prop *prop;
+	uint8_t size;
 
 	response->status.sc = 0;
 	response->value.u64 = 0;
@@ -850,31 +877,46 @@ spdk_nvmf_property_get(struct spdk_nvmf_request *req)
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "size %d, offset 0x%x\n",
 		      cmd->attrib.size, cmd->ofst);
 
-	if (cmd->attrib.size != SPDK_NVMF_PROP_SIZE_4 &&
-	    cmd->attrib.size != SPDK_NVMF_PROP_SIZE_8) {
+	switch (cmd->attrib.size) {
+	case SPDK_NVMF_PROP_SIZE_4:
+		size = 4;
+		break;
+	case SPDK_NVMF_PROP_SIZE_8:
+		size = 8;
+		break;
+	default:
 		SPDK_ERRLOG("Invalid size value %d\n", cmd->attrib.size);
 		response->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	prop = find_prop(cmd->ofst);
+	prop = find_prop(cmd->ofst, size);
 	if (prop == NULL || prop->get_cb == NULL) {
-		/* Reserved properties return 0 when read */
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
-
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "name: %s\n", prop->name);
-	if (cmd->attrib.size != prop->size) {
-		SPDK_ERRLOG("offset 0x%x size mismatch: cmd %u, prop %u\n",
-			    cmd->ofst, cmd->attrib.size, prop->size);
 		response->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "name: %s\n", prop->name);
+
 	response->value.u64 = prop->get_cb(ctrlr);
+
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "response value: 0x%" PRIx64 "\n", response->value.u64);
+
+	if (size != prop->size) {
+		/* The size must be 4 and the prop->size is 8. Figure out which part of the property to read. */
+		assert(size == 4);
+		assert(prop->size == 8);
+
+		if (cmd->ofst == prop->ofst) {
+			/* Keep bottom 4 bytes only */
+			response->value.u64 &= 0xFF;
+		} else {
+			/* Keep top 4 bytes only */
+			response->value.u64 >>= 4;
+		}
+	}
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
@@ -887,11 +929,27 @@ spdk_nvmf_property_set(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 	const struct nvmf_prop *prop;
 	uint64_t value;
+	uint8_t size;
+	bool ret;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "size %d, offset 0x%x, value 0x%" PRIx64 "\n",
 		      cmd->attrib.size, cmd->ofst, cmd->value.u64);
 
-	prop = find_prop(cmd->ofst);
+	switch (cmd->attrib.size) {
+	case SPDK_NVMF_PROP_SIZE_4:
+		size = sizeof(uint32_t);
+		break;
+	case SPDK_NVMF_PROP_SIZE_8:
+		size = sizeof(uint64_t);
+		break;
+	default:
+		SPDK_ERRLOG("Invalid size value %d\n", cmd->attrib.size);
+		response->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+		response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	prop = find_prop(cmd->ofst, size);
 	if (prop == NULL || prop->set_cb == NULL) {
 		SPDK_ERRLOG("Invalid offset 0x%x\n", cmd->ofst);
 		response->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
@@ -900,20 +958,29 @@ spdk_nvmf_property_set(struct spdk_nvmf_request *req)
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "name: %s\n", prop->name);
-	if (cmd->attrib.size != prop->size) {
-		SPDK_ERRLOG("offset 0x%x size mismatch: cmd %u, prop %u\n",
-			    cmd->ofst, cmd->attrib.size, prop->size);
-		response->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
-		response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
 
 	value = cmd->value.u64;
-	if (prop->size == SPDK_NVMF_PROP_SIZE_4) {
-		value = (uint32_t)value;
+
+	if (prop->size == 4) {
+		ret = prop->set_cb(ctrlr, (uint32_t)value);
+	} else if (size != prop->size) {
+		/* The size must be 4 and the prop->size is 8. Figure out which part of the property to write. */
+		assert(size == sizeof(uint32_t));
+		assert(prop->size == sizeof(uint64_t));
+
+		if (cmd->ofst == prop->ofst) {
+			ret = prop->set_cb(ctrlr, value);
+		} else {
+			ret = prop->set_upper_cb(ctrlr, value >> sizeof(uint32_t));
+		}
+	} else {
+		ret = prop->set_cb(ctrlr, (uint32_t)value);
+		if (ret) {
+			ret = prop->set_upper_cb(ctrlr, value >> sizeof(uint32_t));
+		}
 	}
 
-	if (!prop->set_cb(ctrlr, value)) {
+	if (!ret) {
 		SPDK_ERRLOG("prop set_cb failed\n");
 		response->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
