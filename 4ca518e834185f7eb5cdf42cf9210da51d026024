@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f066908e_80bc1c95",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 739,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-02-03T10:43:00Z",
+      "side": 1,
+      "message": "discover_bdevs is changed here but not modified in all places where it is used:\n\n./test/vhost/initiator/blockdev.sh:85:  vbdevs\u003d$(discover_bdevs $rootdir $testdir/bdev.conf)\n./test/bdev/blockdev.sh:292:bdevs\u003d$(discover_bdevs $rootdir $conf_file | jq -r \u0027.[] | select(.claimed \u003d\u003d false)\u0027)\n./test/nvme/perf/common.sh:75:          bdevs\u003d$(discover_bdevs $ROOT_DIR $BASE_DIR/bdev.conf)\n./test/nvme/perf/common.sh:102:         bdevs\u003d$(discover_bdevs $ROOT_DIR $BASE_DIR/bdev.conf)\n./test/common/autotest_common.sh:739:function discover_bdevs()",
+      "revId": "4ca518e834185f7eb5cdf42cf9210da51d026024",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
