@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a42ea8c_49b935bb",
+        "filename": "module/bdev/crypto/vbdev_crypto_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-02-03T06:28:52Z",
+      "side": 1,
+      "message": "We may be able to add what string is specified by using spdk_jsonrpc_send_error_response_fmt.",
+      "range": {
+        "startLine": 98,
+        "startChar": 22,
+        "endLine": 98,
+        "endChar": 23
+      },
+      "revId": "3a84ecc52efbd93537c9d007dd798b404821aa68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bf9f1579_778f8108",
+        "filename": "module/bdev/crypto/vbdev_crypto_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-02-03T06:28:52Z",
+      "side": 1,
+      "message": "Maybe \"AES_XTS is available only for QAT\" ?",
+      "revId": "3a84ecc52efbd93537c9d007dd798b404821aa68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "332a08ac_4596ea11",
+        "filename": "module/bdev/crypto/vbdev_crypto_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-02-03T06:28:52Z",
+      "side": 1,
+      "message": "Maybe \"2nd key must not be empty for AES_ETS\" ?",
+      "revId": "3a84ecc52efbd93537c9d007dd798b404821aa68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d3e99785_3567b33b",
+        "filename": "module/bdev/crypto/vbdev_crypto_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-02-03T06:28:52Z",
+      "side": 1,
+      "message": "Maybe \"2nd key is available only for AES_XTS cipher\" ?",
+      "revId": "3a84ecc52efbd93537c9d007dd798b404821aa68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
