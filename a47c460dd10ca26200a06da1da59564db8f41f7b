@@ -22,6 +22,29 @@
       "revId": "a47c460dd10ca26200a06da1da59564db8f41f7b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e4b73039_c5619ac0",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1016781
+      },
+      "writtenOn": "2020-02-03T21:16:14Z",
+      "side": 1,
+      "message": "There is ~1kB reserved data... \nin case e.g. 1k ctrlrs it becomes 1MB",
+      "range": {
+        "startLine": 312,
+        "startChar": 8,
+        "endLine": 312,
+        "endChar": 28
+      },
+      "revId": "a47c460dd10ca26200a06da1da59564db8f41f7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
