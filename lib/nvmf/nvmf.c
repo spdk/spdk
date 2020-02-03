@@ -184,6 +184,8 @@ _nvmf_tgt_disconnect_next_qpair(void *ctx)
 	struct nvmf_qpair_disconnect_many_ctx *qpair_ctx = ctx;
 	struct spdk_nvmf_poll_group *group = qpair_ctx->group;
 	struct spdk_io_channel *ch;
+	spdk_nvmf_poll_group_mod_done cpl_fn;
+	void *cpl_ctx;
 	int rc = 0;
 
 	qpair = TAILQ_FIRST(&group->qpairs);
@@ -196,12 +198,20 @@ _nvmf_tgt_disconnect_next_qpair(void *ctx)
 		/* When the refcount from the channels reaches 0, spdk_nvmf_tgt_destroy_poll_group will be called. */
 		ch = spdk_io_channel_from_ctx(group);
 		spdk_put_io_channel(ch);
+
+		cpl_fn = qpair_ctx->cpl_fn;
+		cpl_ctx = qpair_ctx->cpl_ctx;
+
 		free(qpair_ctx);
+		if (cpl_fn) {
+			cpl_fn(cpl_ctx, rc);
+		}
 	}
 }
 
 static void
-spdk_nvmf_tgt_destroy_poll_group_qpairs(struct spdk_nvmf_poll_group *group)
+spdk_nvmf_tgt_destroy_poll_group_qpairs(struct spdk_nvmf_poll_group *group,
+					spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg)
 {
 	struct nvmf_qpair_disconnect_many_ctx *ctx;
 
@@ -209,12 +219,17 @@ spdk_nvmf_tgt_destroy_poll_group_qpairs(struct spdk_nvmf_poll_group *group)
 
 	if (!ctx) {
 		SPDK_ERRLOG("Failed to allocate memory for destroy poll group ctx\n");
+		if (cb_fn) {
+			cb_fn(cb_arg, -ENOMEM);
+		}
 		return;
 	}
 
 	spdk_poller_unregister(&group->poller);
 
 	ctx->group = group;
+	ctx->cpl_fn = cb_fn;
+	ctx->cpl_ctx = cb_arg;
 	_nvmf_tgt_disconnect_next_qpair(ctx);
 }
 
@@ -724,10 +739,11 @@ spdk_nvmf_poll_group_create(struct spdk_nvmf_tgt *tgt)
 }
 
 void
-spdk_nvmf_poll_group_destroy(struct spdk_nvmf_poll_group *group)
+spdk_nvmf_poll_group_destroy(struct spdk_nvmf_poll_group *group,
+			     spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg)
 {
 	/* This function will put the io_channel associated with this poll group */
-	spdk_nvmf_tgt_destroy_poll_group_qpairs(group);
+	spdk_nvmf_tgt_destroy_poll_group_qpairs(group, cb_fn, cb_arg);
 }
 
 int

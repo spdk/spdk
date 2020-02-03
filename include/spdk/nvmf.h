@@ -398,12 +398,17 @@ struct spdk_nvmf_poll_group *spdk_nvmf_poll_group_create(struct spdk_nvmf_tgt *t
  */
 struct spdk_nvmf_poll_group *spdk_nvmf_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair);
 
+typedef void(*spdk_nvmf_poll_group_mod_done)(void *cb_arg, int status);
+
 /**
  * Destroy a poll group.
  *
  * \param group The poll group to destroy.
+ * \param cb_fn A callback that will be called once the poll group is destroyed.
+ * \param cb_arg A context argument passed to cb_fn.
  */
-void spdk_nvmf_poll_group_destroy(struct spdk_nvmf_poll_group *group);
+void spdk_nvmf_poll_group_destroy(struct spdk_nvmf_poll_group *group,
+				  spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg);
 
 /**
  * Add the given qpair to the poll group.

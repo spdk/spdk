@@ -154,8 +154,6 @@ struct spdk_nvmf_subsystem_pg_ns_info {
 	uint64_t			num_blocks;
 };
 
-typedef void(*spdk_nvmf_poll_group_mod_done)(void *cb_arg, int status);
-
 struct spdk_nvmf_subsystem_poll_group {
 	/* Array of namespace information for each namespace indexed by nsid - 1 */
 	struct spdk_nvmf_subsystem_pg_ns_info	*ns_info;
