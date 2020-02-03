@@ -56,9 +56,8 @@ struct bdevperf_task {
 	struct spdk_bdev_io_wait_entry	bdev_io_wait;
 };
 
-static const char *g_workload_type;
+static const char *g_workload_type = NULL;
 static int g_io_size = 0;
-static uint64_t g_buf_size = 0;
 /* initialize to invalid value so we can detect if user overrides it. */
 static int g_rw_percentage = -1;
 static int g_is_random;
@@ -68,7 +67,7 @@ static bool g_continue_on_failure = false;
 static bool g_unmap = false;
 static bool g_write_zeroes = false;
 static bool g_flush = false;
-static int g_queue_depth;
+static int g_queue_depth = 0;
 static uint64_t g_time_in_usec;
 static int g_show_performance_real_time = 0;
 static uint64_t g_show_performance_period_in_usec = 1000000;
@@ -79,8 +78,8 @@ static bool g_shutdown = false;
 static uint64_t g_shutdown_tsc;
 static bool g_zcopy = true;
 static unsigned g_master_core;
-static int g_time_in_sec;
-static bool g_mix_specified;
+static int g_time_in_sec = 0;
+static bool g_mix_specified = false;
 static const char *g_target_bdev_name;
 static bool g_wait_for_tests = false;
 static struct spdk_jsonrpc_request *g_request = NULL;
@@ -107,6 +106,7 @@ struct io_target {
 	uint64_t			size_in_ios;
 	uint64_t			offset_in_ios;
 	uint64_t			io_size_blocks;
+	uint64_t			buf_size;
 	uint32_t			dif_check_flags;
 	bool				is_draining;
 	struct spdk_poller		*run_timer;
@@ -130,14 +130,6 @@ static struct spdk_bdevperf g_bdevperf = {
 
 struct io_target_group *g_next_tg;
 static uint32_t g_target_count = 0;
-
-/*
- * Used to determine how the I/O buffers should be aligned.
- *  This alignment will be bumped up for blockdevs that
- *  require alignment based on block length - for example,
- *  AIO blockdevs.
- */
-static size_t g_min_alignment = 8;
 
 static void
 generate_data(void *buf, int buf_len, int block_size, void *md_buf, int md_size,
@@ -332,7 +324,6 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 {
 	struct io_target_group *group;
 	struct io_target *target;
-	size_t align;
 	int block_size, data_block_size;
 	int rc;
 
@@ -381,7 +372,7 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 		return 0;
 	}
 
-	g_buf_size = spdk_max(g_buf_size, target->io_size_blocks * block_size);
+	target->buf_size = target->io_size_blocks * block_size;
 
 	target->dif_check_flags = 0;
 	if (spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_REFTAG)) {
@@ -392,12 +383,6 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 	}
 
 	target->size_in_ios = spdk_bdev_get_num_blocks(bdev) / target->io_size_blocks;
-	align = spdk_bdev_get_buf_align(bdev);
-	/*
-	 * TODO: This should actually use the LCM of align and g_min_alignment, but
-	 * it is fairly safe to assume all alignments are powers of two for now.
-	 */
-	g_min_alignment = spdk_max(g_min_alignment, align);
 
 	target->is_draining = false;
 	target->run_timer = NULL;
@@ -542,7 +527,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		spdk_bdev_io_get_iovec(bdev_io, &iovs, &iovcnt);
 		assert(iovcnt == 1);
 		assert(iovs != NULL);
-		if (!verify_data(task->buf, g_buf_size, iovs[0].iov_base, iovs[0].iov_len,
+		if (!verify_data(task->buf, target->buf_size, iovs[0].iov_base, iovs[0].iov_len,
 				 spdk_bdev_get_block_size(target->bdev),
 				 task->md_buf, spdk_bdev_io_get_md_buf(bdev_io),
 				 spdk_bdev_get_md_size(target->bdev),
@@ -785,7 +770,7 @@ bdevperf_zcopy_get_buf_complete(struct spdk_bdev_io *bdev_io, bool success, void
 		assert(iovcnt == 1);
 		assert(iovs != NULL);
 
-		copy_data(iovs[0].iov_base, iovs[0].iov_len, task->buf, g_buf_size,
+		copy_data(iovs[0].iov_base, iovs[0].iov_len, task->buf, target->buf_size,
 			  spdk_bdev_get_block_size(target->bdev),
 			  spdk_bdev_io_get_md_buf(bdev_io), task->md_buf,
 			  spdk_bdev_get_md_size(target->bdev), target->io_size_blocks);
@@ -846,7 +831,7 @@ bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
 
 	task->offset_blocks = offset_in_ios * target->io_size_blocks;
 	if (g_verify || g_reset) {
-		generate_data(task->buf, g_buf_size,
+		generate_data(task->buf, target->buf_size,
 			      spdk_bdev_get_block_size(target->bdev),
 			      task->md_buf, spdk_bdev_get_md_size(target->bdev),
 			      target->io_size_blocks, rand_r(&seed) % 256);
@@ -855,7 +840,7 @@ bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
 			return;
 		} else {
 			task->iov.iov_base = task->buf;
-			task->iov.iov_len = g_buf_size;
+			task->iov.iov_len = target->buf_size;
 			task->io_type = SPDK_BDEV_IO_TYPE_WRITE;
 		}
 	} else if (g_flush) {
@@ -873,7 +858,7 @@ bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
 			return;
 		} else {
 			task->iov.iov_base = task->buf;
-			task->iov.iov_len = g_buf_size;
+			task->iov.iov_len = target->buf_size;
 			task->io_type = SPDK_BDEV_IO_TYPE_WRITE;
 		}
 	}
@@ -1059,8 +1044,8 @@ static struct bdevperf_task *bdevperf_construct_task_on_target(struct io_target 
 		return NULL;
 	}
 
-	task->buf = spdk_zmalloc(g_io_size, g_min_alignment, NULL, SPDK_ENV_LCORE_ID_ANY,
-				 SPDK_MALLOC_DMA);
+	task->buf = spdk_zmalloc(target->buf_size, spdk_bdev_get_buf_align(target->bdev), NULL,
+				 SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (!task->buf) {
 		fprintf(stderr, "Cannot allocate buf for task=%p\n", task);
 		free(task);
@@ -1092,11 +1077,6 @@ bdevperf_construct_targets_tasks(void)
 	struct bdevperf_task *task;
 	int i, task_num = g_queue_depth;
 
-	/*
-	 * Create the task pool after we have enumerated the targets, so that we know
-	 *  the min buffer alignment.  Some backends such as AIO have alignment restrictions
-	 *  that must be accounted for.
-	 */
 	if (g_reset) {
 		task_num += 1;
 	}
@@ -1504,13 +1484,6 @@ main(int argc, char **argv)
 	opts.rpc_addr = NULL;
 	opts.reactor_mask = NULL;
 	opts.shutdown_cb = spdk_bdevperf_shutdown_cb;
-
-	/* default value */
-	g_queue_depth = 0;
-	g_io_size = 0;
-	g_workload_type = NULL;
-	g_time_in_sec = 0;
-	g_mix_specified = false;
 
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, "zfq:o:t:w:CM:P:S:T:", NULL,
 				      bdevperf_parse_arg, bdevperf_usage)) !=
