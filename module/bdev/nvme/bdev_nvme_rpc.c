@@ -533,6 +533,11 @@ apply_firmware_cleanup(void *cb_arg)
 		free_rpc_apply_firmware(firm_ctx->req);
 		free(firm_ctx->req);
 	}
+
+	if (firm_ctx->ch) {
+		spdk_put_io_channel(firm_ctx->ch);
+	}
+
 	TAILQ_FOREACH_SAFE(opt, &firm_ctx->desc_head, tqlst, tmp) {
 		TAILQ_REMOVE(&firm_ctx->desc_head, opt, tqlst);
 		spdk_bdev_close(opt->desc);
