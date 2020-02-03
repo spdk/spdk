@@ -15,7 +15,7 @@ cd "$rootdir"
 function unittest_bdev {
 	$valgrind $testdir/lib/bdev/bdev.c/bdev_ut
 	$valgrind $testdir/lib/bdev/bdev_ocssd.c/bdev_ocssd_ut
-	$valgrind $testdir/lib/bdev/bdev_raid.c/bdev_raid_ut
+	$valgrind $testdir/lib/bdev/raid/bdev_raid.c/bdev_raid_ut
 	$valgrind $testdir/lib/bdev/bdev_zone.c/bdev_zone_ut
 	$valgrind $testdir/lib/bdev/gpt/gpt.c/gpt_ut
 	$valgrind $testdir/lib/bdev/part.c/part_ut
