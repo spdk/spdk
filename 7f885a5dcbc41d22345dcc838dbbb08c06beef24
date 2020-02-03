@@ -46,6 +46,30 @@
       "revId": "7f885a5dcbc41d22345dcc838dbbb08c06beef24",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "972ce07a_5581ee46",
+        "filename": "module/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 409,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-02-03T12:56:56Z",
+      "side": 1,
+      "message": "These created threads are dedicated to poll group. On the other hand, the current thread which called this function is used for configuration management now. These are different and SPDK threads are light weight. So I think creating new thread even on the current core is better",
+      "parentUuid": "586e9015_b892434f",
+      "range": {
+        "startLine": 409,
+        "startChar": 1,
+        "endLine": 409,
+        "endChar": 25
+      },
+      "revId": "7f885a5dcbc41d22345dcc838dbbb08c06beef24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
