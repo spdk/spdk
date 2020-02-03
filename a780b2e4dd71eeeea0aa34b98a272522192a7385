@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5cb37007_b6566c44",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 27
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-02-03T10:30:57Z",
+      "side": 1,
+      "message": "Both \"help\" and \"developer-tools\" have long and short versions of option. Let\u0027s keep that consistent.",
+      "range": {
+        "startLine": 15,
+        "startChar": 9,
+        "endLine": 15,
+        "endChar": 16
+      },
+      "revId": "a780b2e4dd71eeeea0aa34b98a272522192a7385",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "af980c0f_5435ae2c",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 27
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-02-03T10:30:57Z",
+      "side": 1,
+      "message": "Nit: seems like unnecessary moving code around in the file",
+      "range": {
+        "startLine": 80,
+        "startChar": 0,
+        "endLine": 83,
+        "endChar": 3
+      },
+      "revId": "a780b2e4dd71eeeea0aa34b98a272522192a7385",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f93388e2_c0f72ac5",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 27
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-02-03T10:30:57Z",
+      "side": 1,
+      "message": "Nit: seems like unnecessary moving code around in the file",
+      "range": {
+        "startLine": 154,
+        "startChar": 0,
+        "endLine": 157,
+        "endChar": 3
+      },
+      "revId": "a780b2e4dd71eeeea0aa34b98a272522192a7385",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0292c908_839e6228",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 27
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-02-03T10:30:57Z",
+      "side": 1,
+      "message": "Nit: seems like unnecessary moving code around in the file",
+      "range": {
+        "startLine": 212,
+        "startChar": 0,
+        "endLine": 221,
+        "endChar": 3
+      },
+      "revId": "a780b2e4dd71eeeea0aa34b98a272522192a7385",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
