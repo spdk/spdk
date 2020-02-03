@@ -279,11 +279,6 @@ struct muser_ctrlr {
 
 	TAILQ_ENTRY(muser_ctrlr)		link;
 
-	union spdk_nvme_cc_register		cc;
-	union spdk_nvme_aqa_register		aqa;
-	uint64_t				asq;
-	uint64_t				acq;
-
 	/* even indices are SQ, odd indices are CQ */
 	uint32_t				*doorbells;
 
@@ -543,136 +538,6 @@ max_queue_size(struct muser_ctrlr const *ctrlr)
 	return ctrlr->qp[0]->qpair.ctrlr->vcprop.cap.bits.mqes + 1;
 }
 
-static ssize_t
-aqa_write(struct muser_ctrlr *ctrlr,
-	  union spdk_nvme_aqa_register const *from)
-{
-	assert(ctrlr);
-	assert(from);
-
-	if (from->bits.asqs + 1 > max_queue_size(ctrlr) ||
-	    from->bits.acqs + 1 > max_queue_size(ctrlr)) {
-		SPDK_ERRLOG("admin queue(s) too big, ASQS=%d, ACQS=%d, max=%d\n",
-			    from->bits.asqs + 1, from->bits.acqs + 1,
-			    max_queue_size(ctrlr));
-		return -EINVAL;
-	}
-	ctrlr->aqa.raw = from->raw;
-	SPDK_NOTICELOG("write to AQA %x\n", ctrlr->aqa.raw);
-	return 0;
-}
-
-static void
-write_partial(uint8_t const *buf, const loff_t pos, const size_t count,
-	      const size_t reg_off, uint8_t *reg)
-{
-	memcpy(reg + pos - reg_off, buf, count);
-}
-
-/*
- * Tells whether either the lower 4 bytes are written at the beginning of the
- * 8-byte register, or the higher 4 starting at the middle.
- */
-static inline bool
-_is_half(const size_t p, const size_t c, const size_t o)
-{
-	return c == sizeof(uint32_t) && (p == o || (p == o + sizeof(uint32_t)));
-}
-
-/*
- * Tells whether the full 8 bytes are written at the correct offset.
- */
-static inline bool
-_is_full(const size_t p, const size_t c, const size_t o)
-{
-	return c == sizeof(uint64_t) && p == o;
-}
-
-/*
- * Either write or lower/upper 4 bytes, or the full 8 bytes.
- *
- * p: position
- * c: count
- * o: register offset
- */
-static inline bool
-is_valid_asq_or_acq_write(const size_t p, const size_t c, const size_t o)
-{
-	return _is_half(p, c, o) || _is_full(p, c, o);
-}
-
-static ssize_t
-asq_or_acq_write(uint8_t const *buf, const loff_t pos,
-		 const size_t count, uint64_t *reg, const size_t reg_off)
-{
-	/*
-	 * The NVMe driver seems to write those only in 4 upper/lower bytes, but
-	 * we still have to support writing the whole register in one go.
-	 */
-	if (!is_valid_asq_or_acq_write((size_t)pos, count, reg_off)) {
-		SPDK_ERRLOG("bad write count %zu and/or offset 0x%lx\n",
-			    count, reg_off);
-		return -EINVAL;
-	}
-
-	write_partial(buf, pos, count, reg_off, (uint8_t *)reg);
-
-	return 0;
-}
-
-static ssize_t
-asq_write(uint64_t *asq, uint8_t const *buf,
-	  const loff_t pos, const size_t count)
-{
-	int ret = asq_or_acq_write(buf, pos, count, asq,
-				   offsetof(struct spdk_nvme_registers, asq));
-	SPDK_NOTICELOG("ASQ=0x%lx\n", *asq);
-	return ret;
-}
-
-static ssize_t
-acq_write(uint64_t *acq, uint8_t const *buf,
-	  const loff_t pos, const size_t count)
-{
-	int ret = asq_or_acq_write(buf, pos, count, acq,
-				   offsetof(struct spdk_nvme_registers, acq));
-	SPDK_NOTICELOG("ACQ=0x%lx\n", *acq);
-	return ret;
-}
-
-#define REGISTER_RANGE(name, size) \
-	offsetof(struct spdk_nvme_registers, name) ... \
-		offsetof(struct spdk_nvme_registers, name) + size - 1
-
-#define ASQ \
-	REGISTER_RANGE(asq, sizeof(uint64_t))
-
-#define ACQ \
-	REGISTER_RANGE(acq, sizeof(uint64_t))
-
-#define ADMIN_QUEUES \
-	offsetof(struct spdk_nvme_registers, aqa) ... \
-		offsetof(struct spdk_nvme_registers, acq) + sizeof(uint64_t) - 1
-
-static ssize_t
-admin_queue_write(struct muser_ctrlr *ctrlr, uint8_t const *buf,
-		  const size_t count, const loff_t pos)
-{
-	switch (pos) {
-	case offsetof(struct spdk_nvme_registers, aqa):
-		return aqa_write(ctrlr,
-				 (union spdk_nvme_aqa_register *)buf);
-	case ASQ:
-		return asq_write(&ctrlr->asq, buf, pos, count);
-	case ACQ:
-		return acq_write(&ctrlr->acq, buf, pos, count);
-	default:
-		break;
-	}
-	SPDK_ERRLOG("bad admin queue write offset 0x%lx\n", pos);
-	return -EINVAL;
-}
-
 /* TODO this should be a libmuser public function */
 static void *
 map_one(void *prv, uint64_t addr, uint64_t len, dma_sg_t *sg, struct iovec *iov)
@@ -747,15 +612,16 @@ static int
 asq_map(struct muser_ctrlr *ctrlr)
 {
 	struct io_q q;
+	const struct spdk_nvme_registers *regs = spdk_nvmf_ctrlr_get_regs(ctrlr->qp[0]->qpair.ctrlr);
 
 	assert(ctrlr != NULL);
 	assert(ctrlr->qp[0]->sq.addr == NULL);
 	/* XXX ctrlr->asq == 0 is a valid memory address */
 
-	q.size = ctrlr->aqa.bits.asqs + 1;
+	q.size = regs->aqa.bits.asqs + 1;
 	q.head = ctrlr->doorbells[0] = 0;
 	q.cqid = 0;
-	q.addr = map_one(ctrlr->lm_ctx, ctrlr->asq,
+	q.addr = map_one(ctrlr->lm_ctx, regs->asq,
 			 q.size * sizeof(struct spdk_nvme_cmd), NULL, NULL);
 	if (q.addr == NULL) {
 		return -1;
@@ -832,17 +698,19 @@ static int
 acq_map(struct muser_ctrlr *ctrlr)
 {
 	struct io_q *q;
+	const struct spdk_nvme_registers *regs = spdk_nvmf_ctrlr_get_regs(ctrlr->qp[0]->qpair.ctrlr);
 
 	assert(ctrlr != NULL);
 	assert(ctrlr->qp[0] != NULL);
 	assert(ctrlr->qp[0]->cq.addr == NULL);
-	assert(ctrlr->acq != 0);
+	assert(regs != NULL);
+	assert(regs->acq != 0);
 
 	q = &ctrlr->qp[0]->cq;
 
-	q->size = ctrlr->aqa.bits.acqs + 1;
+	q->size = regs->aqa.bits.acqs + 1;
 	q->tail = 0;
-	q->addr = map_one(ctrlr->lm_ctx, ctrlr->acq,
+	q->addr = map_one(ctrlr->lm_ctx, regs->acq,
 			  q->size * sizeof(struct spdk_nvme_cpl), NULL, NULL);
 	if (q->addr == NULL) {
 		return -1;
@@ -874,8 +742,10 @@ static int
 muser_map_prps(struct muser_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 	       struct iovec *iov, uint32_t length)
 {
+	const struct spdk_nvme_registers *regs = spdk_nvmf_ctrlr_get_regs(ctrlr->qp[0]->qpair.ctrlr);
+
 	return spdk_nvme_map_prps(ctrlr->lm_ctx, cmd, iov, length,
-				  host_mem_page_size(ctrlr->cc.bits.mps), /* TODO don't compute this every time, store it in ctrlr */
+				  host_mem_page_size(regs->cc.bits.mps), /* TODO don't compute this every time, store it in ctrlr */
 				  _map_one);
 }
 
@@ -886,6 +756,7 @@ static int
 dptr_remap(struct muser_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd, size_t size)
 {
 	struct iovec iov;
+	const struct spdk_nvme_registers *regs = spdk_nvmf_ctrlr_get_regs(ctrlr->qp[0]->qpair.ctrlr);
 
 	assert(ctrlr != NULL);
 	assert(cmd != NULL);
@@ -897,7 +768,7 @@ dptr_remap(struct muser_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd, size_t size)
 	if (muser_map_prps(ctrlr, cmd, &iov, size) != 1) {
 		return -1;
 	}
-	cmd->dptr.prp.prp1 = (uint64_t)iov.iov_base >> ctrlr->cc.bits.mps;
+	cmd->dptr.prp.prp1 = (uint64_t)iov.iov_base >> regs->cc.bits.mps;
 	return 0;
 }
 
@@ -1643,15 +1514,9 @@ write_bar0(void *pvt, char *buf, size_t count, loff_t pos)
 		       ctrlr, count, pos);
 	spdk_log_dump(stdout, "muser_write", buf, count);
 
-	switch (pos) {
-	case ADMIN_QUEUES:
-		return admin_queue_write(ctrlr, buf, count, pos);
-	default:
-		if (pos >= DOORBELLS) {
-			return handle_dbl_access(ctrlr, (uint32_t *)buf, count,
-						 pos, true);
-		}
-
+	if (pos >= DOORBELLS) {
+		return handle_dbl_access(ctrlr, (uint32_t *)buf, count,
+					 pos, true);
 	}
 
 	return do_prop_req(ctrlr, buf, count, pos, true);
@@ -2805,6 +2670,7 @@ handle_cmd_req(struct muser_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 {
 	int err;
 	struct muser_req *muser_req;
+	const struct spdk_nvme_registers *regs = spdk_nvmf_ctrlr_get_regs(ctrlr->qp[0]->qpair.ctrlr);
 
 	assert(ctrlr != NULL);
 	assert(cmd != NULL);
@@ -2823,7 +2689,7 @@ handle_cmd_req(struct muser_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 	if (spdk_nvmf_qpair_is_admin_queue(req->qpair)) {
 		req->xfer = SPDK_NVME_DATA_CONTROLLER_TO_HOST;
 		req->length = 1 << 12;
-		req->data = (void *)(req->cmd->nvme_cmd.dptr.prp.prp1 << ctrlr->cc.bits.mps);
+		req->data = (void *)(req->cmd->nvme_cmd.dptr.prp.prp1 << regs->cc.bits.mps);
 	} else {
 		bool submit;
 		err = handle_cmd_io_req(ctrlr, req, &submit);
