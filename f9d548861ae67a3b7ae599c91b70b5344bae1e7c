@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9cb70cd5_47a506c0",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-02-03T06:34:09Z",
+      "side": 1,
+      "message": "poll mode driver may be kind in change long.",
+      "range": {
+        "startLine": 7,
+        "startChar": 38,
+        "endLine": 7,
+        "endChar": 42
+      },
+      "revId": "f9d548861ae67a3b7ae599c91b70b5344bae1e7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "84df30ab_091d8240",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-02-03T06:34:09Z",
+      "side": 1,
+      "message": "both or all?",
+      "range": {
+        "startLine": 8,
+        "startChar": 59,
+        "endLine": 8,
+        "endChar": 66
+      },
+      "revId": "f9d548861ae67a3b7ae599c91b70b5344bae1e7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f9ffb1b4_33a6fad8",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1607,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-02-03T06:34:09Z",
+      "side": 1,
+      "message": "free(name-\u003ecipher);\nfree(name-\u003ekey2);\n\nwill be OK because name is freed below.",
+      "revId": "f9d548861ae67a3b7ae599c91b70b5344bae1e7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bffefbad_989cdee2",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1963,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-02-03T06:34:09Z",
+      "side": 1,
+      "message": "free(name-\u003ecipher);\nfree(name-\u003ekey2);\n\nwill be OK because name is freed below.",
+      "revId": "f9d548861ae67a3b7ae599c91b70b5344bae1e7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
