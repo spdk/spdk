@@ -322,6 +322,21 @@ void spdk_nvmf_transport_register(const struct spdk_nvmf_transport_ops *ops);
 
 int spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req);
 
+/**
+ * A subset of struct spdk_nvme_registers that are emulated by a fabrics device.
+ */
+struct spdk_nvmf_registers {
+	union spdk_nvme_cap_register	cap;
+	union spdk_nvme_vs_register	vs;
+	union spdk_nvme_cc_register	cc;
+	union spdk_nvme_csts_register	csts;
+	union spdk_nvme_aqa_register	aqa;
+	uint64_t			asq;
+	uint64_t			acq;
+};
+
+const struct spdk_nvmf_registers *spdk_nvmf_ctrlr_get_regs(struct spdk_nvmf_ctrlr *ctrlr);
+
 void spdk_nvmf_request_free_buffers(struct spdk_nvmf_request *req,
 				    struct spdk_nvmf_transport_poll_group *group,
 				    struct spdk_nvmf_transport *transport);
