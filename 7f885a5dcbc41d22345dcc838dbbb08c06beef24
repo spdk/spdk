@@ -22,6 +22,30 @@
       "revId": "7f885a5dcbc41d22345dcc838dbbb08c06beef24",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "586e9015_b892434f",
+        "filename": "module/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 409,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-02-03T11:41:29Z",
+      "side": 1,
+      "message": "I\u0027ve just noticed.... should we create new thread for current core? We already have one.",
+      "parentUuid": "d801a00d_8df6d88d",
+      "range": {
+        "startLine": 409,
+        "startChar": 1,
+        "endLine": 409,
+        "endChar": 25
+      },
+      "revId": "7f885a5dcbc41d22345dcc838dbbb08c06beef24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
