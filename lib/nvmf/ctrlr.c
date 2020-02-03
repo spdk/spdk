@@ -644,6 +644,12 @@ spdk_nvmf_ctrlr_cmd_connect(struct spdk_nvmf_request *req)
 	return _spdk_nvmf_ctrlr_connect(req);
 }
 
+const struct spdk_nvme_registers *
+spdk_nvmf_ctrlr_get_regs(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	return &ctrlr->vcprop;
+}
+
 static uint64_t
 nvmf_prop_get_cap(struct spdk_nvmf_ctrlr *ctrlr)
 {

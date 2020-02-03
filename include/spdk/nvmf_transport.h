@@ -312,6 +312,8 @@ struct spdk_nvmf_transport_ops {
  */
 void spdk_nvmf_transport_register(const struct spdk_nvmf_transport_ops *ops);
 
+const struct spdk_nvme_registers *spdk_nvmf_ctrlr_get_regs(struct spdk_nvmf_ctrlr *ctrlr);
+
 void spdk_nvmf_request_free_buffers(struct spdk_nvmf_request *req,
 				    struct spdk_nvmf_transport_poll_group *group,
 				    struct spdk_nvmf_transport *transport);
