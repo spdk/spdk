@@ -78,6 +78,8 @@ struct spdk_nvmf_tgt *g_spdk_nvmf_tgt = NULL;
 
 static enum nvmf_tgt_state g_tgt_state;
 
+static struct spdk_thread *g_tgt_fini_thread = NULL;
+
 /* Round-Robin/IP-based tracking of threads to poll group assignment */
 static struct nvmf_tgt_poll_group *g_next_poll_group = NULL;
 
@@ -307,30 +309,45 @@ acceptor_poll(void *arg)
 }
 
 static void
-nvmf_tgt_destroy_poll_group_done(void *ctx)
+_nvmf_tgt_destroy_poll_group_done(void *ctx)
 {
-	g_tgt_state = NVMF_TGT_FINI_STOP_ACCEPTOR;
-	assert(g_num_poll_groups == 0);
-	nvmf_tgt_advance_state();
+	assert(g_num_poll_groups > 0);
+
+	if (--g_num_poll_groups == 0) {
+		g_tgt_state = NVMF_TGT_FINI_STOP_ACCEPTOR;
+		nvmf_tgt_advance_state();
+	}
+}
+
+static void
+nvmf_tgt_destroy_poll_group_done(void *cb_arg, int status)
+{
+	struct nvmf_tgt_poll_group *pg = cb_arg;
+
+	free(pg);
+
+	spdk_thread_send_msg(g_tgt_fini_thread, _nvmf_tgt_destroy_poll_group_done, NULL);
 }
 
 static void
 nvmf_tgt_destroy_poll_group(void *ctx)
 {
-	struct nvmf_tgt_poll_group *pg, *tpg;
-	struct spdk_thread *thread;
+	struct nvmf_tgt_poll_group *pg = ctx;
 
-	thread = spdk_get_thread();
+	spdk_nvmf_poll_group_destroy(pg->group, nvmf_tgt_destroy_poll_group_done, pg);
+}
+
+static void
+nvmf_tgt_destroy_poll_groups(void)
+{
+	struct nvmf_tgt_poll_group *pg, *tpg;
+
+	g_tgt_fini_thread = spdk_get_thread();
+	assert(g_tgt_fini_thread != NULL);
 
 	TAILQ_FOREACH_SAFE(pg, &g_poll_groups, link, tpg) {
-		if (pg->thread == thread) {
-			TAILQ_REMOVE(&g_poll_groups, pg, link);
-			spdk_nvmf_poll_group_destroy(pg->group, NULL, NULL);
-			free(pg);
-			assert(g_num_poll_groups > 0);
-			g_num_poll_groups--;
-			return;
-		}
+		TAILQ_REMOVE(&g_poll_groups, pg, link);
+		spdk_thread_send_msg(pg->thread, nvmf_tgt_destroy_poll_group, pg);
 	}
 }
 
@@ -493,9 +510,7 @@ nvmf_tgt_advance_state(void)
 		}
 		case NVMF_TGT_FINI_DESTROY_POLL_GROUPS:
 			/* Send a message to each thread and destroy the poll group */
-			spdk_for_each_thread(nvmf_tgt_destroy_poll_group,
-					     NULL,
-					     nvmf_tgt_destroy_poll_group_done);
+			nvmf_tgt_destroy_poll_groups();
 			break;
 		case NVMF_TGT_FINI_STOP_ACCEPTOR:
 			spdk_poller_unregister(&g_acceptor_poller);
