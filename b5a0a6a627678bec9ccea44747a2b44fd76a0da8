@@ -22,6 +22,30 @@
       "revId": "b5a0a6a627678bec9ccea44747a2b44fd76a0da8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a2cde649_974063fc",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 1016781
+      },
+      "writtenOn": "2020-02-03T18:10:50Z",
+      "side": 1,
+      "message": "shortly discuss with Ben and proposed to prepare separate patch for that\n\n... and because of \"snow ball effect\" give up the idea to change the interfaces\neventually it reaches rdma/ibv which doesn\u0027t have corresponding const qualifiers\nwhich would end up with some either compiler warnings or need to introduce and polute the code with macro to unconst\n\nadditionally few func would need to have const / non const version...",
+      "parentUuid": "137fcc36_e60f28cf",
+      "range": {
+        "startLine": 468,
+        "startChar": 31,
+        "endLine": 468,
+        "endChar": 99
+      },
+      "revId": "b5a0a6a627678bec9ccea44747a2b44fd76a0da8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
