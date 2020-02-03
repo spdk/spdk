@@ -4,20 +4,23 @@ The following guide explains how to use the scripts in the `spdk/scripts/vagrant
 
 1. Install and configure [Git](https://git-scm.com/) on your platform.
 2. Install [VirtualBox 5.1](https://www.virtualbox.org/wiki/Downloads) or newer
-3. Install [VirtualBox Extension Pack](https://www.virtualbox.org/wiki/Downloads)
+3. Install* [VirtualBox Extension Pack](https://www.virtualbox.org/wiki/Downloads)
 4. Install and configure [Vagrant 1.9.4](https://www.vagrantup.com) or newer
 
-## Mac OSX Setup (High Sierra)
+* Note: The extension pack has different licensing than main VirtualBox, please
+review them carefully as the evaluation license is for personal use only.
 
-OSX platforms already have Git installed, however, installing the [Apple xCode](https://developer.apple.com/xcode/) developer kit and [xCode Command Line tools](https://developer.apple.com/xcode/features/) will provide UNIX command line tools such as make, awk, sed, ssh, tar, and zip. xCode can be installed through the App Store on you Mac.
+## Mac OSX Setup (High Sierra)
 
 Quick start instructions for OSX:
 
 1. Install Homebrew
 2. Install Virtual Box Cask
-3. Install Virtual Box Extentions
+3. Install Virtual Box Extension Pack*
 4. Install Vagrant Cask
 
+* Note: The extension pack has different licensing than main VirtualBox, please
+review them carefully as the evaluation license is for personal use only.
 ```
    /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
    brew doctor
@@ -29,14 +32,16 @@ Quick start instructions for OSX:
 
 ## Windows 10 Setup
 
-1. Windows platforms should install [Git](https://git-scm.com/download/win) from git-scm.com.
-   - This provides everything needed to use git on Windows, including a `git-bash` command line environment.
+1. Windows platforms should install some form of git.
 2. Install [VirtualBox 5.1](https://www.virtualbox.org/wiki/Downloads) or newer
-3. Install [VirtualBox Extension Pack](https://www.virtualbox.org/wiki/Downloads)
+3. Install* [VirtualBox Extension Pack](https://www.virtualbox.org/wiki/Downloads)
 4. Install and configure [Vagrant 1.9.4](https://www.vagrantup.com) or newer
 
+* Note: The extension pack has different licensing than main VirtualBox, please
+review them carefully as the evaluation license is for personal use only.
+
 - Note: VirtualBox requires virtualization to be enabled in the BIOS.
-- Note: You should disable Hyper-V in Windows RS 3 laptop. Search `windows features` uncheck Hyper-V, restart laptop
+- Note: You should disable Hyper-V in Windows RS 3 laptop. Search `windows features` un-check Hyper-V, restart laptop
 
 ## Linux Setup
 
@@ -49,9 +54,11 @@ Following the generic instructions should be sufficient for most Linux distribut
 3. yum install qt*
 4. yum install libsdl*
 5. rpm -ivh VirtualBox-5.2-5.2.16_123759_fedora26-1.x86_64.rpm (select the right version in https://www.virtualbox.org/wiki/Linux_Downloads)
-6. VBoxManage extpack install Oracle_VM_VirtualBox_Extension_Pack-5.2.16.vbox-extpack(install the same pack as your installed version of VirtualBox)
+6. VBoxManage extpack install Oracle_VM_VirtualBox_Extension_Pack-5.2.16.vbox-extpack(install the same pack* as your installed version of VirtualBox)
 7. rpm -ivh vagrant_2.1.2_x86_64.rpm
 
+* Note: The extension pack has different licensing than main VirtualBox, please
+review them carefully as the evaluation license is for personal use only.
 
 ## Configure Vagrant
 
@@ -125,14 +132,14 @@ This script will:
 6. rsync a copy of the `~/vagrant_tools` directory to `/home/vagrant/tools` (optional)
 7. execute vm_setup.sh on the guest to install all spdk dependencies (optional)
 
-This arrangement allows the provisioning of multiple, different VMs within that same directory hierarchy using the same spdk repository. Following the creation of the vm you'll need to ssh into your virtual box and finish the VM initializaton.
+This arrangement allows the provisioning of multiple, different VMs within that same directory hierarchy using the same spdk repository. Following the creation of the vm you'll need to ssh into your virtual box and finish the VM initialization.
 
 ```
   $ cd <distro>
   $ vagrant ssh
 ```
 
-## Finish VM Initializtion
+## Finish VM Initialization
 
 A copy of the `spdk` repository you cloned will exist in the `spdk_repo` directory of the `/home/vagrant` user account. After using `vagrant ssh` to enter your VM you must complete the initialization of your VM by running the `scripts/vagrant/update.sh` script. For example:
 
@@ -148,9 +155,9 @@ The `update.sh` script completes initialization of the VM by automating the foll
 
 This only needs to be done once. This is also not necessary for Fedora VMs provisioned with the -d flag. The `vm_setup` script performs these operations instead.
 
-## Post VM Initializtion
+## Post VM Initialization
 
-Following VM initializtion you must:
+Following VM initialization you must:
 
 1. Verify you have an emulated NVMe device
 2. Compile your spdk source tree
@@ -204,7 +211,7 @@ After running vm_setup.sh the `run-autorun.sh` can be used to run `spdk/autorun.
 **NOTE:** As of this writing the FreeBSD Virtualbox instance does not correctly support the vagrant-proxyconf feature.
 ---
 
-The following steps are done by the `update.sh` script. It is recommened that you capture the output of `update.sh` with a typescript. E.g.:
+The following steps are done by the `update.sh` script. It is recommended that you capture the output of `update.sh` with a typescript. E.g.:
 
 ```
   $ script update.log sudo spdk_repo/spdk/scripts/vagrant/update.sh
