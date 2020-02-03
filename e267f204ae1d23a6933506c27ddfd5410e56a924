@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2fe9c816_0813d70b",
+        "filename": "doc/ftl.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-02-03T05:45:46Z",
+      "side": 1,
+      "message": "shift right a space.",
+      "range": {
+        "startLine": 33,
+        "startChar": 27,
+        "endLine": 33,
+        "endChar": 28
+      },
+      "revId": "e267f204ae1d23a6933506c27ddfd5410e56a924",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd77be37_4d079ea5",
+        "filename": "doc/ftl.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-02-03T05:45:46Z",
+      "side": 1,
+      "message": "shift right a space.",
+      "range": {
+        "startLine": 35,
+        "startChar": 27,
+        "endLine": 35,
+        "endChar": 28
+      },
+      "revId": "e267f204ae1d23a6933506c27ddfd5410e56a924",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bfc2f3cb_fc009685",
+        "filename": "doc/ftl.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-02-03T05:45:46Z",
+      "side": 1,
+      "message": "shift right a space.",
+      "range": {
+        "startLine": 39,
+        "startChar": 27,
+        "endLine": 39,
+        "endChar": 28
+      },
+      "revId": "e267f204ae1d23a6933506c27ddfd5410e56a924",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b9a40363_22d0954d",
+        "filename": "doc/ftl.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-02-03T05:45:46Z",
+      "side": 1,
+      "message": "top ?",
+      "range": {
+        "startLine": 267,
+        "startChar": 26,
+        "endLine": 267,
+        "endChar": 29
+      },
+      "revId": "e267f204ae1d23a6933506c27ddfd5410e56a924",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
