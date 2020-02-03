@@ -175,6 +175,10 @@ spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 	}
 
 	free(group->sgroups);
+
+	if (group->destroy_cb_fn) {
+		group->destroy_cb_fn(group->destroy_cb_arg, 0);
+	}
 }
 
 static void
@@ -724,8 +728,13 @@ spdk_nvmf_poll_group_create(struct spdk_nvmf_tgt *tgt)
 }
 
 void
-spdk_nvmf_poll_group_destroy(struct spdk_nvmf_poll_group *group)
+spdk_nvmf_poll_group_destroy(struct spdk_nvmf_poll_group *group,
+			     spdk_nvmf_poll_group_destroy_done_fn cb_fn,
+			     void *cb_arg)
 {
+	group->destroy_cb_fn = cb_fn;
+	group->destroy_cb_arg = cb_arg;
+
 	/* This function will put the io_channel associated with this poll group */
 	spdk_nvmf_tgt_destroy_poll_group_qpairs(group);
 }

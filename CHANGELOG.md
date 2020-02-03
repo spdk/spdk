@@ -2,6 +2,10 @@
 
 ## v20.04: (Upcoming Release)
 
+### nvmf
+
+`spdk_nvmf_poll_group_destroy()` is now asynchronous and accepts a completion callback.
+
 ## v20.01
 
 ### bdev
