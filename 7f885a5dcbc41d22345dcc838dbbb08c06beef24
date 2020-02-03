@@ -118,6 +118,30 @@
       "revId": "7f885a5dcbc41d22345dcc838dbbb08c06beef24",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "37749db3_42e98746",
+        "filename": "module/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 409,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-02-03T21:48:46Z",
+      "side": 1,
+      "message": "Hi Alexey,\n\nAbout your first comment, spdk_for_each_reactor() will not be helpful for this case.\nEach event call has to send message on the core anyway.\nspdk_for_each_reactor() don\u0027t have spdk_for_each_reactor_continue().\nSo spdk_for_each_reactor() don\u0027t know the completion of each message.\nHence we cannot remove g_num_creating_poll_groups.\n\nThis means that there are few use cases of spdk_for_each_reactor() but framework_get_reactors RPC needs it and we will find other cases that needs it in future. So it will be OK.\n\nThanks,\nShuhei",
+      "parentUuid": "7ca9846e_4fd0e05b",
+      "range": {
+        "startLine": 409,
+        "startChar": 1,
+        "endLine": 409,
+        "endChar": 25
+      },
+      "revId": "7f885a5dcbc41d22345dcc838dbbb08c06beef24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
