@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d642517d_af843563",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-02-03T06:42:39Z",
+      "side": 1,
+      "message": "In SPDK, I usually see the comment is located not in the same line but in the right above the line.",
+      "range": {
+        "startLine": 312,
+        "startChar": 36,
+        "endLine": 312,
+        "endChar": 46
+      },
+      "revId": "a47c460dd10ca26200a06da1da59564db8f41f7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
