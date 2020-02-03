@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "02231275_a1fff26e",
+        "filename": "configure",
+        "patchSetId": 5
+      },
+      "lineNbr": 548,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-02-03T05:24:54Z",
+      "side": 1,
+      "message": "This may be a single tab.",
+      "range": {
+        "startLine": 548,
+        "startChar": 1,
+        "endLine": 548,
+        "endChar": 3
+      },
+      "revId": "e9c5442f036e9dd9142b40d7b1305b2dac86f759",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
