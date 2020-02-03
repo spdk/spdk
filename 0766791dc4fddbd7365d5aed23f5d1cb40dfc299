@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "18b1098a_7e5ae003",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 744,
+      "author": {
+        "id": 1016781
+      },
+      "writtenOn": "2020-02-03T21:06:11Z",
+      "side": 1,
+      "message": "What about validation of acqs/asqs? Would by helpful for bring up emu devices?",
+      "range": {
+        "startLine": 744,
+        "startChar": 1,
+        "endLine": 744,
+        "endChar": 41
+      },
+      "revId": "0766791dc4fddbd7365d5aed23f5d1cb40dfc299",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
