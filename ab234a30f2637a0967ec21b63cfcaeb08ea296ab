@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f57f9eac_b6d8b43b",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1016781
+      },
+      "writtenOn": "2020-02-03T20:55:51Z",
+      "side": 1,
+      "message": "comment consistently, either above or on the right?",
+      "range": {
+        "startLine": 319,
+        "startChar": 19,
+        "endLine": 319,
+        "endChar": 43
+      },
+      "revId": "ab234a30f2637a0967ec21b63cfcaeb08ea296ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
