@@ -283,7 +283,7 @@ function install_nvmecli()
             echo "nvme-cli already checked out. Skipping"
         fi
 	if [ ! -d "/usr/local/src/nvme-cli" ]; then
-            git clone "https://review.gerrithub.io/spdk/nvme-cli" "nvme-cli-cuse"
+            git clone "https://review.spdk.io/spdk/nvme-cli" "nvme-cli-cuse"
             git -C ./nvme-cli-cuse checkout nvme-cuse
             make -C ./nvme-cli-cuse
             sudo mv ./nvme-cli-cuse /usr/local/src/nvme-cli
@@ -393,7 +393,7 @@ cd ~
 : ${GIT_REPO_DPDK=https://github.com/spdk/dpdk.git}; export GIT_REPO_DPDK
 : ${GIT_REPO_LIBRXE=https://github.com/SoftRoCE/librxe-dev.git}; export GIT_REPO_LIBRXE
 : ${GIT_REPO_OPEN_ISCSI=https://github.com/open-iscsi/open-iscsi}; export GIT_REPO_OPEN_ISCSI
-: ${GIT_REPO_ROCKSDB=https://review.gerrithub.io/spdk/rocksdb}; export GIT_REPO_ROCKSDB
+: ${GIT_REPO_ROCKSDB=https://review.spdk.io/spdk/rocksdb}; export GIT_REPO_ROCKSDB
 : ${GIT_REPO_FIO=http://git.kernel.dk/fio.git}; export GIT_REPO_FIO
 : ${GIT_REPO_FLAMEGRAPH=https://github.com/brendangregg/FlameGraph.git}; export GIT_REPO_FLAMEGRAPH
 : ${GIT_REPO_QEMU=https://github.com/spdk/qemu}; export GIT_REPO_QEMU
