@@ -325,7 +325,7 @@ nvmf_tgt_destroy_poll_group(void *ctx)
 	TAILQ_FOREACH_SAFE(pg, &g_poll_groups, link, tpg) {
 		if (pg->thread == thread) {
 			TAILQ_REMOVE(&g_poll_groups, pg, link);
-			spdk_nvmf_poll_group_destroy(pg->group);
+			spdk_nvmf_poll_group_destroy(pg->group, NULL, NULL);
 			free(pg);
 			assert(g_num_poll_groups > 0);
 			g_num_poll_groups--;

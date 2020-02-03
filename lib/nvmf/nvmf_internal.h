@@ -185,6 +185,9 @@ struct spdk_nvmf_poll_group {
 
 	/* Statistics */
 	struct spdk_nvmf_poll_group_stat		stat;
+
+	spdk_nvmf_poll_group_destroy_done_fn		destroy_cb_fn;
+	void						*destroy_cb_arg;
 };
 
 union nvmf_h2c_msg {
