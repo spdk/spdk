@@ -5,7 +5,7 @@ import re
 import sys
 
 comment = re.compile(r'^\s*#')
-assign = re.compile(r'^\s*([a-zA-Z_]+)\s*(\?)?=\s*([^#]*)')
+assign = re.compile(r'^\s*([a-zA-Z0-9_]+)\s*(\?)?=\s*([^#]*)')
 
 args = os.environ.copy()
 for arg in sys.argv:
