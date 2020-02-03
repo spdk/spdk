@@ -1,45 +1,5 @@
-Starting DPDK 17.11.0 initialization...
-[ DPDK EAL parameters: blobcli -c 0x1 --file-prefix=spdk_pid5072 ]
-EAL: Probing VFIO support...
-EAL: PCI device 0000:00:04.0 on NUMA socket 0
-EAL:   probe driver: 8086:2f20 spdk_ioat
-EAL: PCI device 0000:00:04.1 on NUMA socket 0
-EAL:   probe driver: 8086:2f21 spdk_ioat
-EAL: PCI device 0000:00:04.2 on NUMA socket 0
-EAL:   probe driver: 8086:2f22 spdk_ioat
-EAL: PCI device 0000:00:04.3 on NUMA socket 0
-EAL:   probe driver: 8086:2f23 spdk_ioat
-EAL: PCI device 0000:00:04.4 on NUMA socket 0
-EAL:   probe driver: 8086:2f24 spdk_ioat
-EAL: PCI device 0000:00:04.5 on NUMA socket 0
-EAL:   probe driver: 8086:2f25 spdk_ioat
-EAL: PCI device 0000:00:04.6 on NUMA socket 0
-EAL:   probe driver: 8086:2f26 spdk_ioat
-EAL: PCI device 0000:00:04.7 on NUMA socket 0
-CRYPTODEV: [crypto_aesni_mb] - Creating cryptodev crypto_aesni_mb
-
-CRYPTODEV: [crypto_aesni_mb] - Initialisation parameters - name: crypto_aesni_mb,socket id: 0, max queue pairs: 8
-$(OPT)cryptodev_aesni_mb_create() line 976: IPSec Multi-buffer library version used: 0.49.0
-
-EAL:   probe driver: 8086:2f27 spdk_ioat
-EAL: PCI device 0000:80:04.0 on NUMA socket 1
-EAL:   probe driver: 8086:2f20 spdk_ioat
-EAL: PCI device 0000:80:04.1 on NUMA socket 1
-EAL:   probe driver: 8086:2f21 spdk_ioat
-EAL: PCI device 0000:80:04.2 on NUMA socket 1
-EAL:   probe driver: 8086:2f22 spdk_ioat
-EAL: PCI device 0000:80:04.3 on NUMA socket 1
-EAL:   probe driver: 8086:2f23 spdk_ioat
-EAL: PCI device 0000:80:04.4 on NUMA socket 1
-EAL:   probe driver: 8086:2f24 spdk_ioat
-EAL: PCI device 0000:80:04.5 on NUMA socket 1
-EAL:   probe driver: 8086:2f25 spdk_ioat
-EAL: PCI device 0000:80:04.6 on NUMA socket 1
-EAL:   probe driver: 8086:2f26 spdk_ioat
-EAL: PCI device 0000:80:04.7 on NUMA socket 1
-EAL:   probe driver: 8086:2f27 spdk_ioat
-EAL: PCI device 0000:06:00.0 on NUMA socket 0
-EAL:   probe driver: 8086:953 spdk_nvme
+Starting SPDK v19.10.1 / DPDK 19.08.0 initialization...
+[ DPDK EAL parameters: blobcli --no-shconf -c 0x1 --log-level=lib.eal:6 --log-level=lib.cryptodev:5 --log-level=user1:6 --iova-mode=pa --base-virtaddr=0x200000000000 --match-allocations --file-prefix=spdk_pid1641656 ]
 
 SCRIPT NOW PROCESSING: -i
 Init blobstore using bdev Product Name: NVMe disk
@@ -53,14 +13,14 @@ List bdevs:
 
 
 SCRIPT NOW PROCESSING: -n 1
-New blob id 4294967296
+New blob id $(N)
 blob now has USED clusters of 1
 
 SCRIPT NOW PROCESSING: -p $B0
 Super Blob ID has been set.
 
 SCRIPT NOW PROCESSING: -n 1
-New blob id 4294967297
+New blob id $(N)
 blob now has USED clusters of 1
 
 SCRIPT NOW PROCESSING: -m $B1 test.pattern
@@ -78,7 +38,7 @@ SCRIPT NOW PROCESSING: -s bs
 Blobstore Public Info:
 	Using bdev Product Name: NVMe disk
 	API Version: $(N)
-	super blob ID: 4294967296
+	super blob ID: $(N)
 	page size: $(N)
 	io unit size: $(N)
 	cluster size: 1048576
@@ -92,7 +52,7 @@ Blobstore Private Info:
 
 SCRIPT NOW PROCESSING: -s $B1
 Blob Public Info:
-blob ID: 4294967297
+blob ID: $(N)
 # of clusters: 1
 # of bytes: 1048576
 # of pages: 256
@@ -102,7 +62,7 @@ xattrs:
 (0) Name:key
 (0) Value:
 
-00000000  76 61 6c 00                                       val.
+00000000  76 61 6c 00                                        val.
 
 Blob Private Info:
 state: CLEAN
@@ -115,7 +75,7 @@ SCRIPT NOW PROCESSING: -s bs
 Blobstore Public Info:
 	Using bdev Product Name: NVMe disk
 	API Version: 3
-	super blob ID: 4294967296
+	super blob ID: $(N)
 	page size: $(N)
 	io unit size: $(N)
 	cluster size: 1048576
