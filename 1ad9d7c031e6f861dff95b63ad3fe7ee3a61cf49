@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5788ecc0_de7b49a5",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 401,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2020-02-03T10:36:30Z",
+      "side": 1,
+      "message": "Do we really need this status argument? You pass 0 as a status in nvmf.c",
+      "range": {
+        "startLine": 401,
+        "startChar": 66,
+        "endLine": 401,
+        "endChar": 76
+      },
+      "revId": "1ad9d7c031e6f861dff95b63ad3fe7ee3a61cf49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
