@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cef2dc04_d9e9ee6b",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2020-02-03T10:59:55Z",
+      "side": 1,
+      "message": "BUILD_CMD is also used for compiling - sometimes even with -c flag (compilation only). CPPFLAGS should stay",
+      "revId": "3b6b4cf51b97513548b7ab125a774b9af1a67b86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
