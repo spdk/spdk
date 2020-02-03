@@ -45,6 +45,76 @@
       "revId": "802af5a154ed90cc0761aa5fbbfd59fa9719c350",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "82a237b6_e722775e",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-02-03T10:51:57Z",
+      "side": 1,
+      "message": "This should be renamed to smth like \"package-box\" or similar.\nUsing this flag should result in:\na) starting a fresh VM (e.g. generic/fedora30)\nb) running pkgdep.sh and vm_setup.sh (or maybe just update.sh as a combo of these two), installing all dependencies and configurations\nc) NOT running any tests\nd) shutting down the VM\ne) running package process\nf) adding packaged box to local vagrant repo (\"vagrant box add\") as SPDK version of original box (e.g. spdk/fedora30)\nThis gives an image with all deps insalled, ready to launch and start tests.\ng) removing all temporary files from working directory (e.g. leftovers from point e) )",
+      "parentUuid": "99f0d732_8c19aa06",
+      "range": {
+        "startLine": 41,
+        "startChar": 41,
+        "endLine": 41,
+        "endChar": 64
+      },
+      "revId": "802af5a154ed90cc0761aa5fbbfd59fa9719c350",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6c0bd338_107a560b",
+        "filename": "scripts/vagrant/update.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-02-03T10:51:57Z",
+      "side": 1,
+      "message": "If I recall correctly \"dnf update\" can be done as part of vm_setup.sh using an appropiate flag. Please check vm_setup.sh contents or its help message.",
+      "range": {
+        "startLine": 89,
+        "startChar": 2,
+        "endLine": 89,
+        "endChar": 15
+      },
+      "revId": "802af5a154ed90cc0761aa5fbbfd59fa9719c350",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c7de3406_9803dab1",
+        "filename": "scripts/vagrant/update.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-02-03T10:51:57Z",
+      "side": 1,
+      "message": "99% sure you don\u0027t need to use sudo when runnin vm_setup.sh.",
+      "range": {
+        "startLine": 91,
+        "startChar": 2,
+        "endLine": 91,
+        "endChar": 7
+      },
+      "revId": "802af5a154ed90cc0761aa5fbbfd59fa9719c350",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
