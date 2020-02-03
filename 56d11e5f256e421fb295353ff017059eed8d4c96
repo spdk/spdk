@@ -22,6 +22,30 @@
       "revId": "56d11e5f256e421fb295353ff017059eed8d4c96",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2b4fc17e_c79f4727",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-02-03T10:23:33Z",
+      "side": 1,
+      "message": "For the record:\nLet\u0027s discuss this again on community call. Darek is right here. Using some third-party PPA seems wrong after re-considering.\nWe have no knowledge what this PPA contains or how is it modified over time. It can be also disabled at some point in time without notice. Having this in consideration makes building dependency from source seems a better approach.",
+      "parentUuid": "486d8e34_76e7b3ba",
+      "range": {
+        "startLine": 118,
+        "startChar": 21,
+        "endLine": 118,
+        "endChar": 37
+      },
+      "revId": "56d11e5f256e421fb295353ff017059eed8d4c96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
