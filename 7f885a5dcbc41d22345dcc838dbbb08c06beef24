@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d801a00d_8df6d88d",
+        "filename": "module/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 409,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2020-02-03T11:31:48Z",
+      "side": 1,
+      "message": "As an alternative to iterating over cores, we could use spdk_for_each_reactor() added by you a few months ago. This function has completion callback, so we can get rid of g_num_creating_poll_groups",
+      "range": {
+        "startLine": 409,
+        "startChar": 1,
+        "endLine": 409,
+        "endChar": 25
+      },
+      "revId": "7f885a5dcbc41d22345dcc838dbbb08c06beef24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
