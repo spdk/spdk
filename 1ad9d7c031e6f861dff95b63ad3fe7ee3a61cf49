@@ -46,6 +46,30 @@
       "revId": "1ad9d7c031e6f861dff95b63ad3fe7ee3a61cf49",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "782a1a09_6d8dd066",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 401,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-02-03T21:42:03Z",
+      "side": 1,
+      "message": "Hi Alexey,\n\nI checked the source code again. spdk_nvmf_tgt_destroy() is also asynchronous and accepts a callback, and the callback also has not only cb_arg but also status even if the status is always zero.\nWe may have any case that status is nonzero in future.\nSo I want to keep the status for now.\n\nFor clarification, I will update the commit message.\n\n-Shuhei",
+      "parentUuid": "a6dce382_69bd9a61",
+      "range": {
+        "startLine": 401,
+        "startChar": 66,
+        "endLine": 401,
+        "endChar": 76
+      },
+      "revId": "1ad9d7c031e6f861dff95b63ad3fe7ee3a61cf49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
