@@ -70,6 +70,30 @@
       "revId": "404efceb21deae5e35ee907cd748c8cd14548d55",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d9dc183d_56c1042a",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 494,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-02-03T08:56:28Z",
+      "side": 1,
+      "message": "Hi Jacek,\n\nI meant that next is not #6 but the next in this patch series.\nOf course it’s fine to talk with Ben but please check https://review.gerrithub.io/c/spdk/spdk/+/481494/7.\nI may be wrong though.",
+      "parentUuid": "6665e3af_501937fc",
+      "range": {
+        "startLine": 494,
+        "startChar": 0,
+        "endLine": 494,
+        "endChar": 54
+      },
+      "revId": "404efceb21deae5e35ee907cd748c8cd14548d55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
