@@ -22,6 +22,30 @@
       "revId": "1ad9d7c031e6f861dff95b63ad3fe7ee3a61cf49",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a6dce382_69bd9a61",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 401,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-02-03T11:00:53Z",
+      "side": 1,
+      "message": "Ack. No. I first moved poll_group_mod_done from nvmf_internal.h.\nBut I changed my mind to add new type def in nvmf.h.\nSo as you asked status is not necessary.\nI will fix it tomorrow. But the next patch will be also changed. So please review both again tomorrow",
+      "parentUuid": "5788ecc0_de7b49a5",
+      "range": {
+        "startLine": 401,
+        "startChar": 66,
+        "endLine": 401,
+        "endChar": 76
+      },
+      "revId": "1ad9d7c031e6f861dff95b63ad3fe7ee3a61cf49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
