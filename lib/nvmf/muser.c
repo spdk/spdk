@@ -1111,25 +1111,6 @@ destroy_io_q(lm_ctx_t *lm_ctx, struct io_q *q)
 }
 
 static void
-muser_nvmf_subsystem_paused(struct spdk_nvmf_subsystem *subsys,
-			    void *cb_arg, int status)
-{
-	struct muser_ctrlr *ctrlr = (struct muser_ctrlr *)cb_arg;
-	int err;
-
-	SPDK_DEBUGLOG(SPDK_LOG_MUSER, "NVMf subsystem=%p paused=%d\n",
-		      subsys, status);
-
-	assert(ctrlr != NULL);
-	ctrlr->prop_req.ret = status;
-
-	err = sem_post(&ctrlr->prop_req.wait);
-	if (err != 0) {
-		fail_ctrlr(ctrlr);
-	}
-}
-
-static void
 destroy_io_qp(struct muser_qpair *qp)
 {
 	if (qp->ctrlr == NULL) {
@@ -1653,99 +1634,6 @@ handle_dbl_access(struct muser_ctrlr *ctrlr, uint32_t *buf,
 	return 0;
 }
 
-/*
- * TODO Is there any benefit in forwarding the write to the SPDK thread and
- * handling it there? This way we can optionally make writes posted, which may
- * or may not be a good thing. Also, if we handle writes at the the SPDK thread
- * we won't be able to synchronously wait, we'll have to execute everything in
- * callbacks and schedule the next piece of work from the callback handlers,
- * and this sounds more difficult to implement.
- *
- * TODO Does it make sense to try to cleanup (e.g. undo subsys stop) in case of
- * error?
- */
-static int
-handle_cc_write(struct muser_ctrlr *ctrlr, uint8_t *buf,
-		const size_t count, const loff_t pos)
-{
-	union spdk_nvme_cc_register *cc = (union spdk_nvme_cc_register *)buf;
-	int err;
-
-	assert(ctrlr != NULL);
-	assert(cc != NULL);
-	assert(count == sizeof(union spdk_nvme_cc_register));
-
-	SPDK_DEBUGLOG(SPDK_LOG_MUSER, "write CC=%#x\n", cc->raw);
-
-	/*
-	 * TODO is it OK to access the controller registers like this without
-	 * a proper property request?
-	 */
-
-	/*
-	 * Host driver attempts to reset (set CC.EN to 0), which isn't
-	 * supported in NVMf. We must first shutdown the controller and then
-	 * set CC.EN to 0.
-	 */
-	if (cc->bits.en == 0 && ctrlr->qp[0]->qpair.ctrlr->vcprop.cc.bits.en == 1) {
-
-		SPDK_DEBUGLOG(SPDK_LOG_MUSER, "CC.EN 1 -> 0\n");
-
-		/*
-		 * TODO We send two requests to the SPDK thread, one after
-		 * after another, synchronously waiting for them to complete.
-		 * Is it better to have the SPDK thread issue the second
-		 * request?
-		 */
-
-		SPDK_NOTICELOG("shutdown controller\n");
-		cc->bits.en = 1;
-		cc->bits.shn = SPDK_NVME_SHN_NORMAL;
-		err = do_prop_req(ctrlr, buf, count, pos, true);
-		if (err != 0) {
-			return err;
-		}
-		SPDK_NOTICELOG("controller shut down\n");
-		/* FIXME we shouldn't expect it to shutdown immediately */
-		if (ctrlr->qp[0]->qpair.ctrlr->vcprop.csts.bits.shst != SPDK_NVME_SHST_COMPLETE) {
-			SPDK_ERRLOG("controller didn't shutdown\n");
-			return -1;
-		}
-
-		/* TODO Shouldn't CSTS.SHST be set by NVMf? */
-		ctrlr->qp[0]->qpair.ctrlr->vcprop.csts.bits.shst = 0;
-		cc->bits.en = 0;
-		cc->bits.shn = 0;
-		SPDK_NOTICELOG("disable controller\n");
-
-	} else if (cc->bits.en == 0 &&
-		   ctrlr->qp[0]->qpair.ctrlr->vcprop.cc.bits.en == 0) {
-		return 0;
-	}
-
-	err = do_prop_req(ctrlr, buf, count, pos, true);
-	if (err != 0) {
-		return err;
-	}
-
-	if (cc->bits.en == 0 && ctrlr->qp[0] != NULL) {
-		/* need to delete admin queues, however destroy_qp must be
-		 * called at SPDK thread context.
-		 * TODO is this really needed? Don't we get a callback for
-		 * deleting the admin queue?
-		 */
-		err = sem_init(&ctrlr->sem, 0, 0);
-		if (err != 0) {
-			return err;
-		}
-		ctrlr->del_admin_qp = true;
-		/* deleting the admin QP doesn't fail */
-		return sem_wait(&ctrlr->sem);
-	}
-
-	return 0;
-}
-
 static ssize_t
 write_bar0(void *pvt, char *buf, size_t count, loff_t pos)
 {
@@ -1756,20 +1644,17 @@ write_bar0(void *pvt, char *buf, size_t count, loff_t pos)
 	spdk_log_dump(stdout, "muser_write", buf, count);
 
 	switch (pos) {
-	/* TODO sort cases */
 	case ADMIN_QUEUES:
 		return admin_queue_write(ctrlr, buf, count, pos);
-	case CC:
-		return handle_cc_write(ctrlr, buf, count, pos);
 	default:
 		if (pos >= DOORBELLS) {
 			return handle_dbl_access(ctrlr, (uint32_t *)buf, count,
 						 pos, true);
 		}
-		break;
+
 	}
-	SPDK_ERRLOG("write to 0x%lx not implemented\n", pos);
-	return -ENOTSUP;
+
+	return do_prop_req(ctrlr, buf, count, pos, true);
 }
 
 static ssize_t
@@ -2710,23 +2595,11 @@ map_admin_queues(struct muser_ctrlr *ctrlr)
 	return 0;
 }
 
-static bool
-spdk_nvmf_subsystem_should_stop(union spdk_nvme_cc_register *cc,
-				struct spdk_nvmf_ctrlr	*ctrlr)
-{
-	assert(cc != NULL);
-	assert(ctrlr != NULL);
-
-	return cc->bits.en == 0 && cc->bits.shn == 0 &&
-	       ctrlr->vcprop.csts.bits.shst == SPDK_NVME_SHST_NORMAL;
-}
-
 static int
 handle_prop_rsp(struct muser_req *req, void *cb_arg)
 {
 	struct muser_qpair *qpair = cb_arg;
 	int err = 0;
-	bool fire = true;
 
 	assert(qpair != NULL);
 	assert(req != NULL);
@@ -2752,39 +2625,15 @@ handle_prop_rsp(struct muser_req *req, void *cb_arg)
 
 			cc = (union spdk_nvme_cc_register *)qpair->ctrlr->prop_req.buf;
 
-			/* spdk_nvmf_subsystem_stop must be executed from SPDK thread context */
-			if (spdk_nvmf_subsystem_should_stop(cc, qpair->qpair.ctrlr)) {
-				/* TODO s/pausing/stopping */
-				SPDK_NOTICELOG("pausing NVMf subsystem\n");
-				qpair->ctrlr->prop_req.dir = MUSER_NVMF_INVALID;
-				err = spdk_nvmf_subsystem_stop(qpair->ctrlr->subsys,
-							       muser_nvmf_subsystem_paused,
-							       qpair->ctrlr);
-				if (err != 0) {
-					qpair->ctrlr->prop_req.ret = err;
-				} else {
-					fire = false;
-				}
-			} else if (cc->bits.en == 1 && cc->bits.shn == 0) {
+			if (cc->bits.en == 1 && cc->bits.shn == 0) {
 				qpair->ctrlr->prop_req.ret = map_admin_queues(qpair->ctrlr);
 			}
 		}
 	}
 
-	if (fire) {
-		/*
-		 * FIXME this assumes that spdk_nvmf_request_exec will call this
-		 * callback before it actually returns. This is important
-		 * because if we don't clear it then muser_poll_group_poll will
-		 * pick up the same request again. The reason we don't clear it
-		 * if fire is false is because the semaphore will be posted by
-		 * a callback so it has to cleared there, right before the
-		 * callback is scheduled. Check whether it's guaranteed that
-		 * spdk_nvmf_request_exec is synchronous.
-		 */
-		qpair->ctrlr->prop_req.dir = MUSER_NVMF_INVALID;
-		err = sem_post(&qpair->ctrlr->prop_req.wait);
-	}
+	qpair->ctrlr->prop_req.dir = MUSER_NVMF_INVALID;
+	err = sem_post(&qpair->ctrlr->prop_req.wait);
+
 	return err;
 }
 
