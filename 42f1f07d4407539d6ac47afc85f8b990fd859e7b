@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "21c98d3b_4dd0823c",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-02-04T19:09:56Z",
+      "side": 1,
+      "message": "I\u0027d rather not lose the ability to report a specific error. I also don\u0027t think you actually need to return the trid here in any of the code paths - they all seem to be able to recover the trid pointer some other way.",
+      "revId": "42f1f07d4407539d6ac47afc85f8b990fd859e7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5c7e3574_6da32b07",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 355,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-02-04T19:09:56Z",
+      "side": 1,
+      "message": "You need to update the documentation here to say that trid may not be freed until cb_fn is called.",
+      "revId": "42f1f07d4407539d6ac47afc85f8b990fd859e7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
