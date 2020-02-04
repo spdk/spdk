@@ -22,6 +22,30 @@
       "revId": "e9c5442f036e9dd9142b40d7b1305b2dac86f759",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e5bd18d4_01427e06",
+        "filename": "configure",
+        "patchSetId": 5
+      },
+      "lineNbr": 548,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2020-02-04T06:22:06Z",
+      "side": 1,
+      "message": "Thanks, I corrected the indent",
+      "parentUuid": "02231275_a1fff26e",
+      "range": {
+        "startLine": 548,
+        "startChar": 1,
+        "endLine": 548,
+        "endChar": 3
+      },
+      "revId": "e9c5442f036e9dd9142b40d7b1305b2dac86f759",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
