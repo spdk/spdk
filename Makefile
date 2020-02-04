@@ -103,7 +103,7 @@ mk/cc.mk:
 	false
 
 include/spdk/config.h: mk/config.mk scripts/genconfig.py
-	echo "#ifndef SPDK_CONFIG_H" > $@.tmp; \
+	$(Q)echo "#ifndef SPDK_CONFIG_H" > $@.tmp; \
 	echo "#define SPDK_CONFIG_H" >> $@.tmp; \
 	scripts/genconfig.py $(MAKEFLAGS) >> $@.tmp; \
 	echo "#endif /* SPDK_CONFIG_H */" >> $@.tmp; \
