@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a83e1c7_08de4df8",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1575,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-02-04T08:29:23Z",
+      "side": 1,
+      "message": "I don\u0027t think this is correct, you should be comparing the write pointer to zone-\u003einfo.capacity.",
+      "range": {
+        "startLine": 1575,
+        "startChar": 33,
+        "endLine": 1575,
+        "endChar": 68
+      },
+      "revId": "496580eef62688b414d8261f6f77c1ee4670deea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
