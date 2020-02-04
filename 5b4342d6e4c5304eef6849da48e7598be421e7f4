@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fdc41886_87cfe2c0",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 526,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-02-04T07:39:37Z",
+      "side": 1,
+      "message": "Should be \"\u003c\".",
+      "range": {
+        "startLine": 526,
+        "startChar": 19,
+        "endLine": 526,
+        "endChar": 21
+      },
+      "revId": "5b4342d6e4c5304eef6849da48e7598be421e7f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bb7838b9_52338526",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 553,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-02-04T07:39:37Z",
+      "side": 1,
+      "message": "Let\u0027s just simplify all of this and use one loop and remove requests from the move_queue and submit them at the same time:\n\nwhile (!STAILQ_EMPTY(\u0026breloc-\u003emove_queue)) {\n move \u003d STAILQ_FIRST(\u0026breloc-\u003emove_queue);\n STAILQ_REMOVE(\u0026breloc-\u003emove_queue, move, stailq);\n\n switch (move-\u003estate) {\n  case FTL_RELOC_STATE_READ_LBA_MAP:\n   rc \u003d ftl_reloc_read_lba_map(breloc, move);\n   break;\n  ...\n }\n\n if (rc !\u003d 0) {\n  ...\n }\n}",
+      "range": {
+        "startLine": 525,
+        "startChar": 1,
+        "endLine": 553,
+        "endChar": 2
+      },
+      "revId": "5b4342d6e4c5304eef6849da48e7598be421e7f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

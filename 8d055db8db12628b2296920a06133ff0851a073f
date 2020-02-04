@@ -46,6 +46,30 @@
       "revId": "8d055db8db12628b2296920a06133ff0851a073f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ac2f147f_2ecd2819",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-02-04T07:39:37Z",
+      "side": 0,
+      "message": "Can we make this change in a separate patch?",
+      "parentUuid": "7c5e9bb1_854c8816",
+      "range": {
+        "startLine": 248,
+        "startChar": 1,
+        "endLine": 248,
+        "endChar": 64
+      },
+      "revId": "8d055db8db12628b2296920a06133ff0851a073f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
