@@ -450,6 +450,12 @@ spdk_thread_get_cpumask(struct spdk_thread *thread)
 	return &thread->cpumask;
 }
 
+void
+spdk_thread_set_cpumask(struct spdk_thread *thread, struct spdk_cpuset *cpumask)
+{
+	spdk_cpuset_copy(&thread->cpumask, cpumask);
+}
+
 struct spdk_thread *
 spdk_thread_get_from_ctx(void *ctx)
 {
