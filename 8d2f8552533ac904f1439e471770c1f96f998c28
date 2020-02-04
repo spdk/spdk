@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f129d9da_a6a9ddd6",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 532,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-02-04T20:03:01Z",
+      "side": 1,
+      "message": "I\u0027d prefer to put this in spdk_posix_sock_group_impl_poll, since it is POSIX specific.  For example, alternate TCP stacks do not require this behavior.",
+      "revId": "8d2f8552533ac904f1439e471770c1f96f998c28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
