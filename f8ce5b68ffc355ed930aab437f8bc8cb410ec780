@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "794164e9_afbb62bf",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1016781
+      },
+      "writtenOn": "2020-02-04T12:44:36Z",
+      "side": 1,
+      "message": "not sure why is it needed\n\naccording to nvme-of spec\n\"The host shall access properties in their native width with an offset that is at the beginning of the\nproperty\"",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 25
+      },
+      "revId": "f8ce5b68ffc355ed930aab437f8bc8cb410ec780",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
