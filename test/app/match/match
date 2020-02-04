@@ -188,16 +188,22 @@ sub strip_it {
 	foreach $line_in (@lines_in) {
 		my @i_lines = @i_file;
 		foreach $i_line (@i_lines) {
-			chop($i_line);
-			if (index($line_in, $i_line) != -1) {
+			# Check if both ignore and input lines are new lines
+			if ($i_line eq "\n" && $line_in eq "\n") {
 				$ignore_it = 1;
-				if ($opt_v) {
-					print "Ignoring (from $file): $line_in";
-				}
+				last;
+			}
+			# Find the ignore string in input line
+			chomp($i_line);
+			if (index($line_in, $i_line) != -1 && length($i_line) != 0) {
+				$ignore_it = 1;
+				last;
 			}
 		}
 		if ($ignore_it == 0) {
 			$output .= $line_in;
+		} elsif($opt_v) {
+			print "Ignoring (from $file): $line_in";
 		}
 		$ignore_it = 0;
 	}
