@@ -16,6 +16,23 @@
       "revId": "8299b5279a16f67dddd2941bf9920a801e8d453c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f5b94058_e0da42f9",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 667,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-02-04T20:54:11Z",
+      "side": 1,
+      "message": "just chatting with Ben on this patch since we\u0027re scrubbing which patches to get merged before the Gerrit switchover - he suggested removing \"nvmf\" from these names which I think is a good idea\n\nwe have other nvmf-specific fields (i.e. for keep-alive) that don\u0027t have nvmf on them, so I think we can drop them here",
+      "revId": "8299b5279a16f67dddd2941bf9920a801e8d453c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
