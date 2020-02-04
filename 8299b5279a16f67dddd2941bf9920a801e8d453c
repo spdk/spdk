@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "78d6b044_c03f889e",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 645,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-02-04T20:38:34Z",
+      "side": 1,
+      "message": "I think you can pack this structure even better (in a separate commit obviously) by moving trid just after your new nvmf_icdoff field.\n\nI\u0027m not even sure the trid belongs in the \"hot data\" part of this structure.  I don\u0027t see anything touching the trid in the main I/O path.  But putting after nvmf_icdoff is good enough, and should save us a cacheline.  trid is 512 bytes, and since ns comes first, it basically ends up being the only field in the first cache line that actually gets used in the main I/O path.  Moving trid fixes that.",
+      "revId": "8299b5279a16f67dddd2941bf9920a801e8d453c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
