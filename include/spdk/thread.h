@@ -273,6 +273,16 @@ void *spdk_thread_get_ctx(struct spdk_thread *thread);
 struct spdk_cpuset *spdk_thread_get_cpumask(struct spdk_thread *thread);
 
 /**
+ * Set the thread's cpumask to the specified value.
+ *
+ * May only be called from the framework which calls spdk_thread_poll().
+ *
+ * \param thread The thread whose cpumask is set.
+ * \param cpumask The new cpumask for the thread.
+ */
+void spdk_thread_set_cpumask(struct spdk_thread *thread, struct spdk_cpuset *cpumask);
+
+/**
  * Return the thread object associated with the context handle previously
  * obtained by calling spdk_thread_get_ctx().
  *
