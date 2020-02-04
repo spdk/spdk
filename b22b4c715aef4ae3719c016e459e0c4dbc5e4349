@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "8734994c_f5a8a489",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 2248,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-02-04T07:47:09Z",
+      "side": 1,
+      "message": "Why is that a problem? I think we\u0027re fine with completing some extra requests here.",
+      "parentUuid": "5084ded1_d7bdc37e",
+      "range": {
+        "startLine": 2248,
+        "startChar": 1,
+        "endLine": 2248,
+        "endChar": 66
+      },
+      "revId": "b22b4c715aef4ae3719c016e459e0c4dbc5e4349",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f31bd92d_b2980ff7",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 10
@@ -178,6 +202,30 @@
       "side": 1,
       "message": "This poller will be used also for retry queue so I prefer to keep this name generic.",
       "parentUuid": "f904eed9_4106a518",
+      "range": {
+        "startLine": 138,
+        "startChar": 23,
+        "endLine": 138,
+        "endChar": 29
+      },
+      "revId": "b22b4c715aef4ae3719c016e459e0c4dbc5e4349",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d50d058e_fcc43182",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-02-04T07:47:09Z",
+      "side": 1,
+      "message": "Then perhaps it\u0027d make sense to call it io_poller? Also, let\u0027s make sure the comment describing its purpose is more robust (current \"Poller\" is useless).",
+      "parentUuid": "df1b590b_42bdca46",
       "range": {
         "startLine": 138,
         "startChar": 23,
@@ -281,6 +329,30 @@
       "revId": "b22b4c715aef4ae3719c016e459e0c4dbc5e4349",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a5770f7c_1c640c1d",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-02-04T07:47:09Z",
+      "side": 1,
+      "message": "But you\u0027re adding yet another queue and queue link here. I don\u0027t think there\u0027s any point in doing so, because you could just reuse retry_entry for the purposes of the completion_queue.",
+      "parentUuid": "7061b7c9_203870da",
+      "range": {
+        "startLine": 224,
+        "startChar": 0,
+        "endLine": 227,
+        "endChar": 34
+      },
+      "revId": "b22b4c715aef4ae3719c016e459e0c4dbc5e4349",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
