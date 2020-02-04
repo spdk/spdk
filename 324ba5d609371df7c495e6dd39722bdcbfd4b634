@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e5c1641e_c36a3cc1",
+        "filename": "lib/nvmf/nvmf_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 661,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2020-02-04T12:03:18Z",
+      "side": 1,
+      "message": "What if we send an RPC response with an error if the listener already exists?",
+      "range": {
+        "startLine": 661,
+        "startChar": 2,
+        "endLine": 661,
+        "endChar": 3
+      },
+      "revId": "324ba5d609371df7c495e6dd39722bdcbfd4b634",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
