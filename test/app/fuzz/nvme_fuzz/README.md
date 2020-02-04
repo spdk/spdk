@@ -7,6 +7,7 @@ Multiple controllers and namespaces can be exposed to the fuzzer at a time. In o
 handle multiple namespaces, the fuzzer will round robin assign a thread to each namespace and
 submit commands to that thread at a set queue depth. (currently 128 for I/O, 16 for Admin). The
 application will terminate under three conditions:
+
 1. The user specified run time expires (see the -t flag).
 2. One of the target controllers stops completing I/O operations back to the fuzzer i.e. controller timeout.
 3. The user specified a json file containing operations to run and the fuzzer has received valid completions for all of them.
@@ -14,8 +15,10 @@ application will terminate under three conditions:
 # Output
 
 By default, the fuzzer will print commands that:
+
 1. Complete successfully back from the target, or
 2. Are outstanding at the time of a controller timeout.
+
 Commands are dumped as named objects in json format which can then be supplied back to the
 script for targeted debugging on a subsequent run. See `Debugging` below.
 By default no output is generated when a specific command is returned with a failed status.

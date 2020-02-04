@@ -4950,6 +4950,7 @@ Either UUID or name is used to access logical volume store in RPCs.
 A logical volume has a UUID and a name for its identification.
 The UUID of the logical volume is generated on creation and it can be unique identifier.
 The alias of the logical volume takes the format _lvs_name/lvol_name_ where:
+
 * _lvs_name_ is the name of the logical volume store.
 * _lvol_name_ is specified on creation and can be renamed.
 

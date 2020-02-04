@@ -72,21 +72,26 @@ VPP can be configured using a VPP startup file and the `vppctl` command; By defa
 Some key values from iSCSI point of view includes:
 
 CPU section (`cpu`):
+
 - `main-core <lcore>` -- logical CPU core used for main thread.
 - `corelist-workers <lcore list>` -- logical CPU cores where worker threads are running.
 
 DPDK section (`dpdk`):
+
 - `num-rx-queues <num>` -- number of receive queues.
 - `num-tx-queues <num>` -- number of transmit queues.
 - `dev <PCI address>` -- whitelisted device.
 
 Session section (`session`):
+
 - `evt_qs_memfd_seg` -- uses a memfd segment for event queues. This is required for SPDK.
 
 Socket server session (`socksvr`):
+
 - `socket-name <path>` -- configure API socket filename (curently SPDK uses default path `/run/vpp-api.sock`).
 
 Plugins section (`plugins`):
+
 - `plugin <plugin name> { [enable|disable] }` -- enable or disable VPP plugin.
 
 ### Example:

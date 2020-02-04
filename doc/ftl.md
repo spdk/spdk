@@ -45,6 +45,7 @@ from the oldest band to the youngest.
 The address map and valid map are, along with a several other things (e.g. UUID of the device it's
 part of, number of surfaced LBAs, band's sequence number, etc.), parts of the band's metadata. The
 metadata is split in two parts:
+
  * the head part, containing information already known when opening the band (device's UUID, band's
    sequence number, etc.), located at the beginning blocks of the band,
  * the tail part, containing the address map and the valid map, located at the end of the band.
@@ -145,6 +146,7 @@ SPDK's QEMU fork on [spdk-3.0.0](https://github.com/spdk/qemu/tree/spdk-3.0.0) b
 
 To emulate an Open Channel device, QEMU expects parameters describing the characteristics and
 geometry of the SSD:
+
  - `serial` - serial number,
  - `lver` - version of the OCSSD standard (0 - disabled, 1 - "1.2", 2 - "2.0"), libftl only supports
    2.0,
@@ -226,6 +228,7 @@ Logical blks per chunk: 24576
 Similarly to other bdevs, the FTL bdevs can be created either based on config files or via RPC. Both
 interfaces require the same arguments which are described by the `--help` option of the
 `bdev_ftl_create` RPC call, which are:
+
  - bdev's name
  - transport type of the device (e.g. PCIe)
  - transport address of the device (e.g. `00:0a.0`)
@@ -241,6 +244,7 @@ Example config:
 ```
 
 The above will result in creation of two devices:
+
  - `nvme0` on `00:0a.0` using parallel units 0-3, created from scratch
  - `nvme1` on the same device using parallel units 4-5, restored from the SSD using the UUID
    provided

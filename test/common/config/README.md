@@ -10,6 +10,7 @@ to emulate an RDMA enabled NIC. NVMe controllers can also be virtualized in emul
 
 
 ## VM Envronment Requirements (Host):
+
 - 8 GiB of RAM (for DPDK)
 - Enable intel_kvm on the host machine from the bios.
 - Enable nesting for VMs in kernel command line (for vhost tests).
@@ -28,6 +29,7 @@ configuration file. For a full list of the variable declarations available for a
 `test/common/autotest_common.sh` starting at line 13.
 
 ## Steps for Configuring the VM
+
 1. Download a fresh Fedora 26 image.
 2. Perform the installation of Fedora 26 server.
 3. Create an admin user sys_sgsw (enabling passwordless sudo for this account will make life easier during the tests).
@@ -60,6 +62,7 @@ created above and guest or VM refer to the Ubuntu VM created in this section.
 		- move .qcow2 file and ssh keys to default locations used by vhost test scripts
 
 Alternatively it is possible to create the VM image manually using following steps:
+
 1. Create an image file for the VM. It does not have to be large, about 3.5G should suffice.
 2. Create an ssh keypair for host-guest communications (performed on the host):
     - Generate an ssh keypair with the name spdk_vhost_id_rsa and save it in `/root/.ssh`.
