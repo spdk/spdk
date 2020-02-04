@@ -784,6 +784,24 @@ spdk_thread_get_name(const struct spdk_thread *thread)
 	return thread->name;
 }
 
+struct spdk_thread *
+spdk_get_thread_by_name(const char *name)
+{
+	struct spdk_thread *thread;
+
+	pthread_mutex_lock(&g_devlist_mutex);
+	TAILQ_FOREACH(thread, &g_threads, tailq) {
+		if (strcmp(name, spdk_thread_get_name(thread)) == 0) {
+			pthread_mutex_unlock(&g_devlist_mutex);
+
+			return thread;
+		}
+	}
+	pthread_mutex_unlock(&g_devlist_mutex);
+
+	return NULL;
+}
+
 int
 spdk_thread_get_stats(struct spdk_thread_stats *stats)
 {

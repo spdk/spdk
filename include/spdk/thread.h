@@ -400,6 +400,15 @@ struct spdk_thread *spdk_get_thread(void);
  */
 const char *spdk_thread_get_name(const struct spdk_thread *thread);
 
+/**
+ * Get a handle to the thread whose name matches.
+ *
+ * \param name Thread name.
+ *
+ * \return a pointer to the thread on success or NULL on failure.
+ */
+struct spdk_thread *spdk_get_thread_by_name(const char *name);
+
 struct spdk_thread_stats {
 	uint64_t busy_tsc;
 	uint64_t idle_tsc;
