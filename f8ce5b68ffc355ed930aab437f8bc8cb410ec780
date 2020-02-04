@@ -22,6 +22,30 @@
       "revId": "f8ce5b68ffc355ed930aab437f8bc8cb410ec780",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "84059925_88561c3c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-02-04T18:14:17Z",
+      "side": 1,
+      "message": "When emulating physical NVMe SSDs, MMIO writes are often chunked into 4 byte units. I\u0027m adding this to support that. That\u0027s not allowed over strict NVMe-oF, but it doesn\u0027t hurt anything I don\u0027t think. I could of course block it for TCP/RDMA/FC if we thought it was important.",
+      "parentUuid": "794164e9_afbb62bf",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 25
+      },
+      "revId": "f8ce5b68ffc355ed930aab437f8bc8cb410ec780",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
