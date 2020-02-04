@@ -529,6 +529,48 @@ Example response:
 }
 ~~~
 
+## framework_set_thread_affinity {#rpc_framework_set_thread_affinity}
+
+Set the cpumask of the thread to the specified value. If the thread is not running
+on one of the specified CPUs, the thread is migrated to one of the specifiec CPUs.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Thread name
+cpumask                 | Required | string      | Cpumask for this thread
+
+### Response
+
+Completion status of the operation is returned as a boolean.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "framework_set_thread_affinity",
+  "id": 1,
+  "params": {
+    "name": "app_thread",
+    "cpumask": "1"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## thread_get_stats {#rpc_thread_get_stats}
 
 Retrieve current statistics of all the threads.

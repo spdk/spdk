@@ -37,6 +37,20 @@ def framework_get_reactors(client):
     return client.call('framework_get_reactors')
 
 
+def framework_set_thread_affinity(client, name, cpumask):
+    """Set the cpumask of the thread whose name matches to the specified value.
+
+    Args:
+        name: thread name
+        cpumask: cpumask for this thread
+
+    Returns:
+        True or False
+    """
+    params = {'name': name, 'cpumask': cpumask}
+    return client.call('framework_set_thread_affinity', params)
+
+
 def thread_get_stats(client):
     """Query threads statistics.
 
