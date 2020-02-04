@@ -298,3 +298,64 @@ spdk_rpc_framework_get_reactors(struct spdk_jsonrpc_request *request,
 }
 
 SPDK_RPC_REGISTER("framework_get_reactors", spdk_rpc_framework_get_reactors, SPDK_RPC_RUNTIME)
+
+struct rpc_set_thread_affinity {
+	char *name;
+	char *cpumask;
+};
+
+static void
+free_rpc_set_thread_affinity(struct rpc_set_thread_affinity *req)
+{
+	free(req->name);
+	free(req->cpumask);
+}
+
+static const struct spdk_json_object_decoder rpc_set_thread_affinity_decoders[] = {
+	{"name", offsetof(struct rpc_set_thread_affinity, name), spdk_json_decode_string},
+	{"cpumask", offsetof(struct rpc_set_thread_affinity, cpumask), spdk_json_decode_string},
+};
+
+static void
+spdk_rpc_framework_set_thread_affinity(struct spdk_jsonrpc_request *request,
+				       const struct spdk_json_val *params)
+{
+	struct rpc_set_thread_affinity req = {};
+	struct spdk_json_write_ctx *w;
+	struct spdk_thread *thread;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_set_thread_affinity_decoders,
+				    SPDK_COUNTOF(rpc_set_thread_affinity_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
+	}
+
+	thread = spdk_get_thread_by_name(req.name);
+	if (thread == NULL) {
+		SPDK_ERRLOG("thread %s does not exist\n", req.name);
+		spdk_jsonrpc_send_error_response(request, -ESRCH, spdk_strerror(ESRCH));
+		goto cleanup;
+	}
+
+	rc = spdk_reactor_set_thread_affinity(thread, req.cpumask);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to set cpumask of thread %s to %s\n",
+			    req.name, req.cpumask);
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		goto cleanup;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+
+cleanup:
+	free_rpc_set_thread_affinity(&req);
+}
+
+SPDK_RPC_REGISTER("framework_set_thread_affinity", spdk_rpc_framework_set_thread_affinity,
+		  SPDK_RPC_RUNTIME)

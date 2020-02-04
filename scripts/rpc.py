@@ -142,6 +142,19 @@ if __name__ == "__main__":
         'framework_get_reactors', help='Display list of all reactors')
     p.set_defaults(func=framework_get_reactors)
 
+    def framework_set_thread_affinity(args):
+        ret = rpc.app.framework_set_thread_affinity(args.client,
+                                                    name=args.name,
+                                                    cpumask=args.cpumask)
+
+    p = subparsers.add_parser('framework_set_thread_affinity',
+                              help="""set the cpumask of the thread whose name matches.
+    to the specified value. If the thread is not currently running on one of the specified
+    CPUs, the thread is migrated to one of the specified CPUs.""")
+    p.add_argument('name', help='thread name')
+    p.add_argument('cpumask', help='cpumask for this thread')
+    p.set_defaults(func=framework_set_thread_affinity)
+
     # bdev
     def bdev_set_options(args):
         rpc.bdev.bdev_set_options(args.client,
