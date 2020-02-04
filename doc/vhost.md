@@ -347,9 +347,9 @@ To enable it on Linux, it is required to modify kernel options inside the
 virtual machine.
 
 Instructions below for Ubuntu OS:
+
 1. `vi /etc/default/grub`
-2. Make sure mq is enabled:
-`GRUB_CMDLINE_LINUX="scsi_mod.use_blk_mq=1"`
+2. Make sure mq is enabled: `GRUB_CMDLINE_LINUX="scsi_mod.use_blk_mq=1"`
 3. `sudo update-grub`
 4. Reboot virtual machine
 

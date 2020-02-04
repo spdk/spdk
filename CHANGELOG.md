@@ -223,11 +223,13 @@ Added `spdk_bdev_get_write_unit_size()` function for retrieving required number
 of logical blocks for write operation.
 
 New zone-related fields were added to the result of the `get_bdevs` RPC call:
+
  - `zoned`: indicates whether the device is zoned or a regular
    block device
  - `zone_size`: number of blocks in a single zone
  - `max_open_zones`: maximum number of open zones
  - `optimal_open_zones`: optimal number of open zones
+ 
 The `zoned` field is a boolean and is always present, while the rest is only available for zoned
 bdevs.
 
@@ -945,6 +947,7 @@ parameter. The function will now update that parameter with the largest possible
 for which the memory is contiguous in the physical memory address space.
 
 The following functions were removed:
+
  - spdk_pci_nvme_device_attach()
  - spdk_pci_nvme_enumerate()
  - spdk_pci_ioat_device_attach()
@@ -954,6 +957,7 @@ The following functions were removed:
 
 They were replaced with generic spdk_pci_device_attach() and spdk_pci_enumerate() which
 require a new spdk_pci_driver object to be provided. It can be one of the following:
+
  - spdk_pci_nvme_get_driver()
  - spdk_pci_ioat_get_driver()
  - spdk_pci_virtio_get_driver()
@@ -1134,6 +1138,7 @@ Dropped support for DPDK 16.07 and earlier, which SPDK won't even compile with r
 ### RPC
 
 The following RPC commands deprecated in the previous release are now removed:
+
  - construct_virtio_user_scsi_bdev
  - construct_virtio_pci_scsi_bdev
  - construct_virtio_user_blk_bdev
@@ -1322,6 +1327,7 @@ respectively.
 ### Virtio
 
 The following RPC commands have been deprecated:
+
  - construct_virtio_user_scsi_bdev
  - construct_virtio_pci_scsi_bdev
  - construct_virtio_user_blk_bdev
@@ -1342,6 +1348,7 @@ spdk_file_get_id() returning unique ID for the file was added.
 Added jsonrpc-client C library intended for issuing RPC commands from applications.
 
 Added API enabling iteration over JSON object:
+
  - spdk_json_find()
  - spdk_json_find_string()
  - spdk_json_find_array()
@@ -1781,6 +1788,7 @@ write commands.
 
 New API functions that accept I/O parameters in units of blocks instead of bytes
 have been added:
+
 - spdk_bdev_read_blocks(), spdk_bdev_readv_blocks()
 - spdk_bdev_write_blocks(), spdk_bdev_writev_blocks()
 - spdk_bdev_write_zeroes_blocks()
@@ -1961,6 +1969,7 @@ current set of functions.
 Support for SPDK performance analysis has been added to Intel® VTune™ Amplifier 2018.
 
 This analysis provides:
+
 - I/O performance monitoring (calculating standard I/O metrics like IOPS, throughput, etc.)
 - Tuning insights on the interplay of I/O and compute devices by estimating how many cores
   would be reasonable to provide for SPDK to keep up with a current storage workload.
@@ -2111,6 +2120,7 @@ NVMe devices over a network using the iSCSI protocol. The application is located
 in app/iscsi_tgt and a documented configuration file can be found at etc/spdk/spdk.conf.in.
 
 This release also significantly improves the existing NVMe over Fabrics target.
+
   - The configuration file format was changed, which will require updates to
     any existing nvmf.conf files (see `etc/spdk/nvmf.conf.in`):
     - `SubsystemGroup` was renamed to `Subsystem`.
@@ -2131,6 +2141,7 @@ This release also significantly improves the existing NVMe over Fabrics target.
 
 This release also adds one new feature and provides some better examples and tools
 for the NVMe driver.
+
   - The Weighted Round Robin arbitration method is now supported. This allows
     the user to specify different priorities on a per-I/O-queue basis.  To
     enable WRR, set the `arb_mechanism` field during `spdk_nvme_probe()`.
@@ -2211,6 +2222,7 @@ This release adds a user-space driver with support for the Intel I/O Acceleratio
 This is the initial open source release of the Storage Performance Development Kit (SPDK).
 
 Features:
+
 - NVMe user-space driver
 - NVMe example programs
   - `examples/nvme/perf` tests performance (IOPS) using the NVMe user-space driver

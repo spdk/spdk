@@ -31,6 +31,7 @@ copy the vagrant configuration file (a.k.a. `Vagrantfile`) to it,
 and run `vagrant up` with some settings defined by the script arguments.
 
 By default, the VM created is configured with:
+
 - 2 vCPUs
 - 4G of RAM
 - 2 NICs (1 x NAT - host access, 1 x private network)

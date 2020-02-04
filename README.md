@@ -10,6 +10,7 @@ interrupts, which avoids kernel context switches and eliminates interrupt
 handling overhead.
 
 The development kit currently includes:
+
 * [NVMe driver](http://www.spdk.io/doc/nvme.html)
 * [I/OAT (DMA engine) driver](http://www.spdk.io/doc/ioat.html)
 * [NVMe over Fabrics target](http://www.spdk.io/doc/nvmf.html)
@@ -172,6 +173,7 @@ of the SPDK static ones.
 
 In order to start a SPDK app linked with SPDK shared libraries, make sure
 to do the following steps:
+
 - run ldconfig specifying the directory containing SPDK shared libraries
 - provide proper `LD_LIBRARY_PATH`
 
