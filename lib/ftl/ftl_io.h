@@ -124,6 +124,38 @@ struct ftl_io_init_opts {
 	void					*cb_ctx;
 };
 
+struct ftl_io_channel;
+
+struct ftl_wbuf_entry {
+	/* IO channel that owns the write bufer entry */
+	struct ftl_io_channel			*ioch;
+	/* Data payload (single block) */
+	void					*payload;
+	/* Index within the IO channel's wbuf_entries array */
+	uint32_t				index;
+	uint32_t				io_flags;
+	/* Points at the band the data is copied from.  Only valid for internal
+	 * requests coming from reloc.
+	 */
+	struct ftl_band				*band;
+	/* Physical address of that particular block.  Valid once the data has
+	 * been written out.
+	 */
+	struct ftl_addr				addr;
+	/* Logical block address */
+	uint64_t				lba;
+
+	/* Trace ID of the requests the entry is part of */
+	uint64_t				trace;
+
+	/* Indicates that the entry was written out and is still present in the
+	 * L2P table.
+	 */
+	bool					valid;
+	/* Lock that protects the entry from being evicted from the L2P */
+	pthread_spinlock_t			lock;
+};
+
 struct ftl_io_channel {
 	/* Device */
 	struct spdk_ftl_dev			*dev;
@@ -143,6 +175,16 @@ struct ftl_io_channel {
 	TAILQ_HEAD(, ftl_io)			write_cmpl_queue;
 	TAILQ_HEAD(, ftl_io)			retry_queue;
 	TAILQ_ENTRY(ftl_io_channel)		tailq;
+
+	/* Array of write buffer entries */
+	struct ftl_wbuf_entry			*wbuf_entries;
+	/* Write buffer data payload */
+	void					*wbuf_payload;
+	/* Number of write buffer entries */
+	uint32_t				num_entries;
+	/* Write buffer queues */
+	struct spdk_ring			*free_queue;
+	struct spdk_ring			*submit_queue;
 };
 
 /* General IO descriptor */

@@ -968,6 +968,77 @@ ftl_io_channel_register(void *ctx)
 }
 
 static int
+ftl_io_channel_init_wbuf(struct ftl_io_channel *ioch)
+{
+	struct spdk_ftl_dev *dev = ioch->dev;
+	struct ftl_wbuf_entry *entry;
+	uint32_t i;
+	int rc;
+
+	ioch->num_entries = dev->conf.rwb_size / FTL_BLOCK_SIZE;
+	ioch->wbuf_entries = calloc(ioch->num_entries, sizeof(*ioch->wbuf_entries));
+	if (ioch->wbuf_entries == NULL) {
+		SPDK_ERRLOG("Failed to allocate write buffer entry array\n");
+		return -1;
+	}
+
+	ioch->wbuf_payload = spdk_zmalloc(dev->conf.rwb_size, FTL_BLOCK_SIZE, NULL,
+					  SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+	if (ioch->wbuf_payload == NULL) {
+		SPDK_ERRLOG("Failed to allocate write buffer payload\n");
+		goto error_entries;
+	}
+
+	ioch->free_queue = spdk_ring_create(SPDK_RING_TYPE_SP_SC,
+					    spdk_align32pow2(ioch->num_entries + 1),
+					    SPDK_ENV_SOCKET_ID_ANY);
+	if (ioch->free_queue == NULL) {
+		SPDK_ERRLOG("Failed to allocate free queue\n");
+		goto error_payload;
+	}
+
+	ioch->submit_queue = spdk_ring_create(SPDK_RING_TYPE_SP_SC,
+					      spdk_align32pow2(ioch->num_entries + 1),
+					      SPDK_ENV_SOCKET_ID_ANY);
+	if (ioch->submit_queue == NULL) {
+		SPDK_ERRLOG("Failed to allocate submit queue\n");
+		goto error_free_queue;
+	}
+
+	for (i = 0; i < ioch->num_entries; ++i) {
+		entry = &ioch->wbuf_entries[i];
+		entry->payload = (char *)ioch->wbuf_payload + i * FTL_BLOCK_SIZE;
+		entry->ioch = ioch;
+		entry->index = i;
+		entry->addr.offset = FTL_ADDR_INVALID;
+
+		rc = pthread_spin_init(&entry->lock, PTHREAD_PROCESS_PRIVATE);
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to initialize spinlock\n");
+			goto error_spinlock;
+		}
+
+		spdk_ring_enqueue(ioch->free_queue, (void **)&entry, 1, NULL);
+	}
+
+	return 0;
+error_spinlock:
+	for (; i > 0; --i) {
+		pthread_spin_destroy(&ioch->wbuf_entries[i - 1].lock);
+	}
+
+	spdk_ring_free(ioch->submit_queue);
+error_free_queue:
+	spdk_ring_free(ioch->free_queue);
+error_payload:
+	spdk_free(ioch->wbuf_payload);
+error_entries:
+	free(ioch->wbuf_entries);
+
+	return -1;
+}
+
+static int
 ftl_io_channel_create_cb(void *io_device, void *ctx)
 {
 	struct spdk_ftl_dev *dev = io_device;
@@ -1033,12 +1104,18 @@ ftl_io_channel_create_cb(void *io_device, void *ctx)
 		goto fail_poller;
 	}
 
+	if (ftl_io_channel_init_wbuf(ioch)) {
+		SPDK_ERRLOG("Failed to initialize IO channel's write buffer\n");
+		goto fail_wbuf;
+	}
+
 	_ioch->ioch = ioch;
 
 	spdk_thread_send_msg(ftl_get_core_thread(dev), ftl_io_channel_register, ioch);
 
 	return 0;
-
+fail_wbuf:
+	spdk_poller_unregister(&ioch->poller);
 fail_poller:
 	if (ioch->cache_ioch) {
 		spdk_put_io_channel(ioch->cache_ioch);
@@ -1050,7 +1127,6 @@ fail_ioch:
 	free(ioch);
 
 	return -1;
-
 }
 
 static void
@@ -1058,7 +1134,7 @@ ftl_io_channel_unregister(void *ctx)
 {
 	struct ftl_io_channel *ioch = ctx;
 	struct spdk_ftl_dev *dev = ioch->dev;
-	uint32_t num_io_channels __attribute__((unused));
+	uint32_t i, num_io_channels __attribute__((unused));
 
 	assert(ioch->index < dev->conf.max_io_channels);
 	assert(dev->ioch_array[ioch->index] == ioch);
@@ -1069,16 +1145,29 @@ ftl_io_channel_unregister(void *ctx)
 	num_io_channels = __atomic_fetch_sub(&dev->num_io_channels, 1, __ATOMIC_SEQ_CST);
 	assert(num_io_channels > 0);
 
+	for (i = 0; i < ioch->num_entries; ++i) {
+		pthread_spin_destroy(&ioch->wbuf_entries[i].lock);
+	}
+
 	spdk_mempool_free(ioch->io_pool);
+	spdk_ring_free(ioch->free_queue);
+	spdk_ring_free(ioch->submit_queue);
+	spdk_free(ioch->wbuf_payload);
+	free(ioch->wbuf_entries);
 	free(ioch);
 }
 
 static void
-ftl_io_channel_destroy_cb(void *io_device, void *ctx)
+_ftl_io_channel_destroy_cb(void *ctx)
 {
-	struct _ftl_io_channel *_ioch = ctx;
-	struct ftl_io_channel *ioch = _ioch->ioch;
+	struct ftl_io_channel *ioch = ctx;
 	struct spdk_ftl_dev *dev = ioch->dev;
+
+	/* Do not destroy the channel if some of its entries are still in use */
+	if (spdk_ring_count(ioch->free_queue) != ioch->num_entries) {
+		spdk_thread_send_msg(spdk_get_thread(), _ftl_io_channel_destroy_cb, ctx);
+		return;
+	}
 
 	spdk_poller_unregister(&ioch->poller);
 
@@ -1091,6 +1180,15 @@ ftl_io_channel_destroy_cb(void *io_device, void *ctx)
 	ioch->cache_ioch = NULL;
 
 	spdk_thread_send_msg(ftl_get_core_thread(dev), ftl_io_channel_unregister, ioch);
+}
+
+static void
+ftl_io_channel_destroy_cb(void *io_device, void *ctx)
+{
+	struct _ftl_io_channel *_ioch = ctx;
+	struct ftl_io_channel *ioch = _ioch->ioch;
+
+	_ftl_io_channel_destroy_cb(ioch);
 }
 
 static int
