@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0f6562b4_9d4d1ad3",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-02-04T19:47:58Z",
+      "side": 1,
+      "message": "CC, CXX, and LD may already be set, but what about CCAR, CC_TYPE, and LD_TYPE? Those are variables that aren\u0027t standard (I made them up). Especially CCAR, which needs to be set to the correct archive tool to use to generate the static libraries.",
+      "revId": "19c2c03503cc5652ceeccdb048a7e422ccbf0bf5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
