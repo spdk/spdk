@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5553629c_7eaf9135",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-02-04T16:48:05Z",
+      "side": 1,
+      "message": "It is not argument for Popen",
+      "range": {
+        "startLine": 188,
+        "startChar": 66,
+        "endLine": 188,
+        "endChar": 76
+      },
+      "revId": "0b5d18816b6aeaee0c2c1924a6cb14d4851a15aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
