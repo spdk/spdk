@@ -23,8 +23,6 @@ function usage()
 {
 	[[ -n $2 ]] && ( echo "$2"; echo ""; )
 	echo "Shortcut script for automated RPC tests for PMEM"
-	echo "For test details, check test_plan.md or"
-	echo "https://review.gerrithub.io/#/c/378618/18/test/pmem/test_plan.md"
 	echo
 	echo "Usage: $(basename $1) [OPTIONS]"
 	echo
