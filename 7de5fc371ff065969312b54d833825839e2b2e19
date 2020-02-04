@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cc4ee72e_ede1a666",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 764,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-02-04T00:17:15Z",
+      "side": 1,
+      "message": "stupid question but I don\u0027t have a ton of context, why cast to u32 instead of just having the param be a u32?",
+      "revId": "7de5fc371ff065969312b54d833825839e2b2e19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
