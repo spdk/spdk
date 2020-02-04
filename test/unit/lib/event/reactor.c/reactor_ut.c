@@ -156,6 +156,80 @@ test_schedule_thread(void)
 }
 
 static void
+test_set_thread_affinity(void)
+{
+	struct spdk_cpuset cpuset = {};
+	struct spdk_thread *thread;
+	struct spdk_reactor *reactor;
+	struct spdk_lw_thread *lw_thread;
+
+	allocate_cores(3);
+
+	CU_ASSERT(spdk_reactors_init() ==  0);
+
+	spdk_cpuset_set_cpu(&g_reactor_core_mask, 0, true);
+	spdk_cpuset_set_cpu(&g_reactor_core_mask, 1, true);
+	spdk_cpuset_set_cpu(&g_reactor_core_mask, 2, true);
+	g_next_core = 0;
+
+	/* Create and schedule the thread to core 1. */
+	spdk_cpuset_set_cpu(&cpuset, 1, true);
+
+	thread = spdk_thread_create(NULL, &cpuset);
+	CU_ASSERT(thread != NULL);
+
+	reactor = spdk_reactor_get(1);
+	CU_ASSERT(reactor != NULL);
+
+	MOCK_SET(spdk_env_get_current_core, 1);
+
+	CU_ASSERT(_spdk_event_queue_run_batch(reactor) == 1);
+	lw_thread = TAILQ_FIRST(&reactor->threads);
+	CU_ASSERT(lw_thread != NULL);
+	CU_ASSERT(spdk_thread_get_from_ctx(lw_thread) == thread);
+
+	/* Set the cpumask to the same value. */
+	CU_ASSERT(spdk_reactor_set_thread_affinity(thread, "0x2") == 0);
+
+	CU_ASSERT(_spdk_event_queue_run_batch(reactor) == 1);
+
+	/* Check if the thread is still on core 1. */
+	lw_thread = TAILQ_FIRST(&reactor->threads);
+	CU_ASSERT(lw_thread != NULL);
+	CU_ASSERT(spdk_thread_get_from_ctx(lw_thread) == thread);
+
+	/* Set the cpumask to migrate the thread from core 1 to 2. */
+	CU_ASSERT(spdk_reactor_set_thread_affinity(thread, "0x4") == 0);
+
+	CU_ASSERT(_spdk_event_queue_run_batch(reactor) == 1);
+
+	/* Check if the thread is left from core 1. */
+	CU_ASSERT(TAILQ_EMPTY(&reactor->threads));
+
+	reactor = spdk_reactor_get(2);
+	CU_ASSERT(reactor != NULL);
+
+	MOCK_SET(spdk_env_get_current_core, 2);
+
+	CU_ASSERT(_spdk_event_queue_run_batch(reactor) == 1);
+
+	/* Then check if the thread is migrated to core 2. */
+	lw_thread = TAILQ_FIRST(&reactor->threads);
+	CU_ASSERT(lw_thread != NULL);
+	CU_ASSERT(spdk_thread_get_from_ctx(lw_thread) == thread);
+
+	TAILQ_REMOVE(&reactor->threads, lw_thread, link);
+	spdk_set_thread(thread);
+	spdk_thread_exit(thread);
+	spdk_thread_destroy(thread);
+	spdk_set_thread(NULL);
+
+	spdk_reactors_fini();
+
+	free_cores();
+}
+
+static void
 for_each_reactor_done(void *arg1, void *arg2)
 {
 	uint32_t *count = arg1;
@@ -239,6 +313,7 @@ main(int argc, char **argv)
 		CU_add_test(suite, "test_init_reactors", test_init_reactors) == NULL ||
 		CU_add_test(suite, "test_event_call", test_event_call) == NULL ||
 		CU_add_test(suite, "test_schedule_thread", test_schedule_thread) == NULL ||
+		CU_add_test(suite, "test_set_thread_affinity", test_set_thread_affinity) == NULL ||
 		CU_add_test(suite, "test_for_each_reactor", test_for_each_reactor) == NULL
 	) {
 		CU_cleanup_registry();
