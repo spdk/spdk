@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "3aef16b6_bf75539f",
+        "filename": "module/bdev/crypto/vbdev_crypto_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-02-04T21:58:43Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "3a42ea8c_49b935bb",
+      "range": {
+        "startLine": 98,
+        "startChar": 22,
+        "endLine": 98,
+        "endChar": 23
+      },
+      "revId": "3a84ecc52efbd93537c9d007dd798b404821aa68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bf9f1579_778f8108",
         "filename": "module/bdev/crypto/vbdev_crypto_rpc.c",
         "patchSetId": 8
@@ -36,6 +60,24 @@
       "writtenOn": "2020-02-03T06:28:52Z",
       "side": 1,
       "message": "Maybe \"AES_XTS is available only for QAT\" ?",
+      "revId": "3a84ecc52efbd93537c9d007dd798b404821aa68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "14bd2edc_1176ee1a",
+        "filename": "module/bdev/crypto/vbdev_crypto_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-02-04T21:58:43Z",
+      "side": 1,
+      "message": "done, will be over on the new gerrit though",
+      "parentUuid": "bf9f1579_778f8108",
       "revId": "3a84ecc52efbd93537c9d007dd798b404821aa68",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -59,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "ccf2a15f_76de839d",
+        "filename": "module/bdev/crypto/vbdev_crypto_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-02-04T21:58:43Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "332a08ac_4596ea11",
+      "revId": "3a84ecc52efbd93537c9d007dd798b404821aa68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d3e99785_3567b33b",
         "filename": "module/bdev/crypto/vbdev_crypto_rpc.c",
         "patchSetId": 8
@@ -73,6 +133,24 @@
       "revId": "3a84ecc52efbd93537c9d007dd798b404821aa68",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "39dca4d9_d248ac15",
+        "filename": "module/bdev/crypto/vbdev_crypto_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-02-04T21:58:43Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d3e99785_3567b33b",
+      "revId": "3a84ecc52efbd93537c9d007dd798b404821aa68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
