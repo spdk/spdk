@@ -16,6 +16,24 @@
       "revId": "7de5fc371ff065969312b54d833825839e2b2e19",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c6741dd_4dc2cfd0",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 764,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-02-04T18:12:38Z",
+      "side": 1,
+      "message": "There\u0027s a single function signature for setters that handle either 64 bit or 32 bit sets. This one is a 32 bit set.",
+      "parentUuid": "cc4ee72e_ede1a666",
+      "revId": "7de5fc371ff065969312b54d833825839e2b2e19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
