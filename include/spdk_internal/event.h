@@ -62,6 +62,7 @@ enum spdk_reactor_state {
 
 struct spdk_lw_thread {
 	TAILQ_ENTRY(spdk_lw_thread)	link;
+	uint32_t			lcore;
 };
 
 struct spdk_reactor {
@@ -103,6 +104,18 @@ struct spdk_reactor *spdk_reactor_get(uint32_t lcore);
  * called on each reactor.
  */
 void spdk_for_each_reactor(spdk_event_fn fn, void *arg1, void *arg2, spdk_event_fn cpl);
+
+/**
+ * Set the cpumask of the thread to the specified value. If the thread is not
+ * currently running on one of the specified CPUs, the thread is migrated to
+ * one of the specified CPUs.
+ *
+ * \param thread The thread whose cpumask is set.
+ * \param cpumask The new cpumask for the thread.
+ *
+ * \return zero on success, negative errno otherwise.
+ */
+int spdk_reactor_set_thread_affinity(struct spdk_thread *thread, const char *mask);
 
 struct spdk_subsystem {
 	const char *name;

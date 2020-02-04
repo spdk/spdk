@@ -472,6 +472,7 @@ _schedule_thread(void *arg1, void *arg2)
 	reactor = spdk_reactor_get(current_core);
 	assert(reactor != NULL);
 
+	lw_thread->lcore = current_core;
 	TAILQ_INSERT_TAIL(&reactor->threads, lw_thread, link);
 }
 
@@ -514,6 +515,93 @@ spdk_reactor_schedule_thread(struct spdk_thread *thread)
 	spdk_event_call(evt);
 
 	return 0;
+}
+
+static void
+_set_thread_affinity(void *arg1, void *arg2)
+{
+	struct spdk_lw_thread *lw_thread = arg1;
+	struct spdk_thread *thread;
+	struct spdk_cpuset *cpumask = arg2;
+	struct spdk_reactor *reactor;
+	uint32_t current_core;
+	int rc __attribute__((unused));
+
+	current_core = spdk_env_get_current_core();
+	if (current_core != lw_thread->lcore) {
+		spdk_cpuset_free(cpumask);
+
+		SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "Thread was migrated from %u to %u\n",
+			      current_core, lw_thread->lcore);
+		return;
+	}
+
+	thread = spdk_thread_get_from_ctx(lw_thread);
+
+	/* If the thread is not running on one of the specified CPUs, the thread
+	 * is migrated to one of the specified CPUs.
+	 */
+	spdk_thread_set_cpumask(thread, cpumask);
+	spdk_cpuset_free(cpumask);
+
+	if (!spdk_cpuset_get_cpu(cpumask, current_core)) {
+		reactor = spdk_reactor_get(current_core);
+		assert(reactor != NULL);
+
+		TAILQ_REMOVE(&reactor->threads, lw_thread, link);
+
+		rc = spdk_reactor_schedule_thread(thread);
+		assert(rc == 0);
+	}
+}
+
+int
+spdk_reactor_set_thread_affinity(struct spdk_thread *thread, const char *mask)
+{
+	struct spdk_lw_thread *lw_thread;
+	struct spdk_event *evt;
+	struct spdk_cpuset *cpumask;
+	int rc;
+
+	if (thread == NULL || mask == NULL) {
+		return -EINVAL;
+	}
+
+	cpumask = spdk_cpuset_alloc();
+	if (cpumask == NULL) {
+		return -ENOMEM;
+	}
+
+	rc = spdk_app_parse_core_mask(mask, cpumask);
+	if (rc != 0) {
+		SPDK_ERRLOG("Invalid cpumask %s\n", mask);
+		goto err;
+	}
+
+	if (spdk_cpuset_count(cpumask) == 0) {
+		SPDK_ERRLOG("No CPU is selected from reactor mask %s\n",
+			    spdk_cpuset_fmt(spdk_app_get_core_mask()));
+		rc = -EINVAL;
+		goto err;
+	}
+
+	lw_thread = spdk_thread_get_ctx(thread);
+	assert(lw_thread != NULL);
+
+	evt = spdk_event_allocate(lw_thread->lcore, _set_thread_affinity,
+				  lw_thread, cpumask);
+	if (evt == NULL) {
+		SPDK_ERRLOG("Failed to allocate event\n");
+		rc = -ENOMEM;
+		goto err;
+	}
+
+	spdk_event_call(evt);
+	return 0;
+
+err:
+	spdk_cpuset_free(cpumask);
+	return rc;
 }
 
 struct call_reactor {
