@@ -6,8 +6,9 @@ SPDK Virtio driver is a C library that allows communicating with Virtio devices.
 It allows any SPDK application to become an initiator for (SPDK) vhost targets.
 
 The driver supports two different usage models:
+
 * PCI - This is the standard mode of operation when used in a guest virtual
-machine, where QEMU has presented the virtio controller as a virtual PCI device.
+  machine, where QEMU has presented the virtio controller as a virtual PCI device.
 * vhost-user - Can be used to connect to a vhost socket directly on the same host.
 
 The driver, just like the SPDK @ref vhost, is using pollers instead of standard

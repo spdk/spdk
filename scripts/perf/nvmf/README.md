@@ -60,6 +60,7 @@ other than -t, -s, -n and -a.
 
 ## fio
 Fio job parameters.
+
 - bs: block size
 - qd: io depth
 - rw: workload mode

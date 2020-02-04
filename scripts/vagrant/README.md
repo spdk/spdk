@@ -8,7 +8,7 @@ The following guide explains how to use the scripts in the `spdk/scripts/vagrant
 4. Install and configure [Vagrant 1.9.4](https://www.vagrantup.com) or newer
 
 * Note: The extension pack has different licensing than main VirtualBox, please
-review them carefully as the evaluation license is for personal use only.
+  review them carefully as the evaluation license is for personal use only.
 
 ## Mac OSX Setup (High Sierra)
 
@@ -20,7 +20,8 @@ Quick start instructions for OSX:
 4. Install Vagrant Cask
 
 * Note: The extension pack has different licensing than main VirtualBox, please
-review them carefully as the evaluation license is for personal use only.
+  review them carefully as the evaluation license is for personal use only.
+
 ```
    /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
    brew doctor
@@ -38,7 +39,7 @@ review them carefully as the evaluation license is for personal use only.
 4. Install and configure [Vagrant 1.9.4](https://www.vagrantup.com) or newer
 
 * Note: The extension pack has different licensing than main VirtualBox, please
-review them carefully as the evaluation license is for personal use only.
+  review them carefully as the evaluation license is for personal use only.
 
 - Note: VirtualBox requires virtualization to be enabled in the BIOS.
 - Note: You should disable Hyper-V in Windows RS 3 laptop. Search `windows features` un-check Hyper-V, restart laptop
@@ -58,7 +59,7 @@ Following the generic instructions should be sufficient for most Linux distribut
 7. rpm -ivh vagrant_2.1.2_x86_64.rpm
 
 * Note: The extension pack has different licensing than main VirtualBox, please
-review them carefully as the evaluation license is for personal use only.
+  review them carefully as the evaluation license is for personal use only.
 
 ## Configure Vagrant
 

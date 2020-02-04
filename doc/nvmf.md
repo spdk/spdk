@@ -201,6 +201,7 @@ NVMe Domain NQN = "nqn.", year, '-', month, '.', reverse domain, ':', utf-8 stri
 ~~~
 
 Please note that the following types from the definition above are defined elsewhere:
+
 1. utf-8 string: Defined in [rfc 3629](https://tools.ietf.org/html/rfc3629).
 2. reverse domain: Equivalent to domain name as defined in [rfc 1034](https://tools.ietf.org/html/rfc1034).
 

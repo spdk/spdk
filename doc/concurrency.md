@@ -20,7 +20,7 @@ properties:
   because you don't have to change the data model from the single-threaded
   version. You add a lock around the data.
 * You can write your program as a synchronous, imperative list of statements
-that you read from top to bottom.
+  that you read from top to bottom.
 * The scheduler can interrupt threads, allowing for efficient time-sharing
   of CPU resources.
 

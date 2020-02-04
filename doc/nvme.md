@@ -249,9 +249,10 @@ DPDK EAL allows different types of processes to be spawned, each with different 
 on the hugepage memory used by the applications.
 
 There are two types of processes:
+
 1. a primary process which initializes the shared memory and has full privileges and
 2. a secondary process which can attach to the primary process by mapping its shared memory
-regions and perform NVMe operations including creating queue pairs.
+   regions and perform NVMe operations including creating queue pairs.
 
 This feature is enabled by default and is controlled by selecting a value for the shared
 memory group ID. This ID is a positive integer and two applications with the same shared
@@ -272,10 +273,10 @@ Example: identical shm_id and non-overlapping core masks
 
 1. Two processes sharing memory may not share any cores in their core mask.
 2. If a primary process exits while secondary processes are still running, those processes
-will continue to run. However, a new primary process cannot be created.
+   will continue to run. However, a new primary process cannot be created.
 3. Applications are responsible for coordinating access to logical blocks.
 4. If a process exits unexpectedly, the allocated memory will be released when the last
-process exits.
+   process exits.
 
 @sa spdk_nvme_probe, spdk_nvme_ctrlr_process_admin_completions
 
@@ -285,18 +286,18 @@ process exits.
 At the NVMe driver level, we provide the following support for Hotplug:
 
 1. Hotplug events detection:
-The user of the NVMe library can call spdk_nvme_probe() periodically to detect
-hotplug events. The probe_cb, followed by the attach_cb, will be called for each
-new device detected. The user may optionally also provide a remove_cb that will be
-called if a previously attached NVMe device is no longer present on the system.
-All subsequent I/O to the removed device will return an error.
+   The user of the NVMe library can call spdk_nvme_probe() periodically to detect
+   hotplug events. The probe_cb, followed by the attach_cb, will be called for each
+   new device detected. The user may optionally also provide a remove_cb that will be
+   called if a previously attached NVMe device is no longer present on the system.
+   All subsequent I/O to the removed device will return an error.
 
 2. Hot remove NVMe with IO loads:
-When a device is hot removed while I/O is occurring, all access to the PCI BAR will
-result in a SIGBUS error. The NVMe driver automatically handles this case by installing
-a SIGBUS handler and remapping the PCI BAR to a new, placeholder memory location.
-This means I/O in flight during a hot remove will complete with an appropriate error
-code and will not crash the application.
+   When a device is hot removed while I/O is occurring, all access to the PCI BAR will
+   result in a SIGBUS error. The NVMe driver automatically handles this case by installing
+   a SIGBUS handler and remapping the PCI BAR to a new, placeholder memory location.
+   This means I/O in flight during a hot remove will complete with an appropriate error
+   code and will not crash the application.
 
 @sa spdk_nvme_probe
 

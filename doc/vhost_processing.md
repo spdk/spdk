@@ -89,6 +89,7 @@ device (SPDK) can access it directly. The memory can be fragmented into multiple
 physically-discontiguous regions and Vhost-user specification puts a limit on
 their number - currently 8. The driver sends a single message for each region with
 the following data:
+
  * file descriptor - for mmap
  * user address - for memory translations in Vhost-user messages (e.g.
    translating vring addresses)
@@ -106,6 +107,7 @@ as they use common SCSI I/O to inquiry the underlying disk(s).
 
 Afterwards, the driver requests the number of maximum supported queues and
 starts sending virtqueue data, which consists of:
+
  * unique virtqueue id
  * index of the last processed vring descriptor
  * vring addresses (from user address space)

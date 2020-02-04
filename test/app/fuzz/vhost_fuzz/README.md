@@ -14,6 +14,7 @@ Like the NVMe fuzzer, there is an example json file showing the types of request
 that the application accepts. Since the vhost application accepts both vhost block
 and vhost scsi commands, there are three distinct object types that can be passed in
 to the application.
+
 1. vhost_blk_cmd
 2. vhost_scsi_cmd
 3. vhost_scsi_mgmt_cmd
