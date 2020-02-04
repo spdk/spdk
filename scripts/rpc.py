@@ -161,8 +161,8 @@ if __name__ == "__main__":
 
     p = subparsers.add_parser('bdev_compress_create', aliases=['construct_compress_bdev'],
                               help='Add a compress vbdev')
-    p.add_argument('-b', '--base_bdev_name', help="Name of the base bdev")
-    p.add_argument('-p', '--pm_path', help="Path to persistent memory")
+    p.add_argument('-b', '--base-bdev-name', help="Name of the base bdev")
+    p.add_argument('-p', '--pm-path', help="Path to persistent memory")
     p.set_defaults(func=bdev_compress_create)
 
     def bdev_compress_delete(args):
@@ -725,16 +725,16 @@ if __name__ == "__main__":
     p = subparsers.add_parser('bdev_set_qos_limit', aliases=['set_bdev_qos_limit'],
                               help='Set QoS rate limit on a blockdev')
     p.add_argument('name', help='Blockdev name to set QoS. Example: Malloc0')
-    p.add_argument('--rw_ios_per_sec',
+    p.add_argument('--rw-ios-per-sec',
                    help='R/W IOs per second limit (>=10000, example: 20000). 0 means unlimited.',
                    type=int, required=False)
-    p.add_argument('--rw_mbytes_per_sec',
+    p.add_argument('--rw-mbytes-per-sec',
                    help="R/W megabytes per second limit (>=10, example: 100). 0 means unlimited.",
                    type=int, required=False)
-    p.add_argument('--r_mbytes_per_sec',
+    p.add_argument('--r-mbytes-per-sec',
                    help="Read megabytes per second limit (>=10, example: 100). 0 means unlimited.",
                    type=int, required=False)
-    p.add_argument('--w_mbytes_per_sec',
+    p.add_argument('--w-mbytes-per-sec',
                    help="Write megabytes per second limit (>=10, example: 100). 0 means unlimited.",
                    type=int, required=False)
     p.set_defaults(func=bdev_set_qos_limit)
@@ -1707,7 +1707,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser('nvmf_get_transports', aliases=['get_nvmf_transports'],
                               help='Display nvmf transports')
-    p.add_argument('-t', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_get_transports)
 
     def nvmf_get_subsystems(args):
@@ -1715,7 +1715,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser('nvmf_get_subsystems', aliases=['get_nvmf_subsystems'],
                               help='Display nvmf subsystems')
-    p.add_argument('-t', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_get_subsystems)
 
     def nvmf_create_subsystem(args):
@@ -1730,7 +1730,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('nvmf_create_subsystem', aliases=['nvmf_subsystem_create'],
                               help='Create an NVMe-oF subsystem')
     p.add_argument('nqn', help='Subsystem NQN (ASCII)')
-    p.add_argument('-t', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.add_argument("-s", "--serial-number", help="""
     Format:  'sn' etc
     Example: 'SPDK00000000000001'""", default='00000000000000000000')
@@ -1751,7 +1751,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                               help='Delete a nvmf subsystem')
     p.add_argument('subsystem_nqn',
                    help='subsystem nqn to be deleted. Example: nqn.2016-06.io.spdk:cnode1.')
-    p.add_argument('-t', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_delete_subsystem)
 
     def nvmf_subsystem_add_listener(args):
@@ -1767,7 +1767,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
     p.add_argument('-t', '--trtype', help='NVMe-oF transport type: e.g., rdma', required=True)
     p.add_argument('-a', '--traddr', help='NVMe-oF transport address: e.g., an ip address', required=True)
-    p.add_argument('-p', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.add_argument('-p', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.add_argument('-f', '--adrfam', help='NVMe-oF transport adrfam: e.g., ipv4, ipv6, ib, fc, intra_host')
     p.add_argument('-s', '--trsvcid', help='NVMe-oF transport service id: e.g., a port number')
     p.set_defaults(func=nvmf_subsystem_add_listener)
@@ -1785,7 +1785,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
     p.add_argument('-t', '--trtype', help='NVMe-oF transport type: e.g., rdma', required=True)
     p.add_argument('-a', '--traddr', help='NVMe-oF transport address: e.g., an ip address', required=True)
-    p.add_argument('-p', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.add_argument('-p', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.add_argument('-f', '--adrfam', help='NVMe-oF transport adrfam: e.g., ipv4, ipv6, ib, fc, intra_host')
     p.add_argument('-s', '--trsvcid', help='NVMe-oF transport service id: e.g., a port number')
     p.set_defaults(func=nvmf_subsystem_remove_listener)
@@ -1804,7 +1804,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('nvmf_subsystem_add_ns', help='Add a namespace to an NVMe-oF subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
     p.add_argument('bdev_name', help='The name of the bdev that will back this namespace')
-    p.add_argument('-t', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.add_argument('-p', '--ptpl-file', help='The persistent reservation storage location (optional)', type=str)
     p.add_argument('-n', '--nsid', help='The requested NSID (optional)', type=int)
     p.add_argument('-g', '--nguid', help='Namespace globally unique identifier (optional)')
@@ -1821,7 +1821,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('nvmf_subsystem_remove_ns', help='Remove a namespace to an NVMe-oF subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
     p.add_argument('nsid', help='The requested NSID', type=int)
-    p.add_argument('-t', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_subsystem_remove_ns)
 
     def nvmf_subsystem_add_host(args):
@@ -1833,7 +1833,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('nvmf_subsystem_add_host', help='Add a host to an NVMe-oF subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
     p.add_argument('host', help='Host NQN to allow')
-    p.add_argument('-t', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_subsystem_add_host)
 
     def nvmf_subsystem_remove_host(args):
@@ -1845,7 +1845,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('nvmf_subsystem_remove_host', help='Remove a host from an NVMe-oF subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
     p.add_argument('host', help='Host NQN to remove')
-    p.add_argument('-t', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_subsystem_remove_host)
 
     def nvmf_subsystem_allow_any_host(args):
@@ -1858,7 +1858,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
     p.add_argument('-e', '--enable', action='store_true', help='Enable allowing any host')
     p.add_argument('-d', '--disable', action='store_true', help='Disable allowing any host')
-    p.add_argument('-t', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_subsystem_allow_any_host)
 
     def nvmf_get_stats(args):
@@ -1866,7 +1866,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser(
         'nvmf_get_stats', help='Display current statistics for NVMf subsystem')
-    p.add_argument('-t', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_get_stats)
 
     # pmem
@@ -2081,7 +2081,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser('bdev_ocssd_create',
                               help='Creates zoned bdev on specified Open Channel controller')
-    p.add_argument('-c', '--ctrlr_name', help='Name of the OC NVMe controller', required=True)
+    p.add_argument('-c', '--ctrlr-name', help='Name of the OC NVMe controller', required=True)
     p.add_argument('-b', '--name', help='Name of the bdev to create', required=True)
     p.add_argument('-n', '--nsid', help='Namespace ID', required=False)
     p.add_argument('-r', '--range', help='Parallel unit range (in the form of BEGIN-END (inclusive))',
@@ -2275,7 +2275,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser('blobfs_create', help='Build a blobfs on bdev')
     p.add_argument('bdev_name', help='Blockdev name to build blobfs. Example: Malloc0.')
-    p.add_argument('-c', '--cluster_sz',
+    p.add_argument('-c', '--cluster-sz',
                    help="""Size of cluster in bytes (Optional). Must be multiple of 4KB page size. Default and minimal value is 1M.""")
     p.set_defaults(func=blobfs_create)
 
