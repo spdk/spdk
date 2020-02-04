@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "f4d3c278_4da0df56",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-02-04T23:24:05Z",
+      "side": 1,
+      "message": "Thank you! I learned both and either as English with additional source",
+      "parentUuid": "d056a528_7dbb22d4",
+      "range": {
+        "startLine": 8,
+        "startChar": 59,
+        "endLine": 8,
+        "endChar": 66
+      },
+      "revId": "f9d548861ae67a3b7ae599c91b70b5344bae1e7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f9ffb1b4_33a6fad8",
         "filename": "module/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 6
