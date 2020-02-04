@@ -16,6 +16,47 @@
       "revId": "4ca518e834185f7eb5cdf42cf9210da51d026024",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "986a3bf1_2e3fd1d8",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 739,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2020-02-04T09:35:29Z",
+      "side": 1,
+      "message": "@Karol not sure what you meant. The new param is optional and previous usages of discover_bdevs seem to work just fine.",
+      "parentUuid": "f066908e_80bc1c95",
+      "revId": "4ca518e834185f7eb5cdf42cf9210da51d026024",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3236549b_6303fc95",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2020-02-04T09:35:29Z",
+      "side": 1,
+      "message": "can we use raw RPC commands instead of hardcoded JSON configs? Those configs contain a lot of unnecessary information and are not easy to modify.\n\nWith raw RPC commands, this could be roughly:\n\n./spdk_tgt -r /custom_socket \u0026\n$RPC_PY /custom_socket bdev_virtio_attach_controller 1\n$RPC_PY /custom_socket bdev_virtio_attach_controller 2\n$RPC_PY /custom_socket bdev_virtio_attach_controller 3\nvbdevs\u003d$($RPC_PY /custom_socket get_bdevs)\n$RPC_PY /custom_socket save_config \u003e bdev.json",
+      "range": {
+        "startLine": 85,
+        "startChar": 34,
+        "endLine": 85,
+        "endChar": 52
+      },
+      "revId": "4ca518e834185f7eb5cdf42cf9210da51d026024",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
