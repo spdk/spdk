@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "aacf13b4_51ceec1c",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-02-04T22:05:48Z",
+      "side": 1,
+      "message": "done but over in the new gerrit",
+      "parentUuid": "9cb70cd5_47a506c0",
+      "range": {
+        "startLine": 7,
+        "startChar": 38,
+        "endLine": 7,
+        "endChar": 42
+      },
+      "revId": "f9d548861ae67a3b7ae599c91b70b5344bae1e7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "84df30ab_091d8240",
         "filename": "CHANGELOG.md",
         "patchSetId": 6
@@ -36,6 +60,30 @@
       "writtenOn": "2020-02-03T06:34:09Z",
       "side": 1,
       "message": "both or all?",
+      "range": {
+        "startLine": 8,
+        "startChar": 59,
+        "endLine": 8,
+        "endChar": 66
+      },
+      "revId": "f9d548861ae67a3b7ae599c91b70b5344bae1e7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d056a528_7dbb22d4",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-02-04T22:05:48Z",
+      "side": 1,
+      "message": "\"either\" or \"both\" mean the same thing.",
+      "parentUuid": "84df30ab_091d8240",
       "range": {
         "startLine": 8,
         "startChar": 59,
@@ -65,6 +113,24 @@
     },
     {
       "key": {
+        "uuid": "db6034c6_a7a7a49d",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1607,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-02-04T22:05:48Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "f9ffb1b4_33a6fad8",
+      "revId": "f9d548861ae67a3b7ae599c91b70b5344bae1e7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bffefbad_989cdee2",
         "filename": "module/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 6
@@ -79,6 +145,24 @@
       "revId": "f9d548861ae67a3b7ae599c91b70b5344bae1e7c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "77013883_0e447efe",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1963,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-02-04T22:05:48Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "bffefbad_989cdee2",
+      "revId": "f9d548861ae67a3b7ae599c91b70b5344bae1e7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
