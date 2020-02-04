@@ -348,6 +348,12 @@ function run_bdevperf(){
 	disks=$(head -n $((disks_limit+1)) <<< cat $BASE_DIR/bdev.conf)
 	echo "$disks" > $BASE_DIR/bdev.conf
 
+	cat <<- EOF >> $BASE_DIR/bdev.conf
+	[Bdev]
+	#Maximum number of spdk_bdev_io structures to cache per thread.
+	BdevIoCacheSize 2048
+	EOF
+
 	echo "** Running bdevperf test, this can take a while, depending on the run-time setting."
 	$BDEVPERF_DIR/bdevperf -c $BASE_DIR/bdev.conf -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME -m "[$CPUS_ALLOWED]"
 	sleep 1
