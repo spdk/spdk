@@ -520,6 +520,7 @@ Example response:
         "lw_threads": [
           {
             "name": "app_thread",
+            "id", 1,
             "cpumask": "1"
           }
         ]
@@ -563,6 +564,7 @@ Example response:
     "threads": [
       {
         "name": "app_thread",
+        "id": 1,
 	"cpumask": "1",
         "busy": 139223208,
         "idle": 8641080608

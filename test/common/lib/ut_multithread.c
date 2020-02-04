@@ -61,12 +61,12 @@ struct ut_thread *g_ut_threads;
 
 #define INVALID_THREAD 0x1000
 
-static uint64_t g_thread_id = INVALID_THREAD;
+static uint64_t g_ut_thread_id = INVALID_THREAD;
 
 static void
 set_thread(uintptr_t thread_id)
 {
-	g_thread_id = thread_id;
+	g_ut_thread_id = thread_id;
 	if (thread_id == INVALID_THREAD) {
 		spdk_set_thread(NULL);
 	} else {
@@ -138,7 +138,7 @@ poll_thread_times(uintptr_t thread_id, uint32_t max_polls)
 	assert(thread_id != (uintptr_t)INVALID_THREAD);
 	assert(thread_id < g_ut_num_threads);
 
-	original_thread_id = g_thread_id;
+	original_thread_id = g_ut_thread_id;
 	set_thread(INVALID_THREAD);
 
 	while (polls_executed < max_polls) {
@@ -163,7 +163,7 @@ poll_thread(uintptr_t thread_id)
 	assert(thread_id != (uintptr_t)INVALID_THREAD);
 	assert(thread_id < g_ut_num_threads);
 
-	original_thread_id = g_thread_id;
+	original_thread_id = g_ut_thread_id;
 	set_thread(INVALID_THREAD);
 
 	while (spdk_thread_poll(thread->thread, 0, 0) > 0) {

@@ -51,6 +51,11 @@ static pthread_mutex_t g_devlist_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static spdk_new_thread_fn g_new_thread_fn = NULL;
 static size_t g_ctx_sz = 0;
+/* Monotonic increasing ID is set to each created thread beginning at 1. Once the
+ * ID exceeds UINT64_MAX, further thread creation is not allowed and restarting
+ * SPDK application is required.
+ */
+static uint64_t g_thread_id = 1;
 
 struct io_device {
 	void				*io_device;
@@ -118,6 +123,7 @@ struct spdk_thread {
 	TAILQ_HEAD(, spdk_io_channel)	io_channels;
 	TAILQ_ENTRY(spdk_thread)	tailq;
 	char				name[SPDK_MAX_THREAD_NAME_LEN + 1];
+	uint64_t			id;
 
 	bool				exit;
 
@@ -321,12 +327,20 @@ spdk_thread_create(const char *name, struct spdk_cpuset *cpumask)
 		snprintf(thread->name, sizeof(thread->name), "%p", thread);
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Allocating new thread %s\n", thread->name);
-
 	pthread_mutex_lock(&g_devlist_mutex);
+	if (g_thread_id == 0) {
+		SPDK_ERRLOG("Thread ID rolled over. Further thread creation is not allowed.\n");
+		pthread_mutex_unlock(&g_devlist_mutex);
+		_free_thread(thread);
+		return NULL;
+	}
+	thread->id = g_thread_id++;
 	TAILQ_INSERT_TAIL(&g_threads, thread, tailq);
 	g_thread_count++;
 	pthread_mutex_unlock(&g_devlist_mutex);
+
+	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Allocating new thread (%" PRIu64 ", %s)\n",
+		      thread->id, thread->name);
 
 	if (g_new_thread_fn) {
 		rc = g_new_thread_fn(thread);
@@ -713,6 +727,12 @@ const char *
 spdk_thread_get_name(const struct spdk_thread *thread)
 {
 	return thread->name;
+}
+
+uint64_t
+spdk_thread_get_id(const struct spdk_thread *thread)
+{
+	return thread->id;
 }
 
 int
