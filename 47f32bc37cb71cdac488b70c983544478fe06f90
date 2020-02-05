@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "d1315cdd_55b6d405",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 813,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-02-05T14:12:29Z",
+      "side": 1,
+      "message": "I see that bdev logic is checking this during io_channel destroy.",
+      "parentUuid": "c133ac6d_cf4ad162",
+      "range": {
+        "startLine": 813,
+        "startChar": 39,
+        "endLine": 813,
+        "endChar": 70
+      },
+      "revId": "47f32bc37cb71cdac488b70c983544478fe06f90",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8dc7b20c_780b3863",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 5
