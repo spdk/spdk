@@ -197,6 +197,12 @@ spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 }
 
 static void
+_subsystem_add_listen_done(void *cb_arg, int status)
+{
+	SPDK_CU_ASSERT_FATAL(status == 0);
+}
+
+static void
 test_discovery_log(void)
 {
 	struct spdk_nvmf_tgt tgt = {};
@@ -224,7 +230,7 @@ test_discovery_log(void)
 	trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
 	snprintf(trid.traddr, sizeof(trid.traddr), "1234");
 	snprintf(trid.trsvcid, sizeof(trid.trsvcid), "5678");
-	SPDK_CU_ASSERT_FATAL(spdk_nvmf_subsystem_add_listener(subsystem, &trid) == 0);
+	spdk_nvmf_subsystem_add_listener(subsystem, &trid, _subsystem_add_listen_done, NULL);
 	subsystem->state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 
 	/* Get only genctr (first field in the header) */

@@ -281,6 +281,16 @@ spdk_nvmf_tgt_parse_listen_fc_addr(const char *address,
 	return 0;
 }
 
+static void
+spdk_nvmf_tgt_listen_done(void *cb_arg, int status)
+{
+	/* TODO: Config parsing should wait for this operation to finish. */
+
+	if (status) {
+		SPDK_ERRLOG("Failed to listen on transport address\n");
+	}
+}
+
 static int
 spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 {
@@ -476,7 +486,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 			SPDK_ERRLOG("Failed to listen on transport address\n");
 		}
 
-		spdk_nvmf_subsystem_add_listener(subsystem, &trid);
+		spdk_nvmf_subsystem_add_listener(subsystem, &trid, spdk_nvmf_tgt_listen_done, NULL);
 		allow_any_listener = false;
 	}
 

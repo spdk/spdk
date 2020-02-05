@@ -2956,6 +2956,7 @@ out:
 }
 
 struct nvmf_fc_add_rem_listener_ctx {
+	struct spdk_nvmf_subsystem *subsystem;
 	bool add_listener;
 	struct spdk_nvme_transport_id trid;
 };
@@ -2969,19 +2970,28 @@ nvmf_fc_adm_subsystem_resume_cb(struct spdk_nvmf_subsystem *subsystem, void *cb_
 }
 
 static void
+nvmf_fc_adm_listen_done(void *cb_arg, int status)
+{
+	ASSERT_SPDK_FC_MASTER_THREAD();
+	struct nvmf_fc_add_rem_listener_ctx *ctx = cb_arg;
+
+	if (spdk_nvmf_subsystem_resume(ctx->subsystem, nvmf_fc_adm_subsystem_resume_cb, ctx)) {
+		SPDK_ERRLOG("Failed to resume subsystem: %s\n", subsystem->subnqn);
+		free(ctx);
+	}
+}
+
+static void
 nvmf_fc_adm_subsystem_paused_cb(struct spdk_nvmf_subsystem *subsystem, void *cb_arg, int status)
 {
 	ASSERT_SPDK_FC_MASTER_THREAD();
 	struct nvmf_fc_add_rem_listener_ctx *ctx = (struct nvmf_fc_add_rem_listener_ctx *)cb_arg;
 
 	if (ctx->add_listener) {
-		spdk_nvmf_subsystem_add_listener(subsystem, &ctx->trid);
+		spdk_nvmf_subsystem_add_listener(subsystem, &ctx->trid, nvmf_fc_adm_listen_done, ctx);
 	} else {
 		spdk_nvmf_subsystem_remove_listener(subsystem, &ctx->trid);
-	}
-	if (spdk_nvmf_subsystem_resume(subsystem, nvmf_fc_adm_subsystem_resume_cb, ctx)) {
-		SPDK_ERRLOG("Failed to resume subsystem: %s\n", subsystem->subnqn);
-		free(ctx);
+		nvmf_fc_adm_listen_done(ctx, 0);
 	}
 }
 
@@ -3004,6 +3014,7 @@ nvmf_fc_adm_add_rem_nport_listener(struct spdk_nvmf_fc_nport *nport, bool add)
 			ctx = calloc(1, sizeof(struct nvmf_fc_add_rem_listener_ctx));
 			if (ctx) {
 				ctx->add_listener = add;
+				ctx->subsystem = subsystem;
 				spdk_nvmf_fc_create_trid(&ctx->trid,
 							 nport->fc_nodename.u.wwn,
 							 nport->fc_portname.u.wwn);

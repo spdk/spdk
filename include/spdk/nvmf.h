@@ -123,6 +123,14 @@ struct spdk_nvmf_transport_poll_group_stat {
 typedef void (*new_qpair_fn)(struct spdk_nvmf_qpair *qpair, void *cb_arg);
 
 /**
+ * Function to be called once the listener is associated with a subsystem.
+ *
+ * \param ctx Context argument passed to this function.
+ * \param status 0 if it completed successfully, or negative errno if it failed.
+ */
+typedef void (*spdk_nvmf_tgt_subsystem_listen_done_fn)(void *ctx, int status);
+
+/**
  * Construct an NVMe-oF target.
  *
  * \param opts a pointer to an spdk_nvmf_target_opts structure.
@@ -556,11 +564,13 @@ const char *spdk_nvmf_host_get_nqn(const struct spdk_nvmf_host *host);
  *
  * \param subsystem Subsystem to add listener to.
  * \param trid The address to accept connections from.
- *
- * \return 0 on success, or negated errno value on failure.
+ * \param cb_fn A callback that will be called once the association is complete.
+ * \param cb_arg Argument passed to cb_fn.
  */
-int spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
-				     struct spdk_nvme_transport_id *trid);
+void spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
+				      struct spdk_nvme_transport_id *trid,
+				      spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn,
+				      void *cb_arg);
 
 /**
  * Remove the listener from subsystem.

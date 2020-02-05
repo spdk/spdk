@@ -747,39 +747,48 @@ spdk_nvmf_subsystem_find_listener(struct spdk_nvmf_subsystem *subsystem,
 	return NULL;
 }
 
-int
+void
 spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
-				 struct spdk_nvme_transport_id *trid)
+				 struct spdk_nvme_transport_id *trid,
+				 spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn,
+				 void *cb_arg)
 {
 	struct spdk_nvmf_transport *transport;
 	struct spdk_nvmf_subsystem_listener *listener;
 	struct spdk_nvmf_listener *tr_listener;
 
+	assert(cb_fn != NULL);
+
 	if (!(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
 	      subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED)) {
-		return -EAGAIN;
+		cb_fn(cb_arg, -EAGAIN);
+		return;
 	}
 
 	if (spdk_nvmf_subsystem_find_listener(subsystem, trid)) {
 		/* Listener already exists in this subsystem */
-		return 0;
+		cb_fn(cb_arg, 0);
+		return;
 	}
 
 	transport = spdk_nvmf_tgt_get_transport(subsystem->tgt, trid->trstring);
 	if (transport == NULL) {
 		SPDK_ERRLOG("Unknown transport type %d\n", trid->trtype);
-		return -EINVAL;
+		cb_fn(cb_arg, -EINVAL);
+		return;
 	}
 
 	tr_listener = spdk_nvmf_transport_find_listener(transport, trid);
 	if (!tr_listener) {
 		SPDK_ERRLOG("Cannot find transport listener for %s\n", trid->traddr);
-		return -EINVAL;
+		cb_fn(cb_arg, -EINVAL);
+		return;
 	}
 
 	listener = calloc(1, sizeof(*listener));
 	if (!listener) {
-		return -ENOMEM;
+		cb_fn(cb_arg, -ENOMEM);
+		return;
 	}
 
 	listener->trid = &tr_listener->trid;
@@ -788,7 +797,7 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 	TAILQ_INSERT_HEAD(&subsystem->listeners, listener, link);
 	subsystem->tgt->discovery_genctr++;
 
-	return 0;
+	cb_fn(cb_arg, 0);
 }
 
 int
