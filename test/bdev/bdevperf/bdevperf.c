@@ -1183,45 +1183,6 @@ bdevperf_run(void *arg1)
 }
 
 static void
-bdevperf_stop_io_on_group(struct spdk_io_channel_iter *i)
-{
-	struct spdk_io_channel *ch;
-	struct io_target_group *group;
-	struct io_target *target;
-
-	ch = spdk_io_channel_iter_get_channel(i);
-	group = spdk_io_channel_get_ctx(ch);
-
-	/* Stop I/O for each block device. */
-	TAILQ_FOREACH(target, &group->targets, link) {
-		end_target(target);
-	}
-
-	spdk_for_each_channel_continue(i, 0);
-}
-
-static void
-spdk_bdevperf_shutdown_cb(void)
-{
-	g_shutdown = true;
-
-	if (TAILQ_EMPTY(&g_bdevperf.groups)) {
-		spdk_app_stop(0);
-		return;
-	}
-
-	if (g_target_count == 0) {
-		bdevperf_test_done();
-		return;
-	}
-
-	g_shutdown_tsc = spdk_get_ticks() - g_shutdown_tsc;
-
-	/* Send events to stop all I/O on each target group */
-	spdk_for_each_channel(&g_bdevperf, bdevperf_stop_io_on_group, NULL, NULL);
-}
-
-static void
 rpc_perform_tests_cb(void)
 {
 	struct spdk_json_write_ctx *w;
@@ -1269,6 +1230,45 @@ rpc_perform_tests(struct spdk_jsonrpc_request *request, const struct spdk_json_v
 	}
 }
 SPDK_RPC_REGISTER("perform_tests", rpc_perform_tests, SPDK_RPC_RUNTIME)
+
+static void
+bdevperf_stop_io_on_group(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *ch;
+	struct io_target_group *group;
+	struct io_target *target;
+
+	ch = spdk_io_channel_iter_get_channel(i);
+	group = spdk_io_channel_get_ctx(ch);
+
+	/* Stop I/O for each block device. */
+	TAILQ_FOREACH(target, &group->targets, link) {
+		end_target(target);
+	}
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static void
+spdk_bdevperf_shutdown_cb(void)
+{
+	g_shutdown = true;
+
+	if (TAILQ_EMPTY(&g_bdevperf.groups)) {
+		spdk_app_stop(0);
+		return;
+	}
+
+	if (g_target_count == 0) {
+		bdevperf_test_done();
+		return;
+	}
+
+	g_shutdown_tsc = spdk_get_ticks() - g_shutdown_tsc;
+
+	/* Send events to stop all I/O on each target group */
+	spdk_for_each_channel(&g_bdevperf, bdevperf_stop_io_on_group, NULL, NULL);
+}
 
 static int
 bdevperf_parse_arg(int ch, char *arg)
