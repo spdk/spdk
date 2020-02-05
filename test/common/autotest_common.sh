@@ -5,7 +5,6 @@ function xtrace_disable() {
 			XTRACE_DISABLED="yes"
 		fi
 		set +x
-		shopt -u extdebug
         elif [ -z $XTRACE_NESTING_LEVEL ]; then
                 XTRACE_NESTING_LEVEL=1
         else
@@ -31,7 +30,7 @@ function xtrace_enable() {
 alias xtrace_restore=\
 'if [ -z $XTRACE_NESTING_LEVEL ]; then
         if [[ "$PREV_BASH_OPTS" == *"x"* ]]; then
-		XTRACE_DISABLED="no"; PREV_BASH_OPTS=""; shopt -s extdebug; set -x; xtrace_enable;
+		XTRACE_DISABLED="no"; PREV_BASH_OPTS=""; set -x; xtrace_enable;
 	fi
 else
 	XTRACE_NESTING_LEVEL=$((--XTRACE_NESTING_LEVEL));
@@ -1065,6 +1064,7 @@ function opal_revert_cleanup {
 }
 
 set -o errtrace
+shopt -s extdebug
 trap "trap - ERR; print_backtrace >&2" ERR
 
 PS4=' \t	\$ '
