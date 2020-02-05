@@ -2355,6 +2355,51 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	return num_completions;
 }
 
+static struct spdk_nvme_transport_poll_group *
+nvme_pcie_poll_group_create(void)
+{
+	return NULL;
+}
+
+static int
+nvme_pcie_poll_group_activate_qpair(struct spdk_nvme_qpair *qpair)
+{
+	return 0;
+}
+
+static int
+nvme_pcie_poll_group_deactivate_qpair(struct spdk_nvme_qpair *qpair)
+{
+	return 0;
+}
+
+static int
+nvme_pcie_poll_group_add(struct spdk_nvme_transport_poll_group *tgroup,
+			 struct spdk_nvme_qpair *qpair)
+{
+	return -ENOTSUP;
+}
+
+static int
+nvme_pcie_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
+			    struct spdk_nvme_qpair *qpair)
+{
+	return -ENOTSUP;
+}
+
+static int64_t
+nvme_pcie_poll_group_process_completions(struct spdk_nvme_transport_poll_group *tgroup,
+		uint32_t completions_per_qpair, spdk_nvme_failed_qpair_cb failed_qpair_cb)
+{
+	return -ENOTSUP;
+}
+
+static int
+nvme_pcie_poll_group_destroy(struct spdk_nvme_transport_poll_group *tgroup)
+{
+	return -ENOTSUP;
+}
+
 const struct spdk_nvme_transport_ops pcie_ops = {
 	.name = "PCIE",
 	.type = SPDK_NVME_TRANSPORT_PCIE,
@@ -2384,6 +2429,14 @@ const struct spdk_nvme_transport_ops pcie_ops = {
 	.qpair_submit_request = nvme_pcie_qpair_submit_request,
 	.qpair_process_completions = nvme_pcie_qpair_process_completions,
 	.admin_qpair_abort_aers = nvme_pcie_admin_qpair_abort_aers,
+
+	.poll_group_create = nvme_pcie_poll_group_create,
+	.poll_group_activate_qpair = nvme_pcie_poll_group_activate_qpair,
+	.poll_group_deactivate_qpair = nvme_pcie_poll_group_deactivate_qpair,
+	.poll_group_add = nvme_pcie_poll_group_add,
+	.poll_group_remove = nvme_pcie_poll_group_remove,
+	.poll_group_process_completions = nvme_pcie_poll_group_process_completions,
+	.poll_group_destroy = nvme_pcie_poll_group_destroy,
 };
 
 SPDK_NVME_TRANSPORT_REGISTER(pcie, &pcie_ops);

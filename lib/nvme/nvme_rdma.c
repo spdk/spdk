@@ -2138,6 +2138,51 @@ nvme_rdma_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 	}
 }
 
+static struct spdk_nvme_transport_poll_group *
+nvme_rdma_poll_group_create(void)
+{
+	return NULL;
+}
+
+static int
+nvme_rdma_poll_group_activate_qpair(struct spdk_nvme_qpair *qpair)
+{
+	return 0;
+}
+
+static int
+nvme_rdma_poll_group_deactivate_qpair(struct spdk_nvme_qpair *qpair)
+{
+	return 0;
+}
+
+static int
+nvme_rdma_poll_group_add(struct spdk_nvme_transport_poll_group *tgroup,
+			 struct spdk_nvme_qpair *qpair)
+{
+	return -ENOTSUP;
+}
+
+static int
+nvme_rdma_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
+			    struct spdk_nvme_qpair *qpair)
+{
+	return -ENOTSUP;
+}
+
+static int64_t
+nvme_rdma_poll_group_process_completions(struct spdk_nvme_transport_poll_group *tgroup,
+		uint32_t completions_per_qpair, spdk_nvme_failed_qpair_cb failed_qpair_cb)
+{
+	return -ENOTSUP;
+}
+
+static int
+nvme_rdma_poll_group_destroy(struct spdk_nvme_transport_poll_group *tgroup)
+{
+	return -ENOTSUP;
+}
+
 void
 spdk_nvme_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks)
 {
@@ -2170,6 +2215,15 @@ const struct spdk_nvme_transport_ops rdma_ops = {
 	.qpair_submit_request = nvme_rdma_qpair_submit_request,
 	.qpair_process_completions = nvme_rdma_qpair_process_completions,
 	.admin_qpair_abort_aers = nvme_rdma_admin_qpair_abort_aers,
+
+	.poll_group_create = nvme_rdma_poll_group_create,
+	.poll_group_activate_qpair = nvme_rdma_poll_group_activate_qpair,
+	.poll_group_deactivate_qpair = nvme_rdma_poll_group_deactivate_qpair,
+	.poll_group_add = nvme_rdma_poll_group_add,
+	.poll_group_remove = nvme_rdma_poll_group_remove,
+	.poll_group_process_completions = nvme_rdma_poll_group_process_completions,
+	.poll_group_destroy = nvme_rdma_poll_group_destroy,
+
 };
 
 SPDK_NVME_TRANSPORT_REGISTER(rdma, &rdma_ops);

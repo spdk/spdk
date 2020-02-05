@@ -359,3 +359,114 @@ nvme_transport_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 	assert(transport != NULL);
 	transport->ops.admin_qpair_abort_aers(qpair);
 }
+
+struct spdk_nvme_transport_poll_group *
+nvme_transport_poll_group_create(const struct spdk_nvme_transport *transport)
+{
+	struct spdk_nvme_transport_poll_group *group = NULL;
+
+	group = transport->ops.poll_group_create();
+	if (group) {
+		group->transport = transport;
+		STAILQ_INIT(&group->active_qpairs);
+		STAILQ_INIT(&group->failed_qpairs);
+	}
+
+	return group;
+}
+
+int
+nvme_transport_poll_group_add(struct spdk_nvme_transport_poll_group *tgroup,
+			      struct spdk_nvme_qpair *qpair)
+{
+	int rc;
+
+	rc = tgroup->transport->ops.poll_group_add(tgroup, qpair);
+	if (rc == 0) {
+		qpair->poll_group = tgroup;
+		assert(nvme_qpair_get_state(qpair) < NVME_QPAIR_CONNECTED);
+		qpair->poll_group_tailq_head = &tgroup->failed_qpairs;
+		STAILQ_INSERT_TAIL(&tgroup->failed_qpairs, qpair, poll_group_stailq);
+	}
+
+	return rc;
+}
+
+int
+nvme_transport_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
+				 struct spdk_nvme_qpair *qpair)
+{
+	int rc;
+
+	rc = tgroup->transport->ops.poll_group_remove(tgroup, qpair);
+	if (rc == 0) {
+		qpair->poll_group = NULL;
+	}
+
+	return rc;
+}
+
+int64_t
+nvme_transport_poll_group_process_completions(struct spdk_nvme_transport_poll_group *tgroup,
+		uint32_t completions_per_qpair, spdk_nvme_failed_qpair_cb failed_qpair_cb)
+{
+	return tgroup->transport->ops.poll_group_process_completions(tgroup, completions_per_qpair,
+			failed_qpair_cb);
+}
+
+int
+nvme_transport_poll_group_destroy(struct spdk_nvme_transport_poll_group *tgroup)
+{
+	return tgroup->transport->ops.poll_group_destroy(tgroup);
+}
+
+int
+nvme_transport_poll_group_deactivate_qpair(struct spdk_nvme_qpair *qpair)
+{
+	struct spdk_nvme_transport_poll_group *tgroup;
+	int rc;
+
+	tgroup = qpair->poll_group;
+
+	if (qpair->poll_group_tailq_head == &tgroup->failed_qpairs) {
+		return 0;
+	}
+
+	if (qpair->poll_group_tailq_head == &tgroup->active_qpairs) {
+		rc = tgroup->transport->ops.poll_group_deactivate_qpair(qpair);
+		if (rc == 0) {
+			qpair->poll_group_tailq_head = &tgroup->failed_qpairs;
+			STAILQ_REMOVE(&tgroup->active_qpairs, qpair, spdk_nvme_qpair, poll_group_stailq);
+			STAILQ_INSERT_TAIL(&tgroup->failed_qpairs, qpair, poll_group_stailq);
+		}
+		return rc;
+	}
+
+	return -EINVAL;
+}
+
+int
+nvme_transport_poll_group_activate_qpair(struct spdk_nvme_qpair *qpair)
+{
+	struct spdk_nvme_transport_poll_group *tgroup;
+	int rc;
+
+	tgroup = qpair->poll_group;
+
+	if (qpair->poll_group_tailq_head == &tgroup->active_qpairs) {
+		return 0;
+	}
+
+	if (qpair->poll_group_tailq_head == &tgroup->failed_qpairs) {
+		rc = tgroup->transport->ops.poll_group_activate_qpair(qpair);
+		if (rc == 0) {
+			qpair->poll_group_tailq_head = &tgroup->active_qpairs;
+			STAILQ_REMOVE(&tgroup->failed_qpairs, qpair, spdk_nvme_qpair, poll_group_stailq);
+			STAILQ_INSERT_TAIL(&tgroup->active_qpairs, qpair, poll_group_stailq);
+		}
+		return rc;
+	}
+
+
+	return -EINVAL;
+}
