@@ -120,6 +120,30 @@
     },
     {
       "key": {
+        "uuid": "649ebc60_27f4b7e9",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 2248,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-02-05T14:11:25Z",
+      "side": 1,
+      "message": "This approach is probably safer but I think we can\u0027t get into the case of which I was thinking in current implementation - I will remove this SWAP.",
+      "parentUuid": "8734994c_f5a8a489",
+      "range": {
+        "startLine": 2248,
+        "startChar": 1,
+        "endLine": 2248,
+        "endChar": 66
+      },
+      "revId": "b22b4c715aef4ae3719c016e459e0c4dbc5e4349",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f31bd92d_b2980ff7",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 10
@@ -238,6 +262,30 @@
     },
     {
       "key": {
+        "uuid": "467a385f_f0490a2a",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-02-05T14:11:25Z",
+      "side": 1,
+      "message": "I prefer to keep generic poller name - it is part of ftl_io_channel struct so it is referring to IO already. I\u0027ve added this comment to be consistent with other fields in this struct - I think its name is quite self explanatory, and I want to keep this poller generic so describing what particular functionality this poller actually is doing is not the best approach since its functionality will be extended in future patches. Anyway I will to to update this comment to be more robust.",
+      "parentUuid": "d50d058e_fcc43182",
+      "range": {
+        "startLine": 138,
+        "startChar": 23,
+        "endLine": 138,
+        "endChar": 29
+      },
+      "revId": "b22b4c715aef4ae3719c016e459e0c4dbc5e4349",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b1803f6d_afdd46e9",
         "filename": "lib/ftl/ftl_io.h",
         "patchSetId": 10
@@ -344,6 +392,30 @@
       "side": 1,
       "message": "But you\u0027re adding yet another queue and queue link here. I don\u0027t think there\u0027s any point in doing so, because you could just reuse retry_entry for the purposes of the completion_queue.",
       "parentUuid": "7061b7c9_203870da",
+      "range": {
+        "startLine": 224,
+        "startChar": 0,
+        "endLine": 227,
+        "endChar": 34
+      },
+      "revId": "b22b4c715aef4ae3719c016e459e0c4dbc5e4349",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "13559f53_7251fffc",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-02-05T14:11:25Z",
+      "side": 1,
+      "message": "Since I\u0027m moving retry_queue to IO channel in next patch I will merge those links in next patch - ioch_entry is probably good name for this link.",
+      "parentUuid": "a5770f7c_1c640c1d",
       "range": {
         "startLine": 224,
         "startChar": 0,
