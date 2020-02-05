@@ -22,6 +22,30 @@
       "revId": "496580eef62688b414d8261f6f77c1ee4670deea",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa2b38b3_7513c4b0",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1575,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-02-05T14:11:13Z",
+      "side": 1,
+      "message": "Yeh, I\u0027m aware of that. I was thinking to add it with support for capacity field but I see that we are already retrieving it so it should be checked instead of num_blocks_in_band.",
+      "parentUuid": "9a83e1c7_08de4df8",
+      "range": {
+        "startLine": 1575,
+        "startChar": 33,
+        "endLine": 1575,
+        "endChar": 68
+      },
+      "revId": "496580eef62688b414d8261f6f77c1ee4670deea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
