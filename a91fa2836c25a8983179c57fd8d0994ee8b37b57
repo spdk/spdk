@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d16c56b6_d755f1cb",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-02-05T09:49:38Z",
+      "side": 1,
+      "message": "I could set default to true but sometimes we don\u0027t want to set all values. If value is None then this rpc doesn\u0027t change this value.",
+      "parentUuid": "ff81d67a_e0bdd9d9",
+      "range": {
+        "startLine": 30,
+        "startChar": 8,
+        "endLine": 30,
+        "endChar": 27
+      },
+      "revId": "a91fa2836c25a8983179c57fd8d0994ee8b37b57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "204bd42c_a4592821",
         "filename": "scripts/spdkcli/ui_node_iscsi.py",
         "patchSetId": 21
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "bca82445_139fc07d",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-02-05T09:49:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "204bd42c_a4592821",
+      "range": {
+        "startLine": 57,
+        "startChar": 6,
+        "endLine": 57,
+        "endChar": 24
+      },
+      "revId": "a91fa2836c25a8983179c57fd8d0994ee8b37b57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a17667ec_044b8eb5",
         "filename": "scripts/spdkcli/ui_node_iscsi.py",
         "patchSetId": 21
@@ -59,6 +107,30 @@
       "writtenOn": "2018-09-25T01:19:09Z",
       "side": 1,
       "message": "Optional args also look positional.\n\ncreate g\u003d# d\u003dTrue/False r\u003dTrue/False m\u003dTrue/False... or\ncreate g\u003d# r m (If we want to make r and m True)\n\nmay be possible. How do you think?",
+      "range": {
+        "startLine": 88,
+        "startChar": 8,
+        "endLine": 88,
+        "endChar": 22
+      },
+      "revId": "a91fa2836c25a8983179c57fd8d0994ee8b37b57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e19f8c4_bdbe2d03",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-02-05T09:49:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a17667ec_044b8eb5",
       "range": {
         "startLine": 88,
         "startChar": 8,
@@ -163,6 +235,30 @@
     },
     {
       "key": {
+        "uuid": "2c7a11ef_662a73e1",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-02-05T09:49:38Z",
+      "side": 1,
+      "message": "I think shorter version is better. We display only 4 values and all values can be displayed in easy way in one line",
+      "parentUuid": "3991da12_4e8134bc",
+      "range": {
+        "startLine": 262,
+        "startChar": 4,
+        "endLine": 262,
+        "endChar": 22
+      },
+      "revId": "a91fa2836c25a8983179c57fd8d0994ee8b37b57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "db06eb1c_cea2733c",
         "filename": "scripts/spdkcli/ui_node_iscsi.py",
         "patchSetId": 21
@@ -186,6 +282,30 @@
     },
     {
       "key": {
+        "uuid": "13056610_9de9814b",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-02-05T09:49:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "db06eb1c_cea2733c",
+      "range": {
+        "startLine": 310,
+        "startChar": 31,
+        "endLine": 310,
+        "endChar": 65
+      },
+      "revId": "a91fa2836c25a8983179c57fd8d0994ee8b37b57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "99e9e97a_0ef0e359",
         "filename": "scripts/spdkcli/ui_node_iscsi.py",
         "patchSetId": 21
@@ -197,6 +317,30 @@
       "writtenOn": "2018-09-25T01:19:09Z",
       "side": 1,
       "message": "tag (unique, integer \u003e 0)\"\"\"\n\nPlease add a space between tag and ( and remove the last right bracket.",
+      "range": {
+        "startLine": 347,
+        "startChar": 44,
+        "endLine": 347,
+        "endChar": 69
+      },
+      "revId": "a91fa2836c25a8983179c57fd8d0994ee8b37b57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28a2543f_85228656",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-02-05T09:49:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "99e9e97a_0ef0e359",
       "range": {
         "startLine": 347,
         "startChar": 44,
