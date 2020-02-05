@@ -358,59 +358,54 @@ enum nvme_qpair_state {
 	NVME_QPAIR_ENABLED,
 };
 
-struct nvme_transport {
-	struct spdk_nvme_transport_ops	ops;
-	TAILQ_ENTRY(nvme_transport)	link;
-};
-
 struct spdk_nvme_qpair {
-	struct spdk_nvme_ctrlr		*ctrlr;
+	struct spdk_nvme_ctrlr			*ctrlr;
 
-	uint16_t			id;
+	uint16_t				id;
 
-	uint8_t				qprio;
+	uint8_t					qprio;
 
-	uint8_t				state : 3;
+	uint8_t					state : 3;
 
 	/*
 	 * Members for handling IO qpair deletion inside of a completion context.
 	 * These are specifically defined as single bits, so that they do not
 	 *  push this data structure out to another cacheline.
 	 */
-	uint8_t				in_completion_context : 1;
-	uint8_t				delete_after_completion_context: 1;
+	uint8_t					in_completion_context : 1;
+	uint8_t					delete_after_completion_context: 1;
 
 	/*
 	 * Set when no deletion notification is needed. For example, the process
 	 * which allocated this qpair exited unexpectedly.
 	 */
-	uint8_t				no_deletion_notification_needed: 1;
+	uint8_t					no_deletion_notification_needed: 1;
 
-	uint8_t				first_fused_submitted: 1;
+	uint8_t					first_fused_submitted: 1;
 
-	enum spdk_nvme_transport_type	trtype;
+	enum spdk_nvme_transport_type		trtype;
 
-	STAILQ_HEAD(, nvme_request)	free_req;
-	STAILQ_HEAD(, nvme_request)	queued_req;
+	STAILQ_HEAD(, nvme_request)		free_req;
+	STAILQ_HEAD(, nvme_request)		queued_req;
 
 	/** Commands opcode in this list will return error */
-	TAILQ_HEAD(, nvme_error_cmd)	err_cmd_head;
+	TAILQ_HEAD(, nvme_error_cmd)		err_cmd_head;
 	/** Requests in this list will return error */
-	STAILQ_HEAD(, nvme_request)	err_req_head;
+	STAILQ_HEAD(, nvme_request)		err_req_head;
 
 	/* List entry for spdk_nvme_ctrlr::active_io_qpairs */
-	TAILQ_ENTRY(spdk_nvme_qpair)	tailq;
+	TAILQ_ENTRY(spdk_nvme_qpair)		tailq;
 
 	/* List entry for spdk_nvme_ctrlr_process::allocated_io_qpairs */
-	TAILQ_ENTRY(spdk_nvme_qpair)	per_process_tailq;
+	TAILQ_ENTRY(spdk_nvme_qpair)		per_process_tailq;
 
-	struct spdk_nvme_ctrlr_process	*active_proc;
+	struct spdk_nvme_ctrlr_process		*active_proc;
 
-	void				*req_buf;
+	void					*req_buf;
 
-	const struct nvme_transport	*transport;
+	const struct spdk_nvme_transport	*transport;
 
-	uint8_t				transport_failure_reason: 2;
+	uint8_t					transport_failure_reason: 2;
 };
 
 struct spdk_nvme_ns {
@@ -1125,7 +1120,7 @@ bool	nvme_completion_is_retry(const struct spdk_nvme_cpl *cpl);
 struct spdk_nvme_ctrlr *spdk_nvme_get_ctrlr_by_trid_unsafe(
 	const struct spdk_nvme_transport_id *trid);
 
-const struct nvme_transport *nvme_get_transport(const char *transport_name);
+const struct spdk_nvme_transport *nvme_get_transport(const char *transport_name);
 
 /* Transport specific functions */
 struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_transport_id *trid,

@@ -38,7 +38,12 @@
 #include "nvme_internal.h"
 #include "spdk/queue.h"
 
-TAILQ_HEAD(nvme_transport_list, nvme_transport) g_spdk_nvme_transports =
+struct spdk_nvme_transport {
+	struct spdk_nvme_transport_ops	ops;
+	TAILQ_ENTRY(spdk_nvme_transport)	link;
+};
+
+TAILQ_HEAD(nvme_transport_list, spdk_nvme_transport) g_spdk_nvme_transports =
 	TAILQ_HEAD_INITIALIZER(g_spdk_nvme_transports);
 
 /*
@@ -49,10 +54,10 @@ TAILQ_HEAD(nvme_transport_list, nvme_transport) g_spdk_nvme_transports =
  * In the I/O path, we have the ability to store the transport struct in the I/O
  * qpairs to avoid taking a performance hit.
  */
-const struct nvme_transport *
+const struct spdk_nvme_transport *
 nvme_get_transport(const char *transport_name)
 {
-	struct nvme_transport *registered_transport;
+	struct spdk_nvme_transport *registered_transport;
 
 	TAILQ_FOREACH(registered_transport, &g_spdk_nvme_transports, link) {
 		if (strcasecmp(transport_name, registered_transport->ops.name) == 0) {
@@ -77,7 +82,7 @@ spdk_nvme_transport_available_by_name(const char *transport_name)
 
 void spdk_nvme_transport_register(const struct spdk_nvme_transport_ops *ops)
 {
-	struct nvme_transport *new_transport;
+	struct spdk_nvme_transport *new_transport;
 
 	if (nvme_get_transport(ops->name)) {
 		SPDK_ERRLOG("Double registering NVMe transport %s is prohibited.\n", ops->name);
@@ -99,7 +104,7 @@ struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_tr
 		const struct spdk_nvme_ctrlr_opts *opts,
 		void *devhandle)
 {
-	const struct nvme_transport *transport = nvme_get_transport(trid->trstring);
+	const struct spdk_nvme_transport *transport = nvme_get_transport(trid->trstring);
 	struct spdk_nvme_ctrlr *ctrlr;
 
 	if (transport == NULL) {
@@ -116,7 +121,7 @@ int
 nvme_transport_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 			  bool direct_connect)
 {
-	const struct nvme_transport *transport = nvme_get_transport(probe_ctx->trid.trstring);
+	const struct spdk_nvme_transport *transport = nvme_get_transport(probe_ctx->trid.trstring);
 
 	if (transport == NULL) {
 		SPDK_ERRLOG("Transport %s doesn't exist.", probe_ctx->trid.trstring);
@@ -129,7 +134,7 @@ nvme_transport_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 int
 nvme_transport_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
-	const struct nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
 
 	assert(transport != NULL);
 	return transport->ops.ctrlr_destruct(ctrlr);
@@ -138,7 +143,7 @@ nvme_transport_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 int
 nvme_transport_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 {
-	const struct nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
 
 	assert(transport != NULL);
 	return transport->ops.ctrlr_enable(ctrlr);
@@ -147,7 +152,7 @@ nvme_transport_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 int
 nvme_transport_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value)
 {
-	const struct nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
 
 	assert(transport != NULL);
 	return transport->ops.ctrlr_set_reg_4(ctrlr, offset, value);
@@ -156,7 +161,7 @@ nvme_transport_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, u
 int
 nvme_transport_ctrlr_set_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value)
 {
-	const struct nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
 
 	assert(transport != NULL);
 	return transport->ops.ctrlr_set_reg_8(ctrlr, offset, value);
@@ -165,7 +170,7 @@ nvme_transport_ctrlr_set_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, u
 int
 nvme_transport_ctrlr_get_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t *value)
 {
-	const struct nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
 
 	assert(transport != NULL);
 	return transport->ops.ctrlr_get_reg_4(ctrlr, offset, value);
@@ -174,7 +179,7 @@ nvme_transport_ctrlr_get_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, u
 int
 nvme_transport_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t *value)
 {
-	const struct nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
 
 	assert(transport != NULL);
 	return transport->ops.ctrlr_get_reg_8(ctrlr, offset, value);
@@ -183,7 +188,7 @@ nvme_transport_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, u
 uint32_t
 nvme_transport_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 {
-	const struct nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
 
 	assert(transport != NULL);
 	return transport->ops.ctrlr_get_max_xfer_size(ctrlr);
@@ -192,7 +197,7 @@ nvme_transport_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 uint16_t
 nvme_transport_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
 {
-	const struct nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
 
 	assert(transport != NULL);
 	return transport->ops.ctrlr_get_max_sges(ctrlr);
@@ -201,7 +206,7 @@ nvme_transport_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
 void *
 nvme_transport_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size)
 {
-	const struct nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
 
 	assert(transport != NULL);
 	if (transport->ops.ctrlr_alloc_cmb_io_buffer != NULL) {
@@ -214,7 +219,7 @@ nvme_transport_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t s
 int
 nvme_transport_ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf, size_t size)
 {
-	const struct nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
 
 	assert(transport != NULL);
 	if (transport->ops.ctrlr_free_cmb_io_buffer != NULL) {
@@ -229,7 +234,7 @@ nvme_transport_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid
 				     const struct spdk_nvme_io_qpair_opts *opts)
 {
 	struct spdk_nvme_qpair *qpair;
-	const struct nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
 
 	assert(transport != NULL);
 	qpair = transport->ops.ctrlr_create_io_qpair(ctrlr, qid, opts);
@@ -249,7 +254,7 @@ nvme_transport_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_
 int
 nvme_transport_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
-	const struct nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
 
 	assert(transport != NULL);
 	if (!nvme_qpair_is_admin_queue(qpair)) {
@@ -262,7 +267,7 @@ nvme_transport_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nv
 void
 nvme_transport_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
-	const struct nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
 
 	assert(transport != NULL);
 	transport->ops.ctrlr_disconnect_qpair(ctrlr, qpair);
@@ -271,7 +276,7 @@ nvme_transport_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk
 void
 nvme_transport_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 {
-	const struct nvme_transport *transport;
+	const struct spdk_nvme_transport *transport;
 
 	assert(dnr <= 1);
 	if (spdk_likely(!nvme_qpair_is_admin_queue(qpair))) {
@@ -286,7 +291,7 @@ nvme_transport_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 int
 nvme_transport_qpair_reset(struct spdk_nvme_qpair *qpair)
 {
-	const struct nvme_transport *transport;
+	const struct spdk_nvme_transport *transport;
 
 	if (spdk_likely(!nvme_qpair_is_admin_queue(qpair))) {
 		return qpair->transport->ops.qpair_reset(qpair);
@@ -300,7 +305,7 @@ nvme_transport_qpair_reset(struct spdk_nvme_qpair *qpair)
 int
 nvme_transport_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
-	const struct nvme_transport *transport;
+	const struct spdk_nvme_transport *transport;
 
 	if (spdk_likely(!nvme_qpair_is_admin_queue(qpair))) {
 		return qpair->transport->ops.qpair_submit_request(qpair, req);
@@ -314,7 +319,7 @@ nvme_transport_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_r
 int32_t
 nvme_transport_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
-	const struct nvme_transport *transport;
+	const struct spdk_nvme_transport *transport;
 
 	if (spdk_likely(!nvme_qpair_is_admin_queue(qpair))) {
 		return qpair->transport->ops.qpair_process_completions(qpair, max_completions);
@@ -328,7 +333,7 @@ nvme_transport_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t
 void
 nvme_transport_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 {
-	const struct nvme_transport *transport = nvme_get_transport(qpair->ctrlr->trid.trstring);
+	const struct spdk_nvme_transport *transport = nvme_get_transport(qpair->ctrlr->trid.trstring);
 
 	assert(transport != NULL);
 	transport->ops.admin_qpair_abort_aers(qpair);

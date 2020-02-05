@@ -2842,6 +2842,8 @@ void spdk_nvme_cuse_unregister(struct spdk_nvme_ctrlr *ctrlr);
 
 struct nvme_request;
 
+struct spdk_nvme_transport;
+
 struct spdk_nvme_transport_ops {
 	char name[SPDK_NVMF_TRSTRING_MAX_LEN + 1];
 
