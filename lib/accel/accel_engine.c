@@ -40,12 +40,23 @@
 #include "spdk/log.h"
 #include "spdk/thread.h"
 
+/* Accelerator Engine Framework: The following provides a top level
+ * generic API for the accelerator functions defined here. Modules,
+ * such as the one in /module/accel/ioat, supply the implemention of
+ * with the exception of the pure software implemention contained
+ * later in this file.
+ */
+
+/* Largest context size for all accel modules */
 static size_t g_max_accel_module_size = 0;
 
 static struct spdk_accel_engine *g_hw_accel_engine = NULL;
-/* Software memcpy engine always exists */
 static struct spdk_accel_engine *g_sw_accel_engine = NULL;
+static struct spdk_accel_module_if *g_accel_engine_module = NULL;
+static spdk_accel_fini_cb g_fini_cb_fn = NULL;
+static void *g_fini_cb_arg = NULL;
 
+/* Global list of registered accelerator modules */
 static TAILQ_HEAD(, spdk_accel_module_if) spdk_accel_module_list =
 	TAILQ_HEAD_INITIALIZER(spdk_accel_module_list);
 
@@ -54,38 +65,38 @@ struct accel_io_channel {
 	struct spdk_io_channel		*ch;
 };
 
-static struct spdk_accel_module_if *g_accel_engine_module = NULL;
-static spdk_accel_fini_cb g_fini_cb_fn = NULL;
-static void *g_fini_cb_arg = NULL;
-
+/* Registration of hw modules (currently supports only 1) */
 void
-spdk_accel_engine_register(struct spdk_accel_engine *accel_engine)
+spdk_accel_hw_engine_register(struct spdk_accel_engine *accel_engine)
 {
 	assert(g_hw_accel_engine == NULL);
 	g_hw_accel_engine = accel_engine;
 }
 
+/* Registration of sw modules (currently supports only 1) */
 static void
-spdk_sw_accel_register(struct spdk_accel_engine *accel_engine)
+spdk_accel_sw_register(struct spdk_accel_engine *accel_engine)
 {
 	assert(g_sw_accel_engine == NULL);
 	g_sw_accel_engine = accel_engine;
 }
 
 static void
-spdk_sw_accel_unregister(void)
+spdk_accel_sw_unregister(void)
 {
 	g_sw_accel_engine = NULL;
 }
 
+/* Common completion routine, called only by the accel framework */
 static void
-accel_engine_done(void *ref, int status)
+_accel_engine_done(void *ref, int status)
 {
 	struct spdk_accel_task *req = (struct spdk_accel_task *)ref;
 
 	req->cb(req, status);
 }
 
+/* Accel framework public API for copy function */
 int
 spdk_accel_submit_copy(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
 		       void *dst, void *src, uint64_t nbytes, spdk_accel_completion_cb cb)
@@ -95,9 +106,10 @@ spdk_accel_submit_copy(struct spdk_accel_task *accel_req, struct spdk_io_channel
 
 	req->cb = cb;
 	return accel_ch->engine->copy(req->offload_ctx, accel_ch->ch, dst, src, nbytes,
-				      accel_engine_done);
+				      _accel_engine_done);
 }
 
+/* Accel framework public API for fill function */
 int
 spdk_accel_submit_fill(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
 		       void *dst, uint8_t fill, uint64_t nbytes, spdk_accel_completion_cb cb)
@@ -107,76 +119,17 @@ spdk_accel_submit_fill(struct spdk_accel_task *accel_req, struct spdk_io_channel
 
 	req->cb = cb;
 	return accel_ch->engine->fill(req->offload_ctx, accel_ch->ch, dst, fill, nbytes,
-				      accel_engine_done);
+				      _accel_engine_done);
 }
 
-/* Software memcpy default accel engine */
-static int
-sw_accel_submit_copy(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src,
-		     uint64_t nbytes,
-		     spdk_accel_completion_cb cb)
-{
-	struct spdk_accel_task *accel_req;
-
-	memcpy(dst, src, (size_t)nbytes);
-
-	accel_req = (struct spdk_accel_task *)((uintptr_t)cb_arg -
-					       offsetof(struct spdk_accel_task, offload_ctx));
-	cb(accel_req, 0);
-	return 0;
-}
-
-static int
-sw_accel_submit_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill,
-		     uint64_t nbytes,
-		     spdk_accel_completion_cb cb)
-{
-	struct spdk_accel_task *accel_req;
-
-	memset(dst, fill, nbytes);
-	accel_req = (struct spdk_accel_task *)((uintptr_t)cb_arg -
-					       offsetof(struct spdk_accel_task, offload_ctx));
-	cb(accel_req, 0);
-
-	return 0;
-}
-
-static struct spdk_io_channel *sw_accel_get_io_channel(void);
-
-static struct spdk_accel_engine sw_accel_engine = {
-	.copy		= sw_accel_submit_copy,
-	.fill		= sw_accel_submit_fill,
-	.get_io_channel	= sw_accel_get_io_channel,
-};
-
-static int
-sw_accel_create_cb(void *io_device, void *ctx_buf)
-{
-	return 0;
-}
-
-static void
-sw_accel_destroy_cb(void *io_device, void *ctx_buf)
-{
-}
-
-static struct spdk_io_channel *sw_accel_get_io_channel(void)
-{
-	return spdk_get_io_channel(&sw_accel_engine);
-}
-
-static size_t
-accel_engine_sw_get_ctx_size(void)
-{
-	return sizeof(struct spdk_accel_task);
-}
-
+/* Returns the largest context size of the accel modules. */
 size_t
 spdk_accel_task_size(void)
 {
 	return g_max_accel_module_size;
 }
 
+/* Helper function when when accel modules register with the framework. */
 void spdk_accel_module_list_add(struct spdk_accel_module_if *accel_module)
 {
 	TAILQ_INSERT_TAIL(&spdk_accel_module_list, accel_module, tailq);
@@ -185,6 +138,7 @@ void spdk_accel_module_list_add(struct spdk_accel_module_if *accel_module)
 	}
 }
 
+/* Framework level channel create callback. */
 static int
 accel_engine_create_cb(void *io_device, void *ctx_buf)
 {
@@ -204,6 +158,7 @@ accel_engine_create_cb(void *io_device, void *ctx_buf)
 	return 0;
 }
 
+/* Framework level channel destroy callback. */
 static void
 accel_engine_destroy_cb(void *io_device, void *ctx_buf)
 {
@@ -216,25 +171,6 @@ struct spdk_io_channel *
 spdk_accel_engine_get_io_channel(void)
 {
 	return spdk_get_io_channel(&spdk_accel_module_list);
-}
-
-static int
-accel_engine_sw_accel_init(void)
-{
-	spdk_sw_accel_register(&sw_accel_engine);
-	spdk_io_device_register(&sw_accel_engine, sw_accel_create_cb, sw_accel_destroy_cb, 0,
-				"sw_accel_engine");
-
-	return 0;
-}
-
-static void
-accel_engine_sw_accel_fini(void *ctxt)
-{
-	spdk_io_device_unregister(&sw_accel_engine, NULL);
-	spdk_sw_accel_unregister();
-
-	spdk_accel_engine_module_finish();
 }
 
 static void
@@ -316,5 +252,86 @@ spdk_accel_engine_config_text(FILE *fp)
 	}
 }
 
-SPDK_ACCEL_MODULE_REGISTER(accel_engine_sw_accel_init, accel_engine_sw_accel_fini,
-			   NULL, accel_engine_sw_get_ctx_size)
+/* The SW Accelerator module is "built in" here (rest of file) */
+
+static int
+sw_accel_submit_copy(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src,
+		     uint64_t nbytes,
+		     spdk_accel_completion_cb cb)
+{
+	struct spdk_accel_task *accel_req;
+
+	memcpy(dst, src, (size_t)nbytes);
+
+	accel_req = (struct spdk_accel_task *)((uintptr_t)cb_arg -
+					       offsetof(struct spdk_accel_task, offload_ctx));
+	cb(accel_req, 0);
+	return 0;
+}
+
+static int
+sw_accel_submit_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill,
+		     uint64_t nbytes,
+		     spdk_accel_completion_cb cb)
+{
+	struct spdk_accel_task *accel_req;
+
+	memset(dst, fill, nbytes);
+	accel_req = (struct spdk_accel_task *)((uintptr_t)cb_arg -
+					       offsetof(struct spdk_accel_task, offload_ctx));
+	cb(accel_req, 0);
+
+	return 0;
+}
+
+static struct spdk_io_channel *sw_accel_get_io_channel(void);
+
+static struct spdk_accel_engine sw_accel_engine = {
+	.copy		= sw_accel_submit_copy,
+	.fill		= sw_accel_submit_fill,
+	.get_io_channel	= sw_accel_get_io_channel,
+};
+
+static int
+sw_accel_create_cb(void *io_device, void *ctx_buf)
+{
+	return 0;
+}
+
+static void
+sw_accel_destroy_cb(void *io_device, void *ctx_buf)
+{
+}
+
+static struct spdk_io_channel *sw_accel_get_io_channel(void)
+{
+	return spdk_get_io_channel(&sw_accel_engine);
+}
+
+static size_t
+sw_accel_engine_get_ctx_size(void)
+{
+	return sizeof(struct spdk_accel_task);
+}
+
+static int
+sw_accel_engine_init(void)
+{
+	spdk_accel_sw_register(&sw_accel_engine);
+	spdk_io_device_register(&sw_accel_engine, sw_accel_create_cb, sw_accel_destroy_cb, 0,
+				"sw_accel_engine");
+
+	return 0;
+}
+
+static void
+sw_accel_engine_fini(void *ctxt)
+{
+	spdk_io_device_unregister(&sw_accel_engine, NULL);
+	spdk_accel_sw_unregister();
+
+	spdk_accel_engine_module_finish();
+}
+
+SPDK_ACCEL_MODULE_REGISTER(sw_accel_engine_init, sw_accel_engine_fini,
+			   NULL, sw_accel_engine_get_ctx_size)

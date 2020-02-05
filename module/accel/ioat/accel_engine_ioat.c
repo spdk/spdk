@@ -371,7 +371,7 @@ accel_engine_ioat_init(void)
 
 	g_ioat_initialized = true;
 	SPDK_INFOLOG(SPDK_LOG_ACCEL_IOAT, "Ioat Acceleration Engine Offload Enabled\n");
-	spdk_accel_engine_register(&ioat_accel_engine);
+	spdk_accel_hw_engine_register(&ioat_accel_engine);
 	spdk_io_device_register(&ioat_accel_engine, ioat_create_cb, ioat_destroy_cb,
 				sizeof(struct ioat_io_channel), "ioat_accel_engine");
 	return 0;
