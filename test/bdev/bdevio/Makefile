@@ -40,8 +40,8 @@ APP = bdevio
 C_SRCS := bdevio.c
 
 SPDK_LIB_LIST = $(ALL_MODULES_LIST)
-SPDK_LIB_LIST += event_bdev event_copy event_vmd
-SPDK_LIB_LIST += app_rpc bdev bdev_rpc copy event trace log conf thread util rpc jsonrpc json sock notify
+SPDK_LIB_LIST += event_bdev event_accel event_vmd
+SPDK_LIB_LIST += app_rpc bdev bdev_rpc accel event trace log conf thread util rpc jsonrpc json sock notify
 
 LIBS += -lcunit
 

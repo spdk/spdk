@@ -2,6 +2,13 @@
 
 ## v20.04: (Upcoming Release)
 
+### copy
+
+The copy engine library, modules and public APIs have been renamed. Use of the word `copy`
+has been replaced with the word `accel` short for accelerator in preparation for adding new
+capabilities in the future. Additionally, APIs for what was previously called the `memcpy`
+engine have been renamed to identify the engine as a software accelerator.
+
 ### vmd
 
 A new function, `spdk_vmd_fini`, has been added. It releases all resources acquired by the VMD

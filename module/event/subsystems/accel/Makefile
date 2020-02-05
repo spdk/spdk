@@ -31,10 +31,10 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-LIBNAME = copy_ioat
-C_SRCS = copy_engine_ioat.c copy_engine_ioat_rpc.c
+C_SRCS = accel.c
+LIBNAME = event_accel
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

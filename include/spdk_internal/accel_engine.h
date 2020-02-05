@@ -31,28 +31,28 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPDK_INTERNAL_COPY_ENGINE_H
-#define SPDK_INTERNAL_COPY_ENGINE_H
+#ifndef SPDK_INTERNAL_ACCEL_ENGINE_H
+#define SPDK_INTERNAL_ACCEL_ENGINE_H
 
 #include "spdk/stdinc.h"
 
-#include "spdk/copy_engine.h"
+#include "spdk/accel_engine.h"
 #include "spdk/queue.h"
 
-struct spdk_copy_task {
-	spdk_copy_completion_cb	cb;
-	uint8_t			offload_ctx[0];
+struct spdk_accel_task {
+	spdk_accel_completion_cb	cb;
+	uint8_t				offload_ctx[0];
 };
 
-struct spdk_copy_engine {
+struct spdk_accel_engine {
 	int	(*copy)(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src,
-			uint64_t nbytes, spdk_copy_completion_cb cb);
+			uint64_t nbytes, spdk_accel_completion_cb cb);
 	int	(*fill)(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill,
-			uint64_t nbytes, spdk_copy_completion_cb cb);
+			uint64_t nbytes, spdk_accel_completion_cb cb);
 	struct spdk_io_channel *(*get_io_channel)(void);
 };
 
-struct spdk_copy_module_if {
+struct spdk_accel_module_if {
 	/** Initialization function for the module.  Called by the spdk
 	 *   application during startup.
 	 *
@@ -74,14 +74,14 @@ struct spdk_copy_module_if {
 	void	(*config_text)(FILE *fp);
 
 	size_t	(*get_ctx_size)(void);
-	TAILQ_ENTRY(spdk_copy_module_if)	tailq;
+	TAILQ_ENTRY(spdk_accel_module_if)	tailq;
 };
 
-void spdk_copy_engine_register(struct spdk_copy_engine *copy_engine);
-void spdk_copy_module_list_add(struct spdk_copy_module_if *copy_module);
+void spdk_accel_engine_register(struct spdk_accel_engine *accel_engine);
+void spdk_accel_module_list_add(struct spdk_accel_module_if *accel_module);
 
-#define SPDK_COPY_MODULE_REGISTER(init_fn, fini_fn, config_fn, ctx_size_fn)				\
-	static struct spdk_copy_module_if init_fn ## _if = {						\
+#define SPDK_ACCEL_MODULE_REGISTER(init_fn, fini_fn, config_fn, ctx_size_fn)				\
+	static struct spdk_accel_module_if init_fn ## _if = {						\
 	.module_init	= init_fn,									\
 	.module_fini	= fini_fn,									\
 	.config_text	= config_fn,									\
@@ -89,7 +89,7 @@ void spdk_copy_module_list_add(struct spdk_copy_module_if *copy_module);
 	};												\
 	__attribute__((constructor)) static void init_fn ## _init(void)					\
 	{												\
-		spdk_copy_module_list_add(&init_fn ## _if);						\
+		spdk_accel_module_list_add(&init_fn ## _if);						\
 	}
 
 #endif

@@ -40,8 +40,8 @@ APP = bdev_svc
 C_SRCS := bdev_svc.c
 
 SPDK_LIB_LIST = $(ALL_MODULES_LIST)
-SPDK_LIB_LIST += event_bdev event_copy event_vmd
-SPDK_LIB_LIST += nvmf event log trace conf thread util bdev copy rpc jsonrpc json sock blobfs_bdev
+SPDK_LIB_LIST += event_bdev event_accel event_vmd
+SPDK_LIB_LIST += nvmf event log trace conf thread util bdev accel rpc jsonrpc json sock blobfs_bdev
 SPDK_LIB_LIST += app_rpc log_rpc bdev_rpc notify
 
 ifeq ($(OS),Linux)

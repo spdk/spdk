@@ -31,14 +31,40 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPDK_COPY_ENGINE_IOAT_H
-#define SPDK_COPY_ENGINE_IOAT_H
-
 #include "spdk/stdinc.h"
 
-#define IOAT_MAX_CHANNELS	64
+#include "spdk/accel_engine.h"
 
-int copy_engine_ioat_add_whitelist_devices(const char *pci_bdfs[], size_t num_pci_bdfs);
-void copy_engine_ioat_enable_probe(void);
+#include "spdk_internal/event.h"
+#include "spdk/env.h"
 
-#endif /* SPDK_COPY_ENGINE_IOAT_H */
+static void
+spdk_accel_engine_subsystem_initialize(void)
+{
+	int rc;
+
+	rc = spdk_accel_engine_initialize();
+
+	spdk_subsystem_init_next(rc);
+}
+
+static void
+spdk_accel_engine_subsystem_finish_done(void *cb_arg)
+{
+	spdk_subsystem_fini_next();
+}
+
+static void
+spdk_accel_engine_subsystem_finish(void)
+{
+	spdk_accel_engine_finish(spdk_accel_engine_subsystem_finish_done, NULL);
+}
+
+static struct spdk_subsystem g_spdk_subsystem_accel = {
+	.name = "accel",
+	.init = spdk_accel_engine_subsystem_initialize,
+	.fini = spdk_accel_engine_subsystem_finish,
+	.config = spdk_accel_engine_config_text,
+};
+
+SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_accel);

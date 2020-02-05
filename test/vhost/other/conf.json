@@ -1,7 +1,7 @@
 {
   "subsystems": [
     {
-      "subsystem": "copy",
+      "subsystem": "accel",
       "config": null
     },
     {

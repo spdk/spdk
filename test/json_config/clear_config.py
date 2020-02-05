@@ -132,7 +132,7 @@ def clear_net_framework_subsystem(args, net_framework_config):
     pass
 
 
-def clear_copy_subsystem(args, copy_config):
+def clear_accel_subsystem(args, accel_config):
     pass
 
 

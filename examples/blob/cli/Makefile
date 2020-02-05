@@ -39,8 +39,8 @@ C_SRCS := blobcli.c
 
 # Don't link bdev_lvol in blobcli - otherwise this utility cannot operate on an lvolstore
 SPDK_LIB_LIST = $(filter-out bdev_lvol,$(ALL_MODULES_LIST))
-SPDK_LIB_LIST += event_bdev event_copy event_vmd
-SPDK_LIB_LIST += bdev copy event thread util conf trace \
+SPDK_LIB_LIST += event_bdev event_accel event_vmd
+SPDK_LIB_LIST += bdev accel event thread util conf trace \
 		log jsonrpc json rpc sock notify
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk

@@ -36,7 +36,7 @@ nvmf_dict["subsystems"] = []
 
 # dictionary with new config that will be written to new json config file
 subsystem = {
-    "copy": None,
+    "accel": None,
     "interface": None,
     "net_framework": None,
     "bdev": bdev_dict,
@@ -61,7 +61,7 @@ no_yes_map = {"no": False, "No": False, "Yes": True, "yes": True}
 
 def generate_new_json_config():
     json_subsystem = [
-        {'subsystem': "copy", 'config': None},
+        {'subsystem': "accel", 'config': None},
         {"subsystem": "interface", "config": None},
         {"subsystem": "net_framework", "config": None},
         {"subsystem": "bdev", "config": []},

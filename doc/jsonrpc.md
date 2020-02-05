@@ -279,7 +279,7 @@ Example response:
     "framework_get_subsystems",
     "framework_monitor_context_switch",
     "spdk_kill_instance",
-    "ioat_scan_copy_engine",
+    "ioat_scan_accel_engine",
     "bdev_virtio_attach_controller",
     "bdev_virtio_scsi_get_devices",
     "bdev_virtio_detach_controller",
@@ -349,7 +349,7 @@ Example response:
   "id": 1,
   "result": [
     {
-      "subsystem": "copy",
+      "subsystem": "accel",
       "depends_on": []
     },
     {
@@ -365,7 +365,7 @@ Example response:
     {
       "subsystem": "bdev",
       "depends_on": [
-        "copy"
+        "accel"
       ]
     },
     {

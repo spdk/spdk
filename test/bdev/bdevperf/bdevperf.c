@@ -34,7 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/bdev.h"
-#include "spdk/copy_engine.h"
+#include "spdk/accel_engine.h"
 #include "spdk/endian.h"
 #include "spdk/env.h"
 #include "spdk/event.h"

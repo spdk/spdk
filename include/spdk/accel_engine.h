@@ -32,11 +32,11 @@
  */
 
 /** \file
- * Memory copy offload engine abstraction layer
+ * Acceleration engine abstraction layer
  */
 
-#ifndef SPDK_COPY_ENGINE_H
-#define SPDK_COPY_ENGINE_H
+#ifndef SPDK_ACCEL_ENGINE_H
+#define SPDK_ACCEL_ENGINE_H
 
 #include "spdk/stdinc.h"
 
@@ -45,66 +45,66 @@ extern "C" {
 #endif
 
 /**
- * Copy operation callback.
+ * Acceleration operation callback.
  *
- * \param ref 'copy_req' passed to the corresponding spdk_copy_submit() call.
+ * \param ref 'accel_req' passed to the corresponding spdk_accel_submit* call.
  * \param status 0 if it completed successfully, or negative errno if it failed.
  */
-typedef void (*spdk_copy_completion_cb)(void *ref, int status);
+typedef void (*spdk_accel_completion_cb)(void *ref, int status);
 
 /**
- * Copy engine finish callback.
+ * Acceleration engine finish callback.
  *
  * \param cb_arg Callback argument.
  */
-typedef void (*spdk_copy_fini_cb)(void *cb_arg);
+typedef void (*spdk_accel_fini_cb)(void *cb_arg);
 
 struct spdk_io_channel;
 
-struct spdk_copy_task;
+struct spdk_accel_task;
 
 /**
- * Initialize the copy engine.
+ * Initialize the acceleration engine.
  *
  * \return 0 on success.
  */
-int spdk_copy_engine_initialize(void);
+int spdk_accel_engine_initialize(void);
 
 /**
- * Close the copy engine.
+ * Close the acceleration engine.
  *
  * \param cb_fn Called when the close operation completes.
  * \param cb_arg Argument passed to the callback function.
  */
-void spdk_copy_engine_finish(spdk_copy_fini_cb cb_fn, void *cb_arg);
+void spdk_accel_engine_finish(spdk_accel_fini_cb cb_fn, void *cb_arg);
 
 /**
- * Get the configuration for the copy engine.
+ * Get the configuration for the acceleration engine.
  *
  * \param fp The pointer to a file that will be written to the configuration.
  */
-void spdk_copy_engine_config_text(FILE *fp);
+void spdk_accel_engine_config_text(FILE *fp);
 
 /**
- * Close the copy engine module and perform any necessary cleanup.
+ * Close the acceleration engine module and perform any necessary cleanup.
  */
-void spdk_copy_engine_module_finish(void);
+void spdk_accel_engine_module_finish(void);
 
 /**
- * Get the I/O channel registered on the copy engine.
+ * Get the I/O channel registered on the acceleration engine.
  *
  * This I/O channel is used to submit copy request.
  *
  * \return a pointer to the I/O channel on success, or NULL on failure.
  */
-struct spdk_io_channel *spdk_copy_engine_get_io_channel(void);
+struct spdk_io_channel *spdk_accel_engine_get_io_channel(void);
 
 /**
  * Submit a copy request.
  *
- * \param copy_req Copy request task.
- * \param ch I/O channel to submit request to the copy engine. This channel can
- * be obtained by the function spdk_copy_engine_get_io_channel().
+ * \param accel_req Accel request task.
+ * \param ch I/O channel to submit request to the accel engine. This channel can
+ * be obtained by the function spdk_accel_engine_get_io_channel().
  * \param dst Destination to copy to.
  * \param src Source to copy from.
  * \param nbytes Length in bytes to copy.
@@ -112,33 +112,33 @@ struct spdk_io_channel *spdk_copy_engine_get_io_channel(void);
  *
  * \return 0 on success, negative errno on failure.
  */
-int spdk_copy_submit(struct spdk_copy_task *copy_req, struct spdk_io_channel *ch, void *dst,
-		     void *src, uint64_t nbytes, spdk_copy_completion_cb cb);
+int spdk_accel_submit_copy(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch, void *dst,
+			   void *src, uint64_t nbytes, spdk_accel_completion_cb cb);
 
 /**
  * Submit a fill request.
  *
  * This operation will fill the destination buffer with the specified value.
  *
- * \param copy_req Copy request task.
- * \param ch I/O channel to submit request to the copy engine. This channel can
- * be obtained by the function spdk_copy_engine_get_io_channel().
+ * \param accel_req Accel request task.
+ * \param ch I/O channel to submit request to the accel engine. This channel can
+ * be obtained by the function spdk_accel_engine_get_io_channel().
  * \param dst Destination to fill.
  * \param fill Constant byte to fill to the destination.
  * \param nbytes Length in bytes to fill.
- * \param cb Called when this copy operation completes.
+ * \param cb Called when this fill operation completes.
  *
  * \return 0 on success, negative errno on failure.
  */
-int spdk_copy_submit_fill(struct spdk_copy_task *copy_req, struct spdk_io_channel *ch,
-			  void *dst, uint8_t fill, uint64_t nbytes, spdk_copy_completion_cb cb);
+int spdk_accel_submit_fill(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
+			   void *dst, uint8_t fill, uint64_t nbytes, spdk_accel_completion_cb cb);
 
 /**
- * Get the size of copy task.
+ * Get the size of an acceleration task.
  *
- * \return the size of copy task.
+ * \return the size of acceleration task.
  */
-size_t spdk_copy_task_size(void);
+size_t spdk_accel_task_size(void);
 
 #ifdef __cplusplus
 }

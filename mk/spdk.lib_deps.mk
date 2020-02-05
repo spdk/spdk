@@ -56,7 +56,7 @@ DEPDIRS-reduce := log util
 DEPDIRS-thread := log util
 
 DEPDIRS-blob := log util thread
-DEPDIRS-copy := thread
+DEPDIRS-accel := thread
 DEPDIRS-jsonrpc := log util json
 DEPDIRS-virtio := log util json thread
 
@@ -100,8 +100,8 @@ DEPDIRS-blob_bdev := log thread bdev
 # module/blobfs
 DEPDIRS-blobfs_bdev := $(BDEV_DEPS_THREAD) blob_bdev blobfs
 
-# module/copy
-DEPDIRS-copy_ioat := log ioat conf thread $(JSON_LIBS) copy
+# module/accel
+DEPDIRS-accel_ioat := log ioat conf thread $(JSON_LIBS) accel
 
 # module/env_dpdk
 DEPDIRS-env_dpdk_rpc := log $(JSON_LIBS)
@@ -117,7 +117,7 @@ DEPDIRS-bdev_lvol := $(BDEV_DEPS) lvol blob blob_bdev
 DEPDIRS-bdev_rpc := $(BDEV_DEPS)
 
 DEPDIRS-bdev_error := $(BDEV_DEPS_CONF)
-DEPDIRS-bdev_malloc := $(BDEV_DEPS_CONF) copy
+DEPDIRS-bdev_malloc := $(BDEV_DEPS_CONF) accel
 DEPDIRS-bdev_split := $(BDEV_DEPS_CONF)
 
 DEPDIRS-bdev_compress := $(BDEV_DEPS_THREAD) reduce
@@ -147,11 +147,11 @@ DEPDIRS-app_rpc := log util thread event $(JSON_LIBS)
 # These depdirs include subsystem interdependencies which
 # are not related to symbols, but are defined directly in
 # the SPDK event subsystem code.
-DEPDIRS-event_copy := copy event
+DEPDIRS-event_accel := accel event
 DEPDIRS-event_net := sock net event
 DEPDIRS-event_vmd := vmd conf $(JSON_LIBS) event log thread
 
-DEPDIRS-event_bdev := bdev event event_copy event_vmd
+DEPDIRS-event_bdev := bdev event event_accel event_vmd
 
 DEPDIRS-event_nbd := event nbd event_bdev
 DEPDIRS-event_nvmf := $(BDEV_DEPS_CONF_THREAD) event nvme nvmf event_bdev

@@ -31,11 +31,11 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "copy_engine_ioat.h"
+#include "accel_engine_ioat.h"
 
 #include "spdk/stdinc.h"
 
-#include "spdk_internal/copy_engine.h"
+#include "spdk_internal/accel_engine.h"
 #include "spdk_internal/log.h"
 
 #include "spdk/env.h"
@@ -112,39 +112,39 @@ ioat_free_device(struct ioat_device *dev)
 }
 
 struct ioat_task {
-	spdk_copy_completion_cb	cb;
+	spdk_accel_completion_cb	cb;
 };
 
-static int copy_engine_ioat_init(void);
-static void copy_engine_ioat_exit(void *ctx);
-static void copy_engine_ioat_config_text(FILE *fp);
+static int accel_engine_ioat_init(void);
+static void accel_engine_ioat_exit(void *ctx);
+static void accel_engine_ioat_config_text(FILE *fp);
 
 static size_t
-copy_engine_ioat_get_ctx_size(void)
+accel_engine_ioat_get_ctx_size(void)
 {
-	return sizeof(struct ioat_task) + sizeof(struct spdk_copy_task);
+	return sizeof(struct ioat_task) + sizeof(struct spdk_accel_task);
 }
 
-SPDK_COPY_MODULE_REGISTER(copy_engine_ioat_init, copy_engine_ioat_exit,
-			  copy_engine_ioat_config_text,
-			  copy_engine_ioat_get_ctx_size)
+SPDK_ACCEL_MODULE_REGISTER(accel_engine_ioat_init, accel_engine_ioat_exit,
+			   accel_engine_ioat_config_text,
+			   accel_engine_ioat_get_ctx_size)
 
 static void
 ioat_done(void *cb_arg)
 {
-	struct spdk_copy_task *copy_req;
+	struct spdk_accel_task *accel_req;
 	struct ioat_task *ioat_task = cb_arg;
 
-	copy_req = (struct spdk_copy_task *)
-		   ((uintptr_t)ioat_task -
-		    offsetof(struct spdk_copy_task, offload_ctx));
+	accel_req = (struct spdk_accel_task *)
+		    ((uintptr_t)ioat_task -
+		     offsetof(struct spdk_accel_task, offload_ctx));
 
-	ioat_task->cb(copy_req, 0);
+	ioat_task->cb(accel_req, 0);
 }
 
 static int
-ioat_copy_submit(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src, uint64_t nbytes,
-		 spdk_copy_completion_cb cb)
+ioat_submit_copy(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src, uint64_t nbytes,
+		 spdk_accel_completion_cb cb)
 {
 	struct ioat_task *ioat_task = (struct ioat_task *)cb_arg;
 	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
@@ -157,8 +157,8 @@ ioat_copy_submit(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src,
 }
 
 static int
-ioat_copy_submit_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill,
-		      uint64_t nbytes, spdk_copy_completion_cb cb)
+ioat_submit_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill,
+		 uint64_t nbytes, spdk_accel_completion_cb cb)
 {
 	struct ioat_task *ioat_task = (struct ioat_task *)cb_arg;
 	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
@@ -183,9 +183,9 @@ ioat_poll(void *arg)
 
 static struct spdk_io_channel *ioat_get_io_channel(void);
 
-static struct spdk_copy_engine ioat_copy_engine = {
-	.copy		= ioat_copy_submit,
-	.fill		= ioat_copy_submit_fill,
+static struct spdk_accel_engine ioat_accel_engine = {
+	.copy		= ioat_submit_copy,
+	.fill		= ioat_submit_fill,
 	.get_io_channel	= ioat_get_io_channel,
 };
 
@@ -218,7 +218,7 @@ ioat_destroy_cb(void *io_device, void *ctx_buf)
 static struct spdk_io_channel *
 ioat_get_io_channel(void)
 {
-	return spdk_get_io_channel(&ioat_copy_engine);
+	return spdk_get_io_channel(&ioat_accel_engine);
 }
 
 static bool
@@ -227,7 +227,7 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev)
 	struct ioat_probe_ctx *ctx = cb_ctx;
 	struct spdk_pci_addr pci_addr = spdk_pci_device_get_addr(pci_dev);
 
-	SPDK_INFOLOG(SPDK_LOG_COPY_IOAT,
+	SPDK_INFOLOG(SPDK_LOG_ACCEL_IOAT,
 		     " Found matching device at %04x:%02x:%02x.%x vendor:0x%04x device:0x%04x\n",
 		     pci_addr.domain,
 		     pci_addr.bus,
@@ -265,13 +265,13 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_ioat_chan *
 }
 
 void
-copy_engine_ioat_enable_probe(void)
+accel_engine_ioat_enable_probe(void)
 {
 	g_ioat_enable = true;
 }
 
 static int
-copy_engine_ioat_add_whitelist_device(const char *pci_bdf)
+accel_engine_ioat_add_whitelist_device(const char *pci_bdf)
 {
 	if (pci_bdf == NULL) {
 		return -1;
@@ -295,12 +295,12 @@ copy_engine_ioat_add_whitelist_device(const char *pci_bdf)
 }
 
 int
-copy_engine_ioat_add_whitelist_devices(const char *pci_bdfs[], size_t num_pci_bdfs)
+accel_engine_ioat_add_whitelist_devices(const char *pci_bdfs[], size_t num_pci_bdfs)
 {
 	size_t i;
 
 	for (i = 0; i < num_pci_bdfs; i++) {
-		if (copy_engine_ioat_add_whitelist_device(pci_bdfs[i]) < 0) {
+		if (accel_engine_ioat_add_whitelist_device(pci_bdfs[i]) < 0) {
 			return -1;
 		}
 	}
@@ -309,7 +309,7 @@ copy_engine_ioat_add_whitelist_devices(const char *pci_bdfs[], size_t num_pci_bd
 }
 
 static int
-copy_engine_ioat_read_config_file_params(struct spdk_conf_section *sp)
+accel_engine_ioat_read_config_file_params(struct spdk_conf_section *sp)
 {
 	int i;
 	char *val, *pci_bdf;
@@ -337,7 +337,7 @@ copy_engine_ioat_read_config_file_params(struct spdk_conf_section *sp)
 			break;
 		}
 
-		if (copy_engine_ioat_add_whitelist_device(pci_bdf) < 0) {
+		if (accel_engine_ioat_add_whitelist_device(pci_bdf) < 0) {
 			return -1;
 		}
 	}
@@ -346,16 +346,16 @@ copy_engine_ioat_read_config_file_params(struct spdk_conf_section *sp)
 }
 
 static int
-copy_engine_ioat_init(void)
+accel_engine_ioat_init(void)
 {
 	struct spdk_conf_section *sp;
 	int rc;
 
 	sp = spdk_conf_find_section(NULL, "Ioat");
 	if (sp != NULL) {
-		rc = copy_engine_ioat_read_config_file_params(sp);
+		rc = accel_engine_ioat_read_config_file_params(sp);
 		if (rc != 0) {
-			SPDK_ERRLOG("copy_engine_ioat_read_config_file_params() failed\n");
+			SPDK_ERRLOG("accel_engine_ioat_read_config_file_params() failed\n");
 			return rc;
 		}
 	}
@@ -370,20 +370,20 @@ copy_engine_ioat_init(void)
 	}
 
 	g_ioat_initialized = true;
-	SPDK_INFOLOG(SPDK_LOG_COPY_IOAT, "Ioat Copy Engine Offload Enabled\n");
-	spdk_copy_engine_register(&ioat_copy_engine);
-	spdk_io_device_register(&ioat_copy_engine, ioat_create_cb, ioat_destroy_cb,
-				sizeof(struct ioat_io_channel), "ioat_copy_engine");
+	SPDK_INFOLOG(SPDK_LOG_ACCEL_IOAT, "Ioat Acceleration Engine Offload Enabled\n");
+	spdk_accel_engine_register(&ioat_accel_engine);
+	spdk_io_device_register(&ioat_accel_engine, ioat_create_cb, ioat_destroy_cb,
+				sizeof(struct ioat_io_channel), "ioat_accel_engine");
 	return 0;
 }
 
 static void
-copy_engine_ioat_exit(void *ctx)
+accel_engine_ioat_exit(void *ctx)
 {
 	struct ioat_device *dev;
 
 	if (g_ioat_initialized) {
-		spdk_io_device_unregister(&ioat_copy_engine, NULL);
+		spdk_io_device_unregister(&ioat_accel_engine, NULL);
 	}
 
 	while (!TAILQ_EMPTY(&g_devices)) {
@@ -393,35 +393,35 @@ copy_engine_ioat_exit(void *ctx)
 		ioat_free_device(dev);
 		free(dev);
 	}
-	spdk_copy_engine_module_finish();
+	spdk_accel_engine_module_finish();
 }
 
-#define COPY_ENGINE_IOAT_HEADER_TMPL \
+#define ACCEL_ENGINE_IOAT_HEADER_TMPL \
 "[Ioat]\n" \
 "  # Users may not want to use offload even it is available.\n" \
 "  # Users may use the whitelist to initialize specified devices, IDS\n" \
 "  #  uses BUS:DEVICE.FUNCTION to identify each Ioat channel.\n"
 
-#define COPY_ENGINE_IOAT_ENABLE_TMPL \
+#define ACCEL_ENGINE_IOAT_ENABLE_TMPL \
 "  Enable %s\n"
 
-#define COPY_ENGINE_IOAT_WHITELIST_TMPL \
+#define ACCEL_ENGINE_IOAT_WHITELIST_TMPL \
 "  Whitelist %.4" PRIx16 ":%.2" PRIx8 ":%.2" PRIx8 ".%" PRIx8 "\n"
 
 static void
-copy_engine_ioat_config_text(FILE *fp)
+accel_engine_ioat_config_text(FILE *fp)
 {
 	int i;
 	struct spdk_pci_addr *dev;
 
-	fprintf(fp, COPY_ENGINE_IOAT_HEADER_TMPL);
-	fprintf(fp, COPY_ENGINE_IOAT_ENABLE_TMPL, g_ioat_enable ? "Yes" : "No");
+	fprintf(fp, ACCEL_ENGINE_IOAT_HEADER_TMPL);
+	fprintf(fp, ACCEL_ENGINE_IOAT_ENABLE_TMPL, g_ioat_enable ? "Yes" : "No");
 
 	for (i = 0; i < g_probe_ctx.num_whitelist_devices; i++) {
 		dev = &g_probe_ctx.whitelist[i];
-		fprintf(fp, COPY_ENGINE_IOAT_WHITELIST_TMPL,
+		fprintf(fp, ACCEL_ENGINE_IOAT_WHITELIST_TMPL,
 			dev->domain, dev->bus, dev->dev, dev->func);
 	}
 }
 
-SPDK_LOG_REGISTER_COMPONENT("copy_ioat", SPDK_LOG_COPY_IOAT)
+SPDK_LOG_REGISTER_COMPONENT("accel_ioat", SPDK_LOG_ACCEL_IOAT)

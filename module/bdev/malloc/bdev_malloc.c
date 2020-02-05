@@ -38,7 +38,7 @@
 #include "spdk/conf.h"
 #include "spdk/endian.h"
 #include "spdk/env.h"
-#include "spdk/copy_engine.h"
+#include "spdk/accel_engine.h"
 #include "spdk/json.h"
 #include "spdk/thread.h"
 #include "spdk/queue.h"
@@ -59,15 +59,15 @@ struct malloc_task {
 };
 
 static struct malloc_task *
-__malloc_task_from_copy_task(struct spdk_copy_task *ct)
+__malloc_task_from_copy_task(struct spdk_accel_task *ct)
 {
 	return (struct malloc_task *)((uintptr_t)ct - sizeof(struct malloc_task));
 }
 
-static struct spdk_copy_task *
+static struct spdk_accel_task *
 __copy_task_from_malloc_task(struct malloc_task *mt)
 {
-	return (struct spdk_copy_task *)((uintptr_t)mt + sizeof(struct malloc_task));
+	return (struct spdk_accel_task *)((uintptr_t)mt + sizeof(struct malloc_task));
 }
 
 static void
@@ -98,7 +98,7 @@ static void bdev_malloc_get_spdk_running_config(FILE *fp);
 static int
 bdev_malloc_get_ctx_size(void)
 {
-	return sizeof(struct malloc_task) + spdk_copy_task_size();
+	return sizeof(struct malloc_task) + spdk_accel_task_size();
 }
 
 static struct spdk_bdev_module malloc_if = {
@@ -171,9 +171,9 @@ bdev_malloc_readv(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 	task->num_outstanding = iovcnt;
 
 	for (i = 0; i < iovcnt; i++) {
-		res = spdk_copy_submit(__copy_task_from_malloc_task(task),
-				       ch, iov[i].iov_base,
-				       src, iov[i].iov_len, malloc_done);
+		res = spdk_accel_submit_copy(__copy_task_from_malloc_task(task),
+					     ch, iov[i].iov_base,
+					     src, iov[i].iov_len, malloc_done);
 
 		if (res != 0) {
 			malloc_done(__copy_task_from_malloc_task(task), res);
@@ -206,9 +206,9 @@ bdev_malloc_writev(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 	task->num_outstanding = iovcnt;
 
 	for (i = 0; i < iovcnt; i++) {
-		res = spdk_copy_submit(__copy_task_from_malloc_task(task),
-				       ch, dst, iov[i].iov_base,
-				       iov[i].iov_len, malloc_done);
+		res = spdk_accel_submit_copy(__copy_task_from_malloc_task(task),
+					     ch, dst, iov[i].iov_base,
+					     iov[i].iov_len, malloc_done);
 
 		if (res != 0) {
 			malloc_done(__copy_task_from_malloc_task(task), res);
@@ -228,8 +228,8 @@ bdev_malloc_unmap(struct malloc_disk *mdisk,
 	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	task->num_outstanding = 1;
 
-	return spdk_copy_submit_fill(__copy_task_from_malloc_task(task), ch,
-				     mdisk->malloc_buf + offset, 0, byte_count, malloc_done);
+	return spdk_accel_submit_fill(__copy_task_from_malloc_task(task), ch,
+				      mdisk->malloc_buf + offset, 0, byte_count, malloc_done);
 }
 
 static int64_t
@@ -358,7 +358,7 @@ bdev_malloc_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 static struct spdk_io_channel *
 bdev_malloc_get_io_channel(void *ctx)
 {
-	return spdk_copy_engine_get_io_channel();
+	return spdk_accel_engine_get_io_channel();
 }
 
 static void

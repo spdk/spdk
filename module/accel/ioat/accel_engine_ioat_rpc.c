@@ -31,7 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "copy_engine_ioat.h"
+#include "accel_engine_ioat.h"
 
 #include "spdk/rpc.h"
 #include "spdk/util.h"
@@ -61,55 +61,56 @@ free_rpc_pci_whitelist(struct rpc_pci_whitelist *list)
 	}
 }
 
-struct rpc_ioat_scan_copy_engine {
+struct rpc_ioat_scan_accel_engine {
 	struct rpc_pci_whitelist pci_whitelist;
 };
 
 static void
-free_rpc_ioat_scan_copy_engine(struct rpc_ioat_scan_copy_engine *p)
+free_rpc_ioat_scan_accel_engine(struct rpc_ioat_scan_accel_engine *p)
 {
 	free_rpc_pci_whitelist(&p->pci_whitelist);
 }
 
-static const struct spdk_json_object_decoder rpc_ioat_scan_copy_engine_decoder[] = {
-	{"pci_whitelist", offsetof(struct rpc_ioat_scan_copy_engine, pci_whitelist), decode_rpc_pci_whitelist},
+static const struct spdk_json_object_decoder rpc_ioat_scan_accel_engine_decoder[] = {
+	{"pci_whitelist", offsetof(struct rpc_ioat_scan_accel_engine, pci_whitelist), decode_rpc_pci_whitelist},
 };
 
 static void
-spdk_rpc_ioat_scan_copy_engine(struct spdk_jsonrpc_request *request,
-			       const struct spdk_json_val *params)
+spdk_rpc_ioat_scan_accel_engine(struct spdk_jsonrpc_request *request,
+				const struct spdk_json_val *params)
 {
-	struct rpc_ioat_scan_copy_engine req = {};
+	struct rpc_ioat_scan_accel_engine req = {};
 	struct spdk_json_write_ctx *w;
 	int rc;
 
 	if (params != NULL) {
-		if (spdk_json_decode_object(params, rpc_ioat_scan_copy_engine_decoder,
-					    SPDK_COUNTOF(rpc_ioat_scan_copy_engine_decoder),
+		if (spdk_json_decode_object(params, rpc_ioat_scan_accel_engine_decoder,
+					    SPDK_COUNTOF(rpc_ioat_scan_accel_engine_decoder),
 					    &req)) {
-			free_rpc_ioat_scan_copy_engine(&req);
+			free_rpc_ioat_scan_accel_engine(&req);
 			SPDK_ERRLOG("spdk_json_decode_object() failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 							 "Invalid parameters");
 			return;
 		}
 
-		rc = copy_engine_ioat_add_whitelist_devices((const char **)req.pci_whitelist.bdfs,
+		rc = accel_engine_ioat_add_whitelist_devices((const char **)req.pci_whitelist.bdfs,
 				req.pci_whitelist.num_bdfs);
-		free_rpc_ioat_scan_copy_engine(&req);
+		free_rpc_ioat_scan_accel_engine(&req);
 		if (rc < 0) {
-			SPDK_ERRLOG("copy_engine_ioat_add_whitelist_devices() failed\n");
+			SPDK_ERRLOG("accel_engine_ioat_add_whitelist_devices() failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 							 "Invalid parameters");
 			return;
 		}
 	}
 
-	copy_engine_ioat_enable_probe();
+	accel_engine_ioat_enable_probe();
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("ioat_scan_copy_engine", spdk_rpc_ioat_scan_copy_engine, SPDK_RPC_STARTUP)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(ioat_scan_copy_engine, scan_ioat_copy_engine)
+SPDK_RPC_REGISTER("ioat_scan_accel_engine", spdk_rpc_ioat_scan_accel_engine, SPDK_RPC_STARTUP)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(ioat_scan_accel_engine, ioat_scan_copy_engine)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(ioat_scan_accel_engine, scan_ioat_copy_engine)

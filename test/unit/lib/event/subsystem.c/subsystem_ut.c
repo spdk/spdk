@@ -115,13 +115,13 @@ subsystem_sort_test_depends_on_multiple(void)
 	set_up_subsystem(&g_ut_subsystems[4], "rpc");
 	set_up_subsystem(&g_ut_subsystems[5], "scsi");
 	set_up_subsystem(&g_ut_subsystems[6], "interface");
-	set_up_subsystem(&g_ut_subsystems[7], "copy");
+	set_up_subsystem(&g_ut_subsystems[7], "accel");
 
 	for (i = 0; i < 8; i++) {
 		spdk_add_subsystem(&g_ut_subsystems[i]);
 	}
 
-	set_up_depends(&g_ut_subsystem_deps[0], "bdev", "copy");
+	set_up_depends(&g_ut_subsystem_deps[0], "bdev", "accel");
 	set_up_depends(&g_ut_subsystem_deps[1], "scsi", "bdev");
 	set_up_depends(&g_ut_subsystem_deps[2], "rpc", "interface");
 	set_up_depends(&g_ut_subsystem_deps[3], "sock", "interface");
@@ -143,7 +143,7 @@ subsystem_sort_test_depends_on_multiple(void)
 	TAILQ_REMOVE(&g_subsystems, subsystem, tailq);
 
 	subsystem = TAILQ_FIRST(&g_subsystems);
-	CU_ASSERT(strcmp(subsystem->name, "copy") == 0);
+	CU_ASSERT(strcmp(subsystem->name, "accel") == 0);
 	TAILQ_REMOVE(&g_subsystems, subsystem, tailq);
 
 	subsystem = TAILQ_FIRST(&g_subsystems);
