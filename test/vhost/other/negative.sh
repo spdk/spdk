@@ -120,6 +120,11 @@ if [[ $RUN_NIGHTLY -eq 1 ]]; then
 		error "Set coalescing with invalid parameter should fail"
 	fi
 
+	notice "Trying to add nonexistent device to scsi controller"
+	if $rpc_py vhost_scsi_controller_add_target naa.0 0 nonexistent_bdev; then
+		error "Adding nonexistent device to scsi controller succeeded, but it shouldn't"
+	fi
+
 	notice "Adding initial device (0) to naa.0"
 	$rpc_py vhost_scsi_controller_add_target naa.0 0 Malloc0
 
