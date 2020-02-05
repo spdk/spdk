@@ -642,8 +642,6 @@ struct spdk_nvme_ctrlr {
 	/** Array of namespaces indexed by nsid - 1 */
 	struct spdk_nvme_ns		*ns;
 
-	struct spdk_nvme_transport_id	trid;
-
 	uint32_t			num_ns;
 
 	bool				is_removed;
@@ -670,6 +668,8 @@ struct spdk_nvme_ctrlr {
 	uint16_t			icdoff;
 
 	/* Cold data (not accessed in normal I/O path) is after this point. */
+
+	struct spdk_nvme_transport_id	trid;
 
 	union spdk_nvme_cap_register	cap;
 	union spdk_nvme_vs_register	vs;
@@ -702,7 +702,6 @@ struct spdk_nvme_ctrlr {
 
 	/** guards access to the controller itself, including admin queues */
 	pthread_mutex_t			ctrlr_lock;
-
 
 	struct spdk_nvme_qpair		*adminq;
 
