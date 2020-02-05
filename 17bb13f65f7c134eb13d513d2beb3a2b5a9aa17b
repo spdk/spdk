@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "549b8e72_6850043d",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 626,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-02-05T09:49:30Z",
+      "side": 1,
+      "message": "It could be difficult to check every time with fio if snapshot is readonly",
+      "parentUuid": "10f8a936_79a127c3",
+      "range": {
+        "startLine": 626,
+        "startChar": 0,
+        "endLine": 626,
+        "endChar": 44
+      },
+      "revId": "17bb13f65f7c134eb13d513d2beb3a2b5a9aa17b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0c74a582_283fc8ae",
         "filename": "test/lvol/test_plan.md",
         "patchSetId": 2
