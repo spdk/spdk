@@ -760,7 +760,7 @@ if __name__ == "__main__":
                                                      bdev_name=args.bdev_name,
                                                      filename=args.filename))
 
-    p = subparsers.add_parser('apply_firmware', aliases=['apply_firmware'],
+    p = subparsers.add_parser('bdev_nvme_apply_firmware', aliases=['apply_firmware'],
                               help='Download and commit firmware to NVMe device')
     p.add_argument('filename', help='filename of the firmware to download')
     p.add_argument('bdev_name', help='name of the NVMe device')
