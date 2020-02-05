@@ -16,6 +16,24 @@
       "revId": "5c9dccc96289801cfe9bda5f1e7dc4edf9a33e01",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8555a94c_a076a99e",
+        "filename": "test/spdkcli/vhost.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-02-05T09:49:49Z",
+      "side": 0,
+      "message": "In line 22 we create this file.",
+      "parentUuid": "e9668d58_8abd0290",
+      "revId": "5c9dccc96289801cfe9bda5f1e7dc4edf9a33e01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
