@@ -58,13 +58,22 @@ function scanbuild_make {
 	pass=true
 	$scanbuild $MAKE $MAKEFLAGS > $out/build_output.txt && rm -rf $out/scan-build-tmp || make_fail_cleanup
 	for ent in $(find app examples lib module -type f | grep -vF ".h"); do
+		if [[ $ent == lib/env_ocf* ]]; then continue; fi
 		if file -bi $ent | grep -q 'text/x-c'; then
 			echo $ent | sed 's/\.cp\{0,2\}$//g' >> $out/all_c_files.txt
 		fi
 	done
 
-	sed -n '/Leaving directory /,$p' $out/build_output.txt | grep -E "CC|CXX" | sed 's/\s\s\(CC\|CXX\)\s//g' | sed 's/\.o//g' > $out/built_c_files.txt
-	paste -d '\n' $out/all_c_files.txt $out/built_c_files.txt $rootdir/test/common/skipped_build_files.txt | grep -vE "^test|lib/env_ocf|#" | sort | uniq -u > $out/unbuilt_c_files.txt
+	grep -E "CC|CXX" $out/build_output.txt | sed 's/\s\s\(CC\|CXX\)\s//g' | sed 's/\.o//g' > $out/built_c_files.txt
+	cat $rootdir/test/common/skipped_build_files.txt >> $out/built_c_files.txt
+
+	sort -o $out/all_c_files.txt $out/all_c_files.txt
+	sort -o $out/built_c_files.txt $out/built_c_files.txt
+	# from comm manual:
+	#   -2 suppress column 2 (lines unique to FILE2)
+	#   -3 suppress column 3 (lines that appear in both files)
+	# comm may exit 1 if no lines were printed (undocumented)
+	! comm -2 -3 $out/all_c_files.txt $out/built_c_files.txt > $out/unbuilt_c_files.txt
 
 	if [ $(wc -l < $out/unbuilt_c_files.txt) -ge 1 ]; then
 		echo "missing files"
