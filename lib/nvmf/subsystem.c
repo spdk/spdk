@@ -747,6 +747,28 @@ spdk_nvmf_subsystem_find_listener(struct spdk_nvmf_subsystem *subsystem,
 	return NULL;
 }
 
+/**
+ * Function to be called once the target is listening.
+ *
+ * \param ctx Context argument passed to this function.
+ * \param status 0 if it completed successfully, or negative errno if it failed.
+ */
+static void
+_nvmf_subsystem_add_listener_done(void *ctx, int status)
+{
+	struct spdk_nvmf_subsystem_listener *listener = ctx;
+
+	if (status) {
+		listener->cb_fn(listener->cb_arg, status);
+		free(listener);
+		return;
+	}
+
+	TAILQ_INSERT_HEAD(&listener->subsystem->listeners, listener, link);
+	listener->subsystem->tgt->discovery_genctr++;
+	listener->cb_fn(listener->cb_arg, status);
+}
+
 void
 spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 				 struct spdk_nvme_transport_id *trid,
@@ -793,11 +815,17 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 
 	listener->trid = &tr_listener->trid;
 	listener->transport = transport;
+	listener->cb_fn = cb_fn;
+	listener->cb_arg = cb_arg;
+	listener->subsystem = subsystem;
 
-	TAILQ_INSERT_HEAD(&subsystem->listeners, listener, link);
-	subsystem->tgt->discovery_genctr++;
-
-	cb_fn(cb_arg, 0);
+	if (transport->ops->listen_associate != NULL) {
+		transport->ops->listen_associate(transport, subsystem, trid,
+						 _nvmf_subsystem_add_listener_done,
+						 listener);
+	} else {
+		_nvmf_subsystem_add_listener_done(listener, 0);
+	}
 }
 
 int

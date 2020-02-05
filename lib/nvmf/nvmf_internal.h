@@ -81,6 +81,9 @@ struct spdk_nvmf_host {
 };
 
 struct spdk_nvmf_subsystem_listener {
+	struct spdk_nvmf_subsystem			*subsystem;
+	spdk_nvmf_tgt_subsystem_listen_done_fn		cb_fn;
+	void						*cb_arg;
 	struct spdk_nvme_transport_id			*trid;
 	struct spdk_nvmf_transport			*transport;
 	TAILQ_ENTRY(spdk_nvmf_subsystem_listener)	link;

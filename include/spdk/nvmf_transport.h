@@ -218,6 +218,24 @@ struct spdk_nvmf_transport_ops {
 			    const struct spdk_nvme_transport_id *trid);
 
 	/**
+	 * A listener has been associated with a subsystem with the given NQN.
+	 * This is only a notification. Most transports will not need to take any
+	 * action here, as the enforcement of the association is done in the generic
+	 * code.
+	 *
+	 * The association is not considered complete until cb_fn is called. New
+	 * connections on the listener targeting this subsystem will be rejected
+	 * until that time.
+	 *
+	 * Pass a negated errno code to `cb_fn` to block the association. 0 to allow.
+	 */
+	void (*listen_associate)(struct spdk_nvmf_transport *transport,
+				 const struct spdk_nvmf_subsystem *subsystem,
+				 const struct spdk_nvme_transport_id *trid,
+				 spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn,
+				 void *cb_arg);
+
+	/**
 	 * Check for new connections on the transport.
 	 */
 	void (*accept)(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn, void *cb_arg);

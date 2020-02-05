@@ -101,7 +101,11 @@ spdk_nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport,
 	entry->trtype = 42;
 }
 
-static struct spdk_nvmf_transport g_transport = {};
+struct spdk_nvmf_transport_ops g_transport_ops = {};
+
+static struct spdk_nvmf_transport g_transport = {
+	.ops = &g_transport_ops
+};
 
 struct spdk_nvmf_transport *
 spdk_nvmf_transport_create(const char *transport_name,
