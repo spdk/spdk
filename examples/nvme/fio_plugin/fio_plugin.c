@@ -372,6 +372,20 @@ static int spdk_fio_setup(struct thread_data *td)
 	char *trid_info;
 	unsigned int i;
 
+	/* we might be running in a daemonized FIO instance where standard
+	 * input and output were closed and fds 0, 1, and 2 are reused
+	 * for something important by FIO. We can't ensure we won't print
+	 * anything (and so will our dependencies, e.g. DPDK), so abort early.
+	 * (is_backend is an fio global variable)
+	 */
+	if (is_backend) {
+		char buf[1024];
+		snprintf(buf, sizeof(buf),
+			 "SPDK FIO plugin won't work with daemonized FIO server.");
+		fio_server_text_output(FIO_LOG_ERR, buf, sizeof(buf));
+		return -1;
+	}
+
 	if (!td->o.use_thread) {
 		log_err("spdk: must set thread=1 when using spdk plugin\n");
 		return 1;
