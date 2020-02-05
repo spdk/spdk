@@ -46,6 +46,18 @@ struct spdk_nvme_transport {
 TAILQ_HEAD(nvme_transport_list, spdk_nvme_transport) g_spdk_nvme_transports =
 	TAILQ_HEAD_INITIALIZER(g_spdk_nvme_transports);
 
+const struct spdk_nvme_transport *
+nvme_get_first_transport(void)
+{
+	return TAILQ_FIRST(&g_spdk_nvme_transports);
+}
+
+const struct spdk_nvme_transport *
+nvme_get_next_transport(const struct spdk_nvme_transport *transport)
+{
+	return TAILQ_NEXT(transport, link);
+}
+
 /*
  * Unfortunately, due to NVMe PCIe multiprocess support, we cannot store the
  * transport object in either the controller struct or the admin qpair. THis means

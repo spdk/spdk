@@ -1121,6 +1121,9 @@ struct spdk_nvme_ctrlr *spdk_nvme_get_ctrlr_by_trid_unsafe(
 	const struct spdk_nvme_transport_id *trid);
 
 const struct spdk_nvme_transport *nvme_get_transport(const char *transport_name);
+const struct spdk_nvme_transport *nvme_get_first_transport(void);
+const struct spdk_nvme_transport *nvme_get_next_transport(const struct spdk_nvme_transport
+		*transport);
 
 /* Transport specific functions */
 struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
