@@ -94,6 +94,54 @@
     },
     {
       "key": {
+        "uuid": "d69c1250_b6fde75f",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1761,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-02-05T09:49:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ac7df007_a1e8e44b",
+      "range": {
+        "startLine": 1761,
+        "startChar": 8,
+        "endLine": 1761,
+        "endChar": 46
+      },
+      "revId": "5a6d07df9f33e23dab7424dd2d965a63730e524d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f6a4c56_7351ac29",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1761,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-02-05T09:49:55Z",
+      "side": 1,
+      "message": "size \u003d half size of lvs size\nself.get_lvs_size() \u003d returns free lvs space\nSum of this two values should be total size of lvs :)",
+      "parentUuid": "5553d7eb_f5aa4e05",
+      "range": {
+        "startLine": 1761,
+        "startChar": 8,
+        "endLine": 1761,
+        "endChar": 46
+      },
+      "revId": "5a6d07df9f33e23dab7424dd2d965a63730e524d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "23c2fe39_87412a64",
         "filename": "test/lvol/test_cases.py",
         "patchSetId": 2
