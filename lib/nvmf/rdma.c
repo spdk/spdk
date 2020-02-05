@@ -2,7 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
- *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2019, 2020 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -2961,14 +2961,30 @@ static const char *CM_EVENT_STR[] = {
 };
 #endif /* DEBUG */
 
+static void
+nvmf_rdma_disconnect_qpairs_on_port(struct spdk_nvmf_rdma_transport *rtransport,
+				    struct spdk_nvmf_rdma_port *port)
+{
+	struct spdk_nvmf_rdma_poll_group	*rgroup;
+	struct spdk_nvmf_rdma_poller		*rpoller;
+	struct spdk_nvmf_rdma_qpair		*rqpair;
+
+	TAILQ_FOREACH(rgroup, &rtransport->poll_groups, link) {
+		TAILQ_FOREACH(rpoller, &rgroup->pollers, link) {
+			TAILQ_FOREACH(rqpair, &rpoller->qpairs, link) {
+				if (rqpair->listen_id == port->id) {
+					spdk_nvmf_rdma_start_disconnect(rqpair);
+				}
+			}
+		}
+	}
+}
+
 static bool
 nvmf_rdma_handle_cm_event_addr_change(struct spdk_nvmf_transport *transport,
 				      struct rdma_cm_event *event)
 {
 	struct spdk_nvme_transport_id		trid;
-	struct spdk_nvmf_rdma_qpair		*rqpair;
-	struct spdk_nvmf_rdma_poll_group	*rgroup;
-	struct spdk_nvmf_rdma_poller		*rpoller;
 	struct spdk_nvmf_rdma_port		*port;
 	struct spdk_nvmf_rdma_transport		*rtransport;
 	uint32_t				ref, i;
@@ -2986,25 +3002,39 @@ nvmf_rdma_handle_cm_event_addr_change(struct spdk_nvmf_transport *transport,
 		}
 	}
 	if (event_acked) {
-		TAILQ_FOREACH(rgroup, &rtransport->poll_groups, link) {
-			TAILQ_FOREACH(rpoller, &rgroup->pollers, link) {
-				TAILQ_FOREACH(rqpair, &rpoller->qpairs, link) {
-					if (rqpair->listen_id == port->id) {
-						spdk_nvmf_rdma_start_disconnect(rqpair);
-					}
-				}
-			}
-		}
+		nvmf_rdma_disconnect_qpairs_on_port(rtransport, port);
 
 		for (i = 0; i < ref; i++) {
 			spdk_nvmf_rdma_stop_listen(transport, &trid);
 		}
-		while (ref > 0) {
+		for (i = 0; i < ref; i++) {
 			spdk_nvmf_rdma_listen(transport, &trid, NULL, NULL);
-			ref--;
 		}
 	}
 	return event_acked;
+}
+
+static void
+nvmf_rdma_handle_cm_event_port_removal(struct spdk_nvmf_transport *transport,
+				       struct rdma_cm_event *event)
+{
+	struct spdk_nvmf_rdma_port		*port;
+	struct spdk_nvmf_rdma_transport		*rtransport;
+	uint32_t				ref, i;
+
+	port = event->id->context;
+	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
+	ref = port->ref;
+
+	SPDK_NOTICELOG("Port %s:%s is being removed\n", port->trid.traddr, port->trid.trsvcid);
+
+	nvmf_rdma_disconnect_qpairs_on_port(rtransport, port);
+
+	rdma_ack_cm_event(event);
+
+	for (i = 0; i < ref; i++) {
+		spdk_nvmf_rdma_stop_listen(transport, &port->trid);
+	}
 }
 
 static void
@@ -3024,68 +3054,87 @@ spdk_nvmf_process_cm_event(struct spdk_nvmf_transport *transport, new_qpair_fn c
 	while (1) {
 		event_acked = false;
 		rc = rdma_get_cm_event(rtransport->event_channel, &event);
-		if (rc == 0) {
-			SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Acceptor Event: %s\n", CM_EVENT_STR[event->event]);
+		if (rc) {
+			if (errno != EAGAIN && errno != EWOULDBLOCK) {
+				SPDK_ERRLOG("Acceptor Event Error: %s\n", spdk_strerror(errno));
+			}
+			break;
+		}
 
-			spdk_trace_record(TRACE_RDMA_CM_ASYNC_EVENT, 0, 0, 0, event->event);
+		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Acceptor Event: %s\n", CM_EVENT_STR[event->event]);
 
-			switch (event->event) {
-			case RDMA_CM_EVENT_ADDR_RESOLVED:
-			case RDMA_CM_EVENT_ADDR_ERROR:
-			case RDMA_CM_EVENT_ROUTE_RESOLVED:
-			case RDMA_CM_EVENT_ROUTE_ERROR:
-				/* No action required. The target never attempts to resolve routes. */
+		spdk_trace_record(TRACE_RDMA_CM_ASYNC_EVENT, 0, 0, 0, event->event);
+
+		switch (event->event) {
+		case RDMA_CM_EVENT_ADDR_RESOLVED:
+		case RDMA_CM_EVENT_ADDR_ERROR:
+		case RDMA_CM_EVENT_ROUTE_RESOLVED:
+		case RDMA_CM_EVENT_ROUTE_ERROR:
+			/* No action required. The target never attempts to resolve routes. */
+			break;
+		case RDMA_CM_EVENT_CONNECT_REQUEST:
+			rc = nvmf_rdma_connect(transport, event, cb_fn, cb_arg);
+			if (rc < 0) {
+				SPDK_ERRLOG("Unable to process connect event. rc: %d\n", rc);
 				break;
-			case RDMA_CM_EVENT_CONNECT_REQUEST:
-				rc = nvmf_rdma_connect(transport, event, cb_fn, cb_arg);
-				if (rc < 0) {
-					SPDK_ERRLOG("Unable to process connect event. rc: %d\n", rc);
-					break;
-				}
+			}
+			break;
+		case RDMA_CM_EVENT_CONNECT_RESPONSE:
+			/* The target never initiates a new connection. So this will not occur. */
+			break;
+		case RDMA_CM_EVENT_CONNECT_ERROR:
+			/* Can this happen? The docs say it can, but not sure what causes it. */
+			break;
+		case RDMA_CM_EVENT_UNREACHABLE:
+		case RDMA_CM_EVENT_REJECTED:
+			/* These only occur on the client side. */
+			break;
+		case RDMA_CM_EVENT_ESTABLISHED:
+			/* TODO: Should we be waiting for this event anywhere? */
+			break;
+		case RDMA_CM_EVENT_DISCONNECTED:
+			rc = nvmf_rdma_disconnect(event);
+			if (rc < 0) {
+				SPDK_ERRLOG("Unable to process disconnect event. rc: %d\n", rc);
 				break;
-			case RDMA_CM_EVENT_CONNECT_RESPONSE:
-				/* The target never initiates a new connection. So this will not occur. */
-				break;
-			case RDMA_CM_EVENT_CONNECT_ERROR:
-				/* Can this happen? The docs say it can, but not sure what causes it. */
-				break;
-			case RDMA_CM_EVENT_UNREACHABLE:
-			case RDMA_CM_EVENT_REJECTED:
-				/* These only occur on the client side. */
-				break;
-			case RDMA_CM_EVENT_ESTABLISHED:
-				/* TODO: Should we be waiting for this event anywhere? */
-				break;
-			case RDMA_CM_EVENT_DISCONNECTED:
-			case RDMA_CM_EVENT_DEVICE_REMOVAL:
+			}
+			break;
+		case RDMA_CM_EVENT_DEVICE_REMOVAL:
+			/* In case of device removal, kernel IB part triggers IBV_EVENT_DEVICE_FATAL
+			 * which triggers RDMA_CM_EVENT_DEVICE_REMOVAL on all cma_id’s.
+			 * Once these events are sent to SPDK, we should release all IB resources and
+			 * don't make attempts to call any ibv_query/modify/create functions. We can only call
+			 * ibv_destory* functions to release user space memory allocated by IB. All kernel
+			 * resources are already cleaned. */
+			if (event->id->qp) {
+				/* If rdma_cm event has a valid `qp` pointer then the event refers to the
+				 * corresponding qpair. Otherwise the event refers to a listening device */
 				rc = nvmf_rdma_disconnect(event);
 				if (rc < 0) {
 					SPDK_ERRLOG("Unable to process disconnect event. rc: %d\n", rc);
 					break;
 				}
-				break;
-			case RDMA_CM_EVENT_MULTICAST_JOIN:
-			case RDMA_CM_EVENT_MULTICAST_ERROR:
-				/* Multicast is not used */
-				break;
-			case RDMA_CM_EVENT_ADDR_CHANGE:
-				event_acked = nvmf_rdma_handle_cm_event_addr_change(transport, event);
-				break;
-			case RDMA_CM_EVENT_TIMEWAIT_EXIT:
-				/* For now, do nothing. The target never re-uses queue pairs. */
-				break;
-			default:
-				SPDK_ERRLOG("Unexpected Acceptor Event [%d]\n", event->event);
-				break;
-			}
-			if (!event_acked) {
-				rdma_ack_cm_event(event);
-			}
-		} else {
-			if (errno != EAGAIN && errno != EWOULDBLOCK) {
-				SPDK_ERRLOG("Acceptor Event Error: %s\n", spdk_strerror(errno));
+			} else {
+				nvmf_rdma_handle_cm_event_port_removal(transport, event);
+				event_acked = true;
 			}
 			break;
+		case RDMA_CM_EVENT_MULTICAST_JOIN:
+		case RDMA_CM_EVENT_MULTICAST_ERROR:
+			/* Multicast is not used */
+			break;
+		case RDMA_CM_EVENT_ADDR_CHANGE:
+			event_acked = nvmf_rdma_handle_cm_event_addr_change(transport, event);
+			break;
+		case RDMA_CM_EVENT_TIMEWAIT_EXIT:
+			/* For now, do nothing. The target never re-uses queue pairs. */
+			break;
+		default:
+			SPDK_ERRLOG("Unexpected Acceptor Event [%d]\n", event->event);
+			break;
+		}
+		if (!event_acked) {
+			rdma_ack_cm_event(event);
 		}
 	}
 }
