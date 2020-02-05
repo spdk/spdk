@@ -16,6 +16,24 @@
       "revId": "19c2c03503cc5652ceeccdb048a7e422ccbf0bf5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "14e8b2fa_863ddabc",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1013958
+      },
+      "writtenOn": "2020-02-05T01:23:17Z",
+      "side": 1,
+      "message": "In yocto CCAR would be set in AR. This is the same naming convention as make and autotools. I found some weird merge issue in our repo for mk/spdk.common.mk where we have $(AR) crDs $@ $(OBJS) instead of the upstream $(CCAR). If I resolve that then I have to add \"export CCAR \u003d \"${AR}\" to my recipe/environment. Would you mind if I submit a change to use AR instead?\n\nLD_TYPE would set in LDFLAGS with -fuse-ld if an the standard ld wasn\u0027t being used. spdk.common.mk doesn\u0027t set it if LD_TYPE isn\u0027t set so that\u0027s fine.\n\nRe CC_TYPE, yocto sets the compiler in CC. If clang were being used it would be in CC already. Since yocto handles dependencies it doesn\u0027t initialize submodules. dpdkbuild dir is only included if dpdk/build exists so I guess dpdk would have to be configured for it to be built with the spdk makefile. In our case, CONFIG_DPDK_DIR is set via --with-dpdk in configure to the proper sysroot so \u0027build\u0027 actually doesn\u0027t exist because it isn\u0027t something that would be copied to sysroot. If it did exist we would have to set the SKIP_DPDK_BUILD. \n\nIn the recipe, if it is configured something like this everything works fine:\n\nexport RTE_TARGET \u003d \"your-dpdk-target\"\nexport RTE_INSTALL_PATH \u003d \"${datadir}/dpdk\"\nEXTRA_OEMAKE \u003d \"CC\u003d\u0027${CC}\u0027 CXX\u003d\u0027${CXX}\u0027 V\u003d1\"\n\nSPDK_OPTIONAL_FEATURES \u003d \"${@bb.utils.contains(\u0027ENABLE_VPP\u0027, \u0027true\u0027, \u0027--with-vpp\u0027, \u0027\u0027, d)}\"\n\ndo_configure_append() {\n    ./configure --skip-cc-detect --with-crypto --with-rdma --with-dpdk\u003d${STAGING_DIR_TARGET}/${RTE_INSTALL_PATH}/${RTE_TARGET} ${SPDK_OPTIONAL_FEATURES}\n}",
+      "parentUuid": "0f6562b4_9d4d1ad3",
+      "revId": "19c2c03503cc5652ceeccdb048a7e422ccbf0bf5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
