@@ -219,9 +219,8 @@ static struct spdk_posix_sock *
 _spdk_posix_sock_alloc(int fd)
 {
 	struct spdk_posix_sock *sock;
-	int rc;
 #ifdef SPDK_ZEROCOPY
-	int flag;
+	int flag, rc;
 #endif
 
 	sock = calloc(1, sizeof(*sock));
@@ -232,15 +231,6 @@ _spdk_posix_sock_alloc(int fd)
 
 	sock->fd = fd;
 
-	rc = spdk_posix_sock_set_recvbuf(&sock->base, SO_RCVBUF_SIZE);
-	if (rc) {
-		/* Not fatal */
-	}
-
-	rc = spdk_posix_sock_set_sendbuf(&sock->base, SO_SNDBUF_SIZE);
-	if (rc) {
-		/* Not fatal */
-	}
 
 #ifdef SPDK_ZEROCOPY
 	/* Try to turn on zero copy sends */
@@ -264,7 +254,7 @@ spdk_posix_sock_create(const char *ip, int port, enum spdk_posix_sock_create_typ
 	struct addrinfo hints, *res, *res0;
 	int fd, flag;
 	int val = 1;
-	int rc;
+	int rc, sz;
 
 	if (ip == NULL) {
 		return NULL;
@@ -300,6 +290,19 @@ retry:
 			/* error */
 			continue;
 		}
+
+		sz = SO_RCVBUF_SIZE;
+		rc = setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &sz, sizeof(sz));
+		if (rc) {
+			/* Not fatal */
+		}
+
+		sz = SO_SNDBUF_SIZE;
+		rc = setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &sz, sizeof(sz));
+		if (rc) {
+			/* Not fatal */
+		}
+
 		rc = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof val);
 		if (rc != 0) {
 			close(fd);
