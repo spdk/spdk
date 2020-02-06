@@ -42,12 +42,17 @@
 #include "spdk/string.h"
 #include "spdk/bdev_zone.h"
 #include "spdk/bdev_module.h"
+#include "spdk/config.h"
 
 #include "ftl_core.h"
 #include "ftl_io.h"
 #include "ftl_reloc.h"
 #include "ftl_band.h"
 #include "ftl_debug.h"
+
+#ifdef SPDK_CONFIG_PMDK
+#include "libpmem.h"
+#endif /* SPDK_CONFIG_PMDK */
 
 #define FTL_CORE_RING_SIZE	4096
 #define FTL_INIT_TIMEOUT	30
@@ -530,30 +535,72 @@ ftl_dev_init_core_thread(struct spdk_ftl_dev *dev, const struct spdk_ftl_dev_ini
 }
 
 static int
+ftl_dev_l2p_alloc_pmem(struct spdk_ftl_dev *dev, size_t l2p_size, const char *l2p_path)
+{
+#ifdef SPDK_CONFIG_PMDK
+	int is_pmem;
+
+	if ((dev->l2p = pmem_map_file(l2p_path, 0,
+				      0, 0, &dev->l2p_pmem_len, &is_pmem)) == NULL) {
+		SPDK_ERRLOG("Failed to mmap l2p_path\n");
+		return -1;
+	}
+
+	if (!is_pmem) {
+		SPDK_NOTICELOG("l2p_path mapped on non-pmem device\n");
+	}
+
+	if (dev->l2p_pmem_len < l2p_size) {
+		SPDK_ERRLOG("l2p_path file is too small\n");
+		return -1;
+	}
+
+	pmem_memset_persist(dev->l2p, FTL_ADDR_INVALID, l2p_size);
+
+	return 0;
+#else /* SPDK_CONFIG_PMDK */
+	SPDK_ERRLOG("Libpmem not available, cannot use pmem l2p_path\n");
+	return -1;
+#endif /* SPDK_CONFIG_PMDK */
+}
+
+static int
+ftl_dev_l2p_alloc_dram(struct spdk_ftl_dev *dev, size_t l2p_size)
+{
+	dev->l2p = malloc(l2p_size);
+	if (!dev->l2p) {
+		SPDK_ERRLOG("Failed to allocate l2p table\n");
+		return -1;
+	}
+
+	memset(dev->l2p, FTL_ADDR_INVALID, l2p_size);
+
+	return 0;
+}
+
+static int
 ftl_dev_l2p_alloc(struct spdk_ftl_dev *dev)
 {
-	size_t addr_size;
+	size_t addr_size = dev->addr_len >= 32 ? 8 : 4;
+	size_t l2p_size = dev->num_lbas * addr_size;
+	const char *l2p_path = dev->conf.l2p_path;
 
 	if (dev->num_lbas == 0) {
-		SPDK_DEBUGLOG(SPDK_LOG_FTL_INIT, "Invalid l2p table size\n");
+		SPDK_ERRLOG("Invalid l2p table size\n");
 		return -1;
 	}
 
 	if (dev->l2p) {
-		SPDK_DEBUGLOG(SPDK_LOG_FTL_INIT, "L2p table already allocated\n");
+		SPDK_ERRLOG("L2p table already allocated\n");
 		return -1;
 	}
 
-	addr_size = dev->addr_len >= 32 ? 8 : 4;
-	dev->l2p = malloc(dev->num_lbas * addr_size);
-	if (!dev->l2p) {
-		SPDK_DEBUGLOG(SPDK_LOG_FTL_INIT, "Failed to allocate l2p table\n");
-		return -1;
+	dev->l2p_pmem_len = 0;
+	if (l2p_path) {
+		return ftl_dev_l2p_alloc_pmem(dev, l2p_size, l2p_path);
+	} else {
+		return ftl_dev_l2p_alloc_dram(dev, l2p_size);
 	}
-
-	memset(dev->l2p, FTL_ADDR_INVALID, dev->num_lbas * addr_size);
-
-	return 0;
 }
 
 static void
@@ -1383,7 +1430,14 @@ ftl_dev_free_sync(struct spdk_ftl_dev *dev)
 	free(dev->iov_buf);
 	free(dev->name);
 	free(dev->bands);
-	free(dev->l2p);
+	if (dev->l2p_pmem_len != 0) {
+#ifdef SPDK_CONFIG_PMDK
+		pmem_unmap(dev->l2p, dev->l2p_pmem_len);
+#endif /* SPDK_CONFIG_PMDK */
+	} else {
+		free(dev->l2p);
+	}
+	free((char *)dev->conf.l2p_path);
 	free(dev);
 }
 
@@ -1433,6 +1487,14 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn c
 	if (ftl_dev_init_base_bdev(dev, opts.base_bdev)) {
 		SPDK_ERRLOG("Unsupported underlying device\n");
 		goto fail_sync;
+	}
+
+	if (opts.conf->l2p_path) {
+		dev->conf.l2p_path = strdup(opts.conf->l2p_path);
+		if (!dev->conf.l2p_path) {
+			rc = -ENOMEM;
+			goto fail_sync;
+		}
 	}
 
 	/* In case of errors, we free all of the memory in ftl_dev_free_sync(), */

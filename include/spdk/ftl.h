@@ -102,6 +102,9 @@ struct spdk_ftl_conf {
 		/* Maximum number of blocks per one request */
 		size_t				max_request_size;
 	} nv_cache;
+
+	/* Create l2p table on l2p_path persistent memory file or device instead of in DRAM */
+	const char				*l2p_path;
 };
 
 enum spdk_ftl_mode {

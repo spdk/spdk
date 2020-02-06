@@ -175,6 +175,8 @@ struct spdk_ftl_dev {
 	void					*l2p;
 	/* Size of the l2p table */
 	uint64_t				num_lbas;
+	/* Size of pages mmapped for l2p, valid only for mapping on persistent memory */
+	size_t					l2p_pmem_len;
 
 	/* Address size */
 	size_t					addr_len;
