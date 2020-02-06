@@ -56,18 +56,6 @@ struct ftl_bdev {
 	void				*init_arg;
 };
 
-struct ftl_io_channel {
-	struct spdk_ftl_dev		*dev;
-
-	struct spdk_io_channel		*ioch;
-};
-
-struct ftl_bdev_io {
-	struct ftl_bdev			*bdev;
-
-	int				status;
-};
-
 struct ftl_deferred_init {
 	struct ftl_bdev_init_opts	opts;
 
@@ -80,18 +68,11 @@ static int bdev_ftl_initialize(void);
 static void bdev_ftl_finish(void);
 static void bdev_ftl_examine(struct spdk_bdev *bdev);
 
-static int
-bdev_ftl_get_ctx_size(void)
-{
-	return sizeof(struct ftl_bdev_io);
-}
-
 static struct spdk_bdev_module g_ftl_if = {
 	.name		= "ftl",
 	.module_init	= bdev_ftl_initialize,
 	.module_fini	= bdev_ftl_finish,
 	.examine_disk	= bdev_ftl_examine,
-	.get_ctx_size	= bdev_ftl_get_ctx_size,
 };
 
 SPDK_BDEV_MODULE_REGISTER(ftl, &g_ftl_if)
@@ -100,8 +81,6 @@ static void
 bdev_ftl_free_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 {
 	struct ftl_bdev *ftl_bdev = ctx;
-
-	spdk_io_device_unregister(ftl_bdev, NULL);
 
 	spdk_bdev_destruct_done(&ftl_bdev->bdev, status);
 	free(ftl_bdev->bdev.name);
@@ -119,8 +98,9 @@ bdev_ftl_destruct(void *ctx)
 }
 
 static void
-bdev_ftl_complete_io(struct ftl_bdev_io *io, int rc)
+bdev_ftl_cb(void *arg, int rc)
 {
+	struct spdk_bdev_io *bdev_io = arg;
 	enum spdk_bdev_io_status status;
 
 	switch (rc) {
@@ -135,103 +115,32 @@ bdev_ftl_complete_io(struct ftl_bdev_io *io, int rc)
 		break;
 	}
 
-	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(io), status);
-}
-
-static void
-bdev_ftl_cb(void *arg, int status)
-{
-	struct ftl_bdev_io *io = arg;
-
-	bdev_ftl_complete_io(io, status);
-}
-
-static int
-bdev_ftl_fill_bio(struct ftl_bdev *ftl_bdev, struct spdk_io_channel *ch,
-		  struct ftl_bdev_io *io)
-{
-	memset(io, 0, sizeof(*io));
-
-	io->status = SPDK_BDEV_IO_STATUS_SUCCESS;
-	io->bdev = ftl_bdev;
-	return 0;
-}
-
-static int
-bdev_ftl_readv(struct ftl_bdev *ftl_bdev, struct spdk_io_channel *ch,
-	       struct ftl_bdev_io *io)
-{
-	struct spdk_bdev_io *bio;
-	struct ftl_io_channel *ioch = spdk_io_channel_get_ctx(ch);
-	int rc;
-
-	bio = spdk_bdev_io_from_ctx(io);
-
-	rc = bdev_ftl_fill_bio(ftl_bdev, ch, io);
-	if (rc) {
-		return rc;
-	}
-
-	return spdk_ftl_read(ftl_bdev->dev,
-			     ioch->ioch,
-			     bio->u.bdev.offset_blocks,
-			     bio->u.bdev.num_blocks,
-			     bio->u.bdev.iovs, bio->u.bdev.iovcnt, bdev_ftl_cb, io);
-}
-
-static int
-bdev_ftl_writev(struct ftl_bdev *ftl_bdev, struct spdk_io_channel *ch,
-		struct ftl_bdev_io *io)
-{
-	struct spdk_bdev_io *bio;
-	struct ftl_io_channel *ioch;
-	int rc;
-
-	bio = spdk_bdev_io_from_ctx(io);
-	ioch = spdk_io_channel_get_ctx(ch);
-
-	rc = bdev_ftl_fill_bio(ftl_bdev, ch, io);
-	if (rc) {
-		return rc;
-	}
-
-	return spdk_ftl_write(ftl_bdev->dev,
-			      ioch->ioch,
-			      bio->u.bdev.offset_blocks,
-			      bio->u.bdev.num_blocks,
-			      bio->u.bdev.iovs,
-			      bio->u.bdev.iovcnt, bdev_ftl_cb, io);
+	spdk_bdev_io_complete(bdev_io, status);
 }
 
 static void
 bdev_ftl_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 		    bool success)
 {
+	struct ftl_bdev *ftl_bdev;
+	int rc;
+
+	ftl_bdev = bdev_io->bdev->ctxt;
+
 	if (!success) {
-		bdev_ftl_complete_io((struct ftl_bdev_io *)bdev_io->driver_ctx,
-				     SPDK_BDEV_IO_STATUS_FAILED);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
 
-	int rc = bdev_ftl_readv((struct ftl_bdev *)bdev_io->bdev->ctxt,
-				ch, (struct ftl_bdev_io *)bdev_io->driver_ctx);
+	rc = spdk_ftl_read(ftl_bdev->dev,
+			   ch,
+			   bdev_io->u.bdev.offset_blocks,
+			   bdev_io->u.bdev.num_blocks,
+			   bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, bdev_ftl_cb, bdev_io);
 
 	if (spdk_unlikely(rc != 0)) {
-		bdev_ftl_complete_io((struct ftl_bdev_io *)bdev_io->driver_ctx, rc);
+		spdk_bdev_io_complete(bdev_io, rc);
 	}
-}
-
-static int
-bdev_ftl_flush(struct ftl_bdev *ftl_bdev, struct spdk_io_channel *ch, struct ftl_bdev_io *io)
-{
-	int rc;
-
-	rc = bdev_ftl_fill_bio(ftl_bdev, ch, io);
-	if (rc) {
-		return rc;
-	}
-
-	return spdk_ftl_flush(ftl_bdev->dev, bdev_ftl_cb, io);
 }
 
 static int
@@ -246,10 +155,12 @@ _bdev_ftl_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		return bdev_ftl_writev(ftl_bdev, ch, (struct ftl_bdev_io *)bdev_io->driver_ctx);
+		return spdk_ftl_write(ftl_bdev->dev, ch, bdev_io->u.bdev.offset_blocks,
+				      bdev_io->u.bdev.num_blocks, bdev_io->u.bdev.iovs,
+				      bdev_io->u.bdev.iovcnt, bdev_ftl_cb, bdev_io);
 
 	case SPDK_BDEV_IO_TYPE_FLUSH:
-		return bdev_ftl_flush(ftl_bdev, ch, (struct ftl_bdev_io *)bdev_io->driver_ctx);
+		return spdk_ftl_flush(ftl_bdev->dev, bdev_ftl_cb, bdev_io);
 
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 	case SPDK_BDEV_IO_TYPE_RESET:
@@ -266,7 +177,7 @@ bdev_ftl_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
 	int rc = _bdev_ftl_submit_request(ch, bdev_io);
 
 	if (spdk_unlikely(rc != 0)) {
-		bdev_ftl_complete_io((struct ftl_bdev_io *)bdev_io->driver_ctx, rc);
+		spdk_bdev_io_complete(bdev_io, rc);
 	}
 }
 
@@ -291,7 +202,7 @@ bdev_ftl_get_io_channel(void *ctx)
 {
 	struct ftl_bdev *ftl_bdev = ctx;
 
-	return spdk_get_io_channel(ftl_bdev);
+	return spdk_get_io_channel(ftl_bdev->dev);
 }
 
 static void
@@ -374,26 +285,6 @@ static const struct spdk_bdev_fn_table ftl_fn_table = {
 	.dump_info_json		= bdev_ftl_dump_info_json,
 };
 
-static int
-bdev_ftl_io_channel_create_cb(void *io_device, void *ctx)
-{
-	struct ftl_io_channel *ch = ctx;
-	struct ftl_bdev *ftl_bdev = (struct ftl_bdev *)io_device;
-
-	ch->dev = ftl_bdev->dev;
-	ch->ioch = spdk_get_io_channel(ftl_bdev->dev);
-
-	return 0;
-}
-
-static void
-bdev_ftl_io_channel_destroy_cb(void *io_device, void *ctx_buf)
-{
-	struct ftl_io_channel *ch = ctx_buf;
-
-	spdk_put_io_channel(ch->ioch);
-}
-
 static void
 bdev_ftl_create_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 {
@@ -407,7 +298,7 @@ bdev_ftl_create_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 	if (status) {
 		SPDK_ERRLOG("Failed to create FTL device (%d)\n", status);
 		rc = status;
-		goto error_dev;
+		goto error;
 	}
 
 	spdk_ftl_dev_get_attrs(dev, &attrs);
@@ -427,13 +318,8 @@ bdev_ftl_create_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 	ftl_bdev->bdev.fn_table = &ftl_fn_table;
 	ftl_bdev->bdev.module = &g_ftl_if;
 
-	spdk_io_device_register(ftl_bdev, bdev_ftl_io_channel_create_cb,
-				bdev_ftl_io_channel_destroy_cb,
-				sizeof(struct ftl_io_channel),
-				ftl_bdev->bdev.name);
-
 	if (spdk_bdev_register(&ftl_bdev->bdev)) {
-		goto error_unregister;
+		goto error;
 	}
 
 	info.name = ftl_bdev->bdev.name;
@@ -442,9 +328,7 @@ bdev_ftl_create_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 	init_cb(&info, init_arg, 0);
 	return;
 
-error_unregister:
-	spdk_io_device_unregister(ftl_bdev, NULL);
-error_dev:
+error:
 	free(ftl_bdev->bdev.name);
 	free(ftl_bdev);
 
