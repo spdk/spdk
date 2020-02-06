@@ -38,12 +38,44 @@
 
 #include "ftl/ftl_io.c"
 #include "ftl/ftl_init.c"
+#include "ftl/ftl_core.c"
+#include "ftl/ftl_band.c"
+#include "ftl/ftl_rwb.c"
 
 DEFINE_STUB(ftl_trace_alloc_id, uint64_t, (struct spdk_ftl_dev *dev), 0);
+DEFINE_STUB_V(ftl_trace_completion, (struct spdk_ftl_dev *dev, const struct ftl_io *io,
+				     enum ftl_trace_completion type));
 DEFINE_STUB(spdk_bdev_io_get_append_location, uint64_t, (struct spdk_bdev_io *bdev_io), 0);
-DEFINE_STUB_V(ftl_band_acquire_lba_map, (struct ftl_band *band));
-DEFINE_STUB_V(ftl_band_release_lba_map, (struct ftl_band *band));
-DEFINE_STUB(ftl_io_channel_poll, int, (void *ioch), 0);
+DEFINE_STUB(spdk_bdev_desc_get_bdev, struct spdk_bdev *, (struct spdk_bdev_desc *desc), NULL);
+DEFINE_STUB(spdk_bdev_get_optimal_open_zones, uint32_t, (const struct spdk_bdev *b), 1);
+DEFINE_STUB(spdk_bdev_zone_appendv, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		struct iovec *iov, int iovcnt, uint64_t zone_id, uint64_t num_blocks,
+		spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+DEFINE_STUB(spdk_bdev_get_zone_size, uint64_t, (const struct spdk_bdev *b), 1024);
+DEFINE_STUB(spdk_bdev_zone_management, int, (struct spdk_bdev_desc *desc,
+		struct spdk_io_channel *ch, uint64_t zone_id, enum spdk_bdev_zone_action action,
+		spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *bdev_io));
+DEFINE_STUB_V(ftl_trace_submission, (struct spdk_ftl_dev *dev, const struct ftl_io *io,
+				     struct ftl_addr addr, size_t addr_cnt));
+DEFINE_STUB_V(ftl_trace_limits, (struct spdk_ftl_dev *dev, const size_t *limits, size_t num_free));
+DEFINE_STUB(spdk_bdev_read_blocks, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		void *buf, uint64_t offset_blocks, uint64_t num_blocks,
+		spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+DEFINE_STUB(spdk_bdev_write_blocks, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		void *buf, uint64_t offset_blocks, uint64_t num_blocks, spdk_bdev_io_completion_cb cb,
+		void *cb_arg), 0);
+DEFINE_STUB(spdk_bdev_write_blocks_with_md, int, (struct spdk_bdev_desc *desc,
+		struct spdk_io_channel *ch, void *buf, void *md, uint64_t offset_blocks,
+		uint64_t num_blocks, spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+DEFINE_STUB(spdk_bdev_writev_blocks, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		struct iovec *iov, int iovcnt, uint64_t offset_blocks, uint64_t num_blocks,
+		spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+DEFINE_STUB(spdk_bdev_get_num_blocks, uint64_t, (const struct spdk_bdev *bdev), 1024);
+DEFINE_STUB(spdk_bdev_get_md_size, uint32_t, (const struct spdk_bdev *bdev), 0);
+DEFINE_STUB(spdk_bdev_get_block_size, uint32_t, (const struct spdk_bdev *bdev), 4096);
+DEFINE_STUB(ftl_band_validate_md, bool, (struct ftl_band *band), true);
+DEFINE_STUB_V(ftl_trace_rwb_fill, (struct spdk_ftl_dev *dev, const struct ftl_io *io));
 
 struct spdk_io_channel *
 spdk_bdev_get_io_channel(struct spdk_bdev_desc *bdev_desc)
@@ -614,6 +646,158 @@ test_io_channel_create(void)
 	free_device(dev);
 }
 
+static void
+test_acquire_entry(void)
+{
+	struct spdk_ftl_dev *dev;
+	struct spdk_io_channel *ioch, **ioch_array;
+	struct ftl_io_channel *ftl_ioch;
+	struct ftl_wbuf_entry *entry, **entries;
+	uint32_t num_entries, num_io_channels = 2;
+	uint32_t ioch_idx, entry_idx, tmp_idx;
+
+	dev = setup_device(num_io_channels);
+
+	num_entries = dev->conf.rwb_size / FTL_BLOCK_SIZE;
+	entries = calloc(num_entries * num_io_channels, sizeof(*entries));
+	SPDK_CU_ASSERT_FATAL(entries != NULL);
+	ioch_array = calloc(num_io_channels, sizeof(*ioch_array));
+	SPDK_CU_ASSERT_FATAL(ioch_array != NULL);
+
+	/* Acquire whole buffer of internal entries */
+	entry_idx = 0;
+	for (ioch_idx = 0; ioch_idx < num_io_channels; ++ioch_idx) {
+		set_thread(ioch_idx);
+		ioch_array[ioch_idx] = spdk_get_io_channel(dev);
+		SPDK_CU_ASSERT_FATAL(ioch_array[ioch_idx] != NULL);
+		ftl_ioch = ftl_io_channel_get_ctx(ioch_array[ioch_idx]);
+		poll_threads();
+
+		for (tmp_idx = 0; tmp_idx < num_entries; ++tmp_idx) {
+			entries[entry_idx++] = ftl_acquire_wbuf_entry(ftl_ioch, FTL_IO_INTERNAL);
+			CU_ASSERT(entries[entry_idx - 1] != NULL);
+		}
+
+		entry = ftl_acquire_wbuf_entry(ftl_ioch, FTL_IO_INTERNAL);
+		CU_ASSERT(entry == NULL);
+	}
+
+	for (ioch_idx = 0; ioch_idx < num_io_channels; ++ioch_idx) {
+		set_thread(ioch_idx);
+
+		for (tmp_idx = 0; tmp_idx < num_entries; ++tmp_idx) {
+			ftl_release_wbuf_entry(entries[ioch_idx * num_entries + tmp_idx]);
+			entries[ioch_idx * num_entries + tmp_idx] = NULL;
+		}
+
+		spdk_put_io_channel(ioch_array[ioch_idx]);
+	}
+	poll_threads();
+
+	/* Do the same for user entries */
+	entry_idx = 0;
+	for (ioch_idx = 0; ioch_idx < num_io_channels; ++ioch_idx) {
+		set_thread(ioch_idx);
+		ioch_array[ioch_idx] = spdk_get_io_channel(dev);
+		SPDK_CU_ASSERT_FATAL(ioch_array[ioch_idx] != NULL);
+		ftl_ioch = ftl_io_channel_get_ctx(ioch_array[ioch_idx]);
+		poll_threads();
+
+		for (tmp_idx = 0; tmp_idx < num_entries; ++tmp_idx) {
+			entries[entry_idx++] = ftl_acquire_wbuf_entry(ftl_ioch, 0);
+			CU_ASSERT(entries[entry_idx - 1] != NULL);
+		}
+
+		entry = ftl_acquire_wbuf_entry(ftl_ioch, 0);
+		CU_ASSERT(entry == NULL);
+	}
+
+	for (ioch_idx = 0; ioch_idx < num_io_channels; ++ioch_idx) {
+		set_thread(ioch_idx);
+
+		for (tmp_idx = 0; tmp_idx < num_entries; ++tmp_idx) {
+			ftl_release_wbuf_entry(entries[ioch_idx * num_entries + tmp_idx]);
+			entries[ioch_idx * num_entries + tmp_idx] = NULL;
+		}
+
+		spdk_put_io_channel(ioch_array[ioch_idx]);
+	}
+	poll_threads();
+
+	/* Verify limits */
+	entry_idx = 0;
+	for (ioch_idx = 0; ioch_idx < num_io_channels; ++ioch_idx) {
+		set_thread(ioch_idx);
+		ioch_array[ioch_idx] = spdk_get_io_channel(dev);
+		SPDK_CU_ASSERT_FATAL(ioch_array[ioch_idx] != NULL);
+		ftl_ioch = ftl_io_channel_get_ctx(ioch_array[ioch_idx]);
+		poll_threads();
+
+		ftl_ioch->qdepth_limit = num_entries / 2;
+		for (tmp_idx = 0; tmp_idx < num_entries / 2; ++tmp_idx) {
+			entries[entry_idx++] = ftl_acquire_wbuf_entry(ftl_ioch, 0);
+			CU_ASSERT(entries[entry_idx - 1] != NULL);
+		}
+
+		entry = ftl_acquire_wbuf_entry(ftl_ioch, 0);
+		CU_ASSERT(entry == NULL);
+
+		for (; tmp_idx < num_entries; ++tmp_idx) {
+			entries[entry_idx++] = ftl_acquire_wbuf_entry(ftl_ioch, FTL_IO_INTERNAL);
+			CU_ASSERT(entries[entry_idx - 1] != NULL);
+		}
+	}
+
+	for (ioch_idx = 0; ioch_idx < num_io_channels; ++ioch_idx) {
+		set_thread(ioch_idx);
+
+		for (tmp_idx = 0; tmp_idx < num_entries; ++tmp_idx) {
+			ftl_release_wbuf_entry(entries[ioch_idx * num_entries + tmp_idx]);
+			entries[ioch_idx * num_entries + tmp_idx] = NULL;
+		}
+
+		spdk_put_io_channel(ioch_array[ioch_idx]);
+	}
+	poll_threads();
+
+	/* Verify acquire/release */
+	set_thread(0);
+	ioch = spdk_get_io_channel(dev);
+	SPDK_CU_ASSERT_FATAL(ioch != NULL);
+	ftl_ioch = ftl_io_channel_get_ctx(ioch);
+	poll_threads();
+
+	for (entry_idx = 0; entry_idx < num_entries; ++entry_idx) {
+		entries[entry_idx] = ftl_acquire_wbuf_entry(ftl_ioch, 0);
+		CU_ASSERT(entries[entry_idx] != NULL);
+	}
+
+	entry = ftl_acquire_wbuf_entry(ftl_ioch, 0);
+	CU_ASSERT(entry == NULL);
+
+	for (entry_idx = 0; entry_idx < num_entries / 2; ++entry_idx) {
+		ftl_release_wbuf_entry(entries[entry_idx]);
+		entries[entry_idx] = NULL;
+	}
+
+	for (; entry_idx < num_entries; ++entry_idx) {
+		entries[entry_idx - num_entries / 2] = ftl_acquire_wbuf_entry(ftl_ioch, 0);
+		CU_ASSERT(entries[entry_idx - num_entries / 2] != NULL);
+	}
+
+	for (entry_idx = 0; entry_idx < num_entries; ++entry_idx) {
+		ftl_release_wbuf_entry(entries[entry_idx]);
+		entries[entry_idx] = NULL;
+	}
+
+	spdk_put_io_channel(ioch);
+	poll_threads();
+
+	free(ioch_array);
+	free(entries);
+	free_device(dev);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -643,6 +827,8 @@ main(int argc, char **argv)
 			       test_multi_generation) == NULL
 		|| CU_add_test(suite, "test_io_channel_create",
 			       test_io_channel_create) == NULL
+		|| CU_add_test(suite, "test_acquire_entry",
+			       test_acquire_entry) == NULL
 
 	) {
 		CU_cleanup_registry();

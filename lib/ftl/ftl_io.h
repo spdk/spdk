@@ -185,6 +185,10 @@ struct ftl_io_channel {
 	/* Write buffer queues */
 	struct spdk_ring			*free_queue;
 	struct spdk_ring			*submit_queue;
+	/* Maximum number of concurrent user writes */
+	uint32_t				qdepth_limit;
+	/* Current number of concurrent user writes */
+	uint32_t				qdepth_current;
 };
 
 /* General IO descriptor */

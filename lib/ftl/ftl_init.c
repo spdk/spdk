@@ -982,6 +982,7 @@ ftl_io_channel_init_wbuf(struct ftl_io_channel *ioch)
 		return -1;
 	}
 
+	ioch->qdepth_limit = ioch->num_entries;
 	ioch->wbuf_payload = spdk_zmalloc(dev->conf.rwb_size, FTL_BLOCK_SIZE, NULL,
 					  SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (ioch->wbuf_payload == NULL) {

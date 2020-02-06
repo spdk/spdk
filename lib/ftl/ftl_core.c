@@ -160,6 +160,53 @@ ftl_remove_wptr(struct ftl_wptr *wptr)
 	ftl_wptr_free(wptr);
 }
 
+struct ftl_wbuf_entry *ftl_acquire_wbuf_entry(struct ftl_io_channel *io_channel, int io_flags);
+
+struct ftl_wbuf_entry *
+ftl_acquire_wbuf_entry(struct ftl_io_channel *io_channel, int io_flags)
+{
+	struct ftl_wbuf_entry *entry;
+	uint32_t qdepth;
+
+	if (!(io_flags & FTL_IO_INTERNAL)) {
+		qdepth = __atomic_fetch_add(&io_channel->qdepth_current, 1, __ATOMIC_SEQ_CST);
+		if (qdepth >= io_channel->qdepth_limit) {
+			__atomic_fetch_sub(&io_channel->qdepth_current, 1, __ATOMIC_SEQ_CST);
+			return NULL;
+		}
+	}
+
+	if (spdk_ring_dequeue(io_channel->free_queue, (void **)&entry, 1) != 1) {
+		if (!(io_flags & FTL_IO_INTERNAL)) {
+			__atomic_fetch_sub(&io_channel->qdepth_current, 1, __ATOMIC_SEQ_CST);
+		}
+
+		return NULL;
+	}
+
+	entry->io_flags = io_flags;
+	entry->addr.offset = FTL_ADDR_INVALID;
+	entry->lba = FTL_LBA_INVALID;
+	entry->band = NULL;
+	entry->valid = false;
+
+	return entry;
+}
+
+void ftl_release_wbuf_entry(struct ftl_wbuf_entry *entry);
+
+void
+ftl_release_wbuf_entry(struct ftl_wbuf_entry *entry)
+{
+	struct ftl_io_channel *io_channel = entry->ioch;
+
+	if (!(entry->io_flags & FTL_IO_INTERNAL)) {
+		__atomic_fetch_sub(&io_channel->qdepth_current, 1, __ATOMIC_SEQ_CST);
+	}
+
+	spdk_ring_enqueue(io_channel->free_queue, (void **)&entry, 1, NULL);
+}
+
 static void
 ftl_io_cmpl_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
