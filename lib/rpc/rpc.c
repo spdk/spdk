@@ -43,8 +43,6 @@
 #include "spdk/util.h"
 #include "spdk/version.h"
 
-#define RPC_DEFAULT_PORT	"5260"
-
 static struct sockaddr_un g_rpc_listen_addr_unix = {};
 static char g_rpc_lock_path[sizeof(g_rpc_listen_addr_unix.sun_path) + sizeof(".lock")];
 static int g_rpc_lock_fd = -1;
@@ -139,108 +137,63 @@ jsonrpc_handler(struct spdk_jsonrpc_request *request,
 int
 spdk_rpc_listen(const char *listen_addr)
 {
-	struct addrinfo		hints;
-	struct addrinfo		*res;
+	int rc;
 
 	memset(&g_rpc_listen_addr_unix, 0, sizeof(g_rpc_listen_addr_unix));
 
-	if (listen_addr[0] == '/') {
-		int rc;
-
-		g_rpc_listen_addr_unix.sun_family = AF_UNIX;
-		rc = snprintf(g_rpc_listen_addr_unix.sun_path,
-			      sizeof(g_rpc_listen_addr_unix.sun_path),
-			      "%s", listen_addr);
-		if (rc < 0 || (size_t)rc >= sizeof(g_rpc_listen_addr_unix.sun_path)) {
-			SPDK_ERRLOG("RPC Listen address Unix socket path too long\n");
-			g_rpc_listen_addr_unix.sun_path[0] = '\0';
-			return -1;
-		}
-
-		rc = snprintf(g_rpc_lock_path, sizeof(g_rpc_lock_path), "%s.lock",
-			      g_rpc_listen_addr_unix.sun_path);
-		if (rc < 0 || (size_t)rc >= sizeof(g_rpc_lock_path)) {
-			SPDK_ERRLOG("RPC lock path too long\n");
-			g_rpc_listen_addr_unix.sun_path[0] = '\0';
-			g_rpc_lock_path[0] = '\0';
-			return -1;
-		}
-
-		g_rpc_lock_fd = open(g_rpc_lock_path, O_RDONLY | O_CREAT, 0600);
-		if (g_rpc_lock_fd == -1) {
-			SPDK_ERRLOG("Cannot open lock file %s: %s\n",
-				    g_rpc_lock_path, spdk_strerror(errno));
-			g_rpc_listen_addr_unix.sun_path[0] = '\0';
-			g_rpc_lock_path[0] = '\0';
-			return -1;
-		}
-
-		rc = flock(g_rpc_lock_fd, LOCK_EX | LOCK_NB);
-		if (rc != 0) {
-			SPDK_ERRLOG("RPC Unix domain socket path %s in use. Specify another.\n",
-				    g_rpc_listen_addr_unix.sun_path);
-			g_rpc_listen_addr_unix.sun_path[0] = '\0';
-			g_rpc_lock_path[0] = '\0';
-			return -1;
-		}
-
-		/*
-		 * Since we acquired the lock, it is safe to delete the Unix socket file
-		 * if it still exists from a previous process.
-		 */
-		unlink(g_rpc_listen_addr_unix.sun_path);
-
-		g_jsonrpc_server = spdk_jsonrpc_server_listen(AF_UNIX, 0,
-				   (struct sockaddr *)&g_rpc_listen_addr_unix,
-				   sizeof(g_rpc_listen_addr_unix),
-				   jsonrpc_handler);
-		if (g_jsonrpc_server == NULL) {
-			close(g_rpc_lock_fd);
-			g_rpc_lock_fd = -1;
-			unlink(g_rpc_lock_path);
-			g_rpc_lock_path[0] = '\0';
-		}
-	} else {
-		char *tmp;
-		char *host, *port;
-
-		tmp = strdup(listen_addr);
-		if (!tmp) {
-			SPDK_ERRLOG("Out of memory\n");
-			return -1;
-		}
-
-		if (spdk_parse_ip_addr(tmp, &host, &port) < 0) {
-			free(tmp);
-			SPDK_ERRLOG("Invalid listen address '%s'\n", listen_addr);
-			return -1;
-		}
-
-		if (port == NULL) {
-			port = RPC_DEFAULT_PORT;
-		}
-
-		memset(&hints, 0, sizeof(hints));
-		hints.ai_family = AF_UNSPEC;
-		hints.ai_socktype = SOCK_STREAM;
-		hints.ai_protocol = IPPROTO_TCP;
-
-		if (getaddrinfo(host, port, &hints, &res) != 0) {
-			free(tmp);
-			SPDK_ERRLOG("Unable to look up RPC listen address '%s'\n", listen_addr);
-			return -1;
-		}
-
-		g_jsonrpc_server = spdk_jsonrpc_server_listen(res->ai_family, res->ai_protocol,
-				   res->ai_addr, res->ai_addrlen,
-				   jsonrpc_handler);
-
-		freeaddrinfo(res);
-		free(tmp);
+	g_rpc_listen_addr_unix.sun_family = AF_UNIX;
+	rc = snprintf(g_rpc_listen_addr_unix.sun_path,
+		      sizeof(g_rpc_listen_addr_unix.sun_path),
+		      "%s", listen_addr);
+	if (rc < 0 || (size_t)rc >= sizeof(g_rpc_listen_addr_unix.sun_path)) {
+		SPDK_ERRLOG("RPC Listen address Unix socket path too long\n");
+		g_rpc_listen_addr_unix.sun_path[0] = '\0';
+		return -1;
 	}
 
+	rc = snprintf(g_rpc_lock_path, sizeof(g_rpc_lock_path), "%s.lock",
+		      g_rpc_listen_addr_unix.sun_path);
+	if (rc < 0 || (size_t)rc >= sizeof(g_rpc_lock_path)) {
+		SPDK_ERRLOG("RPC lock path too long\n");
+		g_rpc_listen_addr_unix.sun_path[0] = '\0';
+		g_rpc_lock_path[0] = '\0';
+		return -1;
+	}
+
+	g_rpc_lock_fd = open(g_rpc_lock_path, O_RDONLY | O_CREAT, 0600);
+	if (g_rpc_lock_fd == -1) {
+		SPDK_ERRLOG("Cannot open lock file %s: %s\n",
+			    g_rpc_lock_path, spdk_strerror(errno));
+		g_rpc_listen_addr_unix.sun_path[0] = '\0';
+		g_rpc_lock_path[0] = '\0';
+		return -1;
+	}
+
+	rc = flock(g_rpc_lock_fd, LOCK_EX | LOCK_NB);
+	if (rc != 0) {
+		SPDK_ERRLOG("RPC Unix domain socket path %s in use. Specify another.\n",
+			    g_rpc_listen_addr_unix.sun_path);
+		g_rpc_listen_addr_unix.sun_path[0] = '\0';
+		g_rpc_lock_path[0] = '\0';
+		return -1;
+	}
+
+	/*
+	 * Since we acquired the lock, it is safe to delete the Unix socket file
+	 * if it still exists from a previous process.
+	 */
+	unlink(g_rpc_listen_addr_unix.sun_path);
+
+	g_jsonrpc_server = spdk_jsonrpc_server_listen(AF_UNIX, 0,
+			   (struct sockaddr *)&g_rpc_listen_addr_unix,
+			   sizeof(g_rpc_listen_addr_unix),
+			   jsonrpc_handler);
 	if (g_jsonrpc_server == NULL) {
 		SPDK_ERRLOG("spdk_jsonrpc_server_listen() failed\n");
+		close(g_rpc_lock_fd);
+		g_rpc_lock_fd = -1;
+		unlink(g_rpc_lock_path);
+		g_rpc_lock_path[0] = '\0';
 		return -1;
 	}
 

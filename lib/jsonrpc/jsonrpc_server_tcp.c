@@ -66,9 +66,6 @@ spdk_jsonrpc_server_listen(int domain, int protocol,
 
 	val = 1;
 	setsockopt(server->sockfd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
-	if (protocol == IPPROTO_TCP) {
-		setsockopt(server->sockfd, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val));
-	}
 
 	flag = fcntl(server->sockfd, F_GETFL);
 	if (fcntl(server->sockfd, F_SETFL, flag | O_NONBLOCK) < 0) {

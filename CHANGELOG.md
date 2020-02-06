@@ -7,6 +7,12 @@
 Add `opts_size` in `spdk_nvme_ctrlr_opts` structure in order to solve the compatiblity issue
 for different ABI version.
 
+### RPC
+
+Command line parameters `-r` and `--rpc-socket` will longer accept TCP ports. RPC server
+must now be started on a Unix domain socket. Exposing RPC on the network, as well as providing
+proper authentication (if needed) is now a responsibility of the user.
+
 ### accel
 
 A new API was added `spdk_accel_get_capabilities` that allows applications to
@@ -21,6 +27,7 @@ A new capability, compare, was added via `spdk_accel_submit_compare`.
 The software accel engine implemenation has added support for compare.
 
 ### dpdk
+
 Updated DPDK submodule to DPDK 19.11.2, which includes fixes for DPDK vulnerabilities:
 CVE-2020-10722, CVE-2020-10723, CVE-2020-10724, CVE-2020-10725, CVE-2020-10724.
 
