@@ -130,6 +130,10 @@ SPDK_STATIC_ASSERT(sizeof(struct nvme_tracker) == 4096, "nvme_tracker is not 4K"
 SPDK_STATIC_ASSERT((offsetof(struct nvme_tracker, u.sgl) & 7) == 0, "SGL must be Qword aligned");
 SPDK_STATIC_ASSERT((offsetof(struct nvme_tracker, meta_sgl) & 7) == 0, "SGL must be Qword aligned");
 
+struct nvme_pcie_poll_group {
+	struct spdk_nvme_transport_poll_group group;
+};
+
 /* PCIe transport extensions for spdk_nvme_qpair */
 struct nvme_pcie_qpair {
 	/* Submission queue tail doorbell */
@@ -2432,7 +2436,14 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 static struct spdk_nvme_transport_poll_group *
 nvme_pcie_poll_group_create(void)
 {
-	return NULL;
+	struct nvme_pcie_poll_group *group = calloc(1, sizeof(*group));
+
+	if (group == NULL) {
+		SPDK_ERRLOG("Unable to allocate poll group.\n");
+		return NULL;
+	}
+
+	return &group->group;
 }
 
 static int
@@ -2451,27 +2462,50 @@ static int
 nvme_pcie_poll_group_add(struct spdk_nvme_transport_poll_group *tgroup,
 			 struct spdk_nvme_qpair *qpair)
 {
-	return -ENOTSUP;
+	return 0;
 }
 
 static int
 nvme_pcie_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
 			    struct spdk_nvme_qpair *qpair)
 {
-	return -ENOTSUP;
+	return 0;
 }
 
 static int64_t
 nvme_pcie_poll_group_process_completions(struct spdk_nvme_transport_poll_group *tgroup,
 		uint32_t completions_per_qpair, spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb)
 {
-	return -ENOTSUP;
+	struct spdk_nvme_qpair *qpair, *tmp_qpair;
+	int32_t local_completions = 0;
+	int64_t total_completions = 0;
+
+	STAILQ_FOREACH_SAFE(qpair, &tgroup->disconnected_qpairs, poll_group_stailq, tmp_qpair) {
+		disconnected_qpair_cb(qpair, tgroup->group->ctx);
+	}
+
+	STAILQ_FOREACH_SAFE(qpair, &tgroup->connected_qpairs, poll_group_stailq, tmp_qpair) {
+		local_completions = spdk_nvme_qpair_process_completions(qpair, completions_per_qpair);
+		if (local_completions < 0) {
+			disconnected_qpair_cb(qpair, tgroup->group->ctx);
+			local_completions = 0;
+		}
+		total_completions += local_completions;
+	}
+
+	return total_completions;
 }
 
 static int
 nvme_pcie_poll_group_destroy(struct spdk_nvme_transport_poll_group *tgroup)
 {
-	return -ENOTSUP;
+	if (!STAILQ_EMPTY(&tgroup->connected_qpairs) || !STAILQ_EMPTY(&tgroup->disconnected_qpairs)) {
+		return -EBUSY;
+	}
+
+	free(tgroup);
+
+	return 0;
 }
 
 const struct spdk_nvme_transport_ops pcie_ops = {
