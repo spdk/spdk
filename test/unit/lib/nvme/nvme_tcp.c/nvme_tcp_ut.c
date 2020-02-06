@@ -44,6 +44,8 @@ SPDK_LOG_REGISTER_COMPONENT("nvme", SPDK_LOG_NVME);
 
 DEFINE_STUB(nvme_qpair_submit_request,
 	    int, (struct spdk_nvme_qpair *qpair, struct nvme_request *req), 0);
+DEFINE_STUB(spdk_nvme_qpair_process_completions, int32_t, (struct spdk_nvme_qpair *qpair,
+		uint32_t max_completions), 0);
 
 DEFINE_STUB(spdk_sock_set_priority,
 	    int, (struct spdk_sock *sock, int priority), 0);

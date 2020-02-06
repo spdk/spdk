@@ -443,7 +443,16 @@ nvme_transport_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
 
 	rc = tgroup->transport->ops.poll_group_remove(tgroup, qpair);
 	if (rc == 0) {
+		if (qpair->poll_group_tailq_head == &tgroup->connected_qpairs) {
+			STAILQ_REMOVE(&tgroup->connected_qpairs, qpair, spdk_nvme_qpair, poll_group_stailq);
+		} else if (qpair->poll_group_tailq_head == &tgroup->disconnected_qpairs) {
+			STAILQ_REMOVE(&tgroup->disconnected_qpairs, qpair, spdk_nvme_qpair, poll_group_stailq);
+		} else {
+			return -ENOENT;
+		}
+
 		qpair->poll_group = NULL;
+		qpair->poll_group_tailq_head = NULL;
 	}
 
 	return rc;

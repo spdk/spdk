@@ -64,6 +64,10 @@ struct nvme_tcp_ctrlr {
 	struct spdk_nvme_ctrlr			ctrlr;
 };
 
+struct nvme_tcp_poll_group {
+	struct spdk_nvme_transport_poll_group group;
+};
+
 /* NVMe TCP qpair extensions for spdk_nvme_qpair */
 struct nvme_tcp_qpair {
 	struct spdk_nvme_qpair			qpair;
@@ -1709,7 +1713,14 @@ nvme_tcp_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 static struct spdk_nvme_transport_poll_group *
 nvme_tcp_poll_group_create(void)
 {
-	return NULL;
+	struct nvme_tcp_poll_group *group = calloc(1, sizeof(*group));
+
+	if (group == NULL) {
+		SPDK_ERRLOG("Unable to allocate poll group.\n");
+		return NULL;
+	}
+
+	return &group->group;
 }
 
 static int
@@ -1728,27 +1739,50 @@ static int
 nvme_tcp_poll_group_add(struct spdk_nvme_transport_poll_group *tgroup,
 			struct spdk_nvme_qpair *qpair)
 {
-	return -ENOTSUP;
+	return 0;
 }
 
 static int
 nvme_tcp_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
 			   struct spdk_nvme_qpair *qpair)
 {
-	return -ENOTSUP;
+	return 0;
 }
 
 static int64_t
 nvme_tcp_poll_group_process_completions(struct spdk_nvme_transport_poll_group *tgroup,
 					uint32_t completions_per_qpair, spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb)
 {
-	return -ENOTSUP;
+	struct spdk_nvme_qpair *qpair, *tmp_qpair;
+	int32_t local_completions = 0;
+	int64_t total_completions = 0;
+
+	STAILQ_FOREACH_SAFE(qpair, &tgroup->disconnected_qpairs, poll_group_stailq, tmp_qpair) {
+		disconnected_qpair_cb(qpair, tgroup->group->ctx);
+	}
+
+	STAILQ_FOREACH_SAFE(qpair, &tgroup->connected_qpairs, poll_group_stailq, tmp_qpair) {
+		local_completions = spdk_nvme_qpair_process_completions(qpair, completions_per_qpair);
+		if (local_completions < 0) {
+			disconnected_qpair_cb(qpair, tgroup->group->ctx);
+			local_completions = 0;
+		}
+		total_completions += local_completions;
+	}
+
+	return total_completions;
 }
 
 static int
 nvme_tcp_poll_group_destroy(struct spdk_nvme_transport_poll_group *tgroup)
 {
-	return -ENOTSUP;
+	if (!STAILQ_EMPTY(&tgroup->connected_qpairs) || !STAILQ_EMPTY(&tgroup->disconnected_qpairs)) {
+		return -EBUSY;
+	}
+
+	free(tgroup);
+
+	return 0;
 }
 
 const struct spdk_nvme_transport_ops tcp_ops = {
