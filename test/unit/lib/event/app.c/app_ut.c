@@ -49,7 +49,7 @@ DEFINE_STUB_V(spdk_rpc_register_alias_deprecated, (const char *method, const cha
 DEFINE_STUB_V(spdk_rpc_set_state, (uint32_t state));
 DEFINE_STUB(spdk_rpc_get_state, uint32_t, (void), SPDK_RPC_RUNTIME);
 DEFINE_STUB_V(spdk_app_json_config_load, (const char *json_config_file, const char *rpc_addr,
-		spdk_subsystem_init_fn cb_fn, void *cb_arg));
+		spdk_subsystem_init_fn cb_fn, void *cb_arg, bool stop_on_error));
 
 static void
 unittest_usage(void)

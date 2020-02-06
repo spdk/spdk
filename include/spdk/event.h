@@ -91,6 +91,7 @@ struct spdk_app_opts {
 	const char *name;
 	const char *config_file;
 	const char *json_config_file;
+	bool json_config_ignore_errors;
 	const char *rpc_addr; /* Can be UNIX domain socket path or IP address + TCP port */
 	const char *reactor_mask;
 	const char *tpoint_group_mask;

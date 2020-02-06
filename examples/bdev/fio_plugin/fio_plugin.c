@@ -204,7 +204,7 @@ spdk_fio_bdev_init_start(void *arg)
 
 	if (g_json_config_file != NULL) {
 		spdk_app_json_config_load(g_json_config_file, SPDK_DEFAULT_RPC_ADDR,
-					  spdk_fio_bdev_init_done, done);
+					  spdk_fio_bdev_init_done, done, true);
 	} else {
 		spdk_subsystem_init(spdk_fio_bdev_init_done, done);
 	}

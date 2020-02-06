@@ -144,7 +144,8 @@ void spdk_subsystem_init_next(int rc);
 void spdk_subsystem_fini_next(void);
 void spdk_subsystem_config(FILE *fp);
 void spdk_app_json_config_load(const char *json_config_file, const char *rpc_addr,
-			       spdk_subsystem_init_fn cb_fn, void *cb_arg);
+			       spdk_subsystem_init_fn cb_fn, void *cb_arg,
+			       bool stop_on_error);
 
 /**
  * Save pointed \c subsystem configuration to the JSON write context \c w. In case of

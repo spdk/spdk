@@ -6,6 +6,11 @@
 A new function, `spdk_vmd_fini`, has been added. It releases all resources acquired by the VMD
 library through the `spdk_vmd_init` call.
 
+### Miscellaneous
+
+`--json-ignore-init-errors` command line param has been added to ignore initialization errors
+on JSON config load.
+
 ## v20.01
 
 ### bdev

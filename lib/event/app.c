@@ -59,6 +59,7 @@
 struct spdk_app {
 	struct spdk_conf		*config;
 	const char			*json_config_file;
+	bool				json_config_ignore_errors;
 	const char			*rpc_addr;
 	int				shm_id;
 	spdk_app_shutdown_cb		shutdown_cb;
@@ -128,6 +129,8 @@ static const struct option g_cmdline_options[] = {
 	{"max-delay",			required_argument,	NULL, MAX_REACTOR_DELAY_OPT_IDX},
 #define JSON_CONFIG_OPT_IDX		262
 	{"json",			required_argument,	NULL, JSON_CONFIG_OPT_IDX},
+#define JSON_CONFIG_IGNORE_INIT_ERRORS_IDX	263
+	{"json-ignore-init-errors",	no_argument,		NULL, JSON_CONFIG_IGNORE_INIT_ERRORS_IDX},
 };
 
 /* Global section */
@@ -561,7 +564,7 @@ bootstrap_fn(void *arg1)
 	if (g_spdk_app.json_config_file) {
 		g_delay_subsystem_init = false;
 		spdk_app_json_config_load(g_spdk_app.json_config_file, g_spdk_app.rpc_addr, spdk_app_start_rpc,
-					  NULL);
+					  NULL, !g_spdk_app.json_config_ignore_errors);
 	} else {
 		if (!g_delay_subsystem_init) {
 			spdk_subsystem_init(spdk_app_start_rpc, NULL);
@@ -626,6 +629,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
 	memset(&g_spdk_app, 0, sizeof(g_spdk_app));
 	g_spdk_app.config = config;
 	g_spdk_app.json_config_file = opts->json_config_file;
+	g_spdk_app.json_config_ignore_errors = opts->json_config_ignore_errors;
 	g_spdk_app.rpc_addr = opts->rpc_addr;
 	g_spdk_app.shm_id = opts->shm_id;
 	g_spdk_app.shutdown_cb = opts->shutdown_cb;
@@ -728,6 +732,8 @@ usage(void (*app_usage)(void))
 	       g_default_opts.config_file != NULL ? g_default_opts.config_file : "none");
 	printf("     --json <config>       JSON config file (default %s)\n",
 	       g_default_opts.json_config_file != NULL ? g_default_opts.json_config_file : "none");
+	printf("     --json-ignore-init-errors\n");
+	printf("                           don't exit on invalid config entry\n");
 	printf(" -d, --limit-coredump      do not set max coredump size to RLIM_INFINITY\n");
 	printf(" -g, --single-file-segments\n");
 	printf("                           force creating just one hugetlbfs file\n");
@@ -836,6 +842,9 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			break;
 		case JSON_CONFIG_OPT_IDX:
 			opts->json_config_file = optarg;
+			break;
+		case JSON_CONFIG_IGNORE_INIT_ERRORS_IDX:
+			opts->json_config_ignore_errors = true;
 			break;
 		case LIMIT_COREDUMP_OPT_IDX:
 			opts->enable_coredump = false;

@@ -88,6 +88,7 @@ struct load_json_config_ctx {
 	struct spdk_thread *thread;
 	spdk_subsystem_init_fn cb_fn;
 	void *cb_arg;
+	bool stop_on_error;
 
 	/* Current subsystem */
 	struct spdk_json_val *subsystems; /* "subsystems" array */
@@ -189,6 +190,9 @@ rpc_client_poller(void *arg)
 
 	if (resp->error) {
 		SPDK_ERRLOG("error response: %*s", (int)resp->error->len, (char *)resp->error->start);
+	}
+
+	if (resp->error && ctx->stop_on_error) {
 		spdk_jsonrpc_client_free_response(resp);
 		spdk_app_json_config_load_done(ctx, -EINVAL);
 	} else {
@@ -302,8 +306,7 @@ static void
 spdk_app_json_config_load_subsystem_config_entry_next(struct load_json_config_ctx *ctx,
 		struct spdk_jsonrpc_client_response *resp)
 {
-	/* Don't care about the response as long it is not
-	 * an error (which is validated by poller) */
+	/* Don't care about the response */
 	spdk_jsonrpc_client_free_response(resp);
 
 	ctx->config_it = spdk_json_next(ctx->config_it);
@@ -530,7 +533,8 @@ err:
 
 void
 spdk_app_json_config_load(const char *json_config_file, const char *rpc_addr,
-			  spdk_subsystem_init_fn cb_fn, void *cb_arg)
+			  spdk_subsystem_init_fn cb_fn, void *cb_arg,
+			  bool stop_on_error)
 {
 	struct load_json_config_ctx *ctx = calloc(1, sizeof(*ctx));
 	int rc;
@@ -543,6 +547,7 @@ spdk_app_json_config_load(const char *json_config_file, const char *rpc_addr,
 
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
+	ctx->stop_on_error = stop_on_error;
 	ctx->thread = spdk_get_thread();
 
 	rc = spdk_app_json_config_read(json_config_file, ctx);
