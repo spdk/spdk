@@ -1000,7 +1000,7 @@ function autotest_cleanup()
 	$rootdir/scripts/setup.sh cleanup
 	if [ $(uname -s) = "Linux" ]; then
 		if grep -q '#define SPDK_CONFIG_IGB_UIO_DRIVER 1' $rootdir/include/spdk/config.h; then
-			rmmod igb_uio
+			[[ -e /sys/module/igb_uio ]] && rmmod igb_uio
 		else
 			modprobe -r uio_pci_generic
 		fi
