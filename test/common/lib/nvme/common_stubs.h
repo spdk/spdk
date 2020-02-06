@@ -95,6 +95,8 @@ DEFINE_STUB_V(spdk_nvme_trid_populate_transport, (struct spdk_nvme_transport_id 
 		enum spdk_nvme_transport_type trtype));
 DEFINE_STUB(nvme_get_transport, const struct spdk_nvme_transport *, (const char *transport_name),
 	    NULL);
+DEFINE_STUB(spdk_nvme_qpair_process_completions, int32_t, (struct spdk_nvme_qpair *qpair,
+		uint32_t max_completions), 0);
 
 /* Fabric transports only */
 DEFINE_STUB_V(nvme_ctrlr_disconnect_qpair, (struct spdk_nvme_qpair *qpair));
