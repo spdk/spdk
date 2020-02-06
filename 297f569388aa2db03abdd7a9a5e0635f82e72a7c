@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ad666d4b_37ca369c",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1759,
+      "author": {
+        "id": 1017518
+      },
+      "writtenOn": "2020-02-06T07:17:52Z",
+      "side": 1,
+      "message": "Hi Jim, thanks very much for your careful review. I will fix it in next version.",
+      "parentUuid": "ca4259f2_8f0c8537",
+      "revId": "297f569388aa2db03abdd7a9a5e0635f82e72a7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "60de6da3_c0273e38",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 1
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "16765f09_593b26b3",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1769,
+      "author": {
+        "id": 1017518
+      },
+      "writtenOn": "2020-02-06T07:17:52Z",
+      "side": 1,
+      "message": "Hi Jim, thanks for your valuable comments. \nFor the second comment, I will fix it in the next version.\nFor the first comment, Alexey gave me similar comments in our internal review. However, if we just call nvme_ctrlr_identify_ns(ns), we still have to change 2 files: 1) remove \"static\" of nvme_ctrlr_identify_ns, 2) add its definition in a header file. In addition, similar as \"nvme_ns_construct\", the function name of \"nvme_ns_update\" is more obvious than that of \"nvme_ctrlr_identify_ns\", which is called by other functions now. In future, if we need to add more codes for updating ns, we may still have to add a new function. So we suggest to use a new API here. Of course, if you think we should not involve new API now, we can reuse \"nvme_ctrlr_identify_ns\" by removing its static property. Thanks!",
+      "parentUuid": "60de6da3_c0273e38",
+      "revId": "297f569388aa2db03abdd7a9a5e0635f82e72a7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e1d0971f_717c32ab",
         "filename": "module/bdev/nvme/bdev_nvme.c",
         "patchSetId": 1
@@ -47,6 +83,24 @@
       "writtenOn": "2020-01-15T23:13:49Z",
       "side": 1,
       "message": "Open Channel SSD (OCSSD) support has a feature where a namespace can be split into multiple bdevs - but capacity changes aren\u0027t going to happen on OCSSDs, and even if they did, it would be handled differently than the code you have here\n\nso let\u0027s just add a \u0026\u0026 ns-\u003etype \u003d\u003d NVME_BDEV_NS_STANDARD, which will ensure this code only gets executed for \u0027standard\u0027 controllers\n\nthen also remove the TAILQ_FOREACH_SAFE - in the standard case, there is only ever one bdev per ns, so you can just do TAILQ_FIRST() instead - I think that makes the code more clear",
+      "revId": "297f569388aa2db03abdd7a9a5e0635f82e72a7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a2f45ea6_ccc2e72b",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1097,
+      "author": {
+        "id": 1017518
+      },
+      "writtenOn": "2020-02-06T07:17:52Z",
+      "side": 1,
+      "message": "Hi Jim, thanks for your valuable comment! I will fix it in the next version.",
+      "parentUuid": "e1d0971f_717c32ab",
       "revId": "297f569388aa2db03abdd7a9a5e0635f82e72a7c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
