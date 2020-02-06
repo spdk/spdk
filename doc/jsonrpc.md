@@ -560,7 +560,6 @@ Example response:
   "id": 1,
   "result": {
     "tick_rate": 2400000000,
-    "ticks": 2523538189523655,
     "threads": [
       {
         "name": "app_thread",
@@ -613,6 +612,54 @@ Example response:
   "jsonrpc": "2.0",
   "id": 1,
   "result": true
+}
+~~~
+
+## thread_get_pollers {#rpc_thread_get_pollers}
+
+Retrieve current pollers of all the threads.
+
+### Parameters
+
+This method has no parameters.
+
+### Response
+
+The response is an array of objects containing pollers of all the threads.
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "thread_get_pollers",
+  "id": 1
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "tick_rate": 2500000000,
+    "threads": [
+      {
+        "name": "app_thread",
+        "active_pollers": [],
+        "timed_pollers": [
+          {
+            "name": "spdk_rpc_subsystem_poll",
+            "state": "waiting",
+            "period_ticks": 10000000
+          }
+        ],
+        "paused_pollers": []
+      }
+    ]
+  }
 }
 ~~~
 

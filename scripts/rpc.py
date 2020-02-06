@@ -2283,6 +2283,13 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-m', '--cpumask', help='cpumask for this thread')
     p.set_defaults(func=thread_set_cpumask)
 
+    def thread_get_pollers(args):
+        print_dict(rpc.app.thread_get_pollers(args.client))
+
+    p = subparsers.add_parser(
+        'thread_get_pollers', help='Display current pollers of all the threads')
+    p.set_defaults(func=thread_get_pollers)
+
     def env_dpdk_get_mem_stats(args):
         print_dict(rpc.env_dpdk.env_dpdk_get_mem_stats(args.client))
 

@@ -993,6 +993,25 @@ spdk_poller_resume(struct spdk_poller *poller)
 	poller->state = SPDK_POLLER_STATE_WAITING;
 }
 
+const char *
+spdk_poller_state_str(enum spdk_poller_state state)
+{
+	switch (state) {
+	case SPDK_POLLER_STATE_WAITING:
+		return "waiting";
+	case SPDK_POLLER_STATE_RUNNING:
+		return "running";
+	case SPDK_POLLER_STATE_UNREGISTERED:
+		return "unregistered";
+	case SPDK_POLLER_STATE_PAUSING:
+		return "pausing";
+	case SPDK_POLLER_STATE_PAUSED:
+		return "paused";
+	default:
+		return NULL;
+	}
+}
+
 struct call_thread {
 	struct spdk_thread *cur_thread;
 	spdk_msg_fn fn;

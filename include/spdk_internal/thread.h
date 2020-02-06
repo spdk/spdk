@@ -111,4 +111,6 @@ struct spdk_thread {
 	uint8_t				ctx[0];
 };
 
+const char *spdk_poller_state_str(enum spdk_poller_state state);
+
 #endif /* SPDK_THREAD_INTERNAL_H_ */

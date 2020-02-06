@@ -58,3 +58,12 @@ def thread_set_cpumask(client, id, cpumask):
     """
     params = {'id': id, 'cpumask': cpumask}
     return client.call('thread_set_cpumask', params)
+
+
+def thread_get_pollers(client):
+    """Query current pollers.
+
+    Returns:
+        Current pollers.
+    """
+    return client.call('thread_get_pollers')

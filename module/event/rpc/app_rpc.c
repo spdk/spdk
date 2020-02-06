@@ -42,6 +42,7 @@
 
 #include "spdk_internal/log.h"
 #include "spdk_internal/event.h"
+#include "spdk_internal/thread.h"
 
 struct rpc_spdk_kill_instance {
 	char *sig_name;
@@ -171,6 +172,27 @@ rpc_thread_get_stats_done(void *arg)
 }
 
 static void
+rpc_thread_get_stats_for_each(struct spdk_jsonrpc_request *request, spdk_msg_fn fn)
+{
+	struct rpc_get_stats_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Memory allocation error");
+		return;
+	}
+	ctx->request = request;
+
+	ctx->w = spdk_jsonrpc_begin_result(ctx->request);
+	spdk_json_write_object_begin(ctx->w);
+	spdk_json_write_named_uint64(ctx->w, "tick_rate", spdk_get_ticks_hz());
+	spdk_json_write_named_array_begin(ctx->w, "threads");
+
+	spdk_for_each_thread(fn, ctx, rpc_thread_get_stats_done);
+}
+
+static void
 rpc_thread_get_stats(void *arg)
 {
 	struct rpc_get_stats_ctx *ctx = arg;
@@ -193,31 +215,74 @@ static void
 spdk_rpc_thread_get_stats(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
-	struct rpc_get_stats_ctx *ctx;
-
 	if (params) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "'thread_get_stats' requires no arguments");
 		return;
 	}
 
-	ctx = calloc(1, sizeof(*ctx));
-	if (!ctx) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 "Memory allocation error");
-		return;
-	}
-	ctx->request = request;
-
-	ctx->w = spdk_jsonrpc_begin_result(ctx->request);
-	spdk_json_write_object_begin(ctx->w);
-	spdk_json_write_named_uint64(ctx->w, "tick_rate", spdk_get_ticks_hz());
-	spdk_json_write_named_array_begin(ctx->w, "threads");
-
-	spdk_for_each_thread(rpc_thread_get_stats, ctx, rpc_thread_get_stats_done);
+	rpc_thread_get_stats_for_each(request, rpc_thread_get_stats);
 }
 
 SPDK_RPC_REGISTER("thread_get_stats", spdk_rpc_thread_get_stats, SPDK_RPC_RUNTIME)
+
+static void
+rpc_get_poller(struct spdk_poller *poller, struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "name", poller->name);
+	spdk_json_write_named_string(w, "state", spdk_poller_state_str(poller->state));
+	if (poller->period_ticks) {
+		spdk_json_write_named_uint64(w, "period_ticks", poller->period_ticks);
+	}
+	spdk_json_write_object_end(w);
+}
+
+static void
+rpc_thread_get_pollers(void *arg)
+{
+	struct rpc_get_stats_ctx *ctx = arg;
+	struct spdk_thread *thread = spdk_get_thread();
+	struct spdk_poller *poller;
+
+	spdk_json_write_object_begin(ctx->w);
+	spdk_json_write_named_string(ctx->w, "name", spdk_thread_get_name(thread));
+
+	spdk_json_write_named_array_begin(ctx->w, "active_pollers");
+	TAILQ_FOREACH(poller, &thread->active_pollers, tailq) {
+		rpc_get_poller(poller, ctx->w);
+	}
+	spdk_json_write_array_end(ctx->w);
+
+	spdk_json_write_named_array_begin(ctx->w, "timed_pollers");
+	TAILQ_FOREACH(poller, &thread->timed_pollers, tailq) {
+		rpc_get_poller(poller, ctx->w);
+	}
+	spdk_json_write_array_end(ctx->w);
+
+	spdk_json_write_named_array_begin(ctx->w, "paused_pollers");
+	TAILQ_FOREACH(poller, &thread->paused_pollers, tailq) {
+		rpc_get_poller(poller, ctx->w);
+	}
+	spdk_json_write_array_end(ctx->w);
+
+	spdk_json_write_object_end(ctx->w);
+}
+
+static void
+spdk_rpc_thread_get_pollers(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
+{
+	if (params) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "'thread_get_pollers' requires no arguments");
+		return;
+	}
+
+	rpc_thread_get_stats_for_each(request, rpc_thread_get_pollers);
+}
+
+SPDK_RPC_REGISTER("thread_get_pollers", spdk_rpc_thread_get_pollers, SPDK_RPC_RUNTIME)
 
 static void
 rpc_framework_get_reactors_done(void *arg1, void *arg2)
