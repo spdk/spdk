@@ -245,7 +245,6 @@ ftl_reloc_free_move(struct ftl_band_reloc *breloc, struct ftl_reloc_move *move)
 	spdk_dma_free(move->data);
 	memset(move, 0, sizeof(*move));
 	move->state = FTL_RELOC_STATE_READ;
-	spdk_ring_enqueue(breloc->move_queue, (void **)&move, 1, NULL);
 }
 
 static void
@@ -271,6 +270,7 @@ ftl_reloc_write_cb(struct ftl_io *io, void *arg, int status)
 	}
 
 	ftl_reloc_free_move(breloc, move);
+	spdk_ring_enqueue(breloc->move_queue, (void **)&move, 1, NULL);
 }
 
 static void
@@ -473,6 +473,7 @@ ftl_reloc_write(struct ftl_band_reloc *breloc, struct ftl_reloc_move *move)
 					     FTL_IO_WRITE, io_flags);
 		if (!move->io) {
 			ftl_reloc_free_move(breloc, move);
+			spdk_ring_enqueue(breloc->move_queue, (void **)&move, 1, NULL);
 			return -ENOMEM;
 		}
 	}
@@ -503,6 +504,7 @@ ftl_reloc_read(struct ftl_band_reloc *breloc, struct ftl_reloc_move *move)
 	move->io = ftl_reloc_io_init(breloc, move, ftl_reloc_read_cb, FTL_IO_READ, 0);
 	if (!move->io) {
 		ftl_reloc_free_move(breloc, move);
+		spdk_ring_enqueue(breloc->move_queue, (void **)&move, 1, NULL);
 		SPDK_ERRLOG("Failed to initialize io for relocation.");
 		return -1;
 	}
