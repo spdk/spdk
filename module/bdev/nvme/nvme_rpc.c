@@ -280,10 +280,12 @@ rpc_decode_cmdbuf(const struct spdk_json_val *val, void *out)
 
 	rc = spdk_base64_urlsafe_decode(cmdbuf, &raw_len, text);
 	if (rc) {
+		free(cmdbuf);
 		goto out;
 	}
 	if (raw_len != sizeof(*cmdbuf)) {
 		rc = -EINVAL;
+		free(cmdbuf);
 		goto out;
 	}
 
