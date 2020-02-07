@@ -30,13 +30,13 @@ from the oldest band to the youngest.
              +--------------+        +--------------+                        +--------------+
     band 1   |   zone 1     +--------+    zone 1    +---- --- --- --- --- ---+     zone 1   |
              +--------------+        +--------------+                        +--------------+
-    band 2   |   zone 2    +--------+     zone 2    +---- --- --- --- --- ---+     zone 2   |
+    band 2   |   zone 2     +--------+     zone 2   +---- --- --- --- --- ---+     zone 2   |
              +--------------+        +--------------+                        +--------------+
-    band 3   |   zone 3    +--------+     zone 3    +---- --- --- --- --- ---+     zone 3   |
+    band 3   |   zone 3     +--------+     zone 3   +---- --- --- --- --- ---+     zone 3   |
              +--------------+        +--------------+                        +--------------+
              |     ...      |        |     ...      |                        |     ...      |
              +--------------+        +--------------+                        +--------------+
-    band m   |   zone m    +--------+     zone m    +---- --- --- --- --- ---+     zone m   |
+    band m   |   zone m     +--------+     zone m   +---- --- --- --- --- ---+     zone m   |
              +--------------+        +--------------+                        +--------------+
              |     ...      |        |     ...      |                        |     ...      |
              +--------------+        +--------------+                        +--------------+
@@ -268,7 +268,7 @@ $ scripts/rpc.py bdev_ftl_create -b ftl0 -d nvme0n1
 Zone block bdev is a bdev adapter between regular `bdev` and `bdev_zone`. It emulates a zoned
 interface on top of a regular block device.
 
-In order to create FTL on to of a regular bdev:
+In order to create FTL on top of a regular bdev:
 1) Create regular bdev e.g. `bdev_nvme`, `bdev_null`, `bdev_malloc`
 2) Create zone block bdev on top of a regular bdev created in step 1 (user could specify zone capacity
 and optimal number of open zones)
