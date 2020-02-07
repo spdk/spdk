@@ -49,6 +49,10 @@
 #include "ftl_io.h"
 #include "ftl_trace.h"
 
+#ifdef SPDK_CONFIG_PMDK
+#include "libpmem.h"
+#endif /* SPDK_CONFIG_PMDK */
+
 struct spdk_ftl_dev;
 struct ftl_band;
 struct ftl_zone;
@@ -376,6 +380,18 @@ ftl_addr_packed(const struct spdk_ftl_dev *dev)
 	return dev->addr_len < 32;
 }
 
+static inline void
+ftl_l2p_lba_persist(const struct spdk_ftl_dev *dev, uint64_t lba)
+{
+#ifdef SPDK_CONFIG_PMDK
+	size_t ftl_addr_size = ftl_addr_packed(dev) ? 4 : 8;
+	pmem_persist((char *)dev->l2p + (lba * ftl_addr_size), ftl_addr_size);
+#else /* SPDK_CONFIG_PMDK */
+	SPDK_ERRLOG("Libpmem not available, cannot flush l2p to pmem\n");
+	assert(0);
+#endif /* SPDK_CONFIG_PMDK */
+}
+
 static inline int
 ftl_addr_invalid(struct ftl_addr addr)
 {
@@ -452,6 +468,10 @@ ftl_l2p_set(struct spdk_ftl_dev *dev, uint64_t lba, struct ftl_addr addr)
 		_ftl_l2p_set32(dev->l2p, lba, ftl_addr_to_packed(dev, addr).offset);
 	} else {
 		_ftl_l2p_set64(dev->l2p, lba, addr.offset);
+	}
+
+	if (dev->l2p_pmem_len != 0) {
+		ftl_l2p_lba_persist(dev, lba);
 	}
 }
 
