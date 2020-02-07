@@ -2099,6 +2099,16 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('name', help='Name of the Open Channel bdev')
     p.set_defaults(func=bdev_ocssd_delete)
 
+    # accel framework
+    def accel_set_module(args):
+        rpc.accel.accel_set_module(args.client,
+                                   module=args.module)
+
+    p = subparsers.add_parser('accel_set_module',
+                              help='Set module option for the accelerator framework')
+    p.add_argument('-m', '--module', type=int, help='0 = auto-select, 1= Software, 2 = CBDMA')
+    p.set_defaults(func=accel_set_module)
+
     # ioat
     def ioat_scan_accel_engine(args):
         pci_whitelist = []

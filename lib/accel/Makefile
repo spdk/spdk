@@ -35,6 +35,6 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 LIBNAME = accel
-C_SRCS = accel_engine.c
+C_SRCS = accel_engine.c accel_engine_rpc.c
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

@@ -56,7 +56,7 @@ DEPDIRS-reduce := log util
 DEPDIRS-thread := log util
 
 DEPDIRS-blob := log util thread
-DEPDIRS-accel := thread
+DEPDIRS-accel := thread log rpc thread util $(JSON_LIBS)
 DEPDIRS-jsonrpc := log util json
 DEPDIRS-virtio := log util json thread
 
