@@ -337,7 +337,6 @@ vhost.c:1006:session_shutdown: *NOTICE*: Exiting
 We can see that `sdb` and `sdc` are SPDK vhost-scsi LUNs, and `vda` is SPDK a
 vhost-blk disk.
 
-
 # Advanced Topics {#vhost_advanced_topics}
 
 ## Multi-Queue Block Layer (blk-mq) {#vhost_multiqueue}

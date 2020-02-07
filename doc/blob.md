@@ -87,7 +87,6 @@ The Blobstore defines a hierarchy of storage abstractions as follows.
                                         35,
                                         { alignment: 'center', fill: 'white' });
 
-
         for (var j = 0; j < 4; j++) {
             let pageWidth = 100;
             let pageHeight = canvasHeight;

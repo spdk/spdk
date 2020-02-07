@@ -1908,7 +1908,6 @@ See the [Virtio SCSI](http://www.spdk.io/doc/virtio.html) documentation and [Get
 
 The vhost target application now supports live migration between QEMU instances.
 
-
 ## v17.07: Build system improvements, userspace vhost-blk target, and GPT bdev
 
 ### Build System
@@ -1984,7 +1983,6 @@ This analysis provides:
   would be reasonable to provide for SPDK to keep up with a current storage workload.
 
 See the VTune Amplifier documentation for more information.
-
 
 ## v17.03: Blobstore and userspace vhost-scsi target
 
@@ -2224,7 +2222,6 @@ This release adds a user-space driver with support for the Intel I/O Acceleratio
   - Scattered payload support - an alternate API to provide I/O buffers via a sequence of callbacks
   - Declarations and `nvme/identify` support for Intel SSD DC P3700 series vendor-specific log pages and features
 - Updated to support DPDK 2.2.0
-
 
 ## v1.0.0: NVMe user-space driver
 

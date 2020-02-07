@@ -55,7 +55,6 @@ And remote devices accessed via NVMe over Fabrics will look like this:
 
     filename=trtype=RDMA adrfam=IPv4 traddr=192.168.100.8 trsvcid=4420 ns=1
 
-
 **Note**: The specification of the PCIe address should not use the normal ':'
 and instead only use '.'. This is a limitation in fio - it splits filenames on
 ':'. Also, the NVMe namespaces start at 1, not 0, and the namespace must be

@@ -2227,7 +2227,6 @@ Example response:
 }
 ~~~
 
-
 ## bdev_pmem_create_pool {#rpc_bdev_pmem_create_pool}
 
 Create a @ref bdev_config_pmem blk pool file. It is equivalent of following `pmempool create` command:
@@ -4642,7 +4641,6 @@ ctrlr                   | Required | string      | Controller name
 io_queues               | Required | number      | Number between 1 and 31 of IO queues for the controller
 cpumask                 | Optional | string      | @ref cpu_mask for this controller
 
-
 ### Example
 
 Example request:
@@ -4724,7 +4722,6 @@ bdev_name               | Required | string      | Name of bdev to expose block 
 readonly                | Optional | boolean     | If true, this target will be read only (default: false)
 cpumask                 | Optional | string      | @ref cpu_mask for this controller
 
-
 ### Example
 
 Example request:
@@ -4763,7 +4760,6 @@ specified by name.
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Optional | string      | Vhost controller name
-
 
 ### Response {#rpc_vhost_get_controllers_response}
 
@@ -5525,7 +5521,6 @@ name                    | Required | string      | RAID bdev name
 strip_size_kb           | Required | number      | Strip size in KB
 raid_level              | Required | number      | RAID level
 base_bdevs              | Required | string      | Base bdevs name, whitespace separated list in quotes
-
 
 ### Example
 

@@ -51,13 +51,11 @@ metadata is split in two parts:
    sequence number, etc.), located at the beginning blocks of the band,
  * the tail part, containing the address map and the valid map, located at the end of the band.
 
-
        head metadata               band's data               tail metadata
     +-------------------+-------------------------------+------------------------+
     |zone 1 |...|zone n |...|...|zone 1 |...|           | ... |zone  m-1 |zone  m|
     |block 1|   |block 1|   |   |block x|   |           |     |block y   |block y|
     +-------------------+-------------+-----------------+------------------------+
-
 
 Bands are written sequentially (in a way that was described earlier). Before a band can be written
 to, all of its zones need to be erased. During that time, the band is considered to be in a `PREP`

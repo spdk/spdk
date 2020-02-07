@@ -47,7 +47,6 @@ Param    | Long Param             | Type     | Default                | Descript
 |        | --huge-dir             | string   | the first discovered   | allocate hugepages from a specific mount
 -L       | --logflag              | string   |                        | @ref cmd_arg_debug_log_flags
 
-
 ### Configuration file {#cmd_arg_config_file}
 
 Historically, the SPDK applications were configured using a configuration file.

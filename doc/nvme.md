@@ -280,7 +280,6 @@ Example: identical shm_id and non-overlapping core masks
 
 @sa spdk_nvme_probe, spdk_nvme_ctrlr_process_admin_completions
 
-
 # NVMe Hotplug {#nvme_hotplug}
 
 At the NVMe driver level, we provide the following support for Hotplug:
