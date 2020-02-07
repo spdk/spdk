@@ -336,6 +336,12 @@ _spdk_reactor_run(void *arg)
 		TAILQ_FOREACH_SAFE(lw_thread, &reactor->threads, link, tmp) {
 			thread = spdk_thread_get_from_ctx(lw_thread);
 			spdk_thread_poll(thread, 0, now);
+
+			if (spdk_unlikely(spdk_thread_is_exited(thread) &&
+					  spdk_thread_is_idle(thread))) {
+				TAILQ_REMOVE(&reactor->threads, lw_thread, link);
+				spdk_thread_destroy(thread);
+			}
 		}
 
 		if (g_reactor_state != SPDK_REACTOR_STATE_RUNNING) {
