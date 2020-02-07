@@ -94,7 +94,7 @@ Plugins section (`plugins`):
 
 - `plugin <plugin name> { [enable|disable] }` -- enable or disable VPP plugin.
 
-### Example:
+### Example
 
 ~~~
 unix {

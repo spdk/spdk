@@ -8,7 +8,7 @@ for spinning up a VM capable of running the SPDK test suite.
 There is no need for external hardware to run these tests. The linux kernel comes with the drivers necessary
 to emulate an RDMA enabled NIC. NVMe controllers can also be virtualized in emulators such as QEMU.
 
-## VM Envronment Requirements (Host):
+## VM Envronment Requirements (Host)
 
 - 8 GiB of RAM (for DPDK)
 - Enable intel_kvm on the host machine from the bios.

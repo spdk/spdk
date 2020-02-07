@@ -199,7 +199,7 @@ code for fused compare-and-write operation.
 
 Added spdk_bdev_get_acwu function for getting block device atomic compare and write unit size.
 
-## v19.10:
+## v19.10
 
 ### rpc
 
@@ -429,7 +429,7 @@ New cache modes added to use via RPC, wi - write invalidate and wa - write aroun
 
 New version of OCF provides fully asynchronous management API.
 
-## v19.07:
+## v19.07
 
 ### ftl
 
@@ -705,7 +705,7 @@ with SPDK thread when necessary.
 Added spdk_thread_destroy() to allow framework polling the thread to
 release resources associated with that thread.
 
-## v19.04:
+## v19.04
 
 ### nvme
 
@@ -926,7 +926,7 @@ Added "reduce" block compression scheme based on using SSDs for storing
 compressed blocks of storage and presistent memory for metadata. Please see
 [compression](https://spdk.io/doc/bdev.html) for more details.
 
-## v19.01:
+## v19.01
 
 ### ocf bdev
 
@@ -1181,7 +1181,7 @@ JSON RPC client is now running in non-blocking mode. Requests are sent and recei
 JSON RPC server can now recieve a callback on connection termination or server shutdown using `spdk_jsonrpc_conn_add_close_cb`
 and `spdk_jsonrpc_conn_del_close_cb`.
 
-## v18.10:
+## v18.10
 
 ### nvme
 
@@ -1378,7 +1378,7 @@ in QEMU.
 The SPDKCLI interactive command tool for managing SPDK is no longer considered experimental.
 Support for the iSCSI and NVMe-oF targets has been added.
 
-## v18.07:
+## v18.07
 
 ### bdev
 

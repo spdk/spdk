@@ -1,4 +1,4 @@
-# What is SPDK? {#about}
+# What is SPDK {#about}
 
 The Storage Performance Development Kit (SPDK) provides a set of tools and
 libraries for writing high performance, scalable, user-mode storage

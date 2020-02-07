@@ -196,7 +196,7 @@ Error occurred in Python command: No symbol table is loaded.  Use the "file"
 command.
 ~~~
 
-# Macros available:
+# Macros available
 
 - spdk_load_macros: load the macros (use --reload in order to reload them)
 - spdk_print_bdevs: information about bdevs
@@ -205,7 +205,7 @@ command.
 - spdk_print_nvmf_subsystems: information about nvmf subsystems
 - spdk_print_threads: information about threads
 
-# Adding New Macros:
+# Adding New Macros
 
 The list iteration macros are usually built from 3 layers:
 

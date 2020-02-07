@@ -135,7 +135,7 @@ Please contact your FC vendor for instructions to obtain FC driver module.
 FC LLD driver for Broadcom FC NVMe capable adapters can be obtained from,
 https://github.com/ecdufcdrvr/bcmufctdrvr.
 
-### Fetch FC LLD module and then build SPDK with FC enabled:
+### Fetch FC LLD module and then build SPDK with FC enabled
 
 After cloning SPDK repo and initialize submodules, FC LLD library is built which then can be linked with
 the fc transport.

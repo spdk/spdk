@@ -35,7 +35,7 @@ NAND too.
 
 ## Theory of Operation {#blob_pg_theory}
 
-### Abstractions:
+### Abstractions
 
 The Blobstore defines a hierarchy of storage abstractions as follows.
 

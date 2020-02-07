@@ -3844,7 +3844,7 @@ c2h_success                 | Optional | boolean | Disable C2H success optimizat
 dif_insert_or_strip         | Optional | boolean | Enable DIF insert for write I/O and DIF strip for read I/O DIF (TCP only)
 sock_priority               | Optional | number  | The socket priority of the connection owned by this transport (TCP only)
 
-### Example:
+### Example
 
 Example request:
 
