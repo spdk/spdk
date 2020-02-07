@@ -222,31 +222,38 @@ static struct spdk_bdev_module nvme_if = {
 };
 SPDK_BDEV_MODULE_REGISTER(nvme, &nvme_if)
 
+static void
+bdev_nvme_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_ctx)
+{
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "qpar %p is disconnected, attempting reconnect.\n", qpair);
+	/*
+	 * Currently, just try to reconnect indefinitely. If we are doing a reset, the reset will
+	 * reconnect a qpair and we will stop getting a callback for this one.
+	 */
+	spdk_nvme_ctrlr_reconnect_io_qpair(qpair);
+}
+
 static int
 bdev_nvme_poll(void *arg)
 {
-	struct nvme_io_channel *ch = arg;
-	int32_t num_completions;
+	struct nvme_bdev_poll_group *group = arg;
+	int64_t num_completions;
 
-	if (ch->qpair == NULL) {
-		return -1;
+	if (group->collect_spin_stat && group->start_ticks == 0) {
+		group->start_ticks = spdk_get_ticks();
 	}
 
-	if (ch->collect_spin_stat && ch->start_ticks == 0) {
-		ch->start_ticks = spdk_get_ticks();
-	}
-
-	num_completions = spdk_nvme_qpair_process_completions(ch->qpair, 0);
-
-	if (ch->collect_spin_stat) {
+	num_completions = spdk_nvme_poll_group_process_completions(group->group, 0,
+			  bdev_nvme_disconnected_qpair_cb);
+	if (group->collect_spin_stat) {
 		if (num_completions > 0) {
-			if (ch->end_ticks != 0) {
-				ch->spin_ticks += (ch->end_ticks - ch->start_ticks);
-				ch->end_ticks = 0;
+			if (group->end_ticks != 0) {
+				group->spin_ticks += (group->end_ticks - group->start_ticks);
+				group->end_ticks = 0;
 			}
-			ch->start_ticks = 0;
+			group->start_ticks = 0;
 		} else {
-			ch->end_ticks = spdk_get_ticks();
+			group->end_ticks = spdk_get_ticks();
 		}
 	}
 
@@ -364,9 +371,26 @@ _bdev_nvme_reset_create_qpair(struct spdk_io_channel_iter *i)
 
 	spdk_nvme_ctrlr_get_default_io_qpair_opts(nvme_bdev_ctrlr->ctrlr, &opts, sizeof(opts));
 	opts.delay_cmd_submit = g_opts.delay_cmd_submit;
+	opts.create_only = true;
 
 	nvme_ch->qpair = spdk_nvme_ctrlr_alloc_io_qpair(nvme_bdev_ctrlr->ctrlr, &opts, sizeof(opts));
 	if (!nvme_ch->qpair) {
+		spdk_for_each_channel_continue(i, -1);
+		return;
+	}
+
+	assert(nvme_ch->group != NULL);
+	if (spdk_nvme_poll_group_add(nvme_ch->group->group, nvme_ch->qpair) != 0) {
+		SPDK_ERRLOG("Unable to begin polling on NVMe Channel.\n");
+		spdk_nvme_ctrlr_free_io_qpair(nvme_ch->qpair);
+		spdk_for_each_channel_continue(i, -1);
+		return;
+	}
+
+	if (spdk_nvme_ctrlr_connect_io_qpair(nvme_bdev_ctrlr->ctrlr, nvme_ch->qpair)) {
+		SPDK_ERRLOG("Unable to connect I/O qpair.\n");
+		spdk_nvme_poll_group_remove(nvme_ch->group->group, nvme_ch->qpair);
+		spdk_nvme_ctrlr_free_io_qpair(nvme_ch->qpair);
 		spdk_for_each_channel_continue(i, -1);
 		return;
 	}
@@ -683,16 +707,13 @@ bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = io_device;
 	struct nvme_io_channel *ch = ctx_buf;
 	struct spdk_nvme_io_qpair_opts opts;
-
-#ifdef SPDK_CONFIG_VTUNE
-	ch->collect_spin_stat = true;
-#else
-	ch->collect_spin_stat = false;
-#endif
+	struct spdk_io_channel *pg_ch = NULL;
+	int rc;
 
 	spdk_nvme_ctrlr_get_default_io_qpair_opts(nvme_bdev_ctrlr->ctrlr, &opts, sizeof(opts));
 	opts.delay_cmd_submit = g_opts.delay_cmd_submit;
 	opts.io_queue_requests = spdk_max(g_opts.io_queue_requests, opts.io_queue_requests);
+	opts.create_only = true;
 	g_opts.io_queue_requests = opts.io_queue_requests;
 
 	ch->qpair = spdk_nvme_ctrlr_alloc_io_qpair(nvme_bdev_ctrlr->ctrlr, &opts, sizeof(opts));
@@ -703,15 +724,41 @@ bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 
 	if (spdk_nvme_ctrlr_is_ocssd_supported(nvme_bdev_ctrlr->ctrlr)) {
 		if (bdev_ocssd_create_io_channel(ch)) {
-			spdk_nvme_ctrlr_free_io_qpair(ch->qpair);
-			return -1;
+			goto err;
 		}
 	}
 
-	ch->poller = SPDK_POLLER_REGISTER(bdev_nvme_poll, ch, g_opts.nvme_ioq_poll_period_us);
+	pg_ch = spdk_get_io_channel(&nvme_if);
+	if (!pg_ch) {
+		goto err;
+	}
+
+	ch->group = spdk_io_channel_get_ctx(pg_ch);
+	if (spdk_nvme_poll_group_add(ch->group->group, ch->qpair) != 0) {
+		goto err;
+	}
+
+	rc = spdk_nvme_ctrlr_connect_io_qpair(nvme_bdev_ctrlr->ctrlr, ch->qpair);
+	if (rc) {
+		spdk_nvme_poll_group_remove(ch->group->group, ch->qpair);
+		goto err;
+	}
+
+#ifdef SPDK_CONFIG_VTUNE
+	ch->group->collect_spin_stat = true;
+#else
+	ch->group->collect_spin_stat = false;
+#endif
 
 	TAILQ_INIT(&ch->pending_resets);
 	return 0;
+
+err:
+	if (pg_ch) {
+		spdk_put_io_channel(pg_ch);
+	}
+	spdk_nvme_ctrlr_free_io_qpair(ch->qpair);
+	return -1;
 }
 
 static void
@@ -719,13 +766,53 @@ bdev_nvme_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = io_device;
 	struct nvme_io_channel *ch = ctx_buf;
+	struct nvme_bdev_poll_group *group;
+
+	group = ch->group;
+	assert(group != NULL);
 
 	if (spdk_nvme_ctrlr_is_ocssd_supported(nvme_bdev_ctrlr->ctrlr)) {
 		bdev_ocssd_destroy_io_channel(ch);
 	}
 
+	if (ch->qpair != NULL) {
+		spdk_nvme_poll_group_remove(group->group, ch->qpair);
+	}
+	spdk_put_io_channel(spdk_io_channel_from_ctx(group));
+
 	spdk_nvme_ctrlr_free_io_qpair(ch->qpair);
-	spdk_poller_unregister(&ch->poller);
+}
+
+static int
+bdev_nvme_poll_group_create_cb(void *io_device, void *ctx_buf)
+{
+	struct nvme_bdev_poll_group *group = ctx_buf;
+
+	group->group = spdk_nvme_poll_group_create(group);
+	if (group->group == NULL) {
+		return -1;
+	}
+
+	group->poller = spdk_poller_register(bdev_nvme_poll, group, g_opts.nvme_ioq_poll_period_us);
+
+	if (group->poller == NULL) {
+		spdk_nvme_poll_group_destroy(group->group);
+		return -1;
+	}
+
+	return 0;
+}
+
+static void
+bdev_nvme_poll_group_destroy_cb(void *io_device, void *ctx_buf)
+{
+	struct nvme_bdev_poll_group *group = ctx_buf;
+
+	spdk_poller_unregister(&group->poller);
+	if (spdk_nvme_poll_group_destroy(group->group)) {
+		SPDK_ERRLOG("Unable to destroy a poll group for the NVMe bdev module.");
+		assert(false);
+	}
 }
 
 static struct spdk_io_channel *
@@ -849,20 +936,21 @@ static uint64_t
 bdev_nvme_get_spin_time(struct spdk_io_channel *ch)
 {
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
+	struct nvme_bdev_poll_group *group = nvme_ch->group;
 	uint64_t spin_time;
 
-	if (!nvme_ch->collect_spin_stat) {
+	if (!group || !group->collect_spin_stat) {
 		return 0;
 	}
 
-	if (nvme_ch->end_ticks != 0) {
-		nvme_ch->spin_ticks += (nvme_ch->end_ticks - nvme_ch->start_ticks);
-		nvme_ch->end_ticks = 0;
+	if (group->end_ticks != 0) {
+		group->spin_ticks += (group->end_ticks - group->start_ticks);
+		group->end_ticks = 0;
 	}
 
-	spin_time = (nvme_ch->spin_ticks * 1000000ULL) / spdk_get_ticks_hz();
-	nvme_ch->start_ticks = 0;
-	nvme_ch->spin_ticks = 0;
+	spin_time = (group->spin_ticks * 1000000ULL) / spdk_get_ticks_hz();
+	group->start_ticks = 0;
+	group->spin_ticks = 0;
 
 	return spin_time;
 }
@@ -1728,6 +1816,9 @@ bdev_nvme_library_init(void)
 	bool hotplug_enabled = g_nvme_hotplug_enabled;
 
 	g_bdev_nvme_init_thread = spdk_get_thread();
+
+	spdk_io_device_register(&nvme_if, bdev_nvme_poll_group_create_cb, bdev_nvme_poll_group_destroy_cb,
+				sizeof(struct nvme_bdev_poll_group),  "bdev_nvme_poll_groups");
 
 	sp = spdk_conf_find_section(NULL, "Nvme");
 	if (sp == NULL) {

@@ -109,6 +109,15 @@ struct nvme_bdev {
 	TAILQ_ENTRY(nvme_bdev)	tailq;
 };
 
+struct nvme_bdev_poll_group {
+	struct spdk_nvme_poll_group		*group;
+	struct spdk_poller			*poller;
+	bool					collect_spin_stat;
+	uint64_t				spin_ticks;
+	uint64_t				start_ticks;
+	uint64_t				end_ticks;
+};
+
 typedef void (*spdk_bdev_create_nvme_fn)(void *ctx, size_t bdev_count, int rc);
 
 struct nvme_async_probe_ctx {
@@ -129,14 +138,8 @@ struct ocssd_io_channel;
 
 struct nvme_io_channel {
 	struct spdk_nvme_qpair		*qpair;
-	struct spdk_poller		*poller;
+	struct nvme_bdev_poll_group	*group;
 	TAILQ_HEAD(, spdk_bdev_io)	pending_resets;
-
-	bool				collect_spin_stat;
-	uint64_t			spin_ticks;
-	uint64_t			start_ticks;
-	uint64_t			end_ticks;
-
 	struct ocssd_io_channel		*ocssd_ioch;
 };
 
