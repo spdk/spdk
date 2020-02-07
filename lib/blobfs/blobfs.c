@@ -2569,39 +2569,6 @@ check_readahead(struct spdk_file *file, uint64_t offset,
 	file->fs->send_request(__readahead, req);
 }
 
-static int
-__file_read(struct spdk_file *file, void *payload, uint64_t offset, uint64_t length,
-	    struct spdk_fs_channel *channel)
-{
-	struct cache_buffer *buf;
-	int rc;
-
-	buf = spdk_tree_find_filled_buffer(file->tree, offset);
-	if (buf == NULL) {
-		pthread_spin_unlock(&file->lock);
-		rc = __send_rw_from_file(file, payload, offset, length, true, channel);
-		pthread_spin_lock(&file->lock);
-		return rc;
-	}
-
-	if ((offset + length) > (buf->offset + buf->bytes_filled)) {
-		length = buf->offset + buf->bytes_filled - offset;
-	}
-	BLOBFS_TRACE(file, "read %p offset=%ju length=%ju\n", payload, offset, length);
-	memcpy(payload, &buf->buf[offset - buf->offset], length);
-	if ((offset + length) % CACHE_BUFFER_SIZE == 0) {
-		pthread_spin_lock(&g_caches_lock);
-		spdk_tree_remove_buffer(file->tree, buf);
-		if (file->tree->present_mask == 0) {
-			TAILQ_REMOVE(&g_caches, file, cache_tailq);
-		}
-		pthread_spin_unlock(&g_caches_lock);
-	}
-
-	sem_post(&channel->sem);
-	return 0;
-}
-
 int64_t
 spdk_file_read(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 	       void *payload, uint64_t offset, uint64_t length)
@@ -2609,6 +2576,8 @@ spdk_file_read(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 	struct spdk_fs_channel *channel = (struct spdk_fs_channel *)ctx;
 	uint64_t final_offset, final_length;
 	uint32_t sub_reads = 0;
+	struct cache_buffer *buf;
+	uint64_t read_len;
 	int rc = 0;
 
 	pthread_spin_lock(&file->lock);
@@ -2644,8 +2613,31 @@ spdk_file_read(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 			length = final_offset - offset;
 		}
 
-		sub_reads++;
-		rc = __file_read(file, payload, offset, length, channel);
+		buf = spdk_tree_find_filled_buffer(file->tree, offset);
+		if (buf == NULL) {
+			pthread_spin_unlock(&file->lock);
+			rc = __send_rw_from_file(file, payload, offset, length, true, channel);
+			pthread_spin_lock(&file->lock);
+			if (rc == 0) {
+				sub_reads++;
+			}
+		} else {
+			read_len = length;
+			if ((offset + length) > (buf->offset + buf->bytes_filled)) {
+				read_len = buf->offset + buf->bytes_filled - offset;
+			}
+			BLOBFS_TRACE(file, "read %p offset=%ju length=%ju\n", payload, offset, read_len);
+			memcpy(payload, &buf->buf[offset - buf->offset], read_len);
+			if ((offset + read_len) % CACHE_BUFFER_SIZE == 0) {
+				pthread_spin_lock(&g_caches_lock);
+				spdk_tree_remove_buffer(file->tree, buf);
+				if (file->tree->present_mask == 0) {
+					TAILQ_REMOVE(&g_caches, file, cache_tailq);
+				}
+				pthread_spin_unlock(&g_caches_lock);
+			}
+		}
+
 		if (rc == 0) {
 			final_length += length;
 		} else {
@@ -2655,8 +2647,9 @@ spdk_file_read(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 		offset += length;
 	}
 	pthread_spin_unlock(&file->lock);
-	while (sub_reads-- > 0) {
+	while (sub_reads > 0) {
 		sem_wait(&channel->sem);
+		sub_reads--;
 	}
 	if (rc == 0) {
 		return final_length;
