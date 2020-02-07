@@ -3083,6 +3083,14 @@ int spdk_nvme_map_prps(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs,
  */
 struct spdk_nvme_transport_poll_group;
 
+/**
+ * Update and populate namespace CUSE devices (Experimental)
+ *
+ * \param ctrlr Opaque handle to the NVMe controller.
+ *
+ */
+void spdk_nvme_cuse_update_namespaces(struct spdk_nvme_ctrlr *ctrlr);
+
 struct nvme_request;
 
 struct spdk_nvme_transport;

@@ -985,6 +985,24 @@ nvme_cuse_stop(struct spdk_nvme_ctrlr *ctrlr)
 	pthread_mutex_unlock(&g_cuse_mtx);
 }
 
+static void
+nvme_cuse_update(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct cuse_device *ctrlr_device;
+
+	pthread_mutex_lock(&g_cuse_mtx);
+
+	ctrlr_device = nvme_cuse_get_cuse_ctrlr_device(ctrlr);
+	if (!ctrlr_device) {
+		pthread_mutex_unlock(&g_cuse_mtx);
+		return;
+	}
+
+	cuse_nvme_ctrlr_update_namespaces(ctrlr_device);
+
+	pthread_mutex_unlock(&g_cuse_mtx);
+}
+
 static struct nvme_io_msg_producer cuse_nvme_io_msg_producer = {
 	.name = "cuse",
 	.stop = nvme_cuse_stop,
@@ -1033,6 +1051,12 @@ spdk_nvme_cuse_unregister(struct spdk_nvme_ctrlr *ctrlr)
 	nvme_io_msg_ctrlr_unregister(ctrlr, &cuse_nvme_io_msg_producer);
 
 	return 0;
+}
+
+void
+spdk_nvme_cuse_update_namespaces(struct spdk_nvme_ctrlr *ctrlr)
+{
+	nvme_cuse_update(ctrlr);
 }
 
 int

@@ -144,6 +144,7 @@
 	spdk_nvme_cuse_get_ns_name;
 	spdk_nvme_cuse_register;
 	spdk_nvme_cuse_unregister;
+	spdk_nvme_cuse_update_namespaces;
 
 	spdk_nvme_map_prps;
 
