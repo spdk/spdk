@@ -9,7 +9,7 @@ VPP [Quick Start Guide](https://wiki.fd.io/view/VPP).
 
 *SPDK supports VPP version 19.04.2.*
 
-#  1. Building VPP (optional) {#vpp_build}
+# 1. Building VPP (optional) {#vpp_build}
 
 *Please skip this step if using already built packages.*
 
