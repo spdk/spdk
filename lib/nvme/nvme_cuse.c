@@ -43,6 +43,8 @@
 #include "nvme_cuse.h"
 
 struct cuse_device {
+	bool				is_started;
+
 	char				dev_name[128];
 	uint32_t			index;
 	int				claim_fd;
@@ -55,7 +57,7 @@ struct cuse_device {
 	struct fuse_session		*session;
 
 	struct cuse_device		*ctrlr_device;
-	TAILQ_HEAD(, cuse_device)	ns_devices;
+	struct cuse_device		*ns_devices;	/**< Array of cuse ns devices */
 
 	TAILQ_ENTRY(cuse_device)	tailq;
 };
@@ -703,22 +705,21 @@ err:
  */
 
 static int
-cuse_nvme_ns_start(struct cuse_device *ctrlr_device, uint32_t nsid, const char *dev_path)
+cuse_nvme_ns_start(struct cuse_device *ctrlr_device, uint32_t nsid)
 {
 	struct cuse_device *ns_device;
 	int rv;
 
-	ns_device = (struct cuse_device *)calloc(1, sizeof(struct cuse_device));
-	if (!ns_device) {
-		SPDK_ERRLOG("Cannot allocate momeory for ns_device.");
-		return -ENOMEM;
+	ns_device = &ctrlr_device->ns_devices[nsid - 1];
+	if (ns_device->is_started) {
+		return 0;
 	}
 
 	ns_device->ctrlr = ctrlr_device->ctrlr;
 	ns_device->ctrlr_device = ctrlr_device;
 	ns_device->nsid = nsid;
 	rv = snprintf(ns_device->dev_name, sizeof(ns_device->dev_name), "%sn%d",
-		      dev_path, ns_device->nsid);
+		      ctrlr_device->dev_name, ns_device->nsid);
 	if (rv < 0) {
 		SPDK_ERRLOG("Device name too long.\n");
 		free(ns_device);
@@ -728,12 +729,27 @@ cuse_nvme_ns_start(struct cuse_device *ctrlr_device, uint32_t nsid, const char *
 	rv = pthread_create(&ns_device->tid, NULL, cuse_thread, ns_device);
 	if (rv != 0) {
 		SPDK_ERRLOG("pthread_create failed\n");
-		free(ns_device);
 		return -rv;
 	}
 
-	TAILQ_INSERT_TAIL(&ctrlr_device->ns_devices, ns_device, tailq);
+	ns_device->is_started = true;
+
 	return 0;
+}
+
+static void
+cuse_nvme_ns_stop(struct cuse_device *ctrlr_device, uint32_t nsid)
+{
+	struct cuse_device *ns_device;
+
+	ns_device = &ctrlr_device->ns_devices[nsid - 1];
+	if (!ns_device->is_started) {
+		return;
+	}
+
+	fuse_session_exit(ns_device->session);
+	pthread_join(ns_device->tid, NULL);
+	ns_device->is_started = false;
 }
 
 static int
@@ -801,13 +817,11 @@ nvme_cuse_unclaim(struct cuse_device *ctrlr_device)
 static void
 cuse_nvme_ctrlr_stop(struct cuse_device *ctrlr_device)
 {
-	struct cuse_device *ns_device, *tmp;
+	uint32_t i;
+	uint32_t num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr_device->ctrlr);
 
-	TAILQ_FOREACH_SAFE(ns_device, &ctrlr_device->ns_devices, tailq, tmp) {
-		fuse_session_exit(ns_device->session);
-		pthread_join(ns_device->tid, NULL);
-		TAILQ_REMOVE(&ctrlr_device->ns_devices, ns_device, tailq);
-		free(ns_device);
+	for (i = 1; i <= num_ns; i++) {
+		cuse_nvme_ns_stop(ctrlr_device, i);
 	}
 
 	fuse_session_exit(ctrlr_device->session);
@@ -818,15 +832,37 @@ cuse_nvme_ctrlr_stop(struct cuse_device *ctrlr_device)
 		spdk_bit_array_free(&g_ctrlr_started);
 	}
 	nvme_cuse_unclaim(ctrlr_device);
+	free(ctrlr_device->ns_devices);
 	free(ctrlr_device);
+}
+
+static int
+cuse_nvme_ctrlr_update_namespaces(struct cuse_device *ctrlr_device)
+{
+	uint32_t nsid;
+	uint32_t num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr_device->ctrlr);
+
+	for (nsid = 1; nsid <= num_ns; nsid++) {
+		if (!spdk_nvme_ctrlr_is_active_ns(ctrlr_device->ctrlr, nsid)) {
+			cuse_nvme_ns_stop(ctrlr_device, nsid);
+			continue;
+		}
+
+		if (cuse_nvme_ns_start(ctrlr_device, nsid) < 0) {
+			SPDK_ERRLOG("Cannot start CUSE namespace device.");
+			return -1;
+		}
+	}
+
+	return 0;
 }
 
 static int
 nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
 {
-	uint32_t i, nsid;
 	int rv = 0;
 	struct cuse_device *ctrlr_device;
+	uint32_t num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
 
 	SPDK_NOTICELOG("Creating cuse device for controller\n");
 
@@ -845,7 +881,6 @@ nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
 		goto err2;
 	}
 
-	TAILQ_INIT(&ctrlr_device->ns_devices);
 	ctrlr_device->ctrlr = ctrlr;
 
 	/* Check if device already exists, if not increment index until success */
@@ -874,19 +909,13 @@ nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
 	}
 	TAILQ_INSERT_TAIL(&g_ctrlr_ctx_head, ctrlr_device, tailq);
 
+	ctrlr_device->ns_devices = (struct cuse_device *)calloc(num_ns, sizeof(struct cuse_device));
 	/* Start all active namespaces */
-	for (i = 0; i < spdk_nvme_ctrlr_get_num_ns(ctrlr); i++) {
-		nsid = i + 1;
-		if (!spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
-			continue;
-		}
-
-		rv = cuse_nvme_ns_start(ctrlr_device, nsid, ctrlr_device->dev_name);
-		if (rv < 0) {
-			SPDK_ERRLOG("Cannot start CUSE namespace device.");
-			cuse_nvme_ctrlr_stop(ctrlr_device);
-			goto err3;
-		}
+	if (cuse_nvme_ctrlr_update_namespaces(ctrlr_device) < 0) {
+		SPDK_ERRLOG("Cannot start CUSE namespace devices.");
+		cuse_nvme_ctrlr_stop(ctrlr_device);
+		rv = -1;
+		goto err3;
 	}
 
 	return 0;
@@ -919,20 +948,22 @@ static struct cuse_device *
 nvme_cuse_get_cuse_ns_device(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
 	struct cuse_device *ctrlr_device = NULL;
-	struct cuse_device *ns_device = NULL;
+	uint32_t num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
+
+	if (nsid < 1 || nsid > num_ns) {
+		return NULL;
+	}
 
 	ctrlr_device = nvme_cuse_get_cuse_ctrlr_device(ctrlr);
 	if (!ctrlr_device) {
 		return NULL;
 	}
 
-	TAILQ_FOREACH(ns_device, &ctrlr_device->ns_devices, tailq) {
-		if (ns_device->nsid == nsid) {
-			break;
-		}
+	if (!ctrlr_device->ns_devices[nsid - 1].is_started) {
+		return NULL;
 	}
 
-	return ns_device;
+	return &ctrlr_device->ns_devices[nsid - 1];
 }
 
 static void
