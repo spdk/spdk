@@ -331,10 +331,6 @@ must be compiled with "./configure --with-nvme-cuse".
 
 ## Limitations
 
-NVMe CUSE presents character device for controller and namespaces only at the time
-the controller is being attached. Dynamic creation/deletion of namespaces is not
-supported yet.
-
 NVMe namespaces are created as character devices and their use may be limited for
 tools expecting block devices.
 
