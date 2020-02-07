@@ -3,12 +3,14 @@ however the three operating modes are covered in more detail here:
 
 Command Mode
 ------------
+
 This is the default and will just execute one command at a time. It's simple
 but the downside is that if you are going to interact quite a bit with the
 blobstore, the startup time for the application can be cumbersome.
 
 Shell Mode
 ----------
+
 You startup shell mode by using the -S command. At that point you will get
 a "blob>" prompt where you can enter any of the commands, including -h,
 to execute them. You can stil enter just one at a time but the initial
@@ -17,6 +19,7 @@ anymore so it is much more usable.
 
 Script (aka test) Mode
 ----------------------
+
 In script mode you just supply one command with a filename when you start
 the cli, for example `blobcli -T test.bs` will feed the tool the file
 called test.bs which contains a series of commands that will all run
@@ -37,6 +40,7 @@ script lines will simply be skipped, otherwise the tool will exit if
 it runs into an invalid line (ie './blobcli -T test.bs ignore`).
 
 Sample test/bs file:
+
 ~~~{.sh}
 # this is a comment
 -i

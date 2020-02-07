@@ -16,11 +16,13 @@ to emulate an RDMA enabled NIC. NVMe controllers can also be virtualized in emul
   - In `/etc/default/grub` append the following to the GRUB_CMDLINE_LINUX line: intel_iommu=on kvm-intel.nested=1.
 
 ## VM Specs
+
 When creating the user during the fedora installation, it is best to use the name sys_sgsw. Efforts are being made
 to remove all references to this user, or files specific to this user from the codebase, but there are still some
 trailing references to it.
 
 ## Autorun-spdk.conf
+
 Every machine that runs the autotest scripts should include a file titled autorun-spdk.conf in the home directory
 of the user that will run them. This file consists of several lines of the form 'variable_name=0/1'. autorun.sh sources
 this file each time it is run, and determines which tests to attempt based on which variables are defined in the
@@ -38,6 +40,7 @@ configuration file. For a full list of the variable declarations available for a
 7. Run autorun.sh for SPDK. Any output files will be placed in `~/spdk_repo/output/`.
 
 ## Additional Steps for Preparing the Vhost Tests
+
 The Vhost tests also require the creation of a second virtual machine nested inside of the test VM.
 Please follow the directions below to complete that installation. Note that host refers to the Fedora VM
 created above and guest or VM refer to the Ubuntu VM created in this section.

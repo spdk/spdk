@@ -3,6 +3,7 @@
 ## v20.04: (Upcoming Release)
 
 ### vmd
+
 A new function, `spdk_vmd_fini`, has been added. It releases all resources acquired by the VMD
 library through the `spdk_vmd_init` call.
 
@@ -1404,6 +1405,7 @@ spdk_bdev_get_qd(), spdk_bdev_get_qd_sampling_period(), and
 spdk_bdev_set_qd_sampling_period().
 
 ### RAID module
+
 A new bdev module called "raid" has been added as experimental module which
 aggregates underlying NVMe bdevs and exposes a single raid bdev. Please note
 that vhost will not work with this module because it does not yet have support

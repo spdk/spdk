@@ -131,10 +131,12 @@ To build nvmf_tgt with the FC transport, there is an additional FC LLD (Low Leve
 Please contact your FC vendor for instructions to obtain FC driver module.
 
 ### Broadcom FC LLD code
+
 FC LLD driver for Broadcom FC NVMe capable adapters can be obtained from,
 https://github.com/ecdufcdrvr/bcmufctdrvr.
 
 ### Fetch FC LLD module and then build SPDK with FC enabled:
+
 After cloning SPDK repo and initialize submodules, FC LLD library is built which then can be linked with
 the fc transport.
 

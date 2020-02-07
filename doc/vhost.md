@@ -411,5 +411,6 @@ See the [bug report](https://bugzilla.redhat.com/show_bug.cgi?id=1411092) for
 more information.
 
 ## QEMU vhost-user-blk
+
 QEMU [vhost-user-blk](https://git.qemu.org/?p=qemu.git;a=commit;h=00343e4b54ba) is
 supported from version 2.12.
