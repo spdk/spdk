@@ -275,13 +275,24 @@ nvme_transport_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nv
 	}
 	nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTING);
 	rc = transport->ops.ctrlr_connect_qpair(ctrlr, qpair);
-	if (rc == 0) {
-		nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTED);
-		qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_NONE;
-	} else {
-		nvme_qpair_set_state(qpair, NVME_QPAIR_DISABLED);
+	if (rc != 0) {
+		goto err;
 	}
 
+	nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTED);
+	if (qpair->poll_group) {
+		rc = nvme_poll_group_activate_qpair(qpair);
+		if (rc) {
+			goto err;
+		}
+	}
+
+	qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_NONE;
+	return rc;
+
+err:
+	nvme_transport_ctrlr_disconnect_qpair(ctrlr, qpair);
+	nvme_qpair_set_state(qpair, NVME_QPAIR_DISABLED);
 	return rc;
 }
 
@@ -291,6 +302,9 @@ nvme_transport_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk
 	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
 
 	assert(transport != NULL);
+	if (qpair->poll_group) {
+		nvme_poll_group_deactivate_qpair(qpair);
+	}
 	transport->ops.ctrlr_disconnect_qpair(ctrlr, qpair);
 }
 
