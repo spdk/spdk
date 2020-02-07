@@ -655,7 +655,6 @@ spdk_nvmf_rdma_set_ibv_state(struct spdk_nvmf_rdma_qpair *rqpair,
 
 	if (rc) {
 		SPDK_ERRLOG("Failed to get updated RDMA queue pair state!\n");
-		assert(false);
 	}
 
 	qp_attr.cur_qp_state = rqpair->ibv_state;
