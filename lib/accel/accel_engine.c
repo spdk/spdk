@@ -39,6 +39,7 @@
 #include "spdk/event.h"
 #include "spdk/log.h"
 #include "spdk/thread.h"
+#include "spdk/json.h"
 
 /* Accelerator Engine Framework: The following provides a top level
  * generic API for the accelerator functions defined here. Modules,
@@ -228,6 +229,19 @@ spdk_accel_engine_module_finish_cb(void)
 	cb_fn(g_fini_cb_arg);
 	g_fini_cb_fn = NULL;
 	g_fini_cb_arg = NULL;
+}
+
+void
+spdk_accel_write_config_json(struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_array_begin(w);
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "method", "accel_set_module");
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_uint32(w, "module",  g_active_accel_module);
+	spdk_json_write_object_end(w);
+	spdk_json_write_object_end(w);
+	spdk_json_write_array_end(w);
 }
 
 void

@@ -60,11 +60,18 @@ spdk_accel_engine_subsystem_finish(void)
 	spdk_accel_engine_finish(spdk_accel_engine_subsystem_finish_done, NULL);
 }
 
+static void
+spdk_accel_engine_subsystem_write_config_json(struct spdk_json_write_ctx *w)
+{
+	spdk_accel_write_config_json(w);
+}
+
 static struct spdk_subsystem g_spdk_subsystem_accel = {
 	.name = "accel",
 	.init = spdk_accel_engine_subsystem_initialize,
 	.fini = spdk_accel_engine_subsystem_finish,
 	.config = spdk_accel_engine_config_text,
+	.write_config_json = spdk_accel_engine_subsystem_write_config_json,
 };
 
 SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_accel);

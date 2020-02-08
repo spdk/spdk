@@ -2,7 +2,7 @@
   "subsystems": [
     {
       "subsystem": "accel",
-      "config": null
+      "config": []
     },
     {
       "subsystem": "interface",

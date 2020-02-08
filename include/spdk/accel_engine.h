@@ -140,6 +140,15 @@ int spdk_accel_submit_fill(struct spdk_accel_task *accel_req, struct spdk_io_cha
  */
 size_t spdk_accel_task_size(void);
 
+struct spdk_json_write_ctx;
+
+/**
+ * Write Acceleration subsystem configuration into provided JSON context.
+ *
+ * \param w JSON write context
+ */
+void spdk_accel_write_config_json(struct spdk_json_write_ctx *w);
+
 #ifdef __cplusplus
 }
 #endif
