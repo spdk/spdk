@@ -1043,6 +1043,8 @@ bdevperf_construct_target(struct spdk_bdev *bdev, struct io_target_group *group)
 	return 0;
 }
 
+static uint32_t g_bdev_count = 0;
+
 static struct io_target_group *
 get_next_io_target_group(void)
 {
@@ -1099,6 +1101,11 @@ bdevperf_construct_targets(void)
 {
 	struct spdk_bdev *bdev;
 
+	/* Increment initial bdev_count so that it will never reach 0 in the middle
+	 * of iteration.
+	 */
+	g_bdev_count = 1;
+
 	if (g_target_bdev_name != NULL) {
 		bdev = spdk_bdev_get_by_name(g_target_bdev_name);
 		if (bdev) {
@@ -1114,7 +1121,9 @@ bdevperf_construct_targets(void)
 		}
 	}
 
-	bdevperf_construct_targets_tasks();
+	if (--g_bdev_count == 0) {
+		bdevperf_construct_targets_tasks();
+	}
 }
 
 static int
