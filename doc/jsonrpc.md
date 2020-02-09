@@ -4046,7 +4046,7 @@ Example request:
       "trtype": "RDMA",
       "adrfam": "IPv4",
       "traddr": "192.168.0.123",
-      "trsvcid: "4420"
+      "trsvcid": "4420"
     }
   }
 }
