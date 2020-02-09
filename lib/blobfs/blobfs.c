@@ -1484,6 +1484,10 @@ spdk_fs_delete_file_async(struct spdk_filesystem *fs, const char *name,
 
 	TAILQ_REMOVE(&fs->files, f, tailq);
 
+	/* It's safe to free cache buffers here while another thread
+	 * is trying to free the same file cache buffers, because each
+	 * thread will get the g_caches_lock first.
+	 */
 	cache_free_buffers(f);
 
 	blobid = f->blobid;
@@ -2012,10 +2016,45 @@ spdk_fs_get_cache_size(void)
 
 static void __file_flush(void *ctx);
 
+/* Try to free some cache buffers of this file, this function must
+ * be called while holding g_caches_lock.
+ */
+static void
+reclaim_cache_buffers(struct spdk_file *file)
+{
+	int rc;
+
+	BLOBFS_TRACE(file, "free=%s\n", file->name);
+
+	/* The function is safe to be called with any threads, while the file
+	 * lock maybe locked by other thread for now, so try to get the file
+	 * lock here.
+	 */
+	rc = pthread_spin_trylock(&file->lock);
+	if (rc != 0) {
+		return;
+	}
+
+	if (file->tree->present_mask == 0) {
+		pthread_spin_unlock(&file->lock);
+		return;
+	}
+	spdk_tree_free_buffers(file->tree);
+
+	TAILQ_REMOVE(&g_caches, file, cache_tailq);
+	/* If not freed, put it in the end of the queue */
+	if (file->tree->present_mask != 0) {
+		TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
+	} else {
+		file->last = NULL;
+	}
+	pthread_spin_unlock(&file->lock);
+}
+
 static void *
 alloc_cache_memory_buffer(struct spdk_file *context)
 {
-	struct spdk_file *file;
+	struct spdk_file *file, *tmp;
 	void *buf;
 
 	buf = spdk_mempool_get(g_cache_pool);
@@ -2024,51 +2063,45 @@ alloc_cache_memory_buffer(struct spdk_file *context)
 	}
 
 	pthread_spin_lock(&g_caches_lock);
-	TAILQ_FOREACH(file, &g_caches, cache_tailq) {
+	TAILQ_FOREACH_SAFE(file, &g_caches, cache_tailq, tmp) {
 		if (!file->open_for_writing &&
 		    file->priority == SPDK_FILE_PRIORITY_LOW &&
 		    file != context) {
-			break;
+			reclaim_cache_buffers(file);
 		}
-	}
-	pthread_spin_unlock(&g_caches_lock);
-	if (file != NULL) {
-		cache_free_buffers(file);
 		buf = spdk_mempool_get(g_cache_pool);
 		if (buf != NULL) {
+			pthread_spin_unlock(&g_caches_lock);
 			return buf;
 		}
+		break;
 	}
 
-	pthread_spin_lock(&g_caches_lock);
-	TAILQ_FOREACH(file, &g_caches, cache_tailq) {
-		if (!file->open_for_writing && file != context) {
-			break;
+	TAILQ_FOREACH_SAFE(file, &g_caches, cache_tailq, tmp) {
+		if (!file->open_for_writing &&
+		    file != context) {
+			reclaim_cache_buffers(file);
 		}
-	}
-	pthread_spin_unlock(&g_caches_lock);
-	if (file != NULL) {
-		cache_free_buffers(file);
 		buf = spdk_mempool_get(g_cache_pool);
 		if (buf != NULL) {
+			pthread_spin_unlock(&g_caches_lock);
 			return buf;
 		}
+		break;
 	}
 
-	pthread_spin_lock(&g_caches_lock);
-	TAILQ_FOREACH(file, &g_caches, cache_tailq) {
+	TAILQ_FOREACH_SAFE(file, &g_caches, cache_tailq, tmp) {
 		if (file != context) {
-			break;
+			reclaim_cache_buffers(file);
 		}
-	}
-	pthread_spin_unlock(&g_caches_lock);
-	if (file != NULL) {
-		cache_free_buffers(file);
 		buf = spdk_mempool_get(g_cache_pool);
 		if (buf != NULL) {
+			pthread_spin_unlock(&g_caches_lock);
 			return buf;
 		}
+		break;
 	}
+	pthread_spin_unlock(&g_caches_lock);
 
 	return NULL;
 }
@@ -2880,10 +2913,7 @@ cache_free_buffers(struct spdk_file *file)
 	spdk_tree_free_buffers(file->tree);
 
 	TAILQ_REMOVE(&g_caches, file, cache_tailq);
-	/* If not freed, put it in the end of the queue */
-	if (file->tree->present_mask != 0) {
-		TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
-	}
+	assert(file->tree->present_mask == 0);
 	file->last = NULL;
 	pthread_spin_unlock(&g_caches_lock);
 	pthread_spin_unlock(&file->lock);
