@@ -247,6 +247,7 @@ _spdk_blob_alloc(struct spdk_blob_store *bs, spdk_blob_id id)
 
 	TAILQ_INIT(&blob->xattrs);
 	TAILQ_INIT(&blob->xattrs_internal);
+	TAILQ_INIT(&blob->pending_persists);
 
 	return blob;
 }
@@ -268,6 +269,7 @@ static void
 _spdk_blob_free(struct spdk_blob *blob)
 {
 	assert(blob != NULL);
+	assert(TAILQ_EMPTY(&blob->pending_persists));
 
 	free(blob->active.extent_pages);
 	free(blob->clean.extent_pages);
@@ -1520,6 +1522,7 @@ struct spdk_blob_persist_ctx {
 	spdk_bs_sequence_t		*seq;
 	spdk_bs_sequence_cpl		cb_fn;
 	void				*cb_arg;
+	TAILQ_ENTRY(spdk_blob_persist_ctx) link;
 };
 
 static void
@@ -1540,15 +1543,23 @@ spdk_bs_batch_clear_dev(struct spdk_blob_persist_ctx *ctx, spdk_bs_batch_t *batc
 	}
 }
 
+static void _spdk_blob_persist_check_dirty(struct spdk_blob_persist_ctx *ctx);
+
 static void
 _spdk_blob_persist_complete(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_persist_ctx	*ctx = cb_arg;
+	struct spdk_blob_persist_ctx	*next_persist;
 	struct spdk_blob		*blob = ctx->blob;
 
 	if (bserrno == 0) {
 		_spdk_blob_mark_clean(blob);
 	}
+
+	assert(ctx == TAILQ_FIRST(&blob->pending_persists));
+	TAILQ_REMOVE(&blob->pending_persists, ctx, link);
+
+	next_persist = TAILQ_FIRST(&blob->pending_persists);
 
 	/* Call user callback */
 	ctx->cb_fn(seq, ctx->cb_arg, bserrno);
@@ -1556,6 +1567,10 @@ _spdk_blob_persist_complete(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	/* Free the memory */
 	spdk_free(ctx->pages);
 	free(ctx);
+
+	if (next_persist != NULL) {
+		_spdk_blob_persist_check_dirty(next_persist);
+	}
 }
 
 static void
@@ -2089,7 +2104,7 @@ _spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 
 	_spdk_blob_verify_md_op(blob);
 
-	if (blob->state == SPDK_BLOB_STATE_CLEAN) {
+	if (blob->state == SPDK_BLOB_STATE_CLEAN && TAILQ_EMPTY(&blob->pending_persists)) {
 		cb_fn(seq, cb_arg, 0);
 		return;
 	}
@@ -2104,6 +2119,14 @@ _spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
 	ctx->next_extent_page = 0;
+
+	/* Multiple blob persists can affect one another, via blob->state or
+	 * blob mutable data changes. To prevent it, queue up the persists. */
+	if (!TAILQ_EMPTY(&blob->pending_persists)) {
+		TAILQ_INSERT_TAIL(&blob->pending_persists, ctx, link);
+		return;
+	}
+	TAILQ_INSERT_HEAD(&blob->pending_persists, ctx, link);
 
 	_spdk_blob_persist_check_dirty(ctx);
 }
