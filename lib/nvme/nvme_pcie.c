@@ -580,28 +580,6 @@ nvme_pcie_ctrlr_unmap_cmb(struct nvme_pcie_ctrlr *pctrlr)
 	return rc;
 }
 
-static int
-nvme_pcie_ctrlr_alloc_cmb(struct spdk_nvme_ctrlr *ctrlr, uint64_t length, uint64_t aligned,
-			  uint64_t *offset)
-{
-	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
-	uint64_t round_offset;
-
-	round_offset = pctrlr->cmb.current_offset;
-	round_offset = (round_offset + (aligned - 1)) & ~(aligned - 1);
-
-	/* CMB may only consume part of the BAR, calculate accordingly */
-	if (round_offset + length > pctrlr->cmb.end) {
-		SPDK_ERRLOG("Tried to allocate past valid CMB range!\n");
-		return -1;
-	}
-
-	*offset = round_offset;
-	pctrlr->cmb.current_offset = round_offset + length;
-
-	return 0;
-}
-
 static void *
 nvme_pcie_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size)
 {
@@ -618,10 +596,20 @@ nvme_pcie_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size)
 		return NULL;
 	}
 
-	if (nvme_pcie_ctrlr_alloc_cmb(ctrlr, size, 4, &offset) != 0) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "%zu-byte CMB allocation failed\n", size);
+	if (ctrlr->opts.use_cmb_sqs) {
+		SPDK_ERRLOG("CMB is already in use for submission queues.\n");
 		return NULL;
 	}
+
+	offset = (pctrlr->cmb.current_offset + (3)) & ~(3);
+
+	/* CMB may only consume part of the BAR, calculate accordingly */
+	if (offset + size > pctrlr->cmb.end) {
+		SPDK_ERRLOG("Tried to allocate past valid CMB range!\n");
+		return NULL;
+	}
+
+	pctrlr->cmb.current_offset = offset + size;
 
 	return pctrlr->cmb.bar_va + offset;
 }
@@ -975,6 +963,28 @@ nvme_pcie_qpair_reset(struct spdk_nvme_qpair *qpair)
 	       pqpair->num_entries * sizeof(struct spdk_nvme_cmd));
 	memset(pqpair->cpl, 0,
 	       pqpair->num_entries * sizeof(struct spdk_nvme_cpl));
+
+	return 0;
+}
+
+static int
+nvme_pcie_ctrlr_alloc_cmb(struct spdk_nvme_ctrlr *ctrlr, uint64_t length, uint64_t aligned,
+			  uint64_t *offset)
+{
+	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
+	uint64_t round_offset;
+
+	round_offset = pctrlr->cmb.current_offset;
+	round_offset = (round_offset + (aligned - 1)) & ~(aligned - 1);
+
+	/* CMB may only consume part of the BAR, calculate accordingly */
+	if (round_offset + length > pctrlr->cmb.end) {
+		SPDK_ERRLOG("Tried to allocate past valid CMB range!\n");
+		return -1;
+	}
+
+	*offset = round_offset;
+	pctrlr->cmb.current_offset = round_offset + length;
 
 	return 0;
 }
