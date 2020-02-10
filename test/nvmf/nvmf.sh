@@ -39,6 +39,7 @@ run_test "nvmf_rpc" test/nvmf/target/rpc.sh "${TEST_ARGS[@]}"
 run_test "nvmf_fio" test/nvmf/target/fio.sh "${TEST_ARGS[@]}"
 run_test "nvmf_shutdown" test/nvmf/target/shutdown.sh "${TEST_ARGS[@]}"
 run_test "nvmf_bdevio" test/nvmf/target/bdevio.sh "${TEST_ARGS[@]}"
+run_test "nvmf_invalid" test/nvmf/target/invalid.sh "${TEST_ARGS[@]}"
 
 timing_enter host
 
