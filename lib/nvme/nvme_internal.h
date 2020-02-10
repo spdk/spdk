@@ -1123,34 +1123,36 @@ struct spdk_nvme_ctrlr *spdk_nvme_get_ctrlr_by_trid_unsafe(
 const struct nvme_transport *nvme_get_transport(const char *transport_name);
 
 /* Transport specific functions */
-#define DECLARE_TRANSPORT(name) \
-	struct spdk_nvme_ctrlr *nvme_ ## name ## _ctrlr_construct(const struct spdk_nvme_transport_id *trid, const struct spdk_nvme_ctrlr_opts *opts, \
-		void *devhandle); \
-	int nvme_ ## name ## _ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr); \
-	int nvme_ ## name ## _ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx, bool direct_connect); \
-	int nvme_ ## name ## _ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr); \
-	int nvme_ ## name ## _ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value); \
-	int nvme_ ## name ## _ctrlr_set_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value); \
-	int nvme_ ## name ## _ctrlr_get_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t *value); \
-	int nvme_ ## name ## _ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t *value); \
-	uint32_t nvme_ ## name ## _ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr); \
-	uint16_t nvme_ ## name ## _ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr); \
-	struct spdk_nvme_qpair *nvme_ ## name ## _ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid, const struct spdk_nvme_io_qpair_opts *opts); \
-	void *nvme_ ## name ## _ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size); \
-	int nvme_ ## name ## _ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf, size_t size); \
-	volatile struct spdk_nvme_registers *nvme_ ## name ## _ctrlr_get_registers(struct spdk_nvme_ctrlr *ctrlr); \
-	int nvme_ ## name ## _ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair); \
-	int nvme_ ## name ## _ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair); \
-	void nvme_ ## name ## _ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair); \
-	void nvme_ ## name ## _qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr); \
-	int nvme_ ## name ## _qpair_reset(struct spdk_nvme_qpair *qpair); \
-	int nvme_ ## name ## _qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req); \
-	int32_t nvme_ ## name ## _qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions); \
-	void nvme_ ## name ## _admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair); \
-
-DECLARE_TRANSPORT(transport) /* generic transport dispatch functions */
-
-#undef DECLARE_TRANSPORT
+struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
+		const struct spdk_nvme_ctrlr_opts *opts,
+		void *devhandle);
+int nvme_transport_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr);
+int nvme_transport_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx, bool direct_connect);
+int nvme_transport_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr);
+int nvme_transport_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value);
+int nvme_transport_ctrlr_set_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value);
+int nvme_transport_ctrlr_get_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t *value);
+int nvme_transport_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t *value);
+uint32_t nvme_transport_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr);
+uint16_t nvme_transport_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr);
+struct spdk_nvme_qpair *nvme_transport_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
+		uint16_t qid, const struct spdk_nvme_io_qpair_opts *opts);
+void *nvme_transport_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size);
+int nvme_transport_ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf, size_t size);
+volatile struct spdk_nvme_registers *nvme_transport_ctrlr_get_registers(
+	struct spdk_nvme_ctrlr *ctrlr);
+int nvme_transport_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
+		struct spdk_nvme_qpair *qpair);
+int nvme_transport_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr,
+				       struct spdk_nvme_qpair *qpair);
+void nvme_transport_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr,
+		struct spdk_nvme_qpair *qpair);
+void nvme_transport_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr);
+int nvme_transport_qpair_reset(struct spdk_nvme_qpair *qpair);
+int nvme_transport_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req);
+int32_t nvme_transport_qpair_process_completions(struct spdk_nvme_qpair *qpair,
+		uint32_t max_completions);
+void nvme_transport_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair);
 
 /*
  * Below ref related functions must be called with the global
