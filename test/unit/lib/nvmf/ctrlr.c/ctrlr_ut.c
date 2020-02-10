@@ -947,6 +947,82 @@ test_set_get_features(void)
 	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_SUCCESS);
 	CU_ASSERT(rsp.nvme_cpl.cdw0 == 1);
+
+
+	/* Get SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD - valid TMPSEL */
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
+	cmd.nvme_cmd.cdw11 = 0x42;
+	cmd.nvme_cmd.cdw10_bits.get_features.fid = SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD;
+
+	rc = spdk_nvmf_ctrlr_get_features(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+
+	/* Get SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD - invalid TMPSEL */
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
+	cmd.nvme_cmd.cdw11 = 0x42 | 1 << 16 | 1 << 19; /* Set reserved value */
+	cmd.nvme_cmd.cdw10_bits.get_features.fid = SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD;
+
+	rc = spdk_nvmf_ctrlr_get_features(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
+
+	/* Set SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD - valid TMPSEL */
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
+	cmd.nvme_cmd.cdw11 = 0x42;
+	cmd.nvme_cmd.cdw10_bits.set_features.fid = SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD;
+
+	rc = spdk_nvmf_ctrlr_set_features(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+
+	/* Set SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD - invalid TMPSEL */
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
+	cmd.nvme_cmd.cdw11 = 0x42 | 1 << 16 | 1 << 19; /* Set reserved value */
+	cmd.nvme_cmd.cdw10_bits.set_features.fid = SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD;
+
+	rc = spdk_nvmf_ctrlr_set_features(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
+
+	/* Set SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD - invalid THSEL */
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
+	cmd.nvme_cmd.cdw11 = 0x42;
+	cmd.nvme_cmd.cdw11_bits.feat_temp_threshold.bits.thsel = 0x3; /* Set reserved value */
+	cmd.nvme_cmd.cdw10_bits.set_features.fid = SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD;
+
+	rc = spdk_nvmf_ctrlr_set_features(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
+
+
+	/* get SPDK_NVME_FEAT_ERROR_RECOVERY - generic */
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
+	cmd.nvme_cmd.cdw10_bits.get_features.fid = SPDK_NVME_FEAT_ERROR_RECOVERY;
+
+	rc = spdk_nvmf_ctrlr_get_features(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+
+	/* Set SPDK_NVME_FEAT_ERROR_RECOVERY - DULBE set */
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
+	cmd.nvme_cmd.cdw11 = 0x42;
+	cmd.nvme_cmd.cdw11_bits.feat_error_recovery.bits.dulbe = 0x1;
+	cmd.nvme_cmd.cdw10_bits.set_features.fid = SPDK_NVME_FEAT_ERROR_RECOVERY;
+
+	rc = spdk_nvmf_ctrlr_set_features(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
+
+	/* Set SPDK_NVME_FEAT_ERROR_RECOVERY - DULBE cleared */
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
+	cmd.nvme_cmd.cdw11 = 0x42;
+	cmd.nvme_cmd.cdw11_bits.feat_error_recovery.bits.dulbe = 0x0;
+	cmd.nvme_cmd.cdw10_bits.set_features.fid = SPDK_NVME_FEAT_ERROR_RECOVERY;
+
+	rc = spdk_nvmf_ctrlr_set_features(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 }
 
 /*
