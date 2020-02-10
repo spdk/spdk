@@ -206,7 +206,7 @@ static uint32_t g_max_io_size_blocks;
 static uint32_t g_metacfg_pract_flag;
 static uint32_t g_metacfg_prchk_flags;
 static int g_rw_percentage;
-static int g_is_random;
+static int g_is_random = 0;
 static int g_queue_depth;
 static int g_nr_io_queues_per_ns = 1;
 static int g_nr_unused_io_queues = 0;
@@ -1733,54 +1733,29 @@ parse_args(int argc, char **argv)
 		return 1;
 	}
 
-	if (strcmp(workload_type, "read") &&
-	    strcmp(workload_type, "write") &&
-	    strcmp(workload_type, "randread") &&
-	    strcmp(workload_type, "randwrite") &&
-	    strcmp(workload_type, "rw") &&
-	    strcmp(workload_type, "randrw")) {
-		fprintf(stderr,
-			"io pattern type must be one of\n"
-			"(read, write, randread, randwrite, rw, randrw)\n");
-		return 1;
+	if (strncmp(workload_type, "rand", 4) == 0) {
+		g_is_random = 1;
+		workload_type = &workload_type[4];
 	}
 
-	if (!strcmp(workload_type, "read") ||
-	    !strcmp(workload_type, "randread")) {
-		g_rw_percentage = 100;
-	}
-
-	if (!strcmp(workload_type, "write") ||
-	    !strcmp(workload_type, "randwrite")) {
-		g_rw_percentage = 0;
-	}
-
-	if (!strcmp(workload_type, "read") ||
-	    !strcmp(workload_type, "randread") ||
-	    !strcmp(workload_type, "write") ||
-	    !strcmp(workload_type, "randwrite")) {
+	if (strcmp(workload_type, "read") == 0 || strcmp(workload_type, "write") == 0) {
+		g_rw_percentage = strcmp(workload_type, "read") == 0 ? 100 : 0;
 		if (mix_specified) {
 			fprintf(stderr, "Ignoring -M option... Please use -M option"
 				" only when using rw or randrw.\n");
 		}
-	}
-
-	if (!strcmp(workload_type, "rw") ||
-	    !strcmp(workload_type, "randrw")) {
+	} else if (strcmp(workload_type, "rw") == 0) {
 		if (g_rw_percentage < 0 || g_rw_percentage > 100) {
 			fprintf(stderr,
 				"-M must be specified to value from 0 to 100 "
 				"for rw or randrw.\n");
 			return 1;
 		}
-	}
-
-	if (!strcmp(workload_type, "read") ||
-	    !strcmp(workload_type, "write") ||
-	    !strcmp(workload_type, "rw")) {
-		g_is_random = 0;
 	} else {
-		g_is_random = 1;
+		fprintf(stderr,
+			"io pattern type must be one of\n"
+			"(read, write, randread, randwrite, rw, randrw)\n");
+		return 1;
 	}
 
 	if (TAILQ_EMPTY(&g_trid_list)) {
