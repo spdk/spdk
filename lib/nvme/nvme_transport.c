@@ -204,7 +204,11 @@ nvme_transport_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t s
 	const struct nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
 
 	assert(transport != NULL);
-	return transport->ops.ctrlr_alloc_cmb_io_buffer(ctrlr, size);
+	if (transport->ops.ctrlr_alloc_cmb_io_buffer != NULL) {
+		return transport->ops.ctrlr_alloc_cmb_io_buffer(ctrlr, size);
+	}
+
+	return NULL;
 }
 
 int
@@ -213,7 +217,11 @@ nvme_transport_ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf
 	const struct nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
 
 	assert(transport != NULL);
-	return transport->ops.ctrlr_free_cmb_io_buffer(ctrlr, buf, size);
+	if (transport->ops.ctrlr_free_cmb_io_buffer != NULL) {
+		return transport->ops.ctrlr_free_cmb_io_buffer(ctrlr, buf, size);
+	}
+
+	return 0;
 }
 
 struct spdk_nvme_qpair *

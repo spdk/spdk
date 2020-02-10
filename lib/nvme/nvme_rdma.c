@@ -2097,18 +2097,6 @@ nvme_rdma_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
 	return rctrlr->max_sge;
 }
 
-static void *
-nvme_rdma_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size)
-{
-	return NULL;
-}
-
-static int
-nvme_rdma_ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf, size_t size)
-{
-	return 0;
-}
-
 static void
 nvme_rdma_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 {
@@ -2153,9 +2141,6 @@ const struct spdk_nvme_transport_ops rdma_ops = {
 
 	.ctrlr_get_max_xfer_size = nvme_rdma_ctrlr_get_max_xfer_size,
 	.ctrlr_get_max_sges = nvme_rdma_ctrlr_get_max_sges,
-
-	.ctrlr_alloc_cmb_io_buffer = nvme_rdma_ctrlr_alloc_cmb_io_buffer,
-	.ctrlr_free_cmb_io_buffer = nvme_rdma_ctrlr_free_cmb_io_buffer,
 
 	.ctrlr_create_io_qpair = nvme_rdma_ctrlr_create_io_qpair,
 	.ctrlr_delete_io_qpair = nvme_rdma_ctrlr_delete_io_qpair,
