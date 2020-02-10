@@ -166,6 +166,9 @@ struct spdk_blob {
 	bool extent_table_found;
 	bool use_extent_table;
 
+	/* A list of pending metadata pending_persists */
+	TAILQ_HEAD(, spdk_blob_persist_ctx) pending_persists;
+
 	/* Number of data clusters retrived from extent table,
 	 * that many have to be read from extent pages. */
 	uint64_t	remaining_clusters_in_et;
