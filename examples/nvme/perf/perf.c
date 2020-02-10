@@ -965,12 +965,6 @@ io_complete(void *ctx, const struct spdk_nvme_cpl *cpl)
 	task_complete(task);
 }
 
-static void
-check_io(struct ns_worker_ctx *ns_ctx)
-{
-	ns_ctx->entry->fn_table->check_io(ns_ctx);
-}
-
 static struct perf_task *
 allocate_task(struct ns_worker_ctx *ns_ctx, int queue_depth)
 {
@@ -1081,7 +1075,7 @@ work_fn(void *arg)
 		 */
 		ns_ctx = worker->ns_ctx;
 		while (ns_ctx != NULL) {
-			check_io(ns_ctx);
+			ns_ctx->entry->fn_table->check_io(ns_ctx);
 			ns_ctx = ns_ctx->next;
 		}
 
@@ -1108,7 +1102,7 @@ work_fn(void *arg)
 			}
 
 			if (ns_ctx->current_queue_depth > 0) {
-				check_io(ns_ctx);
+				ns_ctx->entry->fn_table->check_io(ns_ctx);
 				if (ns_ctx->current_queue_depth == 0) {
 					cleanup_ns_worker_ctx(ns_ctx);
 				} else {
