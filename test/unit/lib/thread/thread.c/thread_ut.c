@@ -801,6 +801,10 @@ thread_exit(void)
 	thread = spdk_get_thread();
 	spdk_thread_exit(thread);
 
+	/* Thread will not be able to get I/O channel after it is marked as exited. */
+	ch = spdk_get_io_channel(&g_device1);
+	CU_ASSERT(ch == NULL);
+
 	poll_threads();
 	CU_ASSERT(g_destroy_cb_calls == 1);
 
