@@ -215,6 +215,19 @@ nvme_transport_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
 	return transport->ops.ctrlr_get_max_sges(ctrlr);
 }
 
+int
+nvme_transport_ctrlr_reserve_cmb(struct spdk_nvme_ctrlr *ctrlr)
+{
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+
+	assert(transport != NULL);
+	if (transport->ops.ctrlr_reserve_cmb != NULL) {
+		return transport->ops.ctrlr_reserve_cmb(ctrlr);
+	}
+
+	return -ENOTSUP;
+}
+
 void *
 nvme_transport_ctrlr_map_cmb(struct spdk_nvme_ctrlr *ctrlr, size_t *size)
 {

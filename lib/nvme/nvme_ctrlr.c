@@ -3363,14 +3363,35 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 	return spdk_nvme_ctrlr_reset(ctrlr);
 }
 
+int
+spdk_nvme_ctrlr_reserve_cmb(struct spdk_nvme_ctrlr *ctrlr)
+{
+	int rc, size;
+	union spdk_nvme_cmbsz_register cmbsz;
+
+	cmbsz = spdk_nvme_ctrlr_get_regs_cmbsz(ctrlr);
+
+	if (cmbsz.bits.rds == 0 || cmbsz.bits.wds == 0) {
+		return -ENOTSUP;
+	}
+
+	size = cmbsz.bits.sz * (0x1000 << (cmbsz.bits.szu * 4));
+
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	rc = nvme_transport_ctrlr_reserve_cmb(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	if (rc < 0) {
+		return rc;
+	}
+
+	return size;
+}
+
 void *
 spdk_nvme_ctrlr_map_cmb(struct spdk_nvme_ctrlr *ctrlr, size_t *size)
 {
 	void *buf;
-
-	if (size == 0) {
-		return NULL;
-	}
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	buf = nvme_transport_ctrlr_map_cmb(ctrlr, size);

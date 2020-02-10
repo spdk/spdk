@@ -553,6 +553,24 @@ nvme_pcie_ctrlr_unmap_cmb(struct nvme_pcie_ctrlr *pctrlr)
 	return rc;
 }
 
+static int
+nvme_pcie_ctrlr_reserve_cmb(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
+
+	if (pctrlr->cmb.bar_va == NULL) {
+		SPDK_DEBUGLOG(SPDK_LOG_NVME, "CMB not available\n");
+		return -ENOTSUP;
+	}
+
+	if (ctrlr->opts.use_cmb_sqs) {
+		SPDK_ERRLOG("CMB is already in use for submission queues.\n");
+		return -ENOTSUP;
+	}
+
+	return 0;
+}
+
 static void *
 nvme_pcie_ctrlr_map_io_cmb(struct spdk_nvme_ctrlr *ctrlr, size_t *size)
 {
@@ -2433,6 +2451,7 @@ const struct spdk_nvme_transport_ops pcie_ops = {
 	.ctrlr_get_max_xfer_size = nvme_pcie_ctrlr_get_max_xfer_size,
 	.ctrlr_get_max_sges = nvme_pcie_ctrlr_get_max_sges,
 
+	.ctrlr_reserve_cmb = nvme_pcie_ctrlr_reserve_cmb,
 	.ctrlr_map_cmb = nvme_pcie_ctrlr_map_io_cmb,
 	.ctrlr_unmap_cmb = nvme_pcie_ctrlr_unmap_io_cmb,
 

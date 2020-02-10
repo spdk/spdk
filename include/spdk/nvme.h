@@ -1911,22 +1911,27 @@ int spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload
 volatile struct spdk_nvme_registers *spdk_nvme_ctrlr_get_registers(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
- * Map the controller memory buffer for use in I/O operations.
+ * Reserve the controller memory buffer for data transfer use.
  *
- * This function maps registered memory which belongs to the Controller
- * Memory Buffer (CMB) of the specified NVMe controller so that it is visible
- * from the CPU. Note that the CMB has to support the WDS and RDS capabilities
- * for the mapping to be successful. Also, due to vtophys contraints the CMB must
- * be at least 4MiB in size.
+ * This function reserves the full size of the controller memory buffer
+ * for use in data transfers. If submission queues or completion queues are
+ * already placed in the controller memory buffer, this call will fail.
  *
- * This cannot be used in conjunction with placing submission queues in the
- * controller memory buffer.
+ * \param ctrlr Controller from which to allocate memory buffer
  *
- * \param ctrlr Controller from which to allocate memory buffer.
- * \param size Size of buffer that was mapped. Return value.
+ * \return The size of the controller memory buffer on success. Negated errno
+ * on failure.
+ */
+int spdk_nvme_ctrlr_reserve_cmb(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
+ * Map a previously reserved controller memory buffer so that it's data is
+ * visible from the CPU. This operation is not always possible.
  *
- * \return Pointer to controller memory buffer, or NULL if mapping
- * was not possible.
+ * \param ctrlr Controller that contains the memory buffer
+ * \param size Size of buffer that was mapped.
+ *
+ * \return Pointer to controller memory buffer, or NULL on failure.
  */
 void *spdk_nvme_ctrlr_map_cmb(struct spdk_nvme_ctrlr *ctrlr, size_t *size);
 
@@ -3079,6 +3084,8 @@ struct spdk_nvme_transport_ops {
 	uint32_t (*ctrlr_get_max_xfer_size)(struct spdk_nvme_ctrlr *ctrlr);
 
 	uint16_t (*ctrlr_get_max_sges)(struct spdk_nvme_ctrlr *ctrlr);
+
+	int (*ctrlr_reserve_cmb)(struct spdk_nvme_ctrlr *ctrlr);
 
 	void *(*ctrlr_map_cmb)(struct spdk_nvme_ctrlr *ctrlr, size_t *size);
 
