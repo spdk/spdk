@@ -519,6 +519,10 @@ struct spdk_nvmf_rdma_transport {
 static inline void
 spdk_nvmf_rdma_start_disconnect(struct spdk_nvmf_rdma_qpair *rqpair);
 
+static bool
+spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
+			       struct spdk_nvmf_rdma_request *rdma_req);
+
 static inline int
 spdk_nvmf_rdma_check_ibv_state(enum ibv_qp_state state)
 {
@@ -930,10 +934,31 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 	spdk_poller_unregister(&rqpair->destruct_poller);
 
 	if (rqpair->qd != 0) {
+		struct spdk_nvmf_qpair *qpair = &rqpair->qpair;
+		struct spdk_nvmf_rdma_transport	*rtransport = SPDK_CONTAINEROF(qpair->transport,
+				struct spdk_nvmf_rdma_transport, transport);
+		struct spdk_nvmf_rdma_request *req;
+		uint32_t i, max_req_count = 0;
+
+		SPDK_WARNLOG("Destroying qpair when queue depth is %d\n", rqpair->qd);
+
 		if (rqpair->srq == NULL) {
 			nvmf_rdma_dump_qpair_contents(rqpair);
+			max_req_count = rqpair->max_queue_depth;
+		} else if (rqpair->poller && rqpair->resources) {
+			max_req_count = rqpair->poller->max_srq_depth;
 		}
-		SPDK_WARNLOG("Destroying qpair when queue depth is %d\n", rqpair->qd);
+
+		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Release incomplete requests\n");
+		for (i = 0; i < max_req_count; i++) {
+			req = &rqpair->resources->reqs[i];
+			if (req->req.qpair == qpair && req->state != RDMA_REQUEST_STATE_FREE) {
+				/* spdk_nvmf_rdma_request_process checks qpair ibv and internal state
+				 * and completes a request */
+				spdk_nvmf_rdma_request_process(rtransport, req);
+			}
+		}
+		assert(rqpair->qd == 0);
 	}
 
 	if (rqpair->poller) {
@@ -1992,7 +2017,7 @@ nvmf_rdma_request_free(struct spdk_nvmf_rdma_request *rdma_req,
 	rdma_req->state = RDMA_REQUEST_STATE_FREE;
 }
 
-static bool
+bool
 spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			       struct spdk_nvmf_rdma_request *rdma_req)
 {
