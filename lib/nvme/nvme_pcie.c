@@ -356,7 +356,7 @@ nvme_pcie_reg_addr(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset)
 	return (volatile void *)((uintptr_t)pctrlr->regs + offset);
 }
 
-int
+static int
 nvme_pcie_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value)
 {
 	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
@@ -368,7 +368,7 @@ nvme_pcie_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32
 	return 0;
 }
 
-int
+static int
 nvme_pcie_ctrlr_set_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value)
 {
 	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
@@ -380,7 +380,7 @@ nvme_pcie_ctrlr_set_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64
 	return 0;
 }
 
-int
+static int
 nvme_pcie_ctrlr_get_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t *value)
 {
 	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
@@ -397,7 +397,7 @@ nvme_pcie_ctrlr_get_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32
 	return 0;
 }
 
-int
+static int
 nvme_pcie_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t *value)
 {
 	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
@@ -449,7 +449,7 @@ nvme_pcie_ctrlr_get_cmbsz(struct nvme_pcie_ctrlr *pctrlr, union spdk_nvme_cmbsz_
 					 &cmbsz->raw);
 }
 
-uint32_t
+static  uint32_t
 nvme_pcie_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 {
 	/*
@@ -462,7 +462,7 @@ nvme_pcie_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 	return NVME_MAX_PRP_LIST_ENTRIES * ctrlr->page_size;
 }
 
-uint16_t
+static uint16_t
 nvme_pcie_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
 {
 	return NVME_MAX_SGL_DESCRIPTORS;
@@ -600,7 +600,7 @@ nvme_pcie_ctrlr_alloc_cmb(struct spdk_nvme_ctrlr *ctrlr, uint64_t length, uint64
 	return 0;
 }
 
-volatile struct spdk_nvme_registers *
+static volatile struct spdk_nvme_registers *
 nvme_pcie_ctrlr_get_registers(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
@@ -608,7 +608,7 @@ nvme_pcie_ctrlr_get_registers(struct spdk_nvme_ctrlr *ctrlr)
 	return pctrlr->regs;
 }
 
-void *
+static void *
 nvme_pcie_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size)
 {
 	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
@@ -632,7 +632,7 @@ nvme_pcie_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size)
 	return pctrlr->cmb_bar_virt_addr + offset;
 }
 
-int
+static int
 nvme_pcie_ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf, size_t size)
 {
 	/*
@@ -751,7 +751,7 @@ pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	return nvme_ctrlr_probe(&trid, enum_ctx->probe_ctx, pci_dev);
 }
 
-int
+static int
 nvme_pcie_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 		     bool direct_connect)
 {
@@ -799,7 +799,7 @@ nvme_pcie_ctrlr_attach(struct spdk_nvme_probe_ctx *probe_ctx, struct spdk_pci_ad
 	return spdk_pci_enumerate(spdk_pci_nvme_get_driver(), pcie_nvme_enum_cb, &enum_ctx);
 }
 
-struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
+static struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 		const struct spdk_nvme_ctrlr_opts *opts,
 		void *devhandle)
 {
@@ -896,7 +896,7 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transpo
 	return &pctrlr->ctrlr;
 }
 
-int
+static int
 nvme_pcie_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
@@ -926,7 +926,7 @@ nvme_pcie_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
-int
+static int
 nvme_pcie_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
@@ -960,7 +960,7 @@ nvme_qpair_construct_tracker(struct nvme_tracker *tr, uint16_t cid, uint64_t phy
 	tr->req = NULL;
 }
 
-int
+static int
 nvme_pcie_qpair_reset(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
@@ -1401,7 +1401,7 @@ nvme_pcie_qpair_abort_trackers(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 	}
 }
 
-void
+static void
 nvme_pcie_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
@@ -1458,7 +1458,7 @@ nvme_pcie_qpair_destroy(struct spdk_nvme_qpair *qpair)
 	return 0;
 }
 
-void
+static void
 nvme_pcie_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 {
 	nvme_pcie_qpair_abort_trackers(qpair, dnr);
@@ -1636,7 +1636,7 @@ _nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 	return 0;
 }
 
-struct spdk_nvme_qpair *
+static struct spdk_nvme_qpair *
 nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 				const struct spdk_nvme_io_qpair_opts *opts)
 {
@@ -1681,7 +1681,7 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 	return qpair;
 }
 
-int
+static int
 nvme_pcie_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
 	if (nvme_qpair_is_admin_queue(qpair)) {
@@ -1691,12 +1691,12 @@ nvme_pcie_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qp
 	}
 }
 
-void
+static void
 nvme_pcie_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
 }
 
-int
+static int
 nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_completion_poll_status *status;
@@ -2104,7 +2104,7 @@ static build_req_fn const g_nvme_pcie_build_req_table[][2] = {
 	}
 };
 
-int
+static int
 nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
 	struct nvme_tracker	*tr;
@@ -2209,7 +2209,7 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 	}
 }
 
-int32_t
+static int32_t
 nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
@@ -2330,6 +2330,7 @@ const struct spdk_nvme_transport_ops pcie_ops = {
 	.ctrlr_set_reg_8 = nvme_pcie_ctrlr_set_reg_8,
 	.ctrlr_get_reg_4 = nvme_pcie_ctrlr_get_reg_4,
 	.ctrlr_get_reg_8 = nvme_pcie_ctrlr_get_reg_8,
+	.ctrlr_get_registers = nvme_pcie_ctrlr_get_registers,
 
 	.ctrlr_get_max_xfer_size = nvme_pcie_ctrlr_get_max_xfer_size,
 	.ctrlr_get_max_sges = nvme_pcie_ctrlr_get_max_sges,
