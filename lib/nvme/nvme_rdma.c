@@ -215,8 +215,8 @@ static const char *rdma_cm_event_str[] = {
 static LIST_HEAD(, spdk_nvme_rdma_mr_map) g_rdma_mr_maps = LIST_HEAD_INITIALIZER(&g_rdma_mr_maps);
 static pthread_mutex_t g_rdma_mr_maps_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-int nvme_rdma_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
-				    struct spdk_nvme_qpair *qpair);
+static int nvme_rdma_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
+		struct spdk_nvme_qpair *qpair);
 
 static inline struct nvme_rdma_qpair *
 nvme_rdma_qpair(struct spdk_nvme_qpair *qpair)
@@ -1078,7 +1078,7 @@ nvme_rdma_unregister_mem(struct nvme_rdma_qpair *rqpair)
 	pthread_mutex_unlock(&g_rdma_mr_maps_mutex);
 }
 
-int
+static int
 nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
 	struct sockaddr_storage dst_addr;
@@ -1629,7 +1629,7 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	return qpair;
 }
 
-void
+static void
 nvme_rdma_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(qpair);
@@ -1675,7 +1675,9 @@ nvme_rdma_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 	}
 }
 
-int
+static void nvme_rdma_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr);
+
+static int
 nvme_rdma_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_rdma_qpair *rqpair;
@@ -1696,7 +1698,7 @@ nvme_rdma_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	return 0;
 }
 
-struct spdk_nvme_qpair *
+static struct spdk_nvme_qpair *
 nvme_rdma_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 				const struct spdk_nvme_io_qpair_opts *opts)
 {
@@ -1705,14 +1707,16 @@ nvme_rdma_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 					    opts->delay_cmd_submit);
 }
 
-int
+static int
 nvme_rdma_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 {
 	/* do nothing here */
 	return 0;
 }
 
-struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
+static int nvme_rdma_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr);
+
+static struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 		const struct spdk_nvme_ctrlr_opts *opts,
 		void *devhandle)
 {
@@ -1828,7 +1832,7 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transpo
 	return &rctrlr->ctrlr;
 }
 
-int
+static int
 nvme_rdma_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_rdma_ctrlr *rctrlr = nvme_rdma_ctrlr(ctrlr);
@@ -1858,7 +1862,7 @@ nvme_rdma_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
-int
+static int
 nvme_rdma_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 			       struct nvme_request *req)
 {
@@ -1888,14 +1892,14 @@ nvme_rdma_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 	return nvme_rdma_qpair_queue_send_wr(rqpair, wr);
 }
 
-int
+static int
 nvme_rdma_qpair_reset(struct spdk_nvme_qpair *qpair)
 {
 	/* Currently, doing nothing here */
 	return 0;
 }
 
-void
+static void
 nvme_rdma_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 {
 	struct spdk_nvme_rdma_req *rdma_req, *tmp;
@@ -1957,7 +1961,7 @@ nvme_rdma_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 
 #define MAX_COMPLETIONS_PER_POLL 128
 
-int
+static int
 nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 				    uint32_t max_completions)
 {
@@ -2072,7 +2076,7 @@ fail:
 	return -ENXIO;
 }
 
-uint32_t
+static uint32_t
 nvme_rdma_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 {
 	/* max_mr_size by ibv_query_device indicates the largest value that we can
@@ -2085,7 +2089,7 @@ nvme_rdma_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 	return UINT32_MAX;
 }
 
-uint16_t
+static uint16_t
 nvme_rdma_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_rdma_ctrlr *rctrlr = nvme_rdma_ctrlr(ctrlr);
@@ -2093,25 +2097,25 @@ nvme_rdma_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
 	return rctrlr->max_sge;
 }
 
-volatile struct spdk_nvme_registers *
+static volatile struct spdk_nvme_registers *
 nvme_rdma_ctrlr_get_registers(struct spdk_nvme_ctrlr *ctrlr)
 {
 	return NULL;
 }
 
-void *
+static void *
 nvme_rdma_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size)
 {
 	return NULL;
 }
 
-int
+static int
 nvme_rdma_ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf, size_t size)
 {
 	return 0;
 }
 
-void
+static void
 nvme_rdma_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 {
 	struct spdk_nvme_rdma_req *rdma_req, *tmp;
@@ -2152,6 +2156,7 @@ const struct spdk_nvme_transport_ops rdma_ops = {
 	.ctrlr_set_reg_8 = nvme_fabric_ctrlr_set_reg_8,
 	.ctrlr_get_reg_4 = nvme_fabric_ctrlr_get_reg_4,
 	.ctrlr_get_reg_8 = nvme_fabric_ctrlr_get_reg_8,
+	.ctrlr_get_registers = nvme_rdma_ctrlr_get_registers,
 
 	.ctrlr_get_max_xfer_size = nvme_rdma_ctrlr_get_max_xfer_size,
 	.ctrlr_get_max_sges = nvme_rdma_ctrlr_get_max_sges,
