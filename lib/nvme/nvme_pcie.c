@@ -76,25 +76,27 @@ struct nvme_pcie_ctrlr {
 	/** NVMe MMIO register size */
 	uint64_t regs_size;
 
-	/* BAR mapping address which contains controller memory buffer */
-	void *cmb_bar_virt_addr;
+	struct {
+		/* BAR mapping address which contains controller memory buffer */
+		void *bar_va;
 
-	/* BAR physical address which contains controller memory buffer */
-	uint64_t cmb_bar_phys_addr;
+		/* BAR physical address which contains controller memory buffer */
+		uint64_t bar_pa;
 
-	/* Controller memory buffer size in Bytes */
-	uint64_t cmb_size;
+		/* Controller memory buffer size in Bytes */
+		uint64_t size;
 
-	/* Current offset of controller memory buffer, relative to start of BAR virt addr */
-	uint64_t cmb_current_offset;
+		/* Current offset of controller memory buffer, relative to start of BAR virt addr */
+		uint64_t current_offset;
 
-	/* Last valid offset into CMB, this differs if CMB memory registration occurs or not */
-	uint64_t cmb_max_offset;
+		/* Last valid offset into CMB, this differs if CMB memory registration occurs or not */
+		uint64_t end;
 
-	void *cmb_mem_register_addr;
-	size_t cmb_mem_register_size;
+		void *mem_register_addr;
+		size_t mem_register_size;
 
-	bool cmb_io_data_supported;
+		bool io_data_supported;
+	} cmb;
 
 	/** stride in uint32_t units between doorbell registers (1 = 4 bytes, 2 = 8 bytes, ...) */
 	uint32_t doorbell_stride_u32;
@@ -516,11 +518,11 @@ nvme_pcie_ctrlr_map_cmb(struct nvme_pcie_ctrlr *pctrlr)
 		goto exit;
 	}
 
-	pctrlr->cmb_bar_virt_addr = addr;
-	pctrlr->cmb_bar_phys_addr = bar_phys_addr;
-	pctrlr->cmb_size = size;
-	pctrlr->cmb_current_offset = offset;
-	pctrlr->cmb_max_offset = offset + size;
+	pctrlr->cmb.bar_va = addr;
+	pctrlr->cmb.bar_pa = bar_phys_addr;
+	pctrlr->cmb.size = size;
+	pctrlr->cmb.current_offset = offset;
+	pctrlr->cmb.end = offset + size;
 
 	if (!cmbsz.bits.sqs) {
 		pctrlr->ctrlr.opts.use_cmb_sqs = false;
@@ -532,27 +534,27 @@ nvme_pcie_ctrlr_map_cmb(struct nvme_pcie_ctrlr *pctrlr)
 	}
 
 	/* If CMB is less than 4MiB in size then abort CMB mapping */
-	if (pctrlr->cmb_size < (1ULL << 22)) {
+	if (pctrlr->cmb.size < (1ULL << 22)) {
 		goto exit;
 	}
 
-	mem_register_start = _2MB_PAGE((uintptr_t)pctrlr->cmb_bar_virt_addr + offset + VALUE_2MB - 1);
-	mem_register_end = _2MB_PAGE((uintptr_t)pctrlr->cmb_bar_virt_addr + offset + pctrlr->cmb_size);
-	pctrlr->cmb_mem_register_addr = (void *)mem_register_start;
-	pctrlr->cmb_mem_register_size = mem_register_end - mem_register_start;
+	mem_register_start = _2MB_PAGE((uintptr_t)pctrlr->cmb.bar_va + offset + VALUE_2MB - 1);
+	mem_register_end = _2MB_PAGE((uintptr_t)pctrlr->cmb.bar_va + offset + pctrlr->cmb.size);
+	pctrlr->cmb.mem_register_addr = (void *)mem_register_start;
+	pctrlr->cmb.mem_register_size = mem_register_end - mem_register_start;
 
-	rc = spdk_mem_register(pctrlr->cmb_mem_register_addr, pctrlr->cmb_mem_register_size);
+	rc = spdk_mem_register(pctrlr->cmb.mem_register_addr, pctrlr->cmb.mem_register_size);
 	if (rc) {
 		SPDK_ERRLOG("spdk_mem_register() failed\n");
 		goto exit;
 	}
-	pctrlr->cmb_current_offset = mem_register_start - ((uint64_t)pctrlr->cmb_bar_virt_addr);
-	pctrlr->cmb_max_offset = mem_register_end - ((uint64_t)pctrlr->cmb_bar_virt_addr);
-	pctrlr->cmb_io_data_supported = true;
+	pctrlr->cmb.current_offset = mem_register_start - ((uint64_t)pctrlr->cmb.bar_va);
+	pctrlr->cmb.end = mem_register_end - ((uint64_t)pctrlr->cmb.bar_va);
+	pctrlr->cmb.io_data_supported = true;
 
 	return;
 exit:
-	pctrlr->cmb_bar_virt_addr = NULL;
+	pctrlr->cmb.bar_va = NULL;
 	pctrlr->ctrlr.opts.use_cmb_sqs = false;
 	return;
 }
@@ -562,11 +564,11 @@ nvme_pcie_ctrlr_unmap_cmb(struct nvme_pcie_ctrlr *pctrlr)
 {
 	int rc = 0;
 	union spdk_nvme_cmbloc_register cmbloc;
-	void *addr = pctrlr->cmb_bar_virt_addr;
+	void *addr = pctrlr->cmb.bar_va;
 
 	if (addr) {
-		if (pctrlr->cmb_mem_register_addr) {
-			spdk_mem_unregister(pctrlr->cmb_mem_register_addr, pctrlr->cmb_mem_register_size);
+		if (pctrlr->cmb.mem_register_addr) {
+			spdk_mem_unregister(pctrlr->cmb.mem_register_addr, pctrlr->cmb.mem_register_size);
 		}
 
 		if (nvme_pcie_ctrlr_get_cmbloc(pctrlr, &cmbloc)) {
@@ -585,17 +587,17 @@ nvme_pcie_ctrlr_alloc_cmb(struct spdk_nvme_ctrlr *ctrlr, uint64_t length, uint64
 	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
 	uint64_t round_offset;
 
-	round_offset = pctrlr->cmb_current_offset;
+	round_offset = pctrlr->cmb.current_offset;
 	round_offset = (round_offset + (aligned - 1)) & ~(aligned - 1);
 
 	/* CMB may only consume part of the BAR, calculate accordingly */
-	if (round_offset + length > pctrlr->cmb_max_offset) {
+	if (round_offset + length > pctrlr->cmb.end) {
 		SPDK_ERRLOG("Tried to allocate past valid CMB range!\n");
 		return -1;
 	}
 
 	*offset = round_offset;
-	pctrlr->cmb_current_offset = round_offset + length;
+	pctrlr->cmb.current_offset = round_offset + length;
 
 	return 0;
 }
@@ -606,12 +608,12 @@ nvme_pcie_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size)
 	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
 	uint64_t offset;
 
-	if (pctrlr->cmb_bar_virt_addr == NULL) {
+	if (pctrlr->cmb.bar_va == NULL) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVME, "CMB not available\n");
 		return NULL;
 	}
 
-	if (!pctrlr->cmb_io_data_supported) {
+	if (!pctrlr->cmb.io_data_supported) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVME, "CMB doesn't support I/O data\n");
 		return NULL;
 	}
@@ -621,7 +623,7 @@ nvme_pcie_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size)
 		return NULL;
 	}
 
-	return pctrlr->cmb_bar_virt_addr + offset;
+	return pctrlr->cmb.bar_va + offset;
 }
 
 static int
@@ -1028,8 +1030,8 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 	if (ctrlr->opts.use_cmb_sqs) {
 		if (nvme_pcie_ctrlr_alloc_cmb(ctrlr, pqpair->num_entries * sizeof(struct spdk_nvme_cmd),
 					      sysconf(_SC_PAGESIZE), &offset) == 0) {
-			pqpair->cmd = pctrlr->cmb_bar_virt_addr + offset;
-			pqpair->cmd_bus_addr = pctrlr->cmb_bar_phys_addr + offset;
+			pqpair->cmd = pctrlr->cmb.bar_va + offset;
+			pqpair->cmd_bus_addr = pctrlr->cmb.bar_pa + offset;
 			pqpair->sq_in_cmb = true;
 		}
 	}
