@@ -230,7 +230,7 @@ fail:
 	return -ENOMEM;
 }
 
-void
+static void
 nvme_tcp_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
@@ -254,7 +254,9 @@ nvme_tcp_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	}
 }
 
-int
+static void nvme_tcp_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr);
+
+static int
 nvme_tcp_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_tcp_qpair *tqpair;
@@ -273,13 +275,13 @@ nvme_tcp_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_q
 	return 0;
 }
 
-int
+static int
 nvme_tcp_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 {
 	return 0;
 }
 
-int
+static int
 nvme_tcp_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_tcp_ctrlr *tctrlr = nvme_tcp_ctrlr(ctrlr);
@@ -537,7 +539,7 @@ end:
 
 }
 
-int
+static int
 nvme_tcp_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 			      struct nvme_request *req)
 {
@@ -563,7 +565,7 @@ nvme_tcp_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 	return nvme_tcp_qpair_capsule_cmd_send(tqpair, tcp_req);
 }
 
-int
+static int
 nvme_tcp_qpair_reset(struct spdk_nvme_qpair *qpair)
 {
 	return 0;
@@ -577,7 +579,7 @@ nvme_tcp_req_complete(struct nvme_request *req,
 	nvme_free_request(req);
 }
 
-void
+static void
 nvme_tcp_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 {
 	struct nvme_tcp_req *tcp_req, *tmp;
@@ -1379,7 +1381,7 @@ nvme_tcp_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 	}
 }
 
-int
+static int
 nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
 	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
@@ -1473,7 +1475,7 @@ nvme_tcp_qpair_icreq_send(struct nvme_tcp_qpair *tqpair)
 	return 0;
 }
 
-int
+static int
 nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
 	struct sockaddr_storage dst_addr;
@@ -1592,7 +1594,7 @@ nvme_tcp_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	return qpair;
 }
 
-struct spdk_nvme_qpair *
+static struct spdk_nvme_qpair *
 nvme_tcp_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 			       const struct spdk_nvme_io_qpair_opts *opts)
 {
@@ -1600,7 +1602,7 @@ nvme_tcp_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 					   opts->io_queue_requests);
 }
 
-struct spdk_nvme_ctrlr *nvme_tcp_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
+static struct spdk_nvme_ctrlr *nvme_tcp_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 		const struct spdk_nvme_ctrlr_opts *opts,
 		void *devhandle)
 {
@@ -1656,14 +1658,14 @@ struct spdk_nvme_ctrlr *nvme_tcp_ctrlr_construct(const struct spdk_nvme_transpor
 	return &tctrlr->ctrlr;
 }
 
-uint32_t
+static uint32_t
 nvme_tcp_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 {
 	/* TCP transport doens't limit maximum IO transfer size. */
 	return UINT32_MAX;
 }
 
-uint16_t
+static uint16_t
 nvme_tcp_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
 {
 	/*
@@ -1675,25 +1677,25 @@ nvme_tcp_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
 	return 1;
 }
 
-volatile struct spdk_nvme_registers *
+static volatile struct spdk_nvme_registers *
 nvme_tcp_ctrlr_get_registers(struct spdk_nvme_ctrlr *ctrlr)
 {
 	return NULL;
 }
 
-void *
+static void *
 nvme_tcp_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size)
 {
 	return NULL;
 }
 
-int
+static int
 nvme_tcp_ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf, size_t size)
 {
 	return 0;
 }
 
-void
+static void
 nvme_tcp_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_tcp_req *tcp_req, *tmp;
@@ -1728,6 +1730,7 @@ const struct spdk_nvme_transport_ops tcp_ops = {
 	.ctrlr_set_reg_8 = nvme_fabric_ctrlr_set_reg_8,
 	.ctrlr_get_reg_4 = nvme_fabric_ctrlr_get_reg_4,
 	.ctrlr_get_reg_8 = nvme_fabric_ctrlr_get_reg_8,
+	.ctrlr_get_registers = nvme_tcp_ctrlr_get_registers,
 
 	.ctrlr_get_max_xfer_size = nvme_tcp_ctrlr_get_max_xfer_size,
 	.ctrlr_get_max_sges = nvme_tcp_ctrlr_get_max_sges,

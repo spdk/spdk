@@ -1149,7 +1149,6 @@ const struct nvme_transport *nvme_get_transport(const char *transport_name);
 	void nvme_ ## name ## _admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair); \
 
 DECLARE_TRANSPORT(transport) /* generic transport dispatch functions */
-DECLARE_TRANSPORT(tcp)
 #ifdef  SPDK_CONFIG_RDMA
 DECLARE_TRANSPORT(rdma)
 #endif
