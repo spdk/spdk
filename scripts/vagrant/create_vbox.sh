@@ -310,6 +310,16 @@ EOF
 	if [ ${VAGRANT_PACKAGE_BOX} == 1 ]; then
 		cd "$VAGRANTFILE_DIR"
 		vagrant ssh -c 'sudo spdk_repo/spdk/scripts/vagrant/update.sh'
+		if [[ $SPDK_VAGRANT_DISTRO =~ "ubuntu" ]]; then
+			vagrant ssh -c 'sudo apt-get clean'
+		elif [[ $SPDK_VAGRANT_DISTRO =~ "fedora" ]]; then
+			vagrant ssh -c 'sudo dnf clean all'
+		elif [[ $SPDK_VAGRANT_DISTRO =~ "centos" ]]; then
+			vagrant ssh -c 'sudo yum clean all'
+		elif [[ $SPDK_VAGRANT_DISTRO =~ "freebsd" ]]; then
+			vagrant ssh -c 'sudo pkg clean -ay'
+		fi
+		vagrant ssh -c 'cat /dev/null > ~/.bash_history && history -c'
 	fi
 	echo ""
 	echo "  SUCCESS!"
