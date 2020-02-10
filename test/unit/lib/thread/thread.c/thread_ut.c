@@ -754,7 +754,7 @@ thread_exit(void)
 	bool done1 = false, done2 = false;
 	int rc __attribute__((unused));
 
-	allocate_threads(3);
+	allocate_threads(4);
 
 	/* Test all pending messages are reaped for the thread marked as exited. */
 	set_thread(0);
@@ -810,6 +810,14 @@ thread_exit(void)
 
 	spdk_io_device_unregister(&g_device1, NULL);
 	poll_threads();
+
+	/* Test call spdk_thread_exit() is only once for a single thread. */
+	set_thread(3);
+
+	thread = spdk_get_thread();
+
+	CU_ASSERT(spdk_thread_exit(thread) == 0);
+	CU_ASSERT(spdk_thread_exit(thread) == -EINVAL);
 
 	free_threads();
 }
