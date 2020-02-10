@@ -270,24 +270,8 @@ bdevperf_free_target(struct io_target *target)
 }
 
 static void
-bdevperf_free_targets(void)
+bdevperf_free_targets_done(struct spdk_io_channel_iter *i, int status)
 {
-	struct io_target_group *group, *tmp_group;
-	struct io_target *target, *tmp_target;
-
-	TAILQ_FOREACH_SAFE(group, &g_bdevperf.groups, link, tmp_group) {
-		TAILQ_FOREACH_SAFE(target, &group->targets, link, tmp_target) {
-			TAILQ_REMOVE(&group->targets, target, link);
-			bdevperf_free_target(target);
-		}
-	}
-}
-
-static void
-bdevperf_test_done(void)
-{
-	bdevperf_free_targets();
-
 	if (g_request && !g_shutdown) {
 		rpc_perform_tests_cb();
 	} else {
@@ -296,11 +280,33 @@ bdevperf_test_done(void)
 }
 
 static void
+_bdevperf_free_targets(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *ch;
+	struct io_target_group *group;
+	struct io_target *target, *tmp;
+
+	ch = spdk_io_channel_iter_get_channel(i);
+	group = spdk_io_channel_get_ctx(ch);
+
+	TAILQ_FOREACH_SAFE(target, &group->targets, link, tmp) {
+		TAILQ_REMOVE(&group->targets, target, link);
+		bdevperf_free_target(target);
+	}
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static void
+bdevperf_test_done(void)
+{
+	spdk_for_each_channel(&g_bdevperf, _bdevperf_free_targets, NULL,
+			      bdevperf_free_targets_done);
+}
+
+static void
 end_run(void *ctx)
 {
-	struct io_target *target = ctx;
-
-	spdk_bdev_close(target->bdev_desc);
 	if (--g_target_count == 0) {
 		if (g_show_performance_real_time) {
 			spdk_poller_unregister(&g_perf_timer);
@@ -399,7 +405,8 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		TAILQ_INSERT_TAIL(&target->task_list, task, link);
 		if (target->current_queue_depth == 0) {
 			spdk_put_io_channel(target->ch);
-			spdk_thread_send_msg(g_master_thread, end_run, target);
+			spdk_bdev_close(target->bdev_desc);
+			spdk_thread_send_msg(g_master_thread, end_run, NULL);
 		}
 	}
 }
@@ -972,25 +979,18 @@ bdevperf_construct_targets_tasks(void)
 }
 
 static void
-_target_gone(void *ctx)
+bdevperf_target_gone(void *arg)
 {
-	struct io_target *target = ctx;
+	struct io_target *target = arg;
+
+	assert(spdk_io_channel_get_thread(spdk_io_channel_from_ctx(target->group)) ==
+	       spdk_get_thread());
 
 	_end_target(target);
 }
 
-static void
-bdevperf_target_gone(void *arg)
-{
-	struct io_target *target = arg;
-	struct io_target_group *group = target->group;
-
-	spdk_thread_send_msg(spdk_io_channel_get_thread(spdk_io_channel_from_ctx(group)),
-			     _target_gone, target);
-}
-
 static int
-bdevperf_construct_target(struct spdk_bdev *bdev, struct io_target_group *group)
+_bdevperf_construct_target(struct spdk_bdev *bdev, struct io_target_group *group)
 {
 	struct io_target *target;
 	int block_size, data_block_size;
@@ -1038,12 +1038,59 @@ bdevperf_construct_target(struct spdk_bdev *bdev, struct io_target_group *group)
 
 	target->group = group;
 	TAILQ_INSERT_TAIL(&group->targets, target, link);
-	g_target_count++;
 
 	return 0;
 }
 
 static uint32_t g_bdev_count = 0;
+
+struct construct_targets_ctx {
+	struct spdk_bdev	*bdev;
+	struct io_target_group	*group;
+	uint32_t		target_count;
+};
+
+static void
+_bdevperf_construct_targets_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct construct_targets_ctx *ctx;
+
+	ctx = spdk_io_channel_iter_get_ctx(i);
+
+	/* Update g_target_count on the master thread. */
+	g_target_count += ctx->target_count;
+
+	free(ctx);
+
+	if (--g_bdev_count == 0) {
+		bdevperf_construct_targets_tasks();
+	}
+}
+
+static void
+bdevperf_construct_target(struct spdk_io_channel_iter *i)
+{
+	struct construct_targets_ctx *ctx;
+	struct spdk_io_channel *ch;
+	struct io_target_group *group;
+	int rc = 0;
+
+	ctx = spdk_io_channel_iter_get_ctx(i);
+	ch = spdk_io_channel_iter_get_channel(i);
+	group = spdk_io_channel_get_ctx(ch);
+
+	/* Create target on this group if g_every_core_for_each_bdev is true or
+	 * this group is selected.
+	 */
+	if (ctx->group == NULL || ctx->group == group) {
+		rc = _bdevperf_construct_target(ctx->bdev, group);
+		if (rc == 0) {
+			ctx->target_count++;
+		}
+	}
+
+	spdk_for_each_channel_continue(i, rc);
+}
 
 static struct io_target_group *
 get_next_io_target_group(void)
@@ -1065,9 +1112,7 @@ static void
 _bdevperf_construct_targets(struct spdk_bdev *bdev)
 {
 	uint32_t data_block_size;
-	uint8_t core_idx, core_count_for_each_bdev;
-	struct io_target_group *group;
-	int rc;
+	struct construct_targets_ctx *ctx;
 
 	if (g_unmap && !spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
 		printf("Skipping %s because it does not support unmap\n", spdk_bdev_get_name(bdev));
@@ -1081,19 +1126,20 @@ _bdevperf_construct_targets(struct spdk_bdev *bdev)
 		return;
 	}
 
-	if (g_every_core_for_each_bdev == false) {
-		core_count_for_each_bdev = 1;
-	} else {
-		core_count_for_each_bdev = spdk_env_get_core_count();
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		return;
 	}
 
-	for (core_idx = 0; core_idx < core_count_for_each_bdev; core_idx++) {
-		group = get_next_io_target_group();
-		rc = bdevperf_construct_target(bdev, group);
-		if (rc != 0) {
-			return;
-		}
+	ctx->bdev = bdev;
+
+	if (g_every_core_for_each_bdev == false) {
+		ctx->group = get_next_io_target_group();
 	}
+
+	g_bdev_count++;
+	spdk_for_each_channel(&g_bdevperf, bdevperf_construct_target, ctx,
+			      _bdevperf_construct_targets_done);
 }
 
 static void
