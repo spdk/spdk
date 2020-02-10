@@ -582,10 +582,12 @@ nvme_pcie_ctrlr_unmap_cmb(struct nvme_pcie_ctrlr *pctrlr)
 }
 
 static void *
-nvme_pcie_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size)
+nvme_pcie_ctrlr_map_io_cmb(struct spdk_nvme_ctrlr *ctrlr, size_t *size)
 {
 	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
 	uint64_t offset;
+
+	*size = 0;
 
 	if (pctrlr->cmb.bar_va == NULL) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVME, "CMB not available\n");
@@ -604,25 +606,20 @@ nvme_pcie_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size)
 
 	offset = (pctrlr->cmb.current_offset + (3)) & ~(3);
 
-	/* CMB may only consume part of the BAR, calculate accordingly */
-	if (offset + size > pctrlr->cmb.end) {
-		SPDK_ERRLOG("Tried to allocate past valid CMB range!\n");
+	if (offset >= pctrlr->cmb.end) {
 		return NULL;
 	}
 
-	pctrlr->cmb.current_offset = offset + size;
+	*size = pctrlr->cmb.end - offset;
+
+	pctrlr->cmb.current_offset = pctrlr->cmb.end;
 
 	return pctrlr->cmb.bar_va + offset;
 }
 
 static int
-nvme_pcie_ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf, size_t size)
+nvme_pcie_ctrlr_unmap_io_cmb(struct spdk_nvme_ctrlr *ctrlr)
 {
-	/*
-	 * Do nothing for now.
-	 * TODO: Track free space so buffers may be reused.
-	 */
-	SPDK_ERRLOG("no deallocation for CMB buffers yet!\n");
 	return 0;
 }
 
@@ -2419,8 +2416,8 @@ const struct spdk_nvme_transport_ops pcie_ops = {
 	.ctrlr_get_max_xfer_size = nvme_pcie_ctrlr_get_max_xfer_size,
 	.ctrlr_get_max_sges = nvme_pcie_ctrlr_get_max_sges,
 
-	.ctrlr_alloc_cmb_io_buffer = nvme_pcie_ctrlr_alloc_cmb_io_buffer,
-	.ctrlr_free_cmb_io_buffer = nvme_pcie_ctrlr_free_cmb_io_buffer,
+	.ctrlr_map_cmb = nvme_pcie_ctrlr_map_io_cmb,
+	.ctrlr_unmap_cmb = nvme_pcie_ctrlr_unmap_io_cmb,
 
 	.ctrlr_create_io_qpair = nvme_pcie_ctrlr_create_io_qpair,
 	.ctrlr_delete_io_qpair = nvme_pcie_ctrlr_delete_io_qpair,

@@ -137,13 +137,13 @@ nvme_transport_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 void *
-nvme_transport_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size)
+nvme_transport_ctrlr_map_cmb(struct spdk_nvme_ctrlr *ctrlr, size_t *size)
 {
 	return NULL;
 }
 
 int
-nvme_transport_ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf, size_t size)
+nvme_transport_ctrlr_unmap_cmb(struct spdk_nvme_ctrlr *ctrlr)
 {
 	return 0;
 }

@@ -3364,7 +3364,7 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 }
 
 void *
-spdk_nvme_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size)
+spdk_nvme_ctrlr_map_cmb(struct spdk_nvme_ctrlr *ctrlr, size_t *size)
 {
 	void *buf;
 
@@ -3373,20 +3373,18 @@ spdk_nvme_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size)
 	}
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
-	buf = nvme_transport_ctrlr_alloc_cmb_io_buffer(ctrlr, size);
+	buf = nvme_transport_ctrlr_map_cmb(ctrlr, size);
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	return buf;
 }
 
 void
-spdk_nvme_ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf, size_t size)
+spdk_nvme_ctrlr_unmap_cmb(struct spdk_nvme_ctrlr *ctrlr)
 {
-	if (buf && size) {
-		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
-		nvme_transport_ctrlr_free_cmb_io_buffer(ctrlr, buf, size);
-		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
-	}
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	nvme_transport_ctrlr_unmap_cmb(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 }
 
 bool

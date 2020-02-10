@@ -138,7 +138,7 @@ write_complete(void *arg, const struct spdk_nvme_cpl *completion)
 	 *  the data back from the NVMe namespace.
 	 */
 	if (sequence->using_cmb_io) {
-		spdk_nvme_ctrlr_free_cmb_io_buffer(ns_entry->ctrlr, sequence->buf, 0x1000);
+		spdk_nvme_ctrlr_unmap_cmb(ns_entry->ctrlr);
 	} else {
 		spdk_free(sequence->buf);
 	}
@@ -160,6 +160,7 @@ hello_world(void)
 	struct ns_entry			*ns_entry;
 	struct hello_world_sequence	sequence;
 	int				rc;
+	size_t				sz;
 
 	ns_entry = g_namespaces;
 	while (ns_entry != NULL) {
@@ -187,8 +188,8 @@ hello_world(void)
 		 * I/O operations.
 		 */
 		sequence.using_cmb_io = 1;
-		sequence.buf = spdk_nvme_ctrlr_alloc_cmb_io_buffer(ns_entry->ctrlr, 0x1000);
-		if (sequence.buf == NULL) {
+		sequence.buf = spdk_nvme_ctrlr_map_cmb(ns_entry->ctrlr, &sz);
+		if (sequence.buf == NULL || sz < 0x1000) {
 			sequence.using_cmb_io = 0;
 			sequence.buf = spdk_zmalloc(0x1000, 0x1000, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 		}

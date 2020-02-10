@@ -1911,33 +1911,31 @@ int spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload
 volatile struct spdk_nvme_registers *spdk_nvme_ctrlr_get_registers(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
- * Allocate an I/O buffer from the controller memory buffer (Experimental).
+ * Map the controller memory buffer for use in I/O operations.
  *
- * This function allocates registered memory which belongs to the Controller
- * Memory Buffer (CMB) of the specified NVMe controller. Note that the CMB has
- * to support the WDS and RDS capabilities for the allocation to be successful.
- * Also, due to vtophys contraints the CMB must be at least 4MiB in size. Free
- * memory allocated with this function using spdk_nvme_ctrlr_free_cmb_io_buffer().
+ * This function maps registered memory which belongs to the Controller
+ * Memory Buffer (CMB) of the specified NVMe controller so that it is visible
+ * from the CPU. Note that the CMB has to support the WDS and RDS capabilities
+ * for the mapping to be successful. Also, due to vtophys contraints the CMB must
+ * be at least 4MiB in size.
+ *
+ * This cannot be used in conjunction with placing submission queues in the
+ * controller memory buffer.
  *
  * \param ctrlr Controller from which to allocate memory buffer.
- * \param size Size of buffer to allocate in bytes.
+ * \param size Size of buffer that was mapped. Return value.
  *
- * \return Pointer to controller memory buffer allocation, or NULL if allocation
+ * \return Pointer to controller memory buffer, or NULL if mapping
  * was not possible.
  */
-void *spdk_nvme_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size);
+void *spdk_nvme_ctrlr_map_cmb(struct spdk_nvme_ctrlr *ctrlr, size_t *size);
 
 /**
- * Free a controller memory I/O buffer (Experimental).
+ * Free a controller memory I/O buffer.
  *
- * Note this function is currently a NOP which is one reason why this and
- * spdk_nvme_ctrlr_alloc_cmb_io_buffer() are currently marked as experimental.
- *
- * \param ctrlr Controller from which the buffer was allocated.
- * \param buf Buffer previously allocated by spdk_nvme_ctrlr_alloc_cmb_io_buffer().
- * \param size Size of buf in bytes.
+ * \param ctrlr Controller from which to unmap the memory buffer.
  */
-void spdk_nvme_ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf, size_t size);
+void spdk_nvme_ctrlr_unmap_cmb(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
  * Get the transport ID for a given NVMe controller.
@@ -3082,9 +3080,9 @@ struct spdk_nvme_transport_ops {
 
 	uint16_t (*ctrlr_get_max_sges)(struct spdk_nvme_ctrlr *ctrlr);
 
-	void *(*ctrlr_alloc_cmb_io_buffer)(struct spdk_nvme_ctrlr *ctrlr, size_t size);
+	void *(*ctrlr_map_cmb)(struct spdk_nvme_ctrlr *ctrlr, size_t *size);
 
-	int (*ctrlr_free_cmb_io_buffer)(struct spdk_nvme_ctrlr *ctrlr, void *buf, size_t size);
+	int (*ctrlr_unmap_cmb)(struct spdk_nvme_ctrlr *ctrlr);
 
 	struct spdk_nvme_qpair *(*ctrlr_create_io_qpair)(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 			const struct spdk_nvme_io_qpair_opts *opts);

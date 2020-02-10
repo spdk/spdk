@@ -109,6 +109,7 @@ cmb_copy(void)
 {
 	int rc = 0, rw;
 	void *buf;
+	size_t sz;
 
 	/* Allocate QPs for the read and write controllers */
 	g_config.read.qpair = spdk_nvme_ctrlr_alloc_io_qpair(g_config.read.ctrlr, NULL, 0);
@@ -119,8 +120,8 @@ cmb_copy(void)
 	}
 
 	/* Allocate a buffer from our CMB */
-	buf = spdk_nvme_ctrlr_alloc_cmb_io_buffer(g_config.cmb.ctrlr, g_config.copy_size);
-	if (buf == NULL) {
+	buf = spdk_nvme_ctrlr_map_cmb(g_config.cmb.ctrlr, &sz);
+	if (buf == NULL || sz != g_config.copy_size) {
 		printf("ERROR: buffer allocation failed\n");
 		printf("Are you sure %s has a valid CMB?\n",
 		       g_config.cmb.trid.traddr);
@@ -162,8 +163,7 @@ cmb_copy(void)
 	g_config.write.done = 0;
 
 	/* Free CMB buffer */
-	spdk_nvme_ctrlr_free_cmb_io_buffer(g_config.cmb.ctrlr, buf,
-					   g_config.copy_size);
+	spdk_nvme_ctrlr_unmap_cmb(g_config.cmb.ctrlr);
 
 	/* Free the queues */
 	spdk_nvme_ctrlr_free_io_qpair(g_config.read.qpair);

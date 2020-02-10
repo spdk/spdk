@@ -216,26 +216,26 @@ nvme_transport_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 void *
-nvme_transport_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size)
+nvme_transport_ctrlr_map_cmb(struct spdk_nvme_ctrlr *ctrlr, size_t *size)
 {
 	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
 
 	assert(transport != NULL);
-	if (transport->ops.ctrlr_alloc_cmb_io_buffer != NULL) {
-		return transport->ops.ctrlr_alloc_cmb_io_buffer(ctrlr, size);
+	if (transport->ops.ctrlr_map_cmb != NULL) {
+		return transport->ops.ctrlr_map_cmb(ctrlr, size);
 	}
 
 	return NULL;
 }
 
 int
-nvme_transport_ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf, size_t size)
+nvme_transport_ctrlr_unmap_cmb(struct spdk_nvme_ctrlr *ctrlr)
 {
 	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
 
 	assert(transport != NULL);
-	if (transport->ops.ctrlr_free_cmb_io_buffer != NULL) {
-		return transport->ops.ctrlr_free_cmb_io_buffer(ctrlr, buf, size);
+	if (transport->ops.ctrlr_unmap_cmb != NULL) {
+		return transport->ops.ctrlr_unmap_cmb(ctrlr);
 	}
 
 	return 0;

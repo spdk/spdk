@@ -29,8 +29,8 @@ capabilities are given in the table below.
 
 Key Functions                               | Description
 ------------------------------------------- | -----------
-spdk_nvme_ctrlr_alloc_cmb_io_buffer()       | @copybrief spdk_nvme_ctrlr_alloc_cmb_io_buffer()
-spdk_nvme_ctrlr_free_cmb_io_buffer()        | @copybrief spdk_nvme_ctrlr_free_cmb_io_buffer()
+spdk_nvme_ctrlr_map_cmb()                   | @copybrief spdk_nvme_ctrlr_map_cmb()
+spdk_nvme_ctrlr_unmap_cmb()                 | @copybrief spdk_nvme_ctrlr_unmap_cmb()
 spdk_nvme_ctrlr_get_regs_cmbsz()            | @copybrief spdk_nvme_ctrlr_get_regs_cmbsz()
 
 # Determining device support {#p2p_support}
