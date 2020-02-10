@@ -7651,6 +7651,123 @@ blob_simultaneous_operations(void)
 	poll_threads();
 }
 
+static void
+blob_persist(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev *dev;
+	struct spdk_blob_opts opts;
+	struct spdk_blob *blob;
+	spdk_blob_id blobid;
+	struct spdk_io_channel *channel;
+	char *xattr;
+	size_t xattr_length;
+	int rc;
+	uint32_t page_count_clear, page_count_xattr;
+	uint64_t poller_iterations;
+	bool run_poller;
+
+	dev = init_dev();
+
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	channel = spdk_bs_alloc_io_channel(bs);
+	SPDK_CU_ASSERT_FATAL(channel != NULL);
+
+	ut_spdk_blob_opts_init(&opts);
+	opts.num_clusters = 10;
+
+	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+
+	/* Save the amount of md pages used after creation of a blob.
+	 * This should be consistent after removing xattr. */
+	page_count_clear = spdk_bit_array_count_set(bs->used_md_pages);
+	SPDK_CU_ASSERT_FATAL(blob->active.num_pages + blob->active.num_extent_pages == page_count_clear);
+	SPDK_CU_ASSERT_FATAL(blob->clean.num_pages + blob->clean.num_extent_pages == page_count_clear);
+
+	/* Add xattr with maximum length of descriptor to exceed single metadata page. */
+	xattr_length = SPDK_BS_MAX_DESC_SIZE - sizeof(struct spdk_blob_md_descriptor_xattr) -
+		       strlen("large_xattr");
+	xattr = calloc(xattr_length, sizeof(char));
+	SPDK_CU_ASSERT_FATAL(xattr != NULL);
+
+	rc = spdk_blob_set_xattr(blob, "large_xattr", xattr, xattr_length);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	spdk_blob_sync_md(blob, blob_op_complete, NULL);
+	poll_threads();
+	SPDK_CU_ASSERT_FATAL(g_bserrno == 0);
+
+	/* Save the amount of md pages used after adding the large xattr */
+	page_count_xattr = spdk_bit_array_count_set(bs->used_md_pages);
+	SPDK_CU_ASSERT_FATAL(blob->active.num_pages + blob->active.num_extent_pages == page_count_xattr);
+	SPDK_CU_ASSERT_FATAL(blob->clean.num_pages + blob->clean.num_extent_pages == page_count_xattr);
+
+	/* Add xattr to a blob and sync it. While sync is occuring, remove the xattr and sync again.
+	 * Interrupt the first sync after increasing number of poller iterations, until it succeeds.
+	 * Expectation is that after second sync completes no xattr is saved in metadata. */
+	poller_iterations = 1;
+	run_poller = true;
+	while (run_poller) {
+		rc = spdk_blob_set_xattr(blob, "large_xattr", xattr, xattr_length);
+		SPDK_CU_ASSERT_FATAL(rc == 0);
+		g_bserrno = -1;
+		spdk_blob_sync_md(blob, blob_op_complete, NULL);
+		poll_thread_times(0, poller_iterations);
+		if (g_bserrno == 0) {
+			/* Poller iteration count was high enough for first sync to complete.
+			 * Verify that blob takes up enough of md_pages to store the xattr. */
+			SPDK_CU_ASSERT_FATAL(blob->active.num_pages + blob->active.num_extent_pages == page_count_xattr);
+			SPDK_CU_ASSERT_FATAL(blob->clean.num_pages + blob->clean.num_extent_pages == page_count_xattr);
+			SPDK_CU_ASSERT_FATAL(spdk_bit_array_count_set(bs->used_md_pages) == page_count_xattr);
+			run_poller = false;
+		}
+		rc = spdk_blob_remove_xattr(blob, "large_xattr");
+		SPDK_CU_ASSERT_FATAL(rc == 0);
+		spdk_blob_sync_md(blob, blob_op_complete, NULL);
+		poll_threads();
+		SPDK_CU_ASSERT_FATAL(g_bserrno == 0);
+		SPDK_CU_ASSERT_FATAL(blob->active.num_pages + blob->active.num_extent_pages == page_count_clear);
+		SPDK_CU_ASSERT_FATAL(blob->clean.num_pages + blob->clean.num_extent_pages == page_count_clear);
+		SPDK_CU_ASSERT_FATAL(spdk_bit_array_count_set(bs->used_md_pages) == page_count_clear);
+		poller_iterations++;
+		/* Stop at high iteration count to prevent infinite loop.
+		 * This value should be enough for first md sync to complete in any case. */
+		SPDK_CU_ASSERT_FATAL(poller_iterations < 50);
+	}
+
+	free(xattr);
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_delete_blob(bs, blobid, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+
+	spdk_bs_free_io_channel(channel);
+	poll_threads();
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -7726,7 +7843,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "blob_operation_split_rw_iov", blob_operation_split_rw_iov) == NULL ||
 		CU_add_test(suite, "blob_io_unit", blob_io_unit) == NULL ||
 		CU_add_test(suite, "blob_io_unit_compatiblity", blob_io_unit_compatiblity) == NULL ||
-		CU_add_test(suite, "blob_simultaneous_operations", blob_simultaneous_operations) == NULL
+		CU_add_test(suite, "blob_simultaneous_operations", blob_simultaneous_operations) == NULL ||
+		CU_add_test(suite, "blob_persist", blob_persist) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
