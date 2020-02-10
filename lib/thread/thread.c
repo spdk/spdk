@@ -512,10 +512,6 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 				   active_pollers_head, tailq, tmp) {
 		int poller_rc;
 
-		if (thread->exit) {
-			break;
-		}
-
 		if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
 			TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
 			free(poller);
@@ -550,10 +546,6 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 
 	TAILQ_FOREACH_SAFE(poller, &thread->timed_pollers, tailq, tmp) {
 		int timer_rc = 0;
-
-		if (thread->exit) {
-			break;
-		}
 
 		if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
 			TAILQ_REMOVE(&thread->timed_pollers, poller, tailq);
@@ -775,6 +767,11 @@ spdk_poller_register(spdk_poller_fn fn,
 	thread = spdk_get_thread();
 	if (!thread) {
 		assert(false);
+		return NULL;
+	}
+
+	if (spdk_unlikely(thread->exit)) {
+		SPDK_ERRLOG("thread %s is marked as exited\n", thread->name);
 		return NULL;
 	}
 
