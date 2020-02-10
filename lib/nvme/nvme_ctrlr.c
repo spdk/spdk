@@ -86,12 +86,6 @@ nvme_ctrlr_get_cmbsz(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cmbsz_regist
 					      &cmbsz->raw);
 }
 
-volatile struct spdk_nvme_registers *
-spdk_nvme_ctrlr_get_registers(struct spdk_nvme_ctrlr *ctrlr)
-{
-	return nvme_transport_ctrlr_get_registers(ctrlr);
-}
-
 void
 spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t opts_size)
 {

@@ -1677,12 +1677,6 @@ nvme_tcp_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
 	return 1;
 }
 
-static volatile struct spdk_nvme_registers *
-nvme_tcp_ctrlr_get_registers(struct spdk_nvme_ctrlr *ctrlr)
-{
-	return NULL;
-}
-
 static void *
 nvme_tcp_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size)
 {
@@ -1730,7 +1724,6 @@ const struct spdk_nvme_transport_ops tcp_ops = {
 	.ctrlr_set_reg_8 = nvme_fabric_ctrlr_set_reg_8,
 	.ctrlr_get_reg_4 = nvme_fabric_ctrlr_get_reg_4,
 	.ctrlr_get_reg_8 = nvme_fabric_ctrlr_get_reg_8,
-	.ctrlr_get_registers = nvme_tcp_ctrlr_get_registers,
 
 	.ctrlr_get_max_xfer_size = nvme_tcp_ctrlr_get_max_xfer_size,
 	.ctrlr_get_max_sges = nvme_tcp_ctrlr_get_max_sges,

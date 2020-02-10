@@ -1139,8 +1139,6 @@ struct spdk_nvme_qpair *nvme_transport_ctrlr_create_io_qpair(struct spdk_nvme_ct
 		uint16_t qid, const struct spdk_nvme_io_qpair_opts *opts);
 void *nvme_transport_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size);
 int nvme_transport_ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf, size_t size);
-volatile struct spdk_nvme_registers *nvme_transport_ctrlr_get_registers(
-	struct spdk_nvme_ctrlr *ctrlr);
 int nvme_transport_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_qpair *qpair);
 int nvme_transport_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr,

@@ -600,14 +600,6 @@ nvme_pcie_ctrlr_alloc_cmb(struct spdk_nvme_ctrlr *ctrlr, uint64_t length, uint64
 	return 0;
 }
 
-static volatile struct spdk_nvme_registers *
-nvme_pcie_ctrlr_get_registers(struct spdk_nvme_ctrlr *ctrlr)
-{
-	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
-
-	return pctrlr->regs;
-}
-
 static void *
 nvme_pcie_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size)
 {
@@ -2330,7 +2322,6 @@ const struct spdk_nvme_transport_ops pcie_ops = {
 	.ctrlr_set_reg_8 = nvme_pcie_ctrlr_set_reg_8,
 	.ctrlr_get_reg_4 = nvme_pcie_ctrlr_get_reg_4,
 	.ctrlr_get_reg_8 = nvme_pcie_ctrlr_get_reg_8,
-	.ctrlr_get_registers = nvme_pcie_ctrlr_get_registers,
 
 	.ctrlr_get_max_xfer_size = nvme_pcie_ctrlr_get_max_xfer_size,
 	.ctrlr_get_max_sges = nvme_pcie_ctrlr_get_max_sges,

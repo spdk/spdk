@@ -251,15 +251,6 @@ nvme_transport_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nv
 	return transport->ops.ctrlr_connect_qpair(ctrlr, qpair);
 }
 
-volatile struct spdk_nvme_registers *
-nvme_transport_ctrlr_get_registers(struct spdk_nvme_ctrlr *ctrlr)
-{
-	const struct nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
-
-	assert(transport != NULL);
-	return transport->ops.ctrlr_get_registers(ctrlr);
-}
-
 void
 nvme_transport_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
