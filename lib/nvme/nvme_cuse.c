@@ -1006,6 +1006,7 @@ nvme_cuse_update(struct spdk_nvme_ctrlr *ctrlr)
 static struct nvme_io_msg_producer cuse_nvme_io_msg_producer = {
 	.name = "cuse",
 	.stop = nvme_cuse_stop,
+	.update = nvme_cuse_update,
 };
 
 int

@@ -165,6 +165,17 @@ nvme_io_msg_ctrlr_register(struct spdk_nvme_ctrlr *ctrlr,
 }
 
 void
+nvme_io_msg_ctrlr_update(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct nvme_io_msg_producer *io_msg_producer;
+
+	/* Update all producers */
+	STAILQ_FOREACH(io_msg_producer, &ctrlr->io_producers, link) {
+		io_msg_producer->update(ctrlr);
+	}
+}
+
+void
 nvme_io_msg_ctrlr_detach(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_io_msg_producer *io_msg_producer, *tmp;

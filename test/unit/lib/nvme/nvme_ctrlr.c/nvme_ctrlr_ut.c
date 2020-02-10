@@ -70,6 +70,7 @@ DEFINE_STUB_V(nvme_ns_set_identify_data, (struct spdk_nvme_ns *ns));
 DEFINE_STUB_V(nvme_qpair_abort_reqs, (struct spdk_nvme_qpair *qpair, uint32_t dnr));
 DEFINE_STUB(spdk_nvme_poll_group_remove, int, (struct spdk_nvme_poll_group *group,
 		struct spdk_nvme_qpair *qpair), 0);
+DEFINE_STUB_V(nvme_io_msg_ctrlr_update, (struct spdk_nvme_ctrlr *ctrlr));
 
 struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 		const struct spdk_nvme_ctrlr_opts *opts,

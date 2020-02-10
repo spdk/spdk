@@ -1223,6 +1223,15 @@ out:
 
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
+	if (!ctrlr->cdata.oaes.ns_attribute_notices) {
+		/*
+		 * If controller doesn't support ns_attribute_notices and
+		 * namespace attributes change (e.g. number of namespaces)
+		 * we need to update system handling device reset.
+		 */
+		nvme_io_msg_ctrlr_update(ctrlr);
+	}
+
 	return rc;
 }
 
@@ -2066,6 +2075,7 @@ nvme_ctrlr_async_event_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 			return;
 		}
 		nvme_ctrlr_update_namespaces(ctrlr);
+		nvme_io_msg_ctrlr_update(ctrlr);
 	}
 
 	active_proc = nvme_ctrlr_get_current_process(ctrlr);
