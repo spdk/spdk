@@ -755,7 +755,7 @@ thread_exit(void)
 	bool done1 = false, done2 = false, poller_run = false;
 	int rc __attribute__((unused));
 
-	allocate_threads(5);
+	allocate_threads(6);
 
 	/* Test all pending messages are reaped for the thread marked as exited. */
 	set_thread(0);
@@ -820,7 +820,7 @@ thread_exit(void)
 	CU_ASSERT(spdk_thread_exit(thread) == 0);
 	CU_ASSERT(spdk_thread_exit(thread) == -EINVAL);
 
-	/* Test if spdk_thread_exit() fails when there is any not-unregistered poller,
+	/* Test if spdk_thread_exit() fails when there is any registered poller,
 	 * and if no poller is executed after the thread is marked as exited.
 	 */
 	set_thread(4);
@@ -846,6 +846,32 @@ thread_exit(void)
 	poll_threads();
 
 	CU_ASSERT(poller_run == false);
+
+	/* Test if spdk_thread_exit() fails when there is any active I/O channel. */
+	set_thread(5);
+	thread = spdk_get_thread();
+
+	spdk_io_device_register(&g_device1, create_cb_1, destroy_cb_1, sizeof(g_ctx1), NULL);
+
+	g_create_cb_calls = 0;
+	ch = spdk_get_io_channel(&g_device1);
+	CU_ASSERT(g_create_cb_calls == 1);
+	CU_ASSERT(ch != NULL);
+
+	CU_ASSERT(spdk_thread_exit(thread) == -EBUSY);
+
+	g_destroy_cb_calls = 0;
+	spdk_put_io_channel(ch);
+	CU_ASSERT(g_destroy_cb_calls == 0);
+
+	CU_ASSERT(spdk_thread_exit(thread) == 0);
+
+	poll_threads();
+	CU_ASSERT(g_destroy_cb_calls == 1);
+
+	spdk_io_device_unregister(&g_device1, NULL);
+
+	CU_ASSERT(TAILQ_EMPTY(&thread->io_channels));
 
 	free_threads();
 }

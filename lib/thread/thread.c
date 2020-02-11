@@ -349,6 +349,7 @@ int
 spdk_thread_exit(struct spdk_thread *thread)
 {
 	struct spdk_poller *poller;
+	struct spdk_io_channel *ch;
 
 	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Exit thread %s\n", thread->name);
 
@@ -380,6 +381,14 @@ spdk_thread_exit(struct spdk_thread *thread)
 		SPDK_ERRLOG("thread %s still has paused poller %p\n",
 			    thread->name, poller);
 		return -EBUSY;
+	}
+
+	TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
+		if (ch->ref != 0) {
+			SPDK_ERRLOG("thread %s still has active channel for io_device %s\n",
+				    thread->name, ch->dev->name);
+			return -EBUSY;
+		}
 	}
 
 	thread->exit = true;
