@@ -1125,7 +1125,7 @@ static void usage(char *program_name)
 	printf("\n");
 	printf("\t[-q io depth]\n");
 	printf("\t[-o io size in bytes]\n");
-	printf("\t[-n number of io queues per namespace. default: 1]\n");
+	printf("\t[-P number of io queues per namespace. default: 1]\n");
 	printf("\t[-U number of unused io queues per controller. default: 0]\n");
 	printf("\t[-w io pattern type, must be one of\n");
 	printf("\t\t(read, write, randread, randwrite, rw, randrw)]\n");
@@ -1158,7 +1158,7 @@ static void usage(char *program_name)
 	printf("\t          -e 'PRACT=1,PRCHK=GUARD'\n");
 	printf("\t[-k keep alive timeout period in millisecond]\n");
 	printf("\t[-s DPDK huge memory size in MB.]\n");
-	printf("\t[-m max completions per poll]\n");
+	printf("\t[-C max completions per poll]\n");
 	printf("\t\t(default: 0 - unlimited)\n");
 	printf("\t[-i shared memory group ID]\n");
 	printf("\t");
@@ -1585,11 +1585,11 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:e:i:lm:n:o:q:r:k:s:t:w:DGHILM:NT:U:V")) != -1) {
+	while ((op = getopt(argc, argv, "c:e:i:lo:q:r:k:s:t:w:C:DGHILM:NP:T:U:V")) != -1) {
 		switch (op) {
 		case 'i':
-		case 'm':
-		case 'n':
+		case 'C':
+		case 'P':
 		case 'o':
 		case 'q':
 		case 'k':
@@ -1606,10 +1606,10 @@ parse_args(int argc, char **argv)
 			case 'i':
 				g_shm_id = val;
 				break;
-			case 'm':
+			case 'C':
 				g_max_completions = val;
 				break;
-			case 'n':
+			case 'P':
 				g_nr_io_queues_per_ns = val;
 				break;
 			case 'o':
