@@ -7630,6 +7630,32 @@ blob_simultaneous_operations(void)
 	/* Blob resized successfully */
 	CU_ASSERT(g_bserrno == 0);
 
+	/* Issue two consecutive blob syncs, neither should fail.
+	 * Force sync to actually occur by marking blob dirty each time.
+	 * Execution of sync should not be enough to complete the operation,
+	 * since disk I/O is required to complete it. */
+	g_bserrno = -1;
+
+	blob->state = SPDK_BLOB_STATE_DIRTY;
+	spdk_blob_sync_md(blob, blob_op_complete, NULL);
+	SPDK_CU_ASSERT_FATAL(g_bserrno == -1);
+
+	blob->state = SPDK_BLOB_STATE_DIRTY;
+	spdk_blob_sync_md(blob, blob_op_complete, NULL);
+	SPDK_CU_ASSERT_FATAL(g_bserrno == -1);
+
+	uint32_t completions = 0;
+	while (completions < 2) {
+		SPDK_CU_ASSERT_FATAL(poll_thread_times(0, 1));
+		if (g_bserrno == 0) {
+			g_bserrno = -1;
+			completions++;
+		}
+		/* Never should the g_bserrno be other than -1.
+		 * It would mean that either of syncs failed. */
+		SPDK_CU_ASSERT_FATAL(g_bserrno == -1);
+	}
+
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
