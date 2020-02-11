@@ -94,7 +94,7 @@ channel_destroy_cb(void *io_device, void *ctx)
 {}
 
 static struct spdk_ftl_dev *
-setup_device(uint32_t num_threads)
+setup_device(uint32_t num_threads, uint32_t xfer_size)
 {
 	struct spdk_ftl_dev *dev;
 	struct _ftl_io_channel *_ioch;
@@ -121,6 +121,7 @@ setup_device(uint32_t num_threads)
 	SPDK_CU_ASSERT_FATAL(ioch->io_pool != NULL);
 
 	dev->conf = g_default_conf;
+	dev->xfer_size = xfer_size;
 	dev->base_bdev_desc = (struct spdk_bdev_desc *)0xdeadbeef;
 	spdk_io_device_register(dev->base_bdev_desc, channel_create_cb, channel_destroy_cb, 0, NULL);
 
@@ -144,6 +145,7 @@ free_device(struct spdk_ftl_dev *dev)
 	free_threads();
 
 	free(dev->ioch_array);
+	free(dev->iov_buf);
 	free(dev->ioch);
 	free(dev);
 }
@@ -183,7 +185,7 @@ test_completion(void)
 	int req, status = 0;
 	size_t pool_size;
 
-	dev = setup_device(1);
+	dev = setup_device(1, 16);
 	ioch = ftl_io_channel_get_ctx(dev->ioch);
 	pool_size = spdk_mempool_count(ioch->io_pool);
 
@@ -225,7 +227,7 @@ test_alloc_free(void)
 	int parent_status = -1;
 	size_t pool_size;
 
-	dev = setup_device(1);
+	dev = setup_device(1, 16);
 	ioch = ftl_io_channel_get_ctx(dev->ioch);
 	pool_size = spdk_mempool_count(ioch->io_pool);
 
@@ -271,7 +273,7 @@ test_child_requests(void)
 	int status[MAX_CHILDREN + 1], i;
 	size_t pool_size;
 
-	dev = setup_device(1);
+	dev = setup_device(1, 16);
 	ioch = ftl_io_channel_get_ctx(dev->ioch);
 	pool_size = spdk_mempool_count(ioch->io_pool);
 
@@ -371,7 +373,7 @@ test_child_status(void)
 	int parent_status, child_status[2];
 	size_t pool_size, i;
 
-	dev = setup_device(1);
+	dev = setup_device(1, 16);
 	ioch = ftl_io_channel_get_ctx(dev->ioch);
 	pool_size = spdk_mempool_count(ioch->io_pool);
 
@@ -458,7 +460,7 @@ test_multi_generation(void)
 	size_t pool_size;
 	int i, j;
 
-	dev = setup_device(1);
+	dev = setup_device(1, 16);
 	ioch = ftl_io_channel_get_ctx(dev->ioch);
 	pool_size = spdk_mempool_count(ioch->io_pool);
 
@@ -583,7 +585,7 @@ test_io_channel_create(void)
 	struct ftl_io_channel *ftl_ioch;
 	uint32_t ioch_idx;
 
-	dev = setup_device(g_default_conf.max_io_channels + 1);
+	dev = setup_device(g_default_conf.max_io_channels + 1, 16);
 
 	ioch = spdk_get_io_channel(dev);
 	CU_ASSERT(ioch != NULL);
@@ -656,7 +658,7 @@ test_acquire_entry(void)
 	uint32_t num_entries, num_io_channels = 2;
 	uint32_t ioch_idx, entry_idx, tmp_idx;
 
-	dev = setup_device(num_io_channels);
+	dev = setup_device(num_io_channels, 16);
 
 	num_entries = dev->conf.rwb_size / FTL_BLOCK_SIZE;
 	entries = calloc(num_entries * num_io_channels, sizeof(*entries));
@@ -798,6 +800,123 @@ test_acquire_entry(void)
 	free_device(dev);
 }
 
+static void
+test_submit_batch(void)
+{
+	struct spdk_ftl_dev *dev;
+	struct spdk_io_channel **_ioch_array;
+	struct ftl_io_channel **ioch_array;
+	struct ftl_wbuf_entry *entry;
+	struct ftl_batch *batch;
+	uint32_t num_io_channels = 16;
+	uint32_t ioch_idx, tmp_idx, entry_idx;
+	uint64_t ioch_bitmap;
+	size_t num_entries;
+
+	dev = setup_device(num_io_channels, num_io_channels);
+
+	_ioch_array = calloc(num_io_channels, sizeof(*_ioch_array));
+	SPDK_CU_ASSERT_FATAL(_ioch_array != NULL);
+	ioch_array = calloc(num_io_channels, sizeof(*ioch_array));
+	SPDK_CU_ASSERT_FATAL(ioch_array != NULL);
+
+	for (ioch_idx = 0; ioch_idx < num_io_channels; ++ioch_idx) {
+		set_thread(ioch_idx);
+		_ioch_array[ioch_idx] = spdk_get_io_channel(dev);
+		SPDK_CU_ASSERT_FATAL(_ioch_array[ioch_idx] != NULL);
+		ioch_array[ioch_idx] = ftl_io_channel_get_ctx(_ioch_array[ioch_idx]);
+		poll_threads();
+	}
+
+	/* Make sure the IO channels are not starved and entries are popped in RR fashion */
+	for (ioch_idx = 0; ioch_idx < num_io_channels; ++ioch_idx) {
+		set_thread(ioch_idx);
+
+		for (entry_idx = 0; entry_idx < dev->xfer_size; ++entry_idx) {
+			entry = ftl_acquire_wbuf_entry(ioch_array[ioch_idx], 0);
+			SPDK_CU_ASSERT_FATAL(entry != NULL);
+
+			num_entries = spdk_ring_enqueue(ioch_array[ioch_idx]->submit_queue,
+							(void **)&entry, 1, NULL);
+			CU_ASSERT(num_entries == 1);
+		}
+	}
+
+	for (ioch_idx = 0; ioch_idx < num_io_channels; ++ioch_idx) {
+		for (tmp_idx = 0; tmp_idx < ioch_idx; ++tmp_idx) {
+			set_thread(tmp_idx);
+
+			while (spdk_ring_count(ioch_array[tmp_idx]->submit_queue) < dev->xfer_size) {
+				entry = ftl_acquire_wbuf_entry(ioch_array[tmp_idx], 0);
+				SPDK_CU_ASSERT_FATAL(entry != NULL);
+
+				num_entries = spdk_ring_enqueue(ioch_array[tmp_idx]->submit_queue,
+								(void **)&entry, 1, NULL);
+				CU_ASSERT(num_entries == 1);
+			}
+		}
+
+		set_thread(ioch_idx);
+
+		batch = ftl_get_next_batch(dev);
+		SPDK_CU_ASSERT_FATAL(batch != NULL);
+
+		TAILQ_FOREACH(entry, &batch->entries, tailq) {
+			CU_ASSERT(entry->ioch == ioch_array[ioch_idx]);
+		}
+
+		ftl_release_batch(dev, batch);
+
+		CU_ASSERT(spdk_ring_count(ioch_array[ioch_idx]->free_queue) ==
+			  ioch_array[ioch_idx]->num_entries);
+	}
+
+	for (ioch_idx = 0; ioch_idx < num_io_channels - 1; ++ioch_idx) {
+		batch = ftl_get_next_batch(dev);
+		SPDK_CU_ASSERT_FATAL(batch != NULL);
+		ftl_release_batch(dev, batch);
+	}
+
+	/* Make sure the batch can be built from entries from any IO channel */
+	for (ioch_idx = 0; ioch_idx < num_io_channels; ++ioch_idx) {
+		set_thread(ioch_idx);
+		entry = ftl_acquire_wbuf_entry(ioch_array[ioch_idx], 0);
+		SPDK_CU_ASSERT_FATAL(entry != NULL);
+
+		num_entries = spdk_ring_enqueue(ioch_array[ioch_idx]->submit_queue,
+						(void **)&entry, 1, NULL);
+		CU_ASSERT(num_entries == 1);
+	}
+
+	batch = ftl_get_next_batch(dev);
+	SPDK_CU_ASSERT_FATAL(batch != NULL);
+
+	ioch_bitmap = 0;
+	TAILQ_FOREACH(entry, &batch->entries, tailq) {
+		ioch_bitmap |= 1 << entry->ioch->index;
+	}
+
+	for (ioch_idx = 0; ioch_idx < num_io_channels; ++ioch_idx) {
+		CU_ASSERT((ioch_bitmap & (1 << ioch_array[ioch_idx]->index)) != 0);
+	}
+	ftl_release_batch(dev, batch);
+
+	for (ioch_idx = 0; ioch_idx < num_io_channels; ++ioch_idx) {
+		CU_ASSERT(spdk_ring_count(ioch_array[ioch_idx]->free_queue) ==
+			  ioch_array[ioch_idx]->num_entries);
+	}
+
+	for (ioch_idx = 0; ioch_idx < num_io_channels; ++ioch_idx) {
+		set_thread(ioch_idx);
+		spdk_put_io_channel(_ioch_array[ioch_idx]);
+	}
+	poll_threads();
+
+	free(_ioch_array);
+	free(ioch_array);
+	free_device(dev);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -829,6 +948,8 @@ main(int argc, char **argv)
 			       test_io_channel_create) == NULL
 		|| CU_add_test(suite, "test_acquire_entry",
 			       test_acquire_entry) == NULL
+		|| CU_add_test(suite, "test_submit_batch",
+			       test_submit_batch) == NULL
 
 	) {
 		CU_cleanup_registry();

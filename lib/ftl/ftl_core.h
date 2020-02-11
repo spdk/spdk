@@ -107,6 +107,17 @@ struct ftl_nv_cache {
 	pthread_spinlock_t			lock;
 };
 
+struct ftl_batch {
+	/* Queue of write buffer entries, can reach up to xfer_size entries */
+	TAILQ_HEAD(, ftl_wbuf_entry)		entries;
+	/* Number of entries in the queue above */
+	uint32_t				num_entries;
+	/* Index within spdk_ftl_dev.batch_array */
+	uint32_t				index;
+	struct iovec				*iov;
+	TAILQ_ENTRY(ftl_batch)			tailq;
+};
+
 struct spdk_ftl_dev {
 	/* Device instance */
 	struct spdk_uuid			uuid;
@@ -208,6 +219,15 @@ struct spdk_ftl_dev {
 	struct ftl_io_channel			**ioch_array;
 	TAILQ_HEAD(, ftl_io_channel)		ioch_queue;
 	uint64_t				num_io_channels;
+
+	/* Write buffer batches */
+#define FTL_BATCH_COUNT 4096
+	struct ftl_batch			batch_array[FTL_BATCH_COUNT];
+	/* Iovec buffer used by batches */
+	struct iovec				*iov_buf;
+	/* Batch currently being filled  */
+	struct ftl_batch			*current_batch;
+	TAILQ_HEAD(, ftl_batch)			free_batches;
 
 	/* Devices' list */
 	STAILQ_ENTRY(spdk_ftl_dev)		stailq;

@@ -1195,13 +1195,33 @@ ftl_io_channel_destroy_cb(void *io_device, void *ctx)
 static int
 ftl_dev_init_io_channel(struct spdk_ftl_dev *dev)
 {
+	struct ftl_batch *batch;
+	uint32_t i;
+
 	dev->ioch_array = calloc(dev->conf.max_io_channels, sizeof(*dev->ioch_array));
 	if (!dev->ioch_array) {
 		SPDK_ERRLOG("Failed to allocate IO channel array\n");
 		return -1;
 	}
 
+	dev->iov_buf = calloc(FTL_BATCH_COUNT, dev->xfer_size * sizeof(struct iovec));
+	if (!dev->iov_buf) {
+		SPDK_ERRLOG("Failed to allocate iovec buffer\n");
+		return -1;
+	}
+
+	TAILQ_INIT(&dev->free_batches);
 	TAILQ_INIT(&dev->ioch_queue);
+
+	for (i = 0; i < FTL_BATCH_COUNT; ++i) {
+		batch = &dev->batch_array[i];
+		batch->iov = &dev->iov_buf[i * dev->xfer_size];
+		batch->num_entries = 0;
+		batch->index = i;
+		TAILQ_INIT(&batch->entries);
+		TAILQ_INSERT_TAIL(&dev->free_batches, batch, tailq);
+	}
+
 	dev->num_io_channels = 0;
 
 	spdk_io_device_register(dev, ftl_io_channel_create_cb, ftl_io_channel_destroy_cb,
@@ -1345,6 +1365,7 @@ ftl_dev_free_sync(struct spdk_ftl_dev *dev)
 
 	assert(dev->num_io_channels == 0);
 	free(dev->ioch_array);
+	free(dev->iov_buf);
 	free(dev->name);
 	free(dev->bands);
 	free(dev->l2p);

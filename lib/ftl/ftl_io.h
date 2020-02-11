@@ -154,6 +154,7 @@ struct ftl_wbuf_entry {
 	bool					valid;
 	/* Lock that protects the entry from being evicted from the L2P */
 	pthread_spinlock_t			lock;
+	TAILQ_ENTRY(ftl_wbuf_entry)		tailq;
 };
 
 struct ftl_io_channel {

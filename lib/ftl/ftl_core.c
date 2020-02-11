@@ -193,9 +193,7 @@ ftl_acquire_wbuf_entry(struct ftl_io_channel *io_channel, int io_flags)
 	return entry;
 }
 
-void ftl_release_wbuf_entry(struct ftl_wbuf_entry *entry);
-
-void
+static void
 ftl_release_wbuf_entry(struct ftl_wbuf_entry *entry)
 {
 	struct ftl_io_channel *io_channel = entry->ioch;
@@ -205,6 +203,93 @@ ftl_release_wbuf_entry(struct ftl_wbuf_entry *entry)
 	}
 
 	spdk_ring_enqueue(io_channel->free_queue, (void **)&entry, 1, NULL);
+}
+
+struct ftl_batch *ftl_get_next_batch(struct spdk_ftl_dev *dev);
+
+struct ftl_batch *
+ftl_get_next_batch(struct spdk_ftl_dev *dev)
+{
+	struct ftl_batch *batch = dev->current_batch;
+	struct ftl_io_channel *ioch;
+#define FTL_DEQUEUE_ENTRIES 128
+	struct ftl_wbuf_entry *entries[FTL_DEQUEUE_ENTRIES];
+	TAILQ_HEAD(, ftl_io_channel) ioch_queue;
+	size_t i, num_dequeued, num_remaining;
+
+	if (batch == NULL) {
+		batch = TAILQ_FIRST(&dev->free_batches);
+		if (spdk_unlikely(batch == NULL)) {
+			return NULL;
+		}
+
+		assert(TAILQ_EMPTY(&batch->entries));
+		assert(batch->num_entries == 0);
+		TAILQ_REMOVE(&dev->free_batches, batch, tailq);
+	}
+
+	/*
+	 * Keep shifting the queue to ensure fairness in IO channel selection.  Each time
+	 * ftl_get_next_batch() is called, we're starting to dequeue write buffer entries from a
+	 * different IO channel.
+	 */
+	TAILQ_INIT(&ioch_queue);
+	while (!TAILQ_EMPTY(&dev->ioch_queue)) {
+		ioch = TAILQ_FIRST(&dev->ioch_queue);
+		TAILQ_REMOVE(&dev->ioch_queue, ioch, tailq);
+		TAILQ_INSERT_TAIL(&ioch_queue, ioch, tailq);
+
+		num_remaining = dev->xfer_size - batch->num_entries;
+		while (num_remaining > 0) {
+			num_dequeued = spdk_ring_dequeue(ioch->submit_queue, (void **)entries,
+							 spdk_min(num_remaining,
+									 FTL_DEQUEUE_ENTRIES));
+			if (num_dequeued == 0) {
+				break;
+			}
+
+			for (i = 0; i < num_dequeued; ++i) {
+				batch->iov[batch->num_entries + i].iov_base = entries[i]->payload;
+				batch->iov[batch->num_entries + i].iov_len = FTL_BLOCK_SIZE;
+				TAILQ_INSERT_TAIL(&batch->entries, entries[i], tailq);
+			}
+
+			batch->num_entries += num_dequeued;
+			num_remaining -= num_dequeued;
+		}
+
+		if (num_remaining == 0) {
+			break;
+		}
+	}
+
+	TAILQ_CONCAT(&dev->ioch_queue, &ioch_queue, tailq);
+
+	if (batch->num_entries == dev->xfer_size) {
+		dev->current_batch = NULL;
+	} else {
+		dev->current_batch = batch;
+		batch = NULL;
+	}
+
+	return batch;
+}
+
+void ftl_release_batch(struct spdk_ftl_dev *dev, struct ftl_batch *batch);
+
+void
+ftl_release_batch(struct spdk_ftl_dev *dev, struct ftl_batch *batch)
+{
+	struct ftl_wbuf_entry *entry;
+
+	while (!TAILQ_EMPTY(&batch->entries)) {
+		entry = TAILQ_FIRST(&batch->entries);
+		TAILQ_REMOVE(&batch->entries, entry, tailq);
+		ftl_release_wbuf_entry(entry);
+	}
+
+	batch->num_entries = 0;
+	TAILQ_INSERT_TAIL(&dev->free_batches, batch, tailq);
 }
 
 static void
