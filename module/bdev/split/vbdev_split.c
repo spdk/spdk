@@ -132,6 +132,7 @@ vbdev_split_resubmit_io(void *arg)
 static void
 vbdev_split_queue_io(struct vbdev_split_bdev_io *split_io)
 {
+	struct vbdev_split_channel *ch = spdk_io_channel_get_ctx(split_io->ch);
 	int rc;
 
 	split_io->bdev_io_wait.bdev = split_io->bdev_io->bdev;
@@ -139,7 +140,7 @@ vbdev_split_queue_io(struct vbdev_split_bdev_io *split_io)
 	split_io->bdev_io_wait.cb_arg = split_io;
 
 	rc = spdk_bdev_queue_io_wait(split_io->bdev_io->bdev,
-				     split_io->ch, &split_io->bdev_io_wait);
+				     ch->part_ch.base_ch, &split_io->bdev_io_wait);
 	if (rc != 0) {
 		SPDK_ERRLOG("Queue io failed in vbdev_split_queue_io, rc=%d\n", rc);
 		spdk_bdev_io_complete(split_io->bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
