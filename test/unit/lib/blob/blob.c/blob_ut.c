@@ -758,7 +758,6 @@ blob_snapshot(void)
 static void
 blob_snapshot_freeze_io(void)
 {
-	struct spdk_thread *thread;
 	struct spdk_io_channel *channel;
 	struct spdk_bs_channel *bs_channel;
 	struct spdk_blob_store *bs;
@@ -812,10 +811,7 @@ blob_snapshot_freeze_io(void)
 	/* This is implementation specific.
 	 * Flag 'frozen_io' is set in _spdk_bs_snapshot_freeze_cpl callback.
 	 * Four async I/O operations happen before that. */
-	thread = spdk_get_thread();
-	spdk_thread_poll(thread, 1, 0);
-	spdk_thread_poll(thread, 1, 0);
-	spdk_thread_poll(thread, 1, 0);
+	poll_thread_times(0, 3);
 
 	CU_ASSERT(TAILQ_EMPTY(&bs_channel->queued_io));
 
