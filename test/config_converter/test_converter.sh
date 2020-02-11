@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
-CONVERTER_DIR=$(readlink -f $(dirname $0))
-SPDK_BUILD_DIR=$CONVERTER_DIR/../../
-source $CONVERTER_DIR/../common/autotest_common.sh
+testdir=$(readlink -f "$(dirname "$0")")
+rootdir=$(readlink -f "$testdir/../../")
+source "$rootdir/test/common/autotest_common.sh"
+
+CONVERTER_DIR=$testdir
+SPDK_BUILD_DIR=$rootdir
 
 function test_cleanup() {
 	rm -f $CONVERTER_DIR/config_converter.json $CONVERTER_DIR/config_virtio_converter.json
