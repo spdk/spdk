@@ -174,8 +174,10 @@ function configure_linux_pci {
 	local driver_path=""
 	driver_name=""
 	if [[ -n "${DRIVER_OVERRIDE}" ]]; then
-		driver_path="${DRIVER_OVERRIDE%/*}"
+		driver_path="$DRIVER_OVERRIDE"
 		driver_name="${DRIVER_OVERRIDE##*/}"
+		# modprobe and the sysfs don't use the .ko suffix.
+		driver_name=${driver_name%.ko}
 		# path = name -> there is no path
 		if [[ "$driver_path" = "$driver_name" ]]; then
 			driver_path=""
