@@ -87,9 +87,6 @@ struct nvme_pcie_ctrlr {
 		/* Current offset of controller memory buffer, relative to start of BAR virt addr */
 		uint64_t current_offset;
 
-		/* Last valid offset into CMB, this differs if CMB memory registration occurs or not */
-		uint64_t end;
-
 		void *mem_register_addr;
 		size_t mem_register_size;
 	} cmb;
@@ -520,7 +517,6 @@ nvme_pcie_ctrlr_map_cmb(struct nvme_pcie_ctrlr *pctrlr)
 	pctrlr->cmb.bar_pa = bar_phys_addr;
 	pctrlr->cmb.size = size;
 	pctrlr->cmb.current_offset = offset;
-	pctrlr->cmb.end = offset + size;
 
 	if (!cmbsz.bits.sqs) {
 		pctrlr->ctrlr.opts.use_cmb_sqs = false;
