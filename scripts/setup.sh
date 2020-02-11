@@ -182,6 +182,10 @@ function configure_linux_pci {
 		if [[ "$driver_path" = "$driver_name" ]]; then
 			driver_path=""
 		fi
+		# igb_uio is a common driver to override with and it depends on uio.
+		if [[ "$driver_name" = "igb_uio" ]]; then
+			modprobe uio
+		fi
 	elif [[ -n "$(ls /sys/kernel/iommu_groups)" || \
 	     (-e /sys/module/vfio/parameters/enable_unsafe_noiommu_mode && \
 	     "$(cat /sys/module/vfio/parameters/enable_unsafe_noiommu_mode)" == "Y") ]]; then
