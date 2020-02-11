@@ -495,7 +495,7 @@ _sock_check_zcopy(struct spdk_sock *sock)
 		}
 
 		cm = CMSG_FIRSTHDR(&msgh);
-		if (cm->cmsg_level != SOL_IP || cm->cmsg_type != IP_RECVERR) {
+		if (!cm || cm->cmsg_level != SOL_IP || cm->cmsg_type != IP_RECVERR) {
 			SPDK_WARNLOG("Unexpected cmsg level or type!\n");
 			return 0;
 		}
