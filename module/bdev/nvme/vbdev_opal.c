@@ -168,13 +168,14 @@ vbdev_opal_resubmit_io(void *arg)
 static void
 vbdev_opal_queue_io(struct vbdev_opal_bdev_io *io_ctx)
 {
+	struct vbdev_opal_channel *ch = spdk_io_channel_get_ctx(io_ctx->ch);
 	int rc;
 
 	io_ctx->bdev_io_wait.bdev = io_ctx->bdev_io->bdev;
 	io_ctx->bdev_io_wait.cb_fn = vbdev_opal_resubmit_io;
 	io_ctx->bdev_io_wait.cb_arg = io_ctx;
 
-	rc = spdk_bdev_queue_io_wait(io_ctx->bdev_io->bdev, io_ctx->ch, &io_ctx->bdev_io_wait);
+	rc = spdk_bdev_queue_io_wait(io_ctx->bdev_io->bdev, ch->part_ch.base_ch, &io_ctx->bdev_io_wait);
 
 	if (rc != 0) {
 		SPDK_ERRLOG("Queue io failed in vbdev_opal_queue_io: %d\n", rc);
