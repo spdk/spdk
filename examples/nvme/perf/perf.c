@@ -185,16 +185,16 @@ struct ns_fn_table {
 
 static int g_outstanding_commands;
 
-static bool g_latency_ssd_tracking_enable = false;
-static int g_latency_sw_tracking_level = 0;
+static bool g_latency_ssd_tracking_enable;
+static int g_latency_sw_tracking_level;
 
-static bool g_vmd = false;
-
-static struct ctrlr_entry *g_controllers = NULL;
-static struct ns_entry *g_namespaces = NULL;
-static int g_num_namespaces = 0;
-static struct worker_thread *g_workers = NULL;
-static int g_num_workers = 0;
+static bool g_vmd;
+static const char *g_workload_type;
+static struct ctrlr_entry *g_controllers;
+static struct ns_entry *g_namespaces;
+static int g_num_namespaces;
+static struct worker_thread *g_workers;
+static int g_num_workers;
 static uint32_t g_master_core;
 
 static uint64_t g_tsc_rate;
@@ -205,11 +205,11 @@ static uint32_t g_max_io_md_size;
 static uint32_t g_max_io_size_blocks;
 static uint32_t g_metacfg_pract_flag;
 static uint32_t g_metacfg_prchk_flags;
-static int g_rw_percentage;
-static int g_is_random = 0;
+static int g_rw_percentage = -1;
+static int g_is_random;
 static int g_queue_depth;
 static int g_nr_io_queues_per_ns = 1;
-static int g_nr_unused_io_queues = 0;
+static int g_nr_unused_io_queues;
 static int g_time_in_sec;
 static uint32_t g_max_completions;
 static int g_dpdk_mem;
@@ -219,7 +219,8 @@ static bool g_no_pci;
 static bool g_warn;
 static bool g_header_digest;
 static bool g_data_digest;
-static bool g_no_shn_notification = false;
+static bool g_no_shn_notification;
+static bool g_mix_specified;
 /* Default to 10 seconds for the keep alive value. This value is arbitrary. */
 static uint32_t g_keep_alive_timeout_in_ms = 10000;
 
@@ -1570,20 +1571,9 @@ parse_metadata(const char *metacfg_str)
 static int
 parse_args(int argc, char **argv)
 {
-	const char *workload_type;
 	int op;
-	bool mix_specified = false;
 	long int val;
 	int rc;
-
-	/* default value */
-	g_queue_depth = 0;
-	g_io_size_bytes = 0;
-	workload_type = NULL;
-	g_time_in_sec = 0;
-	g_rw_percentage = -1;
-	g_core_mask = NULL;
-	g_max_completions = 0;
 
 	while ((op = getopt(argc, argv, "c:e:i:lo:q:r:k:s:t:w:C:DGHILM:NP:T:U:V")) != -1) {
 		switch (op) {
@@ -1629,7 +1619,7 @@ parse_args(int argc, char **argv)
 				break;
 			case 'M':
 				g_rw_percentage = val;
-				mix_specified = true;
+				g_mix_specified = true;
 				break;
 			case 'U':
 				g_nr_unused_io_queues = val;
@@ -1655,7 +1645,7 @@ parse_args(int argc, char **argv)
 			}
 			break;
 		case 'w':
-			workload_type = optarg;
+			g_workload_type = optarg;
 			break;
 		case 'D':
 			g_disable_sq_cmb = 1;
@@ -1722,7 +1712,7 @@ parse_args(int argc, char **argv)
 		usage(argv[0]);
 		return 1;
 	}
-	if (!workload_type) {
+	if (!g_workload_type) {
 		fprintf(stderr, "missing -w (io pattern type) operand\n");
 		usage(argv[0]);
 		return 1;
@@ -1733,18 +1723,18 @@ parse_args(int argc, char **argv)
 		return 1;
 	}
 
-	if (strncmp(workload_type, "rand", 4) == 0) {
+	if (strncmp(g_workload_type, "rand", 4) == 0) {
 		g_is_random = 1;
-		workload_type = &workload_type[4];
+		g_workload_type = &g_workload_type[4];
 	}
 
-	if (strcmp(workload_type, "read") == 0 || strcmp(workload_type, "write") == 0) {
-		g_rw_percentage = strcmp(workload_type, "read") == 0 ? 100 : 0;
-		if (mix_specified) {
+	if (strcmp(g_workload_type, "read") == 0 || strcmp(g_workload_type, "write") == 0) {
+		g_rw_percentage = strcmp(g_workload_type, "read") == 0 ? 100 : 0;
+		if (g_mix_specified) {
 			fprintf(stderr, "Ignoring -M option... Please use -M option"
 				" only when using rw or randrw.\n");
 		}
-	} else if (strcmp(workload_type, "rw") == 0) {
+	} else if (strcmp(g_workload_type, "rw") == 0) {
 		if (g_rw_percentage < 0 || g_rw_percentage > 100) {
 			fprintf(stderr,
 				"-M must be specified to value from 0 to 100 "
