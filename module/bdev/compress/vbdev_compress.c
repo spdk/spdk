@@ -889,7 +889,7 @@ vbdev_compress_queue_io(struct spdk_bdev_io *bdev_io)
 	io_ctx->bdev_io_wait.cb_fn = vbdev_compress_resubmit_io;
 	io_ctx->bdev_io_wait.cb_arg = bdev_io;
 
-	rc = spdk_bdev_queue_io_wait(bdev_io->bdev, io_ctx->ch, &io_ctx->bdev_io_wait);
+	rc = spdk_bdev_queue_io_wait(bdev_io->bdev, io_ctx->comp_bdev->base_ch, &io_ctx->bdev_io_wait);
 	if (rc) {
 		SPDK_ERRLOG("Queue io failed in vbdev_compress_queue_io, rc=%d.\n", rc);
 		assert(false);
