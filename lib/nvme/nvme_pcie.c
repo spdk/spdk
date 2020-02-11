@@ -92,8 +92,6 @@ struct nvme_pcie_ctrlr {
 
 		void *mem_register_addr;
 		size_t mem_register_size;
-
-		bool io_data_supported;
 	} cmb;
 
 	/** stride in uint32_t units between doorbell registers (1 = 4 bytes, 2 = 8 bytes, ...) */
@@ -480,7 +478,6 @@ nvme_pcie_ctrlr_map_cmb(struct nvme_pcie_ctrlr *pctrlr)
 	union spdk_nvme_cmbsz_register cmbsz;
 	union spdk_nvme_cmbloc_register cmbloc;
 	uint64_t size, unit_size, offset, bar_size, bar_phys_addr;
-	uint64_t mem_register_start, mem_register_end;
 
 	if (nvme_pcie_ctrlr_get_cmbsz(pctrlr, &cmbsz) ||
 	    nvme_pcie_ctrlr_get_cmbloc(pctrlr, &cmbloc)) {
@@ -529,33 +526,8 @@ nvme_pcie_ctrlr_map_cmb(struct nvme_pcie_ctrlr *pctrlr)
 		pctrlr->ctrlr.opts.use_cmb_sqs = false;
 	}
 
-	/* If only SQS is supported use legacy mapping */
-	if (cmbsz.bits.sqs && !(cmbsz.bits.wds || cmbsz.bits.rds)) {
-		return;
-	}
-
-	/* If CMB is less than 4MiB in size then abort CMB mapping */
-	if (pctrlr->cmb.size < (1ULL << 22)) {
-		goto exit;
-	}
-
-	mem_register_start = _2MB_PAGE((uintptr_t)pctrlr->cmb.bar_va + offset + VALUE_2MB - 1);
-	mem_register_end = _2MB_PAGE((uintptr_t)pctrlr->cmb.bar_va + offset + pctrlr->cmb.size);
-	pctrlr->cmb.mem_register_addr = (void *)mem_register_start;
-	pctrlr->cmb.mem_register_size = mem_register_end - mem_register_start;
-
-	rc = spdk_mem_register(pctrlr->cmb.mem_register_addr, pctrlr->cmb.mem_register_size);
-	if (rc) {
-		SPDK_ERRLOG("spdk_mem_register() failed\n");
-		goto exit;
-	}
-	pctrlr->cmb.current_offset = mem_register_start - ((uint64_t)pctrlr->cmb.bar_va);
-	pctrlr->cmb.end = mem_register_end - ((uint64_t)pctrlr->cmb.bar_va);
-	pctrlr->cmb.io_data_supported = true;
-
 	return;
 exit:
-	pctrlr->cmb.bar_va = NULL;
 	pctrlr->ctrlr.opts.use_cmb_sqs = false;
 	return;
 }
@@ -585,7 +557,15 @@ static void *
 nvme_pcie_ctrlr_map_io_cmb(struct spdk_nvme_ctrlr *ctrlr, size_t *size)
 {
 	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
-	uint64_t offset;
+	union spdk_nvme_cmbsz_register cmbsz;
+	union spdk_nvme_cmbloc_register cmbloc;
+	uint64_t mem_register_start, mem_register_end;
+	int rc;
+
+	if (pctrlr->cmb.mem_register_addr != NULL) {
+		*size = pctrlr->cmb.mem_register_size;
+		return pctrlr->cmb.mem_register_addr;
+	}
 
 	*size = 0;
 
@@ -594,33 +574,65 @@ nvme_pcie_ctrlr_map_io_cmb(struct spdk_nvme_ctrlr *ctrlr, size_t *size)
 		return NULL;
 	}
 
-	if (!pctrlr->cmb.io_data_supported) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "CMB doesn't support I/O data\n");
-		return NULL;
-	}
-
 	if (ctrlr->opts.use_cmb_sqs) {
 		SPDK_ERRLOG("CMB is already in use for submission queues.\n");
 		return NULL;
 	}
 
-	offset = (pctrlr->cmb.current_offset + (3)) & ~(3);
-
-	if (offset >= pctrlr->cmb.end) {
+	if (nvme_pcie_ctrlr_get_cmbsz(pctrlr, &cmbsz) ||
+	    nvme_pcie_ctrlr_get_cmbloc(pctrlr, &cmbloc)) {
+		SPDK_ERRLOG("get registers failed\n");
 		return NULL;
 	}
 
-	*size = pctrlr->cmb.end - offset;
+	/* If only SQS is supported */
+	if (!(cmbsz.bits.wds || cmbsz.bits.rds)) {
+		return NULL;
+	}
 
-	pctrlr->cmb.current_offset = pctrlr->cmb.end;
+	/* If CMB is less than 4MiB in size then abort CMB mapping */
+	if (pctrlr->cmb.size < (1ULL << 22)) {
+		return NULL;
+	}
 
-	return pctrlr->cmb.bar_va + offset;
+	mem_register_start = _2MB_PAGE((uintptr_t)pctrlr->cmb.bar_va + pctrlr->cmb.current_offset +
+				       VALUE_2MB - 1);
+	mem_register_end = _2MB_PAGE((uintptr_t)pctrlr->cmb.bar_va + pctrlr->cmb.current_offset +
+				     pctrlr->cmb.size);
+	pctrlr->cmb.mem_register_addr = (void *)mem_register_start;
+	pctrlr->cmb.mem_register_size = mem_register_end - mem_register_start;
+
+	rc = spdk_mem_register((void *)mem_register_start, mem_register_end - mem_register_start);
+	if (rc) {
+		SPDK_ERRLOG("spdk_mem_register() failed\n");
+		return NULL;
+	}
+
+	pctrlr->cmb.mem_register_addr = (void *)mem_register_start;
+	pctrlr->cmb.mem_register_size = mem_register_end - mem_register_start;
+
+	*size = pctrlr->cmb.mem_register_size;
+	return pctrlr->cmb.mem_register_addr;
 }
 
 static int
 nvme_pcie_ctrlr_unmap_io_cmb(struct spdk_nvme_ctrlr *ctrlr)
 {
-	return 0;
+	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
+	int rc;
+
+	if (pctrlr->cmb.mem_register_addr == NULL) {
+		return 0;
+	}
+
+	rc = spdk_mem_unregister(pctrlr->cmb.mem_register_addr, pctrlr->cmb.mem_register_size);
+
+	if (rc == 0) {
+		pctrlr->cmb.mem_register_addr = NULL;
+		pctrlr->cmb.mem_register_size = 0;
+	}
+
+	return rc;
 }
 
 static int
@@ -970,6 +982,11 @@ nvme_pcie_ctrlr_alloc_cmb(struct spdk_nvme_ctrlr *ctrlr, uint64_t length, uint64
 {
 	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
 	uint64_t round_offset;
+
+	if (pctrlr->cmb.mem_register_addr != NULL) {
+		/* BAR is mapped for data */
+		return -1;
+	}
 
 	round_offset = pctrlr->cmb.current_offset;
 	round_offset = (round_offset + (aligned - 1)) & ~(aligned - 1);
