@@ -242,13 +242,14 @@ static void
 vbdev_delay_queue_io(struct spdk_bdev_io *bdev_io)
 {
 	struct delay_bdev_io *io_ctx = (struct delay_bdev_io *)bdev_io->driver_ctx;
+	struct delay_io_channel *delay_ch = spdk_io_channel_get_ctx(io_ctx->ch);
 	int rc;
 
 	io_ctx->bdev_io_wait.bdev = bdev_io->bdev;
 	io_ctx->bdev_io_wait.cb_fn = vbdev_delay_resubmit_io;
 	io_ctx->bdev_io_wait.cb_arg = bdev_io;
 
-	rc = spdk_bdev_queue_io_wait(bdev_io->bdev, io_ctx->ch, &io_ctx->bdev_io_wait);
+	rc = spdk_bdev_queue_io_wait(bdev_io->bdev, delay_ch->base_ch, &io_ctx->bdev_io_wait);
 	if (rc != 0) {
 		SPDK_ERRLOG("Queue io failed in vbdev_delay_queue_io, rc=%d.\n", rc);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
