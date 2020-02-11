@@ -112,7 +112,6 @@ def case_message(func):
     def inner(*args, **kwargs):
         test_name = {
             # bdev_lvol_delete_lvstore - positive tests
-            254: 'destroy_after_bdev_lvol_resize_positive',
             255: 'delete_lvol_store_persistent_positive',
             551: 'delete_lvol_bdev',
             552: 'bdev_lvol_delete_lvstore_with_clones',
@@ -251,74 +250,6 @@ class TestCases(object):
     def get_lvs_cluster_size(self, lvs_name="lvs_test"):
         lvs = self.c.bdev_lvol_get_lvstores(lvs_name)[0]
         return int(int(lvs['cluster_size']) / MEGABYTE)
-
-    @case_message
-    def test_case254(self):
-        """
-        destroy_resize_logical_volume_positive
-
-        Positive test for destroying a logical_volume after resizing.
-        Call bdev_lvol_delete_lvstore with correct logical_volumes name.
-        """
-        # Create malloc bdev
-        base_name = self.c.bdev_malloc_create(self.total_size,
-                                              self.block_size)
-        # Construct lvol store on create malloc bdev
-        uuid_store = self.c.bdev_lvol_create_lvstore(base_name,
-                                                     self.lvs_name)
-        # Check correct uuid values in response bdev_lvol_get_lvstores command
-        fail_count = self.c.check_bdev_lvol_get_lvstores(base_name, uuid_store,
-                                                         self.cluster_size)
-        size = self.get_lvs_divided_size(4)
-        # bdev_lvol_create on correct lvs_uuid and size is
-        # equal to one quarter of size malloc bdev
-        uuid_bdev = self.c.bdev_lvol_create(uuid_store,
-                                            self.lbd_name,
-                                            size)
-        # check size of the lvol bdev
-        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev, size)
-        sz = size + 4
-        # Resize_lvol_bdev on correct lvs_uuid and size is
-        # equal to one quarter of size malloc bdev plus 4 MB
-        self.c.bdev_lvol_resize(uuid_bdev, sz)
-        # check size of the lvol bdev by command RPC : bdev_get_bdevs
-        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev, sz)
-        # Resize_lvol_bdev on correct lvs_uuid and size is
-        # equal half of size malloc bdev
-        sz = size * 2
-        self.c.bdev_lvol_resize(uuid_bdev, sz)
-        # check size of the lvol bdev by command RPC : bdev_get_bdevs
-        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev, sz)
-        # Resize_lvol_bdev on correct lvs_uuid and size is
-        # equal to three quarters of size malloc bdev
-        sz = size * 3
-        self.c.bdev_lvol_resize(uuid_bdev, sz)
-        # check size of the lvol bdev by command RPC : bdev_get_bdevs
-        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev, sz)
-        # Resize_lvol_bdev on correct lvs_uuid and size is
-        # equal to size if malloc bdev minus 4 MB
-        sz = (size * 4) - 4
-        self.c.bdev_lvol_resize(uuid_bdev, sz)
-        # check size of the lvol bdev by command RPC : bdev_get_bdevs
-        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev, sz)
-        # Resize_lvol_bdev on the correct lvs_uuid and size is equal 0 MiB
-        sz = 0
-        self.c.bdev_lvol_resize(uuid_bdev, sz)
-        # check size of the lvol bdev by command RPC : bdev_get_bdevs
-        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev, sz)
-
-        # Destroy lvol store
-        self.c.bdev_lvol_delete_lvstore(uuid_store)
-        if self.c.check_bdev_lvol_get_lvstores("", "", "") == 1:
-            fail_count += 1
-        self.c.bdev_malloc_delete(base_name)
-
-        # Expected result:
-        # - lvol bdev should change size after resize operations
-        # - calls successful, return code = 0
-        # - no other operation fails
-        # - bdev_lvol_get_lvstores: response should be of no value after destroyed lvol store
-        return fail_count
 
     @case_message
     def test_case255(self):

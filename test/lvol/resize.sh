@@ -154,6 +154,56 @@ function test_resize_lvol_with_io_traffic() {
 	rpc_cmd bdev_malloc_delete "$malloc_name"
 }
 
+# Positive test for destroying a logical_volume after resizing.
+# Call bdev_lvol_delete_lvstore with correct logical_volumes name.
+function test_destroy_after_bdev_lvol_resize_positive() {
+	local malloc_dev
+	local lvstore_name=lvs_test lvstore_uuid
+	local lbd_name=lbd_test bdev_uuid bdev_size
+
+	malloc_dev=$(rpc_cmd bdev_malloc_create 256 "$MALLOC_BS")
+	lvstore_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_dev" "$lvstore_name")
+
+	get_lvs_jq bdev_lvol_get_lvstores -u "$lvstore_uuid"
+	[[ ${jq_out["uuid"]} == "$lvstore_uuid" ]]
+	[[ ${jq_out["name"]} == "$lvstore_name" ]]
+
+	bdev_size=$(round_down $(( LVS_DEFAULT_CAPACITY_MB / 4 )))
+	bdev_uuid=$(rpc_cmd bdev_lvol_create -u "$lvstore_uuid" "$lbd_name" "$bdev_size")
+
+	# start resizing in the following fashion:
+	# - size is equal to one quarter of size malloc bdev plus 4 MB
+	# - size is equal half of size malloc bdev
+	# - size is equal to three quarters of size malloc bdev
+	# - size is equal to size if malloc bdev minus 4 MB
+	# - size is equal 0 MiB
+	local resize
+	for resize in \
+	  "$bdev_size" \
+	  $(( bdev_size + 4 )) \
+	  $(( bdev_size * 2 )) \
+	  $(( bdev_size * 3 )) \
+	  $(( bdev_size * 4 - 4 )) \
+	  0; do
+		resize=$(round_down $(( resize / 4 )))
+		rpc_cmd bdev_lvol_resize "$bdev_uuid" "$resize"
+
+		get_bdev_jq bdev_get_bdevs -b "$bdev_uuid"
+		[[ ${jq_out["name"]} == "$bdev_uuid" ]]
+		[[ ${jq_out["name"]} == "${jq_out["uuid"]}" ]]
+		(( jq_out["block_size"] == MALLOC_BS ))
+		(( jq_out["num_blocks"] * jq_out["block_size"] == resize * 1024**2 ))
+	done
+
+	# cleanup
+	rpc_cmd bdev_lvol_delete "$bdev_uuid"
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvstore_uuid"
+	rpc_cmd bdev_get_bdevs -b "$bdev_uuid" && false
+	rpc_cmd bdev_lvol_get_lvstores -u "$lvstore_uuid" && false
+	rpc_cmd bdev_malloc_delete "$malloc_dev"
+	check_leftover_devices
+}
+
 modprobe nbd
 $rootdir/app/spdk_tgt/spdk_tgt &
 spdk_pid=$!
@@ -163,6 +213,7 @@ waitforlisten $spdk_pid
 run_test "test_resize_lvol" test_resize_lvol
 run_test "test_resize_lvol_negative" test_resize_lvol_negative
 run_test "test_resize_lvol_with_io_traffic" test_resize_lvol_with_io_traffic
+run_test "test_destroy_after_bdev_lvol_resize_positive" test_destroy_after_bdev_lvol_resize_positive
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid
