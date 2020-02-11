@@ -117,6 +117,9 @@ run_test "nvme_reserve" $testdir/reserve/reserve
 run_test "nvme_err_injection" $testdir/err_injection/err_injection
 run_test "nvme_overhead" $testdir/overhead/overhead -s 4096 -t 1 -H
 run_test "nvme_arbitration" $rootdir/examples/nvme/arbitration/arbitration -t 3 -i 0
+if [ $SPDK_TEST_NVME_CUSE -eq 1 ]; then
+	run_test "nvme_cuse" $testdir/cuse/cuse
+fi
 
 if [[ $CONFIG_FIO_PLUGIN == y ]]; then
 	run_test "nvme_fio" nvme_fio_test
