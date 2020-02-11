@@ -750,11 +750,12 @@ thread_exit(void)
 {
 	struct spdk_thread *thread;
 	struct spdk_io_channel *ch;
+	struct spdk_poller *poller;
 	void *ctx;
-	bool done1 = false, done2 = false;
+	bool done1 = false, done2 = false, poller_run = false;
 	int rc __attribute__((unused));
 
-	allocate_threads(4);
+	allocate_threads(5);
 
 	/* Test all pending messages are reaped for the thread marked as exited. */
 	set_thread(0);
@@ -818,6 +819,33 @@ thread_exit(void)
 
 	CU_ASSERT(spdk_thread_exit(thread) == 0);
 	CU_ASSERT(spdk_thread_exit(thread) == -EINVAL);
+
+	/* Test if spdk_thread_exit() fails when there is any not-unregistered poller,
+	 * and if no poller is executed after the thread is marked as exited.
+	 */
+	set_thread(4);
+	thread = spdk_get_thread();
+
+	poller = spdk_poller_register(poller_run_done, &poller_run, 0);
+	CU_ASSERT(poller != NULL);
+
+	CU_ASSERT(spdk_thread_exit(thread) == -EBUSY);
+
+	spdk_poller_pause(poller);
+
+	CU_ASSERT(spdk_thread_exit(thread) == -EBUSY);
+
+	poll_threads();
+
+	CU_ASSERT(spdk_thread_exit(thread) == -EBUSY);
+
+	spdk_poller_unregister(&poller);
+
+	CU_ASSERT(spdk_thread_exit(thread) == 0);
+
+	poll_threads();
+
+	CU_ASSERT(poller_run == false);
 
 	free_threads();
 }

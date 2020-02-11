@@ -40,13 +40,14 @@
 
 static int g_time_in_sec;
 static int g_queue_depth;
-static struct spdk_poller *test_end_poller;
+static struct spdk_poller *g_test_end_poller;
 static uint64_t g_call_count = 0;
 
 static int
 __test_end(void *arg)
 {
 	printf("test_end\n");
+	spdk_poller_unregister(&g_test_end_poller);
 	spdk_app_stop(0);
 	return -1;
 }
@@ -71,8 +72,8 @@ test_start(void *arg1)
 	printf("test_start\n");
 
 	/* Register a poller that will stop the test after the time has elapsed. */
-	test_end_poller = spdk_poller_register(__test_end, NULL,
-					       g_time_in_sec * 1000000ULL);
+	g_test_end_poller = spdk_poller_register(__test_end, NULL,
+			    g_time_in_sec * 1000000ULL);
 
 	for (i = 0; i < g_queue_depth; i++) {
 		__submit_next(NULL, NULL);
@@ -84,7 +85,7 @@ test_cleanup(void)
 {
 	printf("test_abort\n");
 
-	spdk_poller_unregister(&test_end_poller);
+	spdk_poller_unregister(&g_test_end_poller);
 	spdk_app_stop(0);
 }
 
