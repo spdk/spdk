@@ -512,6 +512,33 @@ struct spdk_poller *spdk_poller_register(spdk_poller_fn fn,
 		uint64_t period_microseconds);
 
 /**
+ * Register a poller on the current thread with arbitrary name.
+ *
+ * The poller can be unregistered by calling spdk_poller_unregister().
+ *
+ * \param fn This function will be called every `period_microseconds`.
+ * \param arg Argument passed to fn.
+ * \param period_microseconds How often to call `fn`. If 0, call `fn` as often
+ *  as possible.
+ * \param name Human readable name for the poller. Pointer of the poller function
+ * name is set if NULL.
+ *
+ * \return a pointer to the poller registered on the current thread on success
+ * or NULL on failure.
+ */
+struct spdk_poller *spdk_poller_register_named(spdk_poller_fn fn,
+		void *arg,
+		uint64_t period_microseconds,
+		const char *name);
+
+/*
+ * \brief Register a poller on the current thread with setting its name
+ * to the string of the poller function name.
+ */
+#define SPDK_POLLER_REGISTER(fn, arg, period_microseconds)	\
+	spdk_poller_register_named(fn, arg, period_microseconds, #fn)
+
+/**
  * Unregister a poller on the current thread.
  *
  * \param ppoller The poller to unregister.

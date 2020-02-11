@@ -37,6 +37,7 @@
 #include "spdk/stdinc.h"
 #include "spdk/thread.h"
 
+#define SPDK_MAX_POLLER_NAME_LEN	256
 #define SPDK_MAX_THREAD_NAME_LEN	256
 
 enum spdk_poller_state {
@@ -71,6 +72,8 @@ struct spdk_poller {
 	spdk_poller_fn			fn;
 	void				*arg;
 	struct spdk_thread		*thread;
+
+	char				name[SPDK_MAX_POLLER_NAME_LEN + 1];
 };
 
 struct spdk_thread {

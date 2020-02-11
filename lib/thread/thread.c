@@ -182,8 +182,8 @@ _free_thread(struct spdk_thread *thread)
 
 	TAILQ_FOREACH_SAFE(poller, &thread->active_pollers, tailq, ptmp) {
 		if (poller->state != SPDK_POLLER_STATE_UNREGISTERED) {
-			SPDK_WARNLOG("poller %p still registered at thread exit\n",
-				     poller);
+			SPDK_WARNLOG("poller %s still registered at thread exit\n",
+				     poller->name);
 		}
 		TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
 		free(poller);
@@ -191,15 +191,15 @@ _free_thread(struct spdk_thread *thread)
 
 	TAILQ_FOREACH_SAFE(poller, &thread->timed_pollers, tailq, ptmp) {
 		if (poller->state != SPDK_POLLER_STATE_UNREGISTERED) {
-			SPDK_WARNLOG("poller %p still registered at thread exit\n",
-				     poller);
+			SPDK_WARNLOG("poller %s still registered at thread exit\n",
+				     poller->name);
 		}
 		TAILQ_REMOVE(&thread->timed_pollers, poller, tailq);
 		free(poller);
 	}
 
 	TAILQ_FOREACH_SAFE(poller, &thread->paused_pollers, tailq, ptmp) {
-		SPDK_WARNLOG("poller %p still registered at thread exit\n", poller);
+		SPDK_WARNLOG("poller %s still registered at thread exit\n", poller->name);
 		TAILQ_REMOVE(&thread->paused_pollers, poller, tailq);
 		free(poller);
 	}
@@ -332,23 +332,23 @@ spdk_thread_exit(struct spdk_thread *thread)
 
 	TAILQ_FOREACH(poller, &thread->active_pollers, tailq) {
 		if (poller->state != SPDK_POLLER_STATE_UNREGISTERED) {
-			SPDK_ERRLOG("thread %s still has active poller %p\n",
-				    thread->name, poller);
+			SPDK_ERRLOG("thread %s still has active poller %s\n",
+				    thread->name, poller->name);
 			return -EBUSY;
 		}
 	}
 
 	TAILQ_FOREACH(poller, &thread->timed_pollers, tailq) {
 		if (poller->state != SPDK_POLLER_STATE_UNREGISTERED) {
-			SPDK_ERRLOG("thread %s still has active timed poller %p\n",
-				    thread->name, poller);
+			SPDK_ERRLOG("thread %s still has active timed poller %s\n",
+				    thread->name, poller->name);
 			return -EBUSY;
 		}
 	}
 
 	TAILQ_FOREACH(poller, &thread->paused_pollers, tailq) {
-		SPDK_ERRLOG("thread %s still has paused poller %p\n",
-			    thread->name, poller);
+		SPDK_ERRLOG("thread %s still has paused poller %s\n",
+			    thread->name, poller->name);
 		return -EBUSY;
 	}
 
@@ -566,7 +566,7 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 
 #ifdef DEBUG
 		if (poller_rc == -1) {
-			SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Poller %p returned -1\n", poller);
+			SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Poller %s returned -1\n", poller->name);
 		}
 #endif
 
@@ -605,7 +605,7 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 
 #ifdef DEBUG
 		if (timer_rc == -1) {
-			SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Timed poller %p returned -1\n", poller);
+			SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Timed poller %s returned -1\n", poller->name);
 		}
 #endif
 
@@ -817,10 +817,11 @@ spdk_thread_send_critical_msg(struct spdk_thread *thread, spdk_msg_fn fn)
 	return -EIO;
 }
 
-struct spdk_poller *
-spdk_poller_register(spdk_poller_fn fn,
-		     void *arg,
-		     uint64_t period_microseconds)
+static struct spdk_poller *
+_spdk_poller_register(spdk_poller_fn fn,
+		      void *arg,
+		      uint64_t period_microseconds,
+		      const char *name)
 {
 	struct spdk_thread *thread;
 	struct spdk_poller *poller;
@@ -843,6 +844,12 @@ spdk_poller_register(spdk_poller_fn fn,
 		return NULL;
 	}
 
+	if (name) {
+		snprintf(poller->name, sizeof(poller->name), "%s", name);
+	} else {
+		snprintf(poller->name, sizeof(poller->name), "%p", fn);
+	}
+
 	poller->state = SPDK_POLLER_STATE_WAITING;
 	poller->fn = fn;
 	poller->arg = arg;
@@ -861,6 +868,23 @@ spdk_poller_register(spdk_poller_fn fn,
 	_spdk_thread_insert_poller(thread, poller);
 
 	return poller;
+}
+
+struct spdk_poller *
+spdk_poller_register(spdk_poller_fn fn,
+		     void *arg,
+		     uint64_t period_microseconds)
+{
+	return _spdk_poller_register(fn, arg, period_microseconds, NULL);
+}
+
+struct spdk_poller *
+spdk_poller_register_named(spdk_poller_fn fn,
+			   void *arg,
+			   uint64_t period_microseconds,
+			   const char *name)
+{
+	return _spdk_poller_register(fn, arg, period_microseconds, name);
 }
 
 void
