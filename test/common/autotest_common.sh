@@ -323,6 +323,45 @@ function rpc_cmd() {
 	[[ $rc == 0 ]]
 }
 
+function rpc_cmd_simple_data_json() {
+
+	local elems="$1[@]" elem
+	local -gA jq_out=()
+	local jq val
+
+	local lvs=(
+		"uuid"
+		"name"
+		"base_bdev"
+		"total_data_clusters"
+		"free_clusters"
+		"block_size"
+		"cluster_size"
+	)
+
+	local bdev=(
+		"name"
+		"aliases[0]"
+		"block_size"
+		"num_blocks"
+		"uuid"
+		"product_name"
+	)
+
+	[[ -v $elems ]] || return 1
+
+	for elem in "${!elems}"; do
+		jq="${jq:+$jq,\"\\n\",}\"$elem\",\" \",.[0].$elem"
+	done
+	jq+=',"\n"'
+
+	shift
+	while read -r elem val; do
+		jq_out["$elem"]=$val
+	done < <(rpc_cmd "$@" | jq -jr "$jq")
+	(( ${#jq_out[@]} > 0 )) || return 1
+}
+
 function timing() {
 	direction="$1"
 	testname="$2"

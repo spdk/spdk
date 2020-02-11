@@ -8,6 +8,14 @@ LVS_DEFAULT_CLUSTER_SIZE=$(( LVS_DEFAULT_CLUSTER_SIZE_MB * 1024 * 1024 ))
 LVS_DEFAULT_CAPACITY_MB=$(( MALLOC_SIZE_MB - LVS_DEFAULT_CLUSTER_SIZE_MB ))
 LVS_DEFAULT_CAPACITY=$(( LVS_DEFAULT_CAPACITY_MB * 1024 * 1024 ))
 
+function get_bdev_jq() {
+	rpc_cmd_simple_data_json bdev "$@"
+}
+
+function get_lvs_jq() {
+	rpc_cmd_simple_data_json lvs "$@"
+}
+
 function check_leftover_devices() {
 	leftover_bdevs=$(rpc_cmd bdev_get_bdevs)
 	[ "$(jq length <<< "$leftover_bdevs")" == "0" ]
