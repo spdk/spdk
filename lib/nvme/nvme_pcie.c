@@ -994,31 +994,29 @@ nvme_pcie_qpair_reset(struct spdk_nvme_qpair *qpair)
 	return 0;
 }
 
-static int
-nvme_pcie_ctrlr_alloc_cmb(struct spdk_nvme_ctrlr *ctrlr, uint64_t length, uint64_t aligned,
-			  uint64_t *offset)
+static void *
+nvme_pcie_ctrlr_alloc_cmb(struct spdk_nvme_ctrlr *ctrlr, uint64_t size, uint64_t alignment)
 {
 	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
-	uint64_t round_offset;
+	uintptr_t addr;
 
 	if (pctrlr->cmb.mem_register_addr != NULL) {
 		/* BAR is mapped for data */
-		return -1;
+		return NULL;
 	}
 
-	round_offset = pctrlr->cmb.current_offset;
-	round_offset = (round_offset + (aligned - 1)) & ~(aligned - 1);
+	addr = (uintptr_t)pctrlr->cmb.bar_va + pctrlr->cmb.current_offset;
+	addr = (addr + (alignment - 1)) & ~(alignment - 1);
 
 	/* CMB may only consume part of the BAR, calculate accordingly */
-	if (round_offset + length > pctrlr->cmb.end) {
+	if (addr + size > ((uintptr_t)pctrlr->cmb.bar_va + pctrlr->cmb.size)) {
 		SPDK_ERRLOG("Tried to allocate past valid CMB range!\n");
-		return -1;
+		return NULL;
 	}
 
-	*offset = round_offset;
-	pctrlr->cmb.current_offset = round_offset + length;
+	pctrlr->cmb.current_offset = (addr + size) - (uintptr_t)pctrlr->cmb.bar_va;
 
-	return 0;
+	return (void *)addr;
 }
 
 static int
@@ -1031,7 +1029,6 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 	struct nvme_tracker	*tr;
 	uint16_t		i;
 	volatile uint32_t	*doorbell_base;
-	uint64_t		offset;
 	uint16_t		num_trackers;
 	size_t			page_align = VALUE_2MB;
 	uint32_t                flags = SPDK_MALLOC_DMA;
@@ -1070,10 +1067,10 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 
 	/* cmd and cpl rings must be aligned on page size boundaries. */
 	if (ctrlr->opts.use_cmb_sqs) {
-		if (nvme_pcie_ctrlr_alloc_cmb(ctrlr, pqpair->num_entries * sizeof(struct spdk_nvme_cmd),
-					      sysconf(_SC_PAGESIZE), &offset) == 0) {
-			pqpair->cmd = pctrlr->cmb.bar_va + offset;
-			pqpair->cmd_bus_addr = pctrlr->cmb.bar_pa + offset;
+		pqpair->cmd = nvme_pcie_ctrlr_alloc_cmb(ctrlr, pqpair->num_entries * sizeof(struct spdk_nvme_cmd),
+							sysconf(_SC_PAGESIZE));
+		pqpair->cmd_bus_addr = spdk_vtophys(pqpair->cmd, NULL);
+		if (pqpair->cmd != NULL) {
 			pqpair->sq_in_cmb = true;
 		}
 	}
