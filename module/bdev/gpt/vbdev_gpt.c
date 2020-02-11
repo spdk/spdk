@@ -185,6 +185,7 @@ vbdev_gpt_resubmit_request(void *arg)
 static void
 vbdev_gpt_queue_io(struct gpt_io *io)
 {
+	struct gpt_channel *ch = spdk_io_channel_get_ctx(io->ch);
 	int rc;
 
 	io->bdev_io_wait.bdev = io->bdev_io->bdev;
@@ -192,7 +193,7 @@ vbdev_gpt_queue_io(struct gpt_io *io)
 	io->bdev_io_wait.cb_arg = io;
 
 	rc = spdk_bdev_queue_io_wait(io->bdev_io->bdev,
-				     io->ch, &io->bdev_io_wait);
+				     ch->part_ch.base_ch, &io->bdev_io_wait);
 	if (rc != 0) {
 		SPDK_ERRLOG("Queue io failed in vbdev_gpt_queue_io, rc=%d.\n", rc);
 		spdk_bdev_io_complete(io->bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
