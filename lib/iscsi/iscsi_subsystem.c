@@ -1322,7 +1322,7 @@ iscsi_parse_globals(void)
 		return rc;
 	}
 
-	g_spdk_iscsi.session = calloc(1, sizeof(void *) * g_spdk_iscsi.MaxSessions);
+	g_spdk_iscsi.session = calloc(1, sizeof(struct spdk_iscsi_sess *) * g_spdk_iscsi.MaxSessions);
 	if (!g_spdk_iscsi.session) {
 		SPDK_ERRLOG("calloc() failed for session array\n");
 		return -1;
