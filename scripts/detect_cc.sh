@@ -107,16 +107,16 @@ case "$LD_TYPE" in
 		exit 1
 esac
 
-CCAR="ar"
+AR="ar"
 if [ "$LTO" = "y" ]; then
 	if [ "$CC_TYPE" = "clang" ]; then
 		if [ "$LD_TYPE" != "gold" ]; then
 			err "Using LTO with clang requires the gold linker."
 			exit 1
 		fi
-		CCAR="llvm-ar"
+		AR="llvm-ar"
 	else
-		CCAR="gcc-ar"
+		AR="gcc-ar"
 	fi
 fi
 
@@ -179,7 +179,7 @@ set_default CC $CC
 set_default CXX $CXX
 set_default LD $LD
 
-echo "CCAR=$CCAR"
+echo "AR=$AR"
 echo "CC_TYPE=$CC_TYPE"
 echo "LD_TYPE=$LD_TYPE"
 
