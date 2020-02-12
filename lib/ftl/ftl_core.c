@@ -292,6 +292,39 @@ ftl_release_batch(struct spdk_ftl_dev *dev, struct ftl_batch *batch)
 	TAILQ_INSERT_TAIL(&dev->free_batches, batch, tailq);
 }
 
+struct ftl_wbuf_entry *ftl_get_entry_from_addr(struct spdk_ftl_dev *dev, struct ftl_addr addr);
+
+struct ftl_wbuf_entry *
+ftl_get_entry_from_addr(struct spdk_ftl_dev *dev, struct ftl_addr addr)
+{
+	struct ftl_io_channel *ioch;
+	uint64_t ioch_offset, entry_offset;
+
+	ioch_offset = addr.cache_offset & ((1 << dev->ioch_shift) - 1);
+	entry_offset = addr.cache_offset >> dev->ioch_shift;
+	ioch = dev->ioch_array[ioch_offset];
+
+	assert(ioch_offset < dev->conf.max_io_channels);
+	assert(entry_offset < ioch->num_entries);
+	assert(addr.cached == 1);
+
+	return &ioch->wbuf_entries[entry_offset];
+}
+
+struct ftl_addr ftl_get_addr_from_entry(struct ftl_wbuf_entry *entry);
+
+struct ftl_addr
+ftl_get_addr_from_entry(struct ftl_wbuf_entry *entry)
+{
+	struct ftl_io_channel *ioch = entry->ioch;
+	struct ftl_addr addr = {};
+
+	addr.cached = 1;
+	addr.cache_offset = (uint64_t)entry->index << ioch->dev->ioch_shift | ioch->index;
+
+	return addr;
+}
+
 static void
 ftl_io_cmpl_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {

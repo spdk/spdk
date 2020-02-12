@@ -219,6 +219,11 @@ struct spdk_ftl_dev {
 	struct ftl_io_channel			**ioch_array;
 	TAILQ_HEAD(, ftl_io_channel)		ioch_queue;
 	uint64_t				num_io_channels;
+	/* Value required to shift address of a write buffer entry to retrieve
+	 * the IO channel it's part of.  The other part of the address describes
+	 * the offset of an entry within the IO channel's entry array.
+	 */
+	uint64_t				ioch_shift;
 
 	/* Write buffer batches */
 #define FTL_BATCH_COUNT 4096

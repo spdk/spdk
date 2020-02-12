@@ -1198,6 +1198,10 @@ ftl_dev_init_io_channel(struct spdk_ftl_dev *dev)
 	struct ftl_batch *batch;
 	uint32_t i;
 
+	/* Align the IO channels to nearest power of 2 to allow for easy addr bit shift */
+	dev->conf.max_io_channels = spdk_align32pow2(dev->conf.max_io_channels);
+	dev->ioch_shift = spdk_u32log2(dev->conf.max_io_channels);
+
 	dev->ioch_array = calloc(dev->conf.max_io_channels, sizeof(*dev->ioch_array));
 	if (!dev->ioch_array) {
 		SPDK_ERRLOG("Failed to allocate IO channel array\n");

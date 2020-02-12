@@ -917,6 +917,88 @@ test_submit_batch(void)
 	free_device(dev);
 }
 
+static void
+test_entry_address(void)
+{
+	struct spdk_ftl_dev *dev;
+	struct spdk_io_channel **ioch_array;
+	struct ftl_io_channel *ftl_ioch;
+	struct ftl_wbuf_entry **entry_array;
+	struct ftl_addr addr;
+	uint32_t num_entries, num_io_channels = 7;
+	uint32_t ioch_idx, entry_idx;
+
+	dev = setup_device(num_io_channels, num_io_channels);
+	ioch_array = calloc(num_io_channels, sizeof(*ioch_array));
+	SPDK_CU_ASSERT_FATAL(ioch_array != NULL);
+
+	num_entries = dev->conf.rwb_size / FTL_BLOCK_SIZE;
+	entry_array = calloc(num_entries, sizeof(*entry_array));
+	SPDK_CU_ASSERT_FATAL(entry_array != NULL);
+
+	for (ioch_idx = 0; ioch_idx < num_io_channels; ++ioch_idx) {
+		set_thread(ioch_idx);
+		ioch_array[ioch_idx] = spdk_get_io_channel(dev);
+		SPDK_CU_ASSERT_FATAL(ioch_array[ioch_idx] != NULL);
+		poll_threads();
+	}
+
+	for (ioch_idx = 0; ioch_idx < num_io_channels; ++ioch_idx) {
+		set_thread(ioch_idx);
+		ftl_ioch = ftl_io_channel_get_ctx(ioch_array[ioch_idx]);
+
+		for (entry_idx = 0; entry_idx < num_entries; ++entry_idx) {
+			entry_array[entry_idx] = ftl_acquire_wbuf_entry(ftl_ioch, 0);
+			SPDK_CU_ASSERT_FATAL(entry_array[entry_idx] != NULL);
+
+			addr = ftl_get_addr_from_entry(entry_array[entry_idx]);
+			CU_ASSERT(addr.cached == 1);
+			CU_ASSERT((addr.cache_offset >> dev->ioch_shift) == entry_idx);
+			CU_ASSERT((addr.cache_offset & ((1 << dev->ioch_shift) - 1)) == ioch_idx);
+			CU_ASSERT(entry_array[entry_idx] == ftl_get_entry_from_addr(dev, addr));
+		}
+
+		for (entry_idx = 0; entry_idx < num_entries; ++entry_idx) {
+			ftl_release_wbuf_entry(entry_array[entry_idx]);
+		}
+	}
+
+	for (ioch_idx = 0; ioch_idx < num_io_channels; ioch_idx += 2) {
+		set_thread(ioch_idx);
+		spdk_put_io_channel(ioch_array[ioch_idx]);
+		ioch_array[ioch_idx] = NULL;
+	}
+	poll_threads();
+
+	for (ioch_idx = 1; ioch_idx < num_io_channels; ioch_idx += 2) {
+		set_thread(ioch_idx);
+		ftl_ioch = ftl_io_channel_get_ctx(ioch_array[ioch_idx]);
+
+		for (entry_idx = 0; entry_idx < num_entries; ++entry_idx) {
+			entry_array[entry_idx] = ftl_acquire_wbuf_entry(ftl_ioch, 0);
+			SPDK_CU_ASSERT_FATAL(entry_array[entry_idx] != NULL);
+
+			addr = ftl_get_addr_from_entry(entry_array[entry_idx]);
+			CU_ASSERT(addr.cached == 1);
+			CU_ASSERT(entry_array[entry_idx] == ftl_get_entry_from_addr(dev, addr));
+		}
+
+		for (entry_idx = 0; entry_idx < num_entries; ++entry_idx) {
+			ftl_release_wbuf_entry(entry_array[entry_idx]);
+		}
+	}
+
+	for (ioch_idx = 1; ioch_idx < num_io_channels; ioch_idx += 2) {
+		set_thread(ioch_idx);
+		spdk_put_io_channel(ioch_array[ioch_idx]);
+	}
+	poll_threads();
+
+	free(entry_array);
+	free(ioch_array);
+	free_device(dev);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -950,7 +1032,8 @@ main(int argc, char **argv)
 			       test_acquire_entry) == NULL
 		|| CU_add_test(suite, "test_submit_batch",
 			       test_submit_batch) == NULL
-
+		|| CU_add_test(suite, "test_entry_address",
+			       test_entry_address) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
