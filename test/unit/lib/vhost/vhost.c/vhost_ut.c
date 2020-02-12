@@ -54,6 +54,8 @@ DEFINE_STUB(vhost_driver_unregister, int, (const char *path), 0);
 DEFINE_STUB(spdk_mem_register, int, (void *vaddr, size_t len), 0);
 DEFINE_STUB(spdk_mem_unregister, int, (void *vaddr, size_t len), 0);
 DEFINE_STUB(rte_vhost_vring_call, int, (int vid, uint16_t vring_idx), 0);
+DEFINE_STUB_V(rte_vhost_log_used_vring, (int vid, uint16_t vring_idx,
+		uint64_t offset, uint64_t len));
 
 static struct spdk_cpuset *g_app_core_mask;
 struct spdk_cpuset *spdk_app_get_core_mask(void)
@@ -402,6 +404,147 @@ vq_avail_ring_get_test(void)
 	}
 }
 
+static bool
+vq_desc_guest_is_used(struct spdk_vhost_virtqueue *vq, int16_t guest_last_used_idx,
+		      int16_t guest_used_phase)
+{
+	return (!!(vq->vring.desc_packed[guest_last_used_idx].flags & VRING_DESC_F_USED) ==
+		!!guest_used_phase);
+}
+
+static void
+vq_desc_guest_set_avail(struct spdk_vhost_virtqueue *vq, int16_t *guest_last_avail_idx,
+			int16_t *guest_avail_phase)
+{
+	if (*guest_avail_phase) {
+		vq->vring.desc_packed[*guest_last_avail_idx].flags |= VRING_DESC_F_AVAIL;
+		vq->vring.desc_packed[*guest_last_avail_idx].flags &= ~VRING_DESC_F_USED;
+	} else {
+		vq->vring.desc_packed[*guest_last_avail_idx].flags &= ~VRING_DESC_F_AVAIL;
+		vq->vring.desc_packed[*guest_last_avail_idx].flags |= VRING_DESC_F_USED;
+	}
+
+	if (++(*guest_last_avail_idx) >= vq->vring.size) {
+		*guest_last_avail_idx -= vq->vring.size;
+		*guest_avail_phase = !(*guest_avail_phase);
+	}
+}
+
+static int16_t
+vq_desc_guest_handle_completed_desc(struct spdk_vhost_virtqueue *vq, int16_t *guest_last_used_idx,
+				    int16_t *guest_used_phase)
+{
+	int16_t buffer_id = -1;
+
+	if (vq_desc_guest_is_used(vq, *guest_last_used_idx, *guest_used_phase)) {
+		buffer_id = vq->vring.desc_packed[*guest_last_used_idx].id;
+		if (++(*guest_last_used_idx) >= vq->vring.size) {
+			*guest_last_used_idx -= vq->vring.size;
+			*guest_used_phase = !(*guest_used_phase);
+		}
+
+		return buffer_id;
+	}
+
+	return -1;
+}
+
+static void
+vq_packed_ring_test(void)
+{
+	struct spdk_vhost_session vs = {};
+	struct spdk_vhost_virtqueue vq = {};
+	struct vring_packed_desc descs[4];
+	uint16_t guest_last_avail_idx = 0, guest_last_used_idx = 0;
+	uint16_t guest_avail_phase = 1, guest_used_phase = 1;
+	int i;
+	int16_t chain_num;
+
+	vq.vring.desc_packed = descs;
+	vq.vring.size = 4;
+
+	/* avail and used wrap counter are initialized to 1 */
+	vq.packed.avail_phase = 1;
+	vq.packed.used_phase = 1;
+	vq.packed.packed_ring = true;
+	memset(descs, 0, sizeof(descs));
+
+	CU_ASSERT(vhost_vq_packed_ring_is_avail(&vq) == false);
+
+	/* Guest send requests */
+	for (i = 0; i < vq.vring.size; i++) {
+		descs[guest_last_avail_idx].id = i;
+		/* Set the desc available */
+		vq_desc_guest_set_avail(&vq, &guest_last_avail_idx, &guest_avail_phase);
+	}
+	CU_ASSERT(guest_last_avail_idx == 0);
+	CU_ASSERT(guest_avail_phase == 0);
+
+	/* Host handle available descs */
+	CU_ASSERT(vhost_vq_packed_ring_is_avail(&vq) == true);
+	i = 0;
+	while (vhost_vq_packed_ring_is_avail(&vq)) {
+		CU_ASSERT(vhost_vring_packed_desc_get_buffer_id(&vq, vq.last_avail_idx, &chain_num) == i++);
+		CU_ASSERT(chain_num == 1);
+	}
+
+	/* Host complete them out of order: 1, 0, 2. */
+	vhost_vq_packed_ring_enqueue(&vs, &vq, 1, 1, 1);
+	vhost_vq_packed_ring_enqueue(&vs, &vq, 1, 0, 1);
+	vhost_vq_packed_ring_enqueue(&vs, &vq, 1, 2, 1);
+
+	/* Host has got all the available request but only complete three requests */
+	CU_ASSERT(vq.last_avail_idx == 0);
+	CU_ASSERT(vq.packed.avail_phase == 0);
+	CU_ASSERT(vq.last_used_idx == 3);
+	CU_ASSERT(vq.packed.used_phase == 1);
+
+	/* Guest handle completed requests */
+	CU_ASSERT(vq_desc_guest_handle_completed_desc(&vq, &guest_last_used_idx, &guest_used_phase) == 1);
+	CU_ASSERT(vq_desc_guest_handle_completed_desc(&vq, &guest_last_used_idx, &guest_used_phase) == 0);
+	CU_ASSERT(vq_desc_guest_handle_completed_desc(&vq, &guest_last_used_idx, &guest_used_phase) == 2);
+	CU_ASSERT(guest_last_used_idx == 3);
+	CU_ASSERT(guest_used_phase == 1);
+
+	/* There are three descs available the guest can send three request again */
+	for (i = 0; i < 3; i++) {
+		descs[guest_last_avail_idx].id = 2 - i;
+		/* Set the desc available */
+		vq_desc_guest_set_avail(&vq, &guest_last_avail_idx, &guest_avail_phase);
+	}
+
+	/* Host handle available descs */
+	CU_ASSERT(vhost_vq_packed_ring_is_avail(&vq) == true);
+	i = 2;
+	while (vhost_vq_packed_ring_is_avail(&vq)) {
+		CU_ASSERT(vhost_vring_packed_desc_get_buffer_id(&vq, vq.last_avail_idx, &chain_num) == i--);
+		CU_ASSERT(chain_num == 1);
+	}
+
+	/* There are four requests in Host, the new three ones and left one */
+	CU_ASSERT(vq.last_avail_idx == 3);
+	/* Available wrap conter should overturn */
+	CU_ASSERT(vq.packed.avail_phase == 0);
+
+	/* Host complete all the requests */
+	vhost_vq_packed_ring_enqueue(&vs, &vq, 1, 1, 1);
+	vhost_vq_packed_ring_enqueue(&vs, &vq, 1, 0, 1);
+	vhost_vq_packed_ring_enqueue(&vs, &vq, 1, 3, 1);
+	vhost_vq_packed_ring_enqueue(&vs, &vq, 1, 2, 1);
+
+	CU_ASSERT(vq.last_used_idx == vq.last_avail_idx);
+	CU_ASSERT(vq.packed.used_phase == vq.packed.avail_phase);
+
+	/* Guest handle completed requests */
+	CU_ASSERT(vq_desc_guest_handle_completed_desc(&vq, &guest_last_used_idx, &guest_used_phase) == 1);
+	CU_ASSERT(vq_desc_guest_handle_completed_desc(&vq, &guest_last_used_idx, &guest_used_phase) == 0);
+	CU_ASSERT(vq_desc_guest_handle_completed_desc(&vq, &guest_last_used_idx, &guest_used_phase) == 3);
+	CU_ASSERT(vq_desc_guest_handle_completed_desc(&vq, &guest_last_used_idx, &guest_used_phase) == 2);
+
+	CU_ASSERT(guest_last_avail_idx == guest_last_used_idx);
+	CU_ASSERT(guest_avail_phase == guest_used_phase);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -418,6 +561,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, session_find_by_vid_test);
 	CU_ADD_TEST(suite, remove_controller_test);
 	CU_ADD_TEST(suite, vq_avail_ring_get_test);
+	CU_ADD_TEST(suite, vq_packed_ring_test);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
