@@ -263,6 +263,35 @@ union spdk_nvme_cmbsz_register {
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cmbsz_register) == 4, "Incorrect size");
 
+union spdk_nvme_cmbmsc_register {
+	uint64_t	raw;
+	struct {
+		/** capability registers enabled */
+		uint64_t cre		: 1;
+
+		/** controller memory space enable */
+		uint64_t cmse		: 1;
+
+		uint64_t reserved	: 10;
+
+		/** controller base address */
+		uint64_t cba		: 52;
+	} bits;
+
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cmbmsc_register) == 8, "Incorrect size");
+
+union spdk_nvme_cmbsts_register {
+	uint32_t	raw;
+	struct {
+		/** controller base address invalid */
+		uint32_t cbai		: 1;
+
+		uint32_t reserved	: 31;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cmbsts_register) == 4, "Incorrect size");
+
 /** Boot partition information */
 union spdk_nvme_bpinfo_register	{
 	uint32_t	raw;
@@ -345,7 +374,13 @@ struct spdk_nvme_registers {
 	/** boot partition memory buffer location (must be 4KB aligned) */
 	uint64_t			bpmbl;
 
-	uint32_t			reserved3[0x3ec];
+	/** controller memory buffer memory space control */
+	union spdk_nvme_cmbmsc_register	cmbmsc;
+
+	/** controller memory buffer status */
+	union spdk_nvme_cmbsts_register	cmbsts;
+
+	uint32_t			reserved3[0x3e9];
 
 	struct {
 		uint32_t	sq_tdbl;	/* submission queue tail doorbell */
@@ -376,6 +411,10 @@ SPDK_STATIC_ASSERT(0x40 == offsetof(struct spdk_nvme_registers, bpinfo),
 SPDK_STATIC_ASSERT(0x44 == offsetof(struct spdk_nvme_registers, bprsel),
 		   "Incorrect register offset");
 SPDK_STATIC_ASSERT(0x48 == offsetof(struct spdk_nvme_registers, bpmbl),
+		   "Incorrect register offset");
+SPDK_STATIC_ASSERT(0x50 == offsetof(struct spdk_nvme_registers, cmbmsc),
+		   "Incorrect register offset");
+SPDK_STATIC_ASSERT(0x58 == offsetof(struct spdk_nvme_registers, cmbsts),
 		   "Incorrect register offset");
 
 enum spdk_nvme_sgl_descriptor_type {
