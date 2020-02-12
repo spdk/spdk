@@ -1,3 +1,9 @@
+# Introduction
+
+This directory contains a plug-in module for fio to enable use
+with SPDK. Fio is free software published under version 2 of
+the GPL license.
+
 # Compiling fio
 
 Clone the fio source repository from https://github.com/axboe/fio
