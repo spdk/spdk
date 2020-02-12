@@ -216,6 +216,7 @@ ftl_get_next_batch(struct spdk_ftl_dev *dev)
 	struct ftl_wbuf_entry *entries[FTL_DEQUEUE_ENTRIES];
 	TAILQ_HEAD(, ftl_io_channel) ioch_queue;
 	size_t i, num_dequeued, num_remaining;
+	uint64_t *metadata;
 
 	if (batch == NULL) {
 		batch = TAILQ_FIRST(&dev->free_batches);
@@ -251,6 +252,13 @@ ftl_get_next_batch(struct spdk_ftl_dev *dev)
 			for (i = 0; i < num_dequeued; ++i) {
 				batch->iov[batch->num_entries + i].iov_base = entries[i]->payload;
 				batch->iov[batch->num_entries + i].iov_len = FTL_BLOCK_SIZE;
+
+				if (batch->metadata != NULL) {
+					metadata = (uint64_t *)((char *)batch->metadata +
+								i * dev->md_size);
+					*metadata = entries[i]->lba;
+				}
+
 				TAILQ_INSERT_TAIL(&batch->entries, entries[i], tailq);
 			}
 

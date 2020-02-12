@@ -115,6 +115,7 @@ struct ftl_batch {
 	/* Index within spdk_ftl_dev.batch_array */
 	uint32_t				index;
 	struct iovec				*iov;
+	void					*metadata;
 	TAILQ_ENTRY(ftl_batch)			tailq;
 };
 
@@ -188,6 +189,7 @@ struct spdk_ftl_dev {
 
 	/* Metadata size */
 	size_t					md_size;
+	void					*md_buf;
 
 	/* Transfer unit size */
 	size_t					xfer_size;

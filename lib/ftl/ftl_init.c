@@ -1208,6 +1208,16 @@ ftl_dev_init_io_channel(struct spdk_ftl_dev *dev)
 		return -1;
 	}
 
+	if (dev->md_size > 0) {
+		dev->md_buf = spdk_zmalloc(dev->md_size * dev->xfer_size * FTL_BATCH_COUNT,
+					   dev->md_size, NULL, SPDK_ENV_LCORE_ID_ANY,
+					   SPDK_MALLOC_DMA);
+		if (dev->md_buf == NULL) {
+			SPDK_ERRLOG("Failed to allocate metadata buffer\n");
+			return -1;
+		}
+	}
+
 	dev->iov_buf = calloc(FTL_BATCH_COUNT, dev->xfer_size * sizeof(struct iovec));
 	if (!dev->iov_buf) {
 		SPDK_ERRLOG("Failed to allocate iovec buffer\n");
@@ -1223,6 +1233,10 @@ ftl_dev_init_io_channel(struct spdk_ftl_dev *dev)
 		batch->num_entries = 0;
 		batch->index = i;
 		TAILQ_INIT(&batch->entries);
+		if (dev->md_buf != NULL) {
+			batch->metadata = (char *)dev->md_buf + i * dev->xfer_size * dev->md_size;
+		}
+
 		TAILQ_INSERT_TAIL(&dev->free_batches, batch, tailq);
 	}
 
@@ -1366,6 +1380,8 @@ ftl_dev_free_sync(struct spdk_ftl_dev *dev)
 
 	ftl_release_bdev(dev->nv_cache.bdev_desc);
 	ftl_release_bdev(dev->base_bdev_desc);
+
+	spdk_free(dev->md_buf);
 
 	assert(dev->num_io_channels == 0);
 	free(dev->ioch_array);
