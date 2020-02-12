@@ -54,6 +54,7 @@ free_rpc_bdev_ftl_create(struct rpc_bdev_ftl_create *req)
 	free(req->base_bdev);
 	free(req->uuid);
 	free(req->cache_bdev);
+	free((char *)req->ftl_conf.l2p_path);
 }
 
 static const struct spdk_json_object_decoder rpc_bdev_ftl_create_decoders[] = {
@@ -72,6 +73,11 @@ static const struct spdk_json_object_decoder rpc_bdev_ftl_create_decoders[] = {
 	{
 		"use_append", offsetof(struct rpc_bdev_ftl_create, ftl_conf) +
 		offsetof(struct spdk_ftl_conf, use_append), spdk_json_decode_bool, true
+	},
+	{
+		"l2p_path", offsetof(struct rpc_bdev_ftl_create, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, l2p_path),
+		spdk_json_decode_string, true
 	},
 	{
 		"limit_crit", offsetof(struct rpc_bdev_ftl_create, ftl_conf) +

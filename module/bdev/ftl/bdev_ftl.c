@@ -246,6 +246,9 @@ bdev_ftl_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 	spdk_json_write_named_uint64(w, "limit_low_threshold", conf->limits[SPDK_FTL_LIMIT_LOW].thld);
 	spdk_json_write_named_uint64(w, "limit_start", conf->limits[SPDK_FTL_LIMIT_START].limit);
 	spdk_json_write_named_uint64(w, "limit_start_threshold", conf->limits[SPDK_FTL_LIMIT_START].thld);
+	if (conf->l2p_path) {
+		spdk_json_write_named_string(w, "l2p_path", conf->l2p_path);
+	}
 
 	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &attrs.uuid);
 	spdk_json_write_named_string(w, "uuid", uuid);

@@ -1550,6 +1550,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                             cache=args.cache,
                                             allow_open_bands=args.allow_open_bands,
                                             overprovisioning=args.overprovisioning,
+                                            l2p_path=args.l2p_path,
                                             use_append=args.use_append,
                                             **arg_limits))
 
@@ -1564,6 +1565,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    ' result in partial data recovery, instead of error', action='store_true')
     p.add_argument('--overprovisioning', help='Percentage of device used for relocation, not exposed'
                    ' to user (optional)', type=int)
+    p.add_argument('--l2p_path', help='Path to persistent memory file or device to store l2p onto, '
+                                      'by default l2p is kept in DRAM and is volatile (optional)')
     p.add_argument('--use_append', help='Use appends instead of writes', action='store_true')
 
     limits = p.add_argument_group('Defrag limits', 'Configures defrag limits and thresholds for'
