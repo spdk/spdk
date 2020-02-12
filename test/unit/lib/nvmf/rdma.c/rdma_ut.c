@@ -577,7 +577,8 @@ static void
 qpair_reset(struct spdk_nvmf_rdma_qpair *rqpair,
 	    struct spdk_nvmf_rdma_poller *poller,
 	    struct spdk_nvmf_rdma_device *device,
-	    struct spdk_nvmf_rdma_resources *resources)
+	    struct spdk_nvmf_rdma_resources *resources,
+	    struct spdk_nvmf_transport *transport)
 {
 	memset(rqpair, 0, sizeof(*rqpair));
 	STAILQ_INIT(&rqpair->pending_rdma_write_queue);
@@ -591,6 +592,7 @@ qpair_reset(struct spdk_nvmf_rdma_qpair *rqpair,
 	rqpair->max_send_sge = SPDK_NVMF_MAX_SGL_ENTRIES;
 	rqpair->max_send_depth = 16;
 	rqpair->max_read_depth = 16;
+	rqpair->qpair.transport = transport;
 	resources->recvs_to_post.first = resources->recvs_to_post.last = NULL;
 }
 
@@ -622,7 +624,7 @@ test_spdk_nvmf_rdma_request_process(void)
 	group.group.buf_cache_size = 0;
 	group.group.buf_cache_count = 0;
 	poller_reset(&poller, &group);
-	qpair_reset(&rqpair, &poller, &device, &resources);
+	qpair_reset(&rqpair, &poller, &device, &resources, &rtransport.transport);
 
 	rtransport.transport.opts = g_rdma_ut_transport_opts;
 	rtransport.transport.data_buf_pool = spdk_mempool_create("test_data_pool", 16, 128, 0, 0);
@@ -661,7 +663,7 @@ test_spdk_nvmf_rdma_request_process(void)
 	free_recv(rdma_recv);
 	free_req(rdma_req);
 	poller_reset(&poller, &group);
-	qpair_reset(&rqpair, &poller, &device, &resources);
+	qpair_reset(&rqpair, &poller, &device, &resources, &rtransport.transport);
 
 	/* Test 2: single SGL WRITE request */
 	rdma_recv = create_recv(&rqpair, SPDK_NVME_OPC_WRITE);
@@ -695,7 +697,7 @@ test_spdk_nvmf_rdma_request_process(void)
 	free_recv(rdma_recv);
 	free_req(rdma_req);
 	poller_reset(&poller, &group);
-	qpair_reset(&rqpair, &poller, &device, &resources);
+	qpair_reset(&rqpair, &poller, &device, &resources, &rtransport.transport);
 
 	/* Test 3: WRITE+WRITE ibv_send batching */
 	{
@@ -754,7 +756,7 @@ test_spdk_nvmf_rdma_request_process(void)
 		free_recv(recv2);
 		free_req(req2);
 		poller_reset(&poller, &group);
-		qpair_reset(&rqpair, &poller, &device, &resources);
+		qpair_reset(&rqpair, &poller, &device, &resources, &rtransport.transport);
 	}
 
 	/* Test 4, invalid command, check xfer type */
@@ -783,7 +785,7 @@ test_spdk_nvmf_rdma_request_process(void)
 		free_recv(rdma_recv_inv);
 		free_req(rdma_req_inv);
 		poller_reset(&poller, &group);
-		qpair_reset(&rqpair, &poller, &device, &resources);
+		qpair_reset(&rqpair, &poller, &device, &resources, &rtransport.transport);
 	}
 
 	spdk_mempool_free(rtransport.transport.data_buf_pool);

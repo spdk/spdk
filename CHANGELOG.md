@@ -79,6 +79,11 @@ library now no longer exists.
 The contents of the bdev_rpc library have been moved to the bdev library. The app_rpc
 library now no longer exists.
 
+### nvmf
+
+Add 'no_wr_batching' parameter to 'spdk_nvmf_transport_opts' struct to disable
+Work Requests batching in RDMA transport.
+
 ### scsi
 
 Two new APIs have been added `spdk_scsi_dev_construct_ext` and

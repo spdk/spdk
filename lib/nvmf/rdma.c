@@ -476,6 +476,7 @@ struct spdk_nvmf_rdma_port {
 struct rdma_transport_opts {
 	uint32_t	max_srq_depth;
 	bool		no_srq;
+	bool		no_wr_batching;
 	int		acceptor_backlog;
 };
 
@@ -518,6 +519,14 @@ static const struct spdk_json_object_decoder rdma_transport_opts_decoder[] = {
 static bool
 nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			  struct spdk_nvmf_rdma_request *rdma_req);
+
+static void
+_poller_submit_sends(struct spdk_nvmf_rdma_transport *rtransport,
+		     struct spdk_nvmf_rdma_poller *rpoller);
+
+static void
+_poller_submit_recvs(struct spdk_nvmf_rdma_transport *rtransport,
+		     struct spdk_nvmf_rdma_poller *rpoller);
 
 static inline int
 nvmf_rdma_check_ibv_state(enum ibv_qp_state state)
@@ -1038,6 +1047,8 @@ static void
 nvmf_rdma_qpair_queue_recv_wrs(struct spdk_nvmf_rdma_qpair *rqpair, struct ibv_recv_wr *first)
 {
 	struct ibv_recv_wr *last;
+	struct spdk_nvmf_rdma_transport *rtransport = SPDK_CONTAINEROF(rqpair->qpair.transport,
+			struct spdk_nvmf_rdma_transport, transport);
 
 	last = first;
 	while (last->next != NULL) {
@@ -1054,6 +1065,10 @@ nvmf_rdma_qpair_queue_recv_wrs(struct spdk_nvmf_rdma_qpair *rqpair, struct ibv_r
 		rqpair->resources->recvs_to_post.last->next = first;
 		rqpair->resources->recvs_to_post.last = last;
 	}
+
+	if (rtransport->rdma_opts.no_wr_batching) {
+		_poller_submit_recvs(rtransport, rqpair->poller);
+	}
 }
 
 static int
@@ -1062,16 +1077,22 @@ request_transfer_in(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_rdma_request	*rdma_req;
 	struct spdk_nvmf_qpair		*qpair;
 	struct spdk_nvmf_rdma_qpair	*rqpair;
+	struct spdk_nvmf_rdma_transport *rtransport;
 
 	qpair = req->qpair;
 	rdma_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_rdma_request, req);
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+	rtransport = SPDK_CONTAINEROF(rqpair->qpair.transport,
+				      struct spdk_nvmf_rdma_transport, transport);
 
 	assert(req->xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER);
 	assert(rdma_req != NULL);
 
 	if (spdk_rdma_qp_queue_send_wrs(rqpair->rdma_qp, &rdma_req->data.wr)) {
 		STAILQ_INSERT_TAIL(&rqpair->poller->qpairs_pending_send, rqpair, send_link);
+	}
+	if (rtransport->rdma_opts.no_wr_batching) {
+		_poller_submit_sends(rtransport, rqpair->poller);
 	}
 
 	rqpair->current_read_depth += rdma_req->num_outstanding_data_wr;
@@ -1088,12 +1109,15 @@ request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 	struct spdk_nvmf_rdma_qpair	*rqpair;
 	struct spdk_nvme_cpl		*rsp;
 	struct ibv_send_wr		*first = NULL;
+	struct spdk_nvmf_rdma_transport *rtransport;
 
 	*data_posted = 0;
 	qpair = req->qpair;
 	rsp = &req->rsp->nvme_cpl;
 	rdma_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_rdma_request, req);
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+	rtransport = SPDK_CONTAINEROF(rqpair->qpair.transport,
+				      struct spdk_nvmf_rdma_transport, transport);
 
 	/* Advance our sq_head pointer */
 	if (qpair->sq_head == qpair->sq_head_max) {
@@ -1130,6 +1154,9 @@ request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 	}
 	if (spdk_rdma_qp_queue_send_wrs(rqpair->rdma_qp, first)) {
 		STAILQ_INSERT_TAIL(&rqpair->poller->qpairs_pending_send, rqpair, send_link);
+	}
+	if (rtransport->rdma_opts.no_wr_batching) {
+		_poller_submit_sends(rtransport, rqpair->poller);
 	}
 
 	/* +1 for the rsp wr */
@@ -2235,6 +2262,7 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 #define SPDK_NVMF_RDMA_DIF_INSERT_OR_STRIP false
 #define SPDK_NVMF_RDMA_ACCEPTOR_BACKLOG 100
 #define SPDK_NVMF_RDMA_DEFAULT_ABORT_TIMEOUT_SEC 1
+#define SPDK_NVMF_RDMA_DEFAULT_NO_WR_BATCHING false
 
 static void
 nvmf_rdma_opts_init(struct spdk_nvmf_transport_opts *opts)
@@ -2308,6 +2336,7 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 	rtransport->rdma_opts.max_srq_depth = SPDK_NVMF_RDMA_DEFAULT_SRQ_DEPTH;
 	rtransport->rdma_opts.no_srq = SPDK_NVMF_RDMA_DEFAULT_NO_SRQ;
 	rtransport->rdma_opts.acceptor_backlog = SPDK_NVMF_RDMA_ACCEPTOR_BACKLOG;
+	rtransport->rdma_opts.no_wr_batching = SPDK_NVMF_RDMA_DEFAULT_NO_WR_BATCHING;
 	if (opts->transport_specific != NULL &&
 	    spdk_json_decode_object_relaxed(opts->transport_specific, rdma_transport_opts_decoder,
 					    SPDK_COUNTOF(rdma_transport_opts_decoder),
@@ -2322,7 +2351,7 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		     "  max_io_qpairs_per_ctrlr=%d, io_unit_size=%d,\n"
 		     "  in_capsule_data_size=%d, max_aq_depth=%d,\n"
 		     "  num_shared_buffers=%d, max_srq_depth=%d, no_srq=%d,"
-		     "  acceptor_backlog=%d, abort_timeout_sec=%d\n",
+		     "  acceptor_backlog=%d, no_wr_batching=%d abort_timeout_sec=%d\n",
 		     opts->max_queue_depth,
 		     opts->max_io_size,
 		     opts->max_qpairs_per_ctrlr - 1,
@@ -2333,6 +2362,7 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		     rtransport->rdma_opts.max_srq_depth,
 		     rtransport->rdma_opts.no_srq,
 		     rtransport->rdma_opts.acceptor_backlog,
+		     rtransport->rdma_opts.no_wr_batching,
 		     opts->abort_timeout_sec);
 
 	/* I/O unit size cannot be larger than max I/O size */
