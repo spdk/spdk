@@ -144,7 +144,8 @@ struct spdk_mem_map {
  *   62 - 63 : flags
  */
 static struct spdk_mem_map *g_mem_reg_map;
-static TAILQ_HEAD(, spdk_mem_map) g_spdk_mem_maps = TAILQ_HEAD_INITIALIZER(g_spdk_mem_maps);
+static TAILQ_HEAD(spdk_mem_map_head, spdk_mem_map) g_spdk_mem_maps =
+	TAILQ_HEAD_INITIALIZER(g_spdk_mem_maps);
 static pthread_mutex_t g_spdk_mem_map_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static bool g_legacy_mem;
@@ -476,7 +477,7 @@ spdk_mem_unregister(void *vaddr, size_t len)
 		spdk_mem_map_set_translation(g_mem_reg_map, (uint64_t)vaddr, VALUE_2MB, 0);
 
 		if (seg_len > 0 && (reg & REG_MAP_NOTIFY_START)) {
-			TAILQ_FOREACH(map, &g_spdk_mem_maps, tailq) {
+			TAILQ_FOREACH_REVERSE(map, &g_spdk_mem_maps, spdk_mem_map_head, tailq) {
 				rc = map->ops.notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_UNREGISTER, seg_vaddr, seg_len);
 				if (rc != 0) {
 					pthread_mutex_unlock(&g_spdk_mem_map_mutex);
@@ -495,7 +496,7 @@ spdk_mem_unregister(void *vaddr, size_t len)
 	}
 
 	if (seg_len > 0) {
-		TAILQ_FOREACH(map, &g_spdk_mem_maps, tailq) {
+		TAILQ_FOREACH_REVERSE(map, &g_spdk_mem_maps, spdk_mem_map_head, tailq) {
 			rc = map->ops.notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_UNREGISTER, seg_vaddr, seg_len);
 			if (rc != 0) {
 				pthread_mutex_unlock(&g_spdk_mem_map_mutex);
