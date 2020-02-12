@@ -44,6 +44,7 @@ int allocate_threads(int num_threads);
 void free_threads(void);
 void poll_threads(void);
 bool poll_thread(uintptr_t thread_id);
+bool poll_thread_times(uintptr_t thread_id, uint32_t max_polls);
 
 struct ut_msg {
 	spdk_msg_fn		fn;
@@ -119,6 +120,37 @@ free_threads(void)
 	g_ut_threads = NULL;
 
 	spdk_thread_lib_fini();
+}
+
+bool
+poll_thread_times(uintptr_t thread_id, uint32_t max_polls)
+{
+	bool busy = false;
+	struct ut_thread *thread = &g_ut_threads[thread_id];
+	uintptr_t original_thread_id;
+	uint32_t polls_executed = 0;
+
+	if (max_polls == 0) {
+		/* If max_polls is set to 0,
+		 * poll until no operation is pending. */
+		return poll_thread(thread_id);
+	}
+	assert(thread_id != (uintptr_t)INVALID_THREAD);
+	assert(thread_id < g_ut_num_threads);
+
+	original_thread_id = g_thread_id;
+	set_thread(INVALID_THREAD);
+
+	while (polls_executed < max_polls) {
+		if (spdk_thread_poll(thread->thread, 1, 0) > 0) {
+			busy = true;
+		}
+		polls_executed++;
+	}
+
+	set_thread(original_thread_id);
+
+	return busy;
 }
 
 bool
