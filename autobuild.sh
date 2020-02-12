@@ -72,8 +72,8 @@ function scanbuild_make {
 	# from comm manual:
 	#   -2 suppress column 2 (lines unique to FILE2)
 	#   -3 suppress column 3 (lines that appear in both files)
-	# comm may exit 1 if no lines were printed (undocumented)
-	! comm -2 -3 $out/all_c_files.txt $out/built_c_files.txt > $out/unbuilt_c_files.txt
+	# comm may exit 1 if no lines were printed (undocumented, unreliable)
+	comm -2 -3 $out/all_c_files.txt $out/built_c_files.txt > $out/unbuilt_c_files.txt || true
 
 	if [ $(wc -l < $out/unbuilt_c_files.txt) -ge 1 ]; then
 		echo "missing files"
