@@ -16,7 +16,7 @@ make -C $SPDK_DIR -j$(nproc)
 
 export SPDK_HEADER_DIR="$SPDK_DIR/include"
 export SPDK_LIB_DIR="$SPDK_DIR/build/lib"
-export DPDK_LIB_DIR="$SPDK_DIR/dpdk/build/lib"
+export DPDK_LIB_DIR="${SPDK_RUN_EXTERNAL_DPDK:-$SPDK_DIR/dpdk/build}/lib"
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SPDK_LIB_DIR:$DPDK_LIB_DIR:"$test_root/passthru"
 
 # The default target is to make both the app and bdev and link them against the combined SPDK shared library libspdk.so.

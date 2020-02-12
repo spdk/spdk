@@ -169,8 +169,6 @@ SPDK_TEST_IOAT=0
 # requires some extra configuration. see TEST_ENV_SETUP_README
 SPDK_TEST_VHOST=0
 SPDK_TEST_VHOST_INIT=0
-# Not configured here
-SPDK_RUN_INSTALLED_DPDK=0
 
 EOF
 fi

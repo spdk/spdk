@@ -104,8 +104,8 @@ export SPDK_TEST_REDUCE
 export SPDK_RUN_ASAN
 : ${SPDK_RUN_UBSAN=0}
 export SPDK_RUN_UBSAN
-: ${SPDK_RUN_INSTALLED_DPDK=0}
-export SPDK_RUN_INSTALLED_DPDK
+: ${SPDK_RUN_EXTERNAL_DPDK=""}
+export SPDK_RUN_EXTERNAL_DPDK
 : ${SPDK_RUN_NON_ROOT=0}
 export SPDK_RUN_NON_ROOT
 : ${SPDK_TEST_CRYPTO=0}
@@ -188,19 +188,11 @@ fi
 if [ "$(uname -s)" = "Linux" ]; then
 	MAKE="make"
 	MAKEFLAGS=${MAKEFLAGS:--j$(nproc)}
-	DPDK_LINUX_DIR=/usr/share/dpdk/x86_64-default-linuxapp-gcc
-	if [ -d $DPDK_LINUX_DIR ] && [ $SPDK_RUN_INSTALLED_DPDK -eq 1 ]; then
-		WITH_DPDK_DIR=$DPDK_LINUX_DIR
-	fi
 	# Override the default HUGEMEM in scripts/setup.sh to allocate 8GB in hugepages.
 	export HUGEMEM=8192
 elif [ "$(uname -s)" = "FreeBSD" ]; then
 	MAKE="gmake"
 	MAKEFLAGS=${MAKEFLAGS:--j$(sysctl -a | grep -E -i 'hw.ncpu' | awk '{print $2}')}
-	DPDK_FREEBSD_DIR=/usr/local/share/dpdk/x86_64-native-bsdapp-clang
-	if [ -d $DPDK_FREEBSD_DIR ] && [ $SPDK_RUN_INSTALLED_DPDK -eq 1 ]; then
-		WITH_DPDK_DIR=$DPDK_FREEBSD_DIR
-	fi
 	# FreeBSD runs a much more limited set of tests, so keep the default 2GB.
 	export HUGEMEM=2048
 else
@@ -413,11 +405,8 @@ function get_config_params() {
 		config_params+=' --with-uring'
 	fi
 
-	# By default, --with-dpdk is not set meaning the SPDK build will use the DPDK submodule.
-	# If a DPDK installation is found in a well-known location though, WITH_DPDK_DIR will be
-	# set which will override the default and use that DPDK installation instead.
-	if [ -n "$WITH_DPDK_DIR" ]; then
-		config_params+=" --with-dpdk=$WITH_DPDK_DIR"
+	if [ -n "$SPDK_RUN_EXTERNAL_DPDK" ]; then
+		config_params+=" --with-dpdk=$SPDK_RUN_EXTERNAL_DPDK"
 	fi
 
 	echo "$config_params"
@@ -1200,12 +1189,12 @@ function autotest_cleanup() {
 function freebsd_update_contigmem_mod() {
 	if [ $(uname) = FreeBSD ]; then
 		kldunload contigmem.ko || true
-		if [ -n "$WITH_DPDK_DIR" ]; then
+		if [ -n "$SPDK_RUN_EXTERNAL_DPDK" ]; then
 			echo "Warning: SPDK only works on FreeBSD with patches that only exist in SPDK's dpdk submodule"
-			cp -f "$WITH_DPDK_DIR/kmod/contigmem.ko" /boot/modules/
-			cp -f "$WITH_DPDK_DIR/kmod/contigmem.ko" /boot/kernel/
-			cp -f "$WITH_DPDK_DIR/kmod/nic_uio.ko" /boot/modules/
-			cp -f "$WITH_DPDK_DIR/kmod/nic_uio.ko" /boot/kernel/
+			cp -f "$SPDK_RUN_EXTERNAL_DPDK/kmod/contigmem.ko" /boot/modules/
+			cp -f "$SPDK_RUN_EXTERNAL_DPDK/kmod/contigmem.ko" /boot/kernel/
+			cp -f "$SPDK_RUN_EXTERNAL_DPDK/kmod/nic_uio.ko" /boot/modules/
+			cp -f "$SPDK_RUN_EXTERNAL_DPDK/kmod/nic_uio.ko" /boot/kernel/
 		else
 			cp -f "$rootdir/dpdk/build/kmod/contigmem.ko" /boot/modules/
 			cp -f "$rootdir/dpdk/build/kmod/contigmem.ko" /boot/kernel/
