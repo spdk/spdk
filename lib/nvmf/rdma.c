@@ -511,6 +511,10 @@ static const struct spdk_json_object_decoder rdma_transport_opts_decoder[] = {
 		spdk_json_decode_bool, true
 	},
 	{
+		"no_wr_batching", offsetof(struct rdma_transport_opts, no_wr_batching),
+		spdk_json_decode_bool, true
+	},
+	{
 		"acceptor_backlog", offsetof(struct rdma_transport_opts, acceptor_backlog),
 		spdk_json_decode_int32, true
 	},
@@ -2562,6 +2566,7 @@ nvmf_rdma_dump_opts(struct spdk_nvmf_transport *transport, struct spdk_json_writ
 	spdk_json_write_named_uint32(w, "max_srq_depth", rtransport->rdma_opts.max_srq_depth);
 	spdk_json_write_named_bool(w, "no_srq", rtransport->rdma_opts.no_srq);
 	spdk_json_write_named_int32(w, "acceptor_backlog", rtransport->rdma_opts.acceptor_backlog);
+	spdk_json_write_named_bool(w, "no_wr_batching", rtransport->rdma_opts.no_wr_batching);
 }
 
 static int

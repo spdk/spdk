@@ -68,6 +68,8 @@ RPC.
 A new RPC `bdev_examine_bdev` was added to allow users to examine a bdev explicitly.
 It can be used only if bdev_auto_examine is set to false by the RPC `bdev_set_options`.
 
+Add optional 'no_wr_batching' parameter to 'nvmf_create_transport' RPC method.
+
 ### Miscellaneous
 
 The contents of the log_rpc library have been moved to the event library. The log_rpc
