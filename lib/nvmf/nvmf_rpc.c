@@ -2,7 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
- *   Copyright (c) 2018-2019 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2018-2020 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -359,11 +359,17 @@ spdk_rpc_nvmf_subsystem_started(struct spdk_nvmf_subsystem *subsystem,
 				void *cb_arg, int status)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
-	struct spdk_json_write_ctx *w;
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	if (!status) {
+		struct spdk_json_write_ctx *w = spdk_jsonrpc_begin_result(request);
+		spdk_json_write_bool(w, true);
+		spdk_jsonrpc_end_result(request, w);
+	} else {
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "Subsystem %s start failed",
+						     subsystem->subnqn);
+		spdk_nvmf_subsystem_destroy(subsystem);
+	}
 }
 
 static void
@@ -371,72 +377,77 @@ spdk_rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 			       const struct spdk_json_val *params)
 {
 	struct rpc_subsystem_create *req;
-	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvmf_subsystem *subsystem = NULL;
 	struct spdk_nvmf_tgt *tgt;
+	int rc = -1;
 
 	req = calloc(1, sizeof(*req));
 	if (!req) {
-		goto invalid;
+		SPDK_ERRLOG("Memory allocation failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Memory allocation failed");
+		return;
 	}
 
 	if (spdk_json_decode_object(params, rpc_subsystem_create_decoders,
 				    SPDK_COUNTOF(rpc_subsystem_create_decoders),
 				    req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		goto cleanup;
 	}
 
 	tgt = spdk_nvmf_get_tgt(req->tgt_name);
 	if (!tgt) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 "Unable to find a target.");
-		goto invalid_custom_response;
+		SPDK_ERRLOG("Unable to find target %s\n", req->tgt_name);
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "Unable to find target %s", req->tgt_name);
+		goto cleanup;
 	}
 
 	subsystem = spdk_nvmf_subsystem_create(tgt, req->nqn, SPDK_NVMF_SUBTYPE_NVME,
 					       req->max_namespaces);
 	if (!subsystem) {
-		goto invalid;
+		SPDK_ERRLOG("Unable to create subsystem %s\n", req->nqn);
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "Unable to create subsystem %s", req->nqn);
+		goto cleanup;
 	}
 
 	if (req->serial_number) {
 		if (spdk_nvmf_subsystem_set_sn(subsystem, req->serial_number)) {
 			SPDK_ERRLOG("Subsystem %s: invalid serial number '%s'\n", req->nqn, req->serial_number);
-			goto invalid;
+			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							     "Invalid SN %s", req->serial_number);
+			goto cleanup;
 		}
 	}
 
 	if (req->model_number) {
 		if (spdk_nvmf_subsystem_set_mn(subsystem, req->model_number)) {
 			SPDK_ERRLOG("Subsystem %s: invalid model number '%s'\n", req->nqn, req->model_number);
-			goto invalid;
+			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							     "Invalid MN %s", req->model_number);
+			goto cleanup;
 		}
 	}
 
 	spdk_nvmf_subsystem_set_allow_any_host(subsystem, req->allow_any_host);
 
+	rc = spdk_nvmf_subsystem_start(subsystem,
+				       spdk_rpc_nvmf_subsystem_started,
+				       request);
+
+cleanup:
 	free(req->nqn);
 	free(req->tgt_name);
 	free(req->serial_number);
 	free(req->model_number);
 	free(req);
 
-	spdk_nvmf_subsystem_start(subsystem,
-				  spdk_rpc_nvmf_subsystem_started,
-				  request);
-
-	return;
-
-invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-invalid_custom_response:
-	if (req) {
-		free(req->nqn);
-		free(req->tgt_name);
-		free(req->serial_number);
-		free(req->model_number);
+	if (rc && subsystem) {
+		spdk_nvmf_subsystem_destroy(subsystem);
 	}
-	free(req);
 }
 SPDK_RPC_REGISTER("nvmf_create_subsystem", spdk_rpc_nvmf_create_subsystem, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(nvmf_create_subsystem, nvmf_subsystem_create)
