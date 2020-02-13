@@ -219,6 +219,12 @@ ftl_get_next_batch(struct spdk_ftl_dev *dev)
 	uint64_t *metadata;
 
 	if (batch == NULL) {
+		batch = TAILQ_FIRST(&dev->pending_batches);
+		if (batch != NULL) {
+			TAILQ_REMOVE(&dev->pending_batches, batch, tailq);
+			return batch;
+		}
+
 		batch = TAILQ_FIRST(&dev->free_batches);
 		if (spdk_unlikely(batch == NULL)) {
 			return NULL;

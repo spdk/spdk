@@ -1225,6 +1225,7 @@ ftl_dev_init_io_channel(struct spdk_ftl_dev *dev)
 	}
 
 	TAILQ_INIT(&dev->free_batches);
+	TAILQ_INIT(&dev->pending_batches);
 	TAILQ_INIT(&dev->ioch_queue);
 
 	for (i = 0; i < FTL_BATCH_COUNT; ++i) {

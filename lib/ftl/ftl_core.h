@@ -234,6 +234,10 @@ struct spdk_ftl_dev {
 	struct iovec				*iov_buf;
 	/* Batch currently being filled  */
 	struct ftl_batch			*current_batch;
+	/* Full and ready to be sent batches. A batch is put on this queue in
+	 * case it's already filled, but cannot be sent.
+	 */
+	TAILQ_HEAD(, ftl_batch)			pending_batches;
 	TAILQ_HEAD(, ftl_batch)			free_batches;
 
 	/* Devices' list */

@@ -807,7 +807,7 @@ test_submit_batch(void)
 	struct spdk_io_channel **_ioch_array;
 	struct ftl_io_channel **ioch_array;
 	struct ftl_wbuf_entry *entry;
-	struct ftl_batch *batch;
+	struct ftl_batch *batch, *batch2;
 	uint32_t num_io_channels = 16;
 	uint32_t ioch_idx, tmp_idx, entry_idx;
 	uint64_t ioch_bitmap;
@@ -904,6 +904,41 @@ test_submit_batch(void)
 	for (ioch_idx = 0; ioch_idx < num_io_channels; ++ioch_idx) {
 		CU_ASSERT(spdk_ring_count(ioch_array[ioch_idx]->free_queue) ==
 			  ioch_array[ioch_idx]->num_entries);
+	}
+
+	/* Make sure pending batches are prioritized */
+	for (ioch_idx = 0; ioch_idx < num_io_channels; ++ioch_idx) {
+		set_thread(ioch_idx);
+
+		while (spdk_ring_count(ioch_array[ioch_idx]->submit_queue) < dev->xfer_size) {
+			entry = ftl_acquire_wbuf_entry(ioch_array[ioch_idx], 0);
+			SPDK_CU_ASSERT_FATAL(entry != NULL);
+			num_entries = spdk_ring_enqueue(ioch_array[ioch_idx]->submit_queue,
+							(void **)&entry, 1, NULL);
+			CU_ASSERT(num_entries == 1);
+		}
+	}
+
+	batch = ftl_get_next_batch(dev);
+	SPDK_CU_ASSERT_FATAL(batch != NULL);
+
+	TAILQ_INSERT_TAIL(&dev->pending_batches, batch, tailq);
+	batch2 = ftl_get_next_batch(dev);
+	SPDK_CU_ASSERT_FATAL(batch2 != NULL);
+
+	CU_ASSERT(TAILQ_EMPTY(&dev->pending_batches));
+	CU_ASSERT(batch == batch2);
+
+	batch = ftl_get_next_batch(dev);
+	SPDK_CU_ASSERT_FATAL(batch != NULL);
+
+	ftl_release_batch(dev, batch);
+	ftl_release_batch(dev, batch2);
+
+	for (ioch_idx = 2; ioch_idx < num_io_channels; ++ioch_idx) {
+		batch = ftl_get_next_batch(dev);
+		SPDK_CU_ASSERT_FATAL(batch != NULL);
+		ftl_release_batch(dev, batch);
 	}
 
 	for (ioch_idx = 0; ioch_idx < num_io_channels; ++ioch_idx) {
