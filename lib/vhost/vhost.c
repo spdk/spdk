@@ -45,9 +45,6 @@
 
 static TAILQ_HEAD(, vhost_poll_group) g_poll_groups = TAILQ_HEAD_INITIALIZER(g_poll_groups);
 
-/* Temporary cpuset for poll group assignment */
-static struct spdk_cpuset g_tmp_cpuset;
-
 /* Path to folder where character device will be created. Can be set by user. */
 static char dev_dirname[PATH_MAX] = "";
 
@@ -715,6 +712,7 @@ spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *vdev)
 struct vhost_poll_group *
 vhost_get_poll_group(struct spdk_cpuset *cpumask)
 {
+	struct spdk_cpuset tmp_cpuset = {};
 	struct vhost_poll_group *pg, *selected_pg;
 	uint32_t min_ctrlrs;
 
@@ -722,11 +720,11 @@ vhost_get_poll_group(struct spdk_cpuset *cpumask)
 	selected_pg = TAILQ_FIRST(&g_poll_groups);
 
 	TAILQ_FOREACH(pg, &g_poll_groups, tailq) {
-		spdk_cpuset_copy(&g_tmp_cpuset, cpumask);
-		spdk_cpuset_and(&g_tmp_cpuset, spdk_thread_get_cpumask(pg->thread));
+		spdk_cpuset_copy(&tmp_cpuset, cpumask);
+		spdk_cpuset_and(&tmp_cpuset, spdk_thread_get_cpumask(pg->thread));
 
 		/* ignore threads which could be relocated to a non-masked cpu. */
-		if (!spdk_cpuset_equal(&g_tmp_cpuset, spdk_thread_get_cpumask(pg->thread))) {
+		if (!spdk_cpuset_equal(&tmp_cpuset, spdk_thread_get_cpumask(pg->thread))) {
 			continue;
 		}
 
