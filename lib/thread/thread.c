@@ -1025,6 +1025,7 @@ static void
 spdk_on_thread(void *ctx)
 {
 	struct call_thread *ct = ctx;
+	int rc __attribute__((unused));
 
 	ct->fn(ct->ctx);
 
@@ -1035,14 +1036,15 @@ spdk_on_thread(void *ctx)
 	if (!ct->cur_thread) {
 		SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Completed thread iteration\n");
 
-		spdk_thread_send_msg(ct->orig_thread, ct->cpl, ct->ctx);
+		rc = spdk_thread_send_msg(ct->orig_thread, ct->cpl, ct->ctx);
 		free(ctx);
 	} else {
 		SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Continuing thread iteration to %s\n",
 			      ct->cur_thread->name);
 
-		spdk_thread_send_msg(ct->cur_thread, spdk_on_thread, ctx);
+		rc = spdk_thread_send_msg(ct->cur_thread, spdk_on_thread, ctx);
 	}
+	assert(rc == 0);
 }
 
 void
@@ -1050,6 +1052,7 @@ spdk_for_each_thread(spdk_msg_fn fn, void *ctx, spdk_msg_fn cpl)
 {
 	struct call_thread *ct;
 	struct spdk_thread *thread;
+	int rc __attribute__((unused));
 
 	ct = calloc(1, sizeof(*ct));
 	if (!ct) {
@@ -1078,7 +1081,8 @@ spdk_for_each_thread(spdk_msg_fn fn, void *ctx, spdk_msg_fn cpl)
 	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Starting thread iteration from %s\n",
 		      ct->orig_thread->name);
 
-	spdk_thread_send_msg(ct->cur_thread, spdk_on_thread, ct);
+	rc = spdk_thread_send_msg(ct->cur_thread, spdk_on_thread, ct);
+	assert(rc == 0);
 }
 
 void
@@ -1152,13 +1156,16 @@ _finish_unregister(void *arg)
 static void
 _spdk_io_device_free(struct io_device *dev)
 {
+	int rc __attribute__((unused));
+
 	if (dev->unregister_cb == NULL) {
 		free(dev);
 	} else {
 		assert(dev->unregister_thread != NULL);
 		SPDK_DEBUGLOG(SPDK_LOG_THREAD, "io_device %s (%p) needs to unregister from thread %s\n",
 			      dev->name, dev->io_device, dev->unregister_thread->name);
-		spdk_thread_send_msg(dev->unregister_thread, _finish_unregister, dev);
+		rc = spdk_thread_send_msg(dev->unregister_thread, _finish_unregister, dev);
+		assert(rc == 0);
 	}
 }
 
@@ -1365,6 +1372,7 @@ void
 spdk_put_io_channel(struct spdk_io_channel *ch)
 {
 	struct spdk_thread *thread;
+	int rc __attribute__((unused));
 
 	thread = spdk_get_thread();
 	if (!thread) {
@@ -1387,7 +1395,8 @@ spdk_put_io_channel(struct spdk_io_channel *ch)
 
 	if (ch->ref == 0) {
 		ch->destroy_ref++;
-		spdk_thread_send_msg(thread, _spdk_put_io_channel, ch);
+		rc = spdk_thread_send_msg(thread, _spdk_put_io_channel, ch);
+		assert(rc == 0);
 	}
 }
 
@@ -1521,6 +1530,7 @@ spdk_for_each_channel_continue(struct spdk_io_channel_iter *i, int status)
 {
 	struct spdk_thread *thread;
 	struct spdk_io_channel *ch;
+	int rc __attribute__((unused));
 
 	assert(i->cur_thread == spdk_get_thread());
 
@@ -1537,7 +1547,8 @@ spdk_for_each_channel_continue(struct spdk_io_channel_iter *i, int status)
 				i->cur_thread = thread;
 				i->ch = ch;
 				pthread_mutex_unlock(&g_devlist_mutex);
-				spdk_thread_send_msg(thread, _call_channel, i);
+				rc = spdk_thread_send_msg(thread, _call_channel, i);
+				assert(rc == 0);
 				return;
 			}
 		}
@@ -1549,7 +1560,8 @@ end:
 	i->ch = NULL;
 	pthread_mutex_unlock(&g_devlist_mutex);
 
-	spdk_thread_send_msg(i->orig_thread, _call_completion, i);
+	rc = spdk_thread_send_msg(i->orig_thread, _call_completion, i);
+	assert(rc == 0);
 }
 
 
