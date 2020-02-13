@@ -19,6 +19,9 @@ engine have been renamed to identify the engine as a software accelerator.
 A new function, `spdk_vmd_fini`, has been added. It releases all resources acquired by the VMD
 library through the `spdk_vmd_init` call.
 
+### nvmf
+`spdk_nvmf_poll_group_destroy()` is now asynchronous and accepts a completion callback.
+
 ### Miscellaneous
 
 `--json-ignore-init-errors` command line param has been added to ignore initialization errors

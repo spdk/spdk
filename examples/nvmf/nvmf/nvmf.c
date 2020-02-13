@@ -663,7 +663,7 @@ nvmf_tgt_destroy_poll_group(struct spdk_io_channel_iter *i)
 	TAILQ_FOREACH_SAFE(pg, &g_poll_groups, link, tmp) {
 		if (pg->group == group) {
 			TAILQ_REMOVE(&g_poll_groups, pg, link);
-			spdk_nvmf_poll_group_destroy(group);
+			spdk_nvmf_poll_group_destroy(group, NULL, NULL);
 			free(pg);
 			break;
 		}

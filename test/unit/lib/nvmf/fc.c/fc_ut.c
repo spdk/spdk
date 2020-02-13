@@ -451,7 +451,7 @@ destroy_transport_test(void)
 
 	for (i = 0; i < MAX_FC_UT_POLL_THREADS; i++) {
 		set_thread(i);
-		spdk_nvmf_poll_group_destroy(g_poll_groups[i]);
+		spdk_nvmf_poll_group_destroy(g_poll_groups[i], NULL, NULL);
 		poll_thread(0);
 	}
 
