@@ -221,8 +221,9 @@ struct spdk_thread *spdk_thread_create(const char *name, struct spdk_cpuset *cpu
 void spdk_set_thread(struct spdk_thread *thread);
 
 /**
- * Mark the thread as exited, failing all future spdk_thread_poll() calls. May
- * only be called within an spdk poller or message.
+ * Mark the thread as exited, failing all future spdk_thread_send_msg(),
+ * spdk_poller_register(), and spdk_get_io_channel() calls. May only be called
+ * within an spdk poller or message.
  *
  * All I/O channel references associated with the thread must be released using
  * spdk_put_io_channel(), and all active pollers associated with the thread must
