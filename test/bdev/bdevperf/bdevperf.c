@@ -121,10 +121,12 @@ struct io_target_group {
 
 struct spdk_bdevperf {
 	TAILQ_HEAD(, io_target_group)	groups;
+	uint32_t			num_groups;
 };
 
 static struct spdk_bdevperf g_bdevperf = {
 	.groups = TAILQ_HEAD_INITIALIZER(g_bdevperf.groups),
+	.num_groups = 0,
 };
 
 struct io_target_group *g_next_tg;
@@ -1250,12 +1252,30 @@ io_target_group_create(void *io_device, void *ctx_buf)
 static void
 io_target_group_destroy(void *io_device, void *ctx_buf)
 {
+	struct io_target_group *group = ctx_buf;
+	struct spdk_io_channel *ch;
+	struct spdk_thread *thread;
+
+	ch = spdk_io_channel_from_ctx(group);
+	thread = spdk_io_channel_get_thread(ch);
+
+	assert(thread == spdk_get_thread());
+
+	spdk_thread_exit(thread);
 }
 
 static void
 _bdevperf_init_thread_done(void *ctx)
 {
-	g_master_thread = spdk_get_thread();
+	struct io_target_group *group = ctx;
+
+	TAILQ_INSERT_TAIL(&g_bdevperf.groups, group, link);
+
+	assert(g_bdevperf.num_groups < spdk_env_get_core_count());
+
+	if (++g_bdevperf.num_groups < spdk_env_get_core_count()) {
+		return;
+	}
 
 	if (g_wait_for_tests) {
 		/* Do not perform any tests until RPC is received */
@@ -1274,17 +1294,35 @@ _bdevperf_init_thread(void *ctx)
 	ch = spdk_get_io_channel(&g_bdevperf);
 	group = spdk_io_channel_get_ctx(ch);
 
-	TAILQ_INSERT_TAIL(&g_bdevperf.groups, group, link);
+	spdk_thread_send_msg(g_master_thread, _bdevperf_init_thread_done, group);
 }
 
 static void
 bdevperf_run(void *arg1)
 {
+	struct spdk_cpuset tmp_cpumask = {};
+	uint32_t i;
+	char thread_name[32];
+	struct spdk_thread *thread;
+
+	g_master_thread = spdk_get_thread();
+
 	spdk_io_device_register(&g_bdevperf, io_target_group_create, io_target_group_destroy,
 				sizeof(struct io_target_group), "bdevperf");
 
-	/* Send a message to each thread and create a target group */
-	spdk_for_each_thread(_bdevperf_init_thread, NULL, _bdevperf_init_thread_done);
+	/* Create threads for CPU cores active for this application, and send a
+	 * message to each thread to create a target group on it.
+	 */
+	SPDK_ENV_FOREACH_CORE(i) {
+		spdk_cpuset_zero(&tmp_cpumask);
+		spdk_cpuset_set_cpu(&tmp_cpumask, i, true);
+		snprintf(thread_name, sizeof(thread_name), "bdevperf_tg_%u", i);
+
+		thread = spdk_thread_create(thread_name, &tmp_cpumask);
+		assert(thread != NULL);
+
+		spdk_thread_send_msg(thread, _bdevperf_init_thread, NULL);
+	}
 }
 
 static void
