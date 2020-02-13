@@ -551,7 +551,7 @@ if [[ "${CONFIG[FC]}" = "y" ]]; then
 fi
 
 if [[ "${CONFIG[ISAL]}" = "y" ]] || [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
-	ver=$(nasm -v | awk '{print $3}' | sed 's/[^0-9]*//g')
+	ver=$(nasm -v 2>/dev/null | awk '{print $3}' | sed 's/[^0-9]*//g')
 	if [[ "${ver:0:1}" -le "2" ]] && [[ "${ver:0:3}" -le "213" ]] && [[ "${ver:0:5}" -lt "21303" ]]; then
 		echo "Notice: ISA-L, compression & crypto auto-disabled due to nasm dependency."
 		echo "These features require NASM version 2.13.03 or newer.  Please install"
