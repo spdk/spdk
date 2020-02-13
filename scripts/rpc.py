@@ -2290,6 +2290,13 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         'thread_get_pollers', help='Display current pollers of all the threads')
     p.set_defaults(func=thread_get_pollers)
 
+    def thread_get_io_channels(args):
+        print_dict(rpc.app.thread_get_io_channels(args.client))
+
+    p = subparsers.add_parser(
+        'thread_get_io_channels', help='Display current IO channels of all the threads')
+    p.set_defaults(func=thread_get_io_channels)
+
     def env_dpdk_get_mem_stats(args):
         print_dict(rpc.env_dpdk.env_dpdk_get_mem_stats(args.client))
 

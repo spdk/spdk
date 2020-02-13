@@ -663,6 +663,50 @@ Example response:
 }
 ~~~
 
+## thread_get_io_channels {#rpc_thread_get_io_channels}
+
+Retrieve current IO channels of all the threads.
+
+### Parameters
+
+This method has no parameters.
+
+### Response
+
+The response is an array of objects containing IO channels of all the threads.
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "thread_get_io_channels",
+  "id": 1
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "tick_rate": 2500000000,
+    "threads": [
+      {
+        "name": "app_thread",
+        "io_channels": [
+          {
+            "name": "nvmf_tgt",
+            "ref": 1
+          }
+        ]
+      }
+    ]
+  }
+}
+~~~
 # Block Device Abstraction Layer {#jsonrpc_components_bdev}
 
 ## bdev_set_options {#rpc_bdev_set_options}

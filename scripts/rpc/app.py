@@ -67,3 +67,12 @@ def thread_get_pollers(client):
         Current pollers.
     """
     return client.call('thread_get_pollers')
+
+
+def thread_get_io_channels(client):
+    """Query current IO channels.
+
+    Returns:
+        Current IO channels.
+    """
+    return client.call('thread_get_io_channels')

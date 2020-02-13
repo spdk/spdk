@@ -285,6 +285,49 @@ spdk_rpc_thread_get_pollers(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("thread_get_pollers", spdk_rpc_thread_get_pollers, SPDK_RPC_RUNTIME)
 
 static void
+rpc_get_io_channel(struct spdk_io_channel *ch, struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "name", spdk_io_device_get_name(ch->dev));
+	spdk_json_write_named_uint32(w, "ref", ch->ref);
+	spdk_json_write_object_end(w);
+}
+
+static void
+rpc_thread_get_io_channels(void *arg)
+{
+	struct rpc_get_stats_ctx *ctx = arg;
+	struct spdk_thread *thread = spdk_get_thread();
+	struct spdk_io_channel *ch;
+
+	spdk_json_write_object_begin(ctx->w);
+	spdk_json_write_named_string(ctx->w, "name", spdk_thread_get_name(thread));
+
+	spdk_json_write_named_array_begin(ctx->w, "io_channels");
+	TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
+		rpc_get_io_channel(ch, ctx->w);
+	}
+	spdk_json_write_array_end(ctx->w);
+
+	spdk_json_write_object_end(ctx->w);
+}
+
+static void
+spdk_rpc_thread_get_io_channels(struct spdk_jsonrpc_request *request,
+				const struct spdk_json_val *params)
+{
+	if (params) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "'thread_get_io_channels' requires no arguments");
+		return;
+	}
+
+	rpc_thread_get_stats_for_each(request, rpc_thread_get_io_channels);
+}
+
+SPDK_RPC_REGISTER("thread_get_io_channels", spdk_rpc_thread_get_io_channels, SPDK_RPC_RUNTIME);
+
+static void
 rpc_framework_get_reactors_done(void *arg1, void *arg2)
 {
 	struct rpc_get_stats_ctx *ctx = arg1;
