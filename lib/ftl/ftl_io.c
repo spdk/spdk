@@ -38,7 +38,6 @@
 
 #include "ftl_io.h"
 #include "ftl_core.h"
-#include "ftl_rwb.h"
 #include "ftl_band.h"
 #include "ftl_debug.h"
 
@@ -243,7 +242,7 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 	ftl_io_clear(io);
 	ftl_io_init(io, dev, opts->cb_fn, opts->cb_ctx, opts->flags | FTL_IO_INTERNAL, opts->type);
 
-	io->rwb_batch = opts->rwb_batch;
+	io->batch = opts->batch;
 	io->band = opts->band;
 	io->md = opts->md;
 	io->iov = &io->iov_buf[0];
@@ -281,29 +280,25 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 }
 
 struct ftl_io *
-ftl_io_rwb_init(struct spdk_ftl_dev *dev, struct ftl_addr addr, struct ftl_band *band,
-		struct ftl_rwb_batch *batch, ftl_io_fn cb)
+ftl_io_wbuf_init(struct spdk_ftl_dev *dev, struct ftl_addr addr, struct ftl_band *band,
+		 struct ftl_batch *batch, ftl_io_fn cb)
 {
 	struct ftl_io *io;
 	struct ftl_io_init_opts opts = {
 		.dev		= dev,
 		.io		= NULL,
-		.rwb_batch	= batch,
+		.batch		= batch,
 		.band		= band,
 		.size		= sizeof(struct ftl_io),
 		.flags		= 0,
 		.type		= FTL_IO_WRITE,
 		.num_blocks	= dev->xfer_size,
 		.cb_fn		= cb,
-		.iovs		= {
-			{
-				.iov_base = ftl_rwb_batch_get_data(batch),
-				.iov_len = dev->xfer_size * FTL_BLOCK_SIZE,
-			}
-		},
-		.iovcnt		= 1,
-		.md		= ftl_rwb_batch_get_md(batch),
+		.iovcnt		= dev->xfer_size,
+		.md		= batch->metadata,
 	};
+
+	memcpy(opts.iovs, batch->iov, sizeof(struct iovec) * dev->xfer_size);
 
 	io = ftl_io_init_internal(&opts);
 	if (!io) {
@@ -322,7 +317,6 @@ ftl_io_erase_init(struct ftl_band *band, size_t num_blocks, ftl_io_fn cb)
 	struct ftl_io_init_opts opts = {
 		.dev		= band->dev,
 		.io		= NULL,
-		.rwb_batch	= NULL,
 		.band		= band,
 		.size		= sizeof(struct ftl_io),
 		.flags		= FTL_IO_PHYSICAL_MODE,
@@ -505,7 +499,7 @@ ftl_io_clear(struct ftl_io *io)
 	ftl_io_reset(io);
 
 	io->flags = 0;
-	io->rwb_batch = NULL;
+	io->batch = NULL;
 	io->band = NULL;
 }
 

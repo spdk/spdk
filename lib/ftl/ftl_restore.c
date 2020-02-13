@@ -547,7 +547,7 @@ ftl_nv_cache_band_flush_cb(void *ctx, int status)
 }
 
 static void
-ftl_nv_cache_rwb_flush_cb(void *ctx, int status)
+ftl_nv_cache_wbuf_flush_cb(void *ctx, int status)
 {
 	struct ftl_nv_cache_restore *restore = ctx;
 	struct ftl_nv_cache *nv_cache = restore->nv_cache;
@@ -590,7 +590,7 @@ ftl_nv_cache_recovery_done(struct ftl_nv_cache_restore *restore)
 	     range_current->start_addr < range_prev->last_addr)) {
 		SPDK_DEBUGLOG(SPDK_LOG_FTL_INIT, "Non-volatile cache inconsistency detected\n");
 
-		rc = ftl_flush_rwb(dev, ftl_nv_cache_rwb_flush_cb, restore);
+		rc = ftl_flush_wbuf(dev, ftl_nv_cache_wbuf_flush_cb, restore);
 		if (spdk_unlikely(rc != 0)) {
 			SPDK_ERRLOG("Unable to flush the write buffer: %s\n", spdk_strerror(-rc));
 			ftl_nv_cache_restore_complete(restore, rc);
@@ -1134,7 +1134,6 @@ ftl_restore_init_pad_io(struct ftl_restore_band *rband, void *buffer,
 	struct ftl_io_init_opts opts = {
 		.dev		= dev,
 		.io		= NULL,
-		.rwb_batch	= NULL,
 		.band		= band,
 		.size		= sizeof(struct ftl_io),
 		.flags		= flags,

@@ -40,7 +40,6 @@
 #include "ftl/ftl_init.c"
 #include "ftl/ftl_core.c"
 #include "ftl/ftl_band.c"
-#include "ftl/ftl_rwb.c"
 
 DEFINE_STUB(ftl_trace_alloc_id, uint64_t, (struct spdk_ftl_dev *dev), 0);
 DEFINE_STUB_V(ftl_trace_completion, (struct spdk_ftl_dev *dev, const struct ftl_io *io,
@@ -58,7 +57,7 @@ DEFINE_STUB(spdk_bdev_zone_management, int, (struct spdk_bdev_desc *desc,
 DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *bdev_io));
 DEFINE_STUB_V(ftl_trace_submission, (struct spdk_ftl_dev *dev, const struct ftl_io *io,
 				     struct ftl_addr addr, size_t addr_cnt));
-DEFINE_STUB_V(ftl_trace_limits, (struct spdk_ftl_dev *dev, const size_t *limits, size_t num_free));
+DEFINE_STUB_V(ftl_trace_limits, (struct spdk_ftl_dev *dev, int limit, size_t num_free));
 DEFINE_STUB(spdk_bdev_read_blocks, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		void *buf, uint64_t offset_blocks, uint64_t num_blocks,
 		spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
@@ -75,7 +74,7 @@ DEFINE_STUB(spdk_bdev_get_num_blocks, uint64_t, (const struct spdk_bdev *bdev), 
 DEFINE_STUB(spdk_bdev_get_md_size, uint32_t, (const struct spdk_bdev *bdev), 0);
 DEFINE_STUB(spdk_bdev_get_block_size, uint32_t, (const struct spdk_bdev *bdev), 4096);
 DEFINE_STUB(ftl_band_validate_md, bool, (struct ftl_band *band), true);
-DEFINE_STUB_V(ftl_trace_rwb_fill, (struct spdk_ftl_dev *dev, const struct ftl_io *io));
+DEFINE_STUB_V(ftl_trace_wbuf_fill, (struct spdk_ftl_dev *dev, const struct ftl_io *io));
 
 struct spdk_io_channel *
 spdk_bdev_get_io_channel(struct spdk_bdev_desc *bdev_desc)
@@ -660,7 +659,7 @@ test_acquire_entry(void)
 
 	dev = setup_device(num_io_channels, 16);
 
-	num_entries = dev->conf.rwb_size / FTL_BLOCK_SIZE;
+	num_entries = dev->conf.write_buffer_size / FTL_BLOCK_SIZE;
 	entries = calloc(num_entries * num_io_channels, sizeof(*entries));
 	SPDK_CU_ASSERT_FATAL(entries != NULL);
 	ioch_array = calloc(num_io_channels, sizeof(*ioch_array));
@@ -967,7 +966,7 @@ test_entry_address(void)
 	ioch_array = calloc(num_io_channels, sizeof(*ioch_array));
 	SPDK_CU_ASSERT_FATAL(ioch_array != NULL);
 
-	num_entries = dev->conf.rwb_size / FTL_BLOCK_SIZE;
+	num_entries = dev->conf.write_buffer_size / FTL_BLOCK_SIZE;
 	entry_array = calloc(num_entries, sizeof(*entry_array));
 	SPDK_CU_ASSERT_FATAL(entry_array != NULL);
 

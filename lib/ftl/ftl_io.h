@@ -42,8 +42,8 @@
 #include "ftl_trace.h"
 
 struct spdk_ftl_dev;
-struct ftl_rwb_batch;
 struct ftl_band;
+struct ftl_batch;
 struct ftl_io;
 
 typedef int (*ftl_md_pack_fn)(struct ftl_band *);
@@ -101,8 +101,8 @@ struct ftl_io_init_opts {
 	/* IO type */
 	enum ftl_io_type			type;
 
-	/* RWB entry */
-	struct ftl_rwb_batch			*rwb_batch;
+	/* Transfer batch, set for IO going through the write buffer */
+	struct ftl_batch			*batch;
 
 	/* Band to which the IO is directed */
 	struct ftl_band				*band;
@@ -190,6 +190,8 @@ struct ftl_io_channel {
 	uint32_t				qdepth_limit;
 	/* Current number of concurrent user writes */
 	uint32_t				qdepth_current;
+	/* Means that the IO channel is being flushed */
+	bool					flush;
 };
 
 /* General IO descriptor */
@@ -235,8 +237,8 @@ struct ftl_io {
 	/* Offset within the iovec (in blocks) */
 	size_t					iov_off;
 
-	/* RWB entry (valid only for RWB-based IO) */
-	struct ftl_rwb_batch			*rwb_batch;
+	/* Transfer batch (valid only for writes going through the write buffer) */
+	struct ftl_batch			*batch;
 
 	/* Band this IO is being written to */
 	struct ftl_band				*band;
@@ -331,9 +333,8 @@ void ftl_io_advance(struct ftl_io *io, size_t num_blocks);
 size_t ftl_iovec_num_blocks(struct iovec *iov, size_t iov_cnt);
 void *ftl_io_iovec_addr(struct ftl_io *io);
 size_t ftl_io_iovec_len_left(struct ftl_io *io);
-struct ftl_io *ftl_io_rwb_init(struct spdk_ftl_dev *dev, struct ftl_addr addr,
-			       struct ftl_band *band,
-			       struct ftl_rwb_batch *entry, ftl_io_fn cb);
+struct ftl_io *ftl_io_wbuf_init(struct spdk_ftl_dev *dev, struct ftl_addr addr,
+				struct ftl_band *band, struct ftl_batch *batch, ftl_io_fn cb);
 struct ftl_io *ftl_io_erase_init(struct ftl_band *band, size_t num_blocks, ftl_io_fn cb);
 struct ftl_io *ftl_io_user_init(struct spdk_io_channel *ioch, uint64_t lba, size_t num_blocks,
 				struct iovec *iov, size_t iov_cnt, spdk_ftl_fn cb_fn,

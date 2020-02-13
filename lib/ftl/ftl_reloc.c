@@ -38,7 +38,6 @@
 #include "ftl_reloc.h"
 #include "ftl_core.h"
 #include "ftl_io.h"
-#include "ftl_rwb.h"
 #include "ftl_band.h"
 #include "ftl_debug.h"
 

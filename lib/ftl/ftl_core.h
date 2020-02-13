@@ -193,8 +193,6 @@ struct spdk_ftl_dev {
 
 	/* Transfer unit size */
 	size_t					xfer_size;
-	/* Ring write buffer */
-	struct ftl_rwb				*rwb;
 
 	/* Current user write limit */
 	int					limit;
@@ -271,7 +269,7 @@ typedef void (*ftl_restore_fn)(struct ftl_restore *, int, void *cb_arg);
 void	ftl_apply_limits(struct spdk_ftl_dev *dev);
 void	ftl_io_read(struct ftl_io *io);
 void	ftl_io_write(struct ftl_io *io);
-int	ftl_flush_rwb(struct spdk_ftl_dev *dev, spdk_ftl_fn cb_fn, void *cb_arg);
+int	ftl_flush_wbuf(struct spdk_ftl_dev *dev, spdk_ftl_fn cb_fn, void *cb_arg);
 int	ftl_current_limit(const struct spdk_ftl_dev *dev);
 int	ftl_invalidate_addr(struct spdk_ftl_dev *dev, struct ftl_addr addr);
 int	ftl_task_core(void *ctx);

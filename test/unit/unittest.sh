@@ -41,7 +41,6 @@ function unittest_event {
 }
 
 function unittest_ftl {
-	$valgrind $testdir/lib/ftl/ftl_rwb.c/ftl_rwb_ut
 	$valgrind $testdir/lib/ftl/ftl_ppa/ftl_ppa_ut
 	$valgrind $testdir/lib/ftl/ftl_band.c/ftl_band_ut
 	$valgrind $testdir/lib/ftl/ftl_reloc.c/ftl_reloc_ut

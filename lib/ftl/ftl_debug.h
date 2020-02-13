@@ -37,7 +37,6 @@
 #include "ftl_addr.h"
 #include "ftl_band.h"
 #include "ftl_core.h"
-#include "ftl_rwb.h"
 
 #if defined(DEBUG)
 /* Debug flags - enabled when defined */

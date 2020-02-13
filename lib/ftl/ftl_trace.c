@@ -37,7 +37,6 @@
 #include "ftl_trace.h"
 #include "ftl_io.h"
 #include "ftl_band.h"
-#include "ftl_rwb.h"
 
 #define OWNER_FTL	0x20
 #define TRACE_GROUP_FTL	0x6
@@ -53,7 +52,7 @@ enum ftl_trace_source {
 #define FTL_TRACE_BAND_DEFRAG(src)		FTL_TPOINT_ID(0, src)
 #define FTL_TRACE_BAND_WRITE(src)		FTL_TPOINT_ID(1, src)
 #define FTL_TRACE_LIMITS(src)			FTL_TPOINT_ID(2, src)
-#define FTL_TRACE_RWB_POP(src)			FTL_TPOINT_ID(3, src)
+#define FTL_TRACE_WBUF_POP(src)			FTL_TPOINT_ID(3, src)
 
 #define FTL_TRACE_READ_SCHEDULE(src)		FTL_TPOINT_ID(4, src)
 #define FTL_TRACE_READ_SUBMISSION(src)		FTL_TPOINT_ID(5, src)
@@ -66,7 +65,7 @@ enum ftl_trace_source {
 #define FTL_TRACE_MD_READ_COMPLETION(src)	FTL_TPOINT_ID(11, src)
 
 #define FTL_TRACE_WRITE_SCHEDULE(src)		FTL_TPOINT_ID(12, src)
-#define FTL_TRACE_WRITE_RWB_FILL(src)		FTL_TPOINT_ID(13, src)
+#define FTL_TRACE_WRITE_WBUF_FILL(src)		FTL_TPOINT_ID(13, src)
 #define FTL_TRACE_WRITE_SUBMISSION(src)		FTL_TPOINT_ID(14, src)
 #define FTL_TRACE_WRITE_COMPLETION(src)		FTL_TPOINT_ID(15, src)
 
@@ -96,7 +95,7 @@ SPDK_TRACE_REGISTER_FN(ftl_trace_func, "ftl", TRACE_GROUP_FTL)
 		spdk_trace_register_description(descbuf, FTL_TRACE_LIMITS(i),
 						OWNER_FTL, OBJECT_NONE, 0, 0, "limits: ");
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "rwb_pop");
-		spdk_trace_register_description(descbuf, FTL_TRACE_RWB_POP(i),
+		spdk_trace_register_description(descbuf, FTL_TRACE_WBUF_POP(i),
 						OWNER_FTL, OBJECT_NONE, 0, 0, "lba: ");
 
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "md_read_sched");
@@ -139,7 +138,7 @@ SPDK_TRACE_REGISTER_FN(ftl_trace_func, "ftl", TRACE_GROUP_FTL)
 		spdk_trace_register_description(descbuf, FTL_TRACE_WRITE_SCHEDULE(i),
 						OWNER_FTL, OBJECT_NONE, 0, 0, "lba: ");
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "rwb_fill");
-		spdk_trace_register_description(descbuf, FTL_TRACE_WRITE_RWB_FILL(i),
+		spdk_trace_register_description(descbuf, FTL_TRACE_WRITE_WBUF_FILL(i),
 						OWNER_FTL, OBJECT_NONE, 0, 0, "lba: ");
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "write_submit");
 		spdk_trace_register_description(descbuf, FTL_TRACE_WRITE_SUBMISSION(i),
@@ -228,25 +227,25 @@ ftl_trace_lba_io_init(struct spdk_ftl_dev *dev, const struct ftl_io *io)
 }
 
 void
-ftl_trace_rwb_fill(struct spdk_ftl_dev *dev, const struct ftl_io *io)
+ftl_trace_wbuf_fill(struct spdk_ftl_dev *dev, const struct ftl_io *io)
 {
 	assert(io->trace != FTL_TRACE_INVALID_ID);
 
-	spdk_trace_record(FTL_TRACE_WRITE_RWB_FILL(ftl_trace_io_source(io)), io->trace,
+	spdk_trace_record(FTL_TRACE_WRITE_WBUF_FILL(ftl_trace_io_source(io)), io->trace,
 			  0, 0, ftl_io_current_lba(io));
 }
 
 void
-ftl_trace_rwb_pop(struct spdk_ftl_dev *dev, const struct ftl_rwb_entry *entry)
+ftl_trace_wbuf_pop(struct spdk_ftl_dev *dev, const struct ftl_wbuf_entry *entry)
 {
 	uint16_t tpoint_id;
 
 	assert(entry->trace != FTL_TRACE_INVALID_ID);
 
-	if (ftl_rwb_entry_internal(entry)) {
-		tpoint_id = FTL_TRACE_RWB_POP(FTL_TRACE_SOURCE_INTERNAL);
+	if (entry->io_flags & FTL_IO_INTERNAL) {
+		tpoint_id = FTL_TRACE_WBUF_POP(FTL_TRACE_SOURCE_INTERNAL);
 	} else {
-		tpoint_id = FTL_TRACE_RWB_POP(FTL_TRACE_SOURCE_USER);
+		tpoint_id = FTL_TRACE_WBUF_POP(FTL_TRACE_SOURCE_USER);
 	}
 
 	spdk_trace_record(tpoint_id, entry->trace, 0, entry->addr.offset, entry->lba);
@@ -341,12 +340,12 @@ ftl_trace_submission(struct spdk_ftl_dev *dev, const struct ftl_io *io, struct f
 }
 
 void
-ftl_trace_limits(struct spdk_ftl_dev *dev, const size_t *limits, size_t num_free)
+ftl_trace_limits(struct spdk_ftl_dev *dev, int limit, size_t num_free)
 {
 	struct ftl_trace *trace = &dev->stats.trace;
 
 	spdk_trace_record(FTL_TRACE_LIMITS(FTL_TRACE_SOURCE_INTERNAL), ftl_trace_next_id(trace),
-			  num_free, limits[FTL_RWB_TYPE_INTERNAL], limits[FTL_RWB_TYPE_USER]);
+			  num_free, limit, 0);
 }
 
 uint64_t

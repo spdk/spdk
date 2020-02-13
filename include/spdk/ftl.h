@@ -66,8 +66,8 @@ struct spdk_ftl_conf {
 	/* Number of reserved addresses not exposed to the user */
 	size_t					lba_rsvd;
 
-	/* Write buffer size */
-	size_t					rwb_size;
+	/* Size of the per-io_channel write buffer */
+	size_t					write_buffer_size;
 
 	/* Threshold for opening new band */
 	size_t					band_thld;
@@ -86,9 +86,6 @@ struct spdk_ftl_conf {
 
 	/* User writes limits */
 	struct spdk_ftl_limit			limits[SPDK_FTL_LIMIT_MAX];
-
-	/* Number of interleaving units per ws_opt */
-	size_t                                  num_interleave_units;
 
 	/* Allow for partial recovery from open bands instead of returning error */
 	bool					allow_open_bands;

@@ -46,7 +46,6 @@
 #include "ftl_core.h"
 #include "ftl_io.h"
 #include "ftl_reloc.h"
-#include "ftl_rwb.h"
 #include "ftl_band.h"
 #include "ftl_debug.h"
 
@@ -102,8 +101,8 @@ static const struct spdk_ftl_conf	g_default_conf = {
 	.invalid_thld = 10,
 	/* 20% spare blocks */
 	.lba_rsvd = 20,
-	/* 6M write buffer */
-	.rwb_size = 6 * 1024 * 1024,
+	/* 6M write buffer per each IO channel */
+	.write_buffer_size = 6 * 1024 * 1024,
 	/* 90% band fill threshold */
 	.band_thld = 90,
 	/* Max 32 IO depth per band relocate */
@@ -112,9 +111,6 @@ static const struct spdk_ftl_conf	g_default_conf = {
 	.max_active_relocs = 3,
 	/* IO pool size per user thread (this should be adjusted to thread IO qdepth) */
 	.user_io_pool_size = 2048,
-	/* Number of interleaving units per ws_opt */
-	/* 1 for default and 3 for 3D TLC NAND */
-	.num_interleave_units = 1,
 	/*
 	 * If clear ftl will return error when restoring after a dirty shutdown
 	 * If set, last band will be padded, ftl will restore based only on closed bands - this
@@ -159,13 +155,10 @@ ftl_check_conf(const struct spdk_ftl_dev *dev, const struct spdk_ftl_conf *conf)
 	if (conf->lba_rsvd == 0) {
 		return -1;
 	}
-	if (conf->rwb_size == 0) {
+	if (conf->write_buffer_size == 0) {
 		return -1;
 	}
-	if (conf->rwb_size % FTL_BLOCK_SIZE != 0) {
-		return -1;
-	}
-	if (dev->xfer_size % conf->num_interleave_units != 0) {
+	if (conf->write_buffer_size % FTL_BLOCK_SIZE != 0) {
 		return -1;
 	}
 
@@ -975,7 +968,7 @@ ftl_io_channel_init_wbuf(struct ftl_io_channel *ioch)
 	uint32_t i;
 	int rc;
 
-	ioch->num_entries = dev->conf.rwb_size / FTL_BLOCK_SIZE;
+	ioch->num_entries = dev->conf.write_buffer_size / FTL_BLOCK_SIZE;
 	ioch->wbuf_entries = calloc(ioch->num_entries, sizeof(*ioch->wbuf_entries));
 	if (ioch->wbuf_entries == NULL) {
 		SPDK_ERRLOG("Failed to allocate write buffer entry array\n");
@@ -983,7 +976,7 @@ ftl_io_channel_init_wbuf(struct ftl_io_channel *ioch)
 	}
 
 	ioch->qdepth_limit = ioch->num_entries;
-	ioch->wbuf_payload = spdk_zmalloc(dev->conf.rwb_size, FTL_BLOCK_SIZE, NULL,
+	ioch->wbuf_payload = spdk_zmalloc(dev->conf.write_buffer_size, FTL_BLOCK_SIZE, NULL,
 					  SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (ioch->wbuf_payload == NULL) {
 		SPDK_ERRLOG("Failed to allocate write buffer payload\n");
@@ -1189,6 +1182,9 @@ ftl_io_channel_destroy_cb(void *io_device, void *ctx)
 	struct _ftl_io_channel *_ioch = ctx;
 	struct ftl_io_channel *ioch = _ioch->ioch;
 
+	/* Mark the IO channel as being flush to force out any unwritten entries */
+	ioch->flush = true;
+
 	_ftl_io_channel_destroy_cb(ioch);
 }
 
@@ -1350,8 +1346,7 @@ ftl_dev_free_sync(struct spdk_ftl_dev *dev)
 	pthread_mutex_unlock(&g_ftl_queue_lock);
 
 	assert(LIST_EMPTY(&dev->wptr_list));
-	assert(ftl_rwb_num_acquired(dev->rwb, FTL_RWB_TYPE_INTERNAL) == 0);
-	assert(ftl_rwb_num_acquired(dev->rwb, FTL_RWB_TYPE_USER) == 0);
+	assert(dev->current_batch == NULL);
 
 	ftl_dev_dump_bands(dev);
 	ftl_dev_dump_stats(dev);
@@ -1376,7 +1371,6 @@ ftl_dev_free_sync(struct spdk_ftl_dev *dev)
 	}
 	spdk_mempool_free(dev->lba_request_pool);
 
-	ftl_rwb_free(dev->rwb);
 	ftl_reloc_free(dev->reloc);
 
 	ftl_release_bdev(dev->nv_cache.bdev_desc);
@@ -1467,12 +1461,6 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn c
 
 	if (ftl_dev_init_nv_cache(dev, opts.cache_bdev)) {
 		SPDK_ERRLOG("Unable to initialize persistent cache\n");
-		goto fail_sync;
-	}
-
-	dev->rwb = ftl_rwb_init(&dev->conf, dev->xfer_size, dev->md_size, ftl_get_num_punits(dev));
-	if (!dev->rwb) {
-		SPDK_ERRLOG("Unable to initialize rwb structures\n");
 		goto fail_sync;
 	}
 
@@ -1609,8 +1597,6 @@ _spdk_ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_init_fn cb_fn, void *cb_ar
 	fini_ctx->cb_fn = cb_fn;
 	fini_ctx->cb_arg = cb_arg;
 	fini_ctx->thread = thread;
-
-	ftl_rwb_disable_interleaving(dev->rwb);
 
 	spdk_thread_send_msg(ftl_get_core_thread(dev), ftl_add_halt_poller, fini_ctx);
 	return 0;
