@@ -734,7 +734,7 @@ _sock_close(const char *ip, int port, char *impl_name)
 	struct spdk_sock *listen_sock;
 	struct spdk_sock *server_sock;
 	struct spdk_sock *client_sock;
-	uint8_t data_buf[64];
+	uint8_t data_buf[64] = {};
 	struct spdk_sock_request *req1, *req2;
 	struct close_ctx ctx = {};
 	bool cb_arg2 = false;
