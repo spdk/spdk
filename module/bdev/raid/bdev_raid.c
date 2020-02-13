@@ -1323,6 +1323,7 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 			return -EINVAL;
 		}
 	}
+	assert(blocklen > 0);
 
 	/* The strip_size_kb is read in from user in KB. Convert to blocks here for
 	 * internal use.
