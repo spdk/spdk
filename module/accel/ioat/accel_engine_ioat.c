@@ -61,8 +61,16 @@ struct ioat_device {
 	TAILQ_ENTRY(ioat_device) tailq;
 };
 
+struct pci_device {
+	struct spdk_pci_device *pci_dev;
+	TAILQ_ENTRY(pci_device) tailq;
+};
+
 static TAILQ_HEAD(, ioat_device) g_devices = TAILQ_HEAD_INITIALIZER(g_devices);
 static pthread_mutex_t g_ioat_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static TAILQ_HEAD(, pci_device) g_pci_devices = TAILQ_HEAD_INITIALIZER(g_pci_devices);
+
 
 struct ioat_io_channel {
 	struct spdk_ioat_chan	*ioat_ch;
@@ -226,6 +234,7 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev)
 {
 	struct ioat_probe_ctx *ctx = cb_ctx;
 	struct spdk_pci_addr pci_addr = spdk_pci_device_get_addr(pci_dev);
+	struct pci_device *pdev;
 
 	SPDK_INFOLOG(SPDK_LOG_ACCEL_IOAT,
 		     " Found matching device at %04x:%02x:%02x.%x vendor:0x%04x device:0x%04x\n",
@@ -235,6 +244,13 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev)
 		     pci_addr.func,
 		     spdk_pci_device_get_vendor_id(pci_dev),
 		     spdk_pci_device_get_device_id(pci_dev));
+
+	pdev = calloc(1, sizeof(*pdev));
+	if (pdev == NULL) {
+		return false;
+	}
+	pdev->pci_dev = pci_dev;
+	TAILQ_INSERT_TAIL(&g_pci_devices, pdev, tailq);
 
 	if (ctx->num_whitelist_devices > 0 &&
 	    !ioat_find_dev_by_whitelist_bdf(&pci_addr, ctx->whitelist, ctx->num_whitelist_devices)) {
@@ -381,6 +397,7 @@ static void
 accel_engine_ioat_exit(void *ctx)
 {
 	struct ioat_device *dev;
+	struct pci_device *pci_dev;
 
 	if (g_ioat_initialized) {
 		spdk_io_device_unregister(&ioat_accel_engine, NULL);
@@ -393,6 +410,14 @@ accel_engine_ioat_exit(void *ctx)
 		ioat_free_device(dev);
 		free(dev);
 	}
+
+	while (!TAILQ_EMPTY(&g_pci_devices)) {
+		pci_dev = TAILQ_FIRST(&g_pci_devices);
+		TAILQ_REMOVE(&g_pci_devices, pci_dev, tailq);
+		spdk_pci_device_detach(pci_dev->pci_dev);
+		free(pci_dev);
+	}
+
 	spdk_accel_engine_module_finish();
 }
 
