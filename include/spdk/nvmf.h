@@ -123,14 +123,6 @@ struct spdk_nvmf_transport_poll_group_stat {
 typedef void (*new_qpair_fn)(struct spdk_nvmf_qpair *qpair, void *cb_arg);
 
 /**
- * Function to be called once the target is listening.
- *
- * \param ctx Context argument passed to this function.
- * \param status 0 if it completed successfully, or negative errno if it failed.
- */
-typedef void (*spdk_nvmf_tgt_listen_done_fn)(void *ctx, int status);
-
-/**
  * Construct an NVMe-oF target.
  *
  * \param opts a pointer to an spdk_nvmf_target_opts structure.
@@ -211,16 +203,11 @@ void spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_
  *
  * \param tgt The target associated with this listen address.
  * \param trid The address to listen at.
- * \param cb_fn A callback that will be called once the target is listening
- * \param cb_arg A context argument passed to cb_fn.
  *
- * \return void. The callback status argument will be 0 on success
- *	   or a negated errno on failure.
+ * \return 0 on success or a negated errno on failure.
  */
-void spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
-			  struct spdk_nvme_transport_id *trid,
-			  spdk_nvmf_tgt_listen_done_fn cb_fn,
-			  void *cb_arg);
+int spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
+			 struct spdk_nvme_transport_id *trid);
 
 /**
  * Stop accepting new connections at the provided address.
@@ -984,16 +971,12 @@ void spdk_nvmf_tgt_add_transport(struct spdk_nvmf_tgt *tgt,
  *
  * \param transport The transport to add listener to
  * \param trid Address to listen at
- * \param cb_fn A callback that will be called once the listener is created
- * \param cb_arg A context argument passed to cb_fn.
  *
  * \return int. 0 if it completed successfully, or negative errno if it failed.
  */
 int
 spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
-			   const struct spdk_nvme_transport_id *trid,
-			   spdk_nvmf_tgt_listen_done_fn cb_fn,
-			   void *cb_arg);
+			   const struct spdk_nvme_transport_id *trid);
 
 /**
  * Remove listener from transport and stop accepting new connections.

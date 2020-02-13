@@ -541,11 +541,9 @@ spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_
 	}
 }
 
-void
+int
 spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
-		     struct spdk_nvme_transport_id *trid,
-		     spdk_nvmf_tgt_listen_done_fn cb_fn,
-		     void *cb_arg)
+		     struct spdk_nvme_transport_id *trid)
 {
 	struct spdk_nvmf_transport *transport;
 	const char *trtype;
@@ -560,16 +558,16 @@ spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 			SPDK_ERRLOG("The specified trtype %d is unknown. Please make sure that it is properly registered.\n",
 				    trid->trtype);
 		}
-		cb_fn(cb_arg, -EINVAL);
-		return;
+
+		return -EINVAL;
 	}
 
-	rc = spdk_nvmf_transport_listen(transport, trid, cb_fn, cb_arg);
+	rc = spdk_nvmf_transport_listen(transport, trid);
 	if (rc < 0) {
 		SPDK_ERRLOG("Unable to listen on address '%s'\n", trid->traddr);
-		cb_fn(cb_arg, rc);
-		return;
 	}
+
+	return rc;
 }
 
 int

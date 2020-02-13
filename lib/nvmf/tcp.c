@@ -597,9 +597,7 @@ _spdk_nvmf_tcp_find_port(struct spdk_nvmf_tcp_transport *ttransport,
 
 static int
 spdk_nvmf_tcp_listen(struct spdk_nvmf_transport *transport,
-		     const struct spdk_nvme_transport_id *trid,
-		     spdk_nvmf_tgt_listen_done_fn cb_fn,
-		     void *cb_arg)
+		     const struct spdk_nvme_transport_id *trid)
 {
 	struct spdk_nvmf_tcp_transport *ttransport;
 	struct spdk_nvmf_tcp_port *port;
@@ -655,11 +653,6 @@ spdk_nvmf_tcp_listen(struct spdk_nvmf_transport *transport,
 
 	TAILQ_INSERT_TAIL(&ttransport->ports, port, link);
 	pthread_mutex_unlock(&ttransport->lock);
-
-	if (cb_fn != NULL) {
-		cb_fn(cb_arg, 0);
-	}
-
 	return 0;
 }
 

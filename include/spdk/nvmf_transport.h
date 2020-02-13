@@ -209,9 +209,7 @@ struct spdk_nvmf_transport_ops {
 	  * provided. This may be called multiple times.
 	  */
 	int (*listen)(struct spdk_nvmf_transport *transport,
-		      const struct spdk_nvme_transport_id *trid,
-		      spdk_nvmf_tgt_listen_done_fn cb_fn,
-		      void *cb_arg);
+		      const struct spdk_nvme_transport_id *trid);
 
 	/**
 	  * Stop accepting new connections at the given address.

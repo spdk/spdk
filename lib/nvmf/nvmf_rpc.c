@@ -634,41 +634,26 @@ nvmf_rpc_listen_resumed(struct spdk_nvmf_subsystem *subsystem,
 }
 
 static void
-nvmf_rpc_tgt_listen(void *cb_arg, int status)
-{
-	struct nvmf_rpc_listener_ctx *ctx = cb_arg;
-
-	if (status) {
-		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "Invalid parameters");
-		ctx->response_sent = true;
-	} else {
-		if (spdk_nvmf_subsystem_add_listener(ctx->subsystem, &ctx->trid)) {
-			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-							 "Invalid parameters");
-			ctx->response_sent = true;
-		}
-	}
-
-	if (spdk_nvmf_subsystem_resume(ctx->subsystem, nvmf_rpc_listen_resumed, ctx)) {
-		if (!ctx->response_sent) {
-			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
-		}
-		nvmf_rpc_listener_ctx_free(ctx);
-		/* Can't really do anything to recover here - subsystem will remain paused. */
-	}
-}
-
-static void
 nvmf_rpc_listen_paused(struct spdk_nvmf_subsystem *subsystem,
 		       void *cb_arg, int status)
 {
 	struct nvmf_rpc_listener_ctx *ctx = cb_arg;
+	int rc;
 
 	if (ctx->op == NVMF_RPC_LISTEN_ADD) {
 		if (!spdk_nvmf_subsystem_find_listener(subsystem, &ctx->trid)) {
-			spdk_nvmf_tgt_listen(ctx->tgt, &ctx->trid, nvmf_rpc_tgt_listen, ctx);
-			return;
+			rc = spdk_nvmf_tgt_listen(ctx->tgt, &ctx->trid);
+			if (rc == 0) {
+				if (spdk_nvmf_subsystem_add_listener(ctx->subsystem, &ctx->trid)) {
+					spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+									 "Invalid parameters");
+					ctx->response_sent = true;
+				}
+			} else {
+				spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+								 "Invalid parameters");
+				ctx->response_sent = true;
+			}
 		}
 	} else if (ctx->op == NVMF_RPC_LISTEN_REMOVE) {
 		if (spdk_nvmf_subsystem_remove_listener(subsystem, &ctx->trid)) {
