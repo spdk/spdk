@@ -542,6 +542,62 @@ function test_delete_snapshot_with_snapshot() {
 	check_leftover_devices
 }
 
+# Test for destroying lvol bdevs in particular order.
+function test_bdev_lvol_delete_ordering() {
+	local snapshot_name=snapshot snapshot_uuid
+	local clone_name=clone clone_uuid
+
+	local bdev_uuid
+	local lbd_name=lbd_test
+	local lvstore_uuid lvstore_name=lvs_name
+	local malloc_dev
+	local size
+
+	malloc_dev=$(rpc_cmd bdev_malloc_create 256 "$MALLOC_BS")
+	lvstore_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_dev" "$lvstore_name")
+
+	get_lvs_jq bdev_lvol_get_lvstores -u "$lvstore_uuid"
+	[[ ${jq_out["uuid"]} == "$lvstore_uuid" ]]
+	[[ ${jq_out["name"]} == "$lvstore_name" ]]
+	[[ ${jq_out["base_bdev"]} == "$malloc_dev" ]]
+
+	size=$(( jq_out["free_clusters"] * jq_out["cluster_size"] / 4 / 1024**2 ))
+
+	bdev_uuid=$(rpc_cmd bdev_lvol_create -t -u "$lvstore_uuid" "$lbd_name" "$size")
+
+	get_bdev_jq bdev_get_bdevs -b "$bdev_uuid"
+
+	snapshot_uuid=$(rpc_cmd bdev_lvol_snapshot "${jq_out["name"]}" "$snapshot_name")
+
+	get_bdev_jq bdev_get_bdevs -b "$lvstore_name/$snapshot_name"
+	[[ ${jq_out["name"]} == "$snapshot_uuid" ]]
+	[[ ${jq_out["product_name"]} == "Logical Volume" ]]
+	[[ ${jq_out["aliases[0]"]} == "$lvstore_name/$snapshot_name" ]]
+
+	clone_uuid=$(rpc_cmd bdev_lvol_clone "$lvstore_name/$snapshot_name" "$clone_name")
+
+	get_bdev_jq bdev_get_bdevs -b "$lvstore_name/$clone_name"
+	[[ ${jq_out["name"]} == "$clone_uuid" ]]
+	[[ ${jq_out["product_name"]} == "Logical Volume" ]]
+	[[ ${jq_out["aliases[0]"]} == "$lvstore_name/$clone_name" ]]
+
+	# Try to destroy snapshot with clones and check if it fails
+	rpc_cmd bdev_lvol_delete "$snapshot_uuid" && false
+
+	# cleanup logical volumes
+	rpc_cmd bdev_lvol_delete "$bdev_uuid"
+	rpc_cmd bdev_lvol_delete "$clone_uuid"
+	rpc_cmd bdev_lvol_delete "$snapshot_uuid"
+
+	# cleanup lvstore
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvstore_uuid"
+
+	# cleanup malloc dev
+	rpc_cmd bdev_malloc_delete "$malloc_dev"
+
+	check_leftover_devices
+}
+
 $rootdir/app/spdk_tgt/spdk_tgt &
 spdk_pid=$!
 trap 'killprocess "$spdk_pid"; exit 1' SIGINT SIGTERM EXIT
@@ -557,6 +613,7 @@ run_test "test_clone_decouple_parent" test_clone_decouple_parent
 run_test "test_lvol_bdev_readonly" test_lvol_bdev_readonly
 run_test "test_delete_snapshot_with_clone" test_delete_snapshot_with_clone
 run_test "test_delete_snapshot_with_snapshot" test_delete_snapshot_with_snapshot
+run_test "test_bdev_lvol_delete_ordering" test_bdev_lvol_delete_ordering
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid
