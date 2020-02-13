@@ -320,6 +320,9 @@ EOF
 			vagrant ssh -c 'sudo pkg clean -ay'
 		fi
 		vagrant ssh -c 'cat /dev/null > ~/.bash_history && history -c'
+		vagrant package --output spdk_${SPDK_VAGRANT_DISTRO}.box
+		vagrant box add spdk/${SPDK_VAGRANT_DISTRO} spdk_${SPDK_VAGRANT_DISTRO}.box &&
+			rm spdk_${SPDK_VAGRANT_DISTRO}.box
 	fi
 	echo ""
 	echo "  SUCCESS!"

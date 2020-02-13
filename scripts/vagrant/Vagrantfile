@@ -1,12 +1,21 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+require 'open3' def checkboxtype(distro)
+  localboxes, stderr, status = Open3.capture3("vagrant box list")
+  if localboxes.include? "spdk/"+distro
+    return "spdk/"+distro
+  else
+    return "generic/"+distro
+  end
+end
+
 Vagrant.configure(2) do |config|
 
   # Pick the right distro and bootstrap, default is fedora30
   distro = ( ENV['SPDK_VAGRANT_DISTRO'] || "fedora30")
   provider = (ENV['SPDK_VAGRANT_PROVIDER'] || "virtualbox")
-  config.vm.box = "generic/"+distro
+  config.vm.box = checkboxtype(distro)
   config.vm.box_check_update = false
 
   # Copy in the .gitconfig if it exists
