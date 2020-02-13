@@ -385,7 +385,7 @@ bs_init_complete(void *cb_arg, struct spdk_blob_store *bs,
 	hello_context->io_unit_size = spdk_bs_get_io_unit_size(hello_context->bs);
 
 	/*
-	 * The blostore has been initialized, let's create a blob.
+	 * The blobstore has been initialized, let's create a blob.
 	 * Note that we could pass a message back to ourselves using
 	 * spdk_thread_send_msg() if we wanted to keep our processing
 	 * time limited.
@@ -463,7 +463,7 @@ main(int argc, char **argv)
 
 
 	/*
-	 * Now we'll allocate and intialize the blobstore itself. We
+	 * Now we'll allocate and initialize the blobstore itself. We
 	 * can pass in an spdk_bs_opts if we want something other than
 	 * the defaults (cluster size, etc), but here we'll just take the
 	 * defaults.  We'll also pass in a struct that we'll use for
@@ -483,7 +483,7 @@ main(int argc, char **argv)
 		if (rc) {
 			SPDK_NOTICELOG("ERROR!\n");
 		} else {
-			SPDK_NOTICELOG("SUCCCESS!\n");
+			SPDK_NOTICELOG("SUCCESS!\n");
 		}
 		/* Free up memory that we allocated */
 		hello_cleanup(hello_context);
