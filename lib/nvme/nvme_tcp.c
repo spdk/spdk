@@ -66,6 +66,9 @@ struct nvme_tcp_ctrlr {
 
 struct nvme_tcp_poll_group {
 	struct spdk_nvme_transport_poll_group group;
+	struct spdk_sock_group *sock_group;
+	uint32_t completions_per_qpair;
+	int64_t num_completions;
 };
 
 /* NVMe TCP qpair extensions for spdk_nvme_qpair */
@@ -127,6 +130,12 @@ nvme_tcp_qpair(struct spdk_nvme_qpair *qpair)
 {
 	assert(qpair->trtype == SPDK_NVME_TRANSPORT_TCP);
 	return SPDK_CONTAINEROF(qpair, struct nvme_tcp_qpair, qpair);
+}
+
+static inline struct nvme_tcp_poll_group *
+nvme_tcp_poll_group(struct spdk_nvme_transport_poll_group *group)
+{
+	return SPDK_CONTAINEROF(group, struct nvme_tcp_poll_group, group);
 }
 
 static inline struct nvme_tcp_ctrlr *
@@ -1443,6 +1452,22 @@ fail:
 	return -ENXIO;
 }
 
+static void
+nvme_tcp_qpair_sock_cb(void *ctx, struct spdk_sock_group *group, struct spdk_sock *sock)
+{
+	struct spdk_nvme_qpair *qpair = ctx;
+	struct nvme_tcp_poll_group *pgroup = nvme_tcp_poll_group(qpair->poll_group);
+	int32_t num_completions;
+
+	num_completions = spdk_nvme_qpair_process_completions(qpair, pgroup->completions_per_qpair);
+
+	if (pgroup->num_completions >= 0 && num_completions >= 0) {
+		pgroup->num_completions += num_completions;
+	} else {
+		pgroup->num_completions = -ENXIO;
+	}
+}
+
 static int
 nvme_tcp_qpair_icreq_send(struct nvme_tcp_qpair *tqpair)
 {
@@ -1720,18 +1745,39 @@ nvme_tcp_poll_group_create(void)
 		return NULL;
 	}
 
+	group->sock_group = spdk_sock_group_create(group);
+	if (group->sock_group == NULL) {
+		free(group);
+		SPDK_ERRLOG("Unable to allocate sock group.\n");
+		return NULL;
+	}
+
 	return &group->group;
 }
 
 static int
 nvme_tcp_poll_group_connect_qpair(struct spdk_nvme_qpair *qpair)
 {
+	struct nvme_tcp_poll_group *group = nvme_tcp_poll_group(qpair->poll_group);
+	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
+
+	if (spdk_sock_group_add_sock(group->sock_group, tqpair->sock, nvme_tcp_qpair_sock_cb, qpair)) {
+		return -EPROTO;
+	}
 	return 0;
 }
 
 static int
 nvme_tcp_poll_group_disconnect_qpair(struct spdk_nvme_qpair *qpair)
 {
+	struct nvme_tcp_poll_group *group = nvme_tcp_poll_group(qpair->poll_group);
+	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
+
+	if (tqpair->sock && group->sock_group) {
+		if (spdk_sock_group_remove_sock(group->sock_group, tqpair->sock)) {
+			return -EPROTO;
+		}
+	}
 	return 0;
 }
 
@@ -1739,6 +1785,16 @@ static int
 nvme_tcp_poll_group_add(struct spdk_nvme_transport_poll_group *tgroup,
 			struct spdk_nvme_qpair *qpair)
 {
+	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
+	struct nvme_tcp_poll_group *group = nvme_tcp_poll_group(tgroup);
+
+	/* disconnected qpairs won't have a sock to add. */
+	if (nvme_qpair_get_state(qpair) >= NVME_QPAIR_CONNECTED) {
+		if (spdk_sock_group_add_sock(group->sock_group, tqpair->sock, nvme_tcp_qpair_sock_cb, qpair)) {
+			return -EPROTO;
+		}
+	}
+
 	return 0;
 }
 
@@ -1746,6 +1802,10 @@ static int
 nvme_tcp_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
 			   struct spdk_nvme_qpair *qpair)
 {
+	if (qpair->poll_group_tailq_head == &tgroup->connected_qpairs) {
+		return nvme_poll_group_disconnect_qpair(qpair);
+	}
+
 	return 0;
 }
 
@@ -1753,31 +1813,35 @@ static int64_t
 nvme_tcp_poll_group_process_completions(struct spdk_nvme_transport_poll_group *tgroup,
 					uint32_t completions_per_qpair, spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb)
 {
+	struct nvme_tcp_poll_group *group = nvme_tcp_poll_group(tgroup);
 	struct spdk_nvme_qpair *qpair, *tmp_qpair;
-	int32_t local_completions = 0;
-	int64_t total_completions = 0;
+
+	group->completions_per_qpair = completions_per_qpair;
+	group->num_completions = 0;
+
+	spdk_sock_group_poll(group->sock_group);
 
 	STAILQ_FOREACH_SAFE(qpair, &tgroup->disconnected_qpairs, poll_group_stailq, tmp_qpair) {
 		disconnected_qpair_cb(qpair, tgroup->group->ctx);
 	}
 
-	STAILQ_FOREACH_SAFE(qpair, &tgroup->connected_qpairs, poll_group_stailq, tmp_qpair) {
-		local_completions = spdk_nvme_qpair_process_completions(qpair, completions_per_qpair);
-		if (local_completions < 0) {
-			disconnected_qpair_cb(qpair, tgroup->group->ctx);
-			local_completions = 0;
-		}
-		total_completions += local_completions;
-	}
-
-	return total_completions;
+	return group->num_completions;
 }
 
 static int
 nvme_tcp_poll_group_destroy(struct spdk_nvme_transport_poll_group *tgroup)
 {
+	int rc;
+	struct nvme_tcp_poll_group *group = nvme_tcp_poll_group(tgroup);
+
 	if (!STAILQ_EMPTY(&tgroup->connected_qpairs) || !STAILQ_EMPTY(&tgroup->disconnected_qpairs)) {
 		return -EBUSY;
+	}
+
+	rc = spdk_sock_group_close(&group->sock_group);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to close the sock group for a tcp poll group.\n");
+		assert(false);
 	}
 
 	free(tgroup);

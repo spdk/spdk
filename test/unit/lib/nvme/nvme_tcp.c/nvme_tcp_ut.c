@@ -48,6 +48,9 @@ DEFINE_STUB(nvme_qpair_submit_request,
 DEFINE_STUB(spdk_sock_set_priority,
 	    int, (struct spdk_sock *sock, int priority), 0);
 
+DEFINE_STUB(spdk_nvme_poll_group_remove, int, (struct spdk_nvme_poll_group *group,
+		struct spdk_nvme_qpair *qpair), 0);
+
 static void
 test_nvme_tcp_pdu_set_data_buf(void)
 {

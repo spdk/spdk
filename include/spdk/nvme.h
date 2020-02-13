@@ -1995,7 +1995,7 @@ struct spdk_nvme_poll_group *spdk_nvme_poll_group_create(void *ctx);
  * \param qpair The qpair to add to the poll group.
  *
  * return 0 on success, -EINVAL if the qpair is not in the disabled state, -ENODEV if the transport
- * doesn't exist, or -ENOMEM on memory allocation failures.
+ * doesn't exist, -ENOMEM on memory allocation failures, or -EPROTO on a protocol (transport) specific failure.
  */
 int spdk_nvme_poll_group_add(struct spdk_nvme_poll_group *group, struct spdk_nvme_qpair *qpair);
 
@@ -2005,7 +2005,7 @@ int spdk_nvme_poll_group_add(struct spdk_nvme_poll_group *group, struct spdk_nvm
  * \param group The group from which to remove the qpair.
  * \param qpair The qpair to remove from the poll group.
  *
- * return 0 on success, -ENOENT if the qpair is not found in the group.
+ * return 0 on success, -ENOENT if the qpair is not found in the group, or -EPROTO on a protocol (transport) specific failure.
  */
 int spdk_nvme_poll_group_remove(struct spdk_nvme_poll_group *group, struct spdk_nvme_qpair *qpair);
 
