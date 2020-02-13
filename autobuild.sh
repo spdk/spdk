@@ -28,12 +28,6 @@ cd $rootdir
 # Print some test system info out for the log
 date -u
 git describe --tags
-./configure $config_params
-echo "** START ** Info for Hostname: $HOSTNAME"
-uname -a
-$MAKE cc_version
-$MAKE cxx_version
-echo "** END ** Info for Hostname: $HOSTNAME"
 
 function ocf_precompile() {
 	# We compile OCF sources ourselves
@@ -46,6 +40,76 @@ function ocf_precompile() {
 	config_params="$config_params --with-ocf=/$rootdir/build/ocf.a"
 	# need to reconfigure to avoid clearing ocf related files on future make clean.
 	./configure $config_params
+}
+
+function build_native_dpdk() {
+	local external_dpdk_dir
+	local external_dpdk_base_dir
+
+	external_dpdk_dir="$SPDK_RUN_EXTERNAL_DPDK"
+	external_dpdk_base_dir="$(dirname $external_dpdk_dir)"
+
+	if [[ ! -d "$external_dpdk_base_dir" ]]; then
+		sudo mkdir -p "$external_dpdk_base_dir"
+		sudo chown -R $(whoami) "$external_dpdk_base_dir"/..
+	fi
+	orgdir=$PWD
+
+	rm -rf "$external_dpdk_base_dir"
+	git clone --branch $SPDK_TEST_NATIVE_DPDK --depth 1 http://dpdk.org/git/dpdk "$external_dpdk_base_dir"
+	dpdk_cflags="-fPIC -g -Werror -fcommon"
+	dpdk_ldflags=""
+
+	# the drivers we use
+	DPDK_DRIVERS=("bus" "bus/pci" "bus/vdev" "mempool/ring")
+	# all possible DPDK drivers
+	DPDK_ALL_DRIVERS=($(find "$external_dpdk_base_dir/drivers" -mindepth 1 -type d | sed -n "s#^$external_dpdk_base_dir/drivers/##p"))
+
+	if [[ "$SPDK_TEST_CRYPTO" -eq 1 ]]; then
+		git clone --branch v0.54 --depth 1 https://github.com/intel/intel-ipsec-mb.git "$external_dpdk_base_dir/intel-ipsec-mb"
+		cd "$external_dpdk_base_dir/intel-ipsec-mb"
+		$MAKE $MAKEFLAGS all SHARED=n EXTRA_CFLAGS=-fPIC
+		DPDK_DRIVERS+=("crypto")
+		DPDK_DRIVERS+=("crypto/aesni_mb")
+		DPDK_DRIVERS+=("crypto/qat")
+		DPDK_DRIVERS+=("compress/qat")
+		DPDK_DRIVERS+=("common/qat")
+		dpdk_cflags+=" -I$external_dpdk_base_dir/intel-ipsec-mb"
+		dpdk_ldflags+=" -L$external_dpdk_base_dir/intel-ipsec-mb"
+	fi
+
+	if [[ "$SPDK_TEST_REDUCE" -eq 1 ]]; then
+		git clone --branch v2.29.0 --depth 1 https://github.com/intel/isa-l.git "$external_dpdk_base_dir/isa-l"
+		cd "$external_dpdk_base_dir/isa-l"
+		./autogen.sh
+		./configure CFLAGS="-fPIC -g -O2" --enable-shared=no
+		ln -s $PWD/include $PWD/isa-l
+		$MAKE $MAKEFLAGS all
+		DPDK_DRIVERS+=("compress")
+		DPDK_DRIVERS+=("compress/isal")
+		DPDK_DRIVERS+=("compress/qat")
+		DPDK_DRIVERS+=("common/qat")
+		dpdk_cflags+=" -I$external_dpdk_base_dir/isa-l"
+		dpdk_ldflags+=" -L$external_dpdk_base_dir/isa-l/.libs"
+	fi
+
+	# Use difference between DPDK_ALL_DRIVERS and DPDK_DRIVERS as a set of DPDK drivers we don't want or
+	# don't need to build.
+	DPDK_DISABLED_DRIVERS=($(sort <(printf "%s\n" "${DPDK_DRIVERS[@]}") <(printf "%s\n" "${DPDK_ALL_DRIVERS[@]}") | uniq -u))
+
+	cd $external_dpdk_base_dir
+	if [ "$(uname -s)" = "Linux" ]; then
+		dpdk_cflags+=" -Wno-stringop-overflow"
+	fi
+
+	meson build-tmp --prefix="$external_dpdk_dir" --libdir lib \
+		-Denable_docs=false -Denable_kmods=false -Dtests=false \
+		-Dc_args="$dpdk_cflags $dpdk_ldflags" \
+		-Dmachine=native -Ddisable_drivers=$(printf "%s," "${DPDK_DISABLED_DRIVERS[@]}")
+	ninja -C "$external_dpdk_base_dir/build-tmp" $MAKEFLAGS
+	ninja -C "$external_dpdk_base_dir/build-tmp" $MAKEFLAGS install
+
+	cd "$orgdir"
 }
 
 function make_fail_cleanup() {
@@ -176,6 +240,17 @@ fi
 if [ $SPDK_RUN_UBSAN -eq 1 ]; then
 	run_test "ubsan" echo "using ubsan"
 fi
+
+if [ -n "$SPDK_TEST_NATIVE_DPDK" ]; then
+	run_test "build_native_dpdk" build_native_dpdk
+fi
+
+./configure $config_params
+echo "** START ** Info for Hostname: $HOSTNAME"
+uname -a
+$MAKE cc_version
+$MAKE cxx_version
+echo "** END ** Info for Hostname: $HOSTNAME"
 
 if [ "$SPDK_TEST_AUTOBUILD" -eq 1 ]; then
 	run_test "autobuild" autobuild_test_suite $1

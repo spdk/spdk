@@ -9,14 +9,12 @@ if [[ ! -f $1 ]]; then
 	exit 1
 fi
 
+# always test with SPDK shared objects.
+export SPDK_LIB_DIR="$rootdir/build/lib"
+
 source "$1"
 source "$rootdir/test/common/autotest_common.sh"
 source "$rootdir/test/nvmf/common.sh"
-
-# always test with SPDK shared objects.
-export SPDK_LIB_DIR="$rootdir/build/lib"
-export DPDK_LIB_DIR="$rootdir/dpdk/build/lib"
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SPDK_LIB_DIR:$DPDK_LIB_DIR
 
 if [ $EUID -ne 0 ]; then
 	echo "$0 must be run as root"

@@ -120,12 +120,17 @@ export SPDK_TEST_FTL_EXTENDED
 export SPDK_TEST_VMD
 : ${SPDK_TEST_OPAL=0}
 export SPDK_TEST_OPAL
+: ${SPDK_TEST_NATIVE_DPDK}
+export SPDK_TEST_NATIVE_DPDK
 : ${SPDK_AUTOTEST_X=true}
 export SPDK_AUTOTEST_X
 : ${SPDK_TEST_RAID5=0}
 export SPDK_TEST_RAID5
 : ${SPDK_TEST_URING=0}
 export SPDK_TEST_URING
+
+export DPDK_LIB_DIR="${SPDK_RUN_EXTERNAL_DPDK:-$rootdir/dpdk/build}/lib"
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SPDK_LIB_DIR:$DPDK_LIB_DIR
 
 # Tell setup.sh to wait for block devices upon each reset
 export PCI_BLOCK_SYNC_ON_RESET=yes
