@@ -222,12 +222,9 @@ ftl_reloc_prep(struct ftl_band_reloc *breloc)
 	reloc->num_active++;
 
 	if (!band->high_prio) {
-		if (band->lba_map.ref_cnt == 0) {
-			if (ftl_band_alloc_lba_map(band)) {
-				assert(false);
-			}
-		} else {
-			ftl_band_acquire_lba_map(band);
+		if (ftl_band_alloc_lba_map(band)) {
+			SPDK_ERRLOG("Failed to allocate lba map\n");
+			assert(false);
 		}
 	} else {
 		ftl_band_acquire_lba_map(band);
@@ -772,7 +769,7 @@ ftl_reloc(struct ftl_reloc *reloc)
 			break;
 		}
 
-		/* TODO: Add handling relocation on open bands */
+		/* Wait for band to close before relocating */
 		if (breloc->band->state != FTL_BAND_STATE_CLOSED) {
 			continue;
 		}
