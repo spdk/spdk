@@ -85,7 +85,21 @@ if [[ $test_type =~ "spdk_vhost" ]]; then
 	notice "running SPDK"
 	notice ""
 	vhost_run 0
-	vhost_load_config 0 $testdir/conf.json
+	rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
+	$rpc_py bdev_split_create Nvme0n1 4
+	$rpc_py bdev_malloc_create -b Malloc0 128 4096
+	$rpc_py bdev_malloc_create -b Malloc1 128 4096
+	$rpc_py bdev_malloc_create -b Malloc2 64 512
+	$rpc_py bdev_malloc_create -b Malloc3 64 512
+	$rpc_py bdev_malloc_create -b Malloc4 64 512
+	$rpc_py bdev_malloc_create -b Malloc5 64 512
+	$rpc_py bdev_malloc_create -b Malloc6 64 512
+	$rpc_py bdev_raid_create -n RaidBdev0 -z 128 -r 0 -b "Malloc2 Malloc3"
+	$rpc_py bdev_raid_create -n RaidBdev1 -z 128 -r 0 -b "Nvme0n1p2 Malloc4"
+	$rpc_py bdev_raid_create -n RaidBdev2 -z 128 -r 0 -b "Malloc5 Malloc6"
+	$rpc_py vhost_create_scsi_controller --cpumask 0x1 vhost.0
+	$rpc_py vhost_scsi_controller_add_target vhost.0 0 Malloc0
+	$rpc_py vhost_create_blk_controller --cpumask 0x1 -r vhost.1 Malloc1
 	notice ""
 fi
 

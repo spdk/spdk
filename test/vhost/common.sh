@@ -166,16 +166,6 @@ function vhost_run()
 	timing_exit vhost_start
 }
 
-function vhost_load_config()
-{
-	local vhost_num="$1"
-	local vhost_json_conf="$2"
-	local vhost_dir
-	vhost_dir="$(get_vhost_dir $vhost_num)"
-
-	$rootdir/scripts/rpc.py -s $vhost_dir/rpc.sock load_config < "$vhost_json_conf"
-}
-
 function vhost_kill()
 {
 	local rc=0
