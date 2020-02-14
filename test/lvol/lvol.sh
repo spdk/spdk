@@ -23,7 +23,6 @@ function usage() {
     echo "    --test-cases=         List test cases which will be run:
                                     350: 'nested_destroy_logical_volume_negative',
                                     400: 'nested_construct_logical_volume_positive',
-                                    553: 'unregister_lvol_bdev',
                                     850: 'clear_method_none',
                                     851: 'clear_method_unmap',
                                     or

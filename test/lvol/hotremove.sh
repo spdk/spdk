@@ -149,6 +149,57 @@ function test_bdev_lvol_delete_lvstore_with_clones() {
 	check_leftover_devices
 }
 
+# Test for unregistering the lvol bdevs. Removing malloc bdev under an lvol
+# store triggers unregister of all lvol bdevs. Verify it with clones present.
+function test_unregister_lvol_bdev() {
+	local snapshot_name1=snapshot1 snapshot_uuid1
+	local snapshot_name2=snapshot2 snapshot_uuid2
+	local clone_name=clone clone_uuid
+	local lbd_name=lbd_test
+
+	local bdev_uuid
+	local lvstore_name=lvs_name lvstore_uuid
+	local malloc_dev
+
+	malloc_dev=$(rpc_cmd bdev_malloc_create 256 "$MALLOC_BS")
+	lvstore_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_dev" "$lvstore_name")
+
+	get_lvs_jq bdev_lvol_get_lvstores -u "$lvstore_uuid"
+	[[ ${jq_out["uuid"]} == "$lvstore_uuid" ]]
+	[[ ${jq_out["name"]} == "$lvstore_name" ]]
+	[[ ${jq_out["base_bdev"]} == "$malloc_dev" ]]
+
+	size=$(( jq_out["free_clusters"] * jq_out["cluster_size"] / 4 / 1024**2 ))
+
+	bdev_uuid=$(rpc_cmd bdev_lvol_create -u "$lvstore_uuid" "$lbd_name" "$size")
+
+	get_bdev_jq bdev_get_bdevs -b "$bdev_uuid"
+
+	snapshot_uuid1=$(rpc_cmd bdev_lvol_snapshot "${jq_out["name"]}" "$snapshot_name1")
+
+	get_bdev_jq bdev_get_bdevs -b "$lvstore_name/$snapshot_name1"
+	[[ ${jq_out["name"]} == "$snapshot_uuid1" ]]
+	[[ ${jq_out["product_name"]} == "Logical Volume" ]]
+	[[ ${jq_out["aliases[0]"]} == "$lvstore_name/$snapshot_name1" ]]
+
+	clone_uuid=$(rpc_cmd bdev_lvol_clone "$lvstore_name/$snapshot_name1" "$clone_name")
+
+	get_bdev_jq bdev_get_bdevs -b "$lvstore_name/$clone_name"
+	[[ ${jq_out["name"]} == "$clone_uuid" ]]
+	[[ ${jq_out["product_name"]} == "Logical Volume" ]]
+	[[ ${jq_out["aliases[0]"]} == "$lvstore_name/$clone_name" ]]
+
+	snapshot_uuid2=$(rpc_cmd bdev_lvol_snapshot "${jq_out["name"]}" "$snapshot_name2")
+
+	get_bdev_jq bdev_get_bdevs -b "$lvstore_name/$snapshot_name2"
+	[[ ${jq_out["name"]} == "$snapshot_uuid2" ]]
+	[[ ${jq_out["product_name"]} == "Logical Volume" ]]
+	[[ ${jq_out["aliases[0]"]} == "$lvstore_name/$snapshot_name2" ]]
+
+	rpc_cmd bdev_malloc_delete "$malloc_dev"
+	check_leftover_devices
+}
+
 $rootdir/app/spdk_tgt/spdk_tgt &
 spdk_pid=$!
 trap 'killprocess "$spdk_pid"; exit 1' SIGINT SIGTERM EXIT
@@ -159,6 +210,7 @@ run_test "test_hotremove_lvol_store_multiple_lvols" test_hotremove_lvol_store_mu
 run_test "test_hotremove_lvol_store_base" test_hotremove_lvol_store_base
 run_test "test_hotremove_lvol_store_base_with_lvols" test_hotremove_lvol_store_base_with_lvols
 run_test "test_bdev_lvol_delete_lvstore_with_clones" test_bdev_lvol_delete_lvstore_with_clones
+run_test "test_unregister_lvol_bdev" test_unregister_lvol_bdev
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid

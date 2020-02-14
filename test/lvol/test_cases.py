@@ -111,8 +111,6 @@ def test_counter():
 def case_message(func):
     def inner(*args, **kwargs):
         test_name = {
-            # bdev_lvol_delete_lvstore - positive tests
-            553: 'unregister_lvol_bdev',
             # logical volume clear_method test
             850: 'clear_method_none',
             851: 'clear_method_unmap',
@@ -247,59 +245,6 @@ class TestCases(object):
     def get_lvs_cluster_size(self, lvs_name="lvs_test"):
         lvs = self.c.bdev_lvol_get_lvstores(lvs_name)[0]
         return int(int(lvs['cluster_size']) / MEGABYTE)
-
-    @case_message
-    def test_case553(self):
-        """
-        unregister_lvol_bdev
-
-        Test for unregistering the lvol bdevs.
-        Removing malloc bdev under an lvol store triggers unregister of
-        all lvol bdevs. Verify it with clones present.
-        """
-
-        fail_count = 0
-        snapshot_name = "snapshot"
-        snapshot_name2 = "snapshot2"
-        clone_name = "clone"
-
-        # Create malloc bdev
-        base_name = self.c.bdev_malloc_create(self.total_size,
-                                              self.block_size)
-        # Construct_lvol_store on correct, exisitng malloc bdev
-        uuid_store = self.c.bdev_lvol_create_lvstore(base_name,
-                                                     self.lvs_name,
-                                                     self.cluster_size)
-        # Check correct uuid values in response bdev_lvol_get_lvstores command
-        fail_count = self.c.check_bdev_lvol_get_lvstores(base_name, uuid_store,
-                                                         self.cluster_size)
-        lvs = self.c.bdev_lvol_get_lvstores()
-        size = int(int(lvs[0]['free_clusters'] * lvs[0]['cluster_size']) / 4 / MEGABYTE)
-
-        # Create lvol bdev, snapshot it, then clone it and then snapshot the clone
-        uuid_bdev0 = self.c.bdev_lvol_create(uuid_store, self.lbd_name, size, thin=True)
-        lvol_bdev = self.c.get_lvol_bdev_with_name(uuid_bdev0)
-
-        fail_count += self.c.bdev_lvol_snapshot(lvol_bdev['name'], snapshot_name)
-        snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
-
-        fail_count += self.c.bdev_lvol_clone(self.lvs_name + "/" + snapshot_name, clone_name)
-        clone_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + clone_name)
-
-        fail_count += self.c.bdev_lvol_snapshot(clone_bdev['name'], snapshot_name2)
-        snapshot_bdev2 = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name2)
-
-        # Delete malloc bdev
-        self.c.bdev_malloc_delete(base_name)
-
-        #  Check response bdev_lvol_get_lvstores command
-        if self.c.check_bdev_lvol_get_lvstores("", "", "") == 1:
-            fail_count += 1
-
-        # Expected result:
-        # - bdev_lvol_get_lvstores: response should be of no value after destroyed lvol store
-        # - no other operation fails
-        return fail_count
 
     @case_message
     def test_case850(self):
