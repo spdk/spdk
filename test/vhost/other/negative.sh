@@ -67,9 +67,10 @@ notice ""
 notice "running SPDK"
 notice ""
 vhost_run 0
-vhost_load_config 0 $testdir/conf.json
 notice ""
 rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
+$rpc_py bdev_malloc_create -b Malloc0 128 4096
+$rpc_py bdev_malloc_create -b Malloc1 128 4096
 
 # Try to get nonexistent vhost controller
 if $rpc_py vhost_get_controllers -n nonexistent; then
