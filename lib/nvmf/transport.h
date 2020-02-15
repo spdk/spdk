@@ -40,9 +40,6 @@
 #include "spdk/nvmf.h"
 #include "spdk/nvmf_transport.h"
 
-int spdk_nvmf_transport_stop_listen(struct spdk_nvmf_transport *transport,
-				    const struct spdk_nvme_transport_id *trid);
-
 void spdk_nvmf_transport_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn,
 				void *cb_arg);
 

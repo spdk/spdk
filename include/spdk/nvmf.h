@@ -980,7 +980,6 @@ void spdk_nvmf_tgt_add_transport(struct spdk_nvmf_tgt *tgt,
 				 void *cb_arg);
 
 /**
- *
  * Add listener to transport and begin accepting new connections.
  *
  * \param transport The transport to add listener to
@@ -990,11 +989,23 @@ void spdk_nvmf_tgt_add_transport(struct spdk_nvmf_tgt *tgt,
  *
  * \return int. 0 if it completed successfully, or negative errno if it failed.
  */
+int
+spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
+			   const struct spdk_nvme_transport_id *trid,
+			   spdk_nvmf_tgt_listen_done_fn cb_fn,
+			   void *cb_arg);
 
-int spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
-			       const struct spdk_nvme_transport_id *trid,
-			       spdk_nvmf_tgt_listen_done_fn cb_fn,
-			       void *cb_arg);
+/**
+ * Remove listener from transport and stop accepting new connections.
+ *
+ * \param transport The transport to remove listener from
+ * \param trid Address to stop listen at
+ *
+ * \return int. 0 if it completed successfully, or negative errno if it failed.
+ */
+int
+spdk_nvmf_transport_stop_listen(struct spdk_nvmf_transport *transport,
+				const struct spdk_nvme_transport_id *trid);
 
 /**
  * Write NVMe-oF target's transport configurations into provided JSON context.
