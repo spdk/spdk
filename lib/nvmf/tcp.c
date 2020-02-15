@@ -267,9 +267,8 @@ struct spdk_nvmf_tcp_poll_group {
 };
 
 struct spdk_nvmf_tcp_port {
-	struct spdk_nvme_transport_id		trid;
+	const struct spdk_nvme_transport_id	*trid;
 	struct spdk_sock			*listen_sock;
-	uint32_t				ref;
 	TAILQ_ENTRY(spdk_nvmf_tcp_port)		link;
 };
 
@@ -588,7 +587,7 @@ _spdk_nvmf_tcp_find_port(struct spdk_nvmf_tcp_transport *ttransport,
 	}
 
 	TAILQ_FOREACH(port, &ttransport->ports, link) {
-		if (spdk_nvme_transport_id_compare(&canon_trid, &port->trid) == 0) {
+		if (spdk_nvme_transport_id_compare(&canon_trid, port->trid) == 0) {
 			return port;
 		}
 	}
@@ -616,11 +615,6 @@ spdk_nvmf_tcp_listen(struct spdk_nvmf_transport *transport,
 	}
 
 	pthread_mutex_lock(&ttransport->lock);
-	port = _spdk_nvmf_tcp_find_port(ttransport, trid);
-	if (port) {
-		goto success;
-	}
-
 	port = calloc(1, sizeof(*port));
 	if (!port) {
 		SPDK_ERRLOG("Port allocation failed\n");
@@ -628,14 +622,7 @@ spdk_nvmf_tcp_listen(struct spdk_nvmf_transport *transport,
 		return -ENOMEM;
 	}
 
-	if (_spdk_nvmf_tcp_canon_listen_trid(&port->trid, trid) != 0) {
-		SPDK_ERRLOG("Invalid traddr %s / trsvcid %s\n",
-			    trid->traddr, trid->trsvcid);
-		free(port);
-		pthread_mutex_unlock(&ttransport->lock);
-		return -ENOMEM;
-	}
-
+	port->trid = trid;
 	port->listen_sock = spdk_sock_listen(trid->traddr, trsvcid_int, NULL);
 	if (port->listen_sock == NULL) {
 		SPDK_ERRLOG("spdk_sock_listen(%s, %d) failed: %s (%d)\n",
@@ -667,21 +654,21 @@ spdk_nvmf_tcp_listen(struct spdk_nvmf_transport *transport,
 		       trid->traddr, trid->trsvcid);
 
 	TAILQ_INSERT_TAIL(&ttransport->ports, port, link);
-
-success:
-	port->ref++;
 	pthread_mutex_unlock(&ttransport->lock);
-	cb_fn(cb_arg, 0);
+
+	if (cb_fn != NULL) {
+		cb_fn(cb_arg, 0);
+	}
+
 	return 0;
 }
 
-static int
+static void
 spdk_nvmf_tcp_stop_listen(struct spdk_nvmf_transport *transport,
 			  const struct spdk_nvme_transport_id *trid)
 {
 	struct spdk_nvmf_tcp_transport *ttransport;
 	struct spdk_nvmf_tcp_port *port;
-	int rc;
 
 	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
 
@@ -691,21 +678,12 @@ spdk_nvmf_tcp_stop_listen(struct spdk_nvmf_transport *transport,
 	pthread_mutex_lock(&ttransport->lock);
 	port = _spdk_nvmf_tcp_find_port(ttransport, trid);
 	if (port) {
-		assert(port->ref > 0);
-		port->ref--;
-		if (port->ref == 0) {
-			TAILQ_REMOVE(&ttransport->ports, port, link);
-			spdk_sock_close(&port->listen_sock);
-			free(port);
-		}
-		rc = 0;
-	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Port not found\n");
-		rc = -ENOENT;
+		TAILQ_REMOVE(&ttransport->ports, port, link);
+		spdk_sock_close(&port->listen_sock);
+		free(port);
 	}
-	pthread_mutex_unlock(&ttransport->lock);
 
-	return rc;
+	pthread_mutex_unlock(&ttransport->lock);
 }
 
 static void spdk_nvmf_tcp_qpair_set_recv_state(struct spdk_nvmf_tcp_qpair *tqpair,
@@ -919,7 +897,7 @@ _spdk_nvmf_tcp_handle_connect(struct spdk_nvmf_transport *transport,
 	int rc;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "New connection accepted on %s port %s\n",
-		      port->trid.traddr, port->trid.trsvcid);
+		      port->trid->traddr, port->trid->trsvcid);
 
 	if (transport->opts.sock_priority) {
 		rc = spdk_sock_set_priority(sock, transport->opts.sock_priority);

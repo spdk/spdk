@@ -126,6 +126,8 @@ spdk_nvmf_transport_create(const char *transport_name, struct spdk_nvmf_transpor
 		return NULL;
 	}
 
+	TAILQ_INIT(&transport->listeners);
+
 	transport->ops = ops;
 	transport->opts = *opts;
 	chars_written = snprintf(spdk_mempool_name, MAX_MEMPOOL_NAME_LENGTH, "%s_%s_%s", "spdk_nvmf",
@@ -180,20 +182,62 @@ spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport)
 	return transport->ops->destroy(transport);
 }
 
+struct spdk_nvmf_listener *
+spdk_nvmf_transport_find_listener(struct spdk_nvmf_transport *transport,
+				  const struct spdk_nvme_transport_id *trid)
+{
+	struct spdk_nvmf_listener *listener;
+
+	TAILQ_FOREACH(listener, &transport->listeners, link) {
+		if (spdk_nvme_transport_id_compare(&listener->trid, trid) == 0) {
+			return listener;
+		}
+	}
+
+	return NULL;
+}
+
 int
 spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
 			   const struct spdk_nvme_transport_id *trid,
 			   spdk_nvmf_tgt_listen_done_fn cb_fn,
 			   void *cb_arg)
 {
-	return transport->ops->listen(transport, trid, cb_fn, cb_arg);
+	struct spdk_nvmf_listener *listener = spdk_nvmf_transport_find_listener(transport, trid);
+	if (!listener) {
+		listener = calloc(1, sizeof(*listener));
+		if (!listener) {
+			return -ENOMEM;
+		}
+
+		listener->ref = 1;
+		listener->trid = *trid;
+		TAILQ_INSERT_TAIL(&transport->listeners, listener, link);
+		return transport->ops->listen(transport, &listener->trid, cb_fn, cb_arg);
+	}
+
+	++listener->ref;
+
+	cb_fn(cb_arg, 0);
+	return 0;
 }
 
 int
 spdk_nvmf_transport_stop_listen(struct spdk_nvmf_transport *transport,
 				const struct spdk_nvme_transport_id *trid)
 {
-	return transport->ops->stop_listen(transport, trid);
+	struct spdk_nvmf_listener *listener = spdk_nvmf_transport_find_listener(transport, trid);
+	if (!listener) {
+		return -ENOENT;
+	}
+
+	if (--listener->ref == 0) {
+		TAILQ_REMOVE(&transport->listeners, listener, link);
+		transport->ops->stop_listen(transport, trid);
+		free(listener);
+	}
+
+	return 0;
 }
 
 void

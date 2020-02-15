@@ -1930,11 +1930,10 @@ nvmf_fc_listen(struct spdk_nvmf_transport *transport,
 	return 0;
 }
 
-static int
+static void
 nvmf_fc_stop_listen(struct spdk_nvmf_transport *transport,
 		    const struct spdk_nvme_transport_id *_trid)
 {
-	return 0;
 }
 
 static void

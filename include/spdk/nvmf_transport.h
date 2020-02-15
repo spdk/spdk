@@ -159,6 +159,13 @@ struct spdk_nvmf_poll_group {
 	struct spdk_nvmf_poll_group_stat		stat;
 };
 
+struct spdk_nvmf_listener {
+	struct spdk_nvme_transport_id	trid;
+	uint32_t			ref;
+
+	TAILQ_ENTRY(spdk_nvmf_listener)	link;
+};
+
 struct spdk_nvmf_transport {
 	struct spdk_nvmf_tgt			*tgt;
 	const struct spdk_nvmf_transport_ops	*ops;
@@ -167,6 +174,7 @@ struct spdk_nvmf_transport {
 	/* A mempool for transport related data transfers */
 	struct spdk_mempool			*data_buf_pool;
 
+	TAILQ_HEAD(, spdk_nvmf_listener)	listeners;
 	TAILQ_ENTRY(spdk_nvmf_transport)	link;
 };
 
@@ -208,8 +216,8 @@ struct spdk_nvmf_transport_ops {
 	/**
 	  * Stop accepting new connections at the given address.
 	  */
-	int (*stop_listen)(struct spdk_nvmf_transport *transport,
-			   const struct spdk_nvme_transport_id *trid);
+	void (*stop_listen)(struct spdk_nvmf_transport *transport,
+			    const struct spdk_nvme_transport_id *trid);
 
 	/**
 	 * Check for new connections on the transport.

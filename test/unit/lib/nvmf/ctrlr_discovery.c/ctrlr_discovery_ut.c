@@ -86,6 +86,15 @@ spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
 	return 0;
 }
 
+static struct spdk_nvmf_listener g_listener = {};
+
+struct spdk_nvmf_listener *
+spdk_nvmf_transport_find_listener(struct spdk_nvmf_transport *transport,
+				  const struct spdk_nvme_transport_id *trid)
+{
+	return &g_listener;
+}
+
 void
 spdk_nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport,
 				      struct spdk_nvme_transport_id *trid,

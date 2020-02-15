@@ -106,7 +106,7 @@ nvmf_generate_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn, size
 			entry->subtype = subsystem->subtype;
 			snprintf(entry->subnqn, sizeof(entry->subnqn), "%s", subsystem->subnqn);
 
-			spdk_nvmf_transport_listener_discover(listener->transport, &listener->trid, entry);
+			spdk_nvmf_transport_listener_discover(listener->transport, listener->trid, entry);
 
 			numrec++;
 		}

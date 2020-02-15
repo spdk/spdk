@@ -489,10 +489,9 @@ struct spdk_nvmf_rdma_device {
 };
 
 struct spdk_nvmf_rdma_port {
-	struct spdk_nvme_transport_id		trid;
+	const struct spdk_nvme_transport_id	*trid;
 	struct rdma_cm_id			*id;
 	struct spdk_nvmf_rdma_device		*device;
-	uint32_t				ref;
 	TAILQ_ENTRY(spdk_nvmf_rdma_port)	link;
 };
 
@@ -2660,12 +2659,6 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 	assert(rtransport->event_channel != NULL);
 
 	pthread_mutex_lock(&rtransport->lock);
-	TAILQ_FOREACH(port, &rtransport->ports, link) {
-		if (spdk_nvme_transport_id_compare(&port->trid, trid) == 0) {
-			goto success;
-		}
-	}
-
 	port = calloc(1, sizeof(*port));
 	if (!port) {
 		SPDK_ERRLOG("Port allocation failed\n");
@@ -2673,15 +2666,9 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 		return -ENOMEM;
 	}
 
-	/* Selectively copy the trid. Things like NQN don't matter here - that
-	 * mapping is enforced elsewhere.
-	 */
-	spdk_nvme_trid_populate_transport(&port->trid, SPDK_NVME_TRANSPORT_RDMA);
-	port->trid.adrfam = trid->adrfam;
-	snprintf(port->trid.traddr, sizeof(port->trid.traddr), "%s", trid->traddr);
-	snprintf(port->trid.trsvcid, sizeof(port->trid.trsvcid), "%s", trid->trsvcid);
+	port->trid = trid;
 
-	switch (port->trid.adrfam) {
+	switch (trid->adrfam) {
 	case SPDK_NVMF_ADRFAM_IPV4:
 		family = AF_INET;
 		break;
@@ -2689,7 +2676,7 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 		family = AF_INET6;
 		break;
 	default:
-		SPDK_ERRLOG("Unhandled ADRFAM %d\n", port->trid.adrfam);
+		SPDK_ERRLOG("Unhandled ADRFAM %d\n", trid->adrfam);
 		free(port);
 		pthread_mutex_unlock(&rtransport->lock);
 		return -EINVAL;
@@ -2701,7 +2688,7 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = 0;
 
-	rc = getaddrinfo(port->trid.traddr, port->trid.trsvcid, &hints, &res);
+	rc = getaddrinfo(trid->traddr, trid->trsvcid, &hints, &res);
 	if (rc) {
 		SPDK_ERRLOG("getaddrinfo failed: %s (%d)\n", gai_strerror(rc), rc);
 		free(port);
@@ -2765,50 +2752,35 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 		       trid->traddr, trid->trsvcid);
 
 	TAILQ_INSERT_TAIL(&rtransport->ports, port, link);
-
-success:
-	port->ref++;
 	pthread_mutex_unlock(&rtransport->lock);
+
 	if (cb_fn != NULL) {
 		cb_fn(cb_arg, 0);
 	}
+
 	return 0;
 }
 
-static int
+static void
 spdk_nvmf_rdma_stop_listen(struct spdk_nvmf_transport *transport,
-			   const struct spdk_nvme_transport_id *_trid)
+			   const struct spdk_nvme_transport_id *trid)
 {
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_rdma_port *port, *tmp;
-	struct spdk_nvme_transport_id trid = {};
 
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
 
-	/* Selectively copy the trid. Things like NQN don't matter here - that
-	 * mapping is enforced elsewhere.
-	 */
-	spdk_nvme_trid_populate_transport(&trid, SPDK_NVME_TRANSPORT_RDMA);
-	trid.adrfam = _trid->adrfam;
-	snprintf(trid.traddr, sizeof(port->trid.traddr), "%s", _trid->traddr);
-	snprintf(trid.trsvcid, sizeof(port->trid.trsvcid), "%s", _trid->trsvcid);
-
 	pthread_mutex_lock(&rtransport->lock);
 	TAILQ_FOREACH_SAFE(port, &rtransport->ports, link, tmp) {
-		if (spdk_nvme_transport_id_compare(&port->trid, &trid) == 0) {
-			assert(port->ref > 0);
-			port->ref--;
-			if (port->ref == 0) {
-				TAILQ_REMOVE(&rtransport->ports, port, link);
-				rdma_destroy_id(port->id);
-				free(port);
-			}
+		if (spdk_nvme_transport_id_compare(port->trid, trid) == 0) {
+			TAILQ_REMOVE(&rtransport->ports, port, link);
+			rdma_destroy_id(port->id);
+			free(port);
 			break;
 		}
 	}
 
 	pthread_mutex_unlock(&rtransport->lock);
-	return 0;
 }
 
 static void
@@ -3005,33 +2977,29 @@ static bool
 nvmf_rdma_handle_cm_event_addr_change(struct spdk_nvmf_transport *transport,
 				      struct rdma_cm_event *event)
 {
-	struct spdk_nvme_transport_id		trid;
+	const struct spdk_nvme_transport_id	*trid;
 	struct spdk_nvmf_rdma_port		*port;
 	struct spdk_nvmf_rdma_transport		*rtransport;
-	uint32_t				ref, i;
 	bool					event_acked = false;
 
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
 	TAILQ_FOREACH(port, &rtransport->ports, link) {
 		if (port->id == event->id) {
-			SPDK_ERRLOG("ADDR_CHANGE: IP %s:%s migrated\n", port->trid.traddr, port->trid.trsvcid);
+			SPDK_ERRLOG("ADDR_CHANGE: IP %s:%s migrated\n", port->trid->traddr, port->trid->trsvcid);
 			rdma_ack_cm_event(event);
 			event_acked = true;
 			trid = port->trid;
-			ref = port->ref;
 			break;
 		}
 	}
+
 	if (event_acked) {
 		nvmf_rdma_disconnect_qpairs_on_port(rtransport, port);
 
-		for (i = 0; i < ref; i++) {
-			spdk_nvmf_rdma_stop_listen(transport, &trid);
-		}
-		for (i = 0; i < ref; i++) {
-			spdk_nvmf_rdma_listen(transport, &trid, NULL, NULL);
-		}
+		spdk_nvmf_rdma_stop_listen(transport, trid);
+		spdk_nvmf_rdma_listen(transport, trid, NULL, NULL);
 	}
+
 	return event_acked;
 }
 
@@ -3041,20 +3009,18 @@ nvmf_rdma_handle_cm_event_port_removal(struct spdk_nvmf_transport *transport,
 {
 	struct spdk_nvmf_rdma_port		*port;
 	struct spdk_nvmf_rdma_transport		*rtransport;
-	uint32_t				ref, i;
 
 	port = event->id->context;
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
-	ref = port->ref;
 
-	SPDK_NOTICELOG("Port %s:%s is being removed\n", port->trid.traddr, port->trid.trsvcid);
+	SPDK_NOTICELOG("Port %s:%s is being removed\n", port->trid->traddr, port->trid->trsvcid);
 
 	nvmf_rdma_disconnect_qpairs_on_port(rtransport, port);
 
 	rdma_ack_cm_event(event);
 
-	for (i = 0; i < ref; i++) {
-		spdk_nvmf_rdma_stop_listen(transport, &port->trid);
+	while (spdk_nvmf_transport_stop_listen(transport, port->trid) == 0) {
+		;
 	}
 }
 

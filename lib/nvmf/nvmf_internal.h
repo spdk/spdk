@@ -81,7 +81,7 @@ struct spdk_nvmf_host {
 };
 
 struct spdk_nvmf_subsystem_listener {
-	struct spdk_nvme_transport_id			trid;
+	struct spdk_nvme_transport_id			*trid;
 	struct spdk_nvmf_transport			*transport;
 	TAILQ_ENTRY(spdk_nvmf_subsystem_listener)	link;
 };
@@ -317,6 +317,9 @@ struct spdk_nvmf_ctrlr *spdk_nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem
 		uint16_t cntlid);
 struct spdk_nvmf_subsystem_listener *spdk_nvmf_subsystem_find_listener(
 	struct spdk_nvmf_subsystem *subsystem,
+	const struct spdk_nvme_transport_id *trid);
+struct spdk_nvmf_listener *spdk_nvmf_transport_find_listener(
+	struct spdk_nvmf_transport *transport,
 	const struct spdk_nvme_transport_id *trid);
 
 int spdk_nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr);
