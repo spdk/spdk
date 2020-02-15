@@ -195,8 +195,8 @@ static const struct spdk_json_object_decoder rpc_get_subsystem_decoders[] = {
 static void
 dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *subsystem)
 {
-	struct spdk_nvmf_host		*host;
-	struct spdk_nvmf_listener	*listener;
+	struct spdk_nvmf_host			*host;
+	struct spdk_nvmf_subsystem_listener	*listener;
 
 	spdk_json_write_object_begin(w);
 
@@ -215,7 +215,7 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 		const struct spdk_nvme_transport_id *trid;
 		const char *adrfam;
 
-		trid = spdk_nvmf_listener_get_trid(listener);
+		trid = spdk_nvmf_subsystem_listener_get_trid(listener);
 
 		spdk_json_write_object_begin(w);
 		adrfam = spdk_nvme_transport_id_adrfam_str(trid->adrfam);

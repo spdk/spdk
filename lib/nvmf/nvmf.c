@@ -366,7 +366,7 @@ spdk_nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 				      struct spdk_nvmf_subsystem *subsystem)
 {
 	struct spdk_nvmf_host *host;
-	struct spdk_nvmf_listener *listener;
+	struct spdk_nvmf_subsystem_listener *listener;
 	const struct spdk_nvme_transport_id *trid;
 	struct spdk_nvmf_ns *ns;
 	struct spdk_nvmf_ns_opts ns_opts;
@@ -402,7 +402,7 @@ spdk_nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 
 	for (listener = spdk_nvmf_subsystem_get_first_listener(subsystem); listener != NULL;
 	     listener = spdk_nvmf_subsystem_get_next_listener(subsystem, listener)) {
-		trid = spdk_nvmf_listener_get_trid(listener);
+		trid = spdk_nvmf_subsystem_listener_get_trid(listener);
 
 		adrfam = spdk_nvme_transport_id_adrfam_str(trid->adrfam);
 

@@ -60,7 +60,7 @@ struct spdk_nvmf_request;
 struct spdk_bdev;
 struct spdk_nvmf_request;
 struct spdk_nvmf_host;
-struct spdk_nvmf_listener;
+struct spdk_nvmf_subsystem_listener;
 struct spdk_nvmf_poll_group;
 struct spdk_json_write_ctx;
 struct spdk_nvmf_transport;
@@ -611,7 +611,7 @@ bool spdk_nvmf_subsystem_listener_allowed(struct spdk_nvmf_subsystem *subsystem,
  *
  * \return first allowed listen address in this subsystem, or NULL if none allowed.
  */
-struct spdk_nvmf_listener *spdk_nvmf_subsystem_get_first_listener(
+struct spdk_nvmf_subsystem_listener *spdk_nvmf_subsystem_get_first_listener(
 	struct spdk_nvmf_subsystem *subsystem);
 
 /**
@@ -623,9 +623,9 @@ struct spdk_nvmf_listener *spdk_nvmf_subsystem_get_first_listener(
  * \return next allowed listen address in this subsystem, or NULL if prev_listener
  * was the last address.
  */
-struct spdk_nvmf_listener *spdk_nvmf_subsystem_get_next_listener(
+struct spdk_nvmf_subsystem_listener *spdk_nvmf_subsystem_get_next_listener(
 	struct spdk_nvmf_subsystem *subsystem,
-	struct spdk_nvmf_listener *prev_listener);
+	struct spdk_nvmf_subsystem_listener *prev_listener);
 
 /**
  * Get a listen address' transport ID
@@ -634,8 +634,8 @@ struct spdk_nvmf_listener *spdk_nvmf_subsystem_get_next_listener(
  *
  * \return the transport ID for this listener.
  */
-const struct spdk_nvme_transport_id *spdk_nvmf_listener_get_trid(
-	struct spdk_nvmf_listener *listener);
+const struct spdk_nvme_transport_id *spdk_nvmf_subsystem_listener_get_trid(
+	struct spdk_nvmf_subsystem_listener *listener);
 
 /**
  * Set whether a subsystem should allow any listen address or only addresses in the allowed list.

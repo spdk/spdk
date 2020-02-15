@@ -80,10 +80,10 @@ struct spdk_nvmf_host {
 	TAILQ_ENTRY(spdk_nvmf_host)	link;
 };
 
-struct spdk_nvmf_listener {
-	struct spdk_nvme_transport_id	trid;
-	struct spdk_nvmf_transport	*transport;
-	TAILQ_ENTRY(spdk_nvmf_listener)	link;
+struct spdk_nvmf_subsystem_listener {
+	struct spdk_nvme_transport_id			trid;
+	struct spdk_nvmf_transport			*transport;
+	TAILQ_ENTRY(spdk_nvmf_subsystem_listener)	link;
 };
 
 /* Maximum number of registrants supported per namespace */
@@ -239,7 +239,7 @@ struct spdk_nvmf_subsystem {
 	enum spdk_nvmf_subtype subtype;
 	uint16_t next_cntlid;
 	bool allow_any_host;
-	bool allow_any_listener ;
+	bool allow_any_listener;
 
 	struct spdk_nvmf_tgt			*tgt;
 
@@ -252,11 +252,9 @@ struct spdk_nvmf_subsystem {
 	/* This is the maximum allowed nsid to a subsystem */
 	uint32_t				max_allowed_nsid;
 
-	TAILQ_HEAD(, spdk_nvmf_ctrlr)		ctrlrs;
-
-	TAILQ_HEAD(, spdk_nvmf_host)		hosts;
-
-	TAILQ_HEAD(, spdk_nvmf_listener)	listeners;
+	TAILQ_HEAD(, spdk_nvmf_ctrlr)			ctrlrs;
+	TAILQ_HEAD(, spdk_nvmf_host)			hosts;
+	TAILQ_HEAD(, spdk_nvmf_subsystem_listener)	listeners;
 
 	TAILQ_ENTRY(spdk_nvmf_subsystem)	entries;
 };
@@ -317,8 +315,9 @@ void spdk_nvmf_subsystem_remove_all_listeners(struct spdk_nvmf_subsystem *subsys
 		bool stop);
 struct spdk_nvmf_ctrlr *spdk_nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 		uint16_t cntlid);
-struct spdk_nvmf_listener *spdk_nvmf_subsystem_find_listener(struct spdk_nvmf_subsystem *subsystem,
-		const struct spdk_nvme_transport_id *trid);
+struct spdk_nvmf_subsystem_listener *spdk_nvmf_subsystem_find_listener(
+	struct spdk_nvmf_subsystem *subsystem,
+	const struct spdk_nvme_transport_id *trid);
 
 int spdk_nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr);
 void spdk_nvmf_ctrlr_async_event_reservation_notification(struct spdk_nvmf_ctrlr *ctrlr);
