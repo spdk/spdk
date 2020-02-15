@@ -602,7 +602,7 @@ int spdk_nvmf_subsystem_remove_listener(struct spdk_nvmf_subsystem *subsystem,
  * \return true if allowed, or false if not.
  */
 bool spdk_nvmf_subsystem_listener_allowed(struct spdk_nvmf_subsystem *subsystem,
-		struct spdk_nvme_transport_id *trid);
+		const struct spdk_nvme_transport_id *trid);
 
 /**
  * Get the first allowed listen address in the subsystem.

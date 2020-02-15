@@ -81,7 +81,7 @@ DEFINE_STUB(spdk_nvmf_tgt_find_subsystem,
 
 DEFINE_STUB(spdk_nvmf_subsystem_listener_allowed,
 	    bool,
-	    (struct spdk_nvmf_subsystem *subsystem, struct spdk_nvme_transport_id *trid),
+	    (struct spdk_nvmf_subsystem *subsystem, const struct spdk_nvme_transport_id *trid),
 	    true);
 
 DEFINE_STUB_V(spdk_nvmf_get_discovery_log_page,

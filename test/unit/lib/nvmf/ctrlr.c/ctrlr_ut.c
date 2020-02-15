@@ -116,7 +116,7 @@ DEFINE_STUB(spdk_nvmf_qpair_get_listen_trid,
 
 DEFINE_STUB(spdk_nvmf_subsystem_listener_allowed,
 	    bool,
-	    (struct spdk_nvmf_subsystem *subsystem, struct spdk_nvme_transport_id *trid),
+	    (struct spdk_nvmf_subsystem *subsystem, const struct spdk_nvme_transport_id *trid),
 	    true);
 
 DEFINE_STUB(spdk_nvmf_bdev_ctrlr_read_cmd,
