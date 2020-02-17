@@ -7799,82 +7799,70 @@ int main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("blob", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "blob_init", blob_init) == NULL ||
-		CU_add_test(suite, "blob_open", blob_open) == NULL ||
-		CU_add_test(suite, "blob_create", blob_create) == NULL ||
-		CU_add_test(suite, "blob_create_internal", blob_create_internal) == NULL ||
-		CU_add_test(suite, "blob_thin_provision", blob_thin_provision) == NULL ||
-		CU_add_test(suite, "blob_snapshot", blob_snapshot) == NULL ||
-		CU_add_test(suite, "blob_clone", blob_clone) == NULL ||
-		CU_add_test(suite, "blob_inflate", blob_inflate) == NULL ||
-		CU_add_test(suite, "blob_delete", blob_delete) == NULL ||
-		CU_add_test(suite, "blob_resize", blob_resize) == NULL ||
-		CU_add_test(suite, "blob_read_only", blob_read_only) == NULL ||
-		CU_add_test(suite, "channel_ops", channel_ops) == NULL ||
-		CU_add_test(suite, "blob_super", blob_super) == NULL ||
-		CU_add_test(suite, "blob_write", blob_write) == NULL ||
-		CU_add_test(suite, "blob_read", blob_read) == NULL ||
-		CU_add_test(suite, "blob_rw_verify", blob_rw_verify) == NULL ||
-		CU_add_test(suite, "blob_rw_verify_iov", blob_rw_verify_iov) == NULL ||
-		CU_add_test(suite, "blob_rw_verify_iov_nomem", blob_rw_verify_iov_nomem) == NULL ||
-		CU_add_test(suite, "blob_rw_iov_read_only", blob_rw_iov_read_only) == NULL ||
-		CU_add_test(suite, "blob_unmap", blob_unmap) == NULL ||
-		CU_add_test(suite, "blob_iter", blob_iter) == NULL ||
-		CU_add_test(suite, "blob_xattr", blob_xattr) == NULL ||
-		CU_add_test(suite, "bs_load", bs_load) == NULL ||
-		CU_add_test(suite, "bs_load_pending_removal", bs_load_pending_removal) == NULL ||
-		CU_add_test(suite, "bs_load_custom_cluster_size", bs_load_custom_cluster_size) == NULL ||
-		CU_add_test(suite, "bs_unload", bs_unload) == NULL ||
-		CU_add_test(suite, "bs_cluster_sz", bs_cluster_sz) == NULL ||
-		CU_add_test(suite, "bs_usable_clusters", bs_usable_clusters) == NULL ||
-		CU_add_test(suite, "bs_resize_md", bs_resize_md) == NULL ||
-		CU_add_test(suite, "bs_destroy", bs_destroy) == NULL ||
-		CU_add_test(suite, "bs_type", bs_type) == NULL ||
-		CU_add_test(suite, "bs_super_block", bs_super_block) == NULL ||
-		CU_add_test(suite, "blob_serialize", blob_serialize) == NULL ||
-		CU_add_test(suite, "blob_crc", blob_crc) == NULL ||
-		CU_add_test(suite, "super_block_crc", super_block_crc) == NULL ||
-		CU_add_test(suite, "blob_dirty_shutdown", blob_dirty_shutdown) == NULL ||
-		CU_add_test(suite, "blob_flags", blob_flags) == NULL ||
-		CU_add_test(suite, "bs_version", bs_version) == NULL ||
-		CU_add_test(suite, "blob_set_xattrs", blob_set_xattrs) == NULL ||
-		CU_add_test(suite, "blob_thin_prov_alloc", blob_thin_prov_alloc) == NULL ||
-		CU_add_test(suite, "blob_insert_cluster_msg", blob_insert_cluster_msg) == NULL ||
-		CU_add_test(suite, "blob_thin_prov_rw", blob_thin_prov_rw) == NULL ||
-		CU_add_test(suite, "blob_thin_prov_rle", blob_thin_prov_rle) == NULL ||
-		CU_add_test(suite, "blob_thin_prov_rw_iov", blob_thin_prov_rw_iov) == NULL ||
-		CU_add_test(suite, "bs_load_iter", bs_load_iter) == NULL ||
-		CU_add_test(suite, "blob_snapshot_rw", blob_snapshot_rw) == NULL ||
-		CU_add_test(suite, "blob_snapshot_rw_iov", blob_snapshot_rw_iov) == NULL ||
-		CU_add_test(suite, "blob_relations", blob_relations) == NULL ||
-		CU_add_test(suite, "blob_relations2", blob_relations2) == NULL ||
-		CU_add_test(suite, "blob_delete_snapshot_power_failure",
-			    blob_delete_snapshot_power_failure) == NULL ||
-		CU_add_test(suite, "blob_create_snapshot_power_failure",
-			    blob_create_snapshot_power_failure) == NULL ||
-		CU_add_test(suite, "blob_inflate_rw", blob_inflate_rw) == NULL ||
-		CU_add_test(suite, "blob_snapshot_freeze_io", blob_snapshot_freeze_io) == NULL ||
-		CU_add_test(suite, "blob_operation_split_rw", blob_operation_split_rw) == NULL ||
-		CU_add_test(suite, "blob_operation_split_rw_iov", blob_operation_split_rw_iov) == NULL ||
-		CU_add_test(suite, "blob_io_unit", blob_io_unit) == NULL ||
-		CU_add_test(suite, "blob_io_unit_compatiblity", blob_io_unit_compatiblity) == NULL ||
-		CU_add_test(suite, "blob_simultaneous_operations", blob_simultaneous_operations) == NULL ||
-		CU_add_test(suite, "blob_persist", blob_persist) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "blob_init", blob_init);
+	CU_add_test(suite, "blob_open", blob_open);
+	CU_add_test(suite, "blob_create", blob_create);
+	CU_add_test(suite, "blob_create_internal", blob_create_internal);
+	CU_add_test(suite, "blob_thin_provision", blob_thin_provision);
+	CU_add_test(suite, "blob_snapshot", blob_snapshot);
+	CU_add_test(suite, "blob_clone", blob_clone);
+	CU_add_test(suite, "blob_inflate", blob_inflate);
+	CU_add_test(suite, "blob_delete", blob_delete);
+	CU_add_test(suite, "blob_resize", blob_resize);
+	CU_add_test(suite, "blob_read_only", blob_read_only);
+	CU_add_test(suite, "channel_ops", channel_ops);
+	CU_add_test(suite, "blob_super", blob_super);
+	CU_add_test(suite, "blob_write", blob_write);
+	CU_add_test(suite, "blob_read", blob_read);
+	CU_add_test(suite, "blob_rw_verify", blob_rw_verify);
+	CU_add_test(suite, "blob_rw_verify_iov", blob_rw_verify_iov);
+	CU_add_test(suite, "blob_rw_verify_iov_nomem", blob_rw_verify_iov_nomem);
+	CU_add_test(suite, "blob_rw_iov_read_only", blob_rw_iov_read_only);
+	CU_add_test(suite, "blob_unmap", blob_unmap);
+	CU_add_test(suite, "blob_iter", blob_iter);
+	CU_add_test(suite, "blob_xattr", blob_xattr);
+	CU_add_test(suite, "bs_load", bs_load);
+	CU_add_test(suite, "bs_load_pending_removal", bs_load_pending_removal);
+	CU_add_test(suite, "bs_load_custom_cluster_size", bs_load_custom_cluster_size);
+	CU_add_test(suite, "bs_unload", bs_unload);
+	CU_add_test(suite, "bs_cluster_sz", bs_cluster_sz);
+	CU_add_test(suite, "bs_usable_clusters", bs_usable_clusters);
+	CU_add_test(suite, "bs_resize_md", bs_resize_md);
+	CU_add_test(suite, "bs_destroy", bs_destroy);
+	CU_add_test(suite, "bs_type", bs_type);
+	CU_add_test(suite, "bs_super_block", bs_super_block);
+	CU_add_test(suite, "blob_serialize", blob_serialize);
+	CU_add_test(suite, "blob_crc", blob_crc);
+	CU_add_test(suite, "super_block_crc", super_block_crc);
+	CU_add_test(suite, "blob_dirty_shutdown", blob_dirty_shutdown);
+	CU_add_test(suite, "blob_flags", blob_flags);
+	CU_add_test(suite, "bs_version", bs_version);
+	CU_add_test(suite, "blob_set_xattrs", blob_set_xattrs);
+	CU_add_test(suite, "blob_thin_prov_alloc", blob_thin_prov_alloc);
+	CU_add_test(suite, "blob_insert_cluster_msg", blob_insert_cluster_msg);
+	CU_add_test(suite, "blob_thin_prov_rw", blob_thin_prov_rw);
+	CU_add_test(suite, "blob_thin_prov_rle", blob_thin_prov_rle);
+	CU_add_test(suite, "blob_thin_prov_rw_iov", blob_thin_prov_rw_iov);
+	CU_add_test(suite, "bs_load_iter", bs_load_iter);
+	CU_add_test(suite, "blob_snapshot_rw", blob_snapshot_rw);
+	CU_add_test(suite, "blob_snapshot_rw_iov", blob_snapshot_rw_iov);
+	CU_add_test(suite, "blob_relations", blob_relations);
+	CU_add_test(suite, "blob_relations2", blob_relations2);
+	CU_add_test(suite, "blob_delete_snapshot_power_failure", blob_delete_snapshot_power_failure);
+	CU_add_test(suite, "blob_create_snapshot_power_failure", blob_create_snapshot_power_failure);
+	CU_add_test(suite, "blob_inflate_rw", blob_inflate_rw);
+	CU_add_test(suite, "blob_snapshot_freeze_io", blob_snapshot_freeze_io);
+	CU_add_test(suite, "blob_operation_split_rw", blob_operation_split_rw);
+	CU_add_test(suite, "blob_operation_split_rw_iov", blob_operation_split_rw_iov);
+	CU_add_test(suite, "blob_io_unit", blob_io_unit);
+	CU_add_test(suite, "blob_io_unit_compatiblity", blob_io_unit_compatiblity);
+	CU_add_test(suite, "blob_simultaneous_operations", blob_simultaneous_operations);
+	CU_add_test(suite, "blob_persist", blob_persist);
 
 	allocate_threads(2);
 	set_thread(0);
