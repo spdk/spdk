@@ -97,6 +97,11 @@ function unittest_scsi {
 	$valgrind $testdir/lib/scsi/scsi_pr.c/scsi_pr_ut
 }
 
+function unittest_sock {
+        $valgrind $testdir/lib/sock/sock.c/sock_ut
+        $valgrind $testdir/lib/sock/posix.c/posix_ut
+}
+
 function unittest_util {
 	$valgrind $testdir/lib/util/base64.c/base64_ut
 	$valgrind $testdir/lib/util/bit_array.c/bit_array_ut
@@ -195,7 +200,7 @@ if grep -q '#define SPDK_CONFIG_RDMA 1' $rootdir/include/spdk/config.h; then
 fi
 
 run_test "unittest_scsi" unittest_scsi
-run_test "unittest_sock" $valgrind $testdir/lib/sock/sock.c/sock_ut
+run_test "unittest_sock" unittest_sock
 run_test "unittest_thread" $valgrind $testdir/lib/thread/thread.c/thread_ut
 run_test "unittest_util" unittest_util
 if [ $(uname -s) = Linux ]; then
