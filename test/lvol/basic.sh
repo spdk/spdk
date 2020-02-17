@@ -4,6 +4,7 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/lvol/common.sh
+source "$rootdir/test/bdev/nbd_common.sh"
 
 # create empty lvol store and verify its parameters
 function test_construct_lvs() {
@@ -162,6 +163,120 @@ function test_construct_lvs_clear_methods() {
 		rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid" && false
 	done
 	rpc_cmd bdev_malloc_delete "$malloc_name"
+	check_leftover_devices
+}
+
+# Test for clear_method equals to none
+function test_construct_lvol_fio_clear_method_none() {
+	local nbd_name=/dev/nbd0
+	local clear_method=none
+
+	local lvstore_name=lvs_test lvstore_uuid
+	local lvol_name=lvol_test lvol_uuid
+	local malloc_dev
+
+	malloc_dev=$(rpc_cmd bdev_malloc_create 256 "$MALLOC_BS")
+	lvstore_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_dev" "$lvstore_name")
+
+	get_lvs_jq bdev_lvol_get_lvstores -u "$lvstore_uuid"
+
+	lvol_uuid=$(rpc_cmd bdev_lvol_create \
+		    -c "$clear_method" \
+		    -u "$lvstore_uuid" \
+		    "$lvol_name" \
+		    $(( jq_out["cluster_size"] / 1024**2 )))
+
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid" "$nbd_name"
+	run_fio_test "$nbd_name" 0 "${jq_out["cluster_size"]}" write 0xdd
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" "$nbd_name"
+
+	rpc_cmd bdev_lvol_delete "$lvol_uuid"
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvstore_uuid"
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$malloc_dev" "$nbd_name"
+
+	local metadata_pages
+	local last_metadata_lba
+	local offset_metadata_end
+	local last_cluster_of_metadata
+	local offset
+	local size_metadata_end
+
+	metadata_pages=$(calc "1 + ${jq_out["total_data_clusters"]} + ceil(5 + ceil(${jq_out["total_data_clusters"]} / 8) / 4096) * 3")
+
+	last_metadata_lba=$(( metadata_pages * 4096 / MALLOC_BS ))
+	offset_metadata_end=$(( last_metadata_lba * MALLOC_BS ))
+	last_cluster_of_metadata=$(calc "ceil($metadata_pages / ${jq_out["cluster_size"]} / 4096)")
+	last_cluster_of_metadata=$(( last_cluster_of_metadata == 0 ? 1 : last_cluster_of_metadata ))
+	offset=$(( last_cluster_of_metadata * jq_out["cluster_size"] ))
+	size_metadata_end=$(( offset - offset_metadata_end ))
+
+	# Check if data on area between end of metadata and first cluster of lvol bdev remained unchaged.
+	run_fio_test "$nbd_name" "$offset_metadata_end" "$size_metadata_end" "read" 0x00
+	# Check if data on first lvol bdevs remains unchanged.
+	run_fio_test "$nbd_name" "$offset" "${jq_out["cluster_size"]}" "read" 0xdd
+
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" "$nbd_name"
+	rpc_cmd bdev_malloc_delete "$malloc_dev"
+
+	check_leftover_devices
+}
+
+# Test for clear_method equals to unmap
+function test_construct_lvol_fio_clear_method_unmap() {
+	local nbd_name=/dev/nbd0
+	local clear_method=unmap
+
+	local lvstore_name=lvs_test lvstore_uuid
+	local lvol_name=lvol_test lvol_uuid
+	local malloc_dev
+
+	malloc_dev=$(rpc_cmd bdev_malloc_create 256 "$MALLOC_BS")
+
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$malloc_dev" "$nbd_name"
+	run_fio_test "$nbd_name" 0 $(( 256 * 1024**2 )) write 0xdd
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" "$nbd_name"
+
+	lvstore_uuid=$(rpc_cmd bdev_lvol_create_lvstore --clear-method none "$malloc_dev" "$lvstore_name")
+	get_lvs_jq bdev_lvol_get_lvstores -u "$lvstore_uuid"
+
+	lvol_uuid=$(rpc_cmd bdev_lvol_create \
+		    -c "$clear_method" \
+		    -u "$lvstore_uuid" \
+		    "$lvol_name" \
+		    $(( jq_out["cluster_size"] / 1024**2 )))
+
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid" "$nbd_name"
+	run_fio_test "$nbd_name" 0 "${jq_out["cluster_size"]}" read 0xdd
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" "$nbd_name"
+
+	rpc_cmd bdev_lvol_delete "$lvol_uuid"
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvstore_uuid"
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$malloc_dev" "$nbd_name"
+
+	local metadata_pages
+	local last_metadata_lba
+	local offset_metadata_end
+	local last_cluster_of_metadata
+	local offset
+	local size_metadata_end
+
+	metadata_pages=$(calc "1 + ${jq_out["total_data_clusters"]} + ceil(5 + ceil(${jq_out["total_data_clusters"]} / 8) / 4096) * 3")
+
+	last_metadata_lba=$(( metadata_pages * 4096 / MALLOC_BS ))
+	offset_metadata_end=$(( last_metadata_lba * MALLOC_BS ))
+	last_cluster_of_metadata=$(calc "ceil($metadata_pages / ${jq_out["cluster_size"]} / 4096)")
+	last_cluster_of_metadata=$(( last_cluster_of_metadata == 0 ? 1 : last_cluster_of_metadata ))
+	offset=$(( last_cluster_of_metadata * jq_out["cluster_size"] ))
+	size_metadata_end=$(( offset - offset_metadata_end ))
+
+	# Check if data on area between end of metadata and first cluster of lvol bdev remained unchaged.
+	run_fio_test "$nbd_name" "$offset_metadata_end" "$size_metadata_end" "read" 0xdd
+	# Check if data on lvol bdev was zeroed. Malloc bdev should zero any data that is unmapped.
+	run_fio_test "$nbd_name" "$offset" "${jq_out["cluster_size"]}" "read" 0x00
+
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" "$nbd_name"
+	rpc_cmd bdev_malloc_delete "$malloc_dev"
+
 	check_leftover_devices
 }
 
@@ -436,6 +551,8 @@ run_test "test_construct_two_lvs_on_the_same_bdev" test_construct_two_lvs_on_the
 run_test "test_construct_lvs_conflict_alias" test_construct_lvs_conflict_alias
 run_test "test_construct_lvs_different_cluster_size" test_construct_lvs_different_cluster_size
 run_test "test_construct_lvs_clear_methods" test_construct_lvs_clear_methods
+run_test "test_construct_lvol_fio_clear_method_none" test_construct_lvol_fio_clear_method_none
+run_test "test_construct_lvol_fio_clear_method_unmap" test_construct_lvol_fio_clear_method_unmap
 run_test "test_construct_lvol" test_construct_lvol
 run_test "test_construct_multi_lvols" test_construct_multi_lvols
 run_test "test_construct_lvols_conflict_alias" test_construct_lvols_conflict_alias

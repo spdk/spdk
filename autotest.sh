@@ -239,8 +239,6 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	fi
 
 	if [ $SPDK_TEST_LVOL -eq 1 ]; then
-		#TODO: rewrite lvol tests in bash.
-		run_test "lvol" ./test/lvol/lvol.sh --test-cases=all
 		run_test "lvol2" ./test/lvol/lvol2.sh
 		run_test "blob_io_wait" ./test/blobstore/blob_io_wait/blob_io_wait.sh
 	fi
