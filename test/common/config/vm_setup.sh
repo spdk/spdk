@@ -441,7 +441,10 @@ if $INSTALL; then
 
     if [ $PACKAGEMNG == 'dnf' ]; then
         if echo $CONF | grep -q tsocks; then
-            sudo dnf install -y tsocks
+            # currently, tsocks package is retired in fedora 31, so don't exit in case
+            # installation failed
+            # FIXME: Review when fedora starts to successfully build this package again.
+            sudo dnf install -y tsocks || echo "Installation of the tsocks package failed, proxy may not be available"
         fi
 
         sudo dnf install -y \
