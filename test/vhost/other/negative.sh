@@ -180,6 +180,18 @@ if $rpc_py vhost_create_blk_controller . Malloc0; then
 	error "Creating block controller with incorrect name succeeded, but it shouldn't"
 fi
 
+notice "Trying to create block controller with nonexistent bdev"
+if $rpc_py vhost_create_blk_controller blk_ctrl Malloc3; then
+	error "Creating block controller with nonexistent bdev succeeded, but shouldn't"
+fi
+
+notice "Trying to create block controller with claimed bdev"
+$rpc_py bdev_lvol_create_lvstore Malloc0 lvs
+if $rpc_py vhost_create_blk_controller blk_ctrl Malloc0; then
+	error "Creating block controller with claimed bdev succeeded, but shouldn't"
+fi
+$rpc_py bdev_lvol_delete_lvstore -l lvs
+
 notice "Testing done -> shutting down"
 notice "killing vhost app"
 vhost_kill 0
