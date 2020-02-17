@@ -341,6 +341,16 @@ void spdk_nvmf_request_exec_fabrics(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_free(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_complete(struct spdk_nvmf_request *req);
 
+/**
+ * Get the NVMe-oF subsystem associated with this controller.
+ *
+ * \param ctrlr The NVMe-oF controller
+ *
+ * \return The NVMe-oF subsystem
+ */
+struct spdk_nvmf_subsystem *
+spdk_nvmf_ctrlr_get_subsystem(struct spdk_nvmf_ctrlr *ctrlr);
+
 static inline enum spdk_nvme_data_transfer
 spdk_nvmf_req_get_xfer(struct spdk_nvmf_request *req) {
 	enum spdk_nvme_data_transfer xfer;

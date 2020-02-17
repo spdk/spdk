@@ -3018,3 +3018,8 @@ void spdk_nvmf_request_get_data(struct spdk_nvmf_request *req, void **data, uint
 	*data = req->data;
 	*length = req->length;
 }
+
+struct spdk_nvmf_subsystem *spdk_nvmf_ctrlr_get_subsystem(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	return ctrlr->subsys;
+}
