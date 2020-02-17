@@ -817,6 +817,11 @@ bdev_ocssd_chunk_notification_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 		return;
 	}
 
+	/* The namespace could have been depopulated in the meantime */
+	if (!nvme_ns->populated) {
+		return;
+	}
+
 	for (chunk_id = 0; chunk_id < CHUNK_NOTIFICATION_ENTRY_COUNT; ++chunk_id) {
 		chunk_entry = &ocssd_ns->chunk[chunk_id];
 		if (chunk_entry->nc <= ocssd_ns->chunk_notify_count) {
@@ -884,13 +889,18 @@ static int
 bdev_ocssd_poll_mm(void *ctx)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = ctx;
+	struct nvme_bdev_ns *nvme_ns;
 	struct bdev_ocssd_ns *ocssd_ns;
 	uint32_t nsid;
 	int rc;
 
 	for (nsid = 0; nsid < nvme_bdev_ctrlr->num_ns; ++nsid) {
-		ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_bdev_ctrlr->namespaces[nsid]);
+		nvme_ns = nvme_bdev_ctrlr->namespaces[nsid];
+		if (nvme_ns == NULL || !nvme_ns->populated) {
+			continue;
+		}
 
+		ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ns);
 		if (ocssd_ns->chunk_notify_pending) {
 			ocssd_ns->chunk_notify_pending = false;
 
@@ -900,7 +910,7 @@ bdev_ocssd_poll_mm(void *ctx)
 							      sizeof(ocssd_ns->chunk[0]) *
 							      CHUNK_NOTIFICATION_ENTRY_COUNT,
 							      0, bdev_ocssd_chunk_notification_cb,
-							      nvme_bdev_ctrlr->namespaces[nsid]);
+							      nvme_ns);
 			if (spdk_unlikely(rc != 0)) {
 				SPDK_ERRLOG("Failed to get chunk notification log page: %s\n",
 					    spdk_strerror(-rc));
