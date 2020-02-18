@@ -1,7 +1,8 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-require 'open3' def checkboxtype(distro)
+require 'open3'
+def checkboxtype(distro)
   localboxes, stderr, status = Open3.capture3("vagrant box list")
   if localboxes.include? "spdk/"+distro
     return "spdk/"+distro
