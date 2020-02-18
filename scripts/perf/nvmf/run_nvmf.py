@@ -13,6 +13,7 @@ import time
 import uuid
 import rpc
 import rpc.client
+import pandas as pd
 from common import *
 
 
@@ -193,6 +194,11 @@ class Target(Server):
         time.sleep(self.pcm_delay)
         subprocess.run("%s/pcm.x %s -i=%s -csv=%s/%s" % (self.pcm_dir, self.pcm_interval, self.pcm_count,
                        results_dir, pcm_file_name), shell=True, check=True)
+        df = pd.read_csv(os.path.join(results_dir, pcm_file_name), header=[0, 1])
+        df = df.rename(columns=lambda x: re.sub(r'Unnamed:[\w\s]*$', '', x))
+        skt = df.loc[:, df.columns.get_level_values(1).isin({'UPI0', 'UPI1', 'UPI2'})]
+        skt_pcm_file_name = "_".join(["skt", pcm_file_name])
+        skt.to_csv(os.path.join(results_dir, skt_pcm_file_name), index=False)
 
 
 class Initiator(Server):
