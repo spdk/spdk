@@ -1139,12 +1139,10 @@ static void
 blob_write(void)
 {
 	struct spdk_blob_store *bs = g_bs;
-	struct spdk_blob *blob;
+	struct spdk_blob *blob = g_blob;
 	struct spdk_io_channel *channel;
 	uint64_t pages_per_cluster;
 	uint8_t payload[10 * 4096];
-
-	blob = ut_blob_create_and_open(bs, NULL);
 
 	pages_per_cluster = spdk_bs_get_cluster_size(bs) / spdk_bs_get_page_size(bs);
 
@@ -1187,15 +1185,13 @@ blob_write(void)
 
 	spdk_bs_free_io_channel(channel);
 	poll_threads();
-
-	ut_blob_close_and_delete(bs, blob);
 }
 
 static void
 blob_read(void)
 {
 	struct spdk_blob_store *bs = g_bs;
-	struct spdk_blob *blob;
+	struct spdk_blob *blob = g_blob;
 	struct spdk_io_channel *channel;
 	uint64_t pages_per_cluster;
 	uint8_t payload[10 * 4096];
@@ -1204,8 +1200,6 @@ blob_read(void)
 
 	channel = spdk_bs_alloc_io_channel(bs);
 	CU_ASSERT(channel != NULL);
-
-	blob = ut_blob_create_and_open(bs, NULL);
 
 	/* Read from a blob with 0 size */
 	spdk_blob_io_read(blob, channel, payload, 0, 1, blob_op_complete, NULL);
@@ -1243,23 +1237,19 @@ blob_read(void)
 
 	spdk_bs_free_io_channel(channel);
 	poll_threads();
-
-	ut_blob_close_and_delete(bs, blob);
 }
 
 static void
 blob_rw_verify(void)
 {
 	struct spdk_blob_store *bs = g_bs;
-	struct spdk_blob *blob;
+	struct spdk_blob *blob = g_blob;
 	struct spdk_io_channel *channel;
 	uint8_t payload_read[10 * 4096];
 	uint8_t payload_write[10 * 4096];
 
 	channel = spdk_bs_alloc_io_channel(bs);
 	CU_ASSERT(channel != NULL);
-
-	blob = ut_blob_create_and_open(bs, NULL);
 
 	spdk_blob_resize(blob, 32, blob_op_complete, NULL);
 	poll_threads();
@@ -1278,8 +1268,6 @@ blob_rw_verify(void)
 
 	spdk_bs_free_io_channel(channel);
 	poll_threads();
-
-	ut_blob_close_and_delete(bs, blob);
 }
 
 static void
@@ -1372,7 +1360,7 @@ static void
 blob_rw_verify_iov_nomem(void)
 {
 	struct spdk_blob_store *bs = g_bs;
-	struct spdk_blob *blob;
+	struct spdk_blob *blob = g_blob;
 	struct spdk_io_channel *channel;
 	uint8_t payload_write[10 * 4096];
 	struct iovec iov_write[3];
@@ -1380,8 +1368,6 @@ blob_rw_verify_iov_nomem(void)
 
 	channel = spdk_bs_alloc_io_channel(bs);
 	CU_ASSERT(channel != NULL);
-
-	blob = ut_blob_create_and_open(bs, NULL);
 
 	spdk_blob_resize(blob, 2, blob_op_complete, NULL);
 	poll_threads();
@@ -1407,15 +1393,13 @@ blob_rw_verify_iov_nomem(void)
 
 	spdk_bs_free_io_channel(channel);
 	poll_threads();
-
-	ut_blob_close_and_delete(bs, blob);
 }
 
 static void
 blob_rw_iov_read_only(void)
 {
 	struct spdk_blob_store *bs = g_bs;
-	struct spdk_blob *blob;
+	struct spdk_blob *blob = g_blob;
 	struct spdk_io_channel *channel;
 	uint8_t payload_read[4096];
 	uint8_t payload_write[4096];
@@ -1424,8 +1408,6 @@ blob_rw_iov_read_only(void)
 
 	channel = spdk_bs_alloc_io_channel(bs);
 	CU_ASSERT(channel != NULL);
-
-	blob = ut_blob_create_and_open(bs, NULL);
 
 	spdk_blob_resize(blob, 2, blob_op_complete, NULL);
 	poll_threads();
@@ -1448,8 +1430,6 @@ blob_rw_iov_read_only(void)
 
 	spdk_bs_free_io_channel(channel);
 	poll_threads();
-
-	ut_blob_close_and_delete(bs, blob);
 }
 
 static void
@@ -1920,17 +1900,14 @@ static void
 blob_xattr(void)
 {
 	struct spdk_blob_store *bs = g_bs;
-	struct spdk_blob *blob;
-	spdk_blob_id blobid;
+	struct spdk_blob *blob = g_blob;
+	spdk_blob_id blobid = spdk_blob_get_id(blob);
 	uint64_t length;
 	int rc;
 	const char *name1, *name2;
 	const void *value;
 	size_t value_len;
 	struct spdk_xattr_names *names;
-
-	blob = ut_blob_create_and_open(bs, NULL);
-	blobid = spdk_blob_get_id(blob);
 
 	/* Test that set_xattr fails if md_ro flag is set. */
 	blob->md_ro = true;
@@ -2029,8 +2006,6 @@ blob_xattr(void)
 	CU_ASSERT(rc == 0);
 
 	CU_ASSERT((blob->invalid_flags & SPDK_BLOB_INTERNAL_XATTR) == 0);
-
-	ut_blob_close_and_delete(bs, blob);
 }
 
 static void
@@ -2964,7 +2939,7 @@ blob_dirty_shutdown(void)
 	int index;
 	struct spdk_blob_store *bs = g_bs;
 	spdk_blob_id blobid1, blobid2, blobid3;
-	struct spdk_blob *blob;
+	struct spdk_blob *blob = g_blob;
 	uint64_t length;
 	uint64_t free_clusters;
 	const void *value;
@@ -2974,7 +2949,6 @@ blob_dirty_shutdown(void)
 	struct spdk_blob_opts blob_opts;
 
 	/* Create first blob */
-	blob = ut_blob_create_and_open(bs, NULL);
 	blobid1 = spdk_blob_get_id(blob);
 
 	/* Set some xattrs */
@@ -3221,8 +3195,6 @@ blob_dirty_shutdown(void)
 	blob = g_blob;
 
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
-
-	ut_blob_close_and_delete(bs, blob);
 }
 
 static void
@@ -6478,9 +6450,29 @@ ut_blob_close_and_delete(struct spdk_blob_store *bs, struct spdk_blob *blob)
 	g_bserrno = -1;
 }
 
+static void
+suite_blob_setup(void)
+{
+	suite_bs_setup();
+	CU_ASSERT(g_bs != NULL);
+
+	g_blob = ut_blob_create_and_open(g_bs, NULL);
+	CU_ASSERT(g_blob != NULL);
+}
+
+static void
+suite_blob_cleanup(void)
+{
+	ut_blob_close_and_delete(g_bs, g_blob);
+	CU_ASSERT(g_blob == NULL);
+
+	suite_bs_cleanup();
+	CU_ASSERT(g_bs == NULL);
+}
+
 int main(int argc, char **argv)
 {
-	CU_pSuite	suite, suite_bs;
+	CU_pSuite	suite, suite_bs, suite_blob;
 	unsigned int	num_failures;
 
 	CU_set_error_action(CUEA_ABORT);
@@ -6489,6 +6481,8 @@ int main(int argc, char **argv)
 	suite = CU_add_suite("blob", NULL, NULL);
 	suite_bs = CU_add_suite_with_setup_and_teardown("blob_bs", NULL, NULL,
 			suite_bs_setup, suite_bs_cleanup);
+	suite_blob = CU_add_suite_with_setup_and_teardown("blob_blob", NULL, NULL,
+			suite_blob_setup, suite_blob_cleanup);
 
 	CU_ADD_TEST(suite, blob_init);
 	CU_ADD_TEST(suite_bs, blob_open);
@@ -6503,15 +6497,15 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, blob_read_only);
 	CU_ADD_TEST(suite_bs, channel_ops);
 	CU_ADD_TEST(suite_bs, blob_super);
-	CU_ADD_TEST(suite_bs, blob_write);
-	CU_ADD_TEST(suite_bs, blob_read);
-	CU_ADD_TEST(suite_bs, blob_rw_verify);
+	CU_ADD_TEST(suite_blob, blob_write);
+	CU_ADD_TEST(suite_blob, blob_read);
+	CU_ADD_TEST(suite_blob, blob_rw_verify);
 	CU_ADD_TEST(suite_bs, blob_rw_verify_iov);
-	CU_ADD_TEST(suite_bs, blob_rw_verify_iov_nomem);
-	CU_ADD_TEST(suite_bs, blob_rw_iov_read_only);
+	CU_ADD_TEST(suite_blob, blob_rw_verify_iov_nomem);
+	CU_ADD_TEST(suite_blob, blob_rw_iov_read_only);
 	CU_ADD_TEST(suite_bs, blob_unmap);
 	CU_ADD_TEST(suite_bs, blob_iter);
-	CU_ADD_TEST(suite_bs, blob_xattr);
+	CU_ADD_TEST(suite_blob, blob_xattr);
 	CU_ADD_TEST(suite, bs_load);
 	CU_ADD_TEST(suite_bs, bs_load_pending_removal);
 	CU_ADD_TEST(suite, bs_load_custom_cluster_size);
@@ -6525,7 +6519,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, blob_serialize);
 	CU_ADD_TEST(suite_bs, blob_crc);
 	CU_ADD_TEST(suite, super_block_crc);
-	CU_ADD_TEST(suite_bs, blob_dirty_shutdown);
+	CU_ADD_TEST(suite_blob, blob_dirty_shutdown);
 	CU_ADD_TEST(suite_bs, blob_flags);
 	CU_ADD_TEST(suite_bs, bs_version);
 	CU_ADD_TEST(suite_bs, blob_set_xattrs);
