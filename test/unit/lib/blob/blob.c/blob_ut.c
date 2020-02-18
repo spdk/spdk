@@ -2937,6 +2937,7 @@ bs_usable_clusters(void)
 	struct spdk_blob_store *bs = g_bs;
 	struct spdk_blob_opts blob_opts;
 	struct spdk_blob *blob;
+	spdk_blob_id blobid;
 	uint32_t clusters;
 	int i;
 
@@ -2956,10 +2957,11 @@ bs_usable_clusters(void)
 		poll_threads();
 		CU_ASSERT(g_bserrno == 0);
 		CU_ASSERT(g_blobid !=  SPDK_BLOBID_INVALID);
+		blobid = g_blobid;
 
 		g_bserrno = -1;
 		g_blob = NULL;
-		spdk_bs_open_blob(bs, g_blobid, blob_op_with_handle_complete, NULL);
+		spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
 		poll_threads();
 		CU_ASSERT(g_bserrno == 0);
 		CU_ASSERT(g_blob !=  NULL);
@@ -4447,14 +4449,14 @@ bs_load_iter(void)
 
 		g_bserrno = -1;
 		g_blob = NULL;
-		spdk_bs_open_blob(bs, g_blobid, blob_op_with_handle_complete, NULL);
+		spdk_bs_open_blob(bs, iter_ctx.blobid[i], blob_op_with_handle_complete, NULL);
 		poll_threads();
 		CU_ASSERT(g_bserrno == 0);
 		CU_ASSERT(g_blob != NULL);
 		blob = g_blob;
 
 		/* Just save the blobid as an xattr for testing purposes. */
-		rc = spdk_blob_set_xattr(blob, "blobid", &g_blobid, sizeof(g_blobid));
+		rc = spdk_blob_set_xattr(blob, "blobid", &iter_ctx.blobid[i], sizeof(spdk_blob_id));
 		CU_ASSERT(rc == 0);
 
 		/* Resize the blob */
