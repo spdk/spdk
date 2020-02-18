@@ -59,13 +59,13 @@ struct malloc_task {
 };
 
 static struct malloc_task *
-__malloc_task_from_copy_task(struct spdk_accel_task *ct)
+__malloc_task_from_accel_task(struct spdk_accel_task *ct)
 {
 	return (struct malloc_task *)((uintptr_t)ct - sizeof(struct malloc_task));
 }
 
 static struct spdk_accel_task *
-__copy_task_from_malloc_task(struct malloc_task *mt)
+__accel_task_from_malloc_task(struct malloc_task *mt)
 {
 	return (struct spdk_accel_task *)((uintptr_t)mt + sizeof(struct malloc_task));
 }
@@ -73,7 +73,7 @@ __copy_task_from_malloc_task(struct malloc_task *mt)
 static void
 malloc_done(void *ref, int status)
 {
-	struct malloc_task *task = __malloc_task_from_copy_task(ref);
+	struct malloc_task *task = __malloc_task_from_accel_task(ref);
 
 	if (status != 0) {
 		if (status == -ENOMEM) {
@@ -171,12 +171,12 @@ bdev_malloc_readv(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 	task->num_outstanding = iovcnt;
 
 	for (i = 0; i < iovcnt; i++) {
-		res = spdk_accel_submit_copy(__copy_task_from_malloc_task(task),
+		res = spdk_accel_submit_copy(__accel_task_from_malloc_task(task),
 					     ch, iov[i].iov_base,
 					     src, iov[i].iov_len, malloc_done);
 
 		if (res != 0) {
-			malloc_done(__copy_task_from_malloc_task(task), res);
+			malloc_done(__accel_task_from_malloc_task(task), res);
 		}
 
 		src += iov[i].iov_len;
@@ -206,12 +206,12 @@ bdev_malloc_writev(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 	task->num_outstanding = iovcnt;
 
 	for (i = 0; i < iovcnt; i++) {
-		res = spdk_accel_submit_copy(__copy_task_from_malloc_task(task),
+		res = spdk_accel_submit_copy(__accel_task_from_malloc_task(task),
 					     ch, dst, iov[i].iov_base,
 					     iov[i].iov_len, malloc_done);
 
 		if (res != 0) {
-			malloc_done(__copy_task_from_malloc_task(task), res);
+			malloc_done(__accel_task_from_malloc_task(task), res);
 		}
 
 		dst += iov[i].iov_len;
@@ -228,7 +228,7 @@ bdev_malloc_unmap(struct malloc_disk *mdisk,
 	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	task->num_outstanding = 1;
 
-	return spdk_accel_submit_fill(__copy_task_from_malloc_task(task), ch,
+	return spdk_accel_submit_fill(__accel_task_from_malloc_task(task), ch,
 				      mdisk->malloc_buf + offset, 0, byte_count, malloc_done);
 }
 
