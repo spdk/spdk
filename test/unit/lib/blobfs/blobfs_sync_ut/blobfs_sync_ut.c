@@ -134,6 +134,7 @@ _fs_init(void *arg)
 	spdk_fs_init(dev, NULL, send_request, fs_op_with_handle_complete, NULL);
 	thread = spdk_get_thread();
 	while (spdk_thread_poll(thread, 0, 0) > 0) {}
+	while (spdk_thread_poll(g_cache_pool_thread, 0, 0) > 0) {}
 
 	SPDK_CU_ASSERT_FATAL(g_fs != NULL);
 	SPDK_CU_ASSERT_FATAL(g_fs->bdev == dev);
@@ -152,6 +153,7 @@ _fs_load(void *arg)
 	spdk_fs_load(dev, send_request, fs_op_with_handle_complete, NULL);
 	thread = spdk_get_thread();
 	while (spdk_thread_poll(thread, 0, 0) > 0) {}
+	while (spdk_thread_poll(g_cache_pool_thread, 0, 0) > 0) {}
 
 	SPDK_CU_ASSERT_FATAL(g_fs != NULL);
 	SPDK_CU_ASSERT_FATAL(g_fs->bdev == dev);
@@ -167,6 +169,7 @@ _fs_unload(void *arg)
 	spdk_fs_unload(g_fs, fs_op_complete, NULL);
 	thread = spdk_get_thread();
 	while (spdk_thread_poll(thread, 0, 0) > 0) {}
+	while (spdk_thread_poll(g_cache_pool_thread, 0, 0) > 0) {}
 	CU_ASSERT(g_fserrno == 0);
 	g_fs = NULL;
 }

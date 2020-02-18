@@ -59,6 +59,9 @@
 static uint64_t g_fs_cache_size = BLOBFS_DEFAULT_CACHE_SIZE;
 static struct spdk_mempool *g_cache_pool;
 static TAILQ_HEAD(, spdk_file) g_caches;
+static struct spdk_poller *g_cache_pool_mgmt_poller;
+static struct spdk_thread *g_cache_pool_thread;
+#define BLOBFS_CACHE_POOL_POLL_PERIOD_IN_US 1000ULL
 static int g_fs_count = 0;
 static pthread_mutex_t g_cache_init_lock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_spinlock_t g_caches_lock;
@@ -257,8 +260,26 @@ spdk_fs_opts_init(struct spdk_blobfs_opts *opts)
 	opts->cluster_sz = SPDK_BLOBFS_DEFAULT_OPTS_CLUSTER_SZ;
 }
 
+static int _blobfs_cache_pool_reclaim(void *arg);
+
+static bool
+blobfs_cache_pool_need_reclaim(void)
+{
+	size_t count;
+
+	count = spdk_mempool_count(g_cache_pool);
+	/* We define a aggressive policy here as the requirements from db_bench are batched, so start the poller
+	 *  when the number of available cache buffer is less than 1/5 of total buffers.
+	 */
+	if (count > (size_t)g_fs_cache_size / CACHE_BUFFER_SIZE / 5) {
+		return false;
+	}
+
+	return true;
+}
+
 static void
-__initialize_cache(void)
+__start_cache_pool_mgmt(void *ctx)
 {
 	assert(g_cache_pool == NULL);
 
@@ -274,15 +295,37 @@ __initialize_cache(void)
 	}
 	TAILQ_INIT(&g_caches);
 	pthread_spin_init(&g_caches_lock, 0);
+
+	assert(g_cache_pool_mgmt_poller == NULL);
+	g_cache_pool_mgmt_poller = spdk_poller_register(_blobfs_cache_pool_reclaim, NULL,
+				   BLOBFS_CACHE_POOL_POLL_PERIOD_IN_US);
+}
+
+static void
+__stop_cache_pool_mgmt(void *ctx)
+{
+	spdk_poller_unregister(&g_cache_pool_mgmt_poller);
+
+	assert(g_cache_pool != NULL);
+	assert(spdk_mempool_count(g_cache_pool) == g_fs_cache_size / CACHE_BUFFER_SIZE);
+	spdk_mempool_free(g_cache_pool);
+	g_cache_pool = NULL;
+
+	spdk_thread_exit(g_cache_pool_thread);
+}
+
+static void
+__initialize_cache(void)
+{
+	g_cache_pool_thread = spdk_thread_create("cache_pool_mgmt", NULL);
+	assert(g_cache_pool_thread != NULL);
+	spdk_thread_send_msg(g_cache_pool_thread, __start_cache_pool_mgmt, NULL);
 }
 
 static void
 __free_cache(void)
 {
-	assert(g_cache_pool != NULL);
-
-	spdk_mempool_free(g_cache_pool);
-	g_cache_pool = NULL;
+	spdk_thread_send_msg(g_cache_pool_thread, __stop_cache_pool_mgmt, NULL);
 }
 
 static uint64_t
@@ -2053,69 +2096,56 @@ reclaim_cache_buffers(struct spdk_file *file)
 	return 0;
 }
 
-static void *
-alloc_cache_memory_buffer(struct spdk_file *context)
+static int
+_blobfs_cache_pool_reclaim(void *arg)
 {
 	struct spdk_file *file, *tmp;
-	void *buf;
 	int rc;
 
-	buf = spdk_mempool_get(g_cache_pool);
-	if (buf != NULL) {
-		return buf;
+	if (!blobfs_cache_pool_need_reclaim()) {
+		return 0;
 	}
 
 	pthread_spin_lock(&g_caches_lock);
 	TAILQ_FOREACH_SAFE(file, &g_caches, cache_tailq, tmp) {
 		if (!file->open_for_writing &&
-		    file->priority == SPDK_FILE_PRIORITY_LOW &&
-		    file != context) {
+		    file->priority == SPDK_FILE_PRIORITY_LOW) {
 			rc = reclaim_cache_buffers(file);
 			if (rc < 0) {
 				continue;
 			}
-			buf = spdk_mempool_get(g_cache_pool);
-			if (buf != NULL) {
+			if (!blobfs_cache_pool_need_reclaim()) {
 				pthread_spin_unlock(&g_caches_lock);
-				return buf;
+				return 1;
 			}
 			break;
 		}
 	}
 
 	TAILQ_FOREACH_SAFE(file, &g_caches, cache_tailq, tmp) {
-		if (!file->open_for_writing &&
-		    file != context) {
+		if (!file->open_for_writing) {
 			rc = reclaim_cache_buffers(file);
 			if (rc < 0) {
 				continue;
 			}
-			buf = spdk_mempool_get(g_cache_pool);
-			if (buf != NULL) {
+			if (!blobfs_cache_pool_need_reclaim()) {
 				pthread_spin_unlock(&g_caches_lock);
-				return buf;
+				return 1;
 			}
 			break;
 		}
 	}
 
 	TAILQ_FOREACH_SAFE(file, &g_caches, cache_tailq, tmp) {
-		if (file != context) {
-			rc = reclaim_cache_buffers(file);
-			if (rc < 0) {
-				continue;
-			}
-			buf = spdk_mempool_get(g_cache_pool);
-			if (buf != NULL) {
-				pthread_spin_unlock(&g_caches_lock);
-				return buf;
-			}
-			break;
+		rc = reclaim_cache_buffers(file);
+		if (rc < 0) {
+			continue;
 		}
+		break;
 	}
 	pthread_spin_unlock(&g_caches_lock);
 
-	return NULL;
+	return 1;
 }
 
 static struct cache_buffer *
@@ -2130,23 +2160,19 @@ cache_insert_buffer(struct spdk_file *file, uint64_t offset)
 		return NULL;
 	}
 
-	buf->buf = alloc_cache_memory_buffer(file);
-	while (buf->buf == NULL) {
-		/*
-		 * TODO: alloc_cache_memory_buffer() should eventually free
-		 *  some buffers.  Need a more sophisticated check here, instead
-		 *  of just bailing if 100 tries does not result in getting a
-		 *  free buffer.  This will involve using the sync channel's
-		 *  semaphore to block until a buffer becomes available.
-		 */
+	do {
+		buf->buf = spdk_mempool_get(g_cache_pool);
+		if (buf->buf) {
+			break;
+		}
 		if (count++ == 100) {
 			SPDK_ERRLOG("Could not allocate cache buffer for file=%p on offset=%jx\n",
 				    file, offset);
 			free(buf);
 			return NULL;
 		}
-		buf->buf = alloc_cache_memory_buffer(file);
-	}
+		usleep(BLOBFS_CACHE_POOL_POLL_PERIOD_IN_US);
+	} while (true);
 
 	buf->buf_size = CACHE_BUFFER_SIZE;
 	buf->offset = offset;
