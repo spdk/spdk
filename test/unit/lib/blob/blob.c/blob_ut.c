@@ -2936,6 +2936,7 @@ bs_usable_clusters(void)
 {
 	struct spdk_blob_store *bs = g_bs;
 	struct spdk_blob_opts blob_opts;
+	struct spdk_blob *blob;
 	uint32_t clusters;
 	int i;
 
@@ -2962,13 +2963,14 @@ bs_usable_clusters(void)
 		poll_threads();
 		CU_ASSERT(g_bserrno == 0);
 		CU_ASSERT(g_blob !=  NULL);
+		blob = g_blob;
 
-		spdk_blob_resize(g_blob, 10, blob_op_complete, NULL);
+		spdk_blob_resize(blob, 10, blob_op_complete, NULL);
 		poll_threads();
 		CU_ASSERT(g_bserrno == 0);
 
 		g_bserrno = -1;
-		spdk_blob_close(g_blob, blob_op_complete, NULL);
+		spdk_blob_close(blob, blob_op_complete, NULL);
 		poll_threads();
 		CU_ASSERT(g_bserrno == 0);
 
@@ -2995,6 +2997,7 @@ bs_resize_md(void)
 	const int NUM_BLOBS = CLUSTER_PAGE_COUNT * 4;
 	struct spdk_bs_dev *dev;
 	struct spdk_bs_opts opts;
+	struct spdk_blob *blob;
 	struct spdk_blob_opts blob_opts;
 	uint32_t cluster_sz;
 	spdk_blob_id blobids[NUM_BLOBS];
@@ -3038,8 +3041,9 @@ bs_resize_md(void)
 		poll_threads();
 		CU_ASSERT(g_bserrno == 0);
 		CU_ASSERT(g_blob !=  NULL);
+		blob = g_blob;
 		g_bserrno = -1;
-		spdk_blob_close(g_blob, blob_op_complete, NULL);
+		spdk_blob_close(blob, blob_op_complete, NULL);
 		poll_threads();
 		CU_ASSERT(g_bserrno == 0);
 	}
@@ -3468,8 +3472,9 @@ blob_dirty_shutdown(void)
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blob != NULL);
+	blob = g_blob;
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
-	spdk_blob_close(g_blob, blob_op_complete, NULL);
+	spdk_blob_close(blob, blob_op_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 
@@ -3714,6 +3719,7 @@ bs_version(void)
 	struct spdk_bs_super_block *super;
 	struct spdk_blob_store *bs = g_bs;
 	struct spdk_bs_dev *dev;
+	struct spdk_blob *blob;
 	struct spdk_blob_opts blob_opts;
 	spdk_blob_id blobid;
 
@@ -3786,8 +3792,9 @@ bs_version(void)
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blob != NULL);
+	blob = g_blob;
 
-	spdk_blob_close(g_blob, blob_op_complete, NULL);
+	spdk_blob_close(blob, blob_op_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 
