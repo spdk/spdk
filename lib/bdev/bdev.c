@@ -2937,6 +2937,48 @@ _bdev_io_check_md_buf(const struct iovec *iovs, const void *md_buf)
 	return _is_buf_allocated(iovs) == (md_buf != NULL);
 }
 
+
+
+int
+spdk_bdev_read_blocks_merge_io_spec(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+				    void *buf,
+				    void *md_buf, int64_t offset_blocks, uint64_t num_blocks, uint32_t current_bdev_idx,
+				    spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
+	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+
+	if (!bdev_io_valid_blocks(bdev, offset_blocks, num_blocks)) {
+		return -EINVAL;
+	}
+
+	bdev_io = bdev_channel_get_io(channel);
+	if (!bdev_io) {
+		return -ENOMEM;
+	}
+
+	bdev_io->internal.ch = channel;
+	bdev_io->internal.desc = desc;
+	bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
+	bdev_io->u.bdev.iovs = &bdev_io->iov;
+	bdev_io->u.bdev.iovs[0].iov_base = buf;
+	bdev_io->u.bdev.iovs[0].iov_len = num_blocks * bdev->blocklen;
+	bdev_io->u.bdev.iovcnt = 1;
+	bdev_io->u.bdev.md_buf = md_buf;
+	bdev_io->u.bdev.num_blocks = num_blocks;
+	bdev_io->u.bdev.offset_blocks = offset_blocks;
+
+	/* merge_io */
+	bdev_io->merge_io.current_bdev_idx = current_bdev_idx;
+	bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	bdev_io_submit(bdev_io);
+	return 0;
+}
+
+
+
 static int
 bdev_read_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch, void *buf,
 			 void *md_buf, int64_t offset_blocks, uint64_t num_blocks,
@@ -3327,6 +3369,107 @@ spdk_bdev_zcopy_start(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 
 	return 0;
 }
+
+
+int
+spdk_bdev_zcopy_start_merge_spec(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+				 uint64_t offset_blocks, uint64_t num_blocks,
+				 bool populate, uint32_t current_bdev_idx,
+				 spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
+	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+
+	if (!desc->write) {
+		return -EBADF;
+	}
+
+	if (!bdev_io_valid_blocks(bdev, offset_blocks, num_blocks)) {
+		return -EINVAL;
+	}
+
+	if (!spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_ZCOPY)) {
+		return -ENOTSUP;
+	}
+
+	bdev_io = bdev_channel_get_io(channel);
+	if (!bdev_io) {
+		return -ENOMEM;
+	}
+
+	bdev_io->internal.ch = channel;
+	bdev_io->internal.desc = desc;
+	bdev_io->type = SPDK_BDEV_IO_TYPE_ZCOPY;
+	bdev_io->u.bdev.num_blocks = num_blocks;
+	bdev_io->u.bdev.offset_blocks = offset_blocks;
+	bdev_io->u.bdev.iovs = NULL;
+	bdev_io->u.bdev.iovcnt = 0;
+	bdev_io->u.bdev.md_buf = NULL;
+	bdev_io->u.bdev.zcopy.populate = populate ? 1 : 0;
+	bdev_io->u.bdev.zcopy.commit = 0;
+	bdev_io->u.bdev.zcopy.start = 1;
+
+	bdev_io->merge_io.current_bdev_idx = current_bdev_idx;
+	bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	if (bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_ZCOPY)) {
+		bdev_io_submit(bdev_io);
+	} else {
+		/* Emulate zcopy by allocating a buffer */
+		spdk_bdev_io_get_buf(bdev_io, bdev_zcopy_get_buf,
+				     bdev_io->u.bdev.num_blocks * bdev->blocklen);
+	}
+
+	return 0;
+}
+
+
+
+int
+spdk_bdev_zcopy_end_merge_spec(struct spdk_bdev_io *bdev_io, bool commit,
+			       uint32_t current_bdev_idx, spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct spdk_bdev *bdev = bdev_io->bdev;
+
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
+		/* This can happen if the zcopy was emulated in start */
+		if (bdev_io->u.bdev.zcopy.start != 1) {
+			return -EINVAL;
+		}
+		bdev_io->type = SPDK_BDEV_IO_TYPE_ZCOPY;
+	}
+
+	if (bdev_io->type != SPDK_BDEV_IO_TYPE_ZCOPY) {
+		return -EINVAL;
+	}
+
+	bdev_io->u.bdev.zcopy.commit = commit ? 1 : 0;
+	bdev_io->u.bdev.zcopy.start = 0;
+	bdev_io->internal.caller_ctx = cb_arg;
+	bdev_io->internal.cb = cb;
+	bdev_io->internal.status = SPDK_BDEV_IO_STATUS_PENDING;
+	bdev_io->merge_io.current_bdev_idx = current_bdev_idx;
+
+	if (bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_ZCOPY)) {
+		bdev_io_submit(bdev_io);
+		return 0;
+	}
+
+	if (!bdev_io->u.bdev.zcopy.commit) {
+		/* Don't use spdk_bdev_io_complete here - this bdev_io was never actually submitted. */
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
+		bdev_io->internal.cb(bdev_io, true, bdev_io->internal.caller_ctx);
+		return 0;
+	}
+
+	bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
+	bdev_io_submit(bdev_io);
+
+	return 0;
+}
+
+
 
 int
 spdk_bdev_zcopy_end(struct spdk_bdev_io *bdev_io, bool commit,
