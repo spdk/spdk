@@ -166,7 +166,8 @@ nvme_fabric_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint
 
 static void
 nvme_fabric_discover_probe(struct spdk_nvmf_discovery_log_page_entry *entry,
-			   struct spdk_nvme_probe_ctx *probe_ctx)
+			   struct spdk_nvme_probe_ctx *probe_ctx,
+			   int discover_priority)
 {
 	struct spdk_nvme_transport_id trid;
 	uint8_t *end;
@@ -220,6 +221,9 @@ nvme_fabric_discover_probe(struct spdk_nvmf_discovery_log_page_entry *entry,
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "subnqn=%s, trtype=%u, traddr=%s, trsvcid=%s\n",
 		      trid.subnqn, trid.trtype,
 		      trid.traddr, trid.trsvcid);
+
+	/* Copy the priority from the discovery ctrlr */
+	trid.priority = discover_priority;
 
 	nvme_ctrlr_probe(&trid, probe_ctx, NULL);
 }
@@ -378,7 +382,7 @@ nvme_fabric_ctrlr_discover(struct spdk_nvme_ctrlr *ctrlr,
 		}
 
 		for (i = 0; i < numrec; i++) {
-			nvme_fabric_discover_probe(log_page_entry++, probe_ctx);
+			nvme_fabric_discover_probe(log_page_entry++, probe_ctx, ctrlr->trid.priority);
 		}
 		remaining_num_rec -= numrec;
 		log_page_offset += numrec * sizeof(struct spdk_nvmf_discovery_log_page_entry);

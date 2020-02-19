@@ -432,8 +432,8 @@ def bdev_nvme_set_hotplug(client, enable, period_us=None):
 
 @deprecated_alias('construct_nvme_bdev')
 def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvcid=None,
-                                subnqn=None, hostnqn=None, hostaddr=None, hostsvcid=None,
-                                prchk_reftag=None, prchk_guard=None):
+                                priority=None, subnqn=None, hostnqn=None, hostaddr=None,
+                                hostsvcid=None, prchk_reftag=None, prchk_guard=None):
     """Construct block device for each NVMe namespace in the attached controller.
 
     Args:
@@ -442,6 +442,7 @@ def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvc
         traddr: transport address (PCI BDF or IP address)
         adrfam: address family ("IPv4", "IPv6", "IB", or "FC") (optional for PCIe)
         trsvcid: transport service ID (port number for IP-based addresses; optional for PCIe)
+        priority: transport connection priority (Sock priority for TCP-based transports; optional)
         subnqn: subsystem NQN to connect to (optional)
         hostnqn: NQN to connect from (optional)
         hostaddr: host transport address (IP address for IP-based transports, NULL for PCIe or FC; optional)
@@ -470,6 +471,9 @@ def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvc
 
     if trsvcid:
         params['trsvcid'] = trsvcid
+
+    if priority:
+        params['priority'] = priority
 
     if subnqn:
         params['subnqn'] = subnqn

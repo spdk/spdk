@@ -36,6 +36,9 @@ New version of OCF comes with API changes and bug fixes
 Export internal nvme_ctrlr_cmd_security_receive/send() APIs as public APIs with "spdk_"
 prefix.
 
+Added `priority` field in `spdk_nvme_transport_id`, this field is used to specify the priority
+of the NVMe-oF connection, and currently it is used for NVMe-oF tcp connection.
+
 ### copy
 
 The copy engine library, modules and public APIs have been renamed. Use of the word `copy`

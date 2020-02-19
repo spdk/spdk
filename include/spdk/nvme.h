@@ -53,6 +53,8 @@ extern "C" {
 #define SPDK_NVME_TRANSPORT_NAME_RDMA	"RDMA"
 #define SPDK_NVME_TRANSPORT_NAME_TCP	"TCP"
 
+#define SPDK_NVMF_PRIORITY_MAX_LEN 4
+
 /**
  * Opaque handle to a controller. Returned by spdk_nvme_probe()'s attach_cb.
  */
@@ -360,6 +362,13 @@ struct spdk_nvme_transport_id {
 	 * Subsystem NQN of the NVMe over Fabrics endpoint. May be a zero length string.
 	 */
 	char subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
+
+	/**
+	 * The Transport connection priority of the NVMe-oF endpoint. Currently this is
+	 * only supported by posix based sock implementation on Kernel TCP stack. More
+	 * information of this field can be found from the socket(7) man page.
+	 */
+	int priority;
 };
 
 /**

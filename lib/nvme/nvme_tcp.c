@@ -1487,6 +1487,7 @@ nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpa
 	struct nvme_tcp_qpair *tqpair;
 	int family;
 	long int port;
+	struct spdk_sock_opts opts;
 
 	tqpair = nvme_tcp_qpair(qpair);
 
@@ -1528,7 +1529,10 @@ nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpa
 		return -1;
 	}
 
-	tqpair->sock = spdk_sock_connect(ctrlr->trid.traddr, port, NULL);
+	opts.opts_size = sizeof(opts);
+	spdk_sock_get_default_opts(&opts);
+	opts.priority = ctrlr->trid.priority;
+	tqpair->sock = spdk_sock_connect_ext(ctrlr->trid.traddr, port, NULL, &opts);
 	if (!tqpair->sock) {
 		SPDK_ERRLOG("sock connection error of tqpair=%p with addr=%s, port=%ld\n",
 			    tqpair, ctrlr->trid.traddr, port);

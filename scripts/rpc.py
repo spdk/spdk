@@ -425,6 +425,7 @@ if __name__ == "__main__":
                                                          traddr=args.traddr,
                                                          adrfam=args.adrfam,
                                                          trsvcid=args.trsvcid,
+                                                         priority=args.priority,
                                                          subnqn=args.subnqn,
                                                          hostnqn=args.hostnqn,
                                                          hostaddr=args.hostaddr,
@@ -443,6 +444,8 @@ if __name__ == "__main__":
                    help='NVMe-oF target adrfam: e.g., ipv4, ipv6, ib, fc, intra_host')
     p.add_argument('-s', '--trsvcid',
                    help='NVMe-oF target trsvcid: e.g., a port number')
+    p.add_argument('-p', '--priority',
+                   help='NVMe-oF connection priority: e.g., a priority number')
     p.add_argument('-n', '--subnqn', help='NVMe-oF target subnqn')
     p.add_argument('-q', '--hostnqn', help='NVMe-oF host subnqn')
     p.add_argument('-i', '--hostaddr',

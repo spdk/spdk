@@ -173,6 +173,7 @@ struct rpc_bdev_nvme_attach_controller {
 	char *adrfam;
 	char *traddr;
 	char *trsvcid;
+	char *priority;
 	char *subnqn;
 	char *hostnqn;
 	char *hostaddr;
@@ -189,6 +190,7 @@ free_rpc_bdev_nvme_attach_controller(struct rpc_bdev_nvme_attach_controller *req
 	free(req->adrfam);
 	free(req->traddr);
 	free(req->trsvcid);
+	free(req->priority);
 	free(req->subnqn);
 	free(req->hostnqn);
 	free(req->hostaddr);
@@ -202,6 +204,7 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_attach_controller_dec
 
 	{"adrfam", offsetof(struct rpc_bdev_nvme_attach_controller, adrfam), spdk_json_decode_string, true},
 	{"trsvcid", offsetof(struct rpc_bdev_nvme_attach_controller, trsvcid), spdk_json_decode_string, true},
+	{"priority", offsetof(struct rpc_bdev_nvme_attach_controller, priority), spdk_json_decode_string, true},
 	{"subnqn", offsetof(struct rpc_bdev_nvme_attach_controller, subnqn), spdk_json_decode_string, true},
 	{"hostnqn", offsetof(struct rpc_bdev_nvme_attach_controller, hostnqn), spdk_json_decode_string, true},
 	{"hostaddr", offsetof(struct rpc_bdev_nvme_attach_controller, hostaddr), spdk_json_decode_string, true},
@@ -301,6 +304,11 @@ spdk_rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	/* Parse trsvcid */
 	if (ctx->req.trsvcid) {
 		snprintf(trid.trsvcid, sizeof(trid.trsvcid), "%s", ctx->req.trsvcid);
+	}
+
+	/* Parse priority for the NVMe-oF transport connection */
+	if (ctx->req.priority) {
+		trid.priority = spdk_strtol(ctx->req.priority, 10);
 	}
 
 	/* Parse subnqn */

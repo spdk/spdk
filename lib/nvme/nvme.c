@@ -32,6 +32,7 @@
  */
 
 #include "spdk/nvmf_spec.h"
+#include "spdk/string.h"
 #include "nvme_internal.h"
 #include "nvme_io_msg.h"
 
@@ -975,6 +976,13 @@ spdk_nvme_transport_id_parse(struct spdk_nvme_transport_id *trid, const char *st
 				return -EINVAL;
 			}
 			memcpy(trid->trsvcid, val, val_len + 1);
+		} else if (strcasecmp(key, "priority") == 0) {
+			if (val_len > SPDK_NVMF_PRIORITY_MAX_LEN) {
+				SPDK_ERRLOG("priority length %zu greater than maximum allowed %u\n",
+					    val_len, SPDK_NVMF_PRIORITY_MAX_LEN);
+				return -EINVAL;
+			}
+			trid->priority = spdk_strtol(val, 10);
 		} else if (strcasecmp(key, "subnqn") == 0) {
 			if (val_len > SPDK_NVMF_NQN_MAX_LEN) {
 				SPDK_ERRLOG("subnqn length %zu greater than maximum allowed %u\n",
@@ -1045,6 +1053,8 @@ spdk_nvme_host_id_parse(struct spdk_nvme_host_id *hostid, const char *str)
 		} else if (strcasecmp(key, "trsvcid") == 0) {
 			continue;
 		} else if (strcasecmp(key, "subnqn") == 0) {
+			continue;
+		} else if (strcasecmp(key, "priority") == 0) {
 			continue;
 		} else if (strcasecmp(key, "ns") == 0) {
 			continue;

@@ -594,6 +594,7 @@ spdk_nvmf_tcp_listen(struct spdk_nvmf_transport *transport,
 	struct spdk_nvmf_tcp_port *port;
 	int trsvcid_int;
 	uint8_t adrfam;
+	struct spdk_sock_opts opts;
 
 	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
 
@@ -612,7 +613,11 @@ spdk_nvmf_tcp_listen(struct spdk_nvmf_transport *transport,
 	}
 
 	port->trid = trid;
-	port->listen_sock = spdk_sock_listen(trid->traddr, trsvcid_int, NULL);
+	opts.opts_size = sizeof(opts);
+	spdk_sock_get_default_opts(&opts);
+	opts.priority = transport->opts.sock_priority;
+	port->listen_sock = spdk_sock_listen_ext(trid->traddr, trsvcid_int,
+			    NULL, &opts);
 	if (port->listen_sock == NULL) {
 		SPDK_ERRLOG("spdk_sock_listen(%s, %d) failed: %s (%d)\n",
 			    trid->traddr, trsvcid_int,

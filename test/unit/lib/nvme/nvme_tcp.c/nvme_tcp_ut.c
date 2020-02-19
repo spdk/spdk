@@ -45,6 +45,9 @@ SPDK_LOG_REGISTER_COMPONENT("nvme", SPDK_LOG_NVME);
 DEFINE_STUB(nvme_qpair_submit_request,
 	    int, (struct spdk_nvme_qpair *qpair, struct nvme_request *req), 0);
 
+DEFINE_STUB(spdk_sock_set_priority,
+	    int, (struct spdk_sock *sock, int priority), 0);
+
 static void
 test_nvme_tcp_pdu_set_data_buf(void)
 {
