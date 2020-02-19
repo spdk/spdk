@@ -1562,7 +1562,7 @@ ftl_io_child_write_cb(struct ftl_io *io, void *ctx, int status)
 	zone->busy = false;
 	zone->info.write_pointer += io->num_blocks;
 
-	if (zone->info.write_pointer == zone->info.capacity) {
+	if (zone->info.write_pointer == zone->info.zone_id + zone->info.capacity) {
 		zone->info.state = SPDK_BDEV_ZONE_STATE_FULL;
 	}
 
