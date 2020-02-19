@@ -1007,22 +1007,6 @@ spdk_uring_sock_set_recvlowat(struct spdk_sock *_sock, int nbytes)
 	return 0;
 }
 
-static int
-spdk_uring_sock_set_priority(struct spdk_sock *_sock, int priority)
-{
-	int rc = 0;
-
-#if defined(SO_PRIORITY)
-	struct spdk_uring_sock *sock = __uring_sock(_sock);
-
-	assert(sock != NULL);
-
-	rc = setsockopt(sock->fd, SOL_SOCKET, SO_PRIORITY,
-			&priority, sizeof(priority));
-#endif
-	return rc;
-}
-
 static bool
 spdk_uring_sock_is_ipv6(struct spdk_sock *_sock)
 {
@@ -1253,7 +1237,6 @@ static struct spdk_net_impl g_uring_net_impl = {
 	.set_recvlowat	= spdk_uring_sock_set_recvlowat,
 	.set_recvbuf	= spdk_uring_sock_set_recvbuf,
 	.set_sendbuf	= spdk_uring_sock_set_sendbuf,
-	.set_priority	= spdk_uring_sock_set_priority,
 	.is_ipv6	= spdk_uring_sock_is_ipv6,
 	.is_ipv4	= spdk_uring_sock_is_ipv4,
 	.is_connected   = spdk_uring_sock_is_connected,

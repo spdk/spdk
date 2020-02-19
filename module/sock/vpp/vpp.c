@@ -1134,14 +1134,6 @@ spdk_vpp_sock_set_sendbuf(struct spdk_sock *_sock, int sz)
 	return 0;
 }
 
-static int
-spdk_vpp_sock_set_priority(struct spdk_sock *_sock, int priority)
-{
-	assert(g_svm.vpp_initialized);
-
-	return 0;
-}
-
 static bool
 spdk_vpp_sock_is_ipv6(struct spdk_sock *_sock)
 {
@@ -1604,7 +1596,6 @@ static struct spdk_net_impl g_vpp_net_impl = {
 	.set_recvlowat	= spdk_vpp_sock_set_recvlowat,
 	.set_recvbuf	= spdk_vpp_sock_set_recvbuf,
 	.set_sendbuf	= spdk_vpp_sock_set_sendbuf,
-	.set_priority	= spdk_vpp_sock_set_priority,
 	.is_ipv6	= spdk_vpp_sock_is_ipv6,
 	.is_ipv4	= spdk_vpp_sock_is_ipv4,
 	.is_connected	= spdk_vpp_sock_is_connected,

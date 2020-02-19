@@ -875,15 +875,6 @@ _spdk_nvmf_tcp_handle_connect(struct spdk_nvmf_transport *transport,
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "New connection accepted on %s port %s\n",
 		      port->trid->traddr, port->trid->trsvcid);
 
-	if (transport->opts.sock_priority) {
-		rc = spdk_sock_set_priority(sock, transport->opts.sock_priority);
-		if (rc) {
-			SPDK_ERRLOG("Failed to set the priority of the socket\n");
-			spdk_sock_close(&sock);
-			return;
-		}
-	}
-
 	tqpair = calloc(1, sizeof(struct spdk_nvmf_tcp_qpair));
 	if (tqpair == NULL) {
 		SPDK_ERRLOG("Could not allocate new connection.\n");
