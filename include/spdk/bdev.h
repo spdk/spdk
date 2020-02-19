@@ -704,6 +704,14 @@ int spdk_bdev_read(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		   void *buf, uint64_t offset, uint64_t nbytes,
 		   spdk_bdev_io_completion_cb cb, void *cb_arg);
 
+
+int
+spdk_bdev_read_blocks_merge_io_spec(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+				    void *buf,
+				    void *md_buf, int64_t offset_blocks, uint64_t num_blocks, uint32_t current_bdev_idx,
+				    spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+
 /**
  * Submit a read request to the bdev on the given channel.
  *
@@ -1053,6 +1061,20 @@ int spdk_bdev_zcopy_start(struct spdk_bdev_desc *desc, struct spdk_io_channel *c
  */
 int spdk_bdev_zcopy_end(struct spdk_bdev_io *bdev_io, bool commit,
 			spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+
+int
+spdk_bdev_zcopy_end_merge_spec(struct spdk_bdev_io *bdev_io, bool commit,
+			       uint32_t current_bdev_idx, spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+
+int
+spdk_bdev_zcopy_start_merge_spec(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+				 uint64_t offset_blocks, uint64_t num_blocks,
+				 bool populate, uint32_t current_bdev_idx,
+				 spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+
 
 /**
  * Submit a write zeroes request to the bdev on the given channel. This command
