@@ -314,7 +314,6 @@ merge_bdev_io_completion_without_clear_pio(struct spdk_bdev_io *bdev_io, bool su
 	spdk_bdev_free_io(bdev_io);
 }
 
-
 static void
 merge_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
@@ -332,7 +331,22 @@ merge_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 }
 
 static void
-merge_bdev_slave_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+merge_bdev_slave_io_read_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_bdev_io *parent_io = cb_arg;
+#ifdef SPDK_CONFIG_LOG_BACKTRACE
+	if (g_trace_file_path) {
+		check_io_flow(bdev_io);
+	}
+#endif
+
+	spdk_bdev_free_io(bdev_io);
+	spdk_bdev_io_complete(parent_io,
+			      success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED);
+}
+
+static void
+merge_bdev_slave_io_write_completing(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_bdev_io         *parent_io = cb_arg;
 
@@ -341,12 +355,30 @@ merge_bdev_slave_io_completion(struct spdk_bdev_io *bdev_io, bool success, void 
 		check_io_flow(bdev_io);
 	}
 #endif
-	if (bdev_io->u.merge_io.current_bdev_idx == bdev_io->u.merge_io.slave_bdev_nums) {
-		spdk_bdev_free_io(bdev_io);
+	spdk_bdev_free_io(bdev_io);
 
-		spdk_bdev_io_complete(parent_io,
-				      success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED);
+	if (!success) {
+		spdk_bdev_io_complete(parent_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
+}
+
+static void
+merge_bdev_slave_io_write_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_bdev_io         *parent_io = cb_arg;
+
+#ifdef SPDK_CONFIG_LOG_BACKTRACE
+	if (g_trace_file_path) {
+		check_io_flow(bdev_io);
+	}
+#endif
+	/* todo this info in the parent io, should we deal with in this function? */
+	/* if (bdev_io->merge_io.current_bdev_idx == bdev_io->merge_io.slave_bdev_nums){ */
+	spdk_bdev_free_io(bdev_io);
+
+	spdk_bdev_io_complete(parent_io,
+			      success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED);
+	/* } */
 }
 
 
@@ -365,6 +397,7 @@ merge_bdev_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bde
 	uint64_t offset;
 	bool merge = false;
 	int slave_bdev_index;
+	int i = 0;
 
 	merge_bdev = (struct merge_bdev *)bdev_io->bdev->ctxt;
 	merge_io = (struct merge_bdev_io *)bdev_io->driver_ctx;
@@ -388,10 +421,27 @@ merge_bdev_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bde
 
 	/* todo deal with number_block and offset */
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
+		slave_bdev_index = bdev_io->merge_io.current_bdev_idx;
+		assert(slave_bdev_index >= 0);
+		slave_bdev_index = slave_bdev_index % merge_ch->num_slave_channels;
+
+
+
+		TAILQ_FOREACH(merge_cfg, &merge_bdev->config->merge_base_bdev_config_head, link) {
+			if (merge_cfg->type == MERGE_BDEV_TYPE_SLAVE) {
+				if (i == slave_bdev_index) {
+					slave_bdev_config = merge_cfg;
+					break;
+				}
+				i++;
+			}
+		}
+
+
 		ret = spdk_bdev_readv_blocks(slave_bdev_config->base_bdev_info.desc,
-					     merge_ch->slave_channel[0],
+					     merge_ch->slave_channel[slave_bdev_index],
 					     bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-					     bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks, merge_bdev_slave_io_completion,
+					     bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks, merge_bdev_slave_io_read_completion,
 					     bdev_io);
 		if (ret != 0) {
 			SPDK_ERRLOG("Bad IO read request. error code : %d\n", ret);
@@ -439,17 +489,18 @@ merge_bdev_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bde
 				merge_bdev->slave_offset = (merge_bdev->slave_offset + number_block) % merge_bdev->max_blockcnt;
 			}
 			slave_bdev_index = merge_ch->num_slave_channels - 1;
-			bdev_io->u.merge_io.slave_bdev_nums = merge_ch->num_slave_channels;
+			bdev_io->merge_io.slave_bdev_nums = merge_ch->num_slave_channels;
 			TAILQ_FOREACH(merge_cfg, &merge_bdev->config->merge_base_bdev_config_head, link) {
 				if (merge_cfg->type == MERGE_BDEV_TYPE_SLAVE) {
 					/* todo bind iochannel with base bdev */
-					bdev_io->u.merge_io.current_bdev_idx++;
-					ret = spdk_bdev_writev_blocks(slave_bdev_config->base_bdev_info.desc,
-								      merge_ch->slave_channel[slave_bdev_index--],
+					bdev_io->merge_io.current_bdev_idx++;
+					ret = spdk_bdev_writev_blocks(merge_cfg->base_bdev_info.desc,
+								      merge_ch->slave_channel[slave_bdev_index],
 								      &merge_bdev->big_buff_iov, 1,
-								      merge_bdev->slave_offset % merge_bdev->max_blockcnt, number_block, merge_bdev_slave_io_completion,
+								      merge_bdev->slave_offset % merge_bdev->max_blockcnt, number_block,
+								      slave_bdev_index == 0 ? merge_bdev_slave_io_write_completion : merge_bdev_slave_io_write_completing,
 								      bdev_io);
-
+					slave_bdev_index--;
 					if (ret != 0) {
 						SPDK_ERRLOG("Bad IO write request submit to slave bdev. error code : %d\n", ret);
 						spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
