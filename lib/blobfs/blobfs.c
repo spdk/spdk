@@ -2019,7 +2019,7 @@ static void __file_flush(void *ctx);
 /* Try to free some cache buffers of this file, this function must
  * be called while holding g_caches_lock.
  */
-static void
+static int
 reclaim_cache_buffers(struct spdk_file *file)
 {
 	int rc;
@@ -2032,12 +2032,12 @@ reclaim_cache_buffers(struct spdk_file *file)
 	 */
 	rc = pthread_spin_trylock(&file->lock);
 	if (rc != 0) {
-		return;
+		return -1;
 	}
 
 	if (file->tree->present_mask == 0) {
 		pthread_spin_unlock(&file->lock);
-		return;
+		return -1;
 	}
 	spdk_tree_free_buffers(file->tree);
 
@@ -2049,6 +2049,8 @@ reclaim_cache_buffers(struct spdk_file *file)
 		file->last = NULL;
 	}
 	pthread_spin_unlock(&file->lock);
+
+	return 0;
 }
 
 static void *
@@ -2056,6 +2058,7 @@ alloc_cache_memory_buffer(struct spdk_file *context)
 {
 	struct spdk_file *file, *tmp;
 	void *buf;
+	int rc;
 
 	buf = spdk_mempool_get(g_cache_pool);
 	if (buf != NULL) {
@@ -2067,39 +2070,48 @@ alloc_cache_memory_buffer(struct spdk_file *context)
 		if (!file->open_for_writing &&
 		    file->priority == SPDK_FILE_PRIORITY_LOW &&
 		    file != context) {
-			reclaim_cache_buffers(file);
+			rc = reclaim_cache_buffers(file);
+			if (rc < 0) {
+				continue;
+			}
+			buf = spdk_mempool_get(g_cache_pool);
+			if (buf != NULL) {
+				pthread_spin_unlock(&g_caches_lock);
+				return buf;
+			}
+			break;
 		}
-		buf = spdk_mempool_get(g_cache_pool);
-		if (buf != NULL) {
-			pthread_spin_unlock(&g_caches_lock);
-			return buf;
-		}
-		break;
 	}
 
 	TAILQ_FOREACH_SAFE(file, &g_caches, cache_tailq, tmp) {
 		if (!file->open_for_writing &&
 		    file != context) {
-			reclaim_cache_buffers(file);
+			rc = reclaim_cache_buffers(file);
+			if (rc < 0) {
+				continue;
+			}
+			buf = spdk_mempool_get(g_cache_pool);
+			if (buf != NULL) {
+				pthread_spin_unlock(&g_caches_lock);
+				return buf;
+			}
+			break;
 		}
-		buf = spdk_mempool_get(g_cache_pool);
-		if (buf != NULL) {
-			pthread_spin_unlock(&g_caches_lock);
-			return buf;
-		}
-		break;
 	}
 
 	TAILQ_FOREACH_SAFE(file, &g_caches, cache_tailq, tmp) {
 		if (file != context) {
-			reclaim_cache_buffers(file);
+			rc = reclaim_cache_buffers(file);
+			if (rc < 0) {
+				continue;
+			}
+			buf = spdk_mempool_get(g_cache_pool);
+			if (buf != NULL) {
+				pthread_spin_unlock(&g_caches_lock);
+				return buf;
+			}
+			break;
 		}
-		buf = spdk_mempool_get(g_cache_pool);
-		if (buf != NULL) {
-			pthread_spin_unlock(&g_caches_lock);
-			return buf;
-		}
-		break;
 	}
 	pthread_spin_unlock(&g_caches_lock);
 
