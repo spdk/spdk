@@ -489,7 +489,8 @@ if $INSTALL; then
         clang-analyzer \
         bc \
         kernel-modules-extra \
-        systemd-devel
+        systemd-devel \
+        smartmontools
 
     elif [ $PACKAGEMNG == 'apt-get' ]; then
         echo "Package perl-open is not available at Ubuntu repositories" >&2
@@ -558,7 +559,8 @@ if $INSTALL; then
         sshpass \
         python3-pandas \
         btrfs-tools \
-        bc
+        bc \
+        smartmontools
 
         # rpm-build is not used
         # iptables installed by default
@@ -599,7 +601,8 @@ if $INSTALL; then
             clang \
             bc \
             perl-switch \
-            open-iscsi
+            open-iscsi \
+            smartmontools
 
         # TODO:
         # These are either missing or require some other installation method
