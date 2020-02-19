@@ -4,6 +4,17 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 
+dump_db_bench_on_err() {
+	# Fetch std dump of the last run_step that might have failed
+	[[ -e $db_bench ]] || return 0
+
+	# Dump entire *.txt to stderr to clearly see what might have failed
+	xtrace_disable
+	mapfile -t step_map <"$db_bench"
+	printf '%s\n' "${step_map[@]/#/* $step (FAILED)}" >&2
+	xtrace_restore
+}
+
 run_step() {
 	if [ -z "$1" ]; then
 		echo run_step called with no parameter
@@ -16,9 +27,10 @@ run_step() {
 	--spdk_cache_size=$CACHE_SIZE
 	EOL
 
+	db_bench=$1_db_bench.txt
 	echo -n Start $1 test phase...
-	/usr/bin/time taskset 0xFF $DB_BENCH --flagfile="$1"_flags.txt &> "$1"_db_bench.txt
-	DB_BENCH_FILE=$(grep /dev/shm "$1"_db_bench.txt | cut -f 6 -d ' ')
+	/usr/bin/time taskset 0xFF $DB_BENCH --flagfile="$1"_flags.txt &> "$db_bench"
+	DB_BENCH_FILE=$(grep /dev/shm "$db_bench" | cut -f 6 -d ' ')
 	gzip $DB_BENCH_FILE
 	mv $DB_BENCH_FILE.gz "$1"_trace.gz
 	chmod 644 "$1"_trace.gz
@@ -55,7 +67,7 @@ $rootdir/scripts/gen_nvme.sh > $ROCKSDB_CONF
 echo "[Global]" >> $ROCKSDB_CONF
 echo "TpointGroupMask 0x80" >> $ROCKSDB_CONF
 
-trap 'run_bsdump; rm -f $ROCKSDB_CONF; exit 1' SIGINT SIGTERM EXIT
+trap 'dump_db_bench_on_err; run_bsdump; rm -f $ROCKSDB_CONF; exit 1' SIGINT SIGTERM EXIT
 
 if [ -z "$SKIP_MKFS" ]; then
 	run_test "blobfs_mkfs" $rootdir/test/blobfs/mkfs/mkfs $ROCKSDB_CONF Nvme0n1
