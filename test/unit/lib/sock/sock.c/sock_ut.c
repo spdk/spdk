@@ -75,7 +75,7 @@ spdk_ut_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, uint16_t *s
 }
 
 static struct spdk_sock *
-spdk_ut_sock_listen(const char *ip, int port)
+spdk_ut_sock_listen(const char *ip, int port, struct spdk_sock_opts *opts)
 {
 	struct spdk_ut_sock *sock;
 
@@ -93,7 +93,7 @@ spdk_ut_sock_listen(const char *ip, int port)
 }
 
 static struct spdk_sock *
-spdk_ut_sock_connect(const char *ip, int port)
+spdk_ut_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts)
 {
 	struct spdk_ut_sock *sock;
 
@@ -809,6 +809,40 @@ posix_sock_close(void)
 	_sock_close("127.0.0.1", UT_PORT, "posix");
 }
 
+static void
+sock_get_default_opts(void)
+{
+	struct spdk_sock_opts opts;
+
+	/* opts_size is 0 */
+	opts.opts_size = 0;
+	opts.priority = 3;
+	spdk_sock_get_default_opts(&opts);
+	CU_ASSERT(opts.priority == 3);
+	CU_ASSERT(opts.opts_size == 0);
+
+	/* opts_size is less than sizeof(opts) */
+	opts.opts_size = 4;
+	opts.priority = 3;
+	spdk_sock_get_default_opts(&opts);
+	CU_ASSERT(opts.priority == 3);
+	CU_ASSERT(opts.opts_size == 4);
+
+	/* opts_size is equal to sizeof(opts) */
+	opts.opts_size = sizeof(opts);
+	opts.priority = 3;
+	spdk_sock_get_default_opts(&opts);
+	CU_ASSERT(opts.priority == SPDK_SOCK_DEFAULT_PRIORITY);
+	CU_ASSERT(opts.opts_size == sizeof(opts));
+
+	/* opts_size is larger then sizeof(opts) */
+	opts.opts_size = sizeof(opts) + 1;
+	opts.priority = 3;
+	spdk_sock_get_default_opts(&opts);
+	CU_ASSERT(opts.priority == SPDK_SOCK_DEFAULT_PRIORITY);
+	CU_ASSERT(opts.opts_size == (sizeof(opts) + 1));
+}
+
 int
 main(int argc, char **argv)
 {
@@ -826,6 +860,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, ut_sock_group);
 	CU_ADD_TEST(suite, posix_sock_group_fairness);
 	CU_ADD_TEST(suite, posix_sock_close);
+	CU_ADD_TEST(suite, sock_get_default_opts);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

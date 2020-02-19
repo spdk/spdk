@@ -135,6 +135,7 @@ Poll groups per session have been replaced by SPDK threads per vhost controller.
 
 Remove `spdk_sock_set_priority` function since the feature to set the sock priority will be
 contained in two new functions, i.e., `spdk_sock_listen_ext` and `spdk_sock_connect_ext`.
+Users may now specify the priority of the socket in the opts that they want to use.
 
 ## v20.01
 

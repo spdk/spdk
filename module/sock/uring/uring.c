@@ -339,7 +339,9 @@ _spdk_uring_sock_alloc(int fd)
 }
 
 static struct spdk_sock *
-spdk_uring_sock_create(const char *ip, int port, enum spdk_uring_sock_create_type type)
+spdk_uring_sock_create(const char *ip, int port,
+		       enum spdk_uring_sock_create_type type,
+		       struct spdk_sock_opts *opts)
 {
 	struct spdk_uring_sock *sock;
 	char buf[MAX_TMPBUF];
@@ -410,6 +412,16 @@ retry:
 			continue;
 		}
 
+#if defined(SO_PRIORITY)
+		if (opts != NULL && opts->priority) {
+			rc = setsockopt(fd, SOL_SOCKET, SO_PRIORITY, &opts->priority, sizeof val);
+			if (rc != 0) {
+				close(fd);
+				/* error */
+				continue;
+			}
+		}
+#endif
 		if (res->ai_family == AF_INET6) {
 			rc = setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &val, sizeof val);
 			if (rc != 0) {
@@ -486,15 +498,15 @@ retry:
 }
 
 static struct spdk_sock *
-spdk_uring_sock_listen(const char *ip, int port)
+spdk_uring_sock_listen(const char *ip, int port, struct spdk_sock_opts *opts)
 {
-	return spdk_uring_sock_create(ip, port, SPDK_SOCK_CREATE_LISTEN);
+	return spdk_uring_sock_create(ip, port, SPDK_SOCK_CREATE_LISTEN, opts);
 }
 
 static struct spdk_sock *
-spdk_uring_sock_connect(const char *ip, int port)
+spdk_uring_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts)
 {
-	return spdk_uring_sock_create(ip, port, SPDK_SOCK_CREATE_CONNECT);
+	return spdk_uring_sock_create(ip, port, SPDK_SOCK_CREATE_CONNECT, opts);
 }
 
 static struct spdk_sock *
@@ -526,6 +538,17 @@ spdk_uring_sock_accept(struct spdk_sock *_sock)
 		close(fd);
 		return NULL;
 	}
+
+#if defined(SO_PRIORITY)
+	/* The priority is not inherited, so call this function again */
+	if (sock->base.opts.priority) {
+		rc = setsockopt(fd, SOL_SOCKET, SO_PRIORITY, &sock->base.opts.priority, sizeof(int));
+		if (rc != 0) {
+			close(fd);
+			return NULL;
+		}
+	}
+#endif
 
 	new_sock = _spdk_uring_sock_alloc(fd);
 	if (new_sock == NULL) {

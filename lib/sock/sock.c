@@ -38,6 +38,9 @@
 #include "spdk_internal/sock.h"
 #include "spdk/queue.h"
 
+#define SPDK_SOCK_DEFAULT_PRIORITY 0
+#define SPDK_SOCK_OPTS_FIELD_OK(opts, field) (offsetof(struct spdk_sock_opts, field) + sizeof(opts->field) <= (opts->opts_size))
+
 static STAILQ_HEAD(, spdk_net_impl) g_net_impls = STAILQ_HEAD_INITIALIZER(g_net_impls);
 
 struct spdk_sock_placement_id_entry {
@@ -164,19 +167,68 @@ spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, uint16_t *sport
 	return sock->net_impl->getaddr(sock, saddr, slen, sport, caddr, clen, cport);
 }
 
+void
+spdk_sock_get_default_opts(struct spdk_sock_opts *opts)
+{
+	assert(opts);
+
+	if (SPDK_SOCK_OPTS_FIELD_OK(opts, priority)) {
+		opts->priority = SPDK_SOCK_DEFAULT_PRIORITY;
+	}
+}
+
+/*
+ * opts The opts allocated in the current library.
+ * opts_user The opts passed by the caller.
+ * */
+static void
+spdk_sock_init_opts(struct spdk_sock_opts *opts, struct spdk_sock_opts *opts_user)
+{
+	assert(opts);
+	assert(opts_user);
+
+	opts->opts_size = sizeof(*opts);
+	spdk_sock_get_default_opts(opts);
+
+	/* reset the size according to the user */
+	opts->opts_size = opts_user->opts_size;
+	if (SPDK_SOCK_OPTS_FIELD_OK(opts, priority)) {
+		opts->priority = opts_user->priority;
+	}
+}
+
 struct spdk_sock *
 spdk_sock_connect(const char *ip, int port, char *impl_name)
 {
+	struct spdk_sock_opts opts;
+
+	opts.opts_size = sizeof(opts);
+	spdk_sock_get_default_opts(&opts);
+	return spdk_sock_connect_ext(ip, port, impl_name, &opts);
+}
+
+struct spdk_sock *
+spdk_sock_connect_ext(const char *ip, int port, char *impl_name, struct spdk_sock_opts *opts)
+{
 	struct spdk_net_impl *impl = NULL;
 	struct spdk_sock *sock;
+	struct spdk_sock_opts opts_local;
+
+	if (opts == NULL) {
+		SPDK_ERRLOG("the opts should not be NULL pointer\n");
+		return NULL;
+	}
 
 	STAILQ_FOREACH_FROM(impl, &g_net_impls, link) {
 		if (impl_name && strncmp(impl_name, impl->name, strlen(impl->name) + 1)) {
 			continue;
 		}
 
-		sock = impl->connect(ip, port);
+		spdk_sock_init_opts(&opts_local, opts);
+		sock = impl->connect(ip, port, &opts_local);
 		if (sock != NULL) {
+			/* Copy the contents, both the two structures are the same ABI version */
+			memcpy(&sock->opts, &opts_local, sizeof(sock->opts));
 			sock->net_impl = impl;
 			TAILQ_INIT(&sock->queued_reqs);
 			TAILQ_INIT(&sock->pending_reqs);
@@ -190,16 +242,35 @@ spdk_sock_connect(const char *ip, int port, char *impl_name)
 struct spdk_sock *
 spdk_sock_listen(const char *ip, int port, char *impl_name)
 {
+	struct spdk_sock_opts opts;
+
+	opts.opts_size = sizeof(opts);
+	spdk_sock_get_default_opts(&opts);
+	return spdk_sock_listen_ext(ip, port, impl_name, &opts);
+}
+
+struct spdk_sock *
+spdk_sock_listen_ext(const char *ip, int port, char *impl_name, struct spdk_sock_opts *opts)
+{
 	struct spdk_net_impl *impl = NULL;
 	struct spdk_sock *sock;
+	struct spdk_sock_opts opts_local;
+
+	if (opts == NULL) {
+		SPDK_ERRLOG("the opts should not be NULL pointer\n");
+		return NULL;
+	}
 
 	STAILQ_FOREACH_FROM(impl, &g_net_impls, link) {
 		if (impl_name && strncmp(impl_name, impl->name, strlen(impl->name) + 1)) {
 			continue;
 		}
 
-		sock = impl->listen(ip, port);
+		spdk_sock_init_opts(&opts_local, opts);
+		sock = impl->listen(ip, port, &opts_local);
 		if (sock != NULL) {
+			/* Copy the contents, both the two structures are the same ABI version */
+			memcpy(&sock->opts, &opts_local, sizeof(sock->opts));
 			sock->net_impl = impl;
 			/* Don't need to initialize the request queues for listen
 			 * sockets. */
@@ -217,6 +288,9 @@ spdk_sock_accept(struct spdk_sock *sock)
 
 	new_sock = sock->net_impl->accept(sock);
 	if (new_sock != NULL) {
+		/* Inherit the opts from the "accept sock" */
+		new_sock->opts = sock->opts;
+		memcpy(&new_sock->opts, &sock->opts, sizeof(new_sock->opts));
 		new_sock->net_impl = sock->net_impl;
 		TAILQ_INIT(&new_sock->queued_reqs);
 		TAILQ_INIT(&new_sock->pending_reqs);

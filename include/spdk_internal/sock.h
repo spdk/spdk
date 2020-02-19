@@ -51,6 +51,7 @@ extern "C" {
 
 struct spdk_sock {
 	struct spdk_net_impl		*net_impl;
+	struct spdk_sock_opts		opts;
 	int				cb_cnt;
 	spdk_sock_cb			cb_fn;
 	void				*cb_arg;
@@ -91,8 +92,8 @@ struct spdk_net_impl {
 
 	int (*getaddr)(struct spdk_sock *sock, char *saddr, int slen, uint16_t *sport, char *caddr,
 		       int clen, uint16_t *cport);
-	struct spdk_sock *(*connect)(const char *ip, int port);
-	struct spdk_sock *(*listen)(const char *ip, int port);
+	struct spdk_sock *(*connect)(const char *ip, int port, struct spdk_sock_opts *opts);
+	struct spdk_sock *(*listen)(const char *ip, int port, struct spdk_sock_opts *opts);
 	struct spdk_sock *(*accept)(struct spdk_sock *sock);
 	int (*close)(struct spdk_sock *sock);
 	ssize_t (*recv)(struct spdk_sock *sock, void *buf, size_t len);

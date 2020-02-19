@@ -700,7 +700,8 @@ _spdk_vpp_session_listen(struct spdk_vpp_session *session)
 }
 
 static struct spdk_sock *
-spdk_vpp_sock_create(const char *ip, int port, enum spdk_vpp_create_type type)
+spdk_vpp_sock_create(const char *ip, int port, enum spdk_vpp_create_type type,
+		     struct spdk_sock_opts *opts)
 {
 	struct spdk_vpp_session *session;
 	int rc;
@@ -760,15 +761,15 @@ err:
 }
 
 static struct spdk_sock *
-spdk_vpp_sock_listen(const char *ip, int port)
+spdk_vpp_sock_listen(const char *ip, int port, struct spdk_sock_opts *opts)
 {
-	return spdk_vpp_sock_create(ip, port, SPDK_SOCK_CREATE_LISTEN);
+	return spdk_vpp_sock_create(ip, port, SPDK_SOCK_CREATE_LISTEN, opts);
 }
 
 static struct spdk_sock *
-spdk_vpp_sock_connect(const char *ip, int port)
+spdk_vpp_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts)
 {
-	return spdk_vpp_sock_create(ip, port, SPDK_SOCK_CREATE_CONNECT);
+	return spdk_vpp_sock_create(ip, port, SPDK_SOCK_CREATE_CONNECT, opts);
 }
 
 static struct spdk_sock *
