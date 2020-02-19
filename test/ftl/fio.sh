@@ -14,10 +14,9 @@ ftl_bdev_conf=$testdir/config/ftl.conf
 gen_ftl_nvme_conf > $ftl_bdev_conf
 
 fio_kill() {
-	$rpc_py stop_nbd_disk /dev/nbd0
-	rmmod nbd || true
 	killprocess $svcpid
 	rm -f $ftl_bdev_conf
+	rm -f $FTL_JSON_CONF
 }
 
 device=$1
@@ -34,7 +33,8 @@ if [ -z "$tests" ]; then
 	exit 1
 fi
 
-export FTL_BDEV_NAME=/dev/nbd0
+export FTL_BDEV_NAME=ftl0
+export FTL_JSON_CONF=$testdir/config/ftl.json
 
 trap "fio_kill; exit 1" SIGINT SIGTERM EXIT
 
@@ -50,9 +50,15 @@ else
 	$rpc_py bdev_ftl_create -b ftl0 -d nvme0n1 -u $uuid
 fi
 
-modprobe nbd
-$rpc_py start_nbd_disk ftl0 /dev/nbd0
-waitfornbd nbd0
+waitforbdev ftl0
+
+(
+	echo '{"subsystems": [';
+	$rpc_py save_subsystem_config -n bdev
+	echo ']}'
+) > $FTL_JSON_CONF
+
+killprocess $svcpid
 
 for test in ${tests}; do
 	timing_enter $test

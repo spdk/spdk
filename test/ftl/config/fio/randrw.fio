@@ -1,5 +1,6 @@
 [global]
-ioengine=libaio
+ioengine=spdk_bdev
+spdk_json_conf=${FTL_JSON_CONF}
 filename=${FTL_BDEV_NAME}
 direct=1
 thread=1
