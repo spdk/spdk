@@ -67,7 +67,7 @@ $rootdir/scripts/gen_nvme.sh > $ROCKSDB_CONF
 echo "[Global]" >> $ROCKSDB_CONF
 echo "TpointGroupMask 0x80" >> $ROCKSDB_CONF
 
-trap 'dump_db_bench_on_err; run_bsdump; rm -f $ROCKSDB_CONF; exit 1' SIGINT SIGTERM EXIT
+trap 'dump_db_bench_on_err; run_bsdump || :; rm -f $ROCKSDB_CONF; exit 1' SIGINT SIGTERM EXIT
 
 if [ -z "$SKIP_MKFS" ]; then
 	run_test "blobfs_mkfs" $rootdir/test/blobfs/mkfs/mkfs $ROCKSDB_CONF Nvme0n1
