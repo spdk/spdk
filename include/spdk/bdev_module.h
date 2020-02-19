@@ -532,14 +532,16 @@ struct spdk_bdev_io {
 			void *buf;
 		} zone_mgmt;
 
-		struct {
-			/* slave bdev numbers */
-			uint32_t slave_bdev_nums;
-			/* current io belong to slave bdev index */
-			uint32_t current_bdev_idx;
 
-		} merge_io;
 	} u;
+
+	struct {
+		/* slave bdev numbers */
+		uint32_t slave_bdev_nums;
+		/* current io belong to slave bdev index */
+		uint32_t current_bdev_idx;
+
+	} merge_io;
 
 	/** It may be used by modules to put the bdev_io into its own list. */
 	TAILQ_ENTRY(spdk_bdev_io) module_link;

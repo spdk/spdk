@@ -704,6 +704,14 @@ int spdk_bdev_read(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		   void *buf, uint64_t offset, uint64_t nbytes,
 		   spdk_bdev_io_completion_cb cb, void *cb_arg);
 
+
+int
+spdk_bdev_read_blocks_merge_io_spec(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+				    void *buf,
+				    void *md_buf, int64_t offset_blocks, uint64_t num_blocks, uint32_t current_bdev_idx,
+				    spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+
 /**
  * Submit a read request to the bdev on the given channel.
  *
