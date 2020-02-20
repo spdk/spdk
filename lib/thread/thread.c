@@ -45,7 +45,6 @@
 
 #define SPDK_MSG_BATCH_SIZE		8
 #define SPDK_MAX_DEVICE_NAME_LEN	256
-#define SPDK_MAX_THREAD_NAME_LEN	256
 
 static pthread_mutex_t g_devlist_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -119,50 +118,6 @@ struct spdk_poller {
 	spdk_poller_fn			fn;
 	void				*arg;
 	struct spdk_thread		*thread;
-};
-
-struct spdk_thread {
-	TAILQ_HEAD(, spdk_io_channel)	io_channels;
-	TAILQ_ENTRY(spdk_thread)	tailq;
-	char				name[SPDK_MAX_THREAD_NAME_LEN + 1];
-	uint64_t			id;
-
-	bool				exit;
-
-	struct spdk_cpuset		cpumask;
-
-	uint64_t			tsc_last;
-	struct spdk_thread_stats	stats;
-
-	/*
-	 * Contains pollers actively running on this thread.  Pollers
-	 *  are run round-robin. The thread takes one poller from the head
-	 *  of the ring, executes it, then puts it back at the tail of
-	 *  the ring.
-	 */
-	TAILQ_HEAD(active_pollers_head, spdk_poller)	active_pollers;
-
-	/**
-	 * Contains pollers running on this thread with a periodic timer.
-	 */
-	TAILQ_HEAD(timed_pollers_head, spdk_poller)	timed_pollers;
-
-	/*
-	 * Contains paused pollers.  Pollers on this queue are waiting until
-	 * they are resumed (in which case they're put onto the active/timer
-	 * queues) or unregistered.
-	 */
-	TAILQ_HEAD(paused_pollers_head, spdk_poller)	paused_pollers;
-
-	struct spdk_ring		*messages;
-
-	SLIST_HEAD(, spdk_msg)		msg_cache;
-	size_t				msg_cache_count;
-
-	spdk_msg_fn			critical_msg;
-
-	/* User context allocated at the end */
-	uint8_t				ctx[0];
 };
 
 static TAILQ_HEAD(, spdk_thread) g_threads = TAILQ_HEAD_INITIALIZER(g_threads);
