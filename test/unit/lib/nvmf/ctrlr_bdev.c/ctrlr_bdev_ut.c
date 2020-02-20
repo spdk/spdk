@@ -269,25 +269,25 @@ test_spdk_nvmf_bdev_ctrlr_compare_and_write_cmd(void)
 	struct spdk_bdev_desc *desc = NULL;
 	struct spdk_io_channel ch = {};
 
-	struct spdk_nvmf_request cmp_req;
-	union nvmf_c2h_msg cmp_rsp;
+	struct spdk_nvmf_request cmp_req = {};
+	union nvmf_c2h_msg cmp_rsp = {};
 
-	struct spdk_nvmf_request write_req;
-	union nvmf_c2h_msg write_rsp;
+	struct spdk_nvmf_request write_req = {};
+	union nvmf_c2h_msg write_rsp = {};
 
-	struct spdk_nvmf_qpair qpair;
+	struct spdk_nvmf_qpair qpair = {};
 
-	struct spdk_nvme_cmd cmp_cmd;
-	struct spdk_nvme_cmd write_cmd;
+	struct spdk_nvme_cmd cmp_cmd = {};
+	struct spdk_nvme_cmd write_cmd = {};
 
-	struct spdk_nvmf_ctrlr ctrlr;
-	struct spdk_nvmf_subsystem subsystem;
-	struct spdk_nvmf_ns ns;
-	struct spdk_nvmf_ns *subsys_ns[1];
+	struct spdk_nvmf_ctrlr ctrlr = {};
+	struct spdk_nvmf_subsystem subsystem = {};
+	struct spdk_nvmf_ns ns = {};
+	struct spdk_nvmf_ns *subsys_ns[1] = {};
 
-	struct spdk_nvmf_poll_group group;
-	struct spdk_nvmf_subsystem_poll_group sgroups;
-	struct spdk_nvmf_subsystem_pg_ns_info ns_info;
+	struct spdk_nvmf_poll_group group = {};
+	struct spdk_nvmf_subsystem_poll_group sgroups = {};
+	struct spdk_nvmf_subsystem_pg_ns_info ns_info = {};
 
 	bdev.blocklen = 512;
 	bdev.num_blocks = 10;

@@ -1171,9 +1171,9 @@ test_reservation_notification_log_page(void)
 	struct spdk_nvmf_qpair qpair;
 	struct spdk_nvmf_ns ns;
 	struct spdk_nvmf_request req;
-	union nvmf_h2c_msg cmd;
-	union nvmf_c2h_msg rsp = {{0}};
-	union spdk_nvme_async_event_completion event = {0};
+	union nvmf_h2c_msg cmd = {};
+	union nvmf_c2h_msg rsp = {};
+	union spdk_nvme_async_event_completion event = {};
 	struct spdk_nvme_reservation_notification_log logs[3];
 
 	memset(&ctrlr, 0, sizeof(ctrlr));
@@ -1404,19 +1404,19 @@ test_custom_admin_cmd(void)
 static void
 test_fused_compare_and_write(void)
 {
-	struct spdk_nvmf_request req;
-	struct spdk_nvmf_qpair qpair;
-	struct spdk_nvme_cmd cmd;
-	union nvmf_c2h_msg rsp;
-	struct spdk_nvmf_ctrlr ctrlr;
-	struct spdk_nvmf_subsystem subsystem;
-	struct spdk_nvmf_ns ns;
-	struct spdk_nvmf_ns *subsys_ns[1];
-	struct spdk_bdev bdev;
+	struct spdk_nvmf_request req = {};
+	struct spdk_nvmf_qpair qpair = {};
+	struct spdk_nvme_cmd cmd = {};
+	union nvmf_c2h_msg rsp = {};
+	struct spdk_nvmf_ctrlr ctrlr = {};
+	struct spdk_nvmf_subsystem subsystem = {};
+	struct spdk_nvmf_ns ns = {};
+	struct spdk_nvmf_ns *subsys_ns[1] = {};
+	struct spdk_bdev bdev = {};
 
-	struct spdk_nvmf_poll_group group;
-	struct spdk_nvmf_subsystem_poll_group sgroups;
-	struct spdk_nvmf_subsystem_pg_ns_info ns_info;
+	struct spdk_nvmf_poll_group group = {};
+	struct spdk_nvmf_subsystem_poll_group sgroups = {};
+	struct spdk_nvmf_subsystem_pg_ns_info ns_info = {};
 
 	ns.bdev = &bdev;
 
