@@ -372,6 +372,14 @@ const char *spdk_thread_get_name(const struct spdk_thread *thread);
  */
 uint64_t spdk_thread_get_id(const struct spdk_thread *thread);
 
+/**
+ * Get the thread by the ID.
+ *
+ * \param id ID of the thread.
+ * \return Thread whose ID matches or NULL otherwise.
+ */
+struct spdk_thread *spdk_thread_get_by_id(uint64_t id);
+
 struct spdk_thread_stats {
 	uint64_t busy_tsc;
 	uint64_t idle_tsc;

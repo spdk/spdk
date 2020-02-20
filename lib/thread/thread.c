@@ -735,6 +735,24 @@ spdk_thread_get_id(const struct spdk_thread *thread)
 	return thread->id;
 }
 
+struct spdk_thread *
+spdk_thread_get_by_id(uint64_t id)
+{
+	struct spdk_thread *thread;
+
+	pthread_mutex_lock(&g_devlist_mutex);
+	TAILQ_FOREACH(thread, &g_threads, tailq) {
+		if (thread->id == id) {
+			pthread_mutex_unlock(&g_devlist_mutex);
+
+			return thread;
+		}
+	}
+	pthread_mutex_unlock(&g_devlist_mutex);
+
+	return NULL;
+}
+
 int
 spdk_thread_get_stats(struct spdk_thread_stats *stats)
 {
