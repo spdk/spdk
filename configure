@@ -116,6 +116,44 @@ declare -A CONFIG
 source $rootdir/CONFIG.sh
 rm $rootdir/CONFIG.sh
 
+# Detect the compiler toolchain
+$rootdir/scripts/detect_cc.sh --cc="$CC" --cxx="$CXX" --lto="${CONFIG[LTO]}" --ld="$LD" --cross-prefix="${CONFIG[CROSS_PREFIX]}"  > $rootdir/mk/cc.mk
+
+CC=$(cat $rootdir/mk/cc.mk | grep "DEFAULT_CC=" | cut -d "=" -f 2)
+CC_TYPE=$(cat $rootdir/mk/cc.mk | grep "CC_TYPE=" | cut -d "=" -f 2)
+
+arch=$($CC -dumpmachine)
+
+# Sanitize default configuration. All parameters set by user explicit should fail
+# Force no ISA-L if non-x86 or non-aarch64 architecture
+if [[ "${CONFIG[ISAL]}" = "y" ]]; then
+	if [[ $arch != x86_64* ]] && [[ $arch != aarch64* ]]; then
+		CONFIG[ISAL]=n
+		echo "Notice: ISA-L not supported for ${arch}. Turning off default feature."
+	fi
+fi
+
+if [[ "$OSTYPE" == "freebsd"* ]]; then
+	# Vhost, rte_vhost library and virtio are only supported on Linux.
+	CONFIG[VHOST]="n"
+	CONFIG[VHOST_INTERNAL_LIB]="n"
+	CONFIG[VIRTIO]="n"
+	echo "Notice: Vhost, rte_vhost library and virtio are only supported on Linux. Turning off default feature."
+fi
+
+ver=$(nasm -v 2>/dev/null | awk '{print $3}' | sed 's/[^0-9]*//g')
+if [[ "${ver:0:1}" -le "2" ]] && [[ "${ver:0:3}" -le "213" ]] && [[ "${ver:0:5}" -lt "21303" ]]; then
+	# ISA-L, compression & crypto require NASM version 2.13.03 or newer.
+	CONFIG[ISAL]=n
+	CONFIG[CRYPTO]=n
+	CONFIG[IPSEC_MB]=n
+	CONFIG[REDUCE]=n
+	HAVE_NASM=n
+	echo "Notice: ISA-L, compression & crypto require NASM version 2.13.03 or newer. Turning off default ISA-L and crypto features."
+else
+	HAVE_NASM=y
+fi
+
 function check_dir() {
 	arg="$1"
 	dir="${arg#*=}"
@@ -381,14 +419,6 @@ for i in "$@"; do
 	esac
 done
 
-# Detect the compiler toolchain
-$rootdir/scripts/detect_cc.sh --cc="$CC" --cxx="$CXX" --lto="${CONFIG[LTO]}" --ld="$LD" --cross-prefix="${CONFIG[CROSS_PREFIX]}"  > $rootdir/mk/cc.mk
-
-CC=$(cat $rootdir/mk/cc.mk | grep "DEFAULT_CC=" | cut -d "=" -f 2)
-CC_TYPE=$(cat $rootdir/mk/cc.mk | grep "CC_TYPE=" | cut -d "=" -f 2)
-
-arch=$($CC -dumpmachine)
-
 if [[ $arch == x86_64* ]]; then
 	BUILD_CMD=($CC -o /dev/null -x c $CPPFLAGS $CFLAGS $LDFLAGS -march=native)
 else
@@ -398,8 +428,8 @@ fi
 # Detect architecture and force no ISA-L if non-x86 or non-aarch64 architecture
 if [[ "${CONFIG[ISAL]}" = "y" ]]; then
 	if [[ $arch != x86_64* ]] && [[ $arch != aarch64* ]]; then
-		echo "Notice: ISA-L disabled due to CPU incompatiblity."
-		CONFIG[ISAL]=n
+		echo "ERROR: ISA-L cannot be used due to CPU incompatiblity."
+		exit 1
 	fi
 fi
 
@@ -496,16 +526,16 @@ fi
 
 if [[ "$OSTYPE" == "freebsd"* ]]; then
 	if [[ "${CONFIG[VHOST]}" == "y" ]]; then
-		echo "Vhost is only supported on Linux. Disabling it."
-		CONFIG[VHOST]="n"
+		echo "Vhost is only supported on Linux."
+		exit 1
 	fi
 	if [[ "${CONFIG[VHOST_INTERNAL_LIB]}" == "y" ]]; then
-		echo "Internal rte_vhost library is only supported on Linux. Disabling it."
-		CONFIG[VHOST_INTERNAL_LIB]="n"
+		echo "Internal rte_vhost library is only supported on Linux."
+		exit 1
 	fi
 	if [[ "${CONFIG[VIRTIO]}" == "y" ]]; then
-		echo "Virtio is only supported on Linux. Disabling it."
-		CONFIG[VIRTIO]="n"
+		echo "Virtio is only supported on Linux."
+		exit 1
 	fi
 fi
 
@@ -551,15 +581,10 @@ if [[ "${CONFIG[FC]}" = "y" ]]; then
 fi
 
 if [[ "${CONFIG[ISAL]}" = "y" ]] || [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
-	ver=$(nasm -v 2>/dev/null | awk '{print $3}' | sed 's/[^0-9]*//g')
-	if [[ "${ver:0:1}" -le "2" ]] && [[ "${ver:0:3}" -le "213" ]] && [[ "${ver:0:5}" -lt "21303" ]]; then
-		echo "Notice: ISA-L, compression & crypto auto-disabled due to nasm dependency."
-		echo "These features require NASM version 2.13.03 or newer.  Please install"
-		echo "or upgrade then re-run this script."
-		CONFIG[ISAL]=n
-		CONFIG[CRYPTO]=n
-		CONFIG[IPSEC_MB]=n
-		CONFIG[REDUCE]=n
+	if [[ "${HAVE_NASM}" = "n" ]]; then
+		echo "ERROR: ISA-L, compression & crypto require NASM version 2.13.03 or newer."
+		echo "Please install or upgrade them re-run this script."
+		exit 1
 	else
 		if [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
 			CONFIG[IPSEC_MB]=y
