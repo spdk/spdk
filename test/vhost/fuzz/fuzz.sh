@@ -5,21 +5,21 @@ rootdir=$(readlink -f $(dirname $0))/../../..
 source $rootdir/test/common/autotest_common.sh
 source "$rootdir/scripts/common.sh"
 
-VHOST_APP="$rootdir/app/vhost/vhost -p 0"
+VHOST_APP+=(-p 0)
 FUZZ_RPC_SOCK="/var/tmp/spdk_fuzz.sock"
-FUZZ_APP="$rootdir/test/app/fuzz/vhost_fuzz/vhost_fuzz -r $FUZZ_RPC_SOCK --wait-for-rpc"
+FUZZ_APP+=(-r "$FUZZ_RPC_SOCK" --wait-for-rpc)
 
 vhost_rpc_py="$rootdir/scripts/rpc.py"
 fuzz_generic_rpc_py="$rootdir/scripts/rpc.py -s $FUZZ_RPC_SOCK"
 fuzz_specific_rpc_py="$rootdir/test/app/fuzz/common/fuzz_rpc.py -s $FUZZ_RPC_SOCK"
 
-$VHOST_APP >$output_dir/vhost_fuzz_tgt_output.txt 2>&1 &
+"${VHOST_APP[@]}" >"$output_dir/vhost_fuzz_tgt_output.txt" 2>&1 &
 vhostpid=$!
 waitforlisten $vhostpid
 
 trap 'killprocess $vhostpid; exit 1' SIGINT SIGTERM exit
 
-$FUZZ_APP -t 10 2>$output_dir/vhost_fuzz_output1.txt &
+"${FUZZ_APP[@]}" -t 10 2>"$output_dir/vhost_fuzz_output1.txt" &
 fuzzpid=$!
 waitforlisten $fuzzpid $FUZZ_RPC_SOCK
 
@@ -47,7 +47,7 @@ $fuzz_generic_rpc_py framework_start_init
 
 wait $fuzzpid
 
-$FUZZ_APP -j $rootdir/test/app/fuzz/vhost_fuzz/example.json 2>$output_dir/vhost_fuzz_output2.txt &
+"${FUZZ_APP[@]}" -j "$rootdir/test/app/fuzz/vhost_fuzz/example.json" 2>"$output_dir/vhost_fuzz_output2.txt" &
 fuzzpid=$!
 waitforlisten $fuzzpid $FUZZ_RPC_SOCK
 

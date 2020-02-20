@@ -1,0 +1,11 @@
+# Default set of apps used in functional testing
+
+_root=$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")
+_root=${_root%/test/common}
+_app_dir=$_root/app
+_test_app_dir=$_root/test/app
+
+FUZZ_APP=("$_test_app_dir/fuzz/vhost_fuzz/vhost_fuzz")
+ISCSI_APP=("$_app_dir/iscsi_tgt/iscsi_tgt")
+NVMF_APP=("$_app_dir/nvmf_tgt/nvmf_tgt")
+VHOST_APP=("$_app_dir/vhost/vhost")

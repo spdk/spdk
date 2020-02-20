@@ -23,7 +23,7 @@ rpc_config_py="$testdir/rpc_config.py"
 
 timing_enter start_iscsi_tgt
 
-$ISCSI_APP --wait-for-rpc &
+"${ISCSI_APP[@]}" --wait-for-rpc &
 pid=$!
 echo "Process pid: $pid"
 

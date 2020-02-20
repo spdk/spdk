@@ -36,30 +36,28 @@ vhosttestinit
 
 trap error_exit ERR
 
-VHOST_APP="$rootdir/app/vhost/vhost"
-
 notice "Testing vhost command line arguments"
 # Printing help will force vhost to exit without error
-$VHOST_APP -c /path/to/non_existing_file/conf -S $testdir -e 0x0 -s 1024 -d -h --silence-noticelog
+"${VHOST_APP[@]}" -c /path/to/non_existing_file/conf -S $testdir -e 0x0 -s 1024 -d -h --silence-noticelog
 
 # Testing vhost create pid file option. Vhost will exit with error as invalid config path is given
-if $VHOST_APP -c /path/to/non_existing_file/conf -f $VHOST_DIR/vhost/vhost.pid; then
+if "${VHOST_APP[@]}" -c /path/to/non_existing_file/conf -f "$VHOST_DIR/vhost/vhost.pid"; then
 	fail "vhost started when specifying invalid config file"
 fi
 rm -f $VHOST_DIR/vhost/vhost.pid
 
 # Testing vhost start with invalid config. Vhost will exit with error as bdev module init failed
-if $VHOST_APP -c $testdir/invalid.config; then
+if "${VHOST_APP[@]}" -c $testdir/invalid.config; then
 	fail "vhost started when specifying invalid config file"
 fi
 
 # Expecting vhost to fail if an incorrect argument is given
-if $VHOST_APP -x -h; then
+if "${VHOST_APP[@]}" -x -h; then
 	fail "vhost started with invalid -x command line option"
 fi
 
 # Passing trace flags if spdk is build without CONFIG_DEBUG=y option make vhost exit with error
-if ! $VHOST_APP -t vhost_scsi -h;  then
+if ! "${VHOST_APP[@]}" -t vhost_scsi -h;  then
 	warning "vhost did not started with trace flags enabled but ignoring this as it might not be a debug build"
 fi
 

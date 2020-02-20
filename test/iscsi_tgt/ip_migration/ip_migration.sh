@@ -14,7 +14,8 @@ fio_py="$rootdir/scripts/fio.py"
 
 # Namespaces are NOT used here on purpose. This test requires changes to detect
 # ifc_index for interface that was put into namespace. Needed for net_interface_add_ip_address.
-ISCSI_APP="$rootdir/app/iscsi_tgt/iscsi_tgt"
+# Reset ISCSI_APP[] to use only the plain app for this test without TARGET_NS_CMD preset.
+source "$rootdir/test/common/applications.sh"
 NETMASK=127.0.0.0/24
 MIGRATION_ADDRESS=127.0.0.2
 
@@ -82,7 +83,7 @@ for ((i = 0; i < 2; i++)); do
 	rpc_addr="/var/tmp/spdk${i}.sock"
 
 	# TODO: run the different iSCSI instances on non-overlapping CPU masks
-	$ISCSI_APP -r $rpc_addr -i $i -m $ISCSI_TEST_CORE_MASK --wait-for-rpc &
+	"${ISCSI_APP[@]}" -r $rpc_addr -i $i -m $ISCSI_TEST_CORE_MASK --wait-for-rpc &
 	pid=$!
 	echo "Process pid: $pid"
 

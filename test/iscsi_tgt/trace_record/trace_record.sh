@@ -38,7 +38,7 @@ fio_py="$rootdir/scripts/fio.py"
 timing_enter start_iscsi_tgt
 
 echo "start iscsi_tgt with trace enabled"
-$ISCSI_APP -m 0xf --num-trace-entries $NUM_TRACE_ENTRIES --tpoint-group-mask 0xf &
+"${ISCSI_APP[@]}" -m 0xf --num-trace-entries $NUM_TRACE_ENTRIES --tpoint-group-mask 0xf &
 iscsi_pid=$!
 echo "Process pid: $iscsi_pid"
 

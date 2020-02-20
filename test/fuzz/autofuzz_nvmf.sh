@@ -24,7 +24,7 @@ timing_enter nvmf_fuzz_test
 echo "[Nvme]" > $testdir/nvmf_fuzz.conf
 echo "  TransportID \"trtype:$TEST_TRANSPORT adrfam:IPv4 subnqn:nqn.2016-06.io.spdk:cnode1 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT\" Nvme0" >> $testdir/nvmf_fuzz.conf
 
-$NVMF_APP -m 0xF &>$output_dir/nvmf_autofuzz_tgt_output.txt &
+"${NVMF_APP[@]}" -m 0xF &>"$output_dir/nvmf_autofuzz_tgt_output.txt" &
 nvmfpid=$!
 
 trap 'process_shm --id $NVMF_APP_SHM_ID; rm -f $testdir/nvmf_fuzz.conf; killprocess $nvmfpid; nvmftestfini $1; exit 1' SIGINT SIGTERM EXIT

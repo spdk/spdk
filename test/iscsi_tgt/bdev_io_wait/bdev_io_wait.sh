@@ -14,7 +14,7 @@ rpc_py="$rootdir/scripts/rpc.py"
 
 timing_enter start_iscsi_tgt
 
-$ISCSI_APP -m 0x2 -p 1 -s 512 --wait-for-rpc &
+"${ISCSI_APP[@]}" -m 0x2 -p 1 -s 512 --wait-for-rpc &
 pid=$!
 echo "iSCSI target launched. pid: $pid"
 trap 'killprocess $pid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT

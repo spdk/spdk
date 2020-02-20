@@ -26,7 +26,7 @@ timing_exit nvme_identify
 
 timing_enter start_nvmf_tgt
 
-$NVMF_APP -m 0xF --wait-for-rpc &
+"${NVMF_APP[@]}" -m 0xF --wait-for-rpc &
 nvmfpid=$!
 
 trap 'process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1' SIGINT SIGTERM EXIT

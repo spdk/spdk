@@ -18,13 +18,13 @@ NVMF_SOCK="/tmp/nvmf_rpc.sock"
 NVMF_RPC="$rootdir/scripts/rpc.py -s $NVMF_SOCK"
 
 VHOST_SOCK="/tmp/vhost_rpc.sock"
-VHOST_APP="$rootdir/app/vhost/vhost -p 0 -r $VHOST_SOCK -u"
+VHOST_APP+=(-p 0 -r "$VHOST_SOCK" -u)
 VHOST_RPC="$rootdir/scripts/rpc.py -s $VHOST_SOCK"
 
 nvmftestinit
 
 # Start Apps
-$NVMF_APP -r $NVMF_SOCK &
+"${NVMF_APP[@]}" -r $NVMF_SOCK &
 nvmfpid=$!
 waitforlisten $nvmfpid $NVMF_SOCK
 
@@ -32,7 +32,7 @@ trap 'process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1' SIGINT SIGTERM EX
 
 mkdir -p "$(get_vhost_dir 3)"
 
-$VHOST_APP -S "$(get_vhost_dir 3)" &
+"${VHOST_APP[@]}" -S "$(get_vhost_dir 3)" &
 vhostpid=$!
 waitforlisten $vhostpid $NVMF_SOCK
 

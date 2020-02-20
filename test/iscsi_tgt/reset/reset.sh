@@ -21,7 +21,7 @@ fi
 
 timing_enter start_iscsi_tgt
 
-$ISCSI_APP --wait-for-rpc &
+"${ISCSI_APP[@]}" --wait-for-rpc &
 pid=$!
 echo "Process pid: $pid"
 

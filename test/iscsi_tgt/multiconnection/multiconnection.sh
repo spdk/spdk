@@ -35,7 +35,7 @@ function remove_backends() {
 }
 
 timing_enter start_iscsi_tgt
-$ISCSI_APP --wait-for-rpc &
+"${ISCSI_APP[@]}" --wait-for-rpc &
 iscsipid=$!
 echo "iSCSI target launched. pid: $iscsipid"
 trap 'remove_backends; iscsicleanup; killprocess $iscsipid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT

@@ -14,7 +14,7 @@ node_base="iqn.2013-06.com.intel.ch.spdk"
 
 timing_enter start_iscsi_tgt
 
-$ISCSI_APP --wait-for-rpc &
+"${ISCSI_APP[@]}" --wait-for-rpc &
 pid=$!
 echo "Process pid: $pid"
 

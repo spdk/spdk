@@ -28,7 +28,7 @@ function running_config() {
 
 	timing_enter start_iscsi_tgt2
 
-	$ISCSI_APP --wait-for-rpc &
+	"${ISCSI_APP[@]}" --wait-for-rpc &
 	pid=$!
 	echo "Process pid: $pid"
 	trap 'iscsicleanup; killprocess $pid; delete_tmp_files; exit 1' SIGINT SIGTERM EXIT
@@ -62,7 +62,7 @@ fio_py="$rootdir/scripts/fio.py"
 
 timing_enter start_iscsi_tgt
 
-$ISCSI_APP --wait-for-rpc &
+"${ISCSI_APP[@]}" --wait-for-rpc &
 pid=$!
 echo "Process pid: $pid"
 

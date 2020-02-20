@@ -2,7 +2,7 @@
 TARGET_INTERFACE="spdk_tgt_int"
 INITIATOR_INTERFACE="spdk_init_int"
 TARGET_NAMESPACE="spdk_iscsi_ns"
-TARGET_NS_CMD="ip netns exec $TARGET_NAMESPACE"
+TARGET_NS_CMD=(ip netns exec "$TARGET_NAMESPACE")
 
 # iSCSI target configuration
 TARGET_IP=10.0.0.1
@@ -12,9 +12,9 @@ NETMASK=$INITIATOR_IP/32
 INITIATOR_TAG=2
 INITIATOR_NAME=ANY
 PORTAL_TAG=1
-ISCSI_APP="$TARGET_NS_CMD ./app/iscsi_tgt/iscsi_tgt"
+ISCSI_APP=("${TARGET_NS_CMD[@]}" "${ISCSI_APP[@]}")
 if [ $SPDK_TEST_VPP -eq 1 ]; then
-	ISCSI_APP+=" -L sock_vpp"
+	ISCSI_APP+=(-L sock_vpp)
 fi
 ISCSI_TEST_CORE_MASK=0xFF
 
@@ -37,11 +37,11 @@ function create_veth_interfaces() {
 	# Accept connections from veth interface
 	iptables -I INPUT 1 -i $INITIATOR_INTERFACE -p tcp --dport $ISCSI_PORT -j ACCEPT
 
-	$TARGET_NS_CMD ip link set $TARGET_INTERFACE up
+	"${TARGET_NS_CMD[@]}" ip link set $TARGET_INTERFACE up
 
 	if [ "$1" == "posix" ]; then
-		$TARGET_NS_CMD ip link set lo up
-		$TARGET_NS_CMD ip addr add $TARGET_IP/24 dev $TARGET_INTERFACE
+		"${TARGET_NS_CMD[@]}" ip link set lo up
+		"${TARGET_NS_CMD[@]}" ip addr add $TARGET_IP/24 dev $TARGET_INTERFACE
 
 		# Verify connectivity
 		ping -c 1 $TARGET_IP
@@ -112,7 +112,7 @@ function start_vpp() {
 	ethtool -k $INITIATOR_INTERFACE
 
 	# Start VPP process in SPDK target network namespace
-	$TARGET_NS_CMD vpp \
+	"${TARGET_NS_CMD[@]}" vpp \
 		unix { nodaemon cli-listen /run/vpp/cli.sock } \
 		dpdk { no-pci } \
 		session { evt_qs_memfd_seg } \

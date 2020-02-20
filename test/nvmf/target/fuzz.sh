@@ -9,7 +9,7 @@ rpc_py="$rootdir/scripts/rpc.py"
 
 nvmftestinit
 
-$NVMF_APP -m 0xF >$output_dir/nvmf_fuzz_tgt_output.txt 2>&1 &
+"${NVMF_APP[@]}" -m 0xF >$output_dir/nvmf_fuzz_tgt_output.txt 2>&1 &
 nvmfpid=$!
 
 trap 'process_shm --id $NVMF_APP_SHM_ID; rm -f $testdir/nvmf_fuzz.conf; killprocess $nvmfpid; nvmftestfini $1; exit 1' SIGINT SIGTERM EXIT

@@ -8,14 +8,15 @@ NVMF_SERIAL=SPDK00000000000001
 function build_nvmf_app_args()
 {
 	if [ $SPDK_RUN_NON_ROOT -eq 1 ]; then
-		echo "sudo -u $(logname) ./app/nvmf_tgt/nvmf_tgt -i $NVMF_APP_SHM_ID -e 0xFFFF"
+		NVMF_APP=(sudo -u "$USER" "${NVMF_APP[@]}")
+		NVMF_APP+=(-i "$NVMF_APP_SHM_ID" -e 0xFFFF)
 	else
-		echo "./app/nvmf_tgt/nvmf_tgt -i $NVMF_APP_SHM_ID -e 0xFFFF"
+		NVMF_APP+=(-i "$NVMF_APP_SHM_ID" -e 0xFFFF)
 	fi
 }
 
 : ${NVMF_APP_SHM_ID="0"}; export NVMF_APP_SHM_ID
-: ${NVMF_APP="$(build_nvmf_app_args)"}; export NVMF_APP
+build_nvmf_app_args
 
 have_pci_nics=0
 
@@ -207,7 +208,7 @@ function nvmftestinit()
 function nvmfappstart()
 {
 	timing_enter start_nvmf_tgt
-	$NVMF_APP $1 &
+	"${NVMF_APP[@]}" $1 &
 	nvmfpid=$!
 	trap 'process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $nvmfpid

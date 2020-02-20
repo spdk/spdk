@@ -16,6 +16,8 @@ xtrace_disable
 set -e
 shopt -s expand_aliases
 
+source "$rootdir/test/common/applications.sh"
+
 # Dummy function to be called after restoring xtrace just so that it appears in the
 # xtrace log. This way we can consistently track when xtrace is enabled/disabled.
 function xtrace_enable() {
