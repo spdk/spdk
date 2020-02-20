@@ -86,6 +86,7 @@ struct vbdev_passthru {
 	struct spdk_bdev_desc		*base_desc; /* its descriptor we get from open */
 	struct spdk_bdev		pt_bdev;    /* the PT virtual bdev */
 	TAILQ_ENTRY(vbdev_passthru)	link;
+	struct spdk_thread		*thread;    /* thread where base device is opened */
 };
 static TAILQ_HEAD(, vbdev_passthru) g_pt_nodes = TAILQ_HEAD_INITIALIZER(g_pt_nodes);
 
@@ -127,6 +128,14 @@ _device_unregister_cb(void *io_device)
 	free(pt_node);
 }
 
+/* Wrapper for the bdev close operation. */
+static void
+_vbdev_passthru_destruct(void *ctx)
+{
+	struct spdk_bdev_desc *desc = ctx;
+	spdk_bdev_close(desc);
+}
+
 /* Called after we've unregistered following a hot remove callback.
  * Our finish entry point will be called next.
  */
@@ -144,8 +153,8 @@ vbdev_passthru_destruct(void *ctx)
 	/* Unclaim the underlying bdev. */
 	spdk_bdev_module_release_bdev(pt_node->base_bdev);
 
-	/* Close the underlying bdev. */
-	spdk_bdev_close(pt_node->base_desc);
+	/* Close the underlying bdev on its same opened thread. */
+	spdk_thread_send_msg(pt_node->thread, _vbdev_passthru_destruct, pt_node->base_desc);
 
 	/* Unregister the io_device. */
 	spdk_io_device_unregister(pt_node, _device_unregister_cb);
@@ -684,6 +693,9 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 			break;
 		}
 		SPDK_NOTICELOG("bdev opened\n");
+
+		/* Save the thread where the base device is opened */
+		pt_node->thread = spdk_get_thread();
 
 		rc = spdk_bdev_module_claim_bdev(bdev, pt_node->base_desc, pt_node->pt_bdev.module);
 		if (rc) {
