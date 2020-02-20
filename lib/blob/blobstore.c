@@ -3790,15 +3790,16 @@ static bool _spdk_bs_load_cur_extent_page_valid(struct spdk_blob_md_page *page)
 static bool _spdk_bs_load_cur_md_page_valid(struct spdk_bs_load_ctx *ctx)
 {
 	uint32_t crc;
+	struct spdk_blob_md_page *page = ctx->page;
 
-	crc = _spdk_blob_md_page_calc_crc(ctx->page);
-	if (crc != ctx->page->crc) {
+	crc = _spdk_blob_md_page_calc_crc(page);
+	if (crc != page->crc) {
 		return false;
 	}
 
 	/* First page of a sequence should match the blobid. */
-	if (ctx->page->sequence_num == 0 &&
-	    _spdk_bs_page_to_blobid(ctx->cur_page) != ctx->page->id) {
+	if (page->sequence_num == 0 &&
+	    _spdk_bs_page_to_blobid(ctx->cur_page) != page->id) {
 		return false;
 	}
 	return true;
@@ -3941,6 +3942,7 @@ _spdk_bs_load_replay_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx *ctx = cb_arg;
 	uint32_t page_num;
+	struct spdk_blob_md_page *page;
 
 	if (bserrno != 0) {
 		_spdk_bs_load_ctx_fail(ctx, bserrno);
@@ -3948,19 +3950,20 @@ _spdk_bs_load_replay_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	}
 
 	page_num = ctx->cur_page;
+	page = ctx->page;
 	if (_spdk_bs_load_cur_md_page_valid(ctx) == true) {
-		if (ctx->page->sequence_num == 0 || ctx->in_page_chain == true) {
+		if (page->sequence_num == 0 || ctx->in_page_chain == true) {
 			_spdk_bs_claim_md_page(ctx->bs, page_num);
-			if (ctx->page->sequence_num == 0) {
+			if (page->sequence_num == 0) {
 				spdk_bit_array_set(ctx->bs->used_blobids, page_num);
 			}
 			if (_spdk_bs_load_replay_md_parse_page(ctx)) {
 				_spdk_bs_load_ctx_fail(ctx, -EILSEQ);
 				return;
 			}
-			if (ctx->page->next != SPDK_INVALID_MD_PAGE) {
+			if (page->next != SPDK_INVALID_MD_PAGE) {
 				ctx->in_page_chain = true;
-				ctx->cur_page = ctx->page->next;
+				ctx->cur_page = page->next;
 				_spdk_bs_load_replay_cur_md_page(ctx);
 				return;
 			}
