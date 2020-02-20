@@ -101,10 +101,6 @@ spdk_sock_map_release(int placement_id)
 		if (placement_id == entry->placement_id) {
 			assert(entry->ref > 0);
 			entry->ref--;
-			if (!entry->ref) {
-				STAILQ_REMOVE(&g_placement_id_map, entry, spdk_sock_placement_id_entry, link);
-				free(entry);
-			}
 			break;
 		}
 	}
