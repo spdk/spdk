@@ -292,3 +292,111 @@ spdk_rpc_framework_get_reactors(struct spdk_jsonrpc_request *request,
 }
 
 SPDK_RPC_REGISTER("framework_get_reactors", spdk_rpc_framework_get_reactors, SPDK_RPC_RUNTIME)
+
+struct rpc_thread_set_cpumask_ctx {
+	struct spdk_jsonrpc_request *request;
+	struct spdk_cpuset cpumask;
+	int status;
+	struct spdk_thread *orig_thread;
+};
+
+static void
+rpc_thread_set_cpumask_done(void *_ctx)
+{
+	struct rpc_thread_set_cpumask_ctx *ctx = _ctx;
+	struct spdk_json_write_ctx *w;
+
+	if (ctx->status == 0) {
+		w = spdk_jsonrpc_begin_result(ctx->request);
+		spdk_json_write_bool(w, true);
+		spdk_jsonrpc_end_result(ctx->request, w);
+	} else {
+		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 spdk_strerror(-ctx->status));
+	}
+
+	free(ctx);
+}
+
+static void
+rpc_thread_set_cpumask(void *_ctx)
+{
+	struct rpc_thread_set_cpumask_ctx *ctx = _ctx;
+
+	ctx->status = spdk_thread_set_cpumask(&ctx->cpumask);
+
+	spdk_thread_send_msg(ctx->orig_thread, rpc_thread_set_cpumask_done, ctx);
+}
+
+struct rpc_thread_set_cpumask {
+	uint64_t id;
+	char *cpumask;
+};
+
+static const struct spdk_json_object_decoder rpc_thread_set_cpumask_decoders[] = {
+	{"id", offsetof(struct rpc_thread_set_cpumask, id), spdk_json_decode_uint64},
+	{"cpumask", offsetof(struct rpc_thread_set_cpumask, cpumask), spdk_json_decode_string},
+};
+
+static void
+spdk_rpc_thread_set_cpumask(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
+{
+	struct rpc_thread_set_cpumask req = {};
+	struct rpc_thread_set_cpumask_ctx *ctx;
+	struct spdk_thread *thread;
+	int rc;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("Memory allocation failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Memory allocation failed");
+		return;
+	}
+
+	if (spdk_json_decode_object(params, rpc_thread_set_cpumask_decoders,
+				    SPDK_COUNTOF(rpc_thread_set_cpumask_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "spdk_json_decode_object failed");
+		goto err;
+	}
+
+	thread = spdk_thread_get_by_id(req.id);
+	if (thread == NULL) {
+		SPDK_ERRLOG("Thread %" PRIu64 " does not exist\n", req.id);
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						     "Thread %" PRIu64 " does not exist", req.id);
+		goto err;
+	}
+
+	rc = spdk_app_parse_core_mask(req.cpumask, &ctx->cpumask);
+	if (rc != 0) {
+		SPDK_ERRLOG("Invalid cpumask %s\n", req.cpumask);
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "Invalid cpumask %s", req.cpumask);
+		goto err;
+	}
+
+	if (spdk_cpuset_count(&ctx->cpumask) == 0) {
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "No CPU is selected from reactor mask %s\n",
+						     spdk_cpuset_fmt(spdk_app_get_core_mask()));
+		goto err;
+	}
+
+	ctx->request = request;
+	ctx->orig_thread = spdk_get_thread();
+
+	spdk_thread_send_msg(thread, rpc_thread_set_cpumask, ctx);
+
+	free(req.cpumask);
+	return;
+
+err:
+	free(req.cpumask);
+	free(ctx);
+}
+SPDK_RPC_REGISTER("thread_set_cpumask", spdk_rpc_thread_set_cpumask, SPDK_RPC_RUNTIME)

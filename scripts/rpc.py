@@ -2269,6 +2269,17 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         'thread_get_stats', help='Display current statistics of all the threads')
     p.set_defaults(func=thread_get_stats)
 
+    def thread_set_cpumask(args):
+        ret = rpc.app.thread_set_cpumask(args.client,
+                                         id=args.id,
+                                         cpumask=args.cpumask)
+    p = subparsers.add_parser('thread_set_cpumask',
+                              help="""set the cpumask of the thread whose ID matches to the
+    specified value. The thread may be migrated to one of the specified CPUs.""")
+    p.add_argument('-i', '--id', type=int, help='thread ID')
+    p.add_argument('-m', '--cpumask', help='cpumask for this thread')
+    p.set_defaults(func=thread_set_cpumask)
+
     def env_dpdk_get_mem_stats(args):
         print_dict(rpc.env_dpdk.env_dpdk_get_mem_stats(args.client))
 

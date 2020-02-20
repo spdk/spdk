@@ -574,6 +574,48 @@ Example response:
 }
 ~~~
 
+## thread_set_cpumask {#rpc_thread_set_cpumask}
+
+Set the cpumask of the thread to the specified value. The thread may be migrated
+to one of the specified CPUs.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+id                      | Required | string      | Thread ID
+cpumask                 | Required | string      | Cpumask for this thread
+
+### Response
+
+Completion status of the operation is returned as a boolean.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "thread_set_cpumask",
+  "id": 1,
+  "params": {
+    "id": "1",
+    "cpumask": "1"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 # Block Device Abstraction Layer {#jsonrpc_components_bdev}
 
 ## bdev_set_options {#rpc_bdev_set_options}

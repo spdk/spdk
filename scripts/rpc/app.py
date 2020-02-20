@@ -44,3 +44,17 @@ def thread_get_stats(client):
         Current threads statistics.
     """
     return client.call('thread_get_stats')
+
+
+def thread_set_cpumask(client, id, cpumask):
+    """Set the cpumask of the thread whose ID matches to the specified value.
+
+    Args:
+        id: thread ID
+        cpumask: cpumask for this thread
+
+    Returns:
+        True or False
+    """
+    params = {'id': id, 'cpumask': cpumask}
+    return client.call('thread_set_cpumask', params)
