@@ -495,7 +495,12 @@ function killprocess() {
 	fi
 
 	if kill -0 $1; then
-		if [ "$(ps --no-headers -o comm= $1)" = "sudo" ]; then
+		if [ $(uname) = Linux ]; then
+			process_name=$(ps --no-headers -o comm= $1)
+		else
+			process_name=$(ps -c -o command $1 | tail -1)
+		fi
+		if [ "$process_name" = "sudo" ]; then
 			# kill the child process, which is the actual app
 			# (assume $1 has just one child)
 			local child
