@@ -9,3 +9,14 @@ VHOST_FUZZ_APP=("$_test_app_dir/fuzz/vhost_fuzz/vhost_fuzz")
 ISCSI_APP=("$_app_dir/iscsi_tgt/iscsi_tgt")
 NVMF_APP=("$_app_dir/nvmf_tgt/nvmf_tgt")
 VHOST_APP=("$_app_dir/vhost/vhost")
+
+# Check if apps should execute under debug flags
+if [[ -e $_root/include/spdk/config.h ]]; then
+	if [[ $(<"$_root/include/spdk/config.h") == *"#define SPDK_CONFIG_DEBUG"* ]] \
+	&& (( SPDK_AUTOTEST_DEBUG_APPS )); then
+		VHOST_FUZZ_APP+=("--log-flags=all")
+		ISCSI_APP+=("--log-flags=all")
+		NVMF_APP+=("--log-flags=all")
+		VHOST_APP+=("--log-flags=all")
+	fi
+fi
