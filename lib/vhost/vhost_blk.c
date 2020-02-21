@@ -919,6 +919,7 @@ vhost_blk_get_config(struct spdk_vhost_dev *vdev, uint8_t *config,
 	uint32_t blk_size;
 	uint64_t blkcnt;
 
+	memset(&blkcfg, 0, sizeof(blkcfg));
 	bvdev = to_blk_dev(vdev);
 	assert(bvdev != NULL);
 	bdev = bvdev->bdev;
@@ -949,7 +950,6 @@ vhost_blk_get_config(struct spdk_vhost_dev *vdev, uint8_t *config,
 		}
 	}
 
-	memset(&blkcfg, 0, sizeof(blkcfg));
 	blkcfg.blk_size = blk_size;
 	/* minimum I/O size in blocks */
 	blkcfg.min_io_size = 1;
