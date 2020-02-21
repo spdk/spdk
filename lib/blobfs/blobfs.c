@@ -315,17 +315,27 @@ __stop_cache_pool_mgmt(void *ctx)
 }
 
 static void
-__initialize_cache(void)
+initialize_global_cache(void)
 {
-	g_cache_pool_thread = spdk_thread_create("cache_pool_mgmt", NULL);
-	assert(g_cache_pool_thread != NULL);
-	spdk_thread_send_msg(g_cache_pool_thread, __start_cache_pool_mgmt, NULL);
+	pthread_mutex_lock(&g_cache_init_lock);
+	if (g_fs_count == 0) {
+		g_cache_pool_thread = spdk_thread_create("cache_pool_mgmt", NULL);
+		assert(g_cache_pool_thread != NULL);
+		spdk_thread_send_msg(g_cache_pool_thread, __start_cache_pool_mgmt, NULL);
+	}
+	g_fs_count++;
+	pthread_mutex_unlock(&g_cache_init_lock);
 }
 
 static void
-__free_cache(void)
+free_global_cache(void)
 {
-	spdk_thread_send_msg(g_cache_pool_thread, __stop_cache_pool_mgmt, NULL);
+	pthread_mutex_lock(&g_cache_init_lock);
+	g_fs_count--;
+	if (g_fs_count == 0) {
+		spdk_thread_send_msg(g_cache_pool_thread, __stop_cache_pool_mgmt, NULL);
+	}
+	pthread_mutex_unlock(&g_cache_init_lock);
 }
 
 static uint64_t
@@ -521,12 +531,7 @@ common_fs_bs_init(struct spdk_filesystem *fs, struct spdk_blob_store *bs)
 	fs->sync_target.sync_fs_channel->bs_channel = spdk_bs_alloc_io_channel(fs->bs);
 	fs->sync_target.sync_fs_channel->send_request = __send_request_direct;
 
-	pthread_mutex_lock(&g_cache_init_lock);
-	if (g_fs_count == 0) {
-		__initialize_cache();
-	}
-	g_fs_count++;
-	pthread_mutex_unlock(&g_cache_init_lock);
+	initialize_global_cache();
 }
 
 static void
@@ -898,12 +903,7 @@ unload_cb(void *ctx, int bserrno)
 		free(file);
 	}
 
-	pthread_mutex_lock(&g_cache_init_lock);
-	g_fs_count--;
-	if (g_fs_count == 0) {
-		__free_cache();
-	}
-	pthread_mutex_unlock(&g_cache_init_lock);
+	free_global_cache();
 
 	args->fn.fs_op(args->arg, bserrno);
 	free(req);
