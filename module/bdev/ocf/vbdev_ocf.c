@@ -157,6 +157,14 @@ get_other_cache_instance(struct vbdev_ocf *vbdev)
 	return NULL;
 }
 
+static void
+_remove_base_bdev(void *ctx)
+{
+	struct spdk_bdev_desc *desc = ctx;
+
+	spdk_bdev_close(desc);
+}
+
 /* Close and unclaim base bdev */
 static void
 remove_base_bdev(struct vbdev_ocf_base *base)
@@ -167,7 +175,12 @@ remove_base_bdev(struct vbdev_ocf_base *base)
 		}
 
 		spdk_bdev_module_release_bdev(base->bdev);
-		spdk_bdev_close(base->desc);
+		/* Close the underlying bdev on its same opened thread. */
+		if (base->thread && base->thread != spdk_get_thread()) {
+			spdk_thread_send_msg(base->thread, _remove_base_bdev, base->desc);
+		} else {
+			spdk_bdev_close(base->desc);
+		}
 		base->attached = false;
 	}
 }
@@ -1378,6 +1391,9 @@ attach_base(struct vbdev_ocf_base *base)
 		return -ENOMEM;
 	}
 
+	/* Save the thread where the base device is opened */
+	base->thread = spdk_get_thread();
+
 	base->attached = true;
 	return status;
 }
@@ -1490,6 +1506,14 @@ struct metadata_probe_ctx {
 };
 
 static void
+_examine_ctx_put(void *ctx)
+{
+	struct spdk_bdev_desc *desc = ctx;
+
+	spdk_bdev_close(desc);
+}
+
+static void
 examine_ctx_put(struct metadata_probe_ctx *ctx)
 {
 	unsigned int i;
@@ -1505,7 +1529,12 @@ examine_ctx_put(struct metadata_probe_ctx *ctx)
 	}
 
 	if (ctx->base.desc) {
-		spdk_bdev_close(ctx->base.desc);
+		/* Close the underlying bdev on its same opened thread. */
+		if (ctx->base.thread && ctx->base.thread != spdk_get_thread()) {
+			spdk_thread_send_msg(ctx->base.thread, _examine_ctx_put, ctx->base.desc);
+		} else {
+			spdk_bdev_close(ctx->base.desc);
+		}
 	}
 
 	if (ctx->volume) {
@@ -1688,6 +1717,9 @@ vbdev_ocf_examine_disk(struct spdk_bdev *bdev)
 		examine_ctx_put(ctx);
 		return;
 	}
+
+	/* Save the thread where the base device is opened */
+	ctx->base.thread = spdk_get_thread();
 
 	ocf_metadata_probe(vbdev_ocf_ctx, ctx->volume, metadata_probe_cb, ctx);
 }

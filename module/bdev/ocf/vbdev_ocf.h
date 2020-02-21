@@ -145,6 +145,9 @@ struct vbdev_ocf_base {
 
 	/* Reference to main vbdev */
 	struct vbdev_ocf            *parent;
+
+	/* thread where base device is opened */
+	struct spdk_thread	    *thread;
 };
 
 /*

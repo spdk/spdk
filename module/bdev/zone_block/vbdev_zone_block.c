@@ -85,6 +85,7 @@ struct bdev_zone_block {
 	uint64_t			zone_capacity; /* zone capacity */
 	uint64_t                        zone_shift; /* log2 of zone_size */
 	TAILQ_ENTRY(bdev_zone_block)	link;
+	struct spdk_thread		*thread; /* thread where base device is opened */
 };
 static TAILQ_HEAD(, bdev_zone_block) g_bdev_nodes = TAILQ_HEAD_INITIALIZER(g_bdev_nodes);
 
@@ -165,6 +166,14 @@ _device_unregister_cb(void *io_device)
 	free(bdev_node);
 }
 
+static void
+_zone_block_destruct(void *ctx)
+{
+	struct spdk_bdev_desc *desc = ctx;
+
+	spdk_bdev_close(desc);
+}
+
 static int
 zone_block_destruct(void *ctx)
 {
@@ -175,8 +184,12 @@ zone_block_destruct(void *ctx)
 	/* Unclaim the underlying bdev. */
 	spdk_bdev_module_release_bdev(spdk_bdev_desc_get_bdev(bdev_node->base_desc));
 
-	/* Close the underlying bdev. */
-	spdk_bdev_close(bdev_node->base_desc);
+	/* Close the underlying bdev on its same opened thread. */
+	if (bdev_node->thread && bdev_node->thread != spdk_get_thread()) {
+		spdk_thread_send_msg(bdev_node->thread, _zone_block_destruct, bdev_node->base_desc);
+	} else {
+		spdk_bdev_close(bdev_node->base_desc);
+	}
 
 	/* Unregister the io_device. */
 	spdk_io_device_unregister(bdev_node, _device_unregister_cb);
@@ -796,6 +809,9 @@ zone_block_register(struct spdk_bdev *base_bdev)
 			SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(base_bdev));
 			goto open_failed;
 		}
+
+		/* Save the thread where the base device is opened */
+		bdev_node->thread = spdk_get_thread();
 
 		rc = spdk_bdev_module_claim_bdev(base_bdev, bdev_node->base_desc, bdev_node->bdev.module);
 		if (rc) {

@@ -49,6 +49,7 @@ struct open_descriptors {
 	void *desc;
 	struct  spdk_bdev *bdev;
 	TAILQ_ENTRY(open_descriptors) tqlst;
+	struct spdk_thread *thread;
 };
 typedef TAILQ_HEAD(, open_descriptors) open_descriptors_t;
 
@@ -516,6 +517,14 @@ struct firmware_update_info {
 };
 
 static void
+_apply_firmware_cleanup(void *ctx)
+{
+	struct spdk_bdev_desc *desc = ctx;
+
+	spdk_bdev_close(desc);
+}
+
+static void
 apply_firmware_cleanup(void *cb_arg)
 {
 	struct open_descriptors			*opt, *tmp;
@@ -540,7 +549,12 @@ apply_firmware_cleanup(void *cb_arg)
 
 	TAILQ_FOREACH_SAFE(opt, &firm_ctx->desc_head, tqlst, tmp) {
 		TAILQ_REMOVE(&firm_ctx->desc_head, opt, tqlst);
-		spdk_bdev_close(opt->desc);
+		/* Close the underlying bdev on its same opened thread. */
+		if (opt->thread && opt->thread != spdk_get_thread()) {
+			spdk_thread_send_msg(opt->thread, _apply_firmware_cleanup, opt->desc);
+		} else {
+			spdk_bdev_close(opt->desc);
+		}
 		free(opt);
 	}
 	free(firm_ctx);
@@ -714,6 +728,9 @@ spdk_rpc_bdev_nvme_apply_firmware(struct spdk_jsonrpc_request *request,
 			apply_firmware_cleanup(firm_ctx);
 			return;
 		}
+
+		/* Save the thread where the base device is opened */
+		opt->thread = spdk_get_thread();
 
 		opt->desc = desc;
 		opt->bdev = bdev;

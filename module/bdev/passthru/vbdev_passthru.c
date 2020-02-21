@@ -133,6 +133,7 @@ static void
 _vbdev_passthru_destruct(void *ctx)
 {
 	struct spdk_bdev_desc *desc = ctx;
+
 	spdk_bdev_close(desc);
 }
 
@@ -154,7 +155,11 @@ vbdev_passthru_destruct(void *ctx)
 	spdk_bdev_module_release_bdev(pt_node->base_bdev);
 
 	/* Close the underlying bdev on its same opened thread. */
-	spdk_thread_send_msg(pt_node->thread, _vbdev_passthru_destruct, pt_node->base_desc);
+	if (pt_node->thread && pt_node->thread != spdk_get_thread()) {
+		spdk_thread_send_msg(pt_node->thread, _vbdev_passthru_destruct, pt_node->base_desc);
+	} else {
+		spdk_bdev_close(pt_node->base_desc);
+	}
 
 	/* Unregister the io_device. */
 	spdk_io_device_unregister(pt_node, _device_unregister_cb);

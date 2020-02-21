@@ -128,6 +128,7 @@ struct vbdev_compress {
 	bool				orphaned;	/* base bdev claimed but comp_bdev not registered */
 	TAILQ_HEAD(, vbdev_comp_op)	queued_comp_ops;
 	TAILQ_ENTRY(vbdev_compress)	link;
+	struct spdk_thread		*thread;	/* thread where base device is opened */
 };
 static TAILQ_HEAD(, vbdev_compress) g_vbdev_comp = TAILQ_HEAD_INITIALIZER(g_vbdev_comp);
 
@@ -910,6 +911,14 @@ _device_unregister_cb(void *io_device)
 }
 
 static void
+_vbdev_compress_destruct_cb(void *ctx)
+{
+	struct spdk_bdev_desc *desc = ctx;
+
+	spdk_bdev_close(desc);
+}
+
+static void
 vbdev_compress_destruct_cb(void *cb_arg, int reduce_errno)
 {
 	struct vbdev_compress *comp_bdev = (struct vbdev_compress *)cb_arg;
@@ -919,7 +928,12 @@ vbdev_compress_destruct_cb(void *cb_arg, int reduce_errno)
 	} else {
 		TAILQ_REMOVE(&g_vbdev_comp, comp_bdev, link);
 		spdk_bdev_module_release_bdev(comp_bdev->base_bdev);
-		spdk_bdev_close(comp_bdev->base_desc);
+		/* Close the underlying bdev on its same opened thread. */
+		if (comp_bdev->thread && comp_bdev->thread != spdk_get_thread()) {
+			spdk_thread_send_msg(comp_bdev->thread, _vbdev_compress_destruct_cb, comp_bdev->base_desc);
+		} else {
+			spdk_bdev_close(comp_bdev->base_desc);
+		}
 		comp_bdev->vol = NULL;
 		if (comp_bdev->orphaned == false) {
 			spdk_io_device_unregister(comp_bdev, _device_unregister_cb);
@@ -1076,6 +1090,14 @@ vbdev_compress_config_json(struct spdk_json_write_ctx *w)
 	return 0;
 }
 
+static void
+_vbdev_reduce_init_cb(void *ctx)
+{
+	struct spdk_bdev_desc *desc = ctx;
+
+	spdk_bdev_close(desc);
+}
+
 /* Callback from reduce for when init is complete. We'll pass the vbdev_comp struct
  * used for initial metadata operations to claim where it will be further filled out
  * and added to the global list.
@@ -1087,7 +1109,12 @@ vbdev_reduce_init_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno
 
 	/* We're done with metadata operations */
 	spdk_put_io_channel(meta_ctx->base_ch);
-	spdk_bdev_close(meta_ctx->base_desc);
+	/* Close the underlying bdev on its same opened thread. */
+	if (meta_ctx->thread && meta_ctx->thread != spdk_get_thread()) {
+		spdk_thread_send_msg(meta_ctx->thread, _vbdev_reduce_init_cb, meta_ctx->base_desc);
+	} else {
+		spdk_bdev_close(meta_ctx->base_desc);
+	}
 	meta_ctx->base_desc = NULL;
 
 	if (reduce_errno == 0) {
@@ -1311,6 +1338,10 @@ vbdev_init_reduce(struct spdk_bdev *bdev, const char *pm_path)
 		free(meta_ctx);
 		return -EINVAL;
 	}
+
+	/* Save the thread where the base device is opened */
+	meta_ctx->thread = spdk_get_thread();
+
 	meta_ctx->base_ch = spdk_bdev_get_io_channel(meta_ctx->base_desc);
 
 	spdk_reduce_vol_init(&meta_ctx->params, &meta_ctx->backing_dev,
@@ -1569,6 +1600,9 @@ vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 		goto error_open;
 	}
 
+	/* Save the thread where the base device is opened */
+	comp_bdev->thread = spdk_get_thread();
+
 	spdk_io_device_register(comp_bdev, comp_bdev_ch_create_cb, comp_bdev_ch_destroy_cb,
 				sizeof(struct comp_io_channel),
 				comp_bdev->comp_bdev.name);
@@ -1632,6 +1666,14 @@ bdev_compress_delete(const char *name, spdk_delete_compress_complete cb_fn, void
 	}
 }
 
+static void
+_vbdev_reduce_load_cb(void *ctx)
+{
+	struct spdk_bdev_desc *desc = ctx;
+
+	spdk_bdev_close(desc);
+}
+
 /* Callback from reduce for then load is complete. We'll pass the vbdev_comp struct
  * used for initial metadata operations to claim where it will be further filled out
  * and added to the global list.
@@ -1644,7 +1686,12 @@ vbdev_reduce_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno
 
 	/* Done with metadata operations */
 	spdk_put_io_channel(meta_ctx->base_ch);
-	spdk_bdev_close(meta_ctx->base_desc);
+	/* Close the underlying bdev on its same opened thread. */
+	if (meta_ctx->thread && meta_ctx->thread != spdk_get_thread()) {
+		spdk_thread_send_msg(meta_ctx->thread, _vbdev_reduce_load_cb, meta_ctx->base_desc);
+	} else {
+		spdk_bdev_close(meta_ctx->base_desc);
+	}
 	meta_ctx->base_desc = NULL;
 
 	if (reduce_errno != 0 && reduce_errno != -ENOENT) {
@@ -1675,6 +1722,9 @@ vbdev_reduce_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno
 			SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(meta_ctx->base_bdev));
 			goto err;
 		}
+
+		/* Save the thread where the base device is opened */
+		meta_ctx->thread = spdk_get_thread();
 
 		meta_ctx->comp_bdev.module = &compress_if;
 		pthread_mutex_init(&meta_ctx->reduce_lock, NULL);
@@ -1735,6 +1785,9 @@ vbdev_compress_examine(struct spdk_bdev *bdev)
 		spdk_bdev_module_examine_done(&compress_if);
 		return;
 	}
+
+	/* Save the thread where the base device is opened */
+	meta_ctx->thread = spdk_get_thread();
 
 	meta_ctx->base_ch = spdk_bdev_get_io_channel(meta_ctx->base_desc);
 	spdk_reduce_vol_load(&meta_ctx->backing_dev, vbdev_reduce_load_cb, meta_ctx);

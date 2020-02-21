@@ -173,6 +173,7 @@ struct vbdev_crypto {
 	struct rte_cryptodev_sym_session *session_decrypt;	/* decryption session for this bdev */
 	struct rte_crypto_sym_xform	cipher_xform;		/* crypto control struct for this bdev */
 	TAILQ_ENTRY(vbdev_crypto)	link;
+	struct spdk_thread		*thread;		/* thread where base device is opened */
 };
 static TAILQ_HEAD(, vbdev_crypto) g_vbdev_crypto = TAILQ_HEAD_INITIALIZER(g_vbdev_crypto);
 
@@ -1202,6 +1203,15 @@ _device_unregister_cb(void *io_device)
 	free(crypto_bdev);
 }
 
+/* Wrapper for the bdev close operation. */
+static void
+_vbdev_crypto_destruct(void *ctx)
+{
+	struct spdk_bdev_desc *desc = ctx;
+
+	spdk_bdev_close(desc);
+}
+
 /* Called after we've unregistered following a hot remove callback.
  * Our finish entry point will be called next.
  */
@@ -1216,8 +1226,12 @@ vbdev_crypto_destruct(void *ctx)
 	/* Unclaim the underlying bdev. */
 	spdk_bdev_module_release_bdev(crypto_bdev->base_bdev);
 
-	/* Close the underlying bdev. */
-	spdk_bdev_close(crypto_bdev->base_desc);
+	/* Close the underlying bdev on its same opened thread. */
+	if (crypto_bdev->thread && crypto_bdev->thread != spdk_get_thread()) {
+		spdk_thread_send_msg(crypto_bdev->thread, _vbdev_crypto_destruct, crypto_bdev->base_desc);
+	} else {
+		spdk_bdev_close(crypto_bdev->base_desc);
+	}
 
 	/* Unregister the io_device. */
 	spdk_io_device_unregister(crypto_bdev, _device_unregister_cb);
@@ -1825,6 +1839,9 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 			SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(bdev));
 			goto error_open;
 		}
+
+		/* Save the thread where the base device is opened */
+		vbdev->thread = spdk_get_thread();
 
 		rc = spdk_bdev_module_claim_bdev(bdev, vbdev->base_desc, vbdev->crypto_bdev.module);
 		if (rc) {

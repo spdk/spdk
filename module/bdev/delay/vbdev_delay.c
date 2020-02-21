@@ -87,6 +87,7 @@ struct vbdev_delay {
 	uint64_t			average_write_latency_ticks; /* the average write delay */
 	uint64_t			p99_write_latency_ticks; /* the p99 write delay */
 	TAILQ_ENTRY(vbdev_delay)	link;
+	struct spdk_thread		*thread;    /* thread where base device is opened */
 };
 static TAILQ_HEAD(, vbdev_delay) g_delay_nodes = TAILQ_HEAD_INITIALIZER(g_delay_nodes);
 
@@ -129,6 +130,14 @@ _device_unregister_cb(void *io_device)
 	free(delay_node);
 }
 
+static void
+_vbdev_delay_destruct(void *ctx)
+{
+	struct spdk_bdev_desc *desc = ctx;
+
+	spdk_bdev_close(desc);
+}
+
 static int
 vbdev_delay_destruct(void *ctx)
 {
@@ -143,8 +152,12 @@ vbdev_delay_destruct(void *ctx)
 	/* Unclaim the underlying bdev. */
 	spdk_bdev_module_release_bdev(delay_node->base_bdev);
 
-	/* Close the underlying bdev. */
-	spdk_bdev_close(delay_node->base_desc);
+	/* Close the underlying bdev on its same opened thread. */
+	if (delay_node->thread && delay_node->thread != spdk_get_thread()) {
+		spdk_thread_send_msg(delay_node->thread, _vbdev_delay_destruct, delay_node->base_desc);
+	} else {
+		spdk_bdev_close(delay_node->base_desc);
+	}
 
 	/* Unregister the io_device. */
 	spdk_io_device_unregister(delay_node, _device_unregister_cb);
@@ -652,6 +665,9 @@ vbdev_delay_register(struct spdk_bdev *bdev)
 			SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(bdev));
 			goto error_unregister;
 		}
+
+		/* Save the thread where the base device is opened */
+		delay_node->thread = spdk_get_thread();
 
 		rc = spdk_bdev_module_claim_bdev(bdev, delay_node->base_desc, delay_node->delay_bdev.module);
 		if (rc) {

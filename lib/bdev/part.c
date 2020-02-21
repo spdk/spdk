@@ -39,6 +39,7 @@
 #include "spdk/likely.h"
 #include "spdk/log.h"
 #include "spdk/string.h"
+#include "spdk/thread.h"
 
 #include "spdk/bdev_module.h"
 
@@ -55,6 +56,7 @@ struct spdk_bdev_part_base {
 	struct bdev_part_tailq		*tailq;
 	spdk_io_channel_create_cb	ch_create_cb;
 	spdk_io_channel_destroy_cb	ch_destroy_cb;
+	struct spdk_thread		*thread;
 };
 
 struct spdk_bdev *
@@ -87,12 +89,24 @@ spdk_bdev_part_base_get_bdev_name(struct spdk_bdev_part_base *part_base)
 	return part_base->bdev->name;
 }
 
+static void
+_spdk_bdev_part_base_free(void *ctx)
+{
+	struct spdk_bdev_desc *desc = ctx;
+
+	spdk_bdev_close(desc);
+}
+
 void
 spdk_bdev_part_base_free(struct spdk_bdev_part_base *base)
 {
 	if (base->desc) {
-		spdk_bdev_close(base->desc);
-		base->desc = NULL;
+		/* Close the underlying bdev on its same opened thread. */
+		if (base->thread && base->thread != spdk_get_thread()) {
+			spdk_thread_send_msg(base->thread, _spdk_bdev_part_base_free, base->desc);
+		} else {
+			spdk_bdev_close(base->desc);
+		}
 	}
 
 	if (base->base_free_fn != NULL) {
@@ -441,6 +455,9 @@ struct spdk_bdev_part_base *
 			    spdk_strerror(-rc));
 		return NULL;
 	}
+
+	/* Save the thread where the base device is opened */
+	base->thread = spdk_get_thread();
 
 	return base;
 }
