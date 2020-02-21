@@ -7,7 +7,7 @@ source "$rootdir/scripts/common.sh"
 
 VHOST_APP+=(-p 0)
 FUZZ_RPC_SOCK="/var/tmp/spdk_fuzz.sock"
-FUZZ_APP+=(-r "$FUZZ_RPC_SOCK" --wait-for-rpc)
+VHOST_FUZZ_APP+=(-r "$FUZZ_RPC_SOCK" --wait-for-rpc)
 
 vhost_rpc_py="$rootdir/scripts/rpc.py"
 fuzz_generic_rpc_py="$rootdir/scripts/rpc.py -s $FUZZ_RPC_SOCK"
@@ -19,7 +19,7 @@ waitforlisten $vhostpid
 
 trap 'killprocess $vhostpid; exit 1' SIGINT SIGTERM exit
 
-"${FUZZ_APP[@]}" -t 10 2>"$output_dir/vhost_fuzz_output1.txt" &
+"${VHOST_FUZZ_APP[@]}" -t 10 2>"$output_dir/vhost_fuzz_output1.txt" &
 fuzzpid=$!
 waitforlisten $fuzzpid $FUZZ_RPC_SOCK
 
@@ -47,7 +47,7 @@ $fuzz_generic_rpc_py framework_start_init
 
 wait $fuzzpid
 
-"${FUZZ_APP[@]}" -j "$rootdir/test/app/fuzz/vhost_fuzz/example.json" 2>"$output_dir/vhost_fuzz_output2.txt" &
+"${VHOST_FUZZ_APP[@]}" -j "$rootdir/test/app/fuzz/vhost_fuzz/example.json" 2>"$output_dir/vhost_fuzz_output2.txt" &
 fuzzpid=$!
 waitforlisten $fuzzpid $FUZZ_RPC_SOCK
 

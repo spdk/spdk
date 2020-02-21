@@ -8,7 +8,7 @@ TEST_TIMEOUT=1200
 
 VHOST_APP+=(-p 0)
 FUZZ_RPC_SOCK="/var/tmp/spdk_fuzz.sock"
-FUZZ_APP+=(-r "$FUZZ_RPC_SOCK" --wait-for-rpc)
+VHOST_FUZZ_APP+=(-r "$FUZZ_RPC_SOCK" --wait-for-rpc)
 
 vhost_rpc_py="$rootdir/scripts/rpc.py"
 fuzz_generic_rpc_py="$rootdir/scripts/rpc.py -s $FUZZ_RPC_SOCK"
@@ -35,7 +35,7 @@ waitforlisten $vhostpid
 
 trap 'killprocess $vhostpid; exit 1' SIGINT SIGTERM exit
 
-"${FUZZ_APP[@]}" -t $TEST_TIMEOUT 2>"$output_dir/vhost_autofuzz_output1.txt" &
+"${VHOST_FUZZ_APP[@]}" -t $TEST_TIMEOUT 2>"$output_dir/vhost_autofuzz_output1.txt" &
 fuzzpid=$!
 waitforlisten $fuzzpid $FUZZ_RPC_SOCK
 
