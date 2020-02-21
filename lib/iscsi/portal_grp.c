@@ -400,8 +400,7 @@ iscsi_parse_portal_grp(struct spdk_conf_section *sp)
 		label = spdk_conf_section_get_nmval(sp, "Portal", i, 0);
 		portal = spdk_conf_section_get_nmval(sp, "Portal", i, 1);
 		if (label == NULL || portal == NULL) {
-			SPDK_ERRLOG("portal error\n");
-			goto error;
+			break;
 		}
 
 		rc = iscsi_parse_portal(portal, &p);
