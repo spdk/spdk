@@ -428,23 +428,6 @@ nvme_ctrlr_cmd_fw_image_download(struct spdk_nvme_ctrlr *ctrlr,
 	return 0;
 }
 
-int
-nvme_ctrlr_cmd_security_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp, uint16_t spsp,
-				uint8_t nssf, void *payload, uint32_t payload_size,
-				spdk_nvme_cmd_cb cb_fn, void *cb_arg)
-{
-	return 0;
-}
-
-int
-nvme_ctrlr_cmd_security_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
-			     uint16_t spsp, uint8_t nssf, void *payload,
-			     uint32_t payload_size, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
-{
-	return 0;
-}
-
-
 void
 nvme_ns_destruct(struct spdk_nvme_ns *ns)
 {

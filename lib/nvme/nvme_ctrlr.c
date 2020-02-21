@@ -3255,14 +3255,14 @@ spdk_nvme_ctrlr_security_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
 		return -ENOMEM;
 	}
 
-	res = nvme_ctrlr_cmd_security_receive(ctrlr, secp, spsp, nssf, payload, size,
-					      nvme_completion_poll_cb, status);
+	res = spdk_nvme_ctrlr_cmd_security_receive(ctrlr, secp, spsp, nssf, payload, size,
+			nvme_completion_poll_cb, status);
 	if (res) {
 		free(status);
 		return res;
 	}
 	if (spdk_nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock)) {
-		SPDK_ERRLOG("spdk_nvme_ctrlr_security_receive failed!\n");
+		SPDK_ERRLOG("spdk_nvme_ctrlr_cmd_security_receive failed!\n");
 		if (!status->timed_out) {
 			free(status);
 		}
@@ -3286,14 +3286,15 @@ spdk_nvme_ctrlr_security_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
 		return -ENOMEM;
 	}
 
-	res = nvme_ctrlr_cmd_security_send(ctrlr, secp, spsp, nssf, payload, size, nvme_completion_poll_cb,
-					   status);
+	res = spdk_nvme_ctrlr_cmd_security_send(ctrlr, secp, spsp, nssf, payload, size,
+						nvme_completion_poll_cb,
+						status);
 	if (res) {
 		free(status);
 		return res;
 	}
 	if (spdk_nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock)) {
-		SPDK_ERRLOG("spdk_nvme_ctrlr_security_send failed!\n");
+		SPDK_ERRLOG("spdk_nvme_ctrlr_cmd_security_send failed!\n");
 		if (!status->timed_out) {
 			free(status);
 		}

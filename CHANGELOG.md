@@ -2,6 +2,11 @@
 
 ## v20.04: (Upcoming Release)
 
+### nvme
+
+Export internal nvme_ctrlr_cmd_security_receive/send() APIs as public APIs with "spdk_"
+prefix.
+
 ### copy
 
 The copy engine library, modules and public APIs have been renamed. Use of the word `copy`
