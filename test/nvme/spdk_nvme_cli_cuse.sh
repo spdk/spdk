@@ -93,6 +93,7 @@ set -e
 
 for i in {1..10}; do
 	if [ -f "${KERNEL_OUT}.${i}" ] && [ -f "${CUSE_OUT}.${i}" ]; then
+		sed -i "s/${nvme_name}/nvme0/g" ${KERNEL_OUT}.${i}
 		diff --suppress-common-lines ${KERNEL_OUT}.${i} ${CUSE_OUT}.${i}
 	fi
 done
