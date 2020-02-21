@@ -29,7 +29,7 @@ run_step() {
 
 	db_bench=$1_db_bench.txt
 	echo -n Start $1 test phase...
-	/usr/bin/time taskset 0xFF $DB_BENCH --flagfile="$1"_flags.txt &> "$db_bench"
+	time taskset 0xFF $DB_BENCH --flagfile="$1"_flags.txt &> "$db_bench"
 	DB_BENCH_FILE=$(grep /dev/shm "$db_bench" | cut -f 6 -d ' ')
 	gzip $DB_BENCH_FILE
 	mv $DB_BENCH_FILE.gz "$1"_trace.gz
