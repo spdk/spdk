@@ -5397,6 +5397,16 @@ _spdk_bs_snapshot_newblob_sync_cpl(void *cb_arg, int bserrno)
 	if (bserrno != 0) {
 		/* return cluster map back to original */
 		_spdk_bs_snapshot_swap_cluster_maps(newblob, origblob);
+
+		/* Newblob md sync failed. Valid clusters are only present in origblob.
+		 * Since I/O is frozen on origblob, not changes to zeroed out cluster map should have occured.
+		 * Newblob needs to be reverted to thin_provisioned state at creation to properly close. */
+		_spdk_blob_set_thin_provision(newblob);
+		assert(spdk_mem_all_zero(newblob->active.clusters,
+					 newblob->active.num_clusters * sizeof(*newblob->active.clusters)));
+		assert(spdk_mem_all_zero(newblob->active.extent_pages,
+					 newblob->active.num_extent_pages * sizeof(*newblob->active.extent_pages)));
+
 		_spdk_bs_clone_snapshot_newblob_cleanup(ctx, bserrno);
 		return;
 	}
