@@ -11,6 +11,7 @@ iodepth=128
 rw=randrw
 bs=16k
 verify=md5
+verify_backlog=32
 
 [test]
 numjobs=1
