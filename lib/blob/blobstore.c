@@ -1963,33 +1963,6 @@ _spdk_blob_persist_generate_new_md(struct spdk_blob_persist_ctx *ctx)
 	_spdk_blob_persist_write_page_chain(seq, ctx, 0);
 }
 
-static void _spdk_blob_persist_write_extent_pages(spdk_bs_sequence_t *seq, void *cb_arg,
-		int bserrno);
-
-static void
-_spdk_blob_persist_write_extent_page(uint32_t extent, uint64_t cluster_num,
-				     struct spdk_blob_persist_ctx *ctx)
-{
-	spdk_bs_sequence_t		*seq = ctx->seq;
-	uint32_t                        page_count = 0;
-	struct spdk_blob		*blob = ctx->blob;
-	int				rc;
-
-	rc = _spdk_blob_serialize_add_page(blob, &ctx->extent_page, &page_count, &ctx->extent_page);
-	if (rc < 0) {
-		assert(false);
-		return;
-	}
-
-	_spdk_blob_serialize_extent_page(blob, cluster_num, ctx->extent_page);
-
-	ctx->extent_page->crc = _spdk_blob_md_page_calc_crc(ctx->extent_page);
-
-	spdk_bs_sequence_write_dev(seq, ctx->extent_page, _spdk_bs_md_page_to_lba(blob->bs, extent),
-				   _spdk_bs_byte_to_lba(blob->bs, SPDK_BS_PAGE_SIZE),
-				   _spdk_blob_persist_write_extent_pages, ctx);
-}
-
 static void
 _spdk_blob_persist_write_extent_pages(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
@@ -1997,6 +1970,8 @@ _spdk_blob_persist_write_extent_pages(spdk_bs_sequence_t *seq, void *cb_arg, int
 	struct spdk_blob		*blob = ctx->blob;
 	size_t				i;
 	uint32_t			extent_page_id;
+	uint32_t                        page_count = 0;
+	int				rc;
 
 	if (ctx->extent_page != NULL) {
 		spdk_free(ctx->extent_page);
@@ -2017,7 +1992,19 @@ _spdk_blob_persist_write_extent_pages(spdk_bs_sequence_t *seq, void *cb_arg, int
 			blob->state = SPDK_BLOB_STATE_DIRTY;
 			assert(spdk_bit_array_get(blob->bs->used_md_pages, extent_page_id));
 			ctx->next_extent_page = i + 1;
-			_spdk_blob_persist_write_extent_page(extent_page_id, i * SPDK_EXTENTS_PER_EP, ctx);
+			rc = _spdk_blob_serialize_add_page(ctx->blob, &ctx->extent_page, &page_count, &ctx->extent_page);
+			if (rc < 0) {
+				assert(false);
+				return;
+			}
+
+			_spdk_blob_serialize_extent_page(blob, i * SPDK_EXTENTS_PER_EP, ctx->extent_page);
+
+			ctx->extent_page->crc = _spdk_blob_md_page_calc_crc(ctx->extent_page);
+
+			spdk_bs_sequence_write_dev(seq, ctx->extent_page, _spdk_bs_md_page_to_lba(blob->bs, extent_page_id),
+						   _spdk_bs_byte_to_lba(blob->bs, SPDK_BS_PAGE_SIZE),
+						   _spdk_blob_persist_write_extent_pages, ctx);
 			return;
 		}
 		assert(blob->clean.extent_pages[i] != 0);
