@@ -86,40 +86,6 @@ struct spdk_msg {
 #define SPDK_MSG_MEMPOOL_CACHE_SIZE	1024
 static struct spdk_mempool *g_spdk_msg_mempool = NULL;
 
-enum spdk_poller_state {
-	/* The poller is registered with a thread but not currently executing its fn. */
-	SPDK_POLLER_STATE_WAITING,
-
-	/* The poller is currently running its fn. */
-	SPDK_POLLER_STATE_RUNNING,
-
-	/* The poller was unregistered during the execution of its fn. */
-	SPDK_POLLER_STATE_UNREGISTERED,
-
-	/* The poller is in the process of being paused.  It will be paused
-	 * during the next time it's supposed to be executed.
-	 */
-	SPDK_POLLER_STATE_PAUSING,
-
-	/* The poller is registered but currently paused.  It's on the
-	 * paused_pollers list.
-	 */
-	SPDK_POLLER_STATE_PAUSED,
-};
-
-struct spdk_poller {
-	TAILQ_ENTRY(spdk_poller)	tailq;
-
-	/* Current state of the poller; should only be accessed from the poller's thread. */
-	enum spdk_poller_state		state;
-
-	uint64_t			period_ticks;
-	uint64_t			next_run_tick;
-	spdk_poller_fn			fn;
-	void				*arg;
-	struct spdk_thread		*thread;
-};
-
 static TAILQ_HEAD(, spdk_thread) g_threads = TAILQ_HEAD_INITIALIZER(g_threads);
 static uint32_t g_thread_count = 0;
 
