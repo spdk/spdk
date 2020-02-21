@@ -14,7 +14,7 @@ spdk_nvme_cli="${DEPENDENCY_DIR}/nvme-cli"
 
 if [ ! -d $spdk_nvme_cli ]; then
 	echo "nvme-cli repository not found at $spdk_nvme_cli; skipping tests."
-	exit 0
+	exit 1
 fi
 
 if [ $(uname) = Linux ]; then
