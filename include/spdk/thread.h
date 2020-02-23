@@ -69,6 +69,26 @@ struct spdk_io_channel_iter;
 typedef int (*spdk_new_thread_fn)(struct spdk_thread *thread);
 
 /**
+ * SPDK thread operation type.
+ */
+enum spdk_thread_op {
+	/* Called each time a new thread is created. The implementor of this operation
+	 * should frequently call spdk_thread_poll() on the thread provided.
+	 */
+	SPDK_THREAD_OP_NEW,
+};
+
+/**
+ * Function to be called for SPDK thread operation.
+ */
+typedef int (*spdk_thread_op_fn)(struct spdk_thread *thread, enum spdk_thread_op op);
+
+/**
+ * Function to check whether the SPDK thread operation is supported.
+ */
+typedef bool (*spdk_thread_op_supported_fn)(enum spdk_thread_op op);
+
+/**
  * A function that will be called on the target thread.
  *
  * \param ctx Context passed as arg to spdk_thread_pass_msg().
@@ -193,6 +213,23 @@ struct spdk_io_channel {
  * \return 0 on success. Negated errno on failure.
  */
 int spdk_thread_lib_init(spdk_new_thread_fn new_thread_fn, size_t ctx_sz);
+
+/**
+ * Initialize the threading library. Must be called once prior to allocating any threads
+ *
+ * Both thread_op_fn and thread_op_type_supported_fn have to be specified or not
+ * specified together.
+ *
+ * \param thread_op_fn Called for SPDK thread operation.
+ * \param thread_op_supported_fn Called to check whether the SPDK thread operation is supported.
+ * \param ctx_sz For each thread allocated, for use by the thread scheduler. A pointer
+ * to this region may be obtained by calling spdk_thread_get_ctx().
+ *
+ * \return 0 on success. Negated errno on failure.
+ */
+int spdk_thread_lib_init_ext(spdk_thread_op_fn thread_op_fn,
+			     spdk_thread_op_supported_fn thread_op_supported_fn,
+			     size_t ctx_sz);
 
 /**
  * Release all resources associated with this library.

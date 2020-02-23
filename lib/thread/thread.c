@@ -50,6 +50,8 @@
 static pthread_mutex_t g_devlist_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static spdk_new_thread_fn g_new_thread_fn = NULL;
+static spdk_thread_op_fn g_thread_op_fn = NULL;
+static spdk_thread_op_supported_fn g_thread_op_supported_fn;
 static size_t g_ctx_sz = 0;
 /* Monotonic increasing ID is set to each created thread beginning at 1. Once the
  * ID exceeds UINT64_MAX, further thread creation is not allowed and restarting
@@ -174,13 +176,10 @@ _get_thread(void)
 	return tls_thread;
 }
 
-int
-spdk_thread_lib_init(spdk_new_thread_fn new_thread_fn, size_t ctx_sz)
+static int
+_thread_lib_init(size_t ctx_sz)
 {
 	char mempool_name[SPDK_MAX_MEMZONE_NAME_LEN];
-
-	assert(g_new_thread_fn == NULL);
-	g_new_thread_fn = new_thread_fn;
 
 	g_ctx_sz = ctx_sz;
 
@@ -198,6 +197,36 @@ spdk_thread_lib_init(spdk_new_thread_fn new_thread_fn, size_t ctx_sz)
 	return 0;
 }
 
+int
+spdk_thread_lib_init(spdk_new_thread_fn new_thread_fn, size_t ctx_sz)
+{
+	assert(g_new_thread_fn == NULL);
+	assert(g_thread_op_fn == NULL);
+	g_new_thread_fn = new_thread_fn;
+
+	return _thread_lib_init(ctx_sz);
+}
+
+int
+spdk_thread_lib_init_ext(spdk_thread_op_fn thread_op_fn,
+			 spdk_thread_op_supported_fn thread_op_supported_fn,
+			 size_t ctx_sz)
+{
+	assert(g_new_thread_fn == NULL);
+	assert(g_thread_op_fn == NULL);
+	assert(g_thread_op_supported_fn == NULL);
+
+	if ((thread_op_fn != NULL) != (thread_op_supported_fn != NULL)) {
+		SPDK_ERRLOG("Both must be defined or undefined together.\n");
+		return -EINVAL;
+	}
+
+	g_thread_op_fn = thread_op_fn;
+	g_thread_op_supported_fn = thread_op_supported_fn;
+
+	return _thread_lib_init(ctx_sz);
+}
+
 void
 spdk_thread_lib_fini(void)
 {
@@ -213,6 +242,8 @@ spdk_thread_lib_fini(void)
 	}
 
 	g_new_thread_fn = NULL;
+	g_thread_op_fn = NULL;
+	g_thread_op_supported_fn = NULL;
 	g_ctx_sz = 0;
 }
 
@@ -280,7 +311,7 @@ spdk_thread_create(const char *name, struct spdk_cpuset *cpumask)
 {
 	struct spdk_thread *thread;
 	struct spdk_msg *msgs[SPDK_MSG_MEMPOOL_CACHE_SIZE];
-	int rc, i;
+	int rc = 0, i;
 
 	thread = calloc(1, sizeof(*thread) + g_ctx_sz);
 	if (!thread) {
@@ -344,10 +375,13 @@ spdk_thread_create(const char *name, struct spdk_cpuset *cpumask)
 
 	if (g_new_thread_fn) {
 		rc = g_new_thread_fn(thread);
-		if (rc != 0) {
-			_free_thread(thread);
-			return NULL;
-		}
+	} else if (g_thread_op_supported_fn && g_thread_op_supported_fn(SPDK_THREAD_OP_NEW)) {
+		rc = g_thread_op_fn(thread, SPDK_THREAD_OP_NEW);
+	}
+
+	if (rc != 0) {
+		_free_thread(thread);
+		return NULL;
 	}
 
 	return thread;

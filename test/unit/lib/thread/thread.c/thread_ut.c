@@ -48,6 +48,28 @@ _thread_schedule(struct spdk_thread *thread)
 	return g_sched_rc;
 }
 
+static bool
+_thread_op_supported(enum spdk_thread_op op)
+{
+	switch (op) {
+	case SPDK_THREAD_OP_NEW:
+		return true;
+	default:
+		return false;
+	}
+}
+
+static int
+_thread_op(struct spdk_thread *thread, enum spdk_thread_op op)
+{
+	switch (op) {
+	case SPDK_THREAD_OP_NEW:
+		return _thread_schedule(thread);
+	default:
+		return -ENOTSUP;
+	}
+}
+
 static void
 thread_alloc(void)
 {
@@ -64,6 +86,24 @@ thread_alloc(void)
 
 	/* Schedule callback exists */
 	spdk_thread_lib_init(_thread_schedule, 0);
+
+	/* Scheduling succeeds */
+	g_sched_rc = 0;
+	thread = spdk_thread_create(NULL, NULL);
+	SPDK_CU_ASSERT_FATAL(thread != NULL);
+	spdk_set_thread(thread);
+	spdk_thread_exit(thread);
+	spdk_thread_destroy(thread);
+
+	/* Scheduling fails */
+	g_sched_rc = -1;
+	thread = spdk_thread_create(NULL, NULL);
+	SPDK_CU_ASSERT_FATAL(thread == NULL);
+
+	spdk_thread_lib_fini();
+
+	/* Scheduling callback exists with extended thread library initialization. */
+	spdk_thread_lib_init_ext(_thread_op, _thread_op_supported, 0);
 
 	/* Scheduling succeeds */
 	g_sched_rc = 0;
