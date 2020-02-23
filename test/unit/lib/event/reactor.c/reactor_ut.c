@@ -124,7 +124,7 @@ test_schedule_thread(void)
 	spdk_cpuset_set_cpu(&cpuset, 3, true);
 	g_next_core = 4;
 
-	/* spdk_reactor_schedule_thread() will be called in spdk_thread_create()
+	/* _reactor_schedule_thread() will be called in spdk_thread_create()
 	 * at its end because it is passed to SPDK thread library by
 	 * spdk_thread_lib_init().
 	 */

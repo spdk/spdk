@@ -92,7 +92,8 @@ spdk_reactor_get(uint32_t lcore)
 	return reactor;
 }
 
-static int spdk_reactor_schedule_thread(struct spdk_thread *thread);
+static int spdk_reactor_thread_op(struct spdk_thread *thread, enum spdk_thread_op op);
+static bool spdk_reactor_thread_op_supported(enum spdk_thread_op op);
 
 int
 spdk_reactors_init(void)
@@ -126,7 +127,8 @@ spdk_reactors_init(void)
 
 	memset(g_reactors, 0, (last_core + 1) * sizeof(struct spdk_reactor));
 
-	spdk_thread_lib_init(spdk_reactor_schedule_thread, sizeof(struct spdk_lw_thread));
+	spdk_thread_lib_init_ext(spdk_reactor_thread_op, spdk_reactor_thread_op_supported,
+				 sizeof(struct spdk_lw_thread));
 
 	SPDK_ENV_FOREACH_CORE(i) {
 		spdk_reactor_construct(&g_reactors[i], i);
@@ -474,7 +476,7 @@ _schedule_thread(void *arg1, void *arg2)
 }
 
 static int
-spdk_reactor_schedule_thread(struct spdk_thread *thread)
+_reactor_schedule_thread(struct spdk_thread *thread)
 {
 	uint32_t core;
 	struct spdk_lw_thread *lw_thread;
@@ -512,6 +514,28 @@ spdk_reactor_schedule_thread(struct spdk_thread *thread)
 	spdk_event_call(evt);
 
 	return 0;
+}
+
+static int
+spdk_reactor_thread_op(struct spdk_thread *thread, enum spdk_thread_op op)
+{
+	switch (op) {
+	case SPDK_THREAD_OP_NEW:
+		return _reactor_schedule_thread(thread);
+	default:
+		return -ENOTSUP;
+	}
+}
+
+static bool
+spdk_reactor_thread_op_supported(enum spdk_thread_op op)
+{
+	switch (op) {
+	case SPDK_THREAD_OP_NEW:
+		return true;
+	default:
+		return false;
+	}
 }
 
 struct call_reactor {
