@@ -479,6 +479,35 @@ spdk_thread_get_cpumask(struct spdk_thread *thread)
 	return &thread->cpumask;
 }
 
+int
+spdk_thread_set_cpumask(struct spdk_cpuset *cpumask)
+{
+	struct spdk_thread *thread;
+
+	if (!g_thread_op_supported_fn || !g_thread_op_supported_fn(SPDK_THREAD_OP_RESCHED)) {
+		SPDK_ERRLOG("Framework does not support reschedule operation.\n");
+		assert(false);
+		return -ENOTSUP;
+	}
+
+	thread = spdk_get_thread();
+	if (!thread) {
+		SPDK_ERRLOG("Called from non-SPDK thread\n");
+		assert(false);
+		return -EINVAL;
+	}
+
+	spdk_cpuset_copy(&thread->cpumask, cpumask);
+
+	/* Invoke framework's reschedule operation. If this function is called multiple times
+	 * in a single spdk_thread_poll() context, the last cpumask will be used in the
+	 * reschedule operation.
+	 */
+	g_thread_op_fn(thread, SPDK_THREAD_OP_RESCHED);
+
+	return 0;
+}
+
 struct spdk_thread *
 spdk_thread_get_from_ctx(void *ctx)
 {

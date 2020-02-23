@@ -76,6 +76,11 @@ enum spdk_thread_op {
 	 * should frequently call spdk_thread_poll() on the thread provided.
 	 */
 	SPDK_THREAD_OP_NEW,
+
+	/* Called when SPDK thread needs to be rescheduled. (e.g., when cpumask of the
+	 * SPDK thread is updated.
+	 */
+	SPDK_THREAD_OP_RESCHED,
 };
 
 /**
@@ -308,6 +313,18 @@ void *spdk_thread_get_ctx(struct spdk_thread *thread);
  * \return cpuset pointer
  */
 struct spdk_cpuset *spdk_thread_get_cpumask(struct spdk_thread *thread);
+
+/**
+ * Set the current thread's cpumask to the specified value. The thread may be
+ * rescheduled to one of the CPUs specified in the cpumask.
+ *
+ * This API requires SPDK thread operation supports SPDK_THREAD_OP_RESCHED.
+ *
+ * \param cpumask The new cpumask for the thread.
+ *
+ * \return 0 on success, negated errno otherwise.
+ */
+int spdk_thread_set_cpumask(struct spdk_cpuset *cpumask);
 
 /**
  * Return the thread object associated with the context handle previously
