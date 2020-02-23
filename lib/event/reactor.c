@@ -305,6 +305,8 @@ _set_thread_name(const char *thread_name)
 #endif
 }
 
+static int _reactor_schedule_thread(struct spdk_thread *thread);
+
 static int
 _spdk_reactor_run(void *arg)
 {
@@ -339,10 +341,18 @@ _spdk_reactor_run(void *arg)
 			thread = spdk_thread_get_from_ctx(lw_thread);
 			spdk_thread_poll(thread, 0, now);
 
+			if (spdk_unlikely(lw_thread->resched)) {
+				lw_thread->resched = false;
+				TAILQ_REMOVE(&reactor->threads, lw_thread, link);
+				_reactor_schedule_thread(thread);
+				continue;
+			}
+
 			if (spdk_unlikely(spdk_thread_is_exited(thread) &&
 					  spdk_thread_is_idle(thread))) {
 				TAILQ_REMOVE(&reactor->threads, lw_thread, link);
 				spdk_thread_destroy(thread);
+				continue;
 			}
 		}
 
@@ -516,12 +526,27 @@ _reactor_schedule_thread(struct spdk_thread *thread)
 	return 0;
 }
 
+static void
+_reactor_request_thread_reschedule(struct spdk_thread *thread)
+{
+	struct spdk_lw_thread *lw_thread;
+
+	assert(thread == spdk_get_thread());
+
+	lw_thread = spdk_thread_get_ctx(thread);
+
+	lw_thread->resched = true;
+}
+
 static int
 spdk_reactor_thread_op(struct spdk_thread *thread, enum spdk_thread_op op)
 {
 	switch (op) {
 	case SPDK_THREAD_OP_NEW:
 		return _reactor_schedule_thread(thread);
+	case SPDK_THREAD_OP_RESCHED:
+		_reactor_request_thread_reschedule(thread);
+		return 0;
 	default:
 		return -ENOTSUP;
 	}
@@ -532,6 +557,7 @@ spdk_reactor_thread_op_supported(enum spdk_thread_op op)
 {
 	switch (op) {
 	case SPDK_THREAD_OP_NEW:
+	case SPDK_THREAD_OP_RESCHED:
 		return true;
 	default:
 		return false;

@@ -62,6 +62,7 @@ enum spdk_reactor_state {
 
 struct spdk_lw_thread {
 	TAILQ_ENTRY(spdk_lw_thread)	link;
+	bool				resched;
 };
 
 struct spdk_reactor {
