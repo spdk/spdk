@@ -203,13 +203,14 @@ class Target(Server):
 
 class Initiator(Server):
     def __init__(self, name, username, password, mode, nic_ips, ip, transport="rdma",
-                 nvmecli_bin="nvme", workspace="/tmp/spdk", fio_bin="/usr/src/fio/fio"):
+                 nvmecli_bin="nvme", workspace="/tmp/spdk", cpus_allowed=None, fio_bin="/usr/src/fio/fio"):
 
         super(Initiator, self).__init__(name, username, password, mode, nic_ips, transport)
 
         self.ip = ip
         self.spdk_dir = workspace
         self.fio_bin = fio_bin
+        self.cpus_allowed = cpus_allowed
         self.nvmecli_bin = nvmecli_bin
         self.ssh_connection = paramiko.SSHClient()
         self.ssh_connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -304,17 +305,41 @@ runtime={run_time}
             self.remote_call("echo '%s' > %s/bdev.conf" % (bdev_conf, self.spdk_dir))
             ioengine = "%s/examples/bdev/fio_plugin/fio_plugin" % self.spdk_dir
             spdk_conf = "spdk_conf=%s/bdev.conf" % self.spdk_dir
-            filename_section = self.gen_fio_filename_conf(subsystems)
         else:
             ioengine = "libaio"
             spdk_conf = ""
-            filename_section = self.gen_fio_filename_conf()
+            out, err = self.remote_call("lsblk -o NAME -nlp")
+            subsystems = [x for x in out.split("\n") if "nvme" in x]
+
+        if self.cpus_allowed is not None:
+            self.log_print("Limiting FIO workload execution on specific cores %s" % self.cpus_allowed)
+            cpus_num = 0
+            cpus = self.cpus_allowed.split(",")
+            for cpu in cpus:
+                if "-" in cpu:
+                    a, b = cpu.split("-")
+                    cpus_num += len(range(a, b))
+                else:
+                    cpus_num += 1
+            threads = range(0, cpus_num)
+        elif hasattr(self, 'num_cores'):
+            self.log_print("Limiting FIO workload execution to %s cores" % self.num_cores)
+            threads = range(0, int(self.num_cores))
+        else:
+            threads = range(0, len(subsystems))
+
+        if "spdk" in self.mode:
+            filename_section = self.gen_fio_filename_conf(subsystems, threads)
+        else:
+            filename_section = self.gen_fio_filename_conf(threads)
 
         fio_config = fio_conf_template.format(ioengine=ioengine, spdk_conf=spdk_conf,
                                               rw=rw, rwmixread=rwmixread, block_size=block_size,
                                               io_depth=io_depth, ramp_time=ramp_time, run_time=run_time)
         if num_jobs:
-            fio_config = fio_config + "numjobs=%s" % num_jobs
+            fio_config = fio_config + "numjobs=%s \n" % num_jobs
+        if self.cpus_allowed is not None:
+            fio_config = fio_config + "cpus_allowed=%s \n" % self.cpus_allowed
         fio_config = fio_config + filename_section
 
         fio_config_filename = "%s_%s_%s_m_%s" % (block_size, io_depth, rw, rwmixread)
@@ -592,10 +617,10 @@ class SPDKTarget(Target):
 
 class KernelInitiator(Initiator):
     def __init__(self, name, username, password, mode, nic_ips, ip, transport,
-                 fio_bin="/usr/src/fio/fio", **kwargs):
+                 cpus_allowed=None, fio_bin="/usr/src/fio/fio", **kwargs):
 
         super(KernelInitiator, self).__init__(name, username, password, mode, nic_ips, ip, transport,
-                                              fio_bin=fio_bin)
+                                              cpus_allowed=cpus_allowed, fio_bin=fio_bin)
 
         self.extra_params = ""
         if kwargs["extra_params"]:
@@ -621,7 +646,7 @@ class KernelInitiator(Initiator):
             self.remote_call("sudo %s disconnect -n %s" % (self.nvmecli_bin, subsystem[1]))
             time.sleep(1)
 
-    def gen_fio_filename_conf(self):
+    def gen_fio_filename_conf(self, threads):
         out, err = self.remote_call("lsblk -o NAME -nlp")
         nvme_list = [x for x in out.split("\n") if "nvme" in x]
 
@@ -636,9 +661,9 @@ class KernelInitiator(Initiator):
 
 class SPDKInitiator(Initiator):
     def __init__(self, name, username, password, mode, nic_ips, ip, transport="rdma",
-                 num_cores=1, fio_bin="/usr/src/fio/fio", **kwargs):
+                 num_cores=1, cpus_allowed=None, fio_bin="/usr/src/fio/fio", **kwargs):
         super(SPDKInitiator, self).__init__(name, username, password, mode, nic_ips, ip, transport,
-                                            fio_bin=fio_bin)
+                                            cpus_allowed=cpus_allowed, fio_bin=fio_bin)
 
         self.num_cores = num_cores
 
@@ -668,23 +693,23 @@ class SPDKInitiator(Initiator):
         bdev_section = "\n".join([header, bdev_rows])
         return bdev_section
 
-    def gen_fio_filename_conf(self, remote_subsystem_list):
-        subsystems = [str(x) for x in range(0, len(remote_subsystem_list))]
-
-        # If num_cpus exists then limit FIO to this number of CPUs
-        # Otherwise - each connected subsystem gets its own CPU
-        if hasattr(self, 'num_cores'):
-            self.log_print("Limiting FIO workload execution to %s cores" % self.num_cores)
-            threads = range(0, int(self.num_cores))
-        else:
-            threads = range(0, len(subsystems))
-
-        n = int(len(subsystems) / len(threads))
-
+    def gen_fio_filename_conf(self, subsystems, threads):
         filename_section = ""
-        for t in threads:
-            header = "[filename%s]" % t
-            disks = "\n".join(["filename=Nvme%sn1" % x for x in subsystems[n * t:n + n * t]])
+        filenames = ["Nvme%sn1" % x for x in range(0, subsystems)]
+        nvme_per_split = int(subsystems / threads)
+        remainder = subsystems % threads
+        iterator = iter(filenames)
+        result = []
+        for i in range(threads):
+            result.append([])
+            for j in range(nvme_per_split):
+                result[i].append(next(iterator))
+            if remainder:
+                result[i].append(next(iterator))
+                remainder -= 1
+        for i, r in enumerate(result):
+            header = "[filename%s]" % i
+            disks = "\n".join(["filename=%s" % x for x in r])
             filename_section = "\n".join([filename_section, header, disks])
 
         return filename_section

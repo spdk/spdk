@@ -70,6 +70,15 @@ List of target IP addresses to which the initiator should try to connect.
 
 "spdk" or "kernel" values allowed.
 
+### cpus_allowed
+
+List of CPU cores to assign for running SPDK NVMe-OF initiator process.
+Can specify exact core numbers: 0,5
+or ranges: 10-15
+or binding to CPUs 0, 5, and 8 to 15: `cpus_allowed=0,5,8-15`.
+If not specified then will use num_cores option.
+If specified with num_cores then cpu_allowed parameter has higher priority than num_cores.
+
 ### num_cores
 
 Applies only to SPDK initiator. Number of CPUs core to use for running FIO job.
