@@ -2639,6 +2639,7 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "Prepare to destruct SSD: %s\n", ctrlr->trid.traddr);
 
+	spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 	nvme_transport_admin_qpair_abort_aers(ctrlr->adminq);
 
 	TAILQ_FOREACH_SAFE(qpair, &ctrlr->active_io_qpairs, tailq, tmp) {

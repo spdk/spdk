@@ -41,6 +41,27 @@
 static char g_path[256];
 static struct spdk_poller *g_poller;
 
+struct ctrlr_entry {
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct ctrlr_entry *next;
+};
+
+static struct ctrlr_entry *g_controllers = NULL;
+
+static void
+cleanup(void)
+{
+	struct ctrlr_entry *ctrlr_entry = g_controllers;
+
+	while (ctrlr_entry) {
+		struct ctrlr_entry *next = ctrlr_entry->next;
+
+		spdk_nvme_detach(ctrlr_entry->ctrlr);
+		free(ctrlr_entry);
+		ctrlr_entry = next;
+	}
+}
+
 static void
 usage(char *executable_name)
 {
@@ -70,6 +91,17 @@ static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
+	struct ctrlr_entry *entry;
+
+	entry = malloc(sizeof(struct ctrlr_entry));
+	if (entry == NULL) {
+		fprintf(stderr, "Malloc error\n");
+		exit(1);
+	}
+
+	entry->ctrlr = ctrlr;
+	entry->next = g_controllers;
+	g_controllers = entry;
 }
 
 static int
@@ -163,6 +195,8 @@ main(int argc, char **argv)
 	opts.shutdown_cb = stub_shutdown;
 
 	ch = spdk_app_start(&opts, stub_start, (void *)(intptr_t)opts.shm_id);
+
+	cleanup();
 	spdk_app_fini();
 
 	return ch;
