@@ -216,6 +216,22 @@ raid_bdev_cleanup(struct raid_bdev *raid_bdev)
 
 /*
  * brief:
+ * wrapper for the bdev close operation
+ * params:
+ * base_info - raid base bdev info
+ * returns:
+ */
+static void
+_raid_bdev_free_base_bdev_resource(void *ctx)
+{
+	struct spdk_bdev_desc *desc = ctx;
+
+	spdk_bdev_close(desc);
+}
+
+
+/*
+ * brief:
  * free resource of base bdev for raid bdev
  * params:
  * raid_bdev - pointer to raid bdev
@@ -229,7 +245,11 @@ raid_bdev_free_base_bdev_resource(struct raid_bdev *raid_bdev,
 				  struct raid_base_bdev_info *base_info)
 {
 	spdk_bdev_module_release_bdev(base_info->bdev);
-	spdk_bdev_close(base_info->desc);
+	if (base_info->thread && base_info->thread != spdk_get_thread()) {
+		spdk_thread_send_msg(base_info->thread, _raid_bdev_free_base_bdev_resource, base_info->desc);
+	} else {
+		spdk_bdev_close(base_info->desc);
+	}
 	base_info->desc = NULL;
 	base_info->bdev = NULL;
 
@@ -1287,6 +1307,7 @@ raid_bdev_alloc_base_bdev_resource(struct raid_bdev *raid_bdev, struct spdk_bdev
 	assert(raid_bdev->state != RAID_BDEV_STATE_ONLINE);
 	assert(base_bdev_slot < raid_bdev->num_base_bdevs);
 
+	raid_bdev->base_bdev_info[base_bdev_slot].thread = spdk_get_thread();
 	raid_bdev->base_bdev_info[base_bdev_slot].bdev = bdev;
 	raid_bdev->base_bdev_info[base_bdev_slot].desc = desc;
 	raid_bdev->num_base_bdevs_discovered++;
