@@ -1725,7 +1725,6 @@ static struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_
 		return NULL;
 	}
 
-	spdk_nvme_trid_populate_transport(&rctrlr->ctrlr.trid, SPDK_NVME_TRANSPORT_RDMA);
 	memcpy(&rctrlr->ctrlr.trid, trid, sizeof(rctrlr->ctrlr.trid));
 	rctrlr->ctrlr.opts = *opts;
 	if (rctrlr->ctrlr.opts.transport_retry_count > NVME_RDMA_CTRLR_MAX_TRANSPORT_RETRY_COUNT) {
