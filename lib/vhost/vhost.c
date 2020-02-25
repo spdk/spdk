@@ -468,14 +468,12 @@ vhost_vring_desc_is_wr(struct vring_desc *cur_desc)
 	return !!(cur_desc->flags & VRING_DESC_F_WRITE);
 }
 
-int
-vhost_vring_desc_to_iov(struct spdk_vhost_session *vsession, struct iovec *iov,
-			uint16_t *iov_index, const struct vring_desc *desc)
+static int
+vhost_vring_desc_payload_to_iov(struct spdk_vhost_session *vsession, struct iovec *iov,
+				uint16_t *iov_index, uintptr_t payload, uint64_t remaining)
 {
-	uint64_t len;
-	uint64_t remaining = desc->len;
-	uintptr_t payload = desc->addr;
 	uintptr_t vva;
+	uint64_t len;
 
 	do {
 		if (*iov_index >= SPDK_VHOST_IOVS_MAX) {
@@ -496,6 +494,14 @@ vhost_vring_desc_to_iov(struct spdk_vhost_session *vsession, struct iovec *iov,
 	} while (remaining);
 
 	return 0;
+}
+
+int
+vhost_vring_desc_to_iov(struct spdk_vhost_session *vsession, struct iovec *iov,
+			uint16_t *iov_index, const struct vring_desc *desc)
+{
+	return vhost_vring_desc_payload_to_iov(vsession, iov, iov_index,
+					       desc->addr, desc->len);
 }
 
 static struct spdk_vhost_session *
