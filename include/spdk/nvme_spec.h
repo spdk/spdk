@@ -1103,7 +1103,10 @@ struct spdk_nvme_cpl {
 
 	/* dword 3 */
 	uint16_t		cid;	/* command identifier */
-	struct spdk_nvme_status	status;
+	union {
+		uint16_t                status_raw;
+		struct spdk_nvme_status	status;
+	};
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_cpl) == 16, "Incorrect size");
 
