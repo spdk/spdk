@@ -68,7 +68,8 @@ struct config {
 static struct config g_config;
 
 /* Namespaces index from 1. Return 0 to invoke an error */
-static unsigned get_nsid(const struct spdk_nvme_transport_id *trid)
+static unsigned
+get_nsid(const struct spdk_nvme_transport_id *trid)
 {
 	if (!strcmp(trid->traddr, g_config.read.trid.traddr)) {
 		return g_config.read.nsid;
@@ -79,7 +80,8 @@ static unsigned get_nsid(const struct spdk_nvme_transport_id *trid)
 	return 0;
 }
 
-static int get_rw(const struct spdk_nvme_transport_id *trid)
+static int
+get_rw(const struct spdk_nvme_transport_id *trid)
 {
 	if (!strcmp(trid->traddr, g_config.read.trid.traddr)) {
 		return CMB_COPY_READ;
