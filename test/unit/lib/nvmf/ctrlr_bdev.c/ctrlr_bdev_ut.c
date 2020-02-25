@@ -162,7 +162,7 @@ DEFINE_STUB(spdk_bdev_nvme_io_passthru, int,
 DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *bdev_io));
 
 DEFINE_STUB(spdk_nvmf_subsystem_get_nqn, const char *,
-	    (struct spdk_nvmf_subsystem *subsystem), NULL);
+	    (const struct spdk_nvmf_subsystem *subsystem), NULL);
 
 struct spdk_nvmf_ns *
 spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)

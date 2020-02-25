@@ -558,7 +558,7 @@ struct spdk_nvmf_host *spdk_nvmf_subsystem_get_next_host(struct spdk_nvmf_subsys
  *
  * \return NQN of host.
  */
-const char *spdk_nvmf_host_get_nqn(struct spdk_nvmf_host *host);
+const char *spdk_nvmf_host_get_nqn(const struct spdk_nvmf_host *host);
 
 /**
  * Accept new connections on the address provided.
@@ -845,7 +845,7 @@ int spdk_nvmf_subsystem_set_mn(struct spdk_nvmf_subsystem *subsystem, const char
  *
  * \return NQN of the specified subsystem.
  */
-const char *spdk_nvmf_subsystem_get_nqn(struct spdk_nvmf_subsystem *subsystem);
+const char *spdk_nvmf_subsystem_get_nqn(const struct spdk_nvmf_subsystem *subsystem);
 
 /**
  * Get the type of the specified subsystem.

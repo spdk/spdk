@@ -727,7 +727,7 @@ spdk_nvmf_subsystem_get_next_host(struct spdk_nvmf_subsystem *subsystem,
 }
 
 const char *
-spdk_nvmf_host_get_nqn(struct spdk_nvmf_host *host)
+spdk_nvmf_host_get_nqn(const struct spdk_nvmf_host *host)
 {
 	return host->nqn;
 }
@@ -1318,7 +1318,7 @@ spdk_nvmf_subsystem_set_mn(struct spdk_nvmf_subsystem *subsystem, const char *mn
 }
 
 const char *
-spdk_nvmf_subsystem_get_nqn(struct spdk_nvmf_subsystem *subsystem)
+spdk_nvmf_subsystem_get_nqn(const struct spdk_nvmf_subsystem *subsystem)
 {
 	return subsystem->subnqn;
 }
