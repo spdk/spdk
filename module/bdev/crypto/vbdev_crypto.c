@@ -168,7 +168,10 @@ struct vbdev_crypto {
 	struct spdk_bdev_desc		*base_desc;		/* its descriptor we get from open */
 	struct spdk_bdev		crypto_bdev;		/* the crypto virtual bdev */
 	uint8_t				*key;			/* key per bdev */
+	uint8_t				*key2;			/* for XTS */
+	uint8_t				*xts_key;		/* key + key 2 */
 	char				*drv_name;		/* name of the crypto device driver */
+	char				*cipher;		/* cipher used */
 	struct rte_cryptodev_sym_session *session_encrypt;	/* encryption session for this bdev */
 	struct rte_cryptodev_sym_session *session_decrypt;	/* decryption session for this bdev */
 	struct rte_crypto_sym_xform	cipher_xform;		/* crypto control struct for this bdev */
@@ -1199,6 +1202,8 @@ _device_unregister_cb(void *io_device)
 	rte_cryptodev_sym_session_free(crypto_bdev->session_encrypt);
 	free(crypto_bdev->drv_name);
 	free(crypto_bdev->key);
+	free(crypto_bdev->key2);
+	free(crypto_bdev->xts_key);
 	free(crypto_bdev->crypto_bdev.name);
 	free(crypto_bdev);
 }
@@ -1273,6 +1278,10 @@ vbdev_crypto_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_json_write_named_string(w, "name", spdk_bdev_get_name(&crypto_bdev->crypto_bdev));
 	spdk_json_write_named_string(w, "crypto_pmd", crypto_bdev->drv_name);
 	spdk_json_write_named_string(w, "key", crypto_bdev->key);
+	if (strcmp(crypto_bdev->cipher, AES_XTS) == 0) {
+		spdk_json_write_named_string(w, "key2", crypto_bdev->key);
+	}
+	spdk_json_write_named_string(w, "cipher", crypto_bdev->cipher);
 	spdk_json_write_object_end(w);
 	return 0;
 }
@@ -1290,6 +1299,10 @@ vbdev_crypto_config_json(struct spdk_json_write_ctx *w)
 		spdk_json_write_named_string(w, "name", spdk_bdev_get_name(&crypto_bdev->crypto_bdev));
 		spdk_json_write_named_string(w, "crypto_pmd", crypto_bdev->drv_name);
 		spdk_json_write_named_string(w, "key", crypto_bdev->key);
+		if (strcmp(crypto_bdev->cipher, AES_XTS) == 0) {
+			spdk_json_write_named_string(w, "key2", crypto_bdev->key);
+		}
+		spdk_json_write_named_string(w, "cipher", crypto_bdev->cipher);
 		spdk_json_write_object_end(w);
 		spdk_json_write_object_end(w);
 	}
@@ -1443,7 +1456,7 @@ vbdev_crypto_insert_name(const char *bdev_name, const char *vbdev_name,
 		goto error_alloc_key;
 	}
 	if (strlen(name->key) != AES_CBC_KEY_LENGTH) {
-		SPDK_ERRLOG("invalid AES_CCB key length\n");
+		SPDK_ERRLOG("invalid AES_CBC key length\n");
 		rc = -EINVAL;
 		goto error_invalid_key;
 	}
@@ -1479,9 +1492,10 @@ vbdev_crypto_insert_name(const char *bdev_name, const char *vbdev_name,
 	return 0;
 
 	/* Error cleanup paths. */
+error_cipher:
+	free(name->key2);
 error_alloc_key2:
 error_invalid_key2:
-error_cipher:
 error_invalid_key:
 	free(name->key);
 error_alloc_key:
@@ -1737,7 +1751,6 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 	struct vbdev_dev *device;
 	bool found = false;
 	int rc = 0;
-	void *tmp = NULL;
 
 	if (g_number_of_claimed_volumes >= MAX_CRYPTO_VOLUMES) {
 		SPDK_DEBUGLOG(SPDK_LOG_CRYPTO, "Reached max number of claimed volumes\n");
@@ -1778,6 +1791,15 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 			goto error_alloc_key;
 		}
 
+		if (name->key2) {
+			vbdev->key2 = strdup(name->key2);
+			if (!vbdev->key2) {
+				SPDK_ERRLOG("could not allocate crypto_bdev key2\n");
+				rc = -ENOMEM;
+				goto error_alloc_key2;
+			}
+		}
+
 		vbdev->drv_name = strdup(name->drv_name);
 		if (!vbdev->drv_name) {
 			SPDK_ERRLOG("could not allocate crypto_bdev drv_name\n");
@@ -1787,6 +1809,7 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 
 		vbdev->crypto_bdev.product_name = "crypto";
 		vbdev->crypto_bdev.write_cache = bdev->write_cache;
+		vbdev->cipher = AES_CBC;
 		if (strcmp(vbdev->drv_name, QAT) == 0) {
 			vbdev->crypto_bdev.required_alignment =
 				spdk_max(spdk_u32log2(bdev->blocklen), bdev->required_alignment);
@@ -1796,15 +1819,17 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 				SPDK_NOTICELOG("QAT using cipher: AES_CBC\n");
 			} else {
 				SPDK_NOTICELOG("QAT using cipher: AES_XTS\n");
+				vbdev->cipher = AES_XTS;
 				/* DPDK expects they keys to be concatenated together. */
-				tmp = realloc(vbdev->key, (AES_XTS_KEY_LENGTH * 2) + 1);
-				if (tmp == NULL) {
-					SPDK_ERRLOG("could not reallocate memory for XTS keys\n");
+				vbdev->xts_key = calloc(1, (AES_XTS_KEY_LENGTH * 2) + 1);
+				if (vbdev->xts_key == NULL) {
+					SPDK_ERRLOG("could not allocate memory for XTS key\n");
 					rc = -ENOMEM;
-					goto error_key_realloc;
+					goto error_xts_key;
 				}
-				vbdev->key = tmp;
-				memcpy(vbdev->key + AES_XTS_KEY_LENGTH, name->key2, AES_XTS_KEY_LENGTH + 1);
+				memcpy(vbdev->xts_key, vbdev->key, AES_XTS_KEY_LENGTH);
+				assert(name->key2);
+				memcpy(vbdev->xts_key + AES_XTS_KEY_LENGTH, name->key2, AES_XTS_KEY_LENGTH + 1);
 			}
 		} else {
 			vbdev->crypto_bdev.required_alignment = bdev->required_alignment;
@@ -1879,12 +1904,13 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 
 		/* Init our per vbdev xform with the desired cipher options. */
 		vbdev->cipher_xform.type = RTE_CRYPTO_SYM_XFORM_CIPHER;
-		vbdev->cipher_xform.cipher.key.data = vbdev->key;
 		vbdev->cipher_xform.cipher.iv.offset = IV_OFFSET;
 		if (strcmp(name->cipher, AES_CBC) == 0) {
+			vbdev->cipher_xform.cipher.key.data = vbdev->key;
 			vbdev->cipher_xform.cipher.algo = RTE_CRYPTO_CIPHER_AES_CBC;
 			vbdev->cipher_xform.cipher.key.length = AES_CBC_KEY_LENGTH;
 		} else {
+			vbdev->cipher_xform.cipher.key.data = vbdev->xts_key;
 			vbdev->cipher_xform.cipher.algo = RTE_CRYPTO_CIPHER_AES_XTS;
 			vbdev->cipher_xform.cipher.key.length = AES_XTS_KEY_LENGTH * 2;
 		}
@@ -1936,9 +1962,12 @@ error_claim:
 error_open:
 	TAILQ_REMOVE(&g_vbdev_crypto, vbdev, link);
 	spdk_io_device_unregister(vbdev, NULL);
+	free(vbdev->xts_key);
+error_xts_key:
 	free(vbdev->drv_name);
-error_key_realloc:
 error_drv_name:
+	free(vbdev->key2);
+error_alloc_key2:
 	free(vbdev->key);
 error_alloc_key:
 	free(vbdev->crypto_bdev.name);
