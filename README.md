@@ -26,6 +26,7 @@ The development kit currently includes:
 * [Build](#libraries)
 * [Unit Tests](#tests)
 * [Vagrant](#vagrant)
+* [AWS](#aws)
 * [Advanced Build Options](#advanced)
 * [Shared libraries](#shared)
 * [Hugepages and Device Binding](#huge)
@@ -103,6 +104,14 @@ also be installed in order to get the required NVMe support.
 
 Details on the Vagrant setup can be found in the
 [SPDK Vagrant documentation](http://spdk.io/doc/vagrant.html).
+
+<a id="aws"></a>
+## AWS
+
+The following setup is known to work on AWS:
+Image: Ubuntu 18.04
+Before running  `setup.sh`, run `modprobe vfio-pci`
+then: `DRIVER_OVERRIDE=vfio-pci ./setup.sh`
 
 <a id="advanced"></a>
 ## Advanced Build Options
