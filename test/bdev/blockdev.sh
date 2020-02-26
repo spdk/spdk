@@ -133,8 +133,7 @@ function setup_pmem_conf() {
 	if hash pmempool; then
 		rm -f /tmp/spdk-pmem-pool
 		pmempool create blk --size=32M 512 /tmp/spdk-pmem-pool
-		echo "[Pmem]" >> $conf_file
-		echo "  Blk /tmp/spdk-pmem-pool Pmem0" >> $conf_file
+		"$rpc_py" bdev_pmem_create -n Pmem0 "/tmp/spdk-pmem-pool"
 	else
 		return 1
 	fi
@@ -350,7 +349,7 @@ case "$test_type" in
 	crypto_qat )
 		start_spdk_tgt; setup_crypto_qat_conf;;
 	pmem )
-		setup_pmem_conf;;
+		start_spdk_tgt; setup_pmem_conf;;
 	rbd )
 		setup_rbd_conf;;
 	* )
