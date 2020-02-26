@@ -305,10 +305,9 @@ else
 	PRE_RESERVED_MEM=2048
 fi
 
-test_type=$1
-[ -z "$test_type" ] && setup_bdev_conf
-if [ -n "$test_type" ]; then
-	case "$test_type" in
+test_type=${1:-bdev}
+case "$test_type" in
+	bdev ) setup_bdev_conf;;
 	nvme )
 		setup_nvme_conf;;
 	gpt )
@@ -323,8 +322,7 @@ if [ -n "$test_type" ]; then
 		echo "invalid test name"
 		exit 1
 		;;
-	esac
-fi
+esac
 
 start_spdk_tgt
 
@@ -363,7 +361,7 @@ fi
 run_test "bdev_verify" $testdir/bdevperf/bdevperf --json "$conf_file" -q 128 -o 4096 -w verify -t 5
 run_test "bdev_write_zeroes" $testdir/bdevperf/bdevperf --json "$conf_file" -q 128 -o 4096 -w write_zeroes -t 1
 
-if [ -z $test_type ]; then
+if [[ $test_type == bdev ]]; then
 	run_test "bdev_qos" qos_test_suite
 fi
 
