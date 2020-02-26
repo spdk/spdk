@@ -78,15 +78,14 @@ nvmftestinit
 # skip this test if we are using rxe. TODO: get to the bottom of GitHub issue #1043
 if [ $TEST_TRANSPORT == "rdma" ] && check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
 	echo "Using software RDMA, skipping the target disconnect tests."
-	exit 0
+else
+	run_test "nvmf_target_disconnect_tc1" nvmf_target_disconnect_tc1
+	run_test "nvmf_target_disconnect_tc2" nvmf_target_disconnect_tc2
+	if [ -n "$NVMF_SECOND_TARGET_IP" ]; then
+		run_test "nvmf_target_disconnect_tc3" nvmf_target_disconnect_tc3
+	fi
 fi
 
-run_test "nvmf_target_disconnect_tc1" nvmf_target_disconnect_tc1
-run_test "nvmf_target_disconnect_tc2" nvmf_target_disconnect_tc2
-if [ -n "$NVMF_SECOND_TARGET_IP" ]; then
-	run_test "nvmf_target_disconnect_tc3" nvmf_target_disconnect_tc3
-fi
 
 trap - SIGINT SIGTERM EXIT
-rm -f $PLUGIN_DIR/example_config_extended.fio || true
 nvmftestfini
