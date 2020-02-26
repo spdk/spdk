@@ -220,7 +220,7 @@ function install_qemu()
         declare -a opt_params=("--prefix=/usr/local/qemu/$SPDK_QEMU_BRANCH")
         if [ "$PACKAGEMNG" = "pacman" ]; then
             # GCC 9 on ArchLinux fails to compile Qemu due to some old warnings which were not detected by older versions.
-            opt_params+=("--extra-cflags='-Wno-error=stringop-truncation -Wno-error=deprecated-declarations -Wno-error=incompatible-pointer-types -Wno-error=format-truncation'")
+            opt_params+=("--extra-cflags=-Wno-error=stringop-truncation -Wno-error=deprecated-declarations -Wno-error=incompatible-pointer-types -Wno-error=format-truncation")
             opt_params+=("--disable-glusterfs")
         fi
 
