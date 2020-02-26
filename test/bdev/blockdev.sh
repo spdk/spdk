@@ -107,13 +107,26 @@ function setup_gpt_conf() {
 	fi
 }
 
-function setup_crypto_conf() {
-	cat >$conf_file <<-EOF
-		[Malloc]
-		NumberOfLuns 3
-		LunSizeInMB 16
-	EOF
-	$testdir/gen_crypto.sh Malloc0 Malloc1 Malloc2 >> $conf_file
+function setup_crypto_aesni_conf() {
+	# Malloc0 and Malloc1 use AESNI
+	"$rpc_py" <<-RPC
+		bdev_malloc_create -b Malloc0 16 512
+		bdev_malloc_create -b Malloc1 16 512
+		bdev_crypto_create Malloc0 crypto_ram crypto_aesni_mb 0123456789123456
+		bdev_crypto_create Malloc1 crypto_ram2 crypto_aesni_mb 9012345678912345
+	RPC
+}
+
+function setup_crypto_qat_conf() {
+	# Malloc0 will use QAT AES_CBC
+	# Malloc1 will use QAT AES_XTS
+	"$rpc_py" <<-RPC
+		bdev_malloc_create -b Malloc0 16 512
+		bdev_malloc_create -b Malloc1 16 512
+		bdev_crypto_create Malloc0 crypto_ram crypto_qat 0123456789123456
+		bdev_crypto_create -c AES_XTS -k2 0123456789123456 Malloc1 crypto_ram3 crypto_qat 0123456789123456
+	RPC
+	"$rpc_py" bdev_get_bdevs -b Malloc1
 }
 
 function setup_pmem_conf() {
@@ -332,8 +345,10 @@ case "$test_type" in
 		start_spdk_tgt; setup_nvme_conf;;
 	gpt )
 		start_spdk_tgt; setup_gpt_conf;;
-	crypto )
-		setup_crypto_conf;;
+	crypto_aesni )
+		start_spdk_tgt; setup_crypto_aesni_conf;;
+	crypto_qat )
+		start_spdk_tgt; setup_crypto_qat_conf;;
 	pmem )
 		setup_pmem_conf;;
 	rbd )

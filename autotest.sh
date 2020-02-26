@@ -290,7 +290,11 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	fi
 
 	if [ $SPDK_TEST_CRYPTO -eq 1 ]; then
-		run_test "blockdev_crypto" ./test/bdev/blockdev.sh "crypto"
+		run_test "blockdev_crypto_aesni" ./test/bdev/blockdev.sh "crypto_aesni"
+		# Proceed with the test only if QAT devices are in place
+		if [[ $(lspci -d:37c8) ]]; then
+			run_test "blockdev_crypto_qat" ./test/bdev/blockdev.sh "crypto_qat"
+		fi
 	fi
 fi
 
