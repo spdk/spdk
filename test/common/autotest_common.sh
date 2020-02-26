@@ -762,6 +762,7 @@ function discover_bdevs()
 	local rootdir=$1
 	local config_file=$2
 	local cfg_type=$3
+	local wait_for_spdk_bdev=${4:-30}
 	local rpc_server=/var/tmp/spdk-discover-bdevs.sock
 
 	if [ ! -e $config_file ]; then
@@ -779,6 +780,8 @@ function discover_bdevs()
 		$cfg_type $config_file &>/dev/null &
 	stubpid=$!
 	while ! [ -e /var/run/spdk_bdev0 ]; do
+		# If this counter drops to zero, errexit will be caught to abort the test
+		(( wait_for_spdk_bdev-- ))
 		sleep 1
 	done
 
