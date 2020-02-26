@@ -116,6 +116,7 @@ leak:spdk_fs_alloc_thread_ctx
 leak:/usr/src/fio/parse.c
 leak:/usr/src/fio/iolog.c
 leak:/usr/src/fio/init.c
+leak:/usr/src/fio/filesetup.c
 leak:fio_memalign
 leak:spdk_fio_io_u_init
 
