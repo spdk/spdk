@@ -100,13 +100,24 @@ ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_kvargs.*))
 DPDK_LIB_LIST += rte_kvargs
 endif
 
+LINK_HASH=n
+
 ifeq ($(CONFIG_VHOST),y)
 ifneq ($(CONFIG_VHOST_INTERNAL_LIB),y)
-DPDK_LIB_LIST += rte_vhost rte_net rte_hash
+DPDK_LIB_LIST += rte_vhost rte_net
+LINK_HASH=y
 ifneq ($(DPDK_FRAMEWORK),y)
 DPDK_LIB_LIST += rte_cryptodev
 endif
 endif
+endif
+
+ifeq ($(CONFIG_RAID5),y)
+LINK_HASH=y
+endif
+
+ifeq ($(LINK_HASH),y)
+DPDK_LIB_LIST += rte_hash
 endif
 
 define dpdk_lib_list_to_libs
