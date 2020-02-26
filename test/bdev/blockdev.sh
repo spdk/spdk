@@ -58,7 +58,7 @@ function setup_bdev_conf() {
 }
 
 function setup_nvme_conf() {
-	$rootdir/scripts/gen_nvme.sh >> $conf_file
+	"$rootdir/scripts/gen_nvme.sh" --json | "$rpc_py" load_subsystem_config
 }
 
 function setup_gpt_conf() {
@@ -68,7 +68,8 @@ function setup_gpt_conf() {
 		# still depends on it
 		:>"$conf_file"
 	fi
-	setup_nvme_conf
+	# FIXME: Move this to json
+	$rootdir/scripts/gen_nvme.sh >> "$conf_file"
 	if grep -q Nvme0 $conf_file; then
 		[[ $1 == reset ]] && return 0
 		part_dev_by_gpt $conf_file Nvme0n1 $rootdir
@@ -299,7 +300,7 @@ case "$test_type" in
 	bdev )
 		start_spdk_tgt; setup_bdev_conf;;
 	nvme )
-		setup_nvme_conf;;
+		start_spdk_tgt; setup_nvme_conf;;
 	gpt )
 		setup_gpt_conf;;
 	crypto )
