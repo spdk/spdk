@@ -6,7 +6,7 @@ source $rootdir/test/common/autotest_common.sh
 source $testdir/nbd_common.sh
 
 rpc_py="$rootdir/scripts/rpc.py"
-conf_file="$testdir/bdev.conf"
+conf_file="$testdir/bdev.json"
 # Make sure the configuration is clean
 :>"$conf_file"
 
@@ -19,17 +19,7 @@ function cleanup() {
 }
 
 function start_spdk_tgt() {
-	local spdk_cmd
-
-	if [[ -n $spdk_tgt_pid ]] && kill -0 "$spdk_tgt_pid" &>/dev/null; then
-		return 0
-	fi
-
-	if [[ -s $conf_file ]]; then
-		spdk_cmd+=(--config "$conf_file")
-	fi
-
-	"$rootdir/app/spdk_tgt/spdk_tgt" "${spdk_cmd[@]}" &
+	"$rootdir/app/spdk_tgt/spdk_tgt" &
 	spdk_tgt_pid=$!
 	trap 'killprocess "$spdk_tgt_pid"; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten "$spdk_tgt_pid"
@@ -201,11 +191,11 @@ function fio_test_suite() {
 	done
 
 	if [ $RUN_NIGHTLY_FAILING -eq 0 ]; then
-		local fio_params="--ioengine=spdk_bdev --iodepth=8 --bs=4k --runtime=10 $testdir/bdev.fio --spdk_json_conf=./test/bdev/bdev.conf"
+		local fio_params="--ioengine=spdk_bdev --iodepth=8 --bs=4k --runtime=10 $testdir/bdev.fio --spdk_json_conf=$conf_file"
 	else
 		# Use size 192KB which both exceeds typical 128KB max NVMe I/O
 		#  size and will cross 128KB Intel DC P3700 stripe boundaries.
-		local fio_params="--ioengine=spdk_bdev --iodepth=128 --bs=192k --runtime=100 $testdir/bdev.fio --spdk_json_conf=./test/bdev/bdev.conf"
+		local fio_params="--ioengine=spdk_bdev --iodepth=128 --bs=192k --runtime=100 $testdir/bdev.fio --spdk_json_conf=$conf_file"
 	fi
 
 	run_test "bdev_fio_rw_verify" fio_bdev $fio_params --spdk_mem=$PRE_RESERVED_MEM \
@@ -337,30 +327,29 @@ else
 fi
 
 test_type=${1:-bdev}
+start_spdk_tgt
 case "$test_type" in
 	bdev )
-		start_spdk_tgt; setup_bdev_conf;;
+		setup_bdev_conf;;
 	nvme )
-		start_spdk_tgt; setup_nvme_conf;;
+		setup_nvme_conf;;
 	gpt )
-		start_spdk_tgt; setup_gpt_conf;;
+		setup_gpt_conf;;
 	crypto_aesni )
-		start_spdk_tgt; setup_crypto_aesni_conf;;
+		setup_crypto_aesni_conf;;
 	crypto_qat )
-		start_spdk_tgt; setup_crypto_qat_conf;;
+		setup_crypto_qat_conf;;
 	pmem )
-		start_spdk_tgt; setup_pmem_conf;;
+		setup_pmem_conf;;
 	rbd )
-		start_spdk_tgt; setup_rbd_conf;;
+		setup_rbd_conf;;
 	* )
 		echo "invalid test name"
 		exit 1
 		;;
 esac
 
-start_spdk_tgt
-
-# Overwrite ini config with json and use it as such throughout all the tests
+# Generate json config and use it throughout all the tests
 cat <<-CONF >"$conf_file"
         {"subsystems":[
         $("$rpc_py" save_subsystem_config -n bdev)
