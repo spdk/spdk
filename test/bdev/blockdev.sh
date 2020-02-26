@@ -144,7 +144,7 @@ function setup_rbd_conf() {
 	rbd_setup 127.0.0.1
 	timing_exit rbd_setup
 
-	$rootdir/scripts/gen_rbd.sh >> $conf_file
+	"$rpc_py" bdev_rbd_create -b Ceph0 rbd foo 512
 }
 
 function bdev_bounds() {
@@ -351,7 +351,7 @@ case "$test_type" in
 	pmem )
 		start_spdk_tgt; setup_pmem_conf;;
 	rbd )
-		setup_rbd_conf;;
+		start_spdk_tgt; setup_rbd_conf;;
 	* )
 		echo "invalid test name"
 		exit 1
