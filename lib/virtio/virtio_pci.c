@@ -33,12 +33,12 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/memory.h"
 #include "spdk/mmio.h"
 #include "spdk/string.h"
 #include "spdk/env.h"
 
 #include "spdk_internal/virtio.h"
-#include "spdk_internal/memory.h"
 
 struct virtio_hw {
 	uint8_t	    use_msix;

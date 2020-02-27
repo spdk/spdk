@@ -41,8 +41,7 @@
 #include "spdk/env.h"
 #include "spdk/crc16.h"
 #include "spdk/endian.h"
-
-#include "spdk_internal/memory.h"
+#include "spdk/memory.h"
 
 #define MAX_DEVS 64
 

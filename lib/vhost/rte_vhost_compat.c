@@ -42,12 +42,12 @@
 #include "spdk/likely.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
+#include "spdk/memory.h"
 #include "spdk/barrier.h"
 #include "spdk/vhost.h"
 #include "vhost_internal.h"
 
 #include "spdk_internal/vhost_user.h"
-#include "spdk_internal/memory.h"
 
 static inline void
 vhost_session_mem_region_calc(uint64_t *previous_start, uint64_t *start, uint64_t *end,

@@ -37,11 +37,10 @@
 #include "spdk/likely.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
+#include "spdk/memory.h"
 #include "spdk/barrier.h"
 #include "spdk/vhost.h"
 #include "vhost_internal.h"
-
-#include "spdk_internal/memory.h"
 
 /* Path to folder where character device will be created. Can be set by user. */
 static char dev_dirname[PATH_MAX] = "";

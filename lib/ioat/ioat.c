@@ -37,9 +37,9 @@
 
 #include "spdk/env.h"
 #include "spdk/util.h"
+#include "spdk/memory.h"
 
 #include "spdk_internal/log.h"
-#include "spdk_internal/memory.h"
 
 struct ioat_driver {
 	pthread_mutex_t			lock;

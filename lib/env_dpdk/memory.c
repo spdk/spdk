@@ -41,12 +41,12 @@
 #include <rte_eal_memconfig.h>
 
 #include "spdk_internal/assert.h"
-#include "spdk_internal/memory.h"
 
 #include "spdk/assert.h"
 #include "spdk/likely.h"
 #include "spdk/queue.h"
 #include "spdk/util.h"
+#include "spdk/memory.h"
 #include "spdk/env_dpdk.h"
 
 #ifdef __FreeBSD__

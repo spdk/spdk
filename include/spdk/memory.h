@@ -31,8 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPDK_INTERNAL_MEMORY_H
-#define SPDK_INTERNAL_MEMORY_H
+#ifndef SPDK_MEMORY_H
+#define SPDK_MEMORY_H
 
 #include "spdk/stdinc.h"
 
@@ -57,4 +57,4 @@ extern "C" {
 }
 #endif
 
-#endif /* SPDK_INTERNAL_MEMORY_H */
+#endif /* SPDK_MEMORY_H */
