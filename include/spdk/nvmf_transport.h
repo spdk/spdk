@@ -43,6 +43,7 @@
 #include "spdk/nvmf.h"
 #include "spdk/nvmf_cmd.h"
 #include "spdk/nvmf_spec.h"
+#include "spdk/memory.h"
 
 #define SPDK_NVMF_MAX_SGL_ENTRIES	16
 
@@ -52,8 +53,7 @@
 /* AIO backend requires block size aligned data buffers,
  * extra 4KiB aligned data buffer should work for most devices.
  */
-#define NVMF_SHIFT_4KB			12u
-#define NVMF_DATA_BUFFER_ALIGNMENT	(1u << NVMF_SHIFT_4KB)
+#define NVMF_DATA_BUFFER_ALIGNMENT	VALUE_4KB
 #define NVMF_DATA_BUFFER_MASK		(NVMF_DATA_BUFFER_ALIGNMENT - 1LL)
 
 union nvmf_h2c_msg {
