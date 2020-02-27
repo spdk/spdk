@@ -5181,10 +5181,31 @@ bdev_dummy_event_cb(void *remove_ctx)
 }
 
 static int
+bdev_start_qos(struct spdk_bdev *bdev)
+{
+	struct set_qos_limit_ctx *ctx;
+
+	/* Enable QoS */
+	if (bdev->internal.qos && bdev->internal.qos->thread == NULL) {
+		ctx = calloc(1, sizeof(*ctx));
+		if (ctx == NULL) {
+			SPDK_ERRLOG("Failed to allocate memory for QoS context\n");
+			return -ENOMEM;
+		}
+		ctx->bdev = bdev;
+		spdk_for_each_channel(__bdev_to_io_dev(bdev),
+				      bdev_enable_qos_msg, ctx,
+				      bdev_enable_qos_done);
+	}
+
+	return 0;
+}
+
+static int
 bdev_open(struct spdk_bdev *bdev, bool write, struct spdk_bdev_desc *desc)
 {
 	struct spdk_thread *thread;
-	struct set_qos_limit_ctx *ctx;
+	int rc = 0;
 
 	thread = spdk_get_thread();
 	if (!thread) {
@@ -5212,18 +5233,11 @@ bdev_open(struct spdk_bdev *bdev, bool write, struct spdk_bdev_desc *desc)
 		return -EPERM;
 	}
 
-	/* Enable QoS */
-	if (bdev->internal.qos && bdev->internal.qos->thread == NULL) {
-		ctx = calloc(1, sizeof(*ctx));
-		if (ctx == NULL) {
-			SPDK_ERRLOG("Failed to allocate memory for QoS context\n");
-			pthread_mutex_unlock(&bdev->internal.mutex);
-			return -ENOMEM;
-		}
-		ctx->bdev = bdev;
-		spdk_for_each_channel(__bdev_to_io_dev(bdev),
-				      bdev_enable_qos_msg, ctx,
-				      bdev_enable_qos_done);
+	rc = bdev_start_qos(bdev);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to start QoS on bdev %s\n", bdev->name);
+		pthread_mutex_unlock(&bdev->internal.mutex);
+		return rc;
 	}
 
 	TAILQ_INSERT_TAIL(&bdev->internal.open_descs, desc, link);
