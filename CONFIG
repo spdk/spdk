@@ -73,6 +73,9 @@ CONFIG_TSAN=n
 # Build tests
 CONFIG_TESTS=y
 
+# Build examples
+CONFIG_EXAMPLES=y
+
 # Directory that contains the desired SPDK environment library.
 # By default, this is implemented using DPDK.
 CONFIG_ENV=
