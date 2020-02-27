@@ -19,7 +19,6 @@ case $1 in
 		echo "  -shr|--scsi-hot-remove               for running scsi hot remove tests"
 		echo "  -bhr|--blk-hot-remove                for running blk hot remove tests"
 		echo "  -h |--help                           prints this message"
-		echo "  -tc|--test-cases                     define test cases to run for hotremove test"
 		echo ""
 		echo "Environment:"
 		echo "  VM_IMAGE        path to QCOW2 VM image used during test (default: $HOME/vhost_vm_image.qcow2)"
@@ -51,13 +50,6 @@ DISKS_NUMBER=$(lspci -mm -n | grep 0108 | tr -d '"' | awk -F " " '{print "0000:"
 
 WORKDIR=$(readlink -f $(dirname $0))
 
-test_cases="all"
-if [ -n "$2" ]; then
-	case $2 in
-		-tc=*|-test-cases=*) test_cases="${2#*=}" ;;
-	esac
-fi
-
 case $1 in
 	-hp|--hotplug)
 		echo 'Running hotplug tests suite...'
@@ -76,8 +68,7 @@ case $1 in
 			--vm=1,$VM_IMAGE,Nvme0n1p2:Nvme0n1p3 \
 			--test-type=spdk_vhost_scsi \
 			--scsi-hotremove-test \
-			--fio-jobs=$WORKDIR/hotplug/fio_jobs/default_integrity.job \
-			--test-cases=$test_cases
+			--fio-jobs=$WORKDIR/hotplug/fio_jobs/default_integrity.job
 		;;
 	-bhr|--blk-hot-remove)
 		echo 'Running blk hotremove tests suite...'
@@ -86,9 +77,8 @@ case $1 in
 			--vm=1,$VM_IMAGE,Nvme0n1p2:Nvme0n1p3 \
 			--test-type=spdk_vhost_blk \
 			--blk-hotremove-test \
-			--fio-jobs=$WORKDIR/hotplug/fio_jobs/default_integrity.job \
-			--test-cases=$test_cases
-	;;
+			--fio-jobs=$WORKDIR/hotplug/fio_jobs/default_integrity.job
+		;;
 	*)
 		echo "unknown test type: $1"
 		exit 1

@@ -43,21 +43,23 @@ function scsi_hotremove_tc1() {
     traddr=""
     get_traddr "Nvme0"
     # 1. Run the command to hot remove NVMe disk.
-    delete_nvme $hotnvmename
+    delete_nvme "Nvme0"
     # 2. If vhost had crashed then tests would stop running
     sleep 1
-    set_hotnvmename
-    add_nvme $hotnvmename "$traddr"
+    add_nvme "HotInNvme0" "$traddr"
 }
 
 # Test Case 2
 function scsi_hotremove_tc2() {
     echo "Scsi hotremove test case 2"
     # 1. Attach split NVMe bdevs to scsi controller.
-    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p0.0 0 "${hotnvmename}n1p0"
-    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p2.1 0 "${hotnvmename}n1p1"
+    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p0.0 0 HotInNvme0n1p0
+    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p1.0 0 Mallocp0
+    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p2.1 0 HotInNvme0n1p1
+    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p3.1 0 Mallocp1
 
     # 2. Run two VMs, attached to scsi controllers.
+    vms_setup
     vm_run_with_arg 0 1
     vms_prepare "0 1"
 
@@ -72,7 +74,7 @@ function scsi_hotremove_tc2() {
     local last_pid=$!
     sleep 3
     # 4. Run the command to hot remove NVMe disk.
-    delete_nvme $hotnvmename
+    delete_nvme "HotInNvme0"
 
     # 5. Check that fio job run on hot-remove device stopped on VM.
     #    Expected: Fio should return error message and return code != 0.
@@ -93,8 +95,7 @@ function scsi_hotremove_tc2() {
     #     Expected: Fio should return error message and return code != 0.
     check_fio_retcode "Scsi hotremove test case 2: Iteration 2." 1 $retcode
     vm_shutdown_all
-    set_hotnvmename
-    add_nvme $hotnvmename "$traddr"
+    add_nvme "HotInNvme1" "$traddr"
     sleep 1
 }
 
@@ -102,7 +103,7 @@ function scsi_hotremove_tc2() {
 function scsi_hotremove_tc3() {
     echo "Scsi hotremove test case 3"
     # 1. Attach added NVMe bdev to scsi controller.
-    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p0.0 0 "${hotnvmename}n1p0"
+    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p0.0 0 HotInNvme1n1p0
     # 2. Run two VM, attached to scsi controllers.
     vm_run_with_arg 0 1
     vms_prepare "0 1"
@@ -116,7 +117,7 @@ function scsi_hotremove_tc3() {
     local last_pid=$!
     sleep 3
     # 4. Run the command to hot remove NVMe disk.
-    delete_nvme $hotnvmename
+    delete_nvme "HotInNvme1"
     # 5. Check that fio job run on hot-remove device stopped on first VM.
     #    Expected: Fio should return error message and return code != 0.
     wait_for_finish $last_pid || retcode=$?
@@ -135,8 +136,7 @@ function scsi_hotremove_tc3() {
     #    Expected: Fio should return error message and return code != 0.
     check_fio_retcode "Scsi hotremove test case 3: Iteration 2." 1 $retcode
     vm_shutdown_all
-    set_hotnvmename
-    add_nvme $hotnvmename "$traddr"
+    add_nvme "HotInNvme2" "$traddr"
     sleep 1
 }
 
@@ -144,8 +144,8 @@ function scsi_hotremove_tc3() {
 function scsi_hotremove_tc4() {
     echo "Scsi hotremove test case 4"
     # 1. Attach NVMe bdevs to scsi controllers.
-    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p0.0 0 "${hotnvmename}n1p0"
-    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p2.1 0 "${hotnvmename}n1p1"
+    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p0.0 0 HotInNvme2n1p0
+    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p2.1 0 HotInNvme2n1p1
     # 2. Run two VMs, attach to scsi controller.
     vm_run_with_arg 0 1
     vms_prepare "0 1"
@@ -168,7 +168,7 @@ function scsi_hotremove_tc4() {
     # 5. Run the command to hot remove NVMe disk.
     traddr=""
     get_traddr "Nvme0"
-    delete_nvme $hotnvmename
+    delete_nvme "HotInNvme2"
     # 6. Check that fio job run on hot-removed devices stopped.
     #    Expected: Fio should return error message and return code != 0.
     local retcode_vm0=0
@@ -205,9 +205,10 @@ function scsi_hotremove_tc4() {
     #     Expected: Fio should return return code == 0.
     check_fio_retcode "Scsi hotremove test case 4: Iteration 4." 0 $retcode
     vm_shutdown_all
-    set_hotnvmename
-    add_nvme $hotnvmename "$traddr"
+    add_nvme "HotInNvme3" "$traddr"
     sleep 1
+    $rpc_py vhost_scsi_controller_remove_target naa.Nvme0n1p1.0 0
+    $rpc_py vhost_scsi_controller_remove_target naa.Nvme0n1p3.1 0
 }
 
 function pre_scsi_hotremove_test_case() {
@@ -215,13 +216,9 @@ function pre_scsi_hotremove_test_case() {
     $rpc_py vhost_create_scsi_controller naa.Nvme0n1p1.0
     $rpc_py vhost_create_scsi_controller naa.Nvme0n1p2.1
     $rpc_py vhost_create_scsi_controller naa.Nvme0n1p3.1
-    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p1.0 0 Mallocp0
-    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p3.1 0 Mallocp1
 }
 
 function post_scsi_hotremove_test_case() {
-    $rpc_py vhost_scsi_controller_remove_target naa.Nvme0n1p1.0 0
-    $rpc_py vhost_scsi_controller_remove_target naa.Nvme0n1p3.1 0
     $rpc_py vhost_delete_controller naa.Nvme0n1p0.0
     $rpc_py vhost_delete_controller naa.Nvme0n1p1.0
     $rpc_py vhost_delete_controller naa.Nvme0n1p2.1
@@ -229,18 +226,8 @@ function post_scsi_hotremove_test_case() {
 }
 
 pre_scsi_hotremove_test_case
-vms_setup
-if $tc1; then
-    scsi_hotremove_tc1
-fi
-if $tc2; then
-    scsi_hotremove_tc2
-fi
-if $tc3; then
-    scsi_hotremove_tc3
-fi
-if $tc4; then
-    scsi_hotremove_tc4
-fi
-sleep 1
+scsi_hotremove_tc1
+scsi_hotremove_tc2
+scsi_hotremove_tc3
+scsi_hotremove_tc4
 post_scsi_hotremove_test_case

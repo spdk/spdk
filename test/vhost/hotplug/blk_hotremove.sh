@@ -44,11 +44,11 @@ function blk_hotremove_tc1() {
     echo "Blk hotremove test case 1"
     traddr=""
     # 1. Run the command to hot remove NVMe disk.
-    delete_nvme $hotnvmename
+    get_traddr "Nvme0"
+    delete_nvme "Nvme0"
     # 2. If vhost had crashed then tests would stop running
     sleep 1
-    set_hotnvmename
-    add_nvme $hotnvmename "$traddr"
+    add_nvme "HotInNvme0" "$traddr"
     sleep 1
 }
 
@@ -56,7 +56,7 @@ function blk_hotremove_tc1() {
 function blk_hotremove_tc2() {
     echo "Blk hotremove test case 2"
     # 1. Use rpc command to create blk controllers.
-    $rpc_py vhost_create_blk_controller naa.Nvme0n1p0.0 "${hotnvmename}n1p0"
+    $rpc_py vhost_create_blk_controller naa.Nvme0n1p0.0 HotInNvme0n1p0
     $rpc_py vhost_create_blk_controller naa.Nvme0n1p1.0 Mallocp0
     $rpc_py vhost_create_blk_controller naa.Nvme0n1p2.1 Mallocp1
     $rpc_py vhost_create_blk_controller naa.Nvme0n1p3.1 Mallocp2
@@ -72,7 +72,7 @@ function blk_hotremove_tc2() {
     local last_pid=$!
     sleep 3
     # 4. Run the command to hot remove NVMe disk.
-    delete_nvme $hotnvmename
+    delete_nvme "HotInNvme0"
     local retcode=0
     wait_for_finish $last_pid || retcode=$?
     # 5. Check that fio job run on hot-removed device stopped.
@@ -90,8 +90,7 @@ function blk_hotremove_tc2() {
     check_fio_retcode "Blk hotremove test case 2: Iteration 2." 1 $retcode
     vm_shutdown_all
     vhost_delete_controllers
-    set_hotnvmename
-    add_nvme $hotnvmename "$traddr"
+    add_nvme "HotInNvme1" "$traddr"
     sleep 1
 }
 
@@ -99,9 +98,9 @@ function blk_hotremove_tc2() {
 function blk_hotremove_tc3() {
     echo "Blk hotremove test case 3"
     # 1. Use rpc command to create blk controllers.
-    $rpc_py vhost_create_blk_controller naa.Nvme0n1p0.0 "${hotnvmename}n1p0"
+    $rpc_py vhost_create_blk_controller naa.Nvme0n1p0.0 HotInNvme1n1p0
     $rpc_py vhost_create_blk_controller naa.Nvme0n1p1.0 Mallocp0
-    $rpc_py vhost_create_blk_controller naa.Nvme0n1p2.1 "${hotnvmename}n1p1"
+    $rpc_py vhost_create_blk_controller naa.Nvme0n1p2.1 HotInNvme1n1p1
     $rpc_py vhost_create_blk_controller naa.Nvme0n1p3.1 Mallocp1
     # 2. Run two VMs and attach every VM to two blk controllers.
     vm_run_with_arg "0 1"
@@ -115,7 +114,7 @@ function blk_hotremove_tc3() {
     local last_pid=$!
     sleep 3
     # 4. Run the command to hot remove of first NVMe disk.
-    delete_nvme $hotnvmename
+    delete_nvme "HotInNvme1"
     local retcode=0
     wait_for_finish $last_pid || retcode=$?
     # 6. Check that fio job run on hot-removed device stopped.
@@ -133,8 +132,7 @@ function blk_hotremove_tc3() {
     check_fio_retcode "Blk hotremove test case 3: Iteration 2." 1 $retcode
     vm_shutdown_all
     vhost_delete_controllers
-    set_hotnvmename
-    add_nvme $hotnvmename "$traddr"
+    add_nvme "HotInNvme2" "$traddr"
     sleep 1
 }
 
@@ -142,9 +140,9 @@ function blk_hotremove_tc3() {
 function blk_hotremove_tc4() {
     echo "Blk hotremove test case 4"
     # 1. Use rpc command to create blk controllers.
-    $rpc_py vhost_create_blk_controller naa.Nvme0n1p0.0 "${hotnvmename}n1p0"
+    $rpc_py vhost_create_blk_controller naa.Nvme0n1p0.0 HotInNvme2n1p0
     $rpc_py vhost_create_blk_controller naa.Nvme0n1p1.0 Mallocp0
-    $rpc_py vhost_create_blk_controller naa.Nvme0n1p2.1 "${hotnvmename}n1p1"
+    $rpc_py vhost_create_blk_controller naa.Nvme0n1p2.1 HotInNvme2n1p1
     $rpc_py vhost_create_blk_controller naa.Nvme0n1p3.1 Mallocp1
     # 2. Run two VM, attached to blk controllers.
     vm_run_with_arg "0 1"
@@ -163,7 +161,7 @@ function blk_hotremove_tc4() {
     sleep 3
     prepare_fio_cmd_tc1 "0 1"
     # 5. Run the command to hot remove of first NVMe disk.
-    delete_nvme $hotnvmename
+    delete_nvme "HotInNvme2"
     local retcode_vm0=0
     local retcode_vm1=0
     wait_for_finish $last_pid_vm0 || retcode_vm0=$?
@@ -185,8 +183,7 @@ function blk_hotremove_tc4() {
 
     vm_shutdown_all
     vhost_delete_controllers
-    set_hotnvmename
-    add_nvme $hotnvmename "$traddr"
+    add_nvme "HotInNvme3" "$traddr"
     sleep 1
 }
 
@@ -194,7 +191,7 @@ function blk_hotremove_tc4() {
 function blk_hotremove_tc5() {
     echo "Blk hotremove test case 5"
     # 1. Use rpc command to create blk controllers.
-    $rpc_py vhost_create_blk_controller naa.Nvme0n1p0.0 "${hotnvmename}n1p0"
+    $rpc_py vhost_create_blk_controller naa.Nvme0n1p0.0 HotInNvme3n1p0
     $rpc_py vhost_create_blk_controller naa.Nvme0n1p1.0 Mallocp0
     $rpc_py vhost_create_blk_controller naa.Nvme0n1p2.1 Mallocp1
     $rpc_py vhost_create_blk_controller naa.Nvme0n1p3.1 Mallocp2
@@ -208,7 +205,7 @@ function blk_hotremove_tc5() {
     local last_pid=$!
     sleep 3
     # 4. Run the command to hot remove of first NVMe disk.
-    delete_nvme $hotnvmename
+    delete_nvme "HotInNvme3"
     local retcode=0
     wait_for_finish $last_pid || retcode=$?
     # 5. Check that fio job run on hot-removed device stopped.
@@ -226,25 +223,13 @@ function blk_hotremove_tc5() {
     check_fio_retcode "Blk hotremove test case 5: Iteration 2." 1 $retcode
     vm_shutdown_all
     vhost_delete_controllers
-    set_hotnvmename
-    add_nvme $hotnvmename "$traddr"
+    add_nvme "HotInNvme4" "$traddr"
     sleep 1
 }
 
 vms_setup
-get_traddr "Nvme0"
-if $tc1; then
-    blk_hotremove_tc1
-fi
-if $tc2; then
-    blk_hotremove_tc2
-fi
-if $tc3; then
-    blk_hotremove_tc3
-fi
-if $tc4; then
-    blk_hotremove_tc4
-fi
-if $tc5; then
-    blk_hotremove_tc5
-fi
+blk_hotremove_tc1
+blk_hotremove_tc2
+blk_hotremove_tc3
+blk_hotremove_tc4
+blk_hotremove_tc5
