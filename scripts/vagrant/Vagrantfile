@@ -97,6 +97,7 @@ Vagrant.configure(2) do |config|
   emulated_nvme_types=(ENV['NVME_DISKS_TYPE'] || "nvme").split(',')
   nvme_namespaces=(ENV['NVME_DISKS_NAMESPACES'] || "").split(',')
   nvme_file=(ENV['NVME_FILE'] || "").split(',')
+  vagrantfile_dir=(ENV['VAGRANTFILE_DIR'] || "none")
 
   config.ssh.forward_agent = true
   config.ssh.forward_x11 = true
@@ -192,6 +193,11 @@ Vagrant.configure(2) do |config|
   # Warning: rsync does not work with freebsd boxes, so this step is disabled
   if ENV['COPY_SPDK_DIR'] == "1" && spdk_dir != "none" && !distro.include?("freebsd")
     config.vm.synced_folder "#{spdk_dir}", "/home/vagrant/spdk_repo/spdk", owner: "vagrant", group: "vagrant", type: "rsync", rsync__auto: false
+  end
+
+  # rsync artifacts from build
+  if ENV['COPY_SPDK_ARTIFACTS'] == "1"
+    config.vm.synced_folder "#{vagrantfile_dir}", "/home/vagrant/spdk_repo/output", type: "sshfs"
   end
 
   # provision the vm with all of the necessary spdk dependencies for running the autorun.sh tests

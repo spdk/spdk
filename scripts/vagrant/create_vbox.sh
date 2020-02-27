@@ -35,6 +35,7 @@ display_help() {
 	echo "  -c                              Create all above disk, default 0"
 	echo "  -u                              Use password authentication to the VM instead of SSH keys."
 	echo "  -l                              Use a local copy of spdk, don't try to rsync from the host."
+	echo "  -a                              Copy spdk/autorun.sh artifacts from VM to host system."
 	echo "  -d                              Deploy a test vm by provisioning all prerequisites for spdk autotest"
 	echo "  --qemu-emulator=<path>          Path to custom QEMU binary. Only works with libvirt provider"
 	echo "  --vagrantfiles-dir=<path>       Destination directory to put Vagrantfile into."
@@ -62,6 +63,7 @@ SPDK_VAGRANT_HTTP_PROXY=""
 VERBOSE=0
 HELP=0
 COPY_SPDK_DIR=1
+COPY_SPDK_ARTIFACTS=0
 DRY_RUN=0
 DEPLOY_TEST_VM=0
 SPDK_VAGRANT_DISTRO="distro"
@@ -78,7 +80,7 @@ VAGRANTFILE_DIR=""
 VAGRANT_PASSWORD_AUTH=0
 VAGRANT_PACKAGE_BOX=0
 
-while getopts ":b:n:s:x:p:u:vcrldh-:" opt; do
+while getopts ":b:n:s:x:p:u:vcraldh-:" opt; do
 	case "${opt}" in
 		-)
 		case "${OPTARG}" in
@@ -114,6 +116,9 @@ while getopts ":b:n:s:x:p:u:vcrldh-:" opt; do
 		h)
 			display_help >&2
 			exit 0
+		;;
+		a)
+			COPY_SPDK_ARTIFACTS=1
 		;;
 		l)
 			COPY_SPDK_DIR=0
@@ -228,6 +233,7 @@ export SPDK_VAGRANT_VMCPU
 export SPDK_VAGRANT_VMRAM
 export SPDK_DIR
 export COPY_SPDK_DIR
+export COPY_SPDK_ARTIFACTS
 export DEPLOY_TEST_VM
 export NVME_DISKS_TYPE
 export NVME_DISKS_NAMESPACES
@@ -262,6 +268,7 @@ if [ ${DRY_RUN} = 1 ]; then
 fi
 if [ -z "$VAGRANTFILE_DIR" ]; then
 	VAGRANTFILE_DIR="${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${SPDK_VAGRANT_PROVIDER}"
+	export VAGRANTFILE_DIR
 fi
 
 if [ -d "${VAGRANTFILE_DIR}" ]; then
@@ -289,6 +296,7 @@ http_proxy: ${http_proxy}
 EOF
 		fi
 	fi
+	mkdir -p "${VAGRANTFILE_DIR}/output"
 	vagrant up $provider
 	if [ ${VAGRANT_PACKAGE_BOX} == 1 ]; then
 		vagrant ssh -c 'sudo spdk_repo/spdk/scripts/vagrant/update.sh'
