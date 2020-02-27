@@ -337,7 +337,9 @@ function usage()
 }
 
 # Get package manager #
-if hash dnf &>/dev/null; then
+if hash yum &>/dev/null; then
+    PACKAGEMNG=yum
+elif hash dnf &>/dev/null; then
     PACKAGEMNG=dnf
 elif hash apt-get &>/dev/null; then
     PACKAGEMNG=apt-get
@@ -407,7 +409,9 @@ cd ~
 jobs=$(($(nproc)*2))
 
 if $UPGRADE; then
-    if [ $PACKAGEMNG == 'dnf' ]; then
+    if [ $PACKAGEMNG == 'yum' ]; then
+        sudo $PACKAGEMNG upgrade -y
+    elif [ $PACKAGEMNG == 'dnf' ]; then
         sudo $PACKAGEMNG upgrade -y
     elif [ $PACKAGEMNG == 'apt-get' ]; then
         sudo $PACKAGEMNG update
@@ -439,7 +443,49 @@ git -C spdk_repo/spdk submodule update --init --recursive
 if $INSTALL; then
     sudo spdk_repo/spdk/scripts/pkgdep.sh --all
 
-    if [ $PACKAGEMNG == 'dnf' ]; then
+    if [ $PACKAGEMNG == 'yum' ]; then
+        sudo yum install -y pciutils \
+        valgrind \
+        jq \
+        nvme-cli \
+        gdb \
+        fio \
+        librbd-devel \
+        kernel-devel \
+        gflags-devel \
+        libasan \
+        libubsan \
+        autoconf \
+        automake \
+        libtool \
+        libmount-devel \
+        iscsi-initiator-utils \
+        isns-utils-devel\
+        pmempool \
+        perl-open \
+        glib2-devel \
+        pixman-devel \
+        astyle-devel \
+        elfutils \
+        elfutils-libelf-devel \
+        flex \
+        bison \
+        targetcli \
+        perl-Switch \
+        librdmacm-utils \
+        libibverbs-utils \
+        gdisk \
+        socat \
+        sshfs \
+        sshpass \
+        python3-pandas \
+        rpm-build \
+        iptables \
+        clang-analyzer \
+        bc \
+        kernel-modules-extra \
+        systemd-devel
+    elif [ $PACKAGEMNG == 'dnf' ]; then
         if echo $CONF | grep -q tsocks; then
             # currently, tsocks package is retired in fedora 31, so don't exit in case
             # installation failed
