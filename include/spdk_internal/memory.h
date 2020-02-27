@@ -41,17 +41,17 @@ extern "C" {
 #endif
 
 #define SHIFT_2MB		21 /* (1 << 21) == 2MB */
-#define MASK_2MB		((1ULL << SHIFT_2MB) - 1)
-#define VALUE_2MB		(1 << SHIFT_2MB)
+#define VALUE_2MB		(1ULL << SHIFT_2MB)
+#define MASK_2MB		(VALUE_2MB - 1)
 
 #define SHIFT_4KB		12 /* (1 << 12) == 4KB */
-#define MASK_4KB		((1ULL << SHIFT_4KB) - 1)
-#define VALUE_4KB		(1 << SHIFT_4KB)
+#define VALUE_4KB		(1ULL << SHIFT_4KB)
+#define MASK_4KB		(VALUE_4KB - 1)
 
-#define _2MB_OFFSET(ptr)	(((uintptr_t)(ptr)) &  (VALUE_2MB - 1))
-#define _2MB_PAGE(ptr)		((ptr) & ~(0x200000 - 1))
-#define FLOOR_2MB(x)		(((uintptr_t)x) / VALUE_2MB) << SHIFT_2MB
-#define CEIL_2MB(x)		((((uintptr_t)x) + VALUE_2MB - 1) / VALUE_2MB) << SHIFT_2MB
+#define _2MB_OFFSET(ptr)	(((uintptr_t)(ptr)) & MASK_2MB)
+#define _2MB_PAGE(ptr)		FLOOR_2MB((uintptr_t)(ptr))
+#define FLOOR_2MB(x)		(((uintptr_t)(x)) & ~MASK_2MB)
+#define CEIL_2MB(x)		FLOOR_2MB(((uintptr_t)(x)) + VALUE_2MB - 1)
 
 #ifdef __cplusplus
 }
