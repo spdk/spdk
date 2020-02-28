@@ -322,6 +322,14 @@ function install_ocf()
     fi
 }
 
+function install_git() {
+    sudo yum install -y zlib-devel curl-devel
+    tar -xzof <(wget -qO- "$GIT_REPO_GIT")
+    (cd git-${GIT_VERSION} && ./configure --prefix=/usr/local/git && sudo  make -j${jobs} install)
+    sudo sh -c "echo 'export PATH=/usr/local/git/bin:$PATH' >> /etc/bashrc"
+    source /etc/bashrc
+}
+
 function usage()
 {
     echo "This script is intended to automate the environment setup for a linux virtual machine."
@@ -390,7 +398,7 @@ if [ -n "$CONF_PATH" ]; then
 fi
 
 cd ~
-
+GIT_VERSION=2.25.1
 : ${GIT_REPO_SPDK=https://github.com/spdk/spdk.git}; export GIT_REPO_SPDK
 : ${GIT_REPO_DPDK=https://github.com/spdk/dpdk.git}; export GIT_REPO_DPDK
 : ${GIT_REPO_LIBRXE=https://github.com/SoftRoCE/librxe-dev.git}; export GIT_REPO_LIBRXE
@@ -405,6 +413,7 @@ cd ~
 : ${GIT_REPO_INTEL_IPSEC_MB=https://github.com/spdk/intel-ipsec-mb.git}; export GIT_REPO_INTEL_IPSEC_MB
 : ${DRIVER_LOCATION_QAT=https://01.org/sites/default/files/downloads//qat1.7.l.4.9.0-00008.tar.gz}; export DRIVER_LOCATION_QAT
 : ${GIT_REPO_OCF=https://github.com/Open-CAS/ocf}; export GIT_REPO_OCF
+: ${GIT_REPO_GIT=https://github.com/git/git/archive/v${GIT_VERSION}.tar.gz}; export GIT_REPO_GIT
 
 jobs=$(($(nproc)*2))
 
@@ -425,7 +434,11 @@ if $INSTALL; then
     if [ $PACKAGEMNG == 'pacman' ]; then
         sudo $PACKAGEMNG -Sy --needed --noconfirm git
     else
-        sudo $PACKAGEMNG install -y git
+        if [ "${OSID} ${OSVERSION}" == 'centos 7' ]; then
+            install_git
+        else
+            sudo $PACKAGEMNG install -y git
+        fi
     fi
 fi
 
