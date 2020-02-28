@@ -266,7 +266,7 @@ LINK_CXX=\
 #
 # Variables to use for versioning shared libs
 #
-SO_VER := 1
+SO_VER := 2
 SO_MINOR := 0
 SO_SUFFIX_ALL := $(SO_VER).$(SO_MINOR)
 
