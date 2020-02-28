@@ -191,16 +191,10 @@ spdk_scsi_dev_delete_lun(struct spdk_scsi_dev *dev,
 	}
 }
 
-/* This typedef exists to work around an astyle 2.05 bug.
- * Remove it when astyle is fixed.
- */
-typedef struct spdk_scsi_dev _spdk_scsi_dev;
-
-_spdk_scsi_dev *
-spdk_scsi_dev_construct(const char *name, const char *bdev_name_list[],
-			int *lun_id_list, int num_luns, uint8_t protocol_id,
-			void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
-			void *hotremove_ctx)
+struct spdk_scsi_dev *spdk_scsi_dev_construct(const char *name, const char *bdev_name_list[],
+		int *lun_id_list, int num_luns, uint8_t protocol_id,
+		void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
+		void *hotremove_ctx)
 {
 	struct spdk_scsi_dev *dev;
 	size_t name_len;

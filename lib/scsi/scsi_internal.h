@@ -171,14 +171,9 @@ struct spdk_lun_db_entry {
 
 extern struct spdk_lun_db_entry *spdk_scsi_lun_list_head;
 
-/* This typedef exists to work around an astyle 2.05 bug.
- * Remove it when astyle is fixed.
- */
-typedef struct spdk_scsi_lun _spdk_scsi_lun;
-
-_spdk_scsi_lun *spdk_scsi_lun_construct(struct spdk_bdev *bdev,
-					void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
-					void *hotremove_ctx);
+struct spdk_scsi_lun *spdk_scsi_lun_construct(struct spdk_bdev *bdev,
+		void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
+		void *hotremove_ctx);
 void spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun);
 
 void spdk_scsi_lun_append_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);

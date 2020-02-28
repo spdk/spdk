@@ -138,8 +138,7 @@ spdk_bdev_scsi_execute(struct spdk_scsi_task *task)
 DEFINE_STUB(spdk_bdev_get_io_channel, struct spdk_io_channel *,
 	    (struct spdk_bdev_desc *desc), NULL);
 
-static _spdk_scsi_lun *
-lun_construct(void)
+static struct spdk_scsi_lun *lun_construct(void)
 {
 	struct spdk_scsi_lun		*lun;
 	struct spdk_bdev		bdev;

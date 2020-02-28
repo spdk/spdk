@@ -387,10 +387,9 @@ scsi_lun_hot_remove(void *remove_ctx)
  * \return NULL if bdev == NULL
  * \return pointer to the new spdk_scsi_lun object otherwise
  */
-_spdk_scsi_lun *
-spdk_scsi_lun_construct(struct spdk_bdev *bdev,
-			void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
-			void *hotremove_ctx)
+struct spdk_scsi_lun *spdk_scsi_lun_construct(struct spdk_bdev *bdev,
+		void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
+		void *hotremove_ctx)
 {
 	struct spdk_scsi_lun *lun;
 	int rc;
