@@ -36,11 +36,41 @@
 #include "spdk/rpc.h"
 #include "spdk/event.h"
 #include "spdk/util.h"
+#include "spdk/env.h"
+
+#include <ncurses.h>
+#include <panel.h>
+
 
 #define RPC_MAX_THREADS 1024
 #define RPC_MAX_POLLERS 1024
 
+#define MAX_STRING_LEN 12289 /* 3x 4k monitors + 1 */
+#define TAB_WIN_HEIGHT 3
+#define TAB_WIN_LOCATION_ROW 1
+#define TABS_SPACING 2
+#define TABS_LOCATION_ROW 4
+#define TABS_LOCATION_COL 0
+#define TABS_DATA_START_ROW 3
+#define TABS_DATA_START_COL 3
+#define MENU_WIN_HEIGHT 3
+#define MENU_WIN_SPACING 4
+#define MENU_WIN_LOCATION_COL 0
+
+enum tabs {
+	THREADS_TAB,
+	POLLERS_TAB,
+	CORES_TAB,
+	NUMBER_OF_TABS,
+};
+
+const char *g_tab_title[NUMBER_OF_TABS] = {"[1] THREADS", "[2] POLLERS", "[3] CORES"};
 struct spdk_jsonrpc_client *g_rpc_client;
+WINDOW *g_menu_win, *g_tab_win[NUMBER_OF_TABS], *g_tabs[NUMBER_OF_TABS];
+PANEL *g_tab_panels[NUMBER_OF_TABS];
+uint16_t g_max_row, g_max_col;
+uint16_t g_data_win_size;
+uint32_t g_last_threads_count, g_last_pollers_count, g_last_cores_count;
 
 struct rpc_thread_info {
 	char *name;
@@ -255,19 +285,16 @@ rpc_send_req(char *rpc_name, struct spdk_jsonrpc_client_response **resp)
 	} while (rc == 0 || rc == -ENOTCONN);
 
 	if (rc <= 0) {
-		printf("Failed to get response: %d\n", rc);
 		return -1;
 	}
 
 	json_resp = spdk_jsonrpc_client_get_response(g_rpc_client);
 	if (json_resp == NULL) {
-		printf("spdk_jsonrpc_client_get_response() failed\n");
 		return -1;
 	}
 
 	/* Check for error response */
 	if (json_resp->error != NULL) {
-		printf("Unexpected error response\n");
 		return -1;
 	}
 
@@ -325,6 +352,303 @@ free_data(void)
 }
 
 static void
+print_max_len(WINDOW *win, uint16_t row, uint16_t col, const char *string)
+{
+	int len, max_col;
+	int max_row __attribute__((unused));
+
+	len = strlen(string);
+	getmaxyx(win, max_row, max_col);
+
+	assert(row < max_row);
+
+	/* Check if provided string position limit + "..." exceeds screen width */
+	if (col + 3 > max_col) {
+		col = max_col - 4;
+	}
+
+	if (col + len > max_col - 1) {
+		char tmp_str[MAX_STRING_LEN];
+
+		snprintf(tmp_str, max_col - col - 3, "%s", string);
+		snprintf(&tmp_str[max_col - col - 4], 4, "...");
+		mvwprintw(win, row, col, tmp_str);
+	} else {
+		mvwprintw(win, row, col, string);
+	}
+	refresh();
+	wrefresh(win);
+}
+
+static void
+draw_menu_win(void)
+{
+	wbkgd(g_menu_win, COLOR_PAIR(2));
+	box(g_menu_win, 0, 0);
+	print_max_len(g_menu_win, 1, 1,
+		      "   [q] Quit   |   [1-3] TAB selection   |   [PgUp] Previous page   |   [PgDown] Next page   |   [f] Filters   |   [s] Sorting");
+}
+
+static void
+draw_tab_win(enum tabs tab)
+{
+	uint16_t col;
+	uint8_t white_spaces = TABS_SPACING * NUMBER_OF_TABS;
+
+	wbkgd(g_tab_win[tab], COLOR_PAIR(2));
+	box(g_tab_win[tab], 0, 0);
+
+	col = ((g_max_col - white_spaces) / NUMBER_OF_TABS / 2) - (strlen(g_tab_title[tab]) / 2) -
+	      TABS_SPACING;
+	print_max_len(g_tab_win[tab], 1, col, g_tab_title[tab]);
+}
+
+static void
+draw_tabs(enum tabs tab)
+{
+	static const char *desc[NUMBER_OF_TABS] = {"   Thread name   |   Active pollers   |   Timed pollers   |   Paused pollers   ",
+						   "   Poller name   |   Type   |   On thread   ",
+						   "   Core mask   "
+						  };
+
+	print_max_len(g_tabs[tab], 1, 1, desc[tab]);
+	print_max_len(g_tabs[tab], 2, 1, ""); /* Move to next line */
+	whline(g_tabs[tab], ACS_HLINE, MAX_STRING_LEN);
+	box(g_tabs[tab], 0, 0);
+	wrefresh(g_tabs[tab]);
+}
+
+static void
+resize_interface(enum tabs tab)
+{
+	int i;
+
+	clear();
+	wclear(g_menu_win);
+	mvwin(g_menu_win, g_max_row - MENU_WIN_SPACING, MENU_WIN_LOCATION_COL);
+	wresize(g_menu_win, MENU_WIN_HEIGHT, g_max_col);
+	draw_menu_win();
+
+	for (i = 0; i < NUMBER_OF_TABS; i++) {
+		wclear(g_tabs[i]);
+		wresize(g_tabs[i], g_max_row - MENU_WIN_HEIGHT - TAB_WIN_HEIGHT - 2, g_max_col);
+		mvwin(g_tabs[i], TABS_LOCATION_ROW, TABS_LOCATION_COL);
+		draw_tabs(i);
+	}
+
+	draw_tabs(tab);
+
+	for (i = 0; i < NUMBER_OF_TABS; i++) {
+		wclear(g_tab_win[i]);
+		wresize(g_tab_win[i], TAB_WIN_HEIGHT,
+			(g_max_col - (TABS_SPACING * NUMBER_OF_TABS)) / NUMBER_OF_TABS);
+		mvwin(g_tab_win[i], TAB_WIN_LOCATION_ROW, 1 + (g_max_col / NUMBER_OF_TABS) * i);
+		draw_tab_win(i);
+	}
+
+	update_panels();
+	doupdate();
+}
+
+static void
+switch_tab(enum tabs tab)
+{
+	top_panel(g_tab_panels[tab]);
+	update_panels();
+	doupdate();
+}
+
+static void
+refresh_threads_tab(void)
+{
+	uint64_t i;
+	uint16_t j;
+
+	/* Clear screen if number of threads changed */
+	if (g_last_threads_count != g_threads_stats.threads.threads_count) {
+		for (i = TABS_DATA_START_ROW; i < g_data_win_size; i++) {
+			for (j = 1; j < g_max_col - 1; j++) {
+				mvwprintw(g_tabs[THREADS_TAB], i, j, " ");
+			}
+		}
+
+		g_last_threads_count = g_threads_stats.threads.threads_count;
+	}
+
+	for (i = 0; i < g_threads_stats.threads.threads_count; i++) {
+		print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, TABS_DATA_START_COL,
+			      g_threads_stats.threads.thread_info[i].name);
+	}
+}
+
+static void
+print_pollers(struct rpc_pollers *pollers, uint64_t pollers_count, uint16_t *current_line)
+{
+	uint64_t i;
+
+	for (i = 0; i < pollers_count; i++) {
+		print_max_len(g_tabs[POLLERS_TAB], (*current_line)++, TABS_DATA_START_COL,
+			      pollers->pollers[i].name);
+	}
+}
+
+static void
+refresh_pollers_tab(void)
+{
+	struct rpc_poller_thread_info *thread;
+	uint64_t i, pollers_count = 0;
+	uint16_t j, current_line = TABS_DATA_START_ROW;
+
+	for (i = 0; i < g_pollers_stats.pollers_threads.threads_count; i++) {
+		thread = &g_pollers_stats.pollers_threads.threads[i];
+		pollers_count += thread->active_pollers.pollers_count + thread->timed_pollers.pollers_count +
+				 thread->paused_pollers.pollers_count;
+	}
+
+	/* Clear screen if number of pollers changed */
+	if (g_last_pollers_count != pollers_count) {
+		for (i = TABS_DATA_START_ROW; i < g_data_win_size; i++) {
+			for (j = 1; j < g_max_col - 1; j++) {
+				mvwprintw(g_tabs[POLLERS_TAB], i, j, " ");
+			}
+		}
+
+		g_last_pollers_count = pollers_count;
+	}
+
+	for (i = 0; i < g_pollers_stats.pollers_threads.threads_count; i++) {
+		thread = &g_pollers_stats.pollers_threads.threads[i];
+
+		print_pollers(&thread->active_pollers, thread->active_pollers.pollers_count, &current_line);
+		print_pollers(&thread->timed_pollers, thread->timed_pollers.pollers_count, &current_line);
+		print_pollers(&thread->paused_pollers, thread->paused_pollers.pollers_count, &current_line);
+	}
+}
+
+static void
+refresh_cores_tab(void)
+{
+
+}
+
+static void
+refresh_tab(enum tabs tab)
+{
+	void (*refresh_function[NUMBER_OF_TABS])(void) = {refresh_threads_tab, refresh_pollers_tab, refresh_cores_tab};
+	int color_pair[NUMBER_OF_TABS] = {COLOR_PAIR(2), COLOR_PAIR(2), COLOR_PAIR(2)};
+	int i;
+
+	color_pair[tab] = COLOR_PAIR(1);
+
+	for (i = 0; i < NUMBER_OF_TABS; i++) {
+		wbkgd(g_tab_win[i], color_pair[i]);
+	}
+
+	(*refresh_function[tab])();
+	refresh();
+
+	for (i = 0; i < NUMBER_OF_TABS; i++) {
+		wrefresh(g_tab_win[i]);
+	}
+}
+
+static void
+show_stats(void)
+{
+	const char *refresh_error = "ERROR occurred while getting data";
+	int c, rc;
+	int max_row, max_col;
+	uint8_t active_tab = THREADS_TAB;
+
+	switch_tab(THREADS_TAB);
+
+	while (1) {
+		/* Check if interface has to be resized (terminal size changed) */
+		getmaxyx(stdscr, max_row, max_col);
+
+		if (max_row != g_max_row || max_col != g_max_col) {
+			g_max_row = max_row;
+			g_max_col = max_col;
+			g_data_win_size = g_max_row - MENU_WIN_HEIGHT - TAB_WIN_HEIGHT - TABS_DATA_START_ROW;
+			resize_interface(active_tab);
+		}
+
+		c = getch();
+		if (c == 'q') {
+			break;
+		}
+
+		switch (c) {
+		case '1':
+		case '2':
+		case '3':
+			active_tab = c - '1';
+			switch_tab(active_tab);
+			break;
+		default:
+			break;
+		}
+
+		rc = get_data();
+		if (rc) {
+			mvprintw(g_max_row - 1, g_max_col - strlen(refresh_error) - 2, refresh_error);
+		}
+
+		refresh_tab(active_tab);
+
+		free_data();
+
+		refresh();
+	}
+}
+
+static void
+draw_interface(void)
+{
+	int i;
+
+	getmaxyx(stdscr, g_max_row, g_max_col);
+	g_data_win_size = g_max_row - MENU_WIN_HEIGHT - TAB_WIN_HEIGHT - TABS_DATA_START_ROW;
+
+	g_menu_win = newwin(MENU_WIN_HEIGHT, g_max_col, g_max_row - MENU_WIN_HEIGHT - 1,
+			    MENU_WIN_LOCATION_COL);
+	draw_menu_win();
+
+	for (i = 0; i < NUMBER_OF_TABS; i++) {
+		g_tab_win[i] = newwin(TAB_WIN_HEIGHT, g_max_col / NUMBER_OF_TABS - TABS_SPACING,
+				      TAB_WIN_LOCATION_ROW, g_max_col / NUMBER_OF_TABS * i + 1);
+		draw_tab_win(i);
+
+		g_tabs[i] = newwin(g_max_row - MENU_WIN_HEIGHT - TAB_WIN_HEIGHT - 2, g_max_col, TABS_LOCATION_ROW,
+				   TABS_LOCATION_COL);
+		draw_tabs(i);
+		g_tab_panels[i] = new_panel(g_tabs[i]);
+	}
+
+	update_panels();
+	doupdate();
+}
+
+static void
+setup_ncurses(void)
+{
+	clear();
+	noecho();
+	halfdelay(1);
+	curs_set(0);
+	start_color();
+	init_pair(1, COLOR_BLACK, COLOR_GREEN);
+	init_pair(2, COLOR_BLACK, COLOR_WHITE);
+
+
+	if (has_colors() == FALSE) {
+		endwin();
+		printf("Your terminal does not support color\n");
+		exit(1);
+	}
+}
+
+static void
 usage(const char *program_name)
 {
 	printf("%s [options]", program_name);
@@ -336,7 +660,7 @@ usage(const char *program_name)
 
 int main(int argc, char **argv)
 {
-	int op, rc;
+	int op;
 	char *socket = SPDK_DEFAULT_RPC_ADDR;
 
 	while ((op = getopt(argc, argv, "r:h")) != -1) {
@@ -357,14 +681,13 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	rc = get_data();
-	if (rc) {
-		fprintf(stderr, "Error occurred while getting required data from SPDK: %d\n", rc);
-		free_data();
-		return 1;
-	}
+	initscr();
+	setup_ncurses();
+	draw_interface();
+	show_stats();
 
-	free_data();
+	/* End curses mode */
+	endwin();
 
 	spdk_jsonrpc_client_close(g_rpc_client);
 
