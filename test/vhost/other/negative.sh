@@ -71,6 +71,8 @@ notice ""
 rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 $rpc_py bdev_malloc_create -b Malloc0 128 4096
 $rpc_py bdev_malloc_create -b Malloc1 128 4096
+$rpc_py bdev_malloc_create -b Malloc2 128 4096
+$rpc_py bdev_split_create Malloc2 8
 
 # Try to get nonexistent vhost controller
 if $rpc_py vhost_get_controllers -n nonexistent; then
@@ -122,8 +124,29 @@ if $rpc_py vhost_scsi_controller_add_target naa.0 0 nonexistent_bdev; then
 	error "Adding nonexistent device to scsi controller succeeded, but it shouldn't"
 fi
 
+notice "Adding device to naa.0 with slot number exceeding max"
+if $rpc_py vhost_scsi_controller_add_target naa.0 8 Malloc0; then
+	error "Adding device to naa.0 should fail but succeeded"
+fi
+
+for i in $(seq 0 7); do
+	$rpc_py vhost_scsi_controller_add_target naa.0 -1 Malloc2p$i
+done
+notice "All slots are occupied. Try to add one more device to naa.0"
+if $rpc_py vhost_scsi_controller_add_target naa.0 -1 Malloc0; then
+	error "Adding device to naa.0 should fail but succeeded"
+fi
+for i in $(seq 0 7); do
+	$rpc_py vhost_scsi_controller_remove_target naa.0 $i
+done
+
 notice "Adding initial device (0) to naa.0"
 $rpc_py vhost_scsi_controller_add_target naa.0 0 Malloc0
+
+notice "Adding device to naa.0 with slot number 0"
+if $rpc_py vhost_scsi_controller_add_target naa.0 0 Malloc1; then
+	error "Adding device to naa.0 occupied slot should fail but succeeded"
+fi
 
 notice "Trying to remove nonexistent device on existing controller"
 if $rpc_py vhost_scsi_controller_remove_target naa.0 1 > /dev/null; then
