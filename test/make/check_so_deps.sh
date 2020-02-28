@@ -10,6 +10,75 @@ source "$rootdir/test/common/autotest_common.sh"
 
 libdir="$rootdir/build/lib"
 libdeps_file="$rootdir/mk/spdk.lib_deps.mk"
+source_abi_dir="$HOME/spdk_20_01/build/lib"
+
+function confirm_abi_deps() {
+	if ! hash abidiff; then
+		echo "Unable to check ABI compatibility. Please install abidiff."
+		return 1
+	fi
+
+	if [ ! -d $source_abi_dir ]; then
+		echo "No source ABI available, failing this test."
+		return 1
+	fi
+
+	for object in ls "$libdir"/libspdk_*.so; do
+		so_file=$(basename $object)
+		if [ ! -f "$source_abi_dir/$so_file" ]; then
+			echo "No corresponding object for $so_file in canonical directory. Skipping."
+			continue
+		fi
+
+		if ! abidiff $libdir/$so_file $source_abi_dir/$so_file --leaf-changes-only --stat > /dev/null; then
+			found_abi_change=false
+			output=$(abidiff $libdir/$so_file $source_abi_dir/$so_file --leaf-changes-only --stat) || true
+			new_so_maj=$(readlink $libdir/$so_file | awk -F'.so.' '{print $2}' | cut -d '.' -f1)
+			new_so_min=$(readlink $libdir/$so_file | awk -F'.so.' '{print $2}' | cut -d '.' -f2)
+			old_so_maj=$(readlink $source_abi_dir/$so_file | awk -F'.so.' '{print $2}' | cut -d '.' -f1)
+			old_so_min=$(readlink $source_abi_dir/$so_file | awk -F'.so.' '{print $2}' | cut -d '.' -f2)
+			so_name_changed=$(grep "ELF SONAME changed" <<< "$output") || so_name_changed="No"
+			function_summary=$(grep "functions summary" <<< "$output")
+			variable_summary=$(grep "variables summary" <<< "$output")
+
+			read -r _ _ _ removed_functions _ changed_functions _ added_functions _ <<< "$function_summary"
+			read -r _ _ _ removed_vars _ changed_vars _ added_vars _ <<< "$variable_summary"
+
+			if [ $removed_functions -ne 0 ] || [ $removed_vars -ne 0 ]; then
+				if [ "$new_so_maj" == "$old_so_maj" ]; then
+					touch $fail_file
+					echo "Please update the major SO version for $so_file. API functions or variables have been removed since last release."
+				fi
+				found_abi_change=true
+			fi
+
+			if [ $changed_functions -ne 0 ] || [ $changed_vars -ne 0 ]; then
+				if [ "$new_so_maj" == "$old_so_maj" ]; then
+					touch $fail_file
+					echo "Please update the major SO version for $so_file. API functions or variables have been changed since last release."
+				fi
+				found_abi_change=true
+			fi
+
+			if [ $added_functions -ne 0 ] || [ $added_vars -ne 0 ]; then
+				if [ "$new_so_min" == "$old_so_min" ] && [ "$new_so_maj" == "$old_so_maj" ] && ! $found_abi_change; then
+					touch $fail_file
+					echo "Please update the minor SO version for $so_file. API functions or variables have been added since last release."
+				fi
+				found_abi_change=true
+			fi
+
+			if [ "$so_name_changed" != "No" ]; then
+				if ! $found_abi_change; then
+					echo "SO name for $so_file changed without a change to abi. please revert that change."
+					touch $fail_file
+				fi
+			fi
+
+			continue
+		fi
+	done
+}
 
 # This function is needed to properly evaluate the Make variables into actual dependencies.
 function replace_defined_variables() {
@@ -106,6 +175,12 @@ $MAKE $MAKEFLAGS
 
 xtrace_disable
 
+fail_file=$output_dir/check_so_deps_fail
+
+rm -f $fail_file
+
+run_test "confirm_abi_deps" confirm_abi_deps
+
 echo "---------------------------------------------------------------------"
 # Exclude libspdk_env_dpdk.so from the library list. We don't link against this one so that
 # users can define their own environment abstraction. However we do want to still check it
@@ -118,10 +193,6 @@ IGNORED_LIBS=()
 if grep -q 'CONFIG_VHOST_INTERNAL_LIB?=n' $rootdir/mk/config.mk; then
 	IGNORED_LIBS+=("rte_vhost")
 fi
-
-fail_file=$output_dir/check_so_deps_fail
-
-rm -f $fail_file
 
 ( for lib in $SPDK_LIBS; do confirm_deps $lib & done; wait )
 
