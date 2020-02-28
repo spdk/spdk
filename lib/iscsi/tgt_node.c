@@ -917,14 +917,13 @@ spdk_iscsi_check_chap_params(bool disable, bool require, bool mutual, int group)
 	return false;
 }
 
-_spdk_iscsi_tgt_node *
-spdk_iscsi_tgt_node_construct(int target_index,
-			      const char *name, const char *alias,
-			      int *pg_tag_list, int *ig_tag_list, uint16_t num_maps,
-			      const char *bdev_name_list[], int *lun_id_list, int num_luns,
-			      int queue_depth,
-			      bool disable_chap, bool require_chap, bool mutual_chap, int chap_group,
-			      bool header_digest, bool data_digest)
+struct spdk_iscsi_tgt_node *spdk_iscsi_tgt_node_construct(int target_index,
+		const char *name, const char *alias,
+		int *pg_tag_list, int *ig_tag_list, uint16_t num_maps,
+		const char *bdev_name_list[], int *lun_id_list, int num_luns,
+		int queue_depth,
+		bool disable_chap, bool require_chap, bool mutual_chap, int chap_group,
+		bool header_digest, bool data_digest)
 {
 	char				fullname[MAX_TMPBUF];
 	struct spdk_iscsi_tgt_node	*target;

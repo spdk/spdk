@@ -105,25 +105,19 @@ int spdk_iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
 			 const char *iaddr, const char *tiqn, uint8_t *data, int alloc_len,
 			 int data_len);
 
-/* This typedef exists to work around an astyle 2.05 bug.
- * Remove it when astyle is fixed.
- */
-typedef struct spdk_iscsi_tgt_node _spdk_iscsi_tgt_node;
-
 /*
  * bdev_name_list and lun_id_list are equal sized arrays of size num_luns.
  * bdev_name_list refers to the names of the bdevs that will be used for the LUNs on the
  *  new target node.
  * lun_id_list refers to the LUN IDs that will be used for the LUNs on the target node.
  */
-_spdk_iscsi_tgt_node *
-spdk_iscsi_tgt_node_construct(int target_index,
-			      const char *name, const char *alias,
-			      int *pg_tag_list, int *ig_tag_list, uint16_t num_maps,
-			      const char *bdev_name_list[], int *lun_id_list, int num_luns,
-			      int queue_depth,
-			      bool disable_chap, bool require_chap, bool mutual_chap, int chap_group,
-			      bool header_digest, bool data_digest);
+struct spdk_iscsi_tgt_node *spdk_iscsi_tgt_node_construct(int target_index,
+		const char *name, const char *alias,
+		int *pg_tag_list, int *ig_tag_list, uint16_t num_maps,
+		const char *bdev_name_list[], int *lun_id_list, int num_luns,
+		int queue_depth,
+		bool disable_chap, bool require_chap, bool mutual_chap, int chap_group,
+		bool header_digest, bool data_digest);
 
 bool spdk_iscsi_check_chap_params(bool disable, bool require, bool mutual, int group);
 
