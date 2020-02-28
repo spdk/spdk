@@ -22,6 +22,10 @@ gen_random_s () {
 	for (( ll = 0; ll < length; ll++ )); do
 		string+="$(echo -e "\x$(printf '%x' "${chars[RANDOM % ${#chars[@]}]}")")"
 	done
+	# Be nice to rpc.py's arg parser and escape `-` in case it's a first character
+	if [[ ${string::1} == "-" ]]; then
+		string=${string/-/\\-}
+	fi
 	echo "$string"
 }
 
