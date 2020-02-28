@@ -1323,11 +1323,7 @@ spdk_nvmf_subsystem_get_nqn(const struct spdk_nvmf_subsystem *subsystem)
 	return subsystem->subnqn;
 }
 
-/* Workaround for astyle formatting bug */
-typedef enum spdk_nvmf_subtype nvmf_subtype_t;
-
-nvmf_subtype_t
-spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem)
+enum spdk_nvmf_subtype spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem)
 {
 	return subsystem->subtype;
 }
