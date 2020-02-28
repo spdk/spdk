@@ -34,6 +34,10 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
+SO_VER := 2
+SO_MINOR := 0
+SO_SUFFIX := $(SO_VER).$(SO_MINOR)
+
 C_SRCS = ftl_band.c ftl_core.c ftl_debug.c ftl_io.c ftl_reloc.c \
 	 ftl_restore.c ftl_init.c ftl_trace.c
 

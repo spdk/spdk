@@ -34,6 +34,10 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
+SO_VER := 2
+SO_MINOR := 0
+SO_SUFFIX := $(SO_VER).$(SO_MINOR)
+
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 C_SRCS = conn.c \
 	 init_grp.c iscsi.c md5.c param.c portal_grp.c \

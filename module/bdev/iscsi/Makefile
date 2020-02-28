@@ -34,6 +34,10 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
+SO_VER := 2
+SO_MINOR := 0
+SO_SUFFIX := $(SO_VER).$(SO_MINOR)
+
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib/bdev/
 # CentOS 7 libiscsi package has functions declared inline but not
 # defined in the header file.  Not aware of any way to disable

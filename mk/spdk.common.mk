@@ -263,17 +263,10 @@ LINK_CXX=\
 	$(Q)echo "  LINK $S/$@"; \
 	$(CXX) -o $@ $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $(ENV_LINKER_ARGS) $(SYS_LIBS)
 
-#
-# Variables to use for versioning shared libs
-#
-SO_VER := 2
-SO_MINOR := 0
-SO_SUFFIX_ALL := $(SO_VER).$(SO_MINOR)
-
 # Provide function to ease build of a shared lib
 define spdk_build_realname_shared_lib
 	$(CC) -o $@ -shared $(CPPFLAGS) $(LDFLAGS) \
-	    -Wl,--soname,$(patsubst %.so.$(SO_SUFFIX_ALL),%.so.$(SO_SUFFIX_ALL),$(notdir $@)) \
+	    -Wl,--soname,$(notdir $@) \
 	    -Wl,--whole-archive $(1) -Wl,--no-whole-archive \
 	    -Wl,--version-script=$(2) \
 	    $(3)

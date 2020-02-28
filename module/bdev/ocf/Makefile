@@ -35,6 +35,10 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
+SO_VER := 2
+SO_MINOR := 0
+SO_SUFFIX := $(SO_VER).$(SO_MINOR)
+
 CFLAGS += $(ENV_CFLAGS) -I$(SPDK_ROOT_DIR)/lib/env_ocf -I$(SPDK_ROOT_DIR)/lib/env_ocf/include
 C_SRCS = $(shell ls *.c)
 
