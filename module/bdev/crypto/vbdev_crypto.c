@@ -131,6 +131,7 @@ uint8_t g_number_of_claimed_volumes = 0;
 #define AES_CBC_IV_LENGTH	16
 #define AES_CBC_KEY_LENGTH	16
 #define AES_XTS_KEY_LENGTH	16	/* XTS uses 2 keys, each of this size. */
+#define AESNI_MB_NUM_QP		64
 
 /* Common for suported devices. */
 #define IV_OFFSET            (sizeof(struct rte_crypto_op) + \
@@ -374,6 +375,7 @@ vbdev_crypto_init_crypto_drivers(void)
 	struct device_qp *dev_qp;
 	unsigned int max_sess_size = 0, sess_size;
 	uint16_t num_lcores = rte_lcore_count();
+	char aesni_args[32];
 
 	/* Only the first call, via RPC or module init should init the crypto drivers. */
 	if (g_session_mp != NULL) {
@@ -381,7 +383,8 @@ vbdev_crypto_init_crypto_drivers(void)
 	}
 
 	/* We always init AESNI_MB */
-	rc = rte_vdev_init(AESNI_MB, NULL);
+	snprintf(aesni_args, sizeof(aesni_args), "max_nb_queue_pairs=%d", AESNI_MB_NUM_QP);
+	rc = rte_vdev_init(AESNI_MB, aesni_args);
 	if (rc) {
 		SPDK_ERRLOG("error creating virtual PMD %s\n", AESNI_MB);
 		return -EINVAL;
