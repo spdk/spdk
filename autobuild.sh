@@ -57,12 +57,14 @@ function make_fail_cleanup {
 function scanbuild_make {
 	pass=true
 	$scanbuild $MAKE $MAKEFLAGS > $out/build_output.txt && rm -rf $out/scan-build-tmp || make_fail_cleanup
+	xtrace_disable
 	for ent in $(find app examples lib module -type f | grep -vF ".h"); do
 		if [[ $ent == lib/env_ocf* ]]; then continue; fi
 		if file -bi $ent | grep -q 'text/x-c'; then
 			echo $ent | sed 's/\.cp\{0,2\}$//g' >> $out/all_c_files.txt
 		fi
 	done
+	xtrace_restore
 
 	grep -E "CC|CXX" $out/build_output.txt | sed 's/\s\s\(CC\|CXX\)\s//g' | sed 's/\.o//g' > $out/built_c_files.txt
 	cat $rootdir/test/common/skipped_build_files.txt >> $out/built_c_files.txt
