@@ -1455,7 +1455,7 @@ vbdev_crypto_insert_name(const char *bdev_name, const char *vbdev_name,
 		rc = -ENOMEM;
 		goto error_alloc_key;
 	}
-	if (strlen(name->key) != AES_CBC_KEY_LENGTH) {
+	if (strnlen(name->key, (AES_CBC_KEY_LENGTH + 1)) != AES_CBC_KEY_LENGTH) {
 		SPDK_ERRLOG("invalid AES_CBC key length\n");
 		rc = -EINVAL;
 		goto error_invalid_key;
