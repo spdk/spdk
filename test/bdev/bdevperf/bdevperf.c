@@ -381,7 +381,8 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 				 task->md_buf, spdk_bdev_io_get_md_buf(bdev_io),
 				 spdk_bdev_get_md_size(target->bdev),
 				 target->io_size_blocks, md_check)) {
-			printf("Buffer mismatch! Disk Offset: %lu\n", task->offset_blocks);
+			printf("Buffer mismatch! Target: %s Disk Offset: %lu\n", target->name, task->offset_blocks);
+			printf("   First dword expected 0x%x got 0x%x\n", *(int *)task->buf, *(int *)iovs[0].iov_base);
 			_end_target(target);
 			g_run_rc = -1;
 		}
