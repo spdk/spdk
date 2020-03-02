@@ -41,6 +41,7 @@
 #include <rte_config.h>
 #include <rte_eal.h>
 #include <rte_errno.h>
+#include <rte_vfio.h>
 
 #define SPDK_ENV_DPDK_DEFAULT_NAME		"spdk"
 #define SPDK_ENV_DPDK_DEFAULT_SHM_ID		-1
@@ -409,6 +410,16 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 	}
 
 #ifdef __linux__
+
+	/* When using vfio with enable_unsafe_noiommu_mode=Y, we need iova-mode=pa,
+	 * but DPDK guesses it should be iova-mode=va. Add a check and force
+	 * iova-mode=pa here. */
+	if (rte_vfio_noiommu_is_enabled()) {
+		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--iova-mode=pa"));
+		if (args == NULL) {
+			return -1;
+		}
+	}
 
 #if defined(__x86_64__)
 	/* DPDK by default guesses that it should be using iova-mode=va so that it can
