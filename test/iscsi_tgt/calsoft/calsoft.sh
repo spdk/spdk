@@ -8,11 +8,6 @@ delete_tmp_conf_files() {
 	rm -f /usr/local/etc/its.conf
 }
 
-if [ ! -d /usr/local/calsoft ]; then
-	echo "skipping calsoft tests"
-	exit 0
-fi
-
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 

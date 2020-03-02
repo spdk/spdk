@@ -27,7 +27,11 @@ if [ "$TEST_TYPE" == "posix" ]; then
 	# calsoft doesn't handle TCP stream properly and fails decoding iSCSI
 	# requests when are divided by TCP segmentation. This is very common
 	# situation for VPP and causes that calsoft.sh never PASS.
-	run_test "iscsi_tgt_calsoft" ./test/iscsi_tgt/calsoft/calsoft.sh
+	if [[ -d /usr/local/calsoft ]]; then
+		run_test "iscsi_tgt_calsoft" ./test/iscsi_tgt/calsoft/calsoft.sh
+	else
+		skip_run_test_with_warning "WARNING: Calsoft binaries not found, skipping test!"
+	fi
 fi
 run_test "iscsi_tgt_filesystem" ./test/iscsi_tgt/filesystem/filesystem.sh
 run_test "iscsi_tgt_reset" ./test/iscsi_tgt/reset/reset.sh
