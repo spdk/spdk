@@ -666,6 +666,12 @@ function run_test() {
 	xtrace_restore
 }
 
+function skip_run_test_with_warning() {
+	echo "WARNING: $1"
+	echo "Test run may fail if run with autorun.sh"
+	echo "Please check your $rootdir/test/common/skipped_tests.txt"
+}
+
 function print_backtrace() {
 	# if errexit is not enabled, don't print a backtrace
 	[[ "$-" =~ e ]] || return 0
