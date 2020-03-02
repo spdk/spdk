@@ -10,6 +10,14 @@ conf_file="$testdir/bdev.conf"
 # Make sure the configuration is clean
 :>"$conf_file"
 
+function cleanup() {
+	rm -f "/tmp/aiofile"
+	rm -f "/tmp/spdk-pmem-pool"
+	rm -f "$conf_file"
+
+	rbd_cleanup
+}
+
 function start_spdk_tgt() {
 	local spdk_cmd
 
@@ -371,7 +379,4 @@ if [ "$test_type" = "gpt" ]; then
 	part_dev_by_gpt $conf_file Nvme0n1 $rootdir reset
 fi
 
-rm -f /tmp/aiofile
-rm -f /tmp/spdk-pmem-pool
-rm -f $conf_file
-rbd_cleanup
+cleanup
