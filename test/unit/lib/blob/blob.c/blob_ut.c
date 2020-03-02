@@ -187,6 +187,26 @@ ut_bs_reload(struct spdk_blob_store **bs, struct spdk_bs_opts *opts)
 }
 
 static void
+ut_bs_dirty_load(struct spdk_blob_store **bs, struct spdk_bs_opts *opts)
+{
+	struct spdk_bs_dev *dev;
+
+	/* Dirty shutdown */
+	_spdk_bs_free(*bs);
+
+	dev = init_dev();
+	/* Load an existing blob store */
+	spdk_bs_load(dev, opts, bs_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	*bs = g_bs;
+
+	g_bs = NULL;
+	g_bserrno = -1;
+}
+
+static void
 blob_init(void)
 {
 	struct spdk_blob_store *bs;
@@ -576,17 +596,7 @@ blob_thin_provision(void)
 	 *  and try to recover a valid used_cluster map, that blobstore will
 	 *  ignore clusters with index 0 since these are unallocated clusters.
 	 */
-	_spdk_bs_free(bs);
-
-	/* Load an existing blob store and check if invalid_flags is set */
-	dev = init_dev();
-	snprintf(bs_opts.bstype.bstype, sizeof(bs_opts.bstype.bstype), "TESTTYPE");
-	spdk_bs_load(dev, &bs_opts, bs_op_with_handle_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
-	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
-
-	bs = g_bs;
+	ut_bs_dirty_load(&bs, &bs_opts);
 
 	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
 	poll_threads();
@@ -3722,17 +3732,7 @@ blob_dirty_shutdown(void)
 	g_blob = NULL;
 	g_blobid = SPDK_BLOBID_INVALID;
 
-	/* Dirty shutdown */
-	_spdk_bs_free(bs);
-
-	/* reload blobstore */
-	dev = init_dev();
-	spdk_bs_opts_init(&opts);
-	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
-	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
-	bs = g_bs;
+	ut_bs_dirty_load(&bs, &opts);
 
 	/* Get the super blob */
 	spdk_bs_get_super(bs, blob_op_with_id_complete, NULL);
@@ -3771,18 +3771,7 @@ blob_dirty_shutdown(void)
 	g_blob = NULL;
 	g_blobid = SPDK_BLOBID_INVALID;
 
-	/* Dirty shutdown */
-	_spdk_bs_free(bs);
-
-	/* reload the blobstore */
-	dev = init_dev();
-	spdk_bs_opts_init(&opts);
-	/* Load an existing blob store */
-	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
-	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
-	bs = g_bs;
+	ut_bs_dirty_load(&bs, &opts);
 
 	spdk_bs_open_blob(bs, blobid1, blob_op_with_handle_complete, NULL);
 	poll_threads();
@@ -3834,17 +3823,7 @@ blob_dirty_shutdown(void)
 	g_blob = NULL;
 	g_blobid = SPDK_BLOBID_INVALID;
 
-	/* Dirty shutdown */
-	_spdk_bs_free(bs);
-
-	/* reload the blobstore */
-	dev = init_dev();
-	spdk_bs_opts_init(&opts);
-	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
-	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
-	bs = g_bs;
+	ut_bs_dirty_load(&bs, &opts);
 
 	spdk_bs_open_blob(bs, blobid2, blob_op_with_handle_complete, NULL);
 	poll_threads();
@@ -3871,16 +3850,7 @@ blob_dirty_shutdown(void)
 
 	free_clusters = spdk_bs_free_cluster_count(bs);
 
-	/* Dirty shutdown */
-	_spdk_bs_free(bs);
-	/* reload the blobstore */
-	dev = init_dev();
-	spdk_bs_opts_init(&opts);
-	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
-	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
-	bs = g_bs;
+	ut_bs_dirty_load(&bs, &opts);
 
 	spdk_bs_open_blob(bs, blobid2, blob_op_with_handle_complete, NULL);
 	poll_threads();
@@ -3964,16 +3934,7 @@ blob_dirty_shutdown(void)
 
 	free_clusters = spdk_bs_free_cluster_count(bs);
 
-	/* Dirty shutdown */
-	_spdk_bs_free(bs);
-	/* reload the blobstore */
-	dev = init_dev();
-	spdk_bs_opts_init(&opts);
-	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
-	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
-	bs = g_bs;
+	ut_bs_dirty_load(&bs, &opts);
 
 	spdk_bs_open_blob(bs, blobid2, blob_op_with_handle_complete, NULL);
 	poll_threads();
@@ -6436,16 +6397,9 @@ blob_delete_snapshot_power_failure(void)
 
 		/* Do not shut down cleanly. Assumption is that after snapshot deletion
 		 * reports success, changes to both blobs should already persisted. */
-		_spdk_bs_free(bs);
-
 		dev_reset_power_failure_event();
+		ut_bs_dirty_load(&bs, NULL);
 
-		dev = init_dev();
-		spdk_bs_load(dev, NULL, bs_op_with_handle_complete, NULL);
-		poll_threads();
-		CU_ASSERT(g_bserrno == 0);
-		SPDK_CU_ASSERT_FATAL(g_bs != NULL);
-		bs = g_bs;
 		SPDK_CU_ASSERT_FATAL(spdk_bit_array_get(bs->used_clusters, 1));
 		SPDK_CU_ASSERT_FATAL(!spdk_bit_array_get(bs->used_clusters, 11));
 
@@ -6548,16 +6502,9 @@ blob_create_snapshot_power_failure(void)
 
 		/* Do not shut down cleanly. Assumption is that after create snapshot
 		 * reports success, both blobs should be power-fail safe. */
-		_spdk_bs_free(bs);
-
 		dev_reset_power_failure_event();
+		ut_bs_dirty_load(&bs, NULL);
 
-		dev = init_dev();
-		spdk_bs_load(dev, NULL, bs_op_with_handle_complete, NULL);
-		poll_threads();
-		CU_ASSERT(g_bserrno == 0);
-		SPDK_CU_ASSERT_FATAL(g_bs != NULL);
-		bs = g_bs;
 		SPDK_CU_ASSERT_FATAL(spdk_bit_array_get(bs->used_clusters, 1));
 		SPDK_CU_ASSERT_FATAL(!spdk_bit_array_get(bs->used_clusters, 11));
 
