@@ -373,8 +373,11 @@ function timing_finish() {
 }
 
 function create_test_list() {
-	grep -rshI --include="*.sh" --exclude="autotest_common.sh" \
-	-e "run_test " $rootdir | grep -v "#" \
+	# First search all scripts in main SPDK directory.
+	completion=$(grep -shI -d skip --include="*.sh" -e "run_test " $rootdir/*)
+	# Follow up with search in test directory recursively.
+	completion+=$(grep -rshI --include="*.sh" --exclude="autotest_common.sh" -e "run_test " $rootdir/test)
+	printf "%s" "$completion" | grep -v "#" \
 	| sed 's/^.*run_test/run_test/' | awk '{print $2}' | \
 	sed 's/\"//g' | sort > $output_dir/all_tests.txt || true
 }
