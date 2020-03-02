@@ -17,6 +17,14 @@ set -e
 shopt -s expand_aliases
 
 source "$rootdir/test/common/applications.sh"
+if [[ -e $rootdir/test/common/build_config.sh ]]; then
+	source "$rootdir/test/common/build_config.sh"
+elif [[ -e $rootdir/mk/config.mk ]]; then
+	build_config=$(<"$rootdir/mk/config.mk")
+	source <(echo "${build_config//\?=/=}")
+else
+	source "$rootdir/CONFIG"
+fi
 
 # Dummy function to be called after restoring xtrace just so that it appears in the
 # xtrace log. This way we can consistently track when xtrace is enabled/disabled.
