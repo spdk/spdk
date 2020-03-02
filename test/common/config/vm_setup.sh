@@ -497,7 +497,9 @@ if $INSTALL; then
         clang-analyzer \
         bc \
         kernel-modules-extra \
-        systemd-devel
+        systemd-devel \
+        python3 \
+        nbd
     elif [ $PACKAGEMNG == 'dnf' ]; then
         if echo $CONF | grep -q tsocks; then
             # currently, tsocks package is retired in fedora 31, so don't exit in case
