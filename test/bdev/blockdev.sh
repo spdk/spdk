@@ -15,7 +15,9 @@ function cleanup() {
 	rm -f "/tmp/spdk-pmem-pool"
 	rm -f "$conf_file"
 
-	rbd_cleanup
+	if [[ $test_type == rbd ]]; then
+		rbd_cleanup
+	fi
 }
 
 function start_spdk_tgt() {
