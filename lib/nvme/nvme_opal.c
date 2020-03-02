@@ -83,7 +83,7 @@ static int
 opal_recv_cmd(struct spdk_opal_dev *dev)
 {
 	void *response = dev->resp;
-	struct spdk_opal_header *header = response;
+	struct spdk_opal_compacket *header = response;
 	int ret = 0;
 	uint64_t start = spdk_get_ticks();
 	uint64_t now;
@@ -96,11 +96,11 @@ opal_recv_cmd(struct spdk_opal_dev *dev)
 			return ret;
 		}
 		SPDK_DEBUGLOG(SPDK_LOG_OPAL, "outstanding_data=%d, minTransfer=%d\n",
-			      header->com_packet.outstanding_data,
-			      header->com_packet.min_transfer);
+			      header->outstanding_data,
+			      header->min_transfer);
 
-		if (header->com_packet.outstanding_data == 0 &&
-		    header->com_packet.min_transfer == 0) {
+		if (header->outstanding_data == 0 &&
+		    header->min_transfer == 0) {
 			return 0;	/* return if all the response data are ready by tper and received by host */
 		} else {	/* check timeout */
 			now = spdk_get_ticks();
@@ -746,7 +746,7 @@ opal_build_locking_range(uint8_t *buffer, size_t length, uint8_t locking_range)
 static void
 opal_check_tper(struct spdk_opal_dev *dev, const void *data)
 {
-	const struct spdk_d0_tper_features *tper = data;
+	const struct spdk_opal_d0_tper_feat *tper = data;
 	struct spdk_opal_info *opal_info = dev->opal_info;
 
 	opal_info->opal_ssc_dev = 1;
@@ -765,7 +765,7 @@ opal_check_tper(struct spdk_opal_dev *dev, const void *data)
 static bool
 opal_check_sum(struct spdk_opal_dev *dev, const void *data)
 {
-	const struct spdk_d0_sum *sum = data;
+	const struct spdk_opal_d0_single_user_mode_feat *sum = data;
 	uint32_t num_locking_objects = from_be32(&sum->num_locking_objects);
 	struct spdk_opal_info *opal_info = dev->opal_info;
 
@@ -786,7 +786,7 @@ opal_check_sum(struct spdk_opal_dev *dev, const void *data)
 static void
 opal_check_lock(struct spdk_opal_dev *dev, const void *data)
 {
-	const struct spdk_d0_locking_features *lock = data;
+	const struct spdk_opal_d0_locking_feat *lock = data;
 	struct spdk_opal_info *opal_info = dev->opal_info;
 
 	opal_info->locking = 1;
@@ -801,7 +801,7 @@ opal_check_lock(struct spdk_opal_dev *dev, const void *data)
 static void
 opal_check_geometry(struct spdk_opal_dev *dev, const void *data)
 {
-	const struct spdk_d0_geo_features *geo = data;
+	const struct spdk_opal_d0_geo_feat *geo = data;
 	struct spdk_opal_info *opal_info = dev->opal_info;
 	uint64_t align = from_be64(&geo->alignment_granularity);
 	uint64_t lowest_lba = from_be64(&geo->lowest_aligned_lba);
@@ -819,7 +819,7 @@ opal_check_geometry(struct spdk_opal_dev *dev, const void *data)
 static void
 opal_check_datastore(struct spdk_opal_dev *dev, const void *data)
 {
-	const struct spdk_d0_datastore_features *datastore = data;
+	const struct spdk_opal_d0_datastore_feat *datastore = data;
 	struct spdk_opal_info *opal_info = dev->opal_info;
 
 	opal_info->datastore = 1;
@@ -831,7 +831,7 @@ opal_check_datastore(struct spdk_opal_dev *dev, const void *data)
 static uint16_t
 opal_get_comid_v100(struct spdk_opal_dev *dev, const void *data)
 {
-	const struct spdk_d0_opal_v100 *v100 = data;
+	const struct spdk_opal_d0_v100_feat *v100 = data;
 	struct spdk_opal_info *opal_info = dev->opal_info;
 	uint16_t base_comid = from_be16(&v100->base_comid);
 
@@ -846,7 +846,7 @@ opal_get_comid_v100(struct spdk_opal_dev *dev, const void *data)
 static uint16_t
 opal_get_comid_v200(struct spdk_opal_dev *dev, const void *data)
 {
-	const struct spdk_d0_opal_v200 *v200 = data;
+	const struct spdk_opal_d0_v200_feat *v200 = data;
 	struct spdk_opal_info *opal_info = dev->opal_info;
 	uint16_t base_comid = from_be16(&v200->base_comid);
 
@@ -866,8 +866,9 @@ opal_get_comid_v200(struct spdk_opal_dev *dev, const void *data)
 static int
 opal_discovery0_end(struct spdk_opal_dev *dev)
 {
-	bool found_com_id = false, supported = false, single_user = false;
-	const struct spdk_d0_header *hdr = (struct spdk_d0_header *)dev->resp;
+	bool supported = false, single_user = false;
+	const struct spdk_opal_d0_hdr *hdr = (struct spdk_opal_d0_hdr *)dev->resp;
+	struct spdk_opal_d0_feat_hdr *feat_hdr;
 	const uint8_t *epos = dev->resp, *cpos = dev->resp;
 	uint16_t comid = 0;
 	uint32_t hlen = from_be32(&(hdr->length));
@@ -882,40 +883,37 @@ opal_discovery0_end(struct spdk_opal_dev *dev)
 	cpos += sizeof(*hdr); /* current position on buffer */
 
 	while (cpos < epos) {
-		const union spdk_discovery0_features *body =
-				(const union spdk_discovery0_features *)cpos;
-		uint16_t feature_code = from_be16(&(body->tper.feature_code));
+		feat_hdr = (struct spdk_opal_d0_feat_hdr *)cpos;
+		uint16_t feat_code = from_be16(&feat_hdr->code);
 
-		switch (feature_code) {
+		switch (feat_code) {
 		case FEATURECODE_TPER:
-			opal_check_tper(dev, body);
+			opal_check_tper(dev, cpos);
 			break;
 		case FEATURECODE_SINGLEUSER:
-			single_user = opal_check_sum(dev, body);
+			single_user = opal_check_sum(dev, cpos);
 			break;
 		case FEATURECODE_GEOMETRY:
-			opal_check_geometry(dev, body);
+			opal_check_geometry(dev, cpos);
 			break;
 		case FEATURECODE_LOCKING:
-			opal_check_lock(dev, body);
+			opal_check_lock(dev, cpos);
 			break;
 		case FEATURECODE_DATASTORE:
-			opal_check_datastore(dev, body);
+			opal_check_datastore(dev, cpos);
 			break;
 		case FEATURECODE_OPALV100:
-			comid = opal_get_comid_v100(dev, body);
-			found_com_id = true;
+			comid = opal_get_comid_v100(dev, cpos);
 			supported = true;
 			break;
 		case FEATURECODE_OPALV200:
-			comid = opal_get_comid_v200(dev, body);
-			found_com_id = true;
+			comid = opal_get_comid_v200(dev, cpos);
 			supported = true;
 			break;
 		default:
-			SPDK_INFOLOG(SPDK_LOG_OPAL, "Unknow feature code: %d\n", feature_code);
+			SPDK_INFOLOG(SPDK_LOG_OPAL, "Unknow feature code: %d\n", feat_code);
 		}
-		cpos += body->tper.length + 4;
+		cpos += feat_hdr->length + sizeof(*feat_hdr);
 	}
 
 	if (supported == false) {
@@ -925,11 +923,6 @@ opal_discovery0_end(struct spdk_opal_dev *dev)
 
 	if (single_user == false) {
 		SPDK_INFOLOG(SPDK_LOG_OPAL, "Single User Mode Not Supported\n");
-	}
-
-	if (found_com_id == false) {
-		SPDK_ERRLOG("Could not find OPAL comid for device. Returning early\n");
-		return -EINVAL;
 	}
 
 	dev->comid = comid;
@@ -2121,7 +2114,7 @@ int
 spdk_opal_revert_poll(struct spdk_opal_dev *dev)
 {
 	void *response = dev->resp;
-	struct spdk_opal_header *header = response;
+	struct spdk_opal_compacket *header = response;
 	int ret;
 
 	assert(dev->revert_cb_fn);
@@ -2134,8 +2127,8 @@ spdk_opal_revert_poll(struct spdk_opal_dev *dev)
 		return 0;
 	}
 
-	if (header->com_packet.outstanding_data == 0 &&
-	    header->com_packet.min_transfer == 0) {
+	if (header->outstanding_data == 0 &&
+	    header->min_transfer == 0) {
 		ret = opal_parse_and_check_status(dev, NULL);
 		dev->revert_cb_fn(dev, dev->ctx, ret);
 		return 0;

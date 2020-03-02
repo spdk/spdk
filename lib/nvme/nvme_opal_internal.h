@@ -118,16 +118,6 @@ enum opal_method_enum {
 	RANDOM_METHOD,
 };
 
-union spdk_discovery0_features {
-	struct spdk_d0_tper_features tper;
-	struct spdk_d0_locking_features locking;
-	struct spdk_d0_geo_features geometry;
-	struct spdk_d0_datastore_features datastore;
-	struct spdk_d0_sum  sumode;
-	struct spdk_d0_opal_v200 opalv200;
-	struct spdk_d0_opal_v100 opalv100;
-};
-
 struct opal_common_session {
 	uint32_t sum; /* single user mode */
 	uint32_t who;

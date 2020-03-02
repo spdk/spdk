@@ -186,24 +186,33 @@ enum spdk_opal_token {
  * TCG Storage Architecture Core Spec v2.01 r1.00
  * Table-39 Level0 Discovery Header Format
  */
-struct spdk_d0_header {
+struct spdk_opal_d0_hdr {
 	uint32_t length;
 	uint32_t revision;
 	uint32_t reserved_0;
 	uint32_t reserved_1;
 	uint8_t vendor_specfic[32];
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_d0_header) == 48, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_opal_d0_hdr) == 48, "Incorrect size");
+
+/*
+ * Level 0 Discovery Feature Header
+ */
+struct spdk_opal_d0_feat_hdr {
+	uint16_t	code;
+	uint8_t		reserved : 4;
+	uint8_t		version : 4;
+	uint8_t		length;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_opal_d0_feat_hdr) == 4, "Incorrect size");
+
 
 /*
  * TCG Storage Architecture Core Spec v2.01 r1.00
  * Table-42 TPer Feature Descriptor
  */
-struct __attribute__((packed)) spdk_d0_tper_features {
-	uint16_t feature_code;
-	uint8_t reserved_0 : 4;
-	uint8_t version : 4;
-	uint8_t length;
+struct __attribute__((packed)) spdk_opal_d0_tper_feat {
+	struct spdk_opal_d0_feat_hdr hdr;
 	uint8_t sync : 1;
 	uint8_t async : 1;
 	uint8_t acknack : 1;
@@ -217,17 +226,14 @@ struct __attribute__((packed)) spdk_d0_tper_features {
 	uint32_t reserved_4;
 	uint32_t reserved_5;
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_d0_tper_features) == 16, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_opal_d0_tper_feat) == 16, "Incorrect size");
 
 /*
  * TCG Storage Architecture Core Spec v2.01 r1.00
  * Table-43 Locking Feature Descriptor
  */
-struct __attribute__((packed)) spdk_d0_locking_features {
-	uint16_t feature_code;
-	uint8_t reserved_0 : 4;
-	uint8_t version : 4;
-	uint8_t length;
+struct __attribute__((packed)) spdk_opal_d0_locking_feat {
+	struct spdk_opal_d0_feat_hdr hdr;
 	uint8_t locking_supported : 1;
 	uint8_t locking_enabled : 1;
 	uint8_t locked : 1;
@@ -241,17 +247,14 @@ struct __attribute__((packed)) spdk_d0_locking_features {
 	uint32_t reserved_4;
 	uint32_t reserved_5;
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_d0_locking_features) == 16, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_opal_d0_locking_feat) == 16, "Incorrect size");
 
 /*
  * TCG Storage Opal Feature Set Single User Mode v1.00 r2.00
  * 4.2.1 Single User Mode Feature Descriptor
  */
-struct __attribute__((packed)) spdk_d0_sum {
-	uint16_t feature_code;
-	uint8_t reserved_0 : 4;
-	uint8_t version : 4;
-	uint8_t length;
+struct __attribute__((packed)) spdk_opal_d0_single_user_mode_feat {
+	struct spdk_opal_d0_feat_hdr hdr;
 	uint32_t num_locking_objects;
 	uint8_t any : 1;
 	uint8_t all : 1;
@@ -262,17 +265,14 @@ struct __attribute__((packed)) spdk_d0_sum {
 	uint16_t reserved_3;
 	uint32_t reserved_4;
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_d0_sum) == 16, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_opal_d0_single_user_mode_feat) == 16, "Incorrect size");
 
 /*
  * TCG Storage Opal v2.01 r1.00
  * 3.1.1.4 Geometry Reporting Feature
  */
-struct __attribute__((packed)) spdk_d0_geo_features {
-	uint16_t feature_code;
-	uint8_t reserved_0 : 4;
-	uint8_t version : 4;
-	uint8_t length;
+struct __attribute__((packed)) spdk_opal_d0_geo_feat {
+	struct spdk_opal_d0_feat_hdr hdr;
 	uint8_t align : 1;
 	uint8_t reserved_1 : 7;
 	uint8_t reserved_2[7];
@@ -280,33 +280,27 @@ struct __attribute__((packed)) spdk_d0_geo_features {
 	uint64_t alignment_granularity;
 	uint64_t lowest_aligned_lba;
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_d0_geo_features) == 32, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_opal_d0_geo_feat) == 32, "Incorrect size");
 
 /*
  * TCG Storage Opal Feature Set Additional DataStore Tables v1.00 r1.00
  * 4.1.1 DataStore Table Feature Descriptor
  */
-struct __attribute__((packed)) spdk_d0_datastore_features {
-	uint16_t feature_code;
-	uint8_t reserved_0 : 4;
-	uint8_t version : 4;
-	uint8_t length;
+struct __attribute__((packed)) spdk_opal_d0_datastore_feat {
+	struct spdk_opal_d0_feat_hdr hdr;
 	uint16_t reserved_1;
 	uint16_t max_tables;
 	uint32_t max_table_size;
 	uint32_t alignment;
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_d0_datastore_features) == 16, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_opal_d0_datastore_feat) == 16, "Incorrect size");
 
 /*
  * Opal SSC 1.00 r3.00 Final
  * 3.1.1.4 Opal SSC Feature
  */
-struct __attribute__((packed)) spdk_d0_opal_v100 {
-	uint16_t feature_code;
-	uint8_t reserved_0 : 4;
-	uint8_t version : 4;
-	uint8_t length;
+struct __attribute__((packed)) spdk_opal_d0_v100_feat {
+	struct spdk_opal_d0_feat_hdr hdr;
 	uint16_t base_comid;
 	uint16_t number_comids;
 	uint8_t range_crossing : 1;
@@ -317,18 +311,15 @@ struct __attribute__((packed)) spdk_d0_opal_v100 {
 	uint32_t reserved_4;
 	uint32_t reserved_5;
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_d0_opal_v100) == 20, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_opal_d0_v100_feat) == 20, "Incorrect size");
 
 /*
  * TCG Storage Opal v2.01 r1.00
  * 3.1.1.4 Geometry Reporting Feature
  * 3.1.1.5 Opal SSC V2.00 Feature
  */
-struct __attribute__((packed)) spdk_d0_opal_v200 {
-	uint16_t featureCode;
-	uint8_t reserved_0 : 4;
-	uint8_t version : 4;
-	uint8_t length;
+struct __attribute__((packed)) spdk_opal_d0_v200_feat {
+	struct spdk_opal_d0_feat_hdr hdr;
 	uint16_t base_comid;
 	uint16_t num_comids;
 	uint8_t range_crossing : 1;
@@ -341,7 +332,7 @@ struct __attribute__((packed)) spdk_d0_opal_v200 {
 	uint8_t reserved_2;
 	uint32_t reserved_3;
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_d0_opal_v200) == 20, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_opal_d0_v200_feat) == 20, "Incorrect size");
 
 /*
  * TCG Storage Architecture Core Spec v2.01 r1.00
