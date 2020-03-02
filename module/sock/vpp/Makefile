@@ -38,6 +38,13 @@ C_SRCS += vpp.c
 CFLAGS += -Wno-sign-compare -Wno-error=old-style-definition
 CFLAGS += -Wno-error=strict-prototypes -Wno-error=ignored-qualifiers
 
+GCC_VERSION=$(shell $(CC) -dumpversion | cut -d. -f1)
+
+# disable packed member unalign warnings
+ifeq ($(shell test $(GCC_VERSION) -ge 9 && echo 1), 1)
+CFLAGS += -Wno-error=address-of-packed-member
+endif
+
 LIBNAME = sock_vpp
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
