@@ -7583,6 +7583,23 @@ blob_persist(void)
 		SPDK_CU_ASSERT_FATAL(blob->active.num_pages + blob->active.num_extent_pages == page_count_clear);
 		SPDK_CU_ASSERT_FATAL(blob->clean.num_pages + blob->clean.num_extent_pages == page_count_clear);
 		SPDK_CU_ASSERT_FATAL(spdk_bit_array_count_set(bs->used_md_pages) == page_count_clear);
+
+		/* Reload bs and re-open blob to verify that xattr was not persisted. */
+		spdk_blob_close(blob, blob_op_complete, NULL);
+		poll_threads();
+		CU_ASSERT(g_bserrno == 0);
+
+		ut_bs_reload(&bs, NULL);
+
+		spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+		poll_threads();
+		CU_ASSERT(g_bserrno == 0);
+		SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+		blob = g_blob;
+
+		rc = spdk_blob_get_xattr_value(blob, "large_xattr", (const void **)&xattr, &xattr_length);
+		SPDK_CU_ASSERT_FATAL(rc == -ENOENT);
+
 		poller_iterations++;
 		/* Stop at high iteration count to prevent infinite loop.
 		 * This value should be enough for first md sync to complete in any case. */
