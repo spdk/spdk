@@ -2964,8 +2964,8 @@ bs_load_custom_cluster_size(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
-	cluster_sz = g_bs->cluster_sz;
-	total_clusters = g_bs->total_clusters;
+	cluster_sz = bs->cluster_sz;
+	total_clusters = bs->total_clusters;
 
 	/* Unload the blob store */
 	spdk_bs_unload(bs, bs_op_complete, NULL);
@@ -2988,8 +2988,8 @@ bs_load_custom_cluster_size(void)
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
 	/* Compare cluster size and number to one after initialization */
-	CU_ASSERT(cluster_sz == g_bs->cluster_sz);
-	CU_ASSERT(total_clusters == g_bs->total_clusters);
+	CU_ASSERT(cluster_sz == bs->cluster_sz);
+	CU_ASSERT(total_clusters == bs->total_clusters);
 
 	super_block = (struct spdk_bs_super_block *)g_dev_buffer;
 	CU_ASSERT(super_block->clean == 1);
@@ -4056,7 +4056,7 @@ blob_dirty_shutdown(void)
 	/* Mark second blob as invalid */
 	page_num = _spdk_bs_blobid_to_page(blobid2);
 
-	index = DEV_BUFFER_BLOCKLEN * (g_bs->md_start + page_num);
+	index = DEV_BUFFER_BLOCKLEN * (bs->md_start + page_num);
 	page = (struct spdk_blob_md_page *)&g_dev_buffer[index];
 	page->sequence_num = 1;
 	page->crc = _spdk_blob_md_page_calc_crc(page);
