@@ -9,11 +9,6 @@ source $rootdir/test/iscsi_tgt/common.sh
 # $2 = test type posix or vpp. defaults to posix.
 iscsitestinit $1 $2
 
-if ! hash ceph; then
-	echo "Ceph not detected on this system; skipping RBD tests"
-	exit 0
-fi
-
 timing_enter rbd_setup
 rbd_setup $TARGET_IP $TARGET_NAMESPACE
 trap 'rbd_cleanup; exit 1' SIGINT SIGTERM EXIT

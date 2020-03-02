@@ -58,6 +58,10 @@ if [ $SPDK_TEST_RBD -eq 1 ]; then
 	# RBD tests do not support network namespaces,
 	# they can only be run on posix sockets.
 	if [ "$TEST_TYPE" == "posix" ]; then
+		if ! hash ceph; then
+			echo "ERROR: SPDK_TEST_RBD requested but no ceph installed!"
+			false
+		fi
 		run_test "iscsi_tgt_rbd" ./test/iscsi_tgt/rbd/rbd.sh
 	fi
 fi
