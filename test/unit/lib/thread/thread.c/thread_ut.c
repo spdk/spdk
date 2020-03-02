@@ -550,7 +550,7 @@ for_each_channel_unreg(void)
 	struct spdk_io_channel *ch0;
 	struct io_device *dev;
 	struct unreg_ctx ctx = {};
-	int io_target;
+	int io_target = 0;
 
 	allocate_threads(1);
 	set_thread(0);
