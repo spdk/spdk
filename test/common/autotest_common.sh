@@ -339,7 +339,7 @@ function timing_finish() {
 }
 
 function create_test_list() {
-	grep -rshI --exclude="autotest_common.sh" \
+	grep -rshI --include="*.sh" --exclude="autotest_common.sh" \
 	--exclude="$rootdir/test/common/autotest_common.sh" \
 	-e "run_test " $rootdir | grep -v "#" \
 	| sed 's/^.*run_test/run_test/' | awk '{print $2}' | \
