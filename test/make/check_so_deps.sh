@@ -153,10 +153,6 @@ function confirm_deps() {
 		echo "The makefile lists: '${lib_make_deps[*]}'"
 		echo "readelf outputs   : '${dep_names[*]}'"
 		echo "---------------------------------------------------------------------"
-	elif [ ${#missing_syms[@]} -ne 0 ]; then
-		echo "There are still undefined symbols in the library $lib_shortname"
-		printf "%s\n" "${missing_syms[@]}"
-		echo "---------------------------------------------------------------------"
 	fi
 }
 
