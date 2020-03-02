@@ -517,6 +517,7 @@ if $INSTALL; then
         pixman-devel \
         astyle-devel \
         elfutils \
+        libabigail \
         elfutils-libelf-devel \
         flex \
         bison \
