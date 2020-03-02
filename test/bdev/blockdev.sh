@@ -299,7 +299,7 @@ hello_world_bdev=${bdev_list[0]}
 run_test "bdev_hello_world" $rootdir/examples/bdev/hello_world/hello_bdev -c $conf_file -b $hello_world_bdev
 run_test "bdev_bounds" bdev_bounds
 run_test "bdev_nbd" nbd_function_test $conf_file "$bdevs_name"
-if [ -d /usr/src/fio ]; then
+if [[ $CONFIG_FIO_PLUGIN == y ]]; then
         if [ "$test_type" = "nvme" ] || [ "$test_type" = "gpt" ]; then
                 # TODO: once we get real multi-ns drives, re-enable this test for NVMe.
                 echo "skipping fio tests on NVMe due to multi-ns failures."

@@ -25,7 +25,7 @@ wwpn_prefix="naa.5001405bc6498"
 
 fio_bin="--fio-bin=/home/sys_sgsw/fio_ubuntu"
 fio_iterations=1
-precond_fio_bin="/usr/src/fio/fio"
+precond_fio_bin=$CONFIG_FIO_SOURCE_DIR/fio
 disk_map=""
 
 disk_cfg_bdfs=()
@@ -64,7 +64,7 @@ function usage()
 	echo "    --use-split             Use split vbdevs instead of Logical Volumes"
 	echo "    --limit-kernel-vhost=INT  Limit kernel vhost to run only on a number of CPU cores."
 	echo "    --run-precondition      Precondition lvols after creating. Default: true."
-	echo "    --precond-fio-bin       FIO binary used for SPDK fio plugin precondition. Default: /usr/src/fio/fio."
+	echo "    --precond-fio-bin       FIO binary used for SPDK fio plugin precondition. Default: $CONFIG_FIO_SOURCE_DIR/fio."
 	echo "    --custom-cpu-cfg=PATH   Custom CPU config for test."
 	echo "                            Default: spdk/test/vhost/common/autotest.config"
 	echo "    --disk-map              Disk map for given test. Specify which disks to use, their SPDK name,"

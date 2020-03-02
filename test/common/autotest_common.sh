@@ -122,10 +122,10 @@ cat << EOL >> "$asan_suppression_file"
 leak:spdk_fs_alloc_thread_ctx
 
 # Suppress known leaks in fio project
-leak:/usr/src/fio/parse.c
-leak:/usr/src/fio/iolog.c
-leak:/usr/src/fio/init.c
-leak:/usr/src/fio/filesetup.c
+leak:$CONFIG_FIO_SOURCE_DIR/parse.c
+leak:$CONFIG_FIO_SOURCE_DIR/iolog.c
+leak:$CONFIG_FIO_SOURCE_DIR/init.c
+leak:$CONFIG_FIO_SOURCE_DIR/filesetup.c
 leak:fio_memalign
 leak:spdk_fio_io_u_init
 
@@ -186,8 +186,8 @@ if [ -f /usr/include/infiniband/verbs.h ]; then
 	config_params+=' --with-rdma'
 fi
 
-if [ -d /usr/src/fio ]; then
-	config_params+=' --with-fio=/usr/src/fio'
+if [[ -d $CONFIG_FIO_SOURCE_DIR ]]; then
+	config_params+=" --with-fio=$CONFIG_FIO_SOURCE_DIR"
 fi
 
 if [ -d ${DEPENDENCY_DIR}/vtune_codes ]; then
@@ -941,7 +941,7 @@ function fio_config_gen()
 	local config_file=$1
 	local workload=$2
 	local bdev_type=$3
-	local fio_dir="/usr/src/fio"
+	local fio_dir=$CONFIG_FIO_SOURCE_DIR
 
 	if [ -e "$config_file" ]; then
 		echo "Configuration File Already Exists!: $config_file"
@@ -1009,7 +1009,7 @@ function fio_config_add_job()
 function fio_bdev()
 {
 	# Setup fio binary cmd line
-	local fio_dir="/usr/src/fio"
+	local fio_dir=$CONFIG_FIO_SOURCE_DIR
 	local bdev_plugin="$rootdir/examples/bdev/fio_plugin/fio_plugin"
 
 	# Preload AddressSanitizer library to fio if fio_plugin was compiled with it
@@ -1022,7 +1022,7 @@ function fio_bdev()
 function fio_nvme()
 {
 	# Setup fio binary cmd line
-	local fio_dir="/usr/src/fio"
+	local fio_dir=$CONFIG_FIO_SOURCE_DIR
 	local nvme_plugin="$rootdir/examples/nvme/fio_plugin/fio_plugin"
 
 	# Preload AddressSanitizer library to fio if fio_plugin was compiled with it

@@ -54,7 +54,7 @@ function vmd_bdev_svc {
 run_test "vmd_identify" vmd_identify
 run_test "vmd_hello_world" $rootdir/examples/nvme/hello_world/hello_world -V
 run_test "vmd_perf" vmd_perf
-if [ -d /usr/src/fio ]; then
+if [[ $CONFIG_FIO_PLUGIN == y ]]; then
 	run_test "vmd_fio" vmd_fio
 fi
 

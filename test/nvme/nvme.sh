@@ -125,6 +125,6 @@ if [ $(uname) != "FreeBSD" ]; then
 	kill_stub
 fi
 
-if [ -d /usr/src/fio ]; then
+if [[ $CONFIG_FIO_PLUGIN == y ]]; then
 	run_test "nvme_fio" nvme_fio_test
 fi

@@ -6,7 +6,7 @@ source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/vhost/common.sh
 
 PLUGIN_DIR=$rootdir/examples/bdev/fio_plugin
-FIO_PATH="/usr/src/fio"
+FIO_PATH=$CONFIG_FIO_SOURCE_DIR
 virtio_bdevs=""
 virtio_with_unmap=""
 

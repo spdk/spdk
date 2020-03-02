@@ -23,7 +23,7 @@ device=$1
 tests=${suite[$2]}
 uuid=$3
 
-if [ ! -d /usr/src/fio ]; then
+if [[ $CONFIG_FIO_PLUGIN != y ]]; then
 	echo "FIO not available"
 	exit 1
 fi
