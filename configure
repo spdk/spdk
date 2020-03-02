@@ -804,6 +804,11 @@ rm -f $rootdir/mk/cc.flags.mk
 [ -n "$DESTDIR" ] && echo "DESTDIR?=$DESTDIR" >> $rootdir/mk/cc.flags.mk
 echo "done."
 
+# Create .sh with build config for easy sourcing|lookup during the tests.
+for conf in "${!CONFIG[@]}"; do
+	echo "CONFIG_$conf=${CONFIG[$conf]}"
+done >"$rootdir/test/common/build_config.sh"
+
 if [[ $sys_name == "FreeBSD" ]]; then
 	echo "Type 'gmake' to build."
 else
