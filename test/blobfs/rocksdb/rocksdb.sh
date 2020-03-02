@@ -57,7 +57,14 @@ pushd $DB_BENCH_DIR
 if [ -z "$SKIP_GIT_CLEAN" ]; then
 	git clean -x -f -d
 fi
-$MAKE db_bench $MAKEFLAGS $MAKECONFIG DEBUG_LEVEL=0 SPDK_DIR=$rootdir
+
+EXTRA_CXXFLAGS=""
+GCC_VERSION=$(cc -dumpversion | cut -d. -f1)
+if (( GCC_VERSION >= 9 )); then
+        EXTRA_CXXFLAGS+="-Wno-deprecated-copy -Wno-pessimizing-move"
+fi
+
+$MAKE db_bench $MAKEFLAGS $MAKECONFIG DEBUG_LEVEL=0 SPDK_DIR=$rootdir EXTRA_CXXFLAGS="$EXTRA_CXXFLAGS"
 popd
 
 timing_exit db_bench_build
