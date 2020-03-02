@@ -3486,7 +3486,9 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 		}
 
 		if (poller->srq) {
-			nvmf_rdma_resources_destroy(poller->resources);
+			if (poller->resources) {
+				nvmf_rdma_resources_destroy(poller->resources);
+			}
 			ibv_destroy_srq(poller->srq);
 			SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Destroyed RDMA shared queue %p\n", poller->srq);
 		}
