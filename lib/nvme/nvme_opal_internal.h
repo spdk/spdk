@@ -268,7 +268,7 @@ struct spdk_opal_header {
 
 struct spdk_opal_dev {
 	bool supported;
-	void *dev_handler;
+	struct spdk_nvme_ctrlr *ctrlr;
 
 	uint16_t comid;
 	uint32_t hsn;

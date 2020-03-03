@@ -61,7 +61,7 @@ opal_flush_response_buffer(struct spdk_opal_dev *dev)
 	void *response = dev->resp;
 	int ret = 0;
 
-	ret = spdk_nvme_ctrlr_security_receive(dev->dev_handler, SPDK_SCSI_SECP_TCG, dev->comid,
+	ret = spdk_nvme_ctrlr_security_receive(dev->ctrlr, SPDK_SCSI_SECP_TCG, dev->comid,
 					       0, response, IO_BUFFER_LENGTH);
 	if (ret) {
 		SPDK_ERRLOG("Security Receive Error on dev = %p\n", dev);
@@ -75,7 +75,7 @@ opal_flush_response_buffer(struct spdk_opal_dev *dev)
 static int
 opal_send_cmd(struct spdk_opal_dev *dev)
 {
-	return spdk_nvme_ctrlr_security_send(dev->dev_handler, SPDK_SCSI_SECP_TCG, dev->comid,
+	return spdk_nvme_ctrlr_security_send(dev->ctrlr, SPDK_SCSI_SECP_TCG, dev->comid,
 					     0, dev->cmd, IO_BUFFER_LENGTH);
 }
 
@@ -89,7 +89,7 @@ opal_recv_cmd(struct spdk_opal_dev *dev)
 	uint64_t now;
 
 	do {
-		ret = spdk_nvme_ctrlr_security_receive(dev->dev_handler, SPDK_SCSI_SECP_TCG, dev->comid,
+		ret = spdk_nvme_ctrlr_security_receive(dev->ctrlr, SPDK_SCSI_SECP_TCG, dev->comid,
 						       0, dev->resp, IO_BUFFER_LENGTH);
 		if (ret) {
 			SPDK_ERRLOG("Security Receive Error on dev = %p\n", dev);
@@ -908,7 +908,6 @@ opal_setup_dev(struct spdk_opal_dev *dev)
 	dev->tsn = 0;
 	dev->hsn = 0;
 	dev->prev_data = NULL;
-	dev->timeout = SPDK_OPAL_TPER_TIMEOUT;
 }
 
 static int
@@ -949,7 +948,7 @@ opal_check_support(struct spdk_opal_dev *dev)
 }
 
 void
-spdk_opal_close(struct spdk_opal_dev *dev)
+spdk_opal_dev_destruct(struct spdk_opal_dev *dev)
 {
 	pthread_mutex_destroy(&dev->mutex_lock);
 	if (dev->max_ranges > 0) {
@@ -1840,7 +1839,7 @@ end:
 }
 
 struct spdk_opal_dev *
-spdk_opal_init_dev(void *dev_handler)
+	spdk_opal_dev_construct(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct spdk_opal_dev *dev;
 
@@ -1850,7 +1849,8 @@ spdk_opal_init_dev(void *dev_handler)
 		return NULL;
 	}
 
-	dev->dev_handler = dev_handler;
+	dev->ctrlr = ctrlr;
+	dev->timeout = SPDK_OPAL_TPER_TIMEOUT;
 
 	if (opal_check_support(dev) != 0) {
 		SPDK_INFOLOG(SPDK_LOG_OPAL, "Opal is not supported on this device\n");
@@ -1874,7 +1874,7 @@ spdk_opal_cmd_scan(struct spdk_opal_dev *dev)
 	ret = opal_check_support(dev);
 	if (ret) {
 		SPDK_ERRLOG("check opal support failed: %d\n", ret);
-		spdk_opal_close(dev);
+		spdk_opal_dev_destruct(dev);
 	}
 	return ret;
 }
@@ -2066,7 +2066,7 @@ spdk_opal_revert_poll(struct spdk_opal_dev *dev)
 
 	assert(dev->revert_cb_fn);
 
-	ret = spdk_nvme_ctrlr_security_receive(dev->dev_handler, SPDK_SCSI_SECP_TCG, dev->comid,
+	ret = spdk_nvme_ctrlr_security_receive(dev->ctrlr, SPDK_SCSI_SECP_TCG, dev->comid,
 					       0, dev->resp, IO_BUFFER_LENGTH);
 	if (ret) {
 		SPDK_ERRLOG("Security Receive Error on dev = %p\n", dev);

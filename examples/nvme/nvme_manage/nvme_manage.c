@@ -973,7 +973,7 @@ opal_scan(struct dev *iter)
 {
 	while (getchar() != '\n');
 	if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
-		iter->opal_dev = spdk_opal_init_dev(iter->ctrlr);
+		iter->opal_dev = spdk_opal_dev_construct(iter->ctrlr);
 		if (iter->opal_dev == NULL) {
 			return;
 		}
@@ -984,7 +984,7 @@ opal_scan(struct dev *iter)
 			spdk_opal_cmd_scan(iter->opal_dev);
 			opal_dump_info(spdk_opal_get_d0_features_info(iter->opal_dev));
 		}
-		spdk_opal_close(iter->opal_dev);
+		spdk_opal_dev_destruct(iter->opal_dev);
 	} else {
 		printf("%04x:%02x:%02x.%02x: NVMe Security Support/Receive Not supported.\n",
 		       iter->pci_addr.domain, iter->pci_addr.bus, iter->pci_addr.dev, iter->pci_addr.func);
@@ -1002,7 +1002,7 @@ opal_init(struct dev *iter)
 	int ch;
 
 	if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
-		iter->opal_dev = spdk_opal_init_dev(iter->ctrlr);
+		iter->opal_dev = spdk_opal_dev_construct(iter->ctrlr);
 		if (iter->opal_dev == NULL) {
 			return;
 		}
@@ -1015,14 +1015,14 @@ opal_init(struct dev *iter)
 				ret = spdk_opal_cmd_take_ownership(iter->opal_dev, passwd_p);
 				if (ret) {
 					printf("Take ownership failure: %d\n", ret);
-					spdk_opal_close(iter->opal_dev);
+					spdk_opal_dev_destruct(iter->opal_dev);
 					return;
 				}
 
 				ret = spdk_opal_cmd_activate_locking_sp(iter->opal_dev, passwd_p);
 				if (ret) {
 					printf("Locking SP activate failure: %d\n", ret);
-					spdk_opal_close(iter->opal_dev);
+					spdk_opal_dev_destruct(iter->opal_dev);
 					return;
 				}
 				printf("...\nOpal Init Success\n");
@@ -1030,7 +1030,7 @@ opal_init(struct dev *iter)
 				printf("Input password invalid. Opal Init failure\n");
 			}
 		}
-		spdk_opal_close(iter->opal_dev);
+		spdk_opal_dev_destruct(iter->opal_dev);
 	} else {
 		printf("%04x:%02x:%02x.%02x: NVMe Security Support/Receive Not supported.\nOpal Not Supported\n\n\n",
 		       iter->pci_addr.domain, iter->pci_addr.bus, iter->pci_addr.dev, iter->pci_addr.func);
@@ -1060,7 +1060,7 @@ opal_setup_lockingrange(struct dev *iter)
 	struct spdk_opal_locking_range_info *info;
 
 	if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
-		iter->opal_dev = spdk_opal_init_dev(iter->ctrlr);
+		iter->opal_dev = spdk_opal_dev_construct(iter->ctrlr);
 		if (iter->opal_dev == NULL) {
 			return;
 		}
@@ -1073,21 +1073,21 @@ opal_setup_lockingrange(struct dev *iter)
 				printf("Specify locking range id:\n");
 				if (!scanf("%d", &locking_range_id)) {
 					printf("Invalid locking range id\n");
-					spdk_opal_close(iter->opal_dev);
+					spdk_opal_dev_destruct(iter->opal_dev);
 					return;
 				}
 
 				printf("range length:\n");
 				if (!scanf("%" SCNu64, &range_length)) {
 					printf("Invalid range length\n");
-					spdk_opal_close(iter->opal_dev);
+					spdk_opal_dev_destruct(iter->opal_dev);
 					return;
 				}
 
 				printf("range start:\n");
 				if (!scanf("%" SCNu64, &range_start)) {
 					printf("Invalid range start address\n");
-					spdk_opal_close(iter->opal_dev);
+					spdk_opal_dev_destruct(iter->opal_dev);
 					return;
 				}
 				while (getchar() != '\n');
@@ -1096,7 +1096,7 @@ opal_setup_lockingrange(struct dev *iter)
 									OPAL_ADMIN1, locking_range_id, range_start, range_length, passwd_p);
 				if (ret) {
 					printf("Setup locking range failure: %d\n", ret);
-					spdk_opal_close(iter->opal_dev);
+					spdk_opal_dev_destruct(iter->opal_dev);
 					return;
 				}
 
@@ -1104,7 +1104,7 @@ opal_setup_lockingrange(struct dev *iter)
 						passwd_p, OPAL_ADMIN1, locking_range_id);
 				if (ret) {
 					printf("Get locking range info failure: %d\n", ret);
-					spdk_opal_close(iter->opal_dev);
+					spdk_opal_dev_destruct(iter->opal_dev);
 					return;
 				}
 				info = spdk_opal_get_locking_range_info(iter->opal_dev, locking_range_id);
@@ -1122,7 +1122,7 @@ opal_setup_lockingrange(struct dev *iter)
 				printf("Input password invalid. Opal setup locking range failure\n");
 			}
 		}
-		spdk_opal_close(iter->opal_dev);
+		spdk_opal_dev_destruct(iter->opal_dev);
 	} else {
 		printf("%04x:%02x:%02x.%02x: NVMe Security Support/Receive Not supported.\nOpal Not Supported\n\n\n",
 		       iter->pci_addr.domain, iter->pci_addr.bus, iter->pci_addr.dev, iter->pci_addr.func);
@@ -1141,7 +1141,7 @@ opal_list_locking_ranges(struct dev *iter)
 	struct spdk_opal_locking_range_info *info;
 
 	if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
-		iter->opal_dev = spdk_opal_init_dev(iter->ctrlr);
+		iter->opal_dev = spdk_opal_dev_construct(iter->ctrlr);
 		if (iter->opal_dev == NULL) {
 			return;
 		}
@@ -1154,7 +1154,7 @@ opal_list_locking_ranges(struct dev *iter)
 				ret = spdk_opal_cmd_get_max_ranges(iter->opal_dev, passwd_p);
 				if (ret) {
 					printf("get max ranges failure: %d\n", ret);
-					spdk_opal_close(iter->opal_dev);
+					spdk_opal_dev_destruct(iter->opal_dev);
 					return;
 				}
 
@@ -1164,7 +1164,7 @@ opal_list_locking_ranges(struct dev *iter)
 							passwd_p, OPAL_ADMIN1, i);
 					if (ret) {
 						printf("Get locking range info failure: %d\n", ret);
-						spdk_opal_close(iter->opal_dev);
+						spdk_opal_dev_destruct(iter->opal_dev);
 						return;
 					}
 					info = spdk_opal_get_locking_range_info(iter->opal_dev, i);
@@ -1188,7 +1188,7 @@ opal_list_locking_ranges(struct dev *iter)
 				printf("Input password invalid. List locking ranges failure\n");
 			}
 		}
-		spdk_opal_close(iter->opal_dev);
+		spdk_opal_dev_destruct(iter->opal_dev);
 	} else {
 		printf("%04x:%02x:%02x.%02x: NVMe Security Support/Receive Not supported.\nOpal Not Supported\n\n\n",
 		       iter->pci_addr.domain, iter->pci_addr.bus, iter->pci_addr.dev, iter->pci_addr.func);
@@ -1207,7 +1207,7 @@ opal_new_user_enable(struct dev *iter)
 	int ch;
 
 	if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
-		iter->opal_dev = spdk_opal_init_dev(iter->ctrlr);
+		iter->opal_dev = spdk_opal_dev_construct(iter->ctrlr);
 		if (iter->opal_dev == NULL) {
 			return;
 		}
@@ -1220,14 +1220,14 @@ opal_new_user_enable(struct dev *iter)
 				printf("which user to enable: ");
 				if (!scanf("%d", &user_id)) {
 					printf("Invalid user id\n");
-					spdk_opal_close(iter->opal_dev);
+					spdk_opal_dev_destruct(iter->opal_dev);
 					return;
 				}
 
 				ret = spdk_opal_cmd_enable_user(iter->opal_dev, user_id, passwd_p);
 				if (ret) {
 					printf("Enable user failure error code: %d\n", ret);
-					spdk_opal_close(iter->opal_dev);
+					spdk_opal_dev_destruct(iter->opal_dev);
 					return;
 				}
 				printf("Please set a new password for this user:");
@@ -1235,14 +1235,14 @@ opal_new_user_enable(struct dev *iter)
 				user_pw_p = get_line(user_pw, MAX_PASSWORD_SIZE, stdin, true);
 				if (user_pw_p == NULL) {
 					printf("Input password invalid. Enable user failure\n");
-					spdk_opal_close(iter->opal_dev);
+					spdk_opal_dev_destruct(iter->opal_dev);
 					return;
 				}
 
 				ret = spdk_opal_cmd_set_new_passwd(iter->opal_dev, user_id, user_pw_p, passwd_p, true);
 				if (ret) {
 					printf("Set new password failure error code: %d\n", ret);
-					spdk_opal_close(iter->opal_dev);
+					spdk_opal_dev_destruct(iter->opal_dev);
 					return;
 				}
 
@@ -1251,7 +1251,7 @@ opal_new_user_enable(struct dev *iter)
 				printf("Input password invalid. Enable user failure\n");
 			}
 		}
-		spdk_opal_close(iter->opal_dev);
+		spdk_opal_dev_destruct(iter->opal_dev);
 	} else {
 		printf("%04x:%02x:%02x.%02x: NVMe Security Support/Receive Not supported.\nOpal Not Supported\n\n\n",
 		       iter->pci_addr.domain, iter->pci_addr.bus, iter->pci_addr.dev, iter->pci_addr.func);
@@ -1270,7 +1270,7 @@ opal_change_password(struct dev *iter)
 	int ch;
 
 	if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
-		iter->opal_dev = spdk_opal_init_dev(iter->ctrlr);
+		iter->opal_dev = spdk_opal_dev_construct(iter->ctrlr);
 		if (iter->opal_dev == NULL) {
 			return;
 		}
@@ -1278,7 +1278,7 @@ opal_change_password(struct dev *iter)
 			printf("user id: ");
 			if (!scanf("%d", &user_id)) {
 				printf("Invalid user id\n");
-				spdk_opal_close(iter->opal_dev);
+				spdk_opal_dev_destruct(iter->opal_dev);
 				return;
 			}
 			printf("Password:");
@@ -1291,14 +1291,14 @@ opal_change_password(struct dev *iter)
 				printf("\n");
 				if (new_passwd_p == NULL) {
 					printf("Input password invalid. Change password failure\n");
-					spdk_opal_close(iter->opal_dev);
+					spdk_opal_dev_destruct(iter->opal_dev);
 					return;
 				}
 
 				ret = spdk_opal_cmd_set_new_passwd(iter->opal_dev, user_id, new_passwd_p, old_passwd_p, false);
 				if (ret) {
 					printf("Set new password failure error code: %d\n", ret);
-					spdk_opal_close(iter->opal_dev);
+					spdk_opal_dev_destruct(iter->opal_dev);
 					return;
 				}
 
@@ -1307,7 +1307,7 @@ opal_change_password(struct dev *iter)
 				printf("Input password invalid. Change password failure\n");
 			}
 		}
-		spdk_opal_close(iter->opal_dev);
+		spdk_opal_dev_destruct(iter->opal_dev);
 	} else {
 		printf("%04x:%02x:%02x.%02x: NVMe Security Support/Receive Not supported.\nOpal Not Supported\n\n\n",
 		       iter->pci_addr.domain, iter->pci_addr.bus, iter->pci_addr.dev, iter->pci_addr.func);
@@ -1324,7 +1324,7 @@ opal_add_user_to_locking_range(struct dev *iter)
 	int ch;
 
 	if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
-		iter->opal_dev = spdk_opal_init_dev(iter->ctrlr);
+		iter->opal_dev = spdk_opal_dev_construct(iter->ctrlr);
 		if (iter->opal_dev == NULL) {
 			return;
 		}
@@ -1337,14 +1337,14 @@ opal_add_user_to_locking_range(struct dev *iter)
 				printf("Specify locking range id:\n");
 				if (!scanf("%d", &locking_range_id)) {
 					printf("Invalid locking range id\n");
-					spdk_opal_close(iter->opal_dev);
+					spdk_opal_dev_destruct(iter->opal_dev);
 					return;
 				}
 
 				printf("which user to enable:\n");
 				if (!scanf("%d", &user_id)) {
 					printf("Invalid user id\n");
-					spdk_opal_close(iter->opal_dev);
+					spdk_opal_dev_destruct(iter->opal_dev);
 					return;
 				}
 				while (getchar() != '\n');
@@ -1357,7 +1357,7 @@ opal_add_user_to_locking_range(struct dev *iter)
 						passwd_p);
 				if (ret) {
 					printf("Add user to locking range error: %d\n", ret);
-					spdk_opal_close(iter->opal_dev);
+					spdk_opal_dev_destruct(iter->opal_dev);
 					return;
 				}
 
@@ -1366,7 +1366,7 @@ opal_add_user_to_locking_range(struct dev *iter)
 				printf("Input password invalid. Add user to locking range failure\n");
 			}
 		}
-		spdk_opal_close(iter->opal_dev);
+		spdk_opal_dev_destruct(iter->opal_dev);
 	} else {
 		printf("%04x:%02x:%02x.%02x: NVMe Security Support/Receive Not supported.\nOpal Not Supported\n\n\n",
 		       iter->pci_addr.domain, iter->pci_addr.bus, iter->pci_addr.dev, iter->pci_addr.func);
@@ -1386,7 +1386,7 @@ opal_user_lock_unlock_range(struct dev *iter)
 	enum spdk_opal_lock_state state_flag;
 
 	if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
-		iter->opal_dev = spdk_opal_init_dev(iter->ctrlr);
+		iter->opal_dev = spdk_opal_dev_construct(iter->ctrlr);
 		if (iter->opal_dev == NULL) {
 			return;
 		}
@@ -1394,7 +1394,7 @@ opal_user_lock_unlock_range(struct dev *iter)
 			printf("User id: ");
 			if (!scanf("%d", &user_id)) {
 				printf("Invalid user id\n");
-				spdk_opal_close(iter->opal_dev);
+				spdk_opal_dev_destruct(iter->opal_dev);
 				return;
 			}
 
@@ -1406,7 +1406,7 @@ opal_user_lock_unlock_range(struct dev *iter)
 				printf("Specify locking range id:\n");
 				if (!scanf("%d", &locking_range_id)) {
 					printf("Invalid locking range id\n");
-					spdk_opal_close(iter->opal_dev);
+					spdk_opal_dev_destruct(iter->opal_dev);
 					return;
 				}
 
@@ -1426,7 +1426,7 @@ opal_user_lock_unlock_range(struct dev *iter)
 					break;
 				default:
 					printf("Invalid options\n");
-					spdk_opal_close(iter->opal_dev);
+					spdk_opal_dev_destruct(iter->opal_dev);
 					return;
 				}
 				while (getchar() != '\n');
@@ -1435,7 +1435,7 @@ opal_user_lock_unlock_range(struct dev *iter)
 								locking_range_id, passwd_p);
 				if (ret) {
 					printf("lock/unlock range failure: %d\n", ret);
-					spdk_opal_close(iter->opal_dev);
+					spdk_opal_dev_destruct(iter->opal_dev);
 					return;
 				}
 				printf("...\n...\nLock/unlock range Success\n");
@@ -1443,7 +1443,7 @@ opal_user_lock_unlock_range(struct dev *iter)
 				printf("Input password invalid. lock/unlock range failure\n");
 			}
 		}
-		spdk_opal_close(iter->opal_dev);
+		spdk_opal_dev_destruct(iter->opal_dev);
 	} else {
 		printf("%04x:%02x:%02x.%02x: NVMe Security Support/Receive Not supported.\nOpal Not Supported\n\n\n",
 		       iter->pci_addr.domain, iter->pci_addr.bus, iter->pci_addr.dev, iter->pci_addr.func);
@@ -1459,7 +1459,7 @@ opal_revert_tper(struct dev *iter)
 	int ch;
 
 	if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
-		iter->opal_dev = spdk_opal_init_dev(iter->ctrlr);
+		iter->opal_dev = spdk_opal_dev_construct(iter->ctrlr);
 		if (iter->opal_dev == NULL) {
 			return;
 		}
@@ -1474,7 +1474,7 @@ opal_revert_tper(struct dev *iter)
 				ret = spdk_opal_cmd_revert_tper(iter->opal_dev, passwd_p);
 				if (ret) {
 					printf("Revert TPer failure: %d\n", ret);
-					spdk_opal_close(iter->opal_dev);
+					spdk_opal_dev_destruct(iter->opal_dev);
 					return;
 				}
 				printf("...\nRevert TPer Success\n");
@@ -1482,7 +1482,7 @@ opal_revert_tper(struct dev *iter)
 				printf("Input password invalid. Revert TPer failure\n");
 			}
 		}
-		spdk_opal_close(iter->opal_dev);
+		spdk_opal_dev_destruct(iter->opal_dev);
 	} else {
 		printf("%04x:%02x:%02x.%02x: NVMe Security Support/Receive Not supported.\nOpal Not Supported\n\n\n",
 		       iter->pci_addr.domain, iter->pci_addr.bus, iter->pci_addr.dev, iter->pci_addr.func);
@@ -1499,7 +1499,7 @@ opal_erase_locking_range(struct dev *iter)
 	int locking_range_id;
 
 	if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
-		iter->opal_dev = spdk_opal_init_dev(iter->ctrlr);
+		iter->opal_dev = spdk_opal_dev_construct(iter->ctrlr);
 		if (iter->opal_dev == NULL) {
 			return;
 		}
@@ -1512,14 +1512,14 @@ opal_erase_locking_range(struct dev *iter)
 				printf("\nSpecify locking range id:\n");
 				if (!scanf("%d", &locking_range_id)) {
 					printf("Invalid locking range id\n");
-					spdk_opal_close(iter->opal_dev);
+					spdk_opal_dev_destruct(iter->opal_dev);
 					return;
 				}
 				printf("\n...\n");
 				ret = spdk_opal_cmd_erase_locking_range(iter->opal_dev, OPAL_ADMIN1, locking_range_id, passwd_p);
 				if (ret) {
 					printf("Erase locking range failure: %d\n", ret);
-					spdk_opal_close(iter->opal_dev);
+					spdk_opal_dev_destruct(iter->opal_dev);
 					return;
 				}
 				printf("...\nErase locking range Success\n");
@@ -1527,7 +1527,7 @@ opal_erase_locking_range(struct dev *iter)
 				printf("Input password invalid. Erase locking range failure\n");
 			}
 		}
-		spdk_opal_close(iter->opal_dev);
+		spdk_opal_dev_destruct(iter->opal_dev);
 	} else {
 		printf("%04x:%02x:%02x.%02x: NVMe Security Support/Receive Not supported.\nOpal Not Supported\n\n\n",
 		       iter->pci_addr.domain, iter->pci_addr.bus, iter->pci_addr.dev, iter->pci_addr.func);

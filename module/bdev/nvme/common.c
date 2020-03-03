@@ -140,7 +140,7 @@ nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 			/* wait until we get the result */
 			while (spdk_opal_revert_poll(nvme_bdev_ctrlr->opal_dev) == -EAGAIN);
 		}
-		spdk_opal_close(nvme_bdev_ctrlr->opal_dev);
+		spdk_opal_dev_destruct(nvme_bdev_ctrlr->opal_dev);
 		nvme_bdev_ctrlr->opal_dev = NULL;
 	}
 
