@@ -880,77 +880,72 @@ update_firmware_image(void)
 }
 
 static void
-opal_dump_info(struct spdk_opal_info *opal)
+opal_dump_info(struct spdk_opal_d0_features_info *feat)
 {
-	if (!opal->opal_ssc_dev) {
-		SPDK_ERRLOG("This device is not Opal enabled. Not Supported!\n");
-		return;
-	}
-
-	if (opal->tper) {
+	if (feat->tper.hdr.code) {
 		printf("\nOpal TPer feature:\n");
-		printf("ACKNACK = %s", (opal->tper_acknack ? "Y, " : "N, "));
-		printf("ASYNC = %s", (opal->tper_async ? "Y, " : "N, "));
-		printf("BufferManagement = %s\n", (opal->tper_buffer_mgt ? "Y, " : "N, "));
-		printf("ComIDManagement = %s", (opal->tper_comid_mgt ? "Y, " : "N, "));
-		printf("Streaming = %s", (opal->tper_streaming ? "Y, " : "N, "));
-		printf("Sync = %s\n", (opal->tper_sync ? "Y" : "N"));
+		printf("ACKNACK = %s", (feat->tper.acknack ? "Y, " : "N, "));
+		printf("ASYNC = %s", (feat->tper.async ? "Y, " : "N, "));
+		printf("BufferManagement = %s\n", (feat->tper.buffer_management ? "Y, " : "N, "));
+		printf("ComIDManagement = %s", (feat->tper.comid_management ? "Y, " : "N, "));
+		printf("Streaming = %s", (feat->tper.streaming ? "Y, " : "N, "));
+		printf("Sync = %s\n", (feat->tper.sync ? "Y" : "N"));
 		printf("\n");
 	}
 
-	if (opal->locking) {
+	if (feat->locking.hdr.code) {
 		printf("Opal Locking feature:\n");
-		printf("Locked = %s", (opal->locking_locked ? "Y, " : "N, "));
-		printf("Locking Enabled = %s", (opal->locking_locking_enabled ? "Y, " : "N, "));
-		printf("Locking supported = %s\n", (opal->locking_locking_supported ? "Y" : "N"));
+		printf("Locked = %s", (feat->locking.locked ? "Y, " : "N, "));
+		printf("Locking Enabled = %s", (feat->locking.locking_enabled ? "Y, " : "N, "));
+		printf("Locking supported = %s\n", (feat->locking.locking_supported ? "Y" : "N"));
 
-		printf("MBR done = %s", (opal->locking_mbr_done ? "Y, " : "N, "));
-		printf("MBR enabled = %s", (opal->locking_mbr_enabled ? "Y, " : "N, "));
-		printf("Media encrypt = %s\n", (opal->locking_media_encrypt ? "Y" : "N"));
+		printf("MBR done = %s", (feat->locking.mbr_done ? "Y, " : "N, "));
+		printf("MBR enabled = %s", (feat->locking.mbr_enabled ? "Y, " : "N, "));
+		printf("Media encrypt = %s\n", (feat->locking.media_encryption ? "Y" : "N"));
 		printf("\n");
 	}
 
-	if (opal->geometry) {
+	if (feat->geo.hdr.code) {
 		printf("Opal Geometry feature:\n");
-		printf("Align = %s", (opal->geometry_align ? "Y, " : "N, "));
-		printf("Logical block size = %d, ", opal->geometry_logical_block_size);
-		printf("Lowest aligned LBA = %ld\n", opal->geometry_lowest_aligned_lba);
+		printf("Align = %s", (feat->geo.alignment_granularity ? "Y, " : "N, "));
+		printf("Logical block size = %d, ", from_be32(&feat->geo.logical_block_size));
+		printf("Lowest aligned LBA = %ld\n", from_be64(&feat->geo.lowest_aligned_lba));
 		printf("\n");
 	}
 
-	if (opal->single_user_mode) {
+	if (feat->single_user.hdr.code) {
 		printf("Opal Single User Mode feature:\n");
-		printf("Any in SUM = %s", (opal->single_user_any ? "Y, " : "N, "));
-		printf("All in SUM = %s", (opal->single_user_all ? "Y, " : "N, "));
-		printf("Policy: %s Authority,\n", (opal->single_user_policy ? "Admin" : "Users"));
-		printf("Number of locking objects = %d\n ", opal->single_user_locking_objects);
+		printf("Any in SUM = %s", (feat->single_user.any ? "Y, " : "N, "));
+		printf("All in SUM = %s", (feat->single_user.all ? "Y, " : "N, "));
+		printf("Policy: %s Authority,\n", (feat->single_user.policy ? "Admin" : "Users"));
+		printf("Number of locking objects = %d\n ", from_be32(&feat->single_user.num_locking_objects));
 		printf("\n");
 	}
 
-	if (opal->datastore) {
+	if (feat->datastore.hdr.code) {
 		printf("Opal DataStore feature:\n");
-		printf("Table alignment = %d, ", opal->datastore_alignment);
-		printf("Max number of tables = %d, ", opal->datastore_max_tables);
-		printf("Max size of tables = %d\n", opal->datastore_max_table_size);
+		printf("Table alignment = %d, ", from_be32(&feat->datastore.alignment));
+		printf("Max number of tables = %d, ", from_be16(&feat->datastore.max_tables));
+		printf("Max size of tables = %d\n", from_be32(&feat->datastore.max_table_size));
 		printf("\n");
 	}
 
-	if (opal->opal_v100) {
+	if (feat->v100.hdr.code) {
 		printf("Opal V100 feature:\n");
-		printf("Base comID = %d, ", opal->opal_v100_base_comid);
-		printf("Number of comIDs = %d, ", opal->opal_v100_num_comid);
-		printf("Range crossing = %s\n", (opal->opal_v100_range_crossing ? "N" : "Y"));
+		printf("Base comID = %d, ", from_be16(&feat->v100.base_comid));
+		printf("Number of comIDs = %d, ", from_be16(&feat->v100.number_comids));
+		printf("Range crossing = %s\n", (feat->v100.range_crossing ? "N" : "Y"));
 		printf("\n");
 	}
 
-	if (opal->opal_v200) {
+	if (feat->v200.hdr.code) {
 		printf("Opal V200 feature:\n");
-		printf("Base comID = %d, ", opal->opal_v200_base_comid);
-		printf("Number of comIDs = %d, ", opal->opal_v200_num_comid);
-		printf("Initial PIN = %d,\n", opal->opal_v200_initial_pin);
-		printf("Reverted PIN = %d, ", opal->opal_v200_reverted_pin);
-		printf("Number of admins = %d, ", opal->opal_v200_num_admin);
-		printf("Number of users = %d\n", opal->opal_v200_num_user);
+		printf("Base comID = %d, ", from_be16(&feat->v200.base_comid));
+		printf("Number of comIDs = %d, ", from_be16(&feat->v200.num_comids));
+		printf("Initial PIN = %d,\n", feat->v200.initial_pin);
+		printf("Reverted PIN = %d, ", feat->v200.reverted_pin);
+		printf("Number of admins = %d, ", from_be16(&feat->v200.num_locking_admin_auth));
+		printf("Number of users = %d\n", from_be16(&feat->v200.num_locking_user_auth));
 		printf("\n");
 	}
 }
@@ -987,7 +982,7 @@ opal_scan(struct dev *iter)
 			printf("\n\nOpal Supported:\n");
 			display_controller(iter, CONTROLLER_DISPLAY_SIMPLISTIC);
 			spdk_opal_cmd_scan(iter->opal_dev);
-			opal_dump_info(spdk_opal_get_info(iter->opal_dev));
+			opal_dump_info(spdk_opal_get_d0_features_info(iter->opal_dev));
 		}
 		spdk_opal_close(iter->opal_dev);
 	} else {

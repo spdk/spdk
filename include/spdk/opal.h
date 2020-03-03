@@ -39,6 +39,7 @@
 #include "spdk/log.h"
 #include "spdk/endian.h"
 #include "spdk/string.h"
+#include "spdk/opal_spec.h"
 
 #define SPDK_OPAL_NOT_SUPPORTED 0xFF
 
@@ -72,50 +73,14 @@ static const char *const spdk_opal_errors[] = {
 	"AUTHORITY LOCKED OUT",
 };
 
-struct spdk_opal_info {
-	uint8_t tper : 1;
-	uint8_t locking : 1;
-	uint8_t geometry : 1;
-	uint8_t single_user_mode : 1;
-	uint8_t datastore : 1;
-	uint8_t opal_v200 : 1;
-	uint8_t opal_v100 : 1;
-	uint8_t vendor_specific : 1;
-	uint8_t opal_ssc_dev : 1;
-	uint8_t tper_acknack : 1;
-	uint8_t tper_async : 1;
-	uint8_t tper_buffer_mgt : 1;
-	uint8_t tper_comid_mgt : 1;
-	uint8_t tper_streaming : 1;
-	uint8_t tper_sync : 1;
-	uint8_t locking_locked : 1;
-	uint8_t locking_locking_enabled : 1;
-	uint8_t locking_locking_supported : 1;
-	uint8_t locking_mbr_done : 1;
-	uint8_t locking_mbr_enabled : 1;
-	uint8_t locking_media_encrypt : 1;
-	uint8_t geometry_align : 1;
-	uint64_t geometry_alignment_granularity;
-	uint32_t geometry_logical_block_size;
-	uint64_t geometry_lowest_aligned_lba;
-	uint8_t single_user_any : 1;
-	uint8_t single_user_all : 1;
-	uint8_t single_user_policy : 1;
-	uint32_t single_user_locking_objects;
-	uint16_t datastore_max_tables;
-	uint32_t datastore_max_table_size;
-	uint32_t datastore_alignment;
-	uint16_t opal_v100_base_comid;
-	uint16_t opal_v100_num_comid;
-	uint8_t opal_v100_range_crossing : 1;
-	uint16_t opal_v200_base_comid;
-	uint16_t opal_v200_num_comid;
-	uint8_t opal_v200_initial_pin;
-	uint8_t opal_v200_reverted_pin;
-	uint16_t opal_v200_num_admin;
-	uint16_t opal_v200_num_user;
-	uint8_t opal_v200_range_crossing : 1;
-	uint16_t vu_feature_code; /* vendor specific feature */
+struct spdk_opal_d0_features_info {
+	struct spdk_opal_d0_tper_feat tper;
+	struct spdk_opal_d0_locking_feat locking;
+	struct spdk_opal_d0_single_user_mode_feat single_user;
+	struct spdk_opal_d0_geo_feat geo;
+	struct spdk_opal_d0_datastore_feat datastore;
+	struct spdk_opal_d0_v100_feat v100;
+	struct spdk_opal_d0_v200_feat v200;
 };
 
 enum spdk_opal_lock_state {
@@ -169,7 +134,7 @@ typedef void (*spdk_opal_revert_cb)(struct spdk_opal_dev *dev, void *ctx, int rc
 struct spdk_opal_dev *spdk_opal_init_dev(void *dev_handler);
 
 void spdk_opal_close(struct spdk_opal_dev *dev);
-struct spdk_opal_info *spdk_opal_get_info(struct spdk_opal_dev *dev);
+struct spdk_opal_d0_features_info *spdk_opal_get_d0_features_info(struct spdk_opal_dev *dev);
 
 bool spdk_opal_supported(struct spdk_opal_dev *dev);
 

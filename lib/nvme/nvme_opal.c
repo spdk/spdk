@@ -747,16 +747,8 @@ static void
 opal_check_tper(struct spdk_opal_dev *dev, const void *data)
 {
 	const struct spdk_opal_d0_tper_feat *tper = data;
-	struct spdk_opal_info *opal_info = dev->opal_info;
 
-	opal_info->opal_ssc_dev = 1;
-	opal_info->tper = 1;
-	opal_info->tper_acknack = tper->acknack;
-	opal_info->tper_async = tper->async;
-	opal_info->tper_buffer_mgt = tper->buffer_management;
-	opal_info->tper_comid_mgt = tper->comid_management;
-	opal_info->tper_streaming = tper->streaming;
-	opal_info->tper_sync = tper->sync;
+	dev->feat_info.tper = *tper;
 }
 
 /*
@@ -767,18 +759,13 @@ opal_check_sum(struct spdk_opal_dev *dev, const void *data)
 {
 	const struct spdk_opal_d0_single_user_mode_feat *sum = data;
 	uint32_t num_locking_objects = from_be32(&sum->num_locking_objects);
-	struct spdk_opal_info *opal_info = dev->opal_info;
 
 	if (num_locking_objects == 0) {
 		SPDK_NOTICELOG("Need at least one locking object.\n");
 		return false;
 	}
 
-	opal_info->single_user_mode = 1;
-	opal_info->single_user_locking_objects = num_locking_objects;
-	opal_info->single_user_any = sum->any;
-	opal_info->single_user_all = sum->all;
-	opal_info->single_user_policy = sum->policy;
+	dev->feat_info.single_user = *sum;
 
 	return true;
 }
@@ -787,58 +774,38 @@ static void
 opal_check_lock(struct spdk_opal_dev *dev, const void *data)
 {
 	const struct spdk_opal_d0_locking_feat *lock = data;
-	struct spdk_opal_info *opal_info = dev->opal_info;
 
-	opal_info->locking = 1;
-	opal_info->locking_locked = lock->locked;
-	opal_info->locking_locking_enabled = lock->locking_enabled;
-	opal_info->locking_locking_supported = lock->locking_supported;
-	opal_info->locking_mbr_done = lock->mbr_done;
-	opal_info->locking_mbr_enabled = lock->mbr_enabled;
-	opal_info->locking_media_encrypt = lock->media_encryption;
+	dev->feat_info.locking = *lock;
 }
 
 static void
 opal_check_geometry(struct spdk_opal_dev *dev, const void *data)
 {
 	const struct spdk_opal_d0_geo_feat *geo = data;
-	struct spdk_opal_info *opal_info = dev->opal_info;
 	uint64_t align = from_be64(&geo->alignment_granularity);
 	uint64_t lowest_lba = from_be64(&geo->lowest_aligned_lba);
 
 	dev->align = align;
 	dev->lowest_lba = lowest_lba;
 
-	opal_info->geometry = 1;
-	opal_info->geometry_align = geo->align;
-	opal_info->geometry_logical_block_size = from_be32(&geo->logical_block_size);
-	opal_info->geometry_lowest_aligned_lba = lowest_lba;
-	opal_info->geometry_alignment_granularity = align;
+	dev->feat_info.geo = *geo;
 }
 
 static void
 opal_check_datastore(struct spdk_opal_dev *dev, const void *data)
 {
 	const struct spdk_opal_d0_datastore_feat *datastore = data;
-	struct spdk_opal_info *opal_info = dev->opal_info;
 
-	opal_info->datastore = 1;
-	opal_info->datastore_max_tables = from_be16(&datastore->max_tables);
-	opal_info->datastore_max_table_size = from_be32(&datastore->max_table_size);
-	opal_info->datastore_alignment = from_be32(&datastore->alignment);
+	dev->feat_info.datastore = *datastore;
 }
 
 static uint16_t
 opal_get_comid_v100(struct spdk_opal_dev *dev, const void *data)
 {
 	const struct spdk_opal_d0_v100_feat *v100 = data;
-	struct spdk_opal_info *opal_info = dev->opal_info;
 	uint16_t base_comid = from_be16(&v100->base_comid);
 
-	opal_info->opal_v100 = 1;
-	opal_info->opal_v100_base_comid = base_comid;
-	opal_info->opal_v100_num_comid = from_be16(&v100->number_comids);
-	opal_info->opal_v100_range_crossing = v100->range_crossing;
+	dev->feat_info.v100 = *v100;
 
 	return base_comid;
 }
@@ -847,18 +814,9 @@ static uint16_t
 opal_get_comid_v200(struct spdk_opal_dev *dev, const void *data)
 {
 	const struct spdk_opal_d0_v200_feat *v200 = data;
-	struct spdk_opal_info *opal_info = dev->opal_info;
 	uint16_t base_comid = from_be16(&v200->base_comid);
 
-	opal_info->opal_v200 = 1;
-	opal_info->opal_v200_base_comid = base_comid;
-	opal_info->opal_v200_num_comid = from_be16(&v200->num_comids);
-	opal_info->opal_v200_range_crossing = v200->range_crossing;
-	opal_info->opal_v200_num_admin = from_be16(&v200->num_locking_admin_auth);
-	opal_info->opal_v200_num_user = from_be16(&v200->num_locking_user_auth);
-
-	opal_info->opal_v200_initial_pin = v200->initial_pin;
-	opal_info->opal_v200_reverted_pin = v200->reverted_pin;
+	dev->feat_info.v200 = *v200;
 
 	return base_comid;
 }
@@ -999,7 +957,6 @@ spdk_opal_close(struct spdk_opal_dev *dev)
 			spdk_opal_free_locking_range_info(dev, i);
 		}
 	}
-	free(dev->opal_info);
 	free(dev);
 }
 
@@ -1886,7 +1843,6 @@ struct spdk_opal_dev *
 spdk_opal_init_dev(void *dev_handler)
 {
 	struct spdk_opal_dev *dev;
-	struct spdk_opal_info *info;
 
 	dev = calloc(1, sizeof(*dev));
 	if (!dev) {
@@ -1896,14 +1852,6 @@ spdk_opal_init_dev(void *dev_handler)
 
 	dev->dev_handler = dev_handler;
 
-	info = calloc(1, sizeof(struct spdk_opal_info));
-	if (info == NULL) {
-		free(dev);
-		SPDK_ERRLOG("Memory allocation failed\n");
-		return NULL;
-	}
-
-	dev->opal_info = info;
 	if (opal_check_support(dev) != 0) {
 		SPDK_INFOLOG(SPDK_LOG_OPAL, "Opal is not supported on this device\n");
 		dev->supported = false;
@@ -1911,7 +1859,6 @@ spdk_opal_init_dev(void *dev_handler)
 
 	if (pthread_mutex_init(&dev->mutex_lock, NULL)) {
 		SPDK_ERRLOG("Mutex init failed\n");
-		free(dev->opal_info);
 		free(dev);
 		return NULL;
 	}
@@ -2630,10 +2577,10 @@ end:
 	return ret;
 }
 
-struct spdk_opal_info *
-spdk_opal_get_info(struct spdk_opal_dev *dev)
+struct spdk_opal_d0_features_info *
+spdk_opal_get_d0_features_info(struct spdk_opal_dev *dev)
 {
-	return dev->opal_info;
+	return &dev->feat_info;
 }
 
 bool
