@@ -1043,6 +1043,7 @@ nvme_request_remove_child(struct nvme_request *parent, struct nvme_request *chil
 	assert(parent->num_children != 0);
 
 	parent->num_children--;
+	child->parent = NULL;
 	TAILQ_REMOVE(&parent->children, child, child_tailq);
 }
 
