@@ -283,7 +283,92 @@ spdk_nvme_ctrlr_get_default_io_qpair_opts(struct spdk_nvme_ctrlr *ctrlr,
 		opts->cq.buffer_size = 0;
 	}
 
+	if (FIELD_OK(create_only)) {
+		opts->create_only = false;
+	}
+
 #undef FIELD_OK
+}
+
+static struct spdk_nvme_qpair *
+nvme_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
+			   const struct spdk_nvme_io_qpair_opts *opts)
+{
+	uint32_t				qid;
+	struct spdk_nvme_qpair			*qpair;
+	union spdk_nvme_cc_register		cc;
+
+	if (!ctrlr) {
+		return NULL;
+	}
+
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	if (nvme_ctrlr_get_cc(ctrlr, &cc)) {
+		SPDK_ERRLOG("get_cc failed\n");
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+		return NULL;
+	}
+
+	if (opts->qprio & ~SPDK_NVME_CREATE_IO_SQ_QPRIO_MASK) {
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+		return NULL;
+	}
+
+	/*
+	 * Only value SPDK_NVME_QPRIO_URGENT(0) is valid for the
+	 * default round robin arbitration method.
+	 */
+	if ((cc.bits.ams == SPDK_NVME_CC_AMS_RR) && (opts->qprio != SPDK_NVME_QPRIO_URGENT)) {
+		SPDK_ERRLOG("invalid queue priority for default round robin arbitration method\n");
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+		return NULL;
+	}
+
+	/*
+	 * Get the first available I/O queue ID.
+	 */
+	qid = spdk_bit_array_find_first_set(ctrlr->free_io_qids, 1);
+	if (qid > ctrlr->opts.num_io_queues) {
+		SPDK_ERRLOG("No free I/O queue IDs\n");
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+		return NULL;
+	}
+
+	qpair = nvme_transport_ctrlr_create_io_qpair(ctrlr, qid, opts);
+	if (qpair == NULL) {
+		SPDK_ERRLOG("nvme_transport_ctrlr_create_io_qpair() failed\n");
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+		return NULL;
+	}
+
+	spdk_bit_array_clear(ctrlr->free_io_qids, qid);
+	TAILQ_INSERT_TAIL(&ctrlr->active_io_qpairs, qpair, tailq);
+
+	nvme_ctrlr_proc_add_io_qpair(qpair);
+
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	return qpair;
+}
+
+int
+spdk_nvme_ctrlr_connect_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+{
+	int rc;
+
+	if (nvme_qpair_get_state(qpair) != NVME_QPAIR_DISABLED) {
+		return -EISCONN;
+	}
+
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	rc = nvme_transport_ctrlr_connect_qpair(ctrlr, qpair);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	if (ctrlr->quirks & NVME_QUIRK_DELAY_AFTER_QUEUE_ALLOC) {
+		spdk_delay_us(100);
+	}
+
+	return rc;
 }
 
 struct spdk_nvme_qpair *
@@ -291,15 +376,10 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 			       const struct spdk_nvme_io_qpair_opts *user_opts,
 			       size_t opts_size)
 {
-	uint32_t				qid;
-	int					rc;
-	struct spdk_nvme_qpair			*qpair;
-	union spdk_nvme_cc_register		cc;
-	struct spdk_nvme_io_qpair_opts		opts;
 
-	if (!ctrlr) {
-		return NULL;
-	}
+	struct spdk_nvme_qpair		*qpair;
+	struct spdk_nvme_io_qpair_opts	opts;
+	int				rc;
 
 	/*
 	 * Get the default options, then overwrite them with the user-provided options
@@ -329,62 +409,17 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 		}
 	}
 
-	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
-	if (nvme_ctrlr_get_cc(ctrlr, &cc)) {
-		SPDK_ERRLOG("get_cc failed\n");
-		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
-		return NULL;
+	qpair = nvme_ctrlr_create_io_qpair(ctrlr, &opts);
+
+	if (qpair == NULL || opts.create_only == true) {
+		return qpair;
 	}
 
-	if (opts.qprio & ~SPDK_NVME_CREATE_IO_SQ_QPRIO_MASK) {
-		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
-		return NULL;
-	}
-
-	/*
-	 * Only value SPDK_NVME_QPRIO_URGENT(0) is valid for the
-	 * default round robin arbitration method.
-	 */
-	if ((cc.bits.ams == SPDK_NVME_CC_AMS_RR) && (opts.qprio != SPDK_NVME_QPRIO_URGENT)) {
-		SPDK_ERRLOG("invalid queue priority for default round robin arbitration method\n");
-		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
-		return NULL;
-	}
-
-	/*
-	 * Get the first available I/O queue ID.
-	 */
-	qid = spdk_bit_array_find_first_set(ctrlr->free_io_qids, 1);
-	if (qid > ctrlr->opts.num_io_queues) {
-		SPDK_ERRLOG("No free I/O queue IDs\n");
-		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
-		return NULL;
-	}
-
-	qpair = nvme_transport_ctrlr_create_io_qpair(ctrlr, qid, &opts);
-	if (qpair == NULL) {
-		SPDK_ERRLOG("nvme_transport_ctrlr_create_io_qpair() failed\n");
-		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
-		return NULL;
-	}
-
-	rc = nvme_transport_ctrlr_connect_qpair(ctrlr, qpair);
+	rc = spdk_nvme_ctrlr_connect_io_qpair(ctrlr, qpair);
 	if (rc != 0) {
 		SPDK_ERRLOG("nvme_transport_ctrlr_connect_io_qpair() failed\n");
-		nvme_transport_ctrlr_disconnect_qpair(ctrlr, qpair);
 		nvme_transport_ctrlr_delete_io_qpair(ctrlr, qpair);
-		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return NULL;
-	}
-	spdk_bit_array_clear(ctrlr->free_io_qids, qid);
-	TAILQ_INSERT_TAIL(&ctrlr->active_io_qpairs, qpair, tailq);
-
-	nvme_ctrlr_proc_add_io_qpair(qpair);
-
-	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
-
-	if (ctrlr->quirks & NVME_QUIRK_DELAY_AFTER_QUEUE_ALLOC) {
-		spdk_delay_us(100);
 	}
 
 	return qpair;

@@ -1147,6 +1147,13 @@ struct spdk_nvme_io_qpair_opts {
 		uint64_t paddr;
 		uint64_t buffer_size;
 	} cq;
+
+	/**
+	 * This flag indicates to the alloc_io_qpair function that it should not perform
+	 * the connect portion on this qpair. This allows the user to add the qpair to a
+	 * poll group and then connect it later.
+	 */
+	bool create_only;
 };
 
 /**
@@ -1164,6 +1171,10 @@ void spdk_nvme_ctrlr_get_default_io_qpair_opts(struct spdk_nvme_ctrlr *ctrlr,
 /**
  * Allocate an I/O queue pair (submission and completion queue).
  *
+ * This function by default also performs any connection activities required for
+ * a newly created qpair. To avoid that behavior, the user should set the create_only
+ * flag in the opts structure to true.
+ *
  * Each queue pair should only be used from a single thread at a time (mutual
  * exclusion must be enforced by the user).
  *
@@ -1180,6 +1191,27 @@ struct spdk_nvme_qpair *spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *c
 		size_t opts_size);
 
 /**
+ * Connect a newly created I/O qpair.
+ *
+ * This function does any connection activities required for a newly created qpair.
+ * It should be called after spdk_nvme_ctrlr_alloc_io_qpair has been called with the
+ * create_only flag set to true in the spdk_nvme_io_qpair_opts structure.
+ *
+ * This call will fail if performed on a qpair that is already connected.
+ * For reconnecting qpairs, see spdk_nvme_ctrlr_reconnect_io_qpair.
+ *
+ * For fabrics like TCP and RDMA, this function actually sends the commands over the wire
+ * that connect the qpair. For PCIe, this function performs some internal state machine operations.
+ *
+ * \param ctrlr NVMe controller for which to allocate the I/O queue pair.
+ * \param qpair Opaque handle to the qpair to connect.
+ *
+ * return 0 on success or negated errno on failure. Specifically -EISCONN if the qpair is already connected.
+ *
+ */
+int spdk_nvme_ctrlr_connect_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair);
+
+/**
  * Attempt to reconnect the given qpair.
  *
  * This function is intended to be called on qpairs that have already been connected,
@@ -1187,6 +1219,13 @@ struct spdk_nvme_qpair *spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *c
  * either spdk_nvme_qpair_process_completions or one of the spdk_nvme_ns_cmd_* functions.
  * This function must be called from the same thread as spdk_nvme_qpair_process_completions
  * and the spdk_nvme_ns_cmd_* functions.
+ *
+ * Calling this function has the same effect as calling spdk_nvme_ctrlr_disconnect_io_qpair
+ * followed by spdk_nvme_ctrlr_connect_io_qpair.
+ *
+ * This function may be called on newly created qpairs, but it does extra checks and attempts
+ * to disconnect the qpair before connecting it. The recommended API for newly created qpairs
+ * is spdk_nvme_ctrlr_connect_io_qpair.
  *
  * \param qpair The qpair to reconnect.
  *
