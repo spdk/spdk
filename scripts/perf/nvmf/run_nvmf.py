@@ -202,7 +202,7 @@ class Target(Server):
 
 
 class Initiator(Server):
-    def __init__(self, name, username, password, mode, nic_ips, ip, transport="rdma",
+    def __init__(self, name, username, password, mode, nic_ips, ip, transport="rdma", cpu_frequency=None,
                  nvmecli_bin="nvme", workspace="/tmp/spdk", cpus_allowed=None, fio_bin="/usr/src/fio/fio"):
 
         super(Initiator, self).__init__(name, username, password, mode, nic_ips, transport)
@@ -211,12 +211,14 @@ class Initiator(Server):
         self.spdk_dir = workspace
         self.fio_bin = fio_bin
         self.cpus_allowed = cpus_allowed
+        self.cpu_frequency = cpu_frequency
         self.nvmecli_bin = nvmecli_bin
         self.ssh_connection = paramiko.SSHClient()
         self.ssh_connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.ssh_connection.connect(self.ip, username=self.username, password=self.password)
         self.remote_call("sudo rm -rf %s/nvmf_perf" % self.spdk_dir)
         self.remote_call("mkdir -p %s" % self.spdk_dir)
+        self.set_cpu_frequency()
 
     def __del__(self):
         self.ssh_connection.close()
@@ -354,10 +356,22 @@ runtime={run_time}
 
         return os.path.join(self.spdk_dir, "nvmf_perf", fio_config_filename)
 
+    def set_cpu_frequency(self):
+        if self.cpu_frequency is not None:
+            try:
+                self.remote_call('sudo cpupower frequency-set -g userspace')
+                self.remote_call('sudo cpupower frequency-set -f %s' % self.cpu_frequency)
+            except Exception:
+                self.log_print("ERROR: cpu_frequency will not work when intel_pstate is enabled!")
+                sys.exit()
+        else:
+            self.log_print("WARNING: you have disabled intel_pstate and using default cpu governance.")
+
     def run_fio(self, fio_config_file, run_num=None):
         job_name, _ = os.path.splitext(fio_config_file)
         self.log_print("Starting FIO run for job: %s" % job_name)
         self.log_print("Using FIO: %s" % self.fio_bin)
+
         if run_num:
             for i in range(1, run_num + 1):
                 output_filename = job_name + "_run_" + str(i) + "_" + self.name + ".json"
