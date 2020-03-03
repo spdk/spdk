@@ -43,7 +43,7 @@
 
 #include "spdk/bdev_module.h"
 #include "spdk/conf.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk/string.h"
 #include "spdk_internal/log.h"
 #include "spdk/cpuset.h"

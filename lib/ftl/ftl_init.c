@@ -33,7 +33,7 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/nvme.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk/string.h"
 #include "spdk/likely.h"
 #include "spdk_internal/log.h"

@@ -24,6 +24,9 @@ library through the `spdk_vmd_init` call.
 `--json-ignore-init-errors` command line param has been added to ignore initialization errors
 on JSON config load.
 
+The public header file io_channel.h has been removed. Please use thread.h which has the
+exact same API.
+
 ### crypto
 
 Support for AES_XTS was added for the QAT polled mode driver (pmd).  The create RPC

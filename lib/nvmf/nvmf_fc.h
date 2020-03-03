@@ -40,7 +40,7 @@
 #include "spdk/nvme_spec.h"
 #include "spdk/nvmf_fc_spec.h"
 #include "spdk/event.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "nvmf_internal.h"
 
 #define SPDK_NVMF_FC_TR_ADDR_LEN 64

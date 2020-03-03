@@ -35,7 +35,7 @@
 
 #include "spdk/bdev_module.h"
 #include "spdk/env.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk_internal/log.h"
 
 #include "data.h"

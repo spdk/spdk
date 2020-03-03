@@ -33,7 +33,7 @@
 
 #include "bdev_raid.h"
 #include "spdk/env.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk/conf.h"
 #include "spdk_internal/log.h"
 #include "spdk/string.h"
