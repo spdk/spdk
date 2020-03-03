@@ -97,9 +97,10 @@ success or failure.
 
 A [Vagrant](https://www.vagrantup.com/downloads.html) setup is also provided
 to create a Linux VM with a virtual NVMe controller to get up and running
-quickly.  Currently this has only been tested on MacOS and Ubuntu 16.04.2 LTS
-with the [VirtualBox](https://www.virtualbox.org/wiki/Downloads) provider.  The
-[VirtualBox Extension Pack](https://www.virtualbox.org/wiki/Downloads) must
+quickly.  Currently this has been tested on MacOS, Ubuntu 16.04.2 LTS and
+Ubuntu 18.04.3 LTS with the VirtualBox and Libvirt provider.
+The [VirtualBox Extension Pack](https://www.virtualbox.org/wiki/Downloads)
+or [Vagrant Libvirt] (https://github.com/vagrant-libvirt/vagrant-libvirt) must
 also be installed in order to get the required NVMe support.
 
 Details on the Vagrant setup can be found in the
