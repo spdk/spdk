@@ -1816,8 +1816,8 @@ static struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_
 	}
 
 	rctrlr->ctrlr.adminq = nvme_rdma_ctrlr_create_qpair(&rctrlr->ctrlr, 0,
-			       SPDK_NVMF_MIN_ADMIN_QUEUE_ENTRIES, 0, SPDK_NVMF_MIN_ADMIN_QUEUE_ENTRIES,
-			       false);
+			       rctrlr->ctrlr.opts.admin_queue_size, 0,
+			       rctrlr->ctrlr.opts.admin_queue_size, false);
 	if (!rctrlr->ctrlr.adminq) {
 		SPDK_ERRLOG("failed to create admin qpair\n");
 		nvme_rdma_ctrlr_destruct(&rctrlr->ctrlr);

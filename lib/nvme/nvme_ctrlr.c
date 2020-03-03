@@ -178,6 +178,10 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 	if (FIELD_OK(transport_ack_timeout)) {
 		opts->transport_ack_timeout = SPDK_NVME_DEFAULT_TRANSPORT_ACK_TIMEOUT;
 	}
+
+	if (FIELD_OK(admin_queue_size)) {
+		opts->admin_queue_size = DEFAULT_ADMIN_QUEUE_SIZE;
+	}
 #undef FIELD_OK
 }
 
@@ -2574,6 +2578,18 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT_DELAY, NVME_TIMEOUT_INFINITE);
 	} else {
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT, NVME_TIMEOUT_INFINITE);
+	}
+
+	if (ctrlr->opts.admin_queue_size > SPDK_NVME_ADMIN_QUEUE_MAX_ENTRIES) {
+		SPDK_ERRLOG("admin_queue_size %u exceeds max defined by NVMe spec, use max value\n",
+			    ctrlr->opts.admin_queue_size);
+		ctrlr->opts.admin_queue_size = SPDK_NVME_ADMIN_QUEUE_MAX_ENTRIES;
+	}
+
+	if (ctrlr->opts.admin_queue_size < SPDK_NVME_ADMIN_QUEUE_MIN_ENTRIES) {
+		SPDK_ERRLOG("admin_queue_size %u is less than minimum defined by NVMe spec, use min value\n",
+			    ctrlr->opts.admin_queue_size);
+		ctrlr->opts.admin_queue_size = SPDK_NVME_ADMIN_QUEUE_MIN_ENTRIES;
 	}
 
 	ctrlr->flags = 0;

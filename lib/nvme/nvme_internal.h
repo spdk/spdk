@@ -151,10 +151,10 @@ extern pid_t g_spdk_nvme_pid;
  *  try to configure, if available.
  */
 #define DEFAULT_MAX_IO_QUEUES		(1024)
+#define DEFAULT_ADMIN_QUEUE_SIZE	(32)
 #define DEFAULT_IO_QUEUE_SIZE		(256)
 #define DEFAULT_IO_QUEUE_SIZE_FOR_QUIRK	(1024) /* Matches Linux kernel driver */
 
-#define DEFAULT_ADMIN_QUEUE_REQUESTS	(32)
 #define DEFAULT_IO_QUEUE_REQUESTS	(512)
 
 #define SPDK_NVME_DEFAULT_RETRY_COUNT	(4)

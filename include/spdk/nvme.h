@@ -234,6 +234,11 @@ struct spdk_nvme_ctrlr_opts {
 	 * 4.096 * 2^(transport_ack_timeout) usec.
 	 */
 	uint8_t transport_ack_timeout;
+
+	/**
+	 * The queue depth of NVMe Admin queue.
+	 */
+	uint16_t admin_queue_size;
 };
 
 /**

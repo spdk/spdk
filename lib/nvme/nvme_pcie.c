@@ -50,8 +50,6 @@
 #define NVME_MIN_COMPLETIONS	(1)
 #define NVME_MAX_COMPLETIONS	(128)
 
-#define NVME_ADMIN_ENTRIES	(128)
-
 /*
  * NVME_MAX_SGL_DESCRIPTORS defines the maximum number of descriptors in one SGL
  *  segment.
@@ -673,7 +671,7 @@ nvme_pcie_ctrlr_free_bars(struct nvme_pcie_ctrlr *pctrlr)
 }
 
 static int
-nvme_pcie_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr)
+nvme_pcie_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t num_entries)
 {
 	struct nvme_pcie_qpair *pqpair;
 	int rc;
@@ -683,7 +681,7 @@ nvme_pcie_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr)
 		return -ENOMEM;
 	}
 
-	pqpair->num_entries = NVME_ADMIN_ENTRIES;
+	pqpair->num_entries = num_entries;
 	pqpair->flags.delay_cmd_submit = 0;
 
 	ctrlr->adminq = &pqpair->qpair;
@@ -692,7 +690,7 @@ nvme_pcie_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr)
 			     0, /* qpair ID */
 			     ctrlr,
 			     SPDK_NVME_QPRIO_URGENT,
-			     NVME_ADMIN_ENTRIES);
+			     num_entries);
 	if (rc != 0) {
 		return rc;
 	}
@@ -856,7 +854,7 @@ static struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_
 	pci_id = spdk_pci_device_get_id(pci_dev);
 	pctrlr->ctrlr.quirks = nvme_get_quirks(&pci_id);
 
-	rc = nvme_pcie_ctrlr_construct_admin_qpair(&pctrlr->ctrlr);
+	rc = nvme_pcie_ctrlr_construct_admin_qpair(&pctrlr->ctrlr, pctrlr->ctrlr.opts.admin_queue_size);
 	if (rc != 0) {
 		nvme_ctrlr_destruct(&pctrlr->ctrlr);
 		return NULL;

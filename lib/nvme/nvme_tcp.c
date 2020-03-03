@@ -1620,7 +1620,8 @@ static struct spdk_nvme_ctrlr *nvme_tcp_ctrlr_construct(const struct spdk_nvme_t
 	}
 
 	tctrlr->ctrlr.adminq = nvme_tcp_ctrlr_create_qpair(&tctrlr->ctrlr, 0,
-			       SPDK_NVMF_MIN_ADMIN_QUEUE_ENTRIES, 0, SPDK_NVMF_MIN_ADMIN_QUEUE_ENTRIES);
+			       tctrlr->ctrlr.opts.admin_queue_size, 0,
+			       tctrlr->ctrlr.opts.admin_queue_size);
 	if (!tctrlr->ctrlr.adminq) {
 		SPDK_ERRLOG("failed to create admin qpair\n");
 		nvme_tcp_ctrlr_destruct(&tctrlr->ctrlr);
