@@ -1572,12 +1572,6 @@ nvme_tcp_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 		return NULL;
 	}
 
-	rc = nvme_transport_ctrlr_connect_qpair(ctrlr, qpair);
-	if (rc < 0) {
-		nvme_tcp_ctrlr_delete_io_qpair(ctrlr, qpair);
-		return NULL;
-	}
-
 	return qpair;
 }
 
@@ -1618,6 +1612,13 @@ static struct spdk_nvme_ctrlr *nvme_tcp_ctrlr_construct(const struct spdk_nvme_t
 			       tctrlr->ctrlr.opts.admin_queue_size);
 	if (!tctrlr->ctrlr.adminq) {
 		SPDK_ERRLOG("failed to create admin qpair\n");
+		nvme_tcp_ctrlr_destruct(&tctrlr->ctrlr);
+		return NULL;
+	}
+
+	rc = nvme_transport_ctrlr_connect_qpair(&tctrlr->ctrlr, tctrlr->ctrlr.adminq);
+	if (rc < 0) {
+		SPDK_ERRLOG("failed to connect admin qpair\n");
 		nvme_tcp_ctrlr_destruct(&tctrlr->ctrlr);
 		return NULL;
 	}

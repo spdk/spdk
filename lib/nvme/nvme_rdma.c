@@ -1642,13 +1642,6 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	}
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "RDMA responses allocated\n");
 
-	rc = nvme_transport_ctrlr_connect_qpair(ctrlr, qpair);
-
-	if (rc < 0) {
-		nvme_rdma_ctrlr_delete_io_qpair(ctrlr, qpair);
-		return NULL;
-	}
-
 	return qpair;
 }
 
@@ -1833,6 +1826,13 @@ static struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_
 			       rctrlr->ctrlr.opts.admin_queue_size, false);
 	if (!rctrlr->ctrlr.adminq) {
 		SPDK_ERRLOG("failed to create admin qpair\n");
+		nvme_rdma_ctrlr_destruct(&rctrlr->ctrlr);
+		return NULL;
+	}
+
+	rc = nvme_transport_ctrlr_connect_qpair(&rctrlr->ctrlr, rctrlr->ctrlr.adminq);
+	if (rc < 0) {
+		SPDK_ERRLOG("failed to connect admin qpair\n");
 		nvme_rdma_ctrlr_destruct(&rctrlr->ctrlr);
 		return NULL;
 	}
