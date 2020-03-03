@@ -1630,6 +1630,7 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "rc =%d\n", rc);
 	if (rc) {
 		SPDK_ERRLOG("Unable to allocate rqpair RDMA requests\n");
+		free(rqpair);
 		return NULL;
 	}
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "RDMA requests allocated\n");
@@ -1638,6 +1639,8 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "rc =%d\n", rc);
 	if (rc < 0) {
 		SPDK_ERRLOG("Unable to allocate rqpair RDMA responses\n");
+		nvme_rdma_free_reqs(rqpair);
+		free(rqpair);
 		return NULL;
 	}
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "RDMA responses allocated\n");
