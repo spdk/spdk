@@ -1100,7 +1100,7 @@ nvme_rdma_unregister_mem(struct nvme_rdma_qpair *rqpair)
 }
 
 static int
-nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+_nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
 	struct sockaddr_storage dst_addr;
 	struct sockaddr_storage src_addr;
@@ -1205,6 +1205,32 @@ nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qp
 	}
 
 	return 0;
+}
+
+static int
+nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+{
+	int rc;
+	int retry_count = 0;
+
+	rc = _nvme_rdma_ctrlr_connect_qpair(ctrlr, qpair);
+
+	/*
+	 * -EAGAIN represents the special case where the target side still thought it was connected.
+	 * Most NICs will fail the first connection attempt, and the NICs will clean up whatever
+	 * state they need to. After that, subsequent connection attempts will succeed.
+	 */
+	if (rc == -EAGAIN) {
+		SPDK_NOTICELOG("Detected stale connection on Target side for qpid: %d\n", qpair->id);
+		do {
+			nvme_delay(NVME_RDMA_STALE_CONN_RETRY_DELAY_US);
+			nvme_transport_ctrlr_disconnect_qpair(ctrlr, qpair);
+			rc = _nvme_rdma_ctrlr_connect_qpair(ctrlr, qpair);
+			retry_count++;
+		} while (rc == -EAGAIN && retry_count < NVME_RDMA_STALE_CONN_RETRY_MAX);
+	}
+
+	return rc == -EAGAIN ? -1 : rc;
 }
 
 /*
@@ -1584,7 +1610,7 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 {
 	struct nvme_rdma_qpair *rqpair;
 	struct spdk_nvme_qpair *qpair;
-	int rc, retry_count = 0;
+	int rc;
 
 	rqpair = calloc(1, sizeof(struct nvme_rdma_qpair));
 	if (!rqpair) {
@@ -1617,21 +1643,6 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "RDMA responses allocated\n");
 
 	rc = nvme_transport_ctrlr_connect_qpair(ctrlr, qpair);
-
-	/*
-	 * -EAGAIN represents the special case where the target side still thought it was connected.
-	 * Most NICs will fail the first connection attempt, and the NICs will clean up whatever
-	 * state they need to. After that, subsequent connection attempts will succeed.
-	 */
-	if (rc == -EAGAIN) {
-		SPDK_NOTICELOG("Detected stale connection on Target side for qpid: %d\n", rqpair->qpair.id);
-		do {
-			nvme_delay(NVME_RDMA_STALE_CONN_RETRY_DELAY_US);
-			nvme_transport_ctrlr_disconnect_qpair(ctrlr, &rqpair->qpair);
-			rc = nvme_transport_ctrlr_connect_qpair(ctrlr, &rqpair->qpair);
-			retry_count++;
-		} while (rc == -EAGAIN && retry_count < NVME_RDMA_STALE_CONN_RETRY_MAX);
-	}
 
 	if (rc < 0) {
 		nvme_rdma_ctrlr_delete_io_qpair(ctrlr, qpair);
