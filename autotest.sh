@@ -34,7 +34,7 @@ timing_enter autotest
 create_test_list
 
 src=$(readlink -f $(dirname $0))
-out=$PWD
+out=$output_dir
 cd $src
 
 ./scripts/setup.sh status
@@ -56,7 +56,7 @@ if hash lcov; then
 	# Print lcov version to log
 	$LCOV -v
 	# zero out coverage data
-	$LCOV -q -c -i -t "Baseline" -d $src -o cov_base.info
+	$LCOV -q -c -i -t "Baseline" -d $src -o $out/cov_base.info
 fi
 
 # Make sure the disks are clean (no leftover partition tables)
@@ -309,8 +309,8 @@ process_core
 
 if hash lcov; then
 	# generate coverage data and combine with baseline
-	$LCOV -q -c -d $src -t "$(hostname)" -o cov_test.info
-	$LCOV -q -a cov_base.info -a cov_test.info -o $out/cov_total.info
+	$LCOV -q -c -d $src -t "$(hostname)" -o $out/cov_test.info
+	$LCOV -q -a $out/cov_base.info -a $out/cov_test.info -o $out/cov_total.info
 	$LCOV -q -r $out/cov_total.info '*/dpdk/*' -o $out/cov_total.info
 	$LCOV -q -r $out/cov_total.info '/usr/*' -o $out/cov_total.info
 	git clean -f "*.gcda"
