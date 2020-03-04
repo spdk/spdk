@@ -188,6 +188,8 @@ struct nvme_rdma_qpair {
 struct spdk_nvme_rdma_req {
 	int					id;
 
+	bool					request_ready_to_put;
+
 	struct ibv_send_wr			send_wr;
 
 	struct nvme_request			*req;
@@ -195,8 +197,6 @@ struct spdk_nvme_rdma_req {
 	struct ibv_sge				send_sgl[NVME_RDMA_DEFAULT_TX_SGE];
 
 	TAILQ_ENTRY(spdk_nvme_rdma_req)		link;
-
-	bool					request_ready_to_put;
 };
 
 static const char *rdma_cm_event_str[] = {
