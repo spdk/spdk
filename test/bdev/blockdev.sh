@@ -36,36 +36,25 @@ function start_spdk_tgt() {
 }
 
 function setup_bdev_conf() {
-# Create a file to be used as an AIO backend
-dd if=/dev/zero of=/tmp/aiofile bs=2048 count=5000
-
-	cat >$conf_file <<-EOF
-		[AIO]
-		  AIO /tmp/aiofile AIO0 2048
-
-		[Malloc]
-		  NumberOfLuns 6
-		  LunSizeInMB 32
-
-		[Split]
-		  Split Malloc1 2
-		  Split Malloc2 8 4
-
-		[Passthru]
-		  PT Malloc3 TestPT
-
-		# FIXME: QoS doesn't work properly with json_config: issue 1146
-		# [QoS]
-		#  Limit_IOPS Malloc0 20000
-		#  Limit_BPS Malloc3 100
-
-		[RAID0]
-		  Name raid0
-		  StripSize 64
-		  NumDevices 2
-		  RaidLevel 0
-		  Devices Malloc4 Malloc5
-	EOF
+	"$rpc_py" <<-RPC
+		bdev_split_create Malloc1 2
+		bdev_split_create -s 4 Malloc2 8
+		bdev_malloc_create -b Malloc0 32 512
+		bdev_malloc_create -b Malloc1 32 512
+		bdev_malloc_create -b Malloc2 32 512
+		bdev_malloc_create -b Malloc3 32 512
+		bdev_malloc_create -b Malloc4 32 512
+		bdev_malloc_create -b Malloc5 32 512
+		bdev_passthru_create -p TestPT -b Malloc3
+		bdev_raid_create -n raid0 -z 64 -r 0 -b "Malloc4 Malloc5"
+	RPC
+	# FIXME: QoS doesn't work properly with json_config, see issue 1146
+	#$rpc_py bdev_set_qos_limit --rw_mbytes_per_sec 100 Malloc3
+	#$rpc_py bdev_set_qos_limit --rw_ios_per_sec 20000 Malloc0
+	if [[ $(uname -s) != "FreeBSD" ]]; then
+		dd if=/dev/zero of=/tmp/aiofile bs=2048 count=5000
+		"$rpc_py" bdev_aio_create "/tmp/aiofile" AIO0 2048
+	fi
 }
 
 function setup_nvme_conf() {
@@ -307,7 +296,8 @@ fi
 
 test_type=${1:-bdev}
 case "$test_type" in
-	bdev ) setup_bdev_conf;;
+	bdev )
+		start_spdk_tgt; setup_bdev_conf;;
 	nvme )
 		setup_nvme_conf;;
 	gpt )
