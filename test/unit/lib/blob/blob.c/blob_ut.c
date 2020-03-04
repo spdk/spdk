@@ -82,6 +82,8 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_bs_super_block_ver1) == 0x1000, "Invalid s
 static struct spdk_blob *ut_blob_create_and_open(struct spdk_blob_store *bs,
 		struct spdk_blob_opts *blob_opts);
 static void ut_blob_close_and_delete(struct spdk_blob_store *bs, struct spdk_blob *blob);
+static void suite_blob_setup(void);
+static void suite_blob_cleanup(void);
 
 static void
 _get_xattr_value(void *arg, const char *name,
@@ -5209,6 +5211,65 @@ blob_relations2(void)
 }
 
 static void
+blobstore_clean_power_failure(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_blob *blob;
+	struct spdk_power_failure_thresholds thresholds = {};
+	bool clean = false;
+	struct spdk_bs_super_block *super = (struct spdk_bs_super_block *)&g_dev_buffer[0];
+	struct spdk_bs_super_block super_copy = {};
+
+	thresholds.general_threshold = 1;
+	while (!clean) {
+		/* Create bs and blob */
+		suite_blob_setup();
+		SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+		SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+		bs = g_bs;
+		blob = g_blob;
+
+		/* Super block should not change for rest of the UT,
+		 * save it and compare later. */
+		memcpy(&super_copy, super, sizeof(struct spdk_bs_super_block));
+		SPDK_CU_ASSERT_FATAL(super->clean == 0);
+		SPDK_CU_ASSERT_FATAL(bs->clean == 0);
+
+		/* Force bs/super block in a clean state.
+		 * Along with marking blob dirty, to cause blob persist. */
+		blob->state = SPDK_BLOB_STATE_DIRTY;
+		bs->clean = 1;
+		super->clean = 1;
+		super->crc = _spdk_blob_md_page_calc_crc(super);
+
+		g_bserrno = -1;
+		dev_set_power_failure_thresholds(thresholds);
+		spdk_blob_sync_md(blob, blob_op_complete, NULL);
+		poll_threads();
+		dev_reset_power_failure_event();
+
+		if (g_bserrno == 0) {
+			/* After successful md sync, both bs and super block
+			 * should be marked as not clean. */
+			SPDK_CU_ASSERT_FATAL(bs->clean == 0);
+			SPDK_CU_ASSERT_FATAL(super->clean == 0);
+			clean = true;
+		}
+
+		/* Depending on the point of failure, super block was either updated or not. */
+		super_copy.clean = super->clean;
+		super_copy.crc = _spdk_blob_md_page_calc_crc(&super_copy);
+		/* Compare that the values in super block remained unchanged. */
+		SPDK_CU_ASSERT_FATAL(!memcmp(&super_copy, super, sizeof(struct spdk_bs_super_block)));
+
+		/* Delete blob and unload bs */
+		suite_blob_cleanup();
+
+		thresholds.general_threshold++;
+	}
+}
+
+static void
 blob_delete_snapshot_power_failure(void)
 {
 	struct spdk_bs_dev *dev;
@@ -6558,6 +6619,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite_bs, blob_snapshot_rw_iov);
 	CU_ADD_TEST(suite, blob_relations);
 	CU_ADD_TEST(suite, blob_relations2);
+	CU_ADD_TEST(suite, blobstore_clean_power_failure);
 	CU_ADD_TEST(suite, blob_delete_snapshot_power_failure);
 	CU_ADD_TEST(suite, blob_create_snapshot_power_failure);
 	CU_ADD_TEST(suite_bs, blob_inflate_rw);

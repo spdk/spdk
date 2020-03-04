@@ -2050,9 +2050,14 @@ _spdk_blob_persist_dirty_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_persist_ctx *ctx = cb_arg;
 
-	ctx->blob->bs->clean = 0;
-
 	spdk_free(ctx->super);
+
+	if (bserrno != 0) {
+		_spdk_blob_persist_complete(seq, ctx, bserrno);
+		return;
+	}
+
+	ctx->blob->bs->clean = 0;
 
 	_spdk_blob_persist_start(ctx);
 }
@@ -2066,6 +2071,12 @@ static void
 _spdk_blob_persist_dirty(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_persist_ctx *ctx = cb_arg;
+
+	if (bserrno != 0) {
+		spdk_free(ctx->super);
+		_spdk_blob_persist_complete(seq, ctx, bserrno);
+		return;
+	}
 
 	ctx->super->clean = 0;
 	if (ctx->super->size == 0) {
@@ -2082,8 +2093,7 @@ _spdk_blob_persist_check_dirty(struct spdk_blob_persist_ctx *ctx)
 		ctx->super = spdk_zmalloc(sizeof(*ctx->super), 0x1000, NULL,
 					  SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 		if (!ctx->super) {
-			ctx->cb_fn(ctx->seq, ctx->cb_arg, -ENOMEM);
-			free(ctx);
+			_spdk_blob_persist_complete(ctx->seq, ctx, -ENOMEM);
 			return;
 		}
 
