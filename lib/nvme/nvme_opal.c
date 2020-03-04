@@ -42,23 +42,6 @@ typedef int (*spdk_opal_cb)(struct spdk_opal_dev *dev, void *ctx);
 static int opal_parse_and_check_status(struct spdk_opal_dev *dev, void *data);
 
 static int
-opal_flush_response_buffer(struct spdk_opal_dev *dev)
-{
-	void *response = dev->resp;
-	int ret = 0;
-
-	ret = spdk_nvme_ctrlr_security_receive(dev->ctrlr, SPDK_SCSI_SECP_TCG, dev->comid,
-					       0, response, IO_BUFFER_LENGTH);
-	if (ret) {
-		SPDK_ERRLOG("Security Receive Error on dev = %p\n", dev);
-		return ret;
-	}
-
-	memset(response, 0, IO_BUFFER_LENGTH);
-	return 0;
-}
-
-static int
 opal_send_cmd(struct spdk_opal_dev *dev)
 {
 	return spdk_nvme_ctrlr_security_send(dev->ctrlr, SPDK_SCSI_SECP_TCG, dev->comid,
@@ -113,11 +96,6 @@ static int
 opal_send_recv(struct spdk_opal_dev *dev, spdk_opal_cb cb, void *data)
 {
 	int ret;
-
-	ret = opal_flush_response_buffer(dev);
-	if (ret) {
-		return ret;
-	}
 
 	ret = opal_send_cmd(dev);
 	if (ret) {
