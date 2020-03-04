@@ -41,8 +41,6 @@
 #include "spdk/string.h"
 #include "spdk/opal_spec.h"
 
-#define MAX_PASSWORD_SIZE 32 /* in byte */
-
 struct spdk_opal_d0_features_info {
 	struct spdk_opal_d0_tper_feat tper;
 	struct spdk_opal_d0_locking_feat locking;

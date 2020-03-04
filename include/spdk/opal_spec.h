@@ -79,6 +79,8 @@
 
 #define LOCKING_RANGE_NON_GLOBAL		0x03
 
+#define SPDK_OPAL_MAX_PASSWORD_SIZE		32 /* in bytes */
+
 /*
  * Feature Code
  */

@@ -996,7 +996,7 @@ opal_scan(struct dev *iter)
 static void
 opal_init(struct dev *iter)
 {
-	char new_passwd[MAX_PASSWORD_SIZE] = {0};
+	char new_passwd[SPDK_OPAL_MAX_PASSWORD_SIZE] = {0};
 	char *passwd_p;
 	int ret;
 	int ch;
@@ -1009,7 +1009,7 @@ opal_init(struct dev *iter)
 		if (spdk_opal_supported(iter->opal_dev)) {
 			printf("Please input the new password for ownership:");
 			while ((ch = getchar()) != '\n' && ch != EOF);
-			passwd_p = get_line(new_passwd, MAX_PASSWORD_SIZE, stdin, true);
+			passwd_p = get_line(new_passwd, SPDK_OPAL_MAX_PASSWORD_SIZE, stdin, true);
 			printf("\n...\n");
 			if (passwd_p) {
 				ret = spdk_opal_cmd_take_ownership(iter->opal_dev, passwd_p);
@@ -1050,7 +1050,7 @@ opal_locking_usage(void)
 static void
 opal_setup_lockingrange(struct dev *iter)
 {
-	char passwd[MAX_PASSWORD_SIZE] = {0};
+	char passwd[SPDK_OPAL_MAX_PASSWORD_SIZE] = {0};
 	char *passwd_p;
 	int ret;
 	int ch;
@@ -1067,7 +1067,7 @@ opal_setup_lockingrange(struct dev *iter)
 		if (spdk_opal_supported(iter->opal_dev)) {
 			printf("Please input the password for setting up locking range:");
 			while ((ch = getchar()) != '\n' && ch != EOF);
-			passwd_p = get_line(passwd, MAX_PASSWORD_SIZE, stdin, true);
+			passwd_p = get_line(passwd, SPDK_OPAL_MAX_PASSWORD_SIZE, stdin, true);
 			printf("\n");
 			if (passwd_p) {
 				printf("Specify locking range id:\n");
@@ -1132,7 +1132,7 @@ opal_setup_lockingrange(struct dev *iter)
 static void
 opal_list_locking_ranges(struct dev *iter)
 {
-	char passwd[MAX_PASSWORD_SIZE] = {0};
+	char passwd[SPDK_OPAL_MAX_PASSWORD_SIZE] = {0};
 	char *passwd_p;
 	int ret;
 	int ch;
@@ -1148,7 +1148,7 @@ opal_list_locking_ranges(struct dev *iter)
 		if (spdk_opal_supported(iter->opal_dev)) {
 			printf("Please input password:");
 			while ((ch = getchar()) != '\n' && ch != EOF);
-			passwd_p = get_line(passwd, MAX_PASSWORD_SIZE, stdin, true);
+			passwd_p = get_line(passwd, SPDK_OPAL_MAX_PASSWORD_SIZE, stdin, true);
 			printf("\n");
 			if (passwd_p) {
 				ret = spdk_opal_cmd_get_max_ranges(iter->opal_dev, passwd_p);
@@ -1199,9 +1199,9 @@ static void
 opal_new_user_enable(struct dev *iter)
 {
 	int user_id;
-	char passwd[MAX_PASSWORD_SIZE] = {0};
+	char passwd[SPDK_OPAL_MAX_PASSWORD_SIZE] = {0};
 	char *passwd_p;
-	char user_pw[MAX_PASSWORD_SIZE] = {0};
+	char user_pw[SPDK_OPAL_MAX_PASSWORD_SIZE] = {0};
 	char *user_pw_p;
 	int ret;
 	int ch;
@@ -1214,7 +1214,7 @@ opal_new_user_enable(struct dev *iter)
 		if (spdk_opal_supported(iter->opal_dev)) {
 			printf("Please input admin password:");
 			while ((ch = getchar()) != '\n' && ch != EOF);
-			passwd_p = get_line(passwd, MAX_PASSWORD_SIZE, stdin, true);
+			passwd_p = get_line(passwd, SPDK_OPAL_MAX_PASSWORD_SIZE, stdin, true);
 			printf("\n");
 			if (passwd_p) {
 				printf("which user to enable: ");
@@ -1232,7 +1232,7 @@ opal_new_user_enable(struct dev *iter)
 				}
 				printf("Please set a new password for this user:");
 				while ((ch = getchar()) != '\n' && ch != EOF);
-				user_pw_p = get_line(user_pw, MAX_PASSWORD_SIZE, stdin, true);
+				user_pw_p = get_line(user_pw, SPDK_OPAL_MAX_PASSWORD_SIZE, stdin, true);
 				if (user_pw_p == NULL) {
 					printf("Input password invalid. Enable user failure\n");
 					spdk_opal_dev_destruct(iter->opal_dev);
@@ -1262,9 +1262,9 @@ static void
 opal_change_password(struct dev *iter)
 {
 	int user_id;
-	char old_passwd[MAX_PASSWORD_SIZE] = {0};
+	char old_passwd[SPDK_OPAL_MAX_PASSWORD_SIZE] = {0};
 	char *old_passwd_p;
-	char new_passwd[MAX_PASSWORD_SIZE] = {0};
+	char new_passwd[SPDK_OPAL_MAX_PASSWORD_SIZE] = {0};
 	char *new_passwd_p;
 	int ret;
 	int ch;
@@ -1283,11 +1283,11 @@ opal_change_password(struct dev *iter)
 			}
 			printf("Password:");
 			while ((ch = getchar()) != '\n' && ch != EOF);
-			old_passwd_p = get_line(old_passwd, MAX_PASSWORD_SIZE, stdin, true);
+			old_passwd_p = get_line(old_passwd, SPDK_OPAL_MAX_PASSWORD_SIZE, stdin, true);
 			printf("\n");
 			if (old_passwd_p) {
 				printf("Please input new password:\n");
-				new_passwd_p = get_line(new_passwd, MAX_PASSWORD_SIZE, stdin, true);
+				new_passwd_p = get_line(new_passwd, SPDK_OPAL_MAX_PASSWORD_SIZE, stdin, true);
 				printf("\n");
 				if (new_passwd_p == NULL) {
 					printf("Input password invalid. Change password failure\n");
@@ -1318,7 +1318,7 @@ static void
 opal_add_user_to_locking_range(struct dev *iter)
 {
 	int locking_range_id, user_id;
-	char passwd[MAX_PASSWORD_SIZE] = {0};
+	char passwd[SPDK_OPAL_MAX_PASSWORD_SIZE] = {0};
 	char *passwd_p;
 	int ret;
 	int ch;
@@ -1331,7 +1331,7 @@ opal_add_user_to_locking_range(struct dev *iter)
 		if (spdk_opal_supported(iter->opal_dev)) {
 			printf("Please input admin password:");
 			while ((ch = getchar()) != '\n' && ch != EOF);
-			passwd_p = get_line(passwd, MAX_PASSWORD_SIZE, stdin, true);
+			passwd_p = get_line(passwd, SPDK_OPAL_MAX_PASSWORD_SIZE, stdin, true);
 			printf("\n");
 			if (passwd_p) {
 				printf("Specify locking range id:\n");
@@ -1376,7 +1376,7 @@ opal_add_user_to_locking_range(struct dev *iter)
 static void
 opal_user_lock_unlock_range(struct dev *iter)
 {
-	char passwd[MAX_PASSWORD_SIZE] = {0};
+	char passwd[SPDK_OPAL_MAX_PASSWORD_SIZE] = {0};
 	char *passwd_p;
 	int ch;
 	int ret;
@@ -1400,7 +1400,7 @@ opal_user_lock_unlock_range(struct dev *iter)
 
 			printf("Please input password:");
 			while ((ch = getchar()) != '\n' && ch != EOF);
-			passwd_p = get_line(passwd, MAX_PASSWORD_SIZE, stdin, true);
+			passwd_p = get_line(passwd, SPDK_OPAL_MAX_PASSWORD_SIZE, stdin, true);
 			printf("\n");
 			if (passwd_p) {
 				printf("Specify locking range id:\n");
@@ -1453,7 +1453,7 @@ opal_user_lock_unlock_range(struct dev *iter)
 static void
 opal_revert_tper(struct dev *iter)
 {
-	char passwd[MAX_PASSWORD_SIZE] = {0};
+	char passwd[SPDK_OPAL_MAX_PASSWORD_SIZE] = {0};
 	char *passwd_p;
 	int ret;
 	int ch;
@@ -1468,7 +1468,7 @@ opal_revert_tper(struct dev *iter)
 			printf("Please don't ternminate this excecution. Otherwise undefined error may occur\n");
 			printf("Please input password for revert TPer:");
 			while ((ch = getchar()) != '\n' && ch != EOF);
-			passwd_p = get_line(passwd, MAX_PASSWORD_SIZE, stdin, true);
+			passwd_p = get_line(passwd, SPDK_OPAL_MAX_PASSWORD_SIZE, stdin, true);
 			printf("\n...\n");
 			if (passwd_p) {
 				ret = spdk_opal_cmd_revert_tper(iter->opal_dev, passwd_p);
@@ -1492,7 +1492,7 @@ opal_revert_tper(struct dev *iter)
 static void
 opal_erase_locking_range(struct dev *iter)
 {
-	char passwd[MAX_PASSWORD_SIZE] = {0};
+	char passwd[SPDK_OPAL_MAX_PASSWORD_SIZE] = {0};
 	char *passwd_p;
 	int ret;
 	int ch;
@@ -1507,7 +1507,7 @@ opal_erase_locking_range(struct dev *iter)
 			printf("Please be noted this operation will erase ALL DATA on this range\n");
 			printf("Please input password for erase locking range:");
 			while ((ch = getchar()) != '\n' && ch != EOF);
-			passwd_p = get_line(passwd, MAX_PASSWORD_SIZE, stdin, true);
+			passwd_p = get_line(passwd, SPDK_OPAL_MAX_PASSWORD_SIZE, stdin, true);
 			if (passwd_p) {
 				printf("\nSpecify locking range id:\n");
 				if (!scanf("%d", &locking_range_id)) {
