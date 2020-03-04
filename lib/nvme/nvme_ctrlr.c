@@ -362,7 +362,6 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return NULL;
 	}
-	nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTED);
 	spdk_bit_array_clear(ctrlr->free_io_qids, qid);
 	TAILQ_INSERT_TAIL(&ctrlr->active_io_qpairs, qpair, tailq);
 
@@ -415,12 +414,9 @@ spdk_nvme_ctrlr_reconnect_io_qpair(struct spdk_nvme_qpair *qpair)
 
 	rc = nvme_transport_ctrlr_connect_qpair(ctrlr, qpair);
 	if (rc) {
-		nvme_qpair_set_state(qpair, NVME_QPAIR_DISABLED);
 		rc = -EAGAIN;
 		goto out;
 	}
-	qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_NONE;
-	nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTED);
 
 out:
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
@@ -1112,12 +1108,9 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	nvme_transport_ctrlr_disconnect_qpair(ctrlr, ctrlr->adminq);
 	if (nvme_transport_ctrlr_connect_qpair(ctrlr, ctrlr->adminq) != 0) {
 		SPDK_ERRLOG("Controller reinitialization failed.\n");
-		nvme_qpair_set_state(ctrlr->adminq, NVME_QPAIR_DISABLED);
 		rc = -1;
 		goto out;
 	}
-	ctrlr->adminq->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_NONE;
-	nvme_qpair_set_state(ctrlr->adminq, NVME_QPAIR_CONNECTED);
 
 	/* Doorbell buffer config is invalid during reset */
 	nvme_ctrlr_free_doorbell_buffer(ctrlr);
@@ -1146,12 +1139,9 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 		TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
 			if (nvme_transport_ctrlr_connect_qpair(ctrlr, qpair) != 0) {
 				qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_LOCAL;
-				nvme_qpair_set_state(qpair, NVME_QPAIR_DISABLED);
 				rc = -1;
 				continue;
 			}
-			qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_NONE;
-			nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTED);
 		}
 	}
 

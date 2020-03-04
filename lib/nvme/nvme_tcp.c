@@ -1537,7 +1537,6 @@ nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpa
 
 	rc = nvme_fabric_qpair_connect(&tqpair->qpair, tqpair->num_entries);
 	if (rc < 0) {
-		nvme_qpair_set_state(&tqpair->qpair, NVME_QPAIR_DISABLED);
 		SPDK_ERRLOG("Failed to send an NVMe-oF Fabric CONNECT command\n");
 		return -1;
 	}
