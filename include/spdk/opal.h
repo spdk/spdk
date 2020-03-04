@@ -41,37 +41,7 @@
 #include "spdk/string.h"
 #include "spdk/opal_spec.h"
 
-#define SPDK_OPAL_NOT_SUPPORTED 0xFF
-
 #define MAX_PASSWORD_SIZE 32 /* in byte */
-
-/*
- * TCG Storage Architecture Core Spec v2.01 r1.00
- * 5.1.5 Method Status Codes
- */
-#define SPDK_OPAL_FAILED 0x3F
-
-static const char *const spdk_opal_errors[] = {
-	"SUCCESS",
-	"NOT AUTHORIZED",
-	"OBSOLETE/UNKNOWN ERROR",
-	"SP BUSY",
-	"SP FAILED",
-	"SP DISABLED",
-	"SP FROZEN",
-	"NO SESSIONS AVAILABLE",
-	"UNIQUENESS CONFLICT",
-	"INSUFFICIENT SPACE",
-	"INSUFFICIENT ROWS",
-	"UNKNOWN ERROR",
-	"INVALID PARAMETER",
-	"OBSOLETE/UNKNOWN ERROR",
-	"UNKNOWN ERROR",
-	"TPER MALFUNCTION",
-	"TRANSACTION FAILURE",
-	"RESPONSE OVERFLOW",
-	"AUTHORITY LOCKED OUT",
-};
 
 struct spdk_opal_d0_features_info {
 	struct spdk_opal_d0_tper_feat tper;

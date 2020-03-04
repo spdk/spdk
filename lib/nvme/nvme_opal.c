@@ -41,20 +41,6 @@ typedef int (*spdk_opal_cb)(struct spdk_opal_dev *dev, void *ctx);
 
 static int opal_parse_and_check_status(struct spdk_opal_dev *dev, void *data);
 
-static const char *
-opal_error_to_human(int error)
-{
-	if (error == SPDK_OPAL_FAILED) {
-		return "FAILED";
-	}
-
-	if ((size_t)error >= SPDK_COUNTOF(spdk_opal_errors) || error < 0) {
-		return "UNKNOWN ERROR";
-	}
-
-	return spdk_opal_errors[error];
-}
-
 static int
 opal_flush_response_buffer(struct spdk_opal_dev *dev)
 {
@@ -890,7 +876,7 @@ opal_discovery0_end(struct spdk_opal_dev *dev)
 
 	if (supported == false) {
 		SPDK_ERRLOG("Opal Not Supported.\n");
-		return SPDK_OPAL_NOT_SUPPORTED;
+		return -ENOTSUP;
 	}
 
 	if (single_user == false) {
@@ -1803,47 +1789,41 @@ spdk_opal_cmd_take_ownership(struct spdk_opal_dev *dev, char *new_passwd)
 	opal_setup_dev(dev);
 	ret = opal_start_anybody_adminsp_session(dev);
 	if (ret) {
-		SPDK_ERRLOG("start admin SP session error %d: %s\n", ret,
-			    opal_error_to_human(ret));
+		SPDK_ERRLOG("start admin SP session error %d\n", ret);
 		opal_end_session(dev);
 		goto end;
 	}
 
 	ret = opal_get_msid_cpin_pin(dev);
 	if (ret) {
-		SPDK_ERRLOG("get msid error %d: %s\n", ret,
-			    opal_error_to_human(ret));
+		SPDK_ERRLOG("get msid error %d\n", ret);
 		opal_end_session(dev);
 		goto end;
 	}
 
 	ret = opal_end_session(dev);
 	if (ret) {
-		SPDK_ERRLOG("end session error %d: %s\n", ret,
-			    opal_error_to_human(ret));
+		SPDK_ERRLOG("end session error %d\n", ret);
 		goto end;
 	}
 
 	ret = opal_start_adminsp_session(dev, NULL); /* key stored in dev->prev_data */
 	if (ret) {
-		SPDK_ERRLOG("start admin SP session error %d: %s\n", ret,
-			    opal_error_to_human(ret));
+		SPDK_ERRLOG("start admin SP session error %d\n", ret);
 		opal_end_session(dev);
 		goto end;
 	}
 
 	ret = opal_set_sid_cpin_pin(dev, new_passwd);
 	if (ret) {
-		SPDK_ERRLOG("set cpin error %d: %s\n", ret,
-			    opal_error_to_human(ret));
+		SPDK_ERRLOG("set cpin error %d\n", ret);
 		opal_end_session(dev);
 		goto end;
 	}
 
 	ret = opal_end_session(dev);
 	if (ret) {
-		SPDK_ERRLOG("end session error %d: %s\n", ret,
-			    opal_error_to_human(ret));
+		SPDK_ERRLOG("end session error %d\n", ret);
 		goto end;
 	}
 
@@ -2044,24 +2024,21 @@ spdk_opal_cmd_revert_tper(struct spdk_opal_dev *dev, const char *passwd)
 	ret = opal_start_adminsp_session(dev, &opal_key);
 	if (ret) {
 		opal_end_session(dev);
-		SPDK_ERRLOG("Error on starting admin SP session with error %d: %s\n", ret,
-			    opal_error_to_human(ret));
+		SPDK_ERRLOG("Error on starting admin SP session with error %d\n", ret);
 		goto end;
 	}
 
 	ret = opal_revert_tper(dev);
 	if (ret) {
 		opal_end_session(dev);
-		SPDK_ERRLOG("Error on reverting TPer with error %d: %s\n", ret,
-			    opal_error_to_human(ret));
+		SPDK_ERRLOG("Error on reverting TPer with error %d\n", ret);
 		goto end;
 	}
 
 	ret = opal_finalize_and_send(dev, 1, opal_parse_and_check_status, NULL);
 	if (ret) {
 		opal_end_session(dev);
-		SPDK_ERRLOG("Error on reverting TPer with error %d: %s\n", ret,
-			    opal_error_to_human(ret));
+		SPDK_ERRLOG("Error on reverting TPer with error %d\n", ret);
 	}
 
 	/* Controller will terminate session. No "end session" here needed. */
@@ -2131,16 +2108,14 @@ spdk_opal_cmd_revert_tper_async(struct spdk_opal_dev *dev, const char *passwd,
 	ret = opal_start_adminsp_session(dev, &opal_key);
 	if (ret) {
 		opal_end_session(dev);
-		SPDK_ERRLOG("Error on starting admin SP session with error %d: %s\n", ret,
-			    opal_error_to_human(ret));
+		SPDK_ERRLOG("Error on starting admin SP session with error %d\n", ret);
 		goto end;
 	}
 
 	ret = opal_revert_tper(dev);
 	if (ret) {
 		opal_end_session(dev);
-		SPDK_ERRLOG("Error on reverting TPer with error %d: %s\n", ret,
-			    opal_error_to_human(ret));
+		SPDK_ERRLOG("Error on reverting TPer with error %d\n", ret);
 		goto end;
 	}
 
@@ -2176,31 +2151,27 @@ spdk_opal_cmd_activate_locking_sp(struct spdk_opal_dev *dev, const char *passwd)
 	pthread_mutex_lock(&dev->mutex_lock);
 	ret = opal_start_adminsp_session(dev, &opal_key);
 	if (ret) {
-		SPDK_ERRLOG("Error on starting admin SP session with error %d: %s\n", ret,
-			    opal_error_to_human(ret));
+		SPDK_ERRLOG("Error on starting admin SP session with error %d\n", ret);
 		pthread_mutex_unlock(&dev->mutex_lock);
 		return ret;
 	}
 
 	ret = opal_get_locking_sp_lifecycle(dev);
 	if (ret) {
-		SPDK_ERRLOG("Error on getting SP lifecycle with error %d: %s\n", ret,
-			    opal_error_to_human(ret));
+		SPDK_ERRLOG("Error on getting SP lifecycle with error %d\n", ret);
 		goto end;
 	}
 
 	ret = opal_activate(dev);
 	if (ret) {
-		SPDK_ERRLOG("Error on activation with error %d: %s\n", ret,
-			    opal_error_to_human(ret));
+		SPDK_ERRLOG("Error on activation with error %d\n", ret);
 		goto end;
 	}
 
 end:
 	ret += opal_end_session(dev);
 	if (ret) {
-		SPDK_ERRLOG("Error on ending session with error %d: %s\n", ret,
-			    opal_error_to_human(ret));
+		SPDK_ERRLOG("Error on ending session with error %d\n", ret);
 	}
 
 	pthread_mutex_unlock(&dev->mutex_lock);
@@ -2234,21 +2205,21 @@ spdk_opal_cmd_lock_unlock(struct spdk_opal_dev *dev, enum spdk_opal_user user,
 
 	ret = opal_start_auth_session(dev, &locking_session.session);
 	if (ret) {
-		SPDK_ERRLOG("start authenticate session error %d: %s\n", ret, opal_error_to_human(ret));
+		SPDK_ERRLOG("start authenticate session error %d\n", ret);
 		pthread_mutex_unlock(&dev->mutex_lock);
 		return ret;
 	}
 
 	ret = opal_lock_unlock_range(dev, &locking_session);
 	if (ret) {
-		SPDK_ERRLOG("lock unlock range error %d: %s\n", ret, opal_error_to_human(ret));
+		SPDK_ERRLOG("lock unlock range error %d\n", ret);
 		goto end;
 	}
 
 end:
 	ret += opal_end_session(dev);
 	if (ret) {
-		SPDK_ERRLOG("end session error %d: %s\n", ret, opal_error_to_human(ret));
+		SPDK_ERRLOG("end session error %d\n", ret);
 	}
 
 	pthread_mutex_unlock(&dev->mutex_lock);
@@ -2285,21 +2256,21 @@ spdk_opal_cmd_setup_locking_range(struct spdk_opal_dev *dev, enum spdk_opal_user
 	pthread_mutex_lock(&dev->mutex_lock);
 	ret = opal_start_auth_session(dev, &setup_session.session);
 	if (ret) {
-		SPDK_ERRLOG("start authenticate session error %d: %s\n", ret, opal_error_to_human(ret));
+		SPDK_ERRLOG("start authenticate session error %d\n", ret);
 		pthread_mutex_unlock(&dev->mutex_lock);
 		return ret;
 	}
 
 	ret = opal_setup_locking_range(dev, &setup_session);
 	if (ret) {
-		SPDK_ERRLOG("setup locking range error %d: %s\n", ret, opal_error_to_human(ret));
+		SPDK_ERRLOG("setup locking range error %d\n", ret);
 		goto end;
 	}
 
 end:
 	ret += opal_end_session(dev);
 	if (ret) {
-		SPDK_ERRLOG("end session error %d: %s\n", ret, opal_error_to_human(ret));
+		SPDK_ERRLOG("end session error %d\n", ret);
 	}
 
 	pthread_mutex_unlock(&dev->mutex_lock);
@@ -2329,21 +2300,21 @@ spdk_opal_cmd_get_max_ranges(struct spdk_opal_dev *dev, const char *passwd)
 	pthread_mutex_lock(&dev->mutex_lock);
 	ret = opal_start_auth_session(dev, &session);
 	if (ret) {
-		SPDK_ERRLOG("start authenticate session error %d: %s\n", ret, opal_error_to_human(ret));
+		SPDK_ERRLOG("start authenticate session error %d\n", ret);
 		pthread_mutex_unlock(&dev->mutex_lock);
 		return ret;
 	}
 
 	ret = opal_get_max_ranges(dev);
 	if (ret) {
-		SPDK_ERRLOG("get max ranges error %d: %s\n", ret, opal_error_to_human(ret));
+		SPDK_ERRLOG("get max ranges error %d\n", ret);
 		goto end;
 	}
 
 end:
 	ret += opal_end_session(dev);
 	if (ret) {
-		SPDK_ERRLOG("end session error %d: %s\n", ret, opal_error_to_human(ret));
+		SPDK_ERRLOG("end session error %d\n", ret);
 	}
 
 	pthread_mutex_unlock(&dev->mutex_lock);
@@ -2375,21 +2346,21 @@ spdk_opal_cmd_get_locking_range_info(struct spdk_opal_dev *dev, const char *pass
 	pthread_mutex_lock(&dev->mutex_lock);
 	ret = opal_start_auth_session(dev, &session);
 	if (ret) {
-		SPDK_ERRLOG("start authenticate session error %d: %s\n", ret, opal_error_to_human(ret));
+		SPDK_ERRLOG("start authenticate session error %d\n", ret);
 		pthread_mutex_unlock(&dev->mutex_lock);
 		return ret;
 	}
 
 	ret = opal_get_locking_range_info(dev, locking_range_id);
 	if (ret) {
-		SPDK_ERRLOG("get locking range info error %d: %s\n", ret, opal_error_to_human(ret));
+		SPDK_ERRLOG("get locking range info error %d\n", ret);
 		goto end;
 	}
 
 end:
 	ret += opal_end_session(dev);
 	if (ret) {
-		SPDK_ERRLOG("end session error %d: %s\n", ret, opal_error_to_human(ret));
+		SPDK_ERRLOG("end session error %d\n", ret);
 	}
 
 	pthread_mutex_unlock(&dev->mutex_lock);
@@ -2420,21 +2391,21 @@ spdk_opal_cmd_enable_user(struct spdk_opal_dev *dev, enum spdk_opal_user user_id
 	pthread_mutex_lock(&dev->mutex_lock);
 	ret = opal_start_admin_session(dev, session.opal_key);
 	if (ret) {
-		SPDK_ERRLOG("start locking SP session error %d: %s\n", ret, opal_error_to_human(ret));
+		SPDK_ERRLOG("start locking SP session error %d\n", ret);
 		pthread_mutex_unlock(&dev->mutex_lock);
 		return ret;
 	}
 
 	ret = opal_enable_user(dev, &session);
 	if (ret) {
-		SPDK_ERRLOG("enable user error %d: %s\n", ret, opal_error_to_human(ret));
+		SPDK_ERRLOG("enable user error %d\n", ret);
 		goto end;
 	}
 
 end:
 	ret += opal_end_session(dev);
 	if (ret) {
-		SPDK_ERRLOG("end session error %d: %s\n", ret, opal_error_to_human(ret));
+		SPDK_ERRLOG("end session error %d\n", ret);
 	}
 
 	pthread_mutex_unlock(&dev->mutex_lock);
@@ -2467,21 +2438,21 @@ spdk_opal_cmd_add_user_to_locking_range(struct spdk_opal_dev *dev, enum spdk_opa
 	pthread_mutex_lock(&dev->mutex_lock);
 	ret = opal_start_admin_session(dev, locking_session.session.opal_key);
 	if (ret) {
-		SPDK_ERRLOG("start locking SP session error %d: %s\n", ret, opal_error_to_human(ret));
+		SPDK_ERRLOG("start locking SP session error %d\n", ret);
 		pthread_mutex_unlock(&dev->mutex_lock);
 		return ret;
 	}
 
 	ret = opal_add_user_to_locking_range(dev, &locking_session);
 	if (ret) {
-		SPDK_ERRLOG("add user to locking range error %d: %s\n", ret, opal_error_to_human(ret));
+		SPDK_ERRLOG("add user to locking range error %d\n", ret);
 		goto end;
 	}
 
 end:
 	ret += opal_end_session(dev);
 	if (ret) {
-		SPDK_ERRLOG("end session error %d: %s\n", ret, opal_error_to_human(ret));
+		SPDK_ERRLOG("end session error %d\n", ret);
 	}
 
 	pthread_mutex_unlock(&dev->mutex_lock);
@@ -2520,21 +2491,21 @@ spdk_opal_cmd_set_new_passwd(struct spdk_opal_dev *dev, enum spdk_opal_user user
 	pthread_mutex_lock(&dev->mutex_lock);
 	ret = opal_start_auth_session(dev, &session.old_session);
 	if (ret) {
-		SPDK_ERRLOG("start authenticate session error %d: %s\n", ret, opal_error_to_human(ret));
+		SPDK_ERRLOG("start authenticate session error %d\n", ret);
 		pthread_mutex_unlock(&dev->mutex_lock);
 		return ret;
 	}
 
 	ret = opal_new_user_passwd(dev, &session.new_session);
 	if (ret) {
-		SPDK_ERRLOG("set new passwd error %d: %s\n", ret, opal_error_to_human(ret));
+		SPDK_ERRLOG("set new passwd error %d\n", ret);
 		goto end;
 	}
 
 end:
 	ret += opal_end_session(dev);
 	if (ret) {
-		SPDK_ERRLOG("end session error %d: %s\n", ret, opal_error_to_human(ret));
+		SPDK_ERRLOG("end session error %d\n", ret);
 	}
 
 	pthread_mutex_unlock(&dev->mutex_lock);
@@ -2564,27 +2535,27 @@ spdk_opal_cmd_erase_locking_range(struct spdk_opal_dev *dev, enum spdk_opal_user
 	pthread_mutex_lock(&dev->mutex_lock);
 	ret = opal_start_auth_session(dev, &session);
 	if (ret) {
-		SPDK_ERRLOG("start authenticate session error %d: %s\n", ret, opal_error_to_human(ret));
+		SPDK_ERRLOG("start authenticate session error %d\n", ret);
 		pthread_mutex_unlock(&dev->mutex_lock);
 		return ret;
 	}
 
 	ret = opal_get_active_key(dev, &session);
 	if (ret) {
-		SPDK_ERRLOG("get active key error %d: %s\n", ret, opal_error_to_human(ret));
+		SPDK_ERRLOG("get active key error %d\n", ret);
 		goto end;
 	}
 
 	ret = opal_gen_new_active_key(dev);
 	if (ret) {
-		SPDK_ERRLOG("generate new active key error %d: %s\n", ret, opal_error_to_human(ret));
+		SPDK_ERRLOG("generate new active key error %d\n", ret);
 		goto end;
 	}
 
 end:
 	ret += opal_end_session(dev);
 	if (ret) {
-		SPDK_ERRLOG("end session error %d: %s\n", ret, opal_error_to_human(ret));
+		SPDK_ERRLOG("end session error %d\n", ret);
 	}
 
 	pthread_mutex_unlock(&dev->mutex_lock);
