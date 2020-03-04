@@ -8,13 +8,13 @@ if [[ ! -f $1 ]]; then
 	exit 1
 fi
 
-
-out=$PWD
 rootdir=$(readlink -f $(dirname $0))
-scanbuild="scan-build -o $out/scan-build-tmp --status-bugs"
 
 source "$1"
 source "$rootdir/test/common/autotest_common.sh"
+
+out=$output_dir
+scanbuild="scan-build -o $output_dir/scan-build-tmp --status-bugs"
 
 rm -rf /tmp/spdk
 mkdir /tmp/spdk
