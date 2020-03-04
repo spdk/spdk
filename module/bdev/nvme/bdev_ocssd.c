@@ -90,6 +90,7 @@ struct bdev_ocssd_ns {
 	struct bdev_ocssd_lba_offsets			lba_offsets;
 	bool						chunk_notify_pending;
 	uint64_t					chunk_notify_count;
+	uint64_t					num_outstanding;
 #define CHUNK_NOTIFICATION_ENTRY_COUNT 64
 	struct spdk_ocssd_chunk_notification_entry	chunk[CHUNK_NOTIFICATION_ENTRY_COUNT];
 };
@@ -801,6 +802,21 @@ bdev_ocssd_get_io_channel(void *ctx)
 }
 
 static void
+bdev_ocssd_free_namespace(struct nvme_bdev_ns *nvme_ns)
+{
+	struct nvme_bdev *bdev, *tmp;
+
+	TAILQ_FOREACH_SAFE(bdev, &nvme_ns->bdevs, tailq, tmp) {
+		spdk_bdev_unregister(&bdev->disk, NULL, NULL);
+	}
+
+	free(nvme_ns->type_ctx);
+	nvme_ns->type_ctx = NULL;
+
+	nvme_ctrlr_depopulate_namespace_done(nvme_ns->ctrlr);
+}
+
+static void
 bdev_ocssd_chunk_notification_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
 	struct nvme_bdev_ns *nvme_ns = ctx;
@@ -812,13 +828,19 @@ bdev_ocssd_chunk_notification_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 	size_t chunk_id, num_blocks, lba;
 	int rc;
 
-	if (spdk_nvme_cpl_is_error(cpl)) {
-		SPDK_ERRLOG("Failed to retrieve chunk notification log\n");
-		return;
-	}
+	ocssd_ns->num_outstanding--;
 
 	/* The namespace could have been depopulated in the meantime */
 	if (!nvme_ns->populated) {
+		if (ocssd_ns->num_outstanding == 0) {
+			bdev_ocssd_free_namespace(nvme_ns);
+		}
+
+		return;
+	}
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		SPDK_ERRLOG("Failed to retrieve chunk notification log\n");
 		return;
 	}
 
@@ -903,6 +925,7 @@ bdev_ocssd_poll_mm(void *ctx)
 		ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ns);
 		if (ocssd_ns->chunk_notify_pending) {
 			ocssd_ns->chunk_notify_pending = false;
+			ocssd_ns->num_outstanding++;
 
 			rc = spdk_nvme_ctrlr_cmd_get_log_page(nvme_bdev_ctrlr->ctrlr,
 							      SPDK_OCSSD_LOG_CHUNK_NOTIFICATION,
@@ -914,6 +937,7 @@ bdev_ocssd_poll_mm(void *ctx)
 			if (spdk_unlikely(rc != 0)) {
 				SPDK_ERRLOG("Failed to get chunk notification log page: %s\n",
 					    spdk_strerror(-rc));
+				ocssd_ns->num_outstanding--;
 			}
 		}
 	}
@@ -1391,17 +1415,20 @@ bdev_ocssd_populate_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 void
 bdev_ocssd_depopulate_namespace(struct nvme_bdev_ns *ns)
 {
-	struct nvme_bdev *bdev, *tmp;
+	struct bdev_ocssd_ns *ocssd_ns;
 
-	TAILQ_FOREACH_SAFE(bdev, &ns->bdevs, tailq, tmp) {
-		spdk_bdev_unregister(&bdev->disk, NULL, NULL);
-	}
+	ocssd_ns = bdev_ocssd_get_ns_from_nvme(ns);
 
-	free(ns->type_ctx);
+	/* If there are outstanding admin requests, we cannot free the context
+	 * here, as they'd write over deallocated memory.  Clear the populated
+	 * flag, so that the completion callback knows that the namespace is
+	 * being depopulated and finish its deallocation once all requests are
+	 * completed.
+	 */
 	ns->populated = false;
-	ns->type_ctx = NULL;
-
-	nvme_ctrlr_depopulate_namespace_done(ns->ctrlr);
+	if (ocssd_ns->num_outstanding == 0) {
+		bdev_ocssd_free_namespace(ns);
+	}
 }
 
 int
