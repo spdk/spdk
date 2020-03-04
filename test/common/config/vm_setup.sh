@@ -27,9 +27,15 @@ INSTALL=false
 CONF="librxe,iscsi,rocksdb,fio,flamegraph,tsocks,qemu,vpp,libiscsi,nvmecli,qat"
 LIBRXE_INSTALL=true
 
-OSID=$(source /etc/os-release && echo $ID)
-OSVERSION=$(source /etc/os-release && echo $VERSION_ID)
-PACKAGEMNG='undefined'
+if [ $(uname -s) == "FreeBSD" ]; then
+    OSID="freebsd"
+    OSVERSION=$(freebsd-version | cut -d. -f1)
+    PACKAGEMNG='pkg'
+else
+    OSID=$(source /etc/os-release && echo $ID)
+    OSVERSION=$(source /etc/os-release && echo $VERSION_ID)
+    PACKAGEMNG='undefined'
+fi
 
 function install_rxe_cfg()
 {
@@ -152,12 +158,6 @@ function install_fio()
         # building the spdk fio plugin.
         local fio_version="fio-3.15"
 
-        # Change version on Arch Linux, 3.3 does not compile
-        # with gcc 9
-        if [ $PACKAGEMNG == 'pacman' ]; then
-            fio_version="fio-3.15"
-        fi
-
         if [ ! -d /usr/src/fio ]; then
             if [ ! -d fio ]; then
                 git clone "${GIT_REPO_FIO}"
@@ -169,8 +169,13 @@ function install_fio()
                 git -C /usr/src/fio checkout master &&
                 git -C /usr/src/fio pull &&
                 git -C /usr/src/fio checkout $fio_version &&
-                make -C /usr/src/fio -j${jobs} &&
-                sudo make -C /usr/src/fio install
+                if [ $OSID == 'freebsd' ]; then
+                    gmake -C /usr/src/fio -j${jobs} &&
+                    sudo gmake -C /usr/src/fio install
+                else
+                    make -C /usr/src/fio -j${jobs} &&
+                    sudo make -C /usr/src/fio install
+                fi
             )
         else
             echo "fio already in /usr/src/fio. Not installing"
@@ -343,6 +348,8 @@ elif hash apt-get &>/dev/null; then
     PACKAGEMNG=apt-get
 elif hash pacman &>/dev/null; then
     PACKAGEMNG=pacman
+elif hash pkg &>/dev/null; then
+    PACKAGEMNG=pkg
 else
     echo 'Supported package manager not found. Script supports "dnf" and "apt-get".'
 fi
@@ -404,7 +411,11 @@ GIT_VERSION=2.25.1
 : ${DRIVER_LOCATION_QAT=https://01.org/sites/default/files/downloads//qat1.7.l.4.9.0-00008.tar.gz}; export DRIVER_LOCATION_QAT
 : ${GIT_REPO_GIT=https://github.com/git/git/archive/v${GIT_VERSION}.tar.gz}; export GIT_REPO_GIT
 
-jobs=$(($(nproc)*2))
+if [ $PACKAGEMNG == 'pkg' ]; then
+    jobs=$(( $(sysctl -n hw.ncpu) * 2 ))
+else
+    jobs=$(($(nproc)*2))
+fi
 
 if $UPGRADE; then
     if [ $PACKAGEMNG == 'yum' ]; then
@@ -416,6 +427,8 @@ if $UPGRADE; then
         sudo $PACKAGEMNG upgrade -y
     elif [ $PACKAGEMNG == 'pacman' ]; then
         sudo $PACKAGEMNG -Syu --noconfirm --needed
+    elif [ $PACKAGEMNG == 'pkg' ]; then
+        sudo $PACKAGEMNG upgrade -y
     fi
 fi
 
@@ -445,7 +458,21 @@ git -C spdk_repo/spdk submodule update --init --recursive
 if $INSTALL; then
     sudo spdk_repo/spdk/scripts/pkgdep.sh --all
 
-    if [ $PACKAGEMNG == 'yum' ]; then
+    if [ $PACKAGEMNG == 'pkg' ]; then
+        sudo pkg install -y pciutils \
+        jq \
+        gdb \
+        fio \
+        p5-extutils-pkgconfig \
+        libtool \
+        flex \
+        bison \
+        gdisk \
+        socat \
+        sshpass \
+        py37-pandas
+
+    elif [ $PACKAGEMNG == 'yum' ]; then
         sudo yum install -y pciutils \
         valgrind \
         jq \
@@ -671,20 +698,22 @@ fi
 
 sudo mkdir -p /usr/src
 
-if [ $LIBRXE_INSTALL = true ]; then
-    #Ubuntu18 integrates librxe to rdma-core, libibverbs-dev no longer ships infiniband/driver.h.
-    #Don't compile librxe on ubuntu18 or later version, install package rdma-core instead.
-    install_rxe_cfg&
+if [ $OSID != 'freebsd' ]; then
+    if [ $LIBRXE_INSTALL = true ]; then
+        #Ubuntu18 integrates librxe to rdma-core, libibverbs-dev no longer ships infiniband/driver.h.
+        #Don't compile librxe on ubuntu18 or later version, install package rdma-core instead.
+        install_rxe_cfg&
+    fi
+    install_iscsi_adm&
+    install_libiscsi&
+    instll_vpp&
+    install_nvmecli&
+    install_qat&
+    install_rocksdb&
+    install_flamegraph&
+    install_qemu&
 fi
-install_iscsi_adm&
-install_rocksdb&
 install_fio&
-install_flamegraph&
-install_qemu&
-install_vpp&
-install_nvmecli&
-install_libiscsi&
-install_qat&
 
 wait
 # create autorun-spdk.conf in home folder. This is sourced by the autotest_common.sh file.
