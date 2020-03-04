@@ -82,6 +82,13 @@ opal_send_cmd(struct spdk_opal_dev *dev)
 static int
 opal_recv_cmd(struct spdk_opal_dev *dev)
 {
+	return spdk_nvme_ctrlr_security_receive(dev->ctrlr, SPDK_SCSI_SECP_TCG, dev->comid,
+						0, dev->resp, IO_BUFFER_LENGTH);
+}
+
+static int
+opal_recv_check(struct spdk_opal_dev *dev)
+{
 	void *response = dev->resp;
 	struct spdk_opal_compacket *header = response;
 	int ret = 0;
@@ -89,12 +96,6 @@ opal_recv_cmd(struct spdk_opal_dev *dev)
 	uint64_t now;
 
 	do {
-		ret = spdk_nvme_ctrlr_security_receive(dev->ctrlr, SPDK_SCSI_SECP_TCG, dev->comid,
-						       0, dev->resp, IO_BUFFER_LENGTH);
-		if (ret) {
-			SPDK_ERRLOG("Security Receive Error on dev = %p\n", dev);
-			return ret;
-		}
 		SPDK_DEBUGLOG(SPDK_LOG_OPAL, "outstanding_data=%d, minTransfer=%d\n",
 			      header->outstanding_data,
 			      header->min_transfer);
@@ -111,6 +112,12 @@ opal_recv_cmd(struct spdk_opal_dev *dev)
 		}
 
 		memset(response, 0, IO_BUFFER_LENGTH);
+		ret = spdk_nvme_ctrlr_security_receive(dev->ctrlr, SPDK_SCSI_SECP_TCG, dev->comid,
+						       0, dev->resp, IO_BUFFER_LENGTH);
+		if (ret) {
+			SPDK_ERRLOG("Security Receive Error on dev = %p\n", dev);
+			return ret;
+		}
 	} while (!ret);
 
 	return ret;
@@ -130,10 +137,17 @@ opal_send_recv(struct spdk_opal_dev *dev, spdk_opal_cb cb, void *data)
 	if (ret) {
 		return ret;
 	}
+
 	ret = opal_recv_cmd(dev);
 	if (ret) {
 		return ret;
 	}
+
+	ret = opal_recv_check(dev);
+	if (ret) {
+		return ret;
+	}
+
 	return cb(dev, data);
 }
 
