@@ -17,7 +17,7 @@ function test_construct_lvs() {
 
 	# try to destroy inexistent lvs, this should obviously fail
 	dummy_uuid="00000000-0000-0000-0000-000000000000"
-	rpc_cmd bdev_lvol_delete_lvstore -u "$dummy_uuid" && false
+	NOT rpc_cmd bdev_lvol_delete_lvstore -u "$dummy_uuid"
 	# our lvs should not be impacted
 	rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid"
 
@@ -35,9 +35,9 @@ function test_construct_lvs() {
 
 	# remove the lvs and verify it's gone
 	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
-	rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid" && false
+	NOT rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid"
 	# make sure we can't delete the same lvs again
-	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid" && false
+	NOT rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
 
 	rpc_cmd bdev_malloc_delete "$malloc_name"
 	check_leftover_devices

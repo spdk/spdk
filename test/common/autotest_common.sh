@@ -378,6 +378,13 @@ function rpc_cmd_simple_data_json() {
 	(( ${#jq_out[@]} > 0 )) || return 1
 }
 
+# invert error code of any command and also trigger ERR on 0 (unlike bash ! prefix)
+function NOT() {
+	if "$@"; then
+		return 1
+	fi
+}
+
 function timing() {
 	direction="$1"
 	testname="$2"
