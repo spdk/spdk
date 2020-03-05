@@ -692,20 +692,6 @@ vhost_dev_unregister(struct spdk_vhost_dev *vdev)
 	return 0;
 }
 
-static struct spdk_vhost_session *
-vhost_session_next(struct spdk_vhost_dev *vdev, unsigned prev_id)
-{
-	struct spdk_vhost_session *vsession;
-
-	TAILQ_FOREACH(vsession, &vdev->vsessions, tailq) {
-		if (vsession->id > prev_id) {
-			return vsession;
-		}
-	}
-
-	return NULL;
-}
-
 const char *
 spdk_vhost_dev_get_name(struct spdk_vhost_dev *vdev)
 {
@@ -805,9 +791,6 @@ vhost_session_send_event(struct spdk_vhost_session *vsession,
 	return g_dpdk_response;
 }
 
-static void foreach_session_continue(struct vhost_session_fn_ctx *ev_ctx,
-				     struct spdk_vhost_session *vsession);
-
 static void
 foreach_session_finish_cb(void *arg1)
 {
@@ -831,67 +814,31 @@ foreach_session_finish_cb(void *arg1)
 }
 
 static void
-foreach_session_continue_cb(void *arg1)
+foreach_session(void *arg1)
 {
 	struct vhost_session_fn_ctx *ctx = arg1;
-	struct spdk_vhost_session *vsession = NULL;
+	struct spdk_vhost_session *vsession;
 	struct spdk_vhost_dev *vdev = ctx->vdev;
 	int rc;
 
 	if (pthread_mutex_trylock(&g_vhost_mutex) != 0) {
-		spdk_thread_send_msg(spdk_get_thread(),
-				     foreach_session_continue_cb, arg1);
+		spdk_thread_send_msg(spdk_get_thread(), foreach_session, arg1);
 		return;
 	}
 
-	vsession = vhost_session_find_by_id(vdev, ctx->vsession_id);
-	if (vsession == NULL || !vsession->initialized) {
-		/* The session must have been removed in the meantime, so we
-		 * just skip it in our foreach chain
-		 */
-		goto out_unlock_continue;
-	}
-
-	rc = ctx->cb_fn(vdev, vsession, ctx->user_ctx);
-	if (rc < 0) {
-		pthread_mutex_unlock(&g_vhost_mutex);
-		free(ctx);
-		return;
-	}
-
-out_unlock_continue:
-	vsession = vhost_session_next(vdev, ctx->vsession_id);
-	foreach_session_continue(ctx, vsession);
-	pthread_mutex_unlock(&g_vhost_mutex);
-}
-
-static void
-foreach_session_continue(struct vhost_session_fn_ctx *ev_ctx,
-			 struct spdk_vhost_session *vsession)
-{
-	struct spdk_vhost_dev *vdev = ev_ctx->vdev;
-	int rc;
-
-	while (vsession != NULL && !vsession->started) {
+	TAILQ_FOREACH(vsession, &vdev->vsessions, tailq) {
 		if (vsession->initialized) {
-			rc = ev_ctx->cb_fn(vdev, vsession, ev_ctx->user_ctx);
+			rc = ctx->cb_fn(vdev, vsession, ctx);
 			if (rc < 0) {
-				return;
+				goto out;
 			}
 		}
-
-		vsession = vhost_session_next(vdev, vsession->id);
 	}
 
-	if (vsession != NULL) {
-		ev_ctx->vsession_id = vsession->id;
-		spdk_thread_send_msg(vdev->thread,
-				     foreach_session_continue_cb, ev_ctx);
-	} else {
-		ev_ctx->vsession_id = UINT32_MAX;
-		spdk_thread_send_msg(g_vhost_init_thread,
-				     foreach_session_finish_cb, ev_ctx);
-	}
+out:
+	pthread_mutex_unlock(&g_vhost_mutex);
+
+	spdk_thread_send_msg(g_vhost_init_thread, foreach_session_finish_cb, arg1);
 }
 
 void
@@ -900,7 +847,6 @@ vhost_dev_foreach_session(struct spdk_vhost_dev *vdev,
 			  spdk_vhost_dev_fn cpl_fn,
 			  void *arg)
 {
-	struct spdk_vhost_session *vsession = TAILQ_FIRST(&vdev->vsessions);
 	struct vhost_session_fn_ctx *ev_ctx;
 
 	ev_ctx = calloc(1, sizeof(*ev_ctx));
@@ -917,7 +863,8 @@ vhost_dev_foreach_session(struct spdk_vhost_dev *vdev,
 
 	assert(vdev->pending_async_op_num < UINT32_MAX);
 	vdev->pending_async_op_num++;
-	foreach_session_continue(ev_ctx, vsession);
+
+	spdk_thread_send_msg(vdev->thread, foreach_session, ev_ctx);
 }
 
 static int
