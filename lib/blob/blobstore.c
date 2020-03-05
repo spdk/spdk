@@ -6212,7 +6212,14 @@ _spdk_delete_snapshot_sync_clone_cpl(void *cb_arg, int bserrno)
 			ctx->snapshot->active.clusters[i] = 0;
 		}
 	}
+	for (i = 0; i < ctx->snapshot->active.num_extent_pages &&
+	     i < ctx->clone->active.num_extent_pages; i++) {
+		if (ctx->clone->active.extent_pages[i] == ctx->snapshot->active.extent_pages[i]) {
+			ctx->snapshot->active.extent_pages[i] = 0;
+		}
+	}
 
+	_spdk_blob_set_thin_provision(ctx->snapshot);
 	ctx->snapshot->state = SPDK_BLOB_STATE_DIRTY;
 
 	if (ctx->parent_snapshot_entry != NULL) {
@@ -6243,6 +6250,12 @@ _spdk_delete_snapshot_sync_snapshot_xattr_cpl(void *cb_arg, int bserrno)
 	for (i = 0; i < ctx->snapshot->active.num_clusters && i < ctx->clone->active.num_clusters; i++) {
 		if (ctx->clone->active.clusters[i] == 0) {
 			ctx->clone->active.clusters[i] = ctx->snapshot->active.clusters[i];
+		}
+	}
+	for (i = 0; i < ctx->snapshot->active.num_extent_pages &&
+	     i < ctx->clone->active.num_extent_pages; i++) {
+		if (ctx->clone->active.extent_pages[i] == 0) {
+			ctx->clone->active.extent_pages[i] = ctx->snapshot->active.extent_pages[i];
 		}
 	}
 

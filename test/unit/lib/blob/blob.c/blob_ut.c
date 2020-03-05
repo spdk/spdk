@@ -5223,6 +5223,7 @@ blob_delete_snapshot_power_failure(void)
 	spdk_blob_id ids[3] = {};
 	int rc;
 	bool deleted = false;
+	int delete_snapshot_bserrno = -1;
 
 	thresholds.general_threshold = 1;
 	while (!deleted) {
@@ -5257,6 +5258,7 @@ blob_delete_snapshot_power_failure(void)
 
 		spdk_bs_delete_blob(bs, snapshotid, blob_op_complete, NULL);
 		poll_threads();
+		delete_snapshot_bserrno = g_bserrno;
 
 		/* Do not shut down cleanly. Assumption is that after snapshot deletion
 		 * reports success, changes to both blobs should already persisted. */
@@ -5294,7 +5296,12 @@ blob_delete_snapshot_power_failure(void)
 			CU_ASSERT(g_bserrno == 0);
 		} else {
 			CU_ASSERT(spdk_blob_get_parent_snapshot(bs, blobid) == SPDK_BLOBID_INVALID);
-			deleted = true;
+			/* Snapshot might have been left in unrecoverable state, so it does not open.
+			 * Yet delete might perform further changes to the clone after that.
+			 * This UT should test until snapshot is deleted and delete call succeeds. */
+			if (delete_snapshot_bserrno == 0) {
+				deleted = true;
+			}
 		}
 
 		spdk_blob_close(blob, blob_op_complete, NULL);
