@@ -607,28 +607,23 @@ vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *ma
 	if (vhost_parse_core_mask(mask_str, &cpumask) != 0) {
 		SPDK_ERRLOG("cpumask %s is invalid (app mask is 0x%s)\n",
 			    mask_str, spdk_cpuset_fmt(spdk_app_get_core_mask()));
-		rc = -EINVAL;
-		goto out;
+		return -EINVAL;
 	}
 
 	if (spdk_vhost_dev_find(name)) {
 		SPDK_ERRLOG("vhost controller %s already exists.\n", name);
-		rc = -EEXIST;
-		goto out;
+		return -EEXIST;
 	}
 
 	if (snprintf(path, sizeof(path), "%s%s", dev_dirname, name) >= (int)sizeof(path)) {
 		SPDK_ERRLOG("Resulting socket path for controller %s is too long: %s%s\n", name, dev_dirname,
 			    name);
-		rc = -EINVAL;
-		goto out;
+		return -EINVAL;
 	}
 
 	vdev->name = strdup(name);
 	vdev->path = strdup(path);
 	if (vdev->name == NULL || vdev->path == NULL) {
-		free(vdev->name);
-		free(vdev->path);
 		rc = -EIO;
 		goto out;
 	}
@@ -637,24 +632,24 @@ vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *ma
 	vdev->registered = true;
 	vdev->backend = backend;
 	TAILQ_INIT(&vdev->vsessions);
-	TAILQ_INSERT_TAIL(&g_vhost_devices, vdev, tailq);
 
 	vhost_dev_set_coalescing(vdev, SPDK_VHOST_COALESCING_DELAY_BASE_US,
 				 SPDK_VHOST_VQ_IOPS_COALESCING_THRESHOLD);
 
 	if (vhost_register_unix_socket(path, name, vdev->virtio_features, vdev->disabled_features,
 				       vdev->protocol_features)) {
-		TAILQ_REMOVE(&g_vhost_devices, vdev, tailq);
-		free(vdev->name);
-		free(vdev->path);
 		rc = -EIO;
 		goto out;
 	}
+
+	TAILQ_INSERT_TAIL(&g_vhost_devices, vdev, tailq);
 
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Controller %s: new controller added\n", vdev->name);
 	return 0;
 
 out:
+	free(vdev->name);
+	free(vdev->path);
 	return rc;
 }
 
