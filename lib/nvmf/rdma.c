@@ -1056,14 +1056,13 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	if (rqpair->srq) {
 		ibv_init_attr.srq		= rqpair->srq;
 	} else {
-		ibv_init_attr.cap.max_recv_wr	= rqpair->max_queue_depth +
-						  1; /* RECV operations + dummy drain WR */
+		ibv_init_attr.cap.max_recv_wr	= rqpair->max_queue_depth;
 	}
 
-	ibv_init_attr.cap.max_send_wr	= rqpair->max_queue_depth *
-					  2 + 1; /* SEND, READ, and WRITE operations + dummy drain WR */
-	ibv_init_attr.cap.max_send_sge	= spdk_min(device->attr.max_sge, NVMF_DEFAULT_TX_SGE);
-	ibv_init_attr.cap.max_recv_sge	= spdk_min(device->attr.max_sge, NVMF_DEFAULT_RX_SGE);
+	ibv_init_attr.cap.max_send_wr	= (uint32_t)rqpair->max_queue_depth *
+					  2; /* SEND, READ or WRITE operations */
+	ibv_init_attr.cap.max_send_sge	= spdk_min((uint32_t)device->attr.max_sge, NVMF_DEFAULT_TX_SGE);
+	ibv_init_attr.cap.max_recv_sge	= spdk_min((uint32_t)device->attr.max_sge, NVMF_DEFAULT_RX_SGE);
 
 	if (rqpair->srq == NULL && nvmf_rdma_resize_cq(rqpair, device) < 0) {
 		SPDK_ERRLOG("Failed to resize the completion queue. Cannot initialize qpair.\n");
@@ -1076,7 +1075,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 		goto error;
 	}
 
-	rqpair->max_send_depth = spdk_min((uint32_t)(rqpair->max_queue_depth * 2 + 1),
+	rqpair->max_send_depth = spdk_min((uint32_t)(rqpair->max_queue_depth * 2),
 					  ibv_init_attr.cap.max_send_wr);
 	rqpair->max_send_sge = spdk_min(NVMF_DEFAULT_TX_SGE, ibv_init_attr.cap.max_send_sge);
 	rqpair->max_recv_sge = spdk_min(NVMF_DEFAULT_RX_SGE, ibv_init_attr.cap.max_recv_sge);
