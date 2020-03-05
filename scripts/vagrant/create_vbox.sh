@@ -20,7 +20,7 @@ display_help() {
 	echo " Usage: ${0##*/} [-b nvme-backing-file] [-n <num-cpus>] [-s <ram-size>] [-x <http-proxy>] [-hvrld] <distro>"
 	echo
 	echo "  distro = <centos7 | centos8| ubuntu1604 | ubuntu1804 |"
-	echo "            fedora29 | fedora30 | fedora 31 | freebsd11 | freebsd12 | arch>"
+	echo "            fedora30 | fedora31 | freebsd11 | freebsd12 | arch>"
 	echo
 	echo "  -b <nvme-backing-file>          nvme file path with name"
 	echo "                                  type of emulated nvme disk"
@@ -154,9 +154,6 @@ case "${SPDK_VAGRANT_DISTRO}" in
 		export SPDK_VAGRANT_DISTRO
 	;;
 	ubuntu1804)
-		export SPDK_VAGRANT_DISTRO
-	;;
-	fedora29)
 		export SPDK_VAGRANT_DISTRO
 	;;
 	fedora30)
