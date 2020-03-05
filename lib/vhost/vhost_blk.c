@@ -799,10 +799,7 @@ out:
 static int
 vhost_blk_start(struct spdk_vhost_session *vsession)
 {
-	struct vhost_poll_group *pg;
-
-	pg = vhost_get_poll_group(&vsession->vdev->cpumask);
-	return vhost_session_send_event(pg, vsession, vhost_blk_start_cb,
+	return vhost_session_send_event(vsession, vhost_blk_start_cb,
 					3, "start session");
 }
 
@@ -857,8 +854,8 @@ vhost_blk_stop_cb(struct spdk_vhost_dev *vdev,
 static int
 vhost_blk_stop(struct spdk_vhost_session *vsession)
 {
-	return vhost_session_send_event(vsession->poll_group, vsession,
-					vhost_blk_stop_cb, 3, "stop session");
+	return vhost_session_send_event(vsession, vhost_blk_stop_cb,
+					3, "stop session");
 }
 
 static void
@@ -900,7 +897,8 @@ vhost_blk_write_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "ctrlr", vdev->name);
 	spdk_json_write_named_string(w, "dev_name", spdk_bdev_get_name(bvdev->bdev));
-	spdk_json_write_named_string(w, "cpumask", spdk_cpuset_fmt(&vdev->cpumask));
+	spdk_json_write_named_string(w, "cpumask",
+				     spdk_cpuset_fmt(spdk_thread_get_cpumask(vdev->thread)));
 	spdk_json_write_named_bool(w, "readonly", bvdev->readonly);
 	spdk_json_write_object_end(w);
 

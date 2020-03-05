@@ -79,12 +79,6 @@
 #define SPDK_VHOST_DISABLED_FEATURES ((1ULL << VIRTIO_RING_F_EVENT_IDX) | \
 	(1ULL << VIRTIO_F_NOTIFY_ON_EMPTY))
 
-struct vhost_poll_group {
-	struct spdk_thread *thread;
-	unsigned ref;
-	TAILQ_ENTRY(vhost_poll_group) tailq;
-};
-
 typedef struct rte_vhost_resubmit_desc spdk_vhost_resubmit_desc;
 typedef struct rte_vhost_resubmit_info spdk_vhost_resubmit_info;
 
@@ -123,8 +117,6 @@ struct spdk_vhost_session {
 	/* Unique session name. */
 	char *name;
 
-	struct vhost_poll_group *poll_group;
-
 	bool initialized;
 	bool started;
 	bool needs_restart;
@@ -157,7 +149,7 @@ struct spdk_vhost_dev {
 	char *name;
 	char *path;
 
-	struct spdk_cpuset cpumask;
+	struct spdk_thread *thread;
 	bool registered;
 
 	uint64_t virtio_features;
@@ -351,7 +343,6 @@ void vhost_dev_foreach_session(struct spdk_vhost_dev *dev,
  * will unlock for the time it's waiting. It's meant to be called only
  * from start/stop session callbacks.
  *
- * \param pg designated session's poll group
  * \param vsession vhost session
  * \param cb_fn the function to call. The void *arg parameter in cb_fn
  * is always NULL.
@@ -360,8 +351,7 @@ void vhost_dev_foreach_session(struct spdk_vhost_dev *dev,
  * \param errmsg error message to print once the timeout expires
  * \return return the code passed to spdk_vhost_session_event_done().
  */
-int vhost_session_send_event(struct vhost_poll_group *pg,
-			     struct spdk_vhost_session *vsession,
+int vhost_session_send_event(struct spdk_vhost_session *vsession,
 			     spdk_vhost_session_fn cb_fn, unsigned timeout_sec,
 			     const char *errmsg);
 
@@ -401,8 +391,6 @@ int vhost_register_unix_socket(const char *path, const char *ctrl_name,
 int vhost_driver_unregister(const char *path);
 int vhost_get_mem_table(int vid, struct rte_vhost_memory **mem);
 int vhost_get_negotiated_features(int vid, uint64_t *negotiated_features);
-
-struct vhost_poll_group *vhost_get_poll_group(struct spdk_cpuset *cpumask);
 
 int remove_vhost_controller(struct spdk_vhost_dev *vdev);
 

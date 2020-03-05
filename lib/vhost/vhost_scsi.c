@@ -97,9 +97,6 @@ struct spdk_vhost_scsi_dev {
 	bool registered;
 	struct spdk_vhost_dev vdev;
 	struct spdk_scsi_dev_vhost_state scsi_dev_state[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
-
-	/* The poll group for all active vhost sessions of this device */
-	struct vhost_poll_group *poll_group;
 };
 
 /** Context for a SCSI target in a vhost session */
@@ -1366,12 +1363,8 @@ vhost_scsi_start(struct spdk_vhost_session *vsession)
 	assert(svdev != NULL);
 	svsession->svdev = svdev;
 
-	if (svdev->vdev.active_session_num == 0) {
-		svdev->poll_group = vhost_get_poll_group(&svdev->vdev.cpumask);
-	}
-
-	return vhost_session_send_event(svdev->poll_group, vsession,
-					vhost_scsi_start_cb, 3, "start session");
+	return vhost_session_send_event(vsession, vhost_scsi_start_cb,
+					3, "start session");
 }
 
 static int
@@ -1457,8 +1450,8 @@ vhost_scsi_stop_cb(struct spdk_vhost_dev *vdev,
 static int
 vhost_scsi_stop(struct spdk_vhost_session *vsession)
 {
-	return vhost_session_send_event(vsession->poll_group, vsession,
-					vhost_scsi_stop_cb, 3, "stop session");
+	return vhost_session_send_event(vsession, vhost_scsi_stop_cb,
+					3, "stop session");
 }
 
 static void
@@ -1521,7 +1514,8 @@ vhost_scsi_write_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write
 
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "ctrlr", vdev->name);
-	spdk_json_write_named_string(w, "cpumask", spdk_cpuset_fmt(&vdev->cpumask));
+	spdk_json_write_named_string(w, "cpumask",
+				     spdk_cpuset_fmt(spdk_thread_get_cpumask(vdev->thread)));
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);

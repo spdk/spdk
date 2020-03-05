@@ -1120,15 +1120,12 @@ out:
 static int
 spdk_vhost_nvme_start(struct spdk_vhost_session *vsession)
 {
-	struct vhost_poll_group *pg;
-
 	if (vsession->vdev->active_session_num > 0) {
 		/* We're trying to start a second session */
 		SPDK_ERRLOG("Vhost-NVMe devices can support only one simultaneous connection.\n");
 		return -1;
 	}
 
-	pg = vhost_get_poll_group(&vsession->vdev->cpumask);
 	return vhost_session_send_event(pg, vsession, spdk_vhost_nvme_start_cb,
 					3, "start session");
 }
@@ -1215,8 +1212,8 @@ spdk_vhost_nvme_stop_cb(struct spdk_vhost_dev *vdev,
 static int
 spdk_vhost_nvme_stop(struct spdk_vhost_session *vsession)
 {
-	return vhost_session_send_event(vsession->poll_group, vsession,
-					spdk_vhost_nvme_stop_cb, 3, "start session");
+	return vhost_session_send_event(vsession, spdk_vhost_nvme_stop_cb,
+					3, "start session");
 }
 
 static void
