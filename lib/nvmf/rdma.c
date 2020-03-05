@@ -3861,12 +3861,10 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				count++;
 				assert(wc[i].opcode == IBV_WC_SEND);
 				assert(spdk_nvmf_rdma_req_is_completing(rdma_req));
-			} else {
-				SPDK_ERRLOG("data=%p length=%u\n", rdma_req->req.data, rdma_req->req.length);
 			}
 
 			rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
-			/* +1 for the response wr */
+			/* RDMA_WRITE operation completed. +1 since it was chained with rsp WR */
 			rqpair->current_send_depth -= rdma_req->num_outstanding_data_wr + 1;
 			rdma_req->num_outstanding_data_wr = 0;
 
@@ -3917,12 +3915,13 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
 			assert(rdma_req->num_outstanding_data_wr > 0);
+			assert(rdma_req->data.wr.opcode == IBV_WR_RDMA_READ);
 
 			rqpair->current_send_depth--;
+			rqpair->current_read_depth--;
 			rdma_req->num_outstanding_data_wr--;
 			if (!wc[i].status) {
 				assert(wc[i].opcode == IBV_WC_RDMA_READ);
-				rqpair->current_read_depth--;
 				/* wait for all outstanding reads associated with the same rdma_req to complete before proceeding. */
 				if (rdma_req->num_outstanding_data_wr == 0) {
 					rdma_req->state = RDMA_REQUEST_STATE_READY_TO_EXECUTE;
@@ -3930,15 +3929,9 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				}
 			} else {
 				/* If the data transfer fails still force the queue into the error state,
-				 * if we were performing an RDMA_READ, we need to force the request into a
-				 * completed state since it wasn't linked to a send. However, in the RDMA_WRITE
-				 * case, we should wait for the SEND to complete. */
-				SPDK_ERRLOG("data=%p length=%u\n", rdma_req->req.data, rdma_req->req.length);
-				if (rdma_req->data.wr.opcode == IBV_WR_RDMA_READ) {
-					rqpair->current_read_depth--;
-					if (rdma_req->num_outstanding_data_wr == 0) {
-						rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
-					}
+				 * in case of RDMA_READ, we need to force the request into a completed state */
+				if (rdma_req->num_outstanding_data_wr == 0) {
+					rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
 				}
 			}
 			break;
@@ -3949,8 +3942,8 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 
 		/* Handle error conditions */
 		if (wc[i].status) {
-			SPDK_DEBUGLOG(SPDK_LOG_RDMA, "CQ error on CQ %p, Request 0x%lu (%d): %s\n",
-				      rpoller->cq, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
+			SPDK_ERRLOG("Error on CQ %p, request 0x%lu, type %d, status: (%d): %s\n",
+				    rpoller->cq, wc[i].wr_id, rdma_wr->type, wc[i].status, ibv_wc_status_str(wc[i].status));
 
 			error = true;
 
