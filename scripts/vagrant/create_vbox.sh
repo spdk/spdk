@@ -32,9 +32,6 @@ display_help() {
 	echo "  -n <num-cpus> 1 to 4            default: ${SPDK_VAGRANT_VMCPU}"
 	echo "  -x <http-proxy>                 default: \"${SPDK_VAGRANT_HTTP_PROXY}\""
 	echo "  -p <provider>                   libvirt or virtualbox"
-	echo "  --vhost-host-dir=<path>         directory path with vhost test dependencies"
-	echo "                                  (test VM qcow image, fio binary, ssh keys)"
-	echo "  --vhost-vm-dir=<path>           directory where to put vhost dependencies in VM"
 	echo "  --qemu-emulator=<path>          directory path with emulator, default: ${SPDK_QEMU_EMULATOR}"
 	echo "  --vagrantfiles-dir=<path>       directory to put vagrantfile"
 	echo "  -u                              allow password authentication to vagrant box"
@@ -85,8 +82,6 @@ while getopts ":b:n:s:x:p:u:vcrldh-:" opt; do
 		-)
 		case "${OPTARG}" in
 			package-box) VAGRANT_PACKAGE_BOX=1 ;;
-			vhost-host-dir=*) VHOST_HOST_DIR="${OPTARG#*=}" ;;
-			vhost-vm-dir=*) VHOST_VM_DIR="${OPTARG#*=}" ;;
 			qemu-emulator=*) SPDK_QEMU_EMULATOR="${OPTARG#*=}" ;;
 			vagrantfiles-dir=*) VAGRANTFILE_DIR="${OPTARG#*=}" ;;
 			*) echo "Invalid argument '$OPTARG'" ;;
@@ -222,8 +217,6 @@ if [ ${VERBOSE} = 1 ]; then
 	echo SPDK_VAGRANT_VMRAM=$SPDK_VAGRANT_VMRAM
 	echo SPDK_VAGRANT_PROVIDER=$SPDK_VAGRANT_PROVIDER
 	echo SPDK_VAGRANT_HTTP_PROXY=$SPDK_VAGRANT_HTTP_PROXY
-	echo VHOST_HOST_DIR=$VHOST_HOST_DIR
-	echo VHOST_VM_DIR=$VHOST_VM_DIR
 	echo SPDK_QEMU_EMULATOR=$SPDK_QEMU_EMULATOR
 	echo VAGRANT_PACKAGE_BOX=$VAGRANT_PACKAGE_BOX
 	echo
@@ -242,14 +235,6 @@ export VAGRANT_PASSWORD_AUTH
 
 if [ -n "$SPDK_VAGRANT_PROVIDER" ]; then
     provider="--provider=${SPDK_VAGRANT_PROVIDER}"
-fi
-
-if [ -n "$VHOST_HOST_DIR" ]; then
-    export VHOST_HOST_DIR
-fi
-
-if [ -n "$VHOST_VM_DIR" ]; then
-    export VHOST_VM_DIR
 fi
 
 if [ -n "$SPDK_VAGRANT_PROVIDER" ]; then

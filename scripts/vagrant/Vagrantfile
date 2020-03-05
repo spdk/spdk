@@ -79,8 +79,6 @@ Vagrant.configure(2) do |config|
   vmcpu=(ENV['SPDK_VAGRANT_VMCPU'] || 2)
   vmram=(ENV['SPDK_VAGRANT_VMRAM'] || 4096)
   spdk_dir=(ENV['SPDK_DIR'] || "none")
-  vhost_host_dir=(ENV['VHOST_HOST_DIR'] || "none")
-  vhost_vm_dir=(ENV['VHOST_VM_DIR'] || "none")
   vmemulator=(ENV['SPDK_QEMU_EMULATOR'] || "")
   emulated_nvme_types=(ENV['NVME_DISKS_TYPE'] || "nvme").split(',')
   nvme_namespaces=(ENV['NVME_DISKS_NAMESPACES'] || "").split(',')
@@ -189,13 +187,6 @@ Vagrant.configure(2) do |config|
       setup.privileged = false
       setup.args = ["-u", "-i"]
     end
-  end
-
-  if vhost_host_dir != "none"
-      config.vm.synced_folder "#{vhost_host_dir}", "#{vhost_vm_dir}", type: "rsync", rsync__auto: false
-      config.vm.provision "shell", inline: "sudo mkdir -p /root/.ssh"
-      config.vm.provision "shell", inline: "sudo cp #{vhost_vm_dir}/spdk_vhost_id_rsa* /root/.ssh"
-      config.vm.provision "shell", inline: "sudo chmod 600 /root/.ssh/spdk_vhost_id_rsa"
   end
 
   # Copy in the user's tools if they exists
