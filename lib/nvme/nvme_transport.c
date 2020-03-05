@@ -526,6 +526,11 @@ nvme_transport_poll_group_disconnect_qpair(struct spdk_nvme_qpair *qpair)
 			qpair->poll_group_tailq_head = &tgroup->disconnected_qpairs;
 			STAILQ_REMOVE(&tgroup->connected_qpairs, qpair, spdk_nvme_qpair, poll_group_stailq);
 			STAILQ_INSERT_TAIL(&tgroup->disconnected_qpairs, qpair, poll_group_stailq);
+			/* EINPROGRESS indicates that a call has already been made to this function.
+			 * It just keeps us from segfaulting on a double removal/insert.
+			 */
+		} else if (rc == -EINPROGRESS) {
+			rc = 0;
 		}
 		return rc;
 	}
@@ -552,7 +557,8 @@ nvme_transport_poll_group_connect_qpair(struct spdk_nvme_qpair *qpair)
 			STAILQ_REMOVE(&tgroup->disconnected_qpairs, qpair, spdk_nvme_qpair, poll_group_stailq);
 			STAILQ_INSERT_TAIL(&tgroup->connected_qpairs, qpair, poll_group_stailq);
 		}
-		return rc;
+
+		return rc == -EINPROGRESS ? 0 : rc;
 	}
 
 

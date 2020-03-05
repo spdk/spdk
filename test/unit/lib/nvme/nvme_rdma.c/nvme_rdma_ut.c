@@ -48,6 +48,12 @@ DEFINE_STUB(spdk_mem_map_alloc, struct spdk_mem_map *, (uint64_t default_transla
 		const struct spdk_mem_map_ops *ops, void *cb_ctx), NULL);
 DEFINE_STUB_V(spdk_mem_map_free, (struct spdk_mem_map **pmap));
 
+DEFINE_STUB(nvme_poll_group_connect_qpair, int, (struct spdk_nvme_qpair *qpair), 0);
+
+DEFINE_STUB_V(nvme_qpair_resubmit_requests, (struct spdk_nvme_qpair *qpair, uint32_t num_requests));
+DEFINE_STUB(spdk_nvme_poll_group_process_completions, int64_t, (struct spdk_nvme_poll_group *group,
+		uint32_t completions_per_qpair, spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb), 0)
+
 /* used to mock out having to split an SGL over a memory region */
 uint64_t g_mr_size;
 struct ibv_mr g_nvme_rdma_mr;
