@@ -291,21 +291,12 @@ EOF
 	fi
 	vagrant up $provider
 	if [ ${VAGRANT_PACKAGE_BOX} == 1 ]; then
-		cd "$VAGRANTFILE_DIR"
 		vagrant ssh -c 'sudo spdk_repo/spdk/scripts/vagrant/update.sh'
-		if [[ $SPDK_VAGRANT_DISTRO =~ "ubuntu" ]]; then
-			vagrant ssh -c 'sudo apt-get clean'
-		elif [[ $SPDK_VAGRANT_DISTRO =~ "fedora" ]]; then
-			vagrant ssh -c 'sudo dnf clean all'
-		elif [[ $SPDK_VAGRANT_DISTRO =~ "centos" ]]; then
-			vagrant ssh -c 'sudo yum clean all'
-		elif [[ $SPDK_VAGRANT_DISTRO =~ "freebsd" ]]; then
-			vagrant ssh -c 'sudo pkg clean -ay'
-		fi
-		vagrant ssh -c 'cat /dev/null > ~/.bash_history && history -c'
+		vagrant halt
 		vagrant package --output spdk_${SPDK_VAGRANT_DISTRO}.box
 		vagrant box add spdk/${SPDK_VAGRANT_DISTRO} spdk_${SPDK_VAGRANT_DISTRO}.box &&
 			rm spdk_${SPDK_VAGRANT_DISTRO}.box
+		vagrant destroy
 	fi
 	echo ""
 	echo "  SUCCESS!"

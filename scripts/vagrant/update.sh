@@ -80,15 +80,19 @@ else
 		apt-get update --assume-yes --no-install-suggests --no-install-recommends -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 		apt-get upgrade --assume-yes --no-install-suggests --no-install-recommends -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 		${SPDK_DIR}/scripts/pkgdep.sh --all
+		apt-get clean
 	elif [ "$DISTRIB_ID" == "CentOS" ]; then
 		# Standard update + upgrade dance
 		yum check-update
 		yum update -y
 		${SPDK_DIR}/scripts/pkgdep.sh --all
+		yum clean all
 	elif [ "$DISTRIB_ID" == "Fedora" ]; then
 		yum check-update
 		yum update -y
 		"$SPDK_DIR"/scripts/pkgdep.sh --all
 		sudo -u vagrant "$SPDK_DIR"/test/common/config/vm_setup.sh -i
+		yum clean all
 	fi
+	cat /dev/null > ~/.bash_history && history -c
 fi
