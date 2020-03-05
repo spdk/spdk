@@ -1215,6 +1215,12 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 	_spdk_io_device_free(dev);
 }
 
+const char *
+spdk_io_device_get_name(struct io_device *dev)
+{
+	return dev->name;
+}
+
 struct spdk_io_channel *
 spdk_get_io_channel(void *io_device)
 {

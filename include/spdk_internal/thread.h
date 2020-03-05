@@ -113,4 +113,6 @@ struct spdk_thread {
 
 const char *spdk_poller_state_str(enum spdk_poller_state state);
 
+const char *spdk_io_device_get_name(struct io_device *dev);
+
 #endif /* SPDK_THREAD_INTERNAL_H_ */
