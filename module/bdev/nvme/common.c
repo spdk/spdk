@@ -37,6 +37,7 @@
 
 struct nvme_bdev_ctrlrs g_nvme_bdev_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_bdev_ctrlrs);
 pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
+bool g_bdev_nvme_module_finish;
 
 struct nvme_bdev_ctrlr *
 nvme_bdev_ctrlr_get(const struct spdk_nvme_transport_id *trid)
@@ -128,6 +129,15 @@ nvme_bdev_unregister_cb(void *io_device)
 	}
 	free(nvme_bdev_ctrlr->namespaces);
 	free(nvme_bdev_ctrlr);
+
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	if (g_bdev_nvme_module_finish && TAILQ_EMPTY(&g_nvme_bdev_ctrlrs)) {
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+		spdk_bdev_module_finish_done();
+		return;
+	}
+
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 }
 
 void

@@ -212,6 +212,7 @@ bdev_nvme_get_ctx_size(void)
 
 static struct spdk_bdev_module nvme_if = {
 	.name = "nvme",
+	.async_fini = true,
 	.module_init = bdev_nvme_library_init,
 	.module_fini = bdev_nvme_library_fini,
 	.config_text = bdev_nvme_get_spdk_running_config,
@@ -1949,6 +1950,14 @@ bdev_nvme_library_fini(void)
 			pthread_mutex_lock(&g_bdev_nvme_mutex);
 		}
 	}
+
+	g_bdev_nvme_module_finish = true;
+	if (TAILQ_EMPTY(&g_nvme_bdev_ctrlrs)) {
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+		spdk_bdev_module_finish_done();
+		return;
+	}
+
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 }
 
