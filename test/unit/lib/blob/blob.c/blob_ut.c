@@ -5211,7 +5211,8 @@ blob_relations2(void)
 static void
 blob_delete_snapshot_power_failure(void)
 {
-	struct spdk_blob_store *bs = g_bs;
+	struct spdk_bs_dev *dev;
+	struct spdk_blob_store *bs;
 	struct spdk_blob_opts opts;
 	struct spdk_blob *blob, *snapshot;
 	struct spdk_power_failure_thresholds thresholds = {};
@@ -5223,27 +5224,35 @@ blob_delete_snapshot_power_failure(void)
 	int rc;
 	bool deleted = false;
 
-	/* Create blob */
-	ut_spdk_blob_opts_init(&opts);
-	opts.num_clusters = 10;
-
-	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
-	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
-	blobid = g_blobid;
-
-	/* Create snapshot */
-	spdk_bs_create_snapshot(bs, blobid, NULL, blob_op_with_id_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
-	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
-	snapshotid = g_blobid;
-	SPDK_CU_ASSERT_FATAL(spdk_bit_array_get(bs->used_clusters, 1));
-	SPDK_CU_ASSERT_FATAL(!spdk_bit_array_get(bs->used_clusters, 11));
-
 	thresholds.general_threshold = 1;
 	while (!deleted) {
+		dev = init_dev();
+
+		spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
+		poll_threads();
+		CU_ASSERT(g_bserrno == 0);
+		SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+		bs = g_bs;
+
+		/* Create blob */
+		ut_spdk_blob_opts_init(&opts);
+		opts.num_clusters = 10;
+
+		spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
+		poll_threads();
+		CU_ASSERT(g_bserrno == 0);
+		CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+		blobid = g_blobid;
+
+		/* Create snapshot */
+		spdk_bs_create_snapshot(bs, blobid, NULL, blob_op_with_id_complete, NULL);
+		poll_threads();
+		CU_ASSERT(g_bserrno == 0);
+		CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+		snapshotid = g_blobid;
+		SPDK_CU_ASSERT_FATAL(spdk_bit_array_get(bs->used_clusters, 1));
+		SPDK_CU_ASSERT_FATAL(!spdk_bit_array_get(bs->used_clusters, 11));
+
 		dev_set_power_failure_thresholds(thresholds);
 
 		spdk_bs_delete_blob(bs, snapshotid, blob_op_complete, NULL);
@@ -5292,11 +5301,9 @@ blob_delete_snapshot_power_failure(void)
 		poll_threads();
 		CU_ASSERT(g_bserrno == 0);
 
-		/* Reload blobstore to have the same starting conditions (as the previous blobstore load
-		 * may trigger cleanup after power failure or may not) */
-		ut_bs_reload(&bs, NULL);
-		SPDK_CU_ASSERT_FATAL(spdk_bit_array_get(bs->used_clusters, 1));
-		SPDK_CU_ASSERT_FATAL(!spdk_bit_array_get(bs->used_clusters, 11));
+		spdk_bs_unload(bs, bs_op_complete, NULL);
+		poll_threads();
+		CU_ASSERT(g_bserrno == 0);
 
 		thresholds.general_threshold++;
 	}
@@ -6533,7 +6540,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite_bs, blob_snapshot_rw_iov);
 	CU_ADD_TEST(suite, blob_relations);
 	CU_ADD_TEST(suite, blob_relations2);
-	CU_ADD_TEST(suite_bs, blob_delete_snapshot_power_failure);
+	CU_ADD_TEST(suite, blob_delete_snapshot_power_failure);
 	CU_ADD_TEST(suite_bs, blob_create_snapshot_power_failure);
 	CU_ADD_TEST(suite_bs, blob_inflate_rw);
 	CU_ADD_TEST(suite_bs, blob_snapshot_freeze_io);
