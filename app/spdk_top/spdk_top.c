@@ -46,12 +46,7 @@
 #define RPC_MAX_THREADS 1024
 #define RPC_MAX_POLLERS 1024
 #define MAX_THREAD_NAME 128
-#define MAX_THREAD_NAME_DISP 30
 #define MAX_POLLER_NAME 128
-#define MAX_POLLER_NAME_DISP 33
-#define MAX_POLLER_TYPE_DISP 15
-#define MAX_POLLER_COUNT_STR 4
-#define MAX_POLLER_COUNT_DISP 25
 
 #define MAX_STRING_LEN 12289 /* 3x 4k monitors + 1 */
 #define TAB_WIN_HEIGHT 3
@@ -60,11 +55,16 @@
 #define TABS_LOCATION_ROW 4
 #define TABS_LOCATION_COL 0
 #define TABS_DATA_START_ROW 3
-#define TABS_DATA_START_COL 3
+#define TABS_DATA_START_COL 2
 #define TABS_COL_COUNT 10
 #define MENU_WIN_HEIGHT 3
 #define MENU_WIN_SPACING 4
 #define MENU_WIN_LOCATION_COL 0
+#define MAX_THREAD_NAME_LEN 26
+#define MAX_POLLER_NAME_LEN 36
+#define MAX_POLLER_COUNT_STR_LEN 16
+#define MAX_POLLER_TYPE_STR_LEN 8
+#define MAX_CORE_MASK_STR_LEN 12
 
 enum tabs {
 	THREADS_TAB,
@@ -83,6 +83,7 @@ enum spdk_poller_type {
 struct col_desc {
 	const char *name;
 	uint8_t name_len;
+	uint8_t max_data_string;
 	bool disabled;
 };
 
@@ -96,18 +97,18 @@ uint16_t g_data_win_size;
 uint32_t g_last_threads_count, g_last_pollers_count, g_last_cores_count;
 uint8_t g_current_sort_col[NUMBER_OF_TABS] = {0, 0, 0};
 static struct col_desc g_col_desc[NUMBER_OF_TABS][TABS_COL_COUNT] = {
-	{	{.name = "     Thread name     "},
-		{.name = "     Active pollers     "},
-		{.name = "     Timed pollers     "},
-		{.name = "     Paused pollers     "},
+	{	{.name = "Thread name", .max_data_string = MAX_THREAD_NAME_LEN},
+		{.name = "Active pollers", .max_data_string = MAX_POLLER_COUNT_STR_LEN},
+		{.name = "Timed pollers", .max_data_string = MAX_POLLER_COUNT_STR_LEN},
+		{.name = "Paused pollers", .max_data_string = MAX_POLLER_COUNT_STR_LEN},
 		{.name = (char *)NULL}
 	},
-	{	{.name = "          Poller name          "},
-		{.name = "     Type     "},
-		{.name = "     On thread     "},
+	{	{.name = "Poller name", .max_data_string = MAX_POLLER_NAME_LEN},
+		{.name = "Type", .max_data_string = MAX_POLLER_TYPE_STR_LEN},
+		{.name = "On thread", .max_data_string = MAX_THREAD_NAME_LEN},
 		{.name = (char *)NULL}
 	},
-	{	{.name = "     Core     "},
+	{	{.name = "Core", .max_data_string = MAX_CORE_MASK_STR_LEN},
 		{.name = (char *)NULL}
 	}
 };
@@ -478,7 +479,7 @@ draw_tabs(enum tabs tab_index, uint8_t sort_col)
 	struct col_desc *col_desc = g_col_desc[tab_index];
 	WINDOW *tab = g_tabs[tab_index];
 	int i, j;
-	uint16_t offset;
+	uint16_t offset, draw_offset;
 
 	for (i = 0; col_desc[i].name != NULL; i++) {
 		if (col_desc[i].disabled) {
@@ -487,19 +488,24 @@ draw_tabs(enum tabs tab_index, uint8_t sort_col)
 
 		offset = 1;
 		for (j = i; j != 0; j--) {
-			offset += col_desc[j - 1].name_len + 1;
+			if (!col_desc[j - 1].disabled) {
+				offset += col_desc[j - 1].max_data_string;
+				offset += col_desc[j - 1].name_len % 2 + 1;
+			}
 		}
+
+		draw_offset = offset + (col_desc[i].max_data_string / 2) - (col_desc[i].name_len / 2);
 
 		if (i == sort_col) {
 			wattron(tab, COLOR_PAIR(3));
-			print_max_len(tab, 1, offset, 0, col_desc[i].name);
+			print_max_len(tab, 1, draw_offset, 0, col_desc[i].name);
 			wattroff(tab, COLOR_PAIR(3));
 		} else {
-			print_max_len(tab, 1, offset, 0, col_desc[i].name);
+			print_max_len(tab, 1, draw_offset, 0, col_desc[i].name);
 		}
 
-		if (col_desc[i + 1].name != NULL) {
-			print_max_len(tab, 1, offset + col_desc[i].name_len, 0, "|");
+		if (offset != 1) {
+			print_max_len(tab, 1, offset - 1, 0, "|");
 		}
 	}
 
@@ -591,7 +597,7 @@ refresh_threads_tab(void)
 	uint64_t i, threads_count;
 	uint16_t j;
 	uint16_t col;
-	char pollers_number[MAX_POLLER_COUNT_STR];
+	char pollers_number[MAX_POLLER_COUNT_STR_LEN];
 	struct rpc_thread_info *thread_info[g_threads_stats.threads.threads_count];
 
 	threads_count = g_threads_stats.threads.threads_count;
@@ -615,26 +621,29 @@ refresh_threads_tab(void)
 
 	for (i = 0; i < threads_count; i++) {
 		col = TABS_DATA_START_COL;
+
 		if (!col_desc[0].disabled) {
-			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col, 0, thread_info[i]->name);
+			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col, col_desc[0].max_data_string,
+				      thread_info[i]->name);
+			col += col_desc[0].max_data_string + 2;
 		}
 
-		col += MAX_THREAD_NAME_DISP;
 		if (!col_desc[1].disabled) {
-			snprintf(pollers_number, MAX_POLLER_COUNT_STR, "%ld", thread_info[i]->active_pollers_count);
-			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col, 0, pollers_number);
+			snprintf(pollers_number, MAX_POLLER_COUNT_STR_LEN, "%ld", thread_info[i]->active_pollers_count);
+			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col + (col_desc[1].name_len / 2),
+				      col_desc[1].max_data_string, pollers_number);
+			col += col_desc[1].max_data_string + 1;
 		}
-
-		col += MAX_POLLER_COUNT_DISP;
 		if (!col_desc[2].disabled) {
-			snprintf(pollers_number, MAX_POLLER_COUNT_STR, "%ld", thread_info[i]->timed_pollers_count);
-			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col, 0, pollers_number);
+			snprintf(pollers_number, MAX_POLLER_COUNT_STR_LEN, "%ld", thread_info[i]->timed_pollers_count);
+			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col + (col_desc[2].name_len / 2),
+				      col_desc[2].max_data_string, pollers_number);
+			col += col_desc[2].max_data_string + 1;
 		}
-
-		col += MAX_POLLER_COUNT_DISP;
 		if (!col_desc[3].disabled) {
-			snprintf(pollers_number, MAX_POLLER_COUNT_STR, "%ld", thread_info[i]->paused_pollers_count);
-			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col, 0, pollers_number);
+			snprintf(pollers_number, MAX_POLLER_COUNT_STR_LEN, "%ld", thread_info[i]->paused_pollers_count);
+			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col + (col_desc[3].name_len / 2),
+				      col_desc[3].max_data_string, pollers_number);
 		}
 	}
 }
@@ -738,20 +747,20 @@ refresh_pollers_tab(void)
 		col = TABS_DATA_START_COL;
 
 		if (!col_desc[0].disabled) {
-			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + i, col, 0, pollers[i]->name);
+			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + i, col + 1, col_desc[0].max_data_string,
+				      pollers[i]->name);
+			col += col_desc[0].max_data_string + 2;
 		}
-
-		col += MAX_POLLER_NAME_DISP;
 
 		if (!col_desc[1].disabled) {
-			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + i, col, 0,
+			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + i, col, col_desc[1].max_data_string,
 				      poller_type_str[pollers[i]->type]);
+			col += col_desc[1].max_data_string + 2;
 		}
 
-		col += MAX_POLLER_TYPE_DISP;
-
 		if (!col_desc[2].disabled) {
-			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + i, col, 0, pollers[i]->thread_name);
+			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + i, col, col_desc[2].max_data_string,
+				      pollers[i]->thread_name);
 		}
 	}
 }
@@ -831,7 +840,7 @@ draw_filtering_menu(uint8_t position, WINDOW *filter_win, uint8_t tab, MENU **my
 		my_items[i] = new_item(col_desc[i / WINDOW_COLUMNS].disabled ? "[ ]" : "[*]", NULL);
 	}
 
-	my_items[i] = new_item("CLOSE", NULL);
+	my_items[i] = new_item("     CLOSE", NULL);
 	set_item_userptr(my_items[i], apply_filters);
 
 	menu = new_menu((ITEM **)my_items);
