@@ -70,8 +70,11 @@ CONFIG_UBSAN=n
 # Build with Thread Sanitizer enabled
 CONFIG_TSAN=n
 
-# Build tests
+# Build functional tests
 CONFIG_TESTS=y
+
+# Build unit tests
+CONFIG_UNIT_TESTS=y
 
 # Build examples
 CONFIG_EXAMPLES=y

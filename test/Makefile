@@ -35,9 +35,10 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 # These directories contain tests.
-TESTDIRS = app bdev blobfs cpp_headers env event nvme unit rpc_client
+TESTDIRS = app bdev blobfs cpp_headers env event nvme rpc_client
 
-DIRS-y = $(TESTDIRS)
+DIRS-$(CONFIG_TESTS) += $(TESTDIRS)
+DIRS-$(CONFIG_UNIT_TESTS) += unit
 
 .PHONY: all clean $(DIRS-y)
 

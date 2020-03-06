@@ -91,6 +91,7 @@ BuildArch: noarch
 %build
 ./configure --prefix=%{_usr} \
 	--disable-tests \
+	--disable-unit-tests \
 	--without-crypto \
 	--with-dpdk=/usr/share/dpdk/x86_64-default-linuxapp-gcc \
 	--without-fio \

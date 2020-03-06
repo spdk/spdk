@@ -41,7 +41,7 @@ DIRS-y += module
 DIRS-$(CONFIG_SHARED) += shared_lib
 DIRS-y += app include
 DIRS-$(CONFIG_EXAMPLES) += examples
-DIRS-$(CONFIG_TESTS) += test
+DIRS-y += test
 DIRS-$(CONFIG_IPSEC_MB) += ipsecbuild
 DIRS-$(CONFIG_ISAL) += isalbuild
 

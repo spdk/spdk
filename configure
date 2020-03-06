@@ -32,7 +32,8 @@ function usage()
 	echo " --enable-lto              Enable link-time optimization"
 	echo " --enable-pgo-capture      Enable generation of profile guided optimization data"
 	echo " --enable-pgo-use          Use previously captured profile guided optimization data"
-	echo " --disable-tests           Disable building of tests"
+	echo " --disable-tests           Disable building of functional tests"
+	echo " --disable-unit-tests      Disable building of unit tests"
 	echo " --disable-examples        Disable building of examples"
 	echo ""
 	echo "Specifying Dependencies:"
@@ -240,6 +241,12 @@ for i in "$@"; do
 			;;
 		--disable-tests)
 			CONFIG[TESTS]=n
+			;;
+		--enable-unit-tests)
+			CONFIG[UNIT_TESTS]=y
+			;;
+		--disable-unit-tests)
+			CONFIG[UNIT_TESTS]=n
 			;;
 		--enable-examples)
 			CONFIG[EXAMPLES]=y
