@@ -59,6 +59,7 @@ waitforbdev ftl0
 ) > $FTL_JSON_CONF
 
 killprocess $svcpid
+trap - SIGINT SIGTERM EXIT
 
 for test in ${tests}; do
 	timing_enter $test
@@ -66,5 +67,5 @@ for test in ${tests}; do
 	timing_exit $test
 done
 
-trap - SIGINT SIGTERM EXIT
-fio_kill
+rm -f $ftl_bdev_conf
+rm -f $FTL_JSON_CONF
