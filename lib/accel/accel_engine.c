@@ -178,7 +178,6 @@ accel_engine_create_cb(void *io_device, void *ctx_buf)
 	accel_ch->ch = g_sw_accel_engine->get_io_channel();
 	assert(accel_ch->ch != NULL);
 	accel_ch->engine = g_sw_accel_engine;
-	SPDK_NOTICELOG("Acceleration framework using module: SOFTWARE\n");
 	return 0;
 }
 
