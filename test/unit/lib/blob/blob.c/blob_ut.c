@@ -182,7 +182,6 @@ ut_bs_reload(struct spdk_blob_store **bs, struct spdk_bs_opts *opts)
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	*bs = g_bs;
 
-	g_bs = NULL;
 	g_bserrno = -1;
 }
 
@@ -202,7 +201,6 @@ ut_bs_dirty_load(struct spdk_blob_store **bs, struct spdk_bs_opts *opts)
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	*bs = g_bs;
 
-	g_bs = NULL;
 	g_bserrno = -1;
 }
 
