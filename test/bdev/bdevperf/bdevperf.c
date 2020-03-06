@@ -43,6 +43,7 @@
 #include "spdk/thread.h"
 #include "spdk/string.h"
 #include "spdk/rpc.h"
+#include "spdk/bit_array.h"
 
 struct bdevperf_task {
 	struct iovec			iov;
@@ -110,6 +111,7 @@ struct io_target {
 	bool				is_draining;
 	struct spdk_poller		*run_timer;
 	struct spdk_poller		*reset_timer;
+	struct spdk_bit_array		*outstanding;
 	TAILQ_HEAD(, bdevperf_task)	task_list;
 };
 
@@ -267,6 +269,9 @@ bdevperf_free_target(struct io_target *target)
 		free(task);
 	}
 
+	if (g_verify) {
+		spdk_bit_array_free(&target->outstanding);
+	}
 	free(target->name);
 	free(target);
 }
@@ -391,6 +396,9 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	target->current_queue_depth--;
 
 	if (success) {
+		if (g_verify) {
+			spdk_bit_array_clear(target->outstanding, task->offset_blocks / target->io_size_blocks);
+		}
 		target->io_completed++;
 	}
 
@@ -676,6 +684,20 @@ bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
 		offset_in_ios = target->offset_in_ios++;
 		if (target->offset_in_ios == target->size_in_ios) {
 			target->offset_in_ios = 0;
+		}
+
+		/* Increment of offset_in_ios if there's already an outstanding IO
+		 * to that location. We only need this with g_verify as random
+		 * offsets are not supported with g_verify at this time.
+		 */
+		if (g_verify && spdk_bit_array_get(target->outstanding, offset_in_ios)) {
+			do {
+				offset_in_ios++;
+				if (target->offset_in_ios == target->size_in_ios) {
+					target->offset_in_ios = 0;
+				}
+			} while (spdk_bit_array_get(target->outstanding, offset_in_ios));
+			spdk_bit_array_set(target->outstanding, offset_in_ios);
 		}
 	}
 
@@ -1081,7 +1103,7 @@ _bdevperf_construct_target(struct spdk_bdev *bdev, struct io_target_group *group
 		SPDK_ERRLOG("Could not open leaf bdev %s, error=%d\n", spdk_bdev_get_name(bdev), rc);
 		free(target->name);
 		free(target);
-		return 0;
+		return -EINVAL;
 	}
 
 	target->bdev = bdev;
@@ -1100,6 +1122,17 @@ _bdevperf_construct_target(struct spdk_bdev *bdev, struct io_target_group *group
 	}
 
 	target->size_in_ios = spdk_bdev_get_num_blocks(bdev) / target->io_size_blocks;
+
+	if (g_verify) {
+		target->outstanding = spdk_bit_array_create(target->size_in_ios);
+		if (target->outstanding == NULL) {
+			SPDK_ERRLOG("Could not create outstanding array bitmap for bdev %s\n", spdk_bdev_get_name(bdev));
+			spdk_bdev_close(target->bdev_desc);
+			free(target->name);
+			free(target);
+			return -ENOMEM;
+		}
+	}
 
 	TAILQ_INIT(&target->task_list);
 
