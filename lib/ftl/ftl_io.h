@@ -157,6 +157,8 @@ struct ftl_wbuf_entry {
 	TAILQ_ENTRY(ftl_wbuf_entry)		tailq;
 };
 
+#define FTL_IO_CHANNEL_INDEX_INVALID ((uint64_t)-1)
+
 struct ftl_io_channel {
 	/* Device */
 	struct spdk_ftl_dev			*dev;

@@ -2144,6 +2144,13 @@ void
 ftl_io_write(struct ftl_io *io)
 {
 	struct spdk_ftl_dev *dev = io->dev;
+	struct ftl_io_channel *ioch = ftl_io_channel_get_ctx(io->ioch);
+
+	/* Put the IO on retry queue in case IO channel is not initialized */
+	if (spdk_unlikely(ioch->index == FTL_IO_CHANNEL_INDEX_INVALID)) {
+		TAILQ_INSERT_TAIL(&ioch->retry_queue, io, ioch_entry);
+		return;
+	}
 
 	/* For normal IOs we just need to copy the data onto the write buffer */
 	if (!(io->flags & FTL_IO_MD)) {

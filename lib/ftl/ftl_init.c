@@ -1110,6 +1110,7 @@ ftl_io_channel_create_cb(void *io_device, void *ctx)
 	}
 
 	ioch->cache_ioch = NULL;
+	ioch->index = FTL_IO_CHANNEL_INDEX_INVALID;
 	ioch->dev = dev;
 	ioch->elem_size = sizeof(struct ftl_md_io);
 	ioch->io_pool = spdk_mempool_create(mempool_name,
