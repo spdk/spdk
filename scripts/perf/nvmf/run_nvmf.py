@@ -665,10 +665,22 @@ class KernelInitiator(Initiator):
         nvme_list = [x for x in out.split("\n") if "nvme" in x]
 
         filename_section = ""
-        for i, nvme in enumerate(nvme_list):
-            filename_section = "\n".join([filename_section,
-                                          "[filename%s]" % i,
-                                          "filename=%s" % nvme])
+        filenames = ["nvme%sn1" % x for x in range(0, len(nvme_list))]
+        nvme_per_split = int(len(nvme_list) / threads)
+        remainder = len(nvme_list) % threads
+        iterator = iter(filenames)
+        result = []
+        for i in range(threads):
+            result.append([])
+            for j in range(nvme_per_split):
+                result[i].append(next(iterator))
+                if remainder:
+                    result[i].append(next(iterator))
+                    remainder -= 1
+        for i, r in enumerate(result):
+            header = "[filename%s]" % i
+            disks = "\n".join(["filename=/dev/%s" % x for x in r])
+            filename_section = "\n".join([filename_section, header, disks])
 
         return filename_section
 
