@@ -110,6 +110,7 @@ static struct col_desc g_col_desc[NUMBER_OF_TABS][TABS_COL_COUNT] = {
 	{	{.name = "Poller name", .max_data_string = MAX_POLLER_NAME_LEN},
 		{.name = "Type", .max_data_string = MAX_POLLER_TYPE_STR_LEN},
 		{.name = "On thread", .max_data_string = MAX_THREAD_NAME_LEN},
+		{.name = "Run count", .max_data_string = MAX_TIME_STR_LEN},
 		{.name = (char *)NULL}
 	},
 	{	{.name = "Core", .max_data_string = MAX_CORE_STR_LEN},
@@ -718,6 +719,15 @@ sort_pollers(const void *p1, const void *p2, void *arg)
 		case 2: /* Sort by thread */
 			rc = strcmp(poller1->thread_name, poller2->thread_name);
 			break;
+		case 3: /* Sort by run counter */
+			if (poller2->run_count > poller1->run_count) {
+				rc = 1;
+			} else if (poller2->run_count < poller1->run_count) {
+				rc = -1;
+			} else {
+				rc = 0;
+			}
+			break;
 		default:
 			rc = 0;
 			break;
@@ -749,6 +759,7 @@ refresh_pollers_tab(void)
 	uint64_t i, count = 0;
 	uint16_t col, j;
 	enum sort_type sorting;
+	char run_count[MAX_TIME_STR_LEN];
 	struct rpc_poller_info *pollers[RPC_MAX_POLLERS];
 
 	for (i = 0; i < g_pollers_stats.pollers_threads.threads_count; i++) {
@@ -799,6 +810,13 @@ refresh_pollers_tab(void)
 		if (!col_desc[2].disabled) {
 			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + i, col, col_desc[2].max_data_string,
 				      pollers[i]->thread_name);
+			col += col_desc[2].max_data_string + 1;
+		}
+
+		if (!col_desc[3].disabled) {
+			snprintf(run_count, MAX_TIME_STR_LEN, "%" PRIu64, pollers[i]->run_count);
+			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + i, col, col_desc[3].max_data_string,
+				      run_count);
 		}
 	}
 }
