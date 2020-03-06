@@ -406,9 +406,11 @@ free_data(void)
 }
 
 static void
-print_max_len(WINDOW *win, uint16_t row, uint16_t col, const char *string)
+print_max_len(WINDOW *win, int row, uint16_t col, uint16_t max_len, const char *string)
 {
-	int len, max_col;
+	const char dots[] = "...";
+	int DOTS_STR_LEN = sizeof(dots) / sizeof(dots[0]);
+	int len, max_col, max_str;
 	int max_row __attribute__((unused));
 
 	len = strlen(string);
@@ -416,19 +418,32 @@ print_max_len(WINDOW *win, uint16_t row, uint16_t col, const char *string)
 
 	assert(row < max_row);
 
-	/* Check if provided string position limit + "..." exceeds screen width */
-	if (col + 3 > max_col) {
-		col = max_col - 4;
+	if (max_len != 0 && col + max_len < max_col) {
+		max_col = col + max_len;
+	}
+
+	max_str = max_col - col;
+
+	if (max_str <= DOTS_STR_LEN) {
+		/* No space to print anything */
+		return;
 	}
 
 	if (col + len > max_col - 1) {
 		char tmp_str[MAX_STRING_LEN];
 
-		snprintf(tmp_str, max_col - col - 3, "%s", string);
-		snprintf(&tmp_str[max_col - col - 4], 4, "...");
+		snprintf(tmp_str, max_str - DOTS_STR_LEN - 1, "%s", string);
+		snprintf(&tmp_str[max_str - DOTS_STR_LEN - 2], DOTS_STR_LEN, "%s", dots);
 		mvwprintw(win, row, col, tmp_str);
 	} else {
-		mvwprintw(win, row, col, string);
+		if (max_len) {
+			char tmp_str[max_str];
+
+			snprintf(tmp_str, max_str, "%s%*c", string, max_len - len - 1, ' ');
+			mvwprintw(win, row, col, tmp_str);
+		} else {
+			mvwprintw(win, row, col, string);
+		}
 	}
 	refresh();
 	wrefresh(win);
@@ -439,7 +454,7 @@ draw_menu_win(void)
 {
 	wbkgd(g_menu_win, COLOR_PAIR(2));
 	box(g_menu_win, 0, 0);
-	print_max_len(g_menu_win, 1, 1,
+	print_max_len(g_menu_win, 1, 1, 0,
 		      "   [q] Quit   |   [1-3] TAB selection   |   [PgUp] Previous page   |   [PgDown] Next page   |   [c] Columns   |   [s] Sorting");
 }
 
@@ -454,7 +469,7 @@ draw_tab_win(enum tabs tab)
 
 	col = ((g_max_col - white_spaces) / NUMBER_OF_TABS / 2) - (strlen(g_tab_title[tab]) / 2) -
 	      TABS_SPACING;
-	print_max_len(g_tab_win[tab], 1, col, g_tab_title[tab]);
+	print_max_len(g_tab_win[tab], 1, col, 0, g_tab_title[tab]);
 }
 
 static void
@@ -472,23 +487,23 @@ draw_tabs(enum tabs tab_index, uint8_t sort_col)
 
 		offset = 1;
 		for (j = i; j != 0; j--) {
-			offset += strlen(col_desc[j - 1].name) + 1;
+			offset += col_desc[j - 1].name_len + 1;
 		}
 
 		if (i == sort_col) {
 			wattron(tab, COLOR_PAIR(3));
-			print_max_len(tab, 1, offset, col_desc[i].name);
+			print_max_len(tab, 1, offset, 0, col_desc[i].name);
 			wattroff(tab, COLOR_PAIR(3));
 		} else {
-			print_max_len(tab, 1, offset, col_desc[i].name);
+			print_max_len(tab, 1, offset, 0, col_desc[i].name);
 		}
 
 		if (col_desc[i + 1].name != NULL) {
-			print_max_len(tab, 1, offset + col_desc[i].name_len, "|");
+			print_max_len(tab, 1, offset + col_desc[i].name_len, 0, "|");
 		}
 	}
 
-	print_max_len(tab, 2, 1, ""); /* Move to next line */
+	print_max_len(tab, 2, 1, 0, ""); /* Move to next line */
 	whline(tab, ACS_HLINE, MAX_STRING_LEN);
 	box(tab, 0, 0);
 	wrefresh(tab);
@@ -601,25 +616,25 @@ refresh_threads_tab(void)
 	for (i = 0; i < threads_count; i++) {
 		col = TABS_DATA_START_COL;
 		if (!col_desc[0].disabled) {
-			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col, thread_info[i]->name);
+			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col, 0, thread_info[i]->name);
 		}
 
 		col += MAX_THREAD_NAME_DISP;
 		if (!col_desc[1].disabled) {
 			snprintf(pollers_number, MAX_POLLER_COUNT_STR, "%ld", thread_info[i]->active_pollers_count);
-			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col, pollers_number);
+			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col, 0, pollers_number);
 		}
 
 		col += MAX_POLLER_COUNT_DISP;
 		if (!col_desc[2].disabled) {
 			snprintf(pollers_number, MAX_POLLER_COUNT_STR, "%ld", thread_info[i]->timed_pollers_count);
-			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col, pollers_number);
+			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col, 0, pollers_number);
 		}
 
 		col += MAX_POLLER_COUNT_DISP;
 		if (!col_desc[3].disabled) {
 			snprintf(pollers_number, MAX_POLLER_COUNT_STR, "%ld", thread_info[i]->paused_pollers_count);
-			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col, pollers_number);
+			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col, 0, pollers_number);
 		}
 	}
 }
@@ -723,19 +738,20 @@ refresh_pollers_tab(void)
 		col = TABS_DATA_START_COL;
 
 		if (!col_desc[0].disabled) {
-			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + i, col, pollers[i]->name);
+			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + i, col, 0, pollers[i]->name);
 		}
 
 		col += MAX_POLLER_NAME_DISP;
 
 		if (!col_desc[1].disabled) {
-			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + i, col, poller_type_str[pollers[i]->type]);
+			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + i, col, 0,
+				      poller_type_str[pollers[i]->type]);
 		}
 
 		col += MAX_POLLER_TYPE_DISP;
 
 		if (!col_desc[2].disabled) {
-			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + i, col, pollers[i]->thread_name);
+			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + i, col, 0, pollers[i]->thread_name);
 		}
 	}
 }
