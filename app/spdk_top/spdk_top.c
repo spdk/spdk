@@ -65,6 +65,7 @@
 #define MAX_POLLER_COUNT_STR_LEN 16
 #define MAX_POLLER_TYPE_STR_LEN 8
 #define MAX_CORE_STR_LEN 8
+#define MAX_TIME_STR_LEN 10
 
 enum tabs {
 	THREADS_TAB,
@@ -102,6 +103,8 @@ static struct col_desc g_col_desc[NUMBER_OF_TABS][TABS_COL_COUNT] = {
 		{.name = "Active pollers", .max_data_string = MAX_POLLER_COUNT_STR_LEN},
 		{.name = "Timed pollers", .max_data_string = MAX_POLLER_COUNT_STR_LEN},
 		{.name = "Paused pollers", .max_data_string = MAX_POLLER_COUNT_STR_LEN},
+		{.name = "Idle", .max_data_string = MAX_TIME_STR_LEN},
+		{.name = "Busy", .max_data_string = MAX_TIME_STR_LEN},
 		{.name = (char *)NULL}
 	},
 	{	{.name = "Poller name", .max_data_string = MAX_POLLER_NAME_LEN},
@@ -580,6 +583,14 @@ sort_threads(const void *p1, const void *p2)
 		count1 = thread_info1->paused_pollers_count;
 		count2 = thread_info2->paused_pollers_count;
 		break;
+	case 5: /* Sort by idle time */
+		count1 = thread_info1->idle;
+		count2 = thread_info2->idle;
+		break;
+	case 6: /* Sort by busy time */
+		count1 = thread_info1->busy;
+		count2 = thread_info2->busy;
+		break;
 	default:
 		return 0;
 	}
@@ -600,7 +611,8 @@ refresh_threads_tab(void)
 	uint64_t i, threads_count;
 	uint16_t j;
 	uint16_t col;
-	char pollers_number[MAX_POLLER_COUNT_STR_LEN];
+	char pollers_number[MAX_POLLER_COUNT_STR_LEN], idle_time[MAX_TIME_STR_LEN],
+	     busy_time[MAX_TIME_STR_LEN];
 	struct rpc_thread_info *thread_info[g_threads_stats.threads.threads_count];
 
 	threads_count = g_threads_stats.threads.threads_count;
@@ -655,7 +667,22 @@ refresh_threads_tab(void)
 			snprintf(pollers_number, MAX_POLLER_COUNT_STR_LEN, "%ld", thread_info[i]->paused_pollers_count);
 			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col + (col_desc[4].name_len / 2),
 				      col_desc[4].max_data_string, pollers_number);
+			col += col_desc[4].max_data_string + 2;
 		}
+
+		if (!col_desc[5].disabled) {
+			snprintf(idle_time, MAX_TIME_STR_LEN, "%" PRIu64, thread_info[i]->idle);
+			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col, col_desc[5].max_data_string,
+				      idle_time);
+			col += col_desc[5].max_data_string + 2;
+		}
+
+		if (!col_desc[6].disabled) {
+			snprintf(busy_time, MAX_TIME_STR_LEN, "%" PRIu64, thread_info[i]->busy);
+			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col, col_desc[6].max_data_string,
+				      busy_time);
+		}
+
 	}
 }
 
