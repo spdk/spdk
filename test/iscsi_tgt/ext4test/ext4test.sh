@@ -51,8 +51,8 @@ $rpc_py bdev_error_inject_error EE_Malloc0 'all' 'failure' -n 1000
 dev=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
 
 set +e
-waitforfile /dev/$dev
-if mkfs.ext4 -F /dev/$dev; then
+waitforfile /dev/${dev}
+if make_filesystem ext4 /dev/${dev}; then
 	echo "mkfs successful - expected failure"
 	iscsicleanup
 	killprocess $pid
@@ -84,9 +84,9 @@ waitforiscsidevices 1
 devs=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
 
 for dev in $devs; do
-	mkfs.ext4 -F /dev/$dev
+	make_filesystem ext4 /dev/${dev}
 	mkdir -p /mnt/${dev}dir
-	mount -o sync /dev/$dev /mnt/${dev}dir
+	mount -o sync /dev/${dev} /mnt/${dev}dir
 
 	rsync -qav --exclude=".git" --exclude="*.o" $rootdir/ /mnt/${dev}dir/spdk
 

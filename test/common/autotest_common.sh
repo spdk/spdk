@@ -540,6 +540,29 @@ function waitforbdev() {
 	return 1
 }
 
+function make_filesystem() {
+	local fstype=$1
+	local dev_name=$2
+	local i=0
+	local force
+
+	if [ $fstype = ext4 ]; then
+		force=-F
+	else
+		force=-f
+	fi
+
+	while ! mkfs.${fstype} $force ${dev_name}; do
+		if [ $i -ge 15 ]; then
+			return 1
+		fi
+		i=$((i+1))
+		sleep 1
+	done
+
+	return 0
+}
+
 function killprocess() {
 	# $1 = process pid
 	if [ -z "$1" ]; then

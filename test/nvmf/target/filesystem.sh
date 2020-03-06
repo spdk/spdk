@@ -16,18 +16,7 @@ function nvmf_filesystem_create {
 	fstype=$1
 	nvme_name=$2
 
-	if [ $fstype = ext4 ]; then
-		force=-F
-	else
-		force=-f
-	fi
-
-	local i=0
-	while ! mkfs.${fstype} $force /dev/${nvme_name}p1; do
-		[ $i -lt 15 ] || break
-		i=$((i+1))
-		sleep 1
-	done
+	make_filesystem ${fstype} /dev/${nvme_name}p1
 
 	mount /dev/${nvme_name}p1 /mnt/device
 	touch /mnt/device/aaa

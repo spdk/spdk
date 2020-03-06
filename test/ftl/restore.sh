@@ -66,7 +66,7 @@ waitfornbd nbd0
 $rpc_py save_config > $testdir/config/ftl.json
 
 # Prepare the disk by creating ext4 fs and putting a file on it
-mkfs.ext4 -F /dev/nbd0
+make_filesystem ext4 /dev/nbd0
 mount /dev/nbd0 $mount_dir
 dd if=/dev/urandom of=$mount_dir/testfile bs=4K count=256K
 sync

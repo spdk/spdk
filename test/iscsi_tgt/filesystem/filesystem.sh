@@ -78,11 +78,7 @@ sleep 1
 function filesystem_test {
 	fstype=$1
 
-	if [ "$fstype" == "ext4" ]; then
-		mkfs.${fstype} -F /dev/${dev}1
-	else
-		mkfs.${fstype} -f /dev/${dev}1
-	fi
+	make_filesystem ${fstype} /dev/${dev}1
 	mount /dev/${dev}1 /mnt/device
 	if [ $RUN_NIGHTLY -eq 1 ]; then
 		fio -filename=/mnt/device/test -direct=1 -iodepth 64 -thread=1 -invalidate=1 -rw=randwrite -ioengine=libaio -bs=4k \
