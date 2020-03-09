@@ -118,10 +118,17 @@ enum opal_method_enum {
 	RANDOM_METHOD,
 };
 
+struct spdk_opal_key {
+	uint8_t locking_range;
+	uint8_t key_len;
+	uint8_t _padding[6];
+	uint8_t key[OPAL_KEY_MAX];
+};
+
 struct opal_common_session {
 	uint32_t sum; /* single user mode */
 	uint32_t who;
-	struct spdk_opal_key *opal_key;
+	struct spdk_opal_key opal_key;
 };
 
 struct spdk_opal_locking_session {
@@ -240,13 +247,6 @@ struct spdk_opal_resp_token {
 struct spdk_opal_resp_parsed {
 	int num;
 	struct spdk_opal_resp_token resp_tokens[MAX_TOKS];
-};
-
-struct spdk_opal_key {
-	uint8_t locking_range;
-	uint8_t key_len;
-	uint8_t _padding[6];
-	uint8_t key[OPAL_KEY_MAX];
 };
 
 struct opal_locking_range_setup_session {
