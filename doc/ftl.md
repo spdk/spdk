@@ -47,15 +47,15 @@ The address map and valid map are, along with a several other things (e.g. UUID 
 part of, number of surfaced LBAs, band's sequence number, etc.), parts of the band's metadata. The
 metadata is split in two parts:
 
- * the head part, containing information already known when opening the band (device's UUID, band's
-   sequence number, etc.), located at the beginning blocks of the band,
- * the tail part, containing the address map and the valid map, located at the end of the band.
-
        head metadata               band's data               tail metadata
     +-------------------+-------------------------------+------------------------+
     |zone 1 |...|zone n |...|...|zone 1 |...|           | ... |zone  m-1 |zone  m|
     |block 1|   |block 1|   |   |block x|   |           |     |block y   |block y|
     +-------------------+-------------+-----------------+------------------------+
+
+ * the head part, containing information already known when opening the band (device's UUID, band's
+   sequence number, etc.), located at the beginning blocks of the band,
+ * the tail part, containing the address map and the valid map, located at the end of the band.
 
 Bands are written sequentially (in a way that was described earlier). Before a band can be written
 to, all of its zones need to be erased. During that time, the band is considered to be in a `PREP`
@@ -165,16 +165,7 @@ geometry of the SSD:
  - `serial` - serial number,
  - `lver` - version of the OCSSD standard (0 - disabled, 1 - "1.2", 2 - "2.0"), libftl only supports
    2.0,
- - `lba_index` - default LBA format. Possible values (libftl only supports lba_index >= 3):
-        |lba_index| data| metadata|
-        |---------|-----|---------|
-        |    0    | 512B|    0B   |
-        |    1    | 512B|    8B   |
-        |    2    | 512B|   16B   |
-        |    3    |4096B|    0B   |
-        |    4    |4096B|   64B   |
-        |    5    |4096B|  128B   |
-        |    6    |4096B|   16B   |
+ - `lba_index` - default LBA format. Possible values can be found in the table below (libftl only supports lba_index >= 3):
  - `lnum_ch` - number of groups,
  - `lnum_lun` - number of parallel units
  - `lnum_pln` - number of planes (logical blocks from all planes constitute a chunk)
@@ -184,6 +175,16 @@ geometry of the SSD:
  - `laer_thread_sleep` - timeout in ms between asynchronous events requesting the host to relocate
    the data based on media feedback
  - `lmetadata` - metadata file
+
+        |lba_index| data| metadata|
+        |---------|-----|---------|
+        |    0    | 512B|    0B   |
+        |    1    | 512B|    8B   |
+        |    2    | 512B|   16B   |
+        |    3    |4096B|    0B   |
+        |    4    |4096B|   64B   |
+        |    5    |4096B|  128B   |
+        |    6    |4096B|   16B   |
 
 For more detailed description of the available options, consult the `hw/block/nvme.c` file in
 the QEMU repository.
