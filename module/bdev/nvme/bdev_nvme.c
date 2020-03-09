@@ -1073,6 +1073,21 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 	}
 }
 
+void
+nvme_ctrlr_depopulate_namespace_done(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
+{
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	nvme_bdev_ctrlr->ref--;
+
+	if (nvme_bdev_ctrlr->ref == 0 && nvme_bdev_ctrlr->destruct) {
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+		nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
+		return;
+	}
+
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+}
+
 static void
 nvme_ctrlr_depopulate_standard_namespace(struct nvme_bdev_ns *ns)
 {
@@ -1083,6 +1098,8 @@ nvme_ctrlr_depopulate_standard_namespace(struct nvme_bdev_ns *ns)
 	}
 
 	ns->populated = false;
+
+	nvme_ctrlr_depopulate_namespace_done(ns->ctrlr);
 }
 
 static void nvme_ctrlr_populate_namespace(struct nvme_bdev_ctrlr *ctrlr, struct nvme_bdev_ns *ns,
@@ -1102,6 +1119,9 @@ nvme_ctrlr_populate_namespace_done(struct nvme_async_probe_ctx *ctx,
 {
 	if (rc == 0) {
 		ns->populated = true;
+		pthread_mutex_lock(&g_bdev_nvme_mutex);
+		ns->ctrlr->ref++;
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
 	} else {
 		memset(ns, 0, sizeof(*ns));
 	}
@@ -1901,12 +1921,6 @@ bdev_nvme_library_fini(void)
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_FOREACH_SAFE(nvme_bdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq, tmp) {
-		if (nvme_bdev_ctrlr->ref > 0) {
-			SPDK_ERRLOG("Controller %s is still referenced, can't destroy it\n",
-				    nvme_bdev_ctrlr->name);
-			continue;
-		}
-
 		if (nvme_bdev_ctrlr->destruct) {
 			/* This controller's destruction was already started
 			 * before the application started shutting down
@@ -1914,7 +1928,6 @@ bdev_nvme_library_fini(void)
 			continue;
 		}
 
-		nvme_bdev_ctrlr->destruct = true;
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
 		for (i = 0; i < nvme_bdev_ctrlr->num_ns; i++) {
@@ -1927,8 +1940,14 @@ bdev_nvme_library_fini(void)
 			}
 		}
 
-		nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
 		pthread_mutex_lock(&g_bdev_nvme_mutex);
+		nvme_bdev_ctrlr->destruct = true;
+
+		if (nvme_bdev_ctrlr->ref == 0) {
+			pthread_mutex_unlock(&g_bdev_nvme_mutex);
+			nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
+			pthread_mutex_lock(&g_bdev_nvme_mutex);
+		}
 	}
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 }

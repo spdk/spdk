@@ -59,6 +59,7 @@ DEFINE_STUB(spdk_bdev_push_media_events, int, (struct spdk_bdev *bdev,
 		const struct spdk_bdev_media_event *events,
 		size_t num_events), 0);
 DEFINE_STUB_V(spdk_bdev_notify_media_management, (struct spdk_bdev *bdev));
+DEFINE_STUB_V(nvme_ctrlr_depopulate_namespace_done, (struct nvme_bdev_ctrlr *ctrlr));
 
 struct nvme_request {
 	spdk_nvme_cmd_cb cb_fn;

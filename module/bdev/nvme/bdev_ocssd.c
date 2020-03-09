@@ -1400,6 +1400,8 @@ bdev_ocssd_depopulate_namespace(struct nvme_bdev_ns *ns)
 	free(ns->type_ctx);
 	ns->populated = false;
 	ns->type_ctx = NULL;
+
+	nvme_ctrlr_depopulate_namespace_done(ns->ctrlr);
 }
 
 int
