@@ -85,6 +85,8 @@ static const char *g_job_bdev_name;
 static bool g_wait_for_tests = false;
 static struct spdk_jsonrpc_request *g_request = NULL;
 static bool g_multithread_mode = false;
+static uint32_t g_core_ordinal = 0;
+pthread_mutex_t g_ordinal_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static struct spdk_poller *g_perf_timer = NULL;
 
@@ -107,6 +109,8 @@ struct bdevperf_job {
 	double				ema_io_per_second;
 	int				current_queue_depth;
 	uint64_t			size_in_ios;
+	uint64_t			ios_first;
+	uint64_t			ios_last;
 	uint64_t			offset_in_ios;
 	uint64_t			io_size_blocks;
 	uint64_t			buf_size;
@@ -121,6 +125,7 @@ struct bdevperf_job {
 struct bdevperf_reactor {
 	TAILQ_HEAD(, bdevperf_job)	jobs;
 	uint32_t			lcore;
+	uint32_t			multiplier;
 	TAILQ_ENTRY(bdevperf_reactor)	link;
 };
 
@@ -691,8 +696,8 @@ bdevperf_submit_single(struct bdevperf_job *job, struct bdevperf_task *task)
 		offset_in_ios = rand_r(&seed) % job->size_in_ios;
 	} else {
 		offset_in_ios = job->offset_in_ios++;
-		if (job->offset_in_ios == job->size_in_ios) {
-			job->offset_in_ios = 0;
+		if (job->offset_in_ios == job->ios_last) {
+			job->offset_in_ios = job->ios_first;
 		}
 
 		/* Increment of offset_in_ios if there's already an outstanding IO
@@ -702,15 +707,20 @@ bdevperf_submit_single(struct bdevperf_job *job, struct bdevperf_task *task)
 		if (g_verify && spdk_bit_array_get(job->outstanding, offset_in_ios)) {
 			do {
 				offset_in_ios = job->offset_in_ios++;
-				if (job->offset_in_ios == job->size_in_ios) {
-					job->offset_in_ios = 0;
+				if (job->offset_in_ios == job->ios_last) {
+					job->offset_in_ios = job->ios_first;
 				}
 			} while (spdk_bit_array_get(job->outstanding, offset_in_ios));
 			spdk_bit_array_set(job->outstanding, offset_in_ios);
 		}
 	}
 
+	/* For multi-thread to same job, offset_in_ios is relative
+	 * to the LBA range assigned for that job. job->offset_blocks
+	 * is absolute (entire bdev LBA range).
+	 */
 	task->offset_blocks = offset_in_ios * job->io_size_blocks;
+
 	if (g_verify || g_reset) {
 		generate_data(task->buf, job->buf_size,
 			      spdk_bdev_get_block_size(job->bdev),
@@ -1086,11 +1096,18 @@ bdevperf_job_gone(void *arg)
 	bdevperf_job_drain(job);
 }
 
+struct construct_jobs_ctx {
+	struct spdk_bdev	*bdev;
+	struct bdevperf_reactor	*reactor;
+	uint32_t		job_count;
+};
+
 static int
-_bdevperf_construct_job(struct spdk_bdev *bdev, struct bdevperf_reactor *reactor)
+_bdevperf_construct_job(struct construct_jobs_ctx *ctx, struct bdevperf_reactor *reactor)
 {
 	struct bdevperf_job *job;
 	int block_size, data_block_size;
+	struct spdk_bdev *bdev = ctx->bdev;
 	int rc;
 
 	job = calloc(1, sizeof(struct bdevperf_job));
@@ -1131,6 +1148,16 @@ _bdevperf_construct_job(struct spdk_bdev *bdev, struct bdevperf_reactor *reactor
 
 	job->size_in_ios = spdk_bdev_get_num_blocks(bdev) / job->io_size_blocks;
 
+	if (ctx->reactor == NULL) {
+		job->size_in_ios = job->size_in_ios / g_bdevperf.num_reactors;
+		job->ios_first = reactor->multiplier * job->size_in_ios;
+		job->ios_last = job->ios_first + job->size_in_ios;
+		job->offset_in_ios = job->ios_first;
+	} else {
+		job->ios_first = 0;
+		job->ios_last = job->size_in_ios;
+	}
+
 	if (g_verify) {
 		job->outstanding = spdk_bit_array_create(job->size_in_ios);
 		if (job->outstanding == NULL) {
@@ -1151,12 +1178,6 @@ _bdevperf_construct_job(struct spdk_bdev *bdev, struct bdevperf_reactor *reactor
 }
 
 static uint32_t g_construct_job_count = 0;
-
-struct construct_jobs_ctx {
-	struct spdk_bdev	*bdev;
-	struct bdevperf_reactor	*reactor;
-	uint32_t		job_count;
-};
 
 static void
 _bdevperf_construct_jobs_done(struct spdk_io_channel_iter *i, int status)
@@ -1191,7 +1212,7 @@ bdevperf_construct_job(struct spdk_io_channel_iter *i)
 	 * this reactor is selected.
 	 */
 	if (ctx->reactor == NULL || ctx->reactor == reactor) {
-		rc = _bdevperf_construct_job(ctx->bdev, reactor);
+		rc = _bdevperf_construct_job(ctx, reactor);
 		if (rc == 0) {
 			ctx->job_count++;
 		}
@@ -1287,6 +1308,9 @@ bdevperf_reactor_create(void *io_device, void *ctx_buf)
 
 	TAILQ_INIT(&reactor->jobs);
 	reactor->lcore = spdk_env_get_current_core();
+	pthread_mutex_lock(&g_ordinal_lock);
+	reactor->multiplier = g_core_ordinal++;
+	pthread_mutex_unlock(&g_ordinal_lock);
 
 	return 0;
 }
@@ -1603,10 +1627,6 @@ verify_test_params(struct spdk_app_opts *opts)
 			fprintf(stderr, "Unable to exceed max I/O size of %d for verify. (%d provided).\n",
 				SPDK_BDEV_LARGE_BUF_MAX_SIZE, g_io_size);
 			return 1;
-		}
-		if (opts->reactor_mask) {
-			fprintf(stderr, "Ignoring -m option. Verify can only run with a single core.\n");
-			opts->reactor_mask = NULL;
 		}
 		g_verify = true;
 		if (!strcmp(g_workload_type, "reset")) {
