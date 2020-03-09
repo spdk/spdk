@@ -1399,8 +1399,6 @@ ftl_dev_free_sync(struct spdk_ftl_dev *dev)
 	ftl_dev_dump_bands(dev);
 	ftl_dev_dump_stats(dev);
 
-	spdk_io_device_unregister(dev, NULL);
-
 	if (dev->bands) {
 		for (i = 0; i < ftl_get_num_bands(dev); ++i) {
 			free(dev->bands[i].zone_buf);
@@ -1570,6 +1568,8 @@ ftl_halt_complete_cb(void *ctx)
 		spdk_thread_send_msg(spdk_get_thread(), ftl_halt_complete_cb, ctx);
 		return;
 	}
+
+	spdk_io_device_unregister(fini_ctx->dev, NULL);
 
 	ftl_dev_free_sync(fini_ctx->dev);
 	if (fini_ctx->cb_fn != NULL) {
