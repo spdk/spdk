@@ -306,16 +306,15 @@ _set_thread_name(const char *thread_name)
 }
 
 static int _reactor_schedule_thread(struct spdk_thread *thread);
+static uint64_t g_rusage_period;
 
 static int
 _spdk_reactor_run(void *arg)
 {
 	struct spdk_reactor	*reactor = arg;
 	struct spdk_thread	*thread;
-	uint64_t		last_rusage = 0;
 	struct spdk_lw_thread	*lw_thread, *tmp;
 	char			thread_name[32];
-	uint64_t		rusage_period = 0;
 	int			rc __attribute__((unused));
 
 	SPDK_NOTICELOG("Reactor started on core %u\n", reactor->lcore);
@@ -325,8 +324,6 @@ _spdk_reactor_run(void *arg)
 	 */
 	snprintf(thread_name, sizeof(thread_name), "reactor_%u", reactor->lcore);
 	_set_thread_name(thread_name);
-
-	rusage_period = (CONTEXT_SWITCH_MONITOR_PERIOD * spdk_get_ticks_hz()) / SPDK_SEC_TO_USEC;
 
 	while (1) {
 		uint64_t now;
@@ -361,9 +358,9 @@ _spdk_reactor_run(void *arg)
 		}
 
 		if (g_framework_context_switch_monitor_enabled) {
-			if ((last_rusage + rusage_period) < now) {
+			if ((reactor->last_rusage + g_rusage_period) < now) {
 				get_rusage(reactor);
-				last_rusage = now;
+				reactor->last_rusage = now;
 			}
 		}
 	}
@@ -414,6 +411,7 @@ spdk_reactors_start(void)
 	int rc;
 	char thread_name[32];
 
+	g_rusage_period = (CONTEXT_SWITCH_MONITOR_PERIOD * spdk_get_ticks_hz()) / SPDK_SEC_TO_USEC;
 	g_reactor_state = SPDK_REACTOR_STATE_RUNNING;
 
 	current_core = spdk_env_get_current_core();
