@@ -66,6 +66,7 @@
 #define MAX_POLLER_TYPE_STR_LEN 8
 #define MAX_CORE_STR_LEN 8
 #define MAX_TIME_STR_LEN 10
+#define WINDOW_HEADER 12
 
 enum tabs {
 	THREADS_TAB,
@@ -94,7 +95,7 @@ struct spdk_jsonrpc_client *g_rpc_client;
 WINDOW *g_menu_win, *g_tab_win[NUMBER_OF_TABS], *g_tabs[NUMBER_OF_TABS];
 PANEL *g_panels[NUMBER_OF_TABS];
 uint16_t g_max_row, g_max_col;
-uint16_t g_data_win_size;
+uint16_t g_data_win_size, g_max_data_rows;
 uint32_t g_last_threads_count, g_last_pollers_count, g_last_cores_count;
 uint8_t g_current_sort_col[NUMBER_OF_TABS] = {0, 0, 0};
 static struct col_desc g_col_desc[NUMBER_OF_TABS][TABS_COL_COUNT] = {
@@ -418,12 +419,15 @@ print_max_len(WINDOW *win, int row, uint16_t col, uint16_t max_len, const char *
 	const char dots[] = "...";
 	int DOTS_STR_LEN = sizeof(dots) / sizeof(dots[0]);
 	int len, max_col, max_str;
-	int max_row __attribute__((unused));
+	int max_row;
 
 	len = strlen(string);
 	getmaxyx(win, max_row, max_col);
 
-	assert(row < max_row);
+	if (row > max_row) {
+		/* We are in a process of resizing and this may happen */
+		return;
+	}
 
 	if (max_len != 0 && col + max_len < max_col) {
 		max_col = col + max_len;
@@ -606,13 +610,14 @@ sort_threads(const void *p1, const void *p2)
 	}
 }
 
-static void
-refresh_threads_tab(void)
+static uint8_t
+refresh_threads_tab(uint8_t current_page)
 {
 	struct col_desc *col_desc = g_col_desc[THREADS_TAB];
 	uint64_t i, threads_count;
 	uint16_t j;
 	uint16_t col;
+	uint8_t max_pages, item_index;
 	char pollers_number[MAX_POLLER_COUNT_STR_LEN], idle_time[MAX_TIME_STR_LEN],
 	     busy_time[MAX_TIME_STR_LEN];
 	struct rpc_thread_info *thread_info[g_threads_stats.threads.threads_count];
@@ -634,58 +639,65 @@ refresh_threads_tab(void)
 		thread_info[i] = &g_threads_stats.threads.thread_info[i];
 	}
 
+	max_pages = (threads_count + g_max_data_rows - 1) / g_max_data_rows;
+
 	qsort(thread_info, threads_count, sizeof(thread_info[0]), sort_threads);
 
-	for (i = 0; i < threads_count; i++) {
+	for (i = current_page * g_max_data_rows;
+	     i < spdk_min(threads_count, (uint64_t)((current_page + 1) * g_max_data_rows));
+	     i++) {
+		item_index = i - (current_page * g_max_data_rows);
+
 		col = TABS_DATA_START_COL;
 
 		if (!col_desc[0].disabled) {
-			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col, col_desc[0].max_data_string,
-				      thread_info[i]->name);
+			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index, col,
+				      col_desc[0].max_data_string, thread_info[i]->name);
 			col += col_desc[0].max_data_string;
 		}
 
 		if (!col_desc[1].disabled) {
-			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col + (col_desc[1].name_len / 2),
-				      col_desc[1].max_data_string, thread_info[i]->cpumask);
+			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index,
+				      col + (col_desc[1].name_len / 2), col_desc[1].max_data_string, thread_info[i]->cpumask);
 			col += col_desc[1].max_data_string + 2;
 		}
 
 		if (!col_desc[2].disabled) {
 			snprintf(pollers_number, MAX_POLLER_COUNT_STR_LEN, "%ld", thread_info[i]->active_pollers_count);
-			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col + (col_desc[2].name_len / 2),
-				      col_desc[2].max_data_string, pollers_number);
+			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index,
+				      col + (col_desc[2].name_len / 2), col_desc[2].max_data_string, pollers_number);
 			col += col_desc[2].max_data_string + 2;
 		}
 
 		if (!col_desc[3].disabled) {
 			snprintf(pollers_number, MAX_POLLER_COUNT_STR_LEN, "%ld", thread_info[i]->timed_pollers_count);
-			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col + (col_desc[3].name_len / 2),
-				      col_desc[3].max_data_string, pollers_number);
+			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index,
+				      col + (col_desc[3].name_len / 2), col_desc[3].max_data_string, pollers_number);
 			col += col_desc[3].max_data_string + 1;
 		}
 
 		if (!col_desc[4].disabled) {
 			snprintf(pollers_number, MAX_POLLER_COUNT_STR_LEN, "%ld", thread_info[i]->paused_pollers_count);
-			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col + (col_desc[4].name_len / 2),
-				      col_desc[4].max_data_string, pollers_number);
+			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index,
+				      col + (col_desc[4].name_len / 2), col_desc[4].max_data_string, pollers_number);
 			col += col_desc[4].max_data_string + 2;
 		}
 
 		if (!col_desc[5].disabled) {
 			snprintf(idle_time, MAX_TIME_STR_LEN, "%" PRIu64, thread_info[i]->idle);
-			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col, col_desc[5].max_data_string,
-				      idle_time);
+			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index, col,
+				      col_desc[5].max_data_string, idle_time);
 			col += col_desc[5].max_data_string + 2;
 		}
 
 		if (!col_desc[6].disabled) {
 			snprintf(busy_time, MAX_TIME_STR_LEN, "%" PRIu64, thread_info[i]->busy);
-			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col, col_desc[6].max_data_string,
-				      busy_time);
+			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index, col,
+				      col_desc[6].max_data_string, busy_time);
 		}
-
 	}
+
+	return max_pages;
 }
 
 enum sort_type {
@@ -753,13 +765,14 @@ copy_pollers(struct rpc_pollers *pollers, uint64_t pollers_count, enum spdk_poll
 	}
 }
 
-static void
-refresh_pollers_tab(void)
+static uint8_t
+refresh_pollers_tab(uint8_t current_page)
 {
 	struct col_desc *col_desc = g_col_desc[POLLERS_TAB];
 	struct rpc_poller_thread_info *thread;
 	uint64_t i, count = 0;
 	uint16_t col, j;
+	uint8_t max_pages, item_index;
 	enum sort_type sorting;
 	char run_count[MAX_TIME_STR_LEN], period_ticks[MAX_TIME_STR_LEN];
 	struct rpc_poller_info *pollers[RPC_MAX_POLLERS];
@@ -786,7 +799,9 @@ refresh_pollers_tab(void)
 		g_last_pollers_count = count;
 	}
 
-	/* Timed pollers can switch their position on a list because of how they work.
+	max_pages = (count + g_max_data_rows - 1) / g_max_data_rows;
+
+	/* Timed pollers can switch their possition on a list because of how they work.
 	 * Let's sort them by name first so that they won't switch on data refresh */
 	sorting = BY_NAME;
 	qsort_r(pollers, count, sizeof(pollers[0]), sort_pollers, (void *)&sorting);
@@ -794,56 +809,63 @@ refresh_pollers_tab(void)
 	qsort_r(pollers, count, sizeof(pollers[0]), sort_pollers, (void *)&sorting);
 
 	/* Display info */
-	for (i = 0; i < count; i++) {
+	for (i = current_page * g_max_data_rows;
+	     i < spdk_min(count, (uint64_t)((current_page + 1) * g_max_data_rows));
+	     i++) {
+		item_index = i - (current_page * g_max_data_rows);
+
 		col = TABS_DATA_START_COL;
 
 		if (!col_desc[0].disabled) {
-			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + i, col + 1, col_desc[0].max_data_string,
-				      pollers[i]->name);
+			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + item_index, col + 1,
+				      col_desc[0].max_data_string, pollers[i]->name);
 			col += col_desc[0].max_data_string + 2;
 		}
 
 		if (!col_desc[1].disabled) {
-			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + i, col, col_desc[1].max_data_string,
-				      poller_type_str[pollers[i]->type]);
+			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + item_index, col,
+				      col_desc[1].max_data_string, poller_type_str[pollers[i]->type]);
 			col += col_desc[1].max_data_string + 2;
 		}
 
 		if (!col_desc[2].disabled) {
-			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + i, col, col_desc[2].max_data_string,
-				      pollers[i]->thread_name);
+			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + item_index, col,
+				      col_desc[2].max_data_string, pollers[i]->thread_name);
 			col += col_desc[2].max_data_string + 1;
 		}
 
 		if (!col_desc[3].disabled) {
 			snprintf(run_count, MAX_TIME_STR_LEN, "%" PRIu64, pollers[i]->run_count);
-			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + i, col, col_desc[3].max_data_string,
-				      run_count);
+			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + item_index, col,
+				      col_desc[3].max_data_string, run_count);
 			col += col_desc[3].max_data_string + 2;
 		}
 
 		if (!col_desc[4].disabled) {
 			if (pollers[i]->period_ticks != 0) {
 				snprintf(period_ticks, MAX_TIME_STR_LEN, "%" PRIu64, pollers[i]->period_ticks);
-				print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + i, col, col_desc[4].max_data_string,
-					      period_ticks);
+				print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + item_index, col,
+					      col_desc[4].max_data_string, period_ticks);
 			}
 		}
 	}
+
+	return max_pages;
 }
 
-static void
-refresh_cores_tab(void)
+static uint8_t
+refresh_cores_tab(uint8_t current_page)
 {
-
+	return 1;
 }
 
-static void
-refresh_tab(enum tabs tab)
+static uint8_t
+refresh_tab(enum tabs tab, uint8_t current_page)
 {
-	void (*refresh_function[NUMBER_OF_TABS])(void) = {refresh_threads_tab, refresh_pollers_tab, refresh_cores_tab};
+	uint8_t (*refresh_function[NUMBER_OF_TABS])(uint8_t current_page) = {refresh_threads_tab, refresh_pollers_tab, refresh_cores_tab};
 	int color_pair[NUMBER_OF_TABS] = {COLOR_PAIR(2), COLOR_PAIR(2), COLOR_PAIR(2)};
 	int i;
+	uint8_t max_pages = 0;
 
 	color_pair[tab] = COLOR_PAIR(1);
 
@@ -851,12 +873,14 @@ refresh_tab(enum tabs tab)
 		wbkgd(g_tab_win[i], color_pair[i]);
 	}
 
-	(*refresh_function[tab])();
+	max_pages = (*refresh_function[tab])(current_page);
 	refresh();
 
 	for (i = 0; i < NUMBER_OF_TABS; i++) {
 		wrefresh(g_tab_win[i]);
 	}
+
+	return max_pages;
 }
 
 static void
@@ -1149,10 +1173,14 @@ change_sorting(uint8_t tab)
 static void
 show_stats(void)
 {
+	const int CURRENT_PAGE_STR_LEN = 50;
 	const char *refresh_error = "ERROR occurred while getting data";
 	int c, rc;
 	int max_row, max_col;
 	uint8_t active_tab = THREADS_TAB;
+	uint8_t current_page = 0;
+	uint8_t max_pages = 1;
+	char current_page_str[CURRENT_PAGE_STR_LEN];
 
 	switch_tab(THREADS_TAB);
 
@@ -1164,6 +1192,7 @@ show_stats(void)
 			g_max_row = max_row;
 			g_max_col = max_col;
 			g_data_win_size = g_max_row - MENU_WIN_HEIGHT - TAB_WIN_HEIGHT - TABS_DATA_START_ROW;
+			g_max_data_rows = g_max_row - WINDOW_HEADER;
 			resize_interface(active_tab);
 		}
 
@@ -1177,6 +1206,7 @@ show_stats(void)
 		case '2':
 		case '3':
 			active_tab = c - '1';
+			current_page = 0;
 			switch_tab(active_tab);
 			break;
 		case 's':
@@ -1184,6 +1214,20 @@ show_stats(void)
 			break;
 		case 'c':
 			filter_columns(active_tab);
+			break;
+		case 54: /* PgDown */
+			if (current_page + 1 < max_pages) {
+				current_page++;
+			}
+			wclear(g_tabs[active_tab]);
+			draw_tabs(active_tab, g_current_sort_col[active_tab]);
+			break;
+		case 53: /* PgUp */
+			if (current_page > 0) {
+				current_page--;
+			}
+			wclear(g_tabs[active_tab]);
+			draw_tabs(active_tab, g_current_sort_col[active_tab]);
 			break;
 		default:
 			break;
@@ -1194,7 +1238,10 @@ show_stats(void)
 			mvprintw(g_max_row - 1, g_max_col - strlen(refresh_error) - 2, refresh_error);
 		}
 
-		refresh_tab(active_tab);
+		max_pages = refresh_tab(active_tab, current_page);
+
+		snprintf(current_page_str, CURRENT_PAGE_STR_LEN - 1, "Page: %d/%d", current_page + 1, max_pages);
+		mvprintw(g_max_row - 1, 1, current_page_str);
 
 		free_data();
 
@@ -1209,6 +1256,7 @@ draw_interface(void)
 
 	getmaxyx(stdscr, g_max_row, g_max_col);
 	g_data_win_size = g_max_row - MENU_WIN_HEIGHT - TAB_WIN_HEIGHT - TABS_DATA_START_ROW;
+	g_max_data_rows = g_max_row - WINDOW_HEADER;
 
 	g_menu_win = newwin(MENU_WIN_HEIGHT, g_max_col, g_max_row - MENU_WIN_HEIGHT - 1,
 			    MENU_WIN_LOCATION_COL);
