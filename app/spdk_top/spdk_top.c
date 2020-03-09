@@ -45,6 +45,7 @@
 
 #define RPC_MAX_THREADS 1024
 #define RPC_MAX_POLLERS 1024
+#define RPC_MAX_CORES 255
 #define MAX_THREAD_NAME 128
 #define MAX_POLLER_NAME 128
 
@@ -61,11 +62,13 @@
 #define MENU_WIN_SPACING 4
 #define MENU_WIN_LOCATION_COL 0
 #define MAX_THREAD_NAME_LEN 26
+#define MAX_THREAD_COUNT_STR_LEN 14
 #define MAX_POLLER_NAME_LEN 36
 #define MAX_POLLER_COUNT_STR_LEN 16
 #define MAX_POLLER_TYPE_STR_LEN 8
-#define MAX_CORE_STR_LEN 8
-#define MAX_TIME_STR_LEN 10
+#define MAX_CORE_MASK_STR_LEN 16
+#define MAX_CORE_STR_LEN 6
+#define MAX_TIME_STR_LEN 12
 #define WINDOW_HEADER 12
 
 enum tabs {
@@ -100,7 +103,7 @@ uint32_t g_last_threads_count, g_last_pollers_count, g_last_cores_count;
 uint8_t g_current_sort_col[NUMBER_OF_TABS] = {0, 0, 0};
 static struct col_desc g_col_desc[NUMBER_OF_TABS][TABS_COL_COUNT] = {
 	{	{.name = "Thread name", .max_data_string = MAX_THREAD_NAME_LEN},
-		{.name = "Core", .max_data_string = MAX_CORE_STR_LEN},
+		{.name = "Core", .max_data_string = MAX_CORE_MASK_STR_LEN},
 		{.name = "Active pollers", .max_data_string = MAX_POLLER_COUNT_STR_LEN},
 		{.name = "Timed pollers", .max_data_string = MAX_POLLER_COUNT_STR_LEN},
 		{.name = "Paused pollers", .max_data_string = MAX_POLLER_COUNT_STR_LEN},
@@ -116,8 +119,21 @@ static struct col_desc g_col_desc[NUMBER_OF_TABS][TABS_COL_COUNT] = {
 		{.name = (char *)NULL}
 	},
 	{	{.name = "Core", .max_data_string = MAX_CORE_STR_LEN},
+		{.name = "Thread count", .max_data_string = MAX_THREAD_COUNT_STR_LEN},
+		{.name = "Poller count", .max_data_string = MAX_POLLER_COUNT_STR_LEN},
+		{.name = "Idle", .max_data_string = MAX_TIME_STR_LEN},
+		{.name = "Busy", .max_data_string = MAX_TIME_STR_LEN},
 		{.name = (char *)NULL}
 	}
+};
+
+struct core_info {
+	uint32_t core;
+	char core_mask[MAX_CORE_MASK_STR_LEN];
+	uint64_t threads_count;
+	uint64_t pollers_count;
+	uint64_t idle;
+	uint64_t busy;
 };
 
 struct rpc_thread_info {
@@ -174,8 +190,38 @@ struct rpc_pollers_stats {
 	struct rpc_pollers_threads pollers_threads;
 };
 
+struct rpc_core_thread_info {
+	char *name;
+	uint64_t id;
+	char *cpumask;
+	uint64_t elapsed;
+};
+
+struct rpc_core_threads {
+	uint64_t threads_count;
+	struct rpc_core_thread_info thread[RPC_MAX_THREADS];
+};
+
+struct rpc_core_info {
+	uint32_t lcore;
+	uint64_t busy;
+	uint64_t idle;
+	struct rpc_core_threads threads;
+};
+
+struct rpc_cores {
+	uint64_t cores_count;
+	struct rpc_core_info core[RPC_MAX_CORES];
+};
+
+struct rpc_cores_stats {
+	uint64_t tick_rate;
+	struct rpc_cores cores;
+};
+
 struct rpc_threads_stats g_threads_stats;
 struct rpc_pollers_stats g_pollers_stats;
+struct rpc_cores_stats g_cores_stats;
 
 static void
 init_str_len(void)
@@ -271,6 +317,25 @@ free_rpc_pollers_stats(struct rpc_pollers_stats *req)
 	}
 }
 
+static void
+free_rpc_cores_stats(struct rpc_cores_stats *req)
+{
+	struct rpc_core_info *core;
+	struct rpc_core_thread_info *thread;
+	uint64_t i, j;
+
+	for (i = 0; i < req->cores.cores_count; i++) {
+		core = &req->cores.core[i];
+
+		for (j = 0; j < core->threads.threads_count; j++) {
+			thread = &core->threads.thread[j];
+
+			free(thread->name);
+			free(thread->cpumask);
+		}
+	}
+}
+
 static const struct spdk_json_object_decoder rpc_pollers_decoders[] = {
 	{"name", offsetof(struct rpc_poller_info, name), spdk_json_decode_string},
 	{"state", offsetof(struct rpc_poller_info, state), spdk_json_decode_string},
@@ -326,6 +391,62 @@ static const struct spdk_json_object_decoder rpc_pollers_stats_decoders[] = {
 	{"tick_rate", offsetof(struct rpc_pollers_stats, tick_rate), spdk_json_decode_uint64},
 	{"threads", offsetof(struct rpc_pollers_stats, pollers_threads), rpc_decode_pollers_threads_array},
 };
+
+static const struct spdk_json_object_decoder rpc_core_thread_info_decoders[] = {
+	{"name", offsetof(struct rpc_core_thread_info, name), spdk_json_decode_string},
+	{"id", offsetof(struct rpc_core_thread_info, id), spdk_json_decode_uint64},
+	{"cpumask", offsetof(struct rpc_core_thread_info, cpumask), spdk_json_decode_string},
+	{"elapsed", offsetof(struct rpc_core_thread_info, elapsed), spdk_json_decode_uint64},
+};
+
+static int
+rpc_decode_core_threads_object(const struct spdk_json_val *val, void *out)
+{
+	struct rpc_core_thread_info *info = out;
+
+	return spdk_json_decode_object(val, rpc_core_thread_info_decoders,
+				       SPDK_COUNTOF(rpc_core_thread_info_decoders), info);
+}
+
+static int
+rpc_decode_cores_lw_threads(const struct spdk_json_val *val, void *out)
+{
+	struct rpc_core_threads *threads = out;
+
+	return spdk_json_decode_array(val, rpc_decode_core_threads_object, threads->thread, RPC_MAX_THREADS,
+				      &threads->threads_count, sizeof(struct rpc_core_thread_info));
+}
+
+static const struct spdk_json_object_decoder rpc_core_info_decoders[] = {
+	{"lcore", offsetof(struct rpc_core_info, lcore), spdk_json_decode_uint32},
+	{"busy", offsetof(struct rpc_core_info, busy), spdk_json_decode_uint64},
+	{"idle", offsetof(struct rpc_core_info, idle), spdk_json_decode_uint64},
+	{"lw_threads", offsetof(struct rpc_core_info, threads), rpc_decode_cores_lw_threads},
+};
+
+static int
+rpc_decode_core_object(const struct spdk_json_val *val, void *out)
+{
+	struct rpc_core_info *info = out;
+
+	return spdk_json_decode_object(val, rpc_core_info_decoders,
+				       SPDK_COUNTOF(rpc_core_info_decoders), info);
+}
+
+static int
+rpc_decode_cores_array(const struct spdk_json_val *val, void *out)
+{
+	struct rpc_cores *cores = out;
+
+	return spdk_json_decode_array(val, rpc_decode_core_object, cores->core,
+				      RPC_MAX_THREADS, &cores->cores_count, sizeof(struct rpc_core_info));
+}
+
+static const struct spdk_json_object_decoder rpc_cores_stats_decoders[] = {
+	{"tick_rate", offsetof(struct rpc_cores_stats, tick_rate), spdk_json_decode_uint64},
+	{"reactors", offsetof(struct rpc_cores_stats, cores), rpc_decode_cores_array},
+};
+
 
 static int
 rpc_send_req(char *rpc_name, struct spdk_jsonrpc_client_response **resp)
@@ -403,6 +524,21 @@ get_data(void)
 		goto end;
 	}
 
+	spdk_jsonrpc_client_free_response(json_resp);
+
+	rc = rpc_send_req("framework_get_reactors", &json_resp);
+	if (rc) {
+		goto end;
+	}
+
+	/* Decode json */
+	memset(&g_cores_stats, 0, sizeof(g_cores_stats));
+	if (spdk_json_decode_object(json_resp->result, rpc_cores_stats_decoders,
+				    SPDK_COUNTOF(rpc_cores_stats_decoders), &g_cores_stats)) {
+		rc = -EINVAL;
+		goto end;
+	}
+
 end:
 	spdk_jsonrpc_client_free_response(json_resp);
 	return rc;
@@ -413,6 +549,7 @@ free_data(void)
 {
 	free_rpc_threads_stats(&g_threads_stats);
 	free_rpc_pollers_stats(&g_pollers_stats);
+	free_rpc_cores_stats(&g_cores_stats);
 }
 
 static void
@@ -855,10 +992,158 @@ refresh_pollers_tab(uint8_t current_page)
 	return max_pages;
 }
 
+static int
+sort_cores(const void *p1, const void *p2)
+{
+	const struct core_info core_info1 = *(struct core_info *)p1;
+	const struct core_info core_info2 = *(struct core_info *)p2;
+	uint64_t count1, count2;
+
+	switch (g_current_sort_col[CORES_TAB]) {
+	case 0: /* Sort by core */
+		count1 = core_info2.core;
+		count2 = core_info1.core;
+		break;
+	case 1: /* Sort by threads number */
+		count1 = core_info1.threads_count;
+		count2 = core_info2.threads_count;
+		break;
+	case 2: /* Sort by pollers number */
+		count1 = core_info1.pollers_count;
+		count2 = core_info2.pollers_count;
+		break;
+	case 3: /* Sort by idle time */
+		count1 = core_info1.idle;
+		count2 = core_info2.idle;
+		break;
+	case 4: /* Sort by busy time */
+		count1 = core_info1.busy;
+		count2 = core_info2.busy;
+		break;
+	default:
+		return 0;
+	}
+
+	if (count2 > count1) {
+		return 1;
+	} else if (count2 < count1) {
+		return -1;
+	} else {
+		return 0;
+	}
+}
+
 static uint8_t
 refresh_cores_tab(uint8_t current_page)
 {
-	return 1;
+	struct col_desc *col_desc = g_col_desc[CORES_TAB];
+	uint64_t i, j;
+	uint16_t offset, count = 0;
+	uint8_t max_pages, item_index;
+	char core[MAX_CORE_STR_LEN], threads_number[MAX_THREAD_COUNT_STR_LEN],
+	     pollers_number[MAX_POLLER_COUNT_STR_LEN], idle_time[MAX_TIME_STR_LEN], busy_time[MAX_TIME_STR_LEN];
+	struct core_info cores[RPC_MAX_CORES];
+	struct spdk_cpuset tmp_cpumask = {};
+	bool found = false;
+
+	for (i = 0; i < g_threads_stats.threads.threads_count; i++) {
+		if (i == 0) {
+			snprintf(cores[0].core_mask, MAX_CORE_MASK_STR_LEN, "%s",
+				 g_threads_stats.threads.thread_info[0].cpumask);
+			cores[0].threads_count = 1;
+			cores[0].pollers_count = g_threads_stats.threads.thread_info[0].active_pollers_count +
+						 g_threads_stats.threads.thread_info[0].timed_pollers_count +
+						 g_threads_stats.threads.thread_info[0].paused_pollers_count;
+			count++;
+			continue;
+		}
+		for (j = 0; j < count; j++) {
+			if (!strcmp(cores[j].core_mask, g_threads_stats.threads.thread_info[i].cpumask)) {
+				found = true;
+				break;
+			}
+		}
+
+		if (found) {
+			cores[j].threads_count++;
+			cores[j].pollers_count += g_threads_stats.threads.thread_info[i].active_pollers_count +
+						  g_threads_stats.threads.thread_info[i].timed_pollers_count +
+						  g_threads_stats.threads.thread_info[i].paused_pollers_count;
+			found = false;
+		} else {
+			snprintf(cores[count].core_mask, MAX_CORE_MASK_STR_LEN, "%s",
+				 g_threads_stats.threads.thread_info[i].cpumask);
+			cores[count].threads_count = 1;
+			cores[count].pollers_count = g_threads_stats.threads.thread_info[i].active_pollers_count +
+						     g_threads_stats.threads.thread_info[i].timed_pollers_count +
+						     g_threads_stats.threads.thread_info[i].paused_pollers_count;
+			count++;
+		}
+	}
+
+	assert(g_cores_stats.cores.cores_count == count);
+
+	for (i = 0; i < count; i++) {
+		for (j = 0; j < count; j++) {
+			spdk_cpuset_zero(&tmp_cpumask);
+			spdk_cpuset_set_cpu(&tmp_cpumask, g_cores_stats.cores.core[j].lcore, true);
+			if (!strcmp(cores[i].core_mask, spdk_cpuset_fmt(&tmp_cpumask))) {
+				cores[i].core = g_cores_stats.cores.core[j].lcore;
+				cores[i].busy = g_cores_stats.cores.core[j].busy;
+				cores[i].idle = g_cores_stats.cores.core[j].idle;
+			}
+		}
+	}
+
+
+	max_pages = (count + g_max_row - WINDOW_HEADER - 1) / (g_max_row - WINDOW_HEADER);
+
+	qsort(&cores, count, sizeof(cores[0]), sort_cores);
+
+	for (i = current_page * g_max_data_rows;
+	     i < spdk_min(count, (uint64_t)((current_page + 1) * g_max_data_rows));
+	     i++) {
+		item_index = i - (current_page * g_max_data_rows);
+
+		snprintf(threads_number, MAX_THREAD_COUNT_STR_LEN, "%ld", cores[i].threads_count);
+		snprintf(pollers_number, MAX_POLLER_COUNT_STR_LEN, "%ld", cores[i].pollers_count);
+
+		offset = 3;
+
+		if (!col_desc[0].disabled) {
+			snprintf(core, MAX_CORE_STR_LEN, "%d", cores[i].core);
+			print_max_len(g_tabs[CORES_TAB], TABS_DATA_START_ROW + item_index, offset,
+				      col_desc[0].max_data_string, core);
+			offset += col_desc[0].max_data_string;
+		}
+
+		if (!col_desc[1].disabled) {
+			print_max_len(g_tabs[CORES_TAB], TABS_DATA_START_ROW + item_index,
+				      offset + (col_desc[1].name_len / 2), col_desc[1].max_data_string, threads_number);
+			offset += col_desc[1].max_data_string + 1;
+		}
+
+		if (!col_desc[2].disabled) {
+			print_max_len(g_tabs[CORES_TAB], TABS_DATA_START_ROW + item_index,
+				      offset + (col_desc[2].name_len / 2), col_desc[2].max_data_string, pollers_number);
+			offset += col_desc[2].max_data_string + 1;
+		}
+
+		if (!col_desc[3].disabled) {
+			snprintf(idle_time, MAX_TIME_STR_LEN, "%" PRIu64, cores[i].idle);
+			print_max_len(g_tabs[CORES_TAB], TABS_DATA_START_ROW + item_index, offset,
+				      col_desc[3].max_data_string, idle_time);
+			offset += col_desc[3].max_data_string + 2;
+		}
+
+		if (!col_desc[4].disabled) {
+			snprintf(busy_time, MAX_TIME_STR_LEN, "%" PRIu64, cores[i].busy);
+			print_max_len(g_tabs[CORES_TAB], TABS_DATA_START_ROW + item_index, offset,
+				      col_desc[4].max_data_string, busy_time);
+		}
+	}
+
+	return max_pages;
 }
 
 static uint8_t
