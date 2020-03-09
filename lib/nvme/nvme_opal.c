@@ -927,11 +927,6 @@ void
 spdk_opal_dev_destruct(struct spdk_opal_dev *dev)
 {
 	pthread_mutex_destroy(&dev->mutex_lock);
-	if (dev->max_ranges > 0) {
-		for (int i = 0; i < dev->max_ranges; i++) {
-			spdk_opal_free_locking_range_info(dev, i);
-		}
-	}
 	free(dev);
 }
 
@@ -1471,27 +1466,22 @@ opal_get_max_ranges(struct spdk_opal_dev *dev)
 }
 
 static int
-opal_get_locking_range_info_cb(struct spdk_opal_dev *dev, void *data)
+opal_get_locking_range_info_cb(struct spdk_opal_dev *dev, void *cb_arg)
 {
 	int error = 0;
-	uint8_t id = *(uint8_t *)data;
+	struct spdk_opal_locking_range_info *info = cb_arg;
 
 	error = opal_parse_and_check_status(dev, NULL);
 	if (error) {
 		return error;
 	}
 
-	if (dev->max_ranges != 0 && id > dev->max_ranges) {
-		SPDK_ERRLOG("Locking range ID not valid\n");
-		return -EINVAL;
-	}
-
-	dev->locking_range_info[id]->range_start = opal_response_get_u64(&dev->parsed_resp, 4);
-	dev->locking_range_info[id]->range_length = opal_response_get_u64(&dev->parsed_resp, 8);
-	dev->locking_range_info[id]->read_lock_enabled = opal_response_get_u8(&dev->parsed_resp, 12);
-	dev->locking_range_info[id]->write_lock_enabled = opal_response_get_u8(&dev->parsed_resp, 16);
-	dev->locking_range_info[id]->read_locked = opal_response_get_u8(&dev->parsed_resp, 20);
-	dev->locking_range_info[id]->write_locked = opal_response_get_u8(&dev->parsed_resp, 24);
+	info->range_start = opal_response_get_u64(&dev->parsed_resp, 4);
+	info->range_length = opal_response_get_u64(&dev->parsed_resp, 8);
+	info->read_lock_enabled = opal_response_get_u8(&dev->parsed_resp, 12);
+	info->write_lock_enabled = opal_response_get_u8(&dev->parsed_resp, 16);
+	info->read_locked = opal_response_get_u8(&dev->parsed_resp, 20);
+	info->write_locked = opal_response_get_u8(&dev->parsed_resp, 24);
 
 	return 0;
 }
@@ -1509,19 +1499,10 @@ opal_get_locking_range_info(struct spdk_opal_dev *dev,
 		return err;
 	}
 
-	if (dev->locking_range_info[locking_range_id] == NULL) {
-		info = calloc(1, sizeof(struct spdk_opal_locking_range_info));
-		if (info == NULL) {
-			SPDK_ERRLOG("Memory allocation failed for spdk_opal_locking_range_info\n");
-			return -ENOMEM;
-		}
-		info->locking_range_id = locking_range_id;
-		dev->locking_range_info[locking_range_id] = info;
-	} else {
-		info = dev->locking_range_info[locking_range_id];
-		memset(info, 0, sizeof(*info));
-		info->locking_range_id = locking_range_id;
-	}
+	assert(locking_range_id < SPDK_OPAL_MAX_LOCKING_RANGE);
+	info = &dev->locking_ranges[locking_range_id];
+	memset(info, 0, sizeof(*info));
+	info->locking_range_id = locking_range_id;
 
 	opal_clear_cmd(dev);
 	opal_set_comid(dev, dev->comid);
@@ -1549,7 +1530,7 @@ opal_get_locking_range_info(struct spdk_opal_dev *dev,
 		return err;
 	}
 
-	return opal_finalize_and_send(dev, 1, opal_get_locking_range_info_cb, &locking_range_id);
+	return opal_finalize_and_send(dev, 1, opal_get_locking_range_info_cb, (void *)info);
 }
 
 static int
@@ -2484,16 +2465,18 @@ spdk_opal_supported(struct spdk_opal_dev *dev)
 struct spdk_opal_locking_range_info *
 spdk_opal_get_locking_range_info(struct spdk_opal_dev *dev, enum spdk_opal_locking_range id)
 {
-	return dev->locking_range_info[id];
+	assert(id < SPDK_OPAL_MAX_LOCKING_RANGE);
+	return &dev->locking_ranges[id];
 }
 
 void
 spdk_opal_free_locking_range_info(struct spdk_opal_dev *dev, enum spdk_opal_locking_range id)
 {
-	struct spdk_opal_locking_range_info *info = dev->locking_range_info[id];
+	struct spdk_opal_locking_range_info *info;
 
-	free(info);
-	dev->locking_range_info[id] = NULL;
+	assert(id < SPDK_OPAL_MAX_LOCKING_RANGE);
+	info = &dev->locking_ranges[id];
+	memset(info, 0, sizeof(*info));
 }
 
 uint8_t

@@ -42,7 +42,6 @@
 #define MAX_TOKS			64
 #define OPAL_KEY_MAX			256
 #define OPAL_UID_LENGTH			8
-#define OPAL_MAX_LRS			8 /* minimum 8 defined by spec */
 
 #define SPDK_OPAL_TPER_TIMEOUT		600 /* seconds */
 
@@ -286,7 +285,7 @@ struct spdk_opal_dev {
 
 	uint64_t timeout;   /* seconds */
 	uint8_t max_ranges; /* max locking range number */
-	struct spdk_opal_locking_range_info *locking_range_info[OPAL_MAX_LRS];
+	struct spdk_opal_locking_range_info locking_ranges[SPDK_OPAL_MAX_LOCKING_RANGE];
 
 	pthread_mutex_t mutex_lock; /* some structs are accessed by current thread only */
 	spdk_opal_revert_cb revert_cb_fn;

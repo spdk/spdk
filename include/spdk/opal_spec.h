@@ -81,6 +81,8 @@
 
 #define SPDK_OPAL_MAX_PASSWORD_SIZE		32 /* in bytes */
 
+#define SPDK_OPAL_MAX_LOCKING_RANGE		8 /* maximum 8 ranges defined  by spec */
+
 /*
  * Feature Code
  */
