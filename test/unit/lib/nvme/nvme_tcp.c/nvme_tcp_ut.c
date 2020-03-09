@@ -220,12 +220,15 @@ static void
 test_nvme_tcp_build_sgl_request(void)
 {
 	struct nvme_tcp_qpair tqpair;
+	struct spdk_nvme_ctrlr ctrlr = {0};
 	struct nvme_tcp_req tcp_req = {0};
 	struct nvme_request req = {{0}};
 	struct nvme_tcp_ut_bdev_io bio;
 	uint64_t i;
 	int rc;
 
+	ctrlr.max_sges = NVME_TCP_MAX_SGL_DESCRIPTORS;
+	tqpair.qpair.ctrlr = &ctrlr;
 	tcp_req.req = &req;
 
 	req.payload.reset_sgl_fn = nvme_tcp_ut_reset_sgl;

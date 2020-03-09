@@ -379,7 +379,7 @@ static int
 nvme_tcp_build_sgl_request(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_req *tcp_req)
 {
 	int rc;
-	uint32_t length, remaining_size, iovcnt = 0;
+	uint32_t length, remaining_size, iovcnt = 0, max_num_sgl;
 	struct nvme_request *req = tcp_req->req;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "enter\n");
@@ -390,6 +390,7 @@ nvme_tcp_build_sgl_request(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_req *t
 	assert(req->payload.next_sge_fn != NULL);
 	req->payload.reset_sgl_fn(req->payload.contig_or_cb_arg, req->payload_offset);
 
+	max_num_sgl = spdk_min(req->qpair->ctrlr->max_sges, NVME_TCP_MAX_SGL_DESCRIPTORS);
 	remaining_size = req->payload_size;
 
 	do {
@@ -403,11 +404,13 @@ nvme_tcp_build_sgl_request(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_req *t
 		tcp_req->iov[iovcnt].iov_len = length;
 		remaining_size -= length;
 		iovcnt++;
-	} while (remaining_size > 0 && iovcnt < NVME_TCP_MAX_SGL_DESCRIPTORS);
+	} while (remaining_size > 0 && iovcnt < max_num_sgl);
 
 
 	/* Should be impossible if we did our sgl checks properly up the stack, but do a sanity check here. */
 	if (remaining_size > 0) {
+		SPDK_ERRLOG("Failed to construct tcp_req=%p, and the iovcnt=%u, remaining_size=%u\n",
+			    tcp_req, iovcnt, remaining_size);
 		return -1;
 	}
 
