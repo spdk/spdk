@@ -68,6 +68,7 @@ struct spdk_lw_thread {
 struct spdk_reactor {
 	/* Lightweight threads running on this reactor */
 	TAILQ_HEAD(, spdk_lw_thread)			threads;
+	uint32_t					thread_count;
 
 	/* Logical core number for this reactor. */
 	uint32_t					lcore;

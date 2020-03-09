@@ -68,6 +68,7 @@ spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore)
 	reactor->flags.is_valid = true;
 
 	TAILQ_INIT(&reactor->threads);
+	reactor->thread_count = 0;
 
 	reactor->events = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536, SPDK_ENV_SOCKET_ID_ANY);
 	assert(reactor->events != NULL);
@@ -153,6 +154,7 @@ spdk_reactors_fini(void)
 
 	SPDK_ENV_FOREACH_CORE(i) {
 		reactor = spdk_reactor_get(i);
+		assert(reactor->thread_count == 0);
 		if (spdk_likely(reactor != NULL) && reactor->events != NULL) {
 			spdk_ring_free(reactor->events);
 		}
@@ -328,6 +330,8 @@ reactor_run(struct spdk_reactor *reactor)
 		if (spdk_unlikely(lw_thread->resched)) {
 			lw_thread->resched = false;
 			TAILQ_REMOVE(&reactor->threads, lw_thread, link);
+			assert(reactor->thread_count > 0);
+			reactor->thread_count--;
 			_reactor_schedule_thread(thread);
 			continue;
 		}
@@ -335,6 +339,8 @@ reactor_run(struct spdk_reactor *reactor)
 		if (spdk_unlikely(spdk_thread_is_exited(thread) &&
 				  spdk_thread_is_idle(thread))) {
 			TAILQ_REMOVE(&reactor->threads, lw_thread, link);
+			assert(reactor->thread_count > 0);
+			reactor->thread_count--;
 			spdk_thread_destroy(thread);
 			continue;
 		}
@@ -376,6 +382,8 @@ _spdk_reactor_run(void *arg)
 	TAILQ_FOREACH_SAFE(lw_thread, &reactor->threads, link, tmp) {
 		thread = spdk_thread_get_from_ctx(lw_thread);
 		TAILQ_REMOVE(&reactor->threads, lw_thread, link);
+		assert(reactor->thread_count > 0);
+		reactor->thread_count--;
 		spdk_set_thread(thread);
 		if (!spdk_thread_is_exited(thread)) {
 			rc = spdk_thread_exit(thread);
@@ -489,6 +497,7 @@ _schedule_thread(void *arg1, void *arg2)
 	assert(reactor != NULL);
 
 	TAILQ_INSERT_TAIL(&reactor->threads, lw_thread, link);
+	reactor->thread_count++;
 }
 
 static int

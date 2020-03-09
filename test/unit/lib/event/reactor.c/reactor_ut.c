@@ -145,6 +145,7 @@ test_schedule_thread(void)
 	CU_ASSERT(spdk_thread_get_from_ctx(lw_thread) == thread);
 
 	TAILQ_REMOVE(&reactor->threads, lw_thread, link);
+	reactor->thread_count--;
 	spdk_set_thread(thread);
 	spdk_thread_exit(thread);
 	spdk_thread_destroy(thread);
@@ -224,6 +225,7 @@ test_reschedule_thread(void)
 	MOCK_CLEAR(spdk_env_get_current_core);
 
 	TAILQ_REMOVE(&reactor->threads, lw_thread, link);
+	reactor->thread_count--;
 	spdk_set_thread(thread);
 	spdk_thread_exit(thread);
 	spdk_thread_destroy(thread);
