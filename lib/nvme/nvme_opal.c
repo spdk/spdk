@@ -885,7 +885,6 @@ opal_setup_dev(struct spdk_opal_dev *dev)
 {
 	dev->tsn = 0;
 	dev->hsn = 0;
-	dev->prev_data = NULL;
 }
 
 static int
@@ -1022,9 +1021,10 @@ opal_start_generic_session(struct spdk_opal_dev *dev,
 }
 
 static int
-opal_get_msid_cpin_pin_cb(struct spdk_opal_dev *dev, void *data)
+opal_get_msid_cpin_pin_cb(struct spdk_opal_dev *dev, void *cb_arg)
 {
 	const char *msid_pin;
+	struct spdk_opal_key *opal_key = cb_arg;
 	size_t strlen;
 	int error = 0;
 
@@ -1039,20 +1039,16 @@ opal_get_msid_cpin_pin_cb(struct spdk_opal_dev *dev, void *data)
 		return -EINVAL;
 	}
 
-	dev->prev_d_len = strlen;
-	dev->prev_data = calloc(1, strlen);
-	if (!dev->prev_data) {
-		SPDK_ERRLOG("memory allocation error\n");
-		return -ENOMEM;
-	}
-	memcpy(dev->prev_data, msid_pin, strlen);
+	assert(cb_arg != NULL);
+	opal_key->key_len = strlen;
+	memcpy(opal_key->key, msid_pin, opal_key->key_len);
 
-	SPDK_DEBUGLOG(SPDK_LOG_OPAL, "MSID = %p\n", dev->prev_data);
+	SPDK_DEBUGLOG(SPDK_LOG_OPAL, "MSID = %p\n", opal_key->key);
 	return 0;
 }
 
 static int
-opal_get_msid_cpin_pin(struct spdk_opal_dev *dev)
+opal_get_msid_cpin_pin(struct spdk_opal_dev *dev, struct spdk_opal_key *opal_key)
 {
 	int err = 0;
 
@@ -1082,7 +1078,7 @@ opal_get_msid_cpin_pin(struct spdk_opal_dev *dev)
 		return err;
 	}
 
-	return opal_finalize_and_send(dev, 1, opal_get_msid_cpin_pin_cb, NULL);
+	return opal_finalize_and_send(dev, 1, opal_get_msid_cpin_pin_cb, (void *)opal_key);
 }
 
 static int
@@ -1711,6 +1707,7 @@ int
 spdk_opal_cmd_take_ownership(struct spdk_opal_dev *dev, char *new_passwd)
 {
 	int ret;
+	struct spdk_opal_key opal_key = {};
 
 	if (!dev || dev->supported == false) {
 		return -ENODEV;
@@ -1725,7 +1722,7 @@ spdk_opal_cmd_take_ownership(struct spdk_opal_dev *dev, char *new_passwd)
 		goto end;
 	}
 
-	ret = opal_get_msid_cpin_pin(dev);
+	ret = opal_get_msid_cpin_pin(dev, &opal_key);
 	if (ret) {
 		SPDK_ERRLOG("get msid error %d\n", ret);
 		opal_end_session(dev);
@@ -1739,14 +1736,13 @@ spdk_opal_cmd_take_ownership(struct spdk_opal_dev *dev, char *new_passwd)
 	}
 
 	ret = opal_start_generic_session(dev, UID_SID, UID_ADMINSP,
-					 dev->prev_data, dev->prev_d_len);
-	free(dev->prev_data);
-	dev->prev_data = NULL;
+					 opal_key.key, opal_key.key_len);
 	if (ret) {
 		SPDK_ERRLOG("start admin SP session error %d\n", ret);
 		opal_end_session(dev);
 		goto end;
 	}
+	memset(&opal_key, 0, sizeof(struct spdk_opal_key));
 
 	ret = opal_set_sid_cpin_pin(dev, new_passwd);
 	if (ret) {
@@ -1830,7 +1826,7 @@ opal_revert_tper(struct spdk_opal_dev *dev)
 }
 
 static int
-opal_gen_new_active_key(struct spdk_opal_dev *dev)
+opal_gen_new_active_key(struct spdk_opal_dev *dev, struct spdk_opal_key *active_key)
 {
 	uint8_t uid_data[OPAL_UID_LENGTH] = {0};
 	int err = 0;
@@ -1839,15 +1835,13 @@ opal_gen_new_active_key(struct spdk_opal_dev *dev)
 	opal_clear_cmd(dev);
 	opal_set_comid(dev, dev->comid);
 
-	if (dev->prev_data == NULL || dev->prev_d_len == 0) {
+	if (active_key->key_len == 0) {
 		SPDK_ERRLOG("Error finding previous data to generate new active key\n");
 		return -EINVAL;
 	}
 
-	length = spdk_min(dev->prev_d_len, OPAL_UID_LENGTH);
-	memcpy(uid_data, dev->prev_data, length);
-	free(dev->prev_data);
-	dev->prev_data = NULL;
+	length = spdk_min(active_key->key_len, OPAL_UID_LENGTH);
+	memcpy(uid_data, active_key->key, length);
 
 	opal_add_token_u8(&err, dev, SPDK_OPAL_CALL);
 	opal_add_token_bytestring(&err, dev, uid_data, OPAL_UID_LENGTH);
@@ -1865,9 +1859,10 @@ opal_gen_new_active_key(struct spdk_opal_dev *dev)
 }
 
 static int
-opal_get_active_key_cb(struct spdk_opal_dev *dev, void *data)
+opal_get_active_key_cb(struct spdk_opal_dev *dev, void *cb_arg)
 {
-	const char *active_key;
+	const char *key;
+	struct spdk_opal_key *active_key = cb_arg;
 	size_t str_len;
 	int error = 0;
 
@@ -1876,26 +1871,22 @@ opal_get_active_key_cb(struct spdk_opal_dev *dev, void *data)
 		return error;
 	}
 
-	str_len = opal_response_get_string(&dev->parsed_resp, 4, &active_key);
-	if (!active_key) {
+	str_len = opal_response_get_string(&dev->parsed_resp, 4, &key);
+	if (!key) {
 		SPDK_ERRLOG("Couldn't extract active key from response\n");
 		return -EINVAL;
 	}
 
-	dev->prev_d_len = str_len;
-	dev->prev_data = calloc(1, str_len);
-	if (!dev->prev_data) {
-		SPDK_ERRLOG("memory allocation error\n");
-		return -ENOMEM;
-	}
-	memcpy(dev->prev_data, active_key, str_len);
+	active_key->key_len = str_len;
+	memcpy(active_key->key, key, active_key->key_len);
 
-	SPDK_DEBUGLOG(SPDK_LOG_OPAL, "active key = %p\n", dev->prev_data);
+	SPDK_DEBUGLOG(SPDK_LOG_OPAL, "active key = %p\n", active_key->key);
 	return 0;
 }
 
 static int
-opal_get_active_key(struct spdk_opal_dev *dev, struct opal_common_session *session)
+opal_get_active_key(struct spdk_opal_dev *dev, struct opal_common_session *session,
+		    struct spdk_opal_key *active_key)
 {
 	uint8_t uid_locking_range[OPAL_UID_LENGTH];
 	uint8_t locking_range_id;
@@ -1933,7 +1924,7 @@ opal_get_active_key(struct spdk_opal_dev *dev, struct opal_common_session *sessi
 		return err;
 	}
 
-	return opal_finalize_and_send(dev, 1, opal_get_active_key_cb, NULL);
+	return opal_finalize_and_send(dev, 1, opal_get_active_key_cb, (void *)active_key);
 }
 
 int
@@ -2457,6 +2448,7 @@ spdk_opal_cmd_erase_locking_range(struct spdk_opal_dev *dev, enum spdk_opal_user
 				  enum spdk_opal_locking_range locking_range_id, const char *password)
 {
 	struct opal_common_session session = {};
+	struct spdk_opal_key active_key = {};
 	struct spdk_opal_key opal_key;
 	int ret;
 
@@ -2480,17 +2472,18 @@ spdk_opal_cmd_erase_locking_range(struct spdk_opal_dev *dev, enum spdk_opal_user
 		return ret;
 	}
 
-	ret = opal_get_active_key(dev, &session);
+	ret = opal_get_active_key(dev, &session, &active_key);
 	if (ret) {
 		SPDK_ERRLOG("get active key error %d\n", ret);
 		goto end;
 	}
 
-	ret = opal_gen_new_active_key(dev);
+	ret = opal_gen_new_active_key(dev, &active_key);
 	if (ret) {
 		SPDK_ERRLOG("generate new active key error %d\n", ret);
 		goto end;
 	}
+	memset(&active_key, 0, sizeof(struct spdk_opal_key));
 
 end:
 	ret += opal_end_session(dev);

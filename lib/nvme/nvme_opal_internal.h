@@ -281,8 +281,6 @@ struct spdk_opal_dev {
 	uint8_t resp[IO_BUFFER_LENGTH];
 
 	struct spdk_opal_resp_parsed parsed_resp;
-	size_t prev_d_len;
-	void *prev_data;
 
 	struct spdk_opal_d0_features_info feat_info;
 
