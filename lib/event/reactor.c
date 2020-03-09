@@ -308,6 +308,46 @@ _set_thread_name(const char *thread_name)
 static int _reactor_schedule_thread(struct spdk_thread *thread);
 static uint64_t g_rusage_period;
 
+static void
+reactor_run(struct spdk_reactor *reactor)
+{
+	uint64_t		now;
+	struct spdk_thread	*thread;
+	struct spdk_lw_thread	*lw_thread, *tmp;
+
+	/* For each loop through the reactor, capture the time. This time
+	 * is used for all threads. */
+	now = spdk_get_ticks();
+
+	_spdk_event_queue_run_batch(reactor);
+
+	TAILQ_FOREACH_SAFE(lw_thread, &reactor->threads, link, tmp) {
+		thread = spdk_thread_get_from_ctx(lw_thread);
+		spdk_thread_poll(thread, 0, now);
+
+		if (spdk_unlikely(lw_thread->resched)) {
+			lw_thread->resched = false;
+			TAILQ_REMOVE(&reactor->threads, lw_thread, link);
+			_reactor_schedule_thread(thread);
+			continue;
+		}
+
+		if (spdk_unlikely(spdk_thread_is_exited(thread) &&
+				  spdk_thread_is_idle(thread))) {
+			TAILQ_REMOVE(&reactor->threads, lw_thread, link);
+			spdk_thread_destroy(thread);
+			continue;
+		}
+	}
+
+	if (g_framework_context_switch_monitor_enabled) {
+		if ((reactor->last_rusage + g_rusage_period) < now) {
+			get_rusage(reactor);
+			reactor->last_rusage = now;
+		}
+	}
+}
+
 static int
 _spdk_reactor_run(void *arg)
 {
@@ -326,42 +366,10 @@ _spdk_reactor_run(void *arg)
 	_set_thread_name(thread_name);
 
 	while (1) {
-		uint64_t now;
-
-		/* For each loop through the reactor, capture the time. This time
-		 * is used for all threads. */
-		now = spdk_get_ticks();
-
-		_spdk_event_queue_run_batch(reactor);
-
-		TAILQ_FOREACH_SAFE(lw_thread, &reactor->threads, link, tmp) {
-			thread = spdk_thread_get_from_ctx(lw_thread);
-			spdk_thread_poll(thread, 0, now);
-
-			if (spdk_unlikely(lw_thread->resched)) {
-				lw_thread->resched = false;
-				TAILQ_REMOVE(&reactor->threads, lw_thread, link);
-				_reactor_schedule_thread(thread);
-				continue;
-			}
-
-			if (spdk_unlikely(spdk_thread_is_exited(thread) &&
-					  spdk_thread_is_idle(thread))) {
-				TAILQ_REMOVE(&reactor->threads, lw_thread, link);
-				spdk_thread_destroy(thread);
-				continue;
-			}
-		}
+		reactor_run(reactor);
 
 		if (g_reactor_state != SPDK_REACTOR_STATE_RUNNING) {
 			break;
-		}
-
-		if (g_framework_context_switch_monitor_enabled) {
-			if ((reactor->last_rusage + g_rusage_period) < now) {
-				get_rusage(reactor);
-				reactor->last_rusage = now;
-			}
 		}
 	}
 
