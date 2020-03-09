@@ -1022,26 +1022,6 @@ opal_start_generic_session(struct spdk_opal_dev *dev,
 }
 
 static int
-opal_start_anybody_adminsp_session(struct spdk_opal_dev *dev)
-{
-	return opal_start_generic_session(dev, UID_ANYBODY,
-					  UID_ADMINSP, NULL, 0);
-}
-
-static int
-opal_start_admin_session(struct spdk_opal_dev *dev, void *data)
-{
-	struct spdk_opal_key *opal_key = data;
-
-	if (opal_key == NULL) {
-		SPDK_ERRLOG("No key found for auth session\n");
-		return -EINVAL;
-	}
-	return opal_start_generic_session(dev, UID_ADMIN1, UID_LOCKINGSP,
-					  opal_key->key, opal_key->key_len);
-}
-
-static int
 opal_get_msid_cpin_pin_cb(struct spdk_opal_dev *dev, void *data)
 {
 	const char *msid_pin;
@@ -1103,33 +1083,6 @@ opal_get_msid_cpin_pin(struct spdk_opal_dev *dev)
 	}
 
 	return opal_finalize_and_send(dev, 1, opal_get_msid_cpin_pin_cb, NULL);
-}
-
-static int
-opal_start_adminsp_session(struct spdk_opal_dev *dev, void *data)
-{
-	int ret;
-	uint8_t *key = dev->prev_data;
-
-	if (!key) {
-		const struct spdk_opal_key *okey = data;
-		if (okey == NULL) {
-			SPDK_ERRLOG("No key found for auth session\n");
-			return -EINVAL;
-		}
-		ret = opal_start_generic_session(dev, UID_SID,
-						 UID_ADMINSP,
-						 okey->key,
-						 okey->key_len);
-	} else {
-		ret = opal_start_generic_session(dev, UID_SID,
-						 UID_ADMINSP,
-						 key, dev->prev_d_len);
-		free(key);
-		dev->prev_data = NULL;
-	}
-
-	return ret;
 }
 
 static int
@@ -1765,7 +1718,7 @@ spdk_opal_cmd_take_ownership(struct spdk_opal_dev *dev, char *new_passwd)
 
 	pthread_mutex_lock(&dev->mutex_lock);
 	opal_setup_dev(dev);
-	ret = opal_start_anybody_adminsp_session(dev);
+	ret = opal_start_generic_session(dev, UID_ANYBODY, UID_ADMINSP, NULL, 0);
 	if (ret) {
 		SPDK_ERRLOG("start admin SP session error %d\n", ret);
 		opal_end_session(dev);
@@ -1785,7 +1738,10 @@ spdk_opal_cmd_take_ownership(struct spdk_opal_dev *dev, char *new_passwd)
 		goto end;
 	}
 
-	ret = opal_start_adminsp_session(dev, NULL); /* key stored in dev->prev_data */
+	ret = opal_start_generic_session(dev, UID_SID, UID_ADMINSP,
+					 dev->prev_data, dev->prev_d_len);
+	free(dev->prev_data);
+	dev->prev_data = NULL;
 	if (ret) {
 		SPDK_ERRLOG("start admin SP session error %d\n", ret);
 		opal_end_session(dev);
@@ -1999,7 +1955,8 @@ spdk_opal_cmd_revert_tper(struct spdk_opal_dev *dev, const char *passwd)
 	pthread_mutex_lock(&dev->mutex_lock);
 	opal_setup_dev(dev);
 
-	ret = opal_start_adminsp_session(dev, &opal_key);
+	ret = opal_start_generic_session(dev, UID_SID, UID_ADMINSP,
+					 opal_key.key, opal_key.key_len);
 	if (ret) {
 		opal_end_session(dev);
 		SPDK_ERRLOG("Error on starting admin SP session with error %d\n", ret);
@@ -2083,7 +2040,8 @@ spdk_opal_cmd_revert_tper_async(struct spdk_opal_dev *dev, const char *passwd,
 	pthread_mutex_lock(&dev->mutex_lock);
 	opal_setup_dev(dev);
 
-	ret = opal_start_adminsp_session(dev, &opal_key);
+	ret = opal_start_generic_session(dev, UID_SID, UID_ADMINSP,
+					 opal_key.key, opal_key.key_len);
 	if (ret) {
 		opal_end_session(dev);
 		SPDK_ERRLOG("Error on starting admin SP session with error %d\n", ret);
@@ -2127,7 +2085,8 @@ spdk_opal_cmd_activate_locking_sp(struct spdk_opal_dev *dev, const char *passwd)
 	}
 
 	pthread_mutex_lock(&dev->mutex_lock);
-	ret = opal_start_adminsp_session(dev, &opal_key);
+	ret = opal_start_generic_session(dev, UID_SID, UID_ADMINSP,
+					 opal_key.key, opal_key.key_len);
 	if (ret) {
 		SPDK_ERRLOG("Error on starting admin SP session with error %d\n", ret);
 		pthread_mutex_unlock(&dev->mutex_lock);
@@ -2367,7 +2326,8 @@ spdk_opal_cmd_enable_user(struct spdk_opal_dev *dev, enum spdk_opal_user user_id
 	session.who = user_id;
 
 	pthread_mutex_lock(&dev->mutex_lock);
-	ret = opal_start_admin_session(dev, session.opal_key);
+	ret =  opal_start_generic_session(dev, UID_ADMIN1, UID_LOCKINGSP,
+					  session.opal_key->key, session.opal_key->key_len);
 	if (ret) {
 		SPDK_ERRLOG("start locking SP session error %d\n", ret);
 		pthread_mutex_unlock(&dev->mutex_lock);
@@ -2414,7 +2374,9 @@ spdk_opal_cmd_add_user_to_locking_range(struct spdk_opal_dev *dev, enum spdk_opa
 	locking_session.l_state = lock_flag;
 
 	pthread_mutex_lock(&dev->mutex_lock);
-	ret = opal_start_admin_session(dev, locking_session.session.opal_key);
+	ret =  opal_start_generic_session(dev, UID_ADMIN1, UID_LOCKINGSP,
+					  locking_session.session.opal_key->key,
+					  locking_session.session.opal_key->key_len);
 	if (ret) {
 		SPDK_ERRLOG("start locking SP session error %d\n", ret);
 		pthread_mutex_unlock(&dev->mutex_lock);
