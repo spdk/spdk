@@ -321,9 +321,7 @@ blob_open(void)
 	CU_ASSERT(g_blob != NULL);
 	blob = g_blob;
 
-	spdk_blob_close(blob, blob_op_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
+	ut_blob_close_and_delete(bs, blob);
 }
 
 static void
@@ -540,9 +538,7 @@ blob_thin_provision(void)
 	blob = g_blob;
 	CU_ASSERT(blob->invalid_flags & SPDK_BLOB_THIN_PROV);
 
-	spdk_blob_close(blob, blob_op_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
+	ut_blob_close_and_delete(bs, blob);
 
 	spdk_bs_unload(bs, bs_op_complete, NULL);
 	poll_threads();
@@ -751,12 +747,10 @@ blob_snapshot_freeze_io(void)
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(memcmp(payload_write, payload_read, num_of_pages * SPDK_BS_PAGE_SIZE) == 0);
 
-	spdk_blob_close(blob, blob_op_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
-
 	spdk_bs_free_io_channel(channel);
 	poll_threads();
+
+	ut_blob_close_and_delete(bs, blob);
 }
 
 static void
@@ -872,13 +866,8 @@ blob_clone(void)
 	CU_ASSERT(clone->md_ro == false);
 	CU_ASSERT(spdk_blob_get_num_clusters(clone) == 10);
 
-	spdk_blob_close(clone, blob_op_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
-
-	spdk_blob_close(blob, blob_op_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
+	ut_blob_close_and_delete(bs, clone);
+	ut_blob_close_and_delete(bs, blob);
 }
 
 static void
@@ -968,12 +957,10 @@ _blob_inflate(bool decouple_parent)
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10);
 	CU_ASSERT(spdk_blob_is_thin_provisioned(blob) == decouple_parent);
 
-	spdk_blob_close(blob, blob_op_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
-
 	spdk_bs_free_io_channel(channel);
 	poll_threads();
+
+	ut_blob_close_and_delete(bs, blob);
 }
 
 static void
@@ -1128,14 +1115,11 @@ blob_read_only(void)
 	CU_ASSERT(blob->md_ro == true);
 	CU_ASSERT(blob->data_ro_flags & SPDK_BLOB_READ_ONLY);
 
-	spdk_blob_close(blob, blob_op_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
+	ut_blob_close_and_delete(bs, blob);
 
 	spdk_bs_unload(bs, bs_op_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
-
 }
 
 static void
@@ -1201,12 +1185,10 @@ blob_write(void)
 	poll_threads();
 	CU_ASSERT(g_bserrno == -EINVAL);
 
-	spdk_blob_close(blob, blob_op_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
-
 	spdk_bs_free_io_channel(channel);
 	poll_threads();
+
+	ut_blob_close_and_delete(bs, blob);
 }
 
 static void
@@ -1294,12 +1276,10 @@ blob_rw_verify(void)
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(memcmp(payload_write, payload_read, 4 * 4096) == 0);
 
-	spdk_blob_close(blob, blob_op_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
-
 	spdk_bs_free_io_channel(channel);
 	poll_threads();
+
+	ut_blob_close_and_delete(bs, blob);
 }
 
 static void
@@ -1425,12 +1405,10 @@ blob_rw_verify_iov_nomem(void)
 	CU_ASSERT(req_count == bs_channel_get_req_count(channel));
 	MOCK_CLEAR(calloc);
 
-	spdk_blob_close(blob, blob_op_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
-
 	spdk_bs_free_io_channel(channel);
 	poll_threads();
+
+	ut_blob_close_and_delete(bs, blob);
 }
 
 static void
@@ -1468,12 +1446,10 @@ blob_rw_iov_read_only(void)
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 
-	spdk_blob_close(blob, blob_op_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
-
 	spdk_bs_free_io_channel(channel);
 	poll_threads();
+
+	ut_blob_close_and_delete(bs, blob);
 }
 
 static void
@@ -1651,10 +1627,6 @@ blob_operation_split_rw(void)
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(memcmp(payload_pattern, payload_read, payload_size) == 0);
 
-	spdk_blob_close(blob, blob_op_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
-
 	spdk_bs_free_io_channel(channel);
 	poll_threads();
 
@@ -1664,6 +1636,8 @@ blob_operation_split_rw(void)
 	free(payload_read);
 	free(payload_write);
 	free(payload_pattern);
+
+	ut_blob_close_and_delete(bs, blob);
 }
 
 static void
@@ -1815,9 +1789,6 @@ blob_operation_split_rw_iov(void)
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(memcmp(payload_pattern, payload_read, payload_size) == 0);
 
-	spdk_blob_close(blob, blob_op_complete, NULL);
-	CU_ASSERT(g_bserrno == 0);
-
 	spdk_bs_free_io_channel(channel);
 	poll_threads();
 
@@ -1827,6 +1798,8 @@ blob_operation_split_rw_iov(void)
 	free(payload_read);
 	free(payload_write);
 	free(payload_pattern);
+
+	ut_blob_close_and_delete(bs, blob);
 }
 
 static void
@@ -1904,14 +1877,11 @@ blob_unmap(void)
 		}
 	}
 
-	spdk_blob_close(blob, blob_op_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
-
 	spdk_bs_free_io_channel(channel);
 	poll_threads();
-}
 
+	ut_blob_close_and_delete(bs, blob);
+}
 
 static void
 blob_iter(void)
@@ -2060,9 +2030,7 @@ blob_xattr(void)
 
 	CU_ASSERT((blob->invalid_flags & SPDK_BLOB_INTERNAL_XATTR) == 0);
 
-	spdk_blob_close(blob, blob_op_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
+	ut_blob_close_and_delete(bs, blob);
 }
 
 static void
@@ -3254,12 +3222,7 @@ blob_dirty_shutdown(void)
 
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
 
-	spdk_blob_close(blob, blob_op_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
-	blob = NULL;
-	g_blob = NULL;
-	g_blobid = SPDK_BLOBID_INVALID;
+	ut_blob_close_and_delete(bs, blob);
 }
 
 static void
@@ -3370,12 +3333,8 @@ blob_flags(void)
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 
-	spdk_blob_close(blob_data_ro, blob_op_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
-	spdk_blob_close(blob_md_ro, blob_op_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
+	ut_blob_close_and_delete(bs, blob_data_ro);
+	ut_blob_close_and_delete(bs, blob_md_ro);
 }
 
 static void
@@ -3459,9 +3418,7 @@ bs_version(void)
 	CU_ASSERT(g_blob != NULL);
 	blob = g_blob;
 
-	spdk_blob_close(blob, blob_op_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
+	ut_blob_close_and_delete(bs, blob);
 
 	CU_ASSERT(super->version == 2);
 	CU_ASSERT(super->used_blobid_mask_start == 0);
@@ -3966,15 +3923,10 @@ blob_thin_prov_rw_iov(void)
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(memcmp(payload_write, payload_read, 10 * 4096) == 0);
 
-	spdk_blob_close(blob, blob_op_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
-
 	spdk_bs_free_io_channel(channel);
 	poll_threads();
 
-	g_blob = NULL;
-	g_blobid = 0;
+	ut_blob_close_and_delete(bs, blob);
 }
 
 struct iter_ctx {
@@ -4260,19 +4212,11 @@ blob_snapshot_rw_iov(void)
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(memcmp(payload_write, payload_read, 10 * 4096) == 0);
 
-	spdk_blob_close(blob, blob_op_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
-
-	spdk_blob_close(snapshot, blob_op_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
-
 	spdk_bs_free_io_channel(channel);
 	poll_threads();
 
-	g_blob = NULL;
-	g_blobid = 0;
+	ut_blob_close_and_delete(bs, blob);
+	ut_blob_close_and_delete(bs, snapshot);
 }
 
 /**
@@ -4574,19 +4518,14 @@ _blob_inflate_rw(bool decouple_parent)
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(memcmp(payload_clone, payload_read, payload_size) == 0);
 
-	spdk_blob_close(blob, blob_op_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
-
 	spdk_bs_free_io_channel(channel);
 	poll_threads();
-
-	g_blob = NULL;
-	g_blobid = 0;
 
 	free(payload_read);
 	free(payload_write);
 	free(payload_clone);
+
+	ut_blob_close_and_delete(bs, blob);
 }
 
 static void
@@ -6357,14 +6296,11 @@ blob_simultaneous_operations(void)
 		SPDK_CU_ASSERT_FATAL(g_bserrno == -1);
 	}
 
-	spdk_blob_close(snapshot, blob_op_complete, NULL);
-	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
-
-	ut_blob_close_and_delete(bs, blob);
-
 	spdk_bs_free_io_channel(channel);
 	poll_threads();
+
+	ut_blob_close_and_delete(bs, snapshot);
+	ut_blob_close_and_delete(bs, blob);
 }
 
 static void
