@@ -16,13 +16,6 @@ Summary: Set of libraries and utilities for high performance user-mode storage
 %define install_sbindir %{buildroot}/%{_sbindir}
 %define install_docdir %{buildroot}/%{_docdir}/%{name}
 
-# Distros that don't support python3 will use python2
-%if "%{dist}" == ".el7"
-%define use_python2 1
-%else
-%define use_python2 0
-%endif
-
 License: BSD
 
 # Only x86_64 is supported
@@ -62,11 +55,7 @@ developing applications with the Storage Performance Development Kit.
 
 %package tools
 Summary: Storage Performance Development Kit tools files
-%if "%{use_python2}" == "0"
 Requires: %{name}%{?_isa} = %{package_version} python3 python3-configshell python3-pexpect
-%else
-Requires: %{name}%{?_isa} = %{package_version} python python-configshell pexpect
-%endif
 BuildArch: noarch
 
 %description tools
@@ -121,11 +110,6 @@ find scripts -type f -regextype egrep -regex '.*(spdkcli|rpc).*[.]py' \
 # env is banned - replace '/usr/bin/env anything' with '/usr/bin/anything'
 find %{install_datadir}/scripts -type f -regextype egrep -regex '.*([.]py|[.]sh)' \
 	-exec sed -i -E '1s@#!/usr/bin/env (.*)@#!/usr/bin/\1@' {} +
-
-%if "%{use_python2}" == "1"
-find %{install_datadir}/scripts -type f -regextype egrep -regex '.*([.]py)' \
-	-exec sed -i -E '1s@#!/usr/bin/python3@#!/usr/bin/python2@' {} +
-%endif
 
 # synlinks to tools
 mkdir -p %{install_sbindir}
