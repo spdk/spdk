@@ -50,7 +50,7 @@ function run_bdevio() {
 }
 
 function run_bdevperf() {
-	$rootdir/test/bdev/bdevperf/bdevperf -z -q $1 -o $2 -w verify -t $3 &
+	$rootdir/test/bdev/bdevperf/bdevperf -z -q $1 -o $2 -w verify -t $3 -C -m 0x6 &
 	bdevperf_pid=$!
 	trap 'killprocess $bdevperf_pid; error_cleanup; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $bdevperf_pid
