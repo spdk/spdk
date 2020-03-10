@@ -1770,19 +1770,6 @@ struct spdk_opal_dev *
 	return dev;
 }
 
-int
-spdk_opal_cmd_scan(struct spdk_opal_dev *dev)
-{
-	int ret;
-
-	ret = opal_check_support(dev);
-	if (ret) {
-		SPDK_ERRLOG("check opal support failed: %d\n", ret);
-		spdk_opal_dev_destruct(dev);
-	}
-	return ret;
-}
-
 static int
 opal_revert_tper(struct spdk_opal_dev *dev)
 {
@@ -1943,8 +1930,8 @@ spdk_opal_cmd_revert_tper(struct spdk_opal_dev *dev, const char *passwd)
 	int ret;
 	struct spdk_opal_key opal_key = {};
 
-	if (!dev || dev->supported == false) {
-		return -ENODEV;
+	if (dev->supported == false) {
+		return -ENOTSUP;
 	}
 
 	ret = opal_init_key(&opal_key, passwd, OPAL_LOCKING_RANGE_GLOBAL);
@@ -2020,8 +2007,8 @@ spdk_opal_cmd_revert_tper_async(struct spdk_opal_dev *dev, const char *passwd,
 	int ret;
 	struct spdk_opal_key opal_key = {};
 
-	if (!dev || dev->supported == false) {
-		return -ENODEV;
+	if (dev->supported == false) {
+		return -ENOTSUP;
 	}
 
 	if (cb_fn == NULL) {
@@ -2124,8 +2111,8 @@ spdk_opal_cmd_lock_unlock(struct spdk_opal_dev *dev, enum spdk_opal_user user,
 	struct spdk_opal_locking_session locking_session = {};
 	int ret;
 
-	if (!dev || dev->supported == false) {
-		return -ENODEV;
+	if (dev->supported == false) {
+		return -ENOTSUP;
 	}
 
 	ret = opal_init_key(&locking_session.session.opal_key, passwd, locking_range);
@@ -2169,8 +2156,8 @@ spdk_opal_cmd_setup_locking_range(struct spdk_opal_dev *dev, enum spdk_opal_user
 	struct opal_locking_range_setup_session setup_session = {};
 	int ret;
 
-	if (!dev || dev->supported == false) {
-		return -ENODEV;
+	if (dev->supported == false) {
+		return -ENOTSUP;
 	}
 
 	ret = opal_init_key(&setup_session.session.opal_key, passwd, locking_range_id);
@@ -2215,8 +2202,8 @@ spdk_opal_cmd_get_max_ranges(struct spdk_opal_dev *dev, const char *passwd)
 	struct opal_common_session session = {};
 	int ret;
 
-	if (!dev || dev->supported == false) {
-		return -ENODEV;
+	if (dev->supported == false) {
+		return -ENOTSUP;
 	}
 
 	ret = opal_init_key(&session.opal_key, passwd, OPAL_LOCKING_RANGE_GLOBAL);
@@ -2258,8 +2245,8 @@ spdk_opal_cmd_get_locking_range_info(struct spdk_opal_dev *dev, const char *pass
 	struct opal_common_session session = {};
 	int ret;
 
-	if (!dev || dev->supported == false) {
-		return -ENODEV;
+	if (dev->supported == false) {
+		return -ENOTSUP;
 	}
 
 	ret = opal_init_key(&session.opal_key, passwd, locking_range_id);
@@ -2300,15 +2287,14 @@ spdk_opal_cmd_enable_user(struct spdk_opal_dev *dev, enum spdk_opal_user user_id
 	struct opal_common_session session = {};
 	int ret;
 
-	if (!dev || dev->supported == false) {
-		return -ENODEV;
+	if (dev->supported == false) {
+		return -ENOTSUP;
 	}
 
 	ret = opal_init_key(&session.opal_key, passwd, OPAL_LOCKING_RANGE_GLOBAL);
 	if (ret != 0) {
 		return ret;
 	}
-
 	session.who = user_id;
 
 	pthread_mutex_lock(&dev->mutex_lock);
@@ -2344,15 +2330,14 @@ spdk_opal_cmd_add_user_to_locking_range(struct spdk_opal_dev *dev, enum spdk_opa
 	struct spdk_opal_locking_session locking_session = {};
 	int ret;
 
-	if (!dev || dev->supported == false) {
-		return -ENODEV;
+	if (dev->supported == false) {
+		return -ENOTSUP;
 	}
 
 	ret = opal_init_key(&locking_session.session.opal_key, passwd, locking_range_id);
 	if (ret != 0) {
 		return ret;
 	}
-
 	locking_session.session.who = user_id;
 	locking_session.l_state = lock_flag;
 
@@ -2389,8 +2374,8 @@ spdk_opal_cmd_set_new_passwd(struct spdk_opal_dev *dev, enum spdk_opal_user user
 	struct spdk_opal_new_pw_session session;
 	int ret;
 
-	if (!dev || dev->supported == false) {
-		return -ENODEV;
+	if (dev->supported == false) {
+		return -ENOTSUP;
 	}
 
 	ret = opal_init_key(&session.old_session.opal_key, old_passwd, OPAL_LOCKING_RANGE_GLOBAL);
@@ -2479,15 +2464,14 @@ spdk_opal_cmd_secure_erase_locking_range(struct spdk_opal_dev *dev, enum spdk_op
 	struct spdk_opal_key active_key = {};
 	int ret;
 
-	if (!dev || dev->supported == false) {
-		return -ENODEV;
+	if (dev->supported == false) {
+		return -ENOTSUP;
 	}
 
 	ret = opal_init_key(&session.opal_key, password, locking_range_id);
 	if (ret != 0) {
 		return ret;
 	}
-
 	session.who = user_id;
 
 	pthread_mutex_lock(&dev->mutex_lock);

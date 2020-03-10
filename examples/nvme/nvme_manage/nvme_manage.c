@@ -981,7 +981,6 @@ opal_scan(struct dev *iter)
 		if (spdk_opal_supported(iter->opal_dev)) {
 			printf("\n\nOpal Supported:\n");
 			display_controller(iter, CONTROLLER_DISPLAY_SIMPLISTIC);
-			spdk_opal_cmd_scan(iter->opal_dev);
 			opal_dump_info(spdk_opal_get_d0_features_info(iter->opal_dev));
 		}
 		spdk_opal_dev_destruct(iter->opal_dev);

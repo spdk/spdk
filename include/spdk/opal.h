@@ -106,7 +106,6 @@ struct spdk_opal_d0_features_info *spdk_opal_get_d0_features_info(struct spdk_op
 
 bool spdk_opal_supported(struct spdk_opal_dev *dev);
 
-int spdk_opal_cmd_scan(struct spdk_opal_dev *dev);
 int spdk_opal_cmd_take_ownership(struct spdk_opal_dev *dev, char *new_passwd);
 
 /**
