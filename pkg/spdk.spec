@@ -111,7 +111,7 @@ find scripts -type f -regextype egrep -regex '.*(spdkcli|rpc).*[.]py' \
 find %{install_datadir}/scripts -type f -regextype egrep -regex '.*([.]py|[.]sh)' \
 	-exec sed -i -E '1s@#!/usr/bin/env (.*)@#!/usr/bin/\1@' {} +
 
-# synlinks to tools
+# symlinks to tools
 mkdir -p %{install_sbindir}
 ln -sf -r %{install_datadir}/scripts/rpc.py %{install_sbindir}/%{name}-rpc
 ln -sf -r %{install_datadir}/scripts/spdkcli.py %{install_sbindir}/%{name}-cli
