@@ -383,7 +383,7 @@ else
 	exit 1
 fi
 
-run_test "bdev_verify" $testdir/bdevperf/bdevperf --json "$conf_file" -q 128 -o 4096 -w verify -t 5
+run_test "bdev_verify" $testdir/bdevperf/bdevperf --json "$conf_file" -q 128 -o 4096 -w verify -t 5 -C -m 0x3
 run_test "bdev_write_zeroes" $testdir/bdevperf/bdevperf --json "$conf_file" -q 128 -o 4096 -w write_zeroes -t 1
 
 if [[ $test_type == bdev ]]; then
