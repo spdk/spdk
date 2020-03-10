@@ -145,17 +145,20 @@ if [[ "$OSTYPE" == "freebsd"* ]]; then
 	echo "Notice: Vhost, rte_vhost library and virtio are only supported on Linux. Turning off default feature."
 fi
 
-ver=$(nasm -v 2>/dev/null | awk '{print $3}' | sed 's/[^0-9]*//g')
-if [[ "${ver:0:1}" -le "2" ]] && [[ "${ver:0:3}" -le "213" ]] && [[ "${ver:0:5}" -lt "21303" ]]; then
-	# ISA-L, compression & crypto require NASM version 2.13.03 or newer.
-	CONFIG[ISAL]=n
-	CONFIG[CRYPTO]=n
-	CONFIG[IPSEC_MB]=n
-	CONFIG[REDUCE]=n
-	HAVE_NASM=n
-	echo "Notice: ISA-L, compression & crypto require NASM version 2.13.03 or newer. Turning off default ISA-L and crypto features."
-else
-	HAVE_NASM=y
+#check nasm only on x86
+if [[ $arch == x86_64* ]]; then
+	ver=$(nasm -v 2>/dev/null | awk '{print $3}' | sed 's/[^0-9]*//g')
+	if [[ "${ver:0:1}" -le "2" ]] && [[ "${ver:0:3}" -le "213" ]] && [[ "${ver:0:5}" -lt "21303" ]]; then
+		# ISA-L, compression & crypto require NASM version 2.13.03 or newer.
+		CONFIG[ISAL]=n
+		CONFIG[CRYPTO]=n
+		CONFIG[IPSEC_MB]=n
+		CONFIG[REDUCE]=n
+		HAVE_NASM=n
+		echo "Notice: ISA-L, compression & crypto require NASM version 2.13.03 or newer. Turning off default ISA-L and crypto features."
+	else
+		HAVE_NASM=y
+	fi
 fi
 
 function check_dir() {
@@ -613,7 +616,7 @@ if [[ "${CONFIG[FC]}" = "y" ]]; then
 fi
 
 if [[ "${CONFIG[ISAL]}" = "y" ]] || [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
-	if [[ "${HAVE_NASM}" = "n" ]]; then
+	if [[ "${HAVE_NASM}" = "n" ]] && [[ $arch == x86_64* ]]; then
 		echo "ERROR: ISA-L, compression & crypto require NASM version 2.13.03 or newer."
 		echo "Please install or upgrade them re-run this script."
 		exit 1
