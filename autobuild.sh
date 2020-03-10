@@ -58,9 +58,11 @@ function scanbuild_make {
 	pass=true
 	$scanbuild $MAKE $MAKEFLAGS > $out/build_output.txt && rm -rf $out/scan-build-tmp || make_fail_cleanup
 	xtrace_disable
-	for ent in $(find app examples lib module -type f | grep -vF ".h"); do
+	for ent in $(find app examples lib module test -type f | grep -vF ".h"); do
 		if [[ $ent == lib/env_ocf* ]]; then continue; fi
 		if [[ SPDK_RUN_FUNCTIONAL_TEST -eq 0 && $ent == examples* ]]; then continue; fi
+		if [[ SPDK_RUN_FUNCTIONAL_TEST -eq 0 && $ent == test* && $end != test/unit* ]]; then continue; fi
+		if [[ SPDK_TEST_UNITTEST -eq 0 && $end == test/unit* ]]; then continue; fi
 		if file -bi $ent | grep -q 'text/x-c'; then
 			echo $ent | sed 's/\.cp\{0,2\}$//g' >> $out/all_c_files.txt
 		fi
