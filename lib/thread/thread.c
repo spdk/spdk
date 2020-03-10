@@ -564,6 +564,8 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 		poller->state = SPDK_POLLER_STATE_RUNNING;
 		poller_rc = poller->fn(poller->arg);
 
+		poller->run_count++;
+
 #ifdef DEBUG
 		if (poller_rc == -1) {
 			SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Poller %s returned -1\n", poller->name);
@@ -602,6 +604,8 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 
 		poller->state = SPDK_POLLER_STATE_RUNNING;
 		timer_rc = poller->fn(poller->arg);
+
+		poller->run_count++;
 
 #ifdef DEBUG
 		if (timer_rc == -1) {

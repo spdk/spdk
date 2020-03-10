@@ -653,6 +653,7 @@ Example response:
           {
             "name": "spdk_rpc_subsystem_poll",
             "state": "waiting",
+            "run_count": 12345
             "period_ticks": 10000000
           }
         ],
