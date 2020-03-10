@@ -107,6 +107,7 @@ function start_vpp() {
 	# for VPP side maximal size of MTU for TCP is 1460 and tests doesn't work
 	# stable with larger packets
 	MTU=1460
+	MTU_W_HEADER=$((MTU+20))
 	ip link set dev $INITIATOR_INTERFACE mtu $MTU
 	ethtool -K $INITIATOR_INTERFACE tso off
 	ethtool -k $INITIATOR_INTERFACE
@@ -131,7 +132,7 @@ function start_vpp() {
 	xtrace_disable
 	counter=40
 	while [ $counter -gt 0 ] ; do
-		vppctl show version &> /dev/null && break
+		vppctl show version | grep -E "vpp v[0-9]+\.[0-9]+" && break
 		counter=$(( counter - 1 ))
 		sleep 0.5
 	done
@@ -140,37 +141,47 @@ function start_vpp() {
 		return 1
 	fi
 
-	# Setup host interface
-	vppctl create host-interface name $TARGET_INTERFACE
-	VPP_TGT_INT="host-$TARGET_INTERFACE"
-	vppctl set interface state $VPP_TGT_INT up
-	vppctl set interface ip address $VPP_TGT_INT $TARGET_IP/24
-	vppctl set interface mtu $MTU $VPP_TGT_INT
+	# Below VPP commands are masked with "|| true" for the sake of
+	# running the test in the CI system. For reasons unknown when
+	# run via CI these commands result in 141 return code (pipefail)
+	# even despite producing valid output.
+	# Using "|| true" does not impact the "-e" flag used in test scripts
+	# because vppctl cli commands always return with 0, even if
+	# there was an error.
+	# As a result - grep checks on command outputs must be used to
+	# verify vpp configuration and connectivity.
 
-	vppctl show interface
+	# Setup host interface
+	vppctl create host-interface name $TARGET_INTERFACE || true
+	VPP_TGT_INT="host-$TARGET_INTERFACE"
+	vppctl set interface state $VPP_TGT_INT up || true
+	vppctl set interface ip address $VPP_TGT_INT $TARGET_IP/24 || true
+	vppctl set interface mtu $MTU $VPP_TGT_INT || true
+
+	vppctl show interface | tr -s " " | grep -E "host-$TARGET_INTERFACE [0-9]+ up $MTU/0/0/0"
 
 	# Disable session layer
 	# NOTE: VPP net framework should enable it itself.
-	vppctl session disable
+	vppctl session disable || true
 
 	# Verify connectivity
-	vppctl show int addr
+	vppctl show int addr | grep -E "$TARGET_IP/24"
 	ip addr show $INITIATOR_INTERFACE
 	ip netns exec $TARGET_NAMESPACE ip addr show $TARGET_INTERFACE
 	sleep 3
 	# SC1010: ping -M do - in this case do is an option not bash special word
 	# shellcheck disable=SC1010
 	ping -c 1 $TARGET_IP -s $(( MTU - 28 )) -M do
-	vppctl ping $INITIATOR_IP repeat 1 size $(( MTU - (28 + 8) )) verbose
+	vppctl ping $INITIATOR_IP repeat 1 size $(( MTU - (28 + 8) )) verbose | grep -E "$MTU_W_HEADER bytes from $INITIATOR_IP"
 }
 
 function kill_vpp() {
-	vppctl delete host-interface name $TARGET_INTERFACE
+	vppctl delete host-interface name $TARGET_INTERFACE || true
 
 	# Dump VPP configuration before kill
-	vppctl show api clients
-	vppctl show session
-	vppctl show errors
+	vppctl show api clients || true
+	vppctl show session || true
+	vppctl show errors || true
 
 	killprocess $vpp_pid
 }
