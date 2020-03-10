@@ -65,15 +65,16 @@ static TAILQ_HEAD(, cuse_device) g_ctrlr_ctx_head = TAILQ_HEAD_INITIALIZER(g_ctr
 static struct spdk_bit_array *g_ctrlr_started;
 
 struct cuse_io_ctx {
-	struct spdk_nvme_cmd	nvme_cmd;
+	struct spdk_nvme_cmd		nvme_cmd;
+	enum spdk_nvme_data_transfer	data_transfer;
 
-	uint64_t		lba;
-	uint32_t		lba_count;
+	uint64_t			lba;
+	uint32_t			lba_count;
 
-	void			*data;
-	int			data_len;
+	void				*data;
+	int				data_len;
 
-	fuse_req_t		req;
+	fuse_req_t			req;
 };
 
 static void
@@ -99,16 +100,21 @@ cuse_nvme_admin_cmd_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	struct iovec out_iov[2];
 	struct spdk_nvme_cpl _cpl;
 
-	memcpy(&_cpl, cpl, sizeof(struct spdk_nvme_cpl));
-
-	out_iov[0].iov_base = &_cpl.cdw0;
-	out_iov[0].iov_len = sizeof(_cpl.cdw0);
-	if (ctx->data_len > 0) {
-		out_iov[1].iov_base = ctx->data;
-		out_iov[1].iov_len = ctx->data_len;
-		fuse_reply_ioctl_iov(ctx->req, cpl->status.sc, out_iov, 2);
+	if (ctx->data_transfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
+		fuse_reply_ioctl_iov(ctx->req, cpl->status.sc, NULL, 0);
 	} else {
-		fuse_reply_ioctl_iov(ctx->req, cpl->status.sc, out_iov, 1);
+		memcpy(&_cpl, cpl, sizeof(struct spdk_nvme_cpl));
+
+		out_iov[0].iov_base = &_cpl.cdw0;
+		out_iov[0].iov_len = sizeof(_cpl.cdw0);
+
+		if (ctx->data_len > 0) {
+			out_iov[1].iov_base = ctx->data;
+			out_iov[1].iov_len = ctx->data_len;
+			fuse_reply_ioctl_iov(ctx->req, cpl->status.sc, out_iov, 2);
+		} else {
+			fuse_reply_ioctl_iov(ctx->req, cpl->status.sc, out_iov, 1);
+		}
 	}
 
 	cuse_io_ctx_free(ctx);
@@ -129,7 +135,8 @@ cuse_nvme_admin_cmd_execute(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, void *
 }
 
 static void
-cuse_nvme_admin_cmd_send(fuse_req_t req, struct nvme_admin_cmd *admin_cmd)
+cuse_nvme_admin_cmd_send(fuse_req_t req, struct nvme_admin_cmd *admin_cmd,
+			 const void *data)
 {
 	struct cuse_io_ctx *ctx;
 	struct cuse_device *cuse_device = fuse_req_userdata(req);
@@ -143,6 +150,7 @@ cuse_nvme_admin_cmd_send(fuse_req_t req, struct nvme_admin_cmd *admin_cmd)
 	}
 
 	ctx->req = req;
+	ctx->data_transfer = spdk_nvme_opc_get_data_transfer(admin_cmd->opcode);
 
 	memset(&ctx->nvme_cmd, 0, sizeof(ctx->nvme_cmd));
 	ctx->nvme_cmd.opc = admin_cmd->opcode;
@@ -164,6 +172,9 @@ cuse_nvme_admin_cmd_send(fuse_req_t req, struct nvme_admin_cmd *admin_cmd)
 			free(ctx);
 			return;
 		}
+		if (data != NULL) {
+			memcpy(ctx->data, data, ctx->data_len);
+		}
 	}
 
 	rv = nvme_io_msg_send(cuse_device->ctrlr, 0, cuse_nvme_admin_cmd_execute, ctx);
@@ -181,12 +192,12 @@ cuse_nvme_admin_cmd(fuse_req_t req, int cmd, void *arg,
 		    const void *in_buf, size_t in_bufsz, size_t out_bufsz)
 {
 	struct nvme_admin_cmd *admin_cmd;
-	struct iovec in_iov, out_iov[2];
+	struct iovec in_iov[2], out_iov[2];
 
-	in_iov.iov_base = (void *)arg;
-	in_iov.iov_len = sizeof(*admin_cmd);
+	in_iov[0].iov_base = (void *)arg;
+	in_iov[0].iov_len = sizeof(*admin_cmd);
 	if (in_bufsz == 0) {
-		fuse_reply_ioctl_retry(req, &in_iov, 1, NULL, 0);
+		fuse_reply_ioctl_retry(req, in_iov, 1, NULL, 0);
 		return;
 	}
 
@@ -198,8 +209,17 @@ cuse_nvme_admin_cmd(fuse_req_t req, int cmd, void *arg,
 		fuse_reply_err(req, EINVAL);
 		return;
 	case SPDK_NVME_DATA_HOST_TO_CONTROLLER:
-		SPDK_ERRLOG("SPDK_NVME_DATA_HOST_TO_CONTROLLER not implemented\n");
-		fuse_reply_err(req, EINVAL);
+		if (admin_cmd->addr != 0) {
+			in_iov[1].iov_base = (void *)admin_cmd->addr;
+			in_iov[1].iov_len = admin_cmd->data_len;
+			if (in_bufsz == sizeof(*admin_cmd)) {
+				fuse_reply_ioctl_retry(req, in_iov, 2, NULL, 0);
+				return;
+			}
+			cuse_nvme_admin_cmd_send(req, admin_cmd, in_buf + sizeof(*admin_cmd));
+		} else {
+			cuse_nvme_admin_cmd_send(req, admin_cmd, NULL);
+		}
 		return;
 	case SPDK_NVME_DATA_CONTROLLER_TO_HOST:
 		if (out_bufsz == 0) {
@@ -208,14 +228,14 @@ cuse_nvme_admin_cmd(fuse_req_t req, int cmd, void *arg,
 			if (admin_cmd->data_len > 0) {
 				out_iov[1].iov_base = (void *)admin_cmd->addr;
 				out_iov[1].iov_len = admin_cmd->data_len;
-				fuse_reply_ioctl_retry(req, &in_iov, 1, out_iov, 2);
+				fuse_reply_ioctl_retry(req, in_iov, 1, out_iov, 2);
 			} else {
-				fuse_reply_ioctl_retry(req, &in_iov, 1, out_iov, 1);
+				fuse_reply_ioctl_retry(req, in_iov, 1, out_iov, 1);
 			}
 			return;
 		}
 
-		cuse_nvme_admin_cmd_send(req, admin_cmd);
+		cuse_nvme_admin_cmd_send(req, admin_cmd, NULL);
 
 		return;
 	case SPDK_NVME_DATA_BIDIRECTIONAL:
