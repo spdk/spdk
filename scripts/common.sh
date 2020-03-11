@@ -53,7 +53,7 @@ function iter_all_pci_class_code() {
 			cut -d$'\t' -f1 | sed -e 's/^[a-zA-Z0-9_]*@pci//g' | tr ':' ' '))
 		printf "%04x:%02x:%02x:%x\n" ${addr[0]} ${addr[1]} ${addr[2]} ${addr[3]}
 	else
-		echo "Missing PCI enumeration utility"
+		echo "Missing PCI enumeration utility" >&2
 		exit 1
 	fi
 }
@@ -73,7 +73,7 @@ function iter_all_pci_dev_id() {
 			cut -d$'\t' -f1 | sed -e 's/^[a-zA-Z0-9_]*@pci//g' | tr ':' ' '))
 		printf "%04x:%02x:%02x:%x\n" ${addr[0]} ${addr[1]} ${addr[2]} ${addr[3]}
 	else
-		echo "Missing PCI enumeration utility"
+		echo "Missing PCI enumeration utility" >&2
 		exit 1
 	fi
 }
