@@ -45,7 +45,7 @@ struct spdk_vbdev_opal_config {
 	uint8_t locking_range_id;
 	uint64_t range_start;
 	uint64_t range_length;
-	SPDK_BDEV_PART_TAILQ *part_tailq;
+	SPDK_BDEV_PART_TAILQ part_tailq;
 	struct vbdev_opal_part_base *opal_base;
 };
 
@@ -150,9 +150,7 @@ static void
 vbdev_opal_base_free(void *ctx)
 {
 	struct vbdev_opal_part_base *base = ctx;
-	SPDK_BDEV_PART_TAILQ *part_tailq = spdk_bdev_part_base_get_tailq(base->part_base);
 
-	free(part_tailq);
 	free(base->nvme_ctrlr_name);
 	free(base);
 }
@@ -346,7 +344,6 @@ spdk_vbdev_opal_create(const char *nvme_ctrlr_name, uint32_t nsid, uint8_t locki
 	struct opal_vbdev *opal_bdev;
 	struct vbdev_opal_part_base *opal_part_base;
 	struct spdk_bdev_part *part_bdev;
-	SPDK_BDEV_PART_TAILQ *part_tailq;
 	struct spdk_vbdev_opal_config *cfg;
 	struct nvme_bdev *nvme_bdev;
 
@@ -361,9 +358,9 @@ spdk_vbdev_opal_create(const char *nvme_ctrlr_name, uint32_t nsid, uint8_t locki
 		return -ENODEV;
 	}
 
-	if (nvme_ctrlr->opal_dev == NULL) {
+	if (!nvme_ctrlr->opal_dev || !spdk_opal_supported(nvme_ctrlr->opal_dev)) {
 		SPDK_ERRLOG("Opal not supported\n");
-		return -ENODEV;
+		return -ENOTSUP;
 	}
 
 	opal_bdev = calloc(1, sizeof(struct opal_vbdev));
@@ -386,11 +383,6 @@ spdk_vbdev_opal_create(const char *nvme_ctrlr_name, uint32_t nsid, uint8_t locki
 
 	opal_bdev->nvme_ctrlr = nvme_ctrlr;
 	opal_bdev->opal_dev = nvme_ctrlr->opal_dev;
-	if (!spdk_opal_supported(opal_bdev->opal_dev)) {
-		SPDK_ERRLOG("Opal not supported\n");
-		vbdev_opal_free_bdev(opal_bdev);
-		return -EINVAL;
-	}
 
 	nvme_bdev = TAILQ_FIRST(&nvme_ctrlr->namespaces[nsid - 1]->bdevs);
 	assert(nvme_bdev != NULL);
@@ -406,31 +398,21 @@ spdk_vbdev_opal_create(const char *nvme_ctrlr_name, uint32_t nsid, uint8_t locki
 	/* If there is not a corresponding opal_part_base, a new opal_part_base will be created.
 	   For each new part_base, there will be one tailq to store all the parts of this base */
 	if (cfg->opal_base == NULL) {
-		part_tailq = calloc(1, sizeof(*part_tailq));
-		if (part_tailq == NULL) {
-			SPDK_ERRLOG("Could not allocate bdev_part_tailq\n");
-			vbdev_opal_free_bdev(opal_bdev);
-			return -ENOMEM;
-		}
-
-		TAILQ_INIT(part_tailq);
-		cfg->part_tailq = part_tailq;
+		TAILQ_INIT(&cfg->part_tailq);
 		opal_part_base = calloc(1, sizeof(*opal_part_base));
 		if (opal_part_base == NULL) {
 			SPDK_ERRLOG("Could not allocate opal_part_base\n");
 			vbdev_opal_free_bdev(opal_bdev);
-			free(part_tailq);
 			return -ENOMEM;
 		}
 
 		opal_part_base->part_base = spdk_bdev_part_base_construct(spdk_bdev_get_by_name(base_bdev_name),
 					    vbdev_opal_base_bdev_hotremove_cb, &opal_if,
-					    &opal_vbdev_fn_table, part_tailq, vbdev_opal_base_free, opal_part_base,
+					    &opal_vbdev_fn_table, &cfg->part_tailq, vbdev_opal_base_free, opal_part_base,
 					    sizeof(struct vbdev_opal_channel), NULL, NULL);
 		if (opal_part_base->part_base == NULL) {
 			SPDK_ERRLOG("Could not allocate part_base\n");
 			vbdev_opal_free_bdev(opal_bdev);
-			free(part_tailq);
 			free(opal_part_base);
 			return -ENOMEM;
 		}
@@ -505,10 +487,6 @@ vbdev_opal_destruct_bdev(struct opal_vbdev *opal_bdev)
 	if (cfg->opal_base != NULL) {
 		part = opal_bdev->bdev_part;
 		opal_part_tailq = spdk_bdev_part_base_get_tailq(cfg->opal_base->part_base);
-		if (opal_part_tailq == NULL) {
-			SPDK_ERRLOG("Can't get tailq for this opal_base\n");
-			return;
-		}
 		if (cfg->range_start == spdk_bdev_part_get_offset_blocks(part)) {
 			if (cfg->opal_base->num_of_part <= 1) {
 				/* if there is only one part for this base, we can remove the base now */
