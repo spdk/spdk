@@ -197,7 +197,21 @@ rpc_thread_get_stats(void *arg)
 {
 	struct rpc_get_stats_ctx *ctx = arg;
 	struct spdk_thread *thread = spdk_get_thread();
+	struct spdk_poller *poller;
 	struct spdk_thread_stats stats;
+	uint64_t active_pollers_count = 0;
+	uint64_t timed_pollers_count = 0;
+	uint64_t paused_pollers_count = 0;
+
+	TAILQ_FOREACH(poller, &thread->active_pollers, tailq) {
+		active_pollers_count++;
+	}
+	TAILQ_FOREACH(poller, &thread->timed_pollers, tailq) {
+		timed_pollers_count++;
+	}
+	TAILQ_FOREACH(poller, &thread->paused_pollers, tailq) {
+		paused_pollers_count++;
+	}
 
 	if (0 == spdk_thread_get_stats(&stats)) {
 		spdk_json_write_object_begin(ctx->w);
@@ -207,6 +221,9 @@ rpc_thread_get_stats(void *arg)
 					     spdk_cpuset_fmt(spdk_thread_get_cpumask(thread)));
 		spdk_json_write_named_uint64(ctx->w, "busy", stats.busy_tsc);
 		spdk_json_write_named_uint64(ctx->w, "idle", stats.idle_tsc);
+		spdk_json_write_named_uint64(ctx->w, "active_pollers_count", active_pollers_count);
+		spdk_json_write_named_uint64(ctx->w, "timed_pollers_count", timed_pollers_count);
+		spdk_json_write_named_uint64(ctx->w, "paused_pollers_count", paused_pollers_count);
 		spdk_json_write_object_end(ctx->w);
 	}
 }
