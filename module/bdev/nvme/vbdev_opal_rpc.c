@@ -135,19 +135,6 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_opal_revert_decoders[
 };
 
 static void
-revert_tper_done(struct spdk_opal_dev *dev, void *data, int rc)
-{
-	struct nvme_bdev_ctrlr *ctrlr = data;
-
-	if (rc != 0) {
-		SPDK_ERRLOG("%s revert TPer failed\n", ctrlr->name);
-		return;
-	}
-
-	SPDK_NOTICELOG("%s revert TPer done\n", ctrlr->name);
-}
-
-static void
 spdk_rpc_bdev_nvme_opal_revert(struct spdk_jsonrpc_request *request,
 			       const struct spdk_json_val *params)
 {
@@ -175,8 +162,7 @@ spdk_rpc_bdev_nvme_opal_revert(struct spdk_jsonrpc_request *request,
 
 	/* TODO: delete all opal vbdev before revert TPer */
 
-	rc = spdk_vbdev_opal_revert_tper(nvme_ctrlr, req.password, revert_tper_done,
-					 nvme_ctrlr);
+	rc = spdk_opal_cmd_revert_tper(nvme_ctrlr->opal_dev, req.password);
 	if (rc) {
 		SPDK_ERRLOG("Revert TPer failure: %d\n", rc);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");

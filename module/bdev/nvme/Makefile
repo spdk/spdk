@@ -35,7 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 SO_VER := 2
-SO_MINOR := 0
+SO_MINOR := 1
 SO_SUFFIX := $(SO_VER).$(SO_MINOR)
 
 C_SRCS = bdev_nvme.c bdev_nvme_rpc.c nvme_rpc.c common.c bdev_ocssd.c bdev_ocssd_rpc.c

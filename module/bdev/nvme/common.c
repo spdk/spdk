@@ -155,11 +155,6 @@ nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 
 	spdk_poller_unregister(&nvme_bdev_ctrlr->destruct_poller);
 	if (nvme_bdev_ctrlr->opal_dev) {
-		if (nvme_bdev_ctrlr->opal_poller != NULL) {
-			spdk_poller_unregister(&nvme_bdev_ctrlr->opal_poller);
-			/* wait until we get the result */
-			while (spdk_opal_revert_poll(nvme_bdev_ctrlr->opal_dev) == -EAGAIN);
-		}
 		spdk_opal_dev_destruct(nvme_bdev_ctrlr->opal_dev);
 		nvme_bdev_ctrlr->opal_dev = NULL;
 	}

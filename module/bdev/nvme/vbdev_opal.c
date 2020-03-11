@@ -586,38 +586,6 @@ vbdev_opal_examine(struct spdk_bdev *bdev)
 	spdk_bdev_module_examine_done(&opal_if);
 }
 
-static int
-vbdev_opal_recv_poll(void *arg)
-{
-	struct nvme_bdev_ctrlr *nvme_ctrlr = arg;
-	int rc;
-
-	rc = spdk_opal_revert_poll(nvme_ctrlr->opal_dev);
-	if (rc == -EAGAIN) {
-		return -1;
-	}
-
-	/* receive end */
-	spdk_poller_unregister(&nvme_ctrlr->opal_poller);
-	nvme_ctrlr->opal_poller = NULL;
-	return 1;
-}
-
-int
-spdk_vbdev_opal_revert_tper(struct nvme_bdev_ctrlr *nvme_ctrlr, const char *password,
-			    spdk_opal_revert_cb cb_fn, void *cb_ctx)
-{
-	int rc;
-
-	rc = spdk_opal_cmd_revert_tper_async(nvme_ctrlr->opal_dev, password, cb_fn, cb_ctx);
-	if (rc) {
-		SPDK_ERRLOG("%s revert tper failure: %d\n", nvme_ctrlr->name, rc);
-		return rc;
-	}
-	nvme_ctrlr->opal_poller = spdk_poller_register(vbdev_opal_recv_poll, nvme_ctrlr, 50);
-	return 0;
-}
-
 int
 spdk_vbdev_opal_set_lock_state(const char *bdev_name, uint16_t user_id, const char *password,
 			       const char *lock_state)

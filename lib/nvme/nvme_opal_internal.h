@@ -291,7 +291,6 @@ struct spdk_opal_dev {
 	struct spdk_opal_locking_range_info locking_ranges[SPDK_OPAL_MAX_LOCKING_RANGE];
 
 	pthread_mutex_t mutex_lock; /* some structs are accessed by current thread only */
-	spdk_opal_revert_cb revert_cb_fn;
 	void *ctx;  /* user context data */
 };
 
