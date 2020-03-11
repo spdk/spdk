@@ -127,6 +127,7 @@ CC=$(cat $rootdir/mk/cc.mk | grep "DEFAULT_CC=" | cut -d "=" -f 2)
 CC_TYPE=$(cat $rootdir/mk/cc.mk | grep "CC_TYPE=" | cut -d "=" -f 2)
 
 arch=$($CC -dumpmachine)
+sys_name=$(uname -s)
 
 # Sanitize default configuration. All parameters set by user explicit should fail
 # Force no ISA-L if non-x86 or non-aarch64 architecture
@@ -137,7 +138,7 @@ if [[ "${CONFIG[ISAL]}" = "y" ]]; then
 	fi
 fi
 
-if [[ "$OSTYPE" == "freebsd"* ]]; then
+if [[ $sys_name == "FreeBSD" ]]; then
 	# Vhost, rte_vhost library and virtio are only supported on Linux.
 	CONFIG[VHOST]="n"
 	CONFIG[VHOST_INTERNAL_LIB]="n"
@@ -541,7 +542,7 @@ if [ "${CONFIG[ASAN]}" = "y" -a "${CONFIG[TSAN]}" = "y" ]; then
 	exit 1
 fi
 
-if [[ "$OSTYPE" == "freebsd"* ]]; then
+if [[ $sys_name == "FreeBSD" ]]; then
 	# FreeBSD doesn't support all configurations
 	if [[ "${CONFIG[COVERAGE]}" == "y" ]]; then
 		echo "ERROR: CONFIG_COVERAGE not available on FreeBSD"
@@ -549,7 +550,7 @@ if [[ "$OSTYPE" == "freebsd"* ]]; then
 	fi
 fi
 
-if [[ "$OSTYPE" == "freebsd"* ]]; then
+if [[ $sys_name == "FreeBSD" ]]; then
 	if [[ "${CONFIG[VHOST]}" == "y" ]]; then
 		echo "Vhost is only supported on Linux."
 		exit 1
@@ -810,7 +811,7 @@ rm -f $rootdir/mk/cc.flags.mk
 [ -n "$DESTDIR" ] && echo "DESTDIR?=$DESTDIR" >> $rootdir/mk/cc.flags.mk
 echo "done."
 
-if [[ "$OSTYPE" == "freebsd"* ]]; then
+if [[ $sys_name == "FreeBSD" ]]; then
 	echo "Type 'gmake' to build."
 else
 	echo "Type 'make' to build."
