@@ -1041,39 +1041,30 @@ main(int argc, char **argv)
 	CU_pSuite suite;
 	unsigned int num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("ftl_io_suite", NULL, NULL);
-	if (!suite) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "test_completion",
-			    test_completion) == NULL
-		|| CU_add_test(suite, "test_alloc_free",
-			       test_alloc_free) == NULL
-		|| CU_add_test(suite, "test_child_requests",
-			       test_child_requests) == NULL
-		|| CU_add_test(suite, "test_child_status",
-			       test_child_status) == NULL
-		|| CU_add_test(suite, "test_multi_generation",
-			       test_multi_generation) == NULL
-		|| CU_add_test(suite, "test_io_channel_create",
-			       test_io_channel_create) == NULL
-		|| CU_add_test(suite, "test_acquire_entry",
-			       test_acquire_entry) == NULL
-		|| CU_add_test(suite, "test_submit_batch",
-			       test_submit_batch) == NULL
-		|| CU_add_test(suite, "test_entry_address",
-			       test_entry_address) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+
+	CU_add_test(suite, "test_completion",
+		    test_completion);
+	CU_add_test(suite, "test_alloc_free",
+		    test_alloc_free);
+	CU_add_test(suite, "test_child_requests",
+		    test_child_requests);
+	CU_add_test(suite, "test_child_status",
+		    test_child_status);
+	CU_add_test(suite, "test_multi_generation",
+		    test_multi_generation);
+	CU_add_test(suite, "test_io_channel_create",
+		    test_io_channel_create);
+	CU_add_test(suite, "test_acquire_entry",
+		    test_acquire_entry);
+	CU_add_test(suite, "test_submit_batch",
+		    test_submit_batch);
+	CU_add_test(suite, "test_entry_address",
+		    test_entry_address);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

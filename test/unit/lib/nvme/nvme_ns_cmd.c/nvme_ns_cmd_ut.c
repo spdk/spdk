@@ -1701,48 +1701,38 @@ int main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("nvme_ns_cmd", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "split_test", split_test) == NULL
-		|| CU_add_test(suite, "split_test2", split_test2) == NULL
-		|| CU_add_test(suite, "split_test3", split_test3) == NULL
-		|| CU_add_test(suite, "split_test4", split_test4) == NULL
-		|| CU_add_test(suite, "nvme_ns_cmd_flush", test_nvme_ns_cmd_flush) == NULL
-		|| CU_add_test(suite, "nvme_ns_cmd_dataset_management",
-			       test_nvme_ns_cmd_dataset_management) == NULL
-		|| CU_add_test(suite, "io_flags", test_io_flags) == NULL
-		|| CU_add_test(suite, "nvme_ns_cmd_write_zeroes", test_nvme_ns_cmd_write_zeroes) == NULL
-		|| CU_add_test(suite, "nvme_ns_cmd_write_uncorrectable",
-			       test_nvme_ns_cmd_write_uncorrectable) == NULL
-		|| CU_add_test(suite, "nvme_ns_cmd_reservation_register",
-			       test_nvme_ns_cmd_reservation_register) == NULL
-		|| CU_add_test(suite, "nvme_ns_cmd_reservation_release",
-			       test_nvme_ns_cmd_reservation_release) == NULL
-		|| CU_add_test(suite, "nvme_ns_cmd_reservation_acquire",
-			       test_nvme_ns_cmd_reservation_acquire) == NULL
-		|| CU_add_test(suite, "nvme_ns_cmd_reservation_report", test_nvme_ns_cmd_reservation_report) == NULL
-		|| CU_add_test(suite, "test_cmd_child_request", test_cmd_child_request) == NULL
-		|| CU_add_test(suite, "nvme_ns_cmd_readv", test_nvme_ns_cmd_readv) == NULL
-		|| CU_add_test(suite, "nvme_ns_cmd_read_with_md", test_nvme_ns_cmd_read_with_md) == NULL
-		|| CU_add_test(suite, "nvme_ns_cmd_writev", test_nvme_ns_cmd_writev) == NULL
-		|| CU_add_test(suite, "nvme_ns_cmd_write_with_md", test_nvme_ns_cmd_write_with_md) == NULL
-		|| CU_add_test(suite, "nvme_ns_cmd_comparev", test_nvme_ns_cmd_comparev) == NULL
-		|| CU_add_test(suite, "nvme_ns_cmd_compare_and_write", test_nvme_ns_cmd_compare_and_write) == NULL
-		|| CU_add_test(suite, "nvme_ns_cmd_compare_with_md", test_nvme_ns_cmd_compare_with_md) == NULL
-		|| CU_add_test(suite, "nvme_ns_cmd_comparev_with_md", test_nvme_ns_cmd_comparev_with_md) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "split_test", split_test);
+	CU_add_test(suite, "split_test2", split_test2);
+	CU_add_test(suite, "split_test3", split_test3);
+	CU_add_test(suite, "split_test4", split_test4);
+	CU_add_test(suite, "nvme_ns_cmd_flush", test_nvme_ns_cmd_flush);
+	CU_add_test(suite, "nvme_ns_cmd_dataset_management",
+		    test_nvme_ns_cmd_dataset_management);
+	CU_add_test(suite, "io_flags", test_io_flags);
+	CU_add_test(suite, "nvme_ns_cmd_write_zeroes", test_nvme_ns_cmd_write_zeroes);
+	CU_add_test(suite, "nvme_ns_cmd_write_uncorrectable",
+		    test_nvme_ns_cmd_write_uncorrectable);
+	CU_add_test(suite, "nvme_ns_cmd_reservation_register",
+		    test_nvme_ns_cmd_reservation_register);
+	CU_add_test(suite, "nvme_ns_cmd_reservation_release",
+		    test_nvme_ns_cmd_reservation_release);
+	CU_add_test(suite, "nvme_ns_cmd_reservation_acquire",
+		    test_nvme_ns_cmd_reservation_acquire);
+	CU_add_test(suite, "nvme_ns_cmd_reservation_report", test_nvme_ns_cmd_reservation_report);
+	CU_add_test(suite, "test_cmd_child_request", test_cmd_child_request);
+	CU_add_test(suite, "nvme_ns_cmd_readv", test_nvme_ns_cmd_readv);
+	CU_add_test(suite, "nvme_ns_cmd_read_with_md", test_nvme_ns_cmd_read_with_md);
+	CU_add_test(suite, "nvme_ns_cmd_writev", test_nvme_ns_cmd_writev);
+	CU_add_test(suite, "nvme_ns_cmd_write_with_md", test_nvme_ns_cmd_write_with_md);
+	CU_add_test(suite, "nvme_ns_cmd_comparev", test_nvme_ns_cmd_comparev);
+	CU_add_test(suite, "nvme_ns_cmd_compare_and_write", test_nvme_ns_cmd_compare_and_write);
+	CU_add_test(suite, "nvme_ns_cmd_compare_with_md", test_nvme_ns_cmd_compare_with_md);
+	CU_add_test(suite, "nvme_ns_cmd_comparev_with_md", test_nvme_ns_cmd_comparev_with_md);
 
 	g_spdk_nvme_driver = &_g_nvme_driver;
 

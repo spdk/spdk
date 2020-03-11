@@ -285,33 +285,24 @@ main(int argc, char **argv)
 	CU_pSuite suite = NULL;
 	unsigned int num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("ftl_band_suite", NULL, NULL);
-	if (!suite) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "test_band_block_offset_from_addr_base",
-			    test_band_block_offset_from_addr_base) == NULL
-		|| CU_add_test(suite, "test_band_block_offset_from_addr_offset",
-			       test_band_block_offset_from_addr_offset) == NULL
-		|| CU_add_test(suite, "test_band_addr_from_block_offset",
-			       test_band_addr_from_block_offset) == NULL
-		|| CU_add_test(suite, "test_band_set_addr",
-			       test_band_set_addr) == NULL
-		|| CU_add_test(suite, "test_invalidate_addr",
-			       test_invalidate_addr) == NULL
-		|| CU_add_test(suite, "test_next_xfer_addr",
-			       test_next_xfer_addr) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+
+	CU_add_test(suite, "test_band_block_offset_from_addr_base",
+		    test_band_block_offset_from_addr_base);
+	CU_add_test(suite, "test_band_block_offset_from_addr_offset",
+		    test_band_block_offset_from_addr_offset);
+	CU_add_test(suite, "test_band_addr_from_block_offset",
+		    test_band_addr_from_block_offset);
+	CU_add_test(suite, "test_band_set_addr",
+		    test_band_set_addr);
+	CU_add_test(suite, "test_invalidate_addr",
+		    test_invalidate_addr);
+	CU_add_test(suite, "test_next_xfer_addr",
+		    test_next_xfer_addr);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

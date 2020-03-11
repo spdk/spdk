@@ -822,26 +822,17 @@ main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("sock", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "posix_sock", posix_sock) == NULL ||
-		CU_add_test(suite, "ut_sock", ut_sock) == NULL ||
-		CU_add_test(suite, "posix_sock_group", posix_sock_group) == NULL ||
-		CU_add_test(suite, "ut_sock_group", ut_sock_group) == NULL ||
-		CU_add_test(suite, "posix_sock_group_fairness", posix_sock_group_fairness) == NULL ||
-		CU_add_test(suite, "posix_sock_close", posix_sock_close) == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "posix_sock", posix_sock);
+	CU_add_test(suite, "ut_sock", ut_sock);
+	CU_add_test(suite, "posix_sock_group", posix_sock_group);
+	CU_add_test(suite, "ut_sock_group", ut_sock_group);
+	CU_add_test(suite, "posix_sock_group_fairness", posix_sock_group_fairness);
+	CU_add_test(suite, "posix_sock_close", posix_sock_close);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

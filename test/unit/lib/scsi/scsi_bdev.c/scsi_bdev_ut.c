@@ -1007,34 +1007,24 @@ main(int argc, char **argv)
 	TAILQ_INIT(&g_bdev_io_queue);
 	TAILQ_INIT(&g_io_wait_queue);
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("translation_suite", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "mode select 6 test", mode_select_6_test) == NULL
-		|| CU_add_test(suite, "mode select 6 test2", mode_select_6_test2) == NULL
-		|| CU_add_test(suite, "mode sense 6 test", mode_sense_6_test) == NULL
-		|| CU_add_test(suite, "mode sense 10 test", mode_sense_10_test) == NULL
-		|| CU_add_test(suite, "inquiry evpd test", inquiry_evpd_test) == NULL
-		|| CU_add_test(suite, "inquiry standard test", inquiry_standard_test) == NULL
-		|| CU_add_test(suite, "inquiry overflow test", inquiry_overflow_test) == NULL
-		|| CU_add_test(suite, "task complete test", task_complete_test) == NULL
-		|| CU_add_test(suite, "LBA range test", lba_range_test) == NULL
-		|| CU_add_test(suite, "transfer length test", xfer_len_test) == NULL
-		|| CU_add_test(suite, "transfer test", xfer_test) == NULL
-		|| CU_add_test(suite, "scsi name padding test", scsi_name_padding_test) == NULL
-		|| CU_add_test(suite, "get dif context test", get_dif_ctx_test) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "mode select 6 test", mode_select_6_test);
+	CU_add_test(suite, "mode select 6 test2", mode_select_6_test2);
+	CU_add_test(suite, "mode sense 6 test", mode_sense_6_test);
+	CU_add_test(suite, "mode sense 10 test", mode_sense_10_test);
+	CU_add_test(suite, "inquiry evpd test", inquiry_evpd_test);
+	CU_add_test(suite, "inquiry standard test", inquiry_standard_test);
+	CU_add_test(suite, "inquiry overflow test", inquiry_overflow_test);
+	CU_add_test(suite, "task complete test", task_complete_test);
+	CU_add_test(suite, "LBA range test", lba_range_test);
+	CU_add_test(suite, "transfer length test", xfer_len_test);
+	CU_add_test(suite, "transfer test", xfer_test);
+	CU_add_test(suite, "scsi name padding test", scsi_name_padding_test);
+	CU_add_test(suite, "get dif context test", get_dif_ctx_test);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

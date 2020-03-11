@@ -622,41 +622,31 @@ int main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("nvme_ns_cmd", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "nvme_ns_ocssd_cmd_vector_reset", test_nvme_ocssd_ns_cmd_vector_reset) == NULL
-		|| CU_add_test(suite, "nvme_ocssd_ns_cmd_vector_reset_single_entry",
-			       test_nvme_ocssd_ns_cmd_vector_reset_single_entry) == NULL
-		|| CU_add_test(suite, "nvme_ocssd_ns_cmd_vector_read_with_md",
-			       test_nvme_ocssd_ns_cmd_vector_read_with_md) == NULL
-		|| CU_add_test(suite, "nvme_ocssd_ns_cmd_vector_read_with_md_single_entry",
-			       test_nvme_ocssd_ns_cmd_vector_read_with_md_single_entry) == NULL
-		|| CU_add_test(suite, "nvme_ocssd_ns_cmd_vector_read", test_nvme_ocssd_ns_cmd_vector_read) == NULL
-		|| CU_add_test(suite, "nvme_ocssd_ns_cmd_vector_read_single_entry",
-			       test_nvme_ocssd_ns_cmd_vector_read_single_entry) == NULL
-		|| CU_add_test(suite, "nvme_ocssd_ns_cmd_vector_write_with_md",
-			       test_nvme_ocssd_ns_cmd_vector_write_with_md) == NULL
-		|| CU_add_test(suite, "nvme_ocssd_ns_cmd_vector_write_with_md_single_entry",
-			       test_nvme_ocssd_ns_cmd_vector_write_with_md_single_entry) == NULL
-		|| CU_add_test(suite, "nvme_ocssd_ns_cmd_vector_write", test_nvme_ocssd_ns_cmd_vector_write) == NULL
-		|| CU_add_test(suite, "nvme_ocssd_ns_cmd_vector_write_single_entry",
-			       test_nvme_ocssd_ns_cmd_vector_write_single_entry) == NULL
-		|| CU_add_test(suite, "nvme_ocssd_ns_cmd_vector_copy", test_nvme_ocssd_ns_cmd_vector_copy) == NULL
-		|| CU_add_test(suite, "nvme_ocssd_ns_cmd_vector_copy_single_entry",
-			       test_nvme_ocssd_ns_cmd_vector_copy_single_entry) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "nvme_ns_ocssd_cmd_vector_reset", test_nvme_ocssd_ns_cmd_vector_reset);
+	CU_add_test(suite, "nvme_ocssd_ns_cmd_vector_reset_single_entry",
+		    test_nvme_ocssd_ns_cmd_vector_reset_single_entry);
+	CU_add_test(suite, "nvme_ocssd_ns_cmd_vector_read_with_md",
+		    test_nvme_ocssd_ns_cmd_vector_read_with_md);
+	CU_add_test(suite, "nvme_ocssd_ns_cmd_vector_read_with_md_single_entry",
+		    test_nvme_ocssd_ns_cmd_vector_read_with_md_single_entry);
+	CU_add_test(suite, "nvme_ocssd_ns_cmd_vector_read", test_nvme_ocssd_ns_cmd_vector_read);
+	CU_add_test(suite, "nvme_ocssd_ns_cmd_vector_read_single_entry",
+		    test_nvme_ocssd_ns_cmd_vector_read_single_entry);
+	CU_add_test(suite, "nvme_ocssd_ns_cmd_vector_write_with_md",
+		    test_nvme_ocssd_ns_cmd_vector_write_with_md);
+	CU_add_test(suite, "nvme_ocssd_ns_cmd_vector_write_with_md_single_entry",
+		    test_nvme_ocssd_ns_cmd_vector_write_with_md_single_entry);
+	CU_add_test(suite, "nvme_ocssd_ns_cmd_vector_write", test_nvme_ocssd_ns_cmd_vector_write);
+	CU_add_test(suite, "nvme_ocssd_ns_cmd_vector_write_single_entry",
+		    test_nvme_ocssd_ns_cmd_vector_write_single_entry);
+	CU_add_test(suite, "nvme_ocssd_ns_cmd_vector_copy", test_nvme_ocssd_ns_cmd_vector_copy);
+	CU_add_test(suite, "nvme_ocssd_ns_cmd_vector_copy_single_entry",
+		    test_nvme_ocssd_ns_cmd_vector_copy_single_entry);
 
 	g_spdk_nvme_driver = &_g_nvme_driver;
 

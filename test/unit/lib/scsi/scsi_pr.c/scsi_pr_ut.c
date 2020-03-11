@@ -541,24 +541,15 @@ main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("reservation_suite", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
-
-	if (CU_add_test(suite, "register", test_reservation_register) == NULL ||
-	    CU_add_test(suite, "reserve", test_reservation_reserve) == NULL ||
-	    CU_add_test(suite, "preempt", test_reservation_preempt_non_all_regs) == NULL ||
-	    CU_add_test(suite, "preempt all regs", test_reservation_preempt_all_regs) == NULL ||
-	    CU_add_test(suite, "conflict", test_reservation_cmds_conflict) == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "register", test_reservation_register);
+	CU_add_test(suite, "reserve", test_reservation_reserve);
+	CU_add_test(suite, "preempt", test_reservation_preempt_non_all_regs);
+	CU_add_test(suite, "preempt all regs", test_reservation_preempt_all_regs);
+	CU_add_test(suite, "conflict", test_reservation_cmds_conflict);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

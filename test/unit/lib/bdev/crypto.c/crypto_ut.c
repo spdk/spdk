@@ -1058,46 +1058,36 @@ main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("crypto", test_setup, test_cleanup);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
-
-	if (CU_add_test(suite, "test_error_paths",
-			test_error_paths) == NULL ||
-	    CU_add_test(suite, "test_simple_write",
-			test_simple_write) == NULL ||
-	    CU_add_test(suite, "test_simple_read",
-			test_simple_read) == NULL ||
-	    CU_add_test(suite, "test_large_rw",
-			test_large_rw) == NULL ||
-	    CU_add_test(suite, "test_dev_full",
-			test_dev_full) == NULL ||
-	    CU_add_test(suite, "test_crazy_rw",
-			test_crazy_rw) == NULL ||
-	    CU_add_test(suite, "test_passthru",
-			test_passthru) == NULL ||
-	    CU_add_test(suite, "test_initdrivers",
-			test_initdrivers) == NULL ||
-	    CU_add_test(suite, "test_crypto_op_complete",
-			test_crypto_op_complete) == NULL ||
-	    CU_add_test(suite, "test_supported_io",
-			test_supported_io) == NULL ||
-	    CU_add_test(suite, "test_reset",
-			test_reset) == NULL ||
-	    CU_add_test(suite, "test_poller",
-			test_poller) == NULL ||
-	    CU_add_test(suite, "test_assign_device_qp",
-			test_assign_device_qp) == NULL
-	   ) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "test_error_paths",
+		    test_error_paths);
+	CU_add_test(suite, "test_simple_write",
+		    test_simple_write);
+	CU_add_test(suite, "test_simple_read",
+		    test_simple_read);
+	CU_add_test(suite, "test_large_rw",
+		    test_large_rw);
+	CU_add_test(suite, "test_dev_full",
+		    test_dev_full);
+	CU_add_test(suite, "test_crazy_rw",
+		    test_crazy_rw);
+	CU_add_test(suite, "test_passthru",
+		    test_passthru);
+	CU_add_test(suite, "test_initdrivers",
+		    test_initdrivers);
+	CU_add_test(suite, "test_crypto_op_complete",
+		    test_crypto_op_complete);
+	CU_add_test(suite, "test_supported_io",
+		    test_supported_io);
+	CU_add_test(suite, "test_reset",
+		    test_reset);
+	CU_add_test(suite, "test_poller",
+		    test_poller);
+	CU_add_test(suite, "test_assign_device_qp",
+		    test_assign_device_qp);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

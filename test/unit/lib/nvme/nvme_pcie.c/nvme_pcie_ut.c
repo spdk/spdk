@@ -480,23 +480,14 @@ int main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("nvme_pcie", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
-
-	if (CU_add_test(suite, "prp_list_append", test_prp_list_append) == NULL ||
-	    CU_add_test(suite, "nvme_pcie_hotplug_monitor", test_nvme_pcie_hotplug_monitor) == NULL ||
-	    CU_add_test(suite, "shadow_doorbell_update", test_shadow_doorbell_update) == NULL ||
-	    CU_add_test(suite, "build_contig_hw_sgl_request", test_build_contig_hw_sgl_request) == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "prp_list_append", test_prp_list_append);
+	CU_add_test(suite, "nvme_pcie_hotplug_monitor", test_nvme_pcie_hotplug_monitor);
+	CU_add_test(suite, "shadow_doorbell_update", test_shadow_doorbell_update);
+	CU_add_test(suite, "build_contig_hw_sgl_request", test_build_contig_hw_sgl_request);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

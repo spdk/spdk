@@ -738,50 +738,40 @@ main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("lun_suite", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "task management abort task - not supported",
-			    lun_task_mgmt_execute_abort_task_not_supported) == NULL
-		|| CU_add_test(suite, "task management abort task set - success",
-			       lun_task_mgmt_execute_abort_task_all_not_supported) == NULL
-		|| CU_add_test(suite, "task management - lun reset success",
-			       lun_task_mgmt_execute_lun_reset) == NULL
-		|| CU_add_test(suite, "task management - invalid option",
-			       lun_task_mgmt_execute_invalid_case) == NULL
-		|| CU_add_test(suite, "append task - null lun SPDK_SPC_INQUIRY",
-			       lun_append_task_null_lun_task_cdb_spc_inquiry) == NULL
-		|| CU_add_test(suite, "append task - allocated length less than 4096",
-			       lun_append_task_null_lun_alloc_len_lt_4096) == NULL
-		|| CU_add_test(suite, "append task - unsupported lun",
-			       lun_append_task_null_lun_not_supported) == NULL
-		|| CU_add_test(suite, "execute task - scsi task pending",
-			       lun_execute_scsi_task_pending) == NULL
-		|| CU_add_test(suite, "execute task - scsi task complete",
-			       lun_execute_scsi_task_complete) == NULL
-		|| CU_add_test(suite, "destruct task - success", lun_destruct_success) == NULL
-		|| CU_add_test(suite, "construct - null ctx", lun_construct_null_ctx) == NULL
-		|| CU_add_test(suite, "construct - success", lun_construct_success) == NULL
-		|| CU_add_test(suite, "reset task wait for prior task completion",
-			       lun_reset_task_wait_scsi_task_complete) == NULL
-		|| CU_add_test(suite, "reset task suspend subsequent scsi task",
-			       lun_reset_task_suspend_scsi_task) == NULL
-		|| CU_add_test(suite, "check pending tasks only for specific initiator",
-			       lun_check_pending_tasks_only_for_specific_initiator) == NULL
-		|| CU_add_test(suite, "abort_pending_mgmt_tasks_when_lun_is_removed",
-			       abort_pending_mgmt_tasks_when_lun_is_removed) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "task management abort task - not supported",
+		    lun_task_mgmt_execute_abort_task_not_supported);
+	CU_add_test(suite, "task management abort task set - success",
+		    lun_task_mgmt_execute_abort_task_all_not_supported);
+	CU_add_test(suite, "task management - lun reset success",
+		    lun_task_mgmt_execute_lun_reset);
+	CU_add_test(suite, "task management - invalid option",
+		    lun_task_mgmt_execute_invalid_case);
+	CU_add_test(suite, "append task - null lun SPDK_SPC_INQUIRY",
+		    lun_append_task_null_lun_task_cdb_spc_inquiry);
+	CU_add_test(suite, "append task - allocated length less than 4096",
+		    lun_append_task_null_lun_alloc_len_lt_4096);
+	CU_add_test(suite, "append task - unsupported lun",
+		    lun_append_task_null_lun_not_supported);
+	CU_add_test(suite, "execute task - scsi task pending",
+		    lun_execute_scsi_task_pending);
+	CU_add_test(suite, "execute task - scsi task complete",
+		    lun_execute_scsi_task_complete);
+	CU_add_test(suite, "destruct task - success", lun_destruct_success);
+	CU_add_test(suite, "construct - null ctx", lun_construct_null_ctx);
+	CU_add_test(suite, "construct - success", lun_construct_success);
+	CU_add_test(suite, "reset task wait for prior task completion",
+		    lun_reset_task_wait_scsi_task_complete);
+	CU_add_test(suite, "reset task suspend subsequent scsi task",
+		    lun_reset_task_suspend_scsi_task);
+	CU_add_test(suite, "check pending tasks only for specific initiator",
+		    lun_check_pending_tasks_only_for_specific_initiator);
+	CU_add_test(suite, "abort_pending_mgmt_tasks_when_lun_is_removed",
+		    abort_pending_mgmt_tasks_when_lun_is_removed);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	allocate_threads(1);

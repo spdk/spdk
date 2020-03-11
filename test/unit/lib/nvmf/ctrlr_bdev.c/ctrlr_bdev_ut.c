@@ -396,27 +396,17 @@ int main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("nvmf", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "get_rw_params", test_get_rw_params) == NULL ||
-		CU_add_test(suite, "lba_in_range", test_lba_in_range) == NULL ||
-		CU_add_test(suite, "get_dif_ctx", test_get_dif_ctx) == NULL ||
+	CU_add_test(suite, "get_rw_params", test_get_rw_params);
+	CU_add_test(suite, "lba_in_range", test_lba_in_range);
+	CU_add_test(suite, "get_dif_ctx", test_get_dif_ctx);
 
-		CU_add_test(suite, "spdk_nvmf_bdev_ctrlr_compare_and_write_cmd",
-			    test_spdk_nvmf_bdev_ctrlr_compare_and_write_cmd) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "spdk_nvmf_bdev_ctrlr_compare_and_write_cmd",
+		    test_spdk_nvmf_bdev_ctrlr_compare_and_write_cmd);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

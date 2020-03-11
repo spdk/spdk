@@ -707,32 +707,23 @@ int main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("json", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "write_literal", test_write_literal) == NULL ||
-		CU_add_test(suite, "write_string_simple", test_write_string_simple) == NULL ||
-		CU_add_test(suite, "write_string_escapes", test_write_string_escapes) == NULL ||
-		CU_add_test(suite, "write_string_utf16le", test_write_string_utf16le) == NULL ||
-		CU_add_test(suite, "write_number_int32", test_write_number_int32) == NULL ||
-		CU_add_test(suite, "write_number_uint32", test_write_number_uint32) == NULL ||
-		CU_add_test(suite, "write_number_int64", test_write_number_int64) == NULL ||
-		CU_add_test(suite, "write_number_uint64", test_write_number_uint64) == NULL ||
-		CU_add_test(suite, "write_array", test_write_array) == NULL ||
-		CU_add_test(suite, "write_object", test_write_object) == NULL ||
-		CU_add_test(suite, "write_nesting", test_write_nesting) == NULL ||
-		CU_add_test(suite, "write_val", test_write_val) == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "write_literal", test_write_literal);
+	CU_add_test(suite, "write_string_simple", test_write_string_simple);
+	CU_add_test(suite, "write_string_escapes", test_write_string_escapes);
+	CU_add_test(suite, "write_string_utf16le", test_write_string_utf16le);
+	CU_add_test(suite, "write_number_int32", test_write_number_int32);
+	CU_add_test(suite, "write_number_uint32", test_write_number_uint32);
+	CU_add_test(suite, "write_number_int64", test_write_number_int64);
+	CU_add_test(suite, "write_number_uint64", test_write_number_uint64);
+	CU_add_test(suite, "write_array", test_write_array);
+	CU_add_test(suite, "write_object", test_write_object);
+	CU_add_test(suite, "write_nesting", test_write_nesting);
+	CU_add_test(suite, "write_val", test_write_val);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

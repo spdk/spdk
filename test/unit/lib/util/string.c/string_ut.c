@@ -384,26 +384,17 @@ main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("string", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "test_parse_ip_addr", test_parse_ip_addr) == NULL ||
-		CU_add_test(suite, "test_str_chomp", test_str_chomp) == NULL ||
-		CU_add_test(suite, "test_parse_capacity", test_parse_capacity) == NULL ||
-		CU_add_test(suite, "test_sprintf_append_realloc", test_sprintf_append_realloc) == NULL ||
-		CU_add_test(suite, "test_strtol", test_strtol) == NULL ||
-		CU_add_test(suite, "test_strtoll", test_strtoll) == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "test_parse_ip_addr", test_parse_ip_addr);
+	CU_add_test(suite, "test_str_chomp", test_str_chomp);
+	CU_add_test(suite, "test_parse_capacity", test_parse_capacity);
+	CU_add_test(suite, "test_sprintf_append_realloc", test_sprintf_append_realloc);
+	CU_add_test(suite, "test_strtol", test_strtol);
+	CU_add_test(suite, "test_strtoll", test_strtoll);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

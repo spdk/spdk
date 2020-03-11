@@ -344,31 +344,21 @@ main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("gpt_parse", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "parse",
-			    test_parse_mbr_and_primary) == NULL ||
-		CU_add_test(suite, "parse secondary",
-			    test_parse_secondary) == NULL ||
-		CU_add_test(suite, "check mbr",
-			    test_check_mbr) == NULL ||
-		CU_add_test(suite, "read header",
-			    test_read_header) == NULL ||
-		CU_add_test(suite, "read partitions",
-			    test_read_partitions) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "parse",
+		    test_parse_mbr_and_primary);
+	CU_add_test(suite, "parse secondary",
+		    test_parse_secondary);
+	CU_add_test(suite, "check mbr",
+		    test_check_mbr);
+	CU_add_test(suite, "read header",
+		    test_read_header);
+	CU_add_test(suite, "read partitions",
+		    test_read_partitions);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

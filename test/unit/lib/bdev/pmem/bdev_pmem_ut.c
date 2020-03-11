@@ -751,27 +751,17 @@ main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("bdev_pmem", ut_pmem_blk_init, ut_pmem_blk_clean);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "ut_pmem_init", ut_pmem_init) == NULL ||
-		CU_add_test(suite, "ut_pmem_open_close", ut_pmem_open_close) == NULL ||
-		CU_add_test(suite, "ut_pmem_write_read", ut_pmem_write_read) == NULL ||
-		CU_add_test(suite, "ut_pmem_reset", ut_pmem_reset) == NULL ||
-		CU_add_test(suite, "ut_pmem_write_zero", ut_pmem_write_zero) == NULL ||
-		CU_add_test(suite, "ut_pmem_unmap", ut_pmem_unmap) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "ut_pmem_init", ut_pmem_init);
+	CU_add_test(suite, "ut_pmem_open_close", ut_pmem_open_close);
+	CU_add_test(suite, "ut_pmem_write_read", ut_pmem_write_read);
+	CU_add_test(suite, "ut_pmem_reset", ut_pmem_reset);
+	CU_add_test(suite, "ut_pmem_write_zero", ut_pmem_write_zero);
+	CU_add_test(suite, "ut_pmem_unmap", ut_pmem_unmap);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

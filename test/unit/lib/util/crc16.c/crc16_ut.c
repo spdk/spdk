@@ -84,23 +84,14 @@ main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("crc16", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "test_crc16_t10dif", test_crc16_t10dif) == NULL ||
-		CU_add_test(suite, "test_crc16_t10dif_seed", test_crc16_t10dif_seed) == NULL ||
-		CU_add_test(suite, "test_crc16_t10dif_copy", test_crc16_t10dif_copy) == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "test_crc16_t10dif", test_crc16_t10dif);
+	CU_add_test(suite, "test_crc16_t10dif_seed", test_crc16_t10dif_seed);
+	CU_add_test(suite, "test_crc16_t10dif_copy", test_crc16_t10dif_copy);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

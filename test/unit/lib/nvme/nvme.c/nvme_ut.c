@@ -1314,65 +1314,55 @@ int main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("nvme", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "test_opc_data_transfer",
-			    test_opc_data_transfer) == NULL ||
-		CU_add_test(suite, "test_spdk_nvme_transport_id_parse_trtype",
-			    test_spdk_nvme_transport_id_parse_trtype) == NULL ||
-		CU_add_test(suite, "test_spdk_nvme_transport_id_parse_adrfam",
-			    test_spdk_nvme_transport_id_parse_adrfam) == NULL ||
-		CU_add_test(suite, "test_trid_parse_and_compare",
-			    test_trid_parse_and_compare) == NULL ||
-		CU_add_test(suite, "test_trid_trtype_str",
-			    test_trid_trtype_str) == NULL ||
-		CU_add_test(suite, "test_trid_adrfam_str",
-			    test_trid_adrfam_str) == NULL ||
-		CU_add_test(suite, "test_nvme_ctrlr_probe",
-			    test_nvme_ctrlr_probe) == NULL ||
-		CU_add_test(suite, "test_spdk_nvme_probe",
-			    test_spdk_nvme_probe) == NULL ||
-		CU_add_test(suite, "test_spdk_nvme_connect",
-			    test_spdk_nvme_connect) == NULL ||
-		CU_add_test(suite, "test_nvme_pci_probe_internal",
-			    test_nvme_ctrlr_probe_internal) == NULL ||
-		CU_add_test(suite, "test_nvme_init_controllers",
-			    test_nvme_init_controllers) == NULL ||
-		CU_add_test(suite, "test_nvme_driver_init",
-			    test_nvme_driver_init) == NULL ||
-		CU_add_test(suite, "test_spdk_nvme_detach",
-			    test_spdk_nvme_detach) == NULL ||
-		CU_add_test(suite, "test_nvme_completion_poll_cb",
-			    test_nvme_completion_poll_cb) == NULL ||
-		CU_add_test(suite, "test_nvme_user_copy_cmd_complete",
-			    test_nvme_user_copy_cmd_complete) == NULL ||
-		CU_add_test(suite, "test_nvme_allocate_request_null",
-			    test_nvme_allocate_request_null) == NULL ||
-		CU_add_test(suite, "test_nvme_allocate_request",
-			    test_nvme_allocate_request) == NULL ||
-		CU_add_test(suite, "test_nvme_free_request",
-			    test_nvme_free_request) == NULL ||
-		CU_add_test(suite, "test_nvme_allocate_request_user_copy",
-			    test_nvme_allocate_request_user_copy) == NULL ||
-		CU_add_test(suite, "test_nvme_robust_mutex_init_shared",
-			    test_nvme_robust_mutex_init_shared) == NULL ||
-		CU_add_test(suite, "test_nvme_request_check_timeout",
-			    test_nvme_request_check_timeout) == NULL ||
-		CU_add_test(suite, "test_nvme_wait_for_completion",
-			    test_nvme_wait_for_completion) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "test_opc_data_transfer",
+		    test_opc_data_transfer);
+	CU_add_test(suite, "test_spdk_nvme_transport_id_parse_trtype",
+		    test_spdk_nvme_transport_id_parse_trtype);
+	CU_add_test(suite, "test_spdk_nvme_transport_id_parse_adrfam",
+		    test_spdk_nvme_transport_id_parse_adrfam);
+	CU_add_test(suite, "test_trid_parse_and_compare",
+		    test_trid_parse_and_compare);
+	CU_add_test(suite, "test_trid_trtype_str",
+		    test_trid_trtype_str);
+	CU_add_test(suite, "test_trid_adrfam_str",
+		    test_trid_adrfam_str);
+	CU_add_test(suite, "test_nvme_ctrlr_probe",
+		    test_nvme_ctrlr_probe);
+	CU_add_test(suite, "test_spdk_nvme_probe",
+		    test_spdk_nvme_probe);
+	CU_add_test(suite, "test_spdk_nvme_connect",
+		    test_spdk_nvme_connect);
+	CU_add_test(suite, "test_nvme_pci_probe_internal",
+		    test_nvme_ctrlr_probe_internal);
+	CU_add_test(suite, "test_nvme_init_controllers",
+		    test_nvme_init_controllers);
+	CU_add_test(suite, "test_nvme_driver_init",
+		    test_nvme_driver_init);
+	CU_add_test(suite, "test_spdk_nvme_detach",
+		    test_spdk_nvme_detach);
+	CU_add_test(suite, "test_nvme_completion_poll_cb",
+		    test_nvme_completion_poll_cb);
+	CU_add_test(suite, "test_nvme_user_copy_cmd_complete",
+		    test_nvme_user_copy_cmd_complete);
+	CU_add_test(suite, "test_nvme_allocate_request_null",
+		    test_nvme_allocate_request_null);
+	CU_add_test(suite, "test_nvme_allocate_request",
+		    test_nvme_allocate_request);
+	CU_add_test(suite, "test_nvme_free_request",
+		    test_nvme_free_request);
+	CU_add_test(suite, "test_nvme_allocate_request_user_copy",
+		    test_nvme_allocate_request_user_copy);
+	CU_add_test(suite, "test_nvme_robust_mutex_init_shared",
+		    test_nvme_robust_mutex_init_shared);
+	CU_add_test(suite, "test_nvme_request_check_timeout",
+		    test_nvme_request_check_timeout);
+	CU_add_test(suite, "test_nvme_wait_for_completion",
+		    test_nvme_wait_for_completion);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

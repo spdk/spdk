@@ -640,59 +640,49 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	config_file = argv[1];
 
 	suite = CU_add_suite("init_grp_suite", test_setup, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "create from config file cases",
-			    create_from_config_file_cases) == NULL
-		|| CU_add_test(suite, "create initiator group success case",
-			       create_initiator_group_success_case) == NULL
-		|| CU_add_test(suite, "find initiator group success case",
-			       find_initiator_group_success_case) == NULL
-		|| CU_add_test(suite, "register initiator group twice case",
-			       register_initiator_group_twice_case) == NULL
-		|| CU_add_test(suite, "add initiator name success case",
-			       add_initiator_name_success_case) == NULL
-		|| CU_add_test(suite, "add initiator name fail case",
-			       add_initiator_name_fail_case) == NULL
-		|| CU_add_test(suite, "delete all initiator names success case",
-			       delete_all_initiator_names_success_case) == NULL
-		|| CU_add_test(suite, "add initiator netmask success case",
-			       add_netmask_success_case) == NULL
-		|| CU_add_test(suite, "add initiator netmask fail case",
-			       add_netmask_fail_case) == NULL
-		|| CU_add_test(suite, "delete all initiator netmasks success case",
-			       delete_all_netmasks_success_case) == NULL
-		|| CU_add_test(suite, "overwrite all to any for name case",
-			       initiator_name_overwrite_all_to_any_case) == NULL
-		|| CU_add_test(suite, "overwrite all to any for netmask case",
-			       netmask_overwrite_all_to_any_case) == NULL
-		|| CU_add_test(suite, "add/delete initiator names case",
-			       add_delete_initiator_names_case) == NULL
-		|| CU_add_test(suite, "add duplicated initiator names case",
-			       add_duplicated_initiator_names_case) == NULL
-		|| CU_add_test(suite, "delete nonexisting initiator names case",
-			       delete_nonexisting_initiator_names_case) == NULL
-		|| CU_add_test(suite, "add/delete netmasks case",
-			       add_delete_netmasks_case) == NULL
-		|| CU_add_test(suite, "add duplicated netmasks case",
-			       add_duplicated_netmasks_case) == NULL
-		|| CU_add_test(suite, "delete nonexisting netmasks case",
-			       delete_nonexisting_netmasks_case) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "create from config file cases",
+		    create_from_config_file_cases);
+	CU_add_test(suite, "create initiator group success case",
+		    create_initiator_group_success_case);
+	CU_add_test(suite, "find initiator group success case",
+		    find_initiator_group_success_case);
+	CU_add_test(suite, "register initiator group twice case",
+		    register_initiator_group_twice_case);
+	CU_add_test(suite, "add initiator name success case",
+		    add_initiator_name_success_case);
+	CU_add_test(suite, "add initiator name fail case",
+		    add_initiator_name_fail_case);
+	CU_add_test(suite, "delete all initiator names success case",
+		    delete_all_initiator_names_success_case);
+	CU_add_test(suite, "add initiator netmask success case",
+		    add_netmask_success_case);
+	CU_add_test(suite, "add initiator netmask fail case",
+		    add_netmask_fail_case);
+	CU_add_test(suite, "delete all initiator netmasks success case",
+		    delete_all_netmasks_success_case);
+	CU_add_test(suite, "overwrite all to any for name case",
+		    initiator_name_overwrite_all_to_any_case);
+	CU_add_test(suite, "overwrite all to any for netmask case",
+		    netmask_overwrite_all_to_any_case);
+	CU_add_test(suite, "add/delete initiator names case",
+		    add_delete_initiator_names_case);
+	CU_add_test(suite, "add duplicated initiator names case",
+		    add_duplicated_initiator_names_case);
+	CU_add_test(suite, "delete nonexisting initiator names case",
+		    delete_nonexisting_initiator_names_case);
+	CU_add_test(suite, "add/delete netmasks case",
+		    add_delete_netmasks_case);
+	CU_add_test(suite, "add duplicated netmasks case",
+		    add_duplicated_netmasks_case);
+	CU_add_test(suite, "delete nonexisting netmasks case",
+		    delete_nonexisting_netmasks_case);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

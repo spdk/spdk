@@ -1162,26 +1162,16 @@ main(int argc, const char **argv)
 	CU_pSuite       suite = NULL;
 	unsigned int    num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("ocssd", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "test_create_controller", test_create_controller) == NULL ||
-		CU_add_test(suite, "test_device_geometry", test_device_geometry) == NULL ||
-		CU_add_test(suite, "test_lba_translation", test_lba_translation) == NULL ||
-		CU_add_test(suite, "test_parallel_unit_range", test_parallel_unit_range) == NULL ||
-		CU_add_test(suite, "test_get_zone_info", test_get_zone_info) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "test_create_controller", test_create_controller);
+	CU_add_test(suite, "test_device_geometry", test_device_geometry);
+	CU_add_test(suite, "test_lba_translation", test_lba_translation);
+	CU_add_test(suite, "test_parallel_unit_range", test_parallel_unit_range);
+	CU_add_test(suite, "test_get_zone_info", test_get_zone_info);
 
 	g_thread = spdk_thread_create("test", NULL);
 	spdk_set_thread(g_thread);

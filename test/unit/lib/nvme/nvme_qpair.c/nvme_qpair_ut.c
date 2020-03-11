@@ -597,35 +597,26 @@ int main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("nvme_qpair", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (CU_add_test(suite, "test3", test3) == NULL
-	    || CU_add_test(suite, "ctrlr_failed", test_ctrlr_failed) == NULL
-	    || CU_add_test(suite, "struct_packing", struct_packing) == NULL
-	    || CU_add_test(suite, "spdk_nvme_qpair_process_completions",
-			   test_nvme_qpair_process_completions) == NULL
-	    || CU_add_test(suite, "nvme_completion_is_retry", test_nvme_completion_is_retry) == NULL
+	CU_add_test(suite, "test3", test3);
+	CU_add_test(suite, "ctrlr_failed", test_ctrlr_failed);
+	CU_add_test(suite, "struct_packing", struct_packing);
+	CU_add_test(suite, "spdk_nvme_qpair_process_completions",
+		    test_nvme_qpair_process_completions);
+	CU_add_test(suite, "nvme_completion_is_retry", test_nvme_completion_is_retry);
 #ifdef DEBUG
-	    || CU_add_test(suite, "get_status_string", test_get_status_string) == NULL
+	CU_add_test(suite, "get_status_string", test_get_status_string);
 #endif
-	    || CU_add_test(suite, "spdk_nvme_qpair_add_cmd_error_injection",
-			   test_nvme_qpair_add_cmd_error_injection) == NULL
-	    || CU_add_test(suite, "spdk_nvme_qpair_submit_request",
-			   test_nvme_qpair_submit_request) == NULL
-	    || CU_add_test(suite, "nvme_qpair_resubmit_request_with_transport_failed",
-			   test_nvme_qpair_resubmit_request_with_transport_failed) == NULL
-	   ) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "spdk_nvme_qpair_add_cmd_error_injection",
+		    test_nvme_qpair_add_cmd_error_injection);
+	CU_add_test(suite, "spdk_nvme_qpair_submit_request",
+		    test_nvme_qpair_submit_request);
+	CU_add_test(suite, "nvme_qpair_resubmit_request_with_transport_failed",
+		    test_nvme_qpair_resubmit_request_with_transport_failed);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

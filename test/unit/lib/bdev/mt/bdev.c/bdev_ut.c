@@ -1899,36 +1899,26 @@ main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("bdev", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "basic", basic) == NULL ||
-		CU_add_test(suite, "unregister_and_close", unregister_and_close) == NULL ||
-		CU_add_test(suite, "basic_qos", basic_qos) == NULL ||
-		CU_add_test(suite, "put_channel_during_reset", put_channel_during_reset) == NULL ||
-		CU_add_test(suite, "aborted_reset", aborted_reset) == NULL ||
-		CU_add_test(suite, "io_during_reset", io_during_reset) == NULL ||
-		CU_add_test(suite, "io_during_qos_queue", io_during_qos_queue) == NULL ||
-		CU_add_test(suite, "io_during_qos_reset", io_during_qos_reset) == NULL ||
-		CU_add_test(suite, "enomem", enomem) == NULL ||
-		CU_add_test(suite, "enomem_multi_bdev", enomem_multi_bdev) == NULL ||
-		CU_add_test(suite, "enomem_multi_io_target", enomem_multi_io_target) == NULL ||
-		CU_add_test(suite, "qos_dynamic_enable", qos_dynamic_enable) == NULL ||
-		CU_add_test(suite, "bdev_histograms_mt", bdev_histograms_mt) == NULL ||
-		CU_add_test(suite, "bdev_set_io_timeout_mt", bdev_set_io_timeout_mt) == NULL ||
-		CU_add_test(suite, "lock_lba_range_then_submit_io", lock_lba_range_then_submit_io) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "basic", basic);
+	CU_add_test(suite, "unregister_and_close", unregister_and_close);
+	CU_add_test(suite, "basic_qos", basic_qos);
+	CU_add_test(suite, "put_channel_during_reset", put_channel_during_reset);
+	CU_add_test(suite, "aborted_reset", aborted_reset);
+	CU_add_test(suite, "io_during_reset", io_during_reset);
+	CU_add_test(suite, "io_during_qos_queue", io_during_qos_queue);
+	CU_add_test(suite, "io_during_qos_reset", io_during_qos_reset);
+	CU_add_test(suite, "enomem", enomem);
+	CU_add_test(suite, "enomem_multi_bdev", enomem_multi_bdev);
+	CU_add_test(suite, "enomem_multi_io_target", enomem_multi_io_target);
+	CU_add_test(suite, "qos_dynamic_enable", qos_dynamic_enable);
+	CU_add_test(suite, "bdev_histograms_mt", bdev_histograms_mt);
+	CU_add_test(suite, "bdev_set_io_timeout_mt", bdev_set_io_timeout_mt);
+	CU_add_test(suite, "lock_lba_range_then_submit_io", lock_lba_range_then_submit_io);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

@@ -672,31 +672,21 @@ int main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("blobfs_async_ut", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "fs_init", fs_init) == NULL ||
-		CU_add_test(suite, "fs_open", fs_open) == NULL ||
-		CU_add_test(suite, "fs_create", fs_create) == NULL ||
-		CU_add_test(suite, "fs_truncate", fs_truncate) == NULL ||
-		CU_add_test(suite, "fs_rename", fs_rename) == NULL ||
-		CU_add_test(suite, "fs_rw_async", fs_rw_async) == NULL ||
-		CU_add_test(suite, "fs_writev_readv_async", fs_writev_readv_async) == NULL ||
-		CU_add_test(suite, "tree_find_buffer", tree_find_buffer_ut) == NULL ||
-		CU_add_test(suite, "channel_ops", channel_ops) == NULL ||
-		CU_add_test(suite, "channel_ops_sync", channel_ops_sync) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "fs_init", fs_init);
+	CU_add_test(suite, "fs_open", fs_open);
+	CU_add_test(suite, "fs_create", fs_create);
+	CU_add_test(suite, "fs_truncate", fs_truncate);
+	CU_add_test(suite, "fs_rename", fs_rename);
+	CU_add_test(suite, "fs_rw_async", fs_rw_async);
+	CU_add_test(suite, "fs_writev_readv_async", fs_writev_readv_async);
+	CU_add_test(suite, "tree_find_buffer", tree_find_buffer_ut);
+	CU_add_test(suite, "channel_ops", channel_ops);
+	CU_add_test(suite, "channel_ops_sync", channel_ops_sync);
 
 	allocate_threads(1);
 	set_thread(0);

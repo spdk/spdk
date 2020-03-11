@@ -3123,47 +3123,37 @@ main(int argc, char **argv)
 	CU_pSuite		suite = NULL;
 	unsigned int		num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("bdev", null_init, null_clean);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "bytes_to_blocks_test", bytes_to_blocks_test) == NULL ||
-		CU_add_test(suite, "num_blocks_test", num_blocks_test) == NULL ||
-		CU_add_test(suite, "io_valid", io_valid_test) == NULL ||
-		CU_add_test(suite, "open_write", open_write_test) == NULL ||
-		CU_add_test(suite, "alias_add_del", alias_add_del_test) == NULL ||
-		CU_add_test(suite, "get_device_stat", get_device_stat_test) == NULL ||
-		CU_add_test(suite, "bdev_io_types", bdev_io_types_test) == NULL ||
-		CU_add_test(suite, "bdev_io_wait", bdev_io_wait_test) == NULL ||
-		CU_add_test(suite, "bdev_io_spans_boundary", bdev_io_spans_boundary_test) == NULL ||
-		CU_add_test(suite, "bdev_io_split", bdev_io_split_test) == NULL ||
-		CU_add_test(suite, "bdev_io_split_with_io_wait", bdev_io_split_with_io_wait) == NULL ||
-		CU_add_test(suite, "bdev_io_alignment_with_boundary", bdev_io_alignment_with_boundary) == NULL ||
-		CU_add_test(suite, "bdev_io_alignment", bdev_io_alignment) == NULL ||
-		CU_add_test(suite, "bdev_histograms", bdev_histograms) == NULL ||
-		CU_add_test(suite, "bdev_write_zeroes", bdev_write_zeroes) == NULL ||
-		CU_add_test(suite, "bdev_compare_and_write", bdev_compare_and_write) == NULL ||
-		CU_add_test(suite, "bdev_compare", bdev_compare) == NULL ||
-		CU_add_test(suite, "bdev_open_while_hotremove", bdev_open_while_hotremove) == NULL ||
-		CU_add_test(suite, "bdev_close_while_hotremove", bdev_close_while_hotremove) == NULL ||
-		CU_add_test(suite, "bdev_open_ext", bdev_open_ext) == NULL ||
-		CU_add_test(suite, "bdev_set_io_timeout", bdev_set_io_timeout) == NULL ||
-		CU_add_test(suite, "lba_range_overlap", lba_range_overlap) == NULL ||
-		CU_add_test(suite, "lock_lba_range_check_ranges", lock_lba_range_check_ranges) == NULL ||
-		CU_add_test(suite, "lock_lba_range_with_io_outstanding",
-			    lock_lba_range_with_io_outstanding) == NULL ||
-		CU_add_test(suite, "lock_lba_range_overlapped", lock_lba_range_overlapped) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "bytes_to_blocks_test", bytes_to_blocks_test);
+	CU_add_test(suite, "num_blocks_test", num_blocks_test);
+	CU_add_test(suite, "io_valid", io_valid_test);
+	CU_add_test(suite, "open_write", open_write_test);
+	CU_add_test(suite, "alias_add_del", alias_add_del_test);
+	CU_add_test(suite, "get_device_stat", get_device_stat_test);
+	CU_add_test(suite, "bdev_io_types", bdev_io_types_test);
+	CU_add_test(suite, "bdev_io_wait", bdev_io_wait_test);
+	CU_add_test(suite, "bdev_io_spans_boundary", bdev_io_spans_boundary_test);
+	CU_add_test(suite, "bdev_io_split", bdev_io_split_test);
+	CU_add_test(suite, "bdev_io_split_with_io_wait", bdev_io_split_with_io_wait);
+	CU_add_test(suite, "bdev_io_alignment_with_boundary", bdev_io_alignment_with_boundary);
+	CU_add_test(suite, "bdev_io_alignment", bdev_io_alignment);
+	CU_add_test(suite, "bdev_histograms", bdev_histograms);
+	CU_add_test(suite, "bdev_write_zeroes", bdev_write_zeroes);
+	CU_add_test(suite, "bdev_compare_and_write", bdev_compare_and_write);
+	CU_add_test(suite, "bdev_compare", bdev_compare);
+	CU_add_test(suite, "bdev_open_while_hotremove", bdev_open_while_hotremove);
+	CU_add_test(suite, "bdev_close_while_hotremove", bdev_close_while_hotremove);
+	CU_add_test(suite, "bdev_open_ext", bdev_open_ext);
+	CU_add_test(suite, "bdev_set_io_timeout", bdev_set_io_timeout);
+	CU_add_test(suite, "lba_range_overlap", lba_range_overlap);
+	CU_add_test(suite, "lock_lba_range_check_ranges", lock_lba_range_check_ranges);
+	CU_add_test(suite, "lock_lba_range_with_io_outstanding",
+		    lock_lba_range_with_io_outstanding);
+	CU_add_test(suite, "lock_lba_range_overlapped", lock_lba_range_overlapped);
 
 	allocate_threads(1);
 	set_thread(0);

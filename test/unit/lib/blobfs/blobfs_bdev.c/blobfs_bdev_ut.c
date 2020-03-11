@@ -330,24 +330,14 @@ int main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("blobfs_bdev_ut", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "spdk_blobfs_bdev_detect_test", spdk_blobfs_bdev_detect_test) == NULL ||
-		CU_add_test(suite, "spdk_blobfs_bdev_create_test", spdk_blobfs_bdev_create_test) == NULL ||
-		CU_add_test(suite, "spdk_blobfs_bdev_mount_test", spdk_blobfs_bdev_mount_test) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "spdk_blobfs_bdev_detect_test", spdk_blobfs_bdev_detect_test);
+	CU_add_test(suite, "spdk_blobfs_bdev_create_test", spdk_blobfs_bdev_create_test);
+	CU_add_test(suite, "spdk_blobfs_bdev_mount_test", spdk_blobfs_bdev_mount_test);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

@@ -629,30 +629,20 @@ int main(int argc, char **argv)
 	pthread_t	spdk_tid;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("blobfs_sync_ut", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "cache read after write", cache_read_after_write) == NULL ||
-		CU_add_test(suite, "file length", file_length) == NULL ||
-		CU_add_test(suite, "append write to extend blob", append_write_to_extend_blob) == NULL ||
-		CU_add_test(suite, "partial buffer", partial_buffer) == NULL ||
-		CU_add_test(suite, "write_null_buffer", cache_write_null_buffer) == NULL ||
-		CU_add_test(suite, "create_sync", fs_create_sync) == NULL ||
-		CU_add_test(suite, "rename_sync", fs_rename_sync) == NULL ||
-		CU_add_test(suite, "append_no_cache", cache_append_no_cache) == NULL ||
-		CU_add_test(suite, "delete_file_without_close", fs_delete_file_without_close) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "cache read after write", cache_read_after_write);
+	CU_add_test(suite, "file length", file_length);
+	CU_add_test(suite, "append write to extend blob", append_write_to_extend_blob);
+	CU_add_test(suite, "partial buffer", partial_buffer);
+	CU_add_test(suite, "write_null_buffer", cache_write_null_buffer);
+	CU_add_test(suite, "create_sync", fs_create_sync);
+	CU_add_test(suite, "rename_sync", fs_rename_sync);
+	CU_add_test(suite, "append_no_cache", cache_append_no_cache);
+	CU_add_test(suite, "delete_file_without_close", fs_delete_file_without_close);
 
 	spdk_thread_lib_init(NULL, 0);
 

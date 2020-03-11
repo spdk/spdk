@@ -630,26 +630,17 @@ main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("pipe", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "test_create_destroy", test_create_destroy) == NULL ||
-		CU_add_test(suite, "test_write_get_buffer", test_write_get_buffer) == NULL ||
-		CU_add_test(suite, "test_write_advance", test_write_advance) == NULL ||
-		CU_add_test(suite, "test_read_get_buffer", test_read_get_buffer) == NULL ||
-		CU_add_test(suite, "test_read_advance", test_read_advance) == NULL ||
-		CU_add_test(suite, "test_data", test_data) == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "test_create_destroy", test_create_destroy);
+	CU_add_test(suite, "test_write_get_buffer", test_write_get_buffer);
+	CU_add_test(suite, "test_write_advance", test_write_advance);
+	CU_add_test(suite, "test_read_get_buffer", test_read_get_buffer);
+	CU_add_test(suite, "test_read_advance", test_read_advance);
+	CU_add_test(suite, "test_data", test_data);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

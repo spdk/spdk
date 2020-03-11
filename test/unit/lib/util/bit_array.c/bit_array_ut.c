@@ -351,28 +351,19 @@ main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("bit_array", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "test_1bit", test_1bit) == NULL ||
-		CU_add_test(suite, "test_64bit", test_64bit) == NULL ||
-		CU_add_test(suite, "test_find", test_find) == NULL ||
-		CU_add_test(suite, "test_resize", test_resize) == NULL ||
-		CU_add_test(suite, "test_errors", test_errors) == NULL ||
-		CU_add_test(suite, "test_count", test_count) == NULL ||
-		CU_add_test(suite, "test_mask_store_load", test_mask_store_load) == NULL ||
-		CU_add_test(suite, "test_mask_clear", test_mask_clear) == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "test_1bit", test_1bit);
+	CU_add_test(suite, "test_64bit", test_64bit);
+	CU_add_test(suite, "test_find", test_find);
+	CU_add_test(suite, "test_resize", test_resize);
+	CU_add_test(suite, "test_errors", test_errors);
+	CU_add_test(suite, "test_count", test_count);
+	CU_add_test(suite, "test_mask_store_load", test_mask_store_load);
+	CU_add_test(suite, "test_mask_clear", test_mask_clear);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

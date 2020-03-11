@@ -480,57 +480,28 @@ int main(int argc, char **argv)
 	unsigned int num_failures = 0;
 	CU_pSuite suite = NULL;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("NVMf-FC", nvmf_fc_tests_init, nvmf_fc_tests_fini);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (CU_add_test(suite, "Create Target & FC Transport",
-			create_transport_test) == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "Create Target & FC Transport",
+		    create_transport_test);
+	CU_add_test(suite, "Create Poll Groups",
+		    create_poll_groups_test);
+	CU_add_test(suite, "Create FC Port",
+		    create_fc_port_test);
 
-	if (CU_add_test(suite, "Create Poll Groups",
-			create_poll_groups_test) == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "Online FC Port",
+		    online_fc_port_test);
+	CU_add_test(suite, "PG poll", poll_group_poll_test);
 
-	if (CU_add_test(suite, "Create FC Port",
-			create_fc_port_test) == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "Remove HWQP's from PG's",
+		    remove_hwqps_from_poll_groups_test);
 
+	CU_add_test(suite, "Destroy Transport & Target",
+		    destroy_transport_test);
 
-	if (CU_add_test(suite, "Online FC Port",
-			online_fc_port_test) == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
-
-	if (CU_add_test(suite, "PG poll", poll_group_poll_test) == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
-
-	if (CU_add_test(suite, "Remove HWQP's from PG's",
-			remove_hwqps_from_poll_groups_test) == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
-
-	if (CU_add_test(suite, "Destroy Transport & Target",
-			destroy_transport_test) == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

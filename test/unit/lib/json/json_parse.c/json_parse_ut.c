@@ -903,31 +903,22 @@ int main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("json", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "parse_literal", test_parse_literal) == NULL ||
-		CU_add_test(suite, "parse_string_simple", test_parse_string_simple) == NULL ||
-		CU_add_test(suite, "parse_string_control_chars", test_parse_string_control_chars) == NULL ||
-		CU_add_test(suite, "parse_string_utf8", test_parse_string_utf8) == NULL ||
-		CU_add_test(suite, "parse_string_escapes_twochar", test_parse_string_escapes_twochar) == NULL ||
-		CU_add_test(suite, "parse_string_escapes_unicode", test_parse_string_escapes_unicode) == NULL ||
-		CU_add_test(suite, "parse_number", test_parse_number) == NULL ||
-		CU_add_test(suite, "parse_array", test_parse_array) == NULL ||
-		CU_add_test(suite, "parse_object", test_parse_object) == NULL ||
-		CU_add_test(suite, "parse_nesting", test_parse_nesting) == NULL ||
-		CU_add_test(suite, "parse_comment", test_parse_comment) == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "parse_literal", test_parse_literal);
+	CU_add_test(suite, "parse_string_simple", test_parse_string_simple);
+	CU_add_test(suite, "parse_string_control_chars", test_parse_string_control_chars);
+	CU_add_test(suite, "parse_string_utf8", test_parse_string_utf8);
+	CU_add_test(suite, "parse_string_escapes_twochar", test_parse_string_escapes_twochar);
+	CU_add_test(suite, "parse_string_escapes_unicode", test_parse_string_escapes_unicode);
+	CU_add_test(suite, "parse_number", test_parse_number);
+	CU_add_test(suite, "parse_array", test_parse_array);
+	CU_add_test(suite, "parse_object", test_parse_object);
+	CU_add_test(suite, "parse_nesting", test_parse_nesting);
+	CU_add_test(suite, "parse_comment", test_parse_comment);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

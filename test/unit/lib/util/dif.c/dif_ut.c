@@ -2600,114 +2600,104 @@ main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("dif", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "dif_generate_and_verify_test", dif_generate_and_verify_test) == NULL ||
-		CU_add_test(suite, "dif_disable_check_test", dif_disable_check_test) == NULL ||
-		CU_add_test(suite, "dif_sec_512_md_0_error_test", dif_sec_512_md_0_error_test) == NULL ||
-		CU_add_test(suite, "dif_guard_seed_test", dif_guard_seed_test) == NULL ||
-		CU_add_test(suite, "dif_disable_sec_512_md_8_single_iov_test",
-			    dif_disable_sec_512_md_8_single_iov_test) == NULL ||
-		CU_add_test(suite, "dif_sec_512_md_8_prchk_0_single_iov_test",
-			    dif_sec_512_md_8_prchk_0_single_iov_test) == NULL ||
-		CU_add_test(suite, "dif_sec_512_md_8_prchk_0_1_2_4_multi_iovs_test",
-			    dif_sec_512_md_8_prchk_0_1_2_4_multi_iovs_test) == NULL ||
-		CU_add_test(suite, "dif_sec_4096_md_128_prchk_7_multi_iovs_test",
-			    dif_sec_4096_md_128_prchk_7_multi_iovs_test) == NULL ||
-		CU_add_test(suite, "dif_sec_512_md_8_prchk_7_multi_iovs_split_data_and_md_test",
-			    dif_sec_512_md_8_prchk_7_multi_iovs_split_data_and_md_test) == NULL ||
-		CU_add_test(suite, "dif_sec_512_md_8_prchk_7_multi_iovs_split_data_test",
-			    dif_sec_512_md_8_prchk_7_multi_iovs_split_data_test) == NULL ||
-		CU_add_test(suite, "dif_sec_512_md_8_prchk_7_multi_iovs_split_guard_test",
-			    dif_sec_512_md_8_prchk_7_multi_iovs_split_guard_test) == NULL ||
-		CU_add_test(suite, "dif_sec_512_md_8_prchk_7_multi_iovs_split_apptag_test",
-			    dif_sec_512_md_8_prchk_7_multi_iovs_split_apptag_test) == NULL ||
-		CU_add_test(suite, "dif_sec_512_md_8_prchk_7_multi_iovs_split_reftag_test",
-			    dif_sec_512_md_8_prchk_7_multi_iovs_split_reftag_test) == NULL ||
-		CU_add_test(suite, "dif_sec_512_md_8_prchk_7_multi_iovs_complex_splits_test",
-			    dif_sec_512_md_8_prchk_7_multi_iovs_complex_splits_test) == NULL ||
-		CU_add_test(suite, "dif_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_test",
-			    dif_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_test) == NULL ||
-		CU_add_test(suite, "dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_test",
-			    dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_test) == NULL ||
-		CU_add_test(suite, "dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_data_and_md_test",
-			    dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_data_and_md_test) == NULL ||
-		CU_add_test(suite, "dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_data_test",
-			    dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_data_test) == NULL ||
-		CU_add_test(suite, "dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_guard_test",
-			    dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_guard_test) == NULL ||
-		CU_add_test(suite, "dif_sec_4096_md_128_inject_1_2_4_8__multi_iovs_split_apptag_test",
-			    dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_apptag_test) == NULL ||
-		CU_add_test(suite, "dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_reftag_test",
-			    dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_reftag_test) == NULL ||
-		CU_add_test(suite, "dif_copy_sec_512_md_8_prchk_0_single_iov",
-			    dif_copy_sec_512_md_8_prchk_0_single_iov) == NULL ||
-		CU_add_test(suite, "dif_copy_sec_512_md_8_prchk_0_1_2_4_multi_iovs",
-			    dif_copy_sec_512_md_8_prchk_0_1_2_4_multi_iovs) == NULL ||
-		CU_add_test(suite, "dif_copy_sec_4096_md_128_prchk_7_multi_iovs",
-			    dif_copy_sec_4096_md_128_prchk_7_multi_iovs) == NULL ||
-		CU_add_test(suite, "dif_copy_sec_512_md_8_prchk_7_multi_iovs_split_data",
-			    dif_copy_sec_512_md_8_prchk_7_multi_iovs_split_data) == NULL ||
-		CU_add_test(suite, "dif_copy_sec_512_md_8_prchk_7_multi_iovs_complex_splits",
-			    dif_copy_sec_512_md_8_prchk_7_multi_iovs_complex_splits) == NULL ||
-		CU_add_test(suite, "dif_copy_sec_4096_md_128_inject_1_2_4_8_multi_iovs_test",
-			    dif_copy_sec_4096_md_128_inject_1_2_4_8_multi_iovs_test) == NULL ||
-		CU_add_test(suite, "dif_copy_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_test",
-			    dif_copy_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_test) == NULL ||
-		CU_add_test(suite, "dix_sec_512_md_0_error", dix_sec_512_md_0_error) == NULL ||
-		CU_add_test(suite, "dix_sec_512_md_8_prchk_0_single_iov",
-			    dix_sec_512_md_8_prchk_0_single_iov) == NULL ||
-		CU_add_test(suite, "dix_sec_512_md_8_prchk_0_1_2_4_multi_iovs",
-			    dix_sec_512_md_8_prchk_0_1_2_4_multi_iovs) == NULL ||
-		CU_add_test(suite, "dix_sec_4096_md_128_prchk_7_multi_iovs",
-			    dix_sec_4096_md_128_prchk_7_multi_iovs) == NULL ||
-		CU_add_test(suite, "dix_sec_512_md_8_prchk_7_multi_iovs_split_data",
-			    dix_sec_512_md_8_prchk_7_multi_iovs_split_data) == NULL ||
-		CU_add_test(suite, "dix_sec_512_md_8_prchk_7_multi_iovs_complex_splits",
-			    dix_sec_512_md_8_prchk_7_multi_iovs_complex_splits) == NULL ||
-		CU_add_test(suite, "dix_sec_4096_md_128_inject_1_2_4_8_multi_iovs_test",
-			    dix_sec_4096_md_128_inject_1_2_4_8_multi_iovs_test) == NULL ||
-		CU_add_test(suite, "dix_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_test",
-			    dix_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_test) == NULL ||
-		CU_add_test(suite, "set_md_interleave_iovs_test", set_md_interleave_iovs_test) == NULL ||
-		CU_add_test(suite, "set_md_interleave_iovs_split_test",
-			    set_md_interleave_iovs_split_test) == NULL ||
-		CU_add_test(suite, "dif_generate_stream_test", dif_generate_stream_test) == NULL ||
-		CU_add_test(suite, "set_md_interleave_iovs_alignment_test",
-			    set_md_interleave_iovs_alignment_test) == NULL ||
-		CU_add_test(suite, "_dif_generate_split_test", _dif_generate_split_test) == NULL ||
-		CU_add_test(suite, "set_md_interleave_iovs_multi_segments_test",
-			    set_md_interleave_iovs_multi_segments_test) == NULL ||
-		CU_add_test(suite, "_dif_verify_split_test", _dif_verify_split_test) == NULL ||
-		CU_add_test(suite, "dif_verify_stream_multi_segments_test",
-			    dif_verify_stream_multi_segments_test) == NULL ||
-		CU_add_test(suite, "update_crc32c_test", update_crc32c_test) == NULL ||
-		CU_add_test(suite, "_dif_update_crc32c_split_test",
-			    _dif_update_crc32c_split_test) == NULL ||
-		CU_add_test(suite, "dif_update_crc32c_stream_multi_segments_test",
-			    dif_update_crc32c_stream_multi_segments_test) == NULL ||
-		CU_add_test(suite, "get_range_with_md_test", get_range_with_md_test) == NULL ||
-		CU_add_test(suite, "dif_sec_4096_md_128_prchk_7_multi_iovs_remap_test",
-			    dif_sec_4096_md_128_prchk_7_multi_iovs_remap_test) == NULL ||
-		CU_add_test(suite, "dif_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_remap_test",
-			    dif_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_remap_test) == NULL ||
-		CU_add_test(suite, "dix_sec_4096_md_128_prchk_7_multi_iovs_remap",
-			    dix_sec_4096_md_128_prchk_7_multi_iovs_remap) == NULL ||
-		CU_add_test(suite, "dix_sec_512_md_8_prchk_7_multi_iovs_complex_splits_remap",
-			    dix_sec_512_md_8_prchk_7_multi_iovs_complex_splits_remap) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "dif_generate_and_verify_test", dif_generate_and_verify_test);
+	CU_add_test(suite, "dif_disable_check_test", dif_disable_check_test);
+	CU_add_test(suite, "dif_sec_512_md_0_error_test", dif_sec_512_md_0_error_test);
+	CU_add_test(suite, "dif_guard_seed_test", dif_guard_seed_test);
+	CU_add_test(suite, "dif_disable_sec_512_md_8_single_iov_test",
+		    dif_disable_sec_512_md_8_single_iov_test);
+	CU_add_test(suite, "dif_sec_512_md_8_prchk_0_single_iov_test",
+		    dif_sec_512_md_8_prchk_0_single_iov_test);
+	CU_add_test(suite, "dif_sec_512_md_8_prchk_0_1_2_4_multi_iovs_test",
+		    dif_sec_512_md_8_prchk_0_1_2_4_multi_iovs_test);
+	CU_add_test(suite, "dif_sec_4096_md_128_prchk_7_multi_iovs_test",
+		    dif_sec_4096_md_128_prchk_7_multi_iovs_test);
+	CU_add_test(suite, "dif_sec_512_md_8_prchk_7_multi_iovs_split_data_and_md_test",
+		    dif_sec_512_md_8_prchk_7_multi_iovs_split_data_and_md_test);
+	CU_add_test(suite, "dif_sec_512_md_8_prchk_7_multi_iovs_split_data_test",
+		    dif_sec_512_md_8_prchk_7_multi_iovs_split_data_test);
+	CU_add_test(suite, "dif_sec_512_md_8_prchk_7_multi_iovs_split_guard_test",
+		    dif_sec_512_md_8_prchk_7_multi_iovs_split_guard_test);
+	CU_add_test(suite, "dif_sec_512_md_8_prchk_7_multi_iovs_split_apptag_test",
+		    dif_sec_512_md_8_prchk_7_multi_iovs_split_apptag_test);
+	CU_add_test(suite, "dif_sec_512_md_8_prchk_7_multi_iovs_split_reftag_test",
+		    dif_sec_512_md_8_prchk_7_multi_iovs_split_reftag_test);
+	CU_add_test(suite, "dif_sec_512_md_8_prchk_7_multi_iovs_complex_splits_test",
+		    dif_sec_512_md_8_prchk_7_multi_iovs_complex_splits_test);
+	CU_add_test(suite, "dif_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_test",
+		    dif_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_test);
+	CU_add_test(suite, "dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_test",
+		    dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_test);
+	CU_add_test(suite, "dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_data_and_md_test",
+		    dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_data_and_md_test);
+	CU_add_test(suite, "dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_data_test",
+		    dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_data_test);
+	CU_add_test(suite, "dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_guard_test",
+		    dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_guard_test);
+	CU_add_test(suite, "dif_sec_4096_md_128_inject_1_2_4_8__multi_iovs_split_apptag_test",
+		    dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_apptag_test);
+	CU_add_test(suite, "dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_reftag_test",
+		    dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_reftag_test);
+	CU_add_test(suite, "dif_copy_sec_512_md_8_prchk_0_single_iov",
+		    dif_copy_sec_512_md_8_prchk_0_single_iov);
+	CU_add_test(suite, "dif_copy_sec_512_md_8_prchk_0_1_2_4_multi_iovs",
+		    dif_copy_sec_512_md_8_prchk_0_1_2_4_multi_iovs);
+	CU_add_test(suite, "dif_copy_sec_4096_md_128_prchk_7_multi_iovs",
+		    dif_copy_sec_4096_md_128_prchk_7_multi_iovs);
+	CU_add_test(suite, "dif_copy_sec_512_md_8_prchk_7_multi_iovs_split_data",
+		    dif_copy_sec_512_md_8_prchk_7_multi_iovs_split_data);
+	CU_add_test(suite, "dif_copy_sec_512_md_8_prchk_7_multi_iovs_complex_splits",
+		    dif_copy_sec_512_md_8_prchk_7_multi_iovs_complex_splits);
+	CU_add_test(suite, "dif_copy_sec_4096_md_128_inject_1_2_4_8_multi_iovs_test",
+		    dif_copy_sec_4096_md_128_inject_1_2_4_8_multi_iovs_test);
+	CU_add_test(suite, "dif_copy_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_test",
+		    dif_copy_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_test);
+	CU_add_test(suite, "dix_sec_512_md_0_error", dix_sec_512_md_0_error);
+	CU_add_test(suite, "dix_sec_512_md_8_prchk_0_single_iov",
+		    dix_sec_512_md_8_prchk_0_single_iov);
+	CU_add_test(suite, "dix_sec_512_md_8_prchk_0_1_2_4_multi_iovs",
+		    dix_sec_512_md_8_prchk_0_1_2_4_multi_iovs);
+	CU_add_test(suite, "dix_sec_4096_md_128_prchk_7_multi_iovs",
+		    dix_sec_4096_md_128_prchk_7_multi_iovs);
+	CU_add_test(suite, "dix_sec_512_md_8_prchk_7_multi_iovs_split_data",
+		    dix_sec_512_md_8_prchk_7_multi_iovs_split_data);
+	CU_add_test(suite, "dix_sec_512_md_8_prchk_7_multi_iovs_complex_splits",
+		    dix_sec_512_md_8_prchk_7_multi_iovs_complex_splits);
+	CU_add_test(suite, "dix_sec_4096_md_128_inject_1_2_4_8_multi_iovs_test",
+		    dix_sec_4096_md_128_inject_1_2_4_8_multi_iovs_test);
+	CU_add_test(suite, "dix_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_test",
+		    dix_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_test);
+	CU_add_test(suite, "set_md_interleave_iovs_test", set_md_interleave_iovs_test);
+	CU_add_test(suite, "set_md_interleave_iovs_split_test",
+		    set_md_interleave_iovs_split_test);
+	CU_add_test(suite, "dif_generate_stream_test", dif_generate_stream_test);
+	CU_add_test(suite, "set_md_interleave_iovs_alignment_test",
+		    set_md_interleave_iovs_alignment_test);
+	CU_add_test(suite, "_dif_generate_split_test", _dif_generate_split_test);
+	CU_add_test(suite, "set_md_interleave_iovs_multi_segments_test",
+		    set_md_interleave_iovs_multi_segments_test);
+	CU_add_test(suite, "_dif_verify_split_test", _dif_verify_split_test);
+	CU_add_test(suite, "dif_verify_stream_multi_segments_test",
+		    dif_verify_stream_multi_segments_test);
+	CU_add_test(suite, "update_crc32c_test", update_crc32c_test);
+	CU_add_test(suite, "_dif_update_crc32c_split_test",
+		    _dif_update_crc32c_split_test);
+	CU_add_test(suite, "dif_update_crc32c_stream_multi_segments_test",
+		    dif_update_crc32c_stream_multi_segments_test);
+	CU_add_test(suite, "get_range_with_md_test", get_range_with_md_test);
+	CU_add_test(suite, "dif_sec_4096_md_128_prchk_7_multi_iovs_remap_test",
+		    dif_sec_4096_md_128_prchk_7_multi_iovs_remap_test);
+	CU_add_test(suite, "dif_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_remap_test",
+		    dif_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_remap_test);
+	CU_add_test(suite, "dix_sec_4096_md_128_prchk_7_multi_iovs_remap",
+		    dix_sec_4096_md_128_prchk_7_multi_iovs_remap);
+	CU_add_test(suite, "dix_sec_512_md_8_prchk_7_multi_iovs_complex_splits_remap",
+		    dix_sec_512_md_8_prchk_7_multi_iovs_complex_splits_remap);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

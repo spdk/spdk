@@ -1599,37 +1599,28 @@ int main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("nvmf", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
-
-	if (CU_add_test(suite, "get_log_page", test_get_log_page) == NULL ||
-	    CU_add_test(suite, "process_fabrics_cmd", test_process_fabrics_cmd) == NULL ||
-	    CU_add_test(suite, "connect", test_connect) == NULL ||
-	    CU_add_test(suite, "get_ns_id_desc_list", test_get_ns_id_desc_list) == NULL ||
-	    CU_add_test(suite, "identify_ns", test_identify_ns) == NULL ||
-	    CU_add_test(suite, "reservation_write_exclusive", test_reservation_write_exclusive) == NULL ||
-	    CU_add_test(suite, "reservation_exclusive_access", test_reservation_exclusive_access) == NULL ||
-	    CU_add_test(suite, "reservation_write_exclusive_regs_only_and_all_regs",
-			test_reservation_write_exclusive_regs_only_and_all_regs) == NULL ||
-	    CU_add_test(suite, "reservation_exclusive_access_regs_only_and_all_regs",
-			test_reservation_exclusive_access_regs_only_and_all_regs) == NULL ||
-	    CU_add_test(suite, "reservation_notification_log_page",
-			test_reservation_notification_log_page) == NULL ||
-	    CU_add_test(suite, "get_dif_ctx", test_get_dif_ctx) == NULL ||
-	    CU_add_test(suite, "set_get_features", test_set_get_features) == NULL ||
-	    CU_add_test(suite, "identify_ctrlr", test_identify_ctrlr) == NULL ||
-	    CU_add_test(suite, "custom_admin_cmd", test_custom_admin_cmd) == NULL ||
-	    CU_add_test(suite, "fused_compare_and_write", test_fused_compare_and_write) == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "get_log_page", test_get_log_page);
+	CU_add_test(suite, "process_fabrics_cmd", test_process_fabrics_cmd);
+	CU_add_test(suite, "connect", test_connect);
+	CU_add_test(suite, "get_ns_id_desc_list", test_get_ns_id_desc_list);
+	CU_add_test(suite, "identify_ns", test_identify_ns);
+	CU_add_test(suite, "reservation_write_exclusive", test_reservation_write_exclusive);
+	CU_add_test(suite, "reservation_exclusive_access", test_reservation_exclusive_access);
+	CU_add_test(suite, "reservation_write_exclusive_regs_only_and_all_regs",
+		    test_reservation_write_exclusive_regs_only_and_all_regs);
+	CU_add_test(suite, "reservation_exclusive_access_regs_only_and_all_regs",
+		    test_reservation_exclusive_access_regs_only_and_all_regs);
+	CU_add_test(suite, "reservation_notification_log_page",
+		    test_reservation_notification_log_page);
+	CU_add_test(suite, "get_dif_ctx", test_get_dif_ctx);
+	CU_add_test(suite, "set_get_features", test_set_get_features);
+	CU_add_test(suite, "identify_ctrlr", test_identify_ctrlr);
+	CU_add_test(suite, "custom_admin_cmd", test_custom_admin_cmd);
+	CU_add_test(suite, "fused_compare_and_write", test_fused_compare_and_write);
 
 	allocate_threads(1);
 	set_thread(0);

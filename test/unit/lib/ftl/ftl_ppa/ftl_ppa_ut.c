@@ -202,37 +202,25 @@ main(int argc, char **argv)
 	CU_pSuite suite32 = NULL, suite64 = NULL;
 	unsigned int num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite32 = CU_add_suite("ftl_addr32_suite", setup_l2p_32bit, cleanup);
-	if (!suite32) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+
 
 	suite64 = CU_add_suite("ftl_addr64_suite", setup_l2p_64bit, cleanup);
-	if (!suite64) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite32, "test_addr_pack",
-			    test_addr_pack32) == NULL
-		|| CU_add_test(suite32, "test_addr32_invalid",
-			       test_addr_invalid) == NULL
-		|| CU_add_test(suite32, "test_addr32_cached",
-			       test_addr_cached) == NULL
-		|| CU_add_test(suite64, "test_addr64_invalid",
-			       test_addr_invalid) == NULL
-		|| CU_add_test(suite64, "test_addr64_cached",
-			       test_addr_cached) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+
+	CU_add_test(suite32, "test_addr_pack",
+		    test_addr_pack32);
+	CU_add_test(suite32, "test_addr32_invalid",
+		    test_addr_invalid);
+	CU_add_test(suite32, "test_addr32_cached",
+		    test_addr_cached);
+	CU_add_test(suite64, "test_addr64_invalid",
+		    test_addr_invalid);
+	CU_add_test(suite64, "test_addr64_cached",
+		    test_addr_cached);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

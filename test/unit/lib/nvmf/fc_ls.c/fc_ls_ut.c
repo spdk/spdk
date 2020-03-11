@@ -1026,87 +1026,43 @@ int main(int argc, char **argv)
 		}
 	}
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("FC-NVMe LS", ls_tests_init, ls_tests_fini);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
 	if (test == 0) {
 
-		if (CU_add_test(suite, "CASS/DISC", create_single_assoc_test) == NULL) {
-			CU_cleanup_registry();
-			return CU_get_error();
-		}
+		CU_add_test(suite, "CASS/DISC", create_single_assoc_test);
 
-		if (CU_add_test(suite, "Max. Connections", create_max_conns_test) == NULL) {
-			CU_cleanup_registry();
-			return CU_get_error();
-		}
+		CU_add_test(suite, "Max. Connections", create_max_conns_test);
+		CU_add_test(suite, "CIOC to bad assoc_id", invalid_connection_test);
+		CU_add_test(suite, "DISC bad assoc_id", disconnect_bad_assoc_test);
 
-		if (CU_add_test(suite, "CIOC to bad assoc_id", invalid_connection_test) == NULL) {
-			CU_cleanup_registry();
-			return CU_get_error();
-		}
-
-		if (CU_add_test(suite, "DISC bad assoc_id", disconnect_bad_assoc_test) == NULL) {
-			CU_cleanup_registry();
-			return CU_get_error();
-		}
-
-		if (CU_add_test(suite, "Create/delete max. assocs/conns", create_max_aq_conns_test) == NULL) {
-			CU_cleanup_registry();
-			return CU_get_error();
-		}
-
-		if (CU_add_test(suite, "Xmt LS RSP ERR Cleanup", xmt_ls_rsp_failure_test) == NULL) {
-			CU_cleanup_registry();
-			return CU_get_error();
-		}
+		CU_add_test(suite, "Create/delete max. assocs/conns", create_max_aq_conns_test);
+		CU_add_test(suite, "Xmt LS RSP ERR Cleanup", xmt_ls_rsp_failure_test);
 
 	} else {
 
 		switch (test) {
 		case 1:
-			if (CU_add_test(suite, "CASS/DISC", create_single_assoc_test) == NULL) {
-				CU_cleanup_registry();
-				return CU_get_error();
-			}
+			CU_add_test(suite, "CASS/DISC", create_single_assoc_test);
 			break;
 		case 2:
-			if (CU_add_test(suite, "Max. Connections", create_max_conns_test) == NULL) {
-				CU_cleanup_registry();
-				return CU_get_error();
-			}
+			CU_add_test(suite, "Max. Connections", create_max_conns_test);
 			break;
 		case 3:
-			if (CU_add_test(suite, "CIOC to bad assoc_id", invalid_connection_test) == NULL) {
-				CU_cleanup_registry();
-				return CU_get_error();
-			}
+			CU_add_test(suite, "CIOC to bad assoc_id", invalid_connection_test);
 			break;
 		case 4:
-			if (CU_add_test(suite, "Create/delete max. assocs/conns",
-					create_max_aq_conns_test) == NULL) {
-				CU_cleanup_registry();
-				return CU_get_error();
-			}
+			CU_add_test(suite, "Create/delete max. assocs/conns",
+				    create_max_aq_conns_test);
 			break;
 		case 5:
-			if (CU_add_test(suite, "Xmt LS RSP ERR Cleanup", xmt_ls_rsp_failure_test) == NULL) {
-				CU_cleanup_registry();
-				return CU_get_error();
-			}
+			CU_add_test(suite, "Xmt LS RSP ERR Cleanup", xmt_ls_rsp_failure_test);
 			break;
 		case 6:
-			if (CU_add_test(suite, "DISC bad assoc_id", disconnect_bad_assoc_test) == NULL) {
-				CU_cleanup_registry();
-				return CU_get_error();
-			}
+			CU_add_test(suite, "DISC bad assoc_id", disconnect_bad_assoc_test);
 			break;
 
 		default:

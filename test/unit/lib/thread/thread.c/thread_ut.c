@@ -1006,33 +1006,23 @@ main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("io_channel", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "thread_alloc", thread_alloc) == NULL ||
-		CU_add_test(suite, "thread_send_msg", thread_send_msg) == NULL ||
-		CU_add_test(suite, "thread_poller", thread_poller) == NULL ||
-		CU_add_test(suite, "poller_pause", poller_pause) == NULL ||
-		CU_add_test(suite, "thread_for_each", thread_for_each) == NULL ||
-		CU_add_test(suite, "for_each_channel_remove", for_each_channel_remove) == NULL ||
-		CU_add_test(suite, "for_each_channel_unreg", for_each_channel_unreg) == NULL ||
-		CU_add_test(suite, "thread_name", thread_name) == NULL ||
-		CU_add_test(suite, "channel", channel) == NULL ||
-		CU_add_test(suite, "channel_destroy_races", channel_destroy_races) == NULL ||
-		CU_add_test(suite, "thread_exit", thread_exit) == NULL ||
-		CU_add_test(suite, "thread_update_stats", thread_update_stats) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "thread_alloc", thread_alloc);
+	CU_add_test(suite, "thread_send_msg", thread_send_msg);
+	CU_add_test(suite, "thread_poller", thread_poller);
+	CU_add_test(suite, "poller_pause", poller_pause);
+	CU_add_test(suite, "thread_for_each", thread_for_each);
+	CU_add_test(suite, "for_each_channel_remove", for_each_channel_remove);
+	CU_add_test(suite, "for_each_channel_unreg", for_each_channel_unreg);
+	CU_add_test(suite, "thread_name", thread_name);
+	CU_add_test(suite, "channel", channel);
+	CU_add_test(suite, "channel_destroy_races", channel_destroy_races);
+	CU_add_test(suite, "thread_exit", thread_exit);
+	CU_add_test(suite, "thread_update_stats", thread_update_stats);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

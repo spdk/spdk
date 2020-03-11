@@ -1397,38 +1397,28 @@ int main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("lvol", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "ut_lvs_init", ut_lvs_init) == NULL ||
-		CU_add_test(suite, "ut_lvol_init", ut_lvol_init) == NULL ||
-		CU_add_test(suite, "ut_lvol_snapshot", ut_lvol_snapshot) == NULL ||
-		CU_add_test(suite, "ut_lvol_clone", ut_lvol_clone) == NULL ||
-		CU_add_test(suite, "ut_lvs_destroy", ut_lvs_destroy) == NULL ||
-		CU_add_test(suite, "ut_lvs_unload", ut_lvs_unload) == NULL ||
-		CU_add_test(suite, "ut_lvol_resize", ut_lvol_resize) == NULL ||
-		CU_add_test(suite, "ut_lvol_set_read_only", ut_lvol_set_read_only) == NULL ||
-		CU_add_test(suite, "lvol_hotremove", ut_lvol_hotremove) == NULL ||
-		CU_add_test(suite, "ut_vbdev_lvol_get_io_channel", ut_vbdev_lvol_get_io_channel) == NULL ||
-		CU_add_test(suite, "ut_vbdev_lvol_io_type_supported", ut_vbdev_lvol_io_type_supported) == NULL ||
-		CU_add_test(suite, "ut_lvol_read_write", ut_lvol_read_write) == NULL ||
-		CU_add_test(suite, "ut_vbdev_lvol_submit_request", ut_vbdev_lvol_submit_request) == NULL ||
-		CU_add_test(suite, "lvol_examine", ut_lvol_examine) == NULL ||
-		CU_add_test(suite, "ut_lvol_rename", ut_lvol_rename) == NULL ||
-		CU_add_test(suite, "ut_lvol_destroy", ut_lvol_destroy) == NULL ||
-		CU_add_test(suite, "ut_lvs_rename", ut_lvs_rename) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "ut_lvs_init", ut_lvs_init);
+	CU_add_test(suite, "ut_lvol_init", ut_lvol_init);
+	CU_add_test(suite, "ut_lvol_snapshot", ut_lvol_snapshot);
+	CU_add_test(suite, "ut_lvol_clone", ut_lvol_clone);
+	CU_add_test(suite, "ut_lvs_destroy", ut_lvs_destroy);
+	CU_add_test(suite, "ut_lvs_unload", ut_lvs_unload);
+	CU_add_test(suite, "ut_lvol_resize", ut_lvol_resize);
+	CU_add_test(suite, "ut_lvol_set_read_only", ut_lvol_set_read_only);
+	CU_add_test(suite, "lvol_hotremove", ut_lvol_hotremove);
+	CU_add_test(suite, "ut_vbdev_lvol_get_io_channel", ut_vbdev_lvol_get_io_channel);
+	CU_add_test(suite, "ut_vbdev_lvol_io_type_supported", ut_vbdev_lvol_io_type_supported);
+	CU_add_test(suite, "ut_lvol_read_write", ut_lvol_read_write);
+	CU_add_test(suite, "ut_vbdev_lvol_submit_request", ut_vbdev_lvol_submit_request);
+	CU_add_test(suite, "lvol_examine", ut_lvol_examine);
+	CU_add_test(suite, "ut_lvol_rename", ut_lvol_rename);
+	CU_add_test(suite, "ut_lvol_destroy", ut_lvol_destroy);
+	CU_add_test(suite, "ut_lvs_rename", ut_lvs_rename);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

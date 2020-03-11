@@ -1308,40 +1308,30 @@ int main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("nvmf", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "create_subsystem", nvmf_test_create_subsystem) == NULL ||
-		CU_add_test(suite, "nvmf_subsystem_add_ns", test_spdk_nvmf_subsystem_add_ns) == NULL ||
-		CU_add_test(suite, "nvmf_subsystem_set_sn", test_spdk_nvmf_subsystem_set_sn) == NULL ||
-		CU_add_test(suite, "reservation_register", test_reservation_register) == NULL ||
-		CU_add_test(suite, "reservation_register_with_ptpl", test_reservation_register_with_ptpl) == NULL ||
-		CU_add_test(suite, "reservation_acquire_preempt_1", test_reservation_acquire_preempt_1) == NULL ||
-		CU_add_test(suite, "reservation_acquire_release_with_ptpl",
-			    test_reservation_acquire_release_with_ptpl) == NULL ||
-		CU_add_test(suite, "reservation_release", test_reservation_release) == NULL ||
-		CU_add_test(suite, "reservation_unregister_notification",
-			    test_reservation_unregister_notification) == NULL ||
-		CU_add_test(suite, "reservation_release_notification",
-			    test_reservation_release_notification) == NULL ||
-		CU_add_test(suite, "reservation_release_notification_write_exclusive",
-			    test_reservation_release_notification_write_exclusive) == NULL ||
-		CU_add_test(suite, "reservation_clear_notification", test_reservation_clear_notification) == NULL ||
-		CU_add_test(suite, "reservation_preempt_notification",
-			    test_reservation_preempt_notification) == NULL ||
-		CU_add_test(suite, "spdk_nvmf_ns_event", test_spdk_nvmf_ns_event) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "create_subsystem", nvmf_test_create_subsystem);
+	CU_add_test(suite, "nvmf_subsystem_add_ns", test_spdk_nvmf_subsystem_add_ns);
+	CU_add_test(suite, "nvmf_subsystem_set_sn", test_spdk_nvmf_subsystem_set_sn);
+	CU_add_test(suite, "reservation_register", test_reservation_register);
+	CU_add_test(suite, "reservation_register_with_ptpl", test_reservation_register_with_ptpl);
+	CU_add_test(suite, "reservation_acquire_preempt_1", test_reservation_acquire_preempt_1);
+	CU_add_test(suite, "reservation_acquire_release_with_ptpl",
+		    test_reservation_acquire_release_with_ptpl);
+	CU_add_test(suite, "reservation_release", test_reservation_release);
+	CU_add_test(suite, "reservation_unregister_notification",
+		    test_reservation_unregister_notification);
+	CU_add_test(suite, "reservation_release_notification",
+		    test_reservation_release_notification);
+	CU_add_test(suite, "reservation_release_notification_write_exclusive",
+		    test_reservation_release_notification_write_exclusive);
+	CU_add_test(suite, "reservation_clear_notification", test_reservation_clear_notification);
+	CU_add_test(suite, "reservation_preempt_notification",
+		    test_reservation_preempt_notification);
+	CU_add_test(suite, "spdk_nvmf_ns_event", test_spdk_nvmf_ns_event);
 
 	allocate_threads(1);
 	set_thread(0);

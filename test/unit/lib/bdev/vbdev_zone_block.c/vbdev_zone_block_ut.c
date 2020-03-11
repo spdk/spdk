@@ -1465,32 +1465,22 @@ int main(int argc, char **argv)
 	CU_pSuite       suite = NULL;
 	unsigned int    num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("zone_block", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "test_zone_block_create", test_zone_block_create) == NULL ||
-		CU_add_test(suite, "test_zone_block_create_invalid", test_zone_block_create_invalid) == NULL ||
-		CU_add_test(suite, "test_get_zone_info", test_get_zone_info) == NULL ||
-		CU_add_test(suite, "test_supported_io_types", test_supported_io_types) == NULL ||
-		CU_add_test(suite, "test_reset_zone", test_reset_zone) == NULL ||
-		CU_add_test(suite, "test_open_zone", test_open_zone) == NULL ||
-		CU_add_test(suite, "test_zone_write", test_zone_write) == NULL ||
-		CU_add_test(suite, "test_zone_read", test_zone_read) == NULL ||
-		CU_add_test(suite, "test_close_zone", test_close_zone) == NULL ||
-		CU_add_test(suite, "test_finish_zone", test_finish_zone) == NULL ||
-		CU_add_test(suite, "test_append_zone", test_append_zone) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "test_zone_block_create", test_zone_block_create);
+	CU_add_test(suite, "test_zone_block_create_invalid", test_zone_block_create_invalid);
+	CU_add_test(suite, "test_get_zone_info", test_get_zone_info);
+	CU_add_test(suite, "test_supported_io_types", test_supported_io_types);
+	CU_add_test(suite, "test_reset_zone", test_reset_zone);
+	CU_add_test(suite, "test_open_zone", test_open_zone);
+	CU_add_test(suite, "test_zone_write", test_zone_write);
+	CU_add_test(suite, "test_zone_read", test_zone_read);
+	CU_add_test(suite, "test_close_zone", test_close_zone);
+	CU_add_test(suite, "test_finish_zone", test_finish_zone);
+	CU_add_test(suite, "test_append_zone", test_append_zone);
 
 	g_thread = spdk_thread_create("test", NULL);
 	spdk_set_thread(g_thread);

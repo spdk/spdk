@@ -435,30 +435,20 @@ int main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("nvme_tcp", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
-
-	if (CU_add_test(suite, "nvme_tcp_pdu_set_data_buf",
-			test_nvme_tcp_pdu_set_data_buf) == NULL ||
-	    CU_add_test(suite, "nvme_tcp_build_iovs",
-			test_nvme_tcp_build_iovs) == NULL ||
-	    CU_add_test(suite, "build_sgl_request",
-			test_nvme_tcp_build_sgl_request) == NULL ||
-	    CU_add_test(suite, "nvme_tcp_pdu_set_data_buf_with_md",
-			test_nvme_tcp_pdu_set_data_buf_with_md) == NULL ||
-	    CU_add_test(suite, "nvme_tcp_build_iovs_with_md",
-			test_nvme_tcp_build_iovs_with_md) == NULL
-	   ) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "nvme_tcp_pdu_set_data_buf",
+		    test_nvme_tcp_pdu_set_data_buf);
+	CU_add_test(suite, "nvme_tcp_build_iovs",
+		    test_nvme_tcp_build_iovs);
+	CU_add_test(suite, "build_sgl_request",
+		    test_nvme_tcp_build_sgl_request);
+	CU_add_test(suite, "nvme_tcp_pdu_set_data_buf_with_md",
+		    test_nvme_tcp_pdu_set_data_buf_with_md);
+	CU_add_test(suite, "nvme_tcp_build_iovs_with_md",
+		    test_nvme_tcp_build_iovs_with_md);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

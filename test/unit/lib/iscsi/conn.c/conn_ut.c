@@ -890,32 +890,22 @@ main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("conn_suite", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "read task split in order", read_task_split_in_order_case) == NULL ||
-		CU_add_test(suite, "read task split reverse order",
-			    read_task_split_reverse_order_case) == NULL ||
-		CU_add_test(suite, "propagate_scsi_error_status_for_split_read_tasks",
-			    propagate_scsi_error_status_for_split_read_tasks) == NULL ||
-		CU_add_test(suite, "process_non_read_task_completion_test",
-			    process_non_read_task_completion_test) == NULL ||
-		CU_add_test(suite, "free_tasks_on_connection", free_tasks_on_connection) == NULL ||
-		CU_add_test(suite, "free_tasks_with_queued_datain", free_tasks_with_queued_datain) == NULL ||
-		CU_add_test(suite, "abort_queued_datain_task_test", abort_queued_datain_task_test) == NULL ||
-		CU_add_test(suite, "abort_queued_datain_tasks_test", abort_queued_datain_tasks_test) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "read task split in order", read_task_split_in_order_case);
+	CU_add_test(suite, "read task split reverse order",
+		    read_task_split_reverse_order_case);
+	CU_add_test(suite, "propagate_scsi_error_status_for_split_read_tasks",
+		    propagate_scsi_error_status_for_split_read_tasks);
+	CU_add_test(suite, "process_non_read_task_completion_test",
+		    process_non_read_task_completion_test);
+	CU_add_test(suite, "free_tasks_on_connection", free_tasks_on_connection);
+	CU_add_test(suite, "free_tasks_with_queued_datain", free_tasks_with_queued_datain);
+	CU_add_test(suite, "abort_queued_datain_task_test", abort_queued_datain_task_test);
+	CU_add_test(suite, "abort_queued_datain_tasks_test", abort_queued_datain_tasks_test);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

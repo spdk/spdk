@@ -229,23 +229,14 @@ main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("iov", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "test_single_iov", test_single_iov) == NULL ||
-		CU_add_test(suite, "test_simple_iov", test_simple_iov) == NULL ||
-		CU_add_test(suite, "test_complex_iov", test_complex_iov) == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "test_single_iov", test_single_iov);
+	CU_add_test(suite, "test_simple_iov", test_simple_iov);
+	CU_add_test(suite, "test_complex_iov", test_complex_iov);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

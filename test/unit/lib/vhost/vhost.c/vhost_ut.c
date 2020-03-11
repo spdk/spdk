@@ -408,26 +408,16 @@ main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("vhost_suite", test_setup, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "desc_to_iov", desc_to_iov_test) == NULL ||
-		CU_add_test(suite, "create_controller", create_controller_test) == NULL ||
-		CU_add_test(suite, "session_find_by_vid", session_find_by_vid_test) == NULL ||
-		CU_add_test(suite, "remove_controller", remove_controller_test) == NULL ||
-		CU_add_test(suite, "vq_avail_ring_get", vq_avail_ring_get_test) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "desc_to_iov", desc_to_iov_test);
+	CU_add_test(suite, "create_controller", create_controller_test);
+	CU_add_test(suite, "session_find_by_vid", session_find_by_vid_test);
+	CU_add_test(suite, "remove_controller", remove_controller_test);
+	CU_add_test(suite, "vq_avail_ring_get", vq_avail_ring_get_test);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

@@ -923,34 +923,25 @@ int main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("json", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "strequal", test_strequal) == NULL ||
-		CU_add_test(suite, "num_to_uint16", test_num_to_uint16) == NULL ||
-		CU_add_test(suite, "num_to_int32", test_num_to_int32) == NULL ||
-		CU_add_test(suite, "num_to_uint64", test_num_to_uint64) == NULL ||
-		CU_add_test(suite, "decode_object", test_decode_object) == NULL ||
-		CU_add_test(suite, "decode_array", test_decode_array) == NULL ||
-		CU_add_test(suite, "decode_bool", test_decode_bool) == NULL ||
-		CU_add_test(suite, "decode_uint16", test_decode_uint16) == NULL ||
-		CU_add_test(suite, "decode_int32", test_decode_int32) == NULL ||
-		CU_add_test(suite, "decode_uint32", test_decode_uint32) == NULL ||
-		CU_add_test(suite, "decode_uint64", test_decode_uint64) == NULL ||
-		CU_add_test(suite, "decode_string", test_decode_string) == NULL ||
-		CU_add_test(suite, "find_object", test_find) == NULL ||
-		CU_add_test(suite, "iterating", test_iterating) == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "strequal", test_strequal);
+	CU_add_test(suite, "num_to_uint16", test_num_to_uint16);
+	CU_add_test(suite, "num_to_int32", test_num_to_int32);
+	CU_add_test(suite, "num_to_uint64", test_num_to_uint64);
+	CU_add_test(suite, "decode_object", test_decode_object);
+	CU_add_test(suite, "decode_array", test_decode_array);
+	CU_add_test(suite, "decode_bool", test_decode_bool);
+	CU_add_test(suite, "decode_uint16", test_decode_uint16);
+	CU_add_test(suite, "decode_int32", test_decode_int32);
+	CU_add_test(suite, "decode_uint32", test_decode_uint32);
+	CU_add_test(suite, "decode_uint64", test_decode_uint64);
+	CU_add_test(suite, "decode_string", test_decode_string);
+	CU_add_test(suite, "find_object", test_find);
+	CU_add_test(suite, "iterating", test_iterating);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

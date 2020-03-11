@@ -484,33 +484,24 @@ main(int argc, char **argv)
 	CU_pSuite suite = NULL;
 	unsigned int num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("ftl_band_suite", NULL, NULL);
-	if (!suite) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "test_reloc_iter_full",
-			    test_reloc_iter_full) == NULL
-		|| CU_add_test(suite, "test_reloc_empty_band",
-			       test_reloc_empty_band) == NULL
-		|| CU_add_test(suite, "test_reloc_full_band",
-			       test_reloc_full_band) == NULL
-		|| CU_add_test(suite, "test_reloc_scatter_band",
-			       test_reloc_scatter_band) == NULL
-		|| CU_add_test(suite, "test_reloc_zone",
-			       test_reloc_zone) == NULL
-		|| CU_add_test(suite, "test_reloc_single_block",
-			       test_reloc_single_block) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+
+	CU_add_test(suite, "test_reloc_iter_full",
+		    test_reloc_iter_full);
+	CU_add_test(suite, "test_reloc_empty_band",
+		    test_reloc_empty_band);
+	CU_add_test(suite, "test_reloc_full_band",
+		    test_reloc_full_band);
+	CU_add_test(suite, "test_reloc_scatter_band",
+		    test_reloc_scatter_band);
+	CU_add_test(suite, "test_reloc_zone",
+		    test_reloc_zone);
+	CU_add_test(suite, "test_reloc_single_block",
+		    test_reloc_single_block);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

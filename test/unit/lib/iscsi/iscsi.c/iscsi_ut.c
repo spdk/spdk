@@ -1969,46 +1969,36 @@ main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("iscsi_suite", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "login check target test", op_login_check_target_test) == NULL
-		|| CU_add_test(suite, "login_session_normal_test", op_login_session_normal_test) == NULL
-		|| CU_add_test(suite, "maxburstlength test", maxburstlength_test) == NULL
-		|| CU_add_test(suite, "underflow for read transfer test",
-			       underflow_for_read_transfer_test) == NULL
-		|| CU_add_test(suite, "underflow for zero read transfer test",
-			       underflow_for_zero_read_transfer_test) == NULL
-		|| CU_add_test(suite, "underflow for request sense test",
-			       underflow_for_request_sense_test) == NULL
-		|| CU_add_test(suite, "underflow for check condition test",
-			       underflow_for_check_condition_test) == NULL
-		|| CU_add_test(suite, "add transfer task test", add_transfer_task_test) == NULL
-		|| CU_add_test(suite, "get transfer task test", get_transfer_task_test) == NULL
-		|| CU_add_test(suite, "del transfer task test", del_transfer_task_test) == NULL
-		|| CU_add_test(suite, "clear all transfer tasks test",
-			       clear_all_transfer_tasks_test) == NULL
-		|| CU_add_test(suite, "build_iovs_test", build_iovs_test) == NULL
-		|| CU_add_test(suite, "build_iovs_with_md_test", build_iovs_with_md_test) == NULL
-		|| CU_add_test(suite, "pdu_hdr_op_login_test", pdu_hdr_op_login_test) == NULL
-		|| CU_add_test(suite, "pdu_hdr_op_text_test", pdu_hdr_op_text_test) == NULL
-		|| CU_add_test(suite, "pdu_hdr_op_logout_test", pdu_hdr_op_logout_test) == NULL
-		|| CU_add_test(suite, "pdu_hdr_op_scsi_test", pdu_hdr_op_scsi_test) == NULL
-		|| CU_add_test(suite, "pdu_hdr_op_task_mgmt_test", pdu_hdr_op_task_mgmt_test) == NULL
-		|| CU_add_test(suite, "pdu_hdr_op_nopout_test", pdu_hdr_op_nopout_test) == NULL
-		|| CU_add_test(suite, "pdu_hdr_op_data_test", pdu_hdr_op_data_test) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "login check target test", op_login_check_target_test);
+	CU_add_test(suite, "login_session_normal_test", op_login_session_normal_test);
+	CU_add_test(suite, "maxburstlength test", maxburstlength_test);
+	CU_add_test(suite, "underflow for read transfer test",
+		    underflow_for_read_transfer_test);
+	CU_add_test(suite, "underflow for zero read transfer test",
+		    underflow_for_zero_read_transfer_test);
+	CU_add_test(suite, "underflow for request sense test",
+		    underflow_for_request_sense_test);
+	CU_add_test(suite, "underflow for check condition test",
+		    underflow_for_check_condition_test);
+	CU_add_test(suite, "add transfer task test", add_transfer_task_test);
+	CU_add_test(suite, "get transfer task test", get_transfer_task_test);
+	CU_add_test(suite, "del transfer task test", del_transfer_task_test);
+	CU_add_test(suite, "clear all transfer tasks test",
+		    clear_all_transfer_tasks_test);
+	CU_add_test(suite, "build_iovs_test", build_iovs_test);
+	CU_add_test(suite, "build_iovs_with_md_test", build_iovs_with_md_test);
+	CU_add_test(suite, "pdu_hdr_op_login_test", pdu_hdr_op_login_test);
+	CU_add_test(suite, "pdu_hdr_op_text_test", pdu_hdr_op_text_test);
+	CU_add_test(suite, "pdu_hdr_op_logout_test", pdu_hdr_op_logout_test);
+	CU_add_test(suite, "pdu_hdr_op_scsi_test", pdu_hdr_op_scsi_test);
+	CU_add_test(suite, "pdu_hdr_op_task_mgmt_test", pdu_hdr_op_task_mgmt_test);
+	CU_add_test(suite, "pdu_hdr_op_nopout_test", pdu_hdr_op_nopout_test);
+	CU_add_test(suite, "pdu_hdr_op_data_test", pdu_hdr_op_data_test);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

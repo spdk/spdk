@@ -1280,23 +1280,15 @@ int main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("nvmf", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (!CU_add_test(suite, "test_parse_sgl", test_spdk_nvmf_rdma_request_parse_sgl) ||
-	    !CU_add_test(suite, "test_request_process", test_spdk_nvmf_rdma_request_process) ||
-	    !CU_add_test(suite, "test_optimal_pg", test_spdk_nvmf_rdma_get_optimal_poll_group) ||
-	    !CU_add_test(suite, "test_parse_sgl_with_md", test_spdk_nvmf_rdma_request_parse_sgl_with_md)) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "test_parse_sgl", test_spdk_nvmf_rdma_request_parse_sgl);
+	CU_add_test(suite, "test_request_process", test_spdk_nvmf_rdma_request_process);
+	CU_add_test(suite, "test_optimal_pg", test_spdk_nvmf_rdma_get_optimal_poll_group);
+	CU_add_test(suite, "test_parse_sgl_with_md", test_spdk_nvmf_rdma_request_parse_sgl_with_md);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

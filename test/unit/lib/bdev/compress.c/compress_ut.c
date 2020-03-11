@@ -1101,36 +1101,26 @@ main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("compress", test_setup, test_cleanup);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
-
-	if (CU_add_test(suite, "test_compress_operation",
-			test_compress_operation) == NULL ||
-	    CU_add_test(suite, "test_compress_operation_cross_boundary",
-			test_compress_operation_cross_boundary) == NULL ||
-	    CU_add_test(suite, "vbdev_compress_submit_request",
-			test_vbdev_compress_submit_request) == NULL ||
-	    CU_add_test(suite, "test_passthru",
-			test_passthru) == NULL ||
-	    CU_add_test(suite, "test_initdrivers",
-			test_initdrivers) == NULL ||
-	    CU_add_test(suite, "test_supported_io",
-			test_supported_io) == NULL ||
-	    CU_add_test(suite, "test_poller",
-			test_poller) == NULL ||
-	    CU_add_test(suite, "test_reset",
-			test_reset) == NULL
-	   ) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "test_compress_operation",
+		    test_compress_operation);
+	CU_add_test(suite, "test_compress_operation_cross_boundary",
+		    test_compress_operation_cross_boundary);
+	CU_add_test(suite, "vbdev_compress_submit_request",
+		    test_vbdev_compress_submit_request);
+	CU_add_test(suite, "test_passthru",
+		    test_passthru);
+	CU_add_test(suite, "test_initdrivers",
+		    test_initdrivers);
+	CU_add_test(suite, "test_supported_io",
+		    test_supported_io);
+	CU_add_test(suite, "test_poller",
+		    test_poller);
+	CU_add_test(suite, "test_reset",
+		    test_reset);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

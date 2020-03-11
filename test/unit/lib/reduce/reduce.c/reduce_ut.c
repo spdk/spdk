@@ -1277,34 +1277,24 @@ main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("reduce", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "get_pm_file_size", get_pm_file_size) == NULL ||
-		CU_add_test(suite, "get_vol_size", get_vol_size) == NULL ||
-		CU_add_test(suite, "init_failure", init_failure) == NULL ||
-		CU_add_test(suite, "init_md", init_md) == NULL ||
-		CU_add_test(suite, "init_backing_dev", init_backing_dev) == NULL ||
-		CU_add_test(suite, "load", load) == NULL ||
-		CU_add_test(suite, "write_maps", write_maps) == NULL ||
-		CU_add_test(suite, "read_write", read_write) == NULL ||
-		CU_add_test(suite, "readv_writev", readv_writev) == NULL ||
-		CU_add_test(suite, "destroy", destroy) == NULL ||
-		CU_add_test(suite, "defer_bdev_io", defer_bdev_io) == NULL ||
-		CU_add_test(suite, "overlapped", overlapped) == NULL ||
-		CU_add_test(suite, "compress_algorithm", compress_algorithm) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "get_pm_file_size", get_pm_file_size);
+	CU_add_test(suite, "get_vol_size", get_vol_size);
+	CU_add_test(suite, "init_failure", init_failure);
+	CU_add_test(suite, "init_md", init_md);
+	CU_add_test(suite, "init_backing_dev", init_backing_dev);
+	CU_add_test(suite, "load", load);
+	CU_add_test(suite, "write_maps", write_maps);
+	CU_add_test(suite, "read_write", read_write);
+	CU_add_test(suite, "readv_writev", readv_writev);
+	CU_add_test(suite, "destroy", destroy);
+	CU_add_test(suite, "defer_bdev_io", defer_bdev_io);
+	CU_add_test(suite, "overlapped", overlapped);
+	CU_add_test(suite, "compress_algorithm", compress_algorithm);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

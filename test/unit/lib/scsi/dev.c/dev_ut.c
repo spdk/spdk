@@ -644,69 +644,59 @@ main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("dev_suite", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "destruct - null dev",
-			    dev_destruct_null_dev) == NULL
-		|| CU_add_test(suite, "destruct - zero luns", dev_destruct_zero_luns) == NULL
-		|| CU_add_test(suite, "destruct - null lun", dev_destruct_null_lun) == NULL
-		|| CU_add_test(suite, "destruct - success", dev_destruct_success) == NULL
-		|| CU_add_test(suite, "construct  - queue depth gt max depth",
-			       dev_construct_num_luns_zero) == NULL
-		|| CU_add_test(suite, "construct  - no lun0",
-			       dev_construct_no_lun_zero) == NULL
-		|| CU_add_test(suite, "construct  - null lun",
-			       dev_construct_null_lun) == NULL
-		|| CU_add_test(suite, "construct - name too long", dev_construct_name_too_long) == NULL
-		|| CU_add_test(suite, "construct  - success", dev_construct_success) == NULL
-		|| CU_add_test(suite, "construct - success - LUN zero not first",
-			       dev_construct_success_lun_zero_not_first) == NULL
-		|| CU_add_test(suite, "dev queue task mgmt - success",
-			       dev_queue_mgmt_task_success) == NULL
-		|| CU_add_test(suite, "dev queue task - success",
-			       dev_queue_task_success) == NULL
-		|| CU_add_test(suite, "dev stop - success", dev_stop_success) == NULL
-		|| CU_add_test(suite, "dev add port - max ports",
-			       dev_add_port_max_ports) == NULL
-		|| CU_add_test(suite, "dev add port - construct port failure 1",
-			       dev_add_port_construct_failure1) == NULL
-		|| CU_add_test(suite, "dev add port - construct port failure 2",
-			       dev_add_port_construct_failure2) == NULL
-		|| CU_add_test(suite, "dev add port - success 1",
-			       dev_add_port_success1) == NULL
-		|| CU_add_test(suite, "dev add port - success 2",
-			       dev_add_port_success2) == NULL
-		|| CU_add_test(suite, "dev add port - success 3",
-			       dev_add_port_success3) == NULL
-		|| CU_add_test(suite, "dev find port by id - num ports zero",
-			       dev_find_port_by_id_num_ports_zero) == NULL
-		|| CU_add_test(suite, "dev find port by id - different port id failure",
-			       dev_find_port_by_id_id_not_found_failure) == NULL
-		|| CU_add_test(suite, "dev find port by id - success",
-			       dev_find_port_by_id_success) == NULL
-		|| CU_add_test(suite, "dev add lun - bdev not found",
-			       dev_add_lun_bdev_not_found) == NULL
-		|| CU_add_test(suite, "dev add lun - no free lun id",
-			       dev_add_lun_no_free_lun_id) == NULL
-		|| CU_add_test(suite, "dev add lun - success 1",
-			       dev_add_lun_success1) == NULL
-		|| CU_add_test(suite, "dev add lun - success 2",
-			       dev_add_lun_success2) == NULL
-		|| CU_add_test(suite, "dev check pending tasks",
-			       dev_check_pending_tasks) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "destruct - null dev",
+		    dev_destruct_null_dev);
+	CU_add_test(suite, "destruct - zero luns", dev_destruct_zero_luns);
+	CU_add_test(suite, "destruct - null lun", dev_destruct_null_lun);
+	CU_add_test(suite, "destruct - success", dev_destruct_success);
+	CU_add_test(suite, "construct  - queue depth gt max depth",
+		    dev_construct_num_luns_zero);
+	CU_add_test(suite, "construct  - no lun0",
+		    dev_construct_no_lun_zero);
+	CU_add_test(suite, "construct  - null lun",
+		    dev_construct_null_lun);
+	CU_add_test(suite, "construct - name too long", dev_construct_name_too_long);
+	CU_add_test(suite, "construct  - success", dev_construct_success);
+	CU_add_test(suite, "construct - success - LUN zero not first",
+		    dev_construct_success_lun_zero_not_first);
+	CU_add_test(suite, "dev queue task mgmt - success",
+		    dev_queue_mgmt_task_success);
+	CU_add_test(suite, "dev queue task - success",
+		    dev_queue_task_success);
+	CU_add_test(suite, "dev stop - success", dev_stop_success);
+	CU_add_test(suite, "dev add port - max ports",
+		    dev_add_port_max_ports);
+	CU_add_test(suite, "dev add port - construct port failure 1",
+		    dev_add_port_construct_failure1);
+	CU_add_test(suite, "dev add port - construct port failure 2",
+		    dev_add_port_construct_failure2);
+	CU_add_test(suite, "dev add port - success 1",
+		    dev_add_port_success1);
+	CU_add_test(suite, "dev add port - success 2",
+		    dev_add_port_success2);
+	CU_add_test(suite, "dev add port - success 3",
+		    dev_add_port_success3);
+	CU_add_test(suite, "dev find port by id - num ports zero",
+		    dev_find_port_by_id_num_ports_zero);
+	CU_add_test(suite, "dev find port by id - different port id failure",
+		    dev_find_port_by_id_id_not_found_failure);
+	CU_add_test(suite, "dev find port by id - success",
+		    dev_find_port_by_id_success);
+	CU_add_test(suite, "dev add lun - bdev not found",
+		    dev_add_lun_bdev_not_found);
+	CU_add_test(suite, "dev add lun - no free lun id",
+		    dev_add_lun_no_free_lun_id);
+	CU_add_test(suite, "dev add lun - success 1",
+		    dev_add_lun_success1);
+	CU_add_test(suite, "dev add lun - success 2",
+		    dev_add_lun_success2);
+	CU_add_test(suite, "dev check pending tasks",
+		    dev_check_pending_tasks);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

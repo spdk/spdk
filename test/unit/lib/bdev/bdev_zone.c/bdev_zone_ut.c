@@ -410,26 +410,16 @@ main(int argc, char **argv)
 	CU_pSuite suite = NULL;
 	unsigned int num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("zone", test_setup, test_cleanup);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
-
-	if (CU_add_test(suite, "test_zone_get_operation", test_zone_get_operation) == NULL
-	    ||  CU_add_test(suite, "test_bdev_zone_get_info", test_bdev_zone_get_info) == NULL
-	    ||  CU_add_test(suite, "test_bdev_zone_management", test_bdev_zone_management) == NULL
-	    ||  CU_add_test(suite, "test_bdev_zone_append", test_bdev_zone_append) == NULL
-	    ||  CU_add_test(suite, "test_bdev_zone_append_with_md", test_bdev_zone_append_with_md) == NULL
-	    ||  CU_add_test(suite, "test_bdev_io_get_append_location", test_bdev_io_get_append_location) == NULL
-	   ) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_add_test(suite, "test_zone_get_operation", test_zone_get_operation);
+	CU_add_test(suite, "test_bdev_zone_get_info", test_bdev_zone_get_info);
+	CU_add_test(suite, "test_bdev_zone_management", test_bdev_zone_management);
+	CU_add_test(suite, "test_bdev_zone_append", test_bdev_zone_append);
+	CU_add_test(suite, "test_bdev_zone_append_with_md", test_bdev_zone_append_with_md);
+	CU_add_test(suite, "test_bdev_io_get_append_location", test_bdev_io_get_append_location);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
