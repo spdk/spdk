@@ -335,9 +335,9 @@ int main(int argc, char **argv)
 
 	suite = CU_add_suite("blobfs_bdev_ut", NULL, NULL);
 
-	CU_add_test(suite, "spdk_blobfs_bdev_detect_test", spdk_blobfs_bdev_detect_test);
-	CU_add_test(suite, "spdk_blobfs_bdev_create_test", spdk_blobfs_bdev_create_test);
-	CU_add_test(suite, "spdk_blobfs_bdev_mount_test", spdk_blobfs_bdev_mount_test);
+	CU_ADD_TEST(suite, spdk_blobfs_bdev_detect_test);
+	CU_ADD_TEST(suite, spdk_blobfs_bdev_create_test);
+	CU_ADD_TEST(suite, spdk_blobfs_bdev_mount_test);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

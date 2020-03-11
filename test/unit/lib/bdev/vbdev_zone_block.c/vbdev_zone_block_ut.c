@@ -1470,17 +1470,17 @@ int main(int argc, char **argv)
 
 	suite = CU_add_suite("zone_block", NULL, NULL);
 
-	CU_add_test(suite, "test_zone_block_create", test_zone_block_create);
-	CU_add_test(suite, "test_zone_block_create_invalid", test_zone_block_create_invalid);
-	CU_add_test(suite, "test_get_zone_info", test_get_zone_info);
-	CU_add_test(suite, "test_supported_io_types", test_supported_io_types);
-	CU_add_test(suite, "test_reset_zone", test_reset_zone);
-	CU_add_test(suite, "test_open_zone", test_open_zone);
-	CU_add_test(suite, "test_zone_write", test_zone_write);
-	CU_add_test(suite, "test_zone_read", test_zone_read);
-	CU_add_test(suite, "test_close_zone", test_close_zone);
-	CU_add_test(suite, "test_finish_zone", test_finish_zone);
-	CU_add_test(suite, "test_append_zone", test_append_zone);
+	CU_ADD_TEST(suite, test_zone_block_create);
+	CU_ADD_TEST(suite, test_zone_block_create_invalid);
+	CU_ADD_TEST(suite, test_get_zone_info);
+	CU_ADD_TEST(suite, test_supported_io_types);
+	CU_ADD_TEST(suite, test_reset_zone);
+	CU_ADD_TEST(suite, test_open_zone);
+	CU_ADD_TEST(suite, test_zone_write);
+	CU_ADD_TEST(suite, test_zone_read);
+	CU_ADD_TEST(suite, test_close_zone);
+	CU_ADD_TEST(suite, test_finish_zone);
+	CU_ADD_TEST(suite, test_append_zone);
 
 	g_thread = spdk_thread_create("test", NULL);
 	spdk_set_thread(g_thread);

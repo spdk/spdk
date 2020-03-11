@@ -398,32 +398,19 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("portal_grp_suite", test_setup, NULL);
 
-	CU_add_test(suite, "portal create ipv4 normal case",
-		    portal_create_ipv4_normal_case);
-	CU_add_test(suite, "portal create ipv6 normal case",
-		    portal_create_ipv6_normal_case);
-	CU_add_test(suite, "portal create ipv4 wildcard case",
-		    portal_create_ipv4_wildcard_case);
-	CU_add_test(suite, "portal create ipv6 wildcard case",
-		    portal_create_ipv6_wildcard_case);
-	CU_add_test(suite, "portal create twice case",
-		    portal_create_twice_case);
-	CU_add_test(suite, "parse portal ipv4 normal case",
-		    parse_portal_ipv4_normal_case);
-	CU_add_test(suite, "parse portal ipv6 normal case",
-		    parse_portal_ipv6_normal_case);
-	CU_add_test(suite, "parse portal ipv4 skip port case",
-		    parse_portal_ipv4_skip_port_case);
-	CU_add_test(suite, "parse portal ipv6 skip port case",
-		    parse_portal_ipv6_skip_port_case);
-	CU_add_test(suite, "portal group register/unregister case",
-		    portal_grp_register_unregister_case);
-	CU_add_test(suite, "portal group register twice case",
-		    portal_grp_register_twice_case);
-	CU_add_test(suite, "portal group add/delete case",
-		    portal_grp_add_delete_case);
-	CU_add_test(suite, "portal group add/delete twice case",
-		    portal_grp_add_delete_twice_case);
+	CU_ADD_TEST(suite, portal_create_ipv4_normal_case);
+	CU_ADD_TEST(suite, portal_create_ipv6_normal_case);
+	CU_ADD_TEST(suite, portal_create_ipv4_wildcard_case);
+	CU_ADD_TEST(suite, portal_create_ipv6_wildcard_case);
+	CU_ADD_TEST(suite, portal_create_twice_case);
+	CU_ADD_TEST(suite, parse_portal_ipv4_normal_case);
+	CU_ADD_TEST(suite, parse_portal_ipv6_normal_case);
+	CU_ADD_TEST(suite, parse_portal_ipv4_skip_port_case);
+	CU_ADD_TEST(suite, parse_portal_ipv6_skip_port_case);
+	CU_ADD_TEST(suite, portal_grp_register_unregister_case);
+	CU_ADD_TEST(suite, portal_grp_register_twice_case);
+	CU_ADD_TEST(suite, portal_grp_add_delete_case);
+	CU_ADD_TEST(suite, portal_grp_add_delete_twice_case);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

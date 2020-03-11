@@ -681,12 +681,12 @@ int main(int argc, char **argv)
 
 	suite = CU_add_suite("nvmf", NULL, NULL);
 
-	CU_add_test(suite, "nvmf_tcp_create", test_nvmf_tcp_create);
-	CU_add_test(suite, "nvmf_tcp_destroy", test_nvmf_tcp_destroy);
-	CU_add_test(suite, "nvmf_tcp_poll_group_create", test_nvmf_tcp_poll_group_create);
-	CU_add_test(suite, "nvmf_tcp_send_c2h_data", test_nvmf_tcp_send_c2h_data);
-	CU_add_test(suite, "nvmf_tcp_h2c_data_hdr_handle", test_nvmf_tcp_h2c_data_hdr_handle);
-	CU_add_test(suite, "nvmf_tcp_incapsule_test", test_nvmf_tcp_incapsule_data_handle);
+	CU_ADD_TEST(suite, test_nvmf_tcp_create);
+	CU_ADD_TEST(suite, test_nvmf_tcp_destroy);
+	CU_ADD_TEST(suite, test_nvmf_tcp_poll_group_create);
+	CU_ADD_TEST(suite, test_nvmf_tcp_send_c2h_data);
+	CU_ADD_TEST(suite, test_nvmf_tcp_h2c_data_hdr_handle);
+	CU_ADD_TEST(suite, test_nvmf_tcp_incapsule_data_handle);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

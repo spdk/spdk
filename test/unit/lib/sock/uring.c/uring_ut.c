@@ -258,8 +258,8 @@ main(int argc, char **argv)
 	suite = CU_add_suite("uring", NULL, NULL);
 
 
-	CU_add_test(suite, "flush_client", flush_client);
-	CU_add_test(suite, "flush_server", flush_server);
+	CU_ADD_TEST(suite, flush_client);
+	CU_ADD_TEST(suite, flush_server);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

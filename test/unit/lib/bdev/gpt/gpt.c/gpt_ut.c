@@ -349,16 +349,11 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("gpt_parse", NULL, NULL);
 
-	CU_add_test(suite, "parse",
-		    test_parse_mbr_and_primary);
-	CU_add_test(suite, "parse secondary",
-		    test_parse_secondary);
-	CU_add_test(suite, "check mbr",
-		    test_check_mbr);
-	CU_add_test(suite, "read header",
-		    test_read_header);
-	CU_add_test(suite, "read partitions",
-		    test_read_partitions);
+	CU_ADD_TEST(suite, test_parse_mbr_and_primary);
+	CU_ADD_TEST(suite, test_parse_secondary);
+	CU_ADD_TEST(suite, test_check_mbr);
+	CU_ADD_TEST(suite, test_read_header);
+	CU_ADD_TEST(suite, test_read_partitions);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

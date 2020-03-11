@@ -134,7 +134,7 @@ int main(int argc, char **argv)
 
 	suite = CU_add_suite("ioat", NULL, NULL);
 
-	CU_add_test(suite, "ioat_state_check", ioat_state_check);
+	CU_ADD_TEST(suite, ioat_state_check);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

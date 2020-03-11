@@ -1033,36 +1033,35 @@ int main(int argc, char **argv)
 
 	if (test == 0) {
 
-		CU_add_test(suite, "CASS/DISC", create_single_assoc_test);
+		CU_ADD_TEST(suite, create_single_assoc_test);
 
-		CU_add_test(suite, "Max. Connections", create_max_conns_test);
-		CU_add_test(suite, "CIOC to bad assoc_id", invalid_connection_test);
-		CU_add_test(suite, "DISC bad assoc_id", disconnect_bad_assoc_test);
+		CU_ADD_TEST(suite, create_max_conns_test);
+		CU_ADD_TEST(suite, invalid_connection_test);
+		CU_ADD_TEST(suite, disconnect_bad_assoc_test);
 
-		CU_add_test(suite, "Create/delete max. assocs/conns", create_max_aq_conns_test);
-		CU_add_test(suite, "Xmt LS RSP ERR Cleanup", xmt_ls_rsp_failure_test);
+		CU_ADD_TEST(suite, create_max_aq_conns_test);
+		CU_ADD_TEST(suite, xmt_ls_rsp_failure_test);
 
 	} else {
 
 		switch (test) {
 		case 1:
-			CU_add_test(suite, "CASS/DISC", create_single_assoc_test);
+			CU_ADD_TEST(suite, create_single_assoc_test);
 			break;
 		case 2:
-			CU_add_test(suite, "Max. Connections", create_max_conns_test);
+			CU_ADD_TEST(suite, create_max_conns_test);
 			break;
 		case 3:
-			CU_add_test(suite, "CIOC to bad assoc_id", invalid_connection_test);
+			CU_ADD_TEST(suite, invalid_connection_test);
 			break;
 		case 4:
-			CU_add_test(suite, "Create/delete max. assocs/conns",
-				    create_max_aq_conns_test);
+			CU_ADD_TEST(suite, create_max_aq_conns_test);
 			break;
 		case 5:
-			CU_add_test(suite, "Xmt LS RSP ERR Cleanup", xmt_ls_rsp_failure_test);
+			CU_ADD_TEST(suite, xmt_ls_rsp_failure_test);
 			break;
 		case 6:
-			CU_add_test(suite, "DISC bad assoc_id", disconnect_bad_assoc_test);
+			CU_ADD_TEST(suite, disconnect_bad_assoc_test);
 			break;
 
 		default:

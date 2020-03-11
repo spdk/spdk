@@ -485,23 +485,13 @@ int main(int argc, char **argv)
 
 	suite = CU_add_suite("NVMf-FC", nvmf_fc_tests_init, nvmf_fc_tests_fini);
 
-	CU_add_test(suite, "Create Target & FC Transport",
-		    create_transport_test);
-	CU_add_test(suite, "Create Poll Groups",
-		    create_poll_groups_test);
-	CU_add_test(suite, "Create FC Port",
-		    create_fc_port_test);
-
-	CU_add_test(suite, "Online FC Port",
-		    online_fc_port_test);
-	CU_add_test(suite, "PG poll", poll_group_poll_test);
-
-	CU_add_test(suite, "Remove HWQP's from PG's",
-		    remove_hwqps_from_poll_groups_test);
-
-	CU_add_test(suite, "Destroy Transport & Target",
-		    destroy_transport_test);
-
+	CU_ADD_TEST(suite, create_transport_test);
+	CU_ADD_TEST(suite, create_poll_groups_test);
+	CU_ADD_TEST(suite, create_fc_port_test);
+	CU_ADD_TEST(suite, online_fc_port_test);
+	CU_ADD_TEST(suite, poll_group_poll_test);
+	CU_ADD_TEST(suite, remove_hwqps_from_poll_groups_test);
+	CU_ADD_TEST(suite, destroy_transport_test);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

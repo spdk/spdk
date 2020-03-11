@@ -138,10 +138,8 @@ main(int argc, char **argv)
 	suite = CU_add_suite("ftl_meta_suite", NULL, NULL);
 
 
-	CU_add_test(suite, "test_md_unpack",
-		    test_md_unpack);
-	CU_add_test(suite, "test_md_unpack_fail",
-		    test_md_unpack_fail);
+	CU_ADD_TEST(suite, test_md_unpack);
+	CU_ADD_TEST(suite, test_md_unpack_fail);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

@@ -1313,25 +1313,20 @@ int main(int argc, char **argv)
 
 	suite = CU_add_suite("nvmf", NULL, NULL);
 
-	CU_add_test(suite, "create_subsystem", nvmf_test_create_subsystem);
-	CU_add_test(suite, "nvmf_subsystem_add_ns", test_spdk_nvmf_subsystem_add_ns);
-	CU_add_test(suite, "nvmf_subsystem_set_sn", test_spdk_nvmf_subsystem_set_sn);
-	CU_add_test(suite, "reservation_register", test_reservation_register);
-	CU_add_test(suite, "reservation_register_with_ptpl", test_reservation_register_with_ptpl);
-	CU_add_test(suite, "reservation_acquire_preempt_1", test_reservation_acquire_preempt_1);
-	CU_add_test(suite, "reservation_acquire_release_with_ptpl",
-		    test_reservation_acquire_release_with_ptpl);
-	CU_add_test(suite, "reservation_release", test_reservation_release);
-	CU_add_test(suite, "reservation_unregister_notification",
-		    test_reservation_unregister_notification);
-	CU_add_test(suite, "reservation_release_notification",
-		    test_reservation_release_notification);
-	CU_add_test(suite, "reservation_release_notification_write_exclusive",
-		    test_reservation_release_notification_write_exclusive);
-	CU_add_test(suite, "reservation_clear_notification", test_reservation_clear_notification);
-	CU_add_test(suite, "reservation_preempt_notification",
-		    test_reservation_preempt_notification);
-	CU_add_test(suite, "spdk_nvmf_ns_event", test_spdk_nvmf_ns_event);
+	CU_ADD_TEST(suite, nvmf_test_create_subsystem);
+	CU_ADD_TEST(suite, test_spdk_nvmf_subsystem_add_ns);
+	CU_ADD_TEST(suite, test_spdk_nvmf_subsystem_set_sn);
+	CU_ADD_TEST(suite, test_reservation_register);
+	CU_ADD_TEST(suite, test_reservation_register_with_ptpl);
+	CU_ADD_TEST(suite, test_reservation_acquire_preempt_1);
+	CU_ADD_TEST(suite, test_reservation_acquire_release_with_ptpl);
+	CU_ADD_TEST(suite, test_reservation_release);
+	CU_ADD_TEST(suite, test_reservation_unregister_notification);
+	CU_ADD_TEST(suite, test_reservation_release_notification);
+	CU_ADD_TEST(suite, test_reservation_release_notification_write_exclusive);
+	CU_ADD_TEST(suite, test_reservation_clear_notification);
+	CU_ADD_TEST(suite, test_reservation_preempt_notification);
+	CU_ADD_TEST(suite, test_spdk_nvmf_ns_event);
 
 	allocate_threads(1);
 	set_thread(0);

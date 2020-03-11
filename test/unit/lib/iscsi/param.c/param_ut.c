@@ -387,14 +387,10 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("iscsi_suite", NULL, NULL);
 
-	CU_add_test(suite, "param negotiation test",
-		    param_negotiation_test);
-	CU_add_test(suite, "list negotiation test",
-		    list_negotiation_test);
-	CU_add_test(suite, "parse valid test",
-		    parse_valid_test);
-	CU_add_test(suite, "parse invalid test",
-		    parse_invalid_test);
+	CU_ADD_TEST(suite, param_negotiation_test);
+	CU_ADD_TEST(suite, list_negotiation_test);
+	CU_ADD_TEST(suite, parse_valid_test);
+	CU_ADD_TEST(suite, parse_invalid_test);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

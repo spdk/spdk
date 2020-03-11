@@ -1167,11 +1167,11 @@ main(int argc, const char **argv)
 
 	suite = CU_add_suite("ocssd", NULL, NULL);
 
-	CU_add_test(suite, "test_create_controller", test_create_controller);
-	CU_add_test(suite, "test_device_geometry", test_device_geometry);
-	CU_add_test(suite, "test_lba_translation", test_lba_translation);
-	CU_add_test(suite, "test_parallel_unit_range", test_parallel_unit_range);
-	CU_add_test(suite, "test_get_zone_info", test_get_zone_info);
+	CU_ADD_TEST(suite, test_create_controller);
+	CU_ADD_TEST(suite, test_device_geometry);
+	CU_ADD_TEST(suite, test_lba_translation);
+	CU_ADD_TEST(suite, test_parallel_unit_range);
+	CU_ADD_TEST(suite, test_get_zone_info);
 
 	g_thread = spdk_thread_create("test", NULL);
 	spdk_set_thread(g_thread);

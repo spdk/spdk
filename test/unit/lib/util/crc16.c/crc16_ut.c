@@ -89,9 +89,9 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("crc16", NULL, NULL);
 
-	CU_add_test(suite, "test_crc16_t10dif", test_crc16_t10dif);
-	CU_add_test(suite, "test_crc16_t10dif_seed", test_crc16_t10dif_seed);
-	CU_add_test(suite, "test_crc16_t10dif_copy", test_crc16_t10dif_copy);
+	CU_ADD_TEST(suite, test_crc16_t10dif);
+	CU_ADD_TEST(suite, test_crc16_t10dif_seed);
+	CU_ADD_TEST(suite, test_crc16_t10dif_copy);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

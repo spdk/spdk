@@ -139,7 +139,7 @@ int main(int argc, char **argv)
 	CU_initialize_registry();
 
 	suite = CU_add_suite("tree", NULL, NULL);
-	CU_add_test(suite, "blobfs_tree_op_test", blobfs_tree_op_test);
+	CU_ADD_TEST(suite, blobfs_tree_op_test);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

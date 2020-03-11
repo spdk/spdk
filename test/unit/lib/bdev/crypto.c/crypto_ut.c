@@ -1062,32 +1062,19 @@ main(int argc, char **argv)
 	CU_initialize_registry();
 
 	suite = CU_add_suite("crypto", test_setup, test_cleanup);
-	CU_add_test(suite, "test_error_paths",
-		    test_error_paths);
-	CU_add_test(suite, "test_simple_write",
-		    test_simple_write);
-	CU_add_test(suite, "test_simple_read",
-		    test_simple_read);
-	CU_add_test(suite, "test_large_rw",
-		    test_large_rw);
-	CU_add_test(suite, "test_dev_full",
-		    test_dev_full);
-	CU_add_test(suite, "test_crazy_rw",
-		    test_crazy_rw);
-	CU_add_test(suite, "test_passthru",
-		    test_passthru);
-	CU_add_test(suite, "test_initdrivers",
-		    test_initdrivers);
-	CU_add_test(suite, "test_crypto_op_complete",
-		    test_crypto_op_complete);
-	CU_add_test(suite, "test_supported_io",
-		    test_supported_io);
-	CU_add_test(suite, "test_reset",
-		    test_reset);
-	CU_add_test(suite, "test_poller",
-		    test_poller);
-	CU_add_test(suite, "test_assign_device_qp",
-		    test_assign_device_qp);
+	CU_ADD_TEST(suite, test_error_paths);
+	CU_ADD_TEST(suite, test_simple_write);
+	CU_ADD_TEST(suite, test_simple_read);
+	CU_ADD_TEST(suite, test_large_rw);
+	CU_ADD_TEST(suite, test_dev_full);
+	CU_ADD_TEST(suite, test_crazy_rw);
+	CU_ADD_TEST(suite, test_passthru);
+	CU_ADD_TEST(suite, test_initdrivers);
+	CU_ADD_TEST(suite, test_crypto_op_complete);
+	CU_ADD_TEST(suite, test_supported_io);
+	CU_ADD_TEST(suite, test_reset);
+	CU_ADD_TEST(suite, test_poller);
+	CU_ADD_TEST(suite, test_assign_device_qp);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

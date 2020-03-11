@@ -1282,19 +1282,19 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("reduce", NULL, NULL);
 
-	CU_add_test(suite, "get_pm_file_size", get_pm_file_size);
-	CU_add_test(suite, "get_vol_size", get_vol_size);
-	CU_add_test(suite, "init_failure", init_failure);
-	CU_add_test(suite, "init_md", init_md);
-	CU_add_test(suite, "init_backing_dev", init_backing_dev);
-	CU_add_test(suite, "load", load);
-	CU_add_test(suite, "write_maps", write_maps);
-	CU_add_test(suite, "read_write", read_write);
-	CU_add_test(suite, "readv_writev", readv_writev);
-	CU_add_test(suite, "destroy", destroy);
-	CU_add_test(suite, "defer_bdev_io", defer_bdev_io);
-	CU_add_test(suite, "overlapped", overlapped);
-	CU_add_test(suite, "compress_algorithm", compress_algorithm);
+	CU_ADD_TEST(suite, get_pm_file_size);
+	CU_ADD_TEST(suite, get_vol_size);
+	CU_ADD_TEST(suite, init_failure);
+	CU_ADD_TEST(suite, init_md);
+	CU_ADD_TEST(suite, init_backing_dev);
+	CU_ADD_TEST(suite, load);
+	CU_ADD_TEST(suite, write_maps);
+	CU_ADD_TEST(suite, read_write);
+	CU_ADD_TEST(suite, readv_writev);
+	CU_ADD_TEST(suite, destroy);
+	CU_ADD_TEST(suite, defer_bdev_io);
+	CU_ADD_TEST(suite, overlapped);
+	CU_ADD_TEST(suite, compress_algorithm);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

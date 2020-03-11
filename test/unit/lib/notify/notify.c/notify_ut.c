@@ -100,7 +100,7 @@ main(int argc, char **argv)
 	CU_initialize_registry();
 
 	suite = CU_add_suite("app_suite", NULL, NULL);
-	CU_add_test(suite, "notify", notify);
+	CU_ADD_TEST(suite, notify);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

@@ -827,12 +827,12 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("sock", NULL, NULL);
 
-	CU_add_test(suite, "posix_sock", posix_sock);
-	CU_add_test(suite, "ut_sock", ut_sock);
-	CU_add_test(suite, "posix_sock_group", posix_sock_group);
-	CU_add_test(suite, "ut_sock_group", ut_sock_group);
-	CU_add_test(suite, "posix_sock_group_fairness", posix_sock_group_fairness);
-	CU_add_test(suite, "posix_sock_close", posix_sock_close);
+	CU_ADD_TEST(suite, posix_sock);
+	CU_ADD_TEST(suite, ut_sock);
+	CU_ADD_TEST(suite, posix_sock_group);
+	CU_ADD_TEST(suite, ut_sock_group);
+	CU_ADD_TEST(suite, posix_sock_group_fairness);
+	CU_ADD_TEST(suite, posix_sock_close);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

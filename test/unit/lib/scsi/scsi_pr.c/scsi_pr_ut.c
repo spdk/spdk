@@ -545,11 +545,11 @@ main(int argc, char **argv)
 	CU_initialize_registry();
 
 	suite = CU_add_suite("reservation_suite", NULL, NULL);
-	CU_add_test(suite, "register", test_reservation_register);
-	CU_add_test(suite, "reserve", test_reservation_reserve);
-	CU_add_test(suite, "preempt", test_reservation_preempt_non_all_regs);
-	CU_add_test(suite, "preempt all regs", test_reservation_preempt_all_regs);
-	CU_add_test(suite, "conflict", test_reservation_cmds_conflict);
+	CU_ADD_TEST(suite, test_reservation_register);
+	CU_ADD_TEST(suite, test_reservation_reserve);
+	CU_ADD_TEST(suite, test_reservation_preempt_non_all_regs);
+	CU_ADD_TEST(suite, test_reservation_preempt_all_regs);
+	CU_ADD_TEST(suite, test_reservation_cmds_conflict);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

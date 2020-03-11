@@ -389,12 +389,12 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("string", NULL, NULL);
 
-	CU_add_test(suite, "test_parse_ip_addr", test_parse_ip_addr);
-	CU_add_test(suite, "test_str_chomp", test_str_chomp);
-	CU_add_test(suite, "test_parse_capacity", test_parse_capacity);
-	CU_add_test(suite, "test_sprintf_append_realloc", test_sprintf_append_realloc);
-	CU_add_test(suite, "test_strtol", test_strtol);
-	CU_add_test(suite, "test_strtoll", test_strtoll);
+	CU_ADD_TEST(suite, test_parse_ip_addr);
+	CU_ADD_TEST(suite, test_str_chomp);
+	CU_ADD_TEST(suite, test_parse_capacity);
+	CU_ADD_TEST(suite, test_sprintf_append_realloc);
+	CU_ADD_TEST(suite, test_strtol);
+	CU_ADD_TEST(suite, test_strtoll);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

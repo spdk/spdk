@@ -928,20 +928,20 @@ int main(int argc, char **argv)
 
 	suite = CU_add_suite("json", NULL, NULL);
 
-	CU_add_test(suite, "strequal", test_strequal);
-	CU_add_test(suite, "num_to_uint16", test_num_to_uint16);
-	CU_add_test(suite, "num_to_int32", test_num_to_int32);
-	CU_add_test(suite, "num_to_uint64", test_num_to_uint64);
-	CU_add_test(suite, "decode_object", test_decode_object);
-	CU_add_test(suite, "decode_array", test_decode_array);
-	CU_add_test(suite, "decode_bool", test_decode_bool);
-	CU_add_test(suite, "decode_uint16", test_decode_uint16);
-	CU_add_test(suite, "decode_int32", test_decode_int32);
-	CU_add_test(suite, "decode_uint32", test_decode_uint32);
-	CU_add_test(suite, "decode_uint64", test_decode_uint64);
-	CU_add_test(suite, "decode_string", test_decode_string);
-	CU_add_test(suite, "find_object", test_find);
-	CU_add_test(suite, "iterating", test_iterating);
+	CU_ADD_TEST(suite, test_strequal);
+	CU_ADD_TEST(suite, test_num_to_uint16);
+	CU_ADD_TEST(suite, test_num_to_int32);
+	CU_ADD_TEST(suite, test_num_to_uint64);
+	CU_ADD_TEST(suite, test_decode_object);
+	CU_ADD_TEST(suite, test_decode_array);
+	CU_ADD_TEST(suite, test_decode_bool);
+	CU_ADD_TEST(suite, test_decode_uint16);
+	CU_ADD_TEST(suite, test_decode_int32);
+	CU_ADD_TEST(suite, test_decode_uint32);
+	CU_ADD_TEST(suite, test_decode_uint64);
+	CU_ADD_TEST(suite, test_decode_string);
+	CU_ADD_TEST(suite, test_find);
+	CU_ADD_TEST(suite, test_iterating);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

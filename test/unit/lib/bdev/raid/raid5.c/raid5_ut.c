@@ -204,7 +204,7 @@ main(int argc, char **argv)
 	CU_initialize_registry();
 
 	suite = CU_add_suite("raid5", test_setup, test_cleanup);
-	CU_add_test(suite, "test_raid5_start", test_raid5_start);
+	CU_ADD_TEST(suite, test_raid5_start);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

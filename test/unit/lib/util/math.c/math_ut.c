@@ -68,8 +68,7 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("math", NULL, NULL);
 
-	CU_add_test(suite, "test_serial_number_arithmetic",
-		    test_serial_number_arithmetic);
+	CU_ADD_TEST(suite, test_serial_number_arithmetic);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

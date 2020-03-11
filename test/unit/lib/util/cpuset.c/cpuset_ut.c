@@ -247,9 +247,9 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("cpuset", NULL, NULL);
 
-	CU_add_test(suite, "test_cpuset", test_cpuset);
-	CU_add_test(suite, "test_cpuset_parse", test_cpuset_parse);
-	CU_add_test(suite, "test_cpuset_fmt", test_cpuset_fmt);
+	CU_ADD_TEST(suite, test_cpuset);
+	CU_ADD_TEST(suite, test_cpuset_parse);
+	CU_ADD_TEST(suite, test_cpuset_fmt);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

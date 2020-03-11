@@ -634,15 +634,15 @@ int main(int argc, char **argv)
 
 	suite = CU_add_suite("blobfs_sync_ut", NULL, NULL);
 
-	CU_add_test(suite, "cache read after write", cache_read_after_write);
-	CU_add_test(suite, "file length", file_length);
-	CU_add_test(suite, "append write to extend blob", append_write_to_extend_blob);
-	CU_add_test(suite, "partial buffer", partial_buffer);
-	CU_add_test(suite, "write_null_buffer", cache_write_null_buffer);
-	CU_add_test(suite, "create_sync", fs_create_sync);
-	CU_add_test(suite, "rename_sync", fs_rename_sync);
-	CU_add_test(suite, "append_no_cache", cache_append_no_cache);
-	CU_add_test(suite, "delete_file_without_close", fs_delete_file_without_close);
+	CU_ADD_TEST(suite, cache_read_after_write);
+	CU_ADD_TEST(suite, file_length);
+	CU_ADD_TEST(suite, append_write_to_extend_blob);
+	CU_ADD_TEST(suite, partial_buffer);
+	CU_ADD_TEST(suite, cache_write_null_buffer);
+	CU_ADD_TEST(suite, fs_create_sync);
+	CU_ADD_TEST(suite, fs_rename_sync);
+	CU_ADD_TEST(suite, cache_append_no_cache);
+	CU_ADD_TEST(suite, fs_delete_file_without_close);
 
 	spdk_thread_lib_init(NULL, 0);
 

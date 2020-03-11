@@ -211,16 +211,11 @@ main(int argc, char **argv)
 	suite64 = CU_add_suite("ftl_addr64_suite", setup_l2p_64bit, cleanup);
 
 
-	CU_add_test(suite32, "test_addr_pack",
-		    test_addr_pack32);
-	CU_add_test(suite32, "test_addr32_invalid",
-		    test_addr_invalid);
-	CU_add_test(suite32, "test_addr32_cached",
-		    test_addr_cached);
-	CU_add_test(suite64, "test_addr64_invalid",
-		    test_addr_invalid);
-	CU_add_test(suite64, "test_addr64_cached",
-		    test_addr_cached);
+	CU_ADD_TEST(suite32, test_addr_pack32);
+	CU_ADD_TEST(suite32, test_addr_invalid);
+	CU_ADD_TEST(suite32, test_addr_cached);
+	CU_ADD_TEST(suite64, test_addr_invalid);
+	CU_ADD_TEST(suite64, test_addr_cached);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

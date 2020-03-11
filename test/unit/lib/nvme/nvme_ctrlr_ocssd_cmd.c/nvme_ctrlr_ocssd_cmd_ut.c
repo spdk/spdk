@@ -96,7 +96,7 @@ int main(int argc, char **argv)
 
 	suite = CU_add_suite("nvme_ctrlr_cmd", NULL, NULL);
 
-	CU_add_test(suite, "test ocssd ctrlr geometry cmd ", test_geometry_cmd);
+	CU_ADD_TEST(suite, test_geometry_cmd);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

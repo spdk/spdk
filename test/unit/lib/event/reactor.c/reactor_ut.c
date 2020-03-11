@@ -310,12 +310,12 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("app_suite", NULL, NULL);
 
-	CU_add_test(suite, "test_create_reactor", test_create_reactor);
-	CU_add_test(suite, "test_init_reactors", test_init_reactors);
-	CU_add_test(suite, "test_event_call", test_event_call);
-	CU_add_test(suite, "test_schedule_thread", test_schedule_thread);
-	CU_add_test(suite, "test_reschedule_thread", test_reschedule_thread);
-	CU_add_test(suite, "test_for_each_reactor", test_for_each_reactor);
+	CU_ADD_TEST(suite, test_create_reactor);
+	CU_ADD_TEST(suite, test_init_reactors);
+	CU_ADD_TEST(suite, test_event_call);
+	CU_ADD_TEST(suite, test_schedule_thread);
+	CU_ADD_TEST(suite, test_reschedule_thread);
+	CU_ADD_TEST(suite, test_for_each_reactor);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

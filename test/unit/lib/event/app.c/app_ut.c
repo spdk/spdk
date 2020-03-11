@@ -182,8 +182,7 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("app_suite", NULL, NULL);
 
-	CU_add_test(suite, "test_spdk_app_parse_args",
-		    test_spdk_app_parse_args);
+	CU_ADD_TEST(suite, test_spdk_app_parse_args);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

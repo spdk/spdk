@@ -2224,27 +2224,24 @@ int main(int argc, char **argv)
 
 	suite = CU_add_suite("raid", NULL, NULL);
 
-	CU_add_test(suite, "test_create_raid", test_create_raid);
-	CU_add_test(suite, "test_delete_raid", test_delete_raid);
-	CU_add_test(suite, "test_create_raid_invalid_args",
-		    test_create_raid_invalid_args);
-	CU_add_test(suite, "test_delete_raid_invalid_args",
-		    test_delete_raid_invalid_args);
-	CU_add_test(suite, "test_io_channel", test_io_channel);
-	CU_add_test(suite, "test_reset_io", test_reset_io);
-	CU_add_test(suite, "test_write_io", test_write_io);
-	CU_add_test(suite, "test_read_io", test_read_io);
-	CU_add_test(suite, "test_unmap_io", test_unmap_io);
-	CU_add_test(suite, "test_io_failure", test_io_failure);
-	CU_add_test(suite, "test_multi_raid_no_io", test_multi_raid_no_io);
-	CU_add_test(suite, "test_multi_raid_with_io", test_multi_raid_with_io);
-	CU_add_test(suite, "test_io_type_supported", test_io_type_supported);
-	CU_add_test(suite, "test_create_raid_from_config", test_create_raid_from_config);
-	CU_add_test(suite, "test_create_raid_from_config_invalid_params",
-		    test_create_raid_from_config_invalid_params);
-	CU_add_test(suite, "test_raid_json_dump_info", test_raid_json_dump_info);
-	CU_add_test(suite, "test_context_size", test_context_size);
-	CU_add_test(suite, "test_raid_level_conversions", test_raid_level_conversions);
+	CU_ADD_TEST(suite, test_create_raid);
+	CU_ADD_TEST(suite, test_delete_raid);
+	CU_ADD_TEST(suite, test_create_raid_invalid_args);
+	CU_ADD_TEST(suite, test_delete_raid_invalid_args);
+	CU_ADD_TEST(suite, test_io_channel);
+	CU_ADD_TEST(suite, test_reset_io);
+	CU_ADD_TEST(suite, test_write_io);
+	CU_ADD_TEST(suite, test_read_io);
+	CU_ADD_TEST(suite, test_unmap_io);
+	CU_ADD_TEST(suite, test_io_failure);
+	CU_ADD_TEST(suite, test_multi_raid_no_io);
+	CU_ADD_TEST(suite, test_multi_raid_with_io);
+	CU_ADD_TEST(suite, test_io_type_supported);
+	CU_ADD_TEST(suite, test_create_raid_from_config);
+	CU_ADD_TEST(suite, test_create_raid_from_config_invalid_params);
+	CU_ADD_TEST(suite, test_raid_json_dump_info);
+	CU_ADD_TEST(suite, test_context_size);
+	CU_ADD_TEST(suite, test_raid_level_conversions);
 
 	allocate_threads(1);
 	set_thread(0);

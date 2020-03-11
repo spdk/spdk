@@ -208,7 +208,7 @@ int main(int argc, char **argv)
 	CU_initialize_registry();
 
 	suite = CU_add_suite("nvme_rdma", NULL, NULL);
-	CU_add_test(suite, "build_sgl_request", test_nvme_rdma_build_sgl_request);
+	CU_ADD_TEST(suite, test_nvme_rdma_build_sgl_request);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

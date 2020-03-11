@@ -363,13 +363,12 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("base64", NULL, NULL);
 
-	CU_add_test(suite, "test_base64_get_encoded_strlen", test_base64_get_encoded_strlen);
-	CU_add_test(suite, "test_base64_get_decoded_len",
-		    test_base64_get_decoded_len);
-	CU_add_test(suite, "test_base64_encode", test_base64_encode);
-	CU_add_test(suite, "test_base64_decode", test_base64_decode);
-	CU_add_test(suite, "test_base64_urlsafe_encode", test_base64_urlsafe_encode);
-	CU_add_test(suite, "test_base64_urlsafe_decode", test_base64_urlsafe_decode);
+	CU_ADD_TEST(suite, test_base64_get_encoded_strlen);
+	CU_ADD_TEST(suite, test_base64_get_decoded_len);
+	CU_ADD_TEST(suite, test_base64_encode);
+	CU_ADD_TEST(suite, test_base64_decode);
+	CU_ADD_TEST(suite, test_base64_urlsafe_encode);
+	CU_ADD_TEST(suite, test_base64_urlsafe_decode);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

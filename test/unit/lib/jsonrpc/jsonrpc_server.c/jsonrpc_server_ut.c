@@ -394,8 +394,8 @@ int main(int argc, char **argv)
 
 	suite = CU_add_suite("jsonrpc", NULL, NULL);
 
-	CU_add_test(suite, "parse_request", test_parse_request);
-	CU_add_test(suite, "parse_request_streaming", test_parse_request_streaming);
+	CU_ADD_TEST(suite, test_parse_request);
+	CU_ADD_TEST(suite, test_parse_request_streaming);
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 
 	CU_basic_run_tests();

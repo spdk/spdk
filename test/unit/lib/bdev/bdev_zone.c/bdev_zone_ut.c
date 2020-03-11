@@ -414,12 +414,12 @@ main(int argc, char **argv)
 	CU_initialize_registry();
 
 	suite = CU_add_suite("zone", test_setup, test_cleanup);
-	CU_add_test(suite, "test_zone_get_operation", test_zone_get_operation);
-	CU_add_test(suite, "test_bdev_zone_get_info", test_bdev_zone_get_info);
-	CU_add_test(suite, "test_bdev_zone_management", test_bdev_zone_management);
-	CU_add_test(suite, "test_bdev_zone_append", test_bdev_zone_append);
-	CU_add_test(suite, "test_bdev_zone_append_with_md", test_bdev_zone_append_with_md);
-	CU_add_test(suite, "test_bdev_io_get_append_location", test_bdev_io_get_append_location);
+	CU_ADD_TEST(suite, test_zone_get_operation);
+	CU_ADD_TEST(suite, test_bdev_zone_get_info);
+	CU_ADD_TEST(suite, test_bdev_zone_management);
+	CU_ADD_TEST(suite, test_bdev_zone_append);
+	CU_ADD_TEST(suite, test_bdev_zone_append_with_md);
+	CU_ADD_TEST(suite, test_bdev_io_get_append_location);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

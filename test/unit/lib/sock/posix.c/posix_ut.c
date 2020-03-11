@@ -161,7 +161,7 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("posix", NULL, NULL);
 
-	CU_add_test(suite, "flush", flush);
+	CU_ADD_TEST(suite, flush);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

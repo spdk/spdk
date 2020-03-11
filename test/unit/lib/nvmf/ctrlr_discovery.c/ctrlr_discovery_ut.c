@@ -293,7 +293,7 @@ int main(int argc, char **argv)
 
 	suite = CU_add_suite("nvmf", NULL, NULL);
 
-	CU_add_test(suite, "discovery_log", test_discovery_log);
+	CU_ADD_TEST(suite, test_discovery_log);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

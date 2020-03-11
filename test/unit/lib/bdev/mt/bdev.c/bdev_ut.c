@@ -1904,21 +1904,21 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("bdev", NULL, NULL);
 
-	CU_add_test(suite, "basic", basic);
-	CU_add_test(suite, "unregister_and_close", unregister_and_close);
-	CU_add_test(suite, "basic_qos", basic_qos);
-	CU_add_test(suite, "put_channel_during_reset", put_channel_during_reset);
-	CU_add_test(suite, "aborted_reset", aborted_reset);
-	CU_add_test(suite, "io_during_reset", io_during_reset);
-	CU_add_test(suite, "io_during_qos_queue", io_during_qos_queue);
-	CU_add_test(suite, "io_during_qos_reset", io_during_qos_reset);
-	CU_add_test(suite, "enomem", enomem);
-	CU_add_test(suite, "enomem_multi_bdev", enomem_multi_bdev);
-	CU_add_test(suite, "enomem_multi_io_target", enomem_multi_io_target);
-	CU_add_test(suite, "qos_dynamic_enable", qos_dynamic_enable);
-	CU_add_test(suite, "bdev_histograms_mt", bdev_histograms_mt);
-	CU_add_test(suite, "bdev_set_io_timeout_mt", bdev_set_io_timeout_mt);
-	CU_add_test(suite, "lock_lba_range_then_submit_io", lock_lba_range_then_submit_io);
+	CU_ADD_TEST(suite, basic);
+	CU_ADD_TEST(suite, unregister_and_close);
+	CU_ADD_TEST(suite, basic_qos);
+	CU_ADD_TEST(suite, put_channel_during_reset);
+	CU_ADD_TEST(suite, aborted_reset);
+	CU_ADD_TEST(suite, io_during_reset);
+	CU_ADD_TEST(suite, io_during_qos_queue);
+	CU_ADD_TEST(suite, io_during_qos_reset);
+	CU_ADD_TEST(suite, enomem);
+	CU_ADD_TEST(suite, enomem_multi_bdev);
+	CU_ADD_TEST(suite, enomem_multi_io_target);
+	CU_ADD_TEST(suite, qos_dynamic_enable);
+	CU_ADD_TEST(suite, bdev_histograms_mt);
+	CU_ADD_TEST(suite, bdev_set_io_timeout_mt);
+	CU_ADD_TEST(suite, lock_lba_range_then_submit_io);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

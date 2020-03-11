@@ -1285,10 +1285,10 @@ int main(int argc, char **argv)
 
 	suite = CU_add_suite("nvmf", NULL, NULL);
 
-	CU_add_test(suite, "test_parse_sgl", test_spdk_nvmf_rdma_request_parse_sgl);
-	CU_add_test(suite, "test_request_process", test_spdk_nvmf_rdma_request_process);
-	CU_add_test(suite, "test_optimal_pg", test_spdk_nvmf_rdma_get_optimal_poll_group);
-	CU_add_test(suite, "test_parse_sgl_with_md", test_spdk_nvmf_rdma_request_parse_sgl_with_md);
+	CU_ADD_TEST(suite, test_spdk_nvmf_rdma_request_parse_sgl);
+	CU_ADD_TEST(suite, test_spdk_nvmf_rdma_request_process);
+	CU_ADD_TEST(suite, test_spdk_nvmf_rdma_get_optimal_poll_group);
+	CU_ADD_TEST(suite, test_spdk_nvmf_rdma_request_parse_sgl_with_md);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

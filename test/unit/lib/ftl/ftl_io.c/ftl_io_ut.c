@@ -1047,24 +1047,15 @@ main(int argc, char **argv)
 	suite = CU_add_suite("ftl_io_suite", NULL, NULL);
 
 
-	CU_add_test(suite, "test_completion",
-		    test_completion);
-	CU_add_test(suite, "test_alloc_free",
-		    test_alloc_free);
-	CU_add_test(suite, "test_child_requests",
-		    test_child_requests);
-	CU_add_test(suite, "test_child_status",
-		    test_child_status);
-	CU_add_test(suite, "test_multi_generation",
-		    test_multi_generation);
-	CU_add_test(suite, "test_io_channel_create",
-		    test_io_channel_create);
-	CU_add_test(suite, "test_acquire_entry",
-		    test_acquire_entry);
-	CU_add_test(suite, "test_submit_batch",
-		    test_submit_batch);
-	CU_add_test(suite, "test_entry_address",
-		    test_entry_address);
+	CU_ADD_TEST(suite, test_completion);
+	CU_ADD_TEST(suite, test_alloc_free);
+	CU_ADD_TEST(suite, test_child_requests);
+	CU_ADD_TEST(suite, test_child_status);
+	CU_ADD_TEST(suite, test_multi_generation);
+	CU_ADD_TEST(suite, test_io_channel_create);
+	CU_ADD_TEST(suite, test_acquire_entry);
+	CU_ADD_TEST(suite, test_submit_batch);
+	CU_ADD_TEST(suite, test_entry_address);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

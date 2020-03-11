@@ -132,7 +132,7 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("crc32c", NULL, NULL);
 
-	CU_add_test(suite, "test_crc32c", test_crc32c);
+	CU_ADD_TEST(suite, test_crc32c);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

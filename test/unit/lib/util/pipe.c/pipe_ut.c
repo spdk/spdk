@@ -635,12 +635,12 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("pipe", NULL, NULL);
 
-	CU_add_test(suite, "test_create_destroy", test_create_destroy);
-	CU_add_test(suite, "test_write_get_buffer", test_write_get_buffer);
-	CU_add_test(suite, "test_write_advance", test_write_advance);
-	CU_add_test(suite, "test_read_get_buffer", test_read_get_buffer);
-	CU_add_test(suite, "test_read_advance", test_read_advance);
-	CU_add_test(suite, "test_data", test_data);
+	CU_ADD_TEST(suite, test_create_destroy);
+	CU_ADD_TEST(suite, test_write_get_buffer);
+	CU_ADD_TEST(suite, test_write_advance);
+	CU_ADD_TEST(suite, test_read_get_buffer);
+	CU_ADD_TEST(suite, test_read_advance);
+	CU_ADD_TEST(suite, test_data);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

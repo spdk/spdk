@@ -908,17 +908,17 @@ int main(int argc, char **argv)
 
 	suite = CU_add_suite("json", NULL, NULL);
 
-	CU_add_test(suite, "parse_literal", test_parse_literal);
-	CU_add_test(suite, "parse_string_simple", test_parse_string_simple);
-	CU_add_test(suite, "parse_string_control_chars", test_parse_string_control_chars);
-	CU_add_test(suite, "parse_string_utf8", test_parse_string_utf8);
-	CU_add_test(suite, "parse_string_escapes_twochar", test_parse_string_escapes_twochar);
-	CU_add_test(suite, "parse_string_escapes_unicode", test_parse_string_escapes_unicode);
-	CU_add_test(suite, "parse_number", test_parse_number);
-	CU_add_test(suite, "parse_array", test_parse_array);
-	CU_add_test(suite, "parse_object", test_parse_object);
-	CU_add_test(suite, "parse_nesting", test_parse_nesting);
-	CU_add_test(suite, "parse_comment", test_parse_comment);
+	CU_ADD_TEST(suite, test_parse_literal);
+	CU_ADD_TEST(suite, test_parse_string_simple);
+	CU_ADD_TEST(suite, test_parse_string_control_chars);
+	CU_ADD_TEST(suite, test_parse_string_utf8);
+	CU_ADD_TEST(suite, test_parse_string_escapes_twochar);
+	CU_ADD_TEST(suite, test_parse_string_escapes_unicode);
+	CU_ADD_TEST(suite, test_parse_number);
+	CU_ADD_TEST(suite, test_parse_array);
+	CU_ADD_TEST(suite, test_parse_object);
+	CU_ADD_TEST(suite, test_parse_nesting);
+	CU_ADD_TEST(suite, test_parse_comment);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

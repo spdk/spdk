@@ -234,9 +234,9 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("iov", NULL, NULL);
 
-	CU_add_test(suite, "test_single_iov", test_single_iov);
-	CU_add_test(suite, "test_simple_iov", test_simple_iov);
-	CU_add_test(suite, "test_complex_iov", test_complex_iov);
+	CU_ADD_TEST(suite, test_single_iov);
+	CU_ADD_TEST(suite, test_simple_iov);
+	CU_ADD_TEST(suite, test_complex_iov);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

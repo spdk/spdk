@@ -1011,18 +1011,18 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("io_channel", NULL, NULL);
 
-	CU_add_test(suite, "thread_alloc", thread_alloc);
-	CU_add_test(suite, "thread_send_msg", thread_send_msg);
-	CU_add_test(suite, "thread_poller", thread_poller);
-	CU_add_test(suite, "poller_pause", poller_pause);
-	CU_add_test(suite, "thread_for_each", thread_for_each);
-	CU_add_test(suite, "for_each_channel_remove", for_each_channel_remove);
-	CU_add_test(suite, "for_each_channel_unreg", for_each_channel_unreg);
-	CU_add_test(suite, "thread_name", thread_name);
-	CU_add_test(suite, "channel", channel);
-	CU_add_test(suite, "channel_destroy_races", channel_destroy_races);
-	CU_add_test(suite, "thread_exit", thread_exit);
-	CU_add_test(suite, "thread_update_stats", thread_update_stats);
+	CU_ADD_TEST(suite, thread_alloc);
+	CU_ADD_TEST(suite, thread_send_msg);
+	CU_ADD_TEST(suite, thread_poller);
+	CU_ADD_TEST(suite, poller_pause);
+	CU_ADD_TEST(suite, thread_for_each);
+	CU_ADD_TEST(suite, for_each_channel_remove);
+	CU_ADD_TEST(suite, for_each_channel_unreg);
+	CU_ADD_TEST(suite, thread_name);
+	CU_ADD_TEST(suite, channel);
+	CU_ADD_TEST(suite, channel_destroy_races);
+	CU_ADD_TEST(suite, thread_exit);
+	CU_ADD_TEST(suite, thread_update_stats);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

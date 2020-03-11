@@ -157,7 +157,7 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("bdev_part", NULL, NULL);
 
-	CU_add_test(suite, "part", part_test);
+	CU_ADD_TEST(suite, part_test);
 
 	allocate_threads(1);
 	set_thread(0);

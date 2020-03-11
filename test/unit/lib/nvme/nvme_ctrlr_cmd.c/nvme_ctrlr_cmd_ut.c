@@ -723,26 +723,25 @@ int main(int argc, char **argv)
 
 	suite = CU_add_suite("nvme_ctrlr_cmd", NULL, NULL);
 
-	CU_add_test(suite, "test ctrlr cmd get_log_pages", test_get_log_pages);
-	CU_add_test(suite, "test ctrlr cmd set_feature", test_set_feature_cmd);
-	CU_add_test(suite, "test ctrlr cmd set_feature_ns", test_set_feature_ns_cmd);
-	CU_add_test(suite, "test ctrlr cmd get_feature", test_get_feature_cmd);
-	CU_add_test(suite, "test ctrlr cmd get_feature_ns", test_get_feature_ns_cmd);
-	CU_add_test(suite, "test ctrlr cmd abort_cmd", test_abort_cmd);
-	CU_add_test(suite, "test ctrlr cmd set_host_id", test_set_host_id_cmds);
-	CU_add_test(suite, "test ctrlr cmd io_raw_no_payload_build",
-		    test_io_cmd_raw_no_payload_build);
-	CU_add_test(suite, "test ctrlr cmd io_raw_cmd", test_io_raw_cmd);
-	CU_add_test(suite, "test ctrlr cmd io_raw_cmd_with_md", test_io_raw_cmd_with_md);
-	CU_add_test(suite, "test ctrlr cmd namespace_attach", test_namespace_attach);
-	CU_add_test(suite, "test ctrlr cmd namespace_detach", test_namespace_detach);
-	CU_add_test(suite, "test ctrlr cmd namespace_create", test_namespace_create);
-	CU_add_test(suite, "test ctrlr cmd namespace_delete", test_namespace_delete);
-	CU_add_test(suite, "test ctrlr cmd doorbell_buffer_config", test_doorbell_buffer_config);
-	CU_add_test(suite, "test ctrlr cmd format_nvme", test_format_nvme);
-	CU_add_test(suite, "test ctrlr cmd fw_commit", test_fw_commit);
-	CU_add_test(suite, "test ctrlr cmd fw_image_download", test_fw_image_download);
-	CU_add_test(suite, "test ctrlr cmd sanitize", test_sanitize);
+	CU_ADD_TEST(suite, test_get_log_pages);
+	CU_ADD_TEST(suite, test_set_feature_cmd);
+	CU_ADD_TEST(suite, test_set_feature_ns_cmd);
+	CU_ADD_TEST(suite, test_get_feature_cmd);
+	CU_ADD_TEST(suite, test_get_feature_ns_cmd);
+	CU_ADD_TEST(suite, test_abort_cmd);
+	CU_ADD_TEST(suite, test_set_host_id_cmds);
+	CU_ADD_TEST(suite, test_io_cmd_raw_no_payload_build);
+	CU_ADD_TEST(suite, test_io_raw_cmd);
+	CU_ADD_TEST(suite, test_io_raw_cmd_with_md);
+	CU_ADD_TEST(suite, test_namespace_attach);
+	CU_ADD_TEST(suite, test_namespace_detach);
+	CU_ADD_TEST(suite, test_namespace_create);
+	CU_ADD_TEST(suite, test_namespace_delete);
+	CU_ADD_TEST(suite, test_doorbell_buffer_config);
+	CU_ADD_TEST(suite, test_format_nvme);
+	CU_ADD_TEST(suite, test_fw_commit);
+	CU_ADD_TEST(suite, test_fw_image_download);
+	CU_ADD_TEST(suite, test_sanitize);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

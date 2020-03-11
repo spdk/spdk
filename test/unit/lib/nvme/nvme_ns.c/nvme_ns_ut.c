@@ -142,8 +142,8 @@ int main(int argc, char **argv)
 
 	suite = CU_add_suite("nvme", NULL, NULL);
 
-	CU_add_test(suite, "test_nvme_ns", test_nvme_ns_construct);
-	CU_add_test(suite, "test_nvme_ns_uuid", test_nvme_ns_uuid);
+	CU_ADD_TEST(suite, test_nvme_ns_construct);
+	CU_ADD_TEST(suite, test_nvme_ns_uuid);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

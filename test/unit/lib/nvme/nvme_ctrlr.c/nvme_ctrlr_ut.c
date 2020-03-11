@@ -2082,51 +2082,33 @@ int main(int argc, char **argv)
 
 	suite = CU_add_suite("nvme_ctrlr", NULL, NULL);
 
-	CU_add_test(suite, "test nvme_ctrlr init CC.EN = 1 CSTS.RDY = 0",
-		    test_nvme_ctrlr_init_en_1_rdy_0);
-	CU_add_test(suite, "test nvme_ctrlr init CC.EN = 1 CSTS.RDY = 1",
-		    test_nvme_ctrlr_init_en_1_rdy_1);
-	CU_add_test(suite, "test nvme_ctrlr init CC.EN = 0 CSTS.RDY = 0",
-		    test_nvme_ctrlr_init_en_0_rdy_0);
-	CU_add_test(suite, "test nvme_ctrlr init CC.EN = 0 CSTS.RDY = 1",
-		    test_nvme_ctrlr_init_en_0_rdy_1);
-	CU_add_test(suite, "test nvme_ctrlr init CC.EN = 0 CSTS.RDY = 0 AMS = RR",
-		    test_nvme_ctrlr_init_en_0_rdy_0_ams_rr);
-	CU_add_test(suite, "test nvme_ctrlr init CC.EN = 0 CSTS.RDY = 0 AMS = WRR",
-		    test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr);
-	CU_add_test(suite, "test nvme_ctrlr init CC.EN = 0 CSTS.RDY = 0 AMS = VS",
-		    test_nvme_ctrlr_init_en_0_rdy_0_ams_vs);
-	CU_add_test(suite, "test_nvme_ctrlr_init_delay",
-		    test_nvme_ctrlr_init_delay);
-	CU_add_test(suite, "alloc_io_qpair_rr 1", test_alloc_io_qpair_rr_1);
-	CU_add_test(suite, "get_default_ctrlr_opts", test_ctrlr_get_default_ctrlr_opts);
-	CU_add_test(suite, "get_default_io_qpair_opts", test_ctrlr_get_default_io_qpair_opts);
-	CU_add_test(suite, "alloc_io_qpair_wrr 1", test_alloc_io_qpair_wrr_1);
-	CU_add_test(suite, "alloc_io_qpair_wrr 2", test_alloc_io_qpair_wrr_2);
-	CU_add_test(suite, "test nvme ctrlr function update_firmware",
-		    test_spdk_nvme_ctrlr_update_firmware);
-	CU_add_test(suite, "test nvme_ctrlr function nvme_ctrlr_fail", test_nvme_ctrlr_fail);
-	CU_add_test(suite, "test nvme ctrlr function nvme_ctrlr_construct_intel_support_log_page_list",
-		    test_nvme_ctrlr_construct_intel_support_log_page_list);
-	CU_add_test(suite, "test nvme ctrlr function nvme_ctrlr_set_supported_features",
-		    test_nvme_ctrlr_set_supported_features);
-	CU_add_test(suite, "test nvme ctrlr function nvme_ctrlr_set_doorbell_buffer_config",
-		    test_spdk_nvme_ctrlr_doorbell_buffer_config);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_init_en_1_rdy_0);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_init_en_1_rdy_1);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_init_en_0_rdy_0);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_init_en_0_rdy_1);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_init_en_0_rdy_0_ams_rr);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_init_en_0_rdy_0_ams_vs);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_init_delay);
+	CU_ADD_TEST(suite, test_alloc_io_qpair_rr_1);
+	CU_ADD_TEST(suite, test_ctrlr_get_default_ctrlr_opts);
+	CU_ADD_TEST(suite, test_ctrlr_get_default_io_qpair_opts);
+	CU_ADD_TEST(suite, test_alloc_io_qpair_wrr_1);
+	CU_ADD_TEST(suite, test_alloc_io_qpair_wrr_2);
+	CU_ADD_TEST(suite, test_spdk_nvme_ctrlr_update_firmware);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_fail);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_construct_intel_support_log_page_list);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_set_supported_features);
+	CU_ADD_TEST(suite, test_spdk_nvme_ctrlr_doorbell_buffer_config);
 #if 0 /* TODO: move to PCIe-specific unit test */
-	CU_add_test(suite, "test nvme ctrlr function nvme_ctrlr_alloc_cmb",
-		    test_nvme_ctrlr_alloc_cmb);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_alloc_cmb);
 #endif
-	CU_add_test(suite, "test nvme ctrlr function test_nvme_ctrlr_test_active_ns",
-		    test_nvme_ctrlr_test_active_ns);
-	CU_add_test(suite, "test nvme ctrlr function test_nvme_ctrlr_test_active_ns_error_case",
-		    test_nvme_ctrlr_test_active_ns_error_case);
-	CU_add_test(suite, "test_spdk_nvme_ctrlr_reconnect_io_qpair",
-		    test_spdk_nvme_ctrlr_reconnect_io_qpair);
-	CU_add_test(suite, "test_spdk_nvme_ctrlr_set_trid", test_spdk_nvme_ctrlr_set_trid);
-	CU_add_test(suite, "test_nvme_ctrlr_init_set_nvmf_ioccsz",
-		    test_nvme_ctrlr_init_set_nvmf_ioccsz);
-	CU_add_test(suite, "test nvme ctrlr init set num queues",
-		    test_nvme_ctrlr_init_set_num_queues);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_test_active_ns);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_test_active_ns_error_case);
+	CU_ADD_TEST(suite, test_spdk_nvme_ctrlr_reconnect_io_qpair);
+	CU_ADD_TEST(suite, test_spdk_nvme_ctrlr_set_trid);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_init_set_nvmf_ioccsz);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_init_set_num_queues);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

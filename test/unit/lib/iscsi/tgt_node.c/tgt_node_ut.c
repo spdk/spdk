@@ -809,23 +809,20 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("iscsi_target_node_suite", NULL, NULL);
 
-	CU_add_test(suite, "add lun test cases", add_lun_test_cases);
-	CU_add_test(suite, "config file fail cases", config_file_fail_cases);
-	CU_add_test(suite, "allow any allowed case", allow_any_allowed);
-	CU_add_test(suite, "allow ipv6 allowed case", allow_ipv6_allowed);
-	CU_add_test(suite, "allow ipv6 denied case", allow_ipv6_denied);
-	CU_add_test(suite, "allow ipv6 invalid case", allow_ipv6_invalid);
-	CU_add_test(suite, "allow ipv4 allowed case", allow_ipv4_allowed);
-	CU_add_test(suite, "allow ipv4 denied case", allow_ipv4_denied);
-	CU_add_test(suite, "allow ipv4 invalid case", allow_ipv4_invalid);
-	CU_add_test(suite, "node access allowed case", node_access_allowed);
-	CU_add_test(suite, "node access denied case (empty netmask)",
-		    node_access_denied_by_empty_netmask);
-	CU_add_test(suite, "node access multiple initiator groups cases",
-		    node_access_multi_initiator_groups_cases);
-	CU_add_test(suite, "allow iscsi name case",
-		    allow_iscsi_name_multi_maps_case);
-	CU_add_test(suite, "chap param test cases", chap_param_test_cases);
+	CU_ADD_TEST(suite, add_lun_test_cases);
+	CU_ADD_TEST(suite, config_file_fail_cases);
+	CU_ADD_TEST(suite, allow_any_allowed);
+	CU_ADD_TEST(suite, allow_ipv6_allowed);
+	CU_ADD_TEST(suite, allow_ipv6_denied);
+	CU_ADD_TEST(suite, allow_ipv6_invalid);
+	CU_ADD_TEST(suite, allow_ipv4_allowed);
+	CU_ADD_TEST(suite, allow_ipv4_denied);
+	CU_ADD_TEST(suite, allow_ipv4_invalid);
+	CU_ADD_TEST(suite, node_access_allowed);
+	CU_ADD_TEST(suite, node_access_denied_by_empty_netmask);
+	CU_ADD_TEST(suite, node_access_multi_initiator_groups_cases);
+	CU_ADD_TEST(suite, allow_iscsi_name_multi_maps_case);
+	CU_ADD_TEST(suite, chap_param_test_cases);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

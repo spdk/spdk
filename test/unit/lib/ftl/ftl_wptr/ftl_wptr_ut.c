@@ -211,8 +211,7 @@ main(int argc, char **argv)
 	suite = CU_add_suite("ftl_wptr_suite", NULL, NULL);
 
 
-	CU_add_test(suite, "test_wptr",
-		    test_wptr);
+	CU_ADD_TEST(suite, test_wptr);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

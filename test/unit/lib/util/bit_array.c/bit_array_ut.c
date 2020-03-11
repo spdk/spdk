@@ -356,14 +356,14 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("bit_array", NULL, NULL);
 
-	CU_add_test(suite, "test_1bit", test_1bit);
-	CU_add_test(suite, "test_64bit", test_64bit);
-	CU_add_test(suite, "test_find", test_find);
-	CU_add_test(suite, "test_resize", test_resize);
-	CU_add_test(suite, "test_errors", test_errors);
-	CU_add_test(suite, "test_count", test_count);
-	CU_add_test(suite, "test_mask_store_load", test_mask_store_load);
-	CU_add_test(suite, "test_mask_clear", test_mask_clear);
+	CU_ADD_TEST(suite, test_1bit);
+	CU_ADD_TEST(suite, test_64bit);
+	CU_ADD_TEST(suite, test_find);
+	CU_ADD_TEST(suite, test_resize);
+	CU_ADD_TEST(suite, test_errors);
+	CU_ADD_TEST(suite, test_count);
+	CU_ADD_TEST(suite, test_mask_store_load);
+	CU_ADD_TEST(suite, test_mask_clear);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

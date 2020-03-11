@@ -121,8 +121,7 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("scsi_nvme_suite", null_init, null_clean);
 
-	CU_add_test(suite, "scsi_nvme  - translate nvme error to scsi error",
-		    scsi_nvme_translate_test);
+	CU_ADD_TEST(suite, scsi_nvme_translate_test);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

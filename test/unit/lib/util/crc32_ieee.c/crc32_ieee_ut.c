@@ -61,7 +61,7 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("crc32_ieee", NULL, NULL);
 
-	CU_add_test(suite, "test_crc32_ieee", test_crc32_ieee);
+	CU_ADD_TEST(suite, test_crc32_ieee);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 
