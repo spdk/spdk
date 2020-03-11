@@ -1745,14 +1745,16 @@ static struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_
 		return NULL;
 	}
 
-	memcpy(&rctrlr->ctrlr.trid, trid, sizeof(rctrlr->ctrlr.trid));
 	rctrlr->ctrlr.opts = *opts;
-	if (rctrlr->ctrlr.opts.transport_retry_count > NVME_RDMA_CTRLR_MAX_TRANSPORT_RETRY_COUNT) {
+	rctrlr->ctrlr.trid = *trid;
+
+	if (opts->transport_retry_count > NVME_RDMA_CTRLR_MAX_TRANSPORT_RETRY_COUNT) {
 		SPDK_NOTICELOG("transport_retry_count exceeds max value %d, use max value\n",
 			       NVME_RDMA_CTRLR_MAX_TRANSPORT_RETRY_COUNT);
 		rctrlr->ctrlr.opts.transport_retry_count = NVME_RDMA_CTRLR_MAX_TRANSPORT_RETRY_COUNT;
 	}
-	if (rctrlr->ctrlr.opts.transport_ack_timeout > NVME_RDMA_CTRLR_MAX_TRANSPORT_ACK_TIMEOUT) {
+
+	if (opts->transport_ack_timeout > NVME_RDMA_CTRLR_MAX_TRANSPORT_ACK_TIMEOUT) {
 		SPDK_NOTICELOG("transport_ack_timeout exceeds max value %d, use max value\n",
 			       NVME_RDMA_CTRLR_MAX_TRANSPORT_ACK_TIMEOUT);
 		rctrlr->ctrlr.opts.transport_ack_timeout = NVME_RDMA_CTRLR_MAX_TRANSPORT_ACK_TIMEOUT;

@@ -810,7 +810,7 @@ static struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_
 	pctrlr->ctrlr.is_removed = false;
 	pctrlr->devhandle = devhandle;
 	pctrlr->ctrlr.opts = *opts;
-	memcpy(&pctrlr->ctrlr.trid, trid, sizeof(pctrlr->ctrlr.trid));
+	pctrlr->ctrlr.trid = *trid;
 
 	rc = nvme_ctrlr_construct(&pctrlr->ctrlr);
 	if (rc != 0) {
