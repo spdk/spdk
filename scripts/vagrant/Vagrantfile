@@ -125,6 +125,7 @@ Vagrant.configure(2) do |config|
 
     if not vmemulator.empty?
       libvirt.emulator_path = "#{vmemulator}"
+      libvirt.machine_type = "pc"
     end
 
     # we put nvme_disk inside default pool to eliminate libvirt/SELinux Permissions Problems
