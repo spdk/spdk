@@ -44,6 +44,7 @@ sleep 1
 
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
+waitforiscsidevices 1
 
 trap 'iscsicleanup; killprocess $pid; rbd_cleanup; exit 1' SIGINT SIGTERM EXIT
 
