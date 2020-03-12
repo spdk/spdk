@@ -329,7 +329,9 @@ _bdev_nvme_reset_complete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, int rc)
 		SPDK_NOTICELOG("Resetting controller successful.\n");
 	}
 
-	__atomic_clear(&nvme_bdev_ctrlr->resetting, __ATOMIC_RELAXED);
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	nvme_bdev_ctrlr->resetting = false;
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 	/* Make sure we clear any pending resets before returning. */
 	spdk_for_each_channel(nvme_bdev_ctrlr,
 			      _bdev_nvme_complete_pending_resets,
@@ -426,7 +428,11 @@ bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bi
 	struct spdk_io_channel *ch;
 	struct nvme_io_channel *nvme_ch;
 
-	if (__atomic_test_and_set(&nvme_bdev_ctrlr->resetting, __ATOMIC_RELAXED)) {
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	if (!nvme_bdev_ctrlr->resetting) {
+		nvme_bdev_ctrlr->resetting = true;
+	} else {
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
 		SPDK_NOTICELOG("Unable to perform reset, already in progress.\n");
 		/*
 		 * The internal reset calls won't be queued. This is on purpose so that we don't
@@ -443,6 +449,7 @@ bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bi
 		return 0;
 	}
 
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 	/* First, delete all NVMe I/O queue pairs. */
 	spdk_for_each_channel(nvme_bdev_ctrlr,
 			      _bdev_nvme_reset_destroy_qpair,
