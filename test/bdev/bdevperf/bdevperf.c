@@ -692,7 +692,7 @@ bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
 		 */
 		if (g_verify && spdk_bit_array_get(target->outstanding, offset_in_ios)) {
 			do {
-				offset_in_ios++;
+				offset_in_ios = target->offset_in_ios++;
 				if (target->offset_in_ios == target->size_in_ios) {
 					target->offset_in_ios = 0;
 				}
