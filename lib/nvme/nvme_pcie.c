@@ -1927,7 +1927,9 @@ nvme_pcie_qpair_build_contig_hw_sgl_request(struct spdk_nvme_qpair *qpair, struc
 		req->cmd.dptr.sgl1.address = tr->u.sgl[0].address;
 		req->cmd.dptr.sgl1.unkeyed.length = tr->u.sgl[0].unkeyed.length;
 	} else {
-		/* For now we can only support 1 SGL segment in NVMe controller */
+		/* SPDK NVMe driver supports only 1 SGL segment for now, it is enough because
+		 *  NVME_MAX_SGL_DESCRIPTORS * 16 is less than one page.
+		 */
 		req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_LAST_SEGMENT;
 		req->cmd.dptr.sgl1.address = tr->prp_sgl_bus_addr;
 		req->cmd.dptr.sgl1.unkeyed.length = nseg * sizeof(struct spdk_nvme_sgl_descriptor);
@@ -2019,7 +2021,9 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 		req->cmd.dptr.sgl1.address = tr->u.sgl[0].address;
 		req->cmd.dptr.sgl1.unkeyed.length = tr->u.sgl[0].unkeyed.length;
 	} else {
-		/* For now we can only support 1 SGL segment in NVMe controller */
+		/* SPDK NVMe driver supports only 1 SGL segment for now, it is enough because
+		 *  NVME_MAX_SGL_DESCRIPTORS * 16 is less than one page.
+		 */
 		req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_LAST_SEGMENT;
 		req->cmd.dptr.sgl1.address = tr->prp_sgl_bus_addr;
 		req->cmd.dptr.sgl1.unkeyed.length = nseg * sizeof(struct spdk_nvme_sgl_descriptor);
@@ -2142,8 +2146,9 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 		rc = 0;
 	} else {
 		payload_type = nvme_payload_type(&req->payload);
-		/* Some NVME drives can't handle SGL request submitted to the admin qpair
-		 * even if they report SGL support */
+		/* According to the specification, PRPs shall be used for all
+		 *  Admin commands for NVMe over PCIe implementations.
+		 */
 		sgl_supported = (ctrlr->flags & SPDK_NVME_CTRLR_SGL_SUPPORTED) != 0 &&
 				!nvme_qpair_is_admin_queue(qpair);
 		rc = g_nvme_pcie_build_req_table[payload_type][sgl_supported](qpair, req, tr);
