@@ -39,6 +39,7 @@ if [ -n "$local_nvme_trid" ]; then
 	$perf_app -i $NVMF_APP_SHM_ID -q 32 -o 4096 -w randrw -M 50 -t 1 -r "$local_nvme_trid"
 fi
 
+$rootdir/examples/nvme/perf/perf -q 1 -o 4096 -w randrw -M 50 -t 1 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
 $rootdir/examples/nvme/perf/perf -q 32 -o 4096 -w randrw -M 50 -t 1 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
 $rootdir/examples/nvme/perf/perf -q 128 -o 262144 -w randrw -M 50 -t 2 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
 sync
@@ -70,7 +71,7 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 		done
 		$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 		# Test perf as host with different io_size and qd_depth in nightly
-		qd_depth=("1" "128")
+		qd_depth=("1" "32" "128")
 		io_size=("512" "131072")
 		for qd in "${qd_depth[@]}"; do
 			for o in "${io_size[@]}"; do
