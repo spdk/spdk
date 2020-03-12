@@ -429,6 +429,15 @@ bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bi
 	struct nvme_io_channel *nvme_ch;
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	if (nvme_bdev_ctrlr->destruct) {
+		/* Don't bother resetting if the controller is in the process of being destructed. */
+		if (bio) {
+			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), SPDK_BDEV_IO_STATUS_FAILED);
+		}
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+		return 0;
+	}
+
 	if (!nvme_bdev_ctrlr->resetting) {
 		nvme_bdev_ctrlr->resetting = true;
 	} else {

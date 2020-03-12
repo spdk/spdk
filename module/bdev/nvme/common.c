@@ -140,10 +140,20 @@ nvme_bdev_unregister_cb(void *io_device)
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 }
 
-void
+int
 nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
 	assert(nvme_bdev_ctrlr->destruct);
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	if (nvme_bdev_ctrlr->resetting) {
+		nvme_bdev_ctrlr->destruct_poller =
+			spdk_poller_register((spdk_poller_fn)nvme_bdev_ctrlr_destruct, nvme_bdev_ctrlr, 1000);
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+		return 1;
+	}
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+
+	spdk_poller_unregister(&nvme_bdev_ctrlr->destruct_poller);
 	if (nvme_bdev_ctrlr->opal_dev) {
 		if (nvme_bdev_ctrlr->opal_poller != NULL) {
 			spdk_poller_unregister(&nvme_bdev_ctrlr->opal_poller);
@@ -159,6 +169,7 @@ nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 	}
 
 	spdk_io_device_unregister(nvme_bdev_ctrlr, nvme_bdev_unregister_cb);
+	return 1;
 }
 
 void
