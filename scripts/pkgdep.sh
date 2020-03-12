@@ -77,7 +77,7 @@ if [ -s /etc/redhat-release ]; then
 		yum config-manager --set-enabled PowerTools
 	fi
 	yum install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
-		libuuid-devel libiscsi-devel
+		libuuid-devel libiscsi-devel ncurses-devel
 	if echo "$ID $VERSION_ID" | grep -E -q 'centos 8'; then
 		yum install -y python36
 		#Create hard link to use in SPDK as python
@@ -141,7 +141,7 @@ elif [ -f /etc/debian_version ]; then
 	# Includes Ubuntu, Debian
 	# Minimal install
 	apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev \
-		uuid-dev libiscsi-dev python
+		uuid-dev libiscsi-dev python libncurses5-dev libncursesw5-dev
 	# Additional dependencies for SPDK CLI - not available on older Ubuntus
 	apt-get install -y python3-configshell-fb python3-pexpect || echo \
 		"Note: Some SPDK CLI dependencies could not be installed."
@@ -192,7 +192,7 @@ elif [ -f /etc/debian_version ]; then
 elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 	# Minimal install
 	zypper install -y gcc gcc-c++ make cunit-devel libaio-devel libopenssl-devel \
-		libuuid-devel python-base
+		libuuid-devel python-base ncurses-devel
 	# Additional dependencies for DPDK
 	zypper install -y libnuma-devel nasm
 	# Additional dependencies for ISA-L used in compression
@@ -222,7 +222,8 @@ elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 	fi
 elif [ $(uname -s) = "FreeBSD" ] ; then
 	# Minimal install
-	pkg install -y gmake cunit openssl git bash misc/e2fsprogs-libuuid python
+	pkg install -y gmake cunit openssl git bash misc/e2fsprogs-libuuid python \
+		ncurses
 	# Additional dependencies for ISA-L used in compression
 	pkg install -y autoconf automake libtool help2man
 	if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
@@ -237,7 +238,7 @@ elif [ $(uname -s) = "FreeBSD" ] ; then
 elif [ -f /etc/arch-release ]; then
 	# Install main dependencies
 	pacman -Sy --needed --noconfirm gcc make cunit libaio openssl \
-		libutil-linux libiscsi python
+		libutil-linux libiscsi python ncurses
 	# Additional dependencies for SPDK CLI
 	pacman -Sy --needed --noconfirm python-pexpect python-pip
 	pip install configshell_fb
