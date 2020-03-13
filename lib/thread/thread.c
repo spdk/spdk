@@ -519,6 +519,19 @@ _spdk_thread_insert_poller(struct spdk_thread *thread, struct spdk_poller *polle
 	}
 }
 
+static inline void
+_spdk_thread_update_stats(struct spdk_thread *thread, uint64_t now, int rc)
+{
+	if (rc == 0) {
+		/* Poller status idle */
+		thread->stats.idle_tsc += now - thread->tsc_last;
+	} else if (rc > 0) {
+		/* Poller status busy */
+		thread->stats.busy_tsc += now - thread->tsc_last;
+	}
+	thread->tsc_last = now;
+}
+
 int
 spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 {
@@ -627,14 +640,7 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 		}
 	}
 
-	if (rc == 0) {
-		/* Poller status idle */
-		thread->stats.idle_tsc += now - thread->tsc_last;
-	} else if (rc > 0) {
-		/* Poller status busy */
-		thread->stats.busy_tsc += now - thread->tsc_last;
-	}
-	thread->tsc_last = now;
+	_spdk_thread_update_stats(thread, now, rc);
 
 	tls_thread = orig_thread;
 
