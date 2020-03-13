@@ -1581,6 +1581,11 @@ _spdk_blob_persist_clear_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int
 	struct spdk_blob_store		*bs = blob->bs;
 	size_t				i;
 
+	if (bserrno != 0) {
+		_spdk_blob_persist_complete(seq, ctx, bserrno);
+		return;
+	}
+
 	/* Release all clusters that were truncated */
 	for (i = blob->active.num_clusters; i < blob->active.cluster_array_size; i++) {
 		uint32_t cluster_num = _spdk_bs_lba_to_cluster(bs, blob->active.clusters[i]);
@@ -1626,6 +1631,11 @@ _spdk_blob_persist_clear_clusters(spdk_bs_sequence_t *seq, void *cb_arg, int bse
 	size_t				i;
 	uint64_t			lba;
 	uint32_t			lba_count;
+
+	if (bserrno != 0) {
+		_spdk_blob_persist_complete(seq, ctx, bserrno);
+		return;
+	}
 
 	/* Clusters don't move around in blobs. The list shrinks or grows
 	 * at the end, but no changes ever occur in the middle of the list.
@@ -1678,6 +1688,11 @@ _spdk_blob_persist_zero_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bse
 	struct spdk_blob_store		*bs = blob->bs;
 	size_t				i;
 
+	if (bserrno != 0) {
+		_spdk_blob_persist_complete(seq, ctx, bserrno);
+		return;
+	}
+
 	/* This loop starts at 1 because the first page is special and handled
 	 * below. The pages (except the first) are never written in place,
 	 * so any pages in the clean list must be zeroed.
@@ -1707,6 +1722,11 @@ _spdk_blob_persist_zero_pages(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno
 	uint32_t			lba_count;
 	spdk_bs_batch_t			*batch;
 	size_t				i;
+
+	if (bserrno != 0) {
+		_spdk_blob_persist_complete(seq, ctx, bserrno);
+		return;
+	}
 
 	batch = spdk_bs_sequence_to_batch(seq, _spdk_blob_persist_zero_pages_cpl, ctx);
 
@@ -1746,6 +1766,11 @@ _spdk_blob_persist_write_page_root(spdk_bs_sequence_t *seq, void *cb_arg, int bs
 	uint32_t			lba_count;
 	struct spdk_blob_md_page	*page;
 
+	if (bserrno != 0) {
+		_spdk_blob_persist_complete(seq, ctx, bserrno);
+		return;
+	}
+
 	if (blob->active.num_pages == 0) {
 		/* Move on to the next step */
 		_spdk_blob_persist_zero_pages(seq, ctx, 0);
@@ -1773,6 +1798,11 @@ _spdk_blob_persist_write_page_chain(spdk_bs_sequence_t *seq, void *cb_arg, int b
 	struct spdk_blob_md_page	*page;
 	spdk_bs_batch_t			*batch;
 	size_t				i;
+
+	if (bserrno != 0) {
+		_spdk_blob_persist_complete(seq, ctx, bserrno);
+		return;
+	}
 
 	/* Clusters don't move around in blobs. The list shrinks or grows
 	 * at the end, but no changes ever occur in the middle of the list.
@@ -1999,7 +2029,7 @@ _spdk_blob_persist_write_extent_pages(spdk_bs_sequence_t *seq, void *cb_arg, int
 			ctx->next_extent_page = i + 1;
 			rc = _spdk_blob_serialize_add_page(ctx->blob, &ctx->extent_page, &page_count, &ctx->extent_page);
 			if (rc < 0) {
-				assert(false);
+				_spdk_blob_persist_complete(seq, ctx, rc);
 				return;
 			}
 
