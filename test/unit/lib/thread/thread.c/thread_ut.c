@@ -916,6 +916,90 @@ thread_exit(void)
 	free_threads();
 }
 
+static int
+poller_run_idle(void *ctx)
+{
+	uint64_t delay_us = (uint64_t)ctx;
+
+	spdk_delay_us(delay_us);
+
+	return 0;
+}
+
+static int
+poller_run_busy(void *ctx)
+{
+	uint64_t delay_us = (uint64_t)ctx;
+
+	spdk_delay_us(delay_us);
+
+	return 1;
+}
+
+static void
+thread_update_stats(void)
+{
+	struct spdk_poller	*poller;
+	struct spdk_thread	*thread;
+
+	MOCK_SET(spdk_get_ticks, 10);
+
+	allocate_threads(1);
+
+	set_thread(0);
+	thread = spdk_get_thread();
+
+	CU_ASSERT(thread->tsc_last == 10);
+	CU_ASSERT(thread->stats.idle_tsc == 0);
+	CU_ASSERT(thread->stats.busy_tsc == 0);
+
+	/* Test if idle_tsc is updated expectedly. */
+	poller = spdk_poller_register(poller_run_idle, (void *)1000, 0);
+	CU_ASSERT(poller != NULL);
+
+	spdk_delay_us(100);
+
+	poll_thread_times(0, 1);
+
+	CU_ASSERT(thread->tsc_last == 1110);
+	CU_ASSERT(thread->stats.idle_tsc == 1000);
+	CU_ASSERT(thread->stats.busy_tsc == 0);
+
+	spdk_delay_us(100);
+
+	poll_thread_times(0, 1);
+
+	CU_ASSERT(thread->tsc_last == 2210);
+	CU_ASSERT(thread->stats.idle_tsc == 2000);
+	CU_ASSERT(thread->stats.busy_tsc == 0);
+
+	spdk_poller_unregister(&poller);
+
+	/* Test if busy_tsc is updated expectedly. */
+	poller = spdk_poller_register(poller_run_busy, (void *)100000, 0);
+	CU_ASSERT(poller != NULL);
+
+	spdk_delay_us(10000);
+
+	poll_thread_times(0, 1);
+
+	CU_ASSERT(thread->tsc_last == 112210);
+	CU_ASSERT(thread->stats.idle_tsc == 2000);
+	CU_ASSERT(thread->stats.busy_tsc == 100000);
+
+	spdk_delay_us(10000);
+
+	poll_thread_times(0, 1);
+
+	CU_ASSERT(thread->tsc_last == 222210);
+	CU_ASSERT(thread->stats.idle_tsc == 2000);
+	CU_ASSERT(thread->stats.busy_tsc == 200000);
+
+	spdk_poller_unregister(&poller);
+
+	free_threads();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -943,7 +1027,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "thread_name", thread_name) == NULL ||
 		CU_add_test(suite, "channel", channel) == NULL ||
 		CU_add_test(suite, "channel_destroy_races", channel_destroy_races) == NULL ||
-		CU_add_test(suite, "thread_exit", thread_exit) == NULL
+		CU_add_test(suite, "thread_exit", thread_exit) == NULL ||
+		CU_add_test(suite, "thread_update_stats", thread_update_stats) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

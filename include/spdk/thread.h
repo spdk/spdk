@@ -345,7 +345,10 @@ struct spdk_thread *spdk_thread_get_from_ctx(void *ctx);
  * \param max_msgs The maximum number of messages that will be processed.
  *                 Use 0 to process the default number of messages (8).
  * \param now The current time, in ticks. Optional. If 0 is passed, this
- *            function may call spdk_get_ticks() to get the current time.
+ *            function will call spdk_get_ticks() to get the current time.
+ *            The current time is used as start time and this function
+ *            will call spdk_get_ticks() at its end to know end time to
+ *            measure run time of this function.
  *
  * \return 1 if work was done. 0 if no work was done.
  */
@@ -447,6 +450,15 @@ struct spdk_thread_stats {
  * \param stats User's thread_stats structure.
  */
 int spdk_thread_get_stats(struct spdk_thread_stats *stats);
+
+/**
+ * Return the TSC value from the end of the last time this thread was polled.
+ *
+ * \param thread Thread to query.
+ *
+ * \return TSC value from the end of the last time this thread was polled.
+ */
+uint64_t spdk_thread_get_last_tsc(struct spdk_thread *thread);
 
 /**
  * Send a message to the given thread.
