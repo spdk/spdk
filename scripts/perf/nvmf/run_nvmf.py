@@ -203,7 +203,8 @@ class Target(Server):
 
 class Initiator(Server):
     def __init__(self, name, username, password, mode, nic_ips, ip, transport="rdma", cpu_frequency=None,
-                 nvmecli_bin="nvme", workspace="/tmp/spdk", cpus_allowed=None, fio_bin="/usr/src/fio/fio"):
+                 nvmecli_bin="nvme", workspace="/tmp/spdk", cpus_allowed=None,
+                 cpus_allowed_policy="shared", fio_bin="/usr/src/fio/fio"):
 
         super(Initiator, self).__init__(name, username, password, mode, nic_ips, transport)
 
@@ -211,6 +212,7 @@ class Initiator(Server):
         self.spdk_dir = workspace
         self.fio_bin = fio_bin
         self.cpus_allowed = cpus_allowed
+        self.cpus_allowed_policy = cpus_allowed_policy
         self.cpu_frequency = cpu_frequency
         self.nvmecli_bin = nvmecli_bin
         self.ssh_connection = paramiko.SSHClient()
@@ -342,6 +344,7 @@ runtime={run_time}
             fio_config = fio_config + "numjobs=%s \n" % num_jobs
         if self.cpus_allowed is not None:
             fio_config = fio_config + "cpus_allowed=%s \n" % self.cpus_allowed
+            fio_config = fio_config + "cpus_allowed_policy=%s \n" % self.cpus_allowed_policy
         fio_config = fio_config + filename_section
 
         fio_config_filename = "%s_%s_%s_m_%s" % (block_size, io_depth, rw, rwmixread)
@@ -631,10 +634,11 @@ class SPDKTarget(Target):
 
 class KernelInitiator(Initiator):
     def __init__(self, name, username, password, mode, nic_ips, ip, transport,
-                 cpus_allowed=None, fio_bin="/usr/src/fio/fio", **kwargs):
+                 cpus_allowed=None, cpus_allowed_policy="shared", fio_bin="/usr/src/fio/fio", **kwargs):
 
         super(KernelInitiator, self).__init__(name, username, password, mode, nic_ips, ip, transport,
-                                              cpus_allowed=cpus_allowed, fio_bin=fio_bin)
+                                              cpus_allowed=cpus_allowed, cpus_allowed_policy=cpus_allowed_policy,
+                                              fio_bin=fio_bin)
 
         self.extra_params = ""
         if kwargs["extra_params"]:
@@ -687,9 +691,11 @@ class KernelInitiator(Initiator):
 
 class SPDKInitiator(Initiator):
     def __init__(self, name, username, password, mode, nic_ips, ip, transport="rdma",
-                 num_cores=1, cpus_allowed=None, fio_bin="/usr/src/fio/fio", **kwargs):
+                 num_cores=1, cpus_allowed=None, cpus_allowed_policy="shared",
+                 fio_bin="/usr/src/fio/fio", **kwargs):
         super(SPDKInitiator, self).__init__(name, username, password, mode, nic_ips, ip, transport,
-                                            cpus_allowed=cpus_allowed, fio_bin=fio_bin)
+                                            cpus_allowed=cpus_allowed, cpus_allowed_policy=cpus_allowed_policy,
+                                            fio_bin=fio_bin)
 
         self.num_cores = num_cores
 
