@@ -78,6 +78,8 @@ struct spdk_reactor {
 		uint32_t				reserved : 31;
 	} flags;
 
+	uint64_t					tsc_last;
+
 	struct spdk_ring				*events;
 
 	/* The last known rusage values */

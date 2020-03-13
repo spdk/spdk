@@ -313,19 +313,15 @@ static uint64_t g_rusage_period;
 static void
 reactor_run(struct spdk_reactor *reactor)
 {
-	uint64_t		now;
 	struct spdk_thread	*thread;
 	struct spdk_lw_thread	*lw_thread, *tmp;
-
-	/* For each loop through the reactor, capture the time. This time
-	 * is used for all threads. */
-	now = spdk_get_ticks();
 
 	_spdk_event_queue_run_batch(reactor);
 
 	TAILQ_FOREACH_SAFE(lw_thread, &reactor->threads, link, tmp) {
 		thread = spdk_thread_get_from_ctx(lw_thread);
-		spdk_thread_poll(thread, 0, now);
+		spdk_thread_poll(thread, 0, reactor->tsc_last);
+		reactor->tsc_last = spdk_thread_get_last_tsc(thread);
 
 		if (spdk_unlikely(lw_thread->resched)) {
 			lw_thread->resched = false;
@@ -347,9 +343,9 @@ reactor_run(struct spdk_reactor *reactor)
 	}
 
 	if (g_framework_context_switch_monitor_enabled) {
-		if ((reactor->last_rusage + g_rusage_period) < now) {
+		if ((reactor->last_rusage + g_rusage_period) < reactor->tsc_last) {
 			get_rusage(reactor);
-			reactor->last_rusage = now;
+			reactor->last_rusage = reactor->tsc_last;
 		}
 	}
 }
@@ -370,6 +366,8 @@ _spdk_reactor_run(void *arg)
 	 */
 	snprintf(thread_name, sizeof(thread_name), "reactor_%u", reactor->lcore);
 	_set_thread_name(thread_name);
+
+	reactor->tsc_last = spdk_get_ticks();
 
 	while (1) {
 		reactor_run(reactor);
