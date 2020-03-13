@@ -532,21 +532,13 @@ _spdk_thread_update_stats(struct spdk_thread *thread, uint64_t now, int rc)
 	thread->tsc_last = now;
 }
 
-int
-spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
+static int
+_spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 {
 	uint32_t msg_count;
-	struct spdk_thread *orig_thread;
 	struct spdk_poller *poller, *tmp;
 	spdk_msg_fn critical_msg;
 	int rc = 0;
-
-	orig_thread = _get_thread();
-	tls_thread = thread;
-
-	if (now == 0) {
-		now = spdk_get_ticks();
-	}
 
 	critical_msg = thread->critical_msg;
 	if (spdk_unlikely(critical_msg != NULL)) {
@@ -639,6 +631,24 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 			rc = timer_rc;
 		}
 	}
+
+	return rc;
+}
+
+int
+spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
+{
+	struct spdk_thread *orig_thread;
+	int rc;
+
+	orig_thread = _get_thread();
+	tls_thread = thread;
+
+	if (now == 0) {
+		now = spdk_get_ticks();
+	}
+
+	rc = _spdk_thread_poll(thread, max_msgs, now);
 
 	_spdk_thread_update_stats(thread, now, rc);
 
