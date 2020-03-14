@@ -362,8 +362,8 @@ int
 nvme_ctrlr_cmd_get_num_queues(struct spdk_nvme_ctrlr *ctrlr,
 			      spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
-	fake_cpl_success(cb_fn, cb_arg);
-	return 0;
+	CU_ASSERT(0);
+	return -1;
 }
 
 int
@@ -1982,10 +1982,12 @@ test_nvme_ctrlr_init_set_nvmf_ioccsz(void)
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_SET_NUM_QUEUES);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
-	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_GET_NUM_QUEUES);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_CONSTRUCT_NS);
 
 	CU_ASSERT(ctrlr.ioccsz_bytes == 0);
 	CU_ASSERT(ctrlr.icdoff == 0);
+
+	nvme_ctrlr_destruct(&ctrlr);
 
 	/* Check RDMA trtype, */
 	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
@@ -1994,12 +1996,14 @@ test_nvme_ctrlr_init_set_nvmf_ioccsz(void)
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_SET_NUM_QUEUES);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
-	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_GET_NUM_QUEUES);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_CONSTRUCT_NS);
 
 	CU_ASSERT(ctrlr.ioccsz_bytes == 4096);
 	CU_ASSERT(ctrlr.icdoff == 1);
 	ctrlr.ioccsz_bytes = 0;
 	ctrlr.icdoff = 0;
+
+	nvme_ctrlr_destruct(&ctrlr);
 
 	/* Check TCP trtype, */
 	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_TCP;
@@ -2008,12 +2012,14 @@ test_nvme_ctrlr_init_set_nvmf_ioccsz(void)
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_SET_NUM_QUEUES);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
-	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_GET_NUM_QUEUES);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_CONSTRUCT_NS);
 
 	CU_ASSERT(ctrlr.ioccsz_bytes == 4096);
 	CU_ASSERT(ctrlr.icdoff == 1);
 	ctrlr.ioccsz_bytes = 0;
 	ctrlr.icdoff = 0;
+
+	nvme_ctrlr_destruct(&ctrlr);
 
 	/* Check FC trtype, */
 	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_FC;
@@ -2022,12 +2028,14 @@ test_nvme_ctrlr_init_set_nvmf_ioccsz(void)
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_SET_NUM_QUEUES);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
-	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_GET_NUM_QUEUES);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_CONSTRUCT_NS);
 
 	CU_ASSERT(ctrlr.ioccsz_bytes == 4096);
 	CU_ASSERT(ctrlr.icdoff == 1);
 	ctrlr.ioccsz_bytes = 0;
 	ctrlr.icdoff = 0;
+
+	nvme_ctrlr_destruct(&ctrlr);
 
 	/* Check CUSTOM trtype, */
 	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_CUSTOM;
@@ -2036,10 +2044,12 @@ test_nvme_ctrlr_init_set_nvmf_ioccsz(void)
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_SET_NUM_QUEUES);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
-	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_GET_NUM_QUEUES);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_CONSTRUCT_NS);
 
 	CU_ASSERT(ctrlr.ioccsz_bytes == 0);
 	CU_ASSERT(ctrlr.icdoff == 0);
+
+	nvme_ctrlr_destruct(&ctrlr);
 }
 
 int main(int argc, char **argv)

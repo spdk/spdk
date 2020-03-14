@@ -903,10 +903,6 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "set number of queues";
 	case NVME_CTRLR_STATE_WAIT_FOR_SET_NUM_QUEUES:
 		return "wait for set number of queues";
-	case NVME_CTRLR_STATE_GET_NUM_QUEUES:
-		return "get number of queues";
-	case NVME_CTRLR_STATE_WAIT_FOR_GET_NUM_QUEUES:
-		return "wait for get number of queues";
 	case NVME_CTRLR_STATE_CONSTRUCT_NS:
 		return "construct namespaces";
 	case NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS:
@@ -1523,18 +1519,6 @@ nvme_ctrlr_identify_id_desc_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static void
-nvme_ctrlr_set_num_queues_done(void *arg, const struct spdk_nvme_cpl *cpl)
-{
-	struct spdk_nvme_ctrlr *ctrlr = (struct spdk_nvme_ctrlr *)arg;
-
-	if (spdk_nvme_cpl_is_error(cpl)) {
-		SPDK_ERRLOG("Set Features - Number of Queues failed!\n");
-	}
-	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_GET_NUM_QUEUES,
-			     ctrlr->opts.admin_timeout_ms);
-}
-
-static void
 nvme_ctrlr_update_nvmf_ioccsz(struct spdk_nvme_ctrlr *ctrlr)
 {
 	if (ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_RDMA ||
@@ -1551,41 +1535,14 @@ nvme_ctrlr_update_nvmf_ioccsz(struct spdk_nvme_ctrlr *ctrlr)
 	}
 }
 
-static int
-nvme_ctrlr_set_num_queues(struct spdk_nvme_ctrlr *ctrlr)
-{
-	int rc;
-
-	if (ctrlr->opts.num_io_queues > SPDK_NVME_MAX_IO_QUEUES) {
-		SPDK_NOTICELOG("Limiting requested num_io_queues %u to max %d\n",
-			       ctrlr->opts.num_io_queues, SPDK_NVME_MAX_IO_QUEUES);
-		ctrlr->opts.num_io_queues = SPDK_NVME_MAX_IO_QUEUES;
-	} else if (ctrlr->opts.num_io_queues < 1) {
-		SPDK_NOTICELOG("Requested num_io_queues 0, increasing to 1\n");
-		ctrlr->opts.num_io_queues = 1;
-	}
-
-	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_SET_NUM_QUEUES,
-			     ctrlr->opts.admin_timeout_ms);
-
-	rc = nvme_ctrlr_cmd_set_num_queues(ctrlr, ctrlr->opts.num_io_queues,
-					   nvme_ctrlr_set_num_queues_done, ctrlr);
-	if (rc != 0) {
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
-		return rc;
-	}
-
-	return 0;
-}
-
 static void
-nvme_ctrlr_get_num_queues_done(void *arg, const struct spdk_nvme_cpl *cpl)
+nvme_ctrlr_set_num_queues_done(void *arg, const struct spdk_nvme_cpl *cpl)
 {
 	uint32_t cq_allocated, sq_allocated, min_allocated, i;
 	struct spdk_nvme_ctrlr *ctrlr = (struct spdk_nvme_ctrlr *)arg;
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
-		SPDK_ERRLOG("Get Features - Number of Queues failed!\n");
+		SPDK_ERRLOG("Set Features - Number of Queues failed!\n");
 		ctrlr->opts.num_io_queues = 0;
 	} else {
 		/*
@@ -1622,15 +1579,24 @@ nvme_ctrlr_get_num_queues_done(void *arg, const struct spdk_nvme_cpl *cpl)
 }
 
 static int
-nvme_ctrlr_get_num_queues(struct spdk_nvme_ctrlr *ctrlr)
+nvme_ctrlr_set_num_queues(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc;
 
-	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_GET_NUM_QUEUES,
+	if (ctrlr->opts.num_io_queues > SPDK_NVME_MAX_IO_QUEUES) {
+		SPDK_NOTICELOG("Limiting requested num_io_queues %u to max %d\n",
+			       ctrlr->opts.num_io_queues, SPDK_NVME_MAX_IO_QUEUES);
+		ctrlr->opts.num_io_queues = SPDK_NVME_MAX_IO_QUEUES;
+	} else if (ctrlr->opts.num_io_queues < 1) {
+		SPDK_NOTICELOG("Requested num_io_queues 0, increasing to 1\n");
+		ctrlr->opts.num_io_queues = 1;
+	}
+
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_SET_NUM_QUEUES,
 			     ctrlr->opts.admin_timeout_ms);
 
-	/* Obtain the number of queues allocated using Get Features. */
-	rc = nvme_ctrlr_cmd_get_num_queues(ctrlr, nvme_ctrlr_get_num_queues_done, ctrlr);
+	rc = nvme_ctrlr_cmd_set_num_queues(ctrlr, ctrlr->opts.num_io_queues,
+					   nvme_ctrlr_set_num_queues_done, ctrlr);
 	if (rc != 0) {
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 		return rc;
@@ -2449,14 +2415,6 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		break;
 
 	case NVME_CTRLR_STATE_WAIT_FOR_SET_NUM_QUEUES:
-		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
-		break;
-
-	case NVME_CTRLR_STATE_GET_NUM_QUEUES:
-		rc = nvme_ctrlr_get_num_queues(ctrlr);
-		break;
-
-	case NVME_CTRLR_STATE_WAIT_FOR_GET_NUM_QUEUES:
 		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 		break;
 
