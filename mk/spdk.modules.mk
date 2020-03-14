@@ -51,8 +51,11 @@ SYS_LIBS += -lpmem
 endif
 
 ifeq ($(CONFIG_RDMA),y)
-SYS_LIBS += -libverbs -lrdmacm
 BLOCKDEV_MODULES_LIST += rdma
+SYS_LIBS += -libverbs -lrdmacm
+ifeq ($(CONFIG_RDMA_PROV),mlx5_dv)
+SYS_LIBS += -lmlx5
+endif
 endif
 
 ifeq ($(OS),Linux)

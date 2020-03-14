@@ -74,6 +74,13 @@ spdk_rdma_qp_create(struct rdma_cm_id *cm_id, struct spdk_rdma_qp_init_attr *qp_
 	return spdk_rdma_qp;
 }
 
+int
+spdk_rdma_qp_complete_connect(struct spdk_rdma_qp *spdk_rdma_qp)
+{
+	/* Nothing to be done for Verbs */
+	return 0;
+}
+
 void
 spdk_rdma_qp_destroy(struct spdk_rdma_qp *spdk_rdma_qp)
 {

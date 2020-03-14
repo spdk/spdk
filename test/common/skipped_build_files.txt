@@ -16,6 +16,9 @@ test/unit/lib/nvmf/fc_ls.c/fc_ls_ut
 # Not configured for Neon testing
 lib/util/base64_neon
 
+# Not configured for mlx5 dv testing
+lib/rdma/rdma_mlx5_dv
+
 # Files related to testing our internal vhost implementation.
 lib/rte_vhost/fd_man
 lib/rte_vhost/socket

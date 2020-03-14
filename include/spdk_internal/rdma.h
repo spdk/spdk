@@ -45,6 +45,7 @@ struct spdk_rdma_qp_init_attr {
 	struct ibv_srq	       *srq;
 	struct ibv_qp_cap	cap;
 	struct ibv_pd	       *pd;
+	bool			initiator_side;
 };
 
 struct spdk_rdma_qp {
@@ -60,6 +61,14 @@ struct spdk_rdma_qp {
  */
 struct spdk_rdma_qp *spdk_rdma_qp_create(struct rdma_cm_id *cm_id,
 		struct spdk_rdma_qp_init_attr *qp_attr);
+
+/**
+ * Complete the connection process, must be called by the active
+ * side (NVMEoF initiator) upon receipt RDMA_CM_EVENT_CONNECT_RESPONSE
+ * @param spdk_rdma_qp pointer to a qpair
+ * @return 0 on success, errno on failure
+ */
+int spdk_rdma_qp_complete_connect(struct spdk_rdma_qp *spdk_rdma_qp);
 
 /**
  * Destroy RDMA provider specific qpair

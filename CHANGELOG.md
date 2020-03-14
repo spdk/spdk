@@ -15,6 +15,13 @@ The software accel engine implemenation has added support for CRC-32C.
 
 IDXD engine support for CRC-32C has been added.
 
+### rdma
+
+A new `rdma` library has been added. It is an abstraction layer over different RDMA providers.
+Two providers are available - verbs (used by default when RDMA is enabled or enabled explicitly
+using --with-rdma=verbs) and mlx5 Direct Verbs aka DV (enabled by --with-rdma=mlx5_dv).
+Using mlx5_dv requires libmlx5 installed on the system.
+
 ## v20.04:
 
 ### configuration

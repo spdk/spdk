@@ -332,13 +332,14 @@ nvme_rdma_qpair_process_cm_event(struct nvme_rdma_qpair *rqpair)
 			break;
 		case RDMA_CM_EVENT_CONNECT_REQUEST:
 			break;
-		case RDMA_CM_EVENT_CONNECT_RESPONSE:
-			break;
 		case RDMA_CM_EVENT_CONNECT_ERROR:
 			break;
 		case RDMA_CM_EVENT_UNREACHABLE:
 		case RDMA_CM_EVENT_REJECTED:
 			break;
+		case RDMA_CM_EVENT_CONNECT_RESPONSE:
+			rc = spdk_rdma_qp_complete_connect(rqpair->rdma_qp);
+		/* fall through */
 		case RDMA_CM_EVENT_ESTABLISHED:
 			accept_data = (struct spdk_nvmf_rdma_accept_private_data *)event->param.conn.private_data;
 			if (accept_data == NULL) {
@@ -443,6 +444,13 @@ nvme_rdma_validate_cm_event(enum rdma_cm_event_type expected_evt_type,
 		 */
 		if (reaped_evt->event == RDMA_CM_EVENT_REJECTED && reaped_evt->status == 10) {
 			rc = -ESTALE;
+		} else if (reaped_evt->event == RDMA_CM_EVENT_CONNECT_RESPONSE) {
+			/*
+			 *  If we are using a qpair which is not created using rdma cm API
+			 *  then we will receive RDMA_CM_EVENT_CONNECT_RESPONSE instead of
+			 *  RDMA_CM_EVENT_ESTABLISHED.
+			 */
+			return 0;
 		}
 		break;
 	default:
@@ -530,6 +538,7 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 	attr.cap.max_recv_wr	= rqpair->num_entries; /* RECV operations */
 	attr.cap.max_send_sge	= spdk_min(NVME_RDMA_DEFAULT_TX_SGE, dev_attr.max_sge);
 	attr.cap.max_recv_sge	= spdk_min(NVME_RDMA_DEFAULT_RX_SGE, dev_attr.max_sge);
+	attr.initiator_side	= true;
 
 	rqpair->rdma_qp = spdk_rdma_qp_create(rqpair->cm_id, &attr);
 
@@ -541,7 +550,7 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 	rqpair->max_send_sge = spdk_min(NVME_RDMA_DEFAULT_TX_SGE, attr.cap.max_send_sge);
 	rqpair->max_recv_sge = spdk_min(NVME_RDMA_DEFAULT_RX_SGE, attr.cap.max_recv_sge);
 
-	rctrlr->pd = rqpair->cm_id->qp->pd;
+	rctrlr->pd = rqpair->rdma_qp->qp->pd;
 
 	rqpair->cm_id->context = &rqpair->qpair;
 
@@ -555,7 +564,7 @@ nvme_rdma_qpair_submit_sends(struct nvme_rdma_qpair *rqpair)
 	int rc;
 
 	if (rqpair->sends_to_post.first) {
-		rc = ibv_post_send(rqpair->cm_id->qp, rqpair->sends_to_post.first, &bad_send_wr);
+		rc = ibv_post_send(rqpair->rdma_qp->qp, rqpair->sends_to_post.first, &bad_send_wr);
 		if (spdk_unlikely(rc)) {
 			SPDK_ERRLOG("Failed to post WRs on send queue, errno %d (%s), bad_wr %p\n",
 				    rc, spdk_strerror(rc), bad_send_wr);
@@ -579,7 +588,7 @@ nvme_rdma_qpair_submit_recvs(struct nvme_rdma_qpair *rqpair)
 	int rc;
 
 	if (rqpair->recvs_to_post.first) {
-		rc = ibv_post_recv(rqpair->cm_id->qp, rqpair->recvs_to_post.first, &bad_recv_wr);
+		rc = ibv_post_recv(rqpair->rdma_qp->qp, rqpair->recvs_to_post.first, &bad_recv_wr);
 		if (spdk_unlikely(rc)) {
 			SPDK_ERRLOG("Failed to post WRs on receive queue, errno %d (%s), bad_wr %p\n",
 				    rc, spdk_strerror(rc), bad_recv_wr);
@@ -933,6 +942,11 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 	param.retry_count = ctrlr->opts.transport_retry_count;
 	param.rnr_retry_count = 7;
 
+	/* Fields below are ignored by rdma cm if qpair has been
+	 * created using rdma cm API. */
+	param.srq = 0;
+	param.qp_num = rqpair->rdma_qp->qp->qp_num;
+
 	ret = rdma_connect(rqpair->cm_id, &param);
 	if (ret) {
 		SPDK_ERRLOG("nvme rdma connect error\n");
@@ -944,7 +958,7 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 		SPDK_NOTICELOG("Received a stale connection notice during connection.\n");
 		return -EAGAIN;
 	} else if (ret) {
-		SPDK_ERRLOG("RDMA connect error\n");
+		SPDK_ERRLOG("RDMA connect error %d\n", ret);
 		return -1;
 	} else {
 		return 0;
@@ -1033,7 +1047,7 @@ nvme_rdma_check_contiguous_entries(uint64_t addr_1, uint64_t addr_2)
 static int
 nvme_rdma_register_mem(struct nvme_rdma_qpair *rqpair)
 {
-	struct ibv_pd *pd = rqpair->cm_id->qp->pd;
+	struct ibv_pd *pd = rqpair->rdma_qp->qp->pd;
 	struct spdk_nvme_rdma_mr_map *mr_map;
 	const struct spdk_mem_map_ops nvme_rdma_map_ops = {
 		.notify_cb = nvme_rdma_mr_map_notify,

@@ -74,7 +74,8 @@ function usage()
 	echo " rbd                       Build Ceph RBD bdev module."
 	echo "                           No path required."
 	echo " rdma                      Build RDMA transport for NVMf target and initiator."
-	echo "                           No path required."
+	echo "                           Accepts optional RDMA provider name. Can be \"verbs\" or \"mlx5_dv\"."
+	echo "                           If no provider specified, \"verbs\" provider is used by default."
 	echo " fc                        Build FC transport for NVMf target."
 	echo "                           If an argument is provided, it is considered a directory containing"
 	echo "                           libufc.a and fc_lld.h. Otherwise the regular system paths will"
@@ -292,8 +293,13 @@ for i in "$@"; do
 		--without-rbd)
 			CONFIG[RBD]=n
 			;;
+		--with-rdma=*)
+			CONFIG[RDMA]=y
+			CONFIG[RDMA_PROV]=${i#*=}
+			;;
 		--with-rdma)
 			CONFIG[RDMA]=y
+			CONFIG[RDMA_PROV]="verbs"
 			;;
 		--without-rdma)
 			CONFIG[RDMA]=n
@@ -593,6 +599,11 @@ if [[ $sys_name == "FreeBSD" ]]; then
 fi
 
 if [ "${CONFIG[RDMA]}" = "y" ]; then
+  if [[ ! "${CONFIG[RDMA_PROV]}" == "verbs" ]] && [[ ! "${CONFIG[RDMA_PROV]}" == "mlx5_dv" ]]; then
+    echo "Invalid RDMA provider specified, must be \"verbs\" or \"mlx5_dv\""
+    exit 1
+  fi
+
 	if ! echo -e '#include <infiniband/verbs.h>\n#include <rdma/rdma_verbs.h>\n' \
 		'int main(void) { return 0; }\n' \
 		| ${BUILD_CMD[@]} -libverbs -lrdmacm - 2>/dev/null; then
@@ -632,6 +643,19 @@ than or equal to 4.14 will see significantly reduced performance.
 		echo "RDMA_OPTION_ID_ACK_TIMEOUT is not supported"
 	fi
 
+	if [ "${CONFIG[RDMA_PROV]}" == "mlx5_dv" ]; then
+	  if ! echo -e '#include <spdk/stdinc.h>\n' \
+	    '#include <infiniband/mlx5dv.h>\n' \
+	    '#include <rdma/rdma_cma.h>\n' \
+		  'int main(void) { return rdma_establish(NULL) || ' \
+		  '!!IBV_QP_INIT_ATTR_SEND_OPS_FLAGS || !!MLX5_OPCODE_RDMA_WRITE; }\n' \
+		  | ${BUILD_CMD[@]} -lmlx5 -I${rootdir}/include -c - 2>/dev/null; then
+      echo "mlx5_dv provider is not supported"
+		  exit 1
+	  fi
+	fi
+
+	echo "Using "${CONFIG[RDMA_PROV]}" RDMA provider"
 fi
 
 if [[ "${CONFIG[FC]}" = "y" ]]; then
