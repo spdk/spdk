@@ -33,10 +33,6 @@
 
 #include "spdk/stdinc.h"
 
-#include <infiniband/verbs.h>
-#include <rdma/rdma_cma.h>
-#include <rdma/rdma_verbs.h>
-
 #include "spdk/config.h"
 #include "spdk/thread.h"
 #include "spdk/likely.h"
@@ -47,6 +43,7 @@
 
 #include "spdk_internal/assert.h"
 #include "spdk_internal/log.h"
+#include "spdk_internal/rdma.h"
 
 struct spdk_nvme_rdma_hooks g_nvmf_hooks = {};
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma;
@@ -343,6 +340,7 @@ struct spdk_nvmf_rdma_qpair {
 	struct spdk_nvmf_rdma_device		*device;
 	struct spdk_nvmf_rdma_poller		*poller;
 
+	struct spdk_rdma_qp			*rdma_qp;
 	struct rdma_cm_id			*cm_id;
 	struct ibv_srq				*srq;
 	struct rdma_cm_id			*listen_id;
@@ -896,8 +894,9 @@ nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 	}
 
 	if (rqpair->cm_id) {
-		if (rqpair->cm_id->qp != NULL) {
-			rdma_destroy_qp(rqpair->cm_id);
+		if (rqpair->rdma_qp != NULL) {
+			spdk_rdma_qp_destroy(rqpair->rdma_qp);
+			rqpair->rdma_qp = NULL;
 		}
 		rdma_destroy_id(rqpair->cm_id);
 
@@ -955,48 +954,45 @@ static int
 nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 {
 	struct spdk_nvmf_rdma_qpair		*rqpair;
-	int					rc;
 	struct spdk_nvmf_rdma_transport		*rtransport;
 	struct spdk_nvmf_transport		*transport;
 	struct spdk_nvmf_rdma_resource_opts	opts;
 	struct spdk_nvmf_rdma_device		*device;
-	struct ibv_qp_init_attr			ibv_init_attr;
+	struct spdk_rdma_qp_init_attr		qp_init_attr = {};
 
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 	device = rqpair->device;
 
-	memset(&ibv_init_attr, 0, sizeof(struct ibv_qp_init_attr));
-	ibv_init_attr.qp_context	= rqpair;
-	ibv_init_attr.qp_type		= IBV_QPT_RC;
-	ibv_init_attr.send_cq		= rqpair->poller->cq;
-	ibv_init_attr.recv_cq		= rqpair->poller->cq;
+	qp_init_attr.qp_context	= rqpair;
+	qp_init_attr.pd		= device->pd;
+	qp_init_attr.send_cq	= rqpair->poller->cq;
+	qp_init_attr.recv_cq	= rqpair->poller->cq;
 
 	if (rqpair->srq) {
-		ibv_init_attr.srq		= rqpair->srq;
+		qp_init_attr.srq		= rqpair->srq;
 	} else {
-		ibv_init_attr.cap.max_recv_wr	= rqpair->max_queue_depth;
+		qp_init_attr.cap.max_recv_wr	= rqpair->max_queue_depth;
 	}
 
-	ibv_init_attr.cap.max_send_wr	= (uint32_t)rqpair->max_queue_depth *
-					  2; /* SEND, READ or WRITE operations */
-	ibv_init_attr.cap.max_send_sge	= spdk_min((uint32_t)device->attr.max_sge, NVMF_DEFAULT_TX_SGE);
-	ibv_init_attr.cap.max_recv_sge	= spdk_min((uint32_t)device->attr.max_sge, NVMF_DEFAULT_RX_SGE);
+	/* SEND, READ, and WRITE operations */
+	qp_init_attr.cap.max_send_wr	= (uint32_t)rqpair->max_queue_depth * 2;
+	qp_init_attr.cap.max_send_sge	= spdk_min((uint32_t)device->attr.max_sge, NVMF_DEFAULT_TX_SGE);
+	qp_init_attr.cap.max_recv_sge	= spdk_min((uint32_t)device->attr.max_sge, NVMF_DEFAULT_RX_SGE);
 
 	if (rqpair->srq == NULL && nvmf_rdma_resize_cq(rqpair, device) < 0) {
 		SPDK_ERRLOG("Failed to resize the completion queue. Cannot initialize qpair.\n");
 		goto error;
 	}
 
-	rc = rdma_create_qp(rqpair->cm_id, device->pd, &ibv_init_attr);
-	if (rc) {
-		SPDK_ERRLOG("rdma_create_qp failed: errno %d: %s\n", errno, spdk_strerror(errno));
+	rqpair->rdma_qp = spdk_rdma_qp_create(rqpair->cm_id, &qp_init_attr);
+	if (!rqpair->rdma_qp) {
 		goto error;
 	}
 
 	rqpair->max_send_depth = spdk_min((uint32_t)(rqpair->max_queue_depth * 2),
-					  ibv_init_attr.cap.max_send_wr);
-	rqpair->max_send_sge = spdk_min(NVMF_DEFAULT_TX_SGE, ibv_init_attr.cap.max_send_sge);
-	rqpair->max_recv_sge = spdk_min(NVMF_DEFAULT_RX_SGE, ibv_init_attr.cap.max_recv_sge);
+					  qp_init_attr.cap.max_send_wr);
+	rqpair->max_send_sge = spdk_min(NVMF_DEFAULT_TX_SGE, qp_init_attr.cap.max_send_sge);
+	rqpair->max_recv_sge = spdk_min(NVMF_DEFAULT_RX_SGE, qp_init_attr.cap.max_recv_sge);
 	spdk_trace_record(TRACE_RDMA_QP_CREATE, 0, 0, (uintptr_t)rqpair->cm_id, 0);
 	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "New RDMA Connection: %p\n", qpair);
 
@@ -1180,6 +1176,14 @@ nvmf_rdma_event_accept(struct rdma_cm_id *id, struct spdk_nvmf_rdma_qpair *rqpai
 	if (rqpair->srq != NULL) {
 		ctrlr_event_data.rnr_retry_count = 0x7;
 	}
+
+	/* When qpair is created without use of rdma cm API, an additional
+	 * information must be provided to initiator in the connection response:
+	 * whether qpair is using SRQ and its qp_num
+	 * Fields below are ignored by rdma cm if qpair has been
+	 * created using rdma cm API. */
+	ctrlr_event_data.srq = rqpair->srq ? 1 : 0;
+	ctrlr_event_data.qp_num = rqpair->rdma_qp->qp->qp_num;
 
 	rc = rdma_accept(id, &ctrlr_event_data);
 	if (rc) {

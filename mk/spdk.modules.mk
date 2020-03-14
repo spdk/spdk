@@ -52,6 +52,7 @@ endif
 
 ifeq ($(CONFIG_RDMA),y)
 SYS_LIBS += -libverbs -lrdmacm
+BLOCKDEV_MODULES_LIST += rdma
 endif
 
 ifeq ($(OS),Linux)

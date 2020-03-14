@@ -44,24 +44,6 @@ C_SRCS = ctrlr.c ctrlr_discovery.c ctrlr_bdev.c \
 C_SRCS-$(CONFIG_RDMA) += rdma.c
 LIBNAME = nvmf
 LOCAL_SYS_LIBS = -luuid
-ifeq ($(CONFIG_RDMA),y)
-LOCAL_SYS_LIBS += -libverbs -lrdmacm
-#Attach only if FreeBSD and RDMA is specified with configure
-ifeq ($(OS),FreeBSD)
-# Mellanox - MLX4 HBA Userspace Library
-ifneq ("$(wildcard /usr/lib/libmlx4.*)","")
-LOCAL_SYS_LIBS += -lmlx4
-endif
-# Mellanox - MLX5 HBA Userspace Library
-ifneq ("$(wildcard /usr/lib/libmlx5.*)","")
-LOCAL_SYS_LIBS += -lmlx5
-endif
-# Chelsio HBA Userspace Library
-ifneq ("$(wildcard /usr/lib/libcxgb4.*)","")
-LOCAL_SYS_LIBS += -lcxgb4
-endif
-endif
-endif
 
 ifeq ($(CONFIG_FC),y)
 C_SRCS += fc.c fc_ls.c

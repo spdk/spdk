@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 #include "spdk_cunit.h"
 #include "common/lib/test_env.c"
+#include "common/lib/test_rdma.c"
 #include "nvmf/rdma.c"
 #include "nvmf/transport.c"
 
