@@ -207,13 +207,13 @@ int nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 	return 0;
 }
 
+static struct spdk_nvme_cpl fake_cpl = {};
+
 static void
 fake_cpl_success(spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
-	struct spdk_nvme_cpl cpl = {};
-
-	cpl.status.sc = SPDK_NVME_SC_SUCCESS;
-	cb_fn(cb_arg, &cpl);
+	fake_cpl.status.sc = SPDK_NVME_SC_SUCCESS;
+	cb_fn(cb_arg, &fake_cpl);
 }
 
 int
@@ -2052,6 +2052,26 @@ test_nvme_ctrlr_init_set_nvmf_ioccsz(void)
 	nvme_ctrlr_destruct(&ctrlr);
 }
 
+static void
+test_nvme_ctrlr_init_set_num_queues(void)
+{
+	DECLARE_AND_CONSTRUCT_CTRLR();
+
+	ctrlr.state = NVME_CTRLR_STATE_IDENTIFY;
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0); /* -> SET_NUM_QUEUES */
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_SET_NUM_QUEUES);
+
+	ctrlr.opts.num_io_queues = 64;
+	/* Num queues is zero-based. So, use 31 to get 32 queues */
+	fake_cpl.cdw0 = 31 + (31 << 16);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0); /* -> CONSTRUCT_NS */
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_CONSTRUCT_NS);
+	CU_ASSERT(ctrlr.opts.num_io_queues == 32);
+	fake_cpl.cdw0 = 0;
+
+	nvme_ctrlr_destruct(&ctrlr);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -2111,6 +2131,8 @@ int main(int argc, char **argv)
 		|| CU_add_test(suite, "test_spdk_nvme_ctrlr_set_trid", test_spdk_nvme_ctrlr_set_trid) == NULL
 		|| CU_add_test(suite, "test_nvme_ctrlr_init_set_nvmf_ioccsz",
 			       test_nvme_ctrlr_init_set_nvmf_ioccsz) == NULL
+		|| CU_add_test(suite, "test nvme ctrlr init set num queues",
+			       test_nvme_ctrlr_init_set_num_queues) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
