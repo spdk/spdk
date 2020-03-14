@@ -1,8 +1,8 @@
 #
 #  BSD LICENSE
 #
-#  Copyright (c) Intel Corporation.
-#  All rights reserved.
+#  Copyright (c) Intel Corporation. All rights reserved.
+#  Copyright (c) Mellanox Technologies LTD. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions
@@ -31,35 +31,33 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.lib_deps.mk
 
-DIRS-y += bdev blob blobfs conf accel event json jsonrpc \
-          log log_rpc lvol net rpc sock thread trace util nvme vmd nvmf scsi \
-          ioat ut_mock iscsi notify
-ifeq ($(OS),Linux)
-DIRS-y += nbd ftl
+SO_VER := 1
+SO_MINOR := 0
+SO_SUFFIX := $(SO_VER).$(SO_MINOR)
+
+SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_rdma.map)
+
+LIBNAME = rdma
+C_SRCS = rdma_verbs.c
+
+LOCAL_SYS_LIBS += -libverbs -lrdmacm
+#Attach only if FreeBSD and RDMA is specified with configure
+ifeq ($(OS),FreeBSD)
+# Mellanox - MLX4 HBA Userspace Library
+ifneq ("$(wildcard /usr/lib/libmlx4.*)","")
+LOCAL_SYS_LIBS += -lmlx4
+endif
+# Mellanox - MLX5 HBA Userspace Library
+ifneq ("$(wildcard /usr/lib/libmlx5.*)","")
+LOCAL_SYS_LIBS += -lmlx5
+endif
+# Chelsio HBA Userspace Library
+ifneq ("$(wildcard /usr/lib/libcxgb4.*)","")
+LOCAL_SYS_LIBS += -lcxgb4
+endif
 endif
 
-DIRS-$(CONFIG_OCF) += env_ocf
-DIRS-$(CONFIG_IDXD) += idxd
-DIRS-$(CONFIG_VHOST) += vhost
-DIRS-$(CONFIG_VIRTIO) += virtio
-DIRS-$(CONFIG_REDUCE) += reduce
-DIRS-$(CONFIG_VHOST_INTERNAL_LIB) += rte_vhost
-DIRS-$(CONFIG_RDMA) += rdma
-
-# If CONFIG_ENV is pointing at a directory in lib, build it.
-# Out-of-tree env implementations must be built separately by the user.
-ENV_NAME := $(notdir $(CONFIG_ENV))
-ifeq ($(abspath $(CONFIG_ENV)),$(SPDK_ROOT_DIR)/lib/$(ENV_NAME))
-DIRS-y += $(ENV_NAME)
-endif
-
-.PHONY: all clean $(DIRS-y)
-
-all: $(DIRS-y)
-clean: $(DIRS-y)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

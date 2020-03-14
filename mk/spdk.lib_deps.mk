@@ -55,6 +55,7 @@ DEPDIRS-json := log util
 DEPDIRS-nvme := log sock util
 DEPDIRS-reduce := log util
 DEPDIRS-thread := log util
+DEPDIRS-rdma := log util
 
 DEPDIRS-blob := log util thread
 DEPDIRS-accel := log util thread
