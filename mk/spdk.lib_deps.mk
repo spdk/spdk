@@ -52,10 +52,14 @@ DEPDIRS-vmd := log
 
 DEPDIRS-conf := log util
 DEPDIRS-json := log util
-DEPDIRS-nvme := log sock util
+DEPDIRS-rdma := log util
 DEPDIRS-reduce := log util
 DEPDIRS-thread := log util
-DEPDIRS-rdma := log util
+
+DEPDIRS-nvme := log sock util
+ifeq ($(CONFIG_RDMA),y)
+DEPDIRS-nvme += rdma
+endif
 
 DEPDIRS-blob := log util thread
 DEPDIRS-accel := log util thread

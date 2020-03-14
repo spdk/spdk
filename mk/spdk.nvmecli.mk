@@ -47,10 +47,16 @@ ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_power.*))
 DPDK_LIB_LIST += -lrte_power
 endif
 
+NVMECLI_SPDK_LIBS = -lspdk_log -lspdk_sock -lspdk_nvme -lspdk_env_dpdk -lspdk_util
+
+ifeq ($(CONFIG_RDMA),y)
+NVMECLI_SPDK_LIBS += -lspdk_rdma
+endif
+
 override CFLAGS += -I$(SPDK_ROOT_DIR)/include
 override LDFLAGS += \
 	-Wl,--whole-archive \
-	-L$(SPDK_LIB_DIR) -lspdk_log -lspdk_sock -lspdk_nvme -lspdk_env_dpdk -lspdk_util \
+	-L$(SPDK_LIB_DIR) $(NVMECLI_SPDK_LIBS) \
 	-L$(DPDK_LIB_DIR) $(DPDK_LIB_LIST) \
 	-Wl,--no-whole-archive \
 	-ldl -pthread -lrt -lrdmacm -lnuma -libverbs

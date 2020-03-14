@@ -43,7 +43,7 @@ SPDK_LIB_LIST = $(filter-out sock_vpp,$(SOCK_MODULES_LIST))
 SPDK_LIB_LIST += nvme thread util log sock vmd
 
 ifeq ($(CONFIG_RDMA),y)
-SYS_LIBS += -libverbs -lrdmacm
+SPDK_LIB_LIST += rdma
 endif
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk

@@ -42,4 +42,8 @@ C_SRCS := nvme_fuzz.c
 SPDK_LIB_LIST += $(SOCK_MODULES_LIST)
 SPDK_LIB_LIST += conf event json jsonrpc log nvme rpc sock thread trace util
 
+ifeq ($(CONFIG_RDMA),y)
+SPDK_LIB_LIST += rdma
+endif
+
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk

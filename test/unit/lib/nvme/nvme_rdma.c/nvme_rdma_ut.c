@@ -35,6 +35,7 @@
 #include "spdk_cunit.h"
 #include "nvme/nvme_rdma.c"
 #include "common/lib/nvme/common_stubs.h"
+#include "common/lib/test_rdma.c"
 
 SPDK_LOG_REGISTER_COMPONENT("nvme", SPDK_LOG_NVME)
 
