@@ -197,11 +197,6 @@ if [ -d /usr/include/iscsi ]; then
 	fi
 fi
 
-if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 0 ]; then
-	config_params+=' --disable-tests'
-	config_params+=' --disable-examples'
-fi
-
 if [ $SPDK_TEST_UNITTEST -eq 0 ]; then
 	config_params+=' --disable-unit-tests'
 fi
