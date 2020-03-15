@@ -2,7 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
- *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2019, 2020 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -2809,14 +2809,41 @@ spdk_nvmf_request_free(struct spdk_nvmf_request *req)
 	return 0;
 }
 
+static inline bool
+nvmf_request_is_fabric_connect(struct spdk_nvmf_request *req)
+{
+	return req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC &&
+	       req->cmd->nvmf_cmd.fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT;
+}
+
+static struct spdk_nvmf_subsystem_poll_group *
+nvmf_subsystem_pg_from_connect_cmd(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_fabric_connect_data *data;
+	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvmf_tgt *tgt;
+
+	assert(nvmf_request_is_fabric_connect(req));
+	assert(req->qpair->ctrlr == NULL);
+
+	data = req->data;
+	tgt = req->qpair->transport->tgt;
+
+	subsystem = spdk_nvmf_tgt_find_subsystem(tgt, data->subnqn);
+	if (subsystem == NULL) {
+		return NULL;
+	}
+
+	return &req->qpair->group->sgroups[subsystem->id];
+}
+
 int
 spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_qpair *qpair;
 	struct spdk_nvmf_subsystem_poll_group *sgroup = NULL;
-	bool is_connect = req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC &&
-			  req->cmd->nvmf_cmd.fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT;
+	bool is_aer = false;
 
 	rsp->sqid = 0;
 	rsp->status.p = 0;
@@ -2825,6 +2852,9 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 	qpair = req->qpair;
 	if (qpair->ctrlr) {
 		sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
+		is_aer = qpair->ctrlr->aer_req == req;
+	} else if (spdk_unlikely(nvmf_request_is_fabric_connect(req))) {
+		sgroup = nvmf_subsystem_pg_from_connect_cmd(req);
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF,
@@ -2836,8 +2866,8 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 		SPDK_ERRLOG("Transport request completion error!\n");
 	}
 
-	/* AER cmd and fabric connect are exceptions */
-	if (sgroup != NULL && qpair->ctrlr->aer_req != req && !is_connect) {
+	/* AER cmd is an exception */
+	if (sgroup && !is_aer) {
 		assert(sgroup->io_outstanding > 0);
 		sgroup->io_outstanding--;
 		if (sgroup->state == SPDK_NVMF_SUBSYSTEM_PAUSING &&
@@ -2948,6 +2978,8 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 
 	if (qpair->ctrlr) {
 		sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
+	} else if (spdk_unlikely(nvmf_request_is_fabric_connect(req))) {
+		sgroup = nvmf_subsystem_pg_from_connect_cmd(req);
 	}
 
 	if (qpair->state != SPDK_NVMF_QPAIR_ACTIVE) {
