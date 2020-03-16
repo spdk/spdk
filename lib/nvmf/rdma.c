@@ -2497,6 +2497,16 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		rtransport->poll_fds[i++].events = POLLIN;
 	}
 
+	spdk_nvmf_ctrlr_data_init(opts, &rtransport->transport.cdata);
+
+	rtransport->transport.cdata.nvmf_specific.msdbd = SPDK_NVMF_MAX_SGL_ENTRIES;
+
+	/* Disable in-capsule data transfer for RDMA controller when dif_insert_or_strip is enabled
+	since in-capsule data only works with NVME drives that support SGL memory layout */
+	if (opts->dif_insert_or_strip) {
+		rtransport->transport.cdata.nvmf_specific.ioccsz = sizeof(struct spdk_nvme_cmd) / 16;
+	}
+
 	return &rtransport->transport;
 }
 

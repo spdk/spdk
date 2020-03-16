@@ -514,6 +514,8 @@ spdk_nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 		return NULL;
 	}
 
+	spdk_nvmf_ctrlr_data_init(opts, &ttransport->transport.cdata);
+
 	pthread_mutex_init(&ttransport->lock, NULL);
 
 	return &ttransport->transport;

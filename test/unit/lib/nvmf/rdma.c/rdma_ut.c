@@ -73,6 +73,8 @@ DEFINE_STUB_V(spdk_trace_register_description, (const char *name,
 DEFINE_STUB_V(_spdk_trace_record, (uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
 				   uint32_t size, uint64_t object_id, uint64_t arg1));
 
+DEFINE_STUB_V(spdk_nvmf_ctrlr_data_init, (struct spdk_nvmf_transport_opts *opts,
+		struct spdk_nvmf_ctrlr_data *cdata));
 DEFINE_STUB_V(spdk_nvmf_request_exec, (struct spdk_nvmf_request *req));
 DEFINE_STUB(spdk_nvme_transport_id_compare, int, (const struct spdk_nvme_transport_id *trid1,
 		const struct spdk_nvme_transport_id *trid2), 0);

@@ -169,10 +169,18 @@ struct spdk_nvmf_listener {
 	TAILQ_ENTRY(spdk_nvmf_listener)	link;
 };
 
+/**
+ * A subset of struct spdk_nvme_ctrlr_data that are emulated by a fabrics device.
+ */
+struct spdk_nvmf_ctrlr_data {
+	struct spdk_nvme_cdata_nvmf_specific nvmf_specific;
+};
+
 struct spdk_nvmf_transport {
 	struct spdk_nvmf_tgt			*tgt;
 	const struct spdk_nvmf_transport_ops	*ops;
 	struct spdk_nvmf_transport_opts		opts;
+	struct spdk_nvmf_ctrlr_data		cdata;
 
 	/* A mempool for transport related data transfers */
 	struct spdk_mempool			*data_buf_pool;
@@ -353,6 +361,20 @@ struct spdk_nvmf_registers {
 	uint64_t			asq;
 	uint64_t			acq;
 };
+
+/**
+ * Initialize NVMe-oF controller capabilities.
+ *
+ * After that call transport specific layer can override the settings
+ * but internally must enforce the conditions on when it can be updated
+ * (e.g. no connections active).
+ *
+ * \param opts transport options
+ * \param cdata subset of ctrlr capabilities
+ */
+void
+spdk_nvmf_ctrlr_data_init(struct spdk_nvmf_transport_opts *opts,
+			  struct spdk_nvmf_ctrlr_data *cdata);
 
 const struct spdk_nvmf_registers *spdk_nvmf_ctrlr_get_regs(struct spdk_nvmf_ctrlr *ctrlr);
 

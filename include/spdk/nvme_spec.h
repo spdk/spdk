@@ -1525,6 +1525,30 @@ enum spdk_nvme_flush_broadcast {
 
 #define SPDK_NVME_NQN_FIELD_SIZE 256
 
+/** Identify Controller data NVMe over Fabrics-specific fields */
+struct spdk_nvme_cdata_nvmf_specific {
+	/** I/O queue command capsule supported size (16-byte units) */
+	uint32_t	ioccsz;
+
+	/** I/O queue response capsule supported size (16-byte units) */
+	uint32_t	iorcsz;
+
+	/** In-capsule data offset (16-byte units) */
+	uint16_t	icdoff;
+
+	/** Controller attributes */
+	struct {
+		/** Controller model: \ref spdk_nvmf_ctrlr_model */
+		uint8_t	ctrlr_model : 1;
+		uint8_t reserved : 7;
+	} ctrattr;
+
+	/** Maximum SGL block descriptors (0 = no limit) */
+	uint8_t		msdbd;
+
+	uint8_t		reserved[244];
+};
+
 struct __attribute__((packed)) __attribute__((aligned)) spdk_nvme_ctrlr_data {
 	/* bytes 0-255: controller capabilities and features */
 
@@ -1875,29 +1899,7 @@ struct __attribute__((packed)) __attribute__((aligned)) spdk_nvme_ctrlr_data {
 
 	uint8_t			reserved5[768];
 
-	/** NVMe over Fabrics-specific fields */
-	struct {
-		/** I/O queue command capsule supported size (16-byte units) */
-		uint32_t	ioccsz;
-
-		/** I/O queue response capsule supported size (16-byte units) */
-		uint32_t	iorcsz;
-
-		/** In-capsule data offset (16-byte units) */
-		uint16_t	icdoff;
-
-		/** Controller attributes */
-		struct {
-			/** Controller model: \ref spdk_nvmf_ctrlr_model */
-			uint8_t	ctrlr_model : 1;
-			uint8_t reserved : 7;
-		} ctrattr;
-
-		/** Maximum SGL block descriptors (0 = no limit) */
-		uint8_t		msdbd;
-
-		uint8_t		reserved[244];
-	} nvmf_specific;
+	struct spdk_nvme_cdata_nvmf_specific nvmf_specific;
 
 	/* bytes 2048-3071: power state descriptors */
 	struct spdk_nvme_power_state	psd[32];

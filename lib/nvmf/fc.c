@@ -1889,6 +1889,8 @@ nvmf_fc_create(struct spdk_nvmf_transport_opts *opts)
 	/* initialize the low level FC driver */
 	nvmf_fc_lld_init();
 
+	spdk_nvmf_ctrlr_data_init(opts, &g_nvmf_ftransport->transport.cdata);
+
 	return &g_nvmf_ftransport->transport;
 }
 

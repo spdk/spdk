@@ -1813,6 +1813,17 @@ nvmf_ctrlr_populate_oacs(struct spdk_nvmf_ctrlr *ctrlr,
 				     NULL;
 }
 
+void
+spdk_nvmf_ctrlr_data_init(struct spdk_nvmf_transport_opts *opts, struct spdk_nvmf_ctrlr_data *cdata)
+{
+	cdata->nvmf_specific.ioccsz = sizeof(struct spdk_nvme_cmd) / 16;
+	cdata->nvmf_specific.ioccsz += opts->in_capsule_data_size / 16;
+	cdata->nvmf_specific.iorcsz = sizeof(struct spdk_nvme_cpl) / 16;
+	cdata->nvmf_specific.icdoff = 0; /* offset starts directly after SQE */
+	cdata->nvmf_specific.ctrattr.ctrlr_model = SPDK_NVMF_CTRLR_MODEL_DYNAMIC;
+	cdata->nvmf_specific.msdbd = 1;
+}
+
 int
 spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_ctrlr_data *cdata)
 {
@@ -1867,23 +1878,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->vwc.present = 1;
 		cdata->vwc.flush_broadcast = SPDK_NVME_FLUSH_BROADCAST_NOT_SUPPORTED;
 
-		cdata->nvmf_specific.ioccsz = sizeof(struct spdk_nvme_cmd) / 16;
-		cdata->nvmf_specific.iorcsz = sizeof(struct spdk_nvme_cpl) / 16;
-		cdata->nvmf_specific.icdoff = 0; /* offset starts directly after SQE */
-		cdata->nvmf_specific.ctrattr.ctrlr_model = SPDK_NVMF_CTRLR_MODEL_DYNAMIC;
-		/* The RDMA transport supports up to SPDK_NVMF_MAX_SGL_ENTRIES descriptors. */
-		if (transport->ops->type == SPDK_NVME_TRANSPORT_RDMA) {
-			cdata->nvmf_specific.msdbd = SPDK_NVMF_MAX_SGL_ENTRIES;
-		} else {
-			cdata->nvmf_specific.msdbd = 1;
-		}
-
-		/* TODO: this should be set by the transport */
-		/* Disable in-capsule data transfer for RDMA controller when dif_insert_or_strip is enabled
-		   since in-capsule data only works with NVME drives that support SGL memory layout */
-		if (!(transport->ops->type == SPDK_NVME_TRANSPORT_RDMA && ctrlr->dif_insert_or_strip)) {
-			cdata->nvmf_specific.ioccsz += transport->opts.in_capsule_data_size / 16;
-		}
+		cdata->nvmf_specific = transport->cdata.nvmf_specific;
 
 		cdata->oncs.dsm = spdk_nvmf_ctrlr_dsm_supported(ctrlr);
 		cdata->oncs.write_zeroes = spdk_nvmf_ctrlr_write_zeroes_supported(ctrlr);

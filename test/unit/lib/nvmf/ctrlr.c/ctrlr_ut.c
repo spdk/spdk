@@ -1411,6 +1411,8 @@ test_identify_ctrlr(void)
 	struct spdk_nvme_ctrlr_data cdata = {};
 	uint32_t expected_ioccsz;
 
+	spdk_nvmf_ctrlr_data_init(&transport.opts, &transport.cdata);
+
 	/* Check ioccsz, TCP transport */
 	tops.type = SPDK_NVME_TRANSPORT_TCP;
 	expected_ioccsz = sizeof(struct spdk_nvme_cmd) / 16 + transport.opts.in_capsule_data_size / 16;
@@ -1427,13 +1429,6 @@ test_identify_ctrlr(void)
 	tops.type = SPDK_NVME_TRANSPORT_TCP;
 	ctrlr.dif_insert_or_strip = true;
 	expected_ioccsz = sizeof(struct spdk_nvme_cmd) / 16 + transport.opts.in_capsule_data_size / 16;
-	CU_ASSERT(spdk_nvmf_ctrlr_identify_ctrlr(&ctrlr, &cdata) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
-	CU_ASSERT(cdata.nvmf_specific.ioccsz == expected_ioccsz);
-
-	/* Check ioccsz, RDMA transport with dif_insert_or_strip */
-	tops.type = SPDK_NVME_TRANSPORT_RDMA;
-	ctrlr.dif_insert_or_strip = true;
-	expected_ioccsz = sizeof(struct spdk_nvme_cmd) / 16;
 	CU_ASSERT(spdk_nvmf_ctrlr_identify_ctrlr(&ctrlr, &cdata) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(cdata.nvmf_specific.ioccsz == expected_ioccsz);
 }
