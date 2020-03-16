@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 function xtrace_disable() {
 	if [ "$XTRACE_DISABLED" != "yes" ]; then
 		PREV_BASH_OPTS="$-"
