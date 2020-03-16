@@ -9,11 +9,6 @@ source $rootdir/test/iscsi_tgt/common.sh
 # $2 = test type posix or vpp. defaults to posix.
 iscsitestinit $1 $2
 
-delete_tmp_files() {
-	rm -f ./local-job0-0-verify.state
-	rm -f ./local-job1-1-verify.state
-}
-
 if [ -z "$TARGET_IP" ]; then
 	echo "TARGET_IP not defined in environment"
 	exit 1
@@ -52,7 +47,7 @@ $rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
 $rpc_py iscsi_create_target_node disk1 disk1_alias 'Malloc0:0' $PORTAL_TAG:$INITIATOR_TAG 256 -d
 sleep 1
 
-trap 'killprocess $iscsipid; iscsitestfini $1 $2; delete_tmp_files; exit 1' SIGINT SIGTERM EXIT
+trap 'killprocess $iscsipid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 
 $rootdir/test/app/fuzz/iscsi_fuzz/iscsi_fuzz -m 0xF0 -T $TARGET_IP -t 30 2>$output_dir/iscsi_autofuzz_logs.txt
 
@@ -60,8 +55,6 @@ $rpc_py iscsi_delete_target_node 'iqn.2016-06.io.spdk:disk1'
 
 # Delete malloc device
 $rpc_py bdev_malloc_delete Malloc0
-
-delete_tmp_files
 
 trap - SIGINT SIGTERM EXIT
 
