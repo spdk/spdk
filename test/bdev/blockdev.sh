@@ -61,75 +61,49 @@ function setup_nvme_conf() {
 	"$rootdir/scripts/gen_nvme.sh" --json | "$rpc_py" load_subsystem_config
 }
 
-
-function part_dev_by_gpt () {
-	if [ $(uname -s) = Linux ] && hash sgdisk && modprobe nbd; then
-		conf=$1
-		devname=$2
-		rootdir=$3
-		operation=$4
-		local nbd_path=/dev/nbd0
-		local rpc_server=/var/tmp/spdk-gpt-bdevs.sock
-
-		if [ ! -e $conf ]; then
+function setup_gpt_conf() {
+	if [[ $(uname -s) = Linux ]] && hash sgdisk; then
+		$rootdir/scripts/setup.sh reset
+		# FIXME: Note that we are racing with the kernel here. There's no guarantee that
+		# proper object will be already in place under sysfs nor that any udev-like
+		# helper created proper block devices for us. Replace the below sleep with proper
+		# udev settle routine.
+		sleep 1s
+		# Get nvme devices by following drivers' links towards nvme class
+		local nvme_devs=(/sys/bus/pci/drivers/nvme/*/nvme/nvme*/nvme*n*) nvme_dev
+		gpt_nvme=""
+		# Pick first device which doesn't have any valid partition table
+		for nvme_dev in "${nvme_devs[@]}"; do
+			dev=/dev/${nvme_dev##*/}
+			if ! pt=$(parted "$dev" -ms print 2>&1); then
+				[[ $pt == *"$dev: unrecognised disk label"* ]] || continue
+				gpt_nvme=$dev; break
+			fi
+		done
+		if [[ -n $gpt_nvme ]]; then
+			# Create gpt partition table
+			parted -s "$gpt_nvme" mklabel gpt mkpart first '0%' '50%' mkpart second '50%' '100%'
+			# change the GUID to SPDK GUID value
+			# FIXME: Hardcode this in some common place, this value should not be changed much
+			IFS="()" read -r _ SPDK_GPT_GUID _ < <(grep SPDK_GPT_PART_TYPE_GUID module/bdev/gpt/gpt.h)
+			SPDK_GPT_GUID=${SPDK_GPT_GUID//, /-} SPDK_GPT_GUID=${SPDK_GPT_GUID//0x}
+			sgdisk -t "1:$SPDK_GPT_GUID" "$gpt_nvme"
+			sgdisk -t "2:$SPDK_GPT_GUID" "$gpt_nvme"
+			"$rootdir/scripts/setup.sh"
+			"$rpc_py" bdev_get_bdevs
+			setup_nvme_conf
+		else
+			printf 'Did not find any nvme block devices to work with, aborting the test\n' >&2
+			"$rootdir/scripts/setup.sh"
 			return 1
 		fi
-
-		if [ -z "$operation" ]; then
-			operation="create"
-		fi
-
-		cp $conf ${conf}.gpt
-		echo "[Gpt]" >> ${conf}.gpt
-		echo "  Disable Yes" >> ${conf}.gpt
-
-		$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 -c ${conf}.gpt &
-		nbd_pid=$!
-		echo "Process nbd pid: $nbd_pid"
-		waitforlisten $nbd_pid $rpc_server
-
-		# Start bdev as an nbd device
-		nbd_start_disks "$rpc_server" $devname $nbd_path
-
-		waitfornbd ${nbd_path:5}
-
-		if [ "$operation" = create ]; then
-			parted -s $nbd_path mklabel gpt mkpart first '0%' '50%' mkpart second '50%' '100%'
-
-			# change the GUID to SPDK GUID value
-			SPDK_GPT_GUID=$(grep SPDK_GPT_PART_TYPE_GUID $rootdir/module/bdev/gpt/gpt.h \
-				| awk -F "(" '{ print $2}' | sed 's/)//g' \
-				| awk -F ", " '{ print $1 "-" $2 "-" $3 "-" $4 "-" $5}' | sed 's/0x//g')
-			sgdisk -t 1:$SPDK_GPT_GUID $nbd_path
-			sgdisk -t 2:$SPDK_GPT_GUID $nbd_path
-		elif [ "$operation" = reset ]; then
-			# clear the partition table
-			dd if=/dev/zero of=$nbd_path bs=4096 count=8 oflag=direct
-		fi
-
-		nbd_stop_disks "$rpc_server" $nbd_path
-
-		killprocess $nbd_pid
-		rm -f ${conf}.gpt
-	fi
-
-	return 0
-}
-
-function setup_gpt_conf() {
-	# FIXME: Remove this
-	if [[ $1 == reset ]]; then
-		# Make sure that on reset we use ini config only as part_dev_by_gpt()
-		# still depends on it
-		:>"$conf_file"
-	fi
-	# FIXME: Move this to json
-	$rootdir/scripts/gen_nvme.sh >> "$conf_file"
-	if grep -q Nvme0 $conf_file; then
-		[[ $1 == reset ]] && return 0
-		part_dev_by_gpt $conf_file Nvme0n1 $rootdir
-	else
-		return 1
+        else
+		# Not supported platform or missing tooling, nothing to be done, simply exit the test
+		# in a graceful manner.
+		trap - SIGINT SIGTERM EXIT
+		killprocess "$spdk_tgt_pid"
+		cleanup
+		exit 0
 	fi
 }
 
@@ -357,7 +331,7 @@ case "$test_type" in
 	nvme )
 		start_spdk_tgt; setup_nvme_conf;;
 	gpt )
-		setup_gpt_conf;;
+		start_spdk_tgt; setup_gpt_conf;;
 	crypto )
 		setup_crypto_conf;;
 	pmem )
@@ -419,8 +393,11 @@ fi
 # Bdev and configuration cleanup below this line
 #-----------------------------------------------------
 if [ "$test_type" = "gpt" ]; then
-	setup_gpt_conf reset
-	part_dev_by_gpt $conf_file Nvme0n1 $rootdir reset
+	"$rootdir/scripts/setup.sh" reset
+	sleep 1s
+	if [[ -b $gpt_nvme ]]; then
+		dd if=/dev/zero of="$gpt_nvme" bs=4096 count=8 oflag=direct
+	fi
 fi
 
 cleanup
