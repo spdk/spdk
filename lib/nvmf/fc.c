@@ -2976,7 +2976,7 @@ nvmf_fc_adm_listen_done(void *cb_arg, int status)
 	struct nvmf_fc_add_rem_listener_ctx *ctx = cb_arg;
 
 	if (spdk_nvmf_subsystem_resume(ctx->subsystem, nvmf_fc_adm_subsystem_resume_cb, ctx)) {
-		SPDK_ERRLOG("Failed to resume subsystem: %s\n", subsystem->subnqn);
+		SPDK_ERRLOG("Failed to resume subsystem: %s\n", ctx->subsystem->subnqn);
 		free(ctx);
 	}
 }
