@@ -73,7 +73,7 @@ function get_numa_node(){
 		done
 	elif [[ "$plugin" =~ "bdev" ]]; then
 		local bdevs
-		bdevs=$(discover_bdevs $ROOT_DIR $BASE_DIR/bdev.conf)
+		bdevs=$(discover_bdevs $ROOT_DIR $BASE_DIR/bdev.conf --json)
 		for name in $disks; do
 			local bdev_bdf
 			bdev_bdf=$(jq -r ".[] | select(.name==\"$name\").driver_specific.nvme.pci_address" <<< $bdevs)
@@ -97,7 +97,7 @@ function get_disks(){
 		done
 	elif [[ "$plugin" =~ "bdev" ]]; then
 		local bdevs
-		bdevs=$(discover_bdevs $ROOT_DIR $BASE_DIR/bdev.conf)
+		bdevs=$(discover_bdevs $ROOT_DIR $BASE_DIR/bdev.conf --json)
 		jq -r '.[].name' <<< $bdevs
 	else
 		# Only target not mounted NVMes
@@ -322,7 +322,7 @@ function run_spdk_nvme_fio(){
 		 "${@:2}" --ioengine=spdk
 	elif [[ "$plugin" = "spdk-plugin-bdev" ]]; then
 		LD_PRELOAD=$PLUGIN_DIR_BDEV/fio_plugin $FIO_BIN $BASE_DIR/config.fio --output-format=json\
-		 "${@:2}" --ioengine=spdk_bdev --spdk_conf=$BASE_DIR/bdev.conf --spdk_mem=4096
+		 "${@:2}" --ioengine=spdk_bdev --spdk_json_conf=$BASE_DIR/bdev.conf --spdk_mem=4096
 	fi
 
 	sleep 1
@@ -336,7 +336,7 @@ function run_nvme_fio(){
 
 function run_bdevperf(){
 	echo "** Running bdevperf test, this can take a while, depending on the run-time setting."
-	$BDEVPERF_DIR/bdevperf -c $BASE_DIR/bdev.conf -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME -m "[$CPUS_ALLOWED]"
+	$BDEVPERF_DIR/bdevperf --json $BASE_DIR/bdev.conf -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME -m "[$CPUS_ALLOWED]"
 	sleep 1
 }
 
@@ -374,7 +374,11 @@ function wait_for_nvme_reload() {
 function verify_disk_number() {
 	# Check if we have appropriate number of disks to carry out the test
 	if [[ "$PLUGIN" =~ "bdev" ]]; then
-		$ROOT_DIR/scripts/gen_nvme.sh >> $BASE_DIR/bdev.conf
+		cat <<-JSON >"$BASE_DIR/bdev.conf"
+			{"subsystems":[
+			$("$ROOT_DIR/scripts/gen_nvme.sh" --json)
+			]}
+		JSON
 	fi
 
 	disks=($(get_disks $PLUGIN))
