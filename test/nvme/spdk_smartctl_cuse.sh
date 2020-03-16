@@ -8,7 +8,7 @@ source $rootdir/test/common/autotest_common.sh
 SMARTCTL_CMD='smartctl -d nvme'
 rpc_py=$rootdir/scripts/rpc.py
 
-bdf=$(iter_pci_class_code 01 08 02 | head -1)
+bdf=$(get_first_nvme_bdf)
 
 PCI_WHITELIST="${bdf}" $rootdir/scripts/setup.sh reset
 sleep 1

@@ -1126,6 +1126,19 @@ function opal_revert_cleanup {
 	killprocess $spdk_tgt_pid
 }
 
+# Get BDF addresses of all NVMe drives currently attached to
+# uio-pci-generic or vfio-pci
+function get_nvme_bdfs() {
+    xtrace_disable
+    jq -r .config[].params.traddr <<< $(scripts/gen_nvme.sh --json)
+    xtrace_restore
+}
+
+# Same as function above, but just get the first disks BDF address
+function get_first_nvme_bdf() {
+    head -1 <<< $(get_nvme_bdfs)
+}
+
 set -o errtrace
 shopt -s extdebug
 trap "trap - ERR; print_backtrace >&2" ERR

@@ -40,7 +40,7 @@ echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt
 
-bdf=$(iter_pci_class_code 01 08 02 | head -1)
+bdf=$(get_first_nvme_bdf)
 $rpc_py iscsi_create_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
 $rpc_py iscsi_create_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 $rpc_py bdev_nvme_attach_controller -b "Nvme0" -t "pcie" -a $bdf

@@ -21,7 +21,9 @@ def get_nvme_devices_count():
 
 def get_nvme_devices_bdf():
     print("Getting BDFs for NVMe section")
-    output = check_output("source scripts/common.sh; iter_pci_class_code 01 08 02",
+    output = check_output("rootdir=$PWD; \
+                          source test/common/autotest_common.sh; \
+                          get_nvme_bdfs 01 08 02",
                           executable="/bin/bash", shell=True)
     output = [str(x, encoding="utf-8") for x in output.split()]
     print("Done getting BDFs")

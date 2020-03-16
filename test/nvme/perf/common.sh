@@ -80,7 +80,7 @@ function get_numa_node(){
 		done
 	else
 		# Only target not mounted NVMes
-		for bdf in $(iter_pci_class_code 01 08 02); do
+		for bdf in $(get_nvme_bdfs); do
 			if is_bdf_not_mounted $bdf; then
 				cat /sys/bus/pci/devices/$bdf/numa_node
 			fi
@@ -91,11 +91,8 @@ function get_numa_node(){
 function get_disks(){
 	local plugin=$1
 	if [[ "$plugin" =~ "nvme" ]]; then
-		for bdf in $(iter_pci_class_code 01 08 02); do
-			driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}')
-			if [ "$driver" = "vfio-pci" ] || [ "$driver" = "uio_pci_generic" ]; then
-				echo "$bdf"
-			fi
+		for bdf in $(get_nvme_bdfs); do
+			echo "$bdf"
 		done
 	elif [[ "$plugin" =~ "bdev" ]]; then
 		local bdevs
@@ -103,7 +100,7 @@ function get_disks(){
 		jq -r '.[].name' <<< $bdevs
 	else
 		# Only target not mounted NVMes
-		for bdf in $(iter_pci_class_code 01 08 02); do
+		for bdf in $(get_nvme_bdfs); do
 			if is_bdf_not_mounted $bdf; then
 				local blkname
 				blkname=$(ls -l /sys/block/ | grep $bdf | awk '{print $9}')

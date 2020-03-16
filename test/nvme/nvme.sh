@@ -7,7 +7,7 @@ source $rootdir/test/common/autotest_common.sh
 
 function nvme_identify {
 	$rootdir/examples/nvme/identify/identify -i 0
-	for bdf in $(iter_pci_class_code 01 08 02); do
+	for bdf in $(get_nvme_bdfs); do
 		$rootdir/examples/nvme/identify/identify -r "trtype:PCIe traddr:${bdf}" -i 0
 	done
 	timing_exit identify
@@ -25,7 +25,7 @@ function nvme_perf {
 
 function nvme_fio_test {
 	PLUGIN_DIR=$rootdir/examples/nvme/fio_plugin
-	for bdf in $(iter_pci_class_code 01 08 02); do
+	for bdf in $(get_nvme_bdfs); do
 		for blkname in $(get_nvme_name_from_bdf $bdf); do
 			fio_nvme $PLUGIN_DIR/example_config.fio --filename="trtype=PCIe traddr=${bdf//:/.} ns=${blkname##*n}"
 		done
@@ -55,7 +55,7 @@ if [ $(uname) = Linux ]; then
 	#
 	# note: more work probably needs to be done to properly handle devices with multiple
 	# namespaces
-	for bdf in $(iter_pci_class_code 01 08 02); do
+	for bdf in $(get_nvme_bdfs); do
 		for name in $(get_nvme_name_from_bdf $bdf); do
 			if [ "$name" != "" ]; then
 				mountpoints=$(lsblk /dev/$name --output MOUNTPOINT -n | wc -w)

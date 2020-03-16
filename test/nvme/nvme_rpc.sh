@@ -7,7 +7,7 @@ source $rootdir/test/common/autotest_common.sh
 
 rpc_py=$rootdir/scripts/rpc.py
 
-bdf=$(iter_pci_class_code 01 08 02 | head -1)
+bdf=$(get_first_nvme_bdf)
 
 $rootdir/app/spdk_tgt/spdk_tgt -m 0x3 &
 spdk_tgt_pid=$!

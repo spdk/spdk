@@ -12,7 +12,7 @@ nvmftestinit
 
 timing_enter nvme_identify
 
-bdf=$(iter_pci_class_code 01 08 02 | head -1)
+bdf=$(get_first_nvme_bdf)
 if [ -z "${bdf}" ] ; then
 	echo "No NVMe drive found but test requires it. Failing the test."
 	exit 1
