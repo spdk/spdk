@@ -534,6 +534,8 @@ _reactor_schedule_thread(struct spdk_thread *thread)
 		return -1;
 	}
 
+	lw_thread->tsc_start = spdk_get_ticks();
+
 	spdk_event_call(evt);
 
 	return 0;

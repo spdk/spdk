@@ -157,6 +157,7 @@ SPDK_RPC_REGISTER_ALIAS_DEPRECATED(framework_monitor_context_switch, context_swi
 struct rpc_get_stats_ctx {
 	struct spdk_jsonrpc_request *request;
 	struct spdk_json_write_ctx *w;
+	uint64_t now;
 };
 
 static void
@@ -357,6 +358,8 @@ rpc_framework_get_reactors_done(void *arg1, void *arg2)
 	free(ctx);
 }
 
+#define GET_DELTA(end, start)	(end >= start ? end - start : 0)
+
 static void
 rpc_framework_get_reactors(void *arg1, void *arg2)
 {
@@ -381,6 +384,8 @@ rpc_framework_get_reactors(void *arg1, void *arg2)
 		spdk_json_write_named_uint64(ctx->w, "id", spdk_thread_get_id(thread));
 		spdk_json_write_named_string(ctx->w, "cpumask",
 					     spdk_cpuset_fmt(spdk_thread_get_cpumask(thread)));
+		spdk_json_write_named_uint64(ctx->w, "elapsed",
+					     GET_DELTA(ctx->now, lw_thread->tsc_start));
 		spdk_json_write_object_end(ctx->w);
 	}
 	spdk_json_write_array_end(ctx->w);
@@ -407,10 +412,12 @@ spdk_rpc_framework_get_reactors(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
+	ctx->now = spdk_get_ticks();
 	ctx->request = request;
 	ctx->w = spdk_jsonrpc_begin_result(ctx->request);
 
 	spdk_json_write_object_begin(ctx->w);
+	spdk_json_write_named_uint64(ctx->w, "tick_rate", spdk_get_ticks_hz());
 	spdk_json_write_named_array_begin(ctx->w, "reactors");
 
 	spdk_for_each_reactor(rpc_framework_get_reactors, ctx, NULL,

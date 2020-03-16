@@ -514,6 +514,7 @@ Example response:
   "jsonrpc": "2.0",
   "id": 1,
   "result": {
+    "tick_rate": 2400000000,
     "reactors": [
       {
         "lcore": 0,
@@ -521,7 +522,8 @@ Example response:
           {
             "name": "app_thread",
             "id", 1,
-            "cpumask": "1"
+            "cpumask": "1",
+            "elapsed": 44910853363
           }
         ]
       }
