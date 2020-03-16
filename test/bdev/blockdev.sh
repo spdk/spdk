@@ -157,7 +157,8 @@ function fio_test_suite() {
 	# Generate the fio config file given the list of all unclaimed bdevs
 	fio_config_gen $testdir/bdev.fio verify AIO
 	for b in $(echo $bdevs | jq -r '.name'); do
-		fio_config_add_job $testdir/bdev.fio $b
+		echo "[job_$b]" >> $testdir/bdev.fio
+		echo "filename=$b" >> $testdir/bdev.fio
 	done
 
 	if [ $RUN_NIGHTLY_FAILING -eq 0 ]; then
@@ -177,7 +178,8 @@ function fio_test_suite() {
 	fio_config_gen $testdir/bdev.fio trim
 	if [ "$(echo $bdevs | jq -r 'select(.supported_io_types.unmap == true) | .name')" != "" ]; then
 		for b in $(echo $bdevs | jq -r 'select(.supported_io_types.unmap == true) | .name'); do
-			fio_config_add_job $testdir/bdev.fio $b
+			echo "[job_$b]" >> $testdir/bdev.fio
+			echo "filename=$b" >> $testdir/bdev.fio
 		done
 	else
 		rm -f $testdir/bdev.fio

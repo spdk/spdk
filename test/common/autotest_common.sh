@@ -987,25 +987,6 @@ EOL
 	fi
 }
 
-function fio_config_add_job()
-{
-	config_file=$1
-	filename=$2
-
-	if [ ! -e "$config_file" ]; then
-		echo "Configuration File Doesn't Exist: $config_file"
-		return 1
-	fi
-
-	if [ -z "$filename" ]; then
-		echo "No filename provided"
-		return 1
-	fi
-
-	echo "[job_$filename]" >> $config_file
-	echo "filename=$filename" >> $config_file
-}
-
 function fio_bdev()
 {
 	# Setup fio binary cmd line
