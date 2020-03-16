@@ -252,14 +252,6 @@ spdk_vbdev_opal_get_info_from_bdev(const char *opal_bdev_name, const char *passw
 		return NULL;
 	}
 
-	if (spdk_opal_get_max_locking_ranges(nvme_ctrlr->opal_dev) == 0) {
-		rc = spdk_opal_cmd_get_max_ranges(nvme_ctrlr->opal_dev, password);
-		if (rc) {
-			SPDK_ERRLOG("Get locking range number failure: %d\n", rc);
-			return NULL;
-		}
-	}
-
 	locking_range_id = vbdev->cfg.locking_range_id;
 	rc = spdk_opal_cmd_get_locking_range_info(nvme_ctrlr->opal_dev, password,
 			OPAL_ADMIN1, locking_range_id);

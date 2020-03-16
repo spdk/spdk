@@ -142,7 +142,4 @@ int spdk_opal_cmd_secure_erase_locking_range(struct spdk_opal_dev *dev, enum spd
 struct spdk_opal_locking_range_info *spdk_opal_get_locking_range_info(struct spdk_opal_dev *dev,
 		enum spdk_opal_locking_range id);
 void spdk_opal_free_locking_range_info(struct spdk_opal_dev *dev, enum spdk_opal_locking_range id);
-
-uint8_t spdk_opal_get_max_locking_ranges(struct spdk_opal_dev *dev);
-
 #endif

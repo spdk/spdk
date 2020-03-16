@@ -2116,6 +2116,10 @@ spdk_opal_cmd_get_max_ranges(struct spdk_opal_dev *dev, const char *passwd)
 		return -ENOTSUP;
 	}
 
+	if (dev->max_ranges) {
+		return dev->max_ranges;
+	}
+
 	ret = opal_init_key(&session.opal_key, passwd, OPAL_LOCKING_RANGE_GLOBAL);
 	if (ret != 0) {
 		return ret;
@@ -2134,17 +2138,16 @@ spdk_opal_cmd_get_max_ranges(struct spdk_opal_dev *dev, const char *passwd)
 	ret = opal_get_max_ranges(dev);
 	if (ret) {
 		SPDK_ERRLOG("get max ranges error %d\n", ret);
-		goto end;
 	}
 
-end:
 	ret += opal_end_session(dev);
 	if (ret) {
 		SPDK_ERRLOG("end session error %d\n", ret);
 	}
 
 	pthread_mutex_unlock(&dev->mutex_lock);
-	return ret;
+
+	return (ret == 0 ? dev->max_ranges : ret);
 }
 
 int
@@ -2442,12 +2445,6 @@ spdk_opal_free_locking_range_info(struct spdk_opal_dev *dev, enum spdk_opal_lock
 	assert(id < SPDK_OPAL_MAX_LOCKING_RANGE);
 	info = &dev->locking_ranges[id];
 	memset(info, 0, sizeof(*info));
-}
-
-uint8_t
-spdk_opal_get_max_locking_ranges(struct spdk_opal_dev *dev)
-{
-	return dev->max_ranges;
 }
 
 /* Log component for opal submodule */

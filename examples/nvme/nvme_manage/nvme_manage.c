@@ -1151,13 +1151,13 @@ opal_list_locking_ranges(struct dev *iter)
 			printf("\n");
 			if (passwd_p) {
 				ret = spdk_opal_cmd_get_max_ranges(iter->opal_dev, passwd_p);
-				if (ret) {
+				if (ret <= 0) {
 					printf("get max ranges failure: %d\n", ret);
 					spdk_opal_dev_destruct(iter->opal_dev);
 					return;
 				}
 
-				max_ranges = spdk_opal_get_max_locking_ranges(iter->opal_dev);
+				max_ranges = ret;
 				for (i = 0; i < max_ranges; i++) {
 					ret = spdk_opal_cmd_get_locking_range_info(iter->opal_dev,
 							passwd_p, OPAL_ADMIN1, i);
