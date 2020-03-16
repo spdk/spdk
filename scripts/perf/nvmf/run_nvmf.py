@@ -84,11 +84,17 @@ class Target(Server):
             read_max_lat = float(data["jobs"][job_pos]["read"][lat_key]["max"])
             clat_key, clat_unit = get_lat_unit("clat", data["jobs"][job_pos]["read"])
             read_p99_lat = float(data["jobs"][job_pos]["read"][clat_key]["percentile"]["99.000000"])
+            read_p99.9_lat = float(data["jobs"][job_pos]["read"][clat_key]["percentile"]["99.900000"])
+            read_p99.99_lat = float(data["jobs"][job_pos]["read"][clat_key]["percentile"]["99.990000"])
+            read_p99.999_lat = float(data["jobs"][job_pos]["read"][clat_key]["percentile"]["99.999000"])
 
             if "ns" in lat_unit:
                 read_avg_lat, read_min_lat, read_max_lat = [x / 1000 for x in [read_avg_lat, read_min_lat, read_max_lat]]
             if "ns" in clat_unit:
                 read_p99_lat = read_p99_lat / 1000
+                read_p99.9_lat = read_p99.9_lat / 1000
+                read_p99.99_lat = read_p99.99_lat / 1000
+                read_p99.999_lat = read_p99.999_lat / 1000
 
             write_iops = float(data["jobs"][job_pos]["write"]["iops"])
             write_bw = float(data["jobs"][job_pos]["write"]["bw"])
@@ -98,14 +104,22 @@ class Target(Server):
             write_max_lat = float(data["jobs"][job_pos]["write"][lat_key]["max"])
             clat_key, clat_unit = get_lat_unit("clat", data["jobs"][job_pos]["write"])
             write_p99_lat = float(data["jobs"][job_pos]["write"][clat_key]["percentile"]["99.000000"])
+            write_p99.9_lat = float(data["jobs"][job_pos]["write"][clat_key]["percentile"]["99.900000"])
+            write_p99.99_lat = float(data["jobs"][job_pos]["write"][clat_key]["percentile"]["99.990000"])
+            write_p99.999_lat = float(data["jobs"][job_pos]["write"][clat_key]["percentile"]["99.999000"])
 
             if "ns" in lat_unit:
                 write_avg_lat, write_min_lat, write_max_lat = [x / 1000 for x in [write_avg_lat, write_min_lat, write_max_lat]]
             if "ns" in clat_unit:
                 write_p99_lat = write_p99_lat / 1000
+                write_p99.9_lat = write_p99.9_lat / 1000
+                write_p99.99_lat = write_p99.99_lat / 1000
+                write_p99.999_lat = write_p99.999_lat / 1000
 
-        return [read_iops, read_bw, read_avg_lat, read_min_lat, read_max_lat, read_p99_lat,
-                write_iops, write_bw, write_avg_lat, write_min_lat, write_max_lat, write_p99_lat]
+        return [read_iops, read_bw, read_avg_lat, read_min_lat, read_max_lat,
+                read_p99_lat, read_p99.9_lat, read_p99.99_lat, read_p99.999_lat,
+                write_iops, write_bw, write_avg_lat, write_min_lat, write_max_lat,
+                write_p99_lat, write_p99.9_lat, write_p99.99_lat, write_p99.999_lat]
 
     def parse_results(self, results_dir, initiator_count=None, run_num=None):
         files = os.listdir(results_dir)
@@ -118,8 +132,10 @@ class Target(Server):
             header_line = ",".join(["Name",
                                     "read_iops", "read_bw", "read_avg_lat_us",
                                     "read_min_lat_us", "read_max_lat_us", "read_p99_lat_us",
+                                    "read_p99.9_lat_us", "read_p99.99_lat_us", "read_p99.999_lat_us",
                                     "write_iops", "write_bw", "write_avg_lat_us",
-                                    "write_min_lat_us", "write_max_lat_us", "write_p99_lat_us"])
+                                    "write_min_lat_us", "write_max_lat_us", "write_p99_lat_us",
+                                    "write_p99.9_lat_us", "write_p99.99_lat_us", "write_p99.999_lat_us"])
             fh.write(header_line + "\n")
         rows = set()
 
