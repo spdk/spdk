@@ -203,13 +203,18 @@ fi
 if [[ $run_precondition == true ]]; then
 	# Using the same precondition routine possible for lvols thanks
 	# to --clear-method option. Lvols should not UNMAP on creation.
-    $rootdir/scripts/gen_nvme.sh > $rootdir/nvme.cfg
-    mapfile -t nvmes < <(grep -oP "Nvme\d+" $rootdir/nvme.cfg)
+    json_cfg=$rootdir/nvme.json
+    cat <<-JSON >"$json_cfg"
+	{"subsystems":[
+	 $("$rootdir/scripts/gen_nvme.sh" --json)
+	]}
+JSON
+    mapfile -t nvmes < <(grep -oP "Nvme\d+" "$json_cfg")
     fio_filename=$(printf ":%sn1" "${nvmes[@]}")
     fio_filename=${fio_filename:1}
     $precond_fio_bin --name="precondition" \
     --ioengine="${rootdir}/examples/bdev/fio_plugin/fio_plugin" \
-    --rw="write" --spdk_conf="${rootdir}/nvme.cfg" --thread="1" \
+    --rw="write" --spdk_json_conf="$json_cfg" --thread="1" \
     --group_reporting --direct="1" --size="100%" --loops="2" --bs="256k" \
     --iodepth=32 --filename="${fio_filename}" || true
 fi
