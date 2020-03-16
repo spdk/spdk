@@ -758,60 +758,6 @@ function print_backtrace() {
 	return 0
 }
 
-function part_dev_by_gpt () {
-	if [ $(uname -s) = Linux ] && hash sgdisk && modprobe nbd; then
-		conf=$1
-		devname=$2
-		rootdir=$3
-		operation=$4
-		local nbd_path=/dev/nbd0
-		local rpc_server=/var/tmp/spdk-gpt-bdevs.sock
-
-		if [ ! -e $conf ]; then
-			return 1
-		fi
-
-		if [ -z "$operation" ]; then
-			operation="create"
-		fi
-
-		cp $conf ${conf}.gpt
-		echo "[Gpt]" >> ${conf}.gpt
-		echo "  Disable Yes" >> ${conf}.gpt
-
-		$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 -c ${conf}.gpt &
-		nbd_pid=$!
-		echo "Process nbd pid: $nbd_pid"
-		waitforlisten $nbd_pid $rpc_server
-
-		# Start bdev as an nbd device
-		nbd_start_disks "$rpc_server" $devname $nbd_path
-
-		waitfornbd ${nbd_path:5}
-
-		if [ "$operation" = create ]; then
-			parted -s $nbd_path mklabel gpt mkpart first '0%' '50%' mkpart second '50%' '100%'
-
-			# change the GUID to SPDK GUID value
-			SPDK_GPT_GUID=$(grep SPDK_GPT_PART_TYPE_GUID $rootdir/module/bdev/gpt/gpt.h \
-				| awk -F "(" '{ print $2}' | sed 's/)//g' \
-				| awk -F ", " '{ print $1 "-" $2 "-" $3 "-" $4 "-" $5}' | sed 's/0x//g')
-			sgdisk -t 1:$SPDK_GPT_GUID $nbd_path
-			sgdisk -t 2:$SPDK_GPT_GUID $nbd_path
-		elif [ "$operation" = reset ]; then
-			# clear the partition table
-			dd if=/dev/zero of=$nbd_path bs=4096 count=8 oflag=direct
-		fi
-
-		nbd_stop_disks "$rpc_server" $nbd_path
-
-		killprocess $nbd_pid
-		rm -f ${conf}.gpt
-	fi
-
-	return 0
-}
-
 function discover_bdevs()
 {
 	local rootdir=$1
