@@ -1212,6 +1212,21 @@ struct spdk_nvme_qpair *spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *c
 int spdk_nvme_ctrlr_connect_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair);
 
 /**
+ * Disconnect the given I/O qpair.
+ *
+ * This function must be called from the same thread as spdk_nvme_qpair_process_completions
+ * and the spdk_nvme_ns_cmd_* functions.
+ *
+ * After disconnect, calling spdk_nvme_qpair_process_completions or one of the
+ * spdk_nvme_ns_cmd* on a qpair will result in a return value of -ENXIO. A
+ * disconnected qpair may be reconnected with either the spdk_nvme_ctrlr_connect_io_qpair
+ * or spdk_nvme_ctrlr_reconnect_io_qpair APIs.
+ *
+ * \param qpair The qpair to disconnect.
+ */
+void spdk_nvme_ctrlr_disconnect_io_qpair(struct spdk_nvme_qpair *qpair);
+
+/**
  * Attempt to reconnect the given qpair.
  *
  * This function is intended to be called on qpairs that have already been connected,

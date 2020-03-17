@@ -371,6 +371,16 @@ spdk_nvme_ctrlr_connect_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 	return rc;
 }
 
+void
+spdk_nvme_ctrlr_disconnect_io_qpair(struct spdk_nvme_qpair *qpair)
+{
+	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
+
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	nvme_transport_ctrlr_disconnect_qpair(ctrlr, qpair);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+}
+
 struct spdk_nvme_qpair *
 spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 			       const struct spdk_nvme_io_qpair_opts *user_opts,
