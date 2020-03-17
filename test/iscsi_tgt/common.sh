@@ -185,3 +185,25 @@ function kill_vpp() {
 
 	killprocess $vpp_pid
 }
+function initiator_json_config() {
+	# Prepare config file for iSCSI initiator
+	jq . <<-JSON
+		{
+		  "subsystems": [
+		    {
+		      "subsystem": "bdev",
+		      "config": [
+		        {
+		          "method": "bdev_iscsi_create",
+		          "params": {
+		            "name": "iSCSI0",
+		            "url": "iscsi://$TARGET_IP/iqn.2016-06.io.spdk:disk1/0",
+		            "initiator_iqn": "iqn.2016-06.io.spdk:disk1/0"
+		          }
+		        }${*:+,$*}
+		      ]
+		    }
+		  ]
+		}
+	JSON
+}

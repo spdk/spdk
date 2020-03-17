@@ -36,18 +36,14 @@ $rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
 # "-d" ==> disable CHAP authentication
 $rpc_py iscsi_create_target_node disk1 disk1_alias 'Malloc0:0' $PORTAL_TAG:$INITIATOR_TAG 256 -d
 sleep 1
-trap 'killprocess $pid; rm -f $testdir/bdev.conf; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
+trap 'killprocess $pid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 
-# Prepare config file for iSCSI initiator
-echo "[iSCSI_Initiator]" > $testdir/bdev.conf
-echo "  URL iscsi://$TARGET_IP/iqn.2016-06.io.spdk:disk1/0 iSCSI0" >> $testdir/bdev.conf
-$rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdev.conf -q 128 -o 4096 -w verify -t 5 -s 512
+"$rootdir/test/bdev/bdevperf/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w verify -t 5 -s 512
 if [ $RUN_NIGHTLY -eq 1 ]; then
-    $rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdev.conf -q 128 -o 4096 -w unmap -t 5 -s 512
-    $rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdev.conf -q 128 -o 4096 -w flush -t 5 -s 512
-    $rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdev.conf -q 128 -o 4096 -w reset -t 10 -s 512
+    "$rootdir/test/bdev/bdevperf/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w unmap -t 5 -s 512
+    "$rootdir/test/bdev/bdevperf/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w flush -t 5 -s 512
+    "$rootdir/test/bdev/bdevperf/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w reset -t 10 -s 512
 fi
-rm -f $testdir/bdev.conf
 
 trap - SIGINT SIGTERM EXIT
 
