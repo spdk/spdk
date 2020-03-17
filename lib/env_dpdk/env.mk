@@ -100,8 +100,8 @@ ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_kvargs.*))
 DPDK_LIB_LIST += rte_kvargs
 endif
 
+ifeq ($(CONFIG_VHOST),y)
 ifneq ($(CONFIG_VHOST_INTERNAL_LIB),y)
-ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_vhost.*))
 DPDK_LIB_LIST += rte_vhost rte_net rte_hash
 ifneq ($(DPDK_FRAMEWORK),y)
 DPDK_LIB_LIST += rte_cryptodev
