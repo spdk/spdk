@@ -760,7 +760,8 @@ spdk_nvme_trid_populate_transport(struct spdk_nvme_transport_id *trid,
 	case SPDK_NVME_TRANSPORT_CUSTOM:
 	default:
 		SPDK_ERRLOG("don't use this for custom transports\n");
-		break;
+		assert(0);
+		return;
 	}
 	snprintf(trid->trstring, SPDK_NVMF_TRSTRING_MAX_LEN, "%s", trstring);
 }
