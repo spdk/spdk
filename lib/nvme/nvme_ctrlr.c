@@ -1236,7 +1236,11 @@ nvme_ctrlr_identify_done(void *arg, const struct spdk_nvme_cpl *cpl)
 	}
 
 	if (ctrlr->cdata.sgls.supported) {
+		assert(ctrlr->cdata.sgls.supported != 0x3);
 		ctrlr->flags |= SPDK_NVME_CTRLR_SGL_SUPPORTED;
+		if (ctrlr->cdata.sgls.supported == 0x2) {
+			ctrlr->flags |= SPDK_NVME_CTRLR_SGL_REQUIRES_DWORD_ALIGNMENT;
+		}
 		/*
 		 * Use MSDBD to ensure our max_sges doesn't exceed what the
 		 *  controller supports.
