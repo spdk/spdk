@@ -5,6 +5,13 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/spdkcli/common.sh
 
+function err_cleanup() {
+	if [ -n "$socat_pid" ]; then
+		killprocess $socat_pid || true
+	fi
+	killprocess $spdk_tgt_pid
+}
+
 function waitfortcplisten() {
 	# $1 = process pid
 	if [ -z "$1" ]; then
@@ -46,11 +53,17 @@ function waitfortcplisten() {
 IP_ADDRESS="127.0.0.1"
 PORT="9998"
 
-trap 'killprocess $spdk_tgt_pid; exit 1' SIGINT SIGTERM EXIT
+trap 'err_cleanup; exit 1' SIGINT SIGTERM EXIT
 
 timing_enter run_spdk_tgt_tcp
-$rootdir/app/spdk_tgt/spdk_tgt -m 0x3 -p 0 -s 2048 -r $IP_ADDRESS:$PORT &
+$rootdir/app/spdk_tgt/spdk_tgt -m 0x3 -p 0 -s 2048 &
 spdk_tgt_pid=$!
+
+waitforlisten $spdk_tgt_pid
+
+# socat will terminate automatically after the connection is closed
+socat TCP-LISTEN:$PORT UNIX-CONNECT:$DEFAULT_RPC_ADDR &
+socat_pid=$!
 
 # This will issue a rpc request to the spdk target thus validating tcp
 waitfortcplisten $spdk_tgt_pid $IP_ADDRESS $PORT
