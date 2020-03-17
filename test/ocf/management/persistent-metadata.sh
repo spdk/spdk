@@ -4,18 +4,48 @@ curdir=$(dirname $(readlink -f "${BASH_SOURCE[0]}"))
 rootdir=$(readlink -f $curdir/../../..)
 source $rootdir/test/ocf/common.sh
 
-config="
-$(nvme_cfg)
+source $rootdir/scripts/common.sh
+source $rootdir/test/common/autotest_common.sh
 
-[Split]
-  Split Nvme0n1 7 128
-"
-echo "$config" > $curdir/config
+rpc_py=$rootdir/scripts/rpc.py
+
+$rootdir/scripts/setup.sh
+
+mapfile -t config < <("$rootdir/scripts/gen_nvme.sh" --json)
+# Drop anything from last closing ] so we can inject our own config pieces ...
+config=("${config[@]::${#config[@]}-2}")
+# ... and now convert entire array to a single string item
+config=("${config[*]}")
+
+config+=(
+	"$(
+		cat <<- JSON
+			{
+			  "method": "bdev_split_create",
+			  "params": {
+			    "base_bdev": "Nvme0n1",
+			    "split_count": 7,
+			    "split_size_mb": 128
+			  }
+			}
+		JSON
+	)"
+)
+
+# First ']}' closes our config and bdev subsystem blocks
+jq . <<- CONFIG > "$curdir/config"
+	{"subsystems":[
+	$(
+	IFS=","
+	printf '%s\n' "${config[*]}"
+	)
+	]}]}
+CONFIG
 
 # Clear nvme device which we will use in test
 clear_nvme
 
-$rootdir/app/iscsi_tgt/iscsi_tgt -c $curdir/config &
+"$rootdir/app/iscsi_tgt/iscsi_tgt" --json "$curdir/config" &
 spdk_pid=$!
 
 waitforlisten $spdk_pid
@@ -36,12 +66,13 @@ trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid
 
 # Check for ocf persistency after restart
-$rootdir/app/iscsi_tgt/iscsi_tgt -c $curdir/config &
+"$rootdir/app/iscsi_tgt/iscsi_tgt" --json "$curdir/config" &
 spdk_pid=$!
 
 trap 'killprocess $spdk_pid; rm -f $curdir/config ocf_bdevs ocf_bdevs_verify; exit 1' SIGINT SIGTERM EXIT
 
 waitforlisten $spdk_pid
+sleep 5
 
 # OCF should be loaded now as well
 
