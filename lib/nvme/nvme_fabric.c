@@ -297,6 +297,7 @@ nvme_fabric_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 	status = malloc(sizeof(*status));
 	if (!status) {
 		SPDK_ERRLOG("Failed to allocate status tracker\n");
+		nvme_ctrlr_destruct(discovery_ctrlr);
 		return -ENOMEM;
 	}
 
@@ -306,12 +307,14 @@ nvme_fabric_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 				     nvme_completion_poll_cb, status);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to identify cdata\n");
+		nvme_ctrlr_destruct(discovery_ctrlr);
 		free(status);
 		return rc;
 	}
 
 	if (spdk_nvme_wait_for_completion(discovery_ctrlr->adminq, status)) {
 		SPDK_ERRLOG("nvme_identify_controller failed!\n");
+		nvme_ctrlr_destruct(discovery_ctrlr);
 		if (!status->timed_out) {
 			free(status);
 		}
@@ -413,6 +416,7 @@ nvme_fabric_qpair_connect(struct spdk_nvme_qpair *qpair, uint32_t num_entries)
 	status = malloc(sizeof(*status));
 	if (!status) {
 		SPDK_ERRLOG("Failed to allocate status tracker\n");
+		spdk_free(nvmf_data);
 		return -ENOMEM;
 	}
 
