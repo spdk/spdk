@@ -272,7 +272,7 @@ elif [ -f /etc/arch-release ]; then
 	fi
 	if [[ $INSTALL_PMEM == "true" ]]; then
 		# Additional dependencies for building pmem based backends
-		pacman -Sy --needed --noconfirm ndctl
+		pacman -Sy --needed --noconfirm ndctl pkg-config
 		git clone https://github.com/pmem/pmdk.git /tmp/pmdk -b 1.6.1
 		make -C /tmp/pmdk -j$(nproc)
 		make install -C /tmp/pmdk
