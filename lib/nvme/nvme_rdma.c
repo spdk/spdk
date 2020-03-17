@@ -2005,11 +2005,6 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 	struct spdk_nvme_rdma_req	*rdma_req;
 	struct nvme_rdma_ctrlr		*rctrlr;
 
-	if (spdk_unlikely(nvme_rdma_qpair_submit_sends(rqpair) ||
-			  nvme_rdma_qpair_submit_recvs(rqpair))) {
-		return -1;
-	}
-
 	if (max_completions == 0) {
 		max_completions = rqpair->num_entries;
 	} else {
@@ -2081,6 +2076,9 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 			}
 		}
 	} while (reaped < max_completions);
+
+	nvme_rdma_qpair_submit_sends(rqpair);
+	nvme_rdma_qpair_submit_recvs(rqpair);
 
 	if (spdk_unlikely(rqpair->qpair.ctrlr->timeout_enabled)) {
 		nvme_rdma_qpair_check_timeout(qpair);
