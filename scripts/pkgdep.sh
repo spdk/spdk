@@ -287,7 +287,7 @@ elif [ -f /etc/arch-release ]; then
 	if [[ $INSTALL_RDMA == "true" ]]; then
 		# Additional dependencies for RDMA transport in NVMe over Fabrics
 		if [[ -n "$http_proxy" ]]; then
-			gpg_options=" --keyserver hkp://keyserver.ubuntu.com:80 --keyserver-options \"http-proxy=$http_proxy\""
+			gpg_options=" --keyserver hkp://pgp.mit.edu:11371 --keyserver-options \"http-proxy=$http_proxy\""
 		fi
 		su - $SUDO_USER -c "gpg $gpg_options --recv-keys 29F0D86B9C1019B1"
 		su - $SUDO_USER -c "pushd /tmp;
