@@ -1958,11 +1958,6 @@ spdk_rpc_nvmf_get_stats(struct spdk_jsonrpc_request *request,
 	}
 
 	ctx->w = spdk_jsonrpc_begin_result(ctx->request);
-	if (NULL == ctx->w) {
-		free_get_stats_ctx(ctx);
-		return;
-	}
-
 	spdk_json_write_object_begin(ctx->w);
 	spdk_json_write_named_uint64(ctx->w, "tick_rate", spdk_get_ticks_hz());
 	spdk_json_write_named_array_begin(ctx->w, "poll_groups");
