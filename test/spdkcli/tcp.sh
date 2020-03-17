@@ -46,7 +46,7 @@ function waitfortcplisten() {
 IP_ADDRESS="127.0.0.1"
 PORT="9998"
 
-trap 'on_error_exit;' ERR
+trap 'killprocess $spdk_tgt_pid; exit 1' SIGINT SIGTERM EXIT
 
 timing_enter run_spdk_tgt_tcp
 $rootdir/app/spdk_tgt/spdk_tgt -m 0x3 -p 0 -s 2048 -r $IP_ADDRESS:$PORT &
@@ -57,4 +57,5 @@ waitfortcplisten $spdk_tgt_pid $IP_ADDRESS $PORT
 
 timing_exit run_spdk_tgt_tcp
 
+trap - SIGINT SIGTERM EXIT
 killprocess $spdk_tgt_pid
