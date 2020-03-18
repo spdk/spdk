@@ -20,9 +20,14 @@ function finish_test {
 
 trap "finish_test" SIGINT SIGTERM EXIT
 
+cat <<-JSON >"$testdir/conf.json"
+	{"subsystems":[
+	$("$rootdir/scripts/gen_nvme.sh" --json)
+	]}
+JSON
+
 timing_enter run_spdk_tgt
-$rootdir/scripts/gen_nvme.sh >> $testdir/conf.json
-$rootdir/app/spdk_tgt/spdk_tgt -m 0x3 -p 0 -s 1024 -c $testdir/conf.json &
+"$rootdir/app/spdk_tgt/spdk_tgt" -m 0x3 -p 0 -s 1024 --json "$testdir/conf.json" &
 nvmfpid=$!
 waitforlisten $nvmfpid
 $rpc_py bdev_nvme_set_hotplug -e
