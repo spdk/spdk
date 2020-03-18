@@ -133,21 +133,6 @@
  */
 #define ISCSI_LOGOUT_TIMEOUT 5 /* in seconds */
 
-/* according to RFC1982 */
-#define SN32_CMPMAX (((uint32_t)1U) << (32 - 1))
-#define SN32_LT(S1,S2) \
-	(((uint32_t)(S1) != (uint32_t)(S2))				\
-	    && (((uint32_t)(S1) < (uint32_t)(S2)			\
-		    && ((uint32_t)(S2) - (uint32_t)(S1) < SN32_CMPMAX))	\
-		|| ((uint32_t)(S1) > (uint32_t)(S2)			\
-		    && ((uint32_t)(S1) - (uint32_t)(S2) > SN32_CMPMAX))))
-#define SN32_GT(S1,S2) \
-	(((uint32_t)(S1) != (uint32_t)(S2))				\
-	    && (((uint32_t)(S1) < (uint32_t)(S2)			\
-		    && ((uint32_t)(S2) - (uint32_t)(S1) > SN32_CMPMAX))	\
-		|| ((uint32_t)(S1) > (uint32_t)(S2)			\
-		    && ((uint32_t)(S1) - (uint32_t)(S2) < SN32_CMPMAX))))
-
 /* For spdk_iscsi_login_in related function use, we need to avoid the conflict
  * with other errors
  * */

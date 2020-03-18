@@ -2833,7 +2833,7 @@ del_connection_queued_task(struct spdk_iscsi_conn *conn, void *tailq,
 	TAILQ_FOREACH_SAFE(task, head, link, task_tmp) {
 		pdu_tmp = spdk_iscsi_task_get_pdu(task);
 		if ((lun == NULL || lun == task->scsi.lun) &&
-		    (pdu == NULL || SN32_LT(pdu_tmp->cmd_sn, pdu->cmd_sn))) {
+		    (pdu == NULL || spdk_sn32_lt(pdu_tmp->cmd_sn, pdu->cmd_sn))) {
 			TAILQ_REMOVE(head, task, link);
 			task->is_r2t_active = false;
 			if (lun != NULL && spdk_scsi_lun_is_removing(lun)) {
@@ -2858,7 +2858,7 @@ void spdk_clear_all_transfer_task(struct spdk_iscsi_conn *conn,
 		task = conn->outstanding_r2t_tasks[i];
 		pdu_tmp = spdk_iscsi_task_get_pdu(task);
 		if ((lun == NULL || lun == task->scsi.lun) &&
-		    (pdu == NULL || SN32_LT(pdu_tmp->cmd_sn, pdu->cmd_sn))) {
+		    (pdu == NULL || spdk_sn32_lt(pdu_tmp->cmd_sn, pdu->cmd_sn))) {
 			conn->outstanding_r2t_tasks[i] = NULL;
 			task->outstanding_r2t = 0;
 			task->next_r2t_offset = 0;
@@ -4406,7 +4406,7 @@ remove_acked_pdu(struct spdk_iscsi_conn *conn, uint32_t ExpStatSN)
 	conn->exp_statsn = spdk_min(ExpStatSN, conn->StatSN);
 	TAILQ_FOREACH_SAFE(pdu, &conn->snack_pdu_list, tailq, pdu_temp) {
 		stat_sn = from_be32(&pdu->bhs.stat_sn);
-		if (SN32_LT(stat_sn, conn->exp_statsn)) {
+		if (spdk_sn32_lt(stat_sn, conn->exp_statsn)) {
 			TAILQ_REMOVE(&conn->snack_pdu_list, pdu, tailq);
 			spdk_iscsi_conn_free_pdu(conn, pdu);
 		}
@@ -4435,8 +4435,8 @@ iscsi_update_cmdsn(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	I_bit = reqh->immediate;
 	if (I_bit == 0) {
-		if (SN32_LT(pdu->cmd_sn, sess->ExpCmdSN) ||
-		    SN32_GT(pdu->cmd_sn, sess->MaxCmdSN)) {
+		if (spdk_sn32_lt(pdu->cmd_sn, sess->ExpCmdSN) ||
+		    spdk_sn32_gt(pdu->cmd_sn, sess->MaxCmdSN)) {
 			if (sess->session_type == SESSION_TYPE_NORMAL &&
 			    opcode != ISCSI_OP_SCSI_DATAOUT) {
 				SPDK_ERRLOG("CmdSN(%u) ignore (ExpCmdSN=%u, MaxCmdSN=%u)\n",
@@ -4465,7 +4465,7 @@ iscsi_update_cmdsn(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	}
 
 	ExpStatSN = from_be32(&reqh->exp_stat_sn);
-	if (SN32_GT(ExpStatSN, conn->StatSN)) {
+	if (spdk_sn32_gt(ExpStatSN, conn->StatSN)) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "StatSN(%u) advanced\n", ExpStatSN);
 		ExpStatSN = conn->StatSN;
 	}

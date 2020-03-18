@@ -1028,7 +1028,7 @@ spdk_iscsi_conn_abort_queued_datain_tasks(struct spdk_iscsi_conn *conn,
 	TAILQ_FOREACH_SAFE(task, &conn->queued_datain_tasks, link, task_tmp) {
 		pdu_tmp = spdk_iscsi_task_get_pdu(task);
 		if ((lun == NULL || lun == task->scsi.lun) &&
-		    (pdu == NULL || (SN32_LT(pdu_tmp->cmd_sn, pdu->cmd_sn)))) {
+		    (pdu == NULL || (spdk_sn32_lt(pdu_tmp->cmd_sn, pdu->cmd_sn)))) {
 			rc = _iscsi_conn_abort_queued_datain_task(conn, task);
 			if (rc != 0) {
 				return rc;
