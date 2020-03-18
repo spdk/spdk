@@ -8,17 +8,14 @@ source $testdir/common.sh
 rpc_py=$rootdir/scripts/rpc.py
 
 device=$1
-ftl_bdev_conf=$testdir/config/ftl.conf
-gen_ftl_nvme_conf > $ftl_bdev_conf
 
 json_kill() {
 	killprocess $svcpid
-	rm -f $ftl_bdev_conf
 }
 
 trap "json_kill; exit 1" SIGINT SIGTERM EXIT
 
-$rootdir/app/spdk_tgt/spdk_tgt -c $ftl_bdev_conf  & svcpid=$!
+"$rootdir/app/spdk_tgt/spdk_tgt" --json <(gen_ftl_nvme_conf)  & svcpid=$!
 waitforlisten $svcpid
 
 # Create new bdev from json configuration

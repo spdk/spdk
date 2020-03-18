@@ -10,12 +10,9 @@ suite['basic']='randw-verify randw-verify-j2 randw-verify-depth128'
 suite['extended']='drive-prep randw-verify-qd128-ext randw randr randrw'
 
 rpc_py=$rootdir/scripts/rpc.py
-ftl_bdev_conf=$testdir/config/ftl.conf
-gen_ftl_nvme_conf > $ftl_bdev_conf
 
 fio_kill() {
 	killprocess $svcpid
-	rm -f $ftl_bdev_conf
 	rm -f $FTL_JSON_CONF
 }
 
@@ -38,7 +35,7 @@ export FTL_JSON_CONF=$testdir/config/ftl.json
 
 trap "fio_kill; exit 1" SIGINT SIGTERM EXIT
 
-$rootdir/app/spdk_tgt/spdk_tgt -c $ftl_bdev_conf & svcpid=$!
+"$rootdir/app/spdk_tgt/spdk_tgt" --json <(gen_ftl_nvme_conf) & svcpid=$!
 waitforlisten $svcpid
 
 $rpc_py bdev_nvme_attach_controller -b nvme0 -a $device -t pcie
@@ -67,5 +64,4 @@ for test in ${tests}; do
 	timing_exit $test
 done
 
-rm -f $ftl_bdev_conf
 rm -f $FTL_JSON_CONF

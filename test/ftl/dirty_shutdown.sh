@@ -17,14 +17,11 @@ done
 shift $((OPTIND -1))
 
 device=$1
-ftl_bdev_conf=$testdir/config/ftl.conf
-gen_ftl_nvme_conf > $ftl_bdev_conf
 
 restore_kill() {
 	rm -f $testdir/config/ftl.json
 	rm -f $testdir/testfile.md5
 	rm -f $testdir/testfile2.md5
-	rm -f $ftl_bdev_conf
 
 	killprocess $svcpid || true
 	rmmod nbd || true
@@ -40,7 +37,7 @@ pu_count=$((num_group * num_pu))
 # Write one band worth of data + one extra chunk
 data_size=$((chunk_size * (pu_count + 1)))
 
-$rootdir/app/spdk_tgt/spdk_tgt -c $ftl_bdev_conf & svcpid=$!
+"$rootdir/app/spdk_tgt/spdk_tgt" --json <(gen_ftl_nvme_conf) & svcpid=$!
 waitforlisten $svcpid
 
 if [ -n "$nv_cache" ]; then
@@ -72,7 +69,7 @@ $rpc_py nbd_stop_disk /dev/nbd0
 kill -9 $svcpid
 rm -f /dev/shm/spdk_tgt_trace.pid$svcpid
 
-$rootdir/app/spdk_tgt/spdk_tgt -c $ftl_bdev_conf -L ftl_init & svcpid=$!
+"$rootdir/app/spdk_tgt/spdk_tgt" --json <(gen_ftl_nvme_conf) -L ftl_init & svcpid=$!
 waitforlisten $svcpid
 
 $rpc_py load_config < $testdir/config/ftl.json

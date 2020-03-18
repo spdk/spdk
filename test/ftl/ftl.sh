@@ -62,9 +62,7 @@ run_test "ftl_json" $testdir/json.sh $device
 if [ $SPDK_TEST_FTL_EXTENDED -eq 1 ]; then
 	run_test "ftl_fio_basic" $testdir/fio.sh $device basic
 
-	ftl_bdev_conf=$testdir/config/ftl.conf
-	gen_ftl_nvme_conf > $ftl_bdev_conf
-	$rootdir/app/spdk_tgt/spdk_tgt -c $ftl_bdev_conf & svcpid=$!
+	"$rootdir/app/spdk_tgt/spdk_tgt" --json <(gen_ftl_nvme_conf) & svcpid=$!
 
 	trap 'killprocess $svcpid; exit 1' SIGINT SIGTERM EXIT
 
@@ -74,7 +72,6 @@ if [ $SPDK_TEST_FTL_EXTENDED -eq 1 ]; then
 	$rpc_py bdev_ocssd_create -c nvme0 -b nvme0n1 -n 1
 	uuid=$($rpc_py bdev_ftl_create -b ftl0 -d nvme0n1 | jq -r '.uuid')
 	killprocess $svcpid
-	rm -f $ftl_bdev_conf
 
 	trap - SIGINT SIGTERM EXIT
 

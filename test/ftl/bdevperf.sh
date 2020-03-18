@@ -10,12 +10,9 @@ device=$1
 use_append=$2
 rpc_py=$rootdir/scripts/rpc.py
 
-ftl_bdev_conf=$testdir/config/ftl.conf
-gen_ftl_nvme_conf > $ftl_bdev_conf
-
 for (( i=0; i<${#tests[@]}; i++ )) do
 	timing_enter "${tests[$i]}"
-	$rootdir/test/bdev/bdevperf/bdevperf -z -T ftl0 ${tests[$i]} -c $ftl_bdev_conf &
+	"$rootdir/test/bdev/bdevperf/bdevperf" -z -T ftl0 ${tests[$i]} --json <(gen_ftl_nvme_conf) &
 	bdevperf_pid=$!
 
 	trap 'killprocess $bdevperf_pid; exit 1' SIGINT SIGTERM EXIT
@@ -32,5 +29,3 @@ for (( i=0; i<${#tests[@]}; i++ )) do
 	trap - SIGINT SIGTERM EXIT
 	timing_exit "${tests[$i]}"
 done
-
-rm -f $ftl_bdev_conf

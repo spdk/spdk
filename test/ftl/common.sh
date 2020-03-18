@@ -48,6 +48,21 @@ function create_nv_cache_bdev() {
 }
 
 function gen_ftl_nvme_conf() {
-	echo "[Nvme]"
-	echo "  AdminPollRate 100"
+	jq . <<-JSON
+		{
+		  "subsystems": [
+		    {
+		      "subsystem": "bdev",
+		      "config": [
+		        {
+		          "params": {
+		            "nvme_adminq_poll_period_us": 100
+		          },
+		          "method": "bdev_nvme_set_options"
+		        }
+		      ]
+		    }
+		  ]
+		}
+	JSON
 }

@@ -22,9 +22,6 @@ num_group=$(get_num_group $device)
 num_pu=$(get_num_pu $device)
 pu_count=$((num_group * num_pu))
 
-ftl_bdev_conf=$testdir/config/ftl.conf
-gen_ftl_nvme_conf > $ftl_bdev_conf
-
 restore_kill() {
 	if mount | grep $mount_dir; then
 		umount $mount_dir
@@ -33,7 +30,6 @@ restore_kill() {
 	rm -f $testdir/testfile.md5
 	rm -f $testdir/testfile2.md5
 	rm -f $testdir/config/ftl.json
-	rm -f $ftl_bdev_conf
 
 	killprocess $svcpid
 	rmmod nbd || true
@@ -41,7 +37,7 @@ restore_kill() {
 
 trap "restore_kill; exit 1" SIGINT SIGTERM EXIT
 
-$rootdir/app/spdk_tgt/spdk_tgt -c $ftl_bdev_conf  & svcpid=$!
+"$rootdir/app/spdk_tgt/spdk_tgt" --json <(gen_ftl_nvme_conf)  & svcpid=$!
 # Wait until spdk_tgt starts
 waitforlisten $svcpid
 
@@ -77,7 +73,7 @@ md5sum $mount_dir/testfile > $testdir/testfile.md5
 umount $mount_dir
 killprocess $svcpid
 
-$rootdir/app/spdk_tgt/spdk_tgt -c $ftl_bdev_conf -L ftl_init & svcpid=$!
+"$rootdir/app/spdk_tgt/spdk_tgt" --json <(gen_ftl_nvme_conf) -L ftl_init & svcpid=$!
 # Wait until spdk_tgt starts
 waitforlisten $svcpid
 
