@@ -135,6 +135,54 @@ size_t spdk_iovcpy(struct iovec *siov, size_t siovcnt, struct iovec *diov, size_
 		} \
 	} while (0)
 
+/**
+ * Add two sequece numbers s1 and s2
+ *
+ * \param s1 First sequence number
+ * \param s2 Second sequence number
+ *
+ * \return Sum of s1 and s2 based on serial number arithmetic.
+ */
+static inline uint32_t
+spdk_sn32_add(uint32_t s1, uint32_t s2)
+{
+	return (uint32_t)(s1 + s2);
+}
+
+#define SPDK_SN32_CMPMAX	(1U << (32 - 1))
+
+/**
+ * Compare if sequence number s1 is less than s2.
+ *
+ * \param s1 First sequence number
+ * \param s2 Second sequence number
+ *
+ * \return true if s1 is less than s2, or false otherwise.
+ */
+static inline bool
+spdk_sn32_lt(uint32_t s1, uint32_t s2)
+{
+	return (s1 != s2) &&
+	       ((s1 < s2 && s2 - s1 < SPDK_SN32_CMPMAX) ||
+		(s1 > s2 && s1 - s2 > SPDK_SN32_CMPMAX));
+}
+
+/**
+ * Compare if sequence number s1 is greater than s2.
+ *
+ * \param s1 First sequence number
+ * \param s2 Second sequence number
+ *
+ * \return true if s1 is greater than s2, or false otherwise.
+ */
+static inline bool
+spdk_sn32_gt(uint32_t s1, uint32_t s2)
+{
+	return (s1 != s2) &&
+	       ((s1 < s2 && s2 - s1 > SPDK_SN32_CMPMAX) ||
+		(s1 > s2 && s1 - s2 < SPDK_SN32_CMPMAX));
+}
+
 #ifdef __cplusplus
 }
 #endif

@@ -111,6 +111,7 @@ function unittest_util {
 	$valgrind $testdir/lib/util/string.c/string_ut
 	$valgrind $testdir/lib/util/dif.c/dif_ut
 	$valgrind $testdir/lib/util/iov.c/iov_ut
+	$valgrind $testdir/lib/util/math.c/math_ut
 	$valgrind $testdir/lib/util/pipe.c/pipe_ut
 }
 

@@ -37,6 +37,11 @@ Support for AES_XTS was added for the QAT polled mode driver (pmd).  The create 
 AES_CBC (default) or AES_XTS. AES_XTS isonly valid when using the QAT polled mode driver.
 The key2 parameter is the second key required for AES_XTS.
 
+### util
+
+New functions `spdk_sn32_lt` and `spdk_sn32_gt` have been added. They compare two sequence
+numbers based on serial number arithmetic.
+
 ## v20.01
 
 ### bdev
