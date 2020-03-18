@@ -1138,6 +1138,11 @@ iscsi_conn_login_pdu_success_complete(void *arg)
 {
 	struct spdk_iscsi_conn *conn = arg;
 
+	if (conn->state >= ISCSI_CONN_STATE_EXITING) {
+		/* Connection is being exited before this callback is executed. */
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Connection is already exited.\n");
+		return;
+	}
 	if (conn->full_feature) {
 		if (iscsi_conn_params_update(conn) != 0) {
 			return;
