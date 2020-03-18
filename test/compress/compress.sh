@@ -21,7 +21,6 @@ function destroy_vols() {
 	# bdev_compress_delete will delete the on-disk metadata as well as
 	# the persistent memory file containing its metadata.
 	$rpc_py bdev_compress_delete COMP_lvs0/lv0
-	$rpc_py bdev_compress_delete COMP_lvs0/lv1
 	$rpc_py bdev_lvol_delete_lvstore -l lvs0
 }
 
@@ -33,20 +32,9 @@ function create_vols() {
 	$rpc_py bdev_lvol_create -t -l lvs0 lv0 100
 	waitforbdev lvs0/lv0
 
-	$rpc_py bdev_lvol_create -t -l lvs0 lv1 100
-	waitforbdev lvs0/lv1
-
-	# use QAT for lv0, if the test system does not have QAT this will
-	# fail which is what we want
-	$rpc_py compress_set_pmd -p 1
+	$rpc_py compress_set_pmd -p "$pmd"
 	$rpc_py bdev_compress_create -b lvs0/lv0 -p /tmp/pmem
 	waitforbdev COMP_lvs0/lv0
-
-	# use ISAL for lv1, if ISAL is for some reason not available this will
-	# fail which is what we want
-	$rpc_py compress_set_pmd -p 2
-	$rpc_py bdev_compress_create -b lvs0/lv1 -p /tmp/pmem
-	waitforbdev COMP_lvs0/lv1
 }
 
 function run_bdevio() {
@@ -73,6 +61,18 @@ function run_bdevperf() {
 	killprocess $bdevperf_pid
 }
 
+test_type=$1
+case "$test_type" in
+	qat )
+		pmd=1;;
+	isal )
+		pmd=2;;
+	* )
+		echo "invalid pmd name"
+		exit 1
+		;;
+esac
+
 mkdir -p /tmp/pmem
 
 # per patch bdevperf uses slightly different params than nightly
@@ -92,7 +92,6 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	create_vols
 	$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode0 -a -s SPDK0
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode0 COMP_lvs0/lv0
-	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode0 COMP_lvs0/lv1
 	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
 	# Start random read writes in the background
