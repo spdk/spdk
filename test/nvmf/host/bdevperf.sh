@@ -32,11 +32,9 @@ fi
 
 tgt_init
 
-echo "[Nvme]" > $testdir/bdevperf.conf
-echo "  TransportID \"trtype:$TEST_TRANSPORT adrfam:IPv4 subnqn:nqn.2016-06.io.spdk:cnode1 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT\" Nvme0" >> $testdir/bdevperf.conf
-$rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdevperf.conf -q 128 -o 4096 -w verify -t 1
+"$rootdir/test/bdev/bdevperf/bdevperf" --json <(gen_nvmf_target_json) -q 128 -o 4096 -w verify -t 1
 
-$rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdevperf.conf -q 128 -o 4096 -w verify -t 15 -f &
+"$rootdir/test/bdev/bdevperf/bdevperf" --json <(gen_nvmf_target_json) -q 128 -o 4096 -w verify -t 15 -f &
 bdevperfpid=$!
 
 sleep 3
@@ -47,7 +45,6 @@ tgt_init
 
 wait $bdevperfpid
 sync
-rm -rf $testdir/bdevperf.conf
 $rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 
 trap - SIGINT SIGTERM EXIT

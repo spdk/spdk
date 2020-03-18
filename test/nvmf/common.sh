@@ -295,3 +295,40 @@ function get_nvme_devs()
 	(( ${#nvmes[@]} )) || return 1
 	echo "${#nvmes[@]}" >&2
 }
+
+function gen_nvmf_target_json()
+{
+	local subsystem config=()
+
+	for subsystem in "${@:-1}"; do
+		config+=(
+			"$(
+				cat <<-EOF
+					{
+					  "params": {
+					    "name": "Nvme$subsystem",
+					    "trtype": "$TEST_TRANSPORT",
+					    "traddr": "$NVMF_FIRST_TARGET_IP",
+					    "adrfam": "ipv4",
+					    "trsvcid": "$NVMF_PORT",
+					    "subnqn": "nqn.2016-06.io.spdk:cnode$subsystem"
+					  },
+					  "method": "bdev_nvme_attach_controller"
+					}
+				EOF
+			)"
+		)
+	done
+	jq . <<-JSON
+		{
+		  "subsystems": [
+		    {
+		      "subsystem": "bdev",
+		      "config": [
+		        $(IFS=","; printf '%s\n' "${config[*]}")
+		      ]
+		    }
+		  ]
+		}
+	JSON
+}

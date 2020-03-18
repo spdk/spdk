@@ -16,30 +16,24 @@ function starttarget() {
 
 	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 
-	num_subsystems=10
+	num_subsystems=({1..10})
 	# SoftRoce does not have enough queues available for
 	# this test. Detect if we're using software RDMA.
 	# If so, only use two subsystem.
 	if check_ip_is_soft_roce "$NVMF_FIRST_TARGET_IP"; then
-		num_subsystems=2
+		num_subsystems=({1..2})
 	fi
-
-	touch $testdir/bdevperf.conf
-	echo "[Nvme]" > $testdir/bdevperf.conf
 
 	timing_enter create_subsystems
 	# Create subsystems
 	rm -rf $testdir/rpcs.txt
-	for i in $(seq 1 $num_subsystems)
-	do
+	for i in "${num_subsystems[@]}"; do
 		cat <<- EOL >> $testdir/rpcs.txt
-	bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc$i
-	nvmf_create_subsystem nqn.2016-06.io.spdk:cnode$i -a -s SPDK$i
-	nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$i Malloc$i
-	nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$i -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
-	EOL
-
-		echo "  TransportID \"trtype:$TEST_TRANSPORT adrfam:IPv4 subnqn:nqn.2016-06.io.spdk:cnode$i traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT hostaddr:$NVMF_FIRST_TARGET_IP\" Nvme$i" >> $testdir/bdevperf.conf
+			bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc$i
+			nvmf_create_subsystem nqn.2016-06.io.spdk:cnode$i -a -s SPDK$i
+			nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$i Malloc$i
+			nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$i -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+		EOL
 	done
 	$rpc_py < $testdir/rpcs.txt
 	timing_exit create_subsystems
@@ -83,7 +77,7 @@ function nvmf_shutdown_tc1 {
 	starttarget
 
 	# Run bdev_svc, which connects but does not issue I/O
-	$rootdir/test/app/bdev_svc/bdev_svc -m 0x1 -i 1 -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf &
+	$rootdir/test/app/bdev_svc/bdev_svc -m 0x1 -i 1 -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "${num_subsystems[@]}") &
 	perfpid=$!
 	waitforlisten $perfpid /var/tmp/bdevperf.sock
 	$rpc_py -s /var/tmp/bdevperf.sock framework_wait_init
@@ -97,7 +91,7 @@ function nvmf_shutdown_tc1 {
 	kill -0 $nvmfpid
 
 	# Connect with bdevperf and confirm it works
-	$rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 1
+	$rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "${num_subsystems[@]}") -q 64 -o 65536 -w verify -t 1
 
 	stoptarget
 }
@@ -107,7 +101,7 @@ function nvmf_shutdown_tc2 {
 	starttarget
 
 	# Run bdevperf
-	$rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 10 &
+	$rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "${num_subsystems[@]}") -q 64 -o 65536 -w verify -t 10 &
 	perfpid=$!
 	waitforlisten $perfpid /var/tmp/bdevperf.sock
 	$rpc_py -s /var/tmp/bdevperf.sock framework_wait_init
@@ -129,7 +123,7 @@ function nvmf_shutdown_tc3 {
 	starttarget
 
 	# Run bdevperf
-	$rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 10 &
+	$rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "${num_subsystems[@]}")  -q 64 -o 65536 -w verify -t 10 &
 	perfpid=$!
 	waitforlisten $perfpid /var/tmp/bdevperf.sock
 	$rpc_py -s /var/tmp/bdevperf.sock framework_wait_init
