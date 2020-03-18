@@ -10,10 +10,12 @@ TEST_TRANSPORT='rdma'
 nvmftestinit
 
 function finish_test {
-	$rpc_py bdev_lvol_delete_lvstore -l lvs0
-	kill -9 $rpc_proxy_pid
-	killprocess $nvmfpid
-	rm $testdir/conf.json
+	{
+	  "$rpc_py" bdev_lvol_delete_lvstore -l lvs0
+	  kill -9 $rpc_proxy_pid
+	  killprocess $nvmfpid
+	  rm "$testdir/conf.json"
+	} || :
 }
 
 trap "finish_test" SIGINT SIGTERM EXIT
