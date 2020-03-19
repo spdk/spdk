@@ -2117,11 +2117,36 @@ static build_req_fn const g_nvme_pcie_build_req_table[][2] = {
 };
 
 static int
+nvme_pcie_qpair_build_metadata(struct spdk_nvme_qpair *qpair, struct nvme_tracker *tr,
+			       bool dword_aligned)
+{
+	void *md_payload;
+	struct nvme_request *req = tr->req;
+
+	if (req->payload.md) {
+		md_payload = req->payload.md + req->md_offset;
+		if (dword_aligned && ((uintptr_t)md_payload & 3)) {
+			SPDK_ERRLOG("virt_addr %p not dword aligned\n", md_payload);
+			goto exit;
+		}
+		tr->req->cmd.mptr = spdk_vtophys(md_payload, NULL);
+		if (tr->req->cmd.mptr == SPDK_VTOPHYS_ERROR) {
+			goto exit;
+		}
+	}
+
+	return 0;
+
+exit:
+	nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+	return -EINVAL;
+}
+
+static int
 nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
 	struct nvme_tracker	*tr;
 	int			rc = 0;
-	void			*md_payload;
 	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
 	enum nvme_payload_type	payload_type;
@@ -2147,20 +2172,7 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 	tr->cb_arg = req->cb_arg;
 	req->cmd.cid = tr->cid;
 
-	if (req->payload_size && req->payload.md) {
-		md_payload = req->payload.md + req->md_offset;
-		tr->req->cmd.mptr = spdk_vtophys(md_payload, NULL);
-		if (tr->req->cmd.mptr == SPDK_VTOPHYS_ERROR) {
-			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
-			rc = -EINVAL;
-			goto exit;
-		}
-	}
-
-	if (req->payload_size == 0) {
-		/* Null payload - leave PRP fields untouched */
-		rc = 0;
-	} else {
+	if (req->payload_size != 0) {
 		payload_type = nvme_payload_type(&req->payload);
 		/* According to the specification, PRPs shall be used for all
 		 *  Admin commands for NVMe over PCIe implementations.
@@ -2172,10 +2184,14 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 			dword_aligned = false;
 		}
 		rc = g_nvme_pcie_build_req_table[payload_type][sgl_supported](qpair, req, tr, dword_aligned);
-	}
+		if (rc < 0) {
+			goto exit;
+		}
 
-	if (rc < 0) {
-		goto exit;
+		rc = nvme_pcie_qpair_build_metadata(qpair, tr, dword_aligned);
+		if (rc < 0) {
+			goto exit;
+		}
 	}
 
 	nvme_pcie_qpair_submit_tracker(qpair, tr);
