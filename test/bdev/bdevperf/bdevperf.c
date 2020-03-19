@@ -88,8 +88,11 @@ static bool g_every_core_for_each_bdev = false;
 
 static struct spdk_poller *g_perf_timer = NULL;
 
+typedef void (*performance_dump_done_fn)(void *ctx);
+
 static void bdevperf_submit_single(struct bdevperf_job *job, struct bdevperf_task *task);
-static void performance_dump(uint64_t io_time_in_usec, uint64_t ema_period);
+static void performance_dump(uint64_t io_time_in_usec, uint64_t ema_period,
+			     performance_dump_done_fn cb_fn, void *cb_arg);
 static void rpc_perform_tests_cb(void);
 
 struct bdevperf_job {
@@ -305,7 +308,7 @@ _bdevperf_free_jobs(struct spdk_io_channel_iter *i)
 }
 
 static void
-bdevperf_test_done(void)
+bdevperf_test_done(void *ctx)
 {
 	spdk_for_each_channel(&g_bdevperf, _bdevperf_free_jobs, NULL,
 			      bdevperf_free_jobs_done);
@@ -326,13 +329,14 @@ end_run(void *ctx)
 
 		if (g_time_in_usec) {
 			if (!g_run_rc) {
-				performance_dump(g_time_in_usec, 0);
+				performance_dump(g_time_in_usec, 0, bdevperf_test_done, NULL);
+				return;
 			}
 		} else {
 			printf("Test time less than one microsecond, no performance data will be shown\n");
 		}
 
-		bdevperf_test_done();
+		bdevperf_test_done(NULL);
 	}
 }
 
@@ -867,10 +871,12 @@ get_ema_io_per_second(struct bdevperf_job *job, uint64_t ema_period)
 }
 
 struct perf_dump_ctx {
-	uint64_t	io_time_in_usec;
-	uint64_t	ema_period;
-	double		total_io_per_second;
-	double		total_mb_per_second;
+	uint64_t			io_time_in_usec;
+	uint64_t			ema_period;
+	double				total_io_per_second;
+	double				total_mb_per_second;
+	performance_dump_done_fn	cb_fn;
+	void				*cb_arg;
 };
 
 static void
@@ -884,6 +890,10 @@ _performance_dump_done(struct spdk_io_channel_iter *i, int status)
 	printf("\r %-20s: %10.2f IOPS %10.2f MiB/s\n",
 	       "Total", ctx->total_io_per_second, ctx->total_mb_per_second);
 	fflush(stdout);
+
+	if (ctx->cb_fn) {
+		ctx->cb_fn(ctx->cb_arg);
+	}
 
 	free(ctx);
 }
@@ -928,7 +938,8 @@ exit:
 }
 
 static void
-performance_dump(uint64_t io_time_in_usec, uint64_t ema_period)
+performance_dump(uint64_t io_time_in_usec, uint64_t ema_period, performance_dump_done_fn cb_fn,
+		 void *cb_arg)
 {
 	struct perf_dump_ctx *ctx;
 
@@ -939,6 +950,8 @@ performance_dump(uint64_t io_time_in_usec, uint64_t ema_period)
 
 	ctx->io_time_in_usec = io_time_in_usec;
 	ctx->ema_period = ema_period;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
 
 	spdk_for_each_channel(&g_bdevperf, _performance_dump, ctx,
 			      _performance_dump_done);
@@ -950,7 +963,7 @@ performance_statistics_thread(void *arg)
 {
 	g_show_performance_period_num++;
 	performance_dump(g_show_performance_period_num * g_show_performance_period_in_usec,
-			 g_show_performance_ema_period);
+			 g_show_performance_ema_period, NULL, NULL);
 	return -1;
 }
 
@@ -1013,7 +1026,7 @@ bdevperf_construct_jobs_tasks_done(struct spdk_io_channel_iter *i, int status)
 		fprintf(stderr, "Bdevperf program exits due to memory allocation issue\n");
 		fprintf(stderr, "Use -d XXX to allocate more huge pages, e.g., -d 4096\n");
 		g_run_rc = status;
-		bdevperf_test_done();
+		bdevperf_test_done(NULL);
 		return;
 	}
 
@@ -1058,7 +1071,7 @@ bdevperf_construct_jobs_tasks(void)
 	if (g_job_count == 0) {
 		fprintf(stderr, "No valid bdevs found.\n");
 		g_run_rc = -ENODEV;
-		bdevperf_test_done();
+		bdevperf_test_done(NULL);
 		return;
 	}
 
@@ -1429,7 +1442,7 @@ spdk_bdevperf_shutdown_cb(void)
 	}
 
 	if (g_job_count == 0) {
-		bdevperf_test_done();
+		bdevperf_test_done(NULL);
 		return;
 	}
 
