@@ -120,11 +120,11 @@ class JSONRPCClient(object):
             return None
 
     def recv(self):
-        start_time = time.clock()
+        start_time = time.process_time()
         response = self.decode_one_response()
         while not response:
             try:
-                timeout = self.timeout - (time.clock() - start_time)
+                timeout = self.timeout - (time.process_time() - start_time)
                 self.sock.settimeout(timeout)
                 newdata = self.sock.recv(4096)
                 if not newdata:
