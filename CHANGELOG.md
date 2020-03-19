@@ -1,6 +1,6 @@
 # Changelog
 
-## v20.01.1: (Upcoming Release)
+## v20.01.1:
 
 ## v20.01:
 
