@@ -351,15 +351,19 @@ bdevperf_queue_io_wait_with_cb(struct bdevperf_task *task, spdk_bdev_io_wait_cb 
 	spdk_bdev_queue_io_wait(job->bdev, job->ch, &task->bdev_io_wait);
 }
 
-static void
-_end_job(struct bdevperf_job *job)
+static int
+bdevperf_job_drain(void *ctx)
 {
+	struct bdevperf_job *job = ctx;
+
 	spdk_poller_unregister(&job->run_timer);
 	if (g_reset) {
 		spdk_poller_unregister(&job->reset_timer);
 	}
 
 	job->is_draining = true;
+
+	return -1;
 }
 
 static void
@@ -376,7 +380,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 
 	if (!success) {
 		if (!g_reset && !g_continue_on_failure) {
-			_end_job(job);
+			bdevperf_job_drain(job);
 			g_run_rc = -1;
 			printf("task offset: %lu on job bdev=%s fails\n",
 			       task->offset_blocks, job->name);
@@ -392,7 +396,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 				 job->io_size_blocks, md_check)) {
 			printf("Buffer mismatch! Target: %s Disk Offset: %lu\n", job->name, task->offset_blocks);
 			printf("   First dword expected 0x%x got 0x%x\n", *(int *)task->buf, *(int *)iovs[0].iov_base);
-			_end_job(job);
+			bdevperf_job_drain(job);
 			g_run_rc = -1;
 		}
 	}
@@ -450,7 +454,7 @@ bdevperf_verify_submit_read(void *cb_arg)
 		bdevperf_queue_io_wait_with_cb(task, bdevperf_verify_submit_read);
 	} else if (rc != 0) {
 		printf("Failed to submit read: %d\n", rc);
-		_end_job(job);
+		bdevperf_job_drain(job);
 		g_run_rc = rc;
 	}
 }
@@ -596,7 +600,7 @@ bdevperf_submit_task(void *arg)
 		return;
 	} else if (rc != 0) {
 		printf("Failed to submit bdev_io: %d\n", rc);
-		_end_job(job);
+		bdevperf_job_drain(job);
 		g_run_rc = rc;
 		return;
 	}
@@ -613,7 +617,7 @@ bdevperf_zcopy_get_buf_complete(struct spdk_bdev_io *bdev_io, bool success, void
 	int			iovcnt;
 
 	if (!success) {
-		_end_job(job);
+		bdevperf_job_drain(job);
 		g_run_rc = -1;
 		return;
 	}
@@ -753,16 +757,6 @@ bdevperf_submit_io(struct bdevperf_job *job, int queue_depth)
 	}
 }
 
-static int
-end_job(void *arg)
-{
-	struct bdevperf_job *job = arg;
-
-	_end_job(job);
-
-	return -1;
-}
-
 static int reset_job(void *arg);
 
 static void
@@ -773,7 +767,7 @@ reset_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 
 	if (!success) {
 		printf("Reset blockdev=%s failed\n", spdk_bdev_get_name(job->bdev));
-		_end_job(job);
+		bdevperf_job_drain(job);
 		g_run_rc = -1;
 	}
 
@@ -799,7 +793,7 @@ reset_job(void *arg)
 			     reset_cb, task);
 	if (rc) {
 		printf("Reset failed: %d\n", rc);
-		_end_job(job);
+		bdevperf_job_drain(job);
 		g_run_rc = -1;
 	}
 
@@ -830,7 +824,7 @@ bdevperf_submit_on_reactor(struct spdk_io_channel_iter *i)
 		}
 
 		/* Start a timer to stop this I/O chain when the run is over */
-		job->run_timer = spdk_poller_register(end_job, job,
+		job->run_timer = spdk_poller_register(bdevperf_job_drain, job,
 						      g_time_in_usec);
 		if (g_reset) {
 			job->reset_timer = spdk_poller_register(reset_job, job,
@@ -1088,7 +1082,7 @@ bdevperf_job_gone(void *arg)
 	assert(spdk_io_channel_get_thread(spdk_io_channel_from_ctx(job->reactor)) ==
 	       spdk_get_thread());
 
-	_end_job(job);
+	bdevperf_job_drain(job);
 }
 
 static int
@@ -1425,7 +1419,7 @@ bdevperf_stop_io_on_reactor(struct spdk_io_channel_iter *i)
 
 	/* Stop I/O for each block device. */
 	TAILQ_FOREACH(job, &reactor->jobs, link) {
-		end_job(job);
+		bdevperf_job_drain(job);
 	}
 
 	spdk_for_each_channel_continue(i, 0);
