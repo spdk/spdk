@@ -127,15 +127,16 @@ struct bdevperf_reactor {
 struct spdk_bdevperf {
 	TAILQ_HEAD(, bdevperf_reactor)	reactors;
 	uint32_t			num_reactors;
+	uint32_t			running_jobs;
 };
 
 static struct spdk_bdevperf g_bdevperf = {
 	.reactors = TAILQ_HEAD_INITIALIZER(g_bdevperf.reactors),
 	.num_reactors = 0,
+	.running_jobs = 0,
 };
 
 struct bdevperf_reactor *g_next_reactor;
-static uint32_t g_job_count = 0;
 
 static void
 generate_data(void *buf, int buf_len, int block_size, void *md_buf, int md_size,
@@ -317,7 +318,7 @@ bdevperf_test_done(void *ctx)
 static void
 end_run(void *ctx)
 {
-	if (--g_job_count == 0) {
+	if (--g_bdevperf.running_jobs == 0) {
 		if (g_show_performance_real_time) {
 			spdk_poller_unregister(&g_perf_timer);
 		}
@@ -817,7 +818,7 @@ bdevperf_submit_on_reactor(struct spdk_io_channel_iter *i)
 		if (!job->ch) {
 			printf("Skip this device (%s) as IO channel not setup.\n",
 			       spdk_bdev_get_name(job->bdev));
-			g_job_count--;
+			g_bdevperf.running_jobs--;
 			g_run_rc = -1;
 			spdk_bdev_close(job->bdev_desc);
 			continue;
@@ -1062,7 +1063,7 @@ end:
 static void
 bdevperf_construct_jobs_tasks(void)
 {
-	if (g_job_count == 0) {
+	if (g_bdevperf.running_jobs == 0) {
 		fprintf(stderr, "No valid bdevs found.\n");
 		g_run_rc = -ENODEV;
 		bdevperf_test_done(NULL);
@@ -1164,8 +1165,8 @@ _bdevperf_construct_jobs_done(struct spdk_io_channel_iter *i, int status)
 
 	ctx = spdk_io_channel_iter_get_ctx(i);
 
-	/* Update g_job_count on the master thread. */
-	g_job_count += ctx->job_count;
+	/* Update g_bdevperf.running_jobs on the master thread. */
+	g_bdevperf.running_jobs += ctx->job_count;
 
 	free(ctx);
 
@@ -1435,7 +1436,7 @@ spdk_bdevperf_shutdown_cb(void)
 		return;
 	}
 
-	if (g_job_count == 0) {
+	if (g_bdevperf.running_jobs == 0) {
 		bdevperf_test_done(NULL);
 		return;
 	}
