@@ -1142,7 +1142,7 @@ _bdevperf_construct_job(struct spdk_bdev *bdev, struct bdevperf_reactor *reactor
 	return 0;
 }
 
-static uint32_t g_bdev_count = 0;
+static uint32_t g_construct_job_count = 0;
 
 struct construct_jobs_ctx {
 	struct spdk_bdev	*bdev;
@@ -1162,7 +1162,7 @@ _bdevperf_construct_jobs_done(struct spdk_io_channel_iter *i, int status)
 
 	free(ctx);
 
-	if (--g_bdev_count == 0) {
+	if (--g_construct_job_count == 0) {
 		bdevperf_construct_jobs_tasks();
 	}
 }
@@ -1237,7 +1237,7 @@ _bdevperf_construct_jobs(struct spdk_bdev *bdev)
 		ctx->reactor = get_next_bdevperf_reactor();
 	}
 
-	g_bdev_count++;
+	g_construct_job_count++;
 	spdk_for_each_channel(&g_bdevperf, bdevperf_construct_job, ctx,
 			      _bdevperf_construct_jobs_done);
 }
@@ -1247,10 +1247,10 @@ bdevperf_construct_jobs(void)
 {
 	struct spdk_bdev *bdev;
 
-	/* Increment initial bdev_count so that it will never reach 0 in the middle
+	/* Increment initial construct_jobs count so that it will never reach 0 in the middle
 	 * of iteration.
 	 */
-	g_bdev_count = 1;
+	g_construct_job_count = 1;
 
 	if (g_job_bdev_name != NULL) {
 		bdev = spdk_bdev_get_by_name(g_job_bdev_name);
@@ -1267,7 +1267,7 @@ bdevperf_construct_jobs(void)
 		}
 	}
 
-	if (--g_bdev_count == 0) {
+	if (--g_construct_job_count == 0) {
 		bdevperf_construct_jobs_tasks();
 	}
 }
