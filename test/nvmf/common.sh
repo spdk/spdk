@@ -217,7 +217,7 @@ function nvmfappstart()
 
 function nvmftestfini()
 {
-	nvmfcleanup
+	nvmfcleanup || :
 	if [ -n "$nvmfpid" ]; then
 		killprocess $nvmfpid
 	fi
