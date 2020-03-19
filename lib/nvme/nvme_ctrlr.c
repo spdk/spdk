@@ -593,7 +593,7 @@ static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 		return -ENXIO;
 	}
 
-	status = malloc(sizeof(*status));
+	status = calloc(1, sizeof(*status));
 	if (!status) {
 		SPDK_ERRLOG("Failed to allocate status tracker\n");
 		spdk_free(log_page_directory);
@@ -673,7 +673,7 @@ nvme_ctrlr_set_arbitration_feature(struct spdk_nvme_ctrlr *ctrlr)
 		return;
 	}
 
-	status = malloc(sizeof(*status));
+	status = calloc(1, sizeof(*status));
 	if (!status) {
 		SPDK_ERRLOG("Failed to allocate status tracker\n");
 		return;
@@ -1362,7 +1362,7 @@ nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 		return -ENOMEM;
 	}
 
-	status = malloc(sizeof(*status));
+	status = calloc(1, sizeof(*status));
 	if (!status) {
 		SPDK_ERRLOG("Failed to allocate status tracker\n");
 		spdk_free(new_ns_list);
@@ -1375,6 +1375,7 @@ nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 		 * there are no more active namespaces
 		 */
 		for (i = 0; i < num_pages; i++) {
+			memset(status, 0, sizeof(*status));
 			rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST, 0, next_nsid,
 						     &new_ns_list[1024 * i], sizeof(struct spdk_nvme_ns_list),
 						     nvme_completion_poll_cb, status);
@@ -2961,7 +2962,7 @@ spdk_nvme_ctrlr_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	int					res;
 	struct spdk_nvme_ns			*ns;
 
-	status = malloc(sizeof(*status));
+	status = calloc(1, sizeof(*status));
 	if (!status) {
 		SPDK_ERRLOG("Failed to allocate status tracker\n");
 		return -ENOMEM;
@@ -2999,7 +3000,7 @@ spdk_nvme_ctrlr_detach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	int					res;
 	struct spdk_nvme_ns			*ns;
 
-	status = malloc(sizeof(*status));
+	status = calloc(1, sizeof(*status));
 	if (!status) {
 		SPDK_ERRLOG("Failed to allocate status tracker\n");
 		return -ENOMEM;
@@ -3040,7 +3041,7 @@ spdk_nvme_ctrlr_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns_dat
 	uint32_t				nsid;
 	struct spdk_nvme_ns			*ns;
 
-	status = malloc(sizeof(*status));
+	status = calloc(1, sizeof(*status));
 	if (!status) {
 		SPDK_ERRLOG("Failed to allocate status tracker\n");
 		return 0;
@@ -3079,7 +3080,7 @@ spdk_nvme_ctrlr_delete_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 	int					res;
 	struct spdk_nvme_ns			*ns;
 
-	status = malloc(sizeof(*status));
+	status = calloc(1, sizeof(*status));
 	if (!status) {
 		SPDK_ERRLOG("Failed to allocate status tracker\n");
 		return -ENOMEM;
@@ -3117,7 +3118,7 @@ spdk_nvme_ctrlr_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	struct nvme_completion_poll_status	*status;
 	int					res;
 
-	status = malloc(sizeof(*status));
+	status = calloc(1, sizeof(*status));
 	if (!status) {
 		SPDK_ERRLOG("Failed to allocate status tracker\n");
 		return -ENOMEM;
@@ -3171,7 +3172,7 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 		return -1;
 	}
 
-	status = malloc(sizeof(*status));
+	status = calloc(1, sizeof(*status));
 	if (!status) {
 		SPDK_ERRLOG("Failed to allocate status tracker\n");
 		return -ENOMEM;
@@ -3185,6 +3186,7 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 	while (size_remaining > 0) {
 		transfer = spdk_min(size_remaining, ctrlr->min_page_size);
 
+		memset(status, 0, sizeof(*status));
 		res = nvme_ctrlr_cmd_fw_image_download(ctrlr, transfer, offset, p,
 						       nvme_completion_poll_cb,
 						       status);
@@ -3210,6 +3212,7 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 	fw_commit.fs = slot;
 	fw_commit.ca = commit_action;
 
+	memset(status, 0, sizeof(*status));
 	res = nvme_ctrlr_cmd_fw_commit(ctrlr, &fw_commit, nvme_completion_poll_cb,
 				       status);
 	if (res) {
@@ -3283,7 +3286,7 @@ spdk_nvme_ctrlr_security_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
 	struct nvme_completion_poll_status	*status;
 	int					res;
 
-	status = malloc(sizeof(*status));
+	status = calloc(1, sizeof(*status));
 	if (!status) {
 		SPDK_ERRLOG("Failed to allocate status tracker\n");
 		return -ENOMEM;
@@ -3314,7 +3317,7 @@ spdk_nvme_ctrlr_security_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
 	struct nvme_completion_poll_status	*status;
 	int					res;
 
-	status = malloc(sizeof(*status));
+	status = calloc(1, sizeof(*status));
 	if (!status) {
 		SPDK_ERRLOG("Failed to allocate status tracker\n");
 		return -ENOMEM;

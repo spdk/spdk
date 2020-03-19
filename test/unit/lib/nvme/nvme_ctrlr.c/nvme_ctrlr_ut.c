@@ -275,6 +275,10 @@ void
 nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct nvme_completion_poll_status	*status = arg;
+	/* This should not happen it test env since this callback is always called
+	 * before wait_for_completion_* while this field can only be set to true in
+	 * wait_for_completion_* functions */
+	CU_ASSERT(status->timed_out == false);
 
 	status->cpl = *cpl;
 	status->done = true;
@@ -288,7 +292,6 @@ spdk_nvme_wait_for_completion_robust_lock(
 	struct nvme_completion_poll_status *status,
 	pthread_mutex_t *robust_mutex)
 {
-	memset(status, 0, sizeof(*status));
 	if (spdk_nvme_qpair_process_completions(qpair, 0) < 0) {
 		g_failed_status = status;
 		status->timed_out = true;

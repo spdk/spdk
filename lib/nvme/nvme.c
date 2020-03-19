@@ -106,7 +106,8 @@ nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl)
  * Poll qpair for completions until a command completes.
  *
  * \param qpair queue to poll
- * \param status completion status
+ * \param status completion status. The user must fill this structure with zeroes before calling
+ * this function
  * \param robust_mutex optional robust mutex to lock while polling qpair
  *
  * \return 0 if command completed without error,
@@ -122,7 +123,6 @@ spdk_nvme_wait_for_completion_robust_lock(
 	struct nvme_completion_poll_status *status,
 	pthread_mutex_t *robust_mutex)
 {
-	memset(status, 0, sizeof(*status));
 	int rc;
 
 	while (status->done == false) {
@@ -160,7 +160,8 @@ spdk_nvme_wait_for_completion(struct spdk_nvme_qpair *qpair,
  * Poll qpair for completions until a command completes.
  *
  * \param qpair queue to poll
- * \param status completion status
+ * \param status completion status. The user must fill this structure with zeroes before calling
+ * this function
  * \param timeout_in_secs optional timeout
  *
  * \return 0 if command completed without error,
@@ -178,7 +179,6 @@ spdk_nvme_wait_for_completion_timeout(struct spdk_nvme_qpair *qpair,
 	uint64_t timeout_tsc = 0;
 	int rc = 0;
 
-	memset(status, 0, sizeof(*status));
 	if (timeout_in_secs) {
 		timeout_tsc = spdk_get_ticks() + timeout_in_secs * spdk_get_ticks_hz();
 	}

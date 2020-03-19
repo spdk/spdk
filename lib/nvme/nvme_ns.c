@@ -117,7 +117,7 @@ nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 	struct spdk_nvme_ns_data		*nsdata;
 	int					rc;
 
-	status = malloc(sizeof(*status));
+	status = calloc(1, sizeof(*status));
 	if (!status) {
 		SPDK_ERRLOG("Failed to allocate status tracker\n");
 		return -ENOMEM;
@@ -163,7 +163,7 @@ nvme_ctrlr_identify_id_desc(struct spdk_nvme_ns *ns)
 		return 0;
 	}
 
-	status = malloc(sizeof(*status));
+	status = calloc(1, sizeof(*status));
 	if (!status) {
 		SPDK_ERRLOG("Failed to allocate status tracker\n");
 		return -ENOMEM;

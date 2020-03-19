@@ -1567,7 +1567,7 @@ _nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 	struct nvme_completion_poll_status	*status;
 	int					rc;
 
-	status = malloc(sizeof(*status));
+	status = calloc(1, sizeof(*status));
 	if (!status) {
 		SPDK_ERRLOG("Failed to allocate status tracker\n");
 		return -ENOMEM;
@@ -1587,6 +1587,7 @@ _nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 		return -1;
 	}
 
+	memset(status, 0, sizeof(*status));
 	rc = nvme_pcie_ctrlr_cmd_create_io_sq(qpair->ctrlr, qpair, nvme_completion_poll_cb, status);
 	if (rc != 0) {
 		free(status);
@@ -1598,13 +1599,14 @@ _nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 		if (status->timed_out) {
 			/* Request is still queued, the memory will be freed in a completion callback.
 			   allocate a new request */
-			status = malloc(sizeof(*status));
+			status = calloc(1, sizeof(*status));
 			if (!status) {
 				SPDK_ERRLOG("Failed to allocate status tracker\n");
 				return -ENOMEM;
 			}
 		}
 
+		memset(status, 0, sizeof(*status));
 		/* Attempt to delete the completion queue */
 		rc = nvme_pcie_ctrlr_cmd_delete_io_cq(qpair->ctrlr, qpair, nvme_completion_poll_cb, status);
 		if (rc != 0) {
@@ -1704,7 +1706,7 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 		goto free;
 	}
 
-	status = malloc(sizeof(*status));
+	status = calloc(1, sizeof(*status));
 	if (!status) {
 		SPDK_ERRLOG("Failed to allocate status tracker\n");
 		return -ENOMEM;
@@ -1724,6 +1726,7 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 		return -1;
 	}
 
+	memset(status, 0, sizeof(*status));
 	/* Delete the completion queue */
 	rc = nvme_pcie_ctrlr_cmd_delete_io_cq(ctrlr, qpair, nvme_completion_poll_cb, status);
 	if (rc != 0) {

@@ -50,7 +50,7 @@ nvme_fabric_prop_set_cmd(struct spdk_nvme_ctrlr *ctrlr,
 
 	assert(size == SPDK_NVMF_PROP_SIZE_4 || size == SPDK_NVMF_PROP_SIZE_8);
 
-	status = malloc(sizeof(*status));
+	status = calloc(1, sizeof(*status));
 	if (!status) {
 		SPDK_ERRLOG("Failed to allocate status tracker\n");
 		return -ENOMEM;
@@ -93,7 +93,7 @@ nvme_fabric_prop_get_cmd(struct spdk_nvme_ctrlr *ctrlr,
 
 	assert(size == SPDK_NVMF_PROP_SIZE_4 || size == SPDK_NVMF_PROP_SIZE_8);
 
-	status = malloc(sizeof(*status));
+	status = calloc(1, sizeof(*status));
 	if (!status) {
 		SPDK_ERRLOG("Failed to allocate status tracker\n");
 		return -ENOMEM;
@@ -231,7 +231,7 @@ nvme_fabric_get_discovery_log_page(struct spdk_nvme_ctrlr *ctrlr,
 	struct nvme_completion_poll_status *status;
 	int rc;
 
-	status = malloc(sizeof(*status));
+	status = calloc(1, sizeof(*status));
 	if (!status) {
 		SPDK_ERRLOG("Failed to allocate status tracker\n");
 		return -ENOMEM;
@@ -294,7 +294,7 @@ nvme_fabric_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 		return -1;
 	}
 
-	status = malloc(sizeof(*status));
+	status = calloc(1, sizeof(*status));
 	if (!status) {
 		SPDK_ERRLOG("Failed to allocate status tracker\n");
 		nvme_ctrlr_destruct(discovery_ctrlr);
@@ -413,7 +413,7 @@ nvme_fabric_qpair_connect(struct spdk_nvme_qpair *qpair, uint32_t num_entries)
 		return -ENOMEM;
 	}
 
-	status = malloc(sizeof(*status));
+	status = calloc(1, sizeof(*status));
 	if (!status) {
 		SPDK_ERRLOG("Failed to allocate status tracker\n");
 		spdk_free(nvmf_data);
