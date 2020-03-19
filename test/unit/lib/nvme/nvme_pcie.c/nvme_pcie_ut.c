@@ -418,7 +418,7 @@ test_build_contig_hw_sgl_request(void)
 	g_vtophys_size = 100;
 	MOCK_SET(spdk_vtophys, 0xDEADBEEF);
 
-	rc = nvme_pcie_qpair_build_contig_hw_sgl_request(&qpair, &req, &tr);
+	rc = nvme_pcie_qpair_build_contig_hw_sgl_request(&qpair, &req, &tr, 0);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
 	CU_ASSERT(req.cmd.dptr.sgl1.address == 0xDEADBEEF);
@@ -437,7 +437,7 @@ test_build_contig_hw_sgl_request(void)
 	g_vtophys_size = 1000;
 	MOCK_SET(spdk_vtophys, 0xDEADBEEF);
 
-	rc = nvme_pcie_qpair_build_contig_hw_sgl_request(&qpair, &req, &tr);
+	rc = nvme_pcie_qpair_build_contig_hw_sgl_request(&qpair, &req, &tr, 0);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
 	CU_ASSERT(req.cmd.dptr.sgl1.address == 0xDEADBEEF);
@@ -456,7 +456,7 @@ test_build_contig_hw_sgl_request(void)
 	tr.prp_sgl_bus_addr = 0xFF0FF;
 	MOCK_SET(spdk_vtophys, 0xDEADBEEF);
 
-	rc = nvme_pcie_qpair_build_contig_hw_sgl_request(&qpair, &req, &tr);
+	rc = nvme_pcie_qpair_build_contig_hw_sgl_request(&qpair, &req, &tr, 0);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_LAST_SEGMENT);
 	CU_ASSERT(req.cmd.dptr.sgl1.address == tr.prp_sgl_bus_addr);

@@ -1837,7 +1837,7 @@ nvme_pcie_prp_list_append(struct nvme_tracker *tr, uint32_t *prp_index, void *vi
 
 static int
 nvme_pcie_qpair_build_request_invalid(struct spdk_nvme_qpair *qpair,
-				      struct nvme_request *req, struct nvme_tracker *tr)
+				      struct nvme_request *req, struct nvme_tracker *tr, bool dword_aligned)
 {
 	assert(0);
 	nvme_pcie_fail_request_bad_vtophys(qpair, tr);
@@ -1849,7 +1849,7 @@ nvme_pcie_qpair_build_request_invalid(struct spdk_nvme_qpair *qpair,
  */
 static int
 nvme_pcie_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req,
-				     struct nvme_tracker *tr)
+				     struct nvme_tracker *tr, bool dword_aligned)
 {
 	uint32_t prp_index = 0;
 	int rc;
@@ -1871,7 +1871,7 @@ nvme_pcie_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_
  */
 static int
 nvme_pcie_qpair_build_contig_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req,
-		struct nvme_tracker *tr)
+		struct nvme_tracker *tr, bool dword_aligned)
 {
 	void *virt_addr;
 	uint64_t phys_addr, mapping_length;
@@ -1892,6 +1892,12 @@ nvme_pcie_qpair_build_contig_hw_sgl_request(struct spdk_nvme_qpair *qpair, struc
 
 	while (length > 0) {
 		if (nseg >= NVME_MAX_SGL_DESCRIPTORS) {
+			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+			return -EFAULT;
+		}
+
+		if (dword_aligned && ((uintptr_t)virt_addr & 3)) {
+			SPDK_ERRLOG("virt_addr %p not dword aligned\n", virt_addr);
 			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
 			return -EFAULT;
 		}
@@ -1943,7 +1949,7 @@ nvme_pcie_qpair_build_contig_hw_sgl_request(struct spdk_nvme_qpair *qpair, struc
  */
 static int
 nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req,
-				     struct nvme_tracker *tr)
+				     struct nvme_tracker *tr, bool dword_aligned)
 {
 	int rc;
 	void *virt_addr;
@@ -1979,14 +1985,18 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 		remaining_transfer_len -= remaining_user_sge_len;
 		while (remaining_user_sge_len > 0) {
 			if (nseg >= NVME_MAX_SGL_DESCRIPTORS) {
-				nvme_pcie_fail_request_bad_vtophys(qpair, tr);
-				return -EFAULT;
+				SPDK_ERRLOG("Too many SGL entries\n");
+				goto exit;
+			}
+
+			if (dword_aligned && ((uintptr_t)virt_addr & 3)) {
+				SPDK_ERRLOG("virt_addr %p not dword aligned\n", virt_addr);
+				goto exit;
 			}
 
 			phys_addr = spdk_vtophys(virt_addr, NULL);
 			if (phys_addr == SPDK_VTOPHYS_ERROR) {
-				nvme_pcie_fail_request_bad_vtophys(qpair, tr);
-				return -EFAULT;
+				goto exit;
 			}
 
 			length = spdk_min(remaining_user_sge_len, VALUE_2MB - _2MB_OFFSET(virt_addr));
@@ -2030,6 +2040,10 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 	}
 
 	return 0;
+
+exit:
+	nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+	return -EFAULT;
 }
 
 /**
@@ -2037,7 +2051,7 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
  */
 static int
 nvme_pcie_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req,
-				       struct nvme_tracker *tr)
+				       struct nvme_tracker *tr, bool dword_aligned)
 {
 	int rc;
 	void *virt_addr;
@@ -2084,7 +2098,8 @@ nvme_pcie_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvm
 	return 0;
 }
 
-typedef int(*build_req_fn)(struct spdk_nvme_qpair *, struct nvme_request *, struct nvme_tracker *);
+typedef int(*build_req_fn)(struct spdk_nvme_qpair *, struct nvme_request *, struct nvme_tracker *,
+			   bool);
 
 static build_req_fn const g_nvme_pcie_build_req_table[][2] = {
 	[NVME_PAYLOAD_TYPE_INVALID] = {
@@ -2111,6 +2126,7 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
 	enum nvme_payload_type	payload_type;
 	bool			sgl_supported;
+	bool			dword_aligned = true;
 
 	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair))) {
 		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
@@ -2151,7 +2167,11 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 		 */
 		sgl_supported = (ctrlr->flags & SPDK_NVME_CTRLR_SGL_SUPPORTED) != 0 &&
 				!nvme_qpair_is_admin_queue(qpair);
-		rc = g_nvme_pcie_build_req_table[payload_type][sgl_supported](qpair, req, tr);
+
+		if (sgl_supported && !(ctrlr->flags & SPDK_NVME_CTRLR_SGL_REQUIRES_DWORD_ALIGNMENT)) {
+			dword_aligned = false;
+		}
+		rc = g_nvme_pcie_build_req_table[payload_type][sgl_supported](qpair, req, tr, dword_aligned);
 	}
 
 	if (rc < 0) {
