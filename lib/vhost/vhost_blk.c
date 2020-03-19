@@ -452,7 +452,6 @@ static void
 submit_inflight_desc(struct spdk_vhost_blk_session *bvsession,
 		     struct spdk_vhost_virtqueue *vq)
 {
-	struct spdk_vhost_blk_dev *bvdev = bvsession->bvdev;
 	struct spdk_vhost_blk_task *task;
 	struct spdk_vhost_session *vsession = &bvsession->vsession;
 	spdk_vhost_resubmit_info *resubmit = vq->vring_inflight.resubmit_inflight;
@@ -472,7 +471,7 @@ submit_inflight_desc(struct spdk_vhost_blk_session *bvsession,
 
 		if (spdk_unlikely(req_idx >= vq->vring.size)) {
 			SPDK_ERRLOG("%s: request idx '%"PRIu16"' exceeds virtqueue size (%"PRIu16").\n",
-				    bvdev->vdev.name, req_idx, vq->vring.size);
+				    vsession->name, req_idx, vq->vring.size);
 			vhost_vq_used_ring_enqueue(vsession, vq, req_idx, 0);
 			continue;
 		}
@@ -480,7 +479,7 @@ submit_inflight_desc(struct spdk_vhost_blk_session *bvsession,
 		task = &((struct spdk_vhost_blk_task *)vq->tasks)[req_idx];
 		if (spdk_unlikely(task->used)) {
 			SPDK_ERRLOG("%s: request with idx '%"PRIu16"' is already pending.\n",
-				    bvdev->vdev.name, req_idx);
+				    vsession->name, req_idx);
 			vhost_vq_used_ring_enqueue(vsession, vq, req_idx, 0);
 			continue;
 		}
