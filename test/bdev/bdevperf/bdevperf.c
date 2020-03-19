@@ -316,7 +316,7 @@ bdevperf_test_done(void *ctx)
 }
 
 static void
-end_run(void *ctx)
+bdevperf_job_end(void *ctx)
 {
 	if (--g_bdevperf.running_jobs == 0) {
 		if (g_show_performance_real_time) {
@@ -426,7 +426,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		if (job->current_queue_depth == 0) {
 			spdk_put_io_channel(job->ch);
 			spdk_bdev_close(job->bdev_desc);
-			spdk_thread_send_msg(g_master_thread, end_run, NULL);
+			spdk_thread_send_msg(g_master_thread, bdevperf_job_end, NULL);
 		}
 	}
 }
