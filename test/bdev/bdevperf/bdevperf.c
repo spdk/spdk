@@ -1505,7 +1505,7 @@ bdevperf_usage(void)
 	printf("\t\t(Formula: M = 2 / (n + 1), EMA[i+1] = IO/s * M + (1 - M) * EMA[i])\n");
 	printf("\t\t(only valid with -S)\n");
 	printf(" -S <period>               show performance result in real time every <period> seconds\n");
-	printf(" -T <job>               job bdev\n");
+	printf(" -T <bdev>                 bdev to run against. Default: all available bdevs.\n");
 	printf(" -f                        continue processing I/O even after failures\n");
 	printf(" -z                        start bdevperf, but wait for RPC to start tests\n");
 	printf(" -C                        enable every core to send I/Os to each bdev\n");
