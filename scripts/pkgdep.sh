@@ -276,7 +276,7 @@ elif [ -f /etc/arch-release ]; then
 		pacman -Sy --needed --noconfirm ndctl pkg-config
 		git clone https://github.com/pmem/pmdk.git /tmp/pmdk -b 1.6.1
 		make -C /tmp/pmdk -j$(nproc)
-		make install -C /tmp/pmdk
+		make install prefix=/usr -C /tmp/pmdk
 		echo "/usr/local/lib" > /etc/ld.so.conf.d/pmdk.conf
 		ldconfig
 		rm -rf /tmp/pmdk
