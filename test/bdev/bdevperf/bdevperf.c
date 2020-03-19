@@ -84,7 +84,7 @@ static bool g_mix_specified = false;
 static const char *g_job_bdev_name;
 static bool g_wait_for_tests = false;
 static struct spdk_jsonrpc_request *g_request = NULL;
-static bool g_every_core_for_each_bdev = false;
+static bool g_multithread_mode = false;
 
 static struct spdk_poller *g_perf_timer = NULL;
 
@@ -1186,7 +1186,7 @@ bdevperf_construct_job(struct spdk_io_channel_iter *i)
 	ch = spdk_io_channel_iter_get_channel(i);
 	reactor = spdk_io_channel_get_ctx(ch);
 
-	/* Create job on this reactor if g_every_core_for_each_bdev is true or
+	/* Create job on this reactor if g_multithread_mode is true or
 	 * this reactor is selected.
 	 */
 	if (ctx->reactor == NULL || ctx->reactor == reactor) {
@@ -1240,7 +1240,7 @@ _bdevperf_construct_jobs(struct spdk_bdev *bdev)
 
 	ctx->bdev = bdev;
 
-	if (g_every_core_for_each_bdev == false) {
+	if (g_multithread_mode == false) {
 		ctx->reactor = get_next_bdevperf_reactor();
 	}
 
@@ -1458,7 +1458,7 @@ bdevperf_parse_arg(int ch, char *arg)
 	} else if (ch == 'z') {
 		g_wait_for_tests = true;
 	} else if (ch == 'C') {
-		g_every_core_for_each_bdev = true;
+		g_multithread_mode = true;
 	} else if (ch == 'f') {
 		g_continue_on_failure = true;
 	} else {
