@@ -278,3 +278,20 @@ function nvme_connect()
 	done
 	return 1
 }
+
+function get_nvme_devs()
+{
+	local dev rest
+
+	nvmes=()
+	while read -r dev rest; do
+		if [[ $dev == /dev/nvme* ]]; then
+			nvmes+=("$dev")
+		fi
+		if [[ $1 == print ]]; then
+			echo "$dev $rest"
+		fi
+	done < <(nvme list)
+	(( ${#nvmes[@]} )) || return 1
+	echo "${#nvmes[@]}" >&2
+}
