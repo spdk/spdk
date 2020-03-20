@@ -1060,27 +1060,64 @@ struct construct_jobs_ctx {
 	uint32_t		job_count;
 };
 
-static int
-_bdevperf_construct_job(struct construct_jobs_ctx *ctx, struct bdevperf_reactor *reactor)
+static uint32_t g_construct_job_count = 0;
+
+static void
+_bdevperf_construct_jobs_done(struct spdk_io_channel_iter *i, int status)
 {
+	struct construct_jobs_ctx *ctx;
+
+	ctx = spdk_io_channel_iter_get_ctx(i);
+
+	/* Update g_bdevperf.running_jobs on the master thread. */
+	g_bdevperf.running_jobs += ctx->job_count;
+
+	free(ctx);
+
+	if (--g_construct_job_count == 0) {
+		bdevperf_test();
+	}
+}
+
+static void
+bdevperf_construct_job(struct spdk_io_channel_iter *i)
+{
+	struct construct_jobs_ctx *ctx;
+	struct spdk_io_channel *ch;
+	struct bdevperf_reactor *reactor;
 	struct bdevperf_job *job;
 	struct bdevperf_task *task;
 	int block_size, data_block_size;
-	struct spdk_bdev *bdev = ctx->bdev;
-	int rc;
+	struct spdk_bdev *bdev;
+	int rc = 0;
 	int task_num, n;
+
+	ctx = spdk_io_channel_iter_get_ctx(i);
+	ch = spdk_io_channel_iter_get_channel(i);
+	reactor = spdk_io_channel_get_ctx(ch);
+	bdev = ctx->bdev;
+
+	/* Create job on this reactor if g_multithread_mode is true or
+	 * this reactor is selected.
+	 */
+	if (ctx->reactor != NULL && ctx->reactor != reactor) {
+		spdk_for_each_channel_continue(i, rc);
+		return;
+	}
 
 	job = calloc(1, sizeof(struct bdevperf_job));
 	if (!job) {
 		fprintf(stderr, "Unable to allocate memory for new job.\n");
-		return -ENOMEM;
+		rc = -ENOMEM;
+		goto end;
 	}
 
 	job->name = strdup(spdk_bdev_get_name(bdev));
 	if (!job->name) {
 		fprintf(stderr, "Unable to allocate memory for job name.\n");
 		free(job);
-		return -ENOMEM;
+		rc = -ENOMEM;
+		goto end;
 	}
 
 	rc = spdk_bdev_open(bdev, true, bdevperf_job_gone, job, &job->bdev_desc);
@@ -1088,7 +1125,8 @@ _bdevperf_construct_job(struct construct_jobs_ctx *ctx, struct bdevperf_reactor 
 		SPDK_ERRLOG("Could not open leaf bdev %s, error=%d\n", spdk_bdev_get_name(bdev), rc);
 		free(job->name);
 		free(job);
-		return -EINVAL;
+		rc = -ENOMEM;
+		goto end;
 	}
 
 	job->bdev = bdev;
@@ -1119,11 +1157,13 @@ _bdevperf_construct_job(struct construct_jobs_ctx *ctx, struct bdevperf_reactor 
 	if (g_verify) {
 		job->outstanding = spdk_bit_array_create(job->size_in_ios);
 		if (job->outstanding == NULL) {
-			SPDK_ERRLOG("Could not create outstanding array bitmap for bdev %s\n", spdk_bdev_get_name(bdev));
+			SPDK_ERRLOG("Could not create outstanding array bitmap for bdev %s\n",
+				    spdk_bdev_get_name(bdev));
 			spdk_bdev_close(job->bdev_desc);
 			free(job->name);
 			free(job);
-			return -ENOMEM;
+			rc = -ENOMEM;
+			goto end;
 		}
 	}
 
@@ -1139,7 +1179,8 @@ _bdevperf_construct_job(struct construct_jobs_ctx *ctx, struct bdevperf_reactor 
 		if (task == NULL) {
 			spdk_bdev_close(job->bdev_desc);
 			bdevperf_free_job(job);
-			return -ENOMEM;
+			rc = -ENOMEM;
+			goto end;
 		}
 		TAILQ_INSERT_TAIL(&job->task_list, task, link);
 	}
@@ -1147,48 +1188,9 @@ _bdevperf_construct_job(struct construct_jobs_ctx *ctx, struct bdevperf_reactor 
 	job->reactor = reactor;
 	TAILQ_INSERT_TAIL(&reactor->jobs, job, link);
 
-	return 0;
-}
-
-static uint32_t g_construct_job_count = 0;
-
-static void
-_bdevperf_construct_jobs_done(struct spdk_io_channel_iter *i, int status)
-{
-	struct construct_jobs_ctx *ctx;
-
-	ctx = spdk_io_channel_iter_get_ctx(i);
-
-	/* Update g_bdevperf.running_jobs on the master thread. */
-	g_bdevperf.running_jobs += ctx->job_count;
-
-	free(ctx);
-
-	if (--g_construct_job_count == 0) {
-		bdevperf_test();
-	}
-}
-
-static void
-bdevperf_construct_job(struct spdk_io_channel_iter *i)
-{
-	struct construct_jobs_ctx *ctx;
-	struct spdk_io_channel *ch;
-	struct bdevperf_reactor *reactor;
-	int rc = 0;
-
-	ctx = spdk_io_channel_iter_get_ctx(i);
-	ch = spdk_io_channel_iter_get_channel(i);
-	reactor = spdk_io_channel_get_ctx(ch);
-
-	/* Create job on this reactor if g_multithread_mode is true or
-	 * this reactor is selected.
-	 */
-	if (ctx->reactor == NULL || ctx->reactor == reactor) {
-		rc = _bdevperf_construct_job(ctx, reactor);
-		if (rc == 0) {
-			ctx->job_count++;
-		}
+end:
+	if (rc == 0) {
+		ctx->job_count++;
 	}
 
 	spdk_for_each_channel_continue(i, rc);
