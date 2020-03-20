@@ -827,6 +827,22 @@ reset_job(void *arg)
 }
 
 static void
+bdevperf_job_run(struct bdevperf_job *job)
+{
+	/* Submit initial I/O for this job. Each time one
+	 * completes, another will be submitted. */
+
+	/* Start a timer to stop this I/O chain when the run is over */
+	job->run_timer = spdk_poller_register(bdevperf_job_drain, job, g_time_in_usec);
+	if (g_reset) {
+		job->reset_timer = spdk_poller_register(reset_job, job,
+							10 * 1000000);
+	}
+
+	bdevperf_submit_io(job, g_queue_depth);
+}
+
+static void
 bdevperf_submit_on_reactor(struct spdk_io_channel_iter *i)
 {
 	struct spdk_io_channel *ch;
@@ -849,14 +865,7 @@ bdevperf_submit_on_reactor(struct spdk_io_channel_iter *i)
 			continue;
 		}
 
-		/* Start a timer to stop this I/O chain when the run is over */
-		job->run_timer = spdk_poller_register(bdevperf_job_drain, job,
-						      g_time_in_usec);
-		if (g_reset) {
-			job->reset_timer = spdk_poller_register(reset_job, job,
-								10 * 1000000);
-		}
-		bdevperf_submit_io(job, g_queue_depth);
+		bdevperf_job_run(job);
 	}
 
 	spdk_for_each_channel_continue(i, 0);
