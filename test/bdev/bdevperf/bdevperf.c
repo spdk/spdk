@@ -772,17 +772,6 @@ bdevperf_submit_single(struct bdevperf_job *job, struct bdevperf_task *task)
 	bdevperf_submit_task(task);
 }
 
-static void
-bdevperf_submit_io(struct bdevperf_job *job, int queue_depth)
-{
-	struct bdevperf_task *task;
-
-	while (queue_depth-- > 0) {
-		task = bdevperf_job_get_task(job);
-		bdevperf_submit_single(job, task);
-	}
-}
-
 static int reset_job(void *arg);
 
 static void
@@ -829,6 +818,9 @@ reset_job(void *arg)
 static void
 bdevperf_job_run(struct bdevperf_job *job)
 {
+	struct bdevperf_task *task;
+	int i;
+
 	/* Submit initial I/O for this job. Each time one
 	 * completes, another will be submitted. */
 
@@ -839,7 +831,10 @@ bdevperf_job_run(struct bdevperf_job *job)
 							10 * 1000000);
 	}
 
-	bdevperf_submit_io(job, g_queue_depth);
+	for (i = 0; i < g_queue_depth; i++) {
+		task = bdevperf_job_get_task(job);
+		bdevperf_submit_single(job, task);
+	}
 }
 
 static void
