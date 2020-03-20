@@ -174,15 +174,27 @@ static uint32_t dp_guard_check_extended_lba_test(struct spdk_nvme_ns *ns, struct
 static uint32_t dp_with_pract_test(struct spdk_nvme_ns *ns, struct io_request *req,
 				   uint32_t *io_flags)
 {
-	uint32_t sector_size;
+	uint32_t md_size, sector_size, data_len;
 
 	req->lba_count = 8;
 
 	sector_size = spdk_nvme_ns_get_sector_size(ns);
-	/* No additional metadata buffer provided */
-	req->contig = spdk_zmalloc(sector_size * req->lba_count, 0x1000, NULL, SPDK_ENV_LCORE_ID_ANY,
+	md_size = spdk_nvme_ns_get_md_size(ns);
+	if (md_size == 8) {
+		/* No additional metadata buffer provided */
+		data_len = sector_size * req->lba_count;
+	} else {
+		data_len = (sector_size + md_size) * req->lba_count;
+	}
+	req->contig = spdk_zmalloc(data_len, 0x1000, NULL, SPDK_ENV_LCORE_ID_ANY,
 				   SPDK_MALLOC_DMA);
 	if (!req->contig) {
+		return 0;
+	}
+	req->metadata = spdk_zmalloc(md_size * req->lba_count, 0x1000, NULL, SPDK_ENV_LCORE_ID_ANY,
+				     SPDK_MALLOC_DMA);
+	if (!req->metadata) {
+		spdk_free(req->contig);
 		return 0;
 	}
 
@@ -202,7 +214,6 @@ static uint32_t dp_with_pract_test(struct spdk_nvme_ns *ns, struct io_request *r
 
 	req->lba = 0x100000;
 	req->use_extended_lba = false;
-	req->metadata = NULL;
 
 	return req->lba_count;
 }
