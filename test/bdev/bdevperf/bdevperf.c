@@ -1049,67 +1049,6 @@ static struct bdevperf_task *bdevperf_construct_task_on_job(struct bdevperf_job 
 }
 
 static void
-bdevperf_construct_jobs_tasks_done(struct spdk_io_channel_iter *i, int status)
-{
-	if (status != 0) {
-		fprintf(stderr, "Bdevperf program exits due to memory allocation issue\n");
-		fprintf(stderr, "Use -d XXX to allocate more huge pages, e.g., -d 4096\n");
-		g_run_rc = status;
-		bdevperf_test_done(NULL);
-		return;
-	}
-
-	bdevperf_test();
-}
-
-static void
-bdevperf_construct_tasks_on_reactor(struct spdk_io_channel_iter *i)
-{
-	struct spdk_io_channel *ch;
-	struct bdevperf_reactor *reactor;
-	struct bdevperf_job *job;
-	struct bdevperf_task *task;
-	int n, task_num = g_queue_depth;
-	int rc = 0;
-
-	ch = spdk_io_channel_iter_get_channel(i);
-	reactor = spdk_io_channel_get_ctx(ch);
-
-	if (g_reset) {
-		task_num += 1;
-	}
-
-	TAILQ_FOREACH(job, &reactor->jobs, link) {
-		for (n = 0; n < task_num; n++) {
-			task = bdevperf_construct_task_on_job(job);
-			if (task == NULL) {
-				rc = -1;
-				goto end;
-			}
-			TAILQ_INSERT_TAIL(&job->task_list, task, link);
-		}
-	}
-
-end:
-	spdk_for_each_channel_continue(i, rc);
-}
-
-static void
-bdevperf_construct_jobs_tasks(void)
-{
-	if (g_bdevperf.running_jobs == 0) {
-		fprintf(stderr, "No valid bdevs found.\n");
-		g_run_rc = -ENODEV;
-		bdevperf_test_done(NULL);
-		return;
-	}
-
-	/* Initialize task list for each job */
-	spdk_for_each_channel(&g_bdevperf, bdevperf_construct_tasks_on_reactor, NULL,
-			      bdevperf_construct_jobs_tasks_done);
-}
-
-static void
 bdevperf_job_gone(void *arg)
 {
 	struct bdevperf_job *job = arg;
@@ -1130,9 +1069,11 @@ static int
 _bdevperf_construct_job(struct construct_jobs_ctx *ctx, struct bdevperf_reactor *reactor)
 {
 	struct bdevperf_job *job;
+	struct bdevperf_task *task;
 	int block_size, data_block_size;
 	struct spdk_bdev *bdev = ctx->bdev;
 	int rc;
+	int task_num, n;
 
 	job = calloc(1, sizeof(struct bdevperf_job));
 	if (!job) {
@@ -1193,6 +1134,21 @@ _bdevperf_construct_job(struct construct_jobs_ctx *ctx, struct bdevperf_reactor 
 
 	TAILQ_INIT(&job->task_list);
 
+	task_num = g_queue_depth;
+	if (g_reset) {
+		task_num += 1;
+	}
+
+	for (n = 0; n < task_num; n++) {
+		task = bdevperf_construct_task_on_job(job);
+		if (task == NULL) {
+			spdk_bdev_close(job->bdev_desc);
+			bdevperf_free_job(job);
+			return -ENOMEM;
+		}
+		TAILQ_INSERT_TAIL(&job->task_list, task, link);
+	}
+
 	job->reactor = reactor;
 	TAILQ_INSERT_TAIL(&reactor->jobs, job, link);
 
@@ -1214,7 +1170,7 @@ _bdevperf_construct_jobs_done(struct spdk_io_channel_iter *i, int status)
 	free(ctx);
 
 	if (--g_construct_job_count == 0) {
-		bdevperf_construct_jobs_tasks();
+		bdevperf_test();
 	}
 }
 
@@ -1319,7 +1275,7 @@ bdevperf_construct_jobs(void)
 	}
 
 	if (--g_construct_job_count == 0) {
-		bdevperf_construct_jobs_tasks();
+		bdevperf_test();
 	}
 }
 
