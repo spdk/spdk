@@ -63,7 +63,7 @@ extern "C" {
 
 /**
  * Indicates the maximum number of range sets that may be specified
- *  in the dataset mangement command.
+ *  in the dataset management command.
  */
 #define SPDK_NVME_DATASET_MANAGEMENT_MAX_RANGES	256
 
