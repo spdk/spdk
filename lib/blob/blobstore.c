@@ -1978,6 +1978,11 @@ _spdk_blob_persist_write_extent_pages(spdk_bs_sequence_t *seq, void *cb_arg, int
 		ctx->extent_page = NULL;
 	}
 
+	if (bserrno != 0) {
+		_spdk_blob_persist_complete(seq, ctx, bserrno);
+		return;
+	}
+
 	/* Only write out changed extent pages */
 	for (i = ctx->next_extent_page; i < blob->active.num_extent_pages; i++) {
 		extent_page_id = blob->active.extent_pages[i];
@@ -6097,10 +6102,8 @@ _spdk_delete_snapshot_cleanup_snapshot(void *cb_arg, int bserrno)
 		SPDK_ERRLOG("Clone cleanup error %d\n", bserrno);
 	}
 
-	/* open_ref == 1 menas that only deletion context has opened this snapshot
-	 * open_ref == 2 menas that clone has opened this snapshot as well,
-	 * so we have to add it back to the blobs list */
-	if (ctx->snapshot->open_ref == 2) {
+	if (ctx->bserrno != 0) {
+		assert(_spdk_blob_lookup(ctx->snapshot->bs, ctx->snapshot->id) == NULL);
 		TAILQ_INSERT_HEAD(&ctx->snapshot->bs->blobs, ctx->snapshot, link);
 	}
 
