@@ -41,4 +41,6 @@ SO_SUFFIX := $(SO_VER).$(SO_MINOR)
 LIBNAME = accel
 C_SRCS = accel_engine.c accel_engine_rpc.c
 
+SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_accel.map)
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

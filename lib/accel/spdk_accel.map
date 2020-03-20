@@ -1,0 +1,21 @@
+{
+	global:
+
+	# public functions
+	spdk_accel_engine_initialize;
+	spdk_accel_engine_finish;
+	spdk_accel_engine_config_text;
+	spdk_accel_engine_module_finish;
+	spdk_accel_engine_get_io_channel;
+	spdk_accel_submit_copy;
+	spdk_accel_submit_fill;
+	spdk_accel_task_size;
+	spdk_accel_write_config_json;
+
+	# functions needed by modules
+	spdk_accel_hw_engine_register;
+	spdk_accel_module_list_add;
+
+
+	local: *;
+};
