@@ -42,7 +42,8 @@ C_SRCS = fio_plugin.c
 CFLAGS += -I$(CONFIG_FIO_SOURCE_DIR)
 LDFLAGS += -shared -rdynamic -Wl,-z,nodelete
 
-SPDK_LIB_LIST = $(ALL_MODULES_LIST)
+# Unable to combine the FIO plugin and the VPP socket abstraction (license incompatibility)
+SPDK_LIB_LIST = $(filter-out sock_vpp,$(ALL_MODULES_LIST))
 SPDK_LIB_LIST += thread util bdev bdev_rpc conf accel rpc jsonrpc json log sock trace notify
 SPDK_LIB_LIST += event event_bdev event_accel event_vmd
 
