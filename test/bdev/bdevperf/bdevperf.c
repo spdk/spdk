@@ -122,6 +122,7 @@ struct bdevperf_job {
 };
 
 struct bdevperf_reactor {
+	struct spdk_thread		*thread;
 	TAILQ_HEAD(, bdevperf_job)	jobs;
 	uint32_t			lcore;
 	uint32_t			multiplier;
@@ -1019,101 +1020,83 @@ bdevperf_bdev_removed(void *arg)
 	bdevperf_job_drain(job);
 }
 
-struct construct_jobs_ctx {
-	struct spdk_bdev	*bdev;
-	struct bdevperf_reactor	*reactor;
-	uint32_t		job_count;
-};
-
 static uint32_t g_construct_job_count = 0;
 
 static void
-_bdevperf_construct_jobs_done(struct spdk_io_channel_iter *i, int status)
+_bdevperf_construct_job_done(void *ctx)
 {
-	struct construct_jobs_ctx *ctx;
-
-	ctx = spdk_io_channel_iter_get_ctx(i);
-
 	/* Update g_bdevperf.running_jobs on the master thread. */
-	g_bdevperf.running_jobs += ctx->job_count;
-
-	free(ctx);
+	g_bdevperf.running_jobs++;
 
 	if (--g_construct_job_count == 0) {
+		if (g_run_rc != 0) {
+			/* Something failed. */
+			bdevperf_test_done(NULL);
+			return;
+		}
+
+		/* Ready to run the test */
 		bdevperf_test();
 	}
 }
 
 static void
-bdevperf_construct_job(struct spdk_io_channel_iter *i)
+_bdevperf_construct_job(void *ctx)
 {
-	struct construct_jobs_ctx *ctx;
-	struct spdk_io_channel *ch;
-	struct bdevperf_reactor *reactor;
-	struct bdevperf_job *job;
-	struct bdevperf_task *task;
-	int block_size, data_block_size;
-	struct spdk_bdev *bdev;
-	int rc = 0;
-	int task_num, n;
+	struct bdevperf_job *job = ctx;
+	int rc;
 
-	ctx = spdk_io_channel_iter_get_ctx(i);
-	ch = spdk_io_channel_iter_get_channel(i);
-	reactor = spdk_io_channel_get_ctx(ch);
-	bdev = ctx->bdev;
-
-	/* Create job on this reactor if g_multithread_mode is true or
-	 * this reactor is selected.
-	 */
-	if (ctx->reactor != NULL && ctx->reactor != reactor) {
-		spdk_for_each_channel_continue(i, rc);
+	rc = spdk_bdev_open(job->bdev, true, bdevperf_bdev_removed, job, &job->bdev_desc);
+	if (rc != 0) {
+		SPDK_ERRLOG("Could not open leaf bdev %s, error=%d\n", spdk_bdev_get_name(job->bdev), rc);
+		g_run_rc = -EINVAL;
 		return;
 	}
 
-	block_size = spdk_bdev_get_block_size(ctx->bdev);
-	data_block_size = spdk_bdev_get_data_block_size(ctx->bdev);
+	spdk_thread_send_msg(g_master_thread, _bdevperf_construct_job_done, NULL);
+}
 
-	if (g_unmap && !spdk_bdev_io_type_supported(ctx->bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
-		printf("Skipping %s because it does not support unmap\n", spdk_bdev_get_name(ctx->bdev));
-		spdk_for_each_channel_continue(i, -ENOTSUP);
-		return;
+static int
+bdevperf_construct_job(struct spdk_bdev *bdev, struct bdevperf_reactor *reactor)
+{
+	struct bdevperf_job *job;
+	struct bdevperf_task *task;
+	int block_size, data_block_size;
+	int rc;
+	int task_num, n;
+
+	/* This function runs on the master thread. */
+	assert(g_master_thread == spdk_get_thread());
+
+	block_size = spdk_bdev_get_block_size(bdev);
+	data_block_size = spdk_bdev_get_data_block_size(bdev);
+
+	if (g_unmap && !spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
+		printf("Skipping %s because it does not support unmap\n", spdk_bdev_get_name(bdev));
+		return -ENOTSUP;
 	}
 
 	if ((g_io_size % data_block_size) != 0) {
 		SPDK_ERRLOG("IO size (%d) is not multiples of data block size of bdev %s (%"PRIu32")\n",
-			    g_io_size, spdk_bdev_get_name(ctx->bdev), data_block_size);
-		spdk_for_each_channel_continue(i, -ENOTSUP);
-		return;
+			    g_io_size, spdk_bdev_get_name(bdev), data_block_size);
+		return -ENOTSUP;
 	}
 
 	job = calloc(1, sizeof(struct bdevperf_job));
 	if (!job) {
 		fprintf(stderr, "Unable to allocate memory for new job.\n");
-		rc = -ENOMEM;
-		goto end;
+		return -ENOMEM;
 	}
 
 	job->name = strdup(spdk_bdev_get_name(bdev));
 	if (!job->name) {
 		fprintf(stderr, "Unable to allocate memory for job name.\n");
 		free(job);
-		rc = -ENOMEM;
-		goto end;
-	}
-
-	rc = spdk_bdev_open(bdev, true, bdevperf_bdev_removed, job, &job->bdev_desc);
-	if (rc != 0) {
-		SPDK_ERRLOG("Could not open leaf bdev %s, error=%d\n", spdk_bdev_get_name(bdev), rc);
-		free(job->name);
-		free(job);
-		rc = -ENOMEM;
-		goto end;
+		return -ENOMEM;
 	}
 
 	job->bdev = bdev;
-
 	job->io_size_blocks = g_io_size / data_block_size;
-
 	job->buf_size = job->io_size_blocks * block_size;
 
 	if (spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_REFTAG)) {
@@ -1126,7 +1109,7 @@ bdevperf_construct_job(struct spdk_io_channel_iter *i)
 	job->size_in_ios = spdk_bdev_get_num_blocks(bdev) / job->io_size_blocks;
 	job->offset_in_ios = 0;
 
-	if (ctx->reactor == NULL) {
+	if (g_multithread_mode) {
 		job->size_in_ios = job->size_in_ios / g_bdevperf.num_reactors;
 		job->ios_base = reactor->multiplier * job->size_in_ios;
 	} else {
@@ -1141,8 +1124,7 @@ bdevperf_construct_job(struct spdk_io_channel_iter *i)
 			spdk_bdev_close(job->bdev_desc);
 			free(job->name);
 			free(job);
-			rc = -ENOMEM;
-			goto end;
+			return -ENOMEM;
 		}
 	}
 
@@ -1159,8 +1141,7 @@ bdevperf_construct_job(struct spdk_io_channel_iter *i)
 			fprintf(stderr, "Failed to allocate task from memory\n");
 			spdk_bdev_close(job->bdev_desc);
 			bdevperf_free_job(job);
-			rc = -ENOMEM;
-			goto end;
+			return -ENOMEM;
 		}
 
 		task->buf = spdk_zmalloc(job->buf_size, spdk_bdev_get_buf_align(job->bdev), NULL,
@@ -1170,8 +1151,7 @@ bdevperf_construct_job(struct spdk_io_channel_iter *i)
 			free(task);
 			spdk_bdev_close(job->bdev_desc);
 			bdevperf_free_job(job);
-			rc = -ENOMEM;
-			goto end;
+			return -ENOMEM;
 		}
 
 		if (spdk_bdev_is_md_separate(job->bdev)) {
@@ -1184,8 +1164,7 @@ bdevperf_construct_job(struct spdk_io_channel_iter *i)
 				free(task);
 				spdk_bdev_close(job->bdev_desc);
 				bdevperf_free_job(job);
-				rc = -ENOMEM;
-				goto end;
+				return -ENOMEM;
 			}
 		}
 
@@ -1196,13 +1175,44 @@ bdevperf_construct_job(struct spdk_io_channel_iter *i)
 	job->reactor = reactor;
 	TAILQ_INSERT_TAIL(&reactor->jobs, job, link);
 
-end:
-	if (rc == 0) {
-		ctx->job_count++;
-	}
+	g_construct_job_count++;
 
-	spdk_for_each_channel_continue(i, rc);
+	rc = spdk_thread_send_msg(reactor->thread, _bdevperf_construct_job, job);
+	assert(rc == 0);
+
+	return rc;
 }
+
+static void
+bdevperf_construct_multithread_jobs(void)
+{
+	struct spdk_bdev *bdev;
+	struct bdevperf_reactor *reactor;
+
+	if (g_job_bdev_name != NULL) {
+		bdev = spdk_bdev_get_by_name(g_job_bdev_name);
+		if (!bdev) {
+			fprintf(stderr, "Unable to find bdev '%s'\n", g_job_bdev_name);
+			return;
+		}
+
+		/* Build a job for each reactor */
+		TAILQ_FOREACH(reactor, &g_bdevperf.reactors, link) {
+			bdevperf_construct_job(bdev, reactor);
+		}
+	} else {
+		bdev = spdk_bdev_first_leaf();
+		while (bdev != NULL) {
+			/* Build a job for each reactor */
+			TAILQ_FOREACH(reactor, &g_bdevperf.reactors, link) {
+				bdevperf_construct_job(bdev, reactor);
+			}
+
+			bdev = spdk_bdev_next_leaf(bdev);
+		}
+	}
+}
+
 
 static struct bdevperf_reactor *
 get_next_bdevperf_reactor(void)
@@ -1221,51 +1231,54 @@ get_next_bdevperf_reactor(void)
 }
 
 static void
-_bdevperf_construct_jobs(struct spdk_bdev *bdev)
-{
-	struct construct_jobs_ctx *ctx;
-
-	ctx = calloc(1, sizeof(*ctx));
-	if (ctx == NULL) {
-		return;
-	}
-
-	ctx->bdev = bdev;
-
-	if (g_multithread_mode == false) {
-		ctx->reactor = get_next_bdevperf_reactor();
-	}
-
-	g_construct_job_count++;
-	spdk_for_each_channel(&g_bdevperf, bdevperf_construct_job, ctx,
-			      _bdevperf_construct_jobs_done);
-}
-
-static void
 bdevperf_construct_jobs(void)
 {
 	struct spdk_bdev *bdev;
+	struct bdevperf_reactor *reactor;
+
+	/* There are two entirely separate modes for allocating jobs. Standard mode
+	 * (the default) creates one job per bdev and assigns them to reactors round-robin.
+	 *
+	 * The -C flag places bdevperf into "multithread" mode, meaning it creates
+	 * one job per bdev per REACTOR.
+	 * This runs multiple threads per bdev, effectively.
+	 */
 
 	/* Increment initial construct_jobs count so that it will never reach 0 in the middle
 	 * of iteration.
 	 */
 	g_construct_job_count = 1;
 
+	if (g_multithread_mode) {
+		bdevperf_construct_multithread_jobs();
+		goto end;
+	}
+
 	if (g_job_bdev_name != NULL) {
 		bdev = spdk_bdev_get_by_name(g_job_bdev_name);
 		if (bdev) {
-			_bdevperf_construct_jobs(bdev);
+			/* Select the reactor for this job */
+			reactor = get_next_bdevperf_reactor();
+
+			/* Construct the job */
+			bdevperf_construct_job(bdev, reactor);
 		} else {
 			fprintf(stderr, "Unable to find bdev '%s'\n", g_job_bdev_name);
 		}
 	} else {
 		bdev = spdk_bdev_first_leaf();
 		while (bdev != NULL) {
-			_bdevperf_construct_jobs(bdev);
+			/* Select the reactor for this job */
+			reactor = get_next_bdevperf_reactor();
+
+			/* Construct the job */
+			bdevperf_construct_job(bdev, reactor);
+
 			bdev = spdk_bdev_next_leaf(bdev);
 		}
 	}
 
+end:
 	if (--g_construct_job_count == 0) {
 		bdevperf_test();
 	}
@@ -1281,6 +1294,7 @@ bdevperf_reactor_create(void *io_device, void *ctx_buf)
 	pthread_mutex_lock(&g_ordinal_lock);
 	reactor->multiplier = g_core_ordinal++;
 	pthread_mutex_unlock(&g_ordinal_lock);
+	reactor->thread = spdk_get_thread();
 
 	return 0;
 }
