@@ -264,7 +264,7 @@ if [ $SPDK_TEST_ISAL -eq 0 ]; then
 fi
 
 if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
-	if [[ -d /usr/include/fuse3 ]] && [[ -d /usr/local/include/fuse3 ]]; then
+	if [[ -d /usr/include/fuse3 ]] || [[ -d /usr/local/include/fuse3 ]]; then
 		config_params+=' --with-fuse'
 	else
 		echo "FUSE not enabled because libfuse3 is not installed."
