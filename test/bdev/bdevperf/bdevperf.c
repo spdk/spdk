@@ -1044,7 +1044,7 @@ static struct bdevperf_task *bdevperf_construct_task_on_job(struct bdevperf_job 
 }
 
 static void
-bdevperf_job_gone(void *arg)
+bdevperf_bdev_removed(void *arg)
 {
 	struct bdevperf_job *job = arg;
 
@@ -1120,7 +1120,7 @@ bdevperf_construct_job(struct spdk_io_channel_iter *i)
 		goto end;
 	}
 
-	rc = spdk_bdev_open(bdev, true, bdevperf_job_gone, job, &job->bdev_desc);
+	rc = spdk_bdev_open(bdev, true, bdevperf_bdev_removed, job, &job->bdev_desc);
 	if (rc != 0) {
 		SPDK_ERRLOG("Could not open leaf bdev %s, error=%d\n", spdk_bdev_get_name(bdev), rc);
 		free(job->name);
