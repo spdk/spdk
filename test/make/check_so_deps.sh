@@ -13,6 +13,8 @@ libdeps_file="$rootdir/mk/spdk.lib_deps.mk"
 source_abi_dir="$HOME/spdk_20_01/build/lib"
 
 function confirm_abi_deps() {
+	local processed_so=0
+
 	if ! hash abidiff; then
 		echo "Unable to check ABI compatibility. Please install abidiff."
 		return 1
@@ -77,7 +79,9 @@ function confirm_abi_deps() {
 
 			continue
 		fi
+		processed_so=$((processed_so+1))
 	done
+	echo "Processed $processed_so objects."
 }
 
 # This function is needed to properly evaluate the Make variables into actual dependencies.
