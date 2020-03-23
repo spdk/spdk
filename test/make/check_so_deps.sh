@@ -23,7 +23,7 @@ function confirm_abi_deps() {
 		return 1
 	fi
 
-	for object in ls "$libdir"/libspdk_*.so; do
+	for object in "$libdir"/libspdk_*.so; do
 		so_file=$(basename $object)
 		if [ ! -f "$source_abi_dir/$so_file" ]; then
 			echo "No corresponding object for $so_file in canonical directory. Skipping."
