@@ -232,6 +232,10 @@ function install_qemu()
             fi
         fi
 
+        sed -i s@git://git.qemu.org/@https://github.com/qemu/@g qemu/$SPDK_QEMU_BRANCH/.gitmodules
+        sed -i s@git://git.qemu.org/@https://github.com/qemu/@g qemu/$SPDK_QEMU_BRANCH/.git/config
+        sed -i s@git://git.qemu-project.org/@https://github.com/qemu/@g qemu/$SPDK_QEMU_BRANCH/.gitmodules
+        sed -i s@git://git.qemu-project.org/@https://github.com/qemu/@g qemu/$SPDK_QEMU_BRANCH/.git/config
         # The qemu configure script places several output files in the CWD.
         (cd qemu/$SPDK_QEMU_BRANCH && ./configure "${opt_params[@]}" --target-list="x86_64-softmmu" --enable-kvm --enable-linux-aio --enable-numa)
 
