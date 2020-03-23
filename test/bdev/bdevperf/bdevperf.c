@@ -1008,41 +1008,6 @@ bdevperf_test(void)
 	spdk_for_each_channel(&g_bdevperf, bdevperf_submit_on_reactor, NULL, NULL);
 }
 
-static struct bdevperf_task *bdevperf_construct_task_on_job(struct bdevperf_job *job)
-{
-	struct bdevperf_task *task;
-
-	task = calloc(1, sizeof(struct bdevperf_task));
-	if (!task) {
-		fprintf(stderr, "Failed to allocate task from memory\n");
-		return NULL;
-	}
-
-	task->buf = spdk_zmalloc(job->buf_size, spdk_bdev_get_buf_align(job->bdev), NULL,
-				 SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
-	if (!task->buf) {
-		fprintf(stderr, "Cannot allocate buf for task=%p\n", task);
-		free(task);
-		return NULL;
-	}
-
-	if (spdk_bdev_is_md_separate(job->bdev)) {
-		task->md_buf = spdk_zmalloc(job->io_size_blocks *
-					    spdk_bdev_get_md_size(job->bdev), 0, NULL,
-					    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
-		if (!task->md_buf) {
-			fprintf(stderr, "Cannot allocate md buf for task=%p\n", task);
-			free(task->buf);
-			free(task);
-			return NULL;
-		}
-	}
-
-	task->job = job;
-
-	return task;
-}
-
 static void
 bdevperf_bdev_removed(void *arg)
 {
@@ -1175,13 +1140,42 @@ bdevperf_construct_job(struct spdk_io_channel_iter *i)
 	}
 
 	for (n = 0; n < task_num; n++) {
-		task = bdevperf_construct_task_on_job(job);
-		if (task == NULL) {
+		task = calloc(1, sizeof(struct bdevperf_task));
+		if (!task) {
+			fprintf(stderr, "Failed to allocate task from memory\n");
 			spdk_bdev_close(job->bdev_desc);
 			bdevperf_free_job(job);
 			rc = -ENOMEM;
 			goto end;
 		}
+
+		task->buf = spdk_zmalloc(job->buf_size, spdk_bdev_get_buf_align(job->bdev), NULL,
+					 SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+		if (!task->buf) {
+			fprintf(stderr, "Cannot allocate buf for task=%p\n", task);
+			free(task);
+			spdk_bdev_close(job->bdev_desc);
+			bdevperf_free_job(job);
+			rc = -ENOMEM;
+			goto end;
+		}
+
+		if (spdk_bdev_is_md_separate(job->bdev)) {
+			task->md_buf = spdk_zmalloc(job->io_size_blocks *
+						    spdk_bdev_get_md_size(job->bdev), 0, NULL,
+						    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+			if (!task->md_buf) {
+				fprintf(stderr, "Cannot allocate md buf for task=%p\n", task);
+				free(task->buf);
+				free(task);
+				spdk_bdev_close(job->bdev_desc);
+				bdevperf_free_job(job);
+				rc = -ENOMEM;
+				goto end;
+			}
+		}
+
+		task->job = job;
 		TAILQ_INSERT_TAIL(&job->task_list, task, link);
 	}
 
