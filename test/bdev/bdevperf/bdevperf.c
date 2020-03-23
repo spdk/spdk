@@ -1070,6 +1070,22 @@ bdevperf_construct_job(struct spdk_io_channel_iter *i)
 		return;
 	}
 
+	block_size = spdk_bdev_get_block_size(ctx->bdev);
+	data_block_size = spdk_bdev_get_data_block_size(ctx->bdev);
+
+	if (g_unmap && !spdk_bdev_io_type_supported(ctx->bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
+		printf("Skipping %s because it does not support unmap\n", spdk_bdev_get_name(ctx->bdev));
+		spdk_for_each_channel_continue(i, -ENOTSUP);
+		return;
+	}
+
+	if ((g_io_size % data_block_size) != 0) {
+		SPDK_ERRLOG("IO size (%d) is not multiples of data block size of bdev %s (%"PRIu32")\n",
+			    g_io_size, spdk_bdev_get_name(ctx->bdev), data_block_size);
+		spdk_for_each_channel_continue(i, -ENOTSUP);
+		return;
+	}
+
 	job = calloc(1, sizeof(struct bdevperf_job));
 	if (!job) {
 		fprintf(stderr, "Unable to allocate memory for new job.\n");
@@ -1096,8 +1112,6 @@ bdevperf_construct_job(struct spdk_io_channel_iter *i)
 
 	job->bdev = bdev;
 
-	block_size = spdk_bdev_get_block_size(bdev);
-	data_block_size = spdk_bdev_get_data_block_size(bdev);
 	job->io_size_blocks = g_io_size / data_block_size;
 
 	job->buf_size = job->io_size_blocks * block_size;
@@ -1209,20 +1223,7 @@ get_next_bdevperf_reactor(void)
 static void
 _bdevperf_construct_jobs(struct spdk_bdev *bdev)
 {
-	uint32_t data_block_size;
 	struct construct_jobs_ctx *ctx;
-
-	if (g_unmap && !spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
-		printf("Skipping %s because it does not support unmap\n", spdk_bdev_get_name(bdev));
-		return;
-	}
-
-	data_block_size = spdk_bdev_get_data_block_size(bdev);
-	if ((g_io_size % data_block_size) != 0) {
-		SPDK_ERRLOG("IO size (%d) is not multiples of data block size of bdev %s (%"PRIu32")\n",
-			    g_io_size, spdk_bdev_get_name(bdev), data_block_size);
-		return;
-	}
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL) {
