@@ -227,6 +227,84 @@ else
 	echo "You do not have pycodestyle or pep8 installed so your Python style is not being checked!"
 fi
 
+shfmt="shfmt-3.1.0"
+if hash "$shfmt" 2> /dev/null; then
+	shfmt_cmdline=() silly_plural=()
+
+	silly_plural[1]="s"
+
+	commits=() sh_files=() sh_files_repo=() sh_files_staged=()
+
+	mapfile -t sh_files_repo < <(git ls-files '*.sh')
+	# Fetch .sh files only from the commits that are targeted for merge
+	while read -r _ commit; do
+		commits+=("$commit")
+	done < <(git cherry -v origin/master)
+
+	mapfile -t sh_files < <(git diff --name-only HEAD origin/master "${sh_files_repo[@]}")
+	# In case of a call from a pre-commit git hook
+	mapfile -t sh_files_staged < <(
+		IFS="|"
+		git diff --cached --name-only "${sh_files_repo[@]}" | grep -v "${sh_files[*]}"
+	)
+
+	if ((${#sh_files[@]})); then
+		printf 'Checking .sh formatting style...\n\n'
+		printf '  Found %u updated|new .sh file%s from the following commits:\n' \
+			"${#sh_files[@]}" "${silly_plural[${#sh_files[@]} > 1 ? 1 : 0]}"
+		printf '   * %s\n' "${commits[@]}"
+
+		if ((${#sh_files_staged[@]})); then
+			printf '  Found %u .sh file%s in staging area:\n' \
+				"${#sh_files_staged[@]}" "${silly_plural[${#sh_files_staged[@]} > 1 ? 1 : 0]}"
+			printf '    * %s\n' "${sh_files_staged[@]}"
+			sh_files+=("${sh_files_staged[@]}")
+		fi
+
+		printf '  Running %s against the following file%s:\n' "$shfmt" "${silly_plural[${#sh_files[@]} > 1 ? 1 : 0]}"
+		printf '   * %s\n' "${sh_files[@]}"
+
+		shfmt_cmdline+=(-i 0)     # indent_style = tab|indent_size = 0
+		shfmt_cmdline+=(-bn)      # binary_next_line = true
+		shfmt_cmdline+=(-ci)      # switch_case_indent = true
+		shfmt_cmdline+=(-ln bash) # shell_variant = bash (default)
+		shfmt_cmdline+=(-d)       # diffOut - print diff of the changes and exit with != 0
+		shfmt_cmdline+=(-sr)      # redirect operators will be followed by a space
+
+		diff=$PWD/$shfmt.patch
+
+		# Explicitly tell shfmt to not look for .editorconfig. .editorconfig is also not looked up
+		# in case any formatting arguments has been passed on its cmdline.
+		if ! SHFMT_NO_EDITORCONFIG=true "$shfmt" "${shfmt_cmdline[@]}" "${sh_files[@]}" > "$diff"; then
+			# In case shfmt detects an actual syntax error it will write out a proper message on
+			# its stderr, hence the diff file should remain empty.
+			if [[ -s $diff ]]; then
+				diff_out=$(< "$diff")
+			fi
+
+			cat <<- ERROR_SHFMT
+
+				* Errors in style formatting have been detected.
+				${diff_out:+* Please, review the generated patch at $diff
+
+				# _START_OF_THE_DIFF
+
+				${diff_out:-ERROR}
+
+				# _END_OF_THE_DIFF
+				}
+
+			ERROR_SHFMT
+			rc=1
+		else
+			rm -f "$diff"
+			printf 'OK\n'
+		fi
+	fi
+else
+	printf '%s not detected, Bash style formatting check is skipped\n' "$shfmt"
+fi
+
 if hash shellcheck 2> /dev/null; then
 	echo -n "Checking Bash style..."
 

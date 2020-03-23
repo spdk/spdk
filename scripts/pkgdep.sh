@@ -28,6 +28,53 @@ function install_all_dependencies() {
 	INSTALL_DOCS=true
 }
 
+function install_shfmt() {
+	# Fetch version that has been tested
+	local shfmt_version=3.1.0
+	local shfmt=shfmt-$shfmt_version
+	local shfmt_dir=${SHFMT_DIR:-/opt/shfmt}
+	local shfmt_dir_out=${SHFMT_DIR_OUT:-/usr/bin}
+	local shfmt_url
+	local os
+
+	if hash "$shfmt" && [[ $("$shfmt" --version) == "v$shfmt_version" ]]; then
+		echo "$shfmt already installed"
+		return 0
+	fi 2> /dev/null
+
+	os=$(uname -s)
+
+	case "$os" in
+		Linux) shfmt_url=https://github.com/mvdan/sh/releases/download/v$shfmt_version/shfmt_v${shfmt_version}_linux_amd64 ;;
+		FreeBSD) shfmt_url=https://github.com/mvdan/sh/releases/download/v$shfmt_version/shfmt_v${shfmt_version}_freebsd_amd64 ;;
+		*)
+			echo "Not supported OS (${os:-Unknown}), skipping"
+			return 0
+			;;
+	esac
+
+	mkdir -p "$shfmt_dir"
+	mkdir -p "$shfmt_dir_out"
+
+	echo "Fetching ${shfmt_url##*/}"...
+	local err
+	if err=$(curl -f -Lo"$shfmt_dir/$shfmt" "$shfmt_url" 2>&1); then
+		chmod +x "$shfmt_dir/$shfmt"
+		ln -sf "$shfmt_dir/$shfmt" "$shfmt_dir_out"
+	else
+		cat <<- CURL_ERR
+
+			* Fetching $shfmt_url failed, $shfmt will not be available for format check.
+			* Error:
+
+			$err
+
+		CURL_ERR
+		return 0
+	fi
+	echo "$shfmt installed"
+}
+
 INSTALL_CRYPTO=false
 INSTALL_DEV_TOOLS=false
 INSTALL_PMEM=false
@@ -119,6 +166,7 @@ if [ -s /etc/redhat-release ]; then
 		yum install -y git astyle sg3_utils pciutils
 		# Additional (optional) dependencies for showing backtrace in logs
 		yum install -y libunwind-devel || true
+		install_shfmt
 	fi
 	if [[ $INSTALL_PMEM == "true" ]]; then
 		# Additional dependencies for building pmem based backends
@@ -167,6 +215,7 @@ elif [ -f /etc/debian_version ]; then
 		apt-get install -y libunwind-dev || true
 		# Additional dependecies for nvmf performance test script
 		apt-get install -y python3-paramiko
+		install_shfmt
 	fi
 	if [[ $INSTALL_PMEM == "true" ]]; then
 		# Additional dependencies for building pmem based backends
@@ -205,6 +254,7 @@ elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 			pciutils ShellCheck
 		# Additional (optional) dependencies for showing backtrace in logs
 		zypper install libunwind-devel || true
+		install_shfmt
 	fi
 	if [[ $INSTALL_PMEM == "true" ]]; then
 		# Additional dependencies for building pmem based backends
@@ -232,6 +282,7 @@ elif [ $(uname -s) = "FreeBSD" ]; then
 		# Tools for developers
 		pkg install -y devel/astyle bash py27-pycodestyle \
 			misc/e2fsprogs-libuuid sysutils/sg3_utils nasm
+		install_shfmt
 	fi
 	if [[ $INSTALL_DOCS == "true" ]]; then
 		# Additional dependencies for building docs
@@ -272,6 +323,7 @@ elif [ -f /etc/arch-release ]; then
 			makepkg -si --needed --noconfirm;
 			cd .. && rm -rf lcov-git;
 			popd"
+		install_shfmt
 	fi
 	if [[ $INSTALL_PMEM == "true" ]]; then
 		# Additional dependencies for building pmem based backends
