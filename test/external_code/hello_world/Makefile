@@ -31,36 +31,43 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-# Shows how to compile both an external bdev and an external application against the SPDK combined shared object and dpdk shared object.
+# Shows how to compile both an external bdev and an external application against the SPDK combined shared object and dpdk shared objects.
 bdev_shared_combo:
-	$(CC) $(COMMON_CFLAGS) -L../passthru -o hello_bdev ./hello_bdev.c -lpassthru_external -lspdk -lspdk_env_dpdk -ldpdk
+	$(CC) $(COMMON_CFLAGS) -L../passthru -Wl,-rpath=$(SPDK_LIB_DIR),--no-as-needed -o hello_bdev ./hello_bdev.c -lpassthru_external \
+	-lspdk -lspdk_env_dpdk -lrte_eal -lrte_mempool -lrte_ring -lrte_mbuf -lrte_mempool_ring -lrte_pci -lrte_bus_pci -lrte_kvargs \
+	-lrte_vhost -lrte_net -lrte_hash -lrte_cryptodev -Wl,--no-whole-archive
 
-# Shows how to compile both an external bdev and an external application against the SPDK individual shared objects and dpdk shared object.
+# Shows how to compile both an external bdev and an external application against the SPDK individual shared objects and dpdk shared objects.
 bdev_shared_iso:
 	$(CC) $(COMMON_CFLAGS) -L../passthru -Wl,-rpath=$(SPDK_LIB_DIR),--no-as-needed -o hello_bdev ./hello_bdev.c \
-	-lpassthru_external -lspdk_event_bdev -lspdk_bdev -lspdk_bdev_malloc -lspdk_log -lspdk_thread -lspdk_util -lspdk_event -lspdk_env_dpdk -ldpdk
+	-lpassthru_external -lspdk_event_bdev -lspdk_event_accel -lspdk_event_vmd -lspdk_bdev -lspdk_bdev_malloc -lspdk_log -lspdk_thread -lspdk_util -lspdk_event \
+	-lspdk_env_dpdk -lrte_eal -lrte_mempool -lrte_ring -lrte_mbuf -lrte_mempool_ring -lrte_pci -lrte_bus_pci -lrte_kvargs \
+	-lrte_vhost -lrte_net -lrte_hash -lrte_cryptodev -Wl,--no-whole-archive -lnuma
 
-# Shows how to compile an external application against the SPDK combined shared object and dpdk shared object.
+# Shows how to compile an external application against the SPDK combined shared object and dpdk shared objects.
 alone_shared_combo:
-	$(CC) $(COMMON_CFLAGS) -o hello_bdev ./hello_bdev.c -lspdk -lspdk_env_dpdk -ldpdk
+	$(CC) $(COMMON_CFLAGS) -Wl,-rpath=$(SPDK_LIB_DIR),--no-as-needed -o hello_bdev ./hello_bdev.c -lspdk -lspdk_env_dpdk -lrte_eal \
+	-lrte_mempool -lrte_ring -lrte_mbuf -lrte_mempool_ring -lrte_pci -lrte_bus_pci -lrte_kvargs -lrte_vhost -lrte_net -lrte_hash -lrte_cryptodev
 
-# Shows how to compile an external application against the SPDK individual shared objects and dpdk shared object.
+# Shows how to compile an external application against the SPDK individual shared objects and dpdk shared objects.
 alone_shared_iso:
 	$(CC) $(COMMON_CFLAGS) -Wl,-rpath=$(SPDK_LIB_DIR),--no-as-needed -o hello_bdev ./hello_bdev.c -lspdk_event_bdev \
-	-lspdk_bdev -lspdk_bdev_malloc -lspdk_log -lspdk_thread -lspdk_util -lspdk_event -lspdk_env_dpdk -ldpdk
+	-lspdk_event_accel -lspdk_event_vmd -lspdk_bdev -lspdk_bdev_malloc -lspdk_log -lspdk_thread -lspdk_util -lspdk_event \
+	-lspdk_env_dpdk -lrte_eal -lrte_mempool -lrte_ring -lrte_mbuf -lrte_mempool_ring -lrte_pci -lrte_bus_pci -lrte_kvargs \
+	-lrte_vhost -lrte_net -lrte_hash -lrte_cryptodev
 
 # Shows how to compile an external application against the SPDK archives.
 alone_static:
-	$(CC) $(COMMON_CFLAGS) -o hello_bdev ./hello_bdev.c -Wl,--whole-archive -lspdk_bdev_malloc -lspdk_event_bdev -lspdk_event_accel -lspdk_event_vmd \
+	$(CC) $(COMMON_CFLAGS) -o hello_bdev ./hello_bdev.c -Wl,--whole-archive,-Bstatic -lspdk_bdev_malloc -lspdk_event_bdev -lspdk_event_accel -lspdk_event_vmd \
 	-lspdk_event_sock -lspdk_bdev -lspdk_accel -lspdk_event -lspdk_thread -lspdk_util -lspdk_conf -lspdk_trace -lspdk_log -lspdk_json \
 	-lspdk_jsonrpc -lspdk_rpc -lspdk_sock -lspdk_notify -lspdk_vmd -lspdk_env_dpdk -lrte_eal -lrte_mempool -lrte_ring \
 	-lrte_mbuf -lrte_mempool_ring -lrte_pci -lrte_bus_pci -lrte_kvargs -lrte_vhost -lrte_net -lrte_hash -lrte_telemetry \
-	-lrte_cryptodev -Wl,--no-whole-archive -lnuma -luuid -lpthread -ldl -lrt
+	-lrte_cryptodev -Wl,--no-whole-archive,-Bdynamic -lnuma -luuid -lpthread -ldl -lrt
 
 # Shows how to compile and external bdev and application sgainst the SPDK archives.
 bdev_static:
-	$(CC) $(COMMON_CFLAGS) -L../passthru -o hello_bdev ./hello_bdev.c -Wl,--whole-archive -lpassthru_external -lspdk_bdev_malloc -lspdk_event_bdev \
+	$(CC) $(COMMON_CFLAGS) -L../passthru -o hello_bdev ./hello_bdev.c -Wl,--whole-archive,-Bstatic -lpassthru_external -lspdk_bdev_malloc -lspdk_event_bdev \
 	-lspdk_event_accel -lspdk_event_vmd -lspdk_event_sock -lspdk_bdev -lspdk_accel -lspdk_event -lspdk_thread -lspdk_util -lspdk_conf -lspdk_trace \
 	-lspdk_log -lspdk_json -lspdk_jsonrpc -lspdk_rpc -lspdk_sock -lspdk_notify -lspdk_vmd -lspdk_env_dpdk -lrte_eal -lrte_mempool \
 	-lrte_ring -lrte_mbuf -lrte_mempool_ring -lrte_pci -lrte_bus_pci -lrte_kvargs -lrte_vhost -lrte_net -lrte_hash -lrte_telemetry -lrte_cryptodev \
-	-Wl,--no-whole-archive -lnuma -luuid -lpthread -ldl -lrt
+	-Wl,--no-whole-archive,-Bdynamic -lnuma -luuid -lpthread -ldl -lrt

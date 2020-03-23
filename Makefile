@@ -49,6 +49,9 @@ DIRS-$(CONFIG_ISAL) += isalbuild
 	cc_version cxx_version .libs_only_other .ldflags ldflags install \
 	uninstall
 
+# Workaround for ninja. See dpdkbuild/Makefile
+export MAKE_PID := $(shell echo $$PPID)
+
 ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
 ifeq ($(CURDIR)/dpdk/build,$(CONFIG_DPDK_DIR))
 ifneq ($(SKIP_DPDK_BUILD),1)
