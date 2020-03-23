@@ -240,6 +240,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	}
 	ns_id = (uint32_t)tmp;
 
+	pthread_mutex_lock(&g_mutex);
 	fio_ctrlr = get_fio_ctrlr(trid);
 	/* it is a new ctrlr and needs to be added */
 	if (!fio_ctrlr) {
@@ -248,6 +249,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		if (!fio_ctrlr) {
 			SPDK_ERRLOG("Cannot allocate space for fio_ctrlr\n");
 			g_error = true;
+			pthread_mutex_unlock(&g_mutex);
 			return;
 		}
 		fio_ctrlr->opts = *opts;
@@ -256,6 +258,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		fio_ctrlr->next = g_ctrlr;
 		g_ctrlr = fio_ctrlr;
 	}
+	pthread_mutex_unlock(&g_mutex);
 
 	ns = spdk_nvme_ctrlr_get_ns(fio_ctrlr->ctrlr, ns_id);
 	if (ns == NULL) {
@@ -436,6 +439,7 @@ static int spdk_fio_setup(struct thread_data *td)
 			SPDK_ERRLOG("Failed to initialize VMD. Some NVMe devices can be unavailable.\n");
 		}
 	}
+	pthread_mutex_unlock(&g_mutex);
 
 	for_each_file(td, f, i) {
 		memset(&trid, 0, sizeof(trid));
@@ -478,7 +482,9 @@ static int spdk_fio_setup(struct thread_data *td)
 
 		fio_thread->current_f = f;
 
+		pthread_mutex_lock(&g_mutex);
 		fio_ctrlr = get_fio_ctrlr(&trid);
+		pthread_mutex_unlock(&g_mutex);
 		if (fio_ctrlr) {
 			attach_cb(td, &trid, fio_ctrlr->ctrlr, &fio_ctrlr->opts);
 		} else {
@@ -496,8 +502,8 @@ static int spdk_fio_setup(struct thread_data *td)
 		}
 	}
 
+	pthread_mutex_lock(&g_mutex);
 	g_td_count++;
-
 	pthread_mutex_unlock(&g_mutex);
 
 	return rc;
