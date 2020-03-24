@@ -230,7 +230,7 @@ ifeq ($(CONFIG_LOG_BACKTRACE),y)
 SYS_LIBS += -lunwind
 endif
 
-ifeq ($(CONFIG_NVME_CUSE),y)
+ifneq ($(CONFIG_NVME_CUSE)$(CONFIG_FUSE),nn)
 SYS_LIBS += -lfuse3
 endif
 
