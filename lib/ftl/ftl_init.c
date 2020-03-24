@@ -923,6 +923,11 @@ ftl_dev_get_zone_info_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 				    "zone id: %"PRIu64"\n", init_ctx->zone_id);
 		}
 
+		/* Set write pointer to the last block plus one for zone in full state */
+		if (zone->info.state == SPDK_BDEV_ZONE_STATE_FULL) {
+			zone->info.write_pointer = zone->info.zone_id + zone->info.capacity;
+		}
+
 		if (zone->info.state != SPDK_BDEV_ZONE_STATE_OFFLINE) {
 			band->num_zones++;
 			CIRCLEQ_INSERT_TAIL(&band->zones, zone, circleq);
