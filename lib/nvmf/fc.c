@@ -3018,9 +3018,14 @@ nvmf_fc_adm_add_rem_nport_listener(struct spdk_nvmf_fc_nport *nport, bool add)
 				spdk_nvmf_fc_create_trid(&ctx->trid,
 							 nport->fc_nodename.u.wwn,
 							 nport->fc_portname.u.wwn);
-				if (spdk_nvmf_subsystem_pause(subsystem,
-							      nvmf_fc_adm_subsystem_paused_cb,
-							      ctx)) {
+
+				if (spdk_nvmf_tgt_listen(subsystem->tgt, &ctx->trid)) {
+					SPDK_ERRLOG("Failed to add transport address %s to tgt listeners\n",
+						    ctx->trid.traddr);
+					free(ctx);
+				} else if (spdk_nvmf_subsystem_pause(subsystem,
+								     nvmf_fc_adm_subsystem_paused_cb,
+								     ctx)) {
 					SPDK_ERRLOG("Failed to pause subsystem: %s\n",
 						    subsystem->subnqn);
 					free(ctx);
