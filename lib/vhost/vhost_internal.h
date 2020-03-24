@@ -41,7 +41,6 @@
 
 #include "spdk_internal/vhost_user.h"
 #include "spdk_internal/log.h"
-#include "spdk/event.h"
 #include "spdk/util.h"
 #include "spdk/rpc.h"
 #include "spdk/config.h"

@@ -57,33 +57,6 @@ DEFINE_STUB(rte_vhost_vring_call, int, (int vid, uint16_t vring_idx), 0);
 DEFINE_STUB_V(rte_vhost_log_used_vring, (int vid, uint16_t vring_idx,
 		uint64_t offset, uint64_t len));
 
-static struct spdk_cpuset *g_app_core_mask;
-struct spdk_cpuset *spdk_app_get_core_mask(void)
-{
-	if (g_app_core_mask == NULL) {
-		g_app_core_mask = spdk_cpuset_alloc();
-		spdk_cpuset_set_cpu(g_app_core_mask, 0, true);
-	}
-	return g_app_core_mask;
-}
-
-int
-spdk_app_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
-{
-	int ret;
-	struct spdk_cpuset *validmask;
-
-	ret = spdk_cpuset_parse(cpumask, mask);
-	if (ret < 0) {
-		return ret;
-	}
-
-	validmask = spdk_app_get_core_mask();
-	spdk_cpuset_and(cpumask, validmask);
-
-	return 0;
-}
-
 DEFINE_STUB(rte_vhost_get_mem_table, int, (int vid, struct rte_vhost_memory **mem), 0);
 DEFINE_STUB(rte_vhost_get_negotiated_features, int, (int vid, uint64_t *features), 0);
 DEFINE_STUB(rte_vhost_get_vhost_vring, int,
@@ -196,6 +169,8 @@ desc_to_iov_test(void)
 	struct vring_desc desc;
 	int rc;
 
+	spdk_cpuset_set_cpu(&g_vhost_core_mask, 0, true);
+
 	rc = alloc_vdev(&vdev, "vdev_name_0", "0x1");
 	SPDK_CU_ASSERT_FATAL(rc == 0 && vdev);
 	start_vdev(vdev);
@@ -277,7 +252,7 @@ create_controller_test(void)
 	int ret;
 	char long_name[PATH_MAX];
 
-	/* NOTE: spdk_app_get_core_mask stub always sets coremask 0x01 */
+	spdk_cpuset_set_cpu(&g_vhost_core_mask, 0, true);
 
 	/* Create device with no name */
 	ret = alloc_vdev(&vdev, NULL, "0x1");

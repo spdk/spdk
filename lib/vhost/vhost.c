@@ -42,6 +42,8 @@
 #include "spdk/vhost.h"
 #include "vhost_internal.h"
 
+static struct spdk_cpuset g_vhost_core_mask;
+
 /* Path to folder where character device will be created. Can be set by user. */
 static char dev_dirname[PATH_MAX] = "";
 
@@ -782,23 +784,45 @@ vhost_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 	}
 
 	if (mask == NULL) {
-		spdk_cpuset_copy(cpumask, spdk_app_get_core_mask());
+		spdk_cpuset_copy(cpumask, &g_vhost_core_mask);
 		return 0;
 	}
 
-	rc = spdk_app_parse_core_mask(mask, cpumask);
+	rc = spdk_cpuset_parse(cpumask, mask);
 	if (rc < 0) {
 		SPDK_ERRLOG("invalid cpumask %s\n", mask);
 		return -1;
 	}
 
+	spdk_cpuset_and(cpumask, &g_vhost_core_mask);
+
 	if (spdk_cpuset_count(cpumask) == 0) {
-		SPDK_ERRLOG("no cpu is selected among reactor mask(=%s)\n",
-			    spdk_cpuset_fmt(spdk_app_get_core_mask()));
+		SPDK_ERRLOG("no cpu is selected among core mask(=%s)\n",
+			    spdk_cpuset_fmt(&g_vhost_core_mask));
 		return -1;
 	}
 
 	return 0;
+}
+
+static void
+vhost_setup_core_mask(void *ctx)
+{
+	struct spdk_thread *thread = spdk_get_thread();
+	spdk_cpuset_or(&g_vhost_core_mask, spdk_thread_get_cpumask(thread));
+}
+
+static void
+vhost_setup_core_mask_done(void *ctx)
+{
+	spdk_vhost_init_cb init_cb = ctx;
+
+	if (spdk_cpuset_count(&g_vhost_core_mask) == 0) {
+		init_cb(-ECHILD);
+		return;
+	}
+
+	init_cb(0);
 }
 
 static void
@@ -822,8 +846,8 @@ vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *ma
 	}
 
 	if (vhost_parse_core_mask(mask_str, &cpumask) != 0) {
-		SPDK_ERRLOG("cpumask %s is invalid (app mask is 0x%s)\n",
-			    mask_str, spdk_cpuset_fmt(spdk_app_get_core_mask()));
+		SPDK_ERRLOG("cpumask %s is invalid (core mask is 0x%s)\n",
+			    mask_str, spdk_cpuset_fmt(&g_vhost_core_mask));
 		return -EINVAL;
 	}
 
@@ -1502,6 +1526,13 @@ spdk_vhost_init(spdk_vhost_init_cb init_cb)
 	}
 #endif
 
+	spdk_cpuset_zero(&g_vhost_core_mask);
+
+	/* iterate threads instead of using SPDK_ENV_FOREACH_CORE to ensure that threads are really
+	 * created.
+	 */
+	spdk_for_each_thread(vhost_setup_core_mask, init_cb, vhost_setup_core_mask_done);
+	return;
 out:
 	init_cb(ret);
 }
@@ -1520,6 +1551,8 @@ _spdk_vhost_fini(void *arg1)
 		vdev = tmp;
 	}
 	spdk_vhost_unlock();
+
+	spdk_cpuset_zero(&g_vhost_core_mask);
 
 	/* All devices are removed now. */
 	sem_destroy(&g_dpdk_sem);
