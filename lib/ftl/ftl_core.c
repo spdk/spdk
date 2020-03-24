@@ -1611,6 +1611,7 @@ ftl_update_l2p(struct spdk_ftl_dev *dev, const struct ftl_wbuf_entry *entry,
 	struct ftl_wbuf_entry *prev;
 	struct ftl_band *band;
 	int valid;
+	bool io_weak = entry->io_flags & FTL_IO_WEAK;
 
 	prev_addr = ftl_l2p_get(dev, entry->lba);
 	if (ftl_addr_invalid(prev_addr)) {
@@ -1618,14 +1619,7 @@ ftl_update_l2p(struct spdk_ftl_dev *dev, const struct ftl_wbuf_entry *entry,
 		return;
 	}
 
-	/* If the L2P's physical address is different than what we expected we don't need to */
-	/* do anything (someone's already overwritten our data). */
-	if ((entry->io_flags & FTL_IO_WEAK) && !ftl_addr_cmp(prev_addr, entry->addr)) {
-		return;
-	}
-
 	if (ftl_addr_cached(prev_addr)) {
-		assert(!(entry->io_flags & FTL_IO_WEAK));
 		prev = ftl_get_entry_from_addr(dev, prev_addr);
 		pthread_spin_lock(&prev->lock);
 
@@ -1634,12 +1628,33 @@ ftl_update_l2p(struct spdk_ftl_dev *dev, const struct ftl_wbuf_entry *entry,
 		prev_addr = ftl_l2p_get(dev, entry->lba);
 
 		/* If the entry is no longer in cache, another write has been */
-		/* scheduled in the meantime, so we have to invalidate its LBA */
+		/* scheduled in the meantime, so we can return to evicted path */
 		if (!ftl_addr_cached(prev_addr)) {
-			ftl_invalidate_addr(dev, prev_addr);
+			pthread_spin_unlock(&prev->lock);
+			goto evicted;
 		}
 
-		/* If previous entry is part of cache, remove and invalidate it */
+		/*
+		 * Relocating block could still reside in cache due to fact that write
+		 * buffers are independent for each IO channel and enough amount of data
+		 * (write unit size) must be collected before it will be submitted to lower
+		 * layer.
+		 * When previous entry wasn't overwritten invalidate old address and entry.
+		 * Otherwise skip relocating block.
+		 */
+		if (io_weak &&
+		    /* Check if prev_addr was updated in meantime */
+		    !(ftl_addr_cmp(prev_addr, ftl_get_addr_from_entry(prev)) &&
+		      /* Check if relocating address it the same as in previous entry */
+		      ftl_addr_cmp(prev->addr, entry->addr))) {
+			pthread_spin_unlock(&prev->lock);
+			return;
+		}
+
+		/*
+		 * If previous entry is part of cache and was written into disk remove
+		 * and invalidate it
+		 */
 		if (prev->valid) {
 			ftl_invalidate_addr(dev, prev->addr);
 			prev->valid = false;
@@ -1647,6 +1662,15 @@ ftl_update_l2p(struct spdk_ftl_dev *dev, const struct ftl_wbuf_entry *entry,
 
 		ftl_l2p_set(dev, entry->lba, addr);
 		pthread_spin_unlock(&prev->lock);
+		return;
+	}
+
+evicted:
+	/*
+	 *  If the L2P's physical address is different than what we expected we don't need to
+	 *  do anything (someone's already overwritten our data).
+	 */
+	if (io_weak && !ftl_addr_cmp(prev_addr, entry->addr)) {
 		return;
 	}
 
@@ -1660,7 +1684,7 @@ ftl_update_l2p(struct spdk_ftl_dev *dev, const struct ftl_wbuf_entry *entry,
 
 	/* If the address has been invalidated already, we don't want to update */
 	/* the L2P for weak writes, as it means the write is no longer valid. */
-	if (!(entry->io_flags & FTL_IO_WEAK) || valid) {
+	if (!io_weak || valid) {
 		ftl_l2p_set(dev, entry->lba, addr);
 	}
 
