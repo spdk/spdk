@@ -851,16 +851,6 @@ bdevperf_submit_on_reactor(struct spdk_io_channel_iter *i)
 	/* Submit initial I/O for each block device. Each time one
 	 * completes, another will be submitted. */
 	TAILQ_FOREACH(job, &reactor->jobs, link) {
-		job->ch = spdk_bdev_get_io_channel(job->bdev_desc);
-		if (!job->ch) {
-			printf("Skip this device (%s) as IO channel not setup.\n",
-			       spdk_bdev_get_name(job->bdev));
-			g_bdevperf.running_jobs--;
-			g_run_rc = -1;
-			spdk_bdev_close(job->bdev_desc);
-			continue;
-		}
-
 		bdevperf_job_run(job);
 	}
 
@@ -1050,9 +1040,18 @@ _bdevperf_construct_job(void *ctx)
 	if (rc != 0) {
 		SPDK_ERRLOG("Could not open leaf bdev %s, error=%d\n", spdk_bdev_get_name(job->bdev), rc);
 		g_run_rc = -EINVAL;
-		return;
+		goto end;
 	}
 
+	job->ch = spdk_bdev_get_io_channel(job->bdev_desc);
+	if (!job->ch) {
+		SPDK_ERRLOG("Could not get io_channel for device %s, error=%d\n", spdk_bdev_get_name(job->bdev),
+			    rc);
+		g_run_rc = -ENOMEM;
+		goto end;
+	}
+
+end:
 	spdk_thread_send_msg(g_master_thread, _bdevperf_construct_job_done, NULL);
 }
 
