@@ -964,7 +964,6 @@ test_vbdev_compress_submit_request(void)
 	g_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
 	g_bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
 	g_completion_called = false;
-	MOCK_SET(spdk_bdev_io_get_io_channel, g_io_ch);
 	vbdev_compress_submit_request(g_io_ch, g_bdev_io);
 	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(g_completion_called == true);
