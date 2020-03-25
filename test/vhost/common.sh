@@ -1037,9 +1037,10 @@ function run_fio()
 	local fio_bin=""
 	local vms=()
 	local out=""
-	local fio_disks=""
 	local vm
 	local run_server_mode=true
+	local fio_start_cmd
+	local fio_output_format="normal"
 
 	for arg in "$@"; do
 		case "$arg" in
@@ -1051,7 +1052,8 @@ function run_fio()
 				mkdir -p $out
 				;;
 			--local) run_server_mode=false ;;
-			--json) json="--json" ;;
+			--json) fio_output_format="json" ;;
+			--hide-results) hide_results=true ;;
 		*)
 			error "Invalid argument '$arg'"
 			return 1
@@ -1069,17 +1071,24 @@ function run_fio()
 		return 1
 	fi
 
+	fio_start_cmd="$fio_bin --eta=never "
+
 	local job_fname
 	job_fname=$(basename "$job_file")
+	fio_start_cmd+=" --output=$out/$job_fname --output-format=$fio_output_format "
+
 	# prepare job file for each VM
 	for vm in "${vms[@]}"; do
 		local vm_num=${vm%%:*}
 		local vmdisks=${vm#*:}
 
 		sed "s@filename=@filename=$vmdisks@" $job_file | vm_exec $vm_num "cat > /root/$job_fname"
-		fio_disks+="127.0.0.1:$(vm_fio_socket $vm_num):$vmdisks,"
-
 		vm_exec $vm_num cat /root/$job_fname
+
+		if $run_server_mode; then
+			fio_start_cmd+="--client=127.0.0.1,$(vm_fio_socket $vm_num) --remote-config /root/$job_fname"
+		fi
+
 		if ! $run_server_mode; then
 			if [[ -n "$fio_bin" ]]; then
 				vm_exec $vm_num 'cat > /root/fio; chmod +x /root/fio' < $fio_bin
@@ -1096,9 +1105,11 @@ function run_fio()
 		return 0
 	fi
 
-	$rootdir/test/vhost/common/run_fio.py --job-file=/root/$job_fname \
-		$([[ -n "$fio_bin" ]] && echo "--fio-bin=$fio_bin") \
-		--out=$out $json ${fio_disks%,}
+	$fio_start_cmd
+
+	if [[ ! $hide_results ]]; then
+		cat $out/$job_fname
+	fi
 }
 
 # Shutdown or kill any running VM and SPDK APP.
