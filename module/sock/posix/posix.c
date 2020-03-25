@@ -44,6 +44,7 @@
 #include "spdk/pipe.h"
 #include "spdk/sock.h"
 #include "spdk/util.h"
+#include "spdk/likely.h"
 #include "spdk_internal/sock.h"
 
 #define MAX_TMPBUF 1024
@@ -1070,6 +1071,15 @@ spdk_posix_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group, struct 
 
 	rc = kevent(group->fd, &event, 1, NULL, 0, &ts);
 #endif
+
+	/* switched from another polling group due to scheduling */
+	if (spdk_unlikely(sock->recv_pipe != NULL  &&
+			  (spdk_pipe_reader_bytes_available(sock->recv_pipe) > 0))) {
+		assert(sock->pending_recv == false);
+		sock->pending_recv = true;
+		TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
+	}
+
 	return rc;
 }
 
@@ -1085,6 +1095,7 @@ spdk_posix_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group, stru
 			TAILQ_REMOVE(&group->pending_recv, sock, link);
 			sock->pending_recv = false;
 		}
+		assert(sock->pending_recv == false);
 	}
 
 #if defined(__linux__)
