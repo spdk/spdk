@@ -157,7 +157,7 @@ function test_clone_snapshot_relations() {
 
 	# Fill lvol bdev with 100% of its space
 	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid" /dev/nbd0
-	run_fio_test /dev/nbd0 0 lvol_size "write" "0xcc"
+	run_fio_test /dev/nbd0 0 $lvol_size "write" "0xcc"
 	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd0
 
 	# An attempt to create a clone from lvol that is rw capable should fail
@@ -388,7 +388,7 @@ function test_lvol_bdev_readonly() {
 
 	# Try to perform write operation on lvol marked as read only
 	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid" /dev/nbd0
-	run_fio_test /dev/nbd0 0 lvol_size "write" "0xcc" && false
+	run_fio_test /dev/nbd0 0 $lvol_size "write" "0xcc" && false
 	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd0
 
 	# Create clone of lvol set to read only
@@ -396,7 +396,7 @@ function test_lvol_bdev_readonly() {
 
 	# Try to perform write operation on lvol clone
 	nbd_start_disks "$DEFAULT_RPC_ADDR" "$clone_uuid" /dev/nbd0
-	run_fio_test /dev/nbd0 0 lvol_size "write" "0xcc"
+	run_fio_test /dev/nbd0 0 $lvol_size "write" "0xcc"
 	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd0
 
 	# Clean up
