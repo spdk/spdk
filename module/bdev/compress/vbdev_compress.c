@@ -424,6 +424,7 @@ spdk_reduce_rw_blocks_cb(void *arg, int reduce_errno)
 	struct spdk_bdev_io *bdev_io = arg;
 	struct comp_bdev_io *io_ctx = (struct comp_bdev_io *)bdev_io->driver_ctx;
 	struct spdk_io_channel *ch = spdk_io_channel_from_ctx(io_ctx->comp_ch);
+	struct spdk_thread *orig_thread;
 
 	/* TODO: need to decide which error codes are bdev_io success vs failure;
 	 * example examine calls reading metadata */
@@ -431,8 +432,9 @@ spdk_reduce_rw_blocks_cb(void *arg, int reduce_errno)
 	io_ctx->status = reduce_errno;
 
 	/* Send this request to the orig IO thread. */
-	if (spdk_io_channel_get_thread(ch) != spdk_get_thread()) {
-		spdk_thread_send_msg(spdk_io_channel_get_thread(ch), _spdk_reduce_rw_blocks_cb, io_ctx);
+	orig_thread = spdk_io_channel_get_thread(ch);
+	if (orig_thread != spdk_get_thread()) {
+		spdk_thread_send_msg(orig_thread, _spdk_reduce_rw_blocks_cb, io_ctx);
 	} else {
 		_spdk_reduce_rw_blocks_cb(io_ctx);
 	}
@@ -771,6 +773,7 @@ _comp_bdev_io_submit(void *arg)
 	struct spdk_io_channel *ch = spdk_io_channel_from_ctx(io_ctx->comp_ch);
 	struct vbdev_compress *comp_bdev = SPDK_CONTAINEROF(bdev_io->bdev, struct vbdev_compress,
 					   comp_bdev);
+	struct spdk_thread *orig_thread;
 	int rc = 0;
 
 	switch (bdev_io->type) {
@@ -807,8 +810,9 @@ _comp_bdev_io_submit(void *arg)
 	}
 
 	/* Complete this on the orig IO thread. */
-	if (spdk_io_channel_get_thread(ch) != spdk_get_thread()) {
-		spdk_thread_send_msg(spdk_io_channel_get_thread(ch), _complete_other_io, io_ctx);
+	orig_thread = spdk_io_channel_get_thread(ch);
+	if (orig_thread != spdk_get_thread()) {
+		spdk_thread_send_msg(orig_thread, _complete_other_io, io_ctx);
 	} else {
 		_complete_other_io(io_ctx);
 	}
@@ -829,7 +833,7 @@ vbdev_compress_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 	io_ctx->orig_io = bdev_io;
 
 	/* Send this request to the reduce_thread if that's not what we're on. */
-	if (spdk_io_channel_get_thread(ch) != comp_bdev->reduce_thread) {
+	if (spdk_get_thread() != comp_bdev->reduce_thread) {
 		spdk_thread_send_msg(comp_bdev->reduce_thread, _comp_bdev_io_submit, bdev_io);
 	} else {
 		_comp_bdev_io_submit(bdev_io);
