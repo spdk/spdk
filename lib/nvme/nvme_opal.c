@@ -792,18 +792,18 @@ opal_get_comid_v200(struct spdk_opal_dev *dev, const void *data)
 }
 
 static int
-opal_discovery0_end(struct spdk_opal_dev *dev)
+opal_discovery0_end(struct spdk_opal_dev *dev, void *payload, uint32_t payload_size)
 {
 	bool supported = false, single_user = false;
-	const struct spdk_opal_d0_hdr *hdr = (struct spdk_opal_d0_hdr *)dev->resp;
+	const struct spdk_opal_d0_hdr *hdr = (struct spdk_opal_d0_hdr *)payload;
 	struct spdk_opal_d0_feat_hdr *feat_hdr;
-	const uint8_t *epos = dev->resp, *cpos = dev->resp;
+	const uint8_t *epos = payload, *cpos = payload;
 	uint16_t comid = 0;
 	uint32_t hlen = from_be32(&(hdr->length));
 
-	if (hlen > IO_BUFFER_LENGTH - sizeof(*hdr)) {
+	if (hlen > payload_size - sizeof(*hdr)) {
 		SPDK_ERRLOG("Discovery length overflows buffer (%zu+%u)/%u\n",
-			    sizeof(*hdr), hlen, IO_BUFFER_LENGTH);
+			    sizeof(*hdr), hlen, payload_size);
 		return -EFAULT;
 	}
 
@@ -853,23 +853,23 @@ opal_discovery0_end(struct spdk_opal_dev *dev)
 		SPDK_INFOLOG(SPDK_LOG_OPAL, "Single User Mode Not Supported\n");
 	}
 
+	dev->supported = true;
 	dev->comid = comid;
 	return 0;
 }
 
 static int
-opal_discovery0(struct spdk_opal_dev *dev)
+opal_discovery0(struct spdk_opal_dev *dev, void *payload, uint32_t payload_size)
 {
 	int ret;
 
-	memset(dev->resp, 0, IO_BUFFER_LENGTH);
-	dev->comid = LV0_DISCOVERY_COMID;
-	ret = opal_recv_cmd(dev);
+	ret = spdk_nvme_ctrlr_security_receive(dev->ctrlr, SPDK_SCSI_SECP_TCG, LV0_DISCOVERY_COMID,
+					       0, payload, payload_size);
 	if (ret) {
 		return ret;
 	}
 
-	return opal_discovery0_end(dev);
+	return opal_discovery0_end(dev, payload, payload_size);
 }
 
 static inline void
@@ -901,19 +901,6 @@ opal_end_session(struct spdk_opal_dev *dev)
 		return err;
 	}
 	return opal_finalize_and_send(dev, eod, opal_end_session_cb, NULL);
-}
-
-static int
-opal_check_support(struct spdk_opal_dev *dev)
-{
-	int ret;
-
-	opal_setup_dev(dev);
-	ret = opal_discovery0(dev);
-
-	dev->supported = (ret == 0 ? true : false);
-
-	return ret;
 }
 
 void
@@ -1739,6 +1726,7 @@ struct spdk_opal_dev *
 	spdk_opal_dev_construct(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct spdk_opal_dev *dev;
+	void *payload;
 
 	dev = calloc(1, sizeof(*dev));
 	if (!dev) {
@@ -1749,11 +1737,20 @@ struct spdk_opal_dev *
 	dev->ctrlr = ctrlr;
 	dev->timeout = SPDK_OPAL_TPER_TIMEOUT;
 
-	if (opal_check_support(dev) != 0) {
-		SPDK_INFOLOG(SPDK_LOG_OPAL, "Opal is not supported on this device\n");
-		dev->supported = false;
+	payload = calloc(1, IO_BUFFER_LENGTH);
+	if (!payload) {
+		free(dev);
+		return NULL;
 	}
 
+	if (opal_discovery0(dev, payload, IO_BUFFER_LENGTH)) {
+		SPDK_INFOLOG(SPDK_LOG_OPAL, "Opal is not supported on this device\n");
+		free(dev);
+		free(payload);
+		return NULL;
+	}
+
+	free(payload);
 	if (pthread_mutex_init(&dev->mutex_lock, NULL)) {
 		SPDK_ERRLOG("Mutex init failed\n");
 		free(dev);
