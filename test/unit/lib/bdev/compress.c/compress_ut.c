@@ -520,8 +520,15 @@ rte_compressdev_enqueue_burst(uint8_t dev_id, uint16_t qp_id, struct rte_comp_op
 static int
 test_setup(void)
 {
+	struct spdk_thread *thread;
 	int i;
 
+	spdk_thread_lib_init(NULL, 0);
+
+	thread = spdk_thread_create(NULL, NULL);
+	spdk_set_thread(thread);
+
+	g_comp_bdev.reduce_thread = thread;
 	g_comp_bdev.backing_dev.unmap = _comp_reduce_unmap;
 	g_comp_bdev.backing_dev.readv = _comp_reduce_readv;
 	g_comp_bdev.backing_dev.writev = _comp_reduce_writev;
@@ -572,6 +579,7 @@ test_setup(void)
 	g_bdev_io->u.bdev.iovs = calloc(128, sizeof(struct iovec));
 	g_bdev_io->bdev = &g_comp_bdev.comp_bdev;
 	g_io_ch = calloc(1, sizeof(struct spdk_io_channel) + sizeof(struct comp_io_channel));
+	g_io_ch->thread = thread;
 	g_comp_ch = (struct comp_io_channel *)((uint8_t *)g_io_ch + sizeof(struct spdk_io_channel));
 	g_io_ctx = (struct comp_bdev_io *)g_bdev_io->driver_ctx;
 
@@ -597,6 +605,7 @@ test_setup(void)
 static int
 test_cleanup(void)
 {
+	struct spdk_thread *thread;
 	int i;
 
 	for (i = 0; i < UT_MBUFS_PER_OP_BOUND_TEST; i++) {
@@ -608,6 +617,13 @@ test_cleanup(void)
 	free(g_bdev_io->u.bdev.iovs);
 	free(g_bdev_io);
 	free(g_io_ch);
+
+	thread = spdk_get_thread();
+	spdk_thread_exit(thread);
+	spdk_thread_destroy(thread);
+
+	spdk_thread_lib_fini();
+
 	return 0;
 }
 
