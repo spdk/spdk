@@ -1393,22 +1393,22 @@ comp_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 	struct vbdev_compress *comp_bdev = io_device;
 	struct comp_device_qp *device_qp;
 
-	/* We use this queue to track outstanding IO in our layer. */
-	TAILQ_INIT(&comp_bdev->pending_comp_ios);
-
-	/* We use this to queue up compression operations as needed. */
-	TAILQ_INIT(&comp_bdev->queued_comp_ops);
-
 	/* Now set the reduce channel if it's not already set. */
 	pthread_mutex_lock(&comp_bdev->reduce_lock);
 	if (comp_bdev->ch_count == 0) {
+		/* We use this queue to track outstanding IO in our layer. */
+		TAILQ_INIT(&comp_bdev->pending_comp_ios);
+
+		/* We use this to queue up compression operations as needed. */
+		TAILQ_INIT(&comp_bdev->queued_comp_ops);
+
 		comp_bdev->base_ch = spdk_bdev_get_io_channel(comp_bdev->base_desc);
 		comp_bdev->reduce_thread = spdk_get_thread();
 		comp_bdev->poller = spdk_poller_register(comp_dev_poller, comp_bdev, 0);
 		/* Now assign a q pair */
 		pthread_mutex_lock(&g_comp_device_qp_lock);
 		TAILQ_FOREACH(device_qp, &g_comp_device_qp, link) {
-			if ((strcmp(device_qp->device->cdev_info.driver_name, comp_bdev->drv_name) == 0)) {
+			if (strcmp(device_qp->device->cdev_info.driver_name, comp_bdev->drv_name) == 0) {
 				if (device_qp->thread == spdk_get_thread()) {
 					comp_bdev->device_qp = device_qp;
 					break;
@@ -1453,9 +1453,7 @@ _comp_bdev_ch_destroy_cb(void *arg)
 	struct vbdev_compress *comp_bdev = arg;
 
 	pthread_mutex_lock(&comp_bdev->reduce_lock);
-	if (comp_bdev->ch_count == 0) {
-		_channel_cleanup(comp_bdev);
-	}
+	_channel_cleanup(comp_bdev);
 	pthread_mutex_unlock(&comp_bdev->reduce_lock);
 }
 
