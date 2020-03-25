@@ -54,9 +54,9 @@
  * NVME_MAX_SGL_DESCRIPTORS defines the maximum number of descriptors in one SGL
  *  segment.
  */
-#define NVME_MAX_SGL_DESCRIPTORS	(251)
+#define NVME_MAX_SGL_DESCRIPTORS	(250)
 
-#define NVME_MAX_PRP_LIST_ENTRIES	(505)
+#define NVME_MAX_PRP_LIST_ENTRIES	(503)
 
 struct nvme_pcie_enum_ctx {
 	struct spdk_nvme_probe_ctx *probe_ctx;
@@ -120,6 +120,8 @@ struct nvme_tracker {
 
 	uint64_t			prp_sgl_bus_addr;
 
+	/* Don't move, metadata SGL is always contiguous with Data Block SGL */
+	struct spdk_nvme_sgl_descriptor		meta_sgl;
 	union {
 		uint64_t			prp[NVME_MAX_PRP_LIST_ENTRIES];
 		struct spdk_nvme_sgl_descriptor	sgl[NVME_MAX_SGL_DESCRIPTORS];
@@ -131,6 +133,7 @@ struct nvme_tracker {
  */
 SPDK_STATIC_ASSERT(sizeof(struct nvme_tracker) == 4096, "nvme_tracker is not 4K");
 SPDK_STATIC_ASSERT((offsetof(struct nvme_tracker, u.sgl) & 7) == 0, "SGL must be Qword aligned");
+SPDK_STATIC_ASSERT((offsetof(struct nvme_tracker, meta_sgl) & 7) == 0, "SGL must be Qword aligned");
 
 /* PCIe transport extensions for spdk_nvme_qpair */
 struct nvme_pcie_qpair {
