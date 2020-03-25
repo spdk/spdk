@@ -1560,31 +1560,32 @@ nvme_rdma_req_init(struct nvme_rdma_qpair *rqpair, struct nvme_request *req,
 		   struct spdk_nvme_rdma_req *rdma_req)
 {
 	struct spdk_nvme_ctrlr *ctrlr = rqpair->qpair.ctrlr;
+	enum nvme_payload_type payload_type;
+	bool icd_supported;
 	int rc;
 
 	rdma_req->req = req;
 	req->cmd.cid = rdma_req->id;
+	payload_type = nvme_payload_type(&req->payload);
+	/*
+	 * Check if icdoff is non zero, to avoid interop conflicts with
+	 * targets with non-zero icdoff.  Both SPDK and the Linux kernel
+	 * targets use icdoff = 0.  For targets with non-zero icdoff, we
+	 * will currently just not use inline data for now.
+	 */
+	icd_supported = spdk_nvme_opc_get_data_transfer(req->cmd.opc) == SPDK_NVME_DATA_HOST_TO_CONTROLLER
+			&& req->payload_size <= ctrlr->ioccsz_bytes && ctrlr->icdoff == 0;
 
 	if (req->payload_size == 0) {
 		rc = nvme_rdma_build_null_request(rdma_req);
-	} else if (nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG) {
-		/*
-		 * Check if icdoff is non zero, to avoid interop conflicts with
-		 * targets with non-zero icdoff.  Both SPDK and the Linux kernel
-		 * targets use icdoff = 0.  For targets with non-zero icdoff, we
-		 * will currently just not use inline data for now.
-		 */
-		if (spdk_nvme_opc_get_data_transfer(req->cmd.opc) ==
-		    SPDK_NVME_DATA_HOST_TO_CONTROLLER &&
-		    req->payload_size <= ctrlr->ioccsz_bytes && ctrlr->icdoff == 0) {
+	} else if (payload_type == NVME_PAYLOAD_TYPE_CONTIG) {
+		if (icd_supported) {
 			rc = nvme_rdma_build_contig_inline_request(rqpair, rdma_req);
 		} else {
 			rc = nvme_rdma_build_contig_request(rqpair, rdma_req);
 		}
-	} else if (nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_SGL) {
-		if (spdk_nvme_opc_get_data_transfer(req->cmd.opc) ==
-		    SPDK_NVME_DATA_HOST_TO_CONTROLLER &&
-		    req->payload_size <= ctrlr->ioccsz_bytes && ctrlr->icdoff == 0) {
+	} else if (payload_type == NVME_PAYLOAD_TYPE_SGL) {
+		if (icd_supported) {
 			rc = nvme_rdma_build_sgl_inline_request(rqpair, rdma_req);
 		} else {
 			rc = nvme_rdma_build_sgl_request(rqpair, rdma_req);
