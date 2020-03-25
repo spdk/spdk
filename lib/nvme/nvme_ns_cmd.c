@@ -402,7 +402,8 @@ _nvme_ns_cmd_rw(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 		sector_size -= 8;
 	}
 
-	req = nvme_allocate_request(qpair, payload, lba_count * sector_size, cb_fn, cb_arg);
+	req = nvme_allocate_request(qpair, payload, lba_count * sector_size, lba_count * ns->md_size,
+				    cb_fn, cb_arg);
 	if (req == NULL) {
 		return NULL;
 	}

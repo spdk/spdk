@@ -47,7 +47,7 @@ spdk_nvme_ctrlr_io_cmd_raw_no_payload_build(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	memset(&payload, 0, sizeof(payload));
-	req = nvme_allocate_request(qpair, &payload, 0, cb_fn, cb_arg);
+	req = nvme_allocate_request(qpair, &payload, 0, 0, cb_fn, cb_arg);
 
 	if (req == NULL) {
 		return -ENOMEM;
@@ -87,10 +87,19 @@ spdk_nvme_ctrlr_cmd_io_raw_with_md(struct spdk_nvme_ctrlr *ctrlr,
 {
 	struct nvme_request *req;
 	struct nvme_payload payload;
+	uint32_t md_len = 0;
 
 	payload = NVME_PAYLOAD_CONTIG(buf, md_buf);
 
-	req = nvme_allocate_request(qpair, &payload, len, cb_fn, cb_arg);
+	/* Caculate metadata length */
+	if (md_buf) {
+		struct spdk_nvme_ns *ns = &ctrlr->ns[cmd->nsid - 1];
+
+		assert(ns->sector_size != 0);
+		md_len =  len / ns->sector_size * ns->md_size;
+	}
+
+	req = nvme_allocate_request(qpair, &payload, len, md_len, cb_fn, cb_arg);
 	if (req == NULL) {
 		return -ENOMEM;
 	}

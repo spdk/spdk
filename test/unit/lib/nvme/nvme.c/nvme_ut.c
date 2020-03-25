@@ -662,13 +662,13 @@ test_nvme_allocate_request(void)
 	STAILQ_INIT(&qpair.queued_req);
 
 	/* Test trying to allocate a request when no requests are available */
-	req = nvme_allocate_request(&qpair, &payload, payload_struct_size,
+	req = nvme_allocate_request(&qpair, &payload, payload_struct_size, 0,
 				    cb_fn, cb_arg);
 	CU_ASSERT(req == NULL);
 
 	/* put a dummy on the queue, and then allocate one */
 	STAILQ_INSERT_HEAD(&qpair.free_req, &dummy_req, stailq);
-	req = nvme_allocate_request(&qpair, &payload, payload_struct_size,
+	req = nvme_allocate_request(&qpair, &payload, payload_struct_size, 0,
 				    cb_fn, cb_arg);
 
 	/* all the req elements should now match the passed in parameters */

@@ -295,6 +295,8 @@ struct nvme_request {
 	pid_t				pid;
 	struct spdk_nvme_cpl		cpl;
 
+	uint32_t			md_size;
+
 	/**
 	 * The following members should not be reordered with members
 	 *  above.  These members are only needed when splitting
@@ -901,7 +903,7 @@ int	nvme_fabric_qpair_connect(struct spdk_nvme_qpair *qpair, uint32_t num_entrie
 
 static inline struct nvme_request *
 nvme_allocate_request(struct spdk_nvme_qpair *qpair,
-		      const struct nvme_payload *payload, uint32_t payload_size,
+		      const struct nvme_payload *payload, uint32_t payload_size, uint32_t md_size,
 		      spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	struct nvme_request *req;
@@ -930,6 +932,7 @@ nvme_allocate_request(struct spdk_nvme_qpair *qpair,
 	req->cb_arg = cb_arg;
 	req->payload = *payload;
 	req->payload_size = payload_size;
+	req->md_size = md_size;
 	req->pid = g_spdk_nvme_pid;
 	req->submit_tick = 0;
 
@@ -945,7 +948,7 @@ nvme_allocate_request_contig(struct spdk_nvme_qpair *qpair,
 
 	payload = NVME_PAYLOAD_CONTIG(buffer, NULL);
 
-	return nvme_allocate_request(qpair, &payload, payload_size, cb_fn, cb_arg);
+	return nvme_allocate_request(qpair, &payload, payload_size, 0, cb_fn, cb_arg);
 }
 
 static inline struct nvme_request *

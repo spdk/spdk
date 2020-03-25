@@ -1250,6 +1250,7 @@ test_nvme_ns_cmd_write_with_md(void)
 	SPDK_CU_ASSERT_FATAL(g_request->num_children == 0);
 
 	CU_ASSERT(g_request->payload.md == metadata);
+	CU_ASSERT(g_request->md_size == 256 * 128);
 	CU_ASSERT(g_request->payload_size == 256 * 512);
 
 	nvme_free_request(g_request);
@@ -1383,6 +1384,7 @@ test_nvme_ns_cmd_write_with_md(void)
 	SPDK_CU_ASSERT_FATAL(g_request->num_children == 0);
 
 	CU_ASSERT(g_request->payload.md == metadata);
+	CU_ASSERT(g_request->md_size == 256 * 8);
 	CU_ASSERT(g_request->payload_size == 256 * 512);
 
 	nvme_free_request(g_request);
@@ -1414,12 +1416,14 @@ test_nvme_ns_cmd_write_with_md(void)
 	CU_ASSERT(child0->payload_offset == 0);
 	CU_ASSERT(child0->payload_size == 256 * 512);
 	CU_ASSERT(child0->md_offset == 0);
+	CU_ASSERT(child0->md_size == 256 * 8);
 	child1 = TAILQ_NEXT(child0, child_tailq);
 
 	SPDK_CU_ASSERT_FATAL(child1 != NULL);
 	CU_ASSERT(child1->payload_offset == 256 * 512);
 	CU_ASSERT(child1->payload_size == 128 * 512);
 	CU_ASSERT(child1->md_offset == 256 * 8);
+	CU_ASSERT(child1->md_size == 128 * 8);
 
 	nvme_request_free_children(g_request);
 	nvme_free_request(g_request);
@@ -1466,6 +1470,7 @@ test_nvme_ns_cmd_read_with_md(void)
 	SPDK_CU_ASSERT_FATAL(g_request->num_children == 0);
 
 	CU_ASSERT(g_request->payload.md == metadata);
+	CU_ASSERT(g_request->md_size == 256 * md_size);
 	CU_ASSERT(g_request->payload_size == 256 * 512);
 
 	nvme_free_request(g_request);

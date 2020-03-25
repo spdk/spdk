@@ -103,7 +103,8 @@ _nvme_ocssd_ns_cmd_vector_rw_with_md(struct spdk_nvme_ns *ns,
 
 	payload = NVME_PAYLOAD_CONTIG(buffer, metadata);
 
-	req = nvme_allocate_request(qpair, &payload, num_lbas * ns->sector_size, cb_fn, cb_arg);
+	req = nvme_allocate_request(qpair, &payload, num_lbas * ns->sector_size, num_lbas * ns->md_size,
+				    cb_fn, cb_arg);
 	if (req == NULL) {
 		return -ENOMEM;
 	}
