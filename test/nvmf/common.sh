@@ -20,6 +20,10 @@ build_nvmf_app_args
 
 have_pci_nics=0
 
+function rxe_cfg() {
+	"$rootdir/scripts/rxe_cfg_small.sh" "$@"
+}
+
 function load_ib_rdma_modules() {
 	if [ $(uname) != Linux ]; then
 		return 0
@@ -37,18 +41,7 @@ function load_ib_rdma_modules() {
 }
 
 function detect_soft_roce_nics() {
-	if hash rxe_cfg; then
-		rxe_cfg start
-		rdma_nics=$(get_rdma_if_list)
-		all_nics=$(ip -o link | awk '{print $2}' | cut -d":" -f1)
-		non_rdma_nics=$(echo -e "$rdma_nics\n$all_nics" | sort | uniq -u)
-		for nic in $non_rdma_nics; do
-			if [[ -d /sys/class/net/${nic}/bridge ]]; then
-				continue
-			fi
-			rxe_cfg add $nic || true
-		done
-	fi
+	rxe_cfg start
 }
 
 # args 1 and 2 represent the grep filters for finding our NICS.
@@ -220,27 +213,11 @@ function rdma_device_init() {
 }
 
 function revert_soft_roce() {
-	if hash rxe_cfg; then
-		interfaces="$(ip -o link | awk '{print $2}' | cut -d":" -f1)"
-		for interface in $interfaces; do
-			rxe_cfg remove $interface || true
-		done
-		rxe_cfg stop || true
-	fi
+	rxe_cfg stop
 }
 
 function check_ip_is_soft_roce() {
-	IP=$1
-	if hash rxe_cfg; then
-		dev=$(ip -4 -o addr show | grep $IP | cut -d" " -f2)
-		if (rxe_cfg status "rxe" | grep -q $dev); then
-			return 0
-		else
-			return 1
-		fi
-	else
-		return 1
-	fi
+	rxe_cfg status rxe | grep -wq "$1"
 }
 
 function nvme_connect() {

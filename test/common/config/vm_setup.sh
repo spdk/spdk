@@ -24,8 +24,7 @@ VM_SETUP_PATH=$(readlink -f ${BASH_SOURCE%/*})
 
 UPGRADE=false
 INSTALL=false
-CONF="librxe,rocksdb,fio,flamegraph,tsocks,qemu,vpp,libiscsi,nvmecli,qat,refspdk"
-LIBRXE_INSTALL=true
+CONF="rocksdb,fio,flamegraph,tsocks,qemu,vpp,libiscsi,nvmecli,qat,refspdk"
 gcc_version=$(gcc -dumpversion) gcc_version=${gcc_version%%.*}
 
 if [ $(uname -s) == "FreeBSD" ]; then
@@ -82,28 +81,6 @@ EOF
 		CONFIG_OCF_PATH="$output_dir/ocf" $MAKE -C $output_dir/lib/env_ocf $MAKEFLAGS exportlib O=$output_dir/build/ocf.a
 		$output_dir/configure $config_params --with-ocf=$output_dir/build/ocf.a --with-shared
 		$MAKE -C $output_dir $MAKEFLAGS
-	fi
-}
-
-function install_rxe_cfg() {
-	if echo $CONF | grep -q librxe; then
-		# rxe_cfg is used in the NVMe-oF tests
-		# The librxe-dev repository provides a command line tool called rxe_cfg which makes it
-		# very easy to use Soft-RoCE. The build pool utilizes this command line tool in the absence
-		# of any real RDMA NICs to simulate one for the NVMe-oF tests.
-		if hash rxe_cfg 2> /dev/null; then
-			echo "rxe_cfg is already installed. skipping"
-		else
-			if [ -d librxe-dev ]; then
-				echo "librxe-dev source already present, not cloning"
-			else
-				git clone "${GIT_REPO_LIBRXE}"
-			fi
-
-			./librxe-dev/configure --libdir=/usr/lib64/ --prefix=
-			make -C librxe-dev -j${jobs}
-			sudo make -C librxe-dev install
-		fi
 	fi
 }
 
@@ -422,8 +399,6 @@ GIT_VERSION=2.25.1
 export GIT_REPO_SPDK
 : ${GIT_REPO_DPDK=https://github.com/spdk/dpdk.git}
 export GIT_REPO_DPDK
-: ${GIT_REPO_LIBRXE=https://github.com/SoftRoCE/librxe-dev.git}
-export GIT_REPO_LIBRXE
 : ${GIT_REPO_ROCKSDB=https://review.spdk.io/spdk/rocksdb}
 export GIT_REPO_ROCKSDB
 : ${GIT_REPO_FIO=http://git.kernel.dk/fio.git}
@@ -612,8 +587,6 @@ if $INSTALL; then
 			echo "Package rdma-core is avaliable at Ubuntu 18 [universe] repositorium" >&2
 			sudo apt-get install -y rdmacm-utils
 			sudo apt-get install -y ibverbs-utils
-		else
-			LIBRXE_INSTALL=false
 		fi
 		if ! sudo apt-get install -y libpmempool1; then
 			echo "Package libpmempool1 is available at Ubuntu 18 [universe] repositorium" >&2
@@ -742,11 +715,6 @@ git -C spdk_repo/spdk submodule update --init --recursive
 sudo mkdir -p /usr/src
 
 if [ $OSID != 'freebsd' ]; then
-	if [ $LIBRXE_INSTALL = true ]; then
-		#Ubuntu18 integrates librxe to rdma-core, libibverbs-dev no longer ships infiniband/driver.h.
-		#Don't compile librxe on ubuntu18 or later version, install package rdma-core instead.
-		install_rxe_cfg &
-	fi
 	install_libiscsi &
 	install_vpp &
 	install_nvmecli &
