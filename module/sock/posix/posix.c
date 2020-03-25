@@ -209,7 +209,7 @@ spdk_posix_sock_alloc_pipe(struct spdk_posix_sock *sock, int sz)
 	}
 
 	/* Round up to next 64 byte multiple */
-	new_buf = calloc(((sz + 1) >> 6) << 6, sizeof(uint8_t));
+	new_buf = calloc(SPDK_ALIGN_CEIL(sz + 1, 64), sizeof(uint8_t));
 	if (!new_buf) {
 		SPDK_ERRLOG("socket recv buf allocation failed\n");
 		return -ENOMEM;
