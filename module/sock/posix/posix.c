@@ -1196,7 +1196,7 @@ spdk_posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_eve
 
 		TAILQ_REMOVE(&group->pending_recv, psock, link);
 
-		if (psock->recv_pipe != NULL || spdk_pipe_reader_bytes_available(psock->recv_pipe) == 0) {
+		if (psock->recv_pipe == NULL || spdk_pipe_reader_bytes_available(psock->recv_pipe) == 0) {
 			psock->pending_recv = false;
 		} else {
 			TAILQ_INSERT_TAIL(&group->pending_recv, psock, link);
