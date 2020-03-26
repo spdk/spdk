@@ -1754,19 +1754,18 @@ vbdev_reduce_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno
 	}
 	meta_ctx->base_desc = NULL;
 
-	if (reduce_errno != 0 && reduce_errno != -ENOENT) {
-		/* This error means it is not a compress disk. */
-		if (reduce_errno != -EILSEQ) {
-			SPDK_ERRLOG("for vol %s, error %u\n",
-				    spdk_bdev_get_name(meta_ctx->base_bdev), reduce_errno);
+	if (reduce_errno == 0) {
+		if (_set_pmd(meta_ctx) == false) {
+			SPDK_ERRLOG("could not find required pmd\n");
+			goto err;
 		}
-		goto err;
-	}
 
-	/* this status means that the vol could not be loaded because
-	 * the pmem file can't be found.
-	 */
-	if (reduce_errno == -ENOENT) {
+		/* Update information following volume load. */
+		meta_ctx->vol = vol;
+		memcpy(&meta_ctx->params, spdk_reduce_vol_get_params(vol),
+		       sizeof(struct spdk_reduce_vol_params));
+		vbdev_compress_claim(meta_ctx);
+	} else if (reduce_errno == -ENOENT) {
 		if (_set_compbdev_name(meta_ctx)) {
 			goto err;
 		}
@@ -1798,22 +1797,17 @@ vbdev_reduce_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno
 
 		meta_ctx->orphaned = true;
 		TAILQ_INSERT_TAIL(&g_vbdev_comp, meta_ctx, link);
-		spdk_bdev_module_examine_done(&compress_if);
-		return;
-	}
-
-	if (_set_pmd(meta_ctx) == false) {
-		SPDK_ERRLOG("could not find required pmd\n");
+	} else {
+		if (reduce_errno != -EILSEQ) {
+			SPDK_ERRLOG("for vol %s, error %u\n",
+				    spdk_bdev_get_name(meta_ctx->base_bdev), reduce_errno);
+		}
 		goto err;
 	}
 
-	/* Update information following volume load. */
-	meta_ctx->vol = vol;
-	memcpy(&meta_ctx->params, spdk_reduce_vol_get_params(vol),
-	       sizeof(struct spdk_reduce_vol_params));
-	vbdev_compress_claim(meta_ctx);
 	spdk_bdev_module_examine_done(&compress_if);
 	return;
+
 err:
 	free(meta_ctx);
 	spdk_bdev_module_examine_done(&compress_if);
