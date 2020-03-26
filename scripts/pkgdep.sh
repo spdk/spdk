@@ -81,7 +81,7 @@ if [ -s /etc/redhat-release ]; then
 	if echo "$ID $VERSION_ID" | grep -E -q 'centos 8'; then
 		yum install -y python36
 		#Create hard link to use in SPDK as python
-		ln /etc/alternatives/python3 /usr/bin/python
+		ln /etc/alternatives/python3 /usr/bin/python || true
 	else
 		yum install -y python
 	fi
