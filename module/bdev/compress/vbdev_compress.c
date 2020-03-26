@@ -106,6 +106,13 @@ struct vbdev_comp_op {
 	TAILQ_ENTRY(vbdev_comp_op)	link;
 };
 
+struct vbdev_comp_delete_ctx {
+	spdk_delete_compress_complete	cb_fn;
+	void				*cb_arg;
+	int				cb_rc;
+	struct spdk_thread		*orig_thread;
+};
+
 /* List of virtual bdevs and associated info for each. */
 struct vbdev_compress {
 	struct spdk_bdev		*base_bdev;	/* the thing we're attaching to */
@@ -123,8 +130,7 @@ struct vbdev_compress {
 	struct spdk_reduce_vol_params	params;		/* params for the reduce volume */
 	struct spdk_reduce_backing_dev	backing_dev;	/* backing device info for the reduce volume */
 	struct spdk_reduce_vol		*vol;		/* the reduce volume */
-	spdk_delete_compress_complete	delete_cb_fn;
-	void				*delete_cb_arg;
+	struct vbdev_comp_delete_ctx	*delete_ctx;
 	bool				orphaned;	/* base bdev claimed but comp_bdev not registered */
 	TAILQ_HEAD(, vbdev_comp_op)	queued_comp_ops;
 	TAILQ_ENTRY(vbdev_compress)	link;
@@ -184,6 +190,7 @@ static void vbdev_compress_queue_io(struct spdk_bdev_io *bdev_io);
 struct vbdev_compress *_prepare_for_load_init(struct spdk_bdev *bdev);
 static void vbdev_compress_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
 static void comp_bdev_ch_destroy_cb(void *io_device, void *ctx_buf);
+static void vbdev_compress_delete_done(void *cb_arg, int bdeverrno);
 
 /* Dummy function used by DPDK to free ext attached buffers
  * to mbufs, we free them ourselves but this callback has to
@@ -938,7 +945,7 @@ vbdev_compress_destruct_cb(void *cb_arg, int reduce_errno)
 		if (comp_bdev->orphaned == false) {
 			spdk_io_device_unregister(comp_bdev, _device_unregister_cb);
 		} else {
-			comp_bdev->delete_cb_fn(comp_bdev->delete_cb_arg, 0);
+			vbdev_compress_delete_done(comp_bdev->delete_ctx, 0);
 			_device_unregister_cb(comp_bdev);
 		}
 	}
@@ -956,8 +963,8 @@ _reduce_destroy_cb(void *ctx, int reduce_errno)
 	comp_bdev->vol = NULL;
 	spdk_put_io_channel(comp_bdev->base_ch);
 	if (comp_bdev->orphaned == false) {
-		spdk_bdev_unregister(&comp_bdev->comp_bdev, comp_bdev->delete_cb_fn,
-				     comp_bdev->delete_cb_arg);
+		spdk_bdev_unregister(&comp_bdev->comp_bdev, vbdev_compress_delete_done,
+				     comp_bdev->delete_ctx);
 	} else {
 		vbdev_compress_destruct_cb((void *)comp_bdev, 0);
 	}
@@ -1638,10 +1645,35 @@ error_bdev_name:
 	spdk_bdev_module_examine_done(&compress_if);
 }
 
+static void
+_vbdev_compress_delete_done(void *_ctx)
+{
+	struct vbdev_comp_delete_ctx *ctx = _ctx;
+
+	ctx->cb_fn(ctx->cb_arg, ctx->cb_rc);
+
+	free(ctx);
+}
+
+static void
+vbdev_compress_delete_done(void *cb_arg, int bdeverrno)
+{
+	struct vbdev_comp_delete_ctx *ctx = cb_arg;
+
+	ctx->cb_rc = bdeverrno;
+
+	if (ctx->orig_thread != spdk_get_thread()) {
+		spdk_thread_send_msg(ctx->orig_thread, _vbdev_compress_delete_done, ctx);
+	} else {
+		_vbdev_compress_delete_done(ctx);
+	}
+}
+
 void
 bdev_compress_delete(const char *name, spdk_delete_compress_complete cb_fn, void *cb_arg)
 {
 	struct vbdev_compress *comp_bdev = NULL;
+	struct vbdev_comp_delete_ctx *ctx;
 
 	TAILQ_FOREACH(comp_bdev, &g_vbdev_comp, link) {
 		if (strcmp(name, comp_bdev->comp_bdev.name) == 0) {
@@ -1654,9 +1686,19 @@ bdev_compress_delete(const char *name, spdk_delete_compress_complete cb_fn, void
 		return;
 	}
 
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("Failed to allocate delete context\n");
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
 	/* Save these for after the vol is destroyed. */
-	comp_bdev->delete_cb_fn = cb_fn;
-	comp_bdev->delete_cb_arg = cb_arg;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+	ctx->orig_thread = spdk_get_thread();
+
+	comp_bdev->delete_ctx = ctx;
 
 	/* Tell reducelib that we're done with this volume. */
 	if (comp_bdev->orphaned == false) {
