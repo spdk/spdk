@@ -210,11 +210,12 @@ int nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 }
 
 static struct spdk_nvme_cpl fake_cpl = {};
+static enum spdk_nvme_generic_command_status_code set_status_code = SPDK_NVME_SC_SUCCESS;
 
 static void
-fake_cpl_success(spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+fake_cpl_sc(spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
-	fake_cpl.status.sc = SPDK_NVME_SC_SUCCESS;
+	fake_cpl.status.sc = set_status_code;
 	cb_fn(cb_arg, &fake_cpl);
 }
 
@@ -241,7 +242,7 @@ spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page
 				 uint32_t nsid, void *payload, uint32_t payload_size,
 				 uint64_t offset, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
-	fake_cpl_success(cb_fn, cb_arg);
+	fake_cpl_sc(cb_fn, cb_arg);
 	return 0;
 }
 
@@ -325,7 +326,7 @@ nvme_ctrlr_cmd_set_async_event_config(struct spdk_nvme_ctrlr *ctrlr,
 				      union spdk_nvme_feat_async_event_configuration config, spdk_nvme_cmd_cb cb_fn,
 				      void *cb_arg)
 {
-	fake_cpl_success(cb_fn, cb_arg);
+	fake_cpl_sc(cb_fn, cb_arg);
 	return 0;
 }
 
@@ -351,7 +352,8 @@ nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr, uint8_t cns, uint16_t cnt
 		}
 
 	}
-	fake_cpl_success(cb_fn, cb_arg);
+
+	fake_cpl_sc(cb_fn, cb_arg);
 	return 0;
 }
 
@@ -359,7 +361,7 @@ int
 nvme_ctrlr_cmd_set_num_queues(struct spdk_nvme_ctrlr *ctrlr,
 			      uint32_t num_queues, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
-	fake_cpl_success(cb_fn, cb_arg);
+	fake_cpl_sc(cb_fn, cb_arg);
 	return 0;
 }
 
@@ -1763,7 +1765,7 @@ int
 nvme_ctrlr_cmd_doorbell_buffer_config(struct spdk_nvme_ctrlr *ctrlr, uint64_t prp1, uint64_t prp2,
 				      spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
-	fake_cpl_success(cb_fn, cb_arg);
+	fake_cpl_sc(cb_fn, cb_arg);
 	return 0;
 }
 
@@ -1856,25 +1858,10 @@ test_nvme_ctrlr_test_active_ns_error_case(void)
 	ctrlr.vs.bits.ter = 0;
 	ctrlr.num_ns = 2;
 
-	/* completion with error, status is freed by nvme_ctrlr_identify_active_ns */
-	set_status_cpl = 1;
+	set_status_code = SPDK_NVME_SC_INVALID_FIELD;
 	rc = nvme_ctrlr_identify_active_ns(&ctrlr);
 	CU_ASSERT(rc == -ENXIO);
-	set_status_cpl = 0;
-
-	/* spdk_nvme_qpair_process_completions returns an error, status is not freed */
-	g_wait_for_completion_return_val = -1;
-	rc = nvme_ctrlr_identify_active_ns(&ctrlr);
-	CU_ASSERT(rc == -ENXIO);
-	CU_ASSERT(g_failed_status != NULL);
-	CU_ASSERT(g_failed_status->timed_out == true);
-	/* status should be freed by callback, which is not triggered in test env.
-	   Store status to global variable and free it manually.
-	   If nvme_ctrlr_identify_active_ns changes its behaviour and frees the status
-	   itself, we'll get a double free here.. */
-	free(g_failed_status);
-	g_failed_status = NULL;
-	g_wait_for_completion_return_val = 0;
+	set_status_code = SPDK_NVME_SC_SUCCESS;
 }
 
 static void
