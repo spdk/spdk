@@ -2071,9 +2071,6 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "lvs_load", lvs_load) == NULL ||
 		CU_add_test(suite, "lvols_load", lvols_load) == NULL ||
 		CU_add_test(suite, "lvol_open", lvol_open) == NULL ||
-		CU_add_test(suite, "lvol_load", lvs_load) == NULL ||
-		CU_add_test(suite, "lvs_load", lvols_load) == NULL ||
-		CU_add_test(suite, "lvol_open", lvol_open) == NULL ||
 		CU_add_test(suite, "lvol_snapshot", lvol_snapshot) == NULL ||
 		CU_add_test(suite, "lvol_snapshot_fail", lvol_snapshot_fail) == NULL ||
 		CU_add_test(suite, "lvol_clone", lvol_clone) == NULL ||
