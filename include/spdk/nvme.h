@@ -2276,7 +2276,8 @@ typedef void (*spdk_nvme_req_reset_sgl_cb)(void *cb_arg, uint32_t offset);
  * The described segment must be physically contiguous.
  *
  * \param cb_arg Argument passed to readv/writev.
- * \param address Virtual address of this segment.
+ * \param address Virtual address of this segment, a value of UINT64_MAX
+ * means the segment should be described via Bit Bucket SGL.
  * \param length Length of this physical segment.
  */
 typedef int (*spdk_nvme_req_next_sge_cb)(void *cb_arg, void **address, uint32_t *length);

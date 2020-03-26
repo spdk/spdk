@@ -2012,6 +2012,37 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 			return -EFAULT;
 		}
 
+		/* Bit Bucket SGL descriptor */
+		if ((uint64_t)virt_addr == UINT64_MAX) {
+			/* TODO: enable WRITE and COMPARE when necessary */
+			if (req->cmd.opc != SPDK_NVME_OPC_READ) {
+				SPDK_ERRLOG("Only READ command can be supported\n");
+				goto exit;
+			}
+			if (nseg >= NVME_MAX_SGL_DESCRIPTORS) {
+				SPDK_ERRLOG("Too many SGL entries\n");
+				goto exit;
+			}
+
+			sgl->unkeyed.type = SPDK_NVME_SGL_TYPE_BIT_BUCKET;
+			/* If the SGL describes a destination data buffer, the length of data
+			 * buffer shall be discarded by controller, and the length is included
+			 * in Number of Logical Blocks (NLB) parameter. Otherwise, the length
+			 * is not included in the NLB parameter.
+			 */
+			remaining_user_sge_len = spdk_min(remaining_user_sge_len, remaining_transfer_len);
+			remaining_transfer_len -= remaining_user_sge_len;
+
+			sgl->unkeyed.length = remaining_user_sge_len;
+			sgl->address = 0;
+			sgl->unkeyed.subtype = 0;
+
+			sgl++;
+			nseg++;
+
+			continue;
+		}
+
 		remaining_user_sge_len = spdk_min(remaining_user_sge_len, remaining_transfer_len);
 		remaining_transfer_len -= remaining_user_sge_len;
 		while (remaining_user_sge_len > 0) {
