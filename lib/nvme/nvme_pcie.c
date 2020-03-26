@@ -2149,7 +2149,7 @@ static build_req_fn const g_nvme_pcie_build_req_table[][2] = {
 
 static int
 nvme_pcie_qpair_build_metadata(struct spdk_nvme_qpair *qpair, struct nvme_tracker *tr,
-			       bool dword_aligned)
+			       bool sgl_supported, bool dword_aligned)
 {
 	void *md_payload;
 	struct nvme_request *req = tr->req;
@@ -2160,9 +2160,23 @@ nvme_pcie_qpair_build_metadata(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 			SPDK_ERRLOG("virt_addr %p not dword aligned\n", md_payload);
 			goto exit;
 		}
-		tr->req->cmd.mptr = spdk_vtophys(md_payload, NULL);
-		if (tr->req->cmd.mptr == SPDK_VTOPHYS_ERROR) {
-			goto exit;
+
+		if (sgl_supported && dword_aligned) {
+			assert(req->cmd.psdt == SPDK_NVME_PSDT_SGL_MPTR_CONTIG);
+			req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_SGL;
+			tr->meta_sgl.address = spdk_vtophys(md_payload, NULL);
+			if (tr->meta_sgl.address == SPDK_VTOPHYS_ERROR) {
+				goto exit;
+			}
+			tr->meta_sgl.unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+			tr->meta_sgl.unkeyed.length = req->md_size;
+			tr->meta_sgl.unkeyed.subtype = 0;
+			req->cmd.mptr = tr->prp_sgl_bus_addr - sizeof(struct spdk_nvme_sgl_descriptor);
+		} else {
+			req->cmd.mptr = spdk_vtophys(md_payload, NULL);
+			if (req->cmd.mptr == SPDK_VTOPHYS_ERROR) {
+				goto exit;
+			}
 		}
 	}
 
@@ -2219,7 +2233,7 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 			goto exit;
 		}
 
-		rc = nvme_pcie_qpair_build_metadata(qpair, tr, dword_aligned);
+		rc = nvme_pcie_qpair_build_metadata(qpair, tr, sgl_supported, dword_aligned);
 		if (rc < 0) {
 			goto exit;
 		}
