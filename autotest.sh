@@ -158,6 +158,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	run_test "alias_rpc" test/json_config/alias_rpc/alias_rpc.sh
 	run_test "spdkcli_tcp" test/spdkcli/tcp.sh
         run_test "dpdk_mem_utility" test/dpdk_memory_utility/test_dpdk_mem_info.sh
+	run_test "event" test/event/event.sh
 
 	if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
 		run_test "blockdev_general" test/bdev/blockdev.sh
@@ -166,10 +167,6 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 
 	if [ $SPDK_TEST_JSON -eq 1 ]; then
 		run_test "test_converter" test/config_converter/test_converter.sh
-	fi
-
-	if [ $SPDK_TEST_EVENT -eq 1 ]; then
-		run_test "event" test/event/event.sh
 	fi
 
 	if [ $SPDK_TEST_NVME -eq 1 ]; then
