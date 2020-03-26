@@ -692,7 +692,6 @@ wait
 if [ ! -e ~/autorun-spdk.conf ]; then
 	cat > ~/autorun-spdk.conf << EOF
 # assign a value of 1 to all of the pertinent tests
-SPDK_BUILD_SHARED_OBJECT=1
 SPDK_RUN_VALGRIND=1
 SPDK_TEST_CRYPTO=1
 SPDK_RUN_FUNCTIONAL_TEST=1
