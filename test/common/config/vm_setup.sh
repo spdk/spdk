@@ -518,8 +518,13 @@ if $INSTALL; then
         bc \
         kernel-modules-extra \
         systemd-devel \
-        python3 \
-        nbd
+        python3
+
+        sudo yum install -y nbd || {
+            wget -O nbd.rpm https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/n/nbd-3.14-2.el7.x86_64.rpm
+            sudo yum install -y nbd.rpm
+        }
+
     elif [ $PACKAGEMNG == 'dnf' ]; then
         if echo $CONF | grep -q tsocks; then
             # currently, tsocks package is retired in fedora 31, so don't exit in case
