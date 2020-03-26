@@ -268,19 +268,23 @@ struct spdk_opal_header {
 	struct spdk_opal_data_subpacket sub_packet;
 };
 
+struct opal_session {
+	uint32_t hsn;
+	uint32_t tsn;
+	size_t cmd_pos;
+	uint8_t cmd[IO_BUFFER_LENGTH];
+	uint8_t resp[IO_BUFFER_LENGTH];
+	struct spdk_opal_resp_parsed parsed_resp;
+};
+
 struct spdk_opal_dev {
 	bool supported;
 	struct spdk_nvme_ctrlr *ctrlr;
 
 	uint16_t comid;
-	uint32_t hsn;
-	uint32_t tsn;
 
-	size_t cmd_pos;
-	uint8_t cmd[IO_BUFFER_LENGTH];
-	uint8_t resp[IO_BUFFER_LENGTH];
-
-	struct spdk_opal_resp_parsed parsed_resp;
+	/* Only one session can be supported */
+	struct opal_session sess;
 
 	struct spdk_opal_d0_features_info feat_info;
 
