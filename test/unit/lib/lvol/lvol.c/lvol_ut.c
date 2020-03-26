@@ -2045,47 +2045,37 @@ int main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
-	}
+	CU_set_error_action(CUEA_ABORT);
+	CU_initialize_registry();
 
 	suite = CU_add_suite("lvol", NULL, NULL);
-	if (suite == NULL) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
 
-	if (
-		CU_add_test(suite, "lvs_init_unload_success", lvs_init_unload_success) == NULL ||
-		CU_add_test(suite, "lvs_init_destroy_success", lvs_init_destroy_success) == NULL ||
-		CU_add_test(suite, "lvs_init_opts_success", lvs_init_opts_success) == NULL ||
-		CU_add_test(suite, "lvs_unload_lvs_is_null_fail", lvs_unload_lvs_is_null_fail) == NULL ||
-		CU_add_test(suite, "lvs_names", lvs_names) == NULL ||
-		CU_add_test(suite, "lvol_create_destroy_success", lvol_create_destroy_success) == NULL ||
-		CU_add_test(suite, "lvol_create_fail", lvol_create_fail) == NULL ||
-		CU_add_test(suite, "lvol_destroy_fail", lvol_destroy_fail) == NULL ||
-		CU_add_test(suite, "lvol_close_fail", lvol_close_fail) == NULL ||
-		CU_add_test(suite, "lvol_close_success", lvol_close_success) == NULL ||
-		CU_add_test(suite, "lvol_resize", lvol_resize) == NULL ||
-		CU_add_test(suite, "lvol_set_read_only", lvol_set_read_only) == NULL ||
-		CU_add_test(suite, "lvs_load", lvs_load) == NULL ||
-		CU_add_test(suite, "lvols_load", lvols_load) == NULL ||
-		CU_add_test(suite, "lvol_open", lvol_open) == NULL ||
-		CU_add_test(suite, "lvol_snapshot", lvol_snapshot) == NULL ||
-		CU_add_test(suite, "lvol_snapshot_fail", lvol_snapshot_fail) == NULL ||
-		CU_add_test(suite, "lvol_clone", lvol_clone) == NULL ||
-		CU_add_test(suite, "lvol_clone_fail", lvol_clone_fail) == NULL ||
-		CU_add_test(suite, "lvol_refcnt", lvol_refcnt) == NULL ||
-		CU_add_test(suite, "lvol_names", lvol_names) == NULL ||
-		CU_add_test(suite, "lvol_create_thin_provisioned", lvol_create_thin_provisioned) == NULL ||
-		CU_add_test(suite, "lvol_rename", lvol_rename) == NULL ||
-		CU_add_test(suite, "lvs_rename", lvs_rename) == NULL ||
-		CU_add_test(suite, "lvol_inflate", lvol_inflate) == NULL ||
-		CU_add_test(suite, "lvol_decouple_parent", lvol_decouple_parent) == NULL
-	) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+	CU_ADD_TEST(suite, lvs_init_unload_success);
+	CU_ADD_TEST(suite, lvs_init_destroy_success);
+	CU_ADD_TEST(suite, lvs_init_opts_success);
+	CU_ADD_TEST(suite, lvs_unload_lvs_is_null_fail);
+	CU_ADD_TEST(suite, lvs_names);
+	CU_ADD_TEST(suite, lvol_create_destroy_success);
+	CU_ADD_TEST(suite, lvol_create_fail);
+	CU_ADD_TEST(suite, lvol_destroy_fail);
+	CU_ADD_TEST(suite, lvol_close_fail);
+	CU_ADD_TEST(suite, lvol_close_success);
+	CU_ADD_TEST(suite, lvol_resize);
+	CU_ADD_TEST(suite, lvol_set_read_only);
+	CU_ADD_TEST(suite, lvs_load);
+	CU_ADD_TEST(suite, lvols_load);
+	CU_ADD_TEST(suite, lvol_open);
+	CU_ADD_TEST(suite, lvol_snapshot);
+	CU_ADD_TEST(suite, lvol_snapshot_fail);
+	CU_ADD_TEST(suite, lvol_clone);
+	CU_ADD_TEST(suite, lvol_clone_fail);
+	CU_ADD_TEST(suite, lvol_refcnt);
+	CU_ADD_TEST(suite, lvol_names);
+	CU_ADD_TEST(suite, lvol_create_thin_provisioned);
+	CU_ADD_TEST(suite, lvol_rename);
+	CU_ADD_TEST(suite, lvs_rename);
+	CU_ADD_TEST(suite, lvol_inflate);
+	CU_ADD_TEST(suite, lvol_decouple_parent);
 
 	allocate_threads(1);
 	set_thread(0);
