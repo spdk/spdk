@@ -69,7 +69,6 @@ struct spdk_blob {
 	bool			thin_provisioned;
 };
 
-int g_lvolerrno;
 int g_lvserrno;
 int g_close_super_status;
 int g_resize_rc;
@@ -486,9 +485,9 @@ lvol_store_op_with_handle_complete(void *cb_arg, struct spdk_lvol_store *lvol_st
 }
 
 static void
-lvol_op_complete(void *cb_arg, int lvolerrno)
+lvol_op_complete(void *cb_arg, int lvserrno)
 {
-	g_lvolerrno = lvolerrno;
+	g_lvserrno = lvserrno;
 }
 
 static void
@@ -505,15 +504,15 @@ lvol_store_op_complete(void *cb_arg, int lvserrno)
 }
 
 static void
-close_cb(void *cb_arg, int lvolerrno)
+close_cb(void *cb_arg, int lvserrno)
 {
-	g_lvserrno = lvolerrno;
+	g_lvserrno = lvserrno;
 }
 
 static void
-destroy_cb(void *cb_arg, int lvolerrno)
+destroy_cb(void *cb_arg, int lvserrno)
 {
-	g_lvserrno = lvolerrno;
+	g_lvserrno = lvserrno;
 }
 
 static void
@@ -1040,17 +1039,17 @@ lvol_set_read_only(void)
 
 	spdk_lvol_create(g_lvol_store, "lvol", 10, false, LVOL_CLEAR_WITH_DEFAULT,
 			 lvol_op_with_handle_complete, NULL);
-	CU_ASSERT(g_lvolerrno == 0);
+	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 	lvol = g_lvol;
 
 	/* Set lvol as read only */
 	spdk_lvol_set_read_only(lvol, lvol_op_complete, NULL);
-	CU_ASSERT(g_lvolerrno == 0);
+	CU_ASSERT(g_lvserrno == 0);
 
 	/* Create lvol clone from read only lvol */
 	spdk_lvol_create_clone(lvol, "clone", lvol_op_with_handle_complete, NULL);
-	CU_ASSERT(g_lvolerrno == 0);
+	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 	CU_ASSERT_STRING_EQUAL(g_lvol->name, "clone");
 	clone = g_lvol;
@@ -1770,12 +1769,12 @@ lvol_rename(void)
 
 	/* Trying to rename lvol with not existing name */
 	spdk_lvol_rename(lvol, "lvol_new", lvol_op_complete, NULL);
-	CU_ASSERT(g_lvolerrno == 0);
+	CU_ASSERT(g_lvserrno == 0);
 	CU_ASSERT_STRING_EQUAL(lvol->name, "lvol_new");
 
 	/* Trying to rename lvol with other lvol name */
 	spdk_lvol_rename(lvol2, "lvol_new", lvol_op_complete, NULL);
-	CU_ASSERT(g_lvolerrno == -EEXIST);
+	CU_ASSERT(g_lvserrno == -EEXIST);
 	CU_ASSERT_STRING_NOT_EQUAL(lvol2->name, "lvol_new");
 
 	spdk_lvol_close(lvol, close_cb, NULL);
@@ -1901,20 +1900,20 @@ static void lvol_refcnt(void)
 
 	/* Trying to destroy lvol while its open should fail */
 	spdk_lvol_destroy(lvol, lvol_op_complete, NULL);
-	CU_ASSERT(g_lvolerrno != 0);
+	CU_ASSERT(g_lvserrno != 0);
 
 	spdk_lvol_close(lvol, lvol_op_complete, NULL);
 	CU_ASSERT(lvol->ref_count == 1);
-	CU_ASSERT(g_lvolerrno == 0);
+	CU_ASSERT(g_lvserrno == 0);
 
 	spdk_lvol_close(lvol, lvol_op_complete, NULL);
 	CU_ASSERT(lvol->ref_count == 0);
-	CU_ASSERT(g_lvolerrno == 0);
+	CU_ASSERT(g_lvserrno == 0);
 
 	/* Try to close already closed lvol */
 	spdk_lvol_close(lvol, lvol_op_complete, NULL);
 	CU_ASSERT(lvol->ref_count == 0);
-	CU_ASSERT(g_lvolerrno != 0);
+	CU_ASSERT(g_lvserrno != 0);
 
 	g_lvserrno = -1;
 	rc = spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, NULL);
@@ -2005,11 +2004,11 @@ lvol_inflate(void)
 
 	g_inflate_rc = -1;
 	spdk_lvol_inflate(g_lvol, lvol_op_complete, NULL);
-	CU_ASSERT(g_lvolerrno != 0);
+	CU_ASSERT(g_lvserrno != 0);
 
 	g_inflate_rc = 0;
 	spdk_lvol_inflate(g_lvol, lvol_op_complete, NULL);
-	CU_ASSERT(g_lvolerrno == 0);
+	CU_ASSERT(g_lvserrno == 0);
 
 	spdk_lvol_close(g_lvol, close_cb, NULL);
 	CU_ASSERT(g_lvserrno == 0);
@@ -2055,11 +2054,11 @@ lvol_decouple_parent(void)
 
 	g_inflate_rc = -1;
 	spdk_lvol_decouple_parent(g_lvol, lvol_op_complete, NULL);
-	CU_ASSERT(g_lvolerrno != 0);
+	CU_ASSERT(g_lvserrno != 0);
 
 	g_inflate_rc = 0;
 	spdk_lvol_decouple_parent(g_lvol, lvol_op_complete, NULL);
-	CU_ASSERT(g_lvolerrno == 0);
+	CU_ASSERT(g_lvserrno == 0);
 
 	spdk_lvol_close(g_lvol, close_cb, NULL);
 	CU_ASSERT(g_lvserrno == 0);
