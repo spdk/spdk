@@ -41,6 +41,7 @@
 
 struct nvme_active_ns_ctx;
 
+static void nvme_ctrlr_destruct_namespaces(struct spdk_nvme_ctrlr *ctrlr);
 static int nvme_ctrlr_construct_and_submit_aer(struct spdk_nvme_ctrlr *ctrlr,
 		struct nvme_async_event_request *aer);
 static void nvme_ctrlr_identify_active_ns_async(struct nvme_active_ns_ctx *ctx);
@@ -958,6 +959,8 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "construct namespaces";
 	case NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS:
 		return "identify active ns";
+	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_ACTIVE_NS:
+		return "wait for identify active ns";
 	case NVME_CTRLR_STATE_IDENTIFY_NS:
 		return "identify ns";
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS:
@@ -1344,18 +1347,21 @@ enum nvme_active_ns_state {
 	NVME_ACTIVE_NS_STATE_ERROR
 };
 
+typedef void (*nvme_active_ns_ctx_deleter)(struct nvme_active_ns_ctx *);
+
 struct nvme_active_ns_ctx {
 	struct spdk_nvme_ctrlr *ctrlr;
 	uint32_t page;
 	uint32_t num_pages;
 	uint32_t next_nsid;
 	uint32_t *new_ns_list;
+	nvme_active_ns_ctx_deleter deleter;
 
 	enum nvme_active_ns_state state;
 };
 
 static struct nvme_active_ns_ctx *
-nvme_active_ns_ctx_create(struct spdk_nvme_ctrlr *ctrlr)
+nvme_active_ns_ctx_create(struct spdk_nvme_ctrlr *ctrlr, nvme_active_ns_ctx_deleter deleter)
 {
 	struct nvme_active_ns_ctx *ctx;
 	uint32_t num_pages = 0;
@@ -1382,6 +1388,7 @@ nvme_active_ns_ctx_create(struct spdk_nvme_ctrlr *ctrlr)
 	ctx->num_pages = num_pages;
 	ctx->new_ns_list = new_ns_list;
 	ctx->ctrlr = ctrlr;
+	ctx->deleter = deleter;
 
 	return ctx;
 }
@@ -1408,16 +1415,22 @@ nvme_ctrlr_identify_active_ns_async_done(void *arg, const struct spdk_nvme_cpl *
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
 		ctx->state = NVME_ACTIVE_NS_STATE_ERROR;
-		return;
+		goto out;
 	}
 
 	ctx->next_nsid = ctx->new_ns_list[1024 * ctx->page + 1023];
 	if (ctx->next_nsid == 0 || ++ctx->page == ctx->num_pages) {
 		ctx->state = NVME_ACTIVE_NS_STATE_DONE;
-		return;
+		goto out;
 	}
 
 	nvme_ctrlr_identify_active_ns_async(ctx);
+	return;
+
+out:
+	if (ctx->deleter) {
+		ctx->deleter(ctx);
+	}
 }
 
 static void
@@ -1429,7 +1442,7 @@ nvme_ctrlr_identify_active_ns_async(struct nvme_active_ns_ctx *ctx)
 
 	if (ctrlr->num_ns == 0) {
 		ctx->state = NVME_ACTIVE_NS_STATE_DONE;
-		return;
+		goto out;
 	}
 
 	/*
@@ -1442,7 +1455,7 @@ nvme_ctrlr_identify_active_ns_async(struct nvme_active_ns_ctx *ctx)
 		}
 
 		ctx->state = NVME_ACTIVE_NS_STATE_DONE;
-		return;
+		goto out;
 	}
 
 	ctx->state = NVME_ACTIVE_NS_STATE_PROCESSING;
@@ -1451,7 +1464,49 @@ nvme_ctrlr_identify_active_ns_async(struct nvme_active_ns_ctx *ctx)
 				     nvme_ctrlr_identify_active_ns_async_done, ctx);
 	if (rc != 0) {
 		ctx->state = NVME_ACTIVE_NS_STATE_ERROR;
+		goto out;
 	}
+
+	return;
+
+out:
+	if (ctx->deleter) {
+		ctx->deleter(ctx);
+	}
+}
+
+static void
+_nvme_active_ns_ctx_deleter(struct nvme_active_ns_ctx *ctx)
+{
+	struct spdk_nvme_ctrlr *ctrlr = ctx->ctrlr;
+
+	if (ctx->state == NVME_ACTIVE_NS_STATE_ERROR) {
+		nvme_ctrlr_destruct_namespaces(ctrlr);
+		nvme_active_ns_ctx_destroy(ctx);
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+		return;
+	}
+
+	assert(ctx->state == NVME_ACTIVE_NS_STATE_DONE);
+	nvme_ctrlr_identify_active_ns_swap(ctrlr, &ctx->new_ns_list);
+	nvme_active_ns_ctx_destroy(ctx);
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_NS, ctrlr->opts.admin_timeout_ms);
+}
+
+static void
+_nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct nvme_active_ns_ctx *ctx;
+
+	ctx = nvme_active_ns_ctx_create(ctrlr, _nvme_active_ns_ctx_deleter);
+	if (!ctx) {
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+		return;
+	}
+
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_ACTIVE_NS,
+			     ctrlr->opts.admin_timeout_ms);
+	nvme_ctrlr_identify_active_ns_async(ctx);
 }
 
 int
@@ -1460,7 +1515,7 @@ nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 	struct nvme_active_ns_ctx *ctx;
 	int rc;
 
-	ctx = nvme_active_ns_ctx_create(ctrlr);
+	ctx = nvme_active_ns_ctx_create(ctrlr, NULL);
 	if (!ctx) {
 		return -ENOMEM;
 	}
@@ -2542,12 +2597,11 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		break;
 
 	case NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS:
-		rc = nvme_ctrlr_identify_active_ns(ctrlr);
-		if (rc < 0) {
-			nvme_ctrlr_destruct_namespaces(ctrlr);
-		}
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_NS,
-				     ctrlr->opts.admin_timeout_ms);
+		_nvme_ctrlr_identify_active_ns(ctrlr);
+		break;
+
+	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_ACTIVE_NS:
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 		break;
 
 	case NVME_CTRLR_STATE_IDENTIFY_NS:

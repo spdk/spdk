@@ -1790,7 +1790,7 @@ test_nvme_ctrlr_test_active_ns(void)
 {
 	uint32_t		nsid, minor;
 	size_t			ns_id_count;
-	struct spdk_nvme_ctrlr	ctrlr = {};
+	struct spdk_nvme_ctrlr	ctrlr = {.state = NVME_CTRLR_STATE_READY};
 
 	ctrlr.page_size = 0x1000;
 
@@ -1850,7 +1850,7 @@ static void
 test_nvme_ctrlr_test_active_ns_error_case(void)
 {
 	int rc;
-	struct spdk_nvme_ctrlr	ctrlr = {};
+	struct spdk_nvme_ctrlr	ctrlr = {.state = NVME_CTRLR_STATE_READY};
 
 	ctrlr.page_size = 0x1000;
 	ctrlr.vs.bits.mjr = 1;

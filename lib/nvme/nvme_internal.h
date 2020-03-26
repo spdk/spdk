@@ -525,6 +525,11 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS,
 
 	/**
+	 * Waiting for the Identify Active Namespace commands to be completed.
+	 */
+	NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_ACTIVE_NS,
+
+	/**
 	 * Get Identify Namespace Data structure for each NS.
 	 */
 	NVME_CTRLR_STATE_IDENTIFY_NS,
