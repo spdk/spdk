@@ -175,9 +175,9 @@ function set_default() {
 	echo ""
 }
 
-set_default CC $CC
-set_default CXX $CXX
-set_default LD $LD
+set_default CC "$CC"
+set_default CXX "$CXX"
+set_default LD "$LD"
 
 echo "CCAR=$CCAR"
 echo "CC_TYPE=$CC_TYPE"
