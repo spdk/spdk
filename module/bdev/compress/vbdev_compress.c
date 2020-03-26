@@ -971,6 +971,22 @@ _reduce_destroy_cb(void *ctx, int reduce_errno)
 
 }
 
+static void
+_delete_vol_unload_cb(void *ctx)
+{
+	struct vbdev_compress *comp_bdev = ctx;
+
+	/* FIXME: Assert if these conditions are not satisified for now. */
+	assert(!comp_bdev->reduce_thread ||
+	       comp_bdev->reduce_thread == spdk_get_thread());
+
+	/* reducelib needs a channel to comm with the backing device */
+	comp_bdev->base_ch = spdk_bdev_get_io_channel(comp_bdev->base_desc);
+
+	/* Clean the device before we free our resources. */
+	spdk_reduce_vol_destroy(&comp_bdev->backing_dev, _reduce_destroy_cb, comp_bdev);
+}
+
 /* Called by reduceLib after performing unload vol actions */
 static void
 delete_vol_unload_cb(void *cb_arg, int reduce_errno)
@@ -979,12 +995,19 @@ delete_vol_unload_cb(void *cb_arg, int reduce_errno)
 
 	if (reduce_errno) {
 		SPDK_ERRLOG("number %d\n", reduce_errno);
-	} else {
-		/* reducelib needs a channel to comm with the backing device */
-		comp_bdev->base_ch = spdk_bdev_get_io_channel(comp_bdev->base_desc);
+		/* FIXME: callback should be executed. */
+		return;
+	}
 
-		/* Clean the device before we free our resources. */
-		spdk_reduce_vol_destroy(&comp_bdev->backing_dev, _reduce_destroy_cb, comp_bdev);
+	pthread_mutex_lock(&comp_bdev->reduce_lock);
+	if (comp_bdev->reduce_thread && comp_bdev->reduce_thread != spdk_get_thread()) {
+		spdk_thread_send_msg(comp_bdev->reduce_thread,
+				     _delete_vol_unload_cb, comp_bdev);
+		pthread_mutex_unlock(&comp_bdev->reduce_lock);
+	} else {
+		pthread_mutex_unlock(&comp_bdev->reduce_lock);
+
+		_delete_vol_unload_cb(comp_bdev);
 	}
 }
 
