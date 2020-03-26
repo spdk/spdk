@@ -57,6 +57,7 @@
 static bool g_spdk_env_initialized;
 static int g_spdk_enable_sgl = 0;
 static uint32_t g_spdk_sge_size = 4096;
+static uint32_t g_spdk_bit_bucket_data_len = 0;
 static uint32_t g_spdk_pract_flag;
 static uint32_t g_spdk_prchk_flags;
 static uint32_t g_spdk_md_per_io_size = 4096;
@@ -69,6 +70,7 @@ struct spdk_fio_options {
 	int	shm_id;
 	int	enable_sgl;
 	int	sge_size;
+	int	bit_bucket_data_len;
 	char	*hostnqn;
 	int	pi_act;
 	char	*pi_chk;
@@ -83,6 +85,9 @@ struct spdk_fio_request {
 	struct io_u		*io;
 	/** Offset in current iovec, fio only uses 1 vector */
 	uint32_t		iov_offset;
+
+	/** Amount of data used for Bit Bucket SGL */
+	uint32_t		bit_bucket_data_len;
 
 	/** Context for NVMe PI */
 	struct spdk_dif_ctx	dif_ctx;
@@ -413,6 +418,7 @@ static int spdk_fio_setup(struct thread_data *td)
 		opts.shm_id = fio_options->shm_id;
 		g_spdk_enable_sgl = fio_options->enable_sgl;
 		g_spdk_sge_size = fio_options->sge_size;
+		g_spdk_bit_bucket_data_len = fio_options->bit_bucket_data_len;
 		parse_pract_flag(fio_options->pi_act);
 		g_spdk_md_per_io_size = spdk_max(fio_options->md_per_io_size, 4096);
 		g_spdk_apptag = (uint16_t)fio_options->apptag;
@@ -748,6 +754,7 @@ spdk_nvme_io_reset_sgl(void *ref, uint32_t sgl_offset)
 	struct spdk_fio_request *fio_req = (struct spdk_fio_request *)ref;
 
 	fio_req->iov_offset = sgl_offset;
+	fio_req->bit_bucket_data_len = 0;
 }
 
 static int
@@ -756,6 +763,7 @@ spdk_nvme_io_next_sge(void *ref, void **address, uint32_t *length)
 	struct spdk_fio_request *fio_req = (struct spdk_fio_request *)ref;
 	struct io_u *io_u = fio_req->io;
 	uint32_t iov_len;
+	uint32_t bit_bucket_len;
 
 	*address = io_u->buf;
 
@@ -769,8 +777,19 @@ spdk_nvme_io_next_sge(void *ref, void **address, uint32_t *length)
 		iov_len = g_spdk_sge_size;
 	}
 
+	if (fio_req->bit_bucket_data_len < g_spdk_bit_bucket_data_len) {
+		assert(g_spdk_bit_bucket_data_len < io_u->xfer_buflen);
+		*address = (void *)UINT64_MAX;
+		bit_bucket_len = g_spdk_bit_bucket_data_len - fio_req->bit_bucket_data_len;
+		if (iov_len > bit_bucket_len) {
+			iov_len = bit_bucket_len;
+		}
+		fio_req->bit_bucket_data_len += iov_len;
+	}
+
 	fio_req->iov_offset += iov_len;
 	*length = iov_len;
+
 	return 0;
 }
 
@@ -1034,6 +1053,16 @@ static struct fio_option options[] = {
 		.off1		= offsetof(struct spdk_fio_options, sge_size),
 		.def		= "4096",
 		.help		= "SGL size in bytes for I/O Commands (default 4096)",
+		.category	= FIO_OPT_C_ENGINE,
+		.group		= FIO_OPT_G_INVALID,
+	},
+	{
+		.name		= "bit_bucket_data_len",
+		.lname		= "Amount of data used for Bit Bucket",
+		.type		= FIO_OPT_INT,
+		.off1		= offsetof(struct spdk_fio_options, bit_bucket_data_len),
+		.def		= "0",
+		.help		= "Bit Bucket Data Length for READ commands (disabled by default)",
 		.category	= FIO_OPT_C_ENGINE,
 		.group		= FIO_OPT_G_INVALID,
 	},
