@@ -1619,8 +1619,6 @@ vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 
 	pthread_mutex_init(&comp_bdev->reduce_lock, NULL);
 
-	TAILQ_INSERT_TAIL(&g_vbdev_comp, comp_bdev, link);
-
 	rc = spdk_bdev_open(comp_bdev->base_bdev, true, vbdev_compress_base_bdev_hotremove_cb,
 			    comp_bdev->base_bdev, &comp_bdev->base_desc);
 	if (rc) {
@@ -1648,6 +1646,8 @@ vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 		goto error_bdev_register;
 	}
 
+	TAILQ_INSERT_TAIL(&g_vbdev_comp, comp_bdev, link);
+
 	SPDK_NOTICELOG("registered io_device and virtual bdev for: %s\n", comp_bdev->comp_bdev.name);
 
 	return;
@@ -1655,15 +1655,12 @@ vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 error_bdev_register:
 	spdk_bdev_module_release_bdev(comp_bdev->base_bdev);
 error_claim:
-	TAILQ_REMOVE(&g_vbdev_comp, comp_bdev, link);
 	spdk_io_device_unregister(comp_bdev, NULL);
+	spdk_bdev_close(comp_bdev->base_desc);
 error_open:
 	free(comp_bdev->comp_bdev.name);
 error_bdev_name:
-	spdk_put_io_channel(comp_bdev->base_ch);
-	spdk_bdev_close(comp_bdev->base_desc);
 	free(comp_bdev);
-	spdk_bdev_module_examine_done(&compress_if);
 }
 
 static void
