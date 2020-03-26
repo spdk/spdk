@@ -24,7 +24,7 @@ VM_SETUP_PATH=$(readlink -f ${BASH_SOURCE%/*})
 
 UPGRADE=false
 INSTALL=false
-CONF="librxe,iscsi,rocksdb,fio,flamegraph,tsocks,qemu,vpp,libiscsi,nvmecli,qat,ocf"
+CONF="librxe,iscsi,rocksdb,fio,flamegraph,tsocks,qemu,vpp,libiscsi,nvmecli,qat"
 LIBRXE_INSTALL=true
 
 OSID=$(source /etc/os-release && echo $ID)
@@ -312,20 +312,6 @@ function install_libiscsi()
     fi
 }
 
-function install_ocf()
-{
-    local version="v18.12"
-    local targetdir="/usr/src/ocf"
-
-    if echo $CONF | grep -q ocf; then
-        if [ ! -d "$targetdir" ]; then
-            sudo -E git clone "${GIT_REPO_OCF}" "$targetdir" -b "$version"
-        else
-            echo "OCF already installed. Skipping"
-        fi
-    fi
-}
-
 function install_git() {
     sudo yum install -y zlib-devel curl-devel
     tar -xzof <(wget -qO- "$GIT_REPO_GIT")
@@ -416,7 +402,6 @@ GIT_VERSION=2.25.1
 : ${GIT_REPO_SPDK_NVME_CLI=https://github.com/spdk/nvme-cli}; export GIT_REPO_SPDK_NVME_CLI
 : ${GIT_REPO_INTEL_IPSEC_MB=https://github.com/spdk/intel-ipsec-mb.git}; export GIT_REPO_INTEL_IPSEC_MB
 : ${DRIVER_LOCATION_QAT=https://01.org/sites/default/files/downloads//qat1.7.l.4.9.0-00008.tar.gz}; export DRIVER_LOCATION_QAT
-: ${GIT_REPO_OCF=https://github.com/Open-CAS/ocf}; export GIT_REPO_OCF
 : ${GIT_REPO_GIT=https://github.com/git/git/archive/v${GIT_VERSION}.tar.gz}; export GIT_REPO_GIT
 
 jobs=$(($(nproc)*2))
@@ -699,7 +684,6 @@ install_vpp&
 install_nvmecli&
 install_libiscsi&
 install_qat&
-install_ocf&
 
 wait
 # create autorun-spdk.conf in home folder. This is sourced by the autotest_common.sh file.
@@ -727,7 +711,6 @@ SPDK_TEST_BLOBFS=1
 SPDK_TEST_PMDK=1
 SPDK_TEST_LVOL=1
 SPDK_TEST_JSON=1
-SPDK_TEST_OCF=1
 SPDK_RUN_ASAN=1
 SPDK_RUN_UBSAN=1
 # doesn't work on vm
