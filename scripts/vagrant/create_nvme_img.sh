@@ -45,14 +45,14 @@ if [ ! "${SYSTEM}" = "FreeBSD" ]; then
 	WHICH_OS=$(lsb_release -i | awk '{print $3}')
 	case $type in
 		"nvme")
-			qemu-img create -f raw $nvme_disk ${size}
+			qemu-img create -f raw $nvme_disk $size
 		;;
 		"ocssd")
-			if [ ${size} == "1024M" ]; then
+			if [ $size == "1024M" ]; then
 				size="9G"
 			fi
-			fallocate -l ${size} $nvme_disk
-			touch /var/lib/libvirt/images/ocssd_md
+			fallocate -l $size $nvme_disk
+			touch ${nvme_disk}_ocssd_md
 		;;
 		*)
 			echo "We support only nvme and ocssd disks types"
