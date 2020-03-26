@@ -231,18 +231,9 @@ spdk_blob_get_xattr_value(struct spdk_blob *blob, const char *name,
 	return -ENOENT;
 }
 
-int
-spdk_blob_get_clones(struct spdk_blob_store *bs, spdk_blob_id blobid, spdk_blob_id *ids,
-		     size_t *count)
-{
-	return 0;
-}
-
-uint64_t
-spdk_bs_get_page_size(struct spdk_blob_store *bs)
-{
-	return BS_PAGE_SIZE;
-}
+DEFINE_STUB(spdk_blob_get_clones, int, (struct spdk_blob_store *bs, spdk_blob_id blobid,
+					spdk_blob_id *ids, size_t *count), 0);
+DEFINE_STUB(spdk_bs_get_page_size, uint64_t, (struct spdk_blob_store *bs), BS_PAGE_SIZE);
 
 int
 spdk_bdev_notify_blockcnt_change(struct spdk_bdev *bdev, uint64_t size)
@@ -345,11 +336,7 @@ spdk_bs_opts_init(struct spdk_bs_opts *opts)
 	memset(&opts->bstype, 0, sizeof(opts->bstype));
 }
 
-uint64_t
-spdk_bs_get_cluster_size(struct spdk_blob_store *bs)
-{
-	return BS_CLUSTER_SIZE;
-}
+DEFINE_STUB(spdk_bs_get_cluster_size, uint64_t, (struct spdk_blob_store *bs), BS_CLUSTER_SIZE);
 
 void spdk_blob_close(struct spdk_blob *b, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
@@ -369,11 +356,7 @@ spdk_blob_resize(struct spdk_blob *blob, uint64_t sz, spdk_blob_op_complete cb_f
 	cb_fn(cb_arg, 0);
 }
 
-int
-spdk_blob_set_read_only(struct spdk_blob *blob)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_blob_set_read_only, int, (struct spdk_blob *blob), 0);
 
 void
 spdk_blob_sync_md(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb_arg)
@@ -407,11 +390,7 @@ spdk_bs_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 	cb_fn(cb_arg, NULL, -ENOENT);
 }
 
-uint64_t
-spdk_bs_free_cluster_count(struct spdk_blob_store *bs)
-{
-	return BS_FREE_CLUSTERS;
-}
+DEFINE_STUB(spdk_bs_free_cluster_count, uint64_t, (struct spdk_blob_store *bs), BS_FREE_CLUSTERS);
 
 void
 spdk_blob_opts_init(struct spdk_blob_opts *opts)
