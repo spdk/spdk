@@ -653,7 +653,8 @@ if $INSTALL; then
             bc \
             perl-switch \
             open-iscsi \
-            smartmontools
+            smartmontools \
+            parted
 
         # TODO:
         # These are either missing or require some other installation method
