@@ -192,13 +192,7 @@ function fio_test_suite() {
 		echo "filename=$b" >> $testdir/bdev.fio
 	done
 
-	if [ $RUN_NIGHTLY_FAILING -eq 0 ]; then
-		local fio_params="--ioengine=spdk_bdev --iodepth=8 --bs=4k --runtime=10 $testdir/bdev.fio --spdk_json_conf=$conf_file"
-	else
-		# Use size 192KB which both exceeds typical 128KB max NVMe I/O
-		#  size and will cross 128KB Intel DC P3700 stripe boundaries.
-		local fio_params="--ioengine=spdk_bdev --iodepth=128 --bs=192k --runtime=100 $testdir/bdev.fio --spdk_json_conf=$conf_file"
-	fi
+	local fio_params="--ioengine=spdk_bdev --iodepth=8 --bs=4k --runtime=10 $testdir/bdev.fio --spdk_json_conf=$conf_file"
 
 	run_test "bdev_fio_rw_verify" fio_bdev $fio_params --spdk_mem=$PRE_RESERVED_MEM \
 	--output=$output_dir/blockdev_fio_verify.txt

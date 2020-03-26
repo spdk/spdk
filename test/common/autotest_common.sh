@@ -54,9 +54,6 @@ fi'
 : ${RUN_NIGHTLY:=0}
 export RUN_NIGHTLY
 
-: ${RUN_NIGHTLY_FAILING:=0}
-export RUN_NIGHTLY_FAILING
-
 # Set defaults for missing test config options
 : ${SPDK_AUTOTEST_DEBUG_APPS:=0}; export SPDK_AUTOTEST_DEBUG_APPS
 : ${SPDK_BUILD_PACKAGE=0}; export SPDK_BUILD_PACKAGE
