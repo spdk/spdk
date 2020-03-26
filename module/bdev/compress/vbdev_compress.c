@@ -1760,9 +1760,7 @@ vbdev_reduce_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno
 			SPDK_ERRLOG("for vol %s, error %u\n",
 				    spdk_bdev_get_name(meta_ctx->base_bdev), reduce_errno);
 		}
-		free(meta_ctx);
-		spdk_bdev_module_examine_done(&compress_if);
-		return;
+		goto err;
 	}
 
 	/* this status means that the vol could not be loaded because
@@ -1780,6 +1778,7 @@ vbdev_reduce_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno
 				    meta_ctx->base_bdev, &meta_ctx->base_desc);
 		if (rc) {
 			SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(meta_ctx->base_bdev));
+			free(meta_ctx->comp_bdev.name);
 			goto err;
 		}
 
@@ -1792,21 +1791,20 @@ vbdev_reduce_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno
 						 meta_ctx->comp_bdev.module);
 		if (rc) {
 			SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(meta_ctx->base_bdev));
+			spdk_bdev_close(meta_ctx->base_desc);
+			free(meta_ctx->comp_bdev.name);
 			goto err;
 		}
 
 		meta_ctx->orphaned = true;
 		TAILQ_INSERT_TAIL(&g_vbdev_comp, meta_ctx, link);
-err:
 		spdk_bdev_module_examine_done(&compress_if);
 		return;
 	}
 
 	if (_set_pmd(meta_ctx) == false) {
 		SPDK_ERRLOG("could not find required pmd\n");
-		free(meta_ctx);
-		spdk_bdev_module_examine_done(&compress_if);
-		return;
+		goto err;
 	}
 
 	/* Update information following volume load. */
@@ -1814,6 +1812,10 @@ err:
 	memcpy(&meta_ctx->params, spdk_reduce_vol_get_params(vol),
 	       sizeof(struct spdk_reduce_vol_params));
 	vbdev_compress_claim(meta_ctx);
+	spdk_bdev_module_examine_done(&compress_if);
+	return;
+err:
+	free(meta_ctx);
 	spdk_bdev_module_examine_done(&compress_if);
 }
 
