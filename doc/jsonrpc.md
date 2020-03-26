@@ -518,6 +518,8 @@ Example response:
     "reactors": [
       {
         "lcore": 0,
+        "busy": 41289723495,
+        "idle": 3624832946,
         "lw_threads": [
           {
             "name": "app_thread",

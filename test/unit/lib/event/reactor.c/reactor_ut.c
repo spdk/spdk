@@ -299,6 +299,128 @@ test_for_each_reactor(void)
 	free_cores();
 }
 
+static int
+poller_run_idle(void *ctx)
+{
+	uint64_t delay_us = (uint64_t)ctx;
+
+	spdk_delay_us(delay_us);
+
+	return 0;
+}
+
+static int
+poller_run_busy(void *ctx)
+{
+	uint64_t delay_us = (uint64_t)ctx;
+
+	spdk_delay_us(delay_us);
+
+	return 1;
+}
+
+static void
+test_reactor_stats(void)
+{
+	struct spdk_cpuset cpuset = {};
+	struct spdk_thread *thread1, *thread2;
+	struct spdk_reactor *reactor;
+	struct spdk_poller *busy1, *idle1, *busy2, *idle2;
+	int rc __attribute__((unused));
+
+	/* Test case is the following:
+	 * Create a reactor on CPU core0.
+	 * Create thread1 and thread2 simultaneously on reactor0 at TSC = 100.
+	 * Reactor runs
+	 * - thread1 for 100 with busy
+	 * - thread2 for 200 with idle
+	 * - thread1 for 300 with idle
+	 * - thread2 for 400 with busy.
+	 * Then,
+	 * - both elapsed TSC of thread1 and thread2 should be 1000 (= 100 + 900).
+	 * - busy TSC of reactor should be 500 (= 100 + 400).
+	 * - idle TSC of reactor should be 500 (= 200 + 300).
+	 */
+
+	allocate_cores(1);
+
+	CU_ASSERT(spdk_reactors_init() == 0);
+
+	spdk_cpuset_set_cpu(&cpuset, 0, true);
+
+	MOCK_SET(spdk_env_get_current_core, 0);
+	MOCK_SET(spdk_get_ticks, 100);
+
+	thread1 = spdk_thread_create(NULL, &cpuset);
+	SPDK_CU_ASSERT_FATAL(thread1 != NULL);
+
+	thread2 = spdk_thread_create(NULL, &cpuset);
+	SPDK_CU_ASSERT_FATAL(thread2 != NULL);
+
+	reactor = spdk_reactor_get(0);
+	SPDK_CU_ASSERT_FATAL(reactor != NULL);
+
+	reactor->tsc_last = 100;
+
+	spdk_set_thread(thread1);
+	busy1 = spdk_poller_register(poller_run_busy, (void *)100, 0);
+	CU_ASSERT(busy1 != NULL);
+
+	spdk_set_thread(thread2);
+	idle2 = spdk_poller_register(poller_run_idle, (void *)300, 0);
+	CU_ASSERT(idle2 != NULL);
+
+	reactor_run(reactor);
+
+	CU_ASSERT(thread1->tsc_last == 200);
+	CU_ASSERT(thread1->stats.busy_tsc == 100);
+	CU_ASSERT(thread1->stats.idle_tsc == 0);
+	CU_ASSERT(thread2->tsc_last == 500);
+	CU_ASSERT(thread2->stats.busy_tsc == 0);
+	CU_ASSERT(thread2->stats.idle_tsc == 300);
+
+	CU_ASSERT(reactor->busy_tsc == 100);
+	CU_ASSERT(reactor->idle_tsc == 300);
+
+	spdk_set_thread(thread1);
+	spdk_poller_unregister(&busy1);
+	idle1 = spdk_poller_register(poller_run_idle, (void *)200, 0);
+	CU_ASSERT(idle1 != NULL);
+
+	spdk_set_thread(thread2);
+	spdk_poller_unregister(&idle2);
+	busy2 = spdk_poller_register(poller_run_busy, (void *)400, 0);
+	CU_ASSERT(busy2 != NULL);
+
+	reactor_run(reactor);
+
+	CU_ASSERT(thread1->tsc_last == 700);
+	CU_ASSERT(thread1->stats.busy_tsc == 100);
+	CU_ASSERT(thread1->stats.idle_tsc == 200);
+	CU_ASSERT(thread2->tsc_last == 1100);
+	CU_ASSERT(thread2->stats.busy_tsc == 400);
+	CU_ASSERT(thread2->stats.idle_tsc == 300);
+
+	CU_ASSERT(reactor->busy_tsc == 500);
+	CU_ASSERT(reactor->idle_tsc == 500);
+
+	spdk_set_thread(thread1);
+	spdk_poller_unregister(&idle1);
+	spdk_thread_exit(thread1);
+
+	spdk_set_thread(thread2);
+	spdk_poller_unregister(&busy2);
+	spdk_thread_exit(thread2);
+
+	reactor_run(reactor);
+
+	CU_ASSERT(TAILQ_EMPTY(&reactor->threads));
+
+	spdk_reactors_fini();
+
+	free_cores();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -316,6 +438,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_schedule_thread);
 	CU_ADD_TEST(suite, test_reschedule_thread);
 	CU_ADD_TEST(suite, test_for_each_reactor);
+	CU_ADD_TEST(suite, test_reactor_stats);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

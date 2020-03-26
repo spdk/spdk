@@ -315,13 +315,22 @@ reactor_run(struct spdk_reactor *reactor)
 {
 	struct spdk_thread	*thread;
 	struct spdk_lw_thread	*lw_thread, *tmp;
+	uint64_t		now;
+	int			rc;
 
 	_spdk_event_queue_run_batch(reactor);
 
 	TAILQ_FOREACH_SAFE(lw_thread, &reactor->threads, link, tmp) {
 		thread = spdk_thread_get_from_ctx(lw_thread);
-		spdk_thread_poll(thread, 0, reactor->tsc_last);
-		reactor->tsc_last = spdk_thread_get_last_tsc(thread);
+		rc = spdk_thread_poll(thread, 0, reactor->tsc_last);
+
+		now = spdk_thread_get_last_tsc(thread);
+		if (rc == 0) {
+			reactor->idle_tsc += now - reactor->tsc_last;
+		} else if (rc > 0) {
+			reactor->busy_tsc += now - reactor->tsc_last;
+		}
+		reactor->tsc_last = now;
 
 		if (spdk_unlikely(lw_thread->resched)) {
 			lw_thread->resched = false;

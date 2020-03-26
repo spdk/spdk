@@ -86,6 +86,9 @@ struct spdk_reactor {
 	/* The last known rusage values */
 	struct rusage					rusage;
 	uint64_t					last_rusage;
+
+	uint64_t					busy_tsc;
+	uint64_t					idle_tsc;
 } __attribute__((aligned(SPDK_CACHE_LINE_SIZE)));
 
 int spdk_reactors_init(void);

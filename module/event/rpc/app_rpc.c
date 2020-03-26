@@ -374,6 +374,8 @@ rpc_framework_get_reactors(void *arg1, void *arg2)
 
 	spdk_json_write_object_begin(ctx->w);
 	spdk_json_write_named_uint32(ctx->w, "lcore", current_core);
+	spdk_json_write_named_uint64(ctx->w, "busy", reactor->busy_tsc);
+	spdk_json_write_named_uint64(ctx->w, "idle", reactor->idle_tsc);
 
 	spdk_json_write_named_array_begin(ctx->w, "lw_threads");
 	TAILQ_FOREACH(lw_thread, &reactor->threads, link) {
