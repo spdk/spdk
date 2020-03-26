@@ -456,6 +456,10 @@ git -C spdk_repo/spdk config submodule.intel-ipsec-mb.url "${GIT_REPO_INTEL_IPSE
 git -C spdk_repo/spdk submodule update --init --recursive
 
 if $INSTALL; then
+    if [ "${OSID} ${OSVERSION}" == 'centos 8' ]; then
+        #During install using vm_setup.sh there is error with AppStream, to fix it we need to refresh yum
+        sudo yum update -y --refresh
+    fi
     sudo spdk_repo/spdk/scripts/pkgdep.sh --all
 
     if [ $PACKAGEMNG == 'pkg' ]; then
