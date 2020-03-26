@@ -275,8 +275,6 @@ struct spdk_opal_dev {
 	uint16_t comid;
 	uint32_t hsn;
 	uint32_t tsn;
-	uint64_t align;
-	uint64_t lowest_lba;
 
 	size_t cmd_pos;
 	uint8_t cmd[IO_BUFFER_LENGTH];
@@ -291,7 +289,6 @@ struct spdk_opal_dev {
 	struct spdk_opal_locking_range_info locking_ranges[SPDK_OPAL_MAX_LOCKING_RANGE];
 
 	pthread_mutex_t mutex_lock; /* some structs are accessed by current thread only */
-	void *ctx;  /* user context data */
 };
 
 #endif

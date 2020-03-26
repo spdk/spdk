@@ -39,8 +39,6 @@
 
 typedef int (*spdk_opal_cb)(struct spdk_opal_dev *dev, void *ctx);
 
-static int opal_parse_and_check_status(struct spdk_opal_dev *dev, void *data);
-
 static int
 opal_send_cmd(struct spdk_opal_dev *dev)
 {
@@ -759,11 +757,6 @@ static void
 opal_check_geometry(struct spdk_opal_dev *dev, const void *data)
 {
 	const struct spdk_opal_d0_geo_feat *geo = data;
-	uint64_t align = from_be64(&geo->alignment_granularity);
-	uint64_t lowest_lba = from_be64(&geo->lowest_aligned_lba);
-
-	dev->align = align;
-	dev->lowest_lba = lowest_lba;
 
 	dev->feat_info.geo = *geo;
 }
