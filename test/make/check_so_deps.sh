@@ -35,10 +35,10 @@ function confirm_abi_deps() {
 		if ! abidiff $libdir/$so_file $source_abi_dir/$so_file --leaf-changes-only --stat > /dev/null; then
 			found_abi_change=false
 			output=$(abidiff $libdir/$so_file $source_abi_dir/$so_file --leaf-changes-only --stat) || true
-			new_so_maj=$(readlink $libdir/$so_file | awk -F'.so.' '{print $2}' | cut -d '.' -f1)
-			new_so_min=$(readlink $libdir/$so_file | awk -F'.so.' '{print $2}' | cut -d '.' -f2)
-			old_so_maj=$(readlink $source_abi_dir/$so_file | awk -F'.so.' '{print $2}' | cut -d '.' -f1)
-			old_so_min=$(readlink $source_abi_dir/$so_file | awk -F'.so.' '{print $2}' | cut -d '.' -f2)
+			new_so_maj=$(readlink $libdir/$so_file | awk -F'\\.so\\.' '{print $2}' | cut -d '.' -f1)
+			new_so_min=$(readlink $libdir/$so_file | awk -F'\\.so\\.' '{print $2}' | cut -d '.' -f2)
+			old_so_maj=$(readlink $source_abi_dir/$so_file | awk -F'\\.so\\.' '{print $2}' | cut -d '.' -f1)
+			old_so_min=$(readlink $source_abi_dir/$so_file | awk -F'\\.so\\.' '{print $2}' | cut -d '.' -f2)
 			so_name_changed=$(grep "ELF SONAME changed" <<< "$output") || so_name_changed="No"
 			function_summary=$(grep "functions summary" <<< "$output")
 			variable_summary=$(grep "variables summary" <<< "$output")
