@@ -433,8 +433,21 @@ spdk_fio_setup(struct thread_data *td)
 		g_spdk_env_initialized = true;
 	}
 
+	if (td->o.nr_files == 1 && strcmp(td->files[0]->file_name, "*") == 0) {
+		struct spdk_bdev *bdev;
+
+		/* add all available bdevs as fio targets */
+		for (bdev = spdk_bdev_first_leaf(); bdev; bdev = spdk_bdev_next_leaf(bdev)) {
+			add_file(td, spdk_bdev_get_name(bdev), 0, 1);
+		}
+	}
+
 	for_each_file(td, f, i) {
 		struct spdk_bdev *bdev;
+
+		if (strcmp(f->file_name, "*") == 0) {
+			continue;
+		}
 
 		bdev = spdk_bdev_get_by_name(f->file_name);
 		if (!bdev) {
@@ -463,6 +476,10 @@ spdk_fio_bdev_open(void *arg)
 
 	for_each_file(td, f, i) {
 		struct spdk_fio_target *target;
+
+		if (strcmp(f->file_name, "*") == 0) {
+			continue;
+		}
 
 		target = calloc(1, sizeof(*target));
 		if (!target) {
