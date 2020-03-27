@@ -13,11 +13,6 @@ vhosttestinit
 source $testdir/autotest.config
 RPC_PY="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
-if [[ $EUID -ne 0 ]]; then
-	echo "INFO: Go away user come back as root"
-	exit 1
-fi
-
 trap '$(get_vhost_dir)/Virtio0;
 	error_exit "${FUNCNAME}""${LINENO}"' ERR SIGTERM SIGABRT
 
