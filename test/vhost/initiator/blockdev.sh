@@ -5,9 +5,6 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/vhost/common.sh
 
-virtio_bdevs=""
-virtio_with_unmap=""
-
 vhosttestinit
 
 source $testdir/autotest.config
@@ -19,8 +16,6 @@ function run_spdk_fio() {
 
 function create_bdev_config()
 {
-	local vbdevs
-
 	if [ -z "$($RPC_PY bdev_get_bdevs | jq '.[] | select(.name=="Nvme0n1")')" ]; then
 		error "Nvme0n1 bdev not found!"
 	fi
@@ -43,35 +38,58 @@ function create_bdev_config()
 	$RPC_PY bdev_malloc_create 128 4096 --name Malloc1
 	$RPC_PY vhost_create_scsi_controller naa.Malloc1.0
 	$RPC_PY vhost_scsi_controller_add_target naa.Malloc1.0 0 Malloc1
+}
 
-	vbdevs=$(discover_bdevs $rootdir $testdir/bdev.json "--json")
-	virtio_bdevs=$(jq -r '[.[].name] | join(":")' <<< $vbdevs)
-	virtio_with_unmap=$(jq -r '[.[] | select(.supported_io_types.unmap==true).name]
-	 | join(":")' <<< $vbdevs)
+function err_cleanup() {
+	rm -f $testdir/bdev.json
+	vhost_kill 0
+	if [[ -n "$dummy_spdk_pid" ]] && kill -0 $dummy_spdk_pid &>/dev/null; then
+		killprocess $dummy_spdk_pid
+	fi
+	vhosttestfini
 }
 
 timing_enter vhost_run
 vhost_run 0
 timing_exit vhost_run
 
-trap 'vhost_kill 0; vhosttestfini; exit 1' SIGINT SIGTERM EXIT
+trap 'err_cleanup; exit 1' SIGINT SIGTERM EXIT
 
 timing_enter create_bdev_config
 create_bdev_config
 timing_exit create_bdev_config
 
+# start a dummy app and generate a json config for FIO
+$rootdir/app/spdk_tgt/spdk_tgt -r /tmp/spdk2.sock &
+dummy_spdk_pid=$!
+waitforlisten $dummy_spdk_pid /tmp/spdk2.sock
+rpc_cmd -s /tmp/spdk2.sock bdev_virtio_attach_controller --trtype user --traddr 'naa.Nvme0n1_scsi0.0' -d scsi --vq-count 8 'VirtioScsi0'
+rpc_cmd -s /tmp/spdk2.sock bdev_virtio_attach_controller --trtype user --traddr 'naa.Nvme0n1_blk0.0' -d blk --vq-count 8 'VirtioBlk3'
+rpc_cmd -s /tmp/spdk2.sock bdev_virtio_attach_controller --trtype user --traddr 'naa.Nvme0n1_blk1.0' -d blk --vq-count 8 'VirtioBlk4'
+
+rpc_cmd -s /tmp/spdk2.sock bdev_virtio_attach_controller --trtype user --traddr 'naa.Malloc0.0' -d scsi --vq-count 8 'VirtioScsi1'
+rpc_cmd -s /tmp/spdk2.sock bdev_virtio_attach_controller --trtype user --traddr 'naa.Malloc1.0' -d scsi --vq-count 8 'VirtioScsi2'
+
+cat <<-CONF > $testdir/bdev.json
+	{"subsystems":[
+	$(rpc_cmd -s /tmp/spdk2.sock save_subsystem_config -n bdev)
+	]}
+CONF
+killprocess $dummy_spdk_pid
+
 timing_enter run_spdk_fio
-run_spdk_fio $testdir/bdev.fio --filename=$virtio_bdevs --section=job_randwrite --section=job_randrw \
+run_spdk_fio $testdir/bdev.fio --filename=* --section=job_randwrite --section=job_randrw \
 	--section=job_write --section=job_rw --spdk_json_conf=$testdir/bdev.json
 timing_exit run_spdk_fio
 
 timing_enter run_spdk_fio_unmap
-run_spdk_fio $testdir/bdev.fio --filename=$virtio_with_unmap --spdk_json_conf=$testdir/bdev.json
+run_spdk_fio $testdir/bdev.fio --filename="VirtioScsi1t0:VirtioScsi2t0" --spdk_json_conf=$testdir/bdev.json
 timing_exit run_spdk_fio_unmap
 
 $RPC_PY bdev_nvme_detach_controller Nvme0
 
 trap - SIGINT SIGTERM EXIT
+rm -f $testdir/bdev.json
 
 timing_enter vhost_kill
 vhost_kill 0
