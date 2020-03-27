@@ -144,12 +144,15 @@ pci_hook_test(void)
 	uint64_t bar0_paddr, bar0_size;
 	int rc;
 
-	ut_dev.pci.addr.domain = 0x10000;
-	ut_dev.pci.addr.bus = 0x0;
-	ut_dev.pci.addr.dev = 0x1;
-	ut_dev.pci.addr.func = 0x0;
 	ut_dev.pci.id.vendor_id = 0x4;
 	ut_dev.pci.id.device_id = 0x8;
+
+	/* Use add parse for initilization */
+	spdk_pci_addr_parse(&ut_dev.pci.addr, "10000:00:01.0");
+	CU_ASSERT(ut_dev.pci.addr.domain == 0x10000);
+	CU_ASSERT(ut_dev.pci.addr.bus == 0x0);
+	CU_ASSERT(ut_dev.pci.addr.dev == 0x1);
+	CU_ASSERT(ut_dev.pci.addr.func == 0x0);
 
 	ut_dev.pci.map_bar = ut_map_bar;
 	ut_dev.pci.unmap_bar = ut_unmap_bar;
