@@ -36,6 +36,42 @@ PRECONDITIONING=true
 ONEWORKLOAD=false
 DATE="$(date +'%m_%d_%Y_%H%M%S')"
 
+function discover_bdevs() {
+	local rootdir=$1
+	local config_file=$2
+	local cfg_type=$3
+	local wait_for_spdk_bdev=${4:-30}
+	local rpc_server=/var/tmp/spdk-discover-bdevs.sock
+
+	if [ ! -e $config_file ]; then
+		echo "Invalid Configuration File: $config_file"
+		return 1
+	fi
+
+	if [ -z $cfg_type ]; then
+		cfg_type="-c"
+	fi
+
+	# Start the bdev service to query for the list of available
+	# bdevs.
+	$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 \
+		$cfg_type $config_file &> /dev/null &
+	stubpid=$!
+	while ! [ -e /var/run/spdk_bdev0 ]; do
+		# If this counter drops to zero, errexit will be caught to abort the test
+		((wait_for_spdk_bdev--))
+		sleep 1
+	done
+
+	# Get all of the bdevs
+	$rootdir/scripts/rpc.py -s "$rpc_server" bdev_get_bdevs
+
+	# Shut down the bdev service
+	kill $stubpid
+	wait $stubpid
+	rm -f /var/run/spdk_bdev0
+}
+
 function is_bdf_not_mounted() {
 	local bdf=$1
 	local blkname
