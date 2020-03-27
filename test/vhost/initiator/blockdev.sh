@@ -9,32 +9,6 @@ function run_spdk_fio() {
 		--verify_state_save=0
 }
 
-function create_bdev_config() {
-	$rootdir/scripts/gen_nvme.sh --json | $rootdir/scripts/rpc.py load_subsystem_config
-	if [ -z "$(rpc_cmd bdev_get_bdevs | jq '.[] | select(.name=="Nvme0n1")')" ]; then
-		echo "Nvme0n1 bdev not found!" && false
-	fi
-
-	rpc_cmd bdev_split_create Nvme0n1 6
-
-	rpc_cmd vhost_create_scsi_controller naa.Nvme0n1_scsi0.0
-	rpc_cmd vhost_scsi_controller_add_target naa.Nvme0n1_scsi0.0 0 Nvme0n1p0
-	rpc_cmd vhost_scsi_controller_add_target naa.Nvme0n1_scsi0.0 1 Nvme0n1p1
-	rpc_cmd vhost_scsi_controller_add_target naa.Nvme0n1_scsi0.0 2 Nvme0n1p2
-	rpc_cmd vhost_scsi_controller_add_target naa.Nvme0n1_scsi0.0 3 Nvme0n1p3
-
-	rpc_cmd vhost_create_blk_controller naa.Nvme0n1_blk0.0 Nvme0n1p4
-	rpc_cmd vhost_create_blk_controller naa.Nvme0n1_blk1.0 Nvme0n1p5
-
-	rpc_cmd bdev_malloc_create 128 512 --name Malloc0
-	rpc_cmd vhost_create_scsi_controller naa.Malloc0.0
-	rpc_cmd vhost_scsi_controller_add_target naa.Malloc0.0 0 Malloc0
-
-	rpc_cmd bdev_malloc_create 128 4096 --name Malloc1
-	rpc_cmd vhost_create_scsi_controller naa.Malloc1.0
-	rpc_cmd vhost_scsi_controller_add_target naa.Malloc1.0 0 Malloc1
-}
-
 function err_cleanup() {
 	rm -f $testdir/bdev.json
 	killprocess $vhost_pid
@@ -43,16 +17,37 @@ function err_cleanup() {
 	fi
 }
 
+# start vhost and configure it
 trap 'err_cleanup; exit 1' SIGINT SIGTERM EXIT
 $rootdir/app/vhost/vhost &
 vhost_pid=$!
 waitforlisten $vhost_pid
 
-timing_enter create_bdev_config
-create_bdev_config
-timing_exit create_bdev_config
+$rootdir/scripts/gen_nvme.sh --json | $rootdir/scripts/rpc.py load_subsystem_config
+if [ -z "$(rpc_cmd bdev_get_bdevs | jq '.[] | select(.name=="Nvme0n1")')" ]; then
+	echo "Nvme0n1 bdev not found!" && false
+fi
 
-# start a dummy app and generate a json config for FIO
+rpc_cmd bdev_split_create Nvme0n1 6
+
+rpc_cmd vhost_create_scsi_controller naa.Nvme0n1_scsi0.0
+rpc_cmd vhost_scsi_controller_add_target naa.Nvme0n1_scsi0.0 0 Nvme0n1p0
+rpc_cmd vhost_scsi_controller_add_target naa.Nvme0n1_scsi0.0 1 Nvme0n1p1
+rpc_cmd vhost_scsi_controller_add_target naa.Nvme0n1_scsi0.0 2 Nvme0n1p2
+rpc_cmd vhost_scsi_controller_add_target naa.Nvme0n1_scsi0.0 3 Nvme0n1p3
+
+rpc_cmd vhost_create_blk_controller naa.Nvme0n1_blk0.0 Nvme0n1p4
+rpc_cmd vhost_create_blk_controller naa.Nvme0n1_blk1.0 Nvme0n1p5
+
+rpc_cmd bdev_malloc_create 128 512 --name Malloc0
+rpc_cmd vhost_create_scsi_controller naa.Malloc0.0
+rpc_cmd vhost_scsi_controller_add_target naa.Malloc0.0 0 Malloc0
+
+rpc_cmd bdev_malloc_create 128 4096 --name Malloc1
+rpc_cmd vhost_create_scsi_controller naa.Malloc1.0
+rpc_cmd vhost_scsi_controller_add_target naa.Malloc1.0 0 Malloc1
+
+# start a dummy app, create vhost bdevs in it, then dump the config for FIO
 $rootdir/app/spdk_tgt/spdk_tgt -r /tmp/spdk2.sock -g &
 dummy_spdk_pid=$!
 waitforlisten $dummy_spdk_pid /tmp/spdk2.sock
@@ -70,6 +65,7 @@ cat <<- CONF > $testdir/bdev.json
 CONF
 killprocess $dummy_spdk_pid
 
+# run FIO with previously acquired spdk config files
 timing_enter run_spdk_fio
 run_spdk_fio $testdir/bdev.fio --filename=* --section=job_randwrite --section=job_randrw \
 	--section=job_write --section=job_rw --spdk_json_conf=$testdir/bdev.json
