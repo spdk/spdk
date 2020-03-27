@@ -3,20 +3,18 @@
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
-source $rootdir/test/vhost/common.sh
 
-vhosttestinit
-
-source $testdir/autotest.config
-RPC_PY="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
+RPC_PY="$rootdir/scripts/rpc.py"
 
 function run_spdk_fio() {
-	fio_bdev --ioengine=spdk_bdev "$@" --spdk_mem=1024 --spdk_single_seg=1
+	fio_bdev --ioengine=spdk_bdev "$@" --spdk_mem=1024 --spdk_single_seg=1 \
+		--verify_state_save=0
 }
 
 function create_bdev_config() {
+	$rootdir/scripts/gen_nvme.sh --json | $RPC_PY load_subsystem_config
 	if [ -z "$($RPC_PY bdev_get_bdevs | jq '.[] | select(.name=="Nvme0n1")')" ]; then
-		error "Nvme0n1 bdev not found!"
+		echo "Nvme0n1 bdev not found!" && false
 	fi
 
 	$RPC_PY bdev_split_create Nvme0n1 6
@@ -41,18 +39,16 @@ function create_bdev_config() {
 
 function err_cleanup() {
 	rm -f $testdir/bdev.json
-	vhost_kill 0
+	killprocess $vhost_pid
 	if [[ -n "$dummy_spdk_pid" ]] && kill -0 $dummy_spdk_pid &> /dev/null; then
 		killprocess $dummy_spdk_pid
 	fi
-	vhosttestfini
 }
 
-timing_enter vhost_run
-vhost_run 0
-timing_exit vhost_run
-
 trap 'err_cleanup; exit 1' SIGINT SIGTERM EXIT
+$rootdir/app/vhost/vhost &
+vhost_pid=$!
+waitforlisten $vhost_pid
 
 timing_enter create_bdev_config
 create_bdev_config
@@ -90,8 +86,4 @@ $RPC_PY bdev_nvme_detach_controller Nvme0
 trap - SIGINT SIGTERM EXIT
 rm -f $testdir/bdev.json
 
-timing_enter vhost_kill
-vhost_kill 0
-timing_exit vhost_kill
-
-vhosttestfini
+killprocess $vhost_pid
