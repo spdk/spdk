@@ -526,8 +526,8 @@ spdk_vbdev_opal_destruct(const char *bdev_name, const char *password)
 	}
 
 	/* secure erase locking range */
-	rc = spdk_opal_cmd_erase_locking_range(nvme_ctrlr->opal_dev, OPAL_ADMIN1, locking_range_id,
-					       password);
+	rc = spdk_opal_cmd_secure_erase_locking_range(nvme_ctrlr->opal_dev, OPAL_ADMIN1, locking_range_id,
+			password);
 	if (rc) {
 		SPDK_ERRLOG("opal erase locking range failed\n");
 		goto err;

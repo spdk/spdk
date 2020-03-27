@@ -1515,7 +1515,8 @@ opal_erase_locking_range(struct dev *iter)
 					return;
 				}
 				printf("\n...\n");
-				ret = spdk_opal_cmd_erase_locking_range(iter->opal_dev, OPAL_ADMIN1, locking_range_id, passwd_p);
+				ret = spdk_opal_cmd_secure_erase_locking_range(iter->opal_dev, OPAL_ADMIN1, locking_range_id,
+						passwd_p);
 				if (ret) {
 					printf("Erase locking range failure: %d\n", ret);
 					spdk_opal_dev_destruct(iter->opal_dev);
