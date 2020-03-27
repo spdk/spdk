@@ -34,7 +34,12 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
+CUNIT_VERSION = $(shell sed -n -e 's/.*VERSION "\([0-9\.\-]*\).*/\1/p' /usr/include/CUnit/CUnit.h)
+ifeq ($(CUNIT_VERSION),2.1-3)
 DIRS-y = blob.c
+else
+$(warning "blob_ut.c compilation skipped, only CUnit version 2.1-3 is supported")
+endif
 
 .PHONY: all clean $(DIRS-y)
 
