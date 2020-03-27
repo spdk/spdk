@@ -4,37 +4,35 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 
-RPC_PY="$rootdir/scripts/rpc.py"
-
 function run_spdk_fio() {
 	fio_bdev --ioengine=spdk_bdev "$@" --spdk_mem=1024 --spdk_single_seg=1 \
 		--verify_state_save=0
 }
 
 function create_bdev_config() {
-	$rootdir/scripts/gen_nvme.sh --json | $RPC_PY load_subsystem_config
-	if [ -z "$($RPC_PY bdev_get_bdevs | jq '.[] | select(.name=="Nvme0n1")')" ]; then
+	$rootdir/scripts/gen_nvme.sh --json | $rootdir/scripts/rpc.py load_subsystem_config
+	if [ -z "$(rpc_cmd bdev_get_bdevs | jq '.[] | select(.name=="Nvme0n1")')" ]; then
 		echo "Nvme0n1 bdev not found!" && false
 	fi
 
-	$RPC_PY bdev_split_create Nvme0n1 6
+	rpc_cmd bdev_split_create Nvme0n1 6
 
-	$RPC_PY vhost_create_scsi_controller naa.Nvme0n1_scsi0.0
-	$RPC_PY vhost_scsi_controller_add_target naa.Nvme0n1_scsi0.0 0 Nvme0n1p0
-	$RPC_PY vhost_scsi_controller_add_target naa.Nvme0n1_scsi0.0 1 Nvme0n1p1
-	$RPC_PY vhost_scsi_controller_add_target naa.Nvme0n1_scsi0.0 2 Nvme0n1p2
-	$RPC_PY vhost_scsi_controller_add_target naa.Nvme0n1_scsi0.0 3 Nvme0n1p3
+	rpc_cmd vhost_create_scsi_controller naa.Nvme0n1_scsi0.0
+	rpc_cmd vhost_scsi_controller_add_target naa.Nvme0n1_scsi0.0 0 Nvme0n1p0
+	rpc_cmd vhost_scsi_controller_add_target naa.Nvme0n1_scsi0.0 1 Nvme0n1p1
+	rpc_cmd vhost_scsi_controller_add_target naa.Nvme0n1_scsi0.0 2 Nvme0n1p2
+	rpc_cmd vhost_scsi_controller_add_target naa.Nvme0n1_scsi0.0 3 Nvme0n1p3
 
-	$RPC_PY vhost_create_blk_controller naa.Nvme0n1_blk0.0 Nvme0n1p4
-	$RPC_PY vhost_create_blk_controller naa.Nvme0n1_blk1.0 Nvme0n1p5
+	rpc_cmd vhost_create_blk_controller naa.Nvme0n1_blk0.0 Nvme0n1p4
+	rpc_cmd vhost_create_blk_controller naa.Nvme0n1_blk1.0 Nvme0n1p5
 
-	$RPC_PY bdev_malloc_create 128 512 --name Malloc0
-	$RPC_PY vhost_create_scsi_controller naa.Malloc0.0
-	$RPC_PY vhost_scsi_controller_add_target naa.Malloc0.0 0 Malloc0
+	rpc_cmd bdev_malloc_create 128 512 --name Malloc0
+	rpc_cmd vhost_create_scsi_controller naa.Malloc0.0
+	rpc_cmd vhost_scsi_controller_add_target naa.Malloc0.0 0 Malloc0
 
-	$RPC_PY bdev_malloc_create 128 4096 --name Malloc1
-	$RPC_PY vhost_create_scsi_controller naa.Malloc1.0
-	$RPC_PY vhost_scsi_controller_add_target naa.Malloc1.0 0 Malloc1
+	rpc_cmd bdev_malloc_create 128 4096 --name Malloc1
+	rpc_cmd vhost_create_scsi_controller naa.Malloc1.0
+	rpc_cmd vhost_scsi_controller_add_target naa.Malloc1.0 0 Malloc1
 }
 
 function err_cleanup() {
@@ -81,7 +79,7 @@ timing_enter run_spdk_fio_unmap
 run_spdk_fio $testdir/bdev.fio --filename="VirtioScsi1t0:VirtioScsi2t0" --spdk_json_conf=$testdir/bdev.json
 timing_exit run_spdk_fio_unmap
 
-$RPC_PY bdev_nvme_detach_controller Nvme0
+rpc_cmd bdev_nvme_detach_controller Nvme0
 
 trap - SIGINT SIGTERM EXIT
 rm -f $testdir/bdev.json
