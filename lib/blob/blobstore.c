@@ -3160,7 +3160,7 @@ struct spdk_bs_load_ctx {
 	struct spdk_blob_md_page	*page;
 
 	uint64_t			num_extent_pages;
-	uint32_t			*extent_pages;
+	uint32_t			*extent_page_num;
 
 	spdk_bs_sequence_t			*seq;
 	spdk_blob_op_with_handle_complete	iter_cb_fn;
@@ -3750,18 +3750,18 @@ _spdk_bs_load_replay_md_parse_page(struct spdk_bs_load_ctx *ctx, struct spdk_blo
 			}
 
 			if (num_extent_pages > 0) {
-				tmp = realloc(ctx->extent_pages, num_extent_pages * sizeof(uint32_t));
+				tmp = realloc(ctx->extent_page_num, num_extent_pages * sizeof(uint32_t));
 				if (tmp == NULL) {
 					return -ENOMEM;
 				}
-				ctx->extent_pages = tmp;
+				ctx->extent_page_num = tmp;
 
 				/* Extent table entries contain md page numbers for extent pages.
 				 * Zeroes represent unallocated extent pages, those are run-length-encoded.
 				 */
 				for (i = 0; i < extent_pages_length / sizeof(desc_extent_table->extent_page[0]); i++) {
 					if (desc_extent_table->extent_page[i].page_idx != 0) {
-						ctx->extent_pages[ctx->num_extent_pages] = desc_extent_table->extent_page[i].page_idx;
+						ctx->extent_page_num[ctx->num_extent_pages] = desc_extent_table->extent_page[i].page_idx;
 						ctx->num_extent_pages += 1;
 					}
 				}
@@ -3936,7 +3936,7 @@ _spdk_bs_load_replay_extent_page_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int 
 		return;
 	}
 
-	page_num = ctx->extent_pages[ctx->num_extent_pages - 1];
+	page_num = ctx->extent_page_num[ctx->num_extent_pages - 1];
 	spdk_bit_array_set(ctx->bs->used_md_pages, page_num);
 	if (_spdk_bs_load_replay_md_parse_page(ctx, ctx->page)) {
 		_spdk_bs_load_ctx_fail(ctx, -EILSEQ);
@@ -3945,12 +3945,12 @@ _spdk_bs_load_replay_extent_page_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int 
 
 	ctx->num_extent_pages--;
 	if (ctx->num_extent_pages > 0) {
-		_spdk_bs_load_replay_extent_page(seq, ctx->extent_pages[ctx->num_extent_pages - 1], ctx);
+		_spdk_bs_load_replay_extent_page(seq, ctx->extent_page_num[ctx->num_extent_pages - 1], ctx);
 		return;
 	}
 
-	free(ctx->extent_pages);
-	ctx->extent_pages = NULL;
+	free(ctx->extent_page_num);
+	ctx->extent_page_num = NULL;
 
 	_spdk_bs_load_replay_md_chain_cpl(ctx);
 }
@@ -4001,7 +4001,7 @@ _spdk_bs_load_replay_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 			if (ctx->num_extent_pages != 0) {
 				/* Extent pages are read from last to first,
 				 * decreasing the num_extent_pages as they are read. */
-				_spdk_bs_load_replay_extent_page(seq, ctx->extent_pages[ctx->num_extent_pages - 1], ctx);
+				_spdk_bs_load_replay_extent_page(seq, ctx->extent_page_num[ctx->num_extent_pages - 1], ctx);
 				return;
 			}
 		}
