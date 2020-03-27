@@ -39,6 +39,6 @@ APP = spdk_top
 C_SRCS := spdk_top.c
 
 SPDK_LIB_LIST = jsonrpc json rpc log util
-LIBS=-lncurses -lpanel
+LIBS=-lncurses -lpanel -lmenu
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
