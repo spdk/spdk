@@ -13,9 +13,6 @@ vhosttestinit
 source $testdir/autotest.config
 RPC_PY="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
-trap '$(get_vhost_dir)/Virtio0;
-	error_exit "${FUNCNAME}""${LINENO}"' ERR SIGTERM SIGABRT
-
 function run_spdk_fio() {
 	fio_bdev --ioengine=spdk_bdev "$@" --spdk_mem=1024 --spdk_single_seg=1
 }
@@ -57,6 +54,8 @@ timing_enter vhost_run
 vhost_run 0
 timing_exit vhost_run
 
+trap 'vhost_kill 0; vhosttestfini; exit 1' SIGINT SIGTERM EXIT
+
 timing_enter create_bdev_config
 create_bdev_config
 timing_exit create_bdev_config
@@ -71,6 +70,8 @@ run_spdk_fio $testdir/bdev.fio --filename=$virtio_with_unmap --spdk_json_conf=$t
 timing_exit run_spdk_fio_unmap
 
 $RPC_PY bdev_nvme_detach_controller Nvme0
+
+trap - SIGINT SIGTERM EXIT
 
 timing_enter vhost_kill
 vhost_kill 0
