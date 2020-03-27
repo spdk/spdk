@@ -1095,13 +1095,19 @@ function run_fio()
 			fi
 
 			notice "Running local fio on VM $vm_num"
-			vm_exec $vm_num "nohup /root/fio /root/$job_fname 1>/root/$job_fname.out 2>/root/$job_fname.out </dev/null & echo \$! > /root/fio.pid"
+			vm_exec $vm_num "/root/fio --output=/root/$job_fname.out --output-format=$fio_output_format /root/$job_fname" &
+			vm_exec_pids+=("$!")
 		fi
 	done
 
 	if ! $run_server_mode; then
-		# Give FIO time to run
-		sleep 0.5
+		echo "Waiting for guest fio instances to finish.."
+		wait "${vm_exec_pids[@]}"
+
+		for vm in "${vms[@]}"; do
+			local vm_num=${vm%%:*}
+			vm_exec $vm_num cat /root/$job_fname.out > "$out/vm${vm_num}_${job_fname}"
+		done
 		return 0
 	fi
 
