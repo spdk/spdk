@@ -3917,13 +3917,12 @@ _spdk_bs_load_replay_md_chain_cpl(struct spdk_bs_load_ctx *ctx)
 	}
 }
 
-static void _spdk_bs_load_replay_extent_page(spdk_bs_sequence_t *seq, uint32_t page, void *cb_arg);
-
 static void
 _spdk_bs_load_replay_extent_page_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx *ctx = cb_arg;
 	uint32_t page_num;
+	uint64_t i;
 
 	if (bserrno != 0) {
 		spdk_free(ctx->extent_pages);
@@ -3931,53 +3930,58 @@ _spdk_bs_load_replay_extent_page_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int 
 		return;
 	}
 
-	/* Extent pages are only read when present within in chain md.
-	 * Integrity of md is not right if that page was not a valid extent page. */
-	if (_spdk_bs_load_cur_extent_page_valid(&ctx->extent_pages[0]) != true) {
-		spdk_free(ctx->extent_pages);
-		_spdk_bs_load_ctx_fail(ctx, -EILSEQ);
-		return;
-	}
+	for (i = 0; i < ctx->num_extent_pages; i++) {
+		/* Extent pages are only read when present within in chain md.
+		 * Integrity of md is not right if that page was not a valid extent page. */
+		if (_spdk_bs_load_cur_extent_page_valid(&ctx->extent_pages[i]) != true) {
+			spdk_free(ctx->extent_pages);
+			_spdk_bs_load_ctx_fail(ctx, -EILSEQ);
+			return;
+		}
 
-	page_num = ctx->extent_page_num[ctx->num_extent_pages - 1];
-	spdk_bit_array_set(ctx->bs->used_md_pages, page_num);
-	if (_spdk_bs_load_replay_md_parse_page(ctx, &ctx->extent_pages[0])) {
-		spdk_free(ctx->extent_pages);
-		_spdk_bs_load_ctx_fail(ctx, -EILSEQ);
-		return;
-	}
-
-	ctx->num_extent_pages--;
-	if (ctx->num_extent_pages > 0) {
-		spdk_free(ctx->extent_pages);
-		_spdk_bs_load_replay_extent_page(seq, ctx->extent_page_num[ctx->num_extent_pages - 1], ctx);
-		return;
+		page_num = ctx->extent_page_num[i];
+		spdk_bit_array_set(ctx->bs->used_md_pages, page_num);
+		if (_spdk_bs_load_replay_md_parse_page(ctx, &ctx->extent_pages[i])) {
+			spdk_free(ctx->extent_pages);
+			_spdk_bs_load_ctx_fail(ctx, -EILSEQ);
+			return;
+		}
 	}
 
 	spdk_free(ctx->extent_pages);
 	free(ctx->extent_page_num);
 	ctx->extent_page_num = NULL;
+	ctx->num_extent_pages = 0;
 
 	_spdk_bs_load_replay_md_chain_cpl(ctx);
 }
 
 static void
-_spdk_bs_load_replay_extent_page(spdk_bs_sequence_t *seq, uint32_t page, void *cb_arg)
+_spdk_bs_load_replay_extent_pages(struct spdk_bs_load_ctx *ctx)
 {
-	struct spdk_bs_load_ctx *ctx = cb_arg;
+	spdk_bs_batch_t *batch;
+	uint32_t page;
 	uint64_t lba;
+	uint64_t i;
 
-	ctx->extent_pages = spdk_zmalloc(SPDK_BS_PAGE_SIZE, SPDK_BS_PAGE_SIZE,
+	ctx->extent_pages = spdk_zmalloc(SPDK_BS_PAGE_SIZE * ctx->num_extent_pages, SPDK_BS_PAGE_SIZE,
 					 NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 	if (!ctx->extent_pages) {
 		_spdk_bs_load_ctx_fail(ctx, -ENOMEM);
 		return;
 	}
-	assert(page < ctx->super->md_len);
-	lba = _spdk_bs_md_page_to_lba(ctx->bs, page);
-	spdk_bs_sequence_read_dev(seq, &ctx->extent_pages[0], lba,
-				  _spdk_bs_byte_to_lba(ctx->bs, SPDK_BS_PAGE_SIZE),
-				  _spdk_bs_load_replay_extent_page_cpl, ctx);
+
+	batch = spdk_bs_sequence_to_batch(ctx->seq, _spdk_bs_load_replay_extent_page_cpl, ctx);
+
+	for (i = 0; i < ctx->num_extent_pages; i++) {
+		page = ctx->extent_page_num[i];
+		assert(page < ctx->super->md_len);
+		lba = _spdk_bs_md_page_to_lba(ctx->bs, page);
+		spdk_bs_batch_read_dev(batch, &ctx->extent_pages[i], lba,
+				       _spdk_bs_byte_to_lba(ctx->bs, SPDK_BS_PAGE_SIZE));
+	}
+
+	spdk_bs_batch_close(batch);
 }
 
 static void
@@ -4011,9 +4015,7 @@ _spdk_bs_load_replay_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 				return;
 			}
 			if (ctx->num_extent_pages != 0) {
-				/* Extent pages are read from last to first,
-				 * decreasing the num_extent_pages as they are read. */
-				_spdk_bs_load_replay_extent_page(seq, ctx->extent_page_num[ctx->num_extent_pages - 1], ctx);
+				_spdk_bs_load_replay_extent_pages(ctx);
 				return;
 			}
 		}
