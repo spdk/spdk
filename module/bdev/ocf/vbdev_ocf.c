@@ -1154,16 +1154,17 @@ init_vbdev_config(struct vbdev_ocf *vbdev)
 	}
 
 	/* Serialize bdev names in OCF UUID to interpret on future loads
-	 * Core UUID is pair of (core bdev name, cache bdev name)
+	 * Core UUID is a triple of (core name, vbdev name, cache name)
 	 * Cache UUID is cache bdev name */
 	cfg->device.uuid.size = strlen(vbdev->cache.name) + 1;
 	cfg->device.uuid.data = vbdev->cache.name;
 
-	snprintf(vbdev->uuid, VBDEV_OCF_MD_MAX_LEN, "%s %s",
-		 vbdev->core.name, vbdev->name);
+	snprintf(vbdev->uuid, VBDEV_OCF_MD_MAX_LEN, "%s %s %s",
+		 vbdev->core.name, vbdev->name, vbdev->cache.name);
 	cfg->core.uuid.size = strlen(vbdev->uuid) + 1;
 	cfg->core.uuid.data = vbdev->uuid;
 	vbdev->uuid[strlen(vbdev->core.name)] = 0;
+	vbdev->uuid[strlen(vbdev->core.name) + 1 + strlen(vbdev->name)] = 0;
 }
 
 /* Allocate vbdev structure object and add it to the global list */
@@ -1568,6 +1569,7 @@ metadata_probe_cores_construct(void *priv, int error, unsigned int num_cores)
 	struct metadata_probe_ctx *ctx = priv;
 	const char *vbdev_name;
 	const char *core_name;
+	const char *cache_name;
 	unsigned int i;
 
 	if (error) {
@@ -1579,8 +1581,15 @@ metadata_probe_cores_construct(void *priv, int error, unsigned int num_cores)
 	for (i = 0; i < num_cores; i++) {
 		core_name = ocf_uuid_to_str(&ctx->core_uuids[i]);
 		vbdev_name = core_name + strlen(core_name) + 1;
+		cache_name = vbdev_name + strlen(vbdev_name) + 1;
+
+		if (strcmp(ctx->base.bdev->name, cache_name)) {
+			SPDK_NOTICELOG("OCF metadata found on %s belongs to bdev named '%s'\n",
+				       ctx->base.bdev->name, cache_name);
+		}
+
 		ctx->refcnt++;
-		vbdev_ocf_construct(vbdev_name, NULL, ctx->base.bdev->name, core_name, true,
+		vbdev_ocf_construct(vbdev_name, NULL, cache_name, core_name, true,
 				    metadata_probe_construct_cb, ctx);
 	}
 
