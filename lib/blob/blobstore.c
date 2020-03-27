@@ -3161,6 +3161,7 @@ struct spdk_bs_load_ctx {
 
 	uint64_t			num_extent_pages;
 	uint32_t			*extent_page_num;
+	struct spdk_blob_md_page	*extent_pages;
 
 	spdk_bs_sequence_t			*seq;
 	spdk_blob_op_with_handle_complete	iter_cb_fn;
@@ -3925,30 +3926,35 @@ _spdk_bs_load_replay_extent_page_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int 
 	uint32_t page_num;
 
 	if (bserrno != 0) {
+		spdk_free(ctx->extent_pages);
 		_spdk_bs_load_ctx_fail(ctx, bserrno);
 		return;
 	}
 
 	/* Extent pages are only read when present within in chain md.
 	 * Integrity of md is not right if that page was not a valid extent page. */
-	if (_spdk_bs_load_cur_extent_page_valid(ctx->page) != true) {
+	if (_spdk_bs_load_cur_extent_page_valid(&ctx->extent_pages[0]) != true) {
+		spdk_free(ctx->extent_pages);
 		_spdk_bs_load_ctx_fail(ctx, -EILSEQ);
 		return;
 	}
 
 	page_num = ctx->extent_page_num[ctx->num_extent_pages - 1];
 	spdk_bit_array_set(ctx->bs->used_md_pages, page_num);
-	if (_spdk_bs_load_replay_md_parse_page(ctx, ctx->page)) {
+	if (_spdk_bs_load_replay_md_parse_page(ctx, &ctx->extent_pages[0])) {
+		spdk_free(ctx->extent_pages);
 		_spdk_bs_load_ctx_fail(ctx, -EILSEQ);
 		return;
 	}
 
 	ctx->num_extent_pages--;
 	if (ctx->num_extent_pages > 0) {
+		spdk_free(ctx->extent_pages);
 		_spdk_bs_load_replay_extent_page(seq, ctx->extent_page_num[ctx->num_extent_pages - 1], ctx);
 		return;
 	}
 
+	spdk_free(ctx->extent_pages);
 	free(ctx->extent_page_num);
 	ctx->extent_page_num = NULL;
 
@@ -3961,9 +3967,15 @@ _spdk_bs_load_replay_extent_page(spdk_bs_sequence_t *seq, uint32_t page, void *c
 	struct spdk_bs_load_ctx *ctx = cb_arg;
 	uint64_t lba;
 
+	ctx->extent_pages = spdk_zmalloc(SPDK_BS_PAGE_SIZE, SPDK_BS_PAGE_SIZE,
+					 NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+	if (!ctx->extent_pages) {
+		_spdk_bs_load_ctx_fail(ctx, -ENOMEM);
+		return;
+	}
 	assert(page < ctx->super->md_len);
 	lba = _spdk_bs_md_page_to_lba(ctx->bs, page);
-	spdk_bs_sequence_read_dev(seq, ctx->page, lba,
+	spdk_bs_sequence_read_dev(seq, &ctx->extent_pages[0], lba,
 				  _spdk_bs_byte_to_lba(ctx->bs, SPDK_BS_PAGE_SIZE),
 				  _spdk_bs_load_replay_extent_page_cpl, ctx);
 }
