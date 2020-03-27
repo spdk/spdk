@@ -17,6 +17,10 @@ else
 	exit 1
 fi
 
+# Run cleanup once to make sure we remove any stale iscsiadm
+# entries if they were missed in previous runs
+iscsicleanup
+
 # Network configuration
 create_veth_interfaces $TEST_TYPE
 

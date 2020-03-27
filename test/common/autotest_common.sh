@@ -578,6 +578,7 @@ function iscsicleanup() {
 	echo "Cleaning up iSCSI connection"
 	iscsiadm -m node --logout || true
 	iscsiadm -m node -o delete || true
+	rm -rf /var/lib/iscsi/nodes/*
 }
 
 function stop_iscsi_service() {
