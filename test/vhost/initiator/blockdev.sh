@@ -5,50 +5,20 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/vhost/common.sh
 
-PLUGIN_DIR=$rootdir/examples/bdev/fio_plugin
-FIO_PATH=$CONFIG_FIO_SOURCE_DIR
 virtio_bdevs=""
 virtio_with_unmap=""
-
-function usage()
-{
-	[[ -n $2 ]] && ( echo "$2"; echo ""; )
-	echo "Script for running vhost initiator tests."
-	echo "Usage: $(basename $1) [-h|--help] [--fiobin=PATH]"
-	echo "-h, --help            Print help and exit"
-	echo "    --fiopath=PATH    Path to fio directory on host [default=$FIO_PATH]"
-}
-
-while getopts 'h-:' optchar; do
-	case "$optchar" in
-		-)
-		case "$OPTARG" in
-			help) usage $0 && exit 0 ;;
-			fiopath=*) FIO_PATH="${OPTARG#*=}" ;;
-			*) usage $0 echo "Invalid argument '$OPTARG'" && exit 1 ;;
-		esac
-		;;
-		h) usage $0 && exit 0 ;;
-		*) usage $0 "Invalid argument '$optchar'" && exit 1 ;;
-	esac
-done
 
 vhosttestinit
 
 source $testdir/autotest.config
-PLUGIN_DIR=$rootdir/examples/bdev/fio_plugin
 RPC_PY="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
-
-if [ ! -x $FIO_PATH ]; then
-	error "Invalid path of fio binary"
-fi
 
 if [[ $EUID -ne 0 ]]; then
 	echo "INFO: Go away user come back as root"
 	exit 1
 fi
 
-trap 'rm -f *.state $rootdir/spdk.tar.gz $rootdir/fio.tar.gz $(get_vhost_dir)/Virtio0;
+trap '$(get_vhost_dir)/Virtio0;
 	error_exit "${FUNCNAME}""${LINENO}"' ERR SIGTERM SIGABRT
 
 function run_spdk_fio() {
