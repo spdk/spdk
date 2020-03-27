@@ -209,6 +209,7 @@ struct spdk_nvmf_tcp_qpair {
 
 	/* PDU being actively received */
 	struct nvme_tcp_pdu			pdu_in_progress;
+	uint32_t				recv_buf_size;
 
 	/* This is a spare PDU used for sending special management
 	 * operations. Primarily, this is used for the initial
@@ -817,6 +818,9 @@ spdk_nvmf_tcp_qpair_init_mem_resource(struct spdk_nvmf_tcp_qpair *tqpair)
 		TAILQ_INSERT_TAIL(&tqpair->state_queue[tcp_req->state], tcp_req, state_link);
 		tqpair->state_cntr[TCP_REQUEST_STATE_FREE]++;
 	}
+
+	tqpair->recv_buf_size = (in_capsule_data_size + sizeof(struct spdk_nvme_tcp_cmd) + 2 *
+				 SPDK_NVME_TCP_DIGEST_LEN) * SPDK_NVMF_TCP_RECV_BUF_SIZE_FACTOR;
 
 	return 0;
 }
@@ -1493,7 +1497,22 @@ spdk_nvmf_tcp_icreq_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "maxr2t =%u\n", (ic_req->maxr2t + 1u));
 
 	tqpair->host_hdgst_enable = ic_req->dgst.bits.hdgst_enable ? true : false;
+	if (!tqpair->host_hdgst_enable) {
+		tqpair->recv_buf_size -= SPDK_NVME_TCP_DIGEST_LEN * SPDK_NVMF_TCP_RECV_BUF_SIZE_FACTOR;
+	}
+
 	tqpair->host_ddgst_enable = ic_req->dgst.bits.ddgst_enable ? true : false;
+	if (!tqpair->host_ddgst_enable) {
+		tqpair->recv_buf_size -= SPDK_NVME_TCP_DIGEST_LEN * SPDK_NVMF_TCP_RECV_BUF_SIZE_FACTOR;
+	}
+
+	/* Now that we know whether digests are enabled, properly size the receive buffer */
+	if (spdk_sock_set_recvbuf(tqpair->sock, tqpair->recv_buf_size) < 0) {
+		SPDK_WARNLOG("Unable to allocate enough memory for receive buffer on tqpair=%p with size=%d\n",
+			     tqpair,
+			     tqpair->recv_buf_size);
+		/* Not fatal. */
+	}
 
 	tqpair->cpda = spdk_min(ic_req->hpda, SPDK_NVME_TCP_CPDA_MAX);
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "cpda of tqpair=(%p) is : %u\n", tqpair, tqpair->cpda);

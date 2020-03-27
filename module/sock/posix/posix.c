@@ -257,6 +257,15 @@ spdk_posix_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
 
 	assert(sock != NULL);
 
+#ifndef __aarch64__
+	/* On ARM systems, this buffering does not help. Skip it. */
+	rc = spdk_posix_sock_alloc_pipe(sock, sz);
+	if (rc) {
+		return rc;
+	}
+#endif
+
+	/* Set kernel buffer size to be at least SO_RCVBUF_SIZE */
 	if (sz < SO_RCVBUF_SIZE) {
 		sz = SO_RCVBUF_SIZE;
 	}
@@ -293,8 +302,8 @@ static struct spdk_posix_sock *
 _spdk_posix_sock_alloc(int fd)
 {
 	struct spdk_posix_sock *sock;
-	int rc;
 #ifdef SPDK_ZEROCOPY
+	int rc;
 	int flag;
 #endif
 
@@ -305,17 +314,6 @@ _spdk_posix_sock_alloc(int fd)
 	}
 
 	sock->fd = fd;
-
-#ifndef __aarch64__
-	/* On ARM systems, this buffering does not help. Skip it. */
-	/* The size of the pipe is purely derived from benchmarks. It seems to work well. */
-	rc = spdk_posix_sock_alloc_pipe(sock, 8192);
-	if (rc) {
-		SPDK_ERRLOG("unable to allocate sufficient recvbuf\n");
-		free(sock);
-		return NULL;
-	}
-#endif
 
 #ifdef SPDK_ZEROCOPY
 	/* Try to turn on zero copy sends */
