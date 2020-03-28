@@ -304,12 +304,15 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	}
 
 	/*
-	 * KAS: this field indicates the granularity of the Keep Alive Timer in 100ms units
-	 * keep-alive timeout in milliseconds
+	 * KAS: This field indicates the granularity of the Keep Alive Timer in 100ms units.
+	 * If this field is cleared to 0h, then Keep Alive is not supported.
 	 */
-	ctrlr->feat.keep_alive_timer.bits.kato = spdk_divide_round_up(connect_cmd->kato,
-			KAS_DEFAULT_VALUE * KAS_TIME_UNIT_IN_MS) *
-			KAS_DEFAULT_VALUE * KAS_TIME_UNIT_IN_MS;
+	if (transport->cdata.kas) {
+		ctrlr->feat.keep_alive_timer.bits.kato = spdk_divide_round_up(connect_cmd->kato,
+				KAS_DEFAULT_VALUE * KAS_TIME_UNIT_IN_MS) *
+				KAS_DEFAULT_VALUE * KAS_TIME_UNIT_IN_MS;
+	}
+
 	ctrlr->feat.async_event_configuration.bits.ns_attr_notice = 1;
 	ctrlr->feat.volatile_write_cache.bits.wce = 1;
 
@@ -1816,6 +1819,7 @@ nvmf_ctrlr_populate_oacs(struct spdk_nvmf_ctrlr *ctrlr,
 void
 spdk_nvmf_ctrlr_data_init(struct spdk_nvmf_transport_opts *opts, struct spdk_nvmf_ctrlr_data *cdata)
 {
+	cdata->kas = KAS_DEFAULT_VALUE;
 	cdata->nvmf_specific.ioccsz = sizeof(struct spdk_nvme_cmd) / 16;
 	cdata->nvmf_specific.ioccsz += opts->in_capsule_data_size / 16;
 	cdata->nvmf_specific.iorcsz = sizeof(struct spdk_nvme_cpl) / 16;
@@ -1857,7 +1861,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
 		spdk_strcpy_pad(cdata->mn, spdk_nvmf_subsystem_get_mn(subsystem), sizeof(cdata->mn), ' ');
 		spdk_strcpy_pad(cdata->sn, spdk_nvmf_subsystem_get_sn(subsystem), sizeof(cdata->sn), ' ');
-		cdata->kas = KAS_DEFAULT_VALUE;
+		cdata->kas = transport->cdata.kas;
 
 		cdata->rab = 6;
 		cdata->cmic.multi_port = 1;
