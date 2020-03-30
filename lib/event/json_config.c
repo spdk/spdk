@@ -189,7 +189,7 @@ rpc_client_poller(void *arg)
 	assert(resp);
 
 	if (resp->error) {
-		SPDK_ERRLOG("error response: %*s", (int)resp->error->len, (char *)resp->error->start);
+		SPDK_ERRLOG("error response: %.*s", (int)resp->error->len, (char *)resp->error->start);
 	}
 
 	if (resp->error && ctx->stop_on_error) {
@@ -339,7 +339,7 @@ spdk_app_json_config_load_subsystem_config_entry(void *_ctx)
 		params_end = spdk_json_next(ctx->config_it);
 		assert(params_end != NULL);
 		params_len = params_end->start - ctx->config->start + 1;
-		SPDK_ERRLOG("Failed to decode config entry: %*s!\n", (int)params_len, (char *)ctx->config_it);
+		SPDK_ERRLOG("Failed to decode config entry: %.*s!\n", (int)params_len, (char *)ctx->config_it);
 		spdk_app_json_config_load_done(ctx, -EINVAL);
 		goto out;
 	}

@@ -308,7 +308,7 @@ spdk_jsonrpc_client_hook_conn_close(struct spdk_jsonrpc_client *client)
 
 	/* Check for error response */
 	if (json_resp->error != NULL) {
-		SPDK_ERRLOG("Unexpected error response: %*s\n", json_resp->error->len,
+		SPDK_ERRLOG("Unexpected error response: %.*s\n", json_resp->error->len,
 			    (char *)json_resp->error->start);
 		rc = -EIO;
 		goto out;
