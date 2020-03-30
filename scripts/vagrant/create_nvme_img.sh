@@ -65,5 +65,13 @@ if [ ! "${SYSTEM}" = "FreeBSD" ]; then
 	fi
 
 	chmod 777 $nvme_disk
-	chown qemu:qemu $nvme_disk
+	if [ $WHICH_OS == "Fedora" ]; then
+		chown qemu:qemu $nvme_disk
+	elif [ $WHICH_OS == "Ubuntu" ]; then
+		chown libvirt-qemu:kvm $nvme_disk
+	else
+		# That's just a wild guess for now
+		# TODO: needs improvement for other distros
+		chown libvirt-qemu:kvm $nvme_disk
+	fi
 fi
