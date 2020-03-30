@@ -133,8 +133,8 @@ spdk_detach_rte(struct spdk_pci_device *dev)
 	dev->internal.pending_removal = true;
 	if (spdk_process_is_primary() && !pthread_equal(g_dpdk_tid, pthread_self())) {
 		rte_eal_alarm_set(1, spdk_detach_rte_cb, rte_dev);
-		/* wait up to 20ms for the cb to start executing */
-		for (i = 20; i > 0; i--) {
+		/* wait up to 2s for the cb to finish executing */
+		for (i = 2000; i > 0; i--) {
 
 			spdk_delay_us(1000);
 			pthread_mutex_lock(&g_pci_mutex);
@@ -149,7 +149,7 @@ spdk_detach_rte(struct spdk_pci_device *dev)
 		/* besides checking the removed flag, we also need to wait
 		 * for the dpdk detach function to unwind, as it's doing some
 		 * operations even after calling our detach callback. Simply
-		 * cancell the alarm - if it started executing already, this
+		 * cancel the alarm - if it started executing already, this
 		 * call will block and wait for it to finish.
 		 */
 		rte_eal_alarm_cancel(spdk_detach_rte_cb, rte_dev);
@@ -163,6 +163,8 @@ spdk_detach_rte(struct spdk_pci_device *dev)
 		if (!removed) {
 			fprintf(stderr, "Timeout waiting for DPDK to remove PCI device %s.\n",
 				rte_dev->name);
+			/* If we reach this state, then the device couldn't be removed and most likely
+			   a subsequent hot add of a device in the same BDF will fail */
 		}
 	} else {
 		spdk_detach_rte_cb(rte_dev);
