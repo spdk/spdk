@@ -685,21 +685,6 @@ opal_init_key(struct spdk_opal_key *opal_key, const char *passwd,
 }
 
 static int
-opal_build_locking_user(uint8_t *buffer, size_t length, uint8_t user)
-{
-	if (length < OPAL_UID_LENGTH) {
-		SPDK_ERRLOG("Can't build locking range user, buffer overflow\n");
-		return -ERANGE;
-	}
-
-	memcpy(buffer, spdk_opal_uid[UID_USER1], OPAL_UID_LENGTH);
-
-	buffer[7] = user;
-
-	return 0;
-}
-
-static int
 opal_build_locking_range(uint8_t *buffer, size_t length, uint8_t locking_range)
 {
 	if (length < OPAL_UID_LENGTH) {
@@ -1184,11 +1169,8 @@ opal_start_auth_session(struct spdk_opal_dev *dev, struct opal_session *sess,
 	opal_set_comid(sess, dev->comid);
 
 	if (session->who != OPAL_ADMIN1) {
-		err = opal_build_locking_user(uid_user, sizeof(uid_user),
-					      session->who);
-		if (err) {
-			return err;
-		}
+		memcpy(uid_user, spdk_opal_uid[UID_USER1], OPAL_UID_LENGTH);
+		uid_user[7] = session->who;
 	} else {
 		memcpy(uid_user, spdk_opal_uid[UID_ADMIN1], OPAL_UID_LENGTH);
 	}
@@ -1516,7 +1498,8 @@ opal_enable_user(struct spdk_opal_dev *dev, struct opal_session *sess,
 	int err = 0;
 	uint8_t uid_user[OPAL_UID_LENGTH];
 
-	err = opal_build_locking_user(uid_user, OPAL_UID_LENGTH, session->who);
+	memcpy(uid_user, spdk_opal_uid[UID_USER1], OPAL_UID_LENGTH);
+	uid_user[7] = session->who;
 
 	opal_clear_cmd(sess);
 	opal_set_comid(sess, dev->comid);
@@ -1555,10 +1538,8 @@ opal_add_user_to_locking_range(struct spdk_opal_dev *dev,
 	uint8_t uid_user[OPAL_UID_LENGTH];
 	uint8_t uid_locking_range[OPAL_UID_LENGTH];
 
-	err = opal_build_locking_user(uid_user, OPAL_UID_LENGTH, locking_session->session.who);
-	if (err) {
-		return err;
-	}
+	memcpy(uid_user, spdk_opal_uid[UID_USER1], OPAL_UID_LENGTH);
+	uid_user[7] = locking_session->session.who;
 
 	switch (locking_session->l_state) {
 	case OPAL_READONLY:
