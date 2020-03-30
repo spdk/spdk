@@ -131,11 +131,6 @@ struct opal_common_session {
 	struct spdk_opal_key opal_key;
 };
 
-struct spdk_opal_locking_session {
-	struct opal_common_session session;
-	uint32_t l_state;
-};
-
 struct spdk_opal_new_pw_session {
 	struct opal_common_session old_session;
 	struct opal_common_session new_session;

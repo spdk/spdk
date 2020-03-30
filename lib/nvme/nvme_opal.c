@@ -1196,7 +1196,8 @@ opal_start_auth_session(struct spdk_opal_dev *dev,
 
 static int
 opal_lock_unlock_range(struct spdk_opal_dev *dev, struct opal_session *sess,
-		       struct spdk_opal_locking_session *locking_session)
+		       enum spdk_opal_locking_range locking_range,
+		       enum spdk_opal_lock_state l_state)
 {
 	uint8_t uid_locking_range[OPAL_UID_LENGTH];
 	uint8_t read_locked, write_locked;
@@ -1205,9 +1206,9 @@ opal_lock_unlock_range(struct spdk_opal_dev *dev, struct opal_session *sess,
 	opal_clear_cmd(sess);
 	opal_set_comid(sess, dev->comid);
 
-	opal_build_locking_range(uid_locking_range, locking_session->session.opal_key.locking_range);
+	opal_build_locking_range(uid_locking_range, locking_range);
 
-	switch (locking_session->l_state) {
+	switch (l_state) {
 	case OPAL_READONLY:
 		read_locked = 0;
 		write_locked = 1;
@@ -1517,16 +1518,18 @@ opal_enable_user(struct spdk_opal_dev *dev, struct opal_session *sess,
 static int
 opal_add_user_to_locking_range(struct spdk_opal_dev *dev,
 			       struct opal_session *sess,
-			       struct spdk_opal_locking_session *locking_session)
+			       enum spdk_opal_user user,
+			       enum spdk_opal_locking_range locking_range,
+			       enum spdk_opal_lock_state l_state)
 {
 	int err = 0;
 	uint8_t uid_user[OPAL_UID_LENGTH];
 	uint8_t uid_locking_range[OPAL_UID_LENGTH];
 
 	memcpy(uid_user, spdk_opal_uid[UID_USER1], OPAL_UID_LENGTH);
-	uid_user[7] = locking_session->session.who;
+	uid_user[7] = user;
 
-	switch (locking_session->l_state) {
+	switch (l_state) {
 	case OPAL_READONLY:
 		memcpy(uid_locking_range, spdk_opal_uid[UID_LOCKINGRANGE_ACE_RDLOCKED], OPAL_UID_LENGTH);
 		break;
@@ -1538,7 +1541,7 @@ opal_add_user_to_locking_range(struct spdk_opal_dev *dev,
 		return -EINVAL;
 	}
 
-	uid_locking_range[7] = locking_session->session.opal_key.locking_range;
+	uid_locking_range[7] = locking_range;
 
 	opal_clear_cmd(sess);
 	opal_set_comid(sess, dev->comid);
@@ -1970,30 +1973,27 @@ spdk_opal_cmd_lock_unlock(struct spdk_opal_dev *dev, enum spdk_opal_user user,
 			  enum spdk_opal_lock_state flag, enum spdk_opal_locking_range locking_range,
 			  const char *passwd)
 {
-	struct spdk_opal_locking_session locking_session = {};
+	struct spdk_opal_key opal_key = {};
 	int ret;
 
 	if (dev->supported == false) {
 		return -ENOTSUP;
 	}
 
-	ret = opal_init_key(&locking_session.session.opal_key, passwd, locking_range);
+	ret = opal_init_key(&opal_key, passwd, locking_range);
 	if (ret != 0) {
 		return ret;
 	}
 
-	locking_session.l_state = flag;
-
 	pthread_mutex_lock(&dev->mutex_lock);
-
-	ret = opal_start_auth_session(dev, &dev->sess, user, &locking_session.session.opal_key);
+	ret = opal_start_auth_session(dev, &dev->sess, user, &opal_key);
 	if (ret) {
 		SPDK_ERRLOG("start authenticate session error %d\n", ret);
 		pthread_mutex_unlock(&dev->mutex_lock);
 		return ret;
 	}
 
-	ret = opal_lock_unlock_range(dev, &dev->sess, &locking_session);
+	ret = opal_lock_unlock_range(dev, &dev->sess, locking_range, flag);
 	if (ret) {
 		SPDK_ERRLOG("lock unlock range error %d\n", ret);
 		goto end;
@@ -2187,31 +2187,28 @@ spdk_opal_cmd_add_user_to_locking_range(struct spdk_opal_dev *dev, enum spdk_opa
 					enum spdk_opal_locking_range locking_range_id,
 					enum spdk_opal_lock_state lock_flag, const char *passwd)
 {
-	struct spdk_opal_locking_session locking_session = {};
+	struct spdk_opal_key opal_key = {};
 	int ret;
 
 	if (dev->supported == false) {
 		return -ENOTSUP;
 	}
 
-	ret = opal_init_key(&locking_session.session.opal_key, passwd, locking_range_id);
+	ret = opal_init_key(&opal_key, passwd, locking_range_id);
 	if (ret != 0) {
 		return ret;
 	}
-	locking_session.session.who = user_id;
-	locking_session.l_state = lock_flag;
 
 	pthread_mutex_lock(&dev->mutex_lock);
 	ret =  opal_start_generic_session(dev, &dev->sess, UID_ADMIN1, UID_LOCKINGSP,
-					  locking_session.session.opal_key.key,
-					  locking_session.session.opal_key.key_len);
+					  opal_key.key, opal_key.key_len);
 	if (ret) {
 		SPDK_ERRLOG("start locking SP session error %d\n", ret);
 		pthread_mutex_unlock(&dev->mutex_lock);
 		return ret;
 	}
 
-	ret = opal_add_user_to_locking_range(dev, &dev->sess, &locking_session);
+	ret = opal_add_user_to_locking_range(dev, &dev->sess, user_id, locking_range_id, lock_flag);
 	if (ret) {
 		SPDK_ERRLOG("add user to locking range error %d\n", ret);
 		goto end;
