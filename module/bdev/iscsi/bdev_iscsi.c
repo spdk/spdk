@@ -144,7 +144,6 @@ _iscsi_free_lun(void *arg)
 static void
 _bdev_iscsi_conn_req_free(struct bdev_iscsi_conn_req *req)
 {
-
 	free(req->initiator_iqn);
 	free(req->bdev_name);
 	free(req->url);
@@ -771,7 +770,12 @@ iscsi_bdev_conn_poll(void *arg)
 			}
 		}
 
-		if (req->status != SCSI_STATUS_GOOD) {
+		if (req->status == 0) {
+			/*
+			 * The request completed successfully.
+			 */
+			free(req);
+		} else if (req->status > 0) {
 			/*
 			 * An error has occurred during connecting.  This req has already
 			 * been removed from the g_iscsi_conn_req list, but we needed to
@@ -838,6 +842,7 @@ create_iscsi_disk(const char *bdev_name, const char *url, const char *initiator_
 	}
 
 	iscsi_destroy_url(iscsi_url);
+	req->status = -1;
 	TAILQ_INSERT_TAIL(&g_iscsi_conn_req, req, link);
 	if (!g_conn_poller) {
 		g_conn_poller = spdk_poller_register(iscsi_bdev_conn_poll, NULL, BDEV_ISCSI_CONNECTION_POLL_US);
