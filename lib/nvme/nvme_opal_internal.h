@@ -246,16 +246,6 @@ struct spdk_opal_resp_parsed {
 	struct spdk_opal_resp_token resp_tokens[MAX_TOKS];
 };
 
-struct opal_locking_range_setup_session {
-	uint8_t id;
-	uint8_t _padding[7];
-	uint64_t range_start;
-	uint64_t range_length;
-	bool read_lock_enabled;
-	bool write_lock_enabled;
-	struct opal_common_session session;
-};
-
 /* header of a response */
 struct spdk_opal_header {
 	struct spdk_opal_compacket com_packet;

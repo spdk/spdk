@@ -1255,8 +1255,7 @@ opal_lock_unlock_range(struct spdk_opal_dev *dev, struct opal_session *sess,
 
 static int opal_generic_locking_range_enable_disable(struct spdk_opal_dev *dev,
 		struct opal_session *sess,
-		uint8_t *uid, bool read_lock_enabled, bool write_lock_enabled,
-		bool read_locked, bool write_locked)
+		uint8_t *uid, bool read_lock_enabled, bool write_lock_enabled)
 {
 	int err = 0;
 
@@ -1281,12 +1280,12 @@ static int opal_generic_locking_range_enable_disable(struct spdk_opal_dev *dev,
 
 			SPDK_OPAL_STARTNAME,
 			SPDK_OPAL_READLOCKED,
-			read_locked,
+			0,
 			SPDK_OPAL_ENDNAME,
 
 			SPDK_OPAL_STARTNAME,
 			SPDK_OPAL_WRITELOCKED,
-			write_locked,
+			0,
 			SPDK_OPAL_ENDNAME,
 
 			SPDK_OPAL_ENDLIST,
@@ -1300,23 +1299,21 @@ static int opal_generic_locking_range_enable_disable(struct spdk_opal_dev *dev,
 
 static int
 opal_setup_locking_range(struct spdk_opal_dev *dev, struct opal_session *sess,
-			 struct opal_locking_range_setup_session *setup_session)
+			 enum spdk_opal_locking_range locking_range,
+			 uint64_t range_start, uint64_t range_length,
+			 bool read_lock_enabled, bool write_lock_enabled)
 {
 	uint8_t uid_locking_range[OPAL_UID_LENGTH];
-	uint8_t locking_range_id;
 	int err = 0;
 
 	opal_clear_cmd(sess);
 	opal_set_comid(sess, dev->comid);
 
-	locking_range_id = setup_session->session.opal_key.locking_range;
-	opal_build_locking_range(uid_locking_range, locking_range_id);
+	opal_build_locking_range(uid_locking_range, locking_range);
 
-	if (locking_range_id == 0) {
+	if (locking_range == 0) {
 		err = opal_generic_locking_range_enable_disable(dev, sess, uid_locking_range,
-				setup_session->read_lock_enabled,
-				setup_session->write_lock_enabled,
-				0, 0);
+				read_lock_enabled, write_lock_enabled);
 	} else {
 		opal_add_token_u8(&err, sess, SPDK_OPAL_CALL);
 		opal_add_token_bytestring(&err, sess, uid_locking_range, OPAL_UID_LENGTH);
@@ -1330,22 +1327,22 @@ opal_setup_locking_range(struct spdk_opal_dev *dev, struct opal_session *sess,
 				SPDK_OPAL_STARTLIST,
 				SPDK_OPAL_STARTNAME,
 				SPDK_OPAL_RANGESTART);
-		opal_add_token_u64(&err, sess, setup_session->range_start);
+		opal_add_token_u64(&err, sess, range_start);
 		opal_add_tokens(&err, sess, 3,
 				SPDK_OPAL_ENDNAME,
 				SPDK_OPAL_STARTNAME,
 				SPDK_OPAL_RANGELENGTH);
-		opal_add_token_u64(&err, sess, setup_session->range_length);
+		opal_add_token_u64(&err, sess, range_length);
 		opal_add_tokens(&err, sess, 3,
 				SPDK_OPAL_ENDNAME,
 				SPDK_OPAL_STARTNAME,
 				SPDK_OPAL_READLOCKENABLED);
-		opal_add_token_u64(&err, sess, setup_session->read_lock_enabled);
+		opal_add_token_u64(&err, sess, read_lock_enabled);
 		opal_add_tokens(&err, sess, 3,
 				SPDK_OPAL_ENDNAME,
 				SPDK_OPAL_STARTNAME,
 				SPDK_OPAL_WRITELOCKENABLED);
-		opal_add_token_u64(&err, sess, setup_session->write_lock_enabled);
+		opal_add_token_u64(&err, sess, write_lock_enabled);
 		opal_add_tokens(&err, sess, 4,
 				SPDK_OPAL_ENDNAME,
 				SPDK_OPAL_ENDLIST,
@@ -2014,33 +2011,28 @@ spdk_opal_cmd_setup_locking_range(struct spdk_opal_dev *dev, enum spdk_opal_user
 				  enum spdk_opal_locking_range locking_range_id, uint64_t range_start,
 				  uint64_t range_length, const char *passwd)
 {
-	struct opal_locking_range_setup_session setup_session = {};
+	struct spdk_opal_key opal_key = {};
 	int ret;
 
 	if (dev->supported == false) {
 		return -ENOTSUP;
 	}
 
-	ret = opal_init_key(&setup_session.session.opal_key, passwd, locking_range_id);
+	ret = opal_init_key(&opal_key, passwd, locking_range_id);
 	if (ret != 0) {
 		return ret;
 	}
 
-	setup_session.id = locking_range_id;
-	setup_session.range_length = range_length;
-	setup_session.range_start = range_start;
-	setup_session.read_lock_enabled = true;
-	setup_session.write_lock_enabled = true;
-
 	pthread_mutex_lock(&dev->mutex_lock);
-	ret = opal_start_auth_session(dev, &dev->sess, user, &setup_session.session.opal_key);
+	ret = opal_start_auth_session(dev, &dev->sess, user, &opal_key);
 	if (ret) {
 		SPDK_ERRLOG("start authenticate session error %d\n", ret);
 		pthread_mutex_unlock(&dev->mutex_lock);
 		return ret;
 	}
 
-	ret = opal_setup_locking_range(dev, &dev->sess, &setup_session);
+	ret = opal_setup_locking_range(dev, &dev->sess, locking_range_id, range_start, range_length, true,
+				       true);
 	if (ret) {
 		SPDK_ERRLOG("setup locking range error %d\n", ret);
 		goto end;
