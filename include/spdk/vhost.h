@@ -313,11 +313,12 @@ int spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tg
  * \param dev_name bdev name to associate with this vhost device
  * \param readonly if set, all writes to the device will fail with
  * \c VIRTIO_BLK_S_IOERR error code.
+ * \param packed_ring this controller supports packed ring if set.
  *
  * \return 0 on success, negative errno on error.
  */
 int spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_name,
-			     bool readonly);
+			     bool readonly, bool packed_ring);
 
 /**
  * Remove a vhost device. The device must not have any open connections on it's socket.

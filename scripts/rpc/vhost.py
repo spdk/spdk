@@ -97,13 +97,14 @@ def vhost_nvme_controller_add_ns(client, ctrlr, bdev_name):
 
 
 @deprecated_alias('construct_vhost_blk_controller')
-def vhost_create_blk_controller(client, ctrlr, dev_name, cpumask=None, readonly=None):
+def vhost_create_blk_controller(client, ctrlr, dev_name, cpumask=None, readonly=None, packed_ring=None):
     """Create vhost BLK controller.
     Args:
         ctrlr: controller name
         dev_name: device name to add to controller
         cpumask: cpu mask for this controller
         readonly: set controller as read-only
+        packed_ring: support controller packed_ring
     """
     params = {
         'ctrlr': ctrlr,
@@ -113,6 +114,8 @@ def vhost_create_blk_controller(client, ctrlr, dev_name, cpumask=None, readonly=
         params['cpumask'] = cpumask
     if readonly:
         params['readonly'] = readonly
+    if packed_ring:
+        params['packed_ring'] = packed_ring
     return client.call('vhost_create_blk_controller', params)
 
 

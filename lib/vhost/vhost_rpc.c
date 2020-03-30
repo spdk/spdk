@@ -242,6 +242,7 @@ struct rpc_vhost_blk_ctrlr {
 	char *dev_name;
 	char *cpumask;
 	bool readonly;
+	bool packed_ring;
 };
 
 static const struct spdk_json_object_decoder rpc_construct_vhost_blk_ctrlr[] = {
@@ -249,6 +250,7 @@ static const struct spdk_json_object_decoder rpc_construct_vhost_blk_ctrlr[] = {
 	{"dev_name", offsetof(struct rpc_vhost_blk_ctrlr, dev_name), spdk_json_decode_string },
 	{"cpumask", offsetof(struct rpc_vhost_blk_ctrlr, cpumask), spdk_json_decode_string, true},
 	{"readonly", offsetof(struct rpc_vhost_blk_ctrlr, readonly), spdk_json_decode_bool, true},
+	{"packed_ring", offsetof(struct rpc_vhost_blk_ctrlr, packed_ring), spdk_json_decode_bool, true},
 };
 
 static void
@@ -275,7 +277,8 @@ spdk_rpc_vhost_create_blk_controller(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	rc = spdk_vhost_blk_construct(req.ctrlr, req.cpumask, req.dev_name, req.readonly);
+	rc = spdk_vhost_blk_construct(req.ctrlr, req.cpumask, req.dev_name,
+				      req.readonly, req.packed_ring);
 	if (rc < 0) {
 		goto invalid;
 	}

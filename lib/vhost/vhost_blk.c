@@ -1158,6 +1158,7 @@ vhost_blk_controller_construct(void)
 	char *cpumask;
 	char *name;
 	bool readonly;
+	bool packed_ring;
 
 	for (sp = spdk_conf_first_section(NULL); sp != NULL; sp = spdk_conf_next_section(sp)) {
 		if (!spdk_conf_section_match_prefix(sp, "VhostBlk")) {
@@ -1178,13 +1179,15 @@ vhost_blk_controller_construct(void)
 
 		cpumask = spdk_conf_section_get_val(sp, "Cpumask");
 		readonly = spdk_conf_section_get_boolval(sp, "ReadOnly", false);
+		packed_ring = spdk_conf_section_get_boolval(sp, "PackedRing", false);
 
 		bdev_name = spdk_conf_section_get_val(sp, "Dev");
 		if (bdev_name == NULL) {
 			continue;
 		}
 
-		if (spdk_vhost_blk_construct(name, cpumask, bdev_name, readonly) < 0) {
+		if (spdk_vhost_blk_construct(name, cpumask, bdev_name,
+					     readonly, packed_ring) < 0) {
 			return -1;
 		}
 	}
@@ -1193,7 +1196,8 @@ vhost_blk_controller_construct(void)
 }
 
 int
-spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_name, bool readonly)
+spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_name,
+			 bool readonly, bool packed_ring)
 {
 	struct spdk_vhost_blk_dev *bvdev = NULL;
 	struct spdk_vhost_dev *vdev;
@@ -1219,6 +1223,8 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 	vdev->virtio_features = SPDK_VHOST_BLK_FEATURES_BASE;
 	vdev->disabled_features = SPDK_VHOST_BLK_DISABLED_FEATURES;
 	vdev->protocol_features = SPDK_VHOST_BLK_PROTOCOL_FEATURES;
+
+	vdev->virtio_features |= (uint64_t)packed_ring << VIRTIO_F_RING_PACKED;
 
 	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
 		vdev->virtio_features |= (1ULL << VIRTIO_BLK_F_DISCARD);
