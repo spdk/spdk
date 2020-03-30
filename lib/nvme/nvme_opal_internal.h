@@ -125,12 +125,6 @@ struct spdk_opal_key {
 	uint8_t key[OPAL_KEY_MAX];
 };
 
-struct opal_common_session {
-	uint32_t sum; /* single user mode */
-	uint32_t who;
-	struct spdk_opal_key opal_key;
-};
-
 const uint8_t spdk_opal_uid[][OPAL_UID_LENGTH] = {
 	/* users */
 	[UID_SMUID] = /* Session Manager UID */
