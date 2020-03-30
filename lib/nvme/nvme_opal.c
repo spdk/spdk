@@ -660,8 +660,7 @@ opal_set_comid(struct opal_session *sess, uint16_t comid)
 }
 
 static inline int
-opal_init_key(struct spdk_opal_key *opal_key, const char *passwd,
-	      enum spdk_opal_locking_range locking_range)
+opal_init_key(struct spdk_opal_key *opal_key, const char *passwd)
 {
 	int len;
 
@@ -679,7 +678,6 @@ opal_init_key(struct spdk_opal_key *opal_key, const char *passwd,
 
 	opal_key->key_len = len;
 	memcpy(opal_key->key, passwd, opal_key->key_len);
-	opal_key->locking_range = locking_range;
 
 	return 0;
 }
@@ -1615,7 +1613,7 @@ opal_set_sid_cpin_pin(struct spdk_opal_dev *dev, struct opal_session *sess, void
 	struct spdk_opal_key opal_key = {};
 	int ret;
 
-	ret = opal_init_key(&opal_key, new_passwd, OPAL_LOCKING_RANGE_GLOBAL);
+	ret = opal_init_key(&opal_key, new_passwd);
 	if (ret != 0) {
 		return ret;
 	}
@@ -1883,7 +1881,7 @@ spdk_opal_cmd_revert_tper(struct spdk_opal_dev *dev, const char *passwd)
 		return -ENOTSUP;
 	}
 
-	ret = opal_init_key(&opal_key, passwd, OPAL_LOCKING_RANGE_GLOBAL);
+	ret = opal_init_key(&opal_key, passwd);
 	if (ret) {
 		SPDK_ERRLOG("Init key failed\n");
 		return ret;
@@ -1926,7 +1924,7 @@ spdk_opal_cmd_activate_locking_sp(struct spdk_opal_dev *dev, const char *passwd)
 	struct spdk_opal_key opal_key = {};
 	int ret;
 
-	ret = opal_init_key(&opal_key, passwd, OPAL_LOCKING_RANGE_GLOBAL);
+	ret = opal_init_key(&opal_key, passwd);
 	if (ret != 0) {
 		return ret;
 	}
@@ -1974,7 +1972,7 @@ spdk_opal_cmd_lock_unlock(struct spdk_opal_dev *dev, enum spdk_opal_user user,
 		return -ENOTSUP;
 	}
 
-	ret = opal_init_key(&opal_key, passwd, locking_range);
+	ret = opal_init_key(&opal_key, passwd);
 	if (ret != 0) {
 		return ret;
 	}
@@ -2015,7 +2013,7 @@ spdk_opal_cmd_setup_locking_range(struct spdk_opal_dev *dev, enum spdk_opal_user
 		return -ENOTSUP;
 	}
 
-	ret = opal_init_key(&opal_key, passwd, locking_range_id);
+	ret = opal_init_key(&opal_key, passwd);
 	if (ret != 0) {
 		return ret;
 	}
@@ -2060,7 +2058,7 @@ spdk_opal_cmd_get_max_ranges(struct spdk_opal_dev *dev, const char *passwd)
 		return dev->max_ranges;
 	}
 
-	ret = opal_init_key(&opal_key, passwd, OPAL_LOCKING_RANGE_GLOBAL);
+	ret = opal_init_key(&opal_key, passwd);
 	if (ret != 0) {
 		return ret;
 	}
@@ -2100,7 +2098,7 @@ spdk_opal_cmd_get_locking_range_info(struct spdk_opal_dev *dev, const char *pass
 		return -ENOTSUP;
 	}
 
-	ret = opal_init_key(&opal_key, passwd, locking_range_id);
+	ret = opal_init_key(&opal_key, passwd);
 	if (ret != 0) {
 		return ret;
 	}
@@ -2140,7 +2138,7 @@ spdk_opal_cmd_enable_user(struct spdk_opal_dev *dev, enum spdk_opal_user user_id
 		return -ENOTSUP;
 	}
 
-	ret = opal_init_key(&opal_key, passwd, OPAL_LOCKING_RANGE_GLOBAL);
+	ret = opal_init_key(&opal_key, passwd);
 	if (ret != 0) {
 		return ret;
 	}
@@ -2182,7 +2180,7 @@ spdk_opal_cmd_add_user_to_locking_range(struct spdk_opal_dev *dev, enum spdk_opa
 		return -ENOTSUP;
 	}
 
-	ret = opal_init_key(&opal_key, passwd, locking_range_id);
+	ret = opal_init_key(&opal_key, passwd);
 	if (ret != 0) {
 		return ret;
 	}
@@ -2224,12 +2222,12 @@ spdk_opal_cmd_set_new_passwd(struct spdk_opal_dev *dev, enum spdk_opal_user user
 		return -ENOTSUP;
 	}
 
-	ret = opal_init_key(&old_key, old_passwd, OPAL_LOCKING_RANGE_GLOBAL);
+	ret = opal_init_key(&old_key, old_passwd);
 	if (ret != 0) {
 		return ret;
 	}
 
-	ret = opal_init_key(&new_key, new_passwd, OPAL_LOCKING_RANGE_GLOBAL);
+	ret = opal_init_key(&new_key, new_passwd);
 	if (ret != 0) {
 		return ret;
 	}
@@ -2270,7 +2268,7 @@ spdk_opal_cmd_erase_locking_range(struct spdk_opal_dev *dev, enum spdk_opal_user
 		return -ENODEV;
 	}
 
-	ret = opal_init_key(&opal_key, password, locking_range_id);
+	ret = opal_init_key(&opal_key, password);
 	if (ret != 0) {
 		return ret;
 	}
@@ -2311,7 +2309,7 @@ spdk_opal_cmd_secure_erase_locking_range(struct spdk_opal_dev *dev, enum spdk_op
 		return -ENOTSUP;
 	}
 
-	ret = opal_init_key(&opal_key, password, locking_range_id);
+	ret = opal_init_key(&opal_key, password);
 	if (ret != 0) {
 		return ret;
 	}

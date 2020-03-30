@@ -119,9 +119,7 @@ enum opal_method_enum {
 };
 
 struct spdk_opal_key {
-	uint8_t locking_range;
 	uint8_t key_len;
-	uint8_t _padding[6];
 	uint8_t key[OPAL_KEY_MAX];
 };
 
