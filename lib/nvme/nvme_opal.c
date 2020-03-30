@@ -1585,19 +1585,20 @@ opal_add_user_to_locking_range(struct spdk_opal_dev *dev,
 
 static int
 opal_new_user_passwd(struct spdk_opal_dev *dev, struct opal_session *sess,
-		     struct opal_common_session *session)
+		     enum spdk_opal_user user,
+		     struct spdk_opal_key *opal_key)
 {
 	uint8_t uid_cpin[OPAL_UID_LENGTH];
 	int ret;
 
-	if (session->who == OPAL_ADMIN1) {
+	if (user == OPAL_ADMIN1) {
 		memcpy(uid_cpin, spdk_opal_uid[UID_C_PIN_ADMIN1], OPAL_UID_LENGTH);
 	} else {
 		memcpy(uid_cpin, spdk_opal_uid[UID_C_PIN_USER1], OPAL_UID_LENGTH);
-		uid_cpin[7] = session->who;
+		uid_cpin[7] = user;
 	}
 
-	ret = opal_generic_pw_cmd(sess, session->opal_key.key, session->opal_key.key_len, uid_cpin, dev);
+	ret = opal_generic_pw_cmd(sess, opal_key->key, opal_key->key_len, uid_cpin, dev);
 	if (ret != 0) {
 		SPDK_ERRLOG("Error building set password command\n");
 		return ret;
@@ -2220,35 +2221,34 @@ int
 spdk_opal_cmd_set_new_passwd(struct spdk_opal_dev *dev, enum spdk_opal_user user_id,
 			     const char *new_passwd, const char *old_passwd, bool new_user)
 {
-	struct spdk_opal_new_pw_session session;
+	struct spdk_opal_key old_key = {};
+	struct spdk_opal_key new_key = {};
 	int ret;
 
 	if (dev->supported == false) {
 		return -ENOTSUP;
 	}
 
-	ret = opal_init_key(&session.old_session.opal_key, old_passwd, OPAL_LOCKING_RANGE_GLOBAL);
+	ret = opal_init_key(&old_key, old_passwd, OPAL_LOCKING_RANGE_GLOBAL);
 	if (ret != 0) {
 		return ret;
 	}
 
-	ret = opal_init_key(&session.new_session.opal_key, new_passwd, OPAL_LOCKING_RANGE_GLOBAL);
+	ret = opal_init_key(&new_key, new_passwd, OPAL_LOCKING_RANGE_GLOBAL);
 	if (ret != 0) {
 		return ret;
 	}
-
-	session.new_session.who = user_id;
 
 	pthread_mutex_lock(&dev->mutex_lock);
 	ret = opal_start_auth_session(dev, &dev->sess, new_user ? OPAL_ADMIN1 : user_id,
-				      &session.old_session.opal_key);
+				      &old_key);
 	if (ret) {
 		SPDK_ERRLOG("start authenticate session error %d\n", ret);
 		pthread_mutex_unlock(&dev->mutex_lock);
 		return ret;
 	}
 
-	ret = opal_new_user_passwd(dev, &dev->sess, &session.new_session);
+	ret = opal_new_user_passwd(dev, &dev->sess, user_id, &new_key);
 	if (ret) {
 		SPDK_ERRLOG("set new passwd error %d\n", ret);
 		goto end;

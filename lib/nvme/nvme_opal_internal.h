@@ -131,11 +131,6 @@ struct opal_common_session {
 	struct spdk_opal_key opal_key;
 };
 
-struct spdk_opal_new_pw_session {
-	struct opal_common_session old_session;
-	struct opal_common_session new_session;
-};
-
 const uint8_t spdk_opal_uid[][OPAL_UID_LENGTH] = {
 	/* users */
 	[UID_SMUID] = /* Session Manager UID */
