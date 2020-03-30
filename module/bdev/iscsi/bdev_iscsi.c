@@ -522,14 +522,48 @@ bdev_iscsi_create_cb(void *io_device, void *ctx_buf)
 }
 
 static void
+_iscsi_destroy_cb(void *ctx)
+{
+	struct bdev_iscsi_lun *lun = ctx;
+
+	pthread_mutex_lock(&lun->mutex);
+
+	assert(lun->master_td == spdk_get_thread());
+	assert(lun->ch_count > 0);
+
+	lun->ch_count--;
+	if (lun->ch_count > 0) {
+		pthread_mutex_unlock(&lun->mutex);
+		return;
+	}
+
+	lun->master_td = NULL;
+	spdk_poller_unregister(&lun->poller);
+
+	pthread_mutex_unlock(&lun->mutex);
+}
+
+static void
 bdev_iscsi_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct bdev_iscsi_lun *lun = io_device;
+	struct spdk_thread *thread;
 
 	pthread_mutex_lock(&lun->mutex);
 	lun->ch_count--;
 	if (lun->ch_count == 0) {
 		assert(lun->master_td != NULL);
+
+		if (lun->master_td != spdk_get_thread()) {
+			/* The final channel was destroyed on a different thread
+			 * than where the first channel was created. Pass a message
+			 * to the master thread to unregister the poller. */
+			lun->ch_count++;
+			thread = lun->master_td;
+			pthread_mutex_unlock(&lun->mutex);
+			spdk_thread_send_msg(thread, _iscsi_destroy_cb, lun);
+			return;
+		}
 
 		lun->master_td = NULL;
 		spdk_poller_unregister(&lun->poller);
