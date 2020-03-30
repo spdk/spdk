@@ -1012,6 +1012,8 @@ union spdk_nvme_cmd_cdw11 {
 	union spdk_nvme_feat_error_recovery feat_error_recovery;
 	union spdk_nvme_feat_volatile_write_cache feat_volatile_write_cache;
 	union spdk_nvme_feat_number_of_queues feat_num_of_queues;
+	union spdk_nvme_feat_interrupt_coalescing feat_interrupt_coalescing;
+	union spdk_nvme_feat_interrupt_vector_configuration feat_interrupt_vector_configuration;
 	union spdk_nvme_feat_write_atomicity feat_write_atomicity;
 	union spdk_nvme_feat_async_event_configuration feat_async_event_cfg;
 	union spdk_nvme_feat_keep_alive_timer feat_keep_alive_timer;
