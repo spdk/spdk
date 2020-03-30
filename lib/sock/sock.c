@@ -404,6 +404,7 @@ spdk_sock_group_create(void *ctx)
 		if (group_impl != NULL) {
 			STAILQ_INSERT_TAIL(&group->group_impls, group_impl, link);
 			TAILQ_INIT(&group_impl->socks);
+			group_impl->num_removed_socks = 0;
 			group_impl->net_impl = impl;
 		}
 	}
@@ -500,6 +501,9 @@ spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *soc
 	rc = group_impl->net_impl->group_impl_remove_sock(group_impl, sock);
 	if (rc == 0) {
 		TAILQ_REMOVE(&group_impl->socks, sock, link);
+		assert(group_impl->num_removed_socks < MAX_EVENTS_PER_POLL);
+		group_impl->removed_socks[group_impl->num_removed_socks] = (uintptr_t)sock;
+		group_impl->num_removed_socks++;
 		sock->group_impl = NULL;
 		sock->cb_fn = NULL;
 		sock->cb_arg = NULL;
@@ -526,6 +530,9 @@ spdk_sock_group_impl_poll_count(struct spdk_sock_group_impl *group_impl,
 		return 0;
 	}
 
+	/* The number of removed sockets should be reset for each call to poll. */
+	group_impl->num_removed_socks = 0;
+
 	num_events = group_impl->net_impl->group_impl_poll(group_impl, max_events, socks);
 	if (num_events == -1) {
 		return -1;
@@ -533,10 +540,21 @@ spdk_sock_group_impl_poll_count(struct spdk_sock_group_impl *group_impl,
 
 	for (i = 0; i < num_events; i++) {
 		struct spdk_sock *sock = socks[i];
+		int j;
+		bool valid = true;
+		for (j = 0; j < group_impl->num_removed_socks; j++) {
+			if ((uintptr_t)sock == group_impl->removed_socks[j]) {
+				valid = false;
+				break;
+			}
+		}
 
-		assert(sock->cb_fn != NULL);
-		sock->cb_fn(sock->cb_arg, group, sock);
+		if (valid) {
+			assert(sock->cb_fn != NULL);
+			sock->cb_fn(sock->cb_arg, group, sock);
+		}
 	}
+
 	return num_events;
 }
 
