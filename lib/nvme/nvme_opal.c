@@ -684,25 +684,19 @@ opal_init_key(struct spdk_opal_key *opal_key, const char *passwd,
 	return 0;
 }
 
-static int
-opal_build_locking_range(uint8_t *buffer, size_t length, uint8_t locking_range)
+static void
+opal_build_locking_range(uint8_t *buffer, uint8_t locking_range)
 {
-	if (length < OPAL_UID_LENGTH) {
-		SPDK_ERRLOG("Can't build locking range. Buffer overflow\n");
-		return -ERANGE;
-	}
-
 	memcpy(buffer, spdk_opal_uid[UID_LOCKINGRANGE_GLOBAL], OPAL_UID_LENGTH);
 
 	/* global */
 	if (locking_range == 0) {
-		return 0;
+		return;
 	}
 
 	/* non-global */
 	buffer[5] = LOCKING_RANGE_NON_GLOBAL;
 	buffer[7] = locking_range;
-	return 0;
 }
 
 static void
@@ -1211,10 +1205,7 @@ opal_lock_unlock_range(struct spdk_opal_dev *dev, struct opal_session *sess,
 	opal_clear_cmd(sess);
 	opal_set_comid(sess, dev->comid);
 
-	if (opal_build_locking_range(uid_locking_range, sizeof(uid_locking_range),
-				     locking_session->session.opal_key.locking_range) < 0) {
-		return -ERANGE;
-	}
+	opal_build_locking_range(uid_locking_range, locking_session->session.opal_key.locking_range);
 
 	switch (locking_session->l_state) {
 	case OPAL_READONLY:
@@ -1318,10 +1309,7 @@ opal_setup_locking_range(struct spdk_opal_dev *dev, struct opal_session *sess,
 	opal_set_comid(sess, dev->comid);
 
 	locking_range_id = setup_session->session.opal_key.locking_range;
-	err = opal_build_locking_range(uid_locking_range, OPAL_UID_LENGTH, locking_range_id);
-	if (err) {
-		return err;
-	}
+	opal_build_locking_range(uid_locking_range, locking_range_id);
 
 	if (locking_range_id == 0) {
 		err = opal_generic_locking_range_enable_disable(dev, sess, uid_locking_range,
@@ -1452,10 +1440,7 @@ opal_get_locking_range_info(struct spdk_opal_dev *dev,
 	uint8_t uid_locking_range[OPAL_UID_LENGTH];
 	struct spdk_opal_locking_range_info *info;
 
-	err = opal_build_locking_range(uid_locking_range, OPAL_UID_LENGTH, locking_range_id);
-	if (err) {
-		return err;
-	}
+	opal_build_locking_range(uid_locking_range, locking_range_id);
 
 	assert(locking_range_id < SPDK_OPAL_MAX_LOCKING_RANGE);
 	info = &dev->locking_ranges[locking_range_id];
@@ -1835,10 +1820,7 @@ opal_get_active_key(struct spdk_opal_dev *dev, struct opal_session *sess,
 	opal_set_comid(sess, dev->comid);
 
 	locking_range_id = session->opal_key.locking_range;
-	err = opal_build_locking_range(uid_locking_range, OPAL_UID_LENGTH, locking_range_id);
-	if (err) {
-		return err;
-	}
+	opal_build_locking_range(uid_locking_range, locking_range_id);
 
 	opal_add_token_u8(&err, sess, SPDK_OPAL_CALL);
 	opal_add_token_bytestring(&err, sess, uid_locking_range, OPAL_UID_LENGTH);
@@ -1878,10 +1860,7 @@ opal_erase_locking_range(struct spdk_opal_dev *dev, struct opal_session *sess,
 	opal_set_comid(sess, dev->comid);
 
 	locking_range_id = session->opal_key.locking_range;
-	err = opal_build_locking_range(uid_locking_range, OPAL_UID_LENGTH, locking_range_id);
-	if (err) {
-		return err;
-	}
+	opal_build_locking_range(uid_locking_range, locking_range_id);
 
 	opal_add_token_u8(&err, sess, SPDK_OPAL_CALL);
 	opal_add_token_bytestring(&err, sess, uid_locking_range, OPAL_UID_LENGTH);
