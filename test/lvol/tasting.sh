@@ -121,6 +121,42 @@ function test_tasting() {
 	check_leftover_devices
 }
 
+# Positive test for removing lvol store persistently
+function test_delete_lvol_store_persistent_positive() {
+	local aio0=$testdir/aio_bdev_0
+	local bdev_aio_name=${aio0##*/} bdev_block_size=4096
+	local lvstore_name=lvstore_test lvstore_uuid
+
+	rpc_cmd bdev_aio_create "$aio0" "$bdev_aio_name" "$bdev_block_size"
+
+	get_bdev_jq bdev_get_bdevs -b "$bdev_aio_name"
+	[[ ${jq_out["name"]} == "$bdev_aio_name" ]]
+	[[ ${jq_out["product_name"]} == "AIO disk" ]]
+	(( jq_out["block_size"] == bdev_block_size ))
+
+	lvstore_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$bdev_aio_name" "$lvstore_name")
+
+	get_lvs_jq bdev_lvol_get_lvstores -u "$lvstore_uuid"
+	[[ ${jq_out["uuid"]} == "$lvstore_uuid" ]]
+	[[ ${jq_out["name"]} == "$lvstore_name" ]]
+	[[ ${jq_out["base_bdev"]} == "$bdev_aio_name" ]]
+
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvstore_uuid"
+	rpc_cmd bdev_aio_delete "$bdev_aio_name"
+	# Create aio bdev on the same file
+	rpc_cmd bdev_aio_create "$aio0" "$bdev_aio_name" "$bdev_block_size"
+	# Wait 1 second to allow time for lvolstore tasting
+	sleep 1
+	# bdev_lvol_get_lvstores should not report any existsing lvol stores in configuration
+	# after deleting and adding NVMe bdev, thus check if destroyed lvol store does not exist
+	# on aio bdev anymore.
+	rpc_cmd bdev_lvol_get_lvstores -u "$lvstore_uuid" && false
+
+	# cleanup
+	rpc_cmd bdev_aio_delete "$bdev_aio_name"
+	check_leftover_devices
+}
+
 $rootdir/app/spdk_tgt/spdk_tgt &
 spdk_pid=$!
 trap 'killprocess "$spdk_pid"; rm -f $testdir/aio_bdev_0 $testdir/aio_bdev_1; exit 1' SIGINT SIGTERM EXIT
@@ -128,6 +164,7 @@ waitforlisten $spdk_pid
 truncate -s "${AIO_SIZE_MB}M" $testdir/aio_bdev_0 $testdir/aio_bdev_1
 
 run_test "test_tasting" test_tasting
+run_test "test_delete_lvol_store_persistent_positive" test_delete_lvol_store_persistent_positive
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid

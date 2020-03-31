@@ -112,7 +112,6 @@ def case_message(func):
     def inner(*args, **kwargs):
         test_name = {
             # bdev_lvol_delete_lvstore - positive tests
-            255: 'delete_lvol_store_persistent_positive',
             551: 'delete_lvol_bdev',
             552: 'bdev_lvol_delete_lvstore_with_clones',
             553: 'unregister_lvol_bdev',
@@ -250,47 +249,6 @@ class TestCases(object):
     def get_lvs_cluster_size(self, lvs_name="lvs_test"):
         lvs = self.c.bdev_lvol_get_lvstores(lvs_name)[0]
         return int(int(lvs['cluster_size']) / MEGABYTE)
-
-    @case_message
-    def test_case255(self):
-        """
-        delete_lvol_store_persistent_positive
-
-        Positive test for removing lvol store persistently
-        """
-        base_path = path.dirname(sys.argv[0])
-        base_name = "aio_bdev0"
-        aio_bdev0 = path.join(base_path, "aio_bdev_0")
-        # Construct aio bdev
-        self.c.bdev_aio_create(aio_bdev0, base_name, 4096)
-        # Create lvol store on created aio bdev
-        uuid_store = self.c.bdev_lvol_create_lvstore(base_name,
-                                                     self.lvs_name)
-        fail_count = self.c.check_bdev_lvol_get_lvstores(base_name, uuid_store,
-                                                         self.cluster_size)
-        # Destroy lvol store
-        if self.c.bdev_lvol_delete_lvstore(self.lvs_name) != 0:
-            fail_count += 1
-
-        # Delete aio bdev
-        self.c.bdev_aio_delete(base_name)
-        # Create aio bdev on the same file
-        self.c.bdev_aio_create(aio_bdev0, base_name, 4096)
-        # Wait 1 second to allow time for lvolstore tasting
-        sleep(1)
-
-        # check if destroyed lvol store does not exist on aio bdev
-        ret_value = self.c.check_bdev_lvol_get_lvstores(base_name, uuid_store,
-                                                        self.cluster_size)
-        if ret_value == 0:
-            fail_count += 1
-        self.c.bdev_aio_delete(base_name)
-
-        # Expected result:
-        # - bdev_lvol_get_lvstores should not report any existsing lvol stores in configuration
-        #    after deleting and adding NVMe bdev
-        # - no other operation fails
-        return fail_count
 
     @case_message
     def test_case551(self):
