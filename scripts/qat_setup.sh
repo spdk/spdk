@@ -35,7 +35,7 @@ if $bad_driver; then
 fi
 
 # try starting the qat service. If this doesn't work, just treat it as a warning for now.
-if service qat_service start; then
+if ! service qat_service start; then
 	echo "failed to start the qat service. Something may be wrong with your 01.org driver."
 fi
 
