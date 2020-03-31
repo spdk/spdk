@@ -1,15 +1,11 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: Create a report to help us improve. Please use the issue tracker only for reporting suspected issues.
 title: ''
 labels: 'Sighting'
 assignees: ''
 
 ---
-
-Please use the issue tracker only for reporting suspected issues.
-
-See [The SPDK Community Page](http://www.spdk.io/community/) for other SPDK communications channels.
 
 <!--- Provide a general summary of the issue in the Title above -->
 
