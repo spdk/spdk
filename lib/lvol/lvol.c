@@ -919,7 +919,6 @@ static void
 _spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 {
 	struct spdk_lvol_with_handle_req *req = cb_arg;
-	spdk_blob_id blob_id = spdk_blob_get_id(blob);
 	struct spdk_lvol *lvol = req->lvol;
 
 	TAILQ_REMOVE(&req->lvol->lvol_store->pending_lvols, req->lvol, link);
@@ -932,7 +931,7 @@ _spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	}
 
 	lvol->blob = blob;
-	lvol->blob_id = blob_id;
+	lvol->blob_id = spdk_blob_get_id(blob);
 
 	TAILQ_INSERT_TAIL(&lvol->lvol_store->lvols, lvol, link);
 
