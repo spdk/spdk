@@ -47,3 +47,7 @@ function run_fio_test() {
 	fio_template="fio --name=fio_test --filename=$file --offset=$offset --size=$size --rw=$rw --direct=1 $extra_params $pattern_template"
 	$fio_template
 }
+
+function calc() {
+	bc -l <<< "define ceil(x) { scale=0; return(x + (x % 1 > 0))/1 } $1"
+}
