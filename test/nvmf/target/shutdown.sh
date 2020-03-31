@@ -10,6 +10,50 @@ MALLOC_BLOCK_SIZE=512
 
 rpc_py="$rootdir/scripts/rpc.py"
 
+function starttarget() {
+	# Start the target
+	nvmfappstart "-m 0x1E"
+
+	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
+
+	num_subsystems=10
+	# SoftRoce does not have enough queues available for
+	# this test. Detect if we're using software RDMA.
+	# If so, only use two subsystem.
+	if check_ip_is_soft_roce "$NVMF_FIRST_TARGET_IP"; then
+		num_subsystems=2
+	fi
+
+	touch $testdir/bdevperf.conf
+	echo "[Nvme]" > $testdir/bdevperf.conf
+
+	timing_enter create_subsystems
+	# Create subsystems
+	rm -rf $testdir/rpcs.txt
+	for i in $(seq 1 $num_subsystems)
+	do
+		cat <<- EOL >> $testdir/rpcs.txt
+	bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc$i
+	nvmf_create_subsystem nqn.2016-06.io.spdk:cnode$i -a -s SPDK$i
+	nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$i Malloc$i
+	nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$i -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+	EOL
+
+		echo "  TransportID \"trtype:$TEST_TRANSPORT adrfam:IPv4 subnqn:nqn.2016-06.io.spdk:cnode$i traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT hostaddr:$NVMF_FIRST_TARGET_IP\" Nvme$i" >> $testdir/bdevperf.conf
+	done
+	$rpc_py < $testdir/rpcs.txt
+	timing_exit create_subsystems
+
+}
+
+function stoptarget() {
+	rm -f ./local-job0-0-verify.state
+	rm -rf $testdir/bdevperf.conf
+	rm -rf $testdir/rpcs.txt
+
+	nvmftestfini
+}
+
 function waitforio() {
 	# $1 = RPC socket
 	if [ -z "$1" ]; then
@@ -36,6 +80,8 @@ function waitforio() {
 
 # Test 1: Kill the initiator unexpectedly with no I/O outstanding
 function nvmf_shutdown_tc1 {
+	starttarget
+
 	# Run bdev_svc, which connects but does not issue I/O
 	$rootdir/test/app/bdev_svc/bdev_svc -m 0x1 -i 1 -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf &
 	perfpid=$!
@@ -53,14 +99,13 @@ function nvmf_shutdown_tc1 {
 	# Connect with bdevperf and confirm it works
 	$rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 1
 
-	# We have seen the latent failure that the test 2 will see that the target is still finishing
-	# tearing down the qpair when connecting it.  As a workaround, leave a few seconds here to wait
-	# for the completion.
-	sleep 2
+	stoptarget
 }
 
 # Test 2: Kill initiator unexpectedly with I/O outstanding
 function nvmf_shutdown_tc2 {
+	starttarget
+
 	# Run bdevperf
 	$rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 10 &
 	perfpid=$!
@@ -75,10 +120,14 @@ function nvmf_shutdown_tc2 {
 	# Verify the target stays up
 	sleep 1
 	kill -0 $nvmfpid
+
+	stoptarget
 }
 
 # Test 3: Kill the target unexpectedly with I/O outstanding
 function nvmf_shutdown_tc3 {
+	starttarget
+
 	# Run bdevperf
 	$rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 10 &
 	perfpid=$!
@@ -99,48 +148,14 @@ function nvmf_shutdown_tc3 {
 	# TODO: Right now the NVMe-oF initiator will not correctly detect broken connections
 	# and so it will never shut down. Just kill it.
 	kill -9 $perfpid || true
+
+	stoptarget
 }
 
 nvmftestinit
-nvmfappstart "-m 0x1E"
-
-$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
-
-num_subsystems=10
-# SoftRoce does not have enough queues available for
-# this test. Detect if we're using software RDMA.
-# If so, only use two subsystem.
-if check_ip_is_soft_roce "$NVMF_FIRST_TARGET_IP"; then
-	num_subsystems=2
-fi
-
-touch $testdir/bdevperf.conf
-echo "[Nvme]" > $testdir/bdevperf.conf
-
-timing_enter create_subsystems
-# Create subsystems
-rm -rf $testdir/rpcs.txt
-for i in $(seq 1 $num_subsystems)
-do
-	cat <<- EOL >> $testdir/rpcs.txt
-	bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc$i
-	nvmf_create_subsystem nqn.2016-06.io.spdk:cnode$i -a -s SPDK$i
-	nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$i Malloc$i
-	nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$i -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
-	EOL
-
-	echo "  TransportID \"trtype:$TEST_TRANSPORT adrfam:IPv4 subnqn:nqn.2016-06.io.spdk:cnode$i traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT hostaddr:$NVMF_FIRST_TARGET_IP\" Nvme$i" >> $testdir/bdevperf.conf
-done
-$rpc_py < $testdir/rpcs.txt
-timing_exit create_subsystems
 
 run_test "nvmf_shutdown_tc1" nvmf_shutdown_tc1
 run_test "nvmf_shutdown_tc2" nvmf_shutdown_tc2
 run_test "nvmf_shutdown_tc3" nvmf_shutdown_tc3
 
-rm -f ./local-job0-0-verify.state
-rm -rf $testdir/bdevperf.conf
-rm -rf $testdir/rpcs.txt
 trap - SIGINT SIGTERM EXIT
-
-nvmftestfini
