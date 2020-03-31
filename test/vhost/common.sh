@@ -1008,6 +1008,34 @@ function vm_check_scsi_location()
 	fi
 }
 
+# Note: to use this function your VM should be run with
+# appropriate memory and with SPDK source already cloned
+# and compiled in /root/spdk.
+function vm_check_virtio_location()
+{
+	vm_exec $1 NRHUGE=512 /root/spdk/scripts/setup.sh
+	vm_exec $1 "cat > /root/bdev.conf" <<- EOF
+	[VirtioPci]
+		Enable Yes
+EOF
+
+	vm_exec $1 "cat /root/bdev.conf"
+
+	vm_exec $1 "bash -s" <<- EOF
+	set -e
+	rootdir="/root/spdk"
+	source /root/spdk/test/common/autotest_common.sh
+	discover_bdevs /root/spdk /root/bdev.conf | jq -r '[.[].name] | join(" ")' > /root/fio_bdev_filenames
+	exit 0
+EOF
+
+	SCSI_DISK=$(vm_exec $1 cat /root/fio_bdev_filenames)
+	if [[ -z "$SCSI_DISK" ]]; then
+		error "no virtio test disk found!"
+		return 1
+	fi
+}
+
 # Script to perform scsi device reset on all disks in VM
 # param $1 VM num
 # param $2..$n Disks to perform reset on
@@ -1039,6 +1067,7 @@ function run_fio()
 	local out=""
 	local vm
 	local run_server_mode=true
+	local run_plugin_mode=false
 	local fio_start_cmd
 	local fio_output_format="normal"
 
@@ -1052,6 +1081,10 @@ function run_fio()
 				mkdir -p $out
 				;;
 			--local) run_server_mode=false ;;
+			--plugin)
+				notice "Using plugin mode. Disabling server mode."
+				run_plugin_mode=true
+				run_server_mode=false ;;
 			--json) fio_output_format="json" ;;
 			--hide-results) hide_results=true ;;
 		*)
@@ -1091,11 +1124,16 @@ function run_fio()
 
 		if ! $run_server_mode; then
 			if [[ -n "$fio_bin" ]]; then
-				vm_exec $vm_num 'cat > /root/fio; chmod +x /root/fio' < $fio_bin
+				if ! $run_plugin_mode; then
+					vm_exec $vm_num 'cat > /root/fio; chmod +x /root/fio' < $fio_bin
+					vm_fio_bin="/root/fio"
+				else
+					vm_fio_bin="/usr/src/fio/fio"
+				fi
 			fi
 
 			notice "Running local fio on VM $vm_num"
-			vm_exec $vm_num "/root/fio --output=/root/$job_fname.out --output-format=$fio_output_format /root/$job_fname" &
+			vm_exec $vm_num "$vm_fio_bin --output=/root/$job_fname.out --output-format=$fio_output_format /root/$job_fname" &
 			vm_exec_pids+=("$!")
 		fi
 	done
