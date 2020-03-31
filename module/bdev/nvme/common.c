@@ -145,6 +145,13 @@ nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
 	assert(nvme_bdev_ctrlr->destruct);
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
+
+	/* If we have already registered a poller, let that one take care of it. */
+	if (nvme_bdev_ctrlr->destruct_poller != NULL) {
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+		return 1;
+	}
+
 	if (nvme_bdev_ctrlr->resetting) {
 		nvme_bdev_ctrlr->destruct_poller =
 			spdk_poller_register((spdk_poller_fn)nvme_bdev_ctrlr_destruct, nvme_bdev_ctrlr, 1000);
