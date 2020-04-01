@@ -108,6 +108,8 @@ DEFINE_STUB(spdk_iscsi_chap_get_authinfo, int,
 	    (struct iscsi_chap_auth *auth, const char *authuser, int ag_tag),
 	    0);
 
+DEFINE_STUB(spdk_sock_set_recvbuf, int, (struct spdk_sock *sock, int sz), 0);
+
 int
 spdk_scsi_lun_get_id(const struct spdk_scsi_lun *lun)
 {

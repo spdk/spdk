@@ -40,6 +40,7 @@
 #include "spdk/env.h"
 #include "spdk/likely.h"
 #include "spdk/trace.h"
+#include "spdk/sock.h"
 #include "spdk/string.h"
 #include "spdk/queue.h"
 #include "spdk/net.h"
@@ -1100,6 +1101,7 @@ static int
 iscsi_conn_params_update(struct spdk_iscsi_conn *conn)
 {
 	int rc;
+	uint32_t recv_buf_size;
 
 	/* update internal variables */
 	rc = spdk_iscsi_copy_param2var(conn);
@@ -1118,6 +1120,27 @@ iscsi_conn_params_update(struct spdk_iscsi_conn *conn)
 		if (conn->state < ISCSI_CONN_STATE_EXITING) {
 			conn->state = ISCSI_CONN_STATE_EXITING;
 		}
+	}
+
+	/* The socket receive buffer may need to be adjusted based on the new parameters */
+
+	/* Don't allow the recv buffer to be 0 or very large. */
+	recv_buf_size = spdk_max(0x1000, spdk_min(0x2000, conn->sess->FirstBurstLength));
+
+	/* Add in extra space for the PDU */
+	recv_buf_size += ISCSI_BHS_LEN + ISCSI_AHS_LEN;
+
+	if (conn->header_digest) {
+		recv_buf_size += ISCSI_DIGEST_LEN;
+	}
+
+	if (conn->data_digest) {
+		recv_buf_size += ISCSI_DIGEST_LEN;
+	}
+
+	/* Set up to buffer up to 4 commands with immediate data at once */
+	if (spdk_sock_set_recvbuf(conn->sock, recv_buf_size * 4) < 0) {
+		/* Not fatal. */
 	}
 
 	return rc;
