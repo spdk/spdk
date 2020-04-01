@@ -1940,7 +1940,7 @@ test_multi_raid_with_io(void)
 	uint8_t bbdev_idx = 0;
 	struct raid_bdev *pbdev;
 	struct spdk_io_channel *ch;
-	struct raid_bdev_io_channel *ch_ctx;
+	struct raid_bdev_io_channel *ch_ctx = NULL;
 	struct spdk_bdev_io *bdev_io;
 	uint64_t io_len;
 	uint64_t lba = 0;
