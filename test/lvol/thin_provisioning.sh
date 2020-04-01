@@ -192,25 +192,25 @@ function test_thin_overprovisioning() {
 	lvol_uuid1=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test1 "$lvol_size_mb" -t)
 	lvol_uuid2=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test2 "$lvol_size_mb" -t)
 
-	lvs=$(rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid")
-	free_clusters_start="$(jq -r '.[0].free_clusters' <<< "$lvs")"
-
 	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid1" /dev/nbd0
 	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid2" /dev/nbd1
-	# Fill first bdev to 75% of its space with specific pattern
-	fill_size=$(( lvol_size * 75 / 100 ))
+	# Fill first bdev to 50% of its space with specific pattern
+	fill_size=$(( lvol_size_mb * 5 / 10 / LVS_DEFAULT_CLUSTER_SIZE_MB * LVS_DEFAULT_CLUSTER_SIZE_MB ))
+	fill_size=$(( fill_size * 1024 * 1024))
 	run_fio_test /dev/nbd0 0 $fill_size "write" "0xcc"
 
-	# Fill second bdev up to 75% of its space
+	# Fill second bdev up to 50% of its space
+	run_fio_test /dev/nbd1 0 $fill_size "write" "0xcc"
+
+	# Fill rest of second bdev
 	# Check that error message occured while filling second bdev with data
-	run_fio_test /dev/nbd1 0 $fill_size "write" "0xcc" && false
+	offset=$fill_size
+	fill_size_rest=$(( size - fill_size ))
+	run_fio_test /dev/nbd1 0 "$offset" "$fill_size_rest" "write" "0xcc" && false
 
 	# Check if data on first disk stayed unchanged
 	run_fio_test /dev/nbd0 0 $fill_size "read" "0xcc"
-
-	offset=$(( lvol_size * 75 / 100 ))
-	fill_size=$(( lvol_size * 25 / 100 ))
-	run_fio_test /dev/nbd0 $offset $fill_size "read" "0x00"
+	run_fio_test /dev/nbd0 $offset $fill_size_rest "read" "0x00"
 
 	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd0
 	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd1
