@@ -2,41 +2,18 @@
 
 curdir=$(dirname $(readlink -f "${BASH_SOURCE[0]}"))
 rootdir=$(readlink -f $curdir/../../..)
-source $rootdir/scripts/common.sh
-source $rootdir/test/common/autotest_common.sh
-
-function clear_nvme()
-{
-        # Clear metadata on NVMe device
-        $rootdir/scripts/setup.sh reset
-        sleep 5
-        name=$(get_nvme_name_from_bdf $1)
-        mountpoints=$(lsblk /dev/$name --output MOUNTPOINT -n | wc -w)
-        if [ "$mountpoints" != "0" ]; then
-                $rootdir/scripts/setup.sh
-                exit 1
-        fi
-        dd if=/dev/zero of=/dev/$name bs=1M count=1000 oflag=direct
-        $rootdir/scripts/setup.sh
-}
-
-rpc_py=$rootdir/scripts/rpc.py
-
-$rootdir/scripts/setup.sh
-nvme_cfg=$($rootdir/scripts/gen_nvme.sh)
+source $rootdir/test/ocf/common.sh
 
 config="
-$nvme_cfg
+$(nvme_cfg)
 
 [Split]
   Split Nvme0n1 7 128
 "
 echo "$config" > $curdir/config
 
-# Clear only nvme device which we will use in test
-bdf=$($rootdir/scripts/gen_nvme.sh --json | jq '.config[0].params.traddr' | sed s/\"//g)
-
-clear_nvme $bdf
+# Clear nvme device which we will use in test
+clear_nvme
 
 $rootdir/app/iscsi_tgt/iscsi_tgt -c $curdir/config &
 spdk_pid=$!
