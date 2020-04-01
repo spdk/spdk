@@ -33,56 +33,12 @@ if [[ $SPDK_BUILD_PACKAGE -eq 0 && $RUN_NIGHTLY -eq 0 ]]; then
 	exit 0
 fi
 
-timing_enter autopackage
+timing_enter build_release
 
-spdk_pv=spdk-$(date +%Y_%m_%d)
-spdk_tarball=${spdk_pv}.tar
-dpdk_pv=dpdk-$(date +%Y_%m_%d)
-dpdk_tarball=${dpdk_pv}.tar
-ipsec_pv=ipsec-$(date +%Y_%m_%d)
-ipsec_tarball=${ipsec_pv}.tar
-isal_pv=isal-$(date +%Y_%m_%d)
-isal_tarball=${isal_pv}.tar
-ocf_pv=ocf-$(date +%Y_%m_%d)
-ocf_tarball=${ocf_pv}.tar
+./configure $config_params --disable-debug
+$MAKE ${MAKEFLAGS}
+$MAKE ${MAKEFLAGS} clean
 
-find . -iname "spdk-*.tar* dpdk-*.tar* ipsec-*.tar* isal-*.tar*" -delete
-git archive HEAD^{tree} --prefix=${spdk_pv}/ -o ${spdk_tarball}
-
-# Build from packaged source
-tmpdir=$(mktemp -d)
-echo "tmpdir=$tmpdir"
-tar -C "$tmpdir" -xf $spdk_tarball
-
-if [ -z "$WITH_DPDK_DIR" ]; then
-	(cd dpdk && git archive HEAD^{tree} --prefix=dpdk/ -o ../${dpdk_tarball})
-	tar -C "$tmpdir/${spdk_pv}" -xf $dpdk_tarball
-fi
-
-if [ -d "intel-ipsec-mb" ]; then
-	(cd intel-ipsec-mb && git archive HEAD^{tree} --prefix=intel-ipsec-mb/ -o ../${ipsec_tarball})
-	tar -C "$tmpdir/${spdk_pv}" -xf $ipsec_tarball
-fi
-
-if [ -d "isa-l" ]; then
-	(cd isa-l && git archive HEAD^{tree} --prefix=isa-l/ -o ../${isal_tarball})
-	tar -C "$tmpdir/${spdk_pv}" -xf $isal_tarball
-fi
-
-if [ -d "ocf" ]; then
-	(cd ocf && git archive HEAD^{tree} --prefix=ocf/ -o ../${ocf_tarball})
-	tar -C "$tmpdir/${spdk_pv}" -xf $ocf_tarball
-fi
-
-(
-	cd "$tmpdir"/spdk-*
-	# use $config_params to get the right dependency options, but disable coverage and ubsan
-	#  explicitly since they are not needed for this build
-	./configure $config_params --disable-debug --enable-werror --disable-coverage --disable-ubsan
-	time $MAKE ${MAKEFLAGS}
-)
-rm -rf "$tmpdir"
-
-timing_exit autopackage
+timing_exit build_release
 
 timing_finish
