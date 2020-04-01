@@ -7,7 +7,29 @@ def checkboxtype(distro)
   if localboxes.include? "spdk/"+distro
     return "spdk/"+distro
   else
-    return "generic/"+distro
+      case distro
+      when "centos7"
+        return "centos/7"
+      when "centos8"
+        return "centos/8"
+      when "ubuntu1604"
+        return "peru/ubuntu-16.04-server-amd64"
+      when "ubuntu1804"
+        return "peru/ubuntu-18.04-server-amd64"
+      when "fedora30"
+        return "generic/fedora30"
+      when "fedora31"
+        return "generic/fedora31"
+      when "arch"
+        return "generic/arch"
+      when "freebsd11"
+        return "generic/freebsd11"
+      when "freebsd12"
+        return "generic/freebsd12"
+      else
+        "Invalid argument #{distro}"
+        abort("Invalid argument!")
+      end
   end
 end
 
@@ -43,14 +65,6 @@ Vagrant.configure(2) do |config|
   #
   if Vagrant.has_plugin?("vagrant-cachier")
     config.cache.scope = :box
-  end
-
-  if (distro.include?("ubuntu"))
-    # Ubuntu boxes from generic/ubuntuX do not generate /etc/resolv.conf files properly which causes
-    # DNS to not work. Copy host /etc/resolv.conf file to the VM as a workaround.
-    config.vm.network "private_network", type: "dhcp"
-    config.vm.provision "file", source: "/etc/resolv.conf", destination: "/home/vagrant/resolv.conf"
-    config.vm.provision "shell", inline: "sudo mv -f /home/vagrant/resolv.conf /etc/resolv.conf"
   end
 
   # use http proxy if avaiable
