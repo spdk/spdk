@@ -156,6 +156,18 @@ const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
 	.remove_device = vhost_scsi_dev_remove,
 };
 
+static inline void
+scsi_task_init(struct spdk_vhost_scsi_task *task)
+{
+	memset(&task->scsi, 0, sizeof(task->scsi));
+	/* Tmf_resp pointer and resp pointer are in a union.
+	 * Here means task->tmf_resp = task->resp = NULL.
+	 */
+	task->resp = NULL;
+	task->used = true;
+	task->used_len = 0;
+}
+
 static void
 vhost_scsi_task_put(struct spdk_vhost_scsi_task *task)
 {
@@ -683,74 +695,27 @@ process_request(struct spdk_vhost_scsi_task *task)
 }
 
 static void
-process_controlq(struct spdk_vhost_scsi_session *svsession, struct spdk_vhost_virtqueue *vq)
+process_scsi_task(struct spdk_vhost_session *vsession,
+		  struct spdk_vhost_virtqueue *vq,
+		  uint16_t req_idx)
 {
-	struct spdk_vhost_session *vsession = &svsession->vsession;
 	struct spdk_vhost_scsi_task *task;
-	uint16_t reqs[32];
-	uint16_t reqs_cnt, i;
-
-	reqs_cnt = vhost_vq_avail_ring_get(vq, reqs, SPDK_COUNTOF(reqs));
-	for (i = 0; i < reqs_cnt; i++) {
-		if (spdk_unlikely(reqs[i] >= vq->vring.size)) {
-			SPDK_ERRLOG("%s: invalid entry in avail ring. Buffer '%"PRIu16"' exceeds virtqueue size (%"PRIu16")\n",
-				    vsession->name, reqs[i], vq->vring.size);
-			vhost_vq_used_ring_enqueue(vsession, vq, reqs[i], 0);
-			continue;
-		}
-
-		task = &((struct spdk_vhost_scsi_task *)vq->tasks)[reqs[i]];
-		if (spdk_unlikely(task->used)) {
-			SPDK_ERRLOG("%s: invalid entry in avail ring. Buffer '%"PRIu16"' is still in use!\n",
-				    vsession->name, reqs[i]);
-			vhost_vq_used_ring_enqueue(vsession, vq, reqs[i], 0);
-			continue;
-		}
-
-		vsession->task_cnt++;
-		memset(&task->scsi, 0, sizeof(task->scsi));
-		task->tmf_resp = NULL;
-		task->used = true;
-		process_ctrl_request(task);
-	}
-}
-
-static void
-process_requestq(struct spdk_vhost_scsi_session *svsession, struct spdk_vhost_virtqueue *vq)
-{
-	struct spdk_vhost_session *vsession = &svsession->vsession;
-	struct spdk_vhost_scsi_task *task;
-	uint16_t reqs[32];
-	uint16_t reqs_cnt, i;
 	int result;
 
-	reqs_cnt = vhost_vq_avail_ring_get(vq, reqs, SPDK_COUNTOF(reqs));
-	assert(reqs_cnt <= 32);
+	task = &((struct spdk_vhost_scsi_task *)vq->tasks)[req_idx];
+	if (spdk_unlikely(task->used)) {
+		SPDK_ERRLOG("%s: request with idx '%"PRIu16"' is already pending.\n",
+			    vsession->name, req_idx);
+		vhost_vq_used_ring_enqueue(vsession, vq, req_idx, 0);
+		return;
+	}
 
-	for (i = 0; i < reqs_cnt; i++) {
-		SPDK_DEBUGLOG(SPDK_LOG_VHOST_SCSI, "====== Starting processing request idx %"PRIu16"======\n",
-			      reqs[i]);
+	vsession->task_cnt++;
+	scsi_task_init(task);
 
-		if (spdk_unlikely(reqs[i] >= vq->vring.size)) {
-			SPDK_ERRLOG("%s: request idx '%"PRIu16"' exceeds virtqueue size (%"PRIu16").\n",
-				    vsession->name, reqs[i], vq->vring.size);
-			vhost_vq_used_ring_enqueue(vsession, vq, reqs[i], 0);
-			continue;
-		}
-
-		task = &((struct spdk_vhost_scsi_task *)vq->tasks)[reqs[i]];
-		if (spdk_unlikely(task->used)) {
-			SPDK_ERRLOG("%s: request with idx '%"PRIu16"' is already pending.\n",
-				    vsession->name, reqs[i]);
-			vhost_vq_used_ring_enqueue(vsession, vq, reqs[i], 0);
-			continue;
-		}
-
-		vsession->task_cnt++;
-		memset(&task->scsi, 0, sizeof(task->scsi));
-		task->resp = NULL;
-		task->used = true;
-		task->used_len = 0;
+	if (spdk_unlikely(vq->vring_idx == VIRTIO_SCSI_CONTROLQ)) {
+		process_ctrl_request(task);
+	} else {
 		result = process_request(task);
 		if (likely(result == 0)) {
 			task_submit(task);
@@ -768,6 +733,31 @@ process_requestq(struct spdk_vhost_scsi_session *svsession, struct spdk_vhost_vi
 	}
 }
 
+static void
+process_vq(struct spdk_vhost_scsi_session *svsession, struct spdk_vhost_virtqueue *vq)
+{
+	struct spdk_vhost_session *vsession = &svsession->vsession;
+	uint16_t reqs[32];
+	uint16_t reqs_cnt, i;
+
+	reqs_cnt = vhost_vq_avail_ring_get(vq, reqs, SPDK_COUNTOF(reqs));
+	assert(reqs_cnt <= 32);
+
+	for (i = 0; i < reqs_cnt; i++) {
+		SPDK_DEBUGLOG(SPDK_LOG_VHOST_SCSI, "====== Starting processing request idx %"PRIu16"======\n",
+			      reqs[i]);
+
+		if (spdk_unlikely(reqs[i] >= vq->vring.size)) {
+			SPDK_ERRLOG("%s: request idx '%"PRIu16"' exceeds virtqueue size (%"PRIu16").\n",
+				    vsession->name, reqs[i], vq->vring.size);
+			vhost_vq_used_ring_enqueue(vsession, vq, reqs[i], 0);
+			continue;
+		}
+
+		process_scsi_task(vsession, vq, reqs[i]);
+	}
+}
+
 static int
 vdev_mgmt_worker(void *arg)
 {
@@ -777,7 +767,7 @@ vdev_mgmt_worker(void *arg)
 	process_removed_devs(svsession);
 	vhost_vq_used_signal(vsession, &vsession->virtqueue[VIRTIO_SCSI_EVENTQ]);
 
-	process_controlq(svsession, &vsession->virtqueue[VIRTIO_SCSI_CONTROLQ]);
+	process_vq(svsession, &vsession->virtqueue[VIRTIO_SCSI_CONTROLQ]);
 	vhost_vq_used_signal(vsession, &vsession->virtqueue[VIRTIO_SCSI_CONTROLQ]);
 
 	return -1;
@@ -791,7 +781,7 @@ vdev_worker(void *arg)
 	uint32_t q_idx;
 
 	for (q_idx = VIRTIO_SCSI_REQUESTQ; q_idx < vsession->max_queues; q_idx++) {
-		process_requestq(svsession, &vsession->virtqueue[q_idx]);
+		process_vq(svsession, &vsession->virtqueue[q_idx]);
 	}
 
 	vhost_session_used_signal(vsession);
