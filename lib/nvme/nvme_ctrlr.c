@@ -1789,19 +1789,24 @@ nvme_ctrlr_set_keep_alive_timeout_done(void *arg, const struct spdk_nvme_cpl *cp
 	struct spdk_nvme_ctrlr *ctrlr = (struct spdk_nvme_ctrlr *)arg;
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
-		SPDK_ERRLOG("Keep alive timeout Get Feature failed: SC %x SCT %x\n",
-			    cpl->status.sc, cpl->status.sct);
-		ctrlr->opts.keep_alive_timeout_ms = 0;
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
-		return;
-	}
+		if ((cpl->status.sct == SPDK_NVME_SCT_GENERIC) &&
+		    (cpl->status.sc == SPDK_NVME_SC_INVALID_FIELD)) {
+			SPDK_DEBUGLOG(SPDK_LOG_NVME, "Keep alive timeout Get Feature is not supported\n");
+		} else {
+			SPDK_ERRLOG("Keep alive timeout Get Feature failed: SC %x SCT %x\n",
+				    cpl->status.sc, cpl->status.sct);
+			ctrlr->opts.keep_alive_timeout_ms = 0;
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+			return;
+		}
+	} else {
+		if (ctrlr->opts.keep_alive_timeout_ms != cpl->cdw0) {
+			SPDK_DEBUGLOG(SPDK_LOG_NVME, "Controller adjusted keep alive timeout to %u ms\n",
+				      cpl->cdw0);
+		}
 
-	if (ctrlr->opts.keep_alive_timeout_ms != cpl->cdw0) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Controller adjusted keep alive timeout to %u ms\n",
-			      cpl->cdw0);
+		ctrlr->opts.keep_alive_timeout_ms = cpl->cdw0;
 	}
-
-	ctrlr->opts.keep_alive_timeout_ms = cpl->cdw0;
 
 	keep_alive_interval_ms = ctrlr->opts.keep_alive_timeout_ms / 2;
 	if (keep_alive_interval_ms == 0) {

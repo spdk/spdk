@@ -234,8 +234,8 @@ spdk_nvme_ctrlr_cmd_get_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
 				uint32_t cdw11, void *payload, uint32_t payload_size,
 				spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
-	CU_ASSERT(0);
-	return -1;
+	fake_cpl_sc(cb_fn, cb_arg);
+	return 0;
 }
 
 int
@@ -2065,6 +2065,42 @@ test_nvme_ctrlr_init_set_num_queues(void)
 	nvme_ctrlr_destruct(&ctrlr);
 }
 
+static void
+test_nvme_ctrlr_init_set_keep_alive_timeout(void)
+{
+	DECLARE_AND_CONSTRUCT_CTRLR();
+
+	ctrlr.opts.keep_alive_timeout_ms = 60000;
+	ctrlr.cdata.kas = 1;
+	ctrlr.state = NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT;
+	fake_cpl.cdw0 = 120000;
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0); /* -> SET_HOST_ID */
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_SET_HOST_ID);
+	CU_ASSERT(ctrlr.opts.keep_alive_timeout_ms == 120000);
+	fake_cpl.cdw0 = 0;
+
+	/* Target does not support Get Feature "Keep Alive Timer" */
+	ctrlr.opts.keep_alive_timeout_ms = 60000;
+	ctrlr.cdata.kas = 1;
+	ctrlr.state = NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT;
+	set_status_code = SPDK_NVME_SC_INVALID_FIELD;
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0); /* -> SET_HOST_ID */
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_SET_HOST_ID);
+	CU_ASSERT(ctrlr.opts.keep_alive_timeout_ms == 60000);
+	set_status_code = SPDK_NVME_SC_SUCCESS;
+
+	/* Target fails Get Feature "Keep Alive Timer" for another reason */
+	ctrlr.opts.keep_alive_timeout_ms = 60000;
+	ctrlr.cdata.kas = 1;
+	ctrlr.state = NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT;
+	set_status_code = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0); /* -> ERROR */
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ERROR);
+	set_status_code = SPDK_NVME_SC_SUCCESS;
+
+	nvme_ctrlr_destruct(&ctrlr);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -2102,6 +2138,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_spdk_nvme_ctrlr_set_trid);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_init_set_nvmf_ioccsz);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_init_set_num_queues);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_init_set_keep_alive_timeout);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
