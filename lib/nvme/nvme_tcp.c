@@ -883,6 +883,7 @@ nvme_tcp_icresp_handle(struct nvme_tcp_qpair *tqpair,
 	struct spdk_nvme_tcp_ic_resp *ic_resp = &pdu->hdr.ic_resp;
 	uint32_t error_offset = 0;
 	enum spdk_nvme_tcp_term_req_fes fes;
+	int recv_buf_size;
 
 	/* Only PFV 0 is defined currently */
 	if (ic_resp->pfv != 0) {
@@ -913,6 +914,25 @@ nvme_tcp_icresp_handle(struct nvme_tcp_qpair *tqpair,
 	tqpair->host_ddgst_enable = ic_resp->dgst.bits.ddgst_enable ? true : false;
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "host_hdgst_enable: %u\n", tqpair->host_hdgst_enable);
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "host_ddgst_enable: %u\n", tqpair->host_ddgst_enable);
+
+	/* Now that we know whether digests are enabled, properly size the receive buffer to
+	 * handle 4 incoming 4K read commands. */
+	recv_buf_size = 0x1000 + sizeof(struct spdk_nvme_tcp_cmd);
+
+	if (tqpair->host_hdgst_enable) {
+		recv_buf_size += SPDK_NVME_TCP_DIGEST_LEN;
+	}
+
+	if (tqpair->host_ddgst_enable) {
+		recv_buf_size += SPDK_NVME_TCP_DIGEST_LEN;
+	}
+
+	if (spdk_sock_set_recvbuf(tqpair->sock, recv_buf_size * 4) < 0) {
+		SPDK_WARNLOG("Unable to allocate enough memory for receive buffer on tqpair=%p with size=%d\n",
+			     tqpair,
+			     recv_buf_size);
+		/* Not fatal. */
+	}
 
 	tqpair->state = NVME_TCP_QPAIR_STATE_RUNNING;
 	nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
