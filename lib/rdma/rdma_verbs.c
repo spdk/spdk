@@ -86,6 +86,10 @@ spdk_rdma_qp_destroy(struct spdk_rdma_qp *spdk_rdma_qp)
 {
 	assert(spdk_rdma_qp != NULL);
 
+	if (spdk_rdma_qp->send_wrs.first != NULL) {
+		SPDK_WARNLOG("Destroying qpair with queued Work Requests\n");
+	}
+
 	if (spdk_rdma_qp->qp) {
 		rdma_destroy_qp(spdk_rdma_qp->cm_id);
 	}
@@ -106,6 +110,49 @@ spdk_rdma_qp_disconnect(struct spdk_rdma_qp *spdk_rdma_qp)
 			SPDK_ERRLOG("rdma_disconnect failed, errno %s (%d)\n", spdk_strerror(errno), errno);
 		}
 	}
+
+	return rc;
+}
+
+bool
+spdk_rdma_qp_queue_send_wrs(struct spdk_rdma_qp *spdk_rdma_qp, struct ibv_send_wr *first)
+{
+	struct ibv_send_wr *last;
+
+	assert(spdk_rdma_qp);
+	assert(first);
+
+	last = first;
+	while (last->next != NULL) {
+		last = last->next;
+	}
+
+	if (spdk_rdma_qp->send_wrs.first == NULL) {
+		spdk_rdma_qp->send_wrs.first = first;
+		spdk_rdma_qp->send_wrs.last = last;
+		return true;
+	} else {
+		spdk_rdma_qp->send_wrs.last->next = first;
+		spdk_rdma_qp->send_wrs.last = last;
+		return false;
+	}
+}
+
+int
+spdk_rdma_qp_flush_send_wrs(struct spdk_rdma_qp *spdk_rdma_qp, struct ibv_send_wr **bad_wr)
+{
+	int rc;
+
+	assert(spdk_rdma_qp);
+	assert(bad_wr);
+
+	if (spdk_unlikely(!spdk_rdma_qp->send_wrs.first)) {
+		return 0;
+	}
+
+	rc = ibv_post_send(spdk_rdma_qp->qp, spdk_rdma_qp->send_wrs.first, bad_wr);
+
+	spdk_rdma_qp->send_wrs.first = NULL;
 
 	return rc;
 }

@@ -6,6 +6,8 @@
 	spdk_rdma_qp_complete_connect;
 	spdk_rdma_qp_destroy;
 	spdk_rdma_qp_disconnect;
+	spdk_rdma_qp_queue_send_wrs;
+	spdk_rdma_qp_flush_send_wrs;
 
 	local: *;
 };

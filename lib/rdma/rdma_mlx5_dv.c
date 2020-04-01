@@ -188,6 +188,10 @@ spdk_rdma_qp_destroy(struct spdk_rdma_qp *spdk_rdma_qp)
 
 	mlx5_qp = SPDK_CONTAINEROF(spdk_rdma_qp, struct spdk_rdma_mlx5_dv_qp, common);
 
+	if (spdk_rdma_qp->send_wrs.first != NULL) {
+		SPDK_WARNLOG("Destroying qpair with queued Work Requests\n");
+	}
+
 	if (mlx5_qp->common.qp) {
 		rc = ibv_destroy_qp(mlx5_qp->common.qp);
 		if (rc) {
@@ -206,7 +210,7 @@ spdk_rdma_qp_disconnect(struct spdk_rdma_qp *spdk_rdma_qp)
 	assert(spdk_rdma_qp != NULL);
 
 	if (spdk_rdma_qp->qp) {
-		struct ibv_qp_attr qp_attr = { .qp_state = IBV_QPS_ERR };
+		struct ibv_qp_attr qp_attr = {.qp_state = IBV_QPS_ERR};
 
 		rc = ibv_modify_qp(spdk_rdma_qp->qp, &qp_attr, IBV_QP_STATE);
 		if (rc) {
@@ -221,6 +225,83 @@ spdk_rdma_qp_disconnect(struct spdk_rdma_qp *spdk_rdma_qp)
 			SPDK_ERRLOG("rdma_disconnect failed, errno %s (%d)\n", spdk_strerror(errno), errno);
 		}
 	}
+
+	return rc;
+}
+
+bool
+spdk_rdma_qp_queue_send_wrs(struct spdk_rdma_qp *spdk_rdma_qp, struct ibv_send_wr *first)
+{
+	struct ibv_send_wr *tmp;
+	struct spdk_rdma_mlx5_dv_qp *mlx5_qp;
+	bool is_first;
+
+	assert(spdk_rdma_qp);
+	assert(first);
+
+	is_first = spdk_rdma_qp->send_wrs.first == NULL;
+	mlx5_qp = SPDK_CONTAINEROF(spdk_rdma_qp, struct spdk_rdma_mlx5_dv_qp, common);
+
+	if (is_first) {
+		ibv_wr_start(mlx5_qp->qpex);
+		spdk_rdma_qp->send_wrs.first = first;
+	} else {
+		spdk_rdma_qp->send_wrs.last->next = first;
+	}
+
+	for (tmp = first; tmp != NULL; tmp = tmp->next) {
+		mlx5_qp->qpex->wr_id = tmp->wr_id;
+		mlx5_qp->qpex->wr_flags = tmp->send_flags;
+
+		switch (tmp->opcode) {
+		case IBV_WR_SEND:
+			ibv_wr_send(mlx5_qp->qpex);
+			break;
+		case IBV_WR_SEND_WITH_INV:
+			ibv_wr_send_inv(mlx5_qp->qpex, tmp->invalidate_rkey);
+			break;
+		case IBV_WR_RDMA_READ:
+			ibv_wr_rdma_read(mlx5_qp->qpex, tmp->wr.rdma.rkey, tmp->wr.rdma.remote_addr);
+			break;
+		case IBV_WR_RDMA_WRITE:
+			ibv_wr_rdma_write(mlx5_qp->qpex, tmp->wr.rdma.rkey, tmp->wr.rdma.remote_addr);
+			break;
+		default:
+			SPDK_ERRLOG("Unexpected opcode %d\n", tmp->opcode);
+			assert(0);
+		}
+
+		ibv_wr_set_sge_list(mlx5_qp->qpex, tmp->num_sge, tmp->sg_list);
+
+		spdk_rdma_qp->send_wrs.last = tmp;
+	}
+
+	return is_first;
+}
+
+int
+spdk_rdma_qp_flush_send_wrs(struct spdk_rdma_qp *spdk_rdma_qp, struct ibv_send_wr **bad_wr)
+{
+	struct spdk_rdma_mlx5_dv_qp *mlx5_qp;
+	int rc;
+
+	assert(bad_wr);
+	assert(spdk_rdma_qp);
+
+	mlx5_qp = SPDK_CONTAINEROF(spdk_rdma_qp, struct spdk_rdma_mlx5_dv_qp, common);
+
+	if (spdk_unlikely(spdk_rdma_qp->send_wrs.first == NULL)) {
+		return 0;
+	}
+
+	rc =  ibv_wr_complete(mlx5_qp->qpex);
+
+	if (spdk_unlikely(rc)) {
+		/* If ibv_wr_complete reports an error that means that no WRs are posted to NIC */
+		*bad_wr = spdk_rdma_qp->send_wrs.first;
+	}
+
+	spdk_rdma_qp->send_wrs.first = NULL;
 
 	return rc;
 }

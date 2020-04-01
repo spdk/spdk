@@ -48,9 +48,15 @@ struct spdk_rdma_qp_init_attr {
 	bool			initiator_side;
 };
 
+struct spdk_rdma_send_wr_list {
+	struct ibv_send_wr	*first;
+	struct ibv_send_wr	*last;
+};
+
 struct spdk_rdma_qp {
 	struct ibv_qp *qp;
 	struct rdma_cm_id *cm_id;
+	struct spdk_rdma_send_wr_list send_wrs;
 };
 
 /**
@@ -82,5 +88,23 @@ void spdk_rdma_qp_destroy(struct spdk_rdma_qp *spdk_rdma_qp);
  * \param spdk_rdma_qp Pointer to qpair to be destroyed
  */
 int spdk_rdma_qp_disconnect(struct spdk_rdma_qp *spdk_rdma_qp);
+
+/**
+ * Append the given send wr structure to the qpair's outstanding sends list.
+ * This function accepts either a single Work Request or the first WR in a linked list.
+ *
+ * \param spdk_rdma_qp Pointer to SPDK RDMA qpair
+ * \param first Pointer to the first Work Request
+ * \return true if there were no outstanding WRs before, false otherwise
+ */
+bool spdk_rdma_qp_queue_send_wrs(struct spdk_rdma_qp *spdk_rdma_qp, struct ibv_send_wr *first);
+
+/**
+ * Submit all queued Work Request
+ * \param spdk_rdma_qp Pointer to SPDK RDMA qpair
+ * \param bad_wr Stores a pointer to the first failed WR if this function return nonzero value
+ * \return 0 on succes, errno on failure
+ */
+int spdk_rdma_qp_flush_send_wrs(struct spdk_rdma_qp *spdk_rdma_qp, struct ibv_send_wr **bad_wr);
 
 #endif /* SPDK_RDMA_H */
