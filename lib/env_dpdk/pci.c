@@ -180,12 +180,6 @@ pci_driver_register(struct spdk_pci_driver *driver)
 
 #if RTE_VERSION >= RTE_VERSION_NUM(18, 5, 0, 0)
 static void
-pci_device_rte_hotremove_cb(void *dev)
-{
-	detach_rte((struct spdk_pci_device *)dev);
-}
-
-static void
 pci_device_rte_hotremove(const char *device_name,
 			 enum rte_dev_event_type event,
 			 void *cb_arg)
@@ -200,6 +194,7 @@ pci_device_rte_hotremove(const char *device_name,
 	pthread_mutex_lock(&g_pci_mutex);
 	TAILQ_FOREACH(dev, &g_pci_devices, internal.tailq) {
 		struct rte_pci_device *rte_dev = dev->dev_handle;
+
 		if (strcmp(rte_dev->name, device_name) == 0 &&
 		    !dev->internal.pending_removal) {
 			can_detach = !dev->internal.attached;
@@ -211,17 +206,8 @@ pci_device_rte_hotremove(const char *device_name,
 	pthread_mutex_unlock(&g_pci_mutex);
 
 	if (dev != NULL && can_detach) {
-		/* If device is not attached, we can remove it right away.
-		 *
-		 * Because the user's callback is invoked in eal interrupt
-		 * callback, the interrupt callback need to be finished before
-		 * it can be unregistered when detaching device. So finish
-		 * callback soon and use a deferred removal to detach device
-		 * is need. It is a workaround, once the device detaching be
-		 * moved into the eal in the future, the deferred removal could
-		 * be deleted.
-		 */
-		rte_eal_alarm_set(1, pci_device_rte_hotremove_cb, dev);
+		/* if device is not attached, we can remove it right away. */
+		detach_rte(dev);
 	}
 }
 #endif
