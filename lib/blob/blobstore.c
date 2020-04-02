@@ -3834,6 +3834,8 @@ static bool _spdk_bs_load_cur_md_page_valid(struct spdk_bs_load_ctx *ctx)
 	    _spdk_bs_page_to_blobid(ctx->cur_page) != page->id) {
 		return false;
 	}
+	assert(_spdk_bs_load_cur_extent_page_valid(page) == false);
+
 	return true;
 }
 
