@@ -568,13 +568,6 @@ nvme_rdma_qpair_submit_sends(struct nvme_rdma_qpair *rqpair)
 	if (spdk_unlikely(rc)) {
 		SPDK_ERRLOG("Failed to post WRs on send queue, errno %d (%s), bad_wr %p\n",
 			    rc, spdk_strerror(rc), bad_send_wr);
-
-		/* Restart queue from bad wr. If it failed during
-		 * completion processing, controller will be moved to
-		 * failed state. Otherwise it will likely fail again
-		 * in next submit attempt from completion processing.
-		 */
-		spdk_rdma_qp_queue_send_wrs(rqpair->rdma_qp, bad_send_wr);
 		return rc;
 	}
 
@@ -592,14 +585,9 @@ nvme_rdma_qpair_submit_recvs(struct nvme_rdma_qpair *rqpair)
 		if (spdk_unlikely(rc)) {
 			SPDK_ERRLOG("Failed to post WRs on receive queue, errno %d (%s), bad_wr %p\n",
 				    rc, spdk_strerror(rc), bad_recv_wr);
-			/* Restart queue from bad wr. If it failed during
-			 * completion processing, controller will be moved to
-			 * failed state. Otherwise it will likely fail again
-			 * in next submit attempt from completion processing.
-			 */
-			rqpair->recvs_to_post.first = bad_recv_wr;
-			return -1;
+			return rc;
 		}
+
 		rqpair->recvs_to_post.first = NULL;
 	}
 	return 0;
@@ -2101,8 +2089,10 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 		}
 	} while (reaped < max_completions);
 
-	nvme_rdma_qpair_submit_sends(rqpair);
-	nvme_rdma_qpair_submit_recvs(rqpair);
+	if (spdk_unlikely(nvme_rdma_qpair_submit_sends(rqpair) ||
+			  nvme_rdma_qpair_submit_recvs(rqpair))) {
+		goto fail;
+	}
 
 	if (spdk_unlikely(rqpair->qpair.ctrlr->timeout_enabled)) {
 		nvme_rdma_qpair_check_timeout(qpair);
