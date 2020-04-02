@@ -24,7 +24,7 @@ VM_SETUP_PATH=$(readlink -f ${BASH_SOURCE%/*})
 
 UPGRADE=false
 INSTALL=false
-CONF="librxe,iscsi,rocksdb,fio,flamegraph,tsocks,qemu,vpp,libiscsi,nvmecli,qat"
+CONF="librxe,iscsi,rocksdb,fio,flamegraph,tsocks,qemu,vpp,libiscsi,nvmecli,qat,refspdk"
 LIBRXE_INSTALL=true
 
 if [ $(uname -s) == "FreeBSD" ]; then
@@ -36,6 +36,53 @@ else
 	OSVERSION=$(source /etc/os-release && echo $VERSION_ID)
 	PACKAGEMNG='undefined'
 fi
+
+function install_reference_spdk() {
+	local last_release
+	local output_dir
+	local config_params
+	local rootdir
+
+	# Create a reference SPDK build for ABI tests
+	if echo $CONF | grep -q refspdk; then
+		git -C spdk_repo/spdk fetch --tags
+		last_release=$(git -C spdk_repo/spdk tag | sort --version-sort | grep -v rc | tail -n1)
+		git -C spdk_repo/spdk checkout $last_release
+		git -C spdk_repo/spdk submodule update --init
+		output_dir="$HOME/spdk_$(tr . _ < <(tr -d '[:alpha:]' <<< $last_release))"
+
+		cp -r spdk_repo/spdk $output_dir
+
+		cat > $HOME/autorun-spdk.conf << EOF
+SPDK_BUILD_SHARED_OBJECT=1
+SPDK_TEST_AUTOBUILD=1
+SPDK_TEST_UNITTEST=1
+SPDK_TEST_BLOCKDEV=1
+SPDK_TEST_PMDK=1
+SPDK_TEST_ISAL=1
+SPDK_TEST_REDUCE=1
+SPDK_TEST_CRYPTO=1
+SPDK_TEST_FTL=1
+SPDK_TEST_OCF=1
+SPDK_TEST_RAID5=1
+SPDK_TEST_RBD=1
+SPDK_RUN_ASAN=1
+SPDK_RUN_UBSAN=1
+EOF
+
+		mkdir -p $HOME/output
+		rootdir="$output_dir"
+		source $HOME/autorun-spdk.conf
+		source $output_dir/test/common/autotest_common.sh
+
+		config_params="$(get_config_params)"
+		$output_dir/configure $(echo $config_params | sed 's/--enable-coverage//g')
+		$MAKE -C $output_dir $MAKEFLAGS include/spdk/config.h
+		CONFIG_OCF_PATH="$output_dir/ocf" $MAKE -C $output_dir/lib/env_ocf $MAKEFLAGS exportlib O=$output_dir/build/ocf.a
+		$output_dir/configure $config_params --with-ocf=$output_dir/build/ocf.a --with-shared
+		$MAKE -C $output_dir $MAKEFLAGS
+	fi
+}
 
 function install_rxe_cfg() {
 	if echo $CONF | grep -q librxe; then
@@ -730,6 +777,9 @@ fi
 install_fio &
 
 wait
+
+install_reference_spdk
+
 # create autorun-spdk.conf in home folder. This is sourced by the autotest_common.sh file.
 # By setting any one of the values below to 0, you can skip that specific test. If you are
 # using your autotest platform to do sanity checks before uploading to the build pool, it is
