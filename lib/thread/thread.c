@@ -325,9 +325,9 @@ spdk_thread_exit(struct spdk_thread *thread)
 	assert(tls_thread == thread);
 
 	if (thread->exit) {
-		SPDK_ERRLOG("thread %s is already marked as exited\n",
-			    thread->name);
-		return -EINVAL;
+		SPDK_INFOLOG(SPDK_LOG_THREAD, "thread %s is already marked as exited\n",
+			     thread->name);
+		return 0;
 	}
 
 	TAILQ_FOREACH(poller, &thread->active_pollers, tailq) {

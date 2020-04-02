@@ -107,10 +107,8 @@ free_threads(void)
 
 	for (i = 0; i < g_ut_num_threads; i++) {
 		set_thread(i);
-		if (!spdk_thread_is_exited(g_ut_threads[i].thread)) {
-			rc = spdk_thread_exit(g_ut_threads[i].thread);
-			assert(rc == 0);
-		}
+		rc = spdk_thread_exit(g_ut_threads[i].thread);
+		assert(rc == 0);
 		spdk_thread_destroy(g_ut_threads[i].thread);
 		g_ut_threads[i].thread = NULL;
 	}

@@ -852,13 +852,13 @@ thread_exit(void)
 	spdk_io_device_unregister(&g_device1, NULL);
 	poll_threads();
 
-	/* Test call spdk_thread_exit() is only once for a single thread. */
+	/* Test 2nd spdk_thread_exit() call is ignored. */
 	set_thread(3);
 
 	thread = spdk_get_thread();
 
 	CU_ASSERT(spdk_thread_exit(thread) == 0);
-	CU_ASSERT(spdk_thread_exit(thread) == -EINVAL);
+	CU_ASSERT(spdk_thread_exit(thread) == 0);
 
 	/* Test if spdk_thread_exit() fails when there is any registered poller,
 	 * and if no poller is executed after the thread is marked as exited.
