@@ -38,21 +38,14 @@
 #include "nvme_opal_internal.h"
 
 static int
-opal_send_cmd(struct spdk_opal_dev *dev, struct opal_session *sess)
+opal_security_send(struct spdk_opal_dev *dev, struct opal_session *sess)
 {
 	return spdk_nvme_ctrlr_security_send(dev->ctrlr, SPDK_SCSI_SECP_TCG, dev->comid,
 					     0, sess->cmd, IO_BUFFER_LENGTH);
 }
 
 static int
-opal_recv_cmd(struct spdk_opal_dev *dev, struct opal_session *sess)
-{
-	return spdk_nvme_ctrlr_security_receive(dev->ctrlr, SPDK_SCSI_SECP_TCG, dev->comid,
-						0, sess->resp, IO_BUFFER_LENGTH);
-}
-
-static int
-opal_recv_check(struct spdk_opal_dev *dev, struct opal_session *sess)
+opal_security_recv(struct spdk_opal_dev *dev, struct opal_session *sess)
 {
 	void *response = sess->resp;
 	struct spdk_opal_compacket *header = response;
@@ -61,6 +54,13 @@ opal_recv_check(struct spdk_opal_dev *dev, struct opal_session *sess)
 	uint64_t now;
 
 	do {
+		memset(response, 0, IO_BUFFER_LENGTH);
+		ret = spdk_nvme_ctrlr_security_receive(dev->ctrlr, SPDK_SCSI_SECP_TCG, dev->comid,
+						       0, sess->resp, IO_BUFFER_LENGTH);
+		if (ret) {
+			SPDK_ERRLOG("Security Receive Error on dev = %p\n", dev);
+			return ret;
+		}
 		SPDK_DEBUGLOG(SPDK_LOG_OPAL, "outstanding_data=%d, minTransfer=%d\n",
 			      header->outstanding_data,
 			      header->min_transfer);
@@ -76,13 +76,6 @@ opal_recv_check(struct spdk_opal_dev *dev, struct opal_session *sess)
 			}
 		}
 
-		memset(response, 0, IO_BUFFER_LENGTH);
-		ret = spdk_nvme_ctrlr_security_receive(dev->ctrlr, SPDK_SCSI_SECP_TCG, dev->comid,
-						       0, sess->resp, IO_BUFFER_LENGTH);
-		if (ret) {
-			SPDK_ERRLOG("Security Receive Error on dev = %p\n", dev);
-			return ret;
-		}
 	} while (!ret);
 
 	return ret;
@@ -93,17 +86,12 @@ opal_send_recv(struct spdk_opal_dev *dev, struct opal_session *sess)
 {
 	int ret;
 
-	ret = opal_send_cmd(dev, sess);
+	ret = opal_security_send(dev, sess);
 	if (ret) {
 		return ret;
 	}
 
-	ret = opal_recv_cmd(dev, sess);
-	if (ret) {
-		return ret;
-	}
-
-	return opal_recv_check(dev, sess);
+	return opal_security_recv(dev, sess);
 }
 
 static void
