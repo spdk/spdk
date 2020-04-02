@@ -1802,8 +1802,7 @@ static struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_
 	rctrlr->cm_events = calloc(NVME_RDMA_NUM_CM_EVENTS, sizeof(*rctrlr->cm_events));
 	if (rctrlr->cm_events == NULL) {
 		SPDK_ERRLOG("unable to allocat buffers to hold CM events.\n");
-		nvme_rdma_ctrlr_destruct(&rctrlr->ctrlr);
-		return NULL;
+		goto destruct_ctrlr;
 	}
 
 	for (i = 0; i < NVME_RDMA_NUM_CM_EVENTS; i++) {
@@ -1813,15 +1812,13 @@ static struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_
 	rctrlr->cm_channel = rdma_create_event_channel();
 	if (rctrlr->cm_channel == NULL) {
 		SPDK_ERRLOG("rdma_create_event_channel() failed\n");
-		nvme_rdma_ctrlr_destruct(&rctrlr->ctrlr);
-		return NULL;
+		goto destruct_ctrlr;
 	}
 
 	flag = fcntl(rctrlr->cm_channel->fd, F_GETFL);
 	if (fcntl(rctrlr->cm_channel->fd, F_SETFL, flag | O_NONBLOCK) < 0) {
 		SPDK_ERRLOG("Cannot set event channel to non blocking\n");
-		nvme_rdma_ctrlr_destruct(&rctrlr->ctrlr);
-		return NULL;
+		goto destruct_ctrlr;
 	}
 
 	rctrlr->ctrlr.adminq = nvme_rdma_ctrlr_create_qpair(&rctrlr->ctrlr, 0,
@@ -1829,39 +1826,38 @@ static struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_
 			       rctrlr->ctrlr.opts.admin_queue_size, false);
 	if (!rctrlr->ctrlr.adminq) {
 		SPDK_ERRLOG("failed to create admin qpair\n");
-		nvme_rdma_ctrlr_destruct(&rctrlr->ctrlr);
-		return NULL;
+		goto destruct_ctrlr;
 	}
 
 	rc = nvme_transport_ctrlr_connect_qpair(&rctrlr->ctrlr, rctrlr->ctrlr.adminq);
 	if (rc < 0) {
 		SPDK_ERRLOG("failed to connect admin qpair\n");
-		nvme_rdma_ctrlr_destruct(&rctrlr->ctrlr);
-		return NULL;
+		goto destruct_ctrlr;
 	}
 
 	if (nvme_ctrlr_get_cap(&rctrlr->ctrlr, &cap)) {
 		SPDK_ERRLOG("get_cap() failed\n");
-		nvme_ctrlr_destruct(&rctrlr->ctrlr);
-		return NULL;
+		goto destruct_ctrlr;
 	}
 
 	if (nvme_ctrlr_get_vs(&rctrlr->ctrlr, &vs)) {
 		SPDK_ERRLOG("get_vs() failed\n");
-		nvme_ctrlr_destruct(&rctrlr->ctrlr);
-		return NULL;
+		goto destruct_ctrlr;
 	}
 
 	if (nvme_ctrlr_add_process(&rctrlr->ctrlr, 0) != 0) {
 		SPDK_ERRLOG("nvme_ctrlr_add_process() failed\n");
-		nvme_ctrlr_destruct(&rctrlr->ctrlr);
-		return NULL;
+		goto destruct_ctrlr;
 	}
 
 	nvme_ctrlr_init_cap(&rctrlr->ctrlr, &cap, &vs);
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "successfully initialized the nvmf ctrlr\n");
 	return &rctrlr->ctrlr;
+
+destruct_ctrlr:
+	nvme_ctrlr_destruct(&rctrlr->ctrlr);
+	return NULL;
 }
 
 static int
