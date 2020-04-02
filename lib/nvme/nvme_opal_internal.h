@@ -255,9 +255,6 @@ struct spdk_opal_dev {
 
 	uint16_t comid;
 
-	/* Only one session can be supported */
-	struct opal_session sess;
-
 	struct spdk_opal_d0_features_info feat_info;
 
 	uint64_t timeout;   /* seconds */

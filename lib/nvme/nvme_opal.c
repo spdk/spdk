@@ -842,13 +842,6 @@ opal_discovery0(struct spdk_opal_dev *dev, void *payload, uint32_t payload_size)
 	return opal_discovery0_end(dev, payload, payload_size);
 }
 
-static inline void
-opal_setup_session(struct opal_session *sess)
-{
-	sess->tsn = 0;
-	sess->hsn = 0;
-}
-
 static int
 opal_end_session(struct spdk_opal_dev *dev, struct opal_session *sess, uint16_t comid)
 {
@@ -1697,57 +1690,62 @@ spdk_opal_cmd_take_ownership(struct spdk_opal_dev *dev, char *new_passwd)
 {
 	int ret;
 	struct spdk_opal_key opal_key = {};
+	struct opal_session *sess;
 
 	if (!dev || dev->supported == false) {
 		return -ENODEV;
 	}
 
+	sess = calloc(1, sizeof(*sess));
+	if (!sess) {
+		return -ENOMEM;
+	}
+
 	pthread_mutex_lock(&dev->mutex_lock);
-	opal_setup_session(&dev->sess);
-	ret = opal_start_generic_session(dev, &dev->sess, UID_ANYBODY, UID_ADMINSP, NULL, 0);
+	ret = opal_start_generic_session(dev, sess, UID_ANYBODY, UID_ADMINSP, NULL, 0);
 	if (ret) {
 		SPDK_ERRLOG("start admin SP session error %d\n", ret);
-		opal_end_session(dev, &dev->sess, dev->comid);
 		goto end;
 	}
 
-	ret = opal_get_msid_cpin_pin(dev, &dev->sess, &opal_key);
+	ret = opal_get_msid_cpin_pin(dev, sess, &opal_key);
 	if (ret) {
 		SPDK_ERRLOG("get msid error %d\n", ret);
-		opal_end_session(dev, &dev->sess, dev->comid);
+		opal_end_session(dev, sess, dev->comid);
 		goto end;
 	}
 
-	ret = opal_end_session(dev, &dev->sess, dev->comid);
+	ret = opal_end_session(dev, sess, dev->comid);
 	if (ret) {
 		SPDK_ERRLOG("end session error %d\n", ret);
 		goto end;
 	}
 
-	ret = opal_start_generic_session(dev, &dev->sess, UID_SID, UID_ADMINSP,
+	/* reuse the session structure */
+	memset(sess, 0, sizeof(*sess));
+	ret = opal_start_generic_session(dev, sess, UID_SID, UID_ADMINSP,
 					 opal_key.key, opal_key.key_len);
 	if (ret) {
 		SPDK_ERRLOG("start admin SP session error %d\n", ret);
-		opal_end_session(dev, &dev->sess, dev->comid);
 		goto end;
 	}
 	memset(&opal_key, 0, sizeof(struct spdk_opal_key));
 
-	ret = opal_set_sid_cpin_pin(dev, &dev->sess, new_passwd);
+	ret = opal_set_sid_cpin_pin(dev, sess, new_passwd);
 	if (ret) {
 		SPDK_ERRLOG("set cpin error %d\n", ret);
-		opal_end_session(dev, &dev->sess, dev->comid);
+		opal_end_session(dev, sess, dev->comid);
 		goto end;
 	}
 
-	ret = opal_end_session(dev, &dev->sess, dev->comid);
+	ret = opal_end_session(dev, sess, dev->comid);
 	if (ret) {
 		SPDK_ERRLOG("end session error %d\n", ret);
-		goto end;
 	}
 
 end:
 	pthread_mutex_unlock(&dev->mutex_lock);
+	free(sess);
 	return ret;
 }
 
@@ -1957,6 +1955,7 @@ int
 spdk_opal_cmd_revert_tper(struct spdk_opal_dev *dev, const char *passwd)
 {
 	int ret;
+	struct opal_session *sess;
 	struct spdk_opal_key opal_key = {};
 
 	if (dev->supported == false) {
@@ -1969,45 +1968,52 @@ spdk_opal_cmd_revert_tper(struct spdk_opal_dev *dev, const char *passwd)
 		return ret;
 	}
 
-	pthread_mutex_lock(&dev->mutex_lock);
-	opal_setup_session(&dev->sess);
+	sess = calloc(1, sizeof(*sess));
+	if (!sess) {
+		return -ENOMEM;
+	}
 
-	ret = opal_start_generic_session(dev, &dev->sess, UID_SID, UID_ADMINSP,
+	pthread_mutex_lock(&dev->mutex_lock);
+	ret = opal_start_generic_session(dev, sess, UID_SID, UID_ADMINSP,
 					 opal_key.key, opal_key.key_len);
 	if (ret) {
-		pthread_mutex_unlock(&dev->mutex_lock);
 		SPDK_ERRLOG("Error on starting admin SP session with error %d\n", ret);
+		pthread_mutex_unlock(&dev->mutex_lock);
+		free(sess);
 		return ret;
 	}
 
-	ret = opal_revert_tper(dev, &dev->sess);
+	ret = opal_revert_tper(dev, sess);
 	if (ret) {
-		opal_end_session(dev, &dev->sess, dev->comid);
+		opal_end_session(dev, sess, dev->comid);
 		SPDK_ERRLOG("Error on reverting TPer with error %d\n", ret);
 		goto end;
 	}
 
-	ret = opal_finalize_and_send(dev, &dev->sess, true);
+	ret =  opal_finalize_and_send(dev, sess, true);
 	if (ret) {
-		opal_end_session(dev, &dev->sess, dev->comid);
+		opal_end_session(dev, sess, dev->comid);
 		SPDK_ERRLOG("Error on reverting TPer with error %d\n", ret);
 		goto end;
 	}
 
-	ret = opal_parse_and_check_status(&dev->sess);
+	ret = opal_parse_and_check_status(sess);
 	if (ret) {
-		opal_end_session(dev, &dev->sess, dev->comid);
+		opal_end_session(dev, sess, dev->comid);
+		SPDK_ERRLOG("Error on reverting TPer with error %d\n", ret);
 	}
 	/* No opal_end_session() required here for successful case */
 
 end:
 	pthread_mutex_unlock(&dev->mutex_lock);
+	free(sess);
 	return ret;
 }
 
 int
 spdk_opal_cmd_activate_locking_sp(struct spdk_opal_dev *dev, const char *passwd)
 {
+	struct opal_session *sess;
 	struct spdk_opal_key opal_key = {};
 	int ret;
 
@@ -2016,34 +2022,40 @@ spdk_opal_cmd_activate_locking_sp(struct spdk_opal_dev *dev, const char *passwd)
 		return ret;
 	}
 
+	sess = calloc(1, sizeof(*sess));
+	if (!sess) {
+		return -ENOMEM;
+	}
+
 	pthread_mutex_lock(&dev->mutex_lock);
-	ret = opal_start_generic_session(dev, &dev->sess, UID_SID, UID_ADMINSP,
+	ret = opal_start_generic_session(dev, sess, UID_SID, UID_ADMINSP,
 					 opal_key.key, opal_key.key_len);
 	if (ret) {
 		SPDK_ERRLOG("Error on starting admin SP session with error %d\n", ret);
 		pthread_mutex_unlock(&dev->mutex_lock);
+		free(sess);
 		return ret;
 	}
 
-	ret = opal_get_locking_sp_lifecycle(dev, &dev->sess);
+	ret = opal_get_locking_sp_lifecycle(dev, sess);
 	if (ret) {
 		SPDK_ERRLOG("Error on getting SP lifecycle with error %d\n", ret);
 		goto end;
 	}
 
-	ret = opal_activate(dev, &dev->sess);
+	ret = opal_activate(dev, sess);
 	if (ret) {
 		SPDK_ERRLOG("Error on activation with error %d\n", ret);
-		goto end;
 	}
 
 end:
-	ret += opal_end_session(dev, &dev->sess, dev->comid);
+	ret += opal_end_session(dev, sess, dev->comid);
 	if (ret) {
 		SPDK_ERRLOG("Error on ending session with error %d\n", ret);
 	}
 
 	pthread_mutex_unlock(&dev->mutex_lock);
+	free(sess);
 	return ret;
 }
 
@@ -2052,6 +2064,7 @@ spdk_opal_cmd_lock_unlock(struct spdk_opal_dev *dev, enum spdk_opal_user user,
 			  enum spdk_opal_lock_state flag, enum spdk_opal_locking_range locking_range,
 			  const char *passwd)
 {
+	struct opal_session *sess;
 	struct spdk_opal_key opal_key = {};
 	int ret;
 
@@ -2064,27 +2077,32 @@ spdk_opal_cmd_lock_unlock(struct spdk_opal_dev *dev, enum spdk_opal_user user,
 		return ret;
 	}
 
+	sess = calloc(1, sizeof(*sess));
+	if (!sess) {
+		return -ENOMEM;
+	}
+
 	pthread_mutex_lock(&dev->mutex_lock);
-	ret = opal_start_auth_session(dev, &dev->sess, user, &opal_key);
+	ret = opal_start_auth_session(dev, sess, user, &opal_key);
 	if (ret) {
 		SPDK_ERRLOG("start authenticate session error %d\n", ret);
 		pthread_mutex_unlock(&dev->mutex_lock);
+		free(sess);
 		return ret;
 	}
 
-	ret = opal_lock_unlock_range(dev, &dev->sess, locking_range, flag);
+	ret = opal_lock_unlock_range(dev, sess, locking_range, flag);
 	if (ret) {
 		SPDK_ERRLOG("lock unlock range error %d\n", ret);
-		goto end;
 	}
 
-end:
-	ret += opal_end_session(dev, &dev->sess, dev->comid);
+	ret += opal_end_session(dev, sess, dev->comid);
 	if (ret) {
 		SPDK_ERRLOG("end session error %d\n", ret);
 	}
 
 	pthread_mutex_unlock(&dev->mutex_lock);
+	free(sess);
 	return ret;
 }
 
@@ -2093,6 +2111,7 @@ spdk_opal_cmd_setup_locking_range(struct spdk_opal_dev *dev, enum spdk_opal_user
 				  enum spdk_opal_locking_range locking_range_id, uint64_t range_start,
 				  uint64_t range_length, const char *passwd)
 {
+	struct opal_session *sess;
 	struct spdk_opal_key opal_key = {};
 	int ret;
 
@@ -2105,34 +2124,40 @@ spdk_opal_cmd_setup_locking_range(struct spdk_opal_dev *dev, enum spdk_opal_user
 		return ret;
 	}
 
+	sess = calloc(1, sizeof(*sess));
+	if (!sess) {
+		return -ENOMEM;
+	}
+
 	pthread_mutex_lock(&dev->mutex_lock);
-	ret = opal_start_auth_session(dev, &dev->sess, user, &opal_key);
+	ret = opal_start_auth_session(dev, sess, user, &opal_key);
 	if (ret) {
 		SPDK_ERRLOG("start authenticate session error %d\n", ret);
 		pthread_mutex_unlock(&dev->mutex_lock);
+		free(sess);
 		return ret;
 	}
 
-	ret = opal_setup_locking_range(dev, &dev->sess, locking_range_id, range_start, range_length, true,
+	ret = opal_setup_locking_range(dev, sess, locking_range_id, range_start, range_length, true,
 				       true);
 	if (ret) {
 		SPDK_ERRLOG("setup locking range error %d\n", ret);
-		goto end;
 	}
 
-end:
-	ret += opal_end_session(dev, &dev->sess, dev->comid);
+	ret += opal_end_session(dev, sess, dev->comid);
 	if (ret) {
 		SPDK_ERRLOG("end session error %d\n", ret);
 	}
 
 	pthread_mutex_unlock(&dev->mutex_lock);
+	free(sess);
 	return ret;
 }
 
 int
 spdk_opal_cmd_get_max_ranges(struct spdk_opal_dev *dev, const char *passwd)
 {
+	struct opal_session *sess;
 	struct spdk_opal_key opal_key = {};
 	int ret;
 	uint8_t *max_ranges = &dev->max_ranges;
@@ -2150,25 +2175,32 @@ spdk_opal_cmd_get_max_ranges(struct spdk_opal_dev *dev, const char *passwd)
 		return ret;
 	}
 
+	sess = calloc(1, sizeof(*sess));
+	if (!sess) {
+		return -ENOMEM;
+	}
+
 	pthread_mutex_lock(&dev->mutex_lock);
-	ret = opal_start_auth_session(dev, &dev->sess, OPAL_ADMIN1, &opal_key);
+	ret = opal_start_auth_session(dev, sess, OPAL_ADMIN1, &opal_key);
 	if (ret) {
 		SPDK_ERRLOG("start authenticate session error %d\n", ret);
 		pthread_mutex_unlock(&dev->mutex_lock);
+		free(sess);
 		return ret;
 	}
 
-	ret = opal_get_max_ranges(dev, &dev->sess, max_ranges);
+	ret = opal_get_max_ranges(dev, sess, max_ranges);
 	if (ret) {
 		SPDK_ERRLOG("get max ranges error %d\n", ret);
 	}
 
-	ret += opal_end_session(dev, &dev->sess, dev->comid);
+	ret += opal_end_session(dev, sess, dev->comid);
 	if (ret) {
 		SPDK_ERRLOG("end session error %d\n", ret);
 	}
 
 	pthread_mutex_unlock(&dev->mutex_lock);
+	free(sess);
 
 	return (ret == 0 ? dev->max_ranges : ret);
 }
@@ -2178,6 +2210,7 @@ spdk_opal_cmd_get_locking_range_info(struct spdk_opal_dev *dev, const char *pass
 				     enum spdk_opal_user user_id,
 				     enum spdk_opal_locking_range locking_range_id)
 {
+	struct opal_session *sess;
 	struct spdk_opal_key opal_key = {};
 	int ret;
 
@@ -2190,27 +2223,32 @@ spdk_opal_cmd_get_locking_range_info(struct spdk_opal_dev *dev, const char *pass
 		return ret;
 	}
 
+	sess = calloc(1, sizeof(*sess));
+	if (!sess) {
+		return -ENOMEM;
+	}
+
 	pthread_mutex_lock(&dev->mutex_lock);
-	ret = opal_start_auth_session(dev, &dev->sess, user_id, &opal_key);
+	ret = opal_start_auth_session(dev, sess, user_id, &opal_key);
 	if (ret) {
 		SPDK_ERRLOG("start authenticate session error %d\n", ret);
 		pthread_mutex_unlock(&dev->mutex_lock);
+		free(sess);
 		return ret;
 	}
 
-	ret = opal_get_locking_range_info(dev, &dev->sess, locking_range_id);
+	ret = opal_get_locking_range_info(dev, sess, locking_range_id);
 	if (ret) {
 		SPDK_ERRLOG("get locking range info error %d\n", ret);
-		goto end;
 	}
 
-end:
-	ret += opal_end_session(dev, &dev->sess, dev->comid);
+	ret += opal_end_session(dev, sess, dev->comid);
 	if (ret) {
 		SPDK_ERRLOG("end session error %d\n", ret);
 	}
 
 	pthread_mutex_unlock(&dev->mutex_lock);
+	free(sess);
 	return ret;
 }
 
@@ -2218,6 +2256,7 @@ int
 spdk_opal_cmd_enable_user(struct spdk_opal_dev *dev, enum spdk_opal_user user_id,
 			  const char *passwd)
 {
+	struct opal_session *sess;
 	struct spdk_opal_key opal_key = {};
 	int ret;
 
@@ -2230,28 +2269,33 @@ spdk_opal_cmd_enable_user(struct spdk_opal_dev *dev, enum spdk_opal_user user_id
 		return ret;
 	}
 
+	sess = calloc(1, sizeof(*sess));
+	if (!sess) {
+		return -ENOMEM;
+	}
+
 	pthread_mutex_lock(&dev->mutex_lock);
-	ret =  opal_start_generic_session(dev, &dev->sess, UID_ADMIN1, UID_LOCKINGSP,
+	ret =  opal_start_generic_session(dev, sess, UID_ADMIN1, UID_LOCKINGSP,
 					  opal_key.key, opal_key.key_len);
 	if (ret) {
 		SPDK_ERRLOG("start locking SP session error %d\n", ret);
 		pthread_mutex_unlock(&dev->mutex_lock);
+		free(sess);
 		return ret;
 	}
 
-	ret = opal_enable_user(dev, &dev->sess, user_id);
+	ret = opal_enable_user(dev, sess, user_id);
 	if (ret) {
 		SPDK_ERRLOG("enable user error %d\n", ret);
-		goto end;
 	}
 
-end:
-	ret += opal_end_session(dev, &dev->sess, dev->comid);
+	ret += opal_end_session(dev, sess, dev->comid);
 	if (ret) {
 		SPDK_ERRLOG("end session error %d\n", ret);
 	}
 
 	pthread_mutex_unlock(&dev->mutex_lock);
+	free(sess);
 	return ret;
 }
 
@@ -2260,6 +2304,7 @@ spdk_opal_cmd_add_user_to_locking_range(struct spdk_opal_dev *dev, enum spdk_opa
 					enum spdk_opal_locking_range locking_range_id,
 					enum spdk_opal_lock_state lock_flag, const char *passwd)
 {
+	struct opal_session *sess;
 	struct spdk_opal_key opal_key = {};
 	int ret;
 
@@ -2272,28 +2317,33 @@ spdk_opal_cmd_add_user_to_locking_range(struct spdk_opal_dev *dev, enum spdk_opa
 		return ret;
 	}
 
+	sess = calloc(1, sizeof(*sess));
+	if (!sess) {
+		return -ENOMEM;
+	}
+
 	pthread_mutex_lock(&dev->mutex_lock);
-	ret =  opal_start_generic_session(dev, &dev->sess, UID_ADMIN1, UID_LOCKINGSP,
+	ret =  opal_start_generic_session(dev, sess, UID_ADMIN1, UID_LOCKINGSP,
 					  opal_key.key, opal_key.key_len);
 	if (ret) {
 		SPDK_ERRLOG("start locking SP session error %d\n", ret);
 		pthread_mutex_unlock(&dev->mutex_lock);
+		free(sess);
 		return ret;
 	}
 
-	ret = opal_add_user_to_locking_range(dev, &dev->sess, user_id, locking_range_id, lock_flag);
+	ret = opal_add_user_to_locking_range(dev, sess, user_id, locking_range_id, lock_flag);
 	if (ret) {
 		SPDK_ERRLOG("add user to locking range error %d\n", ret);
-		goto end;
 	}
 
-end:
-	ret += opal_end_session(dev, &dev->sess, dev->comid);
+	ret += opal_end_session(dev, sess, dev->comid);
 	if (ret) {
 		SPDK_ERRLOG("end session error %d\n", ret);
 	}
 
 	pthread_mutex_unlock(&dev->mutex_lock);
+	free(sess);
 	return ret;
 }
 
@@ -2301,6 +2351,7 @@ int
 spdk_opal_cmd_set_new_passwd(struct spdk_opal_dev *dev, enum spdk_opal_user user_id,
 			     const char *new_passwd, const char *old_passwd, bool new_user)
 {
+	struct opal_session *sess;
 	struct spdk_opal_key old_key = {};
 	struct spdk_opal_key new_key = {};
 	int ret;
@@ -2319,28 +2370,33 @@ spdk_opal_cmd_set_new_passwd(struct spdk_opal_dev *dev, enum spdk_opal_user user
 		return ret;
 	}
 
+	sess = calloc(1, sizeof(*sess));
+	if (!sess) {
+		return -ENOMEM;
+	}
+
 	pthread_mutex_lock(&dev->mutex_lock);
-	ret = opal_start_auth_session(dev, &dev->sess, new_user ? OPAL_ADMIN1 : user_id,
+	ret = opal_start_auth_session(dev, sess, new_user ? OPAL_ADMIN1 : user_id,
 				      &old_key);
 	if (ret) {
 		SPDK_ERRLOG("start authenticate session error %d\n", ret);
 		pthread_mutex_unlock(&dev->mutex_lock);
+		free(sess);
 		return ret;
 	}
 
-	ret = opal_new_user_passwd(dev, &dev->sess, user_id, &new_key);
+	ret = opal_new_user_passwd(dev, sess, user_id, &new_key);
 	if (ret) {
 		SPDK_ERRLOG("set new passwd error %d\n", ret);
-		goto end;
 	}
 
-end:
-	ret += opal_end_session(dev, &dev->sess, dev->comid);
+	ret += opal_end_session(dev, sess, dev->comid);
 	if (ret) {
 		SPDK_ERRLOG("end session error %d\n", ret);
 	}
 
 	pthread_mutex_unlock(&dev->mutex_lock);
+	free(sess);
 	return ret;
 }
 
@@ -2348,6 +2404,7 @@ int
 spdk_opal_cmd_erase_locking_range(struct spdk_opal_dev *dev, enum spdk_opal_user user_id,
 				  enum spdk_opal_locking_range locking_range_id, const char *password)
 {
+	struct opal_session *sess;
 	struct spdk_opal_key opal_key = {};
 	int ret;
 
@@ -2360,27 +2417,32 @@ spdk_opal_cmd_erase_locking_range(struct spdk_opal_dev *dev, enum spdk_opal_user
 		return ret;
 	}
 
+	sess = calloc(1, sizeof(*sess));
+	if (!sess) {
+		return -ENOMEM;
+	}
+
 	pthread_mutex_lock(&dev->mutex_lock);
-	ret = opal_start_auth_session(dev, &dev->sess, user_id, &opal_key);
+	ret = opal_start_auth_session(dev, sess, user_id, &opal_key);
 	if (ret) {
 		SPDK_ERRLOG("start authenticate session error %d\n", ret);
 		pthread_mutex_unlock(&dev->mutex_lock);
+		free(sess);
 		return ret;
 	}
 
-	ret = opal_erase_locking_range(dev, &dev->sess, locking_range_id);
+	ret = opal_erase_locking_range(dev, sess, locking_range_id);
 	if (ret) {
 		SPDK_ERRLOG("get active key error %d\n", ret);
-		goto end;
 	}
 
-end:
-	ret += opal_end_session(dev, &dev->sess, dev->comid);
+	ret += opal_end_session(dev, sess, dev->comid);
 	if (ret) {
 		SPDK_ERRLOG("end session error %d\n", ret);
 	}
 
 	pthread_mutex_unlock(&dev->mutex_lock);
+	free(sess);
 	return ret;
 }
 
@@ -2388,6 +2450,7 @@ int
 spdk_opal_cmd_secure_erase_locking_range(struct spdk_opal_dev *dev, enum spdk_opal_user user_id,
 		enum spdk_opal_locking_range locking_range_id, const char *password)
 {
+	struct opal_session *sess;
 	struct spdk_opal_key opal_key = {};
 	struct spdk_opal_key *active_key;
 	int ret;
@@ -2406,22 +2469,29 @@ spdk_opal_cmd_secure_erase_locking_range(struct spdk_opal_dev *dev, enum spdk_op
 		return -ENOMEM;
 	}
 
+	sess = calloc(1, sizeof(*sess));
+	if (!sess) {
+		free(active_key);
+		return -ENOMEM;
+	}
+
 	pthread_mutex_lock(&dev->mutex_lock);
-	ret = opal_start_auth_session(dev, &dev->sess, user_id, &opal_key);
+	ret = opal_start_auth_session(dev, sess, user_id, &opal_key);
 	if (ret) {
 		SPDK_ERRLOG("start authenticate session error %d\n", ret);
 		free(active_key);
+		free(sess);
 		pthread_mutex_unlock(&dev->mutex_lock);
 		return ret;
 	}
 
-	ret = opal_get_active_key(dev, &dev->sess, locking_range_id, active_key);
+	ret = opal_get_active_key(dev, sess, locking_range_id, active_key);
 	if (ret) {
 		SPDK_ERRLOG("get active key error %d\n", ret);
 		goto end;
 	}
 
-	ret = opal_gen_new_active_key(dev, &dev->sess, active_key);
+	ret = opal_gen_new_active_key(dev, sess, active_key);
 	if (ret) {
 		SPDK_ERRLOG("generate new active key error %d\n", ret);
 		goto end;
@@ -2429,12 +2499,12 @@ spdk_opal_cmd_secure_erase_locking_range(struct spdk_opal_dev *dev, enum spdk_op
 	memset(active_key, 0, sizeof(struct spdk_opal_key));
 
 end:
-	ret += opal_end_session(dev, &dev->sess, dev->comid);
+	ret += opal_end_session(dev, sess, dev->comid);
 	if (ret) {
 		SPDK_ERRLOG("end session error %d\n", ret);
 	}
 	free(active_key);
-
+	free(sess);
 	pthread_mutex_unlock(&dev->mutex_lock);
 	return ret;
 }
