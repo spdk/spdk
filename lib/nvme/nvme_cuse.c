@@ -129,15 +129,59 @@ cuse_nvme_admin_cmd_execute(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, void *
 }
 
 static void
+cuse_nvme_admin_cmd_send(fuse_req_t req, struct nvme_admin_cmd *admin_cmd)
+{
+	struct cuse_io_ctx *ctx;
+	struct cuse_device *cuse_device = fuse_req_userdata(req);
+	int rv;
+
+	ctx = (struct cuse_io_ctx *)calloc(1, sizeof(struct cuse_io_ctx));
+	if (!ctx) {
+		SPDK_ERRLOG("Cannot allocate memory for cuse_io_ctx\n");
+		fuse_reply_err(req, ENOMEM);
+		return;
+	}
+
+	ctx->req = req;
+
+	memset(&ctx->nvme_cmd, 0, sizeof(ctx->nvme_cmd));
+	ctx->nvme_cmd.opc = admin_cmd->opcode;
+	ctx->nvme_cmd.nsid = admin_cmd->nsid;
+	ctx->nvme_cmd.cdw10 = admin_cmd->cdw10;
+	ctx->nvme_cmd.cdw11 = admin_cmd->cdw11;
+	ctx->nvme_cmd.cdw12 = admin_cmd->cdw12;
+	ctx->nvme_cmd.cdw13 = admin_cmd->cdw13;
+	ctx->nvme_cmd.cdw14 = admin_cmd->cdw14;
+	ctx->nvme_cmd.cdw15 = admin_cmd->cdw15;
+
+	ctx->data_len = admin_cmd->data_len;
+
+	if (ctx->data_len > 0) {
+		ctx->data = spdk_malloc(ctx->data_len, 0, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+		if (!ctx->data) {
+			SPDK_ERRLOG("Cannot allocate memory for data\n");
+			fuse_reply_err(req, ENOMEM);
+			free(ctx);
+			return;
+		}
+	}
+
+	rv = nvme_io_msg_send(cuse_device->ctrlr, 0, cuse_nvme_admin_cmd_execute, ctx);
+	if (rv) {
+		SPDK_ERRLOG("Cannot send io msg to the controller\n");
+		fuse_reply_err(req, -rv);
+		cuse_io_ctx_free(ctx);
+		return;
+	}
+}
+
+static void
 cuse_nvme_admin_cmd(fuse_req_t req, int cmd, void *arg,
 		    struct fuse_file_info *fi, unsigned flags,
 		    const void *in_buf, size_t in_bufsz, size_t out_bufsz)
 {
 	struct nvme_admin_cmd *admin_cmd;
 	struct iovec in_iov, out_iov[2];
-	struct cuse_io_ctx *ctx;
-	int rv;
-	struct cuse_device *cuse_device = fuse_req_userdata(req);
 
 	in_iov.iov_base = (void *)arg;
 	in_iov.iov_len = sizeof(*admin_cmd);
@@ -171,47 +215,11 @@ cuse_nvme_admin_cmd(fuse_req_t req, int cmd, void *arg,
 			return;
 		}
 
-		ctx = (struct cuse_io_ctx *)calloc(1, sizeof(struct cuse_io_ctx));
-		if (!ctx) {
-			SPDK_ERRLOG("Cannot allocate memory for cuse_io_ctx\n");
-			fuse_reply_err(req, ENOMEM);
-			return;
-		}
+		cuse_nvme_admin_cmd_send(req, admin_cmd);
 
-		ctx->req = req;
-
-		memset(&ctx->nvme_cmd, 0, sizeof(ctx->nvme_cmd));
-		ctx->nvme_cmd.opc = admin_cmd->opcode;
-		ctx->nvme_cmd.nsid = admin_cmd->nsid;
-		ctx->nvme_cmd.cdw10 = admin_cmd->cdw10;
-		ctx->nvme_cmd.cdw11 = admin_cmd->cdw11;
-		ctx->nvme_cmd.cdw12 = admin_cmd->cdw12;
-		ctx->nvme_cmd.cdw13 = admin_cmd->cdw13;
-		ctx->nvme_cmd.cdw14 = admin_cmd->cdw14;
-		ctx->nvme_cmd.cdw15 = admin_cmd->cdw15;
-
-		ctx->data_len = admin_cmd->data_len;
-		if (ctx->data_len > 0) {
-			ctx->data = spdk_malloc(ctx->data_len, 0, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
-			if (!ctx->data) {
-				SPDK_ERRLOG("Cannot allocate memory for data\n");
-				fuse_reply_err(req, ENOMEM);
-				free(ctx);
-				return;
-			}
-		}
-
-		break;
+		return;
 	case SPDK_NVME_DATA_BIDIRECTIONAL:
 		fuse_reply_err(req, EINVAL);
-		return;
-	}
-
-	rv = nvme_io_msg_send(cuse_device->ctrlr, 0, cuse_nvme_admin_cmd_execute, ctx);
-	if (rv) {
-		SPDK_ERRLOG("Cannot send io msg to the controller\n");
-		fuse_reply_err(req, -rv);
-		cuse_io_ctx_free(ctx);
 		return;
 	}
 }
