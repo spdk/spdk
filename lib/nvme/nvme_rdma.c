@@ -563,21 +563,21 @@ nvme_rdma_qpair_submit_sends(struct nvme_rdma_qpair *rqpair)
 	struct ibv_send_wr *bad_send_wr;
 	int rc;
 
-	if (rqpair->sends_to_post.first) {
-		rc = ibv_post_send(rqpair->rdma_qp->qp, rqpair->sends_to_post.first, &bad_send_wr);
-		if (spdk_unlikely(rc)) {
-			SPDK_ERRLOG("Failed to post WRs on send queue, errno %d (%s), bad_wr %p\n",
-				    rc, spdk_strerror(rc), bad_send_wr);
-			/* Restart queue from bad wr. If it failed during
-			 * completion processing, controller will be moved to
-			 * failed state. Otherwise it will likely fail again
-			 * in next submit attempt from completion processing.
-			 */
-			rqpair->sends_to_post.first = bad_send_wr;
-			return -1;
-		}
-		rqpair->sends_to_post.first = NULL;
+	rc = spdk_rdma_qp_flush_send_wrs(rqpair->rdma_qp, &bad_send_wr);
+
+	if (spdk_unlikely(rc)) {
+		SPDK_ERRLOG("Failed to post WRs on send queue, errno %d (%s), bad_wr %p\n",
+			    rc, spdk_strerror(rc), bad_send_wr);
+
+		/* Restart queue from bad wr. If it failed during
+		 * completion processing, controller will be moved to
+		 * failed state. Otherwise it will likely fail again
+		 * in next submit attempt from completion processing.
+		 */
+		spdk_rdma_qp_queue_send_wrs(rqpair->rdma_qp, bad_send_wr);
+		return rc;
 	}
+
 	return 0;
 }
 
@@ -612,13 +612,7 @@ nvme_rdma_qpair_queue_send_wr(struct nvme_rdma_qpair *rqpair, struct ibv_send_wr
 {
 	assert(wr->next == NULL);
 
-	if (rqpair->sends_to_post.first == NULL) {
-		rqpair->sends_to_post.first = wr;
-	} else {
-		rqpair->sends_to_post.last->next = wr;
-	}
-
-	rqpair->sends_to_post.last = wr;
+	spdk_rdma_qp_queue_send_wrs(rqpair->rdma_qp, wr);
 
 	if (!rqpair->delay_cmd_submit) {
 		return nvme_rdma_qpair_submit_sends(rqpair);
