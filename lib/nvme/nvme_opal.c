@@ -271,25 +271,6 @@ opal_cmd_finalize(struct opal_session *sess, uint32_t hsn, uint32_t tsn, bool eo
 	return 0;
 }
 
-/**
- * synchronous function: send and then receive.
- *
- * Wait until response is received. And then call the callback functions.
- */
-static int
-opal_finalize_and_send(struct spdk_opal_dev *dev, struct opal_session *sess, bool eod)
-{
-	int ret;
-
-	ret = opal_cmd_finalize(sess, sess->hsn, sess->tsn, eod);
-	if (ret) {
-		SPDK_ERRLOG("Error finalizing command buffer: %d\n", ret);
-		return ret;
-	}
-
-	return opal_send_recv(dev, sess);
-}
-
 static size_t
 opal_response_parse_tiny(struct spdk_opal_resp_token *token,
 			 const uint8_t *pos)
@@ -855,7 +836,13 @@ opal_end_session(struct spdk_opal_dev *dev, struct opal_session *sess, uint16_t 
 	if (err < 0) {
 		return err;
 	}
-	ret = opal_finalize_and_send(dev, sess, false);
+
+	ret = opal_cmd_finalize(sess, sess->hsn, sess->tsn, false);
+	if (ret) {
+		return ret;
+	}
+
+	ret = opal_send_recv(dev, sess);
 	if (ret) {
 		return ret;
 	}
@@ -957,7 +944,12 @@ opal_start_generic_session(struct spdk_opal_dev *dev,
 		return err;
 	}
 
-	ret =  opal_finalize_and_send(dev, sess, true);
+	ret = opal_cmd_finalize(sess, sess->hsn, sess->tsn, true);
+	if (ret) {
+		return ret;
+	}
+
+	ret = opal_send_recv(dev, sess);
 	if (ret) {
 		return ret;
 	}
@@ -1024,7 +1016,12 @@ opal_get_msid_cpin_pin(struct spdk_opal_dev *dev, struct opal_session *sess,
 		return err;
 	}
 
-	ret =  opal_finalize_and_send(dev, sess, true);
+	ret = opal_cmd_finalize(sess, sess->hsn, sess->tsn, true);
+	if (ret) {
+		return ret;
+	}
+
+	ret = opal_send_recv(dev, sess);
 	if (ret) {
 		return ret;
 	}
@@ -1114,7 +1111,12 @@ opal_get_locking_sp_lifecycle(struct spdk_opal_dev *dev, struct opal_session *se
 		return err;
 	}
 
-	ret =  opal_finalize_and_send(dev, sess, true);
+	ret = opal_cmd_finalize(sess, sess->hsn, sess->tsn, true);
+	if (ret) {
+		return ret;
+	}
+
+	ret = opal_send_recv(dev, sess);
 	if (ret) {
 		return ret;
 	}
@@ -1146,7 +1148,12 @@ opal_activate(struct spdk_opal_dev *dev, struct opal_session *sess)
 
 	/* TODO: Single User Mode for activatation */
 
-	ret =  opal_finalize_and_send(dev, sess, true);
+	ret = opal_cmd_finalize(sess, sess->hsn, sess->tsn, true);
+	if (ret) {
+		return ret;
+	}
+
+	ret = opal_send_recv(dev, sess);
 	if (ret) {
 		return ret;
 	}
@@ -1197,7 +1204,12 @@ opal_start_auth_session(struct spdk_opal_dev *dev,
 		return err;
 	}
 
-	ret =  opal_finalize_and_send(dev, sess, true);
+	ret = opal_cmd_finalize(sess, sess->hsn, sess->tsn, true);
+	if (ret) {
+		return ret;
+	}
+
+	ret = opal_send_recv(dev, sess);
 	if (ret) {
 		return ret;
 	}
@@ -1262,7 +1274,12 @@ opal_lock_unlock_range(struct spdk_opal_dev *dev, struct opal_session *sess,
 		SPDK_ERRLOG("Error building SET command.\n");
 		return err;
 	}
-	ret =  opal_finalize_and_send(dev, sess, true);
+	ret = opal_cmd_finalize(sess, sess->hsn, sess->tsn, true);
+	if (ret) {
+		return ret;
+	}
+
+	ret = opal_send_recv(dev, sess);
 	if (ret) {
 		return ret;
 	}
@@ -1373,7 +1390,12 @@ opal_setup_locking_range(struct spdk_opal_dev *dev, struct opal_session *sess,
 
 	}
 
-	ret =  opal_finalize_and_send(dev, sess, true);
+	ret = opal_cmd_finalize(sess, sess->hsn, sess->tsn, true);
+	if (ret) {
+		return ret;
+	}
+
+	ret = opal_send_recv(dev, sess);
 	if (ret) {
 		return ret;
 	}
@@ -1428,7 +1450,12 @@ opal_get_max_ranges(struct spdk_opal_dev *dev, struct opal_session *sess, uint8_
 		return err;
 	}
 
-	ret =  opal_finalize_and_send(dev, sess, true);
+	ret = opal_cmd_finalize(sess, sess->hsn, sess->tsn, true);
+	if (ret) {
+		return ret;
+	}
+
+	ret = opal_send_recv(dev, sess);
 	if (ret) {
 		return ret;
 	}
@@ -1500,7 +1527,12 @@ opal_get_locking_range_info(struct spdk_opal_dev *dev,
 		return err;
 	}
 
-	ret =  opal_finalize_and_send(dev, sess, true);
+	ret = opal_cmd_finalize(sess, sess->hsn, sess->tsn, true);
+	if (ret) {
+		return ret;
+	}
+
+	ret = opal_send_recv(dev, sess);
 	if (ret) {
 		return ret;
 	}
@@ -1544,7 +1576,12 @@ opal_enable_user(struct spdk_opal_dev *dev, struct opal_session *sess,
 		return err;
 	}
 
-	ret =  opal_finalize_and_send(dev, sess, true);
+	ret = opal_cmd_finalize(sess, sess->hsn, sess->tsn, true);
+	if (ret) {
+		return ret;
+	}
+
+	ret = opal_send_recv(dev, sess);
 	if (ret) {
 		return ret;
 	}
@@ -1621,7 +1658,12 @@ opal_add_user_to_locking_range(struct spdk_opal_dev *dev,
 		return err;
 	}
 
-	ret =  opal_finalize_and_send(dev, sess, true);
+	ret = opal_cmd_finalize(sess, sess->hsn, sess->tsn, true);
+	if (ret) {
+		return ret;
+	}
+
+	ret = opal_send_recv(dev, sess);
 	if (ret) {
 		return ret;
 	}
@@ -1650,7 +1692,12 @@ opal_new_user_passwd(struct spdk_opal_dev *dev, struct opal_session *sess,
 		return ret;
 	}
 
-	ret =  opal_finalize_and_send(dev, sess, true);
+	ret = opal_cmd_finalize(sess, sess->hsn, sess->tsn, true);
+	if (ret) {
+		return ret;
+	}
+
+	ret = opal_send_recv(dev, sess);
 	if (ret) {
 		return ret;
 	}
@@ -1677,7 +1724,12 @@ opal_set_sid_cpin_pin(struct spdk_opal_dev *dev, struct opal_session *sess, void
 		SPDK_ERRLOG("Error building Set SID cpin\n");
 		return -ERANGE;
 	}
-	ret =  opal_finalize_and_send(dev, sess, true);
+	ret = opal_cmd_finalize(sess, sess->hsn, sess->tsn, true);
+	if (ret) {
+		return ret;
+	}
+
+	ret = opal_send_recv(dev, sess);
 	if (ret) {
 		return ret;
 	}
@@ -1841,7 +1893,12 @@ opal_gen_new_active_key(struct spdk_opal_dev *dev, struct opal_session *sess,
 		return err;
 	}
 
-	ret =  opal_finalize_and_send(dev, sess, true);
+	ret = opal_cmd_finalize(sess, sess->hsn, sess->tsn, true);
+	if (ret) {
+		return ret;
+	}
+
+	ret = opal_send_recv(dev, sess);
 	if (ret) {
 		return ret;
 	}
@@ -1911,7 +1968,12 @@ opal_get_active_key(struct spdk_opal_dev *dev, struct opal_session *sess,
 		return err;
 	}
 
-	ret =  opal_finalize_and_send(dev, sess, true);
+	ret = opal_cmd_finalize(sess, sess->hsn, sess->tsn, true);
+	if (ret) {
+		return ret;
+	}
+
+	ret = opal_send_recv(dev, sess);
 	if (ret) {
 		return ret;
 	}
@@ -1943,7 +2005,12 @@ opal_erase_locking_range(struct spdk_opal_dev *dev, struct opal_session *sess,
 		return err;
 	}
 
-	ret =  opal_finalize_and_send(dev, sess, true);
+	ret = opal_cmd_finalize(sess, sess->hsn, sess->tsn, true);
+	if (ret) {
+		return ret;
+	}
+
+	ret = opal_send_recv(dev, sess);
 	if (ret) {
 		return ret;
 	}
@@ -1990,7 +2057,12 @@ spdk_opal_cmd_revert_tper(struct spdk_opal_dev *dev, const char *passwd)
 		goto end;
 	}
 
-	ret =  opal_finalize_and_send(dev, sess, true);
+	ret = opal_cmd_finalize(sess, sess->hsn, sess->tsn, true);
+	if (ret) {
+		goto end;
+	}
+
+	ret = opal_send_recv(dev, sess);
 	if (ret) {
 		opal_end_session(dev, sess, dev->comid);
 		SPDK_ERRLOG("Error on reverting TPer with error %d\n", ret);
