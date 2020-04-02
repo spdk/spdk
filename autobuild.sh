@@ -58,6 +58,8 @@ function scanbuild_make {
 	pass=true
 	$scanbuild $MAKE $MAKEFLAGS > $out/build_output.txt && rm -rf $out/scan-build-tmp || make_fail_cleanup
 	xtrace_disable
+
+	rm -f $out/*files.txt
 	for ent in $(find app examples lib module test -type f | grep -vF ".h"); do
 		if [[ $ent == lib/env_ocf* ]]; then continue; fi
 		if file -bi $ent | grep -q 'text/x-c'; then
