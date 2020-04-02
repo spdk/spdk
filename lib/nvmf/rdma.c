@@ -373,9 +373,6 @@ struct spdk_nvmf_rdma_qpair {
 	/* The maximum number of SGEs per WR on the recv queue */
 	uint32_t				max_recv_sge;
 
-	/* The list of pending send requests for a transfer */
-	struct spdk_nvmf_send_wr_list		sends_to_post;
-
 	struct spdk_nvmf_rdma_resources		*resources;
 
 	STAILQ_HEAD(, spdk_nvmf_rdma_request)	pending_rdma_read_queue;
@@ -997,9 +994,6 @@ nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	spdk_trace_record(TRACE_RDMA_QP_CREATE, 0, 0, (uintptr_t)rqpair->cm_id, 0);
 	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "New RDMA Connection: %p\n", qpair);
 
-	rqpair->sends_to_post.first = NULL;
-	rqpair->sends_to_post.last = NULL;
-
 	if (rqpair->poller->srq == NULL) {
 		rtransport = SPDK_CONTAINEROF(qpair->transport, struct spdk_nvmf_rdma_transport, transport);
 		transport = &rtransport->transport;
@@ -1058,28 +1052,6 @@ nvmf_rdma_qpair_queue_recv_wrs(struct spdk_nvmf_rdma_qpair *rqpair, struct ibv_r
 	}
 }
 
-/* Append the given send wr structure to the qpair's outstanding sends list. */
-/* This function accepts either a single wr or the first wr in a linked list. */
-static void
-nvmf_rdma_qpair_queue_send_wrs(struct spdk_nvmf_rdma_qpair *rqpair, struct ibv_send_wr *first)
-{
-	struct ibv_send_wr *last;
-
-	last = first;
-	while (last->next != NULL) {
-		last = last->next;
-	}
-
-	if (rqpair->sends_to_post.first == NULL) {
-		rqpair->sends_to_post.first = first;
-		rqpair->sends_to_post.last = last;
-		STAILQ_INSERT_TAIL(&rqpair->poller->qpairs_pending_send, rqpair, send_link);
-	} else {
-		rqpair->sends_to_post.last->next = first;
-		rqpair->sends_to_post.last = last;
-	}
-}
-
 static int
 request_transfer_in(struct spdk_nvmf_request *req)
 {
@@ -1094,7 +1066,10 @@ request_transfer_in(struct spdk_nvmf_request *req)
 	assert(req->xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER);
 	assert(rdma_req != NULL);
 
-	nvmf_rdma_qpair_queue_send_wrs(rqpair, &rdma_req->data.wr);
+	if (spdk_rdma_qp_queue_send_wrs(rqpair->rdma_qp, &rdma_req->data.wr)) {
+		STAILQ_INSERT_TAIL(&rqpair->poller->qpairs_pending_send, rqpair, send_link);
+	}
+
 	rqpair->current_read_depth += rdma_req->num_outstanding_data_wr;
 	rqpair->current_send_depth += rdma_req->num_outstanding_data_wr;
 	return 0;
@@ -1145,7 +1120,10 @@ request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 		*data_posted = 1;
 		num_outstanding_data_wr = rdma_req->num_outstanding_data_wr;
 	}
-	nvmf_rdma_qpair_queue_send_wrs(rqpair, first);
+	if (spdk_rdma_qp_queue_send_wrs(rqpair->rdma_qp, first)) {
+		STAILQ_INSERT_TAIL(&rqpair->poller->qpairs_pending_send, rqpair, send_link);
+	}
+
 	/* +1 for the rsp wr */
 	rqpair->current_send_depth += num_outstanding_data_wr + 1;
 
@@ -3743,15 +3721,12 @@ _poller_submit_sends(struct spdk_nvmf_rdma_transport *rtransport,
 
 	while (!STAILQ_EMPTY(&rpoller->qpairs_pending_send)) {
 		rqpair = STAILQ_FIRST(&rpoller->qpairs_pending_send);
-		assert(rqpair->sends_to_post.first != NULL);
-		rc = ibv_post_send(rqpair->rdma_qp->qp, rqpair->sends_to_post.first, &bad_wr);
+		rc = spdk_rdma_qp_flush_send_wrs(rqpair->rdma_qp, &bad_wr);
 
 		/* bad wr always points to the first wr that failed. */
 		if (rc) {
 			_qp_reset_failed_sends(rtransport, rqpair, bad_wr, rc);
 		}
-		rqpair->sends_to_post.first = NULL;
-		rqpair->sends_to_post.last = NULL;
 		STAILQ_REMOVE_HEAD(&rpoller->qpairs_pending_send, send_link);
 	}
 }

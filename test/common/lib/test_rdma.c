@@ -41,3 +41,7 @@ DEFINE_STUB(spdk_rdma_qp_create, struct spdk_rdma_qp *, (struct rdma_cm_id *cm_i
 DEFINE_STUB(spdk_rdma_qp_complete_connect, int, (struct spdk_rdma_qp *spdk_rdma_qp), 0);
 DEFINE_STUB_V(spdk_rdma_qp_destroy, (struct spdk_rdma_qp *spdk_rdma_qp));
 DEFINE_STUB(spdk_rdma_qp_disconnect, int, (struct spdk_rdma_qp *spdk_rdma_qp), 0);
+DEFINE_STUB(spdk_rdma_qp_queue_send_wrs, bool, (struct spdk_rdma_qp *spdk_rdma_qp,
+		struct ibv_send_wr *first), true);
+DEFINE_STUB(spdk_rdma_qp_flush_send_wrs, int, (struct spdk_rdma_qp *spdk_rdma_qp,
+		struct ibv_send_wr **bad_wr), 0);
