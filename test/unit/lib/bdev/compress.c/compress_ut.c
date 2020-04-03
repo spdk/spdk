@@ -620,6 +620,9 @@ test_cleanup(void)
 
 	thread = spdk_get_thread();
 	spdk_thread_exit(thread);
+	while (!spdk_thread_is_exited(thread)) {
+		spdk_thread_poll(thread, 0, 0);
+	}
 	spdk_thread_destroy(thread);
 
 	spdk_thread_lib_fini();

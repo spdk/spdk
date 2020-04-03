@@ -396,6 +396,9 @@ test_nvmf_tcp_create(void)
 	CU_ASSERT_PTR_NULL(transport);
 
 	spdk_thread_exit(thread);
+	while (!spdk_thread_is_exited(thread)) {
+		spdk_thread_poll(thread, 0, 0);
+	}
 	spdk_thread_destroy(thread);
 }
 
@@ -426,6 +429,9 @@ test_nvmf_tcp_destroy(void)
 	CU_ASSERT(spdk_nvmf_tcp_destroy(transport) == 0);
 
 	spdk_thread_exit(thread);
+	while (!spdk_thread_is_exited(thread)) {
+		spdk_thread_poll(thread, 0, 0);
+	}
 	spdk_thread_destroy(thread);
 }
 
@@ -462,6 +468,9 @@ test_nvmf_tcp_poll_group_create(void)
 	spdk_nvmf_tcp_destroy(transport);
 
 	spdk_thread_exit(thread);
+	while (!spdk_thread_is_exited(thread)) {
+		spdk_thread_poll(thread, 0, 0);
+	}
 	spdk_thread_destroy(thread);
 }
 
@@ -520,6 +529,9 @@ test_nvmf_tcp_send_c2h_data(void)
 	CU_ASSERT(pdu.data_iov[2].iov_len == 99);
 
 	spdk_thread_exit(thread);
+	while (!spdk_thread_is_exited(thread)) {
+		spdk_thread_poll(thread, 0, 0);
+	}
 	spdk_thread_destroy(thread);
 }
 

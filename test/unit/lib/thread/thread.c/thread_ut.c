@@ -81,6 +81,9 @@ thread_alloc(void)
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
 	spdk_set_thread(thread);
 	spdk_thread_exit(thread);
+	while (!spdk_thread_is_exited(thread)) {
+		spdk_thread_poll(thread, 0, 0);
+	}
 	spdk_thread_destroy(thread);
 	spdk_thread_lib_fini();
 
@@ -93,6 +96,9 @@ thread_alloc(void)
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
 	spdk_set_thread(thread);
 	spdk_thread_exit(thread);
+	while (!spdk_thread_is_exited(thread)) {
+		spdk_thread_poll(thread, 0, 0);
+	}
 	spdk_thread_destroy(thread);
 
 	/* Scheduling fails */
@@ -111,6 +117,9 @@ thread_alloc(void)
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
 	spdk_set_thread(thread);
 	spdk_thread_exit(thread);
+	while (!spdk_thread_is_exited(thread)) {
+		spdk_thread_poll(thread, 0, 0);
+	}
 	spdk_thread_destroy(thread);
 
 	/* Scheduling fails */
@@ -611,6 +620,9 @@ thread_name(void)
 	name = spdk_thread_get_name(thread);
 	CU_ASSERT(name != NULL);
 	spdk_thread_exit(thread);
+	while (!spdk_thread_is_exited(thread)) {
+		spdk_thread_poll(thread, 0, 0);
+	}
 	spdk_thread_destroy(thread);
 
 	/* Create thread named "test_thread" */
@@ -622,6 +634,9 @@ thread_name(void)
 	SPDK_CU_ASSERT_FATAL(name != NULL);
 	CU_ASSERT(strcmp(name, "test_thread") == 0);
 	spdk_thread_exit(thread);
+	while (!spdk_thread_is_exited(thread)) {
+		spdk_thread_poll(thread, 0, 0);
+	}
 	spdk_thread_destroy(thread);
 
 	spdk_thread_lib_fini();

@@ -1491,6 +1491,9 @@ int main(int argc, char **argv)
 	num_failures = CU_get_number_of_failures();
 
 	spdk_thread_exit(g_thread);
+	while (!spdk_thread_is_exited(g_thread)) {
+		spdk_thread_poll(g_thread, 0, 0);
+	}
 	spdk_thread_destroy(g_thread);
 
 	CU_cleanup_registry();

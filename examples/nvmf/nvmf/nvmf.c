@@ -204,6 +204,9 @@ nvmf_reactor_run(void *arg)
 		TAILQ_REMOVE(&nvmf_reactor->threads, lw_thread, link);
 		spdk_set_thread(thread);
 		spdk_thread_exit(thread);
+		while (!spdk_thread_is_exited(thread)) {
+			spdk_thread_poll(thread, 0, 0);
+		}
 		spdk_thread_destroy(thread);
 	}
 	pthread_mutex_unlock(&nvmf_reactor->mutex);

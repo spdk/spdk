@@ -394,6 +394,9 @@ _spdk_reactor_run(void *arg)
 		spdk_set_thread(thread);
 		rc = spdk_thread_exit(thread);
 		assert(rc == 0);
+		while (!spdk_thread_is_exited(thread)) {
+			spdk_thread_poll(thread, 0, 0);
+		}
 		spdk_thread_destroy(thread);
 	}
 

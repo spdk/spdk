@@ -103,13 +103,18 @@ void
 free_threads(void)
 {
 	uint32_t i;
+	struct spdk_thread *thread;
 	int rc __attribute__((unused));
 
 	for (i = 0; i < g_ut_num_threads; i++) {
 		set_thread(i);
-		rc = spdk_thread_exit(g_ut_threads[i].thread);
+		thread = g_ut_threads[i].thread;
+		rc = spdk_thread_exit(thread);
 		assert(rc == 0);
-		spdk_thread_destroy(g_ut_threads[i].thread);
+		while (!spdk_thread_is_exited(thread)) {
+			spdk_thread_poll(thread, 0, 0);
+		}
+		spdk_thread_destroy(thread);
 		g_ut_threads[i].thread = NULL;
 	}
 

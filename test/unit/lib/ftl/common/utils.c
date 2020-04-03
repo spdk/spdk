@@ -134,11 +134,19 @@ test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id, size_t zone_size)
 void
 test_free_ftl_dev(struct spdk_ftl_dev *dev)
 {
+	struct spdk_thread *thread;
+
 	SPDK_CU_ASSERT_FATAL(dev != NULL);
 	free(dev->ioch);
-	spdk_set_thread(dev->core_thread);
-	spdk_thread_exit(dev->core_thread);
-	spdk_thread_destroy(dev->core_thread);
+
+	thread = dev->core_thread;
+
+	spdk_set_thread(thread);
+	spdk_thread_exit(thread);
+	while (!spdk_thread_is_exited(thread)) {
+		spdk_thread_poll(thread, 0, 0);
+	}
+	spdk_thread_destroy(thread);
 	spdk_mempool_free(dev->lba_pool);
 	free(dev->bands);
 	free(dev);

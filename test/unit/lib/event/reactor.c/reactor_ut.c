@@ -148,6 +148,9 @@ test_schedule_thread(void)
 	reactor->thread_count--;
 	spdk_set_thread(thread);
 	spdk_thread_exit(thread);
+	while (!spdk_thread_is_exited(thread)) {
+		spdk_thread_poll(thread, 0, 0);
+	}
 	spdk_thread_destroy(thread);
 	spdk_set_thread(NULL);
 
@@ -228,6 +231,9 @@ test_reschedule_thread(void)
 	reactor->thread_count--;
 	spdk_set_thread(thread);
 	spdk_thread_exit(thread);
+	while (!spdk_thread_is_exited(thread)) {
+		spdk_thread_poll(thread, 0, 0);
+	}
 	spdk_thread_destroy(thread);
 	spdk_set_thread(NULL);
 
