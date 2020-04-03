@@ -50,8 +50,6 @@ opal_security_recv(struct spdk_opal_dev *dev, struct opal_session *sess)
 	void *response = sess->resp;
 	struct spdk_opal_compacket *header = response;
 	int ret = 0;
-	uint64_t start = spdk_get_ticks();
-	uint64_t now;
 
 	do {
 		memset(response, 0, IO_BUFFER_LENGTH);
@@ -67,18 +65,12 @@ opal_security_recv(struct spdk_opal_dev *dev, struct opal_session *sess)
 
 		if (header->outstanding_data == 0 &&
 		    header->min_transfer == 0) {
-			return 0;	/* return if all the response data are ready by tper and received by host */
-		} else {	/* check timeout */
-			now = spdk_get_ticks();
-			if (now - start > dev->timeout * spdk_get_ticks_hz()) {
-				SPDK_ERRLOG("Secutiy Receive Timeout on dev = %p\n", dev);
-				return 0x0F; /* TPer Malfunction */
-			}
+			/* return if all the response data are ready by tper and received by host */
+			return 0;
 		}
+	} while (true);
 
-	} while (!ret);
-
-	return ret;
+	return 0;
 }
 
 static int
@@ -1802,7 +1794,6 @@ struct spdk_opal_dev *
 	}
 
 	dev->ctrlr = ctrlr;
-	dev->timeout = SPDK_OPAL_TPER_TIMEOUT;
 
 	payload = calloc(1, IO_BUFFER_LENGTH);
 	if (!payload) {

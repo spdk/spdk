@@ -43,8 +43,6 @@
 #define OPAL_KEY_MAX			256
 #define OPAL_UID_LENGTH			8
 
-#define SPDK_OPAL_TPER_TIMEOUT		600 /* seconds */
-
 #define GENERIC_HOST_SESSION_NUM	0x69
 
 #define OPAL_INVAL_PARAM		12
@@ -257,7 +255,6 @@ struct spdk_opal_dev {
 
 	struct spdk_opal_d0_features_info feat_info;
 
-	uint64_t timeout;   /* seconds */
 	uint8_t max_ranges; /* max locking range number */
 	struct spdk_opal_locking_range_info locking_ranges[SPDK_OPAL_MAX_LOCKING_RANGE];
 
