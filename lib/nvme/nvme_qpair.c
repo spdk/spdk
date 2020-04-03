@@ -454,12 +454,33 @@ nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 	return nvme_qpair_get_state(qpair) == NVME_QPAIR_ENABLED;
 }
 
+void
+nvme_qpair_resubmit_requests(struct spdk_nvme_qpair *qpair, uint32_t num_requests)
+{
+	uint32_t i;
+	int resubmit_rc;
+	struct nvme_request *req;
+
+	for (i = 0; i < num_requests; i++) {
+		if (qpair->ctrlr->is_resetting) {
+			break;
+		}
+		if ((req = STAILQ_FIRST(&qpair->queued_req)) == NULL) {
+			break;
+		}
+		STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
+		resubmit_rc = nvme_qpair_resubmit_request(qpair, req);
+		if (spdk_unlikely(resubmit_rc != 0)) {
+			SPDK_ERRLOG("Unable to resubmit as many requests as we completed.\n");
+			break;
+		}
+	}
+}
+
 int32_t
 spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
 	int32_t ret;
-	int32_t resubmit_rc;
-	int32_t i;
 	struct nvme_request *req, *tmp;
 
 	if (spdk_unlikely(qpair->ctrlr->is_failed)) {
@@ -513,17 +534,7 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	 * At this point, ret must represent the number of completions we reaped.
 	 * submit as many queued requests as we completed.
 	 */
-	i = 0;
-	while (i < ret && !STAILQ_EMPTY(&qpair->queued_req) && !qpair->ctrlr->is_resetting) {
-		req = STAILQ_FIRST(&qpair->queued_req);
-		STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
-		resubmit_rc = nvme_qpair_resubmit_request(qpair, req);
-		if (spdk_unlikely(resubmit_rc != 0)) {
-			SPDK_ERRLOG("Unable to resubmit as many requests as we completed.\n");
-			break;
-		}
-		i++;
-	}
+	nvme_qpair_resubmit_requests(qpair, ret);
 
 	return ret;
 }
