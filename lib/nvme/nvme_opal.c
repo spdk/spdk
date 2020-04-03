@@ -1818,7 +1818,7 @@ struct spdk_opal_dev *
 }
 
 static int
-opal_revert_tper(struct spdk_opal_dev *dev, struct opal_session *sess)
+opal_build_revert_tper_cmd(struct spdk_opal_dev *dev, struct opal_session *sess)
 {
 	int err = 0;
 
@@ -1834,9 +1834,10 @@ opal_revert_tper(struct spdk_opal_dev *dev, struct opal_session *sess)
 	opal_add_token_u8(&err, sess, SPDK_OPAL_ENDLIST);
 	if (err) {
 		SPDK_ERRLOG("Error building REVERT TPER command.\n");
+		return -ERANGE;
 	}
 
-	return err;
+	return opal_cmd_finalize(sess, sess->hsn, sess->tsn, true);
 }
 
 static int
@@ -2028,15 +2029,10 @@ spdk_opal_cmd_revert_tper(struct spdk_opal_dev *dev, const char *passwd)
 		return ret;
 	}
 
-	ret = opal_revert_tper(dev, sess);
+	ret = opal_build_revert_tper_cmd(dev, sess);
 	if (ret) {
 		opal_end_session(dev, sess, dev->comid);
-		SPDK_ERRLOG("Error on reverting TPer with error %d\n", ret);
-		goto end;
-	}
-
-	ret = opal_cmd_finalize(sess, sess->hsn, sess->tsn, true);
-	if (ret) {
+		SPDK_ERRLOG("Build revert tper command with error %d\n", ret);
 		goto end;
 	}
 
