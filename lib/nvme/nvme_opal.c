@@ -1384,7 +1384,7 @@ opal_setup_locking_range(struct spdk_opal_dev *dev, struct opal_session *sess,
 }
 
 static int
-opal_get_max_ranges_done(struct opal_session *sess, uint8_t *max_ranges)
+opal_get_max_ranges_done(struct opal_session *sess)
 {
 	int error = 0;
 
@@ -1393,13 +1393,12 @@ opal_get_max_ranges_done(struct opal_session *sess, uint8_t *max_ranges)
 		return error;
 	}
 
-	*max_ranges = opal_response_get_u16(&sess->parsed_resp, 4); /* "MaxRanges" is token 4 of response */
-
-	return 0;
+	/* "MaxRanges" is token 4 of response */
+	return opal_response_get_u16(&sess->parsed_resp, 4);
 }
 
 static int
-opal_get_max_ranges(struct spdk_opal_dev *dev, struct opal_session *sess, uint8_t *max_ranges)
+opal_get_max_ranges(struct spdk_opal_dev *dev, struct opal_session *sess)
 {
 	int err = 0;
 	int ret;
@@ -1440,7 +1439,7 @@ opal_get_max_ranges(struct spdk_opal_dev *dev, struct opal_session *sess, uint8_
 		return ret;
 	}
 
-	return opal_get_max_ranges_done(sess, max_ranges);
+	return opal_get_max_ranges_done(sess);
 }
 
 static int
@@ -2211,7 +2210,6 @@ spdk_opal_cmd_get_max_ranges(struct spdk_opal_dev *dev, const char *passwd)
 	struct opal_session *sess;
 	struct spdk_opal_key opal_key = {};
 	int ret;
-	uint8_t *max_ranges = &dev->max_ranges;
 
 	if (dev->supported == false) {
 		return -ENOTSUP;
@@ -2240,12 +2238,12 @@ spdk_opal_cmd_get_max_ranges(struct spdk_opal_dev *dev, const char *passwd)
 		return ret;
 	}
 
-	ret = opal_get_max_ranges(dev, sess, max_ranges);
-	if (ret) {
-		SPDK_ERRLOG("get max ranges error %d\n", ret);
+	ret = opal_get_max_ranges(dev, sess);
+	if (ret > 0) {
+		dev->max_ranges = ret;
 	}
 
-	ret += opal_end_session(dev, sess, dev->comid);
+	ret = opal_end_session(dev, sess, dev->comid);
 	if (ret) {
 		SPDK_ERRLOG("end session error %d\n", ret);
 	}
