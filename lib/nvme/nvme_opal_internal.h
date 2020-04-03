@@ -238,6 +238,11 @@ struct spdk_opal_header {
 	struct spdk_opal_data_subpacket sub_packet;
 };
 
+struct opal_session;
+struct spdk_opal_dev;
+
+typedef void (*opal_sess_cb)(struct opal_session *sess, int status, void *ctx);
+
 struct opal_session {
 	uint32_t hsn;
 	uint32_t tsn;
@@ -245,6 +250,12 @@ struct opal_session {
 	uint8_t cmd[IO_BUFFER_LENGTH];
 	uint8_t resp[IO_BUFFER_LENGTH];
 	struct spdk_opal_resp_parsed parsed_resp;
+
+	opal_sess_cb sess_cb;
+	void *cb_arg;
+	bool done;
+	int status;
+	struct spdk_opal_dev *dev;
 };
 
 struct spdk_opal_dev {

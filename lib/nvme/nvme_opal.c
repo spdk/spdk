@@ -37,40 +37,71 @@
 
 #include "nvme_opal_internal.h"
 
-static int
-opal_security_send(struct spdk_opal_dev *dev, struct opal_session *sess)
+static void
+opal_nvme_security_recv_done(void *arg, const struct spdk_nvme_cpl *cpl)
 {
-	return spdk_nvme_ctrlr_security_send(dev->ctrlr, SPDK_SCSI_SECP_TCG, dev->comid,
-					     0, sess->cmd, IO_BUFFER_LENGTH);
+	struct opal_session *sess = arg;
+	struct spdk_opal_dev *dev = sess->dev;
+	void *response = sess->resp;
+	struct spdk_opal_compacket *header = response;
+	int ret;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		sess->sess_cb(sess, -EIO, sess->cb_arg);
+		return;
+	}
+
+	if (!header->outstanding_data && !header->min_transfer) {
+		sess->sess_cb(sess, 0, sess->cb_arg);
+		return;
+	}
+
+	memset(response, 0, IO_BUFFER_LENGTH);
+	ret = spdk_nvme_ctrlr_cmd_security_receive(dev->ctrlr, SPDK_SCSI_SECP_TCG,
+			dev->comid, 0, sess->resp, IO_BUFFER_LENGTH,
+			opal_nvme_security_recv_done, sess);
+	if (ret) {
+		sess->sess_cb(sess, ret, sess->cb_arg);
+	}
+}
+
+static void
+opal_nvme_security_send_done(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct opal_session *sess = arg;
+	struct spdk_opal_dev *dev = sess->dev;
+	int ret;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		sess->sess_cb(sess, -EIO, sess->cb_arg);
+		return;
+	}
+
+	ret = spdk_nvme_ctrlr_cmd_security_receive(dev->ctrlr, SPDK_SCSI_SECP_TCG,
+			dev->comid, 0, sess->resp, IO_BUFFER_LENGTH,
+			opal_nvme_security_recv_done, sess);
+	if (ret) {
+		sess->sess_cb(sess, ret, sess->cb_arg);
+	}
 }
 
 static int
-opal_security_recv(struct spdk_opal_dev *dev, struct opal_session *sess)
+opal_nvme_security_send(struct spdk_opal_dev *dev, struct opal_session *sess,
+			opal_sess_cb sess_cb, void *cb_arg)
 {
-	void *response = sess->resp;
-	struct spdk_opal_compacket *header = response;
-	int ret = 0;
+	sess->sess_cb = sess_cb;
+	sess->cb_arg = cb_arg;
 
-	do {
-		memset(response, 0, IO_BUFFER_LENGTH);
-		ret = spdk_nvme_ctrlr_security_receive(dev->ctrlr, SPDK_SCSI_SECP_TCG, dev->comid,
-						       0, sess->resp, IO_BUFFER_LENGTH);
-		if (ret) {
-			SPDK_ERRLOG("Security Receive Error on dev = %p\n", dev);
-			return ret;
-		}
-		SPDK_DEBUGLOG(SPDK_LOG_OPAL, "outstanding_data=%d, minTransfer=%d\n",
-			      header->outstanding_data,
-			      header->min_transfer);
+	return spdk_nvme_ctrlr_cmd_security_send(dev->ctrlr, SPDK_SCSI_SECP_TCG, dev->comid,
+			0, sess->cmd, IO_BUFFER_LENGTH,
+			opal_nvme_security_send_done, sess);
+}
 
-		if (header->outstanding_data == 0 &&
-		    header->min_transfer == 0) {
-			/* return if all the response data are ready by tper and received by host */
-			return 0;
-		}
-	} while (true);
-
-	return 0;
+static void
+opal_send_recv_done(struct opal_session *sess, int status, void *ctx)
+{
+	sess->status = status;
+	sess->done = true;
 }
 
 static int
@@ -78,12 +109,31 @@ opal_send_recv(struct spdk_opal_dev *dev, struct opal_session *sess)
 {
 	int ret;
 
-	ret = opal_security_send(dev, sess);
+	sess->done = false;
+	ret = opal_nvme_security_send(dev, sess, opal_send_recv_done, NULL);
 	if (ret) {
 		return ret;
 	}
 
-	return opal_security_recv(dev, sess);
+	while (!sess->done) {
+		spdk_nvme_ctrlr_process_admin_completions(dev->ctrlr);
+	}
+
+	return sess->status;
+}
+
+static struct opal_session *
+opal_alloc_session(struct spdk_opal_dev *dev)
+{
+	struct opal_session *sess;
+
+	sess = calloc(1, sizeof(*sess));
+	if (!sess) {
+		return NULL;
+	}
+	sess->dev = dev;
+
+	return sess;
 }
 
 static void
@@ -1721,7 +1771,7 @@ spdk_opal_cmd_take_ownership(struct spdk_opal_dev *dev, char *new_passwd)
 		return -ENODEV;
 	}
 
-	sess = calloc(1, sizeof(*sess));
+	sess = opal_alloc_session(dev);
 	if (!sess) {
 		return -ENOMEM;
 	}
@@ -1748,6 +1798,7 @@ spdk_opal_cmd_take_ownership(struct spdk_opal_dev *dev, char *new_passwd)
 
 	/* reuse the session structure */
 	memset(sess, 0, sizeof(*sess));
+	sess->dev = dev;
 	ret = opal_start_generic_session(dev, sess, UID_SID, UID_ADMINSP,
 					 opal_key.key, opal_key.key_len);
 	if (ret) {
@@ -2008,7 +2059,7 @@ spdk_opal_cmd_revert_tper(struct spdk_opal_dev *dev, const char *passwd)
 		return ret;
 	}
 
-	sess = calloc(1, sizeof(*sess));
+	sess = opal_alloc_session(dev);
 	if (!sess) {
 		return -ENOMEM;
 	}
@@ -2062,7 +2113,7 @@ spdk_opal_cmd_activate_locking_sp(struct spdk_opal_dev *dev, const char *passwd)
 		return ret;
 	}
 
-	sess = calloc(1, sizeof(*sess));
+	sess = opal_alloc_session(dev);
 	if (!sess) {
 		return -ENOMEM;
 	}
@@ -2117,7 +2168,7 @@ spdk_opal_cmd_lock_unlock(struct spdk_opal_dev *dev, enum spdk_opal_user user,
 		return ret;
 	}
 
-	sess = calloc(1, sizeof(*sess));
+	sess = opal_alloc_session(dev);
 	if (!sess) {
 		return -ENOMEM;
 	}
@@ -2164,7 +2215,7 @@ spdk_opal_cmd_setup_locking_range(struct spdk_opal_dev *dev, enum spdk_opal_user
 		return ret;
 	}
 
-	sess = calloc(1, sizeof(*sess));
+	sess = opal_alloc_session(dev);
 	if (!sess) {
 		return -ENOMEM;
 	}
@@ -2214,7 +2265,7 @@ spdk_opal_cmd_get_max_ranges(struct spdk_opal_dev *dev, const char *passwd)
 		return ret;
 	}
 
-	sess = calloc(1, sizeof(*sess));
+	sess = opal_alloc_session(dev);
 	if (!sess) {
 		return -ENOMEM;
 	}
@@ -2262,7 +2313,7 @@ spdk_opal_cmd_get_locking_range_info(struct spdk_opal_dev *dev, const char *pass
 		return ret;
 	}
 
-	sess = calloc(1, sizeof(*sess));
+	sess = opal_alloc_session(dev);
 	if (!sess) {
 		return -ENOMEM;
 	}
@@ -2308,7 +2359,7 @@ spdk_opal_cmd_enable_user(struct spdk_opal_dev *dev, enum spdk_opal_user user_id
 		return ret;
 	}
 
-	sess = calloc(1, sizeof(*sess));
+	sess = opal_alloc_session(dev);
 	if (!sess) {
 		return -ENOMEM;
 	}
@@ -2356,7 +2407,7 @@ spdk_opal_cmd_add_user_to_locking_range(struct spdk_opal_dev *dev, enum spdk_opa
 		return ret;
 	}
 
-	sess = calloc(1, sizeof(*sess));
+	sess = opal_alloc_session(dev);
 	if (!sess) {
 		return -ENOMEM;
 	}
@@ -2409,7 +2460,7 @@ spdk_opal_cmd_set_new_passwd(struct spdk_opal_dev *dev, enum spdk_opal_user user
 		return ret;
 	}
 
-	sess = calloc(1, sizeof(*sess));
+	sess = opal_alloc_session(dev);
 	if (!sess) {
 		return -ENOMEM;
 	}
@@ -2456,7 +2507,7 @@ spdk_opal_cmd_erase_locking_range(struct spdk_opal_dev *dev, enum spdk_opal_user
 		return ret;
 	}
 
-	sess = calloc(1, sizeof(*sess));
+	sess = opal_alloc_session(dev);
 	if (!sess) {
 		return -ENOMEM;
 	}
@@ -2508,7 +2559,7 @@ spdk_opal_cmd_secure_erase_locking_range(struct spdk_opal_dev *dev, enum spdk_op
 		return -ENOMEM;
 	}
 
-	sess = calloc(1, sizeof(*sess));
+	sess = opal_alloc_session(dev);
 	if (!sess) {
 		free(active_key);
 		return -ENOMEM;
