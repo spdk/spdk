@@ -46,4 +46,6 @@ C_SRCS = bdev.c bdev_rpc.c bdev_zone.c part.c scsi_nvme.c
 C_SRCS-$(CONFIG_VTUNE) += vtune.c
 LIBNAME = bdev
 
+SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_bdev.map)
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

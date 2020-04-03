@@ -26,7 +26,11 @@ function confirm_abi_deps() {
 		return 1
 	fi
 
-	touch $suppression_file
+	cat <<EOF > ${suppression_file}
+[suppress_variable]
+	name = SPDK_LOG_BDEV
+
+EOF
 
 	for object in "$libdir"/libspdk_*.so; do
 		so_file=$(basename $object)
