@@ -1010,8 +1010,8 @@ opal_get_msid_cpin_pin(struct spdk_opal_dev *dev, struct opal_session *sess,
 }
 
 static int
-opal_generic_pw_cmd(struct opal_session *sess, uint8_t *key, size_t key_len, uint8_t *cpin_uid,
-		    struct spdk_opal_dev *dev)
+opal_build_generic_pw_cmd(struct opal_session *sess, uint8_t *key, size_t key_len,
+			  uint8_t *cpin_uid, struct spdk_opal_dev *dev)
 {
 	int err = 0;
 
@@ -1036,7 +1036,11 @@ opal_generic_pw_cmd(struct opal_session *sess, uint8_t *key, size_t key_len, uin
 			SPDK_OPAL_ENDLIST,
 			SPDK_OPAL_ENDNAME,
 			SPDK_OPAL_ENDLIST);
-	return err;
+	if (err) {
+		return err;
+	}
+
+	return opal_cmd_finalize(sess, sess->hsn, sess->tsn, true);
 }
 
 static int
@@ -1665,14 +1669,9 @@ opal_new_user_passwd(struct spdk_opal_dev *dev, struct opal_session *sess,
 		uid_cpin[7] = user;
 	}
 
-	ret = opal_generic_pw_cmd(sess, opal_key->key, opal_key->key_len, uid_cpin, dev);
+	ret = opal_build_generic_pw_cmd(sess, opal_key->key, opal_key->key_len, uid_cpin, dev);
 	if (ret != 0) {
 		SPDK_ERRLOG("Error building set password command\n");
-		return ret;
-	}
-
-	ret = opal_cmd_finalize(sess, sess->hsn, sess->tsn, true);
-	if (ret) {
 		return ret;
 	}
 
@@ -1685,10 +1684,9 @@ opal_new_user_passwd(struct spdk_opal_dev *dev, struct opal_session *sess,
 }
 
 static int
-opal_set_sid_cpin_pin(struct spdk_opal_dev *dev, struct opal_session *sess, void *data)
+opal_set_sid_cpin_pin(struct spdk_opal_dev *dev, struct opal_session *sess, char *new_passwd)
 {
 	uint8_t cpin_uid[OPAL_UID_LENGTH];
-	const char *new_passwd = data;
 	struct spdk_opal_key opal_key = {};
 	int ret;
 
@@ -1699,13 +1697,9 @@ opal_set_sid_cpin_pin(struct spdk_opal_dev *dev, struct opal_session *sess, void
 
 	memcpy(cpin_uid, spdk_opal_uid[UID_C_PIN_SID], OPAL_UID_LENGTH);
 
-	if (opal_generic_pw_cmd(sess, opal_key.key, opal_key.key_len, cpin_uid, dev)) {
+	if (opal_build_generic_pw_cmd(sess, opal_key.key, opal_key.key_len, cpin_uid, dev)) {
 		SPDK_ERRLOG("Error building Set SID cpin\n");
 		return -ERANGE;
-	}
-	ret = opal_cmd_finalize(sess, sess->hsn, sess->tsn, true);
-	if (ret) {
-		return ret;
 	}
 
 	ret = opal_send_recv(dev, sess);
