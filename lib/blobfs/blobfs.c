@@ -817,11 +817,11 @@ load_cb(void *ctx, struct spdk_blob_store *bs, int bserrno)
 	bstype = spdk_bs_get_bstype(bs);
 
 	if (!memcmp(&bstype, &zeros, sizeof(bstype))) {
-		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "assigning bstype\n");
+		SPDK_DEBUGLOG(SPDK_LOG_BLOBFS, "assigning bstype\n");
 		spdk_bs_set_bstype(bs, blobfs_type);
 	} else if (memcmp(&bstype, &blobfs_type, sizeof(bstype))) {
 		SPDK_ERRLOG("not blobfs\n");
-		SPDK_LOGDUMP(SPDK_LOG_BLOB, "bstype", &bstype, sizeof(bstype));
+		SPDK_LOGDUMP(SPDK_LOG_BLOBFS, "bstype", &bstype, sizeof(bstype));
 		args->fn.fs_op_with_handle(args->arg, NULL, -EINVAL);
 		free_fs_request(req);
 		spdk_fs_free_io_channels(fs);

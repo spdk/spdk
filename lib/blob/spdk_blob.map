@@ -1,0 +1,64 @@
+{
+	global:
+
+	# Public functions
+	spdk_bs_opts_init;
+	spdk_bs_load;
+	spdk_bs_init;
+	spdk_bs_dump;
+	spdk_bs_destroy;
+	spdk_bs_unload;
+	spdk_bs_set_super;
+	spdk_bs_get_super;
+	spdk_bs_get_cluster_size;
+	spdk_bs_get_page_size;
+	spdk_bs_get_io_unit_size;
+	spdk_bs_free_cluster_count;
+	spdk_bs_total_data_cluster_count;
+	spdk_blob_get_id;
+	spdk_blob_get_num_pages;
+	spdk_blob_get_num_io_units;
+	spdk_blob_get_num_clusters;
+	spdk_blob_opts_init;
+	spdk_bs_create_blob_ext;
+	spdk_bs_create_blob;
+	spdk_bs_create_snapshot;
+	spdk_bs_create_clone;
+	spdk_blob_get_clones;
+	spdk_blob_get_parent_snapshot;
+	spdk_blob_is_read_only;
+	spdk_blob_is_snapshot;
+	spdk_blob_is_clone;
+	spdk_blob_is_thin_provisioned;
+	spdk_bs_delete_blob;
+	spdk_bs_inflate_blob;
+	spdk_bs_blob_decouple_parent;
+	spdk_blob_open_opts_init;
+	spdk_bs_open_blob;
+	spdk_bs_open_blob_ext;
+	spdk_blob_resize;
+	spdk_blob_set_read_only;
+	spdk_blob_sync_md;
+	spdk_blob_close;
+	spdk_bs_alloc_io_channel;
+	spdk_bs_free_io_channel;
+	spdk_blob_io_write;
+	spdk_blob_io_read;
+	spdk_blob_io_writev;
+	spdk_blob_io_readv;
+	spdk_blob_io_unmap;
+	spdk_blob_io_write_zeroes;
+	spdk_bs_iter_first;
+	spdk_bs_iter_next;
+	spdk_blob_set_xattr;
+	spdk_blob_remove_xattr;
+	spdk_blob_get_xattr_value;
+	spdk_blob_get_xattr_names;
+	spdk_xattr_names_get_count;
+	spdk_xattr_names_get_name;
+	spdk_xattr_names_free;
+	spdk_bs_get_bstype;
+	spdk_bs_set_bstype;
+
+	local: *;
+};
