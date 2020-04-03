@@ -203,7 +203,7 @@ block being 4096B. Therefore the data file needs to be at least 384G (8 * 512 * 
 size and can be created with the following command:
 
 ```
-$ fallocate -l 384G /path/to/data/file
+fallocate -l 384G /path/to/data/file
 ```
 
 ## Configuring SPDK {#ftl_spdk_config}

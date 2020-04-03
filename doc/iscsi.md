@@ -227,33 +227,33 @@ Assuming we have one iSCSI Target server with portal at 10.0.0.1:3200, two LUNs 
 
 Start iscsi_tgt application:
 ```
-$ ./app/iscsi_tgt/iscsi_tgt
+./app/iscsi_tgt/iscsi_tgt
 ```
 
 Construct two 64MB Malloc block devices with 512B sector size "Malloc0" and "Malloc1":
 
 ```
-$ ./scripts/rpc.py bdev_malloc_create -b Malloc0 64 512
-$ ./scripts/rpc.py bdev_malloc_create -b Malloc1 64 512
+./scripts/rpc.py bdev_malloc_create -b Malloc0 64 512
+./scripts/rpc.py bdev_malloc_create -b Malloc1 64 512
 ```
 
 Create new portal group with id 1, and address 10.0.0.1:3260:
 
 ```
-$ ./scripts/rpc.py iscsi_create_portal_group 1 10.0.0.1:3260
+./scripts/rpc.py iscsi_create_portal_group 1 10.0.0.1:3260
 ```
 
 Create one initiator group with id 2 to accept any connection from 10.0.0.2/32:
 
 ```
-$ ./scripts/rpc.py iscsi_create_initiator_group 2 ANY 10.0.0.2/32
+./scripts/rpc.py iscsi_create_initiator_group 2 ANY 10.0.0.2/32
 ```
 
 Finally construct one target using previously created bdevs as LUN0 (Malloc0) and LUN1 (Malloc1)
 with a name "disk1" and alias "Data Disk1" using portal group 1 and initiator group 2.
 
 ```
-$ ./scripts/rpc.py iscsi_create_target_node disk1 "Data Disk1" "Malloc0:0 Malloc1:1" 1:2 64 -d
+./scripts/rpc.py iscsi_create_target_node disk1 "Data Disk1" "Malloc0:0 Malloc1:1" 1:2 64 -d
 ```
 
 #### Configure initiator
@@ -268,7 +268,7 @@ $ iscsiadm -m discovery -t sendtargets -p 10.0.0.1
 Connect to the target
 
 ~~~
-$ iscsiadm -m node --login
+iscsiadm -m node --login
 ~~~
 
 At this point the iSCSI target should show up as SCSI disks.
