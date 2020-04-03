@@ -338,6 +338,8 @@ runtime={run_time}
             for cpu in cpus:
                 if "-" in cpu:
                     a, b = cpu.split("-")
+                    a = int(a)
+                    b = int(b)
                     cpus_num += len(range(a, b))
                 else:
                     cpus_num += 1
@@ -690,7 +692,7 @@ class KernelInitiator(Initiator):
         remainder = len(nvme_list) % threads
         iterator = iter(filenames)
         result = []
-        for i in range(threads):
+        for i in range(len(threads)):
             result.append([])
             for j in range(nvme_per_split):
                 result[i].append(next(iterator))
@@ -743,12 +745,14 @@ class SPDKInitiator(Initiator):
 
     def gen_fio_filename_conf(self, subsystems, threads):
         filename_section = ""
-        filenames = ["Nvme%sn1" % x for x in range(0, subsystems)]
-        nvme_per_split = int(subsystems / threads)
-        remainder = subsystems % threads
+        if len(threads) >= len(subsystems):
+            threads = range(0, len(subsystems))
+        filenames = ["Nvme%sn1" % x for x in range(0, len(subsystems))]
+        nvme_per_split = int(len(subsystems) / len(threads))
+        remainder = len(subsystems) % len(threads)
         iterator = iter(filenames)
         result = []
-        for i in range(threads):
+        for i in range(len(threads)):
             result.append([])
             for j in range(nvme_per_split):
                 result[i].append(next(iterator))
