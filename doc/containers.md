@@ -6,7 +6,22 @@ here.
 
 # In this document {#containers_toc}
 
+* @ref kata_containers_with_spdk_vhost
 * @ref spdk_in_docker
+
+# Using SPDK vhost target to provide volume service to Kata Containers and Docker {#kata_containers_with_spdk_vhost}
+
+[Kata Containers](https://katacontainers.io) can build a secure container
+runtime with lightweight virtual machines that feel and perform like
+containers, but provide stronger workload isolation using hardware
+virtualization technology as a second layer of defense.
+
+From Kata Containers [1.11.0-alpha1](https://github.com/kata-containers/runtime/releases/tag/1.11.0-alpha1),
+vhost-user-blk support is enabled in `kata-containers/runtime`. That is to say
+SPDK vhost target can be used to provide volume service to Kata Containers directly.
+In addition, a container manager like Docker, can be configured easily to launch
+a Kata container with an SPDK vhost-user block device. For operating details, visit
+Kata containers use-case [Setup to run SPDK vhost-user devices with Kata Containers and Docker](https://github.com/kata-containers/documentation/blob/master/use-cases/using-SPDK-vhostuser-and-kata.md#host-setup-for-vhost-user-devices)
 
 # Containerizing an SPDK Application for Docker {#spdk_in_docker}
 
