@@ -164,7 +164,7 @@ register_workers(void)
 		worker = calloc(1, sizeof(*worker));
 		if (worker == NULL) {
 			fprintf(stderr, "Unable to allocate worker\n");
-			return -1;
+			return 1;
 		}
 
 		worker->core = i;
@@ -341,7 +341,7 @@ submit_xfers(struct ioat_chan_entry *ioat_chan_entry, uint64_t queue_depth)
 		ioat_task = spdk_mempool_get(ioat_chan_entry->task_pool);
 		if (!ioat_task) {
 			fprintf(stderr, "Unable to get ioat_task\n");
-			return -1;
+			return 1;
 		}
 
 		submit_single_xfer(ioat_chan_entry, ioat_task, dst, src);
@@ -365,8 +365,8 @@ work_fn(void *arg)
 		/* begin to submit transfers */
 		t->waiting_for_flush = 0;
 		t->flush_threshold = g_user_config.queue_depth / 2;
-		if (submit_xfers(t, g_user_config.queue_depth) < 0) {
-			return -1;
+		if (submit_xfers(t, g_user_config.queue_depth) != 0) {
+			return 1;
 		}
 		t = t->next;
 	}
@@ -403,7 +403,7 @@ init(void)
 	opts.name = "ioat_perf";
 	opts.core_mask = g_user_config.core_mask;
 	if (spdk_env_init(&opts) < 0) {
-		return -1;
+		return 1;
 	}
 
 	return 0;
@@ -478,7 +478,7 @@ associate_workers_with_chan(void)
 	while (chan != NULL) {
 		t = calloc(1, sizeof(struct ioat_chan_entry));
 		if (!t) {
-			return -1;
+			return 1;
 		}
 
 		t->ioat_chan_id = i;
@@ -534,18 +534,18 @@ main(int argc, char **argv)
 	}
 
 	if (register_workers() != 0) {
-		rc = -1;
+		rc = 1;
 		goto cleanup;
 	}
 
 	if (ioat_init() != 0) {
-		rc = -1;
+		rc = 1;
 		goto cleanup;
 	}
 
 	if (g_ioat_chan_num == 0) {
 		printf("No channels found\n");
-		rc = 0;
+		rc = 1;
 		goto cleanup;
 	}
 
@@ -560,7 +560,7 @@ main(int argc, char **argv)
 	dump_user_config(&g_user_config);
 
 	if (associate_workers_with_chan() != 0) {
-		rc = -1;
+		rc = 1;
 		goto cleanup;
 	}
 
@@ -580,7 +580,7 @@ main(int argc, char **argv)
 
 	assert(master_worker != NULL);
 	rc = work_fn(master_worker);
-	if (rc < 0) {
+	if (rc != 0) {
 		goto cleanup;
 	}
 
