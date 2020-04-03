@@ -19,7 +19,7 @@ display_help() {
 	echo
 	echo " Usage: ${0##*/} <distro>"
 	echo
-	echo "  distro = <ubuntu16 | ubuntu18> "
+	echo "  distro = <ubuntu16 | ubuntu18 | fedora31> "
 	echo
 	echo "  --use-ssh-dir=<dir path>    Use existing spdk_vhost_id_rsa keys from specified directory"
 	echo "                              for setting up SSH key pair on VM"
@@ -77,6 +77,9 @@ case "${SPDK_VAGRANT_DISTRO}" in
 		export SPDK_VAGRANT_DISTRO
 		;;
 	ubuntu18)
+		export SPDK_VAGRANT_DISTRO
+		;;
+	fedora31)
 		export SPDK_VAGRANT_DISTRO
 		;;
 	*)
