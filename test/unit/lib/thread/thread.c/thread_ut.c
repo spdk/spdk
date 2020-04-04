@@ -805,41 +805,45 @@ thread_exit(void)
 {
 	struct spdk_thread *thread;
 	struct spdk_io_channel *ch;
-	struct spdk_poller *poller;
+	struct spdk_poller *poller1, *poller2;
 	void *ctx;
-	bool done1 = false, done2 = false, poller_run = false;
+	bool done1 = false, done2 = false, poller1_run = false, poller2_run = false;
 	int rc __attribute__((unused));
 
-	allocate_threads(6);
+	allocate_threads(3);
 
-	/* Test all pending messages are reaped for the thread marked as exited. */
+	/* Test if all pending messages are reaped for the exiting thread, and the
+	 * thread moves to the exited state.
+	 */
 	set_thread(0);
 	thread = spdk_get_thread();
 
 	/* Sending message to thread 0 will be accepted. */
-	set_thread(1);
 	rc = spdk_thread_send_msg(thread, send_msg_cb, &done1);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(!done1);
 
-	/* Mark thread 0 as exited. */
-	set_thread(0);
+	/* Move thread 0 to the exiting state. */
 	spdk_thread_exit(thread);
 
-	/* Sending message to thread 0 will be rejected. */
-	set_thread(1);
-	rc = spdk_thread_send_msg(thread, send_msg_cb, &done2);
-	CU_ASSERT(rc == -EIO);
+	CU_ASSERT(spdk_thread_is_exited(thread) == false);
 
-	/* Thread 0 will reap pending message. */
+	/* Sending message to thread 0 will be still accepted. */
+	rc = spdk_thread_send_msg(thread, send_msg_cb, &done2);
+	CU_ASSERT(rc == 0);
+
+	/* Thread 0 will reap pending messages. */
 	poll_thread(0);
 	CU_ASSERT(done1 == true);
-	CU_ASSERT(done2 == false);
+	CU_ASSERT(done2 == true);
 
-	/* Test releasing I/O channel is reaped even after the thread is marked
-	 * as exited.
+	/* Thread 0 will move to the exited state. */
+	CU_ASSERT(spdk_thread_is_exited(thread) == true);
+
+	/* Test releasing I/O channel is reaped even after the thread moves to
+	 * the exiting state
 	 */
-	set_thread(2);
+	set_thread(1);
 
 	spdk_io_device_register(&g_device1, create_cb_1, destroy_cb_1, sizeof(g_ctx1), NULL);
 
@@ -857,76 +861,63 @@ thread_exit(void)
 	thread = spdk_get_thread();
 	spdk_thread_exit(thread);
 
-	/* Thread will not be able to get I/O channel after it is marked as exited. */
-	ch = spdk_get_io_channel(&g_device1);
-	CU_ASSERT(ch == NULL);
-
-	poll_threads();
-	CU_ASSERT(g_destroy_cb_calls == 1);
-
-	spdk_io_device_unregister(&g_device1, NULL);
-	poll_threads();
-
-	/* Test 2nd spdk_thread_exit() call is ignored. */
-	set_thread(3);
-
-	thread = spdk_get_thread();
-
-	CU_ASSERT(spdk_thread_exit(thread) == 0);
-	CU_ASSERT(spdk_thread_exit(thread) == 0);
-
-	/* Test if spdk_thread_exit() fails when there is any registered poller,
-	 * and if no poller is executed after the thread is marked as exited.
+	/* Thread 1 will not move to the exited state yet because I/O channel release
+	 * does not complete yet.
 	 */
-	set_thread(4);
-	thread = spdk_get_thread();
+	CU_ASSERT(spdk_thread_is_exited(thread) == false);
 
-	poller = spdk_poller_register(poller_run_done, &poller_run, 0);
-	CU_ASSERT(poller != NULL);
-
-	CU_ASSERT(spdk_thread_exit(thread) == -EBUSY);
-
-	spdk_poller_pause(poller);
-
-	CU_ASSERT(spdk_thread_exit(thread) == -EBUSY);
-
-	poll_threads();
-
-	CU_ASSERT(spdk_thread_exit(thread) == -EBUSY);
-
-	spdk_poller_unregister(&poller);
-
-	CU_ASSERT(spdk_thread_exit(thread) == 0);
-
-	poll_threads();
-
-	CU_ASSERT(poller_run == false);
-
-	/* Test if spdk_thread_exit() fails when there is any active I/O channel. */
-	set_thread(5);
-	thread = spdk_get_thread();
-
-	spdk_io_device_register(&g_device1, create_cb_1, destroy_cb_1, sizeof(g_ctx1), NULL);
-
+	/* Thread 1 will be able to get the another reference of I/O channel
+	 * even after the thread moves to the exiting state.
+	 */
 	g_create_cb_calls = 0;
 	ch = spdk_get_io_channel(&g_device1);
-	CU_ASSERT(g_create_cb_calls == 1);
-	CU_ASSERT(ch != NULL);
 
-	CU_ASSERT(spdk_thread_exit(thread) == -EBUSY);
+	CU_ASSERT(g_create_cb_calls == 0);
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
 
-	g_destroy_cb_calls = 0;
+	ctx = spdk_io_channel_get_ctx(ch);
+	CU_ASSERT(*(uint64_t *)ctx == g_ctx1);
+
 	spdk_put_io_channel(ch);
-	CU_ASSERT(g_destroy_cb_calls == 0);
-
-	CU_ASSERT(spdk_thread_exit(thread) == 0);
 
 	poll_threads();
 	CU_ASSERT(g_destroy_cb_calls == 1);
 
-	spdk_io_device_unregister(&g_device1, NULL);
+	/* Thread 1 will move to the exited state after I/O channel is released.
+	 * are released.
+	 */
+	CU_ASSERT(spdk_thread_is_exited(thread) == true);
 
-	CU_ASSERT(TAILQ_EMPTY(&thread->io_channels));
+	spdk_io_device_unregister(&g_device1, NULL);
+	poll_threads();
+
+	/* Test if unregistering poller is reaped for the exiting thread, and the
+	 * thread moves to the exited thread.
+	 */
+	set_thread(2);
+	thread = spdk_get_thread();
+
+	poller1 = spdk_poller_register(poller_run_done, &poller1_run, 0);
+	CU_ASSERT(poller1 != NULL);
+
+	spdk_poller_unregister(&poller1);
+
+	spdk_thread_exit(thread);
+
+	poller2 = spdk_poller_register(poller_run_done, &poller2_run, 0);
+
+	poll_threads();
+
+	CU_ASSERT(poller1_run == false);
+	CU_ASSERT(poller2_run == true);
+
+	CU_ASSERT(spdk_thread_is_exited(thread) == false);
+
+	spdk_poller_unregister(&poller2);
+
+	poll_threads();
+
+	CU_ASSERT(spdk_thread_is_exited(thread) == true);
 
 	free_threads();
 }
@@ -1011,6 +1002,8 @@ thread_update_stats(void)
 	CU_ASSERT(thread->stats.busy_tsc == 200000);
 
 	spdk_poller_unregister(&poller);
+
+	MOCK_CLEAR(spdk_get_ticks);
 
 	free_threads();
 }

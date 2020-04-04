@@ -316,7 +316,7 @@ spdk_set_thread(struct spdk_thread *thread)
 	tls_thread = thread;
 }
 
-static int
+static void
 _spdk_thread_exit(struct spdk_thread *thread)
 {
 	struct spdk_poller *poller;
@@ -324,36 +324,37 @@ _spdk_thread_exit(struct spdk_thread *thread)
 
 	TAILQ_FOREACH(poller, &thread->active_pollers, tailq) {
 		if (poller->state != SPDK_POLLER_STATE_UNREGISTERED) {
-			SPDK_ERRLOG("thread %s still has active poller %s\n",
-				    thread->name, poller->name);
-			return -EBUSY;
+			SPDK_INFOLOG(SPDK_LOG_THREAD,
+				     "thread %s still has active poller %s\n",
+				     thread->name, poller->name);
+			return;
 		}
 	}
 
 	TAILQ_FOREACH(poller, &thread->timed_pollers, tailq) {
 		if (poller->state != SPDK_POLLER_STATE_UNREGISTERED) {
-			SPDK_ERRLOG("thread %s still has active timed poller %s\n",
-				    thread->name, poller->name);
-			return -EBUSY;
+			SPDK_INFOLOG(SPDK_LOG_THREAD,
+				     "thread %s still has active timed poller %s\n",
+				     thread->name, poller->name);
+			return;
 		}
 	}
 
 	TAILQ_FOREACH(poller, &thread->paused_pollers, tailq) {
-		SPDK_ERRLOG("thread %s still has paused poller %s\n",
-			    thread->name, poller->name);
-		return -EBUSY;
+		SPDK_INFOLOG(SPDK_LOG_THREAD,
+			     "thread %s still has paused poller %s\n",
+			     thread->name, poller->name);
+		return;
 	}
 
 	TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
-		if (ch->ref != 0) {
-			SPDK_ERRLOG("thread %s still has active channel for io_device %s\n",
-				    thread->name, ch->dev->name);
-			return -EBUSY;
-		}
+		SPDK_INFOLOG(SPDK_LOG_THREAD,
+			     "thread %s still has channel for io_device %s\n",
+			     thread->name, ch->dev->name);
+		return;
 	}
 
 	thread->state = SPDK_THREAD_STATE_EXITED;
-	return 0;
 }
 
 int
@@ -370,7 +371,8 @@ spdk_thread_exit(struct spdk_thread *thread)
 		return 0;
 	}
 
-	return _spdk_thread_exit(thread);
+	thread->state = SPDK_THREAD_STATE_EXITING;
+	return 0;
 }
 
 bool
@@ -660,6 +662,10 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 	}
 
 	rc = _spdk_thread_poll(thread, max_msgs, now);
+
+	if (spdk_unlikely(thread->state == SPDK_THREAD_STATE_EXITING)) {
+		_spdk_thread_exit(thread);
+	}
 
 	_spdk_thread_update_stats(thread, spdk_get_ticks(), now, rc);
 

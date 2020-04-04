@@ -267,13 +267,15 @@ void spdk_set_thread(struct spdk_thread *thread);
  * spdk_poller_register(), and spdk_get_io_channel() calls. May only be called
  * within an spdk poller or message.
  *
- * All I/O channel references associated with the thread must be released using
- * spdk_put_io_channel(), and all active pollers associated with the thread must
- * be unregistered using spdk_poller_unregister(), prior to calling this function.
+ * All I/O channel references associated with the thread must be released
+ * using spdk_put_io_channel(), and all active pollers associated with the thread
+ * should be unregistered using spdk_poller_unregister(), prior to calling
+ * this function. This function will complete these processing. The completion can
+ * be queried by spdk_thread_is_exited().
  *
  * \param thread The thread to destroy.
  *
- * \return 0 on success, negated errno on failure.
+ * \return always 0. (return value was deprecated but keep it for ABI compatibility.)
  */
 int spdk_thread_exit(struct spdk_thread *thread);
 

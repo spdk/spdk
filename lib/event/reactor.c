@@ -366,7 +366,6 @@ _spdk_reactor_run(void *arg)
 	struct spdk_thread	*thread;
 	struct spdk_lw_thread	*lw_thread, *tmp;
 	char			thread_name[32];
-	int			rc __attribute__((unused));
 
 	SPDK_NOTICELOG("Reactor started on core %u\n", reactor->lcore);
 
@@ -386,18 +385,25 @@ _spdk_reactor_run(void *arg)
 		}
 	}
 
-	TAILQ_FOREACH_SAFE(lw_thread, &reactor->threads, link, tmp) {
+	TAILQ_FOREACH(lw_thread, &reactor->threads, link) {
 		thread = spdk_thread_get_from_ctx(lw_thread);
-		TAILQ_REMOVE(&reactor->threads, lw_thread, link);
-		assert(reactor->thread_count > 0);
-		reactor->thread_count--;
 		spdk_set_thread(thread);
-		rc = spdk_thread_exit(thread);
-		assert(rc == 0);
-		while (!spdk_thread_is_exited(thread)) {
-			spdk_thread_poll(thread, 0, 0);
+		spdk_thread_exit(thread);
+	}
+
+	while (!TAILQ_EMPTY(&reactor->threads)) {
+		TAILQ_FOREACH_SAFE(lw_thread, &reactor->threads, link, tmp) {
+			thread = spdk_thread_get_from_ctx(lw_thread);
+			spdk_set_thread(thread);
+			if (spdk_thread_is_exited(thread)) {
+				TAILQ_REMOVE(&reactor->threads, lw_thread, link);
+				assert(reactor->thread_count > 0);
+				reactor->thread_count--;
+				spdk_thread_destroy(thread);
+			} else {
+				spdk_thread_poll(thread, 0, 0);
+			}
 		}
-		spdk_thread_destroy(thread);
 	}
 
 	return 0;

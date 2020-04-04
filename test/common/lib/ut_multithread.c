@@ -102,20 +102,33 @@ allocate_threads(int num_threads)
 void
 free_threads(void)
 {
-	uint32_t i;
+	uint32_t i, num_threads;
 	struct spdk_thread *thread;
-	int rc __attribute__((unused));
 
 	for (i = 0; i < g_ut_num_threads; i++) {
 		set_thread(i);
 		thread = g_ut_threads[i].thread;
-		rc = spdk_thread_exit(thread);
-		assert(rc == 0);
-		while (!spdk_thread_is_exited(thread)) {
-			spdk_thread_poll(thread, 0, 0);
+		spdk_thread_exit(thread);
+	}
+
+	num_threads = g_ut_num_threads;
+
+	while (num_threads != 0) {
+		for (i = 0; i < g_ut_num_threads; i++) {
+			set_thread(i);
+			thread = g_ut_threads[i].thread;
+			if (thread == NULL) {
+				continue;
+			}
+
+			if (spdk_thread_is_exited(thread)) {
+				g_ut_threads[i].thread = NULL;
+				num_threads--;
+				spdk_thread_destroy(thread);
+			} else {
+				spdk_thread_poll(thread, 0, 0);
+			}
 		}
-		spdk_thread_destroy(thread);
-		g_ut_threads[i].thread = NULL;
 	}
 
 	g_ut_num_threads = 0;

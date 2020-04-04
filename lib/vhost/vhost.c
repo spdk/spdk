@@ -590,10 +590,7 @@ vhost_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 static void
 vhost_dev_thread_exit(void *arg1)
 {
-	int rc __attribute__((unused));
-
-	rc = spdk_thread_exit(spdk_get_thread());
-	assert(rc == 0);
+	spdk_thread_exit(spdk_get_thread());
 }
 
 int
