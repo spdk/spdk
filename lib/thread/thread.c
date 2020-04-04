@@ -314,21 +314,11 @@ spdk_set_thread(struct spdk_thread *thread)
 	tls_thread = thread;
 }
 
-int
-spdk_thread_exit(struct spdk_thread *thread)
+static int
+_spdk_thread_exit(struct spdk_thread *thread)
 {
 	struct spdk_poller *poller;
 	struct spdk_io_channel *ch;
-
-	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Exit thread %s\n", thread->name);
-
-	assert(tls_thread == thread);
-
-	if (thread->exit) {
-		SPDK_INFOLOG(SPDK_LOG_THREAD, "thread %s is already marked as exited\n",
-			     thread->name);
-		return 0;
-	}
 
 	TAILQ_FOREACH(poller, &thread->active_pollers, tailq) {
 		if (poller->state != SPDK_POLLER_STATE_UNREGISTERED) {
@@ -362,6 +352,23 @@ spdk_thread_exit(struct spdk_thread *thread)
 
 	thread->exit = true;
 	return 0;
+}
+
+int
+spdk_thread_exit(struct spdk_thread *thread)
+{
+	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Exit thread %s\n", thread->name);
+
+	assert(tls_thread == thread);
+
+	if (thread->exit) {
+		SPDK_INFOLOG(SPDK_LOG_THREAD,
+			     "thread %s is already marked as exited\n",
+			     thread->name);
+		return 0;
+	}
+
+	return _spdk_thread_exit(thread);
 }
 
 bool
