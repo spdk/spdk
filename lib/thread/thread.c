@@ -305,6 +305,8 @@ spdk_thread_create(const char *name, struct spdk_cpuset *cpumask)
 		return NULL;
 	}
 
+	thread->state = SPDK_THREAD_STATE_RUNNING;
+
 	return thread;
 }
 
@@ -350,7 +352,7 @@ _spdk_thread_exit(struct spdk_thread *thread)
 		}
 	}
 
-	thread->exit = true;
+	thread->state = SPDK_THREAD_STATE_EXITED;
 	return 0;
 }
 
@@ -361,9 +363,9 @@ spdk_thread_exit(struct spdk_thread *thread)
 
 	assert(tls_thread == thread);
 
-	if (thread->exit) {
+	if (thread->state >= SPDK_THREAD_STATE_EXITING) {
 		SPDK_INFOLOG(SPDK_LOG_THREAD,
-			     "thread %s is already marked as exited\n",
+			     "thread %s is already exiting\n",
 			     thread->name);
 		return 0;
 	}
@@ -374,7 +376,7 @@ spdk_thread_exit(struct spdk_thread *thread)
 bool
 spdk_thread_is_exited(struct spdk_thread *thread)
 {
-	return thread->exit;
+	return thread->state == SPDK_THREAD_STATE_EXITED;
 }
 
 void
@@ -382,7 +384,7 @@ spdk_thread_destroy(struct spdk_thread *thread)
 {
 	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Destroy thread %s\n", thread->name);
 
-	assert(thread->exit == true);
+	assert(thread->state == SPDK_THREAD_STATE_EXITED);
 
 	if (tls_thread == thread) {
 		tls_thread = NULL;
@@ -801,7 +803,7 @@ spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx
 
 	assert(thread != NULL);
 
-	if (spdk_unlikely(thread->exit)) {
+	if (spdk_unlikely(thread->state == SPDK_THREAD_STATE_EXITED)) {
 		SPDK_ERRLOG("Thread %s is marked as exited.\n", thread->name);
 		return -EIO;
 	}
@@ -868,7 +870,7 @@ _spdk_poller_register(spdk_poller_fn fn,
 		return NULL;
 	}
 
-	if (spdk_unlikely(thread->exit)) {
+	if (spdk_unlikely(thread->state == SPDK_THREAD_STATE_EXITED)) {
 		SPDK_ERRLOG("thread %s is marked as exited\n", thread->name);
 		return NULL;
 	}
@@ -1290,7 +1292,7 @@ spdk_get_io_channel(void *io_device)
 		return NULL;
 	}
 
-	if (spdk_unlikely(thread->exit)) {
+	if (spdk_unlikely(thread->state == SPDK_THREAD_STATE_EXITED)) {
 		SPDK_ERRLOG("Thread %s is marked as exited\n", thread->name);
 		pthread_mutex_unlock(&g_devlist_mutex);
 		return NULL;

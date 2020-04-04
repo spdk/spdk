@@ -77,12 +77,25 @@ struct spdk_poller {
 	char				name[SPDK_MAX_POLLER_NAME_LEN + 1];
 };
 
+enum spdk_thread_state {
+	/* The thread is pocessing poller and message by spdk_thread_poll(). */
+	SPDK_THREAD_STATE_RUNNING,
+
+	/* The thread is in the process of termination. It reaps unregistering
+	 * poller are releasing I/O channel.
+	 */
+	SPDK_THREAD_STATE_EXITING,
+
+	/* The thread is exited. It is ready to call spdk_thread_destroy(). */
+	SPDK_THREAD_STATE_EXITED,
+};
+
 struct spdk_thread {
 	TAILQ_HEAD(, spdk_io_channel)	io_channels;
 	TAILQ_ENTRY(spdk_thread)	tailq;
 	char				name[SPDK_MAX_THREAD_NAME_LEN + 1];
 	uint64_t			id;
-	bool				exit;
+	enum spdk_thread_state		state;
 	struct spdk_cpuset		cpumask;
 	uint64_t			tsc_last;
 	struct spdk_thread_stats	stats;
