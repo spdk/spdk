@@ -1042,6 +1042,201 @@ thread_update_stats(void)
 	free_threads();
 }
 
+struct ut_nested_ch {
+	struct spdk_io_channel *child;
+	struct spdk_poller *poller;
+};
+
+struct ut_nested_dev {
+	struct ut_nested_dev *child;
+};
+
+static struct io_device *
+ut_get_io_device(void *dev)
+{
+	struct io_device *tmp;
+
+	TAILQ_FOREACH(tmp, &g_io_devices, tailq) {
+		if (tmp->io_device == dev) {
+			return tmp;
+		}
+	}
+
+	return NULL;
+}
+
+static int
+ut_null_poll(void *ctx)
+{
+	return -1;
+}
+
+static int
+ut_nested_ch_create_cb(void *io_device, void *ctx_buf)
+{
+	struct ut_nested_ch *_ch = ctx_buf;
+	struct ut_nested_dev *_dev = io_device;
+	struct ut_nested_dev *_child;
+
+	_child = _dev->child;
+
+	if (_child != NULL) {
+		_ch->child = spdk_get_io_channel(_child);
+		SPDK_CU_ASSERT_FATAL(_ch->child != NULL);
+	} else {
+		_ch->child = NULL;
+	}
+
+	_ch->poller = spdk_poller_register(ut_null_poll, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(_ch->poller != NULL);
+
+	return 0;
+}
+
+static void
+ut_nested_ch_destroy_cb(void *io_device, void *ctx_buf)
+{
+	struct ut_nested_ch *_ch = ctx_buf;
+	struct spdk_io_channel *child;
+
+	child = _ch->child;
+	if (child != NULL) {
+		spdk_put_io_channel(child);
+	}
+
+	spdk_poller_unregister(&_ch->poller);
+}
+
+static void
+ut_check_nested_ch_create(struct spdk_io_channel *ch, struct io_device *dev)
+{
+	CU_ASSERT(ch->ref == 1);
+	CU_ASSERT(ch->dev == dev);
+	CU_ASSERT(dev->refcnt == 1);
+}
+
+static void
+ut_check_nested_ch_destroy_pre(struct spdk_io_channel *ch, struct io_device *dev)
+{
+	CU_ASSERT(ch->ref == 0);
+	CU_ASSERT(ch->destroy_ref == 1);
+	CU_ASSERT(dev->refcnt == 1);
+}
+
+static void
+ut_check_nested_ch_destroy_post(struct io_device *dev)
+{
+	CU_ASSERT(dev->refcnt == 0);
+}
+
+static void
+ut_check_nested_poller_register(struct spdk_poller *poller)
+{
+	SPDK_CU_ASSERT_FATAL(poller != NULL);
+}
+
+static void
+nested_channel(void)
+{
+	struct ut_nested_dev _dev1, _dev2, _dev3;
+	struct ut_nested_ch *_ch1, *_ch2, *_ch3;
+	struct io_device *dev1, *dev2, *dev3;
+	struct spdk_io_channel *ch1, *ch2, *ch3;
+	struct spdk_poller *poller;
+	struct spdk_thread *thread;
+
+	allocate_threads(1);
+	set_thread(0);
+
+	thread = spdk_get_thread();
+	SPDK_CU_ASSERT_FATAL(thread != NULL);
+
+	_dev1.child = &_dev2;
+	_dev2.child = &_dev3;
+	_dev3.child = NULL;
+
+	spdk_io_device_register(&_dev1, ut_nested_ch_create_cb, ut_nested_ch_destroy_cb,
+				sizeof(struct ut_nested_ch), "dev1");
+	spdk_io_device_register(&_dev2, ut_nested_ch_create_cb, ut_nested_ch_destroy_cb,
+				sizeof(struct ut_nested_ch), "dev2");
+	spdk_io_device_register(&_dev3, ut_nested_ch_create_cb, ut_nested_ch_destroy_cb,
+				sizeof(struct ut_nested_ch), "dev3");
+
+	dev1 = ut_get_io_device(&_dev1);
+	SPDK_CU_ASSERT_FATAL(dev1 != NULL);
+	dev2 = ut_get_io_device(&_dev2);
+	SPDK_CU_ASSERT_FATAL(dev2 != NULL);
+	dev3 = ut_get_io_device(&_dev3);
+	SPDK_CU_ASSERT_FATAL(dev3 != NULL);
+
+	/* A single call spdk_get_io_channel() to dev1 will also create channels
+	 * to dev2 and dev3 continuously. Pollers will be registered together.
+	 */
+	ch1 = spdk_get_io_channel(&_dev1);
+	SPDK_CU_ASSERT_FATAL(ch1 != NULL);
+
+	_ch1 = spdk_io_channel_get_ctx(ch1);
+	ch2 = _ch1->child;
+	SPDK_CU_ASSERT_FATAL(ch2 != NULL);
+
+	_ch2 = spdk_io_channel_get_ctx(ch2);
+	ch3 = _ch2->child;
+	SPDK_CU_ASSERT_FATAL(ch3 != NULL);
+
+	_ch3 = spdk_io_channel_get_ctx(ch3);
+	CU_ASSERT(_ch3->child == NULL);
+
+	ut_check_nested_ch_create(ch1, dev1);
+	ut_check_nested_ch_create(ch2, dev2);
+	ut_check_nested_ch_create(ch3, dev3);
+
+	poller = spdk_poller_register(ut_null_poll, NULL, 0);
+
+	ut_check_nested_poller_register(poller);
+	ut_check_nested_poller_register(_ch1->poller);
+	ut_check_nested_poller_register(_ch2->poller);
+	ut_check_nested_poller_register(_ch3->poller);
+
+	spdk_poller_unregister(&poller);
+	poll_thread_times(0, 1);
+
+	/* A single call spdk_put_io_channel() to dev1 will also destroy channels
+	 * to dev2 and dev3 continuously. Pollers will be unregistered together.
+	 */
+	spdk_put_io_channel(ch1);
+
+	/* Start exiting the current thread after unregistering the non-nested
+	 * I/O channel.
+	 */
+	spdk_thread_exit(thread);
+
+	ut_check_nested_ch_destroy_pre(ch1, dev1);
+	poll_thread_times(0, 1);
+	ut_check_nested_ch_destroy_post(dev1);
+
+	CU_ASSERT(spdk_thread_is_exited(thread) == false);
+
+	ut_check_nested_ch_destroy_pre(ch2, dev2);
+	poll_thread_times(0, 1);
+	ut_check_nested_ch_destroy_post(dev2);
+
+	CU_ASSERT(spdk_thread_is_exited(thread) == false);
+
+	ut_check_nested_ch_destroy_pre(ch3, dev3);
+	poll_thread_times(0, 1);
+	ut_check_nested_ch_destroy_post(dev3);
+
+	CU_ASSERT(spdk_thread_is_exited(thread) == true);
+
+	spdk_io_device_unregister(&_dev1, NULL);
+	spdk_io_device_unregister(&_dev2, NULL);
+	spdk_io_device_unregister(&_dev3, NULL);
+	CU_ASSERT(TAILQ_EMPTY(&g_io_devices));
+
+	free_threads();
+	CU_ASSERT(TAILQ_EMPTY(&g_threads));
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1065,6 +1260,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, channel_destroy_races);
 	CU_ADD_TEST(suite, thread_exit);
 	CU_ADD_TEST(suite, thread_update_stats);
+	CU_ADD_TEST(suite, nested_channel);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
