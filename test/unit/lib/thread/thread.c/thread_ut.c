@@ -810,7 +810,10 @@ thread_exit(void)
 	bool done1 = false, done2 = false, poller1_run = false, poller2_run = false;
 	int rc __attribute__((unused));
 
-	allocate_threads(3);
+	MOCK_SET(spdk_get_ticks, 10);
+	MOCK_SET(spdk_get_ticks_hz, 1);
+
+	allocate_threads(4);
 
 	/* Test if all pending messages are reaped for the exiting thread, and the
 	 * thread moves to the exited state.
@@ -918,6 +921,37 @@ thread_exit(void)
 	poll_threads();
 
 	CU_ASSERT(spdk_thread_is_exited(thread) == true);
+
+	/* Test if the exiting thread is exited forcefully after timeout. */
+	set_thread(3);
+	thread = spdk_get_thread();
+
+	poller1 = spdk_poller_register(poller_run_done, &poller1_run, 0);
+	CU_ASSERT(poller1 != NULL);
+
+	spdk_thread_exit(thread);
+
+	CU_ASSERT(spdk_thread_is_exited(thread) == false);
+
+	MOCK_SET(spdk_get_ticks, 11);
+
+	poll_threads();
+
+	CU_ASSERT(spdk_thread_is_exited(thread) == false);
+
+	/* Cause timeout forcefully. */
+	MOCK_SET(spdk_get_ticks, 15);
+
+	poll_threads();
+
+	CU_ASSERT(spdk_thread_is_exited(thread) == true);
+
+	spdk_poller_unregister(&poller1);
+
+	poll_threads();
+
+	MOCK_CLEAR(spdk_get_ticks);
+	MOCK_CLEAR(spdk_get_ticks_hz);
 
 	free_threads();
 }

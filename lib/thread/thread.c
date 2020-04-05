@@ -45,6 +45,7 @@
 
 #define SPDK_MSG_BATCH_SIZE		8
 #define SPDK_MAX_DEVICE_NAME_LEN	256
+#define SPDK_THREAD_EXIT_TIMEOUT_SEC	5
 
 static pthread_mutex_t g_devlist_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -317,10 +318,16 @@ spdk_set_thread(struct spdk_thread *thread)
 }
 
 static void
-_spdk_thread_exit(struct spdk_thread *thread)
+_spdk_thread_exit(struct spdk_thread *thread, uint64_t now)
 {
 	struct spdk_poller *poller;
 	struct spdk_io_channel *ch;
+
+	if (now >= thread->exit_timeout_tsc) {
+		SPDK_ERRLOG("thread %s got timeout, and move it to the exited state forcefully\n",
+			    thread->name);
+		goto exited;
+	}
 
 	TAILQ_FOREACH(poller, &thread->active_pollers, tailq) {
 		if (poller->state != SPDK_POLLER_STATE_UNREGISTERED) {
@@ -354,6 +361,7 @@ _spdk_thread_exit(struct spdk_thread *thread)
 		return;
 	}
 
+exited:
 	thread->state = SPDK_THREAD_STATE_EXITED;
 }
 
@@ -371,6 +379,8 @@ spdk_thread_exit(struct spdk_thread *thread)
 		return 0;
 	}
 
+	thread->exit_timeout_tsc = spdk_get_ticks() + (spdk_get_ticks_hz() *
+				   SPDK_THREAD_EXIT_TIMEOUT_SEC);
 	thread->state = SPDK_THREAD_STATE_EXITING;
 	return 0;
 }
@@ -664,7 +674,7 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 	rc = _spdk_thread_poll(thread, max_msgs, now);
 
 	if (spdk_unlikely(thread->state == SPDK_THREAD_STATE_EXITING)) {
-		_spdk_thread_exit(thread);
+		_spdk_thread_exit(thread, now);
 	}
 
 	_spdk_thread_update_stats(thread, spdk_get_ticks(), now, rc);

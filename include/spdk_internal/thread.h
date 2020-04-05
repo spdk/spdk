@@ -121,6 +121,8 @@ struct spdk_thread {
 	SLIST_HEAD(, spdk_msg)		msg_cache;
 	size_t				msg_cache_count;
 	spdk_msg_fn			critical_msg;
+	uint64_t			exit_timeout_tsc;
+
 	/* User context allocated at the end */
 	uint8_t				ctx[0];
 };
