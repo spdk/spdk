@@ -213,6 +213,10 @@ Vagrant.configure(2) do |config|
     libvirt.cpus = "#{vmcpu}"
     libvirt.video_type = "cirrus"
 
+    if ENV['VAGRANT_HUGE_MEM'] == "1"
+      libvirt.memorybacking :hugepages
+    end
+
     # Optional field if we want use other storage pools than default
     # libvirt.storage_pool_name = "vm"
   end

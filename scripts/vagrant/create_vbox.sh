@@ -33,6 +33,7 @@ display_help() {
 	echo "                                  Parameters for -b option: <path>,<type>,<namespaces>."
 	echo "                                  Available types: nvme, ocssd."
 	echo "  -c                              Create all above disk, default 0"
+	echo "  -H                              Use hugepages for allocating VM memory. Only for libvirt provider. Default: false."
 	echo "  -u                              Use password authentication to the VM instead of SSH keys."
 	echo "  -l                              Use a local copy of spdk, don't try to rsync from the host."
 	echo "  -a                              Copy spdk/autorun.sh artifacts from VM to host system."
@@ -79,8 +80,9 @@ NVME_AUTO_CREATE=0
 VAGRANTFILE_DIR=""
 VAGRANT_PASSWORD_AUTH=0
 VAGRANT_PACKAGE_BOX=0
+VAGRANT_HUGE_MEM=0
 
-while getopts ":b:n:s:x:p:u:vcraldh-:" opt; do
+while getopts ":b:n:s:x:p:u:vcraldHh-:" opt; do
 	case "${opt}" in
 		-)
 		case "${OPTARG}" in
@@ -131,6 +133,9 @@ while getopts ":b:n:s:x:p:u:vcraldh-:" opt; do
 		;;
 		u)
 			VAGRANT_PASSWORD_AUTH=1
+		;;
+		H)
+			VAGRANT_HUGE_MEM=1
 		;;
 		*)
 			echo "  Invalid argument: -$OPTARG" >&2
@@ -239,6 +244,7 @@ export NVME_DISKS_TYPE
 export NVME_DISKS_NAMESPACES
 export NVME_FILE
 export VAGRANT_PASSWORD_AUTH
+export VAGRANT_HUGE_MEM
 
 if [ -n "$SPDK_VAGRANT_PROVIDER" ]; then
     provider="--provider=${SPDK_VAGRANT_PROVIDER}"
@@ -265,6 +271,7 @@ if [ ${DRY_RUN} = 1 ]; then
 	printenv NVME_DISKS_NAMESPACES
 	printenv NVME_FILE
 	printenv SPDK_DIR
+	printenv VAGRANT_HUGE_MEM
 fi
 if [ -z "$VAGRANTFILE_DIR" ]; then
 	VAGRANTFILE_DIR="${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${SPDK_VAGRANT_PROVIDER}"
