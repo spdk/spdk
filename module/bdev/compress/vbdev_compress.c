@@ -437,6 +437,72 @@ spdk_reduce_rw_blocks_cb(void *arg, int reduce_errno)
 	}
 }
 
+static uint64_t
+_setup_compress_mbuf(struct rte_mbuf **mbufs, int *mbuf_total, uint64_t *total_length,
+		     struct iovec *iovs, int iovcnt, void *reduce_cb_arg)
+{
+	uint64_t updated_length, remainder, phys_addr;
+	uint8_t *current_base = NULL;
+	int iov_index, mbuf_index;
+	int rc = 0;
+
+	/* Setup mbufs */
+	iov_index = mbuf_index = 0;
+	while (iov_index < iovcnt) {
+
+		current_base = iovs[iov_index].iov_base;
+		if (total_length) {
+			*total_length += iovs[iov_index].iov_len;
+		}
+		assert(mbufs[mbuf_index] != NULL);
+		mbufs[mbuf_index]->userdata = reduce_cb_arg;
+		updated_length = iovs[iov_index].iov_len;
+		phys_addr = spdk_vtophys((void *)current_base, &updated_length);
+
+		rte_pktmbuf_attach_extbuf(mbufs[mbuf_index],
+					  current_base,
+					  phys_addr,
+					  updated_length,
+					  &g_shinfo);
+		rte_pktmbuf_append(mbufs[mbuf_index], updated_length);
+		remainder = iovs[iov_index].iov_len - updated_length;
+
+		if (mbuf_index > 0) {
+			rte_pktmbuf_chain(mbufs[0], mbufs[mbuf_index]);
+		}
+
+		/* If we crossed 2 2MB boundary we need another mbuf for the remainder */
+		if (remainder > 0) {
+			/* allocate an mbuf at the end of the array */
+			rc = rte_pktmbuf_alloc_bulk(g_mbuf_mp,
+						    (struct rte_mbuf **)&mbufs[*mbuf_total], 1);
+			if (rc) {
+				SPDK_ERRLOG("ERROR trying to get an extra mbuf!\n");
+				return -1;
+			}
+			(*mbuf_total)++;
+			mbuf_index++;
+			mbufs[mbuf_index]->userdata = reduce_cb_arg;
+			current_base += updated_length;
+			phys_addr = spdk_vtophys((void *)current_base, &remainder);
+			/* assert we don't cross another */
+			assert(remainder == iovs[iov_index].iov_len - updated_length);
+
+			rte_pktmbuf_attach_extbuf(mbufs[mbuf_index],
+						  current_base,
+						  phys_addr,
+						  remainder,
+						  &g_shinfo);
+			rte_pktmbuf_append(mbufs[mbuf_index], remainder);
+			rte_pktmbuf_chain(mbufs[0], mbufs[mbuf_index]);
+		}
+		iov_index++;
+		mbuf_index++;
+	}
+
+	return 0;
+}
+
 static int
 _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *src_iovs,
 		    int src_iovcnt, struct iovec *dst_iovs,
@@ -449,10 +515,7 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 	struct rte_mbuf *src_mbufs[MAX_MBUFS_PER_OP];
 	struct rte_mbuf *dst_mbufs[MAX_MBUFS_PER_OP];
 	uint8_t cdev_id = comp_bdev->device_qp->device->cdev_id;
-	uint64_t updated_length, remainder, phys_addr, total_length = 0;
-	uint8_t *current_src_base = NULL;
-	uint8_t *current_dst_base = NULL;
-	int iov_index, mbuf_index;
+	uint64_t total_length = 0;
 	int rc = 0;
 	struct vbdev_comp_op *op_to_queue;
 	int i;
@@ -491,55 +554,10 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 	 * and associate with our single comp_op.
 	 */
 
-	/* Setup src mbufs */
-	iov_index = mbuf_index = 0;
-	while (iov_index < src_iovcnt) {
-
-		current_src_base = src_iovs[iov_index].iov_base;
-		total_length += src_iovs[iov_index].iov_len;
-		assert(src_mbufs[mbuf_index] != NULL);
-		src_mbufs[mbuf_index]->userdata = reduce_cb_arg;
-		updated_length = src_iovs[iov_index].iov_len;
-		phys_addr = spdk_vtophys((void *)current_src_base, &updated_length);
-
-		rte_pktmbuf_attach_extbuf(src_mbufs[mbuf_index],
-					  current_src_base,
-					  phys_addr,
-					  updated_length,
-					  &g_shinfo);
-		rte_pktmbuf_append(src_mbufs[mbuf_index], updated_length);
-		remainder = src_iovs[iov_index].iov_len - updated_length;
-
-		if (mbuf_index > 0) {
-			rte_pktmbuf_chain(src_mbufs[0], src_mbufs[mbuf_index]);
-		}
-
-		/* If we crossed 2 2MB boundary we need another mbuf for the remainder */
-		if (remainder > 0) {
-			/* allocate an mbuf at the end of the array */
-			rc = rte_pktmbuf_alloc_bulk(g_mbuf_mp, (struct rte_mbuf **)&src_mbufs[src_mbuf_total], 1);
-			if (rc) {
-				SPDK_ERRLOG("ERROR trying to get an extra src_mbuf!\n");
-				goto error_src_dst;
-			}
-			src_mbuf_total++;
-			mbuf_index++;
-			src_mbufs[mbuf_index]->userdata = reduce_cb_arg;
-			current_src_base += updated_length;
-			phys_addr = spdk_vtophys((void *)current_src_base, &remainder);
-			/* assert we don't cross another */
-			assert(remainder == src_iovs[iov_index].iov_len - updated_length);
-
-			rte_pktmbuf_attach_extbuf(src_mbufs[mbuf_index],
-						  current_src_base,
-						  phys_addr,
-						  remainder,
-						  &g_shinfo);
-			rte_pktmbuf_append(src_mbufs[mbuf_index], remainder);
-			rte_pktmbuf_chain(src_mbufs[0], src_mbufs[mbuf_index]);
-		}
-		iov_index++;
-		mbuf_index++;
+	rc = _setup_compress_mbuf(&src_mbufs[0], &src_mbuf_total, &total_length,
+				  src_iovs, src_iovcnt, reduce_cb_arg);
+	if (rc < 0) {
+		goto error_src_dst;
 	}
 
 	comp_op->m_src = src_mbufs[0];
@@ -547,49 +565,10 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 	comp_op->src.length = total_length;
 
 	/* setup dst mbufs, for the current test being used with this code there's only one vector */
-	iov_index = mbuf_index = 0;
-	while (iov_index < dst_iovcnt) {
-
-		current_dst_base = dst_iovs[iov_index].iov_base;
-		updated_length = dst_iovs[iov_index].iov_len;
-		phys_addr = spdk_vtophys((void *)current_dst_base, &updated_length);
-
-		rte_pktmbuf_attach_extbuf(dst_mbufs[mbuf_index],
-					  current_dst_base,
-					  phys_addr,
-					  updated_length,
-					  &g_shinfo);
-		rte_pktmbuf_append(dst_mbufs[mbuf_index], updated_length);
-		remainder = dst_iovs[iov_index].iov_len - updated_length;
-
-		if (mbuf_index > 0) {
-			rte_pktmbuf_chain(dst_mbufs[0], dst_mbufs[mbuf_index]);
-		}
-
-		/* If we crossed 2 2MB boundary we need another mbuf for the remainder */
-		if (remainder > 0) {
-			rc = rte_pktmbuf_alloc_bulk(g_mbuf_mp, (struct rte_mbuf **)&dst_mbufs[dst_mbuf_total], 1);
-			if (rc) {
-				SPDK_ERRLOG("ERROR trying to get an extra dst_mbuf!\n");
-				goto error_src_dst;
-			}
-			dst_mbuf_total++;
-			mbuf_index++;
-			current_dst_base += updated_length;
-			phys_addr = spdk_vtophys((void *)current_dst_base, &remainder);
-			/* assert we don't cross another */
-			assert(remainder == dst_iovs[iov_index].iov_len - updated_length);
-
-			rte_pktmbuf_attach_extbuf(dst_mbufs[mbuf_index],
-						  current_dst_base,
-						  phys_addr,
-						  remainder,
-						  &g_shinfo);
-			rte_pktmbuf_append(dst_mbufs[mbuf_index], remainder);
-			rte_pktmbuf_chain(dst_mbufs[0], dst_mbufs[mbuf_index]);
-		}
-		iov_index++;
-		mbuf_index++;
+	rc = _setup_compress_mbuf(&dst_mbufs[0], &dst_mbuf_total, NULL,
+				  dst_iovs, dst_iovcnt, reduce_cb_arg);
+	if (rc < 0) {
+		goto error_src_dst;
 	}
 
 	comp_op->m_dst = dst_mbufs[0];
