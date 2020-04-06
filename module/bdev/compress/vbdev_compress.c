@@ -899,9 +899,19 @@ _device_unregister_cb(void *io_device)
 static void
 _vbdev_compress_destruct_cb(void *ctx)
 {
-	struct spdk_bdev_desc *desc = ctx;
+	struct vbdev_compress *comp_bdev = ctx;
 
-	spdk_bdev_close(desc);
+	TAILQ_REMOVE(&g_vbdev_comp, comp_bdev, link);
+	spdk_bdev_module_release_bdev(comp_bdev->base_bdev);
+	/* Close the underlying bdev on its same opened thread. */
+	spdk_bdev_close(comp_bdev->base_desc);
+	comp_bdev->vol = NULL;
+	if (comp_bdev->orphaned == false) {
+		spdk_io_device_unregister(comp_bdev, _device_unregister_cb);
+	} else {
+		vbdev_compress_delete_done(comp_bdev->delete_ctx, 0);
+		_device_unregister_cb(comp_bdev);
+	}
 }
 
 static void
@@ -912,20 +922,11 @@ vbdev_compress_destruct_cb(void *cb_arg, int reduce_errno)
 	if (reduce_errno) {
 		SPDK_ERRLOG("number %d\n", reduce_errno);
 	} else {
-		TAILQ_REMOVE(&g_vbdev_comp, comp_bdev, link);
-		spdk_bdev_module_release_bdev(comp_bdev->base_bdev);
-		/* Close the underlying bdev on its same opened thread. */
 		if (comp_bdev->thread && comp_bdev->thread != spdk_get_thread()) {
-			spdk_thread_send_msg(comp_bdev->thread, _vbdev_compress_destruct_cb, comp_bdev->base_desc);
+			spdk_thread_send_msg(comp_bdev->thread,
+					     _vbdev_compress_destruct_cb, comp_bdev);
 		} else {
-			spdk_bdev_close(comp_bdev->base_desc);
-		}
-		comp_bdev->vol = NULL;
-		if (comp_bdev->orphaned == false) {
-			spdk_io_device_unregister(comp_bdev, _device_unregister_cb);
-		} else {
-			vbdev_compress_delete_done(comp_bdev->delete_ctx, 0);
-			_device_unregister_cb(comp_bdev);
+			_vbdev_compress_destruct_cb(comp_bdev);
 		}
 	}
 }
