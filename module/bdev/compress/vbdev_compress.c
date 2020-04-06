@@ -132,6 +132,7 @@ struct vbdev_compress {
 	struct spdk_reduce_vol		*vol;		/* the reduce volume */
 	struct vbdev_comp_delete_ctx	*delete_ctx;
 	bool				orphaned;	/* base bdev claimed but comp_bdev not registered */
+	int				reduce_errno;
 	TAILQ_HEAD(, vbdev_comp_op)	queued_comp_ops;
 	TAILQ_ENTRY(vbdev_compress)	link;
 	struct spdk_thread		*thread;	/* thread where base device is opened */
@@ -1713,43 +1714,23 @@ bdev_compress_delete(const char *name, spdk_delete_compress_complete cb_fn, void
 static void
 _vbdev_reduce_load_cb(void *ctx)
 {
-	struct spdk_bdev_desc *desc = ctx;
-
-	spdk_bdev_close(desc);
-}
-
-/* Callback from reduce for then load is complete. We'll pass the vbdev_comp struct
- * used for initial metadata operations to claim where it will be further filled out
- * and added to the global list.
- */
-static void
-vbdev_reduce_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno)
-{
-	struct vbdev_compress *meta_ctx = cb_arg;
+	struct vbdev_compress *meta_ctx = ctx;
 	int rc;
 
 	/* Done with metadata operations */
 	spdk_put_io_channel(meta_ctx->base_ch);
 	/* Close the underlying bdev on its same opened thread. */
-	if (meta_ctx->thread && meta_ctx->thread != spdk_get_thread()) {
-		spdk_thread_send_msg(meta_ctx->thread, _vbdev_reduce_load_cb, meta_ctx->base_desc);
-	} else {
-		spdk_bdev_close(meta_ctx->base_desc);
-	}
+	spdk_bdev_close(meta_ctx->base_desc);
 	meta_ctx->base_desc = NULL;
 
-	if (reduce_errno == 0) {
+	if (meta_ctx->reduce_errno == 0) {
 		if (_set_pmd(meta_ctx) == false) {
 			SPDK_ERRLOG("could not find required pmd\n");
 			goto err;
 		}
 
-		/* Update information following volume load. */
-		meta_ctx->vol = vol;
-		memcpy(&meta_ctx->params, spdk_reduce_vol_get_params(vol),
-		       sizeof(struct spdk_reduce_vol_params));
 		vbdev_compress_claim(meta_ctx);
-	} else if (reduce_errno == -ENOENT) {
+	} else if (meta_ctx->reduce_errno == -ENOENT) {
 		if (_set_compbdev_name(meta_ctx)) {
 			goto err;
 		}
@@ -1782,9 +1763,9 @@ vbdev_reduce_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno
 		meta_ctx->orphaned = true;
 		TAILQ_INSERT_TAIL(&g_vbdev_comp, meta_ctx, link);
 	} else {
-		if (reduce_errno != -EILSEQ) {
+		if (meta_ctx->reduce_errno != -EILSEQ) {
 			SPDK_ERRLOG("for vol %s, error %u\n",
-				    spdk_bdev_get_name(meta_ctx->base_bdev), reduce_errno);
+				    spdk_bdev_get_name(meta_ctx->base_bdev), meta_ctx->reduce_errno);
 		}
 		goto err;
 	}
@@ -1795,6 +1776,32 @@ vbdev_reduce_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno
 err:
 	free(meta_ctx);
 	spdk_bdev_module_examine_done(&compress_if);
+}
+
+/* Callback from reduce for then load is complete. We'll pass the vbdev_comp struct
+ * used for initial metadata operations to claim where it will be further filled out
+ * and added to the global list.
+ */
+static void
+vbdev_reduce_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno)
+{
+	struct vbdev_compress *meta_ctx = cb_arg;
+
+	if (reduce_errno == 0) {
+		/* Update information following volume load. */
+		meta_ctx->vol = vol;
+		memcpy(&meta_ctx->params, spdk_reduce_vol_get_params(vol),
+		       sizeof(struct spdk_reduce_vol_params));
+	}
+
+	meta_ctx->reduce_errno = reduce_errno;
+
+	if (meta_ctx->thread && meta_ctx->thread != spdk_get_thread()) {
+		spdk_thread_send_msg(meta_ctx->thread, _vbdev_reduce_load_cb, meta_ctx);
+	} else {
+		_vbdev_reduce_load_cb(meta_ctx);
+	}
+
 }
 
 /* Examine_disk entry point: will do a metadata load to see if this is ours,
