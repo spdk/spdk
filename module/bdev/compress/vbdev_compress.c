@@ -1102,9 +1102,19 @@ vbdev_compress_config_json(struct spdk_json_write_ctx *w)
 static void
 _vbdev_reduce_init_cb(void *ctx)
 {
-	struct spdk_bdev_desc *desc = ctx;
+	struct vbdev_compress *meta_ctx = ctx;
 
-	spdk_bdev_close(desc);
+	/* We're done with metadata operations */
+	spdk_put_io_channel(meta_ctx->base_ch);
+	/* Close the underlying bdev on its same opened thread. */
+	spdk_bdev_close(meta_ctx->base_desc);
+	meta_ctx->base_desc = NULL;
+
+	if (meta_ctx->vol) {
+		vbdev_compress_claim(meta_ctx);
+	} else {
+		free(meta_ctx);
+	}
 }
 
 /* Callback from reduce for when init is complete. We'll pass the vbdev_comp struct
@@ -1116,23 +1126,17 @@ vbdev_reduce_init_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno
 {
 	struct vbdev_compress *meta_ctx = cb_arg;
 
-	/* We're done with metadata operations */
-	spdk_put_io_channel(meta_ctx->base_ch);
-	/* Close the underlying bdev on its same opened thread. */
-	if (meta_ctx->thread && meta_ctx->thread != spdk_get_thread()) {
-		spdk_thread_send_msg(meta_ctx->thread, _vbdev_reduce_init_cb, meta_ctx->base_desc);
-	} else {
-		spdk_bdev_close(meta_ctx->base_desc);
-	}
-	meta_ctx->base_desc = NULL;
-
 	if (reduce_errno == 0) {
 		meta_ctx->vol = vol;
-		vbdev_compress_claim(meta_ctx);
 	} else {
 		SPDK_ERRLOG("for vol %s, error %u\n",
 			    spdk_bdev_get_name(meta_ctx->base_bdev), reduce_errno);
-		free(meta_ctx);
+	}
+
+	if (meta_ctx->thread && meta_ctx->thread != spdk_get_thread()) {
+		spdk_thread_send_msg(meta_ctx->thread, _vbdev_reduce_init_cb, meta_ctx);
+	} else {
+		_vbdev_reduce_init_cb(meta_ctx);
 	}
 }
 
