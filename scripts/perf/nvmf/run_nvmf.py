@@ -652,11 +652,12 @@ class SPDKTarget(Target):
 
 class KernelInitiator(Initiator):
     def __init__(self, name, username, password, mode, nic_ips, ip, transport,
-                 cpus_allowed=None, cpus_allowed_policy="shared", fio_bin="/usr/src/fio/fio", **kwargs):
+                 cpus_allowed=None, cpus_allowed_policy="shared",
+                 cpu_frequency=None, fio_bin="/usr/src/fio/fio", **kwargs):
 
         super(KernelInitiator, self).__init__(name, username, password, mode, nic_ips, ip, transport,
                                               cpus_allowed=cpus_allowed, cpus_allowed_policy=cpus_allowed_policy,
-                                              fio_bin=fio_bin)
+                                              cpu_frequency=cpu_frequency, fio_bin=fio_bin)
 
         self.extra_params = ""
         if kwargs["extra_params"]:
@@ -710,10 +711,10 @@ class KernelInitiator(Initiator):
 class SPDKInitiator(Initiator):
     def __init__(self, name, username, password, mode, nic_ips, ip, transport="rdma",
                  num_cores=1, cpus_allowed=None, cpus_allowed_policy="shared",
-                 fio_bin="/usr/src/fio/fio", **kwargs):
+                 cpu_frequency=None, fio_bin="/usr/src/fio/fio", **kwargs):
         super(SPDKInitiator, self).__init__(name, username, password, mode, nic_ips, ip, transport,
                                             cpus_allowed=cpus_allowed, cpus_allowed_policy=cpus_allowed_policy,
-                                            fio_bin=fio_bin)
+                                            cpu_frequency=cpu_frequency, fio_bin=fio_bin)
 
         self.num_cores = num_cores
 
