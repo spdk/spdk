@@ -255,6 +255,25 @@ function configure_linux_pci {
 	done < $TMP
 	rm $TMP
 
+        # IDXD
+        TMP=$(mktemp)
+        #collect all the device_id info of idxd devices.
+        grep "PCI_DEVICE_ID_INTEL_IDXD" $rootdir/include/spdk/pci_ids.h \
+        | awk -F"x" '{print $2}' > $TMP
+
+        while IFS= read -r dev_id
+        do
+                for bdf in $(iter_all_pci_dev_id 8086 $dev_id); do
+                        if ! pci_can_use $bdf; then
+                                pci_dev_echo "$bdf" "Skipping un-whitelisted IDXD device"
+                                continue
+                        fi
+
+                        linux_bind_driver "$bdf" "$driver_name"
+                done
+        done < $TMP
+        rm $TMP
+
 	# virtio
 	TMP=$(mktemp)
 	#collect all the device_id info of virtio devices.
@@ -467,6 +486,31 @@ function reset_linux_pci {
 	done < $TMP
 	rm $TMP
 
+        # IDXD
+        TMP=$(mktemp)
+        #collect all the device_id info of idxd devices.
+        grep "PCI_DEVICE_ID_INTEL_IDXD" $rootdir/include/spdk/pci_ids.h \
+        | awk -F"x" '{print $2}' > $TMP
+        set +e
+        check_for_driver idxd
+        driver_loaded=$?
+        set -e
+        while IFS= read -r dev_id
+        do
+                for bdf in $(iter_all_pci_dev_id 8086 $dev_id); do
+                        if ! pci_can_use $bdf; then
+                                pci_dev_echo "$bdf" "Skipping un-whitelisted IDXD device"
+                                continue
+                        fi
+                        if [ $driver_loaded -ne 0 ]; then
+                                linux_bind_driver "$bdf" idxd
+                        else
+                                linux_unbind_driver "$bdf"
+                        fi
+                done
+        done < $TMP
+        rm $TMP
+
 	# virtio
 	TMP=$(mktemp)
 	#collect all the device_id info of virtio devices.
@@ -599,6 +643,27 @@ function status_linux {
 		done
 	done
 
+        echo ""
+        echo "IDXD DMA"
+
+        #collect all the device_id info of idxd devices.
+        TMP=$(grep "PCI_DEVICE_ID_INTEL_IDXD" $rootdir/include/spdk/pci_ids.h \
+        | awk -F"x" '{print $2}')
+        echo -e "BDF\t\tVendor\tDevice\tNUMA\tDriver"
+        for dev_id in $TMP; do
+                for bdf in $(iter_all_pci_dev_id 8086 $dev_id); do
+                        driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}')
+                        if [ "$numa_nodes" = "0" ]; then
+                                node="-"
+                        else
+                                node=$(cat /sys/bus/pci/devices/$bdf/numa_node)
+                        fi
+                        device=$(cat /sys/bus/pci/devices/$bdf/device)
+                        vendor=$(cat /sys/bus/pci/devices/$bdf/vendor)
+                        echo -e "$bdf\t${vendor#0x}\t${device#0x}\t$node\t${driver:--}"
+                done
+        done
+
 	echo ""
 	echo "virtio"
 
@@ -650,6 +715,14 @@ function configure_freebsd_pci {
 	do
 		GREP_STR="${GREP_STR}\|chip=0x${dev_id}8086"
 	done < $TMP
+
+        # IDXD
+        grep "PCI_DEVICE_ID_INTEL_IDXD" $rootdir/include/spdk/pci_ids.h \
+        | awk -F"x" '{print $2}' > $TMP
+        while IFS= read -r dev_id
+        do
+                GREP_STR="${GREP_STR}\|chip=0x${dev_id}8086"
+        done < $TMP
 
 	# VMD
 	grep "PCI_DEVICE_ID_INTEL_VMD" $rootdir/include/spdk/pci_ids.h \
