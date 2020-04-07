@@ -332,7 +332,11 @@ void vhost_vq_packed_ring_enqueue(struct spdk_vhost_session *vsession,
  */
 int vhost_vring_desc_get_next(struct vring_desc **desc,
 			      struct vring_desc *desc_table, uint32_t desc_table_size);
-bool vhost_vring_desc_is_wr(struct vring_desc *cur_desc);
+static inline bool
+vhost_vring_desc_is_wr(struct vring_desc *cur_desc)
+{
+	return !!(cur_desc->flags & VRING_DESC_F_WRITE);
+}
 
 int vhost_vring_desc_to_iov(struct spdk_vhost_session *vsession, struct iovec *iov,
 			    uint16_t *iov_index, const struct vring_desc *desc);
