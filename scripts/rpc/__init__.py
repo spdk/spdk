@@ -6,6 +6,7 @@ from . import app
 from . import bdev
 from . import blobfs
 from . import env_dpdk
+from . import idxd
 from . import ioat
 from . import iscsi
 from . import log

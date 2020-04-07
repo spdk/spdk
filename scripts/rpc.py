@@ -2155,6 +2155,15 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     domain:bus:device.function format or domain.bus.device.function format""")
     p.set_defaults(func=ioat_scan_accel_engine)
 
+    # idxd
+    def idxd_scan_accel_engine(args):
+        rpc.idxd.idxd_scan_accel_engine(args.client, config_number=args.config_number)
+
+    p = subparsers.add_parser('idxd_scan_accel_engine',
+                              help='Set config and enable idxd accel engine offload.')
+    p.add_argument('-c', '--config-number', help="""Pre-defined configuration number to use. See docs.""", type=int)
+    p.set_defaults(func=idxd_scan_accel_engine)
+
     # opal
     def bdev_nvme_opal_init(args):
         rpc.nvme.bdev_nvme_opal_init(args.client,
