@@ -269,8 +269,6 @@ _nvme_pcie_hotplug_monitor(struct spdk_nvme_probe_ctx *probe_ctx)
 	struct spdk_nvme_ctrlr *ctrlr, *tmp;
 	struct spdk_uevent event;
 	struct spdk_pci_addr pci_addr;
-	union spdk_nvme_csts_register csts;
-	struct spdk_nvme_ctrlr_process *proc;
 
 	if (g_spdk_nvme_driver->hotplug_fd < 0) {
 		return 0;
@@ -313,25 +311,20 @@ _nvme_pcie_hotplug_monitor(struct spdk_nvme_probe_ctx *probe_ctx)
 		}
 	}
 
-	/* This is a work around for vfio-attached device hot remove detection. */
+	/* Initiate removal of physically hotremoved PCI controllers. Even after
+	 * they're hotremoved from the system, SPDK might still report them via RPC.
+	 */
 	TAILQ_FOREACH_SAFE(ctrlr, &g_spdk_nvme_driver->shared_attached_ctrlrs, tailq, tmp) {
 		bool do_remove = false;
+		struct nvme_pcie_ctrlr *pctrlr;
 
-		if (ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
-			struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
-
-			if (spdk_pci_device_is_removed(pctrlr->devhandle)) {
-				do_remove = true;
-			}
+		if (ctrlr->trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
+			continue;
 		}
 
-		/* NVMe controller BAR must be mapped in the current process before any access. */
-		proc = nvme_ctrlr_get_current_process(ctrlr);
-		if (proc) {
-			csts = spdk_nvme_ctrlr_get_regs_csts(ctrlr);
-			if (csts.raw == 0xffffffffU) {
-				do_remove = true;
-			}
+		pctrlr = nvme_pcie_ctrlr(ctrlr);
+		if (spdk_pci_device_is_removed(pctrlr->devhandle)) {
+			do_remove = true;
 		}
 
 		if (do_remove) {
