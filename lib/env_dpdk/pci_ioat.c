@@ -93,8 +93,8 @@ static struct spdk_pci_driver g_ioat_pci_drv = {
 	.driver = {
 		.drv_flags	= RTE_PCI_DRV_NEED_MAPPING,
 		.id_table	= ioat_driver_id,
-		.probe		= spdk_pci_device_init,
-		.remove		= spdk_pci_device_fini,
+		.probe		= pci_device_init,
+		.remove		= pci_device_fini,
 		.driver.name	= "spdk_ioat",
 	},
 

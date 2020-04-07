@@ -54,8 +54,8 @@ static struct spdk_pci_driver g_nvme_pci_drv = {
 #endif
 		,
 		.id_table	= nvme_pci_driver_id,
-		.probe		= spdk_pci_device_init,
-		.remove		= spdk_pci_device_fini,
+		.probe		= pci_device_init,
+		.remove		= pci_device_fini,
 		.driver.name	= "spdk_nvme",
 	},
 

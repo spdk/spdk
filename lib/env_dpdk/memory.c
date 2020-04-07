@@ -724,7 +724,7 @@ memory_iter_cb(const struct rte_memseg_list *msl,
 #endif
 
 int
-spdk_mem_map_init(bool legacy_mem)
+mem_map_init(bool legacy_mem)
 {
 	g_legacy_mem = legacy_mem;
 
@@ -1306,7 +1306,7 @@ spdk_vtophys_iommu_init(void)
 #endif
 
 void
-spdk_vtophys_pci_device_added(struct rte_pci_device *pci_device)
+vtophys_pci_device_added(struct rte_pci_device *pci_device)
 {
 	struct spdk_vtophys_pci_device *vtophys_dev;
 
@@ -1352,7 +1352,7 @@ spdk_vtophys_pci_device_added(struct rte_pci_device *pci_device)
 }
 
 void
-spdk_vtophys_pci_device_removed(struct rte_pci_device *pci_device)
+vtophys_pci_device_removed(struct rte_pci_device *pci_device)
 {
 	struct spdk_vtophys_pci_device *vtophys_dev;
 
@@ -1400,7 +1400,7 @@ spdk_vtophys_pci_device_removed(struct rte_pci_device *pci_device)
 }
 
 int
-spdk_vtophys_init(void)
+vtophys_init(void)
 {
 	const struct spdk_mem_map_ops vtophys_map_ops = {
 		.notify_cb = spdk_vtophys_notify,

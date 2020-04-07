@@ -173,7 +173,7 @@ spdk_detach_rte(struct spdk_pci_device *dev)
 }
 
 void
-spdk_pci_driver_register(struct spdk_pci_driver *driver)
+pci_driver_register(struct spdk_pci_driver *driver)
 {
 	TAILQ_INSERT_TAIL(&g_pci_drivers, driver, tailq);
 }
@@ -238,7 +238,7 @@ cleanup_pci_devices(void)
 			continue;
 		}
 
-		spdk_vtophys_pci_device_removed(dev->dev_handle);
+		vtophys_pci_device_removed(dev->dev_handle);
 		TAILQ_REMOVE(&g_pci_devices, dev, internal.tailq);
 		free(dev);
 	}
@@ -247,7 +247,7 @@ cleanup_pci_devices(void)
 	TAILQ_FOREACH_SAFE(dev, &g_pci_hotplugged_devices, internal.tailq, tmp) {
 		TAILQ_REMOVE(&g_pci_hotplugged_devices, dev, internal.tailq);
 		TAILQ_INSERT_TAIL(&g_pci_devices, dev, internal.tailq);
-		spdk_vtophys_pci_device_added(dev->dev_handle);
+		vtophys_pci_device_added(dev->dev_handle);
 	}
 	pthread_mutex_unlock(&g_pci_mutex);
 }
@@ -259,7 +259,7 @@ _get_alarm_thread_cb(void *unused)
 }
 
 void
-spdk_pci_init(void)
+pci_init(void)
 {
 #if RTE_VERSION >= RTE_VERSION_NUM(18, 11, 0, 0)
 	struct spdk_pci_driver *driver;
@@ -298,7 +298,7 @@ spdk_pci_init(void)
 }
 
 void
-spdk_pci_fini(void)
+pci_fini(void)
 {
 	struct spdk_pci_device *dev;
 	char bdf[32];
@@ -319,8 +319,8 @@ spdk_pci_fini(void)
 }
 
 int
-spdk_pci_device_init(struct rte_pci_driver *_drv,
-		     struct rte_pci_device *_dev)
+pci_device_init(struct rte_pci_driver *_drv,
+		struct rte_pci_device *_dev)
 {
 	struct spdk_pci_driver *driver = (struct spdk_pci_driver *)_drv;
 	struct spdk_pci_device *dev;
@@ -378,7 +378,7 @@ spdk_pci_device_init(struct rte_pci_driver *_drv,
 }
 
 int
-spdk_pci_device_fini(struct rte_pci_device *_dev)
+pci_device_fini(struct rte_pci_device *_dev)
 {
 	struct spdk_pci_device *dev;
 

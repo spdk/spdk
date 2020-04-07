@@ -49,8 +49,8 @@ static struct spdk_pci_driver g_virtio_pci_drv = {
 #endif
 		,
 		.id_table	= virtio_pci_driver_id,
-		.probe		= spdk_pci_device_init,
-		.remove		= spdk_pci_device_fini,
+		.probe		= pci_device_init,
+		.remove		= pci_device_fini,
 		.driver.name	= "spdk_virtio",
 	},
 

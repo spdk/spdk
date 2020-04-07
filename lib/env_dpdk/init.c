@@ -499,15 +499,15 @@ spdk_env_dpdk_post_init(bool legacy_mem)
 {
 	int rc;
 
-	spdk_pci_init();
+	pci_init();
 
-	rc = spdk_mem_map_init(legacy_mem);
+	rc = mem_map_init(legacy_mem);
 	if (rc < 0) {
 		fprintf(stderr, "Failed to allocate mem_map\n");
 		return rc;
 	}
 
-	rc = spdk_vtophys_init();
+	rc = vtophys_init();
 	if (rc < 0) {
 		fprintf(stderr, "Failed to initialize vtophys\n");
 		return rc;
@@ -519,7 +519,7 @@ spdk_env_dpdk_post_init(bool legacy_mem)
 void
 spdk_env_dpdk_post_fini(void)
 {
-	spdk_pci_fini();
+	pci_fini();
 
 	spdk_free_args(g_eal_cmdline, g_eal_cmdline_argcount);
 }
