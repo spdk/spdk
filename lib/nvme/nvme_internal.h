@@ -430,8 +430,8 @@ struct spdk_nvme_poll_group {
 struct spdk_nvme_transport_poll_group {
 	struct spdk_nvme_poll_group			*group;
 	const struct spdk_nvme_transport		*transport;
-	STAILQ_HEAD(, spdk_nvme_qpair)			active_qpairs;
-	STAILQ_HEAD(, spdk_nvme_qpair)			failed_qpairs;
+	STAILQ_HEAD(, spdk_nvme_qpair)			connected_qpairs;
+	STAILQ_HEAD(, spdk_nvme_qpair)			disconnected_qpairs;
 	STAILQ_ENTRY(spdk_nvme_transport_poll_group)	link;
 };
 
@@ -830,8 +830,8 @@ nvme_robust_mutex_unlock(pthread_mutex_t *mtx)
 }
 
 /* Poll group management functions. */
-int nvme_poll_group_activate_qpair(struct spdk_nvme_qpair *qpair);
-int nvme_poll_group_deactivate_qpair(struct spdk_nvme_qpair *qpair);
+int nvme_poll_group_connect_qpair(struct spdk_nvme_qpair *qpair);
+int nvme_poll_group_disconnect_qpair(struct spdk_nvme_qpair *qpair);
 
 /* Admin functions */
 int	nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr,
@@ -1185,10 +1185,10 @@ int nvme_transport_poll_group_add(struct spdk_nvme_transport_poll_group *tgroup,
 				  struct spdk_nvme_qpair *qpair);
 int nvme_transport_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
 				     struct spdk_nvme_qpair *qpair);
-int nvme_transport_poll_group_deactivate_qpair(struct spdk_nvme_qpair *qpair);
-int nvme_transport_poll_group_activate_qpair(struct spdk_nvme_qpair *qpair);
+int nvme_transport_poll_group_disconnect_qpair(struct spdk_nvme_qpair *qpair);
+int nvme_transport_poll_group_connect_qpair(struct spdk_nvme_qpair *qpair);
 int64_t nvme_transport_poll_group_process_completions(struct spdk_nvme_transport_poll_group *tgroup,
-		uint32_t completions_per_qpair, spdk_nvme_failed_qpair_cb failed_qpair_cb);
+		uint32_t completions_per_qpair, spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb);
 int nvme_transport_poll_group_destroy(struct spdk_nvme_transport_poll_group *tgroup);
 /*
  * Below ref related functions must be called with the global

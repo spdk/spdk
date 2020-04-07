@@ -64,7 +64,7 @@ TAILQ_HEAD(nvme_transport_list, spdk_nvme_transport) g_spdk_nvme_transports =
 	TAILQ_HEAD_INITIALIZER(g_spdk_nvme_transports);
 
 static void
-unit_test_failed_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_ctx)
+unit_test_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_ctx)
 {
 
 }
@@ -82,22 +82,22 @@ nvme_get_next_transport(const struct spdk_nvme_transport *transport)
 }
 
 int
-nvme_transport_poll_group_deactivate_qpair(struct spdk_nvme_qpair *qpair)
+nvme_transport_poll_group_disconnect_qpair(struct spdk_nvme_qpair *qpair)
 {
 	struct spdk_nvme_transport_poll_group *tgroup;
 	struct spdk_nvme_qpair *iter_qp, *tmp_iter_qp;
 
 	tgroup = qpair->poll_group;
 
-	STAILQ_FOREACH_SAFE(iter_qp, &tgroup->active_qpairs, poll_group_stailq, tmp_iter_qp) {
+	STAILQ_FOREACH_SAFE(iter_qp, &tgroup->connected_qpairs, poll_group_stailq, tmp_iter_qp) {
 		if (qpair == iter_qp) {
-			STAILQ_REMOVE(&tgroup->active_qpairs, qpair, spdk_nvme_qpair, poll_group_stailq);
-			STAILQ_INSERT_TAIL(&tgroup->failed_qpairs, qpair, poll_group_stailq);
+			STAILQ_REMOVE(&tgroup->connected_qpairs, qpair, spdk_nvme_qpair, poll_group_stailq);
+			STAILQ_INSERT_TAIL(&tgroup->disconnected_qpairs, qpair, poll_group_stailq);
 			return 0;
 		}
 	}
 
-	STAILQ_FOREACH(iter_qp, &tgroup->failed_qpairs, poll_group_stailq) {
+	STAILQ_FOREACH(iter_qp, &tgroup->disconnected_qpairs, poll_group_stailq) {
 		if (qpair == iter_qp) {
 			return 0;
 		}
@@ -107,22 +107,22 @@ nvme_transport_poll_group_deactivate_qpair(struct spdk_nvme_qpair *qpair)
 }
 
 int
-nvme_transport_poll_group_activate_qpair(struct spdk_nvme_qpair *qpair)
+nvme_transport_poll_group_connect_qpair(struct spdk_nvme_qpair *qpair)
 {
 	struct spdk_nvme_transport_poll_group *tgroup;
 	struct spdk_nvme_qpair *iter_qp, *tmp_iter_qp;
 
 	tgroup = qpair->poll_group;
 
-	STAILQ_FOREACH_SAFE(iter_qp, &tgroup->failed_qpairs, poll_group_stailq, tmp_iter_qp) {
+	STAILQ_FOREACH_SAFE(iter_qp, &tgroup->disconnected_qpairs, poll_group_stailq, tmp_iter_qp) {
 		if (qpair == iter_qp) {
-			STAILQ_REMOVE(&tgroup->failed_qpairs, qpair, spdk_nvme_qpair, poll_group_stailq);
-			STAILQ_INSERT_TAIL(&tgroup->active_qpairs, qpair, poll_group_stailq);
+			STAILQ_REMOVE(&tgroup->disconnected_qpairs, qpair, spdk_nvme_qpair, poll_group_stailq);
+			STAILQ_INSERT_TAIL(&tgroup->connected_qpairs, qpair, poll_group_stailq);
 			return 0;
 		}
 	}
 
-	STAILQ_FOREACH(iter_qp, &tgroup->active_qpairs, poll_group_stailq) {
+	STAILQ_FOREACH(iter_qp, &tgroup->connected_qpairs, poll_group_stailq) {
 		if (qpair == iter_qp) {
 			return 0;
 		}
@@ -140,8 +140,8 @@ nvme_transport_poll_group_create(const struct spdk_nvme_transport *transport)
 	group = calloc(1, sizeof(*group));
 	if (group) {
 		group->transport = transport;
-		STAILQ_INIT(&group->active_qpairs);
-		STAILQ_INIT(&group->failed_qpairs);
+		STAILQ_INIT(&group->connected_qpairs);
+		STAILQ_INIT(&group->disconnected_qpairs);
 	}
 
 	return group;
@@ -157,7 +157,7 @@ int
 nvme_transport_poll_group_add(struct spdk_nvme_transport_poll_group *tgroup,
 			      struct spdk_nvme_qpair *qpair)
 {
-	STAILQ_INSERT_TAIL(&tgroup->active_qpairs, qpair, poll_group_stailq);
+	STAILQ_INSERT_TAIL(&tgroup->connected_qpairs, qpair, poll_group_stailq);
 	qpair->poll_group = tgroup;
 
 	return 0;
@@ -169,16 +169,16 @@ nvme_transport_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
 {
 	struct spdk_nvme_qpair *iter_qp, *tmp_iter_qp;
 
-	STAILQ_FOREACH_SAFE(iter_qp, &tgroup->active_qpairs, poll_group_stailq, tmp_iter_qp) {
+	STAILQ_FOREACH_SAFE(iter_qp, &tgroup->connected_qpairs, poll_group_stailq, tmp_iter_qp) {
 		if (qpair == iter_qp) {
-			STAILQ_REMOVE(&tgroup->active_qpairs, qpair, spdk_nvme_qpair, poll_group_stailq);
+			STAILQ_REMOVE(&tgroup->connected_qpairs, qpair, spdk_nvme_qpair, poll_group_stailq);
 			return 0;
 		}
 	}
 
-	STAILQ_FOREACH_SAFE(iter_qp, &tgroup->failed_qpairs, poll_group_stailq, tmp_iter_qp) {
+	STAILQ_FOREACH_SAFE(iter_qp, &tgroup->disconnected_qpairs, poll_group_stailq, tmp_iter_qp) {
 		if (qpair == iter_qp) {
-			STAILQ_REMOVE(&tgroup->failed_qpairs, qpair, spdk_nvme_qpair, poll_group_stailq);
+			STAILQ_REMOVE(&tgroup->disconnected_qpairs, qpair, spdk_nvme_qpair, poll_group_stailq);
 			return 0;
 		}
 	}
@@ -188,7 +188,7 @@ nvme_transport_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
 
 int64_t
 nvme_transport_poll_group_process_completions(struct spdk_nvme_transport_poll_group *group,
-		uint32_t completions_per_qpair, spdk_nvme_failed_qpair_cb failed_qpair_cb)
+		uint32_t completions_per_qpair, spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb)
 {
 	return g_process_completions_return_value;
 }
@@ -260,13 +260,13 @@ test_spdk_nvme_poll_group_add_remove(void)
 		if (tmp_tgroup->transport == &t1) {
 			tgroup = tmp_tgroup;
 		} else {
-			CU_ASSERT(STAILQ_EMPTY(&tmp_tgroup->active_qpairs));
+			CU_ASSERT(STAILQ_EMPTY(&tmp_tgroup->connected_qpairs));
 		}
 		i++;
 	}
 	CU_ASSERT(i == 1);
 	SPDK_CU_ASSERT_FATAL(tgroup != NULL);
-	qpair = STAILQ_FIRST(&tgroup->active_qpairs);
+	qpair = STAILQ_FIRST(&tgroup->connected_qpairs);
 	SPDK_CU_ASSERT_FATAL(qpair == &qpair1_1);
 	qpair = STAILQ_NEXT(qpair, poll_group_stailq);
 	CU_ASSERT(qpair == NULL);
@@ -288,18 +288,18 @@ test_spdk_nvme_poll_group_add_remove(void)
 		} else if (tmp_tgroup->transport == &t2) {
 			tgroup_2 = tmp_tgroup;
 		} else {
-			CU_ASSERT(STAILQ_EMPTY(&tmp_tgroup->active_qpairs));
+			CU_ASSERT(STAILQ_EMPTY(&tmp_tgroup->connected_qpairs));
 		}
 		i++;
 	}
 	CU_ASSERT(i == 2);
 	SPDK_CU_ASSERT_FATAL(tgroup_1 != NULL);
-	qpair = STAILQ_FIRST(&tgroup_1->active_qpairs);
+	qpair = STAILQ_FIRST(&tgroup_1->connected_qpairs);
 	SPDK_CU_ASSERT_FATAL(qpair == &qpair1_1);
 	qpair = STAILQ_NEXT(qpair, poll_group_stailq);
 	CU_ASSERT(qpair == NULL);
 	SPDK_CU_ASSERT_FATAL(tgroup_2 != NULL);
-	qpair = STAILQ_FIRST(&tgroup_2->active_qpairs);
+	qpair = STAILQ_FIRST(&tgroup_2->connected_qpairs);
 	SPDK_CU_ASSERT_FATAL(qpair == &qpair2_1);
 	qpair = STAILQ_NEXT(qpair, poll_group_stailq);
 	SPDK_CU_ASSERT_FATAL(qpair == &qpair2_2);
@@ -320,23 +320,23 @@ test_spdk_nvme_poll_group_add_remove(void)
 		} else if (tmp_tgroup->transport == &t4) {
 			tgroup_4 = tmp_tgroup;
 		} else {
-			CU_ASSERT(STAILQ_EMPTY(&tmp_tgroup->active_qpairs));
+			CU_ASSERT(STAILQ_EMPTY(&tmp_tgroup->connected_qpairs));
 		}
 	}
 	SPDK_CU_ASSERT_FATAL(tgroup_1 != NULL);
-	qpair = STAILQ_FIRST(&tgroup_1->active_qpairs);
+	qpair = STAILQ_FIRST(&tgroup_1->connected_qpairs);
 	SPDK_CU_ASSERT_FATAL(qpair == &qpair1_1);
 	qpair = STAILQ_NEXT(qpair, poll_group_stailq);
 	CU_ASSERT(qpair == NULL);
 	SPDK_CU_ASSERT_FATAL(tgroup_2 != NULL);
-	qpair = STAILQ_FIRST(&tgroup_2->active_qpairs);
+	qpair = STAILQ_FIRST(&tgroup_2->connected_qpairs);
 	SPDK_CU_ASSERT_FATAL(qpair == &qpair2_1);
 	qpair = STAILQ_NEXT(qpair, poll_group_stailq);
 	SPDK_CU_ASSERT_FATAL(qpair == &qpair2_2);
 	qpair = STAILQ_NEXT(qpair, poll_group_stailq);
 	CU_ASSERT(qpair == NULL);
 	SPDK_CU_ASSERT_FATAL(tgroup_4 != NULL);
-	qpair = STAILQ_FIRST(&tgroup_4->active_qpairs);
+	qpair = STAILQ_FIRST(&tgroup_4->connected_qpairs);
 	SPDK_CU_ASSERT_FATAL(qpair == &qpair4_1);
 	qpair = STAILQ_NEXT(qpair, poll_group_stailq);
 	SPDK_CU_ASSERT_FATAL(qpair == &qpair4_2);
@@ -352,7 +352,7 @@ test_spdk_nvme_poll_group_add_remove(void)
 	/* Confirm the fourth transport group was created. */
 	i = 0;
 	STAILQ_FOREACH_SAFE(tgroup, &group->tgroups, link, tmp_tgroup) {
-		CU_ASSERT(STAILQ_EMPTY(&tgroup->active_qpairs));
+		CU_ASSERT(STAILQ_EMPTY(&tgroup->connected_qpairs));
 		STAILQ_REMOVE(&group->tgroups, tgroup, spdk_nvme_transport_poll_group, link);
 		free(tgroup);
 		i++;
@@ -378,7 +378,8 @@ test_spdk_nvme_poll_group_process_completions(void)
 
 	/* If we don't have any transport poll groups, we shouldn't get any completions. */
 	g_process_completions_return_value = 32;
-	CU_ASSERT(spdk_nvme_poll_group_process_completions(group, 128, unit_test_failed_qpair_cb) == 0);
+	CU_ASSERT(spdk_nvme_poll_group_process_completions(group, 128,
+			unit_test_disconnected_qpair_cb) == 0);
 	SPDK_CU_ASSERT_FATAL(spdk_nvme_poll_group_destroy(group) == 0);
 
 	TAILQ_INSERT_TAIL(&g_spdk_nvme_transports, &t1, link);
@@ -392,11 +393,12 @@ test_spdk_nvme_poll_group_process_completions(void)
 	qpair1_1.transport = &t1;
 	CU_ASSERT(spdk_nvme_poll_group_add(group, &qpair1_1) == 0);
 	qpair1_1.state = NVME_QPAIR_ENABLED;
-	CU_ASSERT(nvme_poll_group_activate_qpair(&qpair1_1) == 0);
-	CU_ASSERT(spdk_nvme_poll_group_process_completions(group, 128, unit_test_failed_qpair_cb) == 32);
+	CU_ASSERT(nvme_poll_group_connect_qpair(&qpair1_1) == 0);
+	CU_ASSERT(spdk_nvme_poll_group_process_completions(group, 128,
+			unit_test_disconnected_qpair_cb) == 32);
 	CU_ASSERT(spdk_nvme_poll_group_remove(group, &qpair1_1) == 0);
 	STAILQ_FOREACH_SAFE(tgroup, &group->tgroups, link, tmp_tgroup) {
-		CU_ASSERT(STAILQ_EMPTY(&tgroup->active_qpairs));
+		CU_ASSERT(STAILQ_EMPTY(&tgroup->connected_qpairs));
 		STAILQ_REMOVE(&group->tgroups, tgroup, spdk_nvme_transport_poll_group, link);
 		free(tgroup);
 	}

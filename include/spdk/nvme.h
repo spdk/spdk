@@ -1961,10 +1961,11 @@ struct spdk_nvme_poll_group;
 
 
 /**
- * This function alerts the user to failed qpairs when calling
+ * This function alerts the user to disconnected qpairs when calling
  * spdk_nvme_poll_group_process_completions.
  */
-typedef void (*spdk_nvme_failed_qpair_cb)(struct spdk_nvme_qpair *qpair, void *poll_group_ctx);
+typedef void (*spdk_nvme_disconnected_qpair_cb)(struct spdk_nvme_qpair *qpair,
+		void *poll_group_ctx);
 
 /**
  * Create a new poll group.
@@ -2011,19 +2012,19 @@ int spdk_nvme_poll_group_destroy(struct spdk_nvme_poll_group *group);
 /**
  * Poll for completions on all qpairs in this poll group.
  *
- * the failed_qpair_cb will be called for all failed qpairs in the poll group
+ * the disconnected_qpair_cb will be called for all disconnected qpairs in the poll group
  * including qpairs which fail within the context of this call.
  * The user is responsible for trying to reconnect or destroy those qpairs.
  *
  * \param group The group on which to poll for completions.
  * \param completions_per_qpair The maximum number of completions per qpair.
- * \param failed_qpair_cb A callback function of type spdk_nvme_failed_qpair_cb. Must be non-NULL.
+ * \param disconnected_qpair_cb A callback function of type spdk_nvme_disconnected_qpair_cb. Must be non-NULL.
  *
- * return The number of completions across all qpairs, -EINVAL if no failed_qpair_cb is passed, or
+ * return The number of completions across all qpairs, -EINVAL if no disconnected_qpair_cb is passed, or
  * -EIO if the shared completion queue cannot be polled for the RDMA transport.
  */
 int64_t spdk_nvme_poll_group_process_completions(struct spdk_nvme_poll_group *group,
-		uint32_t completions_per_qpair, spdk_nvme_failed_qpair_cb failed_qpair_cb);
+		uint32_t completions_per_qpair, spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb);
 
 /**
  * Retrieve the user context for this specific poll group.
@@ -3118,12 +3119,12 @@ struct spdk_nvme_transport_ops {
 	int (*poll_group_remove)(struct spdk_nvme_transport_poll_group *tgroup,
 				 struct spdk_nvme_qpair *qpair);
 
-	int (*poll_group_activate_qpair)(struct spdk_nvme_qpair *qpair);
+	int (*poll_group_connect_qpair)(struct spdk_nvme_qpair *qpair);
 
-	int (*poll_group_deactivate_qpair)(struct spdk_nvme_qpair *qpair);
+	int (*poll_group_disconnect_qpair)(struct spdk_nvme_qpair *qpair);
 
 	int64_t (*poll_group_process_completions)(struct spdk_nvme_transport_poll_group *tgroup,
-			uint32_t completions_per_qpair, spdk_nvme_failed_qpair_cb failed_qpair_cb);
+			uint32_t completions_per_qpair, spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb);
 
 	int (*poll_group_destroy)(struct spdk_nvme_transport_poll_group *tgroup);
 };

@@ -101,31 +101,31 @@ spdk_nvme_poll_group_remove(struct spdk_nvme_poll_group *group, struct spdk_nvme
 }
 
 int
-nvme_poll_group_activate_qpair(struct spdk_nvme_qpair *qpair)
+nvme_poll_group_connect_qpair(struct spdk_nvme_qpair *qpair)
 {
-	return nvme_transport_poll_group_activate_qpair(qpair);
+	return nvme_transport_poll_group_connect_qpair(qpair);
 }
 
 int
-nvme_poll_group_deactivate_qpair(struct spdk_nvme_qpair *qpair)
+nvme_poll_group_disconnect_qpair(struct spdk_nvme_qpair *qpair)
 {
-	return nvme_transport_poll_group_deactivate_qpair(qpair);
+	return nvme_transport_poll_group_disconnect_qpair(qpair);
 }
 
 int64_t
 spdk_nvme_poll_group_process_completions(struct spdk_nvme_poll_group *group,
-		uint32_t completions_per_qpair, spdk_nvme_failed_qpair_cb failed_qpair_cb)
+		uint32_t completions_per_qpair, spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb)
 {
 	struct spdk_nvme_transport_poll_group *tgroup;
 	int64_t local_completions = 0, error_reason = 0, num_completions = 0;
 
-	if (failed_qpair_cb == NULL) {
+	if (disconnected_qpair_cb == NULL) {
 		return -EINVAL;
 	}
 
 	STAILQ_FOREACH(tgroup, &group->tgroups, link) {
 		local_completions = nvme_transport_poll_group_process_completions(tgroup, completions_per_qpair,
-				    failed_qpair_cb);
+				    disconnected_qpair_cb);
 		if (local_completions < 0 && error_reason == 0) {
 			error_reason = local_completions;
 		} else {
