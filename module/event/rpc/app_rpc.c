@@ -80,7 +80,7 @@ spdk_rpc_spdk_kill_instance(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_spdk_kill_instance_decoders,
 				    SPDK_COUNTOF(rpc_spdk_kill_instance_decoders),
 				    &req)) {
-		SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(SPDK_LOG_APP_RPC, "spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
@@ -97,7 +97,7 @@ spdk_rpc_spdk_kill_instance(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "sending signal %d\n", signals[i].signal);
+	SPDK_DEBUGLOG(SPDK_LOG_APP_RPC, "sending signal %d\n", signals[i].signal);
 	free_rpc_spdk_kill_instance(&req);
 	kill(getpid(), signals[i].signal);
 
@@ -133,7 +133,7 @@ spdk_rpc_framework_monitor_context_switch(struct spdk_jsonrpc_request *request,
 		if (spdk_json_decode_object(params, rpc_framework_monitor_context_switch_decoders,
 					    SPDK_COUNTOF(rpc_framework_monitor_context_switch_decoders),
 					    &req)) {
-			SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "spdk_json_decode_object failed\n");
+			SPDK_DEBUGLOG(SPDK_LOG_APP_RPC, "spdk_json_decode_object failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 			return;
 		}
@@ -537,3 +537,4 @@ err:
 	free(ctx);
 }
 SPDK_RPC_REGISTER("thread_set_cpumask", spdk_rpc_thread_set_cpumask, SPDK_RPC_RUNTIME)
+SPDK_LOG_REGISTER_COMPONENT("APP_RPC", SPDK_LOG_APP_RPC)

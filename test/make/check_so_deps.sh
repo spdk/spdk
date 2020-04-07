@@ -33,6 +33,8 @@ function confirm_abi_deps() {
 	name = SPDK_LOG_BLOBFS_BDEV
 [suppress_variable]
 	name = SPDK_LOG_BLOBFS_BDEV_RPC
+[suppress_variable]
+	name = SPDK_LOG_APP_RPC
 
 EOF
 

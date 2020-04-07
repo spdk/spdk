@@ -34,11 +34,13 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-SO_VER := 2
+SO_VER := 3
 SO_MINOR := 0
 SO_SUFFIX := $(SO_VER).$(SO_MINOR)
 
 LIBNAME = event
 C_SRCS = app.c reactor.c rpc.c subsystem.c json_config.c
+
+SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_event.map)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

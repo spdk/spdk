@@ -1,0 +1,46 @@
+{
+	global:
+
+	# Public functions
+	spdk_app_opts_init;
+	spdk_app_start;
+	spdk_app_fini;
+	spdk_app_start_shutdown;
+	spdk_app_stop;
+	spdk_app_get_running_config;
+	spdk_app_get_shm_id;
+	spdk_app_parse_core_mask;
+	spdk_app_get_core_mask;
+	spdk_app_parse_args;
+	spdk_app_usage;
+	spdk_event_allocate;
+	spdk_event_call;
+	spdk_framework_enable_context_switch_monitor;
+	spdk_framework_context_switch_monitor_enabled;
+
+	# Functions used by other SPDK libraries
+	spdk_reactors_init;
+	spdk_reactors_fini;
+	spdk_reactors_start;
+	spdk_reactors_stop;
+	spdk_reactor_get;
+	spdk_for_each_reactor;
+	spdk_subsystem_find;
+	spdk_add_subsystem;
+	spdk_add_subsystem_depend;
+	spdk_subsystem_init;
+	spdk_subsystem_fini;
+	spdk_subsystem_init_next;
+	spdk_subsystem_fini_next;
+	spdk_subsystem_config;
+	spdk_app_json_config_load;
+	spdk_subsystem_config_json;
+	spdk_rpc_initialize;
+	spdk_rpc_finish;
+
+	# Macros and variables
+	g_subsystems;
+	g_subsystems_deps;
+
+	local: *;
+};
