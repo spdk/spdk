@@ -35,7 +35,7 @@ fi
 
 timing_enter build_release
 
-./configure $config_params --disable-debug
+./configure $config_params --disable-debug --with-lto
 $MAKE ${MAKEFLAGS}
 $MAKE ${MAKEFLAGS} clean
 
