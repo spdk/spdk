@@ -34,6 +34,7 @@
 #include "env_internal.h"
 
 #include <rte_alarm.h>
+#include <rte_devargs.h>
 #include "spdk/env.h"
 
 #define SYSFS_PCI_DRIVERS	"/sys/bus/pci/drivers"
@@ -235,6 +236,8 @@ cleanup_pci_devices(void)
 	pthread_mutex_unlock(&g_pci_mutex);
 }
 
+static int scan_pci_bus(bool delay_init);
+
 void
 pci_env_init(void)
 {
@@ -258,6 +261,12 @@ pci_env_init(void)
 		driver->is_registered = true;
 		rte_pci_register(&driver->driver);
 	}
+
+	/* We assume devices were present on the bus for more than 2 seconds
+	 * before initializing SPDK and there's no need to wait more. We scan
+	 * the bus, but we don't blacklist any devices.
+	 */
+	scan_pci_bus(false);
 
 	/* Register a single hotremove callback for all devices. */
 	if (spdk_process_is_primary()) {
@@ -352,6 +361,11 @@ pci_device_fini(struct rte_pci_device *_dev)
 		return -1;
 	}
 
+	/* remove our whitelist_at option */
+	if (_dev->device.devargs) {
+		_dev->device.devargs->data = NULL;
+	}
+
 	assert(!dev->internal.removed);
 	dev->internal.removed = true;
 	pthread_mutex_unlock(&g_pci_mutex);
@@ -374,12 +388,76 @@ spdk_pci_device_detach(struct spdk_pci_device *dev)
 	cleanup_pci_devices();
 }
 
+static int
+scan_pci_bus(bool delay_init)
+{
+	struct spdk_pci_driver *driver;
+	struct rte_pci_device *rte_dev;
+	uint64_t now;
+
+	rte_bus_scan();
+	now = spdk_get_ticks();
+
+	driver = TAILQ_FIRST(&g_pci_drivers);
+	if (!driver) {
+		return 0;
+	}
+
+	TAILQ_FOREACH(rte_dev, &driver->driver.bus->device_list, next) {
+		struct rte_devargs *da;
+
+		da = rte_dev->device.devargs;
+		if (!da) {
+			char devargs_str[128];
+
+			/* the device was never blacklisted or whitelisted */
+			da = calloc(1, sizeof(*da));
+			if (!da) {
+				return -1;
+			}
+
+			snprintf(devargs_str, sizeof(devargs_str), "pci:%s", rte_dev->device.name);
+			if (rte_devargs_parse(da, devargs_str) != 0) {
+				free(da);
+				return -1;
+			}
+
+			rte_devargs_insert(&da);
+			rte_dev->device.devargs = da;
+		}
+
+		if (da->data) {
+			uint64_t whitelist_at = (uint64_t)(uintptr_t)da->data;
+
+			/* this device was seen by spdk before... */
+			if (da->policy == RTE_DEV_BLACKLISTED && whitelist_at <= now) {
+				da->policy = RTE_DEV_WHITELISTED;
+			}
+		} else if ((driver->driver.bus->bus.conf.scan_mode == RTE_BUS_SCAN_WHITELIST &&
+			    da->policy == RTE_DEV_WHITELISTED) || da->policy != RTE_DEV_BLACKLISTED) {
+			/* override the policy only if not permanently blacklisted */
+
+			if (delay_init) {
+				da->policy = RTE_DEV_BLACKLISTED;
+				da->data = (void *)(now + 2 * spdk_get_ticks_hz());
+			} else {
+				da->policy = RTE_DEV_WHITELISTED;
+				da->data = (void *)(uintptr_t)now;
+			}
+		}
+	}
+
+	return 0;
+}
+
 int
 spdk_pci_device_attach(struct spdk_pci_driver *driver,
 		       spdk_pci_enum_cb enum_cb,
 		       void *enum_ctx, struct spdk_pci_addr *pci_address)
 {
 	struct spdk_pci_device *dev;
+	struct rte_pci_device *rte_dev;
+	struct rte_devargs *da;
 	int rc;
 	char bdf[32];
 
@@ -433,7 +511,29 @@ spdk_pci_device_attach(struct spdk_pci_driver *driver,
 	driver->cb_fn = NULL;
 
 	cleanup_pci_devices();
-	return rc == 0 ? 0 : -1;
+
+	if (rc != 0) {
+		return -1;
+	}
+
+	/* explicit attach ignores the whitelist, so if we blacklisted this
+	 * device before let's enable it now - just for clarity.
+	 */
+	TAILQ_FOREACH(dev, &g_pci_devices, internal.tailq) {
+		if (spdk_pci_addr_compare(&dev->addr, pci_address) == 0) {
+			break;
+		}
+	}
+	assert(dev != NULL);
+
+	rte_dev = dev->dev_handle;
+	da = rte_dev->device.devargs;
+	if (da && da->data) {
+		da->data = (void *)(uintptr_t)spdk_get_ticks();
+		da->policy = RTE_DEV_WHITELISTED;
+	}
+
+	return 0;
 }
 
 /* Note: You can call spdk_pci_enumerate from more than one thread
@@ -473,7 +573,9 @@ spdk_pci_enumerate(struct spdk_pci_driver *driver,
 		rte_pci_register(&driver->driver);
 	}
 
-	rte_bus_scan();
+	if (scan_pci_bus(true) != 0) {
+		return -1;
+	}
 
 	driver->cb_fn = enum_cb;
 	driver->cb_arg = enum_ctx;

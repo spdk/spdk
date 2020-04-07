@@ -112,11 +112,11 @@ timing_enter hotplug_test
 ssh_vm "LD_LIBRARY_PATH=/root//build/lib:/root/dpdk/build/lib:$LD_LIBRARY_PATH build/examples/hotplug -i 0 -t 25 -n 4 -r 8" &
 example_pid=$!
 
-sleep 4
+sleep 6
 remove_devices
 sleep 4
 insert_devices
-sleep 4
+sleep 6
 remove_devices
 devices_delete
 
