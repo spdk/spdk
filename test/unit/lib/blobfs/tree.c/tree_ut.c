@@ -36,7 +36,7 @@
 #include "blobfs/tree.c"
 
 void
-spdk_cache_buffer_free(struct cache_buffer *cache_buffer)
+cache_buffer_free(struct cache_buffer *cache_buffer)
 {
 	free(cache_buffer);
 }
@@ -59,74 +59,74 @@ blobfs_tree_op_test(void)
 
 	/* insert buffer[0] */
 	buffer[0]->offset = 0;
-	tree = spdk_tree_insert_buffer(tree, buffer[0]);
+	tree = tree_insert_buffer(tree, buffer[0]);
 	SPDK_CU_ASSERT_FATAL(tree != NULL);
 	CU_ASSERT(tree->level == 0);
-	tmp_buffer = spdk_tree_find_buffer(tree, buffer[0]->offset);
+	tmp_buffer = tree_find_buffer(tree, buffer[0]->offset);
 	CU_ASSERT(tmp_buffer == buffer[0]);
 
 	/* insert buffer[1] */
 	buffer[1]->offset = CACHE_BUFFER_SIZE;
 	/* set the bytes_filled equal = bytes_filled with same non zero value, e.g., 32 */
 	buffer[1]->bytes_filled = buffer[1]->bytes_flushed = 32;
-	tree = spdk_tree_insert_buffer(tree, buffer[1]);
+	tree = tree_insert_buffer(tree, buffer[1]);
 	SPDK_CU_ASSERT_FATAL(tree != NULL);
 	CU_ASSERT(tree->level == 0);
-	tmp_buffer = spdk_tree_find_filled_buffer(tree, buffer[1]->offset);
+	tmp_buffer = tree_find_filled_buffer(tree, buffer[1]->offset);
 	CU_ASSERT(tmp_buffer == buffer[1]);
 
 	/* insert buffer[2] */
 	buffer[2]->offset = (CACHE_TREE_WIDTH - 1) * CACHE_BUFFER_SIZE;
-	tree = spdk_tree_insert_buffer(tree, buffer[2]);
+	tree = tree_insert_buffer(tree, buffer[2]);
 	SPDK_CU_ASSERT_FATAL(tree != NULL);
 	CU_ASSERT(tree->level == 0);
-	tmp_buffer = spdk_tree_find_buffer(tree, buffer[2]->offset);
+	tmp_buffer = tree_find_buffer(tree, buffer[2]->offset);
 	CU_ASSERT(tmp_buffer == buffer[2]);
-	tmp_buffer = spdk_tree_find_filled_buffer(tree, buffer[2]->offset);
+	tmp_buffer = tree_find_filled_buffer(tree, buffer[2]->offset);
 	CU_ASSERT(tmp_buffer == NULL);
 
 	/* insert buffer[3], set an offset which can not be fit level 0 */
 	buffer[3]->offset = CACHE_TREE_LEVEL_SIZE(1);
-	tree = spdk_tree_insert_buffer(tree, buffer[3]);
+	tree = tree_insert_buffer(tree, buffer[3]);
 	SPDK_CU_ASSERT_FATAL(tree != NULL);
 	CU_ASSERT(tree->level == 1);
-	tmp_buffer = spdk_tree_find_buffer(tree, buffer[3]->offset);
+	tmp_buffer = tree_find_buffer(tree, buffer[3]->offset);
 	CU_ASSERT(tmp_buffer == buffer[3]);
 
 	/*  insert buffer[4], set an offset which can not be fit level 1 */
 	buffer[4]->offset = CACHE_TREE_LEVEL_SIZE(2);
-	tree = spdk_tree_insert_buffer(tree, buffer[4]);
+	tree = tree_insert_buffer(tree, buffer[4]);
 	SPDK_CU_ASSERT_FATAL(tree != NULL);
 	CU_ASSERT(tree->level == 2);
-	tmp_buffer = spdk_tree_find_buffer(tree, buffer[4]->offset);
+	tmp_buffer = tree_find_buffer(tree, buffer[4]->offset);
 	CU_ASSERT(tmp_buffer == buffer[4]);
 
 	/* delete buffer[0] */
-	spdk_tree_remove_buffer(tree, buffer[0]);
+	tree_remove_buffer(tree, buffer[0]);
 	/* check whether buffer[0] is still existed or not */
-	tmp_buffer = spdk_tree_find_buffer(tree, 0);
+	tmp_buffer = tree_find_buffer(tree, 0);
 	CU_ASSERT(tmp_buffer == NULL);
 
 	/* delete buffer[3] */
-	spdk_tree_remove_buffer(tree, buffer[3]);
+	tree_remove_buffer(tree, buffer[3]);
 	/* check whether buffer[3] is still existed or not */
-	tmp_buffer = spdk_tree_find_buffer(tree, CACHE_TREE_LEVEL_SIZE(1));
+	tmp_buffer = tree_find_buffer(tree, CACHE_TREE_LEVEL_SIZE(1));
 	CU_ASSERT(tmp_buffer == NULL);
 
 	/* free all buffers in the tree */
-	spdk_tree_free_buffers(tree);
+	tree_free_buffers(tree);
 
 	/* check whether buffer[1] is still existed or not */
-	tmp_buffer = spdk_tree_find_buffer(tree, CACHE_BUFFER_SIZE);
+	tmp_buffer = tree_find_buffer(tree, CACHE_BUFFER_SIZE);
 	CU_ASSERT(tmp_buffer == NULL);
 	/* check whether buffer[2] is still existed or not */
-	tmp_buffer = spdk_tree_find_buffer(tree, (CACHE_TREE_WIDTH - 1) * CACHE_BUFFER_SIZE);
+	tmp_buffer = tree_find_buffer(tree, (CACHE_TREE_WIDTH - 1) * CACHE_BUFFER_SIZE);
 	CU_ASSERT(tmp_buffer == NULL);
 	/* check whether buffer[4] is still existed or not */
-	tmp_buffer = spdk_tree_find_buffer(tree, CACHE_TREE_LEVEL_SIZE(2));
+	tmp_buffer = tree_find_buffer(tree, CACHE_TREE_LEVEL_SIZE(2));
 	CU_ASSERT(tmp_buffer == NULL);
 
-	/* According to spdk_tree_free_buffers, root will not be freed */
+	/* According to tree_free_buffers, root will not be freed */
 	free(tree);
 }
 

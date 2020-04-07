@@ -109,7 +109,7 @@ SPDK_TRACE_REGISTER_FN(blobfs_trace, "blobfs", TRACE_GROUP_BLOBFS)
 }
 
 void
-spdk_cache_buffer_free(struct cache_buffer *cache_buffer)
+cache_buffer_free(struct cache_buffer *cache_buffer)
 {
 	spdk_mempool_put(g_cache_pool, cache_buffer->buf);
 	free(cache_buffer);
@@ -251,8 +251,8 @@ struct spdk_fs_cb_args {
 };
 
 static void cache_free_buffers(struct spdk_file *file);
-static void spdk_fs_io_device_unregister(struct spdk_filesystem *fs);
-static void spdk_fs_free_io_channels(struct spdk_filesystem *fs);
+static void fs_io_device_unregister(struct spdk_filesystem *fs);
+static void fs_free_io_channels(struct spdk_filesystem *fs);
 
 void
 spdk_fs_opts_init(struct spdk_blobfs_opts *opts)
@@ -443,8 +443,8 @@ free_fs_request(struct spdk_fs_request *req)
 }
 
 static int
-_spdk_fs_channel_create(struct spdk_filesystem *fs, struct spdk_fs_channel *channel,
-			uint32_t max_ops)
+fs_channel_create(struct spdk_filesystem *fs, struct spdk_fs_channel *channel,
+		  uint32_t max_ops)
 {
 	uint32_t i;
 
@@ -467,40 +467,40 @@ _spdk_fs_channel_create(struct spdk_filesystem *fs, struct spdk_fs_channel *chan
 }
 
 static int
-_spdk_fs_md_channel_create(void *io_device, void *ctx_buf)
+fs_md_channel_create(void *io_device, void *ctx_buf)
 {
 	struct spdk_filesystem		*fs;
 	struct spdk_fs_channel		*channel = ctx_buf;
 
 	fs = SPDK_CONTAINEROF(io_device, struct spdk_filesystem, md_target);
 
-	return _spdk_fs_channel_create(fs, channel, fs->md_target.max_ops);
+	return fs_channel_create(fs, channel, fs->md_target.max_ops);
 }
 
 static int
-_spdk_fs_sync_channel_create(void *io_device, void *ctx_buf)
+fs_sync_channel_create(void *io_device, void *ctx_buf)
 {
 	struct spdk_filesystem		*fs;
 	struct spdk_fs_channel		*channel = ctx_buf;
 
 	fs = SPDK_CONTAINEROF(io_device, struct spdk_filesystem, sync_target);
 
-	return _spdk_fs_channel_create(fs, channel, fs->sync_target.max_ops);
+	return fs_channel_create(fs, channel, fs->sync_target.max_ops);
 }
 
 static int
-_spdk_fs_io_channel_create(void *io_device, void *ctx_buf)
+fs_io_channel_create(void *io_device, void *ctx_buf)
 {
 	struct spdk_filesystem		*fs;
 	struct spdk_fs_channel		*channel = ctx_buf;
 
 	fs = SPDK_CONTAINEROF(io_device, struct spdk_filesystem, io_target);
 
-	return _spdk_fs_channel_create(fs, channel, fs->io_target.max_ops);
+	return fs_channel_create(fs, channel, fs->io_target.max_ops);
 }
 
 static void
-_spdk_fs_channel_destroy(void *io_device, void *ctx_buf)
+fs_channel_destroy(void *io_device, void *ctx_buf)
 {
 	struct spdk_fs_channel *channel = ctx_buf;
 
@@ -584,19 +584,19 @@ fs_alloc(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn)
 	TAILQ_INIT(&fs->files);
 
 	fs->md_target.max_ops = 512;
-	spdk_io_device_register(&fs->md_target, _spdk_fs_md_channel_create, _spdk_fs_channel_destroy,
+	spdk_io_device_register(&fs->md_target, fs_md_channel_create, fs_channel_destroy,
 				sizeof(struct spdk_fs_channel), "blobfs_md");
 	fs->md_target.md_io_channel = spdk_get_io_channel(&fs->md_target);
 	fs->md_target.md_fs_channel = spdk_io_channel_get_ctx(fs->md_target.md_io_channel);
 
 	fs->sync_target.max_ops = 512;
-	spdk_io_device_register(&fs->sync_target, _spdk_fs_sync_channel_create, _spdk_fs_channel_destroy,
+	spdk_io_device_register(&fs->sync_target, fs_sync_channel_create, fs_channel_destroy,
 				sizeof(struct spdk_fs_channel), "blobfs_sync");
 	fs->sync_target.sync_io_channel = spdk_get_io_channel(&fs->sync_target);
 	fs->sync_target.sync_fs_channel = spdk_io_channel_get_ctx(fs->sync_target.sync_io_channel);
 
 	fs->io_target.max_ops = 512;
-	spdk_io_device_register(&fs->io_target, _spdk_fs_io_channel_create, _spdk_fs_channel_destroy,
+	spdk_io_device_register(&fs->io_target, fs_io_channel_create, fs_channel_destroy,
 				sizeof(struct spdk_fs_channel), "blobfs_io");
 
 	return fs;
@@ -631,8 +631,8 @@ spdk_fs_init(struct spdk_bs_dev *dev, struct spdk_blobfs_opts *opt,
 
 	req = alloc_fs_request(fs->md_target.md_fs_channel);
 	if (req == NULL) {
-		spdk_fs_free_io_channels(fs);
-		spdk_fs_io_device_unregister(fs);
+		fs_free_io_channels(fs);
+		fs_io_device_unregister(fs);
 		cb_fn(cb_arg, NULL, -ENOMEM);
 		return;
 	}
@@ -809,8 +809,8 @@ load_cb(void *ctx, struct spdk_blob_store *bs, int bserrno)
 	if (bserrno != 0) {
 		args->fn.fs_op_with_handle(args->arg, NULL, bserrno);
 		free_fs_request(req);
-		spdk_fs_free_io_channels(fs);
-		spdk_fs_io_device_unregister(fs);
+		fs_free_io_channels(fs);
+		fs_io_device_unregister(fs);
 		return;
 	}
 
@@ -824,8 +824,8 @@ load_cb(void *ctx, struct spdk_blob_store *bs, int bserrno)
 		SPDK_LOGDUMP(SPDK_LOG_BLOBFS, "bstype", &bstype, sizeof(bstype));
 		args->fn.fs_op_with_handle(args->arg, NULL, -EINVAL);
 		free_fs_request(req);
-		spdk_fs_free_io_channels(fs);
-		spdk_fs_io_device_unregister(fs);
+		fs_free_io_channels(fs);
+		fs_io_device_unregister(fs);
 		return;
 	}
 
@@ -834,7 +834,7 @@ load_cb(void *ctx, struct spdk_blob_store *bs, int bserrno)
 }
 
 static void
-spdk_fs_io_device_unregister(struct spdk_filesystem *fs)
+fs_io_device_unregister(struct spdk_filesystem *fs)
 {
 	assert(fs != NULL);
 	spdk_io_device_unregister(&fs->md_target, NULL);
@@ -844,7 +844,7 @@ spdk_fs_io_device_unregister(struct spdk_filesystem *fs)
 }
 
 static void
-spdk_fs_free_io_channels(struct spdk_filesystem *fs)
+fs_free_io_channels(struct spdk_filesystem *fs)
 {
 	assert(fs != NULL);
 	spdk_fs_free_io_channel(fs->md_target.md_io_channel);
@@ -870,8 +870,8 @@ spdk_fs_load(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 
 	req = alloc_fs_request(fs->md_target.md_fs_channel);
 	if (req == NULL) {
-		spdk_fs_free_io_channels(fs);
-		spdk_fs_io_device_unregister(fs);
+		fs_free_io_channels(fs);
+		fs_io_device_unregister(fs);
 		cb_fn(cb_arg, NULL, -ENOMEM);
 		return;
 	}
@@ -908,7 +908,7 @@ unload_cb(void *ctx, int bserrno)
 	args->fn.fs_op(args->arg, bserrno);
 	free(req);
 
-	spdk_fs_io_device_unregister(fs);
+	fs_io_device_unregister(fs);
 }
 
 void
@@ -932,7 +932,7 @@ spdk_fs_unload(struct spdk_filesystem *fs, spdk_fs_op_complete cb_fn, void *cb_a
 	args->arg = cb_arg;
 	args->fs = fs;
 
-	spdk_fs_free_io_channels(fs);
+	fs_free_io_channels(fs);
 	spdk_bs_unload(fs->bs, unload_cb, req);
 }
 
@@ -1358,7 +1358,7 @@ fs_rename_blob_open_cb(void *ctx, struct spdk_blob *blob, int bserrno)
 }
 
 static void
-__spdk_fs_md_rename_file(struct spdk_fs_request *req)
+_fs_md_rename_file(struct spdk_fs_request *req)
 {
 	struct spdk_fs_cb_args *args = &req->args;
 	struct spdk_file *f;
@@ -1380,7 +1380,7 @@ __spdk_fs_md_rename_file(struct spdk_fs_request *req)
 static void
 fs_rename_delete_done(void *arg, int fserrno)
 {
-	__spdk_fs_md_rename_file(arg);
+	_fs_md_rename_file(arg);
 }
 
 void
@@ -1415,7 +1415,7 @@ spdk_fs_rename_file_async(struct spdk_filesystem *fs,
 
 	f = fs_find_file(fs, new_name);
 	if (f == NULL) {
-		__spdk_fs_md_rename_file(req);
+		_fs_md_rename_file(req);
 		return;
 	}
 
@@ -2007,7 +2007,7 @@ spdk_fs_alloc_thread_ctx(struct spdk_filesystem *fs)
 		return NULL;
 	}
 
-	_spdk_fs_channel_create(fs, &ctx->ch, 512);
+	fs_channel_create(fs, &ctx->ch, 512);
 
 	ctx->ch.send_request = fs->send_request;
 	ctx->ch.sync = 1;
@@ -2032,7 +2032,7 @@ spdk_fs_free_thread_ctx(struct spdk_fs_thread_ctx *ctx)
 		usleep(1000);
 	}
 
-	_spdk_fs_channel_destroy(NULL, &ctx->ch);
+	fs_channel_destroy(NULL, &ctx->ch);
 	free(ctx);
 }
 
@@ -2082,7 +2082,7 @@ reclaim_cache_buffers(struct spdk_file *file)
 		pthread_spin_unlock(&file->lock);
 		return -1;
 	}
-	spdk_tree_free_buffers(file->tree);
+	tree_free_buffers(file->tree);
 
 	TAILQ_REMOVE(&g_caches, file, cache_tailq);
 	/* If not freed, put it in the end of the queue */
@@ -2181,7 +2181,7 @@ cache_insert_buffer(struct spdk_file *file, uint64_t offset)
 	if (file->tree->present_mask == 0) {
 		TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
 	}
-	file->tree = spdk_tree_insert_buffer(file->tree, buf);
+	file->tree = tree_insert_buffer(file->tree, buf);
 	pthread_spin_unlock(&g_caches_lock);
 
 	return buf;
@@ -2282,7 +2282,7 @@ __file_flush_done(void *ctx, int bserrno)
 	}
 	if (next->bytes_flushed == next->buf_size) {
 		BLOBFS_TRACE(file, "write buffer fully flushed 0x%jx\n", file->length_flushed);
-		next = spdk_tree_find_buffer(file->tree, file->length_flushed);
+		next = tree_find_buffer(file->tree, file->length_flushed);
 	}
 
 	/*
@@ -2310,7 +2310,7 @@ __file_flush(void *ctx)
 	uint32_t lba_size;
 
 	pthread_spin_lock(&file->lock);
-	next = spdk_tree_find_buffer(file->tree, file->length_flushed);
+	next = tree_find_buffer(file->tree, file->length_flushed);
 	if (next == NULL || next->in_progress ||
 	    ((next->bytes_filled < next->buf_size) && TAILQ_EMPTY(&file->sync_requests))) {
 		/*
@@ -2610,7 +2610,7 @@ check_readahead(struct spdk_file *file, uint64_t offset,
 	struct spdk_fs_cb_args *args;
 
 	offset = __next_cache_buffer_offset(offset);
-	if (spdk_tree_find_buffer(file->tree, offset) != NULL || file->length <= offset) {
+	if (tree_find_buffer(file->tree, offset) != NULL || file->length <= offset) {
 		return;
 	}
 
@@ -2684,7 +2684,7 @@ spdk_file_read(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 			length = final_offset - offset;
 		}
 
-		buf = spdk_tree_find_filled_buffer(file->tree, offset);
+		buf = tree_find_filled_buffer(file->tree, offset);
 		if (buf == NULL) {
 			pthread_spin_unlock(&file->lock);
 			rc = __send_rw_from_file(file, payload, offset, length, true, channel);
@@ -2701,7 +2701,7 @@ spdk_file_read(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 			memcpy(payload, &buf->buf[offset - buf->offset], read_len);
 			if ((offset + read_len) % CACHE_BUFFER_SIZE == 0) {
 				pthread_spin_lock(&g_caches_lock);
-				spdk_tree_remove_buffer(file->tree, buf);
+				tree_remove_buffer(file->tree, buf);
 				if (file->tree->present_mask == 0) {
 					TAILQ_REMOVE(&g_caches, file, cache_tailq);
 				}
@@ -2948,7 +2948,7 @@ cache_free_buffers(struct spdk_file *file)
 		pthread_spin_unlock(&file->lock);
 		return;
 	}
-	spdk_tree_free_buffers(file->tree);
+	tree_free_buffers(file->tree);
 
 	TAILQ_REMOVE(&g_caches, file, cache_tailq);
 	assert(file->tree->present_mask == 0);

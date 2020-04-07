@@ -44,7 +44,7 @@
 uint32_t g_fs_cache_buffer_shift = CACHE_BUFFER_SHIFT_DEFAULT;
 
 struct cache_buffer *
-spdk_tree_find_buffer(struct cache_tree *tree, uint64_t offset)
+tree_find_buffer(struct cache_tree *tree, uint64_t offset)
 {
 	uint64_t index;
 
@@ -65,11 +65,11 @@ spdk_tree_find_buffer(struct cache_tree *tree, uint64_t offset)
 }
 
 struct cache_buffer *
-spdk_tree_find_filled_buffer(struct cache_tree *tree, uint64_t offset)
+tree_find_filled_buffer(struct cache_tree *tree, uint64_t offset)
 {
 	struct cache_buffer *buf;
 
-	buf = spdk_tree_find_buffer(tree, offset);
+	buf = tree_find_buffer(tree, offset);
 	if (buf != NULL && buf->bytes_filled > 0) {
 		return buf;
 	} else {
@@ -78,7 +78,7 @@ spdk_tree_find_filled_buffer(struct cache_tree *tree, uint64_t offset)
 }
 
 struct cache_tree *
-spdk_tree_insert_buffer(struct cache_tree *root, struct cache_buffer *buffer)
+tree_insert_buffer(struct cache_tree *root, struct cache_buffer *buffer)
 {
 	struct cache_tree *tree;
 	uint64_t index, offset;
@@ -118,7 +118,7 @@ spdk_tree_insert_buffer(struct cache_tree *root, struct cache_buffer *buffer)
 }
 
 void
-spdk_tree_remove_buffer(struct cache_tree *tree, struct cache_buffer *buffer)
+tree_remove_buffer(struct cache_tree *tree, struct cache_buffer *buffer)
 {
 	struct cache_tree *child;
 	uint64_t index;
@@ -130,13 +130,13 @@ spdk_tree_remove_buffer(struct cache_tree *tree, struct cache_buffer *buffer)
 		assert(buffer == tree->u.buffer[index]);
 		tree->present_mask &= ~(1ULL << index);
 		tree->u.buffer[index] = NULL;
-		spdk_cache_buffer_free(buffer);
+		cache_buffer_free(buffer);
 		return;
 	}
 
 	child = tree->u.tree[index];
 	assert(child != NULL);
-	spdk_tree_remove_buffer(child, buffer);
+	tree_remove_buffer(child, buffer);
 	if (child->present_mask == 0) {
 		tree->present_mask &= ~(1ULL << index);
 		tree->u.tree[index] = NULL;
@@ -145,7 +145,7 @@ spdk_tree_remove_buffer(struct cache_tree *tree, struct cache_buffer *buffer)
 }
 
 void
-spdk_tree_free_buffers(struct cache_tree *tree)
+tree_free_buffers(struct cache_tree *tree)
 {
 	struct cache_buffer *buffer;
 	struct cache_tree *child;
@@ -160,7 +160,7 @@ spdk_tree_free_buffers(struct cache_tree *tree)
 			buffer = tree->u.buffer[i];
 			if (buffer != NULL && buffer->in_progress == false &&
 			    buffer->bytes_filled == buffer->bytes_flushed) {
-				spdk_cache_buffer_free(buffer);
+				cache_buffer_free(buffer);
 				tree->u.buffer[i] = NULL;
 				tree->present_mask &= ~(1ULL << i);
 			}
@@ -169,7 +169,7 @@ spdk_tree_free_buffers(struct cache_tree *tree)
 		for (i = 0; i < CACHE_TREE_WIDTH; i++) {
 			child = tree->u.tree[i];
 			if (child != NULL) {
-				spdk_tree_free_buffers(child);
+				tree_free_buffers(child);
 				if (child->present_mask == 0) {
 					free(child);
 					tree->u.tree[i] = NULL;

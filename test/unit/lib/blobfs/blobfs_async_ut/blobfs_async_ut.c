@@ -576,38 +576,38 @@ tree_find_buffer_ut(void)
 	level1_0->u.tree[12] = level0_0_12;
 	level1_0->present_mask |= (1ULL << 12);
 
-	buffer = spdk_tree_find_buffer(NULL, 0);
+	buffer = tree_find_buffer(NULL, 0);
 	CU_ASSERT(buffer == NULL);
 
-	buffer = spdk_tree_find_buffer(level0_0_0, 0);
+	buffer = tree_find_buffer(level0_0_0, 0);
 	CU_ASSERT(buffer == NULL);
 
-	buffer = spdk_tree_find_buffer(level0_0_0, CACHE_TREE_LEVEL_SIZE(0) + 1);
+	buffer = tree_find_buffer(level0_0_0, CACHE_TREE_LEVEL_SIZE(0) + 1);
 	CU_ASSERT(buffer == NULL);
 
-	buffer = spdk_tree_find_buffer(level0_0_0, leaf_0_0_4->offset);
+	buffer = tree_find_buffer(level0_0_0, leaf_0_0_4->offset);
 	CU_ASSERT(buffer == leaf_0_0_4);
 
-	buffer = spdk_tree_find_buffer(level1_0, leaf_0_0_4->offset);
+	buffer = tree_find_buffer(level1_0, leaf_0_0_4->offset);
 	CU_ASSERT(buffer == leaf_0_0_4);
 
-	buffer = spdk_tree_find_buffer(level1_0, leaf_0_12_8->offset);
+	buffer = tree_find_buffer(level1_0, leaf_0_12_8->offset);
 	CU_ASSERT(buffer == leaf_0_12_8);
 
-	buffer = spdk_tree_find_buffer(level1_0, leaf_0_12_8->offset + CACHE_BUFFER_SIZE - 1);
+	buffer = tree_find_buffer(level1_0, leaf_0_12_8->offset + CACHE_BUFFER_SIZE - 1);
 	CU_ASSERT(buffer == leaf_0_12_8);
 
-	buffer = spdk_tree_find_buffer(level1_0, leaf_0_12_8->offset - 1);
+	buffer = tree_find_buffer(level1_0, leaf_0_12_8->offset - 1);
 	CU_ASSERT(buffer == NULL);
 
 	leaf_9_23_15->offset = CACHE_TREE_LEVEL_SIZE(2) * 9 +
 			       CACHE_TREE_LEVEL_SIZE(1) * 23 +
 			       CACHE_BUFFER_SIZE * 15;
-	root = spdk_tree_insert_buffer(level1_0, leaf_9_23_15);
+	root = tree_insert_buffer(level1_0, leaf_9_23_15);
 	CU_ASSERT(root != level1_0);
-	buffer = spdk_tree_find_buffer(root, leaf_9_23_15->offset);
+	buffer = tree_find_buffer(root, leaf_9_23_15->offset);
 	CU_ASSERT(buffer == leaf_9_23_15);
-	spdk_tree_free_buffers(root);
+	tree_free_buffers(root);
 	free(root);
 }
 

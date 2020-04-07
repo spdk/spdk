@@ -66,12 +66,12 @@ struct cache_tree {
 	} u;
 };
 
-void spdk_cache_buffer_free(struct cache_buffer *cache_buffer);
+void cache_buffer_free(struct cache_buffer *cache_buffer);
 
-struct cache_tree *spdk_tree_insert_buffer(struct cache_tree *root, struct cache_buffer *buffer);
-void spdk_tree_free_buffers(struct cache_tree *tree);
-struct cache_buffer *spdk_tree_find_buffer(struct cache_tree *tree, uint64_t offset);
-struct cache_buffer *spdk_tree_find_filled_buffer(struct cache_tree *tree, uint64_t offset);
-void spdk_tree_remove_buffer(struct cache_tree *tree, struct cache_buffer *buffer);
+struct cache_tree *tree_insert_buffer(struct cache_tree *root, struct cache_buffer *buffer);
+void tree_free_buffers(struct cache_tree *tree);
+struct cache_buffer *tree_find_buffer(struct cache_tree *tree, uint64_t offset);
+struct cache_buffer *tree_find_filled_buffer(struct cache_tree *tree, uint64_t offset);
+void tree_remove_buffer(struct cache_tree *tree, struct cache_buffer *buffer);
 
 #endif /* SPDK_TREE_H_ */
