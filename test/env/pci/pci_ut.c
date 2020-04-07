@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "CUnit/Basic.h"
+#include "spdk_internal/mock.h"
 
 #include "env_dpdk/pci.c"
 
