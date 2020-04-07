@@ -251,6 +251,7 @@ rpc_get_poller(struct spdk_poller *poller, struct spdk_json_write_ctx *w)
 	spdk_json_write_named_string(w, "name", poller->name);
 	spdk_json_write_named_string(w, "state", spdk_poller_state_str(poller->state));
 	spdk_json_write_named_uint64(w, "run_count", poller->run_count);
+	spdk_json_write_named_uint64(w, "busy_count", poller->busy_count);
 	if (poller->period_ticks) {
 		spdk_json_write_named_uint64(w, "period_ticks", poller->period_ticks);
 	}

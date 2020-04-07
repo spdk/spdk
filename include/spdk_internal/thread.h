@@ -70,6 +70,7 @@ struct spdk_poller {
 	uint64_t			period_ticks;
 	uint64_t			next_run_tick;
 	uint64_t			run_count;
+	uint64_t			busy_count;
 	spdk_poller_fn			fn;
 	void				*arg;
 	struct spdk_thread		*thread;
