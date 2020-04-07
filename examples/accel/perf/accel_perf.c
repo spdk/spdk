@@ -46,6 +46,7 @@ static int g_xfer_size_bytes = 4096;
 static int g_queue_depth = 32;
 static int g_time_in_sec = 5;
 static bool g_verify = false;
+static const char *g_workload_type = NULL;
 static struct worker_thread *g_workers = NULL;
 static int g_num_workers = 0;
 static pthread_mutex_t g_workers_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -89,6 +90,7 @@ dump_user_config(struct spdk_app_opts *opts)
 	printf("SPDK Configuration:\n");
 	printf("Core mask:      %s\n\n", opts->reactor_mask);
 	printf("Accel Perf Configuration:\n");
+	printf("Workload Type:  %s\n", g_workload_type);
 	printf("Transfer size:  %u bytes\n", g_xfer_size_bytes);
 	printf("Queue depth:    %u\n", g_queue_depth);
 	printf("Run time:       %u seconds\n", g_time_in_sec);
@@ -104,7 +106,8 @@ usage(void)
 	printf("\t[-n number of channels]\n");
 	printf("\t[-o transfer size in bytes]\n");
 	printf("\t[-t time in seconds]\n");
-	printf("\t[-y verify copy result if this switch is on]\n");
+	printf("\t[-w workload type must be one of these: copy, fill\n");
+	printf("\t[-y verify result if this switch is on]\n");
 }
 
 static int
@@ -122,6 +125,9 @@ parse_args(int argc, char *argv)
 		break;
 	case 'y':
 		g_verify = true;
+		break;
+	case 'w':
+		g_workload_type = optarg;
 		break;
 	default:
 		usage();
@@ -159,13 +165,22 @@ _submit_single(void *arg1, void *arg2)
 
 	if (g_verify) {
 		memset(task->src, 0x5a, g_xfer_size_bytes);
-		memset(task->dst, 0x0, g_xfer_size_bytes);
+		memset(task->dst, 0xa5, g_xfer_size_bytes);
 	}
 	task->worker = worker;
 	task->worker->current_queue_depth++;
-	spdk_accel_submit_copy(__accel_task_from_ap_task(task),
-			       worker->ch, task->dst,
-			       task->src, g_xfer_size_bytes, accel_done);
+	if (!strcmp(g_workload_type, "copy")) {
+		spdk_accel_submit_copy(__accel_task_from_ap_task(task),
+				       worker->ch, task->dst,
+				       task->src, g_xfer_size_bytes, accel_done);
+	} else if (!strcmp(g_workload_type, "fill")) {
+		/* For fill use the first byte of the task->dst buffer */
+		spdk_accel_submit_fill(__accel_task_from_ap_task(task),
+				       worker->ch, task->dst, *(uint8_t *)task->src,
+				       g_xfer_size_bytes, accel_done);
+	} else {
+		assert(false);
+	}
 }
 
 static void
@@ -365,8 +380,15 @@ main(int argc, char **argv)
 	pthread_mutex_init(&g_workers_lock, NULL);
 	spdk_app_opts_init(&opts);
 	opts.reactor_mask = "0x1";
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "o:q:t:y", NULL, parse_args,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "o:q:t:yw:", NULL, parse_args,
 				      usage)) != SPDK_APP_PARSE_ARGS_SUCCESS) {
+		rc = -1;
+		goto cleanup;
+	}
+
+	if (strcmp(g_workload_type, "copy") &&
+	    strcmp(g_workload_type, "fill")) {
+		usage();
 		rc = -1;
 		goto cleanup;
 	}
