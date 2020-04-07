@@ -230,24 +230,6 @@ bs_sequence_writev_dev(spdk_bs_sequence_t *seq, struct iovec *iov, int iovcnt,
 }
 
 void
-spdk_bs_sequence_unmap_dev(spdk_bs_sequence_t *seq,
-			   uint64_t lba, uint32_t lba_count,
-			   spdk_bs_sequence_cpl cb_fn, void *cb_arg)
-{
-	struct spdk_bs_request_set      *set = (struct spdk_bs_request_set *)seq;
-	struct spdk_bs_channel       *channel = set->channel;
-
-	SPDK_DEBUGLOG(SPDK_LOG_BLOB_RW, "Unmapping %" PRIu32 " blocks at LBA %" PRIu64 "\n", lba_count,
-		      lba);
-
-	set->u.sequence.cb_fn = cb_fn;
-	set->u.sequence.cb_arg = cb_arg;
-
-	channel->dev->unmap(channel->dev, channel->dev_channel, lba, lba_count,
-			    &set->cb_args);
-}
-
-void
 bs_sequence_write_zeroes_dev(spdk_bs_sequence_t *seq,
 			     uint64_t lba, uint32_t lba_count,
 			     spdk_bs_sequence_cpl cb_fn, void *cb_arg)
@@ -435,25 +417,6 @@ bs_sequence_to_batch(spdk_bs_sequence_t *seq, spdk_bs_sequence_cpl cb_fn, void *
 	set->cb_args.cb_fn = spdk_bs_batch_completion;
 
 	return set;
-}
-
-spdk_bs_sequence_t *
-spdk_bs_batch_to_sequence(spdk_bs_batch_t *batch)
-{
-	struct spdk_bs_request_set *set = (struct spdk_bs_request_set *)batch;
-
-	set->u.batch.outstanding_ops++;
-
-	set->cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
-	set->cpl.u.blob_basic.cb_fn = bs_sequence_to_batch_completion;
-	set->cpl.u.blob_basic.cb_arg = set;
-	set->bserrno = 0;
-
-	set->cb_args.cb_fn = spdk_bs_sequence_completion;
-	set->cb_args.cb_arg = set;
-	set->cb_args.channel = set->channel->dev_channel;
-
-	return (spdk_bs_sequence_t *)set;
 }
 
 spdk_bs_user_op_t *

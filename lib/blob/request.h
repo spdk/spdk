@@ -172,10 +172,6 @@ void bs_sequence_writev_dev(spdk_bs_batch_t *batch, struct iovec *iov, int iovcn
 			    uint64_t lba, uint32_t lba_count,
 			    spdk_bs_sequence_cpl cb_fn, void *cb_arg);
 
-void spdk_bs_sequence_unmap_dev(spdk_bs_sequence_t *seq,
-				uint64_t lba, uint32_t lba_count,
-				spdk_bs_sequence_cpl cb_fn, void *cb_arg);
-
 void bs_sequence_write_zeroes_dev(spdk_bs_sequence_t *seq,
 				  uint64_t lba, uint32_t lba_count,
 				  spdk_bs_sequence_cpl cb_fn, void *cb_arg);
@@ -207,8 +203,6 @@ void bs_batch_close(spdk_bs_batch_t *batch);
 spdk_bs_batch_t *bs_sequence_to_batch(spdk_bs_sequence_t *seq,
 				      spdk_bs_sequence_cpl cb_fn,
 				      void *cb_arg);
-
-spdk_bs_sequence_t *spdk_bs_batch_to_sequence(spdk_bs_batch_t *batch);
 
 spdk_bs_user_op_t *bs_user_op_alloc(struct spdk_io_channel *channel, struct spdk_bs_cpl *cpl,
 				    enum spdk_blob_op_type op_type, struct spdk_blob *blob,
