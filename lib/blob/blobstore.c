@@ -2343,7 +2343,7 @@ _spdk_bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 	}
 }
 
-static void
+static inline void
 _spdk_blob_calculate_lba_and_lba_count(struct spdk_blob *blob, uint64_t io_unit, uint64_t length,
 				       uint64_t *lba,	uint32_t *lba_count)
 {
