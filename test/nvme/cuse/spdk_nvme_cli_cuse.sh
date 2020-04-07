@@ -105,5 +105,10 @@ if [ ! -c "$ctrlr" ]; then
 	return 1
 fi
 
+# Verify admin cmd when no data is transferred,
+# by creating and deleting completion queue.
+${NVME_CMD} admin-passthru $ctrlr -o 5 --cdw10=0x3ff0003 --cdw11=0x1 -r
+${NVME_CMD} admin-passthru $ctrlr -o 4 --cdw10=0x3
+
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_tgt_pid

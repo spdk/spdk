@@ -102,7 +102,8 @@ cuse_nvme_admin_cmd_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	struct iovec out_iov[2];
 	struct spdk_nvme_cpl _cpl;
 
-	if (ctx->data_transfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
+	if (ctx->data_transfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER ||
+	    ctx->data_transfer == SPDK_NVME_DATA_NONE) {
 		fuse_reply_ioctl_iov(ctx->req, cpl->status.sc, NULL, 0);
 	} else {
 		memcpy(&_cpl, cpl, sizeof(struct spdk_nvme_cpl));
@@ -206,10 +207,6 @@ cuse_nvme_admin_cmd(fuse_req_t req, int cmd, void *arg,
 	admin_cmd = (struct nvme_admin_cmd *)in_buf;
 
 	switch (spdk_nvme_opc_get_data_transfer(admin_cmd->opcode)) {
-	case SPDK_NVME_DATA_NONE:
-		SPDK_ERRLOG("SPDK_NVME_DATA_NONE not implemented\n");
-		fuse_reply_err(req, EINVAL);
-		return;
 	case SPDK_NVME_DATA_HOST_TO_CONTROLLER:
 		if (admin_cmd->addr != 0) {
 			in_iov[1].iov_base = (void *)admin_cmd->addr;
@@ -223,6 +220,7 @@ cuse_nvme_admin_cmd(fuse_req_t req, int cmd, void *arg,
 			cuse_nvme_admin_cmd_send(req, admin_cmd, NULL);
 		}
 		return;
+	case SPDK_NVME_DATA_NONE:
 	case SPDK_NVME_DATA_CONTROLLER_TO_HOST:
 		if (out_bufsz == 0) {
 			out_iov[0].iov_base = &((struct nvme_admin_cmd *)arg)->result;
