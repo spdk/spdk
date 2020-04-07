@@ -11,6 +11,7 @@ source "$rootdir/test/common/autotest_common.sh"
 libdir="$rootdir/build/lib"
 libdeps_file="$rootdir/mk/spdk.lib_deps.mk"
 source_abi_dir="$HOME/spdk_20_01/build/lib"
+suppression_file="$HOME/abigail_suppressions.ini"
 
 function confirm_abi_deps() {
 	local processed_so=0
@@ -25,6 +26,8 @@ function confirm_abi_deps() {
 		return 1
 	fi
 
+	touch $suppression_file
+
 	for object in "$libdir"/libspdk_*.so; do
 		so_file=$(basename $object)
 		if [ ! -f "$source_abi_dir/$so_file" ]; then
@@ -32,9 +35,9 @@ function confirm_abi_deps() {
 			continue
 		fi
 
-		if ! abidiff $libdir/$so_file $source_abi_dir/$so_file --leaf-changes-only --stat > /dev/null; then
+		if ! abidiff $source_abi_dir/$so_file $libdir/$so_file --leaf-changes-only --suppressions $suppression_file --stat > /dev/null; then
 			found_abi_change=false
-			output=$(abidiff $libdir/$so_file $source_abi_dir/$so_file --leaf-changes-only --stat) || true
+			output=$(abidiff $source_abi_dir/$so_file $libdir/$so_file --leaf-changes-only --suppressions $suppression_file --stat) || true
 			new_so_maj=$(readlink $libdir/$so_file | awk -F'\\.so\\.' '{print $2}' | cut -d '.' -f1)
 			new_so_min=$(readlink $libdir/$so_file | awk -F'\\.so\\.' '{print $2}' | cut -d '.' -f2)
 			old_so_maj=$(readlink $source_abi_dir/$so_file | awk -F'\\.so\\.' '{print $2}' | cut -d '.' -f1)
@@ -42,6 +45,8 @@ function confirm_abi_deps() {
 			so_name_changed=$(grep "ELF SONAME changed" <<< "$output") || so_name_changed="No"
 			function_summary=$(grep "functions summary" <<< "$output")
 			variable_summary=$(grep "variables summary" <<< "$output")
+			# remove any filtered out variables.
+			variable_summary=$(sed "s/ [()][^)]*[)]//g" <<< "$variable_summary")
 
 			read -r _ _ _ removed_functions _ changed_functions _ added_functions _ <<< "$function_summary"
 			read -r _ _ _ removed_vars _ changed_vars _ added_vars _ <<< "$variable_summary"
@@ -75,12 +80,18 @@ function confirm_abi_deps() {
 					echo "SO name for $so_file changed without a change to abi. please revert that change."
 					touch $fail_file
 				fi
+
+				if [ "$new_so_maj" != "$old_so_maj" ] && [ "$new_so_min"  != "0" ]; then
+					echo "SO major version for $so_file was bumped. Please reset the minor version to 0."
+					touch $fail_file
+				fi
 			fi
 
 			continue
 		fi
 		processed_so=$((processed_so+1))
 	done
+	rm -f $suppression_file
 	echo "Processed $processed_so objects."
 }
 
