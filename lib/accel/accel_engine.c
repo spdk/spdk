@@ -75,12 +75,15 @@ accel_set_module(enum accel_module *opts)
 	return 0;
 }
 
-/* Registration of hw modules (currently supports only 1) */
+/* Registration of hw modules (currently supports only 1 at a time) */
 void
 spdk_accel_hw_engine_register(struct spdk_accel_engine *accel_engine)
 {
-	assert(g_hw_accel_engine == NULL);
-	g_hw_accel_engine = accel_engine;
+	if (g_hw_accel_engine == NULL) {
+		g_hw_accel_engine = accel_engine;
+	} else {
+		SPDK_NOTICELOG("Hardware offload engine already enabled\n");
+	}
 }
 
 /* Registration of sw modules (currently supports only 1) */
@@ -160,13 +163,17 @@ accel_engine_create_cb(void *io_device, void *ctx_buf)
 		return -EINVAL;
 	}
 
+	if (g_active_accel_module == ACCEL_IDXD_DSA && g_hw_accel_engine == NULL) {
+		SPDK_ERRLOG("IDXD acceleration engine specified but not available.\n");
+		return -EINVAL;
+	}
+
 	/* For either HW or AUTO */
 	if (g_active_accel_module > ACCEL_SW) {
 		if (g_hw_accel_engine != NULL) {
 			accel_ch->ch = g_hw_accel_engine->get_io_channel();
 			if (accel_ch->ch != NULL) {
 				accel_ch->engine = g_hw_accel_engine;
-				SPDK_NOTICELOG("Acceleration framework using module: CBDMA\n");
 				return 0;
 			}
 		}

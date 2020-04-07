@@ -43,6 +43,7 @@ enum accel_module {
 	ACCEL_SW = 0,
 	ACCEL_AUTO,
 	ACCEL_CBDMA,
+	ACCEL_IDXD_DSA,
 	ACCEL_MODULE_MAX
 };
 

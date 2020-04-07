@@ -106,5 +106,8 @@ SOCK_MODULES_LIST += sock_vpp
 endif
 
 ACCEL_MODULES_LIST = accel_ioat ioat
+ifeq ($(CONFIG_IDXD),y)
+ACCEL_MODULES_LIST += accel_idxd idxd
+endif
 
 ALL_MODULES_LIST = $(BLOCKDEV_MODULES_LIST) $(ACCEL_MODULES_LIST) $(SOCK_MODULES_LIST)

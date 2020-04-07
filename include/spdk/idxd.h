@@ -135,7 +135,7 @@ void spdk_idxd_detach(struct spdk_idxd_device *idxd);
  *
  * \param config_number the configuration number for a valid IDXD config.
   */
-void spdk_idxd_set_config(int config_number);
+void spdk_idxd_set_config(uint32_t config_number);
 
 /**
  * Build and submit a DMA engine memory copy request.

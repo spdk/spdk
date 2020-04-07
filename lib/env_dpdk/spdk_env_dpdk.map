@@ -53,6 +53,7 @@
 	spdk_vtophys;
 	spdk_pci_nvme_get_driver;
 	spdk_pci_vmd_get_driver;
+	spdk_pci_idxd_get_driver;
 	spdk_pci_ioat_get_driver;
 	spdk_pci_virtio_get_driver;
 	spdk_pci_enumerate;

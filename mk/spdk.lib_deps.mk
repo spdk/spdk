@@ -103,6 +103,7 @@ DEPDIRS-blobfs_bdev := $(BDEV_DEPS_THREAD) blob_bdev blobfs
 
 # module/accel
 DEPDIRS-accel_ioat := log ioat conf thread $(JSON_LIBS) accel
+DEPDIRS-accel_idxd := log idxd thread $(JSON_LIBS) accel
 
 # module/env_dpdk
 DEPDIRS-env_dpdk_rpc := log $(JSON_LIBS)

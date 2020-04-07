@@ -222,7 +222,7 @@ spdk_idxd_reconfigure_chan(struct spdk_idxd_io_channel *chan, uint32_t num_chann
 
 /* Called via RPC to select a pre-defined configuration. */
 void
-spdk_idxd_set_config(int config_num)
+spdk_idxd_set_config(uint32_t config_num)
 {
 	switch (config_num) {
 	case 0:
