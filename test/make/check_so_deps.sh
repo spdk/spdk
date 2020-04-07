@@ -29,6 +29,10 @@ function confirm_abi_deps() {
 	cat <<EOF > ${suppression_file}
 [suppress_variable]
 	name = SPDK_LOG_BDEV
+[suppress_variable]
+	name = SPDK_LOG_BLOBFS_BDEV
+[suppress_variable]
+	name = SPDK_LOG_BLOBFS_BDEV_RPC
 
 EOF
 

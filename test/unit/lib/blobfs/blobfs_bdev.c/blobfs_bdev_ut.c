@@ -346,5 +346,3 @@ int main(int argc, char **argv)
 
 	return num_failures;
 }
-
-SPDK_LOG_REGISTER_COMPONENT("blobfs", SPDK_LOG_BLOBFS)
