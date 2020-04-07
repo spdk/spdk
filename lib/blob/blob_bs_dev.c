@@ -123,7 +123,7 @@ blob_bs_dev_destroy(struct spdk_bs_dev *bs_dev)
 
 
 struct spdk_bs_dev *
-spdk_bs_create_blob_bs_dev(struct spdk_blob *blob)
+bs_create_blob_bs_dev(struct spdk_blob *blob)
 {
 	struct spdk_blob_bs_dev  *b;
 

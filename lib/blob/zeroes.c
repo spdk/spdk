@@ -116,7 +116,7 @@ static struct spdk_bs_dev g_zeroes_bs_dev = {
 };
 
 struct spdk_bs_dev *
-spdk_bs_create_zeroes_dev(void)
+bs_create_zeroes_dev(void)
 {
 	return &g_zeroes_bs_dev;
 }
