@@ -127,6 +127,8 @@ struct core_info {
 };
 
 uint8_t g_sleep_time = 1;
+uint16_t g_selected_row;
+uint16_t g_max_selected_row;
 struct rpc_thread_info *g_thread_info[MAX_THREADS];
 const char *poller_type_str[SPDK_POLLER_TYPES_COUNT] = {"Active", "Timed", "Paused"};
 const char *g_tab_title[NUMBER_OF_TABS] = {"[1] THREADS", "[2] POLLERS", "[3] CORES"};
@@ -660,7 +662,6 @@ print_max_len(WINDOW *win, int row, uint16_t col, uint16_t max_len, enum str_ali
 	wrefresh(win);
 }
 
-
 static void
 draw_menu_win(void)
 {
@@ -822,6 +823,19 @@ sort_threads(const void *p1, const void *p2)
 	}
 }
 
+static void
+draw_row_background(uint8_t item_index, uint8_t tab)
+{
+	int k;
+
+	if (item_index == g_selected_row) {
+		wattron(g_tabs[tab], COLOR_PAIR(2));
+	}
+	for (k = 1; k < g_max_col - 1; k++) {
+		mvwprintw(g_tabs[tab], TABS_DATA_START_ROW + item_index, k, " ");
+	}
+}
+
 static uint8_t
 refresh_threads_tab(uint8_t current_page)
 {
@@ -874,6 +888,8 @@ refresh_threads_tab(uint8_t current_page)
 
 		col = TABS_DATA_START_COL;
 
+		draw_row_background(item_index, THREADS_TAB);
+
 		if (!col_desc[0].disabled) {
 			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index, col,
 				      col_desc[0].max_data_string, ALIGN_LEFT, thread_info[i]->name);
@@ -922,7 +938,13 @@ refresh_threads_tab(uint8_t current_page)
 				      col_desc[6].max_data_string, ALIGN_RIGHT, busy_time);
 			thread_info[i]->last_busy = thread_info[i]->busy;
 		}
+
+		if (item_index == g_selected_row) {
+			wattroff(g_tabs[THREADS_TAB], COLOR_PAIR(2));
+		}
 	}
+
+	g_max_selected_row = i - current_page * g_max_data_rows - 1;
 
 	return max_pages;
 }
@@ -1116,6 +1138,8 @@ refresh_pollers_tab(uint8_t current_page)
 
 		col = TABS_DATA_START_COL;
 
+		draw_row_background(item_index, POLLERS_TAB);
+
 		if (!col_desc[0].disabled) {
 			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + item_index, col + 1,
 				      col_desc[0].max_data_string, ALIGN_LEFT, pollers[i]->name);
@@ -1153,7 +1177,13 @@ refresh_pollers_tab(uint8_t current_page)
 					      col_desc[4].max_data_string, ALIGN_RIGHT, period_ticks);
 			}
 		}
+
+		if (item_index == g_selected_row) {
+			wattroff(g_tabs[POLLERS_TAB], COLOR_PAIR(2));
+		}
 	}
+
+	g_max_selected_row = i - current_page * g_max_data_rows - 1;
 
 	return max_pages;
 }
@@ -1269,6 +1299,8 @@ refresh_cores_tab(uint8_t current_page)
 
 		offset = 1;
 
+		draw_row_background(item_index, CORES_TAB);
+
 		if (!col_desc[0].disabled) {
 			snprintf(core, MAX_CORE_STR_LEN, "%d", cores[core_num].core);
 			print_max_len(g_tabs[CORES_TAB], TABS_DATA_START_ROW + item_index, offset,
@@ -1302,7 +1334,13 @@ refresh_cores_tab(uint8_t current_page)
 		}
 
 		store_core_last_stats(cores[core_num].core, cores[core_num].idle, cores[core_num].busy);
+
+		if (item_index == g_selected_row) {
+			wattroff(g_tabs[CORES_TAB], COLOR_PAIR(2));
+		}
 	}
+
+	g_max_selected_row = i - current_page * g_max_data_rows - 1;
 
 	return max_pages;
 }
@@ -1788,6 +1826,7 @@ show_stats(void)
 		case '3':
 			active_tab = c - '1';
 			current_page = 0;
+			g_selected_row = 0;
 			switch_tab(active_tab);
 			break;
 		case '\t':
@@ -1808,19 +1847,31 @@ show_stats(void)
 		case 'r':
 			change_refresh_rate();
 			break;
-		case 54: /* PgDown */
+		case KEY_NPAGE: /* PgDown */
 			if (current_page + 1 < max_pages) {
 				current_page++;
 			}
 			wclear(g_tabs[active_tab]);
+			g_selected_row = 0;
 			draw_tabs(active_tab, g_current_sort_col[active_tab]);
 			break;
-		case 53: /* PgUp */
+		case KEY_PPAGE: /* PgUp */
 			if (current_page > 0) {
 				current_page--;
 			}
 			wclear(g_tabs[active_tab]);
+			g_selected_row = 0;
 			draw_tabs(active_tab, g_current_sort_col[active_tab]);
+			break;
+		case KEY_UP: /* Arrow up */
+			if (g_selected_row > 0) {
+				g_selected_row--;
+			}
+			break;
+		case KEY_DOWN: /* Arrow down */
+			if (g_selected_row < g_max_selected_row) {
+				g_selected_row++;
+			}
 			break;
 		default:
 			force_refresh = false;
@@ -1898,6 +1949,7 @@ setup_ncurses(void)
 	noecho();
 	timeout(1);
 	curs_set(0);
+	keypad(stdscr, TRUE);
 	start_color();
 	init_pair(1, COLOR_BLACK, COLOR_GREEN);
 	init_pair(2, COLOR_BLACK, COLOR_WHITE);
