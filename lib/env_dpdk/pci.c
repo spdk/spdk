@@ -130,17 +130,19 @@ detach_rte(struct spdk_pci_device *dev)
 	int i;
 	bool removed;
 
-	/* The device was already marked as available and could be attached
-	 * again while we go asynchronous, so we explicitly forbid that.
-	 */
-	dev->internal.pending_removal = true;
 	if (!spdk_process_is_primary()) {
 		remove_rte_dev(rte_dev);
 		return;
 	}
 
+	pthread_mutex_lock(&g_pci_mutex);
+	/* prevent the hotremove notification from removing this device */
+	dev->internal.pending_removal = true;
+	pthread_mutex_unlock(&g_pci_mutex);
+
 	rte_eal_alarm_set(1, detach_rte_cb, rte_dev);
-	/* wait up to 2s for the cb to finish executing */
+
+	/* wait up to 2s for the cb to execute */
 	for (i = 2000; i > 0; i--) {
 
 		spdk_delay_us(1000);
@@ -209,7 +211,9 @@ pci_device_rte_hotremove(const char *device_name,
 	pthread_mutex_unlock(&g_pci_mutex);
 
 	if (dev != NULL && can_detach) {
-		/* if device is not attached we can remove it right away. */
+		/* if device is not attached we can remove it right away.
+		 * Otherwise it will be removed at detach.
+		 */
 		remove_rte_dev(dev->dev_handle);
 	}
 }
