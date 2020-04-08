@@ -109,8 +109,7 @@ struct bdevperf_job {
 	double				ema_io_per_second;
 	int				current_queue_depth;
 	uint64_t			size_in_ios;
-	uint64_t			ios_first;
-	uint64_t			ios_last;
+	uint64_t			ios_base;
 	uint64_t			offset_in_ios;
 	uint64_t			io_size_blocks;
 	uint64_t			buf_size;
@@ -380,6 +379,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	struct iovec		*iovs;
 	int			iovcnt;
 	bool			md_check;
+	uint64_t		offset_in_ios;
 
 	job = task->job;
 	md_check = spdk_bdev_get_dif_type(job->bdev) == SPDK_DIF_DISABLE;
@@ -410,10 +410,15 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	job->current_queue_depth--;
 
 	if (success) {
-		if (g_verify) {
-			spdk_bit_array_clear(job->outstanding, task->offset_blocks / job->io_size_blocks);
-		}
 		job->io_completed++;
+	}
+
+	if (g_verify) {
+		assert(task->offset_blocks / job->io_size_blocks >= job->ios_base);
+		offset_in_ios = task->offset_blocks / job->io_size_blocks - job->ios_base;
+
+		assert(spdk_bit_array_get(job->outstanding, offset_in_ios) == true);
+		spdk_bit_array_clear(job->outstanding, offset_in_ios);
 	}
 
 	spdk_bdev_free_io(bdev_io);
@@ -535,6 +540,7 @@ bdevperf_submit_task(void *arg)
 	struct spdk_bdev_desc	*desc;
 	struct spdk_io_channel	*ch;
 	spdk_bdev_io_completion_cb cb_fn;
+	uint64_t		offset_in_ios;
 	int			rc = 0;
 
 	desc = job->bdev_desc;
@@ -606,6 +612,13 @@ bdevperf_submit_task(void *arg)
 		return;
 	} else if (rc != 0) {
 		printf("Failed to submit bdev_io: %d\n", rc);
+		if (g_verify) {
+			assert(task->offset_blocks / job->io_size_blocks >= job->ios_base);
+			offset_in_ios = task->offset_blocks / job->io_size_blocks - job->ios_base;
+
+			assert(spdk_bit_array_get(job->outstanding, offset_in_ios) == true);
+			spdk_bit_array_clear(job->outstanding, offset_in_ios);
+		}
 		bdevperf_job_drain(job);
 		g_run_rc = rc;
 		return;
@@ -696,21 +709,23 @@ bdevperf_submit_single(struct bdevperf_job *job, struct bdevperf_task *task)
 		offset_in_ios = rand_r(&seed) % job->size_in_ios;
 	} else {
 		offset_in_ios = job->offset_in_ios++;
-		if (job->offset_in_ios == job->ios_last) {
-			job->offset_in_ios = job->ios_first;
+		if (job->offset_in_ios == job->size_in_ios) {
+			job->offset_in_ios = 0;
 		}
 
 		/* Increment of offset_in_ios if there's already an outstanding IO
 		 * to that location. We only need this with g_verify as random
 		 * offsets are not supported with g_verify at this time.
 		 */
-		if (g_verify && spdk_bit_array_get(job->outstanding, offset_in_ios)) {
-			do {
+		if (g_verify) {
+			assert(spdk_bit_array_find_first_clear(job->outstanding, 0) != UINT32_MAX);
+
+			while (spdk_bit_array_get(job->outstanding, offset_in_ios)) {
 				offset_in_ios = job->offset_in_ios++;
-				if (job->offset_in_ios == job->ios_last) {
-					job->offset_in_ios = job->ios_first;
+				if (job->offset_in_ios == job->size_in_ios) {
+					job->offset_in_ios = 0;
 				}
-			} while (spdk_bit_array_get(job->outstanding, offset_in_ios));
+			}
 			spdk_bit_array_set(job->outstanding, offset_in_ios);
 		}
 	}
@@ -719,7 +734,7 @@ bdevperf_submit_single(struct bdevperf_job *job, struct bdevperf_task *task)
 	 * to the LBA range assigned for that job. job->offset_blocks
 	 * is absolute (entire bdev LBA range).
 	 */
-	task->offset_blocks = offset_in_ios * job->io_size_blocks;
+	task->offset_blocks = (offset_in_ios + job->ios_base) * job->io_size_blocks;
 
 	if (g_verify || g_reset) {
 		generate_data(task->buf, job->buf_size,
@@ -1147,15 +1162,13 @@ _bdevperf_construct_job(struct construct_jobs_ctx *ctx, struct bdevperf_reactor 
 	}
 
 	job->size_in_ios = spdk_bdev_get_num_blocks(bdev) / job->io_size_blocks;
+	job->offset_in_ios = 0;
 
 	if (ctx->reactor == NULL) {
 		job->size_in_ios = job->size_in_ios / g_bdevperf.num_reactors;
-		job->ios_first = reactor->multiplier * job->size_in_ios;
-		job->ios_last = job->ios_first + job->size_in_ios;
-		job->offset_in_ios = job->ios_first;
+		job->ios_base = reactor->multiplier * job->size_in_ios;
 	} else {
-		job->ios_first = 0;
-		job->ios_last = job->size_in_ios;
+		job->ios_base = 0;
 	}
 
 	if (g_verify) {
