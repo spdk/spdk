@@ -268,8 +268,6 @@ struct spdk_opal_dev {
 
 	uint8_t max_ranges; /* max locking range number */
 	struct spdk_opal_locking_range_info locking_ranges[SPDK_OPAL_MAX_LOCKING_RANGE];
-
-	pthread_mutex_t mutex_lock; /* some structs are accessed by current thread only */
 };
 
 #endif
