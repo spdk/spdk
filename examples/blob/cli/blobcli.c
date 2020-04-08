@@ -433,7 +433,6 @@ show_blob(struct cli_context_t *cli_context)
 	struct spdk_xattr_names *names;
 	const void *value;
 	size_t value_len;
-	char data[BUFSIZE];
 	unsigned int i;
 
 	printf("Blob Public Info:\n");
@@ -457,16 +456,14 @@ show_blob(struct cli_context_t *cli_context)
 		spdk_blob_get_xattr_value(cli_context->blob,
 					  spdk_xattr_names_get_name(names, i),
 					  &value, &value_len);
-		if ((value_len + 1) > sizeof(data)) {
+		if (value_len > BUFSIZE) {
 			printf("FYI: adjusting size of xattr due to CLI limits.\n");
-			value_len = sizeof(data) - 1;
+			value_len = BUFSIZE + 1;
 		}
-		memcpy(&data, value, value_len);
-		data[value_len] = '\0';
 		printf("\n(%d) Name:%s\n", i,
 		       spdk_xattr_names_get_name(names, i));
 		printf("(%d) Value:\n", i);
-		spdk_log_dump(stdout, "", value, value_len);
+		spdk_log_dump(stdout, "", value, value_len - 1);
 	}
 
 	/*

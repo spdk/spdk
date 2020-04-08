@@ -62,7 +62,7 @@ xattrs:
 (0) Name:key
 (0) Value:
 
-00000000  76 61 6c 00                                        val.
+00000000  76 61 6c                                           val
 
 Blob Private Info:
 state: CLEAN
