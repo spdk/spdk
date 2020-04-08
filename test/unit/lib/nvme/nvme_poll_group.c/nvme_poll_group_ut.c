@@ -229,8 +229,9 @@ static void
 test_spdk_nvme_poll_group_add_remove(void)
 {
 	struct spdk_nvme_poll_group *group;
-	struct spdk_nvme_transport_poll_group *tgroup, *tmp_tgroup, *tgroup_1 = NULL, *tgroup_2 = NULL,
-									     *tgroup_4 = NULL;
+	struct spdk_nvme_transport_poll_group *tgroup = NULL, *tmp_tgroup, *tgroup_1 = NULL,
+						       *tgroup_2 = NULL,
+							*tgroup_4 = NULL;
 	struct spdk_nvme_qpair *qpair;
 	struct spdk_nvme_qpair qpair1_1 = {0};
 	struct spdk_nvme_qpair qpair1_2 = {0};
