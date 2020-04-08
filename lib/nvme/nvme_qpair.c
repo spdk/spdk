@@ -34,7 +34,6 @@
 #include "nvme_internal.h"
 #include "spdk/nvme_ocssd.h"
 
-static void nvme_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr);
 static int nvme_qpair_resubmit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req);
 
 struct nvme_string {
@@ -751,7 +750,7 @@ nvme_qpair_resubmit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *
 	return rc;
 }
 
-static void
+void
 nvme_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 {
 	nvme_qpair_abort_queued_reqs(qpair, dnr);

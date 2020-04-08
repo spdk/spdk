@@ -535,6 +535,8 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 		spdk_nvme_poll_group_remove(qpair->poll_group->group, qpair);
 	}
 
+	/* Do not retry. */
+	nvme_qpair_abort_reqs(qpair, 1);
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
 	nvme_ctrlr_proc_remove_io_qpair(qpair);
