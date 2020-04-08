@@ -554,6 +554,20 @@ if __name__ == "__main__":
     p.add_argument('name', help='rbd bdev name')
     p.set_defaults(func=bdev_rbd_delete)
 
+    def bdev_rbd_resize(args):
+        print_json(rpc.bdev.bdev_rbd_resize(args.client,
+                                            name=args.name,
+                                            new_size=int(args.new_size)))
+        rpc.bdev.bdev_rbd_resize(args.client,
+                                 name=args.name,
+                                 new_size=int(args.new_size))
+
+    p = subparsers.add_parser('bdev_rbd_resize',
+                              help='Resize a rbd bdev')
+    p.add_argument('name', help='rbd bdev name')
+    p.add_argument('new_size', help='new bdev size for resize operation. The unit is MiB')
+    p.set_defaults(func=bdev_rbd_resize)
+
     def bdev_delay_create(args):
         print_json(rpc.bdev.bdev_delay_create(args.client,
                                               base_bdev_name=args.base_bdev_name,

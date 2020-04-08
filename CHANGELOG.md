@@ -80,6 +80,8 @@ A new RPC `thread_get_pollers` has been added to retrieve pollers of SPDK thread
 
 A new RPC `thread_get_io_channels` has been added to retrieve I/O channels of SPDK threads.
 
+A new RPC `bdev_rbd_resize` has been added to resize the Ceph RBD bdev.
+
 ### thread
 
 A new function `spdk_thread_lib_init_ext` has been added, and the function

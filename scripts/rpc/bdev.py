@@ -589,6 +589,20 @@ def bdev_rbd_delete(client, name):
     return client.call('bdev_rbd_delete', params)
 
 
+def bdev_rbd_resize(client, name, new_size):
+    """Resize rbd bdev in the system.
+
+    Args:
+        name: name of rbd bdev to resize
+        new_size: new bdev size of resize operation. The unit is MiB
+    """
+    params = {
+            'name': name,
+            'new_size': new_size,
+            }
+    return client.call('bdev_rbd_resize', params)
+
+
 @deprecated_alias('construct_error_bdev')
 def bdev_error_create(client, base_name):
     """Construct an error injection block device.

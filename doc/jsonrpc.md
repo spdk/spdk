@@ -1998,6 +1998,49 @@ Example response:
 }
 ~~~
 
+## bdev_rbd_resize {#rpc_bdev_rbd_resize}
+
+Resize @ref bdev_config_rbd bdev
+
+This method is available only if SPDK was build with Ceph RBD support.
+
+### Result
+
+`true` if bdev with provided name was resized or `false` otherwise.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+new_size                | Required | int         | New bdev size for resize operation in MiB
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "name": "Rbd0"
+    "new_size": "4096"
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_rbd_resize",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## bdev_delay_create {#rpc_bdev_delay_create}
 
 Create delay bdev. This bdev type redirects all IO to it's base bdev and inserts a delay on the completion

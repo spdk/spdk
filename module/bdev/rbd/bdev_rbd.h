@@ -57,4 +57,12 @@ int spdk_bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *
 void spdk_bdev_rbd_delete(struct spdk_bdev *bdev, spdk_delete_rbd_complete cb_fn,
 			  void *cb_arg);
 
+/**
+ * Resize rbd bdev.
+ *
+ * \param bdev Pointer to rbd bdev.
+ * \param new_size_in_mb The new size in MiB for this bdev.
+ */
+int spdk_bdev_rbd_resize(struct spdk_bdev *bdev, const uint64_t new_size_in_mb);
+
 #endif /* SPDK_BDEV_RBD_H */
