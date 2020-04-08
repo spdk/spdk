@@ -80,6 +80,8 @@ log_test(void)
 	SPDK_DEBUGLOG(SPDK_LOG_LOG, "log test\n");
 	SPDK_LOGDUMP(SPDK_LOG_LOG, "log dump test:", "log dump", 8);
 	spdk_log_dump(stderr, "spdk dump test:", "spdk dump", 9);
+	/* Test spdk_log_dump with more than 16 chars and less than 32 chars */
+	spdk_log_dump(stderr, "spdk dump test:", "spdk dump 16 more chars", 23);
 
 	spdk_log_close();
 }

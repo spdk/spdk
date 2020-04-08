@@ -177,6 +177,7 @@ fdump(FILE *fp, const char *label, const uint8_t *buf, size_t len)
 		if (idx != 0 && idx % 16 == 0) {
 			snprintf(tmpbuf + total, sizeof tmpbuf - total,
 				 " %s", buf16);
+			memset(buf16, 0, sizeof buf16);
 			fprintf(fp, "%s\n", tmpbuf);
 			total = 0;
 		}
