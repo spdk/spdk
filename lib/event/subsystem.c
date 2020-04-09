@@ -39,7 +39,10 @@
 #include "spdk_internal/event.h"
 #include "spdk/env.h"
 
+TAILQ_HEAD(spdk_subsystem_list, spdk_subsystem);
 struct spdk_subsystem_list g_subsystems = TAILQ_HEAD_INITIALIZER(g_subsystems);
+
+TAILQ_HEAD(spdk_subsystem_depend_list, spdk_subsystem_depend);
 struct spdk_subsystem_depend_list g_subsystems_deps = TAILQ_HEAD_INITIALIZER(g_subsystems_deps);
 static struct spdk_subsystem *g_next_subsystem;
 static bool g_subsystems_initialized = false;
@@ -80,6 +83,31 @@ struct spdk_subsystem *
 spdk_subsystem_find(const char *name)
 {
 	return _subsystem_find(&g_subsystems, name);
+}
+
+struct spdk_subsystem *
+spdk_subsystem_get_first(void)
+{
+	return TAILQ_FIRST(&g_subsystems);
+}
+
+struct spdk_subsystem *
+spdk_subsystem_get_next(struct spdk_subsystem *cur_subsystem)
+{
+	return TAILQ_NEXT(cur_subsystem, tailq);
+}
+
+
+struct spdk_subsystem_depend *
+spdk_subsystem_get_first_depend(void)
+{
+	return TAILQ_FIRST(&g_subsystems_deps);
+}
+
+struct spdk_subsystem_depend *
+spdk_subsystem_get_next_depend(struct spdk_subsystem_depend *cur_depend)
+{
+	return TAILQ_NEXT(cur_depend, tailq);
 }
 
 static void

@@ -26,6 +26,10 @@
 	spdk_reactor_get;
 	spdk_for_each_reactor;
 	spdk_subsystem_find;
+	spdk_subsystem_get_first;
+	spdk_subsystem_get_next;
+	spdk_subsystem_get_first_depend;
+	spdk_subsystem_get_next_depend;
 	spdk_add_subsystem;
 	spdk_add_subsystem_depend;
 	spdk_subsystem_init;
@@ -37,10 +41,6 @@
 	spdk_subsystem_config_json;
 	spdk_rpc_initialize;
 	spdk_rpc_finish;
-
-	# Macros and variables
-	g_subsystems;
-	g_subsystems_deps;
 
 	local: *;
 };

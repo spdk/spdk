@@ -129,10 +129,9 @@ struct spdk_subsystem {
 	TAILQ_ENTRY(spdk_subsystem) tailq;
 };
 
-TAILQ_HEAD(spdk_subsystem_list, spdk_subsystem);
-extern struct spdk_subsystem_list g_subsystems;
-
 struct spdk_subsystem *spdk_subsystem_find(const char *name);
+struct spdk_subsystem *spdk_subsystem_get_first(void);
+struct spdk_subsystem *spdk_subsystem_get_next(struct spdk_subsystem *cur_subsystem);
 
 struct spdk_subsystem_depend {
 	const char *name;
@@ -140,8 +139,9 @@ struct spdk_subsystem_depend {
 	TAILQ_ENTRY(spdk_subsystem_depend) tailq;
 };
 
-TAILQ_HEAD(spdk_subsystem_depend_list, spdk_subsystem_depend);
-extern struct spdk_subsystem_depend_list g_subsystems_deps;
+struct spdk_subsystem_depend *spdk_subsystem_get_first_depend(void);
+struct spdk_subsystem_depend *spdk_subsystem_get_next_depend(struct spdk_subsystem_depend
+		*cur_depend);
 
 void spdk_add_subsystem(struct spdk_subsystem *subsystem);
 void spdk_add_subsystem_depend(struct spdk_subsystem_depend *depend);
