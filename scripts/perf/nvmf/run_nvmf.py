@@ -382,6 +382,10 @@ runtime={run_time}
             try:
                 self.remote_call('sudo cpupower frequency-set -g userspace')
                 self.remote_call('sudo cpupower frequency-set -f %s' % self.cpu_frequency)
+                cmd = "sudo cpupower frequency-info"
+                output, error = self.remote_call(cmd)
+                self.log_print(output)
+                self.log_print(error)
             except Exception:
                 self.log_print("ERROR: cpu_frequency will not work when intel_pstate is enabled!")
                 sys.exit()
