@@ -96,7 +96,7 @@ spdk_rpc_framework_get_config(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	subsystem = spdk_subsystem_find(&g_subsystems, req.name);
+	subsystem = spdk_subsystem_find(req.name);
 	if (!subsystem) {
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						     "Subsystem '%s' not found", req.name);

@@ -132,7 +132,7 @@ struct spdk_subsystem {
 TAILQ_HEAD(spdk_subsystem_list, spdk_subsystem);
 extern struct spdk_subsystem_list g_subsystems;
 
-struct spdk_subsystem *spdk_subsystem_find(struct spdk_subsystem_list *list, const char *name);
+struct spdk_subsystem *spdk_subsystem_find(const char *name);
 
 struct spdk_subsystem_depend {
 	const char *name;

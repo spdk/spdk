@@ -62,8 +62,8 @@ spdk_add_subsystem_depend(struct spdk_subsystem_depend *depend)
 	TAILQ_INSERT_TAIL(&g_subsystems_deps, depend, tailq);
 }
 
-struct spdk_subsystem *
-spdk_subsystem_find(struct spdk_subsystem_list *list, const char *name)
+static struct spdk_subsystem *
+_subsystem_find(struct spdk_subsystem_list *list, const char *name)
 {
 	struct spdk_subsystem *iter;
 
@@ -74,6 +74,12 @@ spdk_subsystem_find(struct spdk_subsystem_list *list, const char *name)
 	}
 
 	return NULL;
+}
+
+struct spdk_subsystem *
+spdk_subsystem_find(const char *name)
+{
+	return _subsystem_find(&g_subsystems, name);
 }
 
 static void
@@ -91,7 +97,7 @@ subsystem_sort(void)
 			TAILQ_FOREACH(subsystem_dep, &g_subsystems_deps, tailq) {
 				if (strcmp(subsystem->name, subsystem_dep->name) == 0) {
 					depends_on = true;
-					depends_on_sorted = !!spdk_subsystem_find(&subsystems_list, subsystem_dep->depends_on);
+					depends_on_sorted = !!_subsystem_find(&subsystems_list, subsystem_dep->depends_on);
 					if (depends_on_sorted) {
 						continue;
 					}
@@ -160,12 +166,12 @@ spdk_subsystem_init(spdk_subsystem_init_fn cb_fn, void *cb_arg)
 
 	/* Verify that all dependency name and depends_on subsystems are registered */
 	TAILQ_FOREACH(dep, &g_subsystems_deps, tailq) {
-		if (!spdk_subsystem_find(&g_subsystems, dep->name)) {
+		if (!spdk_subsystem_find(dep->name)) {
 			SPDK_ERRLOG("subsystem %s is missing\n", dep->name);
 			g_subsystem_start_fn(-1, g_subsystem_start_arg);
 			return;
 		}
-		if (!spdk_subsystem_find(&g_subsystems, dep->depends_on)) {
+		if (!spdk_subsystem_find(dep->depends_on)) {
 			SPDK_ERRLOG("subsystem %s dependency %s is missing\n",
 				    dep->name, dep->depends_on);
 			g_subsystem_start_fn(-1, g_subsystem_start_arg);
