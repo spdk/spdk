@@ -169,111 +169,6 @@ else
 	exit 1
 fi
 
-config_params='--enable-debug --enable-werror'
-
-if echo -e "#include <libunwind.h>\nint main(int argc, char *argv[]) {return 0;}\n" | \
-	gcc -o /dev/null -lunwind -x c - 2>/dev/null; then
-	config_params+=' --enable-log-bt'
-fi
-
-# for options with dependencies but no test flag, set them here
-if [ -f /usr/include/infiniband/verbs.h ]; then
-	config_params+=' --with-rdma'
-fi
-
-if [[ -d $CONFIG_FIO_SOURCE_DIR ]]; then
-	config_params+=" --with-fio=$CONFIG_FIO_SOURCE_DIR"
-fi
-
-if [ -d ${DEPENDENCY_DIR}/vtune_codes ]; then
-	config_params+=' --with-vtune='${DEPENDENCY_DIR}'/vtune_codes'
-fi
-
-if [ -d /usr/include/iscsi ]; then
-	libiscsi_version=$(grep LIBISCSI_API_VERSION /usr/include/iscsi/iscsi.h | head -1 | awk '{print $3}' | awk -F '(' '{print $2}' | awk -F ')' '{print $1}')
-	if [ $libiscsi_version -ge 20150621 ]; then
-		config_params+=' --with-iscsi-initiator'
-	fi
-fi
-
-if [ $SPDK_TEST_UNITTEST -eq 0 ]; then
-	config_params+=' --disable-unit-tests'
-fi
-
-if [ $SPDK_TEST_NVME_CUSE -eq 1 ]; then
-	config_params+=' --with-nvme-cuse'
-fi
-
-# for options with both dependencies and a test flag, set them here
-if [ -f /usr/include/libpmemblk.h ] && [ $SPDK_TEST_PMDK -eq 1 ]; then
-	config_params+=' --with-pmdk'
-fi
-
-if [ -f /usr/include/libpmem.h ] && [ $SPDK_TEST_REDUCE -eq 1 ]; then
-	if [ $SPDK_TEST_ISAL -eq 1 ]; then
-		config_params+=' --with-reduce'
-	else
-		echo "reduce not enabled because isal is not enabled."
-	fi
-fi
-
-if [ -d /usr/include/rbd ] &&  [ -d /usr/include/rados ] && [ $SPDK_TEST_RBD -eq 1 ]; then
-	config_params+=' --with-rbd'
-fi
-
-if [ $SPDK_TEST_VPP -eq 1 ]; then
-	VPP_PATH="/usr/local/src/vpp-19.04/build-root/install-vpp_debug-native/vpp/"
-	export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${VPP_PATH}/lib/
-	export PATH=${PATH}:${VPP_PATH}/bin/
-	config_params+=" --with-vpp=${VPP_PATH}"
-fi
-
-# for options with no required dependencies, just test flags, set them here
-if [ $SPDK_TEST_CRYPTO -eq 1 ]; then
-	config_params+=' --with-crypto'
-fi
-
-if [ $SPDK_TEST_OCF -eq 1 ]; then
-	config_params+=" --with-ocf"
-fi
-
-if [ $SPDK_RUN_UBSAN -eq 1 ]; then
-	config_params+=' --enable-ubsan'
-fi
-
-if [ $SPDK_RUN_ASAN -eq 1 ]; then
-	config_params+=' --enable-asan'
-fi
-
-if [ "$(uname -s)" = "Linux" ]; then
-	config_params+=' --enable-coverage'
-fi
-
-if [ $SPDK_TEST_ISAL -eq 0 ]; then
-	config_params+=' --without-isal'
-fi
-
-if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
-	if [[ -d /usr/include/fuse3 ]] || [[ -d /usr/local/include/fuse3 ]]; then
-		config_params+=' --with-fuse'
-	else
-		echo "FUSE not enabled because libfuse3 is not installed."
-	fi
-fi
-
-if [ $SPDK_TEST_RAID5 -eq 1 ]; then
-	config_params+=' --with-raid5'
-fi
-
-# By default, --with-dpdk is not set meaning the SPDK build will use the DPDK submodule.
-# If a DPDK installation is found in a well-known location though, WITH_DPDK_DIR will be
-# set which will override the default and use that DPDK installation instead.
-if [ -n "$WITH_DPDK_DIR" ]; then
-	config_params+=" --with-dpdk=$WITH_DPDK_DIR"
-fi
-
-export config_params
-
 if [ -z "$output_dir" ]; then
 	if [ -z "$rootdir" ] || [ ! -d "$rootdir/../output" ]; then
 		output_dir=.
@@ -305,6 +200,114 @@ if [[ -z $RPC_PIPE_PID ]] || ! kill -0 "$RPC_PIPE_PID" &>/dev/null; then
 	# all descriptors will automatically close together with this bash
 	# process, this will make rpc.py stop reading and exit gracefully
 fi
+
+if [ $SPDK_TEST_VPP -eq 1 ]; then
+	VPP_PATH="/usr/local/src/vpp-19.04/build-root/install-vpp_debug-native/vpp/"
+	export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${VPP_PATH}/lib/
+	export PATH=${PATH}:${VPP_PATH}/bin/
+fi
+
+function get_config_params() {
+	xtrace_disable
+	config_params='--enable-debug --enable-werror'
+
+	if echo -e "#include <libunwind.h>\nint main(int argc, char *argv[]) {return 0;}\n" | \
+		gcc -o /dev/null -lunwind -x c - 2>/dev/null; then
+		config_params+=' --enable-log-bt'
+	fi
+
+	# for options with dependencies but no test flag, set them here
+	if [ -f /usr/include/infiniband/verbs.h ]; then
+		config_params+=' --with-rdma'
+	fi
+
+	if [[ -d $CONFIG_FIO_SOURCE_DIR ]]; then
+		config_params+=" --with-fio=$CONFIG_FIO_SOURCE_DIR"
+	fi
+
+	if [ -d ${DEPENDENCY_DIR}/vtune_codes ]; then
+		config_params+=' --with-vtune='${DEPENDENCY_DIR}'/vtune_codes'
+	fi
+
+	if [ -d /usr/include/iscsi ]; then
+		libiscsi_version=$(grep LIBISCSI_API_VERSION /usr/include/iscsi/iscsi.h | head -1 | awk '{print $3}' | awk -F '(' '{print $2}' | awk -F ')' '{print $1}')
+		if [ $libiscsi_version -ge 20150621 ]; then
+			config_params+=' --with-iscsi-initiator'
+		fi
+	fi
+
+	if [ $SPDK_TEST_UNITTEST -eq 0 ]; then
+		config_params+=' --disable-unit-tests'
+	fi
+
+	if [ $SPDK_TEST_NVME_CUSE -eq 1 ]; then
+		config_params+=' --with-nvme-cuse'
+	fi
+
+	# for options with both dependencies and a test flag, set them here
+	if [ -f /usr/include/libpmemblk.h ] && [ $SPDK_TEST_PMDK -eq 1 ]; then
+		config_params+=' --with-pmdk'
+	fi
+
+	if [ -f /usr/include/libpmem.h ] && [ $SPDK_TEST_REDUCE -eq 1 ]; then
+		if [ $SPDK_TEST_ISAL -eq 1 ]; then
+			config_params+=' --with-reduce'
+		fi
+	fi
+
+	if [ -d /usr/include/rbd ] &&  [ -d /usr/include/rados ] && [ $SPDK_TEST_RBD -eq 1 ]; then
+		config_params+=' --with-rbd'
+	fi
+
+	if [ $SPDK_TEST_VPP -eq 1 ]; then
+		config_params+=" --with-vpp=${VPP_PATH}"
+	fi
+
+	# for options with no required dependencies, just test flags, set them here
+	if [ $SPDK_TEST_CRYPTO -eq 1 ]; then
+		config_params+=' --with-crypto'
+	fi
+
+	if [ $SPDK_TEST_OCF -eq 1 ]; then
+		config_params+=" --with-ocf"
+	fi
+
+	if [ $SPDK_RUN_UBSAN -eq 1 ]; then
+		config_params+=' --enable-ubsan'
+	fi
+
+	if [ $SPDK_RUN_ASAN -eq 1 ]; then
+		config_params+=' --enable-asan'
+	fi
+
+	if [ "$(uname -s)" = "Linux" ]; then
+		config_params+=' --enable-coverage'
+	fi
+
+	if [ $SPDK_TEST_ISAL -eq 0 ]; then
+		config_params+=' --without-isal'
+	fi
+
+	if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
+		if [[ -d /usr/include/fuse3 ]] || [[ -d /usr/local/include/fuse3 ]]; then
+			config_params+=' --with-fuse'
+		fi
+	fi
+
+	if [ $SPDK_TEST_RAID5 -eq 1 ]; then
+		config_params+=' --with-raid5'
+	fi
+
+	# By default, --with-dpdk is not set meaning the SPDK build will use the DPDK submodule.
+	# If a DPDK installation is found in a well-known location though, WITH_DPDK_DIR will be
+	# set which will override the default and use that DPDK installation instead.
+	if [ -n "$WITH_DPDK_DIR" ]; then
+		config_params+=" --with-dpdk=$WITH_DPDK_DIR"
+	fi
+
+	echo "$config_params"
+	xtrace_restore
+}
 
 function rpc_cmd() {
 	xtrace_disable

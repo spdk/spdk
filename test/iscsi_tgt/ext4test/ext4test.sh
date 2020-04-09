@@ -91,7 +91,7 @@ for dev in $devs; do
 	rsync -qav --exclude=".git" --exclude="*.o" $rootdir/ /mnt/${dev}dir/spdk
 
 	make -C /mnt/${dev}dir/spdk clean
-	(cd /mnt/${dev}dir/spdk && ./configure $config_params)
+	(cd /mnt/${dev}dir/spdk && ./configure $(get_config_params))
 	make -C /mnt/${dev}dir/spdk -j16
 
 	# Print out space consumed on target device to help decide
