@@ -2086,7 +2086,7 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 fail:
 	/*
 	 * Since admin queues take the ctrlr_lock before entering this function,
-	 * we can call nvme_rdma_ctrlr_disconnect_qpair. For other qpairs we need
+	 * we can call nvme_transport_ctrlr_disconnect_qpair. For other qpairs we need
 	 * to call the generic function which will take the lock for us.
 	 */
 	if (rc == IBV_WC_RETRY_EXC_ERR) {

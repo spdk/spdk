@@ -330,7 +330,10 @@ nvme_transport_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk
 	if (qpair->poll_group) {
 		nvme_poll_group_deactivate_qpair(qpair);
 	}
+
 	transport->ops.ctrlr_disconnect_qpair(ctrlr, qpair);
+
+	nvme_qpair_abort_reqs(qpair, 0);
 	nvme_qpair_set_state(qpair, NVME_QPAIR_DISCONNECTED);
 }
 

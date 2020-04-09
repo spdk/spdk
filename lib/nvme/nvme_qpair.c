@@ -417,8 +417,14 @@ nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 	 */
 	if (nvme_qpair_get_state(qpair) == NVME_QPAIR_CONNECTED && !qpair->ctrlr->is_resetting) {
 		nvme_qpair_set_state(qpair, NVME_QPAIR_ENABLING);
-		nvme_qpair_complete_error_reqs(qpair);
-		nvme_transport_qpair_abort_reqs(qpair, 0 /* retry */);
+		/*
+		 * PCIe is special, for fabrics transports, we can abort requests before disconnect during reset
+		 * but we have historically not disconnected pcie qpairs during reset so we have to abort requests
+		 * here.
+		 */
+		if (qpair->ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
+			nvme_qpair_abort_reqs(qpair, 0);
+		}
 		nvme_qpair_set_state(qpair, NVME_QPAIR_ENABLED);
 		while (!STAILQ_EMPTY(&qpair->queued_req)) {
 			req = STAILQ_FIRST(&qpair->queued_req);
@@ -776,6 +782,7 @@ nvme_qpair_resubmit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *
 void
 nvme_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 {
+	nvme_qpair_complete_error_reqs(qpair);
 	nvme_qpair_abort_queued_reqs(qpair, dnr);
 	nvme_transport_qpair_abort_reqs(qpair, dnr);
 }

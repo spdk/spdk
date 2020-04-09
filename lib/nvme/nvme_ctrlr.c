@@ -1164,8 +1164,7 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
 		qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_LOCAL;
 	}
-	nvme_qpair_complete_error_reqs(ctrlr->adminq);
-	nvme_transport_qpair_abort_reqs(ctrlr->adminq, 0 /* retry */);
+
 	ctrlr->adminq->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_LOCAL;
 	nvme_transport_ctrlr_disconnect_qpair(ctrlr, ctrlr->adminq);
 	if (nvme_transport_ctrlr_connect_qpair(ctrlr, ctrlr->adminq) != 0) {
