@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -92,12 +92,6 @@ enum spdk_thread_state {
 };
 
 struct spdk_thread {
-	TAILQ_HEAD(, spdk_io_channel)	io_channels;
-	TAILQ_ENTRY(spdk_thread)	tailq;
-	char				name[SPDK_MAX_THREAD_NAME_LEN + 1];
-	uint64_t			id;
-	enum spdk_thread_state		state;
-	struct spdk_cpuset		cpumask;
 	uint64_t			tsc_last;
 	struct spdk_thread_stats	stats;
 	/*
@@ -117,11 +111,18 @@ struct spdk_thread {
 	 * queues) or unregistered.
 	 */
 	TAILQ_HEAD(paused_pollers_head, spdk_poller)	paused_pollers;
-	uint32_t			io_device_delete_count;
 	struct spdk_ring		*messages;
 	SLIST_HEAD(, spdk_msg)		msg_cache;
 	size_t				msg_cache_count;
 	spdk_msg_fn			critical_msg;
+	uint64_t			id;
+	enum spdk_thread_state		state;
+
+	TAILQ_HEAD(, spdk_io_channel)	io_channels;
+	TAILQ_ENTRY(spdk_thread)	tailq;
+
+	char				name[SPDK_MAX_THREAD_NAME_LEN + 1];
+	struct spdk_cpuset		cpumask;
 	uint64_t			exit_timeout_tsc;
 
 	/* User context allocated at the end */
