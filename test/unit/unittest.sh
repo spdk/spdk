@@ -181,6 +181,9 @@ if [ $(uname -s) = Linux ]; then
 fi
 
 run_test "unittest_ioat" $valgrind $testdir/lib/ioat/ioat.c/ioat_ut
+if [ $(uname -m) != "aarch64" ]; then
+	run_test "unittest_idxd" $valgrind $testdir/lib/idxd/idxd.c/idxd_ut
+fi
 run_test "unittest_iscsi" unittest_iscsi
 run_test "unittest_json" unittest_json
 run_test "unittest_notify" $valgrind $testdir/lib/notify/notify.c/notify_ut
