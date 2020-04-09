@@ -122,9 +122,6 @@ struct vbdev_ocf_mngt_ctx {
 
 /* Base device info */
 struct vbdev_ocf_base {
-	/* OCF unique internal id */
-	int                          id;
-
 	/* OCF internal name */
 	char                        *name;
 

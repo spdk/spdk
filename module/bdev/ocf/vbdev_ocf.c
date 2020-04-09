@@ -563,26 +563,15 @@ vbdev_ocf_io_submit_cb(struct ocf_io *io, int error)
 static int
 io_submit_to_ocf(struct spdk_bdev_io *bdev_io, struct ocf_io *io)
 {
-	int dir;
-	uint64_t len = bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
-	uint64_t offset = bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen;
-
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_WRITE:
 	case SPDK_BDEV_IO_TYPE_READ:
-		dir = OCF_READ;
-		if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-			dir = OCF_WRITE;
-		}
-		ocf_io_configure(io, offset, len, dir, 0, 0);
 		ocf_core_submit_io(io);
 		return 0;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
-		ocf_io_configure(io, offset, len, OCF_WRITE, 0, OCF_WRITE_FLUSH);
 		ocf_core_submit_flush(io);
 		return 0;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
-		ocf_io_configure(io, offset, len, 0, 0, 0);
 		ocf_core_submit_discard(io);
 		return 0;
 	case SPDK_BDEV_IO_TYPE_RESET:
@@ -601,15 +590,38 @@ io_handle(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	struct ocf_io *io = NULL;
 	struct bdev_ocf_data *data = NULL;
 	struct vbdev_ocf_qcxt *qctx = spdk_io_channel_get_ctx(ch);
+	uint64_t len = bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
+	uint64_t offset = bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen;
+	int dir, flags = 0;
 	int err;
 
-	io = ocf_core_new_io(vbdev->ocf_core);
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+		dir = OCF_READ;
+		break;
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		dir = OCF_WRITE;
+		break;
+	case SPDK_BDEV_IO_TYPE_FLUSH:
+		dir = OCF_WRITE;
+		break;
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+		dir = OCF_WRITE;
+		break;
+	default:
+		err = -EINVAL;
+		goto fail;
+	}
+
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_FLUSH) {
+		flags = OCF_WRITE_FLUSH;
+	}
+
+	io = ocf_core_new_io(vbdev->ocf_core, qctx->queue, offset, len, dir, 0, flags);
 	if (!io) {
 		err = -ENOMEM;
 		goto fail;
 	}
-
-	ocf_io_set_queue(io, qctx->queue);
 
 	data = vbdev_ocf_data_from_spdk_io(bdev_io);
 	if (!data) {
@@ -955,7 +967,6 @@ add_core_cmpl(ocf_cache_t cache, ocf_core_t core, void *priv, int error)
 		return;
 	} else {
 		vbdev->ocf_core = core;
-		vbdev->core.id  = ocf_core_get_id(core);
 	}
 
 	vbdev_ocf_mngt_continue(vbdev, error);
@@ -1042,7 +1053,6 @@ start_cache(struct vbdev_ocf *vbdev)
 		SPDK_NOTICELOG("OCF bdev %s connects to existing cache device %s\n",
 			       vbdev->name, vbdev->cache.name);
 		vbdev->ocf_cache = existing;
-		vbdev->cache.id = ocf_cache_get_id(existing);
 		vbdev->cache_ctx = ocf_cache_get_priv(existing);
 		vbdev_ocf_cache_ctx_get(vbdev->cache_ctx);
 		vbdev_ocf_mngt_continue(vbdev, 0);
@@ -1066,7 +1076,6 @@ start_cache(struct vbdev_ocf *vbdev)
 		return;
 	}
 
-	vbdev->cache.id = ocf_cache_get_id(vbdev->ocf_cache);
 	ocf_cache_set_priv(vbdev->ocf_cache, vbdev->cache_ctx);
 
 	rc = create_management_queue(vbdev);
@@ -1117,9 +1126,8 @@ init_vbdev_config(struct vbdev_ocf *vbdev)
 {
 	struct vbdev_ocf_config *cfg = &vbdev->cfg;
 
-	/* Id 0 means OCF decides the id */
-	cfg->cache.id = 0;
-	cfg->cache.name = vbdev->name;
+	snprintf(cfg->cache.name, sizeof(cfg->cache.name), "%s", vbdev->name);
+	snprintf(cfg->core.name, sizeof(cfg->core.name), "%s", vbdev->core.name);
 
 	/* TODO [metadata]: make configurable with persistent
 	 * metadata support */
@@ -1144,7 +1152,6 @@ init_vbdev_config(struct vbdev_ocf *vbdev)
 
 	cfg->core.volume_type = SPDK_OBJECT;
 	cfg->device.volume_type = SPDK_OBJECT;
-	cfg->core.core_id = OCF_CORE_MAX;
 
 	if (vbdev->cfg.loadq) {
 		/* When doing cache_load(), we need to set try_add to true,

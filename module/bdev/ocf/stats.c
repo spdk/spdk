@@ -35,12 +35,12 @@
 #include "stats.h"
 
 int
-vbdev_ocf_stats_get(ocf_cache_t cache, ocf_core_id_t core_id, struct vbdev_ocf_stats *stats)
+vbdev_ocf_stats_get(ocf_cache_t cache, char *core_name, struct vbdev_ocf_stats *stats)
 {
 	int status;
 	ocf_core_t core;
 
-	status = ocf_core_get(cache, core_id, &core);
+	status = ocf_core_get_by_name(cache, core_name, strlen(core_name), &core);
 	if (status) {
 		return status;
 	}
@@ -52,7 +52,7 @@ vbdev_ocf_stats_get(ocf_cache_t cache, ocf_core_id_t core_id, struct vbdev_ocf_s
 	spdk_json_write_named_object_begin(w, #field); \
 	spdk_json_write_named_uint64(w, "count", stats->group.field.value); \
 	spdk_json_write_named_string_fmt(w, "percentage", "%lu.%lu", \
-		stats->group.field.percent / 10, stats->group.field.percent % 10); \
+		stats->group.field.fraction / 100, stats->group.field.fraction % 100); \
 	spdk_json_write_named_string(w, "units", units); \
 	spdk_json_write_object_end(w);
 

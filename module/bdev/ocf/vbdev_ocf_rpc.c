@@ -192,7 +192,7 @@ static const struct spdk_json_object_decoder rpc_bdev_ocf_get_stats_decoders[] =
 
 struct get_ocf_stats_ctx {
 	struct spdk_jsonrpc_request *request;
-	int core_id;
+	char *core_name;
 };
 
 static void
@@ -206,7 +206,7 @@ spdk_rpc_bdev_ocf_get_stats_cmpl(ocf_cache_t cache, void *priv, int error)
 		goto end;
 	}
 
-	error = vbdev_ocf_stats_get(cache, ctx->core_id, &stats);
+	error = vbdev_ocf_stats_get(cache, ctx->core_name, &stats);
 
 	ocf_mngt_cache_read_unlock(cache);
 
@@ -259,7 +259,7 @@ spdk_rpc_bdev_ocf_get_stats(struct spdk_jsonrpc_request *request,
 		goto end;
 	}
 
-	ctx->core_id = vbdev->core.id;
+	ctx->core_name = vbdev->core.name;
 	ctx->request = request;
 	ocf_mngt_cache_read_lock(vbdev->ocf_cache, spdk_rpc_bdev_ocf_get_stats_cmpl, ctx);
 

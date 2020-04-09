@@ -115,3 +115,62 @@ env_crc32(uint32_t crc, uint8_t const *message, size_t len)
 {
 	return spdk_crc32_ieee_update(message, len, crc);
 }
+
+/* EXECUTION CONTEXTS */
+pthread_mutex_t *exec_context_mutex;
+
+static void __attribute__((constructor)) init_execution_context(void)
+{
+	unsigned count = env_get_execution_context_count();
+	unsigned i;
+
+	ENV_BUG_ON(count == 0);
+	exec_context_mutex = malloc(count * sizeof(exec_context_mutex[0]));
+	ENV_BUG_ON(exec_context_mutex == NULL);
+	for (i = 0; i < count; i++) {
+		ENV_BUG_ON(pthread_mutex_init(&exec_context_mutex[i], NULL));
+	}
+}
+
+static void __attribute__((destructor)) deinit_execution_context(void)
+{
+	unsigned count = env_get_execution_context_count();
+	unsigned i;
+
+	ENV_BUG_ON(count == 0);
+	ENV_BUG_ON(exec_context_mutex == NULL);
+
+	for (i = 0; i < count; i++) {
+		ENV_BUG_ON(pthread_mutex_destroy(&exec_context_mutex[i]));
+	}
+	free(exec_context_mutex);
+}
+
+/* get_execuction_context must assure that after the call finishes, the caller
+ * will not get preempted from current execution context. For userspace env
+ * we simulate this behavior by acquiring per execution context mutex. As a
+ * result the caller might actually get preempted, but no other thread will
+ * execute in this context by the time the caller puts current execution ctx. */
+unsigned env_get_execution_context(void)
+{
+	unsigned cpu;
+
+	cpu = sched_getcpu();
+	cpu = (cpu == -1) ?  0 : cpu;
+
+	ENV_BUG_ON(pthread_mutex_lock(&exec_context_mutex[cpu]));
+
+	return cpu;
+}
+
+void env_put_execution_context(unsigned ctx)
+{
+	pthread_mutex_unlock(&exec_context_mutex[ctx]);
+}
+
+unsigned env_get_execution_context_count(void)
+{
+	int num = sysconf(_SC_NPROCESSORS_ONLN);
+
+	return (num == -1) ? 0 : num;
+}

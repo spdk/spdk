@@ -2,6 +2,12 @@
 
 ## v20.04: (Upcoming Release)
 
+### ocf
+
+Update OCF submodule to OCF v20.03
+
+New version of OCF comes with API changes and bug fixes
+
 ### nvme
 
 Export internal nvme_ctrlr_cmd_security_receive/send() APIs as public APIs with "spdk_"

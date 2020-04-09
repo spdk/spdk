@@ -217,7 +217,7 @@ prepare_submit(struct ocf_io *io)
 	}
 
 	vbdev_ocf_volume_io_get(io);
-	base = *((struct vbdev_ocf_base **)ocf_volume_get_priv(io->volume));
+	base = *((struct vbdev_ocf_base **)ocf_volume_get_priv(ocf_io_get_volume(io)));
 
 	if (io->io_queue == NULL) {
 		/* In case IO is initiated by OCF, queue is unknown
@@ -254,7 +254,9 @@ prepare_submit(struct ocf_io *io)
 static void
 vbdev_ocf_volume_submit_flush(struct ocf_io *io)
 {
-	struct vbdev_ocf_base *base = *((struct vbdev_ocf_base **)ocf_volume_get_priv(io->volume));
+	struct vbdev_ocf_base *base =
+		*((struct vbdev_ocf_base **)
+		  ocf_volume_get_priv(ocf_io_get_volume(io)));
 	struct ocf_io_ctx *io_ctx = ocf_get_io_ctx(io);
 	int status;
 
@@ -279,7 +281,9 @@ vbdev_ocf_volume_submit_flush(struct ocf_io *io)
 static void
 vbdev_ocf_volume_submit_io(struct ocf_io *io)
 {
-	struct vbdev_ocf_base *base = *((struct vbdev_ocf_base **)ocf_volume_get_priv(io->volume));
+	struct vbdev_ocf_base *base =
+		*((struct vbdev_ocf_base **)
+		  ocf_volume_get_priv(ocf_io_get_volume(io)));
 	struct ocf_io_ctx *io_ctx = ocf_get_io_ctx(io);
 	struct iovec *iovs;
 	int iovcnt, status = 0, i, offset;
@@ -363,7 +367,9 @@ end:
 static void
 vbdev_ocf_volume_submit_discard(struct ocf_io *io)
 {
-	struct vbdev_ocf_base *base = *((struct vbdev_ocf_base **)ocf_volume_get_priv(io->volume));
+	struct vbdev_ocf_base *base =
+		*((struct vbdev_ocf_base **)
+		  ocf_volume_get_priv(ocf_io_get_volume(io)));
 	struct ocf_io_ctx *io_ctx = ocf_get_io_ctx(io);
 	int status = 0;
 
