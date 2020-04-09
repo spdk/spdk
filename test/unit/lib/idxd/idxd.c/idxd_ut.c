@@ -33,6 +33,7 @@
 
 #include "spdk_cunit.h"
 #include "spdk_internal/mock.h"
+#include "spdk_internal/idxd.h"
 #include "common/lib/test_env.c"
 #include "idxd/idxd.c"
 
@@ -81,6 +82,18 @@ mock_movdir64b(void *dst, const void *src)
 }
 
 static int
+test_spdk_idxd_set_config(void)
+{
+
+	g_dev_cfg = NULL;
+	spdk_idxd_set_config(0);
+	SPDK_CU_ASSERT_FATAL(g_dev_cfg != NULL);
+	CU_ASSERT(memcmp(&g_dev_cfg0, g_dev_cfg, sizeof(struct device_config)) == 0);
+
+	return 0;
+}
+
+static int
 test_spdk_idxd_reconfigure_chan(void)
 {
 	struct spdk_idxd_io_channel chan = {};
@@ -103,7 +116,6 @@ test_spdk_idxd_reconfigure_chan(void)
 	return 0;
 }
 
-
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -115,6 +127,7 @@ int main(int argc, char **argv)
 	suite = CU_add_suite("idxd", NULL, NULL);
 
 	CU_ADD_TEST(suite, test_spdk_idxd_reconfigure_chan);
+	CU_ADD_TEST(suite, test_spdk_idxd_set_config);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
