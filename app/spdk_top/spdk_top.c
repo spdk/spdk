@@ -95,10 +95,31 @@ struct col_desc {
 	bool disabled;
 };
 
+struct run_counter_history {
+	char *poller_name;
+	uint64_t thread_id;
+	uint64_t last_run_counter;
+	TAILQ_ENTRY(run_counter_history) link;
+};
+
+struct core_info {
+	uint32_t core;
+	char core_mask[MAX_CORE_MASK_STR_LEN];
+	uint64_t threads_count;
+	uint64_t pollers_count;
+	uint64_t idle;
+	uint64_t last_idle;
+	uint64_t busy;
+	uint64_t last_busy;
+};
+
 struct rpc_thread_info *g_thread_info[MAX_THREADS];
 const char *poller_type_str[SPDK_POLLER_TYPES_COUNT] = {"Active", "Timed", "Paused"};
 const char *g_tab_title[NUMBER_OF_TABS] = {"[1] THREADS", "[2] POLLERS", "[3] CORES"};
 struct spdk_jsonrpc_client *g_rpc_client;
+static TAILQ_HEAD(, run_counter_history) g_run_counter_history = TAILQ_HEAD_INITIALIZER(
+			g_run_counter_history);
+struct core_info g_cores_history[RPC_MAX_CORES];
 WINDOW *g_menu_win, *g_tab_win[NUMBER_OF_TABS], *g_tabs[NUMBER_OF_TABS];
 PANEL *g_panels[NUMBER_OF_TABS];
 uint16_t g_max_row, g_max_col;
@@ -131,22 +152,15 @@ static struct col_desc g_col_desc[NUMBER_OF_TABS][TABS_COL_COUNT] = {
 	}
 };
 
-struct core_info {
-	uint32_t core;
-	char core_mask[MAX_CORE_MASK_STR_LEN];
-	uint64_t threads_count;
-	uint64_t pollers_count;
-	uint64_t idle;
-	uint64_t busy;
-};
-
 struct rpc_thread_info {
 	char *name;
 	uint64_t id;
 	uint32_t core_num;
 	char *cpumask;
 	uint64_t busy;
+	uint64_t last_busy;
 	uint64_t idle;
+	uint64_t last_idle;
 	uint64_t active_pollers_count;
 	uint64_t timed_pollers_count;
 	uint64_t paused_pollers_count;
@@ -170,6 +184,7 @@ struct rpc_poller_info {
 	uint64_t period_ticks;
 	enum spdk_poller_type type;
 	char thread_name[MAX_THREAD_NAME];
+	uint64_t thread_id;
 };
 
 struct rpc_pollers {
@@ -510,7 +525,6 @@ get_data(void)
 	}
 
 	/* Decode json */
-	memset(&g_threads_stats, 0, sizeof(g_threads_stats));
 	if (spdk_json_decode_object(json_resp->result, rpc_threads_stats_decoders,
 				    SPDK_COUNTOF(rpc_threads_stats_decoders), &g_threads_stats)) {
 		rc = -EINVAL;
@@ -802,6 +816,7 @@ refresh_threads_tab(uint8_t current_page)
 	uint16_t j;
 	uint16_t col;
 	uint8_t max_pages, item_index;
+	static uint8_t last_page = 0;
 	char pollers_number[MAX_POLLER_COUNT_STR_LEN], idle_time[MAX_TIME_STR_LEN],
 	     busy_time[MAX_TIME_STR_LEN], core_str[MAX_CORE_MASK_STR_LEN];
 	struct rpc_thread_info *thread_info[g_threads_stats.threads.threads_count];
@@ -823,6 +838,16 @@ refresh_threads_tab(uint8_t current_page)
 	 * TODO: In future we can have gaps in ID list, so we will need to change the way we
 	 * handle copying threads list below */
 	memcpy(thread_info, &g_thread_info[1], sizeof(struct rpc_thread_info *) * threads_count);
+
+	if (last_page != current_page) {
+		for (i = 0; i < threads_count; i++) {
+			/* Thread IDs start from 1, so we have to do i + 1 */
+			g_threads_stats.threads.thread_info[i].last_idle = g_thread_info[i + 1]->idle;
+			g_threads_stats.threads.thread_info[i].last_busy = g_thread_info[i + 1]->busy;
+		}
+
+		last_page = current_page;
+	}
 
 	max_pages = (threads_count + g_max_data_rows - 1) / g_max_data_rows;
 
@@ -870,20 +895,56 @@ refresh_threads_tab(uint8_t current_page)
 		}
 
 		if (!col_desc[5].disabled) {
-			get_time_str(thread_info[i]->idle, idle_time);
+			get_time_str(thread_info[i]->idle - thread_info[i]->last_idle, idle_time);
 			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index, col,
 				      col_desc[5].max_data_string, ALIGN_RIGHT, idle_time);
-			col += col_desc[5].max_data_string + 2;
+			col += col_desc[5].max_data_string;
+			thread_info[i]->last_idle = thread_info[i]->idle;
 		}
 
 		if (!col_desc[6].disabled) {
-			get_time_str(thread_info[i]->busy, busy_time);
+			get_time_str(thread_info[i]->busy - thread_info[i]->last_busy, busy_time);
 			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index, col,
 				      col_desc[6].max_data_string, ALIGN_RIGHT, busy_time);
+			thread_info[i]->last_busy = thread_info[i]->busy;
 		}
 	}
 
 	return max_pages;
+}
+
+static uint64_t *
+get_last_run_counter(const char *poller_name, uint64_t thread_id)
+{
+	struct run_counter_history *history;
+
+	TAILQ_FOREACH(history, &g_run_counter_history, link) {
+		if (!strcmp(history->poller_name, poller_name) && history->thread_id == thread_id) {
+			return &history->last_run_counter;
+		}
+	}
+
+	return NULL;
+}
+
+static void
+store_last_run_counter(const char *poller_name, uint64_t thread_id, uint64_t last_run_counter)
+{
+	struct run_counter_history *history;
+
+	TAILQ_FOREACH(history, &g_run_counter_history, link) {
+		if (!strcmp(history->poller_name, poller_name) && history->thread_id == thread_id) {
+			history->last_run_counter = last_run_counter;
+			return;
+		}
+	}
+
+	history = calloc(1, sizeof(*history));
+	history->poller_name = strdup(poller_name);
+	history->thread_id = thread_id;
+	history->last_run_counter = last_run_counter;
+
+	TAILQ_INSERT_TAIL(&g_run_counter_history, history, link);
 }
 
 enum sort_type {
@@ -902,6 +963,7 @@ sort_pollers(const void *p1, const void *p2, void *arg)
 	const struct rpc_poller_info *poller2 = *(struct rpc_poller_info **)p2;
 	enum sort_type sorting = *(enum sort_type *)arg;
 	uint64_t count1, count2;
+	uint64_t *last_run_counter;
 
 	if (sorting == BY_NAME) {
 		/* Sorting by name requested explicitly */
@@ -916,8 +978,10 @@ sort_pollers(const void *p1, const void *p2, void *arg)
 		case 2: /* Sort by thread */
 			return strcmp(poller1->thread_name, poller2->thread_name);
 		case 3: /* Sort by run counter */
-			count1 = poller1->run_count;
-			count2 = poller2->run_count;
+			last_run_counter = get_last_run_counter(poller1->name, poller1->thread_id);
+			count1 = poller1->run_count - *last_run_counter;
+			last_run_counter = get_last_run_counter(poller2->name, poller2->thread_id);
+			count2 = poller2->run_count - *last_run_counter;
 			break;
 		case 4: /* Sort by period */
 			count1 = poller1->period_ticks;
@@ -939,14 +1003,25 @@ sort_pollers(const void *p1, const void *p2, void *arg)
 
 static void
 copy_pollers(struct rpc_pollers *pollers, uint64_t pollers_count, enum spdk_poller_type type,
-	     struct rpc_poller_thread_info *thread, uint64_t *current_count,
+	     struct rpc_poller_thread_info *thread, uint64_t *current_count, bool reset_last_counter,
 	     struct rpc_poller_info **pollers_info)
 {
+	uint64_t *last_run_counter;
 	uint64_t i;
 
 	for (i = 0; i < pollers_count; i++) {
+		if (reset_last_counter) {
+			last_run_counter = get_last_run_counter(pollers->pollers[i].name, thread->id);
+			if (last_run_counter == NULL) {
+				store_last_run_counter(pollers->pollers[i].name, thread->id, pollers->pollers[i].run_count);
+				last_run_counter = get_last_run_counter(pollers->pollers[i].name, thread->id);
+			}
+
+			*last_run_counter = pollers->pollers[i].run_count;
+		}
 		pollers_info[*current_count] = &pollers->pollers[i];
 		snprintf(pollers_info[*current_count]->thread_name, MAX_POLLER_NAME - 1, "%s", thread->name);
+		pollers_info[*current_count]->thread_id = thread->id;
 		pollers_info[(*current_count)++]->type = type;
 	}
 }
@@ -956,22 +1031,34 @@ refresh_pollers_tab(uint8_t current_page)
 {
 	struct col_desc *col_desc = g_col_desc[POLLERS_TAB];
 	struct rpc_poller_thread_info *thread;
+	uint64_t *last_run_counter;
 	uint64_t i, count = 0;
 	uint16_t col, j;
 	uint8_t max_pages, item_index;
+	/* Init g_last_page with value != 0 to force store_last_run_counter() call in copy_pollers()
+	 * so that initial values for run_counter are stored in g_run_counter_history */
+	static uint8_t g_last_page = 0xF;
 	enum sort_type sorting;
 	char run_count[MAX_TIME_STR_LEN], period_ticks[MAX_PERIOD_STR_LEN];
 	struct rpc_poller_info *pollers[RPC_MAX_POLLERS];
+	bool reset_last_counter = false;
 
 	for (i = 0; i < g_pollers_stats.pollers_threads.threads_count; i++) {
 		thread = &g_pollers_stats.pollers_threads.threads[i];
+		if (g_last_page != current_page) {
+			reset_last_counter = true;
+		}
 
 		copy_pollers(&thread->active_pollers, thread->active_pollers.pollers_count, SPDK_ACTIVE_POLLER,
-			     thread, &count, pollers);
+			     thread, &count, reset_last_counter, pollers);
 		copy_pollers(&thread->timed_pollers, thread->timed_pollers.pollers_count, SPDK_TIMED_POLLER, thread,
-			     &count, pollers);
+			     &count, reset_last_counter, pollers);
 		copy_pollers(&thread->paused_pollers, thread->paused_pollers.pollers_count, SPDK_PAUSED_POLLER,
-			     thread, &count, pollers);
+			     thread, &count, reset_last_counter, pollers);
+	}
+
+	if (g_last_page != current_page) {
+		g_last_page = current_page;
 	}
 
 	/* Clear screen if number of pollers changed */
@@ -1021,10 +1108,14 @@ refresh_pollers_tab(uint8_t current_page)
 		}
 
 		if (!col_desc[3].disabled) {
-			snprintf(run_count, MAX_TIME_STR_LEN, "%" PRIu64, pollers[i]->run_count);
+			last_run_counter = get_last_run_counter(pollers[i]->name, pollers[i]->thread_id);
+
+			snprintf(run_count, MAX_TIME_STR_LEN, "%" PRIu64, pollers[i]->run_count - *last_run_counter);
 			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + item_index, col,
 				      col_desc[3].max_data_string, ALIGN_RIGHT, run_count);
-			col += col_desc[3].max_data_string + 2;
+			col += col_desc[3].max_data_string;
+
+			store_last_run_counter(pollers[i]->name, pollers[i]->thread_id, pollers[i]->run_count);
 		}
 
 		if (!col_desc[4].disabled) {
@@ -1060,12 +1151,12 @@ sort_cores(const void *p1, const void *p2)
 		count2 = core_info2.pollers_count;
 		break;
 	case 3: /* Sort by idle time */
-		count1 = core_info1.idle;
-		count2 = core_info2.idle;
+		count2 = g_cores_history[core_info1.core].last_idle - core_info1.idle;
+		count1 = g_cores_history[core_info2.core].last_idle - core_info2.idle;
 		break;
 	case 4: /* Sort by busy time */
-		count1 = core_info1.busy;
-		count2 = core_info2.busy;
+		count2 = g_cores_history[core_info1.core].last_busy - core_info1.busy;
+		count1 = g_cores_history[core_info2.core].last_busy - core_info2.busy;
 		break;
 	default:
 		return 0;
@@ -1080,6 +1171,20 @@ sort_cores(const void *p1, const void *p2)
 	}
 }
 
+static void
+store_core_last_stats(uint32_t core, uint64_t idle, uint64_t busy)
+{
+	g_cores_history[core].last_idle = idle;
+	g_cores_history[core].last_busy = busy;
+}
+
+static void
+get_core_last_stats(uint32_t core, uint64_t *idle, uint64_t *busy)
+{
+	*idle = g_cores_history[core].last_idle;
+	*busy = g_cores_history[core].last_busy;
+}
+
 static uint8_t
 refresh_cores_tab(uint8_t current_page)
 {
@@ -1087,6 +1192,7 @@ refresh_cores_tab(uint8_t current_page)
 	uint64_t i, j;
 	uint16_t offset, count = 0;
 	uint8_t max_pages, item_index;
+	static uint8_t last_page = 0;
 	char core[MAX_CORE_STR_LEN], threads_number[MAX_THREAD_COUNT_STR_LEN],
 	     pollers_number[MAX_POLLER_COUNT_STR_LEN], idle_time[MAX_TIME_STR_LEN], busy_time[MAX_TIME_STR_LEN];
 	struct core_info cores[RPC_MAX_CORES];
@@ -1138,10 +1244,16 @@ refresh_cores_tab(uint8_t current_page)
 				cores[i].core = g_cores_stats.cores.core[j].lcore;
 				cores[i].busy = g_cores_stats.cores.core[j].busy;
 				cores[i].idle = g_cores_stats.cores.core[j].idle;
+				if (last_page != current_page) {
+					store_core_last_stats(cores[i].core, cores[i].idle, cores[i].busy);
+				}
 			}
 		}
 	}
 
+	if (last_page != current_page) {
+		last_page = current_page;
+	}
 
 	max_pages = (count + g_max_row - WINDOW_HEADER - 1) / (g_max_row - WINDOW_HEADER);
 
@@ -1154,6 +1266,7 @@ refresh_cores_tab(uint8_t current_page)
 
 		snprintf(threads_number, MAX_THREAD_COUNT_STR_LEN, "%ld", cores[i].threads_count);
 		snprintf(pollers_number, MAX_POLLER_COUNT_STR_LEN, "%ld", cores[i].pollers_count);
+		get_core_last_stats(cores[i].core, &cores[i].last_idle, &cores[i].last_busy);
 
 		offset = 1;
 
@@ -1177,17 +1290,19 @@ refresh_cores_tab(uint8_t current_page)
 		}
 
 		if (!col_desc[3].disabled) {
-			get_time_str(cores[i].idle, idle_time);
+			get_time_str(cores[i].idle - cores[i].last_idle, idle_time);
 			print_max_len(g_tabs[CORES_TAB], TABS_DATA_START_ROW + item_index, offset,
 				      col_desc[3].max_data_string, ALIGN_RIGHT, idle_time);
 			offset += col_desc[3].max_data_string + 2;
 		}
 
 		if (!col_desc[4].disabled) {
-			get_time_str(cores[i].busy, busy_time);
+			get_time_str(cores[i].busy - cores[i].last_busy, busy_time);
 			print_max_len(g_tabs[CORES_TAB], TABS_DATA_START_ROW + item_index, offset,
 				      col_desc[4].max_data_string, ALIGN_RIGHT, busy_time);
 		}
+
+		store_core_last_stats(cores[i].core, cores[i].idle, cores[i].busy);
 	}
 
 	return max_pages;
@@ -1505,6 +1620,18 @@ change_sorting(uint8_t tab)
 }
 
 static void
+free_resources(void)
+{
+	struct run_counter_history *history, *tmp;
+
+	TAILQ_FOREACH_SAFE(history, &g_run_counter_history, link, tmp) {
+		TAILQ_REMOVE(&g_run_counter_history, history, link);
+		free(history->poller_name);
+		free(history);
+	}
+}
+
+static void
 show_stats(void)
 {
 	const int CURRENT_PAGE_STR_LEN = 50;
@@ -1532,6 +1659,7 @@ show_stats(void)
 
 		c = getch();
 		if (c == 'q') {
+			free_resources();
 			break;
 		}
 
