@@ -2158,6 +2158,16 @@ _add_file_to_cache_pool(void *ctx)
 	pthread_spin_unlock(&g_caches_lock);
 }
 
+static void
+_remove_file_from_cache_pool(void *ctx)
+{
+	struct spdk_file *file = ctx;
+
+	pthread_spin_lock(&g_caches_lock);
+	TAILQ_REMOVE(&g_caches, file, cache_tailq);
+	pthread_spin_unlock(&g_caches_lock);
+}
+
 static struct cache_buffer *
 cache_insert_buffer(struct spdk_file *file, uint64_t offset)
 {
@@ -2711,12 +2721,10 @@ spdk_file_read(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 			BLOBFS_TRACE(file, "read %p offset=%ju length=%ju\n", payload, offset, read_len);
 			memcpy(payload, &buf->buf[offset - buf->offset], read_len);
 			if ((offset + read_len) % CACHE_BUFFER_SIZE == 0) {
-				pthread_spin_lock(&g_caches_lock);
 				tree_remove_buffer(file->tree, buf);
 				if (file->tree->present_mask == 0) {
-					TAILQ_REMOVE(&g_caches, file, cache_tailq);
+					spdk_thread_send_msg(g_cache_pool_thread, _remove_file_from_cache_pool, file);
 				}
-				pthread_spin_unlock(&g_caches_lock);
 			}
 		}
 
