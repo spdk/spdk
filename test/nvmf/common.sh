@@ -156,7 +156,7 @@ function nvmfcleanup()
 		modprobe -v -r nvme-$TEST_TRANSPORT
 		if modprobe -v -r nvme-fabrics; then
 			set -e
-			return
+			return 0
 		fi
 		sleep 1
 	done
