@@ -250,7 +250,7 @@ struct spdk_fs_cb_args {
 	} op;
 };
 
-static void cache_free_buffers(struct spdk_file *file);
+static void file_free(struct spdk_file *file);
 static void fs_io_device_unregister(struct spdk_filesystem *fs);
 static void fs_free_io_channels(struct spdk_filesystem *fs);
 
@@ -897,10 +897,7 @@ unload_cb(void *ctx, int bserrno)
 
 	TAILQ_FOREACH_SAFE(file, &fs->files, tailq, tmp) {
 		TAILQ_REMOVE(&fs->files, file, tailq);
-		cache_free_buffers(file);
-		free(file->name);
-		free(file->tree);
-		free(file);
+		file_free(file);
 	}
 
 	free_global_cache();
@@ -1525,19 +1522,10 @@ spdk_fs_delete_file_async(struct spdk_filesystem *fs, const char *name,
 		return;
 	}
 
+	blobid = f->blobid;
 	TAILQ_REMOVE(&fs->files, f, tailq);
 
-	/* It's safe to free cache buffers here while another thread
-	 * is trying to free the same file cache buffers, because each
-	 * thread will get the g_caches_lock first.
-	 */
-	cache_free_buffers(f);
-
-	blobid = f->blobid;
-
-	free(f->name);
-	free(f->tree);
-	free(f);
+	file_free(f);
 
 	spdk_bs_delete_blob(fs->bs, blobid, blob_delete_cb, req);
 }
@@ -2957,22 +2945,35 @@ spdk_file_get_id(struct spdk_file *file, void *id, size_t size)
 }
 
 static void
-cache_free_buffers(struct spdk_file *file)
+_file_free(void *ctx)
+{
+	struct spdk_file *file = ctx;
+
+	pthread_spin_lock(&g_caches_lock);
+	TAILQ_REMOVE(&g_caches, file, cache_tailq);
+	pthread_spin_unlock(&g_caches_lock);
+
+	free(file->name);
+	free(file->tree);
+	free(file);
+}
+
+static void
+file_free(struct spdk_file *file)
 {
 	BLOBFS_TRACE(file, "free=%s\n", file->name);
 	pthread_spin_lock(&file->lock);
-	pthread_spin_lock(&g_caches_lock);
 	if (file->tree->present_mask == 0) {
-		pthread_spin_unlock(&g_caches_lock);
 		pthread_spin_unlock(&file->lock);
+		free(file->name);
+		free(file->tree);
+		free(file);
 		return;
 	}
-	tree_free_buffers(file->tree);
 
-	TAILQ_REMOVE(&g_caches, file, cache_tailq);
+	tree_free_buffers(file->tree);
 	assert(file->tree->present_mask == 0);
-	file->last = NULL;
-	pthread_spin_unlock(&g_caches_lock);
+	spdk_thread_send_msg(g_cache_pool_thread, _file_free, file);
 	pthread_spin_unlock(&file->lock);
 }
 

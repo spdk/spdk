@@ -561,7 +561,6 @@ cache_append_no_cache(void)
 
 	fs_thread_poll();
 
-	cache_free_buffers(g_file);
 	spdk_file_write(g_file, channel, buf, 2 * sizeof(buf), sizeof(buf));
 	CU_ASSERT(spdk_file_get_length(g_file) == 3 * sizeof(buf));
 	spdk_file_write(g_file, channel, buf, 3 * sizeof(buf), sizeof(buf));
