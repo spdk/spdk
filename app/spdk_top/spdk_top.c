@@ -49,6 +49,7 @@
 #define MAX_THREAD_NAME 128
 #define MAX_POLLER_NAME 128
 #define MAX_THREADS 4096
+#define RR_MAX_VALUE 255
 
 #define MAX_STRING_LEN 12289 /* 3x 4k monitors + 1 */
 #define TAB_WIN_HEIGHT 3
@@ -62,6 +63,8 @@
 #define MENU_WIN_HEIGHT 3
 #define MENU_WIN_SPACING 4
 #define MENU_WIN_LOCATION_COL 0
+#define RR_WIN_WIDTH 32
+#define RR_WIN_HEIGHT 5
 #define MAX_THREAD_NAME_LEN 26
 #define MAX_THREAD_COUNT_STR_LEN 14
 #define MAX_POLLER_NAME_LEN 36
@@ -113,6 +116,7 @@ struct core_info {
 	uint64_t last_busy;
 };
 
+uint8_t g_sleep_time = 1;
 struct rpc_thread_info *g_thread_info[MAX_THREADS];
 const char *poller_type_str[SPDK_POLLER_TYPES_COUNT] = {"Active", "Timed", "Paused"};
 const char *g_tab_title[NUMBER_OF_TABS] = {"[1] THREADS", "[2] POLLERS", "[3] CORES"};
@@ -653,7 +657,7 @@ draw_menu_win(void)
 	wbkgd(g_menu_win, COLOR_PAIR(2));
 	box(g_menu_win, 0, 0);
 	print_max_len(g_menu_win, 1, 1, 0, ALIGN_LEFT,
-		      "   [q] Quit   |   [1-3] TAB selection   |   [PgUp] Previous page   |   [PgDown] Next page   |   [c] Columns   |   [s] Sorting");
+		      "   [q] Quit   |   [1-3] TAB selection   |   [PgUp] Previous page   |   [PgDown] Next page   |   [c] Columns   |   [s] Sorting  |  [r]  Refresh rate");
 }
 
 static void
@@ -1620,6 +1624,90 @@ change_sorting(uint8_t tab)
 }
 
 static void
+change_refresh_rate(void)
+{
+	const int WINDOW_HEADER_END_LINE = 2;
+	PANEL *refresh_panel;
+	WINDOW *refresh_win;
+	int c;
+	bool stop_loop = false;
+	uint32_t rr_tmp, refresh_rate = 0;
+	char refresh_rate_str[MAX_STRING_LEN];
+
+	refresh_win = newwin(RR_WIN_HEIGHT, RR_WIN_WIDTH, (g_max_row - RR_WIN_HEIGHT - 1) / 2,
+			     (g_max_col - RR_WIN_WIDTH) / 2);
+	keypad(refresh_win, TRUE);
+	refresh_panel = new_panel(refresh_win);
+
+	top_panel(refresh_panel);
+	update_panels();
+	doupdate();
+
+	box(refresh_win, 0, 0);
+
+	print_in_middle(refresh_win, 1, 0, RR_WIN_WIDTH + 1, "Enter refresh rate value [s]", COLOR_PAIR(3));
+	mvwaddch(refresh_win, WINDOW_HEADER_END_LINE, 0, ACS_LTEE);
+	mvwhline(refresh_win, WINDOW_HEADER_END_LINE, 1, ACS_HLINE, RR_WIN_WIDTH - 2);
+	mvwaddch(refresh_win, WINDOW_HEADER_END_LINE, RR_WIN_WIDTH, ACS_RTEE);
+	mvwprintw(refresh_win, WINDOW_HEADER_END_LINE + 1, (RR_WIN_WIDTH - 1) / 2, "%d", refresh_rate);
+
+	refresh();
+	wrefresh(refresh_win);
+
+	while (!stop_loop) {
+		c = wgetch(refresh_win);
+
+		switch (c) {
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+			rr_tmp = refresh_rate * 10 + c - '0';
+
+			if (rr_tmp <= RR_MAX_VALUE) {
+				refresh_rate = rr_tmp;
+				snprintf(refresh_rate_str, MAX_STRING_LEN - 1, "%d", refresh_rate);
+				mvwprintw(refresh_win, WINDOW_HEADER_END_LINE + 1,
+					  (RR_WIN_WIDTH - 1 - strlen(refresh_rate_str)) / 2, "%d", refresh_rate);
+				refresh();
+				wrefresh(refresh_win);
+			}
+			break;
+		case KEY_BACKSPACE:
+		case 127:
+		case '\b':
+			refresh_rate = refresh_rate / 10;
+			snprintf(refresh_rate_str, MAX_STRING_LEN - 1, "%d", refresh_rate);
+			mvwprintw(refresh_win, WINDOW_HEADER_END_LINE + 1,
+				  (RR_WIN_WIDTH - 1 - strlen(refresh_rate_str) - 2) / 2, "       ");
+			mvwprintw(refresh_win, WINDOW_HEADER_END_LINE + 1,
+				  (RR_WIN_WIDTH - 1 - strlen(refresh_rate_str)) / 2, "%d", refresh_rate);
+			refresh();
+			wrefresh(refresh_win);
+			break;
+		case 27: /* ESC */
+		case 'q':
+			stop_loop = true;
+			break;
+		case 10: /* Enter */
+			g_sleep_time = refresh_rate;
+			stop_loop = true;
+			break;
+		}
+		wrefresh(refresh_win);
+	}
+
+	del_panel(refresh_panel);
+	delwin(refresh_win);
+}
+
+static void
 free_resources(void)
 {
 	struct run_counter_history *history, *tmp;
@@ -1636,12 +1724,18 @@ show_stats(void)
 {
 	const int CURRENT_PAGE_STR_LEN = 50;
 	const char *refresh_error = "ERROR occurred while getting data";
+	long int time_last, time_dif;
+	struct timespec time_now;
 	int c, rc;
 	int max_row, max_col;
 	uint8_t active_tab = THREADS_TAB;
 	uint8_t current_page = 0;
 	uint8_t max_pages = 1;
 	char current_page_str[CURRENT_PAGE_STR_LEN];
+	bool force_refresh = true;
+
+	clock_gettime(CLOCK_REALTIME, &time_now);
+	time_last = time_now.tv_sec;
 
 	switch_tab(THREADS_TAB);
 
@@ -1663,6 +1757,8 @@ show_stats(void)
 			break;
 		}
 
+		force_refresh = true;
+
 		switch (c) {
 		case '1':
 		case '2':
@@ -1676,6 +1772,9 @@ show_stats(void)
 			break;
 		case 'c':
 			filter_columns(active_tab);
+			break;
+		case 'r':
+			change_refresh_rate();
 			break;
 		case 54: /* PgDown */
 			if (current_page + 1 < max_pages) {
@@ -1692,22 +1791,32 @@ show_stats(void)
 			draw_tabs(active_tab, g_current_sort_col[active_tab]);
 			break;
 		default:
+			force_refresh = false;
 			break;
 		}
 
-		rc = get_data();
-		if (rc) {
-			mvprintw(g_max_row - 1, g_max_col - strlen(refresh_error) - 2, refresh_error);
+		clock_gettime(CLOCK_REALTIME, &time_now);
+		time_dif = time_now.tv_sec - time_last;
+		if (time_dif < 0) {
+			time_dif = g_sleep_time;
 		}
 
-		max_pages = refresh_tab(active_tab, current_page);
+		if (time_dif >= g_sleep_time || force_refresh) {
+			time_last = time_now.tv_sec;
+			rc = get_data();
+			if (rc) {
+				mvprintw(g_max_row - 1, g_max_col - strlen(refresh_error) - 2, refresh_error);
+			}
 
-		snprintf(current_page_str, CURRENT_PAGE_STR_LEN - 1, "Page: %d/%d", current_page + 1, max_pages);
-		mvprintw(g_max_row - 1, 1, current_page_str);
+			max_pages = refresh_tab(active_tab, current_page);
 
-		free_data();
+			snprintf(current_page_str, CURRENT_PAGE_STR_LEN - 1, "Page: %d/%d", current_page + 1, max_pages);
+			mvprintw(g_max_row - 1, 1, current_page_str);
 
-		refresh();
+			free_data();
+
+			refresh();
+		}
 	}
 }
 
@@ -1744,7 +1853,7 @@ setup_ncurses(void)
 {
 	clear();
 	noecho();
-	halfdelay(1);
+	timeout(1);
 	curs_set(0);
 	start_color();
 	init_pair(1, COLOR_BLACK, COLOR_GREEN);
