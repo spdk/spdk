@@ -749,18 +749,19 @@ lvol_op_comp(void *cb_arg, int bserrno)
 {
 	struct lvol_task *task = cb_arg;
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(task);
+	enum spdk_bdev_io_status status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
 	if (bserrno != 0) {
 		if (bserrno == -ENOMEM) {
-			task->status = SPDK_BDEV_IO_STATUS_NOMEM;
+			status = SPDK_BDEV_IO_STATUS_NOMEM;
 		} else {
-			task->status = SPDK_BDEV_IO_STATUS_FAILED;
+			status = SPDK_BDEV_IO_STATUS_FAILED;
 		}
 	}
 
 	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Vbdev processing callback on device %s with type %d\n",
 		     bdev_io->bdev->name, bdev_io->type);
-	spdk_bdev_io_complete(bdev_io, task->status);
+	spdk_bdev_io_complete(bdev_io, status);
 }
 
 static void
@@ -772,8 +773,6 @@ lvol_unmap(struct spdk_lvol *lvol, struct spdk_io_channel *ch, struct spdk_bdev_
 
 	start_page = bdev_io->u.bdev.offset_blocks;
 	num_pages = bdev_io->u.bdev.num_blocks;
-
-	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
 	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL,
 		     "Vbdev doing unmap at offset %" PRIu64 " using %" PRIu64 " pages on device %s\n", start_page,
@@ -790,8 +789,6 @@ lvol_write_zeroes(struct spdk_lvol *lvol, struct spdk_io_channel *ch, struct spd
 
 	start_page = bdev_io->u.bdev.offset_blocks;
 	num_pages = bdev_io->u.bdev.num_blocks;
-
-	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
 	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL,
 		     "Vbdev doing write zeros at offset %" PRIu64 " using %" PRIu64 " pages on device %s\n", start_page,
@@ -810,8 +807,6 @@ lvol_read(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	start_page = bdev_io->u.bdev.offset_blocks;
 	num_pages = bdev_io->u.bdev.num_blocks;
 
-	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
-
 	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL,
 		     "Vbdev doing read at offset %" PRIu64 " using %" PRIu64 " pages on device %s\n", start_page,
 		     num_pages, bdev_io->bdev->name);
@@ -828,8 +823,6 @@ lvol_write(struct spdk_lvol *lvol, struct spdk_io_channel *ch, struct spdk_bdev_
 
 	start_page = bdev_io->u.bdev.offset_blocks;
 	num_pages = bdev_io->u.bdev.num_blocks;
-
-	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
 	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL,
 		     "Vbdev doing write at offset %" PRIu64 " using %" PRIu64 " pages on device %s\n", start_page,

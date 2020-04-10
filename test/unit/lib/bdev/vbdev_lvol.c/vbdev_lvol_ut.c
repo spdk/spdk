@@ -467,6 +467,7 @@ spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_
 void
 spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status)
 {
+	bdev_io->internal.status = status;
 }
 
 struct spdk_io_channel *spdk_lvol_get_io_channel(struct spdk_lvol *lvol)
@@ -1315,17 +1316,16 @@ ut_lvol_read_write(void)
 	g_lvol = calloc(1, sizeof(struct spdk_lvol));
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 
-	g_task = (struct lvol_task *)g_io->driver_ctx;
 	g_io->bdev = g_base_bdev;
 	g_io->bdev->ctxt = g_lvol;
 	g_io->u.bdev.offset_blocks = 20;
 	g_io->u.bdev.num_blocks = 20;
 
 	lvol_read(g_ch, g_io);
-	CU_ASSERT(g_task->status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(g_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS);
 
 	lvol_write(g_lvol, g_ch, g_io);
-	CU_ASSERT(g_task->status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(g_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS);
 
 	free(g_io);
 	free(g_base_bdev);
