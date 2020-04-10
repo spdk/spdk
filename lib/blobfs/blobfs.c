@@ -2227,10 +2227,8 @@ __file_cache_finish_sync(void *ctx, int bserrno)
 	pthread_spin_unlock(&file->lock);
 
 	sync_args->fn.file_op(sync_args->arg, bserrno);
-	pthread_spin_lock(&file->lock);
-	free_fs_request(sync_req);
-	pthread_spin_unlock(&file->lock);
 
+	free_fs_request(sync_req);
 	__check_sync_reqs(file);
 }
 
