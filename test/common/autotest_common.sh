@@ -221,6 +221,14 @@ function get_config_params() {
 		config_params+=' --with-rdma'
 	fi
 
+	intel="GenuineIntel"
+	cpu_vendor=$(grep -i 'vendor' /proc/cpuinfo  --max-count=1)
+	if [[ "$cpu_vendor" != *"$intel"* ]]; then
+		config_params+=" --without-idxd"
+	else
+		config_params+=" --with-idxd"
+	fi
+
 	if [[ -d $CONFIG_FIO_SOURCE_DIR ]]; then
 		config_params+=" --with-fio=$CONFIG_FIO_SOURCE_DIR"
 	fi

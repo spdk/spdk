@@ -169,3 +169,6 @@ CONFIG_FUSE=n
 
 # Build with RAID5 support
 CONFIG_RAID5=n
+
+# Build with IDXD support
+CONFIG_IDXD=n

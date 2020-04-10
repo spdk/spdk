@@ -52,6 +52,8 @@ function usage()
 	echo "                           Required on some systems to use qat devices. This flag is"
 	echo "                           effective only with the default dpdk submodule."
 	echo "                           No path required"
+	echo " idxd                      Build the IDXD library and accel framework plug-in module."
+	echo "                           Disabled while experimental. Only built for x86 when enabled."
 	echo " crypto                    Build vbdev crypto module."
 	echo "                           No path required."
 	echo " fio                       Build fio_plugin."
@@ -447,6 +449,12 @@ for i in "$@"; do
 		--without-raid5)
 			CONFIG[RAID5]=n
 			;;
+		--with-idxd)
+			CONFIG[IDXD]=y
+			;;
+		--without-idxd)
+			CONFIG[IDXD]=n
+			;;
 		--)
 			break
 			;;
@@ -461,6 +469,16 @@ if [[ $arch == x86_64* ]]; then
 	BUILD_CMD=($CC -o /dev/null -x c $CPPFLAGS $CFLAGS $LDFLAGS -march=native)
 else
 	BUILD_CMD=($CC -o /dev/null -x c $CPPFLAGS $CFLAGS $LDFLAGS)
+fi
+
+# IDXD uses Intel specific instructions.
+if [[ "${CONFIG[IDXD]}" = "y" ]]; then
+	intel="GenuineIntel"
+	cpu_vendor=$(grep -i 'vendor' /proc/cpuinfo  --max-count=1)
+	if [[ "$cpu_vendor" != *"$intel"* ]]; then
+		echo "ERROR: IDXD cannot be used due to CPU incompatiblity."
+		exit 1
+	fi
 fi
 
 # Detect architecture and force no ISA-L if non-x86 or non-aarch64 architecture

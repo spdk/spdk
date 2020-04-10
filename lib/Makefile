@@ -43,7 +43,7 @@ DIRS-y += nbd ftl
 endif
 
 DIRS-$(CONFIG_OCF) += env_ocf
-
+DIRS-$(CONFIG_IDXD) += idxd
 DIRS-$(CONFIG_VHOST) += vhost
 DIRS-$(CONFIG_VIRTIO) += virtio
 DIRS-$(CONFIG_REDUCE) += reduce

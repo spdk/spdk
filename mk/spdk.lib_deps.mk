@@ -45,6 +45,7 @@ DEPDIRS-log :=
 DEPDIRS-rte_vhost :=
 
 DEPDIRS-ioat := log
+DEPDIRS-idxd := log util
 DEPDIRS-sock := log
 DEPDIRS-util := log
 DEPDIRS-vmd := log
