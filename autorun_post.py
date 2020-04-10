@@ -176,6 +176,7 @@ def aggregateCompletedTests(output_dir, repo_dir, skip_confirm=False):
 
 
 def main(output_dir, repo_dir, skip_confirm=False):
+    print("-----Begin Post Process Script------")
     generateCoverageReport(output_dir, repo_dir)
     collectOne(output_dir, 'doc')
     collectOne(output_dir, 'ut_coverage')
