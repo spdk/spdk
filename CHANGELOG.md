@@ -20,13 +20,30 @@ has been replaced with the word `accel` short for accelerator in preparation for
 capabilities in the future. Additionally, APIs for what was previously called the `memcpy`
 engine have been renamed to identify the engine as a software accelerator.
 
+### event
+
+Reactor now accumulates CPU stats and they are retrieved by the RPC `framework_get_reactors`.
+
+### iSCSI
+
+The iSCSI target now creates a lightweight thread per poll group instead of assuming a pool
+of lightweight threads already exist at start up time. A poll group is a collection of
+unrelated iSCSI connections. Each poll group is only accessed from the associated
+lightweight thread.
+
 ### vmd
 
 A new function, `spdk_vmd_fini`, has been added. It releases all resources acquired by the VMD
 library through the `spdk_vmd_init` call.
 
 ### nvmf
+
 `spdk_nvmf_poll_group_destroy()` is now asynchronous and accepts a completion callback.
+
+The NVMe-oF target now creates a lightweight thread per poll group instead of assuming a pool
+of lightweight threads already exist at start up time. A poll group is a collection of
+unrelated NVMe-oF connections. Each poll group is only accessed from the associated
+lightweight thread.
 
 ### Miscellaneous
 
@@ -40,13 +57,54 @@ exact same API.
 
 Support for AES_XTS was added for the QAT polled mode driver (pmd).  The create RPC
 `bdev_crypto_create` has 2 new optional parameters: cipher and key2. Cipher can be either
-AES_CBC (default) or AES_XTS. AES_XTS isonly valid when using the QAT polled mode driver.
+AES_CBC (default) or AES_XTS. AES_XTS is only valid when using the QAT polled mode driver.
 The key2 parameter is the second key required for AES_XTS.
 
 ### util
 
 New functions `spdk_sn32_lt` and `spdk_sn32_gt` have been added. They compare two sequence
 numbers based on serial number arithmetic.
+
+### rpc
+
+A new RPC `thread_set_cpumask` has been added to set the cpumask of the thread
+to the specified value.
+
+A new RPC `thread_get_pollers` has been added to retrieve pollers of SPDK threads.
+
+A new RPC `thread_get_io_channels` has been added to retrieve I/O channels of SPDK threads.
+
+### thread
+
+A new function `spdk_thread_lib_init_ext` has been added, and the function
+`spdk_thread_lib_init` has been deprecated. The user of `spdk_thread_lib_init_ext` is
+expected to implement both functions `spdk_thread_op_fn` and `spdk_thread_op_supported_fn`.
+`spdk_thread_op_supported_fn` is called to check whether the SPDK thread operation
+is supported. `spdk_thread_op_fn` is called to execute the SPDK thread operation.
+Current SPDK operation types are `SPDK_THREAD_OP_NEW` and `SPDK_THREAD_OP_RESCHED`.
+The operation `SPDK_THREAD_OP_NEW` is called each time a new thread is created.
+The operation `SPDK_THREAD_OP_RESCHED` is called when SPDK thread needs to be rescheduled.
+
+An unique ID has been added for each created SPDK thread, it is retrieved by a new function
+`spdk_thread_get_id`, and the SPDK thread which has the specific ID is got by
+a new function `spdk_thread_get_by_id`.
+
+A new function `spdk_thread_cpumask` has been added to set the current thread's cpumask
+to the specified value. The function requires the operation `SPDK_THREAD_OP_RESCHED`
+is supported.
+
+A new function `spdk_poller_register_named` has been added to set arbitrary name to the
+created poller. If NULL, the name is set to the pointer of the poller function.
+
+The function `spdk_thread_poll` now measures run time per call correctly on multiple SPDK
+threads configuration, and a new function `spdk_thread_get_last_tsc` has been added to use together.
+
+Voluntary termination of SPDK thread has been supported by refining the functions `spdk_thread_exit`
+and `spdk_thread_poll`.
+
+### vhost
+
+Poll groups per session have been replaced by SPDK threads per vhost controller.
 
 ## v20.01
 
