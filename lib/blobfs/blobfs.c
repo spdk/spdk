@@ -2148,11 +2148,22 @@ _blobfs_cache_pool_reclaim(void *arg)
 	return 1;
 }
 
+static void
+_add_file_to_cache_pool(void *ctx)
+{
+	struct spdk_file *file = ctx;
+
+	pthread_spin_lock(&g_caches_lock);
+	TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
+	pthread_spin_unlock(&g_caches_lock);
+}
+
 static struct cache_buffer *
 cache_insert_buffer(struct spdk_file *file, uint64_t offset)
 {
 	struct cache_buffer *buf;
 	int count = 0;
+	bool need_update = false;
 
 	buf = calloc(1, sizeof(*buf));
 	if (buf == NULL) {
@@ -2177,12 +2188,14 @@ cache_insert_buffer(struct spdk_file *file, uint64_t offset)
 	buf->buf_size = CACHE_BUFFER_SIZE;
 	buf->offset = offset;
 
-	pthread_spin_lock(&g_caches_lock);
 	if (file->tree->present_mask == 0) {
-		TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
+		need_update = true;
 	}
 	file->tree = tree_insert_buffer(file->tree, buf);
-	pthread_spin_unlock(&g_caches_lock);
+
+	if (need_update) {
+		spdk_thread_send_msg(g_cache_pool_thread, _add_file_to_cache_pool, file);
+	}
 
 	return buf;
 }
