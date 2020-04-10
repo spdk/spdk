@@ -64,7 +64,6 @@ static struct spdk_thread *g_cache_pool_thread;
 #define BLOBFS_CACHE_POOL_POLL_PERIOD_IN_US 1000ULL
 static int g_fs_count = 0;
 static pthread_mutex_t g_cache_init_lock = PTHREAD_MUTEX_INITIALIZER;
-static pthread_spinlock_t g_caches_lock;
 
 #define TRACE_GROUP_BLOBFS	0x7
 #define TRACE_BLOBFS_XATTR_START	SPDK_TPOINT_ID(TRACE_GROUP_BLOBFS, 0x0)
@@ -294,7 +293,6 @@ __start_cache_pool_mgmt(void *ctx)
 		assert(false);
 	}
 	TAILQ_INIT(&g_caches);
-	pthread_spin_init(&g_caches_lock, 0);
 
 	assert(g_cache_pool_mgmt_poller == NULL);
 	g_cache_pool_mgmt_poller = SPDK_POLLER_REGISTER(_blobfs_cache_pool_reclaim, NULL,
@@ -2047,8 +2045,7 @@ spdk_fs_get_cache_size(void)
 
 static void __file_flush(void *ctx);
 
-/* Try to free some cache buffers of this file, this function must
- * be called while holding g_caches_lock.
+/* Try to free some cache buffers from this file.
  */
 static int
 reclaim_cache_buffers(struct spdk_file *file)
@@ -2094,7 +2091,6 @@ _blobfs_cache_pool_reclaim(void *arg)
 		return 0;
 	}
 
-	pthread_spin_lock(&g_caches_lock);
 	TAILQ_FOREACH_SAFE(file, &g_caches, cache_tailq, tmp) {
 		if (!file->open_for_writing &&
 		    file->priority == SPDK_FILE_PRIORITY_LOW) {
@@ -2103,7 +2099,6 @@ _blobfs_cache_pool_reclaim(void *arg)
 				continue;
 			}
 			if (!blobfs_cache_pool_need_reclaim()) {
-				pthread_spin_unlock(&g_caches_lock);
 				return 1;
 			}
 			break;
@@ -2117,7 +2112,6 @@ _blobfs_cache_pool_reclaim(void *arg)
 				continue;
 			}
 			if (!blobfs_cache_pool_need_reclaim()) {
-				pthread_spin_unlock(&g_caches_lock);
 				return 1;
 			}
 			break;
@@ -2131,7 +2125,6 @@ _blobfs_cache_pool_reclaim(void *arg)
 		}
 		break;
 	}
-	pthread_spin_unlock(&g_caches_lock);
 
 	return 1;
 }
@@ -2141,9 +2134,7 @@ _add_file_to_cache_pool(void *ctx)
 {
 	struct spdk_file *file = ctx;
 
-	pthread_spin_lock(&g_caches_lock);
 	TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
-	pthread_spin_unlock(&g_caches_lock);
 }
 
 static void
@@ -2151,9 +2142,7 @@ _remove_file_from_cache_pool(void *ctx)
 {
 	struct spdk_file *file = ctx;
 
-	pthread_spin_lock(&g_caches_lock);
 	TAILQ_REMOVE(&g_caches, file, cache_tailq);
-	pthread_spin_unlock(&g_caches_lock);
 }
 
 static struct cache_buffer *
@@ -2949,9 +2938,7 @@ _file_free(void *ctx)
 {
 	struct spdk_file *file = ctx;
 
-	pthread_spin_lock(&g_caches_lock);
 	TAILQ_REMOVE(&g_caches, file, cache_tailq);
-	pthread_spin_unlock(&g_caches_lock);
 
 	free(file->name);
 	free(file->tree);
