@@ -151,6 +151,9 @@ function build_doc {
 
 function autobuild_test_suite {
 	run_test "autobuild_check_format" ./scripts/check_format.sh
+	if [ "$SPDK_TEST_OCF" -eq 1 ]; then
+		run_test "autobuild_ocf_precompile" ocf_precompile
+	fi
 	run_test "autobuild_check_so_deps" $rootdir/test/make/check_so_deps.sh
 	run_test "scanbuild_make" scanbuild_make
 	run_test "autobuild_generated_files_check" porcelain_check
@@ -172,12 +175,11 @@ if [ $SPDK_RUN_UBSAN -eq 1 ]; then
 	run_test "ubsan" echo "using ubsan"
 fi
 
-if [ "$SPDK_TEST_OCF" -eq 1 ]; then
-	run_test "autobuild_ocf_precompile" ocf_precompile
-fi
-
 if [ "$SPDK_TEST_AUTOBUILD" -eq 1 ]; then
 	run_test "autobuild" autobuild_test_suite
 else
+	if [ "$SPDK_TEST_OCF" -eq 1 ]; then
+		run_test "autobuild_ocf_precompile" ocf_precompile
+	fi
 	run_test "make" $MAKE $MAKEFLAGS
 fi
