@@ -757,6 +757,7 @@ nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
 		ctrlr->is_removed = true;
 	}
 	ctrlr->is_failed = true;
+	nvme_transport_ctrlr_disconnect_qpair(ctrlr, ctrlr->adminq);
 	SPDK_ERRLOG("ctrlr %s in failed state.\n", ctrlr->trid.traddr);
 }
 
