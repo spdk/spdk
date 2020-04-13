@@ -64,8 +64,7 @@ scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *ta
 static bool
 scsi_lun_has_pending_mgmt_tasks(const struct spdk_scsi_lun *lun)
 {
-	return !TAILQ_EMPTY(&lun->pending_mgmt_tasks) ||
-	       !TAILQ_EMPTY(&lun->mgmt_tasks);
+	return !TAILQ_EMPTY(&lun->pending_mgmt_tasks);
 }
 
 static bool
@@ -74,16 +73,14 @@ scsi_lun_has_outstanding_mgmt_tasks(const struct spdk_scsi_lun *lun)
 	return !TAILQ_EMPTY(&lun->mgmt_tasks);
 }
 
-/* This check includes both pending and submitted (outstanding) tasks. */
 static bool
 scsi_lun_has_pending_tasks(const struct spdk_scsi_lun *lun)
 {
-	return !TAILQ_EMPTY(&lun->pending_tasks) ||
-	       !TAILQ_EMPTY(&lun->tasks);
+	return !TAILQ_EMPTY(&lun->pending_tasks);
 }
 
 static bool
-scsi_lun_has_outstanding_tasks(struct spdk_scsi_lun *lun)
+scsi_lun_has_outstanding_tasks(const struct spdk_scsi_lun *lun)
 {
 	return !TAILQ_EMPTY(&lun->tasks);
 }
@@ -242,7 +239,8 @@ scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
 void
 spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
 {
-	if (scsi_lun_has_pending_mgmt_tasks(lun)) {
+	if (scsi_lun_has_pending_mgmt_tasks(lun) ||
+	    scsi_lun_has_outstanding_mgmt_tasks(lun)) {
 		/* Pending IO tasks will wait for completion of existing mgmt tasks.
 		 */
 		return;
@@ -550,7 +548,8 @@ spdk_scsi_lun_has_pending_mgmt_tasks(const struct spdk_scsi_lun *lun,
 	struct spdk_scsi_task *task;
 
 	if (initiator_port == NULL) {
-		return scsi_lun_has_pending_mgmt_tasks(lun);
+		return scsi_lun_has_pending_mgmt_tasks(lun) ||
+		       scsi_lun_has_outstanding_mgmt_tasks(lun);
 	}
 
 	TAILQ_FOREACH(task, &lun->pending_mgmt_tasks, scsi_link) {
@@ -567,7 +566,7 @@ spdk_scsi_lun_has_pending_mgmt_tasks(const struct spdk_scsi_lun *lun,
 
 	return false;
 }
-
+/* This check includes both pending and submitted (outstanding) tasks. */
 bool
 spdk_scsi_lun_has_pending_tasks(const struct spdk_scsi_lun *lun,
 				const struct spdk_scsi_port *initiator_port)
@@ -575,7 +574,8 @@ spdk_scsi_lun_has_pending_tasks(const struct spdk_scsi_lun *lun,
 	struct spdk_scsi_task *task;
 
 	if (initiator_port == NULL) {
-		return scsi_lun_has_pending_tasks(lun);
+		return scsi_lun_has_pending_tasks(lun) ||
+		       scsi_lun_has_outstanding_tasks(lun);
 	}
 
 	TAILQ_FOREACH(task, &lun->pending_tasks, scsi_link) {

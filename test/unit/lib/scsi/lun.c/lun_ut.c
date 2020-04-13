@@ -615,7 +615,7 @@ lun_check_pending_tasks_only_for_specific_initiator(void)
 	TAILQ_INSERT_TAIL(&lun->tasks, &task1, scsi_link);
 	TAILQ_INSERT_TAIL(&lun->tasks, &task2, scsi_link);
 	CU_ASSERT(scsi_lun_has_outstanding_tasks(lun) == true);
-	CU_ASSERT(scsi_lun_has_pending_tasks(lun) == true);
+	CU_ASSERT(scsi_lun_has_pending_tasks(lun) == false);
 	CU_ASSERT(spdk_scsi_lun_has_pending_tasks(lun, NULL) == true);
 	CU_ASSERT(spdk_scsi_lun_has_pending_tasks(lun, &initiator_port1) == true);
 	CU_ASSERT(spdk_scsi_lun_has_pending_tasks(lun, &initiator_port2) == true);
@@ -640,7 +640,8 @@ lun_check_pending_tasks_only_for_specific_initiator(void)
 
 	TAILQ_INSERT_TAIL(&lun->mgmt_tasks, &task1, scsi_link);
 	TAILQ_INSERT_TAIL(&lun->mgmt_tasks, &task2, scsi_link);
-	CU_ASSERT(scsi_lun_has_pending_mgmt_tasks(lun) == true);
+	CU_ASSERT(scsi_lun_has_outstanding_mgmt_tasks(lun) == true);
+	CU_ASSERT(scsi_lun_has_pending_mgmt_tasks(lun) == false);
 	CU_ASSERT(spdk_scsi_lun_has_pending_mgmt_tasks(lun, NULL) == true);
 	CU_ASSERT(spdk_scsi_lun_has_pending_mgmt_tasks(lun, &initiator_port1) == true);
 	CU_ASSERT(spdk_scsi_lun_has_pending_mgmt_tasks(lun, &initiator_port2) == true);
