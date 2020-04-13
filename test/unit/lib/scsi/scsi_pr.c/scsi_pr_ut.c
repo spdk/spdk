@@ -103,26 +103,26 @@ ut_port_init(void)
 	int rc;
 
 	/* g_i_port_a */
-	rc = spdk_scsi_port_construct(&g_i_port_a, 0xa, 0,
-				      "iqn.2016-06.io.spdk:fe5aacf7420a,i,0x00023d00000a");
+	rc = scsi_port_construct(&g_i_port_a, 0xa, 0,
+				 "iqn.2016-06.io.spdk:fe5aacf7420a,i,0x00023d00000a");
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	spdk_scsi_port_set_iscsi_transport_id(&g_i_port_a,
 					      "iqn.2016-06.io.spdk:fe5aacf7420a", 0x00023d00000a);
 	/* g_i_port_b */
-	rc = spdk_scsi_port_construct(&g_i_port_b, 0xb, 0,
-				      "iqn.2016-06.io.spdk:fe5aacf7420b,i,0x00023d00000b");
+	rc = scsi_port_construct(&g_i_port_b, 0xb, 0,
+				 "iqn.2016-06.io.spdk:fe5aacf7420b,i,0x00023d00000b");
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	spdk_scsi_port_set_iscsi_transport_id(&g_i_port_b,
 					      "iqn.2016-06.io.spdk:fe5aacf7420b", 0x00023d00000b);
 	/* g_i_port_c */
-	rc = spdk_scsi_port_construct(&g_i_port_c, 0xc, 0,
-				      "iqn.2016-06.io.spdk:fe5aacf7420c,i,0x00023d00000c");
+	rc = scsi_port_construct(&g_i_port_c, 0xc, 0,
+				 "iqn.2016-06.io.spdk:fe5aacf7420c,i,0x00023d00000c");
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	spdk_scsi_port_set_iscsi_transport_id(&g_i_port_c,
 					      "iqn.2016-06.io.spdk:fe5aacf7420c", 0x00023d00000c);
 	/* g_t_port_0 */
-	rc = spdk_scsi_port_construct(&g_t_port_0, 0x0, 1,
-				      "iqn.2016-06.io.spdk:fe5aacf74200,t,0x00023d000000");
+	rc = scsi_port_construct(&g_t_port_0, 0x0, 1,
+				 "iqn.2016-06.io.spdk:fe5aacf74200,t,0x00023d000000");
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	spdk_scsi_port_set_iscsi_transport_id(&g_t_port_0,
 					      "iqn.2016-06.io.spdk:fe5aacf74200", 0x00023d000000);
@@ -478,11 +478,11 @@ test_reservation_cmds_conflict(void)
 	 */
 	task.cdb[0] = SPDK_SBC_READ_10;
 	task.status = 0;
-	rc = spdk_scsi_pr_check(&task);
+	rc = scsi_pr_check(&task);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	task.cdb[0] = SPDK_SBC_WRITE_10;
 	task.status = 0;
-	rc = spdk_scsi_pr_check(&task);
+	rc = scsi_pr_check(&task);
 	SPDK_CU_ASSERT_FATAL(rc < 0);
 	SPDK_CU_ASSERT_FATAL(task.status == SPDK_SCSI_STATUS_RESERVATION_CONFLICT);
 
@@ -490,11 +490,11 @@ test_reservation_cmds_conflict(void)
 	task.initiator_port = &g_i_port_c;
 	task.cdb[0] = SPDK_SBC_READ_10;
 	task.status = 0;
-	rc = spdk_scsi_pr_check(&task);
+	rc = scsi_pr_check(&task);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	task.cdb[0] = SPDK_SBC_WRITE_10;
 	task.status = 0;
-	rc = spdk_scsi_pr_check(&task);
+	rc = scsi_pr_check(&task);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 
 	/* Host A preempts itself with SPDK_SCSI_PR_EXCLUSIVE_ACCESS */
@@ -510,12 +510,12 @@ test_reservation_cmds_conflict(void)
 	task.initiator_port = &g_i_port_c;
 	task.cdb[0] = SPDK_SBC_READ_10;
 	task.status = 0;
-	rc = spdk_scsi_pr_check(&task);
+	rc = scsi_pr_check(&task);
 	SPDK_CU_ASSERT_FATAL(rc < 0);
 	SPDK_CU_ASSERT_FATAL(task.status == SPDK_SCSI_STATUS_RESERVATION_CONFLICT);
 	task.cdb[0] = SPDK_SBC_WRITE_10;
 	task.status = 0;
-	rc = spdk_scsi_pr_check(&task);
+	rc = scsi_pr_check(&task);
 	SPDK_CU_ASSERT_FATAL(rc < 0);
 	SPDK_CU_ASSERT_FATAL(task.status == SPDK_SCSI_STATUS_RESERVATION_CONFLICT);
 
@@ -523,12 +523,12 @@ test_reservation_cmds_conflict(void)
 	task.initiator_port = &g_i_port_b;
 	task.cdb[0] = SPDK_SBC_READ_10;
 	task.status = 0;
-	rc = spdk_scsi_pr_check(&task);
+	rc = scsi_pr_check(&task);
 	SPDK_CU_ASSERT_FATAL(rc < 0);
 	SPDK_CU_ASSERT_FATAL(task.status == SPDK_SCSI_STATUS_RESERVATION_CONFLICT);
 	task.cdb[0] = SPDK_SBC_WRITE_10;
 	task.status = 0;
-	rc = spdk_scsi_pr_check(&task);
+	rc = scsi_pr_check(&task);
 	SPDK_CU_ASSERT_FATAL(rc < 0);
 	SPDK_CU_ASSERT_FATAL(task.status == SPDK_SCSI_STATUS_RESERVATION_CONFLICT);
 

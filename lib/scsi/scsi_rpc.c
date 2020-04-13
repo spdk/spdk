@@ -42,7 +42,7 @@ spdk_rpc_scsi_get_devices(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
-	struct spdk_scsi_dev *devs = spdk_scsi_dev_get_list();
+	struct spdk_scsi_dev *devs = scsi_dev_get_list();
 	int i;
 
 	if (params != NULL) {

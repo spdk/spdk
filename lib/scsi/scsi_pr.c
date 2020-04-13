@@ -507,9 +507,8 @@ conflict:
 }
 
 int
-spdk_scsi_pr_out(struct spdk_scsi_task *task,
-		 uint8_t *cdb, uint8_t *data,
-		 uint16_t data_len)
+scsi_pr_out(struct spdk_scsi_task *task, uint8_t *cdb,
+	    uint8_t *data, uint16_t data_len)
 {
 	int rc = -1;
 	uint64_t rkey, sa_rkey;
@@ -700,9 +699,8 @@ spdk_scsi_pr_in_read_full_status(struct spdk_scsi_task *task,
 }
 
 int
-spdk_scsi_pr_in(struct spdk_scsi_task *task,
-		uint8_t *cdb, uint8_t *data,
-		uint16_t data_len)
+scsi_pr_in(struct spdk_scsi_task *task, uint8_t *cdb,
+	   uint8_t *data, uint16_t data_len)
 {
 	enum spdk_scsi_pr_in_action_code action;
 	int rc = 0;
@@ -743,7 +741,7 @@ invalid:
 }
 
 int
-spdk_scsi_pr_check(struct spdk_scsi_task *task)
+scsi_pr_check(struct spdk_scsi_task *task)
 {
 	struct spdk_scsi_lun *lun = task->lun;
 	uint8_t *cdb = task->cdb;

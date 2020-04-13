@@ -37,7 +37,7 @@
 static struct spdk_scsi_dev g_devs[SPDK_SCSI_MAX_DEVS];
 
 struct spdk_scsi_dev *
-spdk_scsi_dev_get_list(void)
+scsi_dev_get_list(void)
 {
 	return g_devs;
 }
@@ -110,7 +110,7 @@ spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev,
 		 * LUN will remove itself from this dev when all outstanding IO
 		 * is done. When no more LUNs, dev will be deleted.
 		 */
-		spdk_scsi_lun_destruct(dev->lun[i]);
+		scsi_lun_destruct(dev->lun[i]);
 		lun_cnt++;
 	}
 
@@ -158,7 +158,7 @@ spdk_scsi_dev_add_lun(struct spdk_scsi_dev *dev, const char *bdev_name, int lun_
 		}
 	}
 
-	lun = spdk_scsi_lun_construct(bdev, hotremove_cb, hotremove_ctx);
+	lun = scsi_lun_construct(bdev, hotremove_cb, hotremove_ctx);
 	if (lun == NULL) {
 		return -1;
 	}
@@ -262,7 +262,7 @@ spdk_scsi_dev_queue_mgmt_task(struct spdk_scsi_dev *dev,
 {
 	assert(task != NULL);
 
-	spdk_scsi_lun_execute_mgmt_task(task->lun, task);
+	scsi_lun_execute_mgmt_task(task->lun, task);
 }
 
 void
@@ -271,7 +271,7 @@ spdk_scsi_dev_queue_task(struct spdk_scsi_dev *dev,
 {
 	assert(task != NULL);
 
-	spdk_scsi_lun_execute_task(task->lun, task);
+	scsi_lun_execute_task(task->lun, task);
 }
 
 static struct spdk_scsi_port *
@@ -311,7 +311,7 @@ spdk_scsi_dev_add_port(struct spdk_scsi_dev *dev, uint64_t id, const char *name)
 		return -1;
 	}
 
-	rc = spdk_scsi_port_construct(port, id, dev->num_ports, name);
+	rc = scsi_port_construct(port, id, dev->num_ports, name);
 	if (rc != 0) {
 		return rc;
 	}
@@ -331,7 +331,7 @@ spdk_scsi_dev_delete_port(struct spdk_scsi_dev *dev, uint64_t id)
 		return -1;
 	}
 
-	spdk_scsi_port_destruct(port);
+	scsi_port_destruct(port);
 
 	dev->num_ports--;
 
@@ -365,7 +365,7 @@ spdk_scsi_dev_free_io_channels(struct spdk_scsi_dev *dev)
 		if (dev->lun[i] == NULL) {
 			continue;
 		}
-		_spdk_scsi_lun_free_io_channel(dev->lun[i]);
+		scsi_lun_free_io_channel(dev->lun[i]);
 	}
 }
 
@@ -378,7 +378,7 @@ spdk_scsi_dev_allocate_io_channels(struct spdk_scsi_dev *dev)
 		if (dev->lun[i] == NULL) {
 			continue;
 		}
-		rc = _spdk_scsi_lun_allocate_io_channel(dev->lun[i]);
+		rc = scsi_lun_allocate_io_channel(dev->lun[i]);
 		if (rc < 0) {
 			spdk_scsi_dev_free_io_channels(dev);
 			return -1;
@@ -426,8 +426,8 @@ spdk_scsi_dev_has_pending_tasks(const struct spdk_scsi_dev *dev,
 
 	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; ++i) {
 		if (dev->lun[i] &&
-		    (spdk_scsi_lun_has_pending_tasks(dev->lun[i], initiator_port) ||
-		     spdk_scsi_lun_has_pending_mgmt_tasks(dev->lun[i], initiator_port))) {
+		    (scsi_lun_has_pending_tasks(dev->lun[i], initiator_port) ||
+		     scsi_lun_has_pending_mgmt_tasks(dev->lun[i], initiator_port))) {
 			return true;
 		}
 	}

@@ -47,7 +47,7 @@ spdk_scsi_port_create(uint64_t id, uint16_t index, const char *name)
 		return NULL;
 	}
 
-	if (spdk_scsi_port_construct(port, id, index, name) != 0) {
+	if (scsi_port_construct(port, id, index, name) != 0) {
 		spdk_scsi_port_free(&port);
 		return NULL;
 	}
@@ -70,8 +70,8 @@ spdk_scsi_port_free(struct spdk_scsi_port **pport)
 }
 
 int
-spdk_scsi_port_construct(struct spdk_scsi_port *port, uint64_t id, uint16_t index,
-			 const char *name)
+scsi_port_construct(struct spdk_scsi_port *port, uint64_t id, uint16_t index,
+		    const char *name)
 {
 	if (strlen(name) >= sizeof(port->name)) {
 		SPDK_ERRLOG("port name too long\n");
@@ -86,7 +86,7 @@ spdk_scsi_port_construct(struct spdk_scsi_port *port, uint64_t id, uint16_t inde
 }
 
 void
-spdk_scsi_port_destruct(struct spdk_scsi_port *port)
+scsi_port_destruct(struct spdk_scsi_port *port)
 {
 	memset(port, 0, sizeof(struct spdk_scsi_port));
 }

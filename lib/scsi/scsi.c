@@ -34,14 +34,14 @@
 
 #include "scsi_internal.h"
 
-struct spdk_scsi_globals g_spdk_scsi;
+struct spdk_scsi_globals g_scsi;
 
 int
 spdk_scsi_init(void)
 {
 	int rc;
 
-	rc = pthread_mutex_init(&g_spdk_scsi.mutex, NULL);
+	rc = pthread_mutex_init(&g_scsi.mutex, NULL);
 	if (rc != 0) {
 		SPDK_ERRLOG("mutex_init() failed\n");
 		return -1;
@@ -53,7 +53,7 @@ spdk_scsi_init(void)
 void
 spdk_scsi_fini(void)
 {
-	pthread_mutex_destroy(&g_spdk_scsi.mutex);
+	pthread_mutex_destroy(&g_scsi.mutex);
 }
 
 SPDK_TRACE_REGISTER_FN(scsi_trace, "scsi", TRACE_GROUP_SCSI)

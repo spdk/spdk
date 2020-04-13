@@ -81,7 +81,7 @@ spdk_scsi_task_put(struct spdk_scsi_task *task)
 	free(task);
 }
 
-struct spdk_scsi_lun *spdk_scsi_lun_construct(struct spdk_bdev *bdev,
+struct spdk_scsi_lun *scsi_lun_construct(struct spdk_bdev *bdev,
 		void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
 		void *hotremove_ctx)
 {
@@ -96,7 +96,7 @@ struct spdk_scsi_lun *spdk_scsi_lun_construct(struct spdk_bdev *bdev,
 }
 
 void
-spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun)
+scsi_lun_destruct(struct spdk_scsi_lun *lun)
 {
 	free(lun);
 }
@@ -115,27 +115,27 @@ spdk_bdev_get_by_name(const char *bdev_name)
 	return NULL;
 }
 
-DEFINE_STUB_V(spdk_scsi_lun_execute_mgmt_task,
+DEFINE_STUB_V(scsi_lun_execute_mgmt_task,
 	      (struct spdk_scsi_lun *lun, struct spdk_scsi_task *task));
 
-DEFINE_STUB_V(spdk_scsi_lun_execute_task,
+DEFINE_STUB_V(scsi_lun_execute_task,
 	      (struct spdk_scsi_lun *lun, struct spdk_scsi_task *task));
 
-DEFINE_STUB(_spdk_scsi_lun_allocate_io_channel, int,
+DEFINE_STUB(scsi_lun_allocate_io_channel, int,
 	    (struct spdk_scsi_lun *lun), 0);
 
-DEFINE_STUB_V(_spdk_scsi_lun_free_io_channel, (struct spdk_scsi_lun *lun));
+DEFINE_STUB_V(scsi_lun_free_io_channel, (struct spdk_scsi_lun *lun));
 
 bool
-spdk_scsi_lun_has_pending_mgmt_tasks(const struct spdk_scsi_lun *lun,
-				     const struct spdk_scsi_port *initiator_port)
+scsi_lun_has_pending_mgmt_tasks(const struct spdk_scsi_lun *lun,
+				const struct spdk_scsi_port *initiator_port)
 {
 	return (g_initiator_port_with_pending_mgmt_tasks == initiator_port);
 }
 
 bool
-spdk_scsi_lun_has_pending_tasks(const struct spdk_scsi_lun *lun,
-				const struct spdk_scsi_port *initiator_port)
+scsi_lun_has_pending_tasks(const struct spdk_scsi_lun *lun,
+			   const struct spdk_scsi_port *initiator_port)
 {
 	return (g_initiator_port_with_pending_tasks == initiator_port);
 }

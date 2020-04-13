@@ -1171,7 +1171,7 @@ bdev_scsi_task_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
 	spdk_bdev_free_io(bdev_io);
 
 	spdk_scsi_task_set_status(task, sc, sk, asc, ascq);
-	spdk_scsi_lun_complete_task(task->lun, task);
+	scsi_lun_complete_task(task->lun, task);
 }
 
 static void
@@ -1186,7 +1186,7 @@ bdev_scsi_read_task_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
 	spdk_bdev_io_get_scsi_status(bdev_io, &sc, &sk, &asc, &ascq);
 
 	spdk_scsi_task_set_status(task, sc, sk, asc, ascq);
-	spdk_scsi_lun_complete_task(task->lun, task);
+	scsi_lun_complete_task(task->lun, task);
 }
 
 static void
@@ -1201,7 +1201,7 @@ bdev_scsi_task_complete_reset(struct spdk_bdev_io *bdev_io, bool success,
 		task->response = SPDK_SCSI_TASK_MGMT_RESP_SUCCESS;
 	}
 
-	spdk_scsi_lun_complete_reset_task(task->lun, task);
+	scsi_lun_complete_reset_task(task->lun, task);
 }
 
 static void
@@ -1405,7 +1405,7 @@ bdev_scsi_task_complete_unmap_cmd(struct spdk_bdev_io *bdev_io, bool success,
 	}
 
 	if (ctx->count == 0) {
-		spdk_scsi_lun_complete_task(task->lun, task);
+		scsi_lun_complete_task(task->lun, task);
 		free(ctx);
 	}
 }
@@ -1915,7 +1915,7 @@ bdev_scsi_process_primary(struct spdk_scsi_task *task)
 			break;
 		}
 
-		rc = spdk_scsi_pr_out(task, cdb, data, data_len);
+		rc = scsi_pr_out(task, cdb, data, data_len);
 		if (rc < 0) {
 			break;
 		}
@@ -1928,7 +1928,7 @@ bdev_scsi_process_primary(struct spdk_scsi_task *task)
 		data_len = alloc_len;
 		data = calloc(1, data_len);
 		assert(data != NULL);
-		rc = spdk_scsi_pr_in(task, cdb, data, data_len);
+		rc = scsi_pr_in(task, cdb, data, data_len);
 		break;
 
 	default:
@@ -1954,7 +1954,7 @@ bdev_scsi_process_primary(struct spdk_scsi_task *task)
 }
 
 int
-spdk_bdev_scsi_execute(struct spdk_scsi_task *task)
+bdev_scsi_execute(struct spdk_scsi_task *task)
 {
 	int rc;
 
@@ -1978,11 +1978,11 @@ bdev_scsi_reset_resubmit(void *arg)
 {
 	struct spdk_scsi_task *task = arg;
 
-	spdk_bdev_scsi_reset(task);
+	bdev_scsi_reset(task);
 }
 
 void
-spdk_bdev_scsi_reset(struct spdk_scsi_task *task)
+bdev_scsi_reset(struct spdk_scsi_task *task)
 {
 	struct spdk_scsi_lun *lun = task->lun;
 	int rc;
@@ -1995,8 +1995,8 @@ spdk_bdev_scsi_reset(struct spdk_scsi_task *task)
 }
 
 bool
-spdk_scsi_bdev_get_dif_ctx(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
-			   struct spdk_dif_ctx *dif_ctx)
+bdev_scsi_get_dif_ctx(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
+		      struct spdk_dif_ctx *dif_ctx)
 {
 	uint32_t ref_tag = 0, dif_check_flags = 0, data_offset;
 	uint8_t *cdb;
