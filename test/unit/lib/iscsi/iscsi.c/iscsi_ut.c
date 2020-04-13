@@ -229,9 +229,9 @@ op_login_session_normal_test(void)
 	CU_ASSERT(rsph->status_detail == ISCSI_LOGIN_CONN_ADD_FAIL);
 
 	/* expect failure: session found while tag is wrong */
-	g_spdk_iscsi.MaxSessions = UT_ISCSI_TSIH * 2;
-	g_spdk_iscsi.session = calloc(1, sizeof(void *) * g_spdk_iscsi.MaxSessions);
-	g_spdk_iscsi.session[UT_ISCSI_TSIH - 1] = &sess;
+	g_iscsi.MaxSessions = UT_ISCSI_TSIH * 2;
+	g_iscsi.session = calloc(1, sizeof(void *) * g_iscsi.MaxSessions);
+	g_iscsi.session[UT_ISCSI_TSIH - 1] = &sess;
 	sess.tsih = UT_ISCSI_TSIH;
 	rsph->tsih = UT_ISCSI_TSIH >> 8; /* to append the session */
 	sess.tag = 1;
@@ -244,19 +244,19 @@ op_login_session_normal_test(void)
 
 	/* expect suceess: drop the session */
 	rsph->tsih = 0; /* to create the session */
-	g_spdk_iscsi.AllowDuplicateIsid = false;
+	g_iscsi.AllowDuplicateIsid = false;
 	rc = iscsi_op_login_session_normal(&conn, &rsp_pdu, UT_INITIATOR_NAME1,
 					   &param, 0);
 	CU_ASSERT(rc == 0);
 
 	/* expect suceess: create the session */
 	rsph->tsih = 0; /* to create the session */
-	g_spdk_iscsi.AllowDuplicateIsid = true;
+	g_iscsi.AllowDuplicateIsid = true;
 	rc = iscsi_op_login_session_normal(&conn, &rsp_pdu, UT_INITIATOR_NAME1,
 					   &param, 0);
 	CU_ASSERT(rc == 0);
 
-	free(g_spdk_iscsi.session);
+	free(g_iscsi.session);
 }
 
 static void

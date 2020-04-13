@@ -389,7 +389,7 @@ enum spdk_error_codes {
 
 #define xstrdup(s) (s ? strdup(s) : (char *)NULL)
 
-extern struct spdk_iscsi_globals g_spdk_iscsi;
+extern struct spdk_iscsi_globals g_iscsi;
 extern struct spdk_iscsi_opts *g_spdk_iscsi_opts;
 
 struct spdk_iscsi_task;
@@ -457,7 +457,7 @@ spdk_get_max_immediate_data_size(void)
 	 *  take up much space and we need to make sure the worst-case scenario
 	 *  can be satisified by the size returned here.
 	 */
-	return g_spdk_iscsi.FirstBurstLength +
+	return g_iscsi.FirstBurstLength +
 	       ISCSI_DIGEST_LEN + /* data digest */
 	       ISCSI_DIGEST_LEN + /* header digest */
 	       8 +		   /* bidirectional AHS */

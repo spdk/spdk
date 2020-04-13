@@ -40,14 +40,14 @@
 
 SPDK_LOG_REGISTER_COMPONENT("iscsi", SPDK_LOG_ISCSI)
 
-struct spdk_iscsi_globals g_spdk_iscsi;
+struct spdk_iscsi_globals g_iscsi;
 
 const char *config_file;
 
 static int
 test_setup(void)
 {
-	TAILQ_INIT(&g_spdk_iscsi.ig_head);
+	TAILQ_INIT(&g_iscsi.ig_head);
 	return 0;
 }
 

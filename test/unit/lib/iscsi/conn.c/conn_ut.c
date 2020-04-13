@@ -56,7 +56,7 @@ struct spdk_scsi_lun {
 	uint8_t reserved;
 };
 
-struct spdk_iscsi_globals g_spdk_iscsi;
+struct spdk_iscsi_globals g_iscsi;
 static TAILQ_HEAD(read_tasks_head, spdk_iscsi_task) g_ut_read_tasks =
 	TAILQ_HEAD_INITIALIZER(g_ut_read_tasks);
 static struct spdk_iscsi_task *g_new_task = NULL;

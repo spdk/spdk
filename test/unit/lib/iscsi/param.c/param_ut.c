@@ -42,7 +42,7 @@
 
 #include "spdk_internal/mock.h"
 
-struct spdk_iscsi_globals g_spdk_iscsi;
+struct spdk_iscsi_globals g_iscsi;
 
 DEFINE_STUB(spdk_iscsi_find_tgt_node, struct spdk_iscsi_tgt_node *,
 	    (const char *target_name), NULL);

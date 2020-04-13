@@ -220,9 +220,9 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 		return -1;
 	}
 
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	conn->timeout = g_spdk_iscsi.timeout * spdk_get_ticks_hz(); /* seconds to TSC */
-	conn->nopininterval = g_spdk_iscsi.nopininterval;
+	pthread_mutex_lock(&g_iscsi.mutex);
+	conn->timeout = g_iscsi.timeout * spdk_get_ticks_hz(); /* seconds to TSC */
+	conn->nopininterval = g_iscsi.nopininterval;
 	conn->nopininterval *= spdk_get_ticks_hz(); /* seconds to TSC */
 	conn->nop_outstanding = false;
 	conn->data_out_cnt = 0;
@@ -231,7 +231,7 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	conn->require_chap = portal->group->require_chap;
 	conn->mutual_chap = portal->group->mutual_chap;
 	conn->chap_group = portal->group->chap_group;
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	pthread_mutex_unlock(&g_iscsi.mutex);
 	conn->MaxRecvDataSegmentLength = 8192; /* RFC3720(12.12) */
 
 	conn->portal = portal;
@@ -294,7 +294,7 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	conn->pending_task_cnt = 0;
 
 	/* Get the first poll group. */
-	pg = TAILQ_FIRST(&g_spdk_iscsi.poll_group_head);
+	pg = TAILQ_FIRST(&g_iscsi.poll_group_head);
 	if (pg == NULL) {
 		SPDK_ERRLOG("There is no poll group.\n");
 		assert(false);
@@ -376,7 +376,7 @@ iscsi_conn_cleanup_backend(struct spdk_iscsi_conn *conn)
 
 	if (conn->sess->connections > 1) {
 		/* connection specific cleanup */
-	} else if (!g_spdk_iscsi.AllowDuplicateIsid) {
+	} else if (!g_iscsi.AllowDuplicateIsid) {
 		/* clean up all tasks to all LUNs for session */
 		target = conn->sess->target;
 		if (target != NULL) {
@@ -1579,7 +1579,7 @@ spdk_iscsi_conn_schedule(struct spdk_iscsi_conn *conn)
 		 * thread. */
 		return;
 	}
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	pthread_mutex_lock(&g_iscsi.mutex);
 
 	target = conn->sess->target;
 	pthread_mutex_lock(&target->mutex);
@@ -1590,7 +1590,7 @@ spdk_iscsi_conn_schedule(struct spdk_iscsi_conn *conn)
 		 *  Pick a poll group using round-robin.
 		 */
 		if (g_next_pg == NULL) {
-			g_next_pg = TAILQ_FIRST(&g_spdk_iscsi.poll_group_head);
+			g_next_pg = TAILQ_FIRST(&g_iscsi.poll_group_head);
 			assert(g_next_pg != NULL);
 		}
 
@@ -1607,7 +1607,7 @@ spdk_iscsi_conn_schedule(struct spdk_iscsi_conn *conn)
 	}
 
 	pthread_mutex_unlock(&target->mutex);
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	pthread_mutex_unlock(&g_iscsi.mutex);
 
 	assert(spdk_io_channel_get_thread(spdk_io_channel_from_ctx(conn->pg)) ==
 	       spdk_get_thread());

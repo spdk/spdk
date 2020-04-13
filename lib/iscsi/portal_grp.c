@@ -87,7 +87,7 @@ iscsi_portal_find_by_addr(const char *host, const char *port)
 {
 	struct spdk_iscsi_portal *p;
 
-	TAILQ_FOREACH(p, &g_spdk_iscsi.portal_head, g_tailq) {
+	TAILQ_FOREACH(p, &g_iscsi.portal_head, g_tailq) {
 		if (!strcmp(p->host, host) && !strcmp(p->port, port)) {
 			return p;
 		}
@@ -136,16 +136,16 @@ spdk_iscsi_portal_create(const char *host, const char *port)
 	p->group = NULL; /* set at a later time by caller */
 	p->acceptor_poller = NULL;
 
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	pthread_mutex_lock(&g_iscsi.mutex);
 	tmp = iscsi_portal_find_by_addr(host, port);
 	if (tmp != NULL) {
-		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+		pthread_mutex_unlock(&g_iscsi.mutex);
 		SPDK_ERRLOG("portal (%s, %s) already exists\n", host, port);
 		goto error_out;
 	}
 
-	TAILQ_INSERT_TAIL(&g_spdk_iscsi.portal_head, p, g_tailq);
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	TAILQ_INSERT_TAIL(&g_iscsi.portal_head, p, g_tailq);
+	pthread_mutex_unlock(&g_iscsi.mutex);
 
 	return p;
 
@@ -162,9 +162,9 @@ spdk_iscsi_portal_destroy(struct spdk_iscsi_portal *p)
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_portal_destroy\n");
 
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	TAILQ_REMOVE(&g_spdk_iscsi.portal_head, p, g_tailq);
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	pthread_mutex_lock(&g_iscsi.mutex);
+	TAILQ_REMOVE(&g_iscsi.portal_head, p, g_tailq);
+	pthread_mutex_unlock(&g_iscsi.mutex);
 
 	free(p);
 
@@ -298,12 +298,12 @@ spdk_iscsi_portal_grp_create(int tag)
 	pg->ref = 0;
 	pg->tag = tag;
 
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	pg->disable_chap = g_spdk_iscsi.disable_chap;
-	pg->require_chap = g_spdk_iscsi.require_chap;
-	pg->mutual_chap = g_spdk_iscsi.mutual_chap;
-	pg->chap_group = g_spdk_iscsi.chap_group;
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	pthread_mutex_lock(&g_iscsi.mutex);
+	pg->disable_chap = g_iscsi.disable_chap;
+	pg->require_chap = g_iscsi.require_chap;
+	pg->mutual_chap = g_iscsi.mutual_chap;
+	pg->chap_group = g_iscsi.chap_group;
+	pthread_mutex_unlock(&g_iscsi.mutex);
 
 	TAILQ_INIT(&pg->head);
 
@@ -334,13 +334,13 @@ spdk_iscsi_portal_grp_register(struct spdk_iscsi_portal_grp *pg)
 
 	assert(pg != NULL);
 
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	pthread_mutex_lock(&g_iscsi.mutex);
 	tmp = spdk_iscsi_portal_grp_find_by_tag(pg->tag);
 	if (tmp == NULL) {
-		TAILQ_INSERT_TAIL(&g_spdk_iscsi.pg_head, pg, tailq);
+		TAILQ_INSERT_TAIL(&g_iscsi.pg_head, pg, tailq);
 		rc = 0;
 	}
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	pthread_mutex_unlock(&g_iscsi.mutex);
 	return rc;
 }
 
@@ -441,7 +441,7 @@ spdk_iscsi_portal_grp_find_by_tag(int tag)
 {
 	struct spdk_iscsi_portal_grp *pg;
 
-	TAILQ_FOREACH(pg, &g_spdk_iscsi.pg_head, tailq) {
+	TAILQ_FOREACH(pg, &g_iscsi.pg_head, tailq) {
 		if (pg->tag == tag) {
 			return pg;
 		}
@@ -482,15 +482,15 @@ spdk_iscsi_portal_grps_destroy(void)
 	struct spdk_iscsi_portal_grp *pg;
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_portal_grps_destroy\n");
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	while (!TAILQ_EMPTY(&g_spdk_iscsi.pg_head)) {
-		pg = TAILQ_FIRST(&g_spdk_iscsi.pg_head);
-		TAILQ_REMOVE(&g_spdk_iscsi.pg_head, pg, tailq);
-		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	pthread_mutex_lock(&g_iscsi.mutex);
+	while (!TAILQ_EMPTY(&g_iscsi.pg_head)) {
+		pg = TAILQ_FIRST(&g_iscsi.pg_head);
+		TAILQ_REMOVE(&g_iscsi.pg_head, pg, tailq);
+		pthread_mutex_unlock(&g_iscsi.mutex);
 		spdk_iscsi_portal_grp_destroy(pg);
-		pthread_mutex_lock(&g_spdk_iscsi.mutex);
+		pthread_mutex_lock(&g_iscsi.mutex);
 	}
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	pthread_mutex_unlock(&g_iscsi.mutex);
 }
 
 int
@@ -524,11 +524,11 @@ spdk_iscsi_portal_grp_close_all(void)
 	struct spdk_iscsi_portal_grp *pg;
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_portal_grp_close_all\n");
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	TAILQ_FOREACH(pg, &g_spdk_iscsi.pg_head, tailq) {
+	pthread_mutex_lock(&g_iscsi.mutex);
+	TAILQ_FOREACH(pg, &g_iscsi.pg_head, tailq) {
 		iscsi_portal_grp_close(pg);
 	}
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	pthread_mutex_unlock(&g_iscsi.mutex);
 }
 
 struct spdk_iscsi_portal_grp *
@@ -536,15 +536,15 @@ spdk_iscsi_portal_grp_unregister(int tag)
 {
 	struct spdk_iscsi_portal_grp *pg;
 
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	TAILQ_FOREACH(pg, &g_spdk_iscsi.pg_head, tailq) {
+	pthread_mutex_lock(&g_iscsi.mutex);
+	TAILQ_FOREACH(pg, &g_iscsi.pg_head, tailq) {
 		if (pg->tag == tag) {
-			TAILQ_REMOVE(&g_spdk_iscsi.pg_head, pg, tailq);
-			pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+			TAILQ_REMOVE(&g_iscsi.pg_head, pg, tailq);
+			pthread_mutex_unlock(&g_iscsi.mutex);
 			return pg;
 		}
 	}
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	pthread_mutex_unlock(&g_iscsi.mutex);
 	return NULL;
 }
 
@@ -586,7 +586,7 @@ spdk_iscsi_portal_grps_config_text(FILE *fp)
 	fprintf(fp, "%s", portal_group_section);
 
 	/* Dump portal groups */
-	TAILQ_FOREACH(pg, &g_spdk_iscsi.pg_head, tailq) {
+	TAILQ_FOREACH(pg, &g_iscsi.pg_head, tailq) {
 		if (NULL == pg) { continue; }
 		fprintf(fp, PORTAL_GROUP_TMPL, pg->tag, pg->tag);
 		/* Dump portals */
@@ -640,7 +640,7 @@ spdk_iscsi_portal_grps_info_json(struct spdk_json_write_ctx *w)
 {
 	struct spdk_iscsi_portal_grp *pg;
 
-	TAILQ_FOREACH(pg, &g_spdk_iscsi.pg_head, tailq) {
+	TAILQ_FOREACH(pg, &g_iscsi.pg_head, tailq) {
 		iscsi_portal_grp_info_json(pg, w);
 	}
 }
@@ -650,7 +650,7 @@ spdk_iscsi_portal_grps_config_json(struct spdk_json_write_ctx *w)
 {
 	struct spdk_iscsi_portal_grp *pg;
 
-	TAILQ_FOREACH(pg, &g_spdk_iscsi.pg_head, tailq) {
+	TAILQ_FOREACH(pg, &g_iscsi.pg_head, tailq) {
 		iscsi_portal_grp_config_json(pg, w);
 	}
 }

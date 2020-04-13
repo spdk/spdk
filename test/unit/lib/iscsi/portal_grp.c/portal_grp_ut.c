@@ -49,14 +49,14 @@ DEFINE_STUB(spdk_iscsi_conn_construct, int,
 	    (struct spdk_iscsi_portal *portal, struct spdk_sock *sock),
 	    0);
 
-struct spdk_iscsi_globals g_spdk_iscsi;
+struct spdk_iscsi_globals g_iscsi;
 
 static int
 test_setup(void)
 {
-	TAILQ_INIT(&g_spdk_iscsi.portal_head);
-	TAILQ_INIT(&g_spdk_iscsi.pg_head);
-	pthread_mutex_init(&g_spdk_iscsi.mutex, NULL);
+	TAILQ_INIT(&g_iscsi.portal_head);
+	TAILQ_INIT(&g_iscsi.pg_head);
+	pthread_mutex_init(&g_iscsi.mutex, NULL);
 	return 0;
 }
 
@@ -72,7 +72,7 @@ portal_create_ipv4_normal_case(void)
 	CU_ASSERT(p != NULL);
 
 	spdk_iscsi_portal_destroy(p);
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
 }
 
 static void
@@ -87,7 +87,7 @@ portal_create_ipv6_normal_case(void)
 	CU_ASSERT(p != NULL);
 
 	spdk_iscsi_portal_destroy(p);
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
 }
 
 static void
@@ -102,7 +102,7 @@ portal_create_ipv4_wildcard_case(void)
 	CU_ASSERT(p != NULL);
 
 	spdk_iscsi_portal_destroy(p);
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
 }
 
 static void
@@ -117,7 +117,7 @@ portal_create_ipv6_wildcard_case(void)
 	CU_ASSERT(p != NULL);
 
 	spdk_iscsi_portal_destroy(p);
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
 }
 
 static void
@@ -135,7 +135,7 @@ portal_create_twice_case(void)
 	CU_ASSERT(p2 == NULL);
 
 	spdk_iscsi_portal_destroy(p1);
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
 }
 
 static void
@@ -154,7 +154,7 @@ parse_portal_ipv4_normal_case(void)
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
 
 	spdk_iscsi_portal_destroy(p);
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
 
 }
 
@@ -174,7 +174,7 @@ parse_portal_ipv6_normal_case(void)
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
 
 	spdk_iscsi_portal_destroy(p);
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
 }
 
 static void
@@ -193,7 +193,7 @@ parse_portal_ipv4_skip_port_case(void)
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
 
 	spdk_iscsi_portal_destroy(p);
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
 }
 
 static void
@@ -212,7 +212,7 @@ parse_portal_ipv6_skip_port_case(void)
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
 
 	spdk_iscsi_portal_destroy(p);
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
 }
 
 static void
@@ -239,11 +239,11 @@ portal_grp_register_unregister_case(void)
 	CU_ASSERT(pg2 != NULL);
 	CU_ASSERT(pg1 == pg2);
 
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.pg_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.pg_head));
 
 	spdk_iscsi_portal_grp_destroy(pg1);
 
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
 }
 
 static void
@@ -273,11 +273,11 @@ portal_grp_register_twice_case(void)
 	CU_ASSERT(pg2 != NULL);
 	CU_ASSERT(pg1 == pg2);
 
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.pg_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.pg_head));
 
 	spdk_iscsi_portal_grp_destroy(pg1);
 
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
 }
 
 static void
@@ -320,8 +320,8 @@ portal_grp_add_delete_case(void)
 
 	poll_thread(0);
 
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.pg_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.pg_head));
 
 	free_threads();
 }
@@ -379,8 +379,8 @@ portal_grp_add_delete_twice_case(void)
 
 	spdk_iscsi_portal_grps_destroy();
 
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.pg_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.pg_head));
 
 	MOCK_CLEAR_P(spdk_sock_listen);
 

@@ -55,7 +55,7 @@ iscsi_task_free(struct spdk_scsi_task *scsi_task)
 	spdk_iscsi_task_disassociate_pdu(task);
 	assert(task->conn->pending_task_cnt > 0);
 	task->conn->pending_task_cnt--;
-	spdk_mempool_put(g_spdk_iscsi.task_pool, (void *)task);
+	spdk_mempool_put(g_iscsi.task_pool, (void *)task);
 }
 
 struct spdk_iscsi_task *
@@ -64,7 +64,7 @@ spdk_iscsi_task_get(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *parent
 {
 	struct spdk_iscsi_task *task;
 
-	task = spdk_mempool_get(g_spdk_iscsi.task_pool);
+	task = spdk_mempool_get(g_iscsi.task_pool);
 	if (!task) {
 		SPDK_ERRLOG("Unable to get task\n");
 		abort();

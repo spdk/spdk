@@ -44,7 +44,7 @@
 #include "unit/lib/json_mock.c"
 #include "common/lib/test_env.c"
 
-struct spdk_iscsi_globals g_spdk_iscsi;
+struct spdk_iscsi_globals g_iscsi;
 
 const char *config_file;
 

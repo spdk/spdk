@@ -67,14 +67,14 @@
 #define HAVE_ARC4RANDOM 1
 #endif
 
-struct spdk_iscsi_globals g_spdk_iscsi = {
+struct spdk_iscsi_globals g_iscsi = {
 	.mutex = PTHREAD_MUTEX_INITIALIZER,
-	.portal_head = TAILQ_HEAD_INITIALIZER(g_spdk_iscsi.portal_head),
-	.pg_head = TAILQ_HEAD_INITIALIZER(g_spdk_iscsi.pg_head),
-	.ig_head = TAILQ_HEAD_INITIALIZER(g_spdk_iscsi.ig_head),
-	.target_head = TAILQ_HEAD_INITIALIZER(g_spdk_iscsi.target_head),
-	.auth_group_head = TAILQ_HEAD_INITIALIZER(g_spdk_iscsi.auth_group_head),
-	.poll_group_head = TAILQ_HEAD_INITIALIZER(g_spdk_iscsi.poll_group_head),
+	.portal_head = TAILQ_HEAD_INITIALIZER(g_iscsi.portal_head),
+	.pg_head = TAILQ_HEAD_INITIALIZER(g_iscsi.pg_head),
+	.ig_head = TAILQ_HEAD_INITIALIZER(g_iscsi.ig_head),
+	.target_head = TAILQ_HEAD_INITIALIZER(g_iscsi.target_head),
+	.auth_group_head = TAILQ_HEAD_INITIALIZER(g_iscsi.auth_group_head),
+	.poll_group_head = TAILQ_HEAD_INITIALIZER(g_iscsi.poll_group_head),
 };
 
 #define MATCH_DIGEST_WORD(BUF, CRC32C) \
@@ -546,7 +546,7 @@ void spdk_free_sess(struct spdk_iscsi_sess *sess)
 	spdk_iscsi_param_free(sess->params);
 	free(sess->conns);
 	spdk_scsi_port_free(&sess->initiator_port);
-	spdk_mempool_put(g_spdk_iscsi.session_pool, (void *)sess);
+	spdk_mempool_put(g_iscsi.session_pool, (void *)sess);
 }
 
 static int
@@ -557,30 +557,30 @@ create_iscsi_sess(struct spdk_iscsi_conn *conn,
 	struct spdk_iscsi_sess *sess;
 	int rc;
 
-	sess = spdk_mempool_get(g_spdk_iscsi.session_pool);
+	sess = spdk_mempool_get(g_iscsi.session_pool);
 	if (!sess) {
 		SPDK_ERRLOG("Unable to get session object\n");
-		SPDK_ERRLOG("MaxSessions set to %d\n", g_spdk_iscsi.MaxSessions);
+		SPDK_ERRLOG("MaxSessions set to %d\n", g_iscsi.MaxSessions);
 		return -ENOMEM;
 	}
 
 	/* configuration values */
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	pthread_mutex_lock(&g_iscsi.mutex);
 
-	sess->MaxConnections = g_spdk_iscsi.MaxConnectionsPerSession;
+	sess->MaxConnections = g_iscsi.MaxConnectionsPerSession;
 	sess->MaxOutstandingR2T = DEFAULT_MAXOUTSTANDINGR2T;
 
-	sess->DefaultTime2Wait = g_spdk_iscsi.DefaultTime2Wait;
-	sess->DefaultTime2Retain = g_spdk_iscsi.DefaultTime2Retain;
-	sess->FirstBurstLength = g_spdk_iscsi.FirstBurstLength;
+	sess->DefaultTime2Wait = g_iscsi.DefaultTime2Wait;
+	sess->DefaultTime2Retain = g_iscsi.DefaultTime2Retain;
+	sess->FirstBurstLength = g_iscsi.FirstBurstLength;
 	sess->MaxBurstLength = SPDK_ISCSI_MAX_BURST_LENGTH;
 	sess->InitialR2T = DEFAULT_INITIALR2T;
-	sess->ImmediateData = g_spdk_iscsi.ImmediateData;
+	sess->ImmediateData = g_iscsi.ImmediateData;
 	sess->DataPDUInOrder = DEFAULT_DATAPDUINORDER;
 	sess->DataSequenceInOrder = DEFAULT_DATASEQUENCEINORDER;
-	sess->ErrorRecoveryLevel = g_spdk_iscsi.ErrorRecoveryLevel;
+	sess->ErrorRecoveryLevel = g_iscsi.ErrorRecoveryLevel;
 
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	pthread_mutex_unlock(&g_iscsi.mutex);
 
 	sess->tag = conn->pg_tag;
 
@@ -708,11 +708,11 @@ get_iscsi_sess_by_tsih(uint16_t tsih)
 {
 	struct spdk_iscsi_sess *session;
 
-	if (tsih == 0 || tsih > g_spdk_iscsi.MaxSessions) {
+	if (tsih == 0 || tsih > g_iscsi.MaxSessions) {
 		return NULL;
 	}
 
-	session = g_spdk_iscsi.session[tsih - 1];
+	session = g_iscsi.session[tsih - 1];
 	assert(tsih == session->tsih);
 
 	return session;
@@ -1073,9 +1073,9 @@ iscsi_check_values(struct spdk_iscsi_conn *conn)
 			    conn->sess->MaxBurstLength);
 		return -1;
 	}
-	if (conn->sess->FirstBurstLength > g_spdk_iscsi.FirstBurstLength) {
+	if (conn->sess->FirstBurstLength > g_iscsi.FirstBurstLength) {
 		SPDK_ERRLOG("FirstBurstLength(%d) > iSCSI target restriction(%d)\n",
-			    conn->sess->FirstBurstLength, g_spdk_iscsi.FirstBurstLength);
+			    conn->sess->FirstBurstLength, g_iscsi.FirstBurstLength);
 		return -1;
 	}
 	if (conn->sess->MaxBurstLength > 0x00ffffff) {
@@ -1514,7 +1514,7 @@ iscsi_op_login_check_session(struct spdk_iscsi_conn *conn,
 			rsph->status_detail = rc;
 			return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
 		}
-	} else if (!g_spdk_iscsi.AllowDuplicateIsid) {
+	} else if (!g_iscsi.AllowDuplicateIsid) {
 		/* new session, drop old sess by the initiator */
 		spdk_iscsi_drop_conns(conn, initiator_port_name, 0 /* drop old */);
 	}
@@ -1687,9 +1687,9 @@ iscsi_op_login_session_normal(struct spdk_iscsi_conn *conn,
 			 target_short_name);
 	}
 
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	pthread_mutex_lock(&g_iscsi.mutex);
 	rc = iscsi_op_login_check_target(conn, rsp_pdu, target_name, &target);
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	pthread_mutex_unlock(&g_iscsi.mutex);
 
 	if (rc < 0) {
 		return rc;
@@ -1914,9 +1914,9 @@ iscsi_op_login_phase_none(struct spdk_iscsi_conn *conn,
 		rsph->tsih = 0;
 
 		/* force target flags */
-		pthread_mutex_lock(&g_spdk_iscsi.mutex);
+		pthread_mutex_lock(&g_iscsi.mutex);
 		rc = iscsi_op_login_session_discovery_chap(conn);
-		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+		pthread_mutex_unlock(&g_iscsi.mutex);
 		if (rc < 0) {
 			return rc;
 		}
@@ -4737,10 +4737,10 @@ iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 
 			if (data_len != 0 && pdu->data_buf == NULL) {
 				if (data_len <= spdk_get_max_immediate_data_size()) {
-					pool = g_spdk_iscsi.pdu_immediate_data_pool;
+					pool = g_iscsi.pdu_immediate_data_pool;
 					pdu->data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(spdk_get_max_immediate_data_size());
 				} else if (data_len <= SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
-					pool = g_spdk_iscsi.pdu_data_out_pool;
+					pool = g_iscsi.pdu_data_out_pool;
 					pdu->data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
 				} else {
 					SPDK_ERRLOG("Data(%d) > MaxSegment(%d)\n",
