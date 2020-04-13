@@ -37,7 +37,14 @@
 #include "common/lib/test_env.c"
 #include "idxd/idxd.c"
 
-#define FAKE_REG_SIZE 1024
+#define FAKE_REG_SIZE 0x800
+#define NUM_GROUPS 4
+#define NUM_WQ_PER_GROUP 1
+#define NUM_ENGINES_PER_GROUP 1
+#define TOTAL_WQS (NUM_GROUPS * NUM_WQ_PER_GROUP)
+#define TOTAL_ENGINES (NUM_GROUPS * NUM_ENGINES_PER_GROUP)
+#define MAX_TOKENS 0x40
+#define GRP_CFG_OFFSET 0x400
 
 int
 spdk_pci_enumerate(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb, void *enum_ctx)
@@ -81,6 +88,50 @@ static inline void
 mock_movdir64b(void *dst, const void *src)
 {
 	return;
+}
+
+static int
+test_idxd_group_config(void)
+{
+	struct spdk_idxd_device idxd = {};
+	uint64_t wqs[NUM_GROUPS] = {};
+	uint64_t engines[NUM_GROUPS] = {};
+	union idxd_group_flags flags[NUM_GROUPS] = {};
+	int rc, i;
+	uint64_t base_offset;
+
+	idxd.reg_base = calloc(1, FAKE_REG_SIZE);
+	SPDK_CU_ASSERT_FATAL(idxd.reg_base != NULL);
+
+	g_dev_cfg = &g_dev_cfg0;
+	idxd.registers.groupcap.num_groups = NUM_GROUPS;
+	idxd.registers.enginecap.num_engines = TOTAL_ENGINES;
+	idxd.registers.wqcap.num_wqs = TOTAL_WQS;
+	idxd.registers.groupcap.total_tokens = MAX_TOKENS;
+	idxd.grpcfg_offset = GRP_CFG_OFFSET;
+
+	rc = idxd_group_config(&idxd);
+	CU_ASSERT(rc == 0);
+	for (i = 0 ; i < idxd.registers.groupcap.num_groups; i++) {
+		base_offset = idxd.grpcfg_offset + i * 64;
+
+		wqs[i] = spdk_mmio_read_8((uint64_t *)(idxd.reg_base + base_offset));
+		engines[i] = spdk_mmio_read_8((uint64_t *)(idxd.reg_base + base_offset + CFG_ENGINE_OFFSET));
+		flags[i].raw = spdk_mmio_read_8((uint64_t *)(idxd.reg_base + base_offset + CFG_FLAG_OFFSET));
+	}
+	/* wqe and engine arrays are indexed by group id and are bitmaps of assigned elements. */
+	CU_ASSERT(wqs[0] == 0x1);
+	CU_ASSERT(engines[0] == 0x1);
+	CU_ASSERT(wqs[1] == 0x2);
+	CU_ASSERT(engines[1] == 0x2);
+	CU_ASSERT(flags[0].tokens_allowed == MAX_TOKENS / NUM_GROUPS);
+	CU_ASSERT(flags[1].tokens_allowed == MAX_TOKENS / NUM_GROUPS);
+
+	/* groups allocated by code under test. */
+	free(idxd.groups);
+	free(idxd.reg_base);
+
+	return 0;
 }
 
 static int
@@ -189,6 +240,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_spdk_idxd_set_config);
 	CU_ADD_TEST(suite, test_idxd_wait_cmd);
 	CU_ADD_TEST(suite, test_idxd_reset_dev);
+	CU_ADD_TEST(suite, test_idxd_group_config);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
