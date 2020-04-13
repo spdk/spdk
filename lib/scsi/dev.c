@@ -262,8 +262,7 @@ spdk_scsi_dev_queue_mgmt_task(struct spdk_scsi_dev *dev,
 {
 	assert(task != NULL);
 
-	spdk_scsi_lun_append_mgmt_task(task->lun, task);
-	spdk_scsi_lun_execute_mgmt_task(task->lun);
+	spdk_scsi_lun_execute_mgmt_task(task->lun, task);
 }
 
 void
@@ -272,8 +271,7 @@ spdk_scsi_dev_queue_task(struct spdk_scsi_dev *dev,
 {
 	assert(task != NULL);
 
-	spdk_scsi_lun_append_task(task->lun, task);
-	spdk_scsi_lun_execute_tasks(task->lun);
+	spdk_scsi_lun_execute_task(task->lun, task);
 }
 
 static struct spdk_scsi_port *

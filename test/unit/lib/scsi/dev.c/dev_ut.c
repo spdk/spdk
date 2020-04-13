@@ -115,15 +115,11 @@ spdk_bdev_get_by_name(const char *bdev_name)
 	return NULL;
 }
 
-DEFINE_STUB_V(spdk_scsi_lun_append_mgmt_task,
+DEFINE_STUB_V(spdk_scsi_lun_execute_mgmt_task,
 	      (struct spdk_scsi_lun *lun, struct spdk_scsi_task *task));
 
-DEFINE_STUB_V(spdk_scsi_lun_execute_mgmt_task, (struct spdk_scsi_lun *lun));
-
-DEFINE_STUB_V(spdk_scsi_lun_append_task,
+DEFINE_STUB_V(spdk_scsi_lun_execute_task,
 	      (struct spdk_scsi_lun *lun, struct spdk_scsi_task *task));
-
-DEFINE_STUB_V(spdk_scsi_lun_execute_tasks, (struct spdk_scsi_lun *lun));
 
 DEFINE_STUB(_spdk_scsi_lun_allocate_io_channel, int,
 	    (struct spdk_scsi_lun *lun), 0);

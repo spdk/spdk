@@ -40,6 +40,9 @@
 #include "spdk/util.h"
 #include "spdk/likely.h"
 
+static void scsi_lun_execute_tasks(struct spdk_scsi_lun *lun);
+static void scsi_lun_execute_mgmt_task(struct spdk_scsi_lun *lun);
+
 void
 spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
@@ -58,7 +61,7 @@ scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *ta
 	task->cpl_fn(task);
 
 	/* Try to execute the first pending mgmt task if it exists. */
-	spdk_scsi_lun_execute_mgmt_task(lun);
+	scsi_lun_execute_mgmt_task(lun);
 }
 
 static bool
@@ -116,15 +119,15 @@ spdk_scsi_lun_complete_reset_task(struct spdk_scsi_lun *lun, struct spdk_scsi_ta
 	scsi_lun_complete_mgmt_task(lun, task);
 }
 
-void
-spdk_scsi_lun_append_mgmt_task(struct spdk_scsi_lun *lun,
-			       struct spdk_scsi_task *task)
+static void
+scsi_lun_append_mgmt_task(struct spdk_scsi_lun *lun,
+			  struct spdk_scsi_task *task)
 {
 	TAILQ_INSERT_TAIL(&lun->pending_mgmt_tasks, task, scsi_link);
 }
 
-void
-spdk_scsi_lun_execute_mgmt_task(struct spdk_scsi_lun *lun)
+static void
+scsi_lun_execute_mgmt_task(struct spdk_scsi_lun *lun)
 {
 	struct spdk_scsi_task *task;
 
@@ -135,7 +138,7 @@ spdk_scsi_lun_execute_mgmt_task(struct spdk_scsi_lun *lun)
 	task = TAILQ_FIRST(&lun->pending_mgmt_tasks);
 	if (spdk_likely(task == NULL)) {
 		/* Try to execute all pending tasks */
-		spdk_scsi_lun_execute_tasks(lun);
+		scsi_lun_execute_tasks(lun);
 		return;
 	}
 	TAILQ_REMOVE(&lun->pending_mgmt_tasks, task, scsi_link);
@@ -177,6 +180,14 @@ spdk_scsi_lun_execute_mgmt_task(struct spdk_scsi_lun *lun)
 	scsi_lun_complete_mgmt_task(lun, task);
 }
 
+void
+spdk_scsi_lun_execute_mgmt_task(struct spdk_scsi_lun *lun,
+				struct spdk_scsi_task *task)
+{
+	scsi_lun_append_mgmt_task(lun, task);
+	scsi_lun_execute_mgmt_task(lun);
+}
+
 static void
 _scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
@@ -212,8 +223,8 @@ _scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 	}
 }
 
-void
-spdk_scsi_lun_append_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
+static void
+scsi_lun_append_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
 	TAILQ_INSERT_TAIL(&lun->pending_tasks, task, scsi_link);
 }
@@ -230,15 +241,24 @@ scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
 }
 
 void
-spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
+spdk_scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
-	if (scsi_lun_has_pending_mgmt_tasks(lun) ||
-	    scsi_lun_has_outstanding_mgmt_tasks(lun)) {
-		/* Pending IO tasks will wait for completion of existing mgmt tasks.
+	if (spdk_unlikely(scsi_lun_has_pending_mgmt_tasks(lun))) {
+		/* Add the IO task to pending list and wait for completion of
+		 * existing mgmt tasks.
 		 */
-		return;
+		scsi_lun_append_task(lun, task);
+	} else if (spdk_unlikely(scsi_lun_has_pending_tasks(lun))) {
+		/* If there is any pending IO task, append the IO task to the
+		 * tail of the pending list, and then execute all pending IO tasks
+		 * from the head to submit IO tasks in order.
+		 */
+		scsi_lun_append_task(lun, task);
+		scsi_lun_execute_tasks(lun);
+	} else {
+		/* Execute the IO task directly. */
+		_scsi_lun_execute_task(lun, task);
 	}
-	scsi_lun_execute_tasks(lun);
 }
 
 static void

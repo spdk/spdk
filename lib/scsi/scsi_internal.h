@@ -176,10 +176,8 @@ struct spdk_scsi_lun *spdk_scsi_lun_construct(struct spdk_bdev *bdev,
 		void *hotremove_ctx);
 void spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun);
 
-void spdk_scsi_lun_append_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
-void spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun);
-void spdk_scsi_lun_append_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
-void spdk_scsi_lun_execute_mgmt_task(struct spdk_scsi_lun *lun);
+void spdk_scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
+void spdk_scsi_lun_execute_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
 bool spdk_scsi_lun_has_pending_mgmt_tasks(const struct spdk_scsi_lun *lun,
 		const struct spdk_scsi_port *initiator_port);
 void spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
