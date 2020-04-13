@@ -37,9 +37,9 @@
 
 /* Get registrant by I_T nexus */
 static struct spdk_scsi_pr_registrant *
-spdk_scsi_pr_get_registrant(struct spdk_scsi_lun *lun,
-			    struct spdk_scsi_port *initiator_port,
-			    struct spdk_scsi_port *target_port)
+scsi_pr_get_registrant(struct spdk_scsi_lun *lun,
+		       struct spdk_scsi_port *initiator_port,
+		       struct spdk_scsi_port *target_port)
 {
 	struct spdk_scsi_pr_registrant *reg, *tmp;
 
@@ -55,7 +55,7 @@ spdk_scsi_pr_get_registrant(struct spdk_scsi_lun *lun,
 
 /* Reservation type is all registrants or not */
 static inline bool
-spdk_scsi_pr_is_all_registrants_type(struct spdk_scsi_lun *lun)
+scsi_pr_is_all_registrants_type(struct spdk_scsi_lun *lun)
 {
 	return (lun->reservation.rtype == SPDK_SCSI_PR_WRITE_EXCLUSIVE_ALL_REGS ||
 		lun->reservation.rtype == SPDK_SCSI_PR_EXCLUSIVE_ACCESS_ALL_REGS);
@@ -63,10 +63,10 @@ spdk_scsi_pr_is_all_registrants_type(struct spdk_scsi_lun *lun)
 
 /* Registrant is reservation holder or not */
 static inline bool
-spdk_scsi_pr_registrant_is_holder(struct spdk_scsi_lun *lun,
-				  struct spdk_scsi_pr_registrant *reg)
+scsi_pr_registrant_is_holder(struct spdk_scsi_lun *lun,
+			     struct spdk_scsi_pr_registrant *reg)
 {
-	if (spdk_scsi_pr_is_all_registrants_type(lun)) {
+	if (scsi_pr_is_all_registrants_type(lun)) {
 		return true;
 	}
 
@@ -75,16 +75,16 @@ spdk_scsi_pr_registrant_is_holder(struct spdk_scsi_lun *lun,
 
 /* LUN holds a reservation or not */
 static inline bool
-spdk_scsi_pr_has_reservation(struct spdk_scsi_lun *lun)
+scsi_pr_has_reservation(struct spdk_scsi_lun *lun)
 {
 	return !(lun->reservation.holder == NULL);
 }
 
 static int
-spdk_scsi_pr_register_registrant(struct spdk_scsi_lun *lun,
-				 struct spdk_scsi_port *initiator_port,
-				 struct spdk_scsi_port *target_port,
-				 uint64_t sa_rkey)
+scsi_pr_register_registrant(struct spdk_scsi_lun *lun,
+			    struct spdk_scsi_port *initiator_port,
+			    struct spdk_scsi_port *target_port,
+			    uint64_t sa_rkey)
 {
 	struct spdk_scsi_pr_registrant *reg;
 
@@ -119,7 +119,7 @@ spdk_scsi_pr_register_registrant(struct spdk_scsi_lun *lun,
 }
 
 static void
-spdk_scsi_pr_release_reservation(struct spdk_scsi_lun *lun, struct spdk_scsi_pr_registrant *reg)
+scsi_pr_release_reservation(struct spdk_scsi_lun *lun, struct spdk_scsi_pr_registrant *reg)
 {
 	bool all_regs = false;
 
@@ -127,7 +127,7 @@ spdk_scsi_pr_release_reservation(struct spdk_scsi_lun *lun, struct spdk_scsi_pr_
 		      "with type %u\n", lun->reservation.rtype);
 
 	/* TODO: Unit Attention */
-	all_regs = spdk_scsi_pr_is_all_registrants_type(lun);
+	all_regs = scsi_pr_is_all_registrants_type(lun);
 	if (all_regs && !TAILQ_EMPTY(&lun->reg_head)) {
 		lun->reservation.holder = TAILQ_FIRST(&lun->reg_head);
 		return;
@@ -137,10 +137,10 @@ spdk_scsi_pr_release_reservation(struct spdk_scsi_lun *lun, struct spdk_scsi_pr_
 }
 
 static void
-spdk_scsi_pr_reserve_reservation(struct spdk_scsi_lun *lun,
-				 enum spdk_scsi_pr_type_code type,
-				 uint64_t rkey,
-				 struct spdk_scsi_pr_registrant *holder)
+scsi_pr_reserve_reservation(struct spdk_scsi_lun *lun,
+			    enum spdk_scsi_pr_type_code type,
+			    uint64_t rkey,
+			    struct spdk_scsi_pr_registrant *holder)
 {
 	lun->reservation.rtype = type;
 	lun->reservation.crkey = rkey;
@@ -148,14 +148,14 @@ spdk_scsi_pr_reserve_reservation(struct spdk_scsi_lun *lun,
 }
 
 static void
-spdk_scsi_pr_unregister_registrant(struct spdk_scsi_lun *lun,
-				   struct spdk_scsi_pr_registrant *reg)
+scsi_pr_unregister_registrant(struct spdk_scsi_lun *lun,
+			      struct spdk_scsi_pr_registrant *reg)
 {
 	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "REGISTER: unregister registrant\n");
 
 	TAILQ_REMOVE(&lun->reg_head, reg, link);
-	if (spdk_scsi_pr_registrant_is_holder(lun, reg)) {
-		spdk_scsi_pr_release_reservation(lun, reg);
+	if (scsi_pr_registrant_is_holder(lun, reg)) {
+		scsi_pr_release_reservation(lun, reg);
 	}
 
 	free(reg);
@@ -163,9 +163,9 @@ spdk_scsi_pr_unregister_registrant(struct spdk_scsi_lun *lun,
 }
 
 static void
-spdk_scsi_pr_replace_registrant_key(struct spdk_scsi_lun *lun,
-				    struct spdk_scsi_pr_registrant *reg,
-				    uint64_t sa_rkey)
+scsi_pr_replace_registrant_key(struct spdk_scsi_lun *lun,
+			       struct spdk_scsi_pr_registrant *reg,
+			       uint64_t sa_rkey)
 {
 	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "REGISTER: replace with new "
 		      "reservation key 0x%"PRIx64"\n", sa_rkey);
@@ -174,9 +174,9 @@ spdk_scsi_pr_replace_registrant_key(struct spdk_scsi_lun *lun,
 }
 
 static int
-spdk_scsi_pr_out_reserve(struct spdk_scsi_task *task,
-			 enum spdk_scsi_pr_type_code rtype, uint64_t rkey,
-			 uint8_t spec_i_pt, uint8_t all_tg_pt, uint8_t aptpl)
+scsi_pr_out_reserve(struct spdk_scsi_task *task,
+		    enum spdk_scsi_pr_type_code rtype, uint64_t rkey,
+		    uint8_t spec_i_pt, uint8_t all_tg_pt, uint8_t aptpl)
 {
 	struct spdk_scsi_lun *lun = task->lun;
 	struct spdk_scsi_pr_registrant *reg;
@@ -195,7 +195,7 @@ spdk_scsi_pr_out_reserve(struct spdk_scsi_task *task,
 		return -EINVAL;
 	}
 
-	reg = spdk_scsi_pr_get_registrant(lun, task->initiator_port, task->target_port);
+	reg = scsi_pr_get_registrant(lun, task->initiator_port, task->target_port);
 	/* No registration for the I_T nexus */
 	if (!reg) {
 		SPDK_ERRLOG("No registration\n");
@@ -210,19 +210,19 @@ spdk_scsi_pr_out_reserve(struct spdk_scsi_task *task,
 	}
 
 	/* reservation holder already exists */
-	if (spdk_scsi_pr_has_reservation(lun)) {
+	if (scsi_pr_has_reservation(lun)) {
 		if (rtype != lun->reservation.rtype) {
 			SPDK_ERRLOG("Reservation type doesn't match\n");
 			goto conflict;
 		}
 
-		if (!spdk_scsi_pr_registrant_is_holder(lun, reg)) {
+		if (!scsi_pr_registrant_is_holder(lun, reg)) {
 			SPDK_ERRLOG("Only 1 holder is allowed for type %u\n", rtype);
 			goto conflict;
 		}
 	} else {
 		/* current I_T nexus is the first reservation holder */
-		spdk_scsi_pr_reserve_reservation(lun, rtype, rkey, reg);
+		scsi_pr_reserve_reservation(lun, rtype, rkey, reg);
 	}
 
 	return 0;
@@ -236,10 +236,10 @@ conflict:
 }
 
 static int
-spdk_scsi_pr_out_register(struct spdk_scsi_task *task,
-			  enum spdk_scsi_pr_out_service_action_code action,
-			  uint64_t rkey, uint64_t sa_rkey,
-			  uint8_t spec_i_pt, uint8_t all_tg_pt, uint8_t aptpl)
+scsi_pr_out_register(struct spdk_scsi_task *task,
+		     enum spdk_scsi_pr_out_service_action_code action,
+		     uint64_t rkey, uint64_t sa_rkey,
+		     uint8_t spec_i_pt, uint8_t all_tg_pt, uint8_t aptpl)
 {
 	struct spdk_scsi_lun *lun = task->lun;
 	struct spdk_scsi_pr_registrant *reg;
@@ -257,7 +257,7 @@ spdk_scsi_pr_out_register(struct spdk_scsi_task *task,
 		goto error_exit;
 	}
 
-	reg = spdk_scsi_pr_get_registrant(lun, task->initiator_port, task->target_port);
+	reg = scsi_pr_get_registrant(lun, task->initiator_port, task->target_port);
 	/* an unregistered I_T nexus session */
 	if (!reg) {
 		if (rkey && (action == SPDK_SCSI_PR_OUT_REGISTER)) {
@@ -275,8 +275,8 @@ spdk_scsi_pr_out_register(struct spdk_scsi_task *task,
 			return 0;
 		}
 		/* Add a new registrant for the I_T nexus */
-		return spdk_scsi_pr_register_registrant(lun, task->initiator_port,
-							task->target_port, sa_rkey);
+		return scsi_pr_register_registrant(lun, task->initiator_port,
+						   task->target_port, sa_rkey);
 	} else {
 		/* a registered I_T nexus */
 		if (rkey != reg->rkey && action == SPDK_SCSI_PR_OUT_REGISTER) {
@@ -290,10 +290,10 @@ spdk_scsi_pr_out_register(struct spdk_scsi_task *task,
 
 		if (!sa_rkey) {
 			/* unregister */
-			spdk_scsi_pr_unregister_registrant(lun, reg);
+			scsi_pr_unregister_registrant(lun, reg);
 		} else {
 			/* replace */
-			spdk_scsi_pr_replace_registrant_key(lun, reg, sa_rkey);
+			scsi_pr_replace_registrant_key(lun, reg, sa_rkey);
 		}
 	}
 
@@ -305,8 +305,8 @@ error_exit:
 }
 
 static int
-spdk_scsi_pr_out_release(struct spdk_scsi_task *task,
-			 enum spdk_scsi_pr_type_code rtype, uint64_t rkey)
+scsi_pr_out_release(struct spdk_scsi_task *task,
+		    enum spdk_scsi_pr_type_code rtype, uint64_t rkey)
 {
 	struct spdk_scsi_lun *lun = task->lun;
 	struct spdk_scsi_pr_registrant *reg;
@@ -315,7 +315,7 @@ spdk_scsi_pr_out_release(struct spdk_scsi_task *task,
 	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PR OUT RELEASE: rkey 0x%"PRIx64", "
 		      "reservation type %u\n", rkey, rtype);
 
-	reg = spdk_scsi_pr_get_registrant(lun, task->initiator_port, task->target_port);
+	reg = scsi_pr_get_registrant(lun, task->initiator_port, task->target_port);
 	if (!reg) {
 		SPDK_ERRLOG("No registration\n");
 		sk = SPDK_SCSI_SENSE_NOT_READY;
@@ -324,7 +324,7 @@ spdk_scsi_pr_out_release(struct spdk_scsi_task *task,
 	}
 
 	/* no reservation holder */
-	if (!spdk_scsi_pr_has_reservation(lun)) {
+	if (!scsi_pr_has_reservation(lun)) {
 		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "RELEASE: no reservation holder\n");
 		return 0;
 	}
@@ -336,12 +336,12 @@ spdk_scsi_pr_out_release(struct spdk_scsi_task *task,
 	}
 
 	/* I_T nexus is not a persistent reservation holder */
-	if (!spdk_scsi_pr_registrant_is_holder(lun, reg)) {
+	if (!scsi_pr_registrant_is_holder(lun, reg)) {
 		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "RELEASE: current I_T nexus is not holder\n");
 		return 0;
 	}
 
-	spdk_scsi_pr_release_reservation(lun, reg);
+	scsi_pr_release_reservation(lun, reg);
 
 	return 0;
 
@@ -352,7 +352,7 @@ check_condition:
 }
 
 static int
-spdk_scsi_pr_out_clear(struct spdk_scsi_task *task, uint64_t rkey)
+scsi_pr_out_clear(struct spdk_scsi_task *task, uint64_t rkey)
 {
 	struct spdk_scsi_lun *lun = task->lun;
 	struct spdk_scsi_pr_registrant *reg, *tmp;
@@ -360,7 +360,7 @@ spdk_scsi_pr_out_clear(struct spdk_scsi_task *task, uint64_t rkey)
 
 	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PR OUT CLEAR: rkey 0x%"PRIx64"\n", rkey);
 
-	reg = spdk_scsi_pr_get_registrant(lun, task->initiator_port, task->target_port);
+	reg = scsi_pr_get_registrant(lun, task->initiator_port, task->target_port);
 	if (!reg) {
 		SPDK_ERRLOG("No registration\n");
 		sc = SPDK_SCSI_STATUS_CHECK_CONDITION;
@@ -379,7 +379,7 @@ spdk_scsi_pr_out_clear(struct spdk_scsi_task *task, uint64_t rkey)
 	}
 
 	TAILQ_FOREACH_SAFE(reg, &lun->reg_head, link, tmp) {
-		spdk_scsi_pr_unregister_registrant(lun, reg);
+		scsi_pr_unregister_registrant(lun, reg);
 	}
 
 	return 0;
@@ -390,34 +390,34 @@ error_exit:
 }
 
 static void
-spdk_scsi_pr_remove_all_regs_by_key(struct spdk_scsi_lun *lun, uint64_t sa_rkey)
+scsi_pr_remove_all_regs_by_key(struct spdk_scsi_lun *lun, uint64_t sa_rkey)
 {
 	struct spdk_scsi_pr_registrant *reg, *tmp;
 
 	TAILQ_FOREACH_SAFE(reg, &lun->reg_head, link, tmp) {
 		if (reg->rkey == sa_rkey) {
-			spdk_scsi_pr_unregister_registrant(lun, reg);
+			scsi_pr_unregister_registrant(lun, reg);
 		}
 	}
 }
 
 static void
-spdk_scsi_pr_remove_all_other_regs(struct spdk_scsi_lun *lun, struct spdk_scsi_pr_registrant *reg)
+scsi_pr_remove_all_other_regs(struct spdk_scsi_lun *lun, struct spdk_scsi_pr_registrant *reg)
 {
 	struct spdk_scsi_pr_registrant *reg_tmp, *reg_tmp2;
 
 	TAILQ_FOREACH_SAFE(reg_tmp, &lun->reg_head, link, reg_tmp2) {
 		if (reg_tmp != reg) {
-			spdk_scsi_pr_unregister_registrant(lun, reg_tmp);
+			scsi_pr_unregister_registrant(lun, reg_tmp);
 		}
 	}
 }
 
 static int
-spdk_scsi_pr_out_preempt(struct spdk_scsi_task *task,
-			 enum spdk_scsi_pr_out_service_action_code action,
-			 enum spdk_scsi_pr_type_code rtype,
-			 uint64_t rkey, uint64_t sa_rkey)
+scsi_pr_out_preempt(struct spdk_scsi_task *task,
+		    enum spdk_scsi_pr_out_service_action_code action,
+		    enum spdk_scsi_pr_type_code rtype,
+		    uint64_t rkey, uint64_t sa_rkey)
 {
 	struct spdk_scsi_lun *lun = task->lun;
 	struct spdk_scsi_pr_registrant *reg;
@@ -428,7 +428,7 @@ spdk_scsi_pr_out_preempt(struct spdk_scsi_task *task,
 		      rkey, sa_rkey, action, rtype, lun->reservation.rtype);
 
 	/* I_T nexus is not registered */
-	reg = spdk_scsi_pr_get_registrant(lun, task->initiator_port, task->target_port);
+	reg = scsi_pr_get_registrant(lun, task->initiator_port, task->target_port);
 	if (!reg) {
 		SPDK_ERRLOG("No registration\n");
 		goto conflict;
@@ -440,23 +440,23 @@ spdk_scsi_pr_out_preempt(struct spdk_scsi_task *task,
 	}
 
 	/* no persistent reservation */
-	if (!spdk_scsi_pr_has_reservation(lun)) {
-		spdk_scsi_pr_remove_all_regs_by_key(lun, sa_rkey);
+	if (!scsi_pr_has_reservation(lun)) {
+		scsi_pr_remove_all_regs_by_key(lun, sa_rkey);
 		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PREEMPT: no persistent reservation\n");
 		goto exit;
 	}
 
-	all_regs = spdk_scsi_pr_is_all_registrants_type(lun);
+	all_regs = scsi_pr_is_all_registrants_type(lun);
 
 	if (all_regs) {
 		if (sa_rkey != 0) {
-			spdk_scsi_pr_remove_all_regs_by_key(lun, sa_rkey);
+			scsi_pr_remove_all_regs_by_key(lun, sa_rkey);
 			SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PREEMPT: All registrants type with sa_rkey\n");
 		} else {
 			/* remove all other registrants and release persistent reservation if any */
-			spdk_scsi_pr_remove_all_other_regs(lun, reg);
+			scsi_pr_remove_all_other_regs(lun, reg);
 			/* create persistent reservation using new type and scope */
-			spdk_scsi_pr_reserve_reservation(lun, rtype, 0, reg);
+			scsi_pr_reserve_reservation(lun, rtype, 0, reg);
 			SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PREEMPT: All registrants type with sa_rkey zeroed\n");
 		}
 		goto exit;
@@ -473,26 +473,26 @@ spdk_scsi_pr_out_preempt(struct spdk_scsi_task *task,
 						  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 			return -EINVAL;
 		}
-		spdk_scsi_pr_remove_all_regs_by_key(lun, sa_rkey);
+		scsi_pr_remove_all_regs_by_key(lun, sa_rkey);
 		goto exit;
 	}
 
-	if (spdk_scsi_pr_registrant_is_holder(lun, reg)) {
-		spdk_scsi_pr_reserve_reservation(lun, rtype, rkey, reg);
+	if (scsi_pr_registrant_is_holder(lun, reg)) {
+		scsi_pr_reserve_reservation(lun, rtype, rkey, reg);
 		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PREEMPT: preempt itself with type %u\n", rtype);
 		goto exit;
 	}
 
 	/* unregister registrants if any */
-	spdk_scsi_pr_remove_all_regs_by_key(lun, sa_rkey);
-	reg = spdk_scsi_pr_get_registrant(lun, task->initiator_port, task->target_port);
+	scsi_pr_remove_all_regs_by_key(lun, sa_rkey);
+	reg = scsi_pr_get_registrant(lun, task->initiator_port, task->target_port);
 	if (!reg) {
 		SPDK_ERRLOG("Current I_T nexus registrant was removed\n");
 		goto conflict;
 	}
 
 	/* preempt the holder */
-	spdk_scsi_pr_reserve_reservation(lun, rtype, rkey, reg);
+	scsi_pr_reserve_reservation(lun, rtype, rkey, reg);
 
 exit:
 	lun->pr_generation++;
@@ -531,30 +531,30 @@ scsi_pr_out(struct spdk_scsi_task *task, uint8_t *cdb,
 	switch (action) {
 	case SPDK_SCSI_PR_OUT_REGISTER:
 	case SPDK_SCSI_PR_OUT_REG_AND_IGNORE_KEY:
-		rc = spdk_scsi_pr_out_register(task, action, rkey, sa_rkey,
-					       spec_i_pt, all_tg_pt, aptpl);
+		rc = scsi_pr_out_register(task, action, rkey, sa_rkey,
+					  spec_i_pt, all_tg_pt, aptpl);
 		break;
 	case SPDK_SCSI_PR_OUT_RESERVE:
 		if (scope != SPDK_SCSI_PR_LU_SCOPE) {
 			goto invalid;
 		}
-		rc = spdk_scsi_pr_out_reserve(task, rtype, rkey,
-					      spec_i_pt, all_tg_pt, aptpl);
+		rc = scsi_pr_out_reserve(task, rtype, rkey,
+					 spec_i_pt, all_tg_pt, aptpl);
 		break;
 	case SPDK_SCSI_PR_OUT_RELEASE:
 		if (scope != SPDK_SCSI_PR_LU_SCOPE) {
 			goto invalid;
 		}
-		rc = spdk_scsi_pr_out_release(task, rtype, rkey);
+		rc = scsi_pr_out_release(task, rtype, rkey);
 		break;
 	case SPDK_SCSI_PR_OUT_CLEAR:
-		rc = spdk_scsi_pr_out_clear(task, rkey);
+		rc = scsi_pr_out_clear(task, rkey);
 		break;
 	case SPDK_SCSI_PR_OUT_PREEMPT:
 		if (scope != SPDK_SCSI_PR_LU_SCOPE) {
 			goto invalid;
 		}
-		rc = spdk_scsi_pr_out_preempt(task, action, rtype, rkey, sa_rkey);
+		rc = scsi_pr_out_preempt(task, action, rtype, rkey, sa_rkey);
 		break;
 	default:
 		SPDK_ERRLOG("Invalid service action code %u\n", action);
@@ -572,8 +572,8 @@ invalid:
 }
 
 static int
-spdk_scsi_pr_in_read_keys(struct spdk_scsi_task *task, uint8_t *data,
-			  uint16_t data_len)
+scsi_pr_in_read_keys(struct spdk_scsi_task *task, uint8_t *data,
+		     uint16_t data_len)
 {
 	struct spdk_scsi_lun *lun = task->lun;
 	struct spdk_scsi_pr_in_read_keys_data *keys;
@@ -597,8 +597,8 @@ spdk_scsi_pr_in_read_keys(struct spdk_scsi_task *task, uint8_t *data,
 }
 
 static int
-spdk_scsi_pr_in_read_reservations(struct spdk_scsi_task *task,
-				  uint8_t *data, uint16_t data_len)
+scsi_pr_in_read_reservations(struct spdk_scsi_task *task,
+			     uint8_t *data, uint16_t data_len)
 {
 	struct spdk_scsi_lun *lun = task->lun;
 	struct spdk_scsi_pr_in_read_reservations_data *param;
@@ -608,8 +608,8 @@ spdk_scsi_pr_in_read_reservations(struct spdk_scsi_task *task,
 	param = (struct spdk_scsi_pr_in_read_reservations_data *)(data);
 
 	to_be32(&param->header.pr_generation, lun->pr_generation);
-	if (spdk_scsi_pr_has_reservation(lun)) {
-		all_regs = spdk_scsi_pr_is_all_registrants_type(lun);
+	if (scsi_pr_has_reservation(lun)) {
+		all_regs = scsi_pr_is_all_registrants_type(lun);
 		if (all_regs) {
 			to_be64(&param->rkey, 0);
 		} else {
@@ -629,8 +629,8 @@ spdk_scsi_pr_in_read_reservations(struct spdk_scsi_task *task,
 }
 
 static int
-spdk_scsi_pr_in_report_capabilities(struct spdk_scsi_task *task,
-				    uint8_t *data, uint16_t data_len)
+scsi_pr_in_report_capabilities(struct spdk_scsi_task *task,
+			       uint8_t *data, uint16_t data_len)
 {
 	struct spdk_scsi_pr_in_report_capabilities_data *param;
 
@@ -652,8 +652,8 @@ spdk_scsi_pr_in_report_capabilities(struct spdk_scsi_task *task,
 }
 
 static int
-spdk_scsi_pr_in_read_full_status(struct spdk_scsi_task *task,
-				 uint8_t *data, uint16_t data_len)
+scsi_pr_in_read_full_status(struct spdk_scsi_task *task,
+			    uint8_t *data, uint16_t data_len)
 {
 	struct spdk_scsi_lun *lun = task->lun;
 	struct spdk_scsi_pr_in_full_status_data *param;
@@ -664,7 +664,7 @@ spdk_scsi_pr_in_read_full_status(struct spdk_scsi_task *task,
 
 	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PR IN READ FULL STATUS\n");
 
-	all_regs = spdk_scsi_pr_is_all_registrants_type(lun);
+	all_regs = scsi_pr_is_all_registrants_type(lun);
 	param = (struct spdk_scsi_pr_in_full_status_data *)data;
 	to_be32(&param->header.pr_generation, lun->pr_generation);
 
@@ -712,19 +712,19 @@ scsi_pr_in(struct spdk_scsi_task *task, uint8_t *cdb,
 
 	switch (action) {
 	case SPDK_SCSI_PR_IN_READ_KEYS:
-		rc = spdk_scsi_pr_in_read_keys(task, data, data_len);
+		rc = scsi_pr_in_read_keys(task, data, data_len);
 		break;
 	case SPDK_SCSI_PR_IN_READ_RESERVATION:
 		if (data_len < sizeof(struct spdk_scsi_pr_in_read_reservations_data)) {
 			goto invalid;
 		}
-		rc = spdk_scsi_pr_in_read_reservations(task, data, data_len);
+		rc = scsi_pr_in_read_reservations(task, data, data_len);
 		break;
 	case SPDK_SCSI_PR_IN_REPORT_CAPABILITIES:
-		rc = spdk_scsi_pr_in_report_capabilities(task, data, data_len);
+		rc = scsi_pr_in_report_capabilities(task, data, data_len);
 		break;
 	case SPDK_SCSI_PR_IN_READ_FULL_STATUS:
-		rc = spdk_scsi_pr_in_read_full_status(task, data, data_len);
+		rc = scsi_pr_in_read_full_status(task, data, data_len);
 		break;
 	default:
 		goto invalid;
@@ -751,16 +751,16 @@ scsi_pr_check(struct spdk_scsi_task *task)
 	bool dma_to_device = false;
 
 	/* no reservation holders */
-	if (!spdk_scsi_pr_has_reservation(lun)) {
+	if (!scsi_pr_has_reservation(lun)) {
 		return 0;
 	}
 
 	rtype = lun->reservation.rtype;
 	assert(rtype != 0);
 
-	reg = spdk_scsi_pr_get_registrant(lun, task->initiator_port, task->target_port);
+	reg = scsi_pr_get_registrant(lun, task->initiator_port, task->target_port);
 	/* current I_T nexus hold the reservation */
-	if (spdk_scsi_pr_registrant_is_holder(lun, reg)) {
+	if (scsi_pr_registrant_is_holder(lun, reg)) {
 		return 0;
 	}
 
