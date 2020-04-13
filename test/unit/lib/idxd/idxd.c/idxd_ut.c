@@ -43,8 +43,6 @@
 #define NUM_ENGINES_PER_GROUP 1
 #define TOTAL_WQS (NUM_GROUPS * NUM_WQ_PER_GROUP)
 #define TOTAL_ENGINES (NUM_GROUPS * NUM_ENGINES_PER_GROUP)
-#define MAX_TOKENS 0x40
-#define GRP_CFG_OFFSET 0x400
 
 int
 spdk_pci_enumerate(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb, void *enum_ctx)
@@ -90,6 +88,57 @@ mock_movdir64b(void *dst, const void *src)
 	return;
 }
 
+#define WQ_CFG_OFFSET 0x500
+#define TOTAL_WQE_SIZE 0x40
+static int
+test_idxd_wq_config(void)
+{
+	struct spdk_idxd_device idxd = {};
+	union idxd_wqcfg wqcfg = {};
+	uint32_t expected[8] = {0x10, 0, 0x11, 0x11e, 0, 0, 0x40000000, 0};
+	uint32_t wq_size;
+	int rc, i, j;
+
+	idxd.reg_base = calloc(1, FAKE_REG_SIZE);
+	SPDK_CU_ASSERT_FATAL(idxd.reg_base != NULL);
+
+	g_dev_cfg = &g_dev_cfg0;
+	idxd.registers.wqcap.total_wq_size = TOTAL_WQE_SIZE;
+	idxd.registers.wqcap.num_wqs = TOTAL_WQS;
+	idxd.registers.gencap.max_batch_shift = LOG2_WQ_MAX_BATCH;
+	idxd.registers.gencap.max_xfer_shift = LOG2_WQ_MAX_XFER;
+	idxd.wqcfg_offset = WQ_CFG_OFFSET;
+	wq_size = idxd.registers.wqcap.total_wq_size / g_dev_cfg->total_wqs;
+
+	rc = idxd_wq_config(&idxd);
+	CU_ASSERT(rc == 0);
+	for (i = 0; i < g_dev_cfg->total_wqs; i++) {
+		CU_ASSERT(idxd.queues[i].wqcfg.wq_size == wq_size);
+		CU_ASSERT(idxd.queues[i].wqcfg.mode == WQ_MODE_DEDICATED);
+		CU_ASSERT(idxd.queues[i].wqcfg.max_batch_shift == LOG2_WQ_MAX_BATCH);
+		CU_ASSERT(idxd.queues[i].wqcfg.max_xfer_shift == LOG2_WQ_MAX_XFER);
+		CU_ASSERT(idxd.queues[i].wqcfg.wq_state == WQ_ENABLED);
+		CU_ASSERT(idxd.queues[i].wqcfg.priority == WQ_PRIORITY_1);
+		CU_ASSERT(idxd.queues[i].idxd == &idxd);
+		CU_ASSERT(idxd.queues[i].group == &idxd.groups[i % g_dev_cfg->num_groups]);
+	}
+
+	for (i = 0 ; i < idxd.registers.wqcap.num_wqs; i++) {
+		for (j = 0 ; j < WQCFG_NUM_DWORDS; j++) {
+			wqcfg.raw[j] = spdk_mmio_read_4((uint32_t *)(idxd.reg_base + idxd.wqcfg_offset + i * 32 + j *
+							4));
+			CU_ASSERT(wqcfg.raw[j] == expected[j]);
+		}
+	}
+
+	free(idxd.queues);
+	free(idxd.reg_base);
+
+	return 0;
+}
+
+#define GRP_CFG_OFFSET 0x400
+#define MAX_TOKENS 0x40
 static int
 test_idxd_group_config(void)
 {
@@ -241,6 +290,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_idxd_wait_cmd);
 	CU_ADD_TEST(suite, test_idxd_reset_dev);
 	CU_ADD_TEST(suite, test_idxd_group_config);
+	CU_ADD_TEST(suite, test_idxd_wq_config);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
