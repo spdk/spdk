@@ -164,13 +164,6 @@ struct spdk_scsi_lun {
 	struct spdk_poller *reset_poller;
 };
 
-struct spdk_lun_db_entry {
-	struct spdk_scsi_lun *lun;
-	struct spdk_lun_db_entry *next;
-};
-
-extern struct spdk_lun_db_entry *spdk_scsi_lun_list_head;
-
 struct spdk_scsi_lun *spdk_scsi_lun_construct(struct spdk_bdev *bdev,
 		void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
 		void *hotremove_ctx);
