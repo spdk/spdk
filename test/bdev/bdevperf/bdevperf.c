@@ -914,13 +914,32 @@ _performance_dump_done(struct spdk_io_channel_iter *i, int status)
 }
 
 static void
+_performance_dump_job(struct perf_dump_ctx *ctx, struct bdevperf_job *job)
+{
+	double io_per_second, mb_per_second;
+
+	printf("\r Thread name: %s\n", spdk_thread_get_name(job->reactor->thread));
+	printf("\r Core Mask: 0x%s\n", spdk_cpuset_fmt(spdk_thread_get_cpumask(job->reactor->thread)));
+
+	if (ctx->ema_period == 0) {
+		io_per_second = get_cma_io_per_second(job, ctx->io_time_in_usec);
+	} else {
+		io_per_second = get_ema_io_per_second(job, ctx->ema_period);
+	}
+	mb_per_second = io_per_second * g_io_size / (1024 * 1024);
+	printf("\r %-20s: %10.2f IOPS %10.2f MiB/s\n",
+	       job->name, io_per_second, mb_per_second);
+	ctx->total_io_per_second += io_per_second;
+	ctx->total_mb_per_second += mb_per_second;
+}
+
+static void
 _performance_dump(struct spdk_io_channel_iter *i)
 {
 	struct perf_dump_ctx *ctx;
 	struct spdk_io_channel *ch;
 	struct bdevperf_reactor *reactor;
 	struct bdevperf_job *job;
-	double io_per_second, mb_per_second;
 
 	ctx = spdk_io_channel_iter_get_ctx(i);
 	ch = spdk_io_channel_iter_get_channel(i);
@@ -930,20 +949,8 @@ _performance_dump(struct spdk_io_channel_iter *i)
 		goto exit;
 	}
 
-	printf("\r Thread name: %s\n", spdk_thread_get_name(spdk_get_thread()));
-	printf("\r Logical core: %u\n", reactor->lcore);
-
 	TAILQ_FOREACH(job, &reactor->jobs, link) {
-		if (ctx->ema_period == 0) {
-			io_per_second = get_cma_io_per_second(job, ctx->io_time_in_usec);
-		} else {
-			io_per_second = get_ema_io_per_second(job, ctx->ema_period);
-		}
-		mb_per_second = io_per_second * g_io_size / (1024 * 1024);
-		printf("\r %-20s: %10.2f IOPS %10.2f MiB/s\n",
-		       job->name, io_per_second, mb_per_second);
-		ctx->total_io_per_second += io_per_second;
-		ctx->total_mb_per_second += mb_per_second;
+		_performance_dump_job(ctx, job);
 	}
 
 	fflush(stdout);
