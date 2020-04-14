@@ -1,5 +1,9 @@
 # Performance Reports {#performance_reports}
 
+## Release 20.01
+
+- [SPDK 20.01 Vhost Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_vhost_perf_report_2001.pdf)
+
 ## Release 19.10
 
 - [SPDK 19.10 Vhost Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_vhost_perf_report_1910.pdf)
