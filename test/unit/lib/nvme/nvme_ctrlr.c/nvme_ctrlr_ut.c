@@ -1481,7 +1481,7 @@ test_spdk_nvme_ctrlr_reconnect_io_qpair(void)
 	CU_ASSERT(rc == 0)
 
 	/* transport qpair is failed. make sure we call down to the transport */
-	qpair.state = NVME_QPAIR_DISABLED;
+	qpair.state = NVME_QPAIR_DISCONNECTED;
 	rc = spdk_nvme_ctrlr_reconnect_io_qpair(&qpair);
 	CU_ASSERT(g_connect_qpair_called == true);
 	CU_ASSERT(rc == 0)

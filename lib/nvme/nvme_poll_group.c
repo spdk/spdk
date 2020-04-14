@@ -56,7 +56,7 @@ spdk_nvme_poll_group_add(struct spdk_nvme_poll_group *group, struct spdk_nvme_qp
 	struct spdk_nvme_transport_poll_group *tgroup;
 	const struct spdk_nvme_transport *transport;
 
-	if (nvme_qpair_get_state(qpair) != NVME_QPAIR_DISABLED) {
+	if (nvme_qpair_get_state(qpair) != NVME_QPAIR_DISCONNECTED) {
 		return -EINVAL;
 	}
 

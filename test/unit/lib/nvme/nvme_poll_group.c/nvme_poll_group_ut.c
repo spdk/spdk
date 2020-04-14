@@ -251,7 +251,7 @@ test_spdk_nvme_poll_group_add_remove(void)
 
 	/* Add qpairs to a single transport. */
 	qpair1_1.transport = &t1;
-	qpair1_1.state = NVME_QPAIR_DISABLED;
+	qpair1_1.state = NVME_QPAIR_DISCONNECTED;
 	qpair1_2.transport = &t1;
 	qpair1_2.state = NVME_QPAIR_ENABLED;
 	CU_ASSERT(spdk_nvme_poll_group_add(group, &qpair1_1) == 0);
@@ -388,7 +388,7 @@ test_spdk_nvme_poll_group_process_completions(void)
 	/* try it with three transport poll groups. */
 	group = spdk_nvme_poll_group_create(NULL);
 	SPDK_CU_ASSERT_FATAL(group != NULL);
-	qpair1_1.state = NVME_QPAIR_DISABLED;
+	qpair1_1.state = NVME_QPAIR_DISCONNECTED;
 	qpair1_1.transport = &t1;
 	CU_ASSERT(spdk_nvme_poll_group_add(group, &qpair1_1) == 0);
 	qpair1_1.state = NVME_QPAIR_ENABLED;

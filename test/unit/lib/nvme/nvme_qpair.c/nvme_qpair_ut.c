@@ -204,7 +204,7 @@ static void test_nvme_qpair_process_completions(void)
 	/* Same if the qpair is failed at the transport layer. */
 	ctrlr.is_failed = false;
 	ctrlr.is_removed = false;
-	qpair.state = NVME_QPAIR_DISABLED;
+	qpair.state = NVME_QPAIR_DISCONNECTED;
 	rc = spdk_nvme_qpair_process_completions(&qpair, 0);
 	CU_ASSERT(rc == -ENXIO);
 	CU_ASSERT(!STAILQ_EMPTY(&qpair.queued_req));

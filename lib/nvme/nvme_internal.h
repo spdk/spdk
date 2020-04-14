@@ -356,7 +356,7 @@ struct nvme_async_event_request {
 };
 
 enum nvme_qpair_state {
-	NVME_QPAIR_DISABLED,
+	NVME_QPAIR_DISCONNECTED,
 	NVME_QPAIR_CONNECTING,
 	NVME_QPAIR_CONNECTED,
 	NVME_QPAIR_ENABLING,
