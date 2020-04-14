@@ -535,7 +535,7 @@ _iscsi_conn_hotremove_lun(void *ctx)
 
 	spdk_clear_all_transfer_task(conn, lun, NULL);
 
-	iscsi_lun->remove_poller = spdk_poller_register(iscsi_conn_remove_lun, iscsi_lun,
+	iscsi_lun->remove_poller = SPDK_POLLER_REGISTER(iscsi_conn_remove_lun, iscsi_lun,
 				   1000);
 }
 
@@ -674,7 +674,7 @@ _iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 	rc = iscsi_conn_free_tasks(conn);
 	if (rc < 0) {
 		/* The connection cannot be freed yet. Check back later. */
-		conn->shutdown_timer = spdk_poller_register(_iscsi_conn_check_shutdown, conn, 1000);
+		conn->shutdown_timer = SPDK_POLLER_REGISTER(_iscsi_conn_check_shutdown, conn, 1000);
 	} else {
 		iscsi_conn_stop(conn);
 		iscsi_conn_free(conn);
@@ -744,7 +744,7 @@ spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 
 	if (conn->dev != NULL &&
 	    spdk_scsi_dev_has_pending_tasks(conn->dev, conn->initiator_port)) {
-		conn->shutdown_timer = spdk_poller_register(_iscsi_conn_check_pending_tasks, conn, 1000);
+		conn->shutdown_timer = SPDK_POLLER_REGISTER(_iscsi_conn_check_pending_tasks, conn, 1000);
 	} else {
 		_iscsi_conn_destruct(conn);
 	}
@@ -844,7 +844,7 @@ _iscsi_conn_request_logout(void *ctx)
 
 	iscsi_send_logout_request(conn);
 
-	conn->logout_request_timer = spdk_poller_register(logout_request_timeout,
+	conn->logout_request_timer = SPDK_POLLER_REGISTER(logout_request_timeout,
 				     conn, ISCSI_LOGOUT_REQUEST_TIMEOUT * 1000000);
 }
 
@@ -892,7 +892,7 @@ spdk_shutdown_iscsi_conns(void)
 {
 	spdk_iscsi_conns_request_logout(NULL);
 
-	g_shutdown_timer = spdk_poller_register(iscsi_conn_check_shutdown, NULL, 1000);
+	g_shutdown_timer = SPDK_POLLER_REGISTER(iscsi_conn_check_shutdown, NULL, 1000);
 }
 
 int
@@ -1638,7 +1638,7 @@ void
 spdk_iscsi_conn_logout(struct spdk_iscsi_conn *conn)
 {
 	conn->is_logged_out = true;
-	conn->logout_timer = spdk_poller_register(logout_timeout, conn, ISCSI_LOGOUT_TIMEOUT * 1000000);
+	conn->logout_timer = SPDK_POLLER_REGISTER(logout_timeout, conn, ISCSI_LOGOUT_TIMEOUT * 1000000);
 }
 
 SPDK_TRACE_REGISTER_FN(iscsi_conn_trace, "iscsi_conn", TRACE_GROUP_ISCSI)

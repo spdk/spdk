@@ -968,7 +968,7 @@ start_io(void *ctx)
 		dev_ctx->random_seed = spdk_get_ticks();
 	}
 
-	dev_ctx->poller = spdk_poller_register(poll_dev, dev_ctx, 0);
+	dev_ctx->poller = SPDK_POLLER_REGISTER(poll_dev, dev_ctx, 0);
 	if (dev_ctx->poller == NULL) {
 		return;
 	}
@@ -1012,7 +1012,7 @@ begin_iscsi_fuzz(void *ctx)
 		__sync_add_and_fetch(&g_num_active_threads, 1);
 	}
 
-	g_app_completion_poller = spdk_poller_register(check_app_completion, NULL, 1000000);
+	g_app_completion_poller = SPDK_POLLER_REGISTER(check_app_completion, NULL, 1000000);
 	if (g_app_completion_poller == NULL) {
 		fprintf(stderr, "Failed to register a poller for test completion checking.\n");
 		goto out;

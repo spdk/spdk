@@ -143,7 +143,7 @@ hello_sock_quit(struct hello_context_t *ctx, int rc)
 	ctx->rc = rc;
 	spdk_poller_unregister(&ctx->poller_out);
 	if (!ctx->time_out) {
-		ctx->time_out = spdk_poller_register(hello_sock_close_timeout_poll, ctx,
+		ctx->time_out = SPDK_POLLER_REGISTER(hello_sock_close_timeout_poll, ctx,
 						     CLOSE_TIMEOUT_US);
 	}
 	return 0;
@@ -238,8 +238,8 @@ hello_sock_connect(struct hello_context_t *ctx)
 	fcntl(STDIN_FILENO, F_SETFL, fcntl(STDIN_FILENO, F_GETFL) | O_NONBLOCK);
 
 	g_is_running = true;
-	ctx->poller_in = spdk_poller_register(hello_sock_recv_poll, ctx, 0);
-	ctx->poller_out = spdk_poller_register(hello_sock_writev_poll, ctx, 0);
+	ctx->poller_in = SPDK_POLLER_REGISTER(hello_sock_recv_poll, ctx, 0);
+	ctx->poller_out = SPDK_POLLER_REGISTER(hello_sock_writev_poll, ctx, 0);
 
 	return 0;
 }
@@ -366,9 +366,9 @@ hello_sock_listen(struct hello_context_t *ctx)
 	/*
 	 * Start acceptor and group poller
 	 */
-	ctx->poller_in = spdk_poller_register(hello_sock_accept_poll, ctx,
+	ctx->poller_in = SPDK_POLLER_REGISTER(hello_sock_accept_poll, ctx,
 					      ACCEPT_TIMEOUT_US);
-	ctx->poller_out = spdk_poller_register(hello_sock_group_poll, ctx, 0);
+	ctx->poller_out = SPDK_POLLER_REGISTER(hello_sock_group_poll, ctx, 0);
 
 	return 0;
 }

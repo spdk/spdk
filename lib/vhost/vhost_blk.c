@@ -831,7 +831,7 @@ vhost_session_bdev_remove_cb(struct spdk_vhost_dev *vdev,
 	bvsession = (struct spdk_vhost_blk_session *)vsession;
 	if (bvsession->requestq_poller) {
 		spdk_poller_unregister(&bvsession->requestq_poller);
-		bvsession->requestq_poller = spdk_poller_register(no_bdev_vdev_worker, bvsession, 0);
+		bvsession->requestq_poller = SPDK_POLLER_REGISTER(no_bdev_vdev_worker, bvsession, 0);
 	}
 
 	return 0;
@@ -954,7 +954,7 @@ vhost_blk_start_cb(struct spdk_vhost_dev *vdev,
 		}
 	}
 
-	bvsession->requestq_poller = spdk_poller_register(bvdev->bdev ? vdev_worker : no_bdev_vdev_worker,
+	bvsession->requestq_poller = SPDK_POLLER_REGISTER(bvdev->bdev ? vdev_worker : no_bdev_vdev_worker,
 				     bvsession, 0);
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "%s: started poller on lcore %d\n",
 		     vsession->name, spdk_env_get_current_core());
@@ -1013,7 +1013,7 @@ vhost_blk_stop_cb(struct spdk_vhost_dev *vdev,
 	struct spdk_vhost_blk_session *bvsession = to_blk_session(vsession);
 
 	spdk_poller_unregister(&bvsession->requestq_poller);
-	bvsession->stop_poller = spdk_poller_register(destroy_session_poller_cb,
+	bvsession->stop_poller = SPDK_POLLER_REGISTER(destroy_session_poller_cb,
 				 bvsession, 1000);
 	return 0;
 }

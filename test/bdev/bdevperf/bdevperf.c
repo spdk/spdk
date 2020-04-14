@@ -789,7 +789,7 @@ reset_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	TAILQ_INSERT_TAIL(&job->task_list, task, link);
 	spdk_bdev_free_io(bdev_io);
 
-	job->reset_timer = spdk_poller_register(reset_job, job,
+	job->reset_timer = SPDK_POLLER_REGISTER(reset_job, job,
 						10 * 1000000);
 }
 
@@ -825,9 +825,9 @@ bdevperf_job_run(struct bdevperf_job *job)
 	 * completes, another will be submitted. */
 
 	/* Start a timer to stop this I/O chain when the run is over */
-	job->run_timer = spdk_poller_register(bdevperf_job_drain, job, g_time_in_usec);
+	job->run_timer = SPDK_POLLER_REGISTER(bdevperf_job_drain, job, g_time_in_usec);
 	if (g_reset) {
-		job->reset_timer = spdk_poller_register(reset_job, job,
+		job->reset_timer = SPDK_POLLER_REGISTER(reset_job, job,
 							10 * 1000000);
 	}
 
@@ -1000,7 +1000,7 @@ bdevperf_test(void)
 	/* Start a timer to dump performance numbers */
 	g_shutdown_tsc = spdk_get_ticks();
 	if (g_show_performance_real_time) {
-		g_perf_timer = spdk_poller_register(performance_statistics_thread, NULL,
+		g_perf_timer = SPDK_POLLER_REGISTER(performance_statistics_thread, NULL,
 						    g_show_performance_period_in_usec);
 	}
 

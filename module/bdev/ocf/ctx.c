@@ -429,7 +429,7 @@ vbdev_ocf_ctx_cleaner_kick(ocf_cleaner_t cleaner)
 
 	/* We start cleaner poller at the same thread where cache was created
 	 * TODO: allow user to specify core at which cleaner should run */
-	priv->poller = spdk_poller_register(cleaner_poll, cleaner, 0);
+	priv->poller = SPDK_POLLER_REGISTER(cleaner_poll, cleaner, 0);
 }
 
 static void

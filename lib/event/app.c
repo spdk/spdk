@@ -1134,7 +1134,7 @@ spdk_rpc_framework_wait_init(struct spdk_jsonrpc_request *request,
 			return;
 		}
 		ctx->request = request;
-		ctx->init_poller = spdk_poller_register(spdk_rpc_subsystem_init_poller_ctx, ctx, 0);
+		ctx->init_poller = SPDK_POLLER_REGISTER(spdk_rpc_subsystem_init_poller_ctx, ctx, 0);
 	}
 }
 SPDK_RPC_REGISTER("framework_wait_init", spdk_rpc_framework_wait_init,

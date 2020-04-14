@@ -443,7 +443,7 @@ delay_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 	STAILQ_INIT(&delay_ch->avg_write_io);
 	STAILQ_INIT(&delay_ch->p99_write_io);
 
-	delay_ch->io_poller = spdk_poller_register(_delay_finish_io, delay_ch, 0);
+	delay_ch->io_poller = SPDK_POLLER_REGISTER(_delay_finish_io, delay_ch, 0);
 	delay_ch->base_ch = spdk_bdev_get_io_channel(delay_node->base_desc);
 	delay_ch->rand_seed = time(NULL);
 

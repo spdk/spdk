@@ -154,7 +154,7 @@ nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 
 	if (nvme_bdev_ctrlr->resetting) {
 		nvme_bdev_ctrlr->destruct_poller =
-			spdk_poller_register((spdk_poller_fn)nvme_bdev_ctrlr_destruct, nvme_bdev_ctrlr, 1000);
+			SPDK_POLLER_REGISTER((spdk_poller_fn)nvme_bdev_ctrlr_destruct, nvme_bdev_ctrlr, 1000);
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
 		return 1;
 	}

@@ -362,7 +362,7 @@ null_bdev_create_cb(void *io_device, void *ctx_buf)
 	struct null_io_channel *ch = ctx_buf;
 
 	TAILQ_INIT(&ch->io);
-	ch->poller = spdk_poller_register(null_io_poll, ch, 0);
+	ch->poller = SPDK_POLLER_REGISTER(null_io_poll, ch, 0);
 
 	return 0;
 }

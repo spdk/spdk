@@ -297,7 +297,7 @@ __start_cache_pool_mgmt(void *ctx)
 	pthread_spin_init(&g_caches_lock, 0);
 
 	assert(g_cache_pool_mgmt_poller == NULL);
-	g_cache_pool_mgmt_poller = spdk_poller_register(_blobfs_cache_pool_reclaim, NULL,
+	g_cache_pool_mgmt_poller = SPDK_POLLER_REGISTER(_blobfs_cache_pool_reclaim, NULL,
 				   BLOBFS_CACHE_POOL_POLL_PERIOD_IN_US);
 }
 

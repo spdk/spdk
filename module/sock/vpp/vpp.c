@@ -1351,7 +1351,7 @@ _spdk_vpp_application_attached(void *arg)
 	SPDK_NOTICELOG("VPP net framework initialized.\n");
 	g_svm.vpp_state = VPP_STATE_ATTACHED;
 	g_svm.vpp_initialized = true;
-	g_svm.app_queue_poller = spdk_poller_register(app_queue_poller, NULL, 100);
+	g_svm.app_queue_poller = SPDK_POLLER_REGISTER(app_queue_poller, NULL, 100);
 	spdk_net_framework_init_next(0);
 }
 
@@ -1487,7 +1487,7 @@ _spdk_vpp_app_detach(void)
 	bmp->context = ntohl(0xfeedface);
 	vl_msg_api_send_shmem(g_svm.vl_input_queue, (u8 *)&bmp);
 
-	g_svm.timeout_poller = spdk_poller_register(_spdk_vpp_application_detached_timeout,
+	g_svm.timeout_poller = SPDK_POLLER_REGISTER(_spdk_vpp_application_detached_timeout,
 			       NULL, 10000000);
 
 	return 0;
@@ -1576,7 +1576,7 @@ spdk_vpp_net_framework_init(void)
 	g_svm.init_thread = spdk_get_thread();
 	SPDK_NOTICELOG("Enable VPP session\n");
 
-	g_svm.vpp_queue_poller = spdk_poller_register(vpp_queue_poller, NULL, 100);
+	g_svm.vpp_queue_poller = SPDK_POLLER_REGISTER(vpp_queue_poller, NULL, 100);
 
 	_spdk_vpp_session_enable(1);
 

@@ -198,7 +198,7 @@ iscsi_portal_open(struct spdk_iscsi_portal *p)
 	 * the requests will be queued by the nonzero backlog of the socket
 	 * or resend by TCP.
 	 */
-	p->acceptor_poller = spdk_poller_register(iscsi_portal_accept, p, ACCEPT_TIMEOUT_US);
+	p->acceptor_poller = SPDK_POLLER_REGISTER(iscsi_portal_accept, p, ACCEPT_TIMEOUT_US);
 
 	return 0;
 }

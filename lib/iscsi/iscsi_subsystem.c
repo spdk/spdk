@@ -1228,9 +1228,9 @@ iscsi_poll_group_create(void *io_device, void *ctx_buf)
 	pg->sock_group = spdk_sock_group_create(NULL);
 	assert(pg->sock_group != NULL);
 
-	pg->poller = spdk_poller_register(iscsi_poll_group_poll, pg, 0);
+	pg->poller = SPDK_POLLER_REGISTER(iscsi_poll_group_poll, pg, 0);
 	/* set the period to 1 sec */
-	pg->nop_poller = spdk_poller_register(iscsi_poll_group_handle_nop, pg, 1000000);
+	pg->nop_poller = SPDK_POLLER_REGISTER(iscsi_poll_group_handle_nop, pg, 1000000);
 
 	return 0;
 }

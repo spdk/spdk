@@ -1053,7 +1053,7 @@ spdk_vhost_nvme_start_cb(struct spdk_vhost_dev *vdev,
 
 	nvme->vsession = vsession;
 	/* Start the NVMe Poller */
-	nvme->requestq_poller = spdk_poller_register(nvme_worker, nvme, 0);
+	nvme->requestq_poller = SPDK_POLLER_REGISTER(nvme_worker, nvme, 0);
 
 out:
 	vhost_session_start_done(vsession, rc);
@@ -1147,7 +1147,7 @@ spdk_vhost_nvme_stop_cb(struct spdk_vhost_dev *vdev,
 	SPDK_NOTICELOG("Stopping Device %u, Path %s\n", vsession->vid, vdev->path);
 
 	spdk_poller_unregister(&nvme->requestq_poller);
-	nvme->stop_poller = spdk_poller_register(destroy_device_poller_cb, nvme, 1000);
+	nvme->stop_poller = SPDK_POLLER_REGISTER(destroy_device_poller_cb, nvme, 1000);
 
 	return 0;
 }

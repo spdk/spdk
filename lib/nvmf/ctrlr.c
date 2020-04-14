@@ -196,7 +196,7 @@ spdk_nvmf_ctrlr_start_keep_alive_timer(struct spdk_nvmf_ctrlr *ctrlr)
 		ctrlr->last_keep_alive_tick = spdk_get_ticks();
 
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Ctrlr add keep alive poller\n");
-		ctrlr->keep_alive_poller = spdk_poller_register(spdk_nvmf_ctrlr_keep_alive_poll, ctrlr,
+		ctrlr->keep_alive_poller = SPDK_POLLER_REGISTER(spdk_nvmf_ctrlr_keep_alive_poll, ctrlr,
 					   ctrlr->feat.keep_alive_timer.bits.kato * 1000);
 	}
 }
@@ -1371,7 +1371,7 @@ spdk_nvmf_ctrlr_set_features_keep_alive_timer(struct spdk_nvmf_request *req)
 		if (ctrlr->keep_alive_poller != NULL) {
 			spdk_poller_unregister(&ctrlr->keep_alive_poller);
 		}
-		ctrlr->keep_alive_poller = spdk_poller_register(spdk_nvmf_ctrlr_keep_alive_poll, ctrlr,
+		ctrlr->keep_alive_poller = SPDK_POLLER_REGISTER(spdk_nvmf_ctrlr_keep_alive_poll, ctrlr,
 					   ctrlr->feat.keep_alive_timer.bits.kato * 1000);
 	}
 

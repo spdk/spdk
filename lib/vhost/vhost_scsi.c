@@ -1332,10 +1332,10 @@ vhost_scsi_start_cb(struct spdk_vhost_dev *vdev,
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "%s: started poller on lcore %d\n",
 		     vsession->name, spdk_env_get_current_core());
 
-	svsession->requestq_poller = spdk_poller_register(vdev_worker, svsession, 0);
+	svsession->requestq_poller = SPDK_POLLER_REGISTER(vdev_worker, svsession, 0);
 	if (vsession->virtqueue[VIRTIO_SCSI_CONTROLQ].vring.desc &&
 	    vsession->virtqueue[VIRTIO_SCSI_EVENTQ].vring.desc) {
-		svsession->mgmt_poller = spdk_poller_register(vdev_mgmt_worker, svsession,
+		svsession->mgmt_poller = SPDK_POLLER_REGISTER(vdev_mgmt_worker, svsession,
 					 MGMT_POLL_PERIOD_US);
 	}
 out:
@@ -1431,7 +1431,7 @@ vhost_scsi_stop_cb(struct spdk_vhost_dev *vdev,
 	/* Wait for all pending I/Os to complete, then process all the
 	 * remaining hotremove events one last time.
 	 */
-	svsession->stop_poller = spdk_poller_register(destroy_session_poller_cb,
+	svsession->stop_poller = SPDK_POLLER_REGISTER(destroy_session_poller_cb,
 				 svsession, 1000);
 
 	return 0;

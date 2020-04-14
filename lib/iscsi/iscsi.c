@@ -3606,7 +3606,7 @@ iscsi_op_abort_task(struct spdk_iscsi_task *task, uint32_t ref_task_tag)
 {
 	task->scsi.abort_id = ref_task_tag;
 	task->scsi.function = SPDK_SCSI_TASK_FUNC_ABORT_TASK;
-	task->mgmt_poller = spdk_poller_register(_iscsi_op_abort_task, task, 10);
+	task->mgmt_poller = SPDK_POLLER_REGISTER(_iscsi_op_abort_task, task, 10);
 }
 
 static int
@@ -3630,7 +3630,7 @@ void
 spdk_iscsi_op_abort_task_set(struct spdk_iscsi_task *task, uint8_t function)
 {
 	task->scsi.function = function;
-	task->mgmt_poller = spdk_poller_register(_iscsi_op_abort_task_set, task, 10);
+	task->mgmt_poller = SPDK_POLLER_REGISTER(_iscsi_op_abort_task_set, task, 10);
 }
 
 static int

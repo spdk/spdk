@@ -708,7 +708,7 @@ bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 		}
 	}
 
-	ch->poller = spdk_poller_register(bdev_nvme_poll, ch, g_opts.nvme_ioq_poll_period_us);
+	ch->poller = SPDK_POLLER_REGISTER(bdev_nvme_poll, ch, g_opts.nvme_ioq_poll_period_us);
 
 	TAILQ_INIT(&ch->pending_resets);
 	return 0;
@@ -1318,7 +1318,7 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 				sizeof(struct nvme_io_channel),
 				name);
 
-	nvme_bdev_ctrlr->adminq_timer_poller = spdk_poller_register(bdev_nvme_poll_adminq, ctrlr,
+	nvme_bdev_ctrlr->adminq_timer_poller = SPDK_POLLER_REGISTER(bdev_nvme_poll_adminq, ctrlr,
 					       g_opts.nvme_adminq_poll_period_us);
 
 	TAILQ_INSERT_TAIL(&g_nvme_bdev_ctrlrs, nvme_bdev_ctrlr, tailq);
@@ -1483,7 +1483,7 @@ set_nvme_hotplug_period_cb(void *_ctx)
 
 	spdk_poller_unregister(&g_hotplug_poller);
 	if (ctx->enabled) {
-		g_hotplug_poller = spdk_poller_register(bdev_nvme_hotplug, NULL, ctx->period_us);
+		g_hotplug_poller = SPDK_POLLER_REGISTER(bdev_nvme_hotplug, NULL, ctx->period_us);
 	}
 
 	g_nvme_hotplug_poll_period_us = ctx->period_us;
@@ -1676,7 +1676,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		free(ctx);
 		return -ENODEV;
 	}
-	ctx->poller = spdk_poller_register(bdev_nvme_async_poll, ctx, 1000);
+	ctx->poller = SPDK_POLLER_REGISTER(bdev_nvme_async_poll, ctx, 1000);
 
 	return 0;
 }

@@ -828,7 +828,7 @@ io_device_create_cb(void *io_device, void *ctx_buf)
 	qctx->vbdev      = vbdev;
 	qctx->cache_ch   = spdk_bdev_get_io_channel(vbdev->cache.desc);
 	qctx->core_ch    = spdk_bdev_get_io_channel(vbdev->core.desc);
-	qctx->poller     = spdk_poller_register(queue_poll, qctx, 0);
+	qctx->poller     = SPDK_POLLER_REGISTER(queue_poll, qctx, 0);
 
 	return rc;
 }
@@ -846,7 +846,7 @@ io_device_destroy_cb(void *io_device, void *ctx_buf)
 		ocf_queue_set_priv(qctx->queue, copy);
 		memcpy(copy, qctx, sizeof(*copy));
 		spdk_poller_unregister(&qctx->poller);
-		copy->poller = spdk_poller_register(queue_poll, copy, 0);
+		copy->poller = SPDK_POLLER_REGISTER(queue_poll, copy, 0);
 		copy->allocated = true;
 	} else {
 		SPDK_ERRLOG("Unable to stop OCF queue properly: %s\n",
@@ -1013,7 +1013,7 @@ create_management_queue(struct vbdev_ocf *vbdev)
 		return rc;
 	}
 
-	mngt_poller = spdk_poller_register(mngt_queue_poll, vbdev->cache_ctx->mngt_queue, 100);
+	mngt_poller = SPDK_POLLER_REGISTER(mngt_queue_poll, vbdev->cache_ctx->mngt_queue, 100);
 	if (mngt_poller == NULL) {
 		SPDK_ERRLOG("Unable to initiate mngt request: %s", spdk_strerror(ENOMEM));
 		return -ENOMEM;

@@ -142,7 +142,7 @@ spdk_nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 		}
 	}
 
-	group->poller = spdk_poller_register(spdk_nvmf_poll_group_poll, group, 0);
+	group->poller = SPDK_POLLER_REGISTER(spdk_nvmf_poll_group_poll, group, 0);
 	group->thread = spdk_get_thread();
 
 	return 0;

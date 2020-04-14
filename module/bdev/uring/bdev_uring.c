@@ -427,7 +427,7 @@ bdev_uring_group_create_cb(void *io_device, void *ctx_buf)
 		return -1;
 	}
 
-	ch->poller = spdk_poller_register(bdev_uring_group_poll, ch, 0);
+	ch->poller = SPDK_POLLER_REGISTER(bdev_uring_group_poll, ch, 0);
 	return 0;
 }
 

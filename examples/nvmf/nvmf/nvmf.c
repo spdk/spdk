@@ -730,7 +730,7 @@ nvmf_target_advance_state(void)
 			nvmf_tgt_start_subsystems(&g_nvmf_tgt);
 			break;
 		case NVMF_INIT_START_ACCEPTOR:
-			g_acceptor_poller = spdk_poller_register(nvmf_tgt_acceptor_poll, &g_nvmf_tgt,
+			g_acceptor_poller = SPDK_POLLER_REGISTER(nvmf_tgt_acceptor_poll, &g_nvmf_tgt,
 					    g_acceptor_poll_rate);
 			fprintf(stdout, "Acceptor running\n");
 			g_target_state = NVMF_RUNNING;

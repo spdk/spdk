@@ -286,7 +286,7 @@ virtio_scsi_dev_init(struct virtio_scsi_dev *svdev, uint16_t max_queues)
 
 	svdev->ctrlq_ring = ctrlq_ring;
 
-	svdev->mgmt_poller = spdk_poller_register(bdev_virtio_mgmt_poll, svdev,
+	svdev->mgmt_poller = SPDK_POLLER_REGISTER(bdev_virtio_mgmt_poll, svdev,
 			     MGMT_POLL_PERIOD_US);
 
 	TAILQ_INIT(&svdev->luns);
@@ -1017,7 +1017,7 @@ bdev_virtio_scsi_ch_create_cb(void *io_device, void *ctx_buf)
 	ch->svdev = svdev;
 	ch->vq = vq;
 
-	ch->poller = spdk_poller_register(bdev_virtio_poll, ch, 0);
+	ch->poller = SPDK_POLLER_REGISTER(bdev_virtio_poll, ch, 0);
 
 	return 0;
 }

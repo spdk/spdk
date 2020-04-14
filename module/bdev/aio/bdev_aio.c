@@ -363,7 +363,7 @@ _bdev_aio_get_io_inflight_done(struct spdk_io_channel_iter *i, int status)
 	struct file_disk *fdisk = spdk_io_channel_iter_get_ctx(i);
 
 	if (status == -1) {
-		fdisk->reset_retry_timer = spdk_poller_register(bdev_aio_reset_retry_timer, fdisk, 500);
+		fdisk->reset_retry_timer = SPDK_POLLER_REGISTER(bdev_aio_reset_retry_timer, fdisk, 500);
 		return;
 	}
 
@@ -566,7 +566,7 @@ bdev_aio_group_create_cb(void *io_device, void *ctx_buf)
 		return -1;
 	}
 
-	ch->poller = spdk_poller_register(bdev_aio_group_poll, ch, 0);
+	ch->poller = SPDK_POLLER_REGISTER(bdev_aio_group_poll, ch, 0);
 	return 0;
 }
 

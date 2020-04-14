@@ -1441,7 +1441,7 @@ bdev_ocssd_create_io_channel(struct nvme_io_channel *ioch)
 		return -ENOMEM;
 	}
 
-	ocssd_ioch->pending_poller = spdk_poller_register(bdev_ocssd_poll_pending,
+	ocssd_ioch->pending_poller = SPDK_POLLER_REGISTER(bdev_ocssd_poll_pending,
 				     spdk_io_channel_from_ctx(ioch), 0);
 	if (ocssd_ioch->pending_poller == NULL) {
 		SPDK_ERRLOG("Failed to register pending requests poller\n");
@@ -1475,7 +1475,7 @@ bdev_ocssd_init_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 		return -ENOMEM;
 	}
 
-	ocssd_ctrlr->mm_poller = spdk_poller_register(bdev_ocssd_poll_mm, nvme_bdev_ctrlr,
+	ocssd_ctrlr->mm_poller = SPDK_POLLER_REGISTER(bdev_ocssd_poll_mm, nvme_bdev_ctrlr,
 				 10000ULL);
 	if (!ocssd_ctrlr->mm_poller) {
 		free(ocssd_ctrlr);

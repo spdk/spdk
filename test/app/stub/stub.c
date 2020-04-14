@@ -129,7 +129,7 @@ stub_start(void *arg1)
 		exit(1);
 	}
 
-	g_poller = spdk_poller_register(stub_sleep, NULL, 0);
+	g_poller = SPDK_POLLER_REGISTER(stub_sleep, NULL, 0);
 }
 
 static void

@@ -262,7 +262,7 @@ _worker_stop(void *arg)
 
 	/* now let the worker drain and check it's outstanding IO with a poller */
 	worker->is_draining = true;
-	worker->is_draining_poller = spdk_poller_register(_check_draining, worker, 0);
+	worker->is_draining_poller = SPDK_POLLER_REGISTER(_check_draining, worker, 0);
 
 	return 0;
 }
@@ -311,7 +311,7 @@ _init_thread(void *arg1)
 	}
 
 	/* Register a poller that will stop the worker at time elapsed */
-	worker->stop_poller = spdk_poller_register(_worker_stop, worker,
+	worker->stop_poller = SPDK_POLLER_REGISTER(_worker_stop, worker,
 			      g_time_in_sec * 1000000ULL);
 
 	g_workers = worker;

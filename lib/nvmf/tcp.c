@@ -1064,7 +1064,7 @@ spdk_nvmf_tcp_send_c2h_term_req_complete(void *cb_arg)
 	struct spdk_nvmf_tcp_qpair *tqpair = (struct spdk_nvmf_tcp_qpair *)cb_arg;
 
 	if (!tqpair->timeout_poller) {
-		tqpair->timeout_poller = spdk_poller_register(spdk_nvmf_tcp_qpair_handle_timeout, tqpair,
+		tqpair->timeout_poller = SPDK_POLLER_REGISTER(spdk_nvmf_tcp_qpair_handle_timeout, tqpair,
 					 SPDK_NVME_TCP_QPAIR_EXIT_TIMEOUT * 1000000);
 	}
 }

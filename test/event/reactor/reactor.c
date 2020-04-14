@@ -90,14 +90,14 @@ test_start(void *arg1)
 	printf("test_start\n");
 
 	/* Register a poller that will stop the test after the time has elapsed. */
-	test_end_poller = spdk_poller_register(test_end, NULL, g_time_in_sec * 1000000ULL);
+	test_end_poller = SPDK_POLLER_REGISTER(test_end, NULL, g_time_in_sec * 1000000ULL);
 
-	poller_100ms = spdk_poller_register(tick, (void *)100, 100000);
-	poller_250ms = spdk_poller_register(tick, (void *)250, 250000);
-	poller_500ms = spdk_poller_register(tick, (void *)500, 500000);
-	poller_oneshot = spdk_poller_register(oneshot, NULL, 0);
+	poller_100ms = SPDK_POLLER_REGISTER(tick, (void *)100, 100000);
+	poller_250ms = SPDK_POLLER_REGISTER(tick, (void *)250, 250000);
+	poller_500ms = SPDK_POLLER_REGISTER(tick, (void *)500, 500000);
+	poller_oneshot = SPDK_POLLER_REGISTER(oneshot, NULL, 0);
 
-	poller_unregister = spdk_poller_register(nop, NULL, 0);
+	poller_unregister = SPDK_POLLER_REGISTER(nop, NULL, 0);
 	spdk_poller_unregister(&poller_unregister);
 }
 

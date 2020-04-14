@@ -219,7 +219,7 @@ rpc_client_connect_poller(void *_ctx)
 	if (rc != -ENOTCONN) {
 		/* We are connected. Start regular poller and issue first request */
 		spdk_poller_unregister(&ctx->client_conn_poller);
-		ctx->client_conn_poller = spdk_poller_register(rpc_client_poller, ctx, 100);
+		ctx->client_conn_poller = SPDK_POLLER_REGISTER(rpc_client_poller, ctx, 100);
 		spdk_app_json_config_load_subsystem(ctx);
 	} else {
 		rc = rpc_client_check_timeout(ctx);
@@ -589,7 +589,7 @@ spdk_app_json_config_load(const char *json_config_file, const char *rpc_addr,
 	}
 
 	rpc_client_set_timeout(ctx, RPC_CLIENT_CONNECT_TIMEOUT_US);
-	ctx->client_conn_poller = spdk_poller_register(rpc_client_connect_poller, ctx, 100);
+	ctx->client_conn_poller = SPDK_POLLER_REGISTER(rpc_client_connect_poller, ctx, 100);
 	return;
 
 fail:

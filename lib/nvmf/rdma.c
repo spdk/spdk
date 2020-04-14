@@ -3650,7 +3650,7 @@ spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 		spdk_nvmf_rdma_set_ibv_state(rqpair, IBV_QPS_ERR);
 	}
 
-	rqpair->destruct_poller = spdk_poller_register(spdk_nvmf_rdma_destroy_defunct_qpair, (void *)rqpair,
+	rqpair->destruct_poller = SPDK_POLLER_REGISTER(spdk_nvmf_rdma_destroy_defunct_qpair, (void *)rqpair,
 				  NVMF_RDMA_QPAIR_DESTROY_TIMEOUT_US);
 }
 

@@ -512,7 +512,7 @@ _ftl_dev_init_core_thread(void *ctx)
 {
 	struct spdk_ftl_dev *dev = ctx;
 
-	dev->core_poller = spdk_poller_register(ftl_task_core, dev, 0);
+	dev->core_poller = SPDK_POLLER_REGISTER(ftl_task_core, dev, 0);
 	if (!dev->core_poller) {
 		SPDK_ERRLOG("Unable to register core poller\n");
 		assert(0);
@@ -1140,7 +1140,7 @@ ftl_io_channel_create_cb(void *io_device, void *ctx)
 
 	TAILQ_INIT(&ioch->write_cmpl_queue);
 	TAILQ_INIT(&ioch->retry_queue);
-	ioch->poller = spdk_poller_register(ftl_io_channel_poll, ioch, 0);
+	ioch->poller = SPDK_POLLER_REGISTER(ftl_io_channel_poll, ioch, 0);
 	if (!ioch->poller) {
 		SPDK_ERRLOG("Failed to register IO channel poller\n");
 		goto fail_poller;
@@ -1637,7 +1637,7 @@ ftl_add_halt_poller(void *ctx)
 	_ftl_halt_defrag(dev);
 
 	assert(!fini_ctx->poller);
-	fini_ctx->poller = spdk_poller_register(ftl_halt_poller, fini_ctx, 100);
+	fini_ctx->poller = SPDK_POLLER_REGISTER(ftl_halt_poller, fini_ctx, 100);
 }
 
 static int

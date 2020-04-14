@@ -72,7 +72,7 @@ test_start(void *arg1)
 	printf("test_start\n");
 
 	/* Register a poller that will stop the test after the time has elapsed. */
-	g_test_end_poller = spdk_poller_register(__test_end, NULL,
+	g_test_end_poller = SPDK_POLLER_REGISTER(__test_end, NULL,
 			    g_time_in_sec * 1000000ULL);
 
 	for (i = 0; i < g_queue_depth; i++) {

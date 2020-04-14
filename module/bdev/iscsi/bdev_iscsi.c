@@ -511,7 +511,7 @@ bdev_iscsi_create_cb(void *io_device, void *ctx_buf)
 	if (lun->ch_count == 0) {
 		assert(lun->master_td == NULL);
 		lun->master_td = spdk_get_thread();
-		lun->poller = spdk_poller_register(bdev_iscsi_poll_lun, lun, 0);
+		lun->poller = SPDK_POLLER_REGISTER(bdev_iscsi_poll_lun, lun, 0);
 		ch->lun = lun;
 	}
 	lun->ch_count++;
@@ -663,7 +663,7 @@ create_iscsi_lun(struct iscsi_context *context, int lun_id, char *url, char *ini
 	}
 
 	lun->no_master_ch_poller_td = spdk_get_thread();
-	lun->no_master_ch_poller = spdk_poller_register(bdev_iscsi_no_master_ch_poll, lun,
+	lun->no_master_ch_poller = SPDK_POLLER_REGISTER(bdev_iscsi_no_master_ch_poll, lun,
 				   BDEV_ISCSI_NO_MASTER_CH_POLL_US);
 
 	*bdev = &lun->bdev;
@@ -845,7 +845,7 @@ create_iscsi_disk(const char *bdev_name, const char *url, const char *initiator_
 	req->status = -1;
 	TAILQ_INSERT_TAIL(&g_iscsi_conn_req, req, link);
 	if (!g_conn_poller) {
-		g_conn_poller = spdk_poller_register(iscsi_bdev_conn_poll, NULL, BDEV_ISCSI_CONNECTION_POLL_US);
+		g_conn_poller = SPDK_POLLER_REGISTER(iscsi_bdev_conn_poll, NULL, BDEV_ISCSI_CONNECTION_POLL_US);
 	}
 
 	return 0;

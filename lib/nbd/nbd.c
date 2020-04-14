@@ -911,7 +911,7 @@ spdk_nbd_start_complete(struct spdk_nbd_start_ctx *ctx)
 		goto err;
 	}
 
-	ctx->nbd->nbd_poller = spdk_poller_register(spdk_nbd_poll, ctx->nbd, 0);
+	ctx->nbd->nbd_poller = SPDK_POLLER_REGISTER(spdk_nbd_poll, ctx->nbd, 0);
 
 	if (ctx->cb_fn) {
 		ctx->cb_fn(ctx->cb_arg, ctx->nbd, 0);
@@ -939,7 +939,7 @@ spdk_nbd_enable_kernel(void *arg)
 	if (rc == -1) {
 		if (errno == EBUSY && ctx->polling_count-- > 0) {
 			if (ctx->poller == NULL) {
-				ctx->poller = spdk_poller_register(spdk_nbd_enable_kernel, ctx,
+				ctx->poller = SPDK_POLLER_REGISTER(spdk_nbd_enable_kernel, ctx,
 								   NBD_BUSY_POLLING_INTERVAL_US);
 			}
 			/* If the kernel is busy, check back later */

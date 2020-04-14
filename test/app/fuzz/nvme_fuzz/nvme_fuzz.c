@@ -687,7 +687,7 @@ start_ns_poller(void *ctx)
 {
 	struct nvme_fuzz_ns *ns_entry = ctx;
 
-	ns_entry->req_poller = spdk_poller_register(poll_for_completions, ns_entry, 0);
+	ns_entry->req_poller = SPDK_POLLER_REGISTER(poll_for_completions, ns_entry, 0);
 	submit_ns_cmds(ns_entry);
 }
 
@@ -765,7 +765,7 @@ begin_fuzz(void *ctx)
 		__sync_add_and_fetch(&g_num_active_threads, 1);
 	}
 
-	g_app_completion_poller = spdk_poller_register(check_app_completion, NULL, 1000000);
+	g_app_completion_poller = SPDK_POLLER_REGISTER(check_app_completion, NULL, 1000000);
 	return;
 out:
 	printf("Shutting down the fuzz application\n");

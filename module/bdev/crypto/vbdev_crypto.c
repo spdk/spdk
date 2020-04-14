@@ -1363,7 +1363,7 @@ crypto_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 	struct device_qp *device_qp = NULL;
 
 	crypto_ch->base_ch = spdk_bdev_get_io_channel(crypto_bdev->base_desc);
-	crypto_ch->poller = spdk_poller_register(crypto_dev_poller, crypto_ch, 0);
+	crypto_ch->poller = SPDK_POLLER_REGISTER(crypto_dev_poller, crypto_ch, 0);
 	crypto_ch->device_qp = NULL;
 
 	/* Assign a device/qp combination that is unique per channel per PMD. */

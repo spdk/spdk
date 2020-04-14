@@ -1393,7 +1393,7 @@ comp_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 
 		comp_bdev->base_ch = spdk_bdev_get_io_channel(comp_bdev->base_desc);
 		comp_bdev->reduce_thread = spdk_get_thread();
-		comp_bdev->poller = spdk_poller_register(comp_dev_poller, comp_bdev, 0);
+		comp_bdev->poller = SPDK_POLLER_REGISTER(comp_dev_poller, comp_bdev, 0);
 		/* Now assign a q pair */
 		pthread_mutex_lock(&g_comp_device_qp_lock);
 		TAILQ_FOREACH(device_qp, &g_comp_device_qp, link) {

@@ -390,7 +390,7 @@ bdev_virtio_blk_ch_create_cb(void *io_device, void *ctx_buf)
 	ch->vdev = vdev;
 	ch->vq = vq;
 
-	ch->poller = spdk_poller_register(bdev_virtio_poll, ch, 0);
+	ch->poller = SPDK_POLLER_REGISTER(bdev_virtio_poll, ch, 0);
 	return 0;
 }
 

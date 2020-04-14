@@ -68,7 +68,7 @@ vmd_subsystem_init(void)
 
 	assert(g_hotplug_poller == NULL);
 
-	g_hotplug_poller = spdk_poller_register(vmd_hotplug_monitor, NULL, 1000000ULL);
+	g_hotplug_poller = SPDK_POLLER_REGISTER(vmd_hotplug_monitor, NULL, 1000000ULL);
 	if (g_hotplug_poller == NULL) {
 		SPDK_ERRLOG("Failed to register hotplug monitor poller\n");
 		return -ENOMEM;

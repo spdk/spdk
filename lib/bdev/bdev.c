@@ -2317,7 +2317,7 @@ bdev_enable_qos(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch)
 			qos->timeslice_size =
 				SPDK_BDEV_QOS_TIMESLICE_IN_USEC * spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
 			qos->last_timeslice = spdk_get_ticks();
-			qos->poller = spdk_poller_register(bdev_channel_poll_qos,
+			qos->poller = SPDK_POLLER_REGISTER(bdev_channel_poll_qos,
 							   qos,
 							   SPDK_BDEV_QOS_TIMESLICE_IN_USEC);
 		}
@@ -2437,7 +2437,7 @@ spdk_bdev_set_timeout(struct spdk_bdev_desc *desc, uint64_t timeout_in_sec,
 
 	if (timeout_in_sec) {
 		assert(cb_fn != NULL);
-		desc->io_timeout_poller = spdk_poller_register(bdev_poll_timeout_io,
+		desc->io_timeout_poller = SPDK_POLLER_REGISTER(bdev_poll_timeout_io,
 					  desc,
 					  SPDK_BDEV_IO_POLL_INTERVAL_IN_MSEC * SPDK_SEC_TO_USEC /
 					  1000);
@@ -3044,7 +3044,7 @@ spdk_bdev_set_qd_sampling_period(struct spdk_bdev *bdev, uint64_t period)
 	}
 
 	if (period != 0) {
-		bdev->internal.qd_poller = spdk_poller_register(bdev_calculate_measured_queue_depth, bdev,
+		bdev->internal.qd_poller = SPDK_POLLER_REGISTER(bdev_calculate_measured_queue_depth, bdev,
 					   period);
 	}
 }
@@ -6144,7 +6144,7 @@ bdev_lock_lba_range_check_io(void *_i)
 	 */
 	TAILQ_FOREACH(bdev_io, &ch->io_submitted, internal.ch_link) {
 		if (bdev_io_range_is_locked(bdev_io, range)) {
-			ctx->poller = spdk_poller_register(bdev_lock_lba_range_check_io, i, 100);
+			ctx->poller = SPDK_POLLER_REGISTER(bdev_lock_lba_range_check_io, i, 100);
 			return 1;
 		}
 	}

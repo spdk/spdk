@@ -357,7 +357,7 @@ bdev_rbd_reset(struct bdev_rbd *disk, struct spdk_bdev_io *bdev_io)
 	 */
 	assert(disk->reset_bdev_io == NULL);
 	disk->reset_bdev_io = bdev_io;
-	disk->reset_timer = spdk_poller_register(bdev_rbd_reset_timer, disk, 1 * 1000 * 1000);
+	disk->reset_timer = SPDK_POLLER_REGISTER(bdev_rbd_reset_timer, disk, 1 * 1000 * 1000);
 
 	return 0;
 }
@@ -580,7 +580,7 @@ bdev_rbd_create_cb(void *io_device, void *ctx_buf)
 		goto err;
 	}
 
-	ch->poller = spdk_poller_register(bdev_rbd_io_poll, ch, BDEV_RBD_POLL_US);
+	ch->poller = SPDK_POLLER_REGISTER(bdev_rbd_io_poll, ch, BDEV_RBD_POLL_US);
 
 	return 0;
 
