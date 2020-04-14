@@ -235,12 +235,6 @@ nvme_tcp_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
 	struct nvme_tcp_pdu *pdu;
 
-	if (nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTED) {
-		/* Already disconnecting */
-		return;
-	}
-
-	nvme_qpair_set_state(qpair, NVME_QPAIR_DISCONNECTED);
 	spdk_sock_close(&tqpair->sock);
 
 	/* clear the send_queue */

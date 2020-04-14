@@ -472,9 +472,6 @@ spdk_nvme_ctrlr_reconnect_io_qpair(struct spdk_nvme_qpair *qpair)
 		goto out;
 	}
 
-	/* We have to confirm that any old memory is cleaned up. */
-	nvme_transport_ctrlr_disconnect_qpair(ctrlr, qpair);
-
 	rc = nvme_transport_ctrlr_connect_qpair(ctrlr, qpair);
 	if (rc) {
 		rc = -EAGAIN;
@@ -1165,9 +1162,7 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	/* Disable all queues before disabling the controller hardware. */
 	TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
 		qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_LOCAL;
-		nvme_qpair_set_state(qpair, NVME_QPAIR_DISCONNECTED);
 	}
-	nvme_qpair_set_state(ctrlr->adminq, NVME_QPAIR_DISCONNECTED);
 	nvme_qpair_complete_error_reqs(ctrlr->adminq);
 	nvme_transport_qpair_abort_reqs(ctrlr->adminq, 0 /* retry */);
 	ctrlr->adminq->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_LOCAL;

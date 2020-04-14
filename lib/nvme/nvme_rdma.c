@@ -330,18 +330,15 @@ nvme_rdma_qpair_process_cm_event(struct nvme_rdma_qpair *rqpair)
 			break;
 		case RDMA_CM_EVENT_DISCONNECTED:
 			rqpair->qpair.transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_REMOTE;
-			nvme_qpair_set_state(&rqpair->qpair, NVME_QPAIR_DISCONNECTED);
 			break;
 		case RDMA_CM_EVENT_DEVICE_REMOVAL:
 			rqpair->qpair.transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_LOCAL;
-			nvme_qpair_set_state(&rqpair->qpair, NVME_QPAIR_DISCONNECTED);
 			break;
 		case RDMA_CM_EVENT_MULTICAST_JOIN:
 		case RDMA_CM_EVENT_MULTICAST_ERROR:
 			break;
 		case RDMA_CM_EVENT_ADDR_CHANGE:
 			rqpair->qpair.transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_LOCAL;
-			nvme_qpair_set_state(&rqpair->qpair, NVME_QPAIR_DISCONNECTED);
 			break;
 		case RDMA_CM_EVENT_TIMEWAIT_EXIT:
 			break;
@@ -1631,7 +1628,6 @@ nvme_rdma_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 	struct nvme_rdma_ctrlr *rctrlr;
 	struct nvme_rdma_cm_event_entry *entry, *tmp;
 
-	nvme_qpair_set_state(qpair, NVME_QPAIR_DISCONNECTED);
 	nvme_rdma_unregister_mem(rqpair);
 	nvme_rdma_unregister_reqs(rqpair);
 	nvme_rdma_unregister_rsps(rqpair);
@@ -2007,7 +2003,7 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 	}
 	nvme_rdma_qpair_process_cm_event(rqpair);
 
-	if (spdk_unlikely(nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTED)) {
+	if (spdk_unlikely(qpair->transport_failure_reason != SPDK_NVME_QPAIR_FAILURE_NONE)) {
 		goto fail;
 	}
 
