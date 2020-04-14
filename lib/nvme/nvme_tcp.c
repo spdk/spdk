@@ -264,7 +264,7 @@ nvme_tcp_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_q
 		return -1;
 	}
 
-	nvme_tcp_ctrlr_disconnect_qpair(ctrlr, qpair);
+	nvme_transport_ctrlr_disconnect_qpair(ctrlr, qpair);
 	nvme_tcp_qpair_abort_reqs(qpair, 1);
 	nvme_qpair_deinit(qpair);
 	tqpair = nvme_tcp_qpair(qpair);
@@ -305,7 +305,7 @@ _pdu_write_done(void *cb_arg, int err)
 	TAILQ_REMOVE(&tqpair->send_queue, pdu, tailq);
 
 	if (err != 0) {
-		nvme_tcp_ctrlr_disconnect_qpair(tqpair->qpair.ctrlr, &tqpair->qpair);
+		nvme_transport_ctrlr_disconnect_qpair(tqpair->qpair.ctrlr, &tqpair->qpair);
 		return;
 	}
 
@@ -1438,7 +1438,7 @@ fail:
 	qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_UNKNOWN;
 
 	if (nvme_qpair_is_admin_queue(qpair)) {
-		nvme_tcp_ctrlr_disconnect_qpair(qpair->ctrlr, qpair);
+		nvme_transport_ctrlr_disconnect_qpair(qpair->ctrlr, qpair);
 	} else {
 		nvme_ctrlr_disconnect_qpair(qpair);
 	}

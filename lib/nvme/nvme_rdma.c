@@ -1688,7 +1688,7 @@ nvme_rdma_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	if (!qpair) {
 		return -1;
 	}
-	nvme_rdma_ctrlr_disconnect_qpair(ctrlr, qpair);
+	nvme_transport_ctrlr_disconnect_qpair(ctrlr, qpair);
 	nvme_rdma_qpair_abort_reqs(qpair, 1);
 	nvme_qpair_deinit(qpair);
 
@@ -2100,7 +2100,7 @@ fail:
 	}
 
 	if (nvme_qpair_is_admin_queue(qpair)) {
-		nvme_rdma_ctrlr_disconnect_qpair(qpair->ctrlr, qpair);
+		nvme_transport_ctrlr_disconnect_qpair(qpair->ctrlr, qpair);
 	} else {
 		nvme_ctrlr_disconnect_qpair(qpair);
 	}

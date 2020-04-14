@@ -110,3 +110,5 @@ DEFINE_STUB(nvme_fabric_ctrlr_scan, int, (struct spdk_nvme_probe_ctx *probe_ctx,
 		bool direct_connect), 0);
 DEFINE_STUB(nvme_fabric_qpair_connect, int, (struct spdk_nvme_qpair *qpair, uint32_t num_entries),
 	    0);
+DEFINE_STUB_V(nvme_transport_ctrlr_disconnect_qpair, (struct spdk_nvme_ctrlr *ctrlr,
+		struct spdk_nvme_qpair *qpair));
