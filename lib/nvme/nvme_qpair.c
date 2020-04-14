@@ -429,6 +429,22 @@ nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 		}
 	}
 
+	/*
+	 * When doing a reset, we must disconnect the qpair on the proper core.
+	 * Note, reset is the only case where we set the failure reason without
+	 * setting the qpair state since reset is done at the generic layer on the
+	 * controller thread and we can't disconnect I/O qpairs from the controller
+	 * thread.
+	 */
+	if (qpair->transport_failure_reason != SPDK_NVME_QPAIR_FAILURE_NONE &&
+	    nvme_qpair_get_state(qpair) == NVME_QPAIR_ENABLED) {
+		/* Don't disconnect PCIe qpairs. They are a special case for reset. */
+		if (qpair->ctrlr->trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
+			nvme_ctrlr_disconnect_qpair(qpair);
+		}
+		return false;
+	}
+
 	return nvme_qpair_get_state(qpair) == NVME_QPAIR_ENABLED;
 }
 
