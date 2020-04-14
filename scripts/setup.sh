@@ -211,7 +211,7 @@ function configure_linux_pci {
 	fi
 
 	# NVMe
-	for bdf in $(iter_all_pci_class_code 01 08 02); do
+	for bdf in ${pci_bus_cache["0x010802"]}; do
 		blknames=()
 		if ! pci_can_use $bdf; then
 			pci_dev_echo "$bdf" "Skipping un-whitelisted NVMe controller at $bdf"
@@ -244,7 +244,7 @@ function configure_linux_pci {
 
 	while IFS= read -r dev_id
 	do
-		for bdf in $(iter_all_pci_dev_id 8086 $dev_id); do
+		for bdf in ${pci_bus_cache["0x8086:0x$dev_id"]}; do
 			if ! pci_can_use $bdf; then
 				pci_dev_echo "$bdf" "Skipping un-whitelisted I/OAT device"
 				continue
@@ -263,7 +263,7 @@ function configure_linux_pci {
 
         while IFS= read -r dev_id
         do
-                for bdf in $(iter_all_pci_dev_id 8086 $dev_id); do
+                for bdf in ${pci_bus_cache["0x8086:0x$dev_id"]}; do
                         if ! pci_can_use $bdf; then
                                 pci_dev_echo "$bdf" "Skipping un-whitelisted IDXD device"
                                 continue
@@ -282,7 +282,7 @@ function configure_linux_pci {
 
 	while IFS= read -r dev_id
 	do
-		for bdf in $(iter_all_pci_dev_id 1af4 $dev_id); do
+		for bdf in ${pci_bus_cache["0x1af4:0x$dev_id"]}; do
 			if ! pci_can_use $bdf; then
 				pci_dev_echo "$bdf" "Skipping un-whitelisted Virtio device at $bdf"
 				continue
@@ -309,7 +309,7 @@ function configure_linux_pci {
 
 	while IFS= read -r dev_id
 	do
-		for bdf in $(iter_pci_dev_id 8086 $dev_id); do
+		for bdf in ${pci_bus_cache["0x8086:0x$dev_id"]}; do
 			if [[ -z "$PCI_WHITELIST" ]] || ! pci_can_use $bdf; then
 				echo "Skipping un-whitelisted VMD device at $bdf"
 				continue
@@ -448,7 +448,7 @@ function reset_linux_pci {
 	check_for_driver nvme
 	driver_loaded=$?
 	set -e
-	for bdf in $(iter_all_pci_class_code 01 08 02); do
+	for bdf in ${pci_bus_cache["0x010802"]}; do
 		if ! pci_can_use $bdf; then
 			pci_dev_echo "$bdf" "Skipping un-whitelisted NVMe controller $blkname"
 			continue
@@ -472,7 +472,7 @@ function reset_linux_pci {
 	set -e
 	while IFS= read -r dev_id
 	do
-		for bdf in $(iter_all_pci_dev_id 8086 $dev_id); do
+		for bdf in ${pci_bus_cache["0x8086:0x$dev_id"]}; do
 			if ! pci_can_use $bdf; then
 				pci_dev_echo "$bdf" "Skipping un-whitelisted I/OAT device"
 				continue
@@ -497,7 +497,7 @@ function reset_linux_pci {
         set -e
         while IFS= read -r dev_id
         do
-                for bdf in $(iter_all_pci_dev_id 8086 $dev_id); do
+                for bdf in ${pci_bus_cache["0x8086:0x$dev_id"]}; do
                         if ! pci_can_use $bdf; then
                                 pci_dev_echo "$bdf" "Skipping un-whitelisted IDXD device"
                                 continue
@@ -524,7 +524,7 @@ function reset_linux_pci {
 	modprobe virtio-pci || true
 	while IFS= read -r dev_id
 	do
-		for bdf in $(iter_all_pci_dev_id 1af4 $dev_id); do
+		for bdf in ${pci_bus_cache["0x1af4:0x$dev_id"]}; do
 			if ! pci_can_use $bdf; then
 				pci_dev_echo "$bdf" "Skipping un-whitelisted Virtio device at"
 				continue
@@ -546,7 +546,7 @@ function reset_linux_pci {
 	set -e
 	while IFS= read -r dev_id
 	do
-		for bdf in $(iter_pci_dev_id 8086 $dev_id); do
+		for bdf in ${pci_bus_cache["0x8086:0x$dev_id"]}; do
 			if ! pci_can_use $bdf; then
 				echo "Skipping un-whitelisted VMD device at $bdf"
 				continue
@@ -605,7 +605,7 @@ function status_linux {
 	echo "NVMe devices"
 
 	echo -e "BDF\t\tVendor\tDevice\tNUMA\tDriver\t\tDevice name"
-	for bdf in $(iter_all_pci_class_code 01 08 02); do
+	for bdf in ${pci_bus_cache["0x010802"]}; do
 		driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}')
 		if [ "$numa_nodes" = "0" ]; then
 			node="-"
@@ -630,7 +630,7 @@ function status_linux {
 	| awk -F"x" '{print $2}')
 	echo -e "BDF\t\tVendor\tDevice\tNUMA\tDriver"
 	for dev_id in $TMP; do
-		for bdf in $(iter_all_pci_dev_id 8086 $dev_id); do
+		for bdf in ${pci_bus_cache["0x8086:0x$dev_id"]}; do
 			driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}')
 			if [ "$numa_nodes" = "0" ]; then
 				node="-"
@@ -651,7 +651,7 @@ function status_linux {
         | awk -F"x" '{print $2}')
         echo -e "BDF\t\tVendor\tDevice\tNUMA\tDriver"
         for dev_id in $TMP; do
-                for bdf in $(iter_all_pci_dev_id 8086 $dev_id); do
+                for bdf in ${pci_bus_cache["0x8086:0x$dev_id"]}; do
                         driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}')
                         if [ "$numa_nodes" = "0" ]; then
                                 node="-"
@@ -672,7 +672,7 @@ function status_linux {
 	| awk -F"x" '{print $2}')
 	echo -e "BDF\t\tVendor\tDevice\tNUMA\tDriver\t\tDevice name"
 	for dev_id in $TMP; do
-		for bdf in $(iter_all_pci_dev_id 1af4 $dev_id); do
+		for bdf in ${pci_bus_cache["0x1af4:0x$dev_id"]}; do
 			driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}')
 			if [ "$numa_nodes" = "0" ]; then
 				node="-"
@@ -694,7 +694,7 @@ function status_linux {
 	| awk -F"x" '{print $2}')
 	echo -e "BDF\t\tNuma Node\tDriver Name"
 	for dev_id in $TMP; do
-		for bdf in $(iter_pci_dev_id 8086 $dev_id); do
+		for bdf in ${pci_bus_cache["0x8086:0x$dev_id"]}; do
 			driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}')
 			node=$(cat /sys/bus/pci/devices/$bdf/numa_node);
 			echo -e "$bdf\t$node\t\t$driver"
@@ -703,44 +703,31 @@ function status_linux {
 }
 
 function configure_freebsd_pci {
-	TMP=$(mktemp)
+	local devs ids id
+	local BDFS
 
-	# NVMe
-	GREP_STR="class=0x010802"
+	devs=PCI_DEVICE_ID_INTEL_IOAT
+	devs+="|PCI_DEVICE_ID_INTEL_IDXD"
+	devs+="|PCI_DEVICE_ID_INTEL_VMD"
 
-	# IOAT
-	grep "PCI_DEVICE_ID_INTEL_IOAT" $rootdir/include/spdk/pci_ids.h \
-	| awk -F"x" '{print $2}' > $TMP
-	while IFS= read -r dev_id
-	do
-		GREP_STR="${GREP_STR}\|chip=0x${dev_id}8086"
-	done < $TMP
+	ids=($(grep -E "$devs" "$rootdir/include/spdk/pci_ids.h" | awk '{print $3}'))
 
-        # IDXD
-        grep "PCI_DEVICE_ID_INTEL_IDXD" $rootdir/include/spdk/pci_ids.h \
-        | awk -F"x" '{print $2}' > $TMP
-        while IFS= read -r dev_id
-        do
-                GREP_STR="${GREP_STR}\|chip=0x${dev_id}8086"
-        done < $TMP
+	if [[ -n ${pci_bus_cache["0x010802"]} ]]; then
+		BDFS+=(${pci_bus_cache["0x010802"]})
+	fi
 
-	# VMD
-	grep "PCI_DEVICE_ID_INTEL_VMD" $rootdir/include/spdk/pci_ids.h \
-	| awk -F"x" '{print $2}' > $TMP
-	while IFS= read -r dev_id
-	do
-		GREP_STR="${GREP_STR}\|chip=0x${dev_id}8086"
-	done < $TMP
+	for id in "${ids[@]}"; do
+		[[ -n ${pci_bus_cache["0x8086:$id"]} ]] || continue
+		BDFS+=(${pci_bus_cache["0x8086:$id"]})
+	done
 
-	AWK_PROG=("{if (count > 0) printf \",\"; printf \"%s:%s:%s\",\$2,\$3,\$4; count++}")
-	echo "${AWK_PROG[*]}" > $TMP
+	# Drop the domain part from all the addresses
+	BDFS=("${BDFS[@]#*:}")
 
-	BDFS=$(pciconf -l | grep "${GREP_STR}" | awk -F: -f $TMP)
-
+	local IFS=","
 	kldunload nic_uio.ko || true
-	kenv hw.nic_uio.bdfs=$BDFS
+	kenv hw.nic_uio.bdfs="${BDFS[*]}"
 	kldload nic_uio.ko
-	rm $TMP
 }
 
 function configure_freebsd {
@@ -763,6 +750,8 @@ function reset_freebsd {
 	kldunload contigmem.ko || true
 	kldunload nic_uio.ko || true
 }
+
+CMD=reset cache_pci_bus
 
 mode=$1
 
