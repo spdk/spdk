@@ -725,6 +725,11 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 {
 	int rc;
 
+	/* This prevents us from entering an infinite loop when freeing queued I/O in disconnect. */
+	if (spdk_unlikely(nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING)) {
+		return -ENXIO;
+	}
+
 	if (spdk_unlikely(!STAILQ_EMPTY(&qpair->queued_req) && req->num_children == 0)) {
 		/*
 		 * requests that have no children should be sent to the transport after all
