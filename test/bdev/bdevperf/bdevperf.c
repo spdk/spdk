@@ -90,11 +90,7 @@ pthread_mutex_t g_ordinal_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static struct spdk_poller *g_perf_timer = NULL;
 
-typedef void (*performance_dump_done_fn)(void *ctx);
-
 static void bdevperf_submit_single(struct bdevperf_job *job, struct bdevperf_task *task);
-static void performance_dump(uint64_t io_time_in_usec, uint64_t ema_period,
-			     performance_dump_done_fn cb_fn, void *cb_arg);
 static void rpc_perform_tests_cb(void);
 
 struct bdevperf_job {
@@ -143,14 +139,16 @@ static struct spdk_bdevperf g_bdevperf = {
 
 struct bdevperf_reactor *g_next_reactor;
 
+static bool g_performance_dump_active = false;
+
 struct bdevperf_aggregate_stats {
 	uint64_t			io_time_in_usec;
 	uint64_t			ema_period;
 	double				total_io_per_second;
 	double				total_mb_per_second;
-	performance_dump_done_fn	cb_fn;
-	void				*cb_arg;
 };
+
+static struct bdevperf_aggregate_stats g_stats = {};
 
 /*
  * Cumulative Moving Average (CMA): average of all data up to current
@@ -345,6 +343,11 @@ bdevperf_free_job(struct bdevperf_job *job)
 static void
 bdevperf_free_jobs_done(struct spdk_io_channel_iter *i, int status)
 {
+	printf("\r =====================================================\n");
+	printf("\r %-20s: %10.2f IOPS %10.2f MiB/s\n",
+	       "Total", g_stats.total_io_per_second, g_stats.total_mb_per_second);
+	fflush(stdout);
+
 	if (g_request && !g_shutdown) {
 		rpc_perform_tests_cb();
 	} else {
@@ -364,6 +367,7 @@ _bdevperf_free_jobs(struct spdk_io_channel_iter *i)
 
 	TAILQ_FOREACH_SAFE(job, &reactor->jobs, link, tmp) {
 		TAILQ_REMOVE(&reactor->jobs, job, link);
+		performance_dump_job(&g_stats, job);
 		bdevperf_free_job(job);
 	}
 
@@ -373,6 +377,27 @@ _bdevperf_free_jobs(struct spdk_io_channel_iter *i)
 static void
 bdevperf_test_done(void *ctx)
 {
+	if (g_time_in_usec && !g_run_rc) {
+		g_stats.io_time_in_usec = g_time_in_usec;
+
+		if (g_performance_dump_active) {
+			spdk_thread_send_msg(spdk_get_thread(), bdevperf_test_done, NULL);
+			return;
+		}
+	} else {
+		printf("Job run time less than one microsecond, no performance data will be shown\n");
+	}
+
+	if (g_show_performance_real_time) {
+		spdk_poller_unregister(&g_perf_timer);
+	}
+
+	if (g_shutdown) {
+		g_time_in_usec = g_shutdown_tsc * 1000000 / spdk_get_ticks_hz();
+		printf("Received shutdown signal, test time was about %.6f seconds\n",
+		       (double)g_time_in_usec / 1000000);
+	}
+
 	spdk_for_each_channel(&g_bdevperf, _bdevperf_free_jobs, NULL,
 			      bdevperf_free_jobs_done);
 }
@@ -380,25 +405,9 @@ bdevperf_test_done(void *ctx)
 static void
 bdevperf_job_end(void *ctx)
 {
+	assert(g_master_thread == spdk_get_thread());
+
 	if (--g_bdevperf.running_jobs == 0) {
-		if (g_show_performance_real_time) {
-			spdk_poller_unregister(&g_perf_timer);
-		}
-		if (g_shutdown) {
-			g_time_in_usec = g_shutdown_tsc * 1000000 / spdk_get_ticks_hz();
-			printf("Received shutdown signal, test time is about %.6f seconds\n",
-			       (double)g_time_in_usec / 1000000);
-		}
-
-		if (g_time_in_usec) {
-			if (!g_run_rc) {
-				performance_dump(g_time_in_usec, 0, bdevperf_test_done, NULL);
-				return;
-			}
-		} else {
-			printf("Test time less than one microsecond, no performance data will be shown\n");
-		}
-
 		bdevperf_test_done(NULL);
 	}
 }
@@ -926,9 +935,7 @@ _performance_dump_done(struct spdk_io_channel_iter *i, int status)
 	       "Total", stats->total_io_per_second, stats->total_mb_per_second);
 	fflush(stdout);
 
-	if (stats->cb_fn) {
-		stats->cb_fn(stats->cb_arg);
-	}
+	g_performance_dump_active = false;
 
 	free(stats);
 }
@@ -959,33 +966,29 @@ exit:
 	spdk_for_each_channel_continue(i, 0);
 }
 
-static void
-performance_dump(uint64_t io_time_in_usec, uint64_t ema_period, performance_dump_done_fn cb_fn,
-		 void *cb_arg)
-{
-	struct bdevperf_aggregate_stats *stats;
-
-	stats = calloc(1, sizeof(*stats));
-	if (stats == NULL) {
-		return;
-	}
-
-	stats->io_time_in_usec = io_time_in_usec;
-	stats->ema_period = ema_period;
-	stats->cb_fn = cb_fn;
-	stats->cb_arg = cb_arg;
-
-	spdk_for_each_channel(&g_bdevperf, _performance_dump, stats,
-			      _performance_dump_done);
-}
-
-
 static int
 performance_statistics_thread(void *arg)
 {
+	struct bdevperf_aggregate_stats *stats;
+
+	if (g_performance_dump_active) {
+		return -1;
+	}
+
+	g_performance_dump_active = true;
+
+	stats = calloc(1, sizeof(*stats));
+	if (stats == NULL) {
+		return -1;
+	}
+
 	g_show_performance_period_num++;
-	performance_dump(g_show_performance_period_num * g_show_performance_period_in_usec,
-			 g_show_performance_ema_period, NULL, NULL);
+
+	stats->io_time_in_usec = g_show_performance_period_num * g_show_performance_period_in_usec;
+	stats->ema_period = g_show_performance_ema_period;
+
+	spdk_for_each_channel(&g_bdevperf, _performance_dump, stats,
+			      _performance_dump_done);
 	return -1;
 }
 
