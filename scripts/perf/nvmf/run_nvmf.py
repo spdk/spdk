@@ -309,6 +309,7 @@ ioengine={ioengine}
 thread=1
 group_reporting=1
 direct=1
+percentile_list=50:90:99:99.5:99.9:99.99:99.999
 
 norandommap=1
 rw={rw}
