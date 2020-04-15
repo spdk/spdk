@@ -57,7 +57,7 @@
 struct spdk_iscsi_tgt_node	g_tgt;
 
 struct spdk_iscsi_tgt_node *
-spdk_iscsi_find_tgt_node(const char *target_name)
+iscsi_find_tgt_node(const char *target_name)
 {
 	if (strcasecmp(target_name, UT_TARGET_NAME1) == 0) {
 		g_tgt.dev = NULL;
@@ -68,9 +68,9 @@ spdk_iscsi_find_tgt_node(const char *target_name)
 }
 
 bool
-spdk_iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
-			   struct spdk_iscsi_tgt_node *target,
-			   const char *iqn, const char *addr)
+iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
+		      struct spdk_iscsi_tgt_node *target,
+		      const char *iqn, const char *addr)
 {
 	if (strcasecmp(conn->initiator_name, UT_INITIATOR_NAME1) == 0) {
 		return true;
@@ -79,12 +79,12 @@ spdk_iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
 	}
 }
 
-DEFINE_STUB(spdk_iscsi_send_tgts, int,
+DEFINE_STUB(iscsi_send_tgts, int,
 	    (struct spdk_iscsi_conn *conn, const char *iiqn, const char *iaddr,
 	     const char *tiqn, uint8_t *data, int alloc_len, int data_len),
 	    0);
 
-DEFINE_STUB(spdk_iscsi_tgt_node_is_destructed, bool,
+DEFINE_STUB(iscsi_tgt_node_is_destructed, bool,
 	    (struct spdk_iscsi_tgt_node *target), false);
 
 DEFINE_STUB_V(spdk_iscsi_portal_grp_close_all, (void));

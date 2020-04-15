@@ -688,8 +688,8 @@ iscsi_opts_verify(struct spdk_iscsi_opts *opts)
 		return -EINVAL;
 	}
 
-	if (!spdk_iscsi_check_chap_params(opts->disable_chap, opts->require_chap,
-					  opts->mutual_chap, opts->chap_group)) {
+	if (!iscsi_check_chap_params(opts->disable_chap, opts->require_chap,
+				     opts->mutual_chap, opts->chap_group)) {
 		SPDK_ERRLOG("CHAP params in opts are illegal combination\n");
 		return -EINVAL;
 	}
@@ -777,8 +777,8 @@ int
 spdk_iscsi_set_discovery_auth(bool disable_chap, bool require_chap, bool mutual_chap,
 			      int32_t chap_group)
 {
-	if (!spdk_iscsi_check_chap_params(disable_chap, require_chap, mutual_chap,
-					  chap_group)) {
+	if (!iscsi_check_chap_params(disable_chap, require_chap, mutual_chap,
+				     chap_group)) {
 		SPDK_ERRLOG("CHAP params are illegal combination\n");
 		return -EINVAL;
 	}
@@ -1160,9 +1160,9 @@ iscsi_parse_configuration(void)
 		goto end;
 	}
 
-	rc = spdk_iscsi_parse_tgt_nodes();
+	rc = iscsi_parse_tgt_nodes();
 	if (rc < 0) {
-		SPDK_ERRLOG("spdk_iscsi_parse_tgt_nodes() failed\n");
+		SPDK_ERRLOG("iscsi_parse_tgt_nodes() failed\n");
 	}
 
 	if (g_iscsi.authfile != NULL) {
@@ -1407,7 +1407,7 @@ _iscsi_fini_dev_unreg(struct spdk_io_channel_iter *i, int status)
 
 	assert(TAILQ_EMPTY(&g_iscsi.poll_group_head));
 
-	spdk_iscsi_shutdown_tgt_nodes();
+	iscsi_shutdown_tgt_nodes();
 	spdk_iscsi_init_grps_destroy();
 	spdk_iscsi_portal_grps_destroy();
 	iscsi_auth_groups_destroy();
@@ -1445,7 +1445,7 @@ spdk_iscsi_config_text(FILE *fp)
 	iscsi_globals_config_text(fp);
 	spdk_iscsi_portal_grps_config_text(fp);
 	spdk_iscsi_init_grps_config_text(fp);
-	spdk_iscsi_tgt_nodes_config_text(fp);
+	iscsi_tgt_nodes_config_text(fp);
 }
 
 void
@@ -1569,7 +1569,7 @@ spdk_iscsi_config_json(struct spdk_json_write_ctx *w)
 	iscsi_opts_config_json(w);
 	spdk_iscsi_portal_grps_config_json(w);
 	spdk_iscsi_init_grps_config_json(w);
-	spdk_iscsi_tgt_nodes_config_json(w);
+	iscsi_tgt_nodes_config_json(w);
 	iscsi_auth_groups_config_json(w);
 	spdk_json_write_array_end(w);
 }

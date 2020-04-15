@@ -216,7 +216,7 @@ DEFINE_STUB(spdk_iscsi_handle_incoming_pdus, int, (struct spdk_iscsi_conn *conn)
 
 DEFINE_STUB_V(spdk_free_sess, (struct spdk_iscsi_sess *sess));
 
-DEFINE_STUB(spdk_iscsi_tgt_node_cleanup_luns, int,
+DEFINE_STUB(iscsi_tgt_node_cleanup_luns, int,
 	    (struct spdk_iscsi_conn *conn, struct spdk_iscsi_tgt_node *target),
 	    0);
 

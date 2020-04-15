@@ -285,7 +285,7 @@ spdk_rpc_iscsi_delete_initiator_group(struct spdk_jsonrpc_request *request,
 	if (!ig) {
 		goto invalid;
 	}
-	spdk_iscsi_tgt_node_delete_map(NULL, ig);
+	iscsi_tgt_node_delete_map(NULL, ig);
 	spdk_iscsi_init_grp_destroy(ig);
 
 	w = spdk_jsonrpc_begin_result(request);
@@ -314,7 +314,7 @@ spdk_rpc_iscsi_get_target_nodes(struct spdk_jsonrpc_request *request,
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_array_begin(w);
-	spdk_iscsi_tgt_nodes_info_json(w);
+	iscsi_tgt_nodes_info_json(w);
 	spdk_json_write_array_end(w);
 
 	spdk_jsonrpc_end_result(request, w);
@@ -476,20 +476,20 @@ spdk_rpc_iscsi_create_target_node(struct spdk_jsonrpc_request *request,
 	 *  index = -1 : automatically pick an index for the new target node
 	 *  alias = NULL
 	 */
-	target = spdk_iscsi_tgt_node_construct(-1, req.name, req.alias_name,
-					       pg_tags,
-					       ig_tags,
-					       req.pg_ig_maps.num_maps,
-					       (const char **)bdev_names,
-					       lun_ids,
-					       req.luns.num_luns,
-					       req.queue_depth,
-					       req.disable_chap,
-					       req.require_chap,
-					       req.mutual_chap,
-					       req.chap_group,
-					       req.header_digest,
-					       req.data_digest);
+	target = iscsi_tgt_node_construct(-1, req.name, req.alias_name,
+					  pg_tags,
+					  ig_tags,
+					  req.pg_ig_maps.num_maps,
+					  (const char **)bdev_names,
+					  lun_ids,
+					  req.luns.num_luns,
+					  req.queue_depth,
+					  req.disable_chap,
+					  req.require_chap,
+					  req.mutual_chap,
+					  req.chap_group,
+					  req.header_digest,
+					  req.data_digest);
 
 	if (target == NULL) {
 		goto invalid;
@@ -537,7 +537,7 @@ spdk_rpc_iscsi_target_node_add_pg_ig_maps(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	target = spdk_iscsi_find_tgt_node(req.name);
+	target = iscsi_find_tgt_node(req.name);
 	if (target == NULL) {
 		SPDK_ERRLOG("target is not found\n");
 		goto invalid;
@@ -548,8 +548,8 @@ spdk_rpc_iscsi_target_node_add_pg_ig_maps(struct spdk_jsonrpc_request *request,
 		ig_tags[i] = req.pg_ig_maps.maps[i].ig_tag;
 	}
 
-	rc = spdk_iscsi_target_node_add_pg_ig_maps(target, pg_tags, ig_tags,
-			req.pg_ig_maps.num_maps);
+	rc = iscsi_target_node_add_pg_ig_maps(target, pg_tags, ig_tags,
+					      req.pg_ig_maps.num_maps);
 	if (rc < 0) {
 		SPDK_ERRLOG("add pg-ig maps failed\n");
 		goto invalid;
@@ -589,7 +589,7 @@ spdk_rpc_iscsi_target_node_remove_pg_ig_maps(struct spdk_jsonrpc_request *reques
 		goto invalid;
 	}
 
-	target = spdk_iscsi_find_tgt_node(req.name);
+	target = iscsi_find_tgt_node(req.name);
 	if (target == NULL) {
 		SPDK_ERRLOG("target is not found\n");
 		goto invalid;
@@ -600,7 +600,7 @@ spdk_rpc_iscsi_target_node_remove_pg_ig_maps(struct spdk_jsonrpc_request *reques
 		ig_tags[i] = req.pg_ig_maps.maps[i].ig_tag;
 	}
 
-	rc = spdk_iscsi_target_node_remove_pg_ig_maps(target, pg_tags, ig_tags,
+	rc = iscsi_target_node_remove_pg_ig_maps(target, pg_tags, ig_tags,
 			req.pg_ig_maps.num_maps);
 	if (rc < 0) {
 		SPDK_ERRLOG("remove pg-ig maps failed\n");
@@ -685,8 +685,8 @@ spdk_rpc_iscsi_delete_target_node(struct spdk_jsonrpc_request *request,
 
 	ctx->request = request;
 
-	spdk_iscsi_shutdown_tgt_node_by_name(ctx->req.name,
-					     rpc_iscsi_delete_target_node_done, ctx);
+	iscsi_shutdown_tgt_node_by_name(ctx->req.name,
+					rpc_iscsi_delete_target_node_done, ctx);
 	return;
 
 invalid:
@@ -876,7 +876,7 @@ spdk_rpc_iscsi_delete_portal_group(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	spdk_iscsi_tgt_node_delete_map(pg, NULL);
+	iscsi_tgt_node_delete_map(pg, NULL);
 	spdk_iscsi_portal_grp_release(pg);
 
 	w = spdk_jsonrpc_begin_result(request);
@@ -1053,13 +1053,13 @@ spdk_rpc_iscsi_target_node_add_lun(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	target = spdk_iscsi_find_tgt_node(req.name);
+	target = iscsi_find_tgt_node(req.name);
 	if (target == NULL) {
 		SPDK_ERRLOG("target is not found\n");
 		goto invalid;
 	}
 
-	rc = spdk_iscsi_tgt_node_add_lun(target, req.bdev_name, req.lun_id);
+	rc = iscsi_tgt_node_add_lun(target, req.bdev_name, req.lun_id);
 	if (rc < 0) {
 		SPDK_ERRLOG("add lun failed\n");
 		goto invalid;
@@ -1119,15 +1119,15 @@ spdk_rpc_iscsi_target_node_set_auth(struct spdk_jsonrpc_request *request,
 		goto exit;
 	}
 
-	target = spdk_iscsi_find_tgt_node(req.name);
+	target = iscsi_find_tgt_node(req.name);
 	if (target == NULL) {
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						     "Could not find target %s", req.name);
 		goto exit;
 	}
 
-	rc = spdk_iscsi_tgt_node_set_chap_params(target, req.disable_chap, req.require_chap,
-			req.mutual_chap, req.chap_group);
+	rc = iscsi_tgt_node_set_chap_params(target, req.disable_chap, req.require_chap,
+					    req.mutual_chap, req.chap_group);
 	if (rc < 0) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid combination of auth params");

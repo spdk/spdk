@@ -360,8 +360,8 @@ spdk_iscsi_portal_grp_set_chap_params(struct spdk_iscsi_portal_grp *pg,
 				      bool disable_chap, bool require_chap,
 				      bool mutual_chap, int32_t chap_group)
 {
-	if (!spdk_iscsi_check_chap_params(disable_chap, require_chap,
-					  mutual_chap, chap_group)) {
+	if (!iscsi_check_chap_params(disable_chap, require_chap,
+				     mutual_chap, chap_group)) {
 		return -EINVAL;
 	}
 

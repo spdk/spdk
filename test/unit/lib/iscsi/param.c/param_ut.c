@@ -44,15 +44,15 @@
 
 struct spdk_iscsi_globals g_iscsi;
 
-DEFINE_STUB(spdk_iscsi_find_tgt_node, struct spdk_iscsi_tgt_node *,
+DEFINE_STUB(iscsi_find_tgt_node, struct spdk_iscsi_tgt_node *,
 	    (const char *target_name), NULL);
 
-DEFINE_STUB(spdk_iscsi_tgt_node_access, bool,
+DEFINE_STUB(iscsi_tgt_node_access, bool,
 	    (struct spdk_iscsi_conn *conn, struct spdk_iscsi_tgt_node *target,
 	     const char *iqn, const char *addr),
 	    false);
 
-DEFINE_STUB(spdk_iscsi_send_tgts, int,
+DEFINE_STUB(iscsi_send_tgts, int,
 	    (struct spdk_iscsi_conn *conn, const char *iiqn, const char *iaddr,
 	     const char *tiqn, uint8_t *data, int alloc_len, int data_len),
 	    0);

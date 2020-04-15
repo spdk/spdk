@@ -380,7 +380,7 @@ iscsi_conn_cleanup_backend(struct spdk_iscsi_conn *conn)
 		/* clean up all tasks to all LUNs for session */
 		target = conn->sess->target;
 		if (target != NULL) {
-			rc = spdk_iscsi_tgt_node_cleanup_luns(conn, target);
+			rc = iscsi_tgt_node_cleanup_luns(conn, target);
 			if (rc < 0) {
 				SPDK_ERRLOG("target abort failed\n");
 			}

@@ -1454,7 +1454,7 @@ iscsi_op_login_check_target(struct spdk_iscsi_conn *conn,
 	struct iscsi_bhs_login_rsp *rsph;
 
 	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
-	*target = spdk_iscsi_find_tgt_node(target_name);
+	*target = iscsi_find_tgt_node(target_name);
 	if (*target == NULL) {
 		SPDK_WARNLOG("target %s not found\n", target_name);
 		/* Not found */
@@ -1462,15 +1462,15 @@ iscsi_op_login_check_target(struct spdk_iscsi_conn *conn,
 		rsph->status_detail = ISCSI_LOGIN_TARGET_NOT_FOUND;
 		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
 	}
-	if (spdk_iscsi_tgt_node_is_destructed(*target)) {
+	if (iscsi_tgt_node_is_destructed(*target)) {
 		SPDK_ERRLOG("target %s is removed\n", target_name);
 		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
 		rsph->status_detail = ISCSI_LOGIN_TARGET_REMOVED;
 		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
 	}
-	result = spdk_iscsi_tgt_node_access(conn, *target,
-					    conn->initiator_name,
-					    conn->initiator_addr);
+	result = iscsi_tgt_node_access(conn, *target,
+				       conn->initiator_name,
+				       conn->initiator_addr);
 	if (!result) {
 		SPDK_ERRLOG("access denied\n");
 		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
@@ -2398,11 +2398,11 @@ iscsi_pdu_payload_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 				val = "ALL";
 			}
 
-			data_len = spdk_iscsi_send_tgts(conn,
-							conn->initiator_name,
-							conn->initiator_addr,
-							val, data, alloc_len,
-							data_len);
+			data_len = iscsi_send_tgts(conn,
+						   conn->initiator_name,
+						   conn->initiator_addr,
+						   val, data, alloc_len,
+						   data_len);
 		} else {
 			if (strcasecmp(val, "") == 0) {
 				val = conn->target->name;
@@ -2415,11 +2415,11 @@ iscsi_pdu_payload_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 							     "Reject", data,
 							     alloc_len, data_len);
 			} else {
-				data_len = spdk_iscsi_send_tgts(conn,
-								conn->initiator_name,
-								conn->initiator_addr,
-								val, data, alloc_len,
-								data_len);
+				data_len = iscsi_send_tgts(conn,
+							   conn->initiator_name,
+							   conn->initiator_addr,
+							   val, data, alloc_len,
+							   data_len);
 			}
 		}
 	} else {

@@ -230,8 +230,8 @@ iscsi_tgt_node_find_pg_map(struct spdk_iscsi_tgt_node *target,
 			   struct spdk_iscsi_portal_grp *pg);
 
 bool
-spdk_iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
-			   struct spdk_iscsi_tgt_node *target, const char *iqn, const char *addr)
+iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
+		      struct spdk_iscsi_tgt_node *target, const char *iqn, const char *addr)
 {
 	struct spdk_iscsi_portal_grp *pg;
 	struct spdk_iscsi_pg_map *pg_map;
@@ -297,9 +297,9 @@ iscsi_tgt_node_allow_iscsi_name(struct spdk_iscsi_tgt_node *target, const char *
 }
 
 int
-spdk_iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
-		     const char *iaddr, const char *tiqn, uint8_t *data, int alloc_len,
-		     int data_len)
+iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
+		const char *iaddr, const char *tiqn, uint8_t *data, int alloc_len,
+		int data_len)
 {
 	char buf[MAX_TMPBUF];
 	struct spdk_iscsi_portal_grp	*pg;
@@ -389,7 +389,7 @@ spdk_iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
 }
 
 struct spdk_iscsi_tgt_node *
-spdk_iscsi_find_tgt_node(const char *target_name)
+iscsi_find_tgt_node(const char *target_name)
 {
 	struct spdk_iscsi_tgt_node *target;
 
@@ -410,7 +410,7 @@ iscsi_tgt_node_register(struct spdk_iscsi_tgt_node *target)
 {
 	pthread_mutex_lock(&g_iscsi.mutex);
 
-	if (spdk_iscsi_find_tgt_node(target->name) != NULL) {
+	if (iscsi_find_tgt_node(target->name) != NULL) {
 		pthread_mutex_unlock(&g_iscsi.mutex);
 		return -EEXIST;
 	}
@@ -787,8 +787,8 @@ failed:
 }
 
 int
-spdk_iscsi_target_node_add_pg_ig_maps(struct spdk_iscsi_tgt_node *target,
-				      int *pg_tag_list, int *ig_tag_list, uint16_t num_maps)
+iscsi_target_node_add_pg_ig_maps(struct spdk_iscsi_tgt_node *target,
+				 int *pg_tag_list, int *ig_tag_list, uint16_t num_maps)
 {
 	uint16_t i;
 	int rc;
@@ -815,8 +815,8 @@ invalid:
 }
 
 int
-spdk_iscsi_target_node_remove_pg_ig_maps(struct spdk_iscsi_tgt_node *target,
-		int *pg_tag_list, int *ig_tag_list, uint16_t num_maps)
+iscsi_target_node_remove_pg_ig_maps(struct spdk_iscsi_tgt_node *target,
+				    int *pg_tag_list, int *ig_tag_list, uint16_t num_maps)
 {
 	uint16_t i;
 	int rc;
@@ -900,7 +900,7 @@ check_iscsi_name(const char *name)
 }
 
 bool
-spdk_iscsi_check_chap_params(bool disable, bool require, bool mutual, int group)
+iscsi_check_chap_params(bool disable, bool require, bool mutual, int group)
 {
 	if (group < 0) {
 		SPDK_ERRLOG("Invalid auth group ID (%d)\n", group);
@@ -917,7 +917,7 @@ spdk_iscsi_check_chap_params(bool disable, bool require, bool mutual, int group)
 	return false;
 }
 
-struct spdk_iscsi_tgt_node *spdk_iscsi_tgt_node_construct(int target_index,
+struct spdk_iscsi_tgt_node *iscsi_tgt_node_construct(int target_index,
 		const char *name, const char *alias,
 		int *pg_tag_list, int *ig_tag_list, uint16_t num_maps,
 		const char *bdev_name_list[], int *lun_id_list, int num_luns,
@@ -929,8 +929,8 @@ struct spdk_iscsi_tgt_node *spdk_iscsi_tgt_node_construct(int target_index,
 	struct spdk_iscsi_tgt_node	*target;
 	int				rc;
 
-	if (!spdk_iscsi_check_chap_params(disable_chap, require_chap,
-					  mutual_chap, chap_group)) {
+	if (!iscsi_check_chap_params(disable_chap, require_chap,
+				     mutual_chap, chap_group)) {
 		return NULL;
 	}
 
@@ -992,8 +992,8 @@ struct spdk_iscsi_tgt_node *spdk_iscsi_tgt_node_construct(int target_index,
 	}
 
 	TAILQ_INIT(&target->pg_map_head);
-	rc = spdk_iscsi_target_node_add_pg_ig_maps(target, pg_tag_list,
-			ig_tag_list, num_maps);
+	rc = iscsi_target_node_add_pg_ig_maps(target, pg_tag_list,
+					      ig_tag_list, num_maps);
 	if (rc != 0) {
 		SPDK_ERRLOG("could not add map to target\n");
 		iscsi_tgt_node_destruct(target, NULL, NULL);
@@ -1222,11 +1222,11 @@ iscsi_parse_tgt_node(struct spdk_conf_section *sp)
 		return -1;
 	}
 
-	target = spdk_iscsi_tgt_node_construct(target_num, name, alias,
-					       pg_tag_list, ig_tag_list, num_target_maps,
-					       bdev_name_list, lun_id_list, num_luns, queue_depth,
-					       disable_chap, require_chap, mutual_chap, chap_group,
-					       header_digest, data_digest);
+	target = iscsi_tgt_node_construct(target_num, name, alias,
+					  pg_tag_list, ig_tag_list, num_target_maps,
+					  bdev_name_list, lun_id_list, num_luns, queue_depth,
+					  disable_chap, require_chap, mutual_chap, chap_group,
+					  header_digest, data_digest);
 
 	if (target == NULL) {
 		SPDK_ERRLOG("tgt_node%d: add_iscsi_target_node error\n", target_num);
@@ -1247,12 +1247,12 @@ iscsi_parse_tgt_node(struct spdk_conf_section *sp)
 	return 0;
 }
 
-int spdk_iscsi_parse_tgt_nodes(void)
+int iscsi_parse_tgt_nodes(void)
 {
 	struct spdk_conf_section *sp;
 	int rc;
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_parse_tgt_nodes\n");
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "iscsi_parse_tgt_nodes\n");
 
 	sp = spdk_conf_first_section(NULL);
 	while (sp != NULL) {
@@ -1275,7 +1275,7 @@ int spdk_iscsi_parse_tgt_nodes(void)
 }
 
 void
-spdk_iscsi_shutdown_tgt_nodes(void)
+iscsi_shutdown_tgt_nodes(void)
 {
 	struct spdk_iscsi_tgt_node *target;
 
@@ -1294,13 +1294,13 @@ spdk_iscsi_shutdown_tgt_nodes(void)
 }
 
 void
-spdk_iscsi_shutdown_tgt_node_by_name(const char *target_name,
-				     iscsi_tgt_node_destruct_cb cb_fn, void *cb_arg)
+iscsi_shutdown_tgt_node_by_name(const char *target_name,
+				iscsi_tgt_node_destruct_cb cb_fn, void *cb_arg)
 {
 	struct spdk_iscsi_tgt_node *target;
 
 	pthread_mutex_lock(&g_iscsi.mutex);
-	target = spdk_iscsi_find_tgt_node(target_name);
+	target = iscsi_find_tgt_node(target_name);
 	if (target != NULL) {
 		iscsi_tgt_node_unregister(target);
 		pthread_mutex_unlock(&g_iscsi.mutex);
@@ -1317,14 +1317,14 @@ spdk_iscsi_shutdown_tgt_node_by_name(const char *target_name,
 }
 
 bool
-spdk_iscsi_tgt_node_is_destructed(struct spdk_iscsi_tgt_node *target)
+iscsi_tgt_node_is_destructed(struct spdk_iscsi_tgt_node *target)
 {
 	return target->destructed;
 }
 
 int
-spdk_iscsi_tgt_node_cleanup_luns(struct spdk_iscsi_conn *conn,
-				 struct spdk_iscsi_tgt_node *target)
+iscsi_tgt_node_cleanup_luns(struct spdk_iscsi_conn *conn,
+			    struct spdk_iscsi_tgt_node *target)
 {
 	int i;
 	struct spdk_iscsi_task *task;
@@ -1353,8 +1353,8 @@ spdk_iscsi_tgt_node_cleanup_luns(struct spdk_iscsi_conn *conn,
 	return 0;
 }
 
-void spdk_iscsi_tgt_node_delete_map(struct spdk_iscsi_portal_grp *portal_group,
-				    struct spdk_iscsi_init_grp *initiator_group)
+void iscsi_tgt_node_delete_map(struct spdk_iscsi_portal_grp *portal_group,
+			       struct spdk_iscsi_init_grp *initiator_group)
 {
 	struct spdk_iscsi_tgt_node *target;
 
@@ -1371,8 +1371,8 @@ void spdk_iscsi_tgt_node_delete_map(struct spdk_iscsi_portal_grp *portal_group,
 }
 
 int
-spdk_iscsi_tgt_node_add_lun(struct spdk_iscsi_tgt_node *target,
-			    const char *bdev_name, int lun_id)
+iscsi_tgt_node_add_lun(struct spdk_iscsi_tgt_node *target,
+		       const char *bdev_name, int lun_id)
 {
 	struct spdk_scsi_dev *dev;
 	int rc;
@@ -1404,12 +1404,12 @@ spdk_iscsi_tgt_node_add_lun(struct spdk_iscsi_tgt_node *target,
 }
 
 int
-spdk_iscsi_tgt_node_set_chap_params(struct spdk_iscsi_tgt_node *target,
-				    bool disable_chap, bool require_chap,
-				    bool mutual_chap, int32_t chap_group)
+iscsi_tgt_node_set_chap_params(struct spdk_iscsi_tgt_node *target,
+			       bool disable_chap, bool require_chap,
+			       bool mutual_chap, int32_t chap_group)
 {
-	if (!spdk_iscsi_check_chap_params(disable_chap, require_chap,
-					  mutual_chap, chap_group)) {
+	if (!iscsi_check_chap_params(disable_chap, require_chap,
+				     mutual_chap, chap_group)) {
 		return -EINVAL;
 	}
 
@@ -1450,7 +1450,7 @@ static const char *target_nodes_section = \
 "  LUN%d %s\n"
 
 void
-spdk_iscsi_tgt_nodes_config_text(FILE *fp)
+iscsi_tgt_nodes_config_text(FILE *fp)
 {
 	int l = 0;
 	struct spdk_scsi_dev *dev = NULL;
@@ -1589,7 +1589,7 @@ iscsi_tgt_node_config_json(struct spdk_iscsi_tgt_node *target,
 }
 
 void
-spdk_iscsi_tgt_nodes_info_json(struct spdk_json_write_ctx *w)
+iscsi_tgt_nodes_info_json(struct spdk_json_write_ctx *w)
 {
 	struct spdk_iscsi_tgt_node *target;
 
@@ -1599,7 +1599,7 @@ spdk_iscsi_tgt_nodes_info_json(struct spdk_json_write_ctx *w)
 }
 
 void
-spdk_iscsi_tgt_nodes_config_json(struct spdk_json_write_ctx *w)
+iscsi_tgt_nodes_config_json(struct spdk_json_write_ctx *w)
 {
 	struct spdk_iscsi_tgt_node *target;
 
