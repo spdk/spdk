@@ -282,7 +282,7 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	}
 
 	/* set default params */
-	rc = spdk_iscsi_conn_params_init(&conn->params);
+	rc = iscsi_conn_params_init(&conn->params);
 	if (rc < 0) {
 		SPDK_ERRLOG("iscsi_conn_params_init() failed\n");
 		goto error_return;
@@ -307,7 +307,7 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	return 0;
 
 error_return:
-	spdk_iscsi_param_free(conn->params);
+	iscsi_param_free(conn->params);
 	free_conn(conn);
 	return -1;
 }
@@ -434,7 +434,7 @@ iscsi_conn_free(struct spdk_iscsi_conn *conn)
 
 end:
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "cleanup free conn\n");
-	spdk_iscsi_param_free(conn->params);
+	iscsi_param_free(conn->params);
 	free_conn(conn);
 
 	pthread_mutex_unlock(&g_conns_mutex);
@@ -1266,7 +1266,7 @@ iscsi_conn_send_nopin(struct spdk_iscsi_conn *conn)
 	/* Only send nopin if we have logged in and are in a normal session. */
 	if (conn->sess == NULL ||
 	    !conn->full_feature ||
-	    !spdk_iscsi_param_eq_val(conn->sess->params, "SessionType", "Normal")) {
+	    !iscsi_param_eq_val(conn->sess->params, "SessionType", "Normal")) {
 		return;
 	}
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "send NOPIN isid=%"PRIx64", tsih=%u, cid=%u\n",

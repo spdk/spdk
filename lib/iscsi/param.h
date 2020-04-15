@@ -61,34 +61,34 @@ struct iscsi_param {
 };
 
 void
-spdk_iscsi_param_free(struct iscsi_param *params);
+iscsi_param_free(struct iscsi_param *params);
 struct iscsi_param *
-spdk_iscsi_param_find(struct iscsi_param *params, const char *key);
+iscsi_param_find(struct iscsi_param *params, const char *key);
 int
-spdk_iscsi_param_del(struct iscsi_param **params, const char *key);
+iscsi_param_del(struct iscsi_param **params, const char *key);
 int
-spdk_iscsi_param_add(struct iscsi_param **params, const char *key,
-		     const char *val, const char *list, int type);
+iscsi_param_add(struct iscsi_param **params, const char *key,
+		const char *val, const char *list, int type);
 int
-spdk_iscsi_param_set(struct iscsi_param *params, const char *key,
-		     const char *val);
+iscsi_param_set(struct iscsi_param *params, const char *key,
+		const char *val);
 int
-spdk_iscsi_param_set_int(struct iscsi_param *params, const char *key, uint32_t val);
+iscsi_param_set_int(struct iscsi_param *params, const char *key, uint32_t val);
 int
-spdk_iscsi_parse_params(struct iscsi_param **params, const uint8_t *data,
-			int len, bool cbit_enabled, char **partial_parameter);
+iscsi_parse_params(struct iscsi_param **params, const uint8_t *data,
+		   int len, bool cbit_enabled, char **partial_parameter);
 char *
-spdk_iscsi_param_get_val(struct iscsi_param *params, const char *key);
+iscsi_param_get_val(struct iscsi_param *params, const char *key);
 int
-spdk_iscsi_param_eq_val(struct iscsi_param *params, const char *key,
-			const char *val);
+iscsi_param_eq_val(struct iscsi_param *params, const char *key,
+		   const char *val);
 
-int spdk_iscsi_negotiate_params(struct spdk_iscsi_conn *conn,
-				struct iscsi_param **params_p, uint8_t *data,
-				int alloc_len, int data_len);
-int spdk_iscsi_copy_param2var(struct spdk_iscsi_conn *conn);
+int iscsi_negotiate_params(struct spdk_iscsi_conn *conn,
+			   struct iscsi_param **params_p, uint8_t *data,
+			   int alloc_len, int data_len);
+int iscsi_copy_param2var(struct spdk_iscsi_conn *conn);
 
-int spdk_iscsi_conn_params_init(struct iscsi_param **params);
-int spdk_iscsi_sess_params_init(struct iscsi_param **params);
+int iscsi_conn_params_init(struct iscsi_param **params);
+int iscsi_sess_params_init(struct iscsi_param **params);
 
 #endif /* SPDK_ISCSI_PARAM_H */

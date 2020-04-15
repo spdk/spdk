@@ -543,7 +543,7 @@ void spdk_free_sess(struct spdk_iscsi_sess *sess)
 	sess->tag = 0;
 	sess->target = NULL;
 	sess->session_type = SESSION_TYPE_INVALID;
-	spdk_iscsi_param_free(sess->params);
+	iscsi_param_free(sess->params);
 	free(sess->conns);
 	spdk_scsi_port_free(&sess->initiator_port);
 	spdk_mempool_put(g_iscsi.session_pool, (void *)sess);
@@ -602,92 +602,92 @@ create_iscsi_sess(struct spdk_iscsi_conn *conn,
 	sess->current_text_itt = 0xffffffffU;
 
 	/* set default params */
-	rc = spdk_iscsi_sess_params_init(&sess->params);
+	rc = iscsi_sess_params_init(&sess->params);
 	if (rc < 0) {
 		SPDK_ERRLOG("iscsi_sess_params_init() failed\n");
 		goto error_return;
 	}
 	/* replace with config value */
-	rc = spdk_iscsi_param_set_int(sess->params, "MaxConnections",
-				      sess->MaxConnections);
+	rc = iscsi_param_set_int(sess->params, "MaxConnections",
+				 sess->MaxConnections);
 	if (rc < 0) {
 		SPDK_ERRLOG("iscsi_param_set_int() failed\n");
 		goto error_return;
 	}
 
-	rc = spdk_iscsi_param_set_int(sess->params, "MaxOutstandingR2T",
-				      sess->MaxOutstandingR2T);
+	rc = iscsi_param_set_int(sess->params, "MaxOutstandingR2T",
+				 sess->MaxOutstandingR2T);
 	if (rc < 0) {
 		SPDK_ERRLOG("iscsi_param_set_int() failed\n");
 		goto error_return;
 	}
 
-	rc = spdk_iscsi_param_set_int(sess->params, "DefaultTime2Wait",
-				      sess->DefaultTime2Wait);
+	rc = iscsi_param_set_int(sess->params, "DefaultTime2Wait",
+				 sess->DefaultTime2Wait);
 	if (rc < 0) {
 		SPDK_ERRLOG("iscsi_param_set_int() failed\n");
 		goto error_return;
 	}
 
-	rc = spdk_iscsi_param_set_int(sess->params, "DefaultTime2Retain",
-				      sess->DefaultTime2Retain);
+	rc = iscsi_param_set_int(sess->params, "DefaultTime2Retain",
+				 sess->DefaultTime2Retain);
 	if (rc < 0) {
 		SPDK_ERRLOG("iscsi_param_set_int() failed\n");
 		goto error_return;
 	}
 
-	rc = spdk_iscsi_param_set_int(sess->params, "FirstBurstLength",
-				      sess->FirstBurstLength);
+	rc = iscsi_param_set_int(sess->params, "FirstBurstLength",
+				 sess->FirstBurstLength);
 	if (rc < 0) {
 		SPDK_ERRLOG("iscsi_param_set_int() failed\n");
 		goto error_return;
 	}
 
-	rc = spdk_iscsi_param_set_int(sess->params, "MaxBurstLength",
-				      sess->MaxBurstLength);
+	rc = iscsi_param_set_int(sess->params, "MaxBurstLength",
+				 sess->MaxBurstLength);
 	if (rc < 0) {
 		SPDK_ERRLOG("iscsi_param_set_int() failed\n");
 		goto error_return;
 	}
 
-	rc = spdk_iscsi_param_set(sess->params, "InitialR2T",
-				  sess->InitialR2T ? "Yes" : "No");
+	rc = iscsi_param_set(sess->params, "InitialR2T",
+			     sess->InitialR2T ? "Yes" : "No");
 	if (rc < 0) {
 		SPDK_ERRLOG("iscsi_param_set() failed\n");
 		goto error_return;
 	}
 
-	rc = spdk_iscsi_param_set(sess->params, "ImmediateData",
-				  sess->ImmediateData ? "Yes" : "No");
+	rc = iscsi_param_set(sess->params, "ImmediateData",
+			     sess->ImmediateData ? "Yes" : "No");
 	if (rc < 0) {
 		SPDK_ERRLOG("iscsi_param_set() failed\n");
 		goto error_return;
 	}
 
-	rc = spdk_iscsi_param_set(sess->params, "DataPDUInOrder",
-				  sess->DataPDUInOrder ? "Yes" : "No");
+	rc = iscsi_param_set(sess->params, "DataPDUInOrder",
+			     sess->DataPDUInOrder ? "Yes" : "No");
 	if (rc < 0) {
 		SPDK_ERRLOG("iscsi_param_set() failed\n");
 		goto error_return;
 	}
 
-	rc = spdk_iscsi_param_set(sess->params, "DataSequenceInOrder",
-				  sess->DataSequenceInOrder ? "Yes" : "No");
+	rc = iscsi_param_set(sess->params, "DataSequenceInOrder",
+			     sess->DataSequenceInOrder ? "Yes" : "No");
 	if (rc < 0) {
 		SPDK_ERRLOG("iscsi_param_set() failed\n");
 		goto error_return;
 	}
 
-	rc = spdk_iscsi_param_set_int(sess->params, "ErrorRecoveryLevel",
-				      sess->ErrorRecoveryLevel);
+	rc = iscsi_param_set_int(sess->params, "ErrorRecoveryLevel",
+				 sess->ErrorRecoveryLevel);
 	if (rc < 0) {
 		SPDK_ERRLOG("iscsi_param_set_int() failed\n");
 		goto error_return;
 	}
 
 	/* realloc buffer */
-	rc = spdk_iscsi_param_set_int(conn->params, "MaxRecvDataSegmentLength",
-				      conn->MaxRecvDataSegmentLength);
+	rc = iscsi_param_set_int(conn->params, "MaxRecvDataSegmentLength",
+				 conn->MaxRecvDataSegmentLength);
 	if (rc < 0) {
 		SPDK_ERRLOG("iscsi_param_set_int() failed\n");
 		goto error_return;
@@ -796,9 +796,9 @@ iscsi_append_param(struct spdk_iscsi_conn *conn, const char *key,
 	struct iscsi_param *param;
 	int rc;
 
-	param = spdk_iscsi_param_find(conn->params, key);
+	param = iscsi_param_find(conn->params, key);
 	if (param == NULL) {
-		param = spdk_iscsi_param_find(conn->sess->params, key);
+		param = iscsi_param_find(conn->sess->params, key);
 		if (param == NULL) {
 			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "no key %.64s\n", key);
 			return data_len;
@@ -853,7 +853,7 @@ iscsi_auth_params(struct spdk_iscsi_conn *conn,
 	}
 
 	/* CHAP method (RFC1994) */
-	if ((algorithm = spdk_iscsi_param_get_val(params, "CHAP_A")) != NULL) {
+	if ((algorithm = iscsi_param_get_val(params, "CHAP_A")) != NULL) {
 		if (conn->auth.chap_phase != ISCSI_CHAP_PHASE_WAIT_A) {
 			SPDK_ERRLOG("CHAP sequence error\n");
 			goto error_return;
@@ -897,7 +897,7 @@ iscsi_auth_params(struct spdk_iscsi_conn *conn,
 					  data, alloc_len, total);
 
 		conn->auth.chap_phase = ISCSI_CHAP_PHASE_WAIT_NR;
-	} else if ((name = spdk_iscsi_param_get_val(params, "CHAP_N")) != NULL) {
+	} else if ((name = iscsi_param_get_val(params, "CHAP_N")) != NULL) {
 		uint8_t resmd5[SPDK_MD5DIGEST_LEN];
 		uint8_t tgtmd5[SPDK_MD5DIGEST_LEN];
 		struct spdk_md5ctx md5ctx;
@@ -908,7 +908,7 @@ iscsi_auth_params(struct spdk_iscsi_conn *conn,
 			goto error_return;
 		}
 
-		response = spdk_iscsi_param_get_val(params, "CHAP_R");
+		response = iscsi_param_get_val(params, "CHAP_R");
 		if (response == NULL) {
 			SPDK_ERRLOG("no response\n");
 			goto error_return;
@@ -979,10 +979,10 @@ iscsi_auth_params(struct spdk_iscsi_conn *conn,
 		conn->authenticated = true;
 
 		/* mutual CHAP? */
-		identifier = spdk_iscsi_param_get_val(params, "CHAP_I");
+		identifier = iscsi_param_get_val(params, "CHAP_I");
 		if (identifier != NULL) {
 			conn->auth.chap_mid[0] = (uint8_t) strtol(identifier, NULL, 10);
-			challenge = spdk_iscsi_param_get_val(params, "CHAP_C");
+			challenge = iscsi_param_get_val(params, "CHAP_C");
 			if (challenge == NULL) {
 				SPDK_ERRLOG("CHAP sequence error\n");
 				goto error_return;
@@ -1104,9 +1104,9 @@ iscsi_conn_params_update(struct spdk_iscsi_conn *conn)
 	uint32_t recv_buf_size;
 
 	/* update internal variables */
-	rc = spdk_iscsi_copy_param2var(conn);
+	rc = iscsi_copy_param2var(conn);
 	if (rc < 0) {
-		SPDK_ERRLOG("spdk_iscsi_copy_param2var() failed\n");
+		SPDK_ERRLOG("iscsi_copy_param2var() failed\n");
 		if (conn->state < ISCSI_CONN_STATE_EXITING) {
 			conn->state = ISCSI_CONN_STATE_EXITING;
 		}
@@ -1212,7 +1212,7 @@ iscsi_op_login_response(struct spdk_iscsi_conn *conn,
 		rsph->flags &= ~ISCSI_LOGIN_CURRENT_STAGE_MASK;
 		rsph->flags &= ~ISCSI_LOGIN_NEXT_STAGE_MASK;
 	}
-	spdk_iscsi_param_free(params);
+	iscsi_param_free(params);
 	spdk_iscsi_conn_write_pdu(conn, rsp_pdu, cb_fn, conn);
 }
 
@@ -1342,9 +1342,9 @@ iscsi_op_login_store_incoming_params(struct spdk_iscsi_conn *conn,
 	reqh = (struct iscsi_bhs_login_req *)&pdu->bhs;
 	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 
-	rc = spdk_iscsi_parse_params(params, pdu->data,
-				     pdu->data_segment_len, ISCSI_BHS_LOGIN_GET_CBIT(reqh->flags),
-				     &conn->partial_text_parameter);
+	rc = iscsi_parse_params(params, pdu->data,
+				pdu->data_segment_len, ISCSI_BHS_LOGIN_GET_CBIT(reqh->flags),
+				&conn->partial_text_parameter);
 	if (rc < 0) {
 		SPDK_ERRLOG("iscsi_parse_params() failed\n");
 		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
@@ -1373,7 +1373,7 @@ iscsi_op_login_initialize_port(struct spdk_iscsi_conn *conn,
 	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 
 	/* Initiator Name and Port */
-	val = spdk_iscsi_param_get_val(params, "InitiatorName");
+	val = iscsi_param_get_val(params, "InitiatorName");
 	if (val == NULL) {
 		SPDK_ERRLOG("InitiatorName is empty\n");
 		/* Missing parameter */
@@ -1408,7 +1408,7 @@ iscsi_op_login_session_type(struct spdk_iscsi_conn *conn,
 	struct iscsi_bhs_login_rsp *rsph;
 
 	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
-	session_type_str = spdk_iscsi_param_get_val(params, "SessionType");
+	session_type_str = iscsi_param_get_val(params, "SessionType");
 	if (session_type_str == NULL) {
 		if (rsph->tsih != 0) {
 			*session_type = SESSION_TYPE_NORMAL;
@@ -1538,26 +1538,26 @@ iscsi_op_login_update_param(struct spdk_iscsi_conn *conn,
 	struct iscsi_param *new_param, *orig_param;
 	int index;
 
-	orig_param = spdk_iscsi_param_find(conn->params, key);
+	orig_param = iscsi_param_find(conn->params, key);
 	if (orig_param == NULL) {
 		SPDK_ERRLOG("orig_param %s not found\n", key);
 		return SPDK_ISCSI_LOGIN_ERROR_PARAMETER;
 	}
 
 	index = orig_param->state_index;
-	rc = spdk_iscsi_param_del(&conn->params, key);
+	rc = iscsi_param_del(&conn->params, key);
 	if (rc < 0) {
 		SPDK_ERRLOG("iscsi_param_del(%s) failed\n", key);
 		return SPDK_ISCSI_LOGIN_ERROR_PARAMETER;
 	}
-	rc = spdk_iscsi_param_add(&conn->params, key, value, list, ISPT_LIST);
+	rc = iscsi_param_add(&conn->params, key, value, list, ISPT_LIST);
 	if (rc < 0) {
 		SPDK_ERRLOG("iscsi_param_add() failed\n");
 		return SPDK_ISCSI_LOGIN_ERROR_PARAMETER;
 	}
-	new_param = spdk_iscsi_param_find(conn->params, key);
+	new_param = iscsi_param_find(conn->params, key);
 	if (new_param == NULL) {
-		SPDK_ERRLOG("spdk_iscsi_param_find() failed\n");
+		SPDK_ERRLOG("iscsi_param_find() failed\n");
 		return SPDK_ISCSI_LOGIN_ERROR_PARAMETER;
 	}
 	new_param->state_index = index;
@@ -1661,7 +1661,7 @@ iscsi_op_login_session_normal(struct spdk_iscsi_conn *conn,
 	int rc = 0;
 
 	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
-	target_name = spdk_iscsi_param_get_val(params, "TargetName");
+	target_name = iscsi_param_get_val(params, "TargetName");
 
 	if (target_name == NULL) {
 		SPDK_ERRLOG("TargetName is empty\n");
@@ -1821,7 +1821,7 @@ iscsi_op_login_set_target_info(struct spdk_iscsi_conn *conn,
 			snprintf(buf, sizeof buf, "%s", "");
 		}
 		pthread_mutex_unlock(&target->mutex);
-		rc = spdk_iscsi_param_set(conn->sess->params, "TargetAlias", buf);
+		rc = iscsi_param_set(conn->sess->params, "TargetAlias", buf);
 		if (rc < 0) {
 			SPDK_ERRLOG("iscsi_param_set() failed\n");
 			return SPDK_ISCSI_LOGIN_ERROR_PARAMETER;
@@ -1829,13 +1829,13 @@ iscsi_op_login_set_target_info(struct spdk_iscsi_conn *conn,
 	}
 	snprintf(buf, sizeof buf, "%s:%s,%d", conn->portal_host, conn->portal_port,
 		 conn->pg_tag);
-	rc = spdk_iscsi_param_set(conn->sess->params, "TargetAddress", buf);
+	rc = iscsi_param_set(conn->sess->params, "TargetAddress", buf);
 	if (rc < 0) {
 		SPDK_ERRLOG("iscsi_param_set() failed\n");
 		return SPDK_ISCSI_LOGIN_ERROR_PARAMETER;
 	}
 	snprintf(buf, sizeof buf, "%d", conn->pg_tag);
-	rc = spdk_iscsi_param_set(conn->sess->params, "TargetPortalGroupTag", buf);
+	rc = iscsi_param_set(conn->sess->params, "TargetPortalGroupTag", buf);
 	if (rc < 0) {
 		SPDK_ERRLOG("iscsi_param_set() failed\n");
 		return SPDK_ISCSI_LOGIN_ERROR_PARAMETER;
@@ -1843,7 +1843,7 @@ iscsi_op_login_set_target_info(struct spdk_iscsi_conn *conn,
 
 	/* write in response */
 	if (target != NULL) {
-		val = spdk_iscsi_param_get_val(conn->sess->params, "TargetAlias");
+		val = iscsi_param_get_val(conn->sess->params, "TargetAlias");
 		if (val != NULL && strlen(val) != 0) {
 			rsp_pdu->data_segment_len = iscsi_append_param(conn,
 						    "TargetAlias",
@@ -1937,9 +1937,9 @@ iscsi_op_login_phase_none(struct spdk_iscsi_conn *conn,
 	/* limit conns on discovery session */
 	if (session_type == SESSION_TYPE_DISCOVERY) {
 		conn->sess->MaxConnections = 1;
-		rc = spdk_iscsi_param_set_int(conn->sess->params,
-					      "MaxConnections",
-					      conn->sess->MaxConnections);
+		rc = iscsi_param_set_int(conn->sess->params,
+					 "MaxConnections",
+					 conn->sess->MaxConnections);
 		if (rc < 0) {
 			SPDK_ERRLOG("iscsi_param_set_int() failed\n");
 			return SPDK_ISCSI_LOGIN_ERROR_PARAMETER;
@@ -1968,7 +1968,7 @@ iscsi_op_login_rsp_handle_csg_bit(struct spdk_iscsi_conn *conn,
 	switch (ISCSI_BHS_LOGIN_GET_CSG(rsph->flags)) {
 	case ISCSI_SECURITY_NEGOTIATION_PHASE:
 		/* SecurityNegotiation */
-		auth_method = spdk_iscsi_param_get_val(conn->params, "AuthMethod");
+		auth_method = iscsi_param_get_val(conn->params, "AuthMethod");
 		if (auth_method == NULL) {
 			SPDK_ERRLOG("AuthMethod is empty\n");
 			/* Missing parameter */
@@ -2066,9 +2066,9 @@ iscsi_op_login_notify_session_info(struct spdk_iscsi_conn *conn,
 			      conn->target->name, conn->target->num,
 			      conn->portal_host, conn->portal_port, conn->pg_tag,
 			      conn->sess->isid, conn->sess->tsih, conn->cid,
-			      (spdk_iscsi_param_eq_val(conn->params, "HeaderDigest", "CRC32C")
+			      (iscsi_param_eq_val(conn->params, "HeaderDigest", "CRC32C")
 			       ? "on" : "off"),
-			      (spdk_iscsi_param_eq_val(conn->params, "DataDigest", "CRC32C")
+			      (iscsi_param_eq_val(conn->params, "DataDigest", "CRC32C")
 			       ? "on" : "off"));
 	} else if (conn->sess->session_type == SESSION_TYPE_DISCOVERY) {
 		/* discovery session */
@@ -2078,9 +2078,9 @@ iscsi_op_login_notify_session_info(struct spdk_iscsi_conn *conn,
 			      conn->initiator_name, conn->initiator_addr,
 			      conn->portal_host, conn->portal_port, conn->pg_tag,
 			      conn->sess->isid, conn->sess->tsih, conn->cid,
-			      (spdk_iscsi_param_eq_val(conn->params, "HeaderDigest", "CRC32C")
+			      (iscsi_param_eq_val(conn->params, "HeaderDigest", "CRC32C")
 			       ? "on" : "off"),
-			      (spdk_iscsi_param_eq_val(conn->params, "DataDigest", "CRC32C")
+			      (iscsi_param_eq_val(conn->params, "DataDigest", "CRC32C")
 			       ? "on" : "off"));
 	} else {
 		SPDK_ERRLOG("unknown session type\n");
@@ -2158,12 +2158,12 @@ iscsi_op_login_rsp_handle(struct spdk_iscsi_conn *conn,
 	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 
 	/* negotiate parameters */
-	rc = spdk_iscsi_negotiate_params(conn, params, rsp_pdu->data,
-					 rsp_pdu->data_buf_len,
-					 rsp_pdu->data_segment_len);
+	rc = iscsi_negotiate_params(conn, params, rsp_pdu->data,
+				    rsp_pdu->data_buf_len,
+				    rsp_pdu->data_segment_len);
 	if (rc < 0) {
 		/*
-		 * spdk_iscsi_negotiate_params just returns -1 on failure,
+		 * iscsi_negotiate_params just returns -1 on failure,
 		 *  so translate this into meaningful response codes and
 		 *  return values.
 		 */
@@ -2364,36 +2364,36 @@ iscsi_pdu_payload_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 	task_tag = from_be32(&reqh->itt);
 
 	/* store incoming parameters */
-	rc = spdk_iscsi_parse_params(&params, pdu->data, pdu->data_segment_len,
-				     C_bit, &conn->partial_text_parameter);
+	rc = iscsi_parse_params(&params, pdu->data, pdu->data_segment_len,
+				C_bit, &conn->partial_text_parameter);
 	if (rc < 0) {
 		SPDK_ERRLOG("iscsi_parse_params() failed\n");
-		spdk_iscsi_param_free(params);
+		iscsi_param_free(params);
 		return -1;
 	}
 
 	data = calloc(1, alloc_len);
 	if (!data) {
 		SPDK_ERRLOG("calloc() failed for data segment\n");
-		spdk_iscsi_param_free(params);
+		iscsi_param_free(params);
 		return -ENOMEM;
 	}
 
 	/* negotiate parameters */
-	data_len = spdk_iscsi_negotiate_params(conn, &params,
-					       data, alloc_len, data_len);
+	data_len = iscsi_negotiate_params(conn, &params,
+					  data, alloc_len, data_len);
 	if (data_len < 0) {
-		SPDK_ERRLOG("spdk_iscsi_negotiate_params() failed\n");
-		spdk_iscsi_param_free(params);
+		SPDK_ERRLOG("iscsi_negotiate_params() failed\n");
+		iscsi_param_free(params);
 		free(data);
 		return -1;
 	}
 
 	/* sendtargets is special case */
-	val = spdk_iscsi_param_get_val(params, "SendTargets");
+	val = iscsi_param_get_val(params, "SendTargets");
 	if (val != NULL) {
-		if (spdk_iscsi_param_eq_val(conn->sess->params,
-					    "SessionType", "Discovery")) {
+		if (iscsi_param_eq_val(conn->sess->params,
+				       "SessionType", "Discovery")) {
 			if (strcasecmp(val, "") == 0) {
 				val = "ALL";
 			}
@@ -2423,14 +2423,14 @@ iscsi_pdu_payload_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 			}
 		}
 	} else {
-		if (spdk_iscsi_param_eq_val(conn->sess->params, "SessionType", "Discovery")) {
-			spdk_iscsi_param_free(params);
+		if (iscsi_param_eq_val(conn->sess->params, "SessionType", "Discovery")) {
+			iscsi_param_free(params);
 			free(data);
 			return SPDK_ISCSI_CONNECTION_FATAL;
 		}
 	}
 
-	spdk_iscsi_param_free(params);
+	iscsi_param_free(params);
 	SPDK_LOGDUMP(SPDK_LOG_ISCSI, "Negotiated Params", data, data_len);
 
 	/* response PDU */
@@ -2490,7 +2490,7 @@ static void iscsi_conn_logout_pdu_complete(void *arg)
 			      " (%s:%s,%d)\n",
 			      conn->initiator_name, conn->initiator_addr,
 			      conn->portal_host, conn->portal_port, conn->pg_tag);
-	} else if (spdk_iscsi_param_eq_val(conn->sess->params, "SessionType", "Normal")) {
+	} else if (iscsi_param_eq_val(conn->sess->params, "SessionType", "Normal")) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Logout from %s (%s) on %s tgt_node%d"
 			      " (%s:%s,%d), ISID=%"PRIx64", TSIH=%u,"
 			      " CID=%u, HeaderDigest=%s, DataDigest=%s\n",
@@ -2498,9 +2498,9 @@ static void iscsi_conn_logout_pdu_complete(void *arg)
 			      conn->target->name, conn->target->num,
 			      conn->portal_host, conn->portal_port, conn->pg_tag,
 			      conn->sess->isid, conn->sess->tsih, conn->cid,
-			      (spdk_iscsi_param_eq_val(conn->params, "HeaderDigest", "CRC32C")
+			      (iscsi_param_eq_val(conn->params, "HeaderDigest", "CRC32C")
 			       ? "on" : "off"),
-			      (spdk_iscsi_param_eq_val(conn->params, "DataDigest", "CRC32C")
+			      (iscsi_param_eq_val(conn->params, "DataDigest", "CRC32C")
 			       ? "on" : "off"));
 	} else {
 		/* discovery session */
@@ -2510,9 +2510,9 @@ static void iscsi_conn_logout_pdu_complete(void *arg)
 			      conn->initiator_name, conn->initiator_addr,
 			      conn->portal_host, conn->portal_port, conn->pg_tag,
 			      conn->sess->isid, conn->sess->tsih, conn->cid,
-			      (spdk_iscsi_param_eq_val(conn->params, "HeaderDigest", "CRC32C")
+			      (iscsi_param_eq_val(conn->params, "HeaderDigest", "CRC32C")
 			       ? "on" : "off"),
-			      (spdk_iscsi_param_eq_val(conn->params, "DataDigest", "CRC32C")
+			      (iscsi_param_eq_val(conn->params, "DataDigest", "CRC32C")
 			       ? "on" : "off"));
 	}
 }

@@ -185,9 +185,9 @@ DEFINE_STUB_V(spdk_scsi_task_process_abort, (struct spdk_scsi_task *task));
 
 DEFINE_STUB_V(spdk_put_pdu, (struct spdk_iscsi_pdu *pdu));
 
-DEFINE_STUB_V(spdk_iscsi_param_free, (struct iscsi_param *params));
+DEFINE_STUB_V(iscsi_param_free, (struct iscsi_param *params));
 
-DEFINE_STUB(spdk_iscsi_conn_params_init, int, (struct iscsi_param **params), 0);
+DEFINE_STUB(iscsi_conn_params_init, int, (struct iscsi_param **params), 0);
 
 DEFINE_STUB_V(spdk_clear_all_transfer_task,
 	      (struct spdk_iscsi_conn *conn, struct spdk_scsi_lun *lun,
