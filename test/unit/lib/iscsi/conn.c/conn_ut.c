@@ -103,9 +103,9 @@ DEFINE_STUB(spdk_sock_group_remove_sock, int,
 	    (struct spdk_sock_group *group, struct spdk_sock *sock), 0);
 
 struct spdk_iscsi_task *
-spdk_iscsi_task_get(struct spdk_iscsi_conn *conn,
-		    struct spdk_iscsi_task *parent,
-		    spdk_scsi_task_cpl cpl_fn)
+iscsi_task_get(struct spdk_iscsi_conn *conn,
+	       struct spdk_iscsi_task *parent,
+	       spdk_scsi_task_cpl cpl_fn)
 {
 	struct spdk_iscsi_task *task;
 
@@ -140,7 +140,7 @@ spdk_scsi_task_put(struct spdk_scsi_task *scsi_task)
 	CU_ASSERT(scsi_task->ref > 0);
 	scsi_task->ref--;
 
-	task = spdk_iscsi_task_from_scsi_task(scsi_task);
+	task = iscsi_task_from_scsi_task(scsi_task);
 	if (task->parent) {
 		spdk_scsi_task_put(&task->parent->scsi);
 	}
@@ -288,7 +288,7 @@ read_task_split_in_order_case(void)
 	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&g_ut_read_tasks));
 
 	TAILQ_FOREACH(task, &g_ut_read_tasks, link) {
-		CU_ASSERT(&primary == spdk_iscsi_task_get_primary(task));
+		CU_ASSERT(&primary == iscsi_task_get_primary(task));
 		process_read_task_completion(NULL, task, &primary);
 	}
 
@@ -319,7 +319,7 @@ read_task_split_reverse_order_case(void)
 	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&g_ut_read_tasks));
 
 	TAILQ_FOREACH_REVERSE(task, &g_ut_read_tasks, read_tasks_head, link) {
-		CU_ASSERT(&primary == spdk_iscsi_task_get_primary(task));
+		CU_ASSERT(&primary == iscsi_task_get_primary(task));
 		process_read_task_completion(NULL, task, &primary);
 	}
 
@@ -792,7 +792,7 @@ abort_queued_datain_tasks_test(void)
 	task1.current_datain_offset = 0;
 	task1.scsi.transfer_len = 512;
 	task1.scsi.lun = &lun1;
-	spdk_iscsi_task_set_pdu(&task1, &pdu1);
+	iscsi_task_set_pdu(&task1, &pdu1);
 	TAILQ_INSERT_TAIL(&conn.queued_datain_tasks, &task1, link);
 
 	pdu2.cmd_sn = alloc_cmd_sn;
@@ -803,7 +803,7 @@ abort_queued_datain_tasks_test(void)
 	task2.current_datain_offset = 0;
 	task2.scsi.transfer_len = 512;
 	task2.scsi.lun = &lun2;
-	spdk_iscsi_task_set_pdu(&task2, &pdu2);
+	iscsi_task_set_pdu(&task2, &pdu2);
 	TAILQ_INSERT_TAIL(&conn.queued_datain_tasks, &task2, link);
 
 	mgmt_pdu1.cmd_sn = alloc_cmd_sn;
@@ -817,7 +817,7 @@ abort_queued_datain_tasks_test(void)
 	task3.current_datain_offset = 0;
 	task3.scsi.transfer_len = 512;
 	task3.scsi.lun = &lun1;
-	spdk_iscsi_task_set_pdu(&task3, &pdu3);
+	iscsi_task_set_pdu(&task3, &pdu3);
 	TAILQ_INSERT_TAIL(&conn.queued_datain_tasks, &task3, link);
 
 	pdu4.cmd_sn = alloc_cmd_sn;
@@ -828,7 +828,7 @@ abort_queued_datain_tasks_test(void)
 	task4.current_datain_offset = 0;
 	task4.scsi.transfer_len = 512;
 	task4.scsi.lun = &lun2;
-	spdk_iscsi_task_set_pdu(&task4, &pdu4);
+	iscsi_task_set_pdu(&task4, &pdu4);
 	TAILQ_INSERT_TAIL(&conn.queued_datain_tasks, &task4, link);
 
 	pdu5.cmd_sn = alloc_cmd_sn;
@@ -839,7 +839,7 @@ abort_queued_datain_tasks_test(void)
 	task5.current_datain_offset = 0;
 	task5.scsi.transfer_len = 512;
 	task5.scsi.lun = &lun1;
-	spdk_iscsi_task_set_pdu(&task5, &pdu5);
+	iscsi_task_set_pdu(&task5, &pdu5);
 	TAILQ_INSERT_TAIL(&conn.queued_datain_tasks, &task5, link);
 
 	mgmt_pdu2.cmd_sn = alloc_cmd_sn;
@@ -853,7 +853,7 @@ abort_queued_datain_tasks_test(void)
 	task6.current_datain_offset = 0;
 	task6.scsi.transfer_len = 512;
 	task6.scsi.lun = &lun2;
-	spdk_iscsi_task_set_pdu(&task6, &pdu6);
+	iscsi_task_set_pdu(&task6, &pdu6);
 	TAILQ_INSERT_TAIL(&conn.queued_datain_tasks, &task6, link);
 
 	rc = spdk_iscsi_conn_abort_queued_datain_tasks(&conn, &lun1, &mgmt_pdu1);

@@ -30,9 +30,9 @@ static bool g_task_pool_is_empty = false;
 static bool g_pdu_pool_is_empty = false;
 
 struct spdk_iscsi_task *
-spdk_iscsi_task_get(struct spdk_iscsi_conn *conn,
-		    struct spdk_iscsi_task *parent,
-		    spdk_scsi_task_cpl cpl_fn)
+iscsi_task_get(struct spdk_iscsi_conn *conn,
+	       struct spdk_iscsi_task *parent,
+	       spdk_scsi_task_cpl cpl_fn)
 {
 	struct spdk_iscsi_task *task;
 
@@ -171,7 +171,7 @@ spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
 	struct spdk_iscsi_task *iscsi_task;
 
 	if (scsi_task != NULL) {
-		iscsi_task = spdk_iscsi_task_from_scsi_task(scsi_task);
+		iscsi_task = iscsi_task_from_scsi_task(scsi_task);
 		if (iscsi_task->parent && (iscsi_task->scsi.dxfer_dir == SPDK_SCSI_DIR_FROM_DEV)) {
 			assert(iscsi_task->conn->data_in_cnt > 0);
 			iscsi_task->conn->data_in_cnt--;

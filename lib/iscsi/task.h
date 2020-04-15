@@ -108,75 +108,75 @@ struct spdk_iscsi_task {
 };
 
 static inline void
-spdk_iscsi_task_put(struct spdk_iscsi_task *task)
+iscsi_task_put(struct spdk_iscsi_task *task)
 {
 	spdk_scsi_task_put(&task->scsi);
 }
 
 static inline struct spdk_iscsi_pdu *
-spdk_iscsi_task_get_pdu(struct spdk_iscsi_task *task)
+iscsi_task_get_pdu(struct spdk_iscsi_task *task)
 {
 	return task->pdu;
 }
 
 static inline void
-spdk_iscsi_task_set_pdu(struct spdk_iscsi_task *task, struct spdk_iscsi_pdu *pdu)
+iscsi_task_set_pdu(struct spdk_iscsi_task *task, struct spdk_iscsi_pdu *pdu)
 {
 	task->pdu = pdu;
 }
 
 static inline struct iscsi_bhs *
-spdk_iscsi_task_get_bhs(struct spdk_iscsi_task *task)
+iscsi_task_get_bhs(struct spdk_iscsi_task *task)
 {
-	return &spdk_iscsi_task_get_pdu(task)->bhs;
+	return &iscsi_task_get_pdu(task)->bhs;
 }
 
 static inline void
-spdk_iscsi_task_associate_pdu(struct spdk_iscsi_task *task, struct spdk_iscsi_pdu *pdu)
+iscsi_task_associate_pdu(struct spdk_iscsi_task *task, struct spdk_iscsi_pdu *pdu)
 {
-	spdk_iscsi_task_set_pdu(task, pdu);
+	iscsi_task_set_pdu(task, pdu);
 	pdu->ref++;
 }
 
 static inline void
-spdk_iscsi_task_disassociate_pdu(struct spdk_iscsi_task *task)
+iscsi_task_disassociate_pdu(struct spdk_iscsi_task *task)
 {
-	if (spdk_iscsi_task_get_pdu(task)) {
-		spdk_put_pdu(spdk_iscsi_task_get_pdu(task));
-		spdk_iscsi_task_set_pdu(task, NULL);
+	if (iscsi_task_get_pdu(task)) {
+		spdk_put_pdu(iscsi_task_get_pdu(task));
+		iscsi_task_set_pdu(task, NULL);
 	}
 }
 
 static inline int
-spdk_iscsi_task_is_immediate(struct spdk_iscsi_task *task)
+iscsi_task_is_immediate(struct spdk_iscsi_task *task)
 {
 	struct iscsi_bhs_scsi_req *scsi_req;
 
-	scsi_req = (struct iscsi_bhs_scsi_req *)spdk_iscsi_task_get_bhs(task);
+	scsi_req = (struct iscsi_bhs_scsi_req *)iscsi_task_get_bhs(task);
 	return (scsi_req->immediate == 1);
 }
 
 static inline int
-spdk_iscsi_task_is_read(struct spdk_iscsi_task *task)
+iscsi_task_is_read(struct spdk_iscsi_task *task)
 {
 	struct iscsi_bhs_scsi_req *scsi_req;
 
-	scsi_req = (struct iscsi_bhs_scsi_req *)spdk_iscsi_task_get_bhs(task);
+	scsi_req = (struct iscsi_bhs_scsi_req *)iscsi_task_get_bhs(task);
 	return (scsi_req->read_bit == 1);
 }
 
-struct spdk_iscsi_task *spdk_iscsi_task_get(struct spdk_iscsi_conn *conn,
-		struct spdk_iscsi_task *parent,
-		spdk_scsi_task_cpl cpl_fn);
+struct spdk_iscsi_task *iscsi_task_get(struct spdk_iscsi_conn *conn,
+				       struct spdk_iscsi_task *parent,
+				       spdk_scsi_task_cpl cpl_fn);
 
 static inline struct spdk_iscsi_task *
-spdk_iscsi_task_from_scsi_task(struct spdk_scsi_task *task)
+iscsi_task_from_scsi_task(struct spdk_scsi_task *task)
 {
 	return SPDK_CONTAINEROF(task, struct spdk_iscsi_task, scsi);
 }
 
 static inline struct spdk_iscsi_task *
-spdk_iscsi_task_get_primary(struct spdk_iscsi_task *task)
+iscsi_task_get_primary(struct spdk_iscsi_task *task)
 {
 	if (task->parent) {
 		return task->parent;

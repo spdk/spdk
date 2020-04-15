@@ -1337,7 +1337,7 @@ spdk_iscsi_tgt_node_cleanup_luns(struct spdk_iscsi_conn *conn,
 		}
 
 		/* we create a fake management task per LUN to cleanup */
-		task = spdk_iscsi_task_get(conn, NULL, spdk_iscsi_task_mgmt_cpl);
+		task = iscsi_task_get(conn, NULL, spdk_iscsi_task_mgmt_cpl);
 		if (!task) {
 			SPDK_ERRLOG("Unable to acquire task\n");
 			return -1;

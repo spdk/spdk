@@ -338,8 +338,8 @@ maxburstlength_test(void)
 	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
 
 	SPDK_CU_ASSERT_FATAL(response_pdu->task != NULL);
-	spdk_iscsi_task_disassociate_pdu(response_pdu->task);
-	spdk_iscsi_task_put(response_pdu->task);
+	iscsi_task_disassociate_pdu(response_pdu->task);
+	iscsi_task_put(response_pdu->task);
 	spdk_put_pdu(response_pdu);
 
 	r2t_pdu = TAILQ_FIRST(&g_write_pdu_list);
@@ -378,7 +378,7 @@ underflow_for_read_transfer_test(void)
 	scsi_req = (struct iscsi_bhs_scsi_req *)&pdu->bhs;
 	scsi_req->read_bit = 1;
 
-	spdk_iscsi_task_set_pdu(&task, pdu);
+	iscsi_task_set_pdu(&task, pdu);
 	task.parent = NULL;
 
 	task.scsi.iovs = &task.scsi.iov;
@@ -441,7 +441,7 @@ underflow_for_zero_read_transfer_test(void)
 	scsi_req = (struct iscsi_bhs_scsi_req *)&pdu->bhs;
 	scsi_req->read_bit = 1;
 
-	spdk_iscsi_task_set_pdu(&task, pdu);
+	iscsi_task_set_pdu(&task, pdu);
 	task.parent = NULL;
 
 	task.scsi.length = 512;
@@ -506,7 +506,7 @@ underflow_for_request_sense_test(void)
 	scsi_req = (struct iscsi_bhs_scsi_req *)&pdu1->bhs;
 	scsi_req->read_bit = 1;
 
-	spdk_iscsi_task_set_pdu(&task, pdu1);
+	iscsi_task_set_pdu(&task, pdu1);
 	task.parent = NULL;
 
 	task.scsi.iovs = &task.scsi.iov;
@@ -596,7 +596,7 @@ underflow_for_check_condition_test(void)
 	scsi_req = (struct iscsi_bhs_scsi_req *)&pdu->bhs;
 	scsi_req->read_bit = 1;
 
-	spdk_iscsi_task_set_pdu(&task, pdu);
+	iscsi_task_set_pdu(&task, pdu);
 	task.parent = NULL;
 
 	task.scsi.iovs = &task.scsi.iov;
@@ -659,7 +659,7 @@ add_transfer_task_test(void)
 
 	pdu->data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;	/* 64K */
 	task.scsi.transfer_len = 16 * 1024 * 1024;
-	spdk_iscsi_task_set_pdu(&task, pdu);
+	iscsi_task_set_pdu(&task, pdu);
 
 	/* The following tests if the task is queued because R2T tasks are full. */
 	conn.pending_r2t = DEFAULT_MAXR2T;
@@ -736,7 +736,7 @@ get_transfer_task_test(void)
 
 	pdu1->data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
 	task1.scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
-	spdk_iscsi_task_set_pdu(&task1, pdu1);
+	iscsi_task_set_pdu(&task1, pdu1);
 
 	rc = add_transfer_task(&conn, &task1);
 	CU_ASSERT(rc == 0);
@@ -746,7 +746,7 @@ get_transfer_task_test(void)
 
 	pdu2->data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
 	task2.scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
-	spdk_iscsi_task_set_pdu(&task2, pdu2);
+	iscsi_task_set_pdu(&task2, pdu2);
 
 	rc = add_transfer_task(&conn, &task2);
 	CU_ASSERT(rc == 0);
@@ -793,7 +793,7 @@ del_transfer_task_test(void)
 
 	pdu1->data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
 	task1.scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
-	spdk_iscsi_task_set_pdu(&task1, pdu1);
+	iscsi_task_set_pdu(&task1, pdu1);
 	task1.tag = 11;
 
 	rc = add_transfer_task(&conn, &task1);
@@ -804,7 +804,7 @@ del_transfer_task_test(void)
 
 	pdu2->data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
 	task2.scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
-	spdk_iscsi_task_set_pdu(&task2, pdu2);
+	iscsi_task_set_pdu(&task2, pdu2);
 	task2.tag = 12;
 
 	rc = add_transfer_task(&conn, &task2);
@@ -815,7 +815,7 @@ del_transfer_task_test(void)
 
 	pdu3->data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
 	task3.scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
-	spdk_iscsi_task_set_pdu(&task3, pdu3);
+	iscsi_task_set_pdu(&task3, pdu3);
 	task3.tag = 13;
 
 	rc = add_transfer_task(&conn, &task3);
@@ -826,7 +826,7 @@ del_transfer_task_test(void)
 
 	pdu4->data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
 	task4.scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
-	spdk_iscsi_task_set_pdu(&task4, pdu4);
+	iscsi_task_set_pdu(&task4, pdu4);
 	task4.tag = 14;
 
 	rc = add_transfer_task(&conn, &task4);
@@ -837,7 +837,7 @@ del_transfer_task_test(void)
 
 	pdu5->data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
 	task5.scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
-	spdk_iscsi_task_set_pdu(&task5, pdu5);
+	iscsi_task_set_pdu(&task5, pdu5);
 	task5.tag = 15;
 
 	rc = add_transfer_task(&conn, &task5);
@@ -904,7 +904,7 @@ clear_all_transfer_tasks_test(void)
 
 	alloc_cmd_sn = 10;
 
-	task1 = spdk_iscsi_task_get(&conn, NULL, NULL);
+	task1 = iscsi_task_get(&conn, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(task1 != NULL);
 	pdu1 = spdk_get_pdu(&conn);
 	SPDK_CU_ASSERT_FATAL(pdu1 != NULL);
@@ -914,7 +914,7 @@ clear_all_transfer_tasks_test(void)
 	alloc_cmd_sn++;
 	task1->scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
 	task1->scsi.lun = &lun1;
-	spdk_iscsi_task_set_pdu(task1, pdu1);
+	iscsi_task_set_pdu(task1, pdu1);
 
 	rc = add_transfer_task(&conn, task1);
 	CU_ASSERT(rc == 0);
@@ -925,7 +925,7 @@ clear_all_transfer_tasks_test(void)
 	mgmt_pdu1->cmd_sn = alloc_cmd_sn;
 	alloc_cmd_sn++;
 
-	task2 = spdk_iscsi_task_get(&conn, NULL, NULL);
+	task2 = iscsi_task_get(&conn, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(task2 != NULL);
 	pdu2 = spdk_get_pdu(&conn);
 	SPDK_CU_ASSERT_FATAL(pdu2 != NULL);
@@ -935,12 +935,12 @@ clear_all_transfer_tasks_test(void)
 	alloc_cmd_sn++;
 	task2->scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
 	task2->scsi.lun = &lun1;
-	spdk_iscsi_task_set_pdu(task2, pdu2);
+	iscsi_task_set_pdu(task2, pdu2);
 
 	rc = add_transfer_task(&conn, task2);
 	CU_ASSERT(rc == 0);
 
-	task3 = spdk_iscsi_task_get(&conn, NULL, NULL);
+	task3 = iscsi_task_get(&conn, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(task3 != NULL);
 	pdu3 = spdk_get_pdu(&conn);
 	SPDK_CU_ASSERT_FATAL(pdu3 != NULL);
@@ -950,12 +950,12 @@ clear_all_transfer_tasks_test(void)
 	alloc_cmd_sn++;
 	task3->scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
 	task3->scsi.lun = &lun1;
-	spdk_iscsi_task_set_pdu(task3, pdu3);
+	iscsi_task_set_pdu(task3, pdu3);
 
 	rc = add_transfer_task(&conn, task3);
 	CU_ASSERT(rc == 0);
 
-	task4 = spdk_iscsi_task_get(&conn, NULL, NULL);
+	task4 = iscsi_task_get(&conn, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(task4 != NULL);
 	pdu4 = spdk_get_pdu(&conn);
 	SPDK_CU_ASSERT_FATAL(pdu4 != NULL);
@@ -965,12 +965,12 @@ clear_all_transfer_tasks_test(void)
 	alloc_cmd_sn++;
 	task4->scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
 	task4->scsi.lun = &lun2;
-	spdk_iscsi_task_set_pdu(task4, pdu4);
+	iscsi_task_set_pdu(task4, pdu4);
 
 	rc = add_transfer_task(&conn, task4);
 	CU_ASSERT(rc == 0);
 
-	task5 = spdk_iscsi_task_get(&conn, NULL, NULL);
+	task5 = iscsi_task_get(&conn, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(task5 != NULL);
 	pdu5 = spdk_get_pdu(&conn);
 	SPDK_CU_ASSERT_FATAL(pdu5 != NULL);
@@ -980,7 +980,7 @@ clear_all_transfer_tasks_test(void)
 	alloc_cmd_sn++;
 	task5->scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
 	task5->scsi.lun = &lun2;
-	spdk_iscsi_task_set_pdu(task5, pdu5);
+	iscsi_task_set_pdu(task5, pdu5);
 
 	rc = add_transfer_task(&conn, task5);
 	CU_ASSERT(rc == 0);
@@ -991,7 +991,7 @@ clear_all_transfer_tasks_test(void)
 	mgmt_pdu2->cmd_sn = alloc_cmd_sn;
 	alloc_cmd_sn++;
 
-	task6 = spdk_iscsi_task_get(&conn, NULL, NULL);
+	task6 = iscsi_task_get(&conn, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(task6 != NULL);
 	pdu6 = spdk_get_pdu(&conn);
 	SPDK_CU_ASSERT_FATAL(pdu6 != NULL);
@@ -1001,7 +1001,7 @@ clear_all_transfer_tasks_test(void)
 	alloc_cmd_sn++;
 	task5->scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
 	task6->scsi.lun = &lun2;
-	spdk_iscsi_task_set_pdu(task6, pdu6);
+	iscsi_task_set_pdu(task6, pdu6);
 
 	rc = add_transfer_task(&conn, task6);
 	CU_ASSERT(rc == 0);
@@ -1548,7 +1548,7 @@ check_scsi_task(struct spdk_iscsi_pdu *pdu, enum spdk_scsi_data_dir dir)
 	CU_ASSERT(task->pdu == pdu);
 	CU_ASSERT(task->scsi.dxfer_dir == dir);
 
-	spdk_iscsi_task_put(task);
+	iscsi_task_put(task);
 	pdu->task = NULL;
 }
 
@@ -1937,7 +1937,7 @@ pdu_hdr_op_data_test(void)
 	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(pdu.task != NULL);
-	spdk_iscsi_task_put(pdu.task);
+	iscsi_task_put(pdu.task);
 	pdu.task = NULL;
 
 	/* Case 11 - SCSI Data-Out PDU is correct and processed. Created task is held
@@ -1952,7 +1952,7 @@ pdu_hdr_op_data_test(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(pdu.task != NULL);
 	check_iscsi_r2t(pdu.task, pdu.data_segment_len * 4);
-	spdk_iscsi_task_put(pdu.task);
+	iscsi_task_put(pdu.task);
 
 	/* Case 12 - Task pool is empty. */
 	to_be32(&data_reqh->data_sn, primary.r2t_datasn);
