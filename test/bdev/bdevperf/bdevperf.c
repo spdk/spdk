@@ -322,61 +322,12 @@ bdevperf_fini(void)
 }
 
 static void
-bdevperf_free_job(struct bdevperf_job *job)
-{
-	struct bdevperf_task *task, *tmp;
-
-	TAILQ_FOREACH_SAFE(task, &job->task_list, link, tmp) {
-		TAILQ_REMOVE(&job->task_list, task, link);
-		spdk_free(task->buf);
-		spdk_free(task->md_buf);
-		free(task);
-	}
-
-	if (g_verify) {
-		spdk_bit_array_free(&job->outstanding);
-	}
-	free(job->name);
-	free(job);
-}
-
-static void
-bdevperf_free_jobs_done(struct spdk_io_channel_iter *i, int status)
-{
-	printf("\r =====================================================\n");
-	printf("\r %-20s: %10.2f IOPS %10.2f MiB/s\n",
-	       "Total", g_stats.total_io_per_second, g_stats.total_mb_per_second);
-	fflush(stdout);
-
-	if (g_request && !g_shutdown) {
-		rpc_perform_tests_cb();
-	} else {
-		bdevperf_fini();
-	}
-}
-
-static void
-_bdevperf_free_jobs(struct spdk_io_channel_iter *i)
-{
-	struct spdk_io_channel *ch;
-	struct bdevperf_reactor *reactor;
-	struct bdevperf_job *job, *tmp;
-
-	ch = spdk_io_channel_iter_get_channel(i);
-	reactor = spdk_io_channel_get_ctx(ch);
-
-	TAILQ_FOREACH_SAFE(job, &reactor->jobs, link, tmp) {
-		TAILQ_REMOVE(&reactor->jobs, job, link);
-		performance_dump_job(&g_stats, job);
-		bdevperf_free_job(job);
-	}
-
-	spdk_for_each_channel_continue(i, 0);
-}
-
-static void
 bdevperf_test_done(void *ctx)
 {
+	struct bdevperf_reactor *reactor;
+	struct bdevperf_job *job, *jtmp;
+	struct bdevperf_task *task, *ttmp;
+
 	if (g_time_in_usec && !g_run_rc) {
 		g_stats.io_time_in_usec = g_time_in_usec;
 
@@ -398,8 +349,38 @@ bdevperf_test_done(void *ctx)
 		       (double)g_time_in_usec / 1000000);
 	}
 
-	spdk_for_each_channel(&g_bdevperf, _bdevperf_free_jobs, NULL,
-			      bdevperf_free_jobs_done);
+	TAILQ_FOREACH(reactor, &g_bdevperf.reactors, link) {
+		TAILQ_FOREACH_SAFE(job, &reactor->jobs, link, jtmp) {
+			TAILQ_REMOVE(&reactor->jobs, job, link);
+
+			performance_dump_job(&g_stats, job);
+
+			TAILQ_FOREACH_SAFE(task, &job->task_list, link, ttmp) {
+				TAILQ_REMOVE(&job->task_list, task, link);
+				spdk_free(task->buf);
+				spdk_free(task->md_buf);
+				free(task);
+			}
+
+			if (g_verify) {
+				spdk_bit_array_free(&job->outstanding);
+			}
+
+			free(job->name);
+			free(job);
+		}
+	}
+
+	printf("\r =====================================================\n");
+	printf("\r %-20s: %10.2f IOPS %10.2f MiB/s\n",
+	       "Total", g_stats.total_io_per_second, g_stats.total_mb_per_second);
+	fflush(stdout);
+
+	if (g_request && !g_shutdown) {
+		rpc_perform_tests_cb();
+	} else {
+		bdevperf_fini();
+	}
 }
 
 static void
@@ -1130,7 +1111,6 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct bdevperf_reactor *reactor)
 		if (job->outstanding == NULL) {
 			SPDK_ERRLOG("Could not create outstanding array bitmap for bdev %s\n",
 				    spdk_bdev_get_name(bdev));
-			spdk_bdev_close(job->bdev_desc);
 			free(job->name);
 			free(job);
 			return -ENOMEM;
@@ -1144,12 +1124,12 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct bdevperf_reactor *reactor)
 		task_num += 1;
 	}
 
+	TAILQ_INSERT_TAIL(&reactor->jobs, job, link);
+
 	for (n = 0; n < task_num; n++) {
 		task = calloc(1, sizeof(struct bdevperf_task));
 		if (!task) {
 			fprintf(stderr, "Failed to allocate task from memory\n");
-			spdk_bdev_close(job->bdev_desc);
-			bdevperf_free_job(job);
 			return -ENOMEM;
 		}
 
@@ -1158,8 +1138,6 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct bdevperf_reactor *reactor)
 		if (!task->buf) {
 			fprintf(stderr, "Cannot allocate buf for task=%p\n", task);
 			free(task);
-			spdk_bdev_close(job->bdev_desc);
-			bdevperf_free_job(job);
 			return -ENOMEM;
 		}
 
@@ -1169,10 +1147,8 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct bdevperf_reactor *reactor)
 						    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 			if (!task->md_buf) {
 				fprintf(stderr, "Cannot allocate md buf for task=%p\n", task);
-				free(task->buf);
+				spdk_free(task->buf);
 				free(task);
-				spdk_bdev_close(job->bdev_desc);
-				bdevperf_free_job(job);
 				return -ENOMEM;
 			}
 		}
@@ -1182,7 +1158,6 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct bdevperf_reactor *reactor)
 	}
 
 	job->reactor = reactor;
-	TAILQ_INSERT_TAIL(&reactor->jobs, job, link);
 
 	g_construct_job_count++;
 
@@ -1197,6 +1172,7 @@ bdevperf_construct_multithread_jobs(void)
 {
 	struct spdk_bdev *bdev;
 	struct bdevperf_reactor *reactor;
+	int rc;
 
 	if (g_job_bdev_name != NULL) {
 		bdev = spdk_bdev_get_by_name(g_job_bdev_name);
@@ -1207,14 +1183,26 @@ bdevperf_construct_multithread_jobs(void)
 
 		/* Build a job for each reactor */
 		TAILQ_FOREACH(reactor, &g_bdevperf.reactors, link) {
-			bdevperf_construct_job(bdev, reactor);
+			rc = bdevperf_construct_job(bdev, reactor);
+			if (rc < 0) {
+				g_run_rc = rc;
+				break;
+			}
 		}
 	} else {
 		bdev = spdk_bdev_first_leaf();
 		while (bdev != NULL) {
 			/* Build a job for each reactor */
 			TAILQ_FOREACH(reactor, &g_bdevperf.reactors, link) {
-				bdevperf_construct_job(bdev, reactor);
+				rc = bdevperf_construct_job(bdev, reactor);
+				if (rc < 0) {
+					g_run_rc = rc;
+					break;
+				}
+			}
+
+			if (g_run_rc != 0) {
+				break;
 			}
 
 			bdev = spdk_bdev_next_leaf(bdev);
@@ -1244,6 +1232,7 @@ bdevperf_construct_jobs(void)
 {
 	struct spdk_bdev *bdev;
 	struct bdevperf_reactor *reactor;
+	int rc;
 
 	/* There are two entirely separate modes for allocating jobs. Standard mode
 	 * (the default) creates one job per bdev and assigns them to reactors round-robin.
@@ -1270,7 +1259,10 @@ bdevperf_construct_jobs(void)
 			reactor = get_next_bdevperf_reactor();
 
 			/* Construct the job */
-			bdevperf_construct_job(bdev, reactor);
+			rc = bdevperf_construct_job(bdev, reactor);
+			if (rc < 0) {
+				g_run_rc = rc;
+			}
 		} else {
 			fprintf(stderr, "Unable to find bdev '%s'\n", g_job_bdev_name);
 		}
@@ -1281,7 +1273,11 @@ bdevperf_construct_jobs(void)
 			reactor = get_next_bdevperf_reactor();
 
 			/* Construct the job */
-			bdevperf_construct_job(bdev, reactor);
+			rc = bdevperf_construct_job(bdev, reactor);
+			if (rc < 0) {
+				g_run_rc = rc;
+				break;
+			}
 
 			bdev = spdk_bdev_next_leaf(bdev);
 		}
@@ -1289,6 +1285,12 @@ bdevperf_construct_jobs(void)
 
 end:
 	if (--g_construct_job_count == 0) {
+		if (g_run_rc != 0) {
+			/* Something failed. */
+			bdevperf_test_done(NULL);
+			return;
+		}
+
 		bdevperf_test();
 	}
 }
