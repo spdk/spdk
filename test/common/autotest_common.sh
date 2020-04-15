@@ -242,6 +242,74 @@ if [ $SPDK_TEST_VPP -eq 1 ]; then
 	export PATH=${PATH}:${VPP_PATH}/bin/
 fi
 
+function set_test_storage() {
+	[[ -v testdir ]] || return 0
+
+	local requested_size=$1 # bytes
+	local mount target_dir
+
+	local -A mounts fss sizes avails uses
+	local source fs size avail mount use
+
+	local storage_fallback storage_candidates
+
+	storage_fallback=/tmp/spdk
+	storage_candidates=(
+		"$testdir"
+		"$storage_fallback/tests/${testdir##*/}"
+		"$storage_fallback"
+	)
+
+	if [[ -n $ADD_TEST_STORAGE ]]; then
+		# List of dirs|mounts separated by whitespaces
+		storage_candidates+=($ADD_TEST_STORAGE)
+	fi
+
+	if [[ -n $DEDICATED_TEST_STORAGE ]]; then
+		# Single, dedicated dir|mount
+		storage_candidates=("$DEDICATED_TEST_STORAGE")
+	fi
+
+	mkdir -p "${storage_candidates[@]}"
+
+	# add some headroom - 64M
+	requested_size=$((requested_size + (64 << 20)))
+
+	while read -r source fs size use avail _ mount; do
+		mounts["$mount"]=$source fss["$mount"]=$fs
+		avails["$mount"]=$((avail * 1024)) sizes["$mount"]=$((size * 1024))
+		uses["$mount"]=$((use * 1024))
+	done < <(df -T | grep -v Filesystem)
+
+	printf '* Looking for test storage...\n' >&2
+
+	local target_space new_size
+	for target_dir in "${storage_candidates[@]}"; do
+		# FreeBSD's df is lacking the --output arg
+		# mount=$(df --output=target "$target_dir" | grep -v "Mounted on")
+		mount=$(df "$target_dir" | awk '$1 !~ /Filesystem/{print $6}')
+
+		target_space=${avails["$mount"]}
+		if ((target_space == 0 || target_space < requested_size)); then
+			continue
+		fi
+		if ((target_space >= requested_size)); then
+			# For in-memory fs, and / make sure our requested size won't fill most of the space.
+			if [[ ${fss["$mount"]} == tmpfs ]] || [[ ${fss["$mount"]} == ramfs ]] || [[ $mount == / ]]; then
+				new_size=$((uses["$mount"] + requested_size))
+				if ((new_size * 100 / sizes["$mount"] > 95)); then
+					continue
+				fi
+			fi
+		fi
+		export SPDK_TEST_STORAGE=$target_dir
+		printf '* Found test storage at %s\n' "$SPDK_TEST_STORAGE" >&2
+		return 0
+	done
+	printf '* Test storage is not available\n'
+	return 1
+}
+
 function get_config_params() {
 	xtrace_disable
 	config_params='--enable-debug --enable-werror'
@@ -1171,6 +1239,9 @@ function get_nvme_bdfs() {
 function get_first_nvme_bdf() {
 	head -1 <<< $(get_nvme_bdfs)
 }
+
+# Define temp storage for all the tests. Look for 2GB at minimum
+set_test_storage "${TEST_MIN_STORAGE_SIZE:-$((1 << 31))}"
 
 set -o errtrace
 shopt -s extdebug
