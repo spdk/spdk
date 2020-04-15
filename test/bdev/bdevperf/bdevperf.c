@@ -143,6 +143,63 @@ static struct spdk_bdevperf g_bdevperf = {
 
 struct bdevperf_reactor *g_next_reactor;
 
+struct perf_dump_ctx {
+	uint64_t			io_time_in_usec;
+	uint64_t			ema_period;
+	double				total_io_per_second;
+	double				total_mb_per_second;
+	performance_dump_done_fn	cb_fn;
+	void				*cb_arg;
+};
+
+/*
+ * Cumulative Moving Average (CMA): average of all data up to current
+ * Exponential Moving Average (EMA): weighted mean of the previous n data and more weight is given to recent
+ * Simple Moving Average (SMA): unweighted mean of the previous n data
+ *
+ * Bdevperf supports CMA and EMA.
+ */
+static double
+get_cma_io_per_second(struct bdevperf_job *job, uint64_t io_time_in_usec)
+{
+	return (double)job->io_completed * 1000000 / io_time_in_usec;
+}
+
+static double
+get_ema_io_per_second(struct bdevperf_job *job, uint64_t ema_period)
+{
+	double io_completed, io_per_second;
+
+	io_completed = job->io_completed;
+	io_per_second = (double)(io_completed - job->prev_io_completed) * 1000000
+			/ g_show_performance_period_in_usec;
+	job->prev_io_completed = io_completed;
+
+	job->ema_io_per_second += (io_per_second - job->ema_io_per_second) * 2
+				  / (ema_period + 1);
+	return job->ema_io_per_second;
+}
+
+static void
+performance_dump_job(struct perf_dump_ctx *ctx, struct bdevperf_job *job)
+{
+	double io_per_second, mb_per_second;
+
+	printf("\r Thread name: %s\n", spdk_thread_get_name(job->reactor->thread));
+	printf("\r Core Mask: 0x%s\n", spdk_cpuset_fmt(spdk_thread_get_cpumask(job->reactor->thread)));
+
+	if (ctx->ema_period == 0) {
+		io_per_second = get_cma_io_per_second(job, ctx->io_time_in_usec);
+	} else {
+		io_per_second = get_ema_io_per_second(job, ctx->ema_period);
+	}
+	mb_per_second = io_per_second * g_io_size / (1024 * 1024);
+	printf("\r %-20s: %10.2f IOPS %10.2f MiB/s\n",
+	       job->name, io_per_second, mb_per_second);
+	ctx->total_io_per_second += io_per_second;
+	ctx->total_mb_per_second += mb_per_second;
+}
+
 static void
 generate_data(void *buf, int buf_len, int block_size, void *md_buf, int md_size,
 	      int num_blocks, int seed)
@@ -857,43 +914,6 @@ bdevperf_submit_on_reactor(struct spdk_io_channel_iter *i)
 	spdk_for_each_channel_continue(i, 0);
 }
 
-/*
- * Cumulative Moving Average (CMA): average of all data up to current
- * Exponential Moving Average (EMA): weighted mean of the previous n data and more weight is given to recent
- * Simple Moving Average (SMA): unweighted mean of the previous n data
- *
- * Bdevperf supports CMA and EMA.
- */
-static double
-get_cma_io_per_second(struct bdevperf_job *job, uint64_t io_time_in_usec)
-{
-	return (double)job->io_completed * 1000000 / io_time_in_usec;
-}
-
-static double
-get_ema_io_per_second(struct bdevperf_job *job, uint64_t ema_period)
-{
-	double io_completed, io_per_second;
-
-	io_completed = job->io_completed;
-	io_per_second = (double)(io_completed - job->prev_io_completed) * 1000000
-			/ g_show_performance_period_in_usec;
-	job->prev_io_completed = io_completed;
-
-	job->ema_io_per_second += (io_per_second - job->ema_io_per_second) * 2
-				  / (ema_period + 1);
-	return job->ema_io_per_second;
-}
-
-struct perf_dump_ctx {
-	uint64_t			io_time_in_usec;
-	uint64_t			ema_period;
-	double				total_io_per_second;
-	double				total_mb_per_second;
-	performance_dump_done_fn	cb_fn;
-	void				*cb_arg;
-};
-
 static void
 _performance_dump_done(struct spdk_io_channel_iter *i, int status)
 {
@@ -914,26 +934,6 @@ _performance_dump_done(struct spdk_io_channel_iter *i, int status)
 }
 
 static void
-_performance_dump_job(struct perf_dump_ctx *ctx, struct bdevperf_job *job)
-{
-	double io_per_second, mb_per_second;
-
-	printf("\r Thread name: %s\n", spdk_thread_get_name(job->reactor->thread));
-	printf("\r Core Mask: 0x%s\n", spdk_cpuset_fmt(spdk_thread_get_cpumask(job->reactor->thread)));
-
-	if (ctx->ema_period == 0) {
-		io_per_second = get_cma_io_per_second(job, ctx->io_time_in_usec);
-	} else {
-		io_per_second = get_ema_io_per_second(job, ctx->ema_period);
-	}
-	mb_per_second = io_per_second * g_io_size / (1024 * 1024);
-	printf("\r %-20s: %10.2f IOPS %10.2f MiB/s\n",
-	       job->name, io_per_second, mb_per_second);
-	ctx->total_io_per_second += io_per_second;
-	ctx->total_mb_per_second += mb_per_second;
-}
-
-static void
 _performance_dump(struct spdk_io_channel_iter *i)
 {
 	struct perf_dump_ctx *ctx;
@@ -950,7 +950,7 @@ _performance_dump(struct spdk_io_channel_iter *i)
 	}
 
 	TAILQ_FOREACH(job, &reactor->jobs, link) {
-		_performance_dump_job(ctx, job);
+		performance_dump_job(ctx, job);
 	}
 
 	fflush(stdout);
