@@ -226,6 +226,8 @@ class Initiator(Server):
 
         self.ip = ip
         self.spdk_dir = workspace
+        if os.getenv('SPDK_WORKSPACE'):
+            self.spdk_dir = os.getenv('SPDK_WORKSPACE')
         self.fio_bin = fio_bin
         self.cpus_allowed = cpus_allowed
         self.cpus_allowed_policy = cpus_allowed_policy

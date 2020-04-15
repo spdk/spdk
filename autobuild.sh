@@ -17,8 +17,11 @@ out=$output_dir
 scanbuild="scan-build -o $output_dir/scan-build-tmp --status-bugs"
 config_params=$(get_config_params)
 
-rm -rf /tmp/spdk
-mkdir /tmp/spdk
+trap '[[ -d $SPDK_WORKSPACE ]] && rm -rf "$SPDK_WORKSPACE"' 0
+
+SPDK_WORKSPACE=$(mktemp -dt "spdk_$(date +%s).XXXXXX")
+export SPDK_WORKSPACE
+
 umask 022
 cd $rootdir
 
@@ -115,15 +118,12 @@ function header_dependency_check {
 
 function test_make_uninstall {
 	# Create empty file to check if it is not deleted by target uninstall
-	touch /tmp/spdk/usr/lib/sample_xyz.a
-	$MAKE $MAKEFLAGS uninstall DESTDIR=/tmp/spdk prefix=/usr
-	if [[ $(find /tmp/spdk/usr -maxdepth 1 -mindepth 1 | wc -l) -ne 2 ]] || [[ $(find /tmp/spdk/usr/lib/ -maxdepth 1 -mindepth 1 | wc -l) -ne 1 ]]; then
-		ls -lR /tmp/spdk
-		rm -rf /tmp/spdk
+	touch "$SPDK_WORKSPACE/usr/lib/sample_xyz.a"
+	$MAKE $MAKEFLAGS uninstall DESTDIR="$SPDK_WORKSPACE" prefix=/usr
+	if [[ $(find "$SPDK_WORKSPACE/usr" -maxdepth 1 -mindepth 1 | wc -l) -ne 2 ]] || [[ $(find "$SPDK_WORKSPACE/usr/lib/" -maxdepth 1 -mindepth 1 | wc -l) -ne 1 ]]; then
+		ls -lR "$SPDK_WORKSPACE"
 		echo "Make uninstall failed"
 		exit 1
-	else
-		rm -rf /tmp/spdk
 	fi
 }
 
@@ -159,7 +159,7 @@ function autobuild_test_suite {
 	run_test "scanbuild_make" scanbuild_make
 	run_test "autobuild_generated_files_check" porcelain_check
 	run_test "autobuild_header_dependency_check" header_dependency_check
-	run_test "autobuild_make_install" $MAKE $MAKEFLAGS install DESTDIR=/tmp/spdk prefix=/usr
+	run_test "autobuild_make_install" $MAKE $MAKEFLAGS install DESTDIR="$SPDK_WORKSPACE" prefix=/usr
 	run_test "autobuild_make_uninstall" test_make_uninstall
 	run_test "autobuild_build_doc" build_doc
 }
