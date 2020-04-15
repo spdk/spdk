@@ -132,8 +132,6 @@ bool spdk_iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
 				struct spdk_iscsi_tgt_node *target, const char *iqn,
 				const char *addr);
 struct spdk_iscsi_tgt_node *spdk_iscsi_find_tgt_node(const char *target_name);
-int spdk_iscsi_tgt_node_reset(struct spdk_iscsi_tgt_node *target,
-			      uint64_t lun);
 int spdk_iscsi_tgt_node_cleanup_luns(struct spdk_iscsi_conn *conn,
 				     struct spdk_iscsi_tgt_node *target);
 void spdk_iscsi_tgt_node_delete_map(struct spdk_iscsi_portal_grp *portal_group,

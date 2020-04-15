@@ -3718,33 +3718,12 @@ iscsi_pdu_hdr_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	case ISCSI_TASK_FUNC_TARGET_WARM_RESET:
 		SPDK_NOTICELOG("TARGET_WARM_RESET (Unsupported)\n");
-
-#if 0
-		spdk_iscsi_drop_conns(conn, conn->initiator_name, 1 /* drop all */);
-		rc = spdk_iscsi_tgt_node_reset(conn->sess->target, lun);
-		if (rc < 0) {
-			SPDK_ERRLOG("tgt_node reset failed\n");
-		}
-#else
 		task->scsi.response = SPDK_SCSI_TASK_MGMT_RESP_REJECT_FUNC_NOT_SUPPORTED;
-#endif
 		break;
 
 	case ISCSI_TASK_FUNC_TARGET_COLD_RESET:
-		SPDK_NOTICELOG("TARGET_COLD_RESET\n");
-
-#if 0
-		spdk_iscsi_drop_conns(conn, conn->initiator_name, 1 /* drop all */);
-
-		rc = spdk_iscsi_tgt_node_reset(conn->sess->target, lun);
-		if (rc < 0) {
-			SPDK_ERRLOG("tgt_node reset failed\n");
-		}
-
-		conn->state = ISCSI_CONN_STATE_EXITING;
-#else
+		SPDK_NOTICELOG("TARGET_COLD_RESET (Unsupported)\n");
 		task->scsi.response = SPDK_SCSI_TASK_MGMT_RESP_REJECT_FUNC_NOT_SUPPORTED;
-#endif
 		break;
 
 	case ISCSI_TASK_FUNC_TASK_REASSIGN:
