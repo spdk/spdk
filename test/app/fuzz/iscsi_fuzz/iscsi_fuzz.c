@@ -451,9 +451,9 @@ iscsi_fuzz_read_pdu(struct spdk_iscsi_conn *conn)
 			break;
 		case ISCSI_PDU_RECV_STATE_AWAIT_PDU_HDR:
 			if (pdu->bhs_valid_bytes < ISCSI_BHS_LEN) {
-				rc = spdk_iscsi_conn_read_data(conn,
-							       ISCSI_BHS_LEN - pdu->bhs_valid_bytes,
-							       (uint8_t *)&pdu->bhs + pdu->bhs_valid_bytes);
+				rc = iscsi_conn_read_data(conn,
+							  ISCSI_BHS_LEN - pdu->bhs_valid_bytes,
+							  (uint8_t *)&pdu->bhs + pdu->bhs_valid_bytes);
 				if (rc < 0) {
 					conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
 					break;
@@ -649,7 +649,7 @@ fuzz_iscsi_send_login_request(struct fuzz_iscsi_dev_ctx *dev_ctx, uint8_t sessio
 	}
 
 	DSET24(req_pdu->bhs.data_segment_len, req_pdu->data_segment_len);
-	spdk_iscsi_conn_write_pdu(conn, req_pdu, spdk_iscsi_conn_pdu_generic_complete, NULL);
+	iscsi_conn_write_pdu(conn, req_pdu, iscsi_conn_pdu_generic_complete, NULL);
 }
 
 static void
@@ -680,7 +680,7 @@ fuzz_iscsi_send_logout_request(struct fuzz_iscsi_dev_ctx *dev_ctx)
 	req_pdu->bhs.flags = 0;
 
 	DSET24(req_pdu->bhs.data_segment_len, 0);
-	spdk_iscsi_conn_write_pdu(conn, req_pdu, spdk_iscsi_conn_pdu_generic_complete, conn);
+	iscsi_conn_write_pdu(conn, req_pdu, iscsi_conn_pdu_generic_complete, conn);
 }
 
 static void
@@ -877,8 +877,8 @@ dev_submit_requests(struct fuzz_iscsi_dev_ctx *dev_ctx)
 	check_successful_op(dev_ctx, io_ctx);
 	dev_ctx->num_sent_pdus++;
 
-	spdk_iscsi_conn_write_pdu(dev_ctx->conn, req_pdu,
-				  spdk_iscsi_conn_pdu_generic_complete, NULL);
+	iscsi_conn_write_pdu(dev_ctx->conn, req_pdu,
+			     iscsi_conn_pdu_generic_complete, NULL);
 }
 /* submit requests end */
 

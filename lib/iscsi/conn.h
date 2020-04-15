@@ -200,37 +200,37 @@ struct spdk_iscsi_conn {
 
 extern struct spdk_iscsi_conn *g_conns_array;
 
-void spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task);
-void spdk_iscsi_task_mgmt_cpl(struct spdk_scsi_task *scsi_task);
+void iscsi_task_cpl(struct spdk_scsi_task *scsi_task);
+void iscsi_task_mgmt_cpl(struct spdk_scsi_task *scsi_task);
 
-int spdk_initialize_iscsi_conns(void);
-void spdk_shutdown_iscsi_conns(void);
-void spdk_iscsi_conns_request_logout(struct spdk_iscsi_tgt_node *target);
-int spdk_iscsi_get_active_conns(struct spdk_iscsi_tgt_node *target);
+int initialize_iscsi_conns(void);
+void shutdown_iscsi_conns(void);
+void iscsi_conns_request_logout(struct spdk_iscsi_tgt_node *target);
+int iscsi_get_active_conns(struct spdk_iscsi_tgt_node *target);
 
-int spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal, struct spdk_sock *sock);
-void spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn);
-void spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn);
-void spdk_iscsi_conn_schedule(struct spdk_iscsi_conn *conn);
-void spdk_iscsi_conn_logout(struct spdk_iscsi_conn *conn);
-int spdk_iscsi_drop_conns(struct spdk_iscsi_conn *conn,
-			  const char *conn_match, int drop_all);
-int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn);
-int spdk_iscsi_conn_abort_queued_datain_task(struct spdk_iscsi_conn *conn,
-		uint32_t ref_task_tag);
-int spdk_iscsi_conn_abort_queued_datain_tasks(struct spdk_iscsi_conn *conn,
+int iscsi_conn_construct(struct spdk_iscsi_portal *portal, struct spdk_sock *sock);
+void iscsi_conn_destruct(struct spdk_iscsi_conn *conn);
+void iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn);
+void iscsi_conn_schedule(struct spdk_iscsi_conn *conn);
+void iscsi_conn_logout(struct spdk_iscsi_conn *conn);
+int iscsi_drop_conns(struct spdk_iscsi_conn *conn,
+		     const char *conn_match, int drop_all);
+int iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn);
+int iscsi_conn_abort_queued_datain_task(struct spdk_iscsi_conn *conn,
+					uint32_t ref_task_tag);
+int iscsi_conn_abort_queued_datain_tasks(struct spdk_iscsi_conn *conn,
 		struct spdk_scsi_lun *lun,
 		struct spdk_iscsi_pdu *pdu);
 
-int spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int len, void *buf);
-int spdk_iscsi_conn_readv_data(struct spdk_iscsi_conn *conn,
-			       struct iovec *iov, int iovcnt);
-void spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
-			       iscsi_conn_xfer_complete_cb cb_fn,
-			       void *cb_arg);
+int iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int len, void *buf);
+int iscsi_conn_readv_data(struct spdk_iscsi_conn *conn,
+			  struct iovec *iov, int iovcnt);
+void iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
+			  iscsi_conn_xfer_complete_cb cb_fn,
+			  void *cb_arg);
 
-void spdk_iscsi_conn_free_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu);
+void iscsi_conn_free_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu);
 
-void spdk_iscsi_conn_info_json(struct spdk_json_write_ctx *w, struct spdk_iscsi_conn *conn);
-void spdk_iscsi_conn_pdu_generic_complete(void *cb_arg);
+void iscsi_conn_info_json(struct spdk_json_write_ctx *w, struct spdk_iscsi_conn *conn);
+void iscsi_conn_pdu_generic_complete(void *cb_arg);
 #endif /* SPDK_ISCSI_CONN_H */

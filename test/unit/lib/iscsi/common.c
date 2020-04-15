@@ -152,21 +152,21 @@ DEFINE_STUB_V(spdk_scsi_dev_destruct,
 DEFINE_STUB(spdk_scsi_dev_add_port, int,
 	    (struct spdk_scsi_dev *dev, uint64_t id, const char *name), 0);
 
-DEFINE_STUB(spdk_iscsi_drop_conns, int,
+DEFINE_STUB(iscsi_drop_conns, int,
 	    (struct spdk_iscsi_conn *conn, const char *conn_match, int drop_all),
 	    0);
 
 DEFINE_STUB(spdk_scsi_dev_delete_port, int,
 	    (struct spdk_scsi_dev *dev, uint64_t id), 0);
 
-DEFINE_STUB_V(spdk_shutdown_iscsi_conns, (void));
+DEFINE_STUB_V(shutdown_iscsi_conns, (void));
 
-DEFINE_STUB_V(spdk_iscsi_conns_request_logout, (struct spdk_iscsi_tgt_node *target));
+DEFINE_STUB_V(iscsi_conns_request_logout, (struct spdk_iscsi_tgt_node *target));
 
-DEFINE_STUB(spdk_iscsi_get_active_conns, int, (struct spdk_iscsi_tgt_node *target), 0);
+DEFINE_STUB(iscsi_get_active_conns, int, (struct spdk_iscsi_tgt_node *target), 0);
 
 void
-spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
+iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
 {
 	struct spdk_iscsi_task *iscsi_task;
 
@@ -181,22 +181,22 @@ spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
 	}
 }
 
-DEFINE_STUB_V(spdk_iscsi_task_mgmt_cpl, (struct spdk_scsi_task *scsi_task));
+DEFINE_STUB_V(iscsi_task_mgmt_cpl, (struct spdk_scsi_task *scsi_task));
 
-DEFINE_STUB(spdk_iscsi_conn_read_data, int,
+DEFINE_STUB(iscsi_conn_read_data, int,
 	    (struct spdk_iscsi_conn *conn, int bytes, void *buf), 0);
 
-DEFINE_STUB(spdk_iscsi_conn_readv_data, int,
+DEFINE_STUB(iscsi_conn_readv_data, int,
 	    (struct spdk_iscsi_conn *conn, struct iovec *iov, int iovcnt), 0);
 
 void
-spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
-			  iscsi_conn_xfer_complete_cb cb_fn, void *cb_arg)
+iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
+		     iscsi_conn_xfer_complete_cb cb_fn, void *cb_arg)
 {
 	TAILQ_INSERT_TAIL(&g_write_pdu_list, pdu, tailq);
 }
 
-DEFINE_STUB_V(spdk_iscsi_conn_logout, (struct spdk_iscsi_conn *conn));
+DEFINE_STUB_V(iscsi_conn_logout, (struct spdk_iscsi_conn *conn));
 
 DEFINE_STUB_V(spdk_scsi_task_set_status,
 	      (struct spdk_scsi_task *task, int sc, int sk, int asc, int ascq));

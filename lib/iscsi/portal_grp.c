@@ -64,7 +64,7 @@ iscsi_portal_accept(void *arg)
 	while (1) {
 		sock = spdk_sock_accept(portal->sock);
 		if (sock != NULL) {
-			rc = spdk_iscsi_conn_construct(portal, sock);
+			rc = iscsi_conn_construct(portal, sock);
 			if (rc < 0) {
 				spdk_sock_close(&sock);
 				SPDK_ERRLOG("spdk_iscsi_connection_construct() failed\n");

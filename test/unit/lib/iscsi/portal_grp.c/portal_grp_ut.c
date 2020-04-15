@@ -45,7 +45,7 @@
 
 #include "spdk_internal/thread.h"
 
-DEFINE_STUB(spdk_iscsi_conn_construct, int,
+DEFINE_STUB(iscsi_conn_construct, int,
 	    (struct spdk_iscsi_portal *portal, struct spdk_sock *sock),
 	    0);
 

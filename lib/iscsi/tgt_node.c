@@ -655,7 +655,7 @@ iscsi_tgt_node_check_active_conns(void *arg)
 {
 	struct spdk_iscsi_tgt_node *target = arg;
 
-	if (spdk_iscsi_get_active_conns(target) != 0) {
+	if (iscsi_get_active_conns(target) != 0) {
 		return 1;
 	}
 
@@ -689,9 +689,9 @@ iscsi_tgt_node_destruct(struct spdk_iscsi_tgt_node *target,
 	target->destruct_cb_fn = cb_fn;
 	target->destruct_cb_arg = cb_arg;
 
-	spdk_iscsi_conns_request_logout(target);
+	iscsi_conns_request_logout(target);
 
-	if (spdk_iscsi_get_active_conns(target) != 0) {
+	if (iscsi_get_active_conns(target) != 0) {
 		target->destruct_poller = SPDK_POLLER_REGISTER(iscsi_tgt_node_check_active_conns,
 					  target, 10);
 	} else {
@@ -1337,7 +1337,7 @@ iscsi_tgt_node_cleanup_luns(struct spdk_iscsi_conn *conn,
 		}
 
 		/* we create a fake management task per LUN to cleanup */
-		task = iscsi_task_get(conn, NULL, spdk_iscsi_task_mgmt_cpl);
+		task = iscsi_task_get(conn, NULL, iscsi_task_mgmt_cpl);
 		if (!task) {
 			SPDK_ERRLOG("Unable to acquire task\n");
 			return -1;

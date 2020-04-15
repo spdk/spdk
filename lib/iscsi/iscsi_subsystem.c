@@ -1199,7 +1199,7 @@ iscsi_poll_group_poll(void *ctx)
 
 	STAILQ_FOREACH_SAFE(conn, &group->connections, link, tmp) {
 		if (conn->state == ISCSI_CONN_STATE_EXITING) {
-			spdk_iscsi_conn_destruct(conn);
+			iscsi_conn_destruct(conn);
 		}
 	}
 
@@ -1213,7 +1213,7 @@ iscsi_poll_group_handle_nop(void *ctx)
 	struct spdk_iscsi_conn *conn, *tmp;
 
 	STAILQ_FOREACH_SAFE(conn, &group->connections, link, tmp) {
-		spdk_iscsi_conn_handle_nop(conn);
+		iscsi_conn_handle_nop(conn);
 	}
 
 	return -1;
@@ -1344,7 +1344,7 @@ iscsi_parse_globals(void)
 		return -1;
 	}
 
-	rc = spdk_initialize_iscsi_conns();
+	rc = initialize_iscsi_conns();
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_initialize_iscsi_conns() failed\n");
 		free(g_iscsi.session);
@@ -1385,7 +1385,7 @@ spdk_iscsi_fini(spdk_iscsi_fini_cb cb_fn, void *cb_arg)
 	g_fini_cb_arg = cb_arg;
 
 	iscsi_portal_grp_close_all();
-	spdk_shutdown_iscsi_conns();
+	shutdown_iscsi_conns();
 }
 
 static void

@@ -89,18 +89,20 @@ DEFINE_STUB(iscsi_tgt_node_is_destructed, bool,
 
 DEFINE_STUB_V(iscsi_portal_grp_close_all, (void));
 
-DEFINE_STUB_V(spdk_iscsi_conn_schedule, (struct spdk_iscsi_conn *conn));
+DEFINE_STUB_V(iscsi_conn_schedule, (struct spdk_iscsi_conn *conn));
 
-DEFINE_STUB_V(spdk_iscsi_conn_free_pdu,
+DEFINE_STUB_V(iscsi_conn_free_pdu,
 	      (struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu));
 
-DEFINE_STUB(spdk_iscsi_conn_handle_queued_datain_tasks, int,
+DEFINE_STUB_V(iscsi_conn_pdu_generic_complete, (void *cb_arg));
+
+DEFINE_STUB(iscsi_conn_handle_queued_datain_tasks, int,
 	    (struct spdk_iscsi_conn *conn), 0);
 
-DEFINE_STUB(spdk_iscsi_conn_abort_queued_datain_task, int,
+DEFINE_STUB(iscsi_conn_abort_queued_datain_task, int,
 	    (struct spdk_iscsi_conn *conn, uint32_t ref_task_tag), 0);
 
-DEFINE_STUB(spdk_iscsi_conn_abort_queued_datain_tasks, int,
+DEFINE_STUB(iscsi_conn_abort_queued_datain_tasks, int,
 	    (struct spdk_iscsi_conn *conn, struct spdk_scsi_lun *lun,
 	     struct spdk_iscsi_pdu *pdu), 0);
 

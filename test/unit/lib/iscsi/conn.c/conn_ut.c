@@ -856,7 +856,7 @@ abort_queued_datain_tasks_test(void)
 	iscsi_task_set_pdu(&task6, &pdu6);
 	TAILQ_INSERT_TAIL(&conn.queued_datain_tasks, &task6, link);
 
-	rc = spdk_iscsi_conn_abort_queued_datain_tasks(&conn, &lun1, &mgmt_pdu1);
+	rc = iscsi_conn_abort_queued_datain_tasks(&conn, &lun1, &mgmt_pdu1);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(!datain_task_is_queued(&conn, &task1));
 	CU_ASSERT(datain_task_is_queued(&conn, &task2));
@@ -865,7 +865,7 @@ abort_queued_datain_tasks_test(void)
 	CU_ASSERT(datain_task_is_queued(&conn, &task5));
 	CU_ASSERT(datain_task_is_queued(&conn, &task6));
 
-	rc = spdk_iscsi_conn_abort_queued_datain_tasks(&conn, &lun2, &mgmt_pdu2);
+	rc = iscsi_conn_abort_queued_datain_tasks(&conn, &lun2, &mgmt_pdu2);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(!datain_task_is_queued(&conn, &task2));
 	CU_ASSERT(datain_task_is_queued(&conn, &task3));
