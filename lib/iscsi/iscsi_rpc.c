@@ -58,7 +58,7 @@ spdk_rpc_iscsi_get_initiator_groups(struct spdk_jsonrpc_request *request,
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_array_begin(w);
-	spdk_iscsi_init_grps_info_json(w);
+	iscsi_init_grps_info_json(w);
 	spdk_json_write_array_end(w);
 
 	spdk_jsonrpc_end_result(request, w);
@@ -152,7 +152,7 @@ spdk_rpc_iscsi_create_initiator_group(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	if (spdk_iscsi_init_grp_create_from_initiator_list(req.tag,
+	if (iscsi_init_grp_create_from_initiator_list(req.tag,
 			req.initiator_list.num_initiators,
 			req.initiator_list.initiators,
 			req.netmask_list.num_netmasks,
@@ -195,7 +195,7 @@ spdk_rpc_iscsi_initiator_group_add_initiators(struct spdk_jsonrpc_request *reque
 		goto invalid;
 	}
 
-	if (spdk_iscsi_init_grp_add_initiators_from_initiator_list(req.tag,
+	if (iscsi_init_grp_add_initiators_from_initiator_list(req.tag,
 			req.initiator_list.num_initiators,
 			req.initiator_list.initiators,
 			req.netmask_list.num_netmasks,
@@ -233,7 +233,7 @@ spdk_rpc_iscsi_initiator_group_remove_initiators(struct spdk_jsonrpc_request *re
 		goto invalid;
 	}
 
-	if (spdk_iscsi_init_grp_delete_initiators_from_initiator_list(req.tag,
+	if (iscsi_init_grp_delete_initiators_from_initiator_list(req.tag,
 			req.initiator_list.num_initiators,
 			req.initiator_list.initiators,
 			req.netmask_list.num_netmasks,
@@ -281,12 +281,12 @@ spdk_rpc_iscsi_delete_initiator_group(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	ig = spdk_iscsi_init_grp_unregister(req.tag);
+	ig = iscsi_init_grp_unregister(req.tag);
 	if (!ig) {
 		goto invalid;
 	}
 	iscsi_tgt_node_delete_map(NULL, ig);
-	spdk_iscsi_init_grp_destroy(ig);
+	iscsi_init_grp_destroy(ig);
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_bool(w, true);

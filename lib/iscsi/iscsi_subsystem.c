@@ -1154,7 +1154,7 @@ iscsi_parse_configuration(void)
 		goto end;
 	}
 
-	rc = spdk_iscsi_parse_init_grps();
+	rc = iscsi_parse_init_grps();
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_iscsi_parse_init_grps() failed\n");
 		goto end;
@@ -1408,7 +1408,7 @@ _iscsi_fini_dev_unreg(struct spdk_io_channel_iter *i, int status)
 	assert(TAILQ_EMPTY(&g_iscsi.poll_group_head));
 
 	iscsi_shutdown_tgt_nodes();
-	spdk_iscsi_init_grps_destroy();
+	iscsi_init_grps_destroy();
 	spdk_iscsi_portal_grps_destroy();
 	iscsi_auth_groups_destroy();
 
@@ -1444,7 +1444,7 @@ spdk_iscsi_config_text(FILE *fp)
 {
 	iscsi_globals_config_text(fp);
 	spdk_iscsi_portal_grps_config_text(fp);
-	spdk_iscsi_init_grps_config_text(fp);
+	iscsi_init_grps_config_text(fp);
 	iscsi_tgt_nodes_config_text(fp);
 }
 
@@ -1568,7 +1568,7 @@ spdk_iscsi_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_array_begin(w);
 	iscsi_opts_config_json(w);
 	spdk_iscsi_portal_grps_config_json(w);
-	spdk_iscsi_init_grps_config_json(w);
+	iscsi_init_grps_config_json(w);
 	iscsi_tgt_nodes_config_json(w);
 	iscsi_auth_groups_config_json(w);
 	spdk_json_write_array_end(w);

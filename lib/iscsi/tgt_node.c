@@ -714,7 +714,7 @@ iscsi_tgt_node_delete_pg_ig_map(struct spdk_iscsi_tgt_node *target,
 		SPDK_ERRLOG("%s: PortalGroup%d not found\n", target->name, pg_tag);
 		return -ENOENT;
 	}
-	ig = spdk_iscsi_init_grp_find_by_tag(ig_tag);
+	ig = iscsi_init_grp_find_by_tag(ig_tag);
 	if (ig == NULL) {
 		SPDK_ERRLOG("%s: InitiatorGroup%d not found\n", target->name, ig_tag);
 		return -ENOENT;
@@ -754,7 +754,7 @@ iscsi_tgt_node_add_pg_ig_map(struct spdk_iscsi_tgt_node *target,
 		SPDK_ERRLOG("%s: PortalGroup%d not found\n", target->name, pg_tag);
 		return -ENOENT;
 	}
-	ig = spdk_iscsi_init_grp_find_by_tag(ig_tag);
+	ig = iscsi_init_grp_find_by_tag(ig_tag);
 	if (ig == NULL) {
 		SPDK_ERRLOG("%s: InitiatorGroup%d not found\n", target->name, ig_tag);
 		return -ENOENT;

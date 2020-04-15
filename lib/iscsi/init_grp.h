@@ -60,22 +60,22 @@ struct spdk_iscsi_init_grp {
 };
 
 /* SPDK iSCSI Initiator Group management API */
-int spdk_iscsi_init_grp_create_from_initiator_list(int tag,
+int iscsi_init_grp_create_from_initiator_list(int tag,
 		int num_initiator_names, char **initiator_names,
 		int num_initiator_masks, char **initiator_masks);
-int spdk_iscsi_init_grp_add_initiators_from_initiator_list(int tag,
+int iscsi_init_grp_add_initiators_from_initiator_list(int tag,
 		int num_initiator_names, char **initiator_names,
 		int num_initiator_masks, char **initiator_masks);
-int spdk_iscsi_init_grp_delete_initiators_from_initiator_list(int tag,
+int iscsi_init_grp_delete_initiators_from_initiator_list(int tag,
 		int num_initiator_names, char **initiator_names,
 		int num_initiator_masks, char **initiator_masks);
-int spdk_iscsi_init_grp_register(struct spdk_iscsi_init_grp *ig);
-struct spdk_iscsi_init_grp *spdk_iscsi_init_grp_unregister(int tag);
-struct spdk_iscsi_init_grp *spdk_iscsi_init_grp_find_by_tag(int tag);
-void spdk_iscsi_init_grp_destroy(struct spdk_iscsi_init_grp *ig);
-int spdk_iscsi_parse_init_grps(void);
-void spdk_iscsi_init_grps_destroy(void);
-void spdk_iscsi_init_grps_config_text(FILE *fp);
-void spdk_iscsi_init_grps_info_json(struct spdk_json_write_ctx *w);
-void spdk_iscsi_init_grps_config_json(struct spdk_json_write_ctx *w);
+int iscsi_init_grp_register(struct spdk_iscsi_init_grp *ig);
+struct spdk_iscsi_init_grp *iscsi_init_grp_unregister(int tag);
+struct spdk_iscsi_init_grp *iscsi_init_grp_find_by_tag(int tag);
+void iscsi_init_grp_destroy(struct spdk_iscsi_init_grp *ig);
+int iscsi_parse_init_grps(void);
+void iscsi_init_grps_destroy(void);
+void iscsi_init_grps_config_text(FILE *fp);
+void iscsi_init_grps_info_json(struct spdk_json_write_ctx *w);
+void iscsi_init_grps_config_json(struct spdk_json_write_ctx *w);
 #endif /* SPDK_INIT_GRP_H */

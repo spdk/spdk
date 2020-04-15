@@ -418,7 +418,7 @@ iscsi_parse_init_grp(struct spdk_conf_section *sp)
 		}
 	}
 
-	rc = spdk_iscsi_init_grp_create_from_initiator_list(tag,
+	rc = iscsi_init_grp_create_from_initiator_list(tag,
 			num_initiator_names, initiators, num_initiator_masks, netmasks);
 
 cleanup:
@@ -442,7 +442,7 @@ cleanup:
 }
 
 int
-spdk_iscsi_init_grp_register(struct spdk_iscsi_init_grp *ig)
+iscsi_init_grp_register(struct spdk_iscsi_init_grp *ig)
 {
 	struct spdk_iscsi_init_grp *tmp;
 	int rc = -1;
@@ -450,7 +450,7 @@ spdk_iscsi_init_grp_register(struct spdk_iscsi_init_grp *ig)
 	assert(ig != NULL);
 
 	pthread_mutex_lock(&g_iscsi.mutex);
-	tmp = spdk_iscsi_init_grp_find_by_tag(ig->tag);
+	tmp = iscsi_init_grp_find_by_tag(ig->tag);
 	if (tmp == NULL) {
 		TAILQ_INSERT_TAIL(&g_iscsi.ig_head, ig, tailq);
 		rc = 0;
@@ -466,7 +466,7 @@ spdk_iscsi_init_grp_register(struct spdk_iscsi_init_grp *ig)
  * heap.  Freed later by common initiator_group_destroy() code
  */
 int
-spdk_iscsi_init_grp_create_from_initiator_list(int tag,
+iscsi_init_grp_create_from_initiator_list(int tag,
 		int num_initiator_names,
 		char **initiator_names,
 		int num_initiator_masks,
@@ -499,7 +499,7 @@ spdk_iscsi_init_grp_create_from_initiator_list(int tag,
 		goto cleanup;
 	}
 
-	rc = spdk_iscsi_init_grp_register(ig);
+	rc = iscsi_init_grp_register(ig);
 	if (rc < 0) {
 		SPDK_ERRLOG("initiator group register error (%d)\n", tag);
 		goto cleanup;
@@ -507,12 +507,12 @@ spdk_iscsi_init_grp_create_from_initiator_list(int tag,
 	return 0;
 
 cleanup:
-	spdk_iscsi_init_grp_destroy(ig);
+	iscsi_init_grp_destroy(ig);
 	return rc;
 }
 
 int
-spdk_iscsi_init_grp_add_initiators_from_initiator_list(int tag,
+iscsi_init_grp_add_initiators_from_initiator_list(int tag,
 		int num_initiator_names,
 		char **initiator_names,
 		int num_initiator_masks,
@@ -526,7 +526,7 @@ spdk_iscsi_init_grp_add_initiators_from_initiator_list(int tag,
 		      tag, num_initiator_names, num_initiator_masks);
 
 	pthread_mutex_lock(&g_iscsi.mutex);
-	ig = spdk_iscsi_init_grp_find_by_tag(tag);
+	ig = iscsi_init_grp_find_by_tag(tag);
 	if (!ig) {
 		pthread_mutex_unlock(&g_iscsi.mutex);
 		SPDK_ERRLOG("initiator group (%d) is not found\n", tag);
@@ -554,7 +554,7 @@ error:
 }
 
 int
-spdk_iscsi_init_grp_delete_initiators_from_initiator_list(int tag,
+iscsi_init_grp_delete_initiators_from_initiator_list(int tag,
 		int num_initiator_names,
 		char **initiator_names,
 		int num_initiator_masks,
@@ -568,7 +568,7 @@ spdk_iscsi_init_grp_delete_initiators_from_initiator_list(int tag,
 		      tag, num_initiator_names, num_initiator_masks);
 
 	pthread_mutex_lock(&g_iscsi.mutex);
-	ig = spdk_iscsi_init_grp_find_by_tag(tag);
+	ig = iscsi_init_grp_find_by_tag(tag);
 	if (!ig) {
 		pthread_mutex_unlock(&g_iscsi.mutex);
 		SPDK_ERRLOG("initiator group (%d) is not found\n", tag);
@@ -597,7 +597,7 @@ error:
 }
 
 void
-spdk_iscsi_init_grp_destroy(struct spdk_iscsi_init_grp *ig)
+iscsi_init_grp_destroy(struct spdk_iscsi_init_grp *ig)
 {
 	if (!ig) {
 		return;
@@ -609,7 +609,7 @@ spdk_iscsi_init_grp_destroy(struct spdk_iscsi_init_grp *ig)
 };
 
 struct spdk_iscsi_init_grp *
-spdk_iscsi_init_grp_find_by_tag(int tag)
+iscsi_init_grp_find_by_tag(int tag)
 {
 	struct spdk_iscsi_init_grp *ig;
 
@@ -623,7 +623,7 @@ spdk_iscsi_init_grp_find_by_tag(int tag)
 }
 
 int
-spdk_iscsi_parse_init_grps(void)
+iscsi_parse_init_grps(void)
 {
 	struct spdk_conf_section *sp;
 	int rc;
@@ -647,21 +647,21 @@ spdk_iscsi_parse_init_grps(void)
 }
 
 void
-spdk_iscsi_init_grps_destroy(void)
+iscsi_init_grps_destroy(void)
 {
 	struct spdk_iscsi_init_grp *ig, *tmp;
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_init_grp_array_destroy\n");
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "iscsi_init_grp_array_destroy\n");
 	pthread_mutex_lock(&g_iscsi.mutex);
 	TAILQ_FOREACH_SAFE(ig, &g_iscsi.ig_head, tailq, tmp) {
 		TAILQ_REMOVE(&g_iscsi.ig_head, ig, tailq);
-		spdk_iscsi_init_grp_destroy(ig);
+		iscsi_init_grp_destroy(ig);
 	}
 	pthread_mutex_unlock(&g_iscsi.mutex);
 }
 
 struct spdk_iscsi_init_grp *
-spdk_iscsi_init_grp_unregister(int tag)
+iscsi_init_grp_unregister(int tag)
 {
 	struct spdk_iscsi_init_grp *ig;
 
@@ -696,7 +696,7 @@ static const char *initiator_group_section = \
 "  Netmask "
 
 void
-spdk_iscsi_init_grps_config_text(FILE *fp)
+iscsi_init_grps_config_text(FILE *fp)
 {
 	struct spdk_iscsi_init_grp *ig;
 	struct spdk_iscsi_initiator_name *iname;
@@ -767,7 +767,7 @@ iscsi_init_grp_config_json(struct spdk_iscsi_init_grp *ig,
 }
 
 void
-spdk_iscsi_init_grps_info_json(struct spdk_json_write_ctx *w)
+iscsi_init_grps_info_json(struct spdk_json_write_ctx *w)
 {
 	struct spdk_iscsi_init_grp *ig;
 
@@ -777,7 +777,7 @@ spdk_iscsi_init_grps_info_json(struct spdk_json_write_ctx *w)
 }
 
 void
-spdk_iscsi_init_grps_config_json(struct spdk_json_write_ctx *w)
+iscsi_init_grps_config_json(struct spdk_json_write_ctx *w)
 {
 	struct spdk_iscsi_init_grp *ig;
 

@@ -77,7 +77,7 @@ create_from_config_file_cases(void)
 		rc = iscsi_parse_init_grp(sp);
 		CU_ASSERT(rc == 0);
 
-		spdk_iscsi_init_grps_destroy();
+		iscsi_init_grps_destroy();
 
 		section_index++;
 	}
@@ -94,7 +94,7 @@ create_from_config_file_cases(void)
 		rc = iscsi_parse_init_grp(sp);
 		CU_ASSERT(rc != 0);
 
-		spdk_iscsi_init_grps_destroy();
+		iscsi_init_grps_destroy();
 
 		section_index++;
 	}
@@ -111,7 +111,7 @@ create_initiator_group_success_case(void)
 	ig = iscsi_init_grp_create(1);
 	CU_ASSERT(ig != NULL);
 
-	spdk_iscsi_init_grp_destroy(ig);
+	iscsi_init_grp_destroy(ig);
 }
 
 static void
@@ -123,17 +123,17 @@ find_initiator_group_success_case(void)
 	ig = iscsi_init_grp_create(1);
 	CU_ASSERT(ig != NULL);
 
-	rc = spdk_iscsi_init_grp_register(ig);
+	rc = iscsi_init_grp_register(ig);
 	CU_ASSERT(rc == 0);
 
-	ig = spdk_iscsi_init_grp_find_by_tag(1);
+	ig = iscsi_init_grp_find_by_tag(1);
 	CU_ASSERT(ig != NULL);
 
-	tmp = spdk_iscsi_init_grp_unregister(1);
+	tmp = iscsi_init_grp_unregister(1);
 	CU_ASSERT(ig == tmp);
-	spdk_iscsi_init_grp_destroy(ig);
+	iscsi_init_grp_destroy(ig);
 
-	ig = spdk_iscsi_init_grp_find_by_tag(1);
+	ig = iscsi_init_grp_find_by_tag(1);
 	CU_ASSERT(ig == NULL);
 }
 
@@ -146,20 +146,20 @@ register_initiator_group_twice_case(void)
 	ig = iscsi_init_grp_create(1);
 	CU_ASSERT(ig != NULL);
 
-	rc = spdk_iscsi_init_grp_register(ig);
+	rc = iscsi_init_grp_register(ig);
 	CU_ASSERT(rc == 0);
 
-	rc = spdk_iscsi_init_grp_register(ig);
+	rc = iscsi_init_grp_register(ig);
 	CU_ASSERT(rc != 0);
 
-	ig = spdk_iscsi_init_grp_find_by_tag(1);
+	ig = iscsi_init_grp_find_by_tag(1);
 	CU_ASSERT(ig != NULL);
 
-	tmp = spdk_iscsi_init_grp_unregister(1);
+	tmp = iscsi_init_grp_unregister(1);
 	CU_ASSERT(tmp == ig);
-	spdk_iscsi_init_grp_destroy(ig);
+	iscsi_init_grp_destroy(ig);
 
-	ig = spdk_iscsi_init_grp_find_by_tag(1);
+	ig = iscsi_init_grp_find_by_tag(1);
 	CU_ASSERT(ig == NULL);
 }
 
@@ -203,7 +203,7 @@ add_initiator_name_success_case(void)
 	iname = iscsi_init_grp_find_initiator(ig, name2);
 	CU_ASSERT(iname == NULL);
 
-	spdk_iscsi_init_grp_destroy(ig);
+	iscsi_init_grp_destroy(ig);
 }
 
 static void
@@ -239,7 +239,7 @@ add_initiator_name_fail_case(void)
 	iname = iscsi_init_grp_find_initiator(ig, name1);
 	CU_ASSERT(iname == NULL);
 
-	spdk_iscsi_init_grp_destroy(ig);
+	iscsi_init_grp_destroy(ig);
 }
 
 static void
@@ -272,7 +272,7 @@ delete_all_initiator_names_success_case(void)
 	CU_ASSERT(iname == NULL);
 
 	/* restore the initial state */
-	spdk_iscsi_init_grp_destroy(ig);
+	iscsi_init_grp_destroy(ig);
 }
 
 static void
@@ -314,7 +314,7 @@ add_netmask_success_case(void)
 	imask = iscsi_init_grp_find_netmask(ig, netmask2);
 	CU_ASSERT(imask == NULL);
 
-	spdk_iscsi_init_grp_destroy(ig);
+	iscsi_init_grp_destroy(ig);
 }
 
 static void
@@ -350,7 +350,7 @@ add_netmask_fail_case(void)
 	imask = iscsi_init_grp_find_netmask(ig, netmask1);
 	CU_ASSERT(imask == NULL);
 
-	spdk_iscsi_init_grp_destroy(ig);
+	iscsi_init_grp_destroy(ig);
 }
 
 static void
@@ -383,7 +383,7 @@ delete_all_netmasks_success_case(void)
 	CU_ASSERT(imask == NULL);
 
 	/* restore the initial state */
-	spdk_iscsi_init_grp_destroy(ig);
+	iscsi_init_grp_destroy(ig);
 }
 
 static void
@@ -424,7 +424,7 @@ initiator_name_overwrite_all_to_any_case(void)
 	rc = iscsi_init_grp_delete_initiator(ig, any_not);
 	CU_ASSERT(rc == 0);
 
-	spdk_iscsi_init_grp_destroy(ig);
+	iscsi_init_grp_destroy(ig);
 }
 
 static void
@@ -451,7 +451,7 @@ netmask_overwrite_all_to_any_case(void)
 	rc = iscsi_init_grp_delete_netmask(ig, any);
 	CU_ASSERT(rc == 0);
 
-	spdk_iscsi_init_grp_destroy(ig);
+	iscsi_init_grp_destroy(ig);
 }
 
 static void
@@ -480,7 +480,7 @@ add_delete_initiator_names_case(void)
 		CU_ASSERT(TAILQ_EMPTY(&ig->initiator_head));
 	}
 
-	spdk_iscsi_init_grp_destroy(ig);
+	iscsi_init_grp_destroy(ig);
 }
 
 static void
@@ -500,7 +500,7 @@ add_duplicated_initiator_names_case(void)
 		CU_ASSERT(TAILQ_EMPTY(&ig->initiator_head));
 	}
 
-	spdk_iscsi_init_grp_destroy(ig);
+	iscsi_init_grp_destroy(ig);
 }
 
 static void
@@ -538,7 +538,7 @@ delete_nonexisting_initiator_names_case(void)
 		CU_ASSERT(TAILQ_EMPTY(&ig->initiator_head));
 	}
 
-	spdk_iscsi_init_grp_destroy(ig);
+	iscsi_init_grp_destroy(ig);
 }
 
 static void
@@ -567,7 +567,7 @@ add_delete_netmasks_case(void)
 		CU_ASSERT(TAILQ_EMPTY(&ig->netmask_head));
 	}
 
-	spdk_iscsi_init_grp_destroy(ig);
+	iscsi_init_grp_destroy(ig);
 }
 
 static void
@@ -587,7 +587,7 @@ add_duplicated_netmasks_case(void)
 		CU_ASSERT(TAILQ_EMPTY(&ig->netmask_head));
 	}
 
-	spdk_iscsi_init_grp_destroy(ig);
+	iscsi_init_grp_destroy(ig);
 }
 
 static void
@@ -625,7 +625,7 @@ delete_nonexisting_netmasks_case(void)
 		CU_ASSERT(TAILQ_EMPTY(&ig->netmask_head));
 	}
 
-	spdk_iscsi_init_grp_destroy(ig);
+	iscsi_init_grp_destroy(ig);
 }
 
 
