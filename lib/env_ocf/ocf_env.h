@@ -234,7 +234,13 @@ typedef env_mutex env_rmutex;
 
 static inline int env_rmutex_init(env_rmutex *rmutex)
 {
-	return env_mutex_init(rmutex);
+	pthread_mutexattr_t attr;
+
+	pthread_mutexattr_init(&attr);
+	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+	pthread_mutex_init(&rmutex->m, &attr);
+
+	return 0;
 }
 
 static inline void env_rmutex_lock(env_rmutex *rmutex)
@@ -485,84 +491,98 @@ static inline long env_atomic64_cmpxchg(env_atomic64 *a, long old, long new)
 }
 
 /* *** COMPLETION *** */
-struct completion {
-	env_atomic atom;
-};
+typedef struct completion {
+	sem_t sem;
+} env_completion;
 
-typedef struct completion env_completion;
+static inline void env_completion_init(env_completion *completion)
+{
+	sem_init(&completion->sem, 0, 0);
+}
 
-void env_completion_init(env_completion *completion);
-void env_completion_wait(env_completion *completion);
-void env_completion_complete(env_completion *completion);
+static inline void env_completion_wait(env_completion *completion)
+{
+	sem_wait(&completion->sem);
+}
+
+static inline void env_completion_complete(env_completion *completion)
+{
+	sem_post(&completion->sem);
+}
 
 /* *** SPIN LOCKS *** */
 
-typedef env_mutex env_spinlock;
+typedef struct {
+	pthread_spinlock_t lock;
+} env_spinlock;
 
-static inline void env_spinlock_init(env_spinlock *l)
+static inline int env_spinlock_init(env_spinlock *l)
 {
-	env_mutex_init(l);
+	return pthread_spin_init(&l->lock, 0);
+}
+
+static inline int env_spinlock_trylock(env_spinlock *l)
+{
+	return pthread_spin_trylock(&l->lock) ? -OCF_ERR_NO_LOCK : 0;
 }
 
 static inline void env_spinlock_lock(env_spinlock *l)
 {
-	env_mutex_lock(l);
+	ENV_BUG_ON(pthread_spin_lock(&l->lock));
 }
 
 static inline void env_spinlock_unlock(env_spinlock *l)
 {
-	env_mutex_unlock(l);
+	ENV_BUG_ON(pthread_spin_unlock(&l->lock));
 }
 
-static inline void env_spinlock_lock_irq(env_spinlock *l)
-{
-	env_spinlock_lock(l);
-}
+#define env_spinlock_lock_irqsave(l, flags) \
+		(void)flags; \
+		env_spinlock_lock(l)
 
-static inline void env_spinlock_unlock_irq(env_spinlock *l)
-{
-	env_spinlock_unlock(l);
-}
+#define env_spinlock_unlock_irqrestore(l, flags) \
+		(void)flags; \
+		env_spinlock_unlock(l)
 
-static inline void env_spinlock_lock_irqsave(env_spinlock *l, int flags)
+static inline void env_spinlock_destroy(env_spinlock *l)
 {
-	env_spinlock_lock(l);
-	(void)flags;
-}
-
-static inline void env_spinlock_unlock_irqrestore(env_spinlock *l, int flags)
-{
-	env_spinlock_unlock(l);
-	(void)flags;
+	ENV_BUG_ON(pthread_spin_destroy(&l->lock));
 }
 
 /* *** RW LOCKS *** */
 
-typedef env_rwsem env_rwlock;
+typedef struct {
+	pthread_rwlock_t lock;
+} env_rwlock;
 
 static inline void env_rwlock_init(env_rwlock *l)
 {
-	env_rwsem_init(l);
+	ENV_BUG_ON(pthread_rwlock_init(&l->lock, NULL));
 }
 
 static inline void env_rwlock_read_lock(env_rwlock *l)
 {
-	env_rwsem_down_read(l);
+	ENV_BUG_ON(pthread_rwlock_rdlock(&l->lock));
 }
 
 static inline void env_rwlock_read_unlock(env_rwlock *l)
 {
-	env_rwsem_up_read(l);
+	ENV_BUG_ON(pthread_rwlock_unlock(&l->lock));
 }
 
 static inline void env_rwlock_write_lock(env_rwlock *l)
 {
-	env_rwsem_down_write(l);
+	ENV_BUG_ON(pthread_rwlock_wrlock(&l->lock));
 }
 
 static inline void env_rwlock_write_unlock(env_rwlock *l)
 {
-	env_rwsem_up_write(l);
+	ENV_BUG_ON(pthread_rwlock_unlock(&l->lock));
+}
+
+static inline void env_rwlock_destroy(env_rwlock *l)
+{
+	ENV_BUG_ON(pthread_rwlock_destroy(&l->lock));
 }
 
 static inline void env_bit_set(int nr, volatile void *addr)

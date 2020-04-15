@@ -108,29 +108,6 @@ env_allocator_destroy(env_allocator *allocator)
 		free(allocator);
 	}
 }
-
-/* *** COMPLETION *** */
-
-void
-env_completion_init(env_completion *completion)
-{
-	atomic_set(&completion->atom, 1);
-}
-
-void
-env_completion_wait(env_completion *completion)
-{
-	while (atomic_read(&completion->atom)) {
-		spdk_pause();
-	}
-}
-
-void
-env_completion_complete(env_completion *completion)
-{
-	atomic_set(&completion->atom, 0);
-}
-
 /* *** CRC *** */
 
 uint32_t
