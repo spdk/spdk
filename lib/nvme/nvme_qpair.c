@@ -726,7 +726,8 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 	int rc;
 
 	/* This prevents us from entering an infinite loop when freeing queued I/O in disconnect. */
-	if (spdk_unlikely(nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING)) {
+	if (spdk_unlikely(nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING ||
+			  nvme_qpair_get_state(qpair) == NVME_QPAIR_DESTROYING)) {
 		return -ENXIO;
 	}
 

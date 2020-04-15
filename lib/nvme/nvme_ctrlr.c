@@ -533,6 +533,7 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 	}
 
 	/* Do not retry. */
+	nvme_qpair_set_state(qpair, NVME_QPAIR_DESTROYING);
 	nvme_qpair_abort_reqs(qpair, 1);
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 

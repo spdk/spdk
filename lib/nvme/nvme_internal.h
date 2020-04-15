@@ -362,6 +362,7 @@ enum nvme_qpair_state {
 	NVME_QPAIR_CONNECTED,
 	NVME_QPAIR_ENABLING,
 	NVME_QPAIR_ENABLED,
+	NVME_QPAIR_DESTROYING,
 };
 
 struct spdk_nvme_qpair {
