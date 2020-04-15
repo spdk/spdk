@@ -709,7 +709,7 @@ iscsi_tgt_node_delete_pg_ig_map(struct spdk_iscsi_tgt_node *target,
 	struct spdk_iscsi_pg_map	*pg_map;
 	struct spdk_iscsi_ig_map	*ig_map;
 
-	pg = spdk_iscsi_portal_grp_find_by_tag(pg_tag);
+	pg = iscsi_portal_grp_find_by_tag(pg_tag);
 	if (pg == NULL) {
 		SPDK_ERRLOG("%s: PortalGroup%d not found\n", target->name, pg_tag);
 		return -ENOENT;
@@ -749,7 +749,7 @@ iscsi_tgt_node_add_pg_ig_map(struct spdk_iscsi_tgt_node *target,
 	struct spdk_iscsi_ig_map	*ig_map;
 	bool				new_pg_map = false;
 
-	pg = spdk_iscsi_portal_grp_find_by_tag(pg_tag);
+	pg = iscsi_portal_grp_find_by_tag(pg_tag);
 	if (pg == NULL) {
 		SPDK_ERRLOG("%s: PortalGroup%d not found\n", target->name, pg_tag);
 		return -ENOENT;

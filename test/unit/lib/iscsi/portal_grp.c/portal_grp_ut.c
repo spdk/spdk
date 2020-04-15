@@ -68,10 +68,10 @@ portal_create_ipv4_normal_case(void)
 	const char *host = "192.168.2.0";
 	const char *port = "3260";
 
-	p = spdk_iscsi_portal_create(host, port);
+	p = iscsi_portal_create(host, port);
 	CU_ASSERT(p != NULL);
 
-	spdk_iscsi_portal_destroy(p);
+	iscsi_portal_destroy(p);
 	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
 }
 
@@ -83,10 +83,10 @@ portal_create_ipv6_normal_case(void)
 	const char *host = "[2001:ad6:1234::]";
 	const char *port = "3260";
 
-	p = spdk_iscsi_portal_create(host, port);
+	p = iscsi_portal_create(host, port);
 	CU_ASSERT(p != NULL);
 
-	spdk_iscsi_portal_destroy(p);
+	iscsi_portal_destroy(p);
 	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
 }
 
@@ -98,10 +98,10 @@ portal_create_ipv4_wildcard_case(void)
 	const char *host = "*";
 	const char *port = "3260";
 
-	p = spdk_iscsi_portal_create(host, port);
+	p = iscsi_portal_create(host, port);
 	CU_ASSERT(p != NULL);
 
-	spdk_iscsi_portal_destroy(p);
+	iscsi_portal_destroy(p);
 	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
 }
 
@@ -113,10 +113,10 @@ portal_create_ipv6_wildcard_case(void)
 	const char *host = "[*]";
 	const char *port = "3260";
 
-	p = spdk_iscsi_portal_create(host, port);
+	p = iscsi_portal_create(host, port);
 	CU_ASSERT(p != NULL);
 
-	spdk_iscsi_portal_destroy(p);
+	iscsi_portal_destroy(p);
 	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
 }
 
@@ -128,13 +128,13 @@ portal_create_twice_case(void)
 	const char *host = "192.168.2.0";
 	const char *port = "3260";
 
-	p1 = spdk_iscsi_portal_create(host, port);
+	p1 = iscsi_portal_create(host, port);
 	CU_ASSERT(p1 != NULL);
 
-	p2 = spdk_iscsi_portal_create(host, port);
+	p2 = iscsi_portal_create(host, port);
 	CU_ASSERT(p2 == NULL);
 
-	spdk_iscsi_portal_destroy(p1);
+	iscsi_portal_destroy(p1);
 	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
 }
 
@@ -153,7 +153,7 @@ parse_portal_ipv4_normal_case(void)
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
 
-	spdk_iscsi_portal_destroy(p);
+	iscsi_portal_destroy(p);
 	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
 
 }
@@ -173,7 +173,7 @@ parse_portal_ipv6_normal_case(void)
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
 
-	spdk_iscsi_portal_destroy(p);
+	iscsi_portal_destroy(p);
 	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
 }
 
@@ -192,7 +192,7 @@ parse_portal_ipv4_skip_port_case(void)
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
 
-	spdk_iscsi_portal_destroy(p);
+	iscsi_portal_destroy(p);
 	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
 }
 
@@ -211,7 +211,7 @@ parse_portal_ipv6_skip_port_case(void)
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
 
-	spdk_iscsi_portal_destroy(p);
+	iscsi_portal_destroy(p);
 	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
 }
 
@@ -224,24 +224,24 @@ portal_grp_register_unregister_case(void)
 	const char *host = "192.168.2.0";
 	const char *port = "3260";
 
-	pg1 = spdk_iscsi_portal_grp_create(1);
+	pg1 = iscsi_portal_grp_create(1);
 	CU_ASSERT(pg1 != NULL);
 
-	p = spdk_iscsi_portal_create(host, port);
+	p = iscsi_portal_create(host, port);
 	CU_ASSERT(p != NULL);
 
-	spdk_iscsi_portal_grp_add_portal(pg1, p);
+	iscsi_portal_grp_add_portal(pg1, p);
 
-	rc = spdk_iscsi_portal_grp_register(pg1);
+	rc = iscsi_portal_grp_register(pg1);
 	CU_ASSERT(rc == 0);
 
-	pg2 = spdk_iscsi_portal_grp_unregister(1);
+	pg2 = iscsi_portal_grp_unregister(1);
 	CU_ASSERT(pg2 != NULL);
 	CU_ASSERT(pg1 == pg2);
 
 	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.pg_head));
 
-	spdk_iscsi_portal_grp_destroy(pg1);
+	iscsi_portal_grp_destroy(pg1);
 
 	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
 }
@@ -255,27 +255,27 @@ portal_grp_register_twice_case(void)
 	const char *host = "192.168.2.0";
 	const char *port = "3260";
 
-	pg1 = spdk_iscsi_portal_grp_create(1);
+	pg1 = iscsi_portal_grp_create(1);
 	CU_ASSERT(pg1 != NULL);
 
-	p = spdk_iscsi_portal_create(host, port);
+	p = iscsi_portal_create(host, port);
 	CU_ASSERT(p != NULL);
 
-	spdk_iscsi_portal_grp_add_portal(pg1, p);
+	iscsi_portal_grp_add_portal(pg1, p);
 
-	rc = spdk_iscsi_portal_grp_register(pg1);
+	rc = iscsi_portal_grp_register(pg1);
 	CU_ASSERT(rc == 0);
 
-	rc = spdk_iscsi_portal_grp_register(pg1);
+	rc = iscsi_portal_grp_register(pg1);
 	CU_ASSERT(rc != 0);
 
-	pg2 = spdk_iscsi_portal_grp_unregister(1);
+	pg2 = iscsi_portal_grp_unregister(1);
 	CU_ASSERT(pg2 != NULL);
 	CU_ASSERT(pg1 == pg2);
 
 	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.pg_head));
 
-	spdk_iscsi_portal_grp_destroy(pg1);
+	iscsi_portal_grp_destroy(pg1);
 
 	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
 }
@@ -295,28 +295,28 @@ portal_grp_add_delete_case(void)
 	set_thread(0);
 
 	/* internal of iscsi_create_portal_group */
-	pg1 = spdk_iscsi_portal_grp_create(1);
+	pg1 = iscsi_portal_grp_create(1);
 	CU_ASSERT(pg1 != NULL);
 
-	p = spdk_iscsi_portal_create(host, port);
+	p = iscsi_portal_create(host, port);
 	CU_ASSERT(p != NULL);
 
-	spdk_iscsi_portal_grp_add_portal(pg1, p);
+	iscsi_portal_grp_add_portal(pg1, p);
 
 	MOCK_SET(spdk_sock_listen, &sock);
-	rc = spdk_iscsi_portal_grp_open(pg1);
+	rc = iscsi_portal_grp_open(pg1);
 	CU_ASSERT(rc == 0);
 	MOCK_CLEAR_P(spdk_sock_listen);
 
-	rc = spdk_iscsi_portal_grp_register(pg1);
+	rc = iscsi_portal_grp_register(pg1);
 	CU_ASSERT(rc == 0);
 
 	/* internal of delete_portal_group */
-	pg2 = spdk_iscsi_portal_grp_unregister(1);
+	pg2 = iscsi_portal_grp_unregister(1);
 	CU_ASSERT(pg2 != NULL);
 	CU_ASSERT(pg1 == pg2);
 
-	spdk_iscsi_portal_grp_release(pg2);
+	iscsi_portal_grp_release(pg2);
 
 	poll_thread(0);
 
@@ -341,34 +341,34 @@ portal_grp_add_delete_twice_case(void)
 	set_thread(0);
 
 	/* internal of iscsi_create_portal_group related */
-	pg1 = spdk_iscsi_portal_grp_create(1);
+	pg1 = iscsi_portal_grp_create(1);
 	CU_ASSERT(pg1 != NULL);
 
-	p = spdk_iscsi_portal_create(host, port1);
+	p = iscsi_portal_create(host, port1);
 	CU_ASSERT(p != NULL);
 
-	spdk_iscsi_portal_grp_add_portal(pg1, p);
+	iscsi_portal_grp_add_portal(pg1, p);
 
 	MOCK_SET(spdk_sock_listen, &sock);
-	rc = spdk_iscsi_portal_grp_open(pg1);
+	rc = iscsi_portal_grp_open(pg1);
 	CU_ASSERT(rc == 0);
 
-	rc = spdk_iscsi_portal_grp_register(pg1);
+	rc = iscsi_portal_grp_register(pg1);
 	CU_ASSERT(rc == 0);
 
 	/* internal of iscsi_create_portal_group related */
-	pg2 = spdk_iscsi_portal_grp_create(2);
+	pg2 = iscsi_portal_grp_create(2);
 	CU_ASSERT(pg2 != NULL);
 
-	p = spdk_iscsi_portal_create(host, port2);
+	p = iscsi_portal_create(host, port2);
 	CU_ASSERT(p != NULL);
 
-	spdk_iscsi_portal_grp_add_portal(pg2, p);
+	iscsi_portal_grp_add_portal(pg2, p);
 
-	rc = spdk_iscsi_portal_grp_open(pg2);
+	rc = iscsi_portal_grp_open(pg2);
 	CU_ASSERT(rc == 0);
 
-	rc = spdk_iscsi_portal_grp_register(pg2);
+	rc = iscsi_portal_grp_register(pg2);
 	CU_ASSERT(rc == 0);
 
 	/* internal of destroy_portal_group related */
@@ -377,7 +377,7 @@ portal_grp_add_delete_twice_case(void)
 
 	poll_thread(0);
 
-	spdk_iscsi_portal_grps_destroy();
+	iscsi_portal_grps_destroy();
 
 	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
 	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.pg_head));

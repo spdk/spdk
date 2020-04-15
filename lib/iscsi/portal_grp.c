@@ -98,7 +98,7 @@ iscsi_portal_find_by_addr(const char *host, const char *port)
 
 /* Assumes caller allocated host and port strings on the heap */
 struct spdk_iscsi_portal *
-spdk_iscsi_portal_create(const char *host, const char *port)
+iscsi_portal_create(const char *host, const char *port)
 {
 	struct spdk_iscsi_portal *p = NULL, *tmp;
 
@@ -156,11 +156,11 @@ error_out:
 }
 
 void
-spdk_iscsi_portal_destroy(struct spdk_iscsi_portal *p)
+iscsi_portal_destroy(struct spdk_iscsi_portal *p)
 {
 	assert(p != NULL);
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_portal_destroy\n");
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "iscsi_portal_destroy\n");
 
 	pthread_mutex_lock(&g_iscsi.mutex);
 	TAILQ_REMOVE(&g_iscsi.portal_head, p, g_tailq);
@@ -272,7 +272,7 @@ iscsi_parse_portal(const char *portalstring, struct spdk_iscsi_portal **ip)
 		port[len] = '\0';
 	}
 
-	*ip = spdk_iscsi_portal_create(host, port);
+	*ip = iscsi_portal_create(host, port);
 	if (!*ip) {
 		goto error_out;
 	}
@@ -286,7 +286,7 @@ error_out:
 }
 
 struct spdk_iscsi_portal_grp *
-spdk_iscsi_portal_grp_create(int tag)
+iscsi_portal_grp_create(int tag)
 {
 	struct spdk_iscsi_portal_grp *pg = malloc(sizeof(*pg));
 
@@ -311,23 +311,23 @@ spdk_iscsi_portal_grp_create(int tag)
 }
 
 void
-spdk_iscsi_portal_grp_destroy(struct spdk_iscsi_portal_grp *pg)
+iscsi_portal_grp_destroy(struct spdk_iscsi_portal_grp *pg)
 {
 	struct spdk_iscsi_portal	*p;
 
 	assert(pg != NULL);
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_portal_grp_destroy\n");
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "iscsi_portal_grp_destroy\n");
 	while (!TAILQ_EMPTY(&pg->head)) {
 		p = TAILQ_FIRST(&pg->head);
 		TAILQ_REMOVE(&pg->head, p, per_pg_tailq);
-		spdk_iscsi_portal_destroy(p);
+		iscsi_portal_destroy(p);
 	}
 	free(pg);
 }
 
 int
-spdk_iscsi_portal_grp_register(struct spdk_iscsi_portal_grp *pg)
+iscsi_portal_grp_register(struct spdk_iscsi_portal_grp *pg)
 {
 	int rc = -1;
 	struct spdk_iscsi_portal_grp *tmp;
@@ -335,7 +335,7 @@ spdk_iscsi_portal_grp_register(struct spdk_iscsi_portal_grp *pg)
 	assert(pg != NULL);
 
 	pthread_mutex_lock(&g_iscsi.mutex);
-	tmp = spdk_iscsi_portal_grp_find_by_tag(pg->tag);
+	tmp = iscsi_portal_grp_find_by_tag(pg->tag);
 	if (tmp == NULL) {
 		TAILQ_INSERT_TAIL(&g_iscsi.pg_head, pg, tailq);
 		rc = 0;
@@ -345,8 +345,8 @@ spdk_iscsi_portal_grp_register(struct spdk_iscsi_portal_grp *pg)
 }
 
 void
-spdk_iscsi_portal_grp_add_portal(struct spdk_iscsi_portal_grp *pg,
-				 struct spdk_iscsi_portal *p)
+iscsi_portal_grp_add_portal(struct spdk_iscsi_portal_grp *pg,
+			    struct spdk_iscsi_portal *p)
 {
 	assert(pg != NULL);
 	assert(p != NULL);
@@ -356,9 +356,9 @@ spdk_iscsi_portal_grp_add_portal(struct spdk_iscsi_portal_grp *pg,
 }
 
 int
-spdk_iscsi_portal_grp_set_chap_params(struct spdk_iscsi_portal_grp *pg,
-				      bool disable_chap, bool require_chap,
-				      bool mutual_chap, int32_t chap_group)
+iscsi_portal_grp_set_chap_params(struct spdk_iscsi_portal_grp *pg,
+				 bool disable_chap, bool require_chap,
+				 bool mutual_chap, int32_t chap_group)
 {
 	if (!iscsi_check_chap_params(disable_chap, require_chap,
 				     mutual_chap, chap_group)) {
@@ -390,7 +390,7 @@ iscsi_parse_portal_grp(struct spdk_conf_section *sp)
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Comment %s\n", val);
 	}
 
-	pg = spdk_iscsi_portal_grp_create(spdk_conf_section_get_num(sp));
+	pg = iscsi_portal_grp_create(spdk_conf_section_get_num(sp));
 	if (!pg) {
 		SPDK_ERRLOG("portal group malloc error (%s)\n", spdk_conf_section_get_name(sp));
 		return -1;
@@ -413,17 +413,17 @@ iscsi_parse_portal_grp(struct spdk_conf_section *sp)
 			      "RIndex=%d, Host=%s, Port=%s, Tag=%d\n",
 			      i, p->host, p->port, spdk_conf_section_get_num(sp));
 
-		spdk_iscsi_portal_grp_add_portal(pg, p);
+		iscsi_portal_grp_add_portal(pg, p);
 	}
 
-	rc = spdk_iscsi_portal_grp_open(pg);
+	rc = iscsi_portal_grp_open(pg);
 	if (rc != 0) {
 		SPDK_ERRLOG("portal_grp_open failed\n");
 		goto error;
 	}
 
 	/* Add portal group to the end of the pg list */
-	rc = spdk_iscsi_portal_grp_register(pg);
+	rc = iscsi_portal_grp_register(pg);
 	if (rc != 0) {
 		SPDK_ERRLOG("register portal failed\n");
 		goto error;
@@ -432,12 +432,12 @@ iscsi_parse_portal_grp(struct spdk_conf_section *sp)
 	return 0;
 
 error:
-	spdk_iscsi_portal_grp_release(pg);
+	iscsi_portal_grp_release(pg);
 	return -1;
 }
 
 struct spdk_iscsi_portal_grp *
-spdk_iscsi_portal_grp_find_by_tag(int tag)
+iscsi_portal_grp_find_by_tag(int tag)
 {
 	struct spdk_iscsi_portal_grp *pg;
 
@@ -451,7 +451,7 @@ spdk_iscsi_portal_grp_find_by_tag(int tag)
 }
 
 int
-spdk_iscsi_parse_portal_grps(void)
+iscsi_parse_portal_grps(void)
 {
 	int rc = 0;
 	struct spdk_conf_section *sp;
@@ -477,24 +477,24 @@ spdk_iscsi_parse_portal_grps(void)
 }
 
 void
-spdk_iscsi_portal_grps_destroy(void)
+iscsi_portal_grps_destroy(void)
 {
 	struct spdk_iscsi_portal_grp *pg;
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_portal_grps_destroy\n");
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "iscsi_portal_grps_destroy\n");
 	pthread_mutex_lock(&g_iscsi.mutex);
 	while (!TAILQ_EMPTY(&g_iscsi.pg_head)) {
 		pg = TAILQ_FIRST(&g_iscsi.pg_head);
 		TAILQ_REMOVE(&g_iscsi.pg_head, pg, tailq);
 		pthread_mutex_unlock(&g_iscsi.mutex);
-		spdk_iscsi_portal_grp_destroy(pg);
+		iscsi_portal_grp_destroy(pg);
 		pthread_mutex_lock(&g_iscsi.mutex);
 	}
 	pthread_mutex_unlock(&g_iscsi.mutex);
 }
 
 int
-spdk_iscsi_portal_grp_open(struct spdk_iscsi_portal_grp *pg)
+iscsi_portal_grp_open(struct spdk_iscsi_portal_grp *pg)
 {
 	struct spdk_iscsi_portal *p;
 	int rc;
@@ -519,11 +519,11 @@ iscsi_portal_grp_close(struct spdk_iscsi_portal_grp *pg)
 }
 
 void
-spdk_iscsi_portal_grp_close_all(void)
+iscsi_portal_grp_close_all(void)
 {
 	struct spdk_iscsi_portal_grp *pg;
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_portal_grp_close_all\n");
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "iscsi_portal_grp_close_all\n");
 	pthread_mutex_lock(&g_iscsi.mutex);
 	TAILQ_FOREACH(pg, &g_iscsi.pg_head, tailq) {
 		iscsi_portal_grp_close(pg);
@@ -532,7 +532,7 @@ spdk_iscsi_portal_grp_close_all(void)
 }
 
 struct spdk_iscsi_portal_grp *
-spdk_iscsi_portal_grp_unregister(int tag)
+iscsi_portal_grp_unregister(int tag)
 {
 	struct spdk_iscsi_portal_grp *pg;
 
@@ -549,10 +549,10 @@ spdk_iscsi_portal_grp_unregister(int tag)
 }
 
 void
-spdk_iscsi_portal_grp_release(struct spdk_iscsi_portal_grp *pg)
+iscsi_portal_grp_release(struct spdk_iscsi_portal_grp *pg)
 {
 	iscsi_portal_grp_close(pg);
-	spdk_iscsi_portal_grp_destroy(pg);
+	iscsi_portal_grp_destroy(pg);
 }
 
 static const char *portal_group_section = \
@@ -577,7 +577,7 @@ static const char *portal_group_section = \
 "  Portal DA1 %s:%s\n"
 
 void
-spdk_iscsi_portal_grps_config_text(FILE *fp)
+iscsi_portal_grps_config_text(FILE *fp)
 {
 	struct spdk_iscsi_portal *p = NULL;
 	struct spdk_iscsi_portal_grp *pg = NULL;
@@ -636,7 +636,7 @@ iscsi_portal_grp_config_json(struct spdk_iscsi_portal_grp *pg,
 }
 
 void
-spdk_iscsi_portal_grps_info_json(struct spdk_json_write_ctx *w)
+iscsi_portal_grps_info_json(struct spdk_json_write_ctx *w)
 {
 	struct spdk_iscsi_portal_grp *pg;
 
@@ -646,7 +646,7 @@ spdk_iscsi_portal_grps_info_json(struct spdk_json_write_ctx *w)
 }
 
 void
-spdk_iscsi_portal_grps_config_json(struct spdk_json_write_ctx *w)
+iscsi_portal_grps_config_json(struct spdk_json_write_ctx *w)
 {
 	struct spdk_iscsi_portal_grp *pg;
 

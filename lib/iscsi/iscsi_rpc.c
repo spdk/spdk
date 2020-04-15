@@ -711,7 +711,7 @@ spdk_rpc_iscsi_get_portal_groups(struct spdk_jsonrpc_request *request,
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_array_begin(w);
-	spdk_iscsi_portal_grps_info_json(w);
+	iscsi_portal_grps_info_json(w);
 	spdk_json_write_array_end(w);
 
 	spdk_jsonrpc_end_result(request, w);
@@ -805,28 +805,28 @@ spdk_rpc_iscsi_create_portal_group(struct spdk_jsonrpc_request *request,
 		goto out;
 	}
 
-	pg = spdk_iscsi_portal_grp_create(req.tag);
+	pg = iscsi_portal_grp_create(req.tag);
 	if (pg == NULL) {
 		SPDK_ERRLOG("portal_grp_create failed\n");
 		goto out;
 	}
 	for (i = 0; i < req.portal_list.num_portals; i++) {
-		portal = spdk_iscsi_portal_create(req.portal_list.portals[i].host,
-						  req.portal_list.portals[i].port);
+		portal = iscsi_portal_create(req.portal_list.portals[i].host,
+					     req.portal_list.portals[i].port);
 		if (portal == NULL) {
 			SPDK_ERRLOG("portal_create failed\n");
 			goto out;
 		}
-		spdk_iscsi_portal_grp_add_portal(pg, portal);
+		iscsi_portal_grp_add_portal(pg, portal);
 	}
 
-	rc = spdk_iscsi_portal_grp_open(pg);
+	rc = iscsi_portal_grp_open(pg);
 	if (rc != 0) {
 		SPDK_ERRLOG("portal_grp_open failed\n");
 		goto out;
 	}
 
-	rc = spdk_iscsi_portal_grp_register(pg);
+	rc = iscsi_portal_grp_register(pg);
 	if (rc != 0) {
 		SPDK_ERRLOG("portal_grp_register failed\n");
 	}
@@ -840,7 +840,7 @@ out:
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 
 		if (pg != NULL) {
-			spdk_iscsi_portal_grp_release(pg);
+			iscsi_portal_grp_release(pg);
 		}
 	}
 	free_rpc_portal_group(&req);
@@ -871,13 +871,13 @@ spdk_rpc_iscsi_delete_portal_group(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	pg = spdk_iscsi_portal_grp_unregister(req.tag);
+	pg = iscsi_portal_grp_unregister(req.tag);
 	if (!pg) {
 		goto invalid;
 	}
 
 	iscsi_tgt_node_delete_map(pg, NULL);
-	spdk_iscsi_portal_grp_release(pg);
+	iscsi_portal_grp_release(pg);
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_bool(w, true);
@@ -925,15 +925,15 @@ spdk_rpc_iscsi_portal_group_set_auth(struct spdk_jsonrpc_request *request,
 
 	pthread_mutex_lock(&g_iscsi.mutex);
 
-	pg = spdk_iscsi_portal_grp_find_by_tag(req.tag);
+	pg = iscsi_portal_grp_find_by_tag(req.tag);
 	if (pg == NULL) {
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						     "Could not find portal group %d", req.tag);
 		goto exit;
 	}
 
-	rc = spdk_iscsi_portal_grp_set_chap_params(pg, req.disable_chap, req.require_chap,
-			req.mutual_chap, req.chap_group);
+	rc = iscsi_portal_grp_set_chap_params(pg, req.disable_chap, req.require_chap,
+					      req.mutual_chap, req.chap_group);
 	if (rc < 0) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid combination of auth params");

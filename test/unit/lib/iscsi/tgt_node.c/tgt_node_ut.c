@@ -71,7 +71,7 @@ DEFINE_STUB(spdk_sock_is_ipv6, bool, (struct spdk_sock *sock), false);
 
 DEFINE_STUB(spdk_sock_is_ipv4, bool, (struct spdk_sock *sock), false);
 
-DEFINE_STUB(spdk_iscsi_portal_grp_find_by_tag,
+DEFINE_STUB(iscsi_portal_grp_find_by_tag,
 	    struct spdk_iscsi_portal_grp *, (int tag), NULL);
 
 DEFINE_STUB(iscsi_init_grp_find_by_tag, struct spdk_iscsi_init_grp *,
