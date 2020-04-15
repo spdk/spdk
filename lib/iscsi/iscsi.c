@@ -948,17 +948,17 @@ iscsi_auth_params(struct spdk_iscsi_conn *conn,
 			goto error_return;
 		}
 
-		spdk_md5init(&md5ctx);
+		md5init(&md5ctx);
 		/* Identifier */
-		spdk_md5update(&md5ctx, conn->auth.chap_id, 1);
+		md5update(&md5ctx, conn->auth.chap_id, 1);
 		/* followed by secret */
-		spdk_md5update(&md5ctx, conn->auth.secret,
-			       strlen(conn->auth.secret));
+		md5update(&md5ctx, conn->auth.secret,
+			  strlen(conn->auth.secret));
 		/* followed by Challenge Value */
-		spdk_md5update(&md5ctx, conn->auth.chap_challenge,
-			       conn->auth.chap_challenge_len);
+		md5update(&md5ctx, conn->auth.chap_challenge,
+			  conn->auth.chap_challenge_len);
 		/* tgtmd5 is expecting Response Value */
-		spdk_md5final(tgtmd5, &md5ctx);
+		md5final(tgtmd5, &md5ctx);
 
 		bin2hex(in_val, ISCSI_TEXT_MAX_VAL_LEN, tgtmd5, SPDK_MD5DIGEST_LEN);
 
@@ -1022,17 +1022,17 @@ iscsi_auth_params(struct spdk_iscsi_conn *conn,
 				goto error_return;
 			}
 
-			spdk_md5init(&md5ctx);
+			md5init(&md5ctx);
 			/* Identifier */
-			spdk_md5update(&md5ctx, conn->auth.chap_mid, 1);
+			md5update(&md5ctx, conn->auth.chap_mid, 1);
 			/* followed by secret */
-			spdk_md5update(&md5ctx, conn->auth.msecret,
-				       strlen(conn->auth.msecret));
+			md5update(&md5ctx, conn->auth.msecret,
+				  strlen(conn->auth.msecret));
 			/* followed by Challenge Value */
-			spdk_md5update(&md5ctx, conn->auth.chap_mchallenge,
-				       conn->auth.chap_mchallenge_len);
+			md5update(&md5ctx, conn->auth.chap_mchallenge,
+				  conn->auth.chap_mchallenge_len);
 			/* tgtmd5 is Response Value */
-			spdk_md5final(tgtmd5, &md5ctx);
+			md5final(tgtmd5, &md5ctx);
 
 			bin2hex(in_val, ISCSI_TEXT_MAX_VAL_LEN, tgtmd5, SPDK_MD5DIGEST_LEN);
 
