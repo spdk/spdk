@@ -143,7 +143,7 @@ static struct spdk_bdevperf g_bdevperf = {
 
 struct bdevperf_reactor *g_next_reactor;
 
-struct perf_dump_ctx {
+struct bdevperf_aggregate_stats {
 	uint64_t			io_time_in_usec;
 	uint64_t			ema_period;
 	double				total_io_per_second;
@@ -181,23 +181,23 @@ get_ema_io_per_second(struct bdevperf_job *job, uint64_t ema_period)
 }
 
 static void
-performance_dump_job(struct perf_dump_ctx *ctx, struct bdevperf_job *job)
+performance_dump_job(struct bdevperf_aggregate_stats *stats, struct bdevperf_job *job)
 {
 	double io_per_second, mb_per_second;
 
 	printf("\r Thread name: %s\n", spdk_thread_get_name(job->reactor->thread));
 	printf("\r Core Mask: 0x%s\n", spdk_cpuset_fmt(spdk_thread_get_cpumask(job->reactor->thread)));
 
-	if (ctx->ema_period == 0) {
-		io_per_second = get_cma_io_per_second(job, ctx->io_time_in_usec);
+	if (stats->ema_period == 0) {
+		io_per_second = get_cma_io_per_second(job, stats->io_time_in_usec);
 	} else {
-		io_per_second = get_ema_io_per_second(job, ctx->ema_period);
+		io_per_second = get_ema_io_per_second(job, stats->ema_period);
 	}
 	mb_per_second = io_per_second * g_io_size / (1024 * 1024);
 	printf("\r %-20s: %10.2f IOPS %10.2f MiB/s\n",
 	       job->name, io_per_second, mb_per_second);
-	ctx->total_io_per_second += io_per_second;
-	ctx->total_mb_per_second += mb_per_second;
+	stats->total_io_per_second += io_per_second;
+	stats->total_mb_per_second += mb_per_second;
 }
 
 static void
@@ -917,31 +917,31 @@ bdevperf_submit_on_reactor(struct spdk_io_channel_iter *i)
 static void
 _performance_dump_done(struct spdk_io_channel_iter *i, int status)
 {
-	struct perf_dump_ctx *ctx;
+	struct bdevperf_aggregate_stats *stats;
 
-	ctx = spdk_io_channel_iter_get_ctx(i);
+	stats = spdk_io_channel_iter_get_ctx(i);
 
 	printf("\r =====================================================\n");
 	printf("\r %-20s: %10.2f IOPS %10.2f MiB/s\n",
-	       "Total", ctx->total_io_per_second, ctx->total_mb_per_second);
+	       "Total", stats->total_io_per_second, stats->total_mb_per_second);
 	fflush(stdout);
 
-	if (ctx->cb_fn) {
-		ctx->cb_fn(ctx->cb_arg);
+	if (stats->cb_fn) {
+		stats->cb_fn(stats->cb_arg);
 	}
 
-	free(ctx);
+	free(stats);
 }
 
 static void
 _performance_dump(struct spdk_io_channel_iter *i)
 {
-	struct perf_dump_ctx *ctx;
+	struct bdevperf_aggregate_stats *stats;
 	struct spdk_io_channel *ch;
 	struct bdevperf_reactor *reactor;
 	struct bdevperf_job *job;
 
-	ctx = spdk_io_channel_iter_get_ctx(i);
+	stats = spdk_io_channel_iter_get_ctx(i);
 	ch = spdk_io_channel_iter_get_channel(i);
 	reactor = spdk_io_channel_get_ctx(ch);
 
@@ -950,7 +950,7 @@ _performance_dump(struct spdk_io_channel_iter *i)
 	}
 
 	TAILQ_FOREACH(job, &reactor->jobs, link) {
-		performance_dump_job(ctx, job);
+		performance_dump_job(stats, job);
 	}
 
 	fflush(stdout);
@@ -963,19 +963,19 @@ static void
 performance_dump(uint64_t io_time_in_usec, uint64_t ema_period, performance_dump_done_fn cb_fn,
 		 void *cb_arg)
 {
-	struct perf_dump_ctx *ctx;
+	struct bdevperf_aggregate_stats *stats;
 
-	ctx = calloc(1, sizeof(*ctx));
-	if (ctx == NULL) {
+	stats = calloc(1, sizeof(*stats));
+	if (stats == NULL) {
 		return;
 	}
 
-	ctx->io_time_in_usec = io_time_in_usec;
-	ctx->ema_period = ema_period;
-	ctx->cb_fn = cb_fn;
-	ctx->cb_arg = cb_arg;
+	stats->io_time_in_usec = io_time_in_usec;
+	stats->ema_period = ema_period;
+	stats->cb_fn = cb_fn;
+	stats->cb_arg = cb_arg;
 
-	spdk_for_each_channel(&g_bdevperf, _performance_dump, ctx,
+	spdk_for_each_channel(&g_bdevperf, _performance_dump, stats,
 			      _performance_dump_done);
 }
 
