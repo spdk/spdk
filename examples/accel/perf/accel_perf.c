@@ -386,8 +386,9 @@ main(int argc, char **argv)
 		goto cleanup;
 	}
 
-	if (strcmp(g_workload_type, "copy") &&
-	    strcmp(g_workload_type, "fill")) {
+	if (g_workload_type == NULL ||
+	    (strcmp(g_workload_type, "copy") &&
+	     strcmp(g_workload_type, "fill"))) {
 		usage();
 		rc = -1;
 		goto cleanup;
