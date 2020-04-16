@@ -619,7 +619,7 @@ crypto_dev_poller(void *args)
 			 * to fail it.
 			 */
 			if (crypto_ch->iter) {
-				bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+				io_ctx->bdev_io_status = SPDK_BDEV_IO_STATUS_FAILED;
 			}
 
 			/* Complete the IO */
