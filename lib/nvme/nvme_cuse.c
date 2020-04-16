@@ -871,10 +871,10 @@ err2:
 	return rv;
 }
 
-static void
-nvme_cuse_stop(struct spdk_nvme_ctrlr *ctrlr)
+static struct cuse_device *
+nvme_cuse_get_cuse_ctrlr_device(struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct cuse_device *ctrlr_device;
+	struct cuse_device *ctrlr_device = NULL;
 
 	TAILQ_FOREACH(ctrlr_device, &g_ctrlr_ctx_head, tailq) {
 		if (ctrlr_device->ctrlr == ctrlr) {
@@ -882,6 +882,35 @@ nvme_cuse_stop(struct spdk_nvme_ctrlr *ctrlr)
 		}
 	}
 
+	return ctrlr_device;
+}
+
+static struct cuse_device *
+nvme_cuse_get_cuse_ns_device(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
+{
+	struct cuse_device *ctrlr_device = NULL;
+	struct cuse_device *ns_device = NULL;
+
+	ctrlr_device = nvme_cuse_get_cuse_ctrlr_device(ctrlr);
+	if (!ctrlr_device) {
+		return NULL;
+	}
+
+	TAILQ_FOREACH(ns_device, &ctrlr_device->ns_devices, tailq) {
+		if (ns_device->nsid == nsid) {
+			break;
+		}
+	}
+
+	return ns_device;
+}
+
+static void
+nvme_cuse_stop(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct cuse_device *ctrlr_device;
+
+	ctrlr_device = nvme_cuse_get_cuse_ctrlr_device(ctrlr);
 	if (!ctrlr_device) {
 		SPDK_ERRLOG("Cannot find associated CUSE device\n");
 		return;
@@ -926,16 +955,7 @@ spdk_nvme_cuse_get_ctrlr_name(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct cuse_device *ctrlr_device;
 
-	if (TAILQ_EMPTY(&g_ctrlr_ctx_head)) {
-		return NULL;
-	}
-
-	TAILQ_FOREACH(ctrlr_device, &g_ctrlr_ctx_head, tailq) {
-		if (ctrlr_device->ctrlr == ctrlr) {
-			break;
-		}
-	}
-
+	ctrlr_device = nvme_cuse_get_cuse_ctrlr_device(ctrlr);
 	if (!ctrlr_device) {
 		return NULL;
 	}
@@ -947,28 +967,8 @@ char *
 spdk_nvme_cuse_get_ns_name(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
 	struct cuse_device *ns_device;
-	struct cuse_device *ctrlr_device;
 
-	if (TAILQ_EMPTY(&g_ctrlr_ctx_head)) {
-		return NULL;
-	}
-
-	TAILQ_FOREACH(ctrlr_device, &g_ctrlr_ctx_head, tailq) {
-		if (ctrlr_device->ctrlr == ctrlr) {
-			break;
-		}
-	}
-
-	if (!ctrlr_device) {
-		return NULL;
-	}
-
-	TAILQ_FOREACH(ns_device, &ctrlr_device->ns_devices, tailq) {
-		if (ns_device->nsid == nsid) {
-			break;
-		}
-	}
-
+	ns_device = nvme_cuse_get_cuse_ns_device(ctrlr, nsid);
 	if (!ns_device) {
 		return NULL;
 	}
