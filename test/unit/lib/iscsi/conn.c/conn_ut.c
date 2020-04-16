@@ -193,26 +193,26 @@ DEFINE_STUB_V(iscsi_clear_all_transfer_task,
 	      (struct spdk_iscsi_conn *conn, struct spdk_scsi_lun *lun,
 	       struct spdk_iscsi_pdu *pdu));
 
-DEFINE_STUB(spdk_iscsi_build_iovs, int,
+DEFINE_STUB(iscsi_build_iovs, int,
 	    (struct spdk_iscsi_conn *conn, struct iovec *iov, int num_iovs,
 	     struct spdk_iscsi_pdu *pdu, uint32_t *mapped_length),
 	    0);
 
-DEFINE_STUB_V(spdk_iscsi_queue_task,
+DEFINE_STUB_V(iscsi_queue_task,
 	      (struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task));
 
-DEFINE_STUB_V(spdk_iscsi_task_response,
+DEFINE_STUB_V(iscsi_task_response,
 	      (struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task));
 
-DEFINE_STUB_V(spdk_iscsi_task_mgmt_response,
+DEFINE_STUB_V(iscsi_task_mgmt_response,
 	      (struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task));
 
-DEFINE_STUB_V(spdk_iscsi_send_nopin, (struct spdk_iscsi_conn *conn));
+DEFINE_STUB_V(iscsi_send_nopin, (struct spdk_iscsi_conn *conn));
 
 DEFINE_STUB(iscsi_del_transfer_task, bool,
 	    (struct spdk_iscsi_conn *conn, uint32_t task_tag), true);
 
-DEFINE_STUB(spdk_iscsi_handle_incoming_pdus, int, (struct spdk_iscsi_conn *conn), 0);
+DEFINE_STUB(iscsi_handle_incoming_pdus, int, (struct spdk_iscsi_conn *conn), 0);
 
 DEFINE_STUB_V(iscsi_free_sess, (struct spdk_iscsi_sess *sess));
 
@@ -220,13 +220,13 @@ DEFINE_STUB(iscsi_tgt_node_cleanup_luns, int,
 	    (struct spdk_iscsi_conn *conn, struct spdk_iscsi_tgt_node *target),
 	    0);
 
-DEFINE_STUB(spdk_iscsi_pdu_calc_header_digest, uint32_t,
+DEFINE_STUB(iscsi_pdu_calc_header_digest, uint32_t,
 	    (struct spdk_iscsi_pdu *pdu), 0);
 
 DEFINE_STUB(spdk_iscsi_pdu_calc_data_digest, uint32_t,
 	    (struct spdk_iscsi_pdu *pdu), 0);
 
-DEFINE_STUB_V(spdk_shutdown_iscsi_conns_done, (void));
+DEFINE_STUB_V(shutdown_iscsi_conns_done, (void));
 
 static struct spdk_iscsi_task *
 ut_conn_task_get(struct spdk_iscsi_task *parent)

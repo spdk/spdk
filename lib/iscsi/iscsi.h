@@ -400,35 +400,35 @@ typedef void (*spdk_iscsi_init_cb)(void *cb_arg, int rc);
 void spdk_iscsi_init(spdk_iscsi_init_cb cb_fn, void *cb_arg);
 typedef void (*spdk_iscsi_fini_cb)(void *arg);
 void spdk_iscsi_fini(spdk_iscsi_fini_cb cb_fn, void *cb_arg);
-void spdk_shutdown_iscsi_conns_done(void);
+void shutdown_iscsi_conns_done(void);
 void spdk_iscsi_config_text(FILE *fp);
 void spdk_iscsi_config_json(struct spdk_json_write_ctx *w);
 
-struct spdk_iscsi_opts *spdk_iscsi_opts_alloc(void);
-void spdk_iscsi_opts_free(struct spdk_iscsi_opts *opts);
-struct spdk_iscsi_opts *spdk_iscsi_opts_copy(struct spdk_iscsi_opts *src);
-void spdk_iscsi_opts_info_json(struct spdk_json_write_ctx *w);
-int spdk_iscsi_set_discovery_auth(bool disable_chap, bool require_chap,
-				  bool mutual_chap, int32_t chap_group);
-int spdk_iscsi_chap_get_authinfo(struct iscsi_chap_auth *auth, const char *authuser,
-				 int ag_tag);
-int spdk_iscsi_add_auth_group(int32_t tag, struct spdk_iscsi_auth_group **_group);
-struct spdk_iscsi_auth_group *spdk_iscsi_find_auth_group_by_tag(int32_t tag);
-void spdk_iscsi_delete_auth_group(struct spdk_iscsi_auth_group *group);
-int spdk_iscsi_auth_group_add_secret(struct spdk_iscsi_auth_group *group,
-				     const char *user, const char *secret,
-				     const char *muser, const char *msecret);
-int spdk_iscsi_auth_group_delete_secret(struct spdk_iscsi_auth_group *group,
-					const char *user);
-void spdk_iscsi_auth_groups_info_json(struct spdk_json_write_ctx *w);
+struct spdk_iscsi_opts *iscsi_opts_alloc(void);
+void iscsi_opts_free(struct spdk_iscsi_opts *opts);
+struct spdk_iscsi_opts *iscsi_opts_copy(struct spdk_iscsi_opts *src);
+void iscsi_opts_info_json(struct spdk_json_write_ctx *w);
+int iscsi_set_discovery_auth(bool disable_chap, bool require_chap,
+			     bool mutual_chap, int32_t chap_group);
+int iscsi_chap_get_authinfo(struct iscsi_chap_auth *auth, const char *authuser,
+			    int ag_tag);
+int iscsi_add_auth_group(int32_t tag, struct spdk_iscsi_auth_group **_group);
+struct spdk_iscsi_auth_group *iscsi_find_auth_group_by_tag(int32_t tag);
+void iscsi_delete_auth_group(struct spdk_iscsi_auth_group *group);
+int iscsi_auth_group_add_secret(struct spdk_iscsi_auth_group *group,
+				const char *user, const char *secret,
+				const char *muser, const char *msecret);
+int iscsi_auth_group_delete_secret(struct spdk_iscsi_auth_group *group,
+				   const char *user);
+void iscsi_auth_groups_info_json(struct spdk_json_write_ctx *w);
 
-void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
+void iscsi_task_response(struct spdk_iscsi_conn *conn,
+			 struct spdk_iscsi_task *task);
+int iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs, int iovcnt,
+		     struct spdk_iscsi_pdu *pdu, uint32_t *mapped_length);
+int iscsi_handle_incoming_pdus(struct spdk_iscsi_conn *conn);
+void iscsi_task_mgmt_response(struct spdk_iscsi_conn *conn,
 			      struct spdk_iscsi_task *task);
-int spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs, int iovcnt,
-			  struct spdk_iscsi_pdu *pdu, uint32_t *mapped_length);
-int spdk_iscsi_handle_incoming_pdus(struct spdk_iscsi_conn *conn);
-void spdk_iscsi_task_mgmt_response(struct spdk_iscsi_conn *conn,
-				   struct spdk_iscsi_task *task);
 
 void iscsi_free_sess(struct spdk_iscsi_sess *sess);
 void iscsi_clear_all_transfer_task(struct spdk_iscsi_conn *conn,
@@ -436,15 +436,15 @@ void iscsi_clear_all_transfer_task(struct spdk_iscsi_conn *conn,
 				   struct spdk_iscsi_pdu *pdu);
 bool iscsi_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t CmdSN);
 
-uint32_t spdk_iscsi_pdu_calc_header_digest(struct spdk_iscsi_pdu *pdu);
-uint32_t spdk_iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu);
+uint32_t iscsi_pdu_calc_header_digest(struct spdk_iscsi_pdu *pdu);
+uint32_t iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu);
 
 /* Memory management */
 void iscsi_put_pdu(struct spdk_iscsi_pdu *pdu);
 struct spdk_iscsi_pdu *iscsi_get_pdu(struct spdk_iscsi_conn *conn);
-void spdk_iscsi_op_abort_task_set(struct spdk_iscsi_task *task,
-				  uint8_t function);
-void spdk_iscsi_queue_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task);
+void iscsi_op_abort_task_set(struct spdk_iscsi_task *task,
+			     uint8_t function);
+void iscsi_queue_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task);
 
 static inline uint32_t
 iscsi_get_max_immediate_data_size(void)

@@ -147,14 +147,14 @@ fuzz_get_value_base_64_buffer(void *item, size_t len)
 }
 
 int
-spdk_iscsi_chap_get_authinfo(struct iscsi_chap_auth *auth, const char *authuser,
-			     int ag_tag)
+iscsi_chap_get_authinfo(struct iscsi_chap_auth *auth, const char *authuser,
+			int ag_tag)
 {
 	return 0;
 }
 
 void
-spdk_shutdown_iscsi_conns_done(void)
+shutdown_iscsi_conns_done(void)
 {
 	return;
 }

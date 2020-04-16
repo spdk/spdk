@@ -401,7 +401,7 @@ iscsi_opts_init(struct spdk_iscsi_opts *opts)
 }
 
 struct spdk_iscsi_opts *
-spdk_iscsi_opts_alloc(void)
+iscsi_opts_alloc(void)
 {
 	struct spdk_iscsi_opts *opts;
 
@@ -417,7 +417,7 @@ spdk_iscsi_opts_alloc(void)
 }
 
 void
-spdk_iscsi_opts_free(struct spdk_iscsi_opts *opts)
+iscsi_opts_free(struct spdk_iscsi_opts *opts)
 {
 	free(opts->authfile);
 	free(opts->nodebase);
@@ -426,7 +426,7 @@ spdk_iscsi_opts_free(struct spdk_iscsi_opts *opts)
 
 /* Deep copy of spdk_iscsi_opts */
 struct spdk_iscsi_opts *
-spdk_iscsi_opts_copy(struct spdk_iscsi_opts *src)
+iscsi_opts_copy(struct spdk_iscsi_opts *src)
 {
 	struct spdk_iscsi_opts *dst;
 
@@ -704,9 +704,9 @@ iscsi_parse_options(struct spdk_iscsi_opts **popts)
 	struct spdk_conf_section *sp;
 	int rc;
 
-	opts = spdk_iscsi_opts_alloc();
+	opts = iscsi_opts_alloc();
 	if (!opts) {
-		SPDK_ERRLOG("spdk_iscsi_opts_alloc_failed() failed\n");
+		SPDK_ERRLOG("iscsi_opts_alloc_failed() failed\n");
 		return -ENOMEM;
 	}
 
@@ -774,8 +774,8 @@ iscsi_set_global_params(struct spdk_iscsi_opts *opts)
 }
 
 int
-spdk_iscsi_set_discovery_auth(bool disable_chap, bool require_chap, bool mutual_chap,
-			      int32_t chap_group)
+iscsi_set_discovery_auth(bool disable_chap, bool require_chap, bool mutual_chap,
+			 int32_t chap_group)
 {
 	if (!iscsi_check_chap_params(disable_chap, require_chap, mutual_chap,
 				     chap_group)) {
@@ -794,9 +794,9 @@ spdk_iscsi_set_discovery_auth(bool disable_chap, bool require_chap, bool mutual_
 }
 
 int
-spdk_iscsi_auth_group_add_secret(struct spdk_iscsi_auth_group *group,
-				 const char *user, const char *secret,
-				 const char *muser, const char *msecret)
+iscsi_auth_group_add_secret(struct spdk_iscsi_auth_group *group,
+			    const char *user, const char *secret,
+			    const char *muser, const char *msecret)
 {
 	struct spdk_iscsi_auth_secret *_secret;
 	size_t len;
@@ -867,8 +867,8 @@ spdk_iscsi_auth_group_add_secret(struct spdk_iscsi_auth_group *group,
 }
 
 int
-spdk_iscsi_auth_group_delete_secret(struct spdk_iscsi_auth_group *group,
-				    const char *user)
+iscsi_auth_group_delete_secret(struct spdk_iscsi_auth_group *group,
+			       const char *user)
 {
 	struct spdk_iscsi_auth_secret *_secret;
 
@@ -895,7 +895,7 @@ spdk_iscsi_auth_group_delete_secret(struct spdk_iscsi_auth_group *group,
 }
 
 int
-spdk_iscsi_add_auth_group(int32_t tag, struct spdk_iscsi_auth_group **_group)
+iscsi_add_auth_group(int32_t tag, struct spdk_iscsi_auth_group **_group)
 {
 	struct spdk_iscsi_auth_group *group;
 
@@ -922,7 +922,7 @@ spdk_iscsi_add_auth_group(int32_t tag, struct spdk_iscsi_auth_group **_group)
 }
 
 void
-spdk_iscsi_delete_auth_group(struct spdk_iscsi_auth_group *group)
+iscsi_delete_auth_group(struct spdk_iscsi_auth_group *group)
 {
 	struct spdk_iscsi_auth_secret *_secret, *tmp;
 
@@ -936,7 +936,7 @@ spdk_iscsi_delete_auth_group(struct spdk_iscsi_auth_group *group)
 }
 
 struct spdk_iscsi_auth_group *
-spdk_iscsi_find_auth_group_by_tag(int32_t tag)
+iscsi_find_auth_group_by_tag(int32_t tag)
 {
 	struct spdk_iscsi_auth_group *group;
 
@@ -955,7 +955,7 @@ iscsi_auth_groups_destroy(void)
 	struct spdk_iscsi_auth_group *group, *tmp;
 
 	TAILQ_FOREACH_SAFE(group, &g_iscsi.auth_group_head, tailq, tmp) {
-		spdk_iscsi_delete_auth_group(group);
+		iscsi_delete_auth_group(group);
 	}
 }
 
@@ -975,7 +975,7 @@ iscsi_parse_auth_group(struct spdk_conf_section *sp)
 
 	tag = spdk_conf_section_get_num(sp);
 
-	rc = spdk_iscsi_add_auth_group(tag, &group);
+	rc = iscsi_add_auth_group(tag, &group);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to add auth group\n");
 		return rc;
@@ -992,10 +992,10 @@ iscsi_parse_auth_group(struct spdk_conf_section *sp)
 		muser = spdk_conf_section_get_nmval(sp, "Auth", i, 2);
 		msecret = spdk_conf_section_get_nmval(sp, "Auth", i, 3);
 
-		rc = spdk_iscsi_auth_group_add_secret(group, user, secret, muser, msecret);
+		rc = iscsi_auth_group_add_secret(group, user, secret, muser, msecret);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to add secret to auth group\n");
-			spdk_iscsi_delete_auth_group(group);
+			iscsi_delete_auth_group(group);
 			return rc;
 		}
 	}
@@ -1068,8 +1068,8 @@ iscsi_find_auth_secret(const char *authuser, int ag_tag)
 }
 
 int
-spdk_iscsi_chap_get_authinfo(struct iscsi_chap_auth *auth, const char *authuser,
-			     int ag_tag)
+iscsi_chap_get_authinfo(struct iscsi_chap_auth *auth, const char *authuser,
+			int ag_tag)
 {
 	struct spdk_iscsi_auth_secret *_secret;
 
@@ -1115,17 +1115,17 @@ iscsi_initialize_global_params(void)
 	if (!g_spdk_iscsi_opts) {
 		rc = iscsi_parse_options(&g_spdk_iscsi_opts);
 		if (rc != 0) {
-			SPDK_ERRLOG("spdk_iscsi_parse_options() failed\n");
+			SPDK_ERRLOG("iscsi_parse_options() failed\n");
 			return rc;
 		}
 	}
 
 	rc = iscsi_set_global_params(g_spdk_iscsi_opts);
 	if (rc != 0) {
-		SPDK_ERRLOG("spdk_iscsi_set_global_params() failed\n");
+		SPDK_ERRLOG("iscsi_set_global_params() failed\n");
 	}
 
-	spdk_iscsi_opts_free(g_spdk_iscsi_opts);
+	iscsi_opts_free(g_spdk_iscsi_opts);
 	g_spdk_iscsi_opts = NULL;
 
 	return rc;
@@ -1150,13 +1150,13 @@ iscsi_parse_configuration(void)
 
 	rc = iscsi_parse_portal_grps();
 	if (rc < 0) {
-		SPDK_ERRLOG("spdk_iscsi_parse_portal_grps() failed\n");
+		SPDK_ERRLOG("iscsi_parse_portal_grps() failed\n");
 		goto end;
 	}
 
 	rc = iscsi_parse_init_grps();
 	if (rc < 0) {
-		SPDK_ERRLOG("spdk_iscsi_parse_init_grps() failed\n");
+		SPDK_ERRLOG("iscsi_parse_init_grps() failed\n");
 		goto end;
 	}
 
@@ -1169,7 +1169,7 @@ iscsi_parse_configuration(void)
 		if (access(g_iscsi.authfile, R_OK) == 0) {
 			rc = iscsi_parse_auth_info();
 			if (rc < 0) {
-				SPDK_ERRLOG("spdk_iscsi_parse_auth_info() failed\n");
+				SPDK_ERRLOG("iscsi_parse_auth_info() failed\n");
 			}
 		} else {
 			SPDK_INFOLOG(SPDK_LOG_ISCSI, "CHAP secret file is not found in the path %s\n",
@@ -1318,7 +1318,7 @@ iscsi_parse_globals(void)
 
 	rc = iscsi_initialize_global_params();
 	if (rc != 0) {
-		SPDK_ERRLOG("spdk_iscsi_initialize_iscsi_global_params() failed\n");
+		SPDK_ERRLOG("iscsi_initialize_iscsi_global_params() failed\n");
 		return rc;
 	}
 
@@ -1338,7 +1338,7 @@ iscsi_parse_globals(void)
 
 	rc = iscsi_initialize_all_pools();
 	if (rc != 0) {
-		SPDK_ERRLOG("spdk_initialize_all_pools() failed\n");
+		SPDK_ERRLOG("initialize_all_pools() failed\n");
 		free(g_iscsi.session);
 		g_iscsi.session = NULL;
 		return -1;
@@ -1346,7 +1346,7 @@ iscsi_parse_globals(void)
 
 	rc = initialize_iscsi_conns();
 	if (rc < 0) {
-		SPDK_ERRLOG("spdk_initialize_iscsi_conns() failed\n");
+		SPDK_ERRLOG("initialize_iscsi_conns() failed\n");
 		free(g_iscsi.session);
 		g_iscsi.session = NULL;
 		return rc;
@@ -1367,12 +1367,12 @@ spdk_iscsi_init(spdk_iscsi_init_cb cb_fn, void *cb_arg)
 
 	rc = iscsi_parse_globals();
 	if (rc < 0) {
-		SPDK_ERRLOG("spdk_iscsi_parse_globals() failed\n");
+		SPDK_ERRLOG("iscsi_parse_globals() failed\n");
 		iscsi_init_complete(-1);
 	}
 
 	/*
-	 * spdk_iscsi_parse_configuration() will be called as the callback to
+	 * iscsi_parse_configuration() will be called as the callback to
 	 * spdk_initialize_iscsi_poll_group() and will complete iSCSI
 	 * subsystem initialization.
 	 */
@@ -1434,7 +1434,7 @@ _iscsi_fini_thread(struct spdk_io_channel_iter *i)
 }
 
 void
-spdk_shutdown_iscsi_conns_done(void)
+shutdown_iscsi_conns_done(void)
 {
 	spdk_for_each_channel(&g_iscsi, _iscsi_fini_thread, NULL, _iscsi_fini_dev_unreg);
 }
@@ -1449,7 +1449,7 @@ spdk_iscsi_config_text(FILE *fp)
 }
 
 void
-spdk_iscsi_opts_info_json(struct spdk_json_write_ctx *w)
+iscsi_opts_info_json(struct spdk_json_write_ctx *w)
 {
 	spdk_json_write_object_begin(w);
 
@@ -1530,7 +1530,7 @@ iscsi_auth_group_config_json(struct spdk_iscsi_auth_group *group,
 }
 
 void
-spdk_iscsi_auth_groups_info_json(struct spdk_json_write_ctx *w)
+iscsi_auth_groups_info_json(struct spdk_json_write_ctx *w)
 {
 	struct spdk_iscsi_auth_group *group;
 
@@ -1557,7 +1557,7 @@ iscsi_opts_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_string(w, "method", "iscsi_set_options");
 
 	spdk_json_write_name(w, "params");
-	spdk_iscsi_opts_info_json(w);
+	iscsi_opts_info_json(w);
 
 	spdk_json_write_object_end(w);
 }

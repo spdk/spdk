@@ -1347,7 +1347,7 @@ iscsi_tgt_node_cleanup_luns(struct spdk_iscsi_conn *conn,
 		task->scsi.initiator_port = conn->initiator_port;
 		task->scsi.lun = lun;
 
-		spdk_iscsi_op_abort_task_set(task, SPDK_SCSI_TASK_FUNC_LUN_RESET);
+		iscsi_op_abort_task_set(task, SPDK_SCSI_TASK_FUNC_LUN_RESET);
 	}
 
 	return 0;
