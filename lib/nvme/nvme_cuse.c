@@ -951,7 +951,15 @@ spdk_nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr)
 void
 spdk_nvme_cuse_unregister(struct spdk_nvme_ctrlr *ctrlr)
 {
-	nvme_cuse_stop(ctrlr);
+	struct cuse_device *ctrlr_device;
+
+	ctrlr_device = nvme_cuse_get_cuse_ctrlr_device(ctrlr);
+	if (!ctrlr_device) {
+		SPDK_ERRLOG("Cannot find associated CUSE device\n");
+		return;
+	}
+
+	cuse_nvme_ctrlr_stop(ctrlr_device);
 
 	nvme_io_msg_ctrlr_unregister(ctrlr, &cuse_nvme_io_msg_producer);
 }
