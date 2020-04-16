@@ -3044,8 +3044,9 @@ int spdk_nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr);
  *
  * \param ctrlr Opaque handle to the NVMe controller.
  *
+ * \return 0 on success. Negated errno on failure.
  */
-void spdk_nvme_cuse_unregister(struct spdk_nvme_ctrlr *ctrlr);
+int spdk_nvme_cuse_unregister(struct spdk_nvme_ctrlr *ctrlr);
 
 int spdk_nvme_map_prps(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs,
 		       uint32_t len, size_t mps,

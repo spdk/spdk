@@ -36,6 +36,9 @@ if [ -c "$ctrlr" ]; then
 	exit 1
 fi
 
+# Verify removing non-existent cuse device
+$rpc_py bdev_nvme_cuse_unregister -n Nvme0 && false
+
 $rpc_py bdev_nvme_cuse_register -n Nvme0
 sleep 1
 

@@ -118,6 +118,7 @@ spdk_rpc_nvme_cuse_unregister(struct spdk_jsonrpc_request *request,
 	struct rpc_nvme_cuse_unregister req = {};
 	struct spdk_json_write_ctx *w;
 	struct nvme_bdev_ctrlr *bdev_ctrlr = NULL;
+	int rc;
 
 	if (spdk_json_decode_object(params, rpc_nvme_cuse_unregister_decoders,
 				    SPDK_COUNTOF(rpc_nvme_cuse_unregister_decoders),
@@ -135,7 +136,11 @@ spdk_rpc_nvme_cuse_unregister(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	spdk_nvme_cuse_unregister(bdev_ctrlr->ctrlr);
+	rc = spdk_nvme_cuse_unregister(bdev_ctrlr->ctrlr);
+	if (rc) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		goto cleanup;
+	}
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_bool(w, true);
