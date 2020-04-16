@@ -2789,8 +2789,6 @@ spdk_nvmf_qpair_request_cleanup(struct spdk_nvmf_qpair *qpair)
 		if (TAILQ_EMPTY(&qpair->outstanding)) {
 			qpair->state_cb(qpair->state_cb_arg, 0);
 		}
-	} else {
-		assert(qpair->state == SPDK_NVMF_QPAIR_ACTIVE);
 	}
 }
 
