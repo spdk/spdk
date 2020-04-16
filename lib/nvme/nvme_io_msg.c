@@ -64,6 +64,7 @@ nvme_io_msg_send(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, spdk_nvme_io_msg_
 	rc = spdk_ring_enqueue(ctrlr->external_io_msgs, (void **)&io, 1, NULL);
 	if (rc != 1) {
 		assert(false);
+		free(io);
 		pthread_mutex_unlock(&ctrlr->external_io_msgs_lock);
 		return -ENOMEM;
 	}
