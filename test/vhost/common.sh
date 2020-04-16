@@ -1119,7 +1119,7 @@ function run_fio()
 		vm_exec $vm_num cat /root/$job_fname
 
 		if $run_server_mode; then
-			fio_start_cmd+="--client=127.0.0.1,$(vm_fio_socket $vm_num) --remote-config /root/$job_fname"
+			fio_start_cmd+="--client=127.0.0.1,$(vm_fio_socket $vm_num) --remote-config /root/$job_fname "
 		fi
 
 		if ! $run_server_mode; then
