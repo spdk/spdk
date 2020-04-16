@@ -41,6 +41,8 @@ function confirm_abi_deps() {
 	name = SPDK_LOG_FTL_INIT
 [suppress_variable]
 	name = SPDK_LOG_ISCSI
+[suppress_variable]
+	name = SPDK_LOG_SCSI
 
 EOF
 

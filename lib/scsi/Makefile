@@ -41,4 +41,6 @@ SO_SUFFIX := $(SO_VER).$(SO_MINOR)
 C_SRCS = dev.c lun.c port.c scsi.c scsi_bdev.c scsi_pr.c scsi_rpc.c task.c
 LIBNAME = scsi
 
+SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_scsi.map)
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

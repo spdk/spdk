@@ -1,0 +1,49 @@
+{
+	global:
+
+	# Public functions
+	spdk_scsi_init;
+	spdk_scsi_fini;
+	spdk_scsi_lun_get_id;
+	spdk_scsi_lun_get_bdev_name;
+	spdk_scsi_lun_get_dev;
+	spdk_scsi_lun_is_removing;
+	spdk_scsi_dev_get_name;
+	spdk_scsi_dev_get_id;
+	spdk_scsi_dev_get_lun;
+	spdk_scsi_dev_has_pending_tasks;
+	spdk_scsi_dev_destruct;
+	spdk_scsi_dev_queue_mgmt_task;
+	spdk_scsi_dev_queue_task;
+	spdk_scsi_dev_add_port;
+	spdk_scsi_dev_delete_port;
+	spdk_scsi_dev_find_port_by_id;
+	spdk_scsi_dev_allocate_io_channels;
+	spdk_scsi_dev_free_io_channels;
+	spdk_scsi_dev_construct;
+	spdk_scsi_dev_delete_lun;
+	spdk_scsi_dev_add_lun;
+	spdk_scsi_port_create;
+	spdk_scsi_port_free;
+	spdk_scsi_port_get_name;
+	spdk_scsi_task_construct;
+	spdk_scsi_task_put;
+	spdk_scsi_task_set_data;
+	spdk_scsi_task_scatter_data;
+	spdk_scsi_task_gather_data;
+	spdk_scsi_task_build_sense_data;
+	spdk_scsi_task_set_status;
+	spdk_scsi_task_copy_status;
+	spdk_scsi_task_process_null_lun;
+	spdk_scsi_task_process_abort;
+	spdk_scsi_lun_open;
+	spdk_scsi_lun_close;
+	spdk_scsi_lun_allocate_io_channel;
+	spdk_scsi_lun_free_io_channel;
+	spdk_scsi_lun_get_dif_ctx;
+	spdk_scsi_port_set_iscsi_transport_id;
+	spdk_scsi_lun_id_int_to_fmt;
+	spdk_scsi_lun_id_fmt_to_int;
+
+	local: *;
+};
