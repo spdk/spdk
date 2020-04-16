@@ -2325,7 +2325,7 @@ iscsi_pdu_hdr_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 }
 
 static void
-spdk_iscsi_conn_text_pdu_complete(void *arg)
+iscsi_conn_text_pdu_complete(void *arg)
 {
 	struct spdk_iscsi_conn *conn = arg;
 
@@ -2468,7 +2468,7 @@ iscsi_pdu_payload_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 	to_be32(&rsph->exp_cmd_sn, conn->sess->ExpCmdSN);
 	to_be32(&rsph->max_cmd_sn, conn->sess->MaxCmdSN);
 
-	iscsi_conn_write_pdu(conn, rsp_pdu, spdk_iscsi_conn_text_pdu_complete, conn);
+	iscsi_conn_write_pdu(conn, rsp_pdu, iscsi_conn_text_pdu_complete, conn);
 	return 0;
 }
 
@@ -2921,7 +2921,7 @@ get_transfer_task(struct spdk_iscsi_conn *conn, uint32_t transfer_tag)
 }
 
 static void
-spdk_iscsi_conn_datain_pdu_complete(void *arg)
+iscsi_conn_datain_pdu_complete(void *arg)
 {
 	struct spdk_iscsi_conn *conn = arg;
 
@@ -3030,7 +3030,7 @@ iscsi_send_datain(struct spdk_iscsi_conn *conn,
 		}
 	}
 
-	iscsi_conn_write_pdu(conn, rsp_pdu, spdk_iscsi_conn_datain_pdu_complete, conn);
+	iscsi_conn_write_pdu(conn, rsp_pdu, iscsi_conn_datain_pdu_complete, conn);
 
 	return DataSN;
 }
