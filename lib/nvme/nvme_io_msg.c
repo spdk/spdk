@@ -155,6 +155,7 @@ nvme_io_msg_ctrlr_register(struct spdk_nvme_ctrlr *ctrlr,
 	if (ctrlr->external_io_msgs_qpair == NULL) {
 		SPDK_ERRLOG("spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
 		spdk_ring_free(ctrlr->external_io_msgs);
+		ctrlr->external_io_msgs = NULL;
 		return -ENOMEM;
 	}
 
@@ -176,6 +177,7 @@ nvme_io_msg_ctrlr_detach(struct spdk_nvme_ctrlr *ctrlr)
 
 	if (ctrlr->external_io_msgs) {
 		spdk_ring_free(ctrlr->external_io_msgs);
+		ctrlr->external_io_msgs = NULL;
 	}
 
 	if (ctrlr->external_io_msgs_qpair) {
