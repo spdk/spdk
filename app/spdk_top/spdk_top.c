@@ -69,7 +69,8 @@
 #define MAX_POLLER_TYPE_STR_LEN 8
 #define MAX_CORE_MASK_STR_LEN 16
 #define MAX_CORE_STR_LEN 6
-#define MAX_TIME_STR_LEN 12
+#define MAX_TIME_STR_LEN 10
+#define MAX_PERIOD_STR_LEN 12
 #define WINDOW_HEADER 12
 #define FROM_HEX 16
 
@@ -110,22 +111,22 @@ static struct col_desc g_col_desc[NUMBER_OF_TABS][TABS_COL_COUNT] = {
 		{.name = "Active pollers", .max_data_string = MAX_POLLER_COUNT_STR_LEN},
 		{.name = "Timed pollers", .max_data_string = MAX_POLLER_COUNT_STR_LEN},
 		{.name = "Paused pollers", .max_data_string = MAX_POLLER_COUNT_STR_LEN},
-		{.name = "Idle", .max_data_string = MAX_TIME_STR_LEN},
-		{.name = "Busy", .max_data_string = MAX_TIME_STR_LEN},
+		{.name = "Idle [us]", .max_data_string = MAX_TIME_STR_LEN},
+		{.name = "Busy [us]", .max_data_string = MAX_TIME_STR_LEN},
 		{.name = (char *)NULL}
 	},
 	{	{.name = "Poller name", .max_data_string = MAX_POLLER_NAME_LEN},
 		{.name = "Type", .max_data_string = MAX_POLLER_TYPE_STR_LEN},
 		{.name = "On thread", .max_data_string = MAX_THREAD_NAME_LEN},
 		{.name = "Run count", .max_data_string = MAX_TIME_STR_LEN},
-		{.name = "Period", .max_data_string = MAX_TIME_STR_LEN},
+		{.name = "Period [us]", .max_data_string = MAX_PERIOD_STR_LEN},
 		{.name = (char *)NULL}
 	},
 	{	{.name = "Core", .max_data_string = MAX_CORE_STR_LEN},
 		{.name = "Thread count", .max_data_string = MAX_THREAD_COUNT_STR_LEN},
 		{.name = "Poller count", .max_data_string = MAX_POLLER_COUNT_STR_LEN},
-		{.name = "Idle", .max_data_string = MAX_TIME_STR_LEN},
-		{.name = "Busy", .max_data_string = MAX_TIME_STR_LEN},
+		{.name = "Idle [us]", .max_data_string = MAX_TIME_STR_LEN},
+		{.name = "Busy [us]", .max_data_string = MAX_TIME_STR_LEN},
 		{.name = (char *)NULL}
 	}
 };
@@ -737,6 +738,15 @@ switch_tab(enum tabs tab)
 	doupdate();
 }
 
+static void
+get_time_str(uint64_t ticks, char *time_str)
+{
+	uint64_t time;
+
+	time = ticks * SPDK_SEC_TO_USEC / g_cores_stats.tick_rate;
+	snprintf(time_str, MAX_TIME_STR_LEN, "%" PRIu64, time);
+}
+
 static int
 sort_threads(const void *p1, const void *p2)
 {
@@ -856,18 +866,18 @@ refresh_threads_tab(uint8_t current_page)
 			snprintf(pollers_number, MAX_POLLER_COUNT_STR_LEN, "%ld", thread_info[i]->paused_pollers_count);
 			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index,
 				      col + (col_desc[4].name_len / 2), col_desc[4].max_data_string, ALIGN_LEFT, pollers_number);
-			col += col_desc[4].max_data_string + 1;
+			col += col_desc[4].max_data_string + 2;
 		}
 
 		if (!col_desc[5].disabled) {
-			snprintf(idle_time, MAX_TIME_STR_LEN, "%" PRIu64, thread_info[i]->idle);
+			get_time_str(thread_info[i]->idle, idle_time);
 			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index, col,
 				      col_desc[5].max_data_string, ALIGN_RIGHT, idle_time);
-			col += col_desc[5].max_data_string + 1;
+			col += col_desc[5].max_data_string + 2;
 		}
 
 		if (!col_desc[6].disabled) {
-			snprintf(busy_time, MAX_TIME_STR_LEN, "%" PRIu64, thread_info[i]->busy);
+			get_time_str(thread_info[i]->busy, busy_time);
 			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index, col,
 				      col_desc[6].max_data_string, ALIGN_RIGHT, busy_time);
 		}
@@ -950,7 +960,7 @@ refresh_pollers_tab(uint8_t current_page)
 	uint16_t col, j;
 	uint8_t max_pages, item_index;
 	enum sort_type sorting;
-	char run_count[MAX_TIME_STR_LEN], period_ticks[MAX_TIME_STR_LEN];
+	char run_count[MAX_TIME_STR_LEN], period_ticks[MAX_PERIOD_STR_LEN];
 	struct rpc_poller_info *pollers[RPC_MAX_POLLERS];
 
 	for (i = 0; i < g_pollers_stats.pollers_threads.threads_count; i++) {
@@ -1014,12 +1024,12 @@ refresh_pollers_tab(uint8_t current_page)
 			snprintf(run_count, MAX_TIME_STR_LEN, "%" PRIu64, pollers[i]->run_count);
 			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + item_index, col,
 				      col_desc[3].max_data_string, ALIGN_RIGHT, run_count);
-			col += col_desc[3].max_data_string + 1;
+			col += col_desc[3].max_data_string + 2;
 		}
 
 		if (!col_desc[4].disabled) {
 			if (pollers[i]->period_ticks != 0) {
-				snprintf(period_ticks, MAX_TIME_STR_LEN, "%" PRIu64, pollers[i]->period_ticks);
+				get_time_str(pollers[i]->period_ticks, period_ticks);
 				print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + item_index, col,
 					      col_desc[4].max_data_string, ALIGN_RIGHT, period_ticks);
 			}
@@ -1157,7 +1167,7 @@ refresh_cores_tab(uint8_t current_page)
 		if (!col_desc[1].disabled) {
 			print_max_len(g_tabs[CORES_TAB], TABS_DATA_START_ROW + item_index,
 				      offset + (col_desc[1].name_len / 2), col_desc[1].max_data_string, ALIGN_LEFT, threads_number);
-			offset += col_desc[1].max_data_string + 1;
+			offset += col_desc[1].max_data_string + 2;
 		}
 
 		if (!col_desc[2].disabled) {
@@ -1167,14 +1177,14 @@ refresh_cores_tab(uint8_t current_page)
 		}
 
 		if (!col_desc[3].disabled) {
-			snprintf(idle_time, MAX_TIME_STR_LEN, "%" PRIu64, cores[i].idle);
+			get_time_str(cores[i].idle, idle_time);
 			print_max_len(g_tabs[CORES_TAB], TABS_DATA_START_ROW + item_index, offset,
 				      col_desc[3].max_data_string, ALIGN_RIGHT, idle_time);
-			offset += col_desc[3].max_data_string + 1;
+			offset += col_desc[3].max_data_string + 2;
 		}
 
 		if (!col_desc[4].disabled) {
-			snprintf(busy_time, MAX_TIME_STR_LEN, "%" PRIu64, cores[i].busy);
+			get_time_str(cores[i].busy, busy_time);
 			print_max_len(g_tabs[CORES_TAB], TABS_DATA_START_ROW + item_index, offset,
 				      col_desc[4].max_data_string, ALIGN_RIGHT, busy_time);
 		}
