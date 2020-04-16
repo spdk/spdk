@@ -136,7 +136,7 @@ nvme_io_msg_ctrlr_register(struct spdk_nvme_ctrlr *ctrlr,
 	if (ctrlr->external_io_msgs_qpair == NULL) {
 		SPDK_ERRLOG("spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
 		spdk_ring_free(ctrlr->external_io_msgs);
-		return -1;
+		return -ENOMEM;
 	}
 
 	STAILQ_INSERT_TAIL(&ctrlr->io_producers, io_msg_producer, link);

@@ -695,13 +695,14 @@ cuse_nvme_ns_start(struct cuse_device *ctrlr_device, uint32_t nsid, const char *
 	if (rv < 0) {
 		SPDK_ERRLOG("Device name too long.\n");
 		free(ns_device);
-		return -1;
+		return -ENAMETOOLONG;
 	}
 
-	if (pthread_create(&ns_device->tid, NULL, cuse_thread, ns_device)) {
+	rv = pthread_create(&ns_device->tid, NULL, cuse_thread, ns_device);
+	if (rv != 0) {
 		SPDK_ERRLOG("pthread_create failed\n");
 		free(ns_device);
-		return -1;
+		return -rv;
 	}
 
 	TAILQ_INSERT_TAIL(&ctrlr_device->ns_devices, ns_device, tailq);
@@ -806,7 +807,7 @@ nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
 		g_ctrlr_started = spdk_bit_array_create(128);
 		if (g_ctrlr_started == NULL) {
 			SPDK_ERRLOG("Cannot create bit array\n");
-			return -1;
+			return -ENOMEM;
 		}
 	}
 
@@ -838,9 +839,10 @@ nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
 	snprintf(ctrlr_device->dev_name, sizeof(ctrlr_device->dev_name), "spdk/nvme%d",
 		 ctrlr_device->index);
 
-	if (pthread_create(&ctrlr_device->tid, NULL, cuse_thread, ctrlr_device)) {
+	rv = pthread_create(&ctrlr_device->tid, NULL, cuse_thread, ctrlr_device);
+	if (rv != 0) {
 		SPDK_ERRLOG("pthread_create failed\n");
-		rv = -1;
+		rv = -rv;
 		goto err3;
 	}
 	TAILQ_INSERT_TAIL(&g_ctrlr_ctx_head, ctrlr_device, tailq);
@@ -852,10 +854,10 @@ nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
 			continue;
 		}
 
-		if (cuse_nvme_ns_start(ctrlr_device, nsid, ctrlr_device->dev_name) < 0) {
+		rv = cuse_nvme_ns_start(ctrlr_device, nsid, ctrlr_device->dev_name);
+		if (rv < 0) {
 			SPDK_ERRLOG("Cannot start CUSE namespace device.");
 			cuse_nvme_ctrlr_stop(ctrlr_device);
-			rv = -1;
 			goto err3;
 		}
 	}
