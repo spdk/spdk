@@ -1108,7 +1108,8 @@ function run_fio()
 
 	local job_fname
 	job_fname=$(basename "$job_file")
-	fio_start_cmd+=" --output=$out/$job_fname --output-format=$fio_output_format "
+	log_fname="${job_fname%%.*}.log"
+	fio_start_cmd+=" --output=$out/$log_fname --output-format=$fio_output_format "
 
 	# prepare job file for each VM
 	for vm in "${vms[@]}"; do
@@ -1133,7 +1134,7 @@ function run_fio()
 			fi
 
 			notice "Running local fio on VM $vm_num"
-			vm_exec $vm_num "$vm_fio_bin --output=/root/$job_fname.out --output-format=$fio_output_format /root/$job_fname" &
+			vm_exec $vm_num "$vm_fio_bin --output=/root/$log_fname --output-format=$fio_output_format /root/$job_fname" &
 			vm_exec_pids+=("$!")
 		fi
 	done
@@ -1144,7 +1145,7 @@ function run_fio()
 
 		for vm in "${vms[@]}"; do
 			local vm_num=${vm%%:*}
-			vm_exec $vm_num cat /root/$job_fname.out > "$out/vm${vm_num}_${job_fname}"
+			vm_exec $vm_num cat /root/$log_fname > "$out/vm${vm_num}_${log_fname}"
 		done
 		return 0
 	fi
@@ -1152,7 +1153,7 @@ function run_fio()
 	$fio_start_cmd
 
 	if [[ ! $hide_results ]]; then
-		cat $out/$job_fname
+		cat $out/$log_fname
 	fi
 }
 
