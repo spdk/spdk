@@ -60,6 +60,7 @@ struct cuse_device {
 	TAILQ_ENTRY(cuse_device)	tailq;
 };
 
+static pthread_mutex_t g_cuse_mtx = PTHREAD_MUTEX_INITIALIZER;
 static TAILQ_HEAD(, cuse_device) g_ctrlr_ctx_head = TAILQ_HEAD_INITIALIZER(g_ctrlr_ctx_head);
 static struct spdk_bit_array *g_ctrlr_started;
 
@@ -916,13 +917,18 @@ nvme_cuse_stop(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct cuse_device *ctrlr_device;
 
+	pthread_mutex_lock(&g_cuse_mtx);
+
 	ctrlr_device = nvme_cuse_get_cuse_ctrlr_device(ctrlr);
 	if (!ctrlr_device) {
 		SPDK_ERRLOG("Cannot find associated CUSE device\n");
+		pthread_mutex_unlock(&g_cuse_mtx);
 		return;
 	}
 
 	cuse_nvme_ctrlr_stop(ctrlr_device);
+
+	pthread_mutex_unlock(&g_cuse_mtx);
 }
 
 static struct nvme_io_msg_producer cuse_nvme_io_msg_producer = {
@@ -940,10 +946,14 @@ spdk_nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr)
 		return rc;
 	}
 
+	pthread_mutex_lock(&g_cuse_mtx);
+
 	rc = nvme_cuse_start(ctrlr);
 	if (rc) {
 		nvme_io_msg_ctrlr_unregister(ctrlr, &cuse_nvme_io_msg_producer);
 	}
+
+	pthread_mutex_unlock(&g_cuse_mtx);
 
 	return rc;
 }
@@ -953,13 +963,18 @@ spdk_nvme_cuse_unregister(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct cuse_device *ctrlr_device;
 
+	pthread_mutex_lock(&g_cuse_mtx);
+
 	ctrlr_device = nvme_cuse_get_cuse_ctrlr_device(ctrlr);
 	if (!ctrlr_device) {
 		SPDK_ERRLOG("Cannot find associated CUSE device\n");
+		pthread_mutex_unlock(&g_cuse_mtx);
 		return;
 	}
 
 	cuse_nvme_ctrlr_stop(ctrlr_device);
+
+	pthread_mutex_unlock(&g_cuse_mtx);
 
 	nvme_io_msg_ctrlr_unregister(ctrlr, &cuse_nvme_io_msg_producer);
 }
@@ -969,11 +984,15 @@ spdk_nvme_cuse_get_ctrlr_name(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct cuse_device *ctrlr_device;
 
+	pthread_mutex_lock(&g_cuse_mtx);
+
 	ctrlr_device = nvme_cuse_get_cuse_ctrlr_device(ctrlr);
 	if (!ctrlr_device) {
+		pthread_mutex_unlock(&g_cuse_mtx);
 		return NULL;
 	}
 
+	pthread_mutex_unlock(&g_cuse_mtx);
 	return ctrlr_device->dev_name;
 }
 
@@ -982,10 +1001,14 @@ spdk_nvme_cuse_get_ns_name(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
 	struct cuse_device *ns_device;
 
+	pthread_mutex_lock(&g_cuse_mtx);
+
 	ns_device = nvme_cuse_get_cuse_ns_device(ctrlr, nsid);
 	if (!ns_device) {
+		pthread_mutex_unlock(&g_cuse_mtx);
 		return NULL;
 	}
 
+	pthread_mutex_unlock(&g_cuse_mtx);
 	return ns_device->dev_name;
 }
