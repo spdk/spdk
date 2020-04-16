@@ -149,6 +149,12 @@ struct spdk_nvme_recv_wr_list {
 	struct ibv_recv_wr	*last;
 };
 
+/* Memory regions */
+union nvme_rdma_mr {
+	struct ibv_mr	*mr;
+	uint64_t	key;
+};
+
 /* NVMe RDMA qpair extensions for spdk_nvme_qpair */
 struct nvme_rdma_qpair {
 	struct spdk_nvme_qpair			qpair;
@@ -177,7 +183,7 @@ struct nvme_rdma_qpair {
 	struct spdk_nvme_recv_wr_list		recvs_to_post;
 
 	/* Memory region describing all rsps for this qpair */
-	struct ibv_mr				*rsp_mr;
+	union nvme_rdma_mr			rsp_mr;
 
 	/*
 	 * Array of num_entries NVMe commands registered as RDMA message buffers.
@@ -186,7 +192,7 @@ struct nvme_rdma_qpair {
 	struct spdk_nvmf_cmd			*cmds;
 
 	/* Memory region describing all cmds for this qpair */
-	struct ibv_mr				*cmd_mr;
+	union nvme_rdma_mr			cmd_mr;
 
 	struct spdk_nvme_rdma_mr_map		*mr_map;
 
@@ -667,13 +673,56 @@ nvme_rdma_post_recv(struct nvme_rdma_qpair *rqpair, uint16_t rsp_idx)
 	return nvme_rdma_qpair_queue_recv_wr(rqpair, wr);
 }
 
+static int
+nvme_rdma_reg_mr(struct rdma_cm_id *cm_id, union nvme_rdma_mr *mr, void *mem, size_t length)
+{
+	if (!g_nvme_hooks.get_rkey) {
+		mr->mr = rdma_reg_msgs(cm_id, mem, length);
+		if (mr->mr == NULL) {
+			SPDK_ERRLOG("Unable to register mr: %s (%d)\n",
+				    spdk_strerror(errno), errno);
+			return -1;
+		}
+	} else {
+		mr->key = g_nvme_hooks.get_rkey(cm_id->pd, mem, length);
+	}
+
+	return 0;
+}
+
+static void
+nvme_rdma_dereg_mr(union nvme_rdma_mr *mr)
+{
+	if (!g_nvme_hooks.get_rkey) {
+		if (mr->mr && rdma_dereg_mr(mr->mr)) {
+			SPDK_ERRLOG("Unable to de-register mr\n");
+		}
+	} else {
+		if (mr->key) {
+			g_nvme_hooks.put_rkey(mr->key);
+		}
+	}
+	memset(mr, 0, sizeof(*mr));
+}
+
+static uint32_t
+nvme_rdma_mr_get_lkey(union nvme_rdma_mr *mr)
+{
+	uint32_t lkey;
+
+	if (!g_nvme_hooks.get_rkey) {
+		lkey = mr->mr->lkey;
+	} else {
+		lkey = *((uint64_t *) mr->key);
+	}
+
+	return lkey;
+}
+
 static void
 nvme_rdma_unregister_rsps(struct nvme_rdma_qpair *rqpair)
 {
-	if (rqpair->rsp_mr && rdma_dereg_mr(rqpair->rsp_mr)) {
-		SPDK_ERRLOG("Unable to de-register rsp_mr\n");
-	}
-	rqpair->rsp_mr = NULL;
+	nvme_rdma_dereg_mr(&rqpair->rsp_mr);
 }
 
 static void
@@ -722,14 +771,16 @@ nvme_rdma_register_rsps(struct nvme_rdma_qpair *rqpair)
 {
 	uint16_t i;
 	int rc;
+	uint32_t lkey;
 
-	rqpair->rsp_mr = rdma_reg_msgs(rqpair->cm_id, rqpair->rsps,
-				       rqpair->num_entries * sizeof(*rqpair->rsps));
-	if (rqpair->rsp_mr == NULL) {
-		rc = -errno;
-		SPDK_ERRLOG("Unable to register rsp_mr: %s (%d)\n", spdk_strerror(errno), errno);
+	rc = nvme_rdma_reg_mr(rqpair->cm_id, &rqpair->rsp_mr,
+			      rqpair->rsps, rqpair->num_entries * sizeof(*rqpair->rsps));
+
+	if (rc < 0) {
 		goto fail;
 	}
+
+	lkey = nvme_rdma_mr_get_lkey(&rqpair->rsp_mr);
 
 	for (i = 0; i < rqpair->num_entries; i++) {
 		struct ibv_sge *rsp_sgl = &rqpair->rsp_sgls[i];
@@ -740,7 +791,7 @@ nvme_rdma_register_rsps(struct nvme_rdma_qpair *rqpair)
 		rsp->idx = i;
 		rsp_sgl->addr = (uint64_t)&rqpair->rsps[i];
 		rsp_sgl->length = sizeof(struct spdk_nvme_cpl);
-		rsp_sgl->lkey = rqpair->rsp_mr->lkey;
+		rsp_sgl->lkey = lkey;
 
 		rqpair->rsp_recv_wrs[i].wr_id = (uint64_t)&rsp->rdma_wr;
 		rqpair->rsp_recv_wrs[i].next = NULL;
@@ -768,10 +819,7 @@ fail:
 static void
 nvme_rdma_unregister_reqs(struct nvme_rdma_qpair *rqpair)
 {
-	if (rqpair->cmd_mr && rdma_dereg_mr(rqpair->cmd_mr)) {
-		SPDK_ERRLOG("Unable to de-register cmd_mr\n");
-	}
-	rqpair->cmd_mr = NULL;
+	nvme_rdma_dereg_mr(&rqpair->cmd_mr);
 }
 
 static void
@@ -843,16 +891,20 @@ static int
 nvme_rdma_register_reqs(struct nvme_rdma_qpair *rqpair)
 {
 	int i;
+	int rc;
+	uint32_t lkey;
 
-	rqpair->cmd_mr = rdma_reg_msgs(rqpair->cm_id, rqpair->cmds,
-				       rqpair->num_entries * sizeof(*rqpair->cmds));
-	if (!rqpair->cmd_mr) {
-		SPDK_ERRLOG("Unable to register cmd_mr\n");
+	rc = nvme_rdma_reg_mr(rqpair->cm_id, &rqpair->cmd_mr,
+			      rqpair->cmds, rqpair->num_entries * sizeof(*rqpair->cmds));
+
+	if (rc < 0) {
 		goto fail;
 	}
 
+	lkey = nvme_rdma_mr_get_lkey(&rqpair->cmd_mr);
+
 	for (i = 0; i < rqpair->num_entries; i++) {
-		rqpair->rdma_reqs[i].send_sgl[0].lkey = rqpair->cmd_mr->lkey;
+		rqpair->rdma_reqs[i].send_sgl[0].lkey = lkey;
 	}
 
 	return 0;
