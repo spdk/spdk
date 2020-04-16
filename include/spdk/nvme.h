@@ -2781,6 +2781,14 @@ struct spdk_nvme_rdma_hooks {
 	 * \return Infiniband remote key (rkey) for this buf
 	 */
 	uint64_t (*get_rkey)(struct ibv_pd *pd, void *buf, size_t size);
+
+	/**
+	 * \brief Put back keys got from get_rkey.
+	 *
+	 * \param key The Infiniband remote key (rkey) got from get_rkey
+	 *
+	 */
+	void (*put_rkey)(uint64_t key);
 };
 
 /**
