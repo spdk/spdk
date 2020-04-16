@@ -44,7 +44,7 @@ function usage()
 	echo "    --fio-bin=PATH          Path to FIO binary on host.;"
 	echo "                            Binary will be copied to VM, static compilation"
 	echo "                            of binary is recommended."
-	echo "    --fio-job=PATH          Fio config to use for test."
+	echo "    --fio-jobs=PATH         Comma separated list of fio config files to use for test."
 	echo "    --fio-iterations=INT    Number of times to run specified workload."
 	echo "    --vm-memory=INT         Amount of RAM memory (in MB) to pass to a single VM."
 	echo "                            Default: 2048 MB"
@@ -151,7 +151,7 @@ while getopts 'xh-:' optchar; do
 		case "$OPTARG" in
 			help) usage $0 ;;
 			fio-bin=*) fio_bin="--fio-bin=${OPTARG#*=}" ;;
-			fio-job=*) fio_job="${OPTARG#*=}" ;;
+			fio-jobs=*) fio_jobs="${OPTARG#*=}" ;;
 			fio-iterations=*) fio_iterations="${OPTARG#*=}" ;;
 			vm-memory=*) vm_memory="${OPTARG#*=}" ;;
 			vm-image=*) VM_IMAGE="${OPTARG#*=}" ;;
@@ -188,9 +188,8 @@ if [[ -n $custom_cpu_cfg ]]; then
 	vhost_master_core="${!vhost_master_core}"
 fi
 
-if [[ -z $fio_job ]]; then
-	warning "No FIO job specified! Will use default from common directory."
-	fio_job="$rootdir/test/vhost/common/fio_jobs/default_integrity.job"
+if [[ -z $fio_jobs ]]; then
+	error "No FIO job specified!"
 fi
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' INT ERR
@@ -397,44 +396,46 @@ for vm_num in $used_vms; do
 done
 
 # Run FIO traffic
-fio_job_fname=$(basename $fio_job)
-fio_log_fname="${fio_job_fname%%.*}.log"
-for i in $(seq 1 $fio_iterations); do
-	echo "Running FIO iteration $i"
-	run_fio $fio_bin --job-file="$fio_job" --out="$VHOST_DIR/fio_results" --json $fio_disks &
-	fio_pid=$!
+for fio_job in ${fio_jobs//,/ }; do
+	fio_job_fname=$(basename $fio_job)
+	fio_log_fname="${fio_job_fname%%.*}.log"
+	for i in $(seq 1 $fio_iterations); do
+		echo "Running FIO iteration $i for $fio_job_fname"
+		run_fio $fio_bin --hide-results --job-file="$fio_job" --out="$VHOST_DIR/fio_results" --json $fio_disks &
+		fio_pid=$!
 
-	if $host_sar_enable || $vm_sar_enable; then
-		pids=""
-		mkdir -p $VHOST_DIR/fio_results/sar_stats
-		sleep $sar_delay
-	fi
+		if $host_sar_enable || $vm_sar_enable; then
+			pids=""
+			mkdir -p $VHOST_DIR/fio_results/sar_stats
+			sleep $sar_delay
+		fi
 
-	if $host_sar_enable; then
-		sar -P ALL $sar_interval $sar_count > "$VHOST_DIR/fio_results/sar_stats/sar_stats_host.txt" &
-		pids+=" $!"
-	fi
-
-	if $vm_sar_enable; then
-		for vm_num in $used_vms; do
-			vm_exec "$vm_num" "mkdir -p /root/sar; sar -P ALL $sar_interval $sar_count >> /root/sar/sar_stats_VM${vm_num}_run${i}.txt" &
+		if $host_sar_enable; then
+			sar -P ALL $sar_interval $sar_count > "$VHOST_DIR/fio_results/sar_stats/sar_stats_host.txt" &
 			pids+=" $!"
-		done
-	fi
+		fi
 
-	for j in $pids; do
-			wait $j
+		if $vm_sar_enable; then
+			for vm_num in $used_vms; do
+				vm_exec "$vm_num" "mkdir -p /root/sar; sar -P ALL $sar_interval $sar_count >> /root/sar/sar_stats_VM${vm_num}_run${i}.txt" &
+				pids+=" $!"
+			done
+		fi
+
+		for j in $pids; do
+				wait $j
+		done
+
+		if $vm_sar_enable; then
+			for vm_num in $used_vms; do
+				vm_scp "$vm_num" "root@127.0.0.1:/root/sar/sar_stats_VM${vm_num}_run${i}.txt" "$VHOST_DIR/fio_results/sar_stats"
+			done
+		fi
+
+		wait $fio_pid
+		mv $VHOST_DIR/fio_results/$fio_log_fname $VHOST_DIR/fio_results/$fio_log_fname.$i
+		sleep 1
 	done
-
-	if $vm_sar_enable; then
-		for vm_num in $used_vms; do
-			vm_scp "$vm_num" "root@127.0.0.1:/root/sar/sar_stats_VM${vm_num}_run${i}.txt" "$VHOST_DIR/fio_results/sar_stats"
-		done
-	fi
-
-	wait $fio_pid
-	mv $VHOST_DIR/fio_results/$fio_log_fname $VHOST_DIR/fio_results/$fio_log_fname.$i
-	sleep 1
 done
 
 notice "Shutting down virtual machines..."
