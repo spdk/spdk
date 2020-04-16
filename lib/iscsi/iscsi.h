@@ -430,24 +430,24 @@ int spdk_iscsi_handle_incoming_pdus(struct spdk_iscsi_conn *conn);
 void spdk_iscsi_task_mgmt_response(struct spdk_iscsi_conn *conn,
 				   struct spdk_iscsi_task *task);
 
-void spdk_free_sess(struct spdk_iscsi_sess *sess);
-void spdk_clear_all_transfer_task(struct spdk_iscsi_conn *conn,
-				  struct spdk_scsi_lun *lun,
-				  struct spdk_iscsi_pdu *pdu);
-bool spdk_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t CmdSN);
+void iscsi_free_sess(struct spdk_iscsi_sess *sess);
+void iscsi_clear_all_transfer_task(struct spdk_iscsi_conn *conn,
+				   struct spdk_scsi_lun *lun,
+				   struct spdk_iscsi_pdu *pdu);
+bool iscsi_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t CmdSN);
 
 uint32_t spdk_iscsi_pdu_calc_header_digest(struct spdk_iscsi_pdu *pdu);
 uint32_t spdk_iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu);
 
 /* Memory management */
-void spdk_put_pdu(struct spdk_iscsi_pdu *pdu);
-struct spdk_iscsi_pdu *spdk_get_pdu(struct spdk_iscsi_conn *conn);
+void iscsi_put_pdu(struct spdk_iscsi_pdu *pdu);
+struct spdk_iscsi_pdu *iscsi_get_pdu(struct spdk_iscsi_conn *conn);
 void spdk_iscsi_op_abort_task_set(struct spdk_iscsi_task *task,
 				  uint8_t function);
 void spdk_iscsi_queue_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task);
 
 static inline uint32_t
-spdk_get_max_immediate_data_size(void)
+iscsi_get_max_immediate_data_size(void)
 {
 	/*
 	 * Specify enough extra space in addition to FirstBurstLength to

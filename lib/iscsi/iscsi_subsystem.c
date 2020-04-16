@@ -148,7 +148,7 @@ static int
 iscsi_initialize_pdu_pool(void)
 {
 	struct spdk_iscsi_globals *iscsi = &g_iscsi;
-	int imm_mobj_size = SPDK_BDEV_BUF_SIZE_WITH_MD(spdk_get_max_immediate_data_size()) +
+	int imm_mobj_size = SPDK_BDEV_BUF_SIZE_WITH_MD(iscsi_get_max_immediate_data_size()) +
 			    sizeof(struct spdk_mobj) + ISCSI_DATA_BUFFER_ALIGNMENT;
 	int dout_mobj_size = SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) +
 			     sizeof(struct spdk_mobj) + ISCSI_DATA_BUFFER_ALIGNMENT;
@@ -289,7 +289,7 @@ iscsi_free_pools(void)
 	spdk_mempool_free(iscsi->task_pool);
 }
 
-void spdk_put_pdu(struct spdk_iscsi_pdu *pdu)
+void iscsi_put_pdu(struct spdk_iscsi_pdu *pdu)
 {
 	if (!pdu) {
 		return;
@@ -311,7 +311,7 @@ void spdk_put_pdu(struct spdk_iscsi_pdu *pdu)
 	}
 }
 
-struct spdk_iscsi_pdu *spdk_get_pdu(struct spdk_iscsi_conn *conn)
+struct spdk_iscsi_pdu *iscsi_get_pdu(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_pdu *pdu;
 

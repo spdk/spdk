@@ -142,7 +142,7 @@ static inline void
 iscsi_task_disassociate_pdu(struct spdk_iscsi_task *task)
 {
 	if (iscsi_task_get_pdu(task)) {
-		spdk_put_pdu(iscsi_task_get_pdu(task));
+		iscsi_put_pdu(iscsi_task_get_pdu(task));
 		iscsi_task_set_pdu(task, NULL);
 	}
 }

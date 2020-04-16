@@ -327,7 +327,7 @@ iscsi_conn_free_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	if (pdu->task) {
 		iscsi_task_put(pdu->task);
 	}
-	spdk_put_pdu(pdu);
+	iscsi_put_pdu(pdu);
 
 	cb_fn(cb_arg);
 }
@@ -425,7 +425,7 @@ iscsi_conn_free(struct spdk_iscsi_conn *conn)
 			/* cleanup last connection */
 			SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 				      "cleanup last conn free sess\n");
-			spdk_free_sess(sess);
+			iscsi_free_sess(sess);
 		}
 	}
 
@@ -533,7 +533,7 @@ _iscsi_conn_hotremove_lun(void *ctx)
 		return;
 	}
 
-	spdk_clear_all_transfer_task(conn, lun, NULL);
+	iscsi_clear_all_transfer_task(conn, lun, NULL);
 
 	iscsi_lun->remove_poller = SPDK_POLLER_REGISTER(iscsi_conn_remove_lun, iscsi_lun,
 				   1000);
@@ -664,7 +664,7 @@ _iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 {
 	int rc;
 
-	spdk_clear_all_transfer_task(conn, NULL, NULL);
+	iscsi_clear_all_transfer_task(conn, NULL, NULL);
 
 	iscsi_poll_group_remove_conn(conn->pg, conn);
 	spdk_sock_close(&conn->sock);
@@ -734,7 +734,7 @@ iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 				break;
 			}
 		}
-		spdk_put_pdu(pdu);
+		iscsi_put_pdu(pdu);
 		conn->pdu_in_progress = NULL;
 	}
 
@@ -799,7 +799,7 @@ iscsi_send_logout_request(struct spdk_iscsi_conn *conn)
 	struct spdk_iscsi_pdu *rsp_pdu;
 	struct iscsi_bhs_async *rsph;
 
-	rsp_pdu = spdk_get_pdu(conn);
+	rsp_pdu = iscsi_get_pdu(conn);
 	assert(rsp_pdu != NULL);
 
 	rsph = (struct iscsi_bhs_async *)&rsp_pdu->bhs;
@@ -1216,10 +1216,10 @@ process_non_read_task_completion(struct spdk_iscsi_conn *conn,
 			 *  ensured that the initiator will send all data requested by R2Ts.
 			 *
 			 * We check it and skip the following if primary is completed. (see
-			 *  spdk_clear_all_transfer_task() in iscsi.c.)
+			 *  iscsi_clear_all_transfer_task() in iscsi.c.)
 			 */
 			if (primary->is_r2t_active) {
-				spdk_del_transfer_task(conn, primary->tag);
+				iscsi_del_transfer_task(conn, primary->tag);
 				if (primary->rsp_scsi_status != SPDK_SCSI_STATUS_GOOD) {
 					iscsi_task_copy_from_rsp_scsi_status(&primary->scsi, primary);
 				}
@@ -1274,11 +1274,11 @@ iscsi_conn_send_nopin(struct spdk_iscsi_conn *conn)
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "StatSN=%u, ExpCmdSN=%u, MaxCmdSN=%u\n",
 		      conn->StatSN, conn->sess->ExpCmdSN,
 		      conn->sess->MaxCmdSN);
-	rsp_pdu = spdk_get_pdu(conn);
+	rsp_pdu = iscsi_get_pdu(conn);
 	rsp = (struct iscsi_bhs_nop_in *) &rsp_pdu->bhs;
 	rsp_pdu->data = NULL;
 	/*
-	 * spdk_get_pdu() memset's the PDU for us, so only fill out the needed
+	 * iscsi_get_pdu() memset's the PDU for us, so only fill out the needed
 	 *  fields.
 	 */
 	rsp->opcode = ISCSI_OP_NOPIN;

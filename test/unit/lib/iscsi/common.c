@@ -74,7 +74,7 @@ spdk_scsi_task_put(struct spdk_scsi_task *task)
 }
 
 void
-spdk_put_pdu(struct spdk_iscsi_pdu *pdu)
+iscsi_put_pdu(struct spdk_iscsi_pdu *pdu)
 {
 	if (!pdu) {
 		return;
@@ -95,7 +95,7 @@ spdk_put_pdu(struct spdk_iscsi_pdu *pdu)
 }
 
 struct spdk_iscsi_pdu *
-spdk_get_pdu(struct spdk_iscsi_conn *conn)
+iscsi_get_pdu(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_pdu *pdu;
 

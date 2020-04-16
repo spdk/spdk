@@ -160,7 +160,7 @@ spdk_shutdown_iscsi_conns_done(void)
 }
 
 void
-spdk_put_pdu(struct spdk_iscsi_pdu *pdu)
+iscsi_put_pdu(struct spdk_iscsi_pdu *pdu)
 {
 	if (!pdu) {
 		return;
@@ -180,7 +180,7 @@ spdk_put_pdu(struct spdk_iscsi_pdu *pdu)
 }
 
 struct spdk_iscsi_pdu *
-spdk_get_pdu(struct spdk_iscsi_conn *conn)
+iscsi_get_pdu(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_pdu *pdu;
 
@@ -442,7 +442,7 @@ iscsi_fuzz_read_pdu(struct spdk_iscsi_conn *conn)
 		case ISCSI_PDU_RECV_STATE_AWAIT_PDU_READY:
 			assert(conn->pdu_in_progress == NULL);
 
-			conn->pdu_in_progress = spdk_get_pdu(conn);
+			conn->pdu_in_progress = iscsi_get_pdu(conn);
 			if (conn->pdu_in_progress == NULL) {
 				return SPDK_ISCSI_CONNECTION_FATAL;
 			}
@@ -562,7 +562,7 @@ fuzz_iscsi_send_login_request(struct fuzz_iscsi_dev_ctx *dev_ctx, uint8_t sessio
 	struct iscsi_bhs_login_req *login_req;
 	struct spdk_iscsi_conn *conn = dev_ctx->conn;
 
-	req_pdu = spdk_get_pdu(conn);
+	req_pdu = iscsi_get_pdu(conn);
 	req_pdu->writev_offset = 0;
 	req_pdu->hdigest_valid_bytes = 0;
 	req_pdu->ahs_valid_bytes = 0;
@@ -662,7 +662,7 @@ fuzz_iscsi_send_logout_request(struct fuzz_iscsi_dev_ctx *dev_ctx)
 
 	conn->is_logged_out = true;
 
-	req_pdu = spdk_get_pdu(conn);
+	req_pdu = iscsi_get_pdu(conn);
 	req_pdu->writev_offset = 0;
 	req_pdu->hdigest_valid_bytes = 0;
 	req_pdu->ahs_valid_bytes = 0;
@@ -767,7 +767,7 @@ dev_submit_requests(struct fuzz_iscsi_dev_ctx *dev_ctx)
 		return;
 	}
 
-	req_pdu = spdk_get_pdu(dev_ctx->conn);
+	req_pdu = iscsi_get_pdu(dev_ctx->conn);
 	req_pdu->writev_offset = 0;
 	req_pdu->hdigest_valid_bytes = 0;
 	req_pdu->ahs_valid_bytes = 0;
@@ -902,14 +902,14 @@ poll_dev(void *ctx)
 
 		TAILQ_FOREACH_SAFE(pdu, &g_get_pdu_list, tailq, tmp) {
 			TAILQ_REMOVE(&g_get_pdu_list, pdu, tailq);
-			spdk_put_pdu(pdu);
+			iscsi_put_pdu(pdu);
 		}
 
 		spdk_sock_close(&conn->sock);
 
 		TAILQ_FOREACH_SAFE(pdu, &conn->write_pdu_list, tailq, tmp) {
 			TAILQ_REMOVE(&conn->write_pdu_list, pdu, tailq);
-			spdk_put_pdu(pdu);
+			iscsi_put_pdu(pdu);
 		}
 
 		free(conn);
