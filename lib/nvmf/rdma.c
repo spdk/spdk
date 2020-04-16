@@ -600,88 +600,6 @@ spdk_nvmf_rdma_update_ibv_state(struct spdk_nvmf_rdma_qpair *rqpair) {
 	return new_state;
 }
 
-static const char *str_ibv_qp_state[] = {
-	"IBV_QPS_RESET",
-	"IBV_QPS_INIT",
-	"IBV_QPS_RTR",
-	"IBV_QPS_RTS",
-	"IBV_QPS_SQD",
-	"IBV_QPS_SQE",
-	"IBV_QPS_ERR",
-	"IBV_QPS_UNKNOWN"
-};
-
-static int
-spdk_nvmf_rdma_set_ibv_state(struct spdk_nvmf_rdma_qpair *rqpair,
-			     enum ibv_qp_state new_state)
-{
-	struct ibv_qp_attr qp_attr;
-	struct ibv_qp_init_attr init_attr;
-	int rc;
-	enum ibv_qp_state state;
-	static int attr_mask_rc[] = {
-		[IBV_QPS_RESET] = IBV_QP_STATE,
-		[IBV_QPS_INIT] = (IBV_QP_STATE |
-				  IBV_QP_PKEY_INDEX |
-				  IBV_QP_PORT |
-				  IBV_QP_ACCESS_FLAGS),
-		[IBV_QPS_RTR] = (IBV_QP_STATE |
-				 IBV_QP_AV |
-				 IBV_QP_PATH_MTU |
-				 IBV_QP_DEST_QPN |
-				 IBV_QP_RQ_PSN |
-				 IBV_QP_MAX_DEST_RD_ATOMIC |
-				 IBV_QP_MIN_RNR_TIMER),
-		[IBV_QPS_RTS] = (IBV_QP_STATE |
-				 IBV_QP_SQ_PSN |
-				 IBV_QP_TIMEOUT |
-				 IBV_QP_RETRY_CNT |
-				 IBV_QP_RNR_RETRY |
-				 IBV_QP_MAX_QP_RD_ATOMIC),
-		[IBV_QPS_SQD] = IBV_QP_STATE,
-		[IBV_QPS_SQE] = IBV_QP_STATE,
-		[IBV_QPS_ERR] = IBV_QP_STATE,
-	};
-
-	rc = spdk_nvmf_rdma_check_ibv_state(new_state);
-	if (rc) {
-		SPDK_ERRLOG("QP#%d: bad state requested: %u\n",
-			    rqpair->qpair.qid, new_state);
-		return rc;
-	}
-
-	rc = ibv_query_qp(rqpair->cm_id->qp, &qp_attr,
-			  g_spdk_nvmf_ibv_query_mask, &init_attr);
-
-	if (rc) {
-		SPDK_ERRLOG("Failed to get updated RDMA queue pair state!\n");
-	}
-
-	qp_attr.cur_qp_state = rqpair->ibv_state;
-	qp_attr.qp_state = new_state;
-
-	rc = ibv_modify_qp(rqpair->cm_id->qp, &qp_attr,
-			   attr_mask_rc[new_state]);
-
-	if (rc) {
-		SPDK_ERRLOG("QP#%d: failed to set state to: %s, %d (%s)\n",
-			    rqpair->qpair.qid, str_ibv_qp_state[new_state], errno, strerror(errno));
-		return rc;
-	}
-
-	state = spdk_nvmf_rdma_update_ibv_state(rqpair);
-
-	if (state != new_state) {
-		SPDK_ERRLOG("QP#%d: expected state: %s, actual state: %s\n",
-			    rqpair->qpair.qid, str_ibv_qp_state[new_state],
-			    str_ibv_qp_state[state]);
-		return -1;
-	}
-	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "IBV QP#%u changed to: %s\n", rqpair->qpair.qid,
-		      str_ibv_qp_state[state]);
-	return 0;
-}
-
 static void
 nvmf_rdma_request_free_data(struct spdk_nvmf_rdma_request *rdma_req,
 			    struct spdk_nvmf_rdma_transport *rtransport)
@@ -3646,8 +3564,8 @@ spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 		return;
 	}
 
-	if (rqpair->ibv_state != IBV_QPS_ERR) {
-		spdk_nvmf_rdma_set_ibv_state(rqpair, IBV_QPS_ERR);
+	if (rqpair->cm_id) {
+		rdma_disconnect(rqpair->cm_id);
 	}
 
 	rqpair->destruct_poller = SPDK_POLLER_REGISTER(spdk_nvmf_rdma_destroy_defunct_qpair, (void *)rqpair,
