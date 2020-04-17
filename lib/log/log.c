@@ -150,12 +150,20 @@ spdk_log(enum spdk_log_level level, const char *file, const int line, const char
 	vsnprintf(buf, sizeof(buf), format, ap);
 
 	if (level <= g_spdk_log_print_level) {
-		fprintf(stderr, "%s:%4d:%s: *%s*: %s", file, line, func, spdk_level_names[level], buf);
-		spdk_log_unwind_stack(stderr, level);
+		if (file) {
+			fprintf(stderr, "%s:%4d:%s: *%s*: %s", file, line, func, spdk_level_names[level], buf);
+			spdk_log_unwind_stack(stderr, level);
+		} else {
+			fprintf(stderr, "%s", buf);
+		}
 	}
 
 	if (level <= g_spdk_log_level) {
-		syslog(severity, "%s:%4d:%s: *%s*: %s", file, line, func, spdk_level_names[level], buf);
+		if (file) {
+			syslog(severity, "%s:%4d:%s: *%s*: %s", file, line, func, spdk_level_names[level], buf);
+		} else {
+			syslog(severity, "%s", buf);
+		}
 	}
 
 	va_end(ap);
