@@ -55,6 +55,7 @@ struct ftl_io;
 struct ftl_wbuf_entry;
 struct ftl_band;
 
+#if defined(DEBUG)
 uint64_t ftl_trace_alloc_id(struct spdk_ftl_dev *dev);
 void ftl_trace_defrag_band(struct spdk_ftl_dev *dev, const struct ftl_band *band);
 void ftl_trace_write_band(struct spdk_ftl_dev *dev, const struct ftl_band *band);
@@ -68,5 +69,16 @@ void ftl_trace_completion(struct spdk_ftl_dev *dev,
 			  const struct ftl_io *io,
 			  enum ftl_trace_completion type);
 void ftl_trace_limits(struct spdk_ftl_dev *dev, int limit, size_t num_free);
+#else /* defined(DEBUG) */
+#define ftl_trace_alloc_id(dev) FTL_TRACE_INVALID_ID
+#define ftl_trace_defrag_band(dev, band)
+#define ftl_trace_write_band(dev, band)
+#define ftl_trace_lba_io_init(dev, io)
+#define ftl_trace_wbuf_fill(dev, io)
+#define ftl_trace_wbuf_pop(dev, entry)
+#define ftl_trace_submission(dev, io, addr, addr_cnt)
+#define ftl_trace_completion(dev, io, type)
+#define ftl_trace_limits(dev, limits, num_free)
+#endif
 
 #endif /* FTL_TRACE_H */

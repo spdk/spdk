@@ -38,6 +38,8 @@
 #include "ftl_io.h"
 #include "ftl_band.h"
 
+#if defined(DEBUG)
+
 #define OWNER_FTL	0x20
 #define TRACE_GROUP_FTL	0x6
 
@@ -355,3 +357,5 @@ ftl_trace_alloc_id(struct spdk_ftl_dev *dev)
 
 	return ftl_trace_next_id(trace);
 }
+
+#endif /* defined(DEBUG) */
