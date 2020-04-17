@@ -158,6 +158,7 @@ struct rpc_pollers {
 
 struct rpc_poller_thread_info {
 	char *name;
+	uint64_t id;
 	struct rpc_pollers active_pollers;
 	struct rpc_pollers timed_pollers;
 	struct rpc_pollers paused_pollers;
@@ -297,6 +298,7 @@ rpc_decode_pollers_array(const struct spdk_json_val *val, void *out)
 
 static const struct spdk_json_object_decoder rpc_pollers_threads_decoders[] = {
 	{"name", offsetof(struct rpc_poller_thread_info, name), spdk_json_decode_string},
+	{"id", offsetof(struct rpc_poller_thread_info, id), spdk_json_decode_uint64},
 	{"active_pollers", offsetof(struct rpc_poller_thread_info, active_pollers), rpc_decode_pollers_array},
 	{"timed_pollers", offsetof(struct rpc_poller_thread_info, timed_pollers), rpc_decode_pollers_array},
 	{"paused_pollers", offsetof(struct rpc_poller_thread_info, paused_pollers), rpc_decode_pollers_array},
