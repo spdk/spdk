@@ -106,7 +106,7 @@ fi
 
 $rpc_py bdev_nvme_cuse_unregister -n Nvme0
 sleep 1
-if [ -c /dev/spdk/${nvme_name} ]; then
+if [ -c "$ctrlr" ]; then
 	return 1
 fi
 
@@ -119,7 +119,7 @@ fi
 
 $rpc_py bdev_nvme_detach_controller Nvme0
 sleep 1
-if [ -c /dev/spdk/nvme0 ]; then
+if [ -c "$ctrlr" ]; then
 	return 1
 fi
 
