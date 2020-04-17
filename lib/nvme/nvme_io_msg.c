@@ -106,6 +106,20 @@ spdk_nvme_io_msg_process(struct spdk_nvme_ctrlr *ctrlr)
 	return count;
 }
 
+static bool
+nvme_io_msg_is_producer_registered(struct spdk_nvme_ctrlr *ctrlr,
+				   struct nvme_io_msg_producer *io_msg_producer)
+{
+	struct nvme_io_msg_producer *tmp;
+
+	STAILQ_FOREACH(tmp, &ctrlr->io_producers, link) {
+		if (tmp == io_msg_producer) {
+			return true;
+		}
+	}
+	return false;
+}
+
 int
 nvme_io_msg_ctrlr_register(struct spdk_nvme_ctrlr *ctrlr,
 			   struct nvme_io_msg_producer *io_msg_producer)
@@ -113,6 +127,10 @@ nvme_io_msg_ctrlr_register(struct spdk_nvme_ctrlr *ctrlr,
 	if (io_msg_producer == NULL) {
 		SPDK_ERRLOG("io_msg_producer cannot be NULL\n");
 		return -EINVAL;
+	}
+
+	if (nvme_io_msg_is_producer_registered(ctrlr, io_msg_producer)) {
+		return -EEXIST;
 	}
 
 	if (!STAILQ_EMPTY(&ctrlr->io_producers) || ctrlr->is_resetting) {
@@ -172,6 +190,10 @@ nvme_io_msg_ctrlr_unregister(struct spdk_nvme_ctrlr *ctrlr,
 			     struct nvme_io_msg_producer *io_msg_producer)
 {
 	assert(io_msg_producer != NULL);
+
+	if (!nvme_io_msg_is_producer_registered(ctrlr, io_msg_producer)) {
+		return;
+	}
 
 	STAILQ_REMOVE(&ctrlr->io_producers, io_msg_producer, nvme_io_msg_producer, link);
 	if (STAILQ_EMPTY(&ctrlr->io_producers)) {

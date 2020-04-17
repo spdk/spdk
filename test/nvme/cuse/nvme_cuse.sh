@@ -46,6 +46,14 @@ if [ ! -c "${ctrlr_base}0" ]; then
 	exit 1
 fi
 
+# Verify adding same nvme controller twice fails
+$rpc_py bdev_nvme_cuse_register -n Nvme0 && false
+sleep 1
+
+if [ -c "${ctrlr_base}1" ]; then
+	exit 1
+fi
+
 $rpc_py bdev_nvme_detach_controller Nvme0
 
 trap - SIGINT SIGTERM EXIT
