@@ -267,6 +267,7 @@ rpc_thread_get_pollers(void *arg)
 
 	spdk_json_write_object_begin(ctx->w);
 	spdk_json_write_named_string(ctx->w, "name", spdk_thread_get_name(thread));
+	spdk_json_write_named_uint64(ctx->w, "id", spdk_thread_get_id(thread));
 
 	spdk_json_write_named_array_begin(ctx->w, "active_pollers");
 	TAILQ_FOREACH(poller, &thread->active_pollers, tailq) {

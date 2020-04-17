@@ -655,6 +655,7 @@ Example response:
     "threads": [
       {
         "name": "app_thread",
+        "id": 1,
         "active_pollers": [],
         "timed_pollers": [
           {
