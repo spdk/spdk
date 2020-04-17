@@ -599,14 +599,60 @@ _spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	}
 }
 
+static inline bool
+nvmf_request_is_fabric_connect(struct spdk_nvmf_request *req)
+{
+	return req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC &&
+	       req->cmd->nvmf_cmd.fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT;
+}
+
+static struct spdk_nvmf_subsystem_poll_group *
+nvmf_subsystem_pg_from_connect_cmd(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_fabric_connect_data *data;
+	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvmf_tgt *tgt;
+
+	assert(nvmf_request_is_fabric_connect(req));
+	assert(req->qpair->ctrlr == NULL);
+
+	data = req->data;
+	tgt = req->qpair->transport->tgt;
+
+	subsystem = spdk_nvmf_tgt_find_subsystem(tgt, data->subnqn);
+	if (subsystem == NULL) {
+		return NULL;
+	}
+
+	return &req->qpair->group->sgroups[subsystem->id];
+}
+
 int
 spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 {
+	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
 	struct spdk_nvmf_qpair *qpair = req->qpair;
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
+	enum spdk_nvmf_request_exec_status status;
 
+	sgroup = nvmf_subsystem_pg_from_connect_cmd(req);
+	if (!sgroup) {
+		SPDK_NVMF_INVALID_CONNECT_DATA(rsp, subnqn);
+		status = SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		goto out;
+	}
+
+	sgroup->io_outstanding++;
 	TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
 
-	return _spdk_nvmf_ctrlr_connect(req);
+	status = _spdk_nvmf_ctrlr_connect(req);
+
+out:
+	if (status == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
+		spdk_nvmf_request_complete(req);
+	}
+
+	return status;
 }
 
 static int
@@ -2805,34 +2851,6 @@ spdk_nvmf_request_free(struct spdk_nvmf_request *req)
 	spdk_nvmf_qpair_request_cleanup(qpair);
 
 	return 0;
-}
-
-static inline bool
-nvmf_request_is_fabric_connect(struct spdk_nvmf_request *req)
-{
-	return req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC &&
-	       req->cmd->nvmf_cmd.fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT;
-}
-
-static struct spdk_nvmf_subsystem_poll_group *
-nvmf_subsystem_pg_from_connect_cmd(struct spdk_nvmf_request *req)
-{
-	struct spdk_nvmf_fabric_connect_data *data;
-	struct spdk_nvmf_subsystem *subsystem;
-	struct spdk_nvmf_tgt *tgt;
-
-	assert(nvmf_request_is_fabric_connect(req));
-	assert(req->qpair->ctrlr == NULL);
-
-	data = req->data;
-	tgt = req->qpair->transport->tgt;
-
-	subsystem = spdk_nvmf_tgt_find_subsystem(tgt, data->subnqn);
-	if (subsystem == NULL) {
-		return NULL;
-	}
-
-	return &req->qpair->group->sgroups[subsystem->id];
 }
 
 int
