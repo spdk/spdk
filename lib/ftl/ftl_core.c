@@ -1599,7 +1599,7 @@ ftl_write_cb(struct ftl_io *io, void *arg, int status)
 static void
 ftl_update_stats(struct spdk_ftl_dev *dev, const struct ftl_wbuf_entry *entry)
 {
-	if (entry->io_flags & FTL_IO_INTERNAL) {
+	if (!(entry->io_flags & FTL_IO_INTERNAL)) {
 		dev->stats.write_user++;
 	}
 	dev->stats.write_total++;
