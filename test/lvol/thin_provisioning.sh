@@ -205,8 +205,8 @@ function test_thin_overprovisioning() {
 	# Fill rest of second bdev
 	# Check that error message occured while filling second bdev with data
 	offset=$fill_size
-	fill_size_rest=$(( size - fill_size ))
-	run_fio_test /dev/nbd1 0 "$offset" "$fill_size_rest" "write" "0xcc" && false
+	fill_size_rest=$(( lvol_size - fill_size ))
+	run_fio_test /dev/nbd1 "$offset" "$fill_size_rest" "write" "0xcc" && false
 
 	# Check if data on first disk stayed unchanged
 	run_fio_test /dev/nbd0 0 $fill_size "read" "0xcc"
