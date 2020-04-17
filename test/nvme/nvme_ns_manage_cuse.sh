@@ -28,17 +28,13 @@ for bdf in $bdfs; do
 
 	oacs=$($NVME_CMD id-ctrl /dev/${nvme_name} | grep oacs | cut -d: -f2)
 	oacs_ns_manage=$((oacs & 0x8))
-	oaes=$($NVME_CMD id-ctrl /dev/${nvme_name} | grep oaes | cut -d: -f2)
-	aer_ns_change=$((oaes & 0x100))
 
-	if [[ "$oacs_ns_manage" -ne 0 ]] && [[ "$aer_ns_change" -ne 0 ]]; then
+	if [[ "$oacs_ns_manage" -ne 0 ]]; then
 		break
 	fi
 done
 
-if [[ "${nvme_name}" == "" ]] || [[ "$oacs_ns_manage" -eq 0 ]] || [[ "$aer_ns_change" -eq 0 ]]; then
-	# This version doesn't support devices without supported
-	# NS Change AER. It will be included in the next patch.
+if [[ "${nvme_name}" == "" ]] || [[ "$oacs_ns_manage" -eq 0 ]]; then
 	echo "NVMe device not found"
 	$rootdir/scripts/setup.sh
 	exit 0
@@ -47,6 +43,9 @@ fi
 nvme_dev=/dev/${nvme_name}
 
 # Detect supported features and configuration
+oaes=$($NVME_CMD id-ctrl ${nvme_dev} | grep oaes | cut -d: -f2)
+aer_ns_change=$((oaes & 0x100))
+
 nvmcap=$($NVME_CMD id-ns ${nvme_dev} -n 1 | grep nvmcap | cut -d: -f2)
 blksize=512
 
@@ -76,6 +75,10 @@ info_print "delete all namespaces"
 $NVME_CMD detach-ns ${nvme_dev} -n 0xffffffff -c 0 || true
 $NVME_CMD delete-ns ${nvme_dev} -n 0xffffffff || true
 
+if [[ "$aer_ns_change" -eq "0" ]]; then
+	sleep 1
+	$NVME_CMD reset ${nvme_dev} || true
+fi
 sleep 1
 
 PCI_WHITELIST="${bdf}" $rootdir/scripts/setup.sh
@@ -102,6 +105,10 @@ $NVME_CMD create-ns /dev/spdk/nvme0 -s 10000 -c 10000 -f 0
 info_print "attach ns: nsid=1 controller=0"
 $NVME_CMD attach-ns /dev/spdk/nvme0 -n 1 -c 0
 
+if [[ "$aer_ns_change" -eq "0" ]]; then
+	sleep 1
+	$NVME_CMD reset /dev/spdk/nvme0 || true
+fi
 sleep 1
 
 [[ -c /dev/spdk/nvme0n1 ]]
@@ -112,6 +119,10 @@ $NVME_CMD create-ns /dev/spdk/nvme0 -s 10000 -c 10000 -f 0
 info_print "attach ns: nsid=2 controller=0"
 $NVME_CMD attach-ns /dev/spdk/nvme0 -n 2 -c 0
 
+if [[ "$aer_ns_change" -eq "0" ]]; then
+	sleep 1
+	$NVME_CMD reset /dev/spdk/nvme0 || true
+fi
 sleep 1
 
 [[ -c /dev/spdk/nvme0n2 ]]
@@ -122,6 +133,10 @@ $NVME_CMD detach-ns /dev/spdk/nvme0 -n 2 -c 0 || true
 info_print "delete ns: nsid=2"
 $NVME_CMD delete-ns /dev/spdk/nvme0 -n 2 || true
 
+if [[ "$aer_ns_change" -eq "0" ]]; then
+	sleep 1
+	$NVME_CMD reset /dev/spdk/nvme0 || true
+fi
 sleep 1
 
 [[ ! -c /dev/spdk/nvme0n2 ]]
@@ -132,6 +147,10 @@ $NVME_CMD detach-ns /dev/spdk/nvme0 -n 1 -c 0 || true
 info_print "delete ns: nsid=1"
 $NVME_CMD delete-ns /dev/spdk/nvme0 -n 1 || true
 
+if [[ "$aer_ns_change" -eq "0" ]]; then
+	sleep 1
+	$NVME_CMD reset /dev/spdk/nvme0 || true
+fi
 sleep 1
 
 # Here we should not have any cuse devices
