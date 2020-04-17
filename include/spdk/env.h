@@ -55,7 +55,7 @@ extern "C" {
 #define SPDK_MALLOC_DMA    0x01
 
 /**
- * Memory is sharable across process boundries.
+ * Memory is sharable across process boundaries.
  */
 #define SPDK_MALLOC_SHARE  0x02
 
@@ -942,7 +942,7 @@ void spdk_pci_device_detach(struct spdk_pci_device *device);
  * attached if it's supported by this driver.
  * \param enum_cb Callback to be called for the PCI device once it's found.
  * The return code can be as follows:
- *  -1, 1 - an error occured, fail the attach request entirely
+ *  -1, 1 - an error occurred, fail the attach request entirely
  *   0 - device attached successfully
  * \param enum_ctx Additional context passed to the callback function.
  * \param pci_address Address of the device to attach.
