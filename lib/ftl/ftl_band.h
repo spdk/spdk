@@ -41,7 +41,7 @@
 
 #include "ftl_io.h"
 #include "ftl_addr.h"
-#include "ftl_io.h"
+#include "ftl_core.h"
 
 /* Number of LBAs that could be stored in a single block */
 #define FTL_NUM_LBA_IN_BLOCK	(FTL_BLOCK_SIZE / sizeof(uint64_t))
@@ -275,11 +275,13 @@ ftl_band_zone_is_first(struct ftl_band *band, struct ftl_zone *zone)
 }
 
 static inline int
-ftl_zone_is_writable(const struct ftl_zone *zone)
+ftl_zone_is_writable(const struct spdk_ftl_dev *dev, const struct ftl_zone *zone)
 {
+	bool busy = ftl_is_append_supported(dev) ? false : zone->busy;
+
 	return (zone->info.state == SPDK_BDEV_ZONE_STATE_OPEN ||
 		zone->info.state == SPDK_BDEV_ZONE_STATE_EMPTY) &&
-	       !zone->busy;
+	       !busy;
 }
 
 #endif /* FTL_BAND_H */

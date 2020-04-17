@@ -820,7 +820,7 @@ ftl_wptr_ready(struct ftl_wptr *wptr)
 
 	/* TODO: add handling of empty bands */
 
-	if (spdk_unlikely(!ftl_zone_is_writable(wptr->zone))) {
+	if (spdk_unlikely(!ftl_zone_is_writable(wptr->dev, wptr->zone))) {
 		/* Erasing band may fail after it was assigned to wptr. */
 		if (spdk_unlikely(wptr->zone->info.state == SPDK_BDEV_ZONE_STATE_OFFLINE)) {
 			ftl_wptr_advance(wptr, wptr->dev->xfer_size);
