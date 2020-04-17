@@ -814,6 +814,7 @@ INPUT                  += \
                          ftl.md \
                          gdb_macros.md \
                          getting_started.md \
+                         idxd.md \
                          ioat.md \
                          iscsi.md \
                          jsonrpc.md \

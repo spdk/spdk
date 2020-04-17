@@ -8,6 +8,23 @@ Legacy INI style configuration for SPDK applications has been deprecated and wil
 removed in future release.
 Please switch to JSON-RPC configuration files and/or RPC driven run-time configuration.
 
+### idxd
+
+IDXD support was added in the form of a low level library that can directly
+utilize the IDXD offload engine as well as an accel plug-in module allowing for use
+with the generic accel framework API. IDXD is the first in a family of offload
+engines that share the same interface, specifically DSA is added here. More info
+can be found here: https://01.org/blogs/2019/introducing-intel-data-streaming-accelerator
+
+Much of the implementation models IOAT, however their low level interfaces are very
+different. The RPC to enable IDXD requires a configuration number as well. The
+code includes 2 pre-defined configurations of IDXD groups/work queues/engines. A future
+version will provide an interface to allow for setting of individual configuration
+parameters.
+
+IDXD is not yet available so this feature should be considered experimental. It will
+be built up with additional documentation as an ongoing activity.
+
 ### ocf
 
 Update OCF submodule to OCF v20.03

@@ -280,6 +280,7 @@ Example response:
     "framework_monitor_context_switch",
     "spdk_kill_instance",
     "ioat_scan_accel_engine",
+    "idxd_scan_accel_engine",
     "bdev_virtio_attach_controller",
     "bdev_virtio_scsi_get_devices",
     "bdev_virtio_detach_controller",
