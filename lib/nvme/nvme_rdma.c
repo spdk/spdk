@@ -95,6 +95,8 @@
  */
 #define NVME_RDMA_DESTROYED_QPAIR_EXPIRATION_CYCLES	50
 
+#define WC_PER_QPAIR(queue_depth)	(queue_depth * 2)
+
 enum nvme_rdma_wr_type {
 	RDMA_WR_TYPE_RECV,
 	RDMA_WR_TYPE_SEND,
@@ -152,6 +154,8 @@ struct nvme_rdma_destroyed_qpair {
 struct nvme_rdma_poller {
 	struct ibv_context		*device;
 	struct ibv_cq			*cq;
+	int				required_num_wc;
+	int				current_num_wc;
 	STAILQ_ENTRY(nvme_rdma_poller)	link;
 };
 
@@ -2427,6 +2431,8 @@ nvme_rdma_poller_create(struct nvme_rdma_poll_group *group, struct ibv_context *
 
 	STAILQ_INSERT_HEAD(&group->pollers, poller, link);
 	group->num_pollers++;
+	poller->current_num_wc = DEFAULT_NVME_RDMA_CQ_SIZE;
+	poller->required_num_wc = 0;
 	return 0;
 }
 
@@ -2513,6 +2519,32 @@ nvme_rdma_poll_group_get_qpair_by_id(struct nvme_rdma_poll_group *group, uint32_
 }
 
 static int
+nvme_rdma_resize_cq(struct nvme_rdma_qpair *rqpair, struct nvme_rdma_poller *poller)
+{
+	int	current_num_wc, required_num_wc;
+
+	required_num_wc = poller->required_num_wc + WC_PER_QPAIR(rqpair->num_entries);
+	current_num_wc = poller->current_num_wc;
+	if (current_num_wc < required_num_wc) {
+		current_num_wc = spdk_max(current_num_wc * 2, required_num_wc);
+	}
+
+	if (poller->current_num_wc != current_num_wc) {
+		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Resize RDMA CQ from %d to %d\n", poller->current_num_wc,
+			      current_num_wc);
+		if (ibv_resize_cq(poller->cq, current_num_wc)) {
+			SPDK_ERRLOG("RDMA CQ resize failed: errno %d: %s\n", errno, spdk_strerror(errno));
+			return -1;
+		}
+
+		poller->current_num_wc = current_num_wc;
+	}
+
+	poller->required_num_wc = required_num_wc;
+	return 0;
+}
+
+static int
 nvme_rdma_poll_group_connect_qpair(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_rdma_qpair		*rqpair = nvme_rdma_qpair(qpair);
@@ -2523,6 +2555,9 @@ nvme_rdma_poll_group_connect_qpair(struct spdk_nvme_qpair *qpair)
 
 	STAILQ_FOREACH(poller, &group->pollers, link) {
 		if (poller->device == rqpair->cm_id->verbs) {
+			if (nvme_rdma_resize_cq(rqpair, poller)) {
+				return -EPROTO;
+			}
 			rqpair->cq = poller->cq;
 			break;
 		}
