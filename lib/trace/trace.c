@@ -38,6 +38,7 @@
 #include "spdk/trace.h"
 #include "spdk/util.h"
 #include "spdk/barrier.h"
+#include "spdk/log.h"
 
 static int g_trace_fd = -1;
 static char g_shm_name[64];
@@ -102,20 +103,20 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries)
 
 	g_trace_fd = shm_open(shm_name, O_RDWR | O_CREAT, 0600);
 	if (g_trace_fd == -1) {
-		fprintf(stderr, "could not shm_open spdk_trace\n");
-		fprintf(stderr, "errno=%d %s\n", errno, spdk_strerror(errno));
+		SPDK_ERRLOG("could not shm_open spdk_trace\n");
+		SPDK_ERRLOG("errno=%d %s\n", errno, spdk_strerror(errno));
 		return 1;
 	}
 
 	if (ftruncate(g_trace_fd, histories_size) != 0) {
-		fprintf(stderr, "could not truncate shm\n");
+		SPDK_ERRLOG("could not truncate shm\n");
 		goto trace_init_err;
 	}
 
 	g_trace_histories = mmap(NULL, histories_size, PROT_READ | PROT_WRITE,
 				 MAP_SHARED, g_trace_fd, 0);
 	if (g_trace_histories == MAP_FAILED) {
-		fprintf(stderr, "could not mmap shm\n");
+		SPDK_ERRLOG("could not mmap shm\n");
 		goto trace_init_err;
 	}
 
@@ -125,9 +126,9 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries)
 	 */
 #if defined(__linux__)
 	if (mlock(g_trace_histories, histories_size) != 0) {
-		fprintf(stderr, "Could not mlock shm for tracing - %s.\n", spdk_strerror(errno));
+		SPDK_ERRLOG("Could not mlock shm for tracing - %s.\n", spdk_strerror(errno));
 		if (errno == ENOMEM) {
-			fprintf(stderr, "Check /dev/shm for old tracing files that can be deleted.\n");
+			SPDK_ERRLOG("Check /dev/shm for old tracing files that can be deleted.\n");
 		}
 		goto trace_init_err;
 	}

@@ -514,7 +514,7 @@ spdk_app_setup_env(struct spdk_app_opts *opts)
 	free(env_opts.pci_whitelist);
 
 	if (rc < 0) {
-		fprintf(stderr, "Unable to initialize SPDK env\n");
+		SPDK_ERRLOG("Unable to initialize SPDK env\n");
 	}
 
 	return rc;
@@ -808,7 +808,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 
 	cmdline_options = calloc(global_long_opts_len + app_long_opts_len + 1, sizeof(*cmdline_options));
 	if (!cmdline_options) {
-		fprintf(stderr, "Out of memory\n");
+		SPDK_ERRLOG("Out of memory\n");
 		return SPDK_APP_PARSE_ARGS_FAIL;
 	}
 
@@ -821,15 +821,15 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 	if (app_getopt_str != NULL) {
 		ch = spdk_app_opts_validate(app_getopt_str);
 		if (ch) {
-			fprintf(stderr, "Duplicated option '%c' between the generic and application specific spdk opts.\n",
-				ch);
+			SPDK_ERRLOG("Duplicated option '%c' between the generic and application specific spdk opts.\n",
+				    ch);
 			goto out;
 		}
 	}
 
 	cmdline_short_opts = spdk_sprintf_alloc("%s%s", app_getopt_str, SPDK_APP_GETOPT_STRING);
 	if (!cmdline_short_opts) {
-		fprintf(stderr, "Out of memory\n");
+		SPDK_ERRLOG("Out of memory\n");
 		goto out;
 	}
 
@@ -862,7 +862,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		case SHM_ID_OPT_IDX:
 			opts->shm_id = spdk_strtol(optarg, 0);
 			if (opts->shm_id < 0) {
-				fprintf(stderr, "Invalid shared memory ID %s\n", optarg);
+				SPDK_ERRLOG("Invalid shared memory ID %s\n", optarg);
 				goto out;
 			}
 			break;
@@ -872,14 +872,14 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		case MEM_CHANNELS_OPT_IDX:
 			opts->mem_channel = spdk_strtol(optarg, 0);
 			if (opts->mem_channel < 0) {
-				fprintf(stderr, "Invalid memory channel %s\n", optarg);
+				SPDK_ERRLOG("Invalid memory channel %s\n", optarg);
 				goto out;
 			}
 			break;
 		case MASTER_CORE_OPT_IDX:
 			opts->master_core = spdk_strtol(optarg, 0);
 			if (opts->master_core < 0) {
-				fprintf(stderr, "Invalid master core %s\n", optarg);
+				SPDK_ERRLOG("Invalid master core %s\n", optarg);
 				goto out;
 			}
 			break;
@@ -895,7 +895,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 
 			rc = spdk_parse_capacity(optarg, &mem_size_mb, &mem_size_has_prefix);
 			if (rc != 0) {
-				fprintf(stderr, "invalid memory pool size `-s %s`\n", optarg);
+				SPDK_ERRLOG("invalid memory pool size `-s %s`\n", optarg);
 				usage(app_usage);
 				goto out;
 			}
@@ -908,7 +908,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			}
 
 			if (mem_size_mb > INT_MAX) {
-				fprintf(stderr, "invalid memory pool size `-s %s`\n", optarg);
+				SPDK_ERRLOG("invalid memory pool size `-s %s`\n", optarg);
 				usage(app_usage);
 				goto out;
 			}
@@ -926,7 +926,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			if (opts->pci_whitelist) {
 				free(opts->pci_whitelist);
 				opts->pci_whitelist = NULL;
-				fprintf(stderr, "-B and -W cannot be used at the same time\n");
+				SPDK_ERRLOG("-B and -W cannot be used at the same time\n");
 				usage(app_usage);
 				goto out;
 			}
@@ -940,14 +940,14 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			break;
 		case LOGFLAG_OPT_IDX:
 #ifndef DEBUG
-			fprintf(stderr, "%s must be configured with --enable-debug for -L flag\n",
-				argv[0]);
+			SPDK_ERRLOG("%s must be configured with --enable-debug for -L flag\n",
+				    argv[0]);
 			usage(app_usage);
 			goto out;
 #else
 			rc = spdk_log_set_flag(optarg);
 			if (rc < 0) {
-				fprintf(stderr, "unknown flag\n");
+				SPDK_ERRLOG("unknown flag\n");
 				usage(app_usage);
 				goto out;
 			}
@@ -961,7 +961,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			if (opts->pci_blacklist) {
 				free(opts->pci_blacklist);
 				opts->pci_blacklist = NULL;
-				fprintf(stderr, "-B and -W cannot be used at the same time\n");
+				SPDK_ERRLOG("-B and -W cannot be used at the same time\n");
 				usage(app_usage);
 				goto out;
 			}
@@ -979,20 +979,19 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		case NUM_TRACE_ENTRIES_OPT_IDX:
 			tmp = spdk_strtoll(optarg, 0);
 			if (tmp <= 0) {
-				fprintf(stderr, "Invalid num-trace-entries %s\n", optarg);
+				SPDK_ERRLOG("Invalid num-trace-entries %s\n", optarg);
 				usage(app_usage);
 				goto out;
 			}
 			opts->num_entries = (uint64_t)tmp;
 			if (opts->num_entries & (opts->num_entries - 1)) {
-				fprintf(stderr, "num-trace-entries must be power of 2\n");
+				SPDK_ERRLOG("num-trace-entries must be power of 2\n");
 				usage(app_usage);
 				goto out;
 			}
 			break;
 		case MAX_REACTOR_DELAY_OPT_IDX:
-			fprintf(stderr,
-				"Deprecation warning: The maximum allowed latency parameter is no longer supported.\n");
+			SPDK_ERRLOG("Deprecation warning: The maximum allowed latency parameter is no longer supported.\n");
 			break;
 		case VERSION_OPT_IDX:
 			printf(SPDK_VERSION_STRING"\n");
@@ -1009,19 +1008,19 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		default:
 			rc = app_parse(ch, optarg);
 			if (rc) {
-				fprintf(stderr, "Parsing application specific arguments failed: %d\n", rc);
+				SPDK_ERRLOG("Parsing application specific arguments failed: %d\n", rc);
 				goto out;
 			}
 		}
 	}
 
 	if (opts->config_file && opts->json_config_file) {
-		fprintf(stderr, "ERROR: Legacy config and JSON config can't be used together.\n");
+		SPDK_ERRLOG("ERROR: Legacy config and JSON config can't be used together.\n");
 		goto out;
 	}
 
 	if (opts->json_config_file && opts->delay_subsystem_init) {
-		fprintf(stderr, "ERROR: JSON configuration file can't be used together with --wait-for-rpc.\n");
+		SPDK_ERRLOG("ERROR: JSON configuration file can't be used together with --wait-for-rpc.\n");
 		goto out;
 	}
 
@@ -1049,7 +1048,7 @@ void
 spdk_app_usage(void)
 {
 	if (g_executable_name == NULL) {
-		fprintf(stderr, "%s not valid before calling spdk_app_parse_args()\n", __func__);
+		SPDK_ERRLOG("%s not valid before calling spdk_app_parse_args()\n", __func__);
 		return;
 	}
 

@@ -500,21 +500,21 @@ spdk_app_json_config_read(const char *config_file, struct load_json_config_ctx *
 	rc = spdk_json_parse(json, json_size, NULL, 0, &end,
 			     SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS);
 	if (rc < 0) {
-		fprintf(stderr, "Parsing JSON configuration failed (%zd)\n", rc);
+		SPDK_ERRLOG("Parsing JSON configuration failed (%zd)\n", rc);
 		goto err;
 	}
 
 	values_cnt = rc;
 	values = calloc(values_cnt, sizeof(struct spdk_json_val));
 	if (values == NULL) {
-		fprintf(stderr, "Out of memory\n");
+		SPDK_ERRLOG("Out of memory\n");
 		goto err;
 	}
 
 	rc = spdk_json_parse(json, json_size, values, values_cnt, &end,
 			     SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS);
 	if (rc != values_cnt) {
-		fprintf(stderr, "Parsing JSON configuration failed (%zd)\n", rc);
+		SPDK_ERRLOG("Parsing JSON configuration failed (%zd)\n", rc);
 		goto err;
 	}
 

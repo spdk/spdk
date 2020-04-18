@@ -44,7 +44,7 @@
 #define FTL_DUMP_STATS	1
 
 #define ftl_debug(msg, ...) \
-	fprintf(stderr, msg, ## __VA_ARGS__)
+	SPDK_ERRLOG(msg, ## __VA_ARGS__)
 #else
 #define ftl_debug(msg, ...)
 #endif

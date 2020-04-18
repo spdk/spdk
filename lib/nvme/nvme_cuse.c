@@ -727,12 +727,12 @@ nvme_cuse_claim(struct cuse_device *ctrlr_device, uint32_t index)
 
 	dev_fd = open(ctrlr_device->lock_name, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
 	if (dev_fd == -1) {
-		fprintf(stderr, "could not open %s\n", ctrlr_device->lock_name);
+		SPDK_ERRLOG("could not open %s\n", ctrlr_device->lock_name);
 		return -errno;
 	}
 
 	if (ftruncate(dev_fd, sizeof(int)) != 0) {
-		fprintf(stderr, "could not truncate %s\n", ctrlr_device->lock_name);
+		SPDK_ERRLOG("could not truncate %s\n", ctrlr_device->lock_name);
 		close(dev_fd);
 		return -errno;
 	}
@@ -740,15 +740,15 @@ nvme_cuse_claim(struct cuse_device *ctrlr_device, uint32_t index)
 	dev_map = mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE,
 		       MAP_SHARED, dev_fd, 0);
 	if (dev_map == MAP_FAILED) {
-		fprintf(stderr, "could not mmap dev %s (%d)\n", ctrlr_device->lock_name, errno);
+		SPDK_ERRLOG("could not mmap dev %s (%d)\n", ctrlr_device->lock_name, errno);
 		close(dev_fd);
 		return -errno;
 	}
 
 	if (fcntl(dev_fd, F_SETLK, &cusedev_lock) != 0) {
 		pid = *(int *)dev_map;
-		fprintf(stderr, "Cannot create lock on device %s, probably"
-			" process %d has claimed it\n", ctrlr_device->lock_name, pid);
+		SPDK_ERRLOG("Cannot create lock on device %s, probably"
+			    " process %d has claimed it\n", ctrlr_device->lock_name, pid);
 		munmap(dev_map, sizeof(int));
 		close(dev_fd);
 		/* F_SETLK returns unspecified errnos, normalize them */
