@@ -1,0 +1,14 @@
+{
+	global:
+
+	# public functions
+	spdk_ftl_dev_init;
+	spdk_ftl_dev_free;
+	spdk_ftl_conf_init_defaults;
+	spdk_ftl_dev_get_attrs;
+	spdk_ftl_read;
+	spdk_ftl_write;
+	spdk_ftl_flush;
+
+	local: *;
+};
