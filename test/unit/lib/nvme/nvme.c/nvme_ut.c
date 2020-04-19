@@ -537,16 +537,20 @@ test_spdk_nvme_detach(void)
 static void
 test_nvme_completion_poll_cb(void)
 {
-	struct nvme_completion_poll_status status;
+	struct nvme_completion_poll_status *status;
 	struct spdk_nvme_cpl cpl;
 
-	memset(&status, 0x0, sizeof(status));
+	status = calloc(1, sizeof(*status));
+	SPDK_CU_ASSERT_FATAL(status != NULL);
+
 	memset(&cpl, 0xff, sizeof(cpl));
 
-	nvme_completion_poll_cb(&status, &cpl);
-	CU_ASSERT(status.done == true);
-	CU_ASSERT(memcmp(&cpl, &status.cpl,
+	nvme_completion_poll_cb(status, &cpl);
+	CU_ASSERT(status->done == true);
+	CU_ASSERT(memcmp(&cpl, &status->cpl,
 			 sizeof(struct spdk_nvme_cpl)) == 0);
+
+	free(status);
 }
 
 /* stub callback used by test_nvme_user_copy_cmd_complete() */
