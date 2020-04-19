@@ -895,13 +895,27 @@ shutdown_iscsi_conns(void)
 	g_shutdown_timer = SPDK_POLLER_REGISTER(iscsi_conn_check_shutdown, NULL, 1000);
 }
 
+/* Do not set conn->state if the connection has already started exiting.
+ *  This ensures we do not move a connection from EXITED state back to EXITING.
+ */
+static void
+_iscsi_conn_drop(void *ctx)
+{
+	struct spdk_iscsi_conn *conn = ctx;
+
+	if (conn->state < ISCSI_CONN_STATE_EXITING) {
+		conn->state = ISCSI_CONN_STATE_EXITING;
+	}
+}
+
 int
 iscsi_drop_conns(struct spdk_iscsi_conn *conn, const char *conn_match,
 		 int drop_all)
 {
 	struct spdk_iscsi_conn	*xconn;
-	const char			*xconn_match;
-	int				i, num;
+	const char		*xconn_match;
+	struct spdk_thread	*thread;
+	int			i, num;
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "iscsi_drop_conns\n");
 
@@ -947,12 +961,9 @@ iscsi_drop_conns(struct spdk_iscsi_conn *conn, const char *conn_match,
 
 			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "CID=%u\n", xconn->cid);
 
-			/* Do not set xconn->state if the connection has already started exiting.
-			  * This ensures we do not move a connection from EXITED state back to EXITING.
-			  */
-			if (xconn->state < ISCSI_CONN_STATE_EXITING) {
-				xconn->state = ISCSI_CONN_STATE_EXITING;
-			}
+			thread = spdk_io_channel_get_thread(spdk_io_channel_from_ctx(conn->pg));
+			spdk_thread_send_msg(thread, _iscsi_conn_drop, conn);
+
 			num++;
 		}
 	}
