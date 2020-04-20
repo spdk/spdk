@@ -64,7 +64,7 @@
 #define MAX_POLLER_NAME_LEN 36
 #define MAX_POLLER_COUNT_STR_LEN 16
 #define MAX_POLLER_TYPE_STR_LEN 8
-#define MAX_CORE_MASK_STR_LEN 12
+#define MAX_CORE_STR_LEN 8
 
 enum tabs {
 	THREADS_TAB,
@@ -98,6 +98,7 @@ uint32_t g_last_threads_count, g_last_pollers_count, g_last_cores_count;
 uint8_t g_current_sort_col[NUMBER_OF_TABS] = {0, 0, 0};
 static struct col_desc g_col_desc[NUMBER_OF_TABS][TABS_COL_COUNT] = {
 	{	{.name = "Thread name", .max_data_string = MAX_THREAD_NAME_LEN},
+		{.name = "Core", .max_data_string = MAX_CORE_STR_LEN},
 		{.name = "Active pollers", .max_data_string = MAX_POLLER_COUNT_STR_LEN},
 		{.name = "Timed pollers", .max_data_string = MAX_POLLER_COUNT_STR_LEN},
 		{.name = "Paused pollers", .max_data_string = MAX_POLLER_COUNT_STR_LEN},
@@ -108,7 +109,7 @@ static struct col_desc g_col_desc[NUMBER_OF_TABS][TABS_COL_COUNT] = {
 		{.name = "On thread", .max_data_string = MAX_THREAD_NAME_LEN},
 		{.name = (char *)NULL}
 	},
-	{	{.name = "Core", .max_data_string = MAX_CORE_MASK_STR_LEN},
+	{	{.name = "Core", .max_data_string = MAX_CORE_STR_LEN},
 		{.name = (char *)NULL}
 	}
 };
@@ -565,15 +566,17 @@ sort_threads(const void *p1, const void *p2)
 	switch (g_current_sort_col[THREADS_TAB]) {
 	case 0: /* Sort by name */
 		return strcmp(thread_info1->name, thread_info2->name);
-	case 1: /* Sort by active pollers number */
+	case 1: /* Sort by core */
+		return strcmp(thread_info1->cpumask, thread_info2->cpumask);
+	case 2: /* Sort by active pollers number */
 		count1 = thread_info1->active_pollers_count;
 		count2 = thread_info2->active_pollers_count;
 		break;
-	case 2: /* Sort by timed pollers number */
+	case 3: /* Sort by timed pollers number */
 		count1 = thread_info1->timed_pollers_count;
 		count2 = thread_info2->timed_pollers_count;
 		break;
-	case 3: /* Sort by paused pollers number */
+	case 4: /* Sort by paused pollers number */
 		count1 = thread_info1->paused_pollers_count;
 		count2 = thread_info2->paused_pollers_count;
 		break;
@@ -625,25 +628,33 @@ refresh_threads_tab(void)
 		if (!col_desc[0].disabled) {
 			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col, col_desc[0].max_data_string,
 				      thread_info[i]->name);
-			col += col_desc[0].max_data_string + 2;
+			col += col_desc[0].max_data_string;
 		}
 
 		if (!col_desc[1].disabled) {
-			snprintf(pollers_number, MAX_POLLER_COUNT_STR_LEN, "%ld", thread_info[i]->active_pollers_count);
 			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col + (col_desc[1].name_len / 2),
-				      col_desc[1].max_data_string, pollers_number);
-			col += col_desc[1].max_data_string + 1;
+				      col_desc[1].max_data_string, thread_info[i]->cpumask);
+			col += col_desc[1].max_data_string + 2;
 		}
+
 		if (!col_desc[2].disabled) {
-			snprintf(pollers_number, MAX_POLLER_COUNT_STR_LEN, "%ld", thread_info[i]->timed_pollers_count);
+			snprintf(pollers_number, MAX_POLLER_COUNT_STR_LEN, "%ld", thread_info[i]->active_pollers_count);
 			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col + (col_desc[2].name_len / 2),
 				      col_desc[2].max_data_string, pollers_number);
-			col += col_desc[2].max_data_string + 1;
+			col += col_desc[2].max_data_string + 2;
 		}
+
 		if (!col_desc[3].disabled) {
-			snprintf(pollers_number, MAX_POLLER_COUNT_STR_LEN, "%ld", thread_info[i]->paused_pollers_count);
+			snprintf(pollers_number, MAX_POLLER_COUNT_STR_LEN, "%ld", thread_info[i]->timed_pollers_count);
 			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col + (col_desc[3].name_len / 2),
 				      col_desc[3].max_data_string, pollers_number);
+			col += col_desc[3].max_data_string + 1;
+		}
+
+		if (!col_desc[4].disabled) {
+			snprintf(pollers_number, MAX_POLLER_COUNT_STR_LEN, "%ld", thread_info[i]->paused_pollers_count);
+			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + i, col + (col_desc[4].name_len / 2),
+				      col_desc[4].max_data_string, pollers_number);
 		}
 	}
 }
