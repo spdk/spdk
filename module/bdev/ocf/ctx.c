@@ -477,17 +477,31 @@ static int
 vbdev_ocf_ctx_log_printf(ocf_logger_t logger, ocf_logger_lvl_t lvl,
 			 const char *fmt, va_list args)
 {
-	FILE *lfile = stdout;
+	int spdk_lvl;
 
-	if (lvl > log_info) {
-		return 0;
+	switch (lvl) {
+	case log_emerg:
+	case log_alert:
+	case log_crit:
+	case log_err:
+		spdk_lvl = SPDK_LOG_ERROR;
+		break;
+
+	case log_warn:
+		spdk_lvl = SPDK_LOG_WARN;
+		break;
+
+	case log_notice:
+		spdk_lvl = SPDK_LOG_NOTICE;
+		break;
+
+	case log_info:
+	case log_debug:
+		spdk_lvl = SPDK_LOG_INFO;
 	}
 
-	if (lvl <= log_warn) {
-		lfile = stderr;
-	}
-
-	return vfprintf(lfile, fmt, args);
+	spdk_vlog(spdk_lvl, NULL, -1, NULL, fmt, args);
+	return 0;
 }
 
 static const struct ocf_ctx_config vbdev_ocf_ctx_cfg = {
