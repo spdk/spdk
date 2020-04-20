@@ -2,6 +2,12 @@
 
 ## v20.04: (Upcoming Release)
 
+### configuration
+
+Legacy INI style configuration for SPDK applications has been deprecated and will be
+removed in future release.
+Please switch to JSON-RPC configuration files and/or RPC driven run-time configuration.
+
 ### ocf
 
 Update OCF submodule to OCF v20.03
