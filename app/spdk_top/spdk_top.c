@@ -48,6 +48,7 @@
 #define RPC_MAX_CORES 255
 #define MAX_THREAD_NAME 128
 #define MAX_POLLER_NAME 128
+#define MAX_THREADS 4096
 
 #define MAX_STRING_LEN 12289 /* 3x 4k monitors + 1 */
 #define TAB_WIN_HEIGHT 3
@@ -70,6 +71,7 @@
 #define MAX_CORE_STR_LEN 6
 #define MAX_TIME_STR_LEN 12
 #define WINDOW_HEADER 12
+#define FROM_HEX 16
 
 enum tabs {
 	THREADS_TAB,
@@ -92,6 +94,7 @@ struct col_desc {
 	bool disabled;
 };
 
+struct rpc_thread_info *g_thread_info[MAX_THREADS];
 const char *poller_type_str[SPDK_POLLER_TYPES_COUNT] = {"Active", "Timed", "Paused"};
 const char *g_tab_title[NUMBER_OF_TABS] = {"[1] THREADS", "[2] POLLERS", "[3] CORES"};
 struct spdk_jsonrpc_client *g_rpc_client;
@@ -103,7 +106,7 @@ uint32_t g_last_threads_count, g_last_pollers_count, g_last_cores_count;
 uint8_t g_current_sort_col[NUMBER_OF_TABS] = {0, 0, 0};
 static struct col_desc g_col_desc[NUMBER_OF_TABS][TABS_COL_COUNT] = {
 	{	{.name = "Thread name", .max_data_string = MAX_THREAD_NAME_LEN},
-		{.name = "Core", .max_data_string = MAX_CORE_MASK_STR_LEN},
+		{.name = "Core", .max_data_string = MAX_CORE_STR_LEN},
 		{.name = "Active pollers", .max_data_string = MAX_POLLER_COUNT_STR_LEN},
 		{.name = "Timed pollers", .max_data_string = MAX_POLLER_COUNT_STR_LEN},
 		{.name = "Paused pollers", .max_data_string = MAX_POLLER_COUNT_STR_LEN},
@@ -139,6 +142,7 @@ struct core_info {
 struct rpc_thread_info {
 	char *name;
 	uint64_t id;
+	uint32_t core_num;
 	char *cpumask;
 	uint64_t busy;
 	uint64_t idle;
@@ -494,6 +498,9 @@ static int
 get_data(void)
 {
 	struct spdk_jsonrpc_client_response *json_resp = NULL;
+	struct rpc_thread_info *thread_info;
+	struct rpc_core_info *core_info;
+	uint64_t i, j;
 	int rc = 0;
 
 	rc = rpc_send_req("thread_get_stats", &json_resp);
@@ -510,6 +517,11 @@ get_data(void)
 	}
 
 	spdk_jsonrpc_client_free_response(json_resp);
+
+	for (i = 0; i < g_threads_stats.threads.threads_count; i++) {
+		thread_info = &g_threads_stats.threads.thread_info[i];
+		g_thread_info[thread_info->id] = thread_info;
+	}
 
 	rc = rpc_send_req("thread_get_pollers", &json_resp);
 	if (rc) {
@@ -537,6 +549,14 @@ get_data(void)
 				    SPDK_COUNTOF(rpc_cores_stats_decoders), &g_cores_stats)) {
 		rc = -EINVAL;
 		goto end;
+	}
+
+	for (i = 0; i < g_cores_stats.cores.cores_count; i++) {
+		core_info = &g_cores_stats.cores.core[i];
+
+		for (j = 0; j < core_info->threads.threads_count; j++) {
+			g_thread_info[core_info->threads.thread[j].id]->core_num = core_info->lcore;
+		}
 	}
 
 end:
@@ -715,7 +735,9 @@ sort_threads(const void *p1, const void *p2)
 	case 0: /* Sort by name */
 		return strcmp(thread_info1->name, thread_info2->name);
 	case 1: /* Sort by core */
-		return strcmp(thread_info1->cpumask, thread_info2->cpumask);
+		count2 = thread_info1->core_num;
+		count1 = thread_info2->core_num;
+		break;
 	case 2: /* Sort by active pollers number */
 		count1 = thread_info1->active_pollers_count;
 		count2 = thread_info2->active_pollers_count;
@@ -758,7 +780,7 @@ refresh_threads_tab(uint8_t current_page)
 	uint16_t col;
 	uint8_t max_pages, item_index;
 	char pollers_number[MAX_POLLER_COUNT_STR_LEN], idle_time[MAX_TIME_STR_LEN],
-	     busy_time[MAX_TIME_STR_LEN];
+	     busy_time[MAX_TIME_STR_LEN], core_str[MAX_CORE_MASK_STR_LEN];
 	struct rpc_thread_info *thread_info[g_threads_stats.threads.threads_count];
 
 	threads_count = g_threads_stats.threads.threads_count;
@@ -774,9 +796,10 @@ refresh_threads_tab(uint8_t current_page)
 		g_last_threads_count = threads_count;
 	}
 
-	for (i = 0; i < threads_count; i++) {
-		thread_info[i] = &g_threads_stats.threads.thread_info[i];
-	}
+	/* Thread IDs starts from '1', so we have to take this into account when copying.
+	 * TODO: In future we can have gaps in ID list, so we will need to change the way we
+	 * handle copying threads list below */
+	memcpy(thread_info, &g_thread_info[1], sizeof(struct rpc_thread_info *) * threads_count);
 
 	max_pages = (threads_count + g_max_data_rows - 1) / g_max_data_rows;
 
@@ -796,8 +819,9 @@ refresh_threads_tab(uint8_t current_page)
 		}
 
 		if (!col_desc[1].disabled) {
+			snprintf(core_str, MAX_CORE_STR_LEN, "%d", thread_info[i]->core_num);
 			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index,
-				      col + (col_desc[1].name_len / 2), col_desc[1].max_data_string, thread_info[i]->cpumask);
+				      col + (col_desc[1].name_len / 2), col_desc[1].max_data_string, core_str);
 			col += col_desc[1].max_data_string + 2;
 		}
 
