@@ -176,17 +176,10 @@ persistent_pm_buf_destroy(void)
 	g_persistent_pm_buf_len = 0;
 }
 
-int __wrap_unlink(const char *path);
-
-int
-__wrap_unlink(const char *path)
+static void
+unlink_cb(void)
 {
-	if (strcmp(g_path, path) != 0) {
-		return ENOENT;
-	}
-
 	persistent_pm_buf_destroy();
-	return 0;
 }
 
 static void
@@ -1295,6 +1288,9 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, defer_bdev_io);
 	CU_ADD_TEST(suite, overlapped);
 	CU_ADD_TEST(suite, compress_algorithm);
+
+	g_unlink_path = g_path;
+	g_unlink_callback = unlink_cb;
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

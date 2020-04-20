@@ -36,7 +36,7 @@ fi
 timing_enter build_release
 
 if [ $(uname -s) = Linux ]; then
-	./configure $(get_config_params) --disable-debug --enable-lto --disable-unit-tests
+	./configure $(get_config_params) --disable-debug --enable-lto
 else
 	# LTO needs a special compiler to work on BSD.
 	./configure $(get_config_params) --disable-debug
