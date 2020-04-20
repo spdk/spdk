@@ -128,15 +128,23 @@ void
 spdk_log(enum spdk_log_level level, const char *file, const int line, const char *func,
 	 const char *format, ...)
 {
+	va_list ap;
+
+	va_start(ap, format);
+	spdk_vlog(level, file, line, func, format, ap);
+	va_end(ap);
+}
+
+void
+spdk_vlog(enum spdk_log_level level, const char *file, const int line, const char *func,
+	  const char *format, va_list ap)
+{
 	int severity = LOG_INFO;
 	char buf[MAX_TMPBUF];
 	char timestamp[32];
-	va_list ap;
 
 	if (g_log) {
-		va_start(ap, format);
 		g_log(level, file, line, func, format, ap);
-		va_end(ap);
 		return;
 	}
 
@@ -162,8 +170,6 @@ spdk_log(enum spdk_log_level level, const char *file, const int line, const char
 		return;
 	}
 
-	va_start(ap, format);
-
 	vsnprintf(buf, sizeof(buf), format, ap);
 
 	if (level <= g_spdk_log_print_level) {
@@ -183,8 +189,6 @@ spdk_log(enum spdk_log_level level, const char *file, const int line, const char
 			syslog(severity, "%s", buf);
 		}
 	}
-
-	va_end(ap);
 }
 
 static void

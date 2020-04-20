@@ -11,6 +11,7 @@
 	spdk_log_set_print_level;
 	spdk_log_get_print_level;
 	spdk_log;
+	spdk_vlog;
 	spdk_log_dump;
 	spdk_log_get_flag;
 	spdk_log_set_flag;

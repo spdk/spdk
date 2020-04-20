@@ -155,6 +155,20 @@ void spdk_log(enum spdk_log_level level, const char *file, const int line, const
 	      const char *format, ...) __attribute__((__format__(__printf__, 5, 6)));
 
 /**
+ * Same as spdk_log except that instead of being called with variable number of
+ * arguments it is called with an argument list as defined in stdarg.h
+ *
+ * \param level Log level threshold.
+ * \param file Name of the current source file.
+ * \param line Current source line number.
+ * \param func Current source function name.
+ * \param format Format string to the message.
+ * \param ap printf arguments
+ */
+void spdk_vlog(enum spdk_log_level level, const char *file, const int line, const char *func,
+	       const char *format, va_list ap);
+
+/**
  * Log the contents of a raw buffer to a file.
  *
  * \param fp File to hold the log.
