@@ -991,7 +991,8 @@ nvme_pcie_qpair_reset(struct spdk_nvme_qpair *qpair)
 }
 
 static void *
-nvme_pcie_ctrlr_alloc_cmb(struct spdk_nvme_ctrlr *ctrlr, uint64_t size, uint64_t alignment)
+nvme_pcie_ctrlr_alloc_cmb(struct spdk_nvme_ctrlr *ctrlr, uint64_t size, uint64_t alignment,
+			  uint64_t *phys_addr)
 {
 	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
 	uintptr_t addr;
@@ -1009,6 +1010,7 @@ nvme_pcie_ctrlr_alloc_cmb(struct spdk_nvme_ctrlr *ctrlr, uint64_t size, uint64_t
 		SPDK_ERRLOG("Tried to allocate past valid CMB range!\n");
 		return NULL;
 	}
+	*phys_addr = pctrlr->cmb.bar_pa + addr - (uintptr_t)pctrlr->cmb.bar_va;
 
 	pctrlr->cmb.current_offset = (addr + size) - (uintptr_t)pctrlr->cmb.bar_va;
 
@@ -1064,8 +1066,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 	/* cmd and cpl rings must be aligned on page size boundaries. */
 	if (ctrlr->opts.use_cmb_sqs) {
 		pqpair->cmd = nvme_pcie_ctrlr_alloc_cmb(ctrlr, pqpair->num_entries * sizeof(struct spdk_nvme_cmd),
-							sysconf(_SC_PAGESIZE));
-		pqpair->cmd_bus_addr = spdk_vtophys(pqpair->cmd, NULL);
+							sysconf(_SC_PAGESIZE), &pqpair->cmd_bus_addr);
 		if (pqpair->cmd != NULL) {
 			pqpair->sq_in_cmb = true;
 		}
