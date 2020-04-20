@@ -36,6 +36,7 @@
 #include <rte_alarm.h>
 #include <rte_devargs.h>
 #include "spdk/env.h"
+#include "spdk/log.h"
 
 #define SYSFS_PCI_DRIVERS	"/sys/bus/pci/drivers"
 
@@ -164,8 +165,8 @@ detach_rte(struct spdk_pci_device *dev)
 	removed = dev->internal.removed;
 	pthread_mutex_unlock(&g_pci_mutex);
 	if (!removed) {
-		fprintf(stderr, "Timeout waiting for DPDK to remove PCI device %s.\n",
-			rte_dev->name);
+		SPDK_ERRLOG("Timeout waiting for DPDK to remove PCI device %s.\n",
+			    rte_dev->name);
 		/* If we reach this state, then the device couldn't be removed and most likely
 		   a subsequent hot add of a device in the same BDF will fail */
 	}
@@ -381,7 +382,7 @@ pci_env_fini(void)
 	TAILQ_FOREACH(dev, &g_pci_devices, internal.tailq) {
 		if (dev->internal.attached) {
 			spdk_pci_addr_fmt(bdf, sizeof(bdf), &dev->addr);
-			fprintf(stderr, "Device %s is still attached at shutdown!\n", bdf);
+			SPDK_ERRLOG("Device %s is still attached at shutdown!\n", bdf);
 		}
 	}
 
@@ -924,12 +925,12 @@ spdk_pci_device_claim(struct spdk_pci_device *dev)
 
 	dev_fd = open(dev_name, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
 	if (dev_fd == -1) {
-		fprintf(stderr, "could not open %s\n", dev_name);
+		SPDK_ERRLOG("could not open %s\n", dev_name);
 		return -errno;
 	}
 
 	if (ftruncate(dev_fd, sizeof(int)) != 0) {
-		fprintf(stderr, "could not truncate %s\n", dev_name);
+		SPDK_ERRLOG("could not truncate %s\n", dev_name);
 		close(dev_fd);
 		return -errno;
 	}
@@ -937,15 +938,15 @@ spdk_pci_device_claim(struct spdk_pci_device *dev)
 	dev_map = mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE,
 		       MAP_SHARED, dev_fd, 0);
 	if (dev_map == MAP_FAILED) {
-		fprintf(stderr, "could not mmap dev %s (%d)\n", dev_name, errno);
+		SPDK_ERRLOG("could not mmap dev %s (%d)\n", dev_name, errno);
 		close(dev_fd);
 		return -errno;
 	}
 
 	if (fcntl(dev_fd, F_SETLK, &pcidev_lock) != 0) {
 		pid = *(int *)dev_map;
-		fprintf(stderr, "Cannot create lock on device %s, probably"
-			" process %d has claimed it\n", dev_name, pid);
+		SPDK_ERRLOG("Cannot create lock on device %s, probably"
+			    " process %d has claimed it\n", dev_name, pid);
 		munmap(dev_map, sizeof(int));
 		close(dev_fd);
 		/* F_SETLK returns unspecified errnos, normalize them */

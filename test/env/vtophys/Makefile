@@ -32,8 +32,13 @@
 #
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
+include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-UNIT_TEST_LINK_ENV = 1
-TEST_FILE = vtophys.c
+APP = vtophys
+C_SRCS := vtophys.c
+SPDK_LIB_LIST += thread util log
 
-include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
+SYS_LIBS += -lcunit
+
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk

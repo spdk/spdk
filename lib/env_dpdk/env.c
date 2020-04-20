@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 #include "spdk/util.h"
 #include "spdk/env_dpdk.h"
+#include "spdk/log.h"
 
 #include "env_internal.h"
 
@@ -70,7 +71,7 @@ spdk_malloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint3
 	buf = rte_malloc_socket(NULL, size, align, socket_id);
 	if (buf && phys_addr) {
 #ifdef DEBUG
-		fprintf(stderr, "phys_addr param in spdk_*malloc() is deprecated\n");
+		SPDK_ERRLOG("phys_addr param in spdk_*malloc() is deprecated\n");
 #endif
 		*phys_addr = virt_to_phys(buf);
 	}

@@ -37,6 +37,7 @@
 
 #include "spdk/version.h"
 #include "spdk/env_dpdk.h"
+#include "spdk/log.h"
 
 #include <rte_config.h>
 #include <rte_eal.h>
@@ -147,7 +148,7 @@ push_arg(char *args[], int *argcount, char *arg)
 	char **tmp;
 
 	if (arg == NULL) {
-		fprintf(stderr, "%s: NULL arg supplied\n", __func__);
+		SPDK_ERRLOG("%s: NULL arg supplied\n", __func__);
 		free_args(args, *argcount);
 		return NULL;
 	}
@@ -486,13 +487,13 @@ spdk_env_dpdk_post_init(bool legacy_mem)
 
 	rc = mem_map_init(legacy_mem);
 	if (rc < 0) {
-		fprintf(stderr, "Failed to allocate mem_map\n");
+		SPDK_ERRLOG("Failed to allocate mem_map\n");
 		return rc;
 	}
 
 	rc = vtophys_init();
 	if (rc < 0) {
-		fprintf(stderr, "Failed to initialize vtophys\n");
+		SPDK_ERRLOG("Failed to initialize vtophys\n");
 		return rc;
 	}
 
@@ -539,16 +540,16 @@ spdk_env_init(const struct spdk_env_opts *opts)
 
 	rc = build_eal_cmdline(opts);
 	if (rc < 0) {
-		fprintf(stderr, "Invalid arguments to initialize DPDK\n");
+		SPDK_ERRLOG("Invalid arguments to initialize DPDK\n");
 		return -EINVAL;
 	}
 
-	printf("Starting %s / %s initialization...\n", SPDK_VERSION_STRING, rte_version());
-	printf("[ DPDK EAL parameters: ");
+	SPDK_PRINTF("Starting %s / %s initialization...\n", SPDK_VERSION_STRING, rte_version());
+	SPDK_PRINTF("[ DPDK EAL parameters: ");
 	for (i = 0; i < g_eal_cmdline_argcount; i++) {
-		printf("%s ", g_eal_cmdline[i]);
+		SPDK_PRINTF("%s ", g_eal_cmdline[i]);
 	}
-	printf("]\n");
+	SPDK_PRINTF("]\n");
 
 	/* DPDK rearranges the array we pass to it, so make a copy
 	 * before passing so we can still free the individual strings
@@ -556,7 +557,7 @@ spdk_env_init(const struct spdk_env_opts *opts)
 	 */
 	dpdk_args = calloc(g_eal_cmdline_argcount, sizeof(char *));
 	if (dpdk_args == NULL) {
-		fprintf(stderr, "Failed to allocate dpdk_args\n");
+		SPDK_ERRLOG("Failed to allocate dpdk_args\n");
 		return -ENOMEM;
 	}
 	memcpy(dpdk_args, g_eal_cmdline, sizeof(char *) * g_eal_cmdline_argcount);
@@ -571,9 +572,9 @@ spdk_env_init(const struct spdk_env_opts *opts)
 
 	if (rc < 0) {
 		if (rte_errno == EALREADY) {
-			fprintf(stderr, "DPDK already initialized\n");
+			SPDK_ERRLOG("DPDK already initialized\n");
 		} else {
-			fprintf(stderr, "Failed to initialize DPDK\n");
+			SPDK_ERRLOG("Failed to initialize DPDK\n");
 		}
 		return -rte_errno;
 	}

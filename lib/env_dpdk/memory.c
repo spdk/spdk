@@ -47,6 +47,7 @@
 #include "spdk/util.h"
 #include "spdk/memory.h"
 #include "spdk/env_dpdk.h"
+#include "spdk/log.h"
 
 #ifdef __FreeBSD__
 #define VFIO_ENABLED 0
@@ -87,7 +88,7 @@ static struct vfio_cfg g_vfio = {
 #endif
 
 #if DEBUG
-#define DEBUG_PRINT(...) fprintf(stderr, __VA_ARGS__)
+#define DEBUG_PRINT(...) SPDK_ERRLOG(__VA_ARGS__)
 #else
 #define DEBUG_PRINT(...)
 #endif
