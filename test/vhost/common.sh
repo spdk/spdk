@@ -1070,6 +1070,7 @@ function run_fio()
 	local run_plugin_mode=false
 	local fio_start_cmd
 	local fio_output_format="normal"
+	local wait_for_fio=true
 
 	for arg in "$@"; do
 		case "$arg" in
@@ -1087,6 +1088,7 @@ function run_fio()
 				run_server_mode=false ;;
 			--json) fio_output_format="json" ;;
 			--hide-results) hide_results=true ;;
+			--no-wait-for-fio) wait_for_fio=false ;;
 		*)
 			error "Invalid argument '$arg'"
 			return 1
@@ -1134,12 +1136,15 @@ function run_fio()
 			fi
 
 			notice "Running local fio on VM $vm_num"
-			vm_exec $vm_num "$vm_fio_bin --output=/root/$log_fname --output-format=$fio_output_format /root/$job_fname" &
+			vm_exec $vm_num "$vm_fio_bin --output=/root/$log_fname --output-format=$fio_output_format /root/$job_fname & echo \$! > /root/fio.pid" &
 			vm_exec_pids+=("$!")
 		fi
 	done
 
 	if ! $run_server_mode; then
+		if ! $wait_for_fio; then
+			return 0
+		fi
 		echo "Waiting for guest fio instances to finish.."
 		wait "${vm_exec_pids[@]}"
 

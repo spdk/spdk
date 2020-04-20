@@ -58,7 +58,7 @@ if ! vm_os_booted $target_vm; then
 fi
 
 if ! is_fio_running $target_vm; then
-	vm_exec $target_vm "cat /root/migration-tc3.job.out"
+	vm_exec $target_vm "cat /root/migration-tc3.log"
 	error "FIO is not running on remote server after migration!"
 fi
 
@@ -73,7 +73,7 @@ while is_fio_running $target_vm; do
 done
 
 notice "FIO result after migration:"
-vm_exec $target_vm "cat /root/migration-tc3.job.out"
+vm_exec $target_vm "cat /root/migration-tc3.log"
 
 host_2_cleanup_vhost
 echo "DONE" > $share_dir/DONE

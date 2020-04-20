@@ -55,6 +55,8 @@ function migration_tc1()
 	# incoming VM - the one we want to migrate
 	# targe VM - the one which will accept migration
 	local job_file="$testdir/migration-tc1.job"
+	local log_file
+	log_file="/root/$(basename ${job_file%%.*}).log"
 
 	# Run vhost
 	vhost_run 0
@@ -74,14 +76,14 @@ function migration_tc1()
 	notice "Starting FIO"
 
 	vm_check_scsi_location $incoming_vm
-	run_fio $fio_bin --job-file="$job_file" --local --vm="${incoming_vm}$(printf ':/dev/%s' $SCSI_DISK)"
+	run_fio $fio_bin --job-file="$job_file" --no-wait-for-fio --local --vm="${incoming_vm}$(printf ':/dev/%s' $SCSI_DISK)"
 
 	# Wait a while to let the FIO time to issue some IO
 	sleep 5
 
 	# Check if fio is still running before migration
 	if ! is_fio_running $incoming_vm; then
-		vm_exec $incoming_vm "cat /root/$(basename ${job_file}).out"
+		vm_exec $incoming_vm "cat $log_file"
 		error "FIO is not running before migration: process crashed or finished too early"
 	fi
 
@@ -90,7 +92,7 @@ function migration_tc1()
 
 	# Check if fio is still running after migration
 	if ! is_fio_running $target_vm; then
-		vm_exec $target_vm "cat /root/$(basename ${job_file}).out"
+		vm_exec $target_vm "cat $log_file"
 		error "FIO is not running after migration: process crashed or finished too early"
 	fi
 
@@ -105,7 +107,7 @@ function migration_tc1()
 	done
 
 	notice "Fio result is:"
-	vm_exec $target_vm "cat /root/$(basename ${job_file}).out"
+	vm_exec $target_vm "cat $log_file"
 
 	notice "Migration DONE"
 

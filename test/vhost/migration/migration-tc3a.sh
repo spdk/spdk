@@ -8,6 +8,7 @@ target_vm_ctrlr=naa.VhostScsi0.$target_vm
 share_dir=$TEST_DIR/share
 spdk_repo_share_dir=$TEST_DIR/share_spdk
 job_file=$testdir/migration-tc3.job
+log_file="/root/$(basename ${job_file%%.*}).log"
 
 if [ -z "$MGMT_TARGET_IP" ]; then
 	error "No IP address of target is given"
@@ -206,11 +207,11 @@ function migration_tc3()
 	notice "Starting fio on local VM"
 	vm_check_scsi_location $incoming_vm
 
-	run_fio $fio_bin --job-file="$job_file" --local --vm="${incoming_vm}$(printf ':/dev/%s' $SCSI_DISK)"
+	run_fio $fio_bin --job-file="$job_file" --no-wait-for-fio --local --vm="${incoming_vm}$(printf ':/dev/%s' $SCSI_DISK)"
 	sleep 5
 
 	if ! is_fio_running $incoming_vm; then
-		vh_ssh $incoming_vm "cat /root/$(basename ${job_file}).out"
+		vm_exec $incoming_vm "cat $log_file"
 		error "Fio not running on local VM before starting migration!"
 	fi
 
