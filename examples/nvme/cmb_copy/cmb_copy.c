@@ -121,7 +121,7 @@ cmb_copy(void)
 
 	/* Allocate a buffer from our CMB */
 	buf = spdk_nvme_ctrlr_map_cmb(g_config.cmb.ctrlr, &sz);
-	if (buf == NULL || sz != g_config.copy_size) {
+	if (buf == NULL || sz < g_config.copy_size) {
 		printf("ERROR: buffer allocation failed\n");
 		printf("Are you sure %s has a valid CMB?\n",
 		       g_config.cmb.trid.traddr);
@@ -182,6 +182,8 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		printf("%s - not probed %s!\n", __func__, trid->traddr);
 		return 0;
 	}
+
+	opts->use_cmb_sqs = false;
 
 	printf("%s - probed %s!\n", __func__, trid->traddr);
 	return 1;
