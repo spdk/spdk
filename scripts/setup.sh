@@ -417,24 +417,23 @@ function configure_linux() {
 				chown "$TARGET_USER" "$mount"
 				chmod g+w "$mount"
 			done
-		fi
 
-		MEMLOCK_AMNT=$(ulimit -l)
-		if [ "$MEMLOCK_AMNT" != "unlimited" ]; then
-			MEMLOCK_MB=$((MEMLOCK_AMNT / 1024))
-			echo ""
-			echo "Current user memlock limit: ${MEMLOCK_MB} MB"
-			echo ""
-			echo "This is the maximum amount of memory you will be"
-			echo "able to use with DPDK and VFIO if run as current user."
-			echo -n "To change this, please adjust limits.conf memlock "
-			echo "limit for current user."
+			MEMLOCK_AMNT=$(su "$TARGET_USER" -c "ulimit -l")
+			if [[ $MEMLOCK_AMNT != "unlimited" ]]; then
+				MEMLOCK_MB=$((MEMLOCK_AMNT / 1024))
+				cat <<- MEMLOCK
+					"$TARGET_USER" user memlock limit: $MEMLOCK_MB MB
 
-			if [ $MEMLOCK_AMNT -lt 65536 ]; then
-				echo ""
-				echo "## WARNING: memlock limit is less than 64MB"
-				echo -n "## DPDK with VFIO may not be able to initialize "
-				echo "if run as current user."
+					This is the maximum amount of memory you will be
+					able to use with DPDK and VFIO if run as user "$TARGET_USER".
+					To change this, please adjust limits.conf memlock limit for user "$TARGET_USER".
+				MEMLOCK
+				if ((MEMLOCK_AMNT < 65536)); then
+					echo ""
+					echo "## WARNING: memlock limit is less than 64MB"
+					echo -n "## DPDK with VFIO may not be able to initialize "
+					echo "if run as user \"$TARGET_USER\"."
+				fi
 			fi
 		fi
 	fi
