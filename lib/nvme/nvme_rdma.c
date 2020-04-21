@@ -2011,6 +2011,16 @@ nvme_rdma_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 	cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 	cpl.status.dnr = dnr;
 
+	/*
+	 * We cannot abort requests at the RDMA layer without
+	 * unregistering them. If we do, we can still get error
+	 * free completions on the shared completion queue.
+	 */
+	if (nvme_qpair_get_state(qpair) > NVME_QPAIR_DISCONNECTING &&
+	    nvme_qpair_get_state(qpair) != NVME_QPAIR_DESTROYING) {
+		nvme_ctrlr_disconnect_qpair(qpair);
+	}
+
 	TAILQ_FOREACH_SAFE(rdma_req, &rqpair->outstanding_reqs, link, tmp) {
 		assert(rdma_req->req != NULL);
 		req = rdma_req->req;
