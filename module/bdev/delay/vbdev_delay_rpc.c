@@ -37,6 +37,7 @@
 #include "spdk/util.h"
 #include "spdk/string.h"
 #include "spdk_internal/log.h"
+#include "spdk_internal/assert.h"
 
 struct rpc_update_latency {
 	char *delay_bdev_name;
@@ -100,10 +101,7 @@ spdk_rpc_bdev_delay_update_latency(struct spdk_jsonrpc_request *request,
 						 "The requested bdev is not a delay bdev.");
 		goto cleanup;
 	} else if (rc) {
-		/* currently, only the two error cases are defined. Any new error paths should be handled here. */
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 "An unknown error occured.");
-		goto cleanup;
+		SPDK_UNREACHABLE();
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
