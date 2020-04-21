@@ -2143,16 +2143,22 @@ nvme_rdma_cq_process_completions(struct ibv_cq *cq, uint32_t batch_size)
 
 		case RDMA_WR_TYPE_SEND:
 			rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvme_rdma_req, rdma_wr);
-			rqpair = nvme_rdma_qpair(rdma_req->req->qpair);
-			rdma_req->completion_flags |= NVME_RDMA_SEND_COMPLETED;
 
+			/* If we are flushing I/O */
 			if (wc[i].status) {
+				rqpair = rdma_req->req ? nvme_rdma_qpair(rdma_req->req->qpair) : NULL;
+				if (rqpair) {
+					nvme_rdma_fail_qpair(&rqpair->qpair, 0);
+				}
 				SPDK_ERRLOG("CQ error on Queue Pair %p, Response Index %lu (%d): %s\n",
 					    rqpair, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
-				nvme_rdma_fail_qpair(&rqpair->qpair, 0);
 				completion_rc = -ENXIO;
 				continue;
 			}
+
+			rqpair = nvme_rdma_qpair(rdma_req->req->qpair);
+			rdma_req->completion_flags |= NVME_RDMA_SEND_COMPLETED;
+
 
 			if ((rdma_req->completion_flags & NVME_RDMA_RECV_COMPLETED) != 0) {
 				if (spdk_unlikely(nvme_rdma_request_ready(rqpair, rdma_req))) {
