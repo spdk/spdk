@@ -528,6 +528,13 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 		return 0;
 	}
 
+	if (qpair->poll_group && qpair->poll_group->in_completion_context) {
+		/* Same as above, but in a poll group. */
+		qpair->poll_group->num_qpairs_to_delete++;
+		qpair->delete_after_completion_context = 1;
+		return 0;
+	}
+
 	if (qpair->poll_group) {
 		spdk_nvme_poll_group_remove(qpair->poll_group->group, qpair);
 	}
