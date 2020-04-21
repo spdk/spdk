@@ -42,6 +42,7 @@
 
 #include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
+#include "spdk_internal/assert.h"
 
 #include "nvmf_internal.h"
 
@@ -685,9 +686,7 @@ nvmf_rpc_listen_paused(struct spdk_nvmf_subsystem *subsystem,
 		}
 		spdk_nvmf_tgt_stop_listen(ctx->tgt, &ctx->trid);
 	} else {
-		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "Invalid parameters");
-		ctx->response_sent = true;
+		SPDK_UNREACHABLE();
 	}
 
 	if (spdk_nvmf_subsystem_resume(subsystem, nvmf_rpc_listen_resumed, ctx)) {
