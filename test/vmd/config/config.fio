@@ -12,6 +12,7 @@ iodepth=128
 rw=randrw
 bs=4k
 enable_vmd=1
+verify_state_save=0
 
 [test]
 numjobs=1

@@ -6,13 +6,7 @@ source $rootdir/scripts/common.sh
 source $rootdir/test/common/autotest_common.sh
 
 rpc_py=$rootdir/scripts/rpc.py
-
-pci_devs=$($rootdir/app/spdk_lspci/spdk_lspci | grep "NVMe disk behind VMD" | awk '{print $1}')
-
-if [ -z "$pci_devs" ]; then
-        echo "Couldn't find any NVMe device behind a VMD."
-        exit 1
-fi
+VMD_WHITELIST=()
 
 function vmd_identify {
 	for bdf in $pci_devs; do
@@ -51,6 +45,26 @@ function vmd_bdev_svc {
 	killprocess $svcpid
 }
 
+
+# Re-run setup.sh script and only attach VMD devices to uio/vfio.
+$rootdir/scripts/setup.sh reset
+
+vmd_id=$(grep "PCI_DEVICE_ID_INTEL_VMD" $rootdir/include/spdk/pci_ids.h | awk -F"x" '{print $2}')
+
+for bdf in $(iter_pci_dev_id 8086 $vmd_id); do
+	if pci_can_use $bdf; then
+		VMD_WHITELIST+=("$bdf")
+	fi
+done
+PCI_WHITELIST="${VMD_WHITELIST[*]}" $rootdir/scripts/setup.sh
+
+pci_devs=$($rootdir/app/spdk_lspci/spdk_lspci | grep "NVMe disk behind VMD" | awk '{print $1}')
+
+if [[ -z "$pci_devs" ]]; then
+	echo "Couldn't find any NVMe device behind a VMD."
+	exit 1
+fi
+
 run_test "vmd_identify" vmd_identify
 run_test "vmd_hello_world" $rootdir/examples/nvme/hello_world/hello_world -V
 run_test "vmd_perf" vmd_perf
@@ -59,3 +73,7 @@ if [[ $CONFIG_FIO_PLUGIN == y ]]; then
 fi
 
 run_test "vmd_bdev_svc" vmd_bdev_svc
+
+# Re-run setup.sh again so that other tests may continue
+$rootdir/scripts/setup.sh reset
+$rootdir/scripts/setup.sh
