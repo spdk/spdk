@@ -8,7 +8,7 @@ source $rootdir/test/common/autotest_common.sh
 rpc_py=$rootdir/scripts/rpc.py
 
 bdf=$(get_first_nvme_bdf)
-ctrlr="/dev/spdk/nvme0"
+ctrlr_base="/dev/spdk/nvme"
 
 $rootdir/scripts/setup.sh
 
@@ -23,7 +23,7 @@ $rpc_py bdev_nvme_cuse_register -n Nvme0
 
 sleep 5
 
-if [ ! -c "$ctrlr" ]; then
+if [ ! -c "${ctrlr_base}0" ]; then
 	exit 1
 fi
 
@@ -32,7 +32,7 @@ $rpc_py bdev_nvme_get_controllers
 
 $rpc_py bdev_nvme_cuse_unregister -n Nvme0
 sleep 1
-if [ -c "$ctrlr" ]; then
+if [ -c "${ctrlr_base}0" ]; then
 	exit 1
 fi
 
@@ -42,7 +42,7 @@ $rpc_py bdev_nvme_cuse_unregister -n Nvme0 && false
 $rpc_py bdev_nvme_cuse_register -n Nvme0
 sleep 1
 
-if [ ! -c "$ctrlr" ]; then
+if [ ! -c "${ctrlr_base}0" ]; then
 	exit 1
 fi
 
