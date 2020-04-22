@@ -1517,6 +1517,7 @@ vhost_scsi_write_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write
 		}
 
 		lun = spdk_scsi_dev_get_lun(scsi_dev, 0);
+		assert(lun != NULL);
 
 		spdk_json_write_object_begin(w);
 		spdk_json_write_named_string(w, "method", "vhost_scsi_controller_add_target");
