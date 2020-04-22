@@ -78,11 +78,11 @@ function test_tasting() {
 	new_lvols=$(rpc_cmd bdev_get_bdevs | jq -r '[ .[] | select(.product_name == "Logical Volume") ]')
 	[ "$(jq length <<< "$new_lvols")" == "10" ]
 	new_lvs=$(rpc_cmd bdev_lvol_get_lvstores | jq .)
-	if ! diff <(jq -S . <<<"$old_lvs") <(jq -S . <<<"$new_lvs"); then
+	if ! diff <(jq '. | sort' <<<"$old_lvs") <(jq '. | sort' <<<"$new_lvs"); then
 		echo "ERROR: old and loaded lvol store is not the same"
 		return 1
 	fi
-	if ! diff <(jq -S . <<<"$old_lvols") <(jq -S . <<<"$new_lvols"); then
+	if ! diff <(jq '. | sort' <<<"$old_lvols") <(jq '. | sort' <<<"$new_lvols"); then
 		echo "ERROR: old and loaded lvols are not the same"
 		return 1
 	fi
