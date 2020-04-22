@@ -1767,6 +1767,15 @@ show_stats(void)
 			current_page = 0;
 			switch_tab(active_tab);
 			break;
+		case '\t':
+			if (active_tab < NUMBER_OF_TABS - 1) {
+				active_tab++;
+			} else {
+				active_tab = THREADS_TAB;
+			}
+			current_page = 0;
+			switch_tab(active_tab);
+			break;
 		case 's':
 			change_sorting(active_tab);
 			break;
