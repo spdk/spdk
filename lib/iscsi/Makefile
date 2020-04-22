@@ -46,4 +46,6 @@ C_SRCS = conn.c \
 LIBNAME = iscsi
 LOCAL_SYS_LIBS = -lcrypto
 
+SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_iscsi.map)
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
