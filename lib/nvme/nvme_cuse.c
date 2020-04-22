@@ -960,28 +960,44 @@ spdk_nvme_cuse_unregister(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
-char *
-spdk_nvme_cuse_get_ctrlr_name(struct spdk_nvme_ctrlr *ctrlr)
+int
+spdk_nvme_cuse_get_ctrlr_name(struct spdk_nvme_ctrlr *ctrlr, char *name, size_t *size)
 {
 	struct cuse_device *ctrlr_device;
+	size_t req_len;
 
 	ctrlr_device = nvme_cuse_get_cuse_ctrlr_device(ctrlr);
 	if (!ctrlr_device) {
-		return NULL;
+		return -ENODEV;
 	}
 
-	return ctrlr_device->dev_name;
+	req_len = strnlen(ctrlr_device->dev_name, sizeof(ctrlr_device->dev_name));
+	if (*size < req_len) {
+		*size = req_len;
+		return -ENOSPC;
+	}
+	snprintf(name, req_len + 1, "%s", ctrlr_device->dev_name);
+
+	return 0;
 }
 
-char *
-spdk_nvme_cuse_get_ns_name(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
+int
+spdk_nvme_cuse_get_ns_name(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, char *name, size_t *size)
 {
 	struct cuse_device *ns_device;
+	size_t req_len;
 
 	ns_device = nvme_cuse_get_cuse_ns_device(ctrlr, nsid);
 	if (!ns_device) {
-		return NULL;
+		return -ENODEV;
 	}
 
-	return ns_device->dev_name;
+	req_len = strnlen(ns_device->dev_name, sizeof(ns_device->dev_name));
+	if (*size < req_len) {
+		*size = req_len;
+		return -ENOSPC;
+	}
+	snprintf(name, req_len + 1, "%s", ns_device->dev_name);
+
+	return 0;
 }

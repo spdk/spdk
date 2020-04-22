@@ -3008,20 +3008,29 @@ void spdk_nvme_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks);
  * Get name of cuse device associated with NVMe controller.
  *
  * \param ctrlr Opaque handle to NVMe controller.
+ * \param name	Buffer of be filled with cuse device name.
+ * \param size	Size of name buffer.
  *
- * \return Pointer to the name of device.
+ * \return 0 on success. Negated errno on the following error conditions:
+ * -ENODEV: No cuse device registered for the controller.
+ * -ENSPC: Too small buffer size passed. Value of size pointer changed to the required length.
  */
-char *spdk_nvme_cuse_get_ctrlr_name(struct spdk_nvme_ctrlr *ctrlr);
+int spdk_nvme_cuse_get_ctrlr_name(struct spdk_nvme_ctrlr *ctrlr, char *name, size_t *size);
 
 /**
  * Get name of cuse device associated with NVMe namespace.
  *
  * \param ctrlr Opaque handle to NVMe controller.
- * \param nsid Namespace id.
+ * \param nsid	Namespace id.
+ * \param name	Buffer of be filled with cuse device name.
+ * \param size	Size of name buffer.
  *
- * \return Pointer to the name of device.
+ * \return 0 on success. Negated errno on the following error conditions:
+ * -ENODEV: No cuse device registered for the namespace.
+ * -ENSPC: Too small buffer size passed. Value of size pointer changed to the required length.
  */
-char *spdk_nvme_cuse_get_ns_name(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid);
+int spdk_nvme_cuse_get_ns_name(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
+			       char *name, size_t *size);
 
 /**
  * Create a character device at the path specified (Experimental)

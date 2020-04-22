@@ -765,12 +765,13 @@ bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_json_write_object_end(w);
 
 #ifdef SPDK_CONFIG_NVME_CUSE
-	char *cuse_device;
+	size_t cuse_name_size = 128;
+	char cuse_name[cuse_name_size];
 
-	cuse_device = spdk_nvme_cuse_get_ns_name(nvme_bdev->nvme_bdev_ctrlr->ctrlr,
-			spdk_nvme_ns_get_id(ns));
-	if (cuse_device) {
-		spdk_json_write_named_string(w, "cuse_device", cuse_device);
+	int rc = spdk_nvme_cuse_get_ns_name(nvme_bdev->nvme_bdev_ctrlr->ctrlr, spdk_nvme_ns_get_id(ns),
+					    cuse_name, &cuse_name_size);
+	if (rc == 0) {
+		spdk_json_write_named_string(w, "cuse_device", cuse_name);
 	}
 #endif
 

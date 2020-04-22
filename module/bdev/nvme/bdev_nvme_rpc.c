@@ -355,11 +355,12 @@ spdk_rpc_dump_nvme_controller_info(struct spdk_json_write_ctx *w,
 	spdk_json_write_named_string(w, "name", nvme_bdev_ctrlr->name);
 
 #ifdef SPDK_CONFIG_NVME_CUSE
-	char *cuse_device;
+	size_t cuse_name_size = 128;
+	char cuse_name[cuse_name_size];
 
-	cuse_device = spdk_nvme_cuse_get_ctrlr_name(nvme_bdev_ctrlr->ctrlr);
-	if (cuse_device) {
-		spdk_json_write_named_string(w, "cuse_device", cuse_device);
+	int rc = spdk_nvme_cuse_get_ctrlr_name(nvme_bdev_ctrlr->ctrlr, cuse_name, &cuse_name_size);
+	if (rc == 0) {
+		spdk_json_write_named_string(w, "cuse_device", cuse_name);
 	}
 #endif
 
