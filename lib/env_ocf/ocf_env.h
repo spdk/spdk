@@ -171,8 +171,7 @@ static inline void env_vfree(const void *ptr)
 
 static inline uint64_t env_get_free_memory(void)
 {
-	/* TODO: do we need implementation for this function? */
-	return sysconf(_SC_PAGESIZE) * sysconf(_SC_AVPHYS_PAGES);
+	return -1;
 }
 
 /* *** ALLOCATOR *** */
