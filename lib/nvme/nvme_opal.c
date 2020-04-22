@@ -561,8 +561,7 @@ opal_response_get_string(const struct spdk_opal_resp_parsed *resp, int n,
 			 const char **store)
 {
 	uint8_t header_len;
-	struct spdk_opal_resp_token token = resp->resp_tokens[n];
-
+	struct spdk_opal_resp_token token;
 	*store = NULL;
 	if (!resp) {
 		SPDK_ERRLOG("Response is NULL\n");
@@ -575,6 +574,7 @@ opal_response_get_string(const struct spdk_opal_resp_parsed *resp, int n,
 		return 0;
 	}
 
+	token = resp->resp_tokens[n];
 	if (token.type != OPAL_DTA_TOKENID_BYTESTRING) {
 		SPDK_ERRLOG("Token is not a byte string!\n");
 		return 0;
