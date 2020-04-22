@@ -154,8 +154,9 @@ spdk_reactors_fini(void)
 
 	SPDK_ENV_FOREACH_CORE(i) {
 		reactor = spdk_reactor_get(i);
+		assert(reactor != NULL);
 		assert(reactor->thread_count == 0);
-		if (spdk_likely(reactor != NULL) && reactor->events != NULL) {
+		if (reactor->events != NULL) {
 			spdk_ring_free(reactor->events);
 		}
 	}

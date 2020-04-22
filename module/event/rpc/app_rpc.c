@@ -374,6 +374,8 @@ rpc_framework_get_reactors(void *arg1, void *arg2)
 	current_core = spdk_env_get_current_core();
 	reactor = spdk_reactor_get(current_core);
 
+	assert(reactor != NULL);
+
 	spdk_json_write_object_begin(ctx->w);
 	spdk_json_write_named_uint32(ctx->w, "lcore", current_core);
 	spdk_json_write_named_uint64(ctx->w, "busy", reactor->busy_tsc);
