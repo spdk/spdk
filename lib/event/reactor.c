@@ -567,6 +567,8 @@ _reactor_request_thread_reschedule(struct spdk_thread *thread)
 
 	lw_thread = spdk_thread_get_ctx(thread);
 
+	assert(lw_thread != NULL);
+
 	lw_thread->resched = true;
 }
 
