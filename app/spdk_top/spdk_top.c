@@ -1857,6 +1857,14 @@ draw_interface(void)
 	doupdate();
 }
 
+static void finish(int sig)
+{
+	/* End ncurses mode */
+	endwin();
+	spdk_jsonrpc_client_close(g_rpc_client);
+	exit(0);
+}
+
 static void
 setup_ncurses(void)
 {
@@ -1875,6 +1883,11 @@ setup_ncurses(void)
 		printf("Your terminal does not support color\n");
 		exit(1);
 	}
+
+	/* Handle signals to exit gracfully cleaning up ncurses */
+	(void) signal(SIGINT, finish);
+	(void) signal(SIGPIPE, finish);
+	(void) signal(SIGABRT, finish);
 }
 
 static void
@@ -1916,10 +1929,7 @@ int main(int argc, char **argv)
 	draw_interface();
 	show_stats();
 
-	/* End curses mode */
-	endwin();
-
-	spdk_jsonrpc_client_close(g_rpc_client);
+	finish(0);
 
 	return (0);
 }
