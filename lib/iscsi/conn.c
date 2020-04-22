@@ -961,8 +961,8 @@ iscsi_drop_conns(struct spdk_iscsi_conn *conn, const char *conn_match,
 
 			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "CID=%u\n", xconn->cid);
 
-			thread = spdk_io_channel_get_thread(spdk_io_channel_from_ctx(conn->pg));
-			spdk_thread_send_msg(thread, _iscsi_conn_drop, conn);
+			thread = spdk_io_channel_get_thread(spdk_io_channel_from_ctx(xconn->pg));
+			spdk_thread_send_msg(thread, _iscsi_conn_drop, xconn);
 
 			num++;
 		}
