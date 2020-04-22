@@ -1672,7 +1672,7 @@ nvme_rdma_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 	}
 
 	if (rqpair->cm_id) {
-		rdma_disconnect(rqpair->cm_id);
+		spdk_rdma_qp_disconnect(rqpair->rdma_qp);
 		if (rctrlr != NULL) {
 			if (nvme_rdma_process_event(rqpair, rctrlr->cm_channel, RDMA_CM_EVENT_DISCONNECTED)) {
 				SPDK_DEBUGLOG(SPDK_LOG_NVME, "Target did not respond to qpair disconnect.\n");

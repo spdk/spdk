@@ -85,3 +85,20 @@ spdk_rdma_qp_destroy(struct spdk_rdma_qp *spdk_rdma_qp)
 
 	free(spdk_rdma_qp);
 }
+
+int
+spdk_rdma_qp_disconnect(struct spdk_rdma_qp *spdk_rdma_qp)
+{
+	int rc = 0;
+
+	assert(spdk_rdma_qp != NULL);
+
+	if (spdk_rdma_qp->cm_id) {
+		rc = rdma_disconnect(spdk_rdma_qp->cm_id);
+		if (rc) {
+			SPDK_ERRLOG("rdma_disconnect failed, errno %s (%d)\n", spdk_strerror(errno), errno);
+		}
+	}
+
+	return rc;
+}

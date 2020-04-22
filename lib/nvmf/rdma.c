@@ -3579,7 +3579,7 @@ nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 	}
 
 	if (rqpair->cm_id) {
-		rdma_disconnect(rqpair->cm_id);
+		spdk_rdma_qp_disconnect(rqpair->rdma_qp);
 	}
 
 	rqpair->destruct_poller = SPDK_POLLER_REGISTER(nvmf_rdma_destroy_defunct_qpair, (void *)rqpair,

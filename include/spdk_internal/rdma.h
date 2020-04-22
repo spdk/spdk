@@ -62,9 +62,16 @@ struct spdk_rdma_qp *spdk_rdma_qp_create(struct rdma_cm_id *cm_id,
 		struct spdk_rdma_qp_init_attr *qp_attr);
 
 /**
- * Destory RDMA provider specific qpair
+ * Destroy RDMA provider specific qpair
  * \param spdk_rdma_qp Pointer to qpair to be destroyed
  */
 void spdk_rdma_qp_destroy(struct spdk_rdma_qp *spdk_rdma_qp);
+
+/**
+ * Disconnect a connection and transition assoiciated qpair to error state.
+ * Generates RDMA_CM_EVENT_DISCONNECTED on both connection sides
+ * \param spdk_rdma_qp Pointer to qpair to be destroyed
+ */
+int spdk_rdma_qp_disconnect(struct spdk_rdma_qp *spdk_rdma_qp);
 
 #endif /* SPDK_RDMA_H */
