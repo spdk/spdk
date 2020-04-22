@@ -116,10 +116,6 @@ struct spdk_lvol {
 	TAILQ_ENTRY(spdk_lvol) link;
 };
 
-struct lvol_task {
-	enum spdk_bdev_io_status	status;
-};
-
 struct lvol_store_bdev *vbdev_lvol_store_first(void);
 struct lvol_store_bdev *vbdev_lvol_store_next(struct lvol_store_bdev *prev);
 

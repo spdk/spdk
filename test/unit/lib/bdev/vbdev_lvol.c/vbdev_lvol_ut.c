@@ -51,7 +51,6 @@ struct lvol_store_bdev *g_lvs_bdev = NULL;
 struct spdk_bdev *g_base_bdev = NULL;
 struct spdk_bdev_io *g_io = NULL;
 struct spdk_io_channel *g_ch = NULL;
-struct lvol_task *g_task = NULL;
 
 static struct spdk_bdev g_bdev = {};
 static struct spdk_lvol_store *g_lvol_store = NULL;
@@ -1309,7 +1308,7 @@ ut_vbdev_lvol_io_type_supported(void)
 static void
 ut_lvol_read_write(void)
 {
-	g_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct lvol_task));
+	g_io = calloc(1, sizeof(struct spdk_bdev_io));
 	SPDK_CU_ASSERT_FATAL(g_io != NULL);
 	g_base_bdev = calloc(1, sizeof(struct spdk_bdev));
 	SPDK_CU_ASSERT_FATAL(g_base_bdev != NULL);
@@ -1336,11 +1335,10 @@ static void
 ut_vbdev_lvol_submit_request(void)
 {
 	struct spdk_lvol request_lvol = {};
-	g_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct lvol_task));
+	g_io = calloc(1, sizeof(struct spdk_bdev_io));
 	SPDK_CU_ASSERT_FATAL(g_io != NULL);
 	g_base_bdev = calloc(1, sizeof(struct spdk_bdev));
 	SPDK_CU_ASSERT_FATAL(g_base_bdev != NULL);
-	g_task = (struct lvol_task *)g_io->driver_ctx;
 	g_io->bdev = g_base_bdev;
 
 	g_io->type = SPDK_BDEV_IO_TYPE_READ;
