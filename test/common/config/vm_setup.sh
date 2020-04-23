@@ -715,7 +715,7 @@ if [ $OSID != 'freebsd' ]; then
     fi
     install_iscsi_adm&
     install_libiscsi&
-    instll_vpp&
+    install_vpp&
     install_nvmecli&
     install_qat&
     install_rocksdb&
