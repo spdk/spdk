@@ -320,9 +320,12 @@ function install_libiscsi()
 function install_git() {
     sudo yum install -y zlib-devel curl-devel
     tar -xzof <(wget -qO- "$GIT_REPO_GIT")
-    (cd git-${GIT_VERSION} && ./configure --prefix=/usr/local/git && sudo  make -j${jobs} install)
+    (cd git-${GIT_VERSION} && \
+        make configure && \
+        ./configure --prefix=/usr/local/git && \
+        sudo  make -j${jobs} install)
     sudo sh -c "echo 'export PATH=/usr/local/git/bin:$PATH' >> /etc/bashrc"
-    source /etc/bashrc
+    exec $SHELL
 }
 
 function usage()
