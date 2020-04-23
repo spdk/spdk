@@ -433,29 +433,6 @@ if $UPGRADE; then
 fi
 
 if $INSTALL; then
-    if [ $PACKAGEMNG == 'pacman' ]; then
-        sudo $PACKAGEMNG -Sy --needed --noconfirm git
-    else
-        if [ "${OSID} ${OSVERSION}" == 'centos 7' ]; then
-            install_git
-        else
-            sudo $PACKAGEMNG install -y git
-        fi
-    fi
-fi
-
-mkdir -p spdk_repo/output || echo "Can not create spdk_repo/output directory."
-
-if [ -d spdk_repo/spdk ]; then
-    echo "spdk source already present, not cloning"
-else
-    git -C spdk_repo clone "${GIT_REPO_SPDK}"
-fi
-git -C spdk_repo/spdk config submodule.dpdk.url "${GIT_REPO_DPDK}"
-git -C spdk_repo/spdk config submodule.intel-ipsec-mb.url "${GIT_REPO_INTEL_IPSEC_MB}"
-git -C spdk_repo/spdk submodule update --init --recursive
-
-if $INSTALL; then
     if [ "${OSID} ${OSVERSION}" == 'centos 8' ]; then
         #During install using vm_setup.sh there is error with AppStream, to fix it we need to refresh yum
         sudo yum update -y --refresh
@@ -708,7 +685,22 @@ if $INSTALL; then
     else
         echo "Package manager is undefined, skipping INSTALL step"
     fi
+
+    if [ "${OSID} ${OSVERSION}" == 'centos 7' ]; then
+            install_git
+    fi
 fi
+
+mkdir -p spdk_repo/output || echo "Can not create spdk_repo/output directory."
+
+if [ -d spdk_repo/spdk ]; then
+    echo "spdk source already present, not cloning"
+else
+    git -C spdk_repo clone "${GIT_REPO_SPDK}"
+fi
+git -C spdk_repo/spdk config submodule.dpdk.url "${GIT_REPO_DPDK}"
+git -C spdk_repo/spdk config submodule.intel-ipsec-mb.url "${GIT_REPO_INTEL_IPSEC_MB}"
+git -C spdk_repo/spdk submodule update --init --recursive
 
 sudo mkdir -p /usr/src
 
