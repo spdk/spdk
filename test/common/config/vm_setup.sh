@@ -474,7 +474,8 @@ if $INSTALL; then
         gdisk \
         socat \
         sshpass \
-        py37-pandas
+        py37-pandas \
+        wget
 
     elif [ $PACKAGEMNG == 'yum' ]; then
         sudo yum install -y pciutils \
@@ -518,7 +519,8 @@ if $INSTALL; then
         bc \
         kernel-modules-extra \
         systemd-devel \
-        python3
+        python3 \
+        wget
 
         sudo yum install -y nbd || {
             wget -O nbd.rpm https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/n/nbd-3.14-2.el7.x86_64.rpm
@@ -577,7 +579,8 @@ if $INSTALL; then
         bc \
         kernel-modules-extra \
         systemd-devel \
-        smartmontools
+        smartmontools \
+        wget
 
     elif [ $PACKAGEMNG == 'apt-get' ]; then
         echo "Package perl-open is not available at Ubuntu repositories" >&2
@@ -647,7 +650,8 @@ if $INSTALL; then
         python3-pandas \
         btrfs-tools \
         bc \
-        smartmontools
+        smartmontools \
+        wget
 
         # rpm-build is not used
         # iptables installed by default
@@ -690,7 +694,8 @@ if $INSTALL; then
             perl-switch \
             open-iscsi \
             smartmontools \
-            parted
+            parted \
+            wget
 
         # TODO:
         # These are either missing or require some other installation method
