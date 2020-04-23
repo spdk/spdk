@@ -663,6 +663,7 @@ add_trid(const char *trid_str)
 		len = strcspn(alt_traddr, " \t\n");
 		if (len > SPDK_NVMF_TRADDR_MAX_LEN) {
 			fprintf(stderr, "The failover traddr %s is too long.\n", alt_traddr);
+			free(trid_entry);
 			return -1;
 		}
 		snprintf(trid_entry->failover_trid.traddr, SPDK_NVMF_TRADDR_MAX_LEN + 1, "%s", alt_traddr);
