@@ -517,7 +517,8 @@ function vm_setup()
 	local qemu_args=()
 	local disk_type_g=NOT_DEFINED
 	local read_only="false"
-	local disks=""
+	# List created of a strings separated with a ":"
+	local disks=()
 	local raw_cache=""
 	local vm_incoming=""
 	local vm_migrate_to=""
@@ -535,7 +536,7 @@ function vm_setup()
 				qemu-args=*) qemu_args+=("${OPTARG#*=}") ;;
 				disk-type=*) disk_type_g="${OPTARG#*=}" ;;
 				read-only=*) read_only="${OPTARG#*=}" ;;
-				disks=*) disks="${OPTARG#*=}" ;;
+				disks=*) IFS=":" read -ra disks <<<"${OPTARG#*=}" ;;
 				raw-cache=*) raw_cache=",cache${OPTARG#*=}" ;;
 				force=*) force_vm=${OPTARG#*=} ;;
 				memory=*) guest_memory=${OPTARG#*=} ;;
@@ -686,17 +687,18 @@ function vm_setup()
 		cmd+=(-device "ide-hd,drive=os_disk,bootindex=0")
 	fi
 
-	if [[ $disks == '' ]] && [[ $disk_type_g == virtio* ]]; then
-		disks=1
+	if (( ${#disks[@]} == 0 )) && [[ $disk_type_g == virtio* ]]; then
+		disks=("default_virtio.img")
+	elif (( ${#disks[@]} == 0 )); then
+		error "No disks defined, aborting"
+		return 1
 	fi
 
-	for disk in ${disks//:/ }; do
-		if [[ $disk = *","* ]]; then
-			disk_type=${disk#*,}
-			disk=${disk%,*}
-		else
-			disk_type=$disk_type_g
-		fi
+	for disk in "${disks[@]}"; do
+		# Each disk can define its type in a form of a disk_name,type. The remaining parts
+		# of the string are dropped.
+		IFS="," read -r disk disk_type _ <<<"$disk"
+		[[ -z $disk_type ]] && disk_type=$disk_type_g
 
 		case $disk_type in
 			virtio)
