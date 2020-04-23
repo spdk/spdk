@@ -763,6 +763,7 @@ function vm_setup()
 			*)
 				error "unknown mode '$disk_type', use: virtio, spdk_vhost_scsi, spdk_vhost_blk or kernel_vhost"
 				return 1
+				;;
 		esac
 	done
 
