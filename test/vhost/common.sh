@@ -514,7 +514,7 @@ function vm_setup()
 
 	local os=""
 	local os_mode=""
-	local qemu_args=""
+	local qemu_args=()
 	local disk_type_g=NOT_DEFINED
 	local read_only="false"
 	local disks=""
@@ -532,7 +532,7 @@ function vm_setup()
 			case "$OPTARG" in
 				os=*) os="${OPTARG#*=}" ;;
 				os-mode=*) os_mode="${OPTARG#*=}" ;;
-				qemu-args=*) qemu_args="${qemu_args} ${OPTARG#*=}" ;;
+				qemu-args=*) qemu_args+=("${OPTARG#*=}") ;;
 				disk-type=*) disk_type_g="${OPTARG#*=}" ;;
 				read-only=*) read_only="${OPTARG#*=}" ;;
 				disks=*) disks="${OPTARG#*=}" ;;
@@ -620,10 +620,6 @@ function vm_setup()
 		fi
 	fi
 
-	# WARNING:
-	# each cmd+= must contain ' ${eol}' at the end
-	#
-	local eol="\\\\\n  "
 	local qemu_mask_param="VM_${vm_num}_qemu_mask"
 	local qemu_numa_node_param="VM_${vm_num}_qemu_numa_node"
 
@@ -635,7 +631,7 @@ function vm_setup()
 	local task_mask=${!qemu_mask_param}
 
 	notice "TASK MASK: $task_mask"
-	local cmd="taskset -a -c $task_mask $QEMU_BIN ${eol}"
+	local cmd=(taskset -a -c "$task_mask" "$QEMU_BIN")
 	local vm_socket_offset=$(( 10000 + 100 * vm_num ))
 
 	local ssh_socket=$(( vm_socket_offset + 0 ))
@@ -673,21 +669,21 @@ function vm_setup()
 	local node_num=${!qemu_numa_node_param}
 	local boot_disk_present=false
 	notice "NUMA NODE: $node_num"
-	cmd+="-m $guest_memory --enable-kvm -cpu host -smp $cpu_num -vga std -vnc :$vnc_socket -daemonize ${eol}"
-	cmd+="-object memory-backend-file,id=mem,size=${guest_memory}M,mem-path=/dev/hugepages,share=on,prealloc=yes,host-nodes=$node_num,policy=bind ${eol}"
-	[[ $os_mode == snapshot ]] && cmd+="-snapshot ${eol}"
-	[[ -n "$vm_incoming" ]] && cmd+=" -incoming tcp:0:$migration_port ${eol}"
-	cmd+="-monitor telnet:127.0.0.1:$monitor_port,server,nowait ${eol}"
-	cmd+="-numa node,memdev=mem ${eol}"
-	cmd+="-pidfile $qemu_pid_file ${eol}"
-	cmd+="-serial file:$vm_dir/serial.log ${eol}"
-	cmd+="-D $vm_dir/qemu.log ${eol}"
-	cmd+="-chardev file,path=$vm_dir/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios ${eol}"
-	cmd+="-net user,hostfwd=tcp::$ssh_socket-:22,hostfwd=tcp::$fio_socket-:8765 ${eol}"
-	cmd+="-net nic ${eol}"
+	cmd+=(-m "$guest_memory" --enable-kvm -cpu host -smp "$cpu_num" -vga std -vnc ":$vnc_socket" -daemonize)
+	cmd+=(-object "memory-backend-file,id=mem,size=${guest_memory}M,mem-path=/dev/hugepages,share=on,prealloc=yes,host-nodes=$node_num,policy=bind")
+	[[ $os_mode == snapshot ]] && cmd+=(-snapshot)
+	[[ -n "$vm_incoming" ]] && cmd+=(-incoming "tcp:0:$migration_port")
+	cmd+=(-monitor "telnet:127.0.0.1:$monitor_port,server,nowait")
+	cmd+=(-numa "node,memdev=mem")
+	cmd+=(-pidfile "$qemu_pid_file")
+	cmd+=(-serial "file:$vm_dir/serial.log")
+	cmd+=(-D "$vm_dir/qemu.log")
+	cmd+=(-chardev "file,path=$vm_dir/seabios.log,id=seabios" -device "isa-debugcon,iobase=0x402,chardev=seabios")
+	cmd+=(-net "user,hostfwd=tcp::$ssh_socket-:22,hostfwd=tcp::$fio_socket-:8765")
+	cmd+=(-net nic)
 	if [[ -z "$boot_from" ]]; then
-		cmd+="-drive file=$os,if=none,id=os_disk ${eol}"
-		cmd+="-device ide-hd,drive=os_disk,bootindex=0 ${eol}"
+		cmd+=(-drive "file=$os,if=none,id=os_disk")
+		cmd+=(-device "ide-hd,drive=os_disk,bootindex=0")
 	fi
 
 	if [[ $disks == '' ]] && [[ $disk_type_g == virtio* ]]; then
@@ -729,29 +725,27 @@ function vm_setup()
 					notice "Using existing image $raw_disk"
 				fi
 
-				cmd+="-device virtio-scsi-pci,num_queues=$queue_number ${eol}"
-				cmd+="-device scsi-hd,drive=hd$i,vendor=$raw_name ${eol}"
-				cmd+="-drive if=none,id=hd$i,file=$raw_disk,format=raw$raw_cache ${eol}"
+				cmd+=(-device "virtio-scsi-pci,num_queues=$queue_number")
+				cmd+=(-device "scsi-hd,drive=hd$i,vendor=$raw_name")
+				cmd+=(-drive "if=none,id=hd$i,file=$raw_disk,format=raw$raw_cache")
 				;;
 			spdk_vhost_scsi)
 				notice "using socket $vhost_dir/naa.$disk.$vm_num"
-				cmd+="-chardev socket,id=char_$disk,path=$vhost_dir/naa.$disk.$vm_num ${eol}"
-				cmd+="-device vhost-user-scsi-pci,id=scsi_$disk,num_queues=$queue_number,chardev=char_$disk"
+				cmd+=(-chardev "socket,id=char_$disk,path=$vhost_dir/naa.$disk.$vm_num")
+				cmd+=(-device "vhost-user-scsi-pci,id=scsi_$disk,num_queues=$queue_number,chardev=char_$disk")
 				if [[ "$disk" == "$boot_from" ]]; then
-					cmd+=",bootindex=0"
+					cmd[-1]+=,bootindex=0
 					boot_disk_present=true
 				fi
-				cmd+=" ${eol}"
 				;;
 			spdk_vhost_blk)
 				notice "using socket $vhost_dir/naa.$disk.$vm_num"
-				cmd+="-chardev socket,id=char_$disk,path=$vhost_dir/naa.$disk.$vm_num ${eol}"
-				cmd+="-device vhost-user-blk-pci,num-queues=$queue_number,chardev=char_$disk"
+				cmd+=(-chardev "socket,id=char_$disk,path=$vhost_dir/naa.$disk.$vm_num")
+				cmd+=(-device "vhost-user-blk-pci,num-queues=$queue_number,chardev=char_$disk")
 				if [[ "$disk" == "$boot_from" ]]; then
-					cmd+=",bootindex=0"
+					cmd[-1]+=,bootindex=0
 					boot_disk_present=true
 				fi
-				cmd+=" ${eol}"
 				;;
 			kernel_vhost)
 				if [[ -z $disk ]]; then
@@ -762,7 +756,7 @@ function vm_setup()
 					return 1
 				fi
 				notice "Using kernel vhost disk wwn=$disk"
-				cmd+=" -device vhost-scsi-pci,wwpn=$disk,num_queues=$queue_number ${eol}"
+				cmd+=(-device "vhost-scsi-pci,wwpn=$disk,num_queues=$queue_number")
 				;;
 			*)
 				error "unknown mode '$disk_type', use: virtio, spdk_vhost_scsi, spdk_vhost_blk or kernel_vhost"
@@ -775,10 +769,7 @@ function vm_setup()
 		return 1
 	fi
 
-	[[ -n $qemu_args ]] && cmd+=" $qemu_args ${eol}"
-	# remove last $eol
-	cmd="${cmd%\\\\\\n  }"
-
+	(( ${#qemu_args[@]} )) && cmd+=("${qemu_args[@]}")
 	notice "Saving to $vm_dir/run.sh"
 	(
 	echo '#!/bin/bash'
@@ -787,11 +778,11 @@ function vm_setup()
 	echo '	exit 1'
 	echo 'fi';
 	echo
-	echo -e "qemu_cmd=\"$cmd\"";
+	echo "qemu_cmd=($(printf '%s\n' "${cmd[@]}"))";
 	echo
 	echo "echo 'Running VM in $vm_dir'"
 	echo "rm -f $qemu_pid_file"
-	echo '$qemu_cmd'
+	echo '"${qemu_cmd[@]}"'
 	echo "echo 'Waiting for QEMU pid file'"
 	echo "sleep 1"
 	echo "[[ ! -f $qemu_pid_file ]] && sleep 1"
