@@ -792,12 +792,12 @@ sort_threads(const void *p1, const void *p2)
 		count2 = thread_info2->paused_pollers_count;
 		break;
 	case 5: /* Sort by idle time */
-		count1 = thread_info1->idle;
-		count2 = thread_info2->idle;
+		count1 = thread_info1->idle - thread_info1->last_idle;
+		count2 = thread_info2->idle - thread_info2->last_idle;
 		break;
 	case 6: /* Sort by busy time */
-		count1 = thread_info1->busy;
-		count2 = thread_info2->busy;
+		count1 = thread_info1->busy - thread_info1->last_busy;
+		count2 = thread_info2->busy - thread_info2->last_busy;
 		break;
 	default:
 		return 0;
