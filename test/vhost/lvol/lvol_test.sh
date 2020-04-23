@@ -106,7 +106,7 @@ if [[ -z $max_disks ]]; then
     max_disks=${#nvmes[@]}
 fi
 
-if [[ ${#nvmes[@]} -lt max_disks ]]; then
+if (( ${#nvmes[@]} < max_disks )); then
     fail "Number of NVMe drives (${#nvmes[@]}) is lower than number of requested disks for test ($max_disks)"
 fi
 
