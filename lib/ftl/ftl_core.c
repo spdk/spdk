@@ -966,11 +966,18 @@ ftl_wptr_pad_band(struct ftl_wptr *wptr)
 	struct spdk_ftl_dev *dev = wptr->dev;
 	struct ftl_batch *batch = dev->current_batch;
 	struct ftl_io_channel *ioch;
+	struct ftl_io *io;
 	size_t size, pad_size, blocks_left;
 
 	size = batch != NULL ? batch->num_entries : 0;
 	TAILQ_FOREACH(ioch, &dev->ioch_queue, tailq) {
 		size += spdk_ring_count(ioch->submit_queue);
+
+		TAILQ_FOREACH(io, &ioch->retry_queue, ioch_entry) {
+			if (io->type == FTL_IO_WRITE) {
+				size += io->num_blocks - io->pos;
+			}
+		}
 	}
 
 	ioch = ftl_io_channel_get_ctx(ftl_get_io_channel(dev));
@@ -989,11 +996,18 @@ ftl_wptr_process_shutdown(struct ftl_wptr *wptr)
 	struct spdk_ftl_dev *dev = wptr->dev;
 	struct ftl_batch *batch = dev->current_batch;
 	struct ftl_io_channel *ioch;
+	struct ftl_io *io;
 	size_t size;
 
 	size = batch != NULL ? batch->num_entries : 0;
 	TAILQ_FOREACH(ioch, &dev->ioch_queue, tailq) {
 		size += spdk_ring_count(ioch->submit_queue);
+
+		TAILQ_FOREACH(io, &ioch->retry_queue, ioch_entry) {
+			if (io->type == FTL_IO_WRITE) {
+				size += io->num_blocks - io->pos;
+			}
+		}
 	}
 
 	if (size >= dev->xfer_size) {
