@@ -944,6 +944,10 @@ store_last_run_counter(const char *poller_name, uint64_t thread_id, uint64_t las
 	}
 
 	history = calloc(1, sizeof(*history));
+	if (history == NULL) {
+		fprintf(stderr, "Unable to allocate a history object in store_last_run_counter.\n");
+		return;
+	}
 	history->poller_name = strdup(poller_name);
 	history->thread_id = thread_id;
 	history->last_run_counter = last_run_counter;
@@ -983,8 +987,10 @@ sort_pollers(const void *p1, const void *p2, void *arg)
 			return strcmp(poller1->thread_name, poller2->thread_name);
 		case 3: /* Sort by run counter */
 			last_run_counter = get_last_run_counter(poller1->name, poller1->thread_id);
+			assert(last_run_counter != NULL);
 			count1 = poller1->run_count - *last_run_counter;
 			last_run_counter = get_last_run_counter(poller2->name, poller2->thread_id);
+			assert(last_run_counter != NULL);
 			count2 = poller2->run_count - *last_run_counter;
 			break;
 		case 4: /* Sort by period */
@@ -1021,6 +1027,7 @@ copy_pollers(struct rpc_pollers *pollers, uint64_t pollers_count, enum spdk_poll
 				last_run_counter = get_last_run_counter(pollers->pollers[i].name, thread->id);
 			}
 
+			assert(last_run_counter != NULL);
 			*last_run_counter = pollers->pollers[i].run_count;
 		}
 		pollers_info[*current_count] = &pollers->pollers[i];
@@ -1113,6 +1120,7 @@ refresh_pollers_tab(uint8_t current_page)
 
 		if (!col_desc[3].disabled) {
 			last_run_counter = get_last_run_counter(pollers[i]->name, pollers[i]->thread_id);
+			assert(last_run_counter != NULL);
 
 			snprintf(run_count, MAX_TIME_STR_LEN, "%" PRIu64, pollers[i]->run_count - *last_run_counter);
 			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + item_index, col,
@@ -1377,6 +1385,10 @@ draw_filtering_menu(uint8_t position, WINDOW *filter_win, uint8_t tab, MENU **my
 	elements = i;
 
 	my_items = (ITEM **)calloc(elements * WINDOW_COLUMNS + ADDITIONAL_ELEMENTS, sizeof(ITEM *));
+	if (my_items == NULL) {
+		fprintf(stderr, "Unable to allocate an item list in draw_filtering_menu.\n");
+		return NULL;
+	}
 
 	for (i = 0; i < elements * 2; i++) {
 		my_items[i] = new_item(col_desc[i / WINDOW_COLUMNS].name, NULL);
@@ -1441,7 +1453,7 @@ filter_columns(uint8_t tab)
 	PANEL *filter_panel;
 	WINDOW *filter_win;
 	ITEM **my_items;
-	MENU *my_menu;
+	MENU *my_menu = NULL;
 	int i, c, elements;
 	bool stop_loop = false;
 	ITEM *cur;
@@ -1552,6 +1564,10 @@ change_sorting(uint8_t tab)
 	elements = i;
 
 	my_items = (ITEM **)calloc(elements + 1, sizeof(ITEM *));
+	if (my_items == NULL) {
+		fprintf(stderr, "Unable to allocate an item list in change_sorting.\n");
+		return;
+	}
 
 	for (i = 0; i < elements; ++i) {
 		my_items[i] = new_item(g_col_desc[tab][i].name, NULL);
