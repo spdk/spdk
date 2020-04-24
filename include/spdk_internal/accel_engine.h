@@ -40,11 +40,11 @@
 #include "spdk/queue.h"
 
 enum accel_module {
-	ACCEL_SW = 0,
-	ACCEL_AUTO,
-	ACCEL_CBDMA,
-	ACCEL_IDXD_DSA,
-	ACCEL_MODULE_MAX
+	ACCEL_SW		= 0,
+	ACCEL_AUTO		= 1,
+	ACCEL_CBDMA		= 2,
+	ACCEL_IDXD_DSA		= 3,
+	ACCEL_MODULE_MAX	= 4,
 };
 
 int accel_set_module(enum accel_module *opts);
