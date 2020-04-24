@@ -1342,6 +1342,7 @@ iscsi_op_login_store_incoming_params(struct spdk_iscsi_conn *conn,
 				&conn->partial_text_parameter);
 	if (rc < 0) {
 		SPDK_ERRLOG("iscsi_parse_params() failed\n");
+		iscsi_param_free(*params);
 		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
 		rsph->status_detail = ISCSI_LOGIN_INITIATOR_ERROR;
 		return SPDK_ISCSI_LOGIN_ERROR_PARAMETER;
