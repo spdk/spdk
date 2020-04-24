@@ -132,10 +132,11 @@ struct ns_worker_ctx {
 
 	union {
 		struct {
-			int			num_active_qpairs;
-			int			num_all_qpairs;
-			struct spdk_nvme_qpair	**qpair;
-			int			last_qpair;
+			int				num_active_qpairs;
+			int				num_all_qpairs;
+			struct spdk_nvme_qpair		**qpair;
+			struct spdk_nvme_poll_group	*group;
+			int				last_qpair;
 		} nvme;
 
 #if HAVE_LIBAIO
@@ -538,16 +539,20 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 }
 
 static void
+perf_disconnect_cb(struct spdk_nvme_qpair *qpair, void *ctx)
+{
+
+}
+
+static void
 nvme_check_io(struct ns_worker_ctx *ns_ctx)
 {
-	int i, rc;
+	int64_t rc;
 
-	for (i = 0; i < ns_ctx->u.nvme.num_all_qpairs; i++) {
-		rc = spdk_nvme_qpair_process_completions(ns_ctx->u.nvme.qpair[i], g_max_completions);
-		if (rc < 0) {
-			fprintf(stderr, "NVMe io qpair process completion error\n");
-			exit(1);
-		}
+	rc = spdk_nvme_poll_group_process_completions(ns_ctx->u.nvme.group, 0, perf_disconnect_cb);
+	if (rc < 0) {
+		fprintf(stderr, "NVMe io qpair process completion error\n");
+		exit(1);
 	}
 }
 
@@ -587,6 +592,8 @@ nvme_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 {
 	struct spdk_nvme_io_qpair_opts opts;
 	struct ns_entry *entry = ns_ctx->entry;
+	struct spdk_nvme_poll_group *group;
+	struct spdk_nvme_qpair *qpair;
 	int i;
 
 	ns_ctx->u.nvme.num_active_qpairs = g_nr_io_queues_per_ns;
@@ -601,12 +608,30 @@ nvme_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 		opts.io_queue_requests = entry->num_io_requests;
 	}
 	opts.delay_cmd_submit = true;
+	opts.create_only = true;
 
+	ns_ctx->u.nvme.group = spdk_nvme_poll_group_create(NULL);
+	if (ns_ctx->u.nvme.group == NULL) {
+		return -1;
+	}
+
+	group = ns_ctx->u.nvme.group;
 	for (i = 0; i < ns_ctx->u.nvme.num_all_qpairs; i++) {
 		ns_ctx->u.nvme.qpair[i] = spdk_nvme_ctrlr_alloc_io_qpair(entry->u.nvme.ctrlr, &opts,
 					  sizeof(opts));
-		if (!ns_ctx->u.nvme.qpair[i]) {
+		qpair = ns_ctx->u.nvme.qpair[i];
+		if (!qpair) {
 			printf("ERROR: spdk_nvme_ctrlr_alloc_io_qpair failed\n");
+			return -1;
+		}
+
+		if (spdk_nvme_poll_group_add(group, qpair)) {
+			printf("ERROR: unable to add I/O qpair to poll group.\n");
+			return -1;
+		}
+
+		if (spdk_nvme_ctrlr_connect_io_qpair(entry->u.nvme.ctrlr, qpair)) {
+			printf("ERROR: unable to connect I/O qpair.\n");
 			return -1;
 		}
 	}
@@ -620,9 +645,11 @@ nvme_cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 	int i;
 
 	for (i = 0; i < ns_ctx->u.nvme.num_all_qpairs; i++) {
+		spdk_nvme_poll_group_remove(ns_ctx->u.nvme.group, ns_ctx->u.nvme.qpair[i]);
 		spdk_nvme_ctrlr_free_io_qpair(ns_ctx->u.nvme.qpair[i]);
 	}
 
+	spdk_nvme_poll_group_destroy(ns_ctx->u.nvme.group);
 	free(ns_ctx->u.nvme.qpair);
 }
 
