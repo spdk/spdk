@@ -50,6 +50,11 @@ of lightweight threads already exist at start up time. A poll group is a collect
 unrelated iSCSI connections. Each poll group is only accessed from the associated
 lightweight thread.
 
+### ftl
+
+Several changes have been made to the `spdk_ftl_conf`, `spdk_ftl_dev_init_ops`, and
+`spdk_ftl_attrs` structs. Please see `include/spdk/ftl.h` for more details.
+
 ### miscellaneous
 
 The `--json-ignore-init-errors` command line parameter has been added to ignore
@@ -66,6 +71,41 @@ prefix.
 Added `priority` field in `spdk_nvme_transport_id`, this field is used to specify the priority
 of the NVMe-oF connection, and currently it is used for NVMe-oF tcp connection.
 
+A new poll group API has been added to allow for pooling of nvme qpairs across a single
+entity which can be polled for completions. This new API consists of the `spdk_nvme_poll_group`
+family of functions. As a result of this new API, all NVMe transports are expected to implement
+several poll group related functions.
+
+A new flag, `create_only`, has been added to the `spdk_nvme_io_qpair_opts` structure. This flag
+allows a user to call `spdk_nvme_ctrlr_get_default_io_qpair` without also connecting the qpair
+within the context of that call.
+
+As a result of the `create_only` flag, two new API functions, `spdk_nvme_ctrlr_connect_io_qpair`
+and `spdk_nvme_ctrlr_disconnect_io_qpair`, have been added to facilitate connecting newly created
+qpairs (for example, after they have been added to a poll group) and disconnecting qpairs without
+destroying them (for example to disconnect a qpair before migrating it to a new poll group and
+reconnecting it).
+
+The functions `spdk_nvme_ctrlr_alloc_cmb_io_buffer` and `spdk_nvme_ctrlr_free_cmb_io_buffer`
+have been changed to `spdk_nvme_ctrlr_map_cmb` and `spdk_nvme_ctrlr_unmap_cmb` respectively.
+
+An additional function, `spdk_nvme_ctrlr_reserve_cmb`, has been added to facilitate reserving
+the entire size of the controller memory buffer for data transfer.
+
+### nvme_cuse
+
+`spdk_nvme_cuse_get_ctrlr_name` now takes two additional parameters, `char *name` which
+stores the pointer to the controller name, and `size_t *size` which stores the length of
+the name. The return type has also been changed from char * to int.
+
+`spdk_nvme_cuse_get_ns_name` now takes two additional parameters, `char *name` which
+stores the pointer to the namespace name, and `size_t *size` which stores the length of
+the name. The return type has also been changed from char * to int.
+
+### nvme_opal
+
+Several public OPAL structure definitions have been changed since the last release.
+
 ### nvmf
 
 `spdk_nvmf_poll_group_destroy()` is now asynchronous and accepts a completion callback.
@@ -74,6 +114,21 @@ The NVMe-oF target now creates a lightweight thread per poll group instead of as
 of lightweight threads already exist at start up time. A poll group is a collection of
 unrelated NVMe-oF connections. Each poll group is only accessed from the associated
 lightweight thread.
+
+A new struct, `spdk_nvmf_subsystem_listener`, has been added to encapsulate the subsystem specific
+nature of a listener object.
+
+`spdk_nvmf_tgt_listen` no longer accepts a callback function or argument. It also returns an
+int to indicate the status of the listen call.
+
+The execution of `spdk_nvme_poll_group_destroy` is now asynchronous and the function accepts
+a cb_fn and cb_arg to call upon completion.
+
+The execution of `spdk_nvmf_subsystem_add_listener` is now asynchronous and the function accepts
+a cb_fn and cb_arg to call upon completion.
+
+The `nvmf_transport.h` header has been made public to allow custom NVMe-oF transports to integrate
+with NVMe-oF libraries without using internal APIs.
 
 ### ocf
 
@@ -97,6 +152,12 @@ A new RPC `bdev_rbd_resize` has been added to resize Ceph RBD bdevs.
 The `spdk_sock_set_priority` function has been removed since the feature to set the sock priority
 will be contained in two new functions, i.e., `spdk_sock_listen_ext` and `spdk_sock_connect_ext`.
 Users may now specify the priority of the socket in the opts that they want to use.
+
+### spdk_top
+
+A new application, `spdk_top`, has been added which allows users to monitor resource consumption
+by a running SPDK application. More information on this application can be found in
+`app/spdk_top/README`.
 
 ### thread
 
