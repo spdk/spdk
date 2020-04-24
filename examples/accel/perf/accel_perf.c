@@ -47,6 +47,7 @@ static int g_queue_depth = 32;
 static int g_time_in_sec = 5;
 static bool g_verify = false;
 static const char *g_workload_type = NULL;
+static enum accel_capability g_workload_selection;
 static struct worker_thread *g_workers = NULL;
 static int g_num_workers = 0;
 static pthread_mutex_t g_workers_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -128,6 +129,11 @@ parse_args(int argc, char *argv)
 		break;
 	case 'w':
 		g_workload_type = optarg;
+		if (!strcmp(g_workload_type, "copy")) {
+			g_workload_selection = ACCEL_COPY;
+		} else if (!strcmp(g_workload_type, "fill")) {
+			g_workload_selection = ACCEL_FILL;
+		}
 		break;
 	default:
 		usage();
@@ -360,6 +366,20 @@ accel_done(void *ref, int status)
 static void
 accel_perf_start(void *arg1)
 {
+	uint64_t capabilites;
+	struct spdk_io_channel *accel_ch;
+
+	accel_ch = spdk_accel_engine_get_io_channel();
+	capabilites = spdk_accel_get_capabilities(accel_ch);
+	spdk_put_io_channel(accel_ch);
+
+	if ((capabilites & g_workload_selection) != g_workload_selection) {
+		SPDK_ERRLOG("Selected workload is not supported by the current engine\n");
+		SPDK_NOTICELOG("Software engine is selected by default, enable a HW engine via RPC\n\n");
+		spdk_app_stop(-1);
+		return;
+	}
+
 	g_tsc_rate = spdk_get_ticks_hz();
 	g_tsc_us_rate = g_tsc_rate / (1000 * 1000);
 	g_tsc_end = spdk_get_ticks() + g_time_in_sec * g_tsc_rate;
