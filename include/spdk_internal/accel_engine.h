@@ -55,10 +55,11 @@ struct spdk_accel_task {
 };
 
 struct spdk_accel_engine {
-	int	(*copy)(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src,
-			uint64_t nbytes, spdk_accel_completion_cb cb);
-	int	(*fill)(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill,
-			uint64_t nbytes, spdk_accel_completion_cb cb);
+	uint64_t (*get_capabilities)(void);
+	int (*copy)(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src,
+		    uint64_t nbytes, spdk_accel_completion_cb cb);
+	int (*fill)(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill,
+		    uint64_t nbytes, spdk_accel_completion_cb cb);
 	struct spdk_io_channel *(*get_io_channel)(void);
 };
 

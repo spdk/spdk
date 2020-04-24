@@ -44,6 +44,16 @@
 extern "C" {
 #endif
 
+enum accel_capability {
+	ACCEL_COPY		= 1 << 0,
+	ACCEL_FILL		= 1 << 1,
+	ACCEL_DUALCAST		= 1 << 2,
+	ACCEL_COMPARE		= 1 << 3,
+	ACCEL_BATCH		= 1 << 4,
+	ACCEL_CRC		= 1 << 5,
+	ACCEL_DIF		= 1 << 6,
+};
+
 /**
  * Acceleration operation callback.
  *
@@ -98,6 +108,16 @@ void spdk_accel_engine_module_finish(void);
  * \return a pointer to the I/O channel on success, or NULL on failure.
  */
 struct spdk_io_channel *spdk_accel_engine_get_io_channel(void);
+
+/**
+ * Retrieve accel engine capabilities.
+ *
+ * \param ch I/O channel to submit request to the accel engine. This channel can
+ * be obtained by the function spdk_accel_engine_get_io_channel().
+ *
+ * \return bitmap of capabilities defined by enum accel_capability.
+ */
+uint64_t spdk_accel_get_capabilities(struct spdk_io_channel *ch);
 
 /**
  * Submit a copy request.

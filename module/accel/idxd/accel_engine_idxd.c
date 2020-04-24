@@ -102,20 +102,9 @@ struct idxd_task {
 	spdk_accel_completion_cb	cb;
 };
 
-static int accel_engine_idxd_init(void);
-static void accel_engine_idxd_exit(void *ctx);
-static struct spdk_io_channel *idxd_get_io_channel(void);
-static int idxd_submit_copy(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src,
-			    uint64_t nbytes,
-			    spdk_accel_completion_cb cb);
-static int idxd_submit_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill,
-			    uint64_t nbytes, spdk_accel_completion_cb cb);
+pthread_mutex_t g_num_channels_lock = PTHREAD_MUTEX_INITIALIZER;
 
-static struct spdk_accel_engine idxd_accel_engine = {
-	.copy		= idxd_submit_copy,
-	.fill		= idxd_submit_fill,
-	.get_io_channel	= idxd_get_io_channel,
-};
+static struct spdk_io_channel *idxd_get_io_channel(void);
 
 static struct idxd_device *
 idxd_select_device(void)
@@ -271,7 +260,19 @@ idxd_submit_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fi
 	return rc;
 }
 
-pthread_mutex_t g_num_channels_lock = PTHREAD_MUTEX_INITIALIZER;
+static uint64_t
+idxd_get_capabilities(void)
+{
+	return ACCEL_COPY | ACCEL_FILL | ACCEL_DUALCAST | ACCEL_COMPARE |
+	       ACCEL_BATCH | ACCEL_CRC	| ACCEL_DIF;
+}
+
+static struct spdk_accel_engine idxd_accel_engine = {
+	.get_capabilities	= idxd_get_capabilities,
+	.copy			= idxd_submit_copy,
+	.fill			= idxd_submit_fill,
+	.get_io_channel		= idxd_get_io_channel,
+};
 
 /*
  * Configure the max number of descriptors that a channel is

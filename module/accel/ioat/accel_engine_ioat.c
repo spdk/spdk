@@ -191,10 +191,21 @@ ioat_poll(void *arg)
 
 static struct spdk_io_channel *ioat_get_io_channel(void);
 
+/*
+ * The IOAT engine has more capabilities than this but these are
+ * the only ones we expose via the accel engine.
+ */
+static uint64_t
+ioat_get_capabilities(void)
+{
+	return ACCEL_COPY | ACCEL_FILL;
+}
+
 static struct spdk_accel_engine ioat_accel_engine = {
-	.copy		= ioat_submit_copy,
-	.fill		= ioat_submit_fill,
-	.get_io_channel	= ioat_get_io_channel,
+	.get_capabilities	= ioat_get_capabilities,
+	.copy			= ioat_submit_copy,
+	.fill			= ioat_submit_fill,
+	.get_io_channel		= ioat_get_io_channel,
 };
 
 static int

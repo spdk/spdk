@@ -109,6 +109,14 @@ _accel_engine_done(void *ref, int status)
 	req->cb(req, status);
 }
 
+uint64_t
+spdk_accel_get_capabilities(struct spdk_io_channel *ch)
+{
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+
+	return accel_ch->engine->get_capabilities();
+}
+
 /* Accel framework public API for copy function */
 int
 spdk_accel_submit_copy(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
@@ -297,6 +305,12 @@ spdk_accel_engine_config_text(FILE *fp)
 
 /* The SW Accelerator module is "built in" here (rest of file) */
 
+static uint64_t
+sw_accel_get_capabilities(void)
+{
+	return ACCEL_COPY | ACCEL_FILL;
+}
+
 static int
 sw_accel_submit_copy(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src,
 		     uint64_t nbytes,
@@ -330,9 +344,10 @@ sw_accel_submit_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_
 static struct spdk_io_channel *sw_accel_get_io_channel(void);
 
 static struct spdk_accel_engine sw_accel_engine = {
-	.copy		= sw_accel_submit_copy,
-	.fill		= sw_accel_submit_fill,
-	.get_io_channel	= sw_accel_get_io_channel,
+	.get_capabilities	= sw_accel_get_capabilities,
+	.copy			= sw_accel_submit_copy,
+	.fill			= sw_accel_submit_fill,
+	.get_io_channel		= sw_accel_get_io_channel,
 };
 
 static int
