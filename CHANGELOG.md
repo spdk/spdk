@@ -2,6 +2,11 @@
 
 ## v20.07: (Upcoming Release)
 
+### nvme
+
+Add `opts_size` in `spdk_nvme_ctrlr_opts` structure in order to solve the compatiblity issue
+for different ABI version.
+
 ### accel
 
 A new API was added `spdk_accel_get_capabilities` that allows applications to

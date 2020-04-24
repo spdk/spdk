@@ -727,6 +727,117 @@ nvme_connect_probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	return true;
 }
 
+static void
+nvme_ctrlr_opts_init(struct spdk_nvme_ctrlr_opts *opts,
+		     const struct spdk_nvme_ctrlr_opts *opts_user,
+		     size_t opts_size_user)
+{
+	assert(opts);
+	assert(opts_user);
+
+	spdk_nvme_ctrlr_get_default_ctrlr_opts(opts, opts_size_user);
+
+#define FIELD_OK(field) \
+        offsetof(struct spdk_nvme_ctrlr_opts, field) + sizeof(opts->field) <= (opts->opts_size)
+
+	if (FIELD_OK(num_io_queues)) {
+		opts->num_io_queues = opts_user->num_io_queues;
+	}
+
+	if (FIELD_OK(use_cmb_sqs)) {
+		opts->use_cmb_sqs = opts_user->use_cmb_sqs;
+	}
+
+	if (FIELD_OK(no_shn_notification)) {
+		opts->no_shn_notification = opts_user->no_shn_notification;
+	}
+
+	if (FIELD_OK(arb_mechanism)) {
+		opts->arb_mechanism = opts_user->arb_mechanism;
+	}
+
+	if (FIELD_OK(arbitration_burst)) {
+		opts->arbitration_burst = opts_user->arbitration_burst;
+	}
+
+	if (FIELD_OK(low_priority_weight)) {
+		opts->low_priority_weight = opts_user->low_priority_weight;
+	}
+
+	if (FIELD_OK(medium_priority_weight)) {
+		opts->medium_priority_weight = opts_user->medium_priority_weight;
+	}
+
+	if (FIELD_OK(high_priority_weight)) {
+		opts->high_priority_weight = opts_user->high_priority_weight;
+	}
+
+	if (FIELD_OK(keep_alive_timeout_ms)) {
+		opts->keep_alive_timeout_ms =  opts_user->keep_alive_timeout_ms;
+	}
+
+	if (FIELD_OK(transport_retry_count)) {
+		opts->transport_retry_count = opts_user->transport_retry_count;
+	}
+
+	if (FIELD_OK(io_queue_size)) {
+		opts->io_queue_size =  opts_user->io_queue_size;
+	}
+
+	if (FIELD_OK(hostnqn)) {
+		memcpy(opts->hostnqn, opts_user->hostnqn, sizeof(opts_user->hostnqn));
+	}
+
+	if (FIELD_OK(io_queue_requests)) {
+		opts->io_queue_requests =  opts_user->io_queue_requests;
+	}
+
+	if (FIELD_OK(src_addr)) {
+		memcpy(opts->src_addr, opts_user->src_addr, sizeof(opts_user->src_addr));
+	}
+
+	if (FIELD_OK(src_svcid)) {
+		memcpy(opts->src_svcid, opts_user->src_svcid, sizeof(opts_user->src_svcid));
+	}
+
+	if (FIELD_OK(host_id)) {
+		memcpy(opts->host_id, opts_user->host_id, sizeof(opts_user->host_id));
+	}
+	if (FIELD_OK(extended_host_id)) {
+		memcpy(opts->extended_host_id, opts_user->extended_host_id,
+		       sizeof(opts_user->extended_host_id));
+	}
+
+	if (FIELD_OK(command_set)) {
+		opts->command_set = opts_user->command_set;
+	}
+
+	if (FIELD_OK(admin_timeout_ms)) {
+		opts->admin_timeout_ms = opts_user->admin_timeout_ms;
+	}
+
+	if (FIELD_OK(header_digest)) {
+		opts->header_digest = opts_user->header_digest;
+	}
+
+	if (FIELD_OK(data_digest)) {
+		opts->data_digest = opts_user->data_digest;
+	}
+
+	if (FIELD_OK(disable_error_logging)) {
+		opts->disable_error_logging = opts_user->disable_error_logging;
+	}
+
+	if (FIELD_OK(transport_ack_timeout)) {
+		opts->transport_ack_timeout = opts_user->transport_ack_timeout;
+	}
+
+	if (FIELD_OK(admin_queue_size)) {
+		opts->admin_queue_size = opts_user->admin_queue_size;
+	}
+#undef FIELD_OK
+}
+
 struct spdk_nvme_ctrlr *
 spdk_nvme_connect(const struct spdk_nvme_transport_id *trid,
 		  const struct spdk_nvme_ctrlr_opts *opts, size_t opts_size)
@@ -734,18 +845,20 @@ spdk_nvme_connect(const struct spdk_nvme_transport_id *trid,
 	int rc;
 	struct spdk_nvme_ctrlr *ctrlr = NULL;
 	struct spdk_nvme_probe_ctx *probe_ctx;
+	struct spdk_nvme_ctrlr_opts *opts_local_p = NULL;
+	struct spdk_nvme_ctrlr_opts opts_local;
 
 	if (trid == NULL) {
 		SPDK_ERRLOG("No transport ID specified\n");
 		return NULL;
 	}
 
-	if (opts && (opts_size != sizeof(*opts))) {
-		SPDK_ERRLOG("Invalid opts size\n");
-		return NULL;
+	if (opts) {
+		opts_local_p = &opts_local;
+		nvme_ctrlr_opts_init(opts_local_p, opts, opts_size);
 	}
 
-	probe_ctx = spdk_nvme_connect_async(trid, opts, NULL);
+	probe_ctx = spdk_nvme_connect_async(trid, opts_local_p, NULL);
 	if (!probe_ctx) {
 		SPDK_ERRLOG("Create probe context failed\n");
 		return NULL;

@@ -76,7 +76,8 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 void
 spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t opts_size)
 {
-	memset(opts, 0, sizeof(*opts));
+	memset(opts, 0, opts_size);
+	opts->opts_size = opts_size;
 }
 
 static void
@@ -269,9 +270,18 @@ test_spdk_nvme_connect(void)
 	ret_ctrlr = spdk_nvme_connect(&trid, &opts, sizeof(opts));
 	CU_ASSERT(ret_ctrlr == &ctrlr);
 	CU_ASSERT_EQUAL(ret_ctrlr->opts.num_io_queues, 1);
-	/* opts_size must be sizeof(*opts) if opts != NULL */
-	ret_ctrlr = spdk_nvme_connect(&trid, &opts, sizeof(opts) + 1);
-	CU_ASSERT(ret_ctrlr == NULL);
+	CU_ASSERT_EQUAL(ret_ctrlr->opts.opts_size, sizeof(opts));
+
+	/* opts_size is 0 */
+	ret_ctrlr = spdk_nvme_connect(&trid, &opts, 0);
+	CU_ASSERT(ret_ctrlr == &ctrlr);
+	CU_ASSERT_EQUAL(ret_ctrlr->opts.opts_size, 0);
+
+	/* opts_size is less than sizeof(*opts) if opts != NULL */
+	ret_ctrlr = spdk_nvme_connect(&trid, &opts, 4);
+	CU_ASSERT(ret_ctrlr == &ctrlr);
+	CU_ASSERT_EQUAL(ret_ctrlr->opts.num_io_queues, 1);
+	CU_ASSERT_EQUAL(ret_ctrlr->opts.opts_size, 4);
 	/* remove the attached ctrlr on the attached_list */
 	CU_ASSERT(spdk_nvme_detach(&ctrlr) == 0);
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_nvme_driver->shared_attached_ctrlrs));

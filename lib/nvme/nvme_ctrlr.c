@@ -90,12 +90,17 @@ nvme_ctrlr_get_cmbsz(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cmbsz_regist
 					      &cmbsz->raw);
 }
 
+/* When the field in spdk_nvme_ctrlr_opts are changed and you change this function, please
+ * also update the nvme_ctrl_opts_init function in nvme_ctrlr.c
+ */
 void
 spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t opts_size)
 {
 	char host_id_str[SPDK_UUID_STRING_LEN];
 
 	assert(opts);
+
+	opts->opts_size = opts_size;
 
 #define FIELD_OK(field) \
 	offsetof(struct spdk_nvme_ctrlr_opts, field) + sizeof(opts->field) <= opts_size
