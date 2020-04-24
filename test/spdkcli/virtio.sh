@@ -22,11 +22,11 @@ $spdkcli_job "'/bdevs/malloc create 32 512 Malloc0' 'Malloc0' True
 '/bdevs/malloc create 32 512 Malloc1' 'Malloc1' True
 "
 pci_blk=$(lspci -nn -D | grep '1af4:1001' | head -1 | awk '{print $1;}')
-if [ -n "$pci_blk" ]; then
+if [ -n "$pci_blk" ] && grep -Eq "DRIVER=(uio|vfio)" "/sys/bus/pci/devices/$pci_blk/uevent"; then
 	$spdkcli_job "'/bdevs/virtioblk_disk create virtioblk_pci pci $pci_blk' 'virtioblk_pci' True"
 fi
 pci_scsi=$(lspci -nn -D | grep '1af4:1004' | head -1 | awk '{print $1;}')
-if [ -n "$pci_scsi" ]; then
+if [ -n "$pci_scsi" ] && grep -Eq "DRIVER=(uio|vfio)" "/sys/bus/pci/devices/$pci_scsi/uevent"; then
 	$spdkcli_job "'/bdevs/virtioscsi_disk create virtioscsi_pci pci $pci_scsi' 'virtioscsi_pci' True"
 fi
 $spdkcli_job "'/vhost/scsi create sample_scsi' 'sample_scsi' True
@@ -63,10 +63,10 @@ $spdkcli_job "'/vhost/block delete sample_block' 'sample_block'
 '/vhost/scsi/sample_scsi remove_target 0' 'Malloc0'
 '/vhost/scsi delete sample_scsi' 'sample_scsi'
 "
-if [ -n "$pci_blk" ]; then
+if [ -n "$pci_blk" ] && grep -Eq "DRIVER=(uio|vfio)" "/sys/bus/pci/devices/$pci_blk/uevent"; then
 	$spdkcli_job "'/bdevs/virtioblk_disk delete virtioblk_pci' 'virtioblk_pci'"
 fi
-if [ -n "$pci_scsi" ]; then
+if [ -n "$pci_scsi" ] && grep -Eq "DRIVER=(uio|vfio)" "/sys/bus/pci/devices/$pci_scsi/uevent"; then
 	$spdkcli_job "'/bdevs/virtioscsi_disk delete virtioscsi_pci' 'virtioscsi_pci'"
 fi
 $spdkcli_job "'/bdevs/malloc delete Malloc0' 'Malloc0'
