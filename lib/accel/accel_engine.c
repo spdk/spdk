@@ -224,6 +224,7 @@ spdk_accel_engine_module_initialize(void)
 int
 spdk_accel_engine_initialize(void)
 {
+	SPDK_NOTICELOG("Accel engine initialized to use software engine.\n");
 	spdk_accel_engine_module_initialize();
 	/*
 	 * We need a unique identifier for the accel engine framework, so use the

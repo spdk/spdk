@@ -487,7 +487,7 @@ accel_engine_idxd_init(void)
 	}
 
 	g_idxd_initialized = true;
-	SPDK_NOTICELOG("IDXD Acceleration Engine Offload Enabled\n");
+	SPDK_NOTICELOG("Accel engine updated to use IDXD DSA engine.\n");
 	spdk_accel_hw_engine_register(&idxd_accel_engine);
 	spdk_io_device_register(&idxd_accel_engine, idxd_create_cb, idxd_destroy_cb,
 				sizeof(struct idxd_io_channel), "idxd_accel_engine");
