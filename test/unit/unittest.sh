@@ -158,19 +158,19 @@ fi
 
 run_test "unittest_include" $valgrind $testdir/include/spdk/histogram_data.h/histogram_ut
 run_test "unittest_bdev" unittest_bdev
-if [ $SPDK_TEST_CRYPTO -eq 1 ]; then
+if grep -q '#define SPDK_CONFIG_CRYPTO 1' $rootdir/include/spdk/config.h; then
 	run_test "unittest_bdev_crypto" $valgrind $testdir/lib/bdev/crypto.c/crypto_ut
 fi
 
-if [ $SPDK_TEST_REDUCE -eq 1 ]; then
+if grep -q '#define SPDK_CONFIG_REDUCE 1' $rootdir/include/spdk/config.h; then
 	run_test "unittest_bdev_reduce" $valgrind $testdir/lib/bdev/compress.c/compress_ut
 fi
 
-if [ $SPDK_TEST_PMDK -eq 1 ]; then
+if grep -q '#define SPDK_CONFIG_PMDK 1' $rootdir/include/spdk/config.h; then
 	run_test "unittest_bdev_pmem" $valgrind $testdir/lib/bdev/pmem/bdev_pmem_ut
 fi
 
-if [ $SPDK_TEST_RAID5 -eq 1 ]; then
+if grep -q '#define SPDK_CONFIG_RAID5 1' $rootdir/include/spdk/config.h; then
 	run_test "unittest_bdev_raid5" $valgrind $testdir/lib/bdev/raid/raid5.c/raid5_ut
 fi
 
@@ -195,11 +195,8 @@ if grep -q '#define SPDK_CONFIG_RDMA 1' $rootdir/include/spdk/config.h; then
 fi
 
 run_test "unittest_nvmf" unittest_nvmf
-if [ -e $testdir/lib/nvmf/fc.c/fc_ut ]; then
+if grep -q '#define SPDK_CONFIG_FC 1' $rootdir/include/spdk/config.h; then
 	run_test "unittest_nvmf_fc" $valgrind $testdir/lib/nvmf/fc.c/fc_ut
-fi
-
-if [ -e $testdir/lib/nvmf/fc_ls.c/fc_ls_ut ]; then
 	run_test "unittest_nvmf_fc_ls" $valgrind $testdir/lib/nvmf/fc_ls.c/fc_ls_ut
 fi
 
@@ -211,7 +208,7 @@ run_test "unittest_scsi" unittest_scsi
 run_test "unittest_sock" unittest_sock
 run_test "unittest_thread" $valgrind $testdir/lib/thread/thread.c/thread_ut
 run_test "unittest_util" unittest_util
-if [ $(uname -s) = Linux ]; then
+if grep -q '#define SPDK_CONFIG_VHOST 1' $rootdir/include/spdk/config.h; then
 	run_test "unittest_vhost" $valgrind $testdir/lib/vhost/vhost.c/vhost_ut
 fi
 
