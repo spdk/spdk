@@ -1,7 +1,6 @@
 import json
 import sys
 
-from . import accel
 from . import app
 from . import bdev
 from . import blobfs

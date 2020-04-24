@@ -39,16 +39,6 @@
 #include "spdk/accel_engine.h"
 #include "spdk/queue.h"
 
-enum accel_module {
-	ACCEL_SW		= 0,
-	ACCEL_AUTO		= 1,
-	ACCEL_CBDMA		= 2,
-	ACCEL_IDXD_DSA		= 3,
-	ACCEL_MODULE_MAX	= 4,
-};
-
-int accel_set_module(enum accel_module *opts);
-
 struct spdk_accel_task {
 	spdk_accel_completion_cb	cb;
 	uint8_t				offload_ctx[0];

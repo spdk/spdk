@@ -37,7 +37,6 @@
 
 #include "spdk/env.h"
 #include "spdk/event.h"
-#include "spdk/log.h"
 #include "spdk/thread.h"
 #include "spdk/json.h"
 
@@ -56,7 +55,6 @@ static struct spdk_accel_engine *g_sw_accel_engine = NULL;
 static struct spdk_accel_module_if *g_accel_engine_module = NULL;
 static spdk_accel_fini_cb g_fini_cb_fn = NULL;
 static void *g_fini_cb_arg = NULL;
-enum accel_module g_active_accel_module = ACCEL_AUTO;
 
 /* Global list of registered accelerator modules */
 static TAILQ_HEAD(, spdk_accel_module_if) spdk_accel_module_list =
@@ -66,14 +64,6 @@ struct accel_io_channel {
 	struct spdk_accel_engine	*engine;
 	struct spdk_io_channel		*ch;
 };
-
-int
-accel_set_module(enum accel_module *opts)
-{
-	g_active_accel_module = *opts;
-
-	return 0;
-}
 
 /* Registration of hw modules (currently supports only 1 at a time) */
 void
@@ -165,31 +155,15 @@ accel_engine_create_cb(void *io_device, void *ctx_buf)
 {
 	struct accel_io_channel	*accel_ch = ctx_buf;
 
-	/* If they specify CBDMA and its not available, fail */
-	if (g_active_accel_module == ACCEL_CBDMA && g_hw_accel_engine == NULL) {
-		SPDK_ERRLOG("CBDMA acceleration engine specified but not available.\n");
-		return -EINVAL;
-	}
-
-	if (g_active_accel_module == ACCEL_IDXD_DSA && g_hw_accel_engine == NULL) {
-		SPDK_ERRLOG("IDXD acceleration engine specified but not available.\n");
-		return -EINVAL;
-	}
-
-	/* For either HW or AUTO */
-	if (g_active_accel_module > ACCEL_SW) {
-		if (g_hw_accel_engine != NULL) {
-			accel_ch->ch = g_hw_accel_engine->get_io_channel();
-			if (accel_ch->ch != NULL) {
-				accel_ch->engine = g_hw_accel_engine;
-				return 0;
-			}
+	if (g_hw_accel_engine != NULL) {
+		accel_ch->ch = g_hw_accel_engine->get_io_channel();
+		if (accel_ch->ch != NULL) {
+			accel_ch->engine = g_hw_accel_engine;
+			return 0;
 		}
 	}
 
-	/* Choose SW either because auto was selected and there was no HW,
-	 * or because SW was selected.
-	 */
+	/* No hw engine enabled, use sw. */
 	accel_ch->ch = g_sw_accel_engine->get_io_channel();
 	assert(accel_ch->ch != NULL);
 	accel_ch->engine = g_sw_accel_engine;
@@ -249,12 +223,9 @@ spdk_accel_engine_module_finish_cb(void)
 void
 spdk_accel_write_config_json(struct spdk_json_write_ctx *w)
 {
+	/* TODO: call engine config_json entry points. */
 	spdk_json_write_array_begin(w);
 	spdk_json_write_object_begin(w);
-	spdk_json_write_named_string(w, "method", "accel_set_module");
-	spdk_json_write_named_object_begin(w, "params");
-	spdk_json_write_named_uint32(w, "module",  g_active_accel_module);
-	spdk_json_write_object_end(w);
 	spdk_json_write_object_end(w);
 	spdk_json_write_array_end(w);
 }
