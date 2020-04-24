@@ -60,7 +60,7 @@ create_bdev_config
 timing_exit create_bdev_config
 
 # start a dummy app and generate a json config for FIO
-$rootdir/app/spdk_tgt/spdk_tgt -r /tmp/spdk2.sock &
+$rootdir/app/spdk_tgt/spdk_tgt -r /tmp/spdk2.sock -g &
 dummy_spdk_pid=$!
 waitforlisten $dummy_spdk_pid /tmp/spdk2.sock
 rpc_cmd -s /tmp/spdk2.sock bdev_virtio_attach_controller --trtype user --traddr 'naa.Nvme0n1_scsi0.0' -d scsi --vq-count 8 'VirtioScsi0'
