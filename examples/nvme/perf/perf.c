@@ -132,7 +132,8 @@ struct ns_worker_ctx {
 
 	union {
 		struct {
-			int			num_qpairs;
+			int			num_active_qpairs;
+			int			num_all_qpairs;
 			struct spdk_nvme_qpair	**qpair;
 			int			last_qpair;
 		} nvme;
@@ -484,7 +485,7 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 
 	qp_num = ns_ctx->u.nvme.last_qpair;
 	ns_ctx->u.nvme.last_qpair++;
-	if (ns_ctx->u.nvme.last_qpair == ns_ctx->u.nvme.num_qpairs) {
+	if (ns_ctx->u.nvme.last_qpair == ns_ctx->u.nvme.num_active_qpairs) {
 		ns_ctx->u.nvme.last_qpair = 0;
 	}
 
@@ -541,7 +542,7 @@ nvme_check_io(struct ns_worker_ctx *ns_ctx)
 {
 	int i, rc;
 
-	for (i = 0; i < ns_ctx->u.nvme.num_qpairs; i++) {
+	for (i = 0; i < ns_ctx->u.nvme.num_all_qpairs; i++) {
 		rc = spdk_nvme_qpair_process_completions(ns_ctx->u.nvme.qpair[i], g_max_completions);
 		if (rc < 0) {
 			fprintf(stderr, "NVMe io qpair process completion error\n");
@@ -588,8 +589,9 @@ nvme_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 	struct ns_entry *entry = ns_ctx->entry;
 	int i;
 
-	ns_ctx->u.nvme.num_qpairs = g_nr_io_queues_per_ns;
-	ns_ctx->u.nvme.qpair = calloc(ns_ctx->u.nvme.num_qpairs, sizeof(struct spdk_nvme_qpair *));
+	ns_ctx->u.nvme.num_active_qpairs = g_nr_io_queues_per_ns;
+	ns_ctx->u.nvme.num_all_qpairs = g_nr_io_queues_per_ns + g_nr_unused_io_queues;
+	ns_ctx->u.nvme.qpair = calloc(ns_ctx->u.nvme.num_all_qpairs, sizeof(struct spdk_nvme_qpair *));
 	if (!ns_ctx->u.nvme.qpair) {
 		return -1;
 	}
@@ -600,7 +602,7 @@ nvme_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 	}
 	opts.delay_cmd_submit = true;
 
-	for (i = 0; i < ns_ctx->u.nvme.num_qpairs; i++) {
+	for (i = 0; i < ns_ctx->u.nvme.num_all_qpairs; i++) {
 		ns_ctx->u.nvme.qpair[i] = spdk_nvme_ctrlr_alloc_io_qpair(entry->u.nvme.ctrlr, &opts,
 					  sizeof(opts));
 		if (!ns_ctx->u.nvme.qpair[i]) {
@@ -617,7 +619,7 @@ nvme_cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 {
 	int i;
 
-	for (i = 0; i < ns_ctx->u.nvme.num_qpairs; i++) {
+	for (i = 0; i < ns_ctx->u.nvme.num_all_qpairs; i++) {
 		spdk_nvme_ctrlr_free_io_qpair(ns_ctx->u.nvme.qpair[i]);
 	}
 
@@ -864,27 +866,6 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr, struct trid_entry *trid_entry)
 
 		register_ns(ctrlr, ns);
 	}
-
-	if (g_nr_unused_io_queues) {
-		int i;
-
-		printf("Creating %u unused qpairs for controller %s\n", g_nr_unused_io_queues, entry->name);
-
-		entry->unused_qpairs = calloc(g_nr_unused_io_queues, sizeof(struct spdk_nvme_qpair *));
-		if (!entry->unused_qpairs) {
-			fprintf(stderr, "Unable to allocate memory for qpair array\n");
-			exit(1);
-		}
-
-		for (i = 0; i < g_nr_unused_io_queues; i++) {
-			entry->unused_qpairs[i] = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, NULL, 0);
-			if (!entry->unused_qpairs[i]) {
-				fprintf(stderr, "Unable to allocate unused qpair. Did you request too many?\n");
-				exit(1);
-			}
-		}
-	}
-
 }
 
 static __thread unsigned int seed = 0;
