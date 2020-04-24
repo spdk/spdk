@@ -8,6 +8,24 @@ Legacy INI style configuration for SPDK applications has been deprecated and wil
 removed in future release.
 Please switch to JSON-RPC configuration files and/or RPC driven run-time configuration.
 
+### copy
+
+The copy engine library, modules and public APIs have been renamed. Use of the word `copy`
+has been replaced with the word `accel` short for accelerator in preparation for adding new
+capabilities in the future. Additionally, APIs for what was previously called the `memcpy`
+engine have been renamed to identify the engine as a software accelerator.
+
+### crypto
+
+Support for AES_XTS was added for the QAT polled mode driver (pmd).  The create RPC
+`bdev_crypto_create` has 2 new optional parameters: cipher and key2. Cipher can be either
+AES_CBC (default) or AES_XTS. AES_XTS is only valid when using the QAT polled mode driver.
+The key2 parameter is the second key required for AES_XTS.
+
+### event
+
+Reactors now accumulate CPU stats and they are retrieved by the RPC `framework_get_reactors`.
+
 ### idxd
 
 IDXD support was added in the form of a low level library that can directly
@@ -16,51 +34,37 @@ with the generic accel framework API. IDXD is the first in a family of offload
 engines that share the same interface, specifically DSA is added here. More info
 can be found here: https://01.org/blogs/2019/introducing-intel-data-streaming-accelerator
 
-Much of the implementation models IOAT, however their low level interfaces are very
+Much of the implementation models IOAT, however the low level interfaces are very
 different. The RPC to enable IDXD requires a configuration number as well. The
-code includes 2 pre-defined configurations of IDXD groups/work queues/engines. A future
+code includes two pre-defined configurations of IDXD groups/work queues/engines. A future
 version will provide an interface to allow for setting of individual configuration
 parameters.
 
 IDXD is not yet available so this feature should be considered experimental. It will
 be built up with additional documentation as an ongoing activity.
 
-### ocf
-
-Update OCF submodule to OCF v20.03
-
-New version of OCF comes with API changes and bug fixes
-
-### nvme
-
-Export internal nvme_ctrlr_cmd_security_receive/send() APIs as public APIs with "spdk_"
-prefix.
-
-Added `priority` field in `spdk_nvme_transport_id`, this field is used to specify the priority
-of the NVMe-oF connection, and currently it is used for NVMe-oF tcp connection.
-
-### copy
-
-The copy engine library, modules and public APIs have been renamed. Use of the word `copy`
-has been replaced with the word `accel` short for accelerator in preparation for adding new
-capabilities in the future. Additionally, APIs for what was previously called the `memcpy`
-engine have been renamed to identify the engine as a software accelerator.
-
-### event
-
-Reactor now accumulates CPU stats and they are retrieved by the RPC `framework_get_reactors`.
-
-### iSCSI
+### iscsi
 
 The iSCSI target now creates a lightweight thread per poll group instead of assuming a pool
 of lightweight threads already exist at start up time. A poll group is a collection of
 unrelated iSCSI connections. Each poll group is only accessed from the associated
 lightweight thread.
 
-### vmd
+### miscellaneous
 
-A new function, `spdk_vmd_fini`, has been added. It releases all resources acquired by the VMD
-library through the `spdk_vmd_init` call.
+The `--json-ignore-init-errors` command line parameter has been added to ignore
+initialization errors on JSON config load.
+
+The public header file io_channel.h has been removed. Please use thread.h which has the
+exact same API.
+
+### nvme
+
+Exported internal nvme_ctrlr_cmd_security_receive/send() APIs as public APIs with "the spdk_"
+prefix.
+
+Added `priority` field in `spdk_nvme_transport_id`, this field is used to specify the priority
+of the NVMe-oF connection, and currently it is used for NVMe-oF tcp connection.
 
 ### nvmf
 
@@ -71,36 +75,28 @@ of lightweight threads already exist at start up time. A poll group is a collect
 unrelated NVMe-oF connections. Each poll group is only accessed from the associated
 lightweight thread.
 
-### Miscellaneous
+### ocf
 
-`--json-ignore-init-errors` command line param has been added to ignore initialization errors
-on JSON config load.
+Updated the OCF submodule to OCF v20.03
 
-The public header file io_channel.h has been removed. Please use thread.h which has the
-exact same API.
-
-### crypto
-
-Support for AES_XTS was added for the QAT polled mode driver (pmd).  The create RPC
-`bdev_crypto_create` has 2 new optional parameters: cipher and key2. Cipher can be either
-AES_CBC (default) or AES_XTS. AES_XTS is only valid when using the QAT polled mode driver.
-The key2 parameter is the second key required for AES_XTS.
-
-### util
-
-New functions `spdk_sn32_lt` and `spdk_sn32_gt` have been added. They compare two sequence
-numbers based on serial number arithmetic.
+New version of OCF comes with API changes and bug fixes
 
 ### rpc
 
 A new RPC `thread_set_cpumask` has been added to set the cpumask of the thread
 to the specified value.
 
-A new RPC `thread_get_pollers` has been added to retrieve pollers of SPDK threads.
+A new RPC `thread_get_pollers` has been added to retrieve pollers from SPDK threads.
 
-A new RPC `thread_get_io_channels` has been added to retrieve I/O channels of SPDK threads.
+A new RPC `thread_get_io_channels` has been added to retrieve I/O channels from SPDK threads.
 
-A new RPC `bdev_rbd_resize` has been added to resize the Ceph RBD bdev.
+A new RPC `bdev_rbd_resize` has been added to resize Ceph RBD bdevs.
+
+### sock
+
+The `spdk_sock_set_priority` function has been removed since the feature to set the sock priority
+will be contained in two new functions, i.e., `spdk_sock_listen_ext` and `spdk_sock_connect_ext`.
+Users may now specify the priority of the socket in the opts that they want to use.
 
 ### thread
 
@@ -113,7 +109,7 @@ Current SPDK operation types are `SPDK_THREAD_OP_NEW` and `SPDK_THREAD_OP_RESCHE
 The operation `SPDK_THREAD_OP_NEW` is called each time a new thread is created.
 The operation `SPDK_THREAD_OP_RESCHED` is called when SPDK thread needs to be rescheduled.
 
-An unique ID has been added for each created SPDK thread, it is retrieved by a new function
+A unique ID has been added for each created SPDK thread, it is retrieved by a new function
 `spdk_thread_get_id`, and the SPDK thread which has the specific ID is got by
 a new function `spdk_thread_get_by_id`.
 
@@ -130,15 +126,19 @@ threads configuration, and a new function `spdk_thread_get_last_tsc` has been ad
 Voluntary termination of SPDK thread has been supported by refining the functions `spdk_thread_exit`
 and `spdk_thread_poll`.
 
+### util
+
+New functions `spdk_sn32_lt` and `spdk_sn32_gt` have been added. They compare two sequence
+numbers based on serial number arithmetic.
+
 ### vhost
 
 Poll groups per session have been replaced by SPDK threads per vhost controller.
 
-### sock
+### vmd
 
-Remove `spdk_sock_set_priority` function since the feature to set the sock priority will be
-contained in two new functions, i.e., `spdk_sock_listen_ext` and `spdk_sock_connect_ext`.
-Users may now specify the priority of the socket in the opts that they want to use.
+A new function, `spdk_vmd_fini`, has been added. It releases all resources acquired by the VMD
+library through the `spdk_vmd_init` call.
 
 ## v20.01
 
