@@ -181,7 +181,7 @@ if [ $(uname -s) = Linux ]; then
 fi
 
 run_test "unittest_ioat" $valgrind $testdir/lib/ioat/ioat.c/ioat_ut
-if [ $(uname -m) != "aarch64" ]; then
+if grep -q '#define SPDK_CONFIG_IDXD 1' $rootdir/include/spdk/config.h; then
 	run_test "unittest_idxd" $valgrind $testdir/lib/idxd/idxd.c/idxd_ut
 fi
 run_test "unittest_iscsi" unittest_iscsi
