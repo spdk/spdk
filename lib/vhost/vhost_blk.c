@@ -93,6 +93,8 @@ struct spdk_vhost_blk_dev {
 	struct spdk_vhost_dev vdev;
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *bdev_desc;
+	/* dummy_io_channel is used to hold a bdev reference */
+	struct spdk_io_channel *dummy_io_channel;
 	bool readonly;
 };
 
@@ -816,6 +818,7 @@ vhost_dev_bdev_remove_cpl_cb(struct spdk_vhost_dev *vdev, void *ctx)
 	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
 
 	assert(bvdev != NULL);
+	spdk_put_io_channel(bvdev->dummy_io_channel);
 	spdk_bdev_close(bvdev->bdev_desc);
 	bvdev->bdev_desc = NULL;
 	bvdev->bdev = NULL;
@@ -1246,10 +1249,24 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 		goto out;
 	}
 
+	/*
+	 * When starting qemu with vhost-user-blk multiqueue, the vhost device will
+	 * be started/stopped many times, related to the queues num, as the
+	 * vhost-user backend doesn't know the exact number of queues used for this
+	 * device. The target have to stop and start the device once got a valid
+	 * IO queue.
+	 * When stoping and starting the vhost device, the backend bdev io device
+	 * will be deleted and created repeatedly.
+	 * Hold a bdev reference so that in the struct spdk_vhost_blk_dev, so that
+	 * the io device will not be deleted.
+	 */
+	bvdev->dummy_io_channel = spdk_bdev_get_io_channel(bvdev->bdev_desc);
+
 	bvdev->bdev = bdev;
 	bvdev->readonly = readonly;
 	ret = vhost_dev_register(vdev, name, cpumask, &vhost_blk_device_backend);
 	if (ret != 0) {
+		spdk_put_io_channel(bvdev->dummy_io_channel);
 		spdk_bdev_close(bvdev->bdev_desc);
 		goto out;
 	}
@@ -1270,6 +1287,12 @@ vhost_blk_destroy(struct spdk_vhost_dev *vdev)
 	int rc;
 
 	assert(bvdev != NULL);
+
+	/* if the bdev is removed, don't need call spdk_put_io_channel. */
+	if (bvdev->bdev) {
+		spdk_put_io_channel(bvdev->dummy_io_channel);
+	}
+
 	rc = vhost_dev_unregister(&bvdev->vdev);
 	if (rc != 0) {
 		return rc;
