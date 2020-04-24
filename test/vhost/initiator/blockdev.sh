@@ -58,6 +58,7 @@ function run_spdk_fio() {
 function create_bdev_config()
 {
 	local vbdevs
+	local g_opt
 
 	if [ -z "$($RPC_PY bdev_get_bdevs | jq '.[] | select(.name=="Nvme0n1")')" ]; then
 		error "Nvme0n1 bdev not found!"
@@ -82,7 +83,13 @@ function create_bdev_config()
 	$RPC_PY vhost_create_scsi_controller naa.Malloc1.0
 	$RPC_PY vhost_scsi_controller_add_target naa.Malloc1.0 0 Malloc1
 
-	vbdevs=$(discover_bdevs $rootdir $testdir/bdev.json "--json")
+	# Check default size of host hugepages. If it's 2MB then we have to use
+	# bdev_svc "-g" option for virtio devices.
+	if (( $(grep "Hugepagesize" /proc/meminfo | grep -Eo "[[:digit:]]+") == 2048 )); then
+		g_opt="-g"
+	fi
+
+	vbdevs=$(discover_bdevs $rootdir $testdir/bdev.json "--json" $g_opt)
 	virtio_bdevs=$(jq -r '[.[].name] | join(":")' <<< $vbdevs)
 	virtio_with_unmap=$(jq -r '[.[] | select(.supported_io_types.unmap==true).name]
 	 | join(":")' <<< $vbdevs)

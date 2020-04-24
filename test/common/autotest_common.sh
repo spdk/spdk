@@ -827,7 +827,9 @@ function discover_bdevs()
 	local rootdir=$1
 	local config_file=$2
 	local cfg_type=$3
-	local wait_for_spdk_bdev=${4:-30}
+	shift 3
+	local bdev_svc_opts=("$@")
+	local wait_for_spdk_bdev=30
 	local rpc_server=/var/tmp/spdk-discover-bdevs.sock
 
 	if [ ! -e $config_file ]; then
@@ -841,7 +843,7 @@ function discover_bdevs()
 
 	# Start the bdev service to query for the list of available
 	# bdevs.
-	$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 \
+	$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 "${bdev_svc_opts[@]}" \
 		$cfg_type $config_file &>/dev/null &
 	stubpid=$!
 	while ! [ -e /var/run/spdk_bdev0 ]; do
