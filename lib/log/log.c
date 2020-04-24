@@ -108,12 +108,29 @@ spdk_log_unwind_stack(FILE *fp, enum spdk_log_level level)
 #define spdk_log_unwind_stack(fp, lvl)
 #endif
 
+static void
+get_timestamp_prefix(char *buf, int buf_size)
+{
+	struct tm *info;
+	char date[24];
+	struct timespec ts;
+	long usec;
+
+	clock_gettime(CLOCK_REALTIME, &ts);
+	info = localtime(&ts.tv_sec);
+	usec = ts.tv_nsec / 1000;
+
+	strftime(date, sizeof(date), "%Y-%m-%d %H:%M:%S", info);
+	snprintf(buf, buf_size, "[%s.%06ld] ", date, usec);
+}
+
 void
 spdk_log(enum spdk_log_level level, const char *file, const int line, const char *func,
 	 const char *format, ...)
 {
 	int severity = LOG_INFO;
 	char buf[MAX_TMPBUF];
+	char timestamp[32];
 	va_list ap;
 
 	if (g_log) {
@@ -150,11 +167,12 @@ spdk_log(enum spdk_log_level level, const char *file, const int line, const char
 	vsnprintf(buf, sizeof(buf), format, ap);
 
 	if (level <= g_spdk_log_print_level) {
+		get_timestamp_prefix(timestamp, sizeof(timestamp));
 		if (file) {
-			fprintf(stderr, "%s:%4d:%s: *%s*: %s", file, line, func, spdk_level_names[level], buf);
+			fprintf(stderr, "%s%s:%4d:%s: *%s*: %s", timestamp, file, line, func, spdk_level_names[level], buf);
 			spdk_log_unwind_stack(stderr, level);
 		} else {
-			fprintf(stderr, "%s", buf);
+			fprintf(stderr, "%s%s", timestamp, buf);
 		}
 	}
 
