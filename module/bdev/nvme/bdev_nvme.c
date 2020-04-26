@@ -728,7 +728,7 @@ bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 		}
 	}
 
-	pg_ch = spdk_get_io_channel(&nvme_if);
+	pg_ch = spdk_get_io_channel(&g_nvme_bdev_ctrlrs);
 	if (!pg_ch) {
 		goto err;
 	}
@@ -1817,7 +1817,8 @@ bdev_nvme_library_init(void)
 
 	g_bdev_nvme_init_thread = spdk_get_thread();
 
-	spdk_io_device_register(&nvme_if, bdev_nvme_poll_group_create_cb, bdev_nvme_poll_group_destroy_cb,
+	spdk_io_device_register(&g_nvme_bdev_ctrlrs, bdev_nvme_poll_group_create_cb,
+				bdev_nvme_poll_group_destroy_cb,
 				sizeof(struct nvme_bdev_poll_group),  "bdev_nvme_poll_groups");
 
 	sp = spdk_conf_find_section(NULL, "Nvme");
@@ -2063,6 +2064,7 @@ bdev_nvme_library_fini(void)
 	g_bdev_nvme_module_finish = true;
 	if (TAILQ_EMPTY(&g_nvme_bdev_ctrlrs)) {
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+		spdk_io_device_unregister(&g_nvme_bdev_ctrlrs, NULL);
 		spdk_bdev_module_finish_done();
 		return;
 	}
