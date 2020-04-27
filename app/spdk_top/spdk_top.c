@@ -1483,6 +1483,9 @@ filter_columns(uint8_t tab)
 	mvwaddch(filter_win, WINDOW_HEADER_END_LINE, len + WINDOW_BORDER_LEN - 1, ACS_RTEE);
 
 	my_items = draw_filtering_menu(0, filter_win, tab, &my_menu);
+	if (my_items == NULL || my_menu == NULL) {
+		goto fail;
+	}
 
 	while (!stop_loop) {
 		c = wgetch(filter_win);
@@ -1504,6 +1507,9 @@ filter_columns(uint8_t tab)
 			col_desc[current_index].disabled = !col_desc[current_index].disabled;
 			my_items = refresh_filtering_menu(&my_menu, filter_win, tab, my_items, elements,
 							  item_index(cur) + 1);
+			if (my_items == NULL || my_menu == NULL) {
+				goto fail;
+			}
 			break;
 		case 10: /* Enter */
 			cur = current_item(my_menu);
@@ -1516,6 +1522,9 @@ filter_columns(uint8_t tab)
 				col_desc[current_index].disabled = !col_desc[current_index].disabled;
 				my_items = refresh_filtering_menu(&my_menu, filter_win, tab, my_items, elements,
 								  item_index(cur) + 1);
+				if (my_items == NULL || my_menu == NULL) {
+					goto fail;
+				}
 			}
 			break;
 		}
@@ -1529,6 +1538,11 @@ filter_columns(uint8_t tab)
 
 	wclear(g_menu_win);
 	draw_menu_win();
+	return;
+
+fail:
+	fprintf(stderr, "Unable to filter the columns due to allocation failure.\n");
+	assert(false);
 }
 
 static void
