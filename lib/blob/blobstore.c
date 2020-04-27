@@ -5142,6 +5142,12 @@ static void
 _spdk_bs_create_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob *blob = cb_arg;
+	uint32_t page_idx = _spdk_bs_blobid_to_page(blob->id);
+
+	if (bserrno != 0) {
+		spdk_bit_array_clear(blob->bs->used_blobids, page_idx);
+		_spdk_bs_release_md_page(blob->bs, page_idx);
+	}
 
 	_spdk_blob_free(blob);
 
@@ -5203,6 +5209,8 @@ _spdk_bs_create_blob(struct spdk_blob_store *bs,
 
 	blob = _spdk_blob_alloc(bs, id);
 	if (!blob) {
+		spdk_bit_array_clear(bs->used_blobids, page_idx);
+		_spdk_bs_release_md_page(bs, page_idx);
 		cb_fn(cb_arg, 0, -ENOMEM);
 		return;
 	}
@@ -5225,6 +5233,8 @@ _spdk_bs_create_blob(struct spdk_blob_store *bs,
 	rc = _spdk_blob_set_xattrs(blob, &opts->xattrs, false);
 	if (rc < 0) {
 		_spdk_blob_free(blob);
+		spdk_bit_array_clear(bs->used_blobids, page_idx);
+		_spdk_bs_release_md_page(bs, page_idx);
 		cb_fn(cb_arg, 0, rc);
 		return;
 	}
@@ -5232,6 +5242,8 @@ _spdk_bs_create_blob(struct spdk_blob_store *bs,
 	rc = _spdk_blob_set_xattrs(blob, internal_xattrs, true);
 	if (rc < 0) {
 		_spdk_blob_free(blob);
+		spdk_bit_array_clear(bs->used_blobids, page_idx);
+		_spdk_bs_release_md_page(bs, page_idx);
 		cb_fn(cb_arg, 0, rc);
 		return;
 	}
@@ -5245,6 +5257,8 @@ _spdk_bs_create_blob(struct spdk_blob_store *bs,
 	rc = _spdk_blob_resize(blob, opts->num_clusters);
 	if (rc < 0) {
 		_spdk_blob_free(blob);
+		spdk_bit_array_clear(bs->used_blobids, page_idx);
+		_spdk_bs_release_md_page(bs, page_idx);
 		cb_fn(cb_arg, 0, rc);
 		return;
 	}
@@ -5256,6 +5270,8 @@ _spdk_bs_create_blob(struct spdk_blob_store *bs,
 	seq = bs_sequence_start(bs->md_channel, &cpl);
 	if (!seq) {
 		_spdk_blob_free(blob);
+		spdk_bit_array_clear(bs->used_blobids, page_idx);
+		_spdk_bs_release_md_page(bs, page_idx);
 		cb_fn(cb_arg, 0, -ENOMEM);
 		return;
 	}

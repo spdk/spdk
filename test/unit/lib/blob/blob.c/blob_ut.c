@@ -408,6 +408,45 @@ blob_create(void)
 }
 
 static void
+blob_create_fail(void)
+{
+	struct spdk_blob_store *bs = g_bs;
+	struct spdk_blob_opts opts;
+	spdk_blob_id blobid;
+	uint32_t used_blobids_count = spdk_bit_array_count_set(bs->used_blobids);
+	uint32_t used_md_pages_count = spdk_bit_array_count_set(bs->used_md_pages);
+
+	/* NULL callback */
+	ut_spdk_blob_opts_init(&opts);
+	opts.xattrs.names = g_xattr_names;
+	opts.xattrs.get_value = NULL;
+	opts.xattrs.count = 1;
+	opts.xattrs.ctx = &g_ctx;
+
+	blobid = spdk_bit_array_find_first_clear(bs->used_md_pages, 0);
+	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == -EINVAL);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	CU_ASSERT(spdk_bit_array_count_set(bs->used_blobids) == used_blobids_count);
+	CU_ASSERT(spdk_bit_array_count_set(bs->used_md_pages) == used_md_pages_count);
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == -ENOENT);
+	SPDK_CU_ASSERT_FATAL(g_blob == NULL);
+
+	ut_bs_reload(&bs, NULL);
+	CU_ASSERT(spdk_bit_array_count_set(bs->used_blobids) == used_blobids_count);
+	CU_ASSERT(spdk_bit_array_count_set(bs->used_md_pages) == used_md_pages_count);
+
+	spdk_bs_iter_first(bs, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_blob == NULL);
+	CU_ASSERT(g_bserrno == -ENOENT);
+}
+
+static void
 blob_create_internal(void)
 {
 	struct spdk_blob_store *bs = g_bs;
@@ -6573,6 +6612,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, blob_init);
 	CU_ADD_TEST(suite_bs, blob_open);
 	CU_ADD_TEST(suite_bs, blob_create);
+	CU_ADD_TEST(suite_bs, blob_create_fail);
 	CU_ADD_TEST(suite_bs, blob_create_internal);
 	CU_ADD_TEST(suite, blob_thin_provision);
 	CU_ADD_TEST(suite_bs, blob_snapshot);
