@@ -45,6 +45,7 @@
 #include "spdk/thread.h"
 #include "spdk/idxd.h"
 #include "spdk/util.h"
+#include "spdk/json.h"
 
 /* Undefine this to require an RPC to enable IDXD. */
 #undef DEVELOPER_DEBUG_MODE
@@ -54,6 +55,8 @@ static bool g_idxd_enable = true;
 #else
 static bool g_idxd_enable = false;
 #endif
+
+uint32_t g_config_number;
 
 enum channel_state {
 	IDXD_CHANNEL_ACTIVE,
@@ -470,8 +473,9 @@ accel_engine_idxd_enable_probe(uint32_t config_number)
 		config_number = 0;
 	}
 
+	g_config_number = config_number;
 	g_idxd_enable = true;
-	spdk_idxd_set_config(config_number);
+	spdk_idxd_set_config(g_config_number);
 }
 
 static int
@@ -521,8 +525,25 @@ accel_engine_idxd_exit(void *ctx)
 	spdk_accel_engine_module_finish();
 }
 
+static void
+accel_engine_idxd_write_config_json(struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_array_begin(w);
+
+	if (g_idxd_enable) {
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "method", "idxd_scan_accel_engine");
+		spdk_json_write_named_object_begin(w, "params");
+		spdk_json_write_named_uint32(w, "config_number", g_config_number);
+		spdk_json_write_object_end(w);
+		spdk_json_write_object_end(w);
+	}
+
+	spdk_json_write_array_end(w);
+}
+
 SPDK_ACCEL_MODULE_REGISTER(accel_engine_idxd_init, accel_engine_idxd_exit,
-			   NULL,
+			   NULL, accel_engine_idxd_write_config_json,
 			   accel_engine_idxd_get_ctx_size)
 
 SPDK_LOG_REGISTER_COMPONENT("accel_idxd", SPDK_LOG_ACCEL_IDXD)

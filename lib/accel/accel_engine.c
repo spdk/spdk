@@ -223,11 +223,17 @@ spdk_accel_engine_module_finish_cb(void)
 void
 spdk_accel_write_config_json(struct spdk_json_write_ctx *w)
 {
-	/* TODO: call engine config_json entry points. */
-	spdk_json_write_array_begin(w);
-	spdk_json_write_object_begin(w);
-	spdk_json_write_object_end(w);
-	spdk_json_write_array_end(w);
+	struct spdk_accel_module_if *accel_engine_module;
+
+	/*
+	 * The accel engine has no config, there may be some in
+	 * the modules though.
+	 */
+	TAILQ_FOREACH(accel_engine_module, &spdk_accel_module_list, tailq) {
+		if (accel_engine_module->write_config_json) {
+			accel_engine_module->write_config_json(w);
+		}
+	}
 }
 
 void
@@ -364,4 +370,4 @@ sw_accel_engine_fini(void *ctxt)
 }
 
 SPDK_ACCEL_MODULE_REGISTER(sw_accel_engine_init, sw_accel_engine_fini,
-			   NULL, sw_accel_engine_get_ctx_size)
+			   NULL, NULL, sw_accel_engine_get_ctx_size)

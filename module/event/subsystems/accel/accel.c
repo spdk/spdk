@@ -65,7 +65,7 @@ static struct spdk_subsystem g_spdk_subsystem_accel = {
 	.init = spdk_accel_engine_subsystem_initialize,
 	.fini = spdk_accel_engine_subsystem_finish,
 	.config = spdk_accel_engine_config_text,
-	.write_config_json = NULL,
+	.write_config_json = spdk_accel_write_config_json,
 };
 
 SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_accel);

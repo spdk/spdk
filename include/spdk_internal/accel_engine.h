@@ -74,19 +74,29 @@ struct spdk_accel_module_if {
 	 */
 	void	(*config_text)(FILE *fp);
 
+	/**
+	 * Write Acceleration module configuration into provided JSON context.
+	 */
+	void	(*write_config_json)(struct spdk_json_write_ctx *w);
+
+	/**
+	 * Returns the allocation size required for the modules to use for context.
+	 */
 	size_t	(*get_ctx_size)(void);
+
 	TAILQ_ENTRY(spdk_accel_module_if)	tailq;
 };
 
 void spdk_accel_hw_engine_register(struct spdk_accel_engine *accel_engine);
 void spdk_accel_module_list_add(struct spdk_accel_module_if *accel_module);
 
-#define SPDK_ACCEL_MODULE_REGISTER(init_fn, fini_fn, config_fn, ctx_size_fn)				\
+#define SPDK_ACCEL_MODULE_REGISTER(init_fn, fini_fn, config_fn, config_json, ctx_size_fn)				\
 	static struct spdk_accel_module_if init_fn ## _if = {						\
-	.module_init	= init_fn,									\
-	.module_fini	= fini_fn,									\
-	.config_text	= config_fn,									\
-	.get_ctx_size	= ctx_size_fn,									\
+	.module_init		= init_fn,								\
+	.module_fini		= fini_fn,								\
+	.config_text		= config_fn,								\
+	.write_config_json	= config_json,								\
+	.get_ctx_size		= ctx_size_fn,								\
 	};												\
 	__attribute__((constructor)) static void init_fn ## _init(void)					\
 	{												\
