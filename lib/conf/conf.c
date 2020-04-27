@@ -71,7 +71,6 @@ static struct spdk_conf *default_config = NULL;
 struct spdk_conf *
 spdk_conf_allocate(void)
 {
-	SPDK_ERRLOG("INI configuration has been deprecated and will be removed in a future release. Please switch to JSON-RPC.\n");
 	return calloc(1, sizeof(struct spdk_conf));
 }
 
@@ -611,6 +610,7 @@ spdk_conf_read(struct spdk_conf *cp, const char *file)
 	if (file == NULL || file[0] == '\0') {
 		return -1;
 	}
+	SPDK_ERRLOG("INI configuration has been deprecated and will be removed in a future release. Please switch to JSON-RPC.\n");
 
 	fp = fopen(file, "r");
 	if (fp == NULL) {
