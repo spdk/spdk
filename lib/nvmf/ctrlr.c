@@ -766,6 +766,7 @@ nvmf_prop_set_cc(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
 			ctrlr->vcprop.cc.bits.en = 1;
 			ctrlr->vcprop.csts.bits.rdy = 1;
 		} else {
+			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Property Set CC Disable!\n");
 			ctrlr->vcprop.cc.bits.en = 0;
 			spdk_for_each_channel(ctrlr->subsys->tgt,
 					      spdk_nvmf_ctrlr_disconnect_io_qpairs_on_pg,
