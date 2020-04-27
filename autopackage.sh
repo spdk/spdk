@@ -35,7 +35,7 @@ fi
 
 timing_enter build_release
 
-./configure $(get_config_params) --disable-debug --enable-lto
+./configure $(get_config_params) --disable-debug --enable-lto --disable-unit-tests
 $MAKE ${MAKEFLAGS}
 $MAKE ${MAKEFLAGS} clean
 

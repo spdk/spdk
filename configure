@@ -494,6 +494,11 @@ if [[ "${CONFIG[ISAL]}" = "n" ]] && [[ "${CONFIG[REDUCE]}" = "y" ]]; then
 		exit 1
 fi
 
+if [[ "${CONFIG[LTO]}" = "y" ]] && [[ "${CONFIG[UNIT_TESTS]}" = "y"  ]]; then
+		echo "ERROR Conflicting options: --enable-lto is not compatible with --enable-unit-tests."
+		exit 1
+fi
+
 if [ -z "${CONFIG[ENV]}" ]; then
 	CONFIG[ENV]=$rootdir/lib/env_dpdk
 	echo "Using default SPDK env in ${CONFIG[ENV]}"
