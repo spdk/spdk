@@ -589,7 +589,7 @@ io_handle(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	struct vbdev_ocf *vbdev = bdev_io->bdev->ctxt;
 	struct ocf_io *io = NULL;
 	struct bdev_ocf_data *data = NULL;
-	struct vbdev_ocf_qcxt *qctx = spdk_io_channel_get_ctx(ch);
+	struct vbdev_ocf_qctx *qctx = spdk_io_channel_get_ctx(ch);
 	uint64_t len = bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
 	uint64_t offset = bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen;
 	int dir, flags = 0;
@@ -774,7 +774,7 @@ static struct spdk_bdev_fn_table cache_dev_fn_table = {
 static int
 queue_poll(void *opaque)
 {
-	struct vbdev_ocf_qcxt *qctx = opaque;
+	struct vbdev_ocf_qctx *qctx = opaque;
 	uint32_t iono = ocf_queue_pending_io(qctx->queue);
 	int i, max = spdk_min(32, iono);
 
@@ -801,7 +801,7 @@ vbdev_ocf_ctx_queue_kick(ocf_queue_t q)
 static void
 vbdev_ocf_ctx_queue_stop(ocf_queue_t q)
 {
-	struct vbdev_ocf_qcxt *qctx = ocf_queue_get_priv(q);
+	struct vbdev_ocf_qctx *qctx = ocf_queue_get_priv(q);
 
 	if (qctx) {
 		spdk_put_io_channel(qctx->cache_ch);
@@ -827,7 +827,7 @@ static int
 io_device_create_cb(void *io_device, void *ctx_buf)
 {
 	struct vbdev_ocf *vbdev = io_device;
-	struct vbdev_ocf_qcxt *qctx = ctx_buf;
+	struct vbdev_ocf_qctx *qctx = ctx_buf;
 	int rc;
 
 	rc = vbdev_ocf_queue_create(vbdev->ocf_cache, &qctx->queue, &queue_ops);
@@ -851,8 +851,8 @@ static void
 io_device_destroy_cb(void *io_device, void *ctx_buf)
 {
 	/* Making a copy of context to use it after io channel will be destroyed */
-	struct vbdev_ocf_qcxt *copy = malloc(sizeof(*copy));
-	struct vbdev_ocf_qcxt *qctx = ctx_buf;
+	struct vbdev_ocf_qctx *copy = malloc(sizeof(*copy));
+	struct vbdev_ocf_qctx *qctx = ctx_buf;
 
 	if (copy) {
 		ocf_queue_set_priv(qctx->queue, copy);
@@ -937,7 +937,7 @@ finish_register(struct vbdev_ocf *vbdev)
 
 	/* Finally register vbdev in SPDK */
 	spdk_io_device_register(vbdev, io_device_create_cb, io_device_destroy_cb,
-				sizeof(struct vbdev_ocf_qcxt), vbdev->name);
+				sizeof(struct vbdev_ocf_qctx), vbdev->name);
 	result = spdk_bdev_register(&vbdev->exp_bdev);
 	if (result) {
 		SPDK_ERRLOG("Could not register exposed bdev %s\n",

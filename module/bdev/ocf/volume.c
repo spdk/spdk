@@ -204,7 +204,7 @@ static int
 prepare_submit(struct ocf_io *io)
 {
 	struct ocf_io_ctx *io_ctx = ocf_get_io_ctx(io);
-	struct vbdev_ocf_qcxt *qctx;
+	struct vbdev_ocf_qctx *qctx;
 	struct vbdev_ocf_base *base;
 	ocf_queue_t q = io->io_queue;
 	ocf_cache_t cache;
