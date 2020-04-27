@@ -1151,6 +1151,14 @@ spdk_uring_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group,
 	sock->pollin_task.sock = sock;
 	sock->pollin_task.type = SPDK_SOCK_TASK_POLLIN;
 
+	/* switched from another polling group due to scheduling */
+	if (spdk_unlikely(sock->recv_pipe != NULL &&
+			  (spdk_pipe_reader_bytes_available(sock->recv_pipe) > 0))) {
+		assert(sock->pending_recv == false);
+		sock->pending_recv = true;
+		TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
+	}
+
 	return 0;
 }
 
@@ -1161,6 +1169,7 @@ spdk_uring_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group,
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
 	struct spdk_uring_sock_group_impl *group = __uring_group_impl(_group);
 
+
 	if (sock->write_task.status != SPDK_URING_SOCK_TASK_NOT_IN_USE) {
 		sock->outstanding_io++;
 	}
@@ -1169,10 +1178,12 @@ spdk_uring_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group,
 		sock->outstanding_io++;
 	}
 
-	if ((sock->recv_pipe != NULL) &&
-	    spdk_pipe_reader_bytes_available(sock->recv_pipe) > 0) {
-		TAILQ_REMOVE(&group->pending_recv, sock, link);
-		sock->pending_recv = false;
+	if (sock->recv_pipe != NULL) {
+		if (spdk_pipe_reader_bytes_available(sock->recv_pipe) > 0) {
+			TAILQ_REMOVE(&group->pending_recv, sock, link);
+			sock->pending_recv = false;
+		}
+		assert(sock->pending_recv == false);
 	}
 
 	if (!sock->outstanding_io) {
