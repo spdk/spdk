@@ -1163,37 +1163,6 @@ spdk_uring_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group,
 }
 
 static int
-spdk_uring_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group,
-				       struct spdk_sock *_sock)
-{
-	struct spdk_uring_sock *sock = __uring_sock(_sock);
-	struct spdk_uring_sock_group_impl *group = __uring_group_impl(_group);
-
-
-	if (sock->write_task.status != SPDK_URING_SOCK_TASK_NOT_IN_USE) {
-		sock->outstanding_io++;
-	}
-
-	if (sock->pollin_task.status != SPDK_URING_SOCK_TASK_NOT_IN_USE) {
-		sock->outstanding_io++;
-	}
-
-	if (sock->recv_pipe != NULL) {
-		if (spdk_pipe_reader_bytes_available(sock->recv_pipe) > 0) {
-			TAILQ_REMOVE(&group->pending_recv, sock, link);
-			sock->pending_recv = false;
-		}
-		assert(sock->pending_recv == false);
-	}
-
-	if (!sock->outstanding_io) {
-		sock->group = NULL;
-	}
-
-	return 0;
-}
-
-static int
 spdk_uring_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 				struct spdk_sock **socks)
 {
@@ -1229,6 +1198,37 @@ spdk_uring_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_eve
 	}
 
 	return count;
+}
+
+static int
+spdk_uring_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group,
+				       struct spdk_sock *_sock)
+{
+	struct spdk_uring_sock *sock = __uring_sock(_sock);
+	struct spdk_uring_sock_group_impl *group = __uring_group_impl(_group);
+
+
+	if (sock->write_task.status != SPDK_URING_SOCK_TASK_NOT_IN_USE) {
+		sock->outstanding_io++;
+	}
+
+	if (sock->pollin_task.status != SPDK_URING_SOCK_TASK_NOT_IN_USE) {
+		sock->outstanding_io++;
+	}
+
+	if (sock->recv_pipe != NULL) {
+		if (spdk_pipe_reader_bytes_available(sock->recv_pipe) > 0) {
+			TAILQ_REMOVE(&group->pending_recv, sock, link);
+			sock->pending_recv = false;
+		}
+		assert(sock->pending_recv == false);
+	}
+
+	if (!sock->outstanding_io) {
+		sock->group = NULL;
+	}
+
+	return 0;
 }
 
 static int
