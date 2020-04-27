@@ -35,7 +35,12 @@ fi
 
 timing_enter build_release
 
-./configure $(get_config_params) --disable-debug --enable-lto --disable-unit-tests
+if [ $(uname -s) = Linux ]; then
+	./configure $(get_config_params) --disable-debug --enable-lto --disable-unit-tests
+else
+	# LTO needs a special compiler to work on BSD.
+	./configure $(get_config_params) --disable-debug
+fi
 $MAKE ${MAKEFLAGS}
 $MAKE ${MAKEFLAGS} clean
 
