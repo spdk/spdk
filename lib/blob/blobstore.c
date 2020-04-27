@@ -1399,9 +1399,19 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	struct spdk_blob_md_page	*page;
 	int				rc;
 	uint32_t			crc;
+	uint32_t			current_page;
+
+	if (ctx->num_pages == 1) {
+		current_page = _spdk_bs_blobid_to_page(blob->id);
+	} else {
+		assert(ctx->num_pages != 0);
+		page = &ctx->pages[ctx->num_pages - 2];
+		current_page = page->next;
+	}
 
 	if (bserrno) {
-		SPDK_ERRLOG("Metadata page read failed: %d\n", bserrno);
+		SPDK_ERRLOG("Metadata page %d read failed for blobid %lu: %d\n",
+			    current_page, blob->id, bserrno);
 		_spdk_blob_load_final(ctx, bserrno);
 		return;
 	}
@@ -1409,7 +1419,8 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	page = &ctx->pages[ctx->num_pages - 1];
 	crc = _spdk_blob_md_page_calc_crc(page);
 	if (crc != page->crc) {
-		SPDK_ERRLOG("Metadata page %d crc mismatch\n", ctx->num_pages);
+		SPDK_ERRLOG("Metadata page %d crc mismatch for blobid %lu\n",
+			    current_page, blob->id);
 		_spdk_blob_load_final(ctx, -EINVAL);
 		return;
 	}
