@@ -13,7 +13,7 @@ NVMF_SUBSYS=11
 rpc_py="$rootdir/scripts/rpc.py"
 
 nvmftestinit
-nvmfappstart "-m 0xF"
+nvmfappstart -m 0xF
 
 # SoftRoce does not have enough queues available for
 # multiconnection tests. Detect if we're using software RDMA.

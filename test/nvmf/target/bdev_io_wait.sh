@@ -11,7 +11,7 @@ MALLOC_BLOCK_SIZE=512
 rpc_py="$rootdir/scripts/rpc.py"
 
 nvmftestinit
-nvmfappstart "-m 0xF --wait-for-rpc"
+nvmfappstart -m 0xF --wait-for-rpc
 
 # Minimal number of bdev io pool (5) and cache (1)
 $rpc_py bdev_set_options -p 5 -c 1

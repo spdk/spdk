@@ -44,7 +44,7 @@ function nvmf_filesystem_create() {
 function nvmf_filesystem_part() {
 	incapsule=$1
 
-	nvmfappstart "-m 0xF"
+	nvmfappstart -m 0xF
 
 	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192 -c $incapsule
 	$rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc1

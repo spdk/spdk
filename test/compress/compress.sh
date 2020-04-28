@@ -86,7 +86,7 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 
 	# run perf on nvmf target w/compressed vols
 	export TEST_TRANSPORT=tcp && nvmftestinit
-	nvmfappstart "-m 0x7"
+	nvmfappstart -m 0x7
 	trap "nvmftestfini; error_cleanup; exit 1" SIGINT SIGTERM EXIT
 
 	# Create an NVMe-oF subsystem and add compress bdevs as namespaces

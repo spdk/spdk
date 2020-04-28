@@ -12,7 +12,7 @@ rpc_py="$rootdir/scripts/rpc.py"
 
 function starttarget() {
 	# Start the target
-	nvmfappstart "-m 0x1E"
+	nvmfappstart -m 0x1E
 
 	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 

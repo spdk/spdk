@@ -13,7 +13,7 @@ LVOL_BDEV_FINAL_SIZE=30
 rpc_py="$rootdir/scripts/rpc.py"
 
 nvmftestinit
-nvmfappstart "-m 0x7"
+nvmfappstart -m 0x7
 
 $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 

@@ -13,7 +13,7 @@ MALLOC_BLOCK_SIZE=512
 rpc_py="$rootdir/scripts/rpc.py"
 
 function disconnect_init() {
-	nvmfappstart "-m 0xF0"
+	nvmfappstart -m 0xF0
 
 	$rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc0
 

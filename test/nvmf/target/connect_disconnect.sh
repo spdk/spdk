@@ -12,7 +12,7 @@ rpc_py="$rootdir/scripts/rpc.py"
 
 # connect disconnect is geared towards ensuring that we are properly freeing resources after disconnecting qpairs.
 nvmftestinit
-nvmfappstart "-m 0xF"
+nvmfappstart -m 0xF
 
 $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192 -c 0
 

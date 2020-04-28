@@ -9,7 +9,7 @@ source $rootdir/test/nvmf/common.sh
 rpc_py="$rootdir/test/nvmf/target/multitarget_rpc.py"
 
 nvmftestinit
-nvmfappstart "-m 0xF"
+nvmfappstart -m 0xF
 
 trap 'process_shm --id $NVMF_APP_SHM_ID; nvmftestfini $1; exit 1' SIGINT SIGTERM EXIT
 

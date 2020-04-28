@@ -18,7 +18,7 @@ function jsum() {
 }
 
 nvmftestinit
-nvmfappstart "-m 0xF"
+nvmfappstart -m 0xF
 
 stats=$($rpc_py nvmf_get_stats)
 # Expect 4 poll groups (from CPU mask) and no transports yet

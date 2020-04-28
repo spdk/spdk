@@ -17,7 +17,7 @@ if check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
 	exit 0
 fi
 
-nvmfappstart "-m 0xF"
+nvmfappstart -m 0xF
 
 # create the rdma transport with an intentionally small SRQ depth
 $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192 -s 1024

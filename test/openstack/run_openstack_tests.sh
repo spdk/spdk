@@ -23,7 +23,7 @@ cat <<- JSON > "$testdir/conf.json"
 	]}
 JSON
 
-nvmfappstart "-m 0x3 -p 0 -s 1024 --json $testdir/conf.json"
+nvmfappstart -m 0x3 -p 0 -s 1024 --json $testdir/conf.json
 
 trap 'finish_test; process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 

@@ -16,7 +16,7 @@ if ! hash nvme; then
 fi
 
 nvmftestinit
-nvmfappstart "-m 0xF"
+nvmfappstart -m 0xF
 
 # Use nvmf_create_transport call to create transport
 $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
