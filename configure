@@ -473,8 +473,13 @@ fi
 
 # IDXD uses Intel specific instructions.
 if [[ "${CONFIG[IDXD]}" = "y" ]]; then
-	intel="GenuineIntel"
-	cpu_vendor=$(grep -i 'vendor' /proc/cpuinfo  --max-count=1)
+	if [ $(uname -s) == "FreeBSD" ]; then
+		intel="hw.model: Intel"
+		cpu_vendor=$(sysctl -a | grep hw.model | cut -c 1-15)
+	else
+		intel="GenuineIntel"
+		cpu_vendor=$(grep -i 'vendor' /proc/cpuinfo  --max-count=1)
+	fi
 	if [[ "$cpu_vendor" != *"$intel"* ]]; then
 		echo "ERROR: IDXD cannot be used due to CPU incompatiblity."
 		exit 1

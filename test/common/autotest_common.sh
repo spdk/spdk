@@ -221,8 +221,13 @@ function get_config_params() {
 		config_params+=' --with-rdma'
 	fi
 
-	intel="GenuineIntel"
-	cpu_vendor=$(grep -i 'vendor' /proc/cpuinfo  --max-count=1)
+        if [ $(uname -s) == "FreeBSD" ]; then
+                intel="hw.model: Intel"
+                cpu_vendor=$(sysctl -a | grep hw.model | cut -c 1-15)
+        else
+                intel="GenuineIntel"
+                cpu_vendor=$(grep -i 'vendor' /proc/cpuinfo  --max-count=1)
+        fi
 	if [[ "$cpu_vendor" != *"$intel"* ]]; then
 		config_params+=" --without-idxd"
 	else
