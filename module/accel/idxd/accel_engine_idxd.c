@@ -185,6 +185,24 @@ idxd_done(void *cb_arg, int status)
 	idxd_task->cb(accel_req, status);
 }
 
+static struct idxd_op *
+_prep_queue_command(struct idxd_io_channel *chan, spdk_accel_completion_cb cb_fn, void *cb_arg)
+{
+	struct idxd_op *op_to_queue;
+
+	op_to_queue = calloc(1, sizeof(struct idxd_op));
+	if (op_to_queue == NULL) {
+		SPDK_ERRLOG("Failed to allocate operation for queueing\n");
+		return NULL;
+	}
+
+	op_to_queue->chan = chan->chan;
+	op_to_queue->cb_fn = cb_fn;
+	op_to_queue->cb_arg = cb_arg;
+
+	return op_to_queue;
+}
+
 static int
 idxd_submit_copy(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src, uint64_t nbytes,
 		 spdk_accel_completion_cb cb)
@@ -202,19 +220,19 @@ idxd_submit_copy(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src,
 	if (chan->state == IDXD_CHANNEL_PAUSED || rc == -EBUSY) {
 		struct idxd_op *op_to_queue;
 
-		op_to_queue = calloc(1, sizeof(struct idxd_op));
+		/* Commpom prep. */
+		op_to_queue = _prep_queue_command(chan, idxd_done, idxd_task);
 		if (op_to_queue == NULL) {
-			SPDK_ERRLOG("Failed to allocate operation for queueing\n");
 			return -ENOMEM;
 		}
-		op_to_queue->chan = chan->chan;
+
+		/* Command specific. */
 		op_to_queue->dst = dst;
 		op_to_queue->src = src;
 		op_to_queue->nbytes = nbytes;
-		op_to_queue->cb_arg = idxd_task;
-		op_to_queue->cb_fn = idxd_done;
 		op_to_queue->op_code = IDXD_OPCODE_MEMMOVE;
 
+		/* Queue the operation. */
 		TAILQ_INSERT_TAIL(&chan->queued_ops, op_to_queue, link);
 	} else if (chan->state == IDXD_CHANNEL_ERROR) {
 		return -EINVAL;
@@ -242,19 +260,19 @@ idxd_submit_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fi
 	if (chan->state == IDXD_CHANNEL_PAUSED || rc == -EBUSY) {
 		struct idxd_op *op_to_queue;
 
-		op_to_queue = calloc(1, sizeof(struct idxd_op));
+		/* Commpom prep. */
+		op_to_queue = _prep_queue_command(chan, idxd_done, idxd_task);
 		if (op_to_queue == NULL) {
-			SPDK_ERRLOG("Failed to allocate operation for queueing\n");
 			return -ENOMEM;
 		}
-		op_to_queue->chan = chan->chan;
+
+		/* Command specific. */
 		op_to_queue->dst = dst;
 		op_to_queue->fill_pattern = fill_pattern;
 		op_to_queue->nbytes = nbytes;
-		op_to_queue->cb_arg = idxd_task;
-		op_to_queue->cb_fn = idxd_done;
 		op_to_queue->op_code = IDXD_OPCODE_MEMFILL;
 
+		/* Queue the operation. */
 		TAILQ_INSERT_TAIL(&chan->queued_ops, op_to_queue, link);
 	} else if (chan->state == IDXD_CHANNEL_ERROR) {
 		return -EINVAL;
