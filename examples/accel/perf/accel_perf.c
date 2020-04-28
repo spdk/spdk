@@ -38,6 +38,7 @@
 #include "spdk/log.h"
 #include "spdk/string.h"
 #include "spdk/accel_engine.h"
+#include "spdk/crc32.h"
 
 static uint64_t	g_tsc_rate;
 static uint64_t g_tsc_us_rate;
@@ -45,6 +46,7 @@ static uint64_t g_tsc_end;
 static int g_xfer_size_bytes = 4096;
 static int g_queue_depth = 32;
 static int g_time_in_sec = 5;
+static uint32_t g_crc32c_seed = 0;
 static bool g_verify = false;
 static const char *g_workload_type = NULL;
 static enum accel_capability g_workload_selection;
@@ -92,6 +94,9 @@ dump_user_config(struct spdk_app_opts *opts)
 	printf("Core mask:      %s\n\n", opts->reactor_mask);
 	printf("Accel Perf Configuration:\n");
 	printf("Workload Type:  %s\n", g_workload_type);
+	if (!strcmp(g_workload_type, "crc32c")) {
+		printf("CRC-32C seed:   %u", g_crc32c_seed);
+	}
 	printf("Transfer size:  %u bytes\n", g_xfer_size_bytes);
 	printf("Queue depth:    %u\n", g_queue_depth);
 	printf("Run time:       %u seconds\n", g_time_in_sec);
@@ -107,7 +112,8 @@ usage(void)
 	printf("\t[-n number of channels]\n");
 	printf("\t[-o transfer size in bytes]\n");
 	printf("\t[-t time in seconds]\n");
-	printf("\t[-w workload type must be one of these: copy, fill\n");
+	printf("\t[-w workload type must be one of these: copy, fill, crc32c\n");
+	printf("\t[-s for crc32c workload, use this seed value (default 0)\n");
 	printf("\t[-y verify result if this switch is on]\n");
 }
 
@@ -121,6 +127,9 @@ parse_args(int argc, char *argv)
 	case 'q':
 		g_queue_depth = spdk_strtol(optarg, 10);
 		break;
+	case 's':
+		g_crc32c_seed = spdk_strtol(optarg, 10);
+		break;
 	case 't':
 		g_time_in_sec = spdk_strtol(optarg, 10);
 		break;
@@ -133,6 +142,8 @@ parse_args(int argc, char *argv)
 			g_workload_selection = ACCEL_COPY;
 		} else if (!strcmp(g_workload_type, "fill")) {
 			g_workload_selection = ACCEL_FILL;
+		} else if (!strcmp(g_workload_type, "crc32c")) {
+			g_workload_selection = ACCEL_CRC32C;
 		}
 		break;
 	default:
@@ -175,17 +186,27 @@ _submit_single(void *arg1, void *arg2)
 	}
 	task->worker = worker;
 	task->worker->current_queue_depth++;
-	if (!strcmp(g_workload_type, "copy")) {
+	switch (g_workload_selection) {
+	case ACCEL_COPY:
 		spdk_accel_submit_copy(__accel_task_from_ap_task(task),
 				       worker->ch, task->dst,
 				       task->src, g_xfer_size_bytes, accel_done);
-	} else if (!strcmp(g_workload_type, "fill")) {
+		break;
+	case ACCEL_FILL:
 		/* For fill use the first byte of the task->dst buffer */
 		spdk_accel_submit_fill(__accel_task_from_ap_task(task),
 				       worker->ch, task->dst, *(uint8_t *)task->src,
 				       g_xfer_size_bytes, accel_done);
-	} else {
+		break;
+	case ACCEL_CRC32C:
+		spdk_accel_submit_crc32c(__accel_task_from_ap_task(task),
+					 worker->ch, (uint32_t *)task->dst, task->src, g_crc32c_seed,
+					 g_xfer_size_bytes, accel_done);
+		break;
+	default:
 		assert(false);
+		break;
+
 	}
 }
 
@@ -194,12 +215,22 @@ _accel_done(void *arg1)
 {
 	struct ap_task *task = arg1;
 	struct worker_thread *worker = task->worker;
+	uint32_t sw_crc32c;
 
 	assert(worker);
 	assert(worker->current_queue_depth > 0);
 
 	if (g_verify) {
-		if (memcmp(task->src, task->dst, g_xfer_size_bytes)) {
+		if (!strcmp(g_workload_type, "crc32c")) {
+			/* calculate sw CRC-32C and compare to sw aceel result. */
+			sw_crc32c = spdk_crc32c_update(task->src, g_xfer_size_bytes, ~g_crc32c_seed);
+			if (*(uint32_t *)task->dst != sw_crc32c) {
+				SPDK_NOTICELOG("CRC-32C miscompare\n");
+				worker->xfer_failed++;
+				/* TODO: cleanup */
+				exit(-1);
+			}
+		} else if (memcmp(task->src, task->dst, g_xfer_size_bytes)) {
 			SPDK_NOTICELOG("Data miscompare\n");
 			worker->xfer_failed++;
 			/* TODO: cleanup */
@@ -408,7 +439,8 @@ main(int argc, char **argv)
 
 	if (g_workload_type == NULL ||
 	    (strcmp(g_workload_type, "copy") &&
-	     strcmp(g_workload_type, "fill"))) {
+	     strcmp(g_workload_type, "fill") &&
+	     strcmp(g_workload_type, "crc32c"))) {
 		usage();
 		rc = -1;
 		goto cleanup;
