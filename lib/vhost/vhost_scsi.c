@@ -1121,18 +1121,17 @@ spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_nu
 	svdev = to_scsi_dev(vdev);
 	assert(svdev != NULL);
 	scsi_dev_state = &svdev->scsi_dev_state[scsi_tgt_num];
+
+	if (scsi_dev_state->status != VHOST_SCSI_DEV_PRESENT) {
+		return -EBUSY;
+	}
+
 	if (scsi_dev_state->dev == NULL || scsi_dev_state->status == VHOST_SCSI_DEV_ADDING) {
 		SPDK_ERRLOG("%s: SCSI target %u is not occupied\n", vdev->name, scsi_tgt_num);
 		return -ENODEV;
 	}
 
 	assert(scsi_dev_state->status != VHOST_SCSI_DEV_EMPTY);
-	if (scsi_dev_state->status != VHOST_SCSI_DEV_PRESENT) {
-		SPDK_WARNLOG("%s: SCSI target %u has been already marked for hotremoval.\n",
-			     vdev->name, scsi_tgt_num);
-		return -EBUSY;
-	}
-
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL) {
 		SPDK_ERRLOG("calloc failed\n");
