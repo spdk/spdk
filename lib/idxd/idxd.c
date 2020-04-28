@@ -636,10 +636,9 @@ spdk_idxd_detach(struct spdk_idxd_device *idxd)
 	idxd_device_destruct(idxd);
 }
 
-int
-spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan, void *dst, const void *src,
-		      uint64_t nbytes,
-		      spdk_idxd_req_cb cb_fn, void *cb_arg)
+static struct idxd_hw_desc *
+_idxd_prep_command(struct spdk_idxd_io_channel *chan,
+		   spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	uint32_t index;
 	struct idxd_hw_desc *desc;
@@ -648,7 +647,7 @@ spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan, void *dst, const void *
 	index = spdk_bit_array_find_first_clear(chan->ring_ctrl.ring_slots, 0);
 	if (index == UINT32_MAX) {
 		/* ran out of ring slots */
-		return -EBUSY;
+		return NULL;
 	}
 
 	spdk_bit_array_set(chan->ring_ctrl.ring_slots, index);
@@ -656,15 +655,34 @@ spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan, void *dst, const void *
 	desc = &chan->ring_ctrl.data_desc[index];
 	comp = &chan->ring_ctrl.completions[index];
 
-	desc->opcode = IDXD_OPCODE_MEMMOVE;
 	desc->flags = IDXD_FLAG_COMPLETION_ADDR_VALID | IDXD_FLAG_REQUEST_COMPLETION;
 	desc->completion_addr = (uintptr_t)&comp->hw;
-	desc->src_addr = (uintptr_t)src;
-	desc->dst_addr = (uintptr_t)dst;
-	desc->xfer_size = nbytes;
 	comp->cb_arg = (uint64_t)cb_arg;
 	comp->cb_fn = cb_fn;
 
+	return desc;
+}
+
+int
+spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan, void *dst, const void *src,
+		      uint64_t nbytes,
+		      spdk_idxd_req_cb cb_fn, void *cb_arg)
+{
+	struct idxd_hw_desc *desc;
+
+	/* Common prep. */
+	desc = _idxd_prep_command(chan, cb_fn, cb_arg);
+	if (desc == NULL) {
+		return -EBUSY;
+	}
+
+	/* Command specific. */
+	desc->opcode = IDXD_OPCODE_MEMMOVE;
+	desc->src_addr = (uintptr_t)src;
+	desc->dst_addr = (uintptr_t)dst;
+	desc->xfer_size = nbytes;
+
+	/* Submit operation. */
 	movdir64b((uint64_t *)chan->ring_ctrl.portal, desc);
 
 	return 0;
@@ -675,30 +693,21 @@ spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan, void *dst, uint64_t fil
 		      uint64_t nbytes,
 		      spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
-	uint32_t index;
 	struct idxd_hw_desc *desc;
-	struct idxd_comp *comp;
 
-	index = spdk_bit_array_find_first_clear(chan->ring_ctrl.ring_slots, 0);
-	if (index == UINT32_MAX) {
-		/* ran out of ring slots */
+	/* Common prep. */
+	desc = _idxd_prep_command(chan, cb_fn, cb_arg);
+	if (desc == NULL) {
 		return -EBUSY;
 	}
 
-	spdk_bit_array_set(chan->ring_ctrl.ring_slots, index);
-
-	desc = &chan->ring_ctrl.data_desc[index];
-	comp = &chan->ring_ctrl.completions[index];
-
+	/* Command specific. */
 	desc->opcode = IDXD_OPCODE_MEMFILL;
-	desc->flags = IDXD_FLAG_COMPLETION_ADDR_VALID | IDXD_FLAG_REQUEST_COMPLETION;
-	desc->completion_addr = (uintptr_t)&comp->hw;
 	desc->pattern = fill_pattern;
 	desc->dst_addr = (uintptr_t)dst;
 	desc->xfer_size = nbytes;
-	comp->cb_arg = (uint64_t)cb_arg;
-	comp->cb_fn = cb_fn;
 
+	/* Submit operation. */
 	movdir64b((uint64_t *)chan->ring_ctrl.portal, desc);
 
 	return 0;
