@@ -284,8 +284,7 @@ idxd_submit_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fi
 static uint64_t
 idxd_get_capabilities(void)
 {
-	return ACCEL_COPY | ACCEL_FILL | ACCEL_DUALCAST | ACCEL_COMPARE |
-	       ACCEL_BATCH | ACCEL_CRC	| ACCEL_DIF;
+	return ACCEL_COPY | ACCEL_FILL;
 }
 
 static struct spdk_accel_engine idxd_accel_engine = {

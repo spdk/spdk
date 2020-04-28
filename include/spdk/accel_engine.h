@@ -50,7 +50,7 @@ enum accel_capability {
 	ACCEL_DUALCAST		= 1 << 2,
 	ACCEL_COMPARE		= 1 << 3,
 	ACCEL_BATCH		= 1 << 4,
-	ACCEL_CRC		= 1 << 5,
+	ACCEL_CRC32C		= 1 << 5,
 	ACCEL_DIF		= 1 << 6,
 };
 
@@ -152,6 +152,25 @@ int spdk_accel_submit_copy(struct spdk_accel_task *accel_req, struct spdk_io_cha
  */
 int spdk_accel_submit_fill(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
 			   void *dst, uint8_t fill, uint64_t nbytes, spdk_accel_completion_cb cb);
+
+/**
+ * Submit a CRC-32C calculation request.
+ *
+ * This operation will calculate the 4 byte CRC32-C for the given data.
+ *
+ * \param accel_req Accel request task.
+ * \param ch I/O channel to submit request to the accel engine. This channel can
+ * be obtained by the function spdk_accel_engine_get_io_channel().
+ * \param dst Destination to write the CRC-32C to.
+ * \param src The source address for the data.
+ * \param seed Four byte seed value.
+ * \param nbytes Length in bytes.
+ * \param cb Called when this CRC-32C operation completes.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_accel_submit_crc32c(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
+			     uint32_t *dst, void *src, uint32_t seed, uint64_t nbytes, spdk_accel_completion_cb cb);
 
 /**
  * Get the size of an acceleration task.

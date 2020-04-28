@@ -50,6 +50,8 @@ struct spdk_accel_engine {
 		    uint64_t nbytes, spdk_accel_completion_cb cb);
 	int (*fill)(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill,
 		    uint64_t nbytes, spdk_accel_completion_cb cb);
+	int (*crc32c)(void *cb_arg, struct spdk_io_channel *ch, uint32_t *dst, void *src,
+		      uint32_t seed, uint64_t nbytes, spdk_accel_completion_cb cb);
 	struct spdk_io_channel *(*get_io_channel)(void);
 };
 

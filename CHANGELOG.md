@@ -7,6 +7,10 @@
 A new API was added `spdk_accel_get_capabilities` that allows applications to
 query the capabilities of the currently enabled accel engine back-end.
 
+A new capability, CRC-32C, was added via `spdk_accel_submit_crc32c`.
+
+The software accel engine implemenation has added support for CRC-32C.
+
 ## v20.04:
 
 ### configuration

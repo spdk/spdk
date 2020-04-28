@@ -39,6 +39,7 @@
 #include "spdk/event.h"
 #include "spdk/thread.h"
 #include "spdk/json.h"
+#include "spdk/crc32.h"
 
 /* Accelerator Engine Framework: The following provides a top level
  * generic API for the accelerator functions defined here. Modules,
@@ -132,6 +133,21 @@ spdk_accel_submit_fill(struct spdk_accel_task *accel_req, struct spdk_io_channel
 	return accel_ch->engine->fill(req->offload_ctx, accel_ch->ch, dst, fill, nbytes,
 				      _accel_engine_done);
 }
+
+/* Accel framework public API for CRC-32C function */
+int
+spdk_accel_submit_crc32c(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
+			 uint32_t *dst, void *src, uint32_t seed, uint64_t nbytes, spdk_accel_completion_cb cb)
+{
+	struct spdk_accel_task *req = accel_req;
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+
+	req->cb = cb;
+	return accel_ch->engine->crc32c(req->offload_ctx, accel_ch->ch, dst, src,
+					seed, nbytes,
+					_accel_engine_done);
+}
+
 
 /* Returns the largest context size of the accel modules. */
 size_t
@@ -286,7 +302,7 @@ spdk_accel_engine_config_text(FILE *fp)
 static uint64_t
 sw_accel_get_capabilities(void)
 {
-	return ACCEL_COPY | ACCEL_FILL;
+	return ACCEL_COPY | ACCEL_FILL | ACCEL_CRC32C;
 }
 
 static int
@@ -319,12 +335,28 @@ sw_accel_submit_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_
 	return 0;
 }
 
+static int
+sw_accel_submit_crc32c(void *cb_arg, struct spdk_io_channel *ch, uint32_t *dst, void *src,
+		       uint32_t seed, uint64_t nbytes,
+		       spdk_accel_completion_cb cb)
+{
+	struct spdk_accel_task *accel_req;
+
+	*dst = spdk_crc32c_update(src, nbytes, ~seed);
+	accel_req = (struct spdk_accel_task *)((uintptr_t)cb_arg -
+					       offsetof(struct spdk_accel_task, offload_ctx));
+	cb(accel_req, 0);
+
+	return 0;
+}
+
 static struct spdk_io_channel *sw_accel_get_io_channel(void);
 
 static struct spdk_accel_engine sw_accel_engine = {
 	.get_capabilities	= sw_accel_get_capabilities,
 	.copy			= sw_accel_submit_copy,
 	.fill			= sw_accel_submit_fill,
+	.crc32c			= sw_accel_submit_crc32c,
 	.get_io_channel		= sw_accel_get_io_channel,
 };
 
