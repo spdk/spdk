@@ -2981,6 +2981,8 @@ spdk_nvmf_request_exec_fabrics(struct spdk_nvmf_request *req)
 
 	if (qpair->ctrlr) {
 		sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
+	} else {
+		sgroup = nvmf_subsystem_pg_from_connect_cmd(req);
 	}
 
 	_nvmf_request_exec(req, sgroup);
