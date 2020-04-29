@@ -1,11 +1,13 @@
 # Changelog
 
+## v20.07: (Upcoming Release)
+
 ### accel
 
 A new API was added `spdk_accel_get_capabilities` that allows applications to
 query the capabilities of the currently enabled accel engine back-end.
 
-## v20.04: (Upcoming Release)
+## v20.04:
 
 ### configuration
 
