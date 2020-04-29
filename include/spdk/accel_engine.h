@@ -136,6 +136,23 @@ int spdk_accel_submit_copy(struct spdk_accel_task *accel_req, struct spdk_io_cha
 			   void *src, uint64_t nbytes, spdk_accel_completion_cb cb);
 
 /**
+ * Submit a compare request.
+ *
+ * \param accel_req Accel request task.
+ * \param ch I/O channel to submit request to the accel engine. This channel can
+ * be obtained by the function spdk_accel_engine_get_io_channel().
+ * \param src1 First location to perform compare on.
+ * \param src2 Second location to perform compare on.
+ * \param nbytes Length in bytes to compare.
+ * \param cb Called when this compare operation completes.
+ *
+ * \return 0 on success, any other value means there was a miscompare.
+ */
+int spdk_accel_submit_compare(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
+			      void *src1,
+			      void *src2, uint64_t nbytes, spdk_accel_completion_cb cb);
+
+/**
  * Submit a fill request.
  *
  * This operation will fill the destination buffer with the specified value.

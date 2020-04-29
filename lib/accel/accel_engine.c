@@ -121,6 +121,18 @@ spdk_accel_submit_copy(struct spdk_accel_task *accel_req, struct spdk_io_channel
 				      _accel_engine_done);
 }
 
+/* Accel framework public API for compare function */
+int
+spdk_accel_submit_compare(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
+			  void *src1, void *src2, uint64_t nbytes, spdk_accel_completion_cb cb)
+{
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+
+	accel_req->cb = cb;
+	return accel_ch->engine->compare(accel_req->offload_ctx, accel_ch->ch, src1, src2, nbytes,
+					 _accel_engine_done);
+}
+
 /* Accel framework public API for fill function */
 int
 spdk_accel_submit_fill(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
@@ -302,7 +314,7 @@ spdk_accel_engine_config_text(FILE *fp)
 static uint64_t
 sw_accel_get_capabilities(void)
 {
-	return ACCEL_COPY | ACCEL_FILL | ACCEL_CRC32C;
+	return ACCEL_COPY | ACCEL_FILL | ACCEL_CRC32C | ACCEL_COMPARE;
 }
 
 static int
@@ -317,6 +329,23 @@ sw_accel_submit_copy(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *
 	accel_req = (struct spdk_accel_task *)((uintptr_t)cb_arg -
 					       offsetof(struct spdk_accel_task, offload_ctx));
 	cb(accel_req, 0);
+	return 0;
+}
+
+static int
+sw_accel_submit_compare(void *cb_arg, struct spdk_io_channel *ch, void *src1, void *src2,
+			uint64_t nbytes,
+			spdk_accel_completion_cb cb)
+{
+	struct spdk_accel_task *accel_req;
+	int result;
+
+	result = memcmp(src1, src2, (size_t)nbytes);
+
+	accel_req = (struct spdk_accel_task *)((uintptr_t)cb_arg -
+					       offsetof(struct spdk_accel_task, offload_ctx));
+	cb(accel_req, result);
+
 	return 0;
 }
 
@@ -355,6 +384,7 @@ static struct spdk_io_channel *sw_accel_get_io_channel(void);
 static struct spdk_accel_engine sw_accel_engine = {
 	.get_capabilities	= sw_accel_get_capabilities,
 	.copy			= sw_accel_submit_copy,
+	.compare		= sw_accel_submit_compare,
 	.fill			= sw_accel_submit_fill,
 	.crc32c			= sw_accel_submit_crc32c,
 	.get_io_channel		= sw_accel_get_io_channel,
