@@ -85,7 +85,10 @@ struct idxd_op {
 	void				*cb_arg;
 	spdk_idxd_req_cb		cb_fn;
 	void				*src;
-	void				*dst;
+	union {
+		void			*dst;
+		void			*src2;
+	};
 	uint32_t			seed;
 	uint64_t			fill_pattern;
 	uint32_t			op_code;
@@ -146,6 +149,10 @@ idxd_poll(void *arg)
 		case IDXD_OPCODE_MEMMOVE:
 			rc = spdk_idxd_submit_copy(op->chan, op->dst, op->src, op->nbytes,
 						   op->cb_fn, op->cb_arg);
+			break;
+		case IDXD_OPCODE_COMPARE:
+			rc = spdk_idxd_submit_compare(op->chan, op->src, op->src2, op->nbytes,
+						      op->cb_fn, op->cb_arg);
 			break;
 		case IDXD_OPCODE_MEMFILL:
 			rc = spdk_idxd_submit_fill(op->chan, op->dst, op->fill_pattern, op->nbytes,
@@ -249,6 +256,47 @@ idxd_submit_copy(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src,
 }
 
 static int
+idxd_submit_compare(void *cb_arg, struct spdk_io_channel *ch, void *src1, void *src2,
+		    uint64_t nbytes,
+		    spdk_accel_completion_cb cb)
+{
+	struct idxd_task *idxd_task = (struct idxd_task *)cb_arg;
+	struct idxd_io_channel *chan = spdk_io_channel_get_ctx(ch);
+	int rc = 0;
+
+	idxd_task->cb = cb;
+
+	if (chan->state == IDXD_CHANNEL_ACTIVE) {
+		rc = spdk_idxd_submit_compare(chan->chan, src1, src2, nbytes, idxd_done, idxd_task);
+	}
+
+	if (chan->state == IDXD_CHANNEL_PAUSED || rc == -EBUSY) {
+		struct idxd_op *op_to_queue;
+
+		/* Commpom prep. */
+		op_to_queue = _prep_queue_command(chan, idxd_done, idxd_task);
+		if (op_to_queue == NULL) {
+			return -ENOMEM;
+		}
+
+		/* Command specific. */
+		op_to_queue->src = src1;
+		op_to_queue->src2 = src2;
+		op_to_queue->nbytes = nbytes;
+		op_to_queue->op_code = IDXD_OPCODE_COMPARE;
+
+		/* Queue the operation. */
+		TAILQ_INSERT_TAIL(&chan->queued_ops, op_to_queue, link);
+		return 0;
+
+	} else if (chan->state == IDXD_CHANNEL_ERROR) {
+		return -EINVAL;
+	}
+
+	return rc;
+}
+
+static int
 idxd_submit_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill,
 		 uint64_t nbytes, spdk_accel_completion_cb cb)
 {
@@ -334,12 +382,13 @@ idxd_submit_crc32c(void *cb_arg, struct spdk_io_channel *ch, uint32_t *dst, void
 static uint64_t
 idxd_get_capabilities(void)
 {
-	return ACCEL_COPY | ACCEL_FILL | ACCEL_CRC32C;
+	return ACCEL_COPY | ACCEL_FILL | ACCEL_CRC32C | ACCEL_COMPARE;
 }
 
 static struct spdk_accel_engine idxd_accel_engine = {
 	.get_capabilities	= idxd_get_capabilities,
 	.copy			= idxd_submit_copy,
+	.compare		= idxd_submit_compare,
 	.fill			= idxd_submit_fill,
 	.crc32c			= idxd_submit_crc32c,
 	.get_io_channel		= idxd_get_io_channel,

@@ -158,6 +158,26 @@ int spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan,
 			  spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**
+ * Build and submit a memory compare request.
+ *
+ * This function will build the compare descriptor and then immediately submit
+ * by writing to the proper device portal.
+ *
+ * \param chan IDXD channel to submit request.
+ * \param src1 First source to compare.
+ * \param src2 Second source to compare.
+ * \param nbytes Number of bytes to compare.
+ * \param cb_fn Callback function which will be called when the request is complete.
+ * \param cb_arg Opaque value which will be passed back as the arg parameter in
+ * the completion callback.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan,
+			     void *src1, const void *src2, uint64_t nbytes,
+			     spdk_idxd_req_cb cb_fn, void *cb_arg);
+
+/**
  * Build and submit a DMA engine memory fill request.
  *
  * This function will build the fill descriptor and then immediately submit

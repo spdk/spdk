@@ -7,6 +7,7 @@
 	spdk_idxd_probe;
 	spdk_idxd_detach;
 	spdk_idxd_set_config;
+	spdk_idxd_submit_compare;
 	spdk_idxd_submit_crc32c;
 	spdk_idxd_submit_copy;
 	spdk_idxd_submit_fill;

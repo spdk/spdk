@@ -28,6 +28,8 @@ Using mlx5_dv requires libmlx5 installed on the system.
 
 ## v20.04:
 
+IDXD engine support for compare has been added.
+
 ### configuration
 
 Legacy INI style configuration for SPDK applications has been deprecated and will be

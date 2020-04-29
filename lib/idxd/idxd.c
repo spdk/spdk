@@ -689,6 +689,31 @@ spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan, void *dst, const void *
 }
 
 int
+spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan, void *src1, const void *src2,
+			 uint64_t nbytes,
+			 spdk_idxd_req_cb cb_fn, void *cb_arg)
+{
+	struct idxd_hw_desc *desc;
+
+	/* Common prep. */
+	desc = _idxd_prep_command(chan, cb_fn, cb_arg);
+	if (desc == NULL) {
+		return -EBUSY;
+	}
+
+	/* Command specific. */
+	desc->opcode = IDXD_OPCODE_COMPARE;
+	desc->src_addr = (uintptr_t)src1;
+	desc->src2_addr = (uintptr_t)src2;
+	desc->xfer_size = nbytes;
+
+	/* Submit operation. */
+	movdir64b((uint64_t *)chan->ring_ctrl.portal, desc);
+
+	return 0;
+}
+
+int
 spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan, void *dst, uint64_t fill_pattern,
 		      uint64_t nbytes,
 		      spdk_idxd_req_cb cb_fn, void *cb_arg)
@@ -784,9 +809,16 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 				}
 
 				desc = &chan->ring_ctrl.data_desc[index];
-				if (desc->opcode == IDXD_OPCODE_CRC32C_GEN) {
+				switch (desc->opcode) {
+				case IDXD_OPCODE_CRC32C_GEN:
 					*(uint32_t *)desc->dst_addr = comp->hw.crc32c_val;
 					*(uint32_t *)desc->dst_addr ^= ~0;
+					break;
+				case IDXD_OPCODE_COMPARE:
+					if (status == 0) {
+						status = comp->hw.result;
+					}
+					break;
 				}
 
 				comp->cb_fn((void *)comp->cb_arg, status);
