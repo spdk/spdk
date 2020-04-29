@@ -1,6 +1,6 @@
 # Changelog
 
-## v20.04: (Upcoming Release)
+## v20.04:
 
 ### configuration
 
