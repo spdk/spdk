@@ -2,12 +2,12 @@
 %bcond_with doc
 
 Name: spdk
-Version: 20.04
+Version: 20.04.x
 Release: 0%{?dist}
 Epoch: 0
 URL: http://spdk.io
 
-Source: https://github.com/spdk/spdk/archive/v20.04.tar.gz
+Source: https://github.com/spdk/spdk/archive/v20.04.x.tar.gz
 Summary: Set of libraries and utilities for high performance user-mode storage
 
 %define package_version %{epoch}:%{version}-%{release}
