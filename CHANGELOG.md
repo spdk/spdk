@@ -11,6 +11,10 @@ A new capability, CRC-32C, was added via `spdk_accel_submit_crc32c`.
 
 The software accel engine implemenation has added support for CRC-32C.
 
+### idxd
+
+IDXD engine support for CRC-32C has been added.
+
 ## v20.04:
 
 ### configuration

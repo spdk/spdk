@@ -86,6 +86,7 @@ struct idxd_op {
 	spdk_idxd_req_cb		cb_fn;
 	void				*src;
 	void				*dst;
+	uint32_t			seed;
 	uint64_t			fill_pattern;
 	uint32_t			op_code;
 	uint64_t			nbytes;
@@ -149,6 +150,10 @@ idxd_poll(void *arg)
 		case IDXD_OPCODE_MEMFILL:
 			rc = spdk_idxd_submit_fill(op->chan, op->dst, op->fill_pattern, op->nbytes,
 						   op->cb_fn, op->cb_arg);
+			break;
+		case IDXD_OPCODE_CRC32C_GEN:
+			rc = spdk_idxd_submit_crc32c(op->chan, op->dst, op->src, op->seed, op->nbytes,
+						     op->cb_fn, op->cb_arg);
 			break;
 		default:
 			/* Should never get here */
@@ -234,6 +239,8 @@ idxd_submit_copy(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src,
 
 		/* Queue the operation. */
 		TAILQ_INSERT_TAIL(&chan->queued_ops, op_to_queue, link);
+		return 0;
+
 	} else if (chan->state == IDXD_CHANNEL_ERROR) {
 		return -EINVAL;
 	}
@@ -274,6 +281,49 @@ idxd_submit_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fi
 
 		/* Queue the operation. */
 		TAILQ_INSERT_TAIL(&chan->queued_ops, op_to_queue, link);
+		return 0;
+
+	} else if (chan->state == IDXD_CHANNEL_ERROR) {
+		return -EINVAL;
+	}
+
+	return rc;
+}
+
+static int
+idxd_submit_crc32c(void *cb_arg, struct spdk_io_channel *ch, uint32_t *dst, void *src,
+		   uint32_t seed, uint64_t nbytes, spdk_accel_completion_cb cb)
+{
+	struct idxd_task *idxd_task = (struct idxd_task *)cb_arg;
+	struct idxd_io_channel *chan = spdk_io_channel_get_ctx(ch);
+	int rc = 0;
+
+	idxd_task->cb = cb;
+
+	if (chan->state == IDXD_CHANNEL_ACTIVE) {
+		rc = spdk_idxd_submit_crc32c(chan->chan, dst, src, seed, nbytes, idxd_done, idxd_task);
+	}
+
+	if (chan->state == IDXD_CHANNEL_PAUSED || rc == -EBUSY) {
+		struct idxd_op *op_to_queue;
+
+		/* Commpom prep. */
+		op_to_queue = _prep_queue_command(chan, idxd_done, idxd_task);
+		if (op_to_queue == NULL) {
+			return -ENOMEM;
+		}
+
+		/* Command specific. */
+		op_to_queue->dst = dst;
+		op_to_queue->src = src;
+		op_to_queue->seed = seed;
+		op_to_queue->nbytes = nbytes;
+		op_to_queue->op_code = IDXD_OPCODE_CRC32C_GEN;
+
+		/* Queue the operation. */
+		TAILQ_INSERT_TAIL(&chan->queued_ops, op_to_queue, link);
+		return 0;
+
 	} else if (chan->state == IDXD_CHANNEL_ERROR) {
 		return -EINVAL;
 	}
@@ -284,13 +334,14 @@ idxd_submit_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fi
 static uint64_t
 idxd_get_capabilities(void)
 {
-	return ACCEL_COPY | ACCEL_FILL;
+	return ACCEL_COPY | ACCEL_FILL | ACCEL_CRC32C;
 }
 
 static struct spdk_accel_engine idxd_accel_engine = {
 	.get_capabilities	= idxd_get_capabilities,
 	.copy			= idxd_submit_copy,
 	.fill			= idxd_submit_fill,
+	.crc32c			= idxd_submit_crc32c,
 	.get_io_channel		= idxd_get_io_channel,
 };
 

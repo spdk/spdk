@@ -713,6 +713,33 @@ spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan, void *dst, uint64_t fil
 	return 0;
 }
 
+int
+spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan, uint32_t *dst, void *src,
+			uint32_t seed, uint64_t nbytes,
+			spdk_idxd_req_cb cb_fn, void *cb_arg)
+{
+	struct idxd_hw_desc *desc;
+
+	/* Common prep. */
+	desc = _idxd_prep_command(chan, cb_fn, cb_arg);
+	if (desc == NULL) {
+		return -EBUSY;
+	}
+
+	/* Command specific. */
+	desc->opcode = IDXD_OPCODE_CRC32C_GEN;
+	desc->dst_addr = (uintptr_t)dst;
+	desc->src_addr = (uintptr_t)src;
+	desc->flags &= IDXD_CLEAR_CRC_FLAGS;
+	desc->crc32c.seed = seed;
+	desc->xfer_size = nbytes;
+
+	/* Submit operation. */
+	movdir64b((uint64_t *)chan->ring_ctrl.portal, desc);
+
+	return 0;
+}
+
 static void
 _dump_error_reg(struct spdk_idxd_io_channel *chan)
 {
@@ -748,10 +775,18 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 		if (spdk_bit_array_get(chan->ring_ctrl.ring_slots, index)) {
 			comp = &chan->ring_ctrl.completions[index];
 			if (comp->hw.status == 1) {
+				struct idxd_hw_desc *desc;
+
 				sw_error_0 = _idxd_read_8(chan->idxd, IDXD_SWERR_OFFSET);
 				if (sw_error_0 & 0x1) {
 					_dump_error_reg(chan);
 					status = -EINVAL;
+				}
+
+				desc = &chan->ring_ctrl.data_desc[index];
+				if (desc->opcode == IDXD_OPCODE_CRC32C_GEN) {
+					*(uint32_t *)desc->dst_addr = comp->hw.crc32c_val;
+					*(uint32_t *)desc->dst_addr ^= ~0;
 				}
 
 				comp->cb_fn((void *)comp->cb_arg, status);

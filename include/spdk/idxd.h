@@ -178,6 +178,27 @@ int spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan,
 			  spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**
+ * Build and submit a memory CRC32-C request.
+ *
+ * This function will build the CRC-32C descriptor and then immediately submit
+ * by writing to the proper device portal.
+ *
+ * \param chan IDXD channel to submit request.
+ * \param dst Resulting calculation.
+ * \param src Source virtual address.
+ * \param seed Four byte CRC-32C seed value.
+ * \param nbytes Number of bytes to calculate on.
+ * \param cb_fn Callback function which will be called when the request is complete.
+ * \param cb_arg Opaque value which will be passed back as the cb_arg parameter
+ * in the completion callback.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan, uint32_t *dst, void *src,
+			    uint32_t seed, uint64_t nbytes,
+			    spdk_idxd_req_cb cb_fn, void *cb_arg);
+
+/**
  * Check for completed requests on an IDXD channel.
  *
  * \param chan IDXD channel to check for completions.

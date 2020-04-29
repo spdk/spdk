@@ -74,6 +74,8 @@ extern "C" {
 
 #define IDXD_OPCAP_WORDS		0x4
 
+#define IDXD_CLEAR_CRC_FLAGS		0xFFFFu
+
 #define IDXD_FLAG_FENCE                 (1 << 0)
 #define IDXD_FLAG_COMPLETION_ADDR_VALID (1 << 2)
 #define IDXD_FLAG_REQUEST_COMPLETION    (1 << 3)
@@ -227,11 +229,11 @@ struct idxd_hw_desc {
 		} delta;
 		uint32_t	delta_rec_size;
 		uint64_t	dest2;
-		struct crc {
+		struct crc32c {
 			uint32_t	seed;
 			uint32_t	rsvd;
 			uint64_t	addr;
-		} crc;
+		} crc32c;
 		struct dif_chk {
 			uint8_t		src_flags;
 			uint8_t		rsvd1;
@@ -277,8 +279,8 @@ struct idxd_hw_comp_record {
 	uint32_t		bytes_completed;
 	uint64_t		fault_addr;
 	union {
-		uint16_t	delta_rec_size;
-		uint16_t	crc_val;
+		uint32_t	delta_rec_size;
+		uint32_t	crc32c_val;
 		struct {
 			uint32_t	dif_chk_ref_tag;
 			uint16_t	dif_chk_app_tag_mask;
