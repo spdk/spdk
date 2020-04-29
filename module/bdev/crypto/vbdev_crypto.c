@@ -1204,9 +1204,18 @@ _device_unregister_cb(void *io_device)
 	rte_cryptodev_sym_session_free(crypto_bdev->session_decrypt);
 	rte_cryptodev_sym_session_free(crypto_bdev->session_encrypt);
 	free(crypto_bdev->drv_name);
-	free(crypto_bdev->key);
-	free(crypto_bdev->key2);
-	free(crypto_bdev->xts_key);
+	if (crypto_bdev->key) {
+		memset(crypto_bdev->key, 0, strnlen(crypto_bdev->key, (AES_CBC_KEY_LENGTH + 1)));
+		free(crypto_bdev->key);
+	}
+	if (crypto_bdev->key2) {
+		memset(crypto_bdev->key2, 0, strnlen(crypto_bdev->key2, (AES_XTS_KEY_LENGTH + 1)));
+		free(crypto_bdev->key2);
+	}
+	if (crypto_bdev->xts_key) {
+		memset(crypto_bdev->xts_key, 0, strnlen(crypto_bdev->xts_key, (AES_XTS_KEY_LENGTH * 2) + 1));
+		free(crypto_bdev->xts_key);
+	}
 	free(crypto_bdev->crypto_bdev.name);
 	free(crypto_bdev);
 }
