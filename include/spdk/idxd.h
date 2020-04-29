@@ -32,7 +32,7 @@
  */
 
 /** \file
- * IDXD DMA engine driver public interface
+ * IDXD accel engine driver public interface
  */
 
 #ifndef SPDK_IDXD_H
@@ -138,7 +138,7 @@ void spdk_idxd_detach(struct spdk_idxd_device *idxd);
 void spdk_idxd_set_config(uint32_t config_number);
 
 /**
- * Build and submit a DMA engine memory copy request.
+ * Build and submit a accel engine memory copy request.
  *
  * This function will build the copy descriptor and then immediately submit
  * by writing to the proper device portal.
@@ -178,7 +178,7 @@ int spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan,
 			     spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**
- * Build and submit a DMA engine memory fill request.
+ * Build and submit a accel engine memory fill request.
  *
  * This function will build the fill descriptor and then immediately submit
  * by writing to the proper device portal.

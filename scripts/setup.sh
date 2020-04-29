@@ -626,7 +626,7 @@ function status_linux() {
 	done
 
 	echo ""
-	echo "I/OAT DMA"
+	echo "I/OAT Engine"
 
 	#collect all the device_id info of ioat devices.
 	TMP=$(grep "PCI_DEVICE_ID_INTEL_IOAT" $rootdir/include/spdk/pci_ids.h \
@@ -650,7 +650,7 @@ function status_linux() {
 	done
 
 	echo ""
-	echo "IDXD DMA"
+	echo "IDXD Engine"
 
 	#collect all the device_id info of idxd devices.
 	TMP=$(grep "PCI_DEVICE_ID_INTEL_IDXD" $rootdir/include/spdk/pci_ids.h \
