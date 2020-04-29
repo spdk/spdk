@@ -13,7 +13,7 @@ The software accel engine implemenation has added support for CRC-32C.
 
 A new capability, compare, was added via `spdk_accel_submit_compare`.
 
-The software accel engine implemenation has added support forCRC-32Cc and compare.
+The software accel engine implemenation has added support for compare.
 
 ### idxd
 

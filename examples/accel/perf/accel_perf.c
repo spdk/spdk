@@ -40,6 +40,8 @@
 #include "spdk/accel_engine.h"
 #include "spdk/crc32.h"
 
+#define DATA_PATTERN 0x5a
+
 static uint64_t	g_tsc_rate;
 static uint64_t g_tsc_us_rate;
 static uint64_t g_tsc_end;
@@ -47,6 +49,7 @@ static int g_xfer_size_bytes = 4096;
 static int g_queue_depth = 32;
 static int g_time_in_sec = 5;
 static uint32_t g_crc32c_seed = 0;
+static int g_fail_percent_goal = 0;
 static bool g_verify = false;
 static const char *g_workload_type = NULL;
 static enum accel_capability g_workload_selection;
@@ -58,8 +61,8 @@ struct worker_thread {
 	struct spdk_io_channel		*ch;
 	uint64_t			xfer_completed;
 	uint64_t			xfer_failed;
+	uint64_t			injected_miscompares;
 	uint64_t			current_queue_depth;
-	struct spdk_mempool		*data_pool;
 	struct spdk_mempool		*task_pool;
 	struct worker_thread		*next;
 	unsigned			core;
@@ -73,6 +76,8 @@ struct ap_task {
 	void			*src;
 	void			*dst;
 	struct worker_thread	*worker;
+	int			status;
+	int			expected_status; /* used for compare */
 };
 
 inline static struct ap_task *
@@ -94,8 +99,10 @@ dump_user_config(struct spdk_app_opts *opts)
 	printf("Core mask:      %s\n\n", opts->reactor_mask);
 	printf("Accel Perf Configuration:\n");
 	printf("Workload Type:  %s\n", g_workload_type);
-	if (!strcmp(g_workload_type, "crc32c")) {
-		printf("CRC-32C seed:   %u", g_crc32c_seed);
+	if (g_workload_selection == ACCEL_CRC32C) {
+		printf("CRC-32C seed:   %u\n", g_crc32c_seed);
+	} else if ((g_workload_selection == ACCEL_COMPARE) && g_fail_percent_goal > 0) {
+		printf("Miscompare:     %u percent\n", g_fail_percent_goal);
 	}
 	printf("Transfer size:  %u bytes\n", g_xfer_size_bytes);
 	printf("Queue depth:    %u\n", g_queue_depth);
@@ -112,8 +119,9 @@ usage(void)
 	printf("\t[-n number of channels]\n");
 	printf("\t[-o transfer size in bytes]\n");
 	printf("\t[-t time in seconds]\n");
-	printf("\t[-w workload type must be one of these: copy, fill, crc32c\n");
+	printf("\t[-w workload type must be one of these: copy, fill, crc32c, compare\n");
 	printf("\t[-s for crc32c workload, use this seed value (default 0)\n");
+	printf("\t[-P for compare workload, percentage of operations that should miscompare (percent, default 0)\n");
 	printf("\t[-y verify result if this switch is on]\n");
 }
 
@@ -123,6 +131,9 @@ parse_args(int argc, char *argv)
 	switch (argc) {
 	case 'o':
 		g_xfer_size_bytes = spdk_strtol(optarg, 10);
+		break;
+	case 'P':
+		g_fail_percent_goal = spdk_strtol(optarg, 10);
 		break;
 	case 'q':
 		g_queue_depth = spdk_strtol(optarg, 10);
@@ -144,6 +155,8 @@ parse_args(int argc, char *argv)
 			g_workload_selection = ACCEL_FILL;
 		} else if (!strcmp(g_workload_type, "crc32c")) {
 			g_workload_selection = ACCEL_CRC32C;
+		} else if (!strcmp(g_workload_type, "compare")) {
+			g_workload_selection = ACCEL_COMPARE;
 		}
 		break;
 	default:
@@ -158,7 +171,6 @@ unregister_worker(void *arg1)
 {
 	struct worker_thread *worker = arg1;
 
-	spdk_mempool_free(worker->data_pool);
 	spdk_mempool_free(worker->task_pool);
 	spdk_put_io_channel(worker->ch);
 	pthread_mutex_lock(&g_workers_lock);
@@ -177,13 +189,10 @@ _submit_single(void *arg1, void *arg2)
 {
 	struct worker_thread *worker = arg1;
 	struct ap_task *task = arg2;
+	int random_num;
 
 	assert(worker);
 
-	if (g_verify) {
-		memset(task->src, 0x5a, g_xfer_size_bytes);
-		memset(task->dst, 0xa5, g_xfer_size_bytes);
-	}
 	task->worker = worker;
 	task->worker->current_queue_depth++;
 	switch (g_workload_selection) {
@@ -203,6 +212,19 @@ _submit_single(void *arg1, void *arg2)
 					 worker->ch, (uint32_t *)task->dst, task->src, g_crc32c_seed,
 					 g_xfer_size_bytes, accel_done);
 		break;
+	case ACCEL_COMPARE:
+		random_num = rand() % 100;
+		if (random_num < g_fail_percent_goal) {
+			task->expected_status = -EILSEQ;
+			*(uint8_t *)task->dst = ~DATA_PATTERN;
+		} else {
+			task->expected_status = 0;
+			*(uint8_t *)task->dst = DATA_PATTERN;
+		}
+		spdk_accel_submit_compare(__accel_task_from_ap_task(task),
+					  worker->ch, task->dst, task->src,
+					  g_xfer_size_bytes, accel_done);
+		break;
 	default:
 		assert(false);
 		break;
@@ -220,31 +242,44 @@ _accel_done(void *arg1)
 	assert(worker);
 	assert(worker->current_queue_depth > 0);
 
-	if (g_verify) {
-		if (!strcmp(g_workload_type, "crc32c")) {
+	if (g_verify && task->status == 0) {
+		switch (g_workload_selection) {
+		case ACCEL_CRC32C:
 			/* calculate sw CRC-32C and compare to sw aceel result. */
 			sw_crc32c = spdk_crc32c_update(task->src, g_xfer_size_bytes, ~g_crc32c_seed);
 			if (*(uint32_t *)task->dst != sw_crc32c) {
 				SPDK_NOTICELOG("CRC-32C miscompare\n");
 				worker->xfer_failed++;
-				/* TODO: cleanup */
-				exit(-1);
 			}
-		} else if (memcmp(task->src, task->dst, g_xfer_size_bytes)) {
-			SPDK_NOTICELOG("Data miscompare\n");
-			worker->xfer_failed++;
-			/* TODO: cleanup */
-			exit(-1);
+			break;
+		case ACCEL_COPY:
+			if (memcmp(task->src, task->dst, g_xfer_size_bytes)) {
+				SPDK_NOTICELOG("Data miscompare\n");
+				worker->xfer_failed++;
+			}
+			break;
+		default:
+			assert(false);
+			break;
 		}
 	}
+
+	if (task->expected_status == -EILSEQ) {
+		assert(task->status != 0);
+		worker->injected_miscompares++;
+	} else if (task->status) {
+		/* Expected to pass but API reported error. */
+		worker->xfer_failed++;
+	}
+
 	worker->xfer_completed++;
 	worker->current_queue_depth--;
 
-	if (!worker->is_draining) {
+	if (!worker->is_draining && worker->xfer_failed == 0) {
 		_submit_single(worker, task);
 	} else {
-		spdk_mempool_put(worker->data_pool, task->src);
-		spdk_mempool_put(worker->data_pool, task->dst);
+		spdk_free(task->src);
+		spdk_free(task->dst);
 		spdk_mempool_put(worker->task_pool, task);
 	}
 }
@@ -254,11 +289,12 @@ dump_result(void)
 {
 	uint64_t total_completed = 0;
 	uint64_t total_failed = 0;
+	uint64_t total_miscompared = 0;
 	uint64_t total_xfer_per_sec, total_bw_in_MiBps;
 	struct worker_thread *worker = g_workers;
 
-	printf("\nCore           Transfers     Bandwidth     Failed\n");
-	printf("-------------------------------------------------\n");
+	printf("\nCore           Transfers     Bandwidth     Failed     Miscompares\n");
+	printf("-----------------------------------------------------------------\n");
 	while (worker != NULL) {
 
 		uint64_t xfer_per_sec = worker->xfer_completed / g_time_in_sec;
@@ -267,11 +303,12 @@ dump_result(void)
 
 		total_completed += worker->xfer_completed;
 		total_failed += worker->xfer_failed;
+		total_miscompared += worker->injected_miscompares;
 
 		if (xfer_per_sec) {
-			printf("%10d%12" PRIu64 "/s%8" PRIu64 " MiB/s%11" PRIu64 "\n",
+			printf("%10d%12" PRIu64 "/s%8" PRIu64 " MiB/s%11" PRIu64 " %11" PRIu64 "\n",
 			       worker->core, xfer_per_sec,
-			       bw_in_MiBps, worker->xfer_failed);
+			       bw_in_MiBps, worker->xfer_failed, worker->injected_miscompares);
 		}
 
 		worker = worker->next;
@@ -281,9 +318,9 @@ dump_result(void)
 	total_bw_in_MiBps = (total_completed * g_xfer_size_bytes) /
 			    (g_time_in_sec * 1024 * 1024);
 
-	printf("=================================================\n");
-	printf("Total:%16" PRIu64 "/s%8" PRIu64 " MiB/s%11" PRIu64 "\n\n",
-	       total_xfer_per_sec, total_bw_in_MiBps, total_failed);
+	printf("==================================================================\n");
+	printf("Total:%16" PRIu64 "/s%8" PRIu64 " MiB/s%11" PRIu64 " %11" PRIu64"\n\n",
+	       total_xfer_per_sec, total_bw_in_MiBps, total_failed, total_miscompared);
 
 	return total_failed ? 1 : 0;
 }
@@ -328,7 +365,7 @@ static void
 _init_thread(void *arg1)
 {
 	struct worker_thread *worker;
-	char buf_pool_name[30], task_pool_name[30];
+	char task_pool_name[30];
 	struct ap_task *task;
 	int i;
 
@@ -342,22 +379,15 @@ _init_thread(void *arg1)
 	worker->thread = spdk_get_thread();
 	worker->next = g_workers;
 	worker->ch = spdk_accel_engine_get_io_channel();
-	snprintf(buf_pool_name, sizeof(buf_pool_name), "buf_pool_%d", g_num_workers);
+
 	snprintf(task_pool_name, sizeof(task_pool_name), "task_pool_%d", g_num_workers);
-	worker->data_pool = spdk_mempool_create(buf_pool_name,
-						g_queue_depth * 2, /* src + dst */
-						g_xfer_size_bytes,
-						SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-						SPDK_ENV_SOCKET_ID_ANY);
 	worker->task_pool = spdk_mempool_create(task_pool_name,
 						g_queue_depth,
 						spdk_accel_task_size() + sizeof(struct ap_task),
 						SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 						SPDK_ENV_SOCKET_ID_ANY);
-	if (!worker->data_pool || !worker->task_pool) {
+	if (!worker->task_pool) {
 		fprintf(stderr, "Could not allocate buffer pool.\n");
-		spdk_mempool_free(worker->data_pool);
-		spdk_mempool_free(worker->task_pool);
 		free(worker);
 		return;
 	}
@@ -377,8 +407,26 @@ _init_thread(void *arg1)
 			fprintf(stderr, "Unable to get accel_task\n");
 			return;
 		}
-		task->src = spdk_mempool_get(worker->data_pool);
-		task->dst = spdk_mempool_get(worker->data_pool);
+
+		task->src = spdk_dma_zmalloc(g_xfer_size_bytes, 0, NULL);
+		if (task->src == NULL) {
+			fprintf(stderr, "Unable to alloc src buffer\n");
+			return;
+		}
+		memset(task->src, DATA_PATTERN, g_xfer_size_bytes);
+
+		task->dst = spdk_dma_zmalloc(g_xfer_size_bytes, 0, NULL);
+		if (task->dst == NULL) {
+			fprintf(stderr, "Unable to alloc dst buffer\n");
+			return;
+		}
+		/* For compare we want the buffers to match, otherwise not. */
+		if (g_workload_selection == ACCEL_COMPARE) {
+			memset(task->dst, DATA_PATTERN, g_xfer_size_bytes);
+		} else {
+			memset(task->dst, ~DATA_PATTERN, g_xfer_size_bytes);
+		}
+
 		_submit_single(worker, task);
 	}
 }
@@ -391,6 +439,7 @@ accel_done(void *ref, int status)
 
 	assert(worker);
 
+	task->status = status;
 	spdk_thread_send_msg(worker->thread, _accel_done, task);
 }
 
@@ -431,16 +480,16 @@ main(int argc, char **argv)
 	pthread_mutex_init(&g_workers_lock, NULL);
 	spdk_app_opts_init(&opts);
 	opts.reactor_mask = "0x1";
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "o:q:t:yw:", NULL, parse_args,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "o:q:t:yw:P:", NULL, parse_args,
 				      usage)) != SPDK_APP_PARSE_ARGS_SUCCESS) {
 		rc = -1;
 		goto cleanup;
 	}
 
-	if (g_workload_type == NULL ||
-	    (strcmp(g_workload_type, "copy") &&
-	     strcmp(g_workload_type, "fill") &&
-	     strcmp(g_workload_type, "crc32c"))) {
+	if ((g_workload_selection != ACCEL_COPY) &&
+	    (g_workload_selection != ACCEL_FILL) &&
+	    (g_workload_selection != ACCEL_CRC32C) &&
+	    (g_workload_selection != ACCEL_COMPARE)) {
 		usage();
 		rc = -1;
 		goto cleanup;
