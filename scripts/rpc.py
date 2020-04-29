@@ -91,11 +91,12 @@ if __name__ == "__main__":
     p.set_defaults(func=save_config)
 
     def load_config(args):
-        rpc.load_config(args.client, sys.stdin,
+        rpc.load_config(args.client, args.json_conf,
                         include_aliases=args.include_aliases)
 
-    p = subparsers.add_parser('load_config', help="""Configure SPDK subsystems and targets using JSON RPC read from stdin.""")
+    p = subparsers.add_parser('load_config', help="""Configure SPDK subsystems and targets using JSON RPC.""")
     p.add_argument('-i', '--include-aliases', help='include RPC aliases', action='store_true')
+    p.add_argument('-j', '--json_conf', help='Valid JSON configuration', default=sys.stdin)
     p.set_defaults(func=load_config)
 
     def save_subsystem_config(args):
@@ -113,9 +114,10 @@ if __name__ == "__main__":
 
     def load_subsystem_config(args):
         rpc.load_subsystem_config(args.client,
-                                  sys.stdin)
+                                  args.json_conf)
 
-    p = subparsers.add_parser('load_subsystem_config', help="""Configure SPDK subsystem using JSON RPC read from stdin.""")
+    p = subparsers.add_parser('load_subsystem_config', help="""Configure SPDK subsystem using JSON RPC.""")
+    p.add_argument('-j', '--json_conf', help='Valid JSON configuration', default=sys.stdin)
     p.set_defaults(func=load_subsystem_config)
 
     # app
