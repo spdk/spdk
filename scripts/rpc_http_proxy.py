@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
+import argparse
 import base64
 import errno
 import json
 import socket
+import ssl
 import sys
 try:
     from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
@@ -12,6 +14,14 @@ except ImportError:
     from http.server import BaseHTTPRequestHandler
 
 rpc_sock = None
+
+parser = argparse.ArgumentParser(description='http(s) proxy for SPDK RPC calls')
+parser.add_argument('host', help='Host name / IP representing proxy server')
+parser.add_argument('port', help='Port number', type=int)
+parser.add_argument('user', help='User name used for authentication')
+parser.add_argument('password', help='Password used for authentication')
+parser.add_argument('-s', dest='sock', help='RPC domain socket path', default='/var/tmp/spdk.sock')
+parser.add_argument('-c', dest='cert', help='SSL certificate')
 
 
 def print_usage_and_exit(status):
@@ -92,26 +102,17 @@ class ServerHandler(BaseHTTPRequestHandler):
 def main():
     global rpc_sock
 
-    if len(sys.argv) == 1 or sys.argv[1] == '-h':
-        print_usage_and_exit(0)
-    elif len(sys.argv) < 5:
-        print('Not enough arguments')
-        print_usage_and_exit(errno.EINVAL)
-    elif len(sys.argv) > 6:
-        print('Too many arguments')
-        print_usage_and_exit(errno.E2BIG)
-
-    if len(sys.argv) == 6:
-        rpc_sock = sys.argv[5]
-    else:
-        rpc_sock = '/var/tmp/spdk.sock'
+    args = parser.parse_args()
+    rpc_sock = args.sock
 
     # encoding user name and password
-    key = base64.b64encode((sys.argv[3]+':'+sys.argv[4]).encode(encoding='ascii')).decode('ascii')
+    key = base64.b64encode((args.user+':'+args.password).encode(encoding='ascii')).decode('ascii')
 
     try:
         ServerHandler.key = key
-        httpd = HTTPServer((sys.argv[1], int(sys.argv[2])), ServerHandler)
+        httpd = HTTPServer((args.host, args.port), ServerHandler)
+        if args.cert is not None:
+            httpd.socket = ssl.wrap_socket(httpd.socket, certfile=args.cert, server_side=True)
         print('Started RPC http proxy server')
         httpd.serve_forever()
     except KeyboardInterrupt:
