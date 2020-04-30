@@ -48,6 +48,8 @@
  * later in this file.
  */
 
+#define ALIGN_4K 0x1000
+
 /* Largest context size for all accel modules */
 static size_t g_max_accel_module_size = 0;
 
@@ -119,6 +121,25 @@ spdk_accel_submit_copy(struct spdk_accel_task *accel_req, struct spdk_io_channel
 	req->cb = cb;
 	return accel_ch->engine->copy(req->offload_ctx, accel_ch->ch, dst, src, nbytes,
 				      _accel_engine_done);
+}
+
+/* Accel framework public API for dual cast copy function */
+int
+spdk_accel_submit_dualcast(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
+			   void *dst1, void *dst2, void *src, uint64_t nbytes,
+			   spdk_accel_completion_cb cb)
+{
+	struct spdk_accel_task *req = accel_req;
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+
+	if ((uintptr_t)dst1 & (ALIGN_4K - 1) || (uintptr_t)dst2 & (ALIGN_4K - 1)) {
+		SPDK_ERRLOG("Dualcast requires 4K alignment on dst addresses\n");
+		return -EINVAL;
+	}
+
+	req->cb = cb;
+	return accel_ch->engine->dualcast(req->offload_ctx, accel_ch->ch, dst1, dst2, src, nbytes,
+					  _accel_engine_done);
 }
 
 /* Accel framework public API for compare function */
@@ -316,7 +337,8 @@ spdk_accel_engine_config_text(FILE *fp)
 static uint64_t
 sw_accel_get_capabilities(void)
 {
-	return ACCEL_COPY | ACCEL_FILL | ACCEL_CRC32C | ACCEL_COMPARE;
+	return ACCEL_COPY | ACCEL_FILL | ACCEL_CRC32C | ACCEL_COMPARE |
+	       ACCEL_DUALCAST;
 }
 
 static int
@@ -327,6 +349,21 @@ sw_accel_submit_copy(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *
 	struct spdk_accel_task *accel_req;
 
 	memcpy(dst, src, (size_t)nbytes);
+
+	accel_req = (struct spdk_accel_task *)((uintptr_t)cb_arg -
+					       offsetof(struct spdk_accel_task, offload_ctx));
+	cb(accel_req, 0);
+	return 0;
+}
+
+static int
+sw_accel_submit_dualcast(void *cb_arg, struct spdk_io_channel *ch, void *dst1, void *dst2,
+			 void *src, uint64_t nbytes, spdk_accel_completion_cb cb)
+{
+	struct spdk_accel_task *accel_req;
+
+	memcpy(dst1, src, (size_t)nbytes);
+	memcpy(dst2, src, (size_t)nbytes);
 
 	accel_req = (struct spdk_accel_task *)((uintptr_t)cb_arg -
 					       offsetof(struct spdk_accel_task, offload_ctx));
@@ -386,6 +423,7 @@ static struct spdk_io_channel *sw_accel_get_io_channel(void);
 static struct spdk_accel_engine sw_accel_engine = {
 	.get_capabilities	= sw_accel_get_capabilities,
 	.copy			= sw_accel_submit_copy,
+	.dualcast		= sw_accel_submit_dualcast,
 	.compare		= sw_accel_submit_compare,
 	.fill			= sw_accel_submit_fill,
 	.crc32c			= sw_accel_submit_crc32c,

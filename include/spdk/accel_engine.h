@@ -136,6 +136,24 @@ int spdk_accel_submit_copy(struct spdk_accel_task *accel_req, struct spdk_io_cha
 			   void *src, uint64_t nbytes, spdk_accel_completion_cb cb);
 
 /**
+ * Submit a dual cast copy request.
+ *
+ * \param accel_req Accel request task.
+ * \param ch I/O channel to submit request to the accel engine. This channel can
+ * be obtained by the function spdk_accel_engine_get_io_channel().
+ * \param dst1 First destination to copy to (must be 4K aligned).
+ * \param dst2 Second destination to copy to (must be 4K aligned).
+ * \param src Source to copy from.
+ * \param nbytes Length in bytes to copy.
+ * \param cb Called when this copy operation completes.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_accel_submit_dualcast(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
+			       void *dst1, void *dst2, void *src, uint64_t nbytes,
+			       spdk_accel_completion_cb cb);
+
+/**
  * Submit a compare request.
  *
  * \param accel_req Accel request task.
@@ -149,8 +167,8 @@ int spdk_accel_submit_copy(struct spdk_accel_task *accel_req, struct spdk_io_cha
  * \return 0 on success, any other value means there was a miscompare.
  */
 int spdk_accel_submit_compare(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
-			      void *src1,
-			      void *src2, uint64_t nbytes, spdk_accel_completion_cb cb);
+			      void *src1, void *src2, uint64_t nbytes,
+			      spdk_accel_completion_cb cb);
 
 /**
  * Submit a fill request.
