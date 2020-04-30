@@ -33,42 +33,24 @@ function wait_for_devices_ready() {
 	done
 }
 
-function devices_initialization() {
-	timing_enter devices_initialization
-	dd if=/dev/zero of="$SPDK_TEST_STORAGE/test0" bs=1M count=1024
-	dd if=/dev/zero of="$SPDK_TEST_STORAGE/test1" bs=1M count=1024
-	dd if=/dev/zero of="$SPDK_TEST_STORAGE/test2" bs=1M count=1024
-	dd if=/dev/zero of="$SPDK_TEST_STORAGE/test3" bs=1M count=1024
-	monitor_cmd "drive_add 0 file=$SPDK_TEST_STORAGE/test0,format=raw,id=drive0,if=none"
-	monitor_cmd "drive_add 1 file=$SPDK_TEST_STORAGE/test1,format=raw,id=drive1,if=none"
-	monitor_cmd "drive_add 2 file=$SPDK_TEST_STORAGE/test2,format=raw,id=drive2,if=none"
-	monitor_cmd "drive_add 3 file=$SPDK_TEST_STORAGE/test3,format=raw,id=drive3,if=none"
-	timing_exit devices_initialization
-}
-
 function insert_devices() {
-	monitor_cmd "device_add nvme,drive=drive0,id=nvme0,serial=nvme0"
-	monitor_cmd "device_add nvme,drive=drive1,id=nvme1,serial=nvme1"
-	monitor_cmd "device_add nvme,drive=drive2,id=nvme2,serial=nvme2"
-	monitor_cmd "device_add nvme,drive=drive3,id=nvme3,serial=nvme3"
+	for i in {0..3}; do
+		monitor_cmd "device_add nvme,drive=drive$i,id=nvme$i,serial=nvme$i"
+	done
 	wait_for_devices_ready
 	ssh_vm "scripts/setup.sh"
 }
 
 function remove_devices() {
-	monitor_cmd "device_del nvme0"
-	monitor_cmd "device_del nvme1"
-	monitor_cmd "device_del nvme2"
-	monitor_cmd "device_del nvme3"
+	for i in {0..3}; do
+		monitor_cmd "device_del nvme$i"
+	done
 }
 
 function devices_delete() {
-	timing_enter devices_delete
-	rm "$SPDK_TEST_STORAGE/test0"
-	rm "$SPDK_TEST_STORAGE/test1"
-	rm "$SPDK_TEST_STORAGE/test2"
-	rm "$SPDK_TEST_STORAGE/test3"
-	timing_exit devices_delete
+	for i in {0..3}; do
+		rm "$SPDK_TEST_STORAGE/nvme$i.img"
+	done
 }
 
 password=$1
@@ -85,6 +67,10 @@ timing_enter start_qemu
 
 qemu-img create -b "$base_img" -f qcow2 "$test_img"
 
+for i in {0..3}; do
+	dd if=/dev/zero of="$SPDK_TEST_STORAGE/nvme$i.img" bs=1M count=1024
+done
+
 qemu-system-x86_64 \
 	-daemonize -display none -m 8192 \
 	-pidfile "$qemu_pidfile" \
@@ -95,7 +81,11 @@ qemu-system-x86_64 \
 	-smp cores=16,sockets=1 \
 	--enable-kvm \
 	-chardev socket,id=mon0,host=localhost,port=4444,server,nowait \
-	-mon chardev=mon0,mode=readline
+	-mon chardev=mon0,mode=readline \
+	-drive format=raw,file="$SPDK_TEST_STORAGE/nvme0.img",if=none,id=drive0 \
+	-drive format=raw,file="$SPDK_TEST_STORAGE/nvme1.img",if=none,id=drive1 \
+	-drive format=raw,file="$SPDK_TEST_STORAGE/nvme2.img",if=none,id=drive2 \
+	-drive format=raw,file="$SPDK_TEST_STORAGE/nvme3.img",if=none,id=drive3
 
 timing_exit start_qemu
 
@@ -113,7 +103,6 @@ files_to_copy+="examples/nvme/hotplug/hotplug "
 ) | (ssh_vm "tar -xf -")
 timing_exit copy_repo
 
-devices_initialization
 insert_devices
 
 timing_enter hotplug_test
