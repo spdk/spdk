@@ -62,6 +62,7 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 
 #define SPDK_BDEV_IO_POOL_SIZE			(64 * 1024 - 1)
 #define SPDK_BDEV_IO_CACHE_SIZE			256
+#define SPDK_BDEV_AUTO_EXAMINE			true
 #define BUF_SMALL_POOL_SIZE			8191
 #define BUF_LARGE_POOL_SIZE			1023
 #define NOMEM_THRESHOLD_COUNT			8
@@ -137,6 +138,7 @@ struct lba_range {
 static struct spdk_bdev_opts	g_bdev_opts = {
 	.bdev_io_pool_size = SPDK_BDEV_IO_POOL_SIZE,
 	.bdev_io_cache_size = SPDK_BDEV_IO_CACHE_SIZE,
+	.bdev_auto_examine = SPDK_BDEV_AUTO_EXAMINE,
 };
 
 static spdk_bdev_init_cb	g_init_cb_fn = NULL;
@@ -396,6 +398,25 @@ spdk_bdev_set_opts(struct spdk_bdev_opts *opts)
 
 	g_bdev_opts = *opts;
 	return 0;
+}
+
+/*
+ * Will implement the whitelist in the furture
+ */
+static inline bool
+bdev_in_examine_whitelist(struct spdk_bdev *bdev)
+{
+	return false;
+}
+
+static inline bool
+bdev_ok_to_examine(struct spdk_bdev *bdev)
+{
+	if (g_bdev_opts.bdev_auto_examine) {
+		return true;
+	} else {
+		return bdev_in_examine_whitelist(bdev);
+	}
 }
 
 struct spdk_bdev *
@@ -894,6 +915,7 @@ spdk_bdev_subsystem_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_uint32(w, "bdev_io_pool_size", g_bdev_opts.bdev_io_pool_size);
 	spdk_json_write_named_uint32(w, "bdev_io_cache_size", g_bdev_opts.bdev_io_cache_size);
+	spdk_json_write_named_bool(w, "bdev_auto_examine", g_bdev_opts.bdev_auto_examine);
 	spdk_json_write_object_end(w);
 	spdk_json_write_object_end(w);
 
@@ -5015,7 +5037,7 @@ bdev_start(struct spdk_bdev *bdev)
 
 	/* Examine configuration before initializing I/O */
 	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, internal.tailq) {
-		if (module->examine_config) {
+		if (module->examine_config && bdev_ok_to_examine(bdev)) {
 			action = module->internal.action_in_progress;
 			module->internal.action_in_progress++;
 			module->examine_config(bdev);
@@ -5026,7 +5048,7 @@ bdev_start(struct spdk_bdev *bdev)
 		}
 	}
 
-	if (bdev->internal.claim_module) {
+	if (bdev->internal.claim_module && bdev_ok_to_examine(bdev)) {
 		if (bdev->internal.claim_module->examine_disk) {
 			bdev->internal.claim_module->internal.action_in_progress++;
 			bdev->internal.claim_module->examine_disk(bdev);
@@ -5035,7 +5057,7 @@ bdev_start(struct spdk_bdev *bdev)
 	}
 
 	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, internal.tailq) {
-		if (module->examine_disk) {
+		if (module->examine_disk && bdev_ok_to_examine(bdev)) {
 			module->internal.action_in_progress++;
 			module->examine_disk(bdev);
 		}
