@@ -105,6 +105,8 @@ int main(int argc, char **argv)
 	g_fuse_argc = argc - 2;
 	g_fuse_argv = &argv[2];
 
+	spdk_fs_set_cache_size(512);
+
 	rc = spdk_app_start(&opts, spdk_fuse_run, NULL);
 	spdk_app_fini();
 
