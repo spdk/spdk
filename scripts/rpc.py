@@ -22,7 +22,7 @@ def print_array(a):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description='SPDK RPC command line interface')
+        description='SPDK RPC command line interface', usage='%(prog)s [options]')
     parser.add_argument('-s', dest='server_addr',
                         help='RPC domain socket path or IP address', default='/var/tmp/spdk.sock')
     parser.add_argument('-p', dest='port',
