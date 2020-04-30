@@ -2410,6 +2410,11 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                 exit(1)
 
     args = parser.parse_args()
+
+    if sys.stdin.isatty() and not hasattr(args, 'func'):
+        # No arguments and no data piped through stdin
+        parser.print_help()
+        exit(1)
     if args.is_server:
         for input in sys.stdin:
             cmd = shlex.split(input)
@@ -2442,9 +2447,5 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         except JSONRPCException as ex:
             print(ex.message)
             exit(1)
-    elif sys.stdin.isatty():
-        # No arguments and no data piped through stdin
-        parser.print_help()
-        exit(1)
     else:
         execute_script(parser, args.client, sys.stdin)
