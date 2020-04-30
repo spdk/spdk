@@ -45,7 +45,7 @@ if __name__ == "__main__":
                                 pipes and can be used as a faster way to send RPC commands. If enabled, rpc.py \
                                 must be executed without any other parameters.")
     parser.set_defaults(is_server=False)
-    subparsers = parser.add_subparsers(help='RPC methods', dest='called_rpc_name')
+    subparsers = parser.add_subparsers(help='RPC methods', dest='called_rpc_name', metavar='')
 
     def framework_start_init(args):
         rpc.framework_start_init(args.client)
