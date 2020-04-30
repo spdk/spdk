@@ -41,6 +41,7 @@
 #include "spdk/crc32.h"
 
 #define DATA_PATTERN 0x5a
+#define ALIGN_4K 0x1000
 
 static uint64_t	g_tsc_rate;
 static uint64_t g_tsc_us_rate;
@@ -75,6 +76,7 @@ struct worker_thread {
 struct ap_task {
 	void			*src;
 	void			*dst;
+	void			*dst2;
 	struct worker_thread	*worker;
 	int			status;
 	int			expected_status; /* used for compare */
@@ -119,7 +121,7 @@ usage(void)
 	printf("\t[-n number of channels]\n");
 	printf("\t[-o transfer size in bytes]\n");
 	printf("\t[-t time in seconds]\n");
-	printf("\t[-w workload type must be one of these: copy, fill, crc32c, compare\n");
+	printf("\t[-w workload type must be one of these: copy, fill, crc32c, compare, dualcast\n");
 	printf("\t[-s for crc32c workload, use this seed value (default 0)\n");
 	printf("\t[-P for compare workload, percentage of operations that should miscompare (percent, default 0)\n");
 	printf("\t[-y verify result if this switch is on]\n");
@@ -157,6 +159,8 @@ parse_args(int argc, char *argv)
 			g_workload_selection = ACCEL_CRC32C;
 		} else if (!strcmp(g_workload_type, "compare")) {
 			g_workload_selection = ACCEL_COMPARE;
+		} else if (!strcmp(g_workload_type, "dualcast")) {
+			g_workload_selection = ACCEL_DUALCAST;
 		}
 		break;
 	default:
@@ -226,6 +230,11 @@ _submit_single(void *arg1, void *arg2)
 					       worker->ch, task->dst, task->src,
 					       g_xfer_size_bytes, accel_done);
 		break;
+	case ACCEL_DUALCAST:
+		rc = spdk_accel_submit_dualcast(__accel_task_from_ap_task(task),
+						worker->ch, task->dst, task->dst2,
+						task->src, g_xfer_size_bytes, accel_done);
+		break;
 	default:
 		assert(false);
 		break;
@@ -263,6 +272,16 @@ _accel_done(void *arg1)
 				worker->xfer_failed++;
 			}
 			break;
+		case ACCEL_DUALCAST:
+			if (memcmp(task->src, task->dst, g_xfer_size_bytes)) {
+				SPDK_NOTICELOG("Data miscompare, first destination\n");
+				worker->xfer_failed++;
+			}
+			if (memcmp(task->src, task->dst2, g_xfer_size_bytes)) {
+				SPDK_NOTICELOG("Data miscompare, second destination\n");
+				worker->xfer_failed++;
+			}
+			break;
 		default:
 			assert(false);
 			break;
@@ -285,6 +304,9 @@ _accel_done(void *arg1)
 	} else {
 		spdk_free(task->src);
 		spdk_free(task->dst);
+		if (g_workload_selection == ACCEL_DUALCAST) {
+			spdk_free(task->dst2);
+		}
 		spdk_mempool_put(worker->task_pool, task);
 	}
 }
@@ -373,11 +395,19 @@ _init_thread(void *arg1)
 	char task_pool_name[30];
 	struct ap_task *task;
 	int i;
+	uint32_t align = 0;
 
 	worker = calloc(1, sizeof(*worker));
 	if (worker == NULL) {
 		fprintf(stderr, "Unable to allocate worker\n");
 		return;
+	}
+
+	/* For dualcast, the DSA HW requires 4K alignment on destination addresses but
+	 * we do this for all engines to keep it simple.
+	 */
+	if (g_workload_selection == ACCEL_DUALCAST) {
+		align = ALIGN_4K;
 	}
 
 	worker->core = spdk_env_get_current_core();
@@ -420,11 +450,21 @@ _init_thread(void *arg1)
 		}
 		memset(task->src, DATA_PATTERN, g_xfer_size_bytes);
 
-		task->dst = spdk_dma_zmalloc(g_xfer_size_bytes, 0, NULL);
+		task->dst = spdk_dma_zmalloc(g_xfer_size_bytes, align, NULL);
 		if (task->dst == NULL) {
 			fprintf(stderr, "Unable to alloc dst buffer\n");
 			return;
 		}
+
+		if (g_workload_selection == ACCEL_DUALCAST) {
+			task->dst2 = spdk_dma_zmalloc(g_xfer_size_bytes, align, NULL);
+			if (task->dst2 == NULL) {
+				fprintf(stderr, "Unable to alloc dst buffer\n");
+				return;
+			}
+			memset(task->dst2, ~DATA_PATTERN, g_xfer_size_bytes);
+		}
+
 		/* For compare we want the buffers to match, otherwise not. */
 		if (g_workload_selection == ACCEL_COMPARE) {
 			memset(task->dst, DATA_PATTERN, g_xfer_size_bytes);
@@ -494,7 +534,8 @@ main(int argc, char **argv)
 	if ((g_workload_selection != ACCEL_COPY) &&
 	    (g_workload_selection != ACCEL_FILL) &&
 	    (g_workload_selection != ACCEL_CRC32C) &&
-	    (g_workload_selection != ACCEL_COMPARE)) {
+	    (g_workload_selection != ACCEL_COMPARE) &&
+	    (g_workload_selection != ACCEL_DUALCAST)) {
 		usage();
 		rc = -1;
 		goto cleanup;
