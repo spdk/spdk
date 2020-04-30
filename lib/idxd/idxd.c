@@ -43,6 +43,8 @@
 
 #include "idxd.h"
 
+#define ALIGN_4K 0x1000
+
 pthread_mutex_t	g_driver_lock = PTHREAD_MUTEX_INITIALIZER;
 
 /*
@@ -680,6 +682,37 @@ spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan, void *dst, const void *
 	desc->opcode = IDXD_OPCODE_MEMMOVE;
 	desc->src_addr = (uintptr_t)src;
 	desc->dst_addr = (uintptr_t)dst;
+	desc->xfer_size = nbytes;
+
+	/* Submit operation. */
+	movdir64b((uint64_t *)chan->ring_ctrl.portal, desc);
+
+	return 0;
+}
+
+/* Dual-cast copies the same source to two separate destination buffers. */
+int
+spdk_idxd_submit_dualcast(struct spdk_idxd_io_channel *chan, void *dst1, void *dst2,
+			  const void *src, uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
+{
+	struct idxd_hw_desc *desc;
+
+	if ((uintptr_t)dst1 & (ALIGN_4K - 1) || (uintptr_t)dst2 & (ALIGN_4K - 1)) {
+		SPDK_ERRLOG("Dualcast requires 4K alignment on dst addresses\n");
+		return -EINVAL;
+	}
+
+	/* Common prep. */
+	desc = _idxd_prep_command(chan, cb_fn, cb_arg);
+	if (desc == NULL) {
+		return -EBUSY;
+	}
+
+	/* Command specific. */
+	desc->opcode = IDXD_OPCODE_DUALCAST;
+	desc->src_addr = (uintptr_t)src;
+	desc->dst_addr = (uintptr_t)dst1;
+	desc->dest2 = (uintptr_t)dst2;
 	desc->xfer_size = nbytes;
 
 	/* Submit operation. */

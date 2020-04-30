@@ -10,6 +10,9 @@ Function                                | Description
 --------------------------------------- | -----------
 spdk_idxd_probe()                       | @copybrief spdk_idxd_probe()
 spdk_idxd_submit_copy()                 | @copybrief spdk_idxd_submit_copy()
+spdk_idxd_submit_compare()              | @copybrief spdk_idxd_submit_compare()
+spdk_idxd_submit_crc32c()               | @copybrief spdk_idxd_submit_crc32c()
+spdk_idxd_submit_dualcast               | @copybrief spdk_idxd_submit_dualcast()
 spdk_idxd_submit_fill()                 | @copybrief spdk_idxd_submit_fill()
 
 # Pre-defined configurations {#idxd_configs}

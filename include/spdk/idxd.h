@@ -158,6 +158,27 @@ int spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan,
 			  spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**
+ * Build and submit an accel engine dual cast copy request.
+ *
+ * This function will build the dual cast descriptor and then immediately submit
+ * by writing to the proper device portal.
+ *
+ * \param chan IDXD channel to submit request.
+ * \param dst1 First destination virtual address (must be 4K aligned).
+ * \param dst2 Second destination virtual address (must be 4K aligned).
+ * \param src Source virtual address.
+ * \param nbytes Number of bytes to copy.
+ * \param cb_fn Callback function which will be called when the request is complete.
+ * \param cb_arg Opaque value which will be passed back as the arg parameter in
+ * the completion callback.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_idxd_submit_dualcast(struct spdk_idxd_io_channel *chan,
+			      void *dst1, void *dst2, const void *src, uint64_t nbytes,
+			      spdk_idxd_req_cb cb_fn, void *cb_arg);
+
+/**
  * Build and submit a memory compare request.
  *
  * This function will build the compare descriptor and then immediately submit
