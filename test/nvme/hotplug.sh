@@ -17,13 +17,7 @@ function ssh_vm() {
 }
 
 function monitor_cmd() {
-	rc=0
-	if ! (echo "$@" | nc localhost 4444 > mon.log); then
-		rc=1
-		cat mon.log
-	fi
-	rm mon.log
-	return $rc
+	echo "$@" | nc localhost 4444 | tail --lines=+2 | (grep -v '^(qemu) ' || true)
 }
 
 function get_online_devices_count() {
