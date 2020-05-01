@@ -64,8 +64,6 @@ static struct spdk_bdev_module g_ftl_bdev_module = {
 	.name	= "ftl_lib",
 };
 
-typedef void (*spdk_ftl_init_fn)(struct spdk_ftl_dev *, void *, int);
-
 struct ftl_dev_init_ctx {
 	/* Owner */
 	struct spdk_ftl_dev		*dev;
