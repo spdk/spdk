@@ -51,6 +51,7 @@ static int g_queue_depth = 32;
 static int g_time_in_sec = 5;
 static uint32_t g_crc32c_seed = 0;
 static int g_fail_percent_goal = 0;
+static uint8_t g_fill_pattern = 255;
 static bool g_verify = false;
 static const char *g_workload_type = NULL;
 static enum accel_capability g_workload_selection;
@@ -103,8 +104,10 @@ dump_user_config(struct spdk_app_opts *opts)
 	printf("Workload Type:  %s\n", g_workload_type);
 	if (g_workload_selection == ACCEL_CRC32C) {
 		printf("CRC-32C seed:   %u\n", g_crc32c_seed);
+	} else if (g_workload_selection == ACCEL_FILL) {
+		printf("Fill pattern:   0x%x\n", g_fill_pattern);
 	} else if ((g_workload_selection == ACCEL_COMPARE) && g_fail_percent_goal > 0) {
-		printf("Miscompare:     %u percent\n", g_fail_percent_goal);
+		printf("Failure inject: %u percent\n", g_fail_percent_goal);
 	}
 	printf("Transfer size:  %u bytes\n", g_xfer_size_bytes);
 	printf("Queue depth:    %u\n", g_queue_depth);
@@ -124,6 +127,7 @@ usage(void)
 	printf("\t[-w workload type must be one of these: copy, fill, crc32c, compare, dualcast\n");
 	printf("\t[-s for crc32c workload, use this seed value (default 0)\n");
 	printf("\t[-P for compare workload, percentage of operations that should miscompare (percent, default 0)\n");
+	printf("\t[-f for fill workload, use this BYTE value (default 255)\n");
 	printf("\t[-y verify result if this switch is on]\n");
 }
 
@@ -131,6 +135,9 @@ static int
 parse_args(int argc, char *argv)
 {
 	switch (argc) {
+	case 'f':
+		g_fill_pattern = (uint8_t)spdk_strtol(optarg, 10);
+		break;
 	case 'o':
 		g_xfer_size_bytes = spdk_strtol(optarg, 10);
 		break;
@@ -525,7 +532,7 @@ main(int argc, char **argv)
 	pthread_mutex_init(&g_workers_lock, NULL);
 	spdk_app_opts_init(&opts);
 	opts.reactor_mask = "0x1";
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "o:q:t:yw:P:", NULL, parse_args,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "o:q:t:yw:P:f:", NULL, parse_args,
 				      usage)) != SPDK_APP_PARSE_ARGS_SUCCESS) {
 		rc = -1;
 		goto cleanup;
