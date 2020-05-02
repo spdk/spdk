@@ -8,6 +8,9 @@ source "$rootdir/test/common/autotest_common.sh"
 set -e
 SPDK_DIR=$1
 
+# Skip all pci devices. These tests don't rely on them.
+sudo PCI_WHITELIST="NONE" HUGEMEM=1024 $SPDK_DIR/scripts/setup.sh
+
 $SPDK_DIR/configure --with-shared --without-isal --without-ocf --disable-asan
 make -C $SPDK_DIR -j$(nproc)
 
@@ -61,3 +64,5 @@ LD_LIBRARY_PATH=$SPDK_LIB_DIR:$DPDK_LIB_DIR run_test "external_run_tc6" $test_ro
 
 make -C $test_root clean
 make -C $SPDK_DIR -j$(nproc) clean
+
+sudo PCI_WHITELIST="NONE" $SPDK_DIR/scripts/setup.sh reset
