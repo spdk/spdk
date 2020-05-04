@@ -776,27 +776,30 @@ function vm_setup()
 	notice "Saving to $vm_dir/run.sh"
 	cat <<-RUN >"$vm_dir/run.sh"
 		#!/bin/bash
+		qemu_log () {
+			echo "=== qemu.log ==="
+			[[ -s $vm_dir/qemu.log ]] && cat $vm_dir/qemu.log
+			echo "=== qemu.log ==="
+		}
 
 		if [[ \$EUID -ne 0 ]]; then
 			echo "Go away user come back as root"
 			exit 1
 		fi
 
-		qemu_cmd=($(printf '%s\n' "${cmd[@]}"))
+		trap "qemu_log" EXIT
 
+		qemu_cmd=($(printf '%s\n' "${cmd[@]}"))
+		chmod +r $vm_dir/*
 		echo "Running VM in $vm_dir"
 		rm -f $qemu_pid_file
 		"\${qemu_cmd[@]}"
+
 		echo "Waiting for QEMU pid file"
 		sleep 1
 		[[ ! -f $qemu_pid_file ]] && sleep 1
 		[[ ! -f $qemu_pid_file ]] && echo "ERROR: no qemu pid file found" && exit 1
-
-		chmod +r $vm_dir/*
-
-		echo "=== qemu.log ==="
-		cat $vm_dir/qemu.log
-		echo "=== qemu.log ==="
+		exit 0
 		# EOF
 	RUN
 	chmod +x $vm_dir/run.sh
