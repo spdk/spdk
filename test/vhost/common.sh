@@ -774,30 +774,31 @@ function vm_setup()
 
 	(( ${#qemu_args[@]} )) && cmd+=("${qemu_args[@]}")
 	notice "Saving to $vm_dir/run.sh"
-	(
-	echo '#!/bin/bash'
-	echo 'if [[ $EUID -ne 0 ]]; then '
-	echo '	echo "Go away user come back as root"'
-	echo '	exit 1'
-	echo 'fi';
-	echo
-	echo "qemu_cmd=($(printf '%s\n' "${cmd[@]}"))";
-	echo
-	echo "echo 'Running VM in $vm_dir'"
-	echo "rm -f $qemu_pid_file"
-	echo '"${qemu_cmd[@]}"'
-	echo "echo 'Waiting for QEMU pid file'"
-	echo "sleep 1"
-	echo "[[ ! -f $qemu_pid_file ]] && sleep 1"
-	echo "[[ ! -f $qemu_pid_file ]] && echo 'ERROR: no qemu pid file found' && exit 1"
-	echo
-	echo "chmod +r $vm_dir/*"
-	echo
-	echo "echo '=== qemu.log ==='"
-	echo "cat $vm_dir/qemu.log"
-	echo "echo '=== qemu.log ==='"
-	echo '# EOF'
-	) > $vm_dir/run.sh
+	cat <<-RUN >"$vm_dir/run.sh"
+		#!/bin/bash
+
+		if [[ \$EUID -ne 0 ]]; then
+			echo "Go away user come back as root"
+			exit 1
+		fi
+
+		qemu_cmd=($(printf '%s\n' "${cmd[@]}"))
+
+		echo "Running VM in $vm_dir"
+		rm -f $qemu_pid_file
+		"\${qemu_cmd[@]}"
+		echo "Waiting for QEMU pid file"
+		sleep 1
+		[[ ! -f $qemu_pid_file ]] && sleep 1
+		[[ ! -f $qemu_pid_file ]] && echo "ERROR: no qemu pid file found" && exit 1
+
+		chmod +r $vm_dir/*
+
+		echo "=== qemu.log ==="
+		cat $vm_dir/qemu.log
+		echo "=== qemu.log ==="
+		# EOF
+	RUN
 	chmod +x $vm_dir/run.sh
 
 	# Save generated sockets redirection
