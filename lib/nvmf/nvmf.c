@@ -99,12 +99,12 @@ nvmf_poll_group_poll(void *ctx)
 	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
 		rc = nvmf_transport_poll_group_poll(tgroup);
 		if (rc < 0) {
-			return -1;
+			return SPDK_POLLER_BUSY;
 		}
 		count += rc;
 	}
 
-	return count;
+	return count > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
 static int

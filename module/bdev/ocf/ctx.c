@@ -342,13 +342,13 @@ cleaner_poll(void *arg)
 
 	if (spdk_get_ticks() >= priv->next_run) {
 		ocf_cleaner_run(cleaner, priv->queue);
-		return 1;
+		return SPDK_POLLER_BUSY;
 	}
 
 	if (iono > 0) {
-		return 1;
+		return SPDK_POLLER_BUSY;
 	} else {
-		return 0;
+		return SPDK_POLLER_IDLE;
 	}
 }
 

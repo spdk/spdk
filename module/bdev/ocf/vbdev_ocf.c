@@ -783,9 +783,9 @@ queue_poll(void *opaque)
 	}
 
 	if (iono > 0) {
-		return 1;
+		return SPDK_POLLER_BUSY;
 	} else {
-		return 0;
+		return SPDK_POLLER_IDLE;
 	}
 }
 
@@ -891,9 +891,9 @@ mngt_queue_poll(void *opaque)
 	}
 
 	if (iono > 0) {
-		return 1;
+		return SPDK_POLLER_BUSY;
 	} else {
-		return 0;
+		return SPDK_POLLER_IDLE;
 	}
 }
 

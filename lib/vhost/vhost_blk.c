@@ -688,7 +688,7 @@ vdev_worker(void *arg)
 
 	vhost_session_used_signal(vsession);
 
-	return -1;
+	return SPDK_POLLER_BUSY;
 }
 
 static void
@@ -776,7 +776,7 @@ no_bdev_vdev_worker(void *arg)
 		bvsession->io_channel = NULL;
 	}
 
-	return -1;
+	return SPDK_POLLER_BUSY;
 }
 
 static struct spdk_vhost_blk_session *
@@ -972,11 +972,11 @@ destroy_session_poller_cb(void *arg)
 	int i;
 
 	if (vsession->task_cnt > 0) {
-		return -1;
+		return SPDK_POLLER_BUSY;
 	}
 
 	if (spdk_vhost_trylock() != 0) {
-		return -1;
+		return SPDK_POLLER_BUSY;
 	}
 
 	for (i = 0; i < vsession->max_queues; i++) {
@@ -997,7 +997,7 @@ destroy_session_poller_cb(void *arg)
 	vhost_session_stop_done(vsession, 0);
 
 	spdk_vhost_unlock();
-	return -1;
+	return SPDK_POLLER_BUSY;
 }
 
 static int

@@ -1116,7 +1116,7 @@ rpc_subsystem_init_poller_ctx(void *ctx)
 		free(poller_ctx);
 	}
 
-	return 1;
+	return SPDK_POLLER_BUSY;
 }
 
 static void

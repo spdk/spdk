@@ -656,14 +656,14 @@ iscsi_tgt_node_check_active_conns(void *arg)
 	struct spdk_iscsi_tgt_node *target = arg;
 
 	if (iscsi_get_active_conns(target) != 0) {
-		return 1;
+		return SPDK_POLLER_BUSY;
 	}
 
 	spdk_poller_unregister(&target->destruct_poller);
 
 	spdk_scsi_dev_destruct(target->dev, _iscsi_tgt_node_destruct, target);
 
-	return 1;
+	return SPDK_POLLER_BUSY;
 }
 
 static void

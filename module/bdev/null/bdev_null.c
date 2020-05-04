@@ -368,7 +368,7 @@ null_io_poll(void *arg)
 	TAILQ_SWAP(&ch->io, &io, spdk_bdev_io, module_link);
 
 	if (TAILQ_EMPTY(&io)) {
-		return 0;
+		return SPDK_POLLER_IDLE;
 	}
 
 	while (!TAILQ_EMPTY(&io)) {
@@ -377,7 +377,7 @@ null_io_poll(void *arg)
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 	}
 
-	return 1;
+	return SPDK_POLLER_BUSY;
 }
 
 static int

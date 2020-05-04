@@ -942,7 +942,7 @@ bdev_ocssd_poll_mm(void *ctx)
 		}
 	}
 
-	return 0;
+	return SPDK_POLLER_BUSY;
 }
 
 void

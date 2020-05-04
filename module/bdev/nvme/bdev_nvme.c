@@ -258,7 +258,7 @@ bdev_nvme_poll(void *arg)
 		}
 	}
 
-	return num_completions;
+	return num_completions > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
 static int
@@ -276,7 +276,7 @@ bdev_nvme_poll_adminq(void *arg)
 		bdev_nvme_reset(nvme_bdev_ctrlr, NULL, true);
 	}
 
-	return rc;
+	return rc == 0 ? SPDK_POLLER_IDLE : SPDK_POLLER_BUSY;
 }
 
 static int
@@ -1569,17 +1569,16 @@ bdev_nvme_hotplug(void *arg)
 				      hotplug_probe_cb,
 				      attach_cb, remove_cb);
 		if (!g_hotplug_probe_ctx) {
-			return -1;
+			return SPDK_POLLER_BUSY;
 		}
 	}
 
 	done = spdk_nvme_probe_poll_async(g_hotplug_probe_ctx);
 	if (done != -EAGAIN) {
 		g_hotplug_probe_ctx = NULL;
-		return 1;
 	}
 
-	return -1;
+	return SPDK_POLLER_BUSY;
 }
 
 void
@@ -1740,7 +1739,7 @@ bdev_nvme_async_poll(void *arg)
 		free(ctx);
 	}
 
-	return 1;
+	return SPDK_POLLER_BUSY;
 }
 
 int

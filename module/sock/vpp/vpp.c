@@ -517,7 +517,7 @@ vpp_queue_poller(void *ctx)
 		vl_msg_api_handler((void *)msg);
 	}
 
-	return 0;
+	return SPDK_POLLER_BUSY;
 }
 
 static int
@@ -532,7 +532,7 @@ app_queue_poller(void *ctx)
 		handle_mq_event(e);
 		svm_msg_q_free_msg(g_svm.app_event_queue, &msg);
 	}
-	return 0;
+	return SPDK_POLLER_BUSY;
 }
 
 /* This is required until sock.c API changes to asynchronous */
@@ -1449,7 +1449,7 @@ vpp_application_detached_timeout(void *arg)
 		/* We need to finish detach on initial thread */
 		spdk_thread_send_msg(g_svm.init_thread, vpp_application_detached, NULL);
 	}
-	return 0;
+	return SPDK_POLLER_BUSY;
 }
 
 static void

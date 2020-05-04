@@ -512,10 +512,10 @@ iscsi_conn_remove_lun(void *ctx)
 	int lun_id = spdk_scsi_lun_get_id(lun);
 
 	if (!iscsi_conn_check_tasks_for_lun(conn, lun)) {
-		return -1;
+		return SPDK_POLLER_BUSY;
 	}
 	iscsi_conn_close_lun(conn, lun_id);
-	return -1;
+	return SPDK_POLLER_BUSY;
 }
 
 static void
@@ -648,7 +648,7 @@ _iscsi_conn_check_shutdown(void *arg)
 
 	rc = iscsi_conn_free_tasks(conn);
 	if (rc < 0) {
-		return 1;
+		return SPDK_POLLER_BUSY;
 	}
 
 	spdk_poller_unregister(&conn->shutdown_timer);
@@ -656,7 +656,7 @@ _iscsi_conn_check_shutdown(void *arg)
 	iscsi_conn_stop(conn);
 	iscsi_conn_free(conn);
 
-	return 1;
+	return SPDK_POLLER_BUSY;
 }
 
 static void
@@ -688,14 +688,14 @@ _iscsi_conn_check_pending_tasks(void *arg)
 
 	if (conn->dev != NULL &&
 	    spdk_scsi_dev_has_pending_tasks(conn->dev, conn->initiator_port)) {
-		return 1;
+		return SPDK_POLLER_BUSY;
 	}
 
 	spdk_poller_unregister(&conn->shutdown_timer);
 
 	_iscsi_conn_destruct(conn);
 
-	return 1;
+	return SPDK_POLLER_BUSY;
 }
 
 void
@@ -783,14 +783,14 @@ static int
 iscsi_conn_check_shutdown(void *arg)
 {
 	if (iscsi_get_active_conns(NULL) != 0) {
-		return 1;
+		return SPDK_POLLER_BUSY;
 	}
 
 	spdk_poller_unregister(&g_shutdown_timer);
 
 	spdk_thread_send_msg(spdk_get_thread(), iscsi_conn_check_shutdown_cb, NULL);
 
-	return 1;
+	return SPDK_POLLER_BUSY;
 }
 
 static void
@@ -826,7 +826,7 @@ logout_request_timeout(void *arg)
 		conn->state = ISCSI_CONN_STATE_EXITING;
 	}
 
-	return -1;
+	return SPDK_POLLER_BUSY;
 }
 
 /* If the connection is running and logout is not requested yet, request logout
@@ -1647,7 +1647,7 @@ logout_timeout(void *arg)
 		conn->state = ISCSI_CONN_STATE_EXITING;
 	}
 
-	return -1;
+	return SPDK_POLLER_BUSY;
 }
 
 void

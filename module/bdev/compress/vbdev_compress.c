@@ -702,7 +702,7 @@ comp_dev_poller(void *args)
 			}
 		}
 	}
-	return 0;
+	return num_deq == 0 ? SPDK_POLLER_IDLE : SPDK_POLLER_BUSY;
 }
 
 /* Entry point for reduce lib to issue a compress operation. */

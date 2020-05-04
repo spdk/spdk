@@ -199,7 +199,7 @@ _delay_finish_io(void *arg)
 	_process_io_stailq(&delay_ch->p99_read_io, ticks);
 	_process_io_stailq(&delay_ch->p99_write_io, ticks);
 
-	return 0;
+	return SPDK_POLLER_BUSY;
 }
 
 /* Completion callback for IO that were issued from this bdev. The original bdev_io

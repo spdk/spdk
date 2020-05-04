@@ -198,10 +198,10 @@ rpc_client_poller(void *arg)
 
 	if (rc == 0) {
 		/* No response yet */
-		return -1;
+		return SPDK_POLLER_BUSY;
 	} else if (rc < 0) {
 		app_json_config_load_done(ctx, rc);
-		return -1;
+		return SPDK_POLLER_BUSY;
 	}
 
 	resp = spdk_jsonrpc_client_get_response(ctx->client_conn);
@@ -235,7 +235,7 @@ rpc_client_poller(void *arg)
 	}
 
 
-	return -1;
+	return SPDK_POLLER_BUSY;
 }
 
 static int
@@ -255,9 +255,11 @@ rpc_client_connect_poller(void *_ctx)
 		if (rc) {
 			app_json_config_load_done(ctx, rc);
 		}
+
+		return SPDK_POLLER_IDLE;
 	}
 
-	return -1;
+	return SPDK_POLLER_BUSY;
 }
 
 static int

@@ -1056,7 +1056,7 @@ nvmf_tcp_qpair_handle_timeout(void *ctx)
 		    SPDK_NVME_TCP_QPAIR_EXIT_TIMEOUT);
 
 	nvmf_tcp_qpair_disconnect(tqpair);
-	return 0;
+	return SPDK_POLLER_BUSY;
 }
 
 static void

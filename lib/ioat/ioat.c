@@ -318,7 +318,7 @@ static int
 ioat_process_channel_events(struct spdk_ioat_chan *ioat)
 {
 	struct ioat_descriptor *desc;
-	uint64_t status, completed_descriptor, hw_desc_phys_addr;
+	uint64_t status, completed_descriptor, hw_desc_phys_addr, events_count = 0;
 	uint32_t tail;
 
 	if (ioat->head == ioat->tail) {
@@ -347,10 +347,12 @@ ioat_process_channel_events(struct spdk_ioat_chan *ioat)
 
 		hw_desc_phys_addr = desc->phys_addr;
 		ioat->tail++;
+		events_count++;
 	} while (hw_desc_phys_addr != completed_descriptor);
 
 	ioat->last_seen = hw_desc_phys_addr;
-	return 0;
+
+	return events_count;
 }
 
 static void

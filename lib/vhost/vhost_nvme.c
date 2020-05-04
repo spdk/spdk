@@ -583,11 +583,11 @@ nvme_worker(void *arg)
 	int count = -1;
 
 	if (spdk_unlikely(!nvme->num_sqs)) {
-		return -1;
+		return SPDK_POLLER_IDLE;
 	}
 
 	if (spdk_unlikely(!nvme->dataplane_started && !nvme->bar)) {
-		return -1;
+		return SPDK_POLLER_IDLE;
 	}
 
 	for (qid = 1; qid <= MAX_IO_QUEUES; qid++) {
@@ -598,7 +598,7 @@ nvme_worker(void *arg)
 		}
 		cq = vhost_nvme_get_cq_from_qid(nvme, sq->cqid);
 		if (spdk_unlikely(!cq)) {
-			return -1;
+			return SPDK_POLLER_BUSY;
 		}
 		cq->guest_signaled_cq_head = vhost_nvme_get_queue_head(nvme, cq_offset(sq->cqid, 1));
 		if (spdk_unlikely(!STAILQ_EMPTY(&cq->cq_full_waited_tasks) &&
@@ -620,7 +620,7 @@ nvme_worker(void *arg)
 				task = STAILQ_FIRST(&nvme->free_tasks);
 				STAILQ_REMOVE_HEAD(&nvme->free_tasks, stailq);
 			} else {
-				return -1;
+				return SPDK_POLLER_BUSY;
 			}
 
 			task->cmd = sq->sq_cmd[sq->sq_head];
@@ -1113,7 +1113,7 @@ destroy_device_poller_cb(void *arg)
 	/* FIXME wait for pending I/Os to complete */
 
 	if (spdk_vhost_trylock() != 0) {
-		return -1;
+		return SPDK_POLLER_BUSY;
 	}
 
 	for (i = 0; i < nvme->num_ns; i++) {
@@ -1137,7 +1137,7 @@ destroy_device_poller_cb(void *arg)
 	vhost_session_stop_done(nvme->vsession, 0);
 
 	spdk_vhost_unlock();
-	return -1;
+	return SPDK_POLLER_BUSY;
 }
 
 static int

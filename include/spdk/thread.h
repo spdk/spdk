@@ -47,6 +47,11 @@
 extern "C" {
 #endif
 
+enum spdk_thread_poller_rc {
+	SPDK_POLLER_IDLE,
+	SPDK_POLLER_BUSY,
+};
+
 /**
  * A stackless, lightweight thread.
  */

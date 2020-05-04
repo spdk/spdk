@@ -811,7 +811,7 @@ bdev_virtio_poll(void *arg)
 		if (spdk_unlikely(scan_ctx && io[i] == &scan_ctx->io_ctx)) {
 			if (svdev->removed) {
 				_virtio_scsi_dev_scan_finish(scan_ctx, -EINTR);
-				return -1;
+				return SPDK_POLLER_BUSY;
 			}
 
 			if (scan_ctx->restart) {
@@ -831,9 +831,9 @@ bdev_virtio_poll(void *arg)
 	if (spdk_unlikely(scan_ctx && scan_ctx->needs_resend)) {
 		if (svdev->removed) {
 			_virtio_scsi_dev_scan_finish(scan_ctx, -EINTR);
-			return -1;
+			return SPDK_POLLER_BUSY;
 		} else if (cnt == 0) {
-			return 0;
+			return SPDK_POLLER_IDLE;
 		}
 
 		rc = send_scan_io(scan_ctx);

@@ -111,7 +111,11 @@ acceptor_poll(void *arg)
 
 	count = spdk_nvmf_tgt_accept(tgt);
 
-	return count;
+	if (count > 0) {
+		return SPDK_POLLER_BUSY;
+	} else {
+		return SPDK_POLLER_IDLE;
+	}
 }
 
 static void

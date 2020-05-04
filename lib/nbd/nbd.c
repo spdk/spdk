@@ -818,7 +818,7 @@ nbd_poll(void *arg)
 		spdk_nbd_stop(nbd);
 	}
 
-	return -1;
+	return SPDK_POLLER_BUSY;
 }
 
 static void *
@@ -942,7 +942,7 @@ nbd_enable_kernel(void *arg)
 								   NBD_BUSY_POLLING_INTERVAL_US);
 			}
 			/* If the kernel is busy, check back later */
-			return 0;
+			return SPDK_POLLER_BUSY;
 		}
 
 		SPDK_ERRLOG("ioctl(NBD_SET_SOCK) failed: %s\n", spdk_strerror(errno));
@@ -957,7 +957,7 @@ nbd_enable_kernel(void *arg)
 		}
 
 		free(ctx);
-		return 1;
+		return SPDK_POLLER_BUSY;
 	}
 
 	if (ctx->poller) {
@@ -966,7 +966,7 @@ nbd_enable_kernel(void *arg)
 
 	nbd_start_complete(ctx);
 
-	return 1;
+	return SPDK_POLLER_BUSY;
 }
 
 void

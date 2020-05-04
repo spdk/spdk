@@ -347,7 +347,7 @@ bdev_rbd_reset_timer(void *arg)
 	spdk_poller_unregister(&disk->reset_timer);
 	disk->reset_bdev_io = NULL;
 
-	return -1;
+	return SPDK_POLLER_BUSY;
 }
 
 static int
@@ -468,7 +468,7 @@ bdev_rbd_io_poll(void *arg)
 
 	/* check the return value of poll since we have only one fd for each channel */
 	if (rc != 1) {
-		return 0;
+		return SPDK_POLLER_BUSY;
 	}
 
 	rc = rbd_poll_io_events(ch->image, comps, SPDK_RBD_QUEUE_DEPTH);
@@ -504,7 +504,7 @@ bdev_rbd_io_poll(void *arg)
 		}
 	}
 
-	return rc;
+	return rc > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
 static void

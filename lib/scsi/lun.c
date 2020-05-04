@@ -95,12 +95,12 @@ scsi_lun_reset_check_outstanding_tasks(void *arg)
 	struct spdk_scsi_lun *lun = task->lun;
 
 	if (scsi_lun_has_outstanding_tasks(lun)) {
-		return 0;
+		return SPDK_POLLER_BUSY;
 	}
 	spdk_poller_unregister(&lun->reset_poller);
 
 	scsi_lun_complete_mgmt_task(lun, task);
-	return 1;
+	return SPDK_POLLER_BUSY;
 }
 
 void
@@ -299,12 +299,12 @@ scsi_lun_check_io_channel(void *arg)
 	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)arg;
 
 	if (lun->io_channel) {
-		return -1;
+		return SPDK_POLLER_BUSY;
 	}
 	spdk_poller_unregister(&lun->hotremove_poller);
 
 	scsi_lun_remove(lun);
-	return -1;
+	return SPDK_POLLER_BUSY;
 }
 
 static void
@@ -339,12 +339,12 @@ scsi_lun_check_outstanding_tasks(void *arg)
 
 	if (scsi_lun_has_outstanding_tasks(lun) ||
 	    scsi_lun_has_outstanding_mgmt_tasks(lun)) {
-		return -1;
+		return SPDK_POLLER_BUSY;
 	}
 	spdk_poller_unregister(&lun->hotremove_poller);
 
 	scsi_lun_notify_hot_remove(lun);
-	return -1;
+	return SPDK_POLLER_BUSY;
 }
 
 static void

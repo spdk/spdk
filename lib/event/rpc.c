@@ -49,7 +49,7 @@ static int
 rpc_subsystem_poll(void *arg)
 {
 	spdk_rpc_accept();
-	return -1;
+	return SPDK_POLLER_BUSY;
 }
 
 void

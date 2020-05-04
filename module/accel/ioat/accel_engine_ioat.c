@@ -184,9 +184,8 @@ ioat_poll(void *arg)
 {
 	struct spdk_ioat_chan *chan = arg;
 
-	spdk_ioat_process_events(chan);
-
-	return -1;
+	return spdk_ioat_process_events(chan) != 0 ? SPDK_POLLER_BUSY :
+	       SPDK_POLLER_IDLE;
 }
 
 static struct spdk_io_channel *ioat_get_io_channel(void);

@@ -2410,7 +2410,7 @@ ftl_io_channel_poll(void *arg)
 	TAILQ_HEAD(, ftl_io) retry_queue;
 
 	if (TAILQ_EMPTY(&ch->write_cmpl_queue) && TAILQ_EMPTY(&ch->retry_queue)) {
-		return 0;
+		return SPDK_POLLER_IDLE;
 	}
 
 	while (!TAILQ_EMPTY(&ch->write_cmpl_queue)) {
@@ -2436,7 +2436,7 @@ ftl_io_channel_poll(void *arg)
 		}
 	}
 
-	return 1;
+	return SPDK_POLLER_BUSY;
 }
 
 int
@@ -2447,14 +2447,14 @@ ftl_task_core(void *ctx)
 	if (dev->halt) {
 		if (ftl_shutdown_complete(dev)) {
 			spdk_poller_unregister(&dev->core_poller);
-			return 0;
+			return SPDK_POLLER_IDLE;
 		}
 	}
 
 	ftl_process_writes(dev);
 	ftl_process_relocs(dev);
 
-	return 0;
+	return SPDK_POLLER_BUSY;
 }
 
 SPDK_LOG_REGISTER_COMPONENT("ftl_core", SPDK_LOG_FTL_CORE)

@@ -261,7 +261,7 @@ bdev_uring_group_poll(void *arg)
 	}
 
 	if (ret < 0) {
-		return 1;
+		return SPDK_POLLER_BUSY;
 	}
 
 	count = 0;
@@ -269,7 +269,11 @@ bdev_uring_group_poll(void *arg)
 		count = bdev_uring_reap(&group_ch->uring, to_complete);
 	}
 
-	return (count + to_submit);
+	if (count + to_submit > 0) {
+		return SPDK_POLLER_BUSY;
+	} else {
+		return SPDK_POLLER_IDLE;
+	}
 }
 
 static void bdev_uring_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,

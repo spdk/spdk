@@ -157,14 +157,14 @@ nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 	/* If we have already registered a poller, let that one take care of it. */
 	if (nvme_bdev_ctrlr->destruct_poller != NULL) {
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
-		return 1;
+		return SPDK_POLLER_IDLE;
 	}
 
 	if (nvme_bdev_ctrlr->resetting) {
 		nvme_bdev_ctrlr->destruct_poller =
 			SPDK_POLLER_REGISTER((spdk_poller_fn)nvme_bdev_ctrlr_destruct, nvme_bdev_ctrlr, 1000);
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
-		return 1;
+		return SPDK_POLLER_BUSY;
 	}
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
@@ -179,7 +179,7 @@ nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 	}
 
 	spdk_io_device_unregister(nvme_bdev_ctrlr, nvme_bdev_unregister_cb);
-	return 1;
+	return SPDK_POLLER_BUSY;
 }
 
 void

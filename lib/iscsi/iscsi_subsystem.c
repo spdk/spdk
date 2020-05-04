@@ -1189,7 +1189,7 @@ iscsi_poll_group_poll(void *ctx)
 	int rc;
 
 	if (spdk_unlikely(STAILQ_EMPTY(&group->connections))) {
-		return 0;
+		return SPDK_POLLER_IDLE;
 	}
 
 	rc = spdk_sock_group_poll(group->sock_group);
@@ -1203,7 +1203,7 @@ iscsi_poll_group_poll(void *ctx)
 		}
 	}
 
-	return rc;
+	return rc != 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
 static int
@@ -1216,7 +1216,7 @@ iscsi_poll_group_handle_nop(void *ctx)
 		iscsi_conn_handle_nop(conn);
 	}
 
-	return -1;
+	return SPDK_POLLER_BUSY;
 }
 
 static int

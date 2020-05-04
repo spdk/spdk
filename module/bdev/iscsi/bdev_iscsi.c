@@ -378,27 +378,29 @@ bdev_iscsi_poll_lun(void *_lun)
 
 	if (poll(&pfd, 1, 0) < 0) {
 		SPDK_ERRLOG("poll failed\n");
-		return -1;
+		return SPDK_POLLER_IDLE;
 	}
 
 	if (pfd.revents != 0) {
 		if (iscsi_service(lun->context, pfd.revents) < 0) {
 			SPDK_ERRLOG("iscsi_service failed: %s\n", iscsi_get_error(lun->context));
 		}
+
+		return SPDK_POLLER_BUSY;
 	}
 
-	return -1;
+	return SPDK_POLLER_IDLE;
 }
 
 static int
 bdev_iscsi_no_master_ch_poll(void *arg)
 {
 	struct bdev_iscsi_lun *lun = arg;
-	int rc = 0;
+	enum spdk_thread_poller_rc rc = SPDK_POLLER_IDLE;
 
 	if (pthread_mutex_trylock(&lun->mutex)) {
 		/* Don't care about the error code here. */
-		return -1;
+		return SPDK_POLLER_IDLE;
 	}
 
 	if (lun->ch_count == 0) {
@@ -754,6 +756,10 @@ iscsi_bdev_conn_poll(void *arg)
 	struct pollfd pfd;
 	struct iscsi_context *context;
 
+	if (TAILQ_EMPTY(&g_iscsi_conn_req)) {
+		return SPDK_POLLER_IDLE;
+	}
+
 	TAILQ_FOREACH_SAFE(req, &g_iscsi_conn_req, link, tmp) {
 		context = req->context;
 		pfd.fd = iscsi_get_fd(context);
@@ -761,7 +767,7 @@ iscsi_bdev_conn_poll(void *arg)
 		pfd.revents = 0;
 		if (poll(&pfd, 1, 0) < 0) {
 			SPDK_ERRLOG("poll failed\n");
-			return -1;
+			return SPDK_POLLER_BUSY;
 		}
 
 		if (pfd.revents != 0) {
@@ -784,7 +790,7 @@ iscsi_bdev_conn_poll(void *arg)
 			_bdev_iscsi_conn_req_free(req);
 		}
 	}
-	return -1;
+	return SPDK_POLLER_BUSY;
 }
 
 int

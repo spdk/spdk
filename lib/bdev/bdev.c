@@ -2265,7 +2265,7 @@ bdev_channel_poll_qos(void *arg)
 		 *  timeslice has actually expired.  This should never happen
 		 *  with a well-behaved timer implementation.
 		 */
-		return 0;
+		return SPDK_POLLER_IDLE;
 	}
 
 	/* Reset for next round of rate limiting */
@@ -2457,7 +2457,7 @@ bdev_poll_timeout_io(void *arg)
 	ctx = calloc(1, sizeof(struct poll_timeout_ctx));
 	if (!ctx) {
 		SPDK_ERRLOG("failed to allocate memory\n");
-		return 1;
+		return SPDK_POLLER_BUSY;
 	}
 	ctx->desc = desc;
 	ctx->cb_arg = desc->cb_arg;
@@ -2476,7 +2476,7 @@ bdev_poll_timeout_io(void *arg)
 			      ctx,
 			      bdev_channel_poll_timeout_io_done);
 
-	return 1;
+	return SPDK_POLLER_BUSY;
 }
 
 int
@@ -3114,7 +3114,7 @@ bdev_calculate_measured_queue_depth(void *ctx)
 	bdev->internal.temporary_queue_depth = 0;
 	spdk_for_each_channel(__bdev_to_io_dev(bdev), _calculate_measured_qd, bdev,
 			      _calculate_measured_qd_cpl);
-	return 0;
+	return SPDK_POLLER_BUSY;
 }
 
 void
@@ -6458,12 +6458,12 @@ bdev_lock_lba_range_check_io(void *_i)
 	TAILQ_FOREACH(bdev_io, &ch->io_submitted, internal.ch_link) {
 		if (bdev_io_range_is_locked(bdev_io, range)) {
 			ctx->poller = SPDK_POLLER_REGISTER(bdev_lock_lba_range_check_io, i, 100);
-			return 1;
+			return SPDK_POLLER_BUSY;
 		}
 	}
 
 	spdk_for_each_channel_continue(i, 0);
-	return 1;
+	return SPDK_POLLER_BUSY;
 }
 
 static void

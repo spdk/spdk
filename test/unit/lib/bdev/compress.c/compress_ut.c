@@ -923,7 +923,7 @@ test_poller(void)
 	CU_ASSERT(TAILQ_EMPTY(&g_comp_bdev.queued_comp_ops) == true);
 	rc = comp_dev_poller((void *)&g_comp_bdev);
 	CU_ASSERT(TAILQ_EMPTY(&g_comp_bdev.queued_comp_ops) == true);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == SPDK_POLLER_BUSY);
 
 	/* Success from dequeue, 2 ops. nothing needing to be resubmitted.
 	 */
@@ -942,7 +942,7 @@ test_poller(void)
 	CU_ASSERT(TAILQ_EMPTY(&g_comp_bdev.queued_comp_ops) == true);
 	rc = comp_dev_poller((void *)&g_comp_bdev);
 	CU_ASSERT(TAILQ_EMPTY(&g_comp_bdev.queued_comp_ops) == true);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == SPDK_POLLER_BUSY);
 
 	/* Success from dequeue, one op to be resubmitted.
 	 */
@@ -970,7 +970,7 @@ test_poller(void)
 	CU_ASSERT(TAILQ_EMPTY(&g_comp_bdev.queued_comp_ops) == false);
 	rc = comp_dev_poller((void *)&g_comp_bdev);
 	CU_ASSERT(TAILQ_EMPTY(&g_comp_bdev.queued_comp_ops) == true);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == SPDK_POLLER_BUSY);
 
 	/* op_to_queue is freed in code under test */
 	free(cb_args);

@@ -769,7 +769,7 @@ vdev_mgmt_worker(void *arg)
 	process_vq(svsession, &vsession->virtqueue[VIRTIO_SCSI_CONTROLQ]);
 	vhost_vq_used_signal(vsession, &vsession->virtqueue[VIRTIO_SCSI_CONTROLQ]);
 
-	return -1;
+	return SPDK_POLLER_BUSY;
 }
 
 static int
@@ -785,7 +785,7 @@ vdev_worker(void *arg)
 
 	vhost_session_used_signal(vsession);
 
-	return -1;
+	return SPDK_POLLER_BUSY;
 }
 
 static struct spdk_vhost_scsi_dev *
@@ -1364,11 +1364,11 @@ destroy_session_poller_cb(void *arg)
 	uint32_t i;
 
 	if (vsession->task_cnt > 0) {
-		return -1;
+		return SPDK_POLLER_BUSY;
 	}
 
 	if (spdk_vhost_trylock() != 0) {
-		return -1;
+		return SPDK_POLLER_BUSY;
 	}
 
 	for (i = 0; i < vsession->max_queues; i++) {
@@ -1408,7 +1408,7 @@ destroy_session_poller_cb(void *arg)
 	vhost_session_stop_done(vsession, 0);
 
 	spdk_vhost_unlock();
-	return -1;
+	return SPDK_POLLER_BUSY;
 }
 
 static int

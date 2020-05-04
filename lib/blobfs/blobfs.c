@@ -2088,7 +2088,7 @@ _blobfs_cache_pool_reclaim(void *arg)
 	int rc;
 
 	if (!blobfs_cache_pool_need_reclaim()) {
-		return 0;
+		return SPDK_POLLER_IDLE;
 	}
 
 	TAILQ_FOREACH_SAFE(file, &g_caches, cache_tailq, tmp) {
@@ -2099,7 +2099,7 @@ _blobfs_cache_pool_reclaim(void *arg)
 				continue;
 			}
 			if (!blobfs_cache_pool_need_reclaim()) {
-				return 1;
+				return SPDK_POLLER_BUSY;
 			}
 			break;
 		}
@@ -2112,7 +2112,7 @@ _blobfs_cache_pool_reclaim(void *arg)
 				continue;
 			}
 			if (!blobfs_cache_pool_need_reclaim()) {
-				return 1;
+				return SPDK_POLLER_BUSY;
 			}
 			break;
 		}
@@ -2126,7 +2126,7 @@ _blobfs_cache_pool_reclaim(void *arg)
 		break;
 	}
 
-	return 1;
+	return SPDK_POLLER_BUSY;
 }
 
 static void

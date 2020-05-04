@@ -3542,7 +3542,7 @@ nvmf_rdma_destroy_defunct_qpair(void *ctx)
 	nvmf_rdma_qpair_process_pending(rtransport, rqpair, true);
 	nvmf_rdma_qpair_destroy(rqpair);
 
-	return 0;
+	return SPDK_POLLER_BUSY;
 }
 
 static void

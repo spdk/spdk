@@ -1632,7 +1632,7 @@ ftl_halt_poller(void *ctx)
 		}
 	}
 
-	return 0;
+	return SPDK_POLLER_BUSY;
 }
 
 static void

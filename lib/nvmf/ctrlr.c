@@ -181,7 +181,7 @@ nvmf_ctrlr_keep_alive_poll(void *ctx)
 		}
 	}
 
-	return 1;
+	return SPDK_POLLER_BUSY;
 }
 
 static void

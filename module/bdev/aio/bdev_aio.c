@@ -323,7 +323,7 @@ bdev_aio_group_poll(void *arg)
 	nr = bdev_user_io_getevents(group_ch->io_ctx, SPDK_AIO_QUEUE_DEPTH, events);
 
 	if (nr < 0) {
-		return -1;
+		return SPDK_POLLER_IDLE;
 	}
 
 	for (i = 0; i < nr; i++) {
@@ -338,7 +338,7 @@ bdev_aio_group_poll(void *arg)
 		aio_task->ch->io_inflight--;
 	}
 
-	return nr;
+	return nr > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
 static void
@@ -384,7 +384,7 @@ bdev_aio_reset_retry_timer(void *arg)
 			      fdisk,
 			      _bdev_aio_get_io_inflight_done);
 
-	return -1;
+	return SPDK_POLLER_BUSY;
 }
 
 static void
