@@ -30,7 +30,7 @@ yum install -y numactl-devel nasm
 if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	# Tools for developers
 	# Includes Fedora, CentOS 7, RHEL 7
-	# Add EPEL repository for CUnit-devel and libunwind-devel
+	# Add EPEL repository for CUnit-devel
 	if echo "$ID $VERSION_ID" | grep -E -q 'rhel 7|centos 7|centos 8'; then
 		if ! rpm --quiet -q epel-release; then
 			yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
@@ -49,8 +49,6 @@ if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 		yum install -y python-pycodestyle lcov ShellCheck
 	fi
 	yum install -y git astyle sg3_utils pciutils
-	# Additional (optional) dependencies for showing backtrace in logs
-	yum install -y libunwind-devel || true
 	install_shfmt
 fi
 if [[ $INSTALL_PMEM == "true" ]]; then

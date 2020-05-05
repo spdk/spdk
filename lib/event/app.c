@@ -47,7 +47,6 @@
 
 #define SPDK_APP_DEFAULT_LOG_LEVEL		SPDK_LOG_NOTICE
 #define SPDK_APP_DEFAULT_LOG_PRINT_LEVEL	SPDK_LOG_INFO
-#define SPDK_APP_DEFAULT_BACKTRACE_LOG_LEVEL	SPDK_LOG_ERROR
 #define SPDK_APP_DEFAULT_NUM_TRACE_ENTRIES	SPDK_DEFAULT_NUM_TRACE_ENTRIES
 
 #define SPDK_APP_DPDK_DEFAULT_MEM_SIZE		-1
@@ -636,7 +635,6 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
 	g_spdk_app.rc = 0;
 
 	spdk_log_set_level(SPDK_APP_DEFAULT_LOG_LEVEL);
-	spdk_log_set_backtrace_level(SPDK_APP_DEFAULT_BACKTRACE_LOG_LEVEL);
 
 	if (app_setup_env(opts) < 0) {
 		return 1;

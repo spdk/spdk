@@ -26,8 +26,6 @@ if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	apt-get install -y git astyle pep8 lcov clang sg3-utils pciutils shellcheck
 	# Additional python style checker not available on ubuntu 16.04 or earlier.
 	apt-get install -y pycodestyle || true
-	# Additional (optional) dependencies for showing backtrace in logs
-	apt-get install -y libunwind-dev || true
 	# Additional dependecies for nvmf performance test script
 	apt-get install -y python3-paramiko
 	install_shfmt

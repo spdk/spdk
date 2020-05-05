@@ -14,8 +14,6 @@ if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	# Tools for developers
 	pacman -Sy --needed --noconfirm git astyle autopep8 \
 		clang sg3_utils pciutils shellcheck
-	# Additional (optional) dependencies for showing backtrace in logs
-	pacman -Sy --needed --noconfirm libunwind
 	#fakeroot needed to instal via makepkg
 	pacman -Sy --needed --noconfirm fakeroot
 	su - $SUDO_USER -c "pushd /tmp;

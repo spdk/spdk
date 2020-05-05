@@ -39,7 +39,6 @@ static TAILQ_HEAD(, spdk_log_flag) g_log_flags = TAILQ_HEAD_INITIALIZER(g_log_fl
 
 enum spdk_log_level g_spdk_log_level = SPDK_LOG_NOTICE;
 enum spdk_log_level g_spdk_log_print_level = SPDK_LOG_NOTICE;
-enum spdk_log_level g_spdk_log_backtrace_level = SPDK_LOG_DISABLED;
 
 SPDK_LOG_REGISTER_COMPONENT("log", SPDK_LOG_LOG)
 
@@ -69,19 +68,6 @@ spdk_log_set_print_level(enum spdk_log_level level)
 enum spdk_log_level
 spdk_log_get_print_level(void) {
 	return g_spdk_log_print_level;
-}
-
-void
-spdk_log_set_backtrace_level(enum spdk_log_level level)
-{
-	assert(level >= SPDK_LOG_DISABLED);
-	assert(level <= SPDK_LOG_DEBUG);
-	g_spdk_log_backtrace_level = level;
-}
-
-enum spdk_log_level
-spdk_log_get_backtrace_level(void) {
-	return g_spdk_log_backtrace_level;
 }
 
 static struct spdk_log_flag *

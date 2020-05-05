@@ -24,7 +24,6 @@ function usage()
 	echo "                           example: aarch64-linux-gnu"
 	echo ""
 	echo " --enable-debug            Configure for debug builds"
-	echo " --enable-log-bt           Enable support of backtrace printing in SPDK logs (requires libunwind)."
 	echo " --enable-werror           Treat compiler warnings as errors"
 	echo " --enable-asan             Enable address sanitizer"
 	echo " --enable-ubsan            Enable undefined behavior sanitizer"
@@ -210,12 +209,6 @@ for i in "$@"; do
 			;;
 		--disable-debug)
 			CONFIG[DEBUG]=n
-			;;
-		--enable-log-bt)
-			CONFIG[LOG_BACKTRACE]=y
-			;;
-		--disable-log-bt)
-			CONFIG[LOG_BACKTRACE]=n
 			;;
 		--enable-asan)
 			CONFIG[ASAN]=y
@@ -754,15 +747,6 @@ if [[ "${CONFIG[ISCSI_INITIATOR]}" = "y" ]]; then
 		| ${BUILD_CMD[@]} -L/usr/lib64/iscsi -liscsi - 2>/dev/null; then
 		echo --with-iscsi-initiator requires libiscsi with
 		echo 'LIBISCSI_API_VERSION >= 20150621.'
-		echo Please install then re-run this script.
-		exit 1
-	fi
-fi
-
-if [[ "${CONFIG[LOG_BACKTRACE]}" = "y" ]]; then
-	if ! echo -e '#include <libunwind.h>\nint main(void) { return 0; }\n' \
-		| ${BUILD_CMD[@]} -lunwind - 2>/dev/null; then
-		echo --enable-log-bt requires libunwind.
 		echo Please install then re-run this script.
 		exit 1
 	fi

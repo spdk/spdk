@@ -35,11 +35,6 @@
 
 #include "spdk_internal/log.h"
 
-#ifdef SPDK_LOG_BACKTRACE_LVL
-#define UNW_LOCAL_ONLY
-#include <libunwind.h>
-#endif
-
 static const char *const spdk_level_names[] = {
 	[SPDK_LOG_ERROR]	= "ERROR",
 	[SPDK_LOG_WARN]		= "WARNING",
@@ -69,44 +64,6 @@ spdk_log_close(void)
 		closelog();
 	}
 }
-
-#ifdef SPDK_LOG_BACKTRACE_LVL
-static void
-log_unwind_stack(FILE *fp, enum spdk_log_level level)
-{
-	unw_error_t err;
-	unw_cursor_t cursor;
-	unw_context_t uc;
-	unw_word_t ip;
-	unw_word_t offp;
-	char f_name[64];
-	int frame;
-
-	if (level > g_spdk_log_backtrace_level) {
-		return;
-	}
-
-	unw_getcontext(&uc);
-	unw_init_local(&cursor, &uc);
-	fprintf(fp, "*%s*: === BACKTRACE START ===\n", spdk_level_names[level]);
-
-	unw_step(&cursor);
-	for (frame = 1; unw_step(&cursor) > 0; frame++) {
-		unw_get_reg(&cursor, UNW_REG_IP, &ip);
-		err = unw_get_proc_name(&cursor, f_name, sizeof(f_name), &offp);
-		if (err || strcmp(f_name, "main") == 0) {
-			break;
-		}
-
-		fprintf(fp, "*%s*: %3d: %*s%s() at %#lx\n", spdk_level_names[level], frame, frame - 1, "", f_name,
-			(unsigned long)ip);
-	}
-	fprintf(fp, "*%s*: === BACKTRACE END ===\n", spdk_level_names[level]);
-}
-
-#else
-#define log_unwind_stack(fp, lvl)
-#endif
 
 static void
 get_timestamp_prefix(char *buf, int buf_size)
@@ -176,7 +133,6 @@ spdk_vlog(enum spdk_log_level level, const char *file, const int line, const cha
 		get_timestamp_prefix(timestamp, sizeof(timestamp));
 		if (file) {
 			fprintf(stderr, "%s%s:%4d:%s: *%s*: %s", timestamp, file, line, func, spdk_level_names[level], buf);
-			log_unwind_stack(stderr, level);
 		} else {
 			fprintf(stderr, "%s%s", timestamp, buf);
 		}

@@ -314,11 +314,6 @@ function get_config_params() {
 	xtrace_disable
 	config_params='--enable-debug --enable-werror'
 
-	if echo -e "#include <libunwind.h>\nint main(int argc, char *argv[]) {return 0;}\n" \
-		| gcc -o /dev/null -lunwind -x c - 2> /dev/null; then
-		config_params+=' --enable-log-bt'
-	fi
-
 	# for options with dependencies but no test flag, set them here
 	if [ -f /usr/include/infiniband/verbs.h ]; then
 		config_params+=' --with-rdma'

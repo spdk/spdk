@@ -11,8 +11,6 @@ if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	# Tools for developers
 	zypper install -y git-core lcov python-pycodestyle sg3_utils \
 		pciutils ShellCheck
-	# Additional (optional) dependencies for showing backtrace in logs
-	zypper install libunwind-devel || true
 	install_shfmt
 fi
 if [[ $INSTALL_PMEM == "true" ]]; then
