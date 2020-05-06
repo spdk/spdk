@@ -269,8 +269,7 @@ struct spdk_bdev_channel {
 	uint64_t		io_outstanding;
 
 	/*
-	 * List of spdk_bdev_io directly associated with a call to the public bdev API.
-	 * It does not include any spdk_bdev_io that are generated via splitting.
+	 * List of all submitted I/Os including I/O that are generated via splitting.
 	 */
 	bdev_io_tailq_t		io_submitted;
 
@@ -2126,14 +2125,7 @@ bdev_io_submit(struct spdk_bdev_io *bdev_io)
 		}
 	}
 
-	/* Add the bdev_io to io_submitted only if it is the original
-	 * submission from the bdev user.  When a bdev_io is split,
-	 * it comes back through this code path, so we need to make sure
-	 * we don't try to add it a second time.
-	 */
-	if (bdev_io->internal.cb != bdev_io_split_done) {
-		TAILQ_INSERT_TAIL(&ch->io_submitted, bdev_io, internal.ch_link);
-	}
+	TAILQ_INSERT_TAIL(&ch->io_submitted, bdev_io, internal.ch_link);
 
 	if (bdev->split_on_optimal_io_boundary && bdev_io_should_split(bdev_io)) {
 		bdev_io->internal.submit_tsc = spdk_get_ticks();
@@ -2430,8 +2422,14 @@ bdev_channel_poll_timeout_io(struct spdk_io_channel_iter *i)
 
 	now = spdk_get_ticks();
 	TAILQ_FOREACH(bdev_io, &bdev_ch->io_submitted, internal.ch_link) {
-		/* I/O are added to this TAILQ as they are submitted.
-		 * So once we find an I/O that has not timed out, we can immediately exit the loop. */
+		/* Exclude any I/O that are generated via splitting. */
+		if (bdev_io->internal.cb == bdev_io_split_done) {
+			continue;
+		}
+
+		/* Once we find an I/O that has not timed out, we can immediately
+		 * exit the loop.
+		 */
 		if (now < (bdev_io->internal.submit_tsc +
 			   ctx->timeout_in_sec * spdk_get_ticks_hz())) {
 			goto end;
@@ -4765,13 +4763,8 @@ bdev_io_complete(void *ctx)
 	tsc = spdk_get_ticks();
 	tsc_diff = tsc - bdev_io->internal.submit_tsc;
 	spdk_trace_record_tsc(tsc, TRACE_BDEV_IO_DONE, 0, 0, (uintptr_t)bdev_io, 0);
-	/* When a bdev_io is split, the children bdev_io are not added
-	 * to the io_submitted list.  So don't try to remove them in that
-	 * case.
-	 */
-	if (bdev_io->internal.cb != bdev_io_split_done) {
-		TAILQ_REMOVE(&bdev_ch->io_submitted, bdev_io, internal.ch_link);
-	}
+
+	TAILQ_REMOVE(&bdev_ch->io_submitted, bdev_io, internal.ch_link);
 
 	if (bdev_io->internal.ch->histogram) {
 		spdk_histogram_data_tally(bdev_io->internal.ch->histogram, tsc_diff);

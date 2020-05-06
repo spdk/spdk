@@ -1674,7 +1674,7 @@ bdev_set_io_timeout_mt(void)
 	set_thread(2);
 	CU_ASSERT(spdk_bdev_read_blocks(g_desc, ch[2], (void *)0xF000, 14, 8, io_done, NULL) == 0);
 	bdev_ch[2] = spdk_io_channel_get_ctx(ch[2]);
-	CU_ASSERT(bdev_channel_count_submitted_io(bdev_ch[2]) == 1);
+	CU_ASSERT(bdev_channel_count_submitted_io(bdev_ch[2]) == 3);
 
 	set_thread(0);
 	memset(&cb_arg, 0, sizeof(cb_arg));
@@ -1709,7 +1709,7 @@ bdev_set_io_timeout_mt(void)
 	CU_ASSERT(cb_arg.iov.iov_base == (void *)0xF000);
 	CU_ASSERT(cb_arg.iov.iov_len == 8 * g_bdev.bdev.blocklen);
 	stub_complete_io(g_bdev.io_target, 1);
-	CU_ASSERT(bdev_channel_count_submitted_io(bdev_ch[2]) == 1);
+	CU_ASSERT(bdev_channel_count_submitted_io(bdev_ch[2]) == 2);
 	stub_complete_io(g_bdev.io_target, 1);
 	CU_ASSERT(bdev_channel_count_submitted_io(bdev_ch[2]) == 0);
 
