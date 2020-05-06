@@ -1,0 +1,67 @@
+{
+	global:
+
+	# public functions
+	spdk_json_parse;
+	spdk_json_decode_object;
+	spdk_json_decode_array;
+	spdk_json_decode_bool;
+	spdk_json_decode_uint16;
+	spdk_json_decode_int32;
+	spdk_json_decode_uint32;
+	spdk_json_decode_uint64;
+	spdk_json_decode_string;
+
+	spdk_json_val_len;
+	spdk_json_strequal;
+	spdk_json_strdup;
+
+	spdk_json_number_to_uint16;
+	spdk_json_number_to_int32;
+	spdk_json_number_to_uint32;
+	spdk_json_number_to_uint64;
+
+	spdk_json_write_begin;
+	spdk_json_write_end;
+	spdk_json_write_null;
+	spdk_json_write_bool;
+	spdk_json_write_int32;
+	spdk_json_write_uint32;
+	spdk_json_write_int64;
+	spdk_json_write_uint64;
+	spdk_json_write_string;
+	spdk_json_write_string_raw;
+	spdk_json_write_string_utf16le;
+	spdk_json_write_string_utf16le_raw;
+	spdk_json_write_string_fmt;
+	spdk_json_write_string_fmt_v;
+	spdk_json_write_array_begin;
+	spdk_json_write_array_end;
+	spdk_json_write_object_begin;
+	spdk_json_write_object_end;
+	spdk_json_write_name;
+	spdk_json_write_name_raw;
+	spdk_json_write_val;
+	spdk_json_write_val_raw;
+
+	spdk_json_write_named_null;
+	spdk_json_write_named_bool;
+	spdk_json_write_named_int32;
+	spdk_json_write_named_uint32;
+	spdk_json_write_named_uint64;
+	spdk_json_write_named_int64;
+	spdk_json_write_named_string;
+	spdk_json_write_named_string_fmt;
+	spdk_json_write_named_string_fmt_v;
+	spdk_json_write_named_array_begin;
+	spdk_json_write_named_object_begin;
+
+	spdk_json_find;
+	spdk_json_find_string;
+	spdk_json_find_array;
+	spdk_json_object_first;
+	spdk_json_array_first;
+	spdk_json_next;
+
+	local: *;
+};

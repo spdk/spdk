@@ -38,6 +38,8 @@ function confirm_abi_deps() {
 	name = SPDK_LOG_IDXD
 [suppress_variable]
 	name = SPDK_LOG_IOAT
+[suppress_variable]
+	name = SPDK_LOG_JSON_UTIL
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do

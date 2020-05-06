@@ -41,4 +41,6 @@ SO_SUFFIX := $(SO_VER).$(SO_MINOR)
 C_SRCS = json_parse.c json_util.c json_write.c
 LIBNAME = json
 
+SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_json.map)
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
