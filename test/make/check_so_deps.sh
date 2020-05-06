@@ -27,22 +27,6 @@ function confirm_abi_deps() {
 	fi
 
 	cat << EOF > ${suppression_file}
-[suppress_variable]
-	name = SPDK_LOG_BDEV
-[suppress_variable]
-	name = SPDK_LOG_BLOBFS_BDEV
-[suppress_variable]
-	name = SPDK_LOG_BLOBFS_BDEV_RPC
-[suppress_variable]
-	name = SPDK_LOG_APP_RPC
-[suppress_variable]
-	name = SPDK_LOG_FTL_CORE
-[suppress_variable]
-	name = SPDK_LOG_FTL_INIT
-[suppress_variable]
-	name = SPDK_LOG_ISCSI
-[suppress_variable]
-	name = SPDK_LOG_SCSI
 
 EOF
 
