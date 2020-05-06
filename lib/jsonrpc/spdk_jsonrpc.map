@@ -1,0 +1,28 @@
+{
+	global:
+
+	# public functions
+	spdk_jsonrpc_server_listen;
+	spdk_jsonrpc_server_poll;
+	spdk_jsonrpc_server_shutdown;
+	spdk_jsonrpc_get_conn;
+	spdk_jsonrpc_conn_add_close_cb;
+	spdk_jsonrpc_conn_del_close_cb;
+	spdk_jsonrpc_begin_result;
+	spdk_jsonrpc_end_result;
+	spdk_jsonrpc_send_error_response;
+	spdk_jsonrpc_send_error_response_fmt;
+	spdk_jsonrpc_begin_request;
+	spdk_jsonrpc_end_request;
+	spdk_jsonrpc_client_connect;
+	spdk_jsonrpc_client_close;
+	spdk_jsonrpc_client_create_request;
+	spdk_jsonrpc_client_free_request;
+	spdk_jsonrpc_client_send_request;
+	spdk_jsonrpc_client_poll;
+	spdk_jsonrpc_client_get_response;
+	spdk_jsonrpc_client_free_response;
+
+
+	local: *;
+};

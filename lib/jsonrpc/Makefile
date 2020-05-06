@@ -42,4 +42,6 @@ LIBNAME = jsonrpc
 C_SRCS = jsonrpc_server.c jsonrpc_server_tcp.c
 C_SRCS += jsonrpc_client.c jsonrpc_client_tcp.c
 
+SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_jsonrpc.map)
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
