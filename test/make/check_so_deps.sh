@@ -34,7 +34,8 @@ function confirm_abi_deps() {
 	fi
 
 	cat << EOF > ${suppression_file}
-
+[suppress_variable]
+	name = SPDK_LOG_IDXD
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do
@@ -87,8 +88,11 @@ EOF
 
 			if [ "$so_name_changed" != "No" ]; then
 				if ! $found_abi_change; then
-					echo "SO name for $so_file changed without a change to abi. please revert that change."
-					touch $fail_file
+					# Unfortunately, libspdk_idxd made it into 20.04 without an SO suffix. TODO:: remove after 20.07
+					if [ "$so_file" != "libspdk_idxd.so" ]; then
+						echo "SO name for $so_file changed without a change to abi. please revert that change."
+						touch $fail_file
+					fi
 				fi
 
 				if [ "$new_so_maj" != "$old_so_maj" ] && [ "$new_so_min" != "0" ]; then
