@@ -47,7 +47,7 @@ const struct spdk_json_val *g_cur_param;
 #define PARSE_PASS(in, trailing) \
 	CU_ASSERT(g_cur_param == NULL); \
 	g_cur_param = NULL; \
-	CU_ASSERT(spdk_jsonrpc_parse_request(conn, in, sizeof(in) - 1) == sizeof(in) - sizeof(trailing))
+	CU_ASSERT(jsonrpc_parse_request(conn, in, sizeof(in) - 1) == sizeof(in) - sizeof(trailing))
 
 #define REQ_BEGIN(expected_error) \
 	if (expected_error != 0 ) { \
@@ -56,7 +56,7 @@ const struct spdk_json_val *g_cur_param;
 	}
 
 #define PARSE_FAIL(in) \
-	CU_ASSERT(spdk_jsonrpc_parse_request(conn, in, sizeof(in) - 1) < 0);
+	CU_ASSERT(jsonrpc_parse_request(conn, in, sizeof(in) - 1) < 0);
 
 #define REQ_BEGIN_VALID() \
 		REQ_BEGIN(0); \
@@ -158,7 +158,7 @@ ut_jsonrpc_free_request(struct spdk_jsonrpc_request *request, int err)
 		spdk_jsonrpc_send_error_response_fmt(request, err, "UT error response");
 	}
 
-	spdk_jsonrpc_free_request(request);
+	jsonrpc_free_request(request);
 }
 
 static void
@@ -173,20 +173,20 @@ ut_handle(struct spdk_jsonrpc_request *request, int error, const struct spdk_jso
 }
 
 void
-spdk_jsonrpc_server_handle_error(struct spdk_jsonrpc_request *request, int error)
+jsonrpc_server_handle_error(struct spdk_jsonrpc_request *request, int error)
 {
 	ut_handle(request, error, NULL, NULL);
 }
 
 void
-spdk_jsonrpc_server_handle_request(struct spdk_jsonrpc_request *request,
-				   const struct spdk_json_val *method, const struct spdk_json_val *params)
+jsonrpc_server_handle_request(struct spdk_jsonrpc_request *request,
+			      const struct spdk_json_val *method, const struct spdk_json_val *params)
 {
 	ut_handle(request, 0, method, params);
 }
 
 void
-spdk_jsonrpc_server_send_response(struct spdk_jsonrpc_request *request)
+jsonrpc_server_send_response(struct spdk_jsonrpc_request *request)
 {
 }
 
@@ -366,7 +366,7 @@ test_parse_request_streaming(void)
 
 	/* Try every partial length up to the full request length */
 	for (i = 0; i < len; i++) {
-		int rc = spdk_jsonrpc_parse_request(conn, json_req, i);
+		int rc = jsonrpc_parse_request(conn, json_req, i);
 		/* Partial request - no data consumed */
 		CU_ASSERT(rc == 0);
 		CU_ASSERT(g_request == NULL);
@@ -376,7 +376,7 @@ test_parse_request_streaming(void)
 	}
 
 	/* Verify that full request can be parsed successfully */
-	CU_ASSERT(spdk_jsonrpc_parse_request(conn, json_req, len) == (ssize_t)len);
+	CU_ASSERT(jsonrpc_parse_request(conn, json_req, len) == (ssize_t)len);
 	FREE_REQUEST();
 
 	CU_ASSERT(conn->outstanding_requests == 0);

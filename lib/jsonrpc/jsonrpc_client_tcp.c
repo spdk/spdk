@@ -141,7 +141,7 @@ _spdk_jsonrpc_client_recv(struct spdk_jsonrpc_client *client)
 	client->recv_buf[client->recv_offset] = '\0';
 
 	/* Check to see if we have received a full JSON value. */
-	return spdk_jsonrpc_parse_response(client);
+	return jsonrpc_parse_response(client);
 }
 
 static int

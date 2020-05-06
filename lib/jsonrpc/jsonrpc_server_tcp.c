@@ -117,10 +117,10 @@ spdk_jsonrpc_server_free_conn_request(struct spdk_jsonrpc_server_conn *conn)
 {
 	struct spdk_jsonrpc_request *request;
 
-	spdk_jsonrpc_free_request(conn->send_request);
+	jsonrpc_free_request(conn->send_request);
 	conn->send_request = NULL ;
 	while ((request = spdk_jsonrpc_server_dequeue_request(conn)) != NULL) {
-		spdk_jsonrpc_free_request(request);
+		jsonrpc_free_request(request);
 	}
 }
 
@@ -244,14 +244,14 @@ spdk_jsonrpc_server_accept(struct spdk_jsonrpc_server *server)
 }
 
 void
-spdk_jsonrpc_server_handle_request(struct spdk_jsonrpc_request *request,
-				   const struct spdk_json_val *method, const struct spdk_json_val *params)
+jsonrpc_server_handle_request(struct spdk_jsonrpc_request *request,
+			      const struct spdk_json_val *method, const struct spdk_json_val *params)
 {
 	request->conn->server->handle_request(request, method, params);
 }
 
 void
-spdk_jsonrpc_server_handle_error(struct spdk_jsonrpc_request *request, int error)
+jsonrpc_server_handle_error(struct spdk_jsonrpc_request *request, int error)
 {
 	const char *msg;
 
@@ -309,7 +309,7 @@ spdk_jsonrpc_server_conn_recv(struct spdk_jsonrpc_server_conn *conn)
 
 	offset = 0;
 	do {
-		rc = spdk_jsonrpc_parse_request(conn, conn->recv_buf + offset, conn->recv_len - offset);
+		rc = jsonrpc_parse_request(conn, conn->recv_buf + offset, conn->recv_len - offset);
 		if (rc < 0) {
 			SPDK_ERRLOG("jsonrpc parse request failed\n");
 			return -1;
@@ -332,7 +332,7 @@ spdk_jsonrpc_server_conn_recv(struct spdk_jsonrpc_server_conn *conn)
 }
 
 void
-spdk_jsonrpc_server_send_response(struct spdk_jsonrpc_request *request)
+jsonrpc_server_send_response(struct spdk_jsonrpc_request *request)
 {
 	struct spdk_jsonrpc_server_conn *conn = request->conn;
 
@@ -386,7 +386,7 @@ more:
 		 * Free it and set send_request to NULL to move on to the next queued response.
 		 */
 		conn->send_request = NULL;
-		spdk_jsonrpc_free_request(request);
+		jsonrpc_free_request(request);
 		goto more;
 	}
 

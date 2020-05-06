@@ -77,7 +77,7 @@ static const struct spdk_json_object_decoder jsonrpc_response_decoders[] = {
 };
 
 int
-spdk_jsonrpc_parse_response(struct spdk_jsonrpc_client *client)
+jsonrpc_parse_response(struct spdk_jsonrpc_client *client)
 {
 	struct spdk_jsonrpc_client_response_internal *r;
 	ssize_t rc;

@@ -100,11 +100,11 @@ parse_single_request(struct spdk_jsonrpc_request *request, struct spdk_json_val 
 		}
 	}
 
-	spdk_jsonrpc_server_handle_request(request, req.method, params);
+	jsonrpc_server_handle_request(request, req.method, params);
 	return;
 
 invalid:
-	spdk_jsonrpc_server_handle_error(request, SPDK_JSONRPC_ERROR_INVALID_REQUEST);
+	jsonrpc_server_handle_error(request, SPDK_JSONRPC_ERROR_INVALID_REQUEST);
 }
 
 static int
@@ -144,7 +144,7 @@ spdk_jsonrpc_server_write_cb(void *cb_ctx, const void *data, size_t size)
 }
 
 int
-spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, const void *json, size_t size)
+jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, const void *json, size_t size)
 {
 	struct spdk_jsonrpc_request *request;
 	ssize_t rc;
@@ -172,7 +172,7 @@ spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, const void *js
 	request->recv_buffer = malloc(len + 1);
 	if (request->recv_buffer == NULL) {
 		SPDK_ERRLOG("Failed to allocate buffer to copy request (%zu bytes)\n", len + 1);
-		spdk_jsonrpc_free_request(request);
+		jsonrpc_free_request(request);
 		return -1;
 	}
 
@@ -185,7 +185,7 @@ spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, const void *js
 		if (request->values == NULL) {
 			SPDK_ERRLOG("Failed to allocate buffer for JSON values (%zu bytes)\n",
 				    request->values_cnt * sizeof(request->values[0]));
-			spdk_jsonrpc_free_request(request);
+			jsonrpc_free_request(request);
 			return -1;
 		}
 	}
@@ -196,20 +196,20 @@ spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, const void *js
 	request->send_buf = malloc(request->send_buf_size);
 	if (request->send_buf == NULL) {
 		SPDK_ERRLOG("Failed to allocate send_buf (%zu bytes)\n", request->send_buf_size);
-		spdk_jsonrpc_free_request(request);
+		jsonrpc_free_request(request);
 		return -1;
 	}
 
 	request->response = spdk_json_write_begin(spdk_jsonrpc_server_write_cb, request, 0);
 	if (request->response == NULL) {
 		SPDK_ERRLOG("Failed to allocate response JSON write context.\n");
-		spdk_jsonrpc_free_request(request);
+		jsonrpc_free_request(request);
 		return -1;
 	}
 
 	if (rc <= 0 || rc > SPDK_JSONRPC_MAX_VALUES) {
 		SPDK_DEBUGLOG(SPDK_LOG_RPC, "JSON parse error\n");
-		spdk_jsonrpc_server_handle_error(request, SPDK_JSONRPC_ERROR_PARSE_ERROR);
+		jsonrpc_server_handle_error(request, SPDK_JSONRPC_ERROR_PARSE_ERROR);
 
 		/*
 		 * Can't recover from parse error (no guaranteed resync point in streaming JSON).
@@ -223,7 +223,7 @@ spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, const void *js
 			     SPDK_JSON_PARSE_FLAG_DECODE_IN_PLACE);
 	if (rc < 0 || rc > SPDK_JSONRPC_MAX_VALUES) {
 		SPDK_DEBUGLOG(SPDK_LOG_RPC, "JSON parse error on second pass\n");
-		spdk_jsonrpc_server_handle_error(request, SPDK_JSONRPC_ERROR_PARSE_ERROR);
+		jsonrpc_server_handle_error(request, SPDK_JSONRPC_ERROR_PARSE_ERROR);
 		return -1;
 	}
 
@@ -233,10 +233,10 @@ spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, const void *js
 		parse_single_request(request, request->values);
 	} else if (request->values[0].type == SPDK_JSON_VAL_ARRAY_BEGIN) {
 		SPDK_DEBUGLOG(SPDK_LOG_RPC, "Got batch array (not currently supported)\n");
-		spdk_jsonrpc_server_handle_error(request, SPDK_JSONRPC_ERROR_INVALID_REQUEST);
+		jsonrpc_server_handle_error(request, SPDK_JSONRPC_ERROR_INVALID_REQUEST);
 	} else {
 		SPDK_DEBUGLOG(SPDK_LOG_RPC, "top-level JSON value was not array or object\n");
-		spdk_jsonrpc_server_handle_error(request, SPDK_JSONRPC_ERROR_INVALID_REQUEST);
+		jsonrpc_server_handle_error(request, SPDK_JSONRPC_ERROR_INVALID_REQUEST);
 	}
 
 	return len;
@@ -273,7 +273,7 @@ skip_response(struct spdk_jsonrpc_request *request)
 	request->send_len = 0;
 	spdk_json_write_end(request->response);
 	request->response = NULL;
-	spdk_jsonrpc_server_send_response(request);
+	jsonrpc_server_send_response(request);
 }
 
 static void
@@ -284,11 +284,11 @@ end_response(struct spdk_jsonrpc_request *request)
 	request->response = NULL;
 
 	spdk_jsonrpc_server_write_cb(request, "\n", 1);
-	spdk_jsonrpc_server_send_response(request);
+	jsonrpc_server_send_response(request);
 }
 
 void
-spdk_jsonrpc_free_request(struct spdk_jsonrpc_request *request)
+jsonrpc_free_request(struct spdk_jsonrpc_request *request)
 {
 	if (!request) {
 		return;
