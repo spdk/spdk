@@ -22,6 +22,10 @@ if [ $(uname -s) = Linux ]; then
 	# set core_pattern to a known value to avoid ABRT, systemd-coredump, etc.
 	echo "core" > /proc/sys/kernel/core_pattern
 
+	# Make sure that the hugepage state for our VM is fresh so we don't fail
+	# hugepage allocation
+	echo 1 > /proc/sys/vm/drop_caches
+
 	# make sure nbd (network block device) driver is loaded if it is available
 	# this ensures that when tests need to use nbd, it will be fully initialized
 	modprobe nbd || true
