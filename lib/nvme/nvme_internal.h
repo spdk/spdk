@@ -138,6 +138,13 @@ extern pid_t g_spdk_nvme_pid;
  */
 #define NVME_QUIRK_MINIMUM_IO_QUEUE_SIZE 0x800
 
+/**
+ * The maximum access width to PCI memory space is 8 Bytes, don't use AVX2 or
+ * SSE instructions to optimize the memory access(memcpy or memset) larger than
+ * 8 Bytes.
+ */
+#define NVME_QUIRK_MAXIMUM_PCI_ACCESS_WIDTH 0x1000
+
 #define NVME_MAX_ASYNC_EVENTS	(8)
 
 #define NVME_MAX_ADMIN_TIMEOUT_IN_SECS	(30)

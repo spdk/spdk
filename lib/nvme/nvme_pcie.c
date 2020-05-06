@@ -973,6 +973,7 @@ static int
 nvme_pcie_qpair_reset(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
+	uint32_t i;
 
 	/* all head/tail vals are set to 0 */
 	pqpair->last_sq_tail = pqpair->sq_tail = pqpair->sq_head = pqpair->cq_head = 0;
@@ -985,11 +986,9 @@ nvme_pcie_qpair_reset(struct spdk_nvme_qpair *qpair)
 	 *  rolls over.
 	 */
 	pqpair->flags.phase = 1;
-
-	memset(pqpair->cmd, 0,
-	       pqpair->num_entries * sizeof(struct spdk_nvme_cmd));
-	memset(pqpair->cpl, 0,
-	       pqpair->num_entries * sizeof(struct spdk_nvme_cpl));
+	for (i = 0; i < pqpair->num_entries; i++) {
+		pqpair->cpl[i].status.p = 0;
+	}
 
 	return 0;
 }
@@ -1326,6 +1325,7 @@ nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 {
 	struct nvme_request	*req;
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
+	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
 
 	req = tr->req;
 	assert(req != NULL);
@@ -1335,8 +1335,15 @@ nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 		qpair->first_fused_submitted = 1;
 	}
 
-	/* Copy the command from the tracker to the submission queue. */
-	nvme_pcie_copy_command(&pqpair->cmd[pqpair->sq_tail], &req->cmd);
+	/* Don't use wide instructions to copy NVMe command, this is limited by QEMU
+	 * virtual NVMe controller, the maximum access width is 8 Bytes for one time.
+	 */
+	if (spdk_unlikely((ctrlr->quirks & NVME_QUIRK_MAXIMUM_PCI_ACCESS_WIDTH) && pqpair->sq_in_cmb)) {
+		pqpair->cmd[pqpair->sq_tail] = req->cmd;
+	} else {
+		/* Copy the command from the tracker to the submission queue. */
+		nvme_pcie_copy_command(&pqpair->cmd[pqpair->sq_tail], &req->cmd);
+	}
 
 	if (spdk_unlikely(++pqpair->sq_tail == pqpair->num_entries)) {
 		pqpair->sq_tail = 0;
