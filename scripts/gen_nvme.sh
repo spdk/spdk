@@ -39,10 +39,11 @@ bdfs=()
 # then most likely PCI_WHITELIST option was used for setup.sh
 # and we do not want to use that disk.
 for bdf in $(iter_pci_class_code 01 08 02); do
-	driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent | awk -F"=" '{print $2}')
-	if [ "$driver" != "nvme" ]; then
-		bdfs+=("$bdf")
+	if [[ -e /sys/bus/pci/drivers/nvme/$bdf ]] \
+		|| [[ $(uname -s) == FreeBSD && $(pciconf -l "pci$bdf") == nvme* ]]; then
+		continue
 	fi
+	bdfs+=("$bdf")
 done
 
 if [ "$1" = "--json" ]; then
