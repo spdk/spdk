@@ -1546,6 +1546,42 @@ bdev_io_split_test(void)
 	CU_ASSERT(g_io_done == true);
 	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_FAILED);
 
+	/* Test if a multi vector command terminated with failure before continueing
+	 * splitting process when one of child I/O failed.
+	 * The multi vector command is as same as the above that needs to be split by strip
+	 * and then needs to be split further due to the capacity of child iovs.
+	 */
+	for (i = 0; i < BDEV_IO_NUM_CHILD_IOV - 1; i++) {
+		iov[i].iov_base = (void *)((i + 1) * 0x10000);
+		iov[i].iov_len = 512;
+	}
+	iov[BDEV_IO_NUM_CHILD_IOV - 1].iov_base = (void *)(BDEV_IO_NUM_CHILD_IOV * 0x10000);
+	iov[BDEV_IO_NUM_CHILD_IOV - 1].iov_len = 256;
+
+	iov[BDEV_IO_NUM_CHILD_IOV].iov_base = (void *)((BDEV_IO_NUM_CHILD_IOV + 1) * 0x10000);
+	iov[BDEV_IO_NUM_CHILD_IOV].iov_len = 256;
+
+	iov[BDEV_IO_NUM_CHILD_IOV + 1].iov_base = (void *)((BDEV_IO_NUM_CHILD_IOV + 2) * 0x10000);
+	iov[BDEV_IO_NUM_CHILD_IOV + 1].iov_len = 512;
+
+	bdev->optimal_io_boundary = BDEV_IO_NUM_CHILD_IOV;
+
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_FAILED;
+	g_io_done = false;
+	g_io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	rc = spdk_bdev_readv_blocks(desc, io_ch, iov, BDEV_IO_NUM_CHILD_IOV * 2, 0,
+				    BDEV_IO_NUM_CHILD_IOV + 1, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+	stub_complete_io(1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_FAILED);
+
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
 	/* for this test we will create the following conditions to hit the code path where
 	 * we are trying to send and IO following a split that has no iovs because we had to
 	 * trim them for alignment reasons.

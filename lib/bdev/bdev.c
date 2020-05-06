@@ -1952,6 +1952,9 @@ bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 
 	if (!success) {
 		parent_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+		/* If any child I/O failed, stop further splitting process. */
+		parent_io->u.bdev.split_current_offset_blocks += parent_io->u.bdev.split_remaining_num_blocks;
+		parent_io->u.bdev.split_remaining_num_blocks = 0;
 	}
 	parent_io->u.bdev.split_outstanding--;
 	if (parent_io->u.bdev.split_outstanding != 0) {
