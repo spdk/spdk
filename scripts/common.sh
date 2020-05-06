@@ -30,10 +30,14 @@ function pci_can_use() {
 
 cache_pci_init() {
 	local -gA pci_bus_cache
+	local -gA pci_ids_vendor
+	local -gA pci_ids_device
 
 	[[ -z ${pci_bus_cache[*]} || $CMD == reset ]] || return 1
 
 	pci_bus_cache=()
+	pci_bus_ids_vendor=()
+	pci_bus_ids_device=()
 }
 
 cache_pci() {
@@ -48,6 +52,9 @@ cache_pci() {
 		pci_bus_cache["$vendor"]="${pci_bus_cache["$vendor"]:+${pci_bus_cache["$vendor"]} }$pci"
 		pci_bus_cache["$device"]="${pci_bus_cache["$device"]:+${pci_bus_cache["$device"]} }$pci"
 		pci_bus_cache["$vendor:$device"]="${pci_bus_cache["$vendor:$device"]:+${pci_bus_cache["$vendor:$device"]} }$pci"
+
+		pci_ids_vendor["$pci"]=$vendor
+		pci_ids_device["$pci"]=$device
 	fi
 }
 
