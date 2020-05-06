@@ -56,6 +56,8 @@ function confirm_abi_deps() {
 	name = spdk_jsonrpc_free_request
 [suppress_function]
 	name = spdk_jsonrpc_parse_response
+[suppress_variable]
+	name = SPDK_LOG_LOG_RPC
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do
