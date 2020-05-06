@@ -41,4 +41,6 @@ SO_SUFFIX := $(SO_VER).$(SO_MINOR)
 C_SRCS = ioat.c
 LIBNAME = ioat
 
+SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_ioat.map)
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

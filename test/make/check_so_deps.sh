@@ -36,6 +36,8 @@ function confirm_abi_deps() {
 	cat << EOF > ${suppression_file}
 [suppress_variable]
 	name = SPDK_LOG_IDXD
+[suppress_variable]
+	name = SPDK_LOG_IOAT
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do
