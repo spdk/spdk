@@ -148,7 +148,7 @@ if [ -s /etc/redhat-release ]; then
 		# Add EPEL repository for CUnit-devel and libunwind-devel
 		if echo "$ID $VERSION_ID" | grep -E -q 'rhel 7|centos 7|centos 8'; then
 			if ! rpm --quiet -q epel-release; then
-				yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+				yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 			fi
 
 			if [[ $ID = 'rhel' ]]; then
