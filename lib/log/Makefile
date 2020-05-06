@@ -44,4 +44,6 @@ ifeq ($(CONFIG_LOG_BACKTRACE),y)
 LOCAL_SYS_LIBS += -lunwind
 endif
 
+SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_log.map)
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

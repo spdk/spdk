@@ -1,0 +1,26 @@
+{
+	global:
+
+	# public functions
+	spdk_log_open;
+	spdk_log_close;
+	spdk_log_set_level;
+	spdk_log_get_level;
+	spdk_log_set_backtrace_level;
+	spdk_log_get_backtrace_level;
+	spdk_log_set_print_level;
+	spdk_log_get_print_level;
+	spdk_log;
+	spdk_log_dump;
+	spdk_log_get_flag;
+	spdk_log_set_flag;
+	spdk_log_clear_flag;
+	spdk_log_usage;
+
+	# functions used by other SPDK libraries
+	spdk_log_register_flag;
+	spdk_log_get_first_flag;
+	spdk_log_get_next_flag;
+
+	local: *;
+};
