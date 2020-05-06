@@ -703,6 +703,65 @@ function status_linux() {
 	done
 }
 
+function status_freebsd() {
+	local id pci
+	local ioat idxd vmd
+
+	status_print() (
+		local dev driver
+
+		echo -e "BDF\t\tVendor\tDevice\tDriver"
+
+		for id; do
+			for pci in ${pci_bus_cache["$id"]}; do
+				driver=$(pciconf -l "pci$pci")
+				driver=${driver%@*}
+				printf '%s\t%s\t%s\t%s\n' \
+					"$pci" \
+					"${pci_ids_vendor["$pci"]}" \
+					"${pci_ids_device["$pci"]}" \
+					"$driver"
+			done
+		done
+	)
+
+	devs=PCI_DEVICE_ID_INTEL_IOAT
+	devs+="|PCI_DEVICE_ID_INTEL_IDXD"
+	devs+="|PCI_DEVICE_ID_INTEL_VMD"
+
+	local dev_type dev_id
+	while read -r _ dev_type dev_id; do
+		case "$dev_type" in
+			*IOAT*) ioat+=("0x8086:$dev_id") ;;
+			*IDXD*) idxd+=("0x8086:$dev_id") ;;
+			*VMD*) vmd+=("0x8086:$dev_id") ;;
+		esac
+	done < <(grep -E "$devs" "$rootdir/include/spdk/pci_ids.h")
+
+	local contigmem=present
+	if ! kldstat -q -m contigmem; then
+		contigmem="not present"
+	fi
+
+	cat <<- BSD_INFO
+		Contigmem ($contigmem)
+		Buffer Size: $(kenv hw.contigmem.buffer_size)
+		Num Buffers: $(kenv hw.contigmem.num_buffers)
+
+		NVMe devices
+		$(status_print 0x010802)
+
+		I/IOAT DMA
+		$(status_print "${ioat[@]}")
+
+		IDXD DMA
+		$(status_print "${idxd[@]}")
+
+		VMD
+		$(status_print "${vmd[@]}")
+	BSD_INFO
+}
+
 function configure_freebsd_pci() {
 	local devs ids id
 	local BDFS
@@ -805,7 +864,7 @@ else
 	elif [ "$mode" == "cleanup" ]; then
 		echo "setup.sh cleanup function not yet supported on $os"
 	elif [ "$mode" == "status" ]; then
-		echo "setup.sh status function not yet supported on $os"
+		status_freebsd
 	elif [ "$mode" == "help" ]; then
 		usage $0
 	else
