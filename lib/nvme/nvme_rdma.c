@@ -1318,7 +1318,7 @@ nvme_rdma_build_contig_inline_request(struct nvme_rdma_qpair *rqpair,
 				      struct spdk_nvme_rdma_req *rdma_req)
 {
 	struct nvme_request *req = rdma_req->req;
-	uint32_t lkey;
+	uint32_t lkey = 0;
 	void *payload;
 
 	payload = req->payload.contig_or_cb_arg + req->payload_offset;
@@ -1366,7 +1366,7 @@ nvme_rdma_build_contig_request(struct nvme_rdma_qpair *rqpair,
 {
 	struct nvme_request *req = rdma_req->req;
 	void *payload = req->payload.contig_or_cb_arg + req->payload_offset;
-	uint32_t rkey;
+	uint32_t rkey = 0;
 
 	assert(req->payload_size != 0);
 	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG);
@@ -1409,7 +1409,7 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair,
 	uint32_t remaining_size;
 	uint32_t sge_length;
 	int rc, max_num_sgl, num_sgl_desc;
-	uint32_t rkey;
+	uint32_t rkey = 0;
 
 	assert(req->payload_size != 0);
 	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_SGL);
@@ -1497,7 +1497,7 @@ nvme_rdma_build_sgl_inline_request(struct nvme_rdma_qpair *rqpair,
 				   struct spdk_nvme_rdma_req *rdma_req)
 {
 	struct nvme_request *req = rdma_req->req;
-	uint32_t lkey;
+	uint32_t lkey = 0;
 	uint32_t length;
 	void *virt_addr;
 	int rc;
