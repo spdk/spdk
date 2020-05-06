@@ -128,7 +128,7 @@ struct idxd_group {
  */
 struct idxd_comp {
 	struct idxd_hw_comp_record	hw;
-	uint64_t			cb_arg;
+	void				*cb_arg;
 	spdk_idxd_req_cb		cb_fn;
 	uint64_t			pad1;
 	uint64_t			pad2;

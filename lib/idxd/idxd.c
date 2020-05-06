@@ -659,7 +659,7 @@ _idxd_prep_command(struct spdk_idxd_io_channel *chan,
 
 	desc->flags = IDXD_FLAG_COMPLETION_ADDR_VALID | IDXD_FLAG_REQUEST_COMPLETION;
 	desc->completion_addr = (uintptr_t)&comp->hw;
-	comp->cb_arg = (uint64_t)cb_arg;
+	comp->cb_arg = cb_arg;
 	comp->cb_fn = cb_fn;
 
 	return desc;
@@ -685,7 +685,7 @@ spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan, void *dst, const void *
 	desc->xfer_size = nbytes;
 
 	/* Submit operation. */
-	movdir64b((uint64_t *)chan->ring_ctrl.portal, desc);
+	movdir64b(chan->ring_ctrl.portal, desc);
 
 	return 0;
 }
@@ -716,7 +716,7 @@ spdk_idxd_submit_dualcast(struct spdk_idxd_io_channel *chan, void *dst1, void *d
 	desc->xfer_size = nbytes;
 
 	/* Submit operation. */
-	movdir64b((uint64_t *)chan->ring_ctrl.portal, desc);
+	movdir64b(chan->ring_ctrl.portal, desc);
 
 	return 0;
 }
@@ -741,7 +741,7 @@ spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan, void *src1, const vo
 	desc->xfer_size = nbytes;
 
 	/* Submit operation. */
-	movdir64b((uint64_t *)chan->ring_ctrl.portal, desc);
+	movdir64b(chan->ring_ctrl.portal, desc);
 
 	return 0;
 }
@@ -766,7 +766,7 @@ spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan, void *dst, uint64_t fil
 	desc->xfer_size = nbytes;
 
 	/* Submit operation. */
-	movdir64b((uint64_t *)chan->ring_ctrl.portal, desc);
+	movdir64b(chan->ring_ctrl.portal, desc);
 
 	return 0;
 }
@@ -793,7 +793,7 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan, uint32_t *dst, void *
 	desc->xfer_size = nbytes;
 
 	/* Submit operation. */
-	movdir64b((uint64_t *)chan->ring_ctrl.portal, desc);
+	movdir64b(chan->ring_ctrl.portal, desc);
 
 	return 0;
 }
@@ -854,7 +854,7 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 					break;
 				}
 
-				comp->cb_fn((void *)comp->cb_arg, status);
+				comp->cb_fn(comp->cb_arg, status);
 				comp->hw.status = status = 0;
 				spdk_bit_array_clear(chan->ring_ctrl.ring_slots, index);
 			}
