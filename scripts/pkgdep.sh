@@ -123,6 +123,7 @@ if [ -s /etc/redhat-release ]; then
 	# Minimal install
 	if echo "$ID $VERSION_ID" | grep -E -q 'centos 8'; then
 		# Add PowerTools needed for install CUnit-devel in Centos8
+		yum install -y yum-utils
 		yum config-manager --set-enabled PowerTools
 	fi
 	yum install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
