@@ -57,7 +57,6 @@
 #define UT_NUM_SHARED_BUFFERS 128
 
 SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
-SPDK_LOG_REGISTER_COMPONENT("nvme", SPDK_LOG_NVME)
 
 DEFINE_STUB(spdk_nvmf_qpair_get_listen_trid,
 	    int,

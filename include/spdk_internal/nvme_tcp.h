@@ -481,10 +481,7 @@ nvme_tcp_read_data(struct spdk_sock *sock, int bytes,
 		}
 
 		/* For connect reset issue, do not output error log */
-		if (errno == ECONNRESET) {
-			SPDK_DEBUGLOG(SPDK_LOG_NVME, "spdk_sock_recv() failed, errno %d: %s\n",
-				      errno, spdk_strerror(errno));
-		} else {
+		if (errno != ECONNRESET) {
 			SPDK_ERRLOG("spdk_sock_recv() failed, errno %d: %s\n",
 				    errno, spdk_strerror(errno));
 		}
@@ -520,10 +517,7 @@ nvme_tcp_readv_data(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 		}
 
 		/* For connect reset issue, do not output error log */
-		if (errno == ECONNRESET) {
-			SPDK_DEBUGLOG(SPDK_LOG_NVME, "spdk_sock_readv() failed, errno %d: %s\n",
-				      errno, spdk_strerror(errno));
-		} else {
+		if (errno != ECONNRESET) {
 			SPDK_ERRLOG("spdk_sock_readv() failed, errno %d: %s\n",
 				    errno, spdk_strerror(errno));
 		}
