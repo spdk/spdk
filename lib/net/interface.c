@@ -48,7 +48,7 @@ static TAILQ_HEAD(, spdk_interface) g_interface_head;
 
 static pthread_mutex_t interface_lock = PTHREAD_MUTEX_INITIALIZER;
 
-static int spdk_get_ifc_ipv4(void)
+static int get_ifc_ipv4(void)
 {
 	int ret;
 	int rtattrlen;
@@ -156,7 +156,7 @@ exit:
 }
 
 
-static int spdk_process_new_interface_msg(struct nlmsghdr *h)
+static int process_new_interface_msg(struct nlmsghdr *h)
 {
 	int len;
 	struct spdk_interface *ifc;
@@ -196,7 +196,7 @@ static int spdk_process_new_interface_msg(struct nlmsghdr *h)
 	return 0;
 }
 
-static int spdk_prepare_ifc_list(void)
+static int prepare_ifc_list(void)
 {
 	int ret = 0;
 	struct nl_req_s {
@@ -288,7 +288,7 @@ static int spdk_prepare_ifc_list(void)
 					end++;
 					break;
 				case RTM_NEWLINK:	/* This is a RTM_NEWLINK message, which contains lots of information about a link */
-					ret = spdk_process_new_interface_msg(msg_ptr);
+					ret = process_new_interface_msg(msg_ptr);
 					if (ret != 0) {
 						goto exit;
 					}
@@ -305,7 +305,7 @@ exit:
 }
 
 static struct spdk_interface *
-spdk_interface_find_by_index(uint32_t ifc_index)
+interface_find_by_index(uint32_t ifc_index)
 {
 	struct spdk_interface *ifc_entry;
 
@@ -403,7 +403,7 @@ static int netlink_addr_msg(uint32_t ifc_idx, uint32_t ip_address, uint32_t crea
 	return 0;
 }
 
-static void spdk_interface_ip_update(void)
+static void interface_ip_update(void)
 {
 	struct spdk_interface *ifc_entry;
 
@@ -412,21 +412,21 @@ static void spdk_interface_ip_update(void)
 		ifc_entry->num_ip_addresses = 0;
 		memset(ifc_entry->ip_address, 0, sizeof(ifc_entry->ip_address));
 	}
-	spdk_get_ifc_ipv4();
+	get_ifc_ipv4();
 	pthread_mutex_unlock(&interface_lock);
 }
 
 static int
-spdk_interface_is_ip_address_in_use(int ifc_index, uint32_t addr, bool add)
+interface_is_ip_address_in_use(int ifc_index, uint32_t addr, bool add)
 {
 	struct spdk_interface *ifc_entry;
 	bool in_use = false;
 	uint32_t idx = 0;
 
-	spdk_interface_ip_update();
+	interface_ip_update();
 
 	pthread_mutex_lock(&interface_lock);
-	ifc_entry = spdk_interface_find_by_index(ifc_index);
+	ifc_entry = interface_find_by_index(ifc_index);
 	if (ifc_entry == NULL) {
 		pthread_mutex_unlock(&interface_lock);
 		return -ENODEV;
@@ -459,9 +459,9 @@ spdk_interface_init(void)
 	int rc = 0;
 
 	TAILQ_INIT(&g_interface_head);
-	rc = spdk_prepare_ifc_list();
+	rc = prepare_ifc_list();
 	if (!rc) {
-		rc = spdk_get_ifc_ipv4();
+		rc = get_ifc_ipv4();
 	}
 
 	return rc;
@@ -480,14 +480,14 @@ spdk_interface_destroy(void)
 }
 
 int
-spdk_interface_net_interface_add_ip_address(int ifc_index, char *ip_addr)
+interface_net_interface_add_ip_address(int ifc_index, char *ip_addr)
 {
 	uint32_t addr;
 	int ret;
 
 	addr = inet_addr(ip_addr);
 
-	ret = spdk_interface_is_ip_address_in_use(ifc_index, addr, true);
+	ret = interface_is_ip_address_in_use(ifc_index, addr, true);
 	if (ret < 0) {
 		return ret;
 	}
@@ -496,14 +496,14 @@ spdk_interface_net_interface_add_ip_address(int ifc_index, char *ip_addr)
 }
 
 int
-spdk_interface_net_interface_delete_ip_address(int ifc_index, char *ip_addr)
+interface_net_interface_delete_ip_address(int ifc_index, char *ip_addr)
 {
 	uint32_t addr;
 	int ret;
 
 	addr = inet_addr(ip_addr);
 
-	ret = spdk_interface_is_ip_address_in_use(ifc_index, addr, false);
+	ret = interface_is_ip_address_in_use(ifc_index, addr, false);
 	if (ret < 0) {
 		return ret;
 	}
@@ -511,9 +511,9 @@ spdk_interface_net_interface_delete_ip_address(int ifc_index, char *ip_addr)
 	return netlink_addr_msg(ifc_index, addr, 0);
 }
 
-void *spdk_interface_get_list(void)
+void *interface_get_list(void)
 {
-	spdk_interface_ip_update();
+	interface_ip_update();
 	return &g_interface_head;
 }
 
@@ -531,19 +531,19 @@ spdk_interface_destroy(void)
 }
 
 int
-spdk_interface_net_interface_add_ip_address(int ifc_index, char *ip_addr)
+interface_net_interface_add_ip_address(int ifc_index, char *ip_addr)
 {
 	return -1;
 }
 
 int
-spdk_interface_net_interface_delete_ip_address(int ifc_index, char *ip_addr)
+interface_net_interface_delete_ip_address(int ifc_index, char *ip_addr)
 {
 	return -1;
 }
 
 void *
-spdk_interface_get_list(void)
+interface_get_list(void)
 {
 	return NULL;
 }

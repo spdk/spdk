@@ -74,7 +74,7 @@ spdk_rpc_net_interface_add_ip_address(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	ret_val = spdk_interface_net_interface_add_ip_address(req.ifc_index, req.ip_address);
+	ret_val = interface_net_interface_add_ip_address(req.ifc_index, req.ip_address);
 	if (ret_val) {
 		if (ret_val == -ENODEV) {
 			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_STATE,
@@ -121,7 +121,7 @@ spdk_rpc_net_interface_delete_ip_address(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	ret_val = spdk_interface_net_interface_delete_ip_address(req.ifc_index, req.ip_address);
+	ret_val = interface_net_interface_delete_ip_address(req.ifc_index, req.ip_address);
 	if (ret_val) {
 		if (ret_val == -ENODEV) {
 			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_STATE,
@@ -156,7 +156,7 @@ spdk_rpc_net_get_interfaces(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
-	TAILQ_HEAD(, spdk_interface) *interface_head = spdk_interface_get_list();
+	TAILQ_HEAD(, spdk_interface) *interface_head = interface_get_list();
 	struct spdk_interface *ifc;
 	char *ip_address;
 	struct in_addr inaddr;
