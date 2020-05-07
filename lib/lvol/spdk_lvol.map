@@ -1,0 +1,28 @@
+{
+	global:
+
+	# public functions
+	spdk_lvs_opts_init;
+	spdk_lvs_init;
+	spdk_lvs_rename;
+	spdk_lvs_unload;
+	spdk_lvs_destroy;
+	spdk_lvol_create;
+	spdk_lvol_create_snapshot;
+	spdk_lvol_create_clone;
+	spdk_lvol_rename;
+	spdk_lvol_deletable;
+	spdk_lvol_destroy;
+	spdk_lvol_close;
+	spdk_lvol_get_io_channel;
+	spdk_lvs_load;
+	spdk_lvol_open;
+	spdk_lvol_inflate;
+	spdk_lvol_decouple_parent;
+
+	# internal functions
+	spdk_lvol_resize;
+	spdk_lvol_set_read_only;
+
+	local: *;
+};

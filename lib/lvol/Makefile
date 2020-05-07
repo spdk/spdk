@@ -41,4 +41,6 @@ SO_SUFFIX := $(SO_VER).$(SO_MINOR)
 C_SRCS = lvol.c
 LIBNAME = lvol
 
+SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_lvol.map)
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

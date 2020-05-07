@@ -60,6 +60,8 @@ function confirm_abi_deps() {
 	name = SPDK_LOG_LOG_RPC
 [suppress_variable]
 	name = SPDK_LOG_LOG
+[suppress_variable]
+	name = SPDK_LOG_LVOL
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do
