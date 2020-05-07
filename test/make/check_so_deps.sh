@@ -55,6 +55,7 @@ EOF
 			function_summary=$(grep "functions summary" <<< "$output")
 			variable_summary=$(grep "variables summary" <<< "$output")
 			# remove any filtered out variables.
+			function_summary=$(sed "s/ [()][^)]*[)]//g" <<< "$function_summary")
 			variable_summary=$(sed "s/ [()][^)]*[)]//g" <<< "$variable_summary")
 
 			read -r _ _ _ removed_functions _ changed_functions _ added_functions _ <<< "$function_summary"
