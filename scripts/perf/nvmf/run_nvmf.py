@@ -602,8 +602,11 @@ class SPDKTarget(Target):
             req_num_disks = get_nvme_devices_count()
 
         # Distribute bdevs between provided NICs
-        num_disks = range(1, req_num_disks + 1)
-        disks_per_ip = int(len(num_disks) / len(ips))
+        num_disks = range(0, req_num_disks)
+        if len(num_disks) == 1:
+            disks_per_ip = 1
+        else:
+            disks_per_ip = int(len(num_disks) / len(ips))
         disk_chunks = [num_disks[i * disks_per_ip:disks_per_ip + disks_per_ip * i] for i in range(0, len(ips))]
 
         # Create subsystems, add bdevs to namespaces, add listeners
@@ -611,7 +614,7 @@ class SPDKTarget(Target):
             for c in chunk:
                 nqn = "nqn.2018-09.io.spdk:cnode%s" % c
                 serial = "SPDK00%s" % c
-                bdev_name = "Nvme%sn1" % (c - 1)
+                bdev_name = "Nvme%sn1" % c
                 rpc.nvmf.nvmf_create_subsystem(self.client, nqn, serial,
                                                allow_any_host=True, max_namespaces=8)
                 rpc.nvmf.nvmf_subsystem_add_ns(self.client, nqn, bdev_name)
@@ -696,8 +699,8 @@ class KernelInitiator(Initiator):
 
         filename_section = ""
         filenames = ["nvme%sn1" % x for x in range(0, len(nvme_list))]
-        nvme_per_split = int(len(nvme_list) / threads)
-        remainder = len(nvme_list) % threads
+        nvme_per_split = int(len(nvme_list) / len(threads))
+        remainder = len(nvme_list) % len(threads)
         iterator = iter(filenames)
         result = []
         for i in range(len(threads)):
