@@ -12,14 +12,13 @@ target=foobar
 # pre-seed the rng to generate predictive values across different test runs
 RANDOM=0
 
-
-gen_random_s () {
+gen_random_s() {
 	local length=$1 ll
 	# generate ascii table which nvme supports
 	local chars=({32..127})
 	local string
 
-	for (( ll = 0; ll < length; ll++ )); do
+	for ((ll = 0; ll < length; ll++)); do
 		string+="$(echo -e "\x$(printf '%x' "${chars[RANDOM % ${#chars[@]}]}")")"
 	done
 	# Be nice to rpc.py's arg parser and escape `-` in case it's a first character
@@ -33,7 +32,6 @@ nvmftestinit
 nvmfappstart "-m 0xF"
 
 trap 'process_shm --id $NVMF_APP_SHM_ID; nvmftestfini $1; exit 1' SIGINT SIGTERM EXIT
-
 
 # Attempt to create subsystem with non-existing target
 out=$("$rpc" nvmf_create_subsystem -t "$target" "$nqn$RANDOM" 2>&1) && false

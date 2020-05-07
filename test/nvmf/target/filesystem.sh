@@ -12,7 +12,7 @@ rpc_py="$rootdir/scripts/rpc.py"
 
 nvmftestinit
 
-function nvmf_filesystem_create {
+function nvmf_filesystem_create() {
 	fstype=$1
 	nvme_name=$2
 
@@ -27,7 +27,7 @@ function nvmf_filesystem_create {
 	i=0
 	while ! umount /mnt/device; do
 		[ $i -lt 15 ] || break
-		i=$((i+1))
+		i=$((i + 1))
 		sleep 1
 	done
 
@@ -41,7 +41,7 @@ function nvmf_filesystem_create {
 	lsblk -l -o NAME | grep -q -w "${nvme_name}p1"
 }
 
-function nvmf_filesystem_part {
+function nvmf_filesystem_part() {
 	incapsule=$1
 
 	nvmfappstart "-m 0xF"
@@ -59,7 +59,7 @@ function nvmf_filesystem_part {
 
 	mkdir -p /mnt/device
 
-	parted -s /dev/${nvme_name} mklabel msdos  mkpart primary '0%' '100%'
+	parted -s /dev/${nvme_name} mklabel msdos mkpart primary '0%' '100%'
 	partprobe
 	sleep 1
 

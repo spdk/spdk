@@ -78,8 +78,8 @@ function iscsitestinit() {
 function waitforiscsidevices() {
 	local num=$1
 
-	for ((i=1; i<=20; i++)); do
-		n=$( iscsiadm -m session -P 3 | grep -c "Attached scsi disk sd[a-z]*" || true)
+	for ((i = 1; i <= 20; i++)); do
+		n=$(iscsiadm -m session -P 3 | grep -c "Attached scsi disk sd[a-z]*" || true)
 		if [ $n -ne $num ]; then
 			sleep 0.1
 		else
@@ -107,7 +107,7 @@ function start_vpp() {
 	# for VPP side maximal size of MTU for TCP is 1460 and tests doesn't work
 	# stable with larger packets
 	MTU=1460
-	MTU_W_HEADER=$((MTU+20))
+	MTU_W_HEADER=$((MTU + 20))
 	ip link set dev $INITIATOR_INTERFACE mtu $MTU
 	ethtool -K $INITIATOR_INTERFACE tso off
 	ethtool -k $INITIATOR_INTERFACE
@@ -119,8 +119,8 @@ function start_vpp() {
 		session { evt_qs_memfd_seg } \
 		socksvr { socket-name /run/vpp-api.sock } \
 		plugins { \
-			plugin default { disable } \
-			plugin dpdk_plugin.so { enable } \
+		plugin default { disable } \
+		plugin dpdk_plugin.so { enable } \
 		} &
 
 	vpp_pid=$!
@@ -131,13 +131,13 @@ function start_vpp() {
 	# Wait until VPP starts responding
 	xtrace_disable
 	counter=40
-	while [ $counter -gt 0 ] ; do
+	while [ $counter -gt 0 ]; do
 		vppctl show version | grep -E "vpp v[0-9]+\.[0-9]+" && break
-		counter=$(( counter - 1 ))
+		counter=$((counter - 1))
 		sleep 0.5
 	done
 	xtrace_restore
-	if [ $counter -eq 0 ] ; then
+	if [ $counter -eq 0 ]; then
 		return 1
 	fi
 
@@ -171,8 +171,8 @@ function start_vpp() {
 	sleep 3
 	# SC1010: ping -M do - in this case do is an option not bash special word
 	# shellcheck disable=SC1010
-	ping -c 1 $TARGET_IP -s $(( MTU - 28 )) -M do
-	vppctl ping $INITIATOR_IP repeat 1 size $(( MTU - (28 + 8) )) verbose | grep -E "$MTU_W_HEADER bytes from $INITIATOR_IP"
+	ping -c 1 $TARGET_IP -s $((MTU - 28)) -M do
+	vppctl ping $INITIATOR_IP repeat 1 size $((MTU - (28 + 8))) verbose | grep -E "$MTU_W_HEADER bytes from $INITIATOR_IP"
 }
 
 function kill_vpp() {
@@ -187,7 +187,7 @@ function kill_vpp() {
 }
 function initiator_json_config() {
 	# Prepare config file for iSCSI initiator
-	jq . <<-JSON
+	jq . <<- JSON
 		{
 		  "subsystems": [
 		    {

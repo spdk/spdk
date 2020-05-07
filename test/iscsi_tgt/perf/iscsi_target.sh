@@ -20,9 +20,11 @@ NUM_JOBS=1
 ISCSI_TGT_CM=0x02
 
 # Performance test for iscsi_tgt, run on devices with proper hardware support (target and inititator)
-function usage()
-{
-	[[ -n $2 ]] && ( echo "$2"; echo ""; )
+function usage() {
+	[[ -n $2 ]] && (
+		echo "$2"
+		echo ""
+	)
 	echo "Usage: $(basename $1) [options]"
 	echo "-h, --help                Print help and exit"
 	echo "    --fiopath=PATH        Path to fio directory on initiator. [default=$FIO_PATH]"
@@ -36,19 +38,31 @@ function usage()
 while getopts 'h-:' optchar; do
 	case "$optchar" in
 		-)
-		case "$OPTARG" in
-			help) usage $0; exit 0 ;;
-			fiopath=*) FIO_BIN="${OPTARG#*=}" ;;
-			disk_no=*) DISKNO="${OPTARG#*=}" ;;
-			target_ip=*) TARGET_IP="${OPTARG#*=}" ;;
-			initiator_ip=*) INITIATOR_IP="${OPTARG#*=}" ;;
-			init_mgmnt_ip=*) IP_I_SSH="${OPTARG#*=}" ;;
-			iscsi_tgt_mask=*) ISCSI_TGT_CM="${OPTARG#*=}" ;;
-			*) usage $0 echo "Invalid argument '$OPTARG'"; exit 1 ;;
-		esac
-		;;
-		h) usage $0; exit 0 ;;
-		*) usage $0 "Invalid argument '$optchar'"; exit 1 ;;
+			case "$OPTARG" in
+				help)
+					usage $0
+					exit 0
+					;;
+				fiopath=*) FIO_BIN="${OPTARG#*=}" ;;
+				disk_no=*) DISKNO="${OPTARG#*=}" ;;
+				target_ip=*) TARGET_IP="${OPTARG#*=}" ;;
+				initiator_ip=*) INITIATOR_IP="${OPTARG#*=}" ;;
+				init_mgmnt_ip=*) IP_I_SSH="${OPTARG#*=}" ;;
+				iscsi_tgt_mask=*) ISCSI_TGT_CM="${OPTARG#*=}" ;;
+				*)
+					usage $0 echo "Invalid argument '$OPTARG'"
+					exit 1
+					;;
+			esac
+			;;
+		h)
+			usage $0
+			exit 0
+			;;
+		*)
+			usage $0 "Invalid argument '$optchar'"
+			exit 1
+			;;
 	esac
 done
 
@@ -68,7 +82,7 @@ if [ $EUID -ne 0 ]; then
 	error "INFO: This script must be run with root privileges"
 fi
 
-function ssh_initiator(){
+function ssh_initiator() {
 	ssh -i $HOME/.ssh/spdk_vhost_id_rsa root@$IP_I_SSH "$@"
 }
 
@@ -100,8 +114,7 @@ fi
 $rpc_py iscsi_create_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
 $rpc_py iscsi_create_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 
-for (( i=0; i < DISKNO; i++ ))
-do
+for ((i = 0; i < DISKNO; i++)); do
 	$rpc_py iscsi_create_target_node Target${i} Target${i}_alias "${bdevs[i]}:0" "$PORTAL_TAG:$INITIATOR_TAG" 64 -d
 done
 
@@ -110,7 +123,7 @@ rm -f $testdir/perf.job
 timing_exit iscsi_config
 
 timing_enter iscsi_initiator
-ssh_initiator bash -s - < $testdir/iscsi_initiator.sh $FIO_PATH $TARGET_IP
+ssh_initiator bash -s - $FIO_PATH $TARGET_IP < $testdir/iscsi_initiator.sh
 timing_exit iscsi_initiator
 
 ssh_initiator "cat perf_output/iscsi_fio.json" > $iscsi_fio_results

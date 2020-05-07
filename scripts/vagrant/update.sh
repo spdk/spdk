@@ -9,8 +9,8 @@ fi
 
 set -e
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-SPDK_DIR="$( cd "${DIR}/../../" && pwd )"
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SPDK_DIR="$(cd "${DIR}/../../" && pwd)"
 echo "SPDK_DIR = $SPDK_DIR"
 
 # Bug fix for vagrant rsync problem
@@ -50,7 +50,7 @@ else
 	#       get the requested number of hugepages without rebooting.
 	#       So do it here just in case
 	sysctl -w vm.nr_hugepages=1024
-	HUGEPAGES=$(sysctl -n  vm.nr_hugepages)
+	HUGEPAGES=$(sysctl -n vm.nr_hugepages)
 	if [ $HUGEPAGES != 1024 ]; then
 		echo "Warning: Unable to get 1024 hugepages, only got $HUGEPAGES"
 		echo "Warning: Adjusting HUGEMEM in /home/vagrant/autorun-spdk.conf"
@@ -59,9 +59,9 @@ else
 	fi
 
 	# Figure out what system we are running on
-	if [ -f /etc/lsb-release ];then
+	if [ -f /etc/lsb-release ]; then
 		. /etc/lsb-release
-	elif [ -f /etc/redhat-release ];then
+	elif [ -f /etc/redhat-release ]; then
 		yum update -y
 		yum install -y redhat-lsb
 		DISTRIB_ID=$(lsb_release -si)

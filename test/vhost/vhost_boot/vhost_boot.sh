@@ -10,8 +10,7 @@ source $rootdir/test/bdev/nbd_common.sh
 rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 vm_no="0"
 
-function err_clean
-{
+function err_clean() {
 	trap - ERR
 	print_backtrace
 	set +e
@@ -25,9 +24,11 @@ function err_clean
 	exit 1
 }
 
-function usage()
-{
-	[[ -n $2 ]] && ( echo "$2"; echo ""; )
+function usage() {
+	[[ -n $2 ]] && (
+		echo "$2"
+		echo ""
+	)
 	echo "Usage: $(basename $1) vm_image=PATH [-h|--help]"
 	echo "-h, --help            Print help and exit"
 	echo "    --vm_image=PATH   Path to VM image used in these tests"
@@ -36,11 +37,11 @@ function usage()
 while getopts 'h-:' optchar; do
 	case "$optchar" in
 		-)
-		case "$OPTARG" in
-			vm_image=*) os_image="${OPTARG#*=}" ;;
-			*) usage $0 echo "Invalid argument '$OPTARG'" && exit 1 ;;
-		esac
-		;;
+			case "$OPTARG" in
+				vm_image=*) os_image="${OPTARG#*=}" ;;
+				*) usage $0 echo "Invalid argument '$OPTARG'" && exit 1 ;;
+			esac
+			;;
 		h) usage $0 && exit 0 ;;
 		*) usage $0 "Invalid argument '$optchar'" && exit 1 ;;
 	esac

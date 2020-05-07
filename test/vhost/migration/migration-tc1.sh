@@ -1,5 +1,4 @@
-function migration_tc1_clean_vhost_config()
-{
+function migration_tc1_clean_vhost_config() {
 	# Restore trap
 	trap 'error_exit "${FUNCNAME}" "${LINENO}"' INT ERR EXIT
 
@@ -14,8 +13,7 @@ function migration_tc1_clean_vhost_config()
 	unset -v incoming_vm target_vm incoming_vm_ctrlr target_vm_ctrlr rpc
 }
 
-function migration_tc1_configure_vhost()
-{
+function migration_tc1_configure_vhost() {
 	# Those are global intentionally - they will be unset in cleanup handler
 	incoming_vm=0
 	target_vm=1
@@ -36,8 +34,7 @@ function migration_tc1_configure_vhost()
 	$rpc vhost_scsi_controller_add_target $target_vm_ctrlr 0 Malloc0
 }
 
-function migration_tc1_error_handler()
-{
+function migration_tc1_error_handler() {
 	trap - SIGINT ERR EXIT
 	warning "Migration TC1 ERROR HANDLER"
 	print_backtrace
@@ -49,8 +46,7 @@ function migration_tc1_error_handler()
 	warning "Migration TC1 FAILED"
 }
 
-function migration_tc1()
-{
+function migration_tc1() {
 	# Use 2 VMs:
 	# incoming VM - the one we want to migrate
 	# targe VM - the one which will accept migration
@@ -101,7 +97,7 @@ function migration_tc1()
 	while is_fio_running $target_vm; do
 		sleep 1
 		echo -n "."
-		if (( timeout-- == 0 )); then
+		if ((timeout-- == 0)); then
 			error "timeout while waiting for FIO!"
 		fi
 	done

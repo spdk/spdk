@@ -27,12 +27,12 @@ done
 
 timing_enter autofuzz
 if [ "$TEST_MODULE" == "nvmf" ]; then
-	allowed_transports=( "${allowed_nvme_transports[@]}" )
+	allowed_transports=("${allowed_nvme_transports[@]}")
 	if [ $TEST_TRANSPORT == "rdma" ]; then
 		config_params="$config_params --with-rdma"
 	fi
 elif [ "$TEST_MODULE" == "vhost" ]; then
-	allowed_transports=( "${allowed_vhost_transports[@]}" )
+	allowed_transports=("${allowed_vhost_transports[@]}")
 	config_params="$config_params --with-vhost --with-virtio"
 else
 	echo "Invalid module specified. Please specify either nvmf or vhost."

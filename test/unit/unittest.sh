@@ -12,7 +12,7 @@ source "$rootdir/test/common/autotest_common.sh"
 
 cd "$rootdir"
 
-function unittest_bdev {
+function unittest_bdev() {
 	$valgrind $testdir/lib/bdev/bdev.c/bdev_ut
 	$valgrind $testdir/lib/bdev/bdev_ocssd.c/bdev_ocssd_ut
 	$valgrind $testdir/lib/bdev/raid/bdev_raid.c/bdev_raid_ut
@@ -25,7 +25,7 @@ function unittest_bdev {
 	$valgrind $testdir/lib/bdev/mt/bdev.c/bdev_ut
 }
 
-function unittest_blob {
+function unittest_blob() {
 	$valgrind $testdir/lib/blob/blob.c/blob_ut
 	$valgrind $testdir/lib/blobfs/tree.c/tree_ut
 	$valgrind $testdir/lib/blobfs/blobfs_async_ut/blobfs_async_ut
@@ -34,13 +34,13 @@ function unittest_blob {
 	$valgrind $testdir/lib/blobfs/blobfs_bdev.c/blobfs_bdev_ut
 }
 
-function unittest_event {
+function unittest_event() {
 	$valgrind $testdir/lib/event/subsystem.c/subsystem_ut
 	$valgrind $testdir/lib/event/app.c/app_ut
 	$valgrind $testdir/lib/event/reactor.c/reactor_ut
 }
 
-function unittest_ftl {
+function unittest_ftl() {
 	$valgrind $testdir/lib/ftl/ftl_ppa/ftl_ppa_ut
 	$valgrind $testdir/lib/ftl/ftl_band.c/ftl_band_ut
 	$valgrind $testdir/lib/ftl/ftl_reloc.c/ftl_reloc_ut
@@ -49,7 +49,7 @@ function unittest_ftl {
 	$valgrind $testdir/lib/ftl/ftl_io.c/ftl_io_ut
 }
 
-function unittest_iscsi {
+function unittest_iscsi() {
 	$valgrind $testdir/lib/iscsi/conn.c/conn_ut
 	$valgrind $testdir/lib/iscsi/param.c/param_ut
 	$valgrind $testdir/lib/iscsi/tgt_node.c/tgt_node_ut $testdir/lib/iscsi/tgt_node.c/tgt_node.conf
@@ -58,14 +58,14 @@ function unittest_iscsi {
 	$valgrind $testdir/lib/iscsi/portal_grp.c/portal_grp_ut $testdir/lib/iscsi/portal_grp.c/portal_grp.conf
 }
 
-function unittest_json {
+function unittest_json() {
 	$valgrind $testdir/lib/json/json_parse.c/json_parse_ut
 	$valgrind $testdir/lib/json/json_util.c/json_util_ut
 	$valgrind $testdir/lib/json/json_write.c/json_write_ut
 	$valgrind $testdir/lib/jsonrpc/jsonrpc_server.c/jsonrpc_server_ut
 }
 
-function unittest_nvme {
+function unittest_nvme() {
 	$valgrind $testdir/lib/nvme/nvme.c/nvme_ut
 	$valgrind $testdir/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut
 	$valgrind $testdir/lib/nvme/nvme_ctrlr_cmd.c/nvme_ctrlr_cmd_ut
@@ -81,7 +81,7 @@ function unittest_nvme {
 	$valgrind $testdir/lib/nvme/nvme_uevent.c/nvme_uevent_ut
 }
 
-function unittest_nvmf {
+function unittest_nvmf() {
 	$valgrind $testdir/lib/nvmf/ctrlr.c/ctrlr_ut
 	$valgrind $testdir/lib/nvmf/ctrlr_bdev.c/ctrlr_bdev_ut
 	$valgrind $testdir/lib/nvmf/ctrlr_discovery.c/ctrlr_discovery_ut
@@ -89,7 +89,7 @@ function unittest_nvmf {
 	$valgrind $testdir/lib/nvmf/tcp.c/tcp_ut
 }
 
-function unittest_scsi {
+function unittest_scsi() {
 	$valgrind $testdir/lib/scsi/dev.c/dev_ut
 	$valgrind $testdir/lib/scsi/lun.c/lun_ut
 	$valgrind $testdir/lib/scsi/scsi.c/scsi_ut
@@ -97,12 +97,12 @@ function unittest_scsi {
 	$valgrind $testdir/lib/scsi/scsi_pr.c/scsi_pr_ut
 }
 
-function unittest_sock {
-        $valgrind $testdir/lib/sock/sock.c/sock_ut
-        $valgrind $testdir/lib/sock/posix.c/posix_ut
+function unittest_sock() {
+	$valgrind $testdir/lib/sock/sock.c/sock_ut
+	$valgrind $testdir/lib/sock/posix.c/posix_ut
 }
 
-function unittest_util {
+function unittest_util() {
 	$valgrind $testdir/lib/util/base64.c/base64_ut
 	$valgrind $testdir/lib/util/bit_array.c/bit_array_ut
 	$valgrind $testdir/lib/util/cpuset.c/cpuset_ut

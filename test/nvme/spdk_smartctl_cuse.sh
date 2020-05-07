@@ -12,19 +12,19 @@ bdf=$(get_first_nvme_bdf)
 
 PCI_WHITELIST="${bdf}" $rootdir/scripts/setup.sh reset
 sleep 1
-bdf_sysfs_path=$( readlink -f /sys/class/nvme/nvme* | grep "$bdf/nvme/nvme" )
+bdf_sysfs_path=$(readlink -f /sys/class/nvme/nvme* | grep "$bdf/nvme/nvme")
 if [ -z "$bdf_sysfs_path" ]; then
 	echo "setup.sh failed bind kernel driver to ${bdf}"
 	exit 1
 fi
-nvme_name=$( basename $bdf_sysfs_path )
+nvme_name=$(basename $bdf_sysfs_path)
 
-KERNEL_SMART_JSON=$( ${SMARTCTL_CMD} --json=g -a /dev/${nvme_name} | grep -v "/dev/${nvme_name}" | sort || true )
+KERNEL_SMART_JSON=$(${SMARTCTL_CMD} --json=g -a /dev/${nvme_name} | grep -v "/dev/${nvme_name}" | sort || true)
 
 ${SMARTCTL_CMD} -i /dev/${nvme_name}n1
 
 # logs are not provided by json output
-KERNEL_SMART_ERRLOG=$( ${SMARTCTL_CMD} -l error /dev/${nvme_name} )
+KERNEL_SMART_ERRLOG=$(${SMARTCTL_CMD} -l error /dev/${nvme_name})
 
 $rootdir/scripts/setup.sh
 
@@ -43,19 +43,19 @@ if [ ! -c /dev/spdk/nvme0 ]; then
 	exit 1
 fi
 
-CUSE_SMART_JSON=$( ${SMARTCTL_CMD} --json=g -a /dev/spdk/nvme0 | grep -v "/dev/spdk/nvme0" | sort || true )
+CUSE_SMART_JSON=$(${SMARTCTL_CMD} --json=g -a /dev/spdk/nvme0 | grep -v "/dev/spdk/nvme0" | sort || true)
 
-DIFF_SMART_JSON=$( diff --changed-group-format='%<' --unchanged-group-format='' <(echo "$KERNEL_SMART_JSON") <(echo "$CUSE_SMART_JSON") || true)
+DIFF_SMART_JSON=$(diff --changed-group-format='%<' --unchanged-group-format='' <(echo "$KERNEL_SMART_JSON") <(echo "$CUSE_SMART_JSON") || true)
 
 # Mask values can change
-ERR_SMART_JSON=$( grep -v "json\.nvme_smart_health_information_log\.\|json\.local_time\.\|json\.temperature\.\|json\.power_on_time\.hours" <<< $DIFF_SMART_JSON || true )
+ERR_SMART_JSON=$(grep -v "json\.nvme_smart_health_information_log\.\|json\.local_time\.\|json\.temperature\.\|json\.power_on_time\.hours" <<< $DIFF_SMART_JSON || true)
 
-if [ -n "$ERR_SMART_JSON" ] ; then
+if [ -n "$ERR_SMART_JSON" ]; then
 	echo "Wrong values for: $ERR_SMART_JSON"
 	exit 1
 fi
 
-CUSE_SMART_ERRLOG=$( ${SMARTCTL_CMD} -l error /dev/spdk/nvme0 )
+CUSE_SMART_ERRLOG=$(${SMARTCTL_CMD} -l error /dev/spdk/nvme0)
 if [ "$CUSE_SMART_ERRLOG" != "$KERNEL_SMART_ERRLOG" ]; then
 	echo "Wrong values in NVMe Error log"
 	exit 1

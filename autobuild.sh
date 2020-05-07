@@ -35,7 +35,7 @@ $MAKE cc_version
 $MAKE cxx_version
 echo "** END ** Info for Hostname: $HOSTNAME"
 
-function ocf_precompile {
+function ocf_precompile() {
 	# We compile OCF sources ourselves
 	# They don't need to be checked with scanbuild and code coverage is not applicable
 	# So we precompile OCF now for further use as standalone static library
@@ -48,7 +48,7 @@ function ocf_precompile {
 	./configure $config_params
 }
 
-function make_fail_cleanup {
+function make_fail_cleanup() {
 	if [ -d $out/scan-build-tmp ]; then
 		scanoutput=$(ls -1 $out/scan-build-tmp/)
 		mv $out/scan-build-tmp/$scanoutput $out/scan-build
@@ -58,7 +58,7 @@ function make_fail_cleanup {
 	false
 }
 
-function scanbuild_make {
+function scanbuild_make() {
 	pass=true
 	$scanbuild $MAKE $MAKEFLAGS > $out/build_output.txt && rm -rf $out/scan-build-tmp || make_fail_cleanup
 	xtrace_disable
@@ -92,7 +92,7 @@ function scanbuild_make {
 	$pass
 }
 
-function porcelain_check {
+function porcelain_check() {
 	if [ $(git status --porcelain --ignore-submodules | wc -l) -ne 0 ]; then
 		echo "Generated files missing from .gitignore:"
 		git status --porcelain --ignore-submodules
@@ -103,7 +103,7 @@ function porcelain_check {
 # Check that header file dependencies are working correctly by
 #  capturing a binary's stat data before and after touching a
 #  header file and re-making.
-function header_dependency_check {
+function header_dependency_check() {
 	STAT1=$(stat app/spdk_tgt/spdk_tgt)
 	sleep 1
 	touch lib/nvme/nvme_internal.h
@@ -116,7 +116,7 @@ function header_dependency_check {
 	fi
 }
 
-function test_make_uninstall {
+function test_make_uninstall() {
 	# Create empty file to check if it is not deleted by target uninstall
 	touch "$SPDK_WORKSPACE/usr/lib/sample_xyz.a"
 	$MAKE $MAKEFLAGS uninstall DESTDIR="$SPDK_WORKSPACE" prefix=/usr
@@ -127,14 +127,14 @@ function test_make_uninstall {
 	fi
 }
 
-function build_doc {
+function build_doc() {
 	$MAKE -C "$rootdir"/doc --no-print-directory $MAKEFLAGS &> "$out"/doxygen.log
 	if [ -s "$out"/doxygen.log ]; then
 		cat "$out"/doxygen.log
 		echo "Doxygen errors found!"
 		exit 1
 	fi
-	if hash pdflatex 2>/dev/null; then
+	if hash pdflatex 2> /dev/null; then
 		$MAKE -C "$rootdir"/doc/output/latex --no-print-directory $MAKEFLAGS &>> "$out"/doxygen.log
 	fi
 	mkdir -p "$out"/doc
@@ -149,7 +149,7 @@ function build_doc {
 	rm -rf "$rootdir"/doc/output
 }
 
-function autobuild_test_suite {
+function autobuild_test_suite() {
 	run_test "autobuild_check_format" ./scripts/check_format.sh
 	run_test "autobuild_external_code" sudo -E $rootdir/test/external_code/test_make.sh $rootdir
 	if [ "$SPDK_TEST_OCF" -eq 1 ]; then

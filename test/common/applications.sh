@@ -12,8 +12,8 @@ VHOST_APP=("$_app_dir/vhost/vhost")
 
 # Check if apps should execute under debug flags
 if [[ -e $_root/include/spdk/config.h ]]; then
-	if [[ $(<"$_root/include/spdk/config.h") == *"#define SPDK_CONFIG_DEBUG"* ]] \
-	&& (( SPDK_AUTOTEST_DEBUG_APPS )); then
+	if [[ $(< "$_root/include/spdk/config.h") == *"#define SPDK_CONFIG_DEBUG"* ]] \
+		&& ((SPDK_AUTOTEST_DEBUG_APPS)); then
 		VHOST_FUZZ_APP+=("--log-flags=all")
 		ISCSI_APP+=("--log-flags=all")
 		NVMF_APP+=("--log-flags=all")

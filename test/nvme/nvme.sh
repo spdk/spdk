@@ -5,7 +5,7 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/scripts/common.sh
 source $rootdir/test/common/autotest_common.sh
 
-function nvme_identify {
+function nvme_identify() {
 	$rootdir/examples/nvme/identify/identify -i 0
 	for bdf in $(get_nvme_bdfs); do
 		$rootdir/examples/nvme/identify/identify -r "trtype:PCIe traddr:${bdf}" -i 0
@@ -13,7 +13,7 @@ function nvme_identify {
 	timing_exit identify
 }
 
-function nvme_perf {
+function nvme_perf() {
 	# enable no shutdown notification option
 	$rootdir/examples/nvme/perf/perf -q 128 -w read -o 12288 -t 1 -LL -i 0 -N
 	$rootdir/examples/nvme/perf/perf -q 128 -w write -o 12288 -t 1 -LL -i 0
@@ -23,7 +23,7 @@ function nvme_perf {
 	fi
 }
 
-function nvme_fio_test {
+function nvme_fio_test() {
 	PLUGIN_DIR=$rootdir/examples/nvme/fio_plugin
 	for bdf in $(get_nvme_bdfs); do
 		for blkname in $(get_nvme_name_from_bdf $bdf); do
@@ -32,7 +32,7 @@ function nvme_fio_test {
 	done
 }
 
-function nvme_multi_secondary {
+function nvme_multi_secondary() {
 	$rootdir/examples/nvme/perf/perf -i 0 -q 16 -w read -o 4096 -t 3 -c 0x1 &
 	pid0=$!
 	$rootdir/examples/nvme/perf/perf -i 0 -q 16 -w read -o 4096 -t 3 -c 0x2 &

@@ -10,7 +10,7 @@ function pci_can_use() {
 	local i
 
 	# The '\ ' part is important
-	if [[ " $PCI_BLACKLIST " =~ \ $1\  ]] ; then
+	if [[ " $PCI_BLACKLIST " =~ \ $1\  ]]; then
 		return 1
 	fi
 
@@ -20,7 +20,7 @@ function pci_can_use() {
 	fi
 
 	for i in $PCI_WHITELIST; do
-		if [ "$i" == "$1" ] ; then
+		if [ "$i" == "$1" ]; then
 			return 0
 		fi
 	done
@@ -28,7 +28,7 @@ function pci_can_use() {
 	return 1
 }
 
-cache_pci_init () {
+cache_pci_init() {
 	local -gA pci_bus_cache
 
 	[[ -z ${pci_bus_cache[*]} || $CMD == reset ]] || return 1
@@ -36,22 +36,22 @@ cache_pci_init () {
 	pci_bus_cache=()
 }
 
-cache_pci () {
+cache_pci() {
 	local pci=$1 class=$2 vendor=$3 device=$4
 
 	if [[ -n $class ]]; then
-		class=0x${class/0x}
+		class=0x${class/0x/}
 		pci_bus_cache["$class"]="${pci_bus_cache["$class"]:+${pci_bus_cache["$class"]} }$pci"
 	fi
 	if [[ -n $vendor && -n $device ]]; then
-		vendor=0x${vendor/0x} device=0x${device/0x}
+		vendor=0x${vendor/0x/} device=0x${device/0x/}
 		pci_bus_cache["$vendor"]="${pci_bus_cache["$vendor"]:+${pci_bus_cache["$vendor"]} }$pci"
 		pci_bus_cache["$device"]="${pci_bus_cache["$device"]:+${pci_bus_cache["$device"]} }$pci"
 		pci_bus_cache["$vendor:$device"]="${pci_bus_cache["$vendor:$device"]:+${pci_bus_cache["$vendor:$device"]} }$pci"
 	fi
 }
 
-cache_pci_bus_sysfs () {
+cache_pci_bus_sysfs() {
 	[[ -e /sys/bus/pci/devices ]] || return 1
 
 	cache_pci_init || return 0
@@ -60,13 +60,13 @@ cache_pci_bus_sysfs () {
 	local class vendor device
 
 	for pci in /sys/bus/pci/devices/*; do
-		class=$(<"$pci/class") vendor=$(<"$pci/vendor") device=$(<"$pci/device")
+		class=$(< "$pci/class") vendor=$(< "$pci/vendor") device=$(< "$pci/device")
 		cache_pci "${pci##*/}" "$class" "$vendor" "$device"
 	done
 }
 
-cache_pci_bus_lspci () {
-	hash lspci 2>/dev/null || return 1
+cache_pci_bus_lspci() {
+	hash lspci 2> /dev/null || return 1
 
 	cache_pci_init || return 0
 
@@ -86,8 +86,8 @@ cache_pci_bus_lspci () {
 	done < <(lspci -Dnmm)
 }
 
-cache_pci_bus_pciconf () {
-	hash pciconf 2>/dev/null || return 1
+cache_pci_bus_pciconf() {
+	hash pciconf 2> /dev/null || return 1
 
 	cache_pci_init || return 0
 
@@ -95,25 +95,25 @@ cache_pci_bus_pciconf () {
 	local pci domain bus device function
 
 	while read -r pci class _ vd _; do
-		IFS=":" read -r domain bus device function _ <<<"${pci##*pci}"
+		IFS=":" read -r domain bus device function _ <<< "${pci##*pci}"
 		pci=$(printf '%04x:%02x:%02x:%x' \
 			"$domain" "$bus" "$device" "$function")
-		class=$(printf '0x%06x' $(( class )))
-		vendor=$(printf '0x%04x' $(( vd & 0xffff )))
-		device=$(printf '0x%04x' $(( (vd >> 16) & 0xffff )))
+		class=$(printf '0x%06x' $((class)))
+		vendor=$(printf '0x%04x' $((vd & 0xffff)))
+		device=$(printf '0x%04x' $(((vd >> 16) & 0xffff)))
 
 		cache_pci "$pci" "$class" "$vendor" "$device"
 	done < <(pciconf -l)
 }
 
-cache_pci_bus () {
+cache_pci_bus() {
 	case "$(uname -s)" in
 		Linux) cache_pci_bus_lspci || cache_pci_bus_sysfs ;;
 		FreeBSD) cache_pci_bus_pciconf ;;
 	esac
 }
 
-iter_all_pci_sysfs () {
+iter_all_pci_sysfs() {
 	cache_pci_bus_sysfs || return 1
 
 	# default to class of the nvme devices
@@ -121,9 +121,9 @@ iter_all_pci_sysfs () {
 	local pci pcis
 
 	[[ -n ${pci_bus_cache["$find"]} ]] || return 0
-	read -ra pcis <<<"${pci_bus_cache["$find"]}"
+	read -ra pcis <<< "${pci_bus_cache["$find"]}"
 
-	if (( findx )); then
+	if ((findx)); then
 		printf '%s\n' "${pcis[@]::findx}"
 	else
 		printf '%s\n' "${pcis[@]}"
@@ -139,22 +139,22 @@ function iter_all_pci_class_code() {
 	subclass="$(printf %02x $((0x$2)))"
 	progif="$(printf %02x $((0x$3)))"
 
-	if hash lspci &>/dev/null; then
+	if hash lspci &> /dev/null; then
 		if [ "$progif" != "00" ]; then
-			lspci -mm -n -D | \
-				grep -i -- "-p${progif}" | \
-				awk -v cc="\"${class}${subclass}\"" -F " " \
-				'{if (cc ~ $2) print $1}' | tr -d '"'
+			lspci -mm -n -D \
+				| grep -i -- "-p${progif}" \
+				| awk -v cc="\"${class}${subclass}\"" -F " " \
+					'{if (cc ~ $2) print $1}' | tr -d '"'
 		else
-			lspci -mm -n -D | \
-				awk -v cc="\"${class}${subclass}\"" -F " " \
-				'{if (cc ~ $2) print $1}' | tr -d '"'
+			lspci -mm -n -D \
+				| awk -v cc="\"${class}${subclass}\"" -F " " \
+					'{if (cc ~ $2) print $1}' | tr -d '"'
 		fi
-	elif hash pciconf &>/dev/null; then
-		local addr=($(pciconf -l | grep -i "class=0x${class}${subclass}${progif}" | \
-			cut -d$'\t' -f1 | sed -e 's/^[a-zA-Z0-9_]*@pci//g' | tr ':' ' '))
+	elif hash pciconf &> /dev/null; then
+		local addr=($(pciconf -l | grep -i "class=0x${class}${subclass}${progif}" \
+			| cut -d$'\t' -f1 | sed -e 's/^[a-zA-Z0-9_]*@pci//g' | tr ':' ' '))
 		printf "%04x:%02x:%02x:%x\n" ${addr[0]} ${addr[1]} ${addr[2]} ${addr[3]}
-	elif iter_all_pci_sysfs "$(printf '0x%06x' $(( 0x$progif | 0x$subclass << 8 | 0x$class << 16 )))"; then
+	elif iter_all_pci_sysfs "$(printf '0x%06x' $((0x$progif | 0x$subclass << 8 | 0x$class << 16)))"; then
 		:
 	else
 		echo "Missing PCI enumeration utility" >&2
@@ -169,12 +169,12 @@ function iter_all_pci_dev_id() {
 	ven_id="$(printf %04x $((0x$1)))"
 	dev_id="$(printf %04x $((0x$2)))"
 
-	if hash lspci &>/dev/null; then
+	if hash lspci &> /dev/null; then
 		lspci -mm -n -D | awk -v ven="\"$ven_id\"" -v dev="\"${dev_id}\"" -F " " \
 			'{if (ven ~ $3 && dev ~ $4) print $1}' | tr -d '"'
-	elif hash pciconf &>/dev/null; then
-		local addr=($(pciconf -l | grep -i "chip=0x${dev_id}${ven_id}" | \
-			cut -d$'\t' -f1 | sed -e 's/^[a-zA-Z0-9_]*@pci//g' | tr ':' ' '))
+	elif hash pciconf &> /dev/null; then
+		local addr=($(pciconf -l | grep -i "chip=0x${dev_id}${ven_id}" \
+			| cut -d$'\t' -f1 | sed -e 's/^[a-zA-Z0-9_]*@pci//g' | tr ':' ' '))
 		printf "%04x:%02x:%02x:%x\n" ${addr[0]} ${addr[1]} ${addr[2]} ${addr[3]}
 	elif iter_all_pci_sysfs "0x$ven_id:0x$dev_id"; then
 		:

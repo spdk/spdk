@@ -10,7 +10,7 @@ device=$1
 use_append=$2
 rpc_py=$rootdir/scripts/rpc.py
 
-for (( i=0; i<${#tests[@]}; i++ )) do
+for ((i = 0; i < ${#tests[@]}; i++)); do
 	timing_enter "${tests[$i]}"
 	"$rootdir/test/bdev/bdevperf/bdevperf" -z -T ftl0 ${tests[$i]} --json <(gen_ftl_nvme_conf) &
 	bdevperf_pid=$!

@@ -4,7 +4,7 @@ set -e
 
 rootdir=$(readlink -f $(dirname $0))/..
 
-function usage {
+function usage() {
 	echo "Usage: [-j] $0 -n BDEV_NAME -d BASE_BDEV [-u UUID] [-c CACHE]"
 	echo "UUID is required when restoring device state"
 	echo
@@ -14,8 +14,7 @@ function usage {
 	echo "CACHE - name of the bdev to be used as write buffer cache"
 }
 
-function create_json_config()
-{
+function create_json_config() {
 	echo "{"
 	echo '"subsystem": "bdev",'
 	echo '"config": ['
@@ -40,14 +39,18 @@ uuid=00000000-0000-0000-0000-000000000000
 
 while getopts ":c:d:hn:u:" arg; do
 	case "$arg" in
-		n)	name=$OPTARG		;;
-		d)	base_bdev=$OPTARG	;;
-		u)	uuid=$OPTARG		;;
-		c)	cache=$OPTARG		;;
-		h)	usage
-			exit 0			;;
-		*)	usage
-			exit 1			;;
+		n) name=$OPTARG ;;
+		d) base_bdev=$OPTARG ;;
+		u) uuid=$OPTARG ;;
+		c) cache=$OPTARG ;;
+		h)
+			usage
+			exit 0
+			;;
+		*)
+			usage
+			exit 1
+			;;
 	esac
 done
 

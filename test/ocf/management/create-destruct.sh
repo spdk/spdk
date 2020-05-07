@@ -6,13 +6,12 @@ source $rootdir/test/common/autotest_common.sh
 
 rpc_py=$rootdir/scripts/rpc.py
 
-function bdev_check_claimed()
-{
-       if [ "$($rpc_py get_bdevs -b "$@" | jq '.[0].claimed')" = "true" ]; then
-               return 0;
-       else
-               return 1;
-       fi
+function bdev_check_claimed() {
+	if [ "$($rpc_py get_bdevs -b "$@" | jq '.[0].claimed')" = "true" ]; then
+		return 0
+	else
+		return 1
+	fi
 }
 
 $rootdir/app/iscsi_tgt/iscsi_tgt &
@@ -34,13 +33,13 @@ $rpc_py bdev_ocf_get_bdevs NonExisting | jq -e \
 	'.[0] | .name == "PartCache"'
 
 if ! bdev_check_claimed Malloc0; then
-	>&2 echo "Base device expected to be claimed now"
+	echo >&2 "Base device expected to be claimed now"
 	exit 1
 fi
 
 $rpc_py bdev_ocf_delete PartCache
 if bdev_check_claimed Malloc0; then
-	>&2 echo "Base device is not expected to be claimed now"
+	echo >&2 "Base device is not expected to be claimed now"
 	exit 1
 fi
 
@@ -50,34 +49,34 @@ $rpc_py bdev_ocf_get_bdevs FullCache | jq -e \
 	'.[0] | .started and .cache.attached and .core.attached'
 
 if ! (bdev_check_claimed Malloc0 && bdev_check_claimed Malloc1); then
-	>&2 echo "Base devices expected to be claimed now"
+	echo >&2 "Base devices expected to be claimed now"
 	exit 1
 fi
 
 $rpc_py bdev_ocf_delete FullCache
 if bdev_check_claimed Malloc0 && bdev_check_claimed Malloc1; then
-	>&2 echo "Base devices are not expected to be claimed now"
+	echo >&2 "Base devices are not expected to be claimed now"
 	exit 1
 fi
 
 $rpc_py bdev_ocf_create HotCache wt Malloc0 Malloc1
 
 if ! (bdev_check_claimed Malloc0 && bdev_check_claimed Malloc1); then
-	>&2 echo "Base devices expected to be claimed now"
+	echo >&2 "Base devices expected to be claimed now"
 	exit 1
 fi
 
 $rpc_py bdev_malloc_delete Malloc0
 
 if bdev_check_claimed Malloc1; then
-	>&2 echo "Base device is not expected to be claimed now"
+	echo >&2 "Base device is not expected to be claimed now"
 	exit 1
 fi
 
 status=$($rpc_py get_bdevs)
 gone=$(echo $status | jq 'map(select(.name == "HotCache")) == []')
 if [[ $gone == false ]]; then
-	>&2 echo "OCF bdev is expected to unregister"
+	echo >&2 "OCF bdev is expected to unregister"
 	exit 1
 fi
 

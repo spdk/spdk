@@ -8,8 +8,8 @@ set -e
 
 VAGRANT_TARGET="$PWD"
 
-DIR="$( cd "$( dirname $0 )" && pwd )"
-SPDK_DIR="$( cd "${DIR}/../../" && pwd )"
+DIR="$(cd "$(dirname $0)" && pwd)"
+SPDK_DIR="$(cd "${DIR}/../../" && pwd)"
 USE_SSH_DIR=""
 MOVE_TO_DEFAULT_DIR=false
 INSTALL_DEPS=false
@@ -37,54 +37,53 @@ display_help() {
 while getopts ":h-:" opt; do
 	case "${opt}" in
 		-)
-		case "${OPTARG}" in
-			use-ssh-dir=*) USE_SSH_DIR="${OPTARG#*=}" ;;
-			move-to-default-dir) MOVE_TO_DEFAULT_DIR=true ;;
-			install-deps) INSTALL_DEPS=true ;;
-			http-proxy=*)
-				http_proxy=$OPTARG
-				https_proxy=$http_proxy
-				SPDK_VAGRANT_HTTP_PROXY="${http_proxy}"
+			case "${OPTARG}" in
+				use-ssh-dir=*) USE_SSH_DIR="${OPTARG#*=}" ;;
+				move-to-default-dir) MOVE_TO_DEFAULT_DIR=true ;;
+				install-deps) INSTALL_DEPS=true ;;
+				http-proxy=*)
+					http_proxy=$OPTARG
+					https_proxy=$http_proxy
+					SPDK_VAGRANT_HTTP_PROXY="${http_proxy}"
+					;;
+				*)
+					echo "  Invalid argument -$OPTARG" >&2
+					echo "  Try \"$0 -h\"" >&2
+					exit 1
+					;;
+			esac
 			;;
-			*)
-				echo "  Invalid argument -$OPTARG" >&2
-				echo "  Try \"$0 -h\"" >&2
-				exit 1
-				;;
-		esac
-		;;
 		h)
 			display_help >&2
 			exit 0
-		;;
+			;;
 		*)
 			echo "  Invalid argument: -$OPTARG" >&2
 			echo "  Try: \"$0 -h\"" >&2
 			exit 1
-		;;
+			;;
 	esac
 done
 export SPDK_DIR
 export SPDK_VAGRANT_HTTP_PROXY
 export INSTALL_DEPS
 
-
-shift "$((OPTIND-1))"   # Discard the options and sentinel --
+shift "$((OPTIND - 1))" # Discard the options and sentinel --
 
 SPDK_VAGRANT_DISTRO="$*"
 
 case "${SPDK_VAGRANT_DISTRO}" in
 	ubuntu16)
 		export SPDK_VAGRANT_DISTRO
-	;;
+		;;
 	ubuntu18)
 		export SPDK_VAGRANT_DISTRO
-	;;
+		;;
 	*)
 		echo "  Invalid argument \"${SPDK_VAGRANT_DISTRO}\""
 		echo "  Try: \"$0 -h\"" >&2
 		exit 1
-	;;
+		;;
 esac
 
 mkdir -vp "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}"

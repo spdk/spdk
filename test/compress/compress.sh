@@ -63,11 +63,13 @@ function run_bdevperf() {
 
 test_type=$1
 case "$test_type" in
-	qat )
-		pmd=1;;
-	isal )
-		pmd=2;;
-	* )
+	qat)
+		pmd=1
+		;;
+	isal)
+		pmd=2
+		;;
+	*)
 		echo "invalid pmd name"
 		exit 1
 		;;

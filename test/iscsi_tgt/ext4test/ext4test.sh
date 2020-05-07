@@ -69,7 +69,7 @@ echo "Error injection test done"
 
 if [ -z "$NO_NVME" ]; then
 	bdev_size=$(get_bdev_size Nvme0n1)
-	split_size=$((bdev_size/2))
+	split_size=$((bdev_size / 2))
 	if [ $split_size -gt 10000 ]; then
 		split_size=10000
 	fi

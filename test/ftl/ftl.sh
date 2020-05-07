@@ -31,7 +31,7 @@ PCI_WHITELIST="$device" PCI_BLACKLIST="" DRIVER_OVERRIDE="" ./scripts/setup.sh
 
 # Use first regular NVMe disk (non-OC) as non-volatile cache
 nvme_disks=$($rootdir/scripts/gen_nvme.sh --json | jq -r \
-	   ".config[] | select(.params.traddr != \"$device\").params.traddr")
+	".config[] | select(.params.traddr != \"$device\").params.traddr")
 
 for disk in $nvme_disks; do
 	if has_separate_md $disk; then
@@ -62,7 +62,8 @@ run_test "ftl_json" $testdir/json.sh $device
 if [ $SPDK_TEST_FTL_EXTENDED -eq 1 ]; then
 	run_test "ftl_fio_basic" $testdir/fio.sh $device basic
 
-	"$rootdir/app/spdk_tgt/spdk_tgt" --json <(gen_ftl_nvme_conf) & svcpid=$!
+	"$rootdir/app/spdk_tgt/spdk_tgt" --json <(gen_ftl_nvme_conf) &
+	svcpid=$!
 
 	trap 'killprocess $svcpid; exit 1' SIGINT SIGTERM EXIT
 

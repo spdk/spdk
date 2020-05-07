@@ -8,27 +8,28 @@ source $rootdir/test/common/autotest_common.sh
 rpc_py=$rootdir/scripts/rpc.py
 VMD_WHITELIST=()
 
-function vmd_identify {
+function vmd_identify() {
 	for bdf in $pci_devs; do
 		$rootdir/examples/nvme/identify/identify -i 0 -V -r "trtype:PCIe traddr:$bdf"
 	done
 }
 
-function vmd_perf {
+function vmd_perf() {
 	for bdf in $pci_devs; do
 		$rootdir/examples/nvme/perf/perf -q 128 -w read -o 12288 -t 1 -LL -i 0 -V -r "trtype:PCIe traddr:$bdf"
 	done
 }
 
-function vmd_fio {
+function vmd_fio() {
 	PLUGIN_DIR=$rootdir/examples/nvme/fio_plugin
 	for bdf in $pci_devs; do
 		fio_nvme $testdir/config/config.fio --filename="trtype=PCIe traddr=${bdf//:/.} ns=1"
 	done
 }
 
-function vmd_bdev_svc {
-	$rootdir/test/app/bdev_svc/bdev_svc --wait-for-rpc & svcpid=$!
+function vmd_bdev_svc() {
+	$rootdir/test/app/bdev_svc/bdev_svc --wait-for-rpc &
+	svcpid=$!
 	trap 'killprocess $svcpid; exit 1' SIGINT SIGTERM EXIT
 
 	# Wait until bdev_svc starts
@@ -44,7 +45,6 @@ function vmd_bdev_svc {
 	trap - SIGINT SIGTERM EXIT
 	killprocess $svcpid
 }
-
 
 # Re-run setup.sh script and only attach VMD devices to uio/vfio.
 $rootdir/scripts/setup.sh reset

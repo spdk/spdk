@@ -52,7 +52,7 @@ $VHOST_RPC vhost_create_scsi_controller naa.VhostScsi0.3
 $VHOST_RPC vhost_scsi_controller_add_target naa.VhostScsi0.3 0 "Nvme0n1"
 
 # start qemu based VM.
-vm_setup --os="$VM_IMAGE" --disk-type=spdk_vhost_scsi --disks="VhostScsi0"  --force=3 --vhost-name=3
+vm_setup --os="$VM_IMAGE" --disk-type=spdk_vhost_scsi --disks="VhostScsi0" --force=3 --vhost-name=3
 
 vm_run 3
 

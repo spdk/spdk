@@ -12,7 +12,7 @@ bad_driver=true
 driver_to_bind=uio_pci_generic
 num_vfs=16
 
-qat_pci_bdfs=( $(lspci -Dd:37c8 | awk '{print $1}') )
+qat_pci_bdfs=($(lspci -Dd:37c8 | awk '{print $1}'))
 if [ ${#qat_pci_bdfs[@]} -eq 0 ]; then
 	echo "No QAT devices found. Exiting"
 	exit 0
@@ -48,8 +48,8 @@ done
 
 # Confirm we have all of the virtual functions we asked for.
 
-qat_vf_bdfs=( $(lspci -Dd:37c9 | awk '{print $1}') )
-if (( ${#qat_vf_bdfs[@]} != ${#qat_pci_bdfs[@]}*num_vfs )); then
+qat_vf_bdfs=($(lspci -Dd:37c9 | awk '{print $1}'))
+if ((${#qat_vf_bdfs[@]} != ${#qat_pci_bdfs[@]} * num_vfs)); then
 	echo "Failed to prepare the VFs. Aborting"
 	exit 1
 fi

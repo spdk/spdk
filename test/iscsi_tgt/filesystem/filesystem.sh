@@ -75,7 +75,7 @@ parted -s /dev/$dev mklabel msdos
 parted -s /dev/$dev mkpart primary '0%' '100%'
 sleep 1
 
-function filesystem_test {
+function filesystem_test() {
 	fstype=$1
 
 	make_filesystem ${fstype} /dev/${dev}1

@@ -30,15 +30,16 @@ TEST_TIMEOUT=1200
 
 # This argument is used in addition to the test arguments in autotest_common.sh
 for i in "$@"; do
-        case "$i" in
-                --timeout=*)
-                        TEST_TIMEOUT="${i#*=}"
-        esac
+	case "$i" in
+		--timeout=*)
+			TEST_TIMEOUT="${i#*=}"
+			;;
+	esac
 done
 
 timing_enter start_iscsi_tgt
 
-"${ISCSI_APP[@]}" -m $ISCSI_TEST_CORE_MASK &>$output_dir/iscsi_autofuzz_tgt_output.txt &
+"${ISCSI_APP[@]}" -m $ISCSI_TEST_CORE_MASK &> $output_dir/iscsi_autofuzz_tgt_output.txt &
 iscsipid=$!
 
 trap 'killprocess $iscsipid; exit 1' SIGINT SIGTERM EXIT
@@ -58,7 +59,7 @@ sleep 1
 
 trap 'killprocess $iscsipid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 
-$rootdir/test/app/fuzz/iscsi_fuzz/iscsi_fuzz -m 0xF0 -T $TARGET_IP -t $TEST_TIMEOUT 2>$output_dir/iscsi_autofuzz_logs.txt
+$rootdir/test/app/fuzz/iscsi_fuzz/iscsi_fuzz -m 0xF0 -T $TARGET_IP -t $TEST_TIMEOUT 2> $output_dir/iscsi_autofuzz_logs.txt
 
 $rpc_py iscsi_delete_target_node 'iqn.2016-06.io.spdk:disk1'
 

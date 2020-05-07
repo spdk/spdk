@@ -35,7 +35,8 @@ export FTL_JSON_CONF=$testdir/config/ftl.json
 
 trap "fio_kill; exit 1" SIGINT SIGTERM EXIT
 
-"$rootdir/app/spdk_tgt/spdk_tgt" --json <(gen_ftl_nvme_conf) & svcpid=$!
+"$rootdir/app/spdk_tgt/spdk_tgt" --json <(gen_ftl_nvme_conf) &
+svcpid=$!
 waitforlisten $svcpid
 
 $rpc_py bdev_nvme_attach_controller -b nvme0 -a $device -t pcie
@@ -50,7 +51,7 @@ fi
 waitforbdev ftl0
 
 (
-	echo '{"subsystems": [';
+	echo '{"subsystems": ['
 	$rpc_py save_subsystem_config -n bdev
 	echo ']}'
 ) > $FTL_JSON_CONF

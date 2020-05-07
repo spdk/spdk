@@ -37,10 +37,10 @@ rbd_bdev="$($rpc_py bdev_rbd_create $RBD_POOL $RBD_NAME 4096)"
 $rpc_py bdev_get_bdevs
 
 $rpc_py bdev_rbd_resize $rbd_bdev 2000
-num_block=$($rpc_py bdev_get_bdevs|grep num_blocks|sed 's/[^[:digit:]]//g')
+num_block=$($rpc_py bdev_get_bdevs | grep num_blocks | sed 's/[^[:digit:]]//g')
 # get the bdev size in MiB.
-total_size=$(( num_block * 4096/ 1048576 ))
-if [ $total_size != 2000 ];then
+total_size=$((num_block * 4096 / 1048576))
+if [ $total_size != 2000 ]; then
 	echo "resize failed."
 	exit 1
 fi

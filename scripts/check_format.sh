@@ -6,16 +6,16 @@ cd $BASEDIR
 # exit on errors
 set -e
 
-if ! hash nproc 2>/dev/null; then
+if ! hash nproc 2> /dev/null; then
 
-function nproc() {
-	echo 8
-}
+	function nproc() {
+		echo 8
+	}
 
 fi
 
 function version_lt() {
-	[ $( echo -e "$1\n$2" | sort -V | head -1 ) != "$1" ]
+	[ $(echo -e "$1\n$2" | sort -V | head -1) != "$1" ]
 }
 
 rc=0
@@ -30,13 +30,13 @@ while read -r perm _res0 _res1 path; do
 	fname=$(basename -- "$path")
 
 	case ${fname##*.} in
-		c|h|cpp|cc|cxx|hh|hpp|md|html|js|json|svg|Doxyfile|yml|LICENSE|README|conf|in|Makefile|mk|gitignore|go|txt)
+		c | h | cpp | cc | cxx | hh | hpp | md | html | js | json | svg | Doxyfile | yml | LICENSE | README | conf | in | Makefile | mk | gitignore | go | txt)
 			# These file types should never be executable
 			if [ "$perm" -eq 100755 ]; then
 				echo "ERROR: $path is marked executable but is a code file."
 				rc=1
 			fi
-		;;
+			;;
 		*)
 			shebang=$(head -n 1 $path | cut -c1-3)
 
@@ -54,7 +54,7 @@ while read -r perm _res0 _res1 path; do
 					rc=1
 				fi
 			fi
-		;;
+			;;
 	esac
 
 done <<< "$(git grep -I --name-only --untracked -e . | git ls-files -s)"
@@ -65,8 +65,7 @@ fi
 
 if hash astyle; then
 	echo -n "Checking coding style..."
-	if [ "$(astyle -V)" \< "Artistic Style Version 3" ]
-	then
+	if [ "$(astyle -V)" \< "Artistic Style Version 3" ]; then
 		echo -n " Your astyle version is too old so skipping coding style checks. Please update astyle to at least 3.0.1 version..."
 	else
 		rm -f astyle.log
@@ -75,9 +74,9 @@ if hash astyle; then
 		#  as-is to enable ongoing work to synch with a generic upstream DPDK vhost library,
 		#  rather than making diffs more complicated by a lot of changes to follow SPDK
 		#  coding standards.
-		git ls-files '*.[ch]' '*.cpp' '*.cc' '*.cxx' '*.hh' '*.hpp' | \
-			grep -v rte_vhost | grep -v cpp_headers | \
-			xargs -P$(nproc) -n10 astyle --options=.astylerc >> astyle.log
+		git ls-files '*.[ch]' '*.cpp' '*.cc' '*.cxx' '*.hh' '*.hpp' \
+			| grep -v rte_vhost | grep -v cpp_headers \
+			| xargs -P$(nproc) -n10 astyle --options=.astylerc >> astyle.log
 		if grep -q "^Formatted" astyle.log; then
 			echo " errors detected"
 			git diff
@@ -96,7 +95,7 @@ else
 	echo "You do not have astyle installed so your code style is not being checked!"
 fi
 
-GIT_VERSION=$( git --version | cut -d' ' -f3 )
+GIT_VERSION=$(git --version | cut -d' ' -f3)
 
 if version_lt "1.9.5" "${GIT_VERSION}"; then
 	# git <1.9.5 doesn't support pathspec magic exclude
@@ -171,8 +170,8 @@ rm -f badcunit.log
 
 echo -n "Checking blank lines at end of file..."
 
-if ! git grep -I -l -e . -z  './*' ':!*.patch' | \
-	xargs -0 -P$(nproc) -n1 scripts/eofnl > eofnl.log; then
+if ! git grep -I -l -e . -z './*' ':!*.patch' \
+	| xargs -0 -P$(nproc) -n1 scripts/eofnl > eofnl.log; then
 	echo " Incorrect end-of-file formatting detected"
 	cat eofnl.log
 	rc=1
@@ -203,9 +202,9 @@ else
 fi
 rm -f scripts/includes.log
 
-if hash pycodestyle 2>/dev/null; then
+if hash pycodestyle 2> /dev/null; then
 	PEP8=pycodestyle
-elif hash pep8 2>/dev/null; then
+elif hash pep8 2> /dev/null; then
 	PEP8=pep8
 fi
 
@@ -228,7 +227,7 @@ else
 	echo "You do not have pycodestyle or pep8 installed so your Python style is not being checked!"
 fi
 
-if hash shellcheck 2>/dev/null; then
+if hash shellcheck 2> /dev/null; then
 	echo -n "Checking Bash style..."
 
 	shellcheck_v=$(shellcheck --version | grep -P "version: [0-9\.]+" | cut -d " " -f2)

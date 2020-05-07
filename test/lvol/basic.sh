@@ -31,7 +31,7 @@ function test_construct_lvs() {
 	[ "$cluster_size" = "$LVS_DEFAULT_CLUSTER_SIZE" ]
 	total_clusters=$(jq -r '.[0].total_data_clusters' <<< "$lvs")
 	[ "$(jq -r '.[0].free_clusters' <<< "$lvs")" = "$total_clusters" ]
-	[ "$(( total_clusters * cluster_size ))" = "$LVS_DEFAULT_CAPACITY" ]
+	[ "$((total_clusters * cluster_size))" = "$LVS_DEFAULT_CAPACITY" ]
 
 	# remove the lvs and verify it's gone
 	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
@@ -100,11 +100,11 @@ function test_construct_lvs_different_cluster_size() {
 	# use the second malloc for some more lvs creation negative tests
 	malloc2_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
 	# capacity bigger than malloc's
-	rpc_cmd bdev_lvol_create_lvstore "$malloc2_name" lvs2_test -c $(( MALLOC_SIZE + 1 )) && false
+	rpc_cmd bdev_lvol_create_lvstore "$malloc2_name" lvs2_test -c $((MALLOC_SIZE + 1)) && false
 	# capacity equal to malloc's (no space left for metadata)
 	rpc_cmd bdev_lvol_create_lvstore "$malloc2_name" lvs2_test -c $MALLOC_SIZE && false
 	# capacity smaller than malloc's, but still no space left for metadata
-	rpc_cmd bdev_lvol_create_lvstore "$malloc2_name" lvs2_test -c $(( MALLOC_SIZE - 1 )) && false
+	rpc_cmd bdev_lvol_create_lvstore "$malloc2_name" lvs2_test -c $((MALLOC_SIZE - 1)) && false
 	# cluster size smaller than the minimum (8192)
 	rpc_cmd bdev_lvol_create_lvstore "$malloc2_name" lvs2_test -c 8191 && false
 
@@ -137,7 +137,7 @@ function test_construct_lvs_clear_methods() {
 	malloc_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
 
 	# first try to provide invalid clear method
-	rpc_cmd bdev_lvol_create_lvstore  "$malloc2_name" lvs2_test --clear-method invalid123 && false
+	rpc_cmd bdev_lvol_create_lvstore "$malloc2_name" lvs2_test --clear-method invalid123 && false
 
 	# no lvs should be created
 	lvol_stores=$(rpc_cmd bdev_lvol_get_lvstores)
@@ -154,7 +154,7 @@ function test_construct_lvs_clear_methods() {
 		[ "$(jq -r '.[0].uuid' <<< "$lvol")" = "$lvol_uuid" ]
 		[ "$(jq -r '.[0].aliases[0]' <<< "$lvol")" = "lvs_test/lvol_test" ]
 		[ "$(jq -r '.[0].block_size' <<< "$lvol")" = "$MALLOC_BS" ]
-		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( LVS_DEFAULT_CAPACITY / MALLOC_BS ))" ]
+		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$((LVS_DEFAULT_CAPACITY / MALLOC_BS))" ]
 
 		# clean up
 		rpc_cmd bdev_lvol_delete "$lvol_uuid"
@@ -181,10 +181,10 @@ function test_construct_lvol_fio_clear_method_none() {
 	get_lvs_jq bdev_lvol_get_lvstores -u "$lvstore_uuid"
 
 	lvol_uuid=$(rpc_cmd bdev_lvol_create \
-		    -c "$clear_method" \
-		    -u "$lvstore_uuid" \
-		    "$lvol_name" \
-		    $(( jq_out["cluster_size"] / 1024**2 )))
+		-c "$clear_method" \
+		-u "$lvstore_uuid" \
+		"$lvol_name" \
+		$((jq_out["cluster_size"] / 1024 ** 2)))
 
 	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid" "$nbd_name"
 	run_fio_test "$nbd_name" 0 "${jq_out["cluster_size"]}" write 0xdd
@@ -203,12 +203,12 @@ function test_construct_lvol_fio_clear_method_none() {
 
 	metadata_pages=$(calc "1 + ${jq_out["total_data_clusters"]} + ceil(5 + ceil(${jq_out["total_data_clusters"]} / 8) / 4096) * 3")
 
-	last_metadata_lba=$(( metadata_pages * 4096 / MALLOC_BS ))
-	offset_metadata_end=$(( last_metadata_lba * MALLOC_BS ))
+	last_metadata_lba=$((metadata_pages * 4096 / MALLOC_BS))
+	offset_metadata_end=$((last_metadata_lba * MALLOC_BS))
 	last_cluster_of_metadata=$(calc "ceil($metadata_pages / ${jq_out["cluster_size"]} / 4096)")
-	last_cluster_of_metadata=$(( last_cluster_of_metadata == 0 ? 1 : last_cluster_of_metadata ))
-	offset=$(( last_cluster_of_metadata * jq_out["cluster_size"] ))
-	size_metadata_end=$(( offset - offset_metadata_end ))
+	last_cluster_of_metadata=$((last_cluster_of_metadata == 0 ? 1 : last_cluster_of_metadata))
+	offset=$((last_cluster_of_metadata * jq_out["cluster_size"]))
+	size_metadata_end=$((offset - offset_metadata_end))
 
 	# Check if data on area between end of metadata and first cluster of lvol bdev remained unchaged.
 	run_fio_test "$nbd_name" "$offset_metadata_end" "$size_metadata_end" "read" 0x00
@@ -233,17 +233,17 @@ function test_construct_lvol_fio_clear_method_unmap() {
 	malloc_dev=$(rpc_cmd bdev_malloc_create 256 "$MALLOC_BS")
 
 	nbd_start_disks "$DEFAULT_RPC_ADDR" "$malloc_dev" "$nbd_name"
-	run_fio_test "$nbd_name" 0 $(( 256 * 1024**2 )) write 0xdd
+	run_fio_test "$nbd_name" 0 $((256 * 1024 ** 2)) write 0xdd
 	nbd_stop_disks "$DEFAULT_RPC_ADDR" "$nbd_name"
 
 	lvstore_uuid=$(rpc_cmd bdev_lvol_create_lvstore --clear-method none "$malloc_dev" "$lvstore_name")
 	get_lvs_jq bdev_lvol_get_lvstores -u "$lvstore_uuid"
 
 	lvol_uuid=$(rpc_cmd bdev_lvol_create \
-		    -c "$clear_method" \
-		    -u "$lvstore_uuid" \
-		    "$lvol_name" \
-		    $(( jq_out["cluster_size"] / 1024**2 )))
+		-c "$clear_method" \
+		-u "$lvstore_uuid" \
+		"$lvol_name" \
+		$((jq_out["cluster_size"] / 1024 ** 2)))
 
 	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid" "$nbd_name"
 	run_fio_test "$nbd_name" 0 "${jq_out["cluster_size"]}" read 0xdd
@@ -262,12 +262,12 @@ function test_construct_lvol_fio_clear_method_unmap() {
 
 	metadata_pages=$(calc "1 + ${jq_out["total_data_clusters"]} + ceil(5 + ceil(${jq_out["total_data_clusters"]} / 8) / 4096) * 3")
 
-	last_metadata_lba=$(( metadata_pages * 4096 / MALLOC_BS ))
-	offset_metadata_end=$(( last_metadata_lba * MALLOC_BS ))
+	last_metadata_lba=$((metadata_pages * 4096 / MALLOC_BS))
+	offset_metadata_end=$((last_metadata_lba * MALLOC_BS))
 	last_cluster_of_metadata=$(calc "ceil($metadata_pages / ${jq_out["cluster_size"]} / 4096)")
-	last_cluster_of_metadata=$(( last_cluster_of_metadata == 0 ? 1 : last_cluster_of_metadata ))
-	offset=$(( last_cluster_of_metadata * jq_out["cluster_size"] ))
-	size_metadata_end=$(( offset - offset_metadata_end ))
+	last_cluster_of_metadata=$((last_cluster_of_metadata == 0 ? 1 : last_cluster_of_metadata))
+	offset=$((last_cluster_of_metadata * jq_out["cluster_size"]))
+	size_metadata_end=$((offset - offset_metadata_end))
 
 	# Check if data on area between end of metadata and first cluster of lvol bdev remained unchaged.
 	run_fio_test "$nbd_name" "$offset_metadata_end" "$size_metadata_end" "read" 0xdd
@@ -294,7 +294,7 @@ function test_construct_lvol() {
 	[ "$(jq -r '.[0].uuid' <<< "$lvol")" = "$lvol_uuid" ]
 	[ "$(jq -r '.[0].aliases[0]' <<< "$lvol")" = "lvs_test/lvol_test" ]
 	[ "$(jq -r '.[0].block_size' <<< "$lvol")" = "$MALLOC_BS" ]
-	[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( LVS_DEFAULT_CAPACITY / MALLOC_BS ))" ]
+	[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$((LVS_DEFAULT_CAPACITY / MALLOC_BS))" ]
 	[ "$(jq -r '.[0].driver_specific.lvol.lvol_store_uuid' <<< "$lvol")" = "$lvs_uuid" ]
 
 	# clean up and create another lvol, this time use lvs alias instead of uuid
@@ -307,7 +307,7 @@ function test_construct_lvol() {
 	[ "$(jq -r '.[0].uuid' <<< "$lvol")" = "$lvol_uuid" ]
 	[ "$(jq -r '.[0].aliases[0]' <<< "$lvol")" = "lvs_test/lvol_test" ]
 	[ "$(jq -r '.[0].block_size' <<< "$lvol")" = "$MALLOC_BS" ]
-	[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( LVS_DEFAULT_CAPACITY / MALLOC_BS ))" ]
+	[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$((LVS_DEFAULT_CAPACITY / MALLOC_BS))" ]
 	[ "$(jq -r '.[0].driver_specific.lvol.lvol_store_uuid' <<< "$lvol")" = "$lvs_uuid" ]
 
 	# clean up
@@ -326,10 +326,10 @@ function test_construct_multi_lvols() {
 	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
 
 	# create 4 lvols
-	lvol_size_mb=$(( LVS_DEFAULT_CAPACITY_MB / 4 ))
+	lvol_size_mb=$((LVS_DEFAULT_CAPACITY_MB / 4))
 	# round down lvol size to the nearest cluster size boundary
-	lvol_size_mb=$(( lvol_size_mb / LVS_DEFAULT_CLUSTER_SIZE_MB * LVS_DEFAULT_CLUSTER_SIZE_MB ))
-	lvol_size=$(( lvol_size_mb * 1024 * 1024 ))
+	lvol_size_mb=$((lvol_size_mb / LVS_DEFAULT_CLUSTER_SIZE_MB * LVS_DEFAULT_CLUSTER_SIZE_MB))
+	lvol_size=$((lvol_size_mb * 1024 * 1024))
 	for i in $(seq 1 4); do
 		lvol_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" "lvol_test${i}" "$lvol_size_mb")
 		lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
@@ -338,7 +338,7 @@ function test_construct_multi_lvols() {
 		[ "$(jq -r '.[0].uuid' <<< "$lvol")" = "$lvol_uuid" ]
 		[ "$(jq -r '.[0].aliases[0]' <<< "$lvol")" = "lvs_test/lvol_test${i}" ]
 		[ "$(jq -r '.[0].block_size' <<< "$lvol")" = "$MALLOC_BS" ]
-		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( lvol_size / MALLOC_BS ))" ]
+		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$((lvol_size / MALLOC_BS))" ]
 	done
 
 	lvols=$(rpc_cmd bdev_get_bdevs | jq -r '[ .[] | select(.product_name == "Logical Volume") ]')
@@ -361,7 +361,7 @@ function test_construct_multi_lvols() {
 		[ "$(jq -r '.[0].uuid' <<< "$lvol")" = "$lvol_uuid" ]
 		[ "$(jq -r '.[0].aliases[0]' <<< "$lvol")" = "lvs_test/lvol_test${i}" ]
 		[ "$(jq -r '.[0].block_size' <<< "$lvol")" = "$MALLOC_BS" ]
-		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( lvol_size / MALLOC_BS ))" ]
+		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$((lvol_size / MALLOC_BS))" ]
 	done
 
 	lvols=$(rpc_cmd bdev_get_bdevs | jq -r '[ .[] | select(.product_name == "Logical Volume") ]')
@@ -394,13 +394,13 @@ function test_construct_lvols_conflict_alias() {
 	lvol1=$(rpc_cmd bdev_get_bdevs -b "$lvol1_uuid")
 
 	# use a different size for second malloc to keep those differentiable
-	malloc2_size_mb=$(( MALLOC_SIZE_MB / 2 ))
+	malloc2_size_mb=$((MALLOC_SIZE_MB / 2))
 
 	# create an lvol store 2
 	malloc2_name=$(rpc_cmd bdev_malloc_create $malloc2_size_mb $MALLOC_BS)
 	lvs2_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc2_name" lvs_test2)
 
-	lvol2_size_mb=$(round_down $(( LVS_DEFAULT_CAPACITY_MB / 2 )) )
+	lvol2_size_mb=$(round_down $((LVS_DEFAULT_CAPACITY_MB / 2)))
 
 	# create an lvol on lvs2
 	lvol2_uuid=$(rpc_cmd bdev_lvol_create -l lvs_test2 lvol_test "$lvol2_size_mb")
@@ -474,7 +474,7 @@ function test_construct_lvol_alias_conflict() {
 	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
 
 	# create valid lvol
-	lvol_size_mb=$(round_down $(( LVS_DEFAULT_CAPACITY_MB / 2 )) )
+	lvol_size_mb=$(round_down $((LVS_DEFAULT_CAPACITY_MB / 2)))
 	lvol1_uuid=$(rpc_cmd bdev_lvol_create -l lvs_test lvol_test "$lvol_size_mb")
 	lvol1=$(rpc_cmd bdev_get_bdevs -b "$lvol1_uuid")
 
@@ -500,8 +500,8 @@ function test_construct_nested_lvol() {
 	# create a nested lvs
 	nested_lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$lvol_uuid" nested_lvs)
 
-	nested_lvol_size_mb=$(( LVS_DEFAULT_CAPACITY_MB - LVS_DEFAULT_CLUSTER_SIZE_MB ))
-	nested_lvol_size=$(( nested_lvol_size_mb * 1024 * 1024 ))
+	nested_lvol_size_mb=$((LVS_DEFAULT_CAPACITY_MB - LVS_DEFAULT_CLUSTER_SIZE_MB))
+	nested_lvol_size=$((nested_lvol_size_mb * 1024 * 1024))
 
 	# create a nested lvol
 	nested_lvol1_uuid=$(rpc_cmd bdev_lvol_create -u "$nested_lvs_uuid" nested_lvol1 "$nested_lvol_size_mb")
@@ -511,7 +511,7 @@ function test_construct_nested_lvol() {
 	[ "$(jq -r '.[0].uuid' <<< "$nested_lvol1")" = "$nested_lvol1_uuid" ]
 	[ "$(jq -r '.[0].aliases[0]' <<< "$nested_lvol1")" = "nested_lvs/nested_lvol1" ]
 	[ "$(jq -r '.[0].block_size' <<< "$nested_lvol1")" = "$MALLOC_BS" ]
-	[ "$(jq -r '.[0].num_blocks' <<< "$nested_lvol1")" = "$(( nested_lvol_size / MALLOC_BS ))" ]
+	[ "$(jq -r '.[0].num_blocks' <<< "$nested_lvol1")" = "$((nested_lvol_size / MALLOC_BS))" ]
 	[ "$(jq -r '.[0].driver_specific.lvol.lvol_store_uuid' <<< "$nested_lvol1")" = "$nested_lvs_uuid" ]
 
 	# try to create another nested lvol on a lvs that's already full

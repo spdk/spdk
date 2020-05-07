@@ -11,9 +11,11 @@ ssh_pass=""
 vm_num="0"
 vm_image="/home/sys_sgsw/windows_server.qcow2"
 
-function usage()
-{
-	[[ -n $2 ]] && ( echo "$2"; echo ""; )
+function usage() {
+	[[ -n $2 ]] && (
+		echo "$2"
+		echo ""
+	)
 	echo "Windows Server automated test"
 	echo "Usage: $(basename $1) [OPTIONS]"
 	echo "--vm-ssh-pass=PASSWORD    Text password for the VM"
@@ -30,17 +32,19 @@ function usage()
 while getopts 'xh-:' optchar; do
 	case "$optchar" in
 		-)
-		case "$OPTARG" in
-			help) usage $0 ;;
-			vm-ssh-pass=*) ssh_pass="${OPTARG#*=}" ;;
-			vm-image=*) vm_image="${OPTARG#*=}" ;;
-			ctrl-type=*) ctrl_type="${OPTARG#*=}" ;;
-		esac
-		;;
-	h) usage $0 ;;
-	x) set -x
-		x="-x" ;;
-	*) usage $0 "Invalid argument '$OPTARG'"
+			case "$OPTARG" in
+				help) usage $0 ;;
+				vm-ssh-pass=*) ssh_pass="${OPTARG#*=}" ;;
+				vm-image=*) vm_image="${OPTARG#*=}" ;;
+				ctrl-type=*) ctrl_type="${OPTARG#*=}" ;;
+			esac
+			;;
+		h) usage $0 ;;
+		x)
+			set -x
+			x="-x"
+			;;
+		*) usage $0 "Invalid argument '$OPTARG'" ;;
 	esac
 done
 
@@ -53,8 +57,7 @@ done
 # But they apply to rather old Windows distributions.
 # Potentially using Windows Server 2016 and newer may solve the issue
 # due to OpenSSH being available directly from Windows Store.
-function vm_sshpass()
-{
+function vm_sshpass() {
 	vm_num_is_valid $1 || return 1
 
 	local ssh_cmd

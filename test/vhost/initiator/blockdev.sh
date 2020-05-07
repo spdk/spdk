@@ -14,8 +14,7 @@ function run_spdk_fio() {
 	fio_bdev --ioengine=spdk_bdev "$@" --spdk_mem=1024 --spdk_single_seg=1
 }
 
-function create_bdev_config()
-{
+function create_bdev_config() {
 	if [ -z "$($RPC_PY bdev_get_bdevs | jq '.[] | select(.name=="Nvme0n1")')" ]; then
 		error "Nvme0n1 bdev not found!"
 	fi
@@ -43,7 +42,7 @@ function create_bdev_config()
 function err_cleanup() {
 	rm -f $testdir/bdev.json
 	vhost_kill 0
-	if [[ -n "$dummy_spdk_pid" ]] && kill -0 $dummy_spdk_pid &>/dev/null; then
+	if [[ -n "$dummy_spdk_pid" ]] && kill -0 $dummy_spdk_pid &> /dev/null; then
 		killprocess $dummy_spdk_pid
 	fi
 	vhosttestfini
@@ -70,7 +69,7 @@ rpc_cmd -s /tmp/spdk2.sock bdev_virtio_attach_controller --trtype user --traddr 
 rpc_cmd -s /tmp/spdk2.sock bdev_virtio_attach_controller --trtype user --traddr 'naa.Malloc0.0' -d scsi --vq-count 8 'VirtioScsi1'
 rpc_cmd -s /tmp/spdk2.sock bdev_virtio_attach_controller --trtype user --traddr 'naa.Malloc1.0' -d scsi --vq-count 8 'VirtioScsi2'
 
-cat <<-CONF > $testdir/bdev.json
+cat <<- CONF > $testdir/bdev.json
 	{"subsystems":[
 	$(rpc_cmd -s /tmp/spdk2.sock save_subsystem_config -n bdev)
 	]}

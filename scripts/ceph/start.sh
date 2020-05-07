@@ -26,7 +26,7 @@ mkdir ${base_dir}
 cp ${script_dir}/ceph.conf $ceph_conf
 
 if [ ! -e $image ]; then
-        fallocate -l 4G $image
+	fallocate -l 4G $image
 fi
 
 mknod ${dev} b 7 200 || true
@@ -39,8 +39,8 @@ echo "Partitioning ${dev}"
 ${PARTED} ${dev} mktable gpt
 sleep 2
 
-${PARTED} ${dev} mkpart primary    0%    2GiB
-${PARTED} ${dev} mkpart primary   2GiB  100%
+${PARTED} ${dev} mkpart primary 0% 2GiB
+${PARTED} ${dev} mkpart primary 2GiB 100%
 
 partno=0
 echo "Setting name on ${dev}"
@@ -91,7 +91,7 @@ monmaptool --create --clobber --add a ${mon_ip}:12046 --print ${base_dir}/monmap
 
 sh -c "ulimit -c unlimited && exec ceph-mon --mkfs -c ${ceph_conf} -i a --monmap=${base_dir}/monmap --keyring=${base_dir}/keyring --mon-data=${mon_dir}"
 
-if [ $update_config = true ] ;then
+if [ $update_config = true ]; then
 	sed -i 's/mon addr = /mon addr = v2:/g' $ceph_conf
 fi
 
@@ -106,13 +106,13 @@ chmod a+r /etc/ceph/ceph.client.admin.keyring
 ceph-run sh -c "ulimit -n 16384 && ulimit -c unlimited && exec ceph-mon -c ${ceph_conf} -i a --keyring=${base_dir}/keyring --pid-file=${base_dir}/pid/root@$(hostname).pid --mon-data=${mon_dir}" || true
 
 # after ceph-mon creation, ceph -s should work.
-if [ $update_config = true ] ;then
-        # start to get whole log.
+if [ $update_config = true ]; then
+	# start to get whole log.
 	ceph-conf --name mon.a --show-config-value log_file
 
 	# add fsid to ceph config file.
-        fsid=$(ceph -s | grep id |awk '{print $2}')
-        sed -i 's/perf = true/perf = true\n\tfsid = '$fsid' \n/g' $ceph_conf
+	fsid=$(ceph -s | grep id | awk '{print $2}')
+	sed -i 's/perf = true/perf = true\n\tfsid = '$fsid' \n/g' $ceph_conf
 
 	# unify the filesystem with the old versions.
 	sed -i 's/perf = true/perf = true\n\tosd objectstore = filestore\n/g' $ceph_conf

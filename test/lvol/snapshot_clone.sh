@@ -11,20 +11,20 @@ function test_snapshot_compare_with_lvol_bdev() {
 	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
 
 	# Create two lvol bdevs
-	lvol_size_mb=$( round_down $(( LVS_DEFAULT_CAPACITY_MB / 6 )) )
-	lvol_size=$(( lvol_size_mb * 1024 * 1024 ))
+	lvol_size_mb=$(round_down $((LVS_DEFAULT_CAPACITY_MB / 6)))
+	lvol_size=$((lvol_size_mb * 1024 * 1024))
 
 	lvol_uuid1=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test1 "$lvol_size_mb" -t)
 	lvol_uuid2=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test2 "$lvol_size_mb")
 
 	# Fill thin provisoned lvol bdev with 50% of its space
 	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid1" /dev/nbd0
-	count=$(( lvol_size / LVS_DEFAULT_CLUSTER_SIZE / 2 ))
+	count=$((lvol_size / LVS_DEFAULT_CLUSTER_SIZE / 2))
 	dd if=/dev/urandom of=/dev/nbd0 oflag=direct bs="$LVS_DEFAULT_CLUSTER_SIZE" count=$count
 	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd0
 	# Fill whole thick provisioned lvol bdev
 	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid2" /dev/nbd0
-	count=$(( lvol_size / LVS_DEFAULT_CLUSTER_SIZE ))
+	count=$((lvol_size / LVS_DEFAULT_CLUSTER_SIZE))
 	dd if=/dev/urandom of=/dev/nbd0 oflag=direct bs="$LVS_DEFAULT_CLUSTER_SIZE" count=$count
 	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd0
 
@@ -35,7 +35,7 @@ function test_snapshot_compare_with_lvol_bdev() {
 	nbd_start_disks "$DEFAULT_RPC_ADDR" "$snapshot_uuid1" /dev/nbd0
 	# Try to perform write operation on created snapshot
 	# Check if filling snapshot of lvol bdev fails
-	count=$(( lvol_size / LVS_DEFAULT_CLUSTER_SIZE ))
+	count=$((lvol_size / LVS_DEFAULT_CLUSTER_SIZE))
 	dd if=/dev/urandom of=/dev/nbd0 oflag=direct bs="$LVS_DEFAULT_CLUSTER_SIZE" count=$count && false
 	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd0
 
@@ -52,7 +52,7 @@ function test_snapshot_compare_with_lvol_bdev() {
 	cmp "$lvol_nbd2" "$snapshot_nbd2"
 
 	# Fill second half of thin provisioned lvol bdev
-	count=$(( lvol_size / LVS_DEFAULT_CLUSTER_SIZE / 2 ))
+	count=$((lvol_size / LVS_DEFAULT_CLUSTER_SIZE / 2))
 	dd if=/dev/urandom of="$lvol_nbd1" oflag=direct seek=$count bs="$LVS_DEFAULT_CLUSTER_SIZE" count=$count
 
 	# Compare thin provisioned lvol bdev with its snapshot and check if it fails
@@ -77,7 +77,6 @@ function test_snapshot_compare_with_lvol_bdev() {
 	check_leftover_devices
 }
 
-
 # Check that when writing to lvol bdev
 # creating snapshot ends with success
 function test_create_snapshot_with_io() {
@@ -85,8 +84,8 @@ function test_create_snapshot_with_io() {
 	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
 
 	# Create lvol bdev
-	lvol_size_mb=$( round_down $(( LVS_DEFAULT_CAPACITY_MB / 2 )) )
-	lvol_size=$(( lvol_size_mb * 1024 * 1024 ))
+	lvol_size_mb=$(round_down $((LVS_DEFAULT_CAPACITY_MB / 2)))
+	lvol_size=$((lvol_size_mb * 1024 * 1024))
 
 	lvol_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test "$lvol_size_mb" -t)
 
@@ -111,14 +110,13 @@ function test_create_snapshot_with_io() {
 	check_leftover_devices
 }
 
-
 # Check that creating snapshot of snapshot will fail
 function test_create_snapshot_of_snapshot() {
 	malloc_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
 	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
 
 	# Create lvol bdev
-	lvol_size_mb=$( round_down $(( LVS_DEFAULT_CAPACITY_MB / 3 )) )
+	lvol_size_mb=$(round_down $((LVS_DEFAULT_CAPACITY_MB / 3)))
 
 	lvol_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test "$lvol_size_mb")
 	lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
@@ -149,8 +147,8 @@ function test_clone_snapshot_relations() {
 	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
 
 	# Calculate size and create lvol bdev
-	lvol_size_mb=$( round_down $(( LVS_DEFAULT_CAPACITY_MB / 6 )) )
-	lvol_size=$(( lvol_size_mb * 1024 * 1024 ))
+	lvol_size_mb=$(round_down $((LVS_DEFAULT_CAPACITY_MB / 6)))
+	lvol_size=$((lvol_size_mb * 1024 * 1024))
 
 	lvol_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test "$lvol_size_mb")
 	lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
@@ -176,7 +174,7 @@ function test_clone_snapshot_relations() {
 	# Perform write operation to first clone
 	# Change first half of its space
 	nbd_start_disks "$DEFAULT_RPC_ADDR" "$clone_uuid1" /dev/nbd0
-	fill_size=$(( lvol_size / 2 ))
+	fill_size=$((lvol_size / 2))
 	run_fio_test /dev/nbd0 0 $fill_size "write" "0xaa"
 
 	# Compare snapshot with second clone. Data on both bdevs should be the same
@@ -229,14 +227,14 @@ function test_clone_inflate() {
 	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
 
 	# Calculate size and create lvol bdev
-	lvol_size_mb=$( round_down $(( LVS_DEFAULT_CAPACITY_MB / 4 )) )
+	lvol_size_mb=$(round_down $((LVS_DEFAULT_CAPACITY_MB / 4)))
 
 	lvol_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test "$lvol_size_mb")
 	lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
 
 	# Fill lvol bdev with 100% of its space
 	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid" /dev/nbd0
-	run_fio_test /dev/nbd0 0 $(( lvol_size_mb * 1024 * 1024 )) "write" "0xcc"
+	run_fio_test /dev/nbd0 0 $((lvol_size_mb * 1024 * 1024)) "write" "0xcc"
 	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd0
 
 	# Create snapshots of lvol bdev
@@ -249,9 +247,9 @@ function test_clone_inflate() {
 	# Fill part of clone with data of known pattern
 	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid" /dev/nbd0
 	first_fill=0
-	second_fill=$(( lvol_size_mb * 1024 * 1024 * 3 / 4 ))
-	run_fio_test /dev/nbd0 $first_fill $(( 1024 * 1024 )) "write" "0xdd"
-	run_fio_test /dev/nbd0 $second_fill $(( 1024 * 1024 )) "write" "0xdd"
+	second_fill=$((lvol_size_mb * 1024 * 1024 * 3 / 4))
+	run_fio_test /dev/nbd0 $first_fill $((1024 * 1024)) "write" "0xdd"
+	run_fio_test /dev/nbd0 $second_fill $((1024 * 1024)) "write" "0xdd"
 	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd0
 
 	# Do inflate
@@ -264,10 +262,10 @@ function test_clone_inflate() {
 
 	# Check data consistency
 	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid" /dev/nbd0
-	run_fio_test /dev/nbd0 $first_fill $(( 1024 * 1024 )) "read" "0xdd"
-	run_fio_test /dev/nbd0 $(( (first_fill + 1) * 1024 * 1024 )) $(( second_fill - 1024 * 1024 )) "read" "0xcc"
-	run_fio_test /dev/nbd0 $second_fill $(( 1024 * 1024 )) "read" "0xdd"
-	run_fio_test /dev/nbd0 $(( second_fill + 1024 * 1024 )) $(( lvol_size_mb * 1024 * 1024 - ( second_fill + 1024 * 1024 ) )) "read" "0xcc"
+	run_fio_test /dev/nbd0 $first_fill $((1024 * 1024)) "read" "0xdd"
+	run_fio_test /dev/nbd0 $(((first_fill + 1) * 1024 * 1024)) $((second_fill - 1024 * 1024)) "read" "0xcc"
+	run_fio_test /dev/nbd0 $second_fill $((1024 * 1024)) "read" "0xdd"
+	run_fio_test /dev/nbd0 $((second_fill + 1024 * 1024)) $((lvol_size_mb * 1024 * 1024 - (second_fill + 1024 * 1024))) "read" "0xcc"
 	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd0
 
 	# Clean up
@@ -285,7 +283,7 @@ function test_clone_decouple_parent() {
 	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
 
 	# Calculate size and create lvol bdev
-	lvol_size_mb=$(( 5 * LVS_DEFAULT_CLUSTER_SIZE_MB ))
+	lvol_size_mb=$((5 * LVS_DEFAULT_CLUSTER_SIZE_MB))
 	lvol_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test "$lvol_size_mb" -t)
 	lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
 
@@ -295,17 +293,17 @@ function test_clone_decouple_parent() {
 	# Fill first four out of 5 clusters of clone with data of known pattern
 	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid" /dev/nbd0
 	begin_fill=0
-	end_fill=$(( lvol_size_mb * 4 * 1024 * 1024 / 5 ))
+	end_fill=$((lvol_size_mb * 4 * 1024 * 1024 / 5))
 	run_fio_test /dev/nbd0 $begin_fill $end_fill "write" "0xdd"
 
 	# Create snapshot (snapshot<-lvol_bdev)
 	snapshot_uuid=$(rpc_cmd bdev_lvol_snapshot lvs_test/lvol_test lvol_snapshot)
 
 	# Fill second and fourth cluster of clone with data of known pattern
-	start_fill=$(( lvol_size_mb * 1024 * 1024 / 5 ))
+	start_fill=$((lvol_size_mb * 1024 * 1024 / 5))
 	fill_range=$start_fill
 	run_fio_test /dev/nbd0 $start_fill $fill_range "write" "0xcc"
-	start_fill=$(( lvol_size_mb * 3 * 1024 * 1024 / 5 ))
+	start_fill=$((lvol_size_mb * 3 * 1024 * 1024 / 5))
 	run_fio_test /dev/nbd0 $start_fill $fill_range "write" "0xcc"
 
 	# Create snapshot (snapshot<-snapshot2<-lvol_bdev)
@@ -316,9 +314,9 @@ function test_clone_decouple_parent() {
 	run_fio_test /dev/nbd0 $start_fill $fill_range "write" "0xee"
 
 	# Check data consistency
-	pattern=( "0xdd" "0xee" "0xdd" "0xcc" "0x00" )
+	pattern=("0xdd" "0xee" "0xdd" "0xcc" "0x00")
 	for i in "${!pattern[@]}"; do
-		start_fill=$(( lvol_size_mb * i * 1024 * 1024 / 5 ))
+		start_fill=$((lvol_size_mb * i * 1024 * 1024 / 5))
 		run_fio_test /dev/nbd0 $start_fill $fill_range "read" "${pattern[i]}"
 	done
 
@@ -341,7 +339,7 @@ function test_clone_decouple_parent() {
 
 	# Check data consistency
 	for i in "${!pattern[@]}"; do
-		start_fill=$(( lvol_size_mb * i * 1024 * 1024 / 5 ))
+		start_fill=$((lvol_size_mb * i * 1024 * 1024 / 5))
 		run_fio_test /dev/nbd0 $start_fill $fill_range "read" "${pattern[i]}"
 	done
 
@@ -361,7 +359,7 @@ function test_clone_decouple_parent() {
 
 	# Check data consistency
 	for i in "${!pattern[@]}"; do
-		start_fill=$(( lvol_size_mb * i * 1024 * 1024 / 5 ))
+		start_fill=$((lvol_size_mb * i * 1024 * 1024 / 5))
 		run_fio_test /dev/nbd0 $start_fill $fill_range "read" "${pattern[i]}"
 	done
 
@@ -378,7 +376,7 @@ function test_lvol_bdev_readonly() {
 	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
 
 	# Calculate size and create lvol bdev
-	lvol_size_mb=$( round_down $(( LVS_DEFAULT_CAPACITY_MB / 2 )) )
+	lvol_size_mb=$(round_down $((LVS_DEFAULT_CAPACITY_MB / 2)))
 
 	lvol_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test "$lvol_size_mb")
 	lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
@@ -413,8 +411,8 @@ function test_delete_snapshot_with_clone() {
 	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
 
 	# Calculate size and create lvol bdev
-	lvol_size_mb=$( round_down $(( LVS_DEFAULT_CAPACITY_MB / 2 )) )
-	lvol_size=$(( lvol_size_mb * 1024 * 1024 ))
+	lvol_size_mb=$(round_down $((LVS_DEFAULT_CAPACITY_MB / 2)))
+	lvol_size=$((lvol_size_mb * 1024 * 1024))
 
 	lvol_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test "$lvol_size_mb")
 	lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
@@ -427,7 +425,7 @@ function test_delete_snapshot_with_clone() {
 	snapshot_uuid=$(rpc_cmd bdev_lvol_snapshot lvs_test/lvol_test lvol_snapshot)
 
 	# Fill first half of lvol bdev
-	half_size=$(( lvol_size / 2 - 1 ))
+	half_size=$((lvol_size / 2 - 1))
 	run_fio_test /dev/nbd0 0 $half_size "write" "0xee"
 
 	# Check if snapshot was unchanged
@@ -447,7 +445,7 @@ function test_delete_snapshot_with_clone() {
 	lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
 	[ "$(jq '.[].driver_specific.lvol.clone' <<< "$lvol")" = "false" ]
 	run_fio_test /dev/nbd0 0 $half_size "read" "0xee"
-	run_fio_test /dev/nbd0 $(( half_size + 1 )) $half_size "read" "0xcc"
+	run_fio_test /dev/nbd0 $((half_size + 1)) $half_size "read" "0xcc"
 
 	# Clean up
 	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd0
@@ -463,8 +461,8 @@ function test_delete_snapshot_with_snapshot() {
 	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
 
 	# Calculate size and create lvol bdev
-	lvol_size_mb=$( round_down $(( LVS_DEFAULT_CAPACITY_MB / 5 )) )
-	lvol_size=$(( lvol_size_mb * 1024 * 1024 ))
+	lvol_size_mb=$(round_down $((LVS_DEFAULT_CAPACITY_MB / 5)))
+	lvol_size=$((lvol_size_mb * 1024 * 1024))
 
 	lvol_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test "$lvol_size_mb")
 	lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
@@ -479,9 +477,9 @@ function test_delete_snapshot_with_snapshot() {
 	[ "$(jq '.[].driver_specific.lvol.base_snapshot' <<< "$lvol")" = '"lvol_snapshot"' ]
 
 	# Fill second 1/3 of lvol bdev
-	first_part=$(( lvol_size / 3 ))
-	second_part=$(( lvol_size * 2 / 3 ))
-	run_fio_test /dev/nbd0 $first_part $(( second_part - first_part )) "write" "0xee"
+	first_part=$((lvol_size / 3))
+	second_part=$((lvol_size * 2 / 3))
+	run_fio_test /dev/nbd0 $first_part $((second_part - first_part)) "write" "0xee"
 
 	# Check if snapshot was unchanged
 	nbd_start_disks "$DEFAULT_RPC_ADDR" "$snapshot_uuid" /dev/nbd1
@@ -502,22 +500,22 @@ function test_delete_snapshot_with_snapshot() {
 	# Verify snapshots
 	run_fio_test /dev/nbd1 0 $size "read" "0xcc"
 	nbd_start_disks "$DEFAULT_RPC_ADDR" "$snapshot_uuid2" /dev/nbd2
-	run_fio_test /dev/nbd2 0 $(( first_part - 1 )) "read" "0xcc"
-	run_fio_test /dev/nbd2 $first_part $(( second_part - first_part )) "read" "0xee"
-	run_fio_test /dev/nbd2 $second_part $(( lvol_size - second_part )) "read" "0xcc"
+	run_fio_test /dev/nbd2 0 $((first_part - 1)) "read" "0xcc"
+	run_fio_test /dev/nbd2 $first_part $((second_part - first_part)) "read" "0xee"
+	run_fio_test /dev/nbd2 $second_part $((lvol_size - second_part)) "read" "0xcc"
 
 	# Verify lvol bdev
-	run_fio_test /dev/nbd0 $first_part $(( second_part - first_part )) "read" "0xee"
-	run_fio_test /dev/nbd0 $second_part $(( lvol_size - second_part )) "read" "0xcc"
+	run_fio_test /dev/nbd0 $first_part $((second_part - first_part)) "read" "0xee"
+	run_fio_test /dev/nbd0 $second_part $((lvol_size - second_part)) "read" "0xcc"
 	[ "$(jq '.[].driver_specific.lvol.clone' <<< "$lvol")" = "true" ]
 	[ "$(jq '.[].driver_specific.lvol.base_snapshot' <<< "$lvol")" = '"lvol_snapshot2"' ]
 
 	# Fill third part of lvol bdev
-	run_fio_test /dev/nbd0 $second_part $(( lvol_size - second_part )) "write" "0xdd"
+	run_fio_test /dev/nbd0 $second_part $((lvol_size - second_part)) "write" "0xdd"
 
 	# Verify snapshots
 	run_fio_test /dev/nbd1 0 $size "read" "0xcc"
-	run_fio_test /dev/nbd0 $second_part $(( lvol_size - second_part )) "read" "0xdd"
+	run_fio_test /dev/nbd0 $second_part $((lvol_size - second_part)) "read" "0xdd"
 	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd2
 	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd1
 
@@ -530,8 +528,8 @@ function test_delete_snapshot_with_snapshot() {
 	[ "$(jq '.[].driver_specific.lvol.clone' <<< "$lvol")" = "true" ]
 	[ "$(jq '.[].driver_specific.lvol.base_snapshot' <<< "$lvol")" = '"lvol_snapshot"' ]
 	[ "$(jq '.[].driver_specific.lvol.clones|sort' <<< "$snapshot")" = "$(jq '.|sort' <<< '["lvol_test"]')" ]
-	run_fio_test /dev/nbd0 $first_part $(( second_part - first_part )) "read" "0xee"
-	run_fio_test /dev/nbd0 $second_part $(( lvol_size - second_part )) "read" "0xdd"
+	run_fio_test /dev/nbd0 $first_part $((second_part - first_part)) "read" "0xee"
+	run_fio_test /dev/nbd0 $second_part $((lvol_size - second_part)) "read" "0xdd"
 
 	# Clean up
 	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd0
@@ -561,7 +559,7 @@ function test_bdev_lvol_delete_ordering() {
 	[[ ${jq_out["name"]} == "$lvstore_name" ]]
 	[[ ${jq_out["base_bdev"]} == "$malloc_dev" ]]
 
-	size=$(( jq_out["free_clusters"] * jq_out["cluster_size"] / 4 / 1024**2 ))
+	size=$((jq_out["free_clusters"] * jq_out["cluster_size"] / 4 / 1024 ** 2))
 
 	bdev_uuid=$(rpc_cmd bdev_lvol_create -t -u "$lvstore_uuid" "$lbd_name" "$size")
 

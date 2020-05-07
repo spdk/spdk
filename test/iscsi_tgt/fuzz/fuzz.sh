@@ -49,7 +49,7 @@ sleep 1
 
 trap 'killprocess $iscsipid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 
-$rootdir/test/app/fuzz/iscsi_fuzz/iscsi_fuzz -m 0xF0 -T $TARGET_IP -t 30 2>$output_dir/iscsi_autofuzz_logs.txt
+$rootdir/test/app/fuzz/iscsi_fuzz/iscsi_fuzz -m 0xF0 -T $TARGET_IP -t 30 2> $output_dir/iscsi_autofuzz_logs.txt
 
 $rpc_py iscsi_delete_target_node 'iqn.2016-06.io.spdk:disk1'
 

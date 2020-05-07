@@ -8,13 +8,13 @@ source $rootdir/test/iscsi_tgt/common.sh
 function waitfortcp() {
 	local addr="$2"
 
-	if hash ip &>/dev/null; then
+	if hash ip &> /dev/null; then
 		local have_ip_cmd=true
 	else
 		local have_ip_cmd=false
 	fi
 
-	if hash ss &>/dev/null; then
+	if hash ss &> /dev/null; then
 		local have_ss_cmd=true
 	else
 		local have_ss_cmd=false
@@ -25,7 +25,7 @@ function waitfortcp() {
 	xtrace_disable
 	local ret=0
 	local i
-	for (( i = 40; i != 0; i-- )); do
+	for ((i = 40; i != 0; i--)); do
 		# if the process is no longer running, then exit the script
 		#  since it means the application crashed
 		if ! kill -s 0 $1; then
@@ -55,7 +55,7 @@ function waitfortcp() {
 	done
 
 	xtrace_restore
-	if (( i == 0 )); then
+	if ((i == 0)); then
 		echo "ERROR: timeout while waiting for process (pid: $1) to start listening on '$addr'"
 		ret=1
 	fi
@@ -77,8 +77,8 @@ if [ -z "$TEST_TYPE" ]; then
 fi
 
 if [ "$TEST_TYPE" != "posix" ] && [ "$TEST_TYPE" != "vpp" ]; then
-        echo "No correct sock implmentation specified"
-        exit 1
+	echo "No correct sock implmentation specified"
+	exit 1
 fi
 
 HELLO_SOCK_APP="${TARGET_NS_CMD[*]} $rootdir/examples/sock/hello_world/hello_sock"
@@ -94,14 +94,15 @@ timing_enter sock_client
 echo "Testing client path"
 
 # start echo server using socat
-$SOCAT_APP tcp-l:$ISCSI_PORT,fork,bind=$INITIATOR_IP exec:'/bin/cat' & server_pid=$!
+$SOCAT_APP tcp-l:$ISCSI_PORT,fork,bind=$INITIATOR_IP exec:'/bin/cat' &
+server_pid=$!
 trap 'killprocess $server_pid;iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 
 waitfortcp $server_pid $INITIATOR_IP:$ISCSI_PORT
 
 # send message using hello_sock client
 message="**MESSAGE:This is a test message from the client**"
-response=$( echo $message | $HELLO_SOCK_APP -H $INITIATOR_IP -P $ISCSI_PORT -N $TEST_TYPE)
+response=$(echo $message | $HELLO_SOCK_APP -H $INITIATOR_IP -P $ISCSI_PORT -N $TEST_TYPE)
 
 if ! echo "$response" | grep -q "$message"; then
 	exit 1
@@ -120,13 +121,14 @@ timing_exit sock_client
 timing_enter sock_server
 
 # start echo server using hello_sock echo server
-$HELLO_SOCK_APP -H $TARGET_IP -P $ISCSI_PORT -S -N $TEST_TYPE & server_pid=$!
+$HELLO_SOCK_APP -H $TARGET_IP -P $ISCSI_PORT -S -N $TEST_TYPE &
+server_pid=$!
 trap 'killprocess $server_pid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $server_pid
 
 # send message to server using socat
 message="**MESSAGE:This is a test message to the server**"
-response=$( echo $message | $SOCAT_APP - tcp:$TARGET_IP:$ISCSI_PORT 2>/dev/null )
+response=$(echo $message | $SOCAT_APP - tcp:$TARGET_IP:$ISCSI_PORT 2> /dev/null)
 
 if [ "$message" != "$response" ]; then
 	exit 1

@@ -10,7 +10,7 @@ DEFAULT_FIO_BIN="/home/sys_sgsw/fio_ubuntu"
 CENTOS_FIO_BIN="/home/sys_sgsw/fio_ubuntu_bak"
 
 case $1 in
-	-h|--help)
+	-h | --help)
 		echo "usage: $(basename $0) TEST_TYPE"
 		echo "Test type can be:"
 		echo "  -p |--performance                    for running a performance test with vhost scsi"
@@ -25,7 +25,7 @@ case $1 in
 		echo ""
 		echo "Tests are performed only on Linux machine. For other OS no action is performed."
 		echo ""
-		exit 0;
+		exit 0
 		;;
 esac
 
@@ -46,12 +46,12 @@ if [[ ! -r "${VM_IMAGE}" ]]; then
 	exit 1
 fi
 
-DISKS_NUMBER=$(lspci -mm -n | grep 0108 | tr -d '"' | awk -F " " '{print "0000:"$1}'| wc -l)
+DISKS_NUMBER=$(lspci -mm -n | grep 0108 | tr -d '"' | awk -F " " '{print "0000:"$1}' | wc -l)
 
 WORKDIR=$(readlink -f $(dirname $0))
 
 case $1 in
-	-hp|--hotplug)
+	-hp | --hotplug)
 		echo 'Running hotplug tests suite...'
 		run_test "vhost_hotplug" $WORKDIR/hotplug/scsi_hotplug.sh --fio-bin=$FIO_BIN \
 			--vm=0,$VM_IMAGE,Nvme0n1p0:Nvme0n1p1 \
@@ -61,7 +61,7 @@ case $1 in
 			--test-type=spdk_vhost_scsi \
 			--fio-jobs=$WORKDIR/hotplug/fio_jobs/default_integrity.job -x
 		;;
-	-shr|--scsi-hot-remove)
+	-shr | --scsi-hot-remove)
 		echo 'Running scsi hotremove tests suite...'
 		run_test "vhost_scsi_hot_remove" $WORKDIR/hotplug/scsi_hotplug.sh --fio-bin=$FIO_BIN \
 			--vm=0,$VM_IMAGE,Nvme0n1p0:Nvme0n1p1 \
@@ -70,7 +70,7 @@ case $1 in
 			--scsi-hotremove-test \
 			--fio-jobs=$WORKDIR/hotplug/fio_jobs/default_integrity.job
 		;;
-	-bhr|--blk-hot-remove)
+	-bhr | --blk-hot-remove)
 		echo 'Running blk hotremove tests suite...'
 		run_test "vhost_blk_hot_remove" $WORKDIR/hotplug/scsi_hotplug.sh --fio-bin=$FIO_BIN \
 			--vm=0,$VM_IMAGE,Nvme0n1p0:Nvme0n1p1 \
@@ -82,5 +82,5 @@ case $1 in
 	*)
 		echo "unknown test type: $1"
 		exit 1
-	;;
+		;;
 esac

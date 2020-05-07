@@ -10,7 +10,7 @@ dump_db_bench_on_err() {
 
 	# Dump entire *.txt to stderr to clearly see what might have failed
 	xtrace_disable
-	mapfile -t step_map <"$db_bench"
+	mapfile -t step_map < "$db_bench"
 	printf '%s\n' "${step_map[@]/#/* $step (FAILED)}" >&2
 	xtrace_restore
 }
@@ -22,9 +22,9 @@ run_step() {
 	fi
 
 	cat <<- EOL >> "$1"_flags.txt
-	--spdk=$ROCKSDB_CONF
-	--spdk_bdev=Nvme0n1
-	--spdk_cache_size=$CACHE_SIZE
+		--spdk=$ROCKSDB_CONF
+		--spdk_bdev=Nvme0n1
+		--spdk_cache_size=$CACHE_SIZE
 	EOL
 
 	db_bench=$1_db_bench.txt
@@ -60,8 +60,8 @@ fi
 
 EXTRA_CXXFLAGS=""
 GCC_VERSION=$(cc -dumpversion | cut -d. -f1)
-if (( GCC_VERSION >= 9 )); then
-        EXTRA_CXXFLAGS+="-Wno-deprecated-copy -Wno-pessimizing-move -Wno-error=stringop-truncation"
+if ((GCC_VERSION >= 9)); then
+	EXTRA_CXXFLAGS+="-Wno-deprecated-copy -Wno-pessimizing-move -Wno-error=stringop-truncation"
 fi
 
 $MAKE db_bench $MAKEFLAGS $MAKECONFIG DEBUG_LEVEL=0 SPDK_DIR=$rootdir EXTRA_CXXFLAGS="$EXTRA_CXXFLAGS"

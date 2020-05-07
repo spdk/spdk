@@ -7,7 +7,6 @@ source $rootdir/test/vhost/common.sh
 source $testdir/migration-tc1.sh
 source $testdir/migration-tc2.sh
 
-
 vms=()
 declare -A vms_os
 declare -A vms_raw_disks
@@ -20,9 +19,11 @@ MGMT_TARGET_IP=""
 MGMT_INITIATOR_IP=""
 RDMA_TARGET_IP=""
 RDMA_INITIATOR_IP=""
-function usage()
-{
-	[[ -n $2 ]] && ( echo "$2"; echo ""; )
+function usage() {
+	[[ -n $2 ]] && (
+		echo "$2"
+		echo ""
+	)
 	echo "Shortcut script for doing automated test of live migration."
 	echo "Usage: $(basename $1) [OPTIONS]"
 	echo
@@ -37,7 +38,7 @@ function usage()
 
 for param in "$@"; do
 	case "$param" in
-		--help|-h)
+		--help | -h)
 			usage $0
 			exit 0
 			;;
@@ -48,10 +49,11 @@ for param in "$@"; do
 		--rdma-tgt-ip=*) RDMA_TARGET_IP="${param#*=}" ;;
 		--rdma-init-ip=*) RDMA_INITIATOR_IP="${param#*=}" ;;
 		-x) set -x ;;
-		-v) SPDK_VHOST_VERBOSE=true	;;
+		-v) SPDK_VHOST_VERBOSE=true ;;
 		*)
 			usage $0 "Invalid argument '$param'"
-			exit 1;;
+			exit 1
+			;;
 	esac
 done
 
@@ -59,8 +61,7 @@ vhosttestinit
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' INT ERR EXIT
 
-function vm_monitor_send()
-{
+function vm_monitor_send() {
 	local vm_num=$1
 	local cmd_result_file="$2"
 	local vm_dir="$VM_DIR/$1"
@@ -74,8 +75,7 @@ function vm_monitor_send()
 }
 
 # Migrate VM $1
-function vm_migrate()
-{
+function vm_migrate() {
 	local from_vm_dir="$VM_DIR/$1"
 	local target_vm_dir
 	local target_vm
@@ -103,7 +103,7 @@ function vm_migrate()
 		"quit" | vm_monitor_send $1 "$from_vm_dir/migration_result"
 
 	# Post migration checks:
-	if ! grep "Migration status: completed"  $from_vm_dir/migration_result -q; then
+	if ! grep "Migration status: completed" $from_vm_dir/migration_result -q; then
 		cat $from_vm_dir/migration_result
 		fail "Migration failed:\n"
 	fi
@@ -122,8 +122,7 @@ function vm_migrate()
 	timing_exit vm_migrate
 }
 
-function is_fio_running()
-{
+function is_fio_running() {
 	xtrace_disable
 
 	if vm_exec $1 'kill -0 $(cat /root/fio.pid)'; then

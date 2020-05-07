@@ -10,8 +10,7 @@ target_vm_ctrl=naa.VhostScsi0.$target_vm
 rpc="$rootdir/scripts/rpc.py -s $(get_vhost_dir 1)/rpc.sock"
 share_dir=$VHOST_DIR/share
 
-function host_2_cleanup_vhost()
-{
+function host_2_cleanup_vhost() {
 	notice "Shutting down VM $target_vm"
 	vm_kill $target_vm
 
@@ -24,8 +23,7 @@ function host_2_cleanup_vhost()
 	sleep 1
 }
 
-function host_2_start_vhost()
-{
+function host_2_start_vhost() {
 	echo "BASE DIR $VHOST_DIR"
 	vhost_work_dir=$VHOST_DIR/vhost1
 	mkdir -p $vhost_work_dir
@@ -67,7 +65,7 @@ timeout=40
 while is_fio_running $target_vm; do
 	sleep 1
 	echo -n "."
-	if (( timeout-- == 0 )); then
+	if ((timeout-- == 0)); then
 		error "timeout while waiting for FIO!"
 	fi
 done

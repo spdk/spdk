@@ -34,9 +34,11 @@ disk_cfg_splits=()
 disk_cfg_vms=()
 disk_cfg_kernel_names=()
 
-function usage()
-{
-	[[ -n $2 ]] && ( echo "$2"; echo ""; )
+function usage() {
+	[[ -n $2 ]] && (
+		echo "$2"
+		echo ""
+	)
 	echo "Shortcut script for doing automated test"
 	echo "Usage: $(basename $1) [OPTIONS]"
 	echo
@@ -77,8 +79,7 @@ function usage()
 	exit 0
 }
 
-function cleanup_lvol_cfg()
-{
+function cleanup_lvol_cfg() {
 	notice "Removing lvol bdevs"
 	for lvol_bdev in "${lvol_bdevs[@]}"; do
 		$rpc_py bdev_lvol_delete $lvol_bdev
@@ -92,24 +93,21 @@ function cleanup_lvol_cfg()
 	done
 }
 
-function cleanup_split_cfg()
-{
+function cleanup_split_cfg() {
 	notice "Removing split vbdevs"
 	for disk in "${disk_cfg_spdk_names[@]}"; do
 		$rpc_py bdev_split_delete ${disk}n1
 	done
 }
 
-function cleanup_parted_config()
-{
+function cleanup_parted_config() {
 	notice "Removing parted disk configuration"
 	for disk in "${disk_cfg_kernel_names[@]}"; do
 		parted -s /dev/${disk}n1 rm 1
 	done
 }
 
-function cleanup_kernel_vhost()
-{
+function cleanup_kernel_vhost() {
 	notice "Cleaning kernel vhost configration"
 	targetcli clearconfig confirm=True
 	cleanup_parted_config
@@ -148,33 +146,35 @@ function create_spdk_controller() {
 while getopts 'xh-:' optchar; do
 	case "$optchar" in
 		-)
-		case "$OPTARG" in
-			help) usage $0 ;;
-			fio-bin=*) fio_bin="--fio-bin=${OPTARG#*=}" ;;
-			fio-jobs=*) fio_jobs="${OPTARG#*=}" ;;
-			fio-iterations=*) fio_iterations="${OPTARG#*=}" ;;
-			vm-memory=*) vm_memory="${OPTARG#*=}" ;;
-			vm-image=*) VM_IMAGE="${OPTARG#*=}" ;;
-			vm-sar-enable) vm_sar_enable=true ;;
-			host-sar-enable) host_sar_enable=true ;;
-			sar-delay=*) sar_delay="${OPTARG#*=}" ;;
-			sar-interval=*) sar_interval="${OPTARG#*=}" ;;
-			sar-count=*) sar_count="${OPTARG#*=}" ;;
-			vm-throttle-iops=*) vm_throttle="${OPTARG#*=}" ;;
-			ctrl-type=*) ctrl_type="${OPTARG#*=}" ;;
-			use-split) use_split=true ;;
-			run-precondition) run_precondition=true ;;
-			precond-fio-bin=*) precond_fio_bin="${OPTARG#*=}" ;;
-			limit-kernel-vhost=*) kernel_cpus="${OPTARG#*=}" ;;
-			custom-cpu-cfg=*) custom_cpu_cfg="${OPTARG#*=}" ;;
-			disk-map=*) disk_map="${OPTARG#*=}" ;;
-			*) usage $0 "Invalid argument '$OPTARG'" ;;
-		esac
-		;;
-	h) usage $0 ;;
-	x) set -x
-		x="-x" ;;
-	*) usage $0 "Invalid argument '$OPTARG'"
+			case "$OPTARG" in
+				help) usage $0 ;;
+				fio-bin=*) fio_bin="--fio-bin=${OPTARG#*=}" ;;
+				fio-jobs=*) fio_jobs="${OPTARG#*=}" ;;
+				fio-iterations=*) fio_iterations="${OPTARG#*=}" ;;
+				vm-memory=*) vm_memory="${OPTARG#*=}" ;;
+				vm-image=*) VM_IMAGE="${OPTARG#*=}" ;;
+				vm-sar-enable) vm_sar_enable=true ;;
+				host-sar-enable) host_sar_enable=true ;;
+				sar-delay=*) sar_delay="${OPTARG#*=}" ;;
+				sar-interval=*) sar_interval="${OPTARG#*=}" ;;
+				sar-count=*) sar_count="${OPTARG#*=}" ;;
+				vm-throttle-iops=*) vm_throttle="${OPTARG#*=}" ;;
+				ctrl-type=*) ctrl_type="${OPTARG#*=}" ;;
+				use-split) use_split=true ;;
+				run-precondition) run_precondition=true ;;
+				precond-fio-bin=*) precond_fio_bin="${OPTARG#*=}" ;;
+				limit-kernel-vhost=*) kernel_cpus="${OPTARG#*=}" ;;
+				custom-cpu-cfg=*) custom_cpu_cfg="${OPTARG#*=}" ;;
+				disk-map=*) disk_map="${OPTARG#*=}" ;;
+				*) usage $0 "Invalid argument '$OPTARG'" ;;
+			esac
+			;;
+		h) usage $0 ;;
+		x)
+			set -x
+			x="-x"
+			;;
+		*) usage $0 "Invalid argument '$OPTARG'" ;;
 	esac
 done
 
@@ -202,20 +202,20 @@ fi
 if [[ $run_precondition == true ]]; then
 	# Using the same precondition routine possible for lvols thanks
 	# to --clear-method option. Lvols should not UNMAP on creation.
-    json_cfg=$rootdir/nvme.json
-    cat <<-JSON >"$json_cfg"
-	{"subsystems":[
-	 $("$rootdir/scripts/gen_nvme.sh" --json)
-	]}
-JSON
-    mapfile -t nvmes < <(grep -oP "Nvme\d+" "$json_cfg")
-    fio_filename=$(printf ":%sn1" "${nvmes[@]}")
-    fio_filename=${fio_filename:1}
-    $precond_fio_bin --name="precondition" \
-    --ioengine="${rootdir}/examples/bdev/fio_plugin/fio_plugin" \
-    --rw="write" --spdk_json_conf="$json_cfg" --thread="1" \
-    --group_reporting --direct="1" --size="100%" --loops="2" --bs="256k" \
-    --iodepth=32 --filename="${fio_filename}" || true
+	json_cfg=$rootdir/nvme.json
+	cat <<- JSON > "$json_cfg"
+		{"subsystems":[
+		 $("$rootdir/scripts/gen_nvme.sh" --json)
+		]}
+	JSON
+	mapfile -t nvmes < <(grep -oP "Nvme\d+" "$json_cfg")
+	fio_filename=$(printf ":%sn1" "${nvmes[@]}")
+	fio_filename=${fio_filename:1}
+	$precond_fio_bin --name="precondition" \
+		--ioengine="${rootdir}/examples/bdev/fio_plugin/fio_plugin" \
+		--rw="write" --spdk_json_conf="$json_cfg" --thread="1" \
+		--group_reporting --direct="1" --size="100%" --loops="2" --bs="256k" \
+		--iodepth=32 --filename="${fio_filename}" || true
 fi
 
 set +x
@@ -239,7 +239,6 @@ done
 unset IFS
 set -x
 
-
 if [[ "$ctrl_type" == "kernel_vhost" ]]; then
 	notice "Configuring kernel vhost..."
 	trap 'vm_kill_all; sleep 1; cleanup_kernel_vhost; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR
@@ -247,18 +246,18 @@ if [[ "$ctrl_type" == "kernel_vhost" ]]; then
 	# Split disks using parted for kernel vhost
 	newline=$'\n'
 	backstores=()
-	for (( i=0; i<${#disk_cfg_kernel_names[@]}; i++ )); do
+	for ((i = 0; i < ${#disk_cfg_kernel_names[@]}; i++)); do
 		nvme=${disk_cfg_kernel_names[$i]}
 		splits=${disk_cfg_splits[$i]}
 		notice "  Creating extended partition on disk /dev/${nvme}n1"
 		parted -s /dev/${nvme}n1 mklabel msdos
 		parted -s /dev/${nvme}n1 mkpart extended 2048s 100%
 
-		part_size=$((100/${disk_cfg_splits[$i]})) # Split 100% of disk into roughly even parts
+		part_size=$((100 / ${disk_cfg_splits[$i]})) # Split 100% of disk into roughly even parts
 		echo "  Creating  ${splits} partitions of relative disk size ${part_size}"
 		for p in $(seq 0 $((splits - 1))); do
-			p_start=$((p*part_size))
-			p_end=$((p_start+part_size))
+			p_start=$((p * part_size))
+			p_end=$((p_start + part_size))
 			parted -s /dev/${nvme}n1 mkpart logical ${p_start}% ${p_end}%
 			sleep 3
 		done
@@ -278,7 +277,7 @@ if [[ "$ctrl_type" == "kernel_vhost" ]]; then
 		# Create kernel vhost controllers and add LUNs
 		# Setup VM configurations
 		vms_to_run=(${disk_cfg_vms[i]})
-		for (( j=0; j<${#vms_to_run[@]}; j++ )); do
+		for ((j = 0; j < ${#vms_to_run[@]}; j++)); do
 			# WWPN prefix misses 3 characters. Need to complete it
 			# using block backstore number
 			x=$(printf %03d ${vms_to_run[$j]})
@@ -298,7 +297,7 @@ else
 	if [[ $use_split == true ]]; then
 		notice "Configuring split bdevs configuration..."
 		trap 'cleanup_split_cfg; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR
-		for (( i=0; i<${#disk_cfg_bdfs[@]}; i++ )); do
+		for ((i = 0; i < ${#disk_cfg_bdfs[@]}; i++)); do
 			nvme_bdev=$($rpc_py bdev_nvme_attach_controller -b ${disk_cfg_spdk_names[$i]} -t pcie -a ${disk_cfg_bdfs[$i]})
 			notice "Created NVMe Bdev: $nvme_bdev with BDF ${disk_cfg_bdfs[$i]}"
 
@@ -310,7 +309,7 @@ else
 			done
 
 			vms_to_run=(${disk_cfg_vms[i]})
-			for (( j=0; j<${#vms_to_run[@]}; j++ )); do
+			for ((j = 0; j < ${#vms_to_run[@]}; j++)); do
 				notice "Setting up VM ${vms_to_run[j]}"
 				create_spdk_controller "${vms_to_run[j]}" ${splits[j]}
 				create_vm ${vms_to_run[j]}
@@ -321,7 +320,7 @@ else
 	else
 		notice "Configuring LVOLs..."
 		trap 'cleanup_lvol_cfg; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR
-		for (( i=0; i<${#disk_cfg_bdfs[@]}; i++ )); do
+		for ((i = 0; i < ${#disk_cfg_bdfs[@]}; i++)); do
 			nvme_bdev=$($rpc_py bdev_nvme_attach_controller -b ${disk_cfg_spdk_names[$i]} -t pcie -a ${disk_cfg_bdfs[$i]})
 			notice "Created NVMe Bdev: $nvme_bdev with BDF ${disk_cfg_bdfs[$i]}"
 
@@ -330,9 +329,9 @@ else
 			notice "Created Lvol Store: $ls_guid on Bdev $nvme_bdev"
 
 			vms_to_run=(${disk_cfg_vms[i]})
-			for (( j=0; j<${disk_cfg_splits[$i]}; j++)); do
+			for ((j = 0; j < ${disk_cfg_splits[$i]}; j++)); do
 				free_mb=$(get_lvs_free_mb "$ls_guid")
-				size=$((free_mb / ((${disk_cfg_splits[$i]}-j)) ))
+				size=$((free_mb / ((${disk_cfg_splits[$i]} - j))))
 				lb_name=$($rpc_py bdev_lvol_create -u $ls_guid lbd_$j $size --clear-method none)
 				lvol_bdevs+=("$lb_name")
 				notice "Created LVOL Bdev $lb_name on Lvol Store $ls_guid on Bdev $nvme_bdev"
@@ -423,7 +422,7 @@ for fio_job in ${fio_jobs//,/ }; do
 		fi
 
 		for j in $pids; do
-				wait $j
+			wait $j
 		done
 
 		if $vm_sar_enable; then

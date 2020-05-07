@@ -82,17 +82,15 @@ if [ $(uname -s) = Linux ]; then
 	# If some OCSSD device is bound to other driver than nvme we won't be able to
 	# discover if it is OCSSD or not so load the kernel driver first.
 
-
-	while IFS= read -r -d '' dev
-	do
+	while IFS= read -r -d '' dev; do
 		# Send Open Channel 2.0 Geometry opcode "0xe2" - not supported by NVMe device.
-		if nvme admin-passthru $dev --namespace-id=1 --data-len=4096  --opcode=0xe2 --read >/dev/null; then
+		if nvme admin-passthru $dev --namespace-id=1 --data-len=4096 --opcode=0xe2 --read > /dev/null; then
 			bdf="$(basename $(readlink -e /sys/class/nvme/${dev#/dev/}/device))"
 			echo "INFO: blacklisting OCSSD device: $dev ($bdf)"
 			PCI_BLACKLIST+=" $bdf"
 			OCSSD_PCI_DEVICES+=" $bdf"
 		fi
-	done <   <(find /dev -maxdepth 1 -regex '/dev/nvme[0-9]+' -print0)
+	done < <(find /dev -maxdepth 1 -regex '/dev/nvme[0-9]+' -print0)
 
 	export OCSSD_PCI_DEVICES
 
@@ -102,8 +100,8 @@ if [ $(uname -s) = Linux ]; then
 	if [[ -n "$PCI_BLACKLIST" ]]; then
 		# shellcheck disable=SC2097,SC2098
 		PCI_WHITELIST="$PCI_BLACKLIST" \
-		PCI_BLACKLIST="" \
-		DRIVER_OVERRIDE="pci-stub" \
+			PCI_BLACKLIST="" \
+			DRIVER_OVERRIDE="pci-stub" \
 			./scripts/setup.sh
 
 		# Export our blacklist so it will take effect during next setup.sh
@@ -161,7 +159,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	run_test "json_config" ./test/json_config/json_config.sh
 	run_test "alias_rpc" test/json_config/alias_rpc/alias_rpc.sh
 	run_test "spdkcli_tcp" test/spdkcli/tcp.sh
-        run_test "dpdk_mem_utility" test/dpdk_memory_utility/test_dpdk_mem_info.sh
+	run_test "dpdk_mem_utility" test/dpdk_memory_utility/test_dpdk_mem_info.sh
 	run_test "event" test/event/event.sh
 
 	if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
@@ -231,8 +229,8 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 			run_test "spdkcli_nvmf_tcp" ./test/spdkcli/nvmf.sh
 			run_test "nvmf_identify_passthru" test/nvmf/target/identify_passthru.sh --transport=$SPDK_TEST_NVMF_TRANSPORT
 		elif [ "$SPDK_TEST_NVMF_TRANSPORT" = "fc" ]; then
-				run_test "nvmf_fc" ./test/nvmf/nvmf.sh --transport=$SPDK_TEST_NVMF_TRANSPORT
-				run_test "spdkcli_nvmf_fc" ./test/spdkcli/nvmf.sh
+			run_test "nvmf_fc" ./test/nvmf/nvmf.sh --transport=$SPDK_TEST_NVMF_TRANSPORT
+			run_test "spdkcli_nvmf_fc" ./test/spdkcli/nvmf.sh
 		else
 			echo "unknown NVMe transport, please specify rdma, tcp, or fc."
 			exit 1
@@ -280,10 +278,10 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		run_test "vmd" ./test/vmd/vmd.sh
 	fi
 
-        if [ $SPDK_TEST_REDUCE -eq 1 ]; then
-                run_test "compress_qat" ./test/compress/compress.sh "qat"
-                run_test "compress_isal" ./test/compress/compress.sh "isal"
-        fi
+	if [ $SPDK_TEST_REDUCE -eq 1 ]; then
+		run_test "compress_qat" ./test/compress/compress.sh "qat"
+		run_test "compress_isal" ./test/compress/compress.sh "isal"
+	fi
 
 	if [ $SPDK_TEST_OPAL -eq 1 ]; then
 		run_test "nvme_opal" ./test/nvme/nvme_opal.sh

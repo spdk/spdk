@@ -19,25 +19,25 @@ while getopts "s:n:t:h-:" opt; do
 			echo "  Invalid argument: $OPTARG"
 			usage
 			exit 1
-		;;
+			;;
 		s)
 			size=$OPTARG
-		;;
+			;;
 		n)
 			nvme_disk=$OPTARG
-		;;
+			;;
 		t)
 			type=$OPTARG
-		;;
+			;;
 		h)
 			usage
 			exit 0
-		;;
+			;;
 		*)
 			echo "  Invalid argument: $OPTARG"
 			usage
 			exit 1
-		;;
+			;;
 	esac
 done
 
@@ -46,18 +46,18 @@ if [ ! "${SYSTEM}" = "FreeBSD" ]; then
 	case $type in
 		"nvme")
 			qemu-img create -f raw $nvme_disk $size
-		;;
+			;;
 		"ocssd")
 			if [ $size == "1024M" ]; then
 				size="9G"
 			fi
 			fallocate -l $size $nvme_disk
 			touch ${nvme_disk}_ocssd_md
-		;;
+			;;
 		*)
 			echo "We support only nvme and ocssd disks types"
 			exit 1
-		;;
+			;;
 	esac
 	#Change SE Policy on Fedora
 	if [ $WHICH_OS == "Fedora" ]; then

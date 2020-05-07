@@ -7,16 +7,14 @@ source $rootdir/test/nvmf/common.sh
 
 rpc_py="$rootdir/scripts/rpc.py"
 
-function jcount()
-{
-    local filter=$1
-    jq "$filter" | wc -l
+function jcount() {
+	local filter=$1
+	jq "$filter" | wc -l
 }
 
-function jsum()
-{
-    local filter=$1
-    jq "$filter" | awk '{s+=$1}END{print s}'
+function jsum() {
+	local filter=$1
+	jq "$filter" | awk '{s+=$1}END{print s}'
 }
 
 nvmftestinit
@@ -35,11 +33,11 @@ stats=$($rpc_py nvmf_get_stats)
 [ "0" -eq $(jsum .poll_groups[].io_qpairs <<< "$stats") ]
 # Transport statistics is currently implemented for RDMA only
 if [ 'rdma' == $TEST_TRANSPORT ]; then
-    # Expect RDMA transport and some devices
-    [ "1" -eq $(jcount .poll_groups[0].transports[].trtype <<< "$stats") ]
-    transport_type=$(jq -r .poll_groups[0].transports[0].trtype <<< "$stats")
-    [ "${transport_type,,}" == "${TEST_TRANSPORT,,}" ]
-    [ "0" -lt $(jcount .poll_groups[0].transports[0].devices[].name <<< "$stats") ]
+	# Expect RDMA transport and some devices
+	[ "1" -eq $(jcount .poll_groups[0].transports[].trtype <<< "$stats") ]
+	transport_type=$(jq -r .poll_groups[0].transports[0].trtype <<< "$stats")
+	[ "${transport_type,,}" == "${TEST_TRANSPORT,,}" ]
+	[ "0" -lt $(jcount .poll_groups[0].transports[0].devices[].name <<< "$stats") ]
 fi
 
 # set times for subsystem construct/delete
@@ -82,8 +80,7 @@ nvme disconnect -n nqn.2016-06.io.spdk:cnode1
 $rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 
 # do frequent add delete of namespaces with different nsid.
-for i in $(seq 1 $times)
-do
+for i in $(seq 1 $times); do
 	$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -s $NVMF_SERIAL
 	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc1 -n 5
@@ -100,8 +97,7 @@ do
 done
 
 # do frequent add delete.
-for i in $(seq 1 $times)
-do
+for i in $(seq 1 $times); do
 	$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -s $NVMF_SERIAL
 	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc1
@@ -118,9 +114,9 @@ stats=$($rpc_py nvmf_get_stats)
 [ "0" -lt $(jsum .poll_groups[].io_qpairs <<< "$stats") ]
 # Transport statistics is currently implemented for RDMA only
 if [ 'rdma' == $TEST_TRANSPORT ]; then
-    # Expect non-zero completions and request latencies accumulated
-    [ "0" -lt $(jsum .poll_groups[].transports[].devices[].completions <<< "$stats") ]
-    [ "0" -lt $(jsum .poll_groups[].transports[].devices[].request_latency <<< "$stats") ]
+	# Expect non-zero completions and request latencies accumulated
+	[ "0" -lt $(jsum .poll_groups[].transports[].devices[].completions <<< "$stats") ]
+	[ "0" -lt $(jsum .poll_groups[].transports[].devices[].request_latency <<< "$stats") ]
 fi
 
 trap - SIGINT SIGTERM EXIT

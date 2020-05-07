@@ -5,8 +5,7 @@ NVMF_TCP_IP_ADDRESS="127.0.0.1"
 NVMF_TRANSPORT_OPTS=""
 NVMF_SERIAL=SPDK00000000000001
 
-function build_nvmf_app_args()
-{
+function build_nvmf_app_args() {
 	if [ $SPDK_RUN_NON_ROOT -eq 1 ]; then
 		NVMF_APP=(sudo -u "$USER" "${NVMF_APP[@]}")
 		NVMF_APP+=(-i "$NVMF_APP_SHM_ID" -e 0xFFFF)
@@ -15,13 +14,13 @@ function build_nvmf_app_args()
 	fi
 }
 
-: ${NVMF_APP_SHM_ID="0"}; export NVMF_APP_SHM_ID
+: ${NVMF_APP_SHM_ID="0"}
+export NVMF_APP_SHM_ID
 build_nvmf_app_args
 
 have_pci_nics=0
 
-function load_ib_rdma_modules()
-{
+function load_ib_rdma_modules() {
 	if [ $(uname) != Linux ]; then
 		return 0
 	fi
@@ -37,9 +36,7 @@ function load_ib_rdma_modules()
 	modprobe rdma_ucm
 }
 
-
-function detect_soft_roce_nics()
-{
+function detect_soft_roce_nics() {
 	if hash rxe_cfg; then
 		rxe_cfg start
 		rdma_nics=$(get_rdma_if_list)
@@ -54,12 +51,10 @@ function detect_soft_roce_nics()
 	fi
 }
 
-
 # args 1 and 2 represent the grep filters for finding our NICS.
 # subsequent args are all drivers that should be loaded if we find these NICs.
 # Those drivers should be supplied in the correct order.
-function detect_nics_and_probe_drivers()
-{
+function detect_nics_and_probe_drivers() {
 	NIC_VENDOR="$1"
 	NIC_CLASS="$2"
 
@@ -80,9 +75,7 @@ function detect_nics_and_probe_drivers()
 	fi
 }
 
-
-function detect_pci_nics()
-{
+function detect_pci_nics() {
 
 	if ! hash lspci; then
 		return 0
@@ -101,38 +94,34 @@ function detect_pci_nics()
 	sleep 5
 }
 
-function detect_rdma_nics()
-{
+function detect_rdma_nics() {
 	detect_pci_nics
 	if [ "$have_pci_nics" -eq "0" ]; then
 		detect_soft_roce_nics
 	fi
 }
 
-function allocate_nic_ips()
-{
-	(( count=NVMF_IP_LEAST_ADDR ))
+function allocate_nic_ips() {
+	((count = NVMF_IP_LEAST_ADDR))
 	for nic_name in $(get_rdma_if_list); do
 		ip="$(get_ip_address $nic_name)"
 		if [ -z $ip ]; then
 			ip addr add $NVMF_IP_PREFIX.$count/24 dev $nic_name
 			ip link set $nic_name up
-			(( count=count+1 ))
+			((count = count + 1))
 		fi
 		# dump configuration for debug log
 		ip addr show $nic_name
 	done
 }
 
-function get_available_rdma_ips()
-{
+function get_available_rdma_ips() {
 	for nic_name in $(get_rdma_if_list); do
 		get_ip_address $nic_name
 	done
 }
 
-function get_rdma_if_list()
-{
+function get_rdma_if_list() {
 	for nic_type in /sys/class/infiniband/*; do
 		[[ -e "$nic_type" ]] || break
 		for nic_name in /sys/class/infiniband/"$(basename ${nic_type})"/device/net/*; do
@@ -142,14 +131,12 @@ function get_rdma_if_list()
 	done
 }
 
-function get_ip_address()
-{
+function get_ip_address() {
 	interface=$1
 	ip -o -4 addr show $interface | awk '{print $4}' | cut -d"/" -f1
 }
 
-function nvmfcleanup()
-{
+function nvmfcleanup() {
 	sync
 	set +e
 	for i in {1..20}; do
@@ -170,8 +157,7 @@ function nvmfcleanup()
 	modprobe -v -r nvme-fabrics
 }
 
-function nvmftestinit()
-{
+function nvmftestinit() {
 	if [ -z $TEST_TRANSPORT ]; then
 		echo "transport not specified - use --transport= to specify"
 		return 1
@@ -205,8 +191,7 @@ function nvmftestinit()
 	modprobe nvme-$TEST_TRANSPORT || true
 }
 
-function nvmfappstart()
-{
+function nvmfappstart() {
 	timing_enter start_nvmf_tgt
 	"${NVMF_APP[@]}" $1 &
 	nvmfpid=$!
@@ -215,8 +200,7 @@ function nvmfappstart()
 	timing_exit start_nvmf_tgt
 }
 
-function nvmftestfini()
-{
+function nvmftestfini() {
 	nvmfcleanup || :
 	if [ -n "$nvmfpid" ]; then
 		killprocess $nvmfpid
@@ -229,15 +213,13 @@ function nvmftestfini()
 	fi
 }
 
-function rdma_device_init()
-{
+function rdma_device_init() {
 	load_ib_rdma_modules
 	detect_rdma_nics
 	allocate_nic_ips
 }
 
-function revert_soft_roce()
-{
+function revert_soft_roce() {
 	if hash rxe_cfg; then
 		interfaces="$(ip -o link | awk '{print $2}' | cut -d":" -f1)"
 		for interface in $interfaces; do
@@ -247,8 +229,7 @@ function revert_soft_roce()
 	fi
 }
 
-function check_ip_is_soft_roce()
-{
+function check_ip_is_soft_roce() {
 	IP=$1
 	if hash rxe_cfg; then
 		dev=$(ip -4 -o addr show | grep $IP | cut -d" " -f2)
@@ -262,8 +243,7 @@ function check_ip_is_soft_roce()
 	fi
 }
 
-function nvme_connect()
-{
+function nvme_connect() {
 	local init_count
 	init_count=$(nvme list | wc -l)
 
@@ -279,8 +259,7 @@ function nvme_connect()
 	return 1
 }
 
-function get_nvme_devs()
-{
+function get_nvme_devs() {
 	local dev rest
 
 	nvmes=()
@@ -292,18 +271,17 @@ function get_nvme_devs()
 			echo "$dev $rest"
 		fi
 	done < <(nvme list)
-	(( ${#nvmes[@]} )) || return 1
+	((${#nvmes[@]})) || return 1
 	echo "${#nvmes[@]}" >&2
 }
 
-function gen_nvmf_target_json()
-{
+function gen_nvmf_target_json() {
 	local subsystem config=()
 
 	for subsystem in "${@:-1}"; do
 		config+=(
 			"$(
-				cat <<-EOF
+				cat <<- EOF
 					{
 					  "params": {
 					    "name": "Nvme$subsystem",
@@ -319,13 +297,16 @@ function gen_nvmf_target_json()
 			)"
 		)
 	done
-	jq . <<-JSON
+	jq . <<- JSON
 		{
 		  "subsystems": [
 		    {
 		      "subsystem": "bdev",
 		      "config": [
-		        $(IFS=","; printf '%s\n' "${config[*]}")
+		        $(
+		IFS=","
+		printf '%s\n' "${config[*]}"
+		)
 		      ]
 		    }
 		  ]

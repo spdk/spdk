@@ -26,8 +26,7 @@ if [ -z "$RDMA_INITIATOR_IP" ]; then
 	error "No IP address of initiators RDMA capable NIC is given"
 fi
 
-function ssh_remote()
-{
+function ssh_remote() {
 	local ssh_cmd="sshpass -p root ssh \
 		-o UserKnownHostsFile=/dev/null \
 		-o StrictHostKeyChecking=no \
@@ -39,13 +38,12 @@ function ssh_remote()
 	$ssh_cmd "$@"
 }
 
-function wait_for_remote()
-{
+function wait_for_remote() {
 	local timeout=40
 	set +x
 	while [[ ! -f $share_dir/DONE ]]; do
 		echo -n "."
-		if (( timeout-- == 0 )); then
+		if ((timeout-- == 0)); then
 			error "timeout while waiting for FIO!"
 		fi
 		sleep 1
@@ -54,8 +52,7 @@ function wait_for_remote()
 	rm -f $share_dir/DONE
 }
 
-function check_rdma_connection()
-{
+function check_rdma_connection() {
 	local nic_name
 	nic_name=$(ip -4 -o addr show to $RDMA_TARGET_IP up | cut -d' ' -f2)
 	if [[ -z $nic_name ]]; then
@@ -68,8 +65,7 @@ function check_rdma_connection()
 
 }
 
-function host1_cleanup_nvmf()
-{
+function host1_cleanup_nvmf() {
 	notice "Shutting down nvmf_tgt on local server"
 	if [[ -n "$1" ]]; then
 		pkill --signal $1 -F $nvmf_dir/nvmf_tgt.pid
@@ -79,8 +75,7 @@ function host1_cleanup_nvmf()
 	rm -f $nvmf_dir/nvmf_tgt.pid
 }
 
-function host1_cleanup_vhost()
-{
+function host1_cleanup_vhost() {
 	trap 'host1_cleanup_nvmf SIGKILL; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR EXIT
 	notice "Shutting down VM $incoming_vm"
 	vm_kill $incoming_vm
@@ -95,8 +90,7 @@ function host1_cleanup_vhost()
 	host1_cleanup_nvmf
 }
 
-function host1_start_nvmf()
-{
+function host1_start_nvmf() {
 	nvmf_dir="$TEST_DIR/nvmf_tgt"
 	rpc_nvmf="$rootdir/scripts/rpc.py -s $nvmf_dir/nvmf_rpc.sock"
 
@@ -118,8 +112,7 @@ function host1_start_nvmf()
 	$rpc_nvmf nvmf_subsystem_add_listener nqn.2018-02.io.spdk:cnode1 -t rdma -a $RDMA_TARGET_IP -s 4420
 }
 
-function host1_start_vhost()
-{
+function host1_start_vhost() {
 	rpc_0="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
 	notice "Starting vhost0 instance on local server"
@@ -140,8 +133,7 @@ function host1_start_vhost()
 	vm_wait_for_boot 300 $incoming_vm
 }
 
-function cleanup_share()
-{
+function cleanup_share() {
 	set +e
 	notice "Cleaning up share directory on remote and local server"
 	ssh_remote $MGMT_INITIATOR_IP "umount $VM_BASE_DIR"
@@ -151,8 +143,7 @@ function cleanup_share()
 	set -e
 }
 
-function host_1_create_share()
-{
+function host_1_create_share() {
 	notice "Creating share directory on local server to re-use on remote"
 	mkdir -p $share_dir
 	mkdir -p $VM_BASE_DIR # This dir would've been created later but we need it now
@@ -161,8 +152,7 @@ function host_1_create_share()
 	tar --exclude="*.o" --exclude="*.d" --exclude="*.git" -C $rootdir -zcf $share_dir/spdk.tar.gz .
 }
 
-function host_2_create_share()
-{
+function host_2_create_share() {
 	# Copy & compile the sources for later use on remote server.
 	ssh_remote $MGMT_INITIATOR_IP "uname -a"
 	ssh_remote $MGMT_INITIATOR_IP "mkdir -p $share_dir"
@@ -179,8 +169,7 @@ function host_2_create_share()
 	ssh_remote $MGMT_INITIATOR_IP "cd $spdk_repo_share_dir/spdk; make clean; ./configure --with-rdma --enable-debug; make -j40"
 }
 
-function host_2_start_vhost()
-{
+function host_2_start_vhost() {
 	ssh_remote $MGMT_INITIATOR_IP "nohup $spdk_repo_share_dir/spdk/test/vhost/migration/migration.sh\
 	 --test-cases=3b --os=$share_dir/migration.qcow2\
 	 --rdma-tgt-ip=$RDMA_TARGET_IP &>$share_dir/output.log &"
@@ -188,15 +177,13 @@ function host_2_start_vhost()
 	wait_for_remote
 }
 
-function setup_share()
-{
+function setup_share() {
 	trap 'cleanup_share; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR EXIT
 	host_1_create_share
 	host_2_create_share
 }
 
-function migration_tc3()
-{
+function migration_tc3() {
 	check_rdma_connection
 	setup_share
 	host1_start_nvmf

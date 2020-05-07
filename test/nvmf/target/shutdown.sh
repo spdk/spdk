@@ -59,7 +59,7 @@ function waitforio() {
 	fi
 	local ret=1
 	local i
-	for (( i = 10; i != 0; i-- )); do
+	for ((i = 10; i != 0; i--)); do
 		read_io_count=$($rpc_py -s $1 bdev_get_iostat -b $2 | jq -r '.bdevs[0].num_read_ops')
 		# A few I/O will happen during initial examine.  So wait until at least 100 I/O
 		#  have completed to know that bdevperf is really generating the I/O.
@@ -73,7 +73,7 @@ function waitforio() {
 }
 
 # Test 1: Kill the initiator unexpectedly with no I/O outstanding
-function nvmf_shutdown_tc1 {
+function nvmf_shutdown_tc1() {
 	starttarget
 
 	# Run bdev_svc, which connects but does not issue I/O
@@ -97,7 +97,7 @@ function nvmf_shutdown_tc1 {
 }
 
 # Test 2: Kill initiator unexpectedly with I/O outstanding
-function nvmf_shutdown_tc2 {
+function nvmf_shutdown_tc2() {
 	starttarget
 
 	# Run bdevperf
@@ -119,11 +119,11 @@ function nvmf_shutdown_tc2 {
 }
 
 # Test 3: Kill the target unexpectedly with I/O outstanding
-function nvmf_shutdown_tc3 {
+function nvmf_shutdown_tc3() {
 	starttarget
 
 	# Run bdevperf
-	$rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "${num_subsystems[@]}")  -q 64 -o 65536 -w verify -t 10 &
+	$rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "${num_subsystems[@]}") -q 64 -o 65536 -w verify -t 10 &
 	perfpid=$!
 	waitforlisten $perfpid /var/tmp/bdevperf.sock
 	$rpc_py -s /var/tmp/bdevperf.sock framework_wait_init

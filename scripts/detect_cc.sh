@@ -2,13 +2,11 @@
 
 set -e
 
-function err()
-{
+function err() {
 	echo "$@" >&2
 }
 
-function usage()
-{
+function usage() {
 	err "Detect compiler and linker versions, generate mk/cc.mk"
 	err ""
 	err "Usage: ./detect_cc.sh [OPTION]..."
@@ -24,11 +22,9 @@ function usage()
 	err " --cross-prefix=prefix     Use the given prefix for the cross compiler toolchain"
 }
 
-
-
 for i in "$@"; do
 	case "$i" in
-		-h|--help)
+		-h | --help)
 			usage
 			exit 0
 			;;
@@ -64,6 +60,7 @@ for i in "$@"; do
 			err "Unrecognized option $i"
 			usage
 			exit 1
+			;;
 	esac
 done
 
@@ -105,6 +102,7 @@ case "$LD_TYPE" in
 	*)
 		err "Unsupported linker: $LD"
 		exit 1
+		;;
 esac
 
 CCAR="ar"
@@ -128,7 +126,7 @@ if [ -n "$CROSS_PREFIX" ]; then
 
 		# Try to fix this automatically. Maybe the user set CROSS_PREFIX but not CC.
 		CC=$CROSS_PREFIX-$CC
-		if hash $CC 2>/dev/null; then
+		if hash $CC 2> /dev/null; then
 			expected_prefix=$($CC -dumpmachine)
 
 			if [ "$expected_prefix" = "$CROSS_PREFIX" ]; then
@@ -151,7 +149,7 @@ if [ -n "$CROSS_PREFIX" ]; then
 
 		# Try to fix this automatically. Maybe the user set CROSS_PREFIX but not CXX.
 		CXX=$CROSS_PREFIX-$CXX
-		if hash $CXX 2>/dev/null; then
+		if hash $CXX 2> /dev/null; then
 			expected_prefix=$($CXX -dumpmachine)
 
 			if [ "$expected_prefix" = "$CROSS_PREFIX" ]; then

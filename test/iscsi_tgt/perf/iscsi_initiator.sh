@@ -11,7 +11,7 @@ if [ ! -x $FIO_PATH/fio ]; then
 	error "Invalid path of fio binary"
 fi
 
-function run_spdk_iscsi_fio(){
+function run_spdk_iscsi_fio() {
 	$FIO_PATH/fio $testdir/perf.job "$@" --output-format=json
 }
 
@@ -23,8 +23,7 @@ iscsiadm -m node --login -p $IP_T:$ISCSI_PORT
 waitforiscsidevices 1
 
 disks=($(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}'))
-for (( i=0; i < ${#disks[@]}; i++ ))
-do
+for ((i = 0; i < ${#disks[@]}; i++)); do
 	filename+=$(printf /dev/%s: "${disks[i]}")
 	waitforfile $filename
 	echo noop > /sys/block/${disks[i]}/queue/scheduler

@@ -26,7 +26,7 @@ function confirm_abi_deps() {
 		return 1
 	fi
 
-	cat <<EOF > ${suppression_file}
+	cat << EOF > ${suppression_file}
 [suppress_variable]
 	name = SPDK_LOG_BDEV
 [suppress_variable]
@@ -99,7 +99,7 @@ EOF
 					touch $fail_file
 				fi
 
-				if [ "$new_so_maj" != "$old_so_maj" ] && [ "$new_so_min"  != "0" ]; then
+				if [ "$new_so_maj" != "$old_so_maj" ] && [ "$new_so_min" != "0" ]; then
 					echo "SO major version for $so_file was bumped. Please reset the minor version to 0."
 					touch $fail_file
 				fi
@@ -107,7 +107,7 @@ EOF
 
 			continue
 		fi
-		processed_so=$((processed_so+1))
+		processed_so=$((processed_so + 1))
 	done
 	rm -f $suppression_file
 	echo "Processed $processed_so objects."
@@ -131,7 +131,7 @@ function replace_defined_variables() {
 	for dep in "${bad_values[@]}"; do
 		dep_def_arr=($(grep -v "#" $libdeps_file | grep "${dep}" | cut -d "=" -f 2 | xargs))
 		new_values=($(replace_defined_variables "${dep_def_arr[@]}"))
-		good_values=( "${good_values[@]}" "${new_values[@]}" )
+		good_values=("${good_values[@]}" "${new_values[@]}")
 	done
 	echo ${good_values[*]}
 }
@@ -175,9 +175,9 @@ function confirm_deps() {
 	done
 	IFS=$'\n'
 	# Ignore any event_* dependencies. Those are based on the subsystem configuration and not readelf.
-	lib_make_deps=( $(printf "%s\n" "${lib_make_deps[@]}" | sort | grep -v "event_") )
+	lib_make_deps=($(printf "%s\n" "${lib_make_deps[@]}" | sort | grep -v "event_"))
 	# Ignore the env_dpdk readelf dependency. We don't want people explicitly linking against it.
-	dep_names=( $(printf "%s\n" "${dep_names[@]}" | sort | uniq | grep -v "env_dpdk") )
+	dep_names=($(printf "%s\n" "${dep_names[@]}" | sort | uniq | grep -v "env_dpdk"))
 	unset IFS
 	diff=$(echo "${dep_names[@]}" "${lib_make_deps[@]}" | tr ' ' '\n' | sort | uniq -u)
 	if [ "$diff" != "" ]; then
@@ -224,7 +224,10 @@ if grep -q 'CONFIG_VHOST_INTERNAL_LIB?=n' $rootdir/mk/config.mk; then
 	IGNORED_LIBS+=("rte_vhost")
 fi
 
-( for lib in $SPDK_LIBS; do confirm_deps $lib & done; wait )
+(
+	for lib in $SPDK_LIBS; do confirm_deps $lib & done
+	wait
+)
 
 $MAKE $MAKEFLAGS clean
 git checkout "$rootdir/mk/spdk.lib.mk"

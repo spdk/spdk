@@ -13,8 +13,8 @@ function test_rename_positive() {
 	bdev_aliases=("lvs_test/lvol_test"{0..3})
 
 	# Calculate size and create two lvol bdevs on top
-	lvol_size_mb=$( round_down $(( LVS_DEFAULT_CAPACITY_MB / 4 )) )
-	lvol_size=$(( lvol_size_mb * 1024 * 1024 ))
+	lvol_size_mb=$(round_down $((LVS_DEFAULT_CAPACITY_MB / 4)))
+	lvol_size=$((lvol_size_mb * 1024 * 1024))
 
 	# Create 4 lvol bdevs on top of previously created lvol store
 	bdev_uuids=()
@@ -23,7 +23,7 @@ function test_rename_positive() {
 		lvol=$(rpc_cmd bdev_get_bdevs -b $lvol_uuid)
 		[ "$(jq -r '.[0].driver_specific.lvol.lvol_store_uuid' <<< "$lvol")" = "$lvs_uuid" ]
 		[ "$(jq -r '.[0].block_size' <<< "$lvol")" = "$MALLOC_BS" ]
-		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( lvol_size / MALLOC_BS ))" ]
+		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$((lvol_size / MALLOC_BS))" ]
 		[ "$(jq '.[0].aliases|sort' <<< "$lvol")" = "$(jq '.|sort' <<< '["'${bdev_aliases[i]}'"]')" ]
 		bdev_uuids+=("$lvol_uuid")
 	done
@@ -46,13 +46,13 @@ function test_rename_positive() {
 	cluster_size=$(jq -r '.[0].cluster_size' <<< "$lvs")
 	[ "$cluster_size" = "$LVS_DEFAULT_CLUSTER_SIZE" ]
 	total_clusters=$(jq -r '.[0].total_data_clusters' <<< "$lvs")
-	[ "$(( total_clusters * cluster_size ))" = "$LVS_DEFAULT_CAPACITY" ]
+	[ "$((total_clusters * cluster_size))" = "$LVS_DEFAULT_CAPACITY" ]
 
 	for i in "${!bdev_uuids[@]}"; do
 		lvol=$(rpc_cmd bdev_get_bdevs -b "${bdev_uuids[i]}")
 		[ "$(jq -r '.[0].driver_specific.lvol.lvol_store_uuid' <<< "$lvol")" = "$lvs_uuid" ]
 		[ "$(jq -r '.[0].block_size' <<< "$lvol")" = "$MALLOC_BS" ]
-		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( lvol_size / MALLOC_BS ))" ]
+		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$((lvol_size / MALLOC_BS))" ]
 		[ "$(jq -r '.[0].aliases|sort' <<< "$lvol")" = "$(jq '.|sort' <<< '["'${bdev_aliases[i]}'"]')" ]
 	done
 
@@ -68,7 +68,7 @@ function test_rename_positive() {
 		lvol=$(rpc_cmd bdev_get_bdevs -b "${bdev_uuids[i]}")
 		[ "$(jq -r '.[0].driver_specific.lvol.lvol_store_uuid' <<< "$lvol")" = "$lvs_uuid" ]
 		[ "$(jq -r '.[0].block_size' <<< "$lvol")" = "$MALLOC_BS" ]
-		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( lvol_size / MALLOC_BS ))" ]
+		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$((lvol_size / MALLOC_BS))" ]
 		[ "$(jq -r '.[0].aliases|sort' <<< "$lvol")" = "$(jq '.|sort' <<< '["'${new_bdev_aliases[i]}'"]')" ]
 	done
 
@@ -104,8 +104,8 @@ function test_rename_lvs_negative() {
 	bdev_aliases_2=("lvs_test2/lvol_test_2_"{0..3})
 
 	# Calculate size and create two lvol bdevs on top
-	lvol_size_mb=$( round_down $(( LVS_DEFAULT_CAPACITY_MB / 4 )) )
-	lvol_size=$(( lvol_size_mb * 1024 * 1024 ))
+	lvol_size_mb=$(round_down $((LVS_DEFAULT_CAPACITY_MB / 4)))
+	lvol_size=$((lvol_size_mb * 1024 * 1024))
 
 	# # Create 4 lvol bdevs on top of each lvol store
 	bdev_uuids_1=()
@@ -115,7 +115,7 @@ function test_rename_lvs_negative() {
 		lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
 		[ "$(jq -r '.[0].driver_specific.lvol.lvol_store_uuid' <<< "$lvol")" = "$lvs_uuid1" ]
 		[ "$(jq -r '.[0].block_size' <<< "$lvol")" = "$MALLOC_BS" ]
-		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( lvol_size / MALLOC_BS ))" ]
+		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$((lvol_size / MALLOC_BS))" ]
 		[ "$(jq '.[0].aliases|sort' <<< "$lvol")" = "$(jq '.|sort' <<< '["'${bdev_aliases_1[i]}'"]')" ]
 		bdev_uuids_1+=("$lvol_uuid")
 
@@ -123,7 +123,7 @@ function test_rename_lvs_negative() {
 		lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
 		[ "$(jq -r '.[0].driver_specific.lvol.lvol_store_uuid' <<< "$lvol")" = "$lvs_uuid2" ]
 		[ "$(jq -r '.[0].block_size' <<< "$lvol")" = "$MALLOC_BS" ]
-		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( lvol_size / MALLOC_BS ))" ]
+		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$((lvol_size / MALLOC_BS))" ]
 		[ "$(jq '.[0].aliases|sort' <<< "$lvol")" = "$(jq '.|sort' <<< '["'${bdev_aliases_2[i]}'"]')" ]
 		bdev_uuids_2+=("$lvol_uuid")
 	done
@@ -148,13 +148,13 @@ function test_rename_lvs_negative() {
 		lvol=$(rpc_cmd bdev_get_bdevs -b "${bdev_uuids_1[i]}")
 		[ "$(jq -r '.[0].driver_specific.lvol.lvol_store_uuid' <<< "$lvol")" = "$lvs_uuid1" ]
 		[ "$(jq -r '.[0].block_size' <<< "$lvol")" = "$MALLOC_BS" ]
-		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( lvol_size / MALLOC_BS ))" ]
+		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$((lvol_size / MALLOC_BS))" ]
 		[ "$(jq '.[0].aliases|sort' <<< "$lvol")" = "$(jq '.|sort' <<< '["'${bdev_aliases_1[i]}'"]')" ]
 
 		lvol=$(rpc_cmd bdev_get_bdevs -b "${bdev_uuids_2[i]}")
 		[ "$(jq -r '.[0].driver_specific.lvol.lvol_store_uuid' <<< "$lvol")" = "$lvs_uuid2" ]
 		[ "$(jq -r '.[0].block_size' <<< "$lvol")" = "$MALLOC_BS" ]
-		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( lvol_size / MALLOC_BS ))" ]
+		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$((lvol_size / MALLOC_BS))" ]
 		[ "$(jq '.[0].aliases|sort' <<< "$lvol")" = "$(jq '.|sort' <<< '["'${bdev_aliases_2[i]}'"]')" ]
 	done
 
@@ -181,8 +181,8 @@ function test_lvol_rename_negative() {
 	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
 
 	# Calculate lvol bdev size
-	lvol_size_mb=$( round_down $(( LVS_DEFAULT_CAPACITY_MB / 2 )) )
-	lvol_size=$(( lvol_size_mb * 1024 * 1024 ))
+	lvol_size_mb=$(round_down $((LVS_DEFAULT_CAPACITY_MB / 2)))
+	lvol_size=$((lvol_size_mb * 1024 * 1024))
 
 	# Create two lvol bdevs on top of previously created lvol store
 	lvol_uuid1=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test1 "$lvol_size_mb")
@@ -196,7 +196,7 @@ function test_lvol_rename_negative() {
 	lvol=$(rpc_cmd bdev_get_bdevs -b $lvol_uuid1)
 	[ "$(jq -r '.[0].driver_specific.lvol.lvol_store_uuid' <<< "$lvol")" = "$lvs_uuid" ]
 	[ "$(jq -r '.[0].block_size' <<< "$lvol")" = "$MALLOC_BS" ]
-	[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( lvol_size / MALLOC_BS ))" ]
+	[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$((lvol_size / MALLOC_BS))" ]
 	[ "$(jq -r '.[0].aliases|sort' <<< "$lvol")" = "$(jq '.|sort' <<< '["lvs_test/lvol_test1"]')" ]
 
 	rpc_cmd bdev_lvol_delete lvs_test/lvol_test1

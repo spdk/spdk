@@ -13,7 +13,7 @@ nvmftestinit
 timing_enter nvme_identify
 
 bdf=$(get_first_nvme_bdf)
-if [ -z "${bdf}" ] ; then
+if [ -z "${bdf}" ]; then
 	echo "No NVMe drive found but test requires it. Failing the test."
 	exit 1
 fi
@@ -59,12 +59,12 @@ nvmf_model_number=$($rootdir/examples/nvme/identify/identify -r "\
         trsvcid:$NVMF_PORT \
         subnqn:nqn.2016-06.io.spdk:cnode1" | grep "Model Number:" | awk '{print $3}')
 
-if [ ${nvme_serial_number} != ${nvmf_serial_number} ] ; then
+if [ ${nvme_serial_number} != ${nvmf_serial_number} ]; then
 	echo "Serial number doesn't match"
 	exit 1
 fi
 
-if [ ${nvme_model_number} != ${nvmf_model_number} ] ; then
+if [ ${nvme_model_number} != ${nvmf_model_number} ]; then
 	echo "Model number doesn't match"
 	exit 1
 fi

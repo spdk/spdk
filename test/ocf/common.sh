@@ -1,4 +1,3 @@
-
 source $rootdir/scripts/common.sh
 source $rootdir/test/common/autotest_common.sh
 
@@ -11,8 +10,7 @@ function nvme_cfg() {
 	echo "$ocf_nvme_cfg"
 }
 
-function clear_nvme()
-{
+function clear_nvme() {
 	mapfile -t bdf < <(iter_all_pci_class_code 01 08 02)
 
 	# Clear metadata on NVMe device

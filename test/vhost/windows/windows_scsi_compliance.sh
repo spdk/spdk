@@ -16,9 +16,11 @@ vm_num=1
 keep_results_dir=false
 rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
-function usage()
-{
-	[[ -n $2 ]] && ( echo "$2"; echo ""; )
+function usage() {
+	[[ -n $2 ]] && (
+		echo "$2"
+		echo ""
+	)
 	echo "Windows Server scsi compliance test"
 	echo "Usage: $(basename $1) [OPTIONS]"
 	echo "  --vm-ssh-pass=PASSWORD    Text password for the VM"
@@ -31,15 +33,15 @@ function usage()
 while getopts 'h-:' optchar; do
 	case "$optchar" in
 		-)
-		case "$OPTARG" in
-			help) usage $0 ;;
-			vm-ssh-pass=*) ssh_pass="${OPTARG#*=}" ;;
-			vm-image-path=*) WINDOWS_IMG="${OPTARG#*=}" ;;
-			keep_results*) keep_results_dir=true ;;
-		esac
-		;;
-	h) usage $0 ;;
-	*) usage $0 "Invalid argument '$OPTARG'"
+			case "$OPTARG" in
+				help) usage $0 ;;
+				vm-ssh-pass=*) ssh_pass="${OPTARG#*=}" ;;
+				vm-image-path=*) WINDOWS_IMG="${OPTARG#*=}" ;;
+				keep_results*) keep_results_dir=true ;;
+			esac
+			;;
+		h) usage $0 ;;
+		*) usage $0 "Invalid argument '$OPTARG'" ;;
 	esac
 done
 

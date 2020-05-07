@@ -24,14 +24,14 @@ function test_tasting() {
 	rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid" && false
 
 	# Create a valid lvs
-	lvs1_cluster_size=$(( 1 * 1024 * 1024 ))
-	lvs2_cluster_size=$(( 32 * 1024 * 1024 ))
+	lvs1_cluster_size=$((1 * 1024 * 1024))
+	lvs2_cluster_size=$((32 * 1024 * 1024))
 	lvs_uuid1=$(rpc_cmd bdev_lvol_create_lvstore aio_bdev0 lvs_test1 -c $lvs1_cluster_size)
 	lvs_uuid2=$(rpc_cmd bdev_lvol_create_lvstore aio_bdev1 lvs_test2 -c $lvs2_cluster_size)
 
 	# Create 5 lvols on first lvs
-	lvol_size_mb=$(round_down $(( LVS_DEFAULT_CAPACITY_MB / 10 )))
-	lvol_size=$(( lvol_size_mb * 1024 * 1024 ))
+	lvol_size_mb=$(round_down $((LVS_DEFAULT_CAPACITY_MB / 10)))
+	lvol_size=$((lvol_size_mb * 1024 * 1024))
 
 	for i in $(seq 1 5); do
 		lvol_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid1" "lvol_test${i}" "$lvol_size_mb")
@@ -41,12 +41,12 @@ function test_tasting() {
 		[ "$(jq -r '.[0].uuid' <<< "$lvol")" = "$lvol_uuid" ]
 		[ "$(jq -r '.[0].aliases[0]' <<< "$lvol")" = "lvs_test1/lvol_test${i}" ]
 		[ "$(jq -r '.[0].block_size' <<< "$lvol")" = "$AIO_BS" ]
-		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( lvol_size / AIO_BS ))" ]
+		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$((lvol_size / AIO_BS))" ]
 	done
 
 	# Create 5 lvols on second lvs
-	lvol2_size_mb=$(round_down $(( ( AIO_SIZE_MB - 16 ) / 5 )) 32)
-	lvol2_size=$(( lvol2_size_mb * 1024 * 1024 ))
+	lvol2_size_mb=$(round_down $(((AIO_SIZE_MB - 16) / 5)) 32)
+	lvol2_size=$((lvol2_size_mb * 1024 * 1024))
 
 	for i in $(seq 1 5); do
 		lvol_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid2" "lvol_test${i}" "$lvol2_size_mb")
@@ -56,7 +56,7 @@ function test_tasting() {
 		[ "$(jq -r '.[0].uuid' <<< "$lvol")" = "$lvol_uuid" ]
 		[ "$(jq -r '.[0].aliases[0]' <<< "$lvol")" = "lvs_test2/lvol_test${i}" ]
 		[ "$(jq -r '.[0].block_size' <<< "$lvol")" = "$AIO_BS" ]
-		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( lvol2_size / AIO_BS ))" ]
+		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$((lvol2_size / AIO_BS))" ]
 	done
 
 	old_lvols=$(rpc_cmd bdev_get_bdevs | jq -r '[ .[] | select(.product_name == "Logical Volume") ]')
@@ -78,11 +78,11 @@ function test_tasting() {
 	new_lvols=$(rpc_cmd bdev_get_bdevs | jq -r '[ .[] | select(.product_name == "Logical Volume") ]')
 	[ "$(jq length <<< "$new_lvols")" == "10" ]
 	new_lvs=$(rpc_cmd bdev_lvol_get_lvstores | jq .)
-	if ! diff <(jq '. | sort' <<<"$old_lvs") <(jq '. | sort' <<<"$new_lvs"); then
+	if ! diff <(jq '. | sort' <<< "$old_lvs") <(jq '. | sort' <<< "$new_lvs"); then
 		echo "ERROR: old and loaded lvol store is not the same"
 		return 1
 	fi
-	if ! diff <(jq '. | sort' <<<"$old_lvols") <(jq '. | sort' <<<"$new_lvols"); then
+	if ! diff <(jq '. | sort' <<< "$old_lvols") <(jq '. | sort' <<< "$new_lvols"); then
 		echo "ERROR: old and loaded lvols are not the same"
 		return 1
 	fi
@@ -96,7 +96,7 @@ function test_tasting() {
 		[ "$(jq -r '.[0].uuid' <<< "$lvol")" = "$lvol_uuid" ]
 		[ "$(jq -r '.[0].aliases[0]' <<< "$lvol")" = "lvs_test1/lvol_test${i}" ]
 		[ "$(jq -r '.[0].block_size' <<< "$lvol")" = "$AIO_BS" ]
-		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( lvol_size / AIO_BS ))" ]
+		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$((lvol_size / AIO_BS))" ]
 	done
 
 	for i in $(seq 1 10); do
@@ -132,7 +132,7 @@ function test_delete_lvol_store_persistent_positive() {
 	get_bdev_jq bdev_get_bdevs -b "$bdev_aio_name"
 	[[ ${jq_out["name"]} == "$bdev_aio_name" ]]
 	[[ ${jq_out["product_name"]} == "AIO disk" ]]
-	(( jq_out["block_size"] == bdev_block_size ))
+	((jq_out["block_size"] == bdev_block_size))
 
 	lvstore_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$bdev_aio_name" "$lvstore_name")
 

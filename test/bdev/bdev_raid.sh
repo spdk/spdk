@@ -14,10 +14,10 @@ function raid_unmap_data_verify() {
 		local nbd=$1
 		local rpc_server=$2
 		local blksize
-		blksize=$(lsblk -o  LOG-SEC $nbd | grep -v LOG-SEC | cut -d ' ' -f 5)
+		blksize=$(lsblk -o LOG-SEC $nbd | grep -v LOG-SEC | cut -d ' ' -f 5)
 		local rw_blk_num=4096
 		local rw_len=$((blksize * rw_blk_num))
-		local unmap_blk_offs=(0   1028 321)
+		local unmap_blk_offs=(0 1028 321)
 		local unmap_blk_nums=(128 2035 456)
 		local unmap_off
 		local unmap_len
@@ -30,7 +30,7 @@ function raid_unmap_data_verify() {
 		# confirm random data is written correctly in raid0 device
 		cmp -b -n $rw_len $tmp_file $nbd
 
-		for (( i=0; i<${#unmap_blk_offs[@]}; i++ )); do
+		for ((i = 0; i < ${#unmap_blk_offs[@]}; i++)); do
 			unmap_off=$((blksize * ${unmap_blk_offs[$i]}))
 			unmap_len=$((blksize * ${unmap_blk_nums[$i]}))
 
@@ -63,9 +63,9 @@ function configure_raid_bdev() {
 	rm -rf $testdir/rpcs.txt
 
 	cat <<- EOL >> $testdir/rpcs.txt
-	bdev_malloc_create 32 512 -b Base_1
-	bdev_malloc_create 32 512 -b Base_2
-	bdev_raid_create -z 64 -r 0 -b "Base_1 Base_2" -n raid0
+		bdev_malloc_create 32 512 -b Base_1
+		bdev_malloc_create 32 512 -b Base_2
+		bdev_raid_create -z 64 -r 0 -b "Base_1 Base_2" -n raid0
 	EOL
 	$rpc_py < $testdir/rpcs.txt
 

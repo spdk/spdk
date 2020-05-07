@@ -96,17 +96,15 @@ echo "run-time,ramp-time,fio-plugin,QD,block-size,num-cpu-cores,workload,workloa
 printf "%s,%s,%s,%s,%s,%s,%s,%s\n" $RUNTIME $RAMP_TIME $PLUGIN $IODEPTH $BLK_SIZE $NO_CORES $RW $MIX >> $result_file
 echo "num_of_disks,iops,avg_lat[usec],p99[usec],p99.99[usec],stdev[usec],avg_slat[usec],avg_clat[usec],bw[Kib/s]" >> $result_file
 #Run each workolad $REPEAT_NO times
-for (( j=0; j < REPEAT_NO; j++ ))
-do
+for ((j = 0; j < REPEAT_NO; j++)); do
 	#Start with $DISKNO disks and remove 2 disks for each run to avoid preconditioning before each run.
-	for (( k=DISKNO; k >= 1; k-=2 ))
-	do
+	for ((k = DISKNO; k >= 1; k -= 2)); do
 		cp $BASE_DIR/config.fio.tmp $BASE_DIR/config.fio
 		echo "" >> $BASE_DIR/config.fio
 		#The SPDK fio plugin supports submitting/completing I/Os to multiple SSDs from a single thread.
 		#Therefore, the per thread queue depth is set to the desired IODEPTH/device X the number of devices per thread.
 		if [[ "$PLUGIN" =~ "spdk-plugin" ]] && [[ "$NOIOSCALING" = false ]]; then
-			qd=$(( IODEPTH * k ))
+			qd=$((IODEPTH * k))
 		else
 			qd=$IODEPTH
 		fi
@@ -142,17 +140,17 @@ do
 				time_based=1
 				description=$desc
 				log_avg_msec=250
-				EOF
+			EOF
 
 			echo "USING CONFIG:"
 			cat $BASE_DIR/config.fio
 
 			if [[ "$PLUGIN" =~ "spdk-plugin" ]]; then
 				run_spdk_nvme_fio $PLUGIN "--output=$NVME_FIO_RESULTS" \
-				"--write_lat_log=$result_dir/perf_lat_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}_${k}disks_${j}"
+					"--write_lat_log=$result_dir/perf_lat_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}_${k}disks_${j}"
 			else
 				run_nvme_fio $fio_ioengine_opt "--output=$NVME_FIO_RESULTS" \
-				"--write_lat_log=$result_dir/perf_lat_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}_${k}disks_${j}"
+					"--write_lat_log=$result_dir/perf_lat_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}_${k}disks_${j}"
 			fi
 
 			#Store values for every number of used disks
@@ -177,8 +175,7 @@ do
 	done
 done
 #Write results to csv file
-for (( k=DISKNO; k >= 1; k-=2 ))
-do
+for ((k = DISKNO; k >= 1; k -= 2)); do
 	iops_disks[$k]=$((${iops_disks[$k]} / REPEAT_NO))
 
 	if [[ "$PLUGIN" =~ "plugin" ]]; then
@@ -206,8 +203,8 @@ do
 
 	bw[$k]=$((${bw[$k]} / REPEAT_NO))
 
-	printf "%s,%s,%s,%s,%s,%s,%s,%s,%s\n" ${k} ${iops_disks[$k]} ${mean_lat_disks_usec[$k]} ${p99_lat_disks_usec[$k]}\
-	${p99_99_lat_disks_usec[$k]} ${stdev_disks_usec[$k]} ${mean_slat_disks_usec[$k]} ${mean_clat_disks_usec[$k]} ${bw[$k]} >> $result_file
+	printf "%s,%s,%s,%s,%s,%s,%s,%s,%s\n" ${k} ${iops_disks[$k]} ${mean_lat_disks_usec[$k]} ${p99_lat_disks_usec[$k]} \
+		${p99_99_lat_disks_usec[$k]} ${stdev_disks_usec[$k]} ${mean_slat_disks_usec[$k]} ${mean_clat_disks_usec[$k]} ${bw[$k]} >> $result_file
 
 	#if tested on only one numeber of disk
 	if $ONEWORKLOAD; then

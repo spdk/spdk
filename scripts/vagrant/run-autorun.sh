@@ -70,25 +70,30 @@ set -e
 NOOP=0
 METHOD=0
 V=1
-OPTIND=1         # Reset in case getopts has been used previously in the shell.
+OPTIND=1 # Reset in case getopts has been used previously in the shell.
 while getopts "d:qhn" opt; do
 	case "$opt" in
-		d)  SPDK_SOURCE_PATH=$($READLINK -f $OPTARG)
+		d)
+			SPDK_SOURCE_PATH=$($READLINK -f $OPTARG)
 			echo Using SPDK source at ${SPDK_SOURCE_PATH}
 			METHOD=1
-		;;
-		q)  V=0
-		;;
-		n)  NOOP=1
-		;;
-		h)  display_help >&2
+			;;
+		q)
+			V=0
+			;;
+		n)
+			NOOP=1
+			;;
+		h)
+			display_help >&2
 			exit 0
-		;;
-		*) echo "Invalid option"
+			;;
+		*)
+			echo "Invalid option"
 			echo ""
 			display_help >&2
 			exit 1
-		;;
+			;;
 	esac
 done
 
@@ -141,12 +146,12 @@ case "$METHOD" in
 		fi
 
 		GIT_REPO_PATH="${SPDK_AUTOTEST_LOCAL_PATH}/${GIT_BRANCH}/${BUILD_NAME}"
-	;;
+		;;
 	*)
 		echo "Internal Error: Must specify a source path or branch name"
 		display_help
 		exit 1
-	;;
+		;;
 esac
 
 AUTOTEST_RESULTS="${SPDK_AUTOTEST_LOCAL_PATH}/${GIT_BRANCH}/${BUILD_NAME}"
@@ -203,12 +208,12 @@ if [[ ${NOOP} -eq 0 ]]; then
 			sudo "${MAKE}" clean -j $(nproc)
 			sudo "${GIT}" clean -d -f
 			popd
-		;;
+			;;
 		*)
 			echo "Internal Error: Must specify a source path or branch name"
 			display_help
 			exit 1
-		;;
+			;;
 	esac
 
 	trap "echo ERROR; exit" INT TERM EXIT

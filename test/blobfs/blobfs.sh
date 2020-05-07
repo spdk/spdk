@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 SYSTEM=$(uname -s)
-if [ $SYSTEM = "FreeBSD" ] ; then
-    echo "blobfs.sh cannot run on FreeBSD currently."
-    exit 0
+if [ $SYSTEM = "FreeBSD" ]; then
+	echo "blobfs.sh cannot run on FreeBSD currently."
+	exit 0
 fi
 
 testdir=$(readlink -f $(dirname $0))
@@ -28,7 +28,7 @@ function cleanup() {
 	rm -f $conf_file
 }
 
-function blobfs_start_app {
+function blobfs_start_app() {
 	$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -c ${conf_file} &
 	blobfs_pid=$!
 

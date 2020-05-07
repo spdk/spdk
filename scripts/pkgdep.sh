@@ -3,8 +3,7 @@
 
 set -e
 
-function usage()
-{
+function usage() {
 	echo ""
 	echo "This script is intended to automate the installation of package dependencies to build SPDK."
 	echo "Please run this script as root user or with sudo -E."
@@ -21,8 +20,7 @@ function usage()
 	exit 0
 }
 
-function install_all_dependencies ()
-{
+function install_all_dependencies() {
 	INSTALL_DEV_TOOLS=true
 	INSTALL_PMEM=true
 	INSTALL_FUSE=true
@@ -40,27 +38,31 @@ INSTALL_DOCS=false
 while getopts 'abdfhipr-:' optchar; do
 	case "$optchar" in
 		-)
-		case "$OPTARG" in
-			help) usage;;
-			all) install_all_dependencies;;
-			developer-tools) INSTALL_DEV_TOOLS=true;;
-			pmem) INSTALL_PMEM=true;;
-			fuse) INSTALL_FUSE=true;;
-			rdma) INSTALL_RDMA=true;;
-			docs) INSTALL_DOCS=true;;
-			*) echo "Invalid argument '$OPTARG'"
-			usage;;
-		esac
-		;;
-	h) usage;;
-	a) install_all_dependencies;;
-	d) INSTALL_DEV_TOOLS=true;;
-	p) INSTALL_PMEM=true;;
-	f) INSTALL_FUSE=true;;
-	r) INSTALL_RDMA=true;;
-	b) INSTALL_DOCS=true;;
-	*) echo "Invalid argument '$OPTARG'"
-	usage;;
+			case "$OPTARG" in
+				help) usage ;;
+				all) install_all_dependencies ;;
+				developer-tools) INSTALL_DEV_TOOLS=true ;;
+				pmem) INSTALL_PMEM=true ;;
+				fuse) INSTALL_FUSE=true ;;
+				rdma) INSTALL_RDMA=true ;;
+				docs) INSTALL_DOCS=true ;;
+				*)
+					echo "Invalid argument '$OPTARG'"
+					usage
+					;;
+			esac
+			;;
+		h) usage ;;
+		a) install_all_dependencies ;;
+		d) INSTALL_DEV_TOOLS=true ;;
+		p) INSTALL_PMEM=true ;;
+		f) INSTALL_FUSE=true ;;
+		r) INSTALL_RDMA=true ;;
+		b) INSTALL_DOCS=true ;;
+		*)
+			echo "Invalid argument '$OPTARG'"
+			usage
+			;;
 	esac
 done
 
@@ -174,7 +176,7 @@ elif [ -f /etc/debian_version ]; then
 	fi
 	if [[ $INSTALL_FUSE == "true" ]]; then
 		# Additional dependencies for FUSE and NVMe-CUSE
-		if [[ $NAME == "Ubuntu" ]] && (( VERSION_ID_NUM > 1400 && VERSION_ID_NUM < 1900 )); then
+		if [[ $NAME == "Ubuntu" ]] && ((VERSION_ID_NUM > 1400 && VERSION_ID_NUM < 1900)); then
 			echo "Ubuntu $VERSION_ID does not have libfuse3-dev in mainline repository."
 			echo "You can install it manually"
 		else
@@ -220,7 +222,7 @@ elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 		# Additional dependencies for building docs
 		zypper install -y doxygen mscgen graphviz
 	fi
-elif [ $(uname -s) = "FreeBSD" ] ; then
+elif [ $(uname -s) = "FreeBSD" ]; then
 	# Minimal install
 	pkg install -y gmake cunit openssl git bash misc/e2fsprogs-libuuid python \
 		ncurses

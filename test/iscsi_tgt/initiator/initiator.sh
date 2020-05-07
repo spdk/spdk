@@ -40,9 +40,9 @@ trap 'killprocess $pid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 
 "$rootdir/test/bdev/bdevperf/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w verify -t 5 -s 512
 if [ $RUN_NIGHTLY -eq 1 ]; then
-    "$rootdir/test/bdev/bdevperf/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w unmap -t 5 -s 512
-    "$rootdir/test/bdev/bdevperf/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w flush -t 5 -s 512
-    "$rootdir/test/bdev/bdevperf/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w reset -t 10 -s 512
+	"$rootdir/test/bdev/bdevperf/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w unmap -t 5 -s 512
+	"$rootdir/test/bdev/bdevperf/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w flush -t 5 -s 512
+	"$rootdir/test/bdev/bdevperf/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w reset -t 10 -s 512
 fi
 
 trap - SIGINT SIGTERM EXIT

@@ -11,8 +11,8 @@ set -e
 
 VAGRANT_TARGET="$PWD"
 
-DIR="$( cd "$( dirname $0 )" && pwd )"
-SPDK_DIR="$( cd "${DIR}/../../" && pwd )"
+DIR="$(cd "$(dirname $0)" && pwd)"
+SPDK_DIR="$(cd "${DIR}/../../" && pwd)"
 
 # The command line help
 display_help() {
@@ -85,103 +85,103 @@ VAGRANT_HUGE_MEM=0
 while getopts ":b:n:s:x:p:u:vcraldHh-:" opt; do
 	case "${opt}" in
 		-)
-		case "${OPTARG}" in
-			package-box) VAGRANT_PACKAGE_BOX=1 ;;
-			qemu-emulator=*) SPDK_QEMU_EMULATOR="${OPTARG#*=}" ;;
-			vagrantfiles-dir=*) VAGRANTFILE_DIR="${OPTARG#*=}" ;;
-			*) echo "Invalid argument '$OPTARG'" ;;
-		esac
-		;;
+			case "${OPTARG}" in
+				package-box) VAGRANT_PACKAGE_BOX=1 ;;
+				qemu-emulator=*) SPDK_QEMU_EMULATOR="${OPTARG#*=}" ;;
+				vagrantfiles-dir=*) VAGRANTFILE_DIR="${OPTARG#*=}" ;;
+				*) echo "Invalid argument '$OPTARG'" ;;
+			esac
+			;;
 		x)
 			http_proxy=$OPTARG
 			https_proxy=$http_proxy
 			SPDK_VAGRANT_HTTP_PROXY="${http_proxy}"
-		;;
+			;;
 		n)
 			SPDK_VAGRANT_VMCPU=$OPTARG
-		;;
+			;;
 		s)
 			SPDK_VAGRANT_VMRAM=$OPTARG
-		;;
+			;;
 		p)
 			SPDK_VAGRANT_PROVIDER=$OPTARG
-		;;
+			;;
 		v)
 			VERBOSE=1
-		;;
+			;;
 		c)
 			NVME_AUTO_CREATE=1
-		;;
+			;;
 		r)
 			DRY_RUN=1
-		;;
+			;;
 		h)
 			display_help >&2
 			exit 0
-		;;
+			;;
 		a)
 			COPY_SPDK_ARTIFACTS=1
-		;;
+			;;
 		l)
 			COPY_SPDK_DIR=0
-		;;
+			;;
 		d)
 			DEPLOY_TEST_VM=1
-		;;
+			;;
 		b)
 			NVME_FILE+="${OPTARG#*=} "
-		;;
+			;;
 		u)
 			VAGRANT_PASSWORD_AUTH=1
-		;;
+			;;
 		H)
 			VAGRANT_HUGE_MEM=1
-		;;
+			;;
 		*)
 			echo "  Invalid argument: -$OPTARG" >&2
 			echo "  Try: \"$0 -h\"" >&2
 			exit 1
-		;;
+			;;
 	esac
 done
 
-shift "$((OPTIND-1))"   # Discard the options and sentinel --
+shift "$((OPTIND - 1))" # Discard the options and sentinel --
 
 SPDK_VAGRANT_DISTRO="$*"
 
 case "${SPDK_VAGRANT_DISTRO}" in
 	centos7)
 		export SPDK_VAGRANT_DISTRO
-	;;
+		;;
 	centos8)
 		export SPDK_VAGRANT_DISTRO
-	;;
+		;;
 	ubuntu1604)
 		export SPDK_VAGRANT_DISTRO
-	;;
+		;;
 	ubuntu1804)
 		export SPDK_VAGRANT_DISTRO
-	;;
+		;;
 	fedora30)
 		export SPDK_VAGRANT_DISTRO
-	;;
+		;;
 	fedora31)
 		export SPDK_VAGRANT_DISTRO
-	;;
+		;;
 	freebsd11)
 		export SPDK_VAGRANT_DISTRO
-	;;
+		;;
 	freebsd12)
 		export SPDK_VAGRANT_DISTRO
-	;;
+		;;
 	arch)
 		export SPDK_VAGRANT_DISTRO
-	;;
+		;;
 	*)
 		echo "  Invalid argument \"${SPDK_VAGRANT_DISTRO}\""
 		echo "  Try: \"$0 -h\"" >&2
 		exit 1
-	;;
+		;;
 esac
 
 if ! echo "$SPDK_VAGRANT_DISTRO" | grep -q fedora && [ $DEPLOY_TEST_VM -eq 1 ]; then
@@ -195,15 +195,15 @@ else
 	TMP=""
 	for args in $NVME_FILE; do
 		while IFS=, read -r path type namespace; do
-			TMP+="$path,";
+			TMP+="$path,"
 			if [ -z "$type" ]; then
 				type="nvme"
 			fi
-			NVME_DISKS_TYPE+="$type,";
+			NVME_DISKS_TYPE+="$type,"
 			if [ -z "$namespace" ] && [ -n "$SPDK_QEMU_EMULATOR" ]; then
 				namespace="1"
 			fi
-			NVME_DISKS_NAMESPACES+="$namespace,";
+			NVME_DISKS_NAMESPACES+="$namespace,"
 			if [ ${NVME_AUTO_CREATE} = 1 ]; then
 				$SPDK_DIR/scripts/vagrant/create_nvme_img.sh -t $type -n $path
 			fi
@@ -247,15 +247,15 @@ export VAGRANT_PASSWORD_AUTH
 export VAGRANT_HUGE_MEM
 
 if [ -n "$SPDK_VAGRANT_PROVIDER" ]; then
-    provider="--provider=${SPDK_VAGRANT_PROVIDER}"
+	provider="--provider=${SPDK_VAGRANT_PROVIDER}"
 fi
 
 if [ -n "$SPDK_VAGRANT_PROVIDER" ]; then
-    export SPDK_VAGRANT_PROVIDER
+	export SPDK_VAGRANT_PROVIDER
 fi
 
-if [ -n "$SPDK_QEMU_EMULATOR" ] && [ "$SPDK_VAGRANT_PROVIDER" == "libvirt"  ]; then
-    export SPDK_QEMU_EMULATOR
+if [ -n "$SPDK_QEMU_EMULATOR" ] && [ "$SPDK_VAGRANT_PROVIDER" == "libvirt" ]; then
+	export SPDK_QEMU_EMULATOR
 fi
 
 if [ ${DRY_RUN} = 1 ]; then
@@ -296,7 +296,7 @@ if [ ${DRY_RUN} != 1 ]; then
 			vagrant plugin install vagrant-proxyconf
 		fi
 		if echo "$SPDK_VAGRANT_DISTRO" | grep -q freebsd; then
-			cat >~/vagrant_pkg.conf <<EOF
+			cat > ~/vagrant_pkg.conf << EOF
 pkg_env: {
 http_proxy: ${http_proxy}
 }
@@ -309,8 +309,8 @@ EOF
 		vagrant ssh -c 'sudo spdk_repo/spdk/scripts/vagrant/update.sh'
 		vagrant halt
 		vagrant package --output spdk_${SPDK_VAGRANT_DISTRO}.box
-		vagrant box add spdk/${SPDK_VAGRANT_DISTRO} spdk_${SPDK_VAGRANT_DISTRO}.box &&
-			rm spdk_${SPDK_VAGRANT_DISTRO}.box
+		vagrant box add spdk/${SPDK_VAGRANT_DISTRO} spdk_${SPDK_VAGRANT_DISTRO}.box \
+			&& rm spdk_${SPDK_VAGRANT_DISTRO}.box
 		vagrant destroy
 	fi
 	echo ""

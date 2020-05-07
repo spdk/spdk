@@ -14,7 +14,7 @@ while getopts ':u:c:' opt; do
 		?) echo "Usage: $0 [-u UUID] [-c NV_CACHE_PCI_BDF] OCSSD_PCI_BDF" && exit 1 ;;
 	esac
 done
-shift $((OPTIND -1))
+shift $((OPTIND - 1))
 
 device=$1
 
@@ -37,7 +37,8 @@ pu_count=$((num_group * num_pu))
 # Write one band worth of data + one extra chunk
 data_size=$((chunk_size * (pu_count + 1)))
 
-"$rootdir/app/spdk_tgt/spdk_tgt" --json <(gen_ftl_nvme_conf) & svcpid=$!
+"$rootdir/app/spdk_tgt/spdk_tgt" --json <(gen_ftl_nvme_conf) &
+svcpid=$!
 waitforlisten $svcpid
 
 if [ -n "$nv_cache" ]; then
@@ -49,7 +50,7 @@ $rpc_py bdev_ocssd_create -c nvme0 -b nvme0n1 -n 1
 ftl_construct_args="bdev_ftl_create -b ftl0 -d nvme0n1 -o"
 
 [ -n "$nvc_bdev" ] && ftl_construct_args+=" -c $nvc_bdev"
-[ -n "$uuid" ]     && ftl_construct_args+=" -u $uuid"
+[ -n "$uuid" ] && ftl_construct_args+=" -u $uuid"
 
 $rpc_py $ftl_construct_args
 
@@ -69,7 +70,8 @@ $rpc_py nbd_stop_disk /dev/nbd0
 kill -9 $svcpid
 rm -f /dev/shm/spdk_tgt_trace.pid$svcpid
 
-"$rootdir/app/spdk_tgt/spdk_tgt" --json <(gen_ftl_nvme_conf) -L ftl_init & svcpid=$!
+"$rootdir/app/spdk_tgt/spdk_tgt" --json <(gen_ftl_nvme_conf) -L ftl_init &
+svcpid=$!
 waitforlisten $svcpid
 
 $rpc_py load_config < $testdir/config/ftl.json

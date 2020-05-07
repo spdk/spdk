@@ -8,8 +8,7 @@ disk_name="vda"
 test_folder_name="readonly_test"
 test_file_name="some_test_file"
 
-function error()
-{
+function error() {
 	echo "==========="
 	echo -e "ERROR: $*"
 	echo "==========="
@@ -22,7 +21,7 @@ if [[ ! -d "/sys/block/$disk_name" ]]; then
 	error "No vhost-blk disk found!"
 fi
 
-if (( $(lsblk -r -n -o RO -d "/dev/$disk_name") == 0 )); then
+if (($(lsblk -r -n -o RO -d "/dev/$disk_name") == 0)); then
 	error "Vhost-blk disk is not set as readonly!"
 fi
 

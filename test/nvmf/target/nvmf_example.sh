@@ -10,25 +10,23 @@ rpc_py="$rootdir/scripts/rpc.py"
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
-function build_nvmf_example_args()
-{
-        if [ $SPDK_RUN_NON_ROOT -eq 1 ]; then
-                echo "sudo -u $(logname) ./examples/nvmf/nvmf/nvmf -i $NVMF_APP_SHM_ID"
-        else
-                echo "./examples/nvmf/nvmf/nvmf -i $NVMF_APP_SHM_ID"
-        fi
+function build_nvmf_example_args() {
+	if [ $SPDK_RUN_NON_ROOT -eq 1 ]; then
+		echo "sudo -u $(logname) ./examples/nvmf/nvmf/nvmf -i $NVMF_APP_SHM_ID"
+	else
+		echo "./examples/nvmf/nvmf/nvmf -i $NVMF_APP_SHM_ID"
+	fi
 }
 
 NVMF_EXAMPLE="$(build_nvmf_example_args)"
 
-function nvmfexamplestart()
-{
-        timing_enter start_nvmf_example
-        $NVMF_EXAMPLE $1 &
-        nvmfpid=$!
-        trap 'process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
-        waitforlisten $nvmfpid
-        timing_exit start_nvmf_example
+function nvmfexamplestart() {
+	timing_enter start_nvmf_example
+	$NVMF_EXAMPLE $1 &
+	nvmfpid=$!
+	trap 'process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
+	waitforlisten $nvmfpid
+	timing_exit start_nvmf_example
 }
 
 timing_enter nvmf_example_test
@@ -44,7 +42,7 @@ $rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK0000000000000
 
 #add ns to subsystem
 for malloc_bdev in $malloc_bdevs; do
-        $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 "$malloc_bdev"
+	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 "$malloc_bdev"
 done
 
 #add listener to subsystem
@@ -53,7 +51,7 @@ $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPOR
 perf="$rootdir/examples/nvme/perf/perf"
 
 $perf -q 64 -o 4096 -w randrw -M 30 -t 10 \
--r "trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT} \
+	-r "trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT} \
 subnqn:nqn.2016-06.io.spdk:cnode1"
 
 trap - SIGINT SIGTERM EXIT

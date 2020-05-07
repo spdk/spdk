@@ -82,7 +82,7 @@ $rpc_py iscsi_create_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 malloc_bdevs="$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "
 malloc_bdevs+="$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 $rpc_py bdev_raid_create -n raid0 -z 64 -r 0 -b "$malloc_bdevs"
-bdev=$( $rpc_py bdev_malloc_create 1024 512 )
+bdev=$($rpc_py bdev_malloc_create 1024 512)
 # "raid0:0" ==> use raid0 blockdev for LUN0
 # "1:2" ==> map PortalGroup1 to InitiatorGroup2
 # "64" ==> iSCSI queue depth 64
@@ -130,7 +130,6 @@ $rpc_py bdev_malloc_delete ${bdev}
 
 fio_status=0
 wait $fio_pid || fio_status=$?
-
 
 if [ $fio_status -eq 0 ]; then
 	echo "iscsi hotplug test: fio successful - expected failure"

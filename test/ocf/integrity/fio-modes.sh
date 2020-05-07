@@ -5,11 +5,11 @@ rootdir=$(readlink -f $curdir/../../..)
 
 source $rootdir/test/ocf/common.sh
 
-function fio_verify(){
+function fio_verify() {
 	fio_bdev $curdir/test.fio --aux-path=/tmp/ --ioengine=spdk_bdev "$@"
 }
 
-function cleanup(){
+function cleanup() {
 	rm -f $curdir/modes.conf
 }
 

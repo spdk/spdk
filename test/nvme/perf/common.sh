@@ -14,10 +14,10 @@ NVME_FIO_RESULTS=$BASE_DIR/result.json
 
 declare -A KERNEL_ENGINES
 KERNEL_ENGINES=(
-				["kernel-libaio"]="--ioengine=libaio"
-				["kernel-classic-polling"]="--ioengine=pvsync2 --hipri=100"
-				["kernel-hybrid-polling"]="--ioengine=pvsync2 --hipri=100"
-				["kernel-io-uring"]="--ioengine=io_uring" )
+	["kernel-libaio"]="--ioengine=libaio"
+	["kernel-classic-polling"]="--ioengine=pvsync2 --hipri=100"
+	["kernel-hybrid-polling"]="--ioengine=pvsync2 --hipri=100"
+	["kernel-io-uring"]="--ioengine=io_uring")
 
 RW=randrw
 MIX=100
@@ -45,27 +45,27 @@ function is_bdf_not_mounted() {
 	return $mountpoints
 }
 
-function get_cores(){
+function get_cores() {
 	local cpu_list="$1"
 	for cpu in ${cpu_list//,/ }; do
 		echo $cpu
 	done
 }
 
-function get_cores_numa_node(){
+function get_cores_numa_node() {
 	local cores=$1
 	for core in $cores; do
 		lscpu -p=cpu,node | grep "^$core\b" | awk -F ',' '{print $2}'
 	done
 }
 
-function get_numa_node(){
+function get_numa_node() {
 	local plugin=$1
 	local disks=$2
 	if [[ "$plugin" =~ "nvme" ]]; then
 		for bdf in $disks; do
 			local driver
-			driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}')
+			driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent | awk -F"=" '{print $2}')
 			# Use this check to ommit blacklisted devices ( not binded to driver with setup.sh script )
 			if [ "$driver" = "vfio-pci" ] || [ "$driver" = "uio_pci_generic" ]; then
 				cat /sys/bus/pci/devices/$bdf/numa_node
@@ -89,7 +89,7 @@ function get_numa_node(){
 	fi
 }
 
-function get_disks(){
+function get_disks() {
 	local plugin=$1
 	if [[ "$plugin" =~ "nvme" ]]; then
 		for bdf in $(get_nvme_bdfs); do
@@ -111,23 +111,22 @@ function get_disks(){
 	fi
 }
 
-function get_disks_on_numa(){
+function get_disks_on_numa() {
 	local devs=($1)
 	local numas=($2)
 	local numa_no=$3
 	local disks_on_numa=""
 	local i
 
-	for (( i=0; i<${#devs[@]}; i++ ))
-	do
+	for ((i = 0; i < ${#devs[@]}; i++)); do
 		if [ ${numas[$i]} = $numa_no ]; then
-			disks_on_numa=$((disks_on_numa+1))
+			disks_on_numa=$((disks_on_numa + 1))
 		fi
 	done
 	echo $disks_on_numa
 }
 
-function create_fio_config(){
+function create_fio_config() {
 	local disk_no=$1
 	local plugin=$2
 	local disks=($3)
@@ -139,35 +138,32 @@ function create_fio_config(){
 
 	local cores_numa
 	cores_numa=($(get_cores_numa_node "$5"))
-	local disks_per_core=$((disk_no/no_cores))
-	local disks_per_core_mod=$((disk_no%no_cores))
+	local disks_per_core=$((disk_no / no_cores))
+	local disks_per_core_mod=$((disk_no % no_cores))
 
 	# For kernel dirver, each disk will be alligned with all cpus on the same NUMA node
 	if [[ "$plugin" =~ "kernel" ]]; then
-		for (( i=0; i<disk_no; i++ ))
-		do
+		for ((i = 0; i < disk_no; i++)); do
 			sed -i -e "\$a[filename${i}]" $BASE_DIR/config.fio
 			filename="/dev/${disks[$i]}"
 			sed -i -e "\$afilename=$filename" $BASE_DIR/config.fio
 			cpu_used=""
-				for (( j=0; j<no_cores; j++ ))
-				do
-					core_numa=${cores_numa[$j]}
-					if [ "${disks_numa[$i]}" = "$core_numa" ]; then
-						cpu_used+="${cores[$j]},"
-					fi
-				done
-				sed -i -e "\$acpus_allowed=$cpu_used" $BASE_DIR/config.fio
-				echo "" >> $BASE_DIR/config.fio
+			for ((j = 0; j < no_cores; j++)); do
+				core_numa=${cores_numa[$j]}
+				if [ "${disks_numa[$i]}" = "$core_numa" ]; then
+					cpu_used+="${cores[$j]},"
+				fi
+			done
+			sed -i -e "\$acpus_allowed=$cpu_used" $BASE_DIR/config.fio
+			echo "" >> $BASE_DIR/config.fio
 		done
 	else
-		for (( i=0; i<no_cores; i++ ))
-		do
+		for ((i = 0; i < no_cores; i++)); do
 			core_numa=${cores_numa[$i]}
 			total_disks_per_core=$disks_per_core
 			if [ "$disks_per_core_mod" -gt "0" ]; then
-				total_disks_per_core=$((disks_per_core+1))
-				disks_per_core_mod=$((disks_per_core_mod-1))
+				total_disks_per_core=$((disks_per_core + 1))
+				disks_per_core_mod=$((disks_per_core_mod - 1))
 			fi
 
 			if [ "$total_disks_per_core" = "0" ]; then
@@ -177,11 +173,11 @@ function create_fio_config(){
 			sed -i -e "\$a[filename${i}]" $BASE_DIR/config.fio
 			#use cpus_allowed as cpumask works only for cores 1-32
 			sed -i -e "\$acpus_allowed=${cores[$i]}" $BASE_DIR/config.fio
-			m=0	#counter of disks per cpu core numa
+			m=0 #counter of disks per cpu core numa
 			n=0 #counter of all disks
-			while [ "$m" -lt  "$total_disks_per_core" ]; do
+			while [ "$m" -lt "$total_disks_per_core" ]; do
 				if [ ${disks_numa[$n]} = $core_numa ]; then
-					m=$((m+1))
+					m=$((m + 1))
 					if [[ "$plugin" = "spdk-plugin-nvme" ]]; then
 						filename='trtype=PCIe traddr='${disks[$n]//:/.}' ns=1'
 					elif [[ "$plugin" = "spdk-plugin-bdev" ]]; then
@@ -191,7 +187,7 @@ function create_fio_config(){
 					#Mark numa of n'th disk as "x" to mark it as claimed
 					disks_numa[$n]="x"
 				fi
-				n=$((n+1))
+				n=$((n + 1))
 				# If there is no more disks with numa node same as cpu numa node, switch to other numa node.
 				if [ $n -ge $total_disks ]; then
 					if [ "$core_numa" = "1" ]; then
@@ -231,66 +227,66 @@ function preconditioning() {
 	rm -f $BASE_DIR/config.fio
 }
 
-function get_results(){
+function get_results() {
 	local reads_pct=$2
-	local writes_pct=$((100-$2))
+	local writes_pct=$((100 - $2))
 
 	case "$1" in
 		iops)
-		iops=$(jq -r '.jobs[] | (.read.iops + .write.iops)' $NVME_FIO_RESULTS)
-		iops=${iops%.*}
-		echo $iops
-		;;
+			iops=$(jq -r '.jobs[] | (.read.iops + .write.iops)' $NVME_FIO_RESULTS)
+			iops=${iops%.*}
+			echo $iops
+			;;
 		mean_lat_usec)
-		mean_lat=$(jq -r ".jobs[] | (.read.lat_ns.mean * $reads_pct + .write.lat_ns.mean * $writes_pct)" $NVME_FIO_RESULTS)
-		mean_lat=${mean_lat%.*}
-		echo $(( mean_lat/100000 ))
-		;;
+			mean_lat=$(jq -r ".jobs[] | (.read.lat_ns.mean * $reads_pct + .write.lat_ns.mean * $writes_pct)" $NVME_FIO_RESULTS)
+			mean_lat=${mean_lat%.*}
+			echo $((mean_lat / 100000))
+			;;
 		p99_lat_usec)
-		p99_lat=$(jq -r ".jobs[] | (.read.clat_ns.percentile.\"99.000000\" * $reads_pct + .write.clat_ns.percentile.\"99.000000\" * $writes_pct)" $NVME_FIO_RESULTS)
-		p99_lat=${p99_lat%.*}
-		echo $(( p99_lat/100000 ))
-		;;
+			p99_lat=$(jq -r ".jobs[] | (.read.clat_ns.percentile.\"99.000000\" * $reads_pct + .write.clat_ns.percentile.\"99.000000\" * $writes_pct)" $NVME_FIO_RESULTS)
+			p99_lat=${p99_lat%.*}
+			echo $((p99_lat / 100000))
+			;;
 		p99_99_lat_usec)
-		p99_99_lat=$(jq -r ".jobs[] | (.read.clat_ns.percentile.\"99.990000\" * $reads_pct + .write.clat_ns.percentile.\"99.990000\" * $writes_pct)" $NVME_FIO_RESULTS)
-		p99_99_lat=${p99_99_lat%.*}
-		echo $(( p99_99_lat/100000 ))
-		;;
+			p99_99_lat=$(jq -r ".jobs[] | (.read.clat_ns.percentile.\"99.990000\" * $reads_pct + .write.clat_ns.percentile.\"99.990000\" * $writes_pct)" $NVME_FIO_RESULTS)
+			p99_99_lat=${p99_99_lat%.*}
+			echo $((p99_99_lat / 100000))
+			;;
 		stdev_usec)
-		stdev=$(jq -r ".jobs[] | (.read.clat_ns.stddev * $reads_pct + .write.clat_ns.stddev * $writes_pct)" $NVME_FIO_RESULTS)
-		stdev=${stdev%.*}
-		echo $(( stdev/100000 ))
-		;;
+			stdev=$(jq -r ".jobs[] | (.read.clat_ns.stddev * $reads_pct + .write.clat_ns.stddev * $writes_pct)" $NVME_FIO_RESULTS)
+			stdev=${stdev%.*}
+			echo $((stdev / 100000))
+			;;
 		mean_slat_usec)
-		mean_slat=$(jq -r ".jobs[] | (.read.slat_ns.mean * $reads_pct + .write.slat_ns.mean * $writes_pct)" $NVME_FIO_RESULTS)
-		mean_slat=${mean_slat%.*}
-		echo $(( mean_slat/100000 ))
-		;;
+			mean_slat=$(jq -r ".jobs[] | (.read.slat_ns.mean * $reads_pct + .write.slat_ns.mean * $writes_pct)" $NVME_FIO_RESULTS)
+			mean_slat=${mean_slat%.*}
+			echo $((mean_slat / 100000))
+			;;
 		mean_clat_usec)
-		mean_clat=$(jq -r ".jobs[] | (.read.clat_ns.mean * $reads_pct + .write.clat_ns.mean * $writes_pct)" $NVME_FIO_RESULTS)
-		mean_clat=${mean_clat%.*}
-		echo $(( mean_clat/100000 ))
-		;;
+			mean_clat=$(jq -r ".jobs[] | (.read.clat_ns.mean * $reads_pct + .write.clat_ns.mean * $writes_pct)" $NVME_FIO_RESULTS)
+			mean_clat=${mean_clat%.*}
+			echo $((mean_clat / 100000))
+			;;
 		bw_Kibs)
-		bw=$(jq -r ".jobs[] | (.read.bw + .write.bw)" $NVME_FIO_RESULTS)
-		bw=${bw%.*}
-		echo $(( bw ))
-		;;
+			bw=$(jq -r ".jobs[] | (.read.bw + .write.bw)" $NVME_FIO_RESULTS)
+			bw=${bw%.*}
+			echo $((bw))
+			;;
 	esac
 }
 
-function get_bdevperf_results(){
+function get_bdevperf_results() {
 	case "$1" in
 		iops)
-		iops=$(grep Total $NVME_FIO_RESULTS | awk -F 'Total' '{print $2}' | awk '{print $2}')
-		iops=${iops%.*}
-		echo $iops
-		;;
+			iops=$(grep Total $NVME_FIO_RESULTS | awk -F 'Total' '{print $2}' | awk '{print $2}')
+			iops=${iops%.*}
+			echo $iops
+			;;
 		bw_Kibs)
-		bw_MBs=$(grep Total $NVME_FIO_RESULTS | awk -F 'Total' '{print $2}' | awk '{print $4}')
-		bw_MBs=${bw_MBs%.*}
-		echo $(( bw_MBs * 1024 ))
-		;;
+			bw_MBs=$(grep Total $NVME_FIO_RESULTS | awk -F 'Total' '{print $2}' | awk '{print $4}')
+			bw_MBs=${bw_MBs%.*}
+			echo $((bw_MBs * 1024))
+			;;
 	esac
 }
 
@@ -301,7 +297,7 @@ function get_nvmeperf_results() {
 	local max_lat_usec
 	local min_lat_usec
 
-	read -r iops bw_MBs mean_lat_usec min_lat_usec max_lat_usec<<< $(tr -s " " < $NVME_FIO_RESULTS | grep -oP "(?<=Total : )(.*+)")
+	read -r iops bw_MBs mean_lat_usec min_lat_usec max_lat_usec <<< $(tr -s " " < $NVME_FIO_RESULTS | grep -oP "(?<=Total : )(.*+)")
 
 	# We need to get rid of the decimal spaces due
 	# to use of arithmetic expressions instead of "bc" for calculations
@@ -314,27 +310,25 @@ function get_nvmeperf_results() {
 	echo "$iops $(bc <<< "$bw_MBs * 1024") $mean_lat_usec $min_lat_usec $max_lat_usec"
 }
 
-function run_spdk_nvme_fio(){
+function run_spdk_nvme_fio() {
 	local plugin=$1
 	echo "** Running fio test, this can take a while, depending on the run-time and ramp-time setting."
 	if [[ "$plugin" = "spdk-plugin-nvme" ]]; then
-		LD_PRELOAD=$PLUGIN_DIR_NVME/fio_plugin $FIO_BIN $BASE_DIR/config.fio --output-format=json\
-		 "${@:2}" --ioengine=spdk
+		LD_PRELOAD=$PLUGIN_DIR_NVME/fio_plugin $FIO_BIN $BASE_DIR/config.fio --output-format=json "${@:2}" --ioengine=spdk
 	elif [[ "$plugin" = "spdk-plugin-bdev" ]]; then
-		LD_PRELOAD=$PLUGIN_DIR_BDEV/fio_plugin $FIO_BIN $BASE_DIR/config.fio --output-format=json\
-		 "${@:2}" --ioengine=spdk_bdev --spdk_json_conf=$BASE_DIR/bdev.conf --spdk_mem=4096
+		LD_PRELOAD=$PLUGIN_DIR_BDEV/fio_plugin $FIO_BIN $BASE_DIR/config.fio --output-format=json "${@:2}" --ioengine=spdk_bdev --spdk_json_conf=$BASE_DIR/bdev.conf --spdk_mem=4096
 	fi
 
 	sleep 1
 }
 
-function run_nvme_fio(){
+function run_nvme_fio() {
 	echo "** Running fio test, this can take a while, depending on the run-time and ramp-time setting."
 	$FIO_BIN $BASE_DIR/config.fio --output-format=json "$@"
 	sleep 1
 }
 
-function run_bdevperf(){
+function run_bdevperf() {
 	echo "** Running bdevperf test, this can take a while, depending on the run-time setting."
 	$BDEVPERF_DIR/bdevperf --json $BASE_DIR/bdev.conf -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME -m "[$CPUS_ALLOWED]"
 	sleep 1
@@ -346,8 +340,8 @@ function run_nvmeperf() {
 	local disks
 
 	# Limit the number of disks to $1 if needed
-	disks=( $(get_disks nvme) )
-	disks=( "${disks[@]:0:$1}" )
+	disks=($(get_disks nvme))
+	disks=("${disks[@]:0:$1}")
 	r_opt=$(printf -- ' -r "trtype:PCIe traddr:%s"' "${disks[@]}")
 
 	echo "** Running nvme perf test, this can take a while, depending on the run-time setting."
@@ -363,7 +357,7 @@ function wait_for_nvme_reload() {
 	shopt -s extglob
 	for disk in $nvmes; do
 		cmd="ls /sys/block/$disk/queue/*@(iostats|rq_affinity|nomerges|io_poll_delay)*"
-		until $cmd 2>/dev/null; do
+		until $cmd 2> /dev/null; do
 			echo "Waiting for full nvme driver reload..."
 			sleep 0.5
 		done
@@ -374,7 +368,7 @@ function wait_for_nvme_reload() {
 function verify_disk_number() {
 	# Check if we have appropriate number of disks to carry out the test
 	if [[ "$PLUGIN" =~ "bdev" ]]; then
-		cat <<-JSON >"$BASE_DIR/bdev.conf"
+		cat <<- JSON > "$BASE_DIR/bdev.conf"
 			{"subsystems":[
 			$("$ROOT_DIR/scripts/gen_nvme.sh" --json)
 			]}
@@ -390,10 +384,12 @@ function verify_disk_number() {
 	fi
 }
 
-function usage()
-{
+function usage() {
 	set +x
-	[[ -n $2 ]] && ( echo "$2"; echo ""; )
+	[[ -n $2 ]] && (
+		echo "$2"
+		echo ""
+	)
 	echo "Run NVMe PMD/BDEV performance test. Change options for easier debug and setup configuration"
 	echo "Usage: $(basename $1) [options]"
 	echo "-h, --help                Print help and exit"
@@ -436,27 +432,42 @@ function usage()
 while getopts 'h-:' optchar; do
 	case "$optchar" in
 		-)
-		case "$OPTARG" in
-			help) usage $0; exit 0 ;;
-			rw=*) RW="${OPTARG#*=}" ;;
-			rwmixread=*) MIX="${OPTARG#*=}" ;;
-			iodepth=*) IODEPTH="${OPTARG#*=}" ;;
-			block-size=*) BLK_SIZE="${OPTARG#*=}" ;;
-			run-time=*) RUNTIME="${OPTARG#*=}" ;;
-			ramp-time=*) RAMP_TIME="${OPTARG#*=}" ;;
-			numjobs=*) NUMJOBS="${OPTARG#*=}" ;;
-			repeat-no=*) REPEAT_NO="${OPTARG#*=}" ;;
-			fio-bin=*) FIO_BIN="${OPTARG#*=}" ;;
-			driver=*) PLUGIN="${OPTARG#*=}" ;;
-			disk-no=*) DISKNO="${OPTARG#*=}"; ONEWORKLOAD=true ;;
-			max-disk=*) DISKNO="${OPTARG#*=}" ;;
-			cpu-allowed=*) CPUS_ALLOWED="${OPTARG#*=}" ;;
-			no-preconditioning) PRECONDITIONING=false ;;
-			no-io-scaling) NOIOSCALING=true ;;
-			*) usage $0 echo "Invalid argument '$OPTARG'"; exit 1 ;;
-		esac
-		;;
-		h) usage $0; exit 0 ;;
-		*) usage $0 "Invalid argument '$optchar'"; exit 1 ;;
+			case "$OPTARG" in
+				help)
+					usage $0
+					exit 0
+					;;
+				rw=*) RW="${OPTARG#*=}" ;;
+				rwmixread=*) MIX="${OPTARG#*=}" ;;
+				iodepth=*) IODEPTH="${OPTARG#*=}" ;;
+				block-size=*) BLK_SIZE="${OPTARG#*=}" ;;
+				run-time=*) RUNTIME="${OPTARG#*=}" ;;
+				ramp-time=*) RAMP_TIME="${OPTARG#*=}" ;;
+				numjobs=*) NUMJOBS="${OPTARG#*=}" ;;
+				repeat-no=*) REPEAT_NO="${OPTARG#*=}" ;;
+				fio-bin=*) FIO_BIN="${OPTARG#*=}" ;;
+				driver=*) PLUGIN="${OPTARG#*=}" ;;
+				disk-no=*)
+					DISKNO="${OPTARG#*=}"
+					ONEWORKLOAD=true
+					;;
+				max-disk=*) DISKNO="${OPTARG#*=}" ;;
+				cpu-allowed=*) CPUS_ALLOWED="${OPTARG#*=}" ;;
+				no-preconditioning) PRECONDITIONING=false ;;
+				no-io-scaling) NOIOSCALING=true ;;
+				*)
+					usage $0 echo "Invalid argument '$OPTARG'"
+					exit 1
+					;;
+			esac
+			;;
+		h)
+			usage $0
+			exit 0
+			;;
+		*)
+			usage $0 "Invalid argument '$optchar'"
+			exit 1
+			;;
 	esac
 done

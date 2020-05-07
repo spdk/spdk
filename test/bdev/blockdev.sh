@@ -8,7 +8,7 @@ source $testdir/nbd_common.sh
 rpc_py="$rootdir/scripts/rpc.py"
 conf_file="$testdir/bdev.json"
 # Make sure the configuration is clean
-:>"$conf_file"
+: > "$conf_file"
 
 function cleanup() {
 	rm -f "/tmp/aiofile"
@@ -28,7 +28,7 @@ function start_spdk_tgt() {
 }
 
 function setup_bdev_conf() {
-	"$rpc_py" <<-RPC
+	"$rpc_py" <<- RPC
 		bdev_split_create Malloc1 2
 		bdev_split_create -s 4 Malloc2 8
 		bdev_malloc_create -b Malloc0 32 512
@@ -69,7 +69,8 @@ function setup_gpt_conf() {
 			dev=/dev/${nvme_dev##*/}
 			if ! pt=$(parted "$dev" -ms print 2>&1); then
 				[[ $pt == *"$dev: unrecognised disk label"* ]] || continue
-				gpt_nvme=$dev; break
+				gpt_nvme=$dev
+				break
 			fi
 		done
 		if [[ -n $gpt_nvme ]]; then
@@ -78,7 +79,7 @@ function setup_gpt_conf() {
 			# change the GUID to SPDK GUID value
 			# FIXME: Hardcode this in some common place, this value should not be changed much
 			IFS="()" read -r _ SPDK_GPT_GUID _ < <(grep SPDK_GPT_PART_TYPE_GUID module/bdev/gpt/gpt.h)
-			SPDK_GPT_GUID=${SPDK_GPT_GUID//, /-} SPDK_GPT_GUID=${SPDK_GPT_GUID//0x}
+			SPDK_GPT_GUID=${SPDK_GPT_GUID//, /-} SPDK_GPT_GUID=${SPDK_GPT_GUID//0x/}
 			sgdisk -t "1:$SPDK_GPT_GUID" "$gpt_nvme"
 			sgdisk -t "2:$SPDK_GPT_GUID" "$gpt_nvme"
 			"$rootdir/scripts/setup.sh"
@@ -89,7 +90,7 @@ function setup_gpt_conf() {
 			"$rootdir/scripts/setup.sh"
 			return 1
 		fi
-        else
+	else
 		# Not supported platform or missing tooling, nothing to be done, simply exit the test
 		# in a graceful manner.
 		trap - SIGINT SIGTERM EXIT
@@ -101,7 +102,7 @@ function setup_gpt_conf() {
 
 function setup_crypto_aesni_conf() {
 	# Malloc0 and Malloc1 use AESNI
-	"$rpc_py" <<-RPC
+	"$rpc_py" <<- RPC
 		bdev_malloc_create -b Malloc0 16 512
 		bdev_malloc_create -b Malloc1 16 512
 		bdev_crypto_create Malloc0 crypto_ram crypto_aesni_mb 0123456789123456
@@ -112,7 +113,7 @@ function setup_crypto_aesni_conf() {
 function setup_crypto_qat_conf() {
 	# Malloc0 will use QAT AES_CBC
 	# Malloc1 will use QAT AES_XTS
-	"$rpc_py" <<-RPC
+	"$rpc_py" <<- RPC
 		bdev_malloc_create -b Malloc0 16 512
 		bdev_malloc_create -b Malloc1 16 512
 		bdev_crypto_create Malloc0 crypto_ram crypto_qat 0123456789123456
@@ -195,7 +196,7 @@ function fio_test_suite() {
 	local fio_params="--ioengine=spdk_bdev --iodepth=8 --bs=4k --runtime=10 $testdir/bdev.fio --spdk_json_conf=$conf_file"
 
 	run_test "bdev_fio_rw_verify" fio_bdev $fio_params --spdk_mem=$PRE_RESERVED_MEM \
-	--output=$output_dir/blockdev_fio_verify.txt
+		--output=$output_dir/blockdev_fio_verify.txt
 	rm -f ./*.state
 	rm -f $testdir/bdev.fio
 
@@ -227,9 +228,8 @@ function get_io_result() {
 		iostat_result=$(awk '{print $6}' <<< $iostat_result)
 	fi
 
-	echo ${iostat_result/.*}
+	echo ${iostat_result/.*/}
 }
-
 
 function run_qos_test() {
 	local qos_limit=$1
@@ -237,10 +237,10 @@ function run_qos_test() {
 
 	qos_result=$(get_io_result $2 $3)
 	if [ $2 = BANDWIDTH ]; then
-		qos_limit=$((qos_limit*1024))
+		qos_limit=$((qos_limit * 1024))
 	fi
-	lower_limit=$((qos_limit*9/10))
-	upper_limit=$((qos_limit*11/10))
+	lower_limit=$((qos_limit * 9 / 10))
+	upper_limit=$((qos_limit * 11 / 10))
 
 	# QoS realization is related with bytes transfered. It currently has some variation.
 	if [ $qos_result -lt $lower_limit ] || [ $qos_result -gt $upper_limit ]; then
@@ -261,7 +261,7 @@ function qos_function_test() {
 
 	io_result=$(get_io_result IOPS $QOS_DEV_1)
 	# Set the IOPS limit as one quarter of the measured performance without QoS
-	iops_limit=$(((io_result/4)/qos_lower_iops_limit*qos_lower_iops_limit))
+	iops_limit=$(((io_result / 4) / qos_lower_iops_limit * qos_lower_iops_limit))
 	if [ $iops_limit -gt $qos_lower_iops_limit ]; then
 
 		# Run bdevperf with IOPS rate limit on bdev 1
@@ -271,7 +271,7 @@ function qos_function_test() {
 		# Run bdevperf with bandwidth rate limit on bdev 2
 		# Set the bandwidth limit as 1/10 of the measure performance without QoS
 		bw_limit=$(get_io_result BANDWIDTH $QOS_DEV_2)
-		bw_limit=$((bw_limit/1024/10))
+		bw_limit=$((bw_limit / 1024 / 10))
 		if [ $bw_limit -lt $qos_lower_bw_limit ]; then
 			bw_limit=$qos_lower_bw_limit
 		fi
@@ -325,33 +325,39 @@ fi
 test_type=${1:-bdev}
 start_spdk_tgt
 case "$test_type" in
-	bdev )
-		setup_bdev_conf;;
-	nvme )
-		setup_nvme_conf;;
-	gpt )
-		setup_gpt_conf;;
-	crypto_aesni )
-		setup_crypto_aesni_conf;;
-	crypto_qat )
-		setup_crypto_qat_conf;;
-	pmem )
-		setup_pmem_conf;;
-	rbd )
-		setup_rbd_conf;;
-	* )
+	bdev)
+		setup_bdev_conf
+		;;
+	nvme)
+		setup_nvme_conf
+		;;
+	gpt)
+		setup_gpt_conf
+		;;
+	crypto_aesni)
+		setup_crypto_aesni_conf
+		;;
+	crypto_qat)
+		setup_crypto_qat_conf
+		;;
+	pmem)
+		setup_pmem_conf
+		;;
+	rbd)
+		setup_rbd_conf
+		;;
+	*)
 		echo "invalid test name"
 		exit 1
 		;;
 esac
 
 # Generate json config and use it throughout all the tests
-cat <<-CONF >"$conf_file"
-        {"subsystems":[
-        $("$rpc_py" save_subsystem_config -n bdev)
-        ]}
+cat <<- CONF > "$conf_file"
+	        {"subsystems":[
+	        $("$rpc_py" save_subsystem_config -n bdev)
+	        ]}
 CONF
-
 
 bdevs=$("$rpc_py" bdev_get_bdevs | jq -r '.[] | select(.claimed == false)')
 bdevs_name=$(echo $bdevs | jq -r '.name')
@@ -366,12 +372,12 @@ run_test "bdev_hello_world" $rootdir/examples/bdev/hello_world/hello_bdev --json
 run_test "bdev_bounds" bdev_bounds
 run_test "bdev_nbd" nbd_function_test $conf_file "$bdevs_name"
 if [[ $CONFIG_FIO_PLUGIN == y ]]; then
-        if [ "$test_type" = "nvme" ] || [ "$test_type" = "gpt" ]; then
-                # TODO: once we get real multi-ns drives, re-enable this test for NVMe.
-                echo "skipping fio tests on NVMe due to multi-ns failures."
-        else
-	        run_test "bdev_fio" fio_test_suite
-        fi
+	if [ "$test_type" = "nvme" ] || [ "$test_type" = "gpt" ]; then
+		# TODO: once we get real multi-ns drives, re-enable this test for NVMe.
+		echo "skipping fio tests on NVMe due to multi-ns failures."
+	else
+		run_test "bdev_fio" fio_test_suite
+	fi
 else
 	echo "FIO not available"
 	exit 1
@@ -386,7 +392,7 @@ fi
 
 # Temporarily disabled - infinite loop
 # if [ $RUN_NIGHTLY -eq 1 ]; then
-	# run_test "bdev_reset" $testdir/bdevperf/bdevperf --json "$conf_file" -q 16 -w reset -o 4096 -t 60
+# run_test "bdev_reset" $testdir/bdevperf/bdevperf --json "$conf_file" -q 16 -w reset -o 4096 -t 60
 # fi
 
 # Bdev and configuration cleanup below this line

@@ -14,13 +14,13 @@ if [[ $SPDK_TEST_VHOST -ne 1 && $SPDK_TEST_VHOST_INIT -eq 1 ]]; then
 	echo "         Setting SPDK_TEST_VHOST=1 for duration of current script."
 fi
 
-if (( SPDK_TEST_BLOCKDEV + \
-		SPDK_TEST_ISCSI +
-		SPDK_TEST_NVMF +
-		SPDK_TEST_VHOST +
-		SPDK_TEST_VHOST_INIT +
-		SPDK_TEST_PMDK +
-		SPDK_TEST_RBD == 0 )); then
+if ((SPDK_TEST_BLOCKDEV + \
+	SPDK_TEST_ISCSI + \
+	SPDK_TEST_NVMF + \
+	SPDK_TEST_VHOST + \
+	SPDK_TEST_VHOST_INIT + \
+	SPDK_TEST_PMDK + \
+	SPDK_TEST_RBD == 0)); then
 	echo "WARNING: No tests are enabled so not running JSON configuration tests"
 	exit 0
 fi
@@ -58,41 +58,41 @@ function tgt_check_notification_types() {
 }
 
 function tgt_check_notifications() {
-        local event_line event ev_type ev_ctx
-        local rc=""
+	local event_line event ev_type ev_ctx
+	local rc=""
 
-        while read -r event_line; do
-                # remove ID
-                event="${event_line%:*}"
+	while read -r event_line; do
+		# remove ID
+		event="${event_line%:*}"
 
-                ev_type=${event%:*}
-                ev_ctx=${event#*:}
+		ev_type=${event%:*}
+		ev_ctx=${event#*:}
 
-                ex_ev_type=${1%%:*}
-                ex_ev_ctx=${1#*:}
+		ex_ev_type=${1%%:*}
+		ex_ev_ctx=${1#*:}
 
-                last_event_id=${event_line##*:}
+		last_event_id=${event_line##*:}
 
-                # set rc=false in case of failure so all errors can be printed
-                if (( $# == 0 )); then
-                        echo "ERROR: got extra event: $event_line"
-                        rc=false
-                        continue
-                elif ! echo "$ev_type" | grep -E -q  "^${ex_ev_type}\$" || ! echo "$ev_ctx" | grep -E -q "^${ex_ev_ctx}\$"; then
-                        echo "ERROR: expected event '$1' but got '$event' (whole event line: $event_line)"
-                        rc=false
-                fi
+		# set rc=false in case of failure so all errors can be printed
+		if (($# == 0)); then
+			echo "ERROR: got extra event: $event_line"
+			rc=false
+			continue
+		elif ! echo "$ev_type" | grep -E -q "^${ex_ev_type}\$" || ! echo "$ev_ctx" | grep -E -q "^${ex_ev_ctx}\$"; then
+			echo "ERROR: expected event '$1' but got '$event' (whole event line: $event_line)"
+			rc=false
+		fi
 
-                shift
-        done < <(tgt_rpc notify_get_notifications -i ${last_event_id} | jq -r '.[] | "\(.type):\(.ctx):\(.id)"')
+		shift
+	done < <(tgt_rpc notify_get_notifications -i ${last_event_id} | jq -r '.[] | "\(.type):\(.ctx):\(.id)"')
 
-        $rc
+	$rc
 
-        if (( $# != 0 )); then
-                echo "ERROR: missing events:"
-                echo "$@"
-                return 1
-        fi
+	if (($# != 0)); then
+		echo "ERROR: missing events:"
+		echo "$@"
+		return 1
+	fi
 }
 
 # $1 - target / initiator
@@ -102,7 +102,7 @@ function json_config_test_start_app() {
 	shift
 
 	[[ -n "${#app_socket[$app]}" ]] # Check app type
-	[[ -z "${app_pid[$app]}" ]] # Assert if app is not running
+	[[ -z "${app_pid[$app]}" ]]     # Assert if app is not running
 
 	local app_extra_params=""
 	if [[ $SPDK_TEST_VHOST -eq 1 || $SPDK_TEST_VHOST_INIT -eq 1 ]]; then
@@ -129,8 +129,8 @@ function json_config_test_shutdown_app() {
 	# spdk_kill_instance RPC will trigger ASAN
 	kill -SIGINT ${app_pid[$app]}
 
-	for (( i=0; i<30; i++ )); do
-		if ! kill -0 ${app_pid[$app]} 2>/dev/null; then
+	for ((i = 0; i < 30; i++)); do
+		if ! kill -0 ${app_pid[$app]} 2> /dev/null; then
 			app_pid[$app]=
 			break
 		fi
@@ -152,7 +152,7 @@ function create_bdev_subsystem_config() {
 
 	if [[ $SPDK_TEST_BLOCKDEV -eq 1 ]]; then
 		local lvol_store_base_bdev=Nvme0n1
-		if ! tgt_rpc get_bdevs --name ${lvol_store_base_bdev} >/dev/null; then
+		if ! tgt_rpc get_bdevs --name ${lvol_store_base_bdev} > /dev/null; then
 			if [[ $(uname -s) = Linux ]]; then
 				lvol_store_base_bdev=aio_disk
 				echo "WARNING: No NVMe drive found. Using '$lvol_store_base_bdev' instead."
@@ -191,7 +191,7 @@ function create_bdev_subsystem_config() {
 			# This AIO bdev must be large enough to be used as LVOL store
 			dd if=/dev/zero of=/tmp/sample_aio bs=1024 count=102400
 			tgt_rpc bdev_aio_create /tmp/sample_aio aio_disk 1024
-			expected_notifications+=( bdev_register:aio_disk )
+			expected_notifications+=(bdev_register:aio_disk)
 		fi
 
 		# For LVOLs use split to check for proper order of initialization.
@@ -200,8 +200,8 @@ function create_bdev_subsystem_config() {
 		tgt_rpc bdev_lvol_create_lvstore -c 1048576 ${lvol_store_base_bdev}p0 lvs_test
 		tgt_rpc bdev_lvol_create -l lvs_test lvol0 32
 		tgt_rpc bdev_lvol_create -l lvs_test -t lvol1 32
-		tgt_rpc bdev_lvol_snapshot     lvs_test/lvol0 snapshot0
-		tgt_rpc bdev_lvol_clone        lvs_test/snapshot0 clone0
+		tgt_rpc bdev_lvol_snapshot lvs_test/lvol0 snapshot0
+		tgt_rpc bdev_lvol_clone lvs_test/snapshot0 clone0
 
 		expected_notifications+=(
 			"bdev_register:$RE_UUID"
@@ -231,13 +231,13 @@ function create_bdev_subsystem_config() {
 		rm -f $pmem_pool_file
 		tgt_rpc create_pmem_pool $pmem_pool_file 128 4096
 		tgt_rpc bdev_pmem_create -n pmem1 $pmem_pool_file
-		expected_notifications+=( bdev_register:pmem1 )
+		expected_notifications+=(bdev_register:pmem1)
 	fi
 
 	if [[ $SPDK_TEST_RBD -eq 1 ]]; then
 		rbd_setup 127.0.0.1
 		tgt_rpc bdev_rbd_create $RBD_POOL $RBD_NAME 4096
-		expected_notifications+=( bdev_register:Ceph0 )
+		expected_notifications+=(bdev_register:Ceph0)
 	fi
 
 	tgt_check_notifications "${expected_notifications[@]}"
@@ -249,9 +249,9 @@ function cleanup_bdev_subsystem_config() {
 	timing_enter "${FUNCNAME[0]}"
 
 	if [[ $SPDK_TEST_BLOCKDEV -eq 1 ]]; then
-		tgt_rpc bdev_lvol_delete     lvs_test/clone0
-		tgt_rpc bdev_lvol_delete     lvs_test/lvol0
-		tgt_rpc bdev_lvol_delete     lvs_test/snapshot0
+		tgt_rpc bdev_lvol_delete lvs_test/clone0
+		tgt_rpc bdev_lvol_delete lvs_test/lvol0
+		tgt_rpc bdev_lvol_delete lvs_test/snapshot0
 		tgt_rpc bdev_lvol_delete_lvstore -l lvs_test
 	fi
 
@@ -278,16 +278,16 @@ function create_vhost_subsystem_config() {
 	tgt_rpc bdev_malloc_create 64 1024 --name MallocForVhost0
 	tgt_rpc bdev_split_create MallocForVhost0 8
 
-	tgt_rpc vhost_create_scsi_controller      VhostScsiCtrlr0
-	tgt_rpc vhost_scsi_controller_add_target  VhostScsiCtrlr0 0 MallocForVhost0p3
-	tgt_rpc vhost_scsi_controller_add_target  VhostScsiCtrlr0 -1 MallocForVhost0p4
-	tgt_rpc vhost_controller_set_coalescing   VhostScsiCtrlr0 1 100
+	tgt_rpc vhost_create_scsi_controller VhostScsiCtrlr0
+	tgt_rpc vhost_scsi_controller_add_target VhostScsiCtrlr0 0 MallocForVhost0p3
+	tgt_rpc vhost_scsi_controller_add_target VhostScsiCtrlr0 -1 MallocForVhost0p4
+	tgt_rpc vhost_controller_set_coalescing VhostScsiCtrlr0 1 100
 
-	tgt_rpc vhost_create_blk_controller    VhostBlkCtrlr0 MallocForVhost0p5
+	tgt_rpc vhost_create_blk_controller VhostBlkCtrlr0 MallocForVhost0p5
 
-# FIXME: enable after vhost-nvme is properly implemented against the latest rte_vhost (DPDK 19.05+)
-#	tgt_rpc vhost_create_nvme_controller   VhostNvmeCtrlr0 16
-#	tgt_rpc vhost_nvme_controller_add_ns                 VhostNvmeCtrlr0 MallocForVhost0p6
+	# FIXME: enable after vhost-nvme is properly implemented against the latest rte_vhost (DPDK 19.05+)
+	#	tgt_rpc vhost_create_nvme_controller   VhostNvmeCtrlr0 16
+	#	tgt_rpc vhost_nvme_controller_add_ns                 VhostNvmeCtrlr0 MallocForVhost0p6
 
 	timing_exit "${FUNCNAME[0]}"
 }
@@ -315,9 +315,9 @@ function create_nvmf_subsystem_config() {
 	tgt_rpc bdev_malloc_create 4 1024 --name MallocForNvmf1
 
 	tgt_rpc nvmf_create_transport -t RDMA -u 8192 -c 0
-	tgt_rpc nvmf_create_subsystem       nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
-	tgt_rpc nvmf_subsystem_add_ns       nqn.2016-06.io.spdk:cnode1 MallocForNvmf0
-	tgt_rpc nvmf_subsystem_add_ns       nqn.2016-06.io.spdk:cnode1 MallocForNvmf1
+	tgt_rpc nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
+	tgt_rpc nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 MallocForNvmf0
+	tgt_rpc nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 MallocForNvmf1
 	tgt_rpc nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t RDMA -a $NVMF_FIRST_TARGET_IP -s "$NVMF_PORT"
 
 	timing_exit "${FUNCNAME[0]}"
@@ -326,14 +326,12 @@ function create_nvmf_subsystem_config() {
 function create_virtio_initiator_config() {
 	timing_enter "${FUNCNAME[0]}"
 	initiator_rpc bdev_virtio_attach_controller -t user -a /var/tmp/VhostScsiCtrlr0 -d scsi VirtioScsiCtrlr0
-	initiator_rpc bdev_virtio_attach_controller -t user -a /var/tmp/VhostBlkCtrlr0  -d blk  VirtioBlk0
+	initiator_rpc bdev_virtio_attach_controller -t user -a /var/tmp/VhostBlkCtrlr0 -d blk VirtioBlk0
 	# TODO: initiator_rpc bdev_virtio_attach_controller -t user -a /var/tmp/VhostNvmeCtrlr0 -d nvme VirtioNvme0
 	timing_exit "${FUNCNAME[0]}"
 }
 
-
-function json_config_test_init()
-{
+function json_config_test_init() {
 	timing_enter "${FUNCNAME[0]}"
 	timing_enter json_config_setup_target
 
@@ -343,7 +341,7 @@ function json_config_test_init()
 
 	# Load nvme configuration. The load_config will issue framework_start_init automatically
 	(
-		echo '{"subsystems": [';
+		echo '{"subsystems": ['
 		$rootdir/scripts/gen_nvme.sh --json | jq -r "del(.config[] | select(.params.name!=\"Nvme0\"))"
 		echo ']}'
 	) | tgt_rpc load_config
@@ -412,13 +410,13 @@ function json_config_clear() {
 	# It causes that configuration may not be fully cleaned at this moment and
 	# we should to wait a while. (See github issue #789)
 	count=100
-	while [ $count -gt 0 ] ; do
+	while [ $count -gt 0 ]; do
 		$rootdir/scripts/rpc.py -s "${app_socket[$1]}" save_config | $config_filter -method delete_global_parameters | $config_filter -method check_empty && break
-		count=$(( count -1 ))
+		count=$((count - 1))
 		sleep 0.1
 	done
 
-	if [ $count -eq 0 ] ; then
+	if [ $count -eq 0 ]; then
 		return 1
 	fi
 }
@@ -465,7 +463,7 @@ fi
 echo "INFO: changing configuration and checking if this can be detected..."
 # Self test to check if configuration diff can be detected.
 tgt_rpc bdev_malloc_delete MallocBdevForConfigChangeCheck
-if $rootdir/test/json_config/json_diff.sh <(tgt_rpc save_config) "${configs_path[target]}" >/dev/null; then
+if $rootdir/test/json_config/json_diff.sh <(tgt_rpc save_config) "${configs_path[target]}" > /dev/null; then
 	echo "ERROR: intentional configuration difference not detected!"
 	false
 else

@@ -38,7 +38,7 @@ function test_hotremove_lvol_store_multiple_lvols() {
 	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
 
 	# calculate lvol size
-	lvol_size_mb=$( round_down $(( (MALLOC_SIZE_MB- LVS_DEFAULT_CLUSTER_SIZE_MB) / 4 )) )
+	lvol_size_mb=$(round_down $(((MALLOC_SIZE_MB - LVS_DEFAULT_CLUSTER_SIZE_MB) / 4)))
 
 	# create 4 lvols
 	for i in $(seq 1 4); do
@@ -115,7 +115,7 @@ function test_bdev_lvol_delete_lvstore_with_clones() {
 	[[ ${jq_out["name"]} == "$lvstore_name" ]]
 	[[ ${jq_out["base_bdev"]} == "$malloc_dev" ]]
 
-	size=$(( jq_out["free_clusters"] * jq_out["cluster_size"] / 4 / 1024**2 ))
+	size=$((jq_out["free_clusters"] * jq_out["cluster_size"] / 4 / 1024 ** 2))
 
 	bdev_uuid=$(rpc_cmd bdev_lvol_create -u "$lvstore_uuid" "$lbd_name" "$size")
 
@@ -169,7 +169,7 @@ function test_unregister_lvol_bdev() {
 	[[ ${jq_out["name"]} == "$lvstore_name" ]]
 	[[ ${jq_out["base_bdev"]} == "$malloc_dev" ]]
 
-	size=$(( jq_out["free_clusters"] * jq_out["cluster_size"] / 4 / 1024**2 ))
+	size=$((jq_out["free_clusters"] * jq_out["cluster_size"] / 4 / 1024 ** 2))
 
 	bdev_uuid=$(rpc_cmd bdev_lvol_create -u "$lvstore_uuid" "$lbd_name" "$size")
 

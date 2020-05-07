@@ -26,7 +26,7 @@ function waitfortcplisten() {
 	xtrace_disable
 	local ret=0
 	local i
-	for (( i = 40; i != 0; i-- )); do
+	for ((i = 40; i != 0; i--)); do
 		# if the process is no longer running, then exit the script
 		#  since it means the application crashed
 		if ! kill -s 0 $1; then
@@ -35,7 +35,7 @@ function waitfortcplisten() {
 			break
 		fi
 
-		if $rootdir/scripts/rpc.py -t 1 -s "$ipaddr" -p $port rpc_get_methods &>/dev/null; then
+		if $rootdir/scripts/rpc.py -t 1 -s "$ipaddr" -p $port rpc_get_methods &> /dev/null; then
 			break
 		fi
 
@@ -43,7 +43,7 @@ function waitfortcplisten() {
 	done
 
 	xtrace_restore
-	if (( i == 0 )); then
+	if ((i == 0)); then
 		echo "ERROR: timeout while waiting for process (pid: $1) to start listening on '$ipaddr:$port'"
 		ret=1
 	fi

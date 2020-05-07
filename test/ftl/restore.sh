@@ -16,7 +16,7 @@ while getopts ':u:c:' opt; do
 		?) echo "Usage: $0 [-u UUID] [-c NV_CACHE_PCI_BDF] OCSSD_PCI_BDF" && exit 1 ;;
 	esac
 done
-shift $((OPTIND -1))
+shift $((OPTIND - 1))
 device=$1
 num_group=$(get_num_group $device)
 num_pu=$(get_num_pu $device)
@@ -37,7 +37,8 @@ restore_kill() {
 
 trap "restore_kill; exit 1" SIGINT SIGTERM EXIT
 
-"$rootdir/app/spdk_tgt/spdk_tgt" --json <(gen_ftl_nvme_conf)  & svcpid=$!
+"$rootdir/app/spdk_tgt/spdk_tgt" --json <(gen_ftl_nvme_conf) &
+svcpid=$!
 # Wait until spdk_tgt starts
 waitforlisten $svcpid
 
@@ -49,7 +50,7 @@ $rpc_py bdev_nvme_attach_controller -b nvme0 -a $device -t pcie
 $rpc_py bdev_ocssd_create -c nvme0 -b nvme0n1 -n 1
 ftl_construct_args="bdev_ftl_create -b ftl0 -d nvme0n1"
 
-[ -n "$uuid" ]     && ftl_construct_args+=" -u $uuid"
+[ -n "$uuid" ] && ftl_construct_args+=" -u $uuid"
 [ -n "$nv_cache" ] && ftl_construct_args+=" -c $nvc_bdev"
 
 $rpc_py $ftl_construct_args
@@ -73,7 +74,8 @@ md5sum $mount_dir/testfile > $testdir/testfile.md5
 umount $mount_dir
 killprocess $svcpid
 
-"$rootdir/app/spdk_tgt/spdk_tgt" --json <(gen_ftl_nvme_conf) -L ftl_init & svcpid=$!
+"$rootdir/app/spdk_tgt/spdk_tgt" --json <(gen_ftl_nvme_conf) -L ftl_init &
+svcpid=$!
 # Wait until spdk_tgt starts
 waitforlisten $svcpid
 

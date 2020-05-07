@@ -12,7 +12,7 @@ fi
 function ssh_vm() {
 	xtrace_disable
 	sshpass -p "$password" ssh -o PubkeyAuthentication=no \
-	-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 10022 root@localhost "$@"
+		-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 10022 root@localhost "$@"
 	xtrace_restore
 }
 
@@ -110,7 +110,10 @@ ssh_vm 'echo ready'
 timing_exit wait_for_vm
 
 timing_enter copy_repo
-(cd "$rootdir"; tar -cf - .) | (ssh_vm 'tar -xf -')
+(
+	cd "$rootdir"
+	tar -cf - .
+) | (ssh_vm 'tar -xf -')
 timing_exit copy_repo
 
 devices_initialization

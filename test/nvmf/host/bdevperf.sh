@@ -10,8 +10,7 @@ MALLOC_BLOCK_SIZE=512
 
 rpc_py="$rootdir/scripts/rpc.py"
 
-function tgt_init()
-{
+function tgt_init() {
 	nvmfappstart "-m 0xF"
 
 	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
@@ -28,7 +27,6 @@ if [ $TEST_TRANSPORT == "rdma" ] && check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP;
 	echo "Using software RDMA, skipping the host bdevperf tests."
 	exit 0
 fi
-
 
 tgt_init
 

@@ -1,7 +1,6 @@
 source $rootdir/test/nvmf/common.sh
 
-function migration_tc2_cleanup_nvmf_tgt()
-{
+function migration_tc2_cleanup_nvmf_tgt() {
 	local i
 
 	if [[ ! -r "$nvmf_dir/nvmf_tgt.pid" ]]; then
@@ -18,7 +17,7 @@ function migration_tc2_cleanup_nvmf_tgt()
 		fi
 	else
 		pkill --signal SIGTERM -F $nvmf_dir/nvmf_tgt.pid || true
-		for (( i=0; i<20; i++ )); do
+		for ((i = 0; i < 20; i++)); do
 			if ! pkill --signal 0 -F $nvmf_dir/nvmf_tgt.pid; then
 				break
 			fi
@@ -34,8 +33,7 @@ function migration_tc2_cleanup_nvmf_tgt()
 	unset -v nvmf_dir rpc_nvmf
 }
 
-function migration_tc2_cleanup_vhost_config()
-{
+function migration_tc2_cleanup_vhost_config() {
 	timing_enter migration_tc2_cleanup_vhost_config
 
 	trap 'migration_tc2_cleanup_nvmf_tgt SIGKILL; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR EXIT
@@ -64,8 +62,7 @@ function migration_tc2_cleanup_vhost_config()
 	timing_exit migration_tc2_cleanup_vhost_config
 }
 
-function migration_tc2_configure_vhost()
-{
+function migration_tc2_configure_vhost() {
 	timing_enter migration_tc2_configure_vhost
 
 	# Those are global intentionally - they will be unset in cleanup handler
@@ -131,7 +128,7 @@ function migration_tc2_configure_vhost()
 
 	notice "Setting up VMs"
 	vm_setup --os="$os_image" --force=$incoming_vm --disk-type=spdk_vhost_scsi --disks=VhostScsi0 \
-		--migrate-to=$target_vm  --memory=1024 --vhost-name=0
+		--migrate-to=$target_vm --memory=1024 --vhost-name=0
 	vm_setup --force=$target_vm --disk-type=spdk_vhost_scsi --disks=VhostScsi0 --incoming=$incoming_vm --memory=1024 \
 		--vhost-name=1
 
@@ -146,8 +143,7 @@ function migration_tc2_configure_vhost()
 	timing_exit migration_tc2_configure_vhost
 }
 
-function migration_tc2_error_cleanup()
-{
+function migration_tc2_error_cleanup() {
 	trap - SIGINT ERR EXIT
 	set -x
 
@@ -156,8 +152,7 @@ function migration_tc2_error_cleanup()
 	notice "Migration TC2 FAILED"
 }
 
-function migration_tc2()
-{
+function migration_tc2() {
 	# Use 2 VMs:
 	# incoming VM - the one we want to migrate
 	# targe VM - the one which will accept migration
@@ -195,7 +190,7 @@ function migration_tc2()
 	while is_fio_running $target_vm; do
 		sleep 1
 		echo -n "."
-		if (( timeout-- == 0 )); then
+		if ((timeout-- == 0)); then
 			error "timeout while waiting for FIO!"
 		fi
 	done

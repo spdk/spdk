@@ -18,20 +18,20 @@ bdf=$(get_first_nvme_bdf)
 
 PCI_WHITELIST="${bdf}" $rootdir/scripts/setup.sh reset
 sleep 1
-bdf_sysfs_path=$( readlink -f /sys/class/nvme/nvme* | grep "$bdf/nvme/nvme" )
+bdf_sysfs_path=$(readlink -f /sys/class/nvme/nvme* | grep "$bdf/nvme/nvme")
 if [ -z "$bdf_sysfs_path" ]; then
 	echo "setup.sh failed bind kernel driver to ${bdf}"
 	return 1
 fi
-nvme_name=$( basename $bdf_sysfs_path )
+nvme_name=$(basename $bdf_sysfs_path)
 
 set +e
 
 ctrlr="/dev/${nvme_name}"
 ns="/dev/${nvme_name}n1"
 
-oacs=$( ${NVME_CMD} id-ctrl $ctrlr | grep oacs | cut -d: -f2 )
-oacs_firmware=$(( oacs & 0x4 ))
+oacs=$(${NVME_CMD} id-ctrl $ctrlr | grep oacs | cut -d: -f2)
+oacs_firmware=$((oacs & 0x4))
 
 ${NVME_CMD} get-ns-id $ns > ${KERNEL_OUT}.1
 ${NVME_CMD} id-ns $ns > ${KERNEL_OUT}.2

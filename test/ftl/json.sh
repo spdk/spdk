@@ -15,7 +15,8 @@ json_kill() {
 
 trap "json_kill; exit 1" SIGINT SIGTERM EXIT
 
-"$rootdir/app/spdk_tgt/spdk_tgt" --json <(gen_ftl_nvme_conf)  & svcpid=$!
+"$rootdir/app/spdk_tgt/spdk_tgt" --json <(gen_ftl_nvme_conf) &
+svcpid=$!
 waitforlisten $svcpid
 
 # Create new bdev from json configuration

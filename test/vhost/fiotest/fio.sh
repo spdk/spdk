@@ -17,9 +17,11 @@ used_vms=""
 x=""
 readonly=""
 
-function usage()
-{
-	[[ -n $2 ]] && ( echo "$2"; echo ""; )
+function usage() {
+	[[ -n $2 ]] && (
+		echo "$2"
+		echo ""
+	)
 	echo "Shortcut script for doing automated test"
 	echo "Usage: $(basename $1) [OPTIONS]"
 	echo
@@ -49,25 +51,27 @@ function usage()
 while getopts 'xh-:' optchar; do
 	case "$optchar" in
 		-)
-		case "$OPTARG" in
-			help) usage $0 ;;
-			fio-bin=*) fio_bin="--fio-bin=${OPTARG#*=}" ;;
-			fio-job=*) fio_job="${OPTARG#*=}" ;;
-			dry-run) dry_run=true ;;
-			no-shutdown) no_shutdown=true ;;
-			test-type=*) test_type="${OPTARG#*=}" ;;
-			vm=*) vms+=("${OPTARG#*=}") ;;
-			readonly) readonly="--readonly" ;;
-			*) usage $0 "Invalid argument '$OPTARG'" ;;
-		esac
-		;;
-	h) usage $0 ;;
-	x) set -x
-		x="-x" ;;
-	*) usage $0 "Invalid argument '$OPTARG'"
+			case "$OPTARG" in
+				help) usage $0 ;;
+				fio-bin=*) fio_bin="--fio-bin=${OPTARG#*=}" ;;
+				fio-job=*) fio_job="${OPTARG#*=}" ;;
+				dry-run) dry_run=true ;;
+				no-shutdown) no_shutdown=true ;;
+				test-type=*) test_type="${OPTARG#*=}" ;;
+				vm=*) vms+=("${OPTARG#*=}") ;;
+				readonly) readonly="--readonly" ;;
+				*) usage $0 "Invalid argument '$OPTARG'" ;;
+			esac
+			;;
+		h) usage $0 ;;
+		x)
+			set -x
+			x="-x"
+			;;
+		*) usage $0 "Invalid argument '$OPTARG'" ;;
 	esac
 done
-shift $(( OPTIND - 1 ))
+shift $((OPTIND - 1))
 
 if [[ ! -r "$fio_job" ]]; then
 	fail "no fio job file specified"
@@ -153,7 +157,7 @@ for vm_conf in "${vms[@]}"; do
 				fi
 			done
 		done <<< "${conf[2]}"
-		unset IFS;
+		unset IFS
 		$rpc_py vhost_get_controllers
 	fi
 
@@ -188,7 +192,7 @@ if [[ $test_type == "spdk_vhost_scsi" ]]; then
 				$rpc_py vhost_scsi_controller_add_target naa.$disk.${conf[0]} 0 $based_disk
 			done
 		done <<< "${conf[2]}"
-		unset IFS;
+		unset IFS
 	done
 fi
 
@@ -233,7 +237,7 @@ run_fio $fio_bin --job-file="$fio_job" --out="$VHOST_DIR/fio_results" $fio_disks
 
 if [[ "$test_type" == "spdk_vhost_scsi" ]]; then
 	for vm_num in $used_vms; do
-	vm_reset_scsi_devices $vm_num $SCSI_DISK
+		vm_reset_scsi_devices $vm_num $SCSI_DISK
 	done
 fi
 

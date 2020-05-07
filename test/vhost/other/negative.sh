@@ -5,9 +5,11 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/vhost/common.sh
 
-function usage()
-{
-	[[ -n $2 ]] && ( echo "$2"; echo ""; )
+function usage() {
+	[[ -n $2 ]] && (
+		echo "$2"
+		echo ""
+	)
 	echo "Shortcut script for running vhost app."
 	echo "Usage: $(basename $1) [-x] [-h|--help] [--clean-build]"
 	echo "-h, --help           print help and exit"
@@ -20,15 +22,15 @@ run_in_background=false
 while getopts 'xh-:' optchar; do
 	case "$optchar" in
 		-)
-		case "$OPTARG" in
-			help) usage $0 ;;
-			conf-dir=*) CONF_DIR="${OPTARG#*=}" ;;
-			*) usage $0 echo "Invalid argument '$OPTARG'" ;;
-		esac
-		;;
-	h) usage $0 ;;
-	x) set -x ;;
-	*) usage $0 "Invalid argument '$optchar'" ;;
+			case "$OPTARG" in
+				help) usage $0 ;;
+				conf-dir=*) CONF_DIR="${OPTARG#*=}" ;;
+				*) usage $0 echo "Invalid argument '$OPTARG'" ;;
+			esac
+			;;
+		h) usage $0 ;;
+		x) set -x ;;
+		*) usage $0 "Invalid argument '$optchar'" ;;
 	esac
 done
 
@@ -57,7 +59,7 @@ if "${VHOST_APP[@]}" -x -h; then
 fi
 
 # Passing trace flags if spdk is build without CONFIG_DEBUG=y option make vhost exit with error
-if ! "${VHOST_APP[@]}" -t vhost_scsi -h;  then
+if ! "${VHOST_APP[@]}" -t vhost_scsi -h; then
 	warning "vhost did not started with trace flags enabled but ignoring this as it might not be a debug build"
 fi
 
@@ -171,7 +173,7 @@ $rpc_py vhost_scsi_controller_add_target naa.0 0 Malloc0
 
 # BLK
 notice "Trying to create block controller with incorrect cpumask"
-if $rpc_py vhost_create_blk_controller vhost.invalid.cpumask  Malloc0 --cpumask 0x2; then
+if $rpc_py vhost_create_blk_controller vhost.invalid.cpumask Malloc0 --cpumask 0x2; then
 	error "Creating block controller with incorrect cpumask succeeded, but it shouldn't"
 fi
 

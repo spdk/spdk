@@ -6,8 +6,8 @@ source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
 if [ -z "${DEPENDENCY_DIR}" ]; then
-        echo DEPENDENCY_DIR not defined!
-        exit 1
+	echo DEPENDENCY_DIR not defined!
+	exit 1
 fi
 
 spdk_nvme_cli="${DEPENDENCY_DIR}/nvme-cli"
@@ -33,7 +33,7 @@ $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPOR
 nvme connect -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
 waitforserial $NVMF_SERIAL 2
-if ! get_nvme_devs print 2>/dev/null; then
+if ! get_nvme_devs print 2> /dev/null; then
 	echo "Could not find any nvme devices to work with, aborting the test" >&2
 	exit 1
 fi
@@ -54,7 +54,7 @@ done
 
 nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
 
-if [ -d  $spdk_nvme_cli ]; then
+if [ -d $spdk_nvme_cli ]; then
 	# Test spdk/nvme-cli NVMe-oF commands: discover, connect and disconnect
 	cd $spdk_nvme_cli
 	sed -i 's/shm_id=.*/shm_id=-1/g' spdk.conf

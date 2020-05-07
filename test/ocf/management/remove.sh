@@ -23,7 +23,7 @@ waitforlisten $spdk_pid
 
 # Create ocf on persistent storage
 
-$rpc_py bdev_ocf_create ocfWT  wt aio0 aio1
+$rpc_py bdev_ocf_create ocfWT wt aio0 aio1
 
 # Check that ocfWT was created properly
 

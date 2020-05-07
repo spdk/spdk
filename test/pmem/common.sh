@@ -1,8 +1,7 @@
 # Prints error message and return error code, closes vhost app and remove
 # pmem pool file
 # input: error message, error code
-function error()
-{
+function error() {
 	local error_code=${2:-1}
 	echo "==========="
 	echo -e "ERROR: $1"
@@ -16,8 +15,7 @@ function error()
 # check if there is pool file & remove it
 # input: path to pool file
 # default: $default_pool_file
-function pmem_clean_pool_file()
-{
+function pmem_clean_pool_file() {
 	local pool_file=${1:-$default_pool_file}
 
 	if [ -f $pool_file ]; then
@@ -29,8 +27,7 @@ function pmem_clean_pool_file()
 # create new pmem file
 # input: path to pool file, size in MB, block_size
 # default: $default_pool_file 32 512
-function pmem_create_pool_file()
-{
+function pmem_create_pool_file() {
 	local pool_file=${1:-$default_pool_file}
 	local size=${2:-32}
 	local block_size=${3:-512}
@@ -46,8 +43,7 @@ function pmem_create_pool_file()
 	fi
 }
 
-function pmem_unmount_ramspace
-{
+function pmem_unmount_ramspace() {
 	if [ -d "$testdir/ramspace" ]; then
 		if mount | grep -q "$testdir/ramspace"; then
 			umount $testdir/ramspace
@@ -57,16 +53,14 @@ function pmem_unmount_ramspace
 	fi
 }
 
-function pmem_print_tc_name
-{
+function pmem_print_tc_name() {
 	echo ""
 	echo "==============================================================="
 	echo "Now running: $1"
 	echo "==============================================================="
 }
 
-function vhost_start()
-{
+function vhost_start() {
 	local vhost_pid
 
 	$rootdir/app/vhost/vhost &
@@ -76,8 +70,7 @@ function vhost_start()
 	waitforlisten $vhost_pid
 }
 
-function vhost_kill()
-{
+function vhost_kill() {
 	local vhost_pid_file="$testdir/vhost.pid"
 	local vhost_pid
 	vhost_pid="$(cat $vhost_pid_file)"

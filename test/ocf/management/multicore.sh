@@ -7,15 +7,13 @@ source $rootdir/test/common/autotest_common.sh
 rpc_py=$rootdir/scripts/rpc.py
 
 spdk_pid='?'
-function start_spdk()
-{
+function start_spdk() {
 	$rootdir/app/iscsi_tgt/iscsi_tgt &
 	spdk_pid=$!
 	trap 'killprocess $spdk_pid; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $spdk_pid
 }
-function stop_spdk()
-{
+function stop_spdk() {
 	killprocess $spdk_pid
 	trap - SIGINT SIGTERM EXIT
 }
@@ -24,8 +22,8 @@ start_spdk
 
 # Hotplug case
 
-$rpc_py bdev_malloc_create   1 512 -b Core0
-$rpc_py bdev_malloc_create   1 512 -b Core1
+$rpc_py bdev_malloc_create 1 512 -b Core0
+$rpc_py bdev_malloc_create 1 512 -b Core1
 
 $rpc_py bdev_ocf_create C1 wt Cache Core0
 $rpc_py bdev_ocf_create C2 wt Cache Core1
@@ -43,7 +41,7 @@ waitforbdev C2
 
 # Detaching cores
 
-$rpc_py  bdev_ocf_delete C2
+$rpc_py bdev_ocf_delete C2
 
 $rpc_py bdev_ocf_get_bdevs C1 | jq -e \
 	'.[0] | .started'
@@ -62,7 +60,7 @@ start_spdk
 
 $rpc_py bdev_malloc_create 101 512 -b Cache
 $rpc_py bdev_malloc_create 101 512 -b Malloc
-$rpc_py bdev_malloc_create   1 512 -b Core
+$rpc_py bdev_malloc_create 1 512 -b Core
 
 $rpc_py bdev_ocf_create C1 wt Cache Malloc
 $rpc_py bdev_ocf_create C2 wt Cache Core
