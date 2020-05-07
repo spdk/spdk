@@ -41,4 +41,6 @@ SO_SUFFIX := $(SO_VER).$(SO_MINOR)
 C_SRCS = notify.c notify_rpc.c
 LIBNAME = notify
 
+SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_notify.map)
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

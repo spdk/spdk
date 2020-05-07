@@ -1,0 +1,10 @@
+{
+	global:
+	spdk_notify_type_register;
+	spdk_notify_type_get_name;
+	spdk_notify_foreach_type;
+	spdk_notify_send;
+	spdk_notify_foreach_event;
+
+	local: *;
+};
