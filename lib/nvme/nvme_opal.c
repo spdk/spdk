@@ -834,7 +834,6 @@ opal_discovery0_end(struct spdk_opal_dev *dev, void *payload, uint32_t payload_s
 		SPDK_INFOLOG(SPDK_LOG_OPAL, "Single User Mode Not Supported\n");
 	}
 
-	dev->supported = true;
 	dev->comid = comid;
 	return 0;
 }
@@ -1766,9 +1765,7 @@ spdk_opal_cmd_take_ownership(struct spdk_opal_dev *dev, char *new_passwd)
 	struct spdk_opal_key opal_key = {};
 	struct opal_session *sess;
 
-	if (!dev || dev->supported == false) {
-		return -ENODEV;
-	}
+	assert(dev != NULL);
 
 	sess = opal_alloc_session(dev);
 	if (!sess) {
@@ -2040,9 +2037,7 @@ spdk_opal_cmd_revert_tper(struct spdk_opal_dev *dev, const char *passwd)
 	struct opal_session *sess;
 	struct spdk_opal_key opal_key = {};
 
-	if (dev->supported == false) {
-		return -ENOTSUP;
-	}
+	assert(dev != NULL);
 
 	ret = opal_init_key(&opal_key, passwd);
 	if (ret) {
@@ -2144,9 +2139,7 @@ spdk_opal_cmd_lock_unlock(struct spdk_opal_dev *dev, enum spdk_opal_user user,
 	struct spdk_opal_key opal_key = {};
 	int ret;
 
-	if (dev->supported == false) {
-		return -ENOTSUP;
-	}
+	assert(dev != NULL);
 
 	ret = opal_init_key(&opal_key, passwd);
 	if (ret != 0) {
@@ -2188,9 +2181,7 @@ spdk_opal_cmd_setup_locking_range(struct spdk_opal_dev *dev, enum spdk_opal_user
 	struct spdk_opal_key opal_key = {};
 	int ret;
 
-	if (dev->supported == false) {
-		return -ENOTSUP;
-	}
+	assert(dev != NULL);
 
 	ret = opal_init_key(&opal_key, passwd);
 	if (ret != 0) {
@@ -2231,9 +2222,7 @@ spdk_opal_cmd_get_max_ranges(struct spdk_opal_dev *dev, const char *passwd)
 	struct spdk_opal_key opal_key = {};
 	int ret;
 
-	if (dev->supported == false) {
-		return -ENOTSUP;
-	}
+	assert(dev != NULL);
 
 	if (dev->max_ranges) {
 		return dev->max_ranges;
@@ -2280,9 +2269,7 @@ spdk_opal_cmd_get_locking_range_info(struct spdk_opal_dev *dev, const char *pass
 	struct spdk_opal_key opal_key = {};
 	int ret;
 
-	if (dev->supported == false) {
-		return -ENOTSUP;
-	}
+	assert(dev != NULL);
 
 	ret = opal_init_key(&opal_key, passwd);
 	if (ret != 0) {
@@ -2323,9 +2310,7 @@ spdk_opal_cmd_enable_user(struct spdk_opal_dev *dev, enum spdk_opal_user user_id
 	struct spdk_opal_key opal_key = {};
 	int ret;
 
-	if (dev->supported == false) {
-		return -ENOTSUP;
-	}
+	assert(dev != NULL);
 
 	ret = opal_init_key(&opal_key, passwd);
 	if (ret != 0) {
@@ -2368,9 +2353,7 @@ spdk_opal_cmd_add_user_to_locking_range(struct spdk_opal_dev *dev, enum spdk_opa
 	struct spdk_opal_key opal_key = {};
 	int ret;
 
-	if (dev->supported == false) {
-		return -ENOTSUP;
-	}
+	assert(dev != NULL);
 
 	ret = opal_init_key(&opal_key, passwd);
 	if (ret != 0) {
@@ -2413,9 +2396,7 @@ spdk_opal_cmd_set_new_passwd(struct spdk_opal_dev *dev, enum spdk_opal_user user
 	struct spdk_opal_key new_key = {};
 	int ret;
 
-	if (dev->supported == false) {
-		return -ENOTSUP;
-	}
+	assert(dev != NULL);
 
 	ret = opal_init_key(&old_key, old_passwd);
 	if (ret != 0) {
@@ -2462,9 +2443,7 @@ spdk_opal_cmd_erase_locking_range(struct spdk_opal_dev *dev, enum spdk_opal_user
 	struct spdk_opal_key opal_key = {};
 	int ret;
 
-	if (dev->supported == false) {
-		return -ENODEV;
-	}
+	assert(dev != NULL);
 
 	ret = opal_init_key(&opal_key, password);
 	if (ret != 0) {
@@ -2506,9 +2485,7 @@ spdk_opal_cmd_secure_erase_locking_range(struct spdk_opal_dev *dev, enum spdk_op
 	struct spdk_opal_key *active_key;
 	int ret;
 
-	if (dev->supported == false) {
-		return -ENOTSUP;
-	}
+	assert(dev != NULL);
 
 	ret = opal_init_key(&opal_key, password);
 	if (ret != 0) {
@@ -2561,12 +2538,6 @@ struct spdk_opal_d0_features_info *
 spdk_opal_get_d0_features_info(struct spdk_opal_dev *dev)
 {
 	return &dev->feat_info;
-}
-
-bool
-spdk_opal_supported(struct spdk_opal_dev *dev)
-{
-	return dev->supported;
 }
 
 struct spdk_opal_locking_range_info *

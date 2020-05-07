@@ -259,7 +259,6 @@ struct opal_session {
 };
 
 struct spdk_opal_dev {
-	bool supported;
 	struct spdk_nvme_ctrlr *ctrlr;
 
 	uint16_t comid;
