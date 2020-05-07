@@ -82,7 +82,7 @@ check_available_nbd_disk(char *nbd_device)
 	}
 
 	/* make sure nbd_device is not registered inside SPDK */
-	nbd = spdk_nbd_disk_find_by_nbd_path(nbd_device);
+	nbd = nbd_disk_find_by_nbd_path(nbd_device);
 	if (nbd) {
 		/* nbd_device is in using */
 		return -EBUSY;
@@ -296,7 +296,7 @@ spdk_rpc_nbd_stop_disk(struct spdk_jsonrpc_request *request,
 	}
 
 	/* make sure nbd_device is registered */
-	nbd = spdk_nbd_disk_find_by_nbd_path(req.nbd_device);
+	nbd = nbd_disk_find_by_nbd_path(req.nbd_device);
 	if (!nbd) {
 		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
 		goto out;
@@ -347,9 +347,9 @@ spdk_rpc_dump_nbd_info(struct spdk_json_write_ctx *w,
 {
 	spdk_json_write_object_begin(w);
 
-	spdk_json_write_named_string(w, "nbd_device", spdk_nbd_disk_get_nbd_path(nbd));
+	spdk_json_write_named_string(w, "nbd_device", nbd_disk_get_nbd_path(nbd));
 
-	spdk_json_write_named_string(w, "bdev_name", spdk_nbd_disk_get_bdev_name(nbd));
+	spdk_json_write_named_string(w, "bdev_name", nbd_disk_get_bdev_name(nbd));
 
 	spdk_json_write_object_end(w);
 }
@@ -387,7 +387,7 @@ spdk_rpc_nbd_get_disks(struct spdk_jsonrpc_request *request,
 		}
 
 		if (req.nbd_device) {
-			nbd = spdk_nbd_disk_find_by_nbd_path(req.nbd_device);
+			nbd = nbd_disk_find_by_nbd_path(req.nbd_device);
 			if (nbd == NULL) {
 				SPDK_ERRLOG("nbd device '%s' does not exist\n", req.nbd_device);
 				spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
@@ -404,7 +404,7 @@ spdk_rpc_nbd_get_disks(struct spdk_jsonrpc_request *request,
 	if (nbd != NULL) {
 		spdk_rpc_dump_nbd_info(w, nbd);
 	} else {
-		for (nbd = spdk_nbd_disk_first(); nbd != NULL; nbd = spdk_nbd_disk_next(nbd)) {
+		for (nbd = nbd_disk_first(); nbd != NULL; nbd = nbd_disk_next(nbd)) {
 			spdk_rpc_dump_nbd_info(w, nbd);
 		}
 	}
