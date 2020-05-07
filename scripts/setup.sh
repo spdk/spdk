@@ -578,7 +578,7 @@ function status_linux() {
 
 	numa_nodes=0
 	shopt -s nullglob
-	for path in /sys/devices/system/node/node?/hugepages/hugepages-*/; do
+	for path in /sys/devices/system/node/node*/hugepages/hugepages-*/; do
 		numa_nodes=$((numa_nodes + 1))
 		free_pages=$(cat $path/free_hugepages)
 		all_pages=$(cat $path/nr_hugepages)
