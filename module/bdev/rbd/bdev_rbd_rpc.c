@@ -197,3 +197,56 @@ cleanup:
 }
 SPDK_RPC_REGISTER("bdev_rbd_delete", spdk_rpc_bdev_rbd_delete, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_rbd_delete, delete_rbd_bdev)
+
+struct rpc_bdev_rbd_resize {
+	char *name;
+	uint64_t new_size;
+};
+
+static const struct spdk_json_object_decoder rpc_bdev_rbd_resize_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_rbd_resize, name), spdk_json_decode_string},
+	{"new_size", offsetof(struct rpc_bdev_rbd_resize, new_size), spdk_json_decode_uint64}
+};
+
+static void
+free_rpc_bdev_rbd_resize(struct rpc_bdev_rbd_resize *req)
+{
+	free(req->name);
+}
+
+static void
+spdk_rpc_bdev_rbd_resize(struct spdk_jsonrpc_request *request,
+			 const struct spdk_json_val *params)
+{
+	struct rpc_bdev_rbd_resize req = {};
+	struct spdk_bdev *bdev;
+	struct spdk_json_write_ctx *w;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_bdev_rbd_resize_decoders,
+				    SPDK_COUNTOF(rpc_bdev_rbd_resize_decoders),
+				    &req)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
+	}
+
+	bdev = spdk_bdev_get_by_name(req.name);
+	if (bdev == NULL) {
+		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
+		goto cleanup;
+	}
+
+	rc = spdk_bdev_rbd_resize(bdev, req.new_size);
+	if (rc) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		goto cleanup;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+cleanup:
+	free_rpc_bdev_rbd_resize(&req);
+}
+SPDK_RPC_REGISTER("bdev_rbd_resize", spdk_rpc_bdev_rbd_resize, SPDK_RPC_RUNTIME)

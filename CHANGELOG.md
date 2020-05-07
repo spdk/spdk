@@ -153,6 +153,8 @@ A new RPC, `framework_get_reactors`, has been added to retrieve a list of all re
 `nvmf_set_config` now takes an argument to enable passthru of identify commands to base NVMe devices.
 Please see the nvmf section above for more details.
 
+A new RPC, `bdev_rbd_resize` has been added to resize the Ceph RBD bdev.
+
 ### scsi
 
 `spdk_scsi_lun_get_dif_ctx` now takes an additional argument of type `spdk_scsi_task`.

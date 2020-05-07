@@ -119,6 +119,12 @@ To remove a block device representation use the bdev_rbd_delete command.
 
 `rpc.py bdev_rbd_delete Rbd0`
 
+To resize a bdev use the bdev_rbd_resize command.
+
+`rpc.py bdev_rbd_resize Rbd0 4096`
+
+This command will resize the Rbd0 bdev to 4096 MiB.
+
 # Compression Virtual Bdev Module {#bdev_config_compress}
 
 The compression bdev module can be configured to provide compression/decompression
