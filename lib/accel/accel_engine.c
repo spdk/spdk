@@ -140,6 +140,50 @@ spdk_accel_submit_dualcast(struct spdk_accel_task *accel_req, struct spdk_io_cha
 					  _accel_engine_done);
 }
 
+/* Accel framework public API for batch_create function */
+struct spdk_accel_batch *
+spdk_accel_batch_create(struct spdk_io_channel *ch)
+{
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+
+	return accel_ch->engine->batch_create(accel_ch->ch);
+}
+
+/* Accel framework public API for batch_submit function */
+int
+spdk_accel_batch_submit(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
+			struct spdk_accel_batch *batch, spdk_accel_completion_cb cb)
+{
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+
+	accel_req->cb = cb;
+	return accel_ch->engine->batch_submit(accel_req->offload_ctx, accel_ch->ch, batch,
+					      _accel_engine_done);
+}
+
+/* Accel framework public API for getting max batch */
+uint32_t
+spdk_accel_batch_get_max(struct spdk_io_channel *ch)
+{
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+
+	return accel_ch->engine->batch_get_max();
+}
+
+/* Accel framework public API for batch prep_copy function */
+int
+spdk_accel_batch_prep_copy(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
+			   struct spdk_accel_batch *batch, void *dst, void *src, uint64_t nbytes,
+			   spdk_accel_completion_cb cb)
+{
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+
+	accel_req->cb = cb;
+	return accel_ch->engine->batch_prep_copy(accel_req->offload_ctx, accel_ch->ch, batch, dst, src,
+			nbytes,
+			_accel_engine_done);
+}
+
 /* Accel framework public API for compare function */
 int
 spdk_accel_submit_compare(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
@@ -419,6 +463,10 @@ static struct spdk_accel_engine sw_accel_engine = {
 	.get_capabilities	= sw_accel_get_capabilities,
 	.copy			= sw_accel_submit_copy,
 	.dualcast		= sw_accel_submit_dualcast,
+	.batch_get_max		= NULL, /* TODO */
+	.batch_create		= NULL, /* TODO */
+	.batch_prep_copy	= NULL, /* TODO */
+	.batch_submit		= NULL, /* TODO */
 	.compare		= sw_accel_submit_compare,
 	.fill			= sw_accel_submit_fill,
 	.crc32c			= sw_accel_submit_crc32c,

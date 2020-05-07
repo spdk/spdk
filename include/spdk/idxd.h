@@ -57,6 +57,11 @@ struct spdk_idxd_io_channel;
 struct spdk_idxd_device;
 
 /**
+ * Opaque handle for batching.
+ */
+struct idxd_batch;
+
+/**
  * Signature for configuring a channel
  *
  * \param chan IDXD channel to be configured.
@@ -138,7 +143,57 @@ void spdk_idxd_detach(struct spdk_idxd_device *idxd);
 void spdk_idxd_set_config(uint32_t config_number);
 
 /**
- * Build and submit a accel engine memory copy request.
+ * Return the max number of descriptors per batch for IDXD.
+ *
+ * \return max number of desciptors per batch.
+ */
+uint32_t spdk_idxd_batch_get_max(void);
+
+/**
+ * Create a batch sequence.
+ *
+ * \param chan IDXD channel to submit request.
+ *
+ * \return handle to use for subsequent batch requests, NULL on failure.
+ */
+struct idxd_batch *spdk_idxd_batch_create(struct spdk_idxd_io_channel *chan);
+
+/**
+ * Submit a batch sequence.
+ *
+ * \param chan IDXD channel to submit request.
+ * \param batch Handle provided when the batch was started with spdk_idxd_batch_create().
+ * \param cb_fn Callback function which will be called when the request is complete.
+ * \param cb_arg Opaque value which will be passed back as the arg parameter in
+ * the completion callback.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
+			   spdk_idxd_req_cb cb_fn, void *cb_arg);
+
+/**
+ * Synchronous call to prepare a copy request into a previously initialized batch
+ *  created with spdk_idxd_batch_create(). The callback will be called when the copy
+ *  completes after the batch has been submitted by an asynchronous call to
+ *  spdk_idxd_batch_submit().
+ *
+ * \param chan IDXD channel to submit request.
+ * \param batch Handle provided when the batch was started with spdk_idxd_batch_create().
+ * \param dst Destination virtual address.
+ * \param src Source virtual address.
+ * \param nbytes Number of bytes to copy.
+ * \param cb_fn Callback function which will be called when the request is complete.
+ * \param cb_arg Opaque value which will be passed back as the arg parameter in
+ * the completion callback.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_idxd_batch_prep_copy(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
+			      void *dst, const void *src, uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg);
+
+/**
+ * Build and submit a idxd memory copy request.
  *
  * This function will build the copy descriptor and then immediately submit
  * by writing to the proper device portal.
@@ -158,7 +213,7 @@ int spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan,
 			  spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**
- * Build and submit an accel engine dual cast copy request.
+ * Build and submit an idxd dual cast copy request.
  *
  * This function will build the dual cast descriptor and then immediately submit
  * by writing to the proper device portal.
@@ -179,7 +234,7 @@ int spdk_idxd_submit_dualcast(struct spdk_idxd_io_channel *chan,
 			      spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**
- * Build and submit a memory compare request.
+ * Build and submit an idxd memory compare request.
  *
  * This function will build the compare descriptor and then immediately submit
  * by writing to the proper device portal.
@@ -199,7 +254,7 @@ int spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan,
 			     spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**
- * Build and submit a accel engine memory fill request.
+ * Build and submit an idxd memory fill request.
  *
  * This function will build the fill descriptor and then immediately submit
  * by writing to the proper device portal.
@@ -219,7 +274,7 @@ int spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan,
 			  spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**
- * Build and submit a memory CRC32-C request.
+ * Build and submit an idxd memory CRC32-C request.
  *
  * This function will build the CRC-32C descriptor and then immediately submit
  * by writing to the proper device portal.

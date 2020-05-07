@@ -6,6 +6,10 @@
 	spdk_idxd_reconfigure_chan;
 	spdk_idxd_probe;
 	spdk_idxd_detach;
+	spdk_idxd_batch_prep_copy;
+	spdk_idxd_batch_submit;
+	spdk_idxd_batch_create;
+	spdk_idxd_batch_get_max;
 	spdk_idxd_set_config;
 	spdk_idxd_submit_compare;
 	spdk_idxd_submit_crc32c;

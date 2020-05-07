@@ -104,6 +104,8 @@ struct spdk_idxd_io_channel *
 spdk_idxd_get_channel(struct spdk_idxd_device *idxd)
 {
 	struct spdk_idxd_io_channel *chan;
+	struct idxd_batch *batch;
+	int i;
 
 	chan = calloc(1, sizeof(struct spdk_idxd_io_channel));
 	if (chan == NULL) {
@@ -111,6 +113,22 @@ spdk_idxd_get_channel(struct spdk_idxd_device *idxd)
 		return NULL;
 	}
 	chan->idxd = idxd;
+
+	TAILQ_INIT(&chan->batches);
+
+	TAILQ_INIT(&chan->batch_pool);
+	for (i = 0 ; i < NUM_BATCHES ; i++) {
+		batch = calloc(1, sizeof(struct idxd_batch));
+		if (batch == NULL) {
+			SPDK_ERRLOG("Failed to allocate batch\n");
+			while ((batch = TAILQ_FIRST(&chan->batch_pool))) {
+				TAILQ_REMOVE(&chan->batch_pool, batch, link);
+				free(batch);
+			}
+			return NULL;
+		}
+		TAILQ_INSERT_TAIL(&chan->batch_pool, batch, link);
+	}
 
 	return chan;
 }
@@ -125,7 +143,9 @@ int
 spdk_idxd_configure_chan(struct spdk_idxd_io_channel *chan)
 {
 	uint32_t num_ring_slots;
+	int rc;
 
+	/* Round robin the WQ selection for the chan on this IDXD device. */
 	chan->idxd->wq_id++;
 	if (chan->idxd->wq_id == g_dev_cfg->total_wqs) {
 		chan->idxd->wq_id = 0;
@@ -148,13 +168,13 @@ spdk_idxd_configure_chan(struct spdk_idxd_io_channel *chan)
 	/* Store the original size of the ring. */
 	chan->ring_ctrl.ring_size = num_ring_slots;
 
-	chan->ring_ctrl.data_desc = spdk_zmalloc(num_ring_slots * sizeof(struct idxd_hw_desc),
-				    0x40, NULL,
-				    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
-	if (chan->ring_ctrl.data_desc == NULL) {
+	chan->ring_ctrl.desc = spdk_zmalloc(num_ring_slots * sizeof(struct idxd_hw_desc),
+					    0x40, NULL,
+					    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+	if (chan->ring_ctrl.desc == NULL) {
 		SPDK_ERRLOG("Failed to allocate descriptor memory\n");
-		spdk_bit_array_free(&chan->ring_ctrl.ring_slots);
-		return -ENOMEM;
+		rc = -ENOMEM;
+		goto err_desc;
 	}
 
 	chan->ring_ctrl.completions = spdk_zmalloc(num_ring_slots * sizeof(struct idxd_comp),
@@ -162,12 +182,78 @@ spdk_idxd_configure_chan(struct spdk_idxd_io_channel *chan)
 				      SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (chan->ring_ctrl.completions == NULL) {
 		SPDK_ERRLOG("Failed to allocate completion memory\n");
-		spdk_bit_array_free(&chan->ring_ctrl.ring_slots);
-		spdk_free(chan->ring_ctrl.data_desc);
-		return -ENOMEM;
+		rc = -ENOMEM;
+		goto err_comp;
+	}
+
+	chan->ring_ctrl.user_desc = spdk_zmalloc(TOTAL_USER_DESC * sizeof(struct idxd_hw_desc),
+				    0x40, NULL,
+				    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+	if (chan->ring_ctrl.user_desc == NULL) {
+		SPDK_ERRLOG("Failed to allocate batch descriptor memory\n");
+		rc = -ENOMEM;
+		goto err_user_desc;
+	}
+
+	/* Each slot on the ring reserves DESC_PER_BATCH elemnts in user_desc. */
+	chan->ring_ctrl.user_ring_slots = spdk_bit_array_create(NUM_BATCHES);
+	if (chan->ring_ctrl.user_ring_slots == NULL) {
+		SPDK_ERRLOG("Failed to allocate bit array for user ring\n");
+		rc = -ENOMEM;
+		goto err_user_ring;
+	}
+
+	chan->ring_ctrl.user_completions = spdk_zmalloc(TOTAL_USER_DESC * sizeof(struct idxd_comp),
+					   0x40, NULL,
+					   SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+	if (chan->ring_ctrl.user_completions == NULL) {
+		SPDK_ERRLOG("Failed to allocate user completion memory\n");
+		rc = -ENOMEM;
+		goto err_user_comp;
 	}
 
 	chan->ring_ctrl.portal = (char *)chan->idxd->portals + chan->idxd->wq_id * PORTAL_SIZE;
+
+	return 0;
+
+err_user_comp:
+	spdk_bit_array_free(&chan->ring_ctrl.user_ring_slots);
+err_user_ring:
+	spdk_free(chan->ring_ctrl.user_desc);
+err_user_desc:
+	spdk_free(chan->ring_ctrl.completions);
+err_comp:
+	spdk_free(chan->ring_ctrl.desc);
+err_desc:
+	spdk_bit_array_free(&chan->ring_ctrl.ring_slots);
+
+	return rc;
+}
+
+/* Used for control commands, not for descriptor submission. */
+static int
+idxd_wait_cmd(struct spdk_idxd_device *idxd, int _timeout)
+{
+	uint32_t timeout = _timeout;
+	union idxd_cmdsts_reg cmd_status = {};
+
+	cmd_status.raw = _idxd_read_4(idxd, IDXD_CMDSTS_OFFSET);
+	while (cmd_status.active && --timeout) {
+		usleep(1);
+		cmd_status.raw = _idxd_read_4(idxd, IDXD_CMDSTS_OFFSET);
+	}
+
+	/* Check for timeout */
+	if (timeout == 0 && cmd_status.active) {
+		SPDK_ERRLOG("Command timeout, waited %u\n", _timeout);
+		return -EBUSY;
+	}
+
+	/* Check for error */
+	if (cmd_status.err) {
+		SPDK_ERRLOG("Command status reg reports error 0x%x\n", cmd_status.err);
+		return -EINVAL;
+	}
 
 	return 0;
 }
@@ -178,10 +264,6 @@ _idxd_drain(struct spdk_idxd_io_channel *chan)
 	uint32_t index;
 	int set = 0;
 
-	/*
-	 * TODO this is a temp solution to drain until getting the drain cmd to work, this
-	 * provides equivalent functionality but just doesn't use the device to do it.
-	 */
 	do {
 		spdk_idxd_process_events(chan);
 		set = 0;
@@ -196,6 +278,7 @@ spdk_idxd_reconfigure_chan(struct spdk_idxd_io_channel *chan, uint32_t num_chann
 {
 	uint32_t num_ring_slots;
 	int rc;
+	struct idxd_batch *batch;
 
 	_idxd_drain(chan);
 
@@ -203,8 +286,15 @@ spdk_idxd_reconfigure_chan(struct spdk_idxd_io_channel *chan, uint32_t num_chann
 
 	if (num_channels == 0) {
 		spdk_free(chan->ring_ctrl.completions);
-		spdk_free(chan->ring_ctrl.data_desc);
+		spdk_free(chan->ring_ctrl.desc);
 		spdk_bit_array_free(&chan->ring_ctrl.ring_slots);
+		spdk_free(chan->ring_ctrl.user_completions);
+		spdk_free(chan->ring_ctrl.user_desc);
+		spdk_bit_array_free(&chan->ring_ctrl.user_ring_slots);
+		while ((batch = TAILQ_FIRST(&chan->batch_pool))) {
+			TAILQ_REMOVE(&chan->batch_pool, batch, link);
+			free(batch);
+		}
 		return 0;
 	}
 
@@ -218,6 +308,12 @@ spdk_idxd_reconfigure_chan(struct spdk_idxd_io_channel *chan, uint32_t num_chann
 	}
 
 	chan->ring_ctrl.max_ring_slots = num_ring_slots;
+
+	/*
+	 * Note: The batch descriptor ring does not change with the
+	 * number of channels as descriptors on this ring do not
+	 * "count" for flow control.
+	 */
 
 	return rc;
 }
@@ -282,34 +378,6 @@ idxd_map_pci_bars(struct spdk_idxd_device *idxd)
 		return -EINVAL;
 	}
 	idxd->portals = addr;
-
-	return 0;
-}
-
-/* Used for control commands, not for descriptor submission. */
-static int
-idxd_wait_cmd(struct spdk_idxd_device *idxd, int _timeout)
-{
-	uint32_t timeout = _timeout;
-	union idxd_cmdsts_reg cmd_status = {};
-
-	cmd_status.raw = _idxd_read_4(idxd, IDXD_CMDSTS_OFFSET);
-	while (cmd_status.active && --timeout) {
-		usleep(1);
-		cmd_status.raw = _idxd_read_4(idxd, IDXD_CMDSTS_OFFSET);
-	}
-
-	/* Check for timeout */
-	if (timeout == 0 && cmd_status.active) {
-		SPDK_ERRLOG("Command timeout, waited %u\n", _timeout);
-		return -EBUSY;
-	}
-
-	/* Check for error */
-	if (cmd_status.err) {
-		SPDK_ERRLOG("Command status reg reports error 0x%x\n", cmd_status.err);
-		return -EINVAL;
-	}
 
 	return 0;
 }
@@ -639,8 +707,8 @@ spdk_idxd_detach(struct spdk_idxd_device *idxd)
 }
 
 static struct idxd_hw_desc *
-_idxd_prep_command(struct spdk_idxd_io_channel *chan,
-		   spdk_idxd_req_cb cb_fn, void *cb_arg)
+_idxd_prep_command(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
+		   void *cb_arg, struct idxd_batch *batch)
 {
 	uint32_t index;
 	struct idxd_hw_desc *desc;
@@ -654,26 +722,30 @@ _idxd_prep_command(struct spdk_idxd_io_channel *chan,
 
 	spdk_bit_array_set(chan->ring_ctrl.ring_slots, index);
 
-	desc = &chan->ring_ctrl.data_desc[index];
+	desc = &chan->ring_ctrl.desc[index];
 	comp = &chan->ring_ctrl.completions[index];
 
 	desc->flags = IDXD_FLAG_COMPLETION_ADDR_VALID | IDXD_FLAG_REQUEST_COMPLETION;
 	desc->completion_addr = (uintptr_t)&comp->hw;
 	comp->cb_arg = cb_arg;
 	comp->cb_fn = cb_fn;
+	if (batch) {
+		assert(comp->batch == NULL);
+		comp->batch = batch;
+		batch->batch_desc_index = index;
+	}
 
 	return desc;
 }
 
 int
 spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan, void *dst, const void *src,
-		      uint64_t nbytes,
-		      spdk_idxd_req_cb cb_fn, void *cb_arg)
+		      uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
 
 	/* Common prep. */
-	desc = _idxd_prep_command(chan, cb_fn, cb_arg);
+	desc = _idxd_prep_command(chan, cb_fn, cb_arg, NULL);
 	if (desc == NULL) {
 		return -EBUSY;
 	}
@@ -703,7 +775,7 @@ spdk_idxd_submit_dualcast(struct spdk_idxd_io_channel *chan, void *dst1, void *d
 	}
 
 	/* Common prep. */
-	desc = _idxd_prep_command(chan, cb_fn, cb_arg);
+	desc = _idxd_prep_command(chan, cb_fn, cb_arg, NULL);
 	if (desc == NULL) {
 		return -EBUSY;
 	}
@@ -729,7 +801,7 @@ spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan, void *src1, const vo
 	struct idxd_hw_desc *desc;
 
 	/* Common prep. */
-	desc = _idxd_prep_command(chan, cb_fn, cb_arg);
+	desc = _idxd_prep_command(chan, cb_fn, cb_arg, NULL);
 	if (desc == NULL) {
 		return -EBUSY;
 	}
@@ -754,7 +826,7 @@ spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan, void *dst, uint64_t fil
 	struct idxd_hw_desc *desc;
 
 	/* Common prep. */
-	desc = _idxd_prep_command(chan, cb_fn, cb_arg);
+	desc = _idxd_prep_command(chan, cb_fn, cb_arg, NULL);
 	if (desc == NULL) {
 		return -EBUSY;
 	}
@@ -779,7 +851,7 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan, uint32_t *dst, void *
 	struct idxd_hw_desc *desc;
 
 	/* Common prep. */
-	desc = _idxd_prep_command(chan, cb_fn, cb_arg);
+	desc = _idxd_prep_command(chan, cb_fn, cb_arg, NULL);
 	if (desc == NULL) {
 		return -EBUSY;
 	}
@@ -794,6 +866,141 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan, uint32_t *dst, void *
 
 	/* Submit operation. */
 	movdir64b(chan->ring_ctrl.portal, desc);
+
+	return 0;
+}
+
+uint32_t
+spdk_idxd_batch_get_max(void)
+{
+	return DESC_PER_BATCH; /* TODO maybe add startup RPC to set this */
+}
+
+struct idxd_batch *
+spdk_idxd_batch_create(struct spdk_idxd_io_channel *chan)
+{
+	struct idxd_batch *batch = NULL;
+
+	if (!TAILQ_EMPTY(&chan->batch_pool)) {
+		batch = TAILQ_FIRST(&chan->batch_pool);
+		TAILQ_REMOVE(&chan->batch_pool, batch, link);
+	} else {
+		/* The application needs to handle this. */
+		return NULL;
+	}
+
+	batch->batch_num = spdk_bit_array_find_first_clear(chan->ring_ctrl.user_ring_slots, 0);
+	if (batch->batch_num == UINT32_MAX) {
+		/* ran out of ring slots, the application needs to handle this. */
+		TAILQ_INSERT_TAIL(&chan->batch_pool, batch, link);
+		return NULL;
+	}
+
+	spdk_bit_array_set(chan->ring_ctrl.user_ring_slots, batch->batch_num);
+
+	/*
+	 * Find the first descriptor address for the given batch. The
+	 * descriptor ring used for user desctipors is allocated in
+	 * units of DESC_PER_BATCH.  The actual index is in units of
+	 * one descriptor.
+	 */
+	batch->start_index = batch->cur_index = batch->batch_num * DESC_PER_BATCH;
+
+	TAILQ_INSERT_TAIL(&chan->batches, batch, link);
+	SPDK_DEBUGLOG(SPDK_LOG_IDXD, "New batch %p num %u\n", batch, batch->batch_num);
+
+	return batch;
+}
+
+static bool
+_does_batch_exist(struct idxd_batch *batch, struct spdk_idxd_io_channel *chan)
+{
+	bool found = false;
+	struct idxd_batch *cur_batch;
+
+	TAILQ_FOREACH(cur_batch, &chan->batches, link) {
+		if (cur_batch == batch) {
+			found = true;
+			break;
+		}
+	}
+
+	return found;
+}
+
+int
+spdk_idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
+		       spdk_idxd_req_cb cb_fn, void *cb_arg)
+{
+	struct idxd_hw_desc *desc;
+
+	if (_does_batch_exist(batch, chan) == false) {
+		SPDK_ERRLOG("Attempt to submit a batch that doesn't exist\n.");
+		return -EINVAL;
+	}
+
+	/* Common prep. */
+	desc = _idxd_prep_command(chan, cb_fn, cb_arg, batch);
+	if (desc == NULL) {
+		SPDK_DEBUGLOG(SPDK_LOG_IDXD, "Can't submit batch %p busy batch num %u\n", batch, batch->batch_num);
+		return -EBUSY;
+	}
+
+	/* Command specific. */
+	desc->opcode = IDXD_OPCODE_BATCH;
+	desc->desc_list_addr = (uint64_t)&chan->ring_ctrl.user_desc[batch->start_index];
+	desc->desc_count = batch->cur_index - batch->start_index;
+	assert(desc->desc_count <= DESC_PER_BATCH);
+
+	if (desc->desc_count < MIN_USER_DESC_COUNT) {
+		SPDK_ERRLOG("Attempt to submit a batch without at least %u operations.\n",
+			    MIN_USER_DESC_COUNT);
+		return -EINVAL;
+	}
+
+	/* Total completions for the batch = num desc plus 1 for the batch desc itself. */
+	batch->remaining = desc->desc_count + 1;
+
+	/* Submit operation. */
+	movdir64b(chan->ring_ctrl.portal, desc);
+
+	return 0;
+}
+
+int
+spdk_idxd_batch_prep_copy(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
+			  void *dst, const void *src, uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
+{
+	struct idxd_hw_desc *desc;
+	struct idxd_comp *comp;
+
+	if (_does_batch_exist(batch, chan) == false) {
+		SPDK_ERRLOG("Attempt to add to a batch that doesn't exist\n.");
+		return -EINVAL;
+	}
+
+	if ((batch->cur_index - batch->start_index) == DESC_PER_BATCH) {
+		SPDK_ERRLOG("Attempt to add to a batch that is already full\n.");
+		return -ENOMEM;
+	}
+
+	desc = &chan->ring_ctrl.user_desc[batch->cur_index];
+	comp = &chan->ring_ctrl.user_completions[batch->cur_index];
+	SPDK_DEBUGLOG(SPDK_LOG_IDXD, "Prep batch %p index %u\n", batch, batch->cur_index);
+
+	batch->cur_index++;
+	assert(batch->cur_index > batch->start_index);
+
+	desc->flags = IDXD_FLAG_COMPLETION_ADDR_VALID | IDXD_FLAG_REQUEST_COMPLETION;
+	desc->opcode = IDXD_OPCODE_MEMMOVE;
+	desc->src_addr = (uint64_t)src;
+	desc->dst_addr = (uint64_t)dst;
+	desc->xfer_size = nbytes;
+
+	desc->completion_addr = (uint64_t)&comp->hw;
+	comp->cb_arg = cb_arg;
+	comp->cb_fn = cb_fn;
+	comp->batch = batch;
 
 	return 0;
 }
@@ -817,6 +1024,77 @@ _dump_error_reg(struct spdk_idxd_io_channel *chan)
 	SPDK_NOTICELOG("SW Error Operation: %u\n", (uint8_t)(sw_error_0 >> 32));
 }
 
+static void
+_free_batch(struct idxd_batch *batch, struct spdk_idxd_io_channel *chan,
+	    struct idxd_comp *comp)
+{
+	TAILQ_REMOVE(&chan->batches, batch, link);
+	TAILQ_INSERT_TAIL(&chan->batch_pool, batch, link);
+	comp->batch = NULL;
+	spdk_bit_array_clear(chan->ring_ctrl.user_ring_slots, batch->batch_num);
+	spdk_bit_array_clear(chan->ring_ctrl.ring_slots, batch->batch_desc_index);
+}
+
+static void
+_spdk_idxd_process_batch_events(struct spdk_idxd_io_channel *chan)
+{
+	uint16_t index;
+	struct idxd_comp *comp;
+	uint64_t sw_error_0;
+	int status = 0;
+	struct idxd_batch *batch;
+
+	/*
+	 * We don't check the bit array for user completions as there's only
+	 * one bit per per batch.
+	 */
+	for (index = 0; index < TOTAL_USER_DESC; index++) {
+		comp = &chan->ring_ctrl.user_completions[index];
+		if (comp->hw.status == 1) {
+			struct idxd_hw_desc *desc;
+
+			sw_error_0 = _idxd_read_8(chan->idxd, IDXD_SWERR_OFFSET);
+			if (sw_error_0 & 0x1) {
+				_dump_error_reg(chan);
+				status = -EINVAL;
+			}
+
+			desc = &chan->ring_ctrl.user_desc[index];
+			switch (desc->opcode) {
+			case IDXD_OPCODE_CRC32C_GEN:
+				*(uint32_t *)desc->dst_addr = comp->hw.crc32c_val;
+				*(uint32_t *)desc->dst_addr ^= ~0;
+				break;
+			case IDXD_OPCODE_COMPARE:
+				if (status == 0) {
+					status = comp->hw.result;
+				}
+				break;
+			case IDXD_OPCODE_MEMMOVE:
+				break;
+			default:
+				assert(false);
+				break;
+			}
+
+			/* The hw will complete all user desc first before the batch
+			 * desc (see spec for configuration exceptions) however
+			 * because of the order that we check for comps in the poller
+			 * we may "see" them in a different order than they actually
+			 * completed in.
+			 */
+			batch = comp->batch;
+			assert(batch->remaining > 0);
+			if (--batch->remaining == 0) {
+				_free_batch(batch, chan, comp);
+			}
+
+			comp->cb_fn((void *)comp->cb_arg, status);
+			comp->hw.status = status = 0;
+		}
+	}
+}
+
 /*
  * TODO: Experiment with different methods of reaping completions for performance
  * once we have real silicon.
@@ -828,6 +1106,11 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 	struct idxd_comp *comp;
 	uint64_t sw_error_0;
 	int status = 0;
+	struct idxd_batch *batch;
+
+	if (!TAILQ_EMPTY(&chan->batches)) {
+		_spdk_idxd_process_batch_events(chan);
+	}
 
 	for (index = 0; index < chan->ring_ctrl.max_ring_slots; index++) {
 		if (spdk_bit_array_get(chan->ring_ctrl.ring_slots, index)) {
@@ -841,8 +1124,21 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 					status = -EINVAL;
 				}
 
-				desc = &chan->ring_ctrl.data_desc[index];
+				desc = &chan->ring_ctrl.desc[index];
 				switch (desc->opcode) {
+				case IDXD_OPCODE_BATCH:
+					/* The hw will complete all user desc first before the batch
+					 * desc (see spec for configuration exceptions) however
+					 * because of the order that we check for comps in the poller
+					 * we may "see" them in a different order than they actually
+					 * completed in.
+					 */
+					batch = comp->batch;
+					assert(batch->remaining > 0);
+					if (--batch->remaining == 0) {
+						_free_batch(batch, chan, comp);
+					}
+					break;
 				case IDXD_OPCODE_CRC32C_GEN:
 					*(uint32_t *)desc->dst_addr = comp->hw.crc32c_val;
 					*(uint32_t *)desc->dst_addr ^= ~0;
@@ -856,7 +1152,9 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 
 				comp->cb_fn(comp->cb_arg, status);
 				comp->hw.status = status = 0;
-				spdk_bit_array_clear(chan->ring_ctrl.ring_slots, index);
+				if (desc->opcode != IDXD_OPCODE_BATCH) {
+					spdk_bit_array_clear(chan->ring_ctrl.ring_slots, index);
+				}
 			}
 		}
 	}
