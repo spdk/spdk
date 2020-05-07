@@ -6,6 +6,13 @@ if [ "$(uname -s)" = "FreeBSD" ]; then
 fi
 
 rootdir=$(readlink -f $(dirname $0)/../..)
+
+if [[ ! -f $1 ]]; then
+	echo "ERROR: SPDK test configuration not specified"
+	exit 1
+fi
+
+source $1
 source "$rootdir/test/common/autotest_common.sh"
 
 libdir="$rootdir/build/lib"
@@ -178,6 +185,7 @@ function confirm_deps() {
 # symbol dependencies we have.
 sed -i -e 's,include $(SPDK_ROOT_DIR)/mk/spdk.lib_deps.mk,,g' "$rootdir/mk/spdk.lib.mk"
 
+source ~/autorun-spdk.conf
 config_params=$(get_config_params)
 if [ "$SPDK_TEST_OCF" -eq 1 ]; then
 	config_params="$config_params --with-ocf=$rootdir/build/ocf.a"

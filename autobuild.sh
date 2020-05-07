@@ -155,7 +155,7 @@ function autobuild_test_suite() {
 	if [ "$SPDK_TEST_OCF" -eq 1 ]; then
 		run_test "autobuild_ocf_precompile" ocf_precompile
 	fi
-	run_test "autobuild_check_so_deps" $rootdir/test/make/check_so_deps.sh
+	run_test "autobuild_check_so_deps" $rootdir/test/make/check_so_deps.sh $1
 	run_test "scanbuild_make" scanbuild_make
 	run_test "autobuild_generated_files_check" porcelain_check
 	run_test "autobuild_header_dependency_check" header_dependency_check
@@ -177,7 +177,7 @@ if [ $SPDK_RUN_UBSAN -eq 1 ]; then
 fi
 
 if [ "$SPDK_TEST_AUTOBUILD" -eq 1 ]; then
-	run_test "autobuild" autobuild_test_suite
+	run_test "autobuild" autobuild_test_suite $1
 else
 	if [ "$SPDK_TEST_OCF" -eq 1 ]; then
 		run_test "autobuild_ocf_precompile" ocf_precompile
