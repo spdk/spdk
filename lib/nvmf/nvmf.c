@@ -525,7 +525,8 @@ spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_
 		spdk_json_write_named_object_begin(w, "params");
 		spdk_json_write_named_string(w, "trtype", spdk_nvme_transport_id_trtype_str(transport->ops->type));
 		spdk_json_write_named_uint32(w, "max_queue_depth", transport->opts.max_queue_depth);
-		spdk_json_write_named_uint32(w, "max_qpairs_per_ctrlr", transport->opts.max_qpairs_per_ctrlr);
+		spdk_json_write_named_uint32(w, "max_io_qpairs_per_ctrlr",
+					     transport->opts.max_qpairs_per_ctrlr - 1);
 		spdk_json_write_named_uint32(w, "in_capsule_data_size", transport->opts.in_capsule_data_size);
 		spdk_json_write_named_uint32(w, "max_io_size", transport->opts.max_io_size);
 		spdk_json_write_named_uint32(w, "io_unit_size", transport->opts.io_unit_size);

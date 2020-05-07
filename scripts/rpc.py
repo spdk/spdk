@@ -1715,6 +1715,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                        tgt_name=args.tgt_name,
                                        max_queue_depth=args.max_queue_depth,
                                        max_qpairs_per_ctrlr=args.max_qpairs_per_ctrlr,
+                                       max_io_qpairs_per_ctrlr=args.max_io_qpairs_per_ctrlr,
                                        in_capsule_data_size=args.in_capsule_data_size,
                                        max_io_size=args.max_io_size,
                                        io_unit_size=args.io_unit_size,
@@ -1731,7 +1732,9 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-t', '--trtype', help='Transport type (ex. RDMA)', type=str, required=True)
     p.add_argument('-g', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.add_argument('-q', '--max-queue-depth', help='Max number of outstanding I/O per queue', type=int)
-    p.add_argument('-p', '--max-qpairs-per-ctrlr', help='Max number of SQ and CQ per controller', type=int)
+    p.add_argument('-p', '--max-qpairs-per-ctrlr', help="""Max number of SQ and CQ per controller.
+    Deprecated, use max-io-qpairs-per-ctrlr""", type=int)
+    p.add_argument('-m', '--max-io-qpairs-per-ctrlr', help='Max number of IO qpairs per controller', type=int)
     p.add_argument('-c', '--in-capsule-data-size', help='Max number of in-capsule data size', type=int)
     p.add_argument('-i', '--max-io-size', help='Max I/O size (bytes)', type=int)
     p.add_argument('-u', '--io-unit-size', help='I/O unit size (bytes)', type=int)

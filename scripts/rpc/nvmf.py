@@ -96,6 +96,7 @@ def nvmf_create_transport(client,
                           tgt_name=None,
                           max_queue_depth=None,
                           max_qpairs_per_ctrlr=None,
+                          max_io_qpairs_per_ctrlr=None,
                           in_capsule_data_size=None,
                           max_io_size=None,
                           io_unit_size=None,
@@ -112,7 +113,8 @@ def nvmf_create_transport(client,
     Args:
         trtype: Transport type (ex. RDMA)
         max_queue_depth: Max number of outstanding I/O per queue (optional)
-        max_qpairs_per_ctrlr: Max number of SQ and CQ per controller (optional)
+        max_qpairs_per_ctrlr: Max number of SQ and CQ per controller (optional, deprecated, use max_io_qpairs_per_ctrlr)
+        max_io_qpairs_per_ctrlr: Max number of IO qpairs per controller (optional)
         in_capsule_data_size: Maximum in-capsule data size in bytes (optional)
         max_io_size: Maximum I/O data size in bytes (optional)
         io_unit_size: I/O unit size in bytes (optional)
@@ -135,7 +137,10 @@ def nvmf_create_transport(client,
     if max_queue_depth:
         params['max_queue_depth'] = max_queue_depth
     if max_qpairs_per_ctrlr:
+        print("WARNING: max_qpairs_per_ctrlr is deprecated, please use max_io_qpairs_per_ctrlr.")
         params['max_qpairs_per_ctrlr'] = max_qpairs_per_ctrlr
+    if max_io_qpairs_per_ctrlr:
+        params['max_io_qpairs_per_ctrlr'] = max_io_qpairs_per_ctrlr
     if in_capsule_data_size:
         params['in_capsule_data_size'] = in_capsule_data_size
     if max_io_size:

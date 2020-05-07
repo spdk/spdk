@@ -1821,11 +1821,11 @@ nvmf_fc_create(struct spdk_nvmf_transport_opts *opts)
 
 	SPDK_INFOLOG(SPDK_LOG_NVMF_FC, "*** FC Transport Init ***\n"
 		     "  Transport opts:  max_ioq_depth=%d, max_io_size=%d,\n"
-		     "  max_qpairs_per_ctrlr=%d, io_unit_size=%d,\n"
+		     "  max_io_qpairs_per_ctrlr=%d, io_unit_size=%d,\n"
 		     "  max_aq_depth=%d\n",
 		     opts->max_queue_depth,
 		     opts->max_io_size,
-		     opts->max_qpairs_per_ctrlr,
+		     opts->max_qpairs_per_ctrlr - 1,
 		     opts->io_unit_size,
 		     opts->max_aq_depth);
 

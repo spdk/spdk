@@ -2289,12 +2289,12 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 
 	SPDK_INFOLOG(SPDK_LOG_RDMA, "*** RDMA Transport Init ***\n"
 		     "  Transport opts:  max_ioq_depth=%d, max_io_size=%d,\n"
-		     "  max_qpairs_per_ctrlr=%d, io_unit_size=%d,\n"
+		     "  max_io_qpairs_per_ctrlr=%d, io_unit_size=%d,\n"
 		     "  in_capsule_data_size=%d, max_aq_depth=%d,\n"
 		     "  num_shared_buffers=%d, max_srq_depth=%d, no_srq=%d\n",
 		     opts->max_queue_depth,
 		     opts->max_io_size,
-		     opts->max_qpairs_per_ctrlr,
+		     opts->max_qpairs_per_ctrlr - 1,
 		     opts->io_unit_size,
 		     opts->in_capsule_data_size,
 		     opts->max_aq_depth,

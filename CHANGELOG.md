@@ -26,6 +26,14 @@ Two providers are available - verbs (used by default when RDMA is enabled or ena
 using --with-rdma=verbs) and mlx5 Direct Verbs aka DV (enabled by --with-rdma=mlx5_dv).
 Using mlx5_dv requires libmlx5 installed on the system.
 
+### rpc
+
+Parameter `-p` or `--max-qpairs-per-ctrlr` of `nvmf_create_transport` RPC command accepted by the
+rpc.py script is deprecated, new parameter `-m` or `--max-io-qpairs-per-ctrlr` is added.
+
+Parameter `max_qpairs_per_ctrlr` of `nvmf_create_transport` RPC command accepted by the NVMF target
+is deprecated, new parameter `max_io_qpairs_per_ctrlr` is added.
+
 ### sock
 
 Added `spdk_sock_impl_get_opts` and `spdk_sock_impl_set_opts` functions to set/get socket layer configuration

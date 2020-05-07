@@ -1559,6 +1559,46 @@ struct nvmf_rpc_create_transport_ctx {
 	struct spdk_jsonrpc_request	*request;
 };
 
+/**
+ * `max_qpairs_per_ctrlr` represents both admin and IO qpairs, that confuses
+ * users when they configure a transport using RPC. So it was decided to
+ * deprecate `max_qpairs_per_ctrlr` RPC parameter and use `max_io_qpairs_per_ctrlr`
+ * But internal logic remains unchanged and SPDK expects that
+ * spdk_nvmf_transport_opts::max_qpairs_per_ctrlr includes an admin qpair.
+ * This function parses the number of IO qpairs and adds +1 for admin qpair.
+ */
+static int
+nvmf_rpc_decode_max_io_qpairs(const struct spdk_json_val *val, void *out)
+{
+	uint16_t *i = out;
+	int rc;
+
+	rc = spdk_json_number_to_uint16(val, i);
+	if (rc == 0) {
+		(*i)++;
+	}
+
+	return rc;
+}
+
+/**
+ * This function parses deprecated `max_qpairs_per_ctrlr` and warns the user to use
+ * the new parameter `max_io_qpairs_per_ctrlr`
+ */
+static int
+nvmf_rpc_decode_max_qpairs(const struct spdk_json_val *val, void *out)
+{
+	uint16_t *i = out;
+	int rc;
+
+	rc = spdk_json_number_to_uint16(val, i);
+	if (rc == 0) {
+		SPDK_WARNLOG("Parameter max_qpairs_per_ctrlr is deprecated, use max_io_qpairs_per_ctrlr instead.\n");
+	}
+
+	return rc;
+}
+
 static const struct spdk_json_object_decoder nvmf_rpc_create_transport_decoder[] = {
 	{	"trtype", offsetof(struct nvmf_rpc_create_transport_ctx, trtype), spdk_json_decode_string},
 	{
@@ -1567,7 +1607,11 @@ static const struct spdk_json_object_decoder nvmf_rpc_create_transport_decoder[]
 	},
 	{
 		"max_qpairs_per_ctrlr", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_qpairs_per_ctrlr),
-		spdk_json_decode_uint16, true
+		nvmf_rpc_decode_max_qpairs, true
+	},
+	{
+		"max_io_qpairs_per_ctrlr", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_qpairs_per_ctrlr),
+		nvmf_rpc_decode_max_io_qpairs, true
 	},
 	{
 		"in_capsule_data_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.in_capsule_data_size),
@@ -1749,7 +1793,7 @@ dump_nvmf_transport(struct spdk_json_write_ctx *w, struct spdk_nvmf_transport *t
 
 	spdk_json_write_named_string(w, "trtype", spdk_nvmf_get_transport_name(transport));
 	spdk_json_write_named_uint32(w, "max_queue_depth", opts->max_queue_depth);
-	spdk_json_write_named_uint32(w, "max_qpairs_per_ctrlr", opts->max_qpairs_per_ctrlr);
+	spdk_json_write_named_uint32(w, "max_io_qpairs_per_ctrlr", opts->max_qpairs_per_ctrlr - 1);
 	spdk_json_write_named_uint32(w, "in_capsule_data_size", opts->in_capsule_data_size);
 	spdk_json_write_named_uint32(w, "max_io_size", opts->max_io_size);
 	spdk_json_write_named_uint32(w, "io_unit_size", opts->io_unit_size);

@@ -4021,7 +4021,8 @@ Name                        | Optional | Type    | Description
 trtype                      | Required | string  | Transport type (ex. RDMA)
 tgt_name                    | Optional | string  | Parent NVMe-oF target name.
 max_queue_depth             | Optional | number  | Max number of outstanding I/O per queue
-max_qpairs_per_ctrlr        | Optional | number  | Max number of SQ and CQ per controller
+max_qpairs_per_ctrlr        | Optional | number  | Max number of SQ and CQ per controller (deprecated, use max_io_qpairs_per_ctrlr)
+max_io_qpairs_per_ctrlr     | Optional | number  | Max number of IO qpairs per controller
 in_capsule_data_size        | Optional | number  | Max number of in-capsule data size
 max_io_size                 | Optional | number  | Max I/O size (bytes)
 io_unit_size                | Optional | number  | I/O unit size (bytes)
@@ -4031,7 +4032,7 @@ buf_cache_size              | Optional | number  | The number of shared buffers 
 max_srq_depth               | Optional | number  | The number of elements in a per-thread shared receive queue (RDMA only)
 no_srq                      | Optional | boolean | Disable shared receive queue even for devices that support it. (RDMA only)
 c2h_success                 | Optional | boolean | Disable C2H success optimization (TCP only)
-dif_insert_or_strip         | Optional | boolean | Enable DIF insert for write I/O and DIF strip for read I/O DIF (TCP only)
+dif_insert_or_strip         | Optional | boolean | Enable DIF insert for write I/O and DIF strip for read I/O DIF
 sock_priority               | Optional | number  | The socket priority of the connection owned by this transport (TCP only)
 
 ### Example
@@ -4565,7 +4566,7 @@ Example response:
     {
       "type": "RDMA".
       "max_queue_depth": 128,
-      "max_qpairs_per_ctrlr": 64,
+      "max_io_qpairs_per_ctrlr": 64,
       "in_capsule_data_size": 4096,
       "max_io_size": 131072,
       "io_unit_size": 131072
