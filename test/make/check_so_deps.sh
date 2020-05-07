@@ -62,6 +62,18 @@ function confirm_abi_deps() {
 	name = SPDK_LOG_LOG
 [suppress_variable]
 	name = SPDK_LOG_LVOL
+[suppress_variable]
+	name = SPDK_LOG_NBD
+[suppress_function]
+	name = spdk_nbd_disk_find_by_nbd_path
+[suppress_function]
+	name = spdk_nbd_disk_first
+[suppress_function]
+	name = spdk_nbd_disk_next
+[suppress_function]
+	name = spdk_nbd_disk_get_nbd_path
+[suppress_function]
+	name = spdk_nbd_disk_get_bdev_name
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do

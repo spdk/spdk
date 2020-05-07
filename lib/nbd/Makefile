@@ -41,4 +41,6 @@ SO_SUFFIX := $(SO_VER).$(SO_MINOR)
 LIBNAME = nbd
 C_SRCS = nbd.c nbd_rpc.c
 
+SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_nbd.map)
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
