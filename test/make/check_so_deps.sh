@@ -82,6 +82,32 @@ function confirm_abi_deps() {
 	name = spdk_interface_net_interface_delete_ip_address
 [suppress_function]
 	name = spdk_interface_get_list
+[suppress_function]
+	name = spdk_get_uevent
+[suppress_function]
+	name = spdk_uevent_connect
+[suppress_function]
+	name = spdk_nvme_ctrlr_get_current_process
+[suppress_function]
+	name = spdk_nvme_ctrlr_get_process
+[suppress_function]
+	name = spdk_nvme_get_ctrlr_by_trid_unsafe
+[suppress_function]
+	name = spdk_nvme_io_msg_process
+[suppress_function]
+	name = spdk_nvme_wait_for_completion
+[suppress_function]
+	name = spdk_nvme_wait_for_completion_robust_lock
+[suppress_function]
+	name = spdk_nvme_wait_for_completion_timeout
+[suppress_variable]
+	name = SPDK_LOG_NVME
+[suppress_variable]
+	name = SPDK_LOG_OPAL
+[suppress_variable]
+	name = spdk_opal_method
+[suppress_variable]
+	name = spdk_opal_uid
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do
