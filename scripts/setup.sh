@@ -612,6 +612,9 @@ function status_linux() {
 			node="-"
 		else
 			node=$(cat /sys/bus/pci/devices/$bdf/numa_node)
+			if ((node == -1)); then
+				node=unknown
+			fi
 		fi
 		device=$(cat /sys/bus/pci/devices/$bdf/device)
 		vendor=$(cat /sys/bus/pci/devices/$bdf/vendor)
@@ -637,6 +640,9 @@ function status_linux() {
 				node="-"
 			else
 				node=$(cat /sys/bus/pci/devices/$bdf/numa_node)
+				if ((node == -1)); then
+					node=unknown
+				fi
 			fi
 			device=$(cat /sys/bus/pci/devices/$bdf/device)
 			vendor=$(cat /sys/bus/pci/devices/$bdf/vendor)
@@ -679,6 +685,9 @@ function status_linux() {
 				node="-"
 			else
 				node=$(cat /sys/bus/pci/devices/$bdf/numa_node)
+				if ((node == -1)); then
+					node=unknown
+				fi
 			fi
 			device=$(cat /sys/bus/pci/devices/$bdf/device)
 			vendor=$(cat /sys/bus/pci/devices/$bdf/vendor)
@@ -698,6 +707,9 @@ function status_linux() {
 		for bdf in ${pci_bus_cache["0x8086:0x$dev_id"]}; do
 			driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent | awk -F"=" '{print $2}')
 			node=$(cat /sys/bus/pci/devices/$bdf/numa_node)
+			if ((node == -1)); then
+				node=unknown
+			fi
 			echo -e "$bdf\t$node\t\t$driver"
 		done
 	done
