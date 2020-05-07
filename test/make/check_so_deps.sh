@@ -74,6 +74,14 @@ function confirm_abi_deps() {
 	name = spdk_nbd_disk_get_nbd_path
 [suppress_function]
 	name = spdk_nbd_disk_get_bdev_name
+[suppress_variable]
+	name = SPDK_LOG_NET
+[suppress_function]
+	name = spdk_interface_net_interface_add_ip_address
+[suppress_function]
+	name = spdk_interface_net_interface_delete_ip_address
+[suppress_function]
+	name = spdk_interface_get_list
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do

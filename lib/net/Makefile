@@ -42,4 +42,6 @@ C_SRCS = interface.c net_rpc.c
 
 LIBNAME = net
 
+SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_net.map)
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

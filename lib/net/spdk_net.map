@@ -1,0 +1,9 @@
+{
+	global:
+
+	# public functions
+	spdk_interface_init;
+	spdk_interface_destroy;
+
+	local: *;
+};
