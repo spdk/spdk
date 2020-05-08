@@ -258,13 +258,10 @@ spdk_posix_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
 
 	assert(sock != NULL);
 
-#ifndef __aarch64__
-	/* On ARM systems, this buffering does not help. Skip it. */
 	rc = spdk_posix_sock_alloc_pipe(sock, sz);
 	if (rc) {
 		return rc;
 	}
-#endif
 
 	/* Set kernel buffer size to be at least SO_RCVBUF_SIZE */
 	if (sz < SO_RCVBUF_SIZE) {
