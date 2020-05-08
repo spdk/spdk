@@ -70,8 +70,8 @@ struct spdk_nvmf_custom_admin_cmd {
 static struct spdk_nvmf_custom_admin_cmd g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_MAX_OPC + 1];
 
 static inline void
-spdk_nvmf_invalid_connect_response(struct spdk_nvmf_fabric_connect_rsp *rsp,
-				   uint8_t iattr, uint16_t ipo)
+nvmf_invalid_connect_response(struct spdk_nvmf_fabric_connect_rsp *rsp,
+			      uint8_t iattr, uint16_t ipo)
 {
 	rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 	rsp->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
@@ -80,12 +80,12 @@ spdk_nvmf_invalid_connect_response(struct spdk_nvmf_fabric_connect_rsp *rsp,
 }
 
 #define SPDK_NVMF_INVALID_CONNECT_CMD(rsp, field)	\
-	spdk_nvmf_invalid_connect_response(rsp, 0, offsetof(struct spdk_nvmf_fabric_connect_cmd, field))
+	nvmf_invalid_connect_response(rsp, 0, offsetof(struct spdk_nvmf_fabric_connect_cmd, field))
 #define SPDK_NVMF_INVALID_CONNECT_DATA(rsp, field)	\
-	spdk_nvmf_invalid_connect_response(rsp, 1, offsetof(struct spdk_nvmf_fabric_connect_data, field))
+	nvmf_invalid_connect_response(rsp, 1, offsetof(struct spdk_nvmf_fabric_connect_data, field))
 
 static void
-spdk_nvmf_ctrlr_stop_keep_alive_timer(struct spdk_nvmf_ctrlr *ctrlr)
+nvmf_ctrlr_stop_keep_alive_timer(struct spdk_nvmf_ctrlr *ctrlr)
 {
 	if (!ctrlr) {
 		SPDK_ERRLOG("Controller is NULL\n");
@@ -101,7 +101,7 @@ spdk_nvmf_ctrlr_stop_keep_alive_timer(struct spdk_nvmf_ctrlr *ctrlr)
 }
 
 static void
-spdk_nvmf_ctrlr_disconnect_qpairs_done(struct spdk_io_channel_iter *i, int status)
+nvmf_ctrlr_disconnect_qpairs_done(struct spdk_io_channel_iter *i, int status)
 {
 	if (status == 0) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "ctrlr disconnect qpairs complete successfully\n");
@@ -111,7 +111,7 @@ spdk_nvmf_ctrlr_disconnect_qpairs_done(struct spdk_io_channel_iter *i, int statu
 }
 
 static int
-_spdk_nvmf_ctrlr_disconnect_qpairs_on_pg(struct spdk_io_channel_iter *i, bool include_admin)
+_nvmf_ctrlr_disconnect_qpairs_on_pg(struct spdk_io_channel_iter *i, bool include_admin)
 {
 	int rc = 0;
 	struct spdk_nvmf_ctrlr *ctrlr;
@@ -137,19 +137,19 @@ _spdk_nvmf_ctrlr_disconnect_qpairs_on_pg(struct spdk_io_channel_iter *i, bool in
 }
 
 static void
-spdk_nvmf_ctrlr_disconnect_qpairs_on_pg(struct spdk_io_channel_iter *i)
+nvmf_ctrlr_disconnect_qpairs_on_pg(struct spdk_io_channel_iter *i)
 {
-	spdk_for_each_channel_continue(i, _spdk_nvmf_ctrlr_disconnect_qpairs_on_pg(i, true));
+	spdk_for_each_channel_continue(i, _nvmf_ctrlr_disconnect_qpairs_on_pg(i, true));
 }
 
 static void
-spdk_nvmf_ctrlr_disconnect_io_qpairs_on_pg(struct spdk_io_channel_iter *i)
+nvmf_ctrlr_disconnect_io_qpairs_on_pg(struct spdk_io_channel_iter *i)
 {
-	spdk_for_each_channel_continue(i, _spdk_nvmf_ctrlr_disconnect_qpairs_on_pg(i, false));
+	spdk_for_each_channel_continue(i, _nvmf_ctrlr_disconnect_qpairs_on_pg(i, false));
 }
 
 static int
-spdk_nvmf_ctrlr_keep_alive_poll(void *ctx)
+nvmf_ctrlr_keep_alive_poll(void *ctx)
 {
 	uint64_t keep_alive_timeout_tick;
 	uint64_t now = spdk_get_ticks();
@@ -173,9 +173,9 @@ spdk_nvmf_ctrlr_keep_alive_poll(void *ctx)
 			 * disconnect qpairs with qpair->ctrlr == ctrlr
 			 */
 			spdk_for_each_channel(ctrlr->subsys->tgt,
-					      spdk_nvmf_ctrlr_disconnect_qpairs_on_pg,
+					      nvmf_ctrlr_disconnect_qpairs_on_pg,
 					      ctrlr,
-					      spdk_nvmf_ctrlr_disconnect_qpairs_done);
+					      nvmf_ctrlr_disconnect_qpairs_done);
 		}
 	}
 
@@ -183,7 +183,7 @@ spdk_nvmf_ctrlr_keep_alive_poll(void *ctx)
 }
 
 static void
-spdk_nvmf_ctrlr_start_keep_alive_timer(struct spdk_nvmf_ctrlr *ctrlr)
+nvmf_ctrlr_start_keep_alive_timer(struct spdk_nvmf_ctrlr *ctrlr)
 {
 	if (!ctrlr) {
 		SPDK_ERRLOG("Controller is NULL\n");
@@ -196,7 +196,7 @@ spdk_nvmf_ctrlr_start_keep_alive_timer(struct spdk_nvmf_ctrlr *ctrlr)
 		ctrlr->last_keep_alive_tick = spdk_get_ticks();
 
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Ctrlr add keep alive poller\n");
-		ctrlr->keep_alive_poller = SPDK_POLLER_REGISTER(spdk_nvmf_ctrlr_keep_alive_poll, ctrlr,
+		ctrlr->keep_alive_poller = SPDK_POLLER_REGISTER(nvmf_ctrlr_keep_alive_poll, ctrlr,
 					   ctrlr->feat.keep_alive_timer.bits.kato * 1000);
 	}
 }
@@ -234,7 +234,7 @@ ctrlr_add_qpair_and_update_rsp(struct spdk_nvmf_qpair *qpair,
 }
 
 static void
-_spdk_nvmf_request_complete(void *ctx)
+_nvmf_request_complete(void *ctx)
 {
 	struct spdk_nvmf_request *req = ctx;
 
@@ -242,7 +242,7 @@ _spdk_nvmf_request_complete(void *ctx)
 }
 
 static void
-_spdk_nvmf_ctrlr_add_admin_qpair(void *ctx)
+_nvmf_ctrlr_add_admin_qpair(void *ctx)
 {
 	struct spdk_nvmf_request *req = ctx;
 	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
@@ -250,13 +250,13 @@ _spdk_nvmf_ctrlr_add_admin_qpair(void *ctx)
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
 
 	ctrlr->admin_qpair = qpair;
-	spdk_nvmf_ctrlr_start_keep_alive_timer(ctrlr);
+	nvmf_ctrlr_start_keep_alive_timer(ctrlr);
 	ctrlr_add_qpair_and_update_rsp(qpair, ctrlr, rsp);
 	spdk_nvmf_request_complete(req);
 }
 
 static void
-_spdk_nvmf_subsystem_add_ctrlr(void *ctx)
+_nvmf_subsystem_add_ctrlr(void *ctx)
 {
 	struct spdk_nvmf_request *req = ctx;
 	struct spdk_nvmf_qpair *qpair = req->qpair;
@@ -269,18 +269,18 @@ _spdk_nvmf_subsystem_add_ctrlr(void *ctx)
 		free(ctrlr);
 		qpair->ctrlr = NULL;
 		rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-		spdk_thread_send_msg(qpair->group->thread, _spdk_nvmf_request_complete, req);
+		spdk_thread_send_msg(qpair->group->thread, _nvmf_request_complete, req);
 		return;
 	}
 
-	spdk_thread_send_msg(ctrlr->thread, _spdk_nvmf_ctrlr_add_admin_qpair, req);
+	spdk_thread_send_msg(ctrlr->thread, _nvmf_ctrlr_add_admin_qpair, req);
 }
 
 static struct spdk_nvmf_ctrlr *
-spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
-		       struct spdk_nvmf_request *req,
-		       struct spdk_nvmf_fabric_connect_cmd *connect_cmd,
-		       struct spdk_nvmf_fabric_connect_data *connect_data)
+nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
+		  struct spdk_nvmf_request *req,
+		  struct spdk_nvmf_fabric_connect_cmd *connect_cmd,
+		  struct spdk_nvmf_fabric_connect_data *connect_data)
 {
 	struct spdk_nvmf_ctrlr	*ctrlr;
 	struct spdk_nvmf_transport *transport;
@@ -375,18 +375,18 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	ctrlr->dif_insert_or_strip = transport->opts.dif_insert_or_strip;
 
 	req->qpair->ctrlr = ctrlr;
-	spdk_thread_send_msg(subsystem->thread, _spdk_nvmf_subsystem_add_ctrlr, req);
+	spdk_thread_send_msg(subsystem->thread, _nvmf_subsystem_add_ctrlr, req);
 
 	return ctrlr;
 }
 
 static void
-_spdk_nvmf_ctrlr_destruct(void *ctx)
+_nvmf_ctrlr_destruct(void *ctx)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = ctx;
 	struct spdk_nvmf_reservation_log *log, *log_tmp;
 
-	spdk_nvmf_ctrlr_stop_keep_alive_timer(ctrlr);
+	nvmf_ctrlr_stop_keep_alive_timer(ctrlr);
 
 	TAILQ_FOREACH_SAFE(log, &ctrlr->log_head, link, log_tmp) {
 		TAILQ_REMOVE(&ctrlr->log_head, log, link);
@@ -400,11 +400,11 @@ nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 {
 	nvmf_subsystem_remove_ctrlr(ctrlr->subsys, ctrlr);
 
-	spdk_thread_send_msg(ctrlr->thread, _spdk_nvmf_ctrlr_destruct, ctrlr);
+	spdk_thread_send_msg(ctrlr->thread, _nvmf_ctrlr_destruct, ctrlr);
 }
 
 static void
-spdk_nvmf_ctrlr_add_io_qpair(void *ctx)
+nvmf_ctrlr_add_io_qpair(void *ctx)
 {
 	struct spdk_nvmf_request *req = ctx;
 	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
@@ -444,11 +444,11 @@ spdk_nvmf_ctrlr_add_io_qpair(void *ctx)
 
 	ctrlr_add_qpair_and_update_rsp(qpair, ctrlr, rsp);
 end:
-	spdk_thread_send_msg(qpair->group->thread, _spdk_nvmf_request_complete, req);
+	spdk_thread_send_msg(qpair->group->thread, _nvmf_request_complete, req);
 }
 
 static void
-_spdk_nvmf_ctrlr_add_io_qpair(void *ctx)
+_nvmf_ctrlr_add_io_qpair(void *ctx)
 {
 	struct spdk_nvmf_request *req = ctx;
 	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
@@ -469,18 +469,18 @@ _spdk_nvmf_ctrlr_add_io_qpair(void *ctx)
 	if (ctrlr == NULL) {
 		SPDK_ERRLOG("Unknown controller ID 0x%x\n", data->cntlid);
 		SPDK_NVMF_INVALID_CONNECT_DATA(rsp, cntlid);
-		spdk_thread_send_msg(qpair->group->thread, _spdk_nvmf_request_complete, req);
+		spdk_thread_send_msg(qpair->group->thread, _nvmf_request_complete, req);
 		return;
 	}
 
 	admin_qpair = ctrlr->admin_qpair;
 	qpair->ctrlr = ctrlr;
-	spdk_thread_send_msg(admin_qpair->group->thread, spdk_nvmf_ctrlr_add_io_qpair, req);
+	spdk_thread_send_msg(admin_qpair->group->thread, nvmf_ctrlr_add_io_qpair, req);
 }
 
 static bool
-spdk_nvmf_qpair_access_allowed(struct spdk_nvmf_qpair *qpair, struct spdk_nvmf_subsystem *subsystem,
-			       const char *hostnqn)
+nvmf_qpair_access_allowed(struct spdk_nvmf_qpair *qpair, struct spdk_nvmf_subsystem *subsystem,
+			  const char *hostnqn)
 {
 	struct spdk_nvme_transport_id listen_trid = {};
 
@@ -505,7 +505,7 @@ spdk_nvmf_qpair_access_allowed(struct spdk_nvmf_qpair *qpair, struct spdk_nvmf_s
 }
 
 static int
-_spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
+_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_fabric_connect_data *data = req->data;
 	struct spdk_nvmf_fabric_connect_cmd *cmd = &req->cmd->connect_cmd;
@@ -588,16 +588,16 @@ _spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 		}
 
 		/* Establish a new ctrlr */
-		ctrlr = spdk_nvmf_ctrlr_create(subsystem, req, cmd, data);
+		ctrlr = nvmf_ctrlr_create(subsystem, req, cmd, data);
 		if (!ctrlr) {
-			SPDK_ERRLOG("spdk_nvmf_ctrlr_create() failed\n");
+			SPDK_ERRLOG("nvmf_ctrlr_create() failed\n");
 			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		} else {
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 		}
 	} else {
-		spdk_thread_send_msg(subsystem->thread, _spdk_nvmf_ctrlr_add_io_qpair, req);
+		spdk_thread_send_msg(subsystem->thread, _nvmf_ctrlr_add_io_qpair, req);
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 	}
 }
@@ -648,7 +648,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	sgroup->io_outstanding++;
 	TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
 
-	status = _spdk_nvmf_ctrlr_connect(req);
+	status = _nvmf_ctrlr_connect(req);
 
 out:
 	if (status == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
@@ -659,7 +659,7 @@ out:
 }
 
 static int
-spdk_nvmf_ctrlr_cmd_connect(struct spdk_nvmf_request *req)
+nvmf_ctrlr_cmd_connect(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_fabric_connect_data *data = req->data;
 	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
@@ -695,17 +695,17 @@ spdk_nvmf_ctrlr_cmd_connect(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	if (!spdk_nvmf_qpair_access_allowed(req->qpair, subsystem, data->hostnqn)) {
+	if (!nvmf_qpair_access_allowed(req->qpair, subsystem, data->hostnqn)) {
 		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		rsp->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_HOST;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	return _spdk_nvmf_ctrlr_connect(req);
+	return _nvmf_ctrlr_connect(req);
 }
 
 static void
-spdk_nvmf_ctrlr_cc_reset_done(struct spdk_io_channel_iter *i, int status)
+nvmf_ctrlr_cc_reset_done(struct spdk_io_channel_iter *i, int status)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = spdk_io_channel_iter_get_ctx(i);
 
@@ -769,9 +769,9 @@ nvmf_prop_set_cc(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
 			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Property Set CC Disable!\n");
 			ctrlr->vcprop.cc.bits.en = 0;
 			spdk_for_each_channel(ctrlr->subsys->tgt,
-					      spdk_nvmf_ctrlr_disconnect_io_qpairs_on_pg,
+					      nvmf_ctrlr_disconnect_io_qpairs_on_pg,
 					      ctrlr,
-					      spdk_nvmf_ctrlr_cc_reset_done);
+					      nvmf_ctrlr_cc_reset_done);
 		}
 		diff.bits.en = 0;
 	}
@@ -949,7 +949,7 @@ find_prop(uint32_t ofst, uint8_t size)
 }
 
 static int
-spdk_nvmf_property_get(struct spdk_nvmf_request *req)
+nvmf_property_get(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvmf_fabric_prop_get_cmd *cmd = &req->cmd->prop_get_cmd;
@@ -1008,7 +1008,7 @@ spdk_nvmf_property_get(struct spdk_nvmf_request *req)
 }
 
 static int
-spdk_nvmf_property_set(struct spdk_nvmf_request *req)
+nvmf_property_set(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvmf_fabric_prop_set_cmd *cmd = &req->cmd->prop_set_cmd;
@@ -1077,7 +1077,7 @@ spdk_nvmf_property_set(struct spdk_nvmf_request *req)
 }
 
 static int
-spdk_nvmf_ctrlr_set_features_arbitration(struct spdk_nvmf_request *req)
+nvmf_ctrlr_set_features_arbitration(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
@@ -1091,7 +1091,7 @@ spdk_nvmf_ctrlr_set_features_arbitration(struct spdk_nvmf_request *req)
 }
 
 static int
-spdk_nvmf_ctrlr_set_features_power_management(struct spdk_nvmf_request *req)
+nvmf_ctrlr_set_features_power_management(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
@@ -1142,7 +1142,7 @@ temp_threshold_opts_valid(const union spdk_nvme_feat_temperature_threshold *opts
 }
 
 static int
-spdk_nvmf_ctrlr_set_features_temperature_threshold(struct spdk_nvmf_request *req)
+nvmf_ctrlr_set_features_temperature_threshold(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
@@ -1160,7 +1160,7 @@ spdk_nvmf_ctrlr_set_features_temperature_threshold(struct spdk_nvmf_request *req
 }
 
 static int
-spdk_nvmf_ctrlr_get_features_temperature_threshold(struct spdk_nvmf_request *req)
+nvmf_ctrlr_get_features_temperature_threshold(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
@@ -1180,7 +1180,7 @@ spdk_nvmf_ctrlr_get_features_temperature_threshold(struct spdk_nvmf_request *req
 }
 
 static int
-spdk_nvmf_ctrlr_set_features_error_recovery(struct spdk_nvmf_request *req)
+nvmf_ctrlr_set_features_error_recovery(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
@@ -1206,7 +1206,7 @@ spdk_nvmf_ctrlr_set_features_error_recovery(struct spdk_nvmf_request *req)
 }
 
 static int
-spdk_nvmf_ctrlr_set_features_volatile_write_cache(struct spdk_nvmf_request *req)
+nvmf_ctrlr_set_features_volatile_write_cache(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
@@ -1222,7 +1222,7 @@ spdk_nvmf_ctrlr_set_features_volatile_write_cache(struct spdk_nvmf_request *req)
 }
 
 static int
-spdk_nvmf_ctrlr_set_features_write_atomicity(struct spdk_nvmf_request *req)
+nvmf_ctrlr_set_features_write_atomicity(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
@@ -1236,7 +1236,7 @@ spdk_nvmf_ctrlr_set_features_write_atomicity(struct spdk_nvmf_request *req)
 }
 
 static int
-spdk_nvmf_ctrlr_set_features_host_identifier(struct spdk_nvmf_request *req)
+nvmf_ctrlr_set_features_host_identifier(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 
@@ -1246,7 +1246,7 @@ spdk_nvmf_ctrlr_set_features_host_identifier(struct spdk_nvmf_request *req)
 }
 
 static int
-spdk_nvmf_ctrlr_get_features_host_identifier(struct spdk_nvmf_request *req)
+nvmf_ctrlr_get_features_host_identifier(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
@@ -1272,7 +1272,7 @@ spdk_nvmf_ctrlr_get_features_host_identifier(struct spdk_nvmf_request *req)
 }
 
 static int
-spdk_nvmf_ctrlr_get_features_reservation_notification_mask(struct spdk_nvmf_request *req)
+nvmf_ctrlr_get_features_reservation_notification_mask(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
@@ -1299,7 +1299,7 @@ spdk_nvmf_ctrlr_get_features_reservation_notification_mask(struct spdk_nvmf_requ
 }
 
 static int
-spdk_nvmf_ctrlr_set_features_reservation_notification_mask(struct spdk_nvmf_request *req)
+nvmf_ctrlr_set_features_reservation_notification_mask(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
@@ -1329,7 +1329,7 @@ spdk_nvmf_ctrlr_set_features_reservation_notification_mask(struct spdk_nvmf_requ
 }
 
 static int
-spdk_nvmf_ctrlr_get_features_reservation_persistence(struct spdk_nvmf_request *req)
+nvmf_ctrlr_get_features_reservation_persistence(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
@@ -1355,7 +1355,7 @@ spdk_nvmf_ctrlr_get_features_reservation_persistence(struct spdk_nvmf_request *r
 }
 
 static int
-spdk_nvmf_ctrlr_set_features_reservation_persistence(struct spdk_nvmf_request *req)
+nvmf_ctrlr_set_features_reservation_persistence(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
@@ -1389,7 +1389,7 @@ spdk_nvmf_ctrlr_set_features_reservation_persistence(struct spdk_nvmf_request *r
 }
 
 static int
-spdk_nvmf_ctrlr_set_features_keep_alive_timer(struct spdk_nvmf_request *req)
+nvmf_ctrlr_set_features_keep_alive_timer(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
@@ -1421,7 +1421,7 @@ spdk_nvmf_ctrlr_set_features_keep_alive_timer(struct spdk_nvmf_request *req)
 		if (ctrlr->keep_alive_poller != NULL) {
 			spdk_poller_unregister(&ctrlr->keep_alive_poller);
 		}
-		ctrlr->keep_alive_poller = SPDK_POLLER_REGISTER(spdk_nvmf_ctrlr_keep_alive_poll, ctrlr,
+		ctrlr->keep_alive_poller = SPDK_POLLER_REGISTER(nvmf_ctrlr_keep_alive_poll, ctrlr,
 					   ctrlr->feat.keep_alive_timer.bits.kato * 1000);
 	}
 
@@ -1432,7 +1432,7 @@ spdk_nvmf_ctrlr_set_features_keep_alive_timer(struct spdk_nvmf_request *req)
 }
 
 static int
-spdk_nvmf_ctrlr_set_features_number_of_queues(struct spdk_nvmf_request *req)
+nvmf_ctrlr_set_features_number_of_queues(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
@@ -1458,7 +1458,7 @@ spdk_nvmf_ctrlr_set_features_number_of_queues(struct spdk_nvmf_request *req)
 }
 
 static int
-spdk_nvmf_ctrlr_set_features_async_event_configuration(struct spdk_nvmf_request *req)
+nvmf_ctrlr_set_features_async_event_configuration(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
@@ -1471,7 +1471,7 @@ spdk_nvmf_ctrlr_set_features_async_event_configuration(struct spdk_nvmf_request 
 }
 
 static int
-spdk_nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
+nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
@@ -1510,7 +1510,7 @@ spdk_nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 }
 
 static void
-spdk_nvmf_get_firmware_slot_log_page(void *buffer, uint64_t offset, uint32_t length)
+nvmf_get_firmware_slot_log_page(void *buffer, uint64_t offset, uint32_t length)
 {
 	struct spdk_nvme_firmware_page fw_page;
 	size_t copy_len;
@@ -1557,8 +1557,8 @@ nvmf_ctrlr_ns_changed(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid)
 }
 
 static void
-spdk_nvmf_get_changed_ns_list_log_page(struct spdk_nvmf_ctrlr *ctrlr,
-				       void *buffer, uint64_t offset, uint32_t length)
+nvmf_get_changed_ns_list_log_page(struct spdk_nvmf_ctrlr *ctrlr,
+				  void *buffer, uint64_t offset, uint32_t length)
 {
 	size_t copy_length;
 
@@ -1610,8 +1610,8 @@ static const struct spdk_nvme_cmds_and_effect_log_page g_cmds_and_effect_log_pag
 };
 
 static void
-spdk_nvmf_get_cmds_and_effects_log_page(void *buffer,
-					uint64_t offset, uint32_t length)
+nvmf_get_cmds_and_effects_log_page(void *buffer,
+				   uint64_t offset, uint32_t length)
 {
 	uint32_t page_size = sizeof(struct spdk_nvme_cmds_and_effect_log_page);
 	size_t copy_len = 0;
@@ -1629,7 +1629,7 @@ spdk_nvmf_get_cmds_and_effects_log_page(void *buffer,
 }
 
 static void
-spdk_nvmf_get_reservation_notification_log_page(struct spdk_nvmf_ctrlr *ctrlr,
+nvmf_get_reservation_notification_log_page(struct spdk_nvmf_ctrlr *ctrlr,
 		void *data, uint64_t offset, uint32_t length)
 {
 	uint32_t unit_log_len, avail_log_len, next_pos, copy_len;
@@ -1671,7 +1671,7 @@ spdk_nvmf_get_reservation_notification_log_page(struct spdk_nvmf_ctrlr *ctrlr,
 }
 
 static int
-spdk_nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
+nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
@@ -1727,16 +1727,16 @@ spdk_nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 			/* TODO: actually fill out log page data */
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		case SPDK_NVME_LOG_FIRMWARE_SLOT:
-			spdk_nvmf_get_firmware_slot_log_page(req->data, offset, len);
+			nvmf_get_firmware_slot_log_page(req->data, offset, len);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		case SPDK_NVME_LOG_COMMAND_EFFECTS_LOG:
-			spdk_nvmf_get_cmds_and_effects_log_page(req->data, offset, len);
+			nvmf_get_cmds_and_effects_log_page(req->data, offset, len);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		case SPDK_NVME_LOG_CHANGED_NS_LIST:
-			spdk_nvmf_get_changed_ns_list_log_page(ctrlr, req->data, offset, len);
+			nvmf_get_changed_ns_list_log_page(ctrlr, req->data, offset, len);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		case SPDK_NVME_LOG_RESERVATION_NOTIFICATION:
-			spdk_nvmf_get_reservation_notification_log_page(ctrlr, req->data, offset, len);
+			nvmf_get_reservation_notification_log_page(ctrlr, req->data, offset, len);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		default:
 			goto invalid_log_page;
@@ -1907,10 +1907,10 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 }
 
 static int
-spdk_nvmf_ctrlr_identify_active_ns_list(struct spdk_nvmf_subsystem *subsystem,
-					struct spdk_nvme_cmd *cmd,
-					struct spdk_nvme_cpl *rsp,
-					struct spdk_nvme_ns_list *ns_list)
+nvmf_ctrlr_identify_active_ns_list(struct spdk_nvmf_subsystem *subsystem,
+				   struct spdk_nvme_cmd *cmd,
+				   struct spdk_nvme_cpl *rsp,
+				   struct spdk_nvme_ns_list *ns_list)
 {
 	struct spdk_nvmf_ns *ns;
 	uint32_t count = 0;
@@ -1965,7 +1965,7 @@ _add_ns_id_desc(void **buf_ptr, size_t *buf_remain,
 }
 
 static int
-spdk_nvmf_ctrlr_identify_ns_id_descriptor_list(
+nvmf_ctrlr_identify_ns_id_descriptor_list(
 	struct spdk_nvmf_subsystem *subsystem,
 	struct spdk_nvme_cmd *cmd,
 	struct spdk_nvme_cpl *rsp,
@@ -2004,7 +2004,7 @@ spdk_nvmf_ctrlr_identify_ns_id_descriptor_list(
 }
 
 static int
-spdk_nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
+nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
 {
 	uint8_t cns;
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
@@ -2033,9 +2033,9 @@ spdk_nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
 	case SPDK_NVME_IDENTIFY_CTRLR:
 		return spdk_nvmf_ctrlr_identify_ctrlr(ctrlr, req->data);
 	case SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST:
-		return spdk_nvmf_ctrlr_identify_active_ns_list(subsystem, cmd, rsp, req->data);
+		return nvmf_ctrlr_identify_active_ns_list(subsystem, cmd, rsp, req->data);
 	case SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST:
-		return spdk_nvmf_ctrlr_identify_ns_id_descriptor_list(subsystem, cmd, rsp, req->data, req->length);
+		return nvmf_ctrlr_identify_ns_id_descriptor_list(subsystem, cmd, rsp, req->data, req->length);
 	default:
 		goto invalid_cns;
 	}
@@ -2049,7 +2049,7 @@ invalid_cns:
 
 
 static struct spdk_nvmf_request *
-spdk_nvmf_qpair_abort(struct spdk_nvmf_qpair *qpair, uint16_t cid)
+nvmf_qpair_abort(struct spdk_nvmf_qpair *qpair, uint16_t cid)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
 	struct spdk_nvmf_request *req;
@@ -2068,7 +2068,7 @@ spdk_nvmf_qpair_abort(struct spdk_nvmf_qpair *qpair, uint16_t cid)
 }
 
 static void
-spdk_nvmf_ctrlr_abort_done(struct spdk_io_channel_iter *i, int status)
+nvmf_ctrlr_abort_done(struct spdk_io_channel_iter *i, int status)
 {
 	struct spdk_nvmf_request *req = spdk_io_channel_iter_get_ctx(i);
 
@@ -2076,7 +2076,7 @@ spdk_nvmf_ctrlr_abort_done(struct spdk_io_channel_iter *i, int status)
 }
 
 static void
-spdk_nvmf_ctrlr_abort_on_pg(struct spdk_io_channel_iter *i)
+nvmf_ctrlr_abort_on_pg(struct spdk_io_channel_iter *i)
 {
 	struct spdk_nvmf_request *req = spdk_io_channel_iter_get_ctx(i);
 	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
@@ -2093,7 +2093,7 @@ spdk_nvmf_ctrlr_abort_on_pg(struct spdk_io_channel_iter *i)
 
 			/* Found the qpair */
 
-			req_to_abort = spdk_nvmf_qpair_abort(qpair, cid);
+			req_to_abort = nvmf_qpair_abort(qpair, cid);
 			if (req_to_abort == NULL) {
 				SPDK_DEBUGLOG(SPDK_LOG_NVMF, "cid %u not found\n", cid);
 				rsp->status.sct = SPDK_NVME_SCT_GENERIC;
@@ -2122,7 +2122,7 @@ spdk_nvmf_ctrlr_abort_on_pg(struct spdk_io_channel_iter *i)
 }
 
 static int
-spdk_nvmf_ctrlr_abort(struct spdk_nvmf_request *req)
+nvmf_ctrlr_abort(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 
@@ -2132,9 +2132,9 @@ spdk_nvmf_ctrlr_abort(struct spdk_nvmf_request *req)
 
 	/* Send a message to each poll group, searching for this ctrlr, sqid, and command. */
 	spdk_for_each_channel(req->qpair->ctrlr->subsys->tgt,
-			      spdk_nvmf_ctrlr_abort_on_pg,
+			      nvmf_ctrlr_abort_on_pg,
 			      req,
-			      spdk_nvmf_ctrlr_abort_done
+			      nvmf_ctrlr_abort_done
 			     );
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
@@ -2150,7 +2150,7 @@ get_features_generic(struct spdk_nvmf_request *req, uint32_t cdw0)
 }
 
 static int
-spdk_nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
+nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 {
 	uint8_t feature;
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
@@ -2164,7 +2164,7 @@ spdk_nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 	case SPDK_NVME_FEAT_POWER_MANAGEMENT:
 		return get_features_generic(req, ctrlr->feat.power_management.raw);
 	case SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD:
-		return spdk_nvmf_ctrlr_get_features_temperature_threshold(req);
+		return nvmf_ctrlr_get_features_temperature_threshold(req);
 	case SPDK_NVME_FEAT_ERROR_RECOVERY:
 		return get_features_generic(req, ctrlr->feat.error_recovery.raw);
 	case SPDK_NVME_FEAT_VOLATILE_WRITE_CACHE:
@@ -2178,11 +2178,11 @@ spdk_nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 	case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
 		return get_features_generic(req, ctrlr->feat.keep_alive_timer.raw);
 	case SPDK_NVME_FEAT_HOST_IDENTIFIER:
-		return spdk_nvmf_ctrlr_get_features_host_identifier(req);
+		return nvmf_ctrlr_get_features_host_identifier(req);
 	case SPDK_NVME_FEAT_HOST_RESERVE_MASK:
-		return spdk_nvmf_ctrlr_get_features_reservation_notification_mask(req);
+		return nvmf_ctrlr_get_features_reservation_notification_mask(req);
 	case SPDK_NVME_FEAT_HOST_RESERVE_PERSIST:
-		return spdk_nvmf_ctrlr_get_features_reservation_persistence(req);
+		return nvmf_ctrlr_get_features_reservation_persistence(req);
 	default:
 		SPDK_ERRLOG("Get Features command with unsupported feature ID 0x%02x\n", feature);
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
@@ -2191,7 +2191,7 @@ spdk_nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 }
 
 static int
-spdk_nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
+nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
 {
 	uint8_t feature, save;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
@@ -2211,29 +2211,29 @@ spdk_nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
 	feature = cmd->cdw10_bits.set_features.fid;
 	switch (feature) {
 	case SPDK_NVME_FEAT_ARBITRATION:
-		return spdk_nvmf_ctrlr_set_features_arbitration(req);
+		return nvmf_ctrlr_set_features_arbitration(req);
 	case SPDK_NVME_FEAT_POWER_MANAGEMENT:
-		return spdk_nvmf_ctrlr_set_features_power_management(req);
+		return nvmf_ctrlr_set_features_power_management(req);
 	case SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD:
-		return spdk_nvmf_ctrlr_set_features_temperature_threshold(req);
+		return nvmf_ctrlr_set_features_temperature_threshold(req);
 	case SPDK_NVME_FEAT_ERROR_RECOVERY:
-		return spdk_nvmf_ctrlr_set_features_error_recovery(req);
+		return nvmf_ctrlr_set_features_error_recovery(req);
 	case SPDK_NVME_FEAT_VOLATILE_WRITE_CACHE:
-		return spdk_nvmf_ctrlr_set_features_volatile_write_cache(req);
+		return nvmf_ctrlr_set_features_volatile_write_cache(req);
 	case SPDK_NVME_FEAT_NUMBER_OF_QUEUES:
-		return spdk_nvmf_ctrlr_set_features_number_of_queues(req);
+		return nvmf_ctrlr_set_features_number_of_queues(req);
 	case SPDK_NVME_FEAT_WRITE_ATOMICITY:
-		return spdk_nvmf_ctrlr_set_features_write_atomicity(req);
+		return nvmf_ctrlr_set_features_write_atomicity(req);
 	case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
-		return spdk_nvmf_ctrlr_set_features_async_event_configuration(req);
+		return nvmf_ctrlr_set_features_async_event_configuration(req);
 	case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
-		return spdk_nvmf_ctrlr_set_features_keep_alive_timer(req);
+		return nvmf_ctrlr_set_features_keep_alive_timer(req);
 	case SPDK_NVME_FEAT_HOST_IDENTIFIER:
-		return spdk_nvmf_ctrlr_set_features_host_identifier(req);
+		return nvmf_ctrlr_set_features_host_identifier(req);
 	case SPDK_NVME_FEAT_HOST_RESERVE_MASK:
-		return spdk_nvmf_ctrlr_set_features_reservation_notification_mask(req);
+		return nvmf_ctrlr_set_features_reservation_notification_mask(req);
 	case SPDK_NVME_FEAT_HOST_RESERVE_PERSIST:
-		return spdk_nvmf_ctrlr_set_features_reservation_persistence(req);
+		return nvmf_ctrlr_set_features_reservation_persistence(req);
 	default:
 		SPDK_ERRLOG("Set Features command with unsupported feature ID 0x%02x\n", feature);
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
@@ -2242,7 +2242,7 @@ spdk_nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
 }
 
 static int
-spdk_nvmf_ctrlr_keep_alive(struct spdk_nvmf_request *req)
+nvmf_ctrlr_keep_alive(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 
@@ -2308,19 +2308,19 @@ nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_GET_LOG_PAGE:
-		return spdk_nvmf_ctrlr_get_log_page(req);
+		return nvmf_ctrlr_get_log_page(req);
 	case SPDK_NVME_OPC_IDENTIFY:
-		return spdk_nvmf_ctrlr_identify(req);
+		return nvmf_ctrlr_identify(req);
 	case SPDK_NVME_OPC_ABORT:
-		return spdk_nvmf_ctrlr_abort(req);
+		return nvmf_ctrlr_abort(req);
 	case SPDK_NVME_OPC_GET_FEATURES:
-		return spdk_nvmf_ctrlr_get_features(req);
+		return nvmf_ctrlr_get_features(req);
 	case SPDK_NVME_OPC_SET_FEATURES:
-		return spdk_nvmf_ctrlr_set_features(req);
+		return nvmf_ctrlr_set_features(req);
 	case SPDK_NVME_OPC_ASYNC_EVENT_REQUEST:
-		return spdk_nvmf_ctrlr_async_event_request(req);
+		return nvmf_ctrlr_async_event_request(req);
 	case SPDK_NVME_OPC_KEEP_ALIVE:
-		return spdk_nvmf_ctrlr_keep_alive(req);
+		return nvmf_ctrlr_keep_alive(req);
 
 	case SPDK_NVME_OPC_CREATE_IO_SQ:
 	case SPDK_NVME_OPC_CREATE_IO_CQ:
@@ -2351,7 +2351,7 @@ nvmf_ctrlr_process_fabrics_cmd(struct spdk_nvmf_request *req)
 	if (qpair->ctrlr == NULL) {
 		/* No ctrlr established yet; the only valid command is Connect */
 		if (cap_hdr->fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT) {
-			return spdk_nvmf_ctrlr_cmd_connect(req);
+			return nvmf_ctrlr_cmd_connect(req);
 		} else {
 			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Got fctype 0x%x, expected Connect\n",
 				      cap_hdr->fctype);
@@ -2366,9 +2366,9 @@ nvmf_ctrlr_process_fabrics_cmd(struct spdk_nvmf_request *req)
 		 */
 		switch (cap_hdr->fctype) {
 		case SPDK_NVMF_FABRIC_COMMAND_PROPERTY_SET:
-			return spdk_nvmf_property_set(req);
+			return nvmf_property_set(req);
 		case SPDK_NVMF_FABRIC_COMMAND_PROPERTY_GET:
-			return spdk_nvmf_property_get(req);
+			return nvmf_property_get(req);
 		default:
 			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "unknown fctype 0x%02x\n",
 				      cap_hdr->fctype);
@@ -2656,8 +2656,8 @@ exit:
 }
 
 static int
-spdk_nvmf_ctrlr_process_io_fused_cmd(struct spdk_nvmf_request *req, struct spdk_bdev *bdev,
-				     struct spdk_bdev_desc *desc, struct spdk_io_channel *ch)
+nvmf_ctrlr_process_io_fused_cmd(struct spdk_nvmf_request *req, struct spdk_bdev *bdev,
+				struct spdk_bdev_desc *desc, struct spdk_io_channel *ch)
 {
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
@@ -2789,7 +2789,7 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	ch = ns_info->channel;
 
 	if (spdk_unlikely(cmd->fuse & SPDK_NVME_CMD_FUSE_MASK)) {
-		return spdk_nvmf_ctrlr_process_io_fused_cmd(req, bdev, desc, ch);
+		return nvmf_ctrlr_process_io_fused_cmd(req, bdev, desc, ch);
 	} else if (spdk_unlikely(req->qpair->first_fused_req != NULL)) {
 		struct spdk_nvme_cpl *fused_response = &req->qpair->first_fused_req->rsp->nvme_cpl;
 
@@ -2827,7 +2827,7 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 }
 
 static void
-spdk_nvmf_qpair_request_cleanup(struct spdk_nvmf_qpair *qpair)
+nvmf_qpair_request_cleanup(struct spdk_nvmf_qpair *qpair)
 {
 	if (qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING) {
 		assert(qpair->state_cb != NULL);
@@ -2848,7 +2848,7 @@ spdk_nvmf_request_free(struct spdk_nvmf_request *req)
 		SPDK_ERRLOG("Unable to free transport level request resources.\n");
 	}
 
-	spdk_nvmf_qpair_request_cleanup(qpair);
+	nvmf_qpair_request_cleanup(qpair);
 
 	return 0;
 }
@@ -2893,7 +2893,7 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 		}
 	}
 
-	spdk_nvmf_qpair_request_cleanup(qpair);
+	nvmf_qpair_request_cleanup(qpair);
 
 	return 0;
 }
@@ -3026,8 +3026,8 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 }
 
 static bool
-spdk_nvmf_ctrlr_get_dif_ctx(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
-			    struct spdk_dif_ctx *dif_ctx)
+nvmf_ctrlr_get_dif_ctx(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
+		       struct spdk_dif_ctx *dif_ctx)
 {
 	struct spdk_nvmf_ns *ns;
 	struct spdk_bdev *bdev;
@@ -3077,7 +3077,7 @@ spdk_nvmf_request_get_dif_ctx(struct spdk_nvmf_request *req, struct spdk_dif_ctx
 		return false;
 	}
 
-	return spdk_nvmf_ctrlr_get_dif_ctx(ctrlr, &req->cmd->nvme_cmd, dif_ctx);
+	return nvmf_ctrlr_get_dif_ctx(ctrlr, &req->cmd->nvme_cmd, dif_ctx);
 }
 
 void
