@@ -50,8 +50,8 @@
 #include "spdk_internal/log.h"
 
 static bool
-spdk_nvmf_subsystem_bdev_io_type_supported(struct spdk_nvmf_subsystem *subsystem,
-		enum spdk_bdev_io_type io_type)
+nvmf_subsystem_bdev_io_type_supported(struct spdk_nvmf_subsystem *subsystem,
+				      enum spdk_bdev_io_type io_type)
 {
 	struct spdk_nvmf_ns *ns;
 
@@ -78,13 +78,13 @@ spdk_nvmf_subsystem_bdev_io_type_supported(struct spdk_nvmf_subsystem *subsystem
 bool
 nvmf_ctrlr_dsm_supported(struct spdk_nvmf_ctrlr *ctrlr)
 {
-	return spdk_nvmf_subsystem_bdev_io_type_supported(ctrlr->subsys, SPDK_BDEV_IO_TYPE_UNMAP);
+	return nvmf_subsystem_bdev_io_type_supported(ctrlr->subsys, SPDK_BDEV_IO_TYPE_UNMAP);
 }
 
 bool
 nvmf_ctrlr_write_zeroes_supported(struct spdk_nvmf_ctrlr *ctrlr)
 {
-	return spdk_nvmf_subsystem_bdev_io_type_supported(ctrlr->subsys, SPDK_BDEV_IO_TYPE_WRITE_ZEROES);
+	return nvmf_subsystem_bdev_io_type_supported(ctrlr->subsys, SPDK_BDEV_IO_TYPE_WRITE_ZEROES);
 }
 
 static void
@@ -225,7 +225,7 @@ nvmf_bdev_ctrlr_lba_in_range(uint64_t bdev_num_blocks, uint64_t io_start_lba,
 }
 
 static void
-spdk_nvmf_ctrlr_process_io_cmd_resubmit(void *arg)
+nvmf_ctrlr_process_io_cmd_resubmit(void *arg)
 {
 	struct spdk_nvmf_request *req = arg;
 
@@ -233,7 +233,7 @@ spdk_nvmf_ctrlr_process_io_cmd_resubmit(void *arg)
 }
 
 static void
-spdk_nvmf_ctrlr_process_admin_cmd_resubmit(void *arg)
+nvmf_ctrlr_process_admin_cmd_resubmit(void *arg)
 {
 	struct spdk_nvmf_request *req = arg;
 
@@ -290,7 +290,7 @@ nvmf_bdev_ctrlr_read_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 				    nvmf_bdev_ctrlr_complete_cmd, req);
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
-			nvmf_bdev_ctrl_queue_io(req, bdev, ch, spdk_nvmf_ctrlr_process_io_cmd_resubmit, req);
+			nvmf_bdev_ctrl_queue_io(req, bdev, ch, nvmf_ctrlr_process_io_cmd_resubmit, req);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 		}
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
@@ -334,7 +334,7 @@ nvmf_bdev_ctrlr_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 				     nvmf_bdev_ctrlr_complete_cmd, req);
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
-			nvmf_bdev_ctrl_queue_io(req, bdev, ch, spdk_nvmf_ctrlr_process_io_cmd_resubmit, req);
+			nvmf_bdev_ctrl_queue_io(req, bdev, ch, nvmf_ctrlr_process_io_cmd_resubmit, req);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 		}
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
@@ -378,7 +378,7 @@ nvmf_bdev_ctrlr_compare_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 				       nvmf_bdev_ctrlr_complete_cmd, req);
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
-			nvmf_bdev_ctrl_queue_io(req, bdev, ch, spdk_nvmf_ctrlr_process_io_cmd_resubmit, req);
+			nvmf_bdev_ctrl_queue_io(req, bdev, ch, nvmf_ctrlr_process_io_cmd_resubmit, req);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 		}
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
@@ -432,8 +432,8 @@ nvmf_bdev_ctrlr_compare_and_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_d
 			write_req->iovcnt, write_start_lba, write_num_blocks, nvmf_bdev_ctrlr_complete_cmd, write_req);
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
-			nvmf_bdev_ctrl_queue_io(cmp_req, bdev, ch, spdk_nvmf_ctrlr_process_io_cmd_resubmit, cmp_req);
-			nvmf_bdev_ctrl_queue_io(write_req, bdev, ch, spdk_nvmf_ctrlr_process_io_cmd_resubmit, write_req);
+			nvmf_bdev_ctrl_queue_io(cmp_req, bdev, ch, nvmf_ctrlr_process_io_cmd_resubmit, cmp_req);
+			nvmf_bdev_ctrl_queue_io(write_req, bdev, ch, nvmf_ctrlr_process_io_cmd_resubmit, write_req);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 		}
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
@@ -468,7 +468,7 @@ nvmf_bdev_ctrlr_write_zeroes_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *
 					   nvmf_bdev_ctrlr_complete_cmd, req);
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
-			nvmf_bdev_ctrl_queue_io(req, bdev, ch, spdk_nvmf_ctrlr_process_io_cmd_resubmit, req);
+			nvmf_bdev_ctrl_queue_io(req, bdev, ch, nvmf_ctrlr_process_io_cmd_resubmit, req);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 		}
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
@@ -500,7 +500,7 @@ nvmf_bdev_ctrlr_flush_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 				    nvmf_bdev_ctrlr_complete_cmd, req);
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
-			nvmf_bdev_ctrl_queue_io(req, bdev, ch, spdk_nvmf_ctrlr_process_io_cmd_resubmit, req);
+			nvmf_bdev_ctrl_queue_io(req, bdev, ch, nvmf_ctrlr_process_io_cmd_resubmit, req);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 		}
 		response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
@@ -658,7 +658,7 @@ nvmf_bdev_ctrlr_nvme_passthru_io(struct spdk_bdev *bdev, struct spdk_bdev_desc *
 					nvmf_bdev_ctrlr_complete_cmd, req);
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
-			nvmf_bdev_ctrl_queue_io(req, bdev, ch, spdk_nvmf_ctrlr_process_io_cmd_resubmit, req);
+			nvmf_bdev_ctrl_queue_io(req, bdev, ch, nvmf_ctrlr_process_io_cmd_resubmit, req);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 		}
 		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
@@ -682,7 +682,7 @@ spdk_nvmf_bdev_ctrlr_nvme_passthru_admin(struct spdk_bdev *bdev, struct spdk_bde
 					   nvmf_bdev_ctrlr_complete_admin_cmd, req);
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
-			nvmf_bdev_ctrl_queue_io(req, bdev, ch, spdk_nvmf_ctrlr_process_admin_cmd_resubmit, req);
+			nvmf_bdev_ctrl_queue_io(req, bdev, ch, nvmf_ctrlr_process_admin_cmd_resubmit, req);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 		}
 		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
