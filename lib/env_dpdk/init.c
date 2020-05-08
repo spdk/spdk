@@ -128,6 +128,10 @@ free_args(char **args, int argcount)
 {
 	int i;
 
+	if (args == NULL) {
+		return;
+	}
+
 	for (i = 0; i < argcount; i++) {
 		free(args[i]);
 	}
@@ -501,6 +505,8 @@ spdk_env_dpdk_post_fini(void)
 	pci_env_fini();
 
 	free_args(g_eal_cmdline, g_eal_cmdline_argcount);
+	g_eal_cmdline = NULL;
+	g_eal_cmdline_argcount = 0;
 }
 
 int
@@ -510,6 +516,26 @@ spdk_env_init(const struct spdk_env_opts *opts)
 	int i, rc;
 	int orig_optind;
 	bool legacy_mem;
+
+	/* If SPDK env has been initialized before, then only pci env requires
+	 * reinitialization.
+	 */
+	if (g_external_init == false) {
+		if (opts != NULL) {
+			fprintf(stderr, "Invalid arguments to reinitialize SPDK env\n");
+			return -EINVAL;
+		}
+
+		printf("Starting %s / %s reinitialization...\n", SPDK_VERSION_STRING, rte_version());
+		pci_env_reinit();
+
+		return 0;
+	}
+
+	if (opts == NULL) {
+		fprintf(stderr, "NULL arguments to initialize DPDK\n");
+		return -EINVAL;
+	}
 
 	rc = build_eal_cmdline(opts);
 	if (rc < 0) {

@@ -481,6 +481,8 @@ static int bdev_malloc_initialize(void)
 	uint64_t size;
 	struct spdk_bdev *bdev;
 
+	malloc_disk_count = 0;
+
 	if (sp != NULL) {
 		NumberOfLuns = spdk_conf_section_get_intval(sp, "NumberOfLuns");
 		LunSizeInMB = spdk_conf_section_get_intval(sp, "LunSizeInMB");

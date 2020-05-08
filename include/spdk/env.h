@@ -159,8 +159,11 @@ void spdk_free(void *buf);
 void spdk_env_opts_init(struct spdk_env_opts *opts);
 
 /**
- * Initialize the environment library. This must be called prior to using
- * any other functions in this library.
+ * Initialize or reinitialize the environment library.
+ * For initialization, this must be called prior to using any other functions
+ * in this library. For reinitialization, the parameter `opts` must be set to
+ * NULL and this must be called after the environment library was finished by
+ * spdk_env_fini() within the same process.
  *
  * \param opts Environment initialization options.
  * \return 0 on success, or negative errno on failure.
@@ -168,10 +171,11 @@ void spdk_env_opts_init(struct spdk_env_opts *opts);
 int spdk_env_init(const struct spdk_env_opts *opts);
 
 /**
- * Release any resources of the environment library that were alllocated with
+ * Release any resources of the environment library that were allocated with
  * spdk_env_init(). After this call, no SPDK env function calls may be made.
  * It is expected that common usage of this function is to call it just before
- * terminating the process.
+ * terminating the process or before reinitializing the environment library
+ * within the same process.
  */
 void spdk_env_fini(void);
 

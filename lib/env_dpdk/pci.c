@@ -239,15 +239,9 @@ cleanup_pci_devices(void)
 
 static int scan_pci_bus(bool delay_init);
 
-void
-pci_env_init(void)
+static inline void
+_pci_env_init(void)
 {
-	struct spdk_pci_driver *driver;
-
-	TAILQ_FOREACH(driver, &g_pci_drivers, tailq) {
-		rte_pci_register(&driver->driver);
-	}
-
 	/* We assume devices were present on the bus for more than 2 seconds
 	 * before initializing SPDK and there's no need to wait more. We scan
 	 * the bus, but we don't blacklist any devices.
@@ -258,6 +252,28 @@ pci_env_init(void)
 	if (spdk_process_is_primary()) {
 		rte_dev_event_callback_register(NULL, pci_device_rte_hotremove, NULL);
 	}
+}
+
+void
+pci_env_init(void)
+{
+	struct spdk_pci_driver *driver;
+
+	TAILQ_FOREACH(driver, &g_pci_drivers, tailq) {
+		rte_pci_register(&driver->driver);
+	}
+
+	_pci_env_init();
+}
+
+void
+pci_env_reinit(void)
+{
+	/* There is no need to register pci drivers again, since they were
+	 * already pre-registered in pci_env_init.
+	 */
+
+	_pci_env_init();
 }
 
 void

@@ -315,8 +315,8 @@ app_setup_signal_handlers(struct spdk_app_opts *opts)
 	}
 
 	/* Install the same handler for SIGINT and SIGTERM */
+	g_shutdown_sig_received = false;
 	sigact.sa_handler = __shutdown_signal;
-
 	rc = sigaction(SIGINT, &sigact, NULL);
 	if (rc < 0) {
 		SPDK_ERRLOG("sigaction(SIGINT) failed\n");
@@ -497,6 +497,16 @@ app_setup_env(struct spdk_app_opts *opts)
 	struct spdk_env_opts env_opts = {};
 	int rc;
 
+	if (opts == NULL) {
+		rc = spdk_env_init(NULL);
+		if (rc != 0) {
+			SPDK_ERRLOG("Unable to reinitialize SPDK env\n");
+		}
+
+		return rc;
+	}
+
+
 	spdk_env_opts_init(&env_opts);
 
 	env_opts.name = opts->name;
@@ -512,13 +522,13 @@ app_setup_env(struct spdk_app_opts *opts)
 	env_opts.num_pci_addr = opts->num_pci_addr;
 	env_opts.pci_blacklist = opts->pci_blacklist;
 	env_opts.pci_whitelist = opts->pci_whitelist;
-	env_opts.base_virtaddr = opts->base_virtaddr;
 	env_opts.env_context = opts->env_context;
 	env_opts.iova_mode = opts->iova_mode;
 
 	rc = spdk_env_init(&env_opts);
 	free(env_opts.pci_blacklist);
 	free(env_opts.pci_whitelist);
+
 
 	if (rc < 0) {
 		SPDK_ERRLOG("Unable to initialize SPDK env\n");
@@ -589,6 +599,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
 	int			rc;
 	char			*tty;
 	struct spdk_cpuset	tmp_cpumask = {};
+	static bool		g_env_was_setup = false;
 
 	if (!opts) {
 		SPDK_ERRLOG("opts should not be NULL\n");
@@ -644,7 +655,10 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
 
 	spdk_log_set_level(SPDK_APP_DEFAULT_LOG_LEVEL);
 
-	if (app_setup_env(opts) < 0) {
+	/* Pass NULL to app_setup_env if SPDK app has been set up, in order to
+	 * indicate that this is a reinitialization.
+	 */
+	if (app_setup_env(g_env_was_setup ? NULL : opts) < 0) {
 		return 1;
 	}
 
@@ -694,6 +708,8 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
 
 	/* This blocks until spdk_app_stop is called */
 	spdk_reactors_start();
+
+	g_env_was_setup = true;
 
 	return g_spdk_app.rc;
 }
