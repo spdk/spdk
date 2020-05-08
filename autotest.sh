@@ -23,8 +23,9 @@ if [ $(uname -s) = Linux ]; then
 	echo "core" > /proc/sys/kernel/core_pattern
 
 	# Make sure that the hugepage state for our VM is fresh so we don't fail
-	# hugepage allocation
+	# hugepage allocation. Allow time for this action to complete.
 	echo 1 > /proc/sys/vm/drop_caches
+	sleep 3
 
 	# make sure nbd (network block device) driver is loaded if it is available
 	# this ensures that when tests need to use nbd, it will be fully initialized
