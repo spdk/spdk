@@ -338,7 +338,7 @@ if [ -n "$shfmt" ]; then
 		shfmt_cmdline+=(-d)       # diffOut - print diff of the changes and exit with != 0
 		shfmt_cmdline+=(-sr)      # redirect operators will be followed by a space
 
-		diff=$PWD/$shfmt.patch
+		diff=${output_dir:-$PWD}/$shfmt.patch
 
 		# Explicitly tell shfmt to not look for .editorconfig. .editorconfig is also not looked up
 		# in case any formatting arguments has been passed on its cmdline.
