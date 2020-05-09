@@ -1081,7 +1081,7 @@ struct call_thread {
 };
 
 static void
-spdk_on_thread(void *ctx)
+_on_thread(void *ctx)
 {
 	struct call_thread *ct = ctx;
 	int rc __attribute__((unused));
@@ -1101,7 +1101,7 @@ spdk_on_thread(void *ctx)
 		SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Continuing thread iteration to %s\n",
 			      ct->cur_thread->name);
 
-		rc = spdk_thread_send_msg(ct->cur_thread, spdk_on_thread, ctx);
+		rc = spdk_thread_send_msg(ct->cur_thread, _on_thread, ctx);
 	}
 	assert(rc == 0);
 }
@@ -1140,7 +1140,7 @@ spdk_for_each_thread(spdk_msg_fn fn, void *ctx, spdk_msg_fn cpl)
 	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Starting thread iteration from %s\n",
 		      ct->orig_thread->name);
 
-	rc = spdk_thread_send_msg(ct->cur_thread, spdk_on_thread, ct);
+	rc = spdk_thread_send_msg(ct->cur_thread, _on_thread, ct);
 	assert(rc == 0);
 }
 
