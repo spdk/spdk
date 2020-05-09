@@ -108,6 +108,8 @@ function confirm_abi_deps() {
 	name = spdk_opal_method
 [suppress_variable]
 	name = spdk_opal_uid
+[suppress_variable]
+	name = SPDK_LOG_REDUCE
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do
