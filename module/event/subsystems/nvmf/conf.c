@@ -432,9 +432,6 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 			subsystem = NULL;
 			goto done;
 		}
-
-		SPDK_INFOLOG(SPDK_LOG_NVMF, "Attaching block device %s to subsystem %s\n",
-			     spdk_bdev_get_name(bdev), spdk_nvmf_subsystem_get_nqn(subsystem));
 	}
 
 	/* Parse Listen sections */
