@@ -34,8 +34,8 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-SO_VER := 3
-SO_MINOR := 1
+SO_VER := 4
+SO_MINOR := 0
 SO_SUFFIX := $(SO_VER).$(SO_MINOR)
 
 C_SRCS = ctrlr.c ctrlr_discovery.c ctrlr_bdev.c \
@@ -70,5 +70,7 @@ ifneq ($(strip $(CONFIG_FC_PATH)),)
 CFLAGS += -I$(CONFIG_FC_PATH)
 endif
 endif
+
+SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_nvmf.map)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
