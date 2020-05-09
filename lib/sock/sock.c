@@ -58,7 +58,7 @@ static pthread_mutex_t g_map_table_mutex = PTHREAD_MUTEX_INITIALIZER;
  * If the group is already in the map, take a reference.
  */
 static int
-spdk_sock_map_insert(int placement_id, struct spdk_sock_group *group)
+sock_map_insert(int placement_id, struct spdk_sock_group *group)
 {
 	struct spdk_sock_placement_id_entry *entry;
 
@@ -95,7 +95,7 @@ spdk_sock_map_insert(int placement_id, struct spdk_sock_group *group)
  * If the reference count is 0, remove the group.
  */
 static void
-spdk_sock_map_release(int placement_id)
+sock_map_release(int placement_id)
 {
 	struct spdk_sock_placement_id_entry *entry;
 
@@ -113,7 +113,7 @@ spdk_sock_map_release(int placement_id)
 
 /* Look up the group for a placement_id. */
 static void
-spdk_sock_map_lookup(int placement_id, struct spdk_sock_group **group)
+sock_map_lookup(int placement_id, struct spdk_sock_group **group)
 {
 	struct spdk_sock_placement_id_entry *entry;
 
@@ -131,7 +131,7 @@ spdk_sock_map_lookup(int placement_id, struct spdk_sock_group **group)
 
 /* Remove the socket group from the map table */
 static void
-spdk_sock_remove_sock_group_from_map_table(struct spdk_sock_group *group)
+sock_remove_sock_group_from_map_table(struct spdk_sock_group *group)
 {
 	struct spdk_sock_placement_id_entry *entry, *tmp;
 
@@ -153,7 +153,7 @@ spdk_sock_get_optimal_sock_group(struct spdk_sock *sock, struct spdk_sock_group 
 
 	rc = sock->net_impl->get_placement_id(sock, &placement_id);
 	if (!rc && (placement_id != 0)) {
-		spdk_sock_map_lookup(placement_id, group);
+		sock_map_lookup(placement_id, group);
 		return 0;
 	} else {
 		return -1;
@@ -182,7 +182,7 @@ spdk_sock_get_default_opts(struct spdk_sock_opts *opts)
  * opts_user The opts passed by the caller.
  * */
 static void
-spdk_sock_init_opts(struct spdk_sock_opts *opts, struct spdk_sock_opts *opts_user)
+sock_init_opts(struct spdk_sock_opts *opts, struct spdk_sock_opts *opts_user)
 {
 	assert(opts);
 	assert(opts_user);
@@ -224,7 +224,7 @@ spdk_sock_connect_ext(const char *ip, int port, char *impl_name, struct spdk_soc
 			continue;
 		}
 
-		spdk_sock_init_opts(&opts_local, opts);
+		sock_init_opts(&opts_local, opts);
 		sock = impl->connect(ip, port, &opts_local);
 		if (sock != NULL) {
 			/* Copy the contents, both the two structures are the same ABI version */
@@ -266,7 +266,7 @@ spdk_sock_listen_ext(const char *ip, int port, char *impl_name, struct spdk_sock
 			continue;
 		}
 
-		spdk_sock_init_opts(&opts_local, opts);
+		sock_init_opts(&opts_local, opts);
 		sock = impl->listen(ip, port, &opts_local);
 		if (sock != NULL) {
 			/* Copy the contents, both the two structures are the same ABI version */
@@ -510,7 +510,7 @@ spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 
 	rc = sock->net_impl->get_placement_id(sock, &placement_id);
 	if (!rc && (placement_id != 0)) {
-		rc = spdk_sock_map_insert(placement_id, group);
+		rc = sock_map_insert(placement_id, group);
 		if (rc < 0) {
 			return -1;
 		}
@@ -559,7 +559,7 @@ spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *soc
 
 	rc = sock->net_impl->get_placement_id(sock, &placement_id);
 	if (!rc && (placement_id != 0)) {
-		spdk_sock_map_release(placement_id);
+		sock_map_release(placement_id);
 	}
 
 	rc = group_impl->net_impl->group_impl_remove_sock(group_impl, sock);
@@ -583,9 +583,9 @@ spdk_sock_group_poll(struct spdk_sock_group *group)
 }
 
 static int
-spdk_sock_group_impl_poll_count(struct spdk_sock_group_impl *group_impl,
-				struct spdk_sock_group *group,
-				int max_events)
+sock_group_impl_poll_count(struct spdk_sock_group_impl *group_impl,
+			   struct spdk_sock_group *group,
+			   int max_events)
 {
 	struct spdk_sock *socks[MAX_EVENTS_PER_POLL];
 	int num_events, i;
@@ -642,7 +642,7 @@ spdk_sock_group_poll_count(struct spdk_sock_group *group, int max_events)
 	}
 
 	STAILQ_FOREACH_FROM(group_impl, &group->group_impls, link) {
-		rc = spdk_sock_group_impl_poll_count(group_impl, group, max_events);
+		rc = sock_group_impl_poll_count(group_impl, group, max_events);
 		if (rc < 0) {
 			num_events = -1;
 			SPDK_ERRLOG("group_impl_poll_count for net(%s) failed\n",
@@ -681,7 +681,7 @@ spdk_sock_group_close(struct spdk_sock_group **group)
 		}
 	}
 
-	spdk_sock_remove_sock_group_from_map_table(*group);
+	sock_remove_sock_group_from_map_table(*group);
 	free(*group);
 	*group = NULL;
 
