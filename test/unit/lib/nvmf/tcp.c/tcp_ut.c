@@ -346,7 +346,7 @@ test_nvmf_tcp_create(void)
 	opts.max_aq_depth = UT_MAX_AQ_DEPTH;
 	opts.num_shared_buffers = UT_NUM_SHARED_BUFFERS;
 	/* expect success */
-	transport = spdk_nvmf_tcp_create(&opts);
+	transport = nvmf_tcp_create(&opts);
 	CU_ASSERT_PTR_NOT_NULL(transport);
 	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
 	SPDK_CU_ASSERT_FATAL(ttransport != NULL);
@@ -369,7 +369,7 @@ test_nvmf_tcp_create(void)
 	opts.max_aq_depth = UT_MAX_AQ_DEPTH;
 	opts.num_shared_buffers = UT_NUM_SHARED_BUFFERS;
 	/* expect success */
-	transport = spdk_nvmf_tcp_create(&opts);
+	transport = nvmf_tcp_create(&opts);
 	CU_ASSERT_PTR_NOT_NULL(transport);
 	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
 	SPDK_CU_ASSERT_FATAL(ttransport != NULL);
@@ -391,7 +391,7 @@ test_nvmf_tcp_create(void)
 	opts.io_unit_size = 16;
 	opts.max_aq_depth = UT_MAX_AQ_DEPTH;
 	/* expect failse */
-	transport = spdk_nvmf_tcp_create(&opts);
+	transport = nvmf_tcp_create(&opts);
 	CU_ASSERT_PTR_NULL(transport);
 
 	spdk_thread_exit(thread);
@@ -421,11 +421,11 @@ test_nvmf_tcp_destroy(void)
 	opts.io_unit_size = UT_IO_UNIT_SIZE;
 	opts.max_aq_depth = UT_MAX_AQ_DEPTH;
 	opts.num_shared_buffers = UT_NUM_SHARED_BUFFERS;
-	transport = spdk_nvmf_tcp_create(&opts);
+	transport = nvmf_tcp_create(&opts);
 	CU_ASSERT_PTR_NOT_NULL(transport);
 	transport->opts = opts;
 	/* destroy transport */
-	CU_ASSERT(spdk_nvmf_tcp_destroy(transport) == 0);
+	CU_ASSERT(nvmf_tcp_destroy(transport) == 0);
 
 	spdk_thread_exit(thread);
 	while (!spdk_thread_is_exited(thread)) {
@@ -455,16 +455,16 @@ test_nvmf_tcp_poll_group_create(void)
 	opts.io_unit_size = UT_IO_UNIT_SIZE;
 	opts.max_aq_depth = UT_MAX_AQ_DEPTH;
 	opts.num_shared_buffers = UT_NUM_SHARED_BUFFERS;
-	transport = spdk_nvmf_tcp_create(&opts);
+	transport = nvmf_tcp_create(&opts);
 	CU_ASSERT_PTR_NOT_NULL(transport);
 	transport->opts = opts;
 	MOCK_SET(spdk_sock_group_create, &grp);
-	group = spdk_nvmf_tcp_poll_group_create(transport);
+	group = nvmf_tcp_poll_group_create(transport);
 	MOCK_CLEAR_P(spdk_sock_group_create);
 	SPDK_CU_ASSERT_FATAL(group);
 	group->transport = transport;
-	spdk_nvmf_tcp_poll_group_destroy(group);
-	spdk_nvmf_tcp_destroy(transport);
+	nvmf_tcp_poll_group_destroy(group);
+	nvmf_tcp_destroy(transport);
 
 	spdk_thread_exit(thread);
 	while (!spdk_thread_is_exited(thread)) {
@@ -508,7 +508,7 @@ test_nvmf_tcp_send_c2h_data(void)
 	tcp_req.req.iovcnt = 3;
 	tcp_req.req.length = 300;
 
-	spdk_nvmf_tcp_send_c2h_data(&tqpair, &tcp_req);
+	nvmf_tcp_send_c2h_data(&tqpair, &tcp_req);
 
 	CU_ASSERT(TAILQ_FIRST(&tqpair.send_queue) == &pdu);
 	TAILQ_REMOVE(&tqpair.send_queue, &pdu, tailq);
@@ -571,7 +571,7 @@ test_nvmf_tcp_h2c_data_hdr_handle(void)
 	h2c_data->datao = 0;
 	h2c_data->datal = 200;
 
-	spdk_nvmf_tcp_h2c_data_hdr_handle(&ttransport, &tqpair, &pdu);
+	nvmf_tcp_h2c_data_hdr_handle(&ttransport, &tqpair, &pdu);
 
 	CU_ASSERT(pdu.data_iovcnt == 2);
 	CU_ASSERT((uint64_t)pdu.data_iov[0].iov_base == 0xDEADBEEF);
@@ -663,13 +663,13 @@ test_nvmf_tcp_incapsule_data_handle(void)
 	nvmf_capsule_data->fctype = SPDK_NVMF_FABRIC_COMMAND_CONNECT;
 
 	/* insert tcp_req1 to pending_buf_queue, And this req takes precedence over the next req. */
-	spdk_nvmf_tcp_req_process(&ttransport, &tcp_req1);
+	nvmf_tcp_req_process(&ttransport, &tcp_req1);
 	CU_ASSERT(STAILQ_FIRST(&group->pending_buf_queue) == &tcp_req1.req);
 
 	sgl->unkeyed.length = UT_IO_UNIT_SIZE - 1;
 
 	/* process tqpair capsule req. but we still remain req in pending_buff. */
-	spdk_nvmf_tcp_capsule_cmd_hdr_handle(&ttransport, &tqpair, &tqpair.pdu_in_progress);
+	nvmf_tcp_capsule_cmd_hdr_handle(&ttransport, &tqpair, &tqpair.pdu_in_progress);
 	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD);
 	CU_ASSERT(STAILQ_FIRST(&group->pending_buf_queue) == &tcp_req1.req);
 	STAILQ_FOREACH(req_temp, &group->pending_buf_queue, buf_link) {
