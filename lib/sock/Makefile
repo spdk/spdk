@@ -42,4 +42,6 @@ C_SRCS = sock.c net_framework.c
 
 LIBNAME = sock
 
+SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_sock.map)
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

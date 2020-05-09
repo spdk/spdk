@@ -1,0 +1,44 @@
+{
+	global:
+
+	# public functions in spdk/sock.h
+	spdk_sock_get_default_opts;
+	spdk_sock_getaddr;
+	spdk_sock_connect;
+	spdk_sock_connect_ext;
+	spdk_sock_listen;
+	spdk_sock_listen_ext;
+	spdk_sock_accept;
+	spdk_sock_close;
+	spdk_sock_flush;
+	spdk_sock_recv;
+	spdk_sock_writev;
+	spdk_sock_writev_async;
+	spdk_sock_readv;
+	spdk_sock_set_recvlowat;
+	spdk_sock_set_recvbuf;
+	spdk_sock_set_sendbuf;
+	spdk_sock_is_ipv6;
+	spdk_sock_is_ipv4;
+	spdk_sock_is_connected;
+	spdk_sock_group_create;
+	spdk_sock_group_get_ctx;
+	spdk_sock_group_add_sock;
+	spdk_sock_group_remove_sock;
+	spdk_sock_group_poll;
+	spdk_sock_group_poll_count;
+	spdk_sock_group_close;
+	spdk_sock_get_optimal_sock_group;
+
+	# public functions in spdk/net.h
+	spdk_net_framework_register;
+	spdk_net_framework_start;
+	spdk_net_framework_fini;
+	spdk_net_framework_init_next;
+	spdk_net_framework_fini_next;
+
+	# internal function in spdk_internal/sock.h
+	spdk_net_impl_register;
+
+	local: *;
+};
