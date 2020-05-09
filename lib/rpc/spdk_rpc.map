@@ -1,0 +1,16 @@
+{
+	global:
+
+	# public functions
+	spdk_rpc_verify_methods;
+	spdk_rpc_listen;
+	spdk_rpc_accept;
+	spdk_rpc_close;
+	spdk_rpc_register_method;
+	spdk_rpc_register_alias_deprecated;
+	spdk_rpc_is_method_allowed;
+	spdk_rpc_set_state;
+	spdk_rpc_get_state;
+
+	local: *;
+};
