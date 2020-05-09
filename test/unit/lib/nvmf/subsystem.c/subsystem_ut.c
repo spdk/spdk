@@ -109,38 +109,38 @@ spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt, const char *transport_nam
 }
 
 int
-spdk_nvmf_poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
-				      struct spdk_nvmf_subsystem *subsystem)
+nvmf_poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
+				 struct spdk_nvmf_subsystem *subsystem)
 {
 	return 0;
 }
 
 int
-spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
-				   struct spdk_nvmf_subsystem *subsystem,
-				   spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg)
+nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
+			      struct spdk_nvmf_subsystem *subsystem,
+			      spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg)
 {
 	return 0;
 }
 
 void
-spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
-				      struct spdk_nvmf_subsystem *subsystem,
-				      spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg)
+nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
+				 struct spdk_nvmf_subsystem *subsystem,
+				 spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg)
 {
 }
 
 void
-spdk_nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
-				     struct spdk_nvmf_subsystem *subsystem,
-				     spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg)
+nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
+				struct spdk_nvmf_subsystem *subsystem,
+				spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg)
 {
 }
 
 void
-spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
-				      struct spdk_nvmf_subsystem *subsystem,
-				      spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg)
+nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
+				 struct spdk_nvmf_subsystem *subsystem,
+				 spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg)
 {
 }
 
@@ -187,14 +187,14 @@ spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 void
-spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
+nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 {
 }
 
 static struct spdk_nvmf_ctrlr *g_ns_changed_ctrlr = NULL;
 static uint32_t g_ns_changed_nsid = 0;
 void
-spdk_nvmf_ctrlr_ns_changed(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid)
+nvmf_ctrlr_ns_changed(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid)
 {
 	g_ns_changed_ctrlr = ctrlr;
 	g_ns_changed_nsid = nsid;
@@ -453,7 +453,7 @@ static struct spdk_bdev g_bdev;
 struct spdk_nvmf_subsystem_pg_ns_info g_ns_info;
 
 void
-spdk_nvmf_ctrlr_async_event_reservation_notification(struct spdk_nvmf_ctrlr *ctrlr)
+nvmf_ctrlr_async_event_reservation_notification(struct spdk_nvmf_ctrlr *ctrlr)
 {
 }
 
@@ -999,9 +999,9 @@ test_reservation_release(void)
 }
 
 void
-spdk_nvmf_ctrlr_reservation_notice_log(struct spdk_nvmf_ctrlr *ctrlr,
-				       struct spdk_nvmf_ns *ns,
-				       enum spdk_nvme_reservation_notification_log_page_type type)
+nvmf_ctrlr_reservation_notice_log(struct spdk_nvmf_ctrlr *ctrlr,
+				  struct spdk_nvmf_ns *ns,
+				  enum spdk_nvme_reservation_notification_log_page_type type)
 {
 	ctrlr->num_avail_log_pages++;
 }

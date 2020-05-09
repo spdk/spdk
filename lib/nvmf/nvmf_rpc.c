@@ -472,7 +472,7 @@ spdk_rpc_nvmf_subsystem_stopped(struct spdk_nvmf_subsystem *subsystem,
 	struct spdk_jsonrpc_request *request = cb_arg;
 	struct spdk_json_write_ctx *w;
 
-	spdk_nvmf_subsystem_remove_all_listeners(subsystem, true);
+	nvmf_subsystem_remove_all_listeners(subsystem, true);
 	spdk_nvmf_subsystem_destroy(subsystem);
 
 	w = spdk_jsonrpc_begin_result(request);
@@ -666,7 +666,7 @@ nvmf_rpc_listen_paused(struct spdk_nvmf_subsystem *subsystem,
 	int rc;
 
 	if (ctx->op == NVMF_RPC_LISTEN_ADD) {
-		if (!spdk_nvmf_subsystem_find_listener(subsystem, &ctx->trid)) {
+		if (!nvmf_subsystem_find_listener(subsystem, &ctx->trid)) {
 			rc = spdk_nvmf_tgt_listen(ctx->tgt, &ctx->trid);
 			if (rc == 0) {
 				spdk_nvmf_subsystem_add_listener(ctx->subsystem, &ctx->trid, nvmf_rpc_subsystem_listen, ctx);

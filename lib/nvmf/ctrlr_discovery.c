@@ -120,8 +120,8 @@ nvmf_generate_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn, size
 }
 
 void
-spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, const char *hostnqn, struct iovec *iov,
-				 uint32_t iovcnt, uint64_t offset, uint32_t length)
+nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, const char *hostnqn, struct iovec *iov,
+			    uint32_t iovcnt, uint64_t offset, uint32_t length)
 {
 	size_t copy_len = 0;
 	size_t zero_len = 0;

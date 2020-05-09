@@ -87,8 +87,8 @@ spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
 static struct spdk_nvmf_listener g_listener = {};
 
 struct spdk_nvmf_listener *
-spdk_nvmf_transport_find_listener(struct spdk_nvmf_transport *transport,
-				  const struct spdk_nvme_transport_id *trid)
+nvmf_transport_find_listener(struct spdk_nvmf_transport *transport,
+			     const struct spdk_nvme_transport_id *trid)
 {
 	return &g_listener;
 }
@@ -155,48 +155,48 @@ spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
 }
 
 void
-spdk_nvmf_ctrlr_ns_changed(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid)
+nvmf_ctrlr_ns_changed(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid)
 {
 }
 
 void
-spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
+nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 {
 }
 
 int
-spdk_nvmf_poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
-				      struct spdk_nvmf_subsystem *subsystem)
+nvmf_poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
+				 struct spdk_nvmf_subsystem *subsystem)
 {
 	return 0;
 }
 
 int
-spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
-				   struct spdk_nvmf_subsystem *subsystem,
-				   spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg)
+nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
+			      struct spdk_nvmf_subsystem *subsystem,
+			      spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg)
 {
 	return 0;
 }
 
 void
-spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
-				      struct spdk_nvmf_subsystem *subsystem,
-				      spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg)
+nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
+				 struct spdk_nvmf_subsystem *subsystem,
+				 spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg)
 {
 }
 
 void
-spdk_nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
-				     struct spdk_nvmf_subsystem *subsystem,
-				     spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg)
+nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
+				struct spdk_nvmf_subsystem *subsystem,
+				spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg)
 {
 }
 
 void
-spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
-				      struct spdk_nvmf_subsystem *subsystem,
-				      spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg)
+nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
+				 struct spdk_nvmf_subsystem *subsystem,
+				 spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg)
 {
 }
 
@@ -240,22 +240,22 @@ test_discovery_log(void)
 	/* Get only genctr (first field in the header) */
 	memset(buffer, 0xCC, sizeof(buffer));
 	disc_log = (struct spdk_nvmf_discovery_log_page *)buffer;
-	spdk_nvmf_get_discovery_log_page(&tgt, "nqn.2016-06.io.spdk:host1", &iov, 1, 0,
-					 sizeof(disc_log->genctr));
+	nvmf_get_discovery_log_page(&tgt, "nqn.2016-06.io.spdk:host1", &iov, 1, 0,
+				    sizeof(disc_log->genctr));
 	CU_ASSERT(disc_log->genctr == 2); /* one added subsystem and listener */
 
 	/* Get only the header, no entries */
 	memset(buffer, 0xCC, sizeof(buffer));
 	disc_log = (struct spdk_nvmf_discovery_log_page *)buffer;
-	spdk_nvmf_get_discovery_log_page(&tgt, "nqn.2016-06.io.spdk:host1", &iov, 1, 0, sizeof(*disc_log));
+	nvmf_get_discovery_log_page(&tgt, "nqn.2016-06.io.spdk:host1", &iov, 1, 0, sizeof(*disc_log));
 	CU_ASSERT(disc_log->genctr == 2);
 	CU_ASSERT(disc_log->numrec == 1);
 
 	/* Offset 0, exact size match */
 	memset(buffer, 0xCC, sizeof(buffer));
 	disc_log = (struct spdk_nvmf_discovery_log_page *)buffer;
-	spdk_nvmf_get_discovery_log_page(&tgt, "nqn.2016-06.io.spdk:host1", &iov, 1, 0,
-					 sizeof(*disc_log) + sizeof(disc_log->entries[0]));
+	nvmf_get_discovery_log_page(&tgt, "nqn.2016-06.io.spdk:host1", &iov, 1, 0,
+				    sizeof(*disc_log) + sizeof(disc_log->entries[0]));
 	CU_ASSERT(disc_log->genctr != 0);
 	CU_ASSERT(disc_log->numrec == 1);
 	CU_ASSERT(disc_log->entries[0].trtype == 42);
@@ -263,7 +263,7 @@ test_discovery_log(void)
 	/* Offset 0, oversize buffer */
 	memset(buffer, 0xCC, sizeof(buffer));
 	disc_log = (struct spdk_nvmf_discovery_log_page *)buffer;
-	spdk_nvmf_get_discovery_log_page(&tgt, "nqn.2016-06.io.spdk:host1", &iov, 1, 0, sizeof(buffer));
+	nvmf_get_discovery_log_page(&tgt, "nqn.2016-06.io.spdk:host1", &iov, 1, 0, sizeof(buffer));
 	CU_ASSERT(disc_log->genctr != 0);
 	CU_ASSERT(disc_log->numrec == 1);
 	CU_ASSERT(disc_log->entries[0].trtype == 42);
@@ -273,10 +273,10 @@ test_discovery_log(void)
 	/* Get just the first entry, no header */
 	memset(buffer, 0xCC, sizeof(buffer));
 	entry = (struct spdk_nvmf_discovery_log_page_entry *)buffer;
-	spdk_nvmf_get_discovery_log_page(&tgt, "nqn.2016-06.io.spdk:host1", &iov,
-					 1,
-					 offsetof(struct spdk_nvmf_discovery_log_page, entries[0]),
-					 sizeof(*entry));
+	nvmf_get_discovery_log_page(&tgt, "nqn.2016-06.io.spdk:host1", &iov,
+				    1,
+				    offsetof(struct spdk_nvmf_discovery_log_page, entries[0]),
+				    sizeof(*entry));
 	CU_ASSERT(entry->trtype == 42);
 	subsystem->state = SPDK_NVMF_SUBSYSTEM_INACTIVE;
 	spdk_nvmf_subsystem_destroy(subsystem);

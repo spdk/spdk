@@ -1491,7 +1491,7 @@ nvmf_fc_poller_api_del_connection(void *arg)
 
 	TAILQ_FOREACH_SAFE(fc_req, &hwqp->in_use_reqs, link, tmp) {
 		if (fc_req->fc_conn->conn_id == fc_conn->conn_id) {
-			if (spdk_nvmf_qpair_is_admin_queue(&fc_conn->qpair) &&
+			if (nvmf_qpair_is_admin_queue(&fc_conn->qpair) &&
 			    (fc_req->req.cmd->nvme_cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST)) {
 				/* AER will be cleaned by spdk_nvmf_qpair_disconnect. */
 				continue;

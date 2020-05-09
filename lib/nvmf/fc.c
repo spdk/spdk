@@ -1167,7 +1167,7 @@ nvmf_fc_req_bdev_abort(void *arg1)
 	 */
 	if (ctrlr->aer_req == &fc_req->req) {
 		SPDK_NOTICELOG("Abort AER request\n");
-		spdk_nvmf_qpair_free_aer(fc_req->req.qpair);
+		nvmf_qpair_free_aer(fc_req->req.qpair);
 	}
 }
 

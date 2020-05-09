@@ -63,12 +63,12 @@ DEFINE_STUB(spdk_nvmf_qpair_get_listen_trid,
 	    (struct spdk_nvmf_qpair *qpair, struct spdk_nvme_transport_id *trid),
 	    0);
 
-DEFINE_STUB(spdk_nvmf_subsystem_add_ctrlr,
+DEFINE_STUB(nvmf_subsystem_add_ctrlr,
 	    int,
 	    (struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ctrlr *ctrlr),
 	    0);
 
-DEFINE_STUB(spdk_nvmf_subsystem_get_ctrlr,
+DEFINE_STUB(nvmf_subsystem_get_ctrlr,
 	    struct spdk_nvmf_ctrlr *,
 	    (struct spdk_nvmf_subsystem *subsystem, uint16_t cntlid),
 	    NULL);
@@ -83,11 +83,11 @@ DEFINE_STUB(spdk_nvmf_subsystem_listener_allowed,
 	    (struct spdk_nvmf_subsystem *subsystem, const struct spdk_nvme_transport_id *trid),
 	    true);
 
-DEFINE_STUB_V(spdk_nvmf_get_discovery_log_page,
+DEFINE_STUB_V(nvmf_get_discovery_log_page,
 	      (struct spdk_nvmf_tgt *tgt, const char *hostnqn, struct iovec *iov,
 	       uint32_t iovcnt, uint64_t offset, uint32_t length));
 
-DEFINE_STUB_V(spdk_nvmf_subsystem_remove_ctrlr,
+DEFINE_STUB_V(nvmf_subsystem_remove_ctrlr,
 	      (struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ctrlr *ctrlr));
 
 DEFINE_STUB(spdk_nvmf_subsystem_get_first_ns,
@@ -105,65 +105,65 @@ DEFINE_STUB(spdk_nvmf_subsystem_host_allowed,
 	    (struct spdk_nvmf_subsystem *subsystem, const char *hostnqn),
 	    true);
 
-DEFINE_STUB(spdk_nvmf_ctrlr_dsm_supported,
+DEFINE_STUB(nvmf_ctrlr_dsm_supported,
 	    bool,
 	    (struct spdk_nvmf_ctrlr *ctrlr),
 	    false);
 
-DEFINE_STUB(spdk_nvmf_ctrlr_write_zeroes_supported,
+DEFINE_STUB(nvmf_ctrlr_write_zeroes_supported,
 	    bool,
 	    (struct spdk_nvmf_ctrlr *ctrlr),
 	    false);
 
-DEFINE_STUB(spdk_nvmf_bdev_ctrlr_read_cmd,
+DEFINE_STUB(nvmf_bdev_ctrlr_read_cmd,
 	    int,
 	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	     struct spdk_nvmf_request *req),
 	    0);
 
-DEFINE_STUB(spdk_nvmf_bdev_ctrlr_write_cmd,
+DEFINE_STUB(nvmf_bdev_ctrlr_write_cmd,
 	    int,
 	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	     struct spdk_nvmf_request *req),
 	    0);
 
-DEFINE_STUB(spdk_nvmf_bdev_ctrlr_compare_cmd,
+DEFINE_STUB(nvmf_bdev_ctrlr_compare_cmd,
 	    int,
 	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	     struct spdk_nvmf_request *req),
 	    0);
 
-DEFINE_STUB(spdk_nvmf_bdev_ctrlr_compare_and_write_cmd,
+DEFINE_STUB(nvmf_bdev_ctrlr_compare_and_write_cmd,
 	    int,
 	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	     struct spdk_nvmf_request *cmp_req, struct spdk_nvmf_request *write_req),
 	    0);
 
-DEFINE_STUB(spdk_nvmf_bdev_ctrlr_write_zeroes_cmd,
+DEFINE_STUB(nvmf_bdev_ctrlr_write_zeroes_cmd,
 	    int,
 	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	     struct spdk_nvmf_request *req),
 	    0);
 
-DEFINE_STUB(spdk_nvmf_bdev_ctrlr_flush_cmd,
+DEFINE_STUB(nvmf_bdev_ctrlr_flush_cmd,
 	    int,
 	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	     struct spdk_nvmf_request *req),
 	    0);
 
-DEFINE_STUB(spdk_nvmf_bdev_ctrlr_dsm_cmd,
+DEFINE_STUB(nvmf_bdev_ctrlr_dsm_cmd,
 	    int,
 	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	     struct spdk_nvmf_request *req),
 	    0);
 
-DEFINE_STUB(spdk_nvmf_bdev_ctrlr_nvme_passthru_io,
+DEFINE_STUB(nvmf_bdev_ctrlr_nvme_passthru_io,
 	    int,
 	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	     struct spdk_nvmf_request *req),
 	    0);
 
-DEFINE_STUB(spdk_nvmf_bdev_ctrlr_get_dif_ctx,
+DEFINE_STUB(nvmf_bdev_ctrlr_get_dif_ctx,
 	    bool,
 	    (struct spdk_bdev *bdev, struct spdk_nvme_cmd *cmd, struct spdk_dif_ctx *dif_ctx),
 	    false);
@@ -192,7 +192,7 @@ DEFINE_STUB(spdk_sock_set_priority,
 	    (struct spdk_sock *sock, int priority),
 	    0);
 
-DEFINE_STUB_V(spdk_nvmf_ns_reservation_request, (void *ctx));
+DEFINE_STUB_V(nvmf_ns_reservation_request, (void *ctx));
 
 DEFINE_STUB_V(spdk_nvme_trid_populate_transport, (struct spdk_nvme_transport_id *trid,
 		enum spdk_nvme_transport_type trtype));
@@ -292,8 +292,8 @@ spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 
 
 void
-spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *nsdata,
-				 bool dif_insert_or_strip)
+nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *nsdata,
+			    bool dif_insert_or_strip)
 {
 	uint64_t num_blocks;
 

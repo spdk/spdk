@@ -189,8 +189,8 @@ spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport)
 }
 
 struct spdk_nvmf_listener *
-spdk_nvmf_transport_find_listener(struct spdk_nvmf_transport *transport,
-				  const struct spdk_nvme_transport_id *trid)
+nvmf_transport_find_listener(struct spdk_nvmf_transport *transport,
+			     const struct spdk_nvme_transport_id *trid)
 {
 	struct spdk_nvmf_listener *listener;
 
@@ -210,7 +210,7 @@ spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
 	struct spdk_nvmf_listener *listener;
 	int rc;
 
-	listener = spdk_nvmf_transport_find_listener(transport, trid);
+	listener = nvmf_transport_find_listener(transport, trid);
 	if (!listener) {
 		listener = calloc(1, sizeof(*listener));
 		if (!listener) {
@@ -240,7 +240,7 @@ spdk_nvmf_transport_stop_listen(struct spdk_nvmf_transport *transport,
 {
 	struct spdk_nvmf_listener *listener;
 
-	listener = spdk_nvmf_transport_find_listener(transport, trid);
+	listener = nvmf_transport_find_listener(transport, trid);
 	if (!listener) {
 		return -ENOENT;
 	}

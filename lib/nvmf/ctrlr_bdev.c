@@ -76,13 +76,13 @@ spdk_nvmf_subsystem_bdev_io_type_supported(struct spdk_nvmf_subsystem *subsystem
 }
 
 bool
-spdk_nvmf_ctrlr_dsm_supported(struct spdk_nvmf_ctrlr *ctrlr)
+nvmf_ctrlr_dsm_supported(struct spdk_nvmf_ctrlr *ctrlr)
 {
 	return spdk_nvmf_subsystem_bdev_io_type_supported(ctrlr->subsys, SPDK_BDEV_IO_TYPE_UNMAP);
 }
 
 bool
-spdk_nvmf_ctrlr_write_zeroes_supported(struct spdk_nvmf_ctrlr *ctrlr)
+nvmf_ctrlr_write_zeroes_supported(struct spdk_nvmf_ctrlr *ctrlr)
 {
 	return spdk_nvmf_subsystem_bdev_io_type_supported(ctrlr->subsys, SPDK_BDEV_IO_TYPE_WRITE_ZEROES);
 }
@@ -135,8 +135,8 @@ nvmf_bdev_ctrlr_complete_admin_cmd(struct spdk_bdev_io *bdev_io, bool success,
 }
 
 void
-spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *nsdata,
-				 bool dif_insert_or_strip)
+nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *nsdata,
+			    bool dif_insert_or_strip)
 {
 	struct spdk_bdev *bdev = ns->bdev;
 	uint64_t num_blocks;
@@ -229,7 +229,7 @@ spdk_nvmf_ctrlr_process_io_cmd_resubmit(void *arg)
 {
 	struct spdk_nvmf_request *req = arg;
 
-	spdk_nvmf_ctrlr_process_io_cmd(req);
+	nvmf_ctrlr_process_io_cmd(req);
 }
 
 static void
@@ -237,7 +237,7 @@ spdk_nvmf_ctrlr_process_admin_cmd_resubmit(void *arg)
 {
 	struct spdk_nvmf_request *req = arg;
 
-	spdk_nvmf_ctrlr_process_admin_cmd(req);
+	nvmf_ctrlr_process_admin_cmd(req);
 }
 
 static void
@@ -258,8 +258,8 @@ nvmf_bdev_ctrl_queue_io(struct spdk_nvmf_request *req, struct spdk_bdev *bdev,
 }
 
 int
-spdk_nvmf_bdev_ctrlr_read_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
-			      struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
+nvmf_bdev_ctrlr_read_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+			 struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
 {
 	uint64_t bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
 	uint32_t block_size = spdk_bdev_get_block_size(bdev);
@@ -302,8 +302,8 @@ spdk_nvmf_bdev_ctrlr_read_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *des
 }
 
 int
-spdk_nvmf_bdev_ctrlr_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
-			       struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
+nvmf_bdev_ctrlr_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+			  struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
 {
 	uint64_t bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
 	uint32_t block_size = spdk_bdev_get_block_size(bdev);
@@ -346,8 +346,8 @@ spdk_nvmf_bdev_ctrlr_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *de
 }
 
 int
-spdk_nvmf_bdev_ctrlr_compare_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
-				 struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
+nvmf_bdev_ctrlr_compare_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+			    struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
 {
 	uint64_t bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
 	uint32_t block_size = spdk_bdev_get_block_size(bdev);
@@ -390,8 +390,8 @@ spdk_nvmf_bdev_ctrlr_compare_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *
 }
 
 int
-spdk_nvmf_bdev_ctrlr_compare_and_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
-		struct spdk_io_channel *ch, struct spdk_nvmf_request *cmp_req, struct spdk_nvmf_request *write_req)
+nvmf_bdev_ctrlr_compare_and_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+				      struct spdk_io_channel *ch, struct spdk_nvmf_request *cmp_req, struct spdk_nvmf_request *write_req)
 {
 	uint64_t bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
 	uint32_t block_size = spdk_bdev_get_block_size(bdev);
@@ -445,8 +445,8 @@ spdk_nvmf_bdev_ctrlr_compare_and_write_cmd(struct spdk_bdev *bdev, struct spdk_b
 }
 
 int
-spdk_nvmf_bdev_ctrlr_write_zeroes_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
-				      struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
+nvmf_bdev_ctrlr_write_zeroes_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+				 struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
 {
 	uint64_t bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
@@ -480,8 +480,8 @@ spdk_nvmf_bdev_ctrlr_write_zeroes_cmd(struct spdk_bdev *bdev, struct spdk_bdev_d
 }
 
 int
-spdk_nvmf_bdev_ctrlr_flush_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
-			       struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
+nvmf_bdev_ctrlr_flush_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+			  struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 	int rc;
@@ -633,8 +633,8 @@ nvmf_bdev_ctrlr_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 }
 
 int
-spdk_nvmf_bdev_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
-			     struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
+nvmf_bdev_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+			struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
@@ -649,8 +649,8 @@ spdk_nvmf_bdev_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc
 }
 
 int
-spdk_nvmf_bdev_ctrlr_nvme_passthru_io(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
-				      struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
+nvmf_bdev_ctrlr_nvme_passthru_io(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+				 struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
 {
 	int rc;
 
@@ -694,8 +694,8 @@ spdk_nvmf_bdev_ctrlr_nvme_passthru_admin(struct spdk_bdev *bdev, struct spdk_bde
 }
 
 bool
-spdk_nvmf_bdev_ctrlr_get_dif_ctx(struct spdk_bdev *bdev, struct spdk_nvme_cmd *cmd,
-				 struct spdk_dif_ctx *dif_ctx)
+nvmf_bdev_ctrlr_get_dif_ctx(struct spdk_bdev *bdev, struct spdk_nvme_cmd *cmd,
+			    struct spdk_dif_ctx *dif_ctx)
 {
 	uint32_t init_ref_tag, dif_check_flags = 0;
 	int rc;

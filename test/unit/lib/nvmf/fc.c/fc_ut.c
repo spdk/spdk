@@ -106,12 +106,12 @@ DEFINE_STUB_V(spdk_trace_register_description,
 	       const char *arg1_name));
 DEFINE_STUB_V(spdk_trace_add_register_fn, (struct spdk_trace_register_fn *reg_fn));
 DEFINE_STUB(spdk_bdev_get_name, const char *, (const struct spdk_bdev *bdev), "fc_ut_test");
-DEFINE_STUB_V(spdk_nvmf_ctrlr_destruct, (struct spdk_nvmf_ctrlr *ctrlr));
-DEFINE_STUB_V(spdk_nvmf_qpair_free_aer, (struct spdk_nvmf_qpair *qpair));
+DEFINE_STUB_V(nvmf_ctrlr_destruct, (struct spdk_nvmf_ctrlr *ctrlr));
+DEFINE_STUB_V(nvmf_qpair_free_aer, (struct spdk_nvmf_qpair *qpair));
 DEFINE_STUB(spdk_bdev_get_io_channel, struct spdk_io_channel *, (struct spdk_bdev_desc *desc),
 	    NULL);
 DEFINE_STUB_V(spdk_nvmf_request_exec, (struct spdk_nvmf_request *req));
-DEFINE_STUB_V(spdk_nvmf_ctrlr_ns_changed, (struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid));
+DEFINE_STUB_V(nvmf_ctrlr_ns_changed, (struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid));
 DEFINE_STUB(spdk_bdev_open, int, (struct spdk_bdev *bdev, bool write,
 				  spdk_bdev_remove_cb_t remove_cb,
 				  void *remove_ctx, struct spdk_bdev_desc **desc), 0);
@@ -123,7 +123,7 @@ DEFINE_STUB_V(spdk_bdev_module_release_bdev, (struct spdk_bdev *bdev));
 DEFINE_STUB(spdk_bdev_get_block_size, uint32_t, (const struct spdk_bdev *bdev), 512);
 DEFINE_STUB(spdk_bdev_get_num_blocks, uint64_t, (const struct spdk_bdev *bdev), 1024);
 
-DEFINE_STUB(spdk_nvmf_ctrlr_async_event_ns_notice, int, (struct spdk_nvmf_ctrlr *ctrlr), 0);
+DEFINE_STUB(nvmf_ctrlr_async_event_ns_notice, int, (struct spdk_nvmf_ctrlr *ctrlr), 0);
 DEFINE_STUB_V(spdk_nvme_trid_populate_transport, (struct spdk_nvme_transport_id *trid,
 		enum spdk_nvme_transport_type trtype));
 DEFINE_STUB_V(spdk_nvmf_ctrlr_data_init, (struct spdk_nvmf_transport_opts *opts,

@@ -345,14 +345,14 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "subsystem is %p\n", subsystem);
 
-	spdk_nvmf_subsystem_remove_all_listeners(subsystem, false);
+	nvmf_subsystem_remove_all_listeners(subsystem, false);
 
 	TAILQ_FOREACH_SAFE(host, &subsystem->hosts, link, host_tmp) {
 		_spdk_nvmf_subsystem_remove_host(subsystem, host);
 	}
 
 	TAILQ_FOREACH_SAFE(ctrlr, &subsystem->ctrlrs, link, ctrlr_tmp) {
-		spdk_nvmf_ctrlr_destruct(ctrlr);
+		nvmf_ctrlr_destruct(ctrlr);
 	}
 
 	ns = spdk_nvmf_subsystem_get_first_ns(subsystem);
@@ -473,17 +473,17 @@ subsystem_state_change_on_pg(struct spdk_io_channel_iter *i)
 
 	switch (ctx->requested_state) {
 	case SPDK_NVMF_SUBSYSTEM_INACTIVE:
-		spdk_nvmf_poll_group_remove_subsystem(group, ctx->subsystem, subsystem_state_change_continue, i);
+		nvmf_poll_group_remove_subsystem(group, ctx->subsystem, subsystem_state_change_continue, i);
 		break;
 	case SPDK_NVMF_SUBSYSTEM_ACTIVE:
 		if (ctx->subsystem->state == SPDK_NVMF_SUBSYSTEM_ACTIVATING) {
-			spdk_nvmf_poll_group_add_subsystem(group, ctx->subsystem, subsystem_state_change_continue, i);
+			nvmf_poll_group_add_subsystem(group, ctx->subsystem, subsystem_state_change_continue, i);
 		} else if (ctx->subsystem->state == SPDK_NVMF_SUBSYSTEM_RESUMING) {
-			spdk_nvmf_poll_group_resume_subsystem(group, ctx->subsystem, subsystem_state_change_continue, i);
+			nvmf_poll_group_resume_subsystem(group, ctx->subsystem, subsystem_state_change_continue, i);
 		}
 		break;
 	case SPDK_NVMF_SUBSYSTEM_PAUSED:
-		spdk_nvmf_poll_group_pause_subsystem(group, ctx->subsystem, subsystem_state_change_continue, i);
+		nvmf_poll_group_pause_subsystem(group, ctx->subsystem, subsystem_state_change_continue, i);
 		break;
 	default:
 		assert(false);
@@ -733,8 +733,8 @@ spdk_nvmf_host_get_nqn(const struct spdk_nvmf_host *host)
 }
 
 struct spdk_nvmf_subsystem_listener *
-spdk_nvmf_subsystem_find_listener(struct spdk_nvmf_subsystem *subsystem,
-				  const struct spdk_nvme_transport_id *trid)
+nvmf_subsystem_find_listener(struct spdk_nvmf_subsystem *subsystem,
+			     const struct spdk_nvme_transport_id *trid)
 {
 	struct spdk_nvmf_subsystem_listener *listener;
 
@@ -787,7 +787,7 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 		return;
 	}
 
-	if (spdk_nvmf_subsystem_find_listener(subsystem, trid)) {
+	if (nvmf_subsystem_find_listener(subsystem, trid)) {
 		/* Listener already exists in this subsystem */
 		cb_fn(cb_arg, 0);
 		return;
@@ -800,7 +800,7 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 		return;
 	}
 
-	tr_listener = spdk_nvmf_transport_find_listener(transport, trid);
+	tr_listener = nvmf_transport_find_listener(transport, trid);
 	if (!tr_listener) {
 		SPDK_ERRLOG("Cannot find transport listener for %s\n", trid->traddr);
 		cb_fn(cb_arg, -EINVAL);
@@ -839,7 +839,7 @@ spdk_nvmf_subsystem_remove_listener(struct spdk_nvmf_subsystem *subsystem,
 		return -EAGAIN;
 	}
 
-	listener = spdk_nvmf_subsystem_find_listener(subsystem, trid);
+	listener = nvmf_subsystem_find_listener(subsystem, trid);
 	if (listener == NULL) {
 		return -ENOENT;
 	}
@@ -850,8 +850,8 @@ spdk_nvmf_subsystem_remove_listener(struct spdk_nvmf_subsystem *subsystem,
 }
 
 void
-spdk_nvmf_subsystem_remove_all_listeners(struct spdk_nvmf_subsystem *subsystem,
-		bool stop)
+nvmf_subsystem_remove_all_listeners(struct spdk_nvmf_subsystem *subsystem,
+				    bool stop)
 {
 	struct spdk_nvmf_subsystem_listener *listener, *listener_tmp;
 
@@ -942,7 +942,7 @@ subsystem_update_ns_on_pg(struct spdk_io_channel_iter *i)
 	group = spdk_io_channel_get_ctx(spdk_io_channel_iter_get_channel(i));
 	subsystem = ctx->subsystem;
 
-	rc = spdk_nvmf_poll_group_update_subsystem(group, subsystem);
+	rc = nvmf_poll_group_update_subsystem(group, subsystem);
 	spdk_for_each_channel_continue(i, rc);
 }
 
@@ -964,7 +964,7 @@ spdk_nvmf_subsystem_ns_changed(struct spdk_nvmf_subsystem *subsystem, uint32_t n
 	struct spdk_nvmf_ctrlr *ctrlr;
 
 	TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
-		spdk_nvmf_ctrlr_ns_changed(ctrlr, nsid);
+		nvmf_ctrlr_ns_changed(ctrlr, nsid);
 	}
 }
 
@@ -1138,13 +1138,13 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 		 * expand max_nsid if possible.
 		 */
 		for (opts.nsid = 1; opts.nsid <= subsystem->max_nsid; opts.nsid++) {
-			if (_spdk_nvmf_subsystem_get_ns(subsystem, opts.nsid) == NULL) {
+			if (_nvmf_subsystem_get_ns(subsystem, opts.nsid) == NULL) {
 				break;
 			}
 		}
 	}
 
-	if (_spdk_nvmf_subsystem_get_ns(subsystem, opts.nsid)) {
+	if (_nvmf_subsystem_get_ns(subsystem, opts.nsid)) {
 		SPDK_ERRLOG("Requested NSID %" PRIu32 " already in use\n", opts.nsid);
 		return 0;
 	}
@@ -1252,7 +1252,7 @@ spdk_nvmf_subsystem_get_first_ns(struct spdk_nvmf_subsystem *subsystem)
 	uint32_t first_nsid;
 
 	first_nsid = spdk_nvmf_subsystem_get_next_allocated_nsid(subsystem, 0);
-	return _spdk_nvmf_subsystem_get_ns(subsystem, first_nsid);
+	return _nvmf_subsystem_get_ns(subsystem, first_nsid);
 }
 
 struct spdk_nvmf_ns *
@@ -1262,13 +1262,13 @@ spdk_nvmf_subsystem_get_next_ns(struct spdk_nvmf_subsystem *subsystem,
 	uint32_t next_nsid;
 
 	next_nsid = spdk_nvmf_subsystem_get_next_allocated_nsid(subsystem, prev_ns->opts.nsid);
-	return _spdk_nvmf_subsystem_get_ns(subsystem, next_nsid);
+	return _nvmf_subsystem_get_ns(subsystem, next_nsid);
 }
 
 struct spdk_nvmf_ns *
 spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
 {
-	return _spdk_nvmf_subsystem_get_ns(subsystem, nsid);
+	return _nvmf_subsystem_get_ns(subsystem, nsid);
 }
 
 uint32_t
@@ -1388,7 +1388,7 @@ spdk_nvmf_subsystem_gen_cntlid(struct spdk_nvmf_subsystem *subsystem)
 		}
 
 		/* Check if a controller with this cntlid currently exists. */
-		if (spdk_nvmf_subsystem_get_ctrlr(subsystem, subsystem->next_cntlid) == NULL) {
+		if (nvmf_subsystem_get_ctrlr(subsystem, subsystem->next_cntlid) == NULL) {
 			/* Found unused cntlid */
 			return subsystem->next_cntlid;
 		}
@@ -1399,7 +1399,7 @@ spdk_nvmf_subsystem_gen_cntlid(struct spdk_nvmf_subsystem *subsystem)
 }
 
 int
-spdk_nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ctrlr *ctrlr)
+nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ctrlr *ctrlr)
 {
 	ctrlr->cntlid = spdk_nvmf_subsystem_gen_cntlid(subsystem);
 	if (ctrlr->cntlid == 0xFFFF) {
@@ -1414,15 +1414,15 @@ spdk_nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem, struct spdk
 }
 
 void
-spdk_nvmf_subsystem_remove_ctrlr(struct spdk_nvmf_subsystem *subsystem,
-				 struct spdk_nvmf_ctrlr *ctrlr)
+nvmf_subsystem_remove_ctrlr(struct spdk_nvmf_subsystem *subsystem,
+			    struct spdk_nvmf_ctrlr *ctrlr)
 {
 	assert(subsystem == ctrlr->subsys);
 	TAILQ_REMOVE(&subsystem->ctrlrs, ctrlr, link);
 }
 
 struct spdk_nvmf_ctrlr *
-spdk_nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem *subsystem, uint16_t cntlid)
+nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem *subsystem, uint16_t cntlid)
 {
 	struct spdk_nvmf_ctrlr *ctrlr;
 
@@ -1758,7 +1758,7 @@ nvmf_subsystem_gen_ctrlr_notification(struct spdk_nvmf_subsystem *subsystem,
 	for (i = 0; i < num_hostid; i++) {
 		TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
 			if (!spdk_uuid_compare(&ctrlr->hostid, &hostid_list[i])) {
-				spdk_nvmf_ctrlr_reservation_notice_log(ctrlr, ns, type);
+				nvmf_ctrlr_reservation_notice_log(ctrlr, ns, type);
 			}
 		}
 	}
@@ -2465,7 +2465,7 @@ _nvmf_ns_reservation_update_done(struct spdk_nvmf_subsystem *subsystem,
 }
 
 void
-spdk_nvmf_ns_reservation_request(void *ctx)
+nvmf_ns_reservation_request(void *ctx)
 {
 	struct spdk_nvmf_request *req = (struct spdk_nvmf_request *)ctx;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
@@ -2476,7 +2476,7 @@ spdk_nvmf_ns_reservation_request(void *ctx)
 	bool update_sgroup = false;
 
 	nsid = cmd->nsid;
-	ns = _spdk_nvmf_subsystem_get_ns(ctrlr->subsys, nsid);
+	ns = _nvmf_subsystem_get_ns(ctrlr->subsys, nsid);
 	assert(ns != NULL);
 
 	switch (cmd->opc) {
