@@ -1074,7 +1074,7 @@ spdk_nvmf_fc_assoc_set_state(struct spdk_nvmf_fc_association *assoc,
 }
 
 static struct spdk_nvmf_fc_association *
-spdk_nvmf_ctrlr_get_fc_assoc(struct spdk_nvmf_ctrlr *ctrlr)
+nvmf_ctrlr_get_fc_assoc(struct spdk_nvmf_ctrlr *ctrlr)
 {
 	struct spdk_nvmf_qpair *qpair = ctrlr->admin_qpair;
 	struct spdk_nvmf_fc_conn *fc_conn;
@@ -1105,7 +1105,7 @@ spdk_nvmf_ctrlr_is_on_nport(uint8_t port_hdl, uint16_t nport_hdl,
 		return false;
 	}
 
-	assoc = spdk_nvmf_ctrlr_get_fc_assoc(ctrlr);
+	assoc = nvmf_ctrlr_get_fc_assoc(ctrlr);
 	if (assoc && assoc->tgtport == fc_nport) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC,
 			      "Controller: %d corresponding to association: %p(%lu:%d) is on port: %d nport: %d\n",
