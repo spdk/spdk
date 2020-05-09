@@ -785,7 +785,7 @@ test_reservation_register_with_ptpl(void)
 	SPDK_CU_ASSERT_FATAL(!spdk_uuid_compare(&g_ctrlr1_A.hostid, &reg->hostid));
 	/* Load reservation information from configuration file */
 	memset(&info, 0, sizeof(info));
-	rc = spdk_nvmf_ns_load_reservation(g_ns.ptpl_file, &info);
+	rc = nvmf_ns_load_reservation(g_ns.ptpl_file, &info);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	SPDK_CU_ASSERT_FATAL(info.ptpl_activated == true);
 
@@ -797,7 +797,7 @@ test_reservation_register_with_ptpl(void)
 	SPDK_CU_ASSERT_FATAL(update_sgroup == true);
 	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
 	SPDK_CU_ASSERT_FATAL(g_ns.ptpl_activated == false);
-	rc = spdk_nvmf_ns_load_reservation(g_ns.ptpl_file, &info);
+	rc = nvmf_ns_load_reservation(g_ns.ptpl_file, &info);
 	SPDK_CU_ASSERT_FATAL(rc < 0);
 	unlink(g_ns.ptpl_file);
 
@@ -906,7 +906,7 @@ test_reservation_acquire_release_with_ptpl(void)
 	SPDK_CU_ASSERT_FATAL(!spdk_uuid_compare(&g_ctrlr1_A.hostid, &reg->hostid));
 	/* Load reservation information from configuration file */
 	memset(&info, 0, sizeof(info));
-	rc = spdk_nvmf_ns_load_reservation(g_ns.ptpl_file, &info);
+	rc = nvmf_ns_load_reservation(g_ns.ptpl_file, &info);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	SPDK_CU_ASSERT_FATAL(info.ptpl_activated == true);
 
@@ -918,7 +918,7 @@ test_reservation_acquire_release_with_ptpl(void)
 	SPDK_CU_ASSERT_FATAL(update_sgroup == true);
 	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
 	memset(&info, 0, sizeof(info));
-	rc = spdk_nvmf_ns_load_reservation(g_ns.ptpl_file, &info);
+	rc = nvmf_ns_load_reservation(g_ns.ptpl_file, &info);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	SPDK_CU_ASSERT_FATAL(info.ptpl_activated == true);
 	SPDK_CU_ASSERT_FATAL(info.rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY);
@@ -934,7 +934,7 @@ test_reservation_acquire_release_with_ptpl(void)
 	SPDK_CU_ASSERT_FATAL(update_sgroup == true);
 	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
 	memset(&info, 0, sizeof(info));
-	rc = spdk_nvmf_ns_load_reservation(g_ns.ptpl_file, &info);
+	rc = nvmf_ns_load_reservation(g_ns.ptpl_file, &info);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	SPDK_CU_ASSERT_FATAL(info.rtype == 0);
 	SPDK_CU_ASSERT_FATAL(info.crkey == 0);
@@ -1275,7 +1275,7 @@ test_spdk_nvmf_ns_event(void)
 	subsystem.state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 	g_ns_changed_nsid = 0xFFFFFFFF;
 	g_ns_changed_ctrlr = NULL;
-	spdk_nvmf_ns_event(SPDK_BDEV_EVENT_RESIZE, &bdev1, subsystem.ns[0]);
+	nvmf_ns_event(SPDK_BDEV_EVENT_RESIZE, &bdev1, subsystem.ns[0]);
 	CU_ASSERT(SPDK_NVMF_SUBSYSTEM_PAUSING == subsystem.state);
 
 	poll_threads();
@@ -1287,7 +1287,7 @@ test_spdk_nvmf_ns_event(void)
 	subsystem.state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 	g_ns_changed_nsid = 0xFFFFFFFF;
 	g_ns_changed_ctrlr = NULL;
-	spdk_nvmf_ns_event(SPDK_BDEV_EVENT_REMOVE, &bdev1, subsystem.ns[0]);
+	nvmf_ns_event(SPDK_BDEV_EVENT_REMOVE, &bdev1, subsystem.ns[0]);
 	CU_ASSERT(SPDK_NVMF_SUBSYSTEM_PAUSING == subsystem.state);
 	CU_ASSERT(0xFFFFFFFF == g_ns_changed_nsid);
 	CU_ASSERT(NULL == g_ns_changed_ctrlr);

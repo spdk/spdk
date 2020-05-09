@@ -67,7 +67,7 @@ enum spdk_nvmf_nqn_domain_states {
 
 /* Returns true if is a valid ASCII string as defined by the NVMe spec */
 static bool
-spdk_nvmf_valid_ascii_string(const void *buf, size_t size)
+nvmf_valid_ascii_string(const void *buf, size_t size)
 {
 	const uint8_t *str = buf;
 	size_t i;
@@ -82,7 +82,7 @@ spdk_nvmf_valid_ascii_string(const void *buf, size_t size)
 }
 
 static bool
-spdk_nvmf_valid_nqn(const char *nqn)
+nvmf_valid_nqn(const char *nqn)
 {
 	size_t len;
 	struct spdk_uuid uuid_value;
@@ -247,7 +247,7 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 		return NULL;
 	}
 
-	if (!spdk_nvmf_valid_nqn(nqn)) {
+	if (!nvmf_valid_nqn(nqn)) {
 		return NULL;
 	}
 
@@ -372,8 +372,8 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 }
 
 static int
-spdk_nvmf_subsystem_set_state(struct spdk_nvmf_subsystem *subsystem,
-			      enum spdk_nvmf_subsystem_state state)
+nvmf_subsystem_set_state(struct spdk_nvmf_subsystem *subsystem,
+			 enum spdk_nvmf_subsystem_state state)
 {
 	enum spdk_nvmf_subsystem_state actual_old_state, expected_old_state;
 	bool exchanged;
@@ -441,7 +441,7 @@ subsystem_state_change_done(struct spdk_io_channel_iter *i, int status)
 	struct subsystem_state_change_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
 
 	if (status == 0) {
-		status = spdk_nvmf_subsystem_set_state(ctx->subsystem, ctx->requested_state);
+		status = nvmf_subsystem_set_state(ctx->subsystem, ctx->requested_state);
 		if (status) {
 			status = -1;
 		}
@@ -492,10 +492,10 @@ subsystem_state_change_on_pg(struct spdk_io_channel_iter *i)
 }
 
 static int
-spdk_nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
-				 enum spdk_nvmf_subsystem_state requested_state,
-				 spdk_nvmf_subsystem_state_change_done cb_fn,
-				 void *cb_arg)
+nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
+			    enum spdk_nvmf_subsystem_state requested_state,
+			    spdk_nvmf_subsystem_state_change_done cb_fn,
+			    void *cb_arg)
 {
 	struct subsystem_state_change_ctx *ctx;
 	enum spdk_nvmf_subsystem_state intermediate_state;
@@ -525,7 +525,7 @@ spdk_nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 		return -ENOMEM;
 	}
 
-	rc = spdk_nvmf_subsystem_set_state(subsystem, intermediate_state);
+	rc = nvmf_subsystem_set_state(subsystem, intermediate_state);
 	if (rc) {
 		free(ctx);
 		return rc;
@@ -549,7 +549,7 @@ spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem,
 			  spdk_nvmf_subsystem_state_change_done cb_fn,
 			  void *cb_arg)
 {
-	return spdk_nvmf_subsystem_state_change(subsystem, SPDK_NVMF_SUBSYSTEM_ACTIVE, cb_fn, cb_arg);
+	return nvmf_subsystem_state_change(subsystem, SPDK_NVMF_SUBSYSTEM_ACTIVE, cb_fn, cb_arg);
 }
 
 int
@@ -557,7 +557,7 @@ spdk_nvmf_subsystem_stop(struct spdk_nvmf_subsystem *subsystem,
 			 spdk_nvmf_subsystem_state_change_done cb_fn,
 			 void *cb_arg)
 {
-	return spdk_nvmf_subsystem_state_change(subsystem, SPDK_NVMF_SUBSYSTEM_INACTIVE, cb_fn, cb_arg);
+	return nvmf_subsystem_state_change(subsystem, SPDK_NVMF_SUBSYSTEM_INACTIVE, cb_fn, cb_arg);
 }
 
 int
@@ -565,7 +565,7 @@ spdk_nvmf_subsystem_pause(struct spdk_nvmf_subsystem *subsystem,
 			  spdk_nvmf_subsystem_state_change_done cb_fn,
 			  void *cb_arg)
 {
-	return spdk_nvmf_subsystem_state_change(subsystem, SPDK_NVMF_SUBSYSTEM_PAUSED, cb_fn, cb_arg);
+	return nvmf_subsystem_state_change(subsystem, SPDK_NVMF_SUBSYSTEM_PAUSED, cb_fn, cb_arg);
 }
 
 int
@@ -573,7 +573,7 @@ spdk_nvmf_subsystem_resume(struct spdk_nvmf_subsystem *subsystem,
 			   spdk_nvmf_subsystem_state_change_done cb_fn,
 			   void *cb_arg)
 {
-	return spdk_nvmf_subsystem_state_change(subsystem, SPDK_NVMF_SUBSYSTEM_ACTIVE, cb_fn, cb_arg);
+	return nvmf_subsystem_state_change(subsystem, SPDK_NVMF_SUBSYSTEM_ACTIVE, cb_fn, cb_arg);
 }
 
 struct spdk_nvmf_subsystem *
@@ -633,7 +633,7 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *
 {
 	struct spdk_nvmf_host *host;
 
-	if (!spdk_nvmf_valid_nqn(hostnqn)) {
+	if (!nvmf_valid_nqn(hostnqn)) {
 		return -EINVAL;
 	}
 
@@ -947,8 +947,8 @@ subsystem_update_ns_on_pg(struct spdk_io_channel_iter *i)
 }
 
 static int
-spdk_nvmf_subsystem_update_ns(struct spdk_nvmf_subsystem *subsystem, spdk_channel_for_each_cpl cpl,
-			      void *ctx)
+nvmf_subsystem_update_ns(struct spdk_nvmf_subsystem *subsystem, spdk_channel_for_each_cpl cpl,
+			 void *ctx)
 {
 	spdk_for_each_channel(subsystem->tgt,
 			      subsystem_update_ns_on_pg,
@@ -959,7 +959,7 @@ spdk_nvmf_subsystem_update_ns(struct spdk_nvmf_subsystem *subsystem, spdk_channe
 }
 
 static void
-spdk_nvmf_subsystem_ns_changed(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
+nvmf_subsystem_ns_changed(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
 {
 	struct spdk_nvmf_ctrlr *ctrlr;
 
@@ -1002,14 +1002,14 @@ spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t ns
 	}
 	free(ns);
 
-	spdk_nvmf_subsystem_ns_changed(subsystem, nsid);
+	nvmf_subsystem_ns_changed(subsystem, nsid);
 
 	return 0;
 }
 
 static void
-_spdk_nvmf_ns_hot_remove(struct spdk_nvmf_subsystem *subsystem,
-			 void *cb_arg, int status)
+_nvmf_ns_hot_remove(struct spdk_nvmf_subsystem *subsystem,
+		    void *cb_arg, int status)
 {
 	struct spdk_nvmf_ns *ns = cb_arg;
 	int rc;
@@ -1023,42 +1023,42 @@ _spdk_nvmf_ns_hot_remove(struct spdk_nvmf_subsystem *subsystem,
 }
 
 static void
-spdk_nvmf_ns_hot_remove(void *remove_ctx)
+nvmf_ns_hot_remove(void *remove_ctx)
 {
 	struct spdk_nvmf_ns *ns = remove_ctx;
 	int rc;
 
-	rc = spdk_nvmf_subsystem_pause(ns->subsystem, _spdk_nvmf_ns_hot_remove, ns);
+	rc = spdk_nvmf_subsystem_pause(ns->subsystem, _nvmf_ns_hot_remove, ns);
 	if (rc) {
 		SPDK_ERRLOG("Unable to pause subsystem to process namespace removal!\n");
 	}
 }
 
 static void
-_spdk_nvmf_ns_resize(struct spdk_nvmf_subsystem *subsystem, void *cb_arg, int status)
+_nvmf_ns_resize(struct spdk_nvmf_subsystem *subsystem, void *cb_arg, int status)
 {
 	struct spdk_nvmf_ns *ns = cb_arg;
 
-	spdk_nvmf_subsystem_ns_changed(subsystem, ns->opts.nsid);
+	nvmf_subsystem_ns_changed(subsystem, ns->opts.nsid);
 	spdk_nvmf_subsystem_resume(subsystem, NULL, NULL);
 }
 
 static void
-spdk_nvmf_ns_resize(void *event_ctx)
+nvmf_ns_resize(void *event_ctx)
 {
 	struct spdk_nvmf_ns *ns = event_ctx;
 	int rc;
 
-	rc = spdk_nvmf_subsystem_pause(ns->subsystem, _spdk_nvmf_ns_resize, ns);
+	rc = spdk_nvmf_subsystem_pause(ns->subsystem, _nvmf_ns_resize, ns);
 	if (rc) {
 		SPDK_ERRLOG("Unable to pause subsystem to process namespace resize!\n");
 	}
 }
 
 static void
-spdk_nvmf_ns_event(enum spdk_bdev_event_type type,
-		   struct spdk_bdev *bdev,
-		   void *event_ctx)
+nvmf_ns_event(enum spdk_bdev_event_type type,
+	      struct spdk_bdev *bdev,
+	      void *event_ctx)
 {
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Bdev event: type %d, name %s, subsystem_id %d, ns_id %d\n",
 		      type,
@@ -1068,10 +1068,10 @@ spdk_nvmf_ns_event(enum spdk_bdev_event_type type,
 
 	switch (type) {
 	case SPDK_BDEV_EVENT_REMOVE:
-		spdk_nvmf_ns_hot_remove(event_ctx);
+		nvmf_ns_hot_remove(event_ctx);
 		break;
 	case SPDK_BDEV_EVENT_RESIZE:
-		spdk_nvmf_ns_resize(event_ctx);
+		nvmf_ns_resize(event_ctx);
 		break;
 	default:
 		SPDK_NOTICELOG("Unsupported bdev event: type %d\n", type);
@@ -1092,7 +1092,7 @@ static struct spdk_bdev_module ns_bdev_module = {
 };
 
 static int
-spdk_nvmf_ns_load_reservation(const char *file, struct spdk_nvmf_reservation_info *info);
+nvmf_ns_load_reservation(const char *file, struct spdk_nvmf_reservation_info *info);
 static int
 nvmf_ns_reservation_restore(struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservation_info *info);
 
@@ -1185,7 +1185,7 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	ns->bdev = bdev;
 	ns->opts = opts;
 	ns->subsystem = subsystem;
-	rc = spdk_bdev_open_ext(bdev->name, true, spdk_nvmf_ns_event, ns, &ns->desc);
+	rc = spdk_bdev_open_ext(bdev->name, true, nvmf_ns_event, ns, &ns->desc);
 	if (rc != 0) {
 		SPDK_ERRLOG("Subsystem %s: bdev %s cannot be opened, error=%d\n",
 			    subsystem->subnqn, spdk_bdev_get_name(bdev), rc);
@@ -1203,7 +1203,7 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	TAILQ_INIT(&ns->registrants);
 
 	if (ptpl_file) {
-		rc = spdk_nvmf_ns_load_reservation(ptpl_file, &info);
+		rc = nvmf_ns_load_reservation(ptpl_file, &info);
 		if (!rc) {
 			rc = nvmf_ns_reservation_restore(ns, &info);
 			if (rc) {
@@ -1222,14 +1222,14 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 		      spdk_bdev_get_name(bdev),
 		      opts.nsid);
 
-	spdk_nvmf_subsystem_ns_changed(subsystem, opts.nsid);
+	nvmf_subsystem_ns_changed(subsystem, opts.nsid);
 
 	return opts.nsid;
 }
 
 static uint32_t
-spdk_nvmf_subsystem_get_next_allocated_nsid(struct spdk_nvmf_subsystem *subsystem,
-		uint32_t prev_nsid)
+nvmf_subsystem_get_next_allocated_nsid(struct spdk_nvmf_subsystem *subsystem,
+				       uint32_t prev_nsid)
 {
 	uint32_t nsid;
 
@@ -1251,7 +1251,7 @@ spdk_nvmf_subsystem_get_first_ns(struct spdk_nvmf_subsystem *subsystem)
 {
 	uint32_t first_nsid;
 
-	first_nsid = spdk_nvmf_subsystem_get_next_allocated_nsid(subsystem, 0);
+	first_nsid = nvmf_subsystem_get_next_allocated_nsid(subsystem, 0);
 	return _nvmf_subsystem_get_ns(subsystem, first_nsid);
 }
 
@@ -1261,7 +1261,7 @@ spdk_nvmf_subsystem_get_next_ns(struct spdk_nvmf_subsystem *subsystem,
 {
 	uint32_t next_nsid;
 
-	next_nsid = spdk_nvmf_subsystem_get_next_allocated_nsid(subsystem, prev_ns->opts.nsid);
+	next_nsid = nvmf_subsystem_get_next_allocated_nsid(subsystem, prev_ns->opts.nsid);
 	return _nvmf_subsystem_get_ns(subsystem, next_nsid);
 }
 
@@ -1310,7 +1310,7 @@ spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn
 		return -1;
 	}
 
-	if (!spdk_nvmf_valid_ascii_string(sn, len)) {
+	if (!nvmf_valid_ascii_string(sn, len)) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Non-ASCII sn\n");
 		SPDK_LOGDUMP(SPDK_LOG_NVMF, "sn", sn, len);
 		return -1;
@@ -1343,7 +1343,7 @@ spdk_nvmf_subsystem_set_mn(struct spdk_nvmf_subsystem *subsystem, const char *mn
 		return -1;
 	}
 
-	if (!spdk_nvmf_valid_ascii_string(mn, len)) {
+	if (!nvmf_valid_ascii_string(mn, len)) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Non-ASCII mn\n");
 		SPDK_LOGDUMP(SPDK_LOG_NVMF, "mn", mn, len);
 		return -1;
@@ -1372,7 +1372,7 @@ spdk_nvmf_subsystem_get_max_nsid(struct spdk_nvmf_subsystem *subsystem)
 }
 
 static uint16_t
-spdk_nvmf_subsystem_gen_cntlid(struct spdk_nvmf_subsystem *subsystem)
+nvmf_subsystem_gen_cntlid(struct spdk_nvmf_subsystem *subsystem)
 {
 	int count;
 
@@ -1401,7 +1401,7 @@ spdk_nvmf_subsystem_gen_cntlid(struct spdk_nvmf_subsystem *subsystem)
 int
 nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ctrlr *ctrlr)
 {
-	ctrlr->cntlid = spdk_nvmf_subsystem_gen_cntlid(subsystem);
+	ctrlr->cntlid = nvmf_subsystem_gen_cntlid(subsystem);
 	if (ctrlr->cntlid == 0xFFFF) {
 		/* Unable to get a cntlid */
 		SPDK_ERRLOG("Reached max simultaneous ctrlrs\n");
@@ -1494,7 +1494,7 @@ static const struct spdk_json_object_decoder nvmf_ns_pr_decoders[] = {
 };
 
 static int
-spdk_nvmf_ns_load_reservation(const char *file, struct spdk_nvmf_reservation_info *info)
+nvmf_ns_load_reservation(const char *file, struct spdk_nvmf_reservation_info *info)
 {
 	FILE *fd;
 	size_t json_size;
@@ -1637,7 +1637,7 @@ nvmf_ns_reservation_restore(struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservatio
 }
 
 static int
-spdk_nvmf_ns_json_write_cb(void *cb_ctx, const void *data, size_t size)
+nvmf_ns_json_write_cb(void *cb_ctx, const void *data, size_t size)
 {
 	char *file = cb_ctx;
 	size_t rc;
@@ -1655,13 +1655,13 @@ spdk_nvmf_ns_json_write_cb(void *cb_ctx, const void *data, size_t size)
 }
 
 static int
-spdk_nvmf_ns_reservation_update(const char *file, struct spdk_nvmf_reservation_info *info)
+nvmf_ns_reservation_update(const char *file, struct spdk_nvmf_reservation_info *info)
 {
 	struct spdk_json_write_ctx *w;
 	uint32_t i;
 	int rc = 0;
 
-	w = spdk_json_write_begin(spdk_nvmf_ns_json_write_cb, (void *)file, 0);
+	w = spdk_json_write_begin(nvmf_ns_json_write_cb, (void *)file, 0);
 	if (w == NULL) {
 		return -ENOMEM;
 	}
@@ -1726,7 +1726,7 @@ nvmf_ns_update_reservation_info(struct spdk_nvmf_ns *ns)
 	info.num_regs = i;
 	info.ptpl_activated = ns->ptpl_activated;
 
-	return spdk_nvmf_ns_reservation_update(ns->ptpl_file, &info);
+	return nvmf_ns_reservation_update(ns->ptpl_file, &info);
 }
 
 static struct spdk_nvmf_registrant *
@@ -2447,7 +2447,7 @@ exit:
 }
 
 static void
-spdk_nvmf_ns_reservation_complete(void *ctx)
+nvmf_ns_reservation_complete(void *ctx)
 {
 	struct spdk_nvmf_request *req = ctx;
 
@@ -2461,7 +2461,7 @@ _nvmf_ns_reservation_update_done(struct spdk_nvmf_subsystem *subsystem,
 	struct spdk_nvmf_request *req = (struct spdk_nvmf_request *)cb_arg;
 	struct spdk_nvmf_poll_group *group = req->qpair->group;
 
-	spdk_thread_send_msg(group->thread, spdk_nvmf_ns_reservation_complete, req);
+	spdk_thread_send_msg(group->thread, nvmf_ns_reservation_complete, req);
 }
 
 void
@@ -2507,7 +2507,7 @@ nvmf_ns_reservation_request(void *ctx)
 		update_ctx->cb_fn = _nvmf_ns_reservation_update_done;
 		update_ctx->cb_arg = req;
 
-		spdk_nvmf_subsystem_update_ns(ctrlr->subsys, subsystem_update_ns_done, update_ctx);
+		nvmf_subsystem_update_ns(ctrlr->subsys, subsystem_update_ns_done, update_ctx);
 		return;
 	}
 
