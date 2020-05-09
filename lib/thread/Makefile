@@ -41,4 +41,6 @@ SO_SUFFIX := $(SO_VER).$(SO_MINOR)
 C_SRCS = thread.c
 LIBNAME = thread
 
+SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_thread.map)
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

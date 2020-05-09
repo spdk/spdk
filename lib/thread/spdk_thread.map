@@ -1,0 +1,55 @@
+{
+	global:
+
+	# public functions in spdk/thread.h
+	spdk_thread_lib_init;
+	spdk_thread_lib_init_ext;
+	spdk_thread_lib_fini;
+	spdk_thread_create;
+	spdk_set_thread;
+	spdk_thread_exit;
+	spdk_thread_is_exited;
+	spdk_thread_destroy;
+	spdk_thread_get_ctx;
+	spdk_thread_get_cpumask;
+	spdk_thread_set_cpumask;
+	spdk_thread_get_from_ctx;
+	spdk_thread_poll;
+	spdk_thread_next_poller_expiration;
+	spdk_thread_has_active_pollers;
+	spdk_thread_has_pollers;
+	spdk_thread_is_idle;
+	spdk_thread_get_count;
+	spdk_get_thread;
+	spdk_thread_get_name;
+	spdk_thread_get_id;
+	spdk_thread_get_by_id;
+	spdk_thread_get_stats;
+	spdk_thread_get_last_tsc;
+	spdk_thread_send_msg;
+	spdk_thread_send_critical_msg;
+	spdk_for_each_thread;
+	spdk_poller_register;
+	spdk_poller_register_named;
+	spdk_poller_unregister;
+	spdk_poller_pause;
+	spdk_poller_resume;
+	spdk_io_device_register;
+	spdk_io_device_unregister;
+	spdk_get_io_channel;
+	spdk_put_io_channel;
+	spdk_io_channel_get_ctx;
+	spdk_io_channel_from_ctx;
+	spdk_io_channel_get_thread;
+	spdk_for_each_channel;
+	spdk_io_channel_iter_get_io_device;
+	spdk_io_channel_iter_get_channel;
+	spdk_io_channel_iter_get_ctx;
+	spdk_for_each_channel_continue;
+
+	# internal functions in spdk_internal/thread.h
+	spdk_poller_state_str;
+	spdk_io_device_get_name;
+
+	local: *;
+};
