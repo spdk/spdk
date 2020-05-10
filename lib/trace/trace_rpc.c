@@ -51,8 +51,8 @@ static const struct spdk_json_object_decoder rpc_tpoint_group_decoders[] = {
 };
 
 static void
-spdk_rpc_trace_enable_tpoint_group(struct spdk_jsonrpc_request *request,
-				   const struct spdk_json_val *params)
+rpc_trace_enable_tpoint_group(struct spdk_jsonrpc_request *request,
+			      const struct spdk_json_val *params)
 {
 	struct rpc_tpoint_group req = {};
 	struct spdk_json_write_ctx *w;
@@ -83,13 +83,13 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_tpoint_group(&req);
 }
-SPDK_RPC_REGISTER("trace_enable_tpoint_group", spdk_rpc_trace_enable_tpoint_group,
+SPDK_RPC_REGISTER("trace_enable_tpoint_group", rpc_trace_enable_tpoint_group,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(trace_enable_tpoint_group, enable_tpoint_group)
 
 static void
-spdk_rpc_trace_disable_tpoint_group(struct spdk_jsonrpc_request *request,
-				    const struct spdk_json_val *params)
+rpc_trace_disable_tpoint_group(struct spdk_jsonrpc_request *request,
+			       const struct spdk_json_val *params)
 {
 	struct rpc_tpoint_group req = {};
 	struct spdk_json_write_ctx *w;
@@ -120,13 +120,13 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_tpoint_group(&req);
 }
-SPDK_RPC_REGISTER("trace_disable_tpoint_group", spdk_rpc_trace_disable_tpoint_group,
+SPDK_RPC_REGISTER("trace_disable_tpoint_group", rpc_trace_disable_tpoint_group,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(trace_disable_tpoint_group, disable_tpoint_group)
 
 static void
-spdk_rpc_trace_get_tpoint_group_mask(struct spdk_jsonrpc_request *request,
-				     const struct spdk_json_val *params)
+rpc_trace_get_tpoint_group_mask(struct spdk_jsonrpc_request *request,
+				const struct spdk_json_val *params)
 {
 	uint64_t tpoint_group_mask;
 	char mask_str[7];
@@ -165,6 +165,6 @@ spdk_rpc_trace_get_tpoint_group_mask(struct spdk_jsonrpc_request *request,
 	spdk_json_write_object_end(w);
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("trace_get_tpoint_group_mask", spdk_rpc_trace_get_tpoint_group_mask,
+SPDK_RPC_REGISTER("trace_get_tpoint_group_mask", rpc_trace_get_tpoint_group_mask,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(trace_get_tpoint_group_mask, get_tpoint_group_mask)
