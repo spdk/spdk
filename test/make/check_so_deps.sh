@@ -118,6 +118,12 @@ function confirm_abi_deps() {
 	name = spdk_crc32_table_init
 [suppress_function]
 	name = spdk_crc32_update
+[suppress_variable]
+	name = SPDK_LOG_VIRTIO_DEV
+[suppress_variable]
+	name = SPDK_LOG_VIRTIO_PCI
+[suppress_variable]
+	name = SPDK_LOG_VIRTIO_USER
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do

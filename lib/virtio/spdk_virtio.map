@@ -1,0 +1,33 @@
+{
+	global:
+
+	# internal functions in spdk_internal/virtio.h
+	virtio_recv_pkts;
+	virtqueue_req_start;
+	virtqueue_req_flush;
+	virtqueue_req_abort;
+	virtqueue_req_add_iovs;
+	virtio_dev_construct;
+	virtio_dev_reset;
+	virtio_dev_start;
+	virtio_dev_stop;
+	virtio_dev_destruct;
+	virtio_dev_acquire_queue;
+	virtio_dev_find_and_acquire_queue;
+	virtio_dev_queue_get_thread;
+	virtio_dev_queue_is_acquired;
+	virtio_dev_release_queue;
+	virtio_dev_get_status;
+	virtio_dev_set_status;
+	virtio_dev_write_dev_config;
+	virtio_dev_read_dev_config;
+	virtio_dev_backend_ops;
+	virtio_dev_has_feature;
+	virtio_dev_dump_json_info;
+	virtio_pci_dev_enumerate;
+	virtio_pci_dev_attach;
+	virtio_user_dev_init;
+	virtio_pci_dev_init;
+
+	local: *;
+};

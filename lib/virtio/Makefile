@@ -43,4 +43,6 @@ C_SRCS = virtio.c virtio_user.c virtio_pci.c
 C_SRCS += virtio_user/vhost_user.c
 LIBNAME = virtio
 
+SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_virtio.map)
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
