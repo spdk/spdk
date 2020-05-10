@@ -59,8 +59,8 @@ free_rpc_update_latency(struct rpc_update_latency *req)
 }
 
 static void
-spdk_rpc_bdev_delay_update_latency(struct spdk_jsonrpc_request *request,
-				   const struct spdk_json_val *params)
+rpc_bdev_delay_update_latency(struct spdk_jsonrpc_request *request,
+			      const struct spdk_json_val *params)
 {
 	struct rpc_update_latency req = {NULL};
 	struct spdk_json_write_ctx *w;
@@ -111,7 +111,7 @@ spdk_rpc_bdev_delay_update_latency(struct spdk_jsonrpc_request *request,
 cleanup:
 	free_rpc_update_latency(&req);
 }
-SPDK_RPC_REGISTER("bdev_delay_update_latency", spdk_rpc_bdev_delay_update_latency, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_delay_update_latency", rpc_bdev_delay_update_latency, SPDK_RPC_RUNTIME)
 
 struct rpc_construct_delay {
 	char *base_bdev_name;
@@ -139,8 +139,8 @@ static const struct spdk_json_object_decoder rpc_construct_delay_decoders[] = {
 };
 
 static void
-spdk_rpc_bdev_delay_create(struct spdk_jsonrpc_request *request,
-			   const struct spdk_json_val *params)
+rpc_bdev_delay_create(struct spdk_jsonrpc_request *request,
+		      const struct spdk_json_val *params)
 {
 	struct rpc_construct_delay req = {NULL};
 	struct spdk_json_write_ctx *w;
@@ -169,7 +169,7 @@ spdk_rpc_bdev_delay_create(struct spdk_jsonrpc_request *request,
 cleanup:
 	free_rpc_construct_delay(&req);
 }
-SPDK_RPC_REGISTER("bdev_delay_create", spdk_rpc_bdev_delay_create, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_delay_create", rpc_bdev_delay_create, SPDK_RPC_RUNTIME)
 
 struct rpc_delete_delay {
 	char *name;
@@ -186,7 +186,7 @@ static const struct spdk_json_object_decoder rpc_delete_delay_decoders[] = {
 };
 
 static void
-_spdk_rpc_bdev_delay_delete_cb(void *cb_arg, int bdeverrno)
+rpc_bdev_delay_delete_cb(void *cb_arg, int bdeverrno)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
 	struct spdk_json_write_ctx *w;
@@ -197,8 +197,8 @@ _spdk_rpc_bdev_delay_delete_cb(void *cb_arg, int bdeverrno)
 }
 
 static void
-spdk_rpc_bdev_delay_delete(struct spdk_jsonrpc_request *request,
-			   const struct spdk_json_val *params)
+rpc_bdev_delay_delete(struct spdk_jsonrpc_request *request,
+		      const struct spdk_json_val *params)
 {
 	struct rpc_delete_delay req = {NULL};
 	struct spdk_bdev *bdev;
@@ -217,9 +217,9 @@ spdk_rpc_bdev_delay_delete(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	delete_delay_disk(bdev, _spdk_rpc_bdev_delay_delete_cb, request);
+	delete_delay_disk(bdev, rpc_bdev_delay_delete_cb, request);
 
 cleanup:
 	free_rpc_delete_delay(&req);
 }
-SPDK_RPC_REGISTER("bdev_delay_delete", spdk_rpc_bdev_delay_delete, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_delay_delete", rpc_bdev_delay_delete, SPDK_RPC_RUNTIME)
