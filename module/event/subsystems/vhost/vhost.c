@@ -38,33 +38,33 @@
 #include "spdk_internal/event.h"
 
 static void
-spdk_vhost_subsystem_init_done(int rc)
+vhost_subsystem_init_done(int rc)
 {
 	spdk_subsystem_init_next(rc);
 }
 
 static void
-spdk_vhost_subsystem_init(void)
+vhost_subsystem_init(void)
 {
-	spdk_vhost_init(spdk_vhost_subsystem_init_done);
+	spdk_vhost_init(vhost_subsystem_init_done);
 }
 
 static void
-spdk_vhost_subsystem_fini_done(void)
+vhost_subsystem_fini_done(void)
 {
 	spdk_subsystem_fini_next();
 }
 
 static void
-spdk_vhost_subsystem_fini(void)
+vhost_subsystem_fini(void)
 {
-	spdk_vhost_fini(spdk_vhost_subsystem_fini_done);
+	spdk_vhost_fini(vhost_subsystem_fini_done);
 }
 
 static struct spdk_subsystem g_spdk_subsystem_vhost = {
 	.name = "vhost",
-	.init = spdk_vhost_subsystem_init,
-	.fini = spdk_vhost_subsystem_fini,
+	.init = vhost_subsystem_init,
+	.fini = vhost_subsystem_fini,
 	.config = NULL,
 	.write_config_json = spdk_vhost_config_json,
 };
