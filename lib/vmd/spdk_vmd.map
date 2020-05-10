@@ -1,0 +1,13 @@
+{
+	global:
+
+	# public functions
+	spdk_vmd_init;
+	spdk_vmd_fini;
+	spdk_vmd_pci_device_list;
+	spdk_vmd_set_led_state;
+	spdk_vmd_get_led_state;
+	spdk_vmd_hotplug_monitor;
+
+	local: *;
+};

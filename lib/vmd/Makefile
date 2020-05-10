@@ -41,4 +41,6 @@ SO_SUFFIX := $(SO_VER).$(SO_MINOR)
 C_SRCS = vmd.c led.c
 LIBNAME = vmd
 
+SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_vmd.map)
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

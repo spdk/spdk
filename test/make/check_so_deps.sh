@@ -124,6 +124,8 @@ function confirm_abi_deps() {
 	name = SPDK_LOG_VIRTIO_PCI
 [suppress_variable]
 	name = SPDK_LOG_VIRTIO_USER
+[suppress_variable]
+	name = SPDK_LOG_VMD
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do
