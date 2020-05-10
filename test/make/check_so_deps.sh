@@ -256,6 +256,24 @@ function confirm_abi_deps() {
 	name = SPDK_LOG_APP_RPC
 [suppress_function]
 	name = spdk_nvmf_parse_conf
+[suppress_variable]
+	name = SPDK_LOG_VHOST
+[suppress_variable]
+	name = SPDK_LOG_VHOST_BLK
+[suppress_variable]
+	name = SPDK_LOG_VHOST_BLK_DATA
+[suppress_variable]
+	name = SPDK_LOG_VHOST_RING
+[suppress_variable]
+	name = SPDK_LOG_VHOST_RPC
+[suppress_variable]
+	name = SPDK_LOG_VHOST_SCSI
+[suppress_variable]
+	name = SPDK_LOG_VHOST_SCSI_DATA
+[suppress_variable]
+	name = SPDK_LOG_VHOST_SCSI_QUEUE
+[suppress_variable]
+	name = spdk_vhost_scsi_device_backend
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do

@@ -50,4 +50,6 @@ endif
 
 LIBNAME = vhost
 
+SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_vhost.map)
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
