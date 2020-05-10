@@ -11,8 +11,8 @@ conf_file="$testdir/bdev.json"
 : > "$conf_file"
 
 function cleanup() {
-	rm -f "/tmp/aiofile"
-	rm -f "/tmp/spdk-pmem-pool"
+	rm -f "$SPDK_TEST_STORAGE/aiofile"
+	rm -f "$SPDK_TEST_STORAGE/spdk-pmem-pool"
 	rm -f "$conf_file"
 
 	if [[ $test_type == rbd ]]; then
@@ -44,8 +44,8 @@ function setup_bdev_conf() {
 	#$rpc_py bdev_set_qos_limit --rw_mbytes_per_sec 100 Malloc3
 	#$rpc_py bdev_set_qos_limit --rw_ios_per_sec 20000 Malloc0
 	if [[ $(uname -s) != "FreeBSD" ]]; then
-		dd if=/dev/zero of=/tmp/aiofile bs=2048 count=5000
-		"$rpc_py" bdev_aio_create "/tmp/aiofile" AIO0 2048
+		dd if=/dev/zero of="$SPDK_TEST_STORAGE/aiofile" bs=2048 count=5000
+		"$rpc_py" bdev_aio_create "$SPDK_TEST_STORAGE/aiofile" AIO0 2048
 	fi
 }
 
@@ -124,9 +124,9 @@ function setup_crypto_qat_conf() {
 
 function setup_pmem_conf() {
 	if hash pmempool; then
-		rm -f /tmp/spdk-pmem-pool
-		pmempool create blk --size=32M 512 /tmp/spdk-pmem-pool
-		"$rpc_py" bdev_pmem_create -n Pmem0 "/tmp/spdk-pmem-pool"
+		rm -f "$SPDK_TEST_STORAGE/spdk-pmem-pool"
+		pmempool create blk --size=32M 512 "$SPDK_TEST_STORAGE/spdk-pmem-pool"
+		"$rpc_py" bdev_pmem_create -n Pmem0 "$SPDK_TEST_STORAGE/spdk-pmem-pool"
 	else
 		return 1
 	fi

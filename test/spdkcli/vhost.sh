@@ -8,6 +8,9 @@ source $rootdir/test/spdkcli/common.sh
 MATCH_FILE="spdkcli_vhost.test"
 SPDKCLI_BRANCH="/"
 
+sample_aio=$SPDK_TEST_STORAGE/sample_aio
+sample_aio2=$SPDK_TEST_STORAGE/sample_aio2
+
 trap 'on_error_exit' ERR
 timing_enter run_vhost_tgt
 run_vhost_tgt
@@ -25,10 +28,10 @@ $spdkcli_job "'/bdevs/malloc create 40 512 Malloc0' 'Malloc0' True
 '/bdevs/null create null_bdev0 32 512' 'null_bdev0' True
 '/bdevs/null create null_bdev1 32 512' 'null_bdev1' True
 "
-dd if=/dev/zero of=/tmp/sample_aio bs=2048 count=5000
-dd if=/dev/zero of=/tmp/sample_aio2 bs=2048 count=5000
-$spdkcli_job "'/bdevs/aio create sample0 /tmp/sample_aio 512' 'sample0' True
-'/bdevs/aio create sample1 /tmp/sample_aio2 512' 'sample1' True
+dd if=/dev/zero of="$sample_aio" bs=2048 count=5000
+dd if=/dev/zero of="$sample_aio2" bs=2048 count=5000
+$spdkcli_job "'/bdevs/aio create sample0 $sample_aio 512' 'sample0' True
+'/bdevs/aio create sample1 $sample_aio2 512' 'sample1' True
 "
 trtype=$($rootdir/scripts/gen_nvme.sh --json | jq -r '.config[].params | select(.name=="Nvme0").trtype')
 traddr=$($rootdir/scripts/gen_nvme.sh --json | jq -r '.config[].params | select(.name=="Nvme0").traddr')
@@ -138,7 +141,7 @@ $spdk_clear_config_py clear_config
 rm -f $testdir/config.json
 rm -f $testdir/config_bdev.json
 rm -f $testdir/config_vhost.json
-rm -f /tmp/sample_aio
+rm -f "$sample_aio" "$sample_aio2"
 timing_exit spdkcli_load_config
 
 killprocess $vhost_tgt_pid

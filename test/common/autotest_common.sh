@@ -665,9 +665,9 @@ function waitfornbd() {
 	#  file.  Note that dd returns success when reading an empty file, so we
 	#  need to check the size of the output file instead.
 	for ((i = 1; i <= 20; i++)); do
-		dd if=/dev/$nbd_name of=/tmp/nbdtest bs=4096 count=1 iflag=direct
-		size=$(stat -c %s /tmp/nbdtest)
-		rm -f /tmp/nbdtest
+		dd if=/dev/$nbd_name of="$SPDK_TEST_STORAGE/nbdtest" bs=4096 count=1 iflag=direct
+		size=$(stat -c %s "$SPDK_TEST_STORAGE/nbdtest")
+		rm -f "$SPDK_TEST_STORAGE/nbdtest"
 		if [ "$size" != "0" ]; then
 			return 0
 		else

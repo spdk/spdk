@@ -64,7 +64,7 @@ function nbd_get_count() {
 function nbd_dd_data_verify() {
 	local nbd_list=($1)
 	local operation=$2
-	local tmp_file=/tmp/nbdrandtest
+	local tmp_file=$SPDK_TEST_STORAGE/nbdrandtest
 
 	if [ "$operation" = "write" ]; then
 		# data write

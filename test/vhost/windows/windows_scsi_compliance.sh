@@ -10,7 +10,7 @@ source $rootdir/test/vhost/common.sh
 # In order to run this test with windows vm
 # windows virtio scsi driver must be installed
 WINDOWS_IMG="/home/sys_sgsw/windows_scsi_compliance/windows_vm_image.qcow2"
-aio_file="$testdir/aio_disk"
+aio_file="$SPDK_TEST_STORAGE/aio_disk"
 ssh_pass=""
 vm_num=1
 keep_results_dir=false

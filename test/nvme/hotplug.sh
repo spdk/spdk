@@ -41,14 +41,14 @@ function wait_for_devices_ready() {
 
 function devices_initialization() {
 	timing_enter devices_initialization
-	dd if=/dev/zero of=/root/test0 bs=1M count=1024
-	dd if=/dev/zero of=/root/test1 bs=1M count=1024
-	dd if=/dev/zero of=/root/test2 bs=1M count=1024
-	dd if=/dev/zero of=/root/test3 bs=1M count=1024
-	monitor_cmd "drive_add 0 file=/root/test0,format=raw,id=drive0,if=none"
-	monitor_cmd "drive_add 1 file=/root/test1,format=raw,id=drive1,if=none"
-	monitor_cmd "drive_add 2 file=/root/test2,format=raw,id=drive2,if=none"
-	monitor_cmd "drive_add 3 file=/root/test3,format=raw,id=drive3,if=none"
+	dd if=/dev/zero of="$SPDK_TEST_STORAGE/test0" bs=1M count=1024
+	dd if=/dev/zero of="$SPDK_TEST_STORAGE/test1" bs=1M count=1024
+	dd if=/dev/zero of="$SPDK_TEST_STORAGE/test2" bs=1M count=1024
+	dd if=/dev/zero of="$SPDK_TEST_STORAGE/test3" bs=1M count=1024
+	monitor_cmd "drive_add 0 file=$SPDK_TEST_STORAGE/test0,format=raw,id=drive0,if=none"
+	monitor_cmd "drive_add 1 file=$SPDK_TEST_STORAGE/test1,format=raw,id=drive1,if=none"
+	monitor_cmd "drive_add 2 file=$SPDK_TEST_STORAGE/test2,format=raw,id=drive2,if=none"
+	monitor_cmd "drive_add 3 file=$SPDK_TEST_STORAGE/test3,format=raw,id=drive3,if=none"
 	timing_exit devices_initialization
 }
 
@@ -70,10 +70,10 @@ function remove_devices() {
 
 function devices_delete() {
 	timing_enter devices_delete
-	rm /root/test0
-	rm /root/test1
-	rm /root/test2
-	rm /root/test3
+	rm "$SPDK_TEST_STORAGE/test0"
+	rm "$SPDK_TEST_STORAGE/test1"
+	rm "$SPDK_TEST_STORAGE/test2"
+	rm "$SPDK_TEST_STORAGE/test3"
 	timing_exit devices_delete
 }
 
