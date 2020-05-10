@@ -128,6 +128,8 @@ function confirm_abi_deps() {
 	name = SPDK_LOG_VMD
 [suppress_variable]
 	name = SPDK_LOG_ACCEL_IDXD
+[suppress_variable]
+	name = SPDK_LOG_ACCEL_IOAT
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do
