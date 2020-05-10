@@ -327,7 +327,7 @@ EOF
 			if [ "$so_name_changed" != "No" ]; then
 				if ! $found_abi_change; then
 					# Unfortunately, libspdk_idxd made it into 20.04 without an SO suffix. TODO:: remove after 20.07
-					if [ "$so_file" != "libspdk_idxd.so" ]; then
+					if [ "$so_file" != "libspdk_idxd.so" ] && [ "$so_file" != "libspdk_accel_idxd.so" ]; then
 						echo "SO name for $so_file changed without a change to abi. please revert that change."
 						touch $fail_file
 					fi
