@@ -405,7 +405,7 @@ error_create_mbuf:
 
 /* for completing rw requests on the orig IO thread. */
 static void
-_spdk_reduce_rw_blocks_cb(void *arg)
+_reduce_rw_blocks_cb(void *arg)
 {
 	struct comp_bdev_io *io_ctx = arg;
 
@@ -419,7 +419,7 @@ _spdk_reduce_rw_blocks_cb(void *arg)
 
 /* Completion callback for r/w that were issued via reducelib. */
 static void
-spdk_reduce_rw_blocks_cb(void *arg, int reduce_errno)
+reduce_rw_blocks_cb(void *arg, int reduce_errno)
 {
 	struct spdk_bdev_io *bdev_io = arg;
 	struct comp_bdev_io *io_ctx = (struct comp_bdev_io *)bdev_io->driver_ctx;
@@ -434,9 +434,9 @@ spdk_reduce_rw_blocks_cb(void *arg, int reduce_errno)
 	/* Send this request to the orig IO thread. */
 	orig_thread = spdk_io_channel_get_thread(ch);
 	if (orig_thread != spdk_get_thread()) {
-		spdk_thread_send_msg(orig_thread, _spdk_reduce_rw_blocks_cb, io_ctx);
+		spdk_thread_send_msg(orig_thread, _reduce_rw_blocks_cb, io_ctx);
 	} else {
-		_spdk_reduce_rw_blocks_cb(io_ctx);
+		_reduce_rw_blocks_cb(io_ctx);
 	}
 }
 
@@ -749,7 +749,7 @@ comp_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, b
 
 	spdk_reduce_vol_readv(comp_bdev->vol, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
 			      bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks,
-			      spdk_reduce_rw_blocks_cb, bdev_io);
+			      reduce_rw_blocks_cb, bdev_io);
 }
 
 /* scheduled for completion on IO thread */
@@ -784,7 +784,7 @@ _comp_bdev_io_submit(void *arg)
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		spdk_reduce_vol_writev(comp_bdev->vol, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
 				       bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks,
-				       spdk_reduce_rw_blocks_cb, bdev_io);
+				       reduce_rw_blocks_cb, bdev_io);
 		return;
 	/* TODO in future patch in the series */
 	case SPDK_BDEV_IO_TYPE_RESET:

@@ -52,8 +52,8 @@ static const struct spdk_json_object_decoder rpc_bdev_compress_get_orphans_decod
 };
 
 static void
-spdk_rpc_bdev_compress_get_orphans(struct spdk_jsonrpc_request *request,
-				   const struct spdk_json_val *params)
+rpc_bdev_compress_get_orphans(struct spdk_jsonrpc_request *request,
+			      const struct spdk_json_val *params)
 {
 	struct rpc_bdev_compress_get_orphans req = {};
 	struct spdk_json_write_ctx *w;
@@ -96,7 +96,7 @@ spdk_rpc_bdev_compress_get_orphans(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 	free_rpc_bdev_compress_get_orphans(&req);
 }
-SPDK_RPC_REGISTER("bdev_compress_get_orphans", spdk_rpc_bdev_compress_get_orphans, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_compress_get_orphans", rpc_bdev_compress_get_orphans, SPDK_RPC_RUNTIME)
 
 struct rpc_compress_set_pmd {
 	enum compress_pmd pmd;
@@ -107,8 +107,8 @@ static const struct spdk_json_object_decoder rpc_compress_pmd_decoder[] = {
 };
 
 static void
-spdk_rpc_compress_set_pmd(struct spdk_jsonrpc_request *request,
-			  const struct spdk_json_val *params)
+rpc_compress_set_pmd(struct spdk_jsonrpc_request *request,
+		     const struct spdk_json_val *params)
 {
 	struct rpc_compress_set_pmd req;
 	struct spdk_json_write_ctx *w;
@@ -141,7 +141,7 @@ spdk_rpc_compress_set_pmd(struct spdk_jsonrpc_request *request,
 		spdk_jsonrpc_end_result(request, w);
 	}
 }
-SPDK_RPC_REGISTER("compress_set_pmd", spdk_rpc_compress_set_pmd,
+SPDK_RPC_REGISTER("compress_set_pmd", rpc_compress_set_pmd,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(compress_set_pmd, set_compress_pmd)
 
@@ -169,8 +169,8 @@ static const struct spdk_json_object_decoder rpc_construct_compress_decoders[] =
  * device. Error status returned in the failed cases.
  */
 static void
-spdk_rpc_bdev_compress_create(struct spdk_jsonrpc_request *request,
-			      const struct spdk_json_val *params)
+rpc_bdev_compress_create(struct spdk_jsonrpc_request *request,
+			 const struct spdk_json_val *params)
 {
 	struct rpc_construct_compress req = {NULL};
 	struct spdk_json_write_ctx *w;
@@ -201,7 +201,7 @@ spdk_rpc_bdev_compress_create(struct spdk_jsonrpc_request *request,
 cleanup:
 	free_rpc_construct_compress(&req);
 }
-SPDK_RPC_REGISTER("bdev_compress_create", spdk_rpc_bdev_compress_create, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_compress_create", rpc_bdev_compress_create, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_compress_create, construct_compress_bdev)
 
 struct rpc_delete_compress {
@@ -219,7 +219,7 @@ static const struct spdk_json_object_decoder rpc_delete_compress_decoders[] = {
 };
 
 static void
-_spdk_rpc_bdev_compress_delete_cb(void *cb_arg, int bdeverrno)
+_rpc_bdev_compress_delete_cb(void *cb_arg, int bdeverrno)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
 	struct spdk_json_write_ctx *w;
@@ -230,8 +230,8 @@ _spdk_rpc_bdev_compress_delete_cb(void *cb_arg, int bdeverrno)
 }
 
 static void
-spdk_rpc_bdev_compress_delete(struct spdk_jsonrpc_request *request,
-			      const struct spdk_json_val *params)
+rpc_bdev_compress_delete(struct spdk_jsonrpc_request *request,
+			 const struct spdk_json_val *params)
 {
 	struct rpc_delete_compress req = {NULL};
 
@@ -241,10 +241,10 @@ spdk_rpc_bdev_compress_delete(struct spdk_jsonrpc_request *request,
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
 	} else {
-		bdev_compress_delete(req.name, _spdk_rpc_bdev_compress_delete_cb, request);
+		bdev_compress_delete(req.name, _rpc_bdev_compress_delete_cb, request);
 	}
 
 	free_rpc_delete_compress(&req);
 }
-SPDK_RPC_REGISTER("bdev_compress_delete", spdk_rpc_bdev_compress_delete, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_compress_delete", rpc_bdev_compress_delete, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_compress_delete, delete_compress_bdev)
