@@ -1114,8 +1114,12 @@ request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 	 */
 	first = &rdma_req->rsp.wr;
 
-	if (rsp->status.sc == SPDK_NVME_SC_SUCCESS &&
-	    req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+	if (rsp->status.sc != SPDK_NVME_SC_SUCCESS) {
+		/* On failure, data was not read from the controller. So clear the
+		 * number of outstanding data WRs to zero.
+		 */
+		rdma_req->num_outstanding_data_wr = 0;
+	} else if (req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
 		first = &rdma_req->data.wr;
 		*data_posted = 1;
 		num_outstanding_data_wr = rdma_req->num_outstanding_data_wr;
