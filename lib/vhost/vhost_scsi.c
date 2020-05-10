@@ -147,7 +147,7 @@ static void vhost_scsi_write_config_json(struct spdk_vhost_dev *vdev,
 		struct spdk_json_write_ctx *w);
 static int vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev);
 
-const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
+static const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
 	.session_ctx_size = sizeof(struct spdk_vhost_scsi_session) - sizeof(struct spdk_vhost_session),
 	.start_session =  vhost_scsi_start,
 	.stop_session = vhost_scsi_stop,
