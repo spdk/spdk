@@ -59,8 +59,8 @@ static const struct spdk_json_object_decoder rpc_blobfs_set_cache_size_decoders[
 };
 
 static void
-spdk_rpc_blobfs_set_cache_size(struct spdk_jsonrpc_request *request,
-			       const struct spdk_json_val *params)
+rpc_blobfs_set_cache_size(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
 {
 	struct rpc_blobfs_set_cache_size req;
 	struct spdk_json_write_ctx *w;
@@ -90,7 +90,7 @@ spdk_rpc_blobfs_set_cache_size(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 
-SPDK_RPC_REGISTER("blobfs_set_cache_size", spdk_rpc_blobfs_set_cache_size,
+SPDK_RPC_REGISTER("blobfs_set_cache_size", rpc_blobfs_set_cache_size,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
 struct rpc_blobfs_detect {
@@ -135,8 +135,8 @@ _rpc_blobfs_detect_done(void *cb_arg, int fserrno)
 }
 
 static void
-spdk_rpc_blobfs_detect(struct spdk_jsonrpc_request *request,
-		       const struct spdk_json_val *params)
+rpc_blobfs_detect(struct spdk_jsonrpc_request *request,
+		  const struct spdk_json_val *params)
 {
 	struct rpc_blobfs_detect *req;
 
@@ -163,7 +163,7 @@ spdk_rpc_blobfs_detect(struct spdk_jsonrpc_request *request,
 	spdk_blobfs_bdev_detect(req->bdev_name, _rpc_blobfs_detect_done, req);
 }
 
-SPDK_RPC_REGISTER("blobfs_detect", spdk_rpc_blobfs_detect, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("blobfs_detect", rpc_blobfs_detect, SPDK_RPC_RUNTIME)
 
 struct rpc_blobfs_create {
 	char *bdev_name;
@@ -231,8 +231,8 @@ _rpc_blobfs_create_done(void *cb_arg, int fserrno)
 }
 
 static void
-spdk_rpc_blobfs_create(struct spdk_jsonrpc_request *request,
-		       const struct spdk_json_val *params)
+rpc_blobfs_create(struct spdk_jsonrpc_request *request,
+		  const struct spdk_json_val *params)
 {
 	struct rpc_blobfs_create *req;
 
@@ -259,7 +259,7 @@ spdk_rpc_blobfs_create(struct spdk_jsonrpc_request *request,
 	spdk_blobfs_bdev_create(req->bdev_name, req->cluster_sz, _rpc_blobfs_create_done, req);
 }
 
-SPDK_RPC_REGISTER("blobfs_create", spdk_rpc_blobfs_create, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("blobfs_create", rpc_blobfs_create, SPDK_RPC_RUNTIME)
 
 SPDK_LOG_REGISTER_COMPONENT("blobfs_bdev_rpc", SPDK_LOG_BLOBFS_BDEV_RPC)
 #ifdef SPDK_CONFIG_FUSE
@@ -311,8 +311,8 @@ _rpc_blobfs_mount_done(void *cb_arg, int fserrno)
 }
 
 static void
-spdk_rpc_blobfs_mount(struct spdk_jsonrpc_request *request,
-		      const struct spdk_json_val *params)
+rpc_blobfs_mount(struct spdk_jsonrpc_request *request,
+		 const struct spdk_json_val *params)
 {
 	struct rpc_blobfs_mount *req;
 
@@ -339,6 +339,6 @@ spdk_rpc_blobfs_mount(struct spdk_jsonrpc_request *request,
 	spdk_blobfs_bdev_mount(req->bdev_name, req->mountpoint, _rpc_blobfs_mount_done, req);
 }
 
-SPDK_RPC_REGISTER("blobfs_mount", spdk_rpc_blobfs_mount, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("blobfs_mount", rpc_blobfs_mount, SPDK_RPC_RUNTIME)
 
 #endif

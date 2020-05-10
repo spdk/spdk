@@ -253,8 +253,8 @@ _blobfs_bdev_mount_fuse_start(void *_ctx)
 	 */
 	ctx->cb_fn = NULL;
 
-	rc = spdk_blobfs_fuse_start(ctx->bdev_name, ctx->mountpoint, ctx->fs,
-				    blobfs_bdev_unmount, ctx, &ctx->bfuse);
+	rc = blobfs_fuse_start(ctx->bdev_name, ctx->mountpoint, ctx->fs,
+			       blobfs_bdev_unmount, ctx, &ctx->bfuse);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to mount blobfs on bdev %s to %s\n", ctx->bdev_name, ctx->mountpoint);
 
@@ -297,7 +297,7 @@ blobfs_bdev_fuse_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev
 	SPDK_WARNLOG("Async event(%d) is triggered in bdev %s\n", type, spdk_bdev_get_name(bdev));
 
 	if (type == SPDK_BDEV_EVENT_REMOVE) {
-		spdk_blobfs_fuse_stop(ctx->bfuse);
+		blobfs_fuse_stop(ctx->bfuse);
 	}
 }
 
@@ -348,7 +348,7 @@ spdk_blobfs_bdev_mount(const char *bdev_name, const char *mountpoint,
 		goto invalid;
 	}
 
-	spdk_fs_load(bs_dev, spdk_blobfs_fuse_send_request, _blobfs_bdev_mount_load_cb, ctx);
+	spdk_fs_load(bs_dev, blobfs_fuse_send_request, _blobfs_bdev_mount_load_cb, ctx);
 
 	return;
 

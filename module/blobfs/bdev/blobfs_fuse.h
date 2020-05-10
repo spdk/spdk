@@ -39,14 +39,14 @@
 
 struct spdk_blobfs_fuse;
 
-void spdk_blobfs_fuse_send_request(fs_request_fn fn, void *arg);
+void blobfs_fuse_send_request(fs_request_fn fn, void *arg);
 
 typedef void (*blobfs_fuse_unmount_cb)(void *arg);
 
-int spdk_blobfs_fuse_start(const char *bdev_name, const char *mountpoint,
-			   struct spdk_filesystem *fs, blobfs_fuse_unmount_cb cb_fn,
-			   void *cb_arg, struct spdk_blobfs_fuse **bfuse);
+int blobfs_fuse_start(const char *bdev_name, const char *mountpoint,
+		      struct spdk_filesystem *fs, blobfs_fuse_unmount_cb cb_fn,
+		      void *cb_arg, struct spdk_blobfs_fuse **bfuse);
 
-void spdk_blobfs_fuse_stop(struct spdk_blobfs_fuse *bfuse);
+void blobfs_fuse_stop(struct spdk_blobfs_fuse *bfuse);
 
 #endif /* SPDK_BLOBFS_FUSE_H */

@@ -84,7 +84,7 @@ __call_fn(void *arg1, void *arg2)
 }
 
 void
-spdk_blobfs_fuse_send_request(fs_request_fn fn, void *arg)
+blobfs_fuse_send_request(fs_request_fn fn, void *arg)
 {
 	struct spdk_event *event;
 
@@ -93,7 +93,7 @@ spdk_blobfs_fuse_send_request(fs_request_fn fn, void *arg)
 }
 
 static int
-spdk_fuse_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *fi)
+fuse_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *fi)
 {
 	struct spdk_file_stat stat;
 	int rc;
@@ -115,9 +115,9 @@ spdk_fuse_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *f
 }
 
 static int
-spdk_fuse_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
-		  off_t offset, struct fuse_file_info *fi,
-		  enum fuse_readdir_flags flags)
+fuse_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
+	     off_t offset, struct fuse_file_info *fi,
+	     enum fuse_readdir_flags flags)
 {
 	struct spdk_file *file;
 	const char *filename;
@@ -138,19 +138,19 @@ spdk_fuse_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 }
 
 static int
-spdk_fuse_mknod(const char *path, mode_t mode, dev_t rdev)
+fuse_mknod(const char *path, mode_t mode, dev_t rdev)
 {
 	return spdk_fs_create_file(thd_bfuse->fs, thd_bfuse->channel, path);
 }
 
 static int
-spdk_fuse_unlink(const char *path)
+fuse_unlink(const char *path)
 {
 	return spdk_fs_delete_file(thd_bfuse->fs, thd_bfuse->channel, path);
 }
 
 static int
-spdk_fuse_truncate(const char *path, off_t size, struct fuse_file_info *fi)
+fuse_truncate(const char *path, off_t size, struct fuse_file_info *fi)
 {
 	struct spdk_file *file;
 	int rc;
@@ -171,13 +171,13 @@ spdk_fuse_truncate(const char *path, off_t size, struct fuse_file_info *fi)
 }
 
 static int
-spdk_fuse_utimens(const char *path, const struct timespec tv[2], struct fuse_file_info *fi)
+fuse_utimens(const char *path, const struct timespec tv[2], struct fuse_file_info *fi)
 {
 	return 0;
 }
 
 static int
-spdk_fuse_open(const char *path, struct fuse_file_info *info)
+fuse_open(const char *path, struct fuse_file_info *info)
 {
 	struct spdk_file *file;
 	int rc;
@@ -192,7 +192,7 @@ spdk_fuse_open(const char *path, struct fuse_file_info *info)
 }
 
 static int
-spdk_fuse_release(const char *path, struct fuse_file_info *info)
+fuse_release(const char *path, struct fuse_file_info *info)
 {
 	struct spdk_file *file = (struct spdk_file *)info->fh;
 
@@ -200,7 +200,7 @@ spdk_fuse_release(const char *path, struct fuse_file_info *info)
 }
 
 static int
-spdk_fuse_read(const char *path, char *buf, size_t len, off_t offset, struct fuse_file_info *info)
+fuse_read(const char *path, char *buf, size_t len, off_t offset, struct fuse_file_info *info)
 {
 	struct spdk_file *file = (struct spdk_file *)info->fh;
 
@@ -208,8 +208,8 @@ spdk_fuse_read(const char *path, char *buf, size_t len, off_t offset, struct fus
 }
 
 static int
-spdk_fuse_write(const char *path, const char *buf, size_t len, off_t offset,
-		struct fuse_file_info *info)
+fuse_write(const char *path, const char *buf, size_t len, off_t offset,
+	   struct fuse_file_info *info)
 {
 	struct spdk_file *file = (struct spdk_file *)info->fh;
 	int rc;
@@ -223,37 +223,37 @@ spdk_fuse_write(const char *path, const char *buf, size_t len, off_t offset,
 }
 
 static int
-spdk_fuse_flush(const char *path, struct fuse_file_info *info)
+fuse_flush(const char *path, struct fuse_file_info *info)
 {
 	return 0;
 }
 
 static int
-spdk_fuse_fsync(const char *path, int datasync, struct fuse_file_info *info)
+fuse_fsync(const char *path, int datasync, struct fuse_file_info *info)
 {
 	return 0;
 }
 
 static int
-spdk_fuse_rename(const char *old_path, const char *new_path, unsigned int flags)
+fuse_rename(const char *old_path, const char *new_path, unsigned int flags)
 {
 	return spdk_fs_rename_file(thd_bfuse->fs, thd_bfuse->channel, old_path, new_path);
 }
 
 static struct fuse_operations spdk_fuse_oper = {
-	.getattr	= spdk_fuse_getattr,
-	.readdir	= spdk_fuse_readdir,
-	.mknod		= spdk_fuse_mknod,
-	.unlink		= spdk_fuse_unlink,
-	.truncate	= spdk_fuse_truncate,
-	.utimens	= spdk_fuse_utimens,
-	.open		= spdk_fuse_open,
-	.release	= spdk_fuse_release,
-	.read		= spdk_fuse_read,
-	.write		= spdk_fuse_write,
-	.flush		= spdk_fuse_flush,
-	.fsync		= spdk_fuse_fsync,
-	.rename		= spdk_fuse_rename,
+	.getattr	= fuse_getattr,
+	.readdir	= fuse_readdir,
+	.mknod		= fuse_mknod,
+	.unlink		= fuse_unlink,
+	.truncate	= fuse_truncate,
+	.utimens	= fuse_utimens,
+	.open		= fuse_open,
+	.release	= fuse_release,
+	.read		= fuse_read,
+	.write		= fuse_write,
+	.flush		= fuse_flush,
+	.fsync		= fuse_fsync,
+	.rename		= fuse_rename,
 };
 
 static void *
@@ -284,8 +284,8 @@ fuse_loop_new_thread(void *arg)
 }
 
 int
-spdk_blobfs_fuse_start(const char *bdev_name, const char *mountpoint, struct spdk_filesystem *fs,
-		       blobfs_fuse_unmount_cb cb_fn, void *cb_arg, struct spdk_blobfs_fuse **_bfuse)
+blobfs_fuse_start(const char *bdev_name, const char *mountpoint, struct spdk_filesystem *fs,
+		  blobfs_fuse_unmount_cb cb_fn, void *cb_arg, struct spdk_blobfs_fuse **_bfuse)
 {
 	/* Set argv[1] as bdev_name in order to show bdev_name as the mounting source */
 	char *argv[1] = {(char *)bdev_name};
@@ -351,7 +351,7 @@ err:
 }
 
 void
-spdk_blobfs_fuse_stop(struct spdk_blobfs_fuse *bfuse)
+blobfs_fuse_stop(struct spdk_blobfs_fuse *bfuse)
 {
 	fuse_session_exit(fuse_get_session(bfuse->fuse_handle));
 	pthread_kill(bfuse->fuse_tid, SIGINT);
