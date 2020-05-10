@@ -96,7 +96,7 @@ static struct spdk_bdev_module error_if = {
 SPDK_BDEV_MODULE_REGISTER(error, &error_if)
 
 int
-spdk_vbdev_error_inject_error(char *name, uint32_t io_type, uint32_t error_type, uint32_t error_num)
+vbdev_error_inject_error(char *name, uint32_t io_type, uint32_t error_type, uint32_t error_num)
 {
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_part *part;
@@ -247,7 +247,7 @@ static struct spdk_bdev_fn_table vbdev_error_fn_table = {
 };
 
 static void
-spdk_vbdev_error_base_bdev_hotremove_cb(void *_part_base)
+vbdev_error_base_bdev_hotremove_cb(void *_part_base)
 {
 	struct spdk_bdev_part_base *part_base = _part_base;
 
@@ -263,7 +263,7 @@ _spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 	int rc;
 
 	base = spdk_bdev_part_base_construct(base_bdev,
-					     spdk_vbdev_error_base_bdev_hotremove_cb,
+					     vbdev_error_base_bdev_hotremove_cb,
 					     &error_if, &vbdev_error_fn_table, &g_error_disks,
 					     NULL, NULL, sizeof(struct error_channel),
 					     NULL, NULL);
@@ -304,7 +304,7 @@ _spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 }
 
 int
-spdk_vbdev_error_create(const char *base_bdev_name)
+vbdev_error_create(const char *base_bdev_name)
 {
 	int rc;
 	struct spdk_bdev *base_bdev;
@@ -332,7 +332,7 @@ spdk_vbdev_error_create(const char *base_bdev_name)
 }
 
 void
-spdk_vbdev_error_delete(struct spdk_bdev *vbdev, spdk_delete_error_complete cb_fn, void *cb_arg)
+vbdev_error_delete(struct spdk_bdev *vbdev, spdk_delete_error_complete cb_fn, void *cb_arg)
 {
 	if (!vbdev || vbdev->module != &error_if) {
 		cb_fn(cb_arg, -ENODEV);

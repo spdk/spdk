@@ -50,7 +50,7 @@ typedef void (*spdk_delete_error_complete)(void *cb_arg, int bdeverrno);
  * \param base_bdev_name Name of the base bdev.
  * \return 0 on success or negative on failure.
  */
-int spdk_vbdev_error_create(const char *base_bdev_name);
+int vbdev_error_create(const char *base_bdev_name);
 
 /**
  * Delete vbdev used to inject errors.
@@ -59,8 +59,8 @@ int spdk_vbdev_error_create(const char *base_bdev_name);
  * \param cb_fn Function to call after deletion.
  * \param cb_arg Arguments to pass to cb_fn.
  */
-void spdk_vbdev_error_delete(struct spdk_bdev *vbdev, spdk_delete_error_complete cb_fn,
-			     void *cb_arg);
+void vbdev_error_delete(struct spdk_bdev *vbdev, spdk_delete_error_complete cb_fn,
+			void *cb_arg);
 
 /**
  * Inject error to the base bdev. Users can specify which IO type error is injected,
@@ -70,7 +70,7 @@ void spdk_vbdev_error_delete(struct spdk_bdev *vbdev, spdk_delete_error_complete
  * \param io_type IO type into which error is injected.
  * \param error_num Count of injected errors
  */
-int spdk_vbdev_error_inject_error(char *name, uint32_t io_type, uint32_t error_type,
-				  uint32_t error_num);
+int vbdev_error_inject_error(char *name, uint32_t io_type, uint32_t error_type,
+			     uint32_t error_num);
 
 #endif /* SPDK_VBDEV_ERROR_H */
