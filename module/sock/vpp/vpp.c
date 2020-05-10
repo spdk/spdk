@@ -147,7 +147,7 @@ struct spdk_vpp_sock_group_impl {
  * Session management
  */
 static struct spdk_vpp_session *
-_spdk_vpp_session_create(void)
+vpp_session_create(void)
 {
 	struct spdk_vpp_session *session;
 	int i;
@@ -179,7 +179,7 @@ _spdk_vpp_session_create(void)
 }
 
 static struct spdk_vpp_session *
-_spdk_vpp_session_get(uint32_t id)
+vpp_session_get(uint32_t id)
 {
 	struct spdk_vpp_session *session = NULL;
 
@@ -197,7 +197,7 @@ _spdk_vpp_session_get(uint32_t id)
 }
 
 static struct spdk_vpp_session *
-_spdk_vpp_session_get_by_handle(uint64_t handle, bool is_listen)
+vpp_session_get_by_handle(uint64_t handle, bool is_listen)
 {
 	struct spdk_vpp_session *session = NULL;
 	int i;
@@ -216,7 +216,7 @@ _spdk_vpp_session_get_by_handle(uint64_t handle, bool is_listen)
 }
 
 static int
-_spdk_vpp_session_free(struct spdk_vpp_session *session)
+vpp_session_free(struct spdk_vpp_session *session)
 {
 	/* Remove session */
 	if (session == NULL) {
@@ -235,8 +235,8 @@ _spdk_vpp_session_free(struct spdk_vpp_session *session)
 }
 
 static int
-spdk_vpp_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, uint16_t *sport,
-		      char *caddr, int clen, uint16_t *cport)
+vpp_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, uint16_t *sport,
+		 char *caddr, int clen, uint16_t *cport)
 {
 	struct spdk_vpp_session *session = __vpp_session(_sock);
 	const char *result = NULL;
@@ -292,7 +292,7 @@ session_accepted_handler(session_accepted_msg_t *mp)
 	struct spdk_vpp_session *client_session, *listen_session;
 
 	pthread_mutex_lock(&g_svm.session_get_lock);
-	listen_session = _spdk_vpp_session_get_by_handle(mp->listener_handle, true);
+	listen_session = vpp_session_get_by_handle(mp->listener_handle, true);
 	pthread_mutex_unlock(&g_svm.session_get_lock);
 	if (!listen_session) {
 		SPDK_ERRLOG("Listener not found\n");
@@ -302,7 +302,7 @@ session_accepted_handler(session_accepted_msg_t *mp)
 	SPDK_DEBUGLOG(SPDK_SOCK_VPP, "Listeners handle is %" PRIu64 "\n", mp->listener_handle);
 
 	/* Allocate local session for a client and set it up */
-	client_session = _spdk_vpp_session_create();
+	client_session = vpp_session_create();
 	if (client_session == NULL) {
 		SPDK_ERRLOG("Cannot create new session\n");
 		return;
@@ -350,7 +350,7 @@ session_connected_handler(session_connected_msg_t *mp)
 	struct spdk_vpp_session *session;
 	svm_fifo_t *rx_fifo, *tx_fifo;
 
-	session = _spdk_vpp_session_get(mp->context);
+	session = vpp_session_get(mp->context);
 	if (session == NULL) {
 		return;
 	}
@@ -387,7 +387,7 @@ session_disconnected_handler(session_disconnected_msg_t *mp)
 	struct spdk_vpp_session *session = 0;
 
 	pthread_mutex_lock(&g_svm.session_get_lock);
-	session = _spdk_vpp_session_get_by_handle(mp->handle, false);
+	session = vpp_session_get_by_handle(mp->handle, false);
 	if (session == NULL) {
 		SPDK_ERRLOG("Session with handle=%" PRIu64 " not found.\n",
 			    mp->handle);
@@ -410,7 +410,7 @@ session_reset_handler(session_reset_msg_t *mp)
 	session_reset_reply_msg_t *rmp;
 
 	pthread_mutex_lock(&g_svm.session_get_lock);
-	session = _spdk_vpp_session_get_by_handle(mp->handle, false);
+	session = vpp_session_get_by_handle(mp->handle, false);
 	if (session == NULL) {
 		SPDK_ERRLOG("Session with handle=%" PRIu64 " not found.\n",
 			    mp->handle);
@@ -436,7 +436,7 @@ session_bound_handler(session_bound_msg_t *mp)
 	struct spdk_vpp_session *session;
 
 	/* Context should be set to the session index */
-	session = _spdk_vpp_session_get(mp->context);
+	session = vpp_session_get(mp->context);
 
 	if (mp->retval) {
 		SPDK_ERRLOG("Bind failed (%d).\n", ntohl(mp->retval));
@@ -470,7 +470,7 @@ session_unlisten_reply_handler(session_unlisten_reply_msg_t *mp)
 		return;
 	}
 
-	session = _spdk_vpp_session_get(mp->context);
+	session = vpp_session_get(mp->context);
 	if (session == NULL) {
 		SPDK_ERRLOG("Cannot find a session by context\n");
 		return;
@@ -561,7 +561,7 @@ _wait_for_session_state_change(struct spdk_vpp_session *session, enum spdk_vpp_s
 }
 
 static int
-_spdk_vpp_session_connect(struct spdk_vpp_session *session)
+vpp_session_connect(struct spdk_vpp_session *session)
 {
 	vl_api_connect_sock_t *cmp;
 
@@ -596,7 +596,7 @@ vl_api_disconnect_session_reply_t_handler(vl_api_disconnect_session_reply_t *mp)
 	}
 
 	pthread_mutex_lock(&g_svm.session_get_lock);
-	session = _spdk_vpp_session_get_by_handle(mp->handle, false);
+	session = vpp_session_get_by_handle(mp->handle, false);
 	if (session == NULL) {
 		SPDK_ERRLOG("Invalid session handler (%" PRIu64 ").\n", mp->handle);
 		pthread_mutex_unlock(&g_svm.session_get_lock);
@@ -608,7 +608,7 @@ vl_api_disconnect_session_reply_t_handler(vl_api_disconnect_session_reply_t *mp)
 }
 
 static int
-_spdk_vpp_session_disconnect(struct spdk_vpp_session *session)
+vpp_session_disconnect(struct spdk_vpp_session *session)
 {
 	int rv = 0;
 	vl_api_disconnect_session_t *dmp;
@@ -645,7 +645,7 @@ _spdk_vpp_session_disconnect(struct spdk_vpp_session *session)
 }
 
 static int
-_spdk_send_unbind_sock(struct spdk_vpp_session *session)
+send_unbind_sock(struct spdk_vpp_session *session)
 {
 	vl_api_unbind_sock_t *ump;
 
@@ -667,7 +667,7 @@ _spdk_send_unbind_sock(struct spdk_vpp_session *session)
 }
 
 static int
-_spdk_vpp_session_listen(struct spdk_vpp_session *session)
+vpp_session_listen(struct spdk_vpp_session *session)
 {
 	vl_api_bind_sock_t *bmp;
 
@@ -700,8 +700,8 @@ _spdk_vpp_session_listen(struct spdk_vpp_session *session)
 }
 
 static struct spdk_sock *
-spdk_vpp_sock_create(const char *ip, int port, enum spdk_vpp_create_type type,
-		     struct spdk_sock_opts *opts)
+vpp_sock_create(const char *ip, int port, enum spdk_vpp_create_type type,
+		struct spdk_sock_opts *opts)
 {
 	struct spdk_vpp_session *session;
 	int rc;
@@ -712,9 +712,9 @@ spdk_vpp_sock_create(const char *ip, int port, enum spdk_vpp_create_type type,
 		return NULL;
 	}
 
-	session = _spdk_vpp_session_create();
+	session = vpp_session_create();
 	if (session == NULL) {
-		SPDK_ERRLOG("_spdk_vpp_session_create() failed\n");
+		SPDK_ERRLOG("vpp_session_create() failed\n");
 		errno = ENOMEM;
 		return NULL;
 	}
@@ -735,7 +735,7 @@ spdk_vpp_sock_create(const char *ip, int port, enum spdk_vpp_create_type type,
 		memcpy(&session->app_session.transport.lcl_ip, &addr_buf, sizeof(addr_buf));
 		session->app_session.transport.lcl_port = htons(port);
 
-		rc = _spdk_vpp_session_listen(session);
+		rc = vpp_session_listen(session);
 		if (rc != 0) {
 			errno = -rc;
 			SPDK_ERRLOG("session_listen() failed\n");
@@ -746,7 +746,7 @@ spdk_vpp_sock_create(const char *ip, int port, enum spdk_vpp_create_type type,
 		memcpy(&session->app_session.transport.rmt_ip, &addr_buf, sizeof(addr_buf));
 		session->app_session.transport.rmt_port = htons(port);
 
-		rc = _spdk_vpp_session_connect(session);
+		rc = vpp_session_connect(session);
 		if (rc != 0) {
 			SPDK_ERRLOG("session_connect() failed\n");
 			goto err;
@@ -756,24 +756,24 @@ spdk_vpp_sock_create(const char *ip, int port, enum spdk_vpp_create_type type,
 	return &session->base;
 
 err:
-	_spdk_vpp_session_free(session);
+	vpp_session_free(session);
 	return NULL;
 }
 
 static struct spdk_sock *
-spdk_vpp_sock_listen(const char *ip, int port, struct spdk_sock_opts *opts)
+vpp_sock_listen(const char *ip, int port, struct spdk_sock_opts *opts)
 {
-	return spdk_vpp_sock_create(ip, port, SPDK_SOCK_CREATE_LISTEN, opts);
+	return vpp_sock_create(ip, port, SPDK_SOCK_CREATE_LISTEN, opts);
 }
 
 static struct spdk_sock *
-spdk_vpp_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts)
+vpp_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts)
 {
-	return spdk_vpp_sock_create(ip, port, SPDK_SOCK_CREATE_CONNECT, opts);
+	return vpp_sock_create(ip, port, SPDK_SOCK_CREATE_CONNECT, opts);
 }
 
 static struct spdk_sock *
-spdk_vpp_sock_accept(struct spdk_sock *_sock)
+vpp_sock_accept(struct spdk_sock *_sock)
 {
 	struct spdk_vpp_session *listen_session = __vpp_session(_sock);
 	struct spdk_vpp_session *client_session = NULL;
@@ -809,7 +809,7 @@ spdk_vpp_sock_accept(struct spdk_sock *_sock)
 
 	pthread_mutex_unlock(&listen_session->accept_session_lock);
 
-	client_session = _spdk_vpp_session_get(client_session_index);
+	client_session = vpp_session_get(client_session_index);
 	if (client_session == NULL) {
 		SPDK_ERRLOG("client session closed or aborted\n");
 		errno = ECONNABORTED;
@@ -833,7 +833,7 @@ spdk_vpp_sock_accept(struct spdk_sock *_sock)
 }
 
 static int
-spdk_vpp_sock_close(struct spdk_sock *_sock)
+vpp_sock_close(struct spdk_sock *_sock)
 {
 	struct spdk_vpp_session *session = __vpp_session(_sock);
 
@@ -841,17 +841,17 @@ spdk_vpp_sock_close(struct spdk_sock *_sock)
 	assert(g_svm.vpp_initialized);
 
 	if (session->is_listen) {
-		_spdk_send_unbind_sock(session);
+		send_unbind_sock(session);
 	} else {
-		_spdk_vpp_session_disconnect(session);
+		vpp_session_disconnect(session);
 	}
-	_spdk_vpp_session_free(session);
+	vpp_session_free(session);
 
 	return 0;
 }
 
 static ssize_t
-spdk_vpp_sock_recv(struct spdk_sock *_sock, void *buf, size_t len)
+vpp_sock_recv(struct spdk_sock *_sock, void *buf, size_t len)
 {
 	struct spdk_vpp_session *session = __vpp_session(_sock);
 	int rc;
@@ -890,7 +890,7 @@ spdk_vpp_sock_recv(struct spdk_sock *_sock, void *buf, size_t len)
 }
 
 static ssize_t
-spdk_vpp_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
+vpp_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 {
 	ssize_t total = 0;
 	int i, rc;
@@ -899,7 +899,7 @@ spdk_vpp_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 	assert(g_svm.vpp_initialized);
 
 	for (i = 0; i < iovcnt; ++i) {
-		rc = spdk_vpp_sock_recv(_sock, iov[i].iov_base, iov[i].iov_len);
+		rc = vpp_sock_recv(_sock, iov[i].iov_base, iov[i].iov_len);
 		if (rc < 0) {
 			if (total > 0) {
 				break;
@@ -1070,7 +1070,7 @@ _sock_flush(struct spdk_sock *sock)
 }
 
 static ssize_t
-spdk_vpp_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
+vpp_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 {
 	int rc;
 
@@ -1091,7 +1091,7 @@ spdk_vpp_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 }
 
 static void
-spdk_vpp_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *req)
+vpp_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *req)
 {
 	int rc;
 
@@ -1112,7 +1112,7 @@ spdk_vpp_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *req
 }
 
 static int
-spdk_vpp_sock_set_recvlowat(struct spdk_sock *_sock, int nbytes)
+vpp_sock_set_recvlowat(struct spdk_sock *_sock, int nbytes)
 {
 	assert(g_svm.vpp_initialized);
 
@@ -1120,7 +1120,7 @@ spdk_vpp_sock_set_recvlowat(struct spdk_sock *_sock, int nbytes)
 }
 
 static int
-spdk_vpp_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
+vpp_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
 {
 	assert(g_svm.vpp_initialized);
 
@@ -1128,7 +1128,7 @@ spdk_vpp_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
 }
 
 static int
-spdk_vpp_sock_set_sendbuf(struct spdk_sock *_sock, int sz)
+vpp_sock_set_sendbuf(struct spdk_sock *_sock, int sz)
 {
 	assert(g_svm.vpp_initialized);
 
@@ -1136,19 +1136,19 @@ spdk_vpp_sock_set_sendbuf(struct spdk_sock *_sock, int sz)
 }
 
 static bool
-spdk_vpp_sock_is_ipv6(struct spdk_sock *_sock)
+vpp_sock_is_ipv6(struct spdk_sock *_sock)
 {
 	return !__vpp_session(_sock)->app_session.transport.is_ip4;
 }
 
 static bool
-spdk_vpp_sock_is_ipv4(struct spdk_sock *_sock)
+vpp_sock_is_ipv4(struct spdk_sock *_sock)
 {
 	return __vpp_session(_sock)->app_session.transport.is_ip4;
 }
 
 static bool
-spdk_vpp_sock_is_connected(struct spdk_sock *_sock)
+vpp_sock_is_connected(struct spdk_sock *_sock)
 {
 	assert(g_svm.vpp_initialized);
 
@@ -1156,13 +1156,13 @@ spdk_vpp_sock_is_connected(struct spdk_sock *_sock)
 }
 
 static int
-spdk_vpp_sock_get_placement_id(struct spdk_sock *_sock, int *placement_id)
+vpp_sock_get_placement_id(struct spdk_sock *_sock, int *placement_id)
 {
 	return -1;
 }
 
 static struct spdk_sock_group_impl *
-spdk_vpp_sock_group_impl_create(void)
+vpp_sock_group_impl_create(void)
 {
 	struct spdk_vpp_sock_group_impl *group_impl;
 
@@ -1181,23 +1181,23 @@ spdk_vpp_sock_group_impl_create(void)
 }
 
 static int
-spdk_vpp_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group,
-				  struct spdk_sock *_sock)
+vpp_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group,
+			     struct spdk_sock *_sock)
 {
 	/* We expect that higher level do it for us */
 	return 0;
 }
 
 static int
-spdk_vpp_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group,
-				     struct spdk_sock *_sock)
+vpp_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group,
+				struct spdk_sock *_sock)
 {
 	/* We expect that higher level do it for us */
 	return 0;
 }
 
 static bool
-_spdk_vpp_session_read_ready(struct spdk_vpp_session *session)
+vpp_session_read_ready(struct spdk_vpp_session *session)
 {
 	svm_fifo_t *rx_fifo = NULL;
 	uint32_t ready = 0;
@@ -1219,8 +1219,8 @@ _spdk_vpp_session_read_ready(struct spdk_vpp_session *session)
 }
 
 static int
-spdk_vpp_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
-			      struct spdk_sock **socks)
+vpp_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
+			 struct spdk_sock **socks)
 {
 	int num_events, rc;
 	struct spdk_sock *sock, *tmp;
@@ -1251,7 +1251,7 @@ spdk_vpp_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_event
 
 	while (sock != NULL) {
 		session = __vpp_session(sock);
-		if (_spdk_vpp_session_read_ready(session)) {
+		if (vpp_session_read_ready(session)) {
 			socks[num_events] = sock;
 			num_events++;
 			if (num_events >= max_events) {
@@ -1267,7 +1267,7 @@ spdk_vpp_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_event
 }
 
 static int
-spdk_vpp_sock_group_impl_close(struct spdk_sock_group_impl *_group)
+vpp_sock_group_impl_close(struct spdk_sock_group_impl *_group)
 {
 	free(_group);
 	return 0;
@@ -1277,7 +1277,7 @@ spdk_vpp_sock_group_impl_close(struct spdk_sock_group_impl *_group)
  * Initialize and attach to the VPP
  */
 static int
-_spdk_vpp_app_attach(void)
+vpp_app_attach(void)
 {
 	vl_api_application_attach_t *bmp;
 	u32 fifo_size = 16 << 20;
@@ -1314,12 +1314,12 @@ vl_api_session_enable_disable_reply_t_handler(vl_api_session_enable_disable_repl
 	} else {
 		SPDK_NOTICELOG("Session layer enabled\n");
 		g_svm.vpp_state = VPP_STATE_ENABLED;
-		_spdk_vpp_app_attach();
+		vpp_app_attach();
 	}
 }
 
 static int
-_spdk_vpp_session_enable(u8 is_enable)
+vpp_session_enable(u8 is_enable)
 {
 	vl_api_session_enable_disable_t *bmp;
 
@@ -1339,7 +1339,7 @@ _spdk_vpp_session_enable(u8 is_enable)
 }
 
 static void
-_spdk_vpp_application_attached(void *arg)
+vpp_application_attached(void *arg)
 {
 	SPDK_NOTICELOG("VPP net framework initialized.\n");
 	g_svm.vpp_state = VPP_STATE_ATTACHED;
@@ -1413,7 +1413,7 @@ vl_api_application_attach_reply_t_handler(vl_api_application_attach_reply_t *mp)
 		}
 	}
 
-	spdk_thread_send_msg(g_svm.init_thread, _spdk_vpp_application_attached, NULL);
+	spdk_thread_send_msg(g_svm.init_thread, vpp_application_attached, NULL);
 	return;
 err:
 	g_svm.vpp_state = VPP_STATE_FAILED;
@@ -1422,7 +1422,7 @@ err:
 
 /* Detach */
 static void
-_spdk_vpp_application_detached(void *arg)
+vpp_application_detached(void *arg)
 {
 	if (!g_svm.vpp_initialized) {
 		return;
@@ -1443,11 +1443,11 @@ _spdk_vpp_application_detached(void *arg)
 }
 
 static int
-_spdk_vpp_application_detached_timeout(void *arg)
+vpp_application_detached_timeout(void *arg)
 {
 	if (g_svm.vpp_initialized) {
 		/* We need to finish detach on initial thread */
-		spdk_thread_send_msg(g_svm.init_thread, _spdk_vpp_application_detached, NULL);
+		spdk_thread_send_msg(g_svm.init_thread, vpp_application_detached, NULL);
 	}
 	return 0;
 }
@@ -1461,11 +1461,11 @@ vl_api_application_detach_reply_t_handler(vl_api_application_detach_reply_t *mp)
 	}
 
 	/* We need to finish detach on initial thread */
-	spdk_thread_send_msg(g_svm.init_thread, _spdk_vpp_application_detached, NULL);
+	spdk_thread_send_msg(g_svm.init_thread, vpp_application_detached, NULL);
 }
 
 static int
-_spdk_vpp_app_detach(void)
+vpp_app_detach(void)
 {
 	vl_api_application_detach_t *bmp;
 
@@ -1480,7 +1480,7 @@ _spdk_vpp_app_detach(void)
 	bmp->context = ntohl(0xfeedface);
 	vl_msg_api_send_shmem(g_svm.vl_input_queue, (u8 *)&bmp);
 
-	g_svm.timeout_poller = SPDK_POLLER_REGISTER(_spdk_vpp_application_detached_timeout,
+	g_svm.timeout_poller = SPDK_POLLER_REGISTER(vpp_application_detached_timeout,
 			       NULL, 10000000);
 
 	return 0;
@@ -1509,7 +1509,7 @@ vl_api_map_another_segment_t_handler(vl_api_map_another_segment_t *mp)
 }
 
 static void
-spdk_vpp_net_framework_set_handlers(void)
+vpp_net_framework_set_handlers(void)
 {
 	/* Set up VPP handlers */
 #define _(N,n)						\
@@ -1528,7 +1528,7 @@ spdk_vpp_net_framework_set_handlers(void)
 }
 
 static void
-spdk_vpp_net_framework_init(void)
+vpp_net_framework_init(void)
 {
 	char *app_name;
 	api_main_t *am = &api_main;
@@ -1543,7 +1543,7 @@ spdk_vpp_net_framework_init(void)
 		return;
 	}
 
-	spdk_vpp_net_framework_set_handlers();
+	vpp_net_framework_set_handlers();
 
 	if (vl_socket_client_connect((char *) API_SOCKET_FILE, app_name,
 				     0 /* default rx, tx buffer */)) {
@@ -1571,7 +1571,7 @@ spdk_vpp_net_framework_init(void)
 
 	g_svm.vpp_queue_poller = SPDK_POLLER_REGISTER(vpp_queue_poller, NULL, 100);
 
-	_spdk_vpp_session_enable(1);
+	vpp_session_enable(1);
 
 	return;
 
@@ -1585,36 +1585,36 @@ err:
  */
 static struct spdk_net_impl g_vpp_net_impl = {
 	.name		= "vpp",
-	.getaddr	= spdk_vpp_sock_getaddr,
-	.connect	= spdk_vpp_sock_connect,
-	.listen		= spdk_vpp_sock_listen,
-	.accept		= spdk_vpp_sock_accept,
-	.close		= spdk_vpp_sock_close,
-	.recv		= spdk_vpp_sock_recv,
-	.readv		= spdk_vpp_sock_readv,
-	.writev		= spdk_vpp_sock_writev,
-	.writev_async	= spdk_vpp_sock_writev_async,
-	.set_recvlowat	= spdk_vpp_sock_set_recvlowat,
-	.set_recvbuf	= spdk_vpp_sock_set_recvbuf,
-	.set_sendbuf	= spdk_vpp_sock_set_sendbuf,
-	.is_ipv6	= spdk_vpp_sock_is_ipv6,
-	.is_ipv4	= spdk_vpp_sock_is_ipv4,
-	.is_connected	= spdk_vpp_sock_is_connected,
-	.get_placement_id	= spdk_vpp_sock_get_placement_id,
-	.group_impl_create	= spdk_vpp_sock_group_impl_create,
-	.group_impl_add_sock	= spdk_vpp_sock_group_impl_add_sock,
-	.group_impl_remove_sock = spdk_vpp_sock_group_impl_remove_sock,
-	.group_impl_poll	= spdk_vpp_sock_group_impl_poll,
-	.group_impl_close	= spdk_vpp_sock_group_impl_close,
+	.getaddr	= vpp_sock_getaddr,
+	.connect	= vpp_sock_connect,
+	.listen		= vpp_sock_listen,
+	.accept		= vpp_sock_accept,
+	.close		= vpp_sock_close,
+	.recv		= vpp_sock_recv,
+	.readv		= vpp_sock_readv,
+	.writev		= vpp_sock_writev,
+	.writev_async	= vpp_sock_writev_async,
+	.set_recvlowat	= vpp_sock_set_recvlowat,
+	.set_recvbuf	= vpp_sock_set_recvbuf,
+	.set_sendbuf	= vpp_sock_set_sendbuf,
+	.is_ipv6	= vpp_sock_is_ipv6,
+	.is_ipv4	= vpp_sock_is_ipv4,
+	.is_connected	= vpp_sock_is_connected,
+	.get_placement_id	= vpp_sock_get_placement_id,
+	.group_impl_create	= vpp_sock_group_impl_create,
+	.group_impl_add_sock	= vpp_sock_group_impl_add_sock,
+	.group_impl_remove_sock = vpp_sock_group_impl_remove_sock,
+	.group_impl_poll	= vpp_sock_group_impl_poll,
+	.group_impl_close	= vpp_sock_group_impl_close,
 };
 
 SPDK_NET_IMPL_REGISTER(vpp, &g_vpp_net_impl, DEFAULT_SOCK_PRIORITY + 2);
 
 static void
-spdk_vpp_net_framework_fini(void)
+vpp_net_framework_fini(void)
 {
 	if (g_svm.vpp_initialized) {
-		_spdk_vpp_app_detach();
+		vpp_app_detach();
 	} else {
 		spdk_net_framework_fini_next();
 	}
@@ -1622,8 +1622,8 @@ spdk_vpp_net_framework_fini(void)
 
 static struct spdk_net_framework g_vpp_net_framework = {
 	.name	= "vpp",
-	.init	= spdk_vpp_net_framework_init,
-	.fini	= spdk_vpp_net_framework_fini,
+	.init	= vpp_net_framework_init,
+	.fini	= vpp_net_framework_fini,
 };
 
 SPDK_NET_FRAMEWORK_REGISTER(vpp, &g_vpp_net_framework);
