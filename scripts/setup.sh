@@ -2,11 +2,18 @@
 
 set -e
 
+os=$(uname -s)
+
+if [[ $os != Linux && $os != FreeBSD ]]; then
+	echo "Not supported platform ($os), aborting"
+	exit 1
+fi
+
 rootdir=$(readlink -f $(dirname $0))/..
 source "$rootdir/scripts/common.sh"
 
 function usage() {
-	if [ $(uname) = Linux ]; then
+	if [[ $os == Linux ]]; then
 		options="[config|reset|status|cleanup|help]"
 	else
 		options="[config|reset|help]"
@@ -24,13 +31,13 @@ function usage() {
 	echo
 	echo "$options - as following:"
 	echo "config            Default mode. Allocate hugepages and bind PCI devices."
-	if [ $(uname) = Linux ]; then
+	if [[ $os == Linux ]]; then
 		echo "cleanup            Remove any orphaned files that can be left in the system after SPDK application exit"
 	fi
 	echo "reset             Rebind PCI devices back to their original drivers."
 	echo "                  Also cleanup any leftover spdk files/resources."
 	echo "                  Hugepage memory size will remain unchanged."
-	if [ $(uname) = Linux ]; then
+	if [[ $os == Linux ]]; then
 		echo "status            Print status of all SPDK-compatible devices on the system."
 	fi
 	echo "help              Print this help message."
@@ -772,7 +779,7 @@ if [ -z "$TARGET_USER" ]; then
 	fi
 fi
 
-if [ $(uname) = Linux ]; then
+if [[ $os == Linux ]]; then
 	HUGEPGSZ=$(($(grep Hugepagesize /proc/meminfo | cut -d : -f 2 | tr -dc '0-9')))
 	HUGEPGSZ_MB=$((HUGEPGSZ / 1024))
 	: ${NRHUGE=$(((HUGEMEM + HUGEPGSZ_MB - 1) / HUGEPGSZ_MB))}
@@ -796,9 +803,9 @@ else
 	elif [ "$mode" == "reset" ]; then
 		reset_freebsd
 	elif [ "$mode" == "cleanup" ]; then
-		echo "setup.sh cleanup function not yet supported on $(uname)"
+		echo "setup.sh cleanup function not yet supported on $os"
 	elif [ "$mode" == "status" ]; then
-		echo "setup.sh status function not yet supported on $(uname)"
+		echo "setup.sh status function not yet supported on $os"
 	elif [ "$mode" == "help" ]; then
 		usage $0
 	else
