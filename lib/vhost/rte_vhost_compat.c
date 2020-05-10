@@ -151,7 +151,7 @@ static const struct vhost_device_ops g_spdk_vhost_ops = {
 #ifndef SPDK_CONFIG_VHOST_INTERNAL_LIB
 
 static enum rte_vhost_msg_result
-spdk_extern_vhost_pre_msg_handler(int vid, void *_msg)
+extern_vhost_pre_msg_handler(int vid, void *_msg)
 {
 	struct vhost_user_msg *msg = _msg;
 	struct spdk_vhost_session *vsession;
@@ -245,7 +245,7 @@ spdk_extern_vhost_pre_msg_handler(int vid, void *_msg)
 }
 
 static enum rte_vhost_msg_result
-spdk_extern_vhost_post_msg_handler(int vid, void *_msg)
+extern_vhost_post_msg_handler(int vid, void *_msg)
 {
 	struct vhost_user_msg *msg = _msg;
 	struct spdk_vhost_session *vsession;
@@ -297,8 +297,8 @@ spdk_extern_vhost_post_msg_handler(int vid, void *_msg)
 }
 
 struct rte_vhost_user_extern_ops g_spdk_extern_vhost_ops = {
-	.pre_msg_handle = spdk_extern_vhost_pre_msg_handler,
-	.post_msg_handle = spdk_extern_vhost_post_msg_handler,
+	.pre_msg_handle = extern_vhost_pre_msg_handler,
+	.post_msg_handle = extern_vhost_post_msg_handler,
 };
 
 void
