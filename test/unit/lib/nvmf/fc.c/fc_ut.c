@@ -281,7 +281,7 @@ create_transport_test(void)
 	g_nvmf_tgt = spdk_nvmf_tgt_create(&tgt_opts);
 	SPDK_CU_ASSERT_FATAL(g_nvmf_tgt != NULL);
 
-	ops = spdk_nvmf_get_transport_ops(SPDK_NVME_TRANSPORT_NAME_FC);
+	ops = nvmf_get_transport_ops(SPDK_NVME_TRANSPORT_NAME_FC);
 	SPDK_CU_ASSERT_FATAL(ops != NULL);
 
 	ops->opts_init(&opts);

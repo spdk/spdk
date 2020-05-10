@@ -54,7 +54,7 @@ TAILQ_HEAD(nvmf_transport_ops_list, nvmf_transport_ops_list_element)
 g_spdk_nvmf_transport_ops = TAILQ_HEAD_INITIALIZER(g_spdk_nvmf_transport_ops);
 
 static inline const struct spdk_nvmf_transport_ops *
-spdk_nvmf_get_transport_ops(const char *transport_name)
+nvmf_get_transport_ops(const char *transport_name)
 {
 	struct nvmf_transport_ops_list_element *ops;
 	TAILQ_FOREACH(ops, &g_spdk_nvmf_transport_ops, link) {
@@ -70,7 +70,7 @@ spdk_nvmf_transport_register(const struct spdk_nvmf_transport_ops *ops)
 {
 	struct nvmf_transport_ops_list_element *new_ops;
 
-	if (spdk_nvmf_get_transport_ops(ops->name) != NULL) {
+	if (nvmf_get_transport_ops(ops->name) != NULL) {
 		SPDK_ERRLOG("Double registering nvmf transport type %s.\n", ops->name);
 		assert(false);
 		return;
@@ -114,7 +114,7 @@ spdk_nvmf_transport_create(const char *transport_name, struct spdk_nvmf_transpor
 	char spdk_mempool_name[MAX_MEMPOOL_NAME_LENGTH];
 	int chars_written;
 
-	ops = spdk_nvmf_get_transport_ops(transport_name);
+	ops = nvmf_get_transport_ops(transport_name);
 	if (!ops) {
 		SPDK_ERRLOG("Transport type '%s' unavailable.\n", transport_name);
 		return NULL;
@@ -407,7 +407,7 @@ spdk_nvmf_transport_opts_init(const char *transport_name,
 {
 	const struct spdk_nvmf_transport_ops *ops;
 
-	ops = spdk_nvmf_get_transport_ops(transport_name);
+	ops = nvmf_get_transport_ops(transport_name);
 	if (!ops) {
 		SPDK_ERRLOG("Transport type %s unavailable.\n", transport_name);
 		return false;
