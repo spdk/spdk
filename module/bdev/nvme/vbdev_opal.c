@@ -139,7 +139,7 @@ vbdev_opal_delete_all_base_config(struct vbdev_opal_part_base *base)
 }
 
 static int
-vbdev_opal_destruct(void *ctx)
+_vbdev_opal_destruct(void *ctx)
 {
 	struct spdk_bdev_part *part = ctx;
 
@@ -228,7 +228,7 @@ vbdev_opal_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 }
 
 struct spdk_opal_locking_range_info *
-spdk_vbdev_opal_get_info_from_bdev(const char *opal_bdev_name, const char *password)
+vbdev_opal_get_info_from_bdev(const char *opal_bdev_name, const char *password)
 {
 	struct opal_vbdev *vbdev;
 	struct nvme_bdev_ctrlr *nvme_ctrlr;
@@ -300,7 +300,7 @@ vbdev_opal_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 }
 
 static struct spdk_bdev_fn_table opal_vbdev_fn_table = {
-	.destruct           = vbdev_opal_destruct,
+	.destruct           = _vbdev_opal_destruct,
 	.submit_request     = vbdev_opal_submit_request,
 	.io_type_supported  = vbdev_opal_io_type_supported,
 	.dump_info_json     = vbdev_opal_dump_info_json,
@@ -326,8 +326,8 @@ vbdev_opal_free_bdev(struct opal_vbdev *opal_bdev)
 }
 
 int
-spdk_vbdev_opal_create(const char *nvme_ctrlr_name, uint32_t nsid, uint8_t locking_range_id,
-		       uint64_t range_start, uint64_t range_length, const char *password)
+vbdev_opal_create(const char *nvme_ctrlr_name, uint32_t nsid, uint8_t locking_range_id,
+		  uint64_t range_start, uint64_t range_length, const char *password)
 {
 	int rc;
 	char *opal_vbdev_name;
@@ -496,7 +496,7 @@ vbdev_opal_destruct_bdev(struct opal_vbdev *opal_bdev)
 }
 
 int
-spdk_vbdev_opal_destruct(const char *bdev_name, const char *password)
+vbdev_opal_destruct(const char *bdev_name, const char *password)
 {
 	struct spdk_vbdev_opal_config *cfg;
 	struct nvme_bdev_ctrlr *nvme_ctrlr;
@@ -557,8 +557,8 @@ vbdev_opal_examine(struct spdk_bdev *bdev)
 }
 
 int
-spdk_vbdev_opal_set_lock_state(const char *bdev_name, uint16_t user_id, const char *password,
-			       const char *lock_state)
+vbdev_opal_set_lock_state(const char *bdev_name, uint16_t user_id, const char *password,
+			  const char *lock_state)
 {
 	struct nvme_bdev_ctrlr *nvme_ctrlr;
 	int locking_range_id;
@@ -605,8 +605,8 @@ spdk_vbdev_opal_set_lock_state(const char *bdev_name, uint16_t user_id, const ch
 }
 
 int
-spdk_vbdev_opal_enable_new_user(const char *bdev_name, const char *admin_password, uint16_t user_id,
-				const char *user_password)
+vbdev_opal_enable_new_user(const char *bdev_name, const char *admin_password, uint16_t user_id,
+			   const char *user_password)
 {
 	struct nvme_bdev_ctrlr *nvme_ctrlr;
 	int locking_range_id;

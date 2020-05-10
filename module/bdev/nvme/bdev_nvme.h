@@ -62,21 +62,21 @@ struct spdk_bdev_nvme_opts {
 	bool delay_cmd_submit;
 };
 
-struct spdk_nvme_qpair *spdk_bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch);
-void spdk_bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts);
-int spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts);
-int spdk_bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_msg_fn cb, void *cb_ctx);
+struct spdk_nvme_qpair *bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch);
+void bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts);
+int bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts);
+int bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_msg_fn cb, void *cb_ctx);
 
-int spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
-			  struct spdk_nvme_host_id *hostid,
-			  const char *base_name,
-			  const char **names,
-			  uint32_t count,
-			  const char *hostnqn,
-			  uint32_t prchk_flags,
-			  spdk_bdev_create_nvme_fn cb_fn,
-			  void *cb_ctx);
-struct spdk_nvme_ctrlr *spdk_bdev_nvme_get_ctrlr(struct spdk_bdev *bdev);
+int bdev_nvme_create(struct spdk_nvme_transport_id *trid,
+		     struct spdk_nvme_host_id *hostid,
+		     const char *base_name,
+		     const char **names,
+		     uint32_t count,
+		     const char *hostnqn,
+		     uint32_t prchk_flags,
+		     spdk_bdev_create_nvme_fn cb_fn,
+		     void *cb_ctx);
+struct spdk_nvme_ctrlr *bdev_nvme_get_ctrlr(struct spdk_bdev *bdev);
 
 /**
  * Delete NVMe controller with all bdevs on top of it.
@@ -85,6 +85,6 @@ struct spdk_nvme_ctrlr *spdk_bdev_nvme_get_ctrlr(struct spdk_bdev *bdev);
  * \param name NVMe controller name
  * \return zero on success, -EINVAL on wrong parameters or -ENODEV if controller is not found
  */
-int spdk_bdev_nvme_delete(const char *name);
+int bdev_nvme_delete(const char *name);
 
 #endif /* SPDK_BDEV_NVME_H */

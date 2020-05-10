@@ -195,7 +195,7 @@ static config_json_namespace_fn g_config_json_namespace_fn[] = {
 };
 
 struct spdk_nvme_qpair *
-spdk_bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch)
+bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch)
 {
 	struct nvme_io_channel *nvme_ch;
 
@@ -1120,7 +1120,7 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 }
 
 static void
-spdk_nvme_abort_cpl(void *ctx, const struct spdk_nvme_cpl *cpl)
+nvme_abort_cpl(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
 	struct spdk_nvme_ctrlr *ctrlr = ctx;
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
@@ -1156,7 +1156,7 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 	case SPDK_BDEV_NVME_TIMEOUT_ACTION_ABORT:
 		if (qpair) {
 			rc = spdk_nvme_ctrlr_cmd_abort(ctrlr, qpair, cid,
-						       spdk_nvme_abort_cpl, ctrlr);
+						       nvme_abort_cpl, ctrlr);
 			if (rc == 0) {
 				return;
 			}
@@ -1539,13 +1539,13 @@ bdev_nvme_hotplug(void *arg)
 }
 
 void
-spdk_bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts)
+bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts)
 {
 	*opts = g_opts;
 }
 
 int
-spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts)
+bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts)
 {
 	if (g_bdev_nvme_init_thread != NULL) {
 		if (!TAILQ_EMPTY(&g_nvme_bdev_ctrlrs)) {
@@ -1585,7 +1585,7 @@ set_nvme_hotplug_period_cb(void *_ctx)
 }
 
 int
-spdk_bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_msg_fn cb, void *cb_ctx)
+bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_msg_fn cb, void *cb_ctx)
 {
 	struct set_nvme_hotplug_ctx *ctx;
 
@@ -1700,15 +1700,15 @@ bdev_nvme_async_poll(void *arg)
 }
 
 int
-spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
-		      struct spdk_nvme_host_id *hostid,
-		      const char *base_name,
-		      const char **names,
-		      uint32_t count,
-		      const char *hostnqn,
-		      uint32_t prchk_flags,
-		      spdk_bdev_create_nvme_fn cb_fn,
-		      void *cb_ctx)
+bdev_nvme_create(struct spdk_nvme_transport_id *trid,
+		 struct spdk_nvme_host_id *hostid,
+		 const char *base_name,
+		 const char **names,
+		 uint32_t count,
+		 const char *hostnqn,
+		 uint32_t prchk_flags,
+		 spdk_bdev_create_nvme_fn cb_fn,
+		 void *cb_ctx)
 {
 	struct nvme_probe_skip_entry	*entry, *tmp;
 	struct nvme_async_probe_ctx	*ctx;
@@ -1772,7 +1772,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 }
 
 int
-spdk_bdev_nvme_delete(const char *name)
+bdev_nvme_delete(const char *name)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = NULL;
 	struct nvme_probe_skip_entry *entry;
@@ -2004,7 +2004,7 @@ bdev_nvme_library_init(void)
 		}
 	}
 
-	rc = spdk_bdev_nvme_set_hotplug(hotplug_enabled, hotplug_period, NULL, NULL);
+	rc = bdev_nvme_set_hotplug(hotplug_enabled, hotplug_period, NULL, NULL);
 	if (rc) {
 		SPDK_ERRLOG("Failed to setup hotplug (%d): %s", rc, spdk_strerror(rc));
 		rc = -1;
@@ -2813,7 +2813,7 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 }
 
 struct spdk_nvme_ctrlr *
-spdk_bdev_nvme_get_ctrlr(struct spdk_bdev *bdev)
+bdev_nvme_get_ctrlr(struct spdk_bdev *bdev)
 {
 	if (!bdev || bdev->module != &nvme_if) {
 		return NULL;

@@ -87,14 +87,14 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_options_decoders[] = 
 };
 
 static void
-spdk_rpc_bdev_nvme_set_options(struct spdk_jsonrpc_request *request,
-			       const struct spdk_json_val *params)
+rpc_bdev_nvme_set_options(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
 {
 	struct spdk_bdev_nvme_opts opts;
 	struct spdk_json_write_ctx *w;
 	int rc;
 
-	spdk_bdev_nvme_get_opts(&opts);
+	bdev_nvme_get_opts(&opts);
 	if (params && spdk_json_decode_object(params, rpc_bdev_nvme_options_decoders,
 					      SPDK_COUNTOF(rpc_bdev_nvme_options_decoders),
 					      &opts)) {
@@ -104,7 +104,7 @@ spdk_rpc_bdev_nvme_set_options(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	rc = spdk_bdev_nvme_set_opts(&opts);
+	rc = bdev_nvme_set_opts(&opts);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		return;
@@ -116,7 +116,7 @@ spdk_rpc_bdev_nvme_set_options(struct spdk_jsonrpc_request *request,
 
 	return;
 }
-SPDK_RPC_REGISTER("bdev_nvme_set_options", spdk_rpc_bdev_nvme_set_options,
+SPDK_RPC_REGISTER("bdev_nvme_set_options", rpc_bdev_nvme_set_options,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_nvme_set_options, set_bdev_nvme_options)
 
@@ -141,8 +141,8 @@ rpc_bdev_nvme_set_hotplug_done(void *ctx)
 }
 
 static void
-spdk_rpc_bdev_nvme_set_hotplug(struct spdk_jsonrpc_request *request,
-			       const struct spdk_json_val *params)
+rpc_bdev_nvme_set_hotplug(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
 {
 	struct rpc_bdev_nvme_hotplug req = {false, 0};
 	int rc;
@@ -154,8 +154,8 @@ spdk_rpc_bdev_nvme_set_hotplug(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	rc = spdk_bdev_nvme_set_hotplug(req.enabled, req.period_us, rpc_bdev_nvme_set_hotplug_done,
-					request);
+	rc = bdev_nvme_set_hotplug(req.enabled, req.period_us, rpc_bdev_nvme_set_hotplug_done,
+				   request);
 	if (rc) {
 		goto invalid;
 	}
@@ -164,7 +164,7 @@ spdk_rpc_bdev_nvme_set_hotplug(struct spdk_jsonrpc_request *request,
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
 }
-SPDK_RPC_REGISTER("bdev_nvme_set_hotplug", spdk_rpc_bdev_nvme_set_hotplug, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_nvme_set_hotplug", rpc_bdev_nvme_set_hotplug, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_nvme_set_hotplug, set_bdev_nvme_hotplug)
 
 struct rpc_bdev_nvme_attach_controller {
@@ -224,7 +224,7 @@ struct rpc_bdev_nvme_attach_controller_ctx {
 };
 
 static void
-spdk_rpc_bdev_nvme_attach_controller_done(void *cb_ctx, size_t bdev_count, int rc)
+rpc_bdev_nvme_attach_controller_done(void *cb_ctx, size_t bdev_count, int rc)
 {
 	struct rpc_bdev_nvme_attach_controller_ctx *ctx = cb_ctx;
 	struct spdk_jsonrpc_request *request = ctx->request;
@@ -250,8 +250,8 @@ exit:
 }
 
 static void
-spdk_rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
-				     const struct spdk_json_val *params)
+rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
+				const struct spdk_json_val *params)
 {
 	struct rpc_bdev_nvme_attach_controller_ctx *ctx;
 	struct spdk_nvme_transport_id trid = {};
@@ -334,8 +334,8 @@ spdk_rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 
 	ctx->request = request;
 	ctx->count = NVME_MAX_BDEVS_PER_RPC;
-	rc = spdk_bdev_nvme_create(&trid, &hostid, ctx->req.name, ctx->names, ctx->count, ctx->req.hostnqn,
-				   prchk_flags, spdk_rpc_bdev_nvme_attach_controller_done, ctx);
+	rc = bdev_nvme_create(&trid, &hostid, ctx->req.name, ctx->names, ctx->count, ctx->req.hostnqn,
+			      prchk_flags, rpc_bdev_nvme_attach_controller_done, ctx);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;
@@ -347,13 +347,13 @@ cleanup:
 	free_rpc_bdev_nvme_attach_controller(&ctx->req);
 	free(ctx);
 }
-SPDK_RPC_REGISTER("bdev_nvme_attach_controller", spdk_rpc_bdev_nvme_attach_controller,
+SPDK_RPC_REGISTER("bdev_nvme_attach_controller", rpc_bdev_nvme_attach_controller,
 		  SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_nvme_attach_controller, construct_nvme_bdev)
 
 static void
-spdk_rpc_dump_nvme_controller_info(struct spdk_json_write_ctx *w,
-				   struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
+rpc_dump_nvme_controller_info(struct spdk_json_write_ctx *w,
+			      struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
 	struct spdk_nvme_transport_id	*trid;
 
@@ -394,8 +394,8 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_get_controllers_decod
 };
 
 static void
-spdk_rpc_bdev_nvme_get_controllers(struct spdk_jsonrpc_request *request,
-				   const struct spdk_json_val *params)
+rpc_bdev_nvme_get_controllers(struct spdk_jsonrpc_request *request,
+			      const struct spdk_json_val *params)
 {
 	struct rpc_bdev_nvme_get_controllers req = {};
 	struct spdk_json_write_ctx *w;
@@ -423,10 +423,10 @@ spdk_rpc_bdev_nvme_get_controllers(struct spdk_jsonrpc_request *request,
 	spdk_json_write_array_begin(w);
 
 	if (ctrlr != NULL) {
-		spdk_rpc_dump_nvme_controller_info(w, ctrlr);
+		rpc_dump_nvme_controller_info(w, ctrlr);
 	} else {
 		for (ctrlr = nvme_bdev_first_ctrlr(); ctrlr; ctrlr = nvme_bdev_next_ctrlr(ctrlr))  {
-			spdk_rpc_dump_nvme_controller_info(w, ctrlr);
+			rpc_dump_nvme_controller_info(w, ctrlr);
 		}
 	}
 
@@ -437,7 +437,7 @@ spdk_rpc_bdev_nvme_get_controllers(struct spdk_jsonrpc_request *request,
 cleanup:
 	free_rpc_bdev_nvme_get_controllers(&req);
 }
-SPDK_RPC_REGISTER("bdev_nvme_get_controllers", spdk_rpc_bdev_nvme_get_controllers, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_nvme_get_controllers", rpc_bdev_nvme_get_controllers, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_nvme_get_controllers, get_nvme_controllers)
 
 struct rpc_bdev_nvme_detach_controller {
@@ -455,8 +455,8 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_detach_controller_dec
 };
 
 static void
-spdk_rpc_bdev_nvme_detach_controller(struct spdk_jsonrpc_request *request,
-				     const struct spdk_json_val *params)
+rpc_bdev_nvme_detach_controller(struct spdk_jsonrpc_request *request,
+				const struct spdk_json_val *params)
 {
 	struct rpc_bdev_nvme_detach_controller req = {NULL};
 	struct spdk_json_write_ctx *w;
@@ -470,7 +470,7 @@ spdk_rpc_bdev_nvme_detach_controller(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	rc = spdk_bdev_nvme_delete(req.name);
+	rc = bdev_nvme_delete(req.name);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;
@@ -483,7 +483,7 @@ spdk_rpc_bdev_nvme_detach_controller(struct spdk_jsonrpc_request *request,
 cleanup:
 	free_rpc_bdev_nvme_detach_controller(&req);
 }
-SPDK_RPC_REGISTER("bdev_nvme_detach_controller", spdk_rpc_bdev_nvme_detach_controller,
+SPDK_RPC_REGISTER("bdev_nvme_detach_controller", rpc_bdev_nvme_detach_controller,
 		  SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_nvme_detach_controller, delete_nvme_controller)
 
@@ -654,8 +654,8 @@ apply_firmware_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 }
 
 static void
-spdk_rpc_bdev_nvme_apply_firmware(struct spdk_jsonrpc_request *request,
-				  const struct spdk_json_val *params)
+rpc_bdev_nvme_apply_firmware(struct spdk_jsonrpc_request *request,
+			     const struct spdk_json_val *params)
 {
 	int					rc;
 	int					fd = -1;
@@ -703,7 +703,7 @@ spdk_rpc_bdev_nvme_apply_firmware(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	if ((ctrlr = spdk_bdev_nvme_get_ctrlr(bdev)) == NULL) {
+	if ((ctrlr = bdev_nvme_get_ctrlr(bdev)) == NULL) {
 		snprintf(msg, sizeof(msg), "Controller information for %s were not found.",
 			 firm_ctx->req->bdev_name);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, msg);
@@ -714,7 +714,7 @@ spdk_rpc_bdev_nvme_apply_firmware(struct spdk_jsonrpc_request *request,
 
 	for (bdev2 = spdk_bdev_first(); bdev2; bdev2 = spdk_bdev_next(bdev2)) {
 
-		if (spdk_bdev_nvme_get_ctrlr(bdev2) != ctrlr) {
+		if (bdev_nvme_get_ctrlr(bdev2) != ctrlr) {
 			continue;
 		}
 
@@ -838,5 +838,5 @@ spdk_rpc_bdev_nvme_apply_firmware(struct spdk_jsonrpc_request *request,
 		return;
 	}
 }
-SPDK_RPC_REGISTER("bdev_nvme_apply_firmware", spdk_rpc_bdev_nvme_apply_firmware, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_nvme_apply_firmware", rpc_bdev_nvme_apply_firmware, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_nvme_apply_firmware, apply_nvme_firmware)
