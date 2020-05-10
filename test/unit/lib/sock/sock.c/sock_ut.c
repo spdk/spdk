@@ -804,7 +804,7 @@ _sock_close(const char *ip, int port, char *impl_name)
 }
 
 static void
-posix_sock_close(void)
+_posix_sock_close(void)
 {
 	_sock_close("127.0.0.1", UT_PORT, "posix");
 }
@@ -859,7 +859,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, posix_sock_group);
 	CU_ADD_TEST(suite, ut_sock_group);
 	CU_ADD_TEST(suite, posix_sock_group_fairness);
-	CU_ADD_TEST(suite, posix_sock_close);
+	CU_ADD_TEST(suite, _posix_sock_close);
 	CU_ADD_TEST(suite, sock_get_default_opts);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
