@@ -80,8 +80,8 @@ construct_cb(int status, struct vbdev_ocf *vbdev, void *cb_arg)
 }
 
 static void
-spdk_rpc_bdev_ocf_create(struct spdk_jsonrpc_request *request,
-			 const struct spdk_json_val *params)
+rpc_bdev_ocf_create(struct spdk_jsonrpc_request *request,
+		    const struct spdk_json_val *params)
 {
 	struct rpc_bdev_ocf_create req = {NULL};
 	int ret;
@@ -100,7 +100,7 @@ spdk_rpc_bdev_ocf_create(struct spdk_jsonrpc_request *request,
 			    construct_cb, request);
 	free_rpc_bdev_ocf_create(&req);
 }
-SPDK_RPC_REGISTER("bdev_ocf_create", spdk_rpc_bdev_ocf_create, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_ocf_create", rpc_bdev_ocf_create, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_ocf_create, construct_ocf_bdev)
 
 /* Structure to hold the parameters for this RPC method. */
@@ -137,8 +137,8 @@ delete_cb(void *cb_arg, int status)
 }
 
 static void
-spdk_rpc_bdev_ocf_delete(struct spdk_jsonrpc_request *request,
-			 const struct spdk_json_val *params)
+rpc_bdev_ocf_delete(struct spdk_jsonrpc_request *request,
+		    const struct spdk_json_val *params)
 {
 	struct rpc_bdev_ocf_delete req = {NULL};
 	struct vbdev_ocf *vbdev;
@@ -171,7 +171,7 @@ spdk_rpc_bdev_ocf_delete(struct spdk_jsonrpc_request *request,
 end:
 	free_rpc_bdev_ocf_delete(&req);
 }
-SPDK_RPC_REGISTER("bdev_ocf_delete", spdk_rpc_bdev_ocf_delete, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_ocf_delete", rpc_bdev_ocf_delete, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_ocf_delete, delete_ocf_bdev)
 
 /* Structure to hold the parameters for this RPC method. */
@@ -196,7 +196,7 @@ struct get_ocf_stats_ctx {
 };
 
 static void
-spdk_rpc_bdev_ocf_get_stats_cmpl(ocf_cache_t cache, void *priv, int error)
+rpc_bdev_ocf_get_stats_cmpl(ocf_cache_t cache, void *priv, int error)
 {
 	struct get_ocf_stats_ctx *ctx = (struct get_ocf_stats_ctx *) priv;
 	struct spdk_json_write_ctx *w;
@@ -228,8 +228,8 @@ end:
 }
 
 static void
-spdk_rpc_bdev_ocf_get_stats(struct spdk_jsonrpc_request *request,
-			    const struct spdk_json_val *params)
+rpc_bdev_ocf_get_stats(struct spdk_jsonrpc_request *request,
+		       const struct spdk_json_val *params)
 {
 	struct rpc_bdev_ocf_get_stats req = {NULL};
 	struct vbdev_ocf *vbdev;
@@ -261,12 +261,12 @@ spdk_rpc_bdev_ocf_get_stats(struct spdk_jsonrpc_request *request,
 
 	ctx->core_name = vbdev->core.name;
 	ctx->request = request;
-	ocf_mngt_cache_read_lock(vbdev->ocf_cache, spdk_rpc_bdev_ocf_get_stats_cmpl, ctx);
+	ocf_mngt_cache_read_lock(vbdev->ocf_cache, rpc_bdev_ocf_get_stats_cmpl, ctx);
 
 end:
 	free_rpc_bdev_ocf_get_stats(&req);
 }
-SPDK_RPC_REGISTER("bdev_ocf_get_stats", spdk_rpc_bdev_ocf_get_stats, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_ocf_get_stats", rpc_bdev_ocf_get_stats, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_ocf_get_stats, get_ocf_stats)
 
 /* Structure to hold the parameters for this RPC method. */
@@ -321,8 +321,8 @@ bdev_get_bdevs_fn(struct vbdev_ocf *vbdev, void *ctx)
 }
 
 static void
-spdk_rpc_bdev_ocf_get_bdevs(struct spdk_jsonrpc_request *request,
-			    const struct spdk_json_val *params)
+rpc_bdev_ocf_get_bdevs(struct spdk_jsonrpc_request *request,
+		       const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
 	struct rpc_bdev_ocf_get_bdevs req = {NULL};
@@ -358,5 +358,5 @@ spdk_rpc_bdev_ocf_get_bdevs(struct spdk_jsonrpc_request *request,
 end:
 	free_rpc_bdev_ocf_get_bdevs(&req);
 }
-SPDK_RPC_REGISTER("bdev_ocf_get_bdevs", spdk_rpc_bdev_ocf_get_bdevs, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_ocf_get_bdevs", rpc_bdev_ocf_get_bdevs, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_ocf_get_bdevs, get_ocf_bdevs)
