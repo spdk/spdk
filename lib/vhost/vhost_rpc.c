@@ -62,8 +62,8 @@ static const struct spdk_json_object_decoder rpc_vhost_create_scsi_ctrlr[] = {
 };
 
 static void
-spdk_rpc_vhost_create_scsi_controller(struct spdk_jsonrpc_request *request,
-				      const struct spdk_json_val *params)
+rpc_vhost_create_scsi_controller(struct spdk_jsonrpc_request *request,
+				 const struct spdk_json_val *params)
 {
 	struct rpc_vhost_scsi_ctrlr req = {0};
 	struct spdk_json_write_ctx *w;
@@ -94,7 +94,7 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 					 spdk_strerror(-rc));
 }
-SPDK_RPC_REGISTER("vhost_create_scsi_controller", spdk_rpc_vhost_create_scsi_controller,
+SPDK_RPC_REGISTER("vhost_create_scsi_controller", rpc_vhost_create_scsi_controller,
 		  SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_create_scsi_controller, construct_vhost_scsi_controller)
 
@@ -118,8 +118,8 @@ static const struct spdk_json_object_decoder rpc_vhost_scsi_ctrlr_add_target[] =
 };
 
 static void
-spdk_rpc_vhost_scsi_controller_add_target(struct spdk_jsonrpc_request *request,
-		const struct spdk_json_val *params)
+rpc_vhost_scsi_controller_add_target(struct spdk_jsonrpc_request *request,
+				     const struct spdk_json_val *params)
 {
 	struct rpc_vhost_scsi_ctrlr_add_target req = {0};
 	struct spdk_json_write_ctx *w;
@@ -160,7 +160,7 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 					 spdk_strerror(-rc));
 }
-SPDK_RPC_REGISTER("vhost_scsi_controller_add_target", spdk_rpc_vhost_scsi_controller_add_target,
+SPDK_RPC_REGISTER("vhost_scsi_controller_add_target", rpc_vhost_scsi_controller_add_target,
 		  SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_scsi_controller_add_target, add_vhost_scsi_lun)
 
@@ -181,7 +181,7 @@ static const struct spdk_json_object_decoder rpc_vhost_remove_target[] = {
 };
 
 static int
-spdk_rpc_vhost_scsi_controller_remove_target_finish_cb(struct spdk_vhost_dev *vdev, void *arg)
+rpc_vhost_scsi_controller_remove_target_finish_cb(struct spdk_vhost_dev *vdev, void *arg)
 {
 	struct spdk_jsonrpc_request *request = arg;
 	struct spdk_json_write_ctx *w;
@@ -193,8 +193,8 @@ spdk_rpc_vhost_scsi_controller_remove_target_finish_cb(struct spdk_vhost_dev *vd
 }
 
 static void
-spdk_rpc_vhost_scsi_controller_remove_target(struct spdk_jsonrpc_request *request,
-		const struct spdk_json_val *params)
+rpc_vhost_scsi_controller_remove_target(struct spdk_jsonrpc_request *request,
+					const struct spdk_json_val *params)
 {
 	struct rpc_remove_vhost_scsi_ctrlr_target req = {0};
 	struct spdk_vhost_dev *vdev;
@@ -217,7 +217,7 @@ spdk_rpc_vhost_scsi_controller_remove_target(struct spdk_jsonrpc_request *reques
 	}
 
 	rc = spdk_vhost_scsi_dev_remove_tgt(vdev, req.scsi_target_num,
-					    spdk_rpc_vhost_scsi_controller_remove_target_finish_cb,
+					    rpc_vhost_scsi_controller_remove_target_finish_cb,
 					    request);
 	spdk_vhost_unlock();
 	if (rc < 0) {
@@ -234,7 +234,7 @@ invalid:
 }
 
 SPDK_RPC_REGISTER("vhost_scsi_controller_remove_target",
-		  spdk_rpc_vhost_scsi_controller_remove_target, SPDK_RPC_RUNTIME)
+		  rpc_vhost_scsi_controller_remove_target, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_scsi_controller_remove_target, remove_vhost_scsi_target)
 
 struct rpc_vhost_blk_ctrlr {
@@ -262,8 +262,8 @@ free_rpc_vhost_blk_ctrlr(struct rpc_vhost_blk_ctrlr *req)
 }
 
 static void
-spdk_rpc_vhost_create_blk_controller(struct spdk_jsonrpc_request *request,
-				     const struct spdk_json_val *params)
+rpc_vhost_create_blk_controller(struct spdk_jsonrpc_request *request,
+				const struct spdk_json_val *params)
 {
 	struct rpc_vhost_blk_ctrlr req = {0};
 	struct spdk_json_write_ctx *w;
@@ -296,7 +296,7 @@ invalid:
 					 spdk_strerror(-rc));
 
 }
-SPDK_RPC_REGISTER("vhost_create_blk_controller", spdk_rpc_vhost_create_blk_controller,
+SPDK_RPC_REGISTER("vhost_create_blk_controller", rpc_vhost_create_blk_controller,
 		  SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_create_blk_controller, construct_vhost_blk_controller)
 
@@ -315,8 +315,8 @@ free_rpc_delete_vhost_ctrlr(struct rpc_delete_vhost_ctrlr *req)
 }
 
 static void
-spdk_rpc_vhost_delete_controller(struct spdk_jsonrpc_request *request,
-				 const struct spdk_json_val *params)
+rpc_vhost_delete_controller(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
 {
 	struct rpc_delete_vhost_ctrlr req = {0};
 	struct spdk_json_write_ctx *w;
@@ -358,7 +358,7 @@ invalid:
 					 spdk_strerror(-rc));
 
 }
-SPDK_RPC_REGISTER("vhost_delete_controller", spdk_rpc_vhost_delete_controller, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("vhost_delete_controller", rpc_vhost_delete_controller, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_delete_controller, remove_vhost_controller)
 
 struct rpc_get_vhost_ctrlrs {
@@ -366,7 +366,7 @@ struct rpc_get_vhost_ctrlrs {
 };
 
 static void
-_spdk_rpc_get_vhost_controller(struct spdk_json_write_ctx *w, struct spdk_vhost_dev *vdev)
+_rpc_get_vhost_controller(struct spdk_json_write_ctx *w, struct spdk_vhost_dev *vdev)
 {
 	uint32_t delay_base_us, iops_threshold;
 
@@ -399,8 +399,8 @@ free_rpc_get_vhost_ctrlrs(struct rpc_get_vhost_ctrlrs *req)
 }
 
 static void
-spdk_rpc_vhost_get_controllers(struct spdk_jsonrpc_request *request,
-			       const struct spdk_json_val *params)
+rpc_vhost_get_controllers(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
 {
 	struct rpc_get_vhost_ctrlrs req = {0};
 	struct spdk_json_write_ctx *w;
@@ -428,7 +428,7 @@ spdk_rpc_vhost_get_controllers(struct spdk_jsonrpc_request *request,
 		w = spdk_jsonrpc_begin_result(request);
 		spdk_json_write_array_begin(w);
 
-		_spdk_rpc_get_vhost_controller(w, vdev);
+		_rpc_get_vhost_controller(w, vdev);
 		spdk_vhost_unlock();
 
 		spdk_json_write_array_end(w);
@@ -443,7 +443,7 @@ spdk_rpc_vhost_get_controllers(struct spdk_jsonrpc_request *request,
 
 	vdev = spdk_vhost_dev_next(NULL);
 	while (vdev != NULL) {
-		_spdk_rpc_get_vhost_controller(w, vdev);
+		_rpc_get_vhost_controller(w, vdev);
 		vdev = spdk_vhost_dev_next(vdev);
 	}
 	spdk_vhost_unlock();
@@ -457,7 +457,7 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 					 spdk_strerror(-rc));
 }
-SPDK_RPC_REGISTER("vhost_get_controllers", spdk_rpc_vhost_get_controllers, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("vhost_get_controllers", rpc_vhost_get_controllers, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_get_controllers, get_vhost_controllers)
 
 
@@ -480,8 +480,8 @@ free_rpc_set_vhost_controllers_event_coalescing(struct rpc_vhost_ctrlr_coalescin
 }
 
 static void
-spdk_rpc_vhost_controller_set_coalescing(struct spdk_jsonrpc_request *request,
-		const struct spdk_json_val *params)
+rpc_vhost_controller_set_coalescing(struct spdk_jsonrpc_request *request,
+				    const struct spdk_json_val *params)
 {
 	struct rpc_vhost_ctrlr_coalescing req = {0};
 	struct spdk_json_write_ctx *w;
@@ -522,7 +522,7 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 					 spdk_strerror(-rc));
 }
-SPDK_RPC_REGISTER("vhost_controller_set_coalescing", spdk_rpc_vhost_controller_set_coalescing,
+SPDK_RPC_REGISTER("vhost_controller_set_coalescing", rpc_vhost_controller_set_coalescing,
 		  SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_controller_set_coalescing, set_vhost_controller_coalescing)
 
@@ -548,8 +548,8 @@ free_rpc_vhost_nvme_ctrlr(struct rpc_vhost_nvme_ctrlr *req)
 }
 
 static void
-spdk_rpc_vhost_create_nvme_controller(struct spdk_jsonrpc_request *request,
-				      const struct spdk_json_val *params)
+rpc_vhost_create_nvme_controller(struct spdk_jsonrpc_request *request,
+				 const struct spdk_json_val *params)
 {
 	struct rpc_vhost_nvme_ctrlr req = {};
 	struct spdk_json_write_ctx *w;
@@ -580,7 +580,7 @@ invalid:
 					 spdk_strerror(-rc));
 
 }
-SPDK_RPC_REGISTER("vhost_create_nvme_controller", spdk_rpc_vhost_create_nvme_controller,
+SPDK_RPC_REGISTER("vhost_create_nvme_controller", rpc_vhost_create_nvme_controller,
 		  SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_create_nvme_controller, construct_vhost_nvme_controller)
 
@@ -602,8 +602,8 @@ static const struct spdk_json_object_decoder rpc_vhost_nvme_add_ns[] = {
 };
 
 static void
-spdk_rpc_vhost_nvme_controller_add_ns(struct spdk_jsonrpc_request *request,
-				      const struct spdk_json_val *params)
+rpc_vhost_nvme_controller_add_ns(struct spdk_jsonrpc_request *request,
+				 const struct spdk_json_val *params)
 {
 	struct rpc_vhost_nvme_ctrlr_add_ns req = {0};
 	struct spdk_json_write_ctx *w;
@@ -643,7 +643,7 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 					 spdk_strerror(-rc));
 }
-SPDK_RPC_REGISTER("vhost_nvme_controller_add_ns", spdk_rpc_vhost_nvme_controller_add_ns,
+SPDK_RPC_REGISTER("vhost_nvme_controller_add_ns", rpc_vhost_nvme_controller_add_ns,
 		  SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_nvme_controller_add_ns, add_vhost_nvme_ns)
 
