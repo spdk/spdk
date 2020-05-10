@@ -242,6 +242,16 @@ function confirm_abi_deps() {
 	name = spdk_vbdev_zone_block_create
 [suppress_function]
 	name = spdk_vbdev_zone_block_delete
+[suppress_variable]
+	name = SPDK_LOG_BLOBFS_BDEV
+[suppress_variable]
+	name = SPDK_LOG_BLOBFS_BDEV_RPC
+[suppress_function]
+	name = spdk_blobfs_fuse_send_request
+[suppress_function]
+	name = spdk_blobfs_fuse_start
+[suppress_function]
+	name = spdk_blobfs_fuse_stop
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do

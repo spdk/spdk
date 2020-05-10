@@ -47,4 +47,6 @@ endif
 
 LIBNAME = blobfs_bdev
 
+SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_blobfs_bdev.map)
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
