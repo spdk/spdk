@@ -136,8 +136,8 @@ get_addr_str(struct sockaddr *sa, char *host, size_t hlen)
 #define __uring_group_impl(group) (struct spdk_uring_sock_group_impl *)group
 
 static int
-spdk_uring_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, uint16_t *sport,
-			char *caddr, int clen, uint16_t *cport)
+uring_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, uint16_t *sport,
+		   char *caddr, int clen, uint16_t *cport)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
 	struct sockaddr_storage sa;
@@ -206,13 +206,13 @@ spdk_uring_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, uint16_t
 	return 0;
 }
 
-enum spdk_uring_sock_create_type {
+enum uring_sock_create_type {
 	SPDK_SOCK_CREATE_LISTEN,
 	SPDK_SOCK_CREATE_CONNECT,
 };
 
 static int
-spdk_uring_sock_alloc_pipe(struct spdk_uring_sock *sock, int sz)
+uring_sock_alloc_pipe(struct spdk_uring_sock *sock, int sz)
 {
 	uint8_t *new_buf;
 	struct spdk_pipe *new_pipe;
@@ -276,7 +276,7 @@ spdk_uring_sock_alloc_pipe(struct spdk_uring_sock *sock, int sz)
 }
 
 static int
-spdk_uring_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
+uring_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
 	int rc;
@@ -286,7 +286,7 @@ spdk_uring_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
 #ifndef __aarch64__
 	/* On ARM systems, this buffering does not help. Skip it. */
 	/* The size of the pipe is purely derived from benchmarks. It seems to work well. */
-	rc = spdk_uring_sock_alloc_pipe(sock, sz);
+	rc = uring_sock_alloc_pipe(sock, sz);
 	if (rc) {
 		SPDK_ERRLOG("unable to allocate sufficient recvbuf with sz=%d on sock=%p\n", sz, _sock);
 		return rc;
@@ -306,7 +306,7 @@ spdk_uring_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
 }
 
 static int
-spdk_uring_sock_set_sendbuf(struct spdk_sock *_sock, int sz)
+uring_sock_set_sendbuf(struct spdk_sock *_sock, int sz)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
 	int rc;
@@ -326,7 +326,7 @@ spdk_uring_sock_set_sendbuf(struct spdk_sock *_sock, int sz)
 }
 
 static struct spdk_uring_sock *
-_spdk_uring_sock_alloc(int fd)
+uring_sock_alloc(int fd)
 {
 	struct spdk_uring_sock *sock;
 
@@ -341,9 +341,9 @@ _spdk_uring_sock_alloc(int fd)
 }
 
 static struct spdk_sock *
-spdk_uring_sock_create(const char *ip, int port,
-		       enum spdk_uring_sock_create_type type,
-		       struct spdk_sock_opts *opts)
+uring_sock_create(const char *ip, int port,
+		  enum uring_sock_create_type type,
+		  struct spdk_sock_opts *opts)
 {
 	struct spdk_uring_sock *sock;
 	char buf[MAX_TMPBUF];
@@ -489,7 +489,7 @@ retry:
 		return NULL;
 	}
 
-	sock = _spdk_uring_sock_alloc(fd);
+	sock = uring_sock_alloc(fd);
 	if (sock == NULL) {
 		SPDK_ERRLOG("sock allocation failed\n");
 		close(fd);
@@ -500,19 +500,19 @@ retry:
 }
 
 static struct spdk_sock *
-spdk_uring_sock_listen(const char *ip, int port, struct spdk_sock_opts *opts)
+uring_sock_listen(const char *ip, int port, struct spdk_sock_opts *opts)
 {
-	return spdk_uring_sock_create(ip, port, SPDK_SOCK_CREATE_LISTEN, opts);
+	return uring_sock_create(ip, port, SPDK_SOCK_CREATE_LISTEN, opts);
 }
 
 static struct spdk_sock *
-spdk_uring_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts)
+uring_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts)
 {
-	return spdk_uring_sock_create(ip, port, SPDK_SOCK_CREATE_CONNECT, opts);
+	return uring_sock_create(ip, port, SPDK_SOCK_CREATE_CONNECT, opts);
 }
 
 static struct spdk_sock *
-spdk_uring_sock_accept(struct spdk_sock *_sock)
+uring_sock_accept(struct spdk_sock *_sock)
 {
 	struct spdk_uring_sock		*sock = __uring_sock(_sock);
 	struct sockaddr_storage		sa;
@@ -552,7 +552,7 @@ spdk_uring_sock_accept(struct spdk_sock *_sock)
 	}
 #endif
 
-	new_sock = _spdk_uring_sock_alloc(fd);
+	new_sock = uring_sock_alloc(fd);
 	if (new_sock == NULL) {
 		close(fd);
 		return NULL;
@@ -562,7 +562,7 @@ spdk_uring_sock_accept(struct spdk_sock *_sock)
 }
 
 static int
-spdk_uring_sock_close(struct spdk_sock *_sock)
+uring_sock_close(struct spdk_sock *_sock)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
 	int rc;
@@ -586,7 +586,7 @@ spdk_uring_sock_close(struct spdk_sock *_sock)
 }
 
 static ssize_t
-spdk_uring_sock_recv_from_pipe(struct spdk_uring_sock *sock, struct iovec *diov, int diovcnt)
+uring_sock_recv_from_pipe(struct spdk_uring_sock *sock, struct iovec *diov, int diovcnt)
 {
 	struct iovec siov[2];
 	int sbytes;
@@ -623,7 +623,7 @@ spdk_uring_sock_recv_from_pipe(struct spdk_uring_sock *sock, struct iovec *diov,
 }
 
 static inline ssize_t
-_spdk_uring_sock_read(struct spdk_uring_sock *sock)
+uring_sock_read(struct spdk_uring_sock *sock)
 {
 	struct iovec iov[2];
 	int bytes;
@@ -647,7 +647,7 @@ _spdk_uring_sock_read(struct spdk_uring_sock *sock)
 }
 
 static ssize_t
-spdk_uring_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
+uring_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
 	int rc, i;
@@ -670,28 +670,28 @@ spdk_uring_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 		}
 
 		/* Otherwise, do a big read into our pipe */
-		rc = _spdk_uring_sock_read(sock);
+		rc = uring_sock_read(sock);
 		if (rc <= 0) {
 			return rc;
 		}
 	}
 
-	return spdk_uring_sock_recv_from_pipe(sock, iov, iovcnt);
+	return uring_sock_recv_from_pipe(sock, iov, iovcnt);
 }
 
 static ssize_t
-spdk_uring_sock_recv(struct spdk_sock *sock, void *buf, size_t len)
+uring_sock_recv(struct spdk_sock *sock, void *buf, size_t len)
 {
 	struct iovec iov[1];
 
 	iov[0].iov_base = buf;
 	iov[0].iov_len = len;
 
-	return spdk_uring_sock_readv(sock, iov, 1);
+	return uring_sock_readv(sock, iov, 1);
 }
 
 static ssize_t
-spdk_uring_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
+uring_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
 
@@ -704,8 +704,8 @@ spdk_uring_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 }
 
 static int
-spdk_sock_prep_reqs(struct spdk_sock *_sock, struct iovec *iovs, int index,
-		    struct spdk_sock_request **last_req)
+sock_prep_reqs(struct spdk_sock *_sock, struct iovec *iovs, int index,
+	       struct spdk_sock_request **last_req)
 {
 	int iovcnt, i;
 	struct spdk_sock_request *req;
@@ -758,7 +758,7 @@ end:
 }
 
 static int
-spdk_sock_complete_reqs(struct spdk_sock *_sock, ssize_t rc)
+sock_complete_reqs(struct spdk_sock *_sock, ssize_t rc)
 {
 	struct spdk_sock_request *req;
 	int i, retval;
@@ -821,7 +821,7 @@ _sock_flush(struct spdk_sock *_sock)
 		return;
 	}
 
-	iovcnt = spdk_sock_prep_reqs(&sock->base, task->iovs, task->iov_cnt, &task->last_req);
+	iovcnt = sock_prep_reqs(&sock->base, task->iovs, task->iov_cnt, &task->last_req);
 	if (!iovcnt) {
 		return;
 	}
@@ -881,8 +881,8 @@ _sock_prep_cancel_task(struct spdk_sock *_sock, void *user_data)
 }
 
 static int
-spdk_sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max_read_events,
-			   struct spdk_sock **socks)
+sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max_read_events,
+		      struct spdk_sock **socks)
 {
 	int count, i, completed_cqe_num;
 	struct io_uring_cqe *cqes[SPDK_SOCK_GROUP_QUEUE_DEPTH];
@@ -930,7 +930,7 @@ spdk_sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, in
 			assert(TAILQ_EMPTY(&sock->base.pending_reqs));
 			task->last_req = NULL;
 			task->iov_cnt = 0;
-			spdk_sock_complete_reqs(&sock->base, status);
+			sock_complete_reqs(&sock->base, status);
 
 			/* For socket is removed from the group but having outstanding I/O */
 			if (spdk_unlikely(task->sock->outstanding_io > 0 &&
@@ -938,7 +938,7 @@ spdk_sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, in
 				if (--sock->outstanding_io == 0) {
 					/* Just for sock close case */
 					if (sock->base.flags.closed) {
-						spdk_uring_sock_close(&sock->base);
+						uring_sock_close(&sock->base);
 					}
 				}
 			}
@@ -995,7 +995,7 @@ _sock_flush_client(struct spdk_sock *_sock)
 	}
 
 	/* Gather an iov */
-	iovcnt = spdk_sock_prep_reqs(_sock, iovs, 0, NULL);
+	iovcnt = sock_prep_reqs(_sock, iovs, 0, NULL);
 	if (iovcnt == 0) {
 		return 0;
 	}
@@ -1011,13 +1011,13 @@ _sock_flush_client(struct spdk_sock *_sock)
 		return rc;
 	}
 
-	spdk_sock_complete_reqs(_sock, rc);
+	sock_complete_reqs(_sock, rc);
 
 	return 0;
 }
 
 static void
-spdk_uring_sock_writev_async(struct spdk_sock *_sock, struct spdk_sock_request *req)
+uring_sock_writev_async(struct spdk_sock *_sock, struct spdk_sock_request *req)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
 	int rc;
@@ -1035,7 +1035,7 @@ spdk_uring_sock_writev_async(struct spdk_sock *_sock, struct spdk_sock_request *
 }
 
 static int
-spdk_uring_sock_set_recvlowat(struct spdk_sock *_sock, int nbytes)
+uring_sock_set_recvlowat(struct spdk_sock *_sock, int nbytes)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
 	int val;
@@ -1052,7 +1052,7 @@ spdk_uring_sock_set_recvlowat(struct spdk_sock *_sock, int nbytes)
 }
 
 static bool
-spdk_uring_sock_is_ipv6(struct spdk_sock *_sock)
+uring_sock_is_ipv6(struct spdk_sock *_sock)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
 	struct sockaddr_storage sa;
@@ -1073,7 +1073,7 @@ spdk_uring_sock_is_ipv6(struct spdk_sock *_sock)
 }
 
 static bool
-spdk_uring_sock_is_ipv4(struct spdk_sock *_sock)
+uring_sock_is_ipv4(struct spdk_sock *_sock)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
 	struct sockaddr_storage sa;
@@ -1094,7 +1094,7 @@ spdk_uring_sock_is_ipv4(struct spdk_sock *_sock)
 }
 
 static bool
-spdk_uring_sock_is_connected(struct spdk_sock *_sock)
+uring_sock_is_connected(struct spdk_sock *_sock)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
 	uint8_t byte;
@@ -1117,7 +1117,7 @@ spdk_uring_sock_is_connected(struct spdk_sock *_sock)
 }
 
 static int
-spdk_uring_sock_get_placement_id(struct spdk_sock *_sock, int *placement_id)
+uring_sock_get_placement_id(struct spdk_sock *_sock, int *placement_id)
 {
 	int rc = -1;
 
@@ -1135,7 +1135,7 @@ spdk_uring_sock_get_placement_id(struct spdk_sock *_sock, int *placement_id)
 }
 
 static struct spdk_sock_group_impl *
-spdk_uring_sock_group_impl_create(void)
+uring_sock_group_impl_create(void)
 {
 	struct spdk_uring_sock_group_impl *group_impl;
 
@@ -1159,8 +1159,8 @@ spdk_uring_sock_group_impl_create(void)
 }
 
 static int
-spdk_uring_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group,
-				    struct spdk_sock *_sock)
+uring_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group,
+			       struct spdk_sock *_sock)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
 	struct spdk_uring_sock_group_impl *group = __uring_group_impl(_group);
@@ -1187,8 +1187,8 @@ spdk_uring_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group,
 }
 
 static int
-spdk_uring_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
-				struct spdk_sock **socks)
+uring_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
+			   struct spdk_sock **socks)
 {
 	struct spdk_uring_sock_group_impl *group = __uring_group_impl(_group);
 	int count, ret;
@@ -1218,15 +1218,15 @@ spdk_uring_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_eve
 	count = 0;
 	to_complete = group->io_inflight;
 	if (to_complete > 0) {
-		count = spdk_sock_uring_group_reap(group, to_complete, max_events, socks);
+		count = sock_uring_group_reap(group, to_complete, max_events, socks);
 	}
 
 	return count;
 }
 
 static int
-spdk_uring_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group,
-				       struct spdk_sock *_sock)
+uring_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group,
+				  struct spdk_sock *_sock)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
 	struct spdk_uring_sock_group_impl *group = __uring_group_impl(_group);
@@ -1245,7 +1245,7 @@ spdk_uring_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group,
 	/* Since spdk_sock_group_remove_sock is not asynchronous interface, so
 	 * currently can use a while loop here. */
 	while (sock->pollin_task.status != SPDK_URING_SOCK_TASK_NOT_IN_USE) {
-		spdk_uring_sock_group_impl_poll(_group, 32, NULL);
+		uring_sock_group_impl_poll(_group, 32, NULL);
 	}
 
 	if (sock->recv_pipe != NULL) {
@@ -1260,13 +1260,13 @@ spdk_uring_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group,
 }
 
 static int
-spdk_uring_sock_group_impl_close(struct spdk_sock_group_impl *_group)
+uring_sock_group_impl_close(struct spdk_sock_group_impl *_group)
 {
 	struct spdk_uring_sock_group_impl *group = __uring_group_impl(_group);
 
 	/* try to reap all the active I/O */
 	while (group->io_inflight) {
-		spdk_uring_sock_group_impl_poll(_group, 32, NULL);
+		uring_sock_group_impl_poll(_group, 32, NULL);
 	}
 	assert(group->io_inflight == 0);
 	assert(group->io_avail == SPDK_SOCK_GROUP_QUEUE_DEPTH);
@@ -1279,7 +1279,7 @@ spdk_uring_sock_group_impl_close(struct spdk_sock_group_impl *_group)
 }
 
 static int
-spdk_uring_sock_flush(struct spdk_sock *_sock)
+uring_sock_flush(struct spdk_sock *_sock)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
 
@@ -1292,28 +1292,28 @@ spdk_uring_sock_flush(struct spdk_sock *_sock)
 
 static struct spdk_net_impl g_uring_net_impl = {
 	.name		= "uring",
-	.getaddr	= spdk_uring_sock_getaddr,
-	.connect	= spdk_uring_sock_connect,
-	.listen		= spdk_uring_sock_listen,
-	.accept		= spdk_uring_sock_accept,
-	.close		= spdk_uring_sock_close,
-	.recv		= spdk_uring_sock_recv,
-	.readv		= spdk_uring_sock_readv,
-	.writev		= spdk_uring_sock_writev,
-	.writev_async	= spdk_uring_sock_writev_async,
-	.flush          = spdk_uring_sock_flush,
-	.set_recvlowat	= spdk_uring_sock_set_recvlowat,
-	.set_recvbuf	= spdk_uring_sock_set_recvbuf,
-	.set_sendbuf	= spdk_uring_sock_set_sendbuf,
-	.is_ipv6	= spdk_uring_sock_is_ipv6,
-	.is_ipv4	= spdk_uring_sock_is_ipv4,
-	.is_connected   = spdk_uring_sock_is_connected,
-	.get_placement_id	= spdk_uring_sock_get_placement_id,
-	.group_impl_create	= spdk_uring_sock_group_impl_create,
-	.group_impl_add_sock	= spdk_uring_sock_group_impl_add_sock,
-	.group_impl_remove_sock = spdk_uring_sock_group_impl_remove_sock,
-	.group_impl_poll	= spdk_uring_sock_group_impl_poll,
-	.group_impl_close	= spdk_uring_sock_group_impl_close,
+	.getaddr	= uring_sock_getaddr,
+	.connect	= uring_sock_connect,
+	.listen		= uring_sock_listen,
+	.accept		= uring_sock_accept,
+	.close		= uring_sock_close,
+	.recv		= uring_sock_recv,
+	.readv		= uring_sock_readv,
+	.writev		= uring_sock_writev,
+	.writev_async	= uring_sock_writev_async,
+	.flush          = uring_sock_flush,
+	.set_recvlowat	= uring_sock_set_recvlowat,
+	.set_recvbuf	= uring_sock_set_recvbuf,
+	.set_sendbuf	= uring_sock_set_sendbuf,
+	.is_ipv6	= uring_sock_is_ipv6,
+	.is_ipv4	= uring_sock_is_ipv4,
+	.is_connected   = uring_sock_is_connected,
+	.get_placement_id	= uring_sock_get_placement_id,
+	.group_impl_create	= uring_sock_group_impl_create,
+	.group_impl_add_sock	= uring_sock_group_impl_add_sock,
+	.group_impl_remove_sock = uring_sock_group_impl_remove_sock,
+	.group_impl_poll	= uring_sock_group_impl_poll,
+	.group_impl_close	= uring_sock_group_impl_close,
 };
 
 SPDK_NET_IMPL_REGISTER(uring, &g_uring_net_impl, DEFAULT_SOCK_PRIORITY + 1);
