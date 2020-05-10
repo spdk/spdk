@@ -61,8 +61,8 @@ static const struct spdk_json_object_decoder rpc_bdev_passthru_create_decoders[]
  * device. Error status returned in the failed cases.
  */
 static void
-spdk_rpc_bdev_passthru_create(struct spdk_jsonrpc_request *request,
-			      const struct spdk_json_val *params)
+rpc_bdev_passthru_create(struct spdk_jsonrpc_request *request,
+			 const struct spdk_json_val *params)
 {
 	struct rpc_bdev_passthru_create req = {NULL};
 	struct spdk_json_write_ctx *w;
@@ -90,7 +90,7 @@ spdk_rpc_bdev_passthru_create(struct spdk_jsonrpc_request *request,
 cleanup:
 	free_rpc_bdev_passthru_create(&req);
 }
-SPDK_RPC_REGISTER("bdev_passthru_create", spdk_rpc_bdev_passthru_create, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_passthru_create", rpc_bdev_passthru_create, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_passthru_create, construct_passthru_bdev)
 
 struct rpc_bdev_passthru_delete {
@@ -108,7 +108,7 @@ static const struct spdk_json_object_decoder rpc_bdev_passthru_delete_decoders[]
 };
 
 static void
-_spdk_rpc_bdev_passthru_delete_cb(void *cb_arg, int bdeverrno)
+rpc_bdev_passthru_delete_cb(void *cb_arg, int bdeverrno)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
 	struct spdk_json_write_ctx *w;
@@ -119,8 +119,8 @@ _spdk_rpc_bdev_passthru_delete_cb(void *cb_arg, int bdeverrno)
 }
 
 static void
-spdk_rpc_bdev_passthru_delete(struct spdk_jsonrpc_request *request,
-			      const struct spdk_json_val *params)
+rpc_bdev_passthru_delete(struct spdk_jsonrpc_request *request,
+			 const struct spdk_json_val *params)
 {
 	struct rpc_bdev_passthru_delete req = {NULL};
 	struct spdk_bdev *bdev;
@@ -139,10 +139,10 @@ spdk_rpc_bdev_passthru_delete(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	bdev_passthru_delete_disk(bdev, _spdk_rpc_bdev_passthru_delete_cb, request);
+	bdev_passthru_delete_disk(bdev, rpc_bdev_passthru_delete_cb, request);
 
 cleanup:
 	free_rpc_bdev_passthru_delete(&req);
 }
-SPDK_RPC_REGISTER("bdev_passthru_delete", spdk_rpc_bdev_passthru_delete, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_passthru_delete", rpc_bdev_passthru_delete, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_passthru_delete, delete_passthru_bdev)
