@@ -38,7 +38,7 @@
 #include "spdk_internal/event.h"
 
 static void
-spdk_scsi_subsystem_init(void)
+scsi_subsystem_init(void)
 {
 	int rc;
 
@@ -48,7 +48,7 @@ spdk_scsi_subsystem_init(void)
 }
 
 static void
-spdk_scsi_subsystem_fini(void)
+scsi_subsystem_fini(void)
 {
 	spdk_scsi_fini();
 	spdk_subsystem_fini_next();
@@ -56,8 +56,8 @@ spdk_scsi_subsystem_fini(void)
 
 static struct spdk_subsystem g_spdk_subsystem_scsi = {
 	.name = "scsi",
-	.init = spdk_scsi_subsystem_init,
-	.fini = spdk_scsi_subsystem_fini,
+	.init = scsi_subsystem_init,
+	.fini = scsi_subsystem_fini,
 	.config = NULL,
 };
 
