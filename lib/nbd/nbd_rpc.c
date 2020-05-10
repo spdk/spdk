@@ -136,7 +136,7 @@ find_available_nbd_disk(int nbd_idx, int *next_nbd_idx)
 }
 
 static void
-spdk_rpc_start_nbd_done(void *cb_arg, struct spdk_nbd_disk *nbd, int rc)
+rpc_start_nbd_done(void *cb_arg, struct spdk_nbd_disk *nbd, int rc)
 {
 	struct rpc_nbd_start_disk *req = cb_arg;
 	struct spdk_jsonrpc_request *request = req->request;
@@ -149,7 +149,7 @@ spdk_rpc_start_nbd_done(void *cb_arg, struct spdk_nbd_disk *nbd, int rc)
 		req->nbd_device = find_available_nbd_disk(req->nbd_idx, &req->nbd_idx);
 		if (req->nbd_device != NULL) {
 			spdk_nbd_start(req->bdev_name, req->nbd_device,
-				       spdk_rpc_start_nbd_done, req);
+				       rpc_start_nbd_done, req);
 			return;
 		}
 
@@ -169,8 +169,8 @@ spdk_rpc_start_nbd_done(void *cb_arg, struct spdk_nbd_disk *nbd, int rc)
 }
 
 static void
-spdk_rpc_nbd_start_disk(struct spdk_jsonrpc_request *request,
-			const struct spdk_json_val *params)
+rpc_nbd_start_disk(struct spdk_jsonrpc_request *request,
+		   const struct spdk_json_val *params)
 {
 	struct rpc_nbd_start_disk *req;
 	int rc;
@@ -223,7 +223,7 @@ spdk_rpc_nbd_start_disk(struct spdk_jsonrpc_request *request,
 
 	req->request = request;
 	spdk_nbd_start(req->bdev_name, req->nbd_device,
-		       spdk_rpc_start_nbd_done, req);
+		       rpc_start_nbd_done, req);
 
 	return;
 
@@ -231,7 +231,7 @@ invalid:
 	free_rpc_nbd_start_disk(req);
 }
 
-SPDK_RPC_REGISTER("nbd_start_disk", spdk_rpc_nbd_start_disk, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("nbd_start_disk", rpc_nbd_start_disk, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(nbd_start_disk, start_nbd_disk)
 
 struct rpc_nbd_stop_disk {
@@ -272,8 +272,8 @@ nbd_disconnect_thread(void *arg)
 }
 
 static void
-spdk_rpc_nbd_stop_disk(struct spdk_jsonrpc_request *request,
-		       const struct spdk_json_val *params)
+rpc_nbd_stop_disk(struct spdk_jsonrpc_request *request,
+		  const struct spdk_json_val *params)
 {
 	struct rpc_nbd_stop_disk req = {};
 	struct spdk_nbd_disk *nbd;
@@ -338,12 +338,12 @@ out:
 	free_rpc_nbd_stop_disk(&req);
 }
 
-SPDK_RPC_REGISTER("nbd_stop_disk", spdk_rpc_nbd_stop_disk, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("nbd_stop_disk", rpc_nbd_stop_disk, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(nbd_stop_disk, stop_nbd_disk)
 
 static void
-spdk_rpc_dump_nbd_info(struct spdk_json_write_ctx *w,
-		       struct spdk_nbd_disk *nbd)
+rpc_dump_nbd_info(struct spdk_json_write_ctx *w,
+		  struct spdk_nbd_disk *nbd)
 {
 	spdk_json_write_object_begin(w);
 
@@ -369,8 +369,8 @@ static const struct spdk_json_object_decoder rpc_nbd_get_disks_decoders[] = {
 };
 
 static void
-spdk_rpc_nbd_get_disks(struct spdk_jsonrpc_request *request,
-		       const struct spdk_json_val *params)
+rpc_nbd_get_disks(struct spdk_jsonrpc_request *request,
+		  const struct spdk_json_val *params)
 {
 	struct rpc_nbd_get_disks req = {};
 	struct spdk_json_write_ctx *w;
@@ -402,10 +402,10 @@ spdk_rpc_nbd_get_disks(struct spdk_jsonrpc_request *request,
 	spdk_json_write_array_begin(w);
 
 	if (nbd != NULL) {
-		spdk_rpc_dump_nbd_info(w, nbd);
+		rpc_dump_nbd_info(w, nbd);
 	} else {
 		for (nbd = nbd_disk_first(); nbd != NULL; nbd = nbd_disk_next(nbd)) {
-			spdk_rpc_dump_nbd_info(w, nbd);
+			rpc_dump_nbd_info(w, nbd);
 		}
 	}
 
@@ -418,5 +418,5 @@ spdk_rpc_nbd_get_disks(struct spdk_jsonrpc_request *request,
 invalid:
 	free_rpc_nbd_get_disks(&req);
 }
-SPDK_RPC_REGISTER("nbd_get_disks", spdk_rpc_nbd_get_disks, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("nbd_get_disks", rpc_nbd_get_disks, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(nbd_get_disks, get_nbd_disks)

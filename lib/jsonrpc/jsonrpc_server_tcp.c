@@ -99,7 +99,7 @@ spdk_jsonrpc_server_listen(int domain, int protocol,
 }
 
 static struct spdk_jsonrpc_request *
-spdk_jsonrpc_server_dequeue_request(struct spdk_jsonrpc_server_conn *conn)
+jsonrpc_server_dequeue_request(struct spdk_jsonrpc_server_conn *conn)
 {
 	struct spdk_jsonrpc_request *request = NULL;
 
@@ -113,24 +113,24 @@ spdk_jsonrpc_server_dequeue_request(struct spdk_jsonrpc_server_conn *conn)
 }
 
 static void
-spdk_jsonrpc_server_free_conn_request(struct spdk_jsonrpc_server_conn *conn)
+jsonrpc_server_free_conn_request(struct spdk_jsonrpc_server_conn *conn)
 {
 	struct spdk_jsonrpc_request *request;
 
 	jsonrpc_free_request(conn->send_request);
 	conn->send_request = NULL ;
-	while ((request = spdk_jsonrpc_server_dequeue_request(conn)) != NULL) {
+	while ((request = jsonrpc_server_dequeue_request(conn)) != NULL) {
 		jsonrpc_free_request(request);
 	}
 }
 
 static void
-spdk_jsonrpc_server_conn_close(struct spdk_jsonrpc_server_conn *conn)
+jsonrpc_server_conn_close(struct spdk_jsonrpc_server_conn *conn)
 {
 	conn->closed = true;
 
 	if (conn->sockfd >= 0) {
-		spdk_jsonrpc_server_free_conn_request(conn);
+		jsonrpc_server_free_conn_request(conn);
 		close(conn->sockfd);
 		conn->sockfd = -1;
 
@@ -148,18 +148,18 @@ spdk_jsonrpc_server_shutdown(struct spdk_jsonrpc_server *server)
 	close(server->sockfd);
 
 	TAILQ_FOREACH(conn, &server->conns, link) {
-		spdk_jsonrpc_server_conn_close(conn);
+		jsonrpc_server_conn_close(conn);
 	}
 
 	free(server);
 }
 
 static void
-spdk_jsonrpc_server_conn_remove(struct spdk_jsonrpc_server_conn *conn)
+jsonrpc_server_conn_remove(struct spdk_jsonrpc_server_conn *conn)
 {
 	struct spdk_jsonrpc_server *server = conn->server;
 
-	spdk_jsonrpc_server_conn_close(conn);
+	jsonrpc_server_conn_close(conn);
 
 	pthread_spin_destroy(&conn->queue_lock);
 	assert(STAILQ_EMPTY(&conn->send_queue));
@@ -204,7 +204,7 @@ spdk_jsonrpc_conn_del_close_cb(struct spdk_jsonrpc_server_conn *conn,
 }
 
 static int
-spdk_jsonrpc_server_accept(struct spdk_jsonrpc_server *server)
+jsonrpc_server_accept(struct spdk_jsonrpc_server *server)
 {
 	struct spdk_jsonrpc_server_conn *conn;
 	int rc, flag;
@@ -285,7 +285,7 @@ jsonrpc_server_handle_error(struct spdk_jsonrpc_request *request, int error)
 }
 
 static int
-spdk_jsonrpc_server_conn_recv(struct spdk_jsonrpc_server_conn *conn)
+jsonrpc_server_conn_recv(struct spdk_jsonrpc_server_conn *conn)
 {
 	ssize_t rc, offset;
 	size_t recv_avail = SPDK_JSONRPC_RECV_BUF_SIZE - conn->recv_len;
@@ -344,7 +344,7 @@ jsonrpc_server_send_response(struct spdk_jsonrpc_request *request)
 
 
 static int
-spdk_jsonrpc_server_conn_send(struct spdk_jsonrpc_server_conn *conn)
+jsonrpc_server_conn_send(struct spdk_jsonrpc_server_conn *conn)
 {
 	struct spdk_jsonrpc_request *request;
 	ssize_t rc;
@@ -355,7 +355,7 @@ more:
 	}
 
 	if (conn->send_request == NULL) {
-		conn->send_request = spdk_jsonrpc_server_dequeue_request(conn);
+		conn->send_request = jsonrpc_server_dequeue_request(conn);
 	}
 
 	request = conn->send_request;
@@ -402,17 +402,17 @@ spdk_jsonrpc_server_poll(struct spdk_jsonrpc_server *server)
 	TAILQ_FOREACH_SAFE(conn, &server->conns, link, conn_tmp) {
 		/* If we can't receive and there are no outstanding requests close the connection. */
 		if (conn->closed == true && conn->outstanding_requests == 0) {
-			spdk_jsonrpc_server_conn_close(conn);
+			jsonrpc_server_conn_close(conn);
 		}
 
 		if (conn->sockfd == -1 && conn->outstanding_requests == 0) {
-			spdk_jsonrpc_server_conn_remove(conn);
+			jsonrpc_server_conn_remove(conn);
 		}
 	}
 
 	/* Check listen socket */
 	if (!TAILQ_EMPTY(&server->free_conns)) {
-		spdk_jsonrpc_server_accept(server);
+		jsonrpc_server_accept(server);
 	}
 
 	TAILQ_FOREACH(conn, &server->conns, link) {
@@ -420,16 +420,16 @@ spdk_jsonrpc_server_poll(struct spdk_jsonrpc_server *server)
 			continue;
 		}
 
-		rc = spdk_jsonrpc_server_conn_send(conn);
+		rc = jsonrpc_server_conn_send(conn);
 		if (rc != 0) {
-			spdk_jsonrpc_server_conn_close(conn);
+			jsonrpc_server_conn_close(conn);
 			continue;
 		}
 
 		if (!conn->closed) {
-			rc = spdk_jsonrpc_server_conn_recv(conn);
+			rc = jsonrpc_server_conn_recv(conn);
 			if (rc != 0) {
-				spdk_jsonrpc_server_conn_close(conn);
+				jsonrpc_server_conn_close(conn);
 			}
 		}
 	}

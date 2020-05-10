@@ -72,7 +72,7 @@ spdk_log_close(void)
 
 #ifdef SPDK_LOG_BACKTRACE_LVL
 static void
-spdk_log_unwind_stack(FILE *fp, enum spdk_log_level level)
+log_unwind_stack(FILE *fp, enum spdk_log_level level)
 {
 	unw_error_t err;
 	unw_cursor_t cursor;
@@ -105,7 +105,7 @@ spdk_log_unwind_stack(FILE *fp, enum spdk_log_level level)
 }
 
 #else
-#define spdk_log_unwind_stack(fp, lvl)
+#define log_unwind_stack(fp, lvl)
 #endif
 
 static void
@@ -176,7 +176,7 @@ spdk_vlog(enum spdk_log_level level, const char *file, const int line, const cha
 		get_timestamp_prefix(timestamp, sizeof(timestamp));
 		if (file) {
 			fprintf(stderr, "%s%s:%4d:%s: *%s*: %s", timestamp, file, line, func, spdk_level_names[level], buf);
-			spdk_log_unwind_stack(stderr, level);
+			log_unwind_stack(stderr, level);
 		} else {
 			fprintf(stderr, "%s%s", timestamp, buf);
 		}

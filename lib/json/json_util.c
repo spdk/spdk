@@ -104,7 +104,7 @@ struct spdk_json_num {
 };
 
 static int
-spdk_json_number_split(const struct spdk_json_val *val, struct spdk_json_num *num)
+json_number_split(const struct spdk_json_val *val, struct spdk_json_num *num)
 {
 	const char *iter;
 	size_t remaining;
@@ -210,7 +210,7 @@ spdk_json_number_to_uint16(const struct spdk_json_val *val, uint16_t *num)
 	struct spdk_json_num split_num;
 	int rc;
 
-	rc = spdk_json_number_split(val, &split_num);
+	rc = json_number_split(val, &split_num);
 	if (rc) {
 		return rc;
 	}
@@ -232,7 +232,7 @@ spdk_json_number_to_int32(const struct spdk_json_val *val, int32_t *num)
 	struct spdk_json_num split_num;
 	int rc;
 
-	rc = spdk_json_number_split(val, &split_num);
+	rc = json_number_split(val, &split_num);
 	if (rc) {
 		return rc;
 	}
@@ -263,7 +263,7 @@ spdk_json_number_to_uint32(const struct spdk_json_val *val, uint32_t *num)
 	struct spdk_json_num split_num;
 	int rc;
 
-	rc = spdk_json_number_split(val, &split_num);
+	rc = json_number_split(val, &split_num);
 	if (rc) {
 		return rc;
 	}
@@ -285,7 +285,7 @@ spdk_json_number_to_uint64(const struct spdk_json_val *val, uint64_t *num)
 	struct spdk_json_num split_num;
 	int rc;
 
-	rc = spdk_json_number_split(val, &split_num);
+	rc = json_number_split(val, &split_num);
 	if (rc) {
 		return rc;
 	}
@@ -460,7 +460,7 @@ spdk_json_decode_string(const struct spdk_json_val *val, void *out)
 }
 
 static struct spdk_json_val *
-spdk_json_first(struct spdk_json_val *object, enum spdk_json_val_type type)
+json_first(struct spdk_json_val *object, enum spdk_json_val_type type)
 {
 	/* 'object' must be JSON object or array. 'type' might be combination of these two. */
 	assert((type & (SPDK_JSON_VAL_ARRAY_BEGIN | SPDK_JSON_VAL_OBJECT_BEGIN)) != 0);
@@ -480,7 +480,7 @@ spdk_json_first(struct spdk_json_val *object, enum spdk_json_val_type type)
 }
 
 static struct spdk_json_val *
-spdk_json_value(struct spdk_json_val *key)
+json_value(struct spdk_json_val *key)
 {
 	return key->type == SPDK_JSON_VAL_NAME ? key + 1 : NULL;
 }
@@ -495,7 +495,7 @@ spdk_json_find(struct spdk_json_val *object, const char *key_name, struct spdk_j
 
 	assert(object != NULL);
 
-	for (it = spdk_json_first(object, SPDK_JSON_VAL_ARRAY_BEGIN | SPDK_JSON_VAL_OBJECT_BEGIN);
+	for (it = json_first(object, SPDK_JSON_VAL_ARRAY_BEGIN | SPDK_JSON_VAL_OBJECT_BEGIN);
 	     it != NULL;
 	     it = spdk_json_next(it)) {
 		if (it->type != SPDK_JSON_VAL_NAME) {
@@ -512,7 +512,7 @@ spdk_json_find(struct spdk_json_val *object, const char *key_name, struct spdk_j
 		}
 
 		_key = it;
-		_val = spdk_json_value(_key);
+		_val = json_value(_key);
 
 		if (type != SPDK_JSON_VAL_INVALID && (_val->type & type) == 0) {
 			SPDK_JSON_DEBUG("key '%s' type is %#x but expected one of %#x\n", key_name, _val->type, type);
@@ -548,7 +548,7 @@ spdk_json_find_array(struct spdk_json_val *object, const char *key_name,
 struct spdk_json_val *
 spdk_json_object_first(struct spdk_json_val *object)
 {
-	struct spdk_json_val *first = spdk_json_first(object, SPDK_JSON_VAL_OBJECT_BEGIN);
+	struct spdk_json_val *first = json_first(object, SPDK_JSON_VAL_OBJECT_BEGIN);
 
 	/* Empty object? */
 	return first && first->type != SPDK_JSON_VAL_OBJECT_END ? first : NULL;
@@ -557,14 +557,14 @@ spdk_json_object_first(struct spdk_json_val *object)
 struct spdk_json_val *
 spdk_json_array_first(struct spdk_json_val *array_begin)
 {
-	struct spdk_json_val *first = spdk_json_first(array_begin, SPDK_JSON_VAL_ARRAY_BEGIN);
+	struct spdk_json_val *first = json_first(array_begin, SPDK_JSON_VAL_ARRAY_BEGIN);
 
 	/* Empty array? */
 	return first && first->type != SPDK_JSON_VAL_ARRAY_END ? first : NULL;
 }
 
 static struct spdk_json_val *
-spdk_json_skip_object_or_array(struct spdk_json_val *val)
+json_skip_object_or_array(struct spdk_json_val *val)
 {
 	unsigned lvl;
 	enum spdk_json_val_type end_type;
@@ -605,7 +605,7 @@ spdk_json_next(struct spdk_json_val *it)
 
 	switch (it->type) {
 	case SPDK_JSON_VAL_NAME:
-		val = spdk_json_value(it);
+		val = json_value(it);
 		next = spdk_json_next(val);
 		break;
 
@@ -620,7 +620,7 @@ spdk_json_next(struct spdk_json_val *it)
 
 	case SPDK_JSON_VAL_ARRAY_BEGIN:
 	case SPDK_JSON_VAL_OBJECT_BEGIN:
-		next = spdk_json_skip_object_or_array(it);
+		next = json_skip_object_or_array(it);
 		break;
 
 	/* Can't go to the next object if started from the end of array or object */

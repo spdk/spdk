@@ -108,7 +108,7 @@ invalid:
 }
 
 static int
-spdk_jsonrpc_server_write_cb(void *cb_ctx, const void *data, size_t size)
+jsonrpc_server_write_cb(void *cb_ctx, const void *data, size_t size)
 {
 	struct spdk_jsonrpc_request *request = cb_ctx;
 	size_t new_size = request->send_buf_size;
@@ -200,7 +200,7 @@ jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, const void *json, s
 		return -1;
 	}
 
-	request->response = spdk_json_write_begin(spdk_jsonrpc_server_write_cb, request, 0);
+	request->response = spdk_json_write_begin(jsonrpc_server_write_cb, request, 0);
 	if (request->response == NULL) {
 		SPDK_ERRLOG("Failed to allocate response JSON write context.\n");
 		jsonrpc_free_request(request);
@@ -283,7 +283,7 @@ end_response(struct spdk_jsonrpc_request *request)
 	spdk_json_write_end(request->response);
 	request->response = NULL;
 
-	spdk_jsonrpc_server_write_cb(request, "\n", 1);
+	jsonrpc_server_write_cb(request, "\n", 1);
 	jsonrpc_server_send_response(request);
 }
 

@@ -382,7 +382,7 @@ _spdk_lvs_load_cb(void *cb_arg, struct spdk_blob_store *bs, int lvolerrno)
 }
 
 static void
-spdk_lvs_bs_opts_init(struct spdk_bs_opts *opts)
+lvs_bs_opts_init(struct spdk_bs_opts *opts)
 {
 	spdk_bs_opts_init(opts);
 	opts->max_channel_ops = SPDK_LVOL_BLOB_OPTS_CHANNEL_OPS;
@@ -413,7 +413,7 @@ spdk_lvs_load(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn
 	req->cb_arg = cb_arg;
 	req->bs_dev = bs_dev;
 
-	spdk_lvs_bs_opts_init(&opts);
+	lvs_bs_opts_init(&opts);
 	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "LVOLSTORE");
 
 	spdk_bs_load(bs_dev, &opts, _spdk_lvs_load_cb, req);
@@ -566,7 +566,7 @@ static void
 _spdk_setup_lvs_opts(struct spdk_bs_opts *bs_opts, struct spdk_lvs_opts *o)
 {
 	assert(o != NULL);
-	spdk_lvs_bs_opts_init(bs_opts);
+	lvs_bs_opts_init(bs_opts);
 	bs_opts->cluster_sz = o->cluster_sz;
 	bs_opts->clear_method = (enum bs_clear_method)o->clear_method;
 }
@@ -967,8 +967,8 @@ _spdk_lvol_create_cb(void *cb_arg, spdk_blob_id blobid, int lvolerrno)
 }
 
 static void
-spdk_lvol_get_xattr_value(void *xattr_ctx, const char *name,
-			  const void **value, size_t *value_len)
+lvol_get_xattr_value(void *xattr_ctx, const char *name,
+		     const void **value, size_t *value_len)
 {
 	struct spdk_lvol *lvol = xattr_ctx;
 
@@ -1069,7 +1069,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	opts.xattrs.count = SPDK_COUNTOF(xattr_names);
 	opts.xattrs.names = xattr_names;
 	opts.xattrs.ctx = lvol;
-	opts.xattrs.get_value = spdk_lvol_get_xattr_value;
+	opts.xattrs.get_value = lvol_get_xattr_value;
 
 	spdk_bs_create_blob_ext(lvs->blobstore, &opts, _spdk_lvol_create_cb, req);
 
@@ -1131,7 +1131,7 @@ spdk_lvol_create_snapshot(struct spdk_lvol *origlvol, const char *snapshot_name,
 	snapshot_xattrs.count = SPDK_COUNTOF(xattr_names);
 	snapshot_xattrs.ctx = newlvol;
 	snapshot_xattrs.names = xattr_names;
-	snapshot_xattrs.get_value = spdk_lvol_get_xattr_value;
+	snapshot_xattrs.get_value = lvol_get_xattr_value;
 	req->lvol = newlvol;
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
@@ -1195,7 +1195,7 @@ spdk_lvol_create_clone(struct spdk_lvol *origlvol, const char *clone_name,
 	clone_xattrs.count = SPDK_COUNTOF(xattr_names);
 	clone_xattrs.ctx = newlvol;
 	clone_xattrs.names = xattr_names;
-	clone_xattrs.get_value = spdk_lvol_get_xattr_value;
+	clone_xattrs.get_value = lvol_get_xattr_value;
 	req->lvol = newlvol;
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;

@@ -862,11 +862,11 @@ test_iterating(void)
 	CU_ASSERT(spdk_json_strequal(string_key, "string") == true);
 
 	object_key = spdk_json_next(string_key);
-	object_val = spdk_json_value(object_key);
+	object_val = json_value(object_key);
 	CU_ASSERT(spdk_json_strequal(object_key, "object") == true);
 
 	array_key = spdk_json_next(object_key);
-	array_val = spdk_json_value(array_key);
+	array_val = json_value(array_key);
 	CU_ASSERT(spdk_json_strequal(array_key, "array") == true);
 
 	/* NULL '}' */
@@ -877,7 +877,7 @@ test_iterating(void)
 	CU_ASSERT(spdk_json_strequal(another_string_key, "another_string") == true);
 
 	array_name_with_space_key = spdk_json_next(another_string_key);
-	array_name_with_space_val = spdk_json_value(array_name_with_space_key);
+	array_name_with_space_val = json_value(array_name_with_space_key);
 	CU_ASSERT(spdk_json_strequal(array_name_with_space_key, "array name with space") == true);
 
 	CU_ASSERT(spdk_json_next(array_name_with_space_key) == NULL);
