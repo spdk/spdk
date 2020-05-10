@@ -105,7 +105,7 @@ vbdev_split_base_free(void *ctx)
 }
 
 static int
-vbdev_split_destruct(void *ctx)
+_vbdev_split_destruct(void *ctx)
 {
 	struct spdk_bdev_part *part = ctx;
 
@@ -217,7 +217,7 @@ vbdev_split_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx
 }
 
 static struct spdk_bdev_fn_table vbdev_split_fn_table = {
-	.destruct		= vbdev_split_destruct,
+	.destruct		= _vbdev_split_destruct,
 	.submit_request		= vbdev_split_submit_request,
 	.dump_info_json		= vbdev_split_dump_info_json,
 	.write_config_json	= vbdev_split_write_config_json
@@ -541,7 +541,7 @@ create_vbdev_split(const char *base_bdev_name, unsigned split_count, uint64_t sp
 }
 
 int
-spdk_vbdev_split_destruct(const char *base_bdev_name)
+vbdev_split_destruct(const char *base_bdev_name)
 {
 	struct spdk_vbdev_split_config *cfg = vbdev_split_config_find_by_base_name(base_bdev_name);
 
@@ -555,7 +555,7 @@ spdk_vbdev_split_destruct(const char *base_bdev_name)
 }
 
 struct spdk_bdev_part_base *
-spdk_vbdev_split_get_part_base(struct spdk_bdev *bdev)
+vbdev_split_get_part_base(struct spdk_bdev *bdev)
 {
 	struct spdk_vbdev_split_config *cfg;
 

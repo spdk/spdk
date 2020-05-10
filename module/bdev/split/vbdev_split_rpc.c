@@ -51,8 +51,8 @@ static const struct spdk_json_object_decoder rpc_construct_split_decoders[] = {
 };
 
 static void
-spdk_rpc_bdev_split_create(struct spdk_jsonrpc_request *request,
-			   const struct spdk_json_val *params)
+rpc_bdev_split_create(struct spdk_jsonrpc_request *request,
+		      const struct spdk_json_val *params)
 {
 	struct rpc_construct_split req = {};
 	struct spdk_json_write_ctx *w;
@@ -85,7 +85,7 @@ spdk_rpc_bdev_split_create(struct spdk_jsonrpc_request *request,
 		struct spdk_bdev_part *split_part;
 		struct spdk_bdev *split_bdev;
 
-		split_base = spdk_vbdev_split_get_part_base(base_bdev);
+		split_base = vbdev_split_get_part_base(base_bdev);
 
 		assert(split_base != NULL);
 
@@ -102,7 +102,7 @@ spdk_rpc_bdev_split_create(struct spdk_jsonrpc_request *request,
 out:
 	free(req.base_bdev);
 }
-SPDK_RPC_REGISTER("bdev_split_create", spdk_rpc_bdev_split_create, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_split_create", rpc_bdev_split_create, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_split_create, construct_split_vbdev)
 
 struct rpc_delete_split {
@@ -114,8 +114,8 @@ static const struct spdk_json_object_decoder rpc_delete_split_decoders[] = {
 };
 
 static void
-spdk_rpc_bdev_split_delete(struct spdk_jsonrpc_request *request,
-			   const struct spdk_json_val *params)
+rpc_bdev_split_delete(struct spdk_jsonrpc_request *request,
+		      const struct spdk_json_val *params)
 {
 	struct rpc_delete_split req = {};
 	struct spdk_json_write_ctx *w;
@@ -129,7 +129,7 @@ spdk_rpc_bdev_split_delete(struct spdk_jsonrpc_request *request,
 		goto out;
 	}
 
-	rc = spdk_vbdev_split_destruct(req.base_bdev);
+	rc = vbdev_split_destruct(req.base_bdev);
 	if (rc < 0) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
 		goto out;
@@ -141,5 +141,5 @@ spdk_rpc_bdev_split_delete(struct spdk_jsonrpc_request *request,
 out:
 	free(req.base_bdev);
 }
-SPDK_RPC_REGISTER("bdev_split_delete", spdk_rpc_bdev_split_delete, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_split_delete", rpc_bdev_split_delete, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_split_delete, destruct_split_vbdev)
