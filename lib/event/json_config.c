@@ -121,10 +121,10 @@ struct load_json_config_ctx {
 	uint64_t timeout;
 };
 
-static void spdk_app_json_config_load_subsystem(void *_ctx);
+static void app_json_config_load_subsystem(void *_ctx);
 
 static void
-spdk_app_json_config_load_done(struct load_json_config_ctx *ctx, int rc)
+app_json_config_load_done(struct load_json_config_ctx *ctx, int rc)
 {
 	spdk_poller_unregister(&ctx->client_conn_poller);
 	if (ctx->client_conn != NULL) {
@@ -181,7 +181,7 @@ rpc_client_poller(void *arg)
 		/* No response yet */
 		return -1;
 	} else if (rc < 0) {
-		spdk_app_json_config_load_done(ctx, rc);
+		app_json_config_load_done(ctx, rc);
 		return -1;
 	}
 
@@ -194,7 +194,7 @@ rpc_client_poller(void *arg)
 
 	if (resp->error && ctx->stop_on_error) {
 		spdk_jsonrpc_client_free_response(resp);
-		spdk_app_json_config_load_done(ctx, -EINVAL);
+		app_json_config_load_done(ctx, -EINVAL);
 	} else {
 		/* We have response so we must have callback for it. */
 		cb = ctx->client_resp_cb;
@@ -220,11 +220,11 @@ rpc_client_connect_poller(void *_ctx)
 		/* We are connected. Start regular poller and issue first request */
 		spdk_poller_unregister(&ctx->client_conn_poller);
 		ctx->client_conn_poller = SPDK_POLLER_REGISTER(rpc_client_poller, ctx, 100);
-		spdk_app_json_config_load_subsystem(ctx);
+		app_json_config_load_subsystem(ctx);
 	} else {
 		rc = rpc_client_check_timeout(ctx);
 		if (rc) {
-			spdk_app_json_config_load_done(ctx, rc);
+			app_json_config_load_done(ctx, rc);
 		}
 	}
 
@@ -300,22 +300,22 @@ static struct spdk_json_object_decoder jsonrpc_cmd_decoders[] = {
 	{"params", offsetof(struct config_entry, params), cap_object, true}
 };
 
-static void spdk_app_json_config_load_subsystem_config_entry(void *_ctx);
+static void app_json_config_load_subsystem_config_entry(void *_ctx);
 
 static void
-spdk_app_json_config_load_subsystem_config_entry_next(struct load_json_config_ctx *ctx,
+app_json_config_load_subsystem_config_entry_next(struct load_json_config_ctx *ctx,
 		struct spdk_jsonrpc_client_response *resp)
 {
 	/* Don't care about the response */
 	spdk_jsonrpc_client_free_response(resp);
 
 	ctx->config_it = spdk_json_next(ctx->config_it);
-	spdk_app_json_config_load_subsystem_config_entry(ctx);
+	app_json_config_load_subsystem_config_entry(ctx);
 }
 
 /* Load "config" entry */
 static void
-spdk_app_json_config_load_subsystem_config_entry(void *_ctx)
+app_json_config_load_subsystem_config_entry(void *_ctx)
 {
 	struct load_json_config_ctx *ctx = _ctx;
 	struct spdk_jsonrpc_client_request *rpc_request;
@@ -330,7 +330,7 @@ spdk_app_json_config_load_subsystem_config_entry(void *_ctx)
 				   (char *)ctx->subsystem_name->start);
 		ctx->subsystems_it = spdk_json_next(ctx->subsystems_it);
 		/* Invoke later to avoid recurrency */
-		spdk_thread_send_msg(ctx->thread, spdk_app_json_config_load_subsystem, ctx);
+		spdk_thread_send_msg(ctx->thread, app_json_config_load_subsystem, ctx);
 		return;
 	}
 
@@ -340,7 +340,7 @@ spdk_app_json_config_load_subsystem_config_entry(void *_ctx)
 		assert(params_end != NULL);
 		params_len = params_end->start - ctx->config->start + 1;
 		SPDK_ERRLOG("Failed to decode config entry: %.*s!\n", (int)params_len, (char *)ctx->config_it);
-		spdk_app_json_config_load_done(ctx, -EINVAL);
+		app_json_config_load_done(ctx, -EINVAL);
 		goto out;
 	}
 
@@ -349,7 +349,7 @@ spdk_app_json_config_load_subsystem_config_entry(void *_ctx)
 		SPDK_DEBUG_APP_CFG("Method '%s' not allowed -> skipping\n", cfg.method);
 		/* Invoke later to avoid recurrency */
 		ctx->config_it = spdk_json_next(ctx->config_it);
-		spdk_thread_send_msg(ctx->thread, spdk_app_json_config_load_subsystem_config_entry, ctx);
+		spdk_thread_send_msg(ctx->thread, app_json_config_load_subsystem_config_entry, ctx);
 		goto out;
 	}
 
@@ -364,14 +364,14 @@ spdk_app_json_config_load_subsystem_config_entry(void *_ctx)
 
 	rpc_request = spdk_jsonrpc_client_create_request();
 	if (!rpc_request) {
-		spdk_app_json_config_load_done(ctx, -errno);
+		app_json_config_load_done(ctx, -errno);
 		goto out;
 	}
 
 	w = spdk_jsonrpc_begin_request(rpc_request, ctx->rpc_request_id, NULL);
 	if (!w) {
 		spdk_jsonrpc_client_free_request(rpc_request);
-		spdk_app_json_config_load_done(ctx, -ENOMEM);
+		app_json_config_load_done(ctx, -ENOMEM);
 		goto out;
 	}
 
@@ -383,9 +383,9 @@ spdk_app_json_config_load_subsystem_config_entry(void *_ctx)
 	spdk_json_write_val_raw(w, cfg.params->start, params_len);
 	spdk_jsonrpc_end_request(rpc_request, w);
 
-	rc = client_send_request(ctx, rpc_request, spdk_app_json_config_load_subsystem_config_entry_next);
+	rc = client_send_request(ctx, rpc_request, app_json_config_load_subsystem_config_entry_next);
 	if (rc != 0) {
-		spdk_app_json_config_load_done(ctx, -rc);
+		app_json_config_load_done(ctx, -rc);
 		goto out;
 	}
 out:
@@ -398,7 +398,7 @@ subsystem_init_done(int rc, void *arg1)
 	struct load_json_config_ctx *ctx = arg1;
 
 	if (rc) {
-		spdk_app_json_config_load_done(ctx, rc);
+		app_json_config_load_done(ctx, rc);
 		return;
 	}
 
@@ -411,7 +411,7 @@ subsystem_init_done(int rc, void *arg1)
 		ctx->subsystems_it = spdk_json_array_first(ctx->subsystems);
 	}
 
-	spdk_app_json_config_load_subsystem(ctx);
+	app_json_config_load_subsystem(ctx);
 }
 
 static struct spdk_json_object_decoder subsystem_decoders[] = {
@@ -437,7 +437,7 @@ static struct spdk_json_object_decoder subsystem_decoders[] = {
  * configuration.
  */
 static void
-spdk_app_json_config_load_subsystem(void *_ctx)
+app_json_config_load_subsystem(void *_ctx)
 {
 	struct load_json_config_ctx *ctx = _ctx;
 
@@ -446,7 +446,7 @@ spdk_app_json_config_load_subsystem(void *_ctx)
 			SPDK_DEBUG_APP_CFG("No more entries for current state, calling 'framework_start_init'\n");
 			spdk_subsystem_init(subsystem_init_done, ctx);
 		} else {
-			spdk_app_json_config_load_done(ctx, 0);
+			app_json_config_load_done(ctx, 0);
 		}
 
 		return;
@@ -456,7 +456,7 @@ spdk_app_json_config_load_subsystem(void *_ctx)
 	if (spdk_json_decode_object(ctx->subsystems_it, subsystem_decoders,
 				    SPDK_COUNTOF(subsystem_decoders), ctx)) {
 		SPDK_ERRLOG("Failed to parse subsystem configuration\n");
-		spdk_app_json_config_load_done(ctx, -EINVAL);
+		app_json_config_load_done(ctx, -EINVAL);
 		return;
 	}
 
@@ -465,7 +465,7 @@ spdk_app_json_config_load_subsystem(void *_ctx)
 
 	/* Get 'config' array first configuration entry */
 	ctx->config_it = spdk_json_array_first(ctx->config);
-	spdk_app_json_config_load_subsystem_config_entry(ctx);
+	app_json_config_load_subsystem_config_entry(ctx);
 }
 
 static void *
@@ -485,7 +485,7 @@ read_file(const char *filename, size_t *size)
 }
 
 static int
-spdk_app_json_config_read(const char *config_file, struct load_json_config_ctx *ctx)
+app_json_config_read(const char *config_file, struct load_json_config_ctx *ctx)
 {
 	struct spdk_json_val *values = NULL;
 	void *json = NULL, *end;
@@ -550,7 +550,7 @@ spdk_app_json_config_load(const char *json_config_file, const char *rpc_addr,
 	ctx->stop_on_error = stop_on_error;
 	ctx->thread = spdk_get_thread();
 
-	rc = spdk_app_json_config_read(json_config_file, ctx);
+	rc = app_json_config_read(json_config_file, ctx);
 	if (rc) {
 		goto fail;
 	}
@@ -593,7 +593,7 @@ spdk_app_json_config_load(const char *json_config_file, const char *rpc_addr,
 	return;
 
 fail:
-	spdk_app_json_config_load_done(ctx, -EINVAL);
+	app_json_config_load_done(ctx, -EINVAL);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("app_config", SPDK_LOG_APP_CONFIG)

@@ -44,7 +44,7 @@ test_create_reactor(void)
 
 	g_reactors = &reactor;
 
-	spdk_reactor_construct(&reactor, 0);
+	reactor_construct(&reactor, 0);
 
 	CU_ASSERT(spdk_reactor_get(0) == &reactor);
 

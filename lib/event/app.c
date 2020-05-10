@@ -163,7 +163,7 @@ static const struct option g_cmdline_options[] = {
 "\n" \
 
 static void
-spdk_app_config_dump_global_section(FILE *fp)
+app_config_dump_global_section(FILE *fp)
 {
 	struct spdk_cpuset *coremask;
 
@@ -202,7 +202,7 @@ spdk_app_get_running_config(char **config_str, char *name)
 	/* Buffered IO */
 	setvbuf(fp, vbuf, _IOFBF, BUFSIZ);
 
-	spdk_app_config_dump_global_section(fp);
+	app_config_dump_global_section(fp);
 	spdk_subsystem_config(fp);
 
 	length = ftell(fp);
@@ -251,7 +251,7 @@ __shutdown_signal(int signo)
 }
 
 static int
-spdk_app_opts_validate(const char *app_opts)
+app_opts_validate(const char *app_opts)
 {
 	int i = 0, j;
 
@@ -292,7 +292,7 @@ spdk_app_opts_init(struct spdk_app_opts *opts)
 }
 
 static int
-spdk_app_setup_signal_handlers(struct spdk_app_opts *opts)
+app_setup_signal_handlers(struct spdk_app_opts *opts)
 {
 	struct sigaction	sigact;
 	sigset_t		sigmask;
@@ -342,7 +342,7 @@ spdk_app_setup_signal_handlers(struct spdk_app_opts *opts)
 }
 
 static void
-spdk_app_start_application(void)
+app_start_application(void)
 {
 	assert(spdk_get_thread() == g_app_thread);
 
@@ -350,7 +350,7 @@ spdk_app_start_application(void)
 }
 
 static void
-spdk_app_start_rpc(int rc, void *arg1)
+app_start_rpc(int rc, void *arg1)
 {
 	if (rc) {
 		spdk_app_stop(rc);
@@ -360,12 +360,12 @@ spdk_app_start_rpc(int rc, void *arg1)
 	spdk_rpc_initialize(g_spdk_app.rpc_addr);
 	if (!g_delay_subsystem_init) {
 		spdk_rpc_set_state(SPDK_RPC_RUNTIME);
-		spdk_app_start_application();
+		app_start_application();
 	}
 }
 
 static struct spdk_conf *
-spdk_app_setup_conf(const char *config_file)
+app_setup_conf(const char *config_file)
 {
 	struct spdk_conf *config;
 	int rc;
@@ -392,7 +392,7 @@ error:
 }
 
 static int
-spdk_app_opts_add_pci_addr(struct spdk_app_opts *opts, struct spdk_pci_addr **list, char *bdf)
+app_opts_add_pci_addr(struct spdk_app_opts *opts, struct spdk_pci_addr **list, char *bdf)
 {
 	struct spdk_pci_addr *tmp = *list;
 	size_t i = opts->num_pci_addr;
@@ -414,7 +414,7 @@ spdk_app_opts_add_pci_addr(struct spdk_app_opts *opts, struct spdk_pci_addr **li
 }
 
 static int
-spdk_app_read_config_file_global_params(struct spdk_app_opts *opts)
+app_read_config_file_global_params(struct spdk_app_opts *opts)
 {
 	struct spdk_conf_section *sp;
 	char *bdf;
@@ -458,7 +458,7 @@ spdk_app_read_config_file_global_params(struct spdk_app_opts *opts)
 			break;
 		}
 
-		rc = spdk_app_opts_add_pci_addr(opts, &opts->pci_blacklist, bdf);
+		rc = app_opts_add_pci_addr(opts, &opts->pci_blacklist, bdf);
 		if (rc != 0) {
 			free(opts->pci_blacklist);
 			return rc;
@@ -477,7 +477,7 @@ spdk_app_read_config_file_global_params(struct spdk_app_opts *opts)
 			return -EINVAL;
 		}
 
-		rc = spdk_app_opts_add_pci_addr(opts, &opts->pci_whitelist, bdf);
+		rc = app_opts_add_pci_addr(opts, &opts->pci_whitelist, bdf);
 		if (rc != 0) {
 			free(opts->pci_whitelist);
 			return rc;
@@ -487,7 +487,7 @@ spdk_app_read_config_file_global_params(struct spdk_app_opts *opts)
 }
 
 static int
-spdk_app_setup_env(struct spdk_app_opts *opts)
+app_setup_env(struct spdk_app_opts *opts)
 {
 	struct spdk_env_opts env_opts = {};
 	int rc;
@@ -521,7 +521,7 @@ spdk_app_setup_env(struct spdk_app_opts *opts)
 }
 
 static int
-spdk_app_setup_trace(struct spdk_app_opts *opts)
+app_setup_trace(struct spdk_app_opts *opts)
 {
 	char		shm_name[64];
 	uint64_t	tpoint_group_mask;
@@ -563,11 +563,11 @@ bootstrap_fn(void *arg1)
 {
 	if (g_spdk_app.json_config_file) {
 		g_delay_subsystem_init = false;
-		spdk_app_json_config_load(g_spdk_app.json_config_file, g_spdk_app.rpc_addr, spdk_app_start_rpc,
+		spdk_app_json_config_load(g_spdk_app.json_config_file, g_spdk_app.rpc_addr, app_start_rpc,
 					  NULL, !g_spdk_app.json_config_ignore_errors);
 	} else {
 		if (!g_delay_subsystem_init) {
-			spdk_subsystem_init(spdk_app_start_rpc, NULL);
+			spdk_subsystem_init(app_start_rpc, NULL);
 		} else {
 			spdk_rpc_initialize(g_spdk_app.rpc_addr);
 		}
@@ -616,12 +616,12 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
 	}
 #endif
 
-	config = spdk_app_setup_conf(opts->config_file);
+	config = app_setup_conf(opts->config_file);
 	if (config == NULL) {
 		return 1;
 	}
 
-	if (spdk_app_read_config_file_global_params(opts) < 0) {
+	if (app_read_config_file_global_params(opts) < 0) {
 		spdk_conf_free(config);
 		return 1;
 	}
@@ -638,7 +638,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
 	spdk_log_set_level(SPDK_APP_DEFAULT_LOG_LEVEL);
 	spdk_log_set_backtrace_level(SPDK_APP_DEFAULT_BACKTRACE_LOG_LEVEL);
 
-	if (spdk_app_setup_env(opts) < 0) {
+	if (app_setup_env(opts) < 0) {
 		return 1;
 	}
 
@@ -666,17 +666,17 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
 	}
 
 	/*
-	 * Note the call to spdk_app_setup_trace() is located here
-	 * ahead of spdk_app_setup_signal_handlers().
+	 * Note the call to app_setup_trace() is located here
+	 * ahead of app_setup_signal_handlers().
 	 * That's because there is not an easy/direct clean
 	 * way of unwinding alloc'd resources that can occur
-	 * in spdk_app_setup_signal_handlers().
+	 * in app_setup_signal_handlers().
 	 */
-	if (spdk_app_setup_trace(opts) != 0) {
+	if (app_setup_trace(opts) != 0) {
 		return 1;
 	}
 
-	if ((rc = spdk_app_setup_signal_handlers(opts)) != 0) {
+	if ((rc = app_setup_signal_handlers(opts)) != 0) {
 		return 1;
 	}
 
@@ -819,7 +819,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 	}
 
 	if (app_getopt_str != NULL) {
-		ch = spdk_app_opts_validate(app_getopt_str);
+		ch = app_opts_validate(app_getopt_str);
 		if (ch) {
 			SPDK_ERRLOG("Duplicated option '%c' between the generic and application specific spdk opts.\n",
 				    ch);
@@ -931,7 +931,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 				goto out;
 			}
 
-			rc = spdk_app_opts_add_pci_addr(opts, &opts->pci_blacklist, optarg);
+			rc = app_opts_add_pci_addr(opts, &opts->pci_blacklist, optarg);
 			if (rc != 0) {
 				free(opts->pci_blacklist);
 				opts->pci_blacklist = NULL;
@@ -966,7 +966,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 				goto out;
 			}
 
-			rc = spdk_app_opts_add_pci_addr(opts, &opts->pci_whitelist, optarg);
+			rc = app_opts_add_pci_addr(opts, &opts->pci_whitelist, optarg);
 			if (rc != 0) {
 				free(opts->pci_whitelist);
 				opts->pci_whitelist = NULL;
@@ -1056,7 +1056,7 @@ spdk_app_usage(void)
 }
 
 static void
-spdk_rpc_framework_start_init_cpl(int rc, void *arg1)
+rpc_framework_start_init_cpl(int rc, void *arg1)
 {
 	struct spdk_jsonrpc_request *request = arg1;
 	struct spdk_json_write_ctx *w;
@@ -1070,7 +1070,7 @@ spdk_rpc_framework_start_init_cpl(int rc, void *arg1)
 	}
 
 	spdk_rpc_set_state(SPDK_RPC_RUNTIME);
-	spdk_app_start_application();
+	app_start_application();
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_bool(w, true);
@@ -1078,8 +1078,8 @@ spdk_rpc_framework_start_init_cpl(int rc, void *arg1)
 }
 
 static void
-spdk_rpc_framework_start_init(struct spdk_jsonrpc_request *request,
-			      const struct spdk_json_val *params)
+rpc_framework_start_init(struct spdk_jsonrpc_request *request,
+			 const struct spdk_json_val *params)
 {
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -1087,9 +1087,9 @@ spdk_rpc_framework_start_init(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	spdk_subsystem_init(spdk_rpc_framework_start_init_cpl, request);
+	spdk_subsystem_init(rpc_framework_start_init_cpl, request);
 }
-SPDK_RPC_REGISTER("framework_start_init", spdk_rpc_framework_start_init, SPDK_RPC_STARTUP)
+SPDK_RPC_REGISTER("framework_start_init", rpc_framework_start_init, SPDK_RPC_STARTUP)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(framework_start_init, start_subsystem_init)
 
 struct subsystem_init_poller_ctx {
@@ -1098,7 +1098,7 @@ struct subsystem_init_poller_ctx {
 };
 
 static int
-spdk_rpc_subsystem_init_poller_ctx(void *ctx)
+rpc_subsystem_init_poller_ctx(void *ctx)
 {
 	struct spdk_json_write_ctx *w;
 	struct subsystem_init_poller_ctx *poller_ctx = ctx;
@@ -1115,8 +1115,8 @@ spdk_rpc_subsystem_init_poller_ctx(void *ctx)
 }
 
 static void
-spdk_rpc_framework_wait_init(struct spdk_jsonrpc_request *request,
-			     const struct spdk_json_val *params)
+rpc_framework_wait_init(struct spdk_jsonrpc_request *request,
+			const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
 	struct subsystem_init_poller_ctx *ctx;
@@ -1133,9 +1133,9 @@ spdk_rpc_framework_wait_init(struct spdk_jsonrpc_request *request,
 			return;
 		}
 		ctx->request = request;
-		ctx->init_poller = SPDK_POLLER_REGISTER(spdk_rpc_subsystem_init_poller_ctx, ctx, 0);
+		ctx->init_poller = SPDK_POLLER_REGISTER(rpc_subsystem_init_poller_ctx, ctx, 0);
 	}
 }
-SPDK_RPC_REGISTER("framework_wait_init", spdk_rpc_framework_wait_init,
+SPDK_RPC_REGISTER("framework_wait_init", rpc_framework_wait_init,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(framework_wait_init, wait_subsystem_init)

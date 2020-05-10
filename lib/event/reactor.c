@@ -62,7 +62,7 @@ static bool g_framework_context_switch_monitor_enabled = true;
 static struct spdk_mempool *g_spdk_event_mempool = NULL;
 
 static void
-spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore)
+reactor_construct(struct spdk_reactor *reactor, uint32_t lcore)
 {
 	reactor->lcore = lcore;
 	reactor->flags.is_valid = true;
@@ -93,8 +93,8 @@ spdk_reactor_get(uint32_t lcore)
 	return reactor;
 }
 
-static int spdk_reactor_thread_op(struct spdk_thread *thread, enum spdk_thread_op op);
-static bool spdk_reactor_thread_op_supported(enum spdk_thread_op op);
+static int reactor_thread_op(struct spdk_thread *thread, enum spdk_thread_op op);
+static bool reactor_thread_op_supported(enum spdk_thread_op op);
 
 int
 spdk_reactors_init(void)
@@ -128,11 +128,11 @@ spdk_reactors_init(void)
 
 	memset(g_reactors, 0, (last_core + 1) * sizeof(struct spdk_reactor));
 
-	spdk_thread_lib_init_ext(spdk_reactor_thread_op, spdk_reactor_thread_op_supported,
+	spdk_thread_lib_init_ext(reactor_thread_op, reactor_thread_op_supported,
 				 sizeof(struct spdk_lw_thread));
 
 	SPDK_ENV_FOREACH_CORE(i) {
-		spdk_reactor_construct(&g_reactors[i], i);
+		reactor_construct(&g_reactors[i], i);
 	}
 
 	g_reactor_state = SPDK_REACTOR_STATE_INITIALIZED;
@@ -573,7 +573,7 @@ _reactor_request_thread_reschedule(struct spdk_thread *thread)
 }
 
 static int
-spdk_reactor_thread_op(struct spdk_thread *thread, enum spdk_thread_op op)
+reactor_thread_op(struct spdk_thread *thread, enum spdk_thread_op op)
 {
 	switch (op) {
 	case SPDK_THREAD_OP_NEW:
@@ -587,7 +587,7 @@ spdk_reactor_thread_op(struct spdk_thread *thread, enum spdk_thread_op op)
 }
 
 static bool
-spdk_reactor_thread_op_supported(enum spdk_thread_op op)
+reactor_thread_op_supported(enum spdk_thread_op op)
 {
 	switch (op) {
 	case SPDK_THREAD_OP_NEW:
@@ -609,7 +609,7 @@ struct call_reactor {
 };
 
 static void
-spdk_on_reactor(void *arg1, void *arg2)
+on_reactor(void *arg1, void *arg2)
 {
 	struct call_reactor *cr = arg1;
 	struct spdk_event *evt;
@@ -627,7 +627,7 @@ spdk_on_reactor(void *arg1, void *arg2)
 		SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "Continuing reactor iteration to %d\n",
 			      cr->cur_core);
 
-		evt = spdk_event_allocate(cr->cur_core, spdk_on_reactor, arg1, NULL);
+		evt = spdk_event_allocate(cr->cur_core, on_reactor, arg1, NULL);
 	}
 	assert(evt != NULL);
 	spdk_event_call(evt);
@@ -655,7 +655,7 @@ spdk_for_each_reactor(spdk_event_fn fn, void *arg1, void *arg2, spdk_event_fn cp
 
 	SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "Starting reactor iteration from %d\n", cr->orig_core);
 
-	evt = spdk_event_allocate(cr->cur_core, spdk_on_reactor, cr, NULL);
+	evt = spdk_event_allocate(cr->cur_core, on_reactor, cr, NULL);
 	assert(evt != NULL);
 
 	spdk_event_call(evt);
