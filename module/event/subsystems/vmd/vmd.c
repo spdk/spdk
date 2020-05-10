@@ -80,7 +80,7 @@ vmd_subsystem_init(void)
 }
 
 static void
-spdk_vmd_subsystem_init(void)
+_vmd_subsystem_init(void)
 {
 	struct spdk_conf_section *sp;
 	int rc = 0;
@@ -96,7 +96,7 @@ spdk_vmd_subsystem_init(void)
 }
 
 static void
-spdk_vmd_subsystem_fini(void)
+vmd_subsystem_fini(void)
 {
 	spdk_poller_unregister(&g_hotplug_poller);
 
@@ -106,7 +106,7 @@ spdk_vmd_subsystem_fini(void)
 }
 
 static void
-spdk_vmd_write_config_json(struct spdk_json_write_ctx *w)
+vmd_write_config_json(struct spdk_json_write_ctx *w)
 {
 	spdk_json_write_array_begin(w);
 
@@ -123,10 +123,10 @@ spdk_vmd_write_config_json(struct spdk_json_write_ctx *w)
 
 static struct spdk_subsystem g_spdk_subsystem_vmd = {
 	.name = "vmd",
-	.init = spdk_vmd_subsystem_init,
-	.fini = spdk_vmd_subsystem_fini,
+	.init = _vmd_subsystem_init,
+	.fini = vmd_subsystem_fini,
 	.config = NULL,
-	.write_config_json = spdk_vmd_write_config_json,
+	.write_config_json = vmd_write_config_json,
 };
 
 SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_vmd);

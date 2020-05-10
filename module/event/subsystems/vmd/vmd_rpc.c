@@ -40,7 +40,7 @@
 #include "event_vmd.h"
 
 static void
-spdk_rpc_vmd_enable(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
+rpc_vmd_enable(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
 	int rc;
@@ -52,4 +52,4 @@ spdk_rpc_vmd_enable(struct spdk_jsonrpc_request *request, const struct spdk_json
 	spdk_jsonrpc_end_result(request, w);
 }
 
-SPDK_RPC_REGISTER("enable_vmd", spdk_rpc_vmd_enable, SPDK_RPC_STARTUP)
+SPDK_RPC_REGISTER("enable_vmd", rpc_vmd_enable, SPDK_RPC_STARTUP)
