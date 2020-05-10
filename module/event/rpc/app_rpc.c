@@ -59,8 +59,8 @@ static const struct spdk_json_object_decoder rpc_spdk_kill_instance_decoders[] =
 };
 
 static void
-spdk_rpc_spdk_kill_instance(struct spdk_jsonrpc_request *request,
-			    const struct spdk_json_val *params)
+rpc_spdk_kill_instance(struct spdk_jsonrpc_request *request,
+		       const struct spdk_json_val *params)
 {
 	static const struct {
 		const char	*signal_string;
@@ -110,7 +110,7 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_spdk_kill_instance(&req);
 }
-SPDK_RPC_REGISTER("spdk_kill_instance", spdk_rpc_spdk_kill_instance, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("spdk_kill_instance", rpc_spdk_kill_instance, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(spdk_kill_instance, kill_instance)
 
 
@@ -123,8 +123,8 @@ static const struct spdk_json_object_decoder rpc_framework_monitor_context_switc
 };
 
 static void
-spdk_rpc_framework_monitor_context_switch(struct spdk_jsonrpc_request *request,
-		const struct spdk_json_val *params)
+rpc_framework_monitor_context_switch(struct spdk_jsonrpc_request *request,
+				     const struct spdk_json_val *params)
 {
 	struct rpc_framework_monitor_context_switch req = {};
 	struct spdk_json_write_ctx *w;
@@ -150,7 +150,7 @@ spdk_rpc_framework_monitor_context_switch(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 
-SPDK_RPC_REGISTER("framework_monitor_context_switch", spdk_rpc_framework_monitor_context_switch,
+SPDK_RPC_REGISTER("framework_monitor_context_switch", rpc_framework_monitor_context_switch,
 		  SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(framework_monitor_context_switch, context_switch_monitor)
 
@@ -194,7 +194,7 @@ rpc_thread_get_stats_for_each(struct spdk_jsonrpc_request *request, spdk_msg_fn 
 }
 
 static void
-rpc_thread_get_stats(void *arg)
+_rpc_thread_get_stats(void *arg)
 {
 	struct rpc_get_stats_ctx *ctx = arg;
 	struct spdk_thread *thread = spdk_get_thread();
@@ -230,8 +230,8 @@ rpc_thread_get_stats(void *arg)
 }
 
 static void
-spdk_rpc_thread_get_stats(struct spdk_jsonrpc_request *request,
-			  const struct spdk_json_val *params)
+rpc_thread_get_stats(struct spdk_jsonrpc_request *request,
+		     const struct spdk_json_val *params)
 {
 	if (params) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -239,10 +239,10 @@ spdk_rpc_thread_get_stats(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	rpc_thread_get_stats_for_each(request, rpc_thread_get_stats);
+	rpc_thread_get_stats_for_each(request, _rpc_thread_get_stats);
 }
 
-SPDK_RPC_REGISTER("thread_get_stats", spdk_rpc_thread_get_stats, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("thread_get_stats", rpc_thread_get_stats, SPDK_RPC_RUNTIME)
 
 static void
 rpc_get_poller(struct spdk_poller *poller, struct spdk_json_write_ctx *w)
@@ -259,7 +259,7 @@ rpc_get_poller(struct spdk_poller *poller, struct spdk_json_write_ctx *w)
 }
 
 static void
-rpc_thread_get_pollers(void *arg)
+_rpc_thread_get_pollers(void *arg)
 {
 	struct rpc_get_stats_ctx *ctx = arg;
 	struct spdk_thread *thread = spdk_get_thread();
@@ -291,8 +291,8 @@ rpc_thread_get_pollers(void *arg)
 }
 
 static void
-spdk_rpc_thread_get_pollers(struct spdk_jsonrpc_request *request,
-			    const struct spdk_json_val *params)
+rpc_thread_get_pollers(struct spdk_jsonrpc_request *request,
+		       const struct spdk_json_val *params)
 {
 	if (params) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -300,10 +300,10 @@ spdk_rpc_thread_get_pollers(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	rpc_thread_get_stats_for_each(request, rpc_thread_get_pollers);
+	rpc_thread_get_stats_for_each(request, _rpc_thread_get_pollers);
 }
 
-SPDK_RPC_REGISTER("thread_get_pollers", spdk_rpc_thread_get_pollers, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("thread_get_pollers", rpc_thread_get_pollers, SPDK_RPC_RUNTIME)
 
 static void
 rpc_get_io_channel(struct spdk_io_channel *ch, struct spdk_json_write_ctx *w)
@@ -315,7 +315,7 @@ rpc_get_io_channel(struct spdk_io_channel *ch, struct spdk_json_write_ctx *w)
 }
 
 static void
-rpc_thread_get_io_channels(void *arg)
+_rpc_thread_get_io_channels(void *arg)
 {
 	struct rpc_get_stats_ctx *ctx = arg;
 	struct spdk_thread *thread = spdk_get_thread();
@@ -334,8 +334,8 @@ rpc_thread_get_io_channels(void *arg)
 }
 
 static void
-spdk_rpc_thread_get_io_channels(struct spdk_jsonrpc_request *request,
-				const struct spdk_json_val *params)
+rpc_thread_get_io_channels(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
 {
 	if (params) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -343,10 +343,10 @@ spdk_rpc_thread_get_io_channels(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	rpc_thread_get_stats_for_each(request, rpc_thread_get_io_channels);
+	rpc_thread_get_stats_for_each(request, _rpc_thread_get_io_channels);
 }
 
-SPDK_RPC_REGISTER("thread_get_io_channels", spdk_rpc_thread_get_io_channels, SPDK_RPC_RUNTIME);
+SPDK_RPC_REGISTER("thread_get_io_channels", rpc_thread_get_io_channels, SPDK_RPC_RUNTIME);
 
 static void
 rpc_framework_get_reactors_done(void *arg1, void *arg2)
@@ -363,7 +363,7 @@ rpc_framework_get_reactors_done(void *arg1, void *arg2)
 #define GET_DELTA(end, start)	(end >= start ? end - start : 0)
 
 static void
-rpc_framework_get_reactors(void *arg1, void *arg2)
+_rpc_framework_get_reactors(void *arg1, void *arg2)
 {
 	struct rpc_get_stats_ctx *ctx = arg1;
 	uint32_t current_core;
@@ -400,8 +400,8 @@ rpc_framework_get_reactors(void *arg1, void *arg2)
 }
 
 static void
-spdk_rpc_framework_get_reactors(struct spdk_jsonrpc_request *request,
-				const struct spdk_json_val *params)
+rpc_framework_get_reactors(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
 {
 	struct rpc_get_stats_ctx *ctx;
 
@@ -426,11 +426,11 @@ spdk_rpc_framework_get_reactors(struct spdk_jsonrpc_request *request,
 	spdk_json_write_named_uint64(ctx->w, "tick_rate", spdk_get_ticks_hz());
 	spdk_json_write_named_array_begin(ctx->w, "reactors");
 
-	spdk_for_each_reactor(rpc_framework_get_reactors, ctx, NULL,
+	spdk_for_each_reactor(_rpc_framework_get_reactors, ctx, NULL,
 			      rpc_framework_get_reactors_done);
 }
 
-SPDK_RPC_REGISTER("framework_get_reactors", spdk_rpc_framework_get_reactors, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("framework_get_reactors", rpc_framework_get_reactors, SPDK_RPC_RUNTIME)
 
 struct rpc_thread_set_cpumask_ctx {
 	struct spdk_jsonrpc_request *request;
@@ -458,7 +458,7 @@ rpc_thread_set_cpumask_done(void *_ctx)
 }
 
 static void
-rpc_thread_set_cpumask(void *_ctx)
+_rpc_thread_set_cpumask(void *_ctx)
 {
 	struct rpc_thread_set_cpumask_ctx *ctx = _ctx;
 
@@ -478,8 +478,8 @@ static const struct spdk_json_object_decoder rpc_thread_set_cpumask_decoders[] =
 };
 
 static void
-spdk_rpc_thread_set_cpumask(struct spdk_jsonrpc_request *request,
-			    const struct spdk_json_val *params)
+rpc_thread_set_cpumask(struct spdk_jsonrpc_request *request,
+		       const struct spdk_json_val *params)
 {
 	struct rpc_thread_set_cpumask req = {};
 	struct rpc_thread_set_cpumask_ctx *ctx;
@@ -529,7 +529,7 @@ spdk_rpc_thread_set_cpumask(struct spdk_jsonrpc_request *request,
 	ctx->request = request;
 	ctx->orig_thread = spdk_get_thread();
 
-	spdk_thread_send_msg(thread, rpc_thread_set_cpumask, ctx);
+	spdk_thread_send_msg(thread, _rpc_thread_set_cpumask, ctx);
 
 	free(req.cpumask);
 	return;
@@ -538,5 +538,5 @@ err:
 	free(req.cpumask);
 	free(ctx);
 }
-SPDK_RPC_REGISTER("thread_set_cpumask", spdk_rpc_thread_set_cpumask, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("thread_set_cpumask", rpc_thread_set_cpumask, SPDK_RPC_RUNTIME)
 SPDK_LOG_REGISTER_COMPONENT("APP_RPC", SPDK_LOG_APP_RPC)

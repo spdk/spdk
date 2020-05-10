@@ -38,8 +38,8 @@
 #include "spdk/env.h"
 
 static void
-spdk_rpc_framework_get_subsystems(struct spdk_jsonrpc_request *request,
-				  const struct spdk_json_val *params)
+rpc_framework_get_subsystems(struct spdk_jsonrpc_request *request,
+			     const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_subsystem *subsystem;
@@ -74,27 +74,27 @@ spdk_rpc_framework_get_subsystems(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 
-SPDK_RPC_REGISTER("framework_get_subsystems", spdk_rpc_framework_get_subsystems, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("framework_get_subsystems", rpc_framework_get_subsystems, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(framework_get_subsystems, get_subsystems)
 
-struct rpc_framework_get_config {
+struct rpc_framework_get_config_ctx {
 	char *name;
 };
 
-static const struct spdk_json_object_decoder rpc_framework_get_config[] = {
-	{"name", offsetof(struct rpc_framework_get_config, name), spdk_json_decode_string},
+static const struct spdk_json_object_decoder rpc_framework_get_config_ctx[] = {
+	{"name", offsetof(struct rpc_framework_get_config_ctx, name), spdk_json_decode_string},
 };
 
 static void
-spdk_rpc_framework_get_config(struct spdk_jsonrpc_request *request,
-			      const struct spdk_json_val *params)
+rpc_framework_get_config(struct spdk_jsonrpc_request *request,
+			 const struct spdk_json_val *params)
 {
-	struct rpc_framework_get_config req = {};
+	struct rpc_framework_get_config_ctx req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_subsystem *subsystem;
 
-	if (spdk_json_decode_object(params, rpc_framework_get_config,
-				    SPDK_COUNTOF(rpc_framework_get_config), &req)) {
+	if (spdk_json_decode_object(params, rpc_framework_get_config_ctx,
+				    SPDK_COUNTOF(rpc_framework_get_config_ctx), &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid arguments");
 		return;
 	}
@@ -114,5 +114,5 @@ spdk_rpc_framework_get_config(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 
-SPDK_RPC_REGISTER("framework_get_config", spdk_rpc_framework_get_config, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("framework_get_config", rpc_framework_get_config, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(framework_get_config, get_subsystem_config)

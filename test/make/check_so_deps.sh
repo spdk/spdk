@@ -252,6 +252,8 @@ function confirm_abi_deps() {
 	name = spdk_blobfs_fuse_start
 [suppress_function]
 	name = spdk_blobfs_fuse_stop
+[suppress_variable]
+	name = SPDK_LOG_APP_RPC
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do
