@@ -45,7 +45,7 @@
 #define SPDK_MAX_NUM_PARTITION_ENTRIES 128
 
 static uint64_t
-spdk_gpt_get_expected_head_lba(struct spdk_gpt *gpt)
+gpt_get_expected_head_lba(struct spdk_gpt *gpt)
 {
 	switch (gpt->parse_phase) {
 	case SPDK_GPT_PARSE_PHASE_PRIMARY:
@@ -59,7 +59,7 @@ spdk_gpt_get_expected_head_lba(struct spdk_gpt *gpt)
 }
 
 static struct spdk_gpt_header *
-spdk_gpt_get_header_buf(struct spdk_gpt *gpt)
+gpt_get_header_buf(struct spdk_gpt *gpt)
 {
 	switch (gpt->parse_phase) {
 	case SPDK_GPT_PARSE_PHASE_PRIMARY:
@@ -75,8 +75,8 @@ spdk_gpt_get_header_buf(struct spdk_gpt *gpt)
 }
 
 static struct spdk_gpt_partition_entry *
-spdk_gpt_get_partitions_buf(struct spdk_gpt *gpt, uint64_t total_partition_size,
-			    uint64_t partition_start_lba)
+gpt_get_partitions_buf(struct spdk_gpt *gpt, uint64_t total_partition_size,
+		       uint64_t partition_start_lba)
 {
 	uint64_t secondary_total_size;
 
@@ -104,7 +104,7 @@ spdk_gpt_get_partitions_buf(struct spdk_gpt *gpt, uint64_t total_partition_size,
 }
 
 static int
-spdk_gpt_read_partitions(struct spdk_gpt *gpt)
+gpt_read_partitions(struct spdk_gpt *gpt)
 {
 	uint32_t total_partition_size, num_partition_entries, partition_entry_size;
 	uint64_t partition_start_lba;
@@ -127,7 +127,7 @@ spdk_gpt_read_partitions(struct spdk_gpt *gpt)
 
 	total_partition_size = num_partition_entries * partition_entry_size;
 	partition_start_lba = from_le64(&head->partition_entry_lba);
-	gpt->partitions = spdk_gpt_get_partitions_buf(gpt, total_partition_size,
+	gpt->partitions = gpt_get_partitions_buf(gpt, total_partition_size,
 			  partition_start_lba);
 	if (!gpt->partitions) {
 		SPDK_ERRLOG("Failed to get gpt partitions buf\n");
@@ -146,7 +146,7 @@ spdk_gpt_read_partitions(struct spdk_gpt *gpt)
 }
 
 static int
-spdk_gpt_lba_range_check(struct spdk_gpt_header *head, uint64_t lba_end)
+gpt_lba_range_check(struct spdk_gpt_header *head, uint64_t lba_end)
 {
 	uint64_t usable_lba_start, usable_lba_end;
 
@@ -175,14 +175,14 @@ spdk_gpt_lba_range_check(struct spdk_gpt_header *head, uint64_t lba_end)
 }
 
 static int
-spdk_gpt_read_header(struct spdk_gpt *gpt)
+gpt_read_header(struct spdk_gpt *gpt)
 {
 	uint32_t head_size;
 	uint32_t new_crc, original_crc;
 	uint64_t my_lba, head_lba;
 	struct spdk_gpt_header *head;
 
-	head = spdk_gpt_get_header_buf(gpt);
+	head = gpt_get_header_buf(gpt);
 	if (!head) {
 		SPDK_ERRLOG("Failed to get gpt header buf\n");
 		return -1;
@@ -213,7 +213,7 @@ spdk_gpt_read_header(struct spdk_gpt *gpt)
 		return -1;
 	}
 
-	head_lba = spdk_gpt_get_expected_head_lba(gpt);
+	head_lba = gpt_get_expected_head_lba(gpt);
 	my_lba = from_le64(&head->my_lba);
 	if (my_lba != head_lba) {
 		SPDK_ERRLOG("head my_lba(%" PRIu64 ") != expected(%" PRIu64 ")\n",
@@ -221,7 +221,7 @@ spdk_gpt_read_header(struct spdk_gpt *gpt)
 		return -1;
 	}
 
-	if (spdk_gpt_lba_range_check(head, gpt->lba_end)) {
+	if (gpt_lba_range_check(head, gpt->lba_end)) {
 		SPDK_ERRLOG("lba range check error\n");
 		return -1;
 	}
@@ -231,7 +231,7 @@ spdk_gpt_read_header(struct spdk_gpt *gpt)
 }
 
 static int
-spdk_gpt_check_mbr(struct spdk_gpt *gpt)
+gpt_check_mbr(struct spdk_gpt *gpt)
 {
 	int i, primary_partition = 0;
 	uint32_t total_lba_size = 0, ret = 0, expected_start_lba;
@@ -279,7 +279,7 @@ spdk_gpt_check_mbr(struct spdk_gpt *gpt)
 }
 
 int
-spdk_gpt_parse_mbr(struct spdk_gpt *gpt)
+gpt_parse_mbr(struct spdk_gpt *gpt)
 {
 	int rc;
 
@@ -288,7 +288,7 @@ spdk_gpt_parse_mbr(struct spdk_gpt *gpt)
 		return -1;
 	}
 
-	rc = spdk_gpt_check_mbr(gpt);
+	rc = gpt_check_mbr(gpt);
 	if (rc) {
 		SPDK_DEBUGLOG(SPDK_LOG_GPT_PARSE, "Failed to detect gpt in MBR\n");
 		return rc;
@@ -298,17 +298,17 @@ spdk_gpt_parse_mbr(struct spdk_gpt *gpt)
 }
 
 int
-spdk_gpt_parse_partition_table(struct spdk_gpt *gpt)
+gpt_parse_partition_table(struct spdk_gpt *gpt)
 {
 	int rc;
 
-	rc = spdk_gpt_read_header(gpt);
+	rc = gpt_read_header(gpt);
 	if (rc) {
 		SPDK_ERRLOG("Failed to read gpt header\n");
 		return rc;
 	}
 
-	rc = spdk_gpt_read_partitions(gpt);
+	rc = gpt_read_partitions(gpt);
 	if (rc) {
 		SPDK_ERRLOG("Failed to read gpt partitions\n");
 		return rc;

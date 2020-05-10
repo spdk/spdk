@@ -93,7 +93,7 @@ struct gpt_io {
 static bool g_gpt_disabled;
 
 static void
-spdk_gpt_base_free(void *ctx)
+gpt_base_free(void *ctx)
 {
 	struct gpt_base *gpt_base = ctx;
 
@@ -102,7 +102,7 @@ spdk_gpt_base_free(void *ctx)
 }
 
 static void
-spdk_gpt_base_bdev_hotremove_cb(void *_part_base)
+gpt_base_bdev_hotremove_cb(void *_part_base)
 {
 	struct spdk_bdev_part_base *part_base = _part_base;
 	struct gpt_base *gpt_base = spdk_bdev_part_base_get_ctx(part_base);
@@ -121,7 +121,7 @@ static struct spdk_bdev_fn_table vbdev_gpt_fn_table = {
 };
 
 static struct gpt_base *
-spdk_gpt_base_bdev_init(struct spdk_bdev *bdev)
+gpt_base_bdev_init(struct spdk_bdev *bdev)
 {
 	struct gpt_base *gpt_base;
 	struct spdk_gpt *gpt;
@@ -134,9 +134,9 @@ spdk_gpt_base_bdev_init(struct spdk_bdev *bdev)
 
 	TAILQ_INIT(&gpt_base->parts);
 	gpt_base->part_base = spdk_bdev_part_base_construct(bdev,
-			      spdk_gpt_base_bdev_hotremove_cb,
+			      gpt_base_bdev_hotremove_cb,
 			      &gpt_if, &vbdev_gpt_fn_table,
-			      &gpt_base->parts, spdk_gpt_base_free, gpt_base,
+			      &gpt_base->parts, gpt_base_free, gpt_base,
 			      sizeof(struct gpt_channel), NULL, NULL);
 	if (!gpt_base->part_base) {
 		free(gpt_base);
@@ -367,7 +367,7 @@ vbdev_gpt_create_bdevs(struct gpt_base *gpt_base)
 }
 
 static void
-spdk_gpt_read_secondary_table_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
+gpt_read_secondary_table_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 {
 	struct gpt_base *gpt_base = (struct gpt_base *)arg;
 	struct spdk_bdev *bdev = spdk_bdev_part_base_get_bdev(gpt_base->part_base);
@@ -383,7 +383,7 @@ spdk_gpt_read_secondary_table_complete(struct spdk_bdev_io *bdev_io, bool status
 		goto end;
 	}
 
-	rc = spdk_gpt_parse_partition_table(&gpt_base->gpt);
+	rc = gpt_parse_partition_table(&gpt_base->gpt);
 	if (rc) {
 		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_GPT, "Failed to parse secondary partition table\n");
 		goto end;
@@ -422,12 +422,12 @@ vbdev_gpt_read_secondary_table(struct gpt_base *gpt_base)
 
 	secondary_offset = gpt->total_sectors * gpt->sector_size - gpt->buf_size;
 	return spdk_bdev_read(part_base_desc, gpt_base->ch, gpt_base->gpt.buf, secondary_offset,
-			      gpt_base->gpt.buf_size, spdk_gpt_read_secondary_table_complete,
+			      gpt_base->gpt.buf_size, gpt_read_secondary_table_complete,
 			      gpt_base);
 }
 
 static void
-spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
+gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 {
 	struct gpt_base *gpt_base = (struct gpt_base *)arg;
 	struct spdk_bdev *bdev = spdk_bdev_part_base_get_bdev(gpt_base->part_base);
@@ -441,13 +441,13 @@ spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 		goto end;
 	}
 
-	rc = spdk_gpt_parse_mbr(&gpt_base->gpt);
+	rc = gpt_parse_mbr(&gpt_base->gpt);
 	if (rc) {
 		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_GPT, "Failed to parse mbr\n");
 		goto end;
 	}
 
-	rc = spdk_gpt_parse_partition_table(&gpt_base->gpt);
+	rc = gpt_parse_partition_table(&gpt_base->gpt);
 	if (rc) {
 		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_GPT, "Failed to parse primary partition table\n");
 		rc = vbdev_gpt_read_secondary_table(gpt_base);
@@ -490,7 +490,7 @@ vbdev_gpt_read_gpt(struct spdk_bdev *bdev)
 	struct spdk_bdev_desc *part_base_desc;
 	int rc;
 
-	gpt_base = spdk_gpt_base_bdev_init(bdev);
+	gpt_base = gpt_base_bdev_init(bdev);
 	if (!gpt_base) {
 		SPDK_ERRLOG("Cannot allocated gpt_base\n");
 		return -1;
@@ -505,7 +505,7 @@ vbdev_gpt_read_gpt(struct spdk_bdev *bdev)
 	}
 
 	rc = spdk_bdev_read(part_base_desc, gpt_base->ch, gpt_base->gpt.buf, 0,
-			    gpt_base->gpt.buf_size, spdk_gpt_bdev_complete, gpt_base);
+			    gpt_base->gpt.buf_size, gpt_bdev_complete, gpt_base);
 	if (rc < 0) {
 		spdk_put_io_channel(gpt_base->ch);
 		spdk_bdev_part_base_free(gpt_base->part_base);

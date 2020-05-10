@@ -64,7 +64,7 @@ struct spdk_gpt {
 	struct spdk_gpt_partition_entry *partitions;
 };
 
-int spdk_gpt_parse_mbr(struct spdk_gpt *gpt);
-int spdk_gpt_parse_partition_table(struct spdk_gpt *gpt);
+int gpt_parse_mbr(struct spdk_gpt *gpt);
+int gpt_parse_partition_table(struct spdk_gpt *gpt);
 
 #endif  /* SPDK_INTERNAL_GPT_H */

@@ -46,40 +46,40 @@ test_check_mbr(void)
 	int re;
 
 	/* Set gpt is NULL */
-	re = spdk_gpt_parse_mbr(NULL);
+	re = gpt_parse_mbr(NULL);
 	CU_ASSERT(re == -1);
 
 	/* Set gpt->buf is NULL */
 	gpt = calloc(1, sizeof(*gpt));
 	SPDK_CU_ASSERT_FATAL(gpt != NULL);
-	re = spdk_gpt_parse_mbr(gpt);
+	re = gpt_parse_mbr(gpt);
 	CU_ASSERT(re == -1);
 
 	/* Set *gpt is "aaa...", all are mismatch include mbr_signature */
 	memset(a, 'a', sizeof(a));
 	gpt->buf = &a[0];
-	re = spdk_gpt_check_mbr(gpt);
+	re = gpt_check_mbr(gpt);
 	CU_ASSERT(re == -1);
 
 	/* Set mbr->mbr_signature matched, start lba mismatch */
 	mbr = (struct spdk_mbr *)gpt->buf;
 	mbr->mbr_signature = 0xAA55;
-	re = spdk_gpt_check_mbr(gpt);
+	re = gpt_check_mbr(gpt);
 	CU_ASSERT(re == -1);
 
 	/* Set mbr->partitions[0].start lba matched, os_type mismatch */
 	mbr->partitions[0].start_lba = 1;
-	re = spdk_gpt_check_mbr(gpt);
+	re = gpt_check_mbr(gpt);
 	CU_ASSERT(re == -1);
 
 	/* Set mbr->partitions[0].os_type matched, size_lba mismatch */
 	mbr->partitions[0].os_type = 0xEE;
-	re = spdk_gpt_check_mbr(gpt);
+	re = gpt_check_mbr(gpt);
 	CU_ASSERT(re == -1);
 
 	/* Set mbr->partitions[0].size_lba matched, passing case */
 	mbr->partitions[0].size_lba = 0xFFFFFFFF;
-	re = spdk_gpt_check_mbr(gpt);
+	re = gpt_check_mbr(gpt);
 	CU_ASSERT(re == 0);
 
 	free(gpt);
@@ -93,7 +93,7 @@ test_read_header(void)
 	unsigned char a[SPDK_GPT_BUFFER_SIZE];
 	int re;
 
-	/* spdk_gpt_read_header(NULL) does not exist, NULL is filtered out in spdk_gpt_parse_mbr() */
+	/* gpt_read_header(NULL) does not exist, NULL is filtered out in gpt_parse_mbr() */
 	gpt = calloc(1, sizeof(*gpt));
 	SPDK_CU_ASSERT_FATAL(gpt != NULL);
 	gpt->parse_phase = SPDK_GPT_PARSE_PHASE_PRIMARY;
@@ -108,18 +108,18 @@ test_read_header(void)
 	gpt->sector_size = 512;
 	head = (struct spdk_gpt_header *)(gpt->buf + GPT_PRIMARY_PARTITION_TABLE_LBA * gpt->sector_size);
 	to_le32(&head->header_size, 0x258);
-	re = spdk_gpt_read_header(gpt);
+	re = gpt_read_header(gpt);
 	CU_ASSERT(re == -1);
 
 	/* Set head->header_size matched, header_crc32 mismatch */
 	head->header_size = sizeof(*head);
 	to_le32(&head->header_crc32, 0x22D18C80);
-	re = spdk_gpt_read_header(gpt);
+	re = gpt_read_header(gpt);
 	CU_ASSERT(re == -1);
 
 	/* Set head->header_crc32 matched, gpt_signature mismatch */
 	to_le32(&head->header_crc32, 0xC5B2117E);
-	re = spdk_gpt_read_header(gpt);
+	re = gpt_read_header(gpt);
 	CU_ASSERT(re == -1);
 
 	/* Set head->gpt_signature matched, head->my_lba mismatch */
@@ -132,13 +132,13 @@ test_read_header(void)
 	head->gpt_signature[5] = 'A';
 	head->gpt_signature[6] = 'R';
 	head->gpt_signature[7] = 'T';
-	re = spdk_gpt_read_header(gpt);
+	re = gpt_read_header(gpt);
 	CU_ASSERT(re == -1);
 
 	/* Set head->my_lba matched, lba_end usable_lba mismatch */
 	to_le32(&head->header_crc32, 0xB3CDB2D2);
 	to_le64(&head->my_lba, 0x1);
-	re = spdk_gpt_read_header(gpt);
+	re = gpt_read_header(gpt);
 	CU_ASSERT(re == -1);
 
 	/* Set gpt->lba_end usable_lba matched, passing case */
@@ -147,7 +147,7 @@ test_read_header(void)
 	to_le64(&gpt->lba_end, 0x2E935FFE);
 	to_le64(&head->first_usable_lba, 0xA);
 	to_le64(&head->last_usable_lba, 0xF4240);
-	re = spdk_gpt_read_header(gpt);
+	re = gpt_read_header(gpt);
 	CU_ASSERT(re == 0);
 
 	free(gpt);
@@ -161,7 +161,7 @@ test_read_partitions(void)
 	unsigned char a[SPDK_GPT_BUFFER_SIZE];
 	int re;
 
-	/* spdk_gpt_read_partitions(NULL) does not exist, NULL is filtered out in spdk_gpt_parse_mbr() */
+	/* gpt_read_partitions(NULL) does not exist, NULL is filtered out in gpt_parse_mbr() */
 	gpt = calloc(1, sizeof(*gpt));
 	SPDK_CU_ASSERT_FATAL(gpt != NULL);
 	gpt->parse_phase = SPDK_GPT_PARSE_PHASE_PRIMARY;
@@ -177,35 +177,35 @@ test_read_partitions(void)
 	head = (struct spdk_gpt_header *)(gpt->buf + GPT_PRIMARY_PARTITION_TABLE_LBA * gpt->sector_size);
 	gpt->header = head;
 	to_le32(&head->num_partition_entries, 0x100);
-	re = spdk_gpt_read_partitions(gpt);
+	re = gpt_read_partitions(gpt);
 	CU_ASSERT(re == -1);
 
 	/* Set num_partition_entries within Max value, size_of_partition_entry mismatch */
 	to_le32(&head->header_crc32, 0x573857BE);
 	to_le32(&head->num_partition_entries, 0x40);
 	to_le32(&head->size_of_partition_entry, 0x0);
-	re = spdk_gpt_read_partitions(gpt);
+	re = gpt_read_partitions(gpt);
 	CU_ASSERT(re == -1);
 
 	/* Set size_of_partition_entry matched, partition_entry_lba mismatch */
 	to_le32(&head->header_crc32, 0x5279B712);
 	to_le32(&head->size_of_partition_entry, 0x80);
 	to_le64(&head->partition_entry_lba, 0x64);
-	re = spdk_gpt_read_partitions(gpt);
+	re = gpt_read_partitions(gpt);
 	CU_ASSERT(re == -1);
 
 	/* Set partition_entry_lba matched, partition_entry_array_crc32 mismatch */
 	to_le32(&head->header_crc32, 0xEC093B43);
 	to_le64(&head->partition_entry_lba, 0x20);
 	to_le32(&head->partition_entry_array_crc32, 0x0);
-	re = spdk_gpt_read_partitions(gpt);
+	re = gpt_read_partitions(gpt);
 	CU_ASSERT(re == -1);
 
 	/* Set partition_entry_array_crc32 matched, passing case */
 	to_le32(&head->header_crc32, 0xE1A08822);
 	to_le32(&head->partition_entry_array_crc32, 0xEBEE44FB);
 	to_le32(&head->num_partition_entries, 0x80);
-	re = spdk_gpt_read_partitions(gpt);
+	re = gpt_read_partitions(gpt);
 	CU_ASSERT(re == 0);
 
 	free(gpt);
@@ -221,7 +221,7 @@ test_parse_mbr_and_primary(void)
 	int re;
 
 	/* Set gpt is NULL */
-	re = spdk_gpt_parse_mbr(NULL);
+	re = gpt_parse_mbr(NULL);
 	CU_ASSERT(re == -1);
 
 	/* Set gpt->buf is NULL */
@@ -229,14 +229,14 @@ test_parse_mbr_and_primary(void)
 	SPDK_CU_ASSERT_FATAL(gpt != NULL);
 	gpt->parse_phase = SPDK_GPT_PARSE_PHASE_PRIMARY;
 	gpt->sector_size = 512;
-	re = spdk_gpt_parse_mbr(gpt);
+	re = gpt_parse_mbr(gpt);
 	CU_ASSERT(re == -1);
 
 	/* Set *gpt is "aaa...", check_mbr failed */
 	memset(a, 'a', sizeof(a));
 	gpt->buf = &a[0];
 	gpt->buf_size = sizeof(a);
-	re = spdk_gpt_parse_mbr(gpt);
+	re = gpt_parse_mbr(gpt);
 	CU_ASSERT(re == -1);
 
 	/* Set check_mbr passed */
@@ -245,11 +245,11 @@ test_parse_mbr_and_primary(void)
 	mbr->partitions[0].start_lba = 1;
 	mbr->partitions[0].os_type = 0xEE;
 	mbr->partitions[0].size_lba = 0xFFFFFFFF;
-	re = spdk_gpt_parse_mbr(gpt);
+	re = gpt_parse_mbr(gpt);
 	CU_ASSERT(re == 0);
 
 	/* Expect read_header failed */
-	re = spdk_gpt_parse_partition_table(gpt);
+	re = gpt_parse_partition_table(gpt);
 	CU_ASSERT(re == -1);
 
 	/* Set read_header passed, read_partitions failed */
@@ -269,7 +269,7 @@ test_parse_mbr_and_primary(void)
 	to_le64(&gpt->lba_end, 0x2E935FFE);
 	to_le64(&head->first_usable_lba, 0xA);
 	to_le64(&head->last_usable_lba, 0xF4240);
-	re = spdk_gpt_parse_partition_table(gpt);
+	re = gpt_parse_partition_table(gpt);
 	CU_ASSERT(re == -1);
 
 	/* Set read_partitions passed, all passed */
@@ -278,7 +278,7 @@ test_parse_mbr_and_primary(void)
 	to_le32(&head->header_crc32, 0x845A09AA);
 	to_le32(&head->partition_entry_array_crc32, 0xEBEE44FB);
 	to_le32(&head->num_partition_entries, 0x80);
-	re = spdk_gpt_parse_partition_table(gpt);
+	re = gpt_parse_partition_table(gpt);
 	CU_ASSERT(re == 0);
 
 	free(gpt);
@@ -292,7 +292,7 @@ test_parse_secondary(void)
 	unsigned char a[SPDK_GPT_BUFFER_SIZE];
 	int re;
 
-	/* spdk_gpt_parse_partition_table(NULL) does not exist, NULL is filtered out in spdk_gpt_parse_mbr() */
+	/* gpt_parse_partition_table(NULL) does not exist, NULL is filtered out in gpt_parse_mbr() */
 	gpt = calloc(1, sizeof(*gpt));
 	SPDK_CU_ASSERT_FATAL(gpt != NULL);
 	gpt->parse_phase = SPDK_GPT_PARSE_PHASE_SECONDARY;
@@ -302,7 +302,7 @@ test_parse_secondary(void)
 	memset(a, 'a', sizeof(a));
 	gpt->buf = &a[0];
 	gpt->buf_size = sizeof(a);
-	re = spdk_gpt_parse_partition_table(gpt);
+	re = gpt_parse_partition_table(gpt);
 	CU_ASSERT(re == -1);
 
 	/* Set read_header passed, read_partitions failed */
@@ -323,7 +323,7 @@ test_parse_secondary(void)
 	to_le64(&gpt->total_sectors, 0x6400000);
 	to_le64(&head->first_usable_lba, 0xA);
 	to_le64(&head->last_usable_lba, 0x63FFFDE);
-	re = spdk_gpt_parse_partition_table(gpt);
+	re = gpt_parse_partition_table(gpt);
 	CU_ASSERT(re == -1);
 
 	/* Set read_partitions passed, all passed */
@@ -332,7 +332,7 @@ test_parse_secondary(void)
 	to_le32(&head->header_crc32, 0x204129E8);
 	to_le32(&head->partition_entry_array_crc32, 0xEBEE44FB);
 	to_le32(&head->num_partition_entries, 0x80);
-	re = spdk_gpt_parse_partition_table(gpt);
+	re = gpt_parse_partition_table(gpt);
 	CU_ASSERT(re == 0);
 
 	free(gpt);
