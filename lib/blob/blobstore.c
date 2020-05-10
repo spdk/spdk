@@ -50,8 +50,8 @@
 
 #define BLOB_CRC32C_INITIAL    0xffffffffUL
 
-static int spdk_bs_register_md_thread(struct spdk_blob_store *bs);
-static int spdk_bs_unregister_md_thread(struct spdk_blob_store *bs);
+static int bs_register_md_thread(struct spdk_blob_store *bs);
+static int bs_unregister_md_thread(struct spdk_blob_store *bs);
 static void _spdk_blob_close_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno);
 static void _spdk_blob_insert_cluster_on_md_thread(struct spdk_blob *blob, uint32_t cluster_num,
 		uint64_t cluster, uint32_t extent, spdk_blob_op_complete cb_fn, void *cb_arg);
@@ -1537,8 +1537,8 @@ struct spdk_blob_persist_ctx {
 };
 
 static void
-spdk_bs_batch_clear_dev(struct spdk_blob_persist_ctx *ctx, spdk_bs_batch_t *batch, uint64_t lba,
-			uint32_t lba_count)
+bs_batch_clear_dev(struct spdk_blob_persist_ctx *ctx, spdk_bs_batch_t *batch, uint64_t lba,
+		   uint32_t lba_count)
 {
 	switch (ctx->blob->clear_method) {
 	case BLOB_CLEAR_WITH_DEFAULT:
@@ -1671,7 +1671,7 @@ _spdk_blob_persist_clear_clusters(spdk_bs_sequence_t *seq, void *cb_arg, int bse
 
 		/* If a run of LBAs previously existing, clear them now */
 		if (lba_count > 0) {
-			spdk_bs_batch_clear_dev(ctx, batch, lba, lba_count);
+			bs_batch_clear_dev(ctx, batch, lba, lba_count);
 		}
 
 		/* Start building the next batch */
@@ -1685,7 +1685,7 @@ _spdk_blob_persist_clear_clusters(spdk_bs_sequence_t *seq, void *cb_arg, int bse
 
 	/* If we ended with a contiguous set of LBAs, clear them now */
 	if (lba_count > 0) {
-		spdk_bs_batch_clear_dev(ctx, batch, lba, lba_count);
+		bs_batch_clear_dev(ctx, batch, lba, lba_count);
 	}
 
 	bs_batch_close(batch);
@@ -3055,7 +3055,7 @@ _spdk_bs_free(struct spdk_blob_store *bs)
 {
 	_spdk_bs_blob_list_free(bs);
 
-	spdk_bs_unregister_md_thread(bs);
+	bs_unregister_md_thread(bs);
 	spdk_io_device_unregister(bs, _spdk_bs_dev_destroy);
 }
 
@@ -3145,7 +3145,7 @@ _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts, struct spdk_b
 
 	spdk_io_device_register(bs, _spdk_bs_channel_create, _spdk_bs_channel_destroy,
 				sizeof(struct spdk_bs_channel), "blobstore");
-	rc = spdk_bs_register_md_thread(bs);
+	rc = bs_register_md_thread(bs);
 	if (rc == -1) {
 		spdk_io_device_unregister(bs, NULL);
 		pthread_mutex_destroy(&bs->used_clusters_mutex);
@@ -5100,7 +5100,7 @@ spdk_bs_total_data_cluster_count(struct spdk_blob_store *bs)
 }
 
 static int
-spdk_bs_register_md_thread(struct spdk_blob_store *bs)
+bs_register_md_thread(struct spdk_blob_store *bs)
 {
 	bs->md_channel = spdk_get_io_channel(bs);
 	if (!bs->md_channel) {
@@ -5112,7 +5112,7 @@ spdk_bs_register_md_thread(struct spdk_blob_store *bs)
 }
 
 static int
-spdk_bs_unregister_md_thread(struct spdk_blob_store *bs)
+bs_unregister_md_thread(struct spdk_blob_store *bs)
 {
 	spdk_put_io_channel(bs->md_channel);
 

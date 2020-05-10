@@ -79,14 +79,14 @@ spdk_accel_hw_engine_register(struct spdk_accel_engine *accel_engine)
 
 /* Registration of sw modules (currently supports only 1) */
 static void
-spdk_accel_sw_register(struct spdk_accel_engine *accel_engine)
+accel_sw_register(struct spdk_accel_engine *accel_engine)
 {
 	assert(g_sw_accel_engine == NULL);
 	g_sw_accel_engine = accel_engine;
 }
 
 static void
-spdk_accel_sw_unregister(void)
+accel_sw_unregister(void)
 {
 	g_sw_accel_engine = NULL;
 }
@@ -214,7 +214,7 @@ spdk_accel_engine_get_io_channel(void)
 }
 
 static void
-spdk_accel_engine_module_initialize(void)
+accel_engine_module_initialize(void)
 {
 	struct spdk_accel_module_if *accel_engine_module;
 
@@ -227,7 +227,7 @@ int
 spdk_accel_engine_initialize(void)
 {
 	SPDK_NOTICELOG("Accel engine initialized to use software engine.\n");
-	spdk_accel_engine_module_initialize();
+	accel_engine_module_initialize();
 	/*
 	 * We need a unique identifier for the accel engine framework, so use the
 	 *  spdk_accel_module_list address for this purpose.
@@ -239,7 +239,7 @@ spdk_accel_engine_initialize(void)
 }
 
 static void
-spdk_accel_engine_module_finish_cb(void)
+accel_engine_module_finish_cb(void)
 {
 	spdk_accel_fini_cb cb_fn = g_fini_cb_fn;
 
@@ -274,7 +274,7 @@ spdk_accel_engine_module_finish(void)
 	}
 
 	if (!g_accel_engine_module) {
-		spdk_accel_engine_module_finish_cb();
+		accel_engine_module_finish_cb();
 		return;
 	}
 
@@ -415,7 +415,7 @@ sw_accel_engine_get_ctx_size(void)
 static int
 sw_accel_engine_init(void)
 {
-	spdk_accel_sw_register(&sw_accel_engine);
+	accel_sw_register(&sw_accel_engine);
 	spdk_io_device_register(&sw_accel_engine, sw_accel_create_cb, sw_accel_destroy_cb, 0,
 				"sw_accel_engine");
 
@@ -426,7 +426,7 @@ static void
 sw_accel_engine_fini(void *ctxt)
 {
 	spdk_io_device_unregister(&sw_accel_engine, NULL);
-	spdk_accel_sw_unregister();
+	accel_sw_unregister();
 
 	spdk_accel_engine_module_finish();
 }

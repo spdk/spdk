@@ -56,8 +56,8 @@ static TAILQ_HEAD(, spdk_pci_device) g_pci_hotplugged_devices =
 static TAILQ_HEAD(, spdk_pci_driver) g_pci_drivers = TAILQ_HEAD_INITIALIZER(g_pci_drivers);
 
 static int
-spdk_map_bar_rte(struct spdk_pci_device *device, uint32_t bar,
-		 void **mapped_addr, uint64_t *phys_addr, uint64_t *size)
+map_bar_rte(struct spdk_pci_device *device, uint32_t bar,
+	    void **mapped_addr, uint64_t *phys_addr, uint64_t *size)
 {
 	struct rte_pci_device *dev = device->dev_handle;
 
@@ -69,13 +69,13 @@ spdk_map_bar_rte(struct spdk_pci_device *device, uint32_t bar,
 }
 
 static int
-spdk_unmap_bar_rte(struct spdk_pci_device *device, uint32_t bar, void *addr)
+unmap_bar_rte(struct spdk_pci_device *device, uint32_t bar, void *addr)
 {
 	return 0;
 }
 
 static int
-spdk_cfg_read_rte(struct spdk_pci_device *dev, void *value, uint32_t len, uint32_t offset)
+cfg_read_rte(struct spdk_pci_device *dev, void *value, uint32_t len, uint32_t offset)
 {
 	int rc;
 
@@ -89,7 +89,7 @@ spdk_cfg_read_rte(struct spdk_pci_device *dev, void *value, uint32_t len, uint32
 }
 
 static int
-spdk_cfg_write_rte(struct spdk_pci_device *dev, void *value, uint32_t len, uint32_t offset)
+cfg_write_rte(struct spdk_pci_device *dev, void *value, uint32_t len, uint32_t offset)
 {
 	int rc;
 
@@ -103,7 +103,7 @@ spdk_cfg_write_rte(struct spdk_pci_device *dev, void *value, uint32_t len, uint3
 }
 
 static void
-spdk_detach_rte_cb(void *_dev)
+detach_rte_cb(void *_dev)
 {
 	struct rte_pci_device *rte_dev = _dev;
 
@@ -121,7 +121,7 @@ spdk_detach_rte_cb(void *_dev)
 }
 
 static void
-spdk_detach_rte(struct spdk_pci_device *dev)
+detach_rte(struct spdk_pci_device *dev)
 {
 	struct rte_pci_device *rte_dev = dev->dev_handle;
 	int i;
@@ -132,11 +132,11 @@ spdk_detach_rte(struct spdk_pci_device *dev)
 	 */
 	dev->internal.pending_removal = true;
 	if (!spdk_process_is_primary() || pthread_equal(g_dpdk_tid, pthread_self())) {
-		spdk_detach_rte_cb(rte_dev);
+		detach_rte_cb(rte_dev);
 		return;
 	}
 
-	rte_eal_alarm_set(1, spdk_detach_rte_cb, rte_dev);
+	rte_eal_alarm_set(1, detach_rte_cb, rte_dev);
 	/* wait up to 2s for the cb to finish executing */
 	for (i = 2000; i > 0; i--) {
 
@@ -156,7 +156,7 @@ spdk_detach_rte(struct spdk_pci_device *dev)
 	 * cancel the alarm - if it started executing already, this
 	 * call will block and wait for it to finish.
 	 */
-	rte_eal_alarm_cancel(spdk_detach_rte_cb, rte_dev);
+	rte_eal_alarm_cancel(detach_rte_cb, rte_dev);
 
 	/* the device could have been finally removed, so just check
 	 * it again.
@@ -180,15 +180,15 @@ pci_driver_register(struct spdk_pci_driver *driver)
 
 #if RTE_VERSION >= RTE_VERSION_NUM(18, 5, 0, 0)
 static void
-spdk_pci_device_rte_hotremove_cb(void *dev)
+pci_device_rte_hotremove_cb(void *dev)
 {
-	spdk_detach_rte((struct spdk_pci_device *)dev);
+	detach_rte((struct spdk_pci_device *)dev);
 }
 
 static void
-spdk_pci_device_rte_hotremove(const char *device_name,
-			      enum rte_dev_event_type event,
-			      void *cb_arg)
+pci_device_rte_hotremove(const char *device_name,
+			 enum rte_dev_event_type event,
+			 void *cb_arg)
 {
 	struct spdk_pci_device *dev;
 	bool can_detach = false;
@@ -221,7 +221,7 @@ spdk_pci_device_rte_hotremove(const char *device_name,
 		 * moved into the eal in the future, the deferred removal could
 		 * be deleted.
 		 */
-		rte_eal_alarm_set(1, spdk_pci_device_rte_hotremove_cb, dev);
+		rte_eal_alarm_set(1, pci_device_rte_hotremove_cb, dev);
 	}
 }
 #endif
@@ -287,7 +287,7 @@ pci_init(void)
 #if RTE_VERSION >= RTE_VERSION_NUM(18, 5, 0, 0)
 	/* Register a single hotremove callback for all devices. */
 	if (spdk_process_is_primary()) {
-		rte_dev_event_callback_register(NULL, spdk_pci_device_rte_hotremove, NULL);
+		rte_dev_event_callback_register(NULL, pci_device_rte_hotremove, NULL);
 	}
 #endif
 
@@ -313,7 +313,7 @@ pci_fini(void)
 
 #if RTE_VERSION >= RTE_VERSION_NUM(18, 5, 0, 0)
 	if (spdk_process_is_primary()) {
-		rte_dev_event_callback_unregister(NULL, spdk_pci_device_rte_hotremove, NULL);
+		rte_dev_event_callback_unregister(NULL, pci_device_rte_hotremove, NULL);
 	}
 #endif
 }
@@ -353,11 +353,11 @@ pci_device_init(struct rte_pci_driver *_drv,
 	dev->socket_id = _dev->device.numa_node;
 	dev->type = "pci";
 
-	dev->map_bar = spdk_map_bar_rte;
-	dev->unmap_bar = spdk_unmap_bar_rte;
-	dev->cfg_read = spdk_cfg_read_rte;
-	dev->cfg_write = spdk_cfg_write_rte;
-	dev->detach = spdk_detach_rte;
+	dev->map_bar = map_bar_rte;
+	dev->unmap_bar = unmap_bar_rte;
+	dev->cfg_read = cfg_read_rte;
+	dev->cfg_write = cfg_write_rte;
+	dev->detach = detach_rte;
 
 	dev->internal.driver = driver;
 	dev->internal.claim_fd = -1;

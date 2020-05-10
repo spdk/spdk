@@ -80,7 +80,7 @@ bs_call_cpl(struct spdk_bs_cpl *cpl, int bserrno)
 }
 
 static void
-spdk_bs_request_set_complete(struct spdk_bs_request_set *set)
+bs_request_set_complete(struct spdk_bs_request_set *set)
 {
 	struct spdk_bs_cpl cpl = set->cpl;
 	int bserrno = set->bserrno;
@@ -91,7 +91,7 @@ spdk_bs_request_set_complete(struct spdk_bs_request_set *set)
 }
 
 static void
-spdk_bs_sequence_completion(struct spdk_io_channel *channel, void *cb_arg, int bserrno)
+bs_sequence_completion(struct spdk_io_channel *channel, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_request_set *set = cb_arg;
 
@@ -118,7 +118,7 @@ bs_sequence_start(struct spdk_io_channel *_channel,
 	set->bserrno = 0;
 	set->channel = channel;
 
-	set->cb_args.cb_fn = spdk_bs_sequence_completion;
+	set->cb_args.cb_fn = bs_sequence_completion;
 	set->cb_args.cb_arg = set;
 	set->cb_args.channel = channel->dev_channel;
 
@@ -253,7 +253,7 @@ bs_sequence_finish(spdk_bs_sequence_t *seq, int bserrno)
 	if (bserrno != 0) {
 		seq->bserrno = bserrno;
 	}
-	spdk_bs_request_set_complete((struct spdk_bs_request_set *)seq);
+	bs_request_set_complete((struct spdk_bs_request_set *)seq);
 }
 
 void
@@ -265,8 +265,8 @@ bs_user_op_sequence_finish(void *cb_arg, int bserrno)
 }
 
 static void
-spdk_bs_batch_completion(struct spdk_io_channel *_channel,
-			 void *cb_arg, int bserrno)
+bs_batch_completion(struct spdk_io_channel *_channel,
+		    void *cb_arg, int bserrno)
 {
 	struct spdk_bs_request_set	*set = cb_arg;
 
@@ -277,10 +277,10 @@ spdk_bs_batch_completion(struct spdk_io_channel *_channel,
 
 	if (set->u.batch.outstanding_ops == 0 && set->u.batch.batch_closed) {
 		if (set->u.batch.cb_fn) {
-			set->cb_args.cb_fn = spdk_bs_sequence_completion;
+			set->cb_args.cb_fn = bs_sequence_completion;
 			set->u.batch.cb_fn((spdk_bs_sequence_t *)set, set->u.batch.cb_arg, bserrno);
 		} else {
-			spdk_bs_request_set_complete(set);
+			bs_request_set_complete(set);
 		}
 	}
 }
@@ -309,7 +309,7 @@ bs_batch_open(struct spdk_io_channel *_channel,
 	set->u.batch.outstanding_ops = 0;
 	set->u.batch.batch_closed = 0;
 
-	set->cb_args.cb_fn = spdk_bs_batch_completion;
+	set->cb_args.cb_fn = bs_batch_completion;
 	set->cb_args.cb_arg = set;
 	set->cb_args.channel = channel->dev_channel;
 
@@ -396,10 +396,10 @@ bs_batch_close(spdk_bs_batch_t *batch)
 
 	if (set->u.batch.outstanding_ops == 0) {
 		if (set->u.batch.cb_fn) {
-			set->cb_args.cb_fn = spdk_bs_sequence_completion;
+			set->cb_args.cb_fn = bs_sequence_completion;
 			set->u.batch.cb_fn((spdk_bs_sequence_t *)set, set->u.batch.cb_arg, set->bserrno);
 		} else {
-			spdk_bs_request_set_complete(set);
+			bs_request_set_complete(set);
 		}
 	}
 }
@@ -414,7 +414,7 @@ bs_sequence_to_batch(spdk_bs_sequence_t *seq, spdk_bs_sequence_cpl cb_fn, void *
 	set->u.batch.outstanding_ops = 0;
 	set->u.batch.batch_closed = 0;
 
-	set->cb_args.cb_fn = spdk_bs_batch_completion;
+	set->cb_args.cb_fn = bs_batch_completion;
 
 	return set;
 }
