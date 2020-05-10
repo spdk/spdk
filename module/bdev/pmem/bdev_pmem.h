@@ -49,7 +49,7 @@ typedef void (*spdk_delete_pmem_complete)(void *cb_arg, int bdeverrno);
  *         -EINVAL if input parameters check failed
  *         -ENOMEM if buffer cannot be allocated
  */
-int spdk_create_pmem_disk(const char *pmem_file, const char *name, struct spdk_bdev **bdev);
+int create_pmem_disk(const char *pmem_file, const char *name, struct spdk_bdev **bdev);
 
 /**
  * Delete pmem bdev.
@@ -58,7 +58,7 @@ int spdk_create_pmem_disk(const char *pmem_file, const char *name, struct spdk_b
  * \param cb_fn Function to call after deletion.
  * \param cb_arg Argument to pass to cb_fn.
  */
-void spdk_delete_pmem_disk(struct spdk_bdev *bdev, spdk_delete_pmem_complete cb_fn,
-			   void *cb_arg);
+void delete_pmem_disk(struct spdk_bdev *bdev, spdk_delete_pmem_complete cb_fn,
+		      void *cb_arg);
 
 #endif /* SPDK_BDEV_PMEM_H */

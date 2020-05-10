@@ -310,7 +310,7 @@ static const struct spdk_bdev_fn_table pmem_fn_table = {
 };
 
 int
-spdk_create_pmem_disk(const char *pmem_file, const char *name, struct spdk_bdev **bdev)
+create_pmem_disk(const char *pmem_file, const char *name, struct spdk_bdev **bdev)
 {
 	uint64_t num_blocks;
 	uint32_t block_size;
@@ -320,7 +320,7 @@ spdk_create_pmem_disk(const char *pmem_file, const char *name, struct spdk_bdev 
 	*bdev = NULL;
 
 	if (name == NULL) {
-		SPDK_ERRLOG("Missing name parameter for spdk_create_pmem_disk()\n");
+		SPDK_ERRLOG("Missing name parameter for create_pmem_disk()\n");
 		return -EINVAL;
 	}
 
@@ -391,7 +391,7 @@ spdk_create_pmem_disk(const char *pmem_file, const char *name, struct spdk_bdev 
 }
 
 void
-spdk_delete_pmem_disk(struct spdk_bdev *bdev, spdk_delete_pmem_complete cb_fn, void *cb_arg)
+delete_pmem_disk(struct spdk_bdev *bdev, spdk_delete_pmem_complete cb_fn, void *cb_arg)
 {
 	if (!bdev || bdev->module != &pmem_if) {
 		cb_fn(cb_arg, -ENODEV);
@@ -432,7 +432,7 @@ bdev_pmem_read_conf(void)
 			continue;
 		}
 
-		spdk_create_pmem_disk(pmem_file, bdev_name, &bdev);
+		create_pmem_disk(pmem_file, bdev_name, &bdev);
 	}
 }
 
