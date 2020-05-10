@@ -78,13 +78,13 @@ spdk_bit_array_free(struct spdk_bit_array **bap)
 }
 
 static inline uint32_t
-spdk_bit_array_word_count(uint32_t num_bits)
+bit_array_word_count(uint32_t num_bits)
 {
 	return (num_bits + SPDK_BIT_ARRAY_WORD_BITS - 1) >> SPDK_BIT_ARRAY_WORD_INDEX_SHIFT;
 }
 
 static inline spdk_bit_array_word
-spdk_bit_array_word_mask(uint32_t num_bits)
+bit_array_word_mask(uint32_t num_bits)
 {
 	assert(num_bits < SPDK_BIT_ARRAY_WORD_BITS);
 	return (SPDK_BIT_ARRAY_WORD_C(1) << num_bits) - 1;
@@ -105,7 +105,7 @@ spdk_bit_array_resize(struct spdk_bit_array **bap, uint32_t num_bits)
 		return -EINVAL;
 	}
 
-	new_word_count = spdk_bit_array_word_count(num_bits);
+	new_word_count = bit_array_word_count(num_bits);
 	new_size = offsetof(struct spdk_bit_array, words) + new_word_count * SPDK_BIT_ARRAY_WORD_BYTES;
 
 	/*
@@ -132,7 +132,7 @@ spdk_bit_array_resize(struct spdk_bit_array **bap, uint32_t num_bits)
 		old_word_count = 0;
 		new_ba->bit_count = 0;
 	} else {
-		old_word_count = spdk_bit_array_word_count(new_ba->bit_count);
+		old_word_count = bit_array_word_count(new_ba->bit_count);
 	}
 
 	if (new_word_count > old_word_count) {
@@ -145,7 +145,7 @@ spdk_bit_array_resize(struct spdk_bit_array **bap, uint32_t num_bits)
 		spdk_bit_array_word mask;
 
 		last_word_bits = num_bits & SPDK_BIT_ARRAY_WORD_INDEX_MASK;
-		mask = spdk_bit_array_word_mask(last_word_bits);
+		mask = bit_array_word_mask(last_word_bits);
 		new_ba->words[old_word_count - 1] &= mask;
 	}
 
@@ -236,7 +236,7 @@ _spdk_bit_array_find_first(const struct spdk_bit_array *ba, uint32_t start_bit_i
 	 * within the first word.
 	 */
 	first_word_bit_index = start_bit_index & SPDK_BIT_ARRAY_WORD_INDEX_MASK;
-	first_word_mask = spdk_bit_array_word_mask(first_word_bit_index);
+	first_word_mask = bit_array_word_mask(first_word_bit_index);
 
 	word = (*cur_word ^ xor_mask) & ~first_word_mask;
 
@@ -292,7 +292,7 @@ uint32_t
 spdk_bit_array_count_set(const struct spdk_bit_array *ba)
 {
 	const spdk_bit_array_word *cur_word = ba->words;
-	uint32_t word_count = spdk_bit_array_word_count(ba->bit_count);
+	uint32_t word_count = bit_array_word_count(ba->bit_count);
 	uint32_t set_count = 0;
 
 	while (word_count--) {

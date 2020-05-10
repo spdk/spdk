@@ -642,7 +642,7 @@ crc_update_fast(uint16_t crc, const void *data, size_t data_len)
 }
 
 static inline uint16_t
-spdk_crc16_table_t10dif(uint16_t init_crc, const void *buf, size_t len)
+crc16_table_t10dif(uint16_t init_crc, const void *buf, size_t len)
 {
 	uint16_t crc;
 	const uint8_t *data = (const uint8_t *)buf;
@@ -655,14 +655,14 @@ spdk_crc16_table_t10dif(uint16_t init_crc, const void *buf, size_t len)
 uint16_t
 spdk_crc16_t10dif(uint16_t init_crc, const void *buf, size_t len)
 {
-	return (spdk_crc16_table_t10dif(init_crc, buf, len));
+	return (crc16_table_t10dif(init_crc, buf, len));
 }
 
 uint16_t
 spdk_crc16_t10dif_copy(uint16_t init_crc, uint8_t *dst, uint8_t *src, size_t len)
 {
 	memcpy(dst, src, len);
-	return (spdk_crc16_table_t10dif(init_crc, src, len));
+	return (crc16_table_t10dif(init_crc, src, len));
 }
 
 #endif
