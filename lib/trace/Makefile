@@ -41,4 +41,6 @@ SO_SUFFIX := $(SO_VER).$(SO_MINOR)
 C_SRCS = trace.c trace_flags.c trace_rpc.c
 LIBNAME = trace
 
+SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_trace.map)
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

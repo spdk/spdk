@@ -112,6 +112,8 @@ function confirm_abi_deps() {
 	name = SPDK_LOG_REDUCE
 [suppress_variable]
 	name = SPDK_LOG_THREAD
+[suppress_variable]
+	name = SPDK_LOG_TRACE
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do

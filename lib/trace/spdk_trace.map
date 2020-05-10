@@ -1,0 +1,29 @@
+{
+	global:
+
+	# public functions
+	_spdk_trace_record;
+	spdk_trace_get_tpoint_mask;
+	spdk_trace_set_tpoints;
+	spdk_trace_clear_tpoints;
+	spdk_trace_get_tpoint_group_mask;
+	spdk_trace_set_tpoint_group_mask;
+	spdk_trace_clear_tpoint_group_mask;
+	spdk_trace_init;
+	spdk_trace_cleanup;
+	spdk_trace_flags_init;
+	spdk_trace_register_owner;
+	spdk_trace_register_object;
+	spdk_trace_register_description;
+	spdk_trace_get_first_register_fn;
+	spdk_trace_get_next_register_fn;
+	spdk_trace_enable_tpoint_group;
+	spdk_trace_disable_tpoint_group;
+	spdk_trace_mask_usage;
+	spdk_trace_add_register_fn;
+
+	# public variables
+	g_trace_histories;
+
+	local: *;
+};
