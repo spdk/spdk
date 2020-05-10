@@ -41,4 +41,6 @@ SO_SUFFIX := $(SO_VER).$(SO_MINOR)
 C_SRCS = bdev_pmem.c bdev_pmem_rpc.c
 LIBNAME = bdev_pmem
 
+SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/mk/spdk_blank.map
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

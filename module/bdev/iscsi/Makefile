@@ -47,4 +47,6 @@ CFLAGS += -Wno-error
 C_SRCS = bdev_iscsi.c bdev_iscsi_rpc.c
 LIBNAME = bdev_iscsi
 
+SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/mk/spdk_blank.map
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

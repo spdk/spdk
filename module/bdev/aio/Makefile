@@ -42,4 +42,6 @@ C_SRCS = bdev_aio.c bdev_aio_rpc.c
 LIBNAME = bdev_aio
 LOCAL_SYS_LIBS = -laio
 
+SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/mk/spdk_blank.map
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

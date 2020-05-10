@@ -41,4 +41,6 @@ SO_SUFFIX := $(SO_VER).$(SO_MINOR)
 C_SRCS = gpt.c vbdev_gpt.c
 LIBNAME = bdev_gpt
 
+SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/mk/spdk_blank.map
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

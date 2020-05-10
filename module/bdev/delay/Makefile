@@ -43,4 +43,6 @@ CFLAGS += -I$(SPDK_ROOT_DIR)/lib/bdev/
 C_SRCS = vbdev_delay.c vbdev_delay_rpc.c
 LIBNAME = bdev_delay
 
+SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/mk/spdk_blank.map
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

@@ -130,6 +130,118 @@ function confirm_abi_deps() {
 	name = SPDK_LOG_ACCEL_IDXD
 [suppress_variable]
 	name = SPDK_LOG_ACCEL_IOAT
+[suppress_variable]
+	name = SPDK_LOG_AIO
+[suppress_variable]
+	name = SPDK_LOG_VBDEV_COMPRESS
+[suppress_variable]
+	name = SPDK_LOG_CRYPTO
+[suppress_variable]
+	name = SPDK_LOG_VBDEV_DELAY
+[suppress_function]
+	name = spdk_vbdev_error_create
+[suppress_function]
+	name = spdk_vbdev_error_delete
+[suppress_function]
+	name = spdk_vbdev_error_inject_error
+[suppress_variable]
+	name = SPDK_LOG_BDEV_FTL
+[suppress_variable]
+	name = SPDK_LOG_GPT_PARSE
+[suppress_variable]
+	name = SPDK_LOG_VBDEV_GPT
+[suppress_function]
+	name = spdk_gpt_parse_mbr
+[suppress_function]
+	name = spdk_gpt_parse_partition_table
+[suppress_variable]
+	name = SPDK_LOG_ISCSI_INIT
+[suppress_variable]
+	name = SPDK_LOG_LVOL_RPC
+[suppress_variable]
+	name = SPDK_LOG_VBDEV_LVOL
+[suppress_variable]
+	name = SPDK_LOG_BDEV_MALLOC
+[suppress_variable]
+	name = SPDK_LOG_BDEV_NULL
+[suppress_variable]
+	name = SPDK_LOG_BDEV_NVME
+[suppress_function]
+	name = spdk_bdev_nvme_create
+[suppress_function]
+	name = spdk_bdev_nvme_delete
+[suppress_function]
+	name = spdk_bdev_nvme_get_ctrlr
+[suppress_function]
+	name = spdk_bdev_nvme_get_io_qpair
+[suppress_function]
+	name = spdk_bdev_nvme_get_opts
+[suppress_function]
+	name = spdk_bdev_nvme_set_hotplug
+[suppress_function]
+	name = spdk_bdev_nvme_set_opts
+[suppress_function]
+	name = spdk_vbdev_opal_create
+[suppress_function]
+	name = spdk_vbdev_opal_destruct
+[suppress_function]
+	name = spdk_vbdev_opal_enable_new_user
+[suppress_function]
+	name = spdk_vbdev_opal_get_info_from_bdev
+[suppress_function]
+	name = spdk_vbdev_opal_set_lock_state
+[suppress_variable]
+	name = SPDK_LOG_BDEV_OCSSD
+[suppress_variable]
+	name = SPDK_LOG_VBDEV_OPAL
+[suppress_variable]
+	name = SPDK_LOG_OCFCTX
+[suppress_variable]
+	name = SPDK_LOG_VBDEV_PASSTHRU
+[suppress_variable]
+	name = SPDK_LOG_BDEV_PMEM
+[suppress_function]
+	name = spdk_create_pmem_disk
+[suppress_function]
+	name = spdk_delete_pmem_disk
+[suppress_variable]
+	name = SPDK_LOG_BDEV_RAID
+[suppress_variable]
+	name = SPDK_LOG_BDEV_RAID0
+[suppress_variable]
+	name = SPDK_LOG_BDEV_RAID5
+[suppress_variable]
+	name = SPDK_LOG_RAID_RPC
+[suppress_variable]
+	name = SPDK_LOG_BDEV_RBD
+[suppress_function]
+	name = spdk_bdev_rbd_create
+[suppress_function]
+	name = spdk_bdev_rbd_delete
+[suppress_function]
+	name = spdk_bdev_rbd_dup_config
+[suppress_function]
+	name = spdk_bdev_rbd_free_config
+[suppress_function]
+	name = spdk_bdev_rbd_resize
+[suppress_variable]
+	name = SPDK_LOG_VBDEV_SPLIT
+[suppress_function]
+	name = spdk_vbdev_split_destruct
+[suppress_function]
+	name = spdk_vbdev_split_get_part_base
+[suppress_variable]
+	name = SPDK_LOG_URING
+[suppress_variable]
+	name = SPDK_LOG_VIRTIO
+[suppress_variable]
+	name = SPDK_LOG_VIRTIO_BLK
+[suppress_variable]
+	name = SPDK_LOG_VBDEV_ZONE_BLOCK
+[suppress_function]
+	name = spdk_vbdev_zone_block_create
+[suppress_function]
+	name = spdk_vbdev_zone_block_delete
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do

@@ -43,4 +43,6 @@ CFLAGS += $(ENV_CFLAGS)
 C_SRCS = vbdev_crypto.c vbdev_crypto_rpc.c
 LIBNAME = bdev_crypto
 
+SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/mk/spdk_blank.map
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

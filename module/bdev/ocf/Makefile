@@ -44,6 +44,8 @@ C_SRCS = $(shell ls *.c)
 
 LIBNAME := bdev_ocf
 
+SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/mk/spdk_blank.map
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
 
 OCF_ENV := $(call spdk_lib_list_to_static_libs,ocfenv)

@@ -43,4 +43,6 @@ CFLAGS += -I$(SPDK_ROOT_DIR)/lib/bdev/
 C_SRCS = vbdev_passthru.c vbdev_passthru_rpc.c
 LIBNAME = bdev_passthru
 
+SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/mk/spdk_blank.map
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

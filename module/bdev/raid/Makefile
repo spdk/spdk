@@ -47,4 +47,6 @@ endif
 
 LIBNAME = bdev_raid
 
+SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/mk/spdk_blank.map
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

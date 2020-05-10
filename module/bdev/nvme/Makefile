@@ -46,4 +46,6 @@ C_SRCS += vbdev_opal.c vbdev_opal_rpc.c
 endif
 LIBNAME = bdev_nvme
 
+SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/mk/spdk_blank.map
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

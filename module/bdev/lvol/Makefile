@@ -42,4 +42,6 @@ C_SRCS = vbdev_lvol.c vbdev_lvol_rpc.c
 LIBNAME = bdev_lvol
 LOCAL_SYS_LIBS = -luuid
 
+SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/mk/spdk_blank.map
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

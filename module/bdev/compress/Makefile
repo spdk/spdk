@@ -44,4 +44,6 @@ C_SRCS = vbdev_compress.c vbdev_compress_rpc.c
 LIBNAME = bdev_compress
 CFLAGS += $(ENV_CFLAGS)
 
+SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/mk/spdk_blank.map
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

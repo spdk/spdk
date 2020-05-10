@@ -47,4 +47,6 @@ CFLAGS += -I$(CONFIG_URING_PATH)
 LDFLAGS += -L$(CONFIG_URING_PATH)
 endif
 
+SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/mk/spdk_blank.map
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
