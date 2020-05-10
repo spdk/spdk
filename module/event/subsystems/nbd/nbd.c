@@ -38,7 +38,7 @@
 #include "spdk_internal/event.h"
 
 static void
-spdk_nbd_subsystem_init(void)
+nbd_subsystem_init(void)
 {
 	int rc;
 
@@ -48,24 +48,24 @@ spdk_nbd_subsystem_init(void)
 }
 
 static void
-spdk_nbd_subsystem_fini(void)
+nbd_subsystem_fini(void)
 {
 	spdk_nbd_fini();
 	spdk_subsystem_fini_next();
 }
 
 static void
-spdk_nbd_subsystem_write_config_json(struct spdk_json_write_ctx *w)
+nbd_subsystem_write_config_json(struct spdk_json_write_ctx *w)
 {
 	spdk_nbd_write_config_json(w);
 }
 
 static struct spdk_subsystem g_spdk_subsystem_nbd = {
 	.name = "nbd",
-	.init = spdk_nbd_subsystem_init,
-	.fini = spdk_nbd_subsystem_fini,
+	.init = nbd_subsystem_init,
+	.fini = nbd_subsystem_fini,
 	.config = NULL,
-	.write_config_json = spdk_nbd_subsystem_write_config_json,
+	.write_config_json = nbd_subsystem_write_config_json,
 };
 
 SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_nbd);
