@@ -93,7 +93,7 @@ static const struct spdk_json_object_decoder rpc_bdev_lvol_create_lvstore_decode
 };
 
 static void
-_spdk_rpc_lvol_store_construct_cb(void *cb_arg, struct spdk_lvol_store *lvol_store, int lvserrno)
+rpc_lvol_store_construct_cb(void *cb_arg, struct spdk_lvol_store *lvol_store, int lvserrno)
 {
 	struct spdk_json_write_ctx *w;
 	char lvol_store_uuid[SPDK_UUID_STRING_LEN];
@@ -116,8 +116,8 @@ invalid:
 }
 
 static void
-spdk_rpc_bdev_lvol_create_lvstore(struct spdk_jsonrpc_request *request,
-				  const struct spdk_json_val *params)
+rpc_bdev_lvol_create_lvstore(struct spdk_jsonrpc_request *request,
+			     const struct spdk_json_val *params)
 {
 	struct rpc_bdev_lvol_create_lvstore req = {};
 	struct spdk_bdev *bdev;
@@ -156,7 +156,7 @@ spdk_rpc_bdev_lvol_create_lvstore(struct spdk_jsonrpc_request *request,
 	}
 
 	rc = vbdev_lvs_create(bdev, req.lvs_name, req.cluster_sz, clear_method,
-			      _spdk_rpc_lvol_store_construct_cb, request);
+			      rpc_lvol_store_construct_cb, request);
 	if (rc < 0) {
 		spdk_jsonrpc_send_error_response(request, -rc, spdk_strerror(rc));
 		goto cleanup;
@@ -168,7 +168,7 @@ spdk_rpc_bdev_lvol_create_lvstore(struct spdk_jsonrpc_request *request,
 cleanup:
 	free_rpc_bdev_lvol_create_lvstore(&req);
 }
-SPDK_RPC_REGISTER("bdev_lvol_create_lvstore", spdk_rpc_bdev_lvol_create_lvstore, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_lvol_create_lvstore", rpc_bdev_lvol_create_lvstore, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_create_lvstore, construct_lvol_store)
 
 struct rpc_bdev_lvol_rename_lvstore {
@@ -189,7 +189,7 @@ static const struct spdk_json_object_decoder rpc_bdev_lvol_rename_lvstore_decode
 };
 
 static void
-_spdk_rpc_bdev_lvol_rename_lvstore_cb(void *cb_arg, int lvserrno)
+rpc_bdev_lvol_rename_lvstore_cb(void *cb_arg, int lvserrno)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = cb_arg;
@@ -209,8 +209,8 @@ invalid:
 }
 
 static void
-spdk_rpc_bdev_lvol_rename_lvstore(struct spdk_jsonrpc_request *request,
-				  const struct spdk_json_val *params)
+rpc_bdev_lvol_rename_lvstore(struct spdk_jsonrpc_request *request,
+			     const struct spdk_json_val *params)
 {
 	struct rpc_bdev_lvol_rename_lvstore req = {};
 	struct spdk_lvol_store *lvs;
@@ -231,12 +231,12 @@ spdk_rpc_bdev_lvol_rename_lvstore(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	vbdev_lvs_rename(lvs, req.new_name, _spdk_rpc_bdev_lvol_rename_lvstore_cb, request);
+	vbdev_lvs_rename(lvs, req.new_name, rpc_bdev_lvol_rename_lvstore_cb, request);
 
 cleanup:
 	free_rpc_bdev_lvol_rename_lvstore(&req);
 }
-SPDK_RPC_REGISTER("bdev_lvol_rename_lvstore", spdk_rpc_bdev_lvol_rename_lvstore, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_lvol_rename_lvstore", rpc_bdev_lvol_rename_lvstore, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_rename_lvstore, rename_lvol_store)
 
 struct rpc_bdev_lvol_delete_lvstore {
@@ -257,7 +257,7 @@ static const struct spdk_json_object_decoder rpc_bdev_lvol_delete_lvstore_decode
 };
 
 static void
-_spdk_rpc_lvol_store_destroy_cb(void *cb_arg, int lvserrno)
+rpc_lvol_store_destroy_cb(void *cb_arg, int lvserrno)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = cb_arg;
@@ -277,8 +277,8 @@ invalid:
 }
 
 static void
-spdk_rpc_bdev_lvol_delete_lvstore(struct spdk_jsonrpc_request *request,
-				  const struct spdk_json_val *params)
+rpc_bdev_lvol_delete_lvstore(struct spdk_jsonrpc_request *request,
+			     const struct spdk_json_val *params)
 {
 	struct rpc_bdev_lvol_delete_lvstore req = {};
 	struct spdk_lvol_store *lvs = NULL;
@@ -299,12 +299,12 @@ spdk_rpc_bdev_lvol_delete_lvstore(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	vbdev_lvs_destruct(lvs, _spdk_rpc_lvol_store_destroy_cb, request);
+	vbdev_lvs_destruct(lvs, rpc_lvol_store_destroy_cb, request);
 
 cleanup:
 	free_rpc_bdev_lvol_delete_lvstore(&req);
 }
-SPDK_RPC_REGISTER("bdev_lvol_delete_lvstore", spdk_rpc_bdev_lvol_delete_lvstore, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_lvol_delete_lvstore", rpc_bdev_lvol_delete_lvstore, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_delete_lvstore, destroy_lvol_store)
 
 struct rpc_bdev_lvol_create {
@@ -335,7 +335,7 @@ static const struct spdk_json_object_decoder rpc_bdev_lvol_create_decoders[] = {
 };
 
 static void
-_spdk_rpc_bdev_lvol_create_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
+rpc_bdev_lvol_create_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = cb_arg;
@@ -355,8 +355,8 @@ invalid:
 }
 
 static void
-spdk_rpc_bdev_lvol_create(struct spdk_jsonrpc_request *request,
-			  const struct spdk_json_val *params)
+rpc_bdev_lvol_create(struct spdk_jsonrpc_request *request,
+		     const struct spdk_json_val *params)
 {
 	struct rpc_bdev_lvol_create req = {};
 	enum lvol_clear_method clear_method;
@@ -396,7 +396,7 @@ spdk_rpc_bdev_lvol_create(struct spdk_jsonrpc_request *request,
 	}
 
 	rc = vbdev_lvol_create(lvs, req.lvol_name, req.size, req.thin_provision,
-			       clear_method, _spdk_rpc_bdev_lvol_create_cb, request);
+			       clear_method, rpc_bdev_lvol_create_cb, request);
 	if (rc < 0) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;
@@ -406,7 +406,7 @@ cleanup:
 	free_rpc_bdev_lvol_create(&req);
 }
 
-SPDK_RPC_REGISTER("bdev_lvol_create", spdk_rpc_bdev_lvol_create, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_lvol_create", rpc_bdev_lvol_create, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_create, construct_lvol_bdev)
 
 struct rpc_bdev_lvol_snapshot {
@@ -427,7 +427,7 @@ static const struct spdk_json_object_decoder rpc_bdev_lvol_snapshot_decoders[] =
 };
 
 static void
-_spdk_rpc_bdev_lvol_snapshot_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
+rpc_bdev_lvol_snapshot_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = cb_arg;
@@ -447,8 +447,8 @@ invalid:
 }
 
 static void
-spdk_rpc_bdev_lvol_snapshot(struct spdk_jsonrpc_request *request,
-			    const struct spdk_json_val *params)
+rpc_bdev_lvol_snapshot(struct spdk_jsonrpc_request *request,
+		       const struct spdk_json_val *params)
 {
 	struct rpc_bdev_lvol_snapshot req = {};
 	struct spdk_bdev *bdev;
@@ -479,13 +479,13 @@ spdk_rpc_bdev_lvol_snapshot(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	vbdev_lvol_create_snapshot(lvol, req.snapshot_name, _spdk_rpc_bdev_lvol_snapshot_cb, request);
+	vbdev_lvol_create_snapshot(lvol, req.snapshot_name, rpc_bdev_lvol_snapshot_cb, request);
 
 cleanup:
 	free_rpc_bdev_lvol_snapshot(&req);
 }
 
-SPDK_RPC_REGISTER("bdev_lvol_snapshot", spdk_rpc_bdev_lvol_snapshot, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_lvol_snapshot", rpc_bdev_lvol_snapshot, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_snapshot, snapshot_lvol_bdev)
 
 struct rpc_bdev_lvol_clone {
@@ -506,7 +506,7 @@ static const struct spdk_json_object_decoder rpc_bdev_lvol_clone_decoders[] = {
 };
 
 static void
-_spdk_rpc_bdev_lvol_clone_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
+rpc_bdev_lvol_clone_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = cb_arg;
@@ -526,8 +526,8 @@ invalid:
 }
 
 static void
-spdk_rpc_bdev_lvol_clone(struct spdk_jsonrpc_request *request,
-			 const struct spdk_json_val *params)
+rpc_bdev_lvol_clone(struct spdk_jsonrpc_request *request,
+		    const struct spdk_json_val *params)
 {
 	struct rpc_bdev_lvol_clone req = {};
 	struct spdk_bdev *bdev;
@@ -558,13 +558,13 @@ spdk_rpc_bdev_lvol_clone(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	vbdev_lvol_create_clone(lvol, req.clone_name, _spdk_rpc_bdev_lvol_clone_cb, request);
+	vbdev_lvol_create_clone(lvol, req.clone_name, rpc_bdev_lvol_clone_cb, request);
 
 cleanup:
 	free_rpc_bdev_lvol_clone(&req);
 }
 
-SPDK_RPC_REGISTER("bdev_lvol_clone", spdk_rpc_bdev_lvol_clone, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_lvol_clone", rpc_bdev_lvol_clone, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_clone, clone_lvol_bdev)
 
 struct rpc_bdev_lvol_rename {
@@ -585,7 +585,7 @@ static const struct spdk_json_object_decoder rpc_bdev_lvol_rename_decoders[] = {
 };
 
 static void
-_spdk_rpc_bdev_lvol_rename_cb(void *cb_arg, int lvolerrno)
+rpc_bdev_lvol_rename_cb(void *cb_arg, int lvolerrno)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = cb_arg;
@@ -605,8 +605,8 @@ invalid:
 }
 
 static void
-spdk_rpc_bdev_lvol_rename(struct spdk_jsonrpc_request *request,
-			  const struct spdk_json_val *params)
+rpc_bdev_lvol_rename(struct spdk_jsonrpc_request *request,
+		     const struct spdk_json_val *params)
 {
 	struct rpc_bdev_lvol_rename req = {};
 	struct spdk_bdev *bdev;
@@ -637,13 +637,13 @@ spdk_rpc_bdev_lvol_rename(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	vbdev_lvol_rename(lvol, req.new_name, _spdk_rpc_bdev_lvol_rename_cb, request);
+	vbdev_lvol_rename(lvol, req.new_name, rpc_bdev_lvol_rename_cb, request);
 
 cleanup:
 	free_rpc_bdev_lvol_rename(&req);
 }
 
-SPDK_RPC_REGISTER("bdev_lvol_rename", spdk_rpc_bdev_lvol_rename, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_lvol_rename", rpc_bdev_lvol_rename, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_rename, rename_lvol_bdev)
 
 struct rpc_bdev_lvol_inflate {
@@ -661,7 +661,7 @@ static const struct spdk_json_object_decoder rpc_bdev_lvol_inflate_decoders[] = 
 };
 
 static void
-_spdk_rpc_bdev_lvol_inflate_cb(void *cb_arg, int lvolerrno)
+rpc_bdev_lvol_inflate_cb(void *cb_arg, int lvolerrno)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = cb_arg;
@@ -681,8 +681,8 @@ invalid:
 }
 
 static void
-spdk_rpc_bdev_lvol_inflate(struct spdk_jsonrpc_request *request,
-			   const struct spdk_json_val *params)
+rpc_bdev_lvol_inflate(struct spdk_jsonrpc_request *request,
+		      const struct spdk_json_val *params)
 {
 	struct rpc_bdev_lvol_inflate req = {};
 	struct spdk_bdev *bdev;
@@ -713,18 +713,18 @@ spdk_rpc_bdev_lvol_inflate(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	spdk_lvol_inflate(lvol, _spdk_rpc_bdev_lvol_inflate_cb, request);
+	spdk_lvol_inflate(lvol, rpc_bdev_lvol_inflate_cb, request);
 
 cleanup:
 	free_rpc_bdev_lvol_inflate(&req);
 }
 
-SPDK_RPC_REGISTER("bdev_lvol_inflate", spdk_rpc_bdev_lvol_inflate, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_lvol_inflate", rpc_bdev_lvol_inflate, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_inflate, inflate_lvol_bdev)
 
 static void
-spdk_rpc_bdev_lvol_decouple_parent(struct spdk_jsonrpc_request *request,
-				   const struct spdk_json_val *params)
+rpc_bdev_lvol_decouple_parent(struct spdk_jsonrpc_request *request,
+			      const struct spdk_json_val *params)
 {
 	struct rpc_bdev_lvol_inflate req = {};
 	struct spdk_bdev *bdev;
@@ -755,13 +755,13 @@ spdk_rpc_bdev_lvol_decouple_parent(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	spdk_lvol_decouple_parent(lvol, _spdk_rpc_bdev_lvol_inflate_cb, request);
+	spdk_lvol_decouple_parent(lvol, rpc_bdev_lvol_inflate_cb, request);
 
 cleanup:
 	free_rpc_bdev_lvol_inflate(&req);
 }
 
-SPDK_RPC_REGISTER("bdev_lvol_decouple_parent", spdk_rpc_bdev_lvol_decouple_parent, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_lvol_decouple_parent", rpc_bdev_lvol_decouple_parent, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_decouple_parent, decouple_parent_lvol_bdev)
 
 struct rpc_bdev_lvol_resize {
@@ -781,7 +781,7 @@ static const struct spdk_json_object_decoder rpc_bdev_lvol_resize_decoders[] = {
 };
 
 static void
-_spdk_rpc_bdev_lvol_resize_cb(void *cb_arg, int lvolerrno)
+rpc_bdev_lvol_resize_cb(void *cb_arg, int lvolerrno)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = cb_arg;
@@ -801,8 +801,8 @@ invalid:
 }
 
 static void
-spdk_rpc_bdev_lvol_resize(struct spdk_jsonrpc_request *request,
-			  const struct spdk_json_val *params)
+rpc_bdev_lvol_resize(struct spdk_jsonrpc_request *request,
+		     const struct spdk_json_val *params)
 {
 	struct rpc_bdev_lvol_resize req = {};
 	struct spdk_bdev *bdev;
@@ -832,13 +832,13 @@ spdk_rpc_bdev_lvol_resize(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	vbdev_lvol_resize(lvol, req.size, _spdk_rpc_bdev_lvol_resize_cb, request);
+	vbdev_lvol_resize(lvol, req.size, rpc_bdev_lvol_resize_cb, request);
 
 cleanup:
 	free_rpc_bdev_lvol_resize(&req);
 }
 
-SPDK_RPC_REGISTER("bdev_lvol_resize", spdk_rpc_bdev_lvol_resize, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_lvol_resize", rpc_bdev_lvol_resize, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_resize, resize_lvol_bdev)
 
 struct rpc_set_ro_lvol_bdev {
@@ -856,7 +856,7 @@ static const struct spdk_json_object_decoder rpc_set_ro_lvol_bdev_decoders[] = {
 };
 
 static void
-_spdk_rpc_set_ro_lvol_bdev_cb(void *cb_arg, int lvolerrno)
+rpc_set_ro_lvol_bdev_cb(void *cb_arg, int lvolerrno)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = cb_arg;
@@ -876,8 +876,8 @@ invalid:
 }
 
 static void
-spdk_rpc_bdev_lvol_set_read_only(struct spdk_jsonrpc_request *request,
-				 const struct spdk_json_val *params)
+rpc_bdev_lvol_set_read_only(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
 {
 	struct rpc_set_ro_lvol_bdev req = {};
 	struct spdk_bdev *bdev;
@@ -913,13 +913,13 @@ spdk_rpc_bdev_lvol_set_read_only(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	vbdev_lvol_set_read_only(lvol, _spdk_rpc_set_ro_lvol_bdev_cb, request);
+	vbdev_lvol_set_read_only(lvol, rpc_set_ro_lvol_bdev_cb, request);
 
 cleanup:
 	free_rpc_set_ro_lvol_bdev(&req);
 }
 
-SPDK_RPC_REGISTER("bdev_lvol_set_read_only", spdk_rpc_bdev_lvol_set_read_only, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_lvol_set_read_only", rpc_bdev_lvol_set_read_only, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_set_read_only, set_read_only_lvol_bdev)
 
 struct rpc_bdev_lvol_delete {
@@ -937,7 +937,7 @@ static const struct spdk_json_object_decoder rpc_bdev_lvol_delete_decoders[] = {
 };
 
 static void
-_spdk_rpc_bdev_lvol_delete_cb(void *cb_arg, int lvolerrno)
+rpc_bdev_lvol_delete_cb(void *cb_arg, int lvolerrno)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = cb_arg;
@@ -957,8 +957,8 @@ invalid:
 }
 
 static void
-spdk_rpc_bdev_lvol_delete(struct spdk_jsonrpc_request *request,
-			  const struct spdk_json_val *params)
+rpc_bdev_lvol_delete(struct spdk_jsonrpc_request *request,
+		     const struct spdk_json_val *params)
 {
 	struct rpc_bdev_lvol_delete req = {};
 	struct spdk_bdev *bdev;
@@ -986,13 +986,13 @@ spdk_rpc_bdev_lvol_delete(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	vbdev_lvol_destroy(lvol, _spdk_rpc_bdev_lvol_delete_cb, request);
+	vbdev_lvol_destroy(lvol, rpc_bdev_lvol_delete_cb, request);
 
 cleanup:
 	free_rpc_bdev_lvol_delete(&req);
 }
 
-SPDK_RPC_REGISTER("bdev_lvol_delete", spdk_rpc_bdev_lvol_delete, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_lvol_delete", rpc_bdev_lvol_delete, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_delete, destroy_lvol_bdev)
 
 struct rpc_bdev_lvol_get_lvstores {
@@ -1013,7 +1013,7 @@ static const struct spdk_json_object_decoder rpc_bdev_lvol_get_lvstores_decoders
 };
 
 static void
-spdk_rpc_dump_lvol_store_info(struct spdk_json_write_ctx *w, struct lvol_store_bdev *lvs_bdev)
+rpc_dump_lvol_store_info(struct spdk_json_write_ctx *w, struct lvol_store_bdev *lvs_bdev)
 {
 	struct spdk_blob_store *bs;
 	uint64_t cluster_size, block_size;
@@ -1045,8 +1045,8 @@ spdk_rpc_dump_lvol_store_info(struct spdk_json_write_ctx *w, struct lvol_store_b
 }
 
 static void
-spdk_rpc_bdev_lvol_get_lvstores(struct spdk_jsonrpc_request *request,
-				const struct spdk_json_val *params)
+rpc_bdev_lvol_get_lvstores(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
 {
 	struct rpc_bdev_lvol_get_lvstores req = {};
 	struct spdk_json_write_ctx *w;
@@ -1081,11 +1081,11 @@ spdk_rpc_bdev_lvol_get_lvstores(struct spdk_jsonrpc_request *request,
 	spdk_json_write_array_begin(w);
 
 	if (lvs_bdev != NULL) {
-		spdk_rpc_dump_lvol_store_info(w, lvs_bdev);
+		rpc_dump_lvol_store_info(w, lvs_bdev);
 	} else {
 		for (lvs_bdev = vbdev_lvol_store_first(); lvs_bdev != NULL;
 		     lvs_bdev = vbdev_lvol_store_next(lvs_bdev)) {
-			spdk_rpc_dump_lvol_store_info(w, lvs_bdev);
+			rpc_dump_lvol_store_info(w, lvs_bdev);
 		}
 	}
 	spdk_json_write_array_end(w);
@@ -1096,5 +1096,5 @@ cleanup:
 	free_rpc_bdev_lvol_get_lvstores(&req);
 }
 
-SPDK_RPC_REGISTER("bdev_lvol_get_lvstores", spdk_rpc_bdev_lvol_get_lvstores, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_lvol_get_lvstores", rpc_bdev_lvol_get_lvstores, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_get_lvstores, get_lvol_stores)
