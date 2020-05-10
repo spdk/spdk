@@ -79,8 +79,8 @@ rpc_zone_block_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	rc = spdk_vbdev_zone_block_create(req.base_bdev, req.name, req.zone_capacity,
-					  req.optimal_open_zones);
+	rc = vbdev_zone_block_create(req.base_bdev, req.name, req.zone_capacity,
+				     req.optimal_open_zones);
 	if (rc) {
 		SPDK_ERRLOG("Failed to create block zoned vbdev: %s", spdk_strerror(-rc));
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -138,7 +138,7 @@ rpc_zone_block_delete(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	spdk_vbdev_zone_block_delete(attrs.name, _rpc_delete_zone_block_cb, request);
+	vbdev_zone_block_delete(attrs.name, _rpc_delete_zone_block_cb, request);
 
 cleanup:
 	free_rpc_delete_zone_block(&attrs);

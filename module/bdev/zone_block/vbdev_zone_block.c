@@ -848,8 +848,8 @@ free_config:
 }
 
 int
-spdk_vbdev_zone_block_create(const char *bdev_name, const char *vbdev_name, uint64_t zone_capacity,
-			     uint64_t optimal_open_zones)
+vbdev_zone_block_create(const char *bdev_name, const char *vbdev_name, uint64_t zone_capacity,
+			uint64_t optimal_open_zones)
 {
 	struct spdk_bdev *bdev = NULL;
 	int rc = 0;
@@ -884,7 +884,7 @@ spdk_vbdev_zone_block_create(const char *bdev_name, const char *vbdev_name, uint
 }
 
 void
-spdk_vbdev_zone_block_delete(const char *name, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
+vbdev_zone_block_delete(const char *name, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	struct bdev_zone_block_config *name_node;
 	struct spdk_bdev *bdev = NULL;

@@ -39,9 +39,9 @@
 #include "spdk/bdev.h"
 #include "spdk/bdev_module.h"
 
-int spdk_vbdev_zone_block_create(const char *bdev_name, const char *vbdev_name,
-				 uint64_t zone_capacity, uint64_t optimal_open_zones);
+int vbdev_zone_block_create(const char *bdev_name, const char *vbdev_name,
+			    uint64_t zone_capacity, uint64_t optimal_open_zones);
 
-void spdk_vbdev_zone_block_delete(const char *name, spdk_bdev_unregister_cb cb_fn, void *cb_arg);
+void vbdev_zone_block_delete(const char *name, spdk_bdev_unregister_cb cb_fn, void *cb_arg);
 
 #endif /* SPDK_VBDEV_ZONE_BLOCK_H */
