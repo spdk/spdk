@@ -91,11 +91,11 @@ static struct spdk_poller *g_acceptor_poller = NULL;
 static void nvmf_tgt_advance_state(void);
 
 static void
-_spdk_nvmf_shutdown_cb(void *arg1)
+nvmf_shutdown_cb(void *arg1)
 {
 	/* Still in initialization state, defer shutdown operation */
 	if (g_tgt_state < NVMF_TGT_RUNNING) {
-		spdk_thread_send_msg(spdk_get_thread(), _spdk_nvmf_shutdown_cb, NULL);
+		spdk_thread_send_msg(spdk_get_thread(), nvmf_shutdown_cb, NULL);
 		return;
 	} else if (g_tgt_state != NVMF_TGT_RUNNING && g_tgt_state != NVMF_TGT_ERROR) {
 		/* Already in Shutdown status, ignore the signal */
@@ -112,14 +112,14 @@ _spdk_nvmf_shutdown_cb(void *arg1)
 }
 
 static void
-spdk_nvmf_subsystem_fini(void)
+nvmf_subsystem_fini(void)
 {
-	_spdk_nvmf_shutdown_cb(NULL);
+	nvmf_shutdown_cb(NULL);
 }
 
 /* Round robin selection of poll groups */
 static struct nvmf_tgt_poll_group *
-spdk_nvmf_get_next_pg(void)
+nvmf_get_next_pg(void)
 {
 	struct nvmf_tgt_poll_group *pg;
 
@@ -133,13 +133,13 @@ spdk_nvmf_get_next_pg(void)
 }
 
 static struct nvmf_tgt_poll_group *
-spdk_nvmf_get_optimal_pg(struct spdk_nvmf_qpair *qpair)
+nvmf_get_optimal_pg(struct spdk_nvmf_qpair *qpair)
 {
 	struct nvmf_tgt_poll_group *pg, *_pg = NULL;
 	struct spdk_nvmf_poll_group *group = spdk_nvmf_get_optimal_poll_group(qpair);
 
 	if (group == NULL) {
-		_pg = spdk_nvmf_get_next_pg();
+		_pg = nvmf_get_next_pg();
 		goto end;
 	}
 
@@ -219,7 +219,7 @@ nvmf_tgt_get_pg(struct spdk_nvmf_qpair *qpair)
 				break;
 			}
 			/* Get the next available poll group for the new host */
-			pg = spdk_nvmf_get_next_pg();
+			pg = nvmf_get_next_pg();
 			new_trid->pg = pg;
 			memcpy(new_trid->host_trid.traddr, trid.traddr,
 			       SPDK_NVMF_TRADDR_MAX_LEN + 1);
@@ -227,11 +227,11 @@ nvmf_tgt_get_pg(struct spdk_nvmf_qpair *qpair)
 		}
 		break;
 	case CONNECT_SCHED_TRANSPORT_OPTIMAL_GROUP:
-		pg = spdk_nvmf_get_optimal_pg(qpair);
+		pg = nvmf_get_optimal_pg(qpair);
 		break;
 	case CONNECT_SCHED_ROUND_ROBIN:
 	default:
-		pg = spdk_nvmf_get_next_pg();
+		pg = nvmf_get_next_pg();
 		break;
 	}
 
@@ -470,8 +470,8 @@ nvmf_tgt_parse_conf_done(int status)
 static void
 nvmf_tgt_parse_conf_start(void *ctx)
 {
-	if (spdk_nvmf_parse_conf(nvmf_tgt_parse_conf_done)) {
-		SPDK_ERRLOG("spdk_nvmf_parse_conf() failed\n");
+	if (nvmf_parse_conf(nvmf_tgt_parse_conf_done)) {
+		SPDK_ERRLOG("nvmf_parse_conf() failed\n");
 		g_tgt_state = NVMF_TGT_ERROR;
 		nvmf_tgt_advance_state();
 	}
@@ -515,7 +515,7 @@ fixup_identify_ctrlr(struct spdk_nvmf_request *req)
 }
 
 static int
-spdk_nvmf_custom_identify_hdlr(struct spdk_nvmf_request *req)
+nvmf_custom_identify_hdlr(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cmd *cmd = spdk_nvmf_request_get_cmd(req);
 	struct spdk_bdev *bdev;
@@ -576,7 +576,7 @@ nvmf_tgt_advance_state(void)
 			/* Config parsed */
 			if (g_spdk_nvmf_tgt_conf->admin_passthru.identify_ctrlr) {
 				SPDK_NOTICELOG("Custom identify ctrlr handler enabled\n");
-				spdk_nvmf_set_custom_admin_cmd_hdlr(SPDK_NVME_OPC_IDENTIFY, spdk_nvmf_custom_identify_hdlr);
+				spdk_nvmf_set_custom_admin_cmd_hdlr(SPDK_NVME_OPC_IDENTIFY, nvmf_custom_identify_hdlr);
 			}
 			/* Create poll group threads, and send a message to each thread
 			 * and create a poll group.
@@ -638,7 +638,7 @@ nvmf_tgt_advance_state(void)
 }
 
 static void
-spdk_nvmf_subsystem_init(void)
+nvmf_subsystem_init(void)
 {
 	g_tgt_state = NVMF_TGT_INIT_NONE;
 	nvmf_tgt_advance_state();
@@ -657,7 +657,7 @@ get_conn_sched_string(enum spdk_nvmf_connect_sched sched)
 }
 
 static void
-spdk_nvmf_subsystem_write_config_json(struct spdk_json_write_ctx *w)
+nvmf_subsystem_write_config_json(struct spdk_json_write_ctx *w)
 {
 	spdk_json_write_array_begin(w);
 
@@ -681,9 +681,9 @@ spdk_nvmf_subsystem_write_config_json(struct spdk_json_write_ctx *w)
 
 static struct spdk_subsystem g_spdk_subsystem_nvmf = {
 	.name = "nvmf",
-	.init = spdk_nvmf_subsystem_init,
-	.fini = spdk_nvmf_subsystem_fini,
-	.write_config_json = spdk_nvmf_subsystem_write_config_json,
+	.init = nvmf_subsystem_init,
+	.fini = nvmf_subsystem_fini,
+	.write_config_json = nvmf_subsystem_write_config_json,
 };
 
 SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_nvmf)

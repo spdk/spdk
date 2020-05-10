@@ -47,7 +47,7 @@ struct spdk_nvmf_tgt_conf *g_spdk_nvmf_tgt_conf = NULL;
 uint32_t g_spdk_nvmf_tgt_max_subsystems = 0;
 
 static int
-spdk_add_nvmf_discovery_subsystem(void)
+nvmf_add_discovery_subsystem(void)
 {
 	struct spdk_nvmf_subsystem *subsystem;
 
@@ -64,7 +64,7 @@ spdk_add_nvmf_discovery_subsystem(void)
 }
 
 static void
-spdk_nvmf_read_config_file_tgt_max_subsystems(struct spdk_conf_section *sp,
+nvmf_read_config_file_tgt_max_subsystems(struct spdk_conf_section *sp,
 		int *deprecated_values)
 {
 	int tgt_max_subsystems;
@@ -102,8 +102,8 @@ spdk_nvmf_read_config_file_tgt_max_subsystems(struct spdk_conf_section *sp,
 }
 
 static int
-spdk_nvmf_read_config_file_tgt_conf(struct spdk_conf_section *sp,
-				    struct spdk_nvmf_tgt_conf *conf)
+nvmf_read_config_file_tgt_conf(struct spdk_conf_section *sp,
+			       struct spdk_nvmf_tgt_conf *conf)
 {
 	int acceptor_poll_rate;
 	const char *conn_scheduler;
@@ -143,21 +143,21 @@ spdk_nvmf_read_config_file_tgt_conf(struct spdk_conf_section *sp,
 }
 
 static int
-spdk_nvmf_parse_tgt_max_subsystems(void)
+nvmf_parse_tgt_max_subsystems(void)
 {
 	struct spdk_conf_section *sp;
 	int deprecated_values = 0;
 
 	sp = spdk_conf_find_section(NULL, "Nvmf");
 	if (sp != NULL) {
-		spdk_nvmf_read_config_file_tgt_max_subsystems(sp, &deprecated_values);
+		nvmf_read_config_file_tgt_max_subsystems(sp, &deprecated_values);
 	}
 
 	return deprecated_values;
 }
 
 static struct spdk_nvmf_tgt_conf *
-spdk_nvmf_parse_tgt_conf(void)
+nvmf_parse_tgt_conf(void)
 {
 	struct spdk_nvmf_tgt_conf *conf;
 	struct spdk_conf_section *sp;
@@ -175,7 +175,7 @@ spdk_nvmf_parse_tgt_conf(void)
 
 	sp = spdk_conf_find_section(NULL, "Nvmf");
 	if (sp != NULL) {
-		rc = spdk_nvmf_read_config_file_tgt_conf(sp, conf);
+		rc = nvmf_read_config_file_tgt_conf(sp, conf);
 		if (rc) {
 			free(conf);
 			return NULL;
@@ -186,7 +186,7 @@ spdk_nvmf_parse_tgt_conf(void)
 }
 
 static int
-spdk_nvmf_parse_nvmf_tgt(void)
+nvmf_parse_nvmf_tgt(void)
 {
 	int rc;
 	int using_deprecated_options;
@@ -196,7 +196,7 @@ spdk_nvmf_parse_nvmf_tgt(void)
 	};
 
 	if (!g_spdk_nvmf_tgt_max_subsystems) {
-		using_deprecated_options = spdk_nvmf_parse_tgt_max_subsystems();
+		using_deprecated_options = nvmf_parse_tgt_max_subsystems();
 		if (using_deprecated_options < 0) {
 			SPDK_ERRLOG("Deprecated options detected for the NVMe-oF target.\n"
 				    "The following options are no longer controlled by the target\n"
@@ -208,9 +208,9 @@ spdk_nvmf_parse_nvmf_tgt(void)
 	}
 
 	if (!g_spdk_nvmf_tgt_conf) {
-		g_spdk_nvmf_tgt_conf = spdk_nvmf_parse_tgt_conf();
+		g_spdk_nvmf_tgt_conf = nvmf_parse_tgt_conf();
 		if (!g_spdk_nvmf_tgt_conf) {
-			SPDK_ERRLOG("spdk_nvmf_parse_tgt_conf() failed\n");
+			SPDK_ERRLOG("nvmf_parse_tgt_conf() failed\n");
 			return -1;
 		}
 	}
@@ -225,9 +225,9 @@ spdk_nvmf_parse_nvmf_tgt(void)
 		return -1;
 	}
 
-	rc = spdk_add_nvmf_discovery_subsystem();
+	rc = nvmf_add_discovery_subsystem();
 	if (rc != 0) {
-		SPDK_ERRLOG("spdk_add_nvmf_discovery_subsystem failed\n");
+		SPDK_ERRLOG("nvmf_add_discovery_subsystem failed\n");
 		return rc;
 	}
 
@@ -235,8 +235,8 @@ spdk_nvmf_parse_nvmf_tgt(void)
 }
 
 static int
-spdk_nvmf_tgt_parse_listen_ip_addr(char *address,
-				   struct spdk_nvme_transport_id *trid)
+nvmf_tgt_parse_listen_ip_addr(char *address,
+			      struct spdk_nvme_transport_id *trid)
 {
 	char *host;
 	char *port;
@@ -261,8 +261,8 @@ spdk_nvmf_tgt_parse_listen_ip_addr(char *address,
 }
 
 static int
-spdk_nvmf_tgt_parse_listen_fc_addr(const char *address,
-				   struct spdk_nvme_transport_id *trid)
+nvmf_tgt_parse_listen_fc_addr(const char *address,
+			      struct spdk_nvme_transport_id *trid)
 {
 	/* transport address format and requirements,
 	 * "nn-0xWWNN:pn-0xWWPN" - size equals 43 bytes and is required to
@@ -282,7 +282,7 @@ spdk_nvmf_tgt_parse_listen_fc_addr(const char *address,
 }
 
 static void
-spdk_nvmf_tgt_listen_done(void *cb_arg, int status)
+nvmf_tgt_listen_done(void *cb_arg, int status)
 {
 	/* TODO: Config parsing should wait for this operation to finish. */
 
@@ -292,7 +292,7 @@ spdk_nvmf_tgt_listen_done(void *cb_arg, int status)
 }
 
 static int
-spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
+nvmf_parse_subsystem(struct spdk_conf_section *sp)
 {
 	const char *nqn, *mode;
 	size_t i;
@@ -468,9 +468,9 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 
 		if (trid.trtype == SPDK_NVME_TRANSPORT_RDMA ||
 		    trid.trtype == SPDK_NVME_TRANSPORT_TCP) {
-			ret = spdk_nvmf_tgt_parse_listen_ip_addr(address_dup, &trid);
+			ret = nvmf_tgt_parse_listen_ip_addr(address_dup, &trid);
 		} else if (trid.trtype == SPDK_NVME_TRANSPORT_FC) {
-			ret = spdk_nvmf_tgt_parse_listen_fc_addr(address_dup, &trid);
+			ret = nvmf_tgt_parse_listen_fc_addr(address_dup, &trid);
 		}
 
 		free(address_dup);
@@ -483,7 +483,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 			SPDK_ERRLOG("Failed to listen on transport address\n");
 		}
 
-		spdk_nvmf_subsystem_add_listener(subsystem, &trid, spdk_nvmf_tgt_listen_done, NULL);
+		spdk_nvmf_subsystem_add_listener(subsystem, &trid, nvmf_tgt_listen_done, NULL);
 		allow_any_listener = false;
 	}
 
@@ -508,7 +508,7 @@ done:
 }
 
 static int
-spdk_nvmf_parse_subsystems(void)
+nvmf_parse_subsystems(void)
 {
 	int rc = 0;
 	struct spdk_conf_section *sp;
@@ -516,7 +516,7 @@ spdk_nvmf_parse_subsystems(void)
 	sp = spdk_conf_first_section(NULL);
 	while (sp != NULL) {
 		if (spdk_conf_section_match_prefix(sp, "Subsystem")) {
-			rc = spdk_nvmf_parse_subsystem(sp);
+			rc = nvmf_parse_subsystem(sp);
 			if (rc < 0) {
 				return -1;
 			}
@@ -526,17 +526,17 @@ spdk_nvmf_parse_subsystems(void)
 	return 0;
 }
 
-struct spdk_nvmf_parse_transport_ctx {
+struct nvmf_parse_transport_ctx {
 	struct spdk_conf_section *sp;
-	spdk_nvmf_parse_conf_done_fn cb_fn;
+	nvmf_parse_conf_done_fn cb_fn;
 };
 
-static void spdk_nvmf_parse_transport(struct spdk_nvmf_parse_transport_ctx *ctx);
+static void nvmf_parse_transport(struct nvmf_parse_transport_ctx *ctx);
 
 static void
-spdk_nvmf_tgt_add_transport_done(void *cb_arg, int status)
+nvmf_tgt_add_transport_done(void *cb_arg, int status)
 {
-	struct spdk_nvmf_parse_transport_ctx *ctx = cb_arg;
+	struct nvmf_parse_transport_ctx *ctx = cb_arg;
 	int rc;
 
 	if (status < 0) {
@@ -550,21 +550,21 @@ spdk_nvmf_tgt_add_transport_done(void *cb_arg, int status)
 	ctx->sp = spdk_conf_next_section(ctx->sp);
 	while (ctx->sp) {
 		if (spdk_conf_section_match_prefix(ctx->sp, "Transport")) {
-			spdk_nvmf_parse_transport(ctx);
+			nvmf_parse_transport(ctx);
 			return;
 		}
 		ctx->sp = spdk_conf_next_section(ctx->sp);
 	}
 
 	/* done with transports, parse Subsystem sections */
-	rc = spdk_nvmf_parse_subsystems();
+	rc = nvmf_parse_subsystems();
 
 	ctx->cb_fn(rc);
 	free(ctx);
 }
 
 static void
-spdk_nvmf_parse_transport(struct spdk_nvmf_parse_transport_ctx *ctx)
+nvmf_parse_transport(struct nvmf_parse_transport_ctx *ctx)
 {
 	const char *type;
 	struct spdk_nvmf_transport_opts opts = { 0 };
@@ -653,7 +653,7 @@ spdk_nvmf_parse_transport(struct spdk_nvmf_parse_transport_ctx *ctx)
 
 	transport = spdk_nvmf_transport_create(type, &opts);
 	if (transport) {
-		spdk_nvmf_tgt_add_transport(g_spdk_nvmf_tgt, transport, spdk_nvmf_tgt_add_transport_done, ctx);
+		spdk_nvmf_tgt_add_transport(g_spdk_nvmf_tgt, transport, nvmf_tgt_add_transport_done, ctx);
 	} else {
 		goto error_out;
 	}
@@ -667,11 +667,11 @@ error_out:
 }
 
 static int
-spdk_nvmf_parse_transports(spdk_nvmf_parse_conf_done_fn cb_fn)
+nvmf_parse_transports(nvmf_parse_conf_done_fn cb_fn)
 {
-	struct spdk_nvmf_parse_transport_ctx *ctx;
+	struct nvmf_parse_transport_ctx *ctx;
 
-	ctx = calloc(1, sizeof(struct spdk_nvmf_parse_transport_ctx));
+	ctx = calloc(1, sizeof(struct nvmf_parse_transport_ctx));
 	if (!ctx) {
 		SPDK_ERRLOG("Failed alloc of context memory for parse transports\n");
 		return -ENOMEM;
@@ -688,7 +688,7 @@ spdk_nvmf_parse_transports(spdk_nvmf_parse_conf_done_fn cb_fn)
 
 	while (ctx->sp != NULL) {
 		if (spdk_conf_section_match_prefix(ctx->sp, "Transport")) {
-			spdk_nvmf_parse_transport(ctx);
+			nvmf_parse_transport(ctx);
 			return 0;
 		}
 		ctx->sp = spdk_conf_next_section(ctx->sp);
@@ -701,7 +701,7 @@ spdk_nvmf_parse_transports(spdk_nvmf_parse_conf_done_fn cb_fn)
 }
 
 int
-spdk_nvmf_parse_conf(spdk_nvmf_parse_conf_done_fn cb_fn)
+nvmf_parse_conf(nvmf_parse_conf_done_fn cb_fn)
 {
 	int rc;
 
@@ -711,13 +711,13 @@ spdk_nvmf_parse_conf(spdk_nvmf_parse_conf_done_fn cb_fn)
 	}
 
 	/* NVMf section */
-	rc = spdk_nvmf_parse_nvmf_tgt();
+	rc = nvmf_parse_nvmf_tgt();
 	if (rc < 0) {
 		return rc;
 	}
 
 	/* Transport sections */
-	rc = spdk_nvmf_parse_transports(cb_fn);
+	rc = nvmf_parse_transports(cb_fn);
 	if (rc < 0) {
 		return rc;
 	}
