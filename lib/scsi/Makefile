@@ -36,7 +36,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 SO_VER := 3
 SO_MINOR := 0
-SO_SUFFIX := $(SO_VER).$(SO_MINOR)
 
 C_SRCS = dev.c lun.c port.c scsi.c scsi_bdev.c scsi_pr.c scsi_rpc.c task.c
 LIBNAME = scsi

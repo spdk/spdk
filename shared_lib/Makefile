@@ -38,7 +38,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 SO_VER := 2
 SO_MINOR := 0
-SO_SUFFIX := $(SO_VER).$(SO_MINOR)
 
 # Build combined libspdk.so shared library
 SHARED_LINKED_LIB := $(SPDK_ROOT_DIR)/build/lib/libspdk.so

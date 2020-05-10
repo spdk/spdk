@@ -36,7 +36,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 SO_VER := 2
 SO_MINOR := 0
-SO_SUFFIX := $(SO_VER).$(SO_MINOR)
 
 C_SRCS = app_rpc.c subsystem_rpc.c
 LIBNAME = app_rpc

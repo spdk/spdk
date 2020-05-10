@@ -38,6 +38,16 @@ ifeq ($(SPDK_MAP_FILE),)
 $(error SPDK_MAP_FILE is not set for lib $(LIBNAME))
 endif
 
+ifeq ($(SO_VER),)
+$(error SO major version is not set for lib $(LIBNAME))
+endif
+
+ifeq ($(SO_MINOR),)
+$(error SO minor version is not set for lib $(LIBNAME))
+endif
+
+
+SO_SUFFIX := $(SO_VER).$(SO_MINOR)
 LIB := $(call spdk_lib_list_to_static_libs,$(LIBNAME))
 SHARED_LINKED_LIB := $(LIB:.a=.so)
 SHARED_REALNAME_LIB := $(SHARED_LINKED_LIB:.so=.so.$(SO_SUFFIX))

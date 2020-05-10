@@ -36,7 +36,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 SO_VER := 2
 SO_MINOR := 3
-SO_SUFFIX := $(SO_VER).$(SO_MINOR)
 
 LIBNAME = accel
 C_SRCS = accel_engine.c
