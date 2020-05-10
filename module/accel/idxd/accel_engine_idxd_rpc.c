@@ -48,8 +48,8 @@ static const struct spdk_json_object_decoder rpc_idxd_scan_accel_engine_decoder[
 };
 
 static void
-spdk_rpc_idxd_scan_accel_engine(struct spdk_jsonrpc_request *request,
-				const struct spdk_json_val *params)
+rpc_idxd_scan_accel_engine(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
 {
 	struct rpc_idxd_scan_accel_engine req = {};
 	struct spdk_json_write_ctx *w;
@@ -72,4 +72,4 @@ spdk_rpc_idxd_scan_accel_engine(struct spdk_jsonrpc_request *request,
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("idxd_scan_accel_engine", spdk_rpc_idxd_scan_accel_engine, SPDK_RPC_STARTUP)
+SPDK_RPC_REGISTER("idxd_scan_accel_engine", rpc_idxd_scan_accel_engine, SPDK_RPC_STARTUP)
