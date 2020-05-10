@@ -663,7 +663,7 @@ fs_load_cb(__attribute__((unused)) void *ctx,
 }
 
 static void
-spdk_rocksdb_run(__attribute__((unused)) void *arg1)
+rocksdb_run(__attribute__((unused)) void *arg1)
 {
 	struct spdk_bdev *bdev;
 
@@ -691,7 +691,7 @@ fs_unload_cb(__attribute__((unused)) void *ctx,
 }
 
 static void
-spdk_rocksdb_shutdown(void)
+rocksdb_shutdown(void)
 {
 	if (g_fs != NULL) {
 		spdk_fs_unload(g_fs, fs_unload_cb, NULL);
@@ -706,7 +706,7 @@ initialize_spdk(void *arg)
 	struct spdk_app_opts *opts = (struct spdk_app_opts *)arg;
 	int rc;
 
-	rc = spdk_app_start(opts, spdk_rocksdb_run, NULL);
+	rc = spdk_app_start(opts, rocksdb_run, NULL);
 	/*
 	 * TODO:  Revisit for case of internal failure of
 	 * spdk_app_start(), itself.  At this time, it's known
@@ -734,7 +734,7 @@ SpdkEnv::SpdkEnv(Env *base_env, const std::string &dir, const std::string &conf,
 	spdk_app_opts_init(opts);
 	opts->name = "rocksdb";
 	opts->config_file = mConfig.c_str();
-	opts->shutdown_cb = spdk_rocksdb_shutdown;
+	opts->shutdown_cb = rocksdb_shutdown;
 
 	spdk_fs_set_cache_size(cache_size_in_mb);
 	g_bdev_name = mBdev;
@@ -744,7 +744,7 @@ SpdkEnv::SpdkEnv(Env *base_env, const std::string &dir, const std::string &conf,
 		;
 	if (g_spdk_start_failure) {
 		delete opts;
-		throw SpdkAppStartException("spdk_app_start() unable to start spdk_rocksdb_run()");
+		throw SpdkAppStartException("spdk_app_start() unable to start rocksdb_run()");
 	}
 
 	SpdkInitializeThread();

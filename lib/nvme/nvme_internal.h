@@ -1150,7 +1150,7 @@ int	nvme_robust_mutex_init_recursive_shared(pthread_mutex_t *mtx);
 
 bool	nvme_completion_is_retry(const struct spdk_nvme_cpl *cpl);
 
-struct spdk_nvme_ctrlr *spdk_nvme_get_ctrlr_by_trid_unsafe(
+struct spdk_nvme_ctrlr *nvme_get_ctrlr_by_trid_unsafe(
 	const struct spdk_nvme_transport_id *trid);
 
 const struct spdk_nvme_transport *nvme_get_transport(const char *transport_name);

@@ -58,8 +58,8 @@ static const struct spdk_json_object_decoder rpc_ip_address_decoders[] = {
 };
 
 static void
-spdk_rpc_net_interface_add_ip_address(struct spdk_jsonrpc_request *request,
-				      const struct spdk_json_val *params)
+rpc_net_interface_add_ip_address(struct spdk_jsonrpc_request *request,
+				 const struct spdk_json_val *params)
 {
 	struct rpc_ip_address req = {};
 	struct spdk_json_write_ctx *w;
@@ -100,13 +100,13 @@ spdk_rpc_net_interface_add_ip_address(struct spdk_jsonrpc_request *request,
 invalid:
 	free_rpc_ip_address(&req);
 }
-SPDK_RPC_REGISTER("net_interface_add_ip_address", spdk_rpc_net_interface_add_ip_address,
+SPDK_RPC_REGISTER("net_interface_add_ip_address", rpc_net_interface_add_ip_address,
 		  SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(net_interface_add_ip_address, add_ip_address)
 
 static void
-spdk_rpc_net_interface_delete_ip_address(struct spdk_jsonrpc_request *request,
-		const struct spdk_json_val *params)
+rpc_net_interface_delete_ip_address(struct spdk_jsonrpc_request *request,
+				    const struct spdk_json_val *params)
 {
 	struct rpc_ip_address req = {};
 	struct spdk_json_write_ctx *w;
@@ -147,13 +147,13 @@ spdk_rpc_net_interface_delete_ip_address(struct spdk_jsonrpc_request *request,
 invalid:
 	free_rpc_ip_address(&req);
 }
-SPDK_RPC_REGISTER("net_interface_delete_ip_address", spdk_rpc_net_interface_delete_ip_address,
+SPDK_RPC_REGISTER("net_interface_delete_ip_address", rpc_net_interface_delete_ip_address,
 		  SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(net_interface_delete_ip_address, delete_ip_address)
 
 static void
-spdk_rpc_net_get_interfaces(struct spdk_jsonrpc_request *request,
-			    const struct spdk_json_val *params)
+rpc_net_get_interfaces(struct spdk_jsonrpc_request *request,
+		       const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
 	TAILQ_HEAD(, spdk_interface) *interface_head = interface_get_list();
@@ -192,7 +192,7 @@ spdk_rpc_net_get_interfaces(struct spdk_jsonrpc_request *request,
 
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("net_get_interfaces", spdk_rpc_net_get_interfaces, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("net_get_interfaces", rpc_net_get_interfaces, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(net_get_interfaces, get_interfaces)
 
 SPDK_LOG_REGISTER_COMPONENT("net", SPDK_LOG_NET)

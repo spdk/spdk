@@ -123,7 +123,7 @@ struct nvme_tcp_req {
 	TAILQ_ENTRY(nvme_tcp_req)		link;
 };
 
-static void spdk_nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req);
+static void nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req);
 
 static inline struct nvme_tcp_qpair *
 nvme_tcp_qpair(struct spdk_nvme_qpair *qpair)
@@ -1082,7 +1082,7 @@ nvme_tcp_qpair_h2c_data_send_complete(void *cb_arg)
 	assert(tcp_req != NULL);
 
 	if (tcp_req->r2tl_remain) {
-		spdk_nvme_tcp_send_h2c_data(tcp_req);
+		nvme_tcp_send_h2c_data(tcp_req);
 	} else {
 		assert(tcp_req->active_r2ts > 0);
 		tcp_req->active_r2ts--;
@@ -1091,7 +1091,7 @@ nvme_tcp_qpair_h2c_data_send_complete(void *cb_arg)
 }
 
 static void
-spdk_nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req)
+nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req)
 {
 	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(tcp_req->req->qpair);
 	struct nvme_tcp_pdu *rsp_pdu;
@@ -1200,7 +1200,7 @@ nvme_tcp_r2t_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu *pdu)
 	tcp_req->r2tl_remain = r2t->r2tl;
 	nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
 
-	spdk_nvme_tcp_send_h2c_data(tcp_req);
+	nvme_tcp_send_h2c_data(tcp_req);
 	return;
 
 end:

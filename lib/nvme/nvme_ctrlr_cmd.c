@@ -565,7 +565,7 @@ spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page
 }
 
 static void
-spdk_nvme_ctrlr_cmd_abort_cpl(void *ctx, const struct spdk_nvme_cpl *cpl)
+nvme_ctrlr_cmd_abort_cpl(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
 	struct nvme_request	*req, *next, *tmp;
 	struct spdk_nvme_ctrlr	*ctrlr;
@@ -612,7 +612,7 @@ spdk_nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair 
 	}
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
-	req = nvme_allocate_request_null(ctrlr->adminq, spdk_nvme_ctrlr_cmd_abort_cpl, NULL);
+	req = nvme_allocate_request_null(ctrlr->adminq, nvme_ctrlr_cmd_abort_cpl, NULL);
 	if (req == NULL) {
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return -ENOMEM;

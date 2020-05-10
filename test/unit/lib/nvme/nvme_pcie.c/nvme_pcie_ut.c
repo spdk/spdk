@@ -145,7 +145,7 @@ DEFINE_STUB(spdk_pci_device_get_addr, struct spdk_pci_addr, (struct spdk_pci_dev
 DEFINE_STUB(nvme_ctrlr_probe, int, (const struct spdk_nvme_transport_id *trid,
 				    struct spdk_nvme_probe_ctx *probe_ctx, void *devhandle), 0);
 DEFINE_STUB(spdk_pci_device_is_removed, bool, (struct spdk_pci_device *dev), false);
-DEFINE_STUB(spdk_nvme_get_ctrlr_by_trid_unsafe, struct spdk_nvme_ctrlr *,
+DEFINE_STUB(nvme_get_ctrlr_by_trid_unsafe, struct spdk_nvme_ctrlr *,
 	    (const struct spdk_nvme_transport_id *trid), NULL);
 DEFINE_STUB(spdk_nvme_ctrlr_get_regs_csts, union spdk_nvme_csts_register,
 	    (struct spdk_nvme_ctrlr *ctrlr), {});
@@ -343,14 +343,14 @@ test_nvme_pcie_hotplug_monitor(void)
 	CU_ASSERT(STAILQ_EMPTY(&g_uevents));
 	STAILQ_INSERT_TAIL(&g_uevents, &entry, link);
 
-	MOCK_SET(spdk_nvme_get_ctrlr_by_trid_unsafe, &pctrlr.ctrlr);
+	MOCK_SET(nvme_get_ctrlr_by_trid_unsafe, &pctrlr.ctrlr);
 
 	_nvme_pcie_hotplug_monitor(&test_nvme_probe_ctx);
 
 	CU_ASSERT(STAILQ_EMPTY(&g_uevents));
 	CU_ASSERT(pctrlr.ctrlr.is_failed == true);
 	pctrlr.ctrlr.is_failed = false;
-	MOCK_CLEAR(spdk_nvme_get_ctrlr_by_trid_unsafe);
+	MOCK_CLEAR(nvme_get_ctrlr_by_trid_unsafe);
 
 	/* Case 4: SPDK_NVME_UEVENT_REMOVE/ NVME_VFIO */
 	entry.uevent.subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_VFIO;
@@ -358,14 +358,14 @@ test_nvme_pcie_hotplug_monitor(void)
 	snprintf(entry.uevent.traddr, sizeof(entry.uevent.traddr), "0000:05:00.0");
 	CU_ASSERT(STAILQ_EMPTY(&g_uevents));
 	STAILQ_INSERT_TAIL(&g_uevents, &entry, link);
-	MOCK_SET(spdk_nvme_get_ctrlr_by_trid_unsafe, &pctrlr.ctrlr);
+	MOCK_SET(nvme_get_ctrlr_by_trid_unsafe, &pctrlr.ctrlr);
 
 	_nvme_pcie_hotplug_monitor(&test_nvme_probe_ctx);
 
 	CU_ASSERT(STAILQ_EMPTY(&g_uevents));
 	CU_ASSERT(pctrlr.ctrlr.is_failed == true);
 	pctrlr.ctrlr.is_failed = false;
-	MOCK_CLEAR(spdk_nvme_get_ctrlr_by_trid_unsafe);
+	MOCK_CLEAR(nvme_get_ctrlr_by_trid_unsafe);
 
 	/* Case 5:  Removed device detected in another process  */
 	pctrlr.ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;

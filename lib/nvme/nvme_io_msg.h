@@ -77,7 +77,7 @@ int nvme_io_msg_send(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, spdk_nvme_io_
  *
  * \return number of processed external IO messages.
  */
-int spdk_nvme_io_msg_process(struct spdk_nvme_ctrlr *ctrlr);
+int nvme_io_msg_process(struct spdk_nvme_ctrlr *ctrlr);
 
 int nvme_io_msg_ctrlr_register(struct spdk_nvme_ctrlr *ctrlr,
 			       struct nvme_io_msg_producer *io_msg_producer);

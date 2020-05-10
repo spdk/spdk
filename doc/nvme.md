@@ -317,7 +317,7 @@ Where X is unique SPDK NVMe controller index and Y is namespace id.
 
 Requests from CUSE are handled by pthreads when controller and namespaces are created.
 Those pass the I/O or admin commands via a ring to a thread that processes them using
-spdk_nvme_io_msg_process().
+nvme_io_msg_process().
 
 Ioctls that request information attained when attaching NVMe controller receive an
 immediate response, without passing them through the ring.

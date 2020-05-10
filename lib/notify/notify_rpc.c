@@ -48,8 +48,8 @@ notify_get_types_cb(const struct spdk_notify_type *type, void *ctx)
 }
 
 static void
-spdk_rpc_notify_get_types(struct spdk_jsonrpc_request *request,
-			  const struct spdk_json_val *params)
+rpc_notify_get_types(struct spdk_jsonrpc_request *request,
+		     const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
 
@@ -66,7 +66,7 @@ spdk_rpc_notify_get_types(struct spdk_jsonrpc_request *request,
 
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("notify_get_types", spdk_rpc_notify_get_types, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("notify_get_types", rpc_notify_get_types, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(notify_get_types, get_notification_types)
 
 struct rpc_notify_get_notifications {
@@ -96,8 +96,8 @@ notify_get_notifications_cb(uint64_t id, const struct spdk_notify_event *ev, voi
 }
 
 static void
-spdk_rpc_notify_get_notifications(struct spdk_jsonrpc_request *request,
-				  const struct spdk_json_val *params)
+rpc_notify_get_notifications(struct spdk_jsonrpc_request *request,
+			     const struct spdk_json_val *params)
 {
 	struct rpc_notify_get_notifications req = {0, UINT64_MAX};
 
@@ -120,7 +120,7 @@ spdk_rpc_notify_get_notifications(struct spdk_jsonrpc_request *request,
 
 	spdk_jsonrpc_end_result(request, req.w);
 }
-SPDK_RPC_REGISTER("notify_get_notifications", spdk_rpc_notify_get_notifications, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("notify_get_notifications", rpc_notify_get_notifications, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(notify_get_notifications, get_notifications)
 
 SPDK_LOG_REGISTER_COMPONENT("notify_rpc", SPDK_NOTIFY_RPC)

@@ -2882,7 +2882,7 @@ spdk_nvme_ctrlr_process_admin_completions(struct spdk_nvme_ctrlr *ctrlr)
 		nvme_ctrlr_keep_alive(ctrlr);
 	}
 
-	rc = spdk_nvme_io_msg_process(ctrlr);
+	rc = nvme_io_msg_process(ctrlr);
 	if (rc < 0) {
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return rc;
@@ -2945,7 +2945,7 @@ spdk_nvme_ctrlr_get_num_ns(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static int32_t
-spdk_nvme_ctrlr_active_ns_idx(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
+nvme_ctrlr_active_ns_idx(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
 	int32_t result = -1;
 
@@ -2978,7 +2978,7 @@ spdk_nvme_ctrlr_active_ns_idx(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 bool
 spdk_nvme_ctrlr_is_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
-	return spdk_nvme_ctrlr_active_ns_idx(ctrlr, nsid) != -1;
+	return nvme_ctrlr_active_ns_idx(ctrlr, nsid) != -1;
 }
 
 uint32_t
@@ -2990,7 +2990,7 @@ spdk_nvme_ctrlr_get_first_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 uint32_t
 spdk_nvme_ctrlr_get_next_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t prev_nsid)
 {
-	int32_t nsid_idx = spdk_nvme_ctrlr_active_ns_idx(ctrlr, prev_nsid);
+	int32_t nsid_idx = nvme_ctrlr_active_ns_idx(ctrlr, prev_nsid);
 	if (ctrlr->active_ns_list && nsid_idx >= 0 && (uint32_t)nsid_idx < ctrlr->num_ns - 1) {
 		return ctrlr->active_ns_list[nsid_idx + 1];
 	}

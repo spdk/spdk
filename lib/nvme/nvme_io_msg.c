@@ -75,7 +75,7 @@ nvme_io_msg_send(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, spdk_nvme_io_msg_
 }
 
 int
-spdk_nvme_io_msg_process(struct spdk_nvme_ctrlr *ctrlr)
+nvme_io_msg_process(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int i;
 	int count;

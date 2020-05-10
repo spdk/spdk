@@ -141,7 +141,7 @@ nvme_transport_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 
 	if (direct_connect == true && probe_ctx->probe_cb) {
 		nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
-		ctrlr = spdk_nvme_get_ctrlr_by_trid(&probe_ctx->trid);
+		ctrlr = nvme_get_ctrlr_by_trid(&probe_ctx->trid);
 		nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 		probe_ctx->probe_cb(probe_ctx->cb_ctx, &probe_ctx->trid, &ctrlr->opts);
 	}
@@ -788,21 +788,21 @@ test_nvme_ctrlr_probe(void)
 	/* test when probe_cb returns false */
 
 	MOCK_SET(dummy_probe_cb, false);
-	spdk_nvme_probe_ctx_init(&probe_ctx, &trid, cb_ctx, dummy_probe_cb, NULL, NULL);
+	nvme_probe_ctx_init(&probe_ctx, &trid, cb_ctx, dummy_probe_cb, NULL, NULL);
 	rc = nvme_ctrlr_probe(&trid, &probe_ctx, devhandle);
 	CU_ASSERT(rc == 1);
 
 	/* probe_cb returns true but we can't construct a ctrl */
 	MOCK_SET(dummy_probe_cb, true);
 	MOCK_SET(nvme_transport_ctrlr_construct, NULL);
-	spdk_nvme_probe_ctx_init(&probe_ctx, &trid, cb_ctx, dummy_probe_cb, NULL, NULL);
+	nvme_probe_ctx_init(&probe_ctx, &trid, cb_ctx, dummy_probe_cb, NULL, NULL);
 	rc = nvme_ctrlr_probe(&trid, &probe_ctx, devhandle);
 	CU_ASSERT(rc == -1);
 
 	/* happy path */
 	MOCK_SET(dummy_probe_cb, true);
 	MOCK_SET(nvme_transport_ctrlr_construct, &ctrlr);
-	spdk_nvme_probe_ctx_init(&probe_ctx, &trid, cb_ctx, dummy_probe_cb, NULL, NULL);
+	nvme_probe_ctx_init(&probe_ctx, &trid, cb_ctx, dummy_probe_cb, NULL, NULL);
 	rc = nvme_ctrlr_probe(&trid, &probe_ctx, devhandle);
 	CU_ASSERT(rc == 0);
 	dummy = TAILQ_FIRST(&probe_ctx.init_ctrlrs);
@@ -1315,8 +1315,8 @@ test_nvme_ctrlr_probe_internal(void)
 	ut_test_probe_internal = true;
 	MOCK_SET(dummy_probe_cb, true);
 	trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
-	spdk_nvme_probe_ctx_init(probe_ctx, &trid, NULL, dummy_probe_cb, NULL, NULL);
-	rc = spdk_nvme_probe_internal(probe_ctx, false);
+	nvme_probe_ctx_init(probe_ctx, &trid, NULL, dummy_probe_cb, NULL, NULL);
+	rc = nvme_probe_internal(probe_ctx, false);
 	CU_ASSERT(rc < 0);
 	CU_ASSERT(TAILQ_EMPTY(&probe_ctx->init_ctrlrs));
 
