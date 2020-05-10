@@ -1,0 +1,10 @@
+{
+	global:
+
+	# public functions
+	spdk_bdev_create_bs_dev;
+	spdk_bdev_create_bs_dev_from_desc;
+	spdk_bs_bdev_claim;
+
+	local: *;
+};

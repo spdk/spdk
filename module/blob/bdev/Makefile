@@ -41,4 +41,6 @@ SO_SUFFIX := $(SO_VER).$(SO_MINOR)
 C_SRCS = blob_bdev.c
 LIBNAME = blob_bdev
 
+SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_blob_bdev.map)
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
