@@ -38,15 +38,15 @@
 
 #include "spdk/bdev.h"
 
-void spdk_bdev_rbd_free_config(char **config);
-char **spdk_bdev_rbd_dup_config(const char *const *config);
+void bdev_rbd_free_config(char **config);
+char **bdev_rbd_dup_config(const char *const *config);
 
 typedef void (*spdk_delete_rbd_complete)(void *cb_arg, int bdeverrno);
 
-int spdk_bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *user_id,
-			 const char *pool_name,
-			 const char *const *config,
-			 const char *rbd_name, uint32_t block_size);
+int bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *user_id,
+		    const char *pool_name,
+		    const char *const *config,
+		    const char *rbd_name, uint32_t block_size);
 /**
  * Delete rbd bdev.
  *
@@ -54,8 +54,8 @@ int spdk_bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *
  * \param cb_fn Function to call after deletion.
  * \param cb_arg Argument to pass to cb_fn.
  */
-void spdk_bdev_rbd_delete(struct spdk_bdev *bdev, spdk_delete_rbd_complete cb_fn,
-			  void *cb_arg);
+void bdev_rbd_delete(struct spdk_bdev *bdev, spdk_delete_rbd_complete cb_fn,
+		     void *cb_arg);
 
 /**
  * Resize rbd bdev.
@@ -63,6 +63,6 @@ void spdk_bdev_rbd_delete(struct spdk_bdev *bdev, spdk_delete_rbd_complete cb_fn
  * \param bdev Pointer to rbd bdev.
  * \param new_size_in_mb The new size in MiB for this bdev.
  */
-int spdk_bdev_rbd_resize(struct spdk_bdev *bdev, const uint64_t new_size_in_mb);
+int bdev_rbd_resize(struct spdk_bdev *bdev, const uint64_t new_size_in_mb);
 
 #endif /* SPDK_BDEV_RBD_H */

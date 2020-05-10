@@ -53,11 +53,11 @@ free_rpc_create_rbd(struct rpc_create_rbd *req)
 	free(req->user_id);
 	free(req->pool_name);
 	free(req->rbd_name);
-	spdk_bdev_rbd_free_config(req->config);
+	bdev_rbd_free_config(req->config);
 }
 
 static int
-spdk_bdev_rbd_decode_config(const struct spdk_json_val *values, void *out)
+bdev_rbd_decode_config(const struct spdk_json_val *values, void *out)
 {
 	char ***map = out;
 	char **entry;
@@ -87,7 +87,7 @@ spdk_bdev_rbd_decode_config(const struct spdk_json_val *values, void *out)
 		/* Here we catch errors like invalid types. */
 		if (!(entry[0] = spdk_json_strdup(name)) ||
 		    !(entry[1] = spdk_json_strdup(v))) {
-			spdk_bdev_rbd_free_config(*map);
+			bdev_rbd_free_config(*map);
 			*map = NULL;
 			return -1;
 		}
@@ -104,12 +104,12 @@ static const struct spdk_json_object_decoder rpc_create_rbd_decoders[] = {
 	{"pool_name", offsetof(struct rpc_create_rbd, pool_name), spdk_json_decode_string},
 	{"rbd_name", offsetof(struct rpc_create_rbd, rbd_name), spdk_json_decode_string},
 	{"block_size", offsetof(struct rpc_create_rbd, block_size), spdk_json_decode_uint32},
-	{"config", offsetof(struct rpc_create_rbd, config), spdk_bdev_rbd_decode_config, true}
+	{"config", offsetof(struct rpc_create_rbd, config), bdev_rbd_decode_config, true}
 };
 
 static void
-spdk_rpc_bdev_rbd_create(struct spdk_jsonrpc_request *request,
-			 const struct spdk_json_val *params)
+rpc_bdev_rbd_create(struct spdk_jsonrpc_request *request,
+		    const struct spdk_json_val *params)
 {
 	struct rpc_create_rbd req = {};
 	struct spdk_json_write_ctx *w;
@@ -125,10 +125,10 @@ spdk_rpc_bdev_rbd_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	rc = spdk_bdev_rbd_create(&bdev, req.name, req.user_id, req.pool_name,
-				  (const char *const *)req.config,
-				  req.rbd_name,
-				  req.block_size);
+	rc = bdev_rbd_create(&bdev, req.name, req.user_id, req.pool_name,
+			     (const char *const *)req.config,
+			     req.rbd_name,
+			     req.block_size);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;
@@ -141,7 +141,7 @@ spdk_rpc_bdev_rbd_create(struct spdk_jsonrpc_request *request,
 cleanup:
 	free_rpc_create_rbd(&req);
 }
-SPDK_RPC_REGISTER("bdev_rbd_create", spdk_rpc_bdev_rbd_create, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_rbd_create", rpc_bdev_rbd_create, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_rbd_create, construct_rbd_bdev)
 
 struct rpc_bdev_rbd_delete {
@@ -159,7 +159,7 @@ static const struct spdk_json_object_decoder rpc_bdev_rbd_delete_decoders[] = {
 };
 
 static void
-_spdk_rpc_bdev_rbd_delete_cb(void *cb_arg, int bdeverrno)
+_rpc_bdev_rbd_delete_cb(void *cb_arg, int bdeverrno)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
 	struct spdk_json_write_ctx *w;
@@ -170,8 +170,8 @@ _spdk_rpc_bdev_rbd_delete_cb(void *cb_arg, int bdeverrno)
 }
 
 static void
-spdk_rpc_bdev_rbd_delete(struct spdk_jsonrpc_request *request,
-			 const struct spdk_json_val *params)
+rpc_bdev_rbd_delete(struct spdk_jsonrpc_request *request,
+		    const struct spdk_json_val *params)
 {
 	struct rpc_bdev_rbd_delete req = {NULL};
 	struct spdk_bdev *bdev;
@@ -190,12 +190,12 @@ spdk_rpc_bdev_rbd_delete(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	spdk_bdev_rbd_delete(bdev, _spdk_rpc_bdev_rbd_delete_cb, request);
+	bdev_rbd_delete(bdev, _rpc_bdev_rbd_delete_cb, request);
 
 cleanup:
 	free_rpc_bdev_rbd_delete(&req);
 }
-SPDK_RPC_REGISTER("bdev_rbd_delete", spdk_rpc_bdev_rbd_delete, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_rbd_delete", rpc_bdev_rbd_delete, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_rbd_delete, delete_rbd_bdev)
 
 struct rpc_bdev_rbd_resize {
@@ -215,8 +215,8 @@ free_rpc_bdev_rbd_resize(struct rpc_bdev_rbd_resize *req)
 }
 
 static void
-spdk_rpc_bdev_rbd_resize(struct spdk_jsonrpc_request *request,
-			 const struct spdk_json_val *params)
+rpc_bdev_rbd_resize(struct spdk_jsonrpc_request *request,
+		    const struct spdk_json_val *params)
 {
 	struct rpc_bdev_rbd_resize req = {};
 	struct spdk_bdev *bdev;
@@ -237,7 +237,7 @@ spdk_rpc_bdev_rbd_resize(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	rc = spdk_bdev_rbd_resize(bdev, req.new_size);
+	rc = bdev_rbd_resize(bdev, req.new_size);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;
@@ -249,4 +249,4 @@ spdk_rpc_bdev_rbd_resize(struct spdk_jsonrpc_request *request,
 cleanup:
 	free_rpc_bdev_rbd_resize(&req);
 }
-SPDK_RPC_REGISTER("bdev_rbd_resize", spdk_rpc_bdev_rbd_resize, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_rbd_resize", rpc_bdev_rbd_resize, SPDK_RPC_RUNTIME)

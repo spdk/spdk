@@ -94,12 +94,12 @@ bdev_rbd_free(struct bdev_rbd *rbd)
 	free(rbd->rbd_name);
 	free(rbd->user_id);
 	free(rbd->pool_name);
-	spdk_bdev_rbd_free_config(rbd->config);
+	bdev_rbd_free_config(rbd->config);
 	free(rbd);
 }
 
 void
-spdk_bdev_rbd_free_config(char **config)
+bdev_rbd_free_config(char **config)
 {
 	char **entry;
 
@@ -112,7 +112,7 @@ spdk_bdev_rbd_free_config(char **config)
 }
 
 char **
-spdk_bdev_rbd_dup_config(const char *const *config)
+bdev_rbd_dup_config(const char *const *config)
 {
 	size_t count;
 	char **copy;
@@ -127,7 +127,7 @@ spdk_bdev_rbd_dup_config(const char *const *config)
 	}
 	for (count = 0; config[count]; count++) {
 		if (!(copy[count] = strdup(config[count]))) {
-			spdk_bdev_rbd_free_config(copy);
+			bdev_rbd_free_config(copy);
 			return NULL;
 		}
 	}
@@ -682,11 +682,11 @@ static const struct spdk_bdev_fn_table rbd_fn_table = {
 };
 
 int
-spdk_bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *user_id,
-		     const char *pool_name,
-		     const char *const *config,
-		     const char *rbd_name,
-		     uint32_t block_size)
+bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *user_id,
+		const char *pool_name,
+		const char *const *config,
+		const char *rbd_name,
+		uint32_t block_size)
 {
 	struct bdev_rbd *rbd;
 	int ret;
@@ -721,7 +721,7 @@ spdk_bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *user
 		return -ENOMEM;
 	}
 
-	if (config && !(rbd->config = spdk_bdev_rbd_dup_config(config))) {
+	if (config && !(rbd->config = bdev_rbd_dup_config(config))) {
 		bdev_rbd_free(rbd);
 		return -ENOMEM;
 	}
@@ -773,7 +773,7 @@ spdk_bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *user
 }
 
 void
-spdk_bdev_rbd_delete(struct spdk_bdev *bdev, spdk_delete_rbd_complete cb_fn, void *cb_arg)
+bdev_rbd_delete(struct spdk_bdev *bdev, spdk_delete_rbd_complete cb_fn, void *cb_arg)
 {
 	if (!bdev || bdev->module != &rbd_if) {
 		cb_fn(cb_arg, -ENODEV);
@@ -784,7 +784,7 @@ spdk_bdev_rbd_delete(struct spdk_bdev *bdev, spdk_delete_rbd_complete cb_fn, voi
 }
 
 int
-spdk_bdev_rbd_resize(struct spdk_bdev *bdev, const uint64_t new_size_in_mb)
+bdev_rbd_resize(struct spdk_bdev *bdev, const uint64_t new_size_in_mb)
 {
 	struct spdk_io_channel *ch;
 	struct bdev_rbd_io_channel *rbd_io_ch;
@@ -883,7 +883,7 @@ bdev_rbd_library_init(void)
 		}
 
 		/* TODO(?): user_id and rbd config values */
-		rc = spdk_bdev_rbd_create(&bdev, NULL, NULL, pool_name, NULL, rbd_name, block_size);
+		rc = bdev_rbd_create(&bdev, NULL, NULL, pool_name, NULL, rbd_name, block_size);
 		if (rc) {
 			goto end;
 		}
