@@ -35,11 +35,6 @@ if [ $(uname -s) = Linux ]; then
 	echo "|$rootdir/scripts/core-collector.sh %P %s %t $output_dir/coredumps" > /proc/sys/kernel/core_pattern
 	echo 2 > /proc/sys/kernel/core_pipe_limit
 
-	# Make sure that the hugepage state for our VM is fresh so we don't fail
-	# hugepage allocation. Allow time for this action to complete.
-	echo 1 > /proc/sys/vm/drop_caches
-	sleep 3
-
 	# make sure nbd (network block device) driver is loaded if it is available
 	# this ensures that when tests need to use nbd, it will be fully initialized
 	modprobe nbd || true
