@@ -21,19 +21,19 @@ function on_error_exit() {
 }
 
 function run_spdk_tgt() {
-	$rootdir/app/spdk_tgt/spdk_tgt -m 0x3 -p 0 -s 4096 &
+	$SPDK_BIN_DIR/spdk_tgt -m 0x3 -p 0 -s 4096 &
 	spdk_tgt_pid=$!
 	waitforlisten $spdk_tgt_pid
 }
 
 function run_nvmf_tgt() {
-	$rootdir/app/nvmf_tgt/nvmf_tgt -m 0x3 -p 0 -s 4096 &
+	$SPDK_BIN_DIR/nvmf_tgt -m 0x3 -p 0 -s 4096 &
 	nvmf_tgt_pid=$!
 	waitforlisten $nvmf_tgt_pid
 }
 
 function run_vhost_tgt() {
-	$rootdir/app/vhost/vhost -m 0x3 -p 0 -s 4096 &
+	$SPDK_BIN_DIR/vhost -m 0x3 -p 0 -s 4096 &
 	vhost_tgt_pid=$!
 	waitforlisten $vhost_tgt_pid
 }

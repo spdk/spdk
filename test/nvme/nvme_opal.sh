@@ -74,7 +74,7 @@ function revert() {
 }
 
 function opal_spdk_tgt() {
-	$rootdir/app/spdk_tgt/spdk_tgt &
+	$SPDK_BIN_DIR/spdk_tgt &
 	spdk_tgt_pid=$!
 	trap 'revert; killprocess $spdk_tgt_pid; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $spdk_tgt_pid

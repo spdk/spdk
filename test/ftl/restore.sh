@@ -37,7 +37,7 @@ restore_kill() {
 
 trap "restore_kill; exit 1" SIGINT SIGTERM EXIT
 
-"$rootdir/app/spdk_tgt/spdk_tgt" --json <(gen_ftl_nvme_conf) &
+"$SPDK_BIN_DIR/spdk_tgt" --json <(gen_ftl_nvme_conf) &
 svcpid=$!
 # Wait until spdk_tgt starts
 waitforlisten $svcpid
@@ -74,7 +74,7 @@ md5sum $mount_dir/testfile > $testdir/testfile.md5
 umount $mount_dir
 killprocess $svcpid
 
-"$rootdir/app/spdk_tgt/spdk_tgt" --json <(gen_ftl_nvme_conf) -L ftl_init &
+"$SPDK_BIN_DIR/spdk_tgt" --json <(gen_ftl_nvme_conf) -L ftl_init &
 svcpid=$!
 # Wait until spdk_tgt starts
 waitforlisten $svcpid

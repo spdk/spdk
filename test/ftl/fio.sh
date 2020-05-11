@@ -35,7 +35,7 @@ export FTL_JSON_CONF=$testdir/config/ftl.json
 
 trap "fio_kill; exit 1" SIGINT SIGTERM EXIT
 
-"$rootdir/app/spdk_tgt/spdk_tgt" --json <(gen_ftl_nvme_conf) &
+"$SPDK_BIN_DIR/spdk_tgt" --json <(gen_ftl_nvme_conf) &
 svcpid=$!
 waitforlisten $svcpid
 

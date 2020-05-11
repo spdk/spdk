@@ -58,7 +58,7 @@ for bdf in $(iter_pci_dev_id 8086 $vmd_id); do
 done
 PCI_WHITELIST="${VMD_WHITELIST[*]}" $rootdir/scripts/setup.sh
 
-pci_devs=$($rootdir/app/spdk_lspci/spdk_lspci | grep "NVMe disk behind VMD" | awk '{print $1}')
+pci_devs=$($SPDK_BIN_DIR/spdk_lspci | grep "NVMe disk behind VMD" | awk '{print $1}')
 
 if [[ -z "$pci_devs" ]]; then
 	echo "Couldn't find any NVMe device behind a VMD."

@@ -99,7 +99,7 @@ function host1_start_nvmf() {
 	rm -rf "${nvmf_dir:?}/"*
 
 	trap 'host1_cleanup_nvmf SIGKILL; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR EXIT
-	$rootdir/app/nvmf_tgt/nvmf_tgt -s 512 -m 0xF -r $nvmf_dir/nvmf_rpc.sock --wait-for-rpc &
+	$SPDK_BIN_DIR/nvmf_tgt -s 512 -m 0xF -r $nvmf_dir/nvmf_rpc.sock --wait-for-rpc &
 	nvmf_tgt_pid=$!
 	echo $nvmf_tgt_pid > $nvmf_dir/nvmf_tgt.pid
 	waitforlisten "$nvmf_tgt_pid" "$nvmf_dir/nvmf_rpc.sock"

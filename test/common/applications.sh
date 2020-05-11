@@ -2,13 +2,13 @@
 
 _root=$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")
 _root=${_root%/test/common}
-_app_dir=$_root/app
+_app_dir=$_root/build/bin
 _test_app_dir=$_root/test/app
 
 VHOST_FUZZ_APP=("$_test_app_dir/fuzz/vhost_fuzz/vhost_fuzz")
-ISCSI_APP=("$_app_dir/iscsi_tgt/iscsi_tgt")
-NVMF_APP=("$_app_dir/nvmf_tgt/nvmf_tgt")
-VHOST_APP=("$_app_dir/vhost/vhost")
+ISCSI_APP=("$_app_dir/iscsi_tgt")
+NVMF_APP=("$_app_dir/nvmf_tgt")
+VHOST_APP=("$_app_dir/vhost")
 
 # Check if apps should execute under debug flags
 if [[ -e $_root/include/spdk/config.h ]]; then

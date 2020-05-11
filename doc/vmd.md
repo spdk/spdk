@@ -58,7 +58,7 @@ Check for available devices behind the VMD with spdk_lspci.
 
 Example:
 ```
-$ ./app/spdk_lspci/spdk_lspci
+$ ./build/bin/spdk_lspci
 
  5d0505:01:00.0 (8086 a54) (NVMe disk behind VMD)
  5d0505:03:00.0 (8086 a54) (NVMe disk behind VMD)
@@ -100,7 +100,7 @@ JSON config:
 
 or use RPC call before framework starts e.g.
 ```
-$ ./app/spdk_tgt/spdk_tgt --wait_for_rpc
+$ ./build/bin/spdk_tgt --wait_for_rpc
 $ ./scripts/rpc.py enable_vmd
 $ ./scripts/rpc.py framework_start_init
 ```

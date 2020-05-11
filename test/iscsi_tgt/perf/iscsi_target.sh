@@ -95,7 +95,7 @@ mkdir -p $testdir/perf_output
 touch $iscsi_fio_results
 
 timing_enter run_iscsi_app
-$rootdir/app/iscsi_tgt/iscsi_tgt -m $ISCSI_TGT_CM -r $testdir/rpc_iscsi.sock --wait-for-rpc &
+$SPDK_BIN_DIR/iscsi_tgt -m $ISCSI_TGT_CM -r $testdir/rpc_iscsi.sock --wait-for-rpc &
 pid=$!
 trap 'rm -f $testdir/perf.job; killprocess $pid; print_backtrace; exit 1' ERR SIGTERM SIGABRT
 waitforlisten "$pid" "$testdir/rpc_iscsi.sock"

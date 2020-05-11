@@ -200,7 +200,7 @@ function test_unregister_lvol_bdev() {
 	check_leftover_devices
 }
 
-$rootdir/app/spdk_tgt/spdk_tgt &
+$SPDK_BIN_DIR/spdk_tgt &
 spdk_pid=$!
 trap 'killprocess "$spdk_pid"; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $spdk_pid

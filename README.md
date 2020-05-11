@@ -196,7 +196,7 @@ Linux:
 ./configure --with-shared
 make
 ldconfig -v -n ./build/lib
-LD_LIBRARY_PATH=./build/lib/ ./app/spdk_tgt/spdk_tgt
+LD_LIBRARY_PATH=./build/lib/ ./build/bin/spdk_tgt
 ~~~
 
 <a id="huge"></a>

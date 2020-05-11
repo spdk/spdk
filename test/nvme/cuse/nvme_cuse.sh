@@ -12,7 +12,7 @@ ctrlr_base="/dev/spdk/nvme"
 
 $rootdir/scripts/setup.sh
 
-$rootdir/app/spdk_tgt/spdk_tgt -m 0x3 &
+$SPDK_BIN_DIR/spdk_tgt -m 0x3 &
 spdk_tgt_pid=$!
 trap 'kill -9 ${spdk_tgt_pid}; exit 1' SIGINT SIGTERM EXIT
 

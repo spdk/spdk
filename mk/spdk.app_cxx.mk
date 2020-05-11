@@ -32,6 +32,14 @@
 #
 include $(SPDK_ROOT_DIR)/mk/spdk.app_vars.mk
 
+# Applications in app/ go into build/bin/.
+# Use findstring to identify if the current directory is in the app
+# directory. If it is, change the APP location to build.
+APP_NAME := $(notdir $(APP))
+ifneq (,$(findstring $(SPDK_ROOT_DIR)/app,$(CURDIR)))
+	APP := $(APP_NAME:%=$(SPDK_ROOT_DIR)/build/bin/%)
+endif
+
 LIBS += $(SPDK_LIB_LINKER_ARGS)
 
 CLEAN_FILES = $(APP)
@@ -39,13 +47,13 @@ CLEAN_FILES = $(APP)
 all : $(APP)
 	@:
 
-install: all
+install: empty_rule
+
+uninstall: empty_rule
 
 # To avoid overwriting warning
-empty_uninstall_rule:
+empty_rule:
 	@:
-
-uninstall: empty_uninstall_rule
 
 $(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
 	$(LINK_CXX)

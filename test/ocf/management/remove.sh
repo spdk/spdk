@@ -38,7 +38,7 @@ jq . <<- JSON > "$curdir/config"
 	}
 JSON
 
-"$rootdir/app/iscsi_tgt/iscsi_tgt" --json "$curdir/config" &
+"$SPDK_BIN_DIR/iscsi_tgt" --json "$curdir/config" &
 spdk_pid=$!
 
 waitforlisten $spdk_pid
@@ -64,7 +64,7 @@ trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid
 
 # Check for ocfWT was deleted permanently
-"$rootdir/app/iscsi_tgt/iscsi_tgt" --json "$curdir/config" &
+"$SPDK_BIN_DIR/iscsi_tgt" --json "$curdir/config" &
 spdk_pid=$!
 
 trap 'killprocess $spdk_pid; rm -f aio* $curdir/config ocf_bdevs ocf_bdevs_verify; exit 1' SIGINT SIGTERM EXIT

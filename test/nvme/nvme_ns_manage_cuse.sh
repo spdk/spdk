@@ -83,7 +83,7 @@ sleep 1
 
 PCI_WHITELIST="${bdf}" $rootdir/scripts/setup.sh
 
-$rootdir/app/spdk_tgt/spdk_tgt -m 0x3 &
+$SPDK_BIN_DIR/spdk_tgt -m 0x3 &
 spdk_tgt_pid=$!
 trap 'kill -9 ${spdk_tgt_pid}; clean_up; exit 1' SIGINT SIGTERM EXIT
 

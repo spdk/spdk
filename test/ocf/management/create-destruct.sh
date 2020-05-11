@@ -14,7 +14,7 @@ function bdev_check_claimed() {
 	fi
 }
 
-$rootdir/app/iscsi_tgt/iscsi_tgt &
+$SPDK_BIN_DIR/iscsi_tgt &
 spdk_pid=$!
 
 trap 'killprocess $spdk_pid; exit 1' SIGINT SIGTERM EXIT

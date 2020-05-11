@@ -10,7 +10,7 @@ This following section describes how to run iscsi from your cloned package.
 This guide starts by assuming that you can already build the standard SPDK distribution on your
 platform.
 
-Once built, the binary will be in `app/iscsi_tgt`.
+Once built, the binary will be in `build/bin`.
 
 If you want to kill the application by using signal, make sure use the SIGTERM, then the application
 will release all the shared memory resource before exit, the SIGKILL will make the shared memory
@@ -38,7 +38,7 @@ then run the iscsi_tgt application and pass it the configuration file using the 
 the target requires elevated privileges (root) to run.
 
 ~~~
-app/iscsi_tgt/iscsi_tgt -c /path/to/iscsi.conf
+build/bin/iscsi_tgt -c /path/to/iscsi.conf
 ~~~
 
 ### Assigning CPU Cores to the iSCSI Target {#iscsi_config_lcore}
@@ -227,7 +227,7 @@ Assuming we have one iSCSI Target server with portal at 10.0.0.1:3200, two LUNs 
 
 Start iscsi_tgt application:
 ```
-./app/iscsi_tgt/iscsi_tgt
+./build/bin/iscsi_tgt
 ```
 
 Construct two 64MB Malloc block devices with 512B sector size "Malloc0" and "Malloc1":

@@ -62,7 +62,7 @@ run_test "ftl_json" $testdir/json.sh $device
 if [ $SPDK_TEST_FTL_EXTENDED -eq 1 ]; then
 	run_test "ftl_fio_basic" $testdir/fio.sh $device basic
 
-	"$rootdir/app/spdk_tgt/spdk_tgt" --json <(gen_ftl_nvme_conf) &
+	"$SPDK_BIN_DIR/spdk_tgt" --json <(gen_ftl_nvme_conf) &
 	svcpid=$!
 
 	trap 'killprocess $svcpid; exit 1' SIGINT SIGTERM EXIT

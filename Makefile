@@ -77,6 +77,7 @@ endif
 all: mk/cc.mk $(DIRS-y)
 clean: $(DIRS-y)
 	$(Q)rm -f include/spdk/config.h
+	$(Q)rm -rf build/bin
 
 install: all
 	$(Q)echo "Installed to $(DESTDIR)$(CONFIG_PREFIX)"
@@ -97,11 +98,15 @@ examples: $(LIB)
 pkgdep:
 	sh ./scripts/pkgdep.sh
 
-$(DIRS-y): mk/cc.mk include/spdk/config.h
+$(DIRS-y): mk/cc.mk build_dir include/spdk/config.h
 
 mk/cc.mk:
 	$(Q)echo "Please run configure prior to make"
 	false
+
+build_dir: mk/cc.mk
+	$(Q)mkdir -p build/lib
+	$(Q)mkdir -p build/bin
 
 include/spdk/config.h: mk/config.mk scripts/genconfig.py
 	$(Q)echo "#ifndef SPDK_CONFIG_H" > $@.tmp; \

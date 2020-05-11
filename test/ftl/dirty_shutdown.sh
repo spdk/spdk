@@ -37,7 +37,7 @@ pu_count=$((num_group * num_pu))
 # Write one band worth of data + one extra chunk
 data_size=$((chunk_size * (pu_count + 1)))
 
-"$rootdir/app/spdk_tgt/spdk_tgt" --json <(gen_ftl_nvme_conf) &
+"$SPDK_BIN_DIR/spdk_tgt" --json <(gen_ftl_nvme_conf) &
 svcpid=$!
 waitforlisten $svcpid
 
@@ -70,7 +70,7 @@ $rpc_py nbd_stop_disk /dev/nbd0
 kill -9 $svcpid
 rm -f /dev/shm/spdk_tgt_trace.pid$svcpid
 
-"$rootdir/app/spdk_tgt/spdk_tgt" --json <(gen_ftl_nvme_conf) -L ftl_init &
+"$SPDK_BIN_DIR/spdk_tgt" --json <(gen_ftl_nvme_conf) -L ftl_init &
 svcpid=$!
 waitforlisten $svcpid
 

@@ -253,11 +253,11 @@ COMPILE_CXX=\
 
 # Link $(OBJS) and $(LIBS) into $@ (app)
 LINK_C=\
-	$(Q)echo "  LINK $S/$@"; \
+	$(Q)echo "  LINK $(notdir $@)"; \
 	$(CC) -o $@ $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $(ENV_LINKER_ARGS) $(SYS_LIBS)
 
 LINK_CXX=\
-	$(Q)echo "  LINK $S/$@"; \
+	$(Q)echo "  LINK $(notdir $@)"; \
 	$(CXX) -o $@ $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $(ENV_LINKER_ARGS) $(SYS_LIBS)
 
 # Provide function to ease build of a shared lib
@@ -325,9 +325,9 @@ UNINSTALL_SHARED_LIB=\
 
 # Install an app binary
 INSTALL_APP=\
-	$(Q)echo "  INSTALL $(DESTDIR)$(bindir)/$(APP)"; \
+	$(Q)echo "  INSTALL $(DESTDIR)$(bindir)/$(notdir $<)"; \
 	install -d -m 755 "$(DESTDIR)$(bindir)"; \
-	install -m 755 "$(APP)" "$(DESTDIR)$(bindir)/"
+	install -m 755 "$<" "$(DESTDIR)$(bindir)/"
 
 # Uninstall an app binary
 UNINSTALL_APP=\

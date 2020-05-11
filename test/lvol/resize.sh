@@ -205,7 +205,7 @@ function test_destroy_after_bdev_lvol_resize_positive() {
 }
 
 modprobe nbd
-$rootdir/app/spdk_tgt/spdk_tgt &
+$SPDK_BIN_DIR/spdk_tgt &
 spdk_pid=$!
 trap 'killprocess "$spdk_pid"; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $spdk_pid

@@ -43,7 +43,7 @@ Then build SPDK with RDMA enabled:
 make
 ~~~
 
-Once built, the binary will be in `app/nvmf_tgt`.
+Once built, the binary will be in `build/bin`.
 
 ### Prerequisites for InfiniBand/RDMA Verbs {#nvmf_prereqs_verbs}
 
@@ -157,7 +157,7 @@ and an in capsule data size of 0 bytes. The TCP transport is configured with an 
 16384 bytes, 8 max qpairs per controller, and an in capsule data size of 8192 bytes.
 
 ~~~{.sh}
-app/nvmf_tgt/nvmf_tgt
+build/bin/nvmf_tgt
 scripts/rpc.py nvmf_create_transport -t RDMA -u 8192 -p 4 -c 0
 scripts/rpc.py nvmf_create_transport -t TCP -u 16384 -p 8 -c 8192
 ~~~
@@ -231,7 +231,7 @@ The `-m` core mask option specifies a bit mask of the CPU cores that
 SPDK is allowed to execute work items on.
 For example, to allow SPDK to use cores 24, 25, 26 and 27:
 ~~~{.sh}
-app/nvmf_tgt/nvmf_tgt -m 0xF000000
+build/bin/nvmf_tgt -m 0xF000000
 ~~~
 
 ## Configuring the Linux NVMe over Fabrics Host {#nvmf_host}

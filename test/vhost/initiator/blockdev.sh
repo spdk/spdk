@@ -19,7 +19,7 @@ function err_cleanup() {
 
 # start vhost and configure it
 trap 'err_cleanup; exit 1' SIGINT SIGTERM EXIT
-$rootdir/app/vhost/vhost &
+$SPDK_BIN_DIR/vhost &
 vhost_pid=$!
 waitforlisten $vhost_pid
 
@@ -48,7 +48,7 @@ rpc_cmd vhost_create_scsi_controller naa.Malloc1.0
 rpc_cmd vhost_scsi_controller_add_target naa.Malloc1.0 0 Malloc1
 
 # start a dummy app, create vhost bdevs in it, then dump the config for FIO
-$rootdir/app/spdk_tgt/spdk_tgt -r /tmp/spdk2.sock -g &
+$SPDK_BIN_DIR/spdk_tgt -r /tmp/spdk2.sock -g &
 dummy_spdk_pid=$!
 waitforlisten $dummy_spdk_pid /tmp/spdk2.sock
 rpc_cmd -s /tmp/spdk2.sock bdev_virtio_attach_controller --trtype user --traddr 'naa.Nvme0n1_scsi0.0' -d scsi --vq-count 8 'VirtioScsi0'

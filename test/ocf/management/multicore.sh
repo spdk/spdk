@@ -8,7 +8,7 @@ rpc_py=$rootdir/scripts/rpc.py
 
 spdk_pid='?'
 function start_spdk() {
-	$rootdir/app/iscsi_tgt/iscsi_tgt &
+	$SPDK_BIN_DIR/iscsi_tgt &
 	spdk_pid=$!
 	trap 'killprocess $spdk_pid; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $spdk_pid

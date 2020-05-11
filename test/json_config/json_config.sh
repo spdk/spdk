@@ -110,7 +110,7 @@ function json_config_test_start_app() {
 		app_extra_params='-S /var/tmp'
 	fi
 
-	$rootdir/app/spdk_tgt/spdk_tgt ${app_params[$app]} ${app_extra_params} -r ${app_socket[$app]} "$@" &
+	$SPDK_BIN_DIR/spdk_tgt ${app_params[$app]} ${app_extra_params} -r ${app_socket[$app]} "$@" &
 	app_pid[$app]=$!
 
 	echo "Waiting for $app to run..."

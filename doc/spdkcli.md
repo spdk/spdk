@@ -18,7 +18,7 @@ Package dependencies at the moment include:
 
 ~~~{.sh}
 ./scripts/setup.sh
-./app/vhost/vhost -c vhost.conf
+./build/bin/vhost -c vhost.conf
 ~~~
 
 ### Run SPDK CLI

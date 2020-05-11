@@ -104,11 +104,11 @@ function porcelain_check() {
 #  capturing a binary's stat data before and after touching a
 #  header file and re-making.
 function header_dependency_check() {
-	STAT1=$(stat app/spdk_tgt/spdk_tgt)
+	STAT1=$(stat $SPDK_BIN_DIR/spdk_tgt)
 	sleep 1
 	touch lib/nvme/nvme_internal.h
 	$MAKE $MAKEFLAGS
-	STAT2=$(stat app/spdk_tgt/spdk_tgt)
+	STAT2=$(stat $SPDK_BIN_DIR/spdk_tgt)
 
 	if [ "$STAT1" == "$STAT2" ]; then
 		echo "Header dependency check failed"

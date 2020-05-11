@@ -13,6 +13,7 @@
 *.so.*
 *.swp
 *.DS_Store
+build/
 ut_coverage/
 tags
 cscope.out

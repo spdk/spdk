@@ -63,7 +63,7 @@ function pmem_print_tc_name() {
 function vhost_start() {
 	local vhost_pid
 
-	$rootdir/app/vhost/vhost &
+	$SPDK_BIN_DIR/vhost &
 
 	vhost_pid=$!
 	echo $vhost_pid > $testdir/vhost.pid

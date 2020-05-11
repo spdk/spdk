@@ -120,7 +120,7 @@ function vhost_run() {
 
 	local vhost_dir
 	vhost_dir="$(get_vhost_dir $vhost_name)"
-	local vhost_app="$rootdir/app/vhost/vhost"
+	local vhost_app="$SPDK_BIN_DIR/vhost"
 	local vhost_log_file="$vhost_dir/vhost.log"
 	local vhost_pid_file="$vhost_dir/vhost.pid"
 	local vhost_socket="$vhost_dir/usvhost"

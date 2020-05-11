@@ -631,7 +631,7 @@ class SPDKTarget(Target):
     def tgt_start(self):
         self.subsys_no = get_nvme_devices_count()
         self.log_print("Starting SPDK NVMeOF Target process")
-        nvmf_app_path = os.path.join(self.spdk_dir, "app/nvmf_tgt/nvmf_tgt")
+        nvmf_app_path = os.path.join(self.spdk_dir, "build/bin/nvmf_tgt")
         command = " ".join([nvmf_app_path, "-m", self.num_cores])
         proc = subprocess.Popen(command, shell=True)
         self.pid = os.path.join(self.spdk_dir, "nvmf.pid")

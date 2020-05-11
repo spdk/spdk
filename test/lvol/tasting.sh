@@ -65,7 +65,7 @@ function test_tasting() {
 
 	# Restart spdk app
 	killprocess $spdk_pid
-	$rootdir/app/spdk_tgt/spdk_tgt &
+	$SPDK_BIN_DIR/spdk_tgt &
 	spdk_pid=$!
 	waitforlisten $spdk_pid
 
@@ -157,7 +157,7 @@ function test_delete_lvol_store_persistent_positive() {
 	check_leftover_devices
 }
 
-$rootdir/app/spdk_tgt/spdk_tgt &
+$SPDK_BIN_DIR/spdk_tgt &
 spdk_pid=$!
 trap 'killprocess "$spdk_pid"; rm -f $testdir/aio_bdev_0 $testdir/aio_bdev_1; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $spdk_pid

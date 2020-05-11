@@ -37,7 +37,7 @@ function rpc_plugins() {
 	}
 }
 
-$rootdir/app/spdk_tgt/spdk_tgt &
+$SPDK_BIN_DIR/spdk_tgt &
 spdk_pid=$!
 trap 'killprocess $spdk_pid; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $spdk_pid

@@ -16,14 +16,14 @@ the instrumentation of all the tracepoints group in an SPDK target application, 
 target with -e parameter set to 0xFFFF:
 
 ~~~
-app/nvmf_tgt/nvmf_tgt -e 0xFFFF
+build/bin/nvmf_tgt -e 0xFFFF
 ~~~
 
 To enable the instrumentation of just the NVMe-oF RDMA tracepoints in an SPDK target
 application, start the target with the -e parameter set to 0x10:
 
 ~~~
-app/nvmf_tgt/nvmf_tgt -e 0x10
+build/bin/nvmf_tgt -e 0x10
 ~~~
 
 When the target starts, a message is logged with the information you need to view
@@ -55,7 +55,7 @@ The spdk_trace program can be found in the app/trace directory.  To analyze the 
 system running the NVMe-oF target, simply execute the command line shown in the log:
 
 ~~~{.sh}
-app/trace/spdk_trace -s nvmf -p 24147
+build/bin/spdk_trace -s nvmf -p 24147
 ~~~
 
 To analyze the tracepoints on a different system, first prepare the tracepoint file for transfer.  The
@@ -70,7 +70,7 @@ After transferring the /tmp/trace.bz2 tracepoint file to a different system:
 
 ~~~{.sh}
 bunzip2 /tmp/trace.bz2
-app/trace/spdk_trace -f /tmp/trace
+build/bin/spdk_trace -f /tmp/trace
 ~~~
 
 The following is sample trace capture showing the cumulative time that each
@@ -134,7 +134,7 @@ and store all entries into specified output file at its shutdown on SIGINT or SI
 After SPDK nvmf target is launched, simply execute the command line shown in the log:
 
 ~~~{.sh}
-app/trace_record/spdk_trace_record -q -s nvmf -p 24147 -f /tmp/spdk_nvmf_record.trace
+build/bin/spdk_trace_record -q -s nvmf -p 24147 -f /tmp/spdk_nvmf_record.trace
 ~~~
 
 Also send I/Os to the SPDK target application to generate events by previous perf example for 10 minutes.
@@ -147,7 +147,7 @@ After the completion of perf example, shut down spdk_trace_record by signal SIGI
 To analyze the tracepoints output file from spdk_trace_record, simply run spdk_trace program by:
 
 ~~~{.sh}
-app/trace/spdk_trace -f /tmp/spdk_nvmf_record.trace
+build/bin/spdk_trace -f /tmp/spdk_nvmf_record.trace
 ~~~
 
 # Adding New Tracepoints {#add_tracepoints}

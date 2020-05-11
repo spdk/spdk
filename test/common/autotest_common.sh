@@ -176,6 +176,9 @@ else
 	export DEPENDENCY_DIR
 fi
 
+# Export location of where all the SPDK binaries are
+export SPDK_BIN_DIR="$rootdir/build/bin"
+
 # pass our valgrind desire on to unittest.sh
 if [ $SPDK_RUN_VALGRIND -eq 0 ]; then
 	export valgrind=''
@@ -1172,7 +1175,7 @@ function get_nvme_name_from_bdf() {
 }
 
 function opal_revert_cleanup() {
-	$rootdir/app/spdk_tgt/spdk_tgt &
+	$SPDK_BIN_DIR/spdk_tgt &
 	spdk_tgt_pid=$!
 	waitforlisten $spdk_tgt_pid
 
