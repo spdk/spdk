@@ -300,7 +300,7 @@ spdk_posix_sock_set_sendbuf(struct spdk_sock *_sock, int sz)
 }
 
 static struct spdk_posix_sock *
-_spdk_posix_sock_alloc(int fd)
+_spdk_posix_sock_alloc(int fd, bool enable_zero_copy)
 {
 	struct spdk_posix_sock *sock;
 #ifdef SPDK_ZEROCOPY
@@ -317,6 +317,10 @@ _spdk_posix_sock_alloc(int fd)
 	sock->fd = fd;
 
 #ifdef SPDK_ZEROCOPY
+	if (!enable_zero_copy) {
+		return sock;
+	}
+
 	/* Try to turn on zero copy sends */
 	flag = 1;
 	rc = setsockopt(sock->fd, SOL_SOCKET, SO_ZEROCOPY, &flag, sizeof(flag));
@@ -326,6 +330,55 @@ _spdk_posix_sock_alloc(int fd)
 #endif
 
 	return sock;
+}
+
+static bool
+sock_is_loopback(int fd)
+{
+	struct ifaddrs *addrs, *tmp;
+	struct sockaddr_storage sa = {};
+	socklen_t salen;
+	struct ifreq ifr = {};
+	char ip_addr[256], ip_addr_tmp[256];
+	int rc;
+	bool is_loopback = false;
+
+	salen = sizeof(sa);
+	rc = getsockname(fd, (struct sockaddr *)&sa, &salen);
+	if (rc != 0) {
+		return is_loopback;
+	}
+
+	memset(ip_addr, 0, sizeof(ip_addr));
+	rc = get_addr_str((struct sockaddr *)&sa, ip_addr, sizeof(ip_addr));
+	if (rc != 0) {
+		return is_loopback;
+	}
+
+	getifaddrs(&addrs);
+	for (tmp = addrs; tmp != NULL; tmp = tmp->ifa_next) {
+		if (tmp->ifa_addr && (tmp->ifa_flags & IFF_UP) &&
+		    (tmp->ifa_addr->sa_family == sa.ss_family)) {
+			memset(ip_addr_tmp, 0, sizeof(ip_addr_tmp));
+			rc = get_addr_str(tmp->ifa_addr, ip_addr_tmp, sizeof(ip_addr_tmp));
+			if (rc != 0) {
+				continue;
+			}
+
+			if (strncmp(ip_addr, ip_addr_tmp, sizeof(ip_addr)) == 0) {
+				memcpy(ifr.ifr_name, tmp->ifa_name, sizeof(ifr.ifr_name));
+				ioctl(fd, SIOCGIFFLAGS, &ifr);
+				if (ifr.ifr_flags & IFF_LOOPBACK) {
+					is_loopback = true;
+				}
+				goto end;
+			}
+		}
+	}
+
+end:
+	freeifaddrs(addrs);
+	return is_loopback;
 }
 
 static struct spdk_sock *
@@ -341,6 +394,7 @@ spdk_posix_sock_create(const char *ip, int port,
 	int fd, flag;
 	int val = 1;
 	int rc, sz;
+	bool enable_zero_copy = true;
 
 	if (ip == NULL) {
 		return NULL;
@@ -478,16 +532,19 @@ retry:
 		return NULL;
 	}
 
-	sock = _spdk_posix_sock_alloc(fd);
+	if (type == SPDK_SOCK_CREATE_LISTEN) {
+		/* Only enable zero copy for non-loopback sockets. */
+		enable_zero_copy = !sock_is_loopback(fd);
+	} else if (type == SPDK_SOCK_CREATE_CONNECT) {
+		/* Disable zero copy for client sockets until support is added */
+		enable_zero_copy = false;
+	}
+
+	sock = _spdk_posix_sock_alloc(fd, enable_zero_copy);
 	if (sock == NULL) {
 		SPDK_ERRLOG("sock allocation failed\n");
 		close(fd);
 		return NULL;
-	}
-
-	/* Disable zero copy for client sockets until support is added */
-	if (type == SPDK_SOCK_CREATE_CONNECT) {
-		sock->zcopy = false;
 	}
 
 	return &sock->base;
@@ -546,7 +603,8 @@ spdk_posix_sock_accept(struct spdk_sock *_sock)
 	}
 #endif
 
-	new_sock = _spdk_posix_sock_alloc(fd);
+	/* Inherit the zero copy feature from the listen socket */
+	new_sock = _spdk_posix_sock_alloc(fd, sock->zcopy);
 	if (new_sock == NULL) {
 		close(fd);
 		return NULL;
