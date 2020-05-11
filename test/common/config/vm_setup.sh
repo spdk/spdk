@@ -199,7 +199,7 @@ function install_fio() {
 	if echo $CONF | grep -q fio; then
 		# This version of fio is installed in /usr/src/fio to enable
 		# building the spdk fio plugin.
-		local fio_version="fio-3.15"
+		local fio_version="fio-3.19"
 
 		if [ ! -d /usr/src/fio ]; then
 			if [ ! -d fio ]; then
