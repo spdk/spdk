@@ -669,6 +669,7 @@ print_namespace(struct spdk_nvme_ns *ns)
 	uint32_t				i;
 	uint32_t				flags;
 	char					uuid_str[SPDK_UUID_STRING_LEN];
+	uint32_t				blocksize;
 
 	nsdata = spdk_nvme_ns_get_data(ns);
 	flags  = spdk_nvme_ns_get_flags(ns);
@@ -711,15 +712,16 @@ print_namespace(struct spdk_nvme_ns *ns)
 	}
 	printf("Namespace Sharing Capabilities:        %s\n",
 	       nsdata->nmic.can_share ? "Multiple Controllers" : "Private");
-	printf("Size (in LBAs):                        %lld (%lldM)\n",
+	blocksize = 1 << nsdata->lbaf[nsdata->flbas.format].lbads;
+	printf("Size (in LBAs):                        %lld (%lldGiB)\n",
 	       (long long)nsdata->nsze,
-	       (long long)nsdata->nsze / 1024 / 1024);
-	printf("Capacity (in LBAs):                    %lld (%lldM)\n",
+	       (long long)nsdata->nsze * blocksize / 1024 / 1024 / 1024);
+	printf("Capacity (in LBAs):                    %lld (%lldGiB)\n",
 	       (long long)nsdata->ncap,
-	       (long long)nsdata->ncap / 1024 / 1024);
-	printf("Utilization (in LBAs):                 %lld (%lldM)\n",
+	       (long long)nsdata->ncap * blocksize / 1024 / 1024 / 1024);
+	printf("Utilization (in LBAs):                 %lld (%lldGiB)\n",
 	       (long long)nsdata->nuse,
-	       (long long)nsdata->nuse / 1024 / 1024);
+	       (long long)nsdata->nuse * blocksize / 1024 / 1024 / 1024);
 	if (nsdata->noiob) {
 		printf("Optimal I/O Boundary:                  %u blocks\n", nsdata->noiob);
 	}
