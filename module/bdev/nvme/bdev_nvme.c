@@ -916,7 +916,7 @@ bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	if (cdata->oacs.security) {
 		spdk_json_write_named_object_begin(w, "security");
 
-		spdk_json_write_named_bool(w, "opal", nvme_bdev_ctrlr->opal_dev ? true : false);
+		spdk_json_write_named_bool(w, "opal", spdk_opal_supported(nvme_bdev_ctrlr->opal_dev));
 
 		spdk_json_write_object_end(w);
 	}

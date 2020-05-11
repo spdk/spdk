@@ -350,7 +350,7 @@ spdk_vbdev_opal_create(const char *nvme_ctrlr_name, uint32_t nsid, uint8_t locki
 		return -ENODEV;
 	}
 
-	if (!nvme_ctrlr->opal_dev) {
+	if (!nvme_ctrlr->opal_dev || !spdk_opal_supported(nvme_ctrlr->opal_dev)) {
 		SPDK_ERRLOG("Opal not supported\n");
 		return -ENOTSUP;
 	}
