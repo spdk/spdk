@@ -1678,6 +1678,16 @@ bdev_io_do_submit(struct spdk_bdev_channel *bdev_ch, struct spdk_bdev_io *bdev_i
 	struct spdk_io_channel *ch = bdev_ch->channel;
 	struct spdk_bdev_shared_resource *shared_resource = bdev_ch->shared_resource;
 
+	if (spdk_unlikely(bdev_io->type == SPDK_BDEV_IO_TYPE_ABORT)) {
+		struct spdk_bdev_io *bio_to_abort = bdev_io->u.abort.bio_to_abort;
+
+		if (bdev_abort_queued_io(&shared_resource->nomem_io, bio_to_abort)) {
+			_bdev_io_complete_in_submit(bdev_ch, bdev_io,
+						    SPDK_BDEV_IO_STATUS_SUCCESS);
+			return;
+		}
+	}
+
 	if (spdk_likely(TAILQ_EMPTY(&shared_resource->nomem_io))) {
 		bdev_ch->io_outstanding++;
 		shared_resource->io_outstanding++;
