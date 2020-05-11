@@ -80,6 +80,7 @@ clean: $(DIRS-y)
 	$(Q)rm -rf build/bin
 	$(Q)rm -rf build/fio
 	$(Q)rm -rf build/examples
+	$(Q)rm -rf build/include
 
 install: all
 	$(Q)echo "Installed to $(DESTDIR)$(CONFIG_PREFIX)"
@@ -111,6 +112,7 @@ build_dir: mk/cc.mk
 	$(Q)mkdir -p build/bin
 	$(Q)mkdir -p build/fio
 	$(Q)mkdir -p build/examples
+	$(Q)mkdir -p build/include/spdk
 
 include/spdk/config.h: mk/config.mk scripts/genconfig.py
 	$(Q)echo "#ifndef SPDK_CONFIG_H" > $@.tmp; \

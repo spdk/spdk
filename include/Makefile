@@ -47,7 +47,7 @@ endif
 .PHONY: $(INSTALLED_HEADERS)
 
 all:
-	@:
+	$(Q)cp $(SPDK_ROOT_DIR)/include/spdk/*.h $(SPDK_ROOT_DIR)/build/include/spdk/
 
 clean:
 	@:
