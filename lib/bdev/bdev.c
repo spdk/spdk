@@ -2614,7 +2614,7 @@ bdev_abort_buf_io(bdev_io_stailq_t *queue, struct spdk_bdev_channel *ch)
  *  linked using the spdk_bdev_io link TAILQ_ENTRY.
  */
 static void
-bdev_abort_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_channel *ch)
+bdev_abort_all_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_channel *ch)
 {
 	struct spdk_bdev_io *bdev_io, *tmp;
 
@@ -2738,8 +2738,8 @@ bdev_channel_destroy(void *io_device, void *ctx_buf)
 
 	mgmt_ch = shared_resource->mgmt_ch;
 
-	bdev_abort_queued_io(&ch->queued_resets, ch);
-	bdev_abort_queued_io(&shared_resource->nomem_io, ch);
+	bdev_abort_all_queued_io(&ch->queued_resets, ch);
+	bdev_abort_all_queued_io(&shared_resource->nomem_io, ch);
 	bdev_abort_buf_io(&mgmt_ch->need_buf_small, ch);
 	bdev_abort_buf_io(&mgmt_ch->need_buf_large, ch);
 
@@ -4167,10 +4167,10 @@ bdev_reset_freeze_channel(struct spdk_io_channel_iter *i)
 		pthread_mutex_unlock(&channel->bdev->internal.mutex);
 	}
 
-	bdev_abort_queued_io(&shared_resource->nomem_io, channel);
+	bdev_abort_all_queued_io(&shared_resource->nomem_io, channel);
 	bdev_abort_buf_io(&mgmt_channel->need_buf_small, channel);
 	bdev_abort_buf_io(&mgmt_channel->need_buf_large, channel);
-	bdev_abort_queued_io(&tmp_queued, channel);
+	bdev_abort_all_queued_io(&tmp_queued, channel);
 
 	spdk_for_each_channel_continue(i, 0);
 }
