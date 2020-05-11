@@ -218,7 +218,7 @@ echo "1024" > /sys/block/sdc/queue/nr_requests
 
 ### Example: Configure simple iSCSI Target with one portal and two LUNs
 
-Assuming we have one iSCSI Target server with portal at 10.0.0.1:3200, two LUNs (Malloc0 and Malloc),
+Assuming we have one iSCSI Target server with portal at 10.0.0.1:3200, two LUNs (Malloc0 and Malloc1),
  and accepting initiators on 10.0.0.2/32, like on diagram below:
 
 ![Sample iSCSI configuration](iscsi_example.svg)

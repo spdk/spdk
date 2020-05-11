@@ -105,7 +105,7 @@ app/vhost/vhost -h
 ## Create bdev (block device) {#vhost_bdev_create}
 
 SPDK bdevs are block devices which will be exposed to the guest OS.
-For vhost-scsi, bdevs are exposed as as SCSI LUNs on SCSI devices attached to the
+For vhost-scsi, bdevs are exposed as SCSI LUNs on SCSI devices attached to the
 vhost-scsi controller in the guest OS.
 For vhost-blk, bdevs are exposed directly as block devices in the guest OS and are
 not associated at all with SCSI.
@@ -373,7 +373,7 @@ be aborted - possibly flooding a VM with syslog warnings and errors.
 
 ### Hot-attach
 
-Hot-attach is is done by simply attaching a bdev to a vhost controller with a QEMU VM
+Hot-attach is done by simply attaching a bdev to a vhost controller with a QEMU VM
 already started. No other extra action is necessary.
 
 ~~~{.sh}

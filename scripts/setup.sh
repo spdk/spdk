@@ -32,7 +32,7 @@ function usage() {
 	echo "$options - as following:"
 	echo "config            Default mode. Allocate hugepages and bind PCI devices."
 	if [[ $os == Linux ]]; then
-		echo "cleanup            Remove any orphaned files that can be left in the system after SPDK application exit"
+		echo "cleanup           Remove any orphaned files that can be left in the system after SPDK application exit"
 	fi
 	echo "reset             Rebind PCI devices back to their original drivers."
 	echo "                  Also cleanup any leftover spdk files/resources."
