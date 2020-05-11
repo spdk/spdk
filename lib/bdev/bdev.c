@@ -1655,6 +1655,20 @@ bdev_qos_set_ops(struct spdk_bdev_qos *qos)
 	}
 }
 
+static void
+_bdev_io_complete_in_submit(struct spdk_bdev_channel *bdev_ch,
+			    struct spdk_bdev_io *bdev_io,
+			    enum spdk_bdev_io_status status)
+{
+	struct spdk_bdev_shared_resource *shared_resource = bdev_ch->shared_resource;
+
+	bdev_io->internal.in_submit_request = true;
+	bdev_ch->io_outstanding++;
+	shared_resource->io_outstanding++;
+	spdk_bdev_io_complete(bdev_io, status);
+	bdev_io->internal.in_submit_request = false;
+}
+
 static inline void
 bdev_io_do_submit(struct spdk_bdev_channel *bdev_ch, struct spdk_bdev_io *bdev_io)
 {
@@ -1991,7 +2005,6 @@ _bdev_io_submit(void *ctx)
 	struct spdk_bdev_io *bdev_io = ctx;
 	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct spdk_bdev_channel *bdev_ch = bdev_io->internal.ch;
-	struct spdk_bdev_shared_resource *shared_resource = bdev_ch->shared_resource;
 	uint64_t tsc;
 
 	tsc = spdk_get_ticks();
@@ -2003,21 +2016,15 @@ _bdev_io_submit(void *ctx)
 		return;
 	}
 
-	bdev_ch->io_outstanding++;
-	shared_resource->io_outstanding++;
-	bdev_io->internal.in_submit_request = true;
 	if (bdev_ch->flags & BDEV_CH_RESET_IN_PROGRESS) {
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		_bdev_io_complete_in_submit(bdev_ch, bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	} else if (bdev_ch->flags & BDEV_CH_QOS_ENABLED) {
-		bdev_ch->io_outstanding--;
-		shared_resource->io_outstanding--;
 		TAILQ_INSERT_TAIL(&bdev->internal.qos->queued, bdev_io, internal.link);
 		bdev_qos_io_submit(bdev_ch, bdev->internal.qos);
 	} else {
 		SPDK_ERRLOG("unknown bdev_ch flag %x found\n", bdev_ch->flags);
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		_bdev_io_complete_in_submit(bdev_ch, bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
-	bdev_io->internal.in_submit_request = false;
 }
 
 bool
