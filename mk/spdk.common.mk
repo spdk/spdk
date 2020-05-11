@@ -338,7 +338,7 @@ UNINSTALL_APP=\
 INSTALL_EXAMPLE=\
 	$(Q)echo "  INSTALL $(DESTDIR)$(bindir)/spdk_$(strip $(subst /,_,$(subst $(SPDK_ROOT_DIR)/examples/, ,$(CURDIR))))"; \
 	install -d -m 755 "$(DESTDIR)$(bindir)"; \
-	install -m 755 "$(APP)" "$(DESTDIR)$(bindir)/spdk_$(strip $(subst /,_,$(subst $(SPDK_ROOT_DIR)/examples/, ,$(CURDIR))))"
+	install -m 755 "$<" "$(DESTDIR)$(bindir)/spdk_$(strip $(subst /,_,$(subst $(SPDK_ROOT_DIR)/examples/, ,$(CURDIR))))"
 
 # Uninstall an example binary
 UNINSTALL_EXAMPLE=\

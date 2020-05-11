@@ -12,9 +12,9 @@ MALLOC_BLOCK_SIZE=512
 
 function build_nvmf_example_args() {
 	if [ $SPDK_RUN_NON_ROOT -eq 1 ]; then
-		echo "sudo -u $(logname) ./examples/nvmf/nvmf/nvmf -i $NVMF_APP_SHM_ID" -g 10000
+		echo "sudo -u $(logname) $SPDK_EXAMPLE_DIR/nvmf -i $NVMF_APP_SHM_ID" -g 10000
 	else
-		echo "./examples/nvmf/nvmf/nvmf -i $NVMF_APP_SHM_ID" -g 10000
+		echo "$SPDK_EXAMPLE_DIR/nvmf -i $NVMF_APP_SHM_ID" -g 10000
 	fi
 }
 
@@ -48,7 +48,7 @@ done
 #add listener to subsystem
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
-perf="$rootdir/examples/nvme/perf/perf"
+perf="$SPDK_EXAMPLE_DIR/perf"
 
 $perf -q 64 -o 4096 -w randrw -M 30 -t 10 \
 	-r "trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT} \

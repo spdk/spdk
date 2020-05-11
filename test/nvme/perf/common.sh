@@ -6,7 +6,7 @@ ROOT_DIR=$(readlink -f $BASE_DIR/../../..)
 rootdir=$ROOT_DIR
 PLUGIN_DIR=$ROOT_DIR/build/fio
 BDEVPERF_DIR=$ROOT_DIR/test/bdev/bdevperf
-NVMEPERF_DIR=$ROOT_DIR/examples/nvme/perf
+NVMEPERF_DIR=$ROOT_DIR/build/examples/perf
 . $ROOT_DIR/scripts/common.sh || exit 1
 . $ROOT_DIR/test/common/autotest_common.sh
 NVME_FIO_RESULTS=$BASE_DIR/result.json

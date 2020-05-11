@@ -32,16 +32,16 @@ $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPOR
 # Test multi-process access to local NVMe device
 if [ -n "$local_nvme_trid" ]; then
 	if [ $SPDK_RUN_NON_ROOT -eq 1 ]; then
-		perf_app="sudo -u $(logname) $rootdir/examples/nvme/perf/perf"
+		perf_app="sudo -u $(logname) $SPDK_EXAMPLE_DIR/perf"
 	else
-		perf_app="$rootdir/examples/nvme/perf/perf"
+		perf_app="$SPDK_EXAMPLE_DIR/perf"
 	fi
 	$perf_app -i $NVMF_APP_SHM_ID -q 32 -o 4096 -w randrw -M 50 -t 1 -r "$local_nvme_trid"
 fi
 
-$rootdir/examples/nvme/perf/perf -q 1 -o 4096 -w randrw -M 50 -t 1 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
-$rootdir/examples/nvme/perf/perf -q 32 -o 4096 -w randrw -M 50 -t 1 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
-$rootdir/examples/nvme/perf/perf -q 128 -o 262144 -w randrw -M 50 -t 2 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
+$SPDK_EXAMPLE_DIR/perf -q 1 -o 4096 -w randrw -M 50 -t 1 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
+$SPDK_EXAMPLE_DIR/perf -q 32 -o 4096 -w randrw -M 50 -t 1 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
+$SPDK_EXAMPLE_DIR/perf -q 128 -o 262144 -w randrw -M 50 -t 2 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
 sync
 $rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 
@@ -75,7 +75,7 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 		io_size=("512" "131072")
 		for qd in "${qd_depth[@]}"; do
 			for o in "${io_size[@]}"; do
-				$rootdir/examples/nvme/perf/perf -q $qd -o $o -w randrw -M 50 -t 10 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
+				$SPDK_EXAMPLE_DIR/perf -q $qd -o $o -w randrw -M 50 -t 10 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
 			done
 		done
 

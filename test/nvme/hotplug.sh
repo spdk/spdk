@@ -96,7 +96,7 @@ timing_exit wait_for_vm
 timing_enter copy_repo
 files_to_copy="scripts "
 files_to_copy+="include/spdk/pci_ids.h "
-files_to_copy+="examples/nvme/hotplug/hotplug "
+files_to_copy+="build/examples/hotplug "
 (
 	cd "$rootdir"
 	tar -cf - $files_to_copy
@@ -107,7 +107,7 @@ insert_devices
 
 timing_enter hotplug_test
 
-ssh_vm "examples/nvme/hotplug/hotplug -i 0 -t 25 -n 4 -r 8" &
+ssh_vm "build/examples/hotplug -i 0 -t 25 -n 4 -r 8" &
 example_pid=$!
 
 sleep 4

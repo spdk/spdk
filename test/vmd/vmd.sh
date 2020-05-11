@@ -10,13 +10,13 @@ VMD_WHITELIST=()
 
 function vmd_identify() {
 	for bdf in $pci_devs; do
-		$rootdir/examples/nvme/identify/identify -i 0 -V -r "trtype:PCIe traddr:$bdf"
+		$SPDK_EXAMPLE_DIR/identify -i 0 -V -r "trtype:PCIe traddr:$bdf"
 	done
 }
 
 function vmd_perf() {
 	for bdf in $pci_devs; do
-		$rootdir/examples/nvme/perf/perf -q 128 -w read -o 12288 -t 1 -LL -i 0 -V -r "trtype:PCIe traddr:$bdf"
+		$SPDK_EXAMPLE_DIR/perf -q 128 -w read -o 12288 -t 1 -LL -i 0 -V -r "trtype:PCIe traddr:$bdf"
 	done
 }
 
@@ -65,7 +65,7 @@ if [[ -z "$pci_devs" ]]; then
 fi
 
 run_test "vmd_identify" vmd_identify
-run_test "vmd_hello_world" $rootdir/examples/nvme/hello_world/hello_world -V
+run_test "vmd_hello_world" $SPDK_EXAMPLE_DIR/hello_world -V
 run_test "vmd_perf" vmd_perf
 if [[ $CONFIG_FIO_PLUGIN == y ]]; then
 	run_test "vmd_fio" vmd_fio

@@ -19,8 +19,8 @@ if [ -z "${bdf}" ]; then
 fi
 
 # Expected values
-nvme_serial_number=$($rootdir/examples/nvme/identify/identify -r "trtype:PCIe traddr:${bdf}" -i 0 | grep "Serial Number:" | awk '{print $3}')
-nvme_model_number=$($rootdir/examples/nvme/identify/identify -r "trtype:PCIe traddr:${bdf}" -i 0 | grep "Model Number:" | awk '{print $3}')
+nvme_serial_number=$($SPDK_EXAMPLE_DIR/identify -r "trtype:PCIe traddr:${bdf}" -i 0 | grep "Serial Number:" | awk '{print $3}')
+nvme_model_number=$($SPDK_EXAMPLE_DIR/identify -r "trtype:PCIe traddr:${bdf}" -i 0 | grep "Model Number:" | awk '{print $3}')
 
 timing_exit nvme_identify
 
@@ -45,14 +45,14 @@ $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPOR
 $rpc_py nvmf_get_subsystems
 
 # Discovered values
-nvmf_serial_number=$($rootdir/examples/nvme/identify/identify -r "\
+nvmf_serial_number=$($SPDK_EXAMPLE_DIR/identify -r "\
         trtype:$TEST_TRANSPORT \
         adrfam:IPv4 \
         traddr:$NVMF_FIRST_TARGET_IP \
         trsvcid:$NVMF_PORT \
         subnqn:nqn.2016-06.io.spdk:cnode1" | grep "Serial Number:" | awk '{print $3}')
 
-nvmf_model_number=$($rootdir/examples/nvme/identify/identify -r "\
+nvmf_model_number=$($SPDK_EXAMPLE_DIR/identify -r "\
         trtype:$TEST_TRANSPORT \
         adrfam:IPv4 \
         traddr:$NVMF_FIRST_TARGET_IP \

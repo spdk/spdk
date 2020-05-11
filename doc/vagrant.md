@@ -147,7 +147,7 @@ vagrant@vagrant:~/spdk_repo/spdk$ make
 vagrant@vagrant:~/spdk_repo/spdk$ sudo ./scripts/setup.sh
 0000:00:0e.0 (80ee 4e56): nvme -> uio_pci_generic
 
-vagrant@vagrant:~/spdk_repo/spdk$ sudo examples/nvme/hello_world/hello_world
+vagrant@vagrant:~/spdk_repo/spdk$ sudo build/examples/hello_world
 Starting SPDK v18.10-pre / DPDK 18.05.0 initialization...
 [ DPDK EAL parameters: hello_world -c 0x1 --legacy-mem --file-prefix=spdk0 --base-virtaddr=0x200000000000 --proc-type=auto ]
 EAL: Detected 4 lcore(s)

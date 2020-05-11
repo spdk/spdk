@@ -184,8 +184,7 @@ Following VM initialization you must:
 
 ```
   $ sudo scripts/setup.sh
-  $ cd examples/bdev/hello_world
-  $ sudo ./hello_bdev
+  $ sudo ./build/examples/hello_bdev
 ```
 
 ### Running autorun.sh with vagrant

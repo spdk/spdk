@@ -213,7 +213,7 @@ To verify that the drive is emulated correctly, one can check the output of the 
 device):
 
 ```
-$ examples/nvme/identify/identify
+$ build/examples/identify
 =====================================================
 NVMe Controller at 0000:00:0a.0 [1d1d:1f1f]
 =====================================================

@@ -41,7 +41,7 @@ timing_exit hotplug_hw_cfg
 
 timing_enter hotplug_hw_test
 
-$rootdir/examples/nvme/hotplug/hotplug -i 0 -t 100 -n 2 -r 2 2>&1 | tee -a log.txt &
+$SPDK_EXAMPLE_DIR/hotplug -i 0 -t 100 -n 2 -r 2 2>&1 | tee -a log.txt &
 example_pid=$!
 trap 'killprocess $example_pid; exit 1' SIGINT SIGTERM EXIT
 

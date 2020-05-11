@@ -38,7 +38,7 @@ run_step() {
 }
 
 run_bsdump() {
-	$rootdir/examples/blob/cli/blobcli -c $ROCKSDB_CONF -b Nvme0n1 -D &> bsdump.txt
+	$SPDK_EXAMPLE_DIR/blobcli -c $ROCKSDB_CONF -b Nvme0n1 -D &> bsdump.txt
 }
 
 # In the autotest job, we copy the rocksdb source to just outside the spdk directory.

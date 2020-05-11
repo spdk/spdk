@@ -368,7 +368,7 @@ killprocess "$spdk_tgt_pid"
 # End bdev configuration
 #-----------------------------------------------------
 
-run_test "bdev_hello_world" $rootdir/examples/bdev/hello_world/hello_bdev --json "$conf_file" -b "$hello_world_bdev"
+run_test "bdev_hello_world" $SPDK_EXAMPLE_DIR/hello_bdev --json "$conf_file" -b "$hello_world_bdev"
 run_test "bdev_bounds" bdev_bounds
 run_test "bdev_nbd" nbd_function_test $conf_file "$bdevs_name"
 if [[ $CONFIG_FIO_PLUGIN == y ]]; then

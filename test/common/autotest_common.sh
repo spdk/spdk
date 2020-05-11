@@ -178,6 +178,7 @@ fi
 
 # Export location of where all the SPDK binaries are
 export SPDK_BIN_DIR="$rootdir/build/bin"
+export SPDK_EXAMPLE_DIR="$rootdir/build/examples"
 
 # pass our valgrind desire on to unittest.sh
 if [ $SPDK_RUN_VALGRIND -eq 0 ]; then

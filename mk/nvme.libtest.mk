@@ -36,7 +36,7 @@ NVME_DIR := $(SPDK_ROOT_DIR)/lib/nvme
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-C_SRCS = $(APP:%=%.c)
+C_SRCS := $(APP:%=%.c)
 
 # Unable to combine the FIO plugin and the VPP socket abstraction (license incompatibility)
 SPDK_LIB_LIST = $(filter-out sock_vpp,$(SOCK_MODULES_LIST))

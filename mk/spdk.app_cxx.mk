@@ -33,11 +33,16 @@
 include $(SPDK_ROOT_DIR)/mk/spdk.app_vars.mk
 
 # Applications in app/ go into build/bin/.
+# Applications in examples/ go into build/examples/.
 # Use findstring to identify if the current directory is in the app
 # directory. If it is, change the APP location to build.
 APP_NAME := $(notdir $(APP))
 ifneq (,$(findstring $(SPDK_ROOT_DIR)/app,$(CURDIR)))
 	APP := $(APP_NAME:%=$(SPDK_ROOT_DIR)/build/bin/%)
+else
+ifneq (,$(findstring $(SPDK_ROOT_DIR)/examples,$(CURDIR)))
+	APP := $(APP_NAME:%=$(SPDK_ROOT_DIR)/build/examples/%)
+endif
 endif
 
 LIBS += $(SPDK_LIB_LINKER_ARGS)

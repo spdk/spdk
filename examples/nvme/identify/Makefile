@@ -35,10 +35,10 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 
 APP = identify
 
+include $(SPDK_ROOT_DIR)/mk/nvme.libtest.mk
+
 install: $(APP)
 	$(INSTALL_EXAMPLE)
 
 uninstall:
 	$(UNINSTALL_EXAMPLE)
-
-include $(SPDK_ROOT_DIR)/mk/nvme.libtest.mk
