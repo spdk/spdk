@@ -33,19 +33,10 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.app_cxx.mk
-
-CXX_SRCS := trace.cpp
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 APP = spdk_trace
 
-all: $(APP)
-	@:
+CXX_SRCS := trace.cpp
 
-$(APP): $(OBJS) $(SPDK_LIBS)
-	$(LINK_CXX)
-
-clean:
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app_cxx.mk

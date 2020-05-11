@@ -33,21 +33,13 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.app_cxx.mk
-
-CXXFLAGS += $(ENV_CXXFLAGS)
-CXXFLAGS += -I$(SPDK_ROOT_DIR)/lib
-CXX_SRCS = iscsi_top.cpp
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 APP = iscsi_top
 
-all: $(APP)
-	@:
+CXXFLAGS += $(ENV_CXXFLAGS)
+CXXFLAGS += -I$(SPDK_ROOT_DIR)/lib
 
-$(APP) : $(OBJS)
-	$(LINK_CXX)
+CXX_SRCS := iscsi_top.cpp
 
-clean:
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app_cxx.mk

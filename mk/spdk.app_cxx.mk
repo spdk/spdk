@@ -30,10 +30,27 @@
 #  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-
 include $(SPDK_ROOT_DIR)/mk/spdk.app_vars.mk
+
+LIBS += $(SPDK_LIB_LINKER_ARGS)
+
+CLEAN_FILES = $(APP)
+
+all : $(APP)
+	@:
 
 install: all
 
-uninstall:
+# To avoid overwriting warning
+empty_uninstall_rule:
 	@:
+
+uninstall: empty_uninstall_rule
+
+$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
+	$(LINK_CXX)
+
+clean :
+	$(CLEAN_C) $(CLEAN_FILES)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
