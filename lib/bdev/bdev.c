@@ -372,6 +372,8 @@ bdev_unlock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
 
 static inline void bdev_io_complete(void *ctx);
 
+static bool bdev_abort_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_io *bio_to_abort);
+
 void
 spdk_bdev_get_opts(struct spdk_bdev_opts *opts)
 {
@@ -2019,8 +2021,13 @@ _bdev_io_submit(void *ctx)
 	if (bdev_ch->flags & BDEV_CH_RESET_IN_PROGRESS) {
 		_bdev_io_complete_in_submit(bdev_ch, bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	} else if (bdev_ch->flags & BDEV_CH_QOS_ENABLED) {
-		TAILQ_INSERT_TAIL(&bdev->internal.qos->queued, bdev_io, internal.link);
-		bdev_qos_io_submit(bdev_ch, bdev->internal.qos);
+		if (spdk_unlikely(bdev_io->type == SPDK_BDEV_IO_TYPE_ABORT) &&
+		    bdev_abort_queued_io(&bdev->internal.qos->queued, bdev_io->u.abort.bio_to_abort)) {
+			_bdev_io_complete_in_submit(bdev_ch, bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		} else {
+			TAILQ_INSERT_TAIL(&bdev->internal.qos->queued, bdev_io, internal.link);
+			bdev_qos_io_submit(bdev_ch, bdev->internal.qos);
+		}
 	} else {
 		SPDK_ERRLOG("unknown bdev_ch flag %x found\n", bdev_ch->flags);
 		_bdev_io_complete_in_submit(bdev_ch, bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -2641,6 +2648,22 @@ bdev_abort_all_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_channel *ch)
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		}
 	}
+}
+
+static bool
+bdev_abort_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_io *bio_to_abort)
+{
+	struct spdk_bdev_io *bdev_io;
+
+	TAILQ_FOREACH(bdev_io, queue, internal.link) {
+		if (bdev_io == bio_to_abort) {
+			TAILQ_REMOVE(queue, bio_to_abort, internal.link);
+			spdk_bdev_io_complete(bio_to_abort, SPDK_BDEV_IO_STATUS_ABORTED);
+			return true;
+		}
+	}
+
+	return false;
 }
 
 static void

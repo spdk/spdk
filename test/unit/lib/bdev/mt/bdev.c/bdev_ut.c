@@ -134,10 +134,9 @@ static void
 stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 {
 	struct ut_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+	struct spdk_bdev_io *io;
 
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
-		struct spdk_bdev_io *io;
-
 		while (!TAILQ_EMPTY(&ch->outstanding_io)) {
 			io = TAILQ_FIRST(&ch->outstanding_io);
 			TAILQ_REMOVE(&ch->outstanding_io, io, module_link);
@@ -145,6 +144,21 @@ stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 			spdk_bdev_io_complete(io, SPDK_BDEV_IO_STATUS_FAILED);
 			ch->avail_cnt++;
 		}
+	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_ABORT) {
+		TAILQ_FOREACH(io, &ch->outstanding_io, module_link) {
+			if (io == bdev_io->u.abort.bio_to_abort) {
+				TAILQ_REMOVE(&ch->outstanding_io, io, module_link);
+				ch->outstanding_cnt--;
+				spdk_bdev_io_complete(io, SPDK_BDEV_IO_STATUS_ABORTED);
+				ch->avail_cnt++;
+
+				spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+				return;
+			}
+		}
+
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
 	}
 
 	if (ch->avail_cnt > 0) {
@@ -181,10 +195,17 @@ stub_complete_io(void *io_target, uint32_t num_to_complete)
 	return num_completed;
 }
 
+static bool
+stub_io_type_supported(void *ctx, enum spdk_bdev_io_type type)
+{
+	return true;
+}
+
 static struct spdk_bdev_fn_table fn_table = {
 	.get_io_channel =	stub_get_io_channel,
 	.destruct =		stub_destruct,
 	.submit_request =	stub_submit_request,
+	.io_type_supported =	stub_io_type_supported,
 };
 
 struct spdk_bdev_module bdev_ut_if;
@@ -527,7 +548,7 @@ io_during_io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	enum spdk_bdev_io_status *status = cb_arg;
 
-	*status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+	*status = bdev_io->internal.status;
 	spdk_bdev_free_io(bdev_io);
 }
 
@@ -641,7 +662,7 @@ basic_qos(void)
 	struct spdk_io_channel *io_ch[2];
 	struct spdk_bdev_channel *bdev_ch[2];
 	struct spdk_bdev *bdev;
-	enum spdk_bdev_io_status status;
+	enum spdk_bdev_io_status status, abort_status;
 	int rc;
 
 	setup_test();
@@ -705,6 +726,48 @@ basic_qos(void)
 	stub_complete_io(g_bdev.io_target, 0);
 	poll_threads();
 	CU_ASSERT(status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/* Reset rate limit for the next test cases. */
+	spdk_delay_us(SPDK_BDEV_QOS_TIMESLICE_IN_USEC);
+	poll_threads();
+
+	/*
+	 * Test abort request when QoS is enabled.
+	 */
+
+	/* Send an I/O on thread 0, which is where the QoS thread is running. */
+	set_thread(0);
+	status = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[0], NULL, 0, 1, io_during_io_done, &status);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(status == SPDK_BDEV_IO_STATUS_PENDING);
+	/* Send an abort to the I/O on the same thread. */
+	abort_status = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_abort(g_desc, io_ch[0], &status, io_during_io_done, &abort_status);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(abort_status == SPDK_BDEV_IO_STATUS_PENDING);
+	poll_threads();
+	CU_ASSERT(abort_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(status == SPDK_BDEV_IO_STATUS_ABORTED);
+
+	/* Send an I/O on thread 1. The QoS thread is not running here. */
+	status = SPDK_BDEV_IO_STATUS_PENDING;
+	set_thread(1);
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[1], NULL, 0, 1, io_during_io_done, &status);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(status == SPDK_BDEV_IO_STATUS_PENDING);
+	poll_threads();
+	/* Send an abort to the I/O on the same thread. */
+	abort_status = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_abort(g_desc, io_ch[1], &status, io_during_io_done, &abort_status);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(abort_status == SPDK_BDEV_IO_STATUS_PENDING);
+	poll_threads();
+	/* Complete the I/O with failure and the abort with success on thread 1. */
+	CU_ASSERT(abort_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(status == SPDK_BDEV_IO_STATUS_ABORTED);
+
+	set_thread(0);
 
 	/*
 	 * Close the descriptor only, which should stop the qos channel as
