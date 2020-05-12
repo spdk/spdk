@@ -115,11 +115,10 @@ int
 spdk_accel_submit_copy(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
 		       void *dst, void *src, uint64_t nbytes, spdk_accel_completion_cb cb)
 {
-	struct spdk_accel_task *req = accel_req;
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 
-	req->cb = cb;
-	return accel_ch->engine->copy(req->offload_ctx, accel_ch->ch, dst, src, nbytes,
+	accel_req->cb = cb;
+	return accel_ch->engine->copy(accel_req->offload_ctx, accel_ch->ch, dst, src, nbytes,
 				      _accel_engine_done);
 }
 
@@ -129,7 +128,6 @@ spdk_accel_submit_dualcast(struct spdk_accel_task *accel_req, struct spdk_io_cha
 			   void *dst1, void *dst2, void *src, uint64_t nbytes,
 			   spdk_accel_completion_cb cb)
 {
-	struct spdk_accel_task *req = accel_req;
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 
 	if ((uintptr_t)dst1 & (ALIGN_4K - 1) || (uintptr_t)dst2 & (ALIGN_4K - 1)) {
@@ -137,8 +135,8 @@ spdk_accel_submit_dualcast(struct spdk_accel_task *accel_req, struct spdk_io_cha
 		return -EINVAL;
 	}
 
-	req->cb = cb;
-	return accel_ch->engine->dualcast(req->offload_ctx, accel_ch->ch, dst1, dst2, src, nbytes,
+	accel_req->cb = cb;
+	return accel_ch->engine->dualcast(accel_req->offload_ctx, accel_ch->ch, dst1, dst2, src, nbytes,
 					  _accel_engine_done);
 }
 
@@ -159,11 +157,10 @@ int
 spdk_accel_submit_fill(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
 		       void *dst, uint8_t fill, uint64_t nbytes, spdk_accel_completion_cb cb)
 {
-	struct spdk_accel_task *req = accel_req;
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 
-	req->cb = cb;
-	return accel_ch->engine->fill(req->offload_ctx, accel_ch->ch, dst, fill, nbytes,
+	accel_req->cb = cb;
+	return accel_ch->engine->fill(accel_req->offload_ctx, accel_ch->ch, dst, fill, nbytes,
 				      _accel_engine_done);
 }
 
@@ -172,13 +169,11 @@ int
 spdk_accel_submit_crc32c(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
 			 uint32_t *dst, void *src, uint32_t seed, uint64_t nbytes, spdk_accel_completion_cb cb)
 {
-	struct spdk_accel_task *req = accel_req;
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 
-	req->cb = cb;
-	return accel_ch->engine->crc32c(req->offload_ctx, accel_ch->ch, dst, src,
-					seed, nbytes,
-					_accel_engine_done);
+	accel_req->cb = cb;
+	return accel_ch->engine->crc32c(accel_req->offload_ctx, accel_ch->ch, dst, src,
+					seed, nbytes, _accel_engine_done);
 }
 
 
