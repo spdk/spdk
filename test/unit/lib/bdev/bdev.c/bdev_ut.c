@@ -3181,11 +3181,14 @@ bdev_io_abort(void)
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc = NULL;
 	struct spdk_io_channel *io_ch;
+	struct spdk_bdev_channel *channel;
+	struct spdk_bdev_mgmt_channel *mgmt_ch;
 	struct spdk_bdev_opts bdev_opts = {
-		.bdev_io_pool_size = 4,
+		.bdev_io_pool_size = 7,
 		.bdev_io_cache_size = 2,
 	};
-	uint64_t io_ctx1 = 0, io_ctx2 = 0;
+	struct iovec iov[BDEV_IO_NUM_CHILD_IOV * 2];
+	uint64_t io_ctx1 = 0, io_ctx2 = 0, i;
 	int rc;
 
 	rc = spdk_bdev_set_opts(&bdev_opts);
@@ -3199,6 +3202,8 @@ bdev_io_abort(void)
 	CU_ASSERT(desc != NULL);
 	io_ch = spdk_bdev_get_io_channel(desc);
 	CU_ASSERT(io_ch != NULL);
+	channel = spdk_io_channel_get_ctx(io_ch);
+	mgmt_ch = channel->shared_resource->mgmt_ch;
 
 	g_abort_done = false;
 
@@ -3259,6 +3264,97 @@ bdev_io_abort(void)
 	CU_ASSERT(g_abort_status == SPDK_BDEV_IO_STATUS_SUCCESS);
 
 	g_io_exp_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	bdev->optimal_io_boundary = 16;
+	bdev->split_on_optimal_io_boundary = true;
+
+	/* Test that a single-vector command which is split is aborted correctly.
+	 * Offset 14, length 8, payload 0xF000
+	 *  Child - Offset 14, length 2, payload 0xF000
+	 *  Child - Offset 16, length 6, payload 0xF000 + 2 * 512
+	 */
+	g_io_done = false;
+
+	rc = spdk_bdev_read_blocks(desc, io_ch, (void *)0xF000, 14, 8, io_done, &io_ctx1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 2);
+
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	rc = spdk_bdev_abort(desc, io_ch, &io_ctx1, abort_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_FAILED);
+	stub_complete_io(2);
+	CU_ASSERT(g_abort_done == true);
+	CU_ASSERT(g_abort_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/* Test that a multi-vector command that needs to be split by strip and then
+	 * needs to be split is aborted correctly. Abort is requested before the second
+	 * child I/O was submitted. The parent I/O should complete with failure without
+	 * submitting the second child I/O.
+	 */
+	for (i = 0; i < BDEV_IO_NUM_CHILD_IOV * 2; i++) {
+		iov[i].iov_base = (void *)((i + 1) * 0x10000);
+		iov[i].iov_len = 512;
+	}
+
+	bdev->optimal_io_boundary = BDEV_IO_NUM_CHILD_IOV;
+	g_io_done = false;
+	rc = spdk_bdev_readv_blocks(desc, io_ch, iov, BDEV_IO_NUM_CHILD_IOV * 2, 0,
+				    BDEV_IO_NUM_CHILD_IOV * 2, io_done, &io_ctx1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	rc = spdk_bdev_abort(desc, io_ch, &io_ctx1, abort_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_FAILED);
+	stub_complete_io(1);
+	CU_ASSERT(g_abort_done == true);
+	CU_ASSERT(g_abort_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+
+	bdev->optimal_io_boundary = 16;
+	g_io_done = false;
+
+	/* Test that a ingle-vector command which is split is aborted correctly.
+	 * Differently from the above, the child abort request will be submitted
+	 * sequentially due to the capacity of spdk_bdev_io.
+	 */
+	rc = spdk_bdev_read_blocks(desc, io_ch, (void *)0xF000, 14, 50, io_done, &io_ctx1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 4);
+
+	g_abort_done = false;
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	rc = spdk_bdev_abort(desc, io_ch, &io_ctx1, abort_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(!TAILQ_EMPTY(&mgmt_ch->io_wait_queue));
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 4);
+
+	stub_complete_io(1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_FAILED);
+	stub_complete_io(3);
+	CU_ASSERT(g_abort_done == true);
+	CU_ASSERT(g_abort_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
 
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);

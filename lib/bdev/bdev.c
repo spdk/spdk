@@ -4474,6 +4474,7 @@ spdk_bdev_nvme_io_passthru_md(struct spdk_bdev_desc *desc, struct spdk_io_channe
 }
 
 static void bdev_abort_retry(void *ctx);
+static void bdev_abort(struct spdk_bdev_io *parent_io);
 
 static void
 bdev_abort_io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
@@ -4524,10 +4525,6 @@ bdev_abort_io(struct spdk_bdev_desc *desc, struct spdk_bdev_channel *channel,
 		return -ENOTSUP;
 	}
 
-	if (bdev->split_on_optimal_io_boundary && bdev_io_should_split(bio_to_abort)) {
-		return -ENOTSUP;
-	}
-
 	bdev_io = bdev_channel_get_io(channel);
 	if (bdev_io == NULL) {
 		return -ENOMEM;
@@ -4537,6 +4534,20 @@ bdev_abort_io(struct spdk_bdev_desc *desc, struct spdk_bdev_channel *channel,
 	bdev_io->internal.desc = desc;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_ABORT;
 	bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	if (bdev->split_on_optimal_io_boundary && bdev_io_should_split(bio_to_abort)) {
+		bdev_io->u.bdev.abort.bio_cb_arg = bio_to_abort;
+
+		/* Parent abort request is not submitted directly, but to manage its
+		 * execution add it to the submitted list here.
+		 */
+		bdev_io->internal.submit_tsc = spdk_get_ticks();
+		TAILQ_INSERT_TAIL(&channel->io_submitted, bdev_io, internal.ch_link);
+
+		bdev_abort(bdev_io);
+
+		return 0;
+	}
 
 	bdev_io->u.abort.bio_to_abort = bio_to_abort;
 
