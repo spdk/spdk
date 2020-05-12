@@ -911,15 +911,9 @@ const struct ocf_queue_ops mngt_queue_ops = {
 };
 
 static void
-clear_starting_indicator_vbdev(struct vbdev_ocf *vbdev)
-{
-	vbdev->state.starting = false;
-}
-
-static void
 vbdev_ocf_mngt_exit(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_fn *rollback_path, int rc)
 {
-	clear_starting_indicator_vbdev(vbdev);
+	vbdev->state.starting = false;
 	vbdev_ocf_mngt_stop(vbdev, rollback_path, rc);
 }
 
