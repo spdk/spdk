@@ -74,8 +74,7 @@ rpc_bdev_nvme_opal_init(struct spdk_jsonrpc_request *request,
 
 	/* check if opal supported */
 	nvme_ctrlr = nvme_bdev_ctrlr_get_by_name(req.nvme_ctrlr_name);
-	if (nvme_ctrlr == NULL || nvme_ctrlr->opal_dev == NULL ||
-	    !spdk_opal_supported(nvme_ctrlr->opal_dev)) {
+	if (nvme_ctrlr == NULL || nvme_ctrlr->opal_dev == NULL) {
 		SPDK_ERRLOG("%s not support opal\n", req.nvme_ctrlr_name);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 		goto out;
@@ -153,8 +152,7 @@ rpc_bdev_nvme_opal_revert(struct spdk_jsonrpc_request *request,
 
 	/* check if opal supported */
 	nvme_ctrlr = nvme_bdev_ctrlr_get_by_name(req.nvme_ctrlr_name);
-	if (nvme_ctrlr == NULL || nvme_ctrlr->opal_dev == NULL ||
-	    !spdk_opal_supported(nvme_ctrlr->opal_dev)) {
+	if (nvme_ctrlr == NULL || nvme_ctrlr->opal_dev == NULL) {
 		SPDK_ERRLOG("%s not support opal\n", req.nvme_ctrlr_name);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 		goto out;
