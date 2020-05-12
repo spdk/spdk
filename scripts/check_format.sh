@@ -261,20 +261,11 @@ if [ -n "$shfmt" ]; then
 	)
 
 	if ((${#sh_files[@]})); then
-		printf 'Checking .sh formatting style...\n\n'
-		printf '  Found %u updated|new .sh file%s from the following commits:\n' \
-			"${#sh_files[@]}" "${silly_plural[${#sh_files[@]} > 1 ? 1 : 0]}"
-		printf '   * %s\n' "${commits[@]}"
+		printf 'Checking .sh formatting style...'
 
 		if ((${#sh_files_staged[@]})); then
-			printf '  Found %u .sh file%s in staging area:\n' \
-				"${#sh_files_staged[@]}" "${silly_plural[${#sh_files_staged[@]} > 1 ? 1 : 0]}"
-			printf '    * %s\n' "${sh_files_staged[@]}"
 			sh_files+=("${sh_files_staged[@]}")
 		fi
-
-		printf '  Running %s against the following file%s:\n' "$shfmt" "${silly_plural[${#sh_files[@]} > 1 ? 1 : 0]}"
-		printf '   * %s\n' "${sh_files[@]}"
 
 		shfmt_cmdline+=(-i 0)     # indent_style = tab|indent_size = 0
 		shfmt_cmdline+=(-bn)      # binary_next_line = true
@@ -310,7 +301,7 @@ if [ -n "$shfmt" ]; then
 			rc=1
 		else
 			rm -f "$diff"
-			printf 'OK\n'
+			printf ' OK\n'
 		fi
 	fi
 else
