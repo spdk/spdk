@@ -54,6 +54,91 @@ This type of error is most common one. It mean that there is an error while proc
 - Parameter domain check failed.
 - Request is valid but some other error occurred during processing request. If possible message explains the error reason nature.
 
+## Adding external RPC methods
+
+SPDK includes both in-tree modules as well as the ability to use external modules.  The in-tree modules include some python
+scripts to ease the process of sending RPCs to in-tree modules.  External modules can utilize this same framework to add new RPC
+methods as follows:
+
+If PYTHONPATH doesn't include the location of the external RPC python script, it should be updated:
+
+~~~
+export PYTHONPATH=/home/user/plugin_example/
+~~~
+
+In provided location, create python module file (e.g. rpc_plugin.py) with new RPC methods.  The file should contain
+spdk_rpc_plugin_initialize() method that will be called when the plugin is loaded to define new parsers for provided subparsers
+argument that adds new RPC calls (subparsers.add_parser()).  The new parsers should use the client.call() method to call RPC
+functions registered within the external module using the SPDK_RPC_REGISTER() macro.  Example:
+
+~~~
+from rpc.client import print_json
+
+
+def example_create(client, num_blocks, block_size, name=None, uuid=None):
+    """Construct an example block device.
+
+    Args:
+        num_blocks: size of block device in blocks
+        block_size: block size of device; must be a power of 2 and at least 512
+        name: name of block device (optional)
+        uuid: UUID of block device (optional)
+
+    Returns:
+        Name of created block device.
+    """
+    params = {'num_blocks': num_blocks, 'block_size': block_size}
+    if name:
+        params['name'] = name
+    if uuid:
+        params['uuid'] = uuid
+    return client.call('bdev_example_create', params)
+
+
+def example_delete(client, name):
+    """Delete example block device.
+
+    Args:
+        bdev_name: name of bdev to delete
+    """
+    params = {'name': name}
+    return client.call('bdev_example_delete', params)
+
+
+def spdk_rpc_plugin_initialize(subparsers):
+    def bdev_example_create(args):
+        num_blocks = (args.total_size * 1024 * 1024) // args.block_size
+        print_json(example_create(args.client,
+                                  num_blocks=int(num_blocks),
+                                  block_size=args.block_size,
+                                  name=args.name,
+                                  uuid=args.uuid))
+
+    p = subparsers.add_parser('bdev_example_create',
+                              help='Create an example bdev')
+    p.add_argument('-b', '--name', help="Name of the bdev")
+    p.add_argument('-u', '--uuid', help="UUID of the bdev")
+    p.add_argument(
+        'total_size', help='Size of bdev in MB (float > 0)', type=float)
+    p.add_argument('block_size', help='Block size for this bdev', type=int)
+    p.set_defaults(func=bdev_example_create)
+
+    def bdev_example_delete(args):
+        example_delete(args.client,
+                      name=args.name)
+
+    p = subparsers.add_parser('bdev_example_delete',
+                              help='Delete an example disk')
+    p.add_argument('name', help='example bdev name')
+    p.set_defaults(func=bdev_example_delete)
+~~~
+
+Finally, call the rpc.py script with '--plugin' parameter to provide above python module name:
+
+~~~
+./scripts/rpc.py --plugin rpc_plugin bdev_example_create 10 4096
+~~~
+
 # App Framework {#jsonrpc_components_app}
 
 ## spdk_kill_instance {#rpc_spdk_kill_instance}
