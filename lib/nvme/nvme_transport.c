@@ -38,6 +38,8 @@
 #include "nvme_internal.h"
 #include "spdk/queue.h"
 
+#define SPDK_MAX_NUM_OF_TRANSPORTS 16
+
 struct spdk_nvme_transport {
 	struct spdk_nvme_transport_ops	ops;
 	TAILQ_ENTRY(spdk_nvme_transport)	link;
@@ -45,6 +47,9 @@ struct spdk_nvme_transport {
 
 TAILQ_HEAD(nvme_transport_list, spdk_nvme_transport) g_spdk_nvme_transports =
 	TAILQ_HEAD_INITIALIZER(g_spdk_nvme_transports);
+
+struct spdk_nvme_transport g_spdk_transports[SPDK_MAX_NUM_OF_TRANSPORTS] = {};
+int g_current_transport_index = 0;
 
 const struct spdk_nvme_transport *
 nvme_get_first_transport(void)
@@ -101,12 +106,12 @@ void spdk_nvme_transport_register(const struct spdk_nvme_transport_ops *ops)
 		assert(false);
 	}
 
-	new_transport = calloc(1, sizeof(*new_transport));
-	if (new_transport == NULL) {
-		SPDK_ERRLOG("Unable to allocate memory to register new NVMe transport.\n");
+	if (g_current_transport_index == SPDK_MAX_NUM_OF_TRANSPORTS) {
+		SPDK_ERRLOG("Unable to register new NVMe transport.\n");
 		assert(false);
 		return;
 	}
+	new_transport = &g_spdk_transports[g_current_transport_index++];
 
 	new_transport->ops = *ops;
 	TAILQ_INSERT_TAIL(&g_spdk_nvme_transports, new_transport, link);
