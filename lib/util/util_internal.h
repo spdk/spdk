@@ -1,6 +1,7 @@
 /*-
  *   BSD LICENSE
  *
+ *   Copyright (C) 2008-2012 Daisuke Aoyama <aoyama@peach.ne.jp>.
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
  *
@@ -31,65 +32,46 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "util_internal.h"
-#include "spdk/crc32.h"
+#ifndef SPDK_UTIL_INTERNAL_H
+#define SPDK_UTIL_INTERNAL_H
 
-void
-crc32_table_init(struct spdk_crc32_table *table, uint32_t polynomial_reflect)
-{
-	int i, j;
-	uint32_t val;
+#include "spdk/stdinc.h"
 
-	for (i = 0; i < 256; i++) {
-		val = i;
-		for (j = 0; j < 8; j++) {
-			if (val & 1) {
-				val = (val >> 1) ^ polynomial_reflect;
-			} else {
-				val = (val >> 1);
-			}
-		}
-		table->table[i] = val;
-	}
-}
+/**
+ * IEEE CRC-32 polynomial (bit reflected)
+ */
+#define SPDK_CRC32_POLYNOMIAL_REFLECT 0xedb88320UL
 
-#ifdef SPDK_HAVE_ARM_CRC
+/**
+ * CRC-32C (Castagnoli) polynomial (bit reflected)
+ */
+#define SPDK_CRC32C_POLYNOMIAL_REFLECT 0x82f63b78UL
 
-uint32_t
-crc32_update(const struct spdk_crc32_table *table, const void *buf, size_t len, uint32_t crc)
-{
-	size_t count;
-	const uint64_t *dword_buf;
+struct spdk_crc32_table {
+	uint32_t table[256];
+};
 
-	count = len & 7;
-	while (count--) {
-		crc = __crc32b(crc, *(const uint8_t *)buf);
-		buf++;
-	}
-	dword_buf = (const uint64_t *)buf;
+/**
+ * Initialize a CRC32 lookup table for a given polynomial.
+ *
+ * \param table Table to fill with precalculated CRC-32 data.
+ * \param polynomial_reflect Bit-reflected CRC-32 polynomial.
+ */
+void crc32_table_init(struct spdk_crc32_table *table,
+		      uint32_t polynomial_reflect);
 
-	count = len / 8;
-	while (count--) {
-		crc = __crc32d(crc, *dword_buf);
-		dword_buf++;
-	}
 
-	return crc;
-}
+/**
+ * Calculate a partial CRC-32 checksum.
+ *
+ * \param table CRC-32 table initialized with crc32_table_init().
+ * \param buf Data buffer to checksum.
+ * \param len Length of buf in bytes.
+ * \param crc Previous CRC-32 value.
+ * \return Updated CRC-32 value.
+ */
+uint32_t crc32_update(const struct spdk_crc32_table *table,
+		      const void *buf, size_t len,
+		      uint32_t crc);
 
-#else
-
-uint32_t
-crc32_update(const struct spdk_crc32_table *table, const void *buf, size_t len, uint32_t crc)
-{
-	const uint8_t *buf_u8 = buf;
-	size_t i;
-
-	for (i = 0; i < len; i++) {
-		crc = (crc >> 8) ^ table->table[(crc ^ buf_u8[i]) & 0xff];
-	}
-
-	return crc;
-}
-
-#endif
+#endif /* SPDK_UTIL_INTERNAL_H */

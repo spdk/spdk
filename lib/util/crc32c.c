@@ -31,6 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "util_internal.h"
 #include "spdk/crc32.h"
 
 #ifdef SPDK_CONFIG_ISAL
@@ -120,13 +121,13 @@ static struct spdk_crc32_table g_crc32c_table;
 __attribute__((constructor)) static void
 spdk_crc32c_init(void)
 {
-	spdk_crc32_table_init(&g_crc32c_table, SPDK_CRC32C_POLYNOMIAL_REFLECT);
+	crc32_table_init(&g_crc32c_table, SPDK_CRC32C_POLYNOMIAL_REFLECT);
 }
 
 uint32_t
 spdk_crc32c_update(const void *buf, size_t len, uint32_t crc)
 {
-	return spdk_crc32_update(&g_crc32c_table, buf, len, crc);
+	return crc32_update(&g_crc32c_table, buf, len, crc);
 }
 
 #endif
