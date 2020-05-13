@@ -255,7 +255,7 @@ function install_qemu() {
 		fi
 
 		# Forked QEMU
-		SPDK_QEMU_BRANCH=spdk-3.0.0
+		SPDK_QEMU_BRANCH=spdk-5.0.0
 		mkdir -p qemu
 		if [ ! -d "qemu/$SPDK_QEMU_BRANCH" ]; then
 			git -C ./qemu clone "${GIT_REPO_QEMU}" -b "$SPDK_QEMU_BRANCH" "$SPDK_QEMU_BRANCH"
