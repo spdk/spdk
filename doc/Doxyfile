@@ -819,6 +819,7 @@ INPUT                  += \
                          iscsi.md \
                          jsonrpc.md \
                          jsonrpc_proxy.md \
+                         libraries.md \
                          lvol.md \
                          memory.md \
                          notify.md \
