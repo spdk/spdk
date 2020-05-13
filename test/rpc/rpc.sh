@@ -25,14 +25,29 @@ function rpc_integrity() {
 	}
 }
 
+function rpc_plugins() {
+	time {
+		malloc=$($rpc --plugin rpc_plugin create_malloc)
+		bdevs=$($rpc bdev_get_bdevs)
+		[ "$(jq length <<< "$bdevs")" == "1" ]
+
+		$rpc --plugin rpc_plugin delete_malloc $malloc
+		bdevs=$($rpc bdev_get_bdevs)
+		[ "$(jq length <<< "$bdevs")" == "0" ]
+	}
+}
+
 $rootdir/app/spdk_tgt/spdk_tgt &
 spdk_pid=$!
 trap 'killprocess $spdk_pid; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $spdk_pid
 
+export PYTHONPATH=$PWD/test/rpc/
+
 # basic integrity test
 rpc="$rootdir/scripts/rpc.py"
 run_test "rpc_integrity" rpc_integrity
+run_test "rpc_plugins" rpc_plugins
 # same test, but with rpc_cmd() instead
 rpc="rpc_cmd"
 run_test "rpc_daemon_integrity" rpc_integrity
