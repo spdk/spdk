@@ -331,8 +331,11 @@ function install_nvmecli() {
 			echo "nvme-cli already checked out. Skipping"
 		fi
 		if [ ! -d "/usr/local/src/nvme-cli" ]; then
-			git clone "https://review.spdk.io/spdk/nvme-cli" "nvme-cli-cuse"
-			git -C ./nvme-cli-cuse checkout nvme-cuse
+			# Changes required for SPDK are already merged on top of
+			# nvme-cli, however not released yet.
+			# Support for SPDK should be released in nvme-cli >1.11.1
+			git clone "https://github.com/linux-nvme/nvme-cli.git" "nvme-cli-cuse"
+			git -C ./nvme-cli-cuse checkout "e770466615096a6d41f038a28819b00bc3078e1d"
 			make -C ./nvme-cli-cuse
 			sudo mv ./nvme-cli-cuse /usr/local/src/nvme-cli
 		fi
