@@ -83,6 +83,8 @@ if [ $EUID -ne 0 ]; then
 fi
 
 function ssh_initiator() {
+	# shellcheck disable=SC2029
+	# (we want to expand $@ immediately, not on the VM)
 	ssh -i $HOME/.ssh/spdk_vhost_id_rsa root@$IP_I_SSH "$@"
 }
 
