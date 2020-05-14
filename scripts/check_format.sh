@@ -227,8 +227,16 @@ else
 	echo "You do not have pycodestyle or pep8 installed so your Python style is not being checked!"
 fi
 
-shfmt="shfmt-3.1.0"
-if hash "$shfmt" 2> /dev/null; then
+# find compatible shfmt binary
+shfmt_bins=$(compgen -c | grep '^shfmt' || true)
+for bin in $shfmt_bins; do
+	if [[ "$("$bin" --version)" > "v3.0.9" ]]; then
+		shfmt=$bin
+		break
+	fi
+done
+
+if [ -n "$shfmt" ]; then
 	shfmt_cmdline=() silly_plural=()
 
 	silly_plural[1]="s"
@@ -302,7 +310,7 @@ if hash "$shfmt" 2> /dev/null; then
 		fi
 	fi
 else
-	printf '%s not detected, Bash style formatting check is skipped\n' "$shfmt"
+	echo "shfmt not detected, Bash style formatting check is skipped"
 fi
 
 if hash shellcheck 2> /dev/null; then
