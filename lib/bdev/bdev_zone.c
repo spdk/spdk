@@ -109,9 +109,9 @@ spdk_bdev_zone_management(struct spdk_bdev_desc *desc, struct spdk_io_channel *c
 }
 
 static int
-_spdk_bdev_append_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-			  void *buf, void *md_buf, uint64_t zone_id, uint64_t num_blocks,
-			  spdk_bdev_io_completion_cb cb, void *cb_arg)
+zone_bdev_append_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			 void *buf, void *md_buf, uint64_t zone_id, uint64_t num_blocks,
+			 spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 	struct spdk_bdev_io *bdev_io;
@@ -143,8 +143,8 @@ spdk_bdev_zone_append(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		      void *buf, uint64_t start_lba, uint64_t num_blocks,
 		      spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	return _spdk_bdev_append_with_md(desc, ch, buf, NULL, start_lba, num_blocks,
-					 cb, cb_arg);
+	return zone_bdev_append_with_md(desc, ch, buf, NULL, start_lba, num_blocks,
+					cb, cb_arg);
 }
 
 int
@@ -152,8 +152,8 @@ spdk_bdev_zone_append_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channe
 			      void *buf, void *md, uint64_t start_lba, uint64_t num_blocks,
 			      spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	return _spdk_bdev_append_with_md(desc, ch, buf, md, start_lba, num_blocks,
-					 cb, cb_arg);
+	return zone_bdev_append_with_md(desc, ch, buf, md, start_lba, num_blocks,
+					cb, cb_arg);
 }
 
 int

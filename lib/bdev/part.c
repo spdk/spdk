@@ -90,7 +90,7 @@ spdk_bdev_part_base_get_bdev_name(struct spdk_bdev_part_base *part_base)
 }
 
 static void
-_spdk_bdev_part_base_free(void *ctx)
+bdev_part_base_free(void *ctx)
 {
 	struct spdk_bdev_desc *desc = ctx;
 
@@ -103,7 +103,7 @@ spdk_bdev_part_base_free(struct spdk_bdev_part_base *base)
 	if (base->desc) {
 		/* Close the underlying bdev on its same opened thread. */
 		if (base->thread && base->thread != spdk_get_thread()) {
-			spdk_thread_send_msg(base->thread, _spdk_bdev_part_base_free, base->desc);
+			spdk_thread_send_msg(base->thread, bdev_part_base_free, base->desc);
 		} else {
 			spdk_bdev_close(base->desc);
 		}
