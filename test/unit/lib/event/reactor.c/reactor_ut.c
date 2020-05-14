@@ -100,7 +100,7 @@ test_event_call(void)
 	reactor = spdk_reactor_get(0);
 	CU_ASSERT(reactor != NULL);
 
-	CU_ASSERT(_spdk_event_queue_run_batch(reactor) == 1);
+	CU_ASSERT(event_queue_run_batch(reactor) == 1);
 	CU_ASSERT(test1 == 1);
 	CU_ASSERT(test2 == 0xFF);
 
@@ -136,7 +136,7 @@ test_schedule_thread(void)
 
 	MOCK_SET(spdk_env_get_current_core, 3);
 
-	CU_ASSERT(_spdk_event_queue_run_batch(reactor) == 1);
+	CU_ASSERT(event_queue_run_batch(reactor) == 1);
 
 	MOCK_CLEAR(spdk_env_get_current_core);
 
@@ -187,7 +187,7 @@ test_reschedule_thread(void)
 	CU_ASSERT(reactor != NULL);
 	MOCK_SET(spdk_env_get_current_core, 1);
 
-	CU_ASSERT(_spdk_event_queue_run_batch(reactor) == 1);
+	CU_ASSERT(event_queue_run_batch(reactor) == 1);
 	CU_ASSERT(TAILQ_FIRST(&reactor->threads) == lw_thread);
 
 	spdk_set_thread(thread);
@@ -206,7 +206,7 @@ test_reschedule_thread(void)
 
 	CU_ASSERT(lw_thread->resched == true);
 
-	_spdk_reactor_run(reactor);
+	reactor_run(reactor);
 
 	CU_ASSERT(lw_thread->resched == false);
 	CU_ASSERT(TAILQ_EMPTY(&reactor->threads));
@@ -215,13 +215,13 @@ test_reschedule_thread(void)
 	CU_ASSERT(reactor != NULL);
 	MOCK_SET(spdk_env_get_current_core, 0);
 
-	CU_ASSERT(_spdk_event_queue_run_batch(reactor) == 0);
+	CU_ASSERT(event_queue_run_batch(reactor) == 0);
 
 	reactor = spdk_reactor_get(2);
 	CU_ASSERT(reactor != NULL);
 	MOCK_SET(spdk_env_get_current_core, 2);
 
-	CU_ASSERT(_spdk_event_queue_run_batch(reactor) == 1);
+	CU_ASSERT(event_queue_run_batch(reactor) == 1);
 
 	CU_ASSERT(TAILQ_FIRST(&reactor->threads) == lw_thread);
 
@@ -287,7 +287,7 @@ test_for_each_reactor(void)
 		reactor = spdk_reactor_get(i);
 		CU_ASSERT(reactor != NULL);
 
-		_spdk_event_queue_run_batch(reactor);
+		event_queue_run_batch(reactor);
 		CU_ASSERT(count == (i + 1));
 		CU_ASSERT(done == false);
 	}
@@ -296,7 +296,7 @@ test_for_each_reactor(void)
 	reactor = spdk_reactor_get(0);
 	CU_ASSERT(reactor != NULL);
 
-	_spdk_event_queue_run_batch(reactor);
+	event_queue_run_batch(reactor);
 	CU_ASSERT(count == 6);
 	CU_ASSERT(done == true);
 
@@ -376,7 +376,7 @@ test_reactor_stats(void)
 	idle2 = spdk_poller_register(poller_run_idle, (void *)300, 0);
 	CU_ASSERT(idle2 != NULL);
 
-	reactor_run(reactor);
+	_reactor_run(reactor);
 
 	CU_ASSERT(thread1->tsc_last == 200);
 	CU_ASSERT(thread1->stats.busy_tsc == 100);
@@ -398,7 +398,7 @@ test_reactor_stats(void)
 	busy2 = spdk_poller_register(poller_run_busy, (void *)400, 0);
 	CU_ASSERT(busy2 != NULL);
 
-	reactor_run(reactor);
+	_reactor_run(reactor);
 
 	CU_ASSERT(thread1->tsc_last == 700);
 	CU_ASSERT(thread1->stats.busy_tsc == 100);
@@ -418,7 +418,7 @@ test_reactor_stats(void)
 	spdk_poller_unregister(&busy2);
 	spdk_thread_exit(thread2);
 
-	reactor_run(reactor);
+	_reactor_run(reactor);
 
 	CU_ASSERT(TAILQ_EMPTY(&reactor->threads));
 

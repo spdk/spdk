@@ -703,7 +703,7 @@ spdk_app_fini(void)
 }
 
 static void
-_spdk_app_stop(void *arg1)
+app_stop(void *arg1)
 {
 	spdk_rpc_finish();
 	spdk_subsystem_fini(spdk_reactors_stop, NULL);
@@ -720,7 +720,7 @@ spdk_app_stop(int rc)
 	 * We want to run spdk_subsystem_fini() from the same thread where spdk_subsystem_init()
 	 * was called.
 	 */
-	spdk_thread_send_msg(g_app_thread, _spdk_app_stop, NULL);
+	spdk_thread_send_msg(g_app_thread, app_stop, NULL);
 }
 
 static void

@@ -213,7 +213,7 @@ spdk_subsystem_init(spdk_subsystem_init_fn cb_fn, void *cb_arg)
 }
 
 static void
-_spdk_subsystem_fini_next(void *arg1)
+subsystem_fini_next(void *arg1)
 {
 	assert(g_fini_thread == spdk_get_thread());
 
@@ -248,9 +248,9 @@ void
 spdk_subsystem_fini_next(void)
 {
 	if (g_fini_thread != spdk_get_thread()) {
-		spdk_thread_send_msg(g_fini_thread, _spdk_subsystem_fini_next, NULL);
+		spdk_thread_send_msg(g_fini_thread, subsystem_fini_next, NULL);
 	} else {
-		_spdk_subsystem_fini_next(NULL);
+		subsystem_fini_next(NULL);
 	}
 }
 

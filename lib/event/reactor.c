@@ -210,7 +210,7 @@ spdk_event_call(struct spdk_event *event)
 }
 
 static inline uint32_t
-_spdk_event_queue_run_batch(struct spdk_reactor *reactor)
+event_queue_run_batch(struct spdk_reactor *reactor)
 {
 	unsigned count, i;
 	void *events[SPDK_EVENT_BATCH_SIZE];
@@ -312,14 +312,14 @@ static int _reactor_schedule_thread(struct spdk_thread *thread);
 static uint64_t g_rusage_period;
 
 static void
-reactor_run(struct spdk_reactor *reactor)
+_reactor_run(struct spdk_reactor *reactor)
 {
 	struct spdk_thread	*thread;
 	struct spdk_lw_thread	*lw_thread, *tmp;
 	uint64_t		now;
 	int			rc;
 
-	_spdk_event_queue_run_batch(reactor);
+	event_queue_run_batch(reactor);
 
 	TAILQ_FOREACH_SAFE(lw_thread, &reactor->threads, link, tmp) {
 		thread = spdk_thread_get_from_ctx(lw_thread);
@@ -361,7 +361,7 @@ reactor_run(struct spdk_reactor *reactor)
 }
 
 static int
-_spdk_reactor_run(void *arg)
+reactor_run(void *arg)
 {
 	struct spdk_reactor	*reactor = arg;
 	struct spdk_thread	*thread;
@@ -379,7 +379,7 @@ _spdk_reactor_run(void *arg)
 	reactor->tsc_last = spdk_get_ticks();
 
 	while (1) {
-		reactor_run(reactor);
+		_reactor_run(reactor);
 
 		if (g_reactor_state != SPDK_REACTOR_STATE_RUNNING) {
 			break;
@@ -453,7 +453,7 @@ spdk_reactors_start(void)
 				continue;
 			}
 
-			rc = spdk_env_thread_launch_pinned(reactor->lcore, _spdk_reactor_run, reactor);
+			rc = spdk_env_thread_launch_pinned(reactor->lcore, reactor_run, reactor);
 			if (rc < 0) {
 				SPDK_ERRLOG("Unable to start reactor thread on core %u\n", reactor->lcore);
 				assert(false);
@@ -474,7 +474,7 @@ spdk_reactors_start(void)
 	/* Start the master reactor */
 	reactor = spdk_reactor_get(current_core);
 	assert(reactor != NULL);
-	_spdk_reactor_run(reactor);
+	reactor_run(reactor);
 
 	spdk_env_thread_wait_all();
 
