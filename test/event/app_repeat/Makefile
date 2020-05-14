@@ -31,18 +31,24 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-DIRS-y = event_perf reactor reactor_perf
+APP = app_repeat
+C_SRCS := app_repeat.c
 
-ifeq ($(OS),Linux)
-DIRS-y += app_repeat
-endif
+# Some of the modules and libaries are not repeatable yet, only organize
+# the repeatable ones.
+SPDK_LIB_LIST = event_bdev event_accel event_vmd event_sock
+SPDK_LIB_LIST += event log trace conf thread util bdev accel rpc jsonrpc json sock vmd
+SPDK_LIB_LIST += app_rpc log_rpc bdev_rpc notify
+SPDK_LIB_LIST += event_nbd nbd
 
-.PHONY: all clean $(DIRS-y)
+BLOCKDEV_LIST = bdev_malloc bdev_null
+BLOCKDEV_LIST += bdev_aio
+SYS_LIBS += -laio
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+SPDK_LIB_LIST += $(BLOCKDEV_LIST)
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
