@@ -878,6 +878,8 @@ enum raid_level raid_bdev_parse_raid_level(const char *str)
 {
 	unsigned int i;
 
+	assert(str != NULL);
+
 	for (i = 0; g_raid_level_names[i].name != NULL; i++) {
 		if (strcasecmp(g_raid_level_names[i].name, str) == 0) {
 			return g_raid_level_names[i].value;

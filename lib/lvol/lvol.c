@@ -892,7 +892,7 @@ end:
 bool
 spdk_lvol_deletable(struct spdk_lvol *lvol)
 {
-	size_t count;
+	size_t count = 0;
 
 	spdk_blob_get_clones(lvol->lvol_store->blobstore, lvol->blob_id, NULL, &count);
 	return (count == 0);

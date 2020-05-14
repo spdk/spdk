@@ -93,8 +93,8 @@ nvmf_bdev_ctrlr_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
 {
 	struct spdk_nvmf_request	*req = cb_arg;
 	struct spdk_nvme_cpl		*response = &req->rsp->nvme_cpl;
-	int				first_sc, first_sct, second_sc, second_sct;
-	uint32_t			cdw0;
+	int				first_sc = 0, first_sct = 0, second_sc = 0, second_sct = 0;
+	uint32_t			cdw0 = 0;
 	struct spdk_nvmf_request	*first_req = req->first_fused_req;
 
 	if (spdk_unlikely(first_req != NULL)) {

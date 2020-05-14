@@ -201,7 +201,7 @@ decode_raid_level(const struct spdk_json_val *val, void *out)
 	enum raid_level level;
 
 	ret = spdk_json_decode_string(val, &str);
-	if (ret == 0) {
+	if (ret == 0 && str != NULL) {
 		level = raid_bdev_parse_raid_level(str);
 		if (level == INVALID_RAID_LEVEL) {
 			ret = -EINVAL;

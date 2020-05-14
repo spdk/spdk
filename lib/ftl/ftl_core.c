@@ -151,7 +151,7 @@ static void ftl_evict_cache_entry(struct spdk_ftl_dev *dev, struct ftl_wbuf_entr
 static struct ftl_wbuf_entry *
 ftl_acquire_wbuf_entry(struct ftl_io_channel *io_channel, int io_flags)
 {
-	struct ftl_wbuf_entry *entry;
+	struct ftl_wbuf_entry *entry = NULL;
 	uint32_t qdepth;
 
 	if (!(io_flags & FTL_IO_INTERNAL)) {
@@ -169,6 +169,8 @@ ftl_acquire_wbuf_entry(struct ftl_io_channel *io_channel, int io_flags)
 
 		return NULL;
 	}
+
+	assert(entry != NULL);
 
 	ftl_evict_cache_entry(io_channel->dev, entry);
 

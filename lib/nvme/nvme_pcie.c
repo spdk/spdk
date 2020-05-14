@@ -477,11 +477,11 @@ static void
 nvme_pcie_ctrlr_map_cmb(struct nvme_pcie_ctrlr *pctrlr)
 {
 	int rc;
-	void *addr;
+	void *addr = NULL;
 	uint32_t bir;
 	union spdk_nvme_cmbsz_register cmbsz;
 	union spdk_nvme_cmbloc_register cmbloc;
-	uint64_t size, unit_size, offset, bar_size, bar_phys_addr;
+	uint64_t size, unit_size, offset, bar_size = 0, bar_phys_addr = 0;
 
 	if (nvme_pcie_ctrlr_get_cmbsz(pctrlr, &cmbsz) ||
 	    nvme_pcie_ctrlr_get_cmbloc(pctrlr, &cmbloc)) {
@@ -660,18 +660,19 @@ static int
 nvme_pcie_ctrlr_allocate_bars(struct nvme_pcie_ctrlr *pctrlr)
 {
 	int rc;
-	void *addr;
-	uint64_t phys_addr, size;
+	void *addr = NULL;
+	uint64_t phys_addr = 0, size = 0;
 
 	rc = spdk_pci_device_map_bar(pctrlr->devhandle, 0, &addr,
 				     &phys_addr, &size);
-	pctrlr->regs = (volatile struct spdk_nvme_registers *)addr;
-	if ((pctrlr->regs == NULL) || (rc != 0)) {
+
+	if ((addr == NULL) || (rc != 0)) {
 		SPDK_ERRLOG("nvme_pcicfg_map_bar failed with rc %d or bar %p\n",
-			    rc, pctrlr->regs);
+			    rc, addr);
 		return -1;
 	}
 
+	pctrlr->regs = (volatile struct spdk_nvme_registers *)addr;
 	pctrlr->regs_size = size;
 	nvme_pcie_ctrlr_map_cmb(pctrlr);
 
