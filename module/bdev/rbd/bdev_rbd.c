@@ -328,7 +328,9 @@ bdev_rbd_flush(struct bdev_rbd *disk, struct spdk_io_channel *ch,
 	       struct spdk_bdev_io *bdev_io, uint64_t offset, uint64_t nbytes)
 {
 	struct bdev_rbd_io_channel *rbdio_ch = spdk_io_channel_get_ctx(ch);
+	struct bdev_rbd_io *rbd_io = (struct bdev_rbd_io *)bdev_io->driver_ctx;
 
+	rbd_io->num_segments++;
 	return bdev_rbd_start_aio(rbdio_ch->image, bdev_io, NULL, offset, nbytes);
 }
 
