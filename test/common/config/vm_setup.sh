@@ -26,6 +26,7 @@ UPGRADE=false
 INSTALL=false
 CONF="librxe,iscsi,rocksdb,fio,flamegraph,tsocks,qemu,vpp,libiscsi,nvmecli,qat,refspdk"
 LIBRXE_INSTALL=true
+gcc_version=$(gcc -dumpversion) gcc_version=${gcc_version%%.*}
 
 if [ $(uname -s) == "FreeBSD" ]; then
 	OSID="freebsd"
@@ -263,8 +264,8 @@ function install_qemu() {
 		fi
 
 		declare -a opt_params=("--prefix=/usr/local/qemu/$SPDK_QEMU_BRANCH")
-		if [ "$PACKAGEMNG" = "pacman" ]; then
-			# GCC 9 on ArchLinux fails to compile Qemu due to some old warnings which were not detected by older versions.
+		if ((gcc_version >= 9)); then
+			# GCC 9 fails to compile Qemu due to some old warnings which were not detected by older versions.
 			opt_params+=("--extra-cflags=-Wno-error=stringop-truncation -Wno-error=deprecated-declarations -Wno-error=incompatible-pointer-types -Wno-error=format-truncation")
 			opt_params+=("--disable-glusterfs")
 		fi
