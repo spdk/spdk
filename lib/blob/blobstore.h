@@ -453,7 +453,7 @@ struct spdk_bs_dev *bs_create_blob_bs_dev(struct spdk_blob *blob);
  *        for a particular blob.
  */
 static inline uint64_t
-_spdk_bs_byte_to_lba(struct spdk_blob_store *bs, uint64_t length)
+bs_byte_to_lba(struct spdk_blob_store *bs, uint64_t length)
 {
 	assert(length % bs->dev->blocklen == 0);
 
@@ -461,7 +461,7 @@ _spdk_bs_byte_to_lba(struct spdk_blob_store *bs, uint64_t length)
 }
 
 static inline uint64_t
-_spdk_bs_dev_byte_to_lba(struct spdk_bs_dev *bs_dev, uint64_t length)
+bs_dev_byte_to_lba(struct spdk_bs_dev *bs_dev, uint64_t length)
 {
 	assert(length % bs_dev->blocklen == 0);
 
@@ -469,44 +469,44 @@ _spdk_bs_dev_byte_to_lba(struct spdk_bs_dev *bs_dev, uint64_t length)
 }
 
 static inline uint64_t
-_spdk_bs_page_to_lba(struct spdk_blob_store *bs, uint64_t page)
+bs_page_to_lba(struct spdk_blob_store *bs, uint64_t page)
 {
 	return page * SPDK_BS_PAGE_SIZE / bs->dev->blocklen;
 }
 
 static inline uint64_t
-_spdk_bs_md_page_to_lba(struct spdk_blob_store *bs, uint32_t page)
+bs_md_page_to_lba(struct spdk_blob_store *bs, uint32_t page)
 {
 	assert(page < bs->md_len);
-	return _spdk_bs_page_to_lba(bs, page + bs->md_start);
+	return bs_page_to_lba(bs, page + bs->md_start);
 }
 
 static inline uint64_t
-_spdk_bs_dev_page_to_lba(struct spdk_bs_dev *bs_dev, uint64_t page)
+bs_dev_page_to_lba(struct spdk_bs_dev *bs_dev, uint64_t page)
 {
 	return page * SPDK_BS_PAGE_SIZE / bs_dev->blocklen;
 }
 
 static inline uint64_t
-_spdk_bs_io_unit_per_page(struct spdk_blob_store *bs)
+bs_io_unit_per_page(struct spdk_blob_store *bs)
 {
 	return SPDK_BS_PAGE_SIZE / bs->io_unit_size;
 }
 
 static inline uint64_t
-_spdk_bs_io_unit_to_page(struct spdk_blob_store *bs, uint64_t io_unit)
+bs_io_unit_to_page(struct spdk_blob_store *bs, uint64_t io_unit)
 {
-	return io_unit / _spdk_bs_io_unit_per_page(bs);
+	return io_unit / bs_io_unit_per_page(bs);
 }
 
 static inline uint64_t
-_spdk_bs_cluster_to_page(struct spdk_blob_store *bs, uint32_t cluster)
+bs_cluster_to_page(struct spdk_blob_store *bs, uint32_t cluster)
 {
 	return (uint64_t)cluster * bs->pages_per_cluster;
 }
 
 static inline uint32_t
-_spdk_bs_page_to_cluster(struct spdk_blob_store *bs, uint64_t page)
+bs_page_to_cluster(struct spdk_blob_store *bs, uint64_t page)
 {
 	assert(page % bs->pages_per_cluster == 0);
 
@@ -514,13 +514,13 @@ _spdk_bs_page_to_cluster(struct spdk_blob_store *bs, uint64_t page)
 }
 
 static inline uint64_t
-_spdk_bs_cluster_to_lba(struct spdk_blob_store *bs, uint32_t cluster)
+bs_cluster_to_lba(struct spdk_blob_store *bs, uint32_t cluster)
 {
 	return (uint64_t)cluster * (bs->cluster_sz / bs->dev->blocklen);
 }
 
 static inline uint32_t
-_spdk_bs_lba_to_cluster(struct spdk_blob_store *bs, uint64_t lba)
+bs_lba_to_cluster(struct spdk_blob_store *bs, uint64_t lba)
 {
 	assert(lba % (bs->cluster_sz / bs->dev->blocklen) == 0);
 
@@ -528,27 +528,27 @@ _spdk_bs_lba_to_cluster(struct spdk_blob_store *bs, uint64_t lba)
 }
 
 static inline uint64_t
-_spdk_bs_io_unit_to_back_dev_lba(struct spdk_blob *blob, uint64_t io_unit)
+bs_io_unit_to_back_dev_lba(struct spdk_blob *blob, uint64_t io_unit)
 {
 	return io_unit * (blob->bs->io_unit_size / blob->back_bs_dev->blocklen);
 }
 
 static inline uint64_t
-_spdk_bs_back_dev_lba_to_io_unit(struct spdk_blob *blob, uint64_t lba)
+bs_back_dev_lba_to_io_unit(struct spdk_blob *blob, uint64_t lba)
 {
 	return lba * (blob->back_bs_dev->blocklen / blob->bs->io_unit_size);
 }
 
 static inline uint64_t
-_spdk_bs_cluster_to_extent_table_id(uint64_t cluster_num)
+bs_cluster_to_extent_table_id(uint64_t cluster_num)
 {
 	return cluster_num / SPDK_EXTENTS_PER_EP;
 }
 
 static inline uint32_t *
-_spdk_bs_cluster_to_extent_page(struct spdk_blob *blob, uint64_t cluster_num)
+bs_cluster_to_extent_page(struct spdk_blob *blob, uint64_t cluster_num)
 {
-	uint64_t extent_table_id = _spdk_bs_cluster_to_extent_table_id(cluster_num);
+	uint64_t extent_table_id = bs_cluster_to_extent_table_id(cluster_num);
 
 	assert(blob->use_extent_table);
 	assert(extent_table_id < blob->active.extent_pages_array_size);
@@ -559,7 +559,7 @@ _spdk_bs_cluster_to_extent_page(struct spdk_blob *blob, uint64_t cluster_num)
 /* End basic conversions */
 
 static inline uint64_t
-_spdk_bs_blobid_to_page(spdk_blob_id id)
+bs_blobid_to_page(spdk_blob_id id)
 {
 	return id & 0xFFFFFFFF;
 }
@@ -569,7 +569,7 @@ _spdk_bs_blobid_to_page(spdk_blob_id id)
  * code assumes blob id == page_idx.
  */
 static inline spdk_blob_id
-_spdk_bs_page_to_blobid(uint64_t page_idx)
+bs_page_to_blobid(uint64_t page_idx)
 {
 	if (page_idx > UINT32_MAX) {
 		return SPDK_BLOBID_INVALID;
@@ -581,7 +581,7 @@ _spdk_bs_page_to_blobid(uint64_t page_idx)
  * start of that io unit.
  */
 static inline uint64_t
-_spdk_bs_blob_io_unit_to_lba(struct spdk_blob *blob, uint64_t io_unit)
+bs_blob_io_unit_to_lba(struct spdk_blob *blob, uint64_t io_unit)
 {
 	uint64_t	lba;
 	uint64_t	pages_per_cluster;
@@ -590,11 +590,11 @@ _spdk_bs_blob_io_unit_to_lba(struct spdk_blob *blob, uint64_t io_unit)
 	uint64_t	io_units_per_page;
 	uint64_t	page;
 
-	page = _spdk_bs_io_unit_to_page(blob->bs, io_unit);
+	page = bs_io_unit_to_page(blob->bs, io_unit);
 
 	pages_per_cluster = blob->bs->pages_per_cluster;
 	shift = blob->bs->pages_per_cluster_shift;
-	io_units_per_page = _spdk_bs_io_unit_per_page(blob->bs);
+	io_units_per_page = bs_io_unit_per_page(blob->bs);
 
 	assert(page < blob->active.num_clusters * pages_per_cluster);
 
@@ -613,15 +613,15 @@ _spdk_bs_blob_io_unit_to_lba(struct spdk_blob *blob, uint64_t io_unit)
  * next cluster boundary.
  */
 static inline uint32_t
-_spdk_bs_num_io_units_to_cluster_boundary(struct spdk_blob *blob, uint64_t io_unit)
+bs_num_io_units_to_cluster_boundary(struct spdk_blob *blob, uint64_t io_unit)
 {
 	uint64_t	io_units_per_cluster;
 	uint8_t         shift = blob->bs->pages_per_cluster_shift;
 
 	if (shift != 0) {
-		io_units_per_cluster = _spdk_bs_io_unit_per_page(blob->bs) << shift;
+		io_units_per_cluster = bs_io_unit_per_page(blob->bs) << shift;
 	} else {
-		io_units_per_cluster = _spdk_bs_io_unit_per_page(blob->bs) * blob->bs->pages_per_cluster;
+		io_units_per_cluster = bs_io_unit_per_page(blob->bs) * blob->bs->pages_per_cluster;
 	}
 
 	return io_units_per_cluster - (io_unit % io_units_per_cluster);
@@ -631,7 +631,7 @@ _spdk_bs_num_io_units_to_cluster_boundary(struct spdk_blob *blob, uint64_t io_un
  * next cluster boundary.
  */
 static inline uint32_t
-_spdk_bs_num_pages_to_cluster_boundary(struct spdk_blob *blob, uint64_t page)
+bs_num_pages_to_cluster_boundary(struct spdk_blob *blob, uint64_t page)
 {
 	uint64_t	pages_per_cluster;
 
@@ -642,26 +642,26 @@ _spdk_bs_num_pages_to_cluster_boundary(struct spdk_blob *blob, uint64_t page)
 
 /* Given an io_unit offset into a blob, look up the number of pages into blob to beginning of current cluster */
 static inline uint32_t
-_spdk_bs_io_unit_to_cluster_start(struct spdk_blob *blob, uint64_t io_unit)
+bs_io_unit_to_cluster_start(struct spdk_blob *blob, uint64_t io_unit)
 {
 	uint64_t	pages_per_cluster;
 	uint64_t	page;
 
 	pages_per_cluster = blob->bs->pages_per_cluster;
-	page = _spdk_bs_io_unit_to_page(blob->bs, io_unit);
+	page = bs_io_unit_to_page(blob->bs, io_unit);
 
 	return page - (page % pages_per_cluster);
 }
 
 /* Given an io_unit offset into a blob, look up the number of pages into blob to beginning of current cluster */
 static inline uint32_t
-_spdk_bs_io_unit_to_cluster_number(struct spdk_blob *blob, uint64_t io_unit)
+bs_io_unit_to_cluster_number(struct spdk_blob *blob, uint64_t io_unit)
 {
 	uint64_t	pages_per_cluster = blob->bs->pages_per_cluster;
 	uint8_t		shift = blob->bs->pages_per_cluster_shift;
 	uint32_t	page_offset;
 
-	page_offset = io_unit / _spdk_bs_io_unit_per_page(blob->bs);
+	page_offset = io_unit / bs_io_unit_per_page(blob->bs);
 	if (shift != 0) {
 		return page_offset >> shift;
 	} else {
@@ -671,7 +671,7 @@ _spdk_bs_io_unit_to_cluster_number(struct spdk_blob *blob, uint64_t io_unit)
 
 /* Given an io unit offset into a blob, look up if it is from allocated cluster. */
 static inline bool
-_spdk_bs_io_unit_is_allocated(struct spdk_blob *blob, uint64_t io_unit)
+bs_io_unit_is_allocated(struct spdk_blob *blob, uint64_t io_unit)
 {
 	uint64_t	lba;
 	uint64_t	page;
@@ -680,7 +680,7 @@ _spdk_bs_io_unit_is_allocated(struct spdk_blob *blob, uint64_t io_unit)
 
 	shift = blob->bs->pages_per_cluster_shift;
 	pages_per_cluster = blob->bs->pages_per_cluster;
-	page = _spdk_bs_io_unit_to_page(blob->bs, io_unit);
+	page = bs_io_unit_to_page(blob->bs, io_unit);
 
 	assert(page < blob->active.num_clusters * pages_per_cluster);
 
