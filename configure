@@ -470,6 +470,7 @@ if [[ $arch == x86_64* ]]; then
 else
 	BUILD_CMD=($CC -o /dev/null -x c $CPPFLAGS $CFLAGS $LDFLAGS)
 fi
+BUILD_CMD+=(-I/usr/local/include -L/usr/local/lib)
 
 # IDXD uses Intel specific instructions.
 if [[ "${CONFIG[IDXD]}" = "y" ]]; then
