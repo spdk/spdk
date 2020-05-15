@@ -70,7 +70,7 @@ spdk_notify_type_register(const char *type)
 	pthread_mutex_lock(&g_events_lock);
 	TAILQ_FOREACH(it, &g_notify_types, tailq) {
 		if (strcmp(type, it->name) == 0) {
-			SPDK_ERRLOG("Notification type '%s' already registered.\n", type);
+			SPDK_NOTICELOG("Notification type '%s' already registered.\n", type);
 			goto out;
 		}
 	}
