@@ -3854,8 +3854,16 @@ nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 
 		/* Handle error conditions */
 		if (wc[i].status) {
-			SPDK_ERRLOG("Error on CQ %p, request 0x%lu, type %d, status: (%d): %s\n",
-				    rpoller->cq, wc[i].wr_id, rdma_wr->type, wc[i].status, ibv_wc_status_str(wc[i].status));
+			if ((rdma_wr->type == RDMA_WR_TYPE_RECV && !rpoller->srq)) {
+				/* When we don't use SRQ and close a qpair, we will receive completions with error
+				 * status for all posted ibv_recv_wrs. This is expected and we don't want to log
+				 * an error in that case. */
+				SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Error on CQ %p, request 0x%lu, type %d, status: (%d): %s\n",
+					      rpoller->cq, wc[i].wr_id, rdma_wr->type, wc[i].status, ibv_wc_status_str(wc[i].status));
+			} else {
+				SPDK_ERRLOG("Error on CQ %p, request 0x%lu, type %d, status: (%d): %s\n",
+					    rpoller->cq, wc[i].wr_id, rdma_wr->type, wc[i].status, ibv_wc_status_str(wc[i].status));
+			}
 
 			error = true;
 
