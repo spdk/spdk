@@ -801,7 +801,7 @@ channel_destroy_races(void)
 }
 
 static void
-thread_exit(void)
+thread_exit_test(void)
 {
 	struct spdk_thread *thread;
 	struct spdk_io_channel *ch;
@@ -977,7 +977,7 @@ poller_run_busy(void *ctx)
 }
 
 static void
-thread_update_stats(void)
+thread_update_stats_test(void)
 {
 	struct spdk_poller	*poller;
 	struct spdk_thread	*thread;
@@ -1258,8 +1258,8 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, thread_name);
 	CU_ADD_TEST(suite, channel);
 	CU_ADD_TEST(suite, channel_destroy_races);
-	CU_ADD_TEST(suite, thread_exit);
-	CU_ADD_TEST(suite, thread_update_stats);
+	CU_ADD_TEST(suite, thread_exit_test);
+	CU_ADD_TEST(suite, thread_update_stats_test);
 	CU_ADD_TEST(suite, nested_channel);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
