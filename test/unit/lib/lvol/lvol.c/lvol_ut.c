@@ -231,6 +231,11 @@ spdk_blob_get_xattr_value(struct spdk_blob *blob, const char *name,
 	return -ENOENT;
 }
 
+bool spdk_blob_is_thin_provisioned(struct spdk_blob *blob)
+{
+	return blob->thin_provisioned;
+}
+
 DEFINE_STUB(spdk_blob_get_clones, int, (struct spdk_blob_store *bs, spdk_blob_id blobid,
 					spdk_blob_id *ids, size_t *count), 0);
 DEFINE_STUB(spdk_bs_get_page_size, uint64_t, (struct spdk_blob_store *bs), BS_PAGE_SIZE);
