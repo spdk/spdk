@@ -795,6 +795,7 @@ INPUT                  += \
                          misc.md \
                          driver_modules.md \
                          tools.md \
+                         ci_tools.md \
                          performance_reports.md \
 
 # All remaining pages are listed here in alphabetical order by filename.
@@ -834,6 +835,7 @@ INPUT                  += \
                          overview.md \
                          peer_2_peer.md \
                          porting.md \
+                         shfmt.md \
                          spdkcli.md \
                          spdk_top.md \
                          ssd_internals.md \

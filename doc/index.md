@@ -32,6 +32,10 @@
 
 @copydoc tools
 
+# CI Tools
+
+@copydoc ci_tools
+
 # Performance Reports
 
 @copydoc performance_reports
