@@ -887,7 +887,7 @@ static struct spdk_bdev_fn_table vbdev_lvol_fn_table = {
 };
 
 static void
-_spdk_lvol_destroy_cb(void *cb_arg, int bdeverrno)
+lvol_destroy_cb(void *cb_arg, int bdeverrno)
 {
 }
 
@@ -902,7 +902,7 @@ _create_lvol_disk_destroy_cb(void *cb_arg, int bdeverrno)
 		return;
 	}
 
-	spdk_lvol_destroy(lvol, _spdk_lvol_destroy_cb, NULL);
+	spdk_lvol_destroy(lvol, lvol_destroy_cb, NULL);
 }
 
 static void

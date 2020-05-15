@@ -1538,7 +1538,7 @@ out:
 }
 
 static void
-_spdk_vhost_fini(void *arg1)
+vhost_fini(void *arg1)
 {
 	struct spdk_vhost_dev *vdev, *tmp;
 
@@ -1571,7 +1571,7 @@ session_shutdown(void *arg)
 	}
 
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Exiting\n");
-	spdk_thread_send_msg(g_vhost_init_thread, _spdk_vhost_fini, NULL);
+	spdk_thread_send_msg(g_vhost_init_thread, vhost_fini, NULL);
 	return NULL;
 }
 

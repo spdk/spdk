@@ -255,7 +255,7 @@ vbdev_error_base_bdev_hotremove_cb(void *_part_base)
 }
 
 static int
-_spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
+_vbdev_error_create(struct spdk_bdev *base_bdev)
 {
 	struct spdk_bdev_part_base *base = NULL;
 	struct error_disk *disk = NULL;
@@ -321,7 +321,7 @@ vbdev_error_create(const char *base_bdev_name)
 		return 0;
 	}
 
-	rc = _spdk_vbdev_error_create(base_bdev);
+	rc = _vbdev_error_create(base_bdev);
 	if (rc != 0) {
 		vbdev_error_config_remove(base_bdev_name);
 		SPDK_ERRLOG("Could not create ErrorInjection bdev %s (rc=%d)\n",
@@ -478,7 +478,7 @@ vbdev_error_examine(struct spdk_bdev *bdev)
 
 	cfg = vbdev_error_config_find_by_base_name(bdev->name);
 	if (cfg != NULL) {
-		rc = _spdk_vbdev_error_create(bdev);
+		rc = _vbdev_error_create(bdev);
 		if (rc != 0) {
 			SPDK_ERRLOG("could not create error vbdev for bdev %s at examine\n",
 				    bdev->name);
