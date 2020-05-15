@@ -37,7 +37,7 @@
 #define RPC_DEFAULT_PORT	"5260"
 
 static int
-_spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client)
+jsonrpc_client_send_request(struct spdk_jsonrpc_client *client)
 {
 	ssize_t rc;
 	struct spdk_jsonrpc_client_request *request = client->request;
@@ -96,13 +96,13 @@ recv_buf_expand(struct spdk_jsonrpc_client *client)
 }
 
 static int
-_spdk_jsonrpc_client_resp_ready_count(struct spdk_jsonrpc_client *client)
+jsonrpc_client_resp_ready_count(struct spdk_jsonrpc_client *client)
 {
 	return client->resp != NULL && client->resp->ready ? 1 : 0;
 }
 
 static int
-_spdk_jsonrpc_client_recv(struct spdk_jsonrpc_client *client)
+jsonrpc_client_recv(struct spdk_jsonrpc_client *client)
 {
 	ssize_t rc;
 
@@ -145,7 +145,7 @@ _spdk_jsonrpc_client_recv(struct spdk_jsonrpc_client *client)
 }
 
 static int
-_spdk_jsonrpc_client_poll(struct spdk_jsonrpc_client *client, int timeout)
+jsonrpc_client_poll(struct spdk_jsonrpc_client *client, int timeout)
 {
 	int rc;
 	struct pollfd pfd = { .fd = client->sockfd, .events = POLLIN | POLLOUT };
@@ -163,11 +163,11 @@ _spdk_jsonrpc_client_poll(struct spdk_jsonrpc_client *client, int timeout)
 		rc = 0;
 
 		if (pfd.revents & POLLOUT) {
-			rc = _spdk_jsonrpc_client_send_request(client);
+			rc = jsonrpc_client_send_request(client);
 		}
 
 		if (rc == 0 && (pfd.revents & POLLIN)) {
-			rc = _spdk_jsonrpc_client_recv(client);
+			rc = jsonrpc_client_recv(client);
 			/* Incomplete message in buffer isn't an error. */
 			if (rc == -EAGAIN) {
 				rc = 0;
@@ -175,11 +175,11 @@ _spdk_jsonrpc_client_poll(struct spdk_jsonrpc_client *client, int timeout)
 		}
 	}
 
-	return rc ? rc : _spdk_jsonrpc_client_resp_ready_count(client);
+	return rc ? rc : jsonrpc_client_resp_ready_count(client);
 }
 
 static int
-_spdk_jsonrpc_client_poll_connecting(struct spdk_jsonrpc_client *client, int timeout)
+jsonrpc_client_poll_connecting(struct spdk_jsonrpc_client *client, int timeout)
 {
 	socklen_t rc_len;
 	int rc;
@@ -224,8 +224,8 @@ err:
 }
 
 static int
-_spdk_jsonrpc_client_connect(struct spdk_jsonrpc_client *client, int domain, int protocol,
-			     struct sockaddr *server_addr, socklen_t addrlen)
+jsonrpc_client_connect(struct spdk_jsonrpc_client *client, int domain, int protocol,
+		       struct sockaddr *server_addr, socklen_t addrlen)
 {
 	int rc, flags;
 
@@ -285,7 +285,7 @@ spdk_jsonrpc_client_connect(const char *addr, int addr_family)
 			goto err;
 		}
 
-		rc = _spdk_jsonrpc_client_connect(client, AF_UNIX, 0, (struct sockaddr *)&addr_un, sizeof(addr_un));
+		rc = jsonrpc_client_connect(client, AF_UNIX, 0, (struct sockaddr *)&addr_un, sizeof(addr_un));
 	} else {
 		/* TCP/IP socket */
 		struct addrinfo		hints;
@@ -321,8 +321,8 @@ spdk_jsonrpc_client_connect(const char *addr, int addr_family)
 			goto err;
 		}
 
-		rc = _spdk_jsonrpc_client_connect(client, res->ai_family, res->ai_protocol, res->ai_addr,
-						  res->ai_addrlen);
+		rc = jsonrpc_client_connect(client, res->ai_family, res->ai_protocol, res->ai_addr,
+					    res->ai_addrlen);
 		freeaddrinfo(res);
 	}
 
@@ -385,9 +385,9 @@ int
 spdk_jsonrpc_client_poll(struct spdk_jsonrpc_client *client, int timeout)
 {
 	if (client->connected) {
-		return _spdk_jsonrpc_client_poll(client, timeout);
+		return jsonrpc_client_poll(client, timeout);
 	} else {
-		return _spdk_jsonrpc_client_poll_connecting(client, timeout);
+		return jsonrpc_client_poll_connecting(client, timeout);
 	}
 }
 
