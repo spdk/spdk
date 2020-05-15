@@ -120,7 +120,7 @@ nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl)
  * and status as the callback argument.
  */
 int
-spdk_nvme_wait_for_completion_robust_lock(
+nvme_wait_for_completion_robust_lock(
 	struct spdk_nvme_qpair *qpair,
 	struct nvme_completion_poll_status *status,
 	pthread_mutex_t *robust_mutex)
@@ -152,10 +152,10 @@ spdk_nvme_wait_for_completion_robust_lock(
 }
 
 int
-spdk_nvme_wait_for_completion(struct spdk_nvme_qpair *qpair,
-			      struct nvme_completion_poll_status *status)
+nvme_wait_for_completion(struct spdk_nvme_qpair *qpair,
+			 struct nvme_completion_poll_status *status)
 {
-	return spdk_nvme_wait_for_completion_robust_lock(qpair, status, NULL);
+	return nvme_wait_for_completion_robust_lock(qpair, status, NULL);
 }
 
 /**
@@ -174,9 +174,9 @@ spdk_nvme_wait_for_completion(struct spdk_nvme_qpair *qpair,
  * and status as the callback argument.
  */
 int
-spdk_nvme_wait_for_completion_timeout(struct spdk_nvme_qpair *qpair,
-				      struct nvme_completion_poll_status *status,
-				      uint64_t timeout_in_secs)
+nvme_wait_for_completion_timeout(struct spdk_nvme_qpair *qpair,
+				 struct nvme_completion_poll_status *status,
+				 uint64_t timeout_in_secs)
 {
 	uint64_t timeout_tsc = 0;
 	int rc = 0;
@@ -439,7 +439,7 @@ nvme_driver_init(void)
 	nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 
 	g_spdk_nvme_driver->initialized = false;
-	g_spdk_nvme_driver->hotplug_fd = spdk_uevent_connect();
+	g_spdk_nvme_driver->hotplug_fd = nvme_uevent_connect();
 	if (g_spdk_nvme_driver->hotplug_fd < 0) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Failed to open uevent netlink socket\n");
 	}
@@ -648,7 +648,7 @@ nvme_probe_internal(struct spdk_nvme_probe_ctx *probe_ctx,
 			}
 
 			/* Do not attach if we failed to initialize it in this process */
-			if (spdk_nvme_ctrlr_get_current_process(ctrlr) == NULL) {
+			if (nvme_ctrlr_get_current_process(ctrlr) == NULL) {
 				continue;
 			}
 

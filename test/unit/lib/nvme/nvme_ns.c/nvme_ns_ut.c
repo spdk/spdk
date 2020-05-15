@@ -41,7 +41,7 @@
 
 SPDK_LOG_REGISTER_COMPONENT("nvme", SPDK_LOG_NVME)
 
-DEFINE_STUB(spdk_nvme_wait_for_completion_robust_lock, int,
+DEFINE_STUB(nvme_wait_for_completion_robust_lock, int,
 	    (struct spdk_nvme_qpair *qpair,
 	     struct nvme_completion_poll_status *status,
 	     pthread_mutex_t *robust_mutex), 0);

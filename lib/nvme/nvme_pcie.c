@@ -276,7 +276,7 @@ _nvme_pcie_hotplug_monitor(struct spdk_nvme_probe_ctx *probe_ctx)
 		return 0;
 	}
 
-	while (spdk_get_uevent(g_spdk_nvme_driver->hotplug_fd, &event) > 0) {
+	while (nvme_get_uevent(g_spdk_nvme_driver->hotplug_fd, &event) > 0) {
 		if (event.subsystem == SPDK_NVME_UEVENT_SUBSYSTEM_UIO ||
 		    event.subsystem == SPDK_NVME_UEVENT_SUBSYSTEM_VFIO) {
 			if (event.action == SPDK_NVME_UEVENT_ADD) {
@@ -326,7 +326,7 @@ _nvme_pcie_hotplug_monitor(struct spdk_nvme_probe_ctx *probe_ctx)
 		}
 
 		/* NVMe controller BAR must be mapped in the current process before any access. */
-		proc = spdk_nvme_ctrlr_get_current_process(ctrlr);
+		proc = nvme_ctrlr_get_current_process(ctrlr);
 		if (proc) {
 			csts = spdk_nvme_ctrlr_get_regs_csts(ctrlr);
 			if (csts.raw == 0xffffffffU) {
@@ -1187,7 +1187,7 @@ nvme_pcie_qpair_insert_pending_admin_request(struct spdk_nvme_qpair *qpair,
 	assert(nvme_qpair_is_admin_queue(qpair));
 	assert(active_req->pid != getpid());
 
-	active_proc = spdk_nvme_ctrlr_get_process(ctrlr, active_req->pid);
+	active_proc = nvme_ctrlr_get_process(ctrlr, active_req->pid);
 	if (active_proc) {
 		/* Save the original completion information */
 		memcpy(&active_req->cpl, cpl, sizeof(*cpl));
@@ -1217,7 +1217,7 @@ nvme_pcie_qpair_complete_pending_admin_request(struct spdk_nvme_qpair *qpair)
 	 */
 	assert(nvme_qpair_is_admin_queue(qpair));
 
-	proc = spdk_nvme_ctrlr_get_current_process(ctrlr);
+	proc = nvme_ctrlr_get_current_process(ctrlr);
 	if (!proc) {
 		SPDK_ERRLOG("the active process (pid %d) is not found for this controller.\n", pid);
 		assert(proc);
@@ -1613,7 +1613,7 @@ _nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, status)) {
+	if (nvme_wait_for_completion(ctrlr->adminq, status)) {
 		SPDK_ERRLOG("nvme_create_io_cq failed!\n");
 		if (!status->timed_out) {
 			free(status);
@@ -1628,7 +1628,7 @@ _nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, status)) {
+	if (nvme_wait_for_completion(ctrlr->adminq, status)) {
 		SPDK_ERRLOG("nvme_create_io_sq failed!\n");
 		if (status->timed_out) {
 			/* Request is still queued, the memory will be freed in a completion callback.
@@ -1649,9 +1649,9 @@ _nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 			free(status);
 			return -1;
 		}
-		spdk_nvme_wait_for_completion(ctrlr->adminq, status);
+		nvme_wait_for_completion(ctrlr->adminq, status);
 		if (!status->timed_out) {
-			/* status can be freed regardless of spdk_nvme_wait_for_completion return value */
+			/* status can be freed regardless of nvme_wait_for_completion return value */
 			free(status);
 		}
 		return -1;
@@ -1753,7 +1753,7 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 		free(status);
 		return rc;
 	}
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, status)) {
+	if (nvme_wait_for_completion(ctrlr->adminq, status)) {
 		if (!status->timed_out) {
 			free(status);
 		}
@@ -1768,7 +1768,7 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 		free(status);
 		return rc;
 	}
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, status)) {
+	if (nvme_wait_for_completion(ctrlr->adminq, status)) {
 		if (!status->timed_out) {
 			free(status);
 		}
@@ -2304,7 +2304,7 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 	}
 
 	if (nvme_qpair_is_admin_queue(qpair)) {
-		active_proc = spdk_nvme_ctrlr_get_current_process(ctrlr);
+		active_proc = nvme_ctrlr_get_current_process(ctrlr);
 	} else {
 		active_proc = qpair->active_proc;
 	}

@@ -289,7 +289,7 @@ nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 static struct nvme_completion_poll_status *g_failed_status;
 
 int
-spdk_nvme_wait_for_completion_robust_lock(
+nvme_wait_for_completion_robust_lock(
 	struct spdk_nvme_qpair *qpair,
 	struct nvme_completion_poll_status *status,
 	pthread_mutex_t *robust_mutex)
@@ -308,18 +308,18 @@ spdk_nvme_wait_for_completion_robust_lock(
 }
 
 int
-spdk_nvme_wait_for_completion(struct spdk_nvme_qpair *qpair,
-			      struct nvme_completion_poll_status *status)
+nvme_wait_for_completion(struct spdk_nvme_qpair *qpair,
+			 struct nvme_completion_poll_status *status)
 {
-	return spdk_nvme_wait_for_completion_robust_lock(qpair, status, NULL);
+	return nvme_wait_for_completion_robust_lock(qpair, status, NULL);
 }
 
 int
-spdk_nvme_wait_for_completion_timeout(struct spdk_nvme_qpair *qpair,
-				      struct nvme_completion_poll_status *status,
-				      uint64_t timeout_in_secs)
+nvme_wait_for_completion_timeout(struct spdk_nvme_qpair *qpair,
+				 struct nvme_completion_poll_status *status,
+				 uint64_t timeout_in_secs)
 {
-	return spdk_nvme_wait_for_completion_robust_lock(qpair, status, NULL);
+	return nvme_wait_for_completion_robust_lock(qpair, status, NULL);
 }
 
 int
@@ -1745,7 +1745,7 @@ test_spdk_nvme_ctrlr_update_firmware(void)
 	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot, commit_action, &status);
 	CU_ASSERT(ret == 0);
 
-	/* spdk_nvme_wait_for_completion returns an error */
+	/* nvme_wait_for_completion returns an error */
 	g_wait_for_completion_return_val = -1;
 	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot, commit_action, &status);
 	CU_ASSERT(ret == -ENXIO);

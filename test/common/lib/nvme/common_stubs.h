@@ -88,7 +88,7 @@ DEFINE_STUB_V(nvme_qpair_deinit, (struct spdk_nvme_qpair *qpair));
 DEFINE_STUB_V(spdk_nvme_transport_register, (const struct spdk_nvme_transport_ops *ops));
 DEFINE_STUB(nvme_transport_ctrlr_connect_qpair, int, (struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_qpair *qpair), 0);
-DEFINE_STUB(spdk_nvme_ctrlr_get_current_process, struct spdk_nvme_ctrlr_process *,
+DEFINE_STUB(nvme_ctrlr_get_current_process, struct spdk_nvme_ctrlr_process *,
 	    (struct spdk_nvme_ctrlr *ctrlr), (struct spdk_nvme_ctrlr_process *)(uintptr_t)0x1);
 DEFINE_STUB(nvme_ctrlr_add_process, int, (struct spdk_nvme_ctrlr *ctrlr, void *devhandle), 0);
 DEFINE_STUB_V(spdk_nvme_trid_populate_transport, (struct spdk_nvme_transport_id *trid,

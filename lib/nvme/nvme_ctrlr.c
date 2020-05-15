@@ -199,7 +199,7 @@ nvme_ctrlr_proc_add_io_qpair(struct spdk_nvme_qpair *qpair)
 	struct spdk_nvme_ctrlr_process	*active_proc;
 	struct spdk_nvme_ctrlr		*ctrlr = qpair->ctrlr;
 
-	active_proc = spdk_nvme_ctrlr_get_current_process(ctrlr);
+	active_proc = nvme_ctrlr_get_current_process(ctrlr);
 	if (active_proc) {
 		TAILQ_INSERT_TAIL(&active_proc->allocated_io_qpairs, qpair, per_process_tailq);
 		qpair->active_proc = active_proc;
@@ -217,7 +217,7 @@ nvme_ctrlr_proc_remove_io_qpair(struct spdk_nvme_qpair *qpair)
 	struct spdk_nvme_ctrlr		*ctrlr = qpair->ctrlr;
 	struct spdk_nvme_qpair          *active_qpair, *tmp_qpair;
 
-	active_proc = spdk_nvme_ctrlr_get_current_process(ctrlr);
+	active_proc = nvme_ctrlr_get_current_process(ctrlr);
 	if (!active_proc) {
 		return;
 	}
@@ -621,8 +621,8 @@ static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion_timeout(ctrlr->adminq, status,
-			ctrlr->opts.admin_timeout_ms / 1000)) {
+	if (nvme_wait_for_completion_timeout(ctrlr->adminq, status,
+					     ctrlr->opts.admin_timeout_ms / 1000)) {
 		spdk_free(log_page_directory);
 		SPDK_WARNLOG("Intel log pages not supported on Intel drive!\n");
 		if (!status->timed_out) {
@@ -706,8 +706,8 @@ nvme_ctrlr_set_arbitration_feature(struct spdk_nvme_ctrlr *ctrlr)
 		return;
 	}
 
-	if (spdk_nvme_wait_for_completion_timeout(ctrlr->adminq, status,
-			ctrlr->opts.admin_timeout_ms / 1000)) {
+	if (nvme_wait_for_completion_timeout(ctrlr->adminq, status,
+					     ctrlr->opts.admin_timeout_ms / 1000)) {
 		SPDK_ERRLOG("Timeout to set arbitration feature\n");
 	}
 
@@ -2068,7 +2068,7 @@ nvme_ctrlr_async_event_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 		nvme_ctrlr_update_namespaces(ctrlr);
 	}
 
-	active_proc = spdk_nvme_ctrlr_get_current_process(ctrlr);
+	active_proc = nvme_ctrlr_get_current_process(ctrlr);
 	if (active_proc && active_proc->aer_cb_fn) {
 		active_proc->aer_cb_fn(active_proc->aer_cb_arg, cpl);
 	}
@@ -2179,7 +2179,7 @@ nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 struct spdk_nvme_ctrlr_process *
-spdk_nvme_ctrlr_get_process(struct spdk_nvme_ctrlr *ctrlr, pid_t pid)
+nvme_ctrlr_get_process(struct spdk_nvme_ctrlr *ctrlr, pid_t pid)
 {
 	struct spdk_nvme_ctrlr_process	*active_proc;
 
@@ -2193,9 +2193,9 @@ spdk_nvme_ctrlr_get_process(struct spdk_nvme_ctrlr *ctrlr, pid_t pid)
 }
 
 struct spdk_nvme_ctrlr_process *
-spdk_nvme_ctrlr_get_current_process(struct spdk_nvme_ctrlr *ctrlr)
+nvme_ctrlr_get_current_process(struct spdk_nvme_ctrlr *ctrlr)
 {
-	return spdk_nvme_ctrlr_get_process(ctrlr, getpid());
+	return nvme_ctrlr_get_process(ctrlr, getpid());
 }
 
 /**
@@ -2211,7 +2211,7 @@ nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 	pid_t				pid = getpid();
 
 	/* Check whether the process is already added or not */
-	if (spdk_nvme_ctrlr_get_process(ctrlr, pid)) {
+	if (nvme_ctrlr_get_process(ctrlr, pid)) {
 		return 0;
 	}
 
@@ -2355,7 +2355,7 @@ nvme_ctrlr_proc_get_ref(struct spdk_nvme_ctrlr *ctrlr)
 
 	nvme_ctrlr_remove_inactive_proc(ctrlr);
 
-	active_proc = spdk_nvme_ctrlr_get_current_process(ctrlr);
+	active_proc = nvme_ctrlr_get_current_process(ctrlr);
 	if (active_proc) {
 		active_proc->ref++;
 	}
@@ -2373,7 +2373,7 @@ nvme_ctrlr_proc_put_ref(struct spdk_nvme_ctrlr *ctrlr)
 
 	proc_count = nvme_ctrlr_remove_inactive_proc(ctrlr);
 
-	active_proc = spdk_nvme_ctrlr_get_current_process(ctrlr);
+	active_proc = nvme_ctrlr_get_current_process(ctrlr);
 	if (active_proc) {
 		active_proc->ref--;
 		assert(active_proc->ref >= 0);
@@ -2420,7 +2420,7 @@ nvme_ctrlr_proc_get_devhandle(struct spdk_nvme_ctrlr *ctrlr)
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
-	active_proc = spdk_nvme_ctrlr_get_current_process(ctrlr);
+	active_proc = nvme_ctrlr_get_current_process(ctrlr);
 	if (active_proc) {
 		devhandle = active_proc->devhandle;
 	}
@@ -3037,7 +3037,7 @@ spdk_nvme_ctrlr_register_aer_callback(struct spdk_nvme_ctrlr *ctrlr,
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
-	active_proc = spdk_nvme_ctrlr_get_current_process(ctrlr);
+	active_proc = nvme_ctrlr_get_current_process(ctrlr);
 	if (active_proc) {
 		active_proc->aer_cb_fn = aer_cb_fn;
 		active_proc->aer_cb_arg = aer_cb_arg;
@@ -3054,7 +3054,7 @@ spdk_nvme_ctrlr_register_timeout_callback(struct spdk_nvme_ctrlr *ctrlr,
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
-	active_proc = spdk_nvme_ctrlr_get_current_process(ctrlr);
+	active_proc = nvme_ctrlr_get_current_process(ctrlr);
 	if (active_proc) {
 		active_proc->timeout_ticks = timeout_us * spdk_get_ticks_hz() / 1000000ULL;
 		active_proc->timeout_cb_fn = cb_fn;
@@ -3102,7 +3102,7 @@ spdk_nvme_ctrlr_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 		free(status);
 		return res;
 	}
-	if (spdk_nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock)) {
+	if (nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock)) {
 		SPDK_ERRLOG("spdk_nvme_ctrlr_attach_ns failed!\n");
 		if (!status->timed_out) {
 			free(status);
@@ -3140,7 +3140,7 @@ spdk_nvme_ctrlr_detach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 		free(status);
 		return res;
 	}
-	if (spdk_nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock)) {
+	if (nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock)) {
 		SPDK_ERRLOG("spdk_nvme_ctrlr_detach_ns failed!\n");
 		if (!status->timed_out) {
 			free(status);
@@ -3180,7 +3180,7 @@ spdk_nvme_ctrlr_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns_dat
 		free(status);
 		return 0;
 	}
-	if (spdk_nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock)) {
+	if (nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock)) {
 		SPDK_ERRLOG("spdk_nvme_ctrlr_create_ns failed!\n");
 		if (!status->timed_out) {
 			free(status);
@@ -3219,7 +3219,7 @@ spdk_nvme_ctrlr_delete_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 		free(status);
 		return res;
 	}
-	if (spdk_nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock)) {
+	if (nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock)) {
 		SPDK_ERRLOG("spdk_nvme_ctrlr_delete_ns failed!\n");
 		if (!status->timed_out) {
 			free(status);
@@ -3258,7 +3258,7 @@ spdk_nvme_ctrlr_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 		free(status);
 		return res;
 	}
-	if (spdk_nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock)) {
+	if (nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock)) {
 		SPDK_ERRLOG("spdk_nvme_ctrlr_format failed!\n");
 		if (!status->timed_out) {
 			free(status);
@@ -3323,7 +3323,7 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 			return res;
 		}
 
-		if (spdk_nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock)) {
+		if (nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock)) {
 			SPDK_ERRLOG("spdk_nvme_ctrlr_fw_image_download failed!\n");
 			if (!status->timed_out) {
 				free(status);
@@ -3348,7 +3348,7 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 		return res;
 	}
 
-	res = spdk_nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock);
+	res = nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock);
 
 	memcpy(completion_status, &status->cpl.status, sizeof(struct spdk_nvme_status));
 
@@ -3445,7 +3445,7 @@ spdk_nvme_ctrlr_security_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
 		free(status);
 		return res;
 	}
-	if (spdk_nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock)) {
+	if (nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock)) {
 		SPDK_ERRLOG("spdk_nvme_ctrlr_cmd_security_receive failed!\n");
 		if (!status->timed_out) {
 			free(status);
@@ -3477,7 +3477,7 @@ spdk_nvme_ctrlr_security_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
 		free(status);
 		return res;
 	}
-	if (spdk_nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock)) {
+	if (nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock)) {
 		SPDK_ERRLOG("spdk_nvme_ctrlr_cmd_security_send failed!\n");
 		if (!status->timed_out) {
 			free(status);

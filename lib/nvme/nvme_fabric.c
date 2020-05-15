@@ -70,7 +70,7 @@ nvme_fabric_prop_set_cmd(struct spdk_nvme_ctrlr *ctrlr,
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, status)) {
+	if (nvme_wait_for_completion(ctrlr->adminq, status)) {
 		if (!status->timed_out) {
 			free(status);
 		}
@@ -112,7 +112,7 @@ nvme_fabric_prop_get_cmd(struct spdk_nvme_ctrlr *ctrlr,
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, status)) {
+	if (nvme_wait_for_completion(ctrlr->adminq, status)) {
 		if (!status->timed_out) {
 			free(status);
 		}
@@ -248,7 +248,7 @@ nvme_fabric_get_discovery_log_page(struct spdk_nvme_ctrlr *ctrlr,
 		return -1;
 	}
 
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, status)) {
+	if (nvme_wait_for_completion(ctrlr->adminq, status)) {
 		if (!status->timed_out) {
 			free(status);
 		}
@@ -316,7 +316,7 @@ nvme_fabric_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion(discovery_ctrlr->adminq, status)) {
+	if (nvme_wait_for_completion(discovery_ctrlr->adminq, status)) {
 		SPDK_ERRLOG("nvme_identify_controller failed!\n");
 		nvme_ctrlr_destruct(discovery_ctrlr);
 		if (!status->timed_out) {
@@ -454,7 +454,7 @@ nvme_fabric_qpair_connect(struct spdk_nvme_qpair *qpair, uint32_t num_entries)
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion(qpair, status)) {
+	if (nvme_wait_for_completion(qpair, status)) {
 		SPDK_ERRLOG("Connect command failed\n");
 		spdk_free(nvmf_data);
 		if (!status->timed_out) {

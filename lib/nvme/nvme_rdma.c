@@ -2045,7 +2045,7 @@ nvme_rdma_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 	}
 
 	if (nvme_qpair_is_admin_queue(qpair)) {
-		active_proc = spdk_nvme_ctrlr_get_current_process(ctrlr);
+		active_proc = nvme_ctrlr_get_current_process(ctrlr);
 	} else {
 		active_proc = qpair->active_proc;
 	}

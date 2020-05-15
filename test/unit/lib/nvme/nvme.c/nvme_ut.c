@@ -47,7 +47,7 @@ DEFINE_STUB_V(nvme_ctrlr_fail, (struct spdk_nvme_ctrlr *ctrlr, bool hotremove));
 DEFINE_STUB(spdk_nvme_transport_available_by_name, bool,
 	    (const char *transport_name), true);
 /* return anything non-NULL, this won't be deferenced anywhere in this test */
-DEFINE_STUB(spdk_nvme_ctrlr_get_current_process, struct spdk_nvme_ctrlr_process *,
+DEFINE_STUB(nvme_ctrlr_get_current_process, struct spdk_nvme_ctrlr_process *,
 	    (struct spdk_nvme_ctrlr *ctrlr), (struct spdk_nvme_ctrlr_process *)(uintptr_t)0x1);
 DEFINE_STUB(nvme_ctrlr_process_init, int,
 	    (struct spdk_nvme_ctrlr *ctrlr), 0);
@@ -63,7 +63,7 @@ DEFINE_STUB(nvme_transport_ctrlr_construct, struct spdk_nvme_ctrlr *,
 DEFINE_STUB_V(nvme_io_msg_ctrlr_detach, (struct spdk_nvme_ctrlr *ctrlr));
 DEFINE_STUB(spdk_nvme_transport_available, bool,
 	    (enum spdk_nvme_transport_type trtype), true);
-DEFINE_STUB(spdk_uevent_connect, int, (void), 1);
+DEFINE_STUB(nvme_uevent_connect, int, (void), 1);
 
 
 static bool ut_destruct_called = false;
@@ -1248,7 +1248,7 @@ test_nvme_wait_for_completion(void)
 	memset(&g_status, 0, sizeof(g_status));
 	completion_delay = 2;
 	timeout_in_secs = 1;
-	rc = spdk_nvme_wait_for_completion_timeout(&qpair, &g_status, timeout_in_secs);
+	rc = nvme_wait_for_completion_timeout(&qpair, &g_status, timeout_in_secs);
 	CU_ASSERT(g_status.timed_out == true);
 	CU_ASSERT(g_status.done == false);
 	CU_ASSERT(rc == -ECANCELED);
@@ -1258,7 +1258,7 @@ test_nvme_wait_for_completion(void)
 	g_process_comp_result = -1;
 	completion_delay = 1;
 	timeout_in_secs = 2;
-	rc = spdk_nvme_wait_for_completion_timeout(&qpair, &g_status, timeout_in_secs);
+	rc = nvme_wait_for_completion_timeout(&qpair, &g_status, timeout_in_secs);
 	CU_ASSERT(rc == -ECANCELED);
 	CU_ASSERT(g_status.timed_out == true);
 	CU_ASSERT(g_status.done == false);
@@ -1271,16 +1271,16 @@ test_nvme_wait_for_completion(void)
 	memset(&g_status, 0, sizeof(g_status));
 	completion_delay = 1;
 	timeout_in_secs = 2;
-	rc = spdk_nvme_wait_for_completion_timeout(&qpair, &g_status, timeout_in_secs);
+	rc = nvme_wait_for_completion_timeout(&qpair, &g_status, timeout_in_secs);
 	CU_ASSERT(g_status.timed_out == false);
 	CU_ASSERT(g_status.done == true);
 	CU_ASSERT(rc == 0);
 
-	/* spdk_nvme_wait_for_completion */
+	/* nvme_wait_for_completion */
 	/* spdk_nvme_qpair_process_completions returns error */
 	memset(&g_status, 0, sizeof(g_status));
 	g_process_comp_result = -1;
-	rc = spdk_nvme_wait_for_completion(&qpair, &g_status);
+	rc = nvme_wait_for_completion(&qpair, &g_status);
 	CU_ASSERT(rc == -ECANCELED);
 	CU_ASSERT(g_status.timed_out == true);
 	CU_ASSERT(g_status.done == false);
@@ -1290,7 +1290,7 @@ test_nvme_wait_for_completion(void)
 	/* successful completion */
 	memset(&g_status, 0, sizeof(g_status));
 	g_process_comp_result = 0;
-	rc = spdk_nvme_wait_for_completion(&qpair, &g_status);
+	rc = nvme_wait_for_completion(&qpair, &g_status);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_status.timed_out == false);
 	CU_ASSERT(g_status.done == true);

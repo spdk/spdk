@@ -46,7 +46,7 @@ DEFINE_STUB(spdk_mem_unregister, int, (void *vaddr, size_t len), 0);
 
 DEFINE_STUB(nvme_get_quirks, uint64_t, (const struct spdk_pci_id *id), 0);
 
-DEFINE_STUB(spdk_nvme_wait_for_completion, int,
+DEFINE_STUB(nvme_wait_for_completion, int,
 	    (struct spdk_nvme_qpair *qpair,
 	     struct nvme_completion_poll_status *status), 0);
 DEFINE_STUB_V(nvme_completion_poll_cb, (void *arg, const struct spdk_nvme_cpl *cpl));
@@ -72,7 +72,7 @@ DEFINE_STUB(spdk_pci_device_cfg_read16, int, (struct spdk_pci_device *dev, uint1
 		uint32_t offset), 0);
 DEFINE_STUB(spdk_pci_device_get_id, struct spdk_pci_id, (struct spdk_pci_device *dev), {0})
 
-DEFINE_STUB(spdk_uevent_connect, int, (void), 0);
+DEFINE_STUB(nvme_uevent_connect, int, (void), 0);
 
 struct spdk_log_flag SPDK_LOG_NVME = {
 	.name = "nvme",
@@ -102,7 +102,7 @@ struct spdk_uevent_entry {
 static STAILQ_HEAD(, spdk_uevent_entry) g_uevents = STAILQ_HEAD_INITIALIZER(g_uevents);
 
 int
-spdk_get_uevent(int fd, struct spdk_uevent *uevent)
+nvme_get_uevent(int fd, struct spdk_uevent *uevent)
 {
 	struct spdk_uevent_entry *entry;
 
@@ -149,7 +149,7 @@ DEFINE_STUB(nvme_get_ctrlr_by_trid_unsafe, struct spdk_nvme_ctrlr *,
 	    (const struct spdk_nvme_transport_id *trid), NULL);
 DEFINE_STUB(spdk_nvme_ctrlr_get_regs_csts, union spdk_nvme_csts_register,
 	    (struct spdk_nvme_ctrlr *ctrlr), {});
-DEFINE_STUB(spdk_nvme_ctrlr_get_process, struct spdk_nvme_ctrlr_process *,
+DEFINE_STUB(nvme_ctrlr_get_process, struct spdk_nvme_ctrlr_process *,
 	    (struct spdk_nvme_ctrlr *ctrlr, pid_t pid), NULL);
 DEFINE_STUB(nvme_completion_is_retry, bool, (const struct spdk_nvme_cpl *cpl), false);
 DEFINE_STUB_V(spdk_nvme_qpair_print_command, (struct spdk_nvme_qpair *qpair,

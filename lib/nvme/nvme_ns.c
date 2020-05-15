@@ -132,7 +132,7 @@ nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion_robust_lock(ns->ctrlr->adminq, status,
+	if (nvme_wait_for_completion_robust_lock(ns->ctrlr->adminq, status,
 			&ns->ctrlr->ctrlr_lock)) {
 		if (!status->timed_out) {
 			free(status);
@@ -178,7 +178,7 @@ nvme_ctrlr_identify_id_desc(struct spdk_nvme_ns *ns)
 		return rc;
 	}
 
-	rc = spdk_nvme_wait_for_completion_robust_lock(ns->ctrlr->adminq, status, &ns->ctrlr->ctrlr_lock);
+	rc = nvme_wait_for_completion_robust_lock(ns->ctrlr->adminq, status, &ns->ctrlr->ctrlr_lock);
 	if (rc != 0) {
 		SPDK_WARNLOG("Failed to retrieve NS ID Descriptor List\n");
 		memset(ns->id_desc_list, 0, sizeof(ns->id_desc_list));
@@ -310,7 +310,7 @@ spdk_nvme_ns_get_optimal_io_boundary(struct spdk_nvme_ns *ns)
 }
 
 static const void *
-_spdk_nvme_ns_find_id_desc(const struct spdk_nvme_ns *ns, enum spdk_nvme_nidt type, size_t *length)
+nvme_ns_find_id_desc(const struct spdk_nvme_ns *ns, enum spdk_nvme_nidt type, size_t *length)
 {
 	const struct spdk_nvme_ns_id_desc *desc;
 	size_t offset;
@@ -350,7 +350,7 @@ spdk_nvme_ns_get_uuid(const struct spdk_nvme_ns *ns)
 	const struct spdk_uuid *uuid;
 	size_t uuid_size;
 
-	uuid = _spdk_nvme_ns_find_id_desc(ns, SPDK_NVME_NIDT_UUID, &uuid_size);
+	uuid = nvme_ns_find_id_desc(ns, SPDK_NVME_NIDT_UUID, &uuid_size);
 	if (uuid == NULL || uuid_size != sizeof(*uuid)) {
 		return NULL;
 	}
