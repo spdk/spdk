@@ -2520,7 +2520,7 @@ blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blob *blo
 			bs_batch_read_dev(batch, payload, lba, lba_count);
 		} else {
 			/* Read from the backing block device */
-			spdk_bs_batch_read_bs_dev(batch, blob->back_bs_dev, payload, lba, lba_count);
+			bs_batch_read_bs_dev(batch, blob->back_bs_dev, payload, lba, lba_count);
 		}
 
 		bs_batch_close(batch);

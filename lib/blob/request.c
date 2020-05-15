@@ -317,8 +317,8 @@ bs_batch_open(struct spdk_io_channel *_channel,
 }
 
 void
-spdk_bs_batch_read_bs_dev(spdk_bs_batch_t *batch, struct spdk_bs_dev *bs_dev,
-			  void *payload, uint64_t lba, uint32_t lba_count)
+bs_batch_read_bs_dev(spdk_bs_batch_t *batch, struct spdk_bs_dev *bs_dev,
+		     void *payload, uint64_t lba, uint32_t lba_count)
 {
 	struct spdk_bs_request_set	*set = (struct spdk_bs_request_set *)batch;
 	struct spdk_bs_channel		*channel = set->channel;
