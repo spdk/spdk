@@ -654,13 +654,13 @@ ftl_init_fail_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 	ftl_dev_free_init_ctx(init_ctx);
 }
 
-static int _spdk_ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_init_fn cb_fn, void *cb_arg,
-			      struct spdk_thread *thread);
+static int ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_init_fn cb_fn, void *cb_arg,
+			struct spdk_thread *thread);
 
 static void
 ftl_init_fail(struct ftl_dev_init_ctx *init_ctx)
 {
-	if (_spdk_ftl_dev_free(init_ctx->dev, ftl_init_fail_cb, init_ctx, init_ctx->thread)) {
+	if (ftl_dev_free(init_ctx->dev, ftl_init_fail_cb, init_ctx, init_ctx->thread)) {
 		SPDK_ERRLOG("Unable to free the device\n");
 		assert(0);
 	}
@@ -1644,8 +1644,8 @@ ftl_add_halt_poller(void *ctx)
 }
 
 static int
-_spdk_ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_init_fn cb_fn, void *cb_arg,
-		   struct spdk_thread *thread)
+ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_init_fn cb_fn, void *cb_arg,
+	     struct spdk_thread *thread)
 {
 	struct ftl_dev_init_ctx *fini_ctx;
 
@@ -1671,7 +1671,7 @@ _spdk_ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_init_fn cb_fn, void *cb_ar
 int
 spdk_ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_init_fn cb_fn, void *cb_arg)
 {
-	return _spdk_ftl_dev_free(dev, cb_fn, cb_arg, spdk_get_thread());
+	return ftl_dev_free(dev, cb_fn, cb_arg, spdk_get_thread());
 }
 
 SPDK_LOG_REGISTER_COMPONENT("ftl_init", SPDK_LOG_FTL_INIT)
