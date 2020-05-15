@@ -71,6 +71,7 @@ rpc_spdk_kill_instance(struct spdk_jsonrpc_request *request,
 		{"SIGQUIT",	SIGQUIT},
 		{"SIGHUP",	SIGHUP},
 		{"SIGKILL",	SIGKILL},
+		{"SIGUSR1",	SIGUSR1},
 	};
 	size_t i, sig_count;
 	int signal;
