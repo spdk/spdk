@@ -161,8 +161,8 @@ spdk_bit_array_capacity(const struct spdk_bit_array *ba)
 }
 
 static inline int
-_spdk_bit_array_get_word(const struct spdk_bit_array *ba, uint32_t bit_index,
-			 uint32_t *word_index, uint32_t *word_bit_index)
+bit_array_get_word(const struct spdk_bit_array *ba, uint32_t bit_index,
+		   uint32_t *word_index, uint32_t *word_bit_index)
 {
 	if (spdk_unlikely(bit_index >= ba->bit_count)) {
 		return -EINVAL;
@@ -179,7 +179,7 @@ spdk_bit_array_get(const struct spdk_bit_array *ba, uint32_t bit_index)
 {
 	uint32_t word_index, word_bit_index;
 
-	if (_spdk_bit_array_get_word(ba, bit_index, &word_index, &word_bit_index)) {
+	if (bit_array_get_word(ba, bit_index, &word_index, &word_bit_index)) {
 		return false;
 	}
 
@@ -191,7 +191,7 @@ spdk_bit_array_set(struct spdk_bit_array *ba, uint32_t bit_index)
 {
 	uint32_t word_index, word_bit_index;
 
-	if (_spdk_bit_array_get_word(ba, bit_index, &word_index, &word_bit_index)) {
+	if (bit_array_get_word(ba, bit_index, &word_index, &word_bit_index)) {
 		return -EINVAL;
 	}
 
@@ -204,7 +204,7 @@ spdk_bit_array_clear(struct spdk_bit_array *ba, uint32_t bit_index)
 {
 	uint32_t word_index, word_bit_index;
 
-	if (_spdk_bit_array_get_word(ba, bit_index, &word_index, &word_bit_index)) {
+	if (bit_array_get_word(ba, bit_index, &word_index, &word_bit_index)) {
 		/*
 		 * Clearing past the end of the bit array is a no-op, since bit past the end
 		 * are implicitly 0.
@@ -216,8 +216,8 @@ spdk_bit_array_clear(struct spdk_bit_array *ba, uint32_t bit_index)
 }
 
 static inline uint32_t
-_spdk_bit_array_find_first(const struct spdk_bit_array *ba, uint32_t start_bit_index,
-			   spdk_bit_array_word xor_mask)
+bit_array_find_first(const struct spdk_bit_array *ba, uint32_t start_bit_index,
+		     spdk_bit_array_word xor_mask)
 {
 	uint32_t word_index, first_word_bit_index;
 	spdk_bit_array_word word, first_word_mask;
@@ -257,7 +257,7 @@ spdk_bit_array_find_first_set(const struct spdk_bit_array *ba, uint32_t start_bi
 {
 	uint32_t bit_index;
 
-	bit_index = _spdk_bit_array_find_first(ba, start_bit_index, 0);
+	bit_index = bit_array_find_first(ba, start_bit_index, 0);
 
 	/*
 	 * If we ran off the end of the array and found the 1 bit in the extra word,
@@ -275,7 +275,7 @@ spdk_bit_array_find_first_clear(const struct spdk_bit_array *ba, uint32_t start_
 {
 	uint32_t bit_index;
 
-	bit_index = _spdk_bit_array_find_first(ba, start_bit_index, SPDK_BIT_ARRAY_WORD_C(-1));
+	bit_index = bit_array_find_first(ba, start_bit_index, SPDK_BIT_ARRAY_WORD_C(-1));
 
 	/*
 	 * If we ran off the end of the array and found the 0 bit in the extra word,

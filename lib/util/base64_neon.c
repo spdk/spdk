@@ -116,7 +116,7 @@ load_64byte_table(const uint8_t *p)
 }
 
 static void
-_spdk_base64_encode_neon64(char **dst, const char *enc_table, const void **src, size_t *src_len)
+base64_encode_neon64(char **dst, const char *enc_table, const void **src, size_t *src_len)
 {
 	const uint8x16x4_t tbl_enc = load_64byte_table(enc_table);
 
@@ -155,8 +155,8 @@ _spdk_base64_encode_neon64(char **dst, const char *enc_table, const void **src, 
 }
 
 static void
-_spdk_base64_decode_neon64(void **dst, const uint8_t *dec_table_neon64, const uint8_t **src,
-			   size_t *src_len)
+base64_decode_neon64(void **dst, const uint8_t *dec_table_neon64, const uint8_t **src,
+		     size_t *src_len)
 {
 	/*
 	 * First LUT tbl_dec1 will use VTBL instruction (out of range indices are set to 0 in destination).
