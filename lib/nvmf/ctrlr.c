@@ -2862,7 +2862,7 @@ spdk_nvmf_request_free(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 
 	TAILQ_REMOVE(&qpair->outstanding, req, link);
-	if (spdk_nvmf_transport_req_free(req)) {
+	if (nvmf_transport_req_free(req)) {
 		SPDK_ERRLOG("Unable to free transport level request resources.\n");
 	}
 
@@ -2896,7 +2896,7 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 		      rsp->cdw0, rsp->status.sct, rsp->status.sc, rsp->cid);
 
 	TAILQ_REMOVE(&qpair->outstanding, req, link);
-	if (spdk_nvmf_transport_req_complete(req)) {
+	if (nvmf_transport_req_complete(req)) {
 		SPDK_ERRLOG("Transport request completion error!\n");
 	}
 

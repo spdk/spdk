@@ -344,11 +344,11 @@ create_fc_port_test(void)
 	init_args.io_queues = (void *)lld_q;
 
 	set_thread(0);
-	err = spdk_nvmf_fc_master_enqueue_event(SPDK_FC_HW_PORT_INIT, (void *)&init_args, port_init_cb);
+	err = nvmf_fc_master_enqueue_event(SPDK_FC_HW_PORT_INIT, (void *)&init_args, port_init_cb);
 	CU_ASSERT(err == 0);
 	poll_thread(0);
 
-	fc_port = spdk_nvmf_fc_port_lookup(g_fc_port_handle);
+	fc_port = nvmf_fc_port_lookup(g_fc_port_handle);
 	CU_ASSERT(fc_port != NULL);
 }
 
@@ -361,12 +361,12 @@ online_fc_port_test(void)
 
 	SPDK_CU_ASSERT_FATAL(g_nvmf_tprt != NULL);
 
-	fc_port = spdk_nvmf_fc_port_lookup(g_fc_port_handle);
+	fc_port = nvmf_fc_port_lookup(g_fc_port_handle);
 	SPDK_CU_ASSERT_FATAL(fc_port != NULL);
 
 	set_thread(0);
 	args.port_handle = g_fc_port_handle;
-	err = spdk_nvmf_fc_master_enqueue_event(SPDK_FC_HW_PORT_ONLINE, (void *)&args, port_init_cb);
+	err = nvmf_fc_master_enqueue_event(SPDK_FC_HW_PORT_ONLINE, (void *)&args, port_init_cb);
 	CU_ASSERT(err == 0);
 	poll_threads();
 	set_thread(0);
@@ -406,7 +406,7 @@ poll_group_poll_test(void)
 	SPDK_CU_ASSERT_FATAL(g_nvmf_tprt != NULL);
 
 	set_thread(0);
-	fc_port = spdk_nvmf_fc_port_lookup(g_fc_port_handle);
+	fc_port = nvmf_fc_port_lookup(g_fc_port_handle);
 	SPDK_CU_ASSERT_FATAL(fc_port != NULL);
 
 	for (i = 0; i < fc_port->num_io_queues; i++) {
@@ -432,11 +432,11 @@ remove_hwqps_from_poll_groups_test(void)
 
 	SPDK_CU_ASSERT_FATAL(g_nvmf_tprt != NULL);
 
-	fc_port = spdk_nvmf_fc_port_lookup(g_fc_port_handle);
+	fc_port = nvmf_fc_port_lookup(g_fc_port_handle);
 	SPDK_CU_ASSERT_FATAL(fc_port != NULL);
 
 	for (i = 0; i < fc_port->num_io_queues; i++) {
-		spdk_nvmf_fc_poll_group_remove_hwqp(&fc_port->io_queues[i]);
+		nvmf_fc_poll_group_remove_hwqp(&fc_port->io_queues[i]);
 		poll_threads();
 		CU_ASSERT(fc_port->io_queues[i].fgroup == 0);
 	}

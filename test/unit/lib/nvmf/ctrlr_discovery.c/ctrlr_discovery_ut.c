@@ -94,9 +94,9 @@ nvmf_transport_find_listener(struct spdk_nvmf_transport *transport,
 }
 
 void
-spdk_nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport,
-				      struct spdk_nvme_transport_id *trid,
-				      struct spdk_nvmf_discovery_log_page_entry *entry)
+nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport,
+				 struct spdk_nvme_transport_id *trid,
+				 struct spdk_nvmf_discovery_log_page_entry *entry)
 {
 	entry->trtype = 42;
 }

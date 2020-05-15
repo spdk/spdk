@@ -255,21 +255,21 @@ spdk_nvmf_transport_stop_listen(struct spdk_nvmf_transport *transport,
 }
 
 void
-spdk_nvmf_transport_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn, void *cb_arg)
+nvmf_transport_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn, void *cb_arg)
 {
 	transport->ops->accept(transport, cb_fn, cb_arg);
 }
 
 void
-spdk_nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport,
-				      struct spdk_nvme_transport_id *trid,
-				      struct spdk_nvmf_discovery_log_page_entry *entry)
+nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport,
+				 struct spdk_nvme_transport_id *trid,
+				 struct spdk_nvmf_discovery_log_page_entry *entry)
 {
 	transport->ops->listener_discover(transport, trid, entry);
 }
 
 struct spdk_nvmf_transport_poll_group *
-spdk_nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport)
+nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport)
 {
 	struct spdk_nvmf_transport_poll_group *group;
 	struct spdk_nvmf_transport_pg_cache_buf *buf;
@@ -300,8 +300,8 @@ spdk_nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport)
 }
 
 struct spdk_nvmf_transport_poll_group *
-spdk_nvmf_transport_get_optimal_poll_group(struct spdk_nvmf_transport *transport,
-		struct spdk_nvmf_qpair *qpair)
+nvmf_transport_get_optimal_poll_group(struct spdk_nvmf_transport *transport,
+				      struct spdk_nvmf_qpair *qpair)
 {
 	if (transport->ops->get_optimal_poll_group) {
 		return transport->ops->get_optimal_poll_group(qpair);
@@ -311,7 +311,7 @@ spdk_nvmf_transport_get_optimal_poll_group(struct spdk_nvmf_transport *transport
 }
 
 void
-spdk_nvmf_transport_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
+nvmf_transport_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 {
 	struct spdk_nvmf_transport_pg_cache_buf *buf, *tmp;
 
@@ -327,8 +327,8 @@ spdk_nvmf_transport_poll_group_destroy(struct spdk_nvmf_transport_poll_group *gr
 }
 
 int
-spdk_nvmf_transport_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
-				   struct spdk_nvmf_qpair *qpair)
+nvmf_transport_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
+			      struct spdk_nvmf_qpair *qpair)
 {
 	if (qpair->transport) {
 		assert(qpair->transport == group->transport);
@@ -343,8 +343,8 @@ spdk_nvmf_transport_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 }
 
 int
-spdk_nvmf_transport_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
-				      struct spdk_nvmf_qpair *qpair)
+nvmf_transport_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
+				 struct spdk_nvmf_qpair *qpair)
 {
 	int rc = ENOTSUP;
 
@@ -357,46 +357,46 @@ spdk_nvmf_transport_poll_group_remove(struct spdk_nvmf_transport_poll_group *gro
 }
 
 int
-spdk_nvmf_transport_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
+nvmf_transport_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 {
 	return group->transport->ops->poll_group_poll(group);
 }
 
 int
-spdk_nvmf_transport_req_free(struct spdk_nvmf_request *req)
+nvmf_transport_req_free(struct spdk_nvmf_request *req)
 {
 	return req->qpair->transport->ops->req_free(req);
 }
 
 int
-spdk_nvmf_transport_req_complete(struct spdk_nvmf_request *req)
+nvmf_transport_req_complete(struct spdk_nvmf_request *req)
 {
 	return req->qpair->transport->ops->req_complete(req);
 }
 
 void
-spdk_nvmf_transport_qpair_fini(struct spdk_nvmf_qpair *qpair)
+nvmf_transport_qpair_fini(struct spdk_nvmf_qpair *qpair)
 {
 	qpair->transport->ops->qpair_fini(qpair);
 }
 
 int
-spdk_nvmf_transport_qpair_get_peer_trid(struct spdk_nvmf_qpair *qpair,
-					struct spdk_nvme_transport_id *trid)
+nvmf_transport_qpair_get_peer_trid(struct spdk_nvmf_qpair *qpair,
+				   struct spdk_nvme_transport_id *trid)
 {
 	return qpair->transport->ops->qpair_get_peer_trid(qpair, trid);
 }
 
 int
-spdk_nvmf_transport_qpair_get_local_trid(struct spdk_nvmf_qpair *qpair,
-		struct spdk_nvme_transport_id *trid)
+nvmf_transport_qpair_get_local_trid(struct spdk_nvmf_qpair *qpair,
+				    struct spdk_nvme_transport_id *trid)
 {
 	return qpair->transport->ops->qpair_get_local_trid(qpair, trid);
 }
 
 int
-spdk_nvmf_transport_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
-		struct spdk_nvme_transport_id *trid)
+nvmf_transport_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
+				     struct spdk_nvme_transport_id *trid)
 {
 	return qpair->transport->ops->qpair_get_listen_trid(qpair, trid);
 }

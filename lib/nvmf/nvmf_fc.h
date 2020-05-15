@@ -750,9 +750,9 @@ typedef void (*spdk_nvmf_fc_callback)(uint8_t port_handle,
  * \return 0 on success, non-zero on failure.
  */
 int
-spdk_nvmf_fc_master_enqueue_event(enum spdk_fc_event event_type,
-				  void *args,
-				  spdk_nvmf_fc_callback cb_func);
+nvmf_fc_master_enqueue_event(enum spdk_fc_event event_type,
+			     void *args,
+			     spdk_nvmf_fc_callback cb_func);
 
 /*
  * dump info
@@ -764,7 +764,7 @@ struct spdk_nvmf_fc_queue_dump_info {
 #define SPDK_FC_HW_DUMP_BUF_SIZE (10 * 4096)
 
 static inline void
-spdk_nvmf_fc_dump_buf_print(struct spdk_nvmf_fc_queue_dump_info *dump_info, char *fmt, ...)
+nvmf_fc_dump_buf_print(struct spdk_nvmf_fc_queue_dump_info *dump_info, char *fmt, ...)
 {
 	uint64_t buffer_size = SPDK_FC_HW_DUMP_BUF_SIZE;
 	int32_t avail = (int32_t)(buffer_size - dump_info->offset);
@@ -812,14 +812,14 @@ struct spdk_nvmf_fc_xchg_info {
  */
 
 static inline struct spdk_nvmf_fc_request *
-spdk_nvmf_fc_get_fc_req(struct spdk_nvmf_request *req)
+nvmf_fc_get_fc_req(struct spdk_nvmf_request *req)
 {
 	return (struct spdk_nvmf_fc_request *)
 	       ((uintptr_t)req - offsetof(struct spdk_nvmf_fc_request, req));
 }
 
 static inline bool
-spdk_nvmf_fc_is_port_dead(struct spdk_nvmf_fc_hwqp *hwqp)
+nvmf_fc_is_port_dead(struct spdk_nvmf_fc_hwqp *hwqp)
 {
 	switch (hwqp->fc_port->hw_port_status) {
 	case SPDK_FC_PORT_QUIESCED:
@@ -830,7 +830,7 @@ spdk_nvmf_fc_is_port_dead(struct spdk_nvmf_fc_hwqp *hwqp)
 }
 
 static inline bool
-spdk_nvmf_fc_req_in_xfer(struct spdk_nvmf_fc_request *fc_req)
+nvmf_fc_req_in_xfer(struct spdk_nvmf_fc_request *fc_req)
 {
 	switch (fc_req->state) {
 	case SPDK_NVMF_FC_REQ_READ_XFER:
@@ -845,7 +845,7 @@ spdk_nvmf_fc_req_in_xfer(struct spdk_nvmf_fc_request *fc_req)
 }
 
 static inline void
-spdk_nvmf_fc_create_trid(struct spdk_nvme_transport_id *trid, uint64_t n_wwn, uint64_t p_wwn)
+nvmf_fc_create_trid(struct spdk_nvme_transport_id *trid, uint64_t n_wwn, uint64_t p_wwn)
 {
 	spdk_nvme_trid_populate_transport(trid, SPDK_NVME_TRANSPORT_FC);
 	trid->adrfam = SPDK_NVMF_ADRFAM_FC;
@@ -853,116 +853,106 @@ spdk_nvmf_fc_create_trid(struct spdk_nvme_transport_id *trid, uint64_t n_wwn, ui
 	snprintf(trid->traddr, sizeof(trid->traddr), "nn-0x%lx:pn-0x%lx", n_wwn, p_wwn);
 }
 
-void spdk_nvmf_fc_ls_init(struct spdk_nvmf_fc_port *fc_port);
+void nvmf_fc_ls_init(struct spdk_nvmf_fc_port *fc_port);
 
-void spdk_nvmf_fc_ls_fini(struct spdk_nvmf_fc_port *fc_port);
+void nvmf_fc_ls_fini(struct spdk_nvmf_fc_port *fc_port);
 
-void spdk_nvmf_fc_handle_ls_rqst(struct spdk_nvmf_fc_ls_rqst *ls_rqst);
+void nvmf_fc_handle_ls_rqst(struct spdk_nvmf_fc_ls_rqst *ls_rqst);
 void nvmf_fc_ls_add_conn_failure(
 	struct spdk_nvmf_fc_association *assoc,
 	struct spdk_nvmf_fc_ls_rqst *ls_rqst,
 	struct spdk_nvmf_fc_conn *fc_conn,
 	bool aq_conn);
 
-int spdk_nvmf_fc_xmt_ls_rsp(struct spdk_nvmf_fc_nport *tgtport,
-			    struct spdk_nvmf_fc_ls_rqst *ls_rqst);
+void nvmf_fc_init_hwqp(struct spdk_nvmf_fc_port *fc_port, struct spdk_nvmf_fc_hwqp *hwqp);
 
-void spdk_nvmf_fc_init_hwqp(struct spdk_nvmf_fc_port *fc_port, struct spdk_nvmf_fc_hwqp *hwqp);
+void nvmf_fc_init_poller_queues(struct spdk_nvmf_fc_hwqp *hwqp);
 
-void spdk_nvmf_fc_init_poller_queues(struct spdk_nvmf_fc_hwqp *hwqp);
-
-struct spdk_nvmf_fc_conn *spdk_nvmf_fc_hwqp_find_fc_conn(struct spdk_nvmf_fc_hwqp *hwqp,
+struct spdk_nvmf_fc_conn *nvmf_fc_hwqp_find_fc_conn(struct spdk_nvmf_fc_hwqp *hwqp,
 		uint64_t conn_id);
 
-void spdk_nvmf_fc_hwqp_reinit_poller_queues(struct spdk_nvmf_fc_hwqp *hwqp, void *queues_curr);
+void nvmf_fc_hwqp_reinit_poller_queues(struct spdk_nvmf_fc_hwqp *hwqp, void *queues_curr);
 
-struct spdk_nvmf_fc_port *spdk_nvmf_fc_port_lookup(uint8_t port_hdl);
+struct spdk_nvmf_fc_port *nvmf_fc_port_lookup(uint8_t port_hdl);
 
-bool spdk_nvmf_fc_port_is_offline(struct spdk_nvmf_fc_port *fc_port);
+bool nvmf_fc_port_is_offline(struct spdk_nvmf_fc_port *fc_port);
 
-int spdk_nvmf_fc_port_set_offline(struct spdk_nvmf_fc_port *fc_port);
+int nvmf_fc_port_set_offline(struct spdk_nvmf_fc_port *fc_port);
 
-bool spdk_nvmf_fc_port_is_online(struct spdk_nvmf_fc_port *fc_port);
+bool nvmf_fc_port_is_online(struct spdk_nvmf_fc_port *fc_port);
 
-int spdk_nvmf_fc_port_set_online(struct spdk_nvmf_fc_port *fc_port);
+int nvmf_fc_port_set_online(struct spdk_nvmf_fc_port *fc_port);
 
-int spdk_nvmf_fc_rport_set_state(struct spdk_nvmf_fc_remote_port_info *rport,
-				 enum spdk_nvmf_fc_object_state state);
+int nvmf_fc_rport_set_state(struct spdk_nvmf_fc_remote_port_info *rport,
+			    enum spdk_nvmf_fc_object_state state);
 
-void spdk_nvmf_fc_port_add(struct spdk_nvmf_fc_port *fc_port);
+void nvmf_fc_port_add(struct spdk_nvmf_fc_port *fc_port);
 
-int spdk_nvmf_fc_port_add_nport(struct spdk_nvmf_fc_port *fc_port,
-				struct spdk_nvmf_fc_nport *nport);
+int nvmf_fc_port_add_nport(struct spdk_nvmf_fc_port *fc_port,
+			   struct spdk_nvmf_fc_nport *nport);
 
-int spdk_nvmf_fc_port_remove_nport(struct spdk_nvmf_fc_port *fc_port,
-				   struct spdk_nvmf_fc_nport *nport);
+int nvmf_fc_port_remove_nport(struct spdk_nvmf_fc_port *fc_port,
+			      struct spdk_nvmf_fc_nport *nport);
 
-struct spdk_nvmf_fc_nport *spdk_nvmf_fc_nport_find(uint8_t port_hdl, uint16_t nport_hdl);
+struct spdk_nvmf_fc_nport *nvmf_fc_nport_find(uint8_t port_hdl, uint16_t nport_hdl);
 
-int spdk_nvmf_fc_nport_set_state(struct spdk_nvmf_fc_nport *nport,
-				 enum spdk_nvmf_fc_object_state state);
+int nvmf_fc_nport_set_state(struct spdk_nvmf_fc_nport *nport,
+			    enum spdk_nvmf_fc_object_state state);
 
-bool spdk_nvmf_fc_nport_add_rem_port(struct spdk_nvmf_fc_nport *nport,
-				     struct spdk_nvmf_fc_remote_port_info *rem_port);
+bool nvmf_fc_nport_add_rem_port(struct spdk_nvmf_fc_nport *nport,
+				struct spdk_nvmf_fc_remote_port_info *rem_port);
 
-bool spdk_nvmf_fc_nport_remove_rem_port(struct spdk_nvmf_fc_nport *nport,
-					struct spdk_nvmf_fc_remote_port_info *rem_port);
+bool nvmf_fc_nport_remove_rem_port(struct spdk_nvmf_fc_nport *nport,
+				   struct spdk_nvmf_fc_remote_port_info *rem_port);
 
-bool spdk_nvmf_fc_nport_has_no_rport(struct spdk_nvmf_fc_nport *nport);
+bool nvmf_fc_nport_has_no_rport(struct spdk_nvmf_fc_nport *nport);
 
-int spdk_nvmf_fc_assoc_set_state(struct spdk_nvmf_fc_association *assoc,
-				 enum spdk_nvmf_fc_object_state state);
+int nvmf_fc_assoc_set_state(struct spdk_nvmf_fc_association *assoc,
+			    enum spdk_nvmf_fc_object_state state);
 
-int spdk_nvmf_fc_delete_association(struct spdk_nvmf_fc_nport *tgtport,
-				    uint64_t assoc_id, bool send_abts, bool backend_initiated,
-				    spdk_nvmf_fc_del_assoc_cb del_assoc_cb,
-				    void *cb_data);
+int nvmf_fc_delete_association(struct spdk_nvmf_fc_nport *tgtport,
+			       uint64_t assoc_id, bool send_abts, bool backend_initiated,
+			       spdk_nvmf_fc_del_assoc_cb del_assoc_cb,
+			       void *cb_data);
 
-bool spdk_nvmf_ctrlr_is_on_nport(uint8_t port_hdl, uint16_t nport_hdl,
-				 struct spdk_nvmf_ctrlr *ctrlr);
+bool nvmf_ctrlr_is_on_nport(uint8_t port_hdl, uint16_t nport_hdl,
+			    struct spdk_nvmf_ctrlr *ctrlr);
 
-void spdk_nvmf_fc_assign_queue_to_master_thread(struct spdk_nvmf_fc_hwqp *hwqp);
+void nvmf_fc_assign_queue_to_master_thread(struct spdk_nvmf_fc_hwqp *hwqp);
 
-void spdk_nvmf_fc_poll_group_add_hwqp(struct spdk_nvmf_fc_hwqp *hwqp);
+void nvmf_fc_poll_group_add_hwqp(struct spdk_nvmf_fc_hwqp *hwqp);
 
-void spdk_nvmf_fc_poll_group_remove_hwqp(struct spdk_nvmf_fc_hwqp *hwqp);
+void nvmf_fc_poll_group_remove_hwqp(struct spdk_nvmf_fc_hwqp *hwqp);
 
-int spdk_nvmf_fc_hwqp_set_online(struct spdk_nvmf_fc_hwqp *hwqp);
+int nvmf_fc_hwqp_set_online(struct spdk_nvmf_fc_hwqp *hwqp);
 
-int spdk_nvmf_fc_hwqp_set_offline(struct spdk_nvmf_fc_hwqp *hwqp);
+int nvmf_fc_hwqp_set_offline(struct spdk_nvmf_fc_hwqp *hwqp);
 
-uint32_t spdk_nvmf_fc_get_prli_service_params(void);
+uint32_t nvmf_fc_get_prli_service_params(void);
 
-void spdk_nvmf_fc_handle_abts_frame(struct spdk_nvmf_fc_nport *nport, uint16_t rpi, uint16_t oxid,
-				    uint16_t rxid);
+void nvmf_fc_handle_abts_frame(struct spdk_nvmf_fc_nport *nport, uint16_t rpi, uint16_t oxid,
+			       uint16_t rxid);
 
-void spdk_nvmf_fc_request_abort(struct spdk_nvmf_fc_request *fc_req, bool send_abts,
-				spdk_nvmf_fc_caller_cb cb, void *cb_args);
+void nvmf_fc_request_abort(struct spdk_nvmf_fc_request *fc_req, bool send_abts,
+			   spdk_nvmf_fc_caller_cb cb, void *cb_args);
 
-int spdk_nvmf_fc_xmt_srsr_req(struct spdk_nvmf_fc_hwqp *hwqp,
-			      struct spdk_nvmf_fc_srsr_bufs *srsr_bufs,
-			      spdk_nvmf_fc_caller_cb cb, void *cb_args);
+struct spdk_nvmf_tgt *nvmf_fc_get_tgt(void);
 
-struct spdk_nvmf_tgt *spdk_nvmf_fc_get_tgt(void);
-
-void spdk_nvmf_fc_dump_all_queues(struct spdk_nvmf_fc_port *fc_port,
-				  struct spdk_nvmf_fc_queue_dump_info *dump_info);
-
-struct spdk_thread *spdk_nvmf_fc_get_master_thread(void);
+struct spdk_thread *nvmf_fc_get_master_thread(void);
 
 /*
  * These functions are called by low level FC driver
  */
 
 static inline struct spdk_nvmf_fc_conn *
-spdk_nvmf_fc_get_conn(struct spdk_nvmf_qpair *qpair)
+nvmf_fc_get_conn(struct spdk_nvmf_qpair *qpair)
 {
 	return (struct spdk_nvmf_fc_conn *)
 	       ((uintptr_t)qpair - offsetof(struct spdk_nvmf_fc_conn, qpair));
 }
 
 static inline uint16_t
-spdk_nvmf_fc_advance_conn_sqhead(struct spdk_nvmf_qpair *qpair)
+nvmf_fc_advance_conn_sqhead(struct spdk_nvmf_qpair *qpair)
 {
 	/* advance sq_head pointer - wrap if needed */
 	qpair->sq_head = (qpair->sq_head == qpair->sq_head_max) ?
@@ -971,7 +961,7 @@ spdk_nvmf_fc_advance_conn_sqhead(struct spdk_nvmf_qpair *qpair)
 }
 
 static inline bool
-spdk_nvmf_fc_use_send_frame(struct spdk_nvmf_request *req)
+nvmf_fc_use_send_frame(struct spdk_nvmf_request *req)
 {
 	/* For now use for only keepalives. */
 	if (req->qpair->qid == 0 &&
@@ -981,31 +971,31 @@ spdk_nvmf_fc_use_send_frame(struct spdk_nvmf_request *req)
 	return false;
 }
 
-enum spdk_nvmf_fc_poller_api_ret spdk_nvmf_fc_poller_api_func(
+enum spdk_nvmf_fc_poller_api_ret nvmf_fc_poller_api_func(
 	struct spdk_nvmf_fc_hwqp *hwqp,
 	enum spdk_nvmf_fc_poller_api api,
 	void *api_args);
 
-int spdk_nvmf_fc_hwqp_process_frame(struct spdk_nvmf_fc_hwqp *hwqp, uint32_t buff_idx,
-				    struct spdk_nvmf_fc_frame_hdr *frame,
-				    struct spdk_nvmf_fc_buffer_desc *buffer, uint32_t plen);
+int nvmf_fc_hwqp_process_frame(struct spdk_nvmf_fc_hwqp *hwqp, uint32_t buff_idx,
+			       struct spdk_nvmf_fc_frame_hdr *frame,
+			       struct spdk_nvmf_fc_buffer_desc *buffer, uint32_t plen);
 
-void spdk_nvmf_fc_hwqp_process_pending_reqs(struct spdk_nvmf_fc_hwqp *hwqp);
+void nvmf_fc_hwqp_process_pending_reqs(struct spdk_nvmf_fc_hwqp *hwqp);
 
-void spdk_nvmf_fc_hwqp_process_pending_ls_rqsts(struct spdk_nvmf_fc_hwqp *hwqp);
+void nvmf_fc_hwqp_process_pending_ls_rqsts(struct spdk_nvmf_fc_hwqp *hwqp);
 
-void spdk_nvmf_fc_request_set_state(struct spdk_nvmf_fc_request *fc_req,
-				    enum spdk_nvmf_fc_request_state state);
+void nvmf_fc_request_set_state(struct spdk_nvmf_fc_request *fc_req,
+			       enum spdk_nvmf_fc_request_state state);
 
-char *spdk_nvmf_fc_request_get_state_str(int state);
+char *nvmf_fc_request_get_state_str(int state);
 
-void spdk_nvmf_fc_request_free(struct spdk_nvmf_fc_request *fc_req);
+void _nvmf_fc_request_free(struct spdk_nvmf_fc_request *fc_req);
 
-void spdk_nvmf_fc_request_abort_complete(void *arg1);
+void nvmf_fc_request_abort_complete(void *arg1);
 
-bool spdk_nvmf_fc_send_ersp_required(struct spdk_nvmf_fc_request *fc_req,
-				     uint32_t rsp_cnt, uint32_t xfer_len);
+bool nvmf_fc_send_ersp_required(struct spdk_nvmf_fc_request *fc_req,
+				uint32_t rsp_cnt, uint32_t xfer_len);
 
-int spdk_nvmf_fc_handle_rsp(struct spdk_nvmf_fc_request *req);
+int nvmf_fc_handle_rsp(struct spdk_nvmf_fc_request *req);
 
 #endif

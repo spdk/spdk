@@ -77,14 +77,11 @@ static struct spdk_nvmf_transport_opts g_nvmf_transport_opts = {
 static uint32_t g_hw_queue_depth = 1024;
 static struct spdk_nvmf_subsystem g_nvmf_subsystem;
 
-
-int spdk_nvmf_fc_xmt_ls_rsp(struct spdk_nvmf_fc_nport *g_tgt_port,
-			    struct spdk_nvmf_fc_ls_rqst *ls_rqst);
-void spdk_nvmf_fc_request_abort(struct spdk_nvmf_fc_request *fc_req, bool send_abts,
-				spdk_nvmf_fc_caller_cb cb, void *cb_args);
+void nvmf_fc_request_abort(struct spdk_nvmf_fc_request *fc_req, bool send_abts,
+			   spdk_nvmf_fc_caller_cb cb, void *cb_args);
 void spdk_bdev_io_abort(struct spdk_bdev_io *bdev_io, void *ctx);
-void spdk_nvmf_fc_request_abort_complete(void *arg1);
-bool spdk_nvmf_fc_req_in_xfer(struct spdk_nvmf_fc_request *fc_req);
+void nvmf_fc_request_abort_complete(void *arg1);
+bool nvmf_fc_req_in_xfer(struct spdk_nvmf_fc_request *fc_req);
 
 struct spdk_nvmf_subsystem *
 spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt, const char *subnqn)
@@ -177,7 +174,7 @@ new_qpair(struct spdk_nvmf_qpair *qpair, void *cb_arg)
 		fc_conn->fc_assoc->assoc_id = fc_conn->conn_id;
 	}
 
-	spdk_nvmf_fc_poller_api_func(sel_hwqp, SPDK_NVMF_FC_POLLER_API_ADD_CONNECTION, &api_data->args);
+	nvmf_fc_poller_api_func(sel_hwqp, SPDK_NVMF_FC_POLLER_API_ADD_CONNECTION, &api_data->args);
 
 	return;
 err:
@@ -186,7 +183,7 @@ err:
 }
 
 struct spdk_nvmf_fc_conn *
-spdk_nvmf_fc_hwqp_find_fc_conn(struct spdk_nvmf_fc_hwqp *hwqp, uint64_t conn_id)
+nvmf_fc_hwqp_find_fc_conn(struct spdk_nvmf_fc_hwqp *hwqp, uint64_t conn_id)
 {
 	struct spdk_nvmf_fc_conn *fc_conn;
 
@@ -279,12 +276,6 @@ nvmf_fc_free_srsr_bufs(struct spdk_nvmf_fc_srsr_bufs *srsr_bufs)
 	}
 }
 
-int
-nvmf_fc_xmt_ls_rsp(struct spdk_nvmf_fc_nport *tgtport, struct spdk_nvmf_fc_ls_rqst *ls_rqst)
-{
-	return spdk_nvmf_fc_xmt_ls_rsp(tgtport, ls_rqst);
-}
-
 /*
  *  The Tests
  */
@@ -341,7 +332,7 @@ run_create_assoc_test(const char *subnqn,
 	ls_rqst.rport = &g_rem_port;
 	ls_rqst.nvmf_tgt = &g_nvmf_tgt;
 
-	spdk_nvmf_fc_handle_ls_rqst(&ls_rqst);
+	nvmf_fc_handle_ls_rqst(&ls_rqst);
 	poll_thread(0);
 }
 
@@ -391,7 +382,7 @@ run_create_conn_test(struct spdk_nvmf_host *host,
 	ls_rqst.rport = &g_rem_port;
 	ls_rqst.nvmf_tgt = &g_nvmf_tgt;
 
-	spdk_nvmf_fc_handle_ls_rqst(&ls_rqst);
+	nvmf_fc_handle_ls_rqst(&ls_rqst);
 	poll_thread(0);
 }
 
@@ -435,7 +426,7 @@ run_disconn_test(struct spdk_nvmf_fc_nport *tgt_port,
 	ls_rqst.rport = &g_rem_port;
 	ls_rqst.nvmf_tgt = &g_nvmf_tgt;
 
-	spdk_nvmf_fc_handle_ls_rqst(&ls_rqst);
+	nvmf_fc_handle_ls_rqst(&ls_rqst);
 	poll_thread(0);
 }
 
@@ -713,7 +704,7 @@ ls_tests_init(void)
 		hwqp->fgroup = &g_fgroup[i];
 	}
 
-	spdk_nvmf_fc_ls_init(&g_fc_port);
+	nvmf_fc_ls_init(&g_fc_port);
 	bzero(&g_tgt_port, sizeof(struct spdk_nvmf_fc_nport));
 	g_tgt_port.fc_port = &g_fc_port;
 	TAILQ_INIT(&g_tgt_port.rem_port_list);
@@ -728,7 +719,7 @@ ls_tests_init(void)
 static int
 ls_tests_fini(void)
 {
-	spdk_nvmf_fc_ls_fini(&g_fc_port);
+	nvmf_fc_ls_fini(&g_fc_port);
 	free_threads();
 	return 0;
 }
@@ -829,8 +820,8 @@ create_max_aq_conns_test(void)
 	for (i = 0; i < create_assoc_test_cnt; i++) {
 		int ret;
 		g_spdk_nvmf_fc_xmt_srsr_req = false;
-		ret = spdk_nvmf_fc_delete_association(&g_tgt_port, from_be64(&assoc_id[i]), true, false,
-						      disconnect_assoc_cb, 0);
+		ret = nvmf_fc_delete_association(&g_tgt_port, from_be64(&assoc_id[i]), true, false,
+						 disconnect_assoc_cb, 0);
 		CU_ASSERT(ret == 0);
 		poll_thread(0);
 
@@ -869,8 +860,8 @@ disconnect_bad_assoc_test(void)
  */
 
 int
-spdk_nvmf_fc_xmt_ls_rsp(struct spdk_nvmf_fc_nport *g_tgt_port,
-			struct spdk_nvmf_fc_ls_rqst *ls_rqst)
+nvmf_fc_xmt_ls_rsp(struct spdk_nvmf_fc_nport *g_tgt_port,
+		   struct spdk_nvmf_fc_ls_rqst *ls_rqst)
 {
 	switch (g_test_run_type) {
 	case TEST_RUN_TYPE_CREATE_ASSOC:
@@ -904,9 +895,9 @@ spdk_nvmf_fc_xmt_ls_rsp(struct spdk_nvmf_fc_nport *g_tgt_port,
 }
 
 int
-spdk_nvmf_fc_xmt_srsr_req(struct spdk_nvmf_fc_hwqp *hwqp,
-			  struct spdk_nvmf_fc_srsr_bufs *srsr_bufs,
-			  spdk_nvmf_fc_caller_cb cb, void *cb_args)
+nvmf_fc_xmt_srsr_req(struct spdk_nvmf_fc_hwqp *hwqp,
+		     struct spdk_nvmf_fc_srsr_bufs *srsr_bufs,
+		     spdk_nvmf_fc_caller_cb cb, void *cb_args)
 {
 	struct spdk_nvmf_fc_ls_disconnect_rqst *dc_rqst =
 		(struct spdk_nvmf_fc_ls_disconnect_rqst *)
@@ -931,10 +922,10 @@ spdk_nvmf_fc_xmt_srsr_req(struct spdk_nvmf_fc_hwqp *hwqp,
 	return 0;
 }
 
-DEFINE_STUB_V(spdk_nvmf_fc_request_abort, (struct spdk_nvmf_fc_request *fc_req,
-		bool send_abts, spdk_nvmf_fc_caller_cb cb, void *cb_args));
+DEFINE_STUB_V(nvmf_fc_request_abort, (struct spdk_nvmf_fc_request *fc_req,
+				      bool send_abts, spdk_nvmf_fc_caller_cb cb, void *cb_args));
 DEFINE_STUB_V(spdk_bdev_io_abort, (struct spdk_bdev_io *bdev_io, void *ctx));
-DEFINE_STUB_V(spdk_nvmf_fc_request_abort_complete, (void *arg1));
+DEFINE_STUB_V(nvmf_fc_request_abort_complete, (void *arg1));
 
 static void
 usage(const char *program_name)

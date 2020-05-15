@@ -305,7 +305,7 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 }
 
 static void
-_spdk_nvmf_subsystem_remove_host(struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_host *host)
+nvmf_subsystem_remove_host(struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_host *host)
 {
 	TAILQ_REMOVE(&subsystem->hosts, host, link);
 	free(host);
@@ -347,7 +347,7 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 	nvmf_subsystem_remove_all_listeners(subsystem, false);
 
 	TAILQ_FOREACH_SAFE(host, &subsystem->hosts, link, host_tmp) {
-		_spdk_nvmf_subsystem_remove_host(subsystem, host);
+		nvmf_subsystem_remove_host(subsystem, host);
 	}
 
 	TAILQ_FOREACH_SAFE(ctrlr, &subsystem->ctrlrs, link, ctrlr_tmp) {
@@ -614,7 +614,7 @@ spdk_nvmf_subsystem_get_next(struct spdk_nvmf_subsystem *subsystem)
 }
 
 static struct spdk_nvmf_host *
-_spdk_nvmf_subsystem_find_host(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn)
+nvmf_subsystem_find_host(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn)
 {
 	struct spdk_nvmf_host *host = NULL;
 
@@ -641,7 +641,7 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *
 		return -EAGAIN;
 	}
 
-	if (_spdk_nvmf_subsystem_find_host(subsystem, hostnqn)) {
+	if (nvmf_subsystem_find_host(subsystem, hostnqn)) {
 		/* This subsystem already allows the specified host. */
 		return 0;
 	}
@@ -669,12 +669,12 @@ spdk_nvmf_subsystem_remove_host(struct spdk_nvmf_subsystem *subsystem, const cha
 		return -EAGAIN;
 	}
 
-	host = _spdk_nvmf_subsystem_find_host(subsystem, hostnqn);
+	host = nvmf_subsystem_find_host(subsystem, hostnqn);
 	if (host == NULL) {
 		return -ENOENT;
 	}
 
-	_spdk_nvmf_subsystem_remove_host(subsystem, host);
+	nvmf_subsystem_remove_host(subsystem, host);
 	return 0;
 }
 
@@ -708,7 +708,7 @@ spdk_nvmf_subsystem_host_allowed(struct spdk_nvmf_subsystem *subsystem, const ch
 		return true;
 	}
 
-	return _spdk_nvmf_subsystem_find_host(subsystem, hostnqn) != NULL;
+	return nvmf_subsystem_find_host(subsystem, hostnqn) != NULL;
 }
 
 struct spdk_nvmf_host *

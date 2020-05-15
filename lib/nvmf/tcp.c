@@ -522,7 +522,7 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 }
 
 static int
-_spdk_nvmf_tcp_trsvcid_to_int(const char *trsvcid)
+nvmf_tcp_trsvcid_to_int(const char *trsvcid)
 {
 	unsigned long long ull;
 	char *end = NULL;
@@ -544,12 +544,12 @@ _spdk_nvmf_tcp_trsvcid_to_int(const char *trsvcid)
  * Canonicalize a listen address trid.
  */
 static int
-_spdk_nvmf_tcp_canon_listen_trid(struct spdk_nvme_transport_id *canon_trid,
-				 const struct spdk_nvme_transport_id *trid)
+nvmf_tcp_canon_listen_trid(struct spdk_nvme_transport_id *canon_trid,
+			   const struct spdk_nvme_transport_id *trid)
 {
 	int trsvcid_int;
 
-	trsvcid_int = _spdk_nvmf_tcp_trsvcid_to_int(trid->trsvcid);
+	trsvcid_int = nvmf_tcp_trsvcid_to_int(trid->trsvcid);
 	if (trsvcid_int < 0) {
 		return -EINVAL;
 	}
@@ -569,13 +569,13 @@ _spdk_nvmf_tcp_canon_listen_trid(struct spdk_nvme_transport_id *canon_trid,
  * Caller must hold ttransport->lock.
  */
 static struct spdk_nvmf_tcp_port *
-_spdk_nvmf_tcp_find_port(struct spdk_nvmf_tcp_transport *ttransport,
-			 const struct spdk_nvme_transport_id *trid)
+nvmf_tcp_find_port(struct spdk_nvmf_tcp_transport *ttransport,
+		   const struct spdk_nvme_transport_id *trid)
 {
 	struct spdk_nvme_transport_id canon_trid;
 	struct spdk_nvmf_tcp_port *port;
 
-	if (_spdk_nvmf_tcp_canon_listen_trid(&canon_trid, trid) != 0) {
+	if (nvmf_tcp_canon_listen_trid(&canon_trid, trid) != 0) {
 		return NULL;
 	}
 
@@ -600,7 +600,7 @@ nvmf_tcp_listen(struct spdk_nvmf_transport *transport,
 
 	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
 
-	trsvcid_int = _spdk_nvmf_tcp_trsvcid_to_int(trid->trsvcid);
+	trsvcid_int = nvmf_tcp_trsvcid_to_int(trid->trsvcid);
 	if (trsvcid_int < 0) {
 		SPDK_ERRLOG("Invalid trsvcid '%s'\n", trid->trsvcid);
 		return -EINVAL;
@@ -667,7 +667,7 @@ nvmf_tcp_stop_listen(struct spdk_nvmf_transport *transport,
 		      trid->traddr, trid->trsvcid);
 
 	pthread_mutex_lock(&ttransport->lock);
-	port = _spdk_nvmf_tcp_find_port(ttransport, trid);
+	port = nvmf_tcp_find_port(ttransport, trid);
 	if (port) {
 		TAILQ_REMOVE(&ttransport->ports, port, link);
 		spdk_sock_close(&port->listen_sock);
@@ -871,10 +871,10 @@ nvmf_tcp_qpair_sock_init(struct spdk_nvmf_tcp_qpair *tqpair)
 }
 
 static void
-_spdk_nvmf_tcp_handle_connect(struct spdk_nvmf_transport *transport,
-			      struct spdk_nvmf_tcp_port *port,
-			      struct spdk_sock *sock,
-			      new_qpair_fn cb_fn, void *cb_arg)
+nvmf_tcp_handle_connect(struct spdk_nvmf_transport *transport,
+			struct spdk_nvmf_tcp_port *port,
+			struct spdk_sock *sock,
+			new_qpair_fn cb_fn, void *cb_arg)
 {
 	struct spdk_nvmf_tcp_qpair *tqpair;
 	int rc;
@@ -919,7 +919,7 @@ nvmf_tcp_port_accept(struct spdk_nvmf_transport *transport, struct spdk_nvmf_tcp
 		if (sock == NULL) {
 			break;
 		}
-		_spdk_nvmf_tcp_handle_connect(transport, port, sock, cb_fn, cb_arg);
+		nvmf_tcp_handle_connect(transport, port, sock, cb_fn, cb_arg);
 	}
 }
 

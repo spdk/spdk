@@ -97,7 +97,7 @@ nvmf_poll_group_poll(void *ctx)
 	struct spdk_nvmf_transport_poll_group *tgroup;
 
 	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
-		rc = spdk_nvmf_transport_poll_group_poll(tgroup);
+		rc = nvmf_transport_poll_group_poll(tgroup);
 		if (rc < 0) {
 			return -1;
 		}
@@ -158,7 +158,7 @@ nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 
 	TAILQ_FOREACH_SAFE(tgroup, &group->tgroups, link, tmp) {
 		TAILQ_REMOVE(&group->tgroups, tgroup, link);
-		spdk_nvmf_transport_poll_group_destroy(tgroup);
+		nvmf_transport_poll_group_destroy(tgroup);
 	}
 
 	for (sid = 0; sid < group->num_sgroups; sid++) {
@@ -713,7 +713,7 @@ spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt, new_qpair_fn cb_fn, void *cb_arg
 	struct spdk_nvmf_transport *transport, *tmp;
 
 	TAILQ_FOREACH_SAFE(transport, &tgt->transports, link, tmp) {
-		spdk_nvmf_transport_accept(transport, cb_fn, cb_arg);
+		nvmf_transport_accept(transport, cb_fn, cb_arg);
 	}
 }
 
@@ -756,7 +756,7 @@ spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 
 	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
 		if (tgroup->transport == qpair->transport) {
-			rc = spdk_nvmf_transport_poll_group_add(tgroup, qpair);
+			rc = nvmf_transport_poll_group_add(tgroup, qpair);
 			break;
 		}
 	}
@@ -783,7 +783,7 @@ _nvmf_transport_qpair_fini(void *ctx)
 {
 	struct spdk_nvmf_qpair *qpair = ctx;
 
-	spdk_nvmf_transport_qpair_fini(qpair);
+	nvmf_transport_qpair_fini(qpair);
 }
 
 static void
@@ -826,7 +826,7 @@ _nvmf_qpair_destroy(void *ctx, int status)
 	/* Find the tgroup and remove the qpair from the tgroup */
 	TAILQ_FOREACH(tgroup, &qpair->group->tgroups, link) {
 		if (tgroup->transport == qpair->transport) {
-			rc = spdk_nvmf_transport_poll_group_remove(tgroup, qpair);
+			rc = nvmf_transport_poll_group_remove(tgroup, qpair);
 			if (rc && (rc != ENOTSUP)) {
 				SPDK_ERRLOG("Cannot remove qpair=%p from transport group=%p\n",
 					    qpair, tgroup);
@@ -840,7 +840,7 @@ _nvmf_qpair_destroy(void *ctx, int status)
 		TAILQ_FOREACH_SAFE(req, &sgroup->queued, link, tmp) {
 			if (req->qpair == qpair) {
 				TAILQ_REMOVE(&sgroup->queued, req, link);
-				if (spdk_nvmf_transport_req_free(req)) {
+				if (nvmf_transport_req_free(req)) {
 					SPDK_ERRLOG("Transport request free error!\n");
 				}
 			}
@@ -850,7 +850,7 @@ _nvmf_qpair_destroy(void *ctx, int status)
 	TAILQ_REMOVE(&qpair->group->qpairs, qpair, link);
 
 	if (!ctrlr || !ctrlr->thread) {
-		spdk_nvmf_transport_qpair_fini(qpair);
+		nvmf_transport_qpair_fini(qpair);
 		if (qpair_ctx->cb_fn) {
 			spdk_thread_send_msg(qpair_ctx->thread, qpair_ctx->cb_fn, qpair_ctx->ctx);
 		}
@@ -870,7 +870,7 @@ spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_
 
 	/* If we get a qpair in the uninitialized state, we can just destroy it immediately */
 	if (qpair->state == SPDK_NVMF_QPAIR_UNINITIALIZED) {
-		spdk_nvmf_transport_qpair_fini(qpair);
+		nvmf_transport_qpair_fini(qpair);
 		if (cb_fn) {
 			cb_fn(ctx);
 		}
@@ -924,21 +924,21 @@ int
 spdk_nvmf_qpair_get_peer_trid(struct spdk_nvmf_qpair *qpair,
 			      struct spdk_nvme_transport_id *trid)
 {
-	return spdk_nvmf_transport_qpair_get_peer_trid(qpair, trid);
+	return nvmf_transport_qpair_get_peer_trid(qpair, trid);
 }
 
 int
 spdk_nvmf_qpair_get_local_trid(struct spdk_nvmf_qpair *qpair,
 			       struct spdk_nvme_transport_id *trid)
 {
-	return spdk_nvmf_transport_qpair_get_local_trid(qpair, trid);
+	return nvmf_transport_qpair_get_local_trid(qpair, trid);
 }
 
 int
 spdk_nvmf_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
 				struct spdk_nvme_transport_id *trid)
 {
-	return spdk_nvmf_transport_qpair_get_listen_trid(qpair, trid);
+	return nvmf_transport_qpair_get_listen_trid(qpair, trid);
 }
 
 int
@@ -954,7 +954,7 @@ nvmf_poll_group_add_transport(struct spdk_nvmf_poll_group *group,
 		}
 	}
 
-	tgroup = spdk_nvmf_transport_poll_group_create(transport);
+	tgroup = nvmf_transport_poll_group_create(transport);
 	if (!tgroup) {
 		SPDK_ERRLOG("Unable to create poll group for transport\n");
 		return -1;
@@ -1350,7 +1350,7 @@ spdk_nvmf_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 {
 	struct spdk_nvmf_transport_poll_group *tgroup;
 
-	tgroup = spdk_nvmf_transport_get_optimal_poll_group(qpair->transport, qpair);
+	tgroup = nvmf_transport_get_optimal_poll_group(qpair->transport, qpair);
 
 	if (tgroup == NULL) {
 		return NULL;

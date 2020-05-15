@@ -57,7 +57,7 @@
 
 #ifndef ASSERT_SPDK_FC_MASTER_THREAD
 #define ASSERT_SPDK_FC_MASTER_THREAD() \
-        DEV_VERIFY(spdk_get_thread() == spdk_nvmf_fc_get_master_thread());
+        DEV_VERIFY(spdk_get_thread() == nvmf_fc_get_master_thread());
 #endif
 
 /*
@@ -249,7 +249,7 @@ static TAILQ_HEAD(, spdk_nvmf_fc_poll_group) g_nvmf_fgroups =
 	TAILQ_HEAD_INITIALIZER(g_nvmf_fgroups);
 
 struct spdk_thread *
-spdk_nvmf_fc_get_master_thread(void)
+nvmf_fc_get_master_thread(void)
 {
 	return g_nvmf_fc_master_thread;
 }
@@ -337,8 +337,8 @@ nvmf_fc_handle_assoc_deletion(void *arg)
 {
 	struct spdk_nvmf_fc_conn *fc_conn = arg;
 
-	spdk_nvmf_fc_delete_association(fc_conn->fc_assoc->tgtport,
-					fc_conn->fc_assoc->assoc_id, false, true, NULL, NULL);
+	nvmf_fc_delete_association(fc_conn->fc_assoc->tgtport,
+				   fc_conn->fc_assoc->assoc_id, false, true, NULL, NULL);
 }
 
 static int
@@ -359,7 +359,7 @@ nvmf_fc_create_req_mempool(struct spdk_nvmf_fc_hwqp *hwqp)
 	for (i = 0; i < hwqp->rq_size; i++) {
 		fc_req = hwqp->fc_reqs_buf + i;
 
-		spdk_nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_INIT);
+		nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_INIT);
 		TAILQ_INSERT_TAIL(&hwqp->free_reqs, fc_req, link);
 	}
 
@@ -390,7 +390,7 @@ nvmf_fc_hwqp_free_fc_request(struct spdk_nvmf_fc_hwqp *hwqp, struct spdk_nvmf_fc
 {
 	if (fc_req->state != SPDK_NVMF_FC_REQ_SUCCESS) {
 		/* Log an error for debug purpose. */
-		spdk_nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_FAILED);
+		nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_FAILED);
 	}
 
 	/* set the magic to mark req as no longer valid. */
@@ -412,13 +412,13 @@ nvmf_fc_req_in_get_buff(struct spdk_nvmf_fc_request *fc_req)
 }
 
 void
-spdk_nvmf_fc_init_poller_queues(struct spdk_nvmf_fc_hwqp *hwqp)
+nvmf_fc_init_poller_queues(struct spdk_nvmf_fc_hwqp *hwqp)
 {
 	nvmf_fc_init_rqpair_buffers(hwqp);
 }
 
 struct spdk_nvmf_fc_conn *
-spdk_nvmf_fc_hwqp_find_fc_conn(struct spdk_nvmf_fc_hwqp *hwqp, uint64_t conn_id)
+nvmf_fc_hwqp_find_fc_conn(struct spdk_nvmf_fc_hwqp *hwqp, uint64_t conn_id)
 {
 	struct spdk_nvmf_fc_conn *fc_conn;
 
@@ -432,7 +432,7 @@ spdk_nvmf_fc_hwqp_find_fc_conn(struct spdk_nvmf_fc_hwqp *hwqp, uint64_t conn_id)
 }
 
 void
-spdk_nvmf_fc_hwqp_reinit_poller_queues(struct spdk_nvmf_fc_hwqp *hwqp, void *queues_curr)
+nvmf_fc_hwqp_reinit_poller_queues(struct spdk_nvmf_fc_hwqp *hwqp, void *queues_curr)
 {
 	struct spdk_nvmf_fc_abts_ctx *ctx;
 	struct spdk_nvmf_fc_poller_api_queue_sync_args *args = NULL, *tmp = NULL;
@@ -454,14 +454,14 @@ spdk_nvmf_fc_hwqp_reinit_poller_queues(struct spdk_nvmf_fc_hwqp *hwqp, void *que
 }
 
 void
-spdk_nvmf_fc_init_hwqp(struct spdk_nvmf_fc_port *fc_port, struct spdk_nvmf_fc_hwqp *hwqp)
+nvmf_fc_init_hwqp(struct spdk_nvmf_fc_port *fc_port, struct spdk_nvmf_fc_hwqp *hwqp)
 {
 	hwqp->fc_port = fc_port;
 
 	/* clear counters */
 	memset(&hwqp->counters, 0, sizeof(struct spdk_nvmf_fc_errors));
 
-	spdk_nvmf_fc_init_poller_queues(hwqp);
+	nvmf_fc_init_poller_queues(hwqp);
 	if (&fc_port->ls_queue != hwqp) {
 		nvmf_fc_create_req_mempool(hwqp);
 	}
@@ -491,7 +491,7 @@ nvmf_fc_get_idlest_poll_group(void)
 }
 
 void
-spdk_nvmf_fc_poll_group_add_hwqp(struct spdk_nvmf_fc_hwqp *hwqp)
+nvmf_fc_poll_group_add_hwqp(struct spdk_nvmf_fc_hwqp *hwqp)
 {
 	struct spdk_nvmf_fc_poll_group *fgroup = NULL;
 
@@ -512,11 +512,11 @@ spdk_nvmf_fc_poll_group_add_hwqp(struct spdk_nvmf_fc_hwqp *hwqp)
 	hwqp->thread = fgroup->group.group->thread;
 	hwqp->fgroup = fgroup;
 	fgroup->hwqp_count++;
-	spdk_nvmf_fc_poller_api_func(hwqp, SPDK_NVMF_FC_POLLER_API_ADD_HWQP, NULL);
+	nvmf_fc_poller_api_func(hwqp, SPDK_NVMF_FC_POLLER_API_ADD_HWQP, NULL);
 }
 
 void
-spdk_nvmf_fc_poll_group_remove_hwqp(struct spdk_nvmf_fc_hwqp *hwqp)
+nvmf_fc_poll_group_remove_hwqp(struct spdk_nvmf_fc_hwqp *hwqp)
 {
 	assert(hwqp);
 
@@ -528,7 +528,7 @@ spdk_nvmf_fc_poll_group_remove_hwqp(struct spdk_nvmf_fc_hwqp *hwqp)
 		SPDK_ERRLOG("HWQP (%d) not assigned to poll group\n", hwqp->hwqp_id);
 	} else {
 		hwqp->fgroup->hwqp_count--;
-		spdk_nvmf_fc_poller_api_func(hwqp, SPDK_NVMF_FC_POLLER_API_REMOVE_HWQP, NULL);
+		nvmf_fc_poller_api_func(hwqp, SPDK_NVMF_FC_POLLER_API_REMOVE_HWQP, NULL);
 	}
 }
 
@@ -574,9 +574,9 @@ nvmf_fc_queue_synced_cb(void *cb_data, enum spdk_nvmf_fc_poller_api_ret ret)
 	args = ctx->abts_poller_args;
 	for (int i = 0; i < ctx->num_hwqps; i++) {
 		poller_arg = args + i;
-		spdk_nvmf_fc_poller_api_func(poller_arg->hwqp,
-					     SPDK_NVMF_FC_POLLER_API_ABTS_RECEIVED,
-					     poller_arg);
+		nvmf_fc_poller_api_func(poller_arg->hwqp,
+					SPDK_NVMF_FC_POLLER_API_ABTS_RECEIVED,
+					poller_arg);
 	}
 }
 
@@ -620,9 +620,9 @@ nvmf_fc_handle_abts_notfound(struct spdk_nvmf_fc_abts_ctx *ctx)
 		poller_arg->cb_info.cb_thread = spdk_get_thread();
 
 		/* Send a Queue sync message to interested pollers */
-		spdk_nvmf_fc_poller_api_func(poller_arg->hwqp,
-					     SPDK_NVMF_FC_POLLER_API_QUEUE_SYNC,
-					     poller_arg);
+		nvmf_fc_poller_api_func(poller_arg->hwqp,
+					SPDK_NVMF_FC_POLLER_API_QUEUE_SYNC,
+					poller_arg);
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC,
@@ -652,7 +652,7 @@ nvmf_fc_abts_handled_cb(void *cb_data, enum spdk_nvmf_fc_poller_api_ret ret)
 		return;
 	}
 
-	nport = spdk_nvmf_fc_nport_find(ctx->port_hdl, ctx->nport_hdl);
+	nport = nvmf_fc_nport_find(ctx->port_hdl, ctx->nport_hdl);
 
 	if (ctx->nport != nport) {
 		/* Nport can be deleted while this abort is being
@@ -689,8 +689,8 @@ nvmf_fc_abts_handled_cb(void *cb_data, enum spdk_nvmf_fc_poller_api_ret ret)
 }
 
 void
-spdk_nvmf_fc_handle_abts_frame(struct spdk_nvmf_fc_nport *nport, uint16_t rpi,
-			       uint16_t oxid, uint16_t rxid)
+nvmf_fc_handle_abts_frame(struct spdk_nvmf_fc_nport *nport, uint16_t rpi,
+			  uint16_t oxid, uint16_t rxid)
 {
 	struct spdk_nvmf_fc_abts_ctx *ctx = NULL;
 	struct spdk_nvmf_fc_poller_api_abts_recvd_args *args = NULL, *poller_arg;
@@ -769,9 +769,9 @@ spdk_nvmf_fc_handle_abts_frame(struct spdk_nvmf_fc_nport *nport, uint16_t rpi,
 		poller_arg->cb_info.cb_thread = spdk_get_thread();
 		poller_arg->ctx = ctx;
 
-		spdk_nvmf_fc_poller_api_func(poller_arg->hwqp,
-					     SPDK_NVMF_FC_POLLER_API_ABTS_RECEIVED,
-					     poller_arg);
+		nvmf_fc_poller_api_func(poller_arg->hwqp,
+					SPDK_NVMF_FC_POLLER_API_ABTS_RECEIVED,
+					poller_arg);
 	}
 
 	free(hwqps);
@@ -794,7 +794,7 @@ bls_rej:
  * Returns true if the port is in offline state.
  */
 bool
-spdk_nvmf_fc_port_is_offline(struct spdk_nvmf_fc_port *fc_port)
+nvmf_fc_port_is_offline(struct spdk_nvmf_fc_port *fc_port)
 {
 	if (fc_port && (fc_port->hw_port_status == SPDK_FC_PORT_OFFLINE)) {
 		return true;
@@ -807,7 +807,7 @@ spdk_nvmf_fc_port_is_offline(struct spdk_nvmf_fc_port *fc_port)
  * Returns true if the port is in online state.
  */
 bool
-spdk_nvmf_fc_port_is_online(struct spdk_nvmf_fc_port *fc_port)
+nvmf_fc_port_is_online(struct spdk_nvmf_fc_port *fc_port)
 {
 	if (fc_port && (fc_port->hw_port_status == SPDK_FC_PORT_ONLINE)) {
 		return true;
@@ -817,7 +817,7 @@ spdk_nvmf_fc_port_is_online(struct spdk_nvmf_fc_port *fc_port)
 }
 
 int
-spdk_nvmf_fc_port_set_online(struct spdk_nvmf_fc_port *fc_port)
+nvmf_fc_port_set_online(struct spdk_nvmf_fc_port *fc_port)
 {
 	if (fc_port && (fc_port->hw_port_status != SPDK_FC_PORT_ONLINE)) {
 		fc_port->hw_port_status = SPDK_FC_PORT_ONLINE;
@@ -828,7 +828,7 @@ spdk_nvmf_fc_port_set_online(struct spdk_nvmf_fc_port *fc_port)
 }
 
 int
-spdk_nvmf_fc_port_set_offline(struct spdk_nvmf_fc_port *fc_port)
+nvmf_fc_port_set_offline(struct spdk_nvmf_fc_port *fc_port)
 {
 	if (fc_port && (fc_port->hw_port_status != SPDK_FC_PORT_OFFLINE)) {
 		fc_port->hw_port_status = SPDK_FC_PORT_OFFLINE;
@@ -839,7 +839,7 @@ spdk_nvmf_fc_port_set_offline(struct spdk_nvmf_fc_port *fc_port)
 }
 
 int
-spdk_nvmf_fc_hwqp_set_online(struct spdk_nvmf_fc_hwqp *hwqp)
+nvmf_fc_hwqp_set_online(struct spdk_nvmf_fc_hwqp *hwqp)
 {
 	if (hwqp && (hwqp->state != SPDK_FC_HWQP_ONLINE)) {
 		hwqp->state = SPDK_FC_HWQP_ONLINE;
@@ -852,7 +852,7 @@ spdk_nvmf_fc_hwqp_set_online(struct spdk_nvmf_fc_hwqp *hwqp)
 }
 
 int
-spdk_nvmf_fc_hwqp_set_offline(struct spdk_nvmf_fc_hwqp *hwqp)
+nvmf_fc_hwqp_set_offline(struct spdk_nvmf_fc_hwqp *hwqp)
 {
 	if (hwqp && (hwqp->state != SPDK_FC_HWQP_OFFLINE)) {
 		hwqp->state = SPDK_FC_HWQP_OFFLINE;
@@ -863,13 +863,13 @@ spdk_nvmf_fc_hwqp_set_offline(struct spdk_nvmf_fc_hwqp *hwqp)
 }
 
 void
-spdk_nvmf_fc_port_add(struct spdk_nvmf_fc_port *fc_port)
+nvmf_fc_port_add(struct spdk_nvmf_fc_port *fc_port)
 {
 	TAILQ_INSERT_TAIL(&g_spdk_nvmf_fc_port_list, fc_port, link);
 }
 
 struct spdk_nvmf_fc_port *
-spdk_nvmf_fc_port_lookup(uint8_t port_hdl)
+nvmf_fc_port_lookup(uint8_t port_hdl)
 {
 	struct spdk_nvmf_fc_port *fc_port = NULL;
 
@@ -901,14 +901,14 @@ nvmf_fc_port_cleanup(void)
 }
 
 uint32_t
-spdk_nvmf_fc_get_prli_service_params(void)
+nvmf_fc_get_prli_service_params(void)
 {
 	return (SPDK_NVMF_FC_DISCOVERY_SERVICE | SPDK_NVMF_FC_TARGET_FUNCTION);
 }
 
 int
-spdk_nvmf_fc_port_add_nport(struct spdk_nvmf_fc_port *fc_port,
-			    struct spdk_nvmf_fc_nport *nport)
+nvmf_fc_port_add_nport(struct spdk_nvmf_fc_port *fc_port,
+		       struct spdk_nvmf_fc_nport *nport)
 {
 	if (fc_port) {
 		TAILQ_INSERT_TAIL(&fc_port->nport_list, nport, link);
@@ -920,8 +920,8 @@ spdk_nvmf_fc_port_add_nport(struct spdk_nvmf_fc_port *fc_port,
 }
 
 int
-spdk_nvmf_fc_port_remove_nport(struct spdk_nvmf_fc_port *fc_port,
-			       struct spdk_nvmf_fc_nport *nport)
+nvmf_fc_port_remove_nport(struct spdk_nvmf_fc_port *fc_port,
+			  struct spdk_nvmf_fc_nport *nport)
 {
 	if (fc_port && nport) {
 		TAILQ_REMOVE(&fc_port->nport_list, nport, link);
@@ -947,11 +947,11 @@ nvmf_fc_nport_hdl_lookup(struct spdk_nvmf_fc_port *fc_port, uint16_t nport_hdl)
 }
 
 struct spdk_nvmf_fc_nport *
-spdk_nvmf_fc_nport_find(uint8_t port_hdl, uint16_t nport_hdl)
+nvmf_fc_nport_find(uint8_t port_hdl, uint16_t nport_hdl)
 {
 	struct spdk_nvmf_fc_port *fc_port = NULL;
 
-	fc_port = spdk_nvmf_fc_port_lookup(port_hdl);
+	fc_port = nvmf_fc_port_lookup(port_hdl);
 	if (fc_port) {
 		return nvmf_fc_nport_hdl_lookup(fc_port, nport_hdl);
 	}
@@ -1001,7 +1001,7 @@ nvmf_fc_hwqp_find_nport_and_rport(struct spdk_nvmf_fc_hwqp *hwqp,
 
 /* Returns true if the Nport is empty of all rem_ports */
 bool
-spdk_nvmf_fc_nport_has_no_rport(struct spdk_nvmf_fc_nport *nport)
+nvmf_fc_nport_has_no_rport(struct spdk_nvmf_fc_nport *nport)
 {
 	if (nport && TAILQ_EMPTY(&nport->rem_port_list)) {
 		assert(nport->rport_count == 0);
@@ -1012,8 +1012,8 @@ spdk_nvmf_fc_nport_has_no_rport(struct spdk_nvmf_fc_nport *nport)
 }
 
 int
-spdk_nvmf_fc_nport_set_state(struct spdk_nvmf_fc_nport *nport,
-			     enum spdk_nvmf_fc_object_state state)
+nvmf_fc_nport_set_state(struct spdk_nvmf_fc_nport *nport,
+			enum spdk_nvmf_fc_object_state state)
 {
 	if (nport) {
 		nport->nport_state = state;
@@ -1024,8 +1024,8 @@ spdk_nvmf_fc_nport_set_state(struct spdk_nvmf_fc_nport *nport,
 }
 
 bool
-spdk_nvmf_fc_nport_add_rem_port(struct spdk_nvmf_fc_nport *nport,
-				struct spdk_nvmf_fc_remote_port_info *rem_port)
+nvmf_fc_nport_add_rem_port(struct spdk_nvmf_fc_nport *nport,
+			   struct spdk_nvmf_fc_remote_port_info *rem_port)
 {
 	if (nport && rem_port) {
 		TAILQ_INSERT_TAIL(&nport->rem_port_list, rem_port, link);
@@ -1037,8 +1037,8 @@ spdk_nvmf_fc_nport_add_rem_port(struct spdk_nvmf_fc_nport *nport,
 }
 
 bool
-spdk_nvmf_fc_nport_remove_rem_port(struct spdk_nvmf_fc_nport *nport,
-				   struct spdk_nvmf_fc_remote_port_info *rem_port)
+nvmf_fc_nport_remove_rem_port(struct spdk_nvmf_fc_nport *nport,
+			      struct spdk_nvmf_fc_remote_port_info *rem_port)
 {
 	if (nport && rem_port) {
 		TAILQ_REMOVE(&nport->rem_port_list, rem_port, link);
@@ -1050,8 +1050,8 @@ spdk_nvmf_fc_nport_remove_rem_port(struct spdk_nvmf_fc_nport *nport,
 }
 
 int
-spdk_nvmf_fc_rport_set_state(struct spdk_nvmf_fc_remote_port_info *rport,
-			     enum spdk_nvmf_fc_object_state state)
+nvmf_fc_rport_set_state(struct spdk_nvmf_fc_remote_port_info *rport,
+			enum spdk_nvmf_fc_object_state state)
 {
 	if (rport) {
 		rport->rport_state = state;
@@ -1061,8 +1061,8 @@ spdk_nvmf_fc_rport_set_state(struct spdk_nvmf_fc_remote_port_info *rport,
 	}
 }
 int
-spdk_nvmf_fc_assoc_set_state(struct spdk_nvmf_fc_association *assoc,
-			     enum spdk_nvmf_fc_object_state state)
+nvmf_fc_assoc_set_state(struct spdk_nvmf_fc_association *assoc,
+			enum spdk_nvmf_fc_object_state state)
 {
 	if (assoc) {
 		assoc->assoc_state = state;
@@ -1089,8 +1089,8 @@ nvmf_ctrlr_get_fc_assoc(struct spdk_nvmf_ctrlr *ctrlr)
 }
 
 bool
-spdk_nvmf_ctrlr_is_on_nport(uint8_t port_hdl, uint16_t nport_hdl,
-			    struct spdk_nvmf_ctrlr *ctrlr)
+nvmf_ctrlr_is_on_nport(uint8_t port_hdl, uint16_t nport_hdl,
+		       struct spdk_nvmf_ctrlr *ctrlr)
 {
 	struct spdk_nvmf_fc_nport *fc_nport = NULL;
 	struct spdk_nvmf_fc_association *assoc = NULL;
@@ -1099,7 +1099,7 @@ spdk_nvmf_ctrlr_is_on_nport(uint8_t port_hdl, uint16_t nport_hdl,
 		return false;
 	}
 
-	fc_nport = spdk_nvmf_fc_nport_find(port_hdl, nport_hdl);
+	fc_nport = nvmf_fc_nport_find(port_hdl, nport_hdl);
 	if (!fc_nport) {
 		return false;
 	}
@@ -1171,7 +1171,7 @@ nvmf_fc_req_bdev_abort(void *arg1)
 }
 
 void
-spdk_nvmf_fc_request_abort_complete(void *arg1)
+nvmf_fc_request_abort_complete(void *arg1)
 {
 	struct spdk_nvmf_fc_request *fc_req =
 		(struct spdk_nvmf_fc_request *)arg1;
@@ -1190,12 +1190,12 @@ spdk_nvmf_fc_request_abort_complete(void *arg1)
 	SPDK_NOTICELOG("FC Request(%p) in state :%s aborted\n", fc_req,
 		       fc_req_state_strs[fc_req->state]);
 
-	spdk_nvmf_fc_request_free(fc_req);
+	_nvmf_fc_request_free(fc_req);
 }
 
 void
-spdk_nvmf_fc_request_abort(struct spdk_nvmf_fc_request *fc_req, bool send_abts,
-			   spdk_nvmf_fc_caller_cb cb, void *cb_args)
+nvmf_fc_request_abort(struct spdk_nvmf_fc_request *fc_req, bool send_abts,
+		      spdk_nvmf_fc_caller_cb cb, void *cb_args)
 {
 	struct spdk_nvmf_fc_caller_ctx *ctx = NULL;
 	bool kill_req = false;
@@ -1219,8 +1219,8 @@ spdk_nvmf_fc_request_abort(struct spdk_nvmf_fc_request *fc_req, bool send_abts,
 	}
 
 	/* If port is dead, skip abort wqe */
-	kill_req = spdk_nvmf_fc_is_port_dead(fc_req->hwqp);
-	if (kill_req && spdk_nvmf_fc_req_in_xfer(fc_req)) {
+	kill_req = nvmf_fc_is_port_dead(fc_req->hwqp);
+	if (kill_req && nvmf_fc_req_in_xfer(fc_req)) {
 		fc_req->is_aborted = true;
 		goto complete;
 	}
@@ -1246,7 +1246,7 @@ spdk_nvmf_fc_request_abort(struct spdk_nvmf_fc_request *fc_req, bool send_abts,
 		/* Notify bdev */
 		spdk_thread_send_msg(fc_req->hwqp->thread,
 				     nvmf_fc_req_bdev_abort, (void *)fc_req);
-	} else if (spdk_nvmf_fc_req_in_xfer(fc_req)) {
+	} else if (nvmf_fc_req_in_xfer(fc_req)) {
 		/* Notify HBA to abort this exchange  */
 		nvmf_fc_issue_abort(fc_req->hwqp, fc_req->xchg, NULL, NULL);
 	} else if (nvmf_fc_req_in_get_buff(fc_req)) {
@@ -1265,9 +1265,9 @@ spdk_nvmf_fc_request_abort(struct spdk_nvmf_fc_request *fc_req, bool send_abts,
 
 	return;
 complete:
-	spdk_nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_ABORTED);
-	spdk_nvmf_fc_poller_api_func(fc_req->hwqp, SPDK_NVMF_FC_POLLER_API_REQ_ABORT_COMPLETE,
-				     (void *)fc_req);
+	nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_ABORTED);
+	nvmf_fc_poller_api_func(fc_req->hwqp, SPDK_NVMF_FC_POLLER_API_REQ_ABORT_COMPLETE,
+				(void *)fc_req);
 }
 
 static int
@@ -1289,7 +1289,7 @@ static int
 nvmf_fc_request_execute(struct spdk_nvmf_fc_request *fc_req)
 {
 	/* Allocate an XCHG if we dont use send frame for this command. */
-	if (!spdk_nvmf_fc_use_send_frame(&fc_req->req)) {
+	if (!nvmf_fc_use_send_frame(&fc_req->req)) {
 		fc_req->xchg = nvmf_fc_get_xri(fc_req->hwqp);
 		if (!fc_req->xchg) {
 			fc_req->hwqp->counters.no_xchg++;
@@ -1309,20 +1309,20 @@ nvmf_fc_request_execute(struct spdk_nvmf_fc_request *fc_req)
 	if (fc_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC, "WRITE CMD.\n");
 
-		spdk_nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_WRITE_XFER);
+		nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_WRITE_XFER);
 
 		if (nvmf_fc_recv_data(fc_req)) {
 			/* Dropped return success to caller */
 			fc_req->hwqp->counters.unexpected_err++;
-			spdk_nvmf_fc_request_free(fc_req);
+			_nvmf_fc_request_free(fc_req);
 		}
 	} else {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC, "READ/NONE CMD\n");
 
 		if (fc_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
-			spdk_nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_READ_BDEV);
+			nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_READ_BDEV);
 		} else {
-			spdk_nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_NONE_BDEV);
+			nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_NONE_BDEV);
 		}
 		spdk_nvmf_request_exec(&fc_req->req);
 	}
@@ -1335,7 +1335,7 @@ pending:
 		fc_req->xchg = NULL;
 	}
 
-	spdk_nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_PENDING);
+	nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_PENDING);
 
 	return -EAGAIN;
 }
@@ -1374,7 +1374,7 @@ nvmf_fc_hwqp_handle_request(struct spdk_nvmf_fc_hwqp *hwqp, struct spdk_nvmf_fc_
 	rqst_conn_id = from_be64(&cmd_iu->conn_id);
 
 	/* Check if conn id is valid */
-	fc_conn = spdk_nvmf_fc_hwqp_find_fc_conn(hwqp, rqst_conn_id);
+	fc_conn = nvmf_fc_hwqp_find_fc_conn(hwqp, rqst_conn_id);
 	if (!fc_conn) {
 		SPDK_ERRLOG("IU CMD conn(%ld) invalid\n", rqst_conn_id);
 		hwqp->counters.invalid_conn_err++;
@@ -1436,7 +1436,7 @@ nvmf_fc_hwqp_handle_request(struct spdk_nvmf_fc_hwqp *hwqp, struct spdk_nvmf_fc_
  */
 
 void
-spdk_nvmf_fc_request_free(struct spdk_nvmf_fc_request *fc_req)
+_nvmf_fc_request_free(struct spdk_nvmf_fc_request *fc_req)
 {
 	struct spdk_nvmf_fc_hwqp *hwqp = fc_req->hwqp;
 	struct spdk_nvmf_fc_poll_group *fgroup = hwqp->fgroup;
@@ -1467,21 +1467,21 @@ spdk_nvmf_fc_request_free(struct spdk_nvmf_fc_request *fc_req)
 }
 
 void
-spdk_nvmf_fc_request_set_state(struct spdk_nvmf_fc_request *fc_req,
-			       enum spdk_nvmf_fc_request_state state)
+nvmf_fc_request_set_state(struct spdk_nvmf_fc_request *fc_req,
+			  enum spdk_nvmf_fc_request_state state)
 {
 	assert(fc_req->magic != 0xDEADBEEF);
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC,
 		      "FC Request(%p):\n\tState Old:%s New:%s\n", fc_req,
-		      spdk_nvmf_fc_request_get_state_str(fc_req->state),
-		      spdk_nvmf_fc_request_get_state_str(state));
+		      nvmf_fc_request_get_state_str(fc_req->state),
+		      nvmf_fc_request_get_state_str(state));
 	nvmf_fc_record_req_trace_point(fc_req, state);
 	fc_req->state = state;
 }
 
 char *
-spdk_nvmf_fc_request_get_state_str(int state)
+nvmf_fc_request_get_state_str(int state)
 {
 	static char *unk_str = "unknown";
 
@@ -1490,11 +1490,11 @@ spdk_nvmf_fc_request_get_state_str(int state)
 }
 
 int
-spdk_nvmf_fc_hwqp_process_frame(struct spdk_nvmf_fc_hwqp *hwqp,
-				uint32_t buff_idx,
-				struct spdk_nvmf_fc_frame_hdr *frame,
-				struct spdk_nvmf_fc_buffer_desc *buffer,
-				uint32_t plen)
+nvmf_fc_hwqp_process_frame(struct spdk_nvmf_fc_hwqp *hwqp,
+			   uint32_t buff_idx,
+			   struct spdk_nvmf_fc_frame_hdr *frame,
+			   struct spdk_nvmf_fc_buffer_desc *buffer,
+			   uint32_t plen)
 {
 	int rc = 0;
 	uint32_t s_id, d_id;
@@ -1573,7 +1573,7 @@ spdk_nvmf_fc_hwqp_process_frame(struct spdk_nvmf_fc_hwqp *hwqp,
 		ls_rqst->xchg = nvmf_fc_get_xri(hwqp);
 		if (ls_rqst->xchg) {
 			/* Handover the request to LS module */
-			spdk_nvmf_fc_handle_ls_rqst(ls_rqst);
+			nvmf_fc_handle_ls_rqst(ls_rqst);
 		} else {
 			/* No XCHG available. Add to pending list. */
 			hwqp->counters.no_xchg++;
@@ -1595,7 +1595,7 @@ spdk_nvmf_fc_hwqp_process_frame(struct spdk_nvmf_fc_hwqp *hwqp,
 }
 
 void
-spdk_nvmf_fc_hwqp_process_pending_reqs(struct spdk_nvmf_fc_hwqp *hwqp)
+nvmf_fc_hwqp_process_pending_reqs(struct spdk_nvmf_fc_hwqp *hwqp)
 {
 	struct spdk_nvmf_request *req = NULL, *tmp;
 	struct spdk_nvmf_fc_request *fc_req;
@@ -1624,7 +1624,7 @@ spdk_nvmf_fc_hwqp_process_pending_reqs(struct spdk_nvmf_fc_hwqp *hwqp)
 }
 
 void
-spdk_nvmf_fc_hwqp_process_pending_ls_rqsts(struct spdk_nvmf_fc_hwqp *hwqp)
+nvmf_fc_hwqp_process_pending_ls_rqsts(struct spdk_nvmf_fc_hwqp *hwqp)
 {
 	struct spdk_nvmf_fc_ls_rqst *ls_rqst = NULL, *tmp;
 	struct spdk_nvmf_fc_nport *nport = NULL;
@@ -1664,7 +1664,7 @@ spdk_nvmf_fc_hwqp_process_pending_ls_rqsts(struct spdk_nvmf_fc_hwqp *hwqp)
 			/* Got an XCHG */
 			TAILQ_REMOVE(&hwqp->ls_pending_queue, ls_rqst, ls_pending_link);
 			/* Handover the request to LS module */
-			spdk_nvmf_fc_handle_ls_rqst(ls_rqst);
+			nvmf_fc_handle_ls_rqst(ls_rqst);
 		} else {
 			/* No more XCHGs. Stop processing. */
 			hwqp->counters.no_xchg++;
@@ -1674,23 +1674,23 @@ spdk_nvmf_fc_hwqp_process_pending_ls_rqsts(struct spdk_nvmf_fc_hwqp *hwqp)
 }
 
 int
-spdk_nvmf_fc_handle_rsp(struct spdk_nvmf_fc_request *fc_req)
+nvmf_fc_handle_rsp(struct spdk_nvmf_fc_request *fc_req)
 {
 	int rc = 0;
 	struct spdk_nvmf_request *req = &fc_req->req;
 	struct spdk_nvmf_qpair *qpair = req->qpair;
-	struct spdk_nvmf_fc_conn *fc_conn = spdk_nvmf_fc_get_conn(qpair);
+	struct spdk_nvmf_fc_conn *fc_conn = nvmf_fc_get_conn(qpair);
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	uint16_t ersp_len = 0;
 
 	/* set sq head value in resp */
-	rsp->sqhd = spdk_nvmf_fc_advance_conn_sqhead(qpair);
+	rsp->sqhd = nvmf_fc_advance_conn_sqhead(qpair);
 
 	/* Increment connection responses */
 	fc_conn->rsp_count++;
 
-	if (spdk_nvmf_fc_send_ersp_required(fc_req, fc_conn->rsp_count,
-					    fc_req->transfered_len)) {
+	if (nvmf_fc_send_ersp_required(fc_req, fc_conn->rsp_count,
+				       fc_req->transfered_len)) {
 		/* Fill ERSP Len */
 		to_be16(&ersp_len, (sizeof(struct spdk_nvmf_fc_ersp_iu) /
 				    sizeof(uint32_t)));
@@ -1714,28 +1714,13 @@ spdk_nvmf_fc_handle_rsp(struct spdk_nvmf_fc_request *fc_req)
 	return rc;
 }
 
-int
-spdk_nvmf_fc_xmt_ls_rsp(struct spdk_nvmf_fc_nport *tgtport,
-			struct spdk_nvmf_fc_ls_rqst *ls_rqst)
-{
-	return nvmf_fc_xmt_ls_rsp(tgtport, ls_rqst);
-}
-
-int
-spdk_nvmf_fc_xmt_srsr_req(struct spdk_nvmf_fc_hwqp *hwqp,
-			  struct spdk_nvmf_fc_srsr_bufs *srsr_bufs,
-			  spdk_nvmf_fc_caller_cb cb, void *cb_args)
-{
-	return nvmf_fc_xmt_srsr_req(hwqp, srsr_bufs, cb, cb_args);
-}
-
 bool
-spdk_nvmf_fc_send_ersp_required(struct spdk_nvmf_fc_request *fc_req,
-				uint32_t rsp_cnt, uint32_t xfer_len)
+nvmf_fc_send_ersp_required(struct spdk_nvmf_fc_request *fc_req,
+			   uint32_t rsp_cnt, uint32_t xfer_len)
 {
 	struct spdk_nvmf_request *req = &fc_req->req;
 	struct spdk_nvmf_qpair *qpair = req->qpair;
-	struct spdk_nvmf_fc_conn *fc_conn = spdk_nvmf_fc_get_conn(qpair);
+	struct spdk_nvmf_fc_conn *fc_conn = nvmf_fc_get_conn(qpair);
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	uint16_t status = *((uint16_t *)&rsp->status);
@@ -1758,52 +1743,44 @@ spdk_nvmf_fc_send_ersp_required(struct spdk_nvmf_fc_request *fc_req,
 	return false;
 }
 
-void
-spdk_nvmf_fc_dump_all_queues(struct spdk_nvmf_fc_port *fc_port,
-			     struct spdk_nvmf_fc_queue_dump_info *dump_info)
-{
-	nvmf_fc_dump_all_queues(&fc_port->ls_queue, fc_port->io_queues,
-				fc_port->num_io_queues, dump_info);
-}
-
 static int
 nvmf_fc_request_complete(struct spdk_nvmf_request *req)
 {
 	int rc = 0;
-	struct spdk_nvmf_fc_request *fc_req = spdk_nvmf_fc_get_fc_req(req);
+	struct spdk_nvmf_fc_request *fc_req = nvmf_fc_get_fc_req(req);
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 
 	if (fc_req->is_aborted) {
 		/* Defer this to make sure we dont call io cleanup in same context. */
-		spdk_nvmf_fc_poller_api_func(fc_req->hwqp, SPDK_NVMF_FC_POLLER_API_REQ_ABORT_COMPLETE,
-					     (void *)fc_req);
+		nvmf_fc_poller_api_func(fc_req->hwqp, SPDK_NVMF_FC_POLLER_API_REQ_ABORT_COMPLETE,
+					(void *)fc_req);
 	} else if (rsp->status.sc == SPDK_NVME_SC_SUCCESS &&
 		   req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
 
-		spdk_nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_READ_XFER);
+		nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_READ_XFER);
 
 		rc = nvmf_fc_send_data(fc_req);
 	} else {
 		if (req->xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
-			spdk_nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_WRITE_RSP);
+			nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_WRITE_RSP);
 		} else if (req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
-			spdk_nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_READ_RSP);
+			nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_READ_RSP);
 		} else {
-			spdk_nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_NONE_RSP);
+			nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_NONE_RSP);
 		}
 
-		rc = spdk_nvmf_fc_handle_rsp(fc_req);
+		rc = nvmf_fc_handle_rsp(fc_req);
 	}
 
 	if (rc) {
 		SPDK_ERRLOG("Error in request complete.\n");
-		spdk_nvmf_fc_request_free(fc_req);
+		_nvmf_fc_request_free(fc_req);
 	}
 	return 0;
 }
 
 struct spdk_nvmf_tgt *
-spdk_nvmf_fc_get_tgt(void)
+nvmf_fc_get_tgt(void)
 {
 	if (g_nvmf_ftransport) {
 		return g_nvmf_ftransport->transport.tgt;
@@ -2045,7 +2022,7 @@ nvmf_fc_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 	}
 
 	api_data = &fc_conn->create_opd->u.add_conn;
-	spdk_nvmf_fc_poller_api_func(hwqp, SPDK_NVMF_FC_POLLER_API_ADD_CONNECTION, &api_data->args);
+	nvmf_fc_poller_api_func(hwqp, SPDK_NVMF_FC_POLLER_API_ADD_CONNECTION, &api_data->args);
 	return 0;
 err:
 	return -1;
@@ -2072,13 +2049,13 @@ nvmf_fc_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 static int
 nvmf_fc_request_free(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_fc_request *fc_req = spdk_nvmf_fc_get_fc_req(req);
+	struct spdk_nvmf_fc_request *fc_req = nvmf_fc_get_fc_req(req);
 
 	if (!fc_req->is_aborted) {
-		spdk_nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_BDEV_ABORTED);
-		spdk_nvmf_fc_request_abort(fc_req, true, NULL, NULL);
+		nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_BDEV_ABORTED);
+		nvmf_fc_request_abort(fc_req, true, NULL, NULL);
 	} else {
-		spdk_nvmf_fc_request_abort_complete(fc_req);
+		nvmf_fc_request_abort_complete(fc_req);
 	}
 	return 0;
 }
@@ -2093,12 +2070,12 @@ nvmf_fc_close_qpair(struct spdk_nvmf_qpair *qpair)
 
 	if (fc_conn->conn_id == NVMF_FC_INVALID_CONN_ID) {
 		/* QP creation failure in FC tranport. Cleanup. */
-		spdk_thread_send_msg(spdk_nvmf_fc_get_master_thread(),
+		spdk_thread_send_msg(nvmf_fc_get_master_thread(),
 				     nvmf_fc_handle_connection_failure, fc_conn);
 	} else if (fc_conn->fc_assoc->assoc_id == fc_conn->conn_id &&
 		   fc_conn->fc_assoc->assoc_state != SPDK_NVMF_FC_OBJECT_TO_BE_DELETED) {
 		/* Admin connection */
-		spdk_thread_send_msg(spdk_nvmf_fc_get_master_thread(),
+		spdk_thread_send_msg(nvmf_fc_get_master_thread(),
 				     nvmf_fc_handle_assoc_deletion, fc_conn);
 	}
 }
@@ -2175,27 +2152,27 @@ nvmf_fc_adm_hw_port_reinit_validate(struct spdk_nvmf_fc_port *fc_port,
 	uint32_t i;
 
 	/* Verify that the port was previously in offline or quiesced state */
-	if (spdk_nvmf_fc_port_is_online(fc_port)) {
+	if (nvmf_fc_port_is_online(fc_port)) {
 		SPDK_ERRLOG("SPDK FC port %d already initialized and online.\n", args->port_handle);
 		return -EINVAL;
 	}
 
 	/* Reinit information in new LS queue from previous queue */
-	spdk_nvmf_fc_hwqp_reinit_poller_queues(&fc_port->ls_queue, args->ls_queue);
+	nvmf_fc_hwqp_reinit_poller_queues(&fc_port->ls_queue, args->ls_queue);
 
 	fc_port->fcp_rq_id = args->fcp_rq_id;
 
 	/* Initialize the LS queue */
 	fc_port->ls_queue.queues = args->ls_queue;
-	spdk_nvmf_fc_init_poller_queues(fc_port->ls_queue.queues);
+	nvmf_fc_init_poller_queues(fc_port->ls_queue.queues);
 
 	for (i = 0; i < fc_port->num_io_queues; i++) {
 		/* Reinit information in new IO queue from previous queue */
-		spdk_nvmf_fc_hwqp_reinit_poller_queues(&fc_port->io_queues[i],
-						       args->io_queues[i]);
+		nvmf_fc_hwqp_reinit_poller_queues(&fc_port->io_queues[i],
+						  args->io_queues[i]);
 		fc_port->io_queues[i].queues = args->io_queues[i];
 		/* Initialize the IO queues */
-		spdk_nvmf_fc_init_poller_queues(fc_port->io_queues[i].queues);
+		nvmf_fc_init_poller_queues(fc_port->io_queues[i].queues);
 	}
 
 	fc_port->hw_port_status = SPDK_FC_PORT_OFFLINE;
@@ -2238,13 +2215,13 @@ nvmf_fc_adm_hw_port_data_init(struct spdk_nvmf_fc_port *fc_port,
 	 * Initialize the LS queue wherever needed.
 	 */
 	fc_port->ls_queue.queues = args->ls_queue;
-	fc_port->ls_queue.thread = spdk_nvmf_fc_get_master_thread();
+	fc_port->ls_queue.thread = nvmf_fc_get_master_thread();
 	fc_port->ls_queue.hwqp_id = SPDK_MAX_NUM_OF_FC_PORTS * fc_port->num_io_queues;
 
 	/*
 	 * Initialize the LS queue.
 	 */
-	spdk_nvmf_fc_init_hwqp(fc_port, &fc_port->ls_queue);
+	nvmf_fc_init_hwqp(fc_port, &fc_port->ls_queue);
 
 	/*
 	 * Initialize the IO queues.
@@ -2254,13 +2231,13 @@ nvmf_fc_adm_hw_port_data_init(struct spdk_nvmf_fc_port *fc_port,
 		hwqp->hwqp_id = i;
 		hwqp->queues = args->io_queues[i];
 		hwqp->rq_size = args->io_queue_size;
-		spdk_nvmf_fc_init_hwqp(fc_port, hwqp);
+		nvmf_fc_init_hwqp(fc_port, hwqp);
 	}
 
 	/*
 	 * Initialize the LS processing for port
 	 */
-	spdk_nvmf_fc_ls_init(fc_port);
+	nvmf_fc_ls_init(fc_port);
 
 	/*
 	 * Initialize the list of nport on this HW port.
@@ -2278,13 +2255,13 @@ nvmf_fc_adm_port_hwqp_offline_del_poller(struct spdk_nvmf_fc_port *fc_port)
 	int i = 0;
 
 	hwqp = &fc_port->ls_queue;
-	(void)spdk_nvmf_fc_hwqp_set_offline(hwqp);
+	(void)nvmf_fc_hwqp_set_offline(hwqp);
 
 	/*  Remove poller for all the io queues. */
 	for (i = 0; i < (int)fc_port->num_io_queues; i++) {
 		hwqp = &fc_port->io_queues[i];
-		(void)spdk_nvmf_fc_hwqp_set_offline(hwqp);
-		spdk_nvmf_fc_poll_group_remove_hwqp(hwqp);
+		(void)nvmf_fc_hwqp_set_offline(hwqp);
+		nvmf_fc_poll_group_remove_hwqp(hwqp);
 	}
 }
 
@@ -2347,7 +2324,7 @@ nvmf_fc_adm_hw_port_link_break_cb(uint8_t port_handle,
 		goto out;
 	}
 
-	fc_port = spdk_nvmf_fc_port_lookup(port_handle);
+	fc_port = nvmf_fc_port_lookup(port_handle);
 	if (!fc_port) {
 		DEV_VERIFY(!"port link break cb: fc_port is NULL.");
 		SPDK_ERRLOG("port link break cb: Unable to find port:%d\n",
@@ -2410,7 +2387,7 @@ nvmf_fc_adm_hw_port_offline_nport_delete(struct spdk_nvmf_fc_port *fc_port)
 	/* Mark the nport states to be zombie, if they exist */
 	if (fc_port && !TAILQ_EMPTY(&fc_port->nport_list)) {
 		TAILQ_FOREACH(nport, &fc_port->nport_list, link) {
-			(void)spdk_nvmf_fc_nport_set_state(nport, SPDK_NVMF_FC_OBJECT_ZOMBIE);
+			(void)nvmf_fc_nport_set_state(nport, SPDK_NVMF_FC_OBJECT_ZOMBIE);
 		}
 	}
 }
@@ -2493,7 +2470,7 @@ nvmf_fc_adm_i_t_delete_assoc_cb(void *args, uint32_t err)
 	 */
 	if (0 == rport->assoc_count) {
 		/* Remove the rport from the remote port list. */
-		if (spdk_nvmf_fc_nport_remove_rem_port(nport, rport) != 0) {
+		if (nvmf_fc_nport_remove_rem_port(nport, rport) != 0) {
 			SPDK_ERRLOG("Error while removing rport from list.\n");
 			DEV_VERIFY(!"Error while removing rport from list.");
 		}
@@ -2566,17 +2543,17 @@ nvmf_fc_adm_i_t_delete_assoc(struct spdk_nvmf_fc_nport *nport,
 	TAILQ_FOREACH(assoc, &nport->fc_associations, link) {
 		num_assoc++;
 		if (assoc->s_id == s_id) {
-			assoc_err = spdk_nvmf_fc_delete_association(nport,
-					assoc->assoc_id,
-					false /* send abts */, false,
-					nvmf_fc_adm_i_t_delete_assoc_cb, cb_data);
+			assoc_err = nvmf_fc_delete_association(nport,
+							       assoc->assoc_id,
+							       false /* send abts */, false,
+							       nvmf_fc_adm_i_t_delete_assoc_cb, cb_data);
 			if (0 != assoc_err) {
 				/*
 				 * Mark this association as zombie.
 				 */
 				err = -EINVAL;
 				DEV_VERIFY(!"Error while deleting association");
-				(void)spdk_nvmf_fc_assoc_set_state(assoc, SPDK_NVMF_FC_OBJECT_ZOMBIE);
+				(void)nvmf_fc_assoc_set_state(assoc, SPDK_NVMF_FC_OBJECT_ZOMBIE);
 			} else {
 				num_assoc_del_scheduled++;
 			}
@@ -2681,7 +2658,7 @@ nvmf_fc_adm_hw_queue_quiesce(struct spdk_nvmf_fc_hwqp *fc_hwqp, void *ctx,
 	args->cb_info.cb_thread = spdk_get_thread();
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API, "Quiesce queue %d\n", fc_hwqp->hwqp_id);
-	rc = spdk_nvmf_fc_poller_api_func(fc_hwqp, SPDK_NVMF_FC_POLLER_API_QUIESCE_QUEUE, args);
+	rc = nvmf_fc_poller_api_func(fc_hwqp, SPDK_NVMF_FC_POLLER_API_QUIESCE_QUEUE, args);
 	if (rc) {
 		free(args);
 		err = -EINVAL;
@@ -2790,7 +2767,7 @@ nvmf_fc_adm_evnt_hw_port_init(void *arg)
 	/*
 	 * 1. Check for duplicate initialization.
 	 */
-	fc_port = spdk_nvmf_fc_port_lookup(args->port_handle);
+	fc_port = nvmf_fc_port_lookup(args->port_handle);
 	if (fc_port != NULL) {
 		/* Port already exists, check if it has to be re-initialized */
 		err = nvmf_fc_adm_hw_port_reinit_validate(fc_port, args);
@@ -2833,7 +2810,7 @@ nvmf_fc_adm_evnt_hw_port_init(void *arg)
 	/*
 	 * 4. Add this port to the global fc port list in the library.
 	 */
-	spdk_nvmf_fc_port_add(fc_port);
+	nvmf_fc_port_add(fc_port);
 
 abort_port_init:
 	if (err && fc_port) {
@@ -2864,10 +2841,10 @@ nvmf_fc_adm_evnt_hw_port_online(void *arg)
 	int i = 0;
 	int err = 0;
 
-	fc_port = spdk_nvmf_fc_port_lookup(args->port_handle);
+	fc_port = nvmf_fc_port_lookup(args->port_handle);
 	if (fc_port) {
 		/* Set the port state to online */
-		err = spdk_nvmf_fc_port_set_online(fc_port);
+		err = nvmf_fc_port_set_online(fc_port);
 		if (err != 0) {
 			SPDK_ERRLOG("Hw port %d online failed. err = %d\n", fc_port->port_hdl, err);
 			DEV_VERIFY(!"Hw port online failed");
@@ -2876,14 +2853,14 @@ nvmf_fc_adm_evnt_hw_port_online(void *arg)
 
 		hwqp = &fc_port->ls_queue;
 		hwqp->context = NULL;
-		(void)spdk_nvmf_fc_hwqp_set_online(hwqp);
+		(void)nvmf_fc_hwqp_set_online(hwqp);
 
 		/* Cycle through all the io queues and setup a hwqp poller for each. */
 		for (i = 0; i < (int)fc_port->num_io_queues; i++) {
 			hwqp = &fc_port->io_queues[i];
 			hwqp->context = NULL;
-			(void)spdk_nvmf_fc_hwqp_set_online(hwqp);
-			spdk_nvmf_fc_poll_group_add_hwqp(hwqp);
+			(void)nvmf_fc_hwqp_set_online(hwqp);
+			nvmf_fc_poll_group_add_hwqp(hwqp);
 		}
 	} else {
 		SPDK_ERRLOG("Unable to find the SPDK FC port %d\n", args->port_handle);
@@ -2916,10 +2893,10 @@ nvmf_fc_adm_evnt_hw_port_offline(void *arg)
 	int i = 0;
 	int err = 0;
 
-	fc_port = spdk_nvmf_fc_port_lookup(args->port_handle);
+	fc_port = nvmf_fc_port_lookup(args->port_handle);
 	if (fc_port) {
 		/* Set the port state to offline, if it is not already. */
-		err = spdk_nvmf_fc_port_set_offline(fc_port);
+		err = nvmf_fc_port_set_offline(fc_port);
 		if (err != 0) {
 			SPDK_ERRLOG("Hw port %d already offline. err = %d\n", fc_port->port_hdl, err);
 			err = 0;
@@ -2927,13 +2904,13 @@ nvmf_fc_adm_evnt_hw_port_offline(void *arg)
 		}
 
 		hwqp = &fc_port->ls_queue;
-		(void)spdk_nvmf_fc_hwqp_set_offline(hwqp);
+		(void)nvmf_fc_hwqp_set_offline(hwqp);
 
 		/* Remove poller for all the io queues. */
 		for (i = 0; i < (int)fc_port->num_io_queues; i++) {
 			hwqp = &fc_port->io_queues[i];
-			(void)spdk_nvmf_fc_hwqp_set_offline(hwqp);
-			spdk_nvmf_fc_poll_group_remove_hwqp(hwqp);
+			(void)nvmf_fc_hwqp_set_offline(hwqp);
+			nvmf_fc_poll_group_remove_hwqp(hwqp);
 		}
 
 		/*
@@ -2999,7 +2976,7 @@ nvmf_fc_adm_subsystem_paused_cb(struct spdk_nvmf_subsystem *subsystem, void *cb_
 static int
 nvmf_fc_adm_add_rem_nport_listener(struct spdk_nvmf_fc_nport *nport, bool add)
 {
-	struct spdk_nvmf_tgt *tgt = spdk_nvmf_fc_get_tgt();
+	struct spdk_nvmf_tgt *tgt = nvmf_fc_get_tgt();
 	struct spdk_nvmf_subsystem *subsystem;
 
 	if (!tgt) {
@@ -3016,9 +2993,9 @@ nvmf_fc_adm_add_rem_nport_listener(struct spdk_nvmf_fc_nport *nport, bool add)
 			if (ctx) {
 				ctx->add_listener = add;
 				ctx->subsystem = subsystem;
-				spdk_nvmf_fc_create_trid(&ctx->trid,
-							 nport->fc_nodename.u.wwn,
-							 nport->fc_portname.u.wwn);
+				nvmf_fc_create_trid(&ctx->trid,
+						    nport->fc_nodename.u.wwn,
+						    nport->fc_portname.u.wwn);
 
 				if (spdk_nvmf_tgt_listen(subsystem->tgt, &ctx->trid)) {
 					SPDK_ERRLOG("Failed to add transport address %s to tgt listeners\n",
@@ -3057,7 +3034,7 @@ nvmf_fc_adm_evnt_nport_create(void *arg)
 	/*
 	 * Get the physical port.
 	 */
-	fc_port = spdk_nvmf_fc_port_lookup(args->port_handle);
+	fc_port = nvmf_fc_port_lookup(args->port_handle);
 	if (fc_port == NULL) {
 		err = -EINVAL;
 		goto out;
@@ -3066,7 +3043,7 @@ nvmf_fc_adm_evnt_nport_create(void *arg)
 	/*
 	 * Check for duplicate initialization.
 	 */
-	nport = spdk_nvmf_fc_nport_find(args->port_handle, args->nport_handle);
+	nport = nvmf_fc_nport_find(args->port_handle, args->nport_handle);
 	if (nport != NULL) {
 		SPDK_ERRLOG("Duplicate SPDK FC nport %d exists for FC port:%d.\n", args->nport_handle,
 			    args->port_handle);
@@ -3094,9 +3071,9 @@ nvmf_fc_adm_evnt_nport_create(void *arg)
 	nport->fc_nodename  = args->fc_nodename;
 	nport->fc_portname  = args->fc_portname;
 	nport->d_id         = args->d_id;
-	nport->fc_port      = spdk_nvmf_fc_port_lookup(args->port_handle);
+	nport->fc_port      = nvmf_fc_port_lookup(args->port_handle);
 
-	(void)spdk_nvmf_fc_nport_set_state(nport, SPDK_NVMF_FC_OBJECT_CREATED);
+	(void)nvmf_fc_nport_set_state(nport, SPDK_NVMF_FC_OBJECT_CREATED);
 	TAILQ_INIT(&nport->rem_port_list);
 	nport->rport_count = 0;
 	TAILQ_INIT(&nport->fc_associations);
@@ -3107,7 +3084,7 @@ nvmf_fc_adm_evnt_nport_create(void *arg)
 	 */
 	err = nvmf_fc_adm_add_rem_nport_listener(nport, true);
 
-	(void)spdk_nvmf_fc_port_add_nport(fc_port, nport);
+	(void)nvmf_fc_port_add_nport(fc_port, nport);
 out:
 	if (err && nport) {
 		free(nport);
@@ -3153,13 +3130,13 @@ nvmf_fc_adm_delete_nport_cb(uint8_t port_handle, enum spdk_fc_event event_type,
 	 * Free the nport if this is the last rport being deleted and
 	 * execute the callback(s).
 	 */
-	if (spdk_nvmf_fc_nport_has_no_rport(nport)) {
+	if (nvmf_fc_nport_has_no_rport(nport)) {
 		if (0 != nport->assoc_count) {
 			SPDK_ERRLOG("association count != 0\n");
 			DEV_VERIFY(!"association count != 0");
 		}
 
-		err = spdk_nvmf_fc_port_remove_nport(nport->fc_port, nport);
+		err = nvmf_fc_port_remove_nport(nport->fc_port, nport);
 		if (0 != err) {
 			SPDK_ERRLOG("Nport delete callback: Failed to remove "
 				    "nport from nport list. FC Port:%d Nport:%d\n",
@@ -3205,7 +3182,7 @@ nvmf_fc_adm_evnt_nport_delete(void *arg)
 	/*
 	 * Make sure that the nport exists.
 	 */
-	nport = spdk_nvmf_fc_nport_find(args->port_handle, args->nport_handle);
+	nport = nvmf_fc_nport_find(args->port_handle, args->nport_handle);
 	if (nport == NULL) {
 		SPDK_ERRLOG("Unable to find the SPDK FC nport %d for FC Port: %d.\n", args->nport_handle,
 			    args->port_handle);
@@ -3232,7 +3209,7 @@ nvmf_fc_adm_evnt_nport_delete(void *arg)
 	 * Begin nport tear down
 	 */
 	if (nport->nport_state == SPDK_NVMF_FC_OBJECT_CREATED) {
-		(void)spdk_nvmf_fc_nport_set_state(nport, SPDK_NVMF_FC_OBJECT_TO_BE_DELETED);
+		(void)nvmf_fc_nport_set_state(nport, SPDK_NVMF_FC_OBJECT_TO_BE_DELETED);
 	} else if (nport->nport_state == SPDK_NVMF_FC_OBJECT_TO_BE_DELETED) {
 		/*
 		 * Deletion of this nport already in progress. Register callback
@@ -3255,7 +3232,7 @@ nvmf_fc_adm_evnt_nport_delete(void *arg)
 	rc = nvmf_fc_adm_add_rem_nport_listener(nport, false);
 
 	if (0 != rc) {
-		err = spdk_nvmf_fc_nport_set_state(nport, SPDK_NVMF_FC_OBJECT_ZOMBIE);
+		err = nvmf_fc_nport_set_state(nport, SPDK_NVMF_FC_OBJECT_ZOMBIE);
 		SPDK_ERRLOG("Unable to remove the listen addr in the subsystems for nport %d.\n",
 			    nport->nport_hdl);
 		goto out;
@@ -3267,7 +3244,7 @@ nvmf_fc_adm_evnt_nport_delete(void *arg)
 	/* TODO - Need to do this with a "first" and a "next" accessor function
 	 * for completeness. Look at app-subsystem as examples.
 	 */
-	if (spdk_nvmf_fc_nport_has_no_rport(nport)) {
+	if (nvmf_fc_nport_has_no_rport(nport)) {
 		/* No rports to delete. Complete the nport deletion. */
 		nvmf_fc_adm_delete_nport_cb(nport->port_hdl, SPDK_FC_NPORT_DELETE, cb_data, 0);
 		goto out;
@@ -3292,8 +3269,8 @@ nvmf_fc_adm_evnt_nport_delete(void *arg)
 		it_del_args->rpi = rport_iter->rpi;
 		it_del_args->s_id = rport_iter->s_id;
 
-		spdk_nvmf_fc_master_enqueue_event(SPDK_FC_IT_DELETE, (void *)it_del_args,
-						  nvmf_fc_adm_delete_nport_cb);
+		nvmf_fc_master_enqueue_event(SPDK_FC_IT_DELETE, (void *)it_del_args,
+					     nvmf_fc_adm_delete_nport_cb);
 	}
 
 out:
@@ -3338,7 +3315,7 @@ nvmf_fc_adm_evnt_i_t_add(void *arg)
 	/*
 	 * Make sure the nport port exists.
 	 */
-	nport = spdk_nvmf_fc_nport_find(args->port_handle, args->nport_handle);
+	nport = nvmf_fc_nport_find(args->port_handle, args->nport_handle);
 	if (nport == NULL) {
 		SPDK_ERRLOG("Unable to find the SPDK FC nport %d\n", args->nport_handle);
 		err = -EINVAL;
@@ -3370,7 +3347,7 @@ nvmf_fc_adm_evnt_i_t_add(void *arg)
 	/*
 	 * Initialize the contents for the rport
 	 */
-	(void)spdk_nvmf_fc_rport_set_state(rport, SPDK_NVMF_FC_OBJECT_CREATED);
+	(void)nvmf_fc_rport_set_state(rport, SPDK_NVMF_FC_OBJECT_CREATED);
 	rport->s_id = args->s_id;
 	rport->rpi = args->rpi;
 	rport->fc_nodename = args->fc_nodename;
@@ -3379,7 +3356,7 @@ nvmf_fc_adm_evnt_i_t_add(void *arg)
 	/*
 	 * Add remote port to nport
 	 */
-	if (spdk_nvmf_fc_nport_add_rem_port(nport, rport) != 0) {
+	if (nvmf_fc_nport_add_rem_port(nport, rport) != 0) {
 		DEV_VERIFY(!"Error while adding rport to list");
 	};
 
@@ -3391,7 +3368,7 @@ nvmf_fc_adm_evnt_i_t_add(void *arg)
 	 * Get the targets service parameters from the library
 	 * to return back to the driver.
 	 */
-	args->target_prli_info = spdk_nvmf_fc_get_prli_service_params();
+	args->target_prli_info = nvmf_fc_get_prli_service_params();
 
 out:
 	if (api_data->cb_func != NULL) {
@@ -3432,7 +3409,7 @@ nvmf_fc_adm_evnt_i_t_delete(void *arg)
 	/*
 	 * Make sure the nport port exists. If it does not, error out.
 	 */
-	nport = spdk_nvmf_fc_nport_find(args->port_handle, args->nport_handle);
+	nport = nvmf_fc_nport_find(args->port_handle, args->nport_handle);
 	if (nport == NULL) {
 		SPDK_ERRLOG("Unable to find the SPDK FC nport:%d\n", args->nport_handle);
 		rc = -EINVAL;
@@ -3484,7 +3461,7 @@ nvmf_fc_adm_evnt_i_t_delete(void *arg)
 	 * Validate rport object state.
 	 */
 	if (rport->rport_state == SPDK_NVMF_FC_OBJECT_CREATED) {
-		(void)spdk_nvmf_fc_rport_set_state(rport, SPDK_NVMF_FC_OBJECT_TO_BE_DELETED);
+		(void)nvmf_fc_rport_set_state(rport, SPDK_NVMF_FC_OBJECT_TO_BE_DELETED);
 	} else if (rport->rport_state == SPDK_NVMF_FC_OBJECT_TO_BE_DELETED) {
 		/*
 		 * Deletion of this rport already in progress. Register callback
@@ -3557,7 +3534,7 @@ nvmf_fc_adm_evnt_abts_recv(void *arg)
 	/*
 	 * 1. Make sure the nport port exists.
 	 */
-	nport = spdk_nvmf_fc_nport_find(args->port_handle, args->nport_handle);
+	nport = nvmf_fc_nport_find(args->port_handle, args->nport_handle);
 	if (nport == NULL) {
 		SPDK_ERRLOG("Unable to find the SPDK FC nport %d\n", args->nport_handle);
 		err = -EINVAL;
@@ -3579,7 +3556,7 @@ nvmf_fc_adm_evnt_abts_recv(void *arg)
 	/*
 	 * 3. Pass the received ABTS-LS to the library for handling.
 	 */
-	spdk_nvmf_fc_handle_abts_frame(nport, args->rpi, args->oxid, args->rxid);
+	nvmf_fc_handle_abts_frame(nport, args->rpi, args->oxid, args->rxid);
 
 out:
 	if (api_data->cb_func != NULL) {
@@ -3634,7 +3611,7 @@ nvmf_fc_adm_hw_port_quiesce_reset_cb(void *ctx, int err)
 	/*
 	 * Get the fc port.
 	 */
-	fc_port = spdk_nvmf_fc_port_lookup(args->port_handle);
+	fc_port = nvmf_fc_port_lookup(args->port_handle);
 	if (fc_port == NULL) {
 		SPDK_ERRLOG("Unable to find the SPDK FC port %d\n", args->port_handle);
 		err = -EINVAL;
@@ -3658,12 +3635,13 @@ nvmf_fc_adm_hw_port_quiesce_reset_cb(void *ctx, int err)
 	/*
 	 * Add the dump reason to the top of the buffer.
 	 */
-	spdk_nvmf_fc_dump_buf_print(&dump_info, "%s\n", args->reason);
+	nvmf_fc_dump_buf_print(&dump_info, "%s\n", args->reason);
 
 	/*
 	 * Dump the hwqp.
 	 */
-	spdk_nvmf_fc_dump_all_queues(fc_port, &dump_info);
+	nvmf_fc_dump_all_queues(&fc_port->ls_queue, fc_port->io_queues,
+				fc_port->num_io_queues, &dump_info);
 
 out:
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API, "HW port %d reset done, queues_dumped = %d, rc = %d.\n",
@@ -3694,7 +3672,7 @@ nvmf_fc_adm_evnt_hw_port_reset(void *arg)
 	/*
 	 * Make sure the physical port exists.
 	 */
-	fc_port = spdk_nvmf_fc_port_lookup(args->port_handle);
+	fc_port = nvmf_fc_port_lookup(args->port_handle);
 	if (fc_port == NULL) {
 		SPDK_ERRLOG("Unable to find the SPDK FC port %d\n", args->port_handle);
 		err = -EINVAL;
@@ -3764,7 +3742,7 @@ nvmf_fc_adm_evnt_hw_port_link_break(void *arg)
 	/*
 	 * Get the fc port using the port handle.
 	 */
-	fc_port = spdk_nvmf_fc_port_lookup(args->port_handle);
+	fc_port = nvmf_fc_port_lookup(args->port_handle);
 	if (!fc_port) {
 		SPDK_ERRLOG("port link break: Unable to find the SPDK FC port %d\n",
 			    args->port_handle);
@@ -3775,7 +3753,7 @@ nvmf_fc_adm_evnt_hw_port_link_break(void *arg)
 	/*
 	 * Set the port state to offline, if it is not already.
 	 */
-	err = spdk_nvmf_fc_port_set_offline(fc_port);
+	err = nvmf_fc_port_set_offline(fc_port);
 	if (err != 0) {
 		SPDK_ERRLOG("port link break: HW port %d already offline. rc = %d\n",
 			    fc_port->port_hdl, err);
@@ -3809,9 +3787,9 @@ nvmf_fc_adm_evnt_hw_port_link_break(void *arg)
 			nport_del_args->nport_handle = nport->nport_hdl;
 			nport_del_args->cb_ctx = cb_data;
 
-			spdk_nvmf_fc_master_enqueue_event(SPDK_FC_NPORT_DELETE,
-							  (void *)nport_del_args,
-							  nvmf_fc_adm_hw_port_link_break_cb);
+			nvmf_fc_master_enqueue_event(SPDK_FC_NPORT_DELETE,
+						     (void *)nport_del_args,
+						     nvmf_fc_adm_hw_port_link_break_cb);
 
 			nport_deletes_sent++;
 		}
@@ -3850,8 +3828,8 @@ out:
 static inline void
 nvmf_fc_adm_run_on_master_thread(spdk_msg_fn fn, void *args)
 {
-	if (spdk_nvmf_fc_get_master_thread()) {
-		spdk_thread_send_msg(spdk_nvmf_fc_get_master_thread(), fn, args);
+	if (nvmf_fc_get_master_thread()) {
+		spdk_thread_send_msg(nvmf_fc_get_master_thread(), fn, args);
 	}
 }
 
@@ -3860,8 +3838,8 @@ nvmf_fc_adm_run_on_master_thread(spdk_msg_fn fn, void *args)
  * Used by the FC driver to notify the SPDK master of FC related events.
  */
 int
-spdk_nvmf_fc_master_enqueue_event(enum spdk_fc_event event_type, void *args,
-				  spdk_nvmf_fc_callback cb_func)
+nvmf_fc_master_enqueue_event(enum spdk_fc_event event_type, void *args,
+			     spdk_nvmf_fc_callback cb_func)
 {
 	int err = 0;
 	struct spdk_nvmf_fc_adm_api_data *api_data = NULL;
