@@ -650,9 +650,12 @@ _nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *r
 
 		if (spdk_unlikely(child_req_failed)) {
 			/* part of children requests have been submitted,
-			 * return success for this case.
+			 * return success since we must wait for those children to complete,
+			 * but set the parent request to failure.
 			 */
 			if (req->num_children) {
+				req->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+				req->cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 				return 0;
 			}
 			goto error;
