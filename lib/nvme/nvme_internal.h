@@ -1197,6 +1197,10 @@ int nvme_transport_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nv
 int32_t nvme_transport_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 		uint32_t max_completions);
 void nvme_transport_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair);
+int nvme_transport_qpair_iterate_requests(struct spdk_nvme_qpair *qpair,
+		int (*iter_fn)(struct nvme_request *req, void *arg),
+		void *arg);
+
 struct spdk_nvme_transport_poll_group *nvme_transport_poll_group_create(
 	const struct spdk_nvme_transport *transport);
 int nvme_transport_poll_group_add(struct spdk_nvme_transport_poll_group *tgroup,

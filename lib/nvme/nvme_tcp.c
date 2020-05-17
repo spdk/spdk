@@ -1772,6 +1772,29 @@ nvme_tcp_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
 	return 1;
 }
 
+static int
+nvme_tcp_qpair_iterate_requests(struct spdk_nvme_qpair *qpair,
+				int (*iter_fn)(struct nvme_request *req, void *arg),
+				void *arg)
+{
+	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
+	struct nvme_tcp_req *tcp_req, *tmp;
+	int rc;
+
+	assert(iter_fn != NULL);
+
+	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->outstanding_reqs, link, tmp) {
+		assert(tcp_req->req != NULL);
+
+		rc = iter_fn(tcp_req->req, arg);
+		if (rc != 0) {
+			return rc;
+		}
+	}
+
+	return 0;
+}
+
 static void
 nvme_tcp_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 {
@@ -1932,6 +1955,7 @@ const struct spdk_nvme_transport_ops tcp_ops = {
 	.qpair_reset = nvme_tcp_qpair_reset,
 	.qpair_submit_request = nvme_tcp_qpair_submit_request,
 	.qpair_process_completions = nvme_tcp_qpair_process_completions,
+	.qpair_iterate_requests = nvme_tcp_qpair_iterate_requests,
 	.admin_qpair_abort_aers = nvme_tcp_admin_qpair_abort_aers,
 
 	.poll_group_create = nvme_tcp_poll_group_create,

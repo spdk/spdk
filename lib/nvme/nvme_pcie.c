@@ -1457,6 +1457,29 @@ nvme_pcie_qpair_abort_trackers(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 	}
 }
 
+static int
+nvme_pcie_qpair_iterate_requests(struct spdk_nvme_qpair *qpair,
+				 int (*iter_fn)(struct nvme_request *req, void *arg),
+				 void *arg)
+{
+	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
+	struct nvme_tracker *tr, *tmp;
+	int rc;
+
+	assert(iter_fn != NULL);
+
+	TAILQ_FOREACH_SAFE(tr, &pqpair->outstanding_tr, tq_list, tmp) {
+		assert(tr->req != NULL);
+
+		rc = iter_fn(tr->req, arg);
+		if (rc != 0) {
+			return rc;
+		}
+	}
+
+	return 0;
+}
+
 static void
 nvme_pcie_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 {
@@ -2559,6 +2582,7 @@ const struct spdk_nvme_transport_ops pcie_ops = {
 	.qpair_reset = nvme_pcie_qpair_reset,
 	.qpair_submit_request = nvme_pcie_qpair_submit_request,
 	.qpair_process_completions = nvme_pcie_qpair_process_completions,
+	.qpair_iterate_requests = nvme_pcie_qpair_iterate_requests,
 	.admin_qpair_abort_aers = nvme_pcie_admin_qpair_abort_aers,
 
 	.poll_group_create = nvme_pcie_poll_group_create,

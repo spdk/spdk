@@ -2408,6 +2408,29 @@ nvme_rdma_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
 	return rctrlr->max_sge;
 }
 
+static int
+nvme_rdma_qpair_iterate_requests(struct spdk_nvme_qpair *qpair,
+				 int (*iter_fn)(struct nvme_request *req, void *arg),
+				 void *arg)
+{
+	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(qpair);
+	struct spdk_nvme_rdma_req *rdma_req, *tmp;
+	int rc;
+
+	assert(iter_fn != NULL);
+
+	TAILQ_FOREACH_SAFE(rdma_req, &rqpair->outstanding_reqs, link, tmp) {
+		assert(rdma_req->req != NULL);
+
+		rc = iter_fn(rdma_req->req, arg);
+		if (rc != 0) {
+			return rc;
+		}
+	}
+
+	return 0;
+}
+
 static void
 nvme_rdma_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 {
@@ -2813,6 +2836,7 @@ const struct spdk_nvme_transport_ops rdma_ops = {
 	.qpair_reset = nvme_rdma_qpair_reset,
 	.qpair_submit_request = nvme_rdma_qpair_submit_request,
 	.qpair_process_completions = nvme_rdma_qpair_process_completions,
+	.qpair_iterate_requests = nvme_rdma_qpair_iterate_requests,
 	.admin_qpair_abort_aers = nvme_rdma_admin_qpair_abort_aers,
 
 	.poll_group_create = nvme_rdma_poll_group_create,

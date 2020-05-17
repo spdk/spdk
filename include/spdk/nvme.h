@@ -3152,6 +3152,10 @@ struct spdk_nvme_transport_ops {
 
 	int32_t (*qpair_process_completions)(struct spdk_nvme_qpair *qpair, uint32_t max_completions);
 
+	int (*qpair_iterate_requests)(struct spdk_nvme_qpair *qpair,
+				      int (*iter_fn)(struct nvme_request *req, void *arg),
+				      void *arg);
+
 	void (*admin_qpair_abort_aers)(struct spdk_nvme_qpair *qpair);
 
 	struct spdk_nvme_transport_poll_group *(*poll_group_create)(void);
