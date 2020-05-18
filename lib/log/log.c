@@ -141,7 +141,7 @@ spdk_vlog(enum spdk_log_level level, const char *file, const int line, const cha
 {
 	int severity = LOG_INFO;
 	char buf[MAX_TMPBUF];
-	char timestamp[32];
+	char timestamp[45];
 
 	if (g_log) {
 		g_log(level, file, line, func, format, ap);
