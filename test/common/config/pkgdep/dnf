@@ -1,0 +1,72 @@
+package_manager=dnf
+
+upgrade() {
+	sudo "$package_manager" upgrade -y
+}
+
+install() {
+	(($#)) || return 0
+
+	sudo "$package_manager" install -y "$@"
+}
+
+packages=(
+	valgrind
+	jq
+	nvme-cli
+	ceph
+	gdb
+	fio
+	librbd-devel
+	kernel-devel
+	gflags-devel
+	libasan
+	libubsan
+	autoconf
+	automake
+	libtool
+	libmount-devel
+	iscsi-initiator-utils
+	isns-utils-devel
+	pmempool
+	perl-open
+	glib2-devel
+	pixman-devel
+	astyle-devel
+	elfutils
+	libabigail
+	elfutils-libelf-devel
+	flex
+	bison
+	targetcli
+	perl-Switch
+	librdmacm-utils
+	libibverbs-utils
+	gdisk
+	socat
+	sshfs
+	sshpass
+	python3-pandas
+	btrfs-progs
+	rpm-build
+	iptables
+	clang-analyzer
+	bc
+	kernel-modules-extra
+	systemd-devel
+	smartmontools
+	wget
+)
+
+pre_install() {
+	if [[ $INTSALL_TSOCKS == true ]]; then
+		# currently, tsocks package is retired in fedora 31, so don't exit in case
+		# installation failed
+		# FIXME: Review when fedora starts to successfully build this package again.
+		install tsocks || echo "Installation of the tsocks package failed, proxy may not be available"
+	fi
+}
+
+if [[ $OSID != fedora ]]; then
+	echo "Located dnf package manager, but it was tested for Fedora only"
+fi
