@@ -1,0 +1,100 @@
+package_manager=apt-get
+
+update() {
+	sudo "$package_manager" update
+}
+
+install() {
+	(( $# )) || return 0
+
+	sudo "$package_manager" install -y "$@"
+}
+
+upgrade() {
+	sudo "$package_manager" update
+	sudo "$package_manager" upgrade -y
+}
+
+
+pre_install() {
+	echo "Package perl-open is not available at Ubuntu repositories" >&2
+
+	update
+
+	if [[ $INSTALL_TSOCKS == true ]]; then
+		install tsocks
+	fi
+
+	# asan an ubsan have to be installed together to not mix up gcc versions
+	if install libasan5; then
+		install libubsan1
+	else
+		echo "Latest libasan5 is not available" >&2
+		echo "  installing libasan2 and corresponding libubsan0" >&2
+		install libasan2
+		install libubsan0
+	fi
+	if ! install rdma-core; then
+		echo "Package rdma-core is avaliable at Ubuntu 18 [universe] repositorium" >&2
+		install rdmacm-utils
+		install ibverbs-utils
+	else
+		LIBRXE_INSTALL=false
+	fi
+	if ! install libpmempool1; then
+		echo "Package libpmempool1 is available at Ubuntu 18 [universe] repositorium" >&2
+	fi
+	if ! install clang-tools; then
+		echo "Package clang-tools is available at Ubuntu 18 [universe] repositorium" >&2
+	fi
+	if ! install --no-install-suggests --no-install-recommends open-isns-utils; then
+		echo "Package open-isns-utils is available at Ubuntu 18 [universe] repositorium" >&2
+	fi
+
+	# Package name for Ubuntu 18 is targetcli-fb but for Ubuntu 16 it's targetcli
+	if ! install targetcli-fb; then
+		install targetcli
+	fi
+
+	# On Ubuntu 20.04 (focal) btrfs-tools are available under different name - btrfs-progs
+	if ! install btrfs-tools; then
+		install btrfs-progs
+	fi
+}
+
+packages=(
+	valgrind
+	jq
+	nvme-cli
+	ceph
+	gdb
+	fio
+	librbd-dev
+	linux-headers-generic
+	libgflags-dev
+	autoconf
+	automake
+	libtool
+	libmount-dev
+	open-iscsi
+	libglib2.0-dev
+	libpixman-1-dev
+	astyle
+	elfutils
+	libelf-dev
+	flex
+	bison
+	libswitch-perl
+	gdisk
+	socat
+	sshfs
+	sshpass
+	python3-pandas
+	bc
+	smartmontools
+	wget
+)
+
+if [[ $OSID != ubuntu ]]; then
+	echo "Located apt-get package manager, but it was tested for Ubuntu only"
+fi
