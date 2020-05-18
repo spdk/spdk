@@ -996,7 +996,8 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 	volatile uint32_t	*doorbell_base;
 	uint64_t		offset;
 	uint16_t		num_trackers;
-	size_t			page_align = VALUE_2MB;
+	size_t			page_align = sysconf(_SC_PAGESIZE);
+	size_t			queue_align, queue_len;
 	uint32_t                flags = SPDK_MALLOC_DMA;
 	uint64_t		sq_paddr = 0;
 	uint64_t		cq_paddr = 0;
@@ -1034,7 +1035,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 	/* cmd and cpl rings must be aligned on page size boundaries. */
 	if (ctrlr->opts.use_cmb_sqs) {
 		if (nvme_pcie_ctrlr_alloc_cmb(ctrlr, pqpair->num_entries * sizeof(struct spdk_nvme_cmd),
-					      sysconf(_SC_PAGESIZE), &offset) == 0) {
+					      page_align, &offset) == 0) {
 			pqpair->cmd = pctrlr->cmb_bar_virt_addr + offset;
 			pqpair->cmd_bus_addr = pctrlr->cmb_bar_phys_addr + offset;
 			pqpair->sq_in_cmb = true;
@@ -1048,9 +1049,9 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 			/* To ensure physical address contiguity we make each ring occupy
 			 * a single hugepage only. See MAX_IO_QUEUE_ENTRIES.
 			 */
-			pqpair->cmd = spdk_zmalloc(pqpair->num_entries * sizeof(struct spdk_nvme_cmd),
-						   page_align, NULL,
-						   SPDK_ENV_SOCKET_ID_ANY, flags);
+			queue_len = pqpair->num_entries * sizeof(struct spdk_nvme_cmd);
+			queue_align = spdk_max(spdk_align32pow2(queue_len), page_align);
+			pqpair->cmd = spdk_zmalloc(queue_len, queue_align, NULL, SPDK_ENV_SOCKET_ID_ANY, flags);
 			if (pqpair->cmd == NULL) {
 				SPDK_ERRLOG("alloc qpair_cmd failed\n");
 				return -ENOMEM;
@@ -1071,9 +1072,9 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 	if (pqpair->cq_vaddr) {
 		pqpair->cpl = pqpair->cq_vaddr;
 	} else {
-		pqpair->cpl = spdk_zmalloc(pqpair->num_entries * sizeof(struct spdk_nvme_cpl),
-					   page_align, NULL,
-					   SPDK_ENV_SOCKET_ID_ANY, flags);
+		queue_len = pqpair->num_entries * sizeof(struct spdk_nvme_cpl);
+		queue_align = spdk_max(spdk_align32pow2(queue_len), page_align);
+		pqpair->cpl = spdk_zmalloc(queue_len, queue_align, NULL, SPDK_ENV_SOCKET_ID_ANY, flags);
 		if (pqpair->cpl == NULL) {
 			SPDK_ERRLOG("alloc qpair_cpl failed\n");
 			return -ENOMEM;
