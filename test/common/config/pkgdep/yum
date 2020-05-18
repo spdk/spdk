@@ -1,0 +1,67 @@
+package_manager=yum
+
+upgrade() {
+	sudo "$package_manager" upgrade -y
+}
+
+install() {
+	(($#)) || return 0
+
+	sudo "$package_manager" install -y "$@"
+}
+
+packages=(
+	pciutils
+	valgrind
+	jq
+	nvme-cli
+	gdb
+	fio
+	librbd-devel
+	kernel-devel
+	gflags-devel
+	libasan
+	libubsan
+	autoconf
+	automake
+	libtool
+	libmount-devel
+	iscsi-initiator-utils
+	isns-utils-devel pmempool
+	perl-open
+	glib2-devel
+	pixman-devel
+	astyle-devel
+	elfutils
+	elfutils-libelf-devel
+	flex
+	bison
+	targetcli
+	perl-Switch
+	librdmacm-utils
+	libibverbs-utils
+	gdisk
+	socat
+	sshfs
+	sshpass
+	python3-pandas
+	rpm-build
+	iptables
+	clang-analyzer
+	bc
+	kernel-modules-extra
+	systemd-devel
+	python3
+	wget
+)
+
+pre_install() {
+	if [[ $ID == centos ]] && (( VERSION_ID == 8 )); then
+		"$package_manager" update -y --refresh
+	fi
+
+	install nbd || {
+		wget -O nbd.rpm https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/n/nbd-3.14-2.el7.x86_64.rpm
+		install nbd.rpm
+	}
+}
