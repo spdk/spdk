@@ -1,3 +1,16 @@
+function install_spdk() {
+	mkdir -p spdk_repo/output || echo "Can not create spdk_repo/output directory."
+
+	if [ -d spdk_repo/spdk ]; then
+		echo "spdk source already present, not cloning"
+	else
+		git -C spdk_repo clone "${GIT_REPO_SPDK}"
+	fi
+	git -C spdk_repo/spdk config submodule.dpdk.url "${GIT_REPO_DPDK}"
+	git -C spdk_repo/spdk config submodule.intel-ipsec-mb.url "${GIT_REPO_INTEL_IPSEC_MB}"
+	git -C spdk_repo/spdk submodule update --init --recursive
+}
+
 function install_refspdk() {
 	local last_release
 	local output_dir
@@ -317,6 +330,14 @@ fi
 sources+=(install_fio)
 
 sudo mkdir -p /usr/{,local}/src
+
+if [[ $INSTALL_REFSPDK == true ]]; then
+	# Serialize builds as refspdk depends on spdk
+	install_spdk
+	install_refspdk
+else
+	sources+=(install_spdk)
+fi
 
 for source in "${sources[@]}"; do
 	source_conf=${source^^}

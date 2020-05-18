@@ -24,7 +24,7 @@ VM_SETUP_PATH=$(readlink -f ${BASH_SOURCE%/*})
 
 UPGRADE=false
 INSTALL=false
-CONF="rocksdb,fio,flamegraph,tsocks,qemu,vpp,libiscsi,nvmecli,qat,refspdk"
+CONF="rocksdb,fio,flamegraph,tsocks,qemu,vpp,libiscsi,nvmecli,qat,spdk,refspdk"
 gcc_version=$(gcc -dumpversion) gcc_version=${gcc_version%%.*}
 
 if [[ -e /etc/os-release ]]; then
@@ -121,17 +121,6 @@ if $INSTALL; then
 	pre_install
 	install "${packages[@]}"
 fi
-
-mkdir -p spdk_repo/output || echo "Can not create spdk_repo/output directory."
-
-if [ -d spdk_repo/spdk ]; then
-	echo "spdk source already present, not cloning"
-else
-	git -C spdk_repo clone "${GIT_REPO_SPDK}"
-fi
-git -C spdk_repo/spdk config submodule.dpdk.url "${GIT_REPO_DPDK}"
-git -C spdk_repo/spdk config submodule.intel-ipsec-mb.url "${GIT_REPO_INTEL_IPSEC_MB}"
-git -C spdk_repo/spdk submodule update --init --recursive
 
 source "$vmsetupdir/pkgdep/git"
 
