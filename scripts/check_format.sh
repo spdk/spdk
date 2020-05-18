@@ -27,6 +27,10 @@ while read -r perm _res0 _res1 path; do
 		continue
 	fi
 
+	# Skip symlinks
+	if [[ -L $path ]]; then
+		continue
+	fi
 	fname=$(basename -- "$path")
 
 	case ${fname##*.} in
