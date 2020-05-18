@@ -509,6 +509,57 @@ spdk_mem_unregister(void *vaddr, size_t len)
 	return 0;
 }
 
+int
+spdk_mem_reserve(void *vaddr, size_t len)
+{
+	struct spdk_mem_map *map;
+	void *seg_vaddr;
+	size_t seg_len;
+	uint64_t reg;
+
+	if ((uintptr_t)vaddr & ~MASK_256TB) {
+		DEBUG_PRINT("invalid usermode virtual address %p\n", vaddr);
+		return -EINVAL;
+	}
+
+	if (((uintptr_t)vaddr & MASK_2MB) || (len & MASK_2MB)) {
+		DEBUG_PRINT("invalid %s parameters, vaddr=%p len=%ju\n",
+			    __func__, vaddr, len);
+		return -EINVAL;
+	}
+
+	if (len == 0) {
+		return 0;
+	}
+
+	pthread_mutex_lock(&g_spdk_mem_map_mutex);
+
+	/* Check if any part of this range is already registered */
+	seg_vaddr = vaddr;
+	seg_len = len;
+	while (seg_len > 0) {
+		reg = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)seg_vaddr, NULL);
+		if (reg & REG_MAP_REGISTERED) {
+			pthread_mutex_unlock(&g_spdk_mem_map_mutex);
+			return -EBUSY;
+		}
+		seg_vaddr += VALUE_2MB;
+		seg_len -= VALUE_2MB;
+	}
+
+	/* Simply set the translation to the memory map's default. This allocates the space in the
+	 * map but does not provide a valid translation. */
+	spdk_mem_map_set_translation(g_mem_reg_map, (uint64_t)vaddr, len,
+				     g_mem_reg_map->default_translation);
+
+	TAILQ_FOREACH(map, &g_spdk_mem_maps, tailq) {
+		spdk_mem_map_set_translation(map, (uint64_t)vaddr, len, map->default_translation);
+	}
+
+	pthread_mutex_unlock(&g_spdk_mem_map_mutex);
+	return 0;
+}
+
 static struct map_1gb *
 spdk_mem_map_get_map_1gb(struct spdk_mem_map *map, uint64_t vfn_2mb)
 {

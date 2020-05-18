@@ -1248,6 +1248,20 @@ int spdk_mem_register(void *vaddr, size_t len);
  */
 int spdk_mem_unregister(void *vaddr, size_t len);
 
+/**
+ * Reserve the address space specified in all memory maps.
+ *
+ * This pre-allocates the necessary space in the memory maps such that
+ * future calls to spdk_mem_register() on that region require no
+ * internal memory allocations.
+ *
+ * \param vaddr Virtual address to reserve
+ * \param len Length in bytes of vaddr
+ *
+ * \return 0 on success, negated errno on failure.
+ */
+int spdk_mem_reserve(void *vaddr, size_t len);
+
 #ifdef __cplusplus
 }
 #endif
