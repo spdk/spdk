@@ -628,7 +628,8 @@ spdk_nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair 
 	cmd->cdw10_bits.abort.sqid = sqid;
 	cmd->cdw10_bits.abort.cid = cid;
 
-	if (ctrlr->outstanding_aborts >= ctrlr->cdata.acl) {
+	/* ACL is a 0's based value. */
+	if (ctrlr->outstanding_aborts >= ctrlr->cdata.acl + 1U) {
 		STAILQ_INSERT_TAIL(&ctrlr->queued_aborts, req, stailq);
 		rc = 0;
 	} else {
