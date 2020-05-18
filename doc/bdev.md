@@ -336,9 +336,9 @@ Example commands
 
 This command will create `aio0` device from /dev/sda.
 
-`rpc.py bdev_aio_create /tmp/file file 8192`
+`rpc.py bdev_aio_create /tmp/file file 4096`
 
-This command will create `file` device with block size 8192 from /tmp/file.
+This command will create `file` device with block size 4096 from /tmp/file.
 
 To delete an aio bdev use the bdev_aio_delete command.
 
