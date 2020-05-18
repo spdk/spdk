@@ -593,6 +593,20 @@ nvme_ctrlr_retry_queued_abort(struct spdk_nvme_ctrlr *ctrlr)
 	}
 }
 
+static int
+_nvme_ctrlr_submit_abort_request(struct spdk_nvme_ctrlr *ctrlr,
+				 struct nvme_request *req)
+{
+	/* ACL is a 0's based value. */
+	if (ctrlr->outstanding_aborts >= ctrlr->cdata.acl + 1U) {
+		STAILQ_INSERT_TAIL(&ctrlr->queued_aborts, req, stailq);
+		return 0;
+	} else {
+		ctrlr->outstanding_aborts++;
+		return nvme_ctrlr_submit_admin_request(ctrlr, req);
+	}
+}
+
 static void
 nvme_ctrlr_cmd_abort_cpl(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
@@ -640,14 +654,7 @@ spdk_nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair 
 	cmd->cdw10_bits.abort.sqid = sqid;
 	cmd->cdw10_bits.abort.cid = cid;
 
-	/* ACL is a 0's based value. */
-	if (ctrlr->outstanding_aborts >= ctrlr->cdata.acl + 1U) {
-		STAILQ_INSERT_TAIL(&ctrlr->queued_aborts, req, stailq);
-		rc = 0;
-	} else {
-		ctrlr->outstanding_aborts++;
-		rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
-	}
+	rc = _nvme_ctrlr_submit_abort_request(ctrlr, req);
 
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 	return rc;
