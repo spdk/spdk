@@ -27,6 +27,10 @@ INSTALL=false
 CONF="rocksdb,fio,flamegraph,tsocks,qemu,vpp,libiscsi,nvmecli,qat,refspdk"
 gcc_version=$(gcc -dumpversion) gcc_version=${gcc_version%%.*}
 
+if [[ -e /etc/os-release ]]; then
+	source /etc/os-release
+fi
+
 if [ $(uname -s) == "FreeBSD" ]; then
 	OSID="freebsd"
 	OSVERSION=$(freebsd-version | cut -d. -f1)
@@ -344,26 +348,24 @@ function usage() {
 	exit 0
 }
 
+vmsetupdir=$(readlink -f "$(dirname "$0")")
+rootdir=$(readlink -f "$vmsetupdir/../../../")
+
+managers=("$vmsetupdir/pkgdep/"*)
 # Get package manager #
 if hash yum &> /dev/null; then
-	PACKAGEMNG=yum
+	source "$vmsetupdir/pkgdep/yum"
 elif hash dnf &> /dev/null; then
-	PACKAGEMNG=dnf
+	source "$vmsetupdir/pkgdep/dnf"
 elif hash apt-get &> /dev/null; then
-	PACKAGEMNG=apt-get
+	source "$vmsetupdir/pkgdep/apt-get"
 elif hash pacman &> /dev/null; then
-	PACKAGEMNG=pacman
+	source "$vmsetupdir/pkgdep/pacman"
 elif hash pkg &> /dev/null; then
-	PACKAGEMNG=pkg
+	source "$vmsetupdir/pkgdep/pkg"
 else
-	echo 'Supported package manager not found. Script supports "dnf" and "apt-get".'
-fi
-
-if [ $PACKAGEMNG == 'apt-get' ] && [ $OSID != 'ubuntu' ]; then
-	echo 'Located apt-get package manager, but it was tested for Ubuntu only'
-fi
-if [ $PACKAGEMNG == 'dnf' ] && [ $OSID != 'fedora' ]; then
-	echo 'Located dnf package manager, but it was tested for Fedora only'
+	echo "Supported package manager not found. Script supports:"
+	printf ' * %s\n' "${managers[@]##*/}"
 fi
 
 # Parse input arguments #
@@ -437,278 +439,13 @@ else
 fi
 
 if $UPGRADE; then
-	if [ $PACKAGEMNG == 'yum' ]; then
-		sudo $PACKAGEMNG upgrade -y
-	elif [ $PACKAGEMNG == 'dnf' ]; then
-		sudo $PACKAGEMNG upgrade -y
-	elif [ $PACKAGEMNG == 'apt-get' ]; then
-		sudo $PACKAGEMNG update
-		sudo $PACKAGEMNG upgrade -y
-	elif [ $PACKAGEMNG == 'pacman' ]; then
-		sudo $PACKAGEMNG -Syu --noconfirm --needed
-	elif [ $PACKAGEMNG == 'pkg' ]; then
-		sudo $PACKAGEMNG upgrade -y
-	fi
+	upgrade
 fi
 
 if $INSTALL; then
-	if [ "${OSID} ${OSVERSION}" == 'centos 8' ]; then
-		#During install using vm_setup.sh there is error with AppStream, to fix it we need to refresh yum
-		sudo yum update -y --refresh
-	fi
-	sudo spdk_repo/spdk/scripts/pkgdep.sh --all
-
-	if [ $PACKAGEMNG == 'pkg' ]; then
-		sudo pkg install -y pciutils \
-			jq \
-			gdb \
-			fio \
-			p5-extutils-pkgconfig \
-			libtool \
-			flex \
-			bison \
-			gdisk \
-			socat \
-			sshpass \
-			py37-pandas \
-			wget
-
-	elif [ $PACKAGEMNG == 'yum' ]; then
-		sudo yum install -y pciutils \
-			valgrind \
-			jq \
-			nvme-cli \
-			gdb \
-			fio \
-			librbd-devel \
-			kernel-devel \
-			gflags-devel \
-			libasan \
-			libubsan \
-			autoconf \
-			automake \
-			libtool \
-			libmount-devel \
-			iscsi-initiator-utils \
-			isns-utils-devel pmempool \
-			perl-open \
-			glib2-devel \
-			pixman-devel \
-			astyle-devel \
-			elfutils \
-			elfutils-libelf-devel \
-			flex \
-			bison \
-			targetcli \
-			perl-Switch \
-			librdmacm-utils \
-			libibverbs-utils \
-			gdisk \
-			socat \
-			sshfs \
-			sshpass \
-			python3-pandas \
-			rpm-build \
-			iptables \
-			clang-analyzer \
-			bc \
-			kernel-modules-extra \
-			systemd-devel \
-			python3 \
-			wget
-
-		sudo yum install -y nbd || {
-			wget -O nbd.rpm https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/n/nbd-3.14-2.el7.x86_64.rpm
-			sudo yum install -y nbd.rpm
-		}
-
-	elif [ $PACKAGEMNG == 'dnf' ]; then
-		if echo $CONF | grep -q tsocks; then
-			# currently, tsocks package is retired in fedora 31, so don't exit in case
-			# installation failed
-			# FIXME: Review when fedora starts to successfully build this package again.
-			sudo dnf install -y tsocks || echo "Installation of the tsocks package failed, proxy may not be available"
-		fi
-
-		sudo dnf install -y \
-			valgrind \
-			jq \
-			nvme-cli \
-			ceph \
-			gdb \
-			fio \
-			librbd-devel \
-			kernel-devel \
-			gflags-devel \
-			libasan \
-			libubsan \
-			autoconf \
-			automake \
-			libtool \
-			libmount-devel \
-			iscsi-initiator-utils \
-			isns-utils-devel \
-			pmempool \
-			perl-open \
-			glib2-devel \
-			pixman-devel \
-			astyle-devel \
-			elfutils \
-			libabigail \
-			elfutils-libelf-devel \
-			flex \
-			bison \
-			targetcli \
-			perl-Switch \
-			librdmacm-utils \
-			libibverbs-utils \
-			gdisk \
-			socat \
-			sshfs \
-			sshpass \
-			python3-pandas \
-			btrfs-progs \
-			rpm-build \
-			iptables \
-			clang-analyzer \
-			bc \
-			kernel-modules-extra \
-			systemd-devel \
-			smartmontools \
-			wget
-
-	elif [ $PACKAGEMNG == 'apt-get' ]; then
-		echo "Package perl-open is not available at Ubuntu repositories" >&2
-
-		if echo $CONF | grep -q tsocks; then
-			sudo apt-get install -y tsocks
-		fi
-
-		# asan an ubsan have to be installed together to not mix up gcc versions
-		if sudo apt-get install -y libasan5; then
-			sudo apt-get install -y libubsan1
-		else
-			echo "Latest libasan5 is not available" >&2
-			echo "  installing libasan2 and corresponding libubsan0" >&2
-			sudo apt-get install -y libasan2
-			sudo apt-get install -y libubsan0
-		fi
-		if ! sudo apt-get install -y rdma-core; then
-			echo "Package rdma-core is avaliable at Ubuntu 18 [universe] repositorium" >&2
-			sudo apt-get install -y rdmacm-utils
-			sudo apt-get install -y ibverbs-utils
-		fi
-		if ! sudo apt-get install -y libpmempool1; then
-			echo "Package libpmempool1 is available at Ubuntu 18 [universe] repositorium" >&2
-		fi
-		if ! sudo apt-get install -y clang-tools; then
-			echo "Package clang-tools is available at Ubuntu 18 [universe] repositorium" >&2
-		fi
-		if ! sudo apt-get install -y --no-install-suggests --no-install-recommends open-isns-utils; then
-			echo "Package open-isns-utils is available at Ubuntu 18 [universe] repositorium" >&2
-		fi
-
-		# Package name for Ubuntu 18 is targetcli-fb but for Ubuntu 16 it's targetcli
-		if ! sudo apt-get install -y targetcli-fb; then
-			sudo apt-get install -y targetcli
-		fi
-
-		# On Ubuntu 20.04 (focal) btrfs-tools are available under different name - btrfs-progs
-		if ! sudo apt-get install -y btrfs-tools; then
-			sudo apt-get install -y btrfs-progs
-		fi
-
-		sudo apt-get install -y \
-			valgrind \
-			jq \
-			nvme-cli \
-			ceph \
-			gdb \
-			fio \
-			librbd-dev \
-			linux-headers-generic \
-			libgflags-dev \
-			autoconf \
-			automake \
-			libtool \
-			libmount-dev \
-			open-iscsi \
-			libglib2.0-dev \
-			libpixman-1-dev \
-			astyle \
-			elfutils \
-			libelf-dev \
-			flex \
-			bison \
-			libswitch-perl \
-			gdisk \
-			socat \
-			sshfs \
-			sshpass \
-			python3-pandas \
-			bc \
-			smartmontools \
-			wget
-
-		# rpm-build is not used
-		# iptables installed by default
-
-	elif [ $PACKAGEMNG == 'pacman' ]; then
-		if echo $CONF | grep -q tsocks; then
-			sudo pacman -Sy --noconfirm --needed tsocks
-		fi
-
-		sudo pacman -Sy --noconfirm --needed valgrind \
-			jq \
-			nvme-cli \
-			ceph \
-			gdb \
-			fio \
-			linux-headers \
-			gflags \
-			autoconf \
-			automake \
-			libtool \
-			libutil-linux \
-			libiscsi \
-			open-isns \
-			glib2 \
-			pixman \
-			flex \
-			bison \
-			elfutils \
-			libelf \
-			astyle \
-			gptfdisk \
-			socat \
-			sshfs \
-			sshpass \
-			python-pandas \
-			btrfs-progs \
-			iptables \
-			clang \
-			bc \
-			perl-switch \
-			open-iscsi \
-			smartmontools \
-			parted \
-			wget
-
-		# TODO:
-		# These are either missing or require some other installation method
-		# than pacman:
-
-		# librbd-devel
-		# perl-open
-		# targetcli
-
-	else
-		echo "Package manager is undefined, skipping INSTALL step"
-	fi
-
-	if [ "${OSID} ${OSVERSION}" == 'centos 7' ]; then
-		install_git
-	fi
+	sudo "$rootdir/scripts/pkgdep.sh" --all
+	pre_install
+	install "${packages[@]}"
 fi
 
 mkdir -p spdk_repo/output || echo "Can not create spdk_repo/output directory."
