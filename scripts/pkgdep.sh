@@ -135,6 +135,9 @@ if [ -s /etc/redhat-release ]; then
 	else
 		yum install -y python
 	fi
+	yum install -y python3-pip
+	pip-3.6 install ninja
+	pip-3.6 install meson
 	# Additional dependencies for SPDK CLI - not available in rhel and centos
 	if ! echo "$ID $VERSION_ID" | grep -E -q 'rhel 7|centos 7'; then
 		yum install -y python3-configshell python3-pexpect
@@ -192,7 +195,9 @@ elif [ -f /etc/debian_version ]; then
 	# Includes Ubuntu, Debian
 	# Minimal install
 	apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev \
-		uuid-dev libiscsi-dev python libncurses5-dev libncursesw5-dev
+		uuid-dev libiscsi-dev python libncurses5-dev libncursesw5-dev python3-pip
+	pip3 install ninja
+	pip3 install meson
 	# Additional dependencies for SPDK CLI - not available on older Ubuntus
 	apt-get install -y python3-configshell-fb python3-pexpect || echo \
 		"Note: Some SPDK CLI dependencies could not be installed."
@@ -244,7 +249,7 @@ elif [ -f /etc/debian_version ]; then
 elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 	# Minimal install
 	zypper install -y gcc gcc-c++ make cunit-devel libaio-devel libopenssl-devel \
-		libuuid-devel python-base ncurses-devel
+		libuuid-devel python-base ncurses-devel ninja meson
 	# Additional dependencies for DPDK
 	zypper install -y libnuma-devel nasm
 	# Additional dependencies for ISA-L used in compression
@@ -276,7 +281,7 @@ elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 elif [ $(uname -s) = "FreeBSD" ]; then
 	# Minimal install
 	pkg install -y gmake cunit openssl git bash misc/e2fsprogs-libuuid python \
-		ncurses
+		ncurses ninja meson
 	# Additional dependencies for ISA-L used in compression
 	pkg install -y autoconf automake libtool help2man
 	if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
@@ -292,7 +297,7 @@ elif [ $(uname -s) = "FreeBSD" ]; then
 elif [ -f /etc/arch-release ]; then
 	# Install main dependencies
 	pacman -Sy --needed --noconfirm gcc make cunit libaio openssl \
-		libutil-linux libiscsi python ncurses
+		libutil-linux libiscsi python ncurses ninja meson
 	# Additional dependencies for SPDK CLI
 	pacman -Sy --needed --noconfirm python-pexpect python-pip
 	pip install configshell_fb
