@@ -186,13 +186,20 @@ nvmf_reactor_run(void *arg)
 	struct nvmf_lw_thread *lw_thread, *tmp;
 	struct spdk_thread *thread;
 
-	/* foreach all the lightweight threads in this nvmf_reactor */
+	/* run all the lightweight threads in this nvmf_reactor by FIFO. */
 	do {
 		pthread_mutex_lock(&nvmf_reactor->mutex);
-		TAILQ_FOREACH_SAFE(lw_thread, &nvmf_reactor->threads, link, tmp) {
+		lw_thread = TAILQ_FIRST(&nvmf_reactor->threads);
+		if (lw_thread != NULL) {
+			TAILQ_REMOVE(&nvmf_reactor->threads, lw_thread, link);
+			pthread_mutex_unlock(&nvmf_reactor->mutex);
+
 			thread = spdk_thread_get_from_ctx(lw_thread);
 
 			spdk_thread_poll(thread, 0, 0);
+
+			pthread_mutex_lock(&nvmf_reactor->mutex);
+			TAILQ_INSERT_TAIL(&nvmf_reactor->threads, lw_thread, link);
 		}
 		pthread_mutex_unlock(&nvmf_reactor->mutex);
 	} while (!g_reactors_exit);
