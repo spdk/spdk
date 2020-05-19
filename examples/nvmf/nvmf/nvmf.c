@@ -309,7 +309,6 @@ nvmf_init_threads(void)
 	uint32_t i;
 	char thread_name[32];
 	struct nvmf_reactor *nvmf_reactor;
-	struct spdk_thread *thread;
 	struct spdk_cpuset cpumask;
 	uint32_t master_core = spdk_env_get_current_core();
 
@@ -357,20 +356,14 @@ nvmf_init_threads(void)
 		}
 	}
 
-	/* Some SPDK libraries assume that there is at least some number of lightweight
-	 * threads that exist from the beginning of time. That assumption is currently
-	 * being removed from the SPDK libraries, but until that work is completed spawn
-	 * one lightweight thread per reactor here.
-	 */
-	SPDK_ENV_FOREACH_CORE(i) {
-		spdk_cpuset_zero(&cpumask);
-		spdk_cpuset_set_cpu(&cpumask, i, true);
-		snprintf(thread_name, sizeof(thread_name), "spdk_thread_%u", i);
-		thread = spdk_thread_create(thread_name, &cpumask);
-		if (!thread) {
-			fprintf(stderr, "failed to create spdk thread\n");
-			return -1;
-		}
+	/* Spawn a lightweight thread only on the current core to manage this application. */
+	spdk_cpuset_zero(&cpumask);
+	spdk_cpuset_set_cpu(&cpumask, master_core, true);
+	snprintf(thread_name, sizeof(thread_name), "nvmf_master_thread");
+	g_init_thread = spdk_thread_create(thread_name, &cpumask);
+	if (!g_init_thread) {
+		fprintf(stderr, "failed to create spdk thread\n");
+		return -1;
 	}
 
 	fprintf(stdout, "nvmf threads initlize successfully\n");
@@ -896,7 +889,6 @@ int main(int argc, char **argv)
 {
 	int rc;
 	struct spdk_env_opts opts;
-	struct nvmf_lw_thread *lw_thread;
 
 	spdk_env_opts_init(&opts);
 	opts.name = "nvmf-example";
@@ -919,8 +911,6 @@ int main(int argc, char **argv)
 	 * that continues initialization. This is how we bootstrap the
 	 * program so that all code from here on is running on an SPDK thread.
 	 */
-	lw_thread = TAILQ_FIRST(&g_master_reactor->threads);
-	g_init_thread = spdk_thread_get_from_ctx(lw_thread);
 	assert(g_init_thread != NULL);
 
 	rc = nvmf_setup_signal_handlers();
