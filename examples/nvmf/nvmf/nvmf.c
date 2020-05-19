@@ -198,8 +198,15 @@ nvmf_reactor_run(void *arg)
 
 			spdk_thread_poll(thread, 0, 0);
 
-			pthread_mutex_lock(&nvmf_reactor->mutex);
-			TAILQ_INSERT_TAIL(&nvmf_reactor->threads, lw_thread, link);
+			if (spdk_unlikely(spdk_thread_is_exited(thread) &&
+					  spdk_thread_is_idle(thread))) {
+				spdk_thread_destroy(thread);
+
+				pthread_mutex_lock(&nvmf_reactor->mutex);
+			} else {
+				pthread_mutex_lock(&nvmf_reactor->mutex);
+				TAILQ_INSERT_TAIL(&nvmf_reactor->threads, lw_thread, link);
+			}
 		}
 		pthread_mutex_unlock(&nvmf_reactor->mutex);
 	} while (!g_reactors_exit);
