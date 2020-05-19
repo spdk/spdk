@@ -90,10 +90,12 @@ struct nvmf_target {
 
 TAILQ_HEAD(, nvmf_reactor) g_reactors = TAILQ_HEAD_INITIALIZER(g_reactors);
 TAILQ_HEAD(, nvmf_target_poll_group) g_poll_groups = TAILQ_HEAD_INITIALIZER(g_poll_groups);
+static uint32_t g_num_poll_groups = 0;
 
 static struct nvmf_reactor *g_master_reactor = NULL;
 static struct nvmf_reactor *g_next_reactor = NULL;
 static struct spdk_thread *g_init_thread = NULL;
+static struct spdk_thread *g_fini_thread = NULL;
 static struct nvmf_target g_nvmf_tgt = {
 	.max_subsystems = NVMF_DEFAULT_SUBSYSTEMS,
 };
@@ -606,10 +608,22 @@ nvmf_tgt_start_subsystems(struct nvmf_target *nvmf_tgt)
 static void
 nvmf_tgt_create_poll_groups_done(void *ctx)
 {
-	fprintf(stdout, "create targets's poll groups done\n");
+	struct nvmf_target_poll_group *pg = ctx;
 
-	g_target_state = NVMF_INIT_START_SUBSYSTEMS;
-	nvmf_target_advance_state();
+	if (!g_next_pg) {
+		g_next_pg = pg;
+	}
+
+	TAILQ_INSERT_TAIL(&g_poll_groups, pg, link);
+
+	assert(g_num_poll_groups < spdk_env_get_core_count());
+
+	if (++g_num_poll_groups == spdk_env_get_core_count()) {
+		fprintf(stdout, "create targets's poll groups done\n");
+
+		g_target_state = NVMF_INIT_START_SUBSYSTEMS;
+		nvmf_target_advance_state();
+	}
 }
 
 static void
@@ -620,6 +634,7 @@ nvmf_tgt_create_poll_group(void *ctx)
 	pg = calloc(1, sizeof(struct nvmf_target_poll_group));
 	if (!pg) {
 		fprintf(stderr, "failed to allocate poll group\n");
+		assert(false);
 		return;
 	}
 
@@ -628,78 +643,84 @@ nvmf_tgt_create_poll_group(void *ctx)
 	if (!pg->group) {
 		fprintf(stderr, "failed to create poll group of the target\n");
 		free(pg);
+		assert(false);
 		return;
 	}
 
-	if (!g_next_pg) {
-		g_next_pg = pg;
-	}
-
-	/* spdk_for_each_channel is asynchronous, but runs on each thread in serial.
-	 * Since this is the only operation occurring on the g_poll_groups list,
-	 * we don't need to take a lock.
-	 */
-	TAILQ_INSERT_TAIL(&g_poll_groups, pg, link);
+	spdk_thread_send_msg(g_init_thread, nvmf_tgt_create_poll_groups_done, pg);
 }
 
+/* Create a lightweight thread per poll group instead of assuming a pool of lightweight
+ * threads already exist at start up time. A poll group is a collection of unrelated NVMe-oF
+ * connections. Each poll group is only accessed from the associated lightweight thread.
+ */
 static void
 nvmf_poll_groups_create(void)
 {
-	/* Send a message to each thread and create a poll group.
-	 * Pgs are used to handle all the connections from the host so we
-	 * would like to create one pg in each core. We use the spdk_for_each
-	 * _thread because we have allocated one lightweight thread per core in
-	 * thread layer. You can also do this by traversing reactors
-	 * or SPDK_ENV_FOREACH_CORE().
-	 */
-	spdk_for_each_thread(nvmf_tgt_create_poll_group,
-			     NULL,
-			     nvmf_tgt_create_poll_groups_done);
-}
+	struct spdk_cpuset tmp_cpumask = {};
+	uint32_t i;
+	char thread_name[32];
+	struct spdk_thread *thread;
 
-static void
-nvmf_tgt_destroy_poll_groups_done(struct spdk_io_channel_iter *i, int status)
-{
-	fprintf(stdout, "destroy targets's poll groups done\n");
+	assert(g_init_thread != NULL);
 
-	g_target_state = NVMF_FINI_STOP_ACCEPTOR;
-	nvmf_target_advance_state();
-}
+	SPDK_ENV_FOREACH_CORE(i) {
+		spdk_cpuset_zero(&tmp_cpumask);
+		spdk_cpuset_set_cpu(&tmp_cpumask, i, true);
+		snprintf(thread_name, sizeof(thread_name), "nvmf_tgt_poll_group_%u", i);
 
-static void
-nvmf_tgt_destroy_poll_group(struct spdk_io_channel_iter *i)
-{
-	struct spdk_io_channel *io_ch = spdk_io_channel_iter_get_channel(i);
-	struct spdk_nvmf_poll_group *group = spdk_io_channel_get_ctx(io_ch);
-	struct nvmf_target_poll_group *pg, *tmp;
+		thread = spdk_thread_create(thread_name, &tmp_cpumask);
+		assert(thread != NULL);
 
-	/* Spdk_for_each_channel is asynchronous but executes serially.
-	 * That means only a single thread is executing this callback at a time,
-	 * so we can safely touch the g_poll_groups list without a lock.
-	 */
-	TAILQ_FOREACH_SAFE(pg, &g_poll_groups, link, tmp) {
-		if (pg->group == group) {
-			TAILQ_REMOVE(&g_poll_groups, pg, link);
-			spdk_nvmf_poll_group_destroy(group, NULL, NULL);
-			free(pg);
-			break;
-		}
+		spdk_thread_send_msg(thread, nvmf_tgt_create_poll_group, NULL);
 	}
+}
 
-	spdk_for_each_channel_continue(i, 0);
+static void
+_nvmf_tgt_destroy_poll_groups_done(void *ctx)
+{
+	assert(g_num_poll_groups > 0);
+
+	if (--g_num_poll_groups == 0) {
+		fprintf(stdout, "destroy targets's poll groups done\n");
+
+		g_target_state = NVMF_FINI_STOP_ACCEPTOR;
+		nvmf_target_advance_state();
+	}
+}
+
+static void
+nvmf_tgt_destroy_poll_groups_done(void *cb_arg, int status)
+{
+	struct nvmf_target_poll_group *pg = cb_arg;
+
+	free(pg);
+
+	spdk_thread_send_msg(g_fini_thread, _nvmf_tgt_destroy_poll_groups_done, NULL);
+
+	spdk_thread_exit(spdk_get_thread());
+}
+
+static void
+nvmf_tgt_destroy_poll_group(void *ctx)
+{
+	struct nvmf_target_poll_group *pg = ctx;
+
+	spdk_nvmf_poll_group_destroy(pg->group, nvmf_tgt_destroy_poll_groups_done, pg);
 }
 
 static void
 nvmf_poll_groups_destroy(void)
 {
-	/* Send a message to each channel and destroy the poll group.
-	 * Poll groups are I/O channels associated with the spdk_nvmf_tgt object.
-	 * To iterate all poll groups, we can use spdk_for_each_channel.
-	 */
-	spdk_for_each_channel(g_nvmf_tgt.tgt,
-			      nvmf_tgt_destroy_poll_group,
-			      NULL,
-			      nvmf_tgt_destroy_poll_groups_done);
+	struct nvmf_target_poll_group *pg, *tmp;
+
+	g_fini_thread = spdk_get_thread();
+	assert(g_fini_thread != NULL);
+
+	TAILQ_FOREACH_SAFE(pg, &g_poll_groups, link, tmp) {
+		TAILQ_REMOVE(&g_poll_groups, pg, link);
+		spdk_thread_send_msg(pg->thread, nvmf_tgt_destroy_poll_group, pg);
+	}
 }
 
 static void
