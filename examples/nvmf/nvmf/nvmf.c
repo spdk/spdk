@@ -279,6 +279,30 @@ nvmf_schedule_spdk_thread(struct spdk_thread *thread)
 }
 
 static int
+nvmf_reactor_thread_op(struct spdk_thread *thread, enum spdk_thread_op op)
+{
+	switch (op) {
+	case SPDK_THREAD_OP_NEW:
+		return nvmf_schedule_spdk_thread(thread);
+	case SPDK_THREAD_OP_RESCHED:
+	default:
+		return -ENOTSUP;
+	}
+}
+
+static bool
+nvmf_reactor_thread_op_supported(enum spdk_thread_op op)
+{
+	switch (op) {
+	case SPDK_THREAD_OP_NEW:
+		return true;
+	case SPDK_THREAD_OP_RESCHED:
+	default:
+		return false;
+	}
+}
+
+static int
 nvmf_init_threads(void)
 {
 	int rc;
@@ -295,7 +319,8 @@ nvmf_init_threads(void)
 	 * SPDK optionally allocates extra memory to be used by the application
 	 * framework. The size of the extra memory allocated is the second parameter.
 	 */
-	spdk_thread_lib_init(nvmf_schedule_spdk_thread, sizeof(struct nvmf_lw_thread));
+	spdk_thread_lib_init_ext(nvmf_reactor_thread_op, nvmf_reactor_thread_op_supported,
+				 sizeof(struct nvmf_lw_thread));
 
 	/* Spawn one system thread per CPU core. The system thread is called a reactor.
 	 * SPDK will spawn lightweight threads that must be mapped to reactors in
