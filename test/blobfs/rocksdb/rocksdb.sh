@@ -47,8 +47,8 @@ DB_BENCH=$DB_BENCH_DIR/db_bench
 ROCKSDB_CONF=$testdir/rocksdb.conf
 
 if [ ! -e $DB_BENCH_DIR ]; then
-	echo $DB_BENCH_DIR does not exist, skipping rocksdb tests
-	exit 0
+	echo $DB_BENCH_DIR does not exist
+	false
 fi
 
 timing_enter db_bench_build
