@@ -237,14 +237,13 @@ nvmf_schedule_spdk_thread(struct spdk_thread *thread)
 	 * Here we use the mutex.The way the actual SPDK event framework
 	 * solves this is by using internal rings for messages between reactors
 	 */
+	pthread_mutex_lock(&g_mutex);
 	for (i = 0; i < spdk_env_get_core_count(); i++) {
-		pthread_mutex_lock(&g_mutex);
 		if (g_next_reactor == NULL) {
 			g_next_reactor = TAILQ_FIRST(&g_reactors);
 		}
 		nvmf_reactor = g_next_reactor;
 		g_next_reactor = TAILQ_NEXT(g_next_reactor, link);
-		pthread_mutex_unlock(&g_mutex);
 
 		/* each spdk_thread has the core affinity */
 		if (spdk_cpuset_get_cpu(cpumask, nvmf_reactor->core)) {
@@ -254,6 +253,7 @@ nvmf_schedule_spdk_thread(struct spdk_thread *thread)
 			break;
 		}
 	}
+	pthread_mutex_unlock(&g_mutex);
 
 	if (i == spdk_env_get_core_count()) {
 		fprintf(stderr, "failed to schedule spdk thread\n");
