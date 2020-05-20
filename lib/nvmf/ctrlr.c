@@ -2386,11 +2386,27 @@ nvmf_ctrlr_process_fabrics_cmd(struct spdk_nvmf_request *req)
 	}
 }
 
-int
-nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr)
+static inline int
+nvmf_ctrlr_async_event_nofitification(struct spdk_nvmf_ctrlr *ctrlr,
+				      union spdk_nvme_async_event_completion *event)
 {
 	struct spdk_nvmf_request *req;
 	struct spdk_nvme_cpl *rsp;
+
+	req = ctrlr->aer_req;
+	rsp = &req->rsp->nvme_cpl;
+
+	rsp->cdw0 = event->raw;
+
+	spdk_nvmf_request_complete(req);
+	ctrlr->aer_req = NULL;
+
+	return 0;
+}
+
+int
+nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr)
+{
 	union spdk_nvme_async_event_completion event = {0};
 
 	/* Users may disable the event notification */
@@ -2416,22 +2432,12 @@ nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr)
 		return 0;
 	}
 
-	req = ctrlr->aer_req;
-	rsp = &req->rsp->nvme_cpl;
-
-	rsp->cdw0 = event.raw;
-
-	spdk_nvmf_request_complete(req);
-	ctrlr->aer_req = NULL;
-
-	return 0;
+	return nvmf_ctrlr_async_event_nofitification(ctrlr, &event);
 }
 
 void
 nvmf_ctrlr_async_event_reservation_notification(struct spdk_nvmf_ctrlr *ctrlr)
 {
-	struct spdk_nvmf_request *req;
-	struct spdk_nvme_cpl *rsp;
 	union spdk_nvme_async_event_completion event = {0};
 
 	if (!ctrlr->num_avail_log_pages) {
@@ -2455,13 +2461,7 @@ nvmf_ctrlr_async_event_reservation_notification(struct spdk_nvmf_ctrlr *ctrlr)
 		return;
 	}
 
-	req = ctrlr->aer_req;
-	rsp = &req->rsp->nvme_cpl;
-
-	rsp->cdw0 = event.raw;
-
-	spdk_nvmf_request_complete(req);
-	ctrlr->aer_req = NULL;
+	nvmf_ctrlr_async_event_nofitification(ctrlr, &event);
 }
 
 void
