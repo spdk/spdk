@@ -1590,6 +1590,74 @@ test_fused_compare_and_write(void)
 	CU_ASSERT(qpair.first_fused_req == NULL);
 }
 
+static void
+test_multi_async_event_reqs(void)
+{
+	struct spdk_nvmf_subsystem subsystem = {};
+	struct spdk_nvmf_qpair qpair = {};
+	struct spdk_nvmf_ctrlr ctrlr = {};
+	struct spdk_nvmf_request req[5] = {};
+	struct spdk_nvmf_ns *ns_ptrs[1] = {};
+	struct spdk_nvmf_ns ns = {};
+	union nvmf_h2c_msg cmd[5] = {};
+	union nvmf_c2h_msg rsp[5] = {};
+
+	struct spdk_nvmf_poll_group group = {};
+	struct spdk_nvmf_subsystem_poll_group sgroups = {};
+
+	int i;
+
+	ns_ptrs[0] = &ns;
+	subsystem.ns = ns_ptrs;
+	subsystem.max_nsid = 1;
+	subsystem.subtype = SPDK_NVMF_SUBTYPE_NVME;
+
+	ns.opts.nsid = 1;
+	group.sgroups = &sgroups;
+
+	qpair.ctrlr = &ctrlr;
+	qpair.group = &group;
+
+	ctrlr.subsys = &subsystem;
+	ctrlr.vcprop.cc.bits.en = 1;
+
+	for (i = 0; i < 5; i++) {
+		cmd[i].nvme_cmd.opc = SPDK_NVME_OPC_ASYNC_EVENT_REQUEST;
+		cmd[i].nvme_cmd.nsid = 1;
+		cmd[i].nvme_cmd.cid = i;
+
+		req[i].qpair = &qpair;
+		req[i].cmd = &cmd[i];
+		req[i].rsp = &rsp[i];
+	}
+
+	/* Target can store NVMF_MAX_ASYNC_EVENTS reqs */
+	sgroups.io_outstanding = NVMF_MAX_ASYNC_EVENTS;
+	for (i = 0; i < NVMF_MAX_ASYNC_EVENTS; i++) {
+		CU_ASSERT(nvmf_ctrlr_process_admin_cmd(&req[i]) == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
+		CU_ASSERT(ctrlr.nr_aer_reqs == i + 1);
+	}
+	CU_ASSERT(sgroups.io_outstanding == 0);
+
+	/* Exceeding the NVMF_MAX_ASYNC_EVENTS reports error */
+	CU_ASSERT(nvmf_ctrlr_process_admin_cmd(&req[4]) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(ctrlr.nr_aer_reqs == NVMF_MAX_ASYNC_EVENTS);
+	CU_ASSERT(rsp[4].nvme_cpl.status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC);
+	CU_ASSERT(rsp[4].nvme_cpl.status.sc = SPDK_NVME_SC_ASYNC_EVENT_REQUEST_LIMIT_EXCEEDED);
+
+	/* Test if the aer_reqs keep continuous when abort a req in the middle */
+	CU_ASSERT(nvmf_qpair_abort(&qpair, 2) == &req[2]);
+	CU_ASSERT(ctrlr.aer_req[0] == &req[0]);
+	CU_ASSERT(ctrlr.aer_req[1] == &req[1]);
+	CU_ASSERT(ctrlr.aer_req[2] == &req[3]);
+
+	CU_ASSERT(nvmf_qpair_abort(&qpair, 3) == &req[3]);
+	CU_ASSERT(ctrlr.aer_req[0] == &req[0]);
+	CU_ASSERT(ctrlr.aer_req[1] == &req[1]);
+	CU_ASSERT(ctrlr.aer_req[2] == NULL);
+	CU_ASSERT(ctrlr.nr_aer_reqs == 2);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1614,6 +1682,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_identify_ctrlr);
 	CU_ADD_TEST(suite, test_custom_admin_cmd);
 	CU_ADD_TEST(suite, test_fused_compare_and_write);
+	CU_ADD_TEST(suite, test_multi_async_event_reqs);
 
 	allocate_threads(1);
 	set_thread(0);
