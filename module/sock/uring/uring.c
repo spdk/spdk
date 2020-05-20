@@ -884,18 +884,23 @@ static int
 sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max_read_events,
 		      struct spdk_sock **socks)
 {
-	int count, i, completed_cqe_num;
-	struct io_uring_cqe *cqes[SPDK_SOCK_GROUP_QUEUE_DEPTH];
+	int i, count, ret;
+	struct io_uring_cqe *cqe;
 	struct spdk_uring_sock *sock, *tmp;
 	struct spdk_uring_task *task;
 	int status;
 
-	max = spdk_min(max, SPDK_SOCK_GROUP_QUEUE_DEPTH);
-	completed_cqe_num = io_uring_peek_batch_cqe(&group->uring, cqes, max);
-	for (i = 0; i < completed_cqe_num; i++) {
-		assert(cqes[i] != NULL);
+	for (i = 0; i < max; i++) {
+		ret = io_uring_peek_cqe(&group->uring, &cqe);
+		if (ret != 0) {
+			break;
+		}
 
-		task = (struct spdk_uring_task *)cqes[i]->user_data;
+		if (cqe == NULL) {
+			break;
+		}
+
+		task = (struct spdk_uring_task *)cqe->user_data;
 		assert(task != NULL);
 		sock = task->sock;
 		assert(sock != NULL);
@@ -903,8 +908,8 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 		assert(sock->group == group);
 		sock->group->io_inflight--;
 		sock->group->io_avail++;
-		status = cqes[i]->res;
-		io_uring_cqe_seen(&group->uring, cqes[i]);
+		status = cqe->res;
+		io_uring_cqe_seen(&group->uring, cqe);
 
 		task->status = SPDK_URING_SOCK_TASK_NOT_IN_USE;
 
