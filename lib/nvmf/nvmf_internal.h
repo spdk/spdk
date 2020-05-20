@@ -47,6 +47,8 @@
 #include "spdk/util.h"
 #include "spdk/thread.h"
 
+#define NVMF_MAX_ASYNC_EVENTS	(4)
+
 enum spdk_nvmf_subsystem_state {
 	SPDK_NVMF_SUBSYSTEM_INACTIVE = 0,
 	SPDK_NVMF_SUBSYSTEM_ACTIVATING,
@@ -205,9 +207,10 @@ struct spdk_nvmf_ctrlr {
 	struct spdk_thread	*thread;
 	struct spdk_bit_array	*qpair_mask;
 
-	struct spdk_nvmf_request *aer_req;
+	struct spdk_nvmf_request *aer_req[NVMF_MAX_ASYNC_EVENTS];
 	union spdk_nvme_async_event_completion notice_event;
 	union spdk_nvme_async_event_completion reservation_event;
+	uint8_t nr_aer_reqs;
 	struct spdk_uuid  hostid;
 
 	uint16_t changed_ns_list_count;

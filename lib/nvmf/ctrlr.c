@@ -1479,8 +1479,8 @@ nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Async Event Request\n");
 
-	/* Only one asynchronous event is supported for now */
-	if (ctrlr->aer_req != NULL) {
+	/* Four asynchronous events are supported for now */
+	if (ctrlr->nr_aer_reqs >= NVMF_MAX_ASYNC_EVENTS) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "AERL exceeded\n");
 		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		rsp->status.sc = SPDK_NVME_SC_ASYNC_EVENT_REQUEST_LIMIT_EXCEEDED;
@@ -1505,7 +1505,7 @@ nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 	sgroup = &req->qpair->group->sgroups[ctrlr->subsys->id];
 	sgroup->io_outstanding--;
 
-	ctrlr->aer_req = req;
+	ctrlr->aer_req[ctrlr->nr_aer_reqs++] = req;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 }
 
@@ -1843,6 +1843,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 	cdata->mdts = spdk_u32log2(transport->opts.max_io_size / 4096);
 	cdata->cntlid = ctrlr->cntlid;
 	cdata->ver = ctrlr->vcprop.vs;
+	cdata->aerl = NVMF_MAX_ASYNC_EVENTS - 1;
 	cdata->lpa.edlp = 1;
 	cdata->elpe = 127;
 	cdata->maxcmd = transport->opts.max_queue_depth;
@@ -2052,19 +2053,29 @@ static struct spdk_nvmf_request *
 nvmf_qpair_abort(struct spdk_nvmf_qpair *qpair, uint16_t cid)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
-	struct spdk_nvmf_request *req;
+	struct spdk_nvmf_request *req = NULL;
+	int i;
 
 	if (nvmf_qpair_is_admin_queue(qpair)) {
-		if (ctrlr->aer_req && ctrlr->aer_req->cmd->nvme_cmd.cid == cid) {
-			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Aborting AER request\n");
-			req = ctrlr->aer_req;
-			ctrlr->aer_req = NULL;
-			return req;
+		for (i = 0; i < ctrlr->nr_aer_reqs; i++) {
+			if (ctrlr->aer_req[i]->cmd->nvme_cmd.cid == cid) {
+				SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Aborting AER request\n");
+				req = ctrlr->aer_req[i];
+				ctrlr->aer_req[i] = NULL;
+				ctrlr->nr_aer_reqs--;
+				break;
+			}
+		}
+
+		/* Move the last req to the aborting position for making aer_reqs in continuous */
+		if (i < ctrlr->nr_aer_reqs) {
+			ctrlr->aer_req[i] = ctrlr->aer_req[ctrlr->nr_aer_reqs];
+			ctrlr->aer_req[ctrlr->nr_aer_reqs] = NULL;
 		}
 	}
 
 	/* TODO: track list of outstanding requests in qpair? */
-	return NULL;
+	return req;
 }
 
 static void
@@ -2393,13 +2404,15 @@ nvmf_ctrlr_async_event_nofitification(struct spdk_nvmf_ctrlr *ctrlr,
 	struct spdk_nvmf_request *req;
 	struct spdk_nvme_cpl *rsp;
 
-	req = ctrlr->aer_req;
+	assert(ctrlr->nr_aer_reqs > 0);
+
+	req = ctrlr->aer_req[--ctrlr->nr_aer_reqs];
 	rsp = &req->rsp->nvme_cpl;
 
 	rsp->cdw0 = event->raw;
 
 	spdk_nvmf_request_complete(req);
-	ctrlr->aer_req = NULL;
+	ctrlr->aer_req[ctrlr->nr_aer_reqs] = NULL;
 
 	return 0;
 }
@@ -2422,7 +2435,7 @@ nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr)
 	 * if an AER is later submitted, this event can be sent as a
 	 * response.
 	 */
-	if (!ctrlr->aer_req) {
+	if (ctrlr->nr_aer_reqs == 0) {
 		if (ctrlr->notice_event.bits.async_event_type ==
 		    SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) {
 			return 0;
@@ -2451,7 +2464,7 @@ nvmf_ctrlr_async_event_reservation_notification(struct spdk_nvmf_ctrlr *ctrlr)
 	 * if an AER is later submitted, this event can be sent as a
 	 * response.
 	 */
-	if (!ctrlr->aer_req) {
+	if (ctrlr->nr_aer_reqs == 0) {
 		if (ctrlr->reservation_event.bits.async_event_type ==
 		    SPDK_NVME_ASYNC_EVENT_TYPE_IO) {
 			return;
@@ -2468,26 +2481,31 @@ void
 nvmf_qpair_free_aer(struct spdk_nvmf_qpair *qpair)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
+	int i;
 
 	if (!nvmf_qpair_is_admin_queue(qpair)) {
 		return;
 	}
 
-	if (ctrlr->aer_req != NULL) {
-		spdk_nvmf_request_free(ctrlr->aer_req);
-		ctrlr->aer_req = NULL;
+	for (i = 0; i < ctrlr->nr_aer_reqs; i++) {
+		spdk_nvmf_request_free(ctrlr->aer_req[i]);
+		ctrlr->aer_req[i] = NULL;
 	}
+
+	ctrlr->nr_aer_reqs = 0;
 }
 
 void
 nvmf_ctrlr_abort_aer(struct spdk_nvmf_ctrlr *ctrlr)
 {
-	if (!ctrlr->aer_req) {
-		return;
+	int i;
+
+	for (i = 0; i < ctrlr->nr_aer_reqs; i++) {
+		spdk_nvmf_request_complete(ctrlr->aer_req[i]);
+		ctrlr->aer_req[i] = NULL;
 	}
 
-	spdk_nvmf_request_complete(ctrlr->aer_req);
-	ctrlr->aer_req = NULL;
+	ctrlr->nr_aer_reqs = 0;
 }
 
 static void

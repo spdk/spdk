@@ -1300,7 +1300,8 @@ test_reservation_notification_log_page(void)
 	ctrlr.num_avail_log_pages = 0;
 	req.cmd = &cmd;
 	req.rsp = &rsp;
-	ctrlr.aer_req = &req;
+	ctrlr.aer_req[0] = &req;
+	ctrlr.nr_aer_reqs = 1;
 	req.qpair = &qpair;
 	TAILQ_INIT(&qpair.outstanding);
 	qpair.ctrlr = NULL;
