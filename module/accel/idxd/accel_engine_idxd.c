@@ -645,8 +645,6 @@ accel_engine_idxd_exit(void *ctx)
 static void
 accel_engine_idxd_write_config_json(struct spdk_json_write_ctx *w)
 {
-	spdk_json_write_array_begin(w);
-
 	if (g_idxd_enable) {
 		spdk_json_write_object_begin(w);
 		spdk_json_write_named_string(w, "method", "idxd_scan_accel_engine");
@@ -655,8 +653,6 @@ accel_engine_idxd_write_config_json(struct spdk_json_write_ctx *w)
 		spdk_json_write_object_end(w);
 		spdk_json_write_object_end(w);
 	}
-
-	spdk_json_write_array_end(w);
 }
 
 SPDK_ACCEL_MODULE_REGISTER(accel_engine_idxd_init, accel_engine_idxd_exit,

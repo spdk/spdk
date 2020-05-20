@@ -62,7 +62,7 @@ DEPDIRS-nvme += rdma
 endif
 
 DEPDIRS-blob := log util thread
-DEPDIRS-accel := log util thread
+DEPDIRS-accel := log util thread json
 DEPDIRS-jsonrpc := log util json
 DEPDIRS-virtio := log util json thread
 

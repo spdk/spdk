@@ -257,11 +257,13 @@ spdk_accel_write_config_json(struct spdk_json_write_ctx *w)
 	 * The accel engine has no config, there may be some in
 	 * the modules though.
 	 */
+	spdk_json_write_array_begin(w);
 	TAILQ_FOREACH(accel_engine_module, &spdk_accel_module_list, tailq) {
 		if (accel_engine_module->write_config_json) {
 			accel_engine_module->write_config_json(w);
 		}
 	}
+	spdk_json_write_array_end(w);
 }
 
 void
