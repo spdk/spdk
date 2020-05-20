@@ -2868,7 +2868,7 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 	qpair = req->qpair;
 	if (qpair->ctrlr) {
 		sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
-		is_aer = qpair->ctrlr->aer_req == req;
+		is_aer = req->cmd->nvme_cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST;
 	} else if (spdk_unlikely(nvmf_request_is_fabric_connect(req))) {
 		sgroup = nvmf_subsystem_pg_from_connect_cmd(req);
 	}
