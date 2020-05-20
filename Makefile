@@ -97,7 +97,7 @@ examples: $(LIB)
 pkgdep:
 	sh ./scripts/pkgdep.sh
 
-$(DIRS-y): include/spdk/config.h
+$(DIRS-y): mk/cc.mk include/spdk/config.h
 
 mk/cc.mk:
 	$(Q)echo "Please run configure prior to make"
