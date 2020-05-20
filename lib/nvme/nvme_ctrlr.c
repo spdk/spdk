@@ -1156,12 +1156,28 @@ error:
 	return rc;
 }
 
+static void
+nvme_ctrlr_abort_queued_aborts(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct nvme_request	*req, *tmp;
+	struct spdk_nvme_cpl	cpl = {};
+
+	cpl.status.sc = SPDK_NVME_SC_ABORTED_SQ_DELETION;
+	cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+
+	STAILQ_FOREACH_SAFE(req, &ctrlr->queued_aborts, stailq, tmp) {
+		STAILQ_REMOVE_HEAD(&ctrlr->queued_aborts, stailq);
+
+		nvme_complete_request(req->cb_fn, req->cb_arg, req->qpair, req, &cpl);
+		nvme_free_request(req);
+	}
+}
+
 int
 spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc = 0;
 	struct spdk_nvme_qpair	*qpair;
-	struct nvme_request	*req, *tmp;
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
@@ -1180,12 +1196,8 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 
 	SPDK_NOTICELOG("resetting controller\n");
 
-	/* Free all of the queued abort requests */
-	STAILQ_FOREACH_SAFE(req, &ctrlr->queued_aborts, stailq, tmp) {
-		STAILQ_REMOVE_HEAD(&ctrlr->queued_aborts, stailq);
-		nvme_free_request(req);
-		ctrlr->outstanding_aborts--;
-	}
+	/* Abort all of the queued abort requests */
+	nvme_ctrlr_abort_queued_aborts(ctrlr);
 
 	nvme_transport_admin_qpair_abort_aers(ctrlr->adminq);
 
@@ -2832,6 +2844,8 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	ctrlr->is_destructed = true;
 
 	spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
+
+	nvme_ctrlr_abort_queued_aborts(ctrlr);
 	nvme_transport_admin_qpair_abort_aers(ctrlr->adminq);
 
 	TAILQ_FOREACH_SAFE(qpair, &ctrlr->active_io_qpairs, tailq, tmp) {

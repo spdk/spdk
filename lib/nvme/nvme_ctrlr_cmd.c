@@ -570,6 +570,10 @@ nvme_ctrlr_retry_queued_abort(struct spdk_nvme_ctrlr *ctrlr)
 	struct nvme_request	*next, *tmp;
 	int rc;
 
+	if (ctrlr->is_resetting || ctrlr->is_destructed) {
+		return;
+	}
+
 	STAILQ_FOREACH_SAFE(next, &ctrlr->queued_aborts, stailq, tmp) {
 		STAILQ_REMOVE_HEAD(&ctrlr->queued_aborts, stailq);
 		ctrlr->outstanding_aborts++;
