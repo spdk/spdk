@@ -1066,6 +1066,10 @@ function run_fio() {
 		return 1
 	fi
 
+	if [[ -z "$fio_bin" ]]; then
+		fio_bin="fio"
+	fi
+
 	if [[ ! -r "$job_file" ]]; then
 		error "Fio job '$job_file' does not exist"
 		return 1
@@ -1121,6 +1125,7 @@ function run_fio() {
 	fi
 
 	$fio_start_cmd
+	sleep 1
 
 	if [[ ! $hide_results ]]; then
 		cat $out/$log_fname

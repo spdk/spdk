@@ -23,7 +23,6 @@ split_bdevs=()
 used_vms=""
 wwpn_prefix="naa.5001405bc6498"
 
-fio_bin="--fio-bin=/home/sys_sgsw/fio_ubuntu"
 fio_iterations=1
 precond_fio_bin=$CONFIG_FIO_SOURCE_DIR/fio
 disk_map=""
