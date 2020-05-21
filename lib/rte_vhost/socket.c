@@ -137,7 +137,10 @@ read_fd_message(int sockfd, char *buf, int buflen, int *fds, int fd_num)
 
 	ret = recvmsg(sockfd, &msgh, 0);
 	if (ret <= 0) {
-		RTE_LOG(ERR, VHOST_CONFIG, "recvmsg failed\n");
+		if (ret)
+			RTE_LOG(ERR, VHOST_CONFIG, "recvmsg failed, %s\n", strerror(errno));
+		else
+			RTE_LOG(INFO, VHOST_CONFIG, "peer closed\n");
 		return ret;
 	}
 
