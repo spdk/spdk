@@ -931,6 +931,7 @@ function vm_wait_for_boot() {
 function vm_start_fio_server() {
 	local OPTIND optchar
 	local readonly=''
+	local fio_bin=''
 	while getopts ':-:' optchar; do
 		case "$optchar" in
 			-)
