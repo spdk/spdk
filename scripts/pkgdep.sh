@@ -136,8 +136,8 @@ if [ -s /etc/redhat-release ]; then
 		yum install -y python
 	fi
 	yum install -y python3-pip
-	pip-3.6 install ninja
-	pip-3.6 install meson
+	pip3 install ninja
+	pip3 install meson
 	# Additional dependencies for SPDK CLI - not available in rhel and centos
 	if ! echo "$ID $VERSION_ID" | grep -E -q 'rhel 7|centos 7'; then
 		yum install -y python3-configshell python3-pexpect
