@@ -565,16 +565,11 @@ spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page
 }
 
 static void
-nvme_ctrlr_cmd_abort_cpl(void *ctx, const struct spdk_nvme_cpl *cpl)
+nvme_ctrlr_retry_queued_abort(struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct nvme_request	*req, *next, *tmp;
-	struct spdk_nvme_ctrlr	*ctrlr;
-	int			rc;
+	struct nvme_request	*next, *tmp;
+	int rc;
 
-	req = ctx;
-	ctrlr = (struct spdk_nvme_ctrlr *)req->user_buffer;
-
-	ctrlr->outstanding_aborts--;
 	STAILQ_FOREACH_SAFE(next, &ctrlr->queued_aborts, stailq, tmp) {
 		STAILQ_REMOVE_HEAD(&ctrlr->queued_aborts, stailq);
 		ctrlr->outstanding_aborts++;
@@ -592,6 +587,19 @@ nvme_ctrlr_cmd_abort_cpl(void *ctx, const struct spdk_nvme_cpl *cpl)
 			break;
 		}
 	}
+}
+
+static void
+nvme_ctrlr_cmd_abort_cpl(void *ctx, const struct spdk_nvme_cpl *cpl)
+{
+	struct nvme_request	*req;
+	struct spdk_nvme_ctrlr	*ctrlr;
+
+	req = ctx;
+	ctrlr = (struct spdk_nvme_ctrlr *)req->user_buffer;
+
+	ctrlr->outstanding_aborts--;
+	nvme_ctrlr_retry_queued_abort(ctrlr);
 
 	req->user_cb_fn(req->user_cb_arg, cpl);
 }
