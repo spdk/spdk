@@ -15,6 +15,10 @@ A new capability, compare, was added via `spdk_accel_submit_compare`.
 
 The software accel engine implemenation has added support for compare.
 
+### dpdk
+Updated DPDK submodule to DPDK 19.11.2, which includes fixes for DPDK vulnerabilities:
+CVE-2020-10722, CVE-2020-10723, CVE-2020-10724, CVE-2020-10725, CVE-2020-10724.
+
 ### idxd
 
 IDXD engine support for CRC-32C has been added.
