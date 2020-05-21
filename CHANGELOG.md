@@ -2,6 +2,11 @@
 
 ## v20.04.1: (Upcoming Release)
 
+### dpdk
+
+Updated DPDK submodule to DPDK 19.11.2, which includes fixes for DPDK vulnerabilities:
+CVE-2020-10722, CVE-2020-10723, CVE-2020-10724, CVE-2020-10725, CVE-2020-10724.
+
 ## v20.04:
 
 ### configuration
