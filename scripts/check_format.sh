@@ -300,7 +300,7 @@ fi
 # find compatible shfmt binary
 shfmt_bins=$(compgen -c | grep '^shfmt' || true)
 for bin in $shfmt_bins; do
-	if [[ "$("$bin" --version)" > "v3.0.9" ]]; then
+	if version_lt "$("$bin" --version)" "3.1.0"; then
 		shfmt=$bin
 		break
 	fi
