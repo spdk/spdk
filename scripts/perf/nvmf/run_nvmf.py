@@ -556,6 +556,7 @@ class KernelTarget(Target):
 
     def tgt_start(self):
         self.log_print("Configuring kernel NVMeOF Target")
+        self.subsys_no = get_nvme_devices_count()
 
         if self.null_block:
             print("Configuring with null block device.")
@@ -663,6 +664,8 @@ class SPDKTarget(Target):
 
     def tgt_start(self):
         self.subsys_no = get_nvme_devices_count()
+        if self.null_block:
+            self.subsys_no = 1
         self.log_print("Starting SPDK NVMeOF Target process")
         nvmf_app_path = os.path.join(self.spdk_dir, "build/bin/nvmf_tgt")
         command = " ".join([nvmf_app_path, "-m", self.num_cores])
@@ -731,10 +734,9 @@ class KernelInitiator(Initiator):
         nvme_list = [x for x in out.split("\n") if "nvme" in x]
 
         filename_section = ""
-        filenames = ["nvme%sn1" % x for x in range(0, len(nvme_list))]
         nvme_per_split = int(len(nvme_list) / len(threads))
         remainder = len(nvme_list) % len(threads)
-        iterator = iter(filenames)
+        iterator = iter(nvme_list)
         result = []
         for i in range(len(threads)):
             result.append([])
@@ -745,7 +747,7 @@ class KernelInitiator(Initiator):
                     remainder -= 1
         for i, r in enumerate(result):
             header = "[filename%s]" % i
-            disks = "\n".join(["filename=/dev/%s" % x for x in r])
+            disks = "\n".join(["filename=%s" % x for x in r])
             job_section_qd = round((io_depth * len(r)) / num_jobs)
             iodepth = "iodepth=%s" % job_section_qd
             filename_section = "\n".join([filename_section, header, disks, iodepth])
