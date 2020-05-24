@@ -731,6 +731,7 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 bdev_io_pool_size       | Optional | number      | Number of spdk_bdev_io structures in shared buffer pool
 bdev_io_cache_size      | Optional | number      | Maximum number of spdk_bdev_io structures cached per thread
+bdev_auto_examine       | Optional | boolean     | If set to false, the bdev layer will not examine every disks automatically
 
 ### Example
 
