@@ -65,6 +65,7 @@ enum nvmf_target_state {
 
 struct nvmf_lw_thread {
 	TAILQ_ENTRY(nvmf_lw_thread) link;
+	bool resched;
 };
 
 struct nvmf_reactor {
@@ -106,6 +107,7 @@ static enum nvmf_target_state g_target_state;
 static bool g_intr_received = false;
 
 static void nvmf_target_advance_state(void);
+static int nvmf_schedule_spdk_thread(struct spdk_thread *thread);
 
 static void
 usage(char *program_name)
@@ -197,6 +199,9 @@ nvmf_reactor_run(void *arg)
 			if (spdk_unlikely(spdk_thread_is_exited(thread) &&
 					  spdk_thread_is_idle(thread))) {
 				spdk_thread_destroy(thread);
+			} else if (spdk_unlikely(lw_thread->resched)) {
+				lw_thread->resched = false;
+				nvmf_schedule_spdk_thread(thread);
 			} else {
 				spdk_ring_enqueue(nvmf_reactor->threads, (void **)&lw_thread, 1, NULL);
 			}
@@ -263,6 +268,20 @@ nvmf_schedule_spdk_thread(struct spdk_thread *thread)
 	return 0;
 }
 
+static void
+nvmf_request_spdk_thread_reschedule(struct spdk_thread *thread)
+{
+	struct nvmf_lw_thread *lw_thread;
+
+	assert(thread == spdk_get_thread());
+
+	lw_thread = spdk_thread_get_ctx(thread);
+
+	assert(lw_thread != NULL);
+
+	lw_thread->resched = true;
+}
+
 static int
 nvmf_reactor_thread_op(struct spdk_thread *thread, enum spdk_thread_op op)
 {
@@ -270,6 +289,8 @@ nvmf_reactor_thread_op(struct spdk_thread *thread, enum spdk_thread_op op)
 	case SPDK_THREAD_OP_NEW:
 		return nvmf_schedule_spdk_thread(thread);
 	case SPDK_THREAD_OP_RESCHED:
+		nvmf_request_spdk_thread_reschedule(thread);
+		return 0;
 	default:
 		return -ENOTSUP;
 	}
@@ -280,8 +301,8 @@ nvmf_reactor_thread_op_supported(enum spdk_thread_op op)
 {
 	switch (op) {
 	case SPDK_THREAD_OP_NEW:
-		return true;
 	case SPDK_THREAD_OP_RESCHED:
+		return true;
 	default:
 		return false;
 	}
