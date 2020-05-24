@@ -106,6 +106,9 @@ static bool g_reactors_exit = false;
 static enum nvmf_target_state g_target_state;
 static bool g_intr_received = false;
 
+static uint32_t g_migrate_pg_period_us = 0;
+static struct spdk_poller *g_migrate_pg_poller = NULL;
+
 static void nvmf_target_advance_state(void);
 static int nvmf_schedule_spdk_thread(struct spdk_thread *thread);
 
@@ -114,6 +117,7 @@ usage(char *program_name)
 {
 	printf("%s options", program_name);
 	printf("\n");
+	printf("\t[-g period of round robin poll group migration (us) (default: 0 (disabled))]\n");
 	printf("\t[-h show this usage]\n");
 	printf("\t[-i shared memory ID (optional)]\n");
 	printf("\t[-m core mask for DPDK]\n");
@@ -130,8 +134,16 @@ parse_args(int argc, char **argv, struct spdk_env_opts *opts)
 	int op;
 	long int value;
 
-	while ((op = getopt(argc, argv, "i:m:n:p:r:s:u:h")) != -1) {
+	while ((op = getopt(argc, argv, "g:i:m:n:p:r:s:u:h")) != -1) {
 		switch (op) {
+		case 'g':
+			value = spdk_strtol(optarg, 10);
+			if (value < 0) {
+				fprintf(stderr, "converting a string to integer failed\n");
+				return -EINVAL;
+			}
+			g_migrate_pg_period_us = value;
+			break;
 		case 'i':
 			value = spdk_strtol(optarg, 10);
 			if (value < 0) {
@@ -774,6 +786,35 @@ nvmf_subsystem_init_done(int rc, void *cb_arg)
 }
 
 static void
+migrate_poll_group_by_rr(void *ctx)
+{
+	uint32_t current_core, next_core;
+	struct spdk_cpuset cpumask = {};
+
+	current_core = spdk_env_get_current_core();
+	next_core = spdk_env_get_next_core(current_core);
+	if (next_core == UINT32_MAX) {
+		next_core = spdk_env_get_first_core();
+	}
+
+	spdk_cpuset_set_cpu(&cpumask, next_core, true);
+
+	spdk_thread_set_cpumask(&cpumask);
+}
+
+static int
+migrate_poll_groups_by_rr(void *ctx)
+{
+	struct nvmf_target_poll_group *pg;
+
+	TAILQ_FOREACH(pg, &g_poll_groups, link) {
+		spdk_thread_send_msg(pg->thread, migrate_poll_group_by_rr, NULL);
+	}
+
+	return 1;
+}
+
+static void
 nvmf_target_advance_state(void)
 {
 	enum nvmf_target_state prev_state;
@@ -803,8 +844,13 @@ nvmf_target_advance_state(void)
 			break;
 		case NVMF_RUNNING:
 			fprintf(stdout, "nvmf target is running\n");
+			if (g_migrate_pg_period_us != 0) {
+				g_migrate_pg_poller = SPDK_POLLER_REGISTER(migrate_poll_groups_by_rr, NULL,
+						      g_migrate_pg_period_us);
+			}
 			break;
 		case NVMF_FINI_STOP_SUBSYSTEMS:
+			spdk_poller_unregister(&g_migrate_pg_poller);
 			nvmf_tgt_stop_subsystems(&g_nvmf_tgt);
 			break;
 		case NVMF_FINI_POLL_GROUPS:
