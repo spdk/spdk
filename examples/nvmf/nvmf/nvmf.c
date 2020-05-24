@@ -69,9 +69,8 @@ struct nvmf_lw_thread {
 
 struct nvmf_reactor {
 	uint32_t core;
-	pthread_mutex_t mutex;
 
-	TAILQ_HEAD(, nvmf_lw_thread)	threads;
+	struct spdk_ring		*threads;
 	TAILQ_ENTRY(nvmf_reactor)	link;
 };
 
@@ -185,17 +184,12 @@ static int
 nvmf_reactor_run(void *arg)
 {
 	struct nvmf_reactor *nvmf_reactor = arg;
-	struct nvmf_lw_thread *lw_thread, *tmp;
+	struct nvmf_lw_thread *lw_thread;
 	struct spdk_thread *thread;
 
 	/* run all the lightweight threads in this nvmf_reactor by FIFO. */
 	do {
-		pthread_mutex_lock(&nvmf_reactor->mutex);
-		lw_thread = TAILQ_FIRST(&nvmf_reactor->threads);
-		if (lw_thread != NULL) {
-			TAILQ_REMOVE(&nvmf_reactor->threads, lw_thread, link);
-			pthread_mutex_unlock(&nvmf_reactor->mutex);
-
+		if (spdk_ring_dequeue(nvmf_reactor->threads, (void **)&lw_thread, 1)) {
 			thread = spdk_thread_get_from_ctx(lw_thread);
 
 			spdk_thread_poll(thread, 0, 0);
@@ -203,21 +197,15 @@ nvmf_reactor_run(void *arg)
 			if (spdk_unlikely(spdk_thread_is_exited(thread) &&
 					  spdk_thread_is_idle(thread))) {
 				spdk_thread_destroy(thread);
-
-				pthread_mutex_lock(&nvmf_reactor->mutex);
 			} else {
-				pthread_mutex_lock(&nvmf_reactor->mutex);
-				TAILQ_INSERT_TAIL(&nvmf_reactor->threads, lw_thread, link);
+				spdk_ring_enqueue(nvmf_reactor->threads, (void **)&lw_thread, 1, NULL);
 			}
 		}
-		pthread_mutex_unlock(&nvmf_reactor->mutex);
 	} while (!g_reactors_exit);
 
 	/* free all the lightweight threads */
-	pthread_mutex_lock(&nvmf_reactor->mutex);
-	TAILQ_FOREACH_SAFE(lw_thread, &nvmf_reactor->threads, link, tmp) {
+	while (spdk_ring_dequeue(nvmf_reactor->threads, (void **)&lw_thread, 1)) {
 		thread = spdk_thread_get_from_ctx(lw_thread);
-		TAILQ_REMOVE(&nvmf_reactor->threads, lw_thread, link);
 		spdk_set_thread(thread);
 		spdk_thread_exit(thread);
 		while (!spdk_thread_is_exited(thread)) {
@@ -225,7 +213,6 @@ nvmf_reactor_run(void *arg)
 		}
 		spdk_thread_destroy(thread);
 	}
-	pthread_mutex_unlock(&nvmf_reactor->mutex);
 
 	return 0;
 }
@@ -263,9 +250,7 @@ nvmf_schedule_spdk_thread(struct spdk_thread *thread)
 
 		/* each spdk_thread has the core affinity */
 		if (spdk_cpuset_get_cpu(cpumask, nvmf_reactor->core)) {
-			pthread_mutex_lock(&nvmf_reactor->mutex);
-			TAILQ_INSERT_TAIL(&nvmf_reactor->threads, lw_thread, link);
-			pthread_mutex_unlock(&nvmf_reactor->mutex);
+			spdk_ring_enqueue(nvmf_reactor->threads, (void **)&lw_thread, 1, NULL);
 			break;
 		}
 	}
@@ -338,8 +323,15 @@ nvmf_init_threads(void)
 		}
 
 		nvmf_reactor->core = i;
-		pthread_mutex_init(&nvmf_reactor->mutex, NULL);
-		TAILQ_INIT(&nvmf_reactor->threads);
+
+		nvmf_reactor->threads = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 1024, SPDK_ENV_SOCKET_ID_ANY);
+		if (!nvmf_reactor->threads) {
+			fprintf(stderr, "failed to alloc ring\n");
+			free(nvmf_reactor);
+			rc = -ENOMEM;
+			goto err_exit;
+		}
+
 		TAILQ_INSERT_TAIL(&g_reactors, nvmf_reactor, link);
 
 		if (i == master_core) {
@@ -379,7 +371,7 @@ nvmf_destroy_threads(void)
 	struct nvmf_reactor *nvmf_reactor, *tmp;
 
 	TAILQ_FOREACH_SAFE(nvmf_reactor, &g_reactors, link, tmp) {
-		pthread_mutex_destroy(&nvmf_reactor->mutex);
+		spdk_ring_free(nvmf_reactor->threads);
 		free(nvmf_reactor);
 	}
 
