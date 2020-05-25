@@ -321,9 +321,9 @@ submit_single_io(struct ns_worker_ctx *ns_ctx)
 
 	if (rc != 0) {
 		fprintf(stderr, "starting I/O failed\n");
+	} else {
+		ns_ctx->current_queue_depth++;
 	}
-
-	ns_ctx->current_queue_depth++;
 }
 
 static void
