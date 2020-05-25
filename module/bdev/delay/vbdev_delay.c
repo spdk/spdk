@@ -343,6 +343,42 @@ vbdev_delay_reset_channel(struct spdk_io_channel_iter *i)
 	spdk_for_each_channel_continue(i, 0);
 }
 
+static bool
+abort_delayed_io(void *_head, struct spdk_bdev_io *bio_to_abort)
+{
+	STAILQ_HEAD(, delay_bdev_io) *head = _head;
+	struct delay_bdev_io *io_ctx_to_abort = (struct delay_bdev_io *)bio_to_abort->driver_ctx;
+	struct delay_bdev_io *io_ctx;
+
+	STAILQ_FOREACH(io_ctx, head, link) {
+		if (io_ctx == io_ctx_to_abort) {
+			STAILQ_REMOVE(head, io_ctx_to_abort, delay_bdev_io, link);
+			spdk_bdev_io_complete(bio_to_abort, SPDK_BDEV_IO_STATUS_ABORTED);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+static int
+vbdev_delay_abort(struct vbdev_delay *delay_node, struct delay_io_channel *delay_ch,
+		  struct spdk_bdev_io *bdev_io)
+{
+	struct spdk_bdev_io *bio_to_abort = bdev_io->u.abort.bio_to_abort;
+
+	if (abort_delayed_io(&delay_ch->avg_read_io, bio_to_abort) ||
+	    abort_delayed_io(&delay_ch->avg_write_io, bio_to_abort) ||
+	    abort_delayed_io(&delay_ch->p99_read_io, bio_to_abort) ||
+	    abort_delayed_io(&delay_ch->p99_write_io, bio_to_abort)) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		return 0;
+	}
+
+	return spdk_bdev_abort(delay_node->base_desc, delay_ch->base_ch, bio_to_abort,
+			       _delay_complete_io, bdev_io);
+}
+
 static void
 vbdev_delay_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
@@ -394,6 +430,9 @@ vbdev_delay_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 		 */
 		spdk_for_each_channel(delay_node, vbdev_delay_reset_channel, bdev_io,
 				      vbdev_delay_reset_dev);
+		break;
+	case SPDK_BDEV_IO_TYPE_ABORT:
+		rc = vbdev_delay_abort(delay_node, delay_ch, bdev_io);
 		break;
 	default:
 		SPDK_ERRLOG("delay: unknown I/O type %d\n", bdev_io->type);
