@@ -174,7 +174,7 @@ _process_io_stailq(void *arg, uint64_t ticks)
 	STAILQ_FOREACH_SAFE(io_ctx, head, link, tmp) {
 		if (io_ctx->completion_tick <= ticks) {
 			STAILQ_REMOVE(head, io_ctx, delay_bdev_io, link);
-			spdk_bdev_io_complete(SPDK_CONTAINEROF(io_ctx, struct spdk_bdev_io, driver_ctx), io_ctx->status);
+			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(io_ctx), io_ctx->status);
 		} else {
 			/* In the general case, I/O will become ready in an fifo order. When timeouts are dynamically
 			 * changed, this is not necessarily the case. However, the normal behavior will be restored
@@ -287,15 +287,60 @@ delay_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, 
 				    bdev_io->u.bdev.num_blocks, _delay_complete_io,
 				    bdev_io);
 
-	if (rc != 0) {
-		if (rc == -ENOMEM) {
-			SPDK_ERRLOG("No memory, start to queue io for delay.\n");
-			vbdev_delay_queue_io(bdev_io);
-		} else {
-			SPDK_ERRLOG("ERROR on bdev_io submission!\n");
-			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-		}
+	if (rc == -ENOMEM) {
+		SPDK_ERRLOG("No memory, start to queue io for delay.\n");
+		vbdev_delay_queue_io(bdev_io);
+	} else if (rc != 0) {
+		SPDK_ERRLOG("ERROR on bdev_io submission!\n");
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
+}
+
+static void
+vbdev_delay_reset_dev(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_bdev_io *bdev_io = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct delay_io_channel *delay_ch = spdk_io_channel_get_ctx(ch);
+	struct vbdev_delay *delay_node = spdk_io_channel_iter_get_io_device(i);
+	int rc;
+
+	rc = spdk_bdev_reset(delay_node->base_desc, delay_ch->base_ch,
+			     _delay_complete_io, bdev_io);
+
+	if (rc == -ENOMEM) {
+		SPDK_ERRLOG("No memory, start to queue io for delay.\n");
+		vbdev_delay_queue_io(bdev_io);
+	} else if (rc != 0) {
+		SPDK_ERRLOG("ERROR on bdev_io submission!\n");
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
+}
+
+static void
+_abort_all_delayed_io(void *arg)
+{
+	STAILQ_HEAD(, delay_bdev_io) *head = arg;
+	struct delay_bdev_io *io_ctx, *tmp;
+
+	STAILQ_FOREACH_SAFE(io_ctx, head, link, tmp) {
+		STAILQ_REMOVE(head, io_ctx, delay_bdev_io, link);
+		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(io_ctx), SPDK_BDEV_IO_STATUS_ABORTED);
+	}
+}
+
+static void
+vbdev_delay_reset_channel(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct delay_io_channel *delay_ch = spdk_io_channel_get_ctx(ch);
+
+	_abort_all_delayed_io(&delay_ch->avg_read_io);
+	_abort_all_delayed_io(&delay_ch->avg_write_io);
+	_abort_all_delayed_io(&delay_ch->p99_read_io);
+	_abort_all_delayed_io(&delay_ch->p99_write_io);
+
+	spdk_for_each_channel_continue(i, 0);
 }
 
 static void
@@ -344,22 +389,24 @@ vbdev_delay_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 					    _delay_complete_io, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_RESET:
-		rc = spdk_bdev_reset(delay_node->base_desc, delay_ch->base_ch,
-				     _delay_complete_io, bdev_io);
+		/* During reset, the generic bdev layer aborts all new I/Os and queues all new resets.
+		 * Hence we can simply abort all I/Os delayed to complete.
+		 */
+		spdk_for_each_channel(delay_node, vbdev_delay_reset_channel, bdev_io,
+				      vbdev_delay_reset_dev);
 		break;
 	default:
 		SPDK_ERRLOG("delay: unknown I/O type %d\n", bdev_io->type);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
-	if (rc != 0) {
-		if (rc == -ENOMEM) {
-			SPDK_ERRLOG("No memory, start to queue io for delay.\n");
-			vbdev_delay_queue_io(bdev_io);
-		} else {
-			SPDK_ERRLOG("ERROR on bdev_io submission!\n");
-			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-		}
+
+	if (rc == -ENOMEM) {
+		SPDK_ERRLOG("No memory, start to queue io for delay.\n");
+		vbdev_delay_queue_io(bdev_io);
+	} else if (rc != 0) {
+		SPDK_ERRLOG("ERROR on bdev_io submission!\n");
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
 }
 
