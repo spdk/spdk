@@ -37,7 +37,11 @@ include $(SPDK_ROOT_DIR)/mk/spdk.lib_deps.mk
 SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/shared_lib/spdk.map
 LIB := $(call spdk_lib_list_to_static_libs,$(LIBNAME))
 SHARED_LINKED_LIB := $(subst .a,.so,$(LIB))
+ifdef SO_SUFFIX
+SHARED_REALNAME_LIB := $(subst .so,.so.$(SO_SUFFIX),$(SHARED_LINKED_LIB))
+else
 SHARED_REALNAME_LIB := $(subst .so,.so.$(SO_SUFFIX_ALL),$(SHARED_LINKED_LIB))
+endif
 
 ifeq ($(CONFIG_SHARED),y)
 DEP := $(SHARED_LINKED_LIB)
