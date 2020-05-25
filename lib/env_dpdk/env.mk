@@ -78,6 +78,11 @@ ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_bus_pci.*))
 DPDK_LIB_LIST += rte_bus_pci
 endif
 
+# DPDK 20.05 eal dependency
+ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_telemetry.*))
+DPDK_LIB_LIST += rte_telemetry
+endif
+
 # There are some complex dependencies when using crypto, reduce or both so
 # here we add the feature specific ones and set a flag to add the common
 # ones after that.
