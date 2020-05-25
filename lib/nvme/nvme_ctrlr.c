@@ -794,14 +794,14 @@ nvme_ctrlr_shutdown(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	if (nvme_ctrlr_get_cc(ctrlr, &cc)) {
-		SPDK_ERRLOG("get_cc() failed\n");
+		SPDK_ERRLOG("ctrlr %s get_cc() failed\n", ctrlr->trid.traddr);
 		return;
 	}
 
 	cc.bits.shn = SPDK_NVME_SHN_NORMAL;
 
 	if (nvme_ctrlr_set_cc(ctrlr, &cc)) {
-		SPDK_ERRLOG("set_cc() failed\n");
+		SPDK_ERRLOG("ctrlr %s set_cc() failed\n", ctrlr->trid.traddr);
 		return;
 	}
 
@@ -820,13 +820,13 @@ nvme_ctrlr_shutdown(struct spdk_nvme_ctrlr *ctrlr)
 
 	do {
 		if (nvme_ctrlr_get_csts(ctrlr, &csts)) {
-			SPDK_ERRLOG("get_csts() failed\n");
+			SPDK_ERRLOG("ctrlr %s get_csts() failed\n", ctrlr->trid.traddr);
 			return;
 		}
 
 		if (csts.bits.shst == SPDK_NVME_SHST_COMPLETE) {
-			SPDK_DEBUGLOG(SPDK_LOG_NVME, "shutdown complete in %u milliseconds\n",
-				      ms_waited);
+			SPDK_DEBUGLOG(SPDK_LOG_NVME, "ctrlr %s shutdown complete in %u milliseconds\n",
+				      ctrlr->trid.traddr, ms_waited);
 			return;
 		}
 
@@ -834,7 +834,8 @@ nvme_ctrlr_shutdown(struct spdk_nvme_ctrlr *ctrlr)
 		ms_waited++;
 	} while (ms_waited < shutdown_timeout_ms);
 
-	SPDK_ERRLOG("did not shutdown within %u milliseconds\n", shutdown_timeout_ms);
+	SPDK_ERRLOG("ctrlr %s did not shutdown within %u milliseconds\n",
+		    ctrlr->trid.traddr, shutdown_timeout_ms);
 	if (ctrlr->quirks & NVME_QUIRK_SHST_COMPLETE) {
 		SPDK_ERRLOG("likely due to shutdown handling in the VMWare emulated NVMe SSD\n");
 	}
