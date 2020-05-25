@@ -66,9 +66,9 @@ DEFINE_STUB(spdk_pci_device_attach, int, (struct spdk_pci_driver *driver, spdk_p
 DEFINE_STUB(spdk_pci_device_claim, int, (struct spdk_pci_device *dev), 0);
 DEFINE_STUB_V(spdk_pci_device_unclaim, (struct spdk_pci_device *dev));
 DEFINE_STUB_V(spdk_pci_device_detach, (struct spdk_pci_device *device));
-DEFINE_STUB(spdk_pci_device_cfg_write32, int, (struct spdk_pci_device *dev, uint32_t value,
+DEFINE_STUB(spdk_pci_device_cfg_write16, int, (struct spdk_pci_device *dev, uint16_t value,
 		uint32_t offset), 0);
-DEFINE_STUB(spdk_pci_device_cfg_read32, int, (struct spdk_pci_device *dev, uint32_t *value,
+DEFINE_STUB(spdk_pci_device_cfg_read16, int, (struct spdk_pci_device *dev, uint16_t *value,
 		uint32_t offset), 0);
 DEFINE_STUB(spdk_pci_device_get_id, struct spdk_pci_id, (struct spdk_pci_device *dev), {0})
 

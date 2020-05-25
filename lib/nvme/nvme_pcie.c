@@ -813,7 +813,7 @@ static struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_
 	struct nvme_pcie_ctrlr *pctrlr;
 	union spdk_nvme_cap_register cap;
 	union spdk_nvme_vs_register vs;
-	uint32_t cmd_reg;
+	uint16_t cmd_reg;
 	int rc;
 	struct spdk_pci_id pci_id;
 
@@ -853,9 +853,9 @@ static struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_
 	}
 
 	/* Enable PCI busmaster and disable INTx */
-	spdk_pci_device_cfg_read32(pci_dev, &cmd_reg, 4);
+	spdk_pci_device_cfg_read16(pci_dev, &cmd_reg, 4);
 	cmd_reg |= 0x404;
-	spdk_pci_device_cfg_write32(pci_dev, cmd_reg, 4);
+	spdk_pci_device_cfg_write16(pci_dev, cmd_reg, 4);
 
 	if (nvme_ctrlr_get_cap(&pctrlr->ctrlr, &cap)) {
 		SPDK_ERRLOG("get_cap() failed\n");
