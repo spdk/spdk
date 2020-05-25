@@ -101,6 +101,7 @@ function blobfs_fuse_test() {
 	dd if=/dev/urandom of=${mount_dir}/rand_file bs=4k count=32
 
 	umount ${mount_dir}
+	sleep 1
 	killprocess $blobfs_pid
 
 	# Verify there is no file in mount dir now
@@ -117,6 +118,7 @@ function blobfs_fuse_test() {
 	rm ${mount_dir}/rand_file
 
 	umount ${mount_dir}
+	sleep 1
 	killprocess $blobfs_pid
 }
 
@@ -125,7 +127,7 @@ trap 'cleanup' EXIT
 # Create one temp file as test bdev
 dd if=/dev/zero of=${tmp_file} bs=4k count=1M
 echo "[AIO]" > ${conf_file}
-echo "AIO ${tmp_file} ${bdevname} 4096" >> ${conf_file}
+echo "AIO ${tmp_file} ${bdevname} 512" >> ${conf_file}
 
 blobfs_detect_test
 
