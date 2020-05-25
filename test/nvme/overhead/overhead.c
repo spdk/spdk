@@ -325,9 +325,9 @@ submit_single_io(void)
 
 	if (rc != 0) {
 		fprintf(stderr, "starting I/O failed\n");
+	} else {
+		g_ns->current_queue_depth++;
 	}
-
-	g_ns->current_queue_depth++;
 }
 
 static void
