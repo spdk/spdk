@@ -100,6 +100,7 @@ struct bdevperf_job {
 	struct spdk_thread		*thread;
 
 	uint64_t			io_completed;
+	uint64_t			io_failed;
 	uint64_t			prev_io_completed;
 	double				ema_io_per_second;
 	int				current_queue_depth;
@@ -134,6 +135,7 @@ struct bdevperf_aggregate_stats {
 	uint64_t			ema_period;
 	double				total_io_per_second;
 	double				total_mb_per_second;
+	double				total_failed_per_second;
 };
 
 static struct bdevperf_aggregate_stats g_stats = {};
@@ -169,7 +171,7 @@ get_ema_io_per_second(struct bdevperf_job *job, uint64_t ema_period)
 static void
 performance_dump_job(struct bdevperf_aggregate_stats *stats, struct bdevperf_job *job)
 {
-	double io_per_second, mb_per_second;
+	double io_per_second, mb_per_second, failed_per_second;
 
 	printf("\r Thread name: %s\n", spdk_thread_get_name(job->thread));
 	printf("\r Core Mask: 0x%s\n", spdk_cpuset_fmt(spdk_thread_get_cpumask(job->thread)));
@@ -180,10 +182,16 @@ performance_dump_job(struct bdevperf_aggregate_stats *stats, struct bdevperf_job
 		io_per_second = get_ema_io_per_second(job, stats->ema_period);
 	}
 	mb_per_second = io_per_second * g_io_size / (1024 * 1024);
+	failed_per_second = (double)job->io_failed * 1000000 / stats->io_time_in_usec;
+
 	printf("\r %-20s: %10.2f IOPS %10.2f MiB/s\n",
 	       job->name, io_per_second, mb_per_second);
+	if (failed_per_second != 0) {
+		printf("\r %-20s: %10.2f Fail/s\n", "", failed_per_second);
+	}
 	stats->total_io_per_second += io_per_second;
 	stats->total_mb_per_second += mb_per_second;
+	stats->total_failed_per_second += failed_per_second;
 }
 
 static void
@@ -328,6 +336,9 @@ bdevperf_test_done(void *ctx)
 	printf("\r =====================================================\n");
 	printf("\r %-20s: %10.2f IOPS %10.2f MiB/s\n",
 	       "Total", g_stats.total_io_per_second, g_stats.total_mb_per_second);
+	if (g_stats.total_failed_per_second != 0) {
+		printf("\r %-20s: %10.2f Fail/s\n", "", g_stats.total_failed_per_second);
+	}
 	fflush(stdout);
 
 	if (g_request && !g_shutdown) {
@@ -413,6 +424,8 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 
 	if (success) {
 		job->io_completed++;
+	} else {
+		job->io_failed++;
 	}
 
 	if (g_verify) {
@@ -848,6 +861,9 @@ _performance_dump_done(void *ctx)
 	printf("\r =====================================================\n");
 	printf("\r %-20s: %10.2f IOPS %10.2f MiB/s\n",
 	       "Total", stats->total_io_per_second, stats->total_mb_per_second);
+	if (stats->total_failed_per_second != 0) {
+		printf("\r %-20s: %10.2f Fail/s\n", "", stats->total_failed_per_second);
+	}
 	fflush(stdout);
 
 	g_performance_dump_active = false;
