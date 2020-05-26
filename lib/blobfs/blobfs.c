@@ -2358,7 +2358,7 @@ __file_flush(void *ctx)
 	__get_page_parameters(file, offset, length, &start_lba, &lba_size, &num_lba);
 
 	next->in_progress = true;
-	BLOBFS_TRACE(file, "offset=%jx length=%jx page start=%jx num=%jx\n",
+	BLOBFS_TRACE(file, "offset=0x%jx length=0x%jx page start=0x%jx num=0x%jx\n",
 		     offset, length, start_lba, num_lba);
 	pthread_spin_unlock(&file->lock);
 	spdk_blob_io_write(file->blob, file->fs->sync_target.sync_fs_channel->bs_channel,
