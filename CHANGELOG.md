@@ -1,5 +1,7 @@
 # Changelog
 
+## v20.04.2: (Upcoming Release)
+
 ## v20.04.1:
 
 ### dpdk
