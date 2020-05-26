@@ -5793,6 +5793,17 @@ spdk_bdev_io_get_md_buf(struct spdk_bdev_io *bdev_io)
 	return NULL;
 }
 
+void *
+spdk_bdev_io_get_cb_arg(struct spdk_bdev_io *bdev_io)
+{
+	if (bdev_io == NULL) {
+		assert(false);
+		return NULL;
+	}
+
+	return bdev_io->internal.caller_ctx;
+}
+
 void
 spdk_bdev_module_list_add(struct spdk_bdev_module *bdev_module)
 {

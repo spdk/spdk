@@ -1648,6 +1648,14 @@ void spdk_bdev_io_get_iovec(struct spdk_bdev_io *bdev_io, struct iovec **iovp, i
  */
 void *spdk_bdev_io_get_md_buf(struct spdk_bdev_io *bdev_io);
 
+/**
+ * Get the callback argument of bdev_io to abort it by spdk_bdev_abort.
+ *
+ * \param bdev_io I/O to get the callback argument from.
+ * \return Callback argument of bdev_io.
+ */
+void *spdk_bdev_io_get_cb_arg(struct spdk_bdev_io *bdev_io);
+
 typedef void (*spdk_bdev_histogram_status_cb)(void *cb_arg, int status);
 typedef void (*spdk_bdev_histogram_data_cb)(void *cb_arg, int status,
 		struct spdk_histogram_data *histogram);
