@@ -497,6 +497,7 @@ vbdev_ocf_ctx_log_printf(ocf_logger_t logger, ocf_logger_lvl_t lvl,
 
 	case log_info:
 	case log_debug:
+	default:
 		spdk_lvl = SPDK_LOG_INFO;
 	}
 
