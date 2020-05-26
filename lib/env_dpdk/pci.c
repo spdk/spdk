@@ -259,7 +259,7 @@ _get_alarm_thread_cb(void *unused)
 }
 
 void
-pci_init(void)
+pci_env_init(void)
 {
 #if RTE_VERSION >= RTE_VERSION_NUM(18, 11, 0, 0)
 	struct spdk_pci_driver *driver;
@@ -298,7 +298,7 @@ pci_init(void)
 }
 
 void
-pci_fini(void)
+pci_env_fini(void)
 {
 	struct spdk_pci_device *dev;
 	char bdf[32];
