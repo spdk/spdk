@@ -77,8 +77,8 @@ void pci_driver_register(struct spdk_pci_driver *driver);
 int pci_device_init(struct rte_pci_driver *driver, struct rte_pci_device *device);
 int pci_device_fini(struct rte_pci_device *device);
 
-void pci_init(void);
-void pci_fini(void);
+void pci_env_init(void);
+void pci_env_fini(void);
 int mem_map_init(bool legacy_mem);
 int vtophys_init(void);
 

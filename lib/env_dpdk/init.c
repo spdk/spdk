@@ -499,7 +499,7 @@ spdk_env_dpdk_post_init(bool legacy_mem)
 {
 	int rc;
 
-	pci_init();
+	pci_env_init();
 
 	rc = mem_map_init(legacy_mem);
 	if (rc < 0) {
@@ -519,7 +519,7 @@ spdk_env_dpdk_post_init(bool legacy_mem)
 void
 spdk_env_dpdk_post_fini(void)
 {
-	pci_fini();
+	pci_env_fini();
 
 	spdk_free_args(g_eal_cmdline, g_eal_cmdline_argcount);
 }
