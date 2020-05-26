@@ -52,6 +52,7 @@ struct bdevperf_task {
 	void				*buf;
 	void				*md_buf;
 	uint64_t			offset_blocks;
+	struct bdevperf_task		*task_to_abort;
 	enum spdk_bdev_io_type		io_type;
 	TAILQ_ENTRY(bdevperf_task)	link;
 	struct spdk_bdev_io_wait_entry	bdev_io_wait;
@@ -68,6 +69,7 @@ static bool g_continue_on_failure = false;
 static bool g_unmap = false;
 static bool g_write_zeroes = false;
 static bool g_flush = false;
+static bool g_abort = false;
 static int g_queue_depth = 0;
 static uint64_t g_time_in_usec;
 static int g_show_performance_real_time = 0;
@@ -392,6 +394,38 @@ bdevperf_job_drain(void *ctx)
 }
 
 static void
+bdevperf_abort_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct bdevperf_task	*task = cb_arg;
+	struct bdevperf_job	*job = task->job;
+
+	job->current_queue_depth--;
+
+	if (success) {
+		job->io_completed++;
+	} else {
+		job->io_failed++;
+		if (!g_continue_on_failure) {
+			bdevperf_job_drain(job);
+			g_run_rc = -1;
+		}
+	}
+
+	spdk_bdev_free_io(bdev_io);
+
+	/* Return task to free list because abort is submitted on demand. */
+	TAILQ_INSERT_TAIL(&job->task_list, task, link);
+
+	if (job->is_draining) {
+		if (job->current_queue_depth == 0) {
+			spdk_put_io_channel(job->ch);
+			spdk_bdev_close(job->bdev_desc);
+			spdk_thread_send_msg(g_master_thread, bdevperf_job_end, NULL);
+		}
+	}
+}
+
+static void
 bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct bdevperf_job	*job;
@@ -623,6 +657,9 @@ bdevperf_submit_task(void *arg)
 			}
 		}
 		break;
+	case SPDK_BDEV_IO_TYPE_ABORT:
+		rc = spdk_bdev_abort(desc, ch, task->task_to_abort, bdevperf_abort_complete, task);
+		break;
 	default:
 		assert(false);
 		rc = -EINVAL;
@@ -841,8 +878,24 @@ static void
 bdevperf_timeout_cb(void *cb_arg, struct spdk_bdev_io *bdev_io)
 {
 	struct bdevperf_job *job = cb_arg;
+	struct bdevperf_task *task;
 
 	job->io_timeout++;
+
+	if (job->is_draining || !g_abort ||
+	    !spdk_bdev_io_type_supported(job->bdev, SPDK_BDEV_IO_TYPE_ABORT)) {
+		return;
+	}
+
+	task = bdevperf_job_get_task(job);
+	if (task == NULL) {
+		return;
+	}
+
+	task->task_to_abort = spdk_bdev_io_get_cb_arg(bdev_io);
+	task->io_type = SPDK_BDEV_IO_TYPE_ABORT;
+
+	bdevperf_submit_task(task);
 }
 
 static void
@@ -1102,6 +1155,9 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct spdk_cpuset *cpumask,
 	task_num = g_queue_depth;
 	if (g_reset) {
 		task_num += 1;
+	}
+	if (g_abort) {
+		task_num += g_queue_depth;
 	}
 
 	TAILQ_INSERT_TAIL(&g_bdevperf.jobs, job, link);
@@ -1404,6 +1460,8 @@ bdevperf_parse_arg(int ch, char *arg)
 		g_wait_for_tests = true;
 	} else if (ch == 'x') {
 		g_zcopy = false;
+	} else if (ch == 'A') {
+		g_abort = true;
 	} else if (ch == 'C') {
 		g_multithread_mode = true;
 	} else if (ch == 'f') {
@@ -1467,6 +1525,7 @@ bdevperf_usage(void)
 	printf(" -f                        continue processing I/O even after failures\n");
 	printf(" -x                        disable using zcopy bdev API for read or write I/O\n");
 	printf(" -z                        start bdevperf, but wait for RPC to start tests\n");
+	printf(" -A                        abort the timeout I/O\n");
 	printf(" -C                        enable every core to send I/Os to each bdev\n");
 }
 
@@ -1626,7 +1685,7 @@ main(int argc, char **argv)
 	opts.reactor_mask = NULL;
 	opts.shutdown_cb = spdk_bdevperf_shutdown_cb;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "xzfq:o:t:w:k:CM:P:S:T:", NULL,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "xzfq:o:t:w:k:ACM:P:S:T:", NULL,
 				      bdevperf_parse_arg, bdevperf_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;
