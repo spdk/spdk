@@ -645,7 +645,7 @@ cuse_thread(void *arg)
 	}
 	if (!cuse_device->session) {
 		SPDK_ERRLOG("Cannot create cuse session\n");
-		goto end;
+		goto err;
 	}
 
 	SPDK_NOTICELOG("fuse session for device %s created\n", cuse_device->dev_name);
@@ -665,9 +665,8 @@ cuse_thread(void *arg)
 	}
 	free(buf.mem);
 	fuse_session_reset(cuse_device->session);
-
-end:
 	cuse_lowlevel_teardown(cuse_device->session);
+err:
 	pthread_exit(NULL);
 }
 
