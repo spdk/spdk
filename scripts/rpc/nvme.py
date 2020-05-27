@@ -85,3 +85,52 @@ def bdev_nvme_opal_revert(client, nvme_ctrlr_name, password):
     }
 
     return client.call('bdev_nvme_opal_revert', params)
+    
+    
+def nvme_controllers_error_injection(client, opcode, do_not_submit, sct, sc, name=None, admin=None, \
+        timeout_in_us=None, err_count=None, info=None):
+    """Inject an error for the next request with a given opcode.
+
+    Args:
+        name: NVMe controller name to inject an error (optional; if omitted, inject to Admin controller)
+        admin: if set - error injected for Admin command type, otherwise IO
+        opcode: 0x... Opcode for Admin or I/O commands
+        do_not_submit: True if matching requests should not be submitted to \
+                        the controller, but instead completed manually after \
+                        timeout_in_us has expired. False if matching requests \
+                        should be submitted to the controller and have their \
+                        completion status modified after the controller \
+                        completes the request
+        timeout_in_us: Wait specified microseconds when do_not_submit is true
+        err_count: Number of matching requests to inject errors
+        sct: Status code type
+        sc: Status code
+        info: Show controller information
+
+    Returns:
+        Success or failure.
+    """
+    params = {
+        'admin': admin,
+        'opcode': opcode,
+        'do_not_submit': do_not_submit,
+        'sct': sct,
+        'sc': sc,
+        'info': info
+        }
+    if name:
+        params['name'] = name
+    if timeout_in_us:
+        params['timeout_in_us'] = timeout_in_us
+    if err_count:
+        params['err_count'] = err_count
+        
+    return client.call('nvme_controllers_error_injection', params)
+
+
+
+
+
+
+
+

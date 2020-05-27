@@ -477,6 +477,51 @@ if __name__ == "__main__":
     p.add_argument('name', help="Name of the controller")
     p.set_defaults(func=bdev_nvme_detach_controller)
 
+# define NVME qpair add cmd error injection
+    def nvme_controllers_error_injection(args):
+        print_dict(rpc.nvme.nvme_controllers_error_injection(args.client,
+                                                      name=args.name,
+                                                      admin=args.admin,
+                                                      opcode=args.opcode,
+                                                      do_not_submit=args.do_not_submit,
+                                                      timeout_in_us=args.timeout_in_us,
+                                                      err_count=args.err_count,
+                                                      sct=args.sct,
+                                                      sc=args.sc,
+                                                      info=args.info))
+
+    p = subparsers.add_parser(
+        'nvme_controllers_error_injection', aliases=['nvme_error_injection'],
+        help='Inject an error for the next request with a given opcode.')
+    p.add_argument('-n', '--name',
+                   help="Name of the NVMe controller. Example: Nvme0", required=False)
+    p.add_argument('-a', '--admin',
+                   help='if set - error injected for Admin command type, ' \
+                   'otherwise IO', action='store_true')
+    p.add_argument('-o', '--opcode',
+                   help='0x... Opcode for Admin or I/O commands.', type=lambda x: eval(x), required=True)
+    p.add_argument('-d', '--do_not_submit',
+                   help='True if matching requests should not be submitted to ' \
+                        'the controller, but instead completed manually after ' \
+                        'timeout_in_us has expired. False if matching requests ' \
+                        'should be submitted to the controller and have their ' \
+                        'completion status modified after the controller ' \
+                        'completes the request.',
+                   action='store_true')
+    p.add_argument('-t', '--timeout_in_us',
+                   help='Wait specified microseconds when do_not_submit is true.', type=int, required=False)
+    p.add_argument('-e', '--err_count',
+                   help='Number of matching requests to inject errors.', type=int, required=False)
+    p.add_argument('-c', '--sct',
+                   help='Status code type.', type=int, required=True)
+    p.add_argument('-s', '--sc',
+                   help='Status code.', type=int, required=True)
+    p.add_argument('-i', '--info',
+                   help='Show controller information.', action='store_true')
+    
+    p.set_defaults(func=nvme_controllers_error_injection)
+    
+
     def bdev_nvme_cuse_register(args):
         rpc.bdev.bdev_nvme_cuse_register(args.client,
                                          name=args.name)
