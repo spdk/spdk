@@ -244,6 +244,18 @@ Vagrant.configure(2) do |config|
     end
   end
 
+  # Clear CFLAGS in clear linux
+  if distro == "clearlinux"
+    $clearcflags = <<-SCRIPT
+    echo "export CFLAGS=" >> /etc/profile.d/clearcflags.sh
+    echo "export CFFLAGS=" >> /etc/profile.d/clearcflags.sh
+    echo "export CXXFLAGS=" >> /etc/profile.d/clearcflags.sh
+    echo "export FFLAGS=" >> /etc/profile.d/clearcflags.sh
+    echo "export THEANO_FLAGS=" >> /etc/profile.d/clearcflags.sh
+    SCRIPT
+    config.vm.provision "shell", inline: $clearcflags, run: "always"
+  end
+
   # Copy in the user's tools if they exists
   if File.directory?(File.expand_path("~/vagrant_tools"))
     config.vm.synced_folder "~/vagrant_tools", "/home/vagrant/tools", files_sync_backend
