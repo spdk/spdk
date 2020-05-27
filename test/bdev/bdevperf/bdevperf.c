@@ -85,6 +85,7 @@ static const char *g_job_bdev_name;
 static bool g_wait_for_tests = false;
 static struct spdk_jsonrpc_request *g_request = NULL;
 static bool g_multithread_mode = false;
+static int g_timeout_in_sec;
 
 static struct spdk_poller *g_perf_timer = NULL;
 
@@ -101,6 +102,7 @@ struct bdevperf_job {
 
 	uint64_t			io_completed;
 	uint64_t			io_failed;
+	uint64_t			io_timeout;
 	uint64_t			prev_io_completed;
 	double				ema_io_per_second;
 	int				current_queue_depth;
@@ -136,6 +138,7 @@ struct bdevperf_aggregate_stats {
 	double				total_io_per_second;
 	double				total_mb_per_second;
 	double				total_failed_per_second;
+	double				total_timeout_per_second;
 };
 
 static struct bdevperf_aggregate_stats g_stats = {};
@@ -171,7 +174,7 @@ get_ema_io_per_second(struct bdevperf_job *job, uint64_t ema_period)
 static void
 performance_dump_job(struct bdevperf_aggregate_stats *stats, struct bdevperf_job *job)
 {
-	double io_per_second, mb_per_second, failed_per_second;
+	double io_per_second, mb_per_second, failed_per_second, timeout_per_second;
 
 	printf("\r Thread name: %s\n", spdk_thread_get_name(job->thread));
 	printf("\r Core Mask: 0x%s\n", spdk_cpuset_fmt(spdk_thread_get_cpumask(job->thread)));
@@ -183,15 +186,18 @@ performance_dump_job(struct bdevperf_aggregate_stats *stats, struct bdevperf_job
 	}
 	mb_per_second = io_per_second * g_io_size / (1024 * 1024);
 	failed_per_second = (double)job->io_failed * 1000000 / stats->io_time_in_usec;
+	timeout_per_second = (double)job->io_timeout * 1000000 / stats->io_time_in_usec;
 
 	printf("\r %-20s: %10.2f IOPS %10.2f MiB/s\n",
 	       job->name, io_per_second, mb_per_second);
 	if (failed_per_second != 0) {
-		printf("\r %-20s: %10.2f Fail/s\n", "", failed_per_second);
+		printf("\r %-20s: %10.2f Fail/s %8.2f TO/s\n",
+		       "", failed_per_second, timeout_per_second);
 	}
 	stats->total_io_per_second += io_per_second;
 	stats->total_mb_per_second += mb_per_second;
 	stats->total_failed_per_second += failed_per_second;
+	stats->total_timeout_per_second += timeout_per_second;
 }
 
 static void
@@ -336,8 +342,9 @@ bdevperf_test_done(void *ctx)
 	printf("\r =====================================================\n");
 	printf("\r %-20s: %10.2f IOPS %10.2f MiB/s\n",
 	       "Total", g_stats.total_io_per_second, g_stats.total_mb_per_second);
-	if (g_stats.total_failed_per_second != 0) {
-		printf("\r %-20s: %10.2f Fail/s\n", "", g_stats.total_failed_per_second);
+	if (g_stats.total_failed_per_second != 0 || g_stats.total_timeout_per_second != 0) {
+		printf("\r %-20s: %10.2f Fail/s %8.2f TO/s\n",
+		       "", g_stats.total_failed_per_second, g_stats.total_timeout_per_second);
 	}
 	fflush(stdout);
 
@@ -831,6 +838,14 @@ reset_job(void *arg)
 }
 
 static void
+bdevperf_timeout_cb(void *cb_arg, struct spdk_bdev_io *bdev_io)
+{
+	struct bdevperf_job *job = cb_arg;
+
+	job->io_timeout++;
+}
+
+static void
 bdevperf_job_run(void *ctx)
 {
 	struct bdevperf_job *job = ctx;
@@ -847,6 +862,8 @@ bdevperf_job_run(void *ctx)
 							10 * 1000000);
 	}
 
+	spdk_bdev_set_timeout(job->bdev_desc, g_timeout_in_sec, bdevperf_timeout_cb, job);
+
 	for (i = 0; i < g_queue_depth; i++) {
 		task = bdevperf_job_get_task(job);
 		bdevperf_submit_single(job, task);
@@ -861,8 +878,9 @@ _performance_dump_done(void *ctx)
 	printf("\r =====================================================\n");
 	printf("\r %-20s: %10.2f IOPS %10.2f MiB/s\n",
 	       "Total", stats->total_io_per_second, stats->total_mb_per_second);
-	if (stats->total_failed_per_second != 0) {
-		printf("\r %-20s: %10.2f Fail/s\n", "", stats->total_failed_per_second);
+	if (stats->total_failed_per_second != 0 || stats->total_timeout_per_second != 0) {
+		printf("\r %-20s: %10.2f Fail/s %8.2f TO/s\n",
+		       "", stats->total_failed_per_second, stats->total_timeout_per_second);
 	}
 	fflush(stdout);
 
@@ -1410,6 +1428,9 @@ bdevperf_parse_arg(int ch, char *arg)
 		case 't':
 			g_time_in_sec = tmp;
 			break;
+		case 'k':
+			g_timeout_in_sec = tmp;
+			break;
 		case 'M':
 			g_rw_percentage = tmp;
 			g_mix_specified = true;
@@ -1435,6 +1456,7 @@ bdevperf_usage(void)
 	printf(" -o <size>                 io size in bytes\n");
 	printf(" -w <type>                 io pattern type, must be one of (read, write, randread, randwrite, rw, randrw, verify, reset, unmap, flush)\n");
 	printf(" -t <time>                 time in seconds\n");
+	printf(" -k <timeout>              timeout in seconds to detect starved I/O (default is 0 and disabled)\n");
 	printf(" -M <percent>              rwmixread (100 for reads, 0 for writes)\n");
 	printf(" -P <num>                  number of moving average period\n");
 	printf("\t\t(If set to n, show weighted mean of the previous n IO/s in real time)\n");
@@ -1479,6 +1501,12 @@ verify_test_params(struct spdk_app_opts *opts)
 		return 1;
 	}
 	g_time_in_usec = g_time_in_sec * 1000000LL;
+
+	if (g_timeout_in_sec < 0) {
+		spdk_app_usage();
+		bdevperf_usage();
+		return 1;
+	}
 
 	if (g_show_performance_ema_period > 0 &&
 	    g_show_performance_real_time == 0) {
@@ -1598,7 +1626,7 @@ main(int argc, char **argv)
 	opts.reactor_mask = NULL;
 	opts.shutdown_cb = spdk_bdevperf_shutdown_cb;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "xzfq:o:t:w:CM:P:S:T:", NULL,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "xzfq:o:t:w:k:CM:P:S:T:", NULL,
 				      bdevperf_parse_arg, bdevperf_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;
