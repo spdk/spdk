@@ -142,36 +142,10 @@ static int set_error_injection_for_nvme_controller( struct nvme_bdev_ctrlr *ctrl
     return rc;
 }
 
-static void
-get_feature_test_cb(void *cb_arg, const struct spdk_nvme_cpl *cpl)
-{
-	printf ( "%p: get features failed as expected, sct = %d, sc = %d\n",
-			cb_arg, cpl->status.sct, cpl->status.sc);
-}
-
-static void get_feature_test( struct spdk_nvme_ctrlr *ctrlr )
-{
-	struct spdk_nvme_cmd cmd;
-
-	memset(&cmd, 0, sizeof(cmd));
-	cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
-	cmd.cdw10_bits.get_features.fid = SPDK_NVME_FEAT_NUMBER_OF_QUEUES;
-
-	if (spdk_nvme_ctrlr_cmd_admin_raw( ctrlr, &cmd, NULL, 0,
-					  get_feature_test_cb, ctrlr) != 0) {
-		printf("Error: failed to send Get Features command for controller=%p\n", ctrlr);
-	}
-}
-
 static int
 error_injection_set( struct nvme_bdev_ctrlr *ctrlr, const struct rpc_error_injection_nvme_controller *rpc)
 {
 	int rc = set_error_injection_for_nvme_controller( ctrlr, rpc);
-
-	if (rc == 0) {
-		// Test code
-		get_feature_test( ctrlr->ctrlr );
-	}
 
 	return rc;
 }
