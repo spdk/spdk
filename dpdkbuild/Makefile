@@ -152,7 +152,8 @@ all: $(SPDK_ROOT_DIR)/dpdk/build
 clean:
 	$(Q)rm -rf $(SPDK_ROOT_DIR)/dpdk/build
 
-install: all
+install:
+	@:
 
 uninstall:
 	@:
