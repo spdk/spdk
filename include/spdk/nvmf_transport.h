@@ -160,6 +160,8 @@ struct spdk_nvmf_poll_group {
 
 	spdk_nvmf_poll_group_destroy_done_fn		destroy_cb_fn;
 	void						*destroy_cb_arg;
+
+	TAILQ_ENTRY(spdk_nvmf_poll_group)		link;
 };
 
 struct spdk_nvmf_listener {

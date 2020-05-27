@@ -62,6 +62,8 @@ enum spdk_nvmf_subsystem_state {
 struct spdk_nvmf_tgt {
 	char					name[NVMF_TGT_NAME_MAX_LENGTH];
 
+	pthread_mutex_t				mutex;
+
 	uint64_t				discovery_genctr;
 
 	uint32_t				max_subsystems;
@@ -70,6 +72,7 @@ struct spdk_nvmf_tgt {
 	struct spdk_nvmf_subsystem		**subsystems;
 
 	TAILQ_HEAD(, spdk_nvmf_transport)	transports;
+	TAILQ_HEAD(, spdk_nvmf_poll_group)	poll_groups;
 
 	spdk_nvmf_tgt_destroy_done_fn		*destroy_cb_fn;
 	void					*destroy_cb_arg;
