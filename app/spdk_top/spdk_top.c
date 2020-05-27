@@ -38,10 +38,21 @@
 #include "spdk/util.h"
 #include "spdk/env.h"
 
+#if defined __has_include
+#if __has_include(<ncurses/panel.h>)
+#include <ncurses/ncurses.h>
+#include <ncurses/panel.h>
+#include <ncurses/menu.h>
+#else
 #include <ncurses.h>
 #include <panel.h>
 #include <menu.h>
-
+#endif
+#else
+#include <ncurses.h>
+#include <panel.h>
+#include <menu.h>
+#endif
 
 #define RPC_MAX_THREADS 1024
 #define RPC_MAX_POLLERS 1024
