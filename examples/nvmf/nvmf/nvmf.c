@@ -224,11 +224,17 @@ nvmf_reactor_run(void *arg)
 	while (spdk_ring_dequeue(nvmf_reactor->threads, (void **)&lw_thread, 1)) {
 		thread = spdk_thread_get_from_ctx(lw_thread);
 		spdk_set_thread(thread);
-		spdk_thread_exit(thread);
-		while (!spdk_thread_is_exited(thread)) {
+
+		if (spdk_thread_is_exited(thread)) {
+			spdk_thread_destroy(thread);
+		} else {
+			/* This thread is not exited yet, and may need to communicate with other threads
+			 * to be exited. So mark it as exiting, and check again after traversing other threads.
+			 */
+			spdk_thread_exit(thread);
 			spdk_thread_poll(thread, 0, 0);
+			spdk_ring_enqueue(nvmf_reactor->threads, (void **)&lw_thread, 1, NULL);
 		}
-		spdk_thread_destroy(thread);
 	}
 
 	return 0;
