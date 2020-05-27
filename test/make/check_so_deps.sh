@@ -291,14 +291,25 @@ EOF
 			old_so_maj=$(readlink $source_abi_dir/$so_file | awk -F'\\.so\\.' '{print $2}' | cut -d '.' -f1)
 			old_so_min=$(readlink $source_abi_dir/$so_file | awk -F'\\.so\\.' '{print $2}' | cut -d '.' -f2)
 			so_name_changed=$(grep "ELF SONAME changed" <<< "$output") || so_name_changed="No"
+			leaf_type_summary=$(grep "leaf types summary" <<< "$output") || true
 			function_summary=$(grep "functions summary" <<< "$output")
 			variable_summary=$(grep "variables summary" <<< "$output")
 			# remove any filtered out variables.
+			leaf_type_summary=$(sed "s/ [()][^)]*[)]//g" <<< "$leaf_type_summary")
 			function_summary=$(sed "s/ [()][^)]*[)]//g" <<< "$function_summary")
 			variable_summary=$(sed "s/ [()][^)]*[)]//g" <<< "$variable_summary")
 
+			read -r _ _ _ _ changed_leaf_types _ _ _ <<< "$leaf_type_summary" || changed_leaf_types=0
 			read -r _ _ _ removed_functions _ changed_functions _ added_functions _ <<< "$function_summary"
 			read -r _ _ _ removed_vars _ changed_vars _ added_vars _ <<< "$variable_summary"
+
+			if [ $changed_leaf_types -ne 0 ]; then
+				if [ "$new_so_maj" == "$old_so_maj" ]; then
+					touch $fail_file
+					echo "Please update the major SO version for $so_file. A header accesible type has been modified since last release."
+				fi
+				found_abi_change=true
+			fi
 
 			if [ $removed_functions -ne 0 ] || [ $removed_vars -ne 0 ]; then
 				if [ "$new_so_maj" == "$old_so_maj" ]; then
