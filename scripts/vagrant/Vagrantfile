@@ -26,6 +26,8 @@ def checkboxtype(distro)
         return "generic/freebsd11"
       when "freebsd12"
         return "generic/freebsd12"
+      when "clearlinux"
+        return "AntonioMeireles/ClearLinux"
       else
         "Invalid argument #{distro}"
         abort("Invalid argument!")
