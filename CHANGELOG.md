@@ -2,6 +2,11 @@
 
 ## v20.07: (Upcoming Release)
 
+### nvmf
+
+The NVMe-oF target no longer supports connecting scheduling configuration and instead
+always uses what was previously called "transport" scheduling.
+
 ### nvme
 
 Add `opts_size` in `spdk_nvme_ctrlr_opts` structure in order to solve the compatiblity issue

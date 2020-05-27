@@ -76,18 +76,9 @@ SPDK_RPC_REGISTER_ALIAS_DEPRECATED(nvmf_set_max_subsystems, set_nvmf_target_max_
 
 static int decode_conn_sched(const struct spdk_json_val *val, void *out)
 {
-	enum spdk_nvmf_connect_sched *sched = out;
+	*(uint32_t *)out = 0;
 
-	if (spdk_json_strequal(val, "roundrobin") == true) {
-		*sched = CONNECT_SCHED_ROUND_ROBIN;
-	} else if (spdk_json_strequal(val, "hostip") == true) {
-		*sched = CONNECT_SCHED_HOST_IP;
-	} else if (spdk_json_strequal(val, "transport") == true) {
-		*sched = CONNECT_SCHED_TRANSPORT_OPTIMAL_GROUP;
-	} else {
-		SPDK_ERRLOG("Invalid connection scheduling parameter\n");
-		return -EINVAL;
-	}
+	SPDK_NOTICELOG("conn_sched is no longer a supported parameter. Ignoring.");
 
 	return 0;
 }
@@ -139,7 +130,6 @@ rpc_nvmf_set_config(struct spdk_jsonrpc_request *request,
 	}
 
 	conf->acceptor_poll_rate = ACCEPT_TIMEOUT_US;
-	conf->conn_sched = DEFAULT_CONN_SCHED;
 	conf->admin_passthru.identify_ctrlr = false;
 
 	if (params != NULL) {

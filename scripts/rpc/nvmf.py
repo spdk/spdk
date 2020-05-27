@@ -27,7 +27,7 @@ def nvmf_set_config(client,
 
     Args:
         acceptor_poll_rate: Acceptor poll period in microseconds (optional)
-        conn_sched: Scheduling of incoming connections (optional)
+        conn_sched: (Deprecated) Ignored
 
     Returns:
         True or False
@@ -37,7 +37,7 @@ def nvmf_set_config(client,
     if acceptor_poll_rate:
         params['acceptor_poll_rate'] = acceptor_poll_rate
     if conn_sched:
-        params['conn_sched'] = conn_sched
+        print("WARNING: conn_sched is deprecated and ignored.")
     if passthru_identify_ctrlr:
         admin_cmd_passthru = {}
         admin_cmd_passthru['identify_ctrlr'] = passthru_identify_ctrlr

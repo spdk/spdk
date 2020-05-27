@@ -62,17 +62,6 @@ struct nvmf_tgt_poll_group {
 	TAILQ_ENTRY(nvmf_tgt_poll_group)	link;
 };
 
-struct nvmf_tgt_host_trid {
-	struct spdk_nvme_transport_id       host_trid;
-	struct nvmf_tgt_poll_group          *pg;
-	uint32_t                            ref;
-	TAILQ_ENTRY(nvmf_tgt_host_trid)     link;
-};
-
-/* List of host trids that are connected to the target */
-static TAILQ_HEAD(, nvmf_tgt_host_trid) g_nvmf_tgt_host_trids =
-	TAILQ_HEAD_INITIALIZER(g_nvmf_tgt_host_trids);
-
 struct spdk_nvmf_tgt *g_spdk_nvmf_tgt = NULL;
 
 static enum nvmf_tgt_state g_tgt_state;
@@ -80,7 +69,7 @@ static enum nvmf_tgt_state g_tgt_state;
 static struct spdk_thread *g_tgt_init_thread = NULL;
 static struct spdk_thread *g_tgt_fini_thread = NULL;
 
-/* Round-Robin/IP-based tracking of threads to poll group assignment */
+/* Round-Robin assignment of connections to poll groups */
 static struct nvmf_tgt_poll_group *g_next_poll_group = NULL;
 
 static TAILQ_HEAD(, nvmf_tgt_poll_group) g_poll_groups = TAILQ_HEAD_INITIALIZER(g_poll_groups);
@@ -117,123 +106,33 @@ nvmf_subsystem_fini(void)
 	nvmf_shutdown_cb(NULL);
 }
 
-/* Round robin selection of poll groups */
-static struct nvmf_tgt_poll_group *
-nvmf_get_next_pg(void)
-{
-	struct nvmf_tgt_poll_group *pg;
-
-	pg = g_next_poll_group;
-	g_next_poll_group = TAILQ_NEXT(pg, link);
-	if (g_next_poll_group == NULL) {
-		g_next_poll_group = TAILQ_FIRST(&g_poll_groups);
-	}
-
-	return pg;
-}
-
-static struct nvmf_tgt_poll_group *
-nvmf_get_optimal_pg(struct spdk_nvmf_qpair *qpair)
-{
-	struct nvmf_tgt_poll_group *pg, *_pg = NULL;
-	struct spdk_nvmf_poll_group *group = spdk_nvmf_get_optimal_poll_group(qpair);
-
-	if (group == NULL) {
-		_pg = nvmf_get_next_pg();
-		goto end;
-	}
-
-	TAILQ_FOREACH(pg, &g_poll_groups, link) {
-		if (pg->group == group) {
-			_pg = pg;
-			break;
-		}
-
-	}
-
-end:
-	assert(_pg != NULL);
-	return _pg;
-}
-
-static void
-nvmf_tgt_remove_host_trid(struct spdk_nvmf_qpair *qpair)
-{
-	struct spdk_nvme_transport_id trid_to_remove;
-	struct nvmf_tgt_host_trid *trid = NULL, *tmp_trid = NULL;
-
-	if (g_spdk_nvmf_tgt_conf->conn_sched != CONNECT_SCHED_HOST_IP) {
-		return;
-	}
-
-	if (spdk_nvmf_qpair_get_peer_trid(qpair, &trid_to_remove) != 0) {
-		return;
-	}
-
-	TAILQ_FOREACH_SAFE(trid, &g_nvmf_tgt_host_trids, link, tmp_trid) {
-		if (trid && !strncmp(trid->host_trid.traddr,
-				     trid_to_remove.traddr, SPDK_NVMF_TRADDR_MAX_LEN + 1)) {
-			trid->ref--;
-			if (trid->ref == 0) {
-				TAILQ_REMOVE(&g_nvmf_tgt_host_trids, trid, link);
-				free(trid);
-			}
-
-			break;
-		}
-	}
-
-	return;
-}
-
 static struct nvmf_tgt_poll_group *
 nvmf_tgt_get_pg(struct spdk_nvmf_qpair *qpair)
 {
-	struct spdk_nvme_transport_id trid;
-	struct nvmf_tgt_host_trid *tmp_trid = NULL, *new_trid = NULL;
 	struct nvmf_tgt_poll_group *pg;
-	int ret;
+	struct spdk_nvmf_poll_group *group;
 
-	switch (g_spdk_nvmf_tgt_conf->conn_sched) {
-	case CONNECT_SCHED_HOST_IP:
-		ret = spdk_nvmf_qpair_get_peer_trid(qpair, &trid);
-		if (ret) {
-			pg = g_next_poll_group;
-			SPDK_ERRLOG("Invalid host transport Id. Assigning to poll group %p\n", pg);
-			break;
-		}
+	group = spdk_nvmf_get_optimal_poll_group(qpair);
 
-		TAILQ_FOREACH(tmp_trid, &g_nvmf_tgt_host_trids, link) {
-			if (tmp_trid && !strncmp(tmp_trid->host_trid.traddr,
-						 trid.traddr, SPDK_NVMF_TRADDR_MAX_LEN + 1)) {
-				tmp_trid->ref++;
-				pg = tmp_trid->pg;
-				break;
+	if (group != NULL) {
+		/* Look up the nvmf_tgt_poll_group that matches this spdk_nvmf_poll_group */
+		TAILQ_FOREACH(pg, &g_poll_groups, link) {
+			if (pg->group == group) {
+				return pg;
 			}
 		}
-		if (!tmp_trid) {
-			new_trid = calloc(1, sizeof(*new_trid));
-			if (!new_trid) {
-				pg = g_next_poll_group;
-				SPDK_ERRLOG("Insufficient memory. Assigning to poll group %p\n", pg);
-				break;
-			}
-			/* Get the next available poll group for the new host */
-			pg = nvmf_get_next_pg();
-			new_trid->pg = pg;
-			memcpy(new_trid->host_trid.traddr, trid.traddr,
-			       SPDK_NVMF_TRADDR_MAX_LEN + 1);
-			TAILQ_INSERT_TAIL(&g_nvmf_tgt_host_trids, new_trid, link);
-		}
-		break;
-	case CONNECT_SCHED_TRANSPORT_OPTIMAL_GROUP:
-		pg = nvmf_get_optimal_pg(qpair);
-		break;
-	case CONNECT_SCHED_ROUND_ROBIN:
-	default:
-		pg = nvmf_get_next_pg();
-		break;
+
+		return NULL;
 	}
+
+	if (g_next_poll_group == NULL) {
+		g_next_poll_group = TAILQ_FIRST(&g_poll_groups);
+		if (g_next_poll_group == NULL) {
+			return NULL;
+		}
+	}
+	pg = g_next_poll_group;
+	g_next_poll_group = TAILQ_NEXT(pg, link);
 
 	return pg;
 }
@@ -263,23 +162,14 @@ new_qpair(struct spdk_nvmf_qpair *qpair, void *cb_arg)
 {
 	struct nvmf_tgt_pg_ctx *ctx;
 	struct nvmf_tgt_poll_group *pg;
-	uint32_t attempts;
 
 	if (g_tgt_state != NVMF_TGT_RUNNING) {
 		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
 		return;
 	}
 
-	for (attempts = 0; attempts < g_num_poll_groups; attempts++) {
-		pg = nvmf_tgt_get_pg(qpair);
-		if (pg->group != NULL) {
-			break;
-		} else {
-			nvmf_tgt_remove_host_trid(qpair);
-		}
-	}
-
-	if (attempts == g_num_poll_groups) {
+	pg = nvmf_tgt_get_pg(qpair);
+	if (pg == NULL) {
 		SPDK_ERRLOG("No poll groups exist.\n");
 		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
 		return;
@@ -447,14 +337,7 @@ nvmf_tgt_subsystem_stopped(struct spdk_nvmf_subsystem *subsystem,
 static void
 nvmf_tgt_destroy_done(void *ctx, int status)
 {
-	struct nvmf_tgt_host_trid *trid, *tmp_trid;
-
 	g_tgt_state = NVMF_TGT_STOPPED;
-
-	TAILQ_FOREACH_SAFE(trid, &g_nvmf_tgt_host_trids, link, tmp_trid) {
-		TAILQ_REMOVE(&g_nvmf_tgt_host_trids, trid, link);
-		free(trid);
-	}
 
 	free(g_spdk_nvmf_tgt_conf);
 	g_spdk_nvmf_tgt_conf = NULL;
@@ -645,18 +528,6 @@ nvmf_subsystem_init(void)
 	nvmf_tgt_advance_state();
 }
 
-static char *
-get_conn_sched_string(enum spdk_nvmf_connect_sched sched)
-{
-	if (sched == CONNECT_SCHED_HOST_IP) {
-		return "hostip";
-	} else if (sched == CONNECT_SCHED_TRANSPORT_OPTIMAL_GROUP) {
-		return "transport";
-	} else {
-		return "roundrobin";
-	}
-}
-
 static void
 nvmf_subsystem_write_config_json(struct spdk_json_write_ctx *w)
 {
@@ -667,8 +538,6 @@ nvmf_subsystem_write_config_json(struct spdk_json_write_ctx *w)
 
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_uint32(w, "acceptor_poll_rate", g_spdk_nvmf_tgt_conf->acceptor_poll_rate);
-	spdk_json_write_named_string(w, "conn_sched",
-				     get_conn_sched_string(g_spdk_nvmf_tgt_conf->conn_sched));
 	spdk_json_write_named_object_begin(w, "admin_cmd_passthru");
 	spdk_json_write_named_bool(w, "identify_ctrlr",
 				   g_spdk_nvmf_tgt_conf->admin_passthru.identify_ctrlr);

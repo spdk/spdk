@@ -117,23 +117,7 @@ nvmf_read_config_file_tgt_conf(struct spdk_conf_section *sp,
 	conn_scheduler = spdk_conf_section_get_val(sp, "ConnectionScheduler");
 
 	if (conn_scheduler) {
-		if (strcasecmp(conn_scheduler, "RoundRobin") == 0) {
-			conf->conn_sched = CONNECT_SCHED_ROUND_ROBIN;
-		} else if (strcasecmp(conn_scheduler, "Host") == 0) {
-			conf->conn_sched = CONNECT_SCHED_HOST_IP;
-		} else if (strcasecmp(conn_scheduler, "Transport") == 0) {
-			conf->conn_sched = CONNECT_SCHED_TRANSPORT_OPTIMAL_GROUP;
-		} else {
-			SPDK_ERRLOG("The valid value of ConnectionScheduler should be:\n"
-				    "\t RoundRobin\n"
-				    "\t Host\n"
-				    "\t Transport\n");
-			rc = -1;
-		}
-
-	} else {
-		SPDK_NOTICELOG("The value of ConnectionScheduler is not configured,\n"
-			       "we will use RoundRobin as the default scheduler\n");
+		SPDK_NOTICELOG("The ConnectionScheduler option is no longer valid. Ignoring it.\n");
 	}
 
 	conf->admin_passthru.identify_ctrlr = spdk_conf_section_get_boolval(sp,
@@ -170,7 +154,6 @@ nvmf_parse_tgt_conf(void)
 	}
 
 	conf->acceptor_poll_rate = ACCEPT_TIMEOUT_US;
-	conf->conn_sched = DEFAULT_CONN_SCHED;
 	conf->admin_passthru.identify_ctrlr = false;
 
 	sp = spdk_conf_find_section(NULL, "Nvmf");

@@ -1704,10 +1704,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('nvmf_set_config', aliases=['set_nvmf_target_config'],
                               help='Set NVMf target config')
     p.add_argument('-r', '--acceptor-poll-rate', help='Polling interval of the acceptor for incoming connections (usec)', type=int)
-    p.add_argument('-s', '--conn-sched', help="""'roundrobin' - Schedule the incoming connections from any host
-    on the cores in a round robin manner (Default). 'hostip' - Schedule all the incoming connections from a
-    specific host IP on to the same core. Connections from different IP will be assigned to cores in a round
-    robin manner. 'transport' - Schedule the connection according to the transport characteristics.""")
+    p.add_argument('-s', '--conn-sched', help='(Deprecated). Ignored.')
     p.add_argument('-i', '--passthru-identify-ctrlr', help="""Passthrough fields like serial number and model number
     when the controller has a single namespace that is an NVMe bdev""", action='store_true')
     p.set_defaults(func=nvmf_set_config)
