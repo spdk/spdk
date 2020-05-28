@@ -348,6 +348,12 @@ EOF
 					echo "SO major version for $so_file was bumped. Please reset the minor version to 0."
 					touch $fail_file
 				fi
+
+				expected_new_so_min=$((old_so_min + 1))
+				if [ "$new_so_min" -gt "$old_so_min" ] && [ $expected_new_so_min != $new_so_min ]; then
+					echo "SO minor version for $so_file was incremented more than once. Please revert minor version to $expected_new_so_min."
+					touch $fail_file
+				fi
 			fi
 
 			continue
