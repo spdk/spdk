@@ -351,9 +351,18 @@ nvme_robust_mutex_init_shared(pthread_mutex_t *mtx)
 int
 nvme_driver_init(void)
 {
+	static pthread_mutex_t g_init_mutex = PTHREAD_MUTEX_INITIALIZER;
 	int ret = 0;
 	/* Any socket ID */
 	int socket_id = -1;
+
+	/* Use a special process-private mutex to ensure the global
+	 * nvme driver object (g_spdk_nvme_driver) gets initialized by
+	 * only one thread.  Once that object is established and its
+	 * mutex is initialized, we can unlock this mutex and use that
+	 * one instead.
+	 */
+	pthread_mutex_lock(&g_init_mutex);
 
 	/* Each process needs its own pid. */
 	g_spdk_nvme_pid = getpid();
@@ -367,6 +376,7 @@ nvme_driver_init(void)
 	if (spdk_process_is_primary()) {
 		/* The unique named memzone already reserved. */
 		if (g_spdk_nvme_driver != NULL) {
+			pthread_mutex_unlock(&g_init_mutex);
 			return 0;
 		} else {
 			g_spdk_nvme_driver = spdk_memzone_reserve(SPDK_NVME_DRIVER_NAME,
@@ -376,7 +386,7 @@ nvme_driver_init(void)
 
 		if (g_spdk_nvme_driver == NULL) {
 			SPDK_ERRLOG("primary process failed to reserve memory\n");
-
+			pthread_mutex_unlock(&g_init_mutex);
 			return -1;
 		}
 	} else {
@@ -394,15 +404,16 @@ nvme_driver_init(void)
 			}
 			if (g_spdk_nvme_driver->initialized == false) {
 				SPDK_ERRLOG("timeout waiting for primary process to init\n");
-
+				pthread_mutex_unlock(&g_init_mutex);
 				return -1;
 			}
 		} else {
 			SPDK_ERRLOG("primary process is not started yet\n");
-
+			pthread_mutex_unlock(&g_init_mutex);
 			return -1;
 		}
 
+		pthread_mutex_unlock(&g_init_mutex);
 		return 0;
 	}
 
@@ -416,9 +427,14 @@ nvme_driver_init(void)
 	if (ret != 0) {
 		SPDK_ERRLOG("failed to initialize mutex\n");
 		spdk_memzone_free(SPDK_NVME_DRIVER_NAME);
+		pthread_mutex_unlock(&g_init_mutex);
 		return ret;
 	}
 
+	/* The lock in the shared g_spdk_nvme_driver object is now ready to
+	 * be used - so we can unlock the g_init_mutex here.
+	 */
+	pthread_mutex_unlock(&g_init_mutex);
 	nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 
 	g_spdk_nvme_driver->initialized = false;
