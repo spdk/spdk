@@ -276,6 +276,9 @@ function install_vpp() {
 				if [ ${OSVERSION} -eq 30 ]; then
 					git -C ./vpp apply ${VM_SETUP_PATH}/patch/vpp/fedora30-fix.patch
 				fi
+				if ((OVERSION == 31)); then
+					git -C ./vpp apply "$VM_SETUP_PATH/patch/vpp/fedora31-fix.patch"
+				fi
 			fi
 
 			# vpp depends on python-ply, however some packages on different Fedoras don't

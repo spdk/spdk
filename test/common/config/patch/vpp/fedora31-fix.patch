@@ -1,0 +1,46 @@
+diff --git a/Makefile b/Makefile
+index 8c7f3523f..20814ee8d 100644
+--- a/Makefile
++++ b/Makefile
+@@ -92,8 +92,8 @@ RPM_DEPENDS += mbedtls-devel
+ ifeq ($(OS_ID),fedora)
+ 	RPM_DEPENDS += dnf-utils
+ 	RPM_DEPENDS += subunit subunit-devel
+-	RPM_DEPENDS += compat-openssl10-devel
+-	RPM_DEPENDS += python2-devel python34-ply
++	RPM_DEPENDS += openssl-devel
++	RPM_DEPENDS += python2-devel
+ 	RPM_DEPENDS += python2-virtualenv
+ 	RPM_DEPENDS += cmake
+ 	RPM_DEPENDS_GROUPS = 'C Development Tools and Libraries'
+diff --git a/build/external/packages/dpdk.mk b/build/external/packages/dpdk.mk
+index a551151bb..b0258017a 100644
+--- a/build/external/packages/dpdk.mk
++++ b/build/external/packages/dpdk.mk
+@@ -147,7 +147,7 @@ endif
+ endif
+ endif
+ 
+-DPDK_EXTRA_CFLAGS += -L$(I)/lib -I$(I)/include
++DPDK_EXTRA_CFLAGS += -L$(I)/lib -I$(I)/include -Wno-address-of-packed-member
+ 
+ # assemble DPDK make arguments
+ DPDK_MAKE_ARGS := -C $(DPDK_SOURCE) -j $(JOBS) \
+diff --git a/src/plugins/crypto_ia32/CMakeLists.txt b/src/plugins/crypto_ia32/CMakeLists.txt
+index a100cdbb6..92e408098 100644
+--- a/src/plugins/crypto_ia32/CMakeLists.txt
++++ b/src/plugins/crypto_ia32/CMakeLists.txt
+@@ -22,3 +22,4 @@ add_vpp_plugin(crypto_ia32
+ )
+ 
+ target_compile_options(crypto_ia32_plugin PRIVATE "-march=silvermont")
++target_compile_options(crypto_ia32_plugin PRIVATE "-maes")
+diff --git a/src/plugins/crypto_ipsecmb/CMakeLists.txt b/src/plugins/crypto_ipsecmb/CMakeLists.txt
+index 0d08032c0..6a7eb148f 100644
+--- a/src/plugins/crypto_ipsecmb/CMakeLists.txt
++++ b/src/plugins/crypto_ipsecmb/CMakeLists.txt
+@@ -39,3 +39,4 @@ else()
+ endif()
+ 
+ target_compile_options(crypto_ipsecmb_plugin PRIVATE "-march=silvermont")
++target_compile_options(crypto_ipsecmb_plugin PRIVATE "-maes")
