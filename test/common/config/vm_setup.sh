@@ -620,6 +620,11 @@ if $INSTALL; then
 			sudo apt-get install -y targetcli
 		fi
 
+		# On Ubuntu 20.04 (focal) btrfs-tools are available under different name - btrfs-progs
+		if ! sudo apt-get install -y btrfs-tools; then
+			sudo apt-get install -y btrfs-progs
+		fi
+
 		sudo apt-get install -y \
 			valgrind \
 			jq \
@@ -648,7 +653,6 @@ if $INSTALL; then
 			sshfs \
 			sshpass \
 			python3-pandas \
-			btrfs-tools \
 			bc \
 			smartmontools \
 			wget
