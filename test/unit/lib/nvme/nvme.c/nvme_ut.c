@@ -63,6 +63,7 @@ DEFINE_STUB(nvme_transport_ctrlr_construct, struct spdk_nvme_ctrlr *,
 DEFINE_STUB_V(nvme_io_msg_ctrlr_detach, (struct spdk_nvme_ctrlr *ctrlr));
 DEFINE_STUB(spdk_nvme_transport_available, bool,
 	    (enum spdk_nvme_transport_type trtype), true);
+DEFINE_STUB(spdk_uevent_connect, int, (void), 1);
 
 
 static bool ut_destruct_called = false;

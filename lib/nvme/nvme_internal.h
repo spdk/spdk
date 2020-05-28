@@ -798,6 +798,9 @@ struct nvme_driver {
 
 	bool				initialized;
 	struct spdk_uuid		default_extended_host_id;
+
+	/** netlink socket fd for hotplug messages */
+	int				hotplug_fd;
 };
 
 extern struct nvme_driver *g_spdk_nvme_driver;
