@@ -278,6 +278,11 @@ function install_vpp() {
 				fi
 			fi
 
+			# vpp depends on python-ply, however some packages on different Fedoras don't
+			# provide ply.lex. To make sure vpp won't fail, try to reinstall ply via pip.
+			sudo pip3 uninstall -y ply || true
+			sudo pip3 install ply || true
+
 			# Installing required dependencies for building VPP
 			yes | make -C ./vpp install-dep
 
