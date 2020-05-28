@@ -215,7 +215,7 @@ function install_qemu() {
 		if [ "$PACKAGEMNG" = "dnf" ]; then
 			sudo dnf install -y qemu-system-x86 qemu-img
 		elif [ "$PACKAGEMNG" = "apt-get" ]; then
-			sudo apt-get install -y qemu-system-x86 qemu-img
+			sudo apt-get install -y qemu-system-x86 qemu-utils
 		elif [ "$PACKAGEMNG" = "pacman" ]; then
 			sudo pacman -Sy --needed --noconfirm qemu
 		elif [[ $PACKAGEMNG == "yum" ]]; then
