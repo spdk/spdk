@@ -218,6 +218,8 @@ function install_qemu() {
 			sudo apt-get install -y qemu-system-x86 qemu-img
 		elif [ "$PACKAGEMNG" = "pacman" ]; then
 			sudo pacman -Sy --needed --noconfirm qemu
+		elif [[ $PACKAGEMNG == "yum" ]]; then
+			sudo yum install -y qemu-system-x86 qemu-img
 		fi
 
 		# Forked QEMU
