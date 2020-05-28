@@ -212,7 +212,7 @@ if [[ $run_precondition == true ]]; then
 	fio_filename=$(printf ":%sn1" "${nvmes[@]}")
 	fio_filename=${fio_filename:1}
 	$precond_fio_bin --name="precondition" \
-		--ioengine="${rootdir}/examples/bdev/fio_plugin/fio_plugin" \
+		--ioengine="${rootdir}/build/fio/spdk_bdev" \
 		--rw="write" --spdk_json_conf="$json_cfg" --thread="1" \
 		--group_reporting --direct="1" --size="100%" --loops="2" --bs="256k" \
 		--iodepth=32 --filename="${fio_filename}" || true

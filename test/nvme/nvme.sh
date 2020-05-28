@@ -24,10 +24,9 @@ function nvme_perf() {
 }
 
 function nvme_fio_test() {
-	PLUGIN_DIR=$rootdir/examples/nvme/fio_plugin
 	for bdf in $(get_nvme_bdfs); do
 		for blkname in $(get_nvme_name_from_bdf $bdf); do
-			fio_nvme $PLUGIN_DIR/example_config.fio --filename="trtype=PCIe traddr=${bdf//:/.} ns=${blkname##*n}"
+			fio_nvme $rootdir/examples/nvme/fio_plugin/example_config.fio --filename="trtype=PCIe traddr=${bdf//:/.} ns=${blkname##*n}"
 		done
 	done
 }

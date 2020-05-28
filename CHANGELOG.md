@@ -13,6 +13,11 @@ Command line parameters `-r` and `--rpc-socket` will longer accept TCP ports. RP
 must now be started on a Unix domain socket. Exposing RPC on the network, as well as providing
 proper authentication (if needed) is now a responsibility of the user.
 
+### build
+
+The fio plugins now compile to `build/fio` and are named `spdk_bdev` and `spdk_nvme`.
+Existing fio configuration files will need to be updated.
+
 ### accel
 
 A new API was added `spdk_accel_get_capabilities` that allows applications to

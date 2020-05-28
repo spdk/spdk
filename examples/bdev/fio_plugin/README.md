@@ -45,7 +45,7 @@ To use the SPDK fio plugin with fio, specify the plugin binary using LD_PRELOAD 
 fio and set ioengine=spdk_bdev in the fio configuration file (see example_config.fio in the same
 directory as this README).
 
-    LD_PRELOAD=<path to spdk repo>/examples/bdev/fio_plugin/fio_plugin fio
+    LD_PRELOAD=<path to spdk repo>/build/fio/spdk_bdev fio
 
 The fio configuration file must contain one new parameter:
 

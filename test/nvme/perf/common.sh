@@ -4,8 +4,7 @@ set -e
 BASE_DIR=$(readlink -f $(dirname $0))
 ROOT_DIR=$(readlink -f $BASE_DIR/../../..)
 rootdir=$ROOT_DIR
-PLUGIN_DIR_NVME=$ROOT_DIR/examples/nvme/fio_plugin
-PLUGIN_DIR_BDEV=$ROOT_DIR/examples/bdev/fio_plugin
+PLUGIN_DIR=$ROOT_DIR/build/fio
 BDEVPERF_DIR=$ROOT_DIR/test/bdev/bdevperf
 NVMEPERF_DIR=$ROOT_DIR/examples/nvme/perf
 . $ROOT_DIR/scripts/common.sh || exit 1
@@ -350,9 +349,9 @@ function run_spdk_nvme_fio() {
 	local plugin=$1
 	echo "** Running fio test, this can take a while, depending on the run-time and ramp-time setting."
 	if [[ "$plugin" = "spdk-plugin-nvme" ]]; then
-		LD_PRELOAD=$PLUGIN_DIR_NVME/fio_plugin $FIO_BIN $BASE_DIR/config.fio --output-format=json "${@:2}" --ioengine=spdk
+		LD_PRELOAD=$PLUGIN_DIR/spdk_nvme $FIO_BIN $BASE_DIR/config.fio --output-format=json "${@:2}" --ioengine=spdk
 	elif [[ "$plugin" = "spdk-plugin-bdev" ]]; then
-		LD_PRELOAD=$PLUGIN_DIR_BDEV/fio_plugin $FIO_BIN $BASE_DIR/config.fio --output-format=json "${@:2}" --ioengine=spdk_bdev --spdk_json_conf=$BASE_DIR/bdev.conf --spdk_mem=4096
+		LD_PRELOAD=$PLUGIN_DIR/spdk_bdev $FIO_BIN $BASE_DIR/config.fio --output-format=json "${@:2}" --ioengine=spdk_bdev --spdk_json_conf=$BASE_DIR/bdev.conf --spdk_mem=4096
 	fi
 
 	sleep 1

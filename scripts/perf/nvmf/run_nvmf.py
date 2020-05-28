@@ -326,7 +326,7 @@ runtime={run_time}
             subsystems = self.discover_subsystems(self.nic_ips, subsys_no)
             bdev_conf = self.gen_spdk_bdev_conf(subsystems)
             self.remote_call("echo '%s' > %s/bdev.conf" % (bdev_conf, self.spdk_dir))
-            ioengine = "%s/examples/bdev/fio_plugin/fio_plugin" % self.spdk_dir
+            ioengine = "%s/build/fio/spdk_bdev" % self.spdk_dir
             spdk_conf = "spdk_conf=%s/bdev.conf" % self.spdk_dir
         else:
             ioengine = "libaio"

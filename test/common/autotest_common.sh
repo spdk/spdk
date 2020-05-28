@@ -1074,7 +1074,7 @@ EOL
 function fio_bdev() {
 	# Setup fio binary cmd line
 	local fio_dir=$CONFIG_FIO_SOURCE_DIR
-	local bdev_plugin="$rootdir/examples/bdev/fio_plugin/fio_plugin"
+	local bdev_plugin="$rootdir/build/fio/spdk_bdev"
 
 	# Preload AddressSanitizer library to fio if fio_plugin was compiled with it
 	local asan_lib
@@ -1086,7 +1086,7 @@ function fio_bdev() {
 function fio_nvme() {
 	# Setup fio binary cmd line
 	local fio_dir=$CONFIG_FIO_SOURCE_DIR
-	local nvme_plugin="$rootdir/examples/nvme/fio_plugin/fio_plugin"
+	local nvme_plugin="$rootdir/build/fio/spdk_nvme"
 
 	# Preload AddressSanitizer library to fio if fio_plugin was compiled with it
 	asan_lib=$(ldd $nvme_plugin | grep libasan | awk '{print $3}')

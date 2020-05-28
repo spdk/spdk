@@ -2,7 +2,6 @@
 #  BSD LICENSE
 #
 #  Copyright (c) Intel Corporation.
-#  Copyright (c) 2015-2016, Micron Technology, Inc.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -32,20 +31,33 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
-include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app_vars.mk
 
-FIO_PLUGIN := spdk_nvme
+# Plugins go into build/example/
+FIO_PLUGIN := $(SPDK_ROOT_DIR)/build/fio/$(notdir $(FIO_PLUGIN))
 
-C_SRCS = fio_plugin.c
+LIBS += $(SPDK_LIB_LINKER_ARGS)
 
-# Unable to combine the FIO plugin and the VPP socket abstraction (license incompatibility)
-SPDK_LIB_LIST = $(filter-out sock_vpp,$(SOCK_MODULES_LIST))
-SPDK_LIB_LIST += nvme thread util log sock vmd
+CFLAGS += -I$(CONFIG_FIO_SOURCE_DIR)
+LDFLAGS += -shared -rdynamic -Wl,-z,nodelete
 
-ifeq ($(CONFIG_RDMA),y)
-SPDK_LIB_LIST += rdma
-endif
+CLEAN_FILES = $(FIO_PLUGIN)
 
-include $(SPDK_ROOT_DIR)/mk/spdk.fio.mk
+all : $(FIO_PLUGIN)
+	@:
+
+install: empty_rule
+
+uninstall: empty_rule
+
+# To avoid overwriting warning
+empty_rule:
+	@:
+
+$(FIO_PLUGIN) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
+	$(LINK_C)
+
+clean :
+	$(CLEAN_C) $(CLEAN_FILES)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
