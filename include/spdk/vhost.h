@@ -41,8 +41,9 @@
 
 #include "spdk/stdinc.h"
 
-#include "spdk/event.h"
+#include "spdk/cpuset.h"
 #include "spdk/json.h"
+#include "spdk/thread.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -40,7 +40,6 @@
 #include "spdk/scsi.h"
 #include "spdk/scsi_spec.h"
 #include "spdk/conf.h"
-#include "spdk/event.h"
 #include "spdk/util.h"
 #include "spdk/likely.h"
 
