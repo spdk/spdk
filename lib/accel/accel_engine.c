@@ -36,7 +36,7 @@
 #include "spdk_internal/accel_engine.h"
 
 #include "spdk/env.h"
-#include "spdk/event.h"
+#include "spdk/log.h"
 #include "spdk/thread.h"
 #include "spdk/json.h"
 #include "spdk/crc32.h"
