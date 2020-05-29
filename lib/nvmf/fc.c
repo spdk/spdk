@@ -41,7 +41,6 @@
 #include "spdk/string.h"
 #include "spdk/trace.h"
 #include "spdk/util.h"
-#include "spdk/event.h"
 #include "spdk/likely.h"
 #include "spdk/endian.h"
 #include "spdk/log.h"

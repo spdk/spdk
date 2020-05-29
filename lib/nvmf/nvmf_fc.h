@@ -39,7 +39,6 @@
 #include "spdk/assert.h"
 #include "spdk/nvme_spec.h"
 #include "spdk/nvmf_fc_spec.h"
-#include "spdk/event.h"
 #include "spdk/thread.h"
 #include "nvmf_internal.h"
 

@@ -36,7 +36,6 @@
 #include "spdk/env.h"
 #include "spdk_cunit.h"
 #include "spdk/nvmf.h"
-#include "spdk_internal/event.h"
 #include "spdk/endian.h"
 #include "spdk/trace.h"
 #include "spdk_internal/log.h"

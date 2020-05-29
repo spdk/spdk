@@ -36,7 +36,6 @@
 #include "nvmf_internal.h"
 #include "transport.h"
 
-#include "spdk/event.h"
 #include "spdk/likely.h"
 #include "spdk/string.h"
 #include "spdk/trace.h"
