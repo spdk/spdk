@@ -40,7 +40,6 @@
 #include "spdk/assert.h"
 #include "spdk/log.h"
 #include "spdk/trace.h"
-#include "spdk/event.h"
 #include "spdk/queue.h"
 #include "spdk/nvme.h"
 #include "spdk/nvmf_spec.h"

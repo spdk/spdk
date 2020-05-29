@@ -35,7 +35,6 @@
 #include "spdk/string.h"
 
 #include "spdk/log.h"
-#include "spdk/event.h"
 
 #include "nvme_uevent.h"
 
