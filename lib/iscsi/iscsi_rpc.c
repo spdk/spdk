@@ -40,7 +40,6 @@
 
 #include "spdk/rpc.h"
 #include "spdk/util.h"
-#include "spdk/event.h"
 #include "spdk/string.h"
 #include "spdk_internal/log.h"
 

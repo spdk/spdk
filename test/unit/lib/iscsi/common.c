@@ -3,7 +3,6 @@
 #include "iscsi/conn.h"
 
 #include "spdk/env.h"
-#include "spdk/event.h"
 #include "spdk/sock.h"
 #include "spdk_cunit.h"
 

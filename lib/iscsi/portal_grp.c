@@ -36,7 +36,6 @@
 
 #include "spdk/conf.h"
 #include "spdk/sock.h"
-#include "spdk/event.h"
 #include "spdk/string.h"
 
 #include "spdk_internal/log.h"

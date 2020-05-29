@@ -32,7 +32,6 @@
  */
 
 #include "spdk/stdinc.h"
-#include "spdk/event.h"
 
 #include "spdk_cunit.h"
 

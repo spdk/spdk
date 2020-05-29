@@ -39,7 +39,6 @@
 
 #include "spdk/bdev.h"
 #include "spdk/iscsi_spec.h"
-#include "spdk/event.h"
 #include "spdk/thread.h"
 #include "spdk/sock.h"
 
