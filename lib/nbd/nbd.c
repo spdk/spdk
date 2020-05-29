@@ -44,7 +44,6 @@
 #include "spdk/log.h"
 #include "spdk/util.h"
 #include "spdk/thread.h"
-#include "spdk/event.h"
 
 #include "spdk_internal/log.h"
 #include "spdk/queue.h"
