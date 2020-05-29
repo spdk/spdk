@@ -36,7 +36,6 @@
 #include "spdk/endian.h"
 #include "spdk/env.h"
 #include "spdk/thread.h"
-#include "spdk/event.h"
 #include "spdk/util.h"
 #include "spdk/likely.h"
 
