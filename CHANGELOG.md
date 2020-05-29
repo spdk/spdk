@@ -7,6 +7,16 @@
 Updated DPDK submodule to DPDK 19.11.2, which includes fixes for DPDK vulnerabilities:
 CVE-2020-10722, CVE-2020-10723, CVE-2020-10724, CVE-2020-10725, CVE-2020-10724.
 
+### env_dpdk
+
+A new function, `spdk_mem_reserve`, has been added to reserve a memory region in SPDK's
+memory maps. It pre-allocates data structures to hold memory address translations
+without populating the region.
+
+### rpc
+
+A new RPC, `bdev_rbd_resize` has been added to resize the Ceph RBD bdev.
+
 ## v20.01.1:
 
 ## v20.01:
@@ -157,8 +167,6 @@ A new RPC, `framework_get_reactors`, has been added to retrieve a list of all re
 
 `nvmf_set_config` now takes an argument to enable passthru of identify commands to base NVMe devices.
 Please see the nvmf section above for more details.
-
-A new RPC, `bdev_rbd_resize` has been added to resize the Ceph RBD bdev.
 
 ### scsi
 
