@@ -8,6 +8,8 @@ fi
 
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
+source $rootdir/test/common/autotest_common.sh
+
 rpc_server=/var/tmp/spdk-blobfs.sock
 rpc_py="$rootdir/scripts/rpc.py -s $rpc_server"
 tmp_file=$SPDK_TEST_STORAGE/blobfs_file
@@ -15,8 +17,6 @@ conf_file=/tmp/blobfs.conf
 bdevname=BlobfsBdev
 mount_dir=/tmp/spdk_tmp_mount
 test_cache_size=512
-
-source $rootdir/test/common/autotest_common.sh
 
 function cleanup() {
 	if [[ -n $blobfs_pid && -e /proc/$blobfs_pid ]]; then
