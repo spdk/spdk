@@ -24,7 +24,7 @@ VM_SETUP_PATH=$(readlink -f ${BASH_SOURCE%/*})
 
 UPGRADE=false
 INSTALL=false
-CONF="librxe,iscsi,rocksdb,fio,flamegraph,tsocks,qemu,vpp,libiscsi,nvmecli,qat,refspdk"
+CONF="librxe,rocksdb,fio,flamegraph,tsocks,qemu,vpp,libiscsi,nvmecli,qat,refspdk"
 LIBRXE_INSTALL=true
 gcc_version=$(gcc -dumpversion) gcc_version=${gcc_version%%.*}
 
@@ -103,40 +103,6 @@ function install_rxe_cfg() {
 			./librxe-dev/configure --libdir=/usr/lib64/ --prefix=
 			make -C librxe-dev -j${jobs}
 			sudo make -C librxe-dev install
-		fi
-	fi
-}
-
-function install_iscsi_adm() {
-	if echo $CONF | grep -q iscsi; then
-		# iscsiadm is used in the iscsi_tgt tests
-		# The version of iscsiadm that ships with fedora 26 was broken as of November 3 2017.
-		# There is already a bug report out about it, and hopefully it is fixed soon, but in the event that
-		# that version is still broken when you do your setup, the below steps will fix the issue.
-		CURRENT_VERSION=$(iscsiadm --version)
-		OPEN_ISCSI_VER='iscsiadm version 6.2.0.874'
-		if [ "$CURRENT_VERSION" == "$OPEN_ISCSI_VER" ]; then
-			if [ ! -d open-iscsi-install ]; then
-				mkdir -p open-iscsi-install/patches
-				sudo dnf download --downloaddir=./open-iscsi-install --source iscsi-initiator-utils
-				rpm2cpio open-iscsi-install/$(ls ~/open-iscsi-install) | cpio -D open-iscsi-install -idmv
-				mv open-iscsi-install/00* open-iscsi-install/patches/
-				git clone "${GIT_REPO_OPEN_ISCSI}" open-iscsi-install/open-iscsi
-
-				# the configurations of username and email are needed for applying patches to iscsiadm.
-				git -C open-iscsi-install/open-iscsi config user.name none
-				git -C open-iscsi-install/open-iscsi config user.email none
-
-				git -C open-iscsi-install/open-iscsi checkout 86e8892
-				for patch in open-iscsi-install/patches/*; do
-					git -C open-iscsi-install/open-iscsi am ../patches/$patch
-				done
-				sed -i '427s/.*/-1);/' open-iscsi-install/open-iscsi/usr/session_info.c
-				make -C open-iscsi-install/open-iscsi -j${jobs}
-				sudo make -C open-iscsi-install/open-iscsi install
-			else
-				echo "custom open-iscsi install located, not reinstalling"
-			fi
 		fi
 	fi
 }
@@ -448,8 +414,6 @@ export GIT_REPO_SPDK
 export GIT_REPO_DPDK
 : ${GIT_REPO_LIBRXE=https://github.com/SoftRoCE/librxe-dev.git}
 export GIT_REPO_LIBRXE
-: ${GIT_REPO_OPEN_ISCSI=https://github.com/open-iscsi/open-iscsi}
-export GIT_REPO_OPEN_ISCSI
 : ${GIT_REPO_ROCKSDB=https://review.spdk.io/spdk/rocksdb}
 export GIT_REPO_ROCKSDB
 : ${GIT_REPO_FIO=http://git.kernel.dk/fio.git}
@@ -769,7 +733,6 @@ if [ $OSID != 'freebsd' ]; then
 		#Don't compile librxe on ubuntu18 or later version, install package rdma-core instead.
 		install_rxe_cfg &
 	fi
-	install_iscsi_adm &
 	install_libiscsi &
 	install_vpp &
 	install_nvmecli &
