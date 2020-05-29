@@ -29,3 +29,6 @@ if [[ $INSTALL_DOCS == "true" ]]; then
 	# Additional dependencies for building docs
 	zypper install -y doxygen mscgen graphviz
 fi
+if [[ $INSTALL_LIBURING == "true" ]]; then
+	install_liburing
+fi

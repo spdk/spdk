@@ -68,3 +68,6 @@ if [[ $INSTALL_DOCS == "true" ]]; then
 	yum install -y mscgen || echo "Warning: couldn't install mscgen via yum. Please install mscgen manually."
 	yum install -y doxygen graphviz
 fi
+if [[ $INSTALL_LIBURING == "true" ]]; then
+	install_liburing
+fi

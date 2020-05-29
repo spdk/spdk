@@ -16,6 +16,7 @@ function usage() {
 	echo "  -f --fuse                   Additional dependencies for FUSE and NVMe-CUSE"
 	echo "  -r --rdma                   Additional dependencies for RDMA transport in NVMe over Fabrics"
 	echo "  -b --docs                   Additional dependencies for building docs"
+	echo "  -u --uring                  Additional dependencies for io_uring"
 	echo ""
 	exit 0
 }
@@ -26,6 +27,23 @@ function install_all_dependencies() {
 	INSTALL_FUSE=true
 	INSTALL_RDMA=true
 	INSTALL_DOCS=true
+}
+
+function install_liburing() {
+	local GIT_REPO_LIBURING=https://github.com/axboe/liburing.git
+	local liburing_dir=/usr/local/src/liburing
+
+	if [[ -e /usr/lib/liburing.so ]]; then
+		echo "liburing is already installed. skipping"
+	else
+		if [[ -d $liburing_dir ]]; then
+			echo "liburing source already present, not cloning"
+		else
+			mkdir $liburing_dir
+			git clone "${GIT_REPO_LIBURING}" "$liburing_dir"
+		fi
+		(cd "$liburing_dir" && ./configure && make install)
+	fi
 }
 
 function install_shfmt() {
@@ -81,8 +99,9 @@ INSTALL_PMEM=false
 INSTALL_FUSE=false
 INSTALL_RDMA=false
 INSTALL_DOCS=false
+INSTALL_LIBURING=false
 
-while getopts 'abdfhipr-:' optchar; do
+while getopts 'abdfhipru-:' optchar; do
 	case "$optchar" in
 		-)
 			case "$OPTARG" in
@@ -93,6 +112,7 @@ while getopts 'abdfhipr-:' optchar; do
 				fuse) INSTALL_FUSE=true ;;
 				rdma) INSTALL_RDMA=true ;;
 				docs) INSTALL_DOCS=true ;;
+				uring) INSTALL_LIBURING=true ;;
 				*)
 					echo "Invalid argument '$OPTARG'"
 					usage
@@ -106,6 +126,7 @@ while getopts 'abdfhipr-:' optchar; do
 		f) INSTALL_FUSE=true ;;
 		r) INSTALL_RDMA=true ;;
 		b) INSTALL_DOCS=true ;;
+		u) INSTALL_LIBURING=true ;;
 		*)
 			echo "Invalid argument '$OPTARG'"
 			usage

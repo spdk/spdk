@@ -72,3 +72,6 @@ if [[ $INSTALL_DOCS == "true" ]]; then
 		cd .. && rm -rf mscgen;
 		popd"
 fi
+if [[ $INSTALL_LIBURING == "true" ]]; then
+	install_liburing
+fi
