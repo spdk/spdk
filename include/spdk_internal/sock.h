@@ -48,6 +48,7 @@ extern "C" {
 
 #define MAX_EVENTS_PER_POLL 32
 #define DEFAULT_SOCK_PRIORITY 0
+#define MIN_SOCK_PIPE_SIZE 1024
 
 struct spdk_sock {
 	struct spdk_net_impl		*net_impl;

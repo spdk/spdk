@@ -232,6 +232,9 @@ uring_sock_alloc_pipe(struct spdk_uring_sock *sock, int sz)
 		sock->recv_pipe = NULL;
 		sock->recv_buf = NULL;
 		return 0;
+	} else if (sz < MIN_SOCK_PIPE_SIZE) {
+		SPDK_ERRLOG("The size of the pipe must be larger than %d\n", MIN_SOCK_PIPE_SIZE);
+		return -1;
 	}
 
 	/* Round up to next 64 byte multiple */
@@ -660,7 +663,7 @@ uring_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 	if (spdk_pipe_reader_bytes_available(sock->recv_pipe) == 0) {
 		/* If the user is receiving a sufficiently large amount of data,
 		 * receive directly to their buffers. */
-		if (len >= 1024) {
+		if (len >= MIN_SOCK_PIPE_SIZE) {
 			return readv(sock->fd, iov, iovcnt);
 		}
 
