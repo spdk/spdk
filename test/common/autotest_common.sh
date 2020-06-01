@@ -1196,7 +1196,7 @@ function get_nvme_bdfs() {
 
 # Same as function above, but just get the first disks BDF address
 function get_first_nvme_bdf() {
-	head -1 <<< $(get_nvme_bdfs)
+	head -1 <<< "$(get_nvme_bdfs)"
 }
 
 # Define temp storage for all the tests. Look for 2GB at minimum
