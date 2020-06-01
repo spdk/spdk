@@ -91,6 +91,13 @@ function notice() {
 	message "INFO" "$@"
 }
 
+function check_qemu_packedring_support() {
+	qemu_version=$($QEMU_BIN -version | grep -Po "(?<=version )\d+.\d+.\d+")
+	if [[ "$qemu_version" < "4.2.0" ]]; then
+		error "This qemu binary does not support packed ring"
+	fi
+}
+
 function get_vhost_dir() {
 	local vhost_name="$1"
 
@@ -499,6 +506,7 @@ function vm_setup() {
 	local guest_memory=1024
 	local queue_number=""
 	local vhost_dir
+	local packed=false
 	vhost_dir="$(get_vhost_dir 0)"
 	while getopts ':-:' optchar; do
 		case "$optchar" in
@@ -518,6 +526,7 @@ function vm_setup() {
 					migrate-to=*) vm_migrate_to="${OPTARG#*=}" ;;
 					vhost-name=*) vhost_dir="$(get_vhost_dir ${OPTARG#*=})" ;;
 					spdk-boot=*) local boot_from="${OPTARG#*=}" ;;
+					packed) packed=true ;;
 					*)
 						error "unknown argument $OPTARG"
 						return 1
@@ -721,6 +730,12 @@ function vm_setup() {
 				if [[ "$disk" == "$boot_from" ]]; then
 					cmd[-1]+=,bootindex=0
 					boot_disk_present=true
+				fi
+
+				if $packed; then
+					check_qemu_packedring_support
+					notice "Enabling packed ring support for VM $vm_num, controller $vhost_dir/naa.$disk.$vm_num"
+					cmd[-1]+=,packed=on
 				fi
 				;;
 			kernel_vhost)

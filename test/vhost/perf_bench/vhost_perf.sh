@@ -22,6 +22,7 @@ lvol_bdevs=()
 split_bdevs=()
 used_vms=""
 wwpn_prefix="naa.5001405bc6498"
+packed_ring=false
 
 fio_iterations=1
 precond_fio_bin=$CONFIG_FIO_SOURCE_DIR/fio
@@ -62,6 +63,7 @@ function usage() {
 	echo "                            spdk_vhost_blk - use spdk vhost block"
 	echo "                            kernel_vhost - use kernel vhost scsi"
 	echo "                            Default: spdk_vhost_scsi"
+	echo "    --packed-ring           Use packed ring support. Requires Qemu 4.2.0 or greater. Default: disabled."
 	echo "    --use-split             Use split vbdevs instead of Logical Volumes"
 	echo "    --limit-kernel-vhost=INT  Limit kernel vhost to run only on a number of CPU cores."
 	echo "    --run-precondition      Precondition lvols after creating. Default: true."
@@ -121,6 +123,11 @@ function create_vm() {
 	else
 		setup_cmd+=" --disks=0"
 	fi
+
+	if $packed_ring; then
+		setup_cmd+=" --packed"
+	fi
+
 	$setup_cmd
 	used_vms+=" $vm_num"
 	echo "Added to used vms"
@@ -137,7 +144,11 @@ function create_spdk_controller() {
 		$rpc_py vhost_scsi_controller_add_target naa.0.$vm_num 0 $bdev
 		notice "Added LUN 0/$bdev to controller naa.0.$vm_num"
 	elif [[ "$ctrl_type" == "spdk_vhost_blk" ]]; then
-		$rpc_py vhost_create_blk_controller naa.0.$vm_num $bdev
+		if $packed_ring; then
+			p_opt="-p"
+		fi
+
+		$rpc_py vhost_create_blk_controller naa.0.$vm_num $bdev $p_opt
 		notice "Created vhost blk controller naa.0.$vm_num $bdev"
 	fi
 }
@@ -159,6 +170,7 @@ while getopts 'xh-:' optchar; do
 				sar-count=*) sar_count="${OPTARG#*=}" ;;
 				vm-throttle-iops=*) vm_throttle="${OPTARG#*=}" ;;
 				ctrl-type=*) ctrl_type="${OPTARG#*=}" ;;
+				packed-ring) packed_ring=true ;;
 				use-split) use_split=true ;;
 				run-precondition) run_precondition=true ;;
 				precond-fio-bin=*) precond_fio_bin="${OPTARG#*=}" ;;
