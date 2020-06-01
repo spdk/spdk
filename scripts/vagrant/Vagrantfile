@@ -128,6 +128,7 @@ Vagrant.configure(2) do |config|
   emulated_nvme_types=(ENV['NVME_DISKS_TYPE'] || "nvme").split(',')
   nvme_namespaces=(ENV['NVME_DISKS_NAMESPACES'] || "").split(',')
   nvme_file=(ENV['NVME_FILE'] || "").split(',')
+  nvme_cmbs=(ENV['NVME_CMB'] || "").split(',')
   vagrantfile_dir=(ENV['VAGRANTFILE_DIR'] || "none")
 
   config.ssh.forward_agent = true
@@ -192,11 +193,15 @@ Vagrant.configure(2) do |config|
         libvirt.qemuargs :value => "-drive"
         libvirt.qemuargs :value => "format=raw,file=#{nvme_disk},if=none,id=#{nvme_disk_id}"
         libvirt.qemuargs :value => "-device"
-        if nvme_namespaces["#{index}".to_i].nil? || nvme_namespaces["#{index}".to_i] == "1"
-          libvirt.qemuargs :value => "nvme,drive=#{nvme_disk_id},serial=1234#{index}"
-        else
-          libvirt.qemuargs :value => "nvme,drive=#{nvme_disk_id},serial=1234#{index},namespaces=#{nvme_namespaces["#{index}".to_i]}"
+        nvme_drive = "nvme,drive#{nvme_disk_id},serial=1234#{index}"
+        if !nvme_namespaces["#{index}".to_i].nil? && nvme_namespaces["#{index}".to_i] != 1
+          nvme_drive << ",namespaces=#{nvme_namespaces["#{index}".to_i]}"
         end
+        if !nvme_cmbs["#{index}".to_i].nil? && nvme_cmbs["#{index}".to_i] == "true"
+          # Fix the size of the buffer to 128M
+          nvme_drive << ",cmb_size_mb=128"
+        end
+        libvirt.qemuargs :value => nvme_drive
       elsif disk == "ocssd"
         libvirt.qemuargs :value => "-drive"
         libvirt.qemuargs :value => "format=raw,file=#{nvme_disk},if=none,id=#{nvme_disk_id}"
