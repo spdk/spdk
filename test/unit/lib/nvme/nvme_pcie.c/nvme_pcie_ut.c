@@ -463,11 +463,11 @@ test_build_contig_hw_sgl_request(void)
 	CU_ASSERT(req.cmd.dptr.sgl1.address == tr.prp_sgl_bus_addr);
 	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == 2 * sizeof(struct spdk_nvme_sgl_descriptor));
 	CU_ASSERT(tr.u.sgl[0].unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
-	CU_ASSERT(tr.u.sgl[0].unkeyed.length = 60);
-	CU_ASSERT(tr.u.sgl[0].address = 0xDEADBEEF);
+	CU_ASSERT(tr.u.sgl[0].unkeyed.length == 60);
+	CU_ASSERT(tr.u.sgl[0].address == 0xDEADBEEF);
 	CU_ASSERT(tr.u.sgl[1].unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
-	CU_ASSERT(tr.u.sgl[1].unkeyed.length = 40);
-	CU_ASSERT(tr.u.sgl[1].address = 0xDEADBEEF);
+	CU_ASSERT(tr.u.sgl[1].unkeyed.length == 40);
+	CU_ASSERT(tr.u.sgl[1].address == 0xDEADBEEF);
 
 	MOCK_CLEAR(spdk_vtophys);
 	g_vtophys_size = 0;
