@@ -777,7 +777,7 @@ spdk_nvme_io_next_sge(void *ref, void **address, uint32_t *length)
 		iov_len = g_spdk_sge_size;
 	}
 
-	if (fio_req->bit_bucket_data_len < g_spdk_bit_bucket_data_len) {
+	if ((fio_req->bit_bucket_data_len < g_spdk_bit_bucket_data_len) && (io_u->ddir == DDIR_READ)) {
 		assert(g_spdk_bit_bucket_data_len < io_u->xfer_buflen);
 		*address = (void *)UINT64_MAX;
 		bit_bucket_len = g_spdk_bit_bucket_data_len - fio_req->bit_bucket_data_len;
