@@ -129,23 +129,31 @@ reservation_ns_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 
 static int
 reservation_ns_register(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
-			uint32_t ns_id)
+			uint32_t ns_id, bool reg)
 {
 	int ret;
 	struct spdk_nvme_reservation_register_data rr_data;
+	enum spdk_nvme_reservation_register_action action;
 	struct spdk_nvme_ns *ns;
 
 	ns = spdk_nvme_ctrlr_get_ns(ctrlr, ns_id);
 
-	rr_data.crkey = CR_KEY;
-	rr_data.nrkey = CR_KEY;
+	if (reg) {
+		rr_data.crkey = 0;
+		rr_data.nrkey = CR_KEY;
+		action = SPDK_NVME_RESERVE_REGISTER_KEY;
+	} else {
+		rr_data.crkey = CR_KEY;
+		rr_data.nrkey = 0;
+		action = SPDK_NVME_RESERVE_UNREGISTER_KEY;
+	}
 
 	outstanding_commands = 0;
 	reserve_command_result = -1;
 
 	ret = spdk_nvme_ns_cmd_reservation_register(ns, qpair, &rr_data, true,
-			SPDK_NVME_RESERVE_REGISTER_KEY,
-			SPDK_NVME_RESERVE_PTPL_NO_CHANGES,
+			action,
+			SPDK_NVME_RESERVE_PTPL_CLEAR_POWER_ON,
 			reservation_ns_completion, NULL);
 	if (ret) {
 		fprintf(stderr, "Reservation Register Failed\n");
@@ -316,10 +324,11 @@ reserve_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
 	get_host_identifier(ctrlr);
 
 	/* tested 1 namespace */
-	reservation_ns_register(ctrlr, qpair, 1);
+	reservation_ns_register(ctrlr, qpair, 1, 1);
 	reservation_ns_acquire(ctrlr, qpair, 1);
-	reservation_ns_report(ctrlr, qpair, 1);
 	reservation_ns_release(ctrlr, qpair, 1);
+	reservation_ns_register(ctrlr, qpair, 1, 0);
+	reservation_ns_report(ctrlr, qpair, 1);
 }
 
 static bool
