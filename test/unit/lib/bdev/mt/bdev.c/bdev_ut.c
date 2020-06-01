@@ -141,7 +141,7 @@ stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 			io = TAILQ_FIRST(&ch->outstanding_io);
 			TAILQ_REMOVE(&ch->outstanding_io, io, module_link);
 			ch->outstanding_cnt--;
-			spdk_bdev_io_complete(io, SPDK_BDEV_IO_STATUS_FAILED);
+			spdk_bdev_io_complete(io, SPDK_BDEV_IO_STATUS_ABORTED);
 			ch->avail_cnt++;
 		}
 	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_ABORT) {
@@ -621,13 +621,13 @@ io_during_reset(void)
 	CU_ASSERT(rc == 0);
 
 	/*
-	 * A reset is in progress so these read I/O should complete with failure.  Note that we
+	 * A reset is in progress so these read I/O should complete with aborted.  Note that we
 	 *  need to poll_threads() since I/O completed inline have their completion deferred.
 	 */
 	poll_threads();
 	CU_ASSERT(status_reset == SPDK_BDEV_IO_STATUS_PENDING);
-	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_FAILED);
-	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_FAILED);
+	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_ABORTED);
+	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_ABORTED);
 
 	/*
 	 * Complete the reset
@@ -1002,8 +1002,8 @@ io_during_qos_reset(void)
 	poll_threads();
 
 	CU_ASSERT(reset_status == SPDK_BDEV_IO_STATUS_SUCCESS);
-	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_FAILED);
-	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_FAILED);
+	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_ABORTED);
+	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_ABORTED);
 
 	/* Tear down the channels */
 	set_thread(1);

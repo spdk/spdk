@@ -2035,7 +2035,7 @@ _bdev_io_submit(void *ctx)
 	}
 
 	if (bdev_ch->flags & BDEV_CH_RESET_IN_PROGRESS) {
-		_bdev_io_complete_in_submit(bdev_ch, bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		_bdev_io_complete_in_submit(bdev_ch, bdev_io, SPDK_BDEV_IO_STATUS_ABORTED);
 	} else if (bdev_ch->flags & BDEV_CH_QOS_ENABLED) {
 		if (spdk_unlikely(bdev_io->type == SPDK_BDEV_IO_TYPE_ABORT) &&
 		    bdev_abort_queued_io(&bdev->internal.qos->queued, bdev_io->u.abort.bio_to_abort)) {
@@ -2629,7 +2629,7 @@ bdev_abort_all_buf_io(bdev_io_stailq_t *queue, struct spdk_bdev_channel *ch)
 		bdev_io = STAILQ_FIRST(queue);
 		STAILQ_REMOVE_HEAD(queue, internal.buf_link);
 		if (bdev_io->internal.ch == ch) {
-			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_ABORTED);
 		} else {
 			STAILQ_INSERT_TAIL(&tmp, bdev_io, internal.buf_link);
 		}
@@ -2660,7 +2660,7 @@ bdev_abort_all_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_channel *ch)
 				ch->io_outstanding++;
 				ch->shared_resource->io_outstanding++;
 			}
-			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_ABORTED);
 		}
 	}
 }
