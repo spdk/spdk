@@ -2500,10 +2500,16 @@ nvmf_qpair_free_aer(struct spdk_nvmf_qpair *qpair)
 void
 nvmf_ctrlr_abort_aer(struct spdk_nvmf_ctrlr *ctrlr)
 {
+	struct spdk_nvmf_request *req;
 	int i;
 
 	for (i = 0; i < ctrlr->nr_aer_reqs; i++) {
-		_nvmf_request_complete(ctrlr->aer_req[i]);
+		req = ctrlr->aer_req[i];
+
+		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_ABORTED_BY_REQUEST;
+		_nvmf_request_complete(req);
+
 		ctrlr->aer_req[i] = NULL;
 	}
 
