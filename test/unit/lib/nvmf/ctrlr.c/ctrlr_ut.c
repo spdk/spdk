@@ -1619,6 +1619,7 @@ test_multi_async_event_reqs(void)
 
 	qpair.ctrlr = &ctrlr;
 	qpair.group = &group;
+	TAILQ_INIT(&qpair.outstanding);
 
 	ctrlr.subsys = &subsystem;
 	ctrlr.vcprop.cc.bits.en = 1;
@@ -1631,6 +1632,7 @@ test_multi_async_event_reqs(void)
 		req[i].qpair = &qpair;
 		req[i].cmd = &cmd[i];
 		req[i].rsp = &rsp[i];
+		TAILQ_INSERT_TAIL(&qpair.outstanding, &req[i], link);
 	}
 
 	/* Target can store NVMF_MAX_ASYNC_EVENTS reqs */
@@ -1648,16 +1650,19 @@ test_multi_async_event_reqs(void)
 	CU_ASSERT(rsp[4].nvme_cpl.status.sc = SPDK_NVME_SC_ASYNC_EVENT_REQUEST_LIMIT_EXCEEDED);
 
 	/* Test if the aer_reqs keep continuous when abort a req in the middle */
-	CU_ASSERT(nvmf_qpair_abort(&qpair, 2) == &req[2]);
+	CU_ASSERT(nvmf_qpair_abort_aer(&qpair, 2) == true);
 	CU_ASSERT(ctrlr.aer_req[0] == &req[0]);
 	CU_ASSERT(ctrlr.aer_req[1] == &req[1]);
 	CU_ASSERT(ctrlr.aer_req[2] == &req[3]);
 
-	CU_ASSERT(nvmf_qpair_abort(&qpair, 3) == &req[3]);
+	CU_ASSERT(nvmf_qpair_abort_aer(&qpair, 3) == true);
 	CU_ASSERT(ctrlr.aer_req[0] == &req[0]);
 	CU_ASSERT(ctrlr.aer_req[1] == &req[1]);
 	CU_ASSERT(ctrlr.aer_req[2] == NULL);
 	CU_ASSERT(ctrlr.nr_aer_reqs == 2);
+
+	TAILQ_REMOVE(&qpair.outstanding, &req[0], link);
+	TAILQ_REMOVE(&qpair.outstanding, &req[1], link);
 }
 
 int main(int argc, char **argv)

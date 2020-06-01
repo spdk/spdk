@@ -2050,34 +2050,40 @@ invalid_cns:
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
-
-static struct spdk_nvmf_request *
-nvmf_qpair_abort(struct spdk_nvmf_qpair *qpair, uint16_t cid)
+static bool
+nvmf_qpair_abort_aer(struct spdk_nvmf_qpair *qpair, uint16_t cid)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
-	struct spdk_nvmf_request *req = NULL;
+	struct spdk_nvmf_request *req;
 	int i;
 
-	if (nvmf_qpair_is_admin_queue(qpair)) {
-		for (i = 0; i < ctrlr->nr_aer_reqs; i++) {
-			if (ctrlr->aer_req[i]->cmd->nvme_cmd.cid == cid) {
-				SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Aborting AER request\n");
-				req = ctrlr->aer_req[i];
-				ctrlr->aer_req[i] = NULL;
-				ctrlr->nr_aer_reqs--;
-				break;
-			}
-		}
+	if (!nvmf_qpair_is_admin_queue(qpair)) {
+		return false;
+	}
 
-		/* Move the last req to the aborting position for making aer_reqs in continuous */
-		if (i < ctrlr->nr_aer_reqs) {
-			ctrlr->aer_req[i] = ctrlr->aer_req[ctrlr->nr_aer_reqs];
-			ctrlr->aer_req[ctrlr->nr_aer_reqs] = NULL;
+	for (i = 0; i < ctrlr->nr_aer_reqs; i++) {
+		if (ctrlr->aer_req[i]->cmd->nvme_cmd.cid == cid) {
+			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Aborting AER request\n");
+			req = ctrlr->aer_req[i];
+			ctrlr->aer_req[i] = NULL;
+			ctrlr->nr_aer_reqs--;
+
+			/* Move the last req to the aborting position for making aer_reqs
+			 * in continuous
+			 */
+			if (i < ctrlr->nr_aer_reqs) {
+				ctrlr->aer_req[i] = ctrlr->aer_req[ctrlr->nr_aer_reqs];
+				ctrlr->aer_req[ctrlr->nr_aer_reqs] = NULL;
+			}
+
+			req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_ABORTED_BY_REQUEST;
+			_nvmf_request_complete(req);
+			return true;
 		}
 	}
 
-	/* TODO: track list of outstanding requests in qpair? */
-	return req;
+	return false;
 }
 
 static void
@@ -2101,13 +2107,12 @@ nvmf_ctrlr_abort_on_pg(struct spdk_io_channel_iter *i)
 
 	TAILQ_FOREACH(qpair, &group->qpairs, link) {
 		if (qpair->ctrlr == req->qpair->ctrlr && qpair->qid == sqid) {
-			struct spdk_nvmf_request *req_to_abort;
 			uint16_t cid = cmd->cdw10_bits.abort.cid;
 
 			/* Found the qpair */
 
-			req_to_abort = nvmf_qpair_abort(qpair, cid);
-			if (req_to_abort == NULL) {
+			if (!nvmf_qpair_abort_aer(qpair, cid)) {
+				/* TODO: track list of outstanding requests in qpair? */
 				SPDK_DEBUGLOG(SPDK_LOG_NVMF, "cid %u not found\n", cid);
 				rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 				rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
@@ -2115,13 +2120,8 @@ nvmf_ctrlr_abort_on_pg(struct spdk_io_channel_iter *i)
 				return;
 			}
 
-			/* Complete the request with aborted status */
-			req_to_abort->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
-			req_to_abort->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_ABORTED_BY_REQUEST;
-			_nvmf_request_complete(req_to_abort);
-
-			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "abort ctrlr=%p req=%p sqid=%u cid=%u successful\n",
-				      qpair->ctrlr, req_to_abort, sqid, cid);
+			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "abort ctrlr=%p sqid=%u cid=%u successful\n",
+				      qpair->ctrlr, sqid, cid);
 			rsp->cdw0 = 0; /* Command successfully aborted */
 			rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 			rsp->status.sc = SPDK_NVME_SC_SUCCESS;
