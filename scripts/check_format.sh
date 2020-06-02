@@ -209,15 +209,17 @@ fi
 rm -f scripts/posix.log
 
 echo -n "Checking for proper function naming conventions..."
+# commit_to_compare = HEAD - 1.
+commit_to_compare="$(git log --pretty=oneline --skip=1 -n 1 | awk '{print $1}')"
 failed_naming_conventions=false
 changed_c_libs=()
 declared_symbols=()
 
 # Build an array of all the modified C files.
-mapfile -t changed_c_libs < <(git diff --name-only HEAD origin/master -- lib/**/*.c module/**/*.c)
+mapfile -t changed_c_libs < <(git diff --name-only HEAD $commit_to_compare -- lib/**/*.c module/**/*.c)
 # Matching groups are 1. qualifiers / return type. 2. function name 3. argument list / comments and stuff after that.
 # Capture just the names of newly added (or modified) function definitions.
-mapfile -t declared_symbols < <(git diff -U0 origin/master HEAD -- include/spdk*/*.h | sed -En 's/(^[+].*)(spdk[a-z,A-Z,0-9,_]*)(\(.*)/\2/p')
+mapfile -t declared_symbols < <(git diff -U0 $commit_to_compare HEAD -- include/spdk*/*.h | sed -En 's/(^[+].*)(spdk[a-z,A-Z,0-9,_]*)(\(.*)/\2/p')
 
 for c_file in "${changed_c_libs[@]}"; do
 	lib_map_file="mk/spdk_blank.map"
@@ -228,7 +230,7 @@ for c_file in "${changed_c_libs[@]}"; do
 	fi
 	# Matching groups are 1. leading +sign. 2, function name 3. argument list / anything after that.
 	# Capture just the names of newly added (or modified) functions that start with "spdk_"
-	mapfile -t defined_symbols < <(git diff -U0 origin/master HEAD -- $c_file | sed -En 's/(^[+])(spdk[a-z,A-Z,0-9,_]*)(\(.*)/\2/p')
+	mapfile -t defined_symbols < <(git diff -U0 $commit_to_compare HEAD -- $c_file | sed -En 's/(^[+])(spdk[a-z,A-Z,0-9,_]*)(\(.*)/\2/p')
 	# It's possible that we just modified a functions arguments so unfortunately we can't just look at changed lines in this function.
 	# matching groups are 1. All leading whitespace 2. function name. Capture just the symbol name.
 	mapfile -t exported_symbols < <(sed -En 's/(^[[:space:]]*)(spdk[a-z,A-Z,0-9,_]*);/\2/p' < $lib_map_file)
