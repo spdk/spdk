@@ -30,6 +30,7 @@ fi
 echo "Running make with $COMP ..."
 echo "${MAKE} clean " > make.log
 $MAKE clean  >> make.log 2>&1
+
 echo "${MAKE} CONFIG_DEBUG=n CONFIG_WERROR=y " >> make.log
 $MAKE CONFIG_DEBUG=n CONFIG_WERROR=y  >> make.log 2>&1
 rc=$?
@@ -74,64 +75,6 @@ fi
 
 echo "$MAKE clean " >> make.log
 $MAKE clean  >> make.log 2>&1
-
-if [ "$SYSTEM" = "FreeBSD" ]; then
-	echo
-        echo "Pushing to $1 $2"
-        exit $rc
-fi
-
-if ! hash clang 2>/dev/null; then
-	echo "clang not found; skipping the clang tests"
-	echo
-	echo "Pushing to $1 $2"
-	exit $rc
-fi
-
-echo "Running make with clang ..."
-echo "make CONFIG_DEBUG=n CONFIG_WERROR=y CC=clang CXX=clang++ " >> make.log
-$MAKE CONFIG_DEBUG=n CONFIG_WERROR=y CC=clang CXX=clang++  >> make.log 2>&1
-rc=$?
-if [ $rc -ne 0 ]; then
-tail -20 make.log
-	echo ""
-	echo "ERROR make CC=clang CXX=clang++ returned errors!"
-	echo "ERROR Fix the problem and use 'git commit' to update your changes."
-	echo "ERROR See `pwd`/make.log for more information."
-	echo ""
-	exit $rc
-fi
-
-echo "make clean CC=clang CXX=clang++ SKIP_DPDK_BUILD=1 " >> make.log
-$MAKE clean CC=clang CXX=clang++ SKIP_DPDK_BUILD=1 >> make.log 2>&1
-echo "make CONFIG_DEBUG=y CONFIG_WERROR=y CC=clang CXX=clang++ SKIP_DPDK_BUILD=1 " >> make.log
-$MAKE CONFIG_DEBUG=y CONFIG_WERROR=y CC=clang CXX=clang++ SKIP_DPDK_BUILD=1 >> make.log 2>&1
-rc=$?
-if [ $rc -ne 0 ]; then
-	tail -20 make.log
-	echo ""
-	echo "ERROR make CC=clang CXX=clang++ returned errors!"
-	echo "ERROR Fix the problem and use 'git commit' to update your changes."
-	echo "ERROR See `pwd`/make.log for more information."
-	echo ""
-	exit $rc
-fi
-
-echo "Running unittest.sh ..."
-echo "./test/unit/unittest.sh" >> make.log
-"./test/unit/unittest.sh" >> make.log 2>&1
-rc=$?
-if [ $rc -ne 0 ]; then
-	tail -20 make.log
-	echo ""
-	echo "ERROR unittest returned errors!"
-	echo "ERROR Fix the problem and use 'git commit' to update your changes."
-	echo "ERROR See `pwd`/make.log for more information."
-	echo ""
-	exit $rc
-fi
-
-${MAKE} clean CC=clang CXX=clang++ 2> /dev/null
 
 echo "Pushing to $1 $2"
 
