@@ -7,11 +7,14 @@ function install_refspdk() {
 	# Create a reference SPDK build for ABI tests
 	git -C spdk_repo/spdk fetch --tags
 	last_release=$(git -C spdk_repo/spdk tag | sort --version-sort | grep -v rc | tail -n1)
-	git -C spdk_repo/spdk checkout $last_release
-	git -C spdk_repo/spdk submodule update --init
 	output_dir="$HOME/spdk_$(tr . _ < <(tr -d '[:alpha:]' <<< $last_release))"
 
-	cp -r spdk_repo/spdk $output_dir
+	if [[ ! -d $output_dir ]]; then
+		cp -r spdk_repo/spdk "$output_dir"
+	fi
+
+	git -C "$output_dir" checkout "$last_release"
+	git -C "$output_dir" submodule update --init
 
 	cat > $HOME/autorun-spdk.conf <<- EOF
 		SPDK_BUILD_SHARED_OBJECT=1
