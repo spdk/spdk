@@ -373,6 +373,7 @@ bdev_unlock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
 static inline void bdev_io_complete(void *ctx);
 
 static bool bdev_abort_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_io *bio_to_abort);
+static bool bdev_abort_buf_io(bdev_io_stailq_t *queue, struct spdk_bdev_io *bio_to_abort);
 
 void
 spdk_bdev_get_opts(struct spdk_bdev_opts *opts)
@@ -1679,9 +1680,12 @@ bdev_io_do_submit(struct spdk_bdev_channel *bdev_ch, struct spdk_bdev_io *bdev_i
 	struct spdk_bdev_shared_resource *shared_resource = bdev_ch->shared_resource;
 
 	if (spdk_unlikely(bdev_io->type == SPDK_BDEV_IO_TYPE_ABORT)) {
+		struct spdk_bdev_mgmt_channel *mgmt_channel = shared_resource->mgmt_ch;
 		struct spdk_bdev_io *bio_to_abort = bdev_io->u.abort.bio_to_abort;
 
-		if (bdev_abort_queued_io(&shared_resource->nomem_io, bio_to_abort)) {
+		if (bdev_abort_queued_io(&shared_resource->nomem_io, bio_to_abort) ||
+		    bdev_abort_buf_io(&mgmt_channel->need_buf_small, bio_to_abort) ||
+		    bdev_abort_buf_io(&mgmt_channel->need_buf_large, bio_to_abort)) {
 			_bdev_io_complete_in_submit(bdev_ch, bdev_io,
 						    SPDK_BDEV_IO_STATUS_SUCCESS);
 			return;
@@ -2668,6 +2672,22 @@ bdev_abort_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_io *bio_to_abort)
 	TAILQ_FOREACH(bdev_io, queue, internal.link) {
 		if (bdev_io == bio_to_abort) {
 			TAILQ_REMOVE(queue, bio_to_abort, internal.link);
+			spdk_bdev_io_complete(bio_to_abort, SPDK_BDEV_IO_STATUS_ABORTED);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+static bool
+bdev_abort_buf_io(bdev_io_stailq_t *queue, struct spdk_bdev_io *bio_to_abort)
+{
+	struct spdk_bdev_io *bdev_io;
+
+	STAILQ_FOREACH(bdev_io, queue, internal.buf_link) {
+		if (bdev_io == bio_to_abort) {
+			STAILQ_REMOVE(queue, bio_to_abort, spdk_bdev_io, internal.buf_link);
 			spdk_bdev_io_complete(bio_to_abort, SPDK_BDEV_IO_STATUS_ABORTED);
 			return true;
 		}
