@@ -18,6 +18,10 @@
 
 # We have made a lot of progress with removing hardcoded paths from the tests,
 
+sudo() {
+	"$(type -P sudo)" -E "$@"
+}
+
 set -e
 
 VM_SETUP_PATH=$(readlink -f ${BASH_SOURCE%/*})
