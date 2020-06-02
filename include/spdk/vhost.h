@@ -330,16 +330,6 @@ int spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *
  */
 int spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev);
 
-/**
- * Get underlying SPDK bdev from vhost blk device. The bdev might be NULL, as it
- * could have been hotremoved.
- *
- * \param ctrlr vhost blk device.
- *
- * \return SPDK bdev associated with given vdev.
- */
-struct spdk_bdev *spdk_vhost_blk_get_dev(struct spdk_vhost_dev *ctrlr);
-
 #ifdef __cplusplus
 }
 #endif

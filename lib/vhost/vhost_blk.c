@@ -801,15 +801,6 @@ to_blk_dev(struct spdk_vhost_dev *vdev)
 	return SPDK_CONTAINEROF(vdev, struct spdk_vhost_blk_dev, vdev);
 }
 
-struct spdk_bdev *
-spdk_vhost_blk_get_dev(struct spdk_vhost_dev *vdev)
-{
-	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
-
-	assert(bvdev != NULL);
-	return bvdev->bdev;
-}
-
 static void
 vhost_dev_bdev_remove_cpl_cb(struct spdk_vhost_dev *vdev, void *ctx)
 {
@@ -1031,18 +1022,18 @@ vhost_blk_stop(struct spdk_vhost_session *vsession)
 static void
 vhost_blk_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
 {
-	struct spdk_bdev *bdev = spdk_vhost_blk_get_dev(vdev);
 	struct spdk_vhost_blk_dev *bvdev;
 
 	bvdev = to_blk_dev(vdev);
 	assert(bvdev != NULL);
+
 	spdk_json_write_named_object_begin(w, "block");
 
 	spdk_json_write_named_bool(w, "readonly", bvdev->readonly);
 
 	spdk_json_write_name(w, "bdev");
-	if (bdev) {
-		spdk_json_write_string(w, spdk_bdev_get_name(bdev));
+	if (bvdev->bdev) {
+		spdk_json_write_string(w, spdk_bdev_get_name(bvdev->bdev));
 	} else {
 		spdk_json_write_null(w);
 	}
@@ -1057,6 +1048,7 @@ vhost_blk_write_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_
 
 	bvdev = to_blk_dev(vdev);
 	assert(bvdev != NULL);
+
 	if (!bvdev->bdev) {
 		return;
 	}

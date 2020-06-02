@@ -50,6 +50,10 @@ options. Options can be set independently for each implementation.
 
 Added `recv_buf_size` and 'send_buf_size' socket layer options. They are used only in posix implementation.
 
+### vhost
+
+The function `spdk_vhost_blk_get_dev` has been removed.
+
 ## v20.04:
 
 IDXD engine support for compare has been added.

@@ -22,7 +22,6 @@
 	spdk_vhost_scsi_dev_remove_tgt;
 	spdk_vhost_blk_construct;
 	spdk_vhost_dev_remove;
-	spdk_vhost_blk_get_dev;
 
 	local: *;
 };
