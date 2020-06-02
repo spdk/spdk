@@ -192,9 +192,9 @@ function install_qemu() {
 }
 
 function install_vpp() {
-	if [ -d /usr/local/src/vpp ]; then
+	if [[ -d /usr/local/src/vpp-19.04 ]]; then
 		echo "vpp already cloned."
-		if [ ! -d /usr/local/src/vpp/build-root ]; then
+		if [[ ! -d /usr/local/src/vpp-19.04/build-root ]]; then
 			echo "build-root has not been done"
 			echo "remove the $(pwd) and start again"
 			exit 1
