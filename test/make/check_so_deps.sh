@@ -274,6 +274,8 @@ function confirm_abi_deps() {
 	name = SPDK_LOG_VHOST_SCSI_QUEUE
 [suppress_variable]
 	name = spdk_vhost_scsi_device_backend
+[suppress_type]
+	name = spdk_net_impl
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do
