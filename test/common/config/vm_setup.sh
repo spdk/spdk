@@ -51,6 +51,7 @@ function usage() {
 	echo "  -i --install-deps Install $PACKAGEMNG based dependencies"
 	echo "  -t --test-conf List of test configurations to enable (${CONF})"
 	echo "  -c --conf-path Path to configuration file"
+	echo "  -d --dir-git Path to where git sources should be saved"
 	exit 0
 }
 
@@ -75,7 +76,7 @@ else
 fi
 
 # Parse input arguments #
-while getopts 'iuht:c:-:' optchar; do
+while getopts 'd:iuht:c:-:' optchar; do
 	case "$optchar" in
 		-)
 			case "$OPTARG" in
@@ -84,6 +85,7 @@ while getopts 'iuht:c:-:' optchar; do
 				install-deps) INSTALL=true ;;
 				test-conf=*) CONF="${OPTARG#*=}" ;;
 				conf-path=*) CONF_PATH="${OPTARG#*=}" ;;
+				dir-git=*) GIT_REPOS="${OPTARG#*=}" ;;
 				*)
 					echo "Invalid argument '$OPTARG'"
 					usage
@@ -95,6 +97,7 @@ while getopts 'iuht:c:-:' optchar; do
 		i) INSTALL=true ;;
 		t) CONF="$OPTARG" ;;
 		c) CONF_PATH="$OPTARG" ;;
+		d) GIT_REPOS="$OPTARG" ;;
 		*)
 			echo "Invalid argument '$OPTARG'"
 			usage
@@ -111,7 +114,6 @@ if [ -n "$CONF_PATH" ]; then
 	fi
 fi
 
-cd ~
 if $UPGRADE; then
 	upgrade
 fi

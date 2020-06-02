@@ -1,14 +1,14 @@
 function install_spdk() {
-	mkdir -p spdk_repo/output || echo "Can not create spdk_repo/output directory."
+	mkdir -p "$GIT_REPOS/spdk_repo/output" || echo "Can not create spdk_repo/output directory."
 
-	if [ -d spdk_repo/spdk ]; then
+	if [[ -d $GIT_REPOS/spdk_repo/spdk ]]; then
 		echo "spdk source already present, not cloning"
 	else
-		git -C spdk_repo clone "${GIT_REPO_SPDK}"
+		git -C "$GIT_REPOS/spdk_repo" clone "${GIT_REPO_SPDK}"
 	fi
-	git -C spdk_repo/spdk config submodule.dpdk.url "${GIT_REPO_DPDK}"
-	git -C spdk_repo/spdk config submodule.intel-ipsec-mb.url "${GIT_REPO_INTEL_IPSEC_MB}"
-	git -C spdk_repo/spdk submodule update --init --recursive
+	git -C "$GIT_REPOS/spdk_repo/spdk" config submodule.dpdk.url "${GIT_REPO_DPDK}"
+	git -C "$GIT_REPOS/spdk_repo/spdk" config submodule.intel-ipsec-mb.url "${GIT_REPO_INTEL_IPSEC_MB}"
+	git -C "$GIT_REPOS/spdk_repo/spdk" submodule update --init --recursive
 }
 
 function install_refspdk() {
@@ -18,12 +18,12 @@ function install_refspdk() {
 	local rootdir
 
 	# Create a reference SPDK build for ABI tests
-	git -C spdk_repo/spdk fetch --tags
-	last_release=$(git -C spdk_repo/spdk tag | sort --version-sort | grep -v rc | tail -n1)
-	output_dir="$HOME/spdk_$(tr . _ < <(tr -d '[:alpha:]' <<< $last_release))"
+	git -C "$GIT_REPOS/spdk_repo/spdk" fetch --tags
+	last_release=$(git -C "$GIT_REPOS/spdk_repo/spdk" tag | sort --version-sort | grep -v rc | tail -n1)
+	output_dir="$GIT_REPOS/spdk_$(tr . _ < <(tr -d '[:alpha:]' <<< $last_release))"
 
 	if [[ ! -d $output_dir ]]; then
-		cp -r spdk_repo/spdk "$output_dir"
+		cp -r "$GIT_REPOS/spdk_repo/spdk" "$output_dir"
 	fi
 
 	git -C "$output_dir" checkout "$last_release"
@@ -76,30 +76,27 @@ function install_qat() {
 
 	install libudev-devel || install libudev-dev
 
-	qat_tarball=$(basename $DRIVER_LOCATION_QAT)
 	kernel_maj=$(uname -r | cut -d'.' -f1)
 	kernel_min=$(uname -r | cut -d'.' -f2)
 
 	sudo modprobe -r qat_c62x
-	if [ -d /QAT ]; then
-		sudo rm -rf /QAT/
+	if [[ -d $GIT_REPOS/QAT ]]; then
+		sudo rm -rf "$GIT_REPOS/QAT"
 	fi
 
-	sudo mkdir /QAT
+	sudo mkdir "$GIT_REPOS/QAT"
 
-	wget $DRIVER_LOCATION_QAT
-	sudo cp $qat_tarball /QAT/
-	(cd /QAT && sudo tar zxof /QAT/$qat_tarball)
+	tar -C "$GIT_REPOS/QAT" -xzof - < <(wget -O- "$DRIVER_LOCATION_QAT")
 
 	#The driver version 1.7.l.4.3.0-00033 contains a reference to a deprecated function. Remove it so the build won't fail.
 	if [ $kernel_maj -le 4 ]; then
 		if [ $kernel_min -le 17 ]; then
 			sudo sed -i 's/rdtscll(timestamp);/timestamp = rdtsc_ordered();/g' \
-				/QAT/quickassist/utilities/osal/src/linux/kernel_space/OsalServices.c || true
+				"$GIT_REPOS/QAT/quickassist/utilities/osal/src/linux/kernel_space/OsalServices.c" || true
 		fi
 	fi
 
-	(cd /QAT && sudo ./configure --enable-icp-sriov=host && sudo make install)
+	(cd "$GIT_REPOS/QAT" && sudo ./configure --enable-icp-sriov=host && sudo make install)
 
 	if sudo service qat_service start; then
 		echo "failed to start the qat service. Something may be wrong with your device or package."
@@ -109,9 +106,9 @@ function install_qat() {
 function install_rocksdb() {
 	# Rocksdb is installed for use with the blobfs tests.
 	if [ ! -d /usr/src/rocksdb ]; then
-		git clone "${GIT_REPO_ROCKSDB}"
-		git -C ./rocksdb checkout spdk-v5.6.1
-		sudo mv rocksdb /usr/src/
+		git clone "${GIT_REPO_ROCKSDB}" "$GIT_REPOS/rocksdb"
+		git -C "$GIT_REPOS/rocksdb" checkout spdk-v5.6.1
+		sudo mv "$GIT_REPOS/rocksdb" /usr/src/
 	else
 		sudo git -C /usr/src/rocksdb checkout spdk-v5.6.1
 		echo "rocksdb already in /usr/src. Not checking out again"
@@ -125,10 +122,10 @@ function install_fio() {
 
 	if [ ! -d /usr/src/fio ]; then
 		if [ ! -d fio ]; then
-			git clone "${GIT_REPO_FIO}"
-			sudo mv fio /usr/src/
+			git clone "${GIT_REPO_FIO}" "$GIT_REPOS/fio"
+			sudo mv "$GIT_REPOS/fio" /usr/src/
 		else
-			sudo mv fio /usr/src/
+			sudo mv "$GIT_REPOS/fio" /usr/src/
 		fi
 		(
 			git -C /usr/src/fio checkout master \
@@ -150,9 +147,9 @@ function install_fio() {
 function install_flamegraph() {
 	# Flamegraph is used when printing out timing graphs for the tests.
 	if [ ! -d /usr/local/FlameGraph ]; then
-		git clone "${GIT_REPO_FLAMEGRAPH}"
+		git clone "${GIT_REPO_FLAMEGRAPH}" "$GIT_REPOS/FlameGraph"
 		mkdir -p /usr/local
-		sudo mv FlameGraph /usr/local/FlameGraph
+		sudo mv "$GIT_REPOS/FlameGraph" /usr/local/FlameGraph
 	else
 		echo "flamegraph already installed. Skipping"
 	fi
@@ -171,9 +168,9 @@ function install_qemu() {
 
 	# Forked QEMU
 	SPDK_QEMU_BRANCH=spdk-5.0.0
-	mkdir -p qemu
-	if [ ! -d "qemu/$SPDK_QEMU_BRANCH" ]; then
-		git -C ./qemu clone "${GIT_REPO_QEMU}" -b "$SPDK_QEMU_BRANCH" "$SPDK_QEMU_BRANCH"
+	mkdir -p "$GIT_REPOS/qemu"
+	if [[ ! -d $GIT_REPOS/qemu/$SPDK_QEMU_BRANCH ]]; then
+		git clone "${GIT_REPO_QEMU}" -b "$SPDK_QEMU_BRANCH" "$GIT_REPOS/qemu/$SPDK_QEMU_BRANCH"
 	else
 		echo "qemu already checked out. Skipping"
 	fi
@@ -193,15 +190,15 @@ function install_qemu() {
 		fi
 	fi
 
-	sed -i s@git://git.qemu.org/@https://github.com/qemu/@g qemu/$SPDK_QEMU_BRANCH/.gitmodules
-	sed -i s@git://git.qemu.org/@https://github.com/qemu/@g qemu/$SPDK_QEMU_BRANCH/.git/config
-	sed -i s@git://git.qemu-project.org/@https://github.com/qemu/@g qemu/$SPDK_QEMU_BRANCH/.gitmodules
-	sed -i s@git://git.qemu-project.org/@https://github.com/qemu/@g qemu/$SPDK_QEMU_BRANCH/.git/config
+	sed -i s@git://git.qemu.org/@https://github.com/qemu/@g "$GIT_REPOS/qemu/$SPDK_QEMU_BRANCH/.gitmodules"
+	sed -i s@git://git.qemu.org/@https://github.com/qemu/@g "$GIT_REPOS/qemu/$SPDK_QEMU_BRANCH/.git/config"
+	sed -i s@git://git.qemu-project.org/@https://github.com/qemu/@g "$GIT_REPOS/qemu/$SPDK_QEMU_BRANCH/.gitmodules"
+	sed -i s@git://git.qemu-project.org/@https://github.com/qemu/@g "$GIT_REPOS/qemu/$SPDK_QEMU_BRANCH/.git/config"
 	# The qemu configure script places several output files in the CWD.
-	(cd qemu/$SPDK_QEMU_BRANCH && ./configure "${opt_params[@]}" --target-list="x86_64-softmmu" --enable-kvm --enable-linux-aio --enable-numa)
+	(cd "$GIT_REPOS/qemu/$SPDK_QEMU_BRANCH" && ./configure "${opt_params[@]}" --target-list="x86_64-softmmu" --enable-kvm --enable-linux-aio --enable-numa)
 
-	make -C ./qemu/$SPDK_QEMU_BRANCH -j${jobs}
-	sudo make -C ./qemu/$SPDK_QEMU_BRANCH install
+	make -C "$GIT_REPOS/qemu/$SPDK_QEMU_BRANCH" -j${jobs}
+	sudo make -C "$GIT_REPOS/qemu/$SPDK_QEMU_BRANCH" install
 }
 
 function install_vpp() {
@@ -213,31 +210,31 @@ function install_vpp() {
 			exit 1
 		fi
 	else
-		git clone "${GIT_REPO_VPP}"
-		git -C ./vpp checkout v19.04.2
+		git clone "${GIT_REPO_VPP}" "$GIT_REPOS/vpp"
+		git -C "$GIT_REPOS/vpp" checkout v19.04.2
 
 		if [ "${OSID}" == 'fedora' ]; then
 			if [ ${OSVERSION} -eq 29 ]; then
-				git -C ./vpp apply ${VM_SETUP_PATH}/patch/vpp/fedora29-fix.patch
+				git -C "$GIT_REPOS/vpp" apply ${VM_SETUP_PATH}/patch/vpp/fedora29-fix.patch
 			fi
 			if [ ${OSVERSION} -eq 30 ]; then
-				git -C ./vpp apply ${VM_SETUP_PATH}/patch/vpp/fedora30-fix.patch
+				git -C "$GIT_REPOS/vpp" apply ${VM_SETUP_PATH}/patch/vpp/fedora30-fix.patch
 			fi
 		fi
 
 		# Installing required dependencies for building VPP
-		yes | make -C ./vpp install-dep
+		yes | make -C "$GIT_REPOS/vpp" install-dep
 
-		make -C ./vpp build -j${jobs}
+		make -C "$GIT_REPOS/vpp" build -j${jobs}
 
-		sudo mv ./vpp /usr/local/src/vpp-19.04
+		sudo mv "$GIT_REPOS/vpp" /usr/local/src/vpp-19.04
 	fi
 }
 
 function install_nvmecli() {
 	SPDK_NVME_CLI_BRANCH=spdk-1.6
-	if [ ! -d nvme-cli ]; then
-		git clone "${GIT_REPO_SPDK_NVME_CLI}" -b "$SPDK_NVME_CLI_BRANCH"
+	if [[ ! -d $GIT_REPOS/nvme-cli ]]; then
+		git clone "${GIT_REPO_SPDK_NVME_CLI}" -b "$SPDK_NVME_CLI_BRANCH" "$GIT_REPOS/nvme-cli"
 	else
 		echo "nvme-cli already checked out. Skipping"
 	fi
@@ -245,30 +242,30 @@ function install_nvmecli() {
 		# Changes required for SPDK are already merged on top of
 		# nvme-cli, however not released yet.
 		# Support for SPDK should be released in nvme-cli >1.11.1
-		git clone "https://github.com/linux-nvme/nvme-cli.git" "nvme-cli-cuse"
-		git -C ./nvme-cli-cuse checkout "e770466615096a6d41f038a28819b00bc3078e1d"
-		make -C ./nvme-cli-cuse
-		sudo mv ./nvme-cli-cuse /usr/local/src/nvme-cli
+		git clone "https://github.com/linux-nvme/nvme-cli.git" "$GIT_REPOS/nvme-cli-cuse"
+		git -C "$GIT_REPOS/nvme-cli-cuse checkout" "e770466615096a6d41f038a28819b00bc3078e1d"
+		make -C "$GIT_REPOS/nvme-cli-cuse"
+		sudo mv "$GIT_REPOS/nvme-cli-cuse" /usr/local/src/nvme-cli
 	fi
 }
 
 function install_libiscsi() {
 	# We currently don't make any changes to the libiscsi repository for our tests, but it is possible that we will need
 	# to later. Cloning from git is just future proofing the machines.
-	if [ ! -d libiscsi ]; then
-		git clone "${GIT_REPO_LIBISCSI}"
+	if [[ ! -d $GIT_REPOS/libiscsi ]]; then
+		git clone "${GIT_REPO_LIBISCSI}" "$GIT_REPOS/libiscsi"
 	else
 		echo "libiscsi already checked out. Skipping"
 	fi
-	(cd libiscsi && ./autogen.sh && ./configure --prefix=/usr/local/libiscsi)
-	make -C ./libiscsi -j${jobs}
-	sudo make -C ./libiscsi install
+	(cd "$GIT_REPOS/libiscsi" && ./autogen.sh && ./configure --prefix=/usr/local/libiscsi)
+	make -C "$GIT_REPOS/libiscsi" -j${jobs}
+	sudo make -C "$GIT_REPOS/libiscsi" install
 }
 
 function install_git() {
 	install zlib-devel curl-devel
-	tar -xzof <(wget -qO- "$GIT_REPO_GIT")
-	(cd git-${GIT_VERSION} \
+	tar -C "$GIT_REPOS" -xzof <(wget -qO- "$GIT_REPO_GIT")
+	(cd "$GIT_REPOS/git-$GIT_VERSION" \
 		&& make configure \
 		&& ./configure --prefix=/usr/local/git \
 		&& sudo make -j${jobs} install)
@@ -301,6 +298,7 @@ export GIT_REPO_INTEL_IPSEC_MB
 export DRIVER_LOCATION_QAT
 : ${GIT_REPO_GIT=https://github.com/git/git/archive/v${GIT_VERSION}.tar.gz}
 export GIT_REPO_GIT
+GIT_REPOS=${GIT_REPOS:-$HOME}
 
 if [[ $ID == centos ]] && (( VERSION_ID == 7 )); then
 	# install proper version of the git first
@@ -330,6 +328,7 @@ fi
 sources+=(install_fio)
 
 sudo mkdir -p /usr/{,local}/src
+sudo mkdir -p "$GIT_REPOS"
 
 if [[ $INSTALL_REFSPDK == true ]]; then
 	# Serialize builds as refspdk depends on spdk
