@@ -287,59 +287,68 @@ EOF
 			continue
 		fi
 
-		if ! abidiff $source_abi_dir/$so_file $libdir/$so_file --leaf-changes-only --suppressions $suppression_file --stat > /dev/null; then
-			found_abi_change=false
-			output=$(abidiff $source_abi_dir/$so_file $libdir/$so_file --leaf-changes-only --suppressions $suppression_file --stat) || true
-			new_so_maj=$(readlink $libdir/$so_file | awk -F'\\.so\\.' '{print $2}' | cut -d '.' -f1)
-			new_so_min=$(readlink $libdir/$so_file | awk -F'\\.so\\.' '{print $2}' | cut -d '.' -f2)
-			old_so_maj=$(readlink $source_abi_dir/$so_file | awk -F'\\.so\\.' '{print $2}' | cut -d '.' -f1)
-			old_so_min=$(readlink $source_abi_dir/$so_file | awk -F'\\.so\\.' '{print $2}' | cut -d '.' -f2)
-			so_name_changed=$(grep "ELF SONAME changed" <<< "$output") || so_name_changed="No"
-			leaf_type_summary=$(grep "leaf types summary" <<< "$output") || true
-			function_summary=$(grep "functions summary" <<< "$output")
-			variable_summary=$(grep "variables summary" <<< "$output")
+		if ! output=$(abidiff "$source_abi_dir/$so_file" "$libdir/$so_file" --leaf-changes-only --suppressions $suppression_file --stat); then
 			# remove any filtered out variables.
-			leaf_type_summary=$(sed "s/ [()][^)]*[)]//g" <<< "$leaf_type_summary")
-			function_summary=$(sed "s/ [()][^)]*[)]//g" <<< "$function_summary")
-			variable_summary=$(sed "s/ [()][^)]*[)]//g" <<< "$variable_summary")
+			output=${output// [()][^)]*[)]/}
 
-			read -r _ _ _ _ changed_leaf_types _ _ _ <<< "$leaf_type_summary" || changed_leaf_types=0
-			read -r _ _ _ removed_functions _ changed_functions _ added_functions _ <<< "$function_summary"
-			read -r _ _ _ removed_vars _ changed_vars _ added_vars _ <<< "$variable_summary"
+			IFS="." read -r _ _ new_so_maj new_so_min < <(readlink "$libdir/$so_file")
+			IFS="." read -r _ _ old_so_maj old_so_min < <(readlink "$source_abi_dir/$so_file")
 
-			if [ $changed_leaf_types -ne 0 ]; then
-				if [ "$new_so_maj" == "$old_so_maj" ]; then
+			found_abi_change=false
+			so_name_changed=no
+
+			if [[ $output == *"ELF SONAME changed"* ]]; then
+				so_name_changed=yes
+			fi
+
+			changed_leaf_types=0
+			if [[ $output =~ "leaf types summary: "([0-9]+) ]]; then
+				changed_leaf_types=${BASH_REMATCH[1]}
+			fi
+
+			removed_functions=0 changed_functions=0 added_functions=0
+			if [[ $output =~ "functions summary: "([0-9]+)" Removed, "([0-9]+)" Changed, "([0-9]+)" Added" ]]; then
+				removed_functions=${BASH_REMATCH[1]} changed_functions=${BASH_REMATCH[2]} added_functions=${BASH_REMATCH[3]}
+			fi
+
+			removed_vars=0 changed_vars=0 added_vars=0
+			if [[ $output =~ "variables summary: "([0-9]+)" Removed, "([0-9]+)" Changed, "([0-9]+)" Added" ]]; then
+				removed_vars=${BASH_REMATCH[1]} changed_vars=${BASH_REMATCH[2]} added_vars=${BASH_REMATCH[3]}
+			fi
+
+			if ((changed_leaf_types != 0)); then
+				if ((new_so_maj == old_so_maj)); then
 					touch $fail_file
 					echo "Please update the major SO version for $so_file. A header accesible type has been modified since last release."
 				fi
 				found_abi_change=true
 			fi
 
-			if [ $removed_functions -ne 0 ] || [ $removed_vars -ne 0 ]; then
-				if [ "$new_so_maj" == "$old_so_maj" ]; then
+			if ((removed_functions != 0)) || ((removed_vars != 0)); then
+				if ((new_so_maj == old_so_maj)); then
 					touch $fail_file
 					echo "Please update the major SO version for $so_file. API functions or variables have been removed since last release."
 				fi
 				found_abi_change=true
 			fi
 
-			if [ $changed_functions -ne 0 ] || [ $changed_vars -ne 0 ]; then
-				if [ "$new_so_maj" == "$old_so_maj" ]; then
+			if ((changed_functions != 0)) || ((changed_vars != 0)); then
+				if ((new_so_maj == old_so_maj)); then
 					touch $fail_file
 					echo "Please update the major SO version for $so_file. API functions or variables have been changed since last release."
 				fi
 				found_abi_change=true
 			fi
 
-			if [ $added_functions -ne 0 ] || [ $added_vars -ne 0 ]; then
-				if [ "$new_so_min" == "$old_so_min" ] && [ "$new_so_maj" == "$old_so_maj" ] && ! $found_abi_change; then
+			if ((added_functions != 0)) || ((added_vars != 0)); then
+				if ((new_so_min == old_so_min && new_so_maj == old_so_maj)) && ! $found_abi_change; then
 					touch $fail_file
 					echo "Please update the minor SO version for $so_file. API functions or variables have been added since last release."
 				fi
 				found_abi_change=true
 			fi
 
-			if [ "$so_name_changed" != "No" ]; then
+			if [[ $so_name_changed == yes ]]; then
 				if ! $found_abi_change; then
 					# Unfortunately, libspdk_idxd made it into 20.04 without an SO suffix. TODO:: remove after 20.07
 					if [ "$so_file" != "libspdk_idxd.so" ] && [ "$so_file" != "libspdk_accel_idxd.so" ]; then
@@ -348,13 +357,13 @@ EOF
 					fi
 				fi
 
-				if [ "$new_so_maj" != "$old_so_maj" ] && [ "$new_so_min" != "0" ]; then
+				if ((new_so_maj != old_so_maj && new_so_min != 0)); then
 					echo "SO major version for $so_file was bumped. Please reset the minor version to 0."
 					touch $fail_file
 				fi
 
 				expected_new_so_min=$((old_so_min + 1))
-				if [ "$new_so_min" -gt "$old_so_min" ] && [ $expected_new_so_min != $new_so_min ]; then
+				if ((new_so_min > old_so_min && expected_new_so_min != new_so_min)); then
 					echo "SO minor version for $so_file was incremented more than once. Please revert minor version to $expected_new_so_min."
 					touch $fail_file
 				fi
