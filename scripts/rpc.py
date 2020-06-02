@@ -32,6 +32,9 @@ if __name__ == "__main__":
     parser.add_argument('-t', dest='timeout',
                         help='Timeout as a floating point number expressed in seconds waiting for response. Default: 60.0',
                         default=60.0, type=float)
+    parser.add_argument('-r', dest='conn_retries',
+                        help='Retry connecting to the RPC server N times with 0.2s interval. Default: 0',
+                        default=0, type=int)
     parser.add_argument('-v', dest='verbose', action='store_const', const="INFO",
                         help='Set verbose mode to INFO', default="ERROR")
     parser.add_argument('--verbose', dest='verbose', choices=['DEBUG', 'INFO', 'ERROR'],
@@ -2444,7 +2447,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             try:
                 tmp_args.client = rpc.client.JSONRPCClient(
                     tmp_args.server_addr, tmp_args.port, tmp_args.timeout,
-                    log_level=getattr(logging, tmp_args.verbose.upper()))
+                    log_level=getattr(logging, tmp_args.verbose.upper()), conn_retries=tmp_args.conn_retries)
                 call_rpc_func(tmp_args)
                 print("**STATUS=0", flush=True)
             except JSONRPCException as ex:
@@ -2457,7 +2460,9 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         print_json = null_print
         print_array = null_print
     else:
-        args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper()))
+        args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout,
+                                               log_level=getattr(logging, args.verbose.upper()),
+                                               conn_retries=args.conn_retries)
     if hasattr(args, 'func'):
         try:
             call_rpc_func(args)

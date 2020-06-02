@@ -28,11 +28,31 @@ class JSONRPCClient(object):
         self._logger = logging.getLogger("JSONRPCClient(%s)" % addr)
         self._logger.addHandler(ch)
         self.log_set_level(kwargs.get('log_level', logging.ERROR))
+        connect_retries = kwargs.get('conn_retries', 0)
 
         self.timeout = timeout
         self._request_id = 0
         self._recv_buf = ""
         self._reqs = []
+
+        for i in range(connect_retries):
+            try:
+                self._connect(addr, port)
+                return
+            except Exception as e:
+                # ignore and retry in 200ms
+                time.sleep(0.2)
+
+        # try one last time without try/except
+        self._connect(addr, port)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        self.close()
+
+    def _connect(self, addr, port):
         try:
             if os.path.exists(addr):
                 self._logger.debug("Trying to connect to UNIX socket: %s", addr)
@@ -54,12 +74,6 @@ class JSONRPCClient(object):
         except socket.error as ex:
             raise JSONRPCException("Error while connecting to %s\n"
                                    "Error details: %s" % (addr, ex))
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exception_type, exception_value, traceback):
-        self.close()
 
     def get_logger(self):
         return self._logger
