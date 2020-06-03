@@ -370,6 +370,8 @@ bdev_unlock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
 		      uint64_t offset, uint64_t length,
 		      lock_range_cb cb_fn, void *cb_arg);
 
+static inline void bdev_io_complete(void *ctx);
+
 void
 spdk_bdev_get_opts(struct spdk_bdev_opts *opts)
 {
@@ -4407,6 +4409,215 @@ spdk_bdev_nvme_io_passthru_md(struct spdk_bdev_desc *desc, struct spdk_io_channe
 	bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
 	bdev_io_submit(bdev_io);
+	return 0;
+}
+
+static void bdev_abort_retry(void *ctx);
+
+static void
+bdev_abort_io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_bdev_channel *channel = bdev_io->internal.ch;
+	struct spdk_bdev_io *parent_io = cb_arg;
+	struct spdk_bdev_io *bio_to_abort, *tmp_io;
+
+	bio_to_abort = bdev_io->u.abort.bio_to_abort;
+
+	spdk_bdev_free_io(bdev_io);
+
+	if (!success) {
+		/* Check if the target I/O completed in the meantime. */
+		TAILQ_FOREACH(tmp_io, &channel->io_submitted, internal.ch_link) {
+			if (tmp_io == bio_to_abort) {
+				break;
+			}
+		}
+
+		/* If the target I/O still exists, set the parent to failed. */
+		if (tmp_io != NULL) {
+			parent_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+		}
+	}
+
+	parent_io->u.bdev.split_outstanding--;
+	if (parent_io->u.bdev.split_outstanding == 0) {
+		if (parent_io->internal.status == SPDK_BDEV_IO_STATUS_NOMEM) {
+			bdev_abort_retry(parent_io);
+		} else {
+			bdev_io_complete(parent_io);
+		}
+	}
+}
+
+static int
+bdev_abort_io(struct spdk_bdev_desc *desc, struct spdk_bdev_channel *channel,
+	      struct spdk_bdev_io *bio_to_abort,
+	      spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
+	struct spdk_bdev_io *bdev_io;
+
+	if (bio_to_abort->type == SPDK_BDEV_IO_TYPE_ABORT ||
+	    bio_to_abort->type == SPDK_BDEV_IO_TYPE_RESET) {
+		/* TODO: Abort reset or abort request. */
+		return -ENOTSUP;
+	}
+
+	if (bdev->split_on_optimal_io_boundary && bdev_io_should_split(bio_to_abort)) {
+		return -ENOTSUP;
+	}
+
+	bdev_io = bdev_channel_get_io(channel);
+	if (bdev_io == NULL) {
+		return -ENOMEM;
+	}
+
+	bdev_io->internal.ch = channel;
+	bdev_io->internal.desc = desc;
+	bdev_io->type = SPDK_BDEV_IO_TYPE_ABORT;
+	bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	bdev_io->u.abort.bio_to_abort = bio_to_abort;
+
+	/* Submit the abort request to the underlying bdev module. */
+	bdev_io_submit(bdev_io);
+
+	return 0;
+}
+
+static uint32_t
+_bdev_abort(struct spdk_bdev_io *parent_io)
+{
+	struct spdk_bdev_desc *desc = parent_io->internal.desc;
+	struct spdk_bdev_channel *channel = parent_io->internal.ch;
+	void *bio_cb_arg;
+	struct spdk_bdev_io *bio_to_abort;
+	uint32_t matched_ios;
+	int rc;
+
+	bio_cb_arg = parent_io->u.bdev.abort.bio_cb_arg;
+
+	/* matched_ios is returned and will be kept by the caller.
+	 *
+	 * This funcion will be used for two cases, 1) the same cb_arg is used for
+	 * multiple I/Os, 2) a single large I/O is split into smaller ones.
+	 * Incrementing split_outstanding directly here may confuse readers especially
+	 * for the 1st case.
+	 *
+	 * Completion of I/O abort is processed after stack unwinding. Hence this trick
+	 * works as expected.
+	 */
+	matched_ios = 0;
+	parent_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	TAILQ_FOREACH(bio_to_abort, &channel->io_submitted, internal.ch_link) {
+		if (bio_to_abort->internal.caller_ctx != bio_cb_arg) {
+			continue;
+		}
+
+		if (bio_to_abort->internal.submit_tsc > parent_io->internal.submit_tsc) {
+			/* Any I/O which was submitted after this abort command should be excluded. */
+			continue;
+		}
+
+		rc = bdev_abort_io(desc, channel, bio_to_abort, bdev_abort_io_done, parent_io);
+		if (rc != 0) {
+			if (rc == -ENOMEM) {
+				parent_io->internal.status = SPDK_BDEV_IO_STATUS_NOMEM;
+			} else {
+				parent_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+			}
+			break;
+		}
+		matched_ios++;
+	}
+
+	return matched_ios;
+}
+
+static void
+bdev_abort_retry(void *ctx)
+{
+	struct spdk_bdev_io *parent_io = ctx;
+	uint32_t matched_ios;
+
+	matched_ios = _bdev_abort(parent_io);
+
+	if (matched_ios == 0) {
+		if (parent_io->internal.status == SPDK_BDEV_IO_STATUS_NOMEM) {
+			bdev_queue_io_wait_with_cb(parent_io, bdev_abort_retry);
+		} else {
+			/* For retry, the case that no target I/O was found is success
+			 * because it means target I/Os completed in the meantime.
+			 */
+			bdev_io_complete(parent_io);
+		}
+		return;
+	}
+
+	/* Use split_outstanding to manage the progress of aborting I/Os. */
+	parent_io->u.bdev.split_outstanding = matched_ios;
+}
+
+static void
+bdev_abort(struct spdk_bdev_io *parent_io)
+{
+	uint32_t matched_ios;
+
+	matched_ios = _bdev_abort(parent_io);
+
+	if (matched_ios == 0) {
+		if (parent_io->internal.status == SPDK_BDEV_IO_STATUS_NOMEM) {
+			bdev_queue_io_wait_with_cb(parent_io, bdev_abort_retry);
+		} else {
+			/* The case the no target I/O was found is failure. */
+			parent_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+			bdev_io_complete(parent_io);
+		}
+		return;
+	}
+
+	/* Use split_outstanding to manage the progress of aborting I/Os. */
+	parent_io->u.bdev.split_outstanding = matched_ios;
+}
+
+int
+spdk_bdev_abort(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		void *bio_cb_arg,
+		spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev_io *bdev_io;
+
+	if (bio_cb_arg == NULL) {
+		return -EINVAL;
+	}
+
+	if (!spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_ABORT)) {
+		return -ENOTSUP;
+	}
+
+	bdev_io = bdev_channel_get_io(channel);
+	if (bdev_io == NULL) {
+		return -ENOMEM;
+	}
+
+	bdev_io->internal.ch = channel;
+	bdev_io->internal.desc = desc;
+	bdev_io->internal.submit_tsc = spdk_get_ticks();
+	bdev_io->type = SPDK_BDEV_IO_TYPE_ABORT;
+	bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	bdev_io->u.bdev.abort.bio_cb_arg = bio_cb_arg;
+
+	/* Parent abort request is not submitted directly, but to manage its execution,
+	 * add it to the submitted list here.
+	 */
+	TAILQ_INSERT_TAIL(&channel->io_submitted, bdev_io, internal.ch_link);
+
+	bdev_abort(bdev_io);
+
 	return 0;
 }
 

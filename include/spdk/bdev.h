@@ -139,6 +139,7 @@ enum spdk_bdev_io_type {
 	SPDK_BDEV_IO_TYPE_ZONE_APPEND,
 	SPDK_BDEV_IO_TYPE_COMPARE,
 	SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE,
+	SPDK_BDEV_IO_TYPE_ABORT,
 	SPDK_BDEV_NUM_IO_TYPES /* Keep last */
 };
 
@@ -1383,6 +1384,37 @@ int spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *
  *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
  */
 int spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		    spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
+ * Submit abort requests to abort all I/Os which has bio_cb_arg as its callback
+ * context to the bdev on the given channel.
+ *
+ * This goes all the way down to the bdev driver module and attempts to abort all
+ * I/Os which have bio_cb_arg as their callback context if they exist. This is a best
+ * effort command. Upon completion of this, the status SPDK_BDEV_IO_STATUS_SUCCESS
+ * indicates all the I/Os were successfully aborted, or the status
+ * SPDK_BDEV_IO_STATUS_FAILED indicates any I/O was failed to abort for any reason
+ * or no I/O which has bio_cb_arg as its callback context was found.
+ *
+ * \ingroup bdev_io_submit functions
+ *
+ * \param desc Block device descriptor.
+ * \param ch The I/O channel which the I/Os to be aborted are associated with.
+ * \param bio_cb_arg Callback argument for the outstanding requests which this
+ * function attempts to abort.
+ * \param cb Called when the abort request is completed.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always be called (even if the
+ * request ultimately failed). Return negated errno on failure, in which case the
+ * callback will not be called.
+ *   * -EINVAL - bio_cb_arg was not specified.
+ *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated.
+ *   * -ENOTSUP - the bdev does not support abort.
+ */
+int spdk_bdev_abort(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		    void *bio_cb_arg,
 		    spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**

@@ -120,6 +120,8 @@ static void *g_compare_read_buf;
 static uint32_t g_compare_read_buf_len;
 static void *g_compare_write_buf;
 static uint32_t g_compare_write_buf_len;
+static bool g_abort_done;
+static enum spdk_bdev_io_status g_abort_status;
 
 static struct ut_expected_io *
 ut_alloc_expected_io(uint8_t type, uint64_t offset, uint64_t length, int iovcnt)
@@ -150,6 +152,7 @@ stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 	struct bdev_ut_channel *ch = spdk_io_channel_get_ctx(_ch);
 	struct ut_expected_io *expected_io;
 	struct iovec *iov, *expected_iov;
+	struct spdk_bdev_io *bio_to_abort;
 	int i;
 
 	g_bdev_io = bdev_io;
@@ -177,6 +180,19 @@ stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 		CU_ASSERT(g_compare_read_buf_len == len);
 		if (memcmp(bdev_io->u.bdev.iovs[0].iov_base, g_compare_read_buf, len)) {
 			g_io_exp_status = SPDK_BDEV_IO_STATUS_MISCOMPARE;
+		}
+	}
+
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_ABORT) {
+		if (g_io_exp_status == SPDK_BDEV_IO_STATUS_SUCCESS) {
+			TAILQ_FOREACH(bio_to_abort, &ch->outstanding_io, module_link) {
+				if (bio_to_abort == bdev_io->u.abort.bio_to_abort) {
+					TAILQ_REMOVE(&ch->outstanding_io, bio_to_abort, module_link);
+					ch->outstanding_io_count--;
+					spdk_bdev_io_complete(bio_to_abort, SPDK_BDEV_IO_STATUS_FAILED);
+					break;
+				}
+			}
 		}
 	}
 
@@ -280,6 +296,7 @@ static bool g_io_types_supported[SPDK_BDEV_NUM_IO_TYPES] = {
 	[SPDK_BDEV_IO_TYPE_NVME_IO_MD]		= true,
 	[SPDK_BDEV_IO_TYPE_WRITE_ZEROES]	= true,
 	[SPDK_BDEV_IO_TYPE_ZCOPY]		= true,
+	[SPDK_BDEV_IO_TYPE_ABORT]		= true,
 };
 
 static void
@@ -3117,6 +3134,106 @@ lock_lba_range_overlapped(void)
 	poll_threads();
 }
 
+static void
+abort_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	g_abort_done = true;
+	g_abort_status = bdev_io->internal.status;
+	spdk_bdev_free_io(bdev_io);
+}
+
+static void
+bdev_io_abort(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel *io_ch;
+	struct spdk_bdev_opts bdev_opts = {
+		.bdev_io_pool_size = 4,
+		.bdev_io_cache_size = 2,
+	};
+	uint64_t io_ctx1 = 0, io_ctx2 = 0;
+	int rc;
+
+	rc = spdk_bdev_set_opts(&bdev_opts);
+	CU_ASSERT(rc == 0);
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+
+	bdev = allocate_bdev("bdev0");
+
+	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc != NULL);
+	io_ch = spdk_bdev_get_io_channel(desc);
+	CU_ASSERT(io_ch != NULL);
+
+	g_abort_done = false;
+
+	ut_enable_io_type(SPDK_BDEV_IO_TYPE_ABORT, false);
+
+	rc = spdk_bdev_abort(desc, io_ch, &io_ctx1, abort_done, NULL);
+	CU_ASSERT(rc == -ENOTSUP);
+
+	ut_enable_io_type(SPDK_BDEV_IO_TYPE_ABORT, true);
+
+	rc = spdk_bdev_abort(desc, io_ch, &io_ctx2, abort_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_abort_done == true);
+	CU_ASSERT(g_abort_status == SPDK_BDEV_IO_STATUS_FAILED);
+
+	/* Test the case that the target I/O was successfully aborted. */
+	g_io_done = false;
+
+	rc = spdk_bdev_read_blocks(desc, io_ch, NULL, 0, 1, io_done, &io_ctx1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	g_abort_done = false;
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	rc = spdk_bdev_abort(desc, io_ch, &io_ctx1, abort_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_FAILED);
+	stub_complete_io(1);
+	CU_ASSERT(g_abort_done == true);
+	CU_ASSERT(g_abort_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/* Test the case that the target I/O was not aborted because it completed
+	 * in the middle of execution of the abort.
+	 */
+	g_io_done = false;
+
+	rc = spdk_bdev_read_blocks(desc, io_ch, NULL, 0, 1, io_done, &io_ctx1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	g_abort_done = false;
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_FAILED;
+
+	rc = spdk_bdev_abort(desc, io_ch, &io_ctx1, abort_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	stub_complete_io(1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_FAILED;
+	stub_complete_io(1);
+	CU_ASSERT(g_abort_done == true);
+	CU_ASSERT(g_abort_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	spdk_put_io_channel(io_ch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	spdk_bdev_finish(bdev_fini_cb, NULL);
+	poll_threads();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -3153,6 +3270,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, lock_lba_range_check_ranges);
 	CU_ADD_TEST(suite, lock_lba_range_with_io_outstanding);
 	CU_ADD_TEST(suite, lock_lba_range_overlapped);
+	CU_ADD_TEST(suite, bdev_io_abort);
 
 	allocate_threads(1);
 	set_thread(0);

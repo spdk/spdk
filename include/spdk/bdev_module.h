@@ -533,11 +533,22 @@ struct spdk_bdev_io {
 				/** True if this request is in the 'start' phase of zcopy. False if in 'end'. */
 				uint8_t start : 1;
 			} zcopy;
+
+			struct {
+				/** The callback argument for the outstanding request which this abort
+				 *  attempts to cancel.
+				 */
+				void *bio_cb_arg;
+			} abort;
 		} bdev;
 		struct {
 			/** Channel reference held while messages for this reset are in progress. */
 			struct spdk_io_channel *ch_ref;
 		} reset;
+		struct {
+			/** The outstanding request matching bio_cb_arg which this abort attempts to cancel. */
+			struct spdk_bdev_io *bio_to_abort;
+		} abort;
 		struct {
 			/* The NVMe command to execute */
 			struct spdk_nvme_cmd cmd;

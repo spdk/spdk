@@ -276,6 +276,8 @@ function confirm_abi_deps() {
 	name = spdk_vhost_scsi_device_backend
 [suppress_type]
 	name = spdk_net_impl
+[suppress_type]
+	name = spdk_lvol
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do
