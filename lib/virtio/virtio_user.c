@@ -35,7 +35,7 @@
 
 #include <sys/eventfd.h>
 
-#include "virtio_user/vhost.h"
+#include "vhost_user.h"
 #include "spdk/string.h"
 #include "spdk/config.h"
 

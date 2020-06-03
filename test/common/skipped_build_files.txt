@@ -25,7 +25,7 @@ lib/rte_vhost/socket
 lib/rte_vhost/vhost
 lib/rte_vhost/vhost_user
 lib/vhost/vhost_nvme
-lib/virtio/virtio_user/vhost_user
+lib/virtio/vhost_user
 
 # Cuse related files, enable when ready.
 lib/nvme/nvme_cuse
