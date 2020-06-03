@@ -84,6 +84,8 @@ through the JSON context provided via spdk_nvmf_target_opts->transport_specific.
 
 ## v20.07: SPDK CSI driver, new accel_fw commands, I/O abort support
 
+spdk_json_free_object() was added to free memory allocated by spdk_json_decode_object().
+
 ### accel
 
 A new API was added `spdk_accel_get_capabilities` that allows applications to

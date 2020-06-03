@@ -252,6 +252,37 @@ test_decode_object(void)
 }
 
 static void
+test_free_object(void)
+{
+	struct my_object {
+		char *my_name;
+		uint32_t my_int;
+		char *my_other_name;
+		char *empty_string;
+	};
+	struct spdk_json_object_decoder decoders[] = {
+		{"first", offsetof(struct my_object, my_name), spdk_json_decode_string, false},
+		{"second", offsetof(struct my_object, my_int), spdk_json_decode_uint32, false},
+		{"third", offsetof(struct my_object, my_other_name), spdk_json_decode_string, true},
+		{"fourth", offsetof(struct my_object, empty_string), spdk_json_decode_string, false},
+	};
+	struct my_object output = {
+		.my_name = strdup("hello"),
+		.my_int = 3,
+		.my_other_name = strdup("world"),
+		.empty_string = NULL
+	};
+
+	SPDK_CU_ASSERT_FATAL(output.my_name != NULL);
+	SPDK_CU_ASSERT_FATAL(output.my_other_name != NULL);
+
+	spdk_json_free_object(decoders, 4, &output);
+	CU_ASSERT(output.my_name == NULL);
+	CU_ASSERT(output.my_other_name == NULL);
+	CU_ASSERT(output.empty_string == NULL);
+}
+
+static void
 test_decode_array(void)
 {
 	struct spdk_json_val values[4];
@@ -942,6 +973,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_decode_string);
 	CU_ADD_TEST(suite, test_find);
 	CU_ADD_TEST(suite, test_iterating);
+	CU_ADD_TEST(suite, test_free_object);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

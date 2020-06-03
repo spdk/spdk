@@ -364,6 +364,29 @@ _json_decode_object(const struct spdk_json_val *values,
 	return invalid ? -1 : 0;
 }
 
+void
+spdk_json_free_object(const struct spdk_json_object_decoder *decoders, size_t num_decoders,
+		      void *obj)
+{
+	struct spdk_json_val invalid_val = {
+		.start = "",
+		.len = 0,
+		.type = SPDK_JSON_VAL_INVALID
+	};
+	size_t decidx;
+
+	for (decidx = 0; decidx < num_decoders; decidx++) {
+		const struct spdk_json_object_decoder *dec = &decoders[decidx];
+		void *field = (void *)((uintptr_t)obj + dec->offset);
+
+		/* decoding an invalid value will free the
+		 * previous memory without allocating it again.
+		 */
+		dec->decode_func(&invalid_val, field);
+	}
+}
+
+
 int
 spdk_json_decode_object(const struct spdk_json_val *values,
 			const struct spdk_json_object_decoder *decoders, size_t num_decoders, void *out)
