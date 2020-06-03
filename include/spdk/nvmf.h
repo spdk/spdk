@@ -1007,15 +1007,6 @@ spdk_nvmf_transport_stop_listen(struct spdk_nvmf_transport *transport,
 				const struct spdk_nvme_transport_id *trid);
 
 /**
- * Write NVMe-oF target's transport configurations into provided JSON context.
- * \param w JSON write context
- * \param tgt The NVMe-oF target
- */
-void
-spdk_nvmf_tgt_transport_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_tgt *tgt);
-
-
-/**
  * \brief Get current transport poll group statistics.
  *
  * This function allocates memory for statistics and returns it

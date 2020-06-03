@@ -75,7 +75,6 @@
 	spdk_nvmf_tgt_add_transport;
 	spdk_nvmf_transport_listen;
 	spdk_nvmf_transport_stop_listen;
-	spdk_nvmf_tgt_transport_write_config_json;
 	spdk_nvmf_transport_poll_group_get_stat;
 	spdk_nvmf_transport_poll_group_free_stat;
 	spdk_nvmf_rdma_init_hooks;
