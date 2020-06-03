@@ -1549,6 +1549,20 @@ struct spdk_nvme_cdata_nvmf_specific {
 	uint8_t		reserved[244];
 };
 
+/** Identify Controller data SGL support */
+struct spdk_nvme_cdata_sgls {
+	uint32_t	supported : 2;
+	uint32_t	keyed_sgl : 1;
+	uint32_t	reserved1 : 13;
+	uint32_t	bit_bucket_descriptor : 1;
+	uint32_t	metadata_pointer : 1;
+	uint32_t	oversized_sgl : 1;
+	uint32_t	metadata_address : 1;
+	uint32_t	sgl_offset : 1;
+	uint32_t	transport_sgl : 1;
+	uint32_t	reserved2 : 10;
+};
+
 struct __attribute__((packed)) __attribute__((aligned)) spdk_nvme_ctrlr_data {
 	/* bytes 0-255: controller capabilities and features */
 
@@ -1879,19 +1893,7 @@ struct __attribute__((packed)) __attribute__((aligned)) spdk_nvme_ctrlr_data {
 
 	uint16_t		reserved534;
 
-	/** SGL support */
-	struct {
-		uint32_t	supported : 2;
-		uint32_t	keyed_sgl : 1;
-		uint32_t	reserved1 : 13;
-		uint32_t	bit_bucket_descriptor : 1;
-		uint32_t	metadata_pointer : 1;
-		uint32_t	oversized_sgl : 1;
-		uint32_t	metadata_address : 1;
-		uint32_t	sgl_offset : 1;
-		uint32_t	transport_sgl : 1;
-		uint32_t	reserved2 : 10;
-	} sgls;
+	struct spdk_nvme_cdata_sgls sgls;
 
 	uint8_t			reserved4[228];
 
