@@ -1821,6 +1821,9 @@ void
 spdk_nvmf_ctrlr_data_init(struct spdk_nvmf_transport_opts *opts, struct spdk_nvmf_ctrlr_data *cdata)
 {
 	cdata->kas = KAS_DEFAULT_VALUE;
+	cdata->sgls.supported = 1;
+	cdata->sgls.keyed_sgl = 1;
+	cdata->sgls.sgl_offset = 1;
 	cdata->nvmf_specific.ioccsz = sizeof(struct spdk_nvme_cmd) / 16;
 	cdata->nvmf_specific.ioccsz += opts->in_capsule_data_size / 16;
 	cdata->nvmf_specific.iorcsz = sizeof(struct spdk_nvme_cpl) / 16;
@@ -1847,9 +1850,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 	cdata->lpa.edlp = 1;
 	cdata->elpe = 127;
 	cdata->maxcmd = transport->opts.max_queue_depth;
-	cdata->sgls.supported = 1;
-	cdata->sgls.keyed_sgl = 1;
-	cdata->sgls.sgl_offset = 1;
+	cdata->sgls = transport->cdata.sgls;
 	cdata->fuses.compare_and_write = 1;
 	cdata->acwu = 1;
 	spdk_strcpy_pad(cdata->subnqn, subsystem->subnqn, sizeof(cdata->subnqn), '\0');
