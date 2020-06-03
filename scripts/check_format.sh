@@ -224,6 +224,7 @@ mapfile -t declared_symbols < <(git diff -U0 $commit_to_compare HEAD -- include/
 for c_file in "${changed_c_libs[@]}"; do
 	lib_map_file="mk/spdk_blank.map"
 	defined_symbols=()
+	removed_symbols=()
 	exported_symbols=()
 	if ls "$(dirname $c_file)"/*.map &> /dev/null; then
 		lib_map_file="$(ls "$(dirname $c_file)"/*.map)"
@@ -231,10 +232,19 @@ for c_file in "${changed_c_libs[@]}"; do
 	# Matching groups are 1. leading +sign. 2, function name 3. argument list / anything after that.
 	# Capture just the names of newly added (or modified) functions that start with "spdk_"
 	mapfile -t defined_symbols < <(git diff -U0 $commit_to_compare HEAD -- $c_file | sed -En 's/(^[+])(spdk[a-z,A-Z,0-9,_]*)(\(.*)/\2/p')
+	# Capture the names of removed symbols to catch edge cases where we just move definitions around.
+	mapfile -t removed_symbols < <(git diff -U0 HEAD $commit_to_compare -- $c_file | sed -En 's/(^[+])(spdk[a-z,A-Z,0-9,_]*)(\(.*)/\2/p')
+	for symbol in "${removed_symbols[@]}"; do
+		defined_symbols=("${defined_symbols[@]/$symbol/}")
+	done
 	# It's possible that we just modified a functions arguments so unfortunately we can't just look at changed lines in this function.
 	# matching groups are 1. All leading whitespace 2. function name. Capture just the symbol name.
 	mapfile -t exported_symbols < <(sed -En 's/(^[[:space:]]*)(spdk[a-z,A-Z,0-9,_]*);/\2/p' < $lib_map_file)
 	for defined_symbol in "${defined_symbols[@]}"; do
+		# if the list of defined symbols is equal to the list of removed symbols, then we are left with a single empty element. skip it.
+		if [ "$defined_symbol" = '' ]; then
+			continue
+		fi
 		not_exported=true
 		not_declared=true
 		if array_contains_string exported_symbols $defined_symbol; then
