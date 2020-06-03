@@ -351,7 +351,6 @@ norandommap=1
 rw={rw}
 rwmixread={rwmixread}
 bs={block_size}
-iodepth={io_depth}
 time_based=1
 ramp_time={ramp_time}
 runtime={run_time}
@@ -388,13 +387,13 @@ runtime={run_time}
             threads = range(0, len(subsystems))
 
         if "spdk" in self.mode:
-            filename_section = self.gen_fio_filename_conf(subsystems, threads)
+            filename_section = self.gen_fio_filename_conf(subsystems, threads, io_depth, num_jobs)
         else:
-            filename_section = self.gen_fio_filename_conf(threads)
+            filename_section = self.gen_fio_filename_conf(threads, io_depth, num_jobs)
 
         fio_config = fio_conf_template.format(ioengine=ioengine, spdk_conf=spdk_conf,
                                               rw=rw, rwmixread=rwmixread, block_size=block_size,
-                                              io_depth=io_depth, ramp_time=ramp_time, run_time=run_time)
+                                              ramp_time=ramp_time, run_time=run_time)
         if num_jobs:
             fio_config = fio_config + "numjobs=%s \n" % num_jobs
         if self.cpus_allowed is not None:
@@ -727,7 +726,7 @@ class KernelInitiator(Initiator):
             self.remote_call("sudo %s disconnect -n %s" % (self.nvmecli_bin, subsystem[1]))
             time.sleep(1)
 
-    def gen_fio_filename_conf(self, threads):
+    def gen_fio_filename_conf(self, threads, io_depth, num_jobs=1):
         out, err = self.remote_call("lsblk -o NAME -nlp")
         nvme_list = [x for x in out.split("\n") if "nvme" in x]
 
@@ -747,7 +746,9 @@ class KernelInitiator(Initiator):
         for i, r in enumerate(result):
             header = "[filename%s]" % i
             disks = "\n".join(["filename=/dev/%s" % x for x in r])
-            filename_section = "\n".join([filename_section, header, disks])
+            job_section_qd = round((io_depth * len(r)) / num_jobs)
+            iodepth = "iodepth=%s" % job_section_qd
+            filename_section = "\n".join([filename_section, header, disks, iodepth])
 
         return filename_section
 
@@ -788,7 +789,7 @@ class SPDKInitiator(Initiator):
         bdev_section = "\n".join([header, bdev_rows])
         return bdev_section
 
-    def gen_fio_filename_conf(self, subsystems, threads):
+    def gen_fio_filename_conf(self, subsystems, threads, io_depth, num_jobs=1):
         filename_section = ""
         if len(threads) >= len(subsystems):
             threads = range(0, len(subsystems))
@@ -807,7 +808,9 @@ class SPDKInitiator(Initiator):
         for i, r in enumerate(result):
             header = "[filename%s]" % i
             disks = "\n".join(["filename=%s" % x for x in r])
-            filename_section = "\n".join([filename_section, header, disks])
+            job_section_qd = round((io_depth * len(r)) / num_jobs)
+            iodepth = "iodepth=%s" % job_section_qd
+            filename_section = "\n".join([filename_section, header, disks, iodepth])
 
         return filename_section
 

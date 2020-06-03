@@ -104,7 +104,7 @@ other than -t, -s, -n and -a.
 Fio job parameters.
 
 - bs: block size
-- qd: io depth
+- qd: io depth - Per connected fio filename target
 - rw: workload mode
 - rwmixread: percentage of reads in readwrite workloads
 - run_time: time (in seconds) to run workload
