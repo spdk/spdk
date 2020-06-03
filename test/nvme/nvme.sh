@@ -24,11 +24,16 @@ function nvme_perf() {
 }
 
 function nvme_fio_test() {
+	PLUGIN_DIR=$rootdir/examples/nvme/fio_plugin
+	ran_fio=false
 	for bdf in $(get_nvme_bdfs); do
-		for blkname in $(get_nvme_name_from_bdf $bdf); do
-			fio_nvme $rootdir/examples/nvme/fio_plugin/example_config.fio --filename="trtype=PCIe traddr=${bdf//:/.} ns=${blkname##*n}"
-		done
+		if $SPDK_EXAMPLE_DIR/identify -r "trtype:PCIe traddr:${bdf}" | grep -E "^Number of Namespaces" - | grep -q "0" -; then
+			continue
+		fi
+		fio_nvme $PLUGIN_DIR/example_config.fio --filename="trtype=PCIe traddr=${bdf//:/.}"
+		ran_fio=true
 	done
+	$ran_fio || (echo "No valid NVMe drive found. Failing test." && false)
 }
 
 function nvme_multi_secondary() {
@@ -117,13 +122,13 @@ run_test "nvme_err_injection" $testdir/err_injection/err_injection
 run_test "nvme_overhead" $testdir/overhead/overhead -s 4096 -t 1 -H
 run_test "nvme_arbitration" $SPDK_EXAMPLE_DIR/arbitration -t 3 -i 0
 
-if [[ $CONFIG_FIO_PLUGIN == y ]]; then
-	run_test "nvme_fio" nvme_fio_test
-fi
-
 if [ $(uname) != "FreeBSD" ]; then
 	run_test "nvme_startup" $testdir/startup/startup -t 1000000
 	run_test "nvme_multi_secondary" nvme_multi_secondary
 	trap - SIGINT SIGTERM EXIT
 	kill_stub
+fi
+
+if [[ $CONFIG_FIO_PLUGIN == y ]]; then
+	run_test "nvme_fio" nvme_fio_test
 fi
