@@ -301,6 +301,7 @@ test_connect(void)
 	struct spdk_nvmf_poll_group group;
 	struct spdk_nvmf_subsystem_poll_group *sgroups;
 	struct spdk_nvmf_transport transport;
+	struct spdk_nvmf_transport_ops tops = {};
 	struct spdk_nvmf_subsystem subsystem;
 	struct spdk_nvmf_request req;
 	struct spdk_nvmf_qpair admin_qpair;
@@ -334,6 +335,7 @@ test_connect(void)
 
 	memset(&tgt, 0, sizeof(tgt));
 	memset(&transport, 0, sizeof(transport));
+	transport.ops = &tops;
 	transport.opts.max_aq_depth = 32;
 	transport.opts.max_queue_depth = 64;
 	transport.opts.max_qpairs_per_ctrlr = 3;
@@ -1412,7 +1414,7 @@ test_identify_ctrlr(void)
 	struct spdk_nvme_ctrlr_data cdata = {};
 	uint32_t expected_ioccsz;
 
-	spdk_nvmf_ctrlr_data_init(&transport.opts, &transport.cdata);
+	nvmf_ctrlr_cdata_init(&transport, &subsystem, &ctrlr.cdata);
 
 	/* Check ioccsz, TCP transport */
 	tops.type = SPDK_NVME_TRANSPORT_TCP;

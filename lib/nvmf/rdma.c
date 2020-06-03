@@ -2480,16 +2480,6 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		rtransport->poll_fds[i++].events = POLLIN;
 	}
 
-	spdk_nvmf_ctrlr_data_init(opts, &rtransport->transport.cdata);
-
-	rtransport->transport.cdata.nvmf_specific.msdbd = SPDK_NVMF_MAX_SGL_ENTRIES;
-
-	/* Disable in-capsule data transfer for RDMA controller when dif_insert_or_strip is enabled
-	since in-capsule data only works with NVME drives that support SGL memory layout */
-	if (opts->dif_insert_or_strip) {
-		rtransport->transport.cdata.nvmf_specific.ioccsz = sizeof(struct spdk_nvme_cmd) / 16;
-	}
-
 	return &rtransport->transport;
 }
 
@@ -3200,6 +3190,19 @@ nvmf_rdma_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn, void
 	}
 	/* check all flagged fd's have been served */
 	assert(nfds == 0);
+}
+
+static void
+nvmf_rdma_cdata_init(struct spdk_nvmf_transport *transport, struct spdk_nvmf_subsystem *subsystem,
+		     struct spdk_nvmf_ctrlr_data *cdata)
+{
+	cdata->nvmf_specific.msdbd = SPDK_NVMF_MAX_SGL_ENTRIES;
+
+	/* Disable in-capsule data transfer for RDMA controller when dif_insert_or_strip is enabled
+	since in-capsule data only works with NVME drives that support SGL memory layout */
+	if (transport->opts.dif_insert_or_strip) {
+		cdata->nvmf_specific.ioccsz = sizeof(struct spdk_nvme_cmd) / 16;
+	}
 }
 
 static void
@@ -4086,6 +4089,7 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 	.listen = nvmf_rdma_listen,
 	.stop_listen = nvmf_rdma_stop_listen,
 	.accept = nvmf_rdma_accept,
+	.cdata_init = nvmf_rdma_cdata_init,
 
 	.listener_discover = nvmf_rdma_discover,
 

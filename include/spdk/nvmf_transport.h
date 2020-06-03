@@ -182,7 +182,6 @@ struct spdk_nvmf_transport {
 	struct spdk_nvmf_tgt			*tgt;
 	const struct spdk_nvmf_transport_ops	*ops;
 	struct spdk_nvmf_transport_opts		opts;
-	struct spdk_nvmf_ctrlr_data		cdata;
 
 	/* A mempool for transport related data transfers */
 	struct spdk_mempool			*data_buf_pool;
@@ -252,6 +251,12 @@ struct spdk_nvmf_transport_ops {
 	 * Check for new connections on the transport.
 	 */
 	void (*accept)(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn, void *cb_arg);
+
+	/**
+	 * Initialize subset of identify controller data.
+	 */
+	void (*cdata_init)(struct spdk_nvmf_transport *transport, struct spdk_nvmf_subsystem *subsystem,
+			   struct spdk_nvmf_ctrlr_data *cdata);
 
 	/**
 	 * Fill out a discovery log entry for a specific listen address.
@@ -363,20 +368,6 @@ struct spdk_nvmf_registers {
 	uint64_t			asq;
 	uint64_t			acq;
 };
-
-/**
- * Initialize NVMe-oF controller capabilities.
- *
- * After that call transport specific layer can override the settings
- * but internally must enforce the conditions on when it can be updated
- * (e.g. no connections active).
- *
- * \param opts transport options
- * \param cdata subset of ctrlr capabilities
- */
-void
-spdk_nvmf_ctrlr_data_init(struct spdk_nvmf_transport_opts *opts,
-			  struct spdk_nvmf_ctrlr_data *cdata);
 
 const struct spdk_nvmf_registers *spdk_nvmf_ctrlr_get_regs(struct spdk_nvmf_ctrlr *ctrlr);
 

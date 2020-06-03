@@ -276,6 +276,26 @@ _nvmf_subsystem_add_ctrlr(void *ctx)
 	spdk_thread_send_msg(ctrlr->thread, _nvmf_ctrlr_add_admin_qpair, req);
 }
 
+static void
+nvmf_ctrlr_cdata_init(struct spdk_nvmf_transport *transport, struct spdk_nvmf_subsystem *subsystem,
+		      struct spdk_nvmf_ctrlr_data *cdata)
+{
+	cdata->kas = KAS_DEFAULT_VALUE;
+	cdata->sgls.supported = 1;
+	cdata->sgls.keyed_sgl = 1;
+	cdata->sgls.sgl_offset = 1;
+	cdata->nvmf_specific.ioccsz = sizeof(struct spdk_nvme_cmd) / 16;
+	cdata->nvmf_specific.ioccsz += transport->opts.in_capsule_data_size / 16;
+	cdata->nvmf_specific.iorcsz = sizeof(struct spdk_nvme_cpl) / 16;
+	cdata->nvmf_specific.icdoff = 0; /* offset starts directly after SQE */
+	cdata->nvmf_specific.ctrattr.ctrlr_model = SPDK_NVMF_CTRLR_MODEL_DYNAMIC;
+	cdata->nvmf_specific.msdbd = 1;
+
+	if (transport->ops->cdata_init) {
+		transport->ops->cdata_init(transport, subsystem, cdata);
+	}
+}
+
 static struct spdk_nvmf_ctrlr *
 nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		  struct spdk_nvmf_request *req,
@@ -303,11 +323,13 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		return NULL;
 	}
 
+	nvmf_ctrlr_cdata_init(transport, subsystem, &ctrlr->cdata);
+
 	/*
 	 * KAS: This field indicates the granularity of the Keep Alive Timer in 100ms units.
 	 * If this field is cleared to 0h, then Keep Alive is not supported.
 	 */
-	if (transport->cdata.kas) {
+	if (ctrlr->cdata.kas) {
 		ctrlr->feat.keep_alive_timer.bits.kato = spdk_divide_round_up(connect_cmd->kato,
 				KAS_DEFAULT_VALUE * KAS_TIME_UNIT_IN_MS) *
 				KAS_DEFAULT_VALUE * KAS_TIME_UNIT_IN_MS;
@@ -1817,21 +1839,6 @@ nvmf_ctrlr_populate_oacs(struct spdk_nvmf_ctrlr *ctrlr,
 				     NULL;
 }
 
-void
-spdk_nvmf_ctrlr_data_init(struct spdk_nvmf_transport_opts *opts, struct spdk_nvmf_ctrlr_data *cdata)
-{
-	cdata->kas = KAS_DEFAULT_VALUE;
-	cdata->sgls.supported = 1;
-	cdata->sgls.keyed_sgl = 1;
-	cdata->sgls.sgl_offset = 1;
-	cdata->nvmf_specific.ioccsz = sizeof(struct spdk_nvme_cmd) / 16;
-	cdata->nvmf_specific.ioccsz += opts->in_capsule_data_size / 16;
-	cdata->nvmf_specific.iorcsz = sizeof(struct spdk_nvme_cpl) / 16;
-	cdata->nvmf_specific.icdoff = 0; /* offset starts directly after SQE */
-	cdata->nvmf_specific.ctrattr.ctrlr_model = SPDK_NVMF_CTRLR_MODEL_DYNAMIC;
-	cdata->nvmf_specific.msdbd = 1;
-}
-
 int
 spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_ctrlr_data *cdata)
 {
@@ -1850,7 +1857,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 	cdata->lpa.edlp = 1;
 	cdata->elpe = 127;
 	cdata->maxcmd = transport->opts.max_queue_depth;
-	cdata->sgls = transport->cdata.sgls;
+	cdata->sgls = ctrlr->cdata.sgls;
 	cdata->fuses.compare_and_write = 1;
 	cdata->acwu = 1;
 	spdk_strcpy_pad(cdata->subnqn, subsystem->subnqn, sizeof(cdata->subnqn), '\0');
@@ -1864,7 +1871,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
 		spdk_strcpy_pad(cdata->mn, spdk_nvmf_subsystem_get_mn(subsystem), sizeof(cdata->mn), ' ');
 		spdk_strcpy_pad(cdata->sn, spdk_nvmf_subsystem_get_sn(subsystem), sizeof(cdata->sn), ' ');
-		cdata->kas = transport->cdata.kas;
+		cdata->kas = ctrlr->cdata.kas;
 
 		cdata->rab = 6;
 		cdata->cmic.multi_port = 1;
@@ -1885,7 +1892,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->vwc.present = 1;
 		cdata->vwc.flush_broadcast = SPDK_NVME_FLUSH_BROADCAST_NOT_SUPPORTED;
 
-		cdata->nvmf_specific = transport->cdata.nvmf_specific;
+		cdata->nvmf_specific = ctrlr->cdata.nvmf_specific;
 
 		cdata->oncs.dsm = nvmf_ctrlr_dsm_supported(ctrlr);
 		cdata->oncs.write_zeroes = nvmf_ctrlr_write_zeroes_supported(ctrlr);

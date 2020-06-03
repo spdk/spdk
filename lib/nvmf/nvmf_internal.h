@@ -199,6 +199,8 @@ struct spdk_nvmf_ctrlr {
 	char				hostnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 	struct spdk_nvmf_subsystem	*subsys;
 
+	struct spdk_nvmf_ctrlr_data	cdata;
+
 	struct spdk_nvmf_registers	vcprop;
 
 	struct spdk_nvmf_ctrlr_feat feat;
