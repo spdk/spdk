@@ -696,6 +696,7 @@ function status_linux() {
 		done
 	done
 
+	echo ""
 	echo "VMD"
 
 	#collect all the device_id info of vmd devices.
