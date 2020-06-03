@@ -66,6 +66,12 @@ static uint16_t g_spdk_apptag_mask;
 
 struct spdk_fio_options {
 	void	*pad;	/* off1 used in option descriptions may not be 0 */
+	int	enable_wrr;
+	int	arbitration_burst;
+	int	low_weight;
+	int	medium_weight;
+	int	high_weight;
+	int	wrr_priority;
 	int	mem_size;
 	int	shm_id;
 	int	enable_sgl;
@@ -190,6 +196,14 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		snprintf(opts->hostnqn, sizeof(opts->hostnqn), "%s", fio_options->hostnqn);
 	}
 
+	if (fio_options->enable_wrr) {
+		opts->arb_mechanism		= SPDK_NVME_CC_AMS_WRR;
+		opts->arbitration_burst		= fio_options->arbitration_burst;
+		opts->low_priority_weight	= fio_options->low_weight;
+		opts->medium_priority_weight	= fio_options->medium_weight;
+		opts->high_priority_weight	= fio_options->high_weight;
+	}
+
 	if (fio_options->digest_enable) {
 		if (strcasecmp(fio_options->digest_enable, "HEADER") == 0) {
 			opts->header_digest = true;
@@ -234,6 +248,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	uint32_t		ns_id;
 	char			*p;
 	long int		tmp;
+	struct spdk_fio_options *fio_options = td->eo;
 
 	p = strstr(f->file_name, "ns=");
 	if (p != NULL) {
@@ -307,6 +322,9 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	spdk_nvme_ctrlr_get_default_io_qpair_opts(fio_ctrlr->ctrlr, &qpopts, sizeof(qpopts));
 	qpopts.delay_cmd_submit = true;
+	if (fio_options->enable_wrr) {
+		qpopts.qprio = fio_options->wrr_priority;
+	}
 
 	fio_qpair->qpair = spdk_nvme_ctrlr_alloc_io_qpair(fio_ctrlr->ctrlr, &qpopts, sizeof(qpopts));
 	if (!fio_qpair->qpair) {
@@ -1023,6 +1041,66 @@ static void spdk_fio_cleanup(struct thread_data *td)
  * Adding new parameters by defining them here and defining a callback
  * function to read the parameter value. */
 static struct fio_option options[] = {
+	{
+		.name           = "enable_wrr",
+		.lname          = "Enable weighted round robin (WRR) for IO submission queues",
+		.type           = FIO_OPT_INT,
+		.off1           = offsetof(struct spdk_fio_options, enable_wrr),
+		.def            = "0",
+		.help           = "Enable weighted round robin (WRR) for IO submission queues",
+		.category       = FIO_OPT_C_ENGINE,
+		.group          = FIO_OPT_G_INVALID,
+	},
+	{
+		.name           = "arbitration_burst",
+		.lname          = "Arbitration Burst",
+		.type           = FIO_OPT_INT,
+		.off1           = offsetof(struct spdk_fio_options, arbitration_burst),
+		.def            = "0",
+		.help           = "Arbitration Burst used for WRR (valid range from 0 - 7)",
+		.category       = FIO_OPT_C_ENGINE,
+		.group          = FIO_OPT_G_INVALID,
+	},
+	{
+		.name           = "low_weight",
+		.lname          = "low_weight for WRR",
+		.type           = FIO_OPT_INT,
+		.off1           = offsetof(struct spdk_fio_options, low_weight),
+		.def            = "0",
+		.help           = "low_weight used for WRR (valid range from 0 - 255)",
+		.category       = FIO_OPT_C_ENGINE,
+		.group          = FIO_OPT_G_INVALID,
+	},
+	{
+		.name           = "medium_weight",
+		.lname          = "medium_weight for WRR",
+		.type           = FIO_OPT_INT,
+		.off1           = offsetof(struct spdk_fio_options, medium_weight),
+		.def            = "0",
+		.help           = "medium weight used for WRR (valid range from 0 - 255)",
+		.category       = FIO_OPT_C_ENGINE,
+		.group          = FIO_OPT_G_INVALID,
+	},
+	{
+		.name           = "high_weight",
+		.lname          = "high_weight for WRR",
+		.type           = FIO_OPT_INT,
+		.off1           = offsetof(struct spdk_fio_options, high_weight),
+		.def            = "0",
+		.help           = "high weight used for WRR (valid range from 0 - 255)",
+		.category       = FIO_OPT_C_ENGINE,
+		.group          = FIO_OPT_G_INVALID,
+	},
+	{
+		.name           = "wrr_priority",
+		.lname          = "priority used for WRR",
+		.type           = FIO_OPT_INT,
+		.off1           = offsetof(struct spdk_fio_options, wrr_priority),
+		.def            = "0",
+		.help           = "priority used for WRR (valid range from 0-3)",
+		.category       = FIO_OPT_C_ENGINE,
+		.group          = FIO_OPT_G_INVALID,
+	},
 	{
 		.name		= "mem_size_mb",
 		.lname		= "Memory size in MB",
