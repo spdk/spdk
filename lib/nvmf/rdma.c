@@ -473,8 +473,15 @@ struct spdk_nvmf_rdma_port {
 	TAILQ_ENTRY(spdk_nvmf_rdma_port)	link;
 };
 
+struct rdma_transport_opts {
+	uint32_t	max_srq_depth;
+	bool		no_srq;
+	int		acceptor_backlog;
+};
+
 struct spdk_nvmf_rdma_transport {
 	struct spdk_nvmf_transport	transport;
+	struct rdma_transport_opts	rdma_opts;
 
 	struct spdk_nvmf_rdma_conn_sched conn_sched;
 
@@ -491,6 +498,21 @@ struct spdk_nvmf_rdma_transport {
 	TAILQ_HEAD(, spdk_nvmf_rdma_device)	devices;
 	TAILQ_HEAD(, spdk_nvmf_rdma_port)	ports;
 	TAILQ_HEAD(, spdk_nvmf_rdma_poll_group)	poll_groups;
+};
+
+static const struct spdk_json_object_decoder rdma_transport_opts_decoder[] = {
+	{
+		"max_srq_depth", offsetof(struct rdma_transport_opts, max_srq_depth),
+		spdk_json_decode_uint32, true
+	},
+	{
+		"no_srq", offsetof(struct rdma_transport_opts, no_srq),
+		spdk_json_decode_bool, true
+	},
+	{
+		"acceptor_backlog", offsetof(struct rdma_transport_opts, acceptor_backlog),
+		spdk_json_decode_int32, true
+	},
 };
 
 static bool
@@ -2225,11 +2247,9 @@ nvmf_rdma_opts_init(struct spdk_nvmf_transport_opts *opts)
 	opts->max_aq_depth =		SPDK_NVMF_RDMA_DEFAULT_AQ_DEPTH;
 	opts->num_shared_buffers =	SPDK_NVMF_RDMA_DEFAULT_NUM_SHARED_BUFFERS;
 	opts->buf_cache_size =		SPDK_NVMF_RDMA_DEFAULT_BUFFER_CACHE_SIZE;
-	opts->max_srq_depth =		SPDK_NVMF_RDMA_DEFAULT_SRQ_DEPTH;
-	opts->no_srq =			SPDK_NVMF_RDMA_DEFAULT_NO_SRQ;
 	opts->dif_insert_or_strip =	SPDK_NVMF_RDMA_DIF_INSERT_OR_STRIP;
-	opts->acceptor_backlog =	SPDK_NVMF_RDMA_ACCEPTOR_BACKLOG;
 	opts->abort_timeout_sec =	SPDK_NVMF_RDMA_DEFAULT_ABORT_TIMEOUT_SEC;
+	opts->transport_specific =      NULL;
 }
 
 const struct spdk_mem_map_ops g_nvmf_rdma_map_ops = {
@@ -2285,6 +2305,17 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 	TAILQ_INIT(&rtransport->poll_groups);
 
 	rtransport->transport.ops = &spdk_nvmf_transport_rdma;
+	rtransport->rdma_opts.max_srq_depth = SPDK_NVMF_RDMA_DEFAULT_SRQ_DEPTH;
+	rtransport->rdma_opts.no_srq = SPDK_NVMF_RDMA_DEFAULT_NO_SRQ;
+	rtransport->rdma_opts.acceptor_backlog = SPDK_NVMF_RDMA_ACCEPTOR_BACKLOG;
+	if (opts->transport_specific != NULL &&
+	    spdk_json_decode_object_relaxed(opts->transport_specific, rdma_transport_opts_decoder,
+					    SPDK_COUNTOF(rdma_transport_opts_decoder),
+					    &rtransport->rdma_opts)) {
+		SPDK_ERRLOG("spdk_json_decode_object_relaxed failed\n");
+		nvmf_rdma_destroy(&rtransport->transport);
+		return NULL;
+	}
 
 	SPDK_INFOLOG(rdma, "*** RDMA Transport Init ***\n"
 		     "  Transport opts:  max_ioq_depth=%d, max_io_size=%d,\n"
@@ -2299,9 +2330,9 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		     opts->in_capsule_data_size,
 		     opts->max_aq_depth,
 		     opts->num_shared_buffers,
-		     opts->max_srq_depth,
-		     opts->no_srq,
-		     opts->acceptor_backlog,
+		     rtransport->rdma_opts.max_srq_depth,
+		     rtransport->rdma_opts.no_srq,
+		     rtransport->rdma_opts.acceptor_backlog,
 		     opts->abort_timeout_sec);
 
 	/* I/O unit size cannot be larger than max I/O size */
@@ -2309,10 +2340,10 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		opts->io_unit_size = opts->max_io_size;
 	}
 
-	if (opts->acceptor_backlog <= 0) {
+	if (rtransport->rdma_opts.acceptor_backlog <= 0) {
 		SPDK_ERRLOG("The acceptor backlog cannot be less than 1, setting to the default value of (%d).\n",
 			    SPDK_NVMF_RDMA_ACCEPTOR_BACKLOG);
-		opts->acceptor_backlog = SPDK_NVMF_RDMA_ACCEPTOR_BACKLOG;
+		rtransport->rdma_opts.acceptor_backlog = SPDK_NVMF_RDMA_ACCEPTOR_BACKLOG;
 	}
 
 	if (opts->num_shared_buffers < (SPDK_NVMF_MAX_SGL_ENTRIES * 2)) {
@@ -2491,6 +2522,18 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 	return &rtransport->transport;
 }
 
+static void
+nvmf_rdma_dump_opts(struct spdk_nvmf_transport *transport, struct spdk_json_write_ctx *w)
+{
+	struct spdk_nvmf_rdma_transport	*rtransport;
+	assert(w != NULL);
+
+	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
+	spdk_json_write_named_uint32(w, "max_srq_depth", rtransport->rdma_opts.max_srq_depth);
+	spdk_json_write_named_bool(w, "no_srq", rtransport->rdma_opts.no_srq);
+	spdk_json_write_named_int32(w, "acceptor_backlog", rtransport->rdma_opts.acceptor_backlog);
+}
+
 static int
 nvmf_rdma_destroy(struct spdk_nvmf_transport *transport)
 {
@@ -2630,7 +2673,7 @@ nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 		return -1;
 	}
 
-	rc = rdma_listen(port->id, transport->opts.acceptor_backlog);
+	rc = rdma_listen(port->id, rtransport->rdma_opts.acceptor_backlog);
 	if (rc < 0) {
 		SPDK_ERRLOG("rdma_listen() failed\n");
 		rdma_destroy_id(port->id);
@@ -3255,8 +3298,8 @@ nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 		STAILQ_INIT(&poller->qpairs_pending_recv);
 
 		TAILQ_INSERT_TAIL(&rgroup->pollers, poller, link);
-		if (transport->opts.no_srq == false && device->num_srq < device->attr.max_srq) {
-			poller->max_srq_depth = transport->opts.max_srq_depth;
+		if (rtransport->rdma_opts.no_srq == false && device->num_srq < device->attr.max_srq) {
+			poller->max_srq_depth = rtransport->rdma_opts.max_srq_depth;
 
 			device->num_srq++;
 			memset(&srq_init_attr, 0, sizeof(struct ibv_srq_init_attr));
@@ -4229,6 +4272,7 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 	.type = SPDK_NVME_TRANSPORT_RDMA,
 	.opts_init = nvmf_rdma_opts_init,
 	.create = nvmf_rdma_create,
+	.dump_opts = nvmf_rdma_dump_opts,
 	.destroy = nvmf_rdma_destroy,
 
 	.listen = nvmf_rdma_listen,

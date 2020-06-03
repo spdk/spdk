@@ -71,6 +71,11 @@ receive the notification when the scsi bdev has been resized.
 The `spdk_scsi_dev_construct` and `spdk_scsi_dev_add_lun` eventually may be
 deprecated and removed.
 
+### nvmf
+
+NVMf Target transports can now parse any additional JSON params in the nvmf_create_transport RPC
+through the JSON context provided via spdk_nvmf_target_opts->transport_specific.
+
 ## v20.07: SPDK CSI driver, new accel_fw commands, I/O abort support
 
 ### accel

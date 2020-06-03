@@ -33,6 +33,7 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 
+SPDK_LIB_LIST = json
 TEST_FILE = tcp_ut.c
 
 include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk

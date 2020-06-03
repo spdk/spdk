@@ -225,6 +225,12 @@ struct spdk_nvmf_transport_ops {
 	struct spdk_nvmf_transport *(*create)(struct spdk_nvmf_transport_opts *opts);
 
 	/**
+	 * Dump transport-specific opts into JSON
+	 */
+	void (*dump_opts)(struct spdk_nvmf_transport *transport,
+			  struct spdk_json_write_ctx *w);
+
+	/**
 	 * Destroy the transport
 	 */
 	int (*destroy)(struct spdk_nvmf_transport *transport);

@@ -63,6 +63,7 @@ struct spdk_nvmf_host;
 struct spdk_nvmf_subsystem_listener;
 struct spdk_nvmf_poll_group;
 struct spdk_json_write_ctx;
+struct spdk_json_val;
 struct spdk_nvmf_transport;
 
 struct spdk_nvmf_target_opts {
@@ -80,15 +81,13 @@ struct spdk_nvmf_transport_opts {
 	uint32_t	max_aq_depth;
 	uint32_t	num_shared_buffers;
 	uint32_t	buf_cache_size;
-	uint32_t	max_srq_depth;
-	bool		no_srq;
-	bool		c2h_success;
 	bool		dif_insert_or_strip;
-	uint32_t	sock_priority;
-	int		acceptor_backlog;
+
 	uint32_t	abort_timeout_sec;
 	/* ms */
 	uint32_t	association_timeout;
+
+	const struct spdk_json_val *transport_specific;
 };
 
 struct spdk_nvmf_poll_group_stat {

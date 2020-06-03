@@ -1870,28 +1870,8 @@ static const struct spdk_json_object_decoder nvmf_rpc_create_transport_decoder[]
 		spdk_json_decode_uint32, true
 	},
 	{
-		"max_srq_depth", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_srq_depth),
-		spdk_json_decode_uint32, true
-	},
-	{
-		"no_srq", offsetof(struct nvmf_rpc_create_transport_ctx, opts.no_srq),
-		spdk_json_decode_bool, true
-	},
-	{
-		"c2h_success", offsetof(struct nvmf_rpc_create_transport_ctx, opts.c2h_success),
-		spdk_json_decode_bool, true
-	},
-	{
 		"dif_insert_or_strip", offsetof(struct nvmf_rpc_create_transport_ctx, opts.dif_insert_or_strip),
 		spdk_json_decode_bool, true
-	},
-	{
-		"sock_priority", offsetof(struct nvmf_rpc_create_transport_ctx, opts.sock_priority),
-		spdk_json_decode_uint32, true
-	},
-	{
-		"acceptor_backlog", offsetof(struct nvmf_rpc_create_transport_ctx, opts.acceptor_backlog),
-		spdk_json_decode_int32, true
 	},
 	{
 		"abort_timeout_sec", offsetof(struct nvmf_rpc_create_transport_ctx, opts.abort_timeout_sec),
@@ -1950,10 +1930,10 @@ rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 	}
 
 	/* Decode parameters the first time to get the transport type */
-	if (spdk_json_decode_object(params, nvmf_rpc_create_transport_decoder,
-				    SPDK_COUNTOF(nvmf_rpc_create_transport_decoder),
-				    ctx)) {
-		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+	if (spdk_json_decode_object_relaxed(params, nvmf_rpc_create_transport_decoder,
+					    SPDK_COUNTOF(nvmf_rpc_create_transport_decoder),
+					    ctx)) {
+		SPDK_ERRLOG("spdk_json_decode_object_relaxed failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 		nvmf_rpc_create_transport_ctx_free(ctx);
 		return;
@@ -1990,10 +1970,10 @@ rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	if (spdk_json_decode_object(params, nvmf_rpc_create_transport_decoder,
-				    SPDK_COUNTOF(nvmf_rpc_create_transport_decoder),
-				    ctx)) {
-		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+	if (spdk_json_decode_object_relaxed(params, nvmf_rpc_create_transport_decoder,
+					    SPDK_COUNTOF(nvmf_rpc_create_transport_decoder),
+					    ctx)) {
+		SPDK_ERRLOG("spdk_json_decode_object_relaxed failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 		nvmf_rpc_create_transport_ctx_free(ctx);
 		return;
@@ -2006,6 +1986,9 @@ rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 		nvmf_rpc_create_transport_ctx_free(ctx);
 		return;
 	}
+
+	/* Transport can parse additional params themselves */
+	ctx->opts.transport_specific = params;
 
 	transport = spdk_nvmf_transport_create(ctx->trtype, &ctx->opts);
 
@@ -2027,7 +2010,6 @@ static void
 dump_nvmf_transport(struct spdk_json_write_ctx *w, struct spdk_nvmf_transport *transport)
 {
 	const struct spdk_nvmf_transport_opts *opts = spdk_nvmf_get_transport_opts(transport);
-	spdk_nvme_transport_type_t type = spdk_nvmf_get_transport_type(transport);
 
 	spdk_json_write_object_begin(w);
 
@@ -2041,14 +2023,11 @@ dump_nvmf_transport(struct spdk_json_write_ctx *w, struct spdk_nvmf_transport *t
 	spdk_json_write_named_uint32(w, "num_shared_buffers", opts->num_shared_buffers);
 	spdk_json_write_named_uint32(w, "buf_cache_size", opts->buf_cache_size);
 	spdk_json_write_named_bool(w, "dif_insert_or_strip", opts->dif_insert_or_strip);
-	if (type == SPDK_NVME_TRANSPORT_RDMA) {
-		spdk_json_write_named_uint32(w, "max_srq_depth", opts->max_srq_depth);
-		spdk_json_write_named_bool(w, "no_srq", opts->no_srq);
-		spdk_json_write_named_int32(w, "acceptor_backlog", opts->acceptor_backlog);
-	} else if (type == SPDK_NVME_TRANSPORT_TCP) {
-		spdk_json_write_named_bool(w, "c2h_success", opts->c2h_success);
-		spdk_json_write_named_uint32(w, "sock_priority", opts->sock_priority);
+
+	if (transport->ops->dump_opts) {
+		transport->ops->dump_opts(transport, w);
 	}
+
 	spdk_json_write_named_uint32(w, "abort_timeout_sec", opts->abort_timeout_sec);
 
 	spdk_json_write_object_end(w);

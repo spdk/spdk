@@ -50,6 +50,8 @@
 
 #define NVMF_TCP_MAX_ACCEPT_SOCK_ONE_TIME 16
 #define SPDK_NVMF_TCP_DEFAULT_MAX_SOCK_PRIORITY 16
+#define SPDK_NVMF_TCP_DEFAULT_SOCK_PRIORITY 0
+#define SPDK_NVMF_TCP_DEFAULT_SUCCESS_OPTIMIZATION true
 
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp;
 
@@ -266,12 +268,29 @@ struct spdk_nvmf_tcp_port {
 	TAILQ_ENTRY(spdk_nvmf_tcp_port)		link;
 };
 
+struct tcp_transport_opts {
+	bool		c2h_success;
+	uint32_t	sock_priority;
+};
+
 struct spdk_nvmf_tcp_transport {
 	struct spdk_nvmf_transport		transport;
+	struct tcp_transport_opts               tcp_opts;
 
 	pthread_mutex_t				lock;
 
 	TAILQ_HEAD(, spdk_nvmf_tcp_port)	ports;
+};
+
+static const struct spdk_json_object_decoder tcp_transport_opts_decoder[] = {
+	{
+		"c2h_success", offsetof(struct tcp_transport_opts, c2h_success),
+		spdk_json_decode_bool, true
+	},
+	{
+		"sock_priority", offsetof(struct tcp_transport_opts, sock_priority),
+		spdk_json_decode_uint32, true
+	},
 };
 
 static bool nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
@@ -437,6 +456,17 @@ nvmf_tcp_qpair_destroy(struct spdk_nvmf_tcp_qpair *tqpair)
 	SPDK_DEBUGLOG(nvmf_tcp, "Leave\n");
 }
 
+static void
+nvmf_tcp_dump_opts(struct spdk_nvmf_transport *transport, struct spdk_json_write_ctx *w)
+{
+	struct spdk_nvmf_tcp_transport	*ttransport;
+	assert(w != NULL);
+
+	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
+	spdk_json_write_named_bool(w, "c2h_success", ttransport->tcp_opts.c2h_success);
+	spdk_json_write_named_uint32(w, "sock_priority", ttransport->tcp_opts.sock_priority);
+}
+
 static int
 nvmf_tcp_destroy(struct spdk_nvmf_transport *transport)
 {
@@ -466,6 +496,17 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 
 	ttransport->transport.ops = &spdk_nvmf_transport_tcp;
 
+	ttransport->tcp_opts.c2h_success = SPDK_NVMF_TCP_DEFAULT_SUCCESS_OPTIMIZATION;
+	ttransport->tcp_opts.sock_priority = SPDK_NVMF_TCP_DEFAULT_SOCK_PRIORITY;
+	if (opts->transport_specific != NULL &&
+	    spdk_json_decode_object_relaxed(opts->transport_specific, tcp_transport_opts_decoder,
+					    SPDK_COUNTOF(tcp_transport_opts_decoder),
+					    &ttransport->tcp_opts)) {
+		SPDK_ERRLOG("spdk_json_decode_object_relaxed failed\n");
+		free(ttransport);
+		return NULL;
+	}
+
 	SPDK_NOTICELOG("*** TCP Transport Init ***\n");
 
 	SPDK_INFOLOG(nvmf_tcp, "*** TCP Transport Init ***\n"
@@ -482,15 +523,15 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 		     opts->in_capsule_data_size,
 		     opts->max_aq_depth,
 		     opts->num_shared_buffers,
-		     opts->c2h_success,
+		     ttransport->tcp_opts.c2h_success,
 		     opts->dif_insert_or_strip,
-		     opts->sock_priority,
+		     ttransport->tcp_opts.sock_priority,
 		     opts->abort_timeout_sec);
 
-	if (opts->sock_priority > SPDK_NVMF_TCP_DEFAULT_MAX_SOCK_PRIORITY) {
+	if (ttransport->tcp_opts.sock_priority > SPDK_NVMF_TCP_DEFAULT_MAX_SOCK_PRIORITY) {
 		SPDK_ERRLOG("Unsupported socket_priority=%d, the current range is: 0 to %d\n"
 			    "you can use man 7 socket to view the range of priority under SO_PRIORITY item\n",
-			    opts->sock_priority, SPDK_NVMF_TCP_DEFAULT_MAX_SOCK_PRIORITY);
+			    ttransport->tcp_opts.sock_priority, SPDK_NVMF_TCP_DEFAULT_MAX_SOCK_PRIORITY);
 		free(ttransport);
 		return NULL;
 	}
@@ -618,7 +659,7 @@ nvmf_tcp_listen(struct spdk_nvmf_transport *transport,
 	port->trid = trid;
 	opts.opts_size = sizeof(opts);
 	spdk_sock_get_default_opts(&opts);
-	opts.priority = transport->opts.sock_priority;
+	opts.priority = ttransport->tcp_opts.sock_priority;
 	port->listen_sock = spdk_sock_listen_ext(trid->traddr, trsvcid_int,
 			    NULL, &opts);
 	if (port->listen_sock == NULL) {
@@ -1295,9 +1336,11 @@ nvmf_tcp_pdu_c2h_data_complete(void *cb_arg)
 	struct spdk_nvmf_tcp_req *tcp_req = cb_arg;
 	struct spdk_nvmf_tcp_qpair *tqpair = SPDK_CONTAINEROF(tcp_req->req.qpair,
 					     struct spdk_nvmf_tcp_qpair, qpair);
+	struct spdk_nvmf_tcp_transport *ttransport = SPDK_CONTAINEROF(
+				tcp_req->req.qpair->transport, struct spdk_nvmf_tcp_transport, transport);
 
 	assert(tqpair != NULL);
-	if (tqpair->qpair.transport->opts.c2h_success) {
+	if (ttransport->tcp_opts.c2h_success) {
 		nvmf_tcp_request_free(tcp_req);
 	} else {
 		nvmf_tcp_req_pdu_fini(tcp_req);
@@ -1947,6 +1990,8 @@ static void
 nvmf_tcp_send_c2h_data(struct spdk_nvmf_tcp_qpair *tqpair,
 		       struct spdk_nvmf_tcp_req *tcp_req)
 {
+	struct spdk_nvmf_tcp_transport *ttransport = SPDK_CONTAINEROF(
+				tqpair->qpair.transport, struct spdk_nvmf_tcp_transport, transport);
 	struct nvme_tcp_pdu *rsp_pdu;
 	struct spdk_nvme_tcp_c2h_data_hdr *c2h_data;
 	uint32_t plen, pdo, alignment;
@@ -2016,7 +2061,7 @@ nvmf_tcp_send_c2h_data(struct spdk_nvmf_tcp_qpair *tqpair,
 	}
 
 	c2h_data->common.flags |= SPDK_NVME_TCP_C2H_DATA_FLAGS_LAST_PDU;
-	if (tqpair->qpair.transport->opts.c2h_success) {
+	if (ttransport->tcp_opts.c2h_success) {
 		c2h_data->common.flags |= SPDK_NVME_TCP_C2H_DATA_FLAGS_SUCCESS;
 	}
 
@@ -2586,9 +2631,7 @@ nvmf_tcp_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
 #define SPDK_NVMF_TCP_DEFAULT_IO_UNIT_SIZE 131072
 #define SPDK_NVMF_TCP_DEFAULT_NUM_SHARED_BUFFERS 511
 #define SPDK_NVMF_TCP_DEFAULT_BUFFER_CACHE_SIZE 32
-#define SPDK_NVMF_TCP_DEFAULT_SUCCESS_OPTIMIZATION true
 #define SPDK_NVMF_TCP_DEFAULT_DIF_INSERT_OR_STRIP false
-#define SPDK_NVMF_TCP_DEFAULT_SOCK_PRIORITY 0
 #define SPDK_NVMF_TCP_DEFAULT_ABORT_TIMEOUT_SEC 1
 
 static void
@@ -2602,10 +2645,9 @@ nvmf_tcp_opts_init(struct spdk_nvmf_transport_opts *opts)
 	opts->max_aq_depth =		SPDK_NVMF_TCP_DEFAULT_AQ_DEPTH;
 	opts->num_shared_buffers =	SPDK_NVMF_TCP_DEFAULT_NUM_SHARED_BUFFERS;
 	opts->buf_cache_size =		SPDK_NVMF_TCP_DEFAULT_BUFFER_CACHE_SIZE;
-	opts->c2h_success =		SPDK_NVMF_TCP_DEFAULT_SUCCESS_OPTIMIZATION;
 	opts->dif_insert_or_strip =	SPDK_NVMF_TCP_DEFAULT_DIF_INSERT_OR_STRIP;
-	opts->sock_priority =		SPDK_NVMF_TCP_DEFAULT_SOCK_PRIORITY;
 	opts->abort_timeout_sec =	SPDK_NVMF_TCP_DEFAULT_ABORT_TIMEOUT_SEC;
+	opts->transport_specific =      NULL;
 }
 
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp = {
@@ -2613,6 +2655,7 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp = {
 	.type = SPDK_NVME_TRANSPORT_TCP,
 	.opts_init = nvmf_tcp_opts_init,
 	.create = nvmf_tcp_create,
+	.dump_opts = nvmf_tcp_dump_opts,
 	.destroy = nvmf_tcp_destroy,
 
 	.listen = nvmf_tcp_listen,

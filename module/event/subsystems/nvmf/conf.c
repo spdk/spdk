@@ -604,23 +604,17 @@ nvmf_parse_transport(struct nvmf_parse_transport_ctx *ctx)
 		opts.buf_cache_size = val;
 	}
 
-	if (trtype == SPDK_NVME_TRANSPORT_RDMA) {
-		val = spdk_conf_section_get_intval(ctx->sp, "MaxSRQDepth");
-		if (val >= 0) {
-			opts.max_srq_depth = val;
-		}
-		bval = spdk_conf_section_get_boolval(ctx->sp, "NoSRQ", false);
-		opts.no_srq = bval;
+	if (spdk_conf_section_get_val(ctx->sp, "MaxSRQDepth")) {
+		SPDK_WARNLOG("MaxSRQDepth can be no longer set with INI configs. JSON configuration only\n");
 	}
-
-	if (trtype == SPDK_NVME_TRANSPORT_TCP) {
-		bval = spdk_conf_section_get_boolval(ctx->sp, "C2HSuccess", true);
-		opts.c2h_success = bval;
-
-		val = spdk_conf_section_get_intval(ctx->sp, "SockPriority");
-		if (val >= 0) {
-			opts.sock_priority = val;
-		}
+	if (spdk_conf_section_get_val(ctx->sp, "NoSRQ")) {
+		SPDK_WARNLOG("NoSRQ can be no longer set with INI configs. JSON configuration only\n");
+	}
+	if (spdk_conf_section_get_val(ctx->sp, "C2HSuccess")) {
+		SPDK_WARNLOG("C2HSuccess can be no longer set with INI configs. JSON configuration only\n");
+	}
+	if (spdk_conf_section_get_val(ctx->sp, "SockPriority")) {
+		SPDK_WARNLOG("SockPriority can be no longer set with INI configs. JSON configuration only\n");
 	}
 
 	bval = spdk_conf_section_get_boolval(ctx->sp, "DifInsertOrStrip", false);
