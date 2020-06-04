@@ -140,6 +140,7 @@ struct spdk_app_opts {
 	 */
 	logfunc         *log;
 
+	uint64_t		base_virtaddr;
 };
 
 /**

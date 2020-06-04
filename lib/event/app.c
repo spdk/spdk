@@ -53,6 +53,7 @@
 #define SPDK_APP_DPDK_DEFAULT_MASTER_CORE	-1
 #define SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL	-1
 #define SPDK_APP_DPDK_DEFAULT_CORE_MASK		"0x1"
+#define SPDK_APP_DPDK_DEFAULT_BASE_VIRTADDR	0x200000000000
 #define SPDK_APP_DEFAULT_CORE_LIMIT		0x140000000 /* 5 GiB */
 
 struct spdk_app {
@@ -132,6 +133,8 @@ static const struct option g_cmdline_options[] = {
 	{"json-ignore-init-errors",	no_argument,		NULL, JSON_CONFIG_IGNORE_INIT_ERRORS_IDX},
 #define IOVA_MODE_OPT_IDX	264
 	{"iova-mode",			required_argument,	NULL, IOVA_MODE_OPT_IDX},
+#define BASE_VIRTADDR_OPT_IDX	265
+	{"base-virtaddr",		required_argument,	NULL, BASE_VIRTADDR_OPT_IDX},
 };
 
 /* Global section */
@@ -286,6 +289,7 @@ spdk_app_opts_init(struct spdk_app_opts *opts)
 	opts->master_core = SPDK_APP_DPDK_DEFAULT_MASTER_CORE;
 	opts->mem_channel = SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL;
 	opts->reactor_mask = NULL;
+	opts->base_virtaddr = SPDK_APP_DPDK_DEFAULT_BASE_VIRTADDR;
 	opts->print_level = SPDK_APP_DEFAULT_LOG_PRINT_LEVEL;
 	opts->rpc_addr = SPDK_DEFAULT_RPC_ADDR;
 	opts->num_entries = SPDK_APP_DEFAULT_NUM_TRACE_ENTRIES;
@@ -508,6 +512,7 @@ app_setup_env(struct spdk_app_opts *opts)
 	env_opts.num_pci_addr = opts->num_pci_addr;
 	env_opts.pci_blacklist = opts->pci_blacklist;
 	env_opts.pci_whitelist = opts->pci_whitelist;
+	env_opts.base_virtaddr = opts->base_virtaddr;
 	env_opts.env_context = opts->env_context;
 	env_opts.iova_mode = opts->iova_mode;
 
@@ -765,6 +770,7 @@ usage(void (*app_usage)(void))
 	printf("                           pci addr to whitelist (-B and -W cannot be used at the same time)\n");
 	printf("      --huge-dir <path>    use a specific hugetlbfs mount to reserve memory from\n");
 	printf("      --iova-mode <pa/va>  set IOVA mode ('pa' for IOVA_PA and 'va' for IOVA_VA)\n");
+	printf("      --base-virtaddr <addr>      the base virtual address for DPDK (default: 0x200000000000)\n");
 	printf("      --num-trace-entries <num>   number of trace entries for each core, must be power of 2. (default %d)\n",
 	       SPDK_APP_DEFAULT_NUM_TRACE_ENTRIES);
 	spdk_log_usage(stdout, "-L");
@@ -974,6 +980,15 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 				opts->pci_whitelist = NULL;
 				goto out;
 			}
+			break;
+		case BASE_VIRTADDR_OPT_IDX:
+			tmp = spdk_strtoll(optarg, 0);
+			if (tmp <= 0) {
+				SPDK_ERRLOG("Invalid base-virtaddr %s\n", optarg);
+				usage(app_usage);
+				goto out;
+			}
+			opts->base_virtaddr = (uint64_t)tmp;
 			break;
 		case HUGE_DIR_OPT_IDX:
 			opts->hugedir = optarg;
