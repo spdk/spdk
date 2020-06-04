@@ -281,6 +281,7 @@ setup_test(void)
 {
 	bool done = false;
 
+	allocate_cores(BDEV_UT_NUM_THREADS);
 	allocate_threads(BDEV_UT_NUM_THREADS);
 	set_thread(0);
 	spdk_bdev_initialize(bdev_init_cb, &done);
@@ -311,6 +312,7 @@ teardown_test(void)
 	CU_ASSERT(g_teardown_done == true);
 	g_teardown_done = false;
 	free_threads();
+	free_cores();
 }
 
 static uint32_t
@@ -1785,6 +1787,7 @@ bdev_set_io_timeout_mt(void)
 	CU_ASSERT(g_teardown_done == true);
 	g_teardown_done = false;
 	free_threads();
+	free_cores();
 }
 
 static bool g_io_done2;

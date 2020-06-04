@@ -3401,6 +3401,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, lock_lba_range_overlapped);
 	CU_ADD_TEST(suite, bdev_io_abort);
 
+	allocate_cores(1);
 	allocate_threads(1);
 	set_thread(0);
 
@@ -3410,6 +3411,7 @@ main(int argc, char **argv)
 	CU_cleanup_registry();
 
 	free_threads();
+	free_cores();
 
 	return num_failures;
 }
