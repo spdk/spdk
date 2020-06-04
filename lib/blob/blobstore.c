@@ -2839,6 +2839,10 @@ blob_lookup(struct spdk_blob_store *bs, spdk_blob_id blobid)
 {
 	struct spdk_blob *blob;
 
+	if (spdk_bit_array_get(bs->open_blobids, blobid) == 0) {
+		return NULL;
+	}
+
 	TAILQ_FOREACH(blob, &bs->blobs, link) {
 		if (blob->id == blobid) {
 			return blob;
@@ -2947,11 +2951,13 @@ bs_dev_destroy(void *io_device)
 
 	TAILQ_FOREACH_SAFE(blob, &bs->blobs, link, blob_tmp) {
 		TAILQ_REMOVE(&bs->blobs, blob, link);
+		spdk_bit_array_clear(bs->open_blobids, blob->id);
 		blob_free(blob);
 	}
 
 	pthread_mutex_destroy(&bs->used_clusters_mutex);
 
+	spdk_bit_array_free(&bs->open_blobids);
 	spdk_bit_array_free(&bs->used_blobids);
 	spdk_bit_array_free(&bs->used_md_pages);
 	spdk_bit_array_free(&bs->used_clusters);
@@ -3140,6 +3146,7 @@ bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts, struct spdk_blob_st
 	/* The metadata is assumed to be at least 1 page */
 	bs->used_md_pages = spdk_bit_array_create(1);
 	bs->used_blobids = spdk_bit_array_create(0);
+	bs->open_blobids = spdk_bit_array_create(0);
 
 	pthread_mutex_init(&bs->used_clusters_mutex, NULL);
 
@@ -3149,6 +3156,7 @@ bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts, struct spdk_blob_st
 	if (rc == -1) {
 		spdk_io_device_unregister(bs, NULL);
 		pthread_mutex_destroy(&bs->used_clusters_mutex);
+		spdk_bit_array_free(&bs->open_blobids);
 		spdk_bit_array_free(&bs->used_blobids);
 		spdk_bit_array_free(&bs->used_md_pages);
 		spdk_bit_array_free(&bs->used_clusters);
@@ -4088,6 +4096,12 @@ bs_recover(struct spdk_bs_load_ctx *ctx)
 		return;
 	}
 
+	rc = spdk_bit_array_resize(&ctx->bs->open_blobids, ctx->super->md_len);
+	if (rc < 0) {
+		bs_load_ctx_fail(ctx, -ENOMEM);
+		return;
+	}
+
 	ctx->bs->num_free_clusters = ctx->bs->total_clusters;
 	bs_load_replay_md(ctx);
 }
@@ -4627,6 +4641,13 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	}
 
 	rc = spdk_bit_array_resize(&bs->used_blobids, bs->md_len);
+	if (rc < 0) {
+		bs_free(bs);
+		cb_fn(cb_arg, NULL, -ENOMEM);
+		return;
+	}
+
+	rc = spdk_bit_array_resize(&bs->open_blobids, bs->md_len);
 	if (rc < 0) {
 		bs_free(bs);
 		cb_fn(cb_arg, NULL, -ENOMEM);
@@ -6184,6 +6205,7 @@ delete_snapshot_cleanup_snapshot(void *cb_arg, int bserrno)
 	if (ctx->bserrno != 0) {
 		assert(blob_lookup(ctx->snapshot->bs, ctx->snapshot->id) == NULL);
 		TAILQ_INSERT_HEAD(&ctx->snapshot->bs->blobs, ctx->snapshot, link);
+		spdk_bit_array_set(ctx->snapshot->bs->open_blobids, ctx->snapshot->id);
 	}
 
 	ctx->snapshot->locked_operation_in_progress = false;
@@ -6576,6 +6598,7 @@ bs_delete_open_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 	 * Remove the blob from the blob_store list now, to ensure it does not
 	 *  get returned after this point by blob_lookup().
 	 */
+	spdk_bit_array_clear(blob->bs->open_blobids, blob->id);
 	TAILQ_REMOVE(&blob->bs->blobs, blob, link);
 
 	if (update_clone) {
@@ -6631,13 +6654,18 @@ bs_open_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 
 	blob->open_ref++;
 
+	spdk_bit_array_set(blob->bs->open_blobids, blob->id);
 	TAILQ_INSERT_HEAD(&blob->bs->blobs, blob, link);
 
 	bs_sequence_finish(seq, bserrno);
 }
 
-static void bs_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
-			 struct spdk_blob_open_opts *opts, spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
+static void
+bs_open_blob(struct spdk_blob_store *bs,
+	     spdk_blob_id blobid,
+	     struct spdk_blob_open_opts *opts,
+	     spdk_blob_op_with_handle_complete cb_fn,
+	     void *cb_arg)
 {
 	struct spdk_blob		*blob;
 	struct spdk_bs_cpl		cpl;
@@ -6927,6 +6955,7 @@ blob_close_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 			 *  remove them again.
 			 */
 			if (blob->active.num_pages > 0) {
+				spdk_bit_array_clear(blob->bs->open_blobids, blob->id);
 				TAILQ_REMOVE(&blob->bs->blobs, blob, link);
 			}
 			blob_free(blob);

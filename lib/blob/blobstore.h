@@ -188,6 +188,7 @@ struct spdk_blob_store {
 	struct spdk_bit_array		*used_md_pages;
 	struct spdk_bit_array		*used_clusters;
 	struct spdk_bit_array		*used_blobids;
+	struct spdk_bit_array		*open_blobids;
 
 	pthread_mutex_t			used_clusters_mutex;
 
