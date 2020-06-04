@@ -880,20 +880,16 @@ _nvmf_ctrlr_free_from_qpair(void *ctx)
 	free(qpair_ctx);
 }
 
-static void
-_nvmf_qpair_destroy(void *ctx, int status)
+void
+spdk_nvmf_poll_group_remove(struct spdk_nvmf_qpair *qpair)
 {
-	struct nvmf_qpair_disconnect_ctx *qpair_ctx = ctx;
-	struct spdk_nvmf_qpair *qpair = qpair_ctx->qpair;
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
 	struct spdk_nvmf_transport_poll_group *tgroup;
 	struct spdk_nvmf_request *req, *tmp;
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
 	int rc;
 
-	assert(qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING);
 	nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_ERROR);
-	qpair_ctx->qid = qpair->qid;
 
 	/* Find the tgroup and remove the qpair from the tgroup */
 	TAILQ_FOREACH(tgroup, &qpair->group->tgroups, link) {
@@ -920,6 +916,19 @@ _nvmf_qpair_destroy(void *ctx, int status)
 	}
 
 	TAILQ_REMOVE(&qpair->group->qpairs, qpair, link);
+}
+
+static void
+_nvmf_qpair_destroy(void *ctx, int status)
+{
+	struct nvmf_qpair_disconnect_ctx *qpair_ctx = ctx;
+	struct spdk_nvmf_qpair *qpair = qpair_ctx->qpair;
+	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
+
+	assert(qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING);
+	qpair_ctx->qid = qpair->qid;
+
+	spdk_nvmf_poll_group_remove(qpair);
 
 	if (!ctrlr || !ctrlr->thread) {
 		nvmf_transport_qpair_fini(qpair);
@@ -932,7 +941,6 @@ _nvmf_qpair_destroy(void *ctx, int status)
 
 	qpair_ctx->ctrlr = ctrlr;
 	spdk_thread_send_msg(ctrlr->thread, _nvmf_ctrlr_free_from_qpair, qpair_ctx);
-
 }
 
 int

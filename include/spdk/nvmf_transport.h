@@ -401,6 +401,13 @@ int spdk_nvmf_request_free(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_complete(struct spdk_nvmf_request *req);
 
 /**
+ * Remove the given qpair from the poll group.
+ *
+ * \param qpair The qpair to remove.
+ */
+void spdk_nvmf_poll_group_remove(struct spdk_nvmf_qpair *qpair);
+
+/**
  * Get the NVMe-oF subsystem associated with this controller.
  *
  * \param ctrlr The NVMe-oF controller
