@@ -49,6 +49,7 @@
 #define SPDK_ENV_DPDK_DEFAULT_MASTER_CORE	-1
 #define SPDK_ENV_DPDK_DEFAULT_MEM_CHANNEL	-1
 #define SPDK_ENV_DPDK_DEFAULT_CORE_MASK		"0x1"
+#define SPDK_ENV_DPDK_DEFAULT_BASE_VIRTADDR	0x200000000000
 
 static char **g_eal_cmdline;
 static int g_eal_cmdline_argcount;
@@ -136,6 +137,7 @@ spdk_env_opts_init(struct spdk_env_opts *opts)
 	opts->mem_size = SPDK_ENV_DPDK_DEFAULT_MEM_SIZE;
 	opts->master_core = SPDK_ENV_DPDK_DEFAULT_MASTER_CORE;
 	opts->mem_channel = SPDK_ENV_DPDK_DEFAULT_MEM_CHANNEL;
+	opts->base_virtaddr = SPDK_ENV_DPDK_DEFAULT_BASE_VIRTADDR;
 }
 
 static void
@@ -449,7 +451,7 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 	 *
 	 * Ref: https://github.com/google/sanitizers/wiki/AddressSanitizerAlgorithm
 	 */
-	args = push_arg(args, &argcount, _sprintf_alloc("--base-virtaddr=0x200000000000"));
+	args = push_arg(args, &argcount, _sprintf_alloc("--base-virtaddr=0x%" PRIx64, opts->base_virtaddr));
 	if (args == NULL) {
 		return -1;
 	}
