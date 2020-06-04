@@ -236,14 +236,21 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	long int		tmp;
 
 	p = strstr(f->file_name, "ns=");
-	assert(p != NULL);
-	tmp = spdk_strtol(p + 3, 10);
-	if (tmp <= 0) {
-		SPDK_ERRLOG("namespace id should be >=1, but was invalid: %ld\n", tmp);
-		g_error = true;
-		return;
+	if (p != NULL) {
+		tmp = spdk_strtol(p + 3, 10);
+		if (tmp <= 0) {
+			SPDK_ERRLOG("namespace id should be >=1, but was invalid: %ld\n", tmp);
+			g_error = true;
+			return;
+		}
+		ns_id = (uint32_t)tmp;
+	} else {
+		ns_id = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
+		if (ns_id == 0) {
+			/* The ctrlr has no active namespaces and we didn't specify any so nothing to do. */
+			return;
+		}
 	}
-	ns_id = (uint32_t)tmp;
 
 	pthread_mutex_lock(&g_mutex);
 	fio_ctrlr = get_fio_ctrlr(trid);
@@ -453,12 +460,12 @@ static int spdk_fio_setup(struct thread_data *td)
 		trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 
 		p = strstr(f->file_name, " ns=");
-		if (p == NULL) {
-			SPDK_ERRLOG("Failed to find namespace 'ns=X'\n");
-			continue;
+		if (p != NULL) {
+			trid_info = strndup(f->file_name, p - f->file_name);
+		} else {
+			trid_info = strndup(f->file_name, strlen(f->file_name));
 		}
 
-		trid_info = strndup(f->file_name, p - f->file_name);
 		if (!trid_info) {
 			SPDK_ERRLOG("Failed to allocate space for trid_info\n");
 			continue;
