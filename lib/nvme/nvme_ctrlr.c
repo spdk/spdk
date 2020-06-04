@@ -97,8 +97,6 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 
 	assert(opts);
 
-	memset(opts, 0, opts_size);
-
 #define FIELD_OK(field) \
 	offsetof(struct spdk_nvme_ctrlr_opts, field) + sizeof(opts->field) <= opts_size
 
@@ -118,6 +116,22 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 		opts->arb_mechanism = SPDK_NVME_CC_AMS_RR;
 	}
 
+	if (FIELD_OK(arbitration_burst)) {
+		opts->arbitration_burst = 0;
+	}
+
+	if (FIELD_OK(low_priority_weight)) {
+		opts->low_priority_weight = 0;
+	}
+
+	if (FIELD_OK(medium_priority_weight)) {
+		opts->medium_priority_weight = 0;
+	}
+
+	if (FIELD_OK(high_priority_weight)) {
+		opts->high_priority_weight = 0;
+	}
+
 	if (FIELD_OK(keep_alive_timeout_ms)) {
 		opts->keep_alive_timeout_ms = MIN_KEEP_ALIVE_TIMEOUT_IN_MS;
 	}
@@ -130,25 +144,22 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 		opts->io_queue_size = DEFAULT_IO_QUEUE_SIZE;
 	}
 
-	if (FIELD_OK(io_queue_requests)) {
-		opts->io_queue_requests = DEFAULT_IO_QUEUE_REQUESTS;
-	}
-
-	if (FIELD_OK(host_id)) {
-		memset(opts->host_id, 0, sizeof(opts->host_id));
-	}
-
 	if (nvme_driver_init() == 0) {
-		if (FIELD_OK(extended_host_id)) {
-			memcpy(opts->extended_host_id, &g_spdk_nvme_driver->default_extended_host_id,
-			       sizeof(opts->extended_host_id));
-		}
-
 		if (FIELD_OK(hostnqn)) {
 			spdk_uuid_fmt_lower(host_id_str, sizeof(host_id_str),
 					    &g_spdk_nvme_driver->default_extended_host_id);
 			snprintf(opts->hostnqn, sizeof(opts->hostnqn), "2014-08.org.nvmexpress:uuid:%s", host_id_str);
 		}
+
+		if (FIELD_OK(extended_host_id)) {
+			memcpy(opts->extended_host_id, &g_spdk_nvme_driver->default_extended_host_id,
+			       sizeof(opts->extended_host_id));
+		}
+
+	}
+
+	if (FIELD_OK(io_queue_requests)) {
+		opts->io_queue_requests = DEFAULT_IO_QUEUE_REQUESTS;
 	}
 
 	if (FIELD_OK(src_addr)) {
@@ -157,6 +168,10 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 
 	if (FIELD_OK(src_svcid)) {
 		memset(opts->src_svcid, 0, sizeof(opts->src_svcid));
+	}
+
+	if (FIELD_OK(host_id)) {
+		memset(opts->host_id, 0, sizeof(opts->host_id));
 	}
 
 	if (FIELD_OK(command_set)) {
