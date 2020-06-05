@@ -1211,7 +1211,7 @@ void spdk_bdev_notify_media_management(struct spdk_bdev *bdev);
  *  Macro used to register module for later initialization.
  */
 #define SPDK_BDEV_MODULE_REGISTER(name, module) \
-static void __attribute__((constructor)) spdk_bdev_module_register_##name(void) \
+static void __attribute__((constructor)) _spdk_bdev_module_register_##name(void) \
 { \
 	spdk_bdev_module_list_add(module); \
 } \
