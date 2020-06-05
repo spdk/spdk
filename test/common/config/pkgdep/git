@@ -262,7 +262,7 @@ function install_git() {
 		&& ./configure --prefix=/usr/local/git \
 		&& sudo make -j${jobs} install)
 	sudo sh -c "echo 'export PATH=/usr/local/git/bin:$PATH' >> /etc/bashrc"
-	exec $SHELL
+	export "PATH=/usr/local/git/bin:$PATH"
 }
 
 function install_extra_pkgs() {
