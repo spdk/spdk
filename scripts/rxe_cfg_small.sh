@@ -130,8 +130,8 @@ status() {
 
 		if [[ $link == yes ]]; then
 			speed=$(< "$dev/speed")
-			if ((speed > 10000)); then
-				speed=10GigE
+			if ((speed >= 1000)); then
+				speed=$((speed / 1000))GigE
 			elif ((speed > 0)); then
 				speed=${speed}Mb/s
 			else
