@@ -80,10 +80,6 @@ cfg_read_rte(struct spdk_pci_device *dev, void *value, uint32_t len, uint32_t of
 
 	rc = rte_pci_read_config(dev->dev_handle, value, len, offset);
 
-#if defined(__FreeBSD__) && RTE_VERSION < RTE_VERSION_NUM(18, 11, 0, 0)
-	/* Older DPDKs return 0 on success and -1 on failure */
-	return rc;
-#endif
 	return (rc > 0 && (uint32_t) rc == len) ? 0 : -1;
 }
 
@@ -104,7 +100,6 @@ cfg_write_rte(struct spdk_pci_device *dev, void *value, uint32_t len, uint32_t o
 static void
 remove_rte_dev(struct rte_pci_device *rte_dev)
 {
-#if RTE_VERSION >= RTE_VERSION_NUM(18, 11, 0, 0)
 	char bdf[32];
 	int i = 0, rc;
 
@@ -112,9 +107,6 @@ remove_rte_dev(struct rte_pci_device *rte_dev)
 	do {
 		rc = rte_eal_hotplug_remove("pci", bdf);
 	} while (rc == -ENOMSG && ++i <= DPDK_HOTPLUG_RETRY_COUNT);
-#else
-	rte_eal_dev_detach(&rte_dev->device);
-#endif
 }
 
 static void
@@ -183,7 +175,6 @@ pci_driver_register(struct spdk_pci_driver *driver)
 	TAILQ_INSERT_TAIL(&g_pci_drivers, driver, tailq);
 }
 
-#if RTE_VERSION >= RTE_VERSION_NUM(18, 5, 0, 0)
 static void
 pci_device_rte_hotremove(const char *device_name,
 			 enum rte_dev_event_type event,
@@ -217,7 +208,6 @@ pci_device_rte_hotremove(const char *device_name,
 		remove_rte_dev(dev->dev_handle);
 	}
 }
-#endif
 
 static void
 cleanup_pci_devices(void)
@@ -248,7 +238,6 @@ cleanup_pci_devices(void)
 void
 pci_env_init(void)
 {
-#if RTE_VERSION >= RTE_VERSION_NUM(18, 11, 0, 0)
 	struct spdk_pci_driver *driver;
 
 	/* We need to pre-register pci drivers for the pci devices to be
@@ -269,14 +258,11 @@ pci_env_init(void)
 		driver->is_registered = true;
 		rte_pci_register(&driver->driver);
 	}
-#endif
 
-#if RTE_VERSION >= RTE_VERSION_NUM(18, 5, 0, 0)
 	/* Register a single hotremove callback for all devices. */
 	if (spdk_process_is_primary()) {
 		rte_dev_event_callback_register(NULL, pci_device_rte_hotremove, NULL);
 	}
-#endif
 }
 
 void
@@ -293,11 +279,9 @@ pci_env_fini(void)
 		}
 	}
 
-#if RTE_VERSION >= RTE_VERSION_NUM(18, 5, 0, 0)
 	if (spdk_process_is_primary()) {
 		rte_dev_event_callback_unregister(NULL, pci_device_rte_hotremove, NULL);
 	}
-#endif
 }
 
 int
@@ -307,15 +291,6 @@ pci_device_init(struct rte_pci_driver *_drv,
 	struct spdk_pci_driver *driver = (struct spdk_pci_driver *)_drv;
 	struct spdk_pci_device *dev;
 	int rc;
-
-#if RTE_VERSION < RTE_VERSION_NUM(18, 11, 0, 0)
-	if (!driver->cb_fn) {
-		/* Return a positive value to indicate that this device does
-		 * not belong to this driver, but this isn't an error.
-		 */
-		return 1;
-	}
-#endif
 
 	dev = calloc(1, sizeof(*dev));
 	if (dev == NULL) {
@@ -441,7 +416,6 @@ spdk_pci_device_attach(struct spdk_pci_driver *driver,
 	driver->cb_fn = enum_cb;
 	driver->cb_arg = enum_ctx;
 
-#if RTE_VERSION >= RTE_VERSION_NUM(18, 11, 0, 0)
 	int i = 0;
 
 	do {
@@ -454,9 +428,6 @@ spdk_pci_device_attach(struct spdk_pci_driver *driver,
 		 */
 		rc = 0;
 	}
-#else
-	rc = rte_eal_dev_attach(bdf, "");
-#endif
 
 	driver->cb_arg = NULL;
 	driver->cb_fn = NULL;

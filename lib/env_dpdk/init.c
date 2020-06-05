@@ -105,23 +105,6 @@ _sprintf_alloc(const char *format, ...)
 	return NULL;
 }
 
-static void
-env_unlink_shared_files(void)
-{
-	/* Starting with DPDK 18.05, there are more files with unpredictable paths
-	 * and filenames. The --no-shconf option prevents from creating them, but
-	 * only for DPDK 18.08+. For DPDK 18.05 we just leave them be.
-	 */
-#if RTE_VERSION < RTE_VERSION_NUM(18, 05, 0, 0)
-	char buffer[PATH_MAX];
-
-	snprintf(buffer, PATH_MAX, "/var/run/.spdk_pid%d_hugepage_info", getpid());
-	if (unlink(buffer)) {
-		fprintf(stderr, "Unable to unlink shared memory file: %s. Error code: %d\n", buffer, errno);
-	}
-#endif
-}
-
 void
 spdk_env_opts_init(struct spdk_env_opts *opts)
 {
@@ -348,16 +331,6 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 		}
 	}
 
-#if RTE_VERSION >= RTE_VERSION_NUM(18, 05, 0, 0) && RTE_VERSION < RTE_VERSION_NUM(18, 5, 1, 0)
-	/* Dynamic memory management is buggy in DPDK 18.05.0. Don't use it. */
-	if (!opts->env_context || strstr(opts->env_context, "--legacy-mem") == NULL) {
-		args = push_arg(args, &argcount, _sprintf_alloc("--legacy-mem"));
-		if (args == NULL) {
-			return -1;
-		}
-	}
-#endif
-
 	if (opts->num_pci_addr) {
 		size_t i;
 		char bdf[32];
@@ -375,8 +348,6 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 		}
 	}
 
-	/* The following log-level options are not understood by older DPDKs */
-#if RTE_VERSION >= RTE_VERSION_NUM(18, 05, 0, 0)
 	/* Lower default EAL loglevel to RTE_LOG_NOTICE - normal, but significant messages.
 	 * This can be overridden by specifying the same option in opts->env_context
 	 */
@@ -402,7 +373,6 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 	if (args == NULL) {
 		return -1;
 	}
-#endif
 
 	if (opts->env_context) {
 		args = push_arg(args, &argcount, strdup(opts->env_context));
@@ -582,17 +552,6 @@ spdk_env_init(const struct spdk_env_opts *opts)
 			fprintf(stderr, "Failed to initialize DPDK\n");
 		}
 		return -rte_errno;
-	}
-
-	if (opts->shm_id < 0 && !opts->hugepage_single_segments) {
-		/*
-		 * Unlink hugepage and config info files after init.  This will ensure they get
-		 *  deleted on app exit, even if the app crashes and does not exit normally.
-		 *  Only do this when not in multi-process mode, since for multi-process other
-		 *  apps will need to open these files. These files are not created for
-		 *  "single file segments".
-		 */
-		env_unlink_shared_files();
 	}
 
 	legacy_mem = false;

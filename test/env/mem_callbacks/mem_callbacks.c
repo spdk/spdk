@@ -43,16 +43,6 @@
 #include <rte_eal_memconfig.h>
 #include <rte_eal.h>
 
-#if RTE_VERSION < RTE_VERSION_NUM(18, 05, 0, 0)
-
-static void
-test(void)
-{
-	printf("DPDK version %s does not support memory callbacks\n", rte_version());
-}
-
-#else
-
 struct mem_allocation {
 	uintptr_t			vaddr;
 	size_t				len;
@@ -182,8 +172,6 @@ test(void)
 	printf("free %p %ju\n", buf4, len4);
 	rte_free(buf4);
 }
-
-#endif
 
 int
 main(int argc, char **argv)
