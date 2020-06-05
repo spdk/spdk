@@ -211,12 +211,8 @@ else
 fi
 
 if [ -z "$output_dir" ]; then
-	if [ -z "$rootdir" ] || [ ! -d "$rootdir/../output" ]; then
-		output_dir=.
-	else
-		output_dir=$rootdir/../output
-	fi
-	export output_dir
+	mkdir -p "$rootdir/../output"
+	export output_dir="$rootdir/../output"
 fi
 
 TEST_MODE=
