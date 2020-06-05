@@ -55,6 +55,7 @@ function usage() {
 	echo "  -t --test-conf List of test configurations to enable (${CONF})"
 	echo "  -c --conf-path Path to configuration file"
 	echo "  -d --dir-git Path to where git sources should be saved"
+	echo "  -s --disable-tsocks Disable use of tsocks"
 	exit 0
 }
 
@@ -79,7 +80,7 @@ else
 fi
 
 # Parse input arguments #
-while getopts 'd:iuht:c:-:' optchar; do
+while getopts 'd:siuht:c:-:' optchar; do
 	case "$optchar" in
 		-)
 			case "$OPTARG" in
@@ -89,6 +90,7 @@ while getopts 'd:iuht:c:-:' optchar; do
 				test-conf=*) CONF="${OPTARG#*=}" ;;
 				conf-path=*) CONF_PATH="${OPTARG#*=}" ;;
 				dir-git=*) GIT_REPOS="${OPTARG#*=}" ;;
+				disable-tsocks) NO_TSOCKS=true ;;
 				*)
 					echo "Invalid argument '$OPTARG'"
 					usage
@@ -101,6 +103,7 @@ while getopts 'd:iuht:c:-:' optchar; do
 		t) CONF="$OPTARG" ;;
 		c) CONF_PATH="$OPTARG" ;;
 		d) GIT_REPOS="$OPTARG" ;;
+		s) NO_TSOCKS=true ;;
 		*)
 			echo "Invalid argument '$OPTARG'"
 			usage

@@ -176,7 +176,7 @@ function install_qemu() {
 
 	# Most tsocks proxies rely on a configuration file in /etc/tsocks.conf.
 	# If using tsocks, please make sure to complete this config before trying to build qemu.
-	if [[ $INSTALL_TSOCKS == true ]]; then
+	if [[ $INSTALL_TSOCKS == true && $NO_TSOCKS != true ]]; then
 		if hash tsocks 2> /dev/null; then
 			opt_params+=("--with-git='tsocks git'")
 		fi
