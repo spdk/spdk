@@ -74,8 +74,6 @@ function install_refspdk() {
 
 function install_qat() {
 
-	install libudev-devel || install libudev-dev
-
 	kernel_maj=$(uname -r | cut -d'.' -f1)
 	kernel_min=$(uname -r | cut -d'.' -f2)
 
@@ -159,12 +157,6 @@ function install_qemu() {
 	# Two versions of QEMU are used in the tests.
 	# Stock QEMU is used for vhost. A special fork
 	# is used to test OCSSDs. Install both.
-
-
-	# Packaged QEMU
-	install qemu-system-x86 qemu-img \
-		|| install qemu-system-x86 qemu-utils \
-		|| install qemu
 
 	# Forked QEMU
 	SPDK_QEMU_BRANCH=spdk-5.0.0
@@ -273,6 +265,18 @@ function install_git() {
 	exec $SHELL
 }
 
+function install_extra_pkgs() {
+	if [[ $INSTALL_QAT == true ]]; then
+		install libudev-devel || install libudev-dev
+	fi
+
+	if [[ $INSTALL_QEMU == true ]]; then
+		install qemu-system-x86 qemu-img \
+			|| install qemu-system-x86 qemu-utils \
+			|| install qemu
+	fi
+}
+
 GIT_VERSION=2.25.1
 : ${GIT_REPO_SPDK=https://github.com/spdk/spdk.git}
 export GIT_REPO_SPDK
@@ -330,6 +334,8 @@ sources+=(install_fio)
 
 sudo mkdir -p /usr/{,local}/src
 sudo mkdir -p "$GIT_REPOS"
+
+install_extra_pkgs
 
 if [[ $INSTALL_REFSPDK == true ]]; then
 	# Serialize builds as refspdk depends on spdk
