@@ -29,7 +29,6 @@ VM_SETUP_PATH=$(readlink -f ${BASH_SOURCE%/*})
 UPGRADE=false
 INSTALL=false
 CONF="rocksdb,fio,flamegraph,tsocks,qemu,vpp,libiscsi,nvmecli,qat,spdk,refspdk"
-gcc_version=$(gcc -dumpversion) gcc_version=${gcc_version%%.*}
 
 if [[ -e /etc/os-release ]]; then
 	source /etc/os-release

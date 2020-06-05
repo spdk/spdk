@@ -300,6 +300,7 @@ export DRIVER_LOCATION_QAT
 export GIT_REPO_GIT
 GIT_REPOS=${GIT_REPOS:-$HOME}
 
+gcc_version=$(gcc -dumpversion) gcc_version=${gcc_version%%.*}
 if [[ $ID == centos ]] && (( VERSION_ID == 7 )); then
 	# install proper version of the git first
 	install_git
