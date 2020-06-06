@@ -454,7 +454,11 @@ vbdev_delay_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
 	struct vbdev_delay *delay_node = (struct vbdev_delay *)ctx;
 
-	return spdk_bdev_io_type_supported(delay_node->base_bdev, io_type);
+	if (io_type == SPDK_BDEV_IO_TYPE_ZCOPY) {
+		return false;
+	} else {
+		return spdk_bdev_io_type_supported(delay_node->base_bdev, io_type);
+	}
 }
 
 static struct spdk_io_channel *
