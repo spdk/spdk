@@ -85,6 +85,22 @@ bdev_null_destruct(void *ctx)
 	return 0;
 }
 
+static bool
+bdev_null_abort_io(struct null_io_channel *ch, struct spdk_bdev_io *bio_to_abort)
+{
+	struct spdk_bdev_io *bdev_io;
+
+	TAILQ_FOREACH(bdev_io, &ch->io, module_link) {
+		if (bdev_io == bio_to_abort) {
+			TAILQ_REMOVE(&ch->io, bio_to_abort, module_link);
+			spdk_bdev_io_complete(bio_to_abort, SPDK_BDEV_IO_STATUS_ABORTED);
+			return true;
+		}
+	}
+
+	return false;
+}
+
 static void
 bdev_null_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 {
@@ -165,6 +181,13 @@ bdev_null_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_
 	case SPDK_BDEV_IO_TYPE_RESET:
 		TAILQ_INSERT_TAIL(&ch->io, bdev_io, module_link);
 		break;
+	case SPDK_BDEV_IO_TYPE_ABORT:
+		if (bdev_null_abort_io(ch, bdev_io->u.abort.bio_to_abort)) {
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		} else {
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
+		break;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 	default:
@@ -181,6 +204,7 @@ bdev_null_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	case SPDK_BDEV_IO_TYPE_WRITE:
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 	case SPDK_BDEV_IO_TYPE_RESET:
+	case SPDK_BDEV_IO_TYPE_ABORT:
 		return true;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
