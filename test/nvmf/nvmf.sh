@@ -40,6 +40,7 @@ run_test "nvmf_fio" test/nvmf/target/fio.sh "${TEST_ARGS[@]}"
 run_test "nvmf_shutdown" test/nvmf/target/shutdown.sh "${TEST_ARGS[@]}"
 run_test "nvmf_bdevio" test/nvmf/target/bdevio.sh "${TEST_ARGS[@]}"
 run_test "nvmf_invalid" test/nvmf/target/invalid.sh "${TEST_ARGS[@]}"
+run_test "nvmf_abort" test/nvmf/target/abort.sh "${TEST_ARGS[@]}"
 
 timing_enter host
 
