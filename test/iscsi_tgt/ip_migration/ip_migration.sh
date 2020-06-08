@@ -112,9 +112,9 @@ iscsiadm -m node --login -p $MIGRATION_ADDRESS:$ISCSI_PORT
 waitforiscsidevices 1
 
 # fio tests for multi-process
-$fio_py -p iscsi -i 4096 -d 32 -t randrw -r 10 &
+$fio_py -p iscsi -i 4096 -d 32 -t randrw -r 12 &
 fiopid=$!
-sleep 5
+sleep 3
 
 $rpc_py -s $rpc_first_addr spdk_kill_instance SIGTERM
 
