@@ -36,7 +36,7 @@ done
 if [[ "${nvme_name}" == "" ]] || [[ "$oacs_ns_manage" -eq 0 ]]; then
 	echo "No NVMe device supporting Namespace managment found"
 	$rootdir/scripts/setup.sh
-	exit 0
+	exit 1
 fi
 
 nvme_dev=/dev/${nvme_name}
