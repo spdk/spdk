@@ -84,6 +84,7 @@ DEFINE_STUB(spdk_nvmf_request_get_dif_ctx, bool, (struct spdk_nvmf_request *req,
 		struct spdk_dif_ctx *dif_ctx), false);
 DEFINE_STUB_V(spdk_nvme_trid_populate_transport, (struct spdk_nvme_transport_id *trid,
 		enum spdk_nvme_transport_type trtype));
+DEFINE_STUB_V(spdk_nvmf_tgt_new_qpair, (struct spdk_nvmf_tgt *tgt, struct spdk_nvmf_qpair *qpair));
 
 const char *
 spdk_nvme_transport_id_trtype_str(enum spdk_nvme_transport_type trtype)

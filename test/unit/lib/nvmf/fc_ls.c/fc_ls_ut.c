@@ -140,8 +140,8 @@ spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_
 	return 0;
 }
 
-static void
-new_qpair(struct spdk_nvmf_qpair *qpair, void *cb_arg)
+void
+spdk_nvmf_tgt_new_qpair(struct spdk_nvmf_tgt *tgt, struct spdk_nvmf_qpair *qpair)
 {
 	uint32_t i;
 	struct spdk_nvmf_fc_conn *fc_conn;
@@ -628,7 +628,6 @@ handle_disconn_bad_assoc_rsp(struct spdk_nvmf_fc_ls_rqst *ls_rqst)
 
 static struct spdk_nvmf_fc_port g_fc_port = {
 	.num_io_queues = 16,
-	.new_qp_cb = new_qpair,
 };
 
 static struct spdk_nvmf_fc_nport g_tgt_port;

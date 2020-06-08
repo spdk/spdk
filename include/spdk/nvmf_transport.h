@@ -192,14 +192,6 @@ struct spdk_nvmf_transport {
 	TAILQ_ENTRY(spdk_nvmf_transport)	link;
 };
 
-/**
- * Function to be called for each newly discovered qpair.
- *
- * \param qpair The newly discovered qpair.
- * \param cb_arg A context argument passed to this function.
- */
-typedef void (*new_qpair_fn)(struct spdk_nvmf_qpair *qpair, void *cb_arg);
-
 struct spdk_nvmf_transport_ops {
 	/**
 	 * Transport name
@@ -260,7 +252,7 @@ struct spdk_nvmf_transport_ops {
 	/**
 	 * Check for new connections on the transport.
 	 */
-	uint32_t (*accept)(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn, void *cb_arg);
+	uint32_t (*accept)(struct spdk_nvmf_transport *transport);
 
 	/**
 	 * Initialize subset of identify controller data.
@@ -365,6 +357,14 @@ struct spdk_nvmf_transport_ops {
 void spdk_nvmf_transport_register(const struct spdk_nvmf_transport_ops *ops);
 
 int spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req);
+
+/**
+ * Function to be called for each newly discovered qpair.
+ *
+ * \param tgt The nvmf target
+ * \param qpair The newly discovered qpair.
+ */
+void spdk_nvmf_tgt_new_qpair(struct spdk_nvmf_tgt *tgt, struct spdk_nvmf_qpair *qpair);
 
 /**
  * A subset of struct spdk_nvme_registers that are emulated by a fabrics device.

@@ -8,7 +8,10 @@ The NVMe-oF target no longer supports connecting scheduling configuration and in
 always uses what was previously called "transport" scheduling.
 
 `spdk_nvmf_tgt_accept` no longer takes a function pointer as an argument. New connections
-are automatically assigned to poll groups by the underlying transport.
+are automatically assigned to poll groups by the underlying transport. Further,
+`spdk_nvmf_transport_ops` has changed such that the accept function pointer no longer
+takes a function pointer as an argument. Instead, transports should call
+`spdk_nvmf_tgt_new_qpair` whenever they previously would have called that callback.
 
 ### nvme
 

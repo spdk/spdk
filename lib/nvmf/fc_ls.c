@@ -564,8 +564,6 @@ nvmf_fc_ls_add_conn_to_poller(
 {
 	struct nvmf_fc_ls_op_ctx *opd;
 	struct spdk_nvmf_fc_ls_add_conn_api_data *api_data;
-	struct spdk_nvmf_fc_nport *tgtport = assoc->tgtport;
-	struct spdk_nvmf_fc_port *fc_port = tgtport->fc_port;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_LS, "Add Connection to poller for "
 		      "assoc_id 0x%lx conn_id 0x%lx\n", assoc->assoc_id,
@@ -595,7 +593,7 @@ nvmf_fc_ls_add_conn_to_poller(
 
 	/* Let the nvmf_tgt decide which pollgroup to use. */
 	fc_conn->create_opd = opd;
-	fc_port->new_qp_cb(&fc_conn->qpair, fc_port->new_qp_arg);
+	spdk_nvmf_tgt_new_qpair(ls_rqst->nvmf_tgt, &fc_conn->qpair);
 }
 
 /* Delete association functions */

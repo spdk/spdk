@@ -1189,8 +1189,7 @@ nvmf_rdma_event_reject(struct rdma_cm_id *id, enum spdk_nvmf_rdma_transport_erro
 }
 
 static int
-nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *event,
-		  new_qpair_fn cb_fn, void *cb_arg)
+nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *event)
 {
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_rdma_qpair	*rqpair = NULL;
@@ -1287,7 +1286,7 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 
 	event->id->context = &rqpair->qpair;
 
-	cb_fn(&rqpair->qpair, cb_arg);
+	spdk_nvmf_tgt_new_qpair(transport->tgt, &rqpair->qpair);
 
 	return 0;
 }
@@ -2922,7 +2921,7 @@ nvmf_rdma_handle_cm_event_port_removal(struct spdk_nvmf_transport *transport,
 }
 
 static void
-nvmf_process_cm_event(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn, void *cb_arg)
+nvmf_process_cm_event(struct spdk_nvmf_transport *transport)
 {
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct rdma_cm_event		*event;
@@ -2957,7 +2956,7 @@ nvmf_process_cm_event(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn,
 			/* No action required. The target never attempts to resolve routes. */
 			break;
 		case RDMA_CM_EVENT_CONNECT_REQUEST:
-			rc = nvmf_rdma_connect(transport, event, cb_fn, cb_arg);
+			rc = nvmf_rdma_connect(transport, event);
 			if (rc < 0) {
 				SPDK_ERRLOG("Unable to process connect event. rc: %d\n", rc);
 				break;
@@ -3162,7 +3161,7 @@ nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 }
 
 static uint32_t
-nvmf_rdma_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn, void *cb_arg)
+nvmf_rdma_accept(struct spdk_nvmf_transport *transport)
 {
 	int	nfds, i = 0;
 	struct spdk_nvmf_rdma_transport *rtransport;
@@ -3178,7 +3177,7 @@ nvmf_rdma_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn, void
 
 	/* The first poll descriptor is RDMA CM event */
 	if (rtransport->poll_fds[i++].revents & POLLIN) {
-		nvmf_process_cm_event(transport, cb_fn, cb_arg);
+		nvmf_process_cm_event(transport);
 		nfds--;
 	}
 

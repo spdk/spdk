@@ -740,14 +740,11 @@ _nvmf_poll_group_add(void *_ctx)
 	}
 }
 
-static void
-_nvmf_new_qpair(struct spdk_nvmf_qpair *qpair, void *cb_arg)
+void
+spdk_nvmf_tgt_new_qpair(struct spdk_nvmf_tgt *tgt, struct spdk_nvmf_qpair *qpair)
 {
 	struct spdk_nvmf_poll_group *group;
-	struct spdk_nvmf_tgt *tgt;
 	struct nvmf_new_qpair_ctx *ctx;
-
-	tgt = qpair->transport->tgt;
 
 	group = spdk_nvmf_get_optimal_poll_group(qpair);
 	if (group == NULL) {
@@ -783,7 +780,7 @@ spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt)
 	uint32_t count = 0;
 
 	TAILQ_FOREACH_SAFE(transport, &tgt->transports, link, tmp) {
-		count += nvmf_transport_accept(transport, _nvmf_new_qpair, NULL);
+		count += nvmf_transport_accept(transport);
 	}
 
 	return count;
