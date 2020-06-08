@@ -1212,6 +1212,48 @@ function get_first_nvme_bdf() {
 	head -1 <<< "$(get_nvme_bdfs)"
 }
 
+function nvme_namespace_revert() {
+	$rootdir/scripts/setup.sh
+	sleep 1
+	bdfs=$(get_nvme_bdfs)
+
+	$rootdir/scripts/setup.sh reset
+	sleep 1
+
+	for bdf in $bdfs; do
+		nvme_ctrlr=/dev/$(get_nvme_ctrlr_from_bdf ${bdf})
+		if [[ -z "$nvme_ctrlr" ]]; then
+			continue
+		fi
+
+		# Check Optional Admin Command Support for Namespace Management
+		oacs=$(nvme id-ctrl ${nvme_ctrlr} | grep oacs | cut -d: -f2)
+		oacs_ns_manage=$((oacs & 0x8))
+
+		if [[ "$oacs_ns_manage" -ne 0 ]]; then
+			# This assumes every NVMe controller contains single namespace,
+			# encompassing Total NVM Capacity and formatted as 4k block size.
+
+			unvmcap=$(nvme id-ctrl ${nvme_ctrlr} | grep unvmcap | cut -d: -f2)
+			if [[ "$unvmcap" -eq 0 ]]; then
+				# All available space already used
+				continue
+			fi
+			tnvmcap=$(nvme id-ctrl ${nvme_ctrlr} | grep tnvmcap | cut -d: -f2)
+			blksize=4096
+
+			size=$((tnvmcap / blksize))
+
+			nvme detach-ns ${nvme_ctrlr} -n 0xffffffff -c 0 || true
+			nvme delete-ns ${nvme_ctrlr} -n 0xffffffff || true
+			nvme create-ns ${nvme_ctrlr} -s ${size} -c ${size} -b ${blksize}
+			nvme attach-ns ${nvme_ctrlr} -n 1 -c 0
+			nvme reset ${nvme_ctrlr}
+			waitforblk "${nvme_ctrlr}n1"
+		fi
+	done
+}
+
 # Define temp storage for all the tests. Look for 2GB at minimum
 set_test_storage "${TEST_MIN_STORAGE_SIZE:-$((1 << 31))}"
 
