@@ -10,8 +10,6 @@ rpc_py=$rootdir/scripts/rpc.py
 bdf=$(get_first_nvme_bdf)
 ctrlr_base="/dev/spdk/nvme"
 
-$rootdir/scripts/setup.sh
-
 $SPDK_BIN_DIR/spdk_tgt -m 0x3 &
 spdk_tgt_pid=$!
 trap 'kill -9 ${spdk_tgt_pid}; exit 1' SIGINT SIGTERM EXIT
