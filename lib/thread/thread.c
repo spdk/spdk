@@ -124,7 +124,12 @@ spdk_thread_lib_init(spdk_new_thread_fn new_thread_fn, size_t ctx_sz)
 {
 	assert(g_new_thread_fn == NULL);
 	assert(g_thread_op_fn == NULL);
-	g_new_thread_fn = new_thread_fn;
+
+	if (new_thread_fn == NULL) {
+		SPDK_INFOLOG(SPDK_LOG_THREAD, "new_thread_fn was not specified at spdk_thread_lib_init\n");
+	} else {
+		g_new_thread_fn = new_thread_fn;
+	}
 
 	return _thread_lib_init(ctx_sz);
 }
@@ -143,8 +148,12 @@ spdk_thread_lib_init_ext(spdk_thread_op_fn thread_op_fn,
 		return -EINVAL;
 	}
 
-	g_thread_op_fn = thread_op_fn;
-	g_thread_op_supported_fn = thread_op_supported_fn;
+	if (thread_op_fn == NULL && thread_op_supported_fn == NULL) {
+		SPDK_INFOLOG(SPDK_LOG_THREAD, "thread_op_fn and thread_op_supported_fn were not specified\n");
+	} else {
+		g_thread_op_fn = thread_op_fn;
+		g_thread_op_supported_fn = thread_op_supported_fn;
+	}
 
 	return _thread_lib_init(ctx_sz);
 }
