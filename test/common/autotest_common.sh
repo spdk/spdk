@@ -1175,6 +1175,15 @@ function get_nvme_name_from_bdf() {
 	printf '%s\n' "${blkname[@]}"
 }
 
+function get_nvme_ctrlr_from_bdf() {
+	bdf_sysfs_path=$(readlink -f /sys/class/nvme/nvme* | grep "$1/nvme/nvme")
+	if [[ -z "$bdf_sysfs_path" ]]; then
+		return
+	fi
+
+	printf '%s\n' "$(basename $bdf_sysfs_path)"
+}
+
 function opal_revert_cleanup() {
 	$SPDK_BIN_DIR/spdk_tgt &
 	spdk_tgt_pid=$!

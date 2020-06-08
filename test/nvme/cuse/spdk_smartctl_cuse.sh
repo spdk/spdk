@@ -12,12 +12,11 @@ bdf=$(get_first_nvme_bdf)
 
 PCI_WHITELIST="${bdf}" $rootdir/scripts/setup.sh reset
 sleep 1
-bdf_sysfs_path=$(readlink -f /sys/class/nvme/nvme* | grep "$bdf/nvme/nvme")
-if [ -z "$bdf_sysfs_path" ]; then
+nvme_name=$(get_nvme_ctrlr_from_bdf ${bdf})
+if [[ -z "$nvme_name" ]]; then
 	echo "setup.sh failed bind kernel driver to ${bdf}"
 	exit 1
 fi
-nvme_name=$(basename $bdf_sysfs_path)
 
 KERNEL_SMART_JSON=$(${SMARTCTL_CMD} --json=g -a /dev/${nvme_name} | grep -v "/dev/${nvme_name}" | sort || true)
 

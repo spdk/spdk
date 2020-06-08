@@ -18,13 +18,10 @@ $rootdir/scripts/setup.sh reset
 sleep 1
 
 for bdf in $bdfs; do
-	# get_nvme_name_from_bdf returns namespace device.
-	# We need here controller.
-	bdf_sysfs_path=$(readlink -f /sys/class/nvme/nvme* | grep "$bdf/nvme/nvme")
-	if [ -z "$bdf_sysfs_path" ]; then
+	nvme_name=$(get_nvme_ctrlr_from_bdf ${bdf})
+	if [[ -z "$nvme_name" ]]; then
 		continue
 	fi
-	nvme_name=$(basename $bdf_sysfs_path)
 
 	oacs=$($NVME_CMD id-ctrl /dev/${nvme_name} | grep oacs | cut -d: -f2)
 	oacs_ns_manage=$((oacs & 0x8))
