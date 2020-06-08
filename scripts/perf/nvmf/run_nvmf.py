@@ -735,8 +735,8 @@ class SPDKInitiator(Initiator):
 
         self.log_print("Sources unpacked")
         self.log_print("Using fio binary %s" % self.fio_bin)
-        self.remote_call("cd %s; git submodule update --init; ./configure --with-rdma --with-fio=%s;"
-                         "make clean; make -j$(($(nproc)*2))" % (self.spdk_dir, os.path.dirname(self.fio_bin)))
+        self.remote_call("cd %s; git submodule update --init; make clean; ./configure --with-rdma --with-fio=%s;"
+                         "make -j$(($(nproc)*2))" % (self.spdk_dir, os.path.dirname(self.fio_bin)))
 
         self.log_print("SPDK built")
         self.remote_call("sudo %s/scripts/setup.sh" % self.spdk_dir)
