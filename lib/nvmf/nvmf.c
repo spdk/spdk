@@ -720,14 +720,70 @@ spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt, const char *transport_nam
 	return NULL;
 }
 
+struct nvmf_new_qpair_ctx {
+	struct spdk_nvmf_qpair *qpair;
+	struct spdk_nvmf_poll_group *group;
+};
+
+static void
+_nvmf_poll_group_add(void *_ctx)
+{
+	struct nvmf_new_qpair_ctx *ctx = _ctx;
+	struct spdk_nvmf_qpair *qpair = ctx->qpair;
+	struct spdk_nvmf_poll_group *group = ctx->group;
+
+	free(_ctx);
+
+	if (spdk_nvmf_poll_group_add(group, qpair) != 0) {
+		SPDK_ERRLOG("Unable to add the qpair to a poll group.\n");
+		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+	}
+}
+
+static void
+_nvmf_new_qpair(struct spdk_nvmf_qpair *qpair, void *cb_arg)
+{
+	struct spdk_nvmf_poll_group *group;
+	struct spdk_nvmf_tgt *tgt;
+	struct nvmf_new_qpair_ctx *ctx;
+
+	tgt = qpair->transport->tgt;
+
+	group = spdk_nvmf_get_optimal_poll_group(qpair);
+	if (group == NULL) {
+		if (tgt->next_poll_group == NULL) {
+			tgt->next_poll_group = TAILQ_FIRST(&tgt->poll_groups);
+			if (tgt->next_poll_group == NULL) {
+				SPDK_ERRLOG("No poll groups exist.\n");
+				spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+				return;
+			}
+		}
+		group = tgt->next_poll_group;
+		tgt->next_poll_group = TAILQ_NEXT(group, link);
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		SPDK_ERRLOG("Unable to send message to poll group.\n");
+		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+		return;
+	}
+
+	ctx->qpair = qpair;
+	ctx->group = group;
+
+	spdk_thread_send_msg(group->thread, _nvmf_poll_group_add, ctx);
+}
+
 uint32_t
-spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt, new_qpair_fn cb_fn, void *cb_arg)
+spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt)
 {
 	struct spdk_nvmf_transport *transport, *tmp;
 	uint32_t count = 0;
 
 	TAILQ_FOREACH_SAFE(transport, &tgt->transports, link, tmp) {
-		count += nvmf_transport_accept(transport, cb_fn, cb_arg);
+		count += nvmf_transport_accept(transport, _nvmf_new_qpair, NULL);
 	}
 
 	return count;

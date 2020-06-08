@@ -192,6 +192,14 @@ struct spdk_nvmf_transport {
 	TAILQ_ENTRY(spdk_nvmf_transport)	link;
 };
 
+/**
+ * Function to be called for each newly discovered qpair.
+ *
+ * \param qpair The newly discovered qpair.
+ * \param cb_arg A context argument passed to this function.
+ */
+typedef void (*new_qpair_fn)(struct spdk_nvmf_qpair *qpair, void *cb_arg);
+
 struct spdk_nvmf_transport_ops {
 	/**
 	 * Transport name

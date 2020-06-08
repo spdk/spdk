@@ -115,14 +115,6 @@ struct spdk_nvmf_transport_poll_group_stat {
 };
 
 /**
- * Function to be called for each newly discovered qpair.
- *
- * \param qpair The newly discovered qpair.
- * \param cb_arg A context argument passed to this function.
- */
-typedef void (*new_qpair_fn)(struct spdk_nvmf_qpair *qpair, void *cb_arg);
-
-/**
  * Function to be called once the listener is associated with a subsystem.
  *
  * \param ctx Context argument passed to this function.
@@ -233,15 +225,9 @@ int spdk_nvmf_tgt_stop_listen(struct spdk_nvmf_tgt *tgt,
 /**
  * Poll the target for incoming connections.
  *
- * The new_qpair_fn cb_fn will be called for each newly discovered
- * qpair. The user is expected to add that qpair to a poll group
- * to establish the connection.
- *
  * \param tgt The target associated with the listen address.
- * \param cb_fn Called for each newly discovered qpair.
- * \param cb_arg A context argument passed to cb_fn.
  */
-uint32_t spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt, new_qpair_fn cb_fn, void *cb_arg);
+uint32_t spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt);
 
 /**
  * Create a poll group.

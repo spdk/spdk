@@ -7,6 +7,9 @@
 The NVMe-oF target no longer supports connecting scheduling configuration and instead
 always uses what was previously called "transport" scheduling.
 
+`spdk_nvmf_tgt_accept` no longer takes a function pointer as an argument. New connections
+are automatically assigned to poll groups by the underlying transport.
+
 ### nvme
 
 Add `opts_size` in `spdk_nvme_ctrlr_opts` structure in order to solve the compatiblity issue

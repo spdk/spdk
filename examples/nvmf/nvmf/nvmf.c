@@ -517,98 +517,12 @@ nvmf_tgt_stop_subsystems(struct nvmf_target *nvmf_tgt)
 	}
 }
 
-struct nvmf_target_pg_ctx {
-	struct spdk_nvmf_qpair *qpair;
-	struct nvmf_target_poll_group *pg;
-};
-
-static void
-nvmf_tgt_pg_add_qpair(void *_ctx)
-{
-	struct nvmf_target_pg_ctx *ctx = _ctx;
-	struct spdk_nvmf_qpair *qpair = ctx->qpair;
-	struct nvmf_target_poll_group *pg = ctx->pg;
-
-	free(_ctx);
-
-	if (spdk_nvmf_poll_group_add(pg->group, qpair) != 0) {
-		fprintf(stderr, "unable to add the qpair to a poll group.\n");
-		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
-	}
-}
-
-static struct nvmf_target_poll_group *
-nvmf_tgt_get_next_pg(struct nvmf_target *nvmf_tgt)
-{
-	struct nvmf_target_poll_group *pg;
-
-	pg = g_next_pg;
-	g_next_pg = TAILQ_NEXT(pg, link);
-	if (g_next_pg == NULL) {
-		g_next_pg = TAILQ_FIRST(&g_poll_groups);
-	}
-
-	return pg;
-}
-
-static struct nvmf_target_poll_group *
-nvmf_get_optimal_pg(struct nvmf_target *nvmf_tgt, struct spdk_nvmf_qpair *qpair)
-{
-	struct nvmf_target_poll_group *pg, *_pg = NULL;
-	struct spdk_nvmf_poll_group *group = spdk_nvmf_get_optimal_poll_group(qpair);
-
-	if (group == NULL) {
-		_pg = nvmf_tgt_get_next_pg(nvmf_tgt);
-		goto end;
-	}
-
-	TAILQ_FOREACH(pg, &g_poll_groups, link) {
-		if (pg->group == group) {
-			_pg = pg;
-			break;
-		}
-	}
-
-end:
-	assert(_pg != NULL);
-	return _pg;
-}
-
-static void
-new_qpair(struct spdk_nvmf_qpair *qpair, void *cb_arg)
-{
-	struct nvmf_target_poll_group *pg;
-	struct nvmf_target_pg_ctx *ctx;
-	struct nvmf_target *nvmf_tgt = &g_nvmf_tgt;
-
-	/* In SPDK we support three methods to get poll group: RoundRobin, Host and Transport.
-	 * In this example we only support the "Transport" which gets the optimal poll group.
-	 */
-	pg = nvmf_get_optimal_pg(nvmf_tgt, qpair);
-	if (!pg) {
-		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
-		return;
-	}
-
-	ctx = calloc(1, sizeof(*ctx));
-	if (!ctx) {
-		fprintf(stderr, "failed to allocate poll group context.\n");
-		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
-		return;
-	}
-
-	ctx->qpair = qpair;
-	ctx->pg = pg;
-
-	spdk_thread_send_msg(pg->thread, nvmf_tgt_pg_add_qpair, ctx);
-}
-
 static int
 nvmf_tgt_acceptor_poll(void *arg)
 {
 	struct nvmf_target *nvmf_tgt = arg;
 
-	spdk_nvmf_tgt_accept(nvmf_tgt->tgt, new_qpair, NULL);
+	spdk_nvmf_tgt_accept(nvmf_tgt->tgt);
 
 	return -1;
 }

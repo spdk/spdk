@@ -69,9 +69,6 @@ static enum nvmf_tgt_state g_tgt_state;
 static struct spdk_thread *g_tgt_init_thread = NULL;
 static struct spdk_thread *g_tgt_fini_thread = NULL;
 
-/* Round-Robin assignment of connections to poll groups */
-static struct nvmf_tgt_poll_group *g_next_poll_group = NULL;
-
 static TAILQ_HEAD(, nvmf_tgt_poll_group) g_poll_groups = TAILQ_HEAD_INITIALIZER(g_poll_groups);
 static size_t g_num_poll_groups = 0;
 
@@ -106,95 +103,13 @@ nvmf_subsystem_fini(void)
 	nvmf_shutdown_cb(NULL);
 }
 
-static struct nvmf_tgt_poll_group *
-nvmf_tgt_get_pg(struct spdk_nvmf_qpair *qpair)
-{
-	struct nvmf_tgt_poll_group *pg;
-	struct spdk_nvmf_poll_group *group;
-
-	group = spdk_nvmf_get_optimal_poll_group(qpair);
-
-	if (group != NULL) {
-		/* Look up the nvmf_tgt_poll_group that matches this spdk_nvmf_poll_group */
-		TAILQ_FOREACH(pg, &g_poll_groups, link) {
-			if (pg->group == group) {
-				return pg;
-			}
-		}
-
-		return NULL;
-	}
-
-	if (g_next_poll_group == NULL) {
-		g_next_poll_group = TAILQ_FIRST(&g_poll_groups);
-		if (g_next_poll_group == NULL) {
-			return NULL;
-		}
-	}
-	pg = g_next_poll_group;
-	g_next_poll_group = TAILQ_NEXT(pg, link);
-
-	return pg;
-}
-
-struct nvmf_tgt_pg_ctx {
-	struct spdk_nvmf_qpair *qpair;
-	struct nvmf_tgt_poll_group *pg;
-};
-
-static void
-nvmf_tgt_poll_group_add(void *_ctx)
-{
-	struct nvmf_tgt_pg_ctx *ctx = _ctx;
-	struct spdk_nvmf_qpair *qpair = ctx->qpair;
-	struct nvmf_tgt_poll_group *pg = ctx->pg;
-
-	free(_ctx);
-
-	if (spdk_nvmf_poll_group_add(pg->group, qpair) != 0) {
-		SPDK_ERRLOG("Unable to add the qpair to a poll group.\n");
-		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
-	}
-}
-
-static void
-new_qpair(struct spdk_nvmf_qpair *qpair, void *cb_arg)
-{
-	struct nvmf_tgt_pg_ctx *ctx;
-	struct nvmf_tgt_poll_group *pg;
-
-	if (g_tgt_state != NVMF_TGT_RUNNING) {
-		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
-		return;
-	}
-
-	pg = nvmf_tgt_get_pg(qpair);
-	if (pg == NULL) {
-		SPDK_ERRLOG("No poll groups exist.\n");
-		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
-		return;
-	}
-
-	ctx = calloc(1, sizeof(*ctx));
-	if (!ctx) {
-		SPDK_ERRLOG("Unable to send message to poll group.\n");
-		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
-		return;
-	}
-
-	ctx->qpair = qpair;
-	ctx->pg = pg;
-
-	spdk_thread_send_msg(pg->thread, nvmf_tgt_poll_group_add, ctx);
-}
-
 static int
 acceptor_poll(void *arg)
 {
 	struct spdk_nvmf_tgt *tgt = arg;
 	uint32_t count;
 
-	count = spdk_nvmf_tgt_accept(tgt, new_qpair, NULL);
+	count = spdk_nvmf_tgt_accept(tgt);
 
 	return count;
 }
@@ -250,10 +165,6 @@ nvmf_tgt_create_poll_group_done(void *ctx)
 	struct nvmf_tgt_poll_group *pg = ctx;
 
 	TAILQ_INSERT_TAIL(&g_poll_groups, pg, link);
-
-	if (g_next_poll_group == NULL) {
-		g_next_poll_group = pg;
-	}
 
 	assert(g_num_poll_groups < spdk_env_get_core_count());
 

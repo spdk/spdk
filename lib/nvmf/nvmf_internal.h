@@ -74,6 +74,9 @@ struct spdk_nvmf_tgt {
 	TAILQ_HEAD(, spdk_nvmf_transport)	transports;
 	TAILQ_HEAD(, spdk_nvmf_poll_group)	poll_groups;
 
+	/* Used for round-robin assignment of connections to poll groups */
+	struct spdk_nvmf_poll_group		*next_poll_group;
+
 	spdk_nvmf_tgt_destroy_done_fn		*destroy_cb_fn;
 	void					*destroy_cb_arg;
 
