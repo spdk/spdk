@@ -181,7 +181,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		fi
 		if [[ $SPDK_TEST_NVME_CUSE -eq 1 ]]; then
 			modprobe cuse
-			run_test "nvme_cuse" test/nvme/cuse/nvme_cuse.sh
+			run_test "nvme_cuse_rpc" test/nvme/cuse/nvme_cuse_rpc.sh
 			run_test "nvme_cli_cuse" test/nvme/spdk_nvme_cli_cuse.sh
 			run_test "nvme_smartctl_cuse" test/nvme/spdk_smartctl_cuse.sh
 			run_test "nvme_ns_manage_cuse" test/nvme/nvme_ns_manage_cuse.sh
