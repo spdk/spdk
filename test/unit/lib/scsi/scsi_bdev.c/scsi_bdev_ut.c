@@ -104,6 +104,9 @@ DEFINE_STUB(scsi_pr_out, int, (struct spdk_scsi_task *task,
 DEFINE_STUB(scsi_pr_in, int, (struct spdk_scsi_task *task, uint8_t *cdb,
 			      uint8_t *data, uint16_t data_len), 0);
 
+DEFINE_STUB(scsi2_reserve, int, (struct spdk_scsi_task *task, uint8_t *cdb), 0);
+DEFINE_STUB(scsi2_release, int, (struct spdk_scsi_task *task), 0);
+
 void
 scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {

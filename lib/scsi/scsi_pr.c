@@ -53,6 +53,23 @@ scsi_pr_get_registrant(struct spdk_scsi_lun *lun,
 	return NULL;
 }
 
+static bool
+scsi2_it_nexus_is_holder(struct spdk_scsi_lun *lun,
+			 struct spdk_scsi_port *initiator_port,
+			 struct spdk_scsi_port *target_port)
+{
+	struct spdk_scsi_pr_registrant *reg = lun->reservation.holder;
+
+	assert(reg != NULL);
+
+	if ((reg->initiator_port == initiator_port) &&
+	    (reg->target_port == target_port)) {
+		return true;
+	}
+
+	return false;
+}
+
 /* Reservation type is all registrants or not */
 static inline bool
 scsi_pr_is_all_registrants_type(struct spdk_scsi_lun *lun)
@@ -638,8 +655,9 @@ scsi_pr_in_report_capabilities(struct spdk_scsi_task *task,
 	param = (struct spdk_scsi_pr_in_report_capabilities_data *)data;
 
 	memset(param, 0, sizeof(*param));
-	/* TODO: can support more capabilities bits */
 	to_be16(&param->length, sizeof(*param));
+	/* Compatible reservation handling to support RESERVE/RELEASE defined in SPC-2 */
+	param->crh = 1;
 	param->tmv = 1;
 	param->wr_ex = 1;
 	param->ex_ac = 1;
@@ -775,6 +793,12 @@ scsi_pr_check(struct spdk_scsi_task *task)
 	case SPDK_SBC_READ_CAPACITY_10:
 	case SPDK_SPC_PERSISTENT_RESERVE_IN:
 	case SPDK_SPC_SERVICE_ACTION_IN_16:
+	/* CRH enabled, processed by scsi2_reserve() */
+	case SPDK_SPC2_RESERVE_6:
+	case SPDK_SPC2_RESERVE_10:
+	/* CRH enabled, processed by scsi2_release() */
+	case SPDK_SPC2_RELEASE_6:
+	case SPDK_SPC2_RELEASE_10:
 		return 0;
 	case SPDK_SPC_MODE_SELECT_6:
 	case SPDK_SPC_MODE_SELECT_10:
@@ -872,6 +896,169 @@ scsi_pr_check(struct spdk_scsi_task *task)
 	return 0;
 
 conflict:
+	spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_RESERVATION_CONFLICT,
+				  SPDK_SCSI_SENSE_NO_SENSE,
+				  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+				  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+	return -1;
+}
+
+static int
+scsi2_check_reservation_conflict(struct spdk_scsi_task *task)
+{
+	struct spdk_scsi_lun *lun = task->lun;
+	struct spdk_scsi_pr_registrant *reg;
+	bool conflict = false;
+
+	reg = scsi_pr_get_registrant(lun, task->initiator_port, task->target_port);
+	if (reg) {
+		/*
+		 * From spc4r31 5.9.3 Exceptions to SPC-2 RESERVE and RELEASE
+		 * behavior
+		 *
+		 * A RESERVE(6) or RESERVE(10) command shall complete with GOOD
+		 * status, but no reservation shall be established and the
+		 * persistent reservation shall not be changed, if the command
+		 * is received from a) and b) below.
+		 *
+		 * A RELEASE(6) or RELEASE(10) command shall complete with GOOD
+		 * status, but the persistent reservation shall not be released,
+		 * if the command is received from a) and b)
+		 *
+		 * a) An I_T nexus that is a persistent reservation holder; or
+		 * b) An I_T nexus that is registered if a registrants only or
+		 *    all registrants type persistent reservation is present.
+		 *
+		 * In all other cases, a RESERVE(6) command, RESERVE(10) command,
+		 * RELEASE(6) command, or RELEASE(10) command shall be processed
+		 * as defined in SPC-2.
+		 */
+		if (scsi_pr_registrant_is_holder(lun, reg)) {
+			return 1;
+		}
+
+		if (lun->reservation.rtype == SPDK_SCSI_PR_WRITE_EXCLUSIVE_REGS_ONLY ||
+		    lun->reservation.rtype == SPDK_SCSI_PR_EXCLUSIVE_ACCESS_REGS_ONLY) {
+			return 1;
+		}
+
+		conflict = true;
+	} else {
+		/*
+		 * From spc2r20 5.5.1 Reservations overview:
+		 *
+		 * If a logical unit has executed a PERSISTENT RESERVE OUT
+		 * command with the REGISTER or the REGISTER AND IGNORE
+		 * EXISTING KEY service action and is still registered by any
+		 * initiator, all RESERVE commands and all RELEASE commands
+		 * regardless of initiator shall conflict and shall terminate
+		 * with a RESERVATION CONFLICT status.
+		 */
+		conflict = TAILQ_EMPTY(&lun->reg_head) ? false : true;
+	}
+
+	if (conflict) {
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_RESERVATION_CONFLICT,
+					  SPDK_SCSI_SENSE_NO_SENSE,
+					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		return -1;
+	}
+
+	return 0;
+}
+
+int
+scsi2_reserve(struct spdk_scsi_task *task, uint8_t *cdb)
+{
+	struct spdk_scsi_lun *lun = task->lun;
+	struct spdk_scsi_pr_registrant *reg = &lun->scsi2_holder;
+	int ret;
+
+	/* Obsolete Bits and LongID set, returning ILLEGAL_REQUEST */
+	if (cdb[1] & 0x3) {
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+					  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		return -1;
+	}
+
+	ret = scsi2_check_reservation_conflict(task);
+	/* PERSISTENT RESERVE is enabled */
+	if (ret == 1) {
+		return 0;
+	} else if (ret < 0) {
+		return ret;
+	}
+
+	/* SPC2 RESERVE */
+	reg->initiator_port = task->initiator_port;
+	if (task->initiator_port) {
+		snprintf(reg->initiator_port_name, sizeof(reg->initiator_port_name), "%s",
+			 task->initiator_port->name);
+		reg->transport_id_len = task->initiator_port->transport_id_len;
+		memcpy(reg->transport_id, task->initiator_port->transport_id,
+		       reg->transport_id_len);
+	}
+	reg->target_port = task->target_port;
+	if (task->target_port) {
+		snprintf(reg->target_port_name, sizeof(reg->target_port_name), "%s",
+			 task->target_port->name);
+	}
+
+	lun->reservation.flags = SCSI_SPC2_RESERVE;
+	lun->reservation.holder = &lun->scsi2_holder;
+
+	return 0;
+}
+
+int
+scsi2_release(struct spdk_scsi_task *task)
+{
+	struct spdk_scsi_lun *lun = task->lun;
+	int ret;
+
+	ret = scsi2_check_reservation_conflict(task);
+	/* PERSISTENT RESERVE is enabled */
+	if (ret == 1) {
+		return 0;
+	} else if (ret < 0) {
+		return ret;
+	}
+
+	assert(lun->reservation.flags & SCSI_SPC2_RESERVE);
+
+	memset(&lun->reservation, 0, sizeof(struct spdk_scsi_pr_reservation));
+	memset(&lun->scsi2_holder, 0, sizeof(struct spdk_scsi_pr_registrant));
+
+	return 0;
+}
+
+int scsi2_reserve_check(struct spdk_scsi_task *task)
+{
+	struct spdk_scsi_lun *lun = task->lun;
+	uint8_t *cdb = task->cdb;
+
+	switch (cdb[0]) {
+	case SPDK_SPC_INQUIRY:
+	case SPDK_SPC2_RELEASE_6:
+	case SPDK_SPC2_RELEASE_10:
+		return 0;
+
+	default:
+		break;
+	}
+
+	/* no reservation holders */
+	if (!scsi_pr_has_reservation(lun)) {
+		return 0;
+	}
+
+	if (scsi2_it_nexus_is_holder(lun, task->initiator_port, task->target_port)) {
+		return 0;
+	}
+
 	spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_RESERVATION_CONFLICT,
 				  SPDK_SCSI_SENSE_NO_SENSE,
 				  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,

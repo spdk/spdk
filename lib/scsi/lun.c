@@ -197,7 +197,11 @@ _scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 	TAILQ_INSERT_TAIL(&lun->tasks, task, scsi_link);
 	if (!lun->removed) {
 		/* Check the command is allowed or not when reservation is exist */
-		rc = scsi_pr_check(task);
+		if (spdk_unlikely(lun->reservation.flags & SCSI_SPC2_RESERVE)) {
+			rc = scsi2_reserve_check(task);
+		} else {
+			rc = scsi_pr_check(task);
+		}
 		if (spdk_unlikely(rc < 0)) {
 			/* Reservation Conflict */
 			rc = SPDK_SCSI_TASK_COMPLETE;

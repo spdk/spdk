@@ -1712,7 +1712,6 @@ bdev_scsi_process_primary(struct spdk_scsi_task *task)
 	int dbd, pc, page, subpage;
 	int cmd_parsed = 0;
 
-
 	switch (cdb[0]) {
 	case SPDK_SPC_INQUIRY:
 		alloc_len = from_be16(&cdb[3]);
@@ -1929,6 +1928,22 @@ bdev_scsi_process_primary(struct spdk_scsi_task *task)
 		data = calloc(1, data_len);
 		assert(data != NULL);
 		rc = scsi_pr_in(task, cdb, data, data_len);
+		break;
+
+	case SPDK_SPC2_RESERVE_6:
+	case SPDK_SPC2_RESERVE_10:
+		rc = scsi2_reserve(task, cdb);
+		if (rc == 0) {
+			if (cdb[0] == SPDK_SPC2_RESERVE_10) {
+				rc = from_be16(&cdb[7]);
+			}
+			data_len = 0;
+		}
+		break;
+
+	case SPDK_SPC2_RELEASE_6:
+	case SPDK_SPC2_RELEASE_10:
+		rc = scsi2_release(task);
 		break;
 
 	default:

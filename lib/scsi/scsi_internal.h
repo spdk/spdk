@@ -73,8 +73,11 @@ struct spdk_scsi_pr_registrant {
 	TAILQ_ENTRY(spdk_scsi_pr_registrant)	link;
 };
 
+#define SCSI_SPC2_RESERVE			0x00000001U
+
 /* Reservation with LU_SCOPE */
 struct spdk_scsi_pr_reservation {
+	uint32_t				flags;
 	struct spdk_scsi_pr_registrant		*holder;
 	enum spdk_scsi_pr_type_code		rtype;
 	uint64_t				crkey;
@@ -144,6 +147,8 @@ struct spdk_scsi_lun {
 	uint32_t pr_generation;
 	/** Reservation for the LUN */
 	struct spdk_scsi_pr_reservation reservation;
+	/** Reservation holder for SPC2 RESERVE(6) and RESERVE(10) */
+	struct spdk_scsi_pr_registrant scsi2_holder;
 
 	/** List of open descriptors for this LUN. */
 	TAILQ_HEAD(, spdk_scsi_lun_desc) open_descs;
@@ -195,6 +200,10 @@ bool bdev_scsi_get_dif_ctx(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 int scsi_pr_out(struct spdk_scsi_task *task, uint8_t *cdb, uint8_t *data, uint16_t data_len);
 int scsi_pr_in(struct spdk_scsi_task *task, uint8_t *cdb, uint8_t *data, uint16_t data_len);
 int scsi_pr_check(struct spdk_scsi_task *task);
+
+int scsi2_reserve(struct spdk_scsi_task *task, uint8_t *cdb);
+int scsi2_release(struct spdk_scsi_task *task);
+int scsi2_reserve_check(struct spdk_scsi_task *task);
 
 struct spdk_scsi_globals {
 	pthread_mutex_t mutex;

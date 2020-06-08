@@ -107,6 +107,7 @@ DEFINE_STUB_V(spdk_scsi_dev_delete_lun,
 	      (struct spdk_scsi_dev *dev, struct spdk_scsi_lun *lun));
 
 DEFINE_STUB(scsi_pr_check, int, (struct spdk_scsi_task *task), 0);
+DEFINE_STUB(scsi2_reserve_check, int, (struct spdk_scsi_task *task), 0);
 
 void
 bdev_scsi_reset(struct spdk_scsi_task *task)
