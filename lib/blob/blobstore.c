@@ -7111,6 +7111,7 @@ blob_set_xattr(struct spdk_blob *blob, const char *name, const void *value,
 	struct spdk_xattr_tailq *xattrs;
 	struct spdk_xattr	*xattr;
 	size_t			desc_size;
+	void			*tmp;
 
 	blob_verify_md_op(blob);
 
@@ -7134,9 +7135,14 @@ blob_set_xattr(struct spdk_blob *blob, const char *name, const void *value,
 
 	TAILQ_FOREACH(xattr, xattrs, link) {
 		if (!strcmp(name, xattr->name)) {
+			tmp = malloc(value_len);
+			if (!tmp) {
+				return -ENOMEM;
+			}
+
 			free(xattr->value);
 			xattr->value_len = value_len;
-			xattr->value = malloc(value_len);
+			xattr->value = tmp;
 			memcpy(xattr->value, value, value_len);
 
 			blob->state = SPDK_BLOB_STATE_DIRTY;
@@ -7149,9 +7155,20 @@ blob_set_xattr(struct spdk_blob *blob, const char *name, const void *value,
 	if (!xattr) {
 		return -ENOMEM;
 	}
+
 	xattr->name = strdup(name);
+	if (!xattr->name) {
+		free(xattr);
+		return -ENOMEM;
+	}
+
 	xattr->value_len = value_len;
 	xattr->value = malloc(value_len);
+	if (!xattr->value) {
+		free(xattr->name);
+		free(xattr);
+		return -ENOMEM;
+	}
 	memcpy(xattr->value, value, value_len);
 	TAILQ_INSERT_TAIL(xattrs, xattr, link);
 
