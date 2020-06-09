@@ -46,6 +46,12 @@ static void *g_fini_cb_arg = NULL;
 
 struct spdk_net_framework *g_next_net_framework = NULL;
 
+static inline struct spdk_net_framework *
+get_next_net_framework(struct spdk_net_framework *net)
+{
+	return net ? STAILQ_NEXT(net, link) : STAILQ_FIRST(&g_net_frameworks);
+}
+
 void
 spdk_net_framework_init_next(int rc)
 {
@@ -55,12 +61,7 @@ spdk_net_framework_init_next(int rc)
 		return;
 	}
 
-	if (g_next_net_framework == NULL) {
-		g_next_net_framework = STAILQ_FIRST(&g_net_frameworks);
-	} else {
-		g_next_net_framework = STAILQ_NEXT(g_next_net_framework, link);
-	}
-
+	g_next_net_framework = get_next_net_framework(g_next_net_framework);
 	if (g_next_net_framework == NULL) {
 		g_init_cb_fn(g_init_cb_arg, 0);
 		return;
@@ -81,12 +82,7 @@ spdk_net_framework_start(spdk_net_init_cb cb_fn, void *cb_arg)
 void
 spdk_net_framework_fini_next(void)
 {
-	if (g_next_net_framework == NULL) {
-		g_next_net_framework = STAILQ_FIRST(&g_net_frameworks);
-	} else {
-		g_next_net_framework = STAILQ_NEXT(g_next_net_framework, link);
-	}
-
+	g_next_net_framework = get_next_net_framework(g_next_net_framework);
 	if (g_next_net_framework == NULL) {
 		g_fini_cb_fn(g_fini_cb_arg);
 		return;
