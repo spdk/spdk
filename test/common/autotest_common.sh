@@ -1240,7 +1240,12 @@ function opal_revert_cleanup() {
 # uio-pci-generic or vfio-pci
 function get_nvme_bdfs() {
 	xtrace_disable
-	jq -r .config[].params.traddr <<< $($rootdir/scripts/gen_nvme.sh --json)
+	bdfs=$(jq -r .config[].params.traddr <<< $($rootdir/scripts/gen_nvme.sh --json))
+	if [[ -z $bdfs ]]; then
+		echo "No devices to test on!"
+		exit 1
+	fi
+	echo "$bdfs"
 	xtrace_restore
 }
 
