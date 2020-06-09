@@ -4,7 +4,7 @@
 pacman -Sy --needed --noconfirm gcc make cunit libaio openssl \
 	libutil-linux libiscsi python ncurses ninja meson
 # Additional dependencies for SPDK CLI
-pacman -Sy --needed --noconfirm python-pexpect python-pip
+pacman -Sy --needed --noconfirm python-pexpect python-pip libffi
 pip install configshell_fb
 # Additional dependencies for DPDK
 pacman -Sy --needed --noconfirm numactl nasm
