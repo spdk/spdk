@@ -129,6 +129,7 @@ detach_rte(struct spdk_pci_device *dev)
 	}
 
 	pthread_mutex_lock(&g_pci_mutex);
+	dev->internal.attached = false;
 	/* prevent the hotremove notification from removing this device */
 	dev->internal.pending_removal = true;
 	pthread_mutex_unlock(&g_pci_mutex);
@@ -323,7 +324,6 @@ pci_device_init(struct rte_pci_driver *_drv,
 	dev->unmap_bar = unmap_bar_rte;
 	dev->cfg_read = cfg_read_rte;
 	dev->cfg_write = cfg_write_rte;
-	dev->detach = detach_rte;
 
 	dev->internal.driver = driver;
 	dev->internal.claim_fd = -1;
@@ -382,8 +382,18 @@ spdk_pci_device_detach(struct spdk_pci_device *dev)
 		spdk_pci_device_unclaim(dev);
 	}
 
-	dev->internal.attached = false;
-	dev->detach(dev);
+	if (strcmp(dev->type, "pci") == 0) {
+		/* if it's a physical device we need to deal with DPDK on
+		 * a different process and we can't just unset one flag
+		 * here. We also want to stop using any device resources
+		 * so that the device isn't "in use" by the userspace driver
+		 * once we detach it. This would allow attaching the device
+		 * to a different process, or to a kernel driver like nvme.
+		 */
+		detach_rte(dev);
+	} else {
+		dev->internal.attached = false;
+	}
 
 	cleanup_pci_devices();
 }
@@ -951,7 +961,6 @@ spdk_pci_hook_device(struct spdk_pci_driver *drv, struct spdk_pci_device *dev)
 	assert(dev->unmap_bar != NULL);
 	assert(dev->cfg_read != NULL);
 	assert(dev->cfg_write != NULL);
-	assert(dev->detach != NULL);
 	dev->internal.driver = drv;
 	TAILQ_INSERT_TAIL(&g_pci_devices, dev, internal.tailq);
 }

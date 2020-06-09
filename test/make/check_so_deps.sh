@@ -278,6 +278,8 @@ function confirm_abi_deps() {
 	name = spdk_net_impl
 [suppress_type]
 	name = spdk_lvol
+[suppress_type]
+	name = spdk_pci_device
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do

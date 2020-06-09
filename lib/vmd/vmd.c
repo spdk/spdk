@@ -864,11 +864,6 @@ vmd_dev_cfg_write(struct spdk_pci_device *_dev,  void *value,
 }
 
 static void
-_vmd_dev_detach(struct spdk_pci_device *dev)
-{
-}
-
-static void
 vmd_dev_detach(struct spdk_pci_device *dev)
 {
 	struct vmd_pci_device *vmd_device = (struct vmd_pci_device *)dev;
@@ -907,7 +902,6 @@ vmd_dev_init(struct vmd_pci_device *dev)
 	dev->pci.unmap_bar = vmd_dev_unmap_bar;
 	dev->pci.cfg_read = vmd_dev_cfg_read;
 	dev->pci.cfg_write = vmd_dev_cfg_write;
-	dev->pci.detach = _vmd_dev_detach;
 	dev->hotplug_capable = false;
 	if (dev->pcie_cap != NULL) {
 		dev->cached_slot_control = dev->pcie_cap->slot_control;

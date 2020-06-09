@@ -667,7 +667,6 @@ struct spdk_pci_device {
 			uint32_t len, uint32_t offset);
 	int (*cfg_write)(struct spdk_pci_device *dev, void *value,
 			 uint32_t len, uint32_t offset);
-	void (*detach)(struct spdk_pci_device *dev);
 
 	struct _spdk_pci_device_internal {
 		struct spdk_pci_driver		*driver;
