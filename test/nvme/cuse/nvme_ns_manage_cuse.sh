@@ -46,6 +46,13 @@ aer_ns_change=$((oaes & 0x100))
 nvmcap=$($NVME_CMD id-ns ${nvme_dev} -n 1 | grep nvmcap | cut -d: -f2)
 blksize=512
 
+function reset_nvme_if_aer_unsupported() {
+	if [[ "$aer_ns_change" -eq "0" ]]; then
+		sleep 1
+		$NVME_CMD reset "$1" || true
+	fi
+}
+
 function clean_up() {
 	$rootdir/scripts/setup.sh reset
 
@@ -72,10 +79,7 @@ info_print "delete all namespaces"
 $NVME_CMD detach-ns ${nvme_dev} -n 0xffffffff -c 0 || true
 $NVME_CMD delete-ns ${nvme_dev} -n 0xffffffff || true
 
-if [[ "$aer_ns_change" -eq "0" ]]; then
-	sleep 1
-	$NVME_CMD reset ${nvme_dev} || true
-fi
+reset_nvme_if_aer_unsupported ${nvme_dev}
 sleep 1
 
 PCI_WHITELIST="${bdf}" $rootdir/scripts/setup.sh
@@ -102,10 +106,7 @@ $NVME_CMD create-ns /dev/spdk/nvme0 -s 10000 -c 10000 -f 0
 info_print "attach ns: nsid=1 controller=0"
 $NVME_CMD attach-ns /dev/spdk/nvme0 -n 1 -c 0
 
-if [[ "$aer_ns_change" -eq "0" ]]; then
-	sleep 1
-	$NVME_CMD reset /dev/spdk/nvme0 || true
-fi
+reset_nvme_if_aer_unsupported /dev/spdk/nvme0
 sleep 1
 
 [[ -c /dev/spdk/nvme0n1 ]]
@@ -116,10 +117,7 @@ $NVME_CMD create-ns /dev/spdk/nvme0 -s 10000 -c 10000 -f 0
 info_print "attach ns: nsid=2 controller=0"
 $NVME_CMD attach-ns /dev/spdk/nvme0 -n 2 -c 0
 
-if [[ "$aer_ns_change" -eq "0" ]]; then
-	sleep 1
-	$NVME_CMD reset /dev/spdk/nvme0 || true
-fi
+reset_nvme_if_aer_unsupported /dev/spdk/nvme0
 sleep 1
 
 [[ -c /dev/spdk/nvme0n2 ]]
@@ -130,10 +128,7 @@ $NVME_CMD detach-ns /dev/spdk/nvme0 -n 2 -c 0 || true
 info_print "delete ns: nsid=2"
 $NVME_CMD delete-ns /dev/spdk/nvme0 -n 2 || true
 
-if [[ "$aer_ns_change" -eq "0" ]]; then
-	sleep 1
-	$NVME_CMD reset /dev/spdk/nvme0 || true
-fi
+reset_nvme_if_aer_unsupported /dev/spdk/nvme0
 sleep 1
 
 [[ ! -c /dev/spdk/nvme0n2 ]]
@@ -144,10 +139,7 @@ $NVME_CMD detach-ns /dev/spdk/nvme0 -n 1 -c 0 || true
 info_print "delete ns: nsid=1"
 $NVME_CMD delete-ns /dev/spdk/nvme0 -n 1 || true
 
-if [[ "$aer_ns_change" -eq "0" ]]; then
-	sleep 1
-	$NVME_CMD reset /dev/spdk/nvme0 || true
-fi
+reset_nvme_if_aer_unsupported /dev/spdk/nvme0
 sleep 1
 
 # Here we should not have any cuse devices
