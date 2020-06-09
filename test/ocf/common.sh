@@ -11,7 +11,7 @@ function nvme_cfg() {
 }
 
 function clear_nvme() {
-	mapfile -t bdf < <(iter_all_pci_class_code 01 08 02)
+	mapfile -t bdf < <(get_first_nvme_bdf)
 
 	# Clear metadata on NVMe device
 	$rootdir/scripts/setup.sh reset
