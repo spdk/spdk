@@ -1230,21 +1230,6 @@ function get_nvme_ctrlr_from_bdf() {
 	printf '%s\n' "$(basename $bdf_sysfs_path)"
 }
 
-function opal_revert_cleanup() {
-	$SPDK_BIN_DIR/spdk_tgt &
-	spdk_tgt_pid=$!
-	waitforlisten $spdk_tgt_pid
-
-	# OPAL test only runs on the first NVMe device
-	# So we just revert the first one here
-	bdf=$($rootdir/scripts/gen_nvme.sh --json | jq -r '.config[].params | select(.name=="Nvme0").traddr')
-	$rootdir/scripts/rpc.py bdev_nvme_attach_controller -b "nvme0" -t "pcie" -a $bdf
-	# Ignore if this fails.
-	$rootdir/scripts/rpc.py bdev_nvme_opal_revert -b nvme0 -p test || true
-
-	killprocess $spdk_tgt_pid
-}
-
 # Get BDF addresses of all NVMe drives currently attached to
 # uio-pci-generic or vfio-pci
 function get_nvme_bdfs() {
@@ -1305,6 +1290,40 @@ function nvme_namespace_revert() {
 			waitforblk "${nvme_ctrlr}n1"
 		fi
 	done
+}
+
+# Get BDFs based on device ID, such as 0x0a54
+function get_nvme_bdfs_by_id() {
+	local bdfs=()
+
+	for bdf in $(get_nvme_bdfs); do
+		device=$(cat /sys/bus/pci/devices/$bdf/device) || true
+		if [[ "$device" == "$1" ]]; then
+			bdfs+=($bdf)
+		fi
+	done
+
+	printf '%s\n' "${bdfs[@]}"
+}
+
+function opal_revert_cleanup() {
+	# The OPAL CI tests is only used for P4510 devices.
+	mapfile -t bdfs < <(get_nvme_bdfs_by_id 0x0a54)
+	if [[ -z ${bdfs[0]} ]]; then
+		return 0
+	fi
+
+	$SPDK_BIN_DIR/spdk_tgt &
+	spdk_tgt_pid=$!
+	waitforlisten $spdk_tgt_pid
+
+	for bdf in "${bdfs[@]}"; do
+		$rootdir/scripts/rpc.py bdev_nvme_attach_controller -b "nvme0" -t "pcie" -a ${bdf}
+		# Ignore if this fails.
+		$rootdir/scripts/rpc.py bdev_nvme_opal_revert -b nvme0 -p test || true
+	done
+
+	killprocess $spdk_tgt_pid
 }
 
 # Define temp storage for all the tests. Look for 2GB at minimum
