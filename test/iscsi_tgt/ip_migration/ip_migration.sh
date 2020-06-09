@@ -109,6 +109,7 @@ sleep 1
 iscsiadm -m discovery -t sendtargets -p $MIGRATION_ADDRESS:$ISCSI_PORT
 sleep 1
 iscsiadm -m node --login -p $MIGRATION_ADDRESS:$ISCSI_PORT
+waitforiscsidevices 1
 
 # fio tests for multi-process
 $fio_py -p iscsi -i 4096 -d 32 -t randrw -r 10 &
