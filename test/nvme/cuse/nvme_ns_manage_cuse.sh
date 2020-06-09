@@ -17,12 +17,14 @@ bdfs=$(get_nvme_bdfs)
 $rootdir/scripts/setup.sh reset
 sleep 1
 
+# Find bdf that supports Namespace Managment
 for bdf in $bdfs; do
 	nvme_name=$(get_nvme_ctrlr_from_bdf ${bdf})
 	if [[ -z "$nvme_name" ]]; then
 		continue
 	fi
 
+	# Check Optional Admin Command Support for Namespace Management
 	oacs=$($NVME_CMD id-ctrl /dev/${nvme_name} | grep oacs | cut -d: -f2)
 	oacs_ns_manage=$((oacs & 0x8))
 
@@ -32,7 +34,7 @@ for bdf in $bdfs; do
 done
 
 if [[ "${nvme_name}" == "" ]] || [[ "$oacs_ns_manage" -eq 0 ]]; then
-	echo "NVMe device not found"
+	echo "No NVMe device supporting Namespace managment found"
 	$rootdir/scripts/setup.sh
 	exit 0
 fi
@@ -42,9 +44,6 @@ nvme_dev=/dev/${nvme_name}
 # Detect supported features and configuration
 oaes=$($NVME_CMD id-ctrl ${nvme_dev} | grep oaes | cut -d: -f2)
 aer_ns_change=$((oaes & 0x100))
-
-nvmcap=$($NVME_CMD id-ns ${nvme_dev} -n 1 | grep nvmcap | cut -d: -f2)
-blksize=512
 
 function reset_nvme_if_aer_unsupported() {
 	if [[ "$aer_ns_change" -eq "0" ]]; then
@@ -56,12 +55,18 @@ function reset_nvme_if_aer_unsupported() {
 function clean_up() {
 	$rootdir/scripts/setup.sh reset
 
-	size=$((nvmcap / blksize))
+	# This assumes every NVMe controller contains single namespace,
+	# encompassing Total NVM Capacity and formatted as 4k block size.
+
+	tnvmcap=$($NVME_CMD id-ctrl ${nvme_dev} | grep tnvmcap | cut -d: -f2)
+	blksize=4096
+
+	size=$((tnvmcap / blksize))
 
 	echo "Restoring $nvme_dev..."
 	$NVME_CMD detach-ns ${nvme_dev} -n 0xffffffff -c 0 || true
 	$NVME_CMD delete-ns ${nvme_dev} -n 0xffffffff || true
-	$NVME_CMD create-ns ${nvme_dev} -s ${size} -c ${size} -f 0
+	$NVME_CMD create-ns ${nvme_dev} -s ${size} -c ${size} -b ${blksize}
 	$NVME_CMD attach-ns ${nvme_dev} -n 1 -c 0
 	$NVME_CMD reset ${nvme_dev}
 
