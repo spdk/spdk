@@ -24,9 +24,6 @@ spdkcli_nvmf_fc
 unittest_nvmf_fc
 unittest_nvmf_fc_ls
 
-# Enable after cuse tests switch to physical devices
-nvme_ns_manage_cuse
-
 # These tests are currently only run manually
 vhost_blk_fs_integrity
 vhost_blk_hot_remove
