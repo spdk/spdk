@@ -3157,18 +3157,19 @@ nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 	ibv_ack_async_event(&event);
 }
 
-static void
+static uint32_t
 nvmf_rdma_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn, void *cb_arg)
 {
 	int	nfds, i = 0;
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_rdma_device *device, *tmp;
+	uint32_t count;
 
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
-	nfds = poll(rtransport->poll_fds, rtransport->npoll_fds, 0);
+	count = nfds = poll(rtransport->poll_fds, rtransport->npoll_fds, 0);
 
 	if (nfds <= 0) {
-		return;
+		return 0;
 	}
 
 	/* The first poll descriptor is RDMA CM event */
@@ -3178,7 +3179,7 @@ nvmf_rdma_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn, void
 	}
 
 	if (nfds == 0) {
-		return;
+		return count;
 	}
 
 	/* Second and subsequent poll descriptors are IB async events */
@@ -3190,6 +3191,8 @@ nvmf_rdma_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn, void
 	}
 	/* check all flagged fd's have been served */
 	assert(nfds == 0);
+
+	return count;
 }
 
 static void

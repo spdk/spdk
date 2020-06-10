@@ -1908,10 +1908,11 @@ nvmf_fc_stop_listen(struct spdk_nvmf_transport *transport,
 {
 }
 
-static void
+static uint32_t
 nvmf_fc_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn, void *cb_arg)
 {
 	struct spdk_nvmf_fc_port *fc_port = NULL;
+	uint32_t count = 0;
 	static bool start_lld = false;
 
 	if (spdk_unlikely(!start_lld)) {
@@ -1923,9 +1924,11 @@ nvmf_fc_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn, void *
 	TAILQ_FOREACH(fc_port, &g_spdk_nvmf_fc_port_list, link) {
 		if (fc_port->hw_port_status == SPDK_FC_PORT_ONLINE) {
 			fc_port->new_qp_cb = cb_fn;
-			nvmf_fc_process_queue(&fc_port->ls_queue);
+			count += nvmf_fc_process_queue(&fc_port->ls_queue);
 		}
 	}
+
+	return count;
 }
 
 static void

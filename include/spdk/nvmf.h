@@ -241,7 +241,7 @@ int spdk_nvmf_tgt_stop_listen(struct spdk_nvmf_tgt *tgt,
  * \param cb_fn Called for each newly discovered qpair.
  * \param cb_arg A context argument passed to cb_fn.
  */
-void spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt, new_qpair_fn cb_fn, void *cb_arg);
+uint32_t spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt, new_qpair_fn cb_fn, void *cb_arg);
 
 /**
  * Create a poll group.

@@ -40,8 +40,8 @@
 #include "spdk/nvmf.h"
 #include "spdk/nvmf_transport.h"
 
-void nvmf_transport_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn,
-			   void *cb_arg);
+uint32_t nvmf_transport_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn,
+			       void *cb_arg);
 
 void nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport,
 				      struct spdk_nvme_transport_id *trid,

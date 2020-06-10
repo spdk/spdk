@@ -252,7 +252,7 @@ struct spdk_nvmf_transport_ops {
 	/**
 	 * Check for new connections on the transport.
 	 */
-	void (*accept)(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn, void *cb_arg);
+	uint32_t (*accept)(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn, void *cb_arg);
 
 	/**
 	 * Initialize subset of identify controller data.

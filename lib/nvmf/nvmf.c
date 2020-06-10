@@ -720,14 +720,17 @@ spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt, const char *transport_nam
 	return NULL;
 }
 
-void
+uint32_t
 spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt, new_qpair_fn cb_fn, void *cb_arg)
 {
 	struct spdk_nvmf_transport *transport, *tmp;
+	uint32_t count = 0;
 
 	TAILQ_FOREACH_SAFE(transport, &tgt->transports, link, tmp) {
-		nvmf_transport_accept(transport, cb_fn, cb_arg);
+		count += nvmf_transport_accept(transport, cb_fn, cb_arg);
 	}
+
+	return count;
 }
 
 struct spdk_nvmf_poll_group *

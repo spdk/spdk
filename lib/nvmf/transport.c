@@ -254,10 +254,10 @@ spdk_nvmf_transport_stop_listen(struct spdk_nvmf_transport *transport,
 	return 0;
 }
 
-void
+uint32_t
 nvmf_transport_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn, void *cb_arg)
 {
-	transport->ops->accept(transport, cb_fn, cb_arg);
+	return transport->ops->accept(transport, cb_fn, cb_arg);
 }
 
 void

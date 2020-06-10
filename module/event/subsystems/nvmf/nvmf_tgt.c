@@ -302,10 +302,11 @@ static int
 acceptor_poll(void *arg)
 {
 	struct spdk_nvmf_tgt *tgt = arg;
+	uint32_t count;
 
-	spdk_nvmf_tgt_accept(tgt, new_qpair, NULL);
+	count = spdk_nvmf_tgt_accept(tgt, new_qpair, NULL);
 
-	return -1;
+	return count;
 }
 
 static void
