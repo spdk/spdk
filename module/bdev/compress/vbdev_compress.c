@@ -1595,7 +1595,7 @@ vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 
 	comp_bdev->comp_bdev.split_on_optimal_io_boundary = true;
 
-	comp_bdev->comp_bdev.blocklen = comp_bdev->base_bdev->blocklen;
+	comp_bdev->comp_bdev.blocklen = comp_bdev->params.logical_block_size;
 	comp_bdev->comp_bdev.blockcnt = comp_bdev->params.vol_size / comp_bdev->comp_bdev.blocklen;
 	assert(comp_bdev->comp_bdev.blockcnt > 0);
 
