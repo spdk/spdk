@@ -1083,6 +1083,8 @@ refresh_pollers_tab(uint8_t current_page)
 		g_last_page = current_page;
 	}
 
+	max_pages = (count + g_max_data_rows - 1) / g_max_data_rows;
+
 	/* Clear screen if number of pollers changed */
 	if (g_last_pollers_count != count) {
 		for (i = TABS_DATA_START_ROW; i < g_data_win_size; i++) {
@@ -1092,9 +1094,13 @@ refresh_pollers_tab(uint8_t current_page)
 		}
 
 		g_last_pollers_count = count;
-	}
 
-	max_pages = (count + g_max_data_rows - 1) / g_max_data_rows;
+		/* We need to run store_last_run_counter() again, so the easiest way is to call this function
+		 * again with changed g_last_page value */
+		g_last_page = 0xF;
+		refresh_pollers_tab(current_page);
+		return max_pages;
+	}
 
 	/* Timed pollers can switch their possition on a list because of how they work.
 	 * Let's sort them by name first so that they won't switch on data refresh */
