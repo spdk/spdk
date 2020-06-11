@@ -450,7 +450,7 @@ spdk_nvmf_req_get_xfer(struct spdk_nvmf_request *req) {
  * Macro used to register new transports.
  */
 #define SPDK_NVMF_TRANSPORT_REGISTER(name, transport_ops) \
-static void __attribute__((constructor)) spdk_nvmf_transport_register_##name(void) \
+static void __attribute__((constructor)) _spdk_nvmf_transport_register_##name(void) \
 { \
 	spdk_nvmf_transport_register(transport_ops); \
 }\

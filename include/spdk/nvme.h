@@ -3185,7 +3185,7 @@ void spdk_nvme_transport_register(const struct spdk_nvme_transport_ops *ops);
  * Macro used to register new transports.
  */
 #define SPDK_NVME_TRANSPORT_REGISTER(name, transport_ops) \
-static void __attribute__((constructor)) spdk_nvme_transport_register_##name(void) \
+static void __attribute__((constructor)) _spdk_nvme_transport_register_##name(void) \
 { \
 	spdk_nvme_transport_register(transport_ops); \
 }\
