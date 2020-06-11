@@ -2,6 +2,19 @@
 
 ## v20.07: (Upcoming Release)
 
+### accel_fw
+
+The accel_fw was updated to support compare, dualcast, crc32c.
+
+The accel_fw introduced batching support for all commands in all plug-ins.
+See docs for detailed information.
+
+### idxd
+
+The idxd library and plug-in module for the accel_fw were updated to support
+all accel_fw commands as well as batching.  Batching is supported both
+through the library and the plug-in module.
+
 ### ioat
 
 A new API `spdk_ioat_get_max_descriptors` was added.

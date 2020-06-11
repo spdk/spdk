@@ -800,6 +800,7 @@ INPUT                  += \
 # All remaining pages are listed here in alphabetical order by filename.
 INPUT                  += \
                          about.md \
+                         accel_fw.md \
                          applications.md \
                          bdev.md \
                          bdev_module.md \
