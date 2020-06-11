@@ -54,7 +54,7 @@ static int g_num_devs = 0;
 
 static int g_outstanding_commands;
 static int g_reserve_command_result;
-static bool g_get_host_id_successful;
+static bool g_feat_host_id_successful;
 
 #define HOST_ID		0xABABABABCDCDCDCD
 #define EXT_HOST_ID	((uint8_t[]){0x0f, 0x97, 0xcd, 0x74, 0x8c, 0x80, 0x41, 0x42, \
@@ -63,13 +63,13 @@ static bool g_get_host_id_successful;
 #define CR_KEY		0xDEADBEAF5A5A5A5B
 
 static void
-get_feature_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
+feat_host_id_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 {
 	if (spdk_nvme_cpl_is_error(cpl)) {
-		fprintf(stdout, "Get Features - Host Identifier failed\n");
-		g_get_host_id_successful = false;
+		fprintf(stdout, "Get/Set Features - Host Identifier failed\n");
+		g_feat_host_id_successful = false;
 	} else {
-		g_get_host_id_successful = true;
+		g_feat_host_id_successful = true;
 	}
 	g_outstanding_commands--;
 }
@@ -95,24 +95,68 @@ get_host_identifier(struct spdk_nvme_ctrlr *ctrlr)
 	g_outstanding_commands = 0;
 	ret = spdk_nvme_ctrlr_cmd_get_feature(ctrlr, SPDK_NVME_FEAT_HOST_IDENTIFIER, cdw11, host_id,
 					      host_id_size,
-					      get_feature_completion, NULL);
+					      feat_host_id_completion, NULL);
 	if (ret) {
 		fprintf(stdout, "Get Feature: Failed\n");
 		return -1;
 	}
 
 	g_outstanding_commands++;
-	g_get_host_id_successful = false;
+	g_feat_host_id_successful = false;
 
 	while (g_outstanding_commands) {
 		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
 	}
 
-	if (g_get_host_id_successful) {
+	if (g_feat_host_id_successful) {
 		spdk_log_dump(stdout, "Get Feature: Host Identifier:", host_id, host_id_size);
 		return 0;
 	}
 
+	return -1;
+}
+
+static int
+set_host_identifier(struct spdk_nvme_ctrlr *ctrlr)
+{
+	int ret;
+	uint8_t host_id[16] = {};
+	uint32_t host_id_size;
+	uint32_t cdw11;
+
+	if (spdk_nvme_ctrlr_get_data(ctrlr)->ctratt.host_id_exhid_supported) {
+		host_id_size = 16;
+		cdw11 = 1;
+		printf("Using 128-bit extended host identifier\n");
+		memcpy(host_id, EXT_HOST_ID, host_id_size);
+	} else {
+		host_id_size = 8;
+		cdw11 = 0;
+		to_be64(host_id, HOST_ID);
+		printf("Using 64-bit host identifier\n");
+	}
+
+	g_outstanding_commands = 0;
+	ret = spdk_nvme_ctrlr_cmd_set_feature(ctrlr, SPDK_NVME_FEAT_HOST_IDENTIFIER, cdw11, 0, host_id,
+					      host_id_size, feat_host_id_completion, NULL);
+	if (ret) {
+		fprintf(stdout, "Set Feature: Failed\n");
+		return -1;
+	}
+
+	g_outstanding_commands++;
+	g_feat_host_id_successful = false;
+
+	while (g_outstanding_commands) {
+		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
+	}
+
+	if (g_feat_host_id_successful) {
+		spdk_log_dump(stdout, "Set Feature: Host Identifier:", host_id, host_id_size);
+		return 0;
+	}
+
+	fprintf(stderr, "Set Feature: Host Identifier Failed\n");
 	return -1;
 }
 
@@ -326,6 +370,11 @@ reserve_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
 		return 0;
 	}
 
+	ret = set_host_identifier(ctrlr);
+	if (ret) {
+		return ret;
+	}
+
 	ret = get_host_identifier(ctrlr);
 	if (ret) {
 		return ret;
@@ -345,15 +394,6 @@ static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
-	/*
-	 * Provide both 64-bit and 128-bit host identifiers.
-	 *
-	 * The NVMe library will choose which one to use based on whether the controller
-	 * supports extended host identifiers.
-	 */
-	to_le64(opts->host_id, HOST_ID);
-	memcpy(opts->extended_host_id, EXT_HOST_ID, sizeof(opts->extended_host_id));
-
 	return true;
 }
 
