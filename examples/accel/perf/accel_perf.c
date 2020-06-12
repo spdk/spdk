@@ -190,6 +190,7 @@ _submit_single(void *arg1, void *arg2)
 	struct worker_thread *worker = arg1;
 	struct ap_task *task = arg2;
 	int random_num;
+	int rc = 0;
 
 	assert(worker);
 
@@ -197,20 +198,20 @@ _submit_single(void *arg1, void *arg2)
 	task->worker->current_queue_depth++;
 	switch (g_workload_selection) {
 	case ACCEL_COPY:
-		spdk_accel_submit_copy(__accel_task_from_ap_task(task),
-				       worker->ch, task->dst,
-				       task->src, g_xfer_size_bytes, accel_done);
+		rc = spdk_accel_submit_copy(__accel_task_from_ap_task(task),
+					    worker->ch, task->dst,
+					    task->src, g_xfer_size_bytes, accel_done);
 		break;
 	case ACCEL_FILL:
 		/* For fill use the first byte of the task->dst buffer */
-		spdk_accel_submit_fill(__accel_task_from_ap_task(task),
-				       worker->ch, task->dst, *(uint8_t *)task->src,
-				       g_xfer_size_bytes, accel_done);
+		rc = spdk_accel_submit_fill(__accel_task_from_ap_task(task),
+					    worker->ch, task->dst, *(uint8_t *)task->src,
+					    g_xfer_size_bytes, accel_done);
 		break;
 	case ACCEL_CRC32C:
-		spdk_accel_submit_crc32c(__accel_task_from_ap_task(task),
-					 worker->ch, (uint32_t *)task->dst, task->src, g_crc32c_seed,
-					 g_xfer_size_bytes, accel_done);
+		rc = spdk_accel_submit_crc32c(__accel_task_from_ap_task(task),
+					      worker->ch, (uint32_t *)task->dst, task->src, g_crc32c_seed,
+					      g_xfer_size_bytes, accel_done);
 		break;
 	case ACCEL_COMPARE:
 		random_num = rand() % 100;
@@ -221,14 +222,18 @@ _submit_single(void *arg1, void *arg2)
 			task->expected_status = 0;
 			*(uint8_t *)task->dst = DATA_PATTERN;
 		}
-		spdk_accel_submit_compare(__accel_task_from_ap_task(task),
-					  worker->ch, task->dst, task->src,
-					  g_xfer_size_bytes, accel_done);
+		rc = spdk_accel_submit_compare(__accel_task_from_ap_task(task),
+					       worker->ch, task->dst, task->src,
+					       g_xfer_size_bytes, accel_done);
 		break;
 	default:
 		assert(false);
 		break;
 
+	}
+
+	if (rc) {
+		accel_done(__accel_task_from_ap_task(task), rc);
 	}
 }
 
@@ -275,7 +280,7 @@ _accel_done(void *arg1)
 	worker->xfer_completed++;
 	worker->current_queue_depth--;
 
-	if (!worker->is_draining && worker->xfer_failed == 0) {
+	if (!worker->is_draining) {
 		_submit_single(worker, task);
 	} else {
 		spdk_free(task->src);
