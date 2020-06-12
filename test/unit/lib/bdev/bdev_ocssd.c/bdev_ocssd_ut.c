@@ -198,6 +198,7 @@ create_nvme_bdev_controller(const struct spdk_nvme_transport_id *trid, const cha
 {
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	struct nvme_bdev_ctrlr_trid *trid_entry;
 	uint32_t nsid;
 
 	ctrlr = find_controller(trid);
@@ -211,15 +212,15 @@ create_nvme_bdev_controller(const struct spdk_nvme_transport_id *trid, const cha
 	nvme_bdev_ctrlr->namespaces = calloc(ctrlr->ns_count, sizeof(struct nvme_bdev_ns *));
 	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr->namespaces != NULL);
 
-	nvme_bdev_ctrlr->trid = calloc(1, sizeof(struct spdk_nvme_transport_id));
-	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr->trid != NULL);
+	trid_entry = calloc(1, sizeof(struct nvme_bdev_ctrlr_trid));
+	SPDK_CU_ASSERT_FATAL(trid_entry != NULL);
+	trid_entry->trid = *trid;
 
 	nvme_bdev_ctrlr->ctrlr = ctrlr;
 	nvme_bdev_ctrlr->num_ns = ctrlr->ns_count;
 	nvme_bdev_ctrlr->ref = 0;
-	*nvme_bdev_ctrlr->trid = *trid;
+	nvme_bdev_ctrlr->trid = &trid_entry->trid;
 	nvme_bdev_ctrlr->name = strdup(name);
-
 	for (nsid = 0; nsid < ctrlr->ns_count; ++nsid) {
 		nvme_bdev_ctrlr->namespaces[nsid] = calloc(1, sizeof(struct nvme_bdev_ns));
 		SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr->namespaces[nsid] != NULL);
@@ -238,6 +239,9 @@ create_nvme_bdev_controller(const struct spdk_nvme_transport_id *trid, const cha
 				io_channel_destroy_cb, 0, name);
 
 	TAILQ_INSERT_TAIL(&g_nvme_bdev_ctrlrs, nvme_bdev_ctrlr, tailq);
+
+	TAILQ_INIT(&nvme_bdev_ctrlr->multipath_trids);
+	TAILQ_INSERT_HEAD(&nvme_bdev_ctrlr->multipath_trids, trid_entry, link);
 
 	return nvme_bdev_ctrlr;
 }

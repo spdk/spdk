@@ -66,6 +66,7 @@ struct spdk_nvme_qpair *bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_
 void bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts);
 int bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts);
 int bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_msg_fn cb, void *cb_ctx);
+int bdev_nvme_add_multipath_trid(const char *name, struct spdk_nvme_transport_id *trid);
 
 int bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		     struct spdk_nvme_host_id *hostid,
