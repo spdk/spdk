@@ -85,6 +85,7 @@ struct nvme_bdev_ctrlr {
 	char					*name;
 	int					ref;
 	bool					resetting;
+	bool					failover_in_progress;
 	bool					destruct;
 	/**
 	 * PI check flags. This flags is set to NVMe controllers created only
