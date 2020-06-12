@@ -1361,6 +1361,7 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	     uint32_t prchk_flags)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	struct nvme_bdev_ctrlr_trid *trid_entry;
 	uint32_t i;
 	int rc;
 
@@ -1370,21 +1371,24 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 		return -ENOMEM;
 	}
 
-	nvme_bdev_ctrlr->connected_trid = calloc(1, sizeof(*nvme_bdev_ctrlr->connected_trid));
-	if (nvme_bdev_ctrlr->connected_trid == NULL) {
-		SPDK_ERRLOG("Failed to allocate device trid struct\n");
-		free(nvme_bdev_ctrlr);
-		return -ENOMEM;
-	}
-
+	TAILQ_INIT(&nvme_bdev_ctrlr->trids);
 	nvme_bdev_ctrlr->num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
 	nvme_bdev_ctrlr->namespaces = calloc(nvme_bdev_ctrlr->num_ns, sizeof(struct nvme_bdev_ns *));
 	if (!nvme_bdev_ctrlr->namespaces) {
 		SPDK_ERRLOG("Failed to allocate block namespaces pointer\n");
-		free(nvme_bdev_ctrlr->connected_trid);
 		free(nvme_bdev_ctrlr);
 		return -ENOMEM;
 	}
+
+	trid_entry = calloc(1, sizeof(*trid_entry));
+	if (trid_entry == NULL) {
+		SPDK_ERRLOG("Failed to allocate trid entry pointer\n");
+		free(nvme_bdev_ctrlr->namespaces);
+		free(nvme_bdev_ctrlr);
+		return -ENOMEM;
+	}
+
+	trid_entry->trid = *trid;
 
 	for (i = 0; i < nvme_bdev_ctrlr->num_ns; i++) {
 		nvme_bdev_ctrlr->namespaces[i] = calloc(1, sizeof(struct nvme_bdev_ns));
@@ -1393,8 +1397,8 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 			for (; i > 0; i--) {
 				free(nvme_bdev_ctrlr->namespaces[i - 1]);
 			}
+			free(trid_entry);
 			free(nvme_bdev_ctrlr->namespaces);
-			free(nvme_bdev_ctrlr->connected_trid);
 			free(nvme_bdev_ctrlr);
 			return -ENOMEM;
 		}
@@ -1404,11 +1408,11 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	nvme_bdev_ctrlr->adminq_timer_poller = NULL;
 	nvme_bdev_ctrlr->ctrlr = ctrlr;
 	nvme_bdev_ctrlr->ref = 0;
-	*nvme_bdev_ctrlr->connected_trid = *trid;
+	nvme_bdev_ctrlr->connected_trid = &trid_entry->trid;
 	nvme_bdev_ctrlr->name = strdup(name);
 	if (nvme_bdev_ctrlr->name == NULL) {
+		free(trid_entry);
 		free(nvme_bdev_ctrlr->namespaces);
-		free(nvme_bdev_ctrlr->connected_trid);
 		free(nvme_bdev_ctrlr);
 		return -ENOMEM;
 	}
@@ -1417,9 +1421,9 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 		rc = bdev_ocssd_init_ctrlr(nvme_bdev_ctrlr);
 		if (spdk_unlikely(rc != 0)) {
 			SPDK_ERRLOG("Unable to initialize OCSSD controller\n");
+			free(trid_entry);
 			free(nvme_bdev_ctrlr->name);
 			free(nvme_bdev_ctrlr->namespaces);
-			free(nvme_bdev_ctrlr->connected_trid);
 			free(nvme_bdev_ctrlr);
 			return rc;
 		}
@@ -1450,6 +1454,8 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 			SPDK_ERRLOG("Failed to initialize Opal\n");
 		}
 	}
+
+	TAILQ_INSERT_HEAD(&nvme_bdev_ctrlr->trids, trid_entry, link);
 	return 0;
 }
 
@@ -1720,6 +1726,84 @@ bdev_nvme_async_poll(void *arg)
 	}
 
 	return SPDK_POLLER_BUSY;
+}
+
+int
+bdev_nvme_add_trid(const char *name, struct spdk_nvme_transport_id *trid)
+{
+	struct nvme_bdev_ctrlr		*nvme_bdev_ctrlr;
+	struct spdk_nvme_ctrlr		*new_ctrlr;
+	struct spdk_nvme_ctrlr_opts	opts;
+	uint32_t			i;
+	struct spdk_nvme_ns		*ns, *new_ns;
+	const struct spdk_nvme_ns_data	*ns_data, *new_ns_data;
+	struct nvme_bdev_ctrlr_trid	*new_trid;
+	int				rc = 0;
+
+	assert(name != NULL);
+
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name(name);
+	if (nvme_bdev_ctrlr == NULL) {
+		SPDK_ERRLOG("Failed to find NVMe controller\n");
+		return -ENODEV;
+	}
+
+	/* Currently we only support failover to the same transport type. */
+	if (nvme_bdev_ctrlr->connected_trid->trtype != trid->trtype) {
+		return -EINVAL;
+	}
+
+	/* Currently we only support failover to the same NQN. */
+	if (strncmp(trid->subnqn, nvme_bdev_ctrlr->connected_trid->subnqn, SPDK_NVMF_NQN_MAX_LEN)) {
+		return -EINVAL;
+	}
+
+	/* Skip all the other checks if we've already registered this path. */
+	TAILQ_FOREACH(new_trid, &nvme_bdev_ctrlr->trids, link) {
+		if (!spdk_nvme_transport_id_compare(&new_trid->trid, trid)) {
+			return -EEXIST;
+		}
+	}
+
+	spdk_nvme_ctrlr_get_default_ctrlr_opts(&opts, sizeof(opts));
+	opts.transport_retry_count = g_opts.retry_count;
+
+	new_ctrlr = spdk_nvme_connect(trid, &opts, sizeof(opts));
+
+	if (new_ctrlr == NULL) {
+		return -ENODEV;
+	}
+
+	if (spdk_nvme_ctrlr_get_num_ns(new_ctrlr) != nvme_bdev_ctrlr->num_ns) {
+		rc = -EINVAL;
+		goto out;
+	}
+
+	for (i = 1; i <= nvme_bdev_ctrlr->num_ns; i++) {
+		ns = spdk_nvme_ctrlr_get_ns(nvme_bdev_ctrlr->ctrlr, i);
+		new_ns = spdk_nvme_ctrlr_get_ns(new_ctrlr, i);
+		assert(ns != NULL);
+		assert(new_ns != NULL);
+
+		ns_data = spdk_nvme_ns_get_data(ns);
+		new_ns_data = spdk_nvme_ns_get_data(new_ns);
+		if (memcmp(ns_data->nguid, new_ns_data->nguid, sizeof(ns_data->nguid))) {
+			rc = -EINVAL;
+			goto out;
+		}
+	}
+
+	new_trid = calloc(1, sizeof(*new_trid));
+	if (new_trid == NULL) {
+		rc = -ENOMEM;
+		goto out;
+	}
+	new_trid->trid = *trid;
+	TAILQ_INSERT_TAIL(&nvme_bdev_ctrlr->trids, new_trid, link);
+
+out:
+	spdk_nvme_detach(new_ctrlr);
+	return rc;
 }
 
 int

@@ -116,6 +116,7 @@ static void
 nvme_bdev_unregister_cb(void *io_device)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = io_device;
+	struct nvme_bdev_ctrlr_trid *trid, *tmp_trid;
 	uint32_t i;
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
@@ -127,8 +128,13 @@ nvme_bdev_unregister_cb(void *io_device)
 	for (i = 0; i < nvme_bdev_ctrlr->num_ns; i++) {
 		free(nvme_bdev_ctrlr->namespaces[i]);
 	}
+
+	TAILQ_FOREACH_SAFE(trid, &nvme_bdev_ctrlr->trids, link, tmp_trid) {
+		TAILQ_REMOVE(&nvme_bdev_ctrlr->trids, trid, link);
+		free(trid);
+	}
+
 	free(nvme_bdev_ctrlr->namespaces);
-	free(nvme_bdev_ctrlr->connected_trid);
 	free(nvme_bdev_ctrlr);
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
