@@ -162,7 +162,8 @@ static int bdev_nvme_io_passthru(struct nvme_bdev *nbdev, struct spdk_io_channel
 static int bdev_nvme_io_passthru_md(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 				    struct nvme_bdev_io *bio,
 				    struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes, void *md_buf, size_t md_len);
-static int bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bio);
+static int bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bio,
+			   bool failover);
 
 typedef void (*populate_namespace_fn)(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 				      struct nvme_bdev_ns *nvme_ns, struct nvme_async_probe_ctx *ctx);
@@ -272,7 +273,7 @@ bdev_nvme_poll_adminq(void *arg)
 	if (rc < 0) {
 		nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(spdk_nvme_ctrlr_get_transport_id(ctrlr));
 		assert(nvme_bdev_ctrlr != NULL);
-		bdev_nvme_reset(nvme_bdev_ctrlr, NULL);
+		bdev_nvme_reset(nvme_bdev_ctrlr, NULL, true);
 	}
 
 	return rc;
@@ -447,10 +448,12 @@ _bdev_nvme_reset_destroy_qpair(struct spdk_io_channel_iter *i)
 }
 
 static int
-bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bio)
+bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bio, bool failover)
 {
 	struct spdk_io_channel *ch;
 	struct nvme_io_channel *nvme_ch;
+	struct nvme_bdev_ctrlr_trid *multipath_trid, *tmp_trid;
+	int rc;
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	if (nvme_bdev_ctrlr->destruct) {
@@ -480,6 +483,25 @@ bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bi
 			spdk_put_io_channel(ch);
 		}
 		return 0;
+	}
+
+	if (failover) {
+		tmp_trid = TAILQ_FIRST(&nvme_bdev_ctrlr->multipath_trids);
+		assert(tmp_trid);
+		assert(&tmp_trid->trid == nvme_bdev_ctrlr->trid);
+		multipath_trid = TAILQ_NEXT(tmp_trid, link);
+
+		if (multipath_trid) {
+			spdk_nvme_ctrlr_fail(nvme_bdev_ctrlr->ctrlr);
+			nvme_bdev_ctrlr->trid = &multipath_trid->trid;
+			/** Shuffle the old trid to the end of the list and use the new one.
+			 * Allows for round robin through multiple connections.
+			 */
+			rc = spdk_nvme_ctrlr_set_trid(nvme_bdev_ctrlr->ctrlr, &multipath_trid->trid);
+			assert(rc == 0);
+			TAILQ_REMOVE(&nvme_bdev_ctrlr->multipath_trids, tmp_trid, link);
+			TAILQ_INSERT_TAIL(&nvme_bdev_ctrlr->multipath_trids, tmp_trid, link);
+		}
 	}
 
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
@@ -592,7 +614,7 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 				       bdev_io->u.bdev.num_blocks);
 
 	case SPDK_BDEV_IO_TYPE_RESET:
-		return bdev_nvme_reset(nbdev->nvme_bdev_ctrlr, nbdev_io);
+		return bdev_nvme_reset(nbdev->nvme_bdev_ctrlr, nbdev_io, false);
 
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		return bdev_nvme_flush(nbdev,
@@ -1129,7 +1151,7 @@ nvme_abort_cpl(void *ctx, const struct spdk_nvme_cpl *cpl)
 		SPDK_WARNLOG("Abort failed. Resetting controller.\n");
 		nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(spdk_nvme_ctrlr_get_transport_id(ctrlr));
 		assert(nvme_bdev_ctrlr != NULL);
-		bdev_nvme_reset(nvme_bdev_ctrlr, NULL);
+		bdev_nvme_reset(nvme_bdev_ctrlr, NULL, false);
 	}
 }
 
@@ -1148,7 +1170,7 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 		SPDK_ERRLOG("Controller Fatal Status, reset required\n");
 		nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(spdk_nvme_ctrlr_get_transport_id(ctrlr));
 		assert(nvme_bdev_ctrlr != NULL);
-		bdev_nvme_reset(nvme_bdev_ctrlr, NULL);
+		bdev_nvme_reset(nvme_bdev_ctrlr, NULL, false);
 		return;
 	}
 
@@ -1168,7 +1190,7 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 	case SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET:
 		nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(spdk_nvme_ctrlr_get_transport_id(ctrlr));
 		assert(nvme_bdev_ctrlr != NULL);
-		bdev_nvme_reset(nvme_bdev_ctrlr, NULL);
+		bdev_nvme_reset(nvme_bdev_ctrlr, NULL, false);
 		break;
 	case SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE:
 		SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "No action for nvme controller timeout.\n");
