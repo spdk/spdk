@@ -47,15 +47,7 @@
 #include "spdk/util.h"
 #include "spdk/json.h"
 
-/* Undefine this to require an RPC to enable IDXD. */
-#undef DEVELOPER_DEBUG_MODE
-
-#ifdef DEVELOPER_DEBUG_MODE
-static bool g_idxd_enable = true;
-#else
 static bool g_idxd_enable = false;
-#endif
-
 uint32_t g_config_number;
 
 enum channel_state {
@@ -676,10 +668,6 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev)
 	if (spdk_pci_device_claim(pci_dev) < 0) {
 		return false;
 	}
-
-#ifdef DEVELOPER_DEBUG_MODE
-	spdk_idxd_set_config(0);
-#endif
 
 	return true;
 }
