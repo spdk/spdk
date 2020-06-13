@@ -1686,7 +1686,7 @@ nvme_ctrlr_populate_namespaces_done(struct nvme_async_probe_ctx *ctx)
 	uint32_t		i, nsid;
 	size_t			j;
 
-	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(&ctx->trid);
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name(ctx->base_name);
 	assert(nvme_bdev_ctrlr != NULL);
 
 	/*
@@ -1849,14 +1849,23 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 {
 	struct nvme_probe_skip_entry	*entry, *tmp;
 	struct nvme_async_probe_ctx	*ctx;
+	struct nvme_bdev_ctrlr		*existing_ctrlr;
+	int				rc;
 
-	if (nvme_bdev_ctrlr_get(trid) != NULL) {
+	existing_ctrlr = nvme_bdev_ctrlr_get_by_name(base_name);
+	if (existing_ctrlr) {
+		if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
+			SPDK_ERRLOG("A controller with the provided name (name: %s) already exists with transport type PCIe. PCIe multipath is not supported.\n",
+				    base_name);
+			return -EEXIST;
+		}
+		rc = bdev_nvme_add_trid(existing_ctrlr->name, trid);
+		if (rc) {
+			return rc;
+		}
+		/* TODO expand this check to include both the host and target TRIDs. Only if both are the same should we fail. */
+	} else if (nvme_bdev_ctrlr_get(trid) != NULL) {
 		SPDK_ERRLOG("A controller with the provided trid (traddr: %s) already exists.\n", trid->traddr);
-		return -EEXIST;
-	}
-
-	if (nvme_bdev_ctrlr_get_by_name(base_name)) {
-		SPDK_ERRLOG("A controller with the provided name (%s) already exists.\n", base_name);
 		return -EEXIST;
 	}
 
@@ -1881,6 +1890,11 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	ctx->cb_ctx = cb_ctx;
 	ctx->prchk_flags = prchk_flags;
 	ctx->trid = *trid;
+
+	if (existing_ctrlr) {
+		nvme_ctrlr_populate_namespaces_done(ctx);
+		return 0;
+	}
 
 	spdk_nvme_ctrlr_get_default_ctrlr_opts(&ctx->opts, sizeof(ctx->opts));
 	ctx->opts.transport_retry_count = g_opts.retry_count;

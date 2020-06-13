@@ -1771,7 +1771,10 @@ Example response:
 
 ## bdev_nvme_attach_controller {#rpc_bdev_nvme_attach_controller}
 
-Construct @ref bdev_config_nvme
+Construct @ref bdev_config_nvme. This RPC can also be used to add additional paths to an existing controller to enable
+multipathing. This is done by specifying the `name` parameter as an existing controller. When adding an additional
+path, the hostnqn, hostsvcid, hostaddr, prchk_reftag, and prchk_guard_arguments must not be specified and are assumed
+to have the same value as the existing path.
 
 ### Result
 

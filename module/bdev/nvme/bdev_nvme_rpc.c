@@ -257,6 +257,7 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	struct spdk_nvme_transport_id trid = {};
 	struct spdk_nvme_host_id hostid = {};
 	uint32_t prchk_flags = 0;
+	struct nvme_bdev_ctrlr *ctrlr = NULL;
 	int rc;
 
 	ctx = calloc(1, sizeof(*ctx));
@@ -287,6 +288,8 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	rc = spdk_nvme_transport_id_parse_trtype(&trid.trtype, ctx->req.trtype);
 	assert(rc == 0);
 
+	ctrlr = nvme_bdev_ctrlr_get_by_name(ctx->req.name);
+
 	/* Parse traddr */
 	snprintf(trid.traddr, sizeof(trid.traddr), "%s", ctx->req.traddr);
 
@@ -316,6 +319,11 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 		snprintf(trid.subnqn, sizeof(trid.subnqn), "%s", ctx->req.subnqn);
 	}
 
+	if (ctrlr && (ctx->req.hostaddr || ctx->req.hostnqn || ctx->req.hostsvcid || ctx->req.prchk_guard ||
+		      ctx->req.prchk_reftag)) {
+		goto conflicting_arguments;
+	}
+
 	if (ctx->req.hostaddr) {
 		snprintf(hostid.hostaddr, sizeof(hostid.hostaddr), "%s", ctx->req.hostaddr);
 	}
@@ -343,6 +351,9 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 
 	return;
 
+conflicting_arguments:
+	spdk_jsonrpc_send_error_response_fmt(request, -EINVAL,
+					     "Invalid agrgument list. Existing controller name cannot be combined with host information or PI options.\n");
 cleanup:
 	free_rpc_bdev_nvme_attach_controller(&ctx->req);
 	free(ctx);
