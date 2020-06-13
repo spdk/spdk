@@ -610,11 +610,10 @@ _nvme_ctrlr_submit_abort_request(struct spdk_nvme_ctrlr *ctrlr,
 static void
 nvme_ctrlr_cmd_abort_cpl(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
-	struct nvme_request	*req;
+	struct nvme_request	*req = ctx;
 	struct spdk_nvme_ctrlr	*ctrlr;
 
-	req = ctx;
-	ctrlr = (struct spdk_nvme_ctrlr *)req->user_buffer;
+	ctrlr = req->qpair->ctrlr;
 
 	ctrlr->outstanding_aborts--;
 	nvme_ctrlr_retry_queued_abort(ctrlr);
@@ -629,12 +628,9 @@ spdk_nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair 
 	int rc;
 	struct nvme_request *req;
 	struct spdk_nvme_cmd *cmd;
-	uint16_t sqid;
 
-	if (qpair) {
-		sqid = qpair->id;
-	} else {
-		sqid = ctrlr->adminq->id; /* 0 */
+	if (qpair == NULL) {
+		qpair = ctrlr->adminq;
 	}
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
@@ -646,12 +642,10 @@ spdk_nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair 
 	req->cb_arg = req;
 	req->user_cb_fn = cb_fn;
 	req->user_cb_arg = cb_arg;
-	req->user_buffer = ctrlr; /* This is a hack to get to the ctrlr in the
-				   * completion handler. */
 
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_ABORT;
-	cmd->cdw10_bits.abort.sqid = sqid;
+	cmd->cdw10_bits.abort.sqid = qpair->id;
 	cmd->cdw10_bits.abort.cid = cid;
 
 	rc = _nvme_ctrlr_submit_abort_request(ctrlr, req);
