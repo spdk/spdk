@@ -654,6 +654,173 @@ spdk_nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair 
 	return rc;
 }
 
+static void
+nvme_complete_abort_request(void *ctx, const struct spdk_nvme_cpl *cpl)
+{
+	struct nvme_request *req = ctx;
+	struct nvme_request *parent = req->parent;
+	struct spdk_nvme_ctrlr *ctrlr;
+
+	ctrlr = req->qpair->ctrlr;
+
+	ctrlr->outstanding_aborts--;
+	nvme_ctrlr_retry_queued_abort(ctrlr);
+
+	nvme_request_remove_child(parent, req);
+
+	if (!spdk_nvme_cpl_is_abort_success(cpl)) {
+		parent->parent_status.cdw0 |= 1U;
+	}
+
+	if (parent->num_children == 0) {
+		nvme_complete_request(parent->cb_fn, parent->cb_arg, parent->qpair,
+				      parent, &parent->parent_status);
+		nvme_free_request(parent);
+	}
+}
+
+static int
+nvme_request_add_abort(struct nvme_request *req, void *arg)
+{
+	struct nvme_request *parent = arg;
+	struct nvme_request *child;
+	void *cmd_cb_arg;
+
+	cmd_cb_arg = parent->user_cb_arg;
+
+	if (req->cb_arg != cmd_cb_arg &&
+	    (req->parent == NULL || req->parent->cb_arg != cmd_cb_arg)) {
+		return 0;
+	}
+
+	child = nvme_allocate_request_null(parent->qpair->ctrlr->adminq,
+					   nvme_complete_abort_request, NULL);
+	if (child == NULL) {
+		return -ENOMEM;
+	}
+
+	child->cb_arg = child;
+
+	child->cmd.opc = SPDK_NVME_OPC_ABORT;
+	/* Copy SQID from the parent. */
+	child->cmd.cdw10_bits.abort.sqid = parent->cmd.cdw10_bits.abort.sqid;
+	child->cmd.cdw10_bits.abort.cid = req->cmd.cid;
+
+	child->parent = parent;
+
+	TAILQ_INSERT_TAIL(&parent->children, child, child_tailq);
+	parent->num_children++;
+
+	return 0;
+}
+
+int
+spdk_nvme_ctrlr_cmd_abort_ext(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
+			      void *cmd_cb_arg,
+			      spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	int rc = 0;
+	struct nvme_request *parent, *child, *tmp;
+	bool child_failed = false;
+	int aborted = 0;
+
+	if (cmd_cb_arg == NULL) {
+		return -EINVAL;
+	}
+
+	pthread_mutex_lock(&ctrlr->ctrlr_lock);
+
+	if (qpair == NULL) {
+		qpair = ctrlr->adminq;
+	}
+
+	parent = nvme_allocate_request_null(ctrlr->adminq, cb_fn, cb_arg);
+	if (parent == NULL) {
+		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
+
+		return -ENOMEM;
+	}
+
+	TAILQ_INIT(&parent->children);
+	parent->num_children = 0;
+
+	parent->cmd.opc = SPDK_NVME_OPC_ABORT;
+	memset(&parent->parent_status, 0, sizeof(struct spdk_nvme_cpl));
+
+	/* Hold SQID that the requests to abort are associated with.
+	 * This will be copied to the children.
+	 *
+	 * CID is not set here because the parent is not submitted directly
+	 * and CID is not determined until request to abort is found.
+	 */
+	parent->cmd.cdw10_bits.abort.sqid = qpair->id;
+
+	/* This is used to find request to abort. */
+	parent->user_cb_arg = cmd_cb_arg;
+
+	/* Add an abort request for each outstanding request which has cmd_cb_arg
+	 * as its callback context.
+	 */
+	rc = nvme_transport_qpair_iterate_requests(qpair, nvme_request_add_abort, parent);
+	if (rc != 0) {
+		/* Free abort requests already added. */
+		child_failed = true;
+	}
+
+	TAILQ_FOREACH_SAFE(child, &parent->children, child_tailq, tmp) {
+		if (spdk_likely(!child_failed)) {
+			rc = _nvme_ctrlr_submit_abort_request(ctrlr, child);
+			if (spdk_unlikely(rc != 0)) {
+				child_failed = true;
+			}
+		} else {
+			/* Free remaining abort requests. */
+			nvme_request_remove_child(parent, child);
+			nvme_free_request(child);
+		}
+	}
+
+	if (spdk_likely(!child_failed)) {
+		/* There is no error so far. Abort requests were submitted successfully
+		 * or there was no outstanding request to abort.
+		 *
+		 * Hence abort queued requests which has cmd_cb_arg as its callback
+		 * context next.
+		 */
+		aborted = nvme_qpair_abort_queued_reqs(qpair, cmd_cb_arg);
+		if (parent->num_children == 0) {
+			/* There was no outstanding request to abort. */
+			if (aborted > 0) {
+				/* The queued requests were successfully aborted. Hence
+				 * complete the parent request with success synchronously.
+				 */
+				nvme_complete_request(parent->cb_fn, parent->cb_arg, parent->qpair,
+						      parent, &parent->parent_status);
+				nvme_free_request(parent);
+			} else {
+				/* There was no queued request to abort. */
+				rc = -ENOENT;
+			}
+		}
+	} else {
+		/* Failed to add or submit abort request. */
+		if (parent->num_children != 0) {
+			/* Return success since we must wait for those children
+			 * to complete but set the parent request to failure.
+			 */
+			parent->parent_status.cdw0 |= 1U;
+			rc = 0;
+		}
+	}
+
+	if (rc != 0) {
+		nvme_free_request(parent);
+	}
+
+	pthread_mutex_unlock(&ctrlr->ctrlr_lock);
+	return rc;
+}
+
 int
 nvme_ctrlr_cmd_fw_commit(struct spdk_nvme_ctrlr *ctrlr,
 			 const struct spdk_nvme_fw_commit *fw_commit,

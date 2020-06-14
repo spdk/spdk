@@ -1602,6 +1602,25 @@ int spdk_nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr,
 			      void *cb_arg);
 
 /**
+ * Abort previously submitted commands which have cmd_cb_arg as its callback argument.
+ *
+ * \param ctrlr NVMe controller to which the commands were submitted.
+ * \param qpair NVMe queue pair to which the commands were submitted. For admin
+ * commands, pass NULL for the qpair.
+ * \param cmd_cb_arg Callback argument for the NVMe commands which this function
+ * attempts to abort.
+ * \param cb_fn Callback function to invoke when this function has completed.
+ * \param cb_arg Argument to pass to the callback function.
+ *
+ * \return 0 if successfully submitted, negated errno otherwise.
+ */
+int spdk_nvme_ctrlr_cmd_abort_ext(struct spdk_nvme_ctrlr *ctrlr,
+				  struct spdk_nvme_qpair *qpair,
+				  void *cmd_cb_arg,
+				  spdk_nvme_cmd_cb cb_fn,
+				  void *cb_arg);
+
+/**
  * Set specific feature for the given NVMe controller.
  *
  * This function is thread safe and can be called at any point while the controller

@@ -62,6 +62,7 @@
 	spdk_nvme_ctrlr_cmd_get_log_page;
 	spdk_nvme_ctrlr_cmd_get_log_page_ext;
 	spdk_nvme_ctrlr_cmd_abort;
+	spdk_nvme_ctrlr_cmd_abort_ext;
 	spdk_nvme_ctrlr_cmd_set_feature;
 	spdk_nvme_ctrlr_cmd_get_feature;
 	spdk_nvme_ctrlr_cmd_get_feature_ns;
