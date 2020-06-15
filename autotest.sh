@@ -173,6 +173,9 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
 		run_test "blockdev_general" test/bdev/blockdev.sh
 		run_test "bdev_raid" test/bdev/bdev_raid.sh
+		if [[ $(uname -s) == Linux ]]; then
+			run_test "spdk_dd" test/dd/dd.sh
+		fi
 	fi
 
 	if [ $SPDK_TEST_JSON -eq 1 ]; then
