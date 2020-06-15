@@ -535,6 +535,73 @@ test_reservation_cmds_conflict(void)
 	ut_deinit_reservation_test();
 }
 
+static void
+test_scsi2_reserve_release(void)
+{
+	struct spdk_scsi_task task = {0};
+	uint8_t cdb[32] = {};
+	int rc;
+
+	task.lun = &g_lun;
+	task.target_port = &g_t_port_0;
+	task.cdb = cdb;
+
+	ut_init_reservation_test();
+
+	/* Test Case: SPC2 RESERVE from Host A */
+	task.initiator_port = &g_i_port_a;
+	task.cdb[0] = SPDK_SPC2_RESERVE_10;
+	rc = scsi2_reserve(&task, task.cdb);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_lun.reservation.holder != NULL);
+	SPDK_CU_ASSERT_FATAL(g_lun.reservation.flags == SCSI_SPC2_RESERVE);
+
+	/* Test Case: READ command from Host B */
+	task.initiator_port = &g_i_port_b;
+	task.cdb[0] = SPDK_SBC_READ_10;
+	task.status = 0;
+	rc = scsi2_reserve_check(&task);
+	SPDK_CU_ASSERT_FATAL(rc < 0);
+	SPDK_CU_ASSERT_FATAL(task.status == SPDK_SCSI_STATUS_RESERVATION_CONFLICT);
+
+	/* Test Case: SPDK_SPC2_RELEASE10 command from Host B */
+	task.initiator_port = &g_i_port_b;
+	task.cdb[0] = SPDK_SPC2_RELEASE_10;
+	task.status = 0;
+	rc = scsi2_reserve_check(&task);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	rc = scsi2_release(&task);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_lun.reservation.holder == NULL);
+	SPDK_CU_ASSERT_FATAL(g_lun.reservation.flags == 0);
+
+	/* Test Case: SPC2 RESERVE from Host B */
+	task.initiator_port = &g_i_port_b;
+	task.cdb[0] = SPDK_SPC2_RESERVE_10;
+	rc = scsi2_reserve(&task, task.cdb);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_lun.reservation.holder != NULL);
+	SPDK_CU_ASSERT_FATAL(g_lun.reservation.flags == SCSI_SPC2_RESERVE);
+
+	/* Test Case: READ command from Host B */
+	task.initiator_port = &g_i_port_b;
+	task.cdb[0] = SPDK_SBC_READ_10;
+	rc = scsi2_reserve_check(&task);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	/* Test Case: SPDK_SPC2_RELEASE10 command from Host A */
+	task.initiator_port = &g_i_port_a;
+	task.cdb[0] = SPDK_SPC2_RELEASE_10;
+
+	rc = scsi2_release(&task);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_lun.reservation.holder == NULL);
+	SPDK_CU_ASSERT_FATAL(g_lun.reservation.flags == 0);
+
+	ut_deinit_reservation_test();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -550,6 +617,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_reservation_preempt_non_all_regs);
 	CU_ADD_TEST(suite, test_reservation_preempt_all_regs);
 	CU_ADD_TEST(suite, test_reservation_cmds_conflict);
+	CU_ADD_TEST(suite, test_scsi2_reserve_release);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
