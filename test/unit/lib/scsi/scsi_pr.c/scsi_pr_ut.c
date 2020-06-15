@@ -602,6 +602,50 @@ test_scsi2_reserve_release(void)
 	ut_deinit_reservation_test();
 }
 
+static void
+test_pr_with_scsi2_reserve_release(void)
+{
+	struct spdk_scsi_task task = {0};
+	uint8_t cdb[32] = {};
+	int rc;
+
+	task.lun = &g_lun;
+	task.target_port = &g_t_port_0;
+	task.cdb = cdb;
+
+	ut_init_reservation_test();
+	test_build_registrants();
+
+	task.initiator_port = &g_i_port_a;
+	task.status = 0;
+	/* Test Case: Host A acquires the reservation */
+	rc = scsi_pr_out_reserve(&task, SPDK_SCSI_PR_WRITE_EXCLUSIVE_REGS_ONLY,
+				 0xa, 0, 0, 0);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_lun.reservation.rtype == SPDK_SCSI_PR_WRITE_EXCLUSIVE_REGS_ONLY);
+	SPDK_CU_ASSERT_FATAL(g_lun.reservation.crkey == 0xa);
+
+	/* Test Case: SPDK_SPC2_RESERVE_10 command from Host B */
+	task.initiator_port = &g_i_port_b;
+	task.cdb[0] = SPDK_SPC2_RESERVE_10;
+	/* SPC2 RESERVE/RELEASE will pass to scsi2_reserve/release */
+	rc = scsi_pr_check(&task);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	/* do nothing with PR but have good status */
+	rc = scsi2_reserve(&task, task.cdb);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_lun.reservation.holder != NULL);
+	SPDK_CU_ASSERT_FATAL(g_lun.reservation.rtype == SPDK_SCSI_PR_WRITE_EXCLUSIVE_REGS_ONLY);
+
+	rc = scsi2_release(&task);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_lun.reservation.holder != NULL);
+	SPDK_CU_ASSERT_FATAL(g_lun.reservation.rtype == SPDK_SCSI_PR_WRITE_EXCLUSIVE_REGS_ONLY);
+
+	ut_deinit_reservation_test();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -618,6 +662,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_reservation_preempt_all_regs);
 	CU_ADD_TEST(suite, test_reservation_cmds_conflict);
 	CU_ADD_TEST(suite, test_scsi2_reserve_release);
+	CU_ADD_TEST(suite, test_pr_with_scsi2_reserve_release);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
