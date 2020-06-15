@@ -96,7 +96,7 @@ int main(int argc, char **argv)
 
 	spdk_app_opts_init(&opts);
 	opts.name = "spdk_mkfs";
-	opts.config_file = argv[1];
+	opts.json_config_file = argv[1];
 	opts.reactor_mask = "0x3";
 	opts.shutdown_cb = NULL;
 

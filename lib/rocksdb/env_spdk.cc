@@ -734,8 +734,9 @@ SpdkEnv::SpdkEnv(Env *base_env, const std::string &dir, const std::string &conf,
 
 	spdk_app_opts_init(opts);
 	opts->name = "rocksdb";
-	opts->config_file = mConfig.c_str();
+	opts->json_config_file = mConfig.c_str();
 	opts->shutdown_cb = rocksdb_shutdown;
+	opts->tpoint_group_mask = "0x80";
 
 	spdk_fs_set_cache_size(cache_size_in_mb);
 	g_bdev_name = mBdev;

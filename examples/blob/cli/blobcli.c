@@ -52,8 +52,8 @@
 static void cli_start(void *arg1);
 
 static const char *program_name = "blobcli";
-/* default name for .conf file, any name can be used however with -c switch */
-static const char *program_conf = "blobcli.conf";
+/* default name for .json file, any name can be used however with -j switch */
+static const char *program_conf = "blobcli.json";
 
 /*
  * CMD mode runs one command at a time which can be annoying as the init takes
@@ -179,7 +179,7 @@ usage(struct cli_context_t *cli_context, char *msg)
 
 	if (!cli_context || cli_context->cli_mode == CLI_MODE_CMD) {
 		printf("Version %s\n", SPDK_VERSION_STRING);
-		printf("Usage: %s [-c SPDK config_file] Command\n", program_name);
+		printf("Usage: %s [-j SPDK josn_config_file] Command\n", program_name);
 		printf("\n%s is a command line tool for interacting with blobstore\n",
 		       program_name);
 		printf("on the underlying device specified in the conf file passed\n");
@@ -1042,7 +1042,7 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 	int cmd_chosen = 0;
 	char resp;
 
-	while ((op = getopt(argc, argv, "b:c:d:f:hil:m:n:p:r:s:DST:Xx:")) != -1) {
+	while ((op = getopt(argc, argv, "b:d:f:hij:l:m:n:p:r:s:DST:Xx:")) != -1) {
 		switch (op) {
 		case 'b':
 			if (strcmp(cli_context->bdev_name, "") == 0) {
@@ -1050,13 +1050,6 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 			} else {
 				printf("Current setting for -b is: %s\n", cli_context->bdev_name);
 				usage(cli_context, "ERROR: -b option can only be set once.\n");
-			}
-			break;
-		case 'c':
-			if (cli_context->app_started == false) {
-				cli_context->config_file = optarg;
-			} else {
-				usage(cli_context, "ERROR: -c option not valid during shell mode.\n");
 			}
 			break;
 		case 'D':
@@ -1104,6 +1097,13 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 			} else {
 				cmd_chosen++;
 				cli_context->action = CLI_INIT_BS;
+			}
+			break;
+		case 'j':
+			if (cli_context->app_started == false) {
+				cli_context->config_file = optarg;
+			} else {
+				usage(cli_context, "ERROR: -j option not valid during shell mode.\n");
 			}
 			break;
 		case 'r':
@@ -1533,8 +1533,8 @@ main(int argc, char **argv)
 	/* if the config file doesn't exist, tell them how to make one */
 	if (access(cli_context->config_file, F_OK) == -1) {
 		printf("Error: No config file found.\n");
-		printf("To create a config file named 'blobcli.conf' for your NVMe device:\n");
-		printf("   <path to spdk>/scripts/gen_nvme.sh > blobcli.conf\n");
+		printf("To create a config file named 'blobcli.json' for your NVMe device:\n");
+		printf("   <path to spdk>/scripts/gen_nvme.sh --json > blobcli.json\n");
 		printf("and then re-run the cli tool.\n");
 		exit(-1);
 	}
@@ -1555,7 +1555,7 @@ main(int argc, char **argv)
 	/* Set default values in opts struct along with name and conf file. */
 	spdk_app_opts_init(&opts);
 	opts.name = "blobcli";
-	opts.config_file = cli_context->config_file;
+	opts.json_config_file = cli_context->config_file;
 
 	cli_context->app_started = true;
 	rc = spdk_app_start(&opts, cli_start, cli_context);

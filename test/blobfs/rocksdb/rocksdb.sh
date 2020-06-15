@@ -43,13 +43,14 @@ run_step() {
 }
 
 run_bsdump() {
-	$SPDK_EXAMPLE_DIR/blobcli -c $ROCKSDB_CONF -b Nvme0n1 -D &> bsdump.txt
+	# 0x80 is the bit mask for BlobFS tracepoints
+	$SPDK_EXAMPLE_DIR/blobcli -j $ROCKSDB_CONF -b Nvme0n1 --tpoint-group-mask 0x80 &> bsdump.txt
 }
 
 # In the autotest job, we copy the rocksdb source to just outside the spdk directory.
 DB_BENCH_DIR="$rootdir/../rocksdb"
 DB_BENCH=$DB_BENCH_DIR/db_bench
-ROCKSDB_CONF=$testdir/rocksdb.conf
+ROCKSDB_CONF=$testdir/rocksdb.json
 
 if [ ! -e $DB_BENCH_DIR ]; then
 	echo $DB_BENCH_DIR does not exist
@@ -74,15 +75,15 @@ popd
 
 timing_exit db_bench_build
 
-$rootdir/scripts/gen_nvme.sh > $ROCKSDB_CONF
-# 0x80 is the bit mask for BlobFS tracepoints
-echo "[Global]" >> $ROCKSDB_CONF
-echo "TpointGroupMask 0x80" >> $ROCKSDB_CONF
+echo '{"subsystems": [' > $ROCKSDB_CONF
+$rootdir/scripts/gen_nvme.sh --json >> $ROCKSDB_CONF
+echo ']}' >> $ROCKSDB_CONF
 
 trap 'dump_db_bench_on_err; run_bsdump || :; rm -f $ROCKSDB_CONF; sanitize_results; exit 1' SIGINT SIGTERM EXIT
 
 if [ -z "$SKIP_MKFS" ]; then
-	run_test "blobfs_mkfs" $rootdir/test/blobfs/mkfs/mkfs $ROCKSDB_CONF Nvme0n1
+	# 0x80 is the bit mask for BlobFS tracepoints
+	run_test "blobfs_mkfs" $rootdir/test/blobfs/mkfs/mkfs $ROCKSDB_CONF Nvme0n1 --tpoint-group-mask 0x80
 fi
 
 mkdir -p $output_dir/rocksdb
