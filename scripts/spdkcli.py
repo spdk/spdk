@@ -71,12 +71,13 @@ def main():
         spdk_shell.con.display("SPDK CLI v0.1")
         spdk_shell.con.display("")
 
-        try:
-            spdk_shell.run_interactive()
-        except (JSONRPCException, ExecutionError) as e:
-            spdk_shell.log.error("%s" % e)
-        except BrokenPipeError as e:
-            spdk_shell.log.error("Lost connection with SPDK: %s" % e)
+        while not spdk_shell._exit:
+            try:
+                spdk_shell.run_interactive()
+            except (JSONRPCException, ExecutionError) as e:
+                spdk_shell.log.error("%s" % e)
+            except BrokenPipeError as e:
+                spdk_shell.log.error("Lost connection with SPDK: %s" % e)
 
 
 if __name__ == "__main__":
