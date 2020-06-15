@@ -14,9 +14,9 @@ VHOST_APP=("$_app_dir/vhost")
 if [[ -e $_root/include/spdk/config.h ]]; then
 	if [[ $(< "$_root/include/spdk/config.h") == *"#define SPDK_CONFIG_DEBUG"* ]] \
 		&& ((SPDK_AUTOTEST_DEBUG_APPS)); then
-		VHOST_FUZZ_APP+=("--log-flags=all")
-		ISCSI_APP+=("--log-flags=all")
-		NVMF_APP+=("--log-flags=all")
-		VHOST_APP+=("--log-flags=all")
+		VHOST_FUZZ_APP+=("--logflag=all")
+		ISCSI_APP+=("--logflag=all")
+		NVMF_APP+=("--logflag=all")
+		VHOST_APP+=("--logflag=all")
 	fi
 fi
