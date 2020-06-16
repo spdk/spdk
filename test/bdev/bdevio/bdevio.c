@@ -419,6 +419,7 @@ static bool
 blockdev_io_valid_blocks(struct spdk_bdev *bdev, uint64_t data_length)
 {
 	if (data_length < spdk_bdev_get_block_size(bdev) ||
+	    data_length % spdk_bdev_get_block_size(bdev) ||
 	    data_length / spdk_bdev_get_block_size(bdev) > spdk_bdev_get_num_blocks(bdev)) {
 		return false;
 	}
