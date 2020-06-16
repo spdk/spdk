@@ -184,6 +184,24 @@ spdk_accel_batch_prep_copy(struct spdk_accel_task *accel_req, struct spdk_io_cha
 			_accel_engine_done);
 }
 
+/* Accel framework public API for batch prep_dualcast function */
+int
+spdk_accel_batch_prep_dualcast(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
+			       struct spdk_accel_batch *batch, void *dst1, void *dst2, void *src, uint64_t nbytes,
+			       spdk_accel_completion_cb cb)
+{
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+
+	if ((uintptr_t)dst1 & (ALIGN_4K - 1) || (uintptr_t)dst2 & (ALIGN_4K - 1)) {
+		SPDK_ERRLOG("Dualcast requires 4K alignment on dst addresses\n");
+		return -EINVAL;
+	}
+
+	accel_req->cb = cb;
+	return accel_ch->engine->batch_prep_dualcast(accel_req->offload_ctx, accel_ch->ch,
+			batch, dst1, dst2, src,	nbytes, _accel_engine_done);
+}
+
 /* Accel framework public API for compare function */
 int
 spdk_accel_submit_compare(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
@@ -440,16 +458,15 @@ sw_accel_batch_start(struct spdk_io_channel *ch)
 	return (struct spdk_accel_batch *)&sw_ch->batch;
 }
 
-static int
-sw_accel_batch_prep_copy(void *cb_arg, struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
-			 void *dst, void *src, uint64_t nbytes, spdk_accel_completion_cb cb)
+static struct sw_accel_op *
+_prep_op(void *cb_arg, struct sw_accel_io_channel *sw_ch, struct spdk_accel_batch *batch,
+	 spdk_accel_completion_cb cb)
 {
 	struct sw_accel_op *op;
-	struct sw_accel_io_channel *sw_ch = spdk_io_channel_get_ctx(ch);
 
 	if ((struct spdk_accel_batch *)&sw_ch->batch != batch) {
 		SPDK_ERRLOG("Invalid batch\n");
-		return -EINVAL;
+		return NULL;
 	}
 
 	if (!TAILQ_EMPTY(&sw_ch->op_pool)) {
@@ -457,16 +474,57 @@ sw_accel_batch_prep_copy(void *cb_arg, struct spdk_io_channel *ch, struct spdk_a
 		TAILQ_REMOVE(&sw_ch->op_pool, op, link);
 	} else {
 		SPDK_ERRLOG("Ran out of operations for batch\n");
-		return -ENOMEM;
+		return NULL;
 	}
 
 	op->cb_arg = cb_arg;
 	op->cb_fn = cb;
 	op->sw_ch = sw_ch;
+
+	return op;
+}
+
+static int
+sw_accel_batch_prep_copy(void *cb_arg, struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
+			 void *dst, void *src, uint64_t nbytes, spdk_accel_completion_cb cb)
+{
+	struct sw_accel_op *op;
+	struct sw_accel_io_channel *sw_ch = spdk_io_channel_get_ctx(ch);
+
+	op = _prep_op(cb_arg, sw_ch, batch, cb);
+	if (op == NULL) {
+		return -EINVAL;
+	}
+
+	/* Command specific. */
 	op->src = src;
 	op->dst = dst;
 	op->nbytes = nbytes;
 	op->op_code = SW_ACCEL_OPCODE_MEMMOVE;
+	TAILQ_INSERT_TAIL(&sw_ch->batch, op, link);
+
+	return 0;
+}
+
+static int
+sw_accel_batch_prep_dualcast(void *cb_arg, struct spdk_io_channel *ch,
+			     struct spdk_accel_batch *batch,
+			     void *dst1, void *dst2, void *src, uint64_t nbytes, spdk_accel_completion_cb cb)
+{
+	struct sw_accel_op *op;
+	struct sw_accel_io_channel *sw_ch = spdk_io_channel_get_ctx(ch);
+
+	op = _prep_op(cb_arg, sw_ch, batch, cb);
+	if (op == NULL) {
+		return -EINVAL;
+	}
+
+	/* Command specific. */
+	op->src = src;
+	op->dst = dst1;
+	op->dst2 = dst2;
+	op->nbytes = nbytes;
+	op->op_code = SW_ACCEL_OPCODE_DUALCAST;
 	TAILQ_INSERT_TAIL(&sw_ch->batch, op, link);
 
 	return 0;
@@ -494,6 +552,10 @@ sw_accel_batch_submit(void *cb_arg, struct spdk_io_channel *ch, struct spdk_acce
 		switch (op->op_code) {
 		case SW_ACCEL_OPCODE_MEMMOVE:
 			memcpy(op->dst, op->src, op->nbytes);
+			break;
+		case SW_ACCEL_OPCODE_DUALCAST:
+			memcpy(op->dst, op->src, op->nbytes);
+			memcpy(op->dst2, op->src, op->nbytes);
 			break;
 		default:
 			assert(false);
@@ -598,6 +660,7 @@ static struct spdk_accel_engine sw_accel_engine = {
 	.batch_get_max		= sw_accel_batch_get_max,
 	.batch_create		= sw_accel_batch_start,
 	.batch_prep_copy	= sw_accel_batch_prep_copy,
+	.batch_prep_dualcast	= sw_accel_batch_prep_dualcast,
 	.batch_submit		= sw_accel_batch_submit,
 	.compare		= sw_accel_submit_compare,
 	.fill			= sw_accel_submit_fill,

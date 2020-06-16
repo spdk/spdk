@@ -461,6 +461,11 @@ _batch_prep_cmd(struct worker_thread *worker, struct ap_task *task, struct spdk_
 						worker->ch, batch, task->dst,
 						task->src, g_xfer_size_bytes, accel_done);
 		break;
+	case ACCEL_DUALCAST:
+		rc = spdk_accel_batch_prep_dualcast(__accel_task_from_ap_task(task),
+						    worker->ch, batch, task->dst, task->dst2,
+						    task->src, g_xfer_size_bytes, accel_done);
+		break;
 	default:
 		assert(false);
 		break;
@@ -511,11 +516,9 @@ _init_thread(void *arg1)
 	g_num_workers++;
 	pthread_mutex_unlock(&g_workers_lock);
 
-	/* TODO: remove the check for ACCEL_COPY as other workloads are enabled for
-	 * batching. It's a lot of code per workload so they are beeing added in
-	 * separate patches.
-	 */
-	if (g_workload_selection == ACCEL_COPY && ((g_capabilites & ACCEL_BATCH) == ACCEL_BATCH) &&
+	/* TODO: remove the workload selection checks once all are added. */
+	if ((g_workload_selection == ACCEL_COPY || g_workload_selection == ACCEL_DUALCAST)
+	    && ((g_capabilites & ACCEL_BATCH) == ACCEL_BATCH) &&
 	    g_queue_depth > 1) {
 
 		/* Selected engine supports batching and we have enough, so do it. */

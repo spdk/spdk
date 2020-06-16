@@ -189,6 +189,27 @@ int spdk_accel_batch_prep_copy(struct spdk_accel_task *accel_req, struct spdk_io
 			       uint64_t nbytes, spdk_accel_completion_cb cb);
 
 /**
+ * Synchronous call to prepare a dualcast request into a previously initialized batch
+ *  created with spdk_accel_batch_create(). The callback will be called when the dualcast
+ *  completes after the batch has been submitted by an asynchronous call to
+ *  spdk_accel_batch_submit().
+ *
+ * \param accel_req Accel request task.
+ * \param ch I/O channel associated with this call.
+ * \param batch Handle provided when the batch was started with spdk_accel_batch_create().
+ * \param dst1 First destination to copy to (must be 4K aligned).
+ * \param dst2 Second destination to copy to (must be 4K aligned).
+ * \param src Source to copy from.
+ * \param nbytes Length in bytes to copy.
+ * \param cb Called when this operation completes.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_accel_batch_prep_dualcast(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
+				   struct spdk_accel_batch *batch, void *dst1, void *dst2, void *src,
+				   uint64_t nbytes, spdk_accel_completion_cb cb);
+
+/**
  * Submit a dual cast copy request.
  *
  * \param accel_req Accel request task.

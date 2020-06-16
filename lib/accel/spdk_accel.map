@@ -11,6 +11,7 @@
 	spdk_accel_batch_get_max;
 	spdk_accel_batch_create;
 	spdk_accel_batch_prep_copy;
+	spdk_accel_batch_prep_dualcast;
 	spdk_accel_batch_submit;
 	spdk_accel_submit_copy;
 	spdk_accel_submit_dualcast;
