@@ -948,7 +948,7 @@ spdk_idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *bat
 
 	/* Command specific. */
 	desc->opcode = IDXD_OPCODE_BATCH;
-	desc->desc_list_addr = (uint64_t)&chan->ring_ctrl.user_desc[batch->start_index];
+	desc->desc_list_addr = (uintptr_t)&chan->ring_ctrl.user_desc[batch->start_index];
 	desc->desc_count = batch->cur_index - batch->start_index;
 	assert(desc->desc_count <= DESC_PER_BATCH);
 
@@ -993,11 +993,11 @@ spdk_idxd_batch_prep_copy(struct spdk_idxd_io_channel *chan, struct idxd_batch *
 
 	desc->flags = IDXD_FLAG_COMPLETION_ADDR_VALID | IDXD_FLAG_REQUEST_COMPLETION;
 	desc->opcode = IDXD_OPCODE_MEMMOVE;
-	desc->src_addr = (uint64_t)src;
-	desc->dst_addr = (uint64_t)dst;
+	desc->src_addr = (uintptr_t)src;
+	desc->dst_addr = (uintptr_t)dst;
 	desc->xfer_size = nbytes;
 
-	desc->completion_addr = (uint64_t)&comp->hw;
+	desc->completion_addr = (uintptr_t)&comp->hw;
 	comp->cb_arg = cb_arg;
 	comp->cb_fn = cb_fn;
 	comp->batch = batch;
@@ -1036,12 +1036,12 @@ spdk_idxd_batch_prep_dualcast(struct spdk_idxd_io_channel *chan, struct idxd_bat
 
 	desc->flags = IDXD_FLAG_COMPLETION_ADDR_VALID | IDXD_FLAG_REQUEST_COMPLETION;
 	desc->opcode = IDXD_OPCODE_DUALCAST;
-	desc->src_addr = (uint64_t)src;
-	desc->dst_addr = (uint64_t)dst1;
-	desc->dest2 = (uint64_t)dst2;
+	desc->src_addr = (uintptr_t)src;
+	desc->dst_addr = (uintptr_t)dst1;
+	desc->dest2 = (uintptr_t)dst2;
 	desc->xfer_size = nbytes;
 
-	desc->completion_addr = (uint64_t)&comp->hw;
+	desc->completion_addr = (uintptr_t)&comp->hw;
 	comp->cb_arg = cb_arg;
 	comp->cb_fn = cb_fn;
 	comp->batch = batch;
