@@ -1146,6 +1146,7 @@ nvmf_fc_req_bdev_abort(void *arg1)
 {
 	struct spdk_nvmf_fc_request *fc_req = arg1;
 	struct spdk_nvmf_ctrlr *ctrlr = fc_req->req.qpair->ctrlr;
+	int i;
 
 	/* Initial release - we don't have to abort Admin Queue or
 	 * Fabric commands. The AQ commands supported at this time are
@@ -1164,9 +1165,11 @@ nvmf_fc_req_bdev_abort(void *arg1)
 	 * Connect -> Special case (async. handling). Not sure how to
 	 * handle at this point. Let it run to completion.
 	 */
-	if (ctrlr->aer_req == &fc_req->req) {
-		SPDK_NOTICELOG("Abort AER request\n");
-		nvmf_qpair_free_aer(fc_req->req.qpair);
+	for (i = 0; i < NVMF_MAX_ASYNC_EVENTS; i++) {
+		if (ctrlr->aer_req[i] == &fc_req->req) {
+			SPDK_NOTICELOG("Abort AER request\n");
+			nvmf_qpair_free_aer(fc_req->req.qpair);
+		}
 	}
 }
 
