@@ -415,6 +415,17 @@ blockdev_write_read_data_match(char *rx_buf, char *tx_buf, int data_length)
 	return rc;
 }
 
+static bool
+blockdev_io_valid_blocks(struct spdk_bdev *bdev, uint64_t data_length)
+{
+	if (data_length < spdk_bdev_get_block_size(bdev) ||
+	    data_length / spdk_bdev_get_block_size(bdev) > spdk_bdev_get_num_blocks(bdev)) {
+		return false;
+	}
+
+	return true;
+}
+
 static void
 blockdev_write_read(uint32_t data_length, uint32_t iov_len, int pattern, uint64_t offset,
 		    int expected_rc, bool write_zeroes)
@@ -426,8 +437,7 @@ blockdev_write_read(uint32_t data_length, uint32_t iov_len, int pattern, uint64_
 
 	target = g_current_io_target;
 
-	if (data_length < spdk_bdev_get_block_size(target->bdev) ||
-	    data_length / spdk_bdev_get_block_size(target->bdev) > spdk_bdev_get_num_blocks(target->bdev)) {
+	if (!blockdev_io_valid_blocks(target->bdev, data_length)) {
 		return;
 	}
 
@@ -476,8 +486,7 @@ blockdev_compare_and_write(uint32_t data_length, uint32_t iov_len, uint64_t offs
 
 	target = g_current_io_target;
 
-	if (data_length < spdk_bdev_get_block_size(target->bdev) ||
-	    data_length / spdk_bdev_get_block_size(target->bdev) > spdk_bdev_get_num_blocks(target->bdev)) {
+	if (!blockdev_io_valid_blocks(target->bdev, data_length)) {
 		return;
 	}
 
