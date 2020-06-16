@@ -84,6 +84,7 @@ struct spdk_env_opts {
 	const char		*hugedir;
 	struct spdk_pci_addr	*pci_blacklist;
 	struct spdk_pci_addr	*pci_whitelist;
+	const char		*iova_mode;
 	uint64_t		base_virtaddr;
 
 	/** Opaque context for use of the env implementation. */

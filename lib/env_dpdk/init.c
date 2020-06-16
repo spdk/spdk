@@ -413,36 +413,43 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 
 #ifdef __linux__
 
-	/* When using vfio with enable_unsafe_noiommu_mode=Y, we need iova-mode=pa,
-	 * but DPDK guesses it should be iova-mode=va. Add a check and force
-	 * iova-mode=pa here. */
-	if (rte_vfio_noiommu_is_enabled()) {
-		args = push_arg(args, &argcount, _sprintf_alloc("--iova-mode=pa"));
+	if (opts->iova_mode) {
+		args = push_arg(args, &argcount, _sprintf_alloc("--iova-mode=%s", opts->iova_mode));
 		if (args == NULL) {
 			return -1;
 		}
-	}
+	} else {
+		/* When using vfio with enable_unsafe_noiommu_mode=Y, we need iova-mode=pa,
+		 * but DPDK guesses it should be iova-mode=va. Add a check and force
+		 * iova-mode=pa here. */
+		if (rte_vfio_noiommu_is_enabled()) {
+			args = push_arg(args, &argcount, _sprintf_alloc("--iova-mode=pa"));
+			if (args == NULL) {
+				return -1;
+			}
+		}
 
 #if defined(__x86_64__)
-	/* DPDK by default guesses that it should be using iova-mode=va so that it can
-	 * support running as an unprivileged user. However, some systems (especially
-	 * virtual machines) don't have an IOMMU capable of handling the full virtual
-	 * address space and DPDK doesn't currently catch that. Add a check in SPDK
-	 * and force iova-mode=pa here. */
-	if (get_iommu_width() < SPDK_IOMMU_VA_REQUIRED_WIDTH) {
+		/* DPDK by default guesses that it should be using iova-mode=va so that it can
+		 * support running as an unprivileged user. However, some systems (especially
+		 * virtual machines) don't have an IOMMU capable of handling the full virtual
+		 * address space and DPDK doesn't currently catch that. Add a check in SPDK
+		 * and force iova-mode=pa here. */
+		if (get_iommu_width() < SPDK_IOMMU_VA_REQUIRED_WIDTH) {
+			args = push_arg(args, &argcount, _sprintf_alloc("--iova-mode=pa"));
+			if (args == NULL) {
+				return -1;
+			}
+		}
+#elif defined(__PPC64__)
+		/* On Linux + PowerPC, DPDK doesn't support VA mode at all. Unfortunately, it doesn't correctly
+		 * auto-detect at the moment, so we'll just force it here. */
 		args = push_arg(args, &argcount, _sprintf_alloc("--iova-mode=pa"));
 		if (args == NULL) {
 			return -1;
 		}
-	}
-#elif defined(__PPC64__)
-	/* On Linux + PowerPC, DPDK doesn't support VA mode at all. Unfortunately, it doesn't correctly
-	 * auto-detect at the moment, so we'll just force it here. */
-	args = push_arg(args, &argcount, _sprintf_alloc("--iova-mode=pa"));
-	if (args == NULL) {
-		return -1;
-	}
 #endif
+	}
 
 
 	/* Set the base virtual address - it must be an address that is not in the

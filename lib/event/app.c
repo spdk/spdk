@@ -110,7 +110,7 @@ static const struct option g_cmdline_options[] = {
 	{"version",			no_argument,		NULL, VERSION_OPT_IDX},
 #define PCI_BLACKLIST_OPT_IDX	'B'
 	{"pci-blacklist",		required_argument,	NULL, PCI_BLACKLIST_OPT_IDX},
-#define LOGFLAG_OPT_IDX	'L'
+#define LOGFLAG_OPT_IDX		'L'
 	{"logflag",			required_argument,	NULL, LOGFLAG_OPT_IDX},
 #define HUGE_UNLINK_OPT_IDX	'R'
 	{"huge-unlink",			no_argument,		NULL, HUGE_UNLINK_OPT_IDX},
@@ -130,6 +130,8 @@ static const struct option g_cmdline_options[] = {
 	{"json",			required_argument,	NULL, JSON_CONFIG_OPT_IDX},
 #define JSON_CONFIG_IGNORE_INIT_ERRORS_IDX	263
 	{"json-ignore-init-errors",	no_argument,		NULL, JSON_CONFIG_IGNORE_INIT_ERRORS_IDX},
+#define IOVA_MODE_OPT_IDX	264
+	{"iova-mode",			required_argument,	NULL, IOVA_MODE_OPT_IDX},
 };
 
 /* Global section */
@@ -507,6 +509,7 @@ app_setup_env(struct spdk_app_opts *opts)
 	env_opts.pci_blacklist = opts->pci_blacklist;
 	env_opts.pci_whitelist = opts->pci_whitelist;
 	env_opts.env_context = opts->env_context;
+	env_opts.iova_mode = opts->iova_mode;
 
 	rc = spdk_env_init(&env_opts);
 	free(env_opts.pci_blacklist);
@@ -761,6 +764,7 @@ usage(void (*app_usage)(void))
 	printf(" -W, --pci-whitelist <bdf>\n");
 	printf("                           pci addr to whitelist (-B and -W cannot be used at the same time)\n");
 	printf("      --huge-dir <path>    use a specific hugetlbfs mount to reserve memory from\n");
+	printf("      --iova-mode <pa/va>  set IOVA mode ('pa' for IOVA_PA and 'va' for IOVA_VA)\n");
 	printf("      --num-trace-entries <num>   number of trace entries for each core, must be power of 2. (default %d)\n",
 	       SPDK_APP_DEFAULT_NUM_TRACE_ENTRIES);
 	spdk_log_usage(stdout, "-L");
@@ -973,6 +977,9 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			break;
 		case HUGE_DIR_OPT_IDX:
 			opts->hugedir = optarg;
+			break;
+		case IOVA_MODE_OPT_IDX:
+			opts->iova_mode = optarg;
 			break;
 		case NUM_TRACE_ENTRIES_OPT_IDX:
 			tmp = spdk_strtoll(optarg, 0);
