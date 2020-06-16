@@ -287,7 +287,7 @@ EOF
 			continue
 		fi
 
-		if ! output=$(abidiff "$source_abi_dir/$so_file" "$libdir/$so_file" --leaf-changes-only --suppressions $suppression_file --stat); then
+		if ! output=$(abidiff "$source_abi_dir/$so_file" "$libdir/$so_file" --headers-dir1 "$source_abi_dir/../../include/" --headers-dir2 "$rootdir/include" --leaf-changes-only --suppressions $suppression_file --stat); then
 			# remove any filtered out variables.
 			output=$(sed "s/ [()][^)]*[)]//g" <<< "$output")
 
