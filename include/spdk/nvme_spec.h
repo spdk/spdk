@@ -1622,7 +1622,8 @@ struct __attribute__((packed)) __attribute__((aligned)) spdk_nvme_ctrlr_data {
 		uint8_t multi_port	: 1;
 		uint8_t multi_host	: 1;
 		uint8_t sr_iov		: 1;
-		uint8_t reserved	: 5;
+		uint8_t ana_reporting	: 1;
+		uint8_t reserved	: 4;
 	} cmic;
 
 	/** maximum data transfer size */
@@ -1853,7 +1854,28 @@ struct __attribute__((packed)) __attribute__((aligned)) spdk_nvme_ctrlr_data {
 		} bits;
 	} sanicap;
 
-	uint8_t			reserved3[180];
+	/* bytes 332-342 */
+	uint8_t			reserved3[11];
+
+	/* bytes 343: Asymmetric namespace access capabilities */
+	struct {
+		uint8_t		ana_optimized_state : 1;
+		uint8_t		ana_non_optimized_state : 1;
+		uint8_t		ana_inaccessible_state : 1;
+		uint8_t		ana_persistent_loss_state : 1;
+		uint8_t		ana_change_state : 1;
+		uint8_t		reserved : 1;
+		uint8_t		no_change_anagrpid : 1;
+		uint8_t		non_zero_anagrpid : 1;
+	} anacap;
+
+	/* bytes 344-347: ANA group identifier maximum */
+	uint32_t		anagrpmax;
+	/* bytes 348-351: number of ANA group identifiers */
+	uint32_t		nanagrpid;
+
+	/* bytes 352-511 */
+	uint8_t			reserved352[160];
 
 	/* bytes 512-703: nvm command set attributes */
 
@@ -1925,7 +1947,10 @@ struct __attribute__((packed)) __attribute__((aligned)) spdk_nvme_ctrlr_data {
 
 	struct spdk_nvme_cdata_sgls sgls;
 
-	uint8_t			reserved4[228];
+	/* maximum number of allowed namespaces */
+	uint32_t		mnan;
+
+	uint8_t			reserved4[224];
 
 	uint8_t			subnqn[SPDK_NVME_NQN_FIELD_SIZE];
 
@@ -2184,7 +2209,12 @@ struct spdk_nvme_ns_data {
 	/** NVM capacity */
 	uint64_t		nvmcap[2];
 
-	uint8_t			reserved64[40];
+	uint8_t			reserved64[28];
+
+	/** ANA group identifier */
+	uint32_t		anagrpid;
+
+	uint8_t			reserved96[8];
 
 	/** namespace globally unique identifier */
 	uint8_t			nguid[16];
@@ -2428,7 +2458,12 @@ enum spdk_nvme_log_page {
 	/** Controller initiated telemetry log (optional) */
 	SPDK_NVME_LOG_TELEMETRY_CTRLR_INITIATED	= 0x08,
 
-	/* 0x09-0x6F - reserved */
+	/* 0x09-0x0B - reserved */
+
+	/** Asymmetric namespace access log (optional) */
+	SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS = 0x0C,
+
+	/* 0x0D-0x6F - reserved */
 
 	/** Discovery(refer to the NVMe over Fabrics specification) */
 	SPDK_NVME_LOG_DISCOVERY		= 0x70,
@@ -2723,6 +2758,40 @@ struct spdk_nvme_firmware_page {
 	uint8_t			reserved2[448];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_firmware_page) == 512, "Incorrect size");
+
+/**
+ * Asymmetric Namespace Acccess page (\ref SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS)
+ */
+struct spdk_nvme_ana_page {
+	uint64_t change_count;
+	uint16_t num_ana_group_desc;
+	uint8_t reserved[6];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ana_page) == 16, "Incorrect size");
+
+/* Asymmetric namespace access state */
+enum spdk_nvme_ana_state {
+	SPDK_NVME_ANA_OPTIMIZED_STATE		= 0x1,
+	SPDK_NVME_ANA_NON_OPTIMIZED_STATE	= 0x2,
+	SPDK_NVME_ANA_INACCESSIBLE_STATE	= 0x3,
+	SPDK_NVME_ANA_PERSISTENT_LOSS_STATE	= 0x4,
+	SPDK_NVME_ANA_CHANGE_STATE		= 0xF,
+};
+
+/* ANA group descriptor */
+struct spdk_nvme_ana_group_descriptor {
+	uint32_t ana_group_id;
+	uint32_t num_of_nsid;
+	uint64_t change_count;
+
+	uint8_t ana_state : 4;
+	uint8_t reserved0 : 4;
+
+	uint8_t reserved1[15];
+
+	uint32_t nsid[];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ana_group_descriptor) == 32, "Incorrect size");
 
 /**
  * Namespace attachment Type Encoding

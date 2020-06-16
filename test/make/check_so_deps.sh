@@ -280,6 +280,18 @@ function confirm_abi_deps() {
 	name = spdk_lvol
 [suppress_type]
 	name = spdk_pci_device
+[suppress_type]
+	name = spdk_nvme_ctrlr_data
+[suppress_type]
+	name = spdk_nvme_ns_data
+[suppress_type]
+	name = spdk_nvme_log_page
+[suppress_type]
+	name = spdk_nvme_ana_state
+[suppress_type]
+	name = spdk_nvme_ana_group_descriptor
+[suppress_type]
+	name = spdk_nvme_ana_page
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do
