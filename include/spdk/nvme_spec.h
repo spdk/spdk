@@ -117,13 +117,20 @@ SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cap_register) == 8, "Incorrect size");
 /**
  * I/O Command Set Selected
  *
- * Only a single command set is defined as of NVMe 1.3 (NVM).
+ * Only a single command set is defined as of NVMe 1.3 (NVM). Later, it became
+ * possible to disable I/O Command Sets, that is, configuring it to only use the
+ * Admin Command Set. With 1.4c and Namespace Types, additional I/O Command Sets
+ * are available.
  */
 enum spdk_nvme_cc_css {
 	SPDK_NVME_CC_CSS_NVM		= 0x0,	/**< NVM command set */
+	SPDK_NVME_CC_CSS_IOCS		= 0x6,	/**< One or more I/O command sets */
+	SPDK_NVME_CC_CSS_NOIO		= 0x7,	/**< No I/O, only admin */
 };
 
 #define SPDK_NVME_CAP_CSS_NVM (1u << SPDK_NVME_CC_CSS_NVM) /**< NVM command set supported */
+#define SPDK_NVME_CAP_CSS_IOCS (1u << SPDK_NVME_CC_CSS_IOCS) /**< One or more I/O Command sets supported */
+#define SPDK_NVME_CAP_CSS_NOIO (1u << SPDK_NVME_CC_CSS_NOIO) /**< No I/O, only admin */
 
 union spdk_nvme_cc_register {
 	uint32_t	raw;
@@ -1234,6 +1241,11 @@ enum spdk_nvme_command_specific_status_code {
 	SPDK_NVME_SC_INVALID_NUM_CTRLR_RESOURCES	= 0x21,
 	SPDK_NVME_SC_INVALID_RESOURCE_ID		= 0x22,
 
+	SPDK_NVME_SC_IOCS_NOT_SUPPORTED			= 0x29,
+	SPDK_NVME_SC_IOCS_NOT_ENABLED			= 0x2a,
+	SPDK_NVME_SC_IOCS_COMBINATION_REJECTED		= 0x2b,
+	SPDK_NVME_SC_INVALID_IOCS			= 0x2c,
+
 	SPDK_NVME_SC_CONFLICTING_ATTRIBUTES		= 0x80,
 	SPDK_NVME_SC_INVALID_PROTECTION_INFO		= 0x81,
 	SPDK_NVME_SC_ATTEMPTED_WRITE_TO_RO_RANGE	= 0x82,
@@ -1465,6 +1477,15 @@ enum spdk_nvme_identify_cns {
 	/** List namespace identification descriptors */
 	SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST	= 0x03,
 
+	/** Identify namespace indicated in CDW1.NSID, specific to CWD11.CSI */
+	SPDK_NVME_IDENTIFY_NS_IOCS			= 0x05,
+
+	/** Identify controller, specific to CWD11.CSI */
+	SPDK_NVME_IDENTIFY_CTRLR_IOCS			= 0x06,
+
+	/** List active NSIDs greater than CDW1.NSID, specific to CWD11.CSI */
+	SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST_IOCS		= 0x07,
+
 	/** List allocated NSIDs greater than CDW1.NSID */
 	SPDK_NVME_IDENTIFY_ALLOCATED_NS_LIST		= 0x10,
 
@@ -1482,6 +1503,15 @@ enum spdk_nvme_identify_cns {
 
 	/** Get secondary controller list */
 	SPDK_NVME_IDENTIFY_SECONDARY_CTRLR_LIST		= 0x15,
+
+	/** List allocated NSIDs greater than CDW1.NSID, specific to CWD11.CSI */
+	SPDK_NVME_IDENTIFY_ALLOCATED_NS_LIST_IOCS	= 0x1a,
+
+	/** Identify namespace if CDW1.NSID is allocated, specific to CDWD11.CSI */
+	SPDK_NVME_IDENTIFY_NS_ALLOCATED_IOCS		= 0x1b,
+
+	/** Identify I/O Command Sets */
+	SPDK_NVME_IDENTIFY_IOCS				= 0x1c,
 };
 
 /** NVMe over Fabrics controller model */
