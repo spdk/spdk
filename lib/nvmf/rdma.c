@@ -975,7 +975,6 @@ nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	qp_init_attr.cap.max_send_wr	= (uint32_t)rqpair->max_queue_depth * 2;
 	qp_init_attr.cap.max_send_sge	= spdk_min((uint32_t)device->attr.max_sge, NVMF_DEFAULT_TX_SGE);
 	qp_init_attr.cap.max_recv_sge	= spdk_min((uint32_t)device->attr.max_sge, NVMF_DEFAULT_RX_SGE);
-	qp_init_attr.initiator_side	= false;
 
 	if (rqpair->srq == NULL && nvmf_rdma_resize_cq(rqpair, device) < 0) {
 		SPDK_ERRLOG("Failed to resize the completion queue. Cannot initialize qpair.\n");
@@ -1168,9 +1167,9 @@ nvmf_rdma_event_accept(struct rdma_cm_id *id, struct spdk_nvmf_rdma_qpair *rqpai
 	ctrlr_event_data.srq = rqpair->srq ? 1 : 0;
 	ctrlr_event_data.qp_num = rqpair->rdma_qp->qp->qp_num;
 
-	rc = rdma_accept(id, &ctrlr_event_data);
+	rc = spdk_rdma_qp_accept(rqpair->rdma_qp, &ctrlr_event_data);
 	if (rc) {
-		SPDK_ERRLOG("Error %d on rdma_accept\n", errno);
+		SPDK_ERRLOG("Error %d on spdk_rdma_qp_accept\n", errno);
 	} else {
 		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Sent back the accept\n");
 	}

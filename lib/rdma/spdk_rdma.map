@@ -3,6 +3,7 @@
 
 	# Public functions
 	spdk_rdma_qp_create;
+	spdk_rdma_qp_accept;
 	spdk_rdma_qp_complete_connect;
 	spdk_rdma_qp_destroy;
 	spdk_rdma_qp_disconnect;

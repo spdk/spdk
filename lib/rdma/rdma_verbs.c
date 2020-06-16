@@ -75,6 +75,15 @@ spdk_rdma_qp_create(struct rdma_cm_id *cm_id, struct spdk_rdma_qp_init_attr *qp_
 }
 
 int
+spdk_rdma_qp_accept(struct spdk_rdma_qp *spdk_rdma_qp, struct rdma_conn_param *conn_param)
+{
+	assert(spdk_rdma_qp != NULL);
+	assert(spdk_rdma_qp->cm_id != NULL);
+
+	return rdma_accept(spdk_rdma_qp->cm_id, conn_param);
+}
+
+int
 spdk_rdma_qp_complete_connect(struct spdk_rdma_qp *spdk_rdma_qp)
 {
 	/* Nothing to be done for Verbs */

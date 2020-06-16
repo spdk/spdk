@@ -44,7 +44,6 @@
 struct spdk_rdma_mlx5_dv_qp {
 	struct spdk_rdma_qp common;
 	struct ibv_qp_ex *qpex;
-	bool initiator_side;
 };
 
 static int
@@ -132,16 +131,8 @@ spdk_rdma_qp_create(struct rdma_cm_id *cm_id, struct spdk_rdma_qp_init_attr *qp_
 	mlx5_qp->common.qp = qp;
 	mlx5_qp->common.cm_id = cm_id;
 	mlx5_qp->qpex = ibv_qp_to_qp_ex(qp);
-	mlx5_qp->initiator_side = qp_attr->initiator_side;
 
 	if (!mlx5_qp->qpex) {
-		spdk_rdma_qp_destroy(&mlx5_qp->common);
-		return NULL;
-	}
-
-	/* NVMEoF target must move qpair to RTS state */
-	if (!mlx5_qp->initiator_side && rdma_mlx5_dv_init_qpair(mlx5_qp) != 0) {
-		SPDK_ERRLOG("Failed to initialize qpair\n");
 		spdk_rdma_qp_destroy(&mlx5_qp->common);
 		return NULL;
 	}
@@ -149,6 +140,27 @@ spdk_rdma_qp_create(struct rdma_cm_id *cm_id, struct spdk_rdma_qp_init_attr *qp_
 	qp_attr->cap = dv_qp_attr.cap;
 
 	return &mlx5_qp->common;
+}
+
+int
+spdk_rdma_qp_accept(struct spdk_rdma_qp *spdk_rdma_qp, struct rdma_conn_param *conn_param)
+{
+	struct spdk_rdma_mlx5_dv_qp *mlx5_qp;
+
+	assert(spdk_rdma_qp != NULL);
+	assert(spdk_rdma_qp->cm_id != NULL);
+
+	mlx5_qp = SPDK_CONTAINEROF(spdk_rdma_qp, struct spdk_rdma_mlx5_dv_qp, common);
+
+	/* NVMEoF target must move qpair to RTS state */
+	if (rdma_mlx5_dv_init_qpair(mlx5_qp) != 0) {
+		SPDK_ERRLOG("Failed to initialize qpair\n");
+		/* Set errno to be compliant with rdma_accept behaviour */
+		errno = ECONNABORTED;
+		return -1;
+	}
+
+	return rdma_accept(spdk_rdma_qp->cm_id, conn_param);
 }
 
 int
@@ -160,9 +172,6 @@ spdk_rdma_qp_complete_connect(struct spdk_rdma_qp *spdk_rdma_qp)
 	assert(spdk_rdma_qp);
 
 	mlx5_qp = SPDK_CONTAINEROF(spdk_rdma_qp, struct spdk_rdma_mlx5_dv_qp, common);
-	if (!mlx5_qp->initiator_side) {
-		return 0;
-	}
 
 	rc = rdma_mlx5_dv_init_qpair(mlx5_qp);
 	if (rc) {
