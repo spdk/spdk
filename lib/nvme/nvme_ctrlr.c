@@ -901,7 +901,8 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 	if (!(ctrlr->cap.bits.css & (1u << ctrlr->opts.command_set))) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Requested I/O command set %u but supported mask is 0x%x\n",
 			      ctrlr->opts.command_set, ctrlr->cap.bits.css);
-		return -EINVAL;
+		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Falling back to NVM. Assuming NVM is supported.\n");
+		ctrlr->opts.command_set = SPDK_NVME_CC_CSS_NVM;
 	}
 
 	cc.bits.css = ctrlr->opts.command_set;
