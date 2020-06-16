@@ -1005,6 +1005,50 @@ spdk_idxd_batch_prep_copy(struct spdk_idxd_io_channel *chan, struct idxd_batch *
 	return 0;
 }
 
+int
+spdk_idxd_batch_prep_dualcast(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
+			      void *dst1, void *dst2, const void *src, uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
+{
+	struct idxd_hw_desc *desc;
+	struct idxd_comp *comp;
+
+	if ((uintptr_t)dst1 & (ALIGN_4K - 1) || (uintptr_t)dst2 & (ALIGN_4K - 1)) {
+		SPDK_ERRLOG("Dualcast requires 4K alignment on dst addresses\n");
+		return -EINVAL;
+	}
+
+	if (_does_batch_exist(batch, chan) == false) {
+		SPDK_ERRLOG("Attempt to add to a batch that doesn't exist\n.");
+		return -EINVAL;
+	}
+
+	if ((batch->cur_index - batch->start_index) == DESC_PER_BATCH) {
+		SPDK_ERRLOG("Attempt to add to a batch that is already full\n.");
+		return -ENOMEM;
+	}
+
+	desc = &chan->ring_ctrl.user_desc[batch->cur_index];
+	comp = &chan->ring_ctrl.user_completions[batch->cur_index];
+	SPDK_DEBUGLOG(SPDK_LOG_IDXD, "Prep batch %p index %u\n", batch, batch->cur_index);
+
+	batch->cur_index++;
+	assert(batch->cur_index > batch->start_index);
+
+	desc->flags = IDXD_FLAG_COMPLETION_ADDR_VALID | IDXD_FLAG_REQUEST_COMPLETION;
+	desc->opcode = IDXD_OPCODE_DUALCAST;
+	desc->src_addr = (uint64_t)src;
+	desc->dst_addr = (uint64_t)dst1;
+	desc->dest2 = (uint64_t)dst2;
+	desc->xfer_size = nbytes;
+
+	desc->completion_addr = (uint64_t)&comp->hw;
+	comp->cb_arg = cb_arg;
+	comp->cb_fn = cb_fn;
+	comp->batch = batch;
+
+	return 0;
+}
+
 static void
 _dump_error_reg(struct spdk_idxd_io_channel *chan)
 {
@@ -1070,6 +1114,7 @@ _spdk_idxd_process_batch_events(struct spdk_idxd_io_channel *chan)
 					status = comp->hw.result;
 				}
 				break;
+			case IDXD_OPCODE_DUALCAST:
 			case IDXD_OPCODE_MEMMOVE:
 				break;
 			default:

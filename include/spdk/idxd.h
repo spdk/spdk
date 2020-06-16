@@ -32,7 +32,7 @@
  */
 
 /** \file
- * IDXD accel engine driver public interface
+ * IDXD driver public interface
  */
 
 #ifndef SPDK_IDXD_H
@@ -193,7 +193,28 @@ int spdk_idxd_batch_prep_copy(struct spdk_idxd_io_channel *chan, struct idxd_bat
 			      void *dst, const void *src, uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**
- * Build and submit a idxd memory copy request.
+ * Synchronous call to prepare a dualcast request into a previously initialized batch
+ *  created with spdk_idxd_batch_create(). The callback will be called when the dualcast
+ *  completes after the batch has been submitted by an asynchronous call to
+ *  spdk_idxd_batch_submit().
+ *
+ * \param chan IDXD channel to submit request.
+ * \param batch Handle provided when the batch was started with spdk_idxd_batch_create().
+ * \param dst1 First destination virtual address (must be 4K aligned).
+ * \param dst2 Second destination virtual address (must be 4K aligned).
+ * \param src Source virtual address.
+ * \param nbytes Number of bytes to copy.
+ * \param cb_fn Callback function which will be called when the request is complete.
+ * \param cb_arg Opaque value which will be passed back as the arg parameter in
+ * the completion callback.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_idxd_batch_prep_dualcast(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
+				  void *dst1, void *dst2, const void *src, uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg);
+
+/**
+ * Build and submit an idxd memory copy request.
  *
  * This function will build the copy descriptor and then immediately submit
  * by writing to the proper device portal.
@@ -213,7 +234,7 @@ int spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan,
 			  spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**
- * Build and submit an idxd dual cast copy request.
+ * Build and submit an idxd dualcast request.
  *
  * This function will build the dual cast descriptor and then immediately submit
  * by writing to the proper device portal.

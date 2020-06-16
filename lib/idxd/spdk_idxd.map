@@ -7,6 +7,7 @@
 	spdk_idxd_probe;
 	spdk_idxd_detach;
 	spdk_idxd_batch_prep_copy;
+        spdk_idxd_batch_prep_dualcast;
 	spdk_idxd_batch_submit;
 	spdk_idxd_batch_create;
 	spdk_idxd_batch_get_max;
