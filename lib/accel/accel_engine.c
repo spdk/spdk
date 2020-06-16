@@ -288,6 +288,7 @@ spdk_accel_engine_initialize(void)
 {
 	SPDK_NOTICELOG("Accel engine initialized to use software engine.\n");
 	accel_engine_module_initialize();
+
 	/*
 	 * We need a unique identifier for the accel engine framework, so use the
 	 *  spdk_accel_module_list address for this purpose.
@@ -371,13 +372,144 @@ spdk_accel_engine_config_text(FILE *fp)
 	}
 }
 
-/* The SW Accelerator module is "built in" here (rest of file) */
+/*
+ * The SW Accelerator module is "built in" here (rest of file)
+ */
+
+#define SW_ACCEL_BATCH_SIZE 2048
+
+enum sw_accel_opcode {
+	SW_ACCEL_OPCODE_MEMMOVE		= 0,
+	SW_ACCEL_OPCODE_MEMFILL		= 1,
+	SW_ACCEL_OPCODE_COMPARE		= 2,
+	SW_ACCEL_OPCODE_CRC32C		= 3,
+	SW_ACCEL_OPCODE_DUALCAST	= 4,
+};
+
+struct sw_accel_op {
+	struct sw_accel_io_channel	*sw_ch;
+	void				*cb_arg;
+	spdk_accel_completion_cb	cb_fn;
+	void				*src;
+	union {
+		void			*dst;
+		void			*src2;
+	};
+	void				*dst2;
+	uint32_t			seed;
+	uint64_t			fill_pattern;
+	enum sw_accel_opcode		op_code;
+	uint64_t			nbytes;
+	TAILQ_ENTRY(sw_accel_op)	link;
+};
+
+/* The sw accel engine only supports one outstanding batch at a time. */
+struct sw_accel_io_channel {
+	TAILQ_HEAD(, sw_accel_op)	op_pool;
+	TAILQ_HEAD(, sw_accel_op)	batch;
+};
 
 static uint64_t
 sw_accel_get_capabilities(void)
 {
 	return ACCEL_COPY | ACCEL_FILL | ACCEL_CRC32C | ACCEL_COMPARE |
-	       ACCEL_DUALCAST;
+	       ACCEL_DUALCAST | ACCEL_BATCH;
+}
+
+static uint32_t
+sw_accel_batch_get_max(void)
+{
+	return SW_ACCEL_BATCH_SIZE;
+}
+
+/* The sw engine plug-in does not ahve a public API, it is only callable
+ * from the accel fw and thus does not need to have its own struct definition
+ * of a batch, it just simply casts the address of the single supported batch
+ * as the struct spdk_accel_batch pointer.
+ */
+static struct spdk_accel_batch *
+sw_accel_batch_start(struct spdk_io_channel *ch)
+{
+	struct sw_accel_io_channel *sw_ch = spdk_io_channel_get_ctx(ch);
+
+	if (!TAILQ_EMPTY(&sw_ch->batch)) {
+		SPDK_ERRLOG("SW accel engine only supports one batch at a time.\n");
+		return NULL;
+	}
+
+	return (struct spdk_accel_batch *)&sw_ch->batch;
+}
+
+static int
+sw_accel_batch_prep_copy(void *cb_arg, struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
+			 void *dst, void *src, uint64_t nbytes, spdk_accel_completion_cb cb)
+{
+	struct sw_accel_op *op;
+	struct sw_accel_io_channel *sw_ch = spdk_io_channel_get_ctx(ch);
+
+	if ((struct spdk_accel_batch *)&sw_ch->batch != batch) {
+		SPDK_ERRLOG("Invalid batch\n");
+		return -EINVAL;
+	}
+
+	if (!TAILQ_EMPTY(&sw_ch->op_pool)) {
+		op = TAILQ_FIRST(&sw_ch->op_pool);
+		TAILQ_REMOVE(&sw_ch->op_pool, op, link);
+	} else {
+		SPDK_ERRLOG("Ran out of operations for batch\n");
+		return -ENOMEM;
+	}
+
+	op->cb_arg = cb_arg;
+	op->cb_fn = cb;
+	op->sw_ch = sw_ch;
+	op->src = src;
+	op->dst = dst;
+	op->nbytes = nbytes;
+	op->op_code = SW_ACCEL_OPCODE_MEMMOVE;
+	TAILQ_INSERT_TAIL(&sw_ch->batch, op, link);
+
+	return 0;
+}
+
+static int
+sw_accel_batch_submit(void *cb_arg, struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
+		      spdk_accel_completion_cb cb)
+{
+	struct sw_accel_op *op;
+	struct sw_accel_io_channel *sw_ch = spdk_io_channel_get_ctx(ch);
+	struct spdk_accel_task *accel_req;
+
+	if ((struct spdk_accel_batch *)&sw_ch->batch != batch) {
+		SPDK_ERRLOG("Invalid batch\n");
+		return -EINVAL;
+	}
+
+	/* Complete the batch items. */
+	while ((op = TAILQ_FIRST(&sw_ch->batch))) {
+		TAILQ_REMOVE(&sw_ch->batch, op, link);
+		accel_req = (struct spdk_accel_task *)((uintptr_t)op->cb_arg -
+						       offsetof(struct spdk_accel_task, offload_ctx));
+
+		switch (op->op_code) {
+		case SW_ACCEL_OPCODE_MEMMOVE:
+			memcpy(op->dst, op->src, op->nbytes);
+			break;
+		default:
+			assert(false);
+			break;
+		}
+
+		op->cb_fn(accel_req, 0);
+		TAILQ_INSERT_TAIL(&sw_ch->op_pool, op, link);
+	}
+
+	/* Now complete the batch request itself. */
+	accel_req = (struct spdk_accel_task *)((uintptr_t)cb_arg -
+					       offsetof(struct spdk_accel_task, offload_ctx));
+	cb(accel_req, 0);
+
+	return 0;
 }
 
 static int
@@ -463,10 +595,10 @@ static struct spdk_accel_engine sw_accel_engine = {
 	.get_capabilities	= sw_accel_get_capabilities,
 	.copy			= sw_accel_submit_copy,
 	.dualcast		= sw_accel_submit_dualcast,
-	.batch_get_max		= NULL, /* TODO */
-	.batch_create		= NULL, /* TODO */
-	.batch_prep_copy	= NULL, /* TODO */
-	.batch_submit		= NULL, /* TODO */
+	.batch_get_max		= sw_accel_batch_get_max,
+	.batch_create		= sw_accel_batch_start,
+	.batch_prep_copy	= sw_accel_batch_prep_copy,
+	.batch_submit		= sw_accel_batch_submit,
 	.compare		= sw_accel_submit_compare,
 	.fill			= sw_accel_submit_fill,
 	.crc32c			= sw_accel_submit_crc32c,
@@ -476,12 +608,39 @@ static struct spdk_accel_engine sw_accel_engine = {
 static int
 sw_accel_create_cb(void *io_device, void *ctx_buf)
 {
+	struct sw_accel_io_channel *sw_ch = ctx_buf;
+	struct sw_accel_op *op;
+	int i;
+
+	TAILQ_INIT(&sw_ch->batch);
+
+	TAILQ_INIT(&sw_ch->op_pool);
+	for (i = 0 ; i < SW_ACCEL_BATCH_SIZE ; i++) {
+		op = calloc(1, sizeof(struct sw_accel_op));
+		if (op == NULL) {
+			SPDK_ERRLOG("Failed to allocate operation for batch.\n");
+			while ((op = TAILQ_FIRST(&sw_ch->op_pool))) {
+				TAILQ_REMOVE(&sw_ch->op_pool, op, link);
+				free(op);
+			}
+			return -ENOMEM;
+		}
+		TAILQ_INSERT_TAIL(&sw_ch->op_pool, op, link);
+	}
+
 	return 0;
 }
 
 static void
 sw_accel_destroy_cb(void *io_device, void *ctx_buf)
 {
+	struct sw_accel_io_channel *sw_ch = ctx_buf;
+	struct sw_accel_op *op;
+
+	while ((op = TAILQ_FIRST(&sw_ch->op_pool))) {
+		TAILQ_REMOVE(&sw_ch->op_pool, op, link);
+		free(op);
+	}
 }
 
 static struct spdk_io_channel *sw_accel_get_io_channel(void)
@@ -499,8 +658,8 @@ static int
 sw_accel_engine_init(void)
 {
 	accel_sw_register(&sw_accel_engine);
-	spdk_io_device_register(&sw_accel_engine, sw_accel_create_cb, sw_accel_destroy_cb, 0,
-				"sw_accel_engine");
+	spdk_io_device_register(&sw_accel_engine, sw_accel_create_cb, sw_accel_destroy_cb,
+				sizeof(struct sw_accel_io_channel), "sw_accel_engine");
 
 	return 0;
 }
