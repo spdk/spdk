@@ -1560,6 +1560,79 @@ nvmf_get_firmware_slot_log_page(void *buffer, uint64_t offset, uint32_t length)
 	}
 }
 
+static void
+nvmf_get_ana_log_page(struct spdk_nvmf_ctrlr *ctrlr, void *data,
+		      uint64_t offset, uint32_t length)
+{
+	char *buf = data;
+	struct spdk_nvme_ana_page ana_hdr;
+	const size_t ana_desc_size = sizeof(struct spdk_nvme_ana_group_descriptor) +
+				     sizeof(uint32_t);
+	char _ana_desc[ana_desc_size];
+	struct spdk_nvme_ana_group_descriptor *ana_desc;
+	size_t copy_len;
+	uint32_t num_ns = 0;
+	struct spdk_nvmf_ns *ns;
+
+	if (length == 0) {
+		return;
+	}
+
+	if (offset >= sizeof(ana_hdr)) {
+		offset -= sizeof(ana_hdr);
+	} else {
+		for (ns = spdk_nvmf_subsystem_get_first_ns(ctrlr->subsys); ns != NULL;
+		     ns = spdk_nvmf_subsystem_get_next_ns(ctrlr->subsys, ns)) {
+			num_ns++;
+		}
+
+		memset(&ana_hdr, 0, sizeof(ana_hdr));
+
+		ana_hdr.num_ana_group_desc = num_ns;
+		/* TODO: Support Change Count. */
+		ana_hdr.change_count = 0;
+
+		copy_len = spdk_min(sizeof(ana_hdr) - offset, length);
+		memcpy(buf, (const char *)&ana_hdr + offset, copy_len);
+		length -= copy_len;
+		buf += copy_len;
+		offset = 0;
+	}
+
+	if (length == 0) {
+		return;
+	}
+
+	ana_desc = (void *)_ana_desc;
+
+	for (ns = spdk_nvmf_subsystem_get_first_ns(ctrlr->subsys); ns != NULL;
+	     ns = spdk_nvmf_subsystem_get_next_ns(ctrlr->subsys, ns)) {
+		if (offset >= ana_desc_size) {
+			offset -= ana_desc_size;
+			continue;
+		}
+
+		memset(ana_desc, 0, ana_desc_size);
+
+		ana_desc->ana_group_id = ns->nsid;
+		ana_desc->num_of_nsid = 1;
+		ana_desc->ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+		ana_desc->nsid[0] = ns->nsid;
+		/* TODO: Support Change Count. */
+		ana_desc->change_count = 0;
+
+		copy_len = spdk_min(ana_desc_size - offset, length);
+		memcpy(buf, (const char *)ana_desc + offset, copy_len);
+		length -= copy_len;
+		buf += copy_len;
+		offset = 0;
+
+		if (length == 0) {
+			return;
+		}
+	}
+}
+
 void
 nvmf_ctrlr_ns_changed(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid)
 {
@@ -1761,6 +1834,9 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 		case SPDK_NVME_LOG_FIRMWARE_SLOT:
 			nvmf_get_firmware_slot_log_page(req->data, offset, len);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		case SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS:
+			nvmf_get_ana_log_page(ctrlr, req->data, offset, len);
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		case SPDK_NVME_LOG_COMMAND_EFFECTS_LOG:
 			nvmf_get_cmds_and_effects_log_page(req->data, offset, len);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -1821,6 +1897,9 @@ spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 		nsdata->noiob = max_num_blocks;
 	}
 
+	/* ANA group ID matches NSID. */
+	nsdata->anagrpid = ns->nsid;
+
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
@@ -1870,6 +1949,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 	cdata->sgls = ctrlr->cdata.sgls;
 	cdata->fuses.compare_and_write = 1;
 	cdata->acwu = 1;
+	cdata->mnan = subsystem->max_nsid;
 	spdk_strcpy_pad(cdata->subnqn, subsystem->subnqn, sizeof(cdata->subnqn), '\0');
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "ctrlr data: maxcmd 0x%x\n", cdata->maxcmd);
@@ -1886,6 +1966,8 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->rab = 6;
 		cdata->cmic.multi_port = 1;
 		cdata->cmic.multi_host = 1;
+		/* Asymmetric Namespace Access Reporting is supported. */
+		cdata->cmic.ana_reporting = 1;
 		cdata->oaes.ns_attribute_notices = 1;
 		cdata->ctratt.host_id_exhid_supported = 1;
 		/* TODO: Concurrent execution of multiple abort commands. */
@@ -1909,6 +1991,11 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->oncs.dsm = nvmf_ctrlr_dsm_supported(ctrlr);
 		cdata->oncs.write_zeroes = nvmf_ctrlr_write_zeroes_supported(ctrlr);
 		cdata->oncs.reservations = 1;
+		cdata->anacap.ana_optimized_state = 1;
+		/* ANAGRPID does not change while namespace is attached to controller */
+		cdata->anacap.no_change_anagrpid = 1;
+		cdata->anagrpmax = subsystem->max_nsid;
+		cdata->nanagrpid = subsystem->max_nsid;
 
 		nvmf_ctrlr_populate_oacs(ctrlr, cdata);
 
