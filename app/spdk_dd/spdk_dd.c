@@ -230,6 +230,10 @@ dd_target_write(struct dd_io *io)
 {
 	struct dd_target *target = &g_job.output;
 	uint64_t length = SPDK_CEIL_DIV(io->length, target->block_size) * target->block_size;
+	uint64_t read_region_start = g_opts.input_offset * g_opts.io_unit_size;
+	uint64_t read_offset = io->offset - read_region_start;
+	uint64_t write_region_start = g_opts.output_offset * g_opts.io_unit_size;
+	uint64_t write_offset = write_region_start + read_offset;
 	int rc = 0;
 
 	if (g_error != 0) {
@@ -243,7 +247,7 @@ dd_target_write(struct dd_io *io)
 		return;
 	}
 
-	dd_show_progress(io->offset, io->length, false);
+	dd_show_progress(read_offset, io->length, false);
 
 	g_job.outstanding++;
 	io->type = DD_WRITE;
@@ -251,13 +255,13 @@ dd_target_write(struct dd_io *io)
 	if (target->type == DD_TARGET_TYPE_FILE) {
 		struct iocb *iocb = &io->iocb;
 
-		io_prep_pwrite(iocb, target->u.aio.fd, io->buf, length, io->offset);
+		io_prep_pwrite(iocb, target->u.aio.fd, io->buf, length, write_offset);
 		iocb->data = io;
 		if (io_submit(target->u.aio.io_ctx, 1, &iocb) < 0) {
 			rc = -errno;
 		}
 	} else if (target->type == DD_TARGET_TYPE_BDEV) {
-		rc = spdk_bdev_write(target->u.bdev.desc, target->u.bdev.ch, io->buf, io->offset, length,
+		rc = spdk_bdev_write(target->u.bdev.desc, target->u.bdev.ch, io->buf, write_offset, length,
 				     _dd_write_bdev_done, io);
 	}
 
@@ -342,16 +346,20 @@ static void
 dd_target_populate_buffer(struct dd_io *io)
 {
 	struct dd_target *target = &g_job.output;
+	uint64_t read_region_start = g_opts.input_offset * g_opts.io_unit_size;
+	uint64_t read_offset = g_job.input.pos - read_region_start;
+	uint64_t write_region_start = g_opts.output_offset * g_opts.io_unit_size;
+	uint64_t write_offset = write_region_start + read_offset;
 	uint64_t length;
 	int rc = 0;
 
 	io->offset = g_job.input.pos;
-	io->length = spdk_min((uint64_t)g_opts.io_unit_size, g_job.copy_size - g_job.input.pos);
+	io->length = spdk_min((uint64_t)g_opts.io_unit_size, g_job.copy_size - read_offset);
 
 	if (io->length == 0 || g_error != 0) {
 		if (g_job.outstanding == 0) {
 			if (g_error == 0) {
-				dd_show_progress(io->offset, io->length, true);
+				dd_show_progress(read_offset, io->length, true);
 				printf("\n\n");
 			}
 			dd_exit(g_error);
@@ -375,13 +383,13 @@ dd_target_populate_buffer(struct dd_io *io)
 	if (target->type == DD_TARGET_TYPE_FILE) {
 		struct iocb *iocb = &io->iocb;
 
-		io_prep_pread(iocb, target->u.aio.fd, io->buf, length, io->offset);
+		io_prep_pread(iocb, target->u.aio.fd, io->buf, length, write_offset);
 		iocb->data = io;
 		if (io_submit(target->u.aio.io_ctx, 1, &iocb) < 0) {
 			rc = -errno;
 		}
 	} else if (target->type == DD_TARGET_TYPE_BDEV) {
-		rc = spdk_bdev_read(target->u.bdev.desc, target->u.bdev.ch, io->buf, io->offset, length,
+		rc = spdk_bdev_read(target->u.bdev.desc, target->u.bdev.ch, io->buf, write_offset, length,
 				    _dd_target_populate_buffer_done, io);
 	}
 
@@ -480,7 +488,7 @@ dd_output_poll(void *ctx)
 }
 
 static int
-dd_open_file(struct dd_target *target, const char *fname, bool input)
+dd_open_file(struct dd_target *target, const char *fname, uint64_t skip_blocks, bool input)
 {
 	target->type = DD_TARGET_TYPE_FILE;
 	target->u.aio.fd = open(fname, O_RDWR);
@@ -494,7 +502,7 @@ dd_open_file(struct dd_target *target, const char *fname, bool input)
 
 	if (input == true) {
 		g_opts.queue_depth = spdk_min(g_opts.queue_depth,
-					      (target->total_size / g_opts.io_unit_size) + 1);
+					      (target->total_size / g_opts.io_unit_size) - skip_blocks + 1);
 	}
 
 	if (g_opts.io_unit_count != 0) {
@@ -505,7 +513,7 @@ dd_open_file(struct dd_target *target, const char *fname, bool input)
 }
 
 static int
-dd_open_bdev(struct dd_target *target, const char *bdev_name)
+dd_open_bdev(struct dd_target *target, const char *bdev_name, uint64_t skip_blocks)
 {
 	int rc;
 
@@ -534,7 +542,8 @@ dd_open_bdev(struct dd_target *target, const char *bdev_name)
 		return -ENOMEM;
 	}
 
-	g_opts.queue_depth = spdk_min(g_opts.queue_depth, (target->total_size / g_opts.io_unit_size) + 1);
+	g_opts.queue_depth = spdk_min(g_opts.queue_depth,
+				      (target->total_size / g_opts.io_unit_size) - skip_blocks + 1);
 
 	if (g_opts.io_unit_count != 0) {
 		g_opts.queue_depth = spdk_min(g_opts.queue_depth, g_opts.io_unit_count);
@@ -551,14 +560,14 @@ dd_run(void *arg1)
 	int rc;
 
 	if (g_opts.input_file) {
-		if (dd_open_file(&g_job.input, g_opts.input_file, true) < 0) {
+		if (dd_open_file(&g_job.input, g_opts.input_file, g_opts.input_offset, true) < 0) {
 			SPDK_ERRLOG("%s: %s\n", g_opts.input_file, strerror(errno));
 			dd_exit(-errno);
 			return;
 		}
 		g_job.input.u.aio.poller = spdk_poller_register(dd_input_poll, NULL, 0);
 	} else if (g_opts.input_bdev) {
-		rc = dd_open_bdev(&g_job.input, g_opts.input_bdev);
+		rc = dd_open_bdev(&g_job.input, g_opts.input_bdev, g_opts.input_offset);
 		if (rc < 0) {
 			SPDK_ERRLOG("%s: %s\n", g_opts.input_bdev, strerror(-rc));
 			dd_exit(rc);
@@ -567,39 +576,59 @@ dd_run(void *arg1)
 	}
 
 	write_size = g_opts.io_unit_count * g_opts.io_unit_size;
+	g_job.input.pos = g_opts.input_offset * g_opts.io_unit_size;
 
 	/* We cannot check write size for input files because /dev/zeros, /dev/random, etc would not work.
 	 * We will handle that during copying */
-	if (g_opts.io_unit_count != 0 && g_opts.input_bdev && write_size > g_job.input.total_size) {
-		SPDK_ERRLOG("--count value too big (%" PRIu64 ") - only %" PRIu64 " blocks available from input\n",
-			    g_opts.io_unit_count, g_job.input.total_size / g_opts.io_unit_size);
+	if (g_opts.input_bdev && g_job.input.pos > g_job.input.total_size) {
+		SPDK_ERRLOG("--skip value too big (%" PRIu64 ") - only %" PRIu64 " blocks available in input\n",
+			    g_opts.input_offset, g_job.input.total_size / g_opts.io_unit_size);
 		dd_exit(-ENOSPC);
 		return;
-	} else if (g_opts.io_unit_count != 0) {
-		g_job.copy_size = write_size;
-	} else {
-		g_job.copy_size = g_job.input.total_size;
 	}
 
+	if (g_opts.io_unit_count != 0 && g_opts.input_bdev &&
+	    write_size + g_job.input.pos > g_job.input.total_size) {
+		SPDK_ERRLOG("--count value too big (%" PRIu64 ") - only %" PRIu64 " blocks available from input\n",
+			    g_opts.io_unit_count, (g_job.input.total_size - g_job.input.pos) / g_opts.io_unit_size);
+		dd_exit(-ENOSPC);
+		return;
+	}
+
+	if (g_opts.io_unit_count != 0) {
+		g_job.copy_size = write_size;
+	} else {
+		g_job.copy_size = g_job.input.total_size - g_job.input.pos;
+	}
+
+	g_job.output.pos = g_opts.output_offset * g_opts.io_unit_size;
+
 	if (g_opts.output_file) {
-		if (dd_open_file(&g_job.output, g_opts.output_file, false) < 0) {
+		if (dd_open_file(&g_job.output, g_opts.output_file, g_opts.output_offset, false) < 0) {
 			SPDK_ERRLOG("%s: %s\n", g_opts.output_file, strerror(errno));
 			dd_exit(-errno);
 			return;
 		}
 		g_job.output.u.aio.poller = spdk_poller_register(dd_output_poll, NULL, 0);
 	} else if (g_opts.output_bdev) {
-		rc = dd_open_bdev(&g_job.output, g_opts.output_bdev);
+		rc = dd_open_bdev(&g_job.output, g_opts.output_bdev, g_opts.output_offset);
 		if (rc < 0) {
 			SPDK_ERRLOG("%s: %s\n", g_opts.output_bdev, strerror(-rc));
 			dd_exit(rc);
 			return;
 		}
 
-		if (g_opts.io_unit_count != 0 && write_size > g_job.output.total_size) {
+		if (g_job.output.pos > g_job.output.total_size) {
+			SPDK_ERRLOG("--seek value too big (%" PRIu64 ") - only %" PRIu64 " blocks available in output\n",
+				    g_opts.output_offset, g_job.output.total_size / g_opts.io_unit_size);
+			dd_exit(-ENOSPC);
+			return;
+		}
+
+		if (g_opts.io_unit_count != 0 && write_size + g_job.output.pos > g_job.output.total_size) {
 			SPDK_ERRLOG("--count value too big (%" PRIu64 ") - only %" PRIu64 " blocks available in output\n",
-				    g_opts.io_unit_count, g_job.output.total_size / g_opts.io_unit_size);
-			dd_exit(-errno);
+				    g_opts.io_unit_count, (g_job.output.total_size - g_job.output.pos) / g_opts.io_unit_size);
+			dd_exit(-ENOSPC);
 			return;
 		}
 	}
