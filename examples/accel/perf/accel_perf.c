@@ -466,6 +466,11 @@ _batch_prep_cmd(struct worker_thread *worker, struct ap_task *task, struct spdk_
 						    worker->ch, batch, task->dst, task->dst2,
 						    task->src, g_xfer_size_bytes, accel_done);
 		break;
+	case ACCEL_COMPARE:
+		rc = spdk_accel_batch_prep_compare(__accel_task_from_ap_task(task),
+						   worker->ch, batch, task->dst, task->src,
+						   g_xfer_size_bytes, accel_done);
+		break;
 	default:
 		assert(false);
 		break;
@@ -517,7 +522,9 @@ _init_thread(void *arg1)
 	pthread_mutex_unlock(&g_workers_lock);
 
 	/* TODO: remove the workload selection checks once all are added. */
-	if ((g_workload_selection == ACCEL_COPY || g_workload_selection == ACCEL_DUALCAST)
+	if ((g_workload_selection == ACCEL_COPY ||
+	     g_workload_selection == ACCEL_DUALCAST ||
+	     g_workload_selection == ACCEL_COMPARE)
 	    && ((g_capabilites & ACCEL_BATCH) == ACCEL_BATCH) &&
 	    g_queue_depth > 1) {
 
