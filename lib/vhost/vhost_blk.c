@@ -1280,14 +1280,14 @@ vhost_blk_destroy(struct spdk_vhost_dev *vdev)
 
 	assert(bvdev != NULL);
 
-	/* if the bdev is removed, don't need call spdk_put_io_channel. */
-	if (bvdev->bdev) {
-		spdk_put_io_channel(bvdev->dummy_io_channel);
-	}
-
 	rc = vhost_dev_unregister(&bvdev->vdev);
 	if (rc != 0) {
 		return rc;
+	}
+
+	/* if the bdev is removed, don't need call spdk_put_io_channel. */
+	if (bvdev->bdev) {
+		spdk_put_io_channel(bvdev->dummy_io_channel);
 	}
 
 	if (bvdev->bdev_desc) {
