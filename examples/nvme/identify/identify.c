@@ -65,6 +65,10 @@ static struct spdk_nvme_health_information_page health_page;
 
 static struct spdk_nvme_firmware_page firmware_page;
 
+static struct spdk_nvme_ana_page *g_ana_log_page;
+
+static size_t g_ana_log_page_size;
+
 static struct spdk_nvme_cmds_and_effect_log_page cmd_effects_log_page;
 
 static struct spdk_nvme_intel_smart_information_page intel_smart_page;
@@ -267,6 +271,19 @@ get_firmware_log_page(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static int
+get_ana_log_page(struct spdk_nvme_ctrlr *ctrlr)
+{
+	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS,
+					     SPDK_NVME_GLOBAL_NS_TAG, g_ana_log_page, g_ana_log_page_size, 0,
+					     get_log_page_completion, NULL)) {
+		printf("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
+		exit(1);
+	}
+
+	return 0;
+}
+
+static int
 get_cmd_effects_log_page(struct spdk_nvme_ctrlr *ctrlr)
 {
 	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_LOG_COMMAND_EFFECTS_LOG,
@@ -441,6 +458,26 @@ get_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 		}
 	}
 
+	if (cdata->cmic.ana_reporting) {
+		/* We always set RGO (Return Groups Only) to 0 in this tool, an ANA group
+		 * descriptor is returned only if that ANA group contains namespaces
+		 * that are attached to the controller processing the command, and
+		 * namespaces attached to the controller shall be members of an ANA group.
+		 * Hence the following size should be enough.
+		 */
+		g_ana_log_page_size = sizeof(struct spdk_nvme_ana_page) + cdata->nanagrpid *
+				      sizeof(struct spdk_nvme_ana_group_descriptor) + cdata->nn *
+				      sizeof(uint32_t);
+		g_ana_log_page = calloc(1, g_ana_log_page_size);
+		if (g_ana_log_page == NULL) {
+			exit(1);
+		}
+		if (get_ana_log_page(ctrlr) == 0) {
+			outstanding_commands++;
+		} else {
+			printf("Get Log Page (Asymmetric Namespace Access) failed\n");
+		}
+	}
 	if (cdata->lpa.celp) {
 		if (get_cmd_effects_log_page(ctrlr) == 0) {
 			outstanding_commands++;
@@ -662,8 +699,9 @@ print_ocssd_geometry(struct spdk_ocssd_geometry_data *geometry_data)
 }
 
 static void
-print_namespace(struct spdk_nvme_ns *ns)
+print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 {
+	const struct spdk_nvme_ctrlr_data	*cdata;
 	const struct spdk_nvme_ns_data		*nsdata;
 	const struct spdk_uuid			*uuid;
 	uint32_t				i;
@@ -671,6 +709,7 @@ print_namespace(struct spdk_nvme_ns *ns)
 	char					uuid_str[SPDK_UUID_STRING_LEN];
 	uint32_t				blocksize;
 
+	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 	nsdata = spdk_nvme_ns_get_data(ns);
 	flags  = spdk_nvme_ns_get_flags(ns);
 
@@ -764,6 +803,11 @@ print_namespace(struct spdk_nvme_ns *ns)
 
 	printf("NGUID/EUI64 Never Reused:              %s\n",
 	       nsdata->nsfeat.guid_never_reused ? "Yes" : "No");
+
+	if (cdata->cmic.ana_reporting) {
+		printf("ANA group ID:                          %u\n", nsdata->anagrpid);
+	}
+
 	printf("Number of LBA Formats:                 %d\n", nsdata->nlbaf + 1);
 	printf("Current LBA Format:                    LBA Format #%02d\n",
 	       nsdata->flbas.format);
@@ -772,7 +816,7 @@ print_namespace(struct spdk_nvme_ns *ns)
 		       i, 1 << nsdata->lbaf[i].lbads, nsdata->lbaf[i].ms);
 	printf("\n");
 
-	if (spdk_nvme_ctrlr_is_ocssd_supported(spdk_nvme_ns_get_ctrlr(ns))) {
+	if (spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
 		get_ocssd_geometry(ns, &geometry_data);
 		print_ocssd_geometry(&geometry_data);
 		get_ocssd_chunk_info_log_page(ns);
@@ -886,12 +930,13 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	union spdk_nvme_vs_register		vs;
 	union spdk_nvme_cmbsz_register		cmbsz;
 	uint8_t					str[512];
-	uint32_t				i;
+	uint32_t				i, j;
 	struct spdk_nvme_error_information_entry *error_entry;
 	struct spdk_pci_addr			pci_addr;
 	struct spdk_pci_device			*pci_dev;
 	struct spdk_pci_id			pci_id;
 	uint32_t				nsid;
+	struct spdk_nvme_ana_group_descriptor	*desc;
 
 	cap = spdk_nvme_ctrlr_get_regs_cap(ctrlr);
 	vs = spdk_nvme_ctrlr_get_regs_vs(ctrlr);
@@ -1087,6 +1132,8 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	}
 	printf("Per-Namespace SMART Log:               %s\n",
 	       cdata->lpa.ns_smart ? "Yes" : "No");
+	printf("Asymmetric Namespace Access Log Page:  %s\n",
+	       cdata->cmic.ana_reporting ? "Supported" : "Not Supported");
 	printf("Command Effects Log Page:              %s\n",
 	       cdata->lpa.celp ? "Supported" : "Not Supported");
 	printf("Get Log Page Extended Data:            %s\n",
@@ -1181,6 +1228,36 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 			printf("\n");
 		}
 	}
+	printf("\n");
+
+	if (g_ana_log_page) {
+		printf("Asymmetric Namespace Access\n");
+		printf("===========================\n");
+		if (g_hex_dump) {
+			hex_dump(g_ana_log_page, g_ana_log_page_size);
+			printf("\n");
+		}
+
+		printf("Change Count                    : %" PRIx64 "\n", g_ana_log_page->change_count);
+		printf("Number of ANA Group Descriptors : %u\n", g_ana_log_page->num_ana_group_desc);
+
+		desc = (void *)((uint8_t *)g_ana_log_page + sizeof(struct spdk_nvme_ana_page));
+
+		for (i = 0; i < g_ana_log_page->num_ana_group_desc; i++) {
+			printf("ANA Group Descriptor            : %u\n", i);
+			printf("  ANA Group ID                  : %u\n", desc->ana_group_id);
+			printf("  Number of NSID Values         : %u\n", desc->num_of_nsid);
+			printf("  Change Count                  : %" PRIx64 "\n", desc->change_count);
+			printf("  ANA State                     : %u\n", desc->ana_state);
+			for (j = 0; j < desc->num_of_nsid; j++) {
+				printf("  Namespace Identifier          : %u\n", desc->nsid[j]);
+			}
+			desc = (void *)((uint8_t *)desc + sizeof(struct spdk_nvme_ana_group_descriptor) +
+					desc->num_of_nsid * sizeof(uint32_t));
+		}
+		free(g_ana_log_page);
+	}
+
 	printf("\n");
 
 	if (cdata->lpa.celp) {
@@ -1571,7 +1648,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	printf("=================\n");
 	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
 	     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid)) {
-		print_namespace(spdk_nvme_ctrlr_get_ns(ctrlr, nsid));
+		print_namespace(ctrlr, spdk_nvme_ctrlr_get_ns(ctrlr, nsid));
 	}
 
 	if (g_discovery_page) {
