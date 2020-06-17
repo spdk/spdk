@@ -436,7 +436,6 @@ bdev_uring_group_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct bdev_uring_group_channel *ch = ctx_buf;
 
-	close(ch->uring.ring_fd);
 	io_uring_queue_exit(&ch->uring);
 
 	spdk_poller_unregister(&ch->poller);

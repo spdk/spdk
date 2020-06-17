@@ -1281,7 +1281,6 @@ uring_sock_group_impl_close(struct spdk_sock_group_impl *_group)
 	assert(group->io_inflight == 0);
 	assert(group->io_avail == SPDK_SOCK_GROUP_QUEUE_DEPTH);
 
-	close(group->uring.ring_fd);
 	io_uring_queue_exit(&group->uring);
 
 	free(group);
