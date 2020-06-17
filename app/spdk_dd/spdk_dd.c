@@ -41,6 +41,9 @@
 
 #include <libaio.h>
 
+#define DD_NSEC_SINCE_X(time_now, time_x) ((1000000000 * time_now.tv_sec + time_now.tv_nsec) \
+											- (1000000000 * time_x.tv_sec + time_x.tv_nsec))
+
 struct spdk_dd_opts {
 	char		*input_file;
 	char		*output_file;
@@ -118,6 +121,7 @@ struct dd_job {
 
 static struct dd_job g_job = {};
 static int g_error = 0;
+static struct timespec g_start_time;
 
 static void dd_target_populate_buffer(struct dd_io *io);
 
@@ -146,6 +150,70 @@ dd_exit(int rc)
 }
 
 static void
+dd_show_progress(uint64_t offset, uint64_t length, bool finish)
+{
+	char *unit_str[5] = {"", "k", "M", "G", "T"};
+	char *speed_type_str[2] = {"", "average "};
+	char *size_unit_str = "";
+	char *speed_unit_str = "";
+	char *speed_type = "";
+	uint64_t size = g_job.copy_size;
+	uint64_t size_unit = 1;
+	uint64_t speed_unit = 1;
+	uint64_t speed, tmp_speed;
+	static struct timespec g_time_last = {.tv_nsec = 0};
+	static uint64_t g_data_last = 0;
+	struct timespec time_now;
+	int i = 0;
+
+	clock_gettime(CLOCK_REALTIME, &time_now);
+
+	if (((time_now.tv_sec == g_time_last.tv_sec && offset + length != g_job.copy_size) ||
+	     (offset < g_data_last)) && !finish) {
+		/* refresh every one second */
+		return;
+	}
+
+	/* Find the rigth unit for size displaying (B vs kB vs MB vs GB vs TB) */
+	while (size > 1024 * 10) {
+		size /= 1024;
+		size_unit *= 1024;
+		size_unit_str = unit_str[++i];
+		if (i == 4) {
+			break;
+		}
+	}
+
+	if (!finish) {
+		speed_type = speed_type_str[0];
+		tmp_speed = speed = (offset - g_data_last) * 1000000000 / DD_NSEC_SINCE_X(time_now, g_time_last);
+	} else {
+		speed_type = speed_type_str[1];
+		tmp_speed = speed = offset * 1000000000 / DD_NSEC_SINCE_X(time_now, g_start_time);
+	}
+
+	i = 0;
+
+	/* Find the rigth unit for speed displaying (Bps vs kBps vs MBps vs GBps vs TBps) */
+	while (tmp_speed > 1024) {
+		tmp_speed /= 1024;
+		speed_unit *= 1024;
+		speed_unit_str = unit_str[++i];
+		if (i == 4) {
+			break;
+		}
+	}
+
+	printf("\33[2K\rCopying: %" PRIu64 "/%" PRIu64 " [%sB] (%s%" PRIu64 " %sBps)",
+	       (offset + length) / size_unit, g_job.copy_size / size_unit, size_unit_str, speed_type,
+	       speed / speed_unit, speed_unit_str);
+	fflush(stdout);
+
+	g_data_last = offset;
+	g_time_last = time_now;
+}
+
+static void
 _dd_write_bdev_done(struct spdk_bdev_io *bdev_io,
 		    bool success,
 		    void *cb_arg)
@@ -166,10 +234,16 @@ dd_target_write(struct dd_io *io)
 
 	if (g_error != 0) {
 		if (g_job.outstanding == 0) {
+			if (g_error == 0) {
+				dd_show_progress(io->offset, io->length, true);
+				printf("\n\n");
+			}
 			dd_exit(g_error);
 		}
 		return;
 	}
+
+	dd_show_progress(io->offset, io->length, false);
 
 	g_job.outstanding++;
 	io->type = DD_WRITE;
@@ -276,6 +350,10 @@ dd_target_populate_buffer(struct dd_io *io)
 
 	if (io->length == 0 || g_error != 0) {
 		if (g_job.outstanding == 0) {
+			if (g_error == 0) {
+				dd_show_progress(io->offset, io->length, true);
+				printf("\n\n");
+			}
 			dd_exit(g_error);
 		}
 		return;
@@ -549,6 +627,8 @@ dd_run(void *arg1)
 			return;
 		}
 	}
+
+	clock_gettime(CLOCK_REALTIME, &g_start_time);
 
 	for (i = 0; i < g_opts.queue_depth; i++) {
 		dd_target_populate_buffer(&g_job.ios[i]);
