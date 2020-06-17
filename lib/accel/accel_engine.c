@@ -202,6 +202,19 @@ spdk_accel_batch_prep_dualcast(struct spdk_accel_task *accel_req, struct spdk_io
 			batch, dst1, dst2, src,	nbytes, _accel_engine_done);
 }
 
+/* Accel framework public API for batch prep_compare function */
+int
+spdk_accel_batch_prep_compare(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
+			      struct spdk_accel_batch *batch, void *src1, void *src2, uint64_t nbytes,
+			      spdk_accel_completion_cb cb)
+{
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+
+	accel_req->cb = cb;
+	return accel_ch->engine->batch_prep_compare(accel_req->offload_ctx, accel_ch->ch,
+			batch, src1, src2, nbytes, _accel_engine_done);
+}
+
 /* Accel framework public API for compare function */
 int
 spdk_accel_submit_compare(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
@@ -531,12 +544,36 @@ sw_accel_batch_prep_dualcast(void *cb_arg, struct spdk_io_channel *ch,
 }
 
 static int
+sw_accel_batch_prep_compare(void *cb_arg, struct spdk_io_channel *ch,
+			    struct spdk_accel_batch *batch,
+			    void *src1, void *src2, uint64_t nbytes, spdk_accel_completion_cb cb)
+{
+	struct sw_accel_op *op;
+	struct sw_accel_io_channel *sw_ch = spdk_io_channel_get_ctx(ch);
+
+	op = _prep_op(cb_arg, sw_ch, batch, cb);
+	if (op == NULL) {
+		return -EINVAL;
+	}
+
+	/* Command specific. */
+	op->src = src1;
+	op->src2 = src2;
+	op->nbytes = nbytes;
+	op->op_code = SW_ACCEL_OPCODE_COMPARE;
+	TAILQ_INSERT_TAIL(&sw_ch->batch, op, link);
+
+	return 0;
+}
+
+static int
 sw_accel_batch_submit(void *cb_arg, struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
 		      spdk_accel_completion_cb cb)
 {
 	struct sw_accel_op *op;
 	struct sw_accel_io_channel *sw_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *accel_req;
+	int batch_status = 0, cmd_status = 0;
 
 	if ((struct spdk_accel_batch *)&sw_ch->batch != batch) {
 		SPDK_ERRLOG("Invalid batch\n");
@@ -557,19 +594,23 @@ sw_accel_batch_submit(void *cb_arg, struct spdk_io_channel *ch, struct spdk_acce
 			memcpy(op->dst, op->src, op->nbytes);
 			memcpy(op->dst2, op->src, op->nbytes);
 			break;
+		case SW_ACCEL_OPCODE_COMPARE:
+			cmd_status = memcmp(op->src, op->src2, op->nbytes);
+			break;
 		default:
 			assert(false);
 			break;
 		}
 
-		op->cb_fn(accel_req, 0);
+		batch_status |= cmd_status;
+		op->cb_fn(accel_req, cmd_status);
 		TAILQ_INSERT_TAIL(&sw_ch->op_pool, op, link);
 	}
 
 	/* Now complete the batch request itself. */
 	accel_req = (struct spdk_accel_task *)((uintptr_t)cb_arg -
 					       offsetof(struct spdk_accel_task, offload_ctx));
-	cb(accel_req, 0);
+	cb(accel_req, batch_status);
 
 	return 0;
 }
@@ -661,6 +702,7 @@ static struct spdk_accel_engine sw_accel_engine = {
 	.batch_create		= sw_accel_batch_start,
 	.batch_prep_copy	= sw_accel_batch_prep_copy,
 	.batch_prep_dualcast	= sw_accel_batch_prep_dualcast,
+	.batch_prep_compare	= sw_accel_batch_prep_compare,
 	.batch_submit		= sw_accel_batch_submit,
 	.compare		= sw_accel_submit_compare,
 	.fill			= sw_accel_submit_fill,

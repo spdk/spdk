@@ -227,6 +227,26 @@ int spdk_accel_submit_dualcast(struct spdk_accel_task *accel_req, struct spdk_io
 			       spdk_accel_completion_cb cb);
 
 /**
+ * Synchronous call to prepare a compare request into a previously initialized batch
+ *  created with spdk_accel_batch_create(). The callback will be called when the comapre
+ *  completes after the batch has been submitted by an asynchronous call to
+ *  spdk_accel_batch_submit().
+ *
+ * \param accel_req Accel request task.
+ * \param ch I/O channel to submit request to the accel engine.
+ * \param batch Handle provided when the batch was started with spdk_accel_batch_create().
+ * \param src1 First location to perform compare on.
+ * \param src2 Second location to perform compare on.
+ * \param nbytes Length in bytes to compare.
+ * \param cb Called when this operation completes.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_accel_batch_prep_compare(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
+				  struct spdk_accel_batch *batch, void *src1, void *src2,
+				  uint64_t nbytes, spdk_accel_completion_cb cb);
+
+/**
  * Submit a compare request.
  *
  * \param accel_req Accel request task.

@@ -56,6 +56,8 @@ struct spdk_accel_engine {
 			       void *dst, void *src, uint64_t nbytes, spdk_accel_completion_cb cb);
 	int (*batch_prep_dualcast)(void *cb_arg, struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
 				   void *dst1, void *dst2, void *src, uint64_t nbytes, spdk_accel_completion_cb cb);
+	int (*batch_prep_compare)(void *cb_arg, struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
+				  void *src1, void *src2, uint64_t nbytes, spdk_accel_completion_cb cb);
 	int (*batch_submit)(void *cb_arg, struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
 			    spdk_accel_completion_cb cb);
 	int (*compare)(void *cb_arg, struct spdk_io_channel *ch, void *src1, void *src2,
