@@ -1207,11 +1207,17 @@ _ftl_io_channel_destroy_cb(void *ctx)
 {
 	struct ftl_io_channel *ioch = ctx;
 	struct spdk_ftl_dev *dev = ioch->dev;
+	uint32_t i;
 
 	/* Do not destroy the channel if some of its entries are still in use */
 	if (spdk_ring_count(ioch->free_queue) != ioch->num_entries) {
 		spdk_thread_send_msg(spdk_get_thread(), _ftl_io_channel_destroy_cb, ctx);
 		return;
+	}
+
+	/* Evict all valid entries from cache */
+	for (i = 0; i < ioch->num_entries; ++i) {
+		ftl_evict_cache_entry(dev, &ioch->wbuf_entries[i]);
 	}
 
 	spdk_poller_unregister(&ioch->poller);

@@ -146,8 +146,6 @@ ftl_remove_wptr(struct ftl_wptr *wptr)
 	ftl_wptr_free(wptr);
 }
 
-static void ftl_evict_cache_entry(struct spdk_ftl_dev *dev, struct ftl_wbuf_entry *entry);
-
 static struct ftl_wbuf_entry *
 ftl_acquire_wbuf_entry(struct ftl_io_channel *io_channel, int io_flags)
 {
@@ -910,7 +908,7 @@ ftl_cache_lba_valid(struct spdk_ftl_dev *dev, struct ftl_wbuf_entry *entry)
 	return true;
 }
 
-static void
+void
 ftl_evict_cache_entry(struct spdk_ftl_dev *dev, struct ftl_wbuf_entry *entry)
 {
 	pthread_spin_lock(&entry->lock);

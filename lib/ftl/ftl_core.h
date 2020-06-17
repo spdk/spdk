@@ -298,6 +298,7 @@ int	ftl_nv_cache_scrub(struct ftl_nv_cache *nv_cache, spdk_bdev_io_completion_cb
 			   void *cb_arg);
 void	ftl_get_media_events(struct spdk_ftl_dev *dev);
 int	ftl_io_channel_poll(void *arg);
+void	ftl_evict_cache_entry(struct spdk_ftl_dev *dev, struct ftl_wbuf_entry *entry);
 struct spdk_io_channel *ftl_get_io_channel(const struct spdk_ftl_dev *dev);
 struct ftl_io_channel *ftl_io_channel_get_ctx(struct spdk_io_channel *ioch);
 
