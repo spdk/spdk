@@ -639,10 +639,8 @@ accel_perf_start(void *arg1)
 	spdk_put_io_channel(accel_ch);
 
 	if ((g_capabilites & g_workload_selection) != g_workload_selection) {
-		SPDK_ERRLOG("Selected workload is not supported by the current engine\n");
-		SPDK_NOTICELOG("Software engine is selected by default, enable a HW engine via RPC\n\n");
-		spdk_app_stop(-1);
-		return;
+		SPDK_WARNLOG("The selected workload is not natively supported by the current engine\n");
+		SPDK_WARNLOG("The software engine will be used instead.\n\n");
 	}
 
 	g_tsc_rate = spdk_get_ticks_hz();

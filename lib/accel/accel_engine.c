@@ -68,6 +68,20 @@ struct accel_io_channel {
 	struct spdk_io_channel		*ch;
 };
 
+/* Forward declarations of software implementations used when an
+ * engine has not implemented the capability.
+ */
+static int sw_accel_submit_dualcast(void *cb_arg, struct spdk_io_channel *ch, void *dst1,
+				    void *dst2, void *src, uint64_t nbytes, spdk_accel_completion_cb cb);
+static int sw_accel_submit_copy(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src,
+				uint64_t nbytes, spdk_accel_completion_cb cb);
+static int sw_accel_submit_compare(void *cb_arg, struct spdk_io_channel *ch, void *src1, void *src2,
+				   uint64_t nbytes, spdk_accel_completion_cb cb);
+static int sw_accel_submit_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill,
+				uint64_t nbytes, spdk_accel_completion_cb cb);
+static int sw_accel_submit_crc32c(void *cb_arg, struct spdk_io_channel *ch, uint32_t *dst,
+				  void *src, uint32_t seed, uint64_t nbytes, spdk_accel_completion_cb cb);
+
 /* Registration of hw modules (currently supports only 1 at a time) */
 void
 spdk_accel_hw_engine_register(struct spdk_accel_engine *accel_engine)
@@ -107,6 +121,7 @@ spdk_accel_get_capabilities(struct spdk_io_channel *ch)
 {
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 
+	/* All engines are required to implement this API. */
 	return accel_ch->engine->get_capabilities();
 }
 
@@ -118,8 +133,15 @@ spdk_accel_submit_copy(struct spdk_accel_task *accel_req, struct spdk_io_channel
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 
 	accel_req->cb = cb;
-	return accel_ch->engine->copy(accel_req->offload_ctx, accel_ch->ch, dst, src, nbytes,
-				      _accel_engine_done);
+
+	/* If the engine does not support it, fallback to the sw implementation. */
+	if (accel_ch->engine->copy) {
+		return accel_ch->engine->copy(accel_req->offload_ctx, accel_ch->ch, dst, src, nbytes,
+					      _accel_engine_done);
+	} else {
+		return sw_accel_submit_copy(accel_req->offload_ctx, accel_ch->ch, dst, src, nbytes,
+					    _accel_engine_done);
+	}
 }
 
 /* Accel framework public API for dual cast copy function */
@@ -136,11 +158,20 @@ spdk_accel_submit_dualcast(struct spdk_accel_task *accel_req, struct spdk_io_cha
 	}
 
 	accel_req->cb = cb;
-	return accel_ch->engine->dualcast(accel_req->offload_ctx, accel_ch->ch, dst1, dst2, src, nbytes,
-					  _accel_engine_done);
+
+	/* If the engine does not support it, fallback to the sw implementation. */
+	if (accel_ch->engine->dualcast) {
+		return accel_ch->engine->dualcast(accel_req->offload_ctx, accel_ch->ch, dst1, dst2, src, nbytes,
+						  _accel_engine_done);
+	} else {
+		return sw_accel_submit_dualcast(accel_req->offload_ctx, accel_ch->ch, dst1, dst2, src, nbytes,
+						_accel_engine_done);
+	}
 }
 
-/* Accel framework public API for batch_create function */
+/* Accel framework public API for batch_create function. All engines are
+ * required to implement this API.
+ */
 struct spdk_accel_batch *
 spdk_accel_batch_create(struct spdk_io_channel *ch)
 {
@@ -149,7 +180,9 @@ spdk_accel_batch_create(struct spdk_io_channel *ch)
 	return accel_ch->engine->batch_create(accel_ch->ch);
 }
 
-/* Accel framework public API for batch_submit function */
+/* Accel framework public API for batch_submit function. All engines are
+ * required to implement this API.
+ */
 int
 spdk_accel_batch_submit(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
 			struct spdk_accel_batch *batch, spdk_accel_completion_cb cb)
@@ -161,7 +194,9 @@ spdk_accel_batch_submit(struct spdk_accel_task *accel_req, struct spdk_io_channe
 					      _accel_engine_done);
 }
 
-/* Accel framework public API for getting max batch */
+/* Accel framework public API for getting max batch. All engines are
+ * required to implement this API.
+ */
 uint32_t
 spdk_accel_batch_get_max(struct spdk_io_channel *ch)
 {
@@ -170,7 +205,9 @@ spdk_accel_batch_get_max(struct spdk_io_channel *ch)
 	return accel_ch->engine->batch_get_max();
 }
 
-/* Accel framework public API for batch prep_copy function */
+/* Accel framework public API for batch prep_copy function. All engines are
+ * required to implement this API.
+ */
 int
 spdk_accel_batch_prep_copy(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
 			   struct spdk_accel_batch *batch, void *dst, void *src, uint64_t nbytes,
@@ -180,11 +217,12 @@ spdk_accel_batch_prep_copy(struct spdk_accel_task *accel_req, struct spdk_io_cha
 
 	accel_req->cb = cb;
 	return accel_ch->engine->batch_prep_copy(accel_req->offload_ctx, accel_ch->ch, batch, dst, src,
-			nbytes,
-			_accel_engine_done);
+			nbytes, _accel_engine_done);
 }
 
-/* Accel framework public API for batch prep_dualcast function */
+/* Accel framework public API for batch prep_dualcast function.  All engines are
+ * required to implement this API.
+ */
 int
 spdk_accel_batch_prep_dualcast(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
 			       struct spdk_accel_batch *batch, void *dst1, void *dst2, void *src, uint64_t nbytes,
@@ -202,7 +240,9 @@ spdk_accel_batch_prep_dualcast(struct spdk_accel_task *accel_req, struct spdk_io
 			batch, dst1, dst2, src,	nbytes, _accel_engine_done);
 }
 
-/* Accel framework public API for batch prep_compare function */
+/* Accel framework public API for batch prep_compare function.  All engines are
+ * required to implement this API.
+ */
 int
 spdk_accel_batch_prep_compare(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
 			      struct spdk_accel_batch *batch, void *src1, void *src2, uint64_t nbytes,
@@ -223,8 +263,15 @@ spdk_accel_submit_compare(struct spdk_accel_task *accel_req, struct spdk_io_chan
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 
 	accel_req->cb = cb;
-	return accel_ch->engine->compare(accel_req->offload_ctx, accel_ch->ch, src1, src2, nbytes,
-					 _accel_engine_done);
+
+	/* If the engine does not support it, fallback to the sw implementation. */
+	if (accel_ch->engine->compare) {
+		return accel_ch->engine->compare(accel_req->offload_ctx, accel_ch->ch, src1, src2, nbytes,
+						 _accel_engine_done);
+	} else {
+		return sw_accel_submit_compare(accel_req->offload_ctx, accel_ch->ch, src1, src2, nbytes,
+					       _accel_engine_done);
+	}
 }
 
 /* Accel framework public API for fill function */
@@ -235,8 +282,15 @@ spdk_accel_submit_fill(struct spdk_accel_task *accel_req, struct spdk_io_channel
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 
 	accel_req->cb = cb;
-	return accel_ch->engine->fill(accel_req->offload_ctx, accel_ch->ch, dst, fill, nbytes,
-				      _accel_engine_done);
+
+	/* If the engine does not support it, fallback to the sw implementation. */
+	if (accel_ch->engine->fill) {
+		return accel_ch->engine->fill(accel_req->offload_ctx, accel_ch->ch, dst, fill, nbytes,
+					      _accel_engine_done);
+	} else {
+		return sw_accel_submit_fill(accel_req->offload_ctx, accel_ch->ch, dst, fill, nbytes,
+					    _accel_engine_done);
+	}
 }
 
 /* Accel framework public API for CRC-32C function */
@@ -247,10 +301,16 @@ spdk_accel_submit_crc32c(struct spdk_accel_task *accel_req, struct spdk_io_chann
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 
 	accel_req->cb = cb;
-	return accel_ch->engine->crc32c(accel_req->offload_ctx, accel_ch->ch, dst, src,
-					seed, nbytes, _accel_engine_done);
-}
 
+	/* If the engine does not support it, fallback to the sw implementation. */
+	if (accel_ch->engine->crc32c) {
+		return accel_ch->engine->crc32c(accel_req->offload_ctx, accel_ch->ch, dst, src,
+						seed, nbytes, _accel_engine_done);
+	} else {
+		return sw_accel_submit_crc32c(accel_req->offload_ctx, accel_ch->ch, dst, src,
+					      seed, nbytes, _accel_engine_done);
+	}
+}
 
 /* Returns the largest context size of the accel modules. */
 size_t
@@ -521,8 +581,8 @@ sw_accel_batch_prep_copy(void *cb_arg, struct spdk_io_channel *ch, struct spdk_a
 
 static int
 sw_accel_batch_prep_dualcast(void *cb_arg, struct spdk_io_channel *ch,
-			     struct spdk_accel_batch *batch,
-			     void *dst1, void *dst2, void *src, uint64_t nbytes, spdk_accel_completion_cb cb)
+			     struct spdk_accel_batch *batch, void *dst1, void *dst2,
+			     void *src, uint64_t nbytes, spdk_accel_completion_cb cb)
 {
 	struct sw_accel_op *op;
 	struct sw_accel_io_channel *sw_ch = spdk_io_channel_get_ctx(ch);
@@ -545,8 +605,8 @@ sw_accel_batch_prep_dualcast(void *cb_arg, struct spdk_io_channel *ch,
 
 static int
 sw_accel_batch_prep_compare(void *cb_arg, struct spdk_io_channel *ch,
-			    struct spdk_accel_batch *batch,
-			    void *src1, void *src2, uint64_t nbytes, spdk_accel_completion_cb cb)
+			    struct spdk_accel_batch *batch, void *src1,
+			    void *src2, uint64_t nbytes, spdk_accel_completion_cb cb)
 {
 	struct sw_accel_op *op;
 	struct sw_accel_io_channel *sw_ch = spdk_io_channel_get_ctx(ch);
@@ -617,8 +677,7 @@ sw_accel_batch_submit(void *cb_arg, struct spdk_io_channel *ch, struct spdk_acce
 
 static int
 sw_accel_submit_copy(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src,
-		     uint64_t nbytes,
-		     spdk_accel_completion_cb cb)
+		     uint64_t nbytes, spdk_accel_completion_cb cb)
 {
 	struct spdk_accel_task *accel_req;
 
@@ -647,8 +706,7 @@ sw_accel_submit_dualcast(void *cb_arg, struct spdk_io_channel *ch, void *dst1, v
 
 static int
 sw_accel_submit_compare(void *cb_arg, struct spdk_io_channel *ch, void *src1, void *src2,
-			uint64_t nbytes,
-			spdk_accel_completion_cb cb)
+			uint64_t nbytes, spdk_accel_completion_cb cb)
 {
 	struct spdk_accel_task *accel_req;
 	int result;
@@ -664,8 +722,7 @@ sw_accel_submit_compare(void *cb_arg, struct spdk_io_channel *ch, void *src1, vo
 
 static int
 sw_accel_submit_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill,
-		     uint64_t nbytes,
-		     spdk_accel_completion_cb cb)
+		     uint64_t nbytes, spdk_accel_completion_cb cb)
 {
 	struct spdk_accel_task *accel_req;
 
@@ -679,8 +736,7 @@ sw_accel_submit_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_
 
 static int
 sw_accel_submit_crc32c(void *cb_arg, struct spdk_io_channel *ch, uint32_t *dst, void *src,
-		       uint32_t seed, uint64_t nbytes,
-		       spdk_accel_completion_cb cb)
+		       uint32_t seed, uint64_t nbytes, spdk_accel_completion_cb cb)
 {
 	struct spdk_accel_task *accel_req;
 
