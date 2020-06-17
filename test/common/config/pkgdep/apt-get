@@ -94,6 +94,7 @@ packages=(
 	bc
 	smartmontools
 	wget
+	xfsprogs
 )
 
 if [[ $OSID != ubuntu ]]; then

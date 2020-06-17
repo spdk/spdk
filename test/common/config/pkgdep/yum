@@ -54,6 +54,8 @@ packages=(
 	systemd-devel
 	python3
 	wget
+	btrfs-progs
+	xfsprogs
 )
 
 pre_install() {

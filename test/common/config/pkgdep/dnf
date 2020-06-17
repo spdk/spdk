@@ -57,6 +57,7 @@ packages=(
 	systemd-devel
 	smartmontools
 	wget
+	xfsprogs
 )
 
 pre_install() {
