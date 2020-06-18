@@ -158,13 +158,6 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
-	if (!spdk_nvme_ns_is_active(ns)) {
-		printf("Controller %-20.20s (%-20.20s): Skipping inactive NS %u\n",
-		       cdata->mn, cdata->sn,
-		       spdk_nvme_ns_get_id(ns));
-		return;
-	}
-
 	if (spdk_nvme_ns_get_size(ns) < g_arbitration.io_size_bytes ||
 	    spdk_nvme_ns_get_sector_size(ns) > g_arbitration.io_size_bytes) {
 		printf("WARNING: controller %-20.20s (%-20.20s) ns %u has invalid "
@@ -231,7 +224,7 @@ set_latency_tracking_feature(struct spdk_nvme_ctrlr *ctrlr, bool enable)
 static void
 register_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 {
-	int nsid, num_ns;
+	uint32_t nsid;
 	struct spdk_nvme_ns *ns;
 	struct ctrlr_entry *entry = calloc(1, sizeof(struct ctrlr_entry));
 	union spdk_nvme_cap_register cap = spdk_nvme_ctrlr_get_regs_cap(ctrlr);
@@ -253,8 +246,8 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 		set_latency_tracking_feature(ctrlr, true);
 	}
 
-	num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
-	for (nsid = 1; nsid <= num_ns; nsid++) {
+	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr); nsid != 0;
+	     nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid)) {
 		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
 		if (ns == NULL) {
 			continue;
