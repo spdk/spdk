@@ -473,10 +473,12 @@ spdk_pci_enumerate(struct spdk_pci_driver *driver,
 		rte_pci_register(&driver->driver);
 	}
 
+	rte_bus_scan();
+
 	driver->cb_fn = enum_cb;
 	driver->cb_arg = enum_ctx;
 
-	if (rte_bus_scan() != 0 || rte_bus_probe() != 0) {
+	if (rte_bus_probe() != 0) {
 		driver->cb_arg = NULL;
 		driver->cb_fn = NULL;
 		return -1;
