@@ -1210,7 +1210,7 @@ function opal_revert_cleanup() {
 # uio-pci-generic or vfio-pci
 function get_nvme_bdfs() {
 	xtrace_disable
-	jq -r .config[].params.traddr <<< $(scripts/gen_nvme.sh --json)
+	jq -r .config[].params.traddr <<< $($rootdir/scripts/gen_nvme.sh --json)
 	xtrace_restore
 }
 
