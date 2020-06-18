@@ -270,6 +270,21 @@ spdk_accel_batch_prep_fill(struct spdk_accel_task *accel_req, struct spdk_io_cha
 			batch, dst, fill, nbytes, _accel_engine_done);
 }
 
+/* Accel framework public API for batch prep_crc32c function.  All engines are
+ * required to implement this API.
+ */
+int
+spdk_accel_batch_prep_crc32c(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
+			     struct spdk_accel_batch *batch, uint32_t *dst, void *src, uint32_t seed,
+			     uint64_t nbytes, spdk_accel_completion_cb cb)
+{
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+
+	accel_req->cb = cb;
+	return accel_ch->engine->batch_prep_crc32c(accel_req->offload_ctx, accel_ch->ch,
+			batch, dst, src, seed, nbytes, _accel_engine_done);
+}
+
 /* Accel framework public API for compare function */
 int
 spdk_accel_submit_compare(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
@@ -665,6 +680,30 @@ sw_accel_batch_prep_fill(void *cb_arg, struct spdk_io_channel *ch,
 }
 
 static int
+sw_accel_batch_prep_crc32c(void *cb_arg, struct spdk_io_channel *ch,
+			   struct spdk_accel_batch *batch, uint32_t *dst, void *src,
+			   uint32_t seed, uint64_t nbytes, spdk_accel_completion_cb cb)
+{
+	struct sw_accel_op *op;
+	struct sw_accel_io_channel *sw_ch = spdk_io_channel_get_ctx(ch);
+
+	op = _prep_op(cb_arg, sw_ch, batch, cb);
+	if (op == NULL) {
+		return -EINVAL;
+	}
+
+	/* Command specific. */
+	op->dst = (void *)dst;
+	op->src = src;
+	op->seed = seed;
+	op->nbytes = nbytes;
+	op->op_code = SW_ACCEL_OPCODE_CRC32C;
+	TAILQ_INSERT_TAIL(&sw_ch->batch, op, link);
+
+	return 0;
+}
+
+static int
 sw_accel_batch_submit(void *cb_arg, struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
 		      spdk_accel_completion_cb cb)
 {
@@ -697,6 +736,9 @@ sw_accel_batch_submit(void *cb_arg, struct spdk_io_channel *ch, struct spdk_acce
 			break;
 		case SW_ACCEL_OPCODE_MEMFILL:
 			memset(op->dst, op->fill_pattern, op->nbytes);
+			break;
+		case SW_ACCEL_OPCODE_CRC32C:
+			*(uint32_t *)op->dst = spdk_crc32c_update(op->src, op->nbytes, ~op->seed);
 			break;
 		default:
 			assert(false);
@@ -801,6 +843,7 @@ static struct spdk_accel_engine sw_accel_engine = {
 	.batch_prep_dualcast	= sw_accel_batch_prep_dualcast,
 	.batch_prep_compare	= sw_accel_batch_prep_compare,
 	.batch_prep_fill	= sw_accel_batch_prep_fill,
+	.batch_prep_crc32c	= sw_accel_batch_prep_crc32c,
 	.batch_submit		= sw_accel_batch_submit,
 	.compare		= sw_accel_submit_compare,
 	.fill			= sw_accel_submit_fill,

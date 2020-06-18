@@ -300,6 +300,27 @@ int spdk_accel_submit_fill(struct spdk_accel_task *accel_req, struct spdk_io_cha
 			   void *dst, uint8_t fill, uint64_t nbytes, spdk_accel_completion_cb cb);
 
 /**
+ * Synchronous call to prepare a crc32c request into a previously initialized batch
+ *  created with spdk_accel_batch_create(). The callback will be called when the crc32c
+ *  completes after the batch has been submitted by an asynchronous call to
+ *  spdk_accel_batch_submit().
+ *
+ * \param accel_req Accel request task.
+ * \param ch I/O channel to submit request to the accel engine.
+ * \param batch Handle provided when the batch was started with spdk_accel_batch_create().
+ * \param dst Destination to write the CRC-32C to.
+ * \param src The source address for the data.
+ * \param seed Four byte seed value.
+ * \param nbytes Length in bytes.
+ * \param cb Called when this operation completes.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_accel_batch_prep_crc32c(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
+				 struct spdk_accel_batch *batch, uint32_t *dst, void *src, uint32_t seed,
+				 uint64_t nbytes, spdk_accel_completion_cb cb);
+
+/**
  * Submit a CRC-32C calculation request.
  *
  * This operation will calculate the 4 byte CRC32-C for the given data.

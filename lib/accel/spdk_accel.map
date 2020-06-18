@@ -14,6 +14,7 @@
 	spdk_accel_batch_prep_dualcast;
 	spdk_accel_batch_prep_compare;
 	spdk_accel_batch_prep_fill;
+	spdk_accel_batch_prep_crc32c;
 	spdk_accel_batch_submit;
 	spdk_accel_submit_copy;
 	spdk_accel_submit_dualcast;

@@ -487,6 +487,11 @@ _batch_prep_cmd(struct worker_thread *worker, struct ap_task *task, struct spdk_
 						worker->ch, batch, task->dst, *(uint8_t *)task->src,
 						g_xfer_size_bytes, accel_done);
 		break;
+	case ACCEL_CRC32C:
+		rc = spdk_accel_batch_prep_crc32c(__accel_task_from_ap_task(task),
+						  worker->ch, batch, (uint32_t *)task->dst, task->src,
+						  g_crc32c_seed, g_xfer_size_bytes, accel_done);
+		break;
 	default:
 		assert(false);
 		break;
@@ -537,13 +542,8 @@ _init_thread(void *arg1)
 	g_num_workers++;
 	pthread_mutex_unlock(&g_workers_lock);
 
-	/* TODO: remove the workload selection checks once all are added. */
-	if ((g_workload_selection == ACCEL_COPY ||
-	     g_workload_selection == ACCEL_DUALCAST ||
-	     g_workload_selection == ACCEL_COMPARE ||
-	     g_workload_selection == ACCEL_FILL)
-	    && ((g_capabilites & ACCEL_BATCH) == ACCEL_BATCH) &&
-	    g_queue_depth > 1) {
+	/* TODO: remove batch check once implemented for IOAT */
+	if ((g_capabilites & ACCEL_BATCH) == ACCEL_BATCH && g_queue_depth > 1) {
 
 		/* Selected engine supports batching and we have enough, so do it. */
 		max_per_batch = spdk_accel_batch_get_max(worker->ch);
