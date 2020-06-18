@@ -10,6 +10,7 @@
 	spdk_idxd_batch_prep_dualcast;
 	spdk_idxd_batch_prep_fill;
 	spdk_idxd_batch_prep_crc32c;
+	spdk_idxd_batch_prep_compare;
 	spdk_idxd_batch_submit;
 	spdk_idxd_batch_create;
 	spdk_idxd_batch_get_max;

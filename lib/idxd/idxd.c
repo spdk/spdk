@@ -1072,17 +1072,41 @@ spdk_idxd_batch_prep_crc32c(struct spdk_idxd_io_channel *chan, struct idxd_batch
 			    spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
+
 	/* Common prep. */
 	desc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch);
 	if (desc == NULL) {
 		return -EINVAL;
 	}
 
+	/* Command specific. */
 	desc->opcode = IDXD_OPCODE_CRC32C_GEN;
 	desc->dst_addr = (uintptr_t)dst;
 	desc->src_addr = (uintptr_t)src;
 	desc->flags &= IDXD_CLEAR_CRC_FLAGS;
 	desc->crc32c.seed = seed;
+	desc->xfer_size = nbytes;
+
+	return 0;
+}
+
+int
+spdk_idxd_batch_prep_compare(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
+			     void *src1, void *src2, uint64_t nbytes, spdk_idxd_req_cb cb_fn,
+			     void *cb_arg)
+{
+	struct idxd_hw_desc *desc;
+
+	/* Common prep. */
+	desc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch);
+	if (desc == NULL) {
+		return -EINVAL;
+	}
+
+	/* Command specific. */
+	desc->opcode = IDXD_OPCODE_COMPARE;
+	desc->src_addr = (uintptr_t)src1;
+	desc->src2_addr = (uintptr_t)src2;
 	desc->xfer_size = nbytes;
 
 	return 0;

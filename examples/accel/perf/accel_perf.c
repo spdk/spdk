@@ -296,6 +296,8 @@ _accel_done(void *arg1)
 				worker->xfer_failed++;
 			}
 			break;
+		case ACCEL_COMPARE:
+			break;
 		default:
 			assert(false);
 			break;

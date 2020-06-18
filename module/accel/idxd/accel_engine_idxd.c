@@ -541,6 +541,20 @@ idxd_batch_prep_crc32c(void *cb_arg, struct spdk_io_channel *ch, struct spdk_acc
 					   idxd_task);
 }
 
+static int
+idxd_batch_prep_compare(void *cb_arg, struct spdk_io_channel *ch, struct spdk_accel_batch *_batch,
+			void *src1, void *src2, uint64_t nbytes, spdk_accel_completion_cb cb)
+{
+	struct idxd_task *idxd_task = (struct idxd_task *)cb_arg;
+	struct idxd_io_channel *chan = spdk_io_channel_get_ctx(ch);
+	struct idxd_batch *batch = (struct idxd_batch *)_batch;
+
+	idxd_task->cb = cb;
+
+	return spdk_idxd_batch_prep_compare(chan->chan, batch, src1, src2, nbytes, idxd_done,
+					    idxd_task);
+}
+
 static struct spdk_accel_engine idxd_accel_engine = {
 	.get_capabilities	= idxd_get_capabilities,
 	.copy			= idxd_submit_copy,
@@ -550,6 +564,7 @@ static struct spdk_accel_engine idxd_accel_engine = {
 	.batch_prep_fill	= idxd_batch_prep_fill,
 	.batch_prep_dualcast	= idxd_batch_prep_dualcast,
 	.batch_prep_crc32c	= idxd_batch_prep_crc32c,
+	.batch_prep_compare	= idxd_batch_prep_compare,
 	.batch_submit		= idxd_batch_submit,
 	.dualcast		= idxd_submit_dualcast,
 	.compare		= idxd_submit_compare,
