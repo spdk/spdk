@@ -831,6 +831,11 @@ function nvme_cli_build() {
 		exit 1
 	fi
 
+	if ! grep -q "DEF_VER=v1.6" $spdk_nvme_cli/NVME-VERSION-GEN; then
+		echo "SPDK supports only \"spdk/nvme-cli\" project on \"spdk-1.6\" branch."
+		exit 1
+	fi
+
 	# Build against the version of SPDK under test
 	pushd $spdk_nvme_cli
 
