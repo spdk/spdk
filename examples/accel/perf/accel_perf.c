@@ -290,6 +290,12 @@ _accel_done(void *arg1)
 				worker->xfer_failed++;
 			}
 			break;
+		case ACCEL_FILL:
+			if (memcmp(task->dst, task->src, g_xfer_size_bytes)) {
+				SPDK_NOTICELOG("Data miscompare\n");
+				worker->xfer_failed++;
+			}
+			break;
 		default:
 			assert(false);
 			break;
@@ -438,6 +444,11 @@ _get_task_data_bufs(struct ap_task *task)
 		memset(task->dst, ~DATA_PATTERN, g_xfer_size_bytes);
 	}
 
+	/* For fill, set the entire src buffer so we can check if verify is enabled. */
+	if (g_workload_selection == ACCEL_FILL) {
+		memset(task->src, g_fill_pattern, g_xfer_size_bytes);
+	}
+
 	if (g_workload_selection == ACCEL_DUALCAST) {
 		task->dst2 = spdk_dma_zmalloc(g_xfer_size_bytes, align, NULL);
 		if (task->dst2 == NULL) {
@@ -470,6 +481,11 @@ _batch_prep_cmd(struct worker_thread *worker, struct ap_task *task, struct spdk_
 		rc = spdk_accel_batch_prep_compare(__accel_task_from_ap_task(task),
 						   worker->ch, batch, task->dst, task->src,
 						   g_xfer_size_bytes, accel_done);
+		break;
+	case ACCEL_FILL:
+		rc = spdk_accel_batch_prep_fill(__accel_task_from_ap_task(task),
+						worker->ch, batch, task->dst, *(uint8_t *)task->src,
+						g_xfer_size_bytes, accel_done);
 		break;
 	default:
 		assert(false);
@@ -524,7 +540,8 @@ _init_thread(void *arg1)
 	/* TODO: remove the workload selection checks once all are added. */
 	if ((g_workload_selection == ACCEL_COPY ||
 	     g_workload_selection == ACCEL_DUALCAST ||
-	     g_workload_selection == ACCEL_COMPARE)
+	     g_workload_selection == ACCEL_COMPARE ||
+	     g_workload_selection == ACCEL_FILL)
 	    && ((g_capabilites & ACCEL_BATCH) == ACCEL_BATCH) &&
 	    g_queue_depth > 1) {
 

@@ -263,6 +263,26 @@ int spdk_accel_submit_compare(struct spdk_accel_task *accel_req, struct spdk_io_
 			      spdk_accel_completion_cb cb);
 
 /**
+ * Synchronous call to prepare a fill request into a previously initialized batch
+ *  created with spdk_accel_batch_create(). The callback will be called when the fill
+ *  completes after the batch has been submitted by an asynchronous call to
+ *  spdk_accel_batch_submit().
+ *
+ * \param accel_req Accel request task.
+ * \param ch I/O channel to submit request to the accel engine.
+ * \param batch Handle provided when the batch was started with spdk_accel_batch_create().
+ * \param dst Destination to fill.
+ * \param fill Constant byte to fill to the destination.
+ * \param nbytes Length in bytes to fill.
+ * \param cb Called when this operation completes.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_accel_batch_prep_fill(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
+			       struct spdk_accel_batch *batch, void *dst, uint8_t fill,
+			       uint64_t nbytes, spdk_accel_completion_cb cb);
+
+/**
  * Submit a fill request.
  *
  * This operation will fill the destination buffer with the specified value.
