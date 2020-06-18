@@ -275,7 +275,27 @@ int spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan,
 			     spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**
- * Build and submit an idxd memory fill request.
+ * Synchronous call to prepare a fill request into a previously initialized batch
+ *  created with spdk_idxd_batch_create(). The callback will be called when the fill
+ *  completes after the batch has been submitted by an asynchronous call to
+ *  spdk_idxd_batch_submit().
+ *
+ * \param chan IDXD channel to submit request.
+ * \param batch Handle provided when the batch was started with spdk_accel_batch_create().
+ * \param dst Destination virtual address.
+ * \param fill_pattern Repeating eight-byte pattern to use for memory fill.
+ * \param nbytes Number of bytes to fill.
+ * \param cb_fn Callback function which will be called when the request is complete.
+ * \param cb_arg Opaque value which will be passed back as the arg parameter in
+ * the completion callback.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_idxd_batch_prep_fill(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
+			      void *dst, uint64_t fill_pattern, uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg);
+
+/**
+ * Build and submit a idxd memory fill request.
  *
  * This function will build the fill descriptor and then immediately submit
  * by writing to the proper device portal.

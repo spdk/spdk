@@ -820,8 +820,7 @@ spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan, void *src1, const vo
 
 int
 spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan, void *dst, uint64_t fill_pattern,
-		      uint64_t nbytes,
-		      spdk_idxd_req_cb cb_fn, void *cb_arg)
+		      uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
 
@@ -1006,6 +1005,45 @@ spdk_idxd_batch_prep_copy(struct spdk_idxd_io_channel *chan, struct idxd_batch *
 }
 
 int
+spdk_idxd_batch_prep_fill(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
+			  void *dst, uint64_t fill_pattern, uint64_t nbytes,
+			  spdk_idxd_req_cb cb_fn, void *cb_arg)
+{
+	struct idxd_hw_desc *desc;
+	struct idxd_comp *comp;
+
+	if (_does_batch_exist(batch, chan) == false) {
+		SPDK_ERRLOG("Attempt to add to a batch that doesn't exist\n.");
+		return -EINVAL;
+	}
+
+	if ((batch->cur_index - batch->start_index) == DESC_PER_BATCH) {
+		SPDK_ERRLOG("Attempt to add to a batch that is already full\n.");
+		return -ENOMEM;
+	}
+
+	desc = &chan->ring_ctrl.user_desc[batch->cur_index];
+	comp = &chan->ring_ctrl.user_completions[batch->cur_index];
+	SPDK_DEBUGLOG(SPDK_LOG_IDXD, "Prep batch %p index %u\n", batch, batch->cur_index);
+
+	batch->cur_index++;
+	assert(batch->cur_index > batch->start_index);
+
+	desc->flags = IDXD_FLAG_COMPLETION_ADDR_VALID | IDXD_FLAG_REQUEST_COMPLETION;
+	desc->opcode = IDXD_OPCODE_MEMFILL;
+	desc->pattern = fill_pattern;
+	desc->dst_addr = (uintptr_t)dst;
+	desc->xfer_size = nbytes;
+
+	desc->completion_addr = (uintptr_t)&comp->hw;
+	comp->cb_arg = cb_arg;
+	comp->cb_fn = cb_fn;
+	comp->batch = batch;
+
+	return 0;
+}
+
+int
 spdk_idxd_batch_prep_dualcast(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
 			      void *dst1, void *dst2, const void *src, uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
@@ -1114,6 +1152,7 @@ _spdk_idxd_process_batch_events(struct spdk_idxd_io_channel *chan)
 					status = comp->hw.result;
 				}
 				break;
+			case IDXD_OPCODE_MEMFILL:
 			case IDXD_OPCODE_DUALCAST:
 			case IDXD_OPCODE_MEMMOVE:
 				break;
