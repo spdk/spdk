@@ -159,11 +159,12 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
 	if (spdk_nvme_ns_get_size(ns) < g_arbitration.io_size_bytes ||
-	    spdk_nvme_ns_get_sector_size(ns) > g_arbitration.io_size_bytes) {
+	    spdk_nvme_ns_get_extended_sector_size(ns) > g_arbitration.io_size_bytes ||
+	    g_arbitration.io_size_bytes % spdk_nvme_ns_get_extended_sector_size(ns)) {
 		printf("WARNING: controller %-20.20s (%-20.20s) ns %u has invalid "
 		       "ns size %" PRIu64 " / block size %u for I/O size %u\n",
 		       cdata->mn, cdata->sn, spdk_nvme_ns_get_id(ns),
-		       spdk_nvme_ns_get_size(ns), spdk_nvme_ns_get_sector_size(ns),
+		       spdk_nvme_ns_get_size(ns), spdk_nvme_ns_get_extended_sector_size(ns),
 		       g_arbitration.io_size_bytes);
 		return;
 	}
