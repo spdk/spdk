@@ -41,6 +41,17 @@ Vagrant.configure(2) do |config|
   distro = ( ENV['SPDK_VAGRANT_DISTRO'] || "fedora30")
   provider = (ENV['SPDK_VAGRANT_PROVIDER'] || "virtualbox")
 
+  # Get all variables for creating vm
+  vmcpu=(ENV['SPDK_VAGRANT_VMCPU'] || 2)
+  vmram=(ENV['SPDK_VAGRANT_VMRAM'] || 4096)
+  spdk_dir=(ENV['SPDK_DIR'] || "none")
+  vmemulator=(ENV['SPDK_QEMU_EMULATOR'] || "")
+  emulated_nvme_types=(ENV['NVME_DISKS_TYPE'] || "nvme").split(',')
+  nvme_namespaces=(ENV['NVME_DISKS_NAMESPACES'] || "").split(',')
+  nvme_file=(ENV['NVME_FILE'] || "").split(',')
+  nvme_cmbs=(ENV['NVME_CMB'] || "").split(',')
+  vagrantfile_dir=(ENV['VAGRANTFILE_DIR'] || "none")
+
   # generic/freebsd boxes do not work properly with vagrant-proxyconf and
   # have issues installing rsync and sshfs for syncing files. NFS is
   # pre-installed, so use it.
@@ -120,16 +131,6 @@ Vagrant.configure(2) do |config|
     SCRIPT
     config.vm.provision "shell", inline: $freebsd_spdk_repo
   end
-
-  vmcpu=(ENV['SPDK_VAGRANT_VMCPU'] || 2)
-  vmram=(ENV['SPDK_VAGRANT_VMRAM'] || 4096)
-  spdk_dir=(ENV['SPDK_DIR'] || "none")
-  vmemulator=(ENV['SPDK_QEMU_EMULATOR'] || "")
-  emulated_nvme_types=(ENV['NVME_DISKS_TYPE'] || "nvme").split(',')
-  nvme_namespaces=(ENV['NVME_DISKS_NAMESPACES'] || "").split(',')
-  nvme_file=(ENV['NVME_FILE'] || "").split(',')
-  nvme_cmbs=(ENV['NVME_CMB'] || "").split(',')
-  vagrantfile_dir=(ENV['VAGRANTFILE_DIR'] || "none")
 
   config.ssh.forward_agent = true
   config.ssh.forward_x11 = true
