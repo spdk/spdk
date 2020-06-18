@@ -32,8 +32,6 @@ waitforblk "${nvme_name}n1"
 oacs=$(${NVME_CMD} id-ctrl $ctrlr | grep oacs | cut -d: -f2)
 oacs_firmware=$((oacs & 0x4))
 
-set +e
-
 ${NVME_CMD} get-ns-id $ns > ${KERNEL_OUT}.1
 ${NVME_CMD} id-ns $ns > ${KERNEL_OUT}.2
 ${NVME_CMD} list-ns $ns > ${KERNEL_OUT}.3
@@ -48,8 +46,6 @@ ${NVME_CMD} error-log $ctrlr > ${KERNEL_OUT}.7
 ${NVME_CMD} get-feature $ctrlr -f 1 -s 1 -l 100 > ${KERNEL_OUT}.8
 ${NVME_CMD} get-log $ctrlr -i 1 -l 100 > ${KERNEL_OUT}.9
 ${NVME_CMD} reset $ctrlr > ${KERNEL_OUT}.10
-
-set -e
 
 $rootdir/scripts/setup.sh
 
@@ -69,8 +65,6 @@ waitforfile "$ns"
 $rpc_py bdev_get_bdevs
 $rpc_py bdev_nvme_get_controllers
 
-set +e
-
 ${NVME_CMD} get-ns-id $ns > ${CUSE_OUT}.1
 ${NVME_CMD} id-ns $ns > ${CUSE_OUT}.2
 ${NVME_CMD} list-ns $ns > ${CUSE_OUT}.3
@@ -85,8 +79,6 @@ ${NVME_CMD} error-log $ctrlr > ${CUSE_OUT}.7
 ${NVME_CMD} get-feature $ctrlr -f 1 -s 1 -l 100 > ${CUSE_OUT}.8
 ${NVME_CMD} get-log $ctrlr -i 1 -l 100 > ${CUSE_OUT}.9
 ${NVME_CMD} reset $ctrlr > ${CUSE_OUT}.10
-
-set -e
 
 for i in {1..10}; do
 	if [ -f "${KERNEL_OUT}.${i}" ] && [ -f "${CUSE_OUT}.${i}" ]; then
