@@ -76,7 +76,7 @@ struct nvme_bdev_ctrlr {
 	 *  target for CONTROLLER IDENTIFY command during initialization
 	 */
 	struct spdk_nvme_ctrlr		*ctrlr;
-	struct spdk_nvme_transport_id	trid;
+	struct spdk_nvme_transport_id	*trid;
 	char				*name;
 	int				ref;
 	bool				resetting;
