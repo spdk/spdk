@@ -24,13 +24,15 @@ if [[ -z "$nvme_name" ]]; then
 	return 1
 fi
 
-set +e
-
 ctrlr="/dev/${nvme_name}"
 ns="/dev/${nvme_name}n1"
 
+waitforblk "${nvme_name}n1"
+
 oacs=$(${NVME_CMD} id-ctrl $ctrlr | grep oacs | cut -d: -f2)
 oacs_firmware=$((oacs & 0x4))
+
+set +e
 
 ${NVME_CMD} get-ns-id $ns > ${KERNEL_OUT}.1
 ${NVME_CMD} id-ns $ns > ${KERNEL_OUT}.2
