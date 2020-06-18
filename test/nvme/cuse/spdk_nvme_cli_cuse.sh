@@ -62,23 +62,19 @@ waitforlisten $spdk_tgt_pid
 $rpc_py bdev_nvme_attach_controller -b Nvme0 -t PCIe -a ${bdf}
 $rpc_py bdev_nvme_cuse_register -n Nvme0
 
-sleep 5
-
-if [ ! -c /dev/spdk/nvme0 ]; then
-	return 1
-fi
+ctrlr="/dev/spdk/nvme0"
+ns="${ctrlr}n1"
+waitforfile "$ns"
 
 $rpc_py bdev_get_bdevs
 $rpc_py bdev_nvme_get_controllers
 
 set +e
 
-ns="/dev/spdk/nvme0n1"
 ${NVME_CMD} get-ns-id $ns > ${CUSE_OUT}.1
 ${NVME_CMD} id-ns $ns > ${CUSE_OUT}.2
 ${NVME_CMD} list-ns $ns > ${CUSE_OUT}.3
 
-ctrlr="/dev/spdk/nvme0"
 ${NVME_CMD} id-ctrl $ctrlr > ${CUSE_OUT}.4
 ${NVME_CMD} list-ctrl $ctrlr > ${CUSE_OUT}.5
 if [ "$oacs_firmware" -ne "0" ]; then
@@ -101,14 +97,13 @@ done
 
 rm -Rf $testdir/match_files
 
-if [ ! -c "$ctrlr" ]; then
-	return 1
-fi
-
 # Verify admin cmd when no data is transferred,
 # by creating and deleting completion queue.
 ${NVME_CMD} admin-passthru $ctrlr -o 5 --cdw10=0x3ff0003 --cdw11=0x1 -r
 ${NVME_CMD} admin-passthru $ctrlr -o 4 --cdw10=0x3
+
+[[ -c "$ctrlr" ]]
+[[ -c "$ns" ]]
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_tgt_pid
