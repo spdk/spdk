@@ -730,7 +730,6 @@ _idxd_prep_command(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
 	comp->cb_arg = cb_arg;
 	comp->cb_fn = cb_fn;
 	if (batch) {
-		assert(comp->batch == NULL);
 		comp->batch = batch;
 		batch->batch_desc_index = index;
 	}
@@ -966,21 +965,21 @@ spdk_idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *bat
 	return 0;
 }
 
-int
-spdk_idxd_batch_prep_copy(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
-			  void *dst, const void *src, uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
+static struct idxd_hw_desc *
+_idxd_prep_batch_cmd(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
+		     void *cb_arg, struct idxd_batch *batch)
 {
 	struct idxd_hw_desc *desc;
 	struct idxd_comp *comp;
 
 	if (_does_batch_exist(batch, chan) == false) {
 		SPDK_ERRLOG("Attempt to add to a batch that doesn't exist\n.");
-		return -EINVAL;
+		return NULL;
 	}
 
 	if ((batch->cur_index - batch->start_index) == DESC_PER_BATCH) {
 		SPDK_ERRLOG("Attempt to add to a batch that is already full\n.");
-		return -ENOMEM;
+		return NULL;
 	}
 
 	desc = &chan->ring_ctrl.user_desc[batch->cur_index];
@@ -991,15 +990,31 @@ spdk_idxd_batch_prep_copy(struct spdk_idxd_io_channel *chan, struct idxd_batch *
 	assert(batch->cur_index > batch->start_index);
 
 	desc->flags = IDXD_FLAG_COMPLETION_ADDR_VALID | IDXD_FLAG_REQUEST_COMPLETION;
-	desc->opcode = IDXD_OPCODE_MEMMOVE;
-	desc->src_addr = (uintptr_t)src;
-	desc->dst_addr = (uintptr_t)dst;
-	desc->xfer_size = nbytes;
-
 	desc->completion_addr = (uintptr_t)&comp->hw;
 	comp->cb_arg = cb_arg;
 	comp->cb_fn = cb_fn;
 	comp->batch = batch;
+
+	return desc;
+}
+
+int
+spdk_idxd_batch_prep_copy(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
+			  void *dst, const void *src, uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
+{
+	struct idxd_hw_desc *desc;
+
+	/* Common prep. */
+	desc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch);
+	if (desc == NULL) {
+		return -EINVAL;
+	}
+
+	/* Command specific. */
+	desc->opcode = IDXD_OPCODE_MEMMOVE;
+	desc->src_addr = (uintptr_t)src;
+	desc->dst_addr = (uintptr_t)dst;
+	desc->xfer_size = nbytes;
 
 	return 0;
 }
@@ -1010,35 +1025,18 @@ spdk_idxd_batch_prep_fill(struct spdk_idxd_io_channel *chan, struct idxd_batch *
 			  spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
-	struct idxd_comp *comp;
 
-	if (_does_batch_exist(batch, chan) == false) {
-		SPDK_ERRLOG("Attempt to add to a batch that doesn't exist\n.");
+	/* Common prep. */
+	desc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch);
+	if (desc == NULL) {
 		return -EINVAL;
 	}
 
-	if ((batch->cur_index - batch->start_index) == DESC_PER_BATCH) {
-		SPDK_ERRLOG("Attempt to add to a batch that is already full\n.");
-		return -ENOMEM;
-	}
-
-	desc = &chan->ring_ctrl.user_desc[batch->cur_index];
-	comp = &chan->ring_ctrl.user_completions[batch->cur_index];
-	SPDK_DEBUGLOG(SPDK_LOG_IDXD, "Prep batch %p index %u\n", batch, batch->cur_index);
-
-	batch->cur_index++;
-	assert(batch->cur_index > batch->start_index);
-
-	desc->flags = IDXD_FLAG_COMPLETION_ADDR_VALID | IDXD_FLAG_REQUEST_COMPLETION;
+	/* Command specific. */
 	desc->opcode = IDXD_OPCODE_MEMFILL;
 	desc->pattern = fill_pattern;
 	desc->dst_addr = (uintptr_t)dst;
 	desc->xfer_size = nbytes;
-
-	desc->completion_addr = (uintptr_t)&comp->hw;
-	comp->cb_arg = cb_arg;
-	comp->cb_fn = cb_fn;
-	comp->batch = batch;
 
 	return 0;
 }
@@ -1048,41 +1046,22 @@ spdk_idxd_batch_prep_dualcast(struct spdk_idxd_io_channel *chan, struct idxd_bat
 			      void *dst1, void *dst2, const void *src, uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
-	struct idxd_comp *comp;
 
 	if ((uintptr_t)dst1 & (ALIGN_4K - 1) || (uintptr_t)dst2 & (ALIGN_4K - 1)) {
 		SPDK_ERRLOG("Dualcast requires 4K alignment on dst addresses\n");
 		return -EINVAL;
 	}
 
-	if (_does_batch_exist(batch, chan) == false) {
-		SPDK_ERRLOG("Attempt to add to a batch that doesn't exist\n.");
+	/* Common prep. */
+	desc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch);
+	if (desc == NULL) {
 		return -EINVAL;
 	}
-
-	if ((batch->cur_index - batch->start_index) == DESC_PER_BATCH) {
-		SPDK_ERRLOG("Attempt to add to a batch that is already full\n.");
-		return -ENOMEM;
-	}
-
-	desc = &chan->ring_ctrl.user_desc[batch->cur_index];
-	comp = &chan->ring_ctrl.user_completions[batch->cur_index];
-	SPDK_DEBUGLOG(SPDK_LOG_IDXD, "Prep batch %p index %u\n", batch, batch->cur_index);
-
-	batch->cur_index++;
-	assert(batch->cur_index > batch->start_index);
-
-	desc->flags = IDXD_FLAG_COMPLETION_ADDR_VALID | IDXD_FLAG_REQUEST_COMPLETION;
 	desc->opcode = IDXD_OPCODE_DUALCAST;
 	desc->src_addr = (uintptr_t)src;
 	desc->dst_addr = (uintptr_t)dst1;
 	desc->dest2 = (uintptr_t)dst2;
 	desc->xfer_size = nbytes;
-
-	desc->completion_addr = (uintptr_t)&comp->hw;
-	comp->cb_arg = cb_arg;
-	comp->cb_fn = cb_fn;
-	comp->batch = batch;
 
 	return 0;
 }
@@ -1093,37 +1072,18 @@ spdk_idxd_batch_prep_crc32c(struct spdk_idxd_io_channel *chan, struct idxd_batch
 			    spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
-	struct idxd_comp *comp;
-
-	if (_does_batch_exist(batch, chan) == false) {
-		SPDK_ERRLOG("Attempt to add to a batch that doesn't exist\n.");
+	/* Common prep. */
+	desc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch);
+	if (desc == NULL) {
 		return -EINVAL;
 	}
-
-	if ((batch->cur_index - batch->start_index) == DESC_PER_BATCH) {
-		SPDK_ERRLOG("Attempt to add to a batch that is already full\n.");
-		return -ENOMEM;
-	}
-
-	desc = &chan->ring_ctrl.user_desc[batch->cur_index];
-	comp = &chan->ring_ctrl.user_completions[batch->cur_index];
-	SPDK_DEBUGLOG(SPDK_LOG_IDXD, "Prep batch %p index %u\n", batch, batch->cur_index);
-
-	batch->cur_index++;
-	assert(batch->cur_index > batch->start_index);
 
 	desc->opcode = IDXD_OPCODE_CRC32C_GEN;
 	desc->dst_addr = (uintptr_t)dst;
 	desc->src_addr = (uintptr_t)src;
-	desc->flags = IDXD_FLAG_COMPLETION_ADDR_VALID | IDXD_FLAG_REQUEST_COMPLETION;
 	desc->flags &= IDXD_CLEAR_CRC_FLAGS;
 	desc->crc32c.seed = seed;
 	desc->xfer_size = nbytes;
-
-	desc->completion_addr = (uintptr_t)&comp->hw;
-	comp->cb_arg = cb_arg;
-	comp->cb_fn = cb_fn;
-	comp->batch = batch;
 
 	return 0;
 }
