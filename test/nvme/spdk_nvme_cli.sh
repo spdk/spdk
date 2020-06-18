@@ -5,6 +5,11 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/scripts/common.sh
 source $rootdir/test/common/autotest_common.sh
 
+if [[ $(uname) != "Linux" ]]; then
+	echo "NVMe cuse tests only supported on Linux"
+	exit 1
+fi
+
 if [ -z "${DEPENDENCY_DIR}" ]; then
 	echo DEPENDENCY_DIR not defined!
 	exit 1
@@ -17,17 +22,16 @@ if [ ! -d $spdk_nvme_cli ]; then
 	exit 1
 fi
 
-if [ $(uname) = Linux ]; then
-	trap "kill_stub; exit 1" SIGINT SIGTERM EXIT
-	start_stub "-s 2048 -i 0 -m 0xF"
-fi
-
 # Build against the version of SPDK under test
 rm -f "$spdk_nvme_cli/spdk"
 ln -sf "$rootdir" "$spdk_nvme_cli/spdk"
 
 cd $spdk_nvme_cli
 make clean && make -j$(nproc) LDFLAGS="$(make -s -C $spdk_nvme_cli/spdk ldflags)"
+
+trap "kill_stub; exit 1" SIGINT SIGTERM EXIT
+start_stub "-s 2048 -i 0 -m 0xF"
+
 sed -i 's/spdk=0/spdk=1/g' spdk.conf
 sed -i 's/shm_id=.*/shm_id=0/g' spdk.conf
 for bdf in $(get_nvme_bdfs); do
@@ -44,7 +48,6 @@ for bdf in $(get_nvme_bdfs); do
 	./nvme get-log $bdf -i 1 -l 100
 	./nvme reset $bdf
 done
-if [ $(uname) = Linux ]; then
-	trap - SIGINT SIGTERM EXIT
-	kill_stub
-fi
+
+trap - SIGINT SIGTERM EXIT
+kill_stub
