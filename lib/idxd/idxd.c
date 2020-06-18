@@ -1087,6 +1087,47 @@ spdk_idxd_batch_prep_dualcast(struct spdk_idxd_io_channel *chan, struct idxd_bat
 	return 0;
 }
 
+int
+spdk_idxd_batch_prep_crc32c(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
+			    uint32_t *dst, void *src, uint32_t seed, uint64_t nbytes,
+			    spdk_idxd_req_cb cb_fn, void *cb_arg)
+{
+	struct idxd_hw_desc *desc;
+	struct idxd_comp *comp;
+
+	if (_does_batch_exist(batch, chan) == false) {
+		SPDK_ERRLOG("Attempt to add to a batch that doesn't exist\n.");
+		return -EINVAL;
+	}
+
+	if ((batch->cur_index - batch->start_index) == DESC_PER_BATCH) {
+		SPDK_ERRLOG("Attempt to add to a batch that is already full\n.");
+		return -ENOMEM;
+	}
+
+	desc = &chan->ring_ctrl.user_desc[batch->cur_index];
+	comp = &chan->ring_ctrl.user_completions[batch->cur_index];
+	SPDK_DEBUGLOG(SPDK_LOG_IDXD, "Prep batch %p index %u\n", batch, batch->cur_index);
+
+	batch->cur_index++;
+	assert(batch->cur_index > batch->start_index);
+
+	desc->opcode = IDXD_OPCODE_CRC32C_GEN;
+	desc->dst_addr = (uintptr_t)dst;
+	desc->src_addr = (uintptr_t)src;
+	desc->flags = IDXD_FLAG_COMPLETION_ADDR_VALID | IDXD_FLAG_REQUEST_COMPLETION;
+	desc->flags &= IDXD_CLEAR_CRC_FLAGS;
+	desc->crc32c.seed = seed;
+	desc->xfer_size = nbytes;
+
+	desc->completion_addr = (uintptr_t)&comp->hw;
+	comp->cb_arg = cb_arg;
+	comp->cb_fn = cb_fn;
+	comp->batch = batch;
+
+	return 0;
+}
+
 static void
 _dump_error_reg(struct spdk_idxd_io_channel *chan)
 {

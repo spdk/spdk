@@ -281,7 +281,7 @@ int spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan,
  *  spdk_idxd_batch_submit().
  *
  * \param chan IDXD channel to submit request.
- * \param batch Handle provided when the batch was started with spdk_accel_batch_create().
+ * \param batch Handle provided when the batch was started with spdk_idxd_batch_create().
  * \param dst Destination virtual address.
  * \param fill_pattern Repeating eight-byte pattern to use for memory fill.
  * \param nbytes Number of bytes to fill.
@@ -315,7 +315,29 @@ int spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan,
 			  spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**
- * Build and submit an idxd memory CRC32-C request.
+ * Synchronous call to prepare a crc32c request into a previously initialized batch
+ *  created with spdk_idxd_batch_create(). The callback will be called when the crc32c
+ *  completes after the batch has been submitted by an asynchronous call to
+ *  spdk_idxd_batch_submit().
+ *
+ * \param chan IDXD channel to submit request.
+ * \param batch Handle provided when the batch was started with spdk_idxd_batch_create().
+ * \param dst Resulting calculation.
+ * \param src Source virtual address.
+ * \param seed Four byte CRC-32C seed value.
+ * \param nbytes Number of bytes to calculate on.
+ * \param cb_fn Callback function which will be called when the request is complete.
+ * \param cb_arg Opaque value which will be passed back as the arg parameter in
+ * the completion callback.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_idxd_batch_prep_crc32c(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
+				uint32_t *dst, void *src, uint32_t seed, uint64_t nbytes,
+				spdk_idxd_req_cb cb_fn, void *cb_arg);
+
+/**
+ * Build and submit a memory CRC32-C request.
  *
  * This function will build the CRC-32C descriptor and then immediately submit
  * by writing to the proper device portal.
