@@ -23,11 +23,14 @@ if [ ! -d $spdk_nvme_cli ]; then
 fi
 
 # Build against the version of SPDK under test
+cd $spdk_nvme_cli
+
+git clean -dfx
+
 rm -f "$spdk_nvme_cli/spdk"
 ln -sf "$rootdir" "$spdk_nvme_cli/spdk"
 
-cd $spdk_nvme_cli
-make clean && make -j$(nproc) LDFLAGS="$(make -s -C $spdk_nvme_cli/spdk ldflags)"
+make -j$(nproc) LDFLAGS="$(make -s -C $spdk_nvme_cli/spdk ldflags)"
 
 trap "kill_stub; exit 1" SIGINT SIGTERM EXIT
 start_stub "-s 2048 -i 0 -m 0xF"
