@@ -217,7 +217,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		run_test "blobstore" ./test/blobstore/blobstore.sh
 		run_test "blobfs" ./test/blobfs/blobfs.sh
 		run_test "hello_blob" $SPDK_EXAMPLE_DIR/hello_blob \
-			examples/blob/hello_world/hello_blob.conf
+			examples/blob/hello_world/hello_blob.json
 	fi
 
 	if [ $SPDK_TEST_NVMF -eq 1 ]; then
