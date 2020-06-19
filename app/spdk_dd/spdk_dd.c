@@ -490,8 +490,14 @@ dd_output_poll(void *ctx)
 static int
 dd_open_file(struct dd_target *target, const char *fname, uint64_t skip_blocks, bool input)
 {
+	int flags = O_RDWR;
+
+	if (input == false) {
+		flags |= O_CREAT;
+	}
+
 	target->type = DD_TARGET_TYPE_FILE;
-	target->u.aio.fd = open(fname, O_RDWR);
+	target->u.aio.fd = open(fname, flags, 0600);
 	if (target->u.aio.fd < 0) {
 		SPDK_ERRLOG("Could not open file %s: %s\n", fname, strerror(errno));
 		return target->u.aio.fd;
