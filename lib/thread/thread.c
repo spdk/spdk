@@ -649,11 +649,11 @@ thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 			poller->busy_count++;
 		}
 
-#ifdef DEBUG
-		if (poller_rc == -1) {
-			SPDK_DEBUGLOG(thread, "Poller %s returned -1\n", poller->name);
-		}
-#endif
+//#ifdef DEBUG
+//		if (poller_rc == -1) {
+//			SPDK_DEBUGLOG(thread, "Poller %s returned -1\n", poller->name);
+//		}
+//#endif
 
 		if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
 			TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
@@ -693,11 +693,11 @@ thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 			poller->busy_count++;
 		}
 
-#ifdef DEBUG
-		if (timer_rc == -1) {
-			SPDK_DEBUGLOG(thread, "Timed poller %s returned -1\n", poller->name);
-		}
-#endif
+//#ifdef DEBUG
+//		if (timer_rc == -1) {
+//			SPDK_DEBUGLOG(thread, "Timed poller %s returned -1\n", poller->name);
+//		}
+//#endif
 
 		if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
 			TAILQ_REMOVE(&thread->timed_pollers, poller, tailq);
