@@ -183,5 +183,7 @@ else
 	if [ "$SPDK_TEST_OCF" -eq 1 ]; then
 		run_test "autobuild_ocf_precompile" ocf_precompile
 	fi
+	# if we aren't testing the unittests, build with shared objects.
+	./configure $config_params --with-shared
 	run_test "make" $MAKE $MAKEFLAGS
 fi
