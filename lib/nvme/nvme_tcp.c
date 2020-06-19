@@ -82,6 +82,7 @@ struct nvme_tcp_qpair {
 	TAILQ_HEAD(, nvme_tcp_pdu)		send_queue;
 	struct nvme_tcp_pdu			recv_pdu;
 	struct nvme_tcp_pdu			send_pdu; /* only for error pdu and init pdu */
+	struct nvme_tcp_pdu			*send_pdus; /* Used by tcp_reqs */
 	enum nvme_tcp_pdu_recv_state		recv_state;
 
 	struct nvme_tcp_req			*tcp_reqs;
@@ -123,7 +124,7 @@ struct nvme_tcp_req {
 		uint8_t				data_recv : 1;
 		uint8_t				reserved : 6;
 	} ordering;
-	struct nvme_tcp_pdu			send_pdu;
+	struct nvme_tcp_pdu			*send_pdu;
 	struct iovec				iov[NVME_TCP_MAX_SGL_DESCRIPTORS];
 	uint32_t				iovcnt;
 	struct nvme_tcp_qpair			*tqpair;
@@ -173,7 +174,7 @@ nvme_tcp_req_get(struct nvme_tcp_qpair *tqpair)
 	tcp_req->iovcnt = 0;
 	tcp_req->ordering.send_ack = 0;
 	tcp_req->ordering.data_recv = 0;
-	memset(&tcp_req->send_pdu, 0, sizeof(tcp_req->send_pdu));
+	memset(tcp_req->send_pdu, 0, sizeof(struct nvme_tcp_pdu));
 	TAILQ_INSERT_TAIL(&tqpair->outstanding_reqs, tcp_req, link);
 
 	return tcp_req;
@@ -222,6 +223,9 @@ nvme_tcp_free_reqs(struct nvme_tcp_qpair *tqpair)
 {
 	free(tqpair->tcp_reqs);
 	tqpair->tcp_reqs = NULL;
+
+	spdk_free(tqpair->send_pdus);
+	tqpair->send_pdus = NULL;
 }
 
 static int
@@ -232,7 +236,16 @@ nvme_tcp_alloc_reqs(struct nvme_tcp_qpair *tqpair)
 
 	tqpair->tcp_reqs = calloc(tqpair->num_entries, sizeof(struct nvme_tcp_req));
 	if (tqpair->tcp_reqs == NULL) {
-		SPDK_ERRLOG("Failed to allocate tcp_reqs\n");
+		SPDK_ERRLOG("Failed to allocate tcp_reqs on tqpair=%p\n", tqpair);
+		goto fail;
+	}
+
+	tqpair->send_pdus = spdk_zmalloc(tqpair->num_entries * sizeof(struct nvme_tcp_pdu),
+					 0x1000, NULL,
+					 SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+
+	if (tqpair->send_pdus == NULL) {
+		SPDK_ERRLOG("Failed to allocate send_pdus on tqpair=%p\n", tqpair);
 		goto fail;
 	}
 
@@ -243,6 +256,7 @@ nvme_tcp_alloc_reqs(struct nvme_tcp_qpair *tqpair)
 		tcp_req = &tqpair->tcp_reqs[i];
 		tcp_req->cid = i;
 		tcp_req->tqpair = tqpair;
+		tcp_req->send_pdu = &tqpair->send_pdus[i];
 		TAILQ_INSERT_TAIL(&tqpair->free_reqs, tcp_req, link);
 	}
 
@@ -515,7 +529,7 @@ nvme_tcp_qpair_capsule_cmd_send(struct nvme_tcp_qpair *tqpair,
 	uint8_t pdo;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "enter\n");
-	pdu = &tcp_req->send_pdu;
+	pdu = tcp_req->send_pdu;
 
 	capsule_cmd = &pdu->hdr.capsule_cmd;
 	capsule_cmd->common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_CAPSULE_CMD;
@@ -1125,7 +1139,7 @@ nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req)
 	struct spdk_nvme_tcp_h2c_data_hdr *h2c_data;
 	uint32_t plen, pdo, alignment;
 
-	rsp_pdu = &tcp_req->send_pdu;
+	rsp_pdu = tcp_req->send_pdu;
 	memset(rsp_pdu, 0, sizeof(*rsp_pdu));
 	h2c_data = &rsp_pdu->hdr.h2c_data;
 
