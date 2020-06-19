@@ -158,6 +158,25 @@ rpc_client_check_timeout(struct load_json_config_ctx *ctx)
 	return 0;
 }
 
+struct json_write_buf {
+	char data[1024];
+	unsigned cur_off;
+};
+
+static int
+json_write_stdout(void *cb_ctx, const void *data, size_t size)
+{
+	struct json_write_buf *buf = cb_ctx;
+	size_t rc;
+
+	rc = snprintf(buf->data + buf->cur_off, sizeof(buf->data) - buf->cur_off,
+		      "%s", (const char *)data);
+	if (rc > 0) {
+		buf->cur_off += rc;
+	}
+	return rc == size ? 0 : -1;
+}
+
 static int
 rpc_client_poller(void *arg)
 {
@@ -189,7 +208,17 @@ rpc_client_poller(void *arg)
 	assert(resp);
 
 	if (resp->error) {
-		SPDK_ERRLOG("error response: %.*s", (int)resp->error->len, (char *)resp->error->start);
+		struct json_write_buf buf = {};
+		struct spdk_json_write_ctx *w = spdk_json_write_begin(json_write_stdout,
+						&buf, SPDK_JSON_PARSE_FLAG_DECODE_IN_PLACE);
+
+		if (w == NULL) {
+			SPDK_ERRLOG("error response: (?)\n");
+		} else {
+			spdk_json_write_val(w, resp->error);
+			spdk_json_write_end(w);
+			SPDK_ERRLOG("error response: \n%s\n", buf.data);
+		}
 	}
 
 	if (resp->error && ctx->stop_on_error) {
