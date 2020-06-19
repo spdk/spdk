@@ -693,6 +693,39 @@ spdk_nvmf_bdev_ctrlr_nvme_passthru_admin(struct spdk_bdev *bdev, struct spdk_bde
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 }
 
+static void
+nvmf_bdev_ctrlr_complete_abort_cmd(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_nvmf_request *req = cb_arg;
+
+	if (success) {
+		req->rsp->nvme_cpl.cdw0 &= ~1U;
+	}
+
+	spdk_nvmf_request_complete(req);
+	spdk_bdev_free_io(bdev_io);
+}
+
+int
+nvmf_bdev_ctrlr_abort_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+			  struct spdk_io_channel *ch, struct spdk_nvmf_request *req,
+			  struct spdk_nvmf_request *req_to_abort)
+{
+	int rc;
+
+	assert((req->rsp->nvme_cpl.cdw0 & 1U) != 0);
+
+	rc = spdk_bdev_abort(desc, ch, req_to_abort, nvmf_bdev_ctrlr_complete_abort_cmd, req);
+	if (spdk_likely(rc == 0)) {
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
+	} else if (rc == -ENOMEM) {
+		nvmf_bdev_ctrl_queue_io(req, bdev, ch, nvmf_ctrlr_process_admin_cmd_resubmit, req);
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
+	} else {
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+}
+
 bool
 nvmf_bdev_ctrlr_get_dif_ctx(struct spdk_bdev *bdev, struct spdk_nvme_cmd *cmd,
 			    struct spdk_dif_ctx *dif_ctx)
