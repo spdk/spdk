@@ -2090,11 +2090,36 @@ nvmf_qpair_abort_aer(struct spdk_nvmf_qpair *qpair, uint16_t cid)
 }
 
 static void
+nvmf_qpair_abort_request(struct spdk_nvmf_qpair *qpair, struct spdk_nvmf_request *req)
+{
+	uint16_t cid = req->cmd->nvme_cmd.cdw10_bits.abort.cid;
+
+	if (nvmf_qpair_abort_aer(qpair, cid)) {
+		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "abort ctrlr=%p sqid=%u cid=%u successful\n",
+			      qpair->ctrlr, qpair->qid, cid);
+		req->rsp->nvme_cpl.cdw0 &= ~1U; /* Command successfully aborted */
+
+		spdk_nvmf_request_complete(req);
+		return;
+	}
+
+	/* TODO: track list of outstanding requests in qpair? */
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "cid %u not found\n", cid);
+
+	spdk_nvmf_request_complete(req);
+}
+
+static void
 nvmf_ctrlr_abort_done(struct spdk_io_channel_iter *i, int status)
 {
 	struct spdk_nvmf_request *req = spdk_io_channel_iter_get_ctx(i);
 
-	_nvmf_request_complete(req);
+	if (status == 0) {
+		/* There was no qpair whose ID matches SQID of the abort command.
+		 * Hence call _nvmf_request_complete() here.
+		 */
+		_nvmf_request_complete(req);
+	}
 }
 
 static void
@@ -2103,27 +2128,15 @@ nvmf_ctrlr_abort_on_pg(struct spdk_io_channel_iter *i)
 	struct spdk_nvmf_request *req = spdk_io_channel_iter_get_ctx(i);
 	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
 	struct spdk_nvmf_poll_group *group = spdk_io_channel_get_ctx(ch);
-	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
-	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
-	uint16_t sqid = cmd->cdw10_bits.abort.sqid;
+	uint16_t sqid = req->cmd->nvme_cmd.cdw10_bits.abort.sqid;
 	struct spdk_nvmf_qpair *qpair;
 
 	TAILQ_FOREACH(qpair, &group->qpairs, link) {
 		if (qpair->ctrlr == req->qpair->ctrlr && qpair->qid == sqid) {
-			uint16_t cid = cmd->cdw10_bits.abort.cid;
-
 			/* Found the qpair */
 
-			if (!nvmf_qpair_abort_aer(qpair, cid)) {
-				/* TODO: track list of outstanding requests in qpair? */
-				SPDK_DEBUGLOG(SPDK_LOG_NVMF, "cid %u not found\n", cid);
-				spdk_for_each_channel_continue(i, -1);
-				return;
-			}
+			nvmf_qpair_abort_request(qpair, req);
 
-			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "abort ctrlr=%p sqid=%u cid=%u successful\n",
-				      qpair->ctrlr, sqid, cid);
-			rsp->cdw0 &= ~1U; /* Command successfully aborted */
 			/* Return -1 for the status so the iteration across threads stops. */
 			spdk_for_each_channel_continue(i, -1);
 			return;
