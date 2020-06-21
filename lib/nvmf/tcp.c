@@ -46,6 +46,8 @@
 #include "spdk_internal/log.h"
 #include "spdk_internal/nvme_tcp.h"
 
+#include "nvmf_internal.h"
+
 #define NVMF_TCP_MAX_ACCEPT_SOCK_ONE_TIME 16
 #define SPDK_NVMF_TCP_DEFAULT_MAX_SOCK_PRIORITY 6
 #define SPDK_NVMF_TCP_RECV_BUF_SIZE_FACTOR 4
@@ -2463,6 +2465,40 @@ static void
 nvmf_tcp_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
 			     struct spdk_nvmf_request *req)
 {
+	struct spdk_nvmf_tcp_qpair *tqpair;
+	uint16_t cid;
+	uint32_t i;
+	struct spdk_nvmf_tcp_req *tcp_req_to_abort = NULL;
+	int rc;
+
+	tqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_tcp_qpair, qpair);
+	cid = req->cmd->nvme_cmd.cdw10_bits.abort.cid;
+
+	for (i = 0; i < tqpair->resource_count; i++) {
+		tcp_req_to_abort = &tqpair->reqs[i];
+
+		if (tcp_req_to_abort->state != TCP_REQUEST_STATE_FREE &&
+		    tcp_req_to_abort->req.cmd->nvme_cmd.cid == cid) {
+			break;
+		}
+	}
+
+	if (tcp_req_to_abort == NULL) {
+		goto complete;
+	}
+
+	switch (tcp_req_to_abort->state) {
+	case TCP_REQUEST_STATE_EXECUTING:
+		rc = nvmf_ctrlr_abort_request(req, &tcp_req_to_abort->req);
+		if (rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS) {
+			return;
+		}
+		break;
+	default:
+		break;
+	}
+
+complete:
 	spdk_nvmf_request_complete(req);
 }
 
