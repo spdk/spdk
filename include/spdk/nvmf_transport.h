@@ -417,6 +417,16 @@ void spdk_nvmf_poll_group_remove(struct spdk_nvmf_qpair *qpair);
 struct spdk_nvmf_subsystem *
 spdk_nvmf_ctrlr_get_subsystem(struct spdk_nvmf_ctrlr *ctrlr);
 
+/**
+ * Get the NVMe-oF controller ID.
+ *
+ * \param ctrlr The NVMe-oF controller
+ *
+ * \return The NVMe-oF controller ID
+ */
+uint16_t
+spdk_nvmf_ctrlr_get_id(struct spdk_nvmf_ctrlr *ctrlr);
+
 static inline enum spdk_nvme_data_transfer
 spdk_nvmf_req_get_xfer(struct spdk_nvmf_request *req) {
 	enum spdk_nvme_data_transfer xfer;

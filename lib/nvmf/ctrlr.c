@@ -3218,3 +3218,8 @@ struct spdk_nvmf_subsystem *spdk_nvmf_ctrlr_get_subsystem(struct spdk_nvmf_ctrlr
 {
 	return ctrlr->subsys;
 }
+
+uint16_t spdk_nvmf_ctrlr_get_id(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	return ctrlr->cntlid;
+}
