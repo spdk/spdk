@@ -103,6 +103,23 @@ nvmf_ctrlr_stop_keep_alive_timer(struct spdk_nvmf_ctrlr *ctrlr)
 }
 
 static void
+nvmf_ctrlr_stop_association_timer(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	if (!ctrlr) {
+		SPDK_ERRLOG("Controller is NULL\n");
+		assert(false);
+		return;
+	}
+
+	if (ctrlr->association_timer == NULL) {
+		return;
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Stop association timer\n");
+	spdk_poller_unregister(&ctrlr->association_timer);
+}
+
+static void
 nvmf_ctrlr_disconnect_qpairs_done(struct spdk_io_channel_iter *i, int status)
 {
 	if (status == 0) {
@@ -403,7 +420,9 @@ _nvmf_ctrlr_destruct(void *ctx)
 	struct spdk_nvmf_reservation_log *log, *log_tmp;
 
 	nvmf_ctrlr_stop_keep_alive_timer(ctrlr);
+	nvmf_ctrlr_stop_association_timer(ctrlr);
 	spdk_bit_array_free(&ctrlr->qpair_mask);
+
 	TAILQ_FOREACH_SAFE(log, &ctrlr->log_head, link, log_tmp) {
 		TAILQ_REMOVE(&ctrlr->log_head, log, link);
 		free(log);
@@ -720,6 +739,25 @@ nvmf_ctrlr_cmd_connect(struct spdk_nvmf_request *req)
 	return _nvmf_ctrlr_connect(req);
 }
 
+static int
+nvmf_ctrlr_association_remove(void *ctx)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = ctx;
+	int rc;
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Disconnecting host from subsystem %s due to association timeout.\n",
+		      ctrlr->subsys->subnqn);
+
+	rc = spdk_nvmf_qpair_disconnect(ctrlr->admin_qpair, NULL, NULL);
+	if (rc < 0) {
+		SPDK_ERRLOG("Fail to disconnect admin ctrlr qpair\n");
+		assert(false);
+	}
+
+	nvmf_ctrlr_stop_association_timer(ctrlr);
+	return 1;
+}
+
 static void
 nvmf_ctrlr_cc_shn_done(struct spdk_io_channel_iter *i, int status)
 {
@@ -731,6 +769,11 @@ nvmf_ctrlr_cc_shn_done(struct spdk_io_channel_iter *i, int status)
 	}
 
 	ctrlr->vcprop.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
+
+	/* After CC.EN transitions to 0 (due to shutdown or reset), the association
+	 * between the host and controller shall be preserved for at least 2 minutes */
+	ctrlr->association_timer = SPDK_POLLER_REGISTER(nvmf_ctrlr_association_remove, ctrlr,
+				   ctrlr->admin_qpair->transport->opts.association_timeout);
 }
 
 static void
@@ -792,6 +835,8 @@ nvmf_prop_set_cc(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
 	if (diff.bits.en) {
 		if (cc.bits.en) {
 			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Property Set CC Enable!\n");
+			nvmf_ctrlr_stop_association_timer(ctrlr);
+
 			ctrlr->vcprop.cc.bits.en = 1;
 			ctrlr->vcprop.csts.bits.rdy = 1;
 		} else {
