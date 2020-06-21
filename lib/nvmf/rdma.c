@@ -45,6 +45,8 @@
 #include "spdk_internal/log.h"
 #include "spdk_internal/rdma.h"
 
+#include "nvmf_internal.h"
+
 struct spdk_nvme_rdma_hooks g_nvmf_hooks = {};
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma;
 
@@ -4030,6 +4032,40 @@ static void
 nvmf_rdma_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
 			      struct spdk_nvmf_request *req)
 {
+	struct spdk_nvmf_rdma_qpair *rqpair;
+	uint16_t cid;
+	uint32_t i;
+	struct spdk_nvmf_rdma_request *rdma_req_to_abort = NULL;
+	int rc;
+
+	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+	cid = req->cmd->nvme_cmd.cdw10_bits.abort.cid;
+
+	for (i = 0; i < rqpair->max_queue_depth; i++) {
+		rdma_req_to_abort = &rqpair->resources->reqs[i];
+
+		if (rdma_req_to_abort->state != RDMA_REQUEST_STATE_FREE &&
+		    rdma_req_to_abort->req.cmd->nvme_cmd.cid == cid) {
+			break;
+		}
+	}
+
+	if (rdma_req_to_abort == NULL) {
+		goto complete;
+	}
+
+	switch (rdma_req_to_abort->state) {
+	case RDMA_REQUEST_STATE_EXECUTING:
+		rc = nvmf_ctrlr_abort_request(req, &rdma_req_to_abort->req);
+		if (rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS) {
+			return;
+		}
+		break;
+	default:
+		break;
+	}
+
+complete:
 	spdk_nvmf_request_complete(req);
 }
 
