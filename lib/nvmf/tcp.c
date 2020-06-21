@@ -2459,6 +2459,13 @@ nvmf_tcp_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
 	return nvmf_tcp_qpair_get_trid(qpair, trid, 0);
 }
 
+static void
+nvmf_tcp_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
+			     struct spdk_nvmf_request *req)
+{
+	spdk_nvmf_request_complete(req);
+}
+
 #define SPDK_NVMF_TCP_DEFAULT_MAX_QUEUE_DEPTH 128
 #define SPDK_NVMF_TCP_DEFAULT_AQ_DEPTH 128
 #define SPDK_NVMF_TCP_DEFAULT_MAX_QPAIRS_PER_CTRLR 128
@@ -2514,6 +2521,7 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp = {
 	.qpair_get_local_trid = nvmf_tcp_qpair_get_local_trid,
 	.qpair_get_peer_trid = nvmf_tcp_qpair_get_peer_trid,
 	.qpair_get_listen_trid = nvmf_tcp_qpair_get_listen_trid,
+	.qpair_abort_request = nvmf_tcp_qpair_abort_request,
 };
 
 SPDK_NVMF_TRANSPORT_REGISTER(tcp, &spdk_nvmf_transport_tcp);

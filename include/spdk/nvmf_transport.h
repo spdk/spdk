@@ -335,6 +335,15 @@ struct spdk_nvmf_transport_ops {
 				     struct spdk_nvme_transport_id *trid);
 
 	/*
+	 * Abort the request which the abort request specifies.
+	 * This function can complete synchronously or asynchronously, but
+	 * is expected to call spdk_nvmf_request_complete() in the end
+	 * for both cases.
+	 */
+	void (*qpair_abort_request)(struct spdk_nvmf_qpair *qpair,
+				    struct spdk_nvmf_request *req);
+
+	/*
 	 * Get transport poll group statistics
 	 */
 	int (*poll_group_get_stat)(struct spdk_nvmf_tgt *tgt,

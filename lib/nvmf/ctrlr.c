@@ -2103,10 +2103,7 @@ nvmf_qpair_abort_request(struct spdk_nvmf_qpair *qpair, struct spdk_nvmf_request
 		return;
 	}
 
-	/* TODO: track list of outstanding requests in qpair? */
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "cid %u not found\n", cid);
-
-	spdk_nvmf_request_complete(req);
+	nvmf_transport_qpair_abort_request(qpair, req);
 }
 
 static void

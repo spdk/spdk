@@ -200,6 +200,9 @@ DEFINE_STUB_V(spdk_nvmf_transport_register, (const struct spdk_nvmf_transport_op
 
 DEFINE_STUB_V(spdk_nvmf_tgt_new_qpair, (struct spdk_nvmf_tgt *tgt, struct spdk_nvmf_qpair *qpair));
 
+DEFINE_STUB_V(nvmf_transport_qpair_abort_request,
+	      (struct spdk_nvmf_qpair *qpair, struct spdk_nvmf_request *req));
+
 struct spdk_trace_histories *g_trace_histories;
 
 struct spdk_bdev {

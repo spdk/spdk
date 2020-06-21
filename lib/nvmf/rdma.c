@@ -4026,6 +4026,13 @@ spdk_nvmf_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks)
 	g_nvmf_hooks = *hooks;
 }
 
+static void
+nvmf_rdma_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
+			      struct spdk_nvmf_request *req)
+{
+	spdk_nvmf_request_complete(req);
+}
+
 static int
 nvmf_rdma_poll_group_get_stat(struct spdk_nvmf_tgt *tgt,
 			      struct spdk_nvmf_transport_poll_group_stat **stat)
@@ -4122,6 +4129,7 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 	.qpair_get_peer_trid = nvmf_rdma_qpair_get_peer_trid,
 	.qpair_get_local_trid = nvmf_rdma_qpair_get_local_trid,
 	.qpair_get_listen_trid = nvmf_rdma_qpair_get_listen_trid,
+	.qpair_abort_request = nvmf_rdma_qpair_abort_request,
 
 	.poll_group_get_stat = nvmf_rdma_poll_group_get_stat,
 	.poll_group_free_stat = nvmf_rdma_poll_group_free_stat,

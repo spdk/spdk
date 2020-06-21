@@ -2116,6 +2116,13 @@ nvmf_fc_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
 	return 0;
 }
 
+static void
+nvmf_fc_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
+			    struct spdk_nvmf_request *req)
+{
+	spdk_nvmf_request_complete(req);
+}
+
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_fc = {
 	.name = "FC",
 	.type = (enum spdk_nvme_transport_type) SPDK_NVMF_TRTYPE_FC,
@@ -2140,6 +2147,7 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_fc = {
 	.qpair_get_peer_trid = nvmf_fc_qpair_get_peer_trid,
 	.qpair_get_local_trid = nvmf_fc_qpair_get_local_trid,
 	.qpair_get_listen_trid = nvmf_fc_qpair_get_listen_trid,
+	.qpair_abort_request = nvmf_fc_qpair_abort_request,
 };
 
 /*

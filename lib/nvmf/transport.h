@@ -76,4 +76,7 @@ int nvmf_transport_qpair_get_local_trid(struct spdk_nvmf_qpair *qpair,
 int nvmf_transport_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
 		struct spdk_nvme_transport_id *trid);
 
+void nvmf_transport_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
+					struct spdk_nvmf_request *req);
+
 #endif /* SPDK_NVMF_TRANSPORT_H */
