@@ -2165,6 +2165,24 @@ nvmf_ctrlr_abort(struct spdk_nvmf_request *req)
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 }
 
+int
+nvmf_ctrlr_abort_request(struct spdk_nvmf_request *req,
+			 struct spdk_nvmf_request *req_to_abort)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+	struct spdk_io_channel *ch;
+	int rc;
+
+	rc = spdk_nvmf_request_get_bdev(req_to_abort->cmd->nvme_cmd.nsid, req_to_abort,
+					&bdev, &desc, &ch);
+	if (rc != 0) {
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	return nvmf_bdev_ctrlr_abort_cmd(bdev, desc, ch, req, req_to_abort);
+}
+
 static int
 get_features_generic(struct spdk_nvmf_request *req, uint32_t cdw0)
 {
