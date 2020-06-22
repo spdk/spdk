@@ -388,7 +388,7 @@ nvme_qpair_manual_complete_request(struct spdk_nvme_qpair *qpair,
 }
 
 static void
-nvme_qpair_abort_queued_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
+_nvme_qpair_abort_queued_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 {
 	struct nvme_request		*req;
 
@@ -608,7 +608,7 @@ nvme_qpair_deinit(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_error_cmd *cmd, *entry;
 
-	nvme_qpair_abort_queued_reqs(qpair, 1);
+	_nvme_qpair_abort_queued_reqs(qpair, 1);
 	nvme_qpair_complete_error_reqs(qpair);
 
 	TAILQ_FOREACH_SAFE(cmd, &qpair->err_cmd_head, link, entry) {
@@ -801,7 +801,7 @@ void
 nvme_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 {
 	nvme_qpair_complete_error_reqs(qpair);
-	nvme_qpair_abort_queued_reqs(qpair, dnr);
+	_nvme_qpair_abort_queued_reqs(qpair, dnr);
 	nvme_transport_qpair_abort_reqs(qpair, dnr);
 }
 
