@@ -75,7 +75,6 @@ struct vbdev_opal_channel {
 struct vbdev_opal_part_base {
 	char *nvme_ctrlr_name;
 	struct spdk_bdev_part_base *part_base;
-	int num_of_part;
 	TAILQ_ENTRY(vbdev_opal_part_base) tailq;
 };
 
@@ -150,6 +149,8 @@ static void
 vbdev_opal_base_free(void *ctx)
 {
 	struct vbdev_opal_part_base *base = ctx;
+
+	TAILQ_REMOVE(&g_opal_base, base, tailq);
 
 	free(base->nvme_ctrlr_name);
 	free(base);
@@ -408,7 +409,6 @@ vbdev_opal_create(const char *nvme_ctrlr_name, uint32_t nsid, uint8_t locking_ra
 			free(opal_part_base);
 			return -ENOMEM;
 		}
-		opal_part_base->num_of_part = 0;
 		opal_part_base->nvme_ctrlr_name = strdup(cfg->nvme_ctrlr_name);
 		if (opal_part_base->nvme_ctrlr_name == NULL) {
 			vbdev_opal_free_bdev(opal_bdev);
@@ -419,6 +419,7 @@ vbdev_opal_create(const char *nvme_ctrlr_name, uint32_t nsid, uint8_t locking_ra
 		cfg->opal_base = opal_part_base;
 		TAILQ_INSERT_TAIL(&g_opal_base, opal_part_base, tailq);
 	}
+	assert(cfg->opal_base != NULL);
 
 	part_bdev = calloc(1, sizeof(struct spdk_bdev_part));
 	if (!part_bdev) {
@@ -460,7 +461,6 @@ vbdev_opal_create(const char *nvme_ctrlr_name, uint32_t nsid, uint8_t locking_ra
 	}
 
 	opal_bdev->bdev_part = part_bdev;
-	cfg->opal_base->num_of_part++;
 	return 0;
 
 err:
@@ -472,25 +472,14 @@ err:
 static void
 vbdev_opal_destruct_bdev(struct opal_vbdev *opal_bdev)
 {
-	SPDK_BDEV_PART_TAILQ *opal_part_tailq;
-	struct spdk_bdev_part *part;
+	struct spdk_bdev_part *part = opal_bdev->bdev_part;
 	struct spdk_vbdev_opal_config *cfg = &opal_bdev->cfg;
 
-	if (cfg->opal_base != NULL) {
-		part = opal_bdev->bdev_part;
-		opal_part_tailq = spdk_bdev_part_base_get_tailq(cfg->opal_base->part_base);
-		if (cfg->range_start == spdk_bdev_part_get_offset_blocks(part)) {
-			if (cfg->opal_base->num_of_part <= 1) {
-				/* if there is only one part for this base, we can remove the base now */
-				spdk_bdev_part_base_hotremove(cfg->opal_base->part_base, opal_part_tailq);
+	assert(cfg->opal_base != NULL);
+	assert(part != NULL);
 
-				/* remove from the tailq vbdev_opal_part_base */
-				TAILQ_REMOVE(&g_opal_base, cfg->opal_base, tailq);
-			} else {
-				spdk_bdev_unregister(spdk_bdev_part_get_bdev(part), NULL, NULL);
-				cfg->opal_base->num_of_part--;
-			}
-		}
+	if (cfg->range_start == spdk_bdev_part_get_offset_blocks(part)) {
+		spdk_bdev_unregister(spdk_bdev_part_get_bdev(part), NULL, NULL);
 	}
 	vbdev_opal_delete(opal_bdev);
 }
