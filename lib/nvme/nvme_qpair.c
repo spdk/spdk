@@ -557,6 +557,44 @@ _nvme_qpair_abort_queued_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 	}
 }
 
+/* The callback to a request may submit the next request which is queued and
+ * then the same callback may abort it immediately. This repetition may cause
+ * infinite recursive calls. Hence move aborting requests to another list here
+ * and abort them later at resubmission.
+ */
+static void
+_nvme_qpair_complete_abort_queued_reqs(struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_request		*req;
+
+	while (!STAILQ_EMPTY(&qpair->aborting_queued_req)) {
+		req = STAILQ_FIRST(&qpair->aborting_queued_req);
+		STAILQ_REMOVE_HEAD(&qpair->aborting_queued_req, stailq);
+		nvme_qpair_manual_complete_request(qpair, req, SPDK_NVME_SCT_GENERIC,
+						   SPDK_NVME_SC_ABORTED_BY_REQUEST, 1, true);
+	}
+}
+
+uint32_t
+nvme_qpair_abort_queued_reqs(struct spdk_nvme_qpair *qpair, void *cmd_cb_arg)
+{
+	struct nvme_request	*req, *tmp;
+	uint32_t		aborting = 0;
+
+	STAILQ_FOREACH_SAFE(req, &qpair->queued_req, stailq, tmp) {
+		if (req->cb_arg == cmd_cb_arg) {
+			STAILQ_REMOVE(&qpair->queued_req, req, nvme_request, stailq);
+			STAILQ_INSERT_TAIL(&qpair->aborting_queued_req, req, stailq);
+			if (!qpair->ctrlr->opts.disable_error_logging) {
+				SPDK_ERRLOG("aborting queued i/o\n");
+			}
+			aborting++;
+		}
+	}
+
+	return aborting;
+}
+
 static inline bool
 nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 {
@@ -629,6 +667,8 @@ nvme_qpair_resubmit_requests(struct spdk_nvme_qpair *qpair, uint32_t num_request
 			break;
 		}
 	}
+
+	_nvme_qpair_complete_abort_queued_reqs(qpair);
 }
 
 int32_t
@@ -720,6 +760,7 @@ nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 
 	STAILQ_INIT(&qpair->free_req);
 	STAILQ_INIT(&qpair->queued_req);
+	STAILQ_INIT(&qpair->aborting_queued_req);
 	TAILQ_INIT(&qpair->err_cmd_head);
 	STAILQ_INIT(&qpair->err_req_head);
 
@@ -763,6 +804,7 @@ nvme_qpair_deinit(struct spdk_nvme_qpair *qpair)
 	struct nvme_error_cmd *cmd, *entry;
 
 	_nvme_qpair_abort_queued_reqs(qpair, 1);
+	_nvme_qpair_complete_abort_queued_reqs(qpair);
 	nvme_qpair_complete_error_reqs(qpair);
 
 	TAILQ_FOREACH_SAFE(cmd, &qpair->err_cmd_head, link, entry) {
@@ -956,6 +998,7 @@ nvme_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 {
 	nvme_qpair_complete_error_reqs(qpair);
 	_nvme_qpair_abort_queued_reqs(qpair, dnr);
+	_nvme_qpair_complete_abort_queued_reqs(qpair);
 	nvme_transport_qpair_abort_reqs(qpair, dnr);
 }
 
