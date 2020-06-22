@@ -37,7 +37,7 @@ SPDK_LIB_DIR ?= $(SPDK_ROOT_DIR)/build/lib
 include $(SPDK_ROOT_DIR)/mk/config.mk
 
 DPDK_LIB_DIR ?= $(CONFIG_DPDK_DIR)/lib
-DPDK_LIB_LIST = -lrte_eal -lrte_mempool -lrte_ring -lrte_pci -lrte_bus_pci
+DPDK_LIB_LIST = -lrte_eal -lrte_mempool -lrte_ring -lrte_pci -lrte_bus_pci -lrte_mbuf
 
 ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_kvargs.*))
 DPDK_LIB_LIST += -lrte_kvargs
@@ -51,6 +51,18 @@ NVMECLI_SPDK_LIBS = -lspdk_log -lspdk_sock -lspdk_nvme -lspdk_env_dpdk -lspdk_ut
 
 ifeq ($(CONFIG_RDMA),y)
 NVMECLI_SPDK_LIBS += -lspdk_rdma
+endif
+
+ifeq ($(CONFIG_OCF),y)
+NVMECLI_SPDK_LIBS += -lspdk_ocfenv
+endif
+
+ifeq ($(CONFIG_VHOST),y)
+ifneq ($(CONFIG_VHOST_INTERNAL_LIB),y)
+DPDK_LIB_LIST += -lrte_vhost -lrte_net -lrte_cryptodev -lrte_hash
+else
+NVMECLI_SPDK_LIBS += -lrte_vhost
+endif
 endif
 
 override CFLAGS += -I$(SPDK_ROOT_DIR)/include
@@ -85,4 +97,8 @@ endif
 ifeq ($(CONFIG_COVERAGE), y)
 override CFLAGS += -fprofile-arcs -ftest-coverage
 override LDFLAGS += -fprofile-arcs -ftest-coverage
+endif
+
+ifeq ($(CONFIG_ISCSI_INITIATOR),y)
+override LDFLAGS += -L/usr/lib64/iscsi -liscsi
 endif
