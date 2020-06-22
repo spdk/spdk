@@ -365,17 +365,27 @@ nvme_rdma_req_get(struct nvme_rdma_qpair *rqpair)
 }
 
 static void
+nvme_rdma_req_put(struct nvme_rdma_qpair *rqpair, struct spdk_nvme_rdma_req *rdma_req)
+{
+	rdma_req->completion_flags = 0;
+	rdma_req->req = NULL;
+	TAILQ_INSERT_HEAD(&rqpair->free_reqs, rdma_req, link);
+}
+
+static void
 nvme_rdma_req_complete(struct spdk_nvme_rdma_req *rdma_req,
 		       struct spdk_nvme_cpl *rsp)
 {
 	struct nvme_request *req = rdma_req->req;
+	struct nvme_rdma_qpair *rqpair;
 
 	assert(req != NULL);
 
+	rqpair = nvme_rdma_qpair(req->qpair);
+	TAILQ_REMOVE(&rqpair->outstanding_reqs, rdma_req, link);
+
 	nvme_complete_request(req->cb_fn, req->cb_arg, req->qpair, req, rsp);
 	nvme_free_request(req);
-	rdma_req->completion_flags = 0;
-	rdma_req->req = NULL;
 }
 
 static const char *
@@ -2070,7 +2080,7 @@ nvme_rdma_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 	if (nvme_rdma_req_init(rqpair, req, rdma_req)) {
 		SPDK_ERRLOG("nvme_rdma_req_init() failed\n");
 		TAILQ_REMOVE(&rqpair->outstanding_reqs, rdma_req, link);
-		TAILQ_INSERT_HEAD(&rqpair->free_reqs, rdma_req, link);
+		nvme_rdma_req_put(rqpair, rdma_req);
 		return -1;
 	}
 
@@ -2109,9 +2119,8 @@ nvme_rdma_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 	}
 
 	TAILQ_FOREACH_SAFE(rdma_req, &rqpair->outstanding_reqs, link, tmp) {
-		TAILQ_REMOVE(&rqpair->outstanding_reqs, rdma_req, link);
 		nvme_rdma_req_complete(rdma_req, &cpl);
-		TAILQ_INSERT_HEAD(&rqpair->free_reqs, rdma_req, link);
+		nvme_rdma_req_put(rqpair, rdma_req);
 	}
 }
 
@@ -2157,9 +2166,8 @@ nvme_rdma_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 static inline int
 nvme_rdma_request_ready(struct nvme_rdma_qpair *rqpair, struct spdk_nvme_rdma_req *rdma_req)
 {
-	TAILQ_REMOVE(&rqpair->outstanding_reqs, rdma_req, link);
 	nvme_rdma_req_complete(rdma_req, &rqpair->rsps[rdma_req->rsp_idx].cpl);
-	TAILQ_INSERT_HEAD(&rqpair->free_reqs, rdma_req, link);
+	nvme_rdma_req_put(rqpair, rdma_req);
 	return nvme_rdma_post_recv(rqpair, rdma_req->rsp_idx);
 }
 
@@ -2417,9 +2425,8 @@ nvme_rdma_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 			continue;
 		}
 
-		TAILQ_REMOVE(&rqpair->outstanding_reqs, rdma_req, link);
 		nvme_rdma_req_complete(rdma_req, &cpl);
-		TAILQ_INSERT_HEAD(&rqpair->free_reqs, rdma_req, link);
+		nvme_rdma_req_put(rqpair, rdma_req);
 	}
 }
 
