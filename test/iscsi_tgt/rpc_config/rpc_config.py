@@ -116,8 +116,6 @@ def verify_iscsi_connection_rpc_methods(rpc_py):
     jsonvalues = json.loads(output)
     verify(jsonvalues[0]['target_node_name'] == rpc_param['target_name'], 1,
            "target node name vaule is {}, expected {}".format(jsonvalues[0]['target_node_name'], rpc_param['target_name']))
-    verify(jsonvalues[0]['id'] == 0, 1,
-           "device id value is {}, expected 0".format(jsonvalues[0]['id']))
     verify(jsonvalues[0]['initiator_addr'] == rpc_param['initiator_ip'], 1,
            "initiator address values is {}, expected {}".format(jsonvalues[0]['initiator_addr'], rpc_param['initiator_ip']))
     verify(jsonvalues[0]['target_addr'] == rpc_param['target_ip'], 1,

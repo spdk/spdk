@@ -66,6 +66,8 @@ struct spdk_iscsi_conn *g_conns_array = MAP_FAILED;
 static int g_conns_array_fd = -1;
 static char g_shm_name[64];
 
+static TAILQ_HEAD(, spdk_iscsi_conn) g_free_conns = TAILQ_HEAD_INITIALIZER(g_free_conns);
+
 static pthread_mutex_t g_conns_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static struct spdk_poller *g_shutdown_timer = NULL;
@@ -77,29 +79,36 @@ static struct spdk_iscsi_conn *
 allocate_conn(void)
 {
 	struct spdk_iscsi_conn	*conn;
-	int				i;
 
 	pthread_mutex_lock(&g_conns_mutex);
-	for (i = 0; i < MAX_ISCSI_CONNECTIONS; i++) {
-		conn = &g_conns_array[i];
-		if (!conn->is_valid) {
-			SPDK_ISCSI_CONNECTION_MEMSET(conn);
-			conn->is_valid = 1;
-			pthread_mutex_unlock(&g_conns_mutex);
-			return conn;
-		}
+	conn = TAILQ_FIRST(&g_free_conns);
+	if (conn != NULL) {
+		assert(!conn->is_valid);
+		TAILQ_REMOVE(&g_free_conns, conn, conn_link);
+		SPDK_ISCSI_CONNECTION_MEMSET(conn);
+		conn->is_valid = 1;
 	}
 	pthread_mutex_unlock(&g_conns_mutex);
 
-	return NULL;
+	return conn;
+}
+
+static void
+_free_conn(struct spdk_iscsi_conn *conn)
+{
+	memset(conn->portal_host, 0, sizeof(conn->portal_host));
+	memset(conn->portal_port, 0, sizeof(conn->portal_port));
+	conn->is_valid = 0;
+
+	TAILQ_INSERT_TAIL(&g_free_conns, conn, conn_link);
 }
 
 static void
 free_conn(struct spdk_iscsi_conn *conn)
 {
-	memset(conn->portal_host, 0, sizeof(conn->portal_host));
-	memset(conn->portal_port, 0, sizeof(conn->portal_port));
-	conn->is_valid = 0;
+	pthread_mutex_lock(&g_conns_mutex);
+	_free_conn(conn);
+	pthread_mutex_unlock(&g_conns_mutex);
 }
 
 static struct spdk_iscsi_conn *
@@ -158,6 +167,7 @@ int initialize_iscsi_conns(void)
 
 	for (i = 0; i < MAX_ISCSI_CONNECTIONS; i++) {
 		g_conns_array[i].id = i;
+		TAILQ_INSERT_TAIL(&g_free_conns, &g_conns_array[i], conn_link);
 	}
 
 	return 0;
@@ -435,7 +445,7 @@ iscsi_conn_free(struct spdk_iscsi_conn *conn)
 end:
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "cleanup free conn\n");
 	iscsi_param_free(conn->params);
-	free_conn(conn);
+	_free_conn(conn);
 
 	pthread_mutex_unlock(&g_conns_mutex);
 }
