@@ -34,17 +34,7 @@ function create_json_config() {
 	echo '}'
 }
 
-bdfs=()
-# Check used drivers. If it's not vfio-pci or uio-pci-generic
-# then most likely PCI_WHITELIST option was used for setup.sh
-# and we do not want to use that disk.
-for bdf in $(iter_pci_class_code 01 08 02); do
-	if [[ -e /sys/bus/pci/drivers/nvme/$bdf ]] \
-		|| [[ $(uname -s) == FreeBSD && $(pciconf -l "pci$bdf") == nvme* ]]; then
-		continue
-	fi
-	bdfs+=("$bdf")
-done
+bdfs=($(nvme_in_userspace))
 
 if [ "$1" = "--json" ]; then
 	create_json_config
