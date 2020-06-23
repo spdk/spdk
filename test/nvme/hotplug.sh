@@ -97,6 +97,8 @@ timing_enter copy_repo
 files_to_copy="scripts "
 files_to_copy+="include/spdk/pci_ids.h "
 files_to_copy+="build/examples/hotplug "
+files_to_copy+="build/lib "
+files_to_copy+="dpdk/build/lib "
 (
 	cd "$rootdir"
 	tar -cf - $files_to_copy
