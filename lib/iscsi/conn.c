@@ -1570,6 +1570,12 @@ iscsi_conn_full_feature_migrate(void *arg)
 {
 	struct spdk_iscsi_conn *conn = arg;
 
+	if (conn->state >= ISCSI_CONN_STATE_EXITING) {
+		/* Connection is being exited before this callback is executed. */
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Connection is already exited.\n");
+		return;
+	}
+
 	if (conn->sess->session_type == SESSION_TYPE_NORMAL) {
 		iscsi_conn_open_luns(conn);
 	}
