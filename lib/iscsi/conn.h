@@ -189,7 +189,7 @@ struct spdk_iscsi_conn {
 	uint32_t ttt; /* target transfer tag */
 	char *partial_text_parameter;
 
-	STAILQ_ENTRY(spdk_iscsi_conn) link;
+	STAILQ_ENTRY(spdk_iscsi_conn) pg_link;
 	bool			is_stopped;  /* Set true when connection is stopped for migration */
 	TAILQ_HEAD(queued_r2t_tasks, spdk_iscsi_task)	queued_r2t_tasks;
 	TAILQ_HEAD(active_r2t_tasks, spdk_iscsi_task)	active_r2t_tasks;

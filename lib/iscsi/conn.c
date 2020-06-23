@@ -180,7 +180,7 @@ iscsi_poll_group_add_conn(struct spdk_iscsi_poll_group *pg, struct spdk_iscsi_co
 	}
 
 	conn->is_stopped = false;
-	STAILQ_INSERT_TAIL(&pg->connections, conn, link);
+	STAILQ_INSERT_TAIL(&pg->connections, conn, pg_link);
 }
 
 static void
@@ -195,7 +195,7 @@ iscsi_poll_group_remove_conn(struct spdk_iscsi_poll_group *pg, struct spdk_iscsi
 	}
 
 	conn->is_stopped = true;
-	STAILQ_REMOVE(&pg->connections, conn, spdk_iscsi_conn, link);
+	STAILQ_REMOVE(&pg->connections, conn, spdk_iscsi_conn, pg_link);
 }
 
 static void

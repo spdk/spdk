@@ -977,7 +977,7 @@ _rpc_iscsi_get_connections(struct spdk_io_channel_iter *i)
 	struct spdk_iscsi_poll_group *pg = spdk_io_channel_get_ctx(ch);
 	struct spdk_iscsi_conn *conn;
 
-	STAILQ_FOREACH(conn, &pg->connections, link) {
+	STAILQ_FOREACH(conn, &pg->connections, pg_link) {
 		iscsi_conn_info_json(ctx->w, conn);
 	}
 

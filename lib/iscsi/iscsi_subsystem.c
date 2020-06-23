@@ -1197,7 +1197,7 @@ iscsi_poll_group_poll(void *ctx)
 		SPDK_ERRLOG("Failed to poll sock_group=%p\n", group->sock_group);
 	}
 
-	STAILQ_FOREACH_SAFE(conn, &group->connections, link, tmp) {
+	STAILQ_FOREACH_SAFE(conn, &group->connections, pg_link, tmp) {
 		if (conn->state == ISCSI_CONN_STATE_EXITING) {
 			iscsi_conn_destruct(conn);
 		}
@@ -1212,7 +1212,7 @@ iscsi_poll_group_handle_nop(void *ctx)
 	struct spdk_iscsi_poll_group *group = ctx;
 	struct spdk_iscsi_conn *conn, *tmp;
 
-	STAILQ_FOREACH_SAFE(conn, &group->connections, link, tmp) {
+	STAILQ_FOREACH_SAFE(conn, &group->connections, pg_link, tmp) {
 		iscsi_conn_handle_nop(conn);
 	}
 
