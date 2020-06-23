@@ -498,7 +498,12 @@ bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bi
 			 * Allows for round robin through multiple connections.
 			 */
 			rc = spdk_nvme_ctrlr_set_trid(nvme_bdev_ctrlr->ctrlr, &multipath_trid->trid);
-			assert(rc == 0);
+			if (rc) {
+				SPDK_ERRLOG("Failed to set the transport id for the nvme ctrlr=%p\n",
+					    nvme_bdev_ctrlr->ctrlr);
+				/* Fail the application if the code comes here */
+				assert(rc == 0);
+			}
 			TAILQ_REMOVE(&nvme_bdev_ctrlr->multipath_trids, tmp_trid, link);
 			TAILQ_INSERT_TAIL(&nvme_bdev_ctrlr->multipath_trids, tmp_trid, link);
 		}
