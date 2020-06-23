@@ -122,6 +122,7 @@ struct dd_job {
 static struct dd_job g_job = {};
 static int g_error = 0;
 static struct timespec g_start_time;
+static bool g_interrupt;
 
 static void dd_target_populate_buffer(struct dd_io *io);
 
@@ -236,7 +237,7 @@ dd_target_write(struct dd_io *io)
 	uint64_t write_offset = write_region_start + read_offset;
 	int rc = 0;
 
-	if (g_error != 0) {
+	if (g_error != 0 || g_interrupt == true) {
 		if (g_job.outstanding == 0) {
 			if (g_error == 0) {
 				dd_show_progress(io->offset, io->length, true);
@@ -295,7 +296,7 @@ dd_target_read(struct dd_io *io)
 	struct dd_target *target = &g_job.input;
 	int rc = 0;
 
-	if (g_error != 0) {
+	if (g_error != 0 || g_interrupt == true) {
 		if (g_job.outstanding == 0) {
 			dd_exit(g_error);
 		}
@@ -356,7 +357,7 @@ dd_target_populate_buffer(struct dd_io *io)
 	io->offset = g_job.input.pos;
 	io->length = spdk_min((uint64_t)g_opts.io_unit_size, g_job.copy_size - read_offset);
 
-	if (io->length == 0 || g_error != 0) {
+	if (io->length == 0 || g_error != 0 || g_interrupt == true) {
 		if (g_job.outstanding == 0) {
 			if (g_error == 0) {
 				dd_show_progress(read_offset, io->length, true);
@@ -556,6 +557,12 @@ dd_open_bdev(struct dd_target *target, const char *bdev_name, uint64_t skip_bloc
 	}
 
 	return 0;
+}
+
+static void dd_finish(void)
+{
+	/* Interrupt operation */
+	g_interrupt = true;
 }
 
 static void
@@ -823,6 +830,7 @@ main(int argc, char **argv)
 
 	spdk_app_opts_init(&opts);
 	opts.reactor_mask = "0x1";
+	opts.shutdown_cb = dd_finish;
 	rc = spdk_app_parse_args(argc, argv, &opts, "", g_cmdline_opts, parse_args, usage);
 	if (rc == SPDK_APP_PARSE_ARGS_FAIL) {
 		SPDK_ERRLOG("Invalid arguments\n");
