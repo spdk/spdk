@@ -69,44 +69,37 @@ struct nvme_bdev_ns {
 
 struct ocssd_bdev_ctrlr;
 
-struct nvme_bdev_ctrlr_trid {
-	struct spdk_nvme_transport_id		trid;
-	TAILQ_ENTRY(nvme_bdev_ctrlr_trid)	link;
-};
-
 struct nvme_bdev_ctrlr {
 	/**
 	 * points to pinned, physically contiguous memory region;
 	 * contains 4KB IDENTIFY structure for controller which is
 	 *  target for CONTROLLER IDENTIFY command during initialization
 	 */
-	struct spdk_nvme_ctrlr			*ctrlr;
-	struct spdk_nvme_transport_id		*trid;
-	char					*name;
-	int					ref;
-	bool					resetting;
-	bool					destruct;
+	struct spdk_nvme_ctrlr		*ctrlr;
+	struct spdk_nvme_transport_id	*trid;
+	char				*name;
+	int				ref;
+	bool				resetting;
+	bool				destruct;
 	/**
 	 * PI check flags. This flags is set to NVMe controllers created only
 	 * through bdev_nvme_attach_controller RPC or .INI config file. Hot added
 	 * NVMe controllers are not included.
 	 */
-	uint32_t				prchk_flags;
-	uint32_t				num_ns;
+	uint32_t			prchk_flags;
+	uint32_t			num_ns;
 	/** Array of pointers to namespaces indexed by nsid - 1 */
-	struct nvme_bdev_ns			**namespaces;
+	struct nvme_bdev_ns		**namespaces;
 
-	struct spdk_opal_dev			*opal_dev;
+	struct spdk_opal_dev		*opal_dev;
 
-	struct spdk_poller			*adminq_timer_poller;
-	struct spdk_poller			*destruct_poller;
+	struct spdk_poller		*adminq_timer_poller;
+	struct spdk_poller		*destruct_poller;
 
-	struct ocssd_bdev_ctrlr			*ocssd_ctrlr;
+	struct ocssd_bdev_ctrlr		*ocssd_ctrlr;
 
 	/** linked list pointer for device list */
-	TAILQ_ENTRY(nvme_bdev_ctrlr)		tailq;
-
-	TAILQ_HEAD(, nvme_bdev_ctrlr_trid)	multipath_trids;
+	TAILQ_ENTRY(nvme_bdev_ctrlr)	tailq;
 };
 
 struct nvme_bdev {
