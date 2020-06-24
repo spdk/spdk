@@ -1199,13 +1199,15 @@ uring_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 	struct spdk_sock *_sock, *tmp;
 	struct spdk_uring_sock *sock;
 
-	TAILQ_FOREACH_SAFE(_sock, &group->base.socks, link, tmp) {
-		sock = __uring_sock(_sock);
-		if (spdk_unlikely(sock->connection_status)) {
-			continue;
+	if (spdk_likely(socks)) {
+		TAILQ_FOREACH_SAFE(_sock, &group->base.socks, link, tmp) {
+			sock = __uring_sock(_sock);
+			if (spdk_unlikely(sock->connection_status)) {
+				continue;
+			}
+			_sock_flush(_sock);
+			_sock_prep_pollin(_sock);
 		}
-		_sock_flush(_sock);
-		_sock_prep_pollin(_sock);
 	}
 
 	to_submit = group->io_queued;
