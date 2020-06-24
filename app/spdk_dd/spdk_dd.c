@@ -47,6 +47,8 @@
 struct spdk_dd_opts {
 	char		*input_file;
 	char		*output_file;
+	char		*input_file_flags;
+	char		*output_file_flags;
 	char		*input_bdev;
 	char		*output_bdev;
 	uint64_t	input_offset;
@@ -117,6 +119,24 @@ struct dd_job {
 
 	uint32_t		outstanding;
 	uint64_t		copy_size;
+};
+
+struct dd_flags {
+	char *name;
+	int flag;
+};
+
+static struct dd_flags g_flags[] = {
+	{"append", O_APPEND},
+	{"direct", O_DIRECT},
+	{"directory", O_DIRECTORY},
+	{"dsync", O_DSYNC},
+	{"noatime", O_NOATIME},
+	{"noctty", O_NOCTTY},
+	{"nofollow", O_NOFOLLOW},
+	{"nonblock", O_NONBLOCK},
+	{"sync", O_SYNC},
+	{NULL, 0}
 };
 
 static struct dd_job g_job = {};
@@ -489,12 +509,17 @@ dd_output_poll(void *ctx)
 }
 
 static int
-dd_open_file(struct dd_target *target, const char *fname, uint64_t skip_blocks, bool input)
+dd_open_file(struct dd_target *target, const char *fname, int flags, uint64_t skip_blocks,
+	     bool input)
 {
-	int flags = O_RDWR;
+	flags |= O_RDWR;
 
-	if (input == false) {
+	if (input == false && ((flags & O_DIRECTORY) == 0)) {
 		flags |= O_CREAT;
+	}
+
+	if (input == false && ((flags & O_APPEND) == 0)) {
+		flags |= O_TRUNC;
 	}
 
 	target->type = DD_TARGET_TYPE_FILE;
@@ -565,15 +590,48 @@ static void dd_finish(void)
 	g_interrupt = true;
 }
 
+static int
+parse_flags(char *file_flags)
+{
+	char *input_flag;
+	int flags = 0;
+	int i;
+	bool found = false;
+
+	/* Translate input flags to file open flags */
+	while ((input_flag = strsep(&file_flags, ","))) {
+		for (i = 0; g_flags[i].name != NULL; i++) {
+			if (!strcmp(input_flag, g_flags[i].name)) {
+				flags |= g_flags[i].flag;
+				found = true;
+				break;
+			}
+		}
+
+		if (found == false) {
+			SPDK_ERRLOG("Unknown file flag: %s\n", input_flag);
+			return -EINVAL;
+		}
+
+		found = false;
+	}
+
+	return flags;
+}
+
 static void
 dd_run(void *arg1)
 {
 	uint64_t write_size;
 	uint32_t i;
-	int rc;
+	int rc, flags = 0;
 
 	if (g_opts.input_file) {
-		if (dd_open_file(&g_job.input, g_opts.input_file, g_opts.input_offset, true) < 0) {
+		if (g_opts.input_file_flags) {
+			flags = parse_flags(g_opts.input_file_flags);
+		}
+
+		if (dd_open_file(&g_job.input, g_opts.input_file, flags, g_opts.input_offset, true) < 0) {
 			SPDK_ERRLOG("%s: %s\n", g_opts.input_file, strerror(errno));
 			dd_exit(-errno);
 			return;
@@ -617,7 +675,13 @@ dd_run(void *arg1)
 	g_job.output.pos = g_opts.output_offset * g_opts.io_unit_size;
 
 	if (g_opts.output_file) {
-		if (dd_open_file(&g_job.output, g_opts.output_file, g_opts.output_offset, false) < 0) {
+		flags = 0;
+
+		if (g_opts.output_file_flags) {
+			flags = parse_flags(g_opts.output_file_flags);
+		}
+
+		if (dd_open_file(&g_job.output, g_opts.output_file, flags, g_opts.output_offset, false) < 0) {
 			SPDK_ERRLOG("%s: %s\n", g_opts.output_file, strerror(errno));
 			dd_exit(-errno);
 			return;
@@ -681,6 +745,8 @@ dd_run(void *arg1)
 enum dd_cmdline_opts {
 	DD_OPTION_IF = 0x1000,
 	DD_OPTION_OF,
+	DD_OPTION_IFLAGS,
+	DD_OPTION_OFLAGS,
 	DD_OPTION_IB,
 	DD_OPTION_OB,
 	DD_OPTION_SKIP,
@@ -702,6 +768,18 @@ static struct option g_cmdline_opts[] = {
 		.has_arg = 1,
 		.flag = NULL,
 		.val = DD_OPTION_OF,
+	},
+	{
+		.name = "iflag",
+		.has_arg = 1,
+		.flag = NULL,
+		.val = DD_OPTION_IFLAGS,
+	},
+	{
+		.name = "oflag",
+		.has_arg = 1,
+		.flag = NULL,
+		.val = DD_OPTION_OFLAGS,
 	},
 	{
 		.name = "ib",
@@ -758,11 +836,23 @@ usage(void)
 	printf(" --ib Input bdev. Must specifier either --if or --ib\n");
 	printf(" --of Output file. Must specify either --of or --ob.\n");
 	printf(" --ob Output bdev. Must specify either --of or --ob.\n");
+	printf(" --iflag Input file flags.\n");
+	printf(" --oflag Onput file flags.\n");
 	printf(" --bs I/O unit size (default: %" PRId64 ")\n", g_opts.io_unit_size);
 	printf(" --qd Queue depth (default: %d)\n", g_opts.queue_depth);
 	printf(" --count I/O unit count. The number of I/O units to copy. (default: all)\n");
 	printf(" --skip Skip this many I/O units at start of input. (default: 0)\n");
 	printf(" --seek Skip this many I/O units at start of output. (default: 0)\n");
+	printf(" Available iflag and oflag values:\n");
+	printf("  append - append mode\n");
+	printf("  direct - use direct I/O for data\n");
+	printf("  directory - fail unless a directory\n");
+	printf("  dsync - use synchronized I/O for data\n");
+	printf("  noatime - do not update access time\n");
+	printf("  noctty - do not assign controlling terminal from file\n");
+	printf("  nofollow - do not follow symlinks\n");
+	printf("  nonblock - use non-blocking I/O\n");
+	printf("  sync - use synchronized I/O for data and metadata\n");
 }
 
 static int
@@ -774,6 +864,12 @@ parse_args(int argc, char *argv)
 		break;
 	case DD_OPTION_OF:
 		g_opts.output_file = strdup(argv);
+		break;
+	case DD_OPTION_IFLAGS:
+		g_opts.input_file_flags = strdup(argv);
+		break;
+	case DD_OPTION_OFLAGS:
+		g_opts.output_file_flags = strdup(argv);
 		break;
 	case DD_OPTION_IB:
 		g_opts.input_bdev = strdup(argv);
@@ -812,6 +908,8 @@ dd_free(void)
 	free(g_opts.output_file);
 	free(g_opts.input_bdev);
 	free(g_opts.output_bdev);
+	free(g_opts.input_file_flags);
+	free(g_opts.output_file_flags);
 
 	if (g_job.ios) {
 		for (i = 0; i < g_opts.queue_depth; i++) {
@@ -871,6 +969,18 @@ main(int argc, char **argv)
 
 	if (g_opts.io_unit_count < 0) {
 		SPDK_ERRLOG("Invalid --count value\n");
+		rc = EINVAL;
+		goto end;
+	}
+
+	if (g_opts.output_file == NULL && g_opts.output_file_flags != NULL) {
+		SPDK_ERRLOG("--oflags may be used only with --of\n");
+		rc = EINVAL;
+		goto end;
+	}
+
+	if (g_opts.input_file == NULL && g_opts.input_file_flags != NULL) {
+		SPDK_ERRLOG("--iflags may be used only with --if\n");
 		rc = EINVAL;
 		goto end;
 	}
