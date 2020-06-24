@@ -10,30 +10,12 @@ if [[ $(uname) != "Linux" ]]; then
 	exit 1
 fi
 
-if [ -z "${DEPENDENCY_DIR}" ]; then
-	echo DEPENDENCY_DIR not defined!
-	exit 1
-fi
-
-spdk_nvme_cli="${DEPENDENCY_DIR}/nvme-cli"
-
-if [ ! -d $spdk_nvme_cli ]; then
-	echo "nvme-cli repository not found at $spdk_nvme_cli; skipping tests."
-	exit 1
-fi
-
-# Build against the version of SPDK under test
-cd $spdk_nvme_cli
-
-git clean -dfx
-
-rm -f "$spdk_nvme_cli/spdk"
-ln -sf "$rootdir" "$spdk_nvme_cli/spdk"
-
-make -j$(nproc) LDFLAGS="$(make -s -C $spdk_nvme_cli/spdk ldflags)"
+nvme_cli_build
 
 trap "kill_stub; exit 1" SIGINT SIGTERM EXIT
 start_stub "-s 2048 -i 0 -m 0xF"
+
+pushd ${DEPENDENCY_DIR}/nvme-cli
 
 sed -i 's/spdk=0/spdk=1/g' spdk.conf
 sed -i 's/shm_id=.*/shm_id=0/g' spdk.conf
@@ -51,6 +33,8 @@ for bdf in $(get_nvme_bdfs); do
 	./nvme get-log $bdf -i 1 -l 100
 	./nvme reset $bdf
 done
+
+popd
 
 trap - SIGINT SIGTERM EXIT
 kill_stub
