@@ -14,6 +14,7 @@ import uuid
 import rpc
 import rpc.client
 import pandas as pd
+from collections import OrderedDict
 from common import *
 
 
@@ -126,11 +127,12 @@ class Target(Server):
         fio_files = filter(lambda x: ".fio" in x, files)
         json_files = [x for x in files if ".json" in x]
 
-        header_line = ",".join(["Name",
-                                "read_iops", "read_bw", "read_avg_lat_us", "read_min_lat_us", "read_max_lat_us",
-                                "read_p99_lat_us", "read_p99.9_lat_us", "read_p99.99_lat_us", "read_p99.999_lat_us",
-                                "write_iops", "write_bw", "write_avg_lat_us", "write_min_lat_us", "write_max_lat_us",
-                                "write_p99_lat_us", "write_p99.9_lat_us", "write_p99.99_lat_us", "write_p99.999_lat_us"])
+        headers = ["read_iops", "read_bw", "read_avg_lat_us", "read_min_lat_us", "read_max_lat_us",
+                   "read_p99_lat_us", "read_p99.9_lat_us", "read_p99.99_lat_us", "read_p99.999_lat_us",
+                   "write_iops", "write_bw", "write_avg_lat_us", "write_min_lat_us", "write_max_lat_us",
+                   "write_p99_lat_us", "write_p99.9_lat_us", "write_p99.99_lat_us", "write_p99.999_lat_us"]
+
+        header_line = ",".join(["Name", *headers])
 
         # Create empty results file
         csv_file = "nvmf_results.csv"
@@ -176,11 +178,15 @@ class Target(Server):
                     fh.write(header_line + "\n")
                     fh.write(",".join([job_name, *["{0:.3f}".format(x) for x in init_results]]) + "\n")
 
-            # Sum average results of all initiators running this FIO job
-            self.log_print("\tTotal results for %s from all initiators" % fio_config)
-            for a in inits_avg_results:
-                self.log_print(a)
-            total = ["{0:.3f}".format(sum(c)) for c in zip(*inits_avg_results)]
+            # Sum results of all initiators running this FIO job.
+            # Latency results are an average of latencies from accros all initiators.
+            inits_avg_results = [sum(x) for x in zip(*inits_avg_results)]
+            inits_avg_results = OrderedDict(zip(headers, inits_avg_results))
+            for key in inits_avg_results:
+                if "lat" in key:
+                    inits_avg_results[key] /= len(inits_names)
+
+            total = ["{0:.3f}".format(x) for x in inits_avg_results.values()]
             rows.add(",".join([job_name, *total]))
 
         # Save results to file
