@@ -1837,6 +1837,53 @@ out:
 }
 
 int
+bdev_nvme_remove_trid(const char *name, struct spdk_nvme_transport_id *trid)
+{
+	struct nvme_bdev_ctrlr		*nvme_bdev_ctrlr;
+	struct nvme_bdev_ctrlr_trid	*ctrlr_trid, *tmp_trid;
+
+	if (name == NULL) {
+		return -EINVAL;
+	}
+
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name(name);
+	if (nvme_bdev_ctrlr == NULL) {
+		SPDK_ERRLOG("Failed to find NVMe controller\n");
+		return -ENODEV;
+	}
+
+	/* case 1: we are currently using the path to be removed. */
+	if (!spdk_nvme_transport_id_compare(trid, nvme_bdev_ctrlr->connected_trid)) {
+		ctrlr_trid = TAILQ_FIRST(&nvme_bdev_ctrlr->trids);
+		assert(nvme_bdev_ctrlr->connected_trid == &ctrlr_trid->trid);
+		/* case 1A: the current path is the only path. */
+		if (!TAILQ_NEXT(ctrlr_trid, link)) {
+			return bdev_nvme_delete(name);
+		}
+
+		/* case 1B: there is an alternative path. */
+		if (bdev_nvme_reset(nvme_bdev_ctrlr, NULL, true) == -EAGAIN) {
+			return -EAGAIN;
+		}
+		assert(nvme_bdev_ctrlr->connected_trid != &ctrlr_trid->trid);
+		TAILQ_REMOVE(&nvme_bdev_ctrlr->trids, ctrlr_trid, link);
+		free(ctrlr_trid);
+		return 0;
+	}
+	/* case 2: We are not using the specified path. */
+	TAILQ_FOREACH_SAFE(ctrlr_trid, &nvme_bdev_ctrlr->trids, link, tmp_trid) {
+		if (!spdk_nvme_transport_id_compare(&ctrlr_trid->trid, trid)) {
+			TAILQ_REMOVE(&nvme_bdev_ctrlr->trids, ctrlr_trid, link);
+			free(ctrlr_trid);
+			return 0;
+		}
+	}
+
+	/* case 2A: The address isn't even in the registered list. */
+	return -ENXIO;
+}
+
+int
 bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		 struct spdk_nvme_host_id *hostid,
 		 const char *base_name,
