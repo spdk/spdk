@@ -484,11 +484,25 @@ if __name__ == "__main__":
 
     def bdev_nvme_detach_controller(args):
         rpc.bdev.bdev_nvme_detach_controller(args.client,
-                                             name=args.name)
+                                             name=args.name,
+                                             trtype=args.trtype,
+                                             traddr=args.traddr,
+                                             adrfam=args.adrfam,
+                                             trsvcid=args.trsvcid,
+                                             subnqn=args.subnqn)
 
     p = subparsers.add_parser('bdev_nvme_detach_controller', aliases=['delete_nvme_controller'],
                               help='Detach an NVMe controller and delete any associated bdevs')
     p.add_argument('name', help="Name of the controller")
+    p.add_argument('-t', '--trtype',
+                   help='NVMe-oF target trtype: e.g., rdma, pcie')
+    p.add_argument('-a', '--traddr',
+                   help='NVMe-oF target address: e.g., an ip address or BDF')
+    p.add_argument('-f', '--adrfam',
+                   help='NVMe-oF target adrfam: e.g., ipv4, ipv6, ib, fc, intra_host')
+    p.add_argument('-s', '--trsvcid',
+                   help='NVMe-oF target trsvcid: e.g., a port number')
+    p.add_argument('-n', '--subnqn', help='NVMe-oF target subnqn')
     p.set_defaults(func=bdev_nvme_detach_controller)
 
     def bdev_nvme_cuse_register(args):

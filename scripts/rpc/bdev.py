@@ -492,14 +492,40 @@ def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvc
 
 
 @deprecated_alias('delete_nvme_controller')
-def bdev_nvme_detach_controller(client, name):
-    """Detach NVMe controller and delete any associated bdevs.
+def bdev_nvme_detach_controller(client, name, trtype=None, traddr=None,
+                                adrfam=None, trsvcid=None, subnqn=None):
+    """Detach NVMe controller and delete any associated bdevs. Optionally,
+       If all of the transport ID options are specified, only remove that
+       transport path from the specified controller. If that is the only
+       available path for the controller, this will also result in the
+       controller being detached and the associated bdevs being deleted.
 
     Args:
         name: controller name
+        trtype: transport type ("PCIe", "RDMA")
+        traddr: transport address (PCI BDF or IP address)
+        adrfam: address family ("IPv4", "IPv6", "IB", or "FC")
+        trsvcid: transport service ID (port number for IP-based addresses)
+        subnqn: subsystem NQN to connect to (optional)
     """
 
     params = {'name': name}
+
+    if trtype:
+        params['trtype'] = trtype
+
+    if traddr:
+        params['traddr'] = traddr
+
+    if adrfam:
+        params['adrfam'] = adrfam
+
+    if trsvcid:
+        params['trsvcid'] = trsvcid
+
+    if subnqn:
+        params['subnqn'] = subnqn
+
     return client.call('bdev_nvme_detach_controller', params)
 
 

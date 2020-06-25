@@ -1877,13 +1877,25 @@ Example response:
 
 ## bdev_nvme_detach_controller {#rpc_bdev_nvme_detach_controller}
 
-Detach NVMe controller and delete any associated bdevs.
+Detach NVMe controller and delete any associated bdevs. Optionally,
+If all of the transport ID options are specified, only remove that
+transport path from the specified controller. If that is the only
+available path for the controller, this will also result in the
+controller being detached and the associated bdevs being deleted.
+
+returns true if the controller and bdevs were successfully destroyed
+or the address was properly removed, false otherwise.
 
 ### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Controller name
+trtype                  | Optional | string      | NVMe-oF target trtype: rdma or tcp
+traddr                  | Optional | string      | NVMe-oF target address: ip or BDF
+adrfam                  | Optional | string      | NVMe-oF target adrfam: ipv4, ipv6, ib, fc, intra_host
+trsvcid                 | Optional | string      | NVMe-oF target trsvcid: port number
+subnqn                  | Optional | string      | NVMe-oF target subnqn
 
 ### Example
 
