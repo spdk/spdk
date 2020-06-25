@@ -3566,7 +3566,7 @@ nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 		return;
 	}
 
-	if (rqpair->cm_id) {
+	if (rqpair->rdma_qp) {
 		spdk_rdma_qp_disconnect(rqpair->rdma_qp);
 	}
 

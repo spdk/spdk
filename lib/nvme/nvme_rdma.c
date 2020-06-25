@@ -1815,17 +1815,17 @@ nvme_rdma_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 	}
 
 	if (rqpair->cm_id) {
-		spdk_rdma_qp_disconnect(rqpair->rdma_qp);
-		if (rctrlr != NULL) {
-			if (nvme_rdma_process_event(rqpair, rctrlr->cm_channel, RDMA_CM_EVENT_DISCONNECTED)) {
-				SPDK_DEBUGLOG(SPDK_LOG_NVME, "Target did not respond to qpair disconnect.\n");
-			}
-		}
-
 		if (rqpair->rdma_qp) {
+			spdk_rdma_qp_disconnect(rqpair->rdma_qp);
+			if (rctrlr != NULL) {
+				if (nvme_rdma_process_event(rqpair, rctrlr->cm_channel, RDMA_CM_EVENT_DISCONNECTED)) {
+					SPDK_DEBUGLOG(SPDK_LOG_NVME, "Target did not respond to qpair disconnect.\n");
+				}
+			}
 			spdk_rdma_qp_destroy(rqpair->rdma_qp);
 			rqpair->rdma_qp = NULL;
 		}
+
 		rdma_destroy_id(rqpair->cm_id);
 		rqpair->cm_id = NULL;
 	}
