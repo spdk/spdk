@@ -102,6 +102,19 @@ struct bdevperf_job {
 	TAILQ_ENTRY(bdevperf_job)	link;
 	struct spdk_thread		*thread;
 
+	const char			*workload_type;
+	int				io_size;
+	int				rw_percentage;
+	bool				is_random;
+	bool				verify;
+	bool				reset;
+	bool				continue_on_failure;
+	bool				unmap;
+	bool				write_zeroes;
+	bool				flush;
+	bool				abort;
+	int				queue_depth;
+
 	uint64_t			io_completed;
 	uint64_t			io_failed;
 	uint64_t			io_timeout;
@@ -186,7 +199,7 @@ performance_dump_job(struct bdevperf_aggregate_stats *stats, struct bdevperf_job
 	} else {
 		io_per_second = get_ema_io_per_second(job, stats->ema_period);
 	}
-	mb_per_second = io_per_second * g_io_size / (1024 * 1024);
+	mb_per_second = io_per_second * job->io_size / (1024 * 1024);
 	failed_per_second = (double)job->io_failed * 1000000 / stats->io_time_in_usec;
 	timeout_per_second = (double)job->io_timeout * 1000000 / stats->io_time_in_usec;
 
@@ -333,7 +346,7 @@ bdevperf_test_done(void *ctx)
 			free(task);
 		}
 
-		if (g_verify) {
+		if (job->verify) {
 			spdk_bit_array_free(&job->outstanding);
 		}
 
@@ -384,7 +397,7 @@ bdevperf_job_drain(void *ctx)
 	struct bdevperf_job *job = ctx;
 
 	spdk_poller_unregister(&job->run_timer);
-	if (g_reset) {
+	if (job->reset) {
 		spdk_poller_unregister(&job->reset_timer);
 	}
 
@@ -405,7 +418,7 @@ bdevperf_abort_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 		job->io_completed++;
 	} else {
 		job->io_failed++;
-		if (!g_continue_on_failure) {
+		if (!job->continue_on_failure) {
 			bdevperf_job_drain(job);
 			g_run_rc = -1;
 		}
@@ -439,13 +452,13 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	md_check = spdk_bdev_get_dif_type(job->bdev) == SPDK_DIF_DISABLE;
 
 	if (!success) {
-		if (!g_reset && !g_continue_on_failure) {
+		if (!job->reset && !job->continue_on_failure) {
 			bdevperf_job_drain(job);
 			g_run_rc = -1;
 			printf("task offset: %lu on job bdev=%s fails\n",
 			       task->offset_blocks, job->name);
 		}
-	} else if (g_verify || g_reset) {
+	} else if (job->verify || job->reset) {
 		spdk_bdev_io_get_iovec(bdev_io, &iovs, &iovcnt);
 		assert(iovcnt == 1);
 		assert(iovs != NULL);
@@ -469,7 +482,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		job->io_failed++;
 	}
 
-	if (g_verify) {
+	if (job->verify) {
 		assert(task->offset_blocks / job->io_size_blocks >= job->ios_base);
 		offset_in_ios = task->offset_blocks / job->io_size_blocks - job->ios_base;
 
@@ -608,7 +621,7 @@ bdevperf_submit_task(void *arg)
 			rc = bdevperf_generate_dif(task);
 		}
 		if (rc == 0) {
-			cb_fn = (g_verify || g_reset) ? bdevperf_verify_write_complete : bdevperf_complete;
+			cb_fn = (job->verify || job->reset) ? bdevperf_verify_write_complete : bdevperf_complete;
 
 			if (g_zcopy) {
 				spdk_bdev_zcopy_end(task->bdev_io, true, cb_fn, task);
@@ -671,7 +684,7 @@ bdevperf_submit_task(void *arg)
 		return;
 	} else if (rc != 0) {
 		printf("Failed to submit bdev_io: %d\n", rc);
-		if (g_verify) {
+		if (job->verify) {
 			assert(task->offset_blocks / job->io_size_blocks >= job->ios_base);
 			offset_in_ios = task->offset_blocks / job->io_size_blocks - job->ios_base;
 
@@ -703,8 +716,8 @@ bdevperf_zcopy_get_buf_complete(struct spdk_bdev_io *bdev_io, bool success, void
 	task->bdev_io = bdev_io;
 	task->io_type = SPDK_BDEV_IO_TYPE_WRITE;
 
-	if (g_verify || g_reset) {
-		/* When g_verify or g_reset is enabled, task->buf is used for
+	if (job->verify || job->reset) {
+		/* When job->verify or job->reset is enabled, task->buf is used for
 		 *  verification of read after write.  For write I/O, when zcopy APIs
 		 *  are used, task->buf cannot be used, and data must be written to
 		 *  the data buffer allocated underneath bdev layer instead.
@@ -764,7 +777,7 @@ bdevperf_submit_single(struct bdevperf_job *job, struct bdevperf_task *task)
 {
 	uint64_t offset_in_ios;
 
-	if (g_is_random) {
+	if (job->is_random) {
 		offset_in_ios = rand_r(&seed) % job->size_in_ios;
 	} else {
 		offset_in_ios = job->offset_in_ios++;
@@ -773,10 +786,10 @@ bdevperf_submit_single(struct bdevperf_job *job, struct bdevperf_task *task)
 		}
 
 		/* Increment of offset_in_ios if there's already an outstanding IO
-		 * to that location. We only need this with g_verify as random
-		 * offsets are not supported with g_verify at this time.
+		 * to that location. We only need this with job->verify as random
+		 * offsets are not supported with job->verify at this time.
 		 */
-		if (g_verify) {
+		if (job->verify) {
 			assert(spdk_bit_array_find_first_clear(job->outstanding, 0) != UINT32_MAX);
 
 			while (spdk_bit_array_get(job->outstanding, offset_in_ios)) {
@@ -795,7 +808,7 @@ bdevperf_submit_single(struct bdevperf_job *job, struct bdevperf_task *task)
 	 */
 	task->offset_blocks = (offset_in_ios + job->ios_base) * job->io_size_blocks;
 
-	if (g_verify || g_reset) {
+	if (job->verify || job->reset) {
 		generate_data(task->buf, job->buf_size,
 			      spdk_bdev_get_block_size(job->bdev),
 			      task->md_buf, spdk_bdev_get_md_size(job->bdev),
@@ -808,14 +821,14 @@ bdevperf_submit_single(struct bdevperf_job *job, struct bdevperf_task *task)
 			task->iov.iov_len = job->buf_size;
 			task->io_type = SPDK_BDEV_IO_TYPE_WRITE;
 		}
-	} else if (g_flush) {
+	} else if (job->flush) {
 		task->io_type = SPDK_BDEV_IO_TYPE_FLUSH;
-	} else if (g_unmap) {
+	} else if (job->unmap) {
 		task->io_type = SPDK_BDEV_IO_TYPE_UNMAP;
-	} else if (g_write_zeroes) {
+	} else if (job->write_zeroes) {
 		task->io_type = SPDK_BDEV_IO_TYPE_WRITE_ZEROES;
-	} else if ((g_rw_percentage == 100) ||
-		   (g_rw_percentage != 0 && ((rand_r(&seed) % 100) < g_rw_percentage))) {
+	} else if ((job->rw_percentage == 100) ||
+		   (job->rw_percentage != 0 && ((rand_r(&seed) % 100) < job->rw_percentage))) {
 		task->io_type = SPDK_BDEV_IO_TYPE_READ;
 	} else {
 		if (g_zcopy) {
@@ -882,7 +895,7 @@ bdevperf_timeout_cb(void *cb_arg, struct spdk_bdev_io *bdev_io)
 
 	job->io_timeout++;
 
-	if (job->is_draining || !g_abort ||
+	if (job->is_draining || !job->abort ||
 	    !spdk_bdev_io_type_supported(job->bdev, SPDK_BDEV_IO_TYPE_ABORT)) {
 		return;
 	}
@@ -910,14 +923,14 @@ bdevperf_job_run(void *ctx)
 
 	/* Start a timer to stop this I/O chain when the run is over */
 	job->run_timer = SPDK_POLLER_REGISTER(bdevperf_job_drain, job, g_time_in_usec);
-	if (g_reset) {
+	if (job->reset) {
 		job->reset_timer = SPDK_POLLER_REGISTER(reset_job, job,
 							10 * 1000000);
 	}
 
 	spdk_bdev_set_timeout(job->bdev_desc, g_timeout_in_sec, bdevperf_timeout_cb, job);
 
-	for (i = 0; i < g_queue_depth; i++) {
+	for (i = 0; i < job->queue_depth; i++) {
 		task = bdevperf_job_get_task(job);
 		bdevperf_submit_single(job, task);
 	}
@@ -1092,17 +1105,6 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct spdk_cpuset *cpumask,
 	block_size = spdk_bdev_get_block_size(bdev);
 	data_block_size = spdk_bdev_get_data_block_size(bdev);
 
-	if (g_unmap && !spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
-		printf("Skipping %s because it does not support unmap\n", spdk_bdev_get_name(bdev));
-		return -ENOTSUP;
-	}
-
-	if ((g_io_size % data_block_size) != 0) {
-		SPDK_ERRLOG("IO size (%d) is not multiples of data block size of bdev %s (%"PRIu32")\n",
-			    g_io_size, spdk_bdev_get_name(bdev), data_block_size);
-		return -ENOTSUP;
-	}
-
 	job = calloc(1, sizeof(struct bdevperf_job));
 	if (!job) {
 		fprintf(stderr, "Unable to allocate memory for new job.\n");
@@ -1116,9 +1118,38 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct spdk_cpuset *cpumask,
 		return -ENOMEM;
 	}
 
+	/* TODO: parse from file */
+	job->workload_type = g_workload_type;
+	job->io_size = g_io_size;
+	job->rw_percentage = g_rw_percentage;
+	job->is_random = g_is_random;
+	job->verify = g_verify;
+	job->reset = g_reset;
+	job->continue_on_failure = g_continue_on_failure;
+	job->unmap = g_unmap;
+	job->write_zeroes = g_write_zeroes;
+	job->flush = g_flush;
+	job->abort = g_abort;
+	job->queue_depth = g_queue_depth;
+
 	job->bdev = bdev;
-	job->io_size_blocks = g_io_size / data_block_size;
+	job->io_size_blocks = job->io_size / data_block_size;
 	job->buf_size = job->io_size_blocks * block_size;
+
+	if ((job->io_size % data_block_size) != 0) {
+		SPDK_ERRLOG("IO size (%d) is not multiples of data block size of bdev %s (%"PRIu32")\n",
+			    job->io_size, spdk_bdev_get_name(bdev), data_block_size);
+		free(job->name);
+		free(job);
+		return -ENOTSUP;
+	}
+
+	if (job->unmap && !spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
+		printf("Skipping %s because it does not support unmap\n", spdk_bdev_get_name(bdev));
+		free(job->name);
+		free(job);
+		return -ENOTSUP;
+	}
 
 	if (spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_REFTAG)) {
 		job->dif_check_flags |= SPDK_DIF_FLAGS_REFTAG_CHECK;
@@ -1139,7 +1170,7 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct spdk_cpuset *cpumask,
 		job->ios_base = 0;
 	}
 
-	if (g_verify) {
+	if (job->verify) {
 		job->outstanding = spdk_bit_array_create(job->size_in_ios);
 		if (job->outstanding == NULL) {
 			SPDK_ERRLOG("Could not create outstanding array bitmap for bdev %s\n",
@@ -1152,12 +1183,12 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct spdk_cpuset *cpumask,
 
 	TAILQ_INIT(&job->task_list);
 
-	task_num = g_queue_depth;
-	if (g_reset) {
+	task_num = job->queue_depth;
+	if (job->reset) {
 		task_num += 1;
 	}
-	if (g_abort) {
-		task_num += g_queue_depth;
+	if (job->abort) {
+		task_num += job->queue_depth;
 	}
 
 	TAILQ_INSERT_TAIL(&g_bdevperf.jobs, job, link);
