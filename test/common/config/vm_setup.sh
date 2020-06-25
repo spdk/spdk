@@ -62,10 +62,10 @@ rootdir=$(readlink -f "$vmsetupdir/../../../")
 
 managers=("$vmsetupdir/pkgdep/"*)
 # Get package manager #
-if hash yum &> /dev/null; then
-	source "$vmsetupdir/pkgdep/yum"
-elif hash dnf &> /dev/null; then
+if hash dnf &> /dev/null; then
 	source "$vmsetupdir/pkgdep/dnf"
+elif hash yum &> /dev/null; then
+	source "$vmsetupdir/pkgdep/yum"
 elif hash apt-get &> /dev/null; then
 	source "$vmsetupdir/pkgdep/apt-get"
 elif hash pacman &> /dev/null; then
