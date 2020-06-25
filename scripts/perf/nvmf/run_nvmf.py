@@ -126,16 +126,15 @@ class Target(Server):
         fio_files = filter(lambda x: ".fio" in x, files)
         json_files = [x for x in files if ".json" in x]
 
+        header_line = ",".join(["Name",
+                                "read_iops", "read_bw", "read_avg_lat_us", "read_min_lat_us", "read_max_lat_us",
+                                "read_p99_lat_us", "read_p99.9_lat_us", "read_p99.99_lat_us", "read_p99.999_lat_us",
+                                "write_iops", "write_bw", "write_avg_lat_us", "write_min_lat_us", "write_max_lat_us",
+                                "write_p99_lat_us", "write_p99.9_lat_us", "write_p99.99_lat_us", "write_p99.999_lat_us"])
+
         # Create empty results file
         csv_file = "nvmf_results.csv"
         with open(os.path.join(results_dir, csv_file), "w") as fh:
-            header_line = ",".join(["Name",
-                                    "read_iops", "read_bw", "read_avg_lat_us",
-                                    "read_min_lat_us", "read_max_lat_us", "read_p99_lat_us",
-                                    "read_p99.9_lat_us", "read_p99.99_lat_us", "read_p99.999_lat_us",
-                                    "write_iops", "write_bw", "write_avg_lat_us",
-                                    "write_min_lat_us", "write_max_lat_us", "write_p99_lat_us",
-                                    "write_p99.9_lat_us", "write_p99.99_lat_us", "write_p99.999_lat_us"])
             fh.write(header_line + "\n")
         rows = set()
 
@@ -159,6 +158,7 @@ class Target(Server):
                 self.log_print("\tGetting stats for initiator %s" % i)
                 # There may have been more than 1 test run for this job, calculate average results for initiator
                 i_results = [x for x in job_result_files if i in x]
+                i_results_filename = re.sub(r"run_\d+_", "", i_results[0].replace("json", "csv"))
 
                 separate_stats = []
                 for r in i_results:
@@ -166,12 +166,15 @@ class Target(Server):
                     separate_stats.append(stats)
                     self.log_print(stats)
 
-                z = [sum(c) for c in zip(*separate_stats)]
-                z = [c/len(separate_stats) for c in z]
-                inits_avg_results.append(z)
+                init_results = [sum(x) for x in zip(*separate_stats)]
+                init_results = [x / len(separate_stats) for x in init_results]
+                inits_avg_results.append(init_results)
 
                 self.log_print("\tAverage results for initiator %s" % i)
-                self.log_print(z)
+                self.log_print(init_results)
+                with open(os.path.join(results_dir, i_results_filename), "w") as fh:
+                    fh.write(header_line + "\n")
+                    fh.write(",".join([job_name, *["{0:.3f}".format(x) for x in init_results]]) + "\n")
 
             # Sum average results of all initiators running this FIO job
             self.log_print("\tTotal results for %s from all initiators" % fio_config)
