@@ -37,11 +37,9 @@ fi
 if [ $(uname -s) == "FreeBSD" ]; then
 	OSID="freebsd"
 	OSVERSION=$(freebsd-version | cut -d. -f1)
-	PACKAGEMNG='pkg'
 else
 	OSID=$(source /etc/os-release && echo $ID)
 	OSVERSION=$(source /etc/os-release && echo $VERSION_ID)
-	PACKAGEMNG='undefined'
 fi
 
 function usage() {
@@ -50,8 +48,8 @@ function usage() {
 	echo ""
 	echo "./vm_setup.sh"
 	echo "  -h --help"
-	echo "  -u --upgrade Run $PACKAGEMNG upgrade"
-	echo "  -i --install-deps Install $PACKAGEMNG based dependencies"
+	echo "  -u --upgrade Run $package_manager upgrade"
+	echo "  -i --install-deps Install $package_manager based dependencies"
 	echo "  -t --test-conf List of test configurations to enable (${CONF})"
 	echo "  -c --conf-path Path to configuration file"
 	echo "  -d --dir-git Path to where git sources should be saved"
@@ -77,6 +75,7 @@ elif hash pkg &> /dev/null; then
 else
 	echo "Supported package manager not found. Script supports:"
 	printf ' * %s\n' "${managers[@]##*/}"
+	package_manager="undefined"
 fi
 
 # Parse input arguments #
