@@ -95,6 +95,11 @@
  */
 #define NVME_RDMA_DESTROYED_QPAIR_EXPIRATION_CYCLES	50
 
+/*
+ * The max length of keyed SGL data block (3 bytes)
+ */
+#define NVME_RDMA_MAX_KEYED_SGL_LENGTH ((1u << 24u) - 1)
+
 #define WC_PER_QPAIR(queue_depth)	(queue_depth * 2)
 
 enum nvme_rdma_wr_type {
@@ -1508,6 +1513,12 @@ nvme_rdma_build_contig_request(struct nvme_rdma_qpair *rqpair,
 	assert(req->payload_size != 0);
 	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG);
 
+	if (spdk_unlikely(req->payload_size > NVME_RDMA_MAX_KEYED_SGL_LENGTH)) {
+		SPDK_ERRLOG("SGL length %u exceeds max keyed SGL block size %u\n",
+			    req->payload_size, NVME_RDMA_MAX_KEYED_SGL_LENGTH);
+		return -1;
+	}
+
 	if (spdk_unlikely(!nvme_rdma_get_key(rqpair->mr_map->map, payload, req->payload_size,
 					     NVME_RDMA_MR_RKEY, &rkey))) {
 		return -1;
@@ -1565,6 +1576,12 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair,
 		}
 
 		sge_length = spdk_min(remaining_size, sge_length);
+
+		if (spdk_unlikely(sge_length > NVME_RDMA_MAX_KEYED_SGL_LENGTH)) {
+			SPDK_ERRLOG("SGL length %u exceeds max keyed SGL block size %u\n",
+				    sge_length, NVME_RDMA_MAX_KEYED_SGL_LENGTH);
+			return -1;
+		}
 
 		if (spdk_unlikely(!nvme_rdma_get_key(rqpair->mr_map->map, virt_addr, sge_length,
 						     NVME_RDMA_MR_RKEY, &rkey))) {

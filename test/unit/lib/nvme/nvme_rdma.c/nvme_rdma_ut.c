@@ -193,7 +193,7 @@ test_nvme_rdma_build_sgl_request(void)
 	SPDK_CU_ASSERT_FATAL(rc != 0);
 	CU_ASSERT(bio.iovpos == 1);
 
-	/* Test case 4: Multiple SGL, SGL size smaller than I/O size */
+	/* Test case 4: Multiple SGL, SGL size smaller than I/O size. Expected: FAIL */
 	bio.iovpos = 0;
 	req.payload_offset = 0;
 	req.payload_size = 0x6000;
@@ -201,6 +201,187 @@ test_nvme_rdma_build_sgl_request(void)
 	rc = nvme_rdma_build_sgl_request(&rqpair, &rdma_req);
 	SPDK_CU_ASSERT_FATAL(rc != 0);
 	CU_ASSERT(bio.iovpos == NVME_RDMA_MAX_SGL_DESCRIPTORS);
+
+	/* Test case 5: SGL length exceeds 3 bytes. Expected: FAIL */
+	req.payload_size = 0x1000 + (1 << 24);
+	bio.iovs[0].iov_len = 0x1000;
+	bio.iovs[1].iov_len = 1 << 24;
+	rc = nvme_rdma_build_sgl_request(&rqpair, &rdma_req);
+	SPDK_CU_ASSERT_FATAL(rc != 0);
+}
+
+static void
+test_nvme_rdma_build_sgl_inline_request(void)
+{
+	struct nvme_rdma_qpair rqpair;
+	struct spdk_nvme_ctrlr ctrlr = {0};
+	struct spdk_nvmf_cmd cmd = {{0}};
+	struct spdk_nvme_rdma_req rdma_req = {0};
+	struct nvme_request req = {{0}};
+	struct nvme_rdma_ut_bdev_io bio;
+	struct spdk_nvme_rdma_mr_map rmap = {0};
+	struct spdk_mem_map *map = NULL;
+	int rc;
+
+	rmap.map = map;
+
+	ctrlr.max_sges = NVME_RDMA_MAX_SGL_DESCRIPTORS;
+	ctrlr.cdata.nvmf_specific.msdbd = 16;
+
+	rqpair.mr_map = &rmap;
+	rqpair.qpair.ctrlr = &ctrlr;
+	rqpair.cmds = &cmd;
+	cmd.sgl[0].address = 0x1111;
+	rdma_req.id = 0;
+	rdma_req.req = &req;
+
+	req.payload.reset_sgl_fn = nvme_rdma_ut_reset_sgl;
+	req.payload.next_sge_fn = nvme_rdma_ut_next_sge;
+	req.payload.contig_or_cb_arg = &bio;
+	req.qpair = &rqpair.qpair;
+
+	g_nvme_rdma_mr.lkey = 2;
+
+	/* Test case 1: single inline SGL. Expected: PASS */
+	bio.iovpos = 0;
+	req.payload_offset = 0;
+	req.payload_size = 0x1000;
+	bio.iovs[0].iov_base = (void *)0xdeadbeef;
+	bio.iovs[0].iov_len = 0x1000;
+	rc = nvme_rdma_build_sgl_inline_request(&rqpair, &rdma_req);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	CU_ASSERT(bio.iovpos == 1);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == req.payload_size);
+	CU_ASSERT(req.cmd.dptr.sgl1.address == 0);
+	CU_ASSERT(rdma_req.send_sgl[0].length == sizeof(struct spdk_nvme_cmd));
+	CU_ASSERT(rdma_req.send_sgl[1].length == req.payload_size);
+	CU_ASSERT(rdma_req.send_sgl[1].addr == (uint64_t)bio.iovs[0].iov_base);
+	CU_ASSERT(rdma_req.send_sgl[1].lkey == g_nvme_rdma_mr.lkey);
+
+	/* Test case 2: SGL length exceeds 3 bytes. Expected: PASS */
+	bio.iovpos = 0;
+	req.payload_offset = 0;
+	req.payload_size = 1 << 24;
+	bio.iovs[0].iov_len = 1 << 24;
+	rc = nvme_rdma_build_sgl_inline_request(&rqpair, &rdma_req);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	CU_ASSERT(bio.iovpos == 1);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == req.payload_size);
+	CU_ASSERT(req.cmd.dptr.sgl1.address == 0);
+	CU_ASSERT(rdma_req.send_sgl[0].length == sizeof(struct spdk_nvme_cmd));
+	CU_ASSERT(rdma_req.send_sgl[1].length == req.payload_size);
+	CU_ASSERT(rdma_req.send_sgl[1].addr == (uint64_t)bio.iovs[0].iov_base);
+	CU_ASSERT(rdma_req.send_sgl[1].lkey == g_nvme_rdma_mr.lkey);
+}
+
+static void
+test_nvme_rdma_build_contig_request(void)
+{
+	struct nvme_rdma_qpair rqpair;
+	struct spdk_nvme_ctrlr ctrlr = {0};
+	struct spdk_nvmf_cmd cmd = {{0}};
+	struct spdk_nvme_rdma_req rdma_req = {0};
+	struct nvme_request req = {{0}};
+	struct spdk_nvme_rdma_mr_map rmap = {0};
+	struct spdk_mem_map *map = NULL;
+	int rc;
+
+	rmap.map = map;
+
+	ctrlr.max_sges = NVME_RDMA_MAX_SGL_DESCRIPTORS;
+	ctrlr.cdata.nvmf_specific.msdbd = 16;
+
+	rqpair.mr_map = &rmap;
+	rqpair.qpair.ctrlr = &ctrlr;
+	rqpair.cmds = &cmd;
+	cmd.sgl[0].address = 0x1111;
+	rdma_req.id = 0;
+	rdma_req.req = &req;
+
+	req.payload.contig_or_cb_arg = (void *)0xdeadbeef;
+	req.qpair = &rqpair.qpair;
+
+	g_nvme_rdma_mr.rkey = 2;
+
+	/* Test case 1: contig request. Expected: PASS */
+	req.payload_offset = 0;
+	req.payload_size = 0x1000;
+	rc = nvme_rdma_build_contig_request(&rqpair, &rdma_req);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	CU_ASSERT(req.cmd.dptr.sgl1.keyed.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK);
+	CU_ASSERT(req.cmd.dptr.sgl1.keyed.subtype == SPDK_NVME_SGL_SUBTYPE_ADDRESS);
+	CU_ASSERT(req.cmd.dptr.sgl1.keyed.length == req.payload_size);
+	CU_ASSERT(req.cmd.dptr.sgl1.keyed.key == g_nvme_rdma_mr.rkey);
+	CU_ASSERT(req.cmd.dptr.sgl1.address == (uint64_t)req.payload.contig_or_cb_arg);
+	CU_ASSERT(rdma_req.send_sgl[0].length == sizeof(struct spdk_nvme_cmd));
+
+	/* Test case 2: SGL length exceeds 3 bytes. Expected: FAIL */
+	req.payload_offset = 0;
+	req.payload_size = 1 << 24;
+	rc = nvme_rdma_build_contig_request(&rqpair, &rdma_req);
+	SPDK_CU_ASSERT_FATAL(rc != 0);
+}
+
+static void
+test_nvme_rdma_build_contig_inline_request(void)
+{
+	struct nvme_rdma_qpair rqpair;
+	struct spdk_nvme_ctrlr ctrlr = {0};
+	struct spdk_nvmf_cmd cmd = {{0}};
+	struct spdk_nvme_rdma_req rdma_req = {0};
+	struct nvme_request req = {{0}};
+	struct spdk_nvme_rdma_mr_map rmap = {0};
+	struct spdk_mem_map *map = NULL;
+	int rc;
+
+	rmap.map = map;
+
+	ctrlr.max_sges = NVME_RDMA_MAX_SGL_DESCRIPTORS;
+	ctrlr.cdata.nvmf_specific.msdbd = 16;
+
+	rqpair.mr_map = &rmap;
+	rqpair.qpair.ctrlr = &ctrlr;
+	rqpair.cmds = &cmd;
+	cmd.sgl[0].address = 0x1111;
+	rdma_req.id = 0;
+	rdma_req.req = &req;
+
+	req.payload.contig_or_cb_arg = (void *)0xdeadbeef;
+	req.qpair = &rqpair.qpair;
+
+	g_nvme_rdma_mr.rkey = 2;
+
+	/* Test case 1: single inline SGL. Expected: PASS */
+	req.payload_offset = 0;
+	req.payload_size = 0x1000;
+	rc = nvme_rdma_build_contig_inline_request(&rqpair, &rdma_req);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == req.payload_size);
+	CU_ASSERT(req.cmd.dptr.sgl1.address == 0);
+	CU_ASSERT(rdma_req.send_sgl[0].length == sizeof(struct spdk_nvme_cmd));
+	CU_ASSERT(rdma_req.send_sgl[1].length == req.payload_size);
+	CU_ASSERT(rdma_req.send_sgl[1].addr == (uint64_t)req.payload.contig_or_cb_arg);
+	CU_ASSERT(rdma_req.send_sgl[1].lkey == g_nvme_rdma_mr.lkey);
+
+	/* Test case 2: SGL length exceeds 3 bytes. Expected: PASS */
+	req.payload_offset = 0;
+	req.payload_size = 1 << 24;
+	rc = nvme_rdma_build_contig_inline_request(&rqpair, &rdma_req);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == req.payload_size);
+	CU_ASSERT(req.cmd.dptr.sgl1.address == 0);
+	CU_ASSERT(rdma_req.send_sgl[0].length == sizeof(struct spdk_nvme_cmd));
+	CU_ASSERT(rdma_req.send_sgl[1].length == req.payload_size);
+	CU_ASSERT(rdma_req.send_sgl[1].addr == (uint64_t)req.payload.contig_or_cb_arg);
+	CU_ASSERT(rdma_req.send_sgl[1].lkey == g_nvme_rdma_mr.lkey);
 }
 
 int main(int argc, char **argv)
@@ -213,6 +394,9 @@ int main(int argc, char **argv)
 
 	suite = CU_add_suite("nvme_rdma", NULL, NULL);
 	CU_ADD_TEST(suite, test_nvme_rdma_build_sgl_request);
+	CU_ADD_TEST(suite, test_nvme_rdma_build_sgl_inline_request);
+	CU_ADD_TEST(suite, test_nvme_rdma_build_contig_request);
+	CU_ADD_TEST(suite, test_nvme_rdma_build_contig_inline_request);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
