@@ -73,8 +73,6 @@ elif hash pacman &> /dev/null; then
 elif hash pkg &> /dev/null; then
 	source "$vmsetupdir/pkgdep/pkg"
 else
-	echo "Supported package manager not found. Script supports:"
-	printf ' * %s\n' "${managers[@]##*/}"
 	package_manager="undefined"
 fi
 
@@ -109,6 +107,12 @@ while getopts 'd:siuht:c:-:' optchar; do
 			;;
 	esac
 done
+
+if [[ "$package_manager" == "undefined" ]]; then
+	echo "Supported package manager not found. Script supports:"
+	printf ' * %s\n' "${managers[@]##*/}"
+	exit 1
+fi
 
 if [ -n "$CONF_PATH" ]; then
 	if [ ! -f "$CONF_PATH" ]; then
