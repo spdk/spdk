@@ -505,6 +505,7 @@ static inline void
 nvme_tcp_req_put_safe(struct nvme_tcp_req *tcp_req)
 {
 	if (tcp_req->ordering.send_ack && tcp_req->ordering.data_recv) {
+		assert(tcp_req->state == NVME_TCP_REQ_ACTIVE);
 		assert(tcp_req->tqpair != NULL);
 		nvme_tcp_req_put(tcp_req->tqpair, tcp_req);
 	}
@@ -1015,7 +1016,6 @@ nvme_tcp_capsule_resp_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_
 	}
 
 	assert(tcp_req->req != NULL);
-	assert(tcp_req->state == NVME_TCP_REQ_ACTIVE);
 	nvme_tcp_req_complete(tcp_req->req, &cpl);
 	(*reaped)++;
 
@@ -1122,12 +1122,15 @@ nvme_tcp_qpair_h2c_data_send_complete(void *cb_arg)
 
 	assert(tcp_req != NULL);
 
+	tcp_req->ordering.send_ack = 1;
 	if (tcp_req->r2tl_remain) {
 		nvme_tcp_send_h2c_data(tcp_req);
 	} else {
 		assert(tcp_req->active_r2ts > 0);
 		tcp_req->active_r2ts--;
 		tcp_req->state = NVME_TCP_REQ_ACTIVE;
+		/* Need also call this function to free the resource */
+		nvme_tcp_req_put_safe(tcp_req);
 	}
 }
 
@@ -1139,6 +1142,8 @@ nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req)
 	struct spdk_nvme_tcp_h2c_data_hdr *h2c_data;
 	uint32_t plen, pdo, alignment;
 
+	/* Reinit the send_ack */
+	tcp_req->ordering.send_ack = 0;
 	rsp_pdu = tcp_req->send_pdu;
 	memset(rsp_pdu, 0, sizeof(*rsp_pdu));
 	h2c_data = &rsp_pdu->hdr.h2c_data;
