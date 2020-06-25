@@ -132,17 +132,32 @@ class Target(Server):
                    "write_iops", "write_bw", "write_avg_lat_us", "write_min_lat_us", "write_max_lat_us",
                    "write_p99_lat_us", "write_p99.9_lat_us", "write_p99.99_lat_us", "write_p99.999_lat_us"]
 
+        aggr_headers = ["iops", "bw", "avg_lat_us", "min_lat_us", "max_lat_us",
+                        "p99_lat_us", "p99.9_lat_us", "p99.99_lat_us", "p99.999_lat_us"]
+
         header_line = ",".join(["Name", *headers])
+        aggr_header_line = ",".join(["Name", *aggr_headers])
 
         # Create empty results file
         csv_file = "nvmf_results.csv"
         with open(os.path.join(results_dir, csv_file), "w") as fh:
-            fh.write(header_line + "\n")
+            fh.write(aggr_header_line + "\n")
         rows = set()
 
         for fio_config in fio_files:
             self.log_print("Getting FIO stats for %s" % fio_config)
             job_name, _ = os.path.splitext(fio_config)
+
+            # Look in the filename for rwmixread value. Function arguments do
+            # not have that information.
+            # TODO: Improve this function by directly using workload params instead
+            # of regexing through filenames.
+            if "read" in job_name:
+                rw_mixread = 1
+            elif "write" in job_name:
+                rw_mixread = 0
+            else:
+                rw_mixread = float(re.search(r"m_(\d+)", job_name).group(1)) / 100
 
             # If "_CPU" exists in name - ignore it
             # Initiators for the same job could have diffrent num_cores parameter
@@ -186,8 +201,18 @@ class Target(Server):
                 if "lat" in key:
                     inits_avg_results[key] /= len(inits_names)
 
-            total = ["{0:.3f}".format(x) for x in inits_avg_results.values()]
-            rows.add(",".join([job_name, *total]))
+            # Aggregate separate read/write values into common labels
+            # Take rw_mixread into consideration for mixed read/write workloads.
+            aggregate_results = OrderedDict()
+            for h in aggr_headers:
+                read_stat, write_stat = [float(value) for key, value in inits_avg_results.items() if h in key]
+                if "lat" in h:
+                    _ = rw_mixread * read_stat + (1 - rw_mixread) * write_stat
+                else:
+                    _ = read_stat + write_stat
+                aggregate_results[h] = "{0:.3f}".format(_)
+
+            rows.add(",".join([job_name, *aggregate_results.values()]))
 
         # Save results to file
         for row in rows:
