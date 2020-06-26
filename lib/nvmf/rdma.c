@@ -2625,7 +2625,7 @@ nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 		return -1;
 	}
 
-	rc = rdma_listen(port->id, 10); /* 10 = backlog */
+	rc = rdma_listen(port->id, 100); /* 100 = backlog */
 	if (rc < 0) {
 		SPDK_ERRLOG("rdma_listen() failed\n");
 		rdma_destroy_id(port->id);
