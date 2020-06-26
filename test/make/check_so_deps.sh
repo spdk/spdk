@@ -289,7 +289,7 @@ EOF
 
 		if ! output=$(abidiff "$source_abi_dir/$so_file" "$libdir/$so_file" --leaf-changes-only --suppressions $suppression_file --stat); then
 			# remove any filtered out variables.
-			output=${output// [()][^)]*[)]/}
+			output=$(sed "s/ [()][^)]*[)]//g" <<< "$output")
 
 			IFS="." read -r _ _ new_so_maj new_so_min < <(readlink "$libdir/$so_file")
 			IFS="." read -r _ _ old_so_maj old_so_min < <(readlink "$source_abi_dir/$so_file")
