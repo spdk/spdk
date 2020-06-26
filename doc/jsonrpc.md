@@ -4119,6 +4119,7 @@ no_srq                      | Optional | boolean | Disable shared receive queue 
 c2h_success                 | Optional | boolean | Disable C2H success optimization (TCP only)
 dif_insert_or_strip         | Optional | boolean | Enable DIF insert for write I/O and DIF strip for read I/O DIF
 sock_priority               | Optional | number  | The socket priority of the connection owned by this transport (TCP only)
+acceptor_backlog            | Optional | number  | The number of pending connections allowed in backlog before failing new connection attempts (RDMA only)
 
 ### Example
 

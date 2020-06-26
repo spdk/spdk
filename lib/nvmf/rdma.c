@@ -2219,6 +2219,7 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 #define SPDK_NVMF_RDMA_DEFAULT_BUFFER_CACHE_SIZE 32
 #define SPDK_NVMF_RDMA_DEFAULT_NO_SRQ false
 #define SPDK_NVMF_RDMA_DIF_INSERT_OR_STRIP false
+#define SPDK_NVMF_RDMA_ACCEPTOR_BACKLOG 100
 
 static void
 nvmf_rdma_opts_init(struct spdk_nvmf_transport_opts *opts)
@@ -2234,6 +2235,7 @@ nvmf_rdma_opts_init(struct spdk_nvmf_transport_opts *opts)
 	opts->max_srq_depth =		SPDK_NVMF_RDMA_DEFAULT_SRQ_DEPTH;
 	opts->no_srq =			SPDK_NVMF_RDMA_DEFAULT_NO_SRQ;
 	opts->dif_insert_or_strip =	SPDK_NVMF_RDMA_DIF_INSERT_OR_STRIP;
+	opts->acceptor_backlog =	SPDK_NVMF_RDMA_ACCEPTOR_BACKLOG;
 }
 
 const struct spdk_mem_map_ops g_nvmf_rdma_map_ops = {
@@ -2294,7 +2296,8 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		     "  Transport opts:  max_ioq_depth=%d, max_io_size=%d,\n"
 		     "  max_io_qpairs_per_ctrlr=%d, io_unit_size=%d,\n"
 		     "  in_capsule_data_size=%d, max_aq_depth=%d,\n"
-		     "  num_shared_buffers=%d, max_srq_depth=%d, no_srq=%d\n",
+		     "  num_shared_buffers=%d, max_srq_depth=%d, no_srq=%d,"
+		     "  acceptor_backlog=%d\n",
 		     opts->max_queue_depth,
 		     opts->max_io_size,
 		     opts->max_qpairs_per_ctrlr - 1,
@@ -2303,11 +2306,18 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		     opts->max_aq_depth,
 		     opts->num_shared_buffers,
 		     opts->max_srq_depth,
-		     opts->no_srq);
+		     opts->no_srq,
+		     opts->acceptor_backlog);
 
 	/* I/O unit size cannot be larger than max I/O size */
 	if (opts->io_unit_size > opts->max_io_size) {
 		opts->io_unit_size = opts->max_io_size;
+	}
+
+	if (opts->acceptor_backlog <= 0) {
+		SPDK_ERRLOG("The acceptor backlog cannot be less than 1, setting to the default value of (%d).\n",
+			    SPDK_NVMF_RDMA_ACCEPTOR_BACKLOG);
+		opts->acceptor_backlog = SPDK_NVMF_RDMA_ACCEPTOR_BACKLOG;
 	}
 
 	if (opts->num_shared_buffers < (SPDK_NVMF_MAX_SGL_ENTRIES * 2)) {
@@ -2625,7 +2635,7 @@ nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 		return -1;
 	}
 
-	rc = rdma_listen(port->id, 100); /* 100 = backlog */
+	rc = rdma_listen(port->id, transport->opts.acceptor_backlog);
 	if (rc < 0) {
 		SPDK_ERRLOG("rdma_listen() failed\n");
 		rdma_destroy_id(port->id);

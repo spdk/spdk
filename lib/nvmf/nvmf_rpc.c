@@ -1647,6 +1647,10 @@ static const struct spdk_json_object_decoder nvmf_rpc_create_transport_decoder[]
 		spdk_json_decode_uint32, true
 	},
 	{
+		"acceptor_backlog", offsetof(struct nvmf_rpc_create_transport_ctx, opts.acceptor_backlog),
+		spdk_json_decode_int32, true
+	},
+	{
 		"tgt_name", offsetof(struct nvmf_rpc_create_transport_ctx, tgt_name),
 		spdk_json_decode_string, true
 	},
@@ -1793,6 +1797,7 @@ dump_nvmf_transport(struct spdk_json_write_ctx *w, struct spdk_nvmf_transport *t
 	if (type == SPDK_NVME_TRANSPORT_RDMA) {
 		spdk_json_write_named_uint32(w, "max_srq_depth", opts->max_srq_depth);
 		spdk_json_write_named_bool(w, "no_srq", opts->no_srq);
+		spdk_json_write_named_int32(w, "acceptor_backlog", opts->acceptor_backlog);
 	} else if (type == SPDK_NVME_TRANSPORT_TCP) {
 		spdk_json_write_named_bool(w, "c2h_success", opts->c2h_success);
 		spdk_json_write_named_uint32(w, "sock_priority", opts->sock_priority);
