@@ -44,6 +44,10 @@
 #include "spdk/string.h"
 #include "spdk/rpc.h"
 #include "spdk/bit_array.h"
+#include "spdk/conf.h"
+
+#define BDEVPERF_CONFIG_UNDEFINED -1
+#define BDEVPERF_CONFIG_ERROR -2
 
 struct bdevperf_task {
 	struct iovec			iov;
@@ -88,7 +92,10 @@ static bool g_wait_for_tests = false;
 static struct spdk_jsonrpc_request *g_request = NULL;
 static bool g_multithread_mode = false;
 static int g_timeout_in_sec;
+static struct spdk_conf *g_bdevperf_conf = NULL;
+static const char *g_bdevperf_conf_file = NULL;
 
+static struct spdk_cpuset g_all_cpuset;
 static struct spdk_poller *g_perf_timer = NULL;
 
 static void bdevperf_submit_single(struct bdevperf_job *job, struct bdevperf_task *task);
@@ -143,6 +150,20 @@ static struct spdk_bdevperf g_bdevperf = {
 	.jobs = TAILQ_HEAD_INITIALIZER(g_bdevperf.jobs),
 	.running_jobs = 0,
 };
+
+/* Storing values from a section of job config file */
+struct job_config {
+	const char			*name;
+	const char			*filename;
+	struct spdk_cpuset		cpumask;
+	int				bs;
+	int				iodepth;
+	int				rwmixread;
+	TAILQ_ENTRY(job_config)	link;
+};
+
+TAILQ_HEAD(, job_config) job_config_list
+	= TAILQ_HEAD_INITIALIZER(job_config_list);
 
 static bool g_performance_dump_active = false;
 
@@ -305,6 +326,20 @@ verify_data(void *wr_buf, int wr_buf_len, void *rd_buf, int rd_buf_len, int bloc
 	}
 
 	return true;
+}
+
+static void
+free_job_config(void)
+{
+	struct job_config *config, *tmp;
+
+	spdk_conf_free(g_bdevperf_conf);
+	g_bdevperf_conf = NULL;
+
+	TAILQ_FOREACH_SAFE(config, &job_config_list, link, tmp) {
+		TAILQ_REMOVE(&job_config_list, config, link);
+		free(config);
+	}
 }
 
 static void
@@ -1063,9 +1098,22 @@ static spdk_thread_t
 construct_job_thread(struct spdk_cpuset *cpumask, const char *tag)
 {
 	char thread_name[32];
+	struct spdk_cpuset tmp;
 
 	/* This function runs on the master thread. */
 	assert(g_master_thread == spdk_get_thread());
+
+	/* Handle default mask */
+	if (spdk_cpuset_count(cpumask) == 0) {
+		cpumask = &g_all_cpuset;
+	}
+
+	/* Warn user that mask might need to be changed */
+	spdk_cpuset_copy(&tmp, cpumask);
+	spdk_cpuset_or(&tmp, &g_all_cpuset);
+	if (!spdk_cpuset_equal(&tmp, &g_all_cpuset)) {
+		fprintf(stderr, "cpumask for '%s' is too big\n", tag);
+	}
 
 	snprintf(thread_name, sizeof(thread_name), "%s_%s",
 		 tag,
@@ -1100,8 +1148,8 @@ end:
 }
 
 static int
-bdevperf_construct_job(struct spdk_bdev *bdev, struct spdk_thread *thread,
-		       uint32_t offset, uint32_t length)
+bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
+		       struct spdk_thread *thread, uint32_t offset, uint32_t length)
 {
 	struct bdevperf_job *job;
 	struct bdevperf_task *task;
@@ -1125,10 +1173,9 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct spdk_thread *thread,
 		return -ENOMEM;
 	}
 
-	/* TODO: parse from file */
 	job->workload_type = g_workload_type;
-	job->io_size = g_io_size;
-	job->rw_percentage = g_rw_percentage;
+	job->io_size = config ? config->bs : g_io_size;
+	job->rw_percentage = config ? config->rwmixread : g_rw_percentage;
 	job->is_random = g_is_random;
 	job->verify = g_verify;
 	job->reset = g_reset;
@@ -1137,7 +1184,7 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct spdk_thread *thread,
 	job->write_zeroes = g_write_zeroes;
 	job->flush = g_flush;
 	job->abort = g_abort;
-	job->queue_depth = g_queue_depth;
+	job->queue_depth = config ? config->iodepth : g_queue_depth;
 
 	job->bdev = bdev;
 	job->io_size_blocks = job->io_size / data_block_size;
@@ -1242,6 +1289,33 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct spdk_thread *thread,
 }
 
 static void
+bdevperf_construct_config_jobs(void)
+{
+	struct spdk_thread *thread;
+	struct job_config *config;
+	struct spdk_bdev *bdev;
+	int rc;
+
+	TAILQ_FOREACH(config, &job_config_list, link) {
+		bdev = spdk_bdev_get_by_name(config->filename);
+		if (!bdev) {
+			fprintf(stderr, "Unable to find bdev '%s'\n", config->filename);
+			g_run_rc = -EINVAL;
+			return;
+		}
+
+		thread = construct_job_thread(&config->cpumask, config->name);
+		assert(thread);
+
+		rc = bdevperf_construct_job(bdev, config, thread, 0, 0);
+		if (rc < 0) {
+			g_run_rc = rc;
+			return;
+		}
+	}
+}
+
+static void
 bdevperf_construct_multithread_jobs(void)
 {
 	struct spdk_bdev *bdev;
@@ -1280,7 +1354,7 @@ bdevperf_construct_multithread_jobs(void)
 			assert(thread);
 
 			/* Construct the job */
-			rc = bdevperf_construct_job(bdev, thread, offset, blocks_per_job);
+			rc = bdevperf_construct_job(bdev, NULL, thread, offset, blocks_per_job);
 			if (rc < 0) {
 				g_run_rc = rc;
 				break;
@@ -1301,7 +1375,7 @@ bdevperf_construct_multithread_jobs(void)
 				assert(thread);
 
 				/* Construct the job */
-				rc = bdevperf_construct_job(bdev, thread, offset, blocks_per_job);
+				rc = bdevperf_construct_job(bdev, NULL, thread, offset, blocks_per_job);
 				if (rc < 0) {
 					g_run_rc = rc;
 					break;
@@ -1346,12 +1420,17 @@ bdevperf_construct_jobs(void)
 	struct spdk_thread *thread;
 	int rc;
 
-	/* There are two entirely separate modes for allocating jobs. Standard mode
+	/* There are three different modes for allocating jobs. Standard mode
 	 * (the default) creates one spdk_thread per bdev and runs the I/O job there.
 	 *
 	 * The -C flag places bdevperf into "multithread" mode, meaning it creates
 	 * one spdk_thread per bdev PER CORE, and runs a copy of the job on each.
 	 * This runs multiple threads per bdev, effectively.
+	 *
+	 * The -j flag implies "FIO" mode which tries to mimic semantic of FIO jobs.
+	 * In "FIO" mode, threads are spawned per-job instead of per-bdev.
+	 * Each FIO job can be individually parameterized by filename, cpu mask, etc,
+	 * which is different from other modes in that they only support global options.
 	 */
 
 	/* Increment initial construct_jobs count so that it will never reach 0 in the middle
@@ -1359,7 +1438,10 @@ bdevperf_construct_jobs(void)
 	 */
 	g_construct_job_count = 1;
 
-	if (g_multithread_mode) {
+	if (g_bdevperf_conf) {
+		bdevperf_construct_config_jobs();
+		goto end;
+	} else if (g_multithread_mode) {
 		bdevperf_construct_multithread_jobs();
 		goto end;
 	}
@@ -1375,7 +1457,7 @@ bdevperf_construct_jobs(void)
 			assert(thread);
 
 			/* Construct the job */
-			rc = bdevperf_construct_job(bdev, thread, 0, 0);
+			rc = bdevperf_construct_job(bdev, NULL, thread, 0, 0);
 			if (rc < 0) {
 				g_run_rc = rc;
 			}
@@ -1394,7 +1476,7 @@ bdevperf_construct_jobs(void)
 			assert(thread);
 
 			/* Construct the job */
-			rc = bdevperf_construct_job(bdev, thread, 0, 0);
+			rc = bdevperf_construct_job(bdev, NULL, thread, 0, 0);
 			if (rc < 0) {
 				g_run_rc = rc;
 				break;
@@ -1416,10 +1498,192 @@ end:
 	}
 }
 
+static int
+parse_uint_option(struct spdk_conf_section *s, const char *name, int def)
+{
+	const char *job_name;
+	int tmp;
+
+	tmp = spdk_conf_section_get_intval(s, name);
+	if (tmp == -1) {
+		/* Field was not found. Check default value
+		 * In [global] section it is ok to have undefined values
+		 * but for other sections it is not ok */
+		if (def == BDEVPERF_CONFIG_UNDEFINED) {
+			job_name = spdk_conf_section_get_name(s);
+			if (strcmp(job_name, "global") == 0) {
+				return def;
+			}
+
+			fprintf(stderr,
+				"Job '%s' has no '%s' assigned\n",
+				job_name, name);
+			return BDEVPERF_CONFIG_ERROR;
+		}
+		return def;
+	}
+
+	/* NOTE: get_intval returns nonnegative on success */
+	if (tmp < 0) {
+		fprintf(stderr, "Job '%s' has bad '%s' value.\n",
+			spdk_conf_section_get_name(s), name);
+		return BDEVPERF_CONFIG_ERROR;
+	}
+
+	return tmp;
+}
+
+/* CLI arguments override parameters for global sections */
+static void
+config_set_cli_args(struct job_config *config)
+{
+	if (g_io_size > 0) {
+		config->bs = g_io_size;
+	}
+	if (g_queue_depth > 0) {
+		config->iodepth = g_queue_depth;
+	}
+	if (g_rw_percentage > 0) {
+		config->rwmixread = g_rw_percentage;
+	}
+}
+
+static int
+read_job_config(void)
+{
+	struct job_config global_default_config;
+	struct job_config global_config;
+	struct spdk_conf_section *s;
+	struct job_config *config;
+	const char *cpumask;
+	bool is_global;
+	int n = 0;
+
+	if (g_bdevperf_conf_file == NULL) {
+		return 0;
+	}
+
+	if (g_job_bdev_name) {
+		fprintf(stderr, "-T options will be ignored since -j is used\n");
+	}
+
+	g_bdevperf_conf = spdk_conf_allocate();
+	if (g_bdevperf_conf == NULL) {
+		fprintf(stderr, "Could not allocate job config structure\n");
+		return 1;
+	}
+
+	spdk_conf_disable_sections_merge(g_bdevperf_conf);
+	if (spdk_conf_read(g_bdevperf_conf, g_bdevperf_conf_file)) {
+		fprintf(stderr, "Invalid job config");
+		return 1;
+	}
+
+	/* Initialize global defaults */
+	global_default_config.filename = NULL;
+	/* Zero mask is the same as g_all_cpuset
+	 * The g_all_cpuset is not initialized yet,
+	 * so use zero mask as the default instead */
+	spdk_cpuset_zero(&global_default_config.cpumask);
+	global_default_config.bs = BDEVPERF_CONFIG_UNDEFINED;
+	global_default_config.iodepth = BDEVPERF_CONFIG_UNDEFINED;
+	/* bdevperf has no default for -M option but in FIO the default is 50 */
+	global_default_config.rwmixread = 50;
+	config_set_cli_args(&global_default_config);
+
+	/* There is only a single instance of global job_config
+	 * We just reset its value when we encounter new [global] section */
+	global_config = global_default_config;
+
+	for (s = spdk_conf_first_section(g_bdevperf_conf);
+	     s != NULL;
+	     s = spdk_conf_next_section(s)) {
+		config = calloc(1, sizeof(*config));
+		if (config == NULL) {
+			fprintf(stderr, "Unable to allocate memory for job config\n");
+			return 1;
+		}
+
+		config->name = spdk_conf_section_get_name(s);
+		is_global = strcmp(config->name, "global") == 0;
+
+		if (is_global) {
+			global_config = global_default_config;
+		}
+
+		config->filename = spdk_conf_section_get_val(s, "filename");
+		if (config->filename == NULL) {
+			config->filename = global_config.filename;
+		}
+		if (!is_global && config->filename == NULL) {
+			fprintf(stderr, "Job '%s' expects 'filename' parameter\n", config->name);
+			goto error;
+		}
+
+		cpumask = spdk_conf_section_get_val(s, "cpumask");
+		if (cpumask == NULL) {
+			config->cpumask = global_config.cpumask;
+		} else if (spdk_cpuset_parse(&config->cpumask, cpumask)) {
+			fprintf(stderr, "Job '%s' has bad 'cpumask' value\n", config->name);
+			goto error;
+		}
+
+		config->bs = parse_uint_option(s, "bs", global_config.bs);
+		if (config->bs == BDEVPERF_CONFIG_ERROR) {
+			goto error;
+		} else if (config->bs == 0) {
+			fprintf(stderr, "'bs' of job '%s' must be greater than 0\n", config->name);
+			goto error;
+		}
+
+		config->iodepth = parse_uint_option(s, "iodepth", global_config.iodepth);
+		if (config->iodepth == BDEVPERF_CONFIG_ERROR) {
+			goto error;
+		} else if (config->iodepth == 0) {
+			fprintf(stderr,
+				"'iodepth' of job '%s' must be greater than 0\n",
+				config->name);
+			goto error;
+		}
+
+		config->rwmixread = parse_uint_option(s, "rwmixread", global_config.rwmixread);
+		if (config->rwmixread == BDEVPERF_CONFIG_ERROR) {
+			goto error;
+		} else if (config->rwmixread > 100) {
+			fprintf(stderr,
+				"'rwmixread' value of '%s' job is not in 0-100 range\n",
+				config->name);
+			goto error;
+		}
+
+		if (is_global) {
+			config_set_cli_args(config);
+			global_config = *config;
+			free(config);
+		} else {
+			TAILQ_INSERT_TAIL(&job_config_list, config, link);
+			n++;
+		}
+	}
+
+	printf("Using job config with %d jobs\n", n);
+	return 0;
+error:
+	free(config);
+	return 1;
+}
+
 static void
 bdevperf_run(void *arg1)
 {
+	uint32_t i;
+
 	g_master_thread = spdk_get_thread();
+
+	spdk_cpuset_zero(&g_all_cpuset);
+	SPDK_ENV_FOREACH_CORE(i) {
+		spdk_cpuset_set_cpu(&g_all_cpuset, i, true);
+	}
 
 	if (g_wait_for_tests) {
 		/* Do not perform any tests until RPC is received */
@@ -1514,6 +1778,8 @@ bdevperf_parse_arg(int ch, char *arg)
 		g_multithread_mode = true;
 	} else if (ch == 'f') {
 		g_continue_on_failure = true;
+	} else if (ch == 'j') {
+		g_bdevperf_conf_file = optarg;
 	} else {
 		tmp = spdk_strtoll(optarg, 10);
 		if (tmp < 0) {
@@ -1575,6 +1841,7 @@ bdevperf_usage(void)
 	printf(" -z                        start bdevperf, but wait for RPC to start tests\n");
 	printf(" -A                        abort the timeout I/O\n");
 	printf(" -C                        enable every core to send I/Os to each bdev\n");
+	printf(" -j                        use job config file");
 }
 
 static int
@@ -1587,12 +1854,12 @@ verify_test_params(struct spdk_app_opts *opts)
 		opts->rpc_addr = SPDK_DEFAULT_RPC_ADDR;
 	}
 
-	if (g_queue_depth <= 0) {
+	if (!g_bdevperf_conf_file && g_queue_depth <= 0) {
 		spdk_app_usage();
 		bdevperf_usage();
 		return 1;
 	}
-	if (g_io_size <= 0) {
+	if (!g_bdevperf_conf_file && g_io_size <= 0) {
 		spdk_app_usage();
 		bdevperf_usage();
 		return 1;
@@ -1689,8 +1956,9 @@ verify_test_params(struct spdk_app_opts *opts)
 		}
 	}
 
-	if (!strcmp(g_workload_type, "rw") ||
-	    !strcmp(g_workload_type, "randrw")) {
+	if (!g_bdevperf_conf_file &&
+	    (!strcmp(g_workload_type, "rw") ||
+	     !strcmp(g_workload_type, "randrw"))) {
 		if (g_rw_percentage < 0 || g_rw_percentage > 100) {
 			fprintf(stderr,
 				"-M must be specified to value from 0 to 100 "
@@ -1733,18 +2001,25 @@ main(int argc, char **argv)
 	opts.reactor_mask = NULL;
 	opts.shutdown_cb = spdk_bdevperf_shutdown_cb;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "xzfq:o:t:w:k:ACM:P:S:T:", NULL,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "xzfq:o:t:w:k:ACM:P:S:T:j:", NULL,
 				      bdevperf_parse_arg, bdevperf_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;
 	}
 
+	if (read_job_config()) {
+		free_job_config();
+		return 1;
+	}
+
 	if (verify_test_params(&opts) != 0) {
+		free_job_config();
 		exit(1);
 	}
 
 	rc = spdk_app_start(&opts, bdevperf_run, NULL);
 
 	spdk_app_fini();
+	free_job_config();
 	return rc;
 }
