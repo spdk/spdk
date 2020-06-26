@@ -1087,7 +1087,7 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 		return -EAGAIN;
 	} else if (ret) {
 		SPDK_ERRLOG("RDMA connect error %d\n", ret);
-		return -1;
+		return ret;
 	} else {
 		return 0;
 	}
@@ -1376,7 +1376,7 @@ nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qp
 		} while (rc == -EAGAIN && retry_count < NVME_RDMA_STALE_CONN_RETRY_MAX);
 	}
 
-	return rc == -EAGAIN ? -1 : rc;
+	return rc;
 }
 
 /*
