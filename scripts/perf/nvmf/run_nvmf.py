@@ -855,15 +855,16 @@ if __name__ == "__main__":
             continue
 
     # Copy and install SPDK on remote initiators
-    target_obj.zip_spdk_sources(target_obj.spdk_dir, spdk_zip_path)
-    threads = []
-    for i in initiators:
-        if i.mode == "spdk":
-            t = threading.Thread(target=i.install_spdk, args=(spdk_zip_path,))
-            threads.append(t)
-            t.start()
-    for t in threads:
-        t.join()
+    if "skip_spdk_install" not in data["general"]:
+        target_obj.zip_spdk_sources(target_obj.spdk_dir, spdk_zip_path)
+        threads = []
+        for i in initiators:
+            if i.mode == "spdk":
+                t = threading.Thread(target=i.install_spdk, args=(spdk_zip_path,))
+                threads.append(t)
+                t.start()
+        for t in threads:
+            t.join()
 
     target_obj.tgt_start()
 
