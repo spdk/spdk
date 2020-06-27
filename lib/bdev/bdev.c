@@ -403,12 +403,40 @@ spdk_bdev_set_opts(struct spdk_bdev_opts *opts)
 	return 0;
 }
 
-/*
- * Will implement the whitelist in the furture
- */
+struct spdk_bdev_examine_item {
+	char *name;
+	TAILQ_ENTRY(spdk_bdev_examine_item) link;
+};
+
+TAILQ_HEAD(spdk_bdev_examine_allowlist, spdk_bdev_examine_item);
+
+struct spdk_bdev_examine_allowlist g_bdev_examine_allowlist = TAILQ_HEAD_INITIALIZER(
+			g_bdev_examine_allowlist);
+
 static inline bool
-bdev_in_examine_whitelist(struct spdk_bdev *bdev)
+bdev_examine_allowlist_check(const char *name)
 {
+	struct spdk_bdev_examine_item *item;
+	TAILQ_FOREACH(item, &g_bdev_examine_allowlist, link) {
+		if (strcmp(name, item->name) == 0) {
+			return true;
+		}
+	}
+	return false;
+}
+
+static inline bool
+bdev_in_examine_allowlist(struct spdk_bdev *bdev)
+{
+	struct spdk_bdev_alias *tmp;
+	if (bdev_examine_allowlist_check(bdev->name)) {
+		return true;
+	}
+	TAILQ_FOREACH(tmp, &bdev->aliases, tailq) {
+		if (bdev_examine_allowlist_check(tmp->alias)) {
+			return true;
+		}
+	}
 	return false;
 }
 
@@ -418,7 +446,41 @@ bdev_ok_to_examine(struct spdk_bdev *bdev)
 	if (g_bdev_opts.bdev_auto_examine) {
 		return true;
 	} else {
-		return bdev_in_examine_whitelist(bdev);
+		return bdev_in_examine_allowlist(bdev);
+	}
+}
+
+static void
+bdev_examine(struct spdk_bdev *bdev)
+{
+	struct spdk_bdev_module *module;
+	uint32_t action;
+
+	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, internal.tailq) {
+		if (module->examine_config && bdev_ok_to_examine(bdev)) {
+			action = module->internal.action_in_progress;
+			module->internal.action_in_progress++;
+			module->examine_config(bdev);
+			if (action != module->internal.action_in_progress) {
+				SPDK_ERRLOG("examine_config for module %s did not call spdk_bdev_module_examine_done()\n",
+					    module->name);
+			}
+		}
+	}
+
+	if (bdev->internal.claim_module && bdev_ok_to_examine(bdev)) {
+		if (bdev->internal.claim_module->examine_disk) {
+			bdev->internal.claim_module->internal.action_in_progress++;
+			bdev->internal.claim_module->examine_disk(bdev);
+		}
+		return;
+	}
+
+	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, internal.tailq) {
+		if (module->examine_disk && bdev_ok_to_examine(bdev)) {
+			module->internal.action_in_progress++;
+			module->examine_disk(bdev);
+		}
 	}
 }
 
@@ -5309,39 +5371,11 @@ bdev_fini(struct spdk_bdev *bdev)
 static void
 bdev_start(struct spdk_bdev *bdev)
 {
-	struct spdk_bdev_module *module;
-	uint32_t action;
-
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Inserting bdev %s into list\n", bdev->name);
 	TAILQ_INSERT_TAIL(&g_bdev_mgr.bdevs, bdev, internal.link);
 
 	/* Examine configuration before initializing I/O */
-	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, internal.tailq) {
-		if (module->examine_config && bdev_ok_to_examine(bdev)) {
-			action = module->internal.action_in_progress;
-			module->internal.action_in_progress++;
-			module->examine_config(bdev);
-			if (action != module->internal.action_in_progress) {
-				SPDK_ERRLOG("examine_config for module %s did not call spdk_bdev_module_examine_done()\n",
-					    module->name);
-			}
-		}
-	}
-
-	if (bdev->internal.claim_module && bdev_ok_to_examine(bdev)) {
-		if (bdev->internal.claim_module->examine_disk) {
-			bdev->internal.claim_module->internal.action_in_progress++;
-			bdev->internal.claim_module->examine_disk(bdev);
-		}
-		return;
-	}
-
-	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, internal.tailq) {
-		if (module->examine_disk && bdev_ok_to_examine(bdev)) {
-			module->internal.action_in_progress++;
-			module->examine_disk(bdev);
-		}
-	}
+	bdev_examine(bdev);
 }
 
 int
