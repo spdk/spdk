@@ -914,6 +914,7 @@ spdk_nvmf_poll_group_remove(struct spdk_nvmf_qpair *qpair)
 	}
 
 	TAILQ_REMOVE(&qpair->group->qpairs, qpair, link);
+	qpair->group = NULL;
 }
 
 static void
