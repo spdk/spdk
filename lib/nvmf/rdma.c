@@ -4040,6 +4040,64 @@ nvmf_rdma_request_set_abort_status(struct spdk_nvmf_request *req,
 	req->rsp->nvme_cpl.cdw0 &= ~1U;	/* Command was successfully aborted. */
 }
 
+#define NVMF_RDMA_ABORT_TIMEOUT_SEC	1
+
+static int
+_nvmf_rdma_qpair_abort_request(void *ctx)
+{
+	struct spdk_nvmf_request *req = ctx;
+	struct spdk_nvmf_rdma_request *rdma_req_to_abort = SPDK_CONTAINEROF(
+				req->req_to_abort, struct spdk_nvmf_rdma_request, req);
+	struct spdk_nvmf_rdma_qpair *rqpair = SPDK_CONTAINEROF(req->req_to_abort->qpair,
+					      struct spdk_nvmf_rdma_qpair, qpair);
+	int rc;
+
+	spdk_poller_unregister(&req->poller);
+
+	switch (rdma_req_to_abort->state) {
+	case RDMA_REQUEST_STATE_EXECUTING:
+		rc = nvmf_ctrlr_abort_request(req, &rdma_req_to_abort->req);
+		if (rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS) {
+			return SPDK_POLLER_BUSY;
+		}
+		break;
+
+	case RDMA_REQUEST_STATE_NEED_BUFFER:
+		STAILQ_REMOVE(&rqpair->poller->group->group.pending_buf_queue,
+			      &rdma_req_to_abort->req, spdk_nvmf_request, buf_link);
+
+		nvmf_rdma_request_set_abort_status(req, rdma_req_to_abort);
+		break;
+
+	case RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING:
+		STAILQ_REMOVE(&rqpair->pending_rdma_read_queue, rdma_req_to_abort,
+			      spdk_nvmf_rdma_request, state_link);
+
+		nvmf_rdma_request_set_abort_status(req, rdma_req_to_abort);
+		break;
+
+	case RDMA_REQUEST_STATE_DATA_TRANSFER_TO_HOST_PENDING:
+		STAILQ_REMOVE(&rqpair->pending_rdma_write_queue, rdma_req_to_abort,
+			      spdk_nvmf_rdma_request, state_link);
+
+		nvmf_rdma_request_set_abort_status(req, rdma_req_to_abort);
+		break;
+
+	case RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER:
+		if (spdk_get_ticks() < req->timeout_tsc) {
+			req->poller = SPDK_POLLER_REGISTER(_nvmf_rdma_qpair_abort_request, req, 0);
+			return SPDK_POLLER_BUSY;
+		}
+		break;
+
+	default:
+		break;
+	}
+
+	spdk_nvmf_request_complete(req);
+	return SPDK_POLLER_BUSY;
+}
+
 static void
 nvmf_rdma_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
 			      struct spdk_nvmf_request *req)
@@ -4048,7 +4106,6 @@ nvmf_rdma_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
 	uint16_t cid;
 	uint32_t i;
 	struct spdk_nvmf_rdma_request *rdma_req_to_abort = NULL;
-	int rc;
 
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 	cid = req->cmd->nvme_cmd.cdw10_bits.abort.cid;
@@ -4063,44 +4120,15 @@ nvmf_rdma_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
 	}
 
 	if (rdma_req_to_abort == NULL) {
-		goto complete;
+		spdk_nvmf_request_complete(req);
+		return;
 	}
 
-	switch (rdma_req_to_abort->state) {
-	case RDMA_REQUEST_STATE_EXECUTING:
-		rc = nvmf_ctrlr_abort_request(req, &rdma_req_to_abort->req);
-		if (rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS) {
-			return;
-		}
-		break;
+	req->req_to_abort = &rdma_req_to_abort->req;
+	req->timeout_tsc = spdk_get_ticks() + NVMF_RDMA_ABORT_TIMEOUT_SEC * spdk_get_ticks_hz();
+	req->poller = NULL;
 
-	case RDMA_REQUEST_STATE_NEED_BUFFER:
-		STAILQ_REMOVE(&rqpair->poller->group->group.pending_buf_queue, &rdma_req_to_abort->req,
-			      spdk_nvmf_request, buf_link);
-
-		nvmf_rdma_request_set_abort_status(req, rdma_req_to_abort);
-		break;
-
-	case RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING:
-		STAILQ_REMOVE(&rqpair->pending_rdma_read_queue, rdma_req_to_abort, spdk_nvmf_rdma_request,
-			      state_link);
-
-		nvmf_rdma_request_set_abort_status(req, rdma_req_to_abort);
-		break;
-
-	case RDMA_REQUEST_STATE_DATA_TRANSFER_TO_HOST_PENDING:
-		STAILQ_REMOVE(&rqpair->pending_rdma_write_queue, rdma_req_to_abort, spdk_nvmf_rdma_request,
-			      state_link);
-
-		nvmf_rdma_request_set_abort_status(req, rdma_req_to_abort);
-		break;
-
-	default:
-		break;
-	}
-
-complete:
-	spdk_nvmf_request_complete(req);
+	_nvmf_rdma_qpair_abort_request(req);
 }
 
 static int
