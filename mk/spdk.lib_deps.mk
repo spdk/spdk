@@ -148,6 +148,7 @@ DEPDIRS-bdev_passthru := $(BDEV_DEPS_CONF_THREAD)
 DEPDIRS-bdev_pmem := $(BDEV_DEPS_CONF_THREAD)
 DEPDIRS-bdev_raid := $(BDEV_DEPS_CONF_THREAD)
 DEPDIRS-bdev_rbd := $(BDEV_DEPS_CONF_THREAD)
+DEPDIRS-bdev_uring := $(BDEV_DEPS_CONF_THREAD)
 DEPDIRS-bdev_virtio := $(BDEV_DEPS_CONF_THREAD) virtio
 
 # module/event

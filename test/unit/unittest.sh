@@ -100,6 +100,10 @@ function unittest_scsi() {
 function unittest_sock() {
 	$valgrind $testdir/lib/sock/sock.c/sock_ut
 	$valgrind $testdir/lib/sock/posix.c/posix_ut
+	# Check whether uring is configured
+	if grep -q '#define SPDK_CONFIG_URING 1' $rootdir/include/spdk/config.h; then
+		$valgrind $testdir/lib/sock/uring.c/uring_ut
+	fi
 }
 
 function unittest_util() {

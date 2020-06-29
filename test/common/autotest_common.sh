@@ -126,6 +126,8 @@ export SPDK_TEST_OPAL
 export SPDK_AUTOTEST_X
 : ${SPDK_TEST_RAID5=0}
 export SPDK_TEST_RAID5
+: ${SPDK_TEST_URING=0}
+export SPDK_TEST_URING
 
 # Export PYTHONPATH with addition of RPC framework. New scripts can be created
 # specific use cases for tests.
@@ -411,6 +413,11 @@ function get_config_params() {
 
 	if [ $SPDK_TEST_RAID5 -eq 1 ]; then
 		config_params+=' --with-raid5'
+	fi
+
+	# Check whether liburing library header exists
+	if [ -f /usr/include/liburing/io_uring.h ] && [ $SPDK_TEST_URING -eq 1 ]; then
+		config_params+=' --with-uring'
 	fi
 
 	# By default, --with-dpdk is not set meaning the SPDK build will use the DPDK submodule.
