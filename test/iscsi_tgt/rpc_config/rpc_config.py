@@ -457,28 +457,6 @@ def verify_net_interface_add_delete_ip_address(rpc_py):
     print("verify_net_interface_add_delete_ip_address passed.")
 
 
-def verify_add_nvme_bdev_rpc_methods(rpc_py):
-    rpc = spdk_rpc(rpc_py)
-    test_pass = 0
-    output = check_output(["lspci", "-mm", "-nn"])
-    addrs = re.findall(r'^([0-9]{2}:[0-9]{2}.[0-9]) "Non-Volatile memory controller \[0108\]".*-p02', output.decode(), re.MULTILINE)
-    for addr in addrs:
-        ctrlr_address = "-b Nvme{} -t pcie -a 0000:{}".format(addrs.index(addr), addr)
-        rpc.bdev_nvme_attach_controller(ctrlr_address)
-        print("add nvme device passed first time")
-        test_pass = 0
-        try:
-            rpc.bdev_nvme_attach_controller(ctrlr_address)
-        except Exception as e:
-            print("add nvme device passed second time")
-            test_pass = 1
-            pass
-        else:
-            pass
-        verify(test_pass == 1, 1, "add nvme device passed second time")
-    print("verify_add_nvme_bdev_rpc_methods passed.")
-
-
 if __name__ == "__main__":
 
     rpc_py = sys.argv[1]
@@ -496,7 +474,6 @@ if __name__ == "__main__":
         verify_target_nodes_rpc_methods(rpc_py, rpc_param)
         verify_scsi_devices_rpc_methods(rpc_py)
         verify_iscsi_connection_rpc_methods(rpc_py)
-        verify_add_nvme_bdev_rpc_methods(rpc_py)
     except RpcException as e:
         print("{}. Exiting with status {}".format(e.message, e.retval))
         raise e
