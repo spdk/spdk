@@ -39,6 +39,8 @@
 #include "spdk/string.h"
 #include "spdk/vmd.h"
 
+#include <libaio.h>
+
 struct spdk_dd_opts {
 	char		*input_file;
 	char		*output_file;
@@ -55,6 +57,504 @@ static struct spdk_dd_opts g_opts = {
 	.io_unit_size = 4096,
 	.queue_depth = 2,
 };
+
+enum dd_submit_type {
+	DD_POPULATE,
+	DD_READ,
+	DD_WRITE,
+};
+
+struct dd_io {
+	uint64_t		offset;
+	uint64_t		length;
+	struct iocb		iocb;
+	enum dd_submit_type	type;
+	void			*buf;
+};
+
+enum dd_target_type {
+	DD_TARGET_TYPE_FILE,
+	DD_TARGET_TYPE_BDEV,
+};
+
+struct dd_target {
+	enum dd_target_type	type;
+
+	union {
+		struct {
+			struct spdk_bdev *bdev;
+			struct spdk_bdev_desc *desc;
+			struct spdk_io_channel *ch;
+		} bdev;
+
+		struct {
+			int fd;
+			io_context_t io_ctx;
+			struct spdk_poller *poller;
+		} aio;
+	} u;
+
+	/* Block size of underlying device. */
+	uint32_t	block_size;
+
+	/* Position of next I/O in bytes */
+	uint64_t	pos;
+
+	/* Total size of target in bytes */
+	uint64_t	total_size;
+
+	bool open;
+};
+
+struct dd_job {
+	struct dd_target	input;
+	struct dd_target	output;
+
+	struct dd_io		*ios;
+
+	uint32_t		outstanding;
+	uint64_t		copy_size;
+};
+
+static struct dd_job g_job = {};
+static int g_error = 0;
+
+static void dd_target_populate_buffer(struct dd_io *io);
+
+static void
+dd_exit(int rc)
+{
+	if (g_job.input.type == DD_TARGET_TYPE_FILE) {
+		spdk_poller_unregister(&g_job.input.u.aio.poller);
+		io_destroy(g_job.input.u.aio.io_ctx);
+		close(g_job.input.u.aio.fd);
+	} else if (g_job.input.type == DD_TARGET_TYPE_BDEV && g_job.input.open) {
+		spdk_put_io_channel(g_job.input.u.bdev.ch);
+		spdk_bdev_close(g_job.input.u.bdev.desc);
+	}
+
+	if (g_job.output.type == DD_TARGET_TYPE_FILE) {
+		spdk_poller_unregister(&g_job.output.u.aio.poller);
+		io_destroy(g_job.output.u.aio.io_ctx);
+		close(g_job.output.u.aio.fd);
+	} else if (g_job.output.type == DD_TARGET_TYPE_BDEV && g_job.output.open) {
+		spdk_put_io_channel(g_job.output.u.bdev.ch);
+		spdk_bdev_close(g_job.output.u.bdev.desc);
+	}
+
+	spdk_app_stop(rc);
+}
+
+static void
+_dd_write_bdev_done(struct spdk_bdev_io *bdev_io,
+		    bool success,
+		    void *cb_arg)
+{
+	struct dd_io *io = cb_arg;
+
+	g_job.outstanding--;
+	spdk_bdev_free_io(bdev_io);
+	dd_target_populate_buffer(io);
+}
+
+static void
+dd_target_write(struct dd_io *io)
+{
+	struct dd_target *target = &g_job.output;
+	uint64_t length = SPDK_CEIL_DIV(io->length, target->block_size) * target->block_size;
+	int rc = 0;
+
+	if (g_error != 0) {
+		if (g_job.outstanding == 0) {
+			dd_exit(g_error);
+		}
+		return;
+	}
+
+	g_job.outstanding++;
+	io->type = DD_WRITE;
+
+	if (target->type == DD_TARGET_TYPE_FILE) {
+		struct iocb *iocb = &io->iocb;
+
+		io_prep_pwrite(iocb, target->u.aio.fd, io->buf, length, io->offset);
+		iocb->data = io;
+		if (io_submit(target->u.aio.io_ctx, 1, &iocb) < 0) {
+			rc = -errno;
+		}
+	} else if (target->type == DD_TARGET_TYPE_BDEV) {
+		rc = spdk_bdev_write(target->u.bdev.desc, target->u.bdev.ch, io->buf, io->offset, length,
+				     _dd_write_bdev_done, io);
+	}
+
+	if (rc != 0) {
+		SPDK_ERRLOG("%s\n", strerror(-rc));
+		g_job.outstanding--;
+		if (g_job.outstanding == 0) {
+			dd_exit(rc);
+		} else {
+			g_error = rc;
+		}
+		return;
+	}
+}
+
+static void
+_dd_read_bdev_done(struct spdk_bdev_io *bdev_io,
+		   bool success,
+		   void *cb_arg)
+{
+	struct dd_io *io = cb_arg;
+
+	spdk_bdev_free_io(bdev_io);
+	g_job.outstanding--;
+	dd_target_write(io);
+}
+
+static void
+dd_target_read(struct dd_io *io)
+{
+	struct dd_target *target = &g_job.input;
+	int rc = 0;
+
+	if (g_error != 0) {
+		if (g_job.outstanding == 0) {
+			dd_exit(g_error);
+		}
+		return;
+	}
+
+	g_job.outstanding++;
+	io->type = DD_READ;
+
+	if (target->type == DD_TARGET_TYPE_FILE) {
+		struct iocb *iocb = &io->iocb;
+
+		io_prep_pread(iocb, target->u.aio.fd, io->buf, io->length, io->offset);
+		iocb->data = io;
+		if (io_submit(target->u.aio.io_ctx, 1, &iocb) < 0) {
+			rc = -errno;
+		}
+	} else if (target->type == DD_TARGET_TYPE_BDEV) {
+		rc = spdk_bdev_read(target->u.bdev.desc, target->u.bdev.ch, io->buf, io->offset, io->length,
+				    _dd_read_bdev_done, io);
+	}
+
+	if (rc != 0) {
+		SPDK_ERRLOG("%s\n", strerror(-rc));
+		g_job.outstanding--;
+		if (g_job.outstanding == 0) {
+			dd_exit(rc);
+		} else {
+			g_error = rc;
+		}
+		return;
+	}
+}
+
+static void
+_dd_target_populate_buffer_done(struct spdk_bdev_io *bdev_io,
+				bool success,
+				void *cb_arg)
+{
+	struct dd_io *io = cb_arg;
+
+	g_job.outstanding--;
+	spdk_bdev_free_io(bdev_io);
+	dd_target_read(io);
+}
+
+static void
+dd_target_populate_buffer(struct dd_io *io)
+{
+	struct dd_target *target = &g_job.output;
+	uint64_t length;
+	int rc = 0;
+
+	io->offset = g_job.input.pos;
+	io->length = spdk_min((uint64_t)g_opts.io_unit_size, g_job.copy_size - g_job.input.pos);
+
+	if (io->length == 0 || g_error != 0) {
+		if (g_job.outstanding == 0) {
+			dd_exit(g_error);
+		}
+		return;
+	}
+
+	g_job.input.pos += io->length;
+
+	if ((io->length % target->block_size) == 0) {
+		dd_target_read(io);
+		return;
+	}
+
+	/* Read whole blocks from output to combine buffers later */
+	g_job.outstanding++;
+	io->type = DD_POPULATE;
+
+	length = SPDK_CEIL_DIV(io->length, target->block_size) * target->block_size;
+
+	if (target->type == DD_TARGET_TYPE_FILE) {
+		struct iocb *iocb = &io->iocb;
+
+		io_prep_pread(iocb, target->u.aio.fd, io->buf, length, io->offset);
+		iocb->data = io;
+		if (io_submit(target->u.aio.io_ctx, 1, &iocb) < 0) {
+			rc = -errno;
+		}
+	} else if (target->type == DD_TARGET_TYPE_BDEV) {
+		rc = spdk_bdev_read(target->u.bdev.desc, target->u.bdev.ch, io->buf, io->offset, length,
+				    _dd_target_populate_buffer_done, io);
+	}
+
+	if (rc != 0) {
+		SPDK_ERRLOG("%s\n", strerror(-rc));
+		g_job.outstanding--;
+		if (g_job.outstanding == 0) {
+			dd_exit(rc);
+		} else {
+			g_error = rc;
+		}
+		return;
+	}
+}
+
+static void
+dd_complete_poll(struct dd_io *io)
+{
+	g_job.outstanding--;
+
+	switch (io->type) {
+	case DD_POPULATE:
+		dd_target_read(io);
+		break;
+	case DD_READ:
+		dd_target_write(io);
+		break;
+	case DD_WRITE:
+		dd_target_populate_buffer(io);
+		break;
+	default:
+		assert(false);
+		break;
+	}
+}
+
+static int
+dd_aio_poll(io_context_t io_ctx)
+{
+	struct io_event events[32];
+	int rc = 0;
+	int i;
+	struct timespec timeout;
+	struct dd_io *io;
+
+	timeout.tv_sec = 0;
+	timeout.tv_nsec = 0;
+
+	rc = io_getevents(io_ctx, 0, 32, events, &timeout);
+
+	if (rc < 0) {
+		SPDK_ERRLOG("%s\n", strerror(-rc));
+		dd_exit(rc);
+	}
+
+	for (i = 0; i < rc; i++) {
+		io = events[i].data;
+		if (events[i].res != io->length) {
+			g_error = rc = -ENOSPC;
+		}
+
+		dd_complete_poll(io);
+	}
+
+	return rc;
+}
+
+static int
+dd_input_poll(void *ctx)
+{
+	int rc = 0;
+
+	if (g_job.input.type == DD_TARGET_TYPE_FILE) {
+		rc = dd_aio_poll(g_job.input.u.aio.io_ctx);
+		if (rc == -ENOSPC) {
+			SPDK_ERRLOG("No more file content to read\n");
+		}
+	}
+
+	return rc;
+}
+
+static int
+dd_output_poll(void *ctx)
+{
+	int rc = 0;
+
+	if (g_job.output.type == DD_TARGET_TYPE_FILE) {
+		rc = dd_aio_poll(g_job.output.u.aio.io_ctx);
+		if (rc == -ENOSPC) {
+			SPDK_ERRLOG("No space left on device\n");
+		}
+	}
+
+	return rc;
+}
+
+static int
+dd_open_file(struct dd_target *target, const char *fname, bool input)
+{
+	target->type = DD_TARGET_TYPE_FILE;
+	target->u.aio.fd = open(fname, O_RDWR);
+	if (target->u.aio.fd < 0) {
+		SPDK_ERRLOG("Could not open file %s: %s\n", fname, strerror(errno));
+		return target->u.aio.fd;
+	}
+
+	target->block_size = spdk_max(spdk_fd_get_blocklen(target->u.aio.fd), 1);
+	target->total_size = spdk_fd_get_size(target->u.aio.fd);
+
+	if (input == true) {
+		g_opts.queue_depth = spdk_min(g_opts.queue_depth,
+					      (target->total_size / g_opts.io_unit_size) + 1);
+	}
+
+	if (g_opts.io_unit_count != 0) {
+		g_opts.queue_depth = spdk_min(g_opts.queue_depth, g_opts.io_unit_count);
+	}
+
+	return io_setup(g_opts.queue_depth, &target->u.aio.io_ctx);
+}
+
+static int
+dd_open_bdev(struct dd_target *target, const char *bdev_name)
+{
+	int rc;
+
+	target->type = DD_TARGET_TYPE_BDEV;
+	target->u.bdev.bdev = spdk_bdev_get_by_name(bdev_name);
+	if (target->u.bdev.bdev == NULL) {
+		SPDK_ERRLOG("Could not find bdev %s\n", bdev_name);
+		return -EINVAL;
+	}
+
+	target->block_size = spdk_bdev_get_block_size(target->u.bdev.bdev);
+	target->total_size = spdk_bdev_get_num_blocks(target->u.bdev.bdev) * target->block_size;
+
+	rc = spdk_bdev_open(target->u.bdev.bdev, true, NULL, NULL, &target->u.bdev.desc);
+	if (rc < 0) {
+		SPDK_ERRLOG("Could not open bdev %s: %s\n", bdev_name, strerror(-rc));
+		return rc;
+	}
+
+	target->open = true;
+
+	target->u.bdev.ch = spdk_bdev_get_io_channel(target->u.bdev.desc);
+	if (target->u.bdev.ch == NULL) {
+		spdk_bdev_close(target->u.bdev.desc);
+		SPDK_ERRLOG("Could not get I/O channel: %s\n", strerror(ENOMEM));
+		return -ENOMEM;
+	}
+
+	g_opts.queue_depth = spdk_min(g_opts.queue_depth, (target->total_size / g_opts.io_unit_size) + 1);
+
+	if (g_opts.io_unit_count != 0) {
+		g_opts.queue_depth = spdk_min(g_opts.queue_depth, g_opts.io_unit_count);
+	}
+
+	return 0;
+}
+
+static void
+dd_run(void *arg1)
+{
+	uint64_t write_size;
+	uint32_t i;
+	int rc;
+
+	if (g_opts.input_file) {
+		if (dd_open_file(&g_job.input, g_opts.input_file, true) < 0) {
+			SPDK_ERRLOG("%s: %s\n", g_opts.input_file, strerror(errno));
+			dd_exit(-errno);
+			return;
+		}
+		g_job.input.u.aio.poller = spdk_poller_register(dd_input_poll, NULL, 0);
+	} else if (g_opts.input_bdev) {
+		rc = dd_open_bdev(&g_job.input, g_opts.input_bdev);
+		if (rc < 0) {
+			SPDK_ERRLOG("%s: %s\n", g_opts.input_bdev, strerror(-rc));
+			dd_exit(rc);
+			return;
+		}
+	}
+
+	write_size = g_opts.io_unit_count * g_opts.io_unit_size;
+
+	/* We cannot check write size for input files because /dev/zeros, /dev/random, etc would not work.
+	 * We will handle that during copying */
+	if (g_opts.io_unit_count != 0 && g_opts.input_bdev && write_size > g_job.input.total_size) {
+		SPDK_ERRLOG("--count value too big (%" PRIu64 ") - only %" PRIu64 " blocks available from input\n",
+			    g_opts.io_unit_count, g_job.input.total_size / g_opts.io_unit_size);
+		dd_exit(-ENOSPC);
+		return;
+	} else if (g_opts.io_unit_count != 0) {
+		g_job.copy_size = write_size;
+	} else {
+		g_job.copy_size = g_job.input.total_size;
+	}
+
+	if (g_opts.output_file) {
+		if (dd_open_file(&g_job.output, g_opts.output_file, false) < 0) {
+			SPDK_ERRLOG("%s: %s\n", g_opts.output_file, strerror(errno));
+			dd_exit(-errno);
+			return;
+		}
+		g_job.output.u.aio.poller = spdk_poller_register(dd_output_poll, NULL, 0);
+	} else if (g_opts.output_bdev) {
+		rc = dd_open_bdev(&g_job.output, g_opts.output_bdev);
+		if (rc < 0) {
+			SPDK_ERRLOG("%s: %s\n", g_opts.output_bdev, strerror(-rc));
+			dd_exit(rc);
+			return;
+		}
+
+		if (g_opts.io_unit_count != 0 && write_size > g_job.output.total_size) {
+			SPDK_ERRLOG("--count value too big (%" PRIu64 ") - only %" PRIu64 " blocks available in output\n",
+				    g_opts.io_unit_count, g_job.output.total_size / g_opts.io_unit_size);
+			dd_exit(-errno);
+			return;
+		}
+	}
+
+	if ((g_job.output.block_size > g_opts.io_unit_size) ||
+	    (g_job.input.block_size > g_opts.io_unit_size)) {
+		SPDK_ERRLOG("--bs value cannot be less than input (%d) neither output (%d) native block size\n",
+			    g_job.input.block_size, g_job.output.block_size);
+		dd_exit(-EINVAL);
+		return;
+	}
+
+	g_job.ios = calloc(g_opts.queue_depth, sizeof(struct dd_io));
+	if (g_job.ios == NULL) {
+		SPDK_ERRLOG("%s\n", strerror(ENOMEM));
+		dd_exit(-ENOMEM);
+		return;
+	}
+
+	for (i = 0; i < g_opts.queue_depth; i++) {
+		g_job.ios[i].buf = spdk_malloc(g_opts.io_unit_size, 0x1000, NULL, 0, SPDK_MALLOC_DMA);
+		if (g_job.ios[i].buf == NULL) {
+			SPDK_ERRLOG("%s - try smaller block size value\n", strerror(ENOMEM));
+			dd_exit(-ENOMEM);
+			return;
+		}
+	}
+
+	for (i = 0; i < g_opts.queue_depth; i++) {
+		dd_target_populate_buffer(&g_job.ios[i]);
+	}
+
+}
 
 enum dd_cmdline_opts {
 	DD_OPTION_IF = 0x1000,
@@ -181,6 +681,25 @@ parse_args(int argc, char *argv)
 	return 0;
 }
 
+static void
+dd_free(void)
+{
+	uint32_t i;
+
+	free(g_opts.input_file);
+	free(g_opts.output_file);
+	free(g_opts.input_bdev);
+	free(g_opts.output_bdev);
+
+	if (g_job.ios) {
+		for (i = 0; i < g_opts.queue_depth; i++) {
+			spdk_free(g_job.ios[i].buf);
+		}
+
+		free(g_job.ios);
+	}
+}
+
 int
 main(int argc, char **argv)
 {
@@ -189,9 +708,11 @@ main(int argc, char **argv)
 
 	spdk_app_opts_init(&opts);
 	opts.reactor_mask = "0x1";
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "", g_cmdline_opts, parse_args,
-				      usage)) != SPDK_APP_PARSE_ARGS_SUCCESS) {
-		SPDK_ERRLOG("%s\n", strerror(-rc));
+	rc = spdk_app_parse_args(argc, argv, &opts, "", g_cmdline_opts, parse_args, usage);
+	if (rc == SPDK_APP_PARSE_ARGS_FAIL) {
+		SPDK_ERRLOG("Invalid arguments\n");
+		goto end;
+	} else if (rc == SPDK_APP_PARSE_ARGS_HELP) {
 		goto end;
 	}
 
@@ -218,6 +739,26 @@ main(int argc, char **argv)
 		rc = EINVAL;
 		goto end;
 	}
+
+	if (g_opts.io_unit_size <= 0) {
+		SPDK_ERRLOG("Invalid --bs value\n");
+		rc = EINVAL;
+		goto end;
+	}
+
+	if (g_opts.io_unit_count < 0) {
+		SPDK_ERRLOG("Invalid --count value\n");
+		rc = EINVAL;
+		goto end;
+	}
+
+	rc = spdk_app_start(&opts, dd_run, NULL);
+	if (rc) {
+		SPDK_ERRLOG("Error occured while performing copy\n");
+	}
+
+	dd_free();
+	spdk_app_fini();
 
 end:
 	return rc;
