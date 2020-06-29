@@ -2827,6 +2827,12 @@ iscsi_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t task_tag)
 				conn->outstanding_r2t_tasks[i] = conn->outstanding_r2t_tasks[i + 1];
 			}
 			conn->outstanding_r2t_tasks[conn->pending_r2t] = NULL;
+
+			assert(task->is_r2t_active == true);
+			TAILQ_REMOVE(&conn->active_r2t_tasks, task, link);
+			task->is_r2t_active = false;
+			iscsi_task_put(task);
+
 			start_queued_transfer_tasks(conn);
 			return true;
 		}

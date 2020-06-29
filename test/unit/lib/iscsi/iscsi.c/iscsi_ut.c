@@ -779,7 +779,7 @@ del_transfer_task_test(void)
 {
 	struct spdk_iscsi_sess sess = {};
 	struct spdk_iscsi_conn conn = {};
-	struct spdk_iscsi_task task1 = {}, task2 = {}, task3 = {}, task4 = {}, task5 = {}, *task;
+	struct spdk_iscsi_task *task1, *task2, *task3, *task4, *task5;
 	struct spdk_iscsi_pdu *pdu1, *pdu2, *pdu3, *pdu4, *pdu5, *pdu;
 	int rc;
 
@@ -794,83 +794,100 @@ del_transfer_task_test(void)
 	SPDK_CU_ASSERT_FATAL(pdu1 != NULL);
 
 	pdu1->data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
-	task1.scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
-	iscsi_task_set_pdu(&task1, pdu1);
-	task1.tag = 11;
 
-	rc = add_transfer_task(&conn, &task1);
+	task1 = iscsi_task_get(&conn, NULL, NULL);
+	SPDK_CU_ASSERT_FATAL(task1 != NULL);
+
+	task1->scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	iscsi_task_set_pdu(task1, pdu1);
+	task1->tag = 11;
+
+	rc = add_transfer_task(&conn, task1);
 	CU_ASSERT(rc == 0);
 
 	pdu2 = iscsi_get_pdu(&conn);
 	SPDK_CU_ASSERT_FATAL(pdu2 != NULL);
 
 	pdu2->data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
-	task2.scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
-	iscsi_task_set_pdu(&task2, pdu2);
-	task2.tag = 12;
 
-	rc = add_transfer_task(&conn, &task2);
+	task2 = iscsi_task_get(&conn, NULL, NULL);
+	SPDK_CU_ASSERT_FATAL(task2 != NULL);
+
+	task2->scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	iscsi_task_set_pdu(task2, pdu2);
+	task2->tag = 12;
+
+	rc = add_transfer_task(&conn, task2);
 	CU_ASSERT(rc == 0);
 
 	pdu3 = iscsi_get_pdu(&conn);
 	SPDK_CU_ASSERT_FATAL(pdu3 != NULL);
 
 	pdu3->data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
-	task3.scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
-	iscsi_task_set_pdu(&task3, pdu3);
-	task3.tag = 13;
 
-	rc = add_transfer_task(&conn, &task3);
+	task3 = iscsi_task_get(&conn, NULL, NULL);
+	SPDK_CU_ASSERT_FATAL(task3 != NULL);
+
+	task3->scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	iscsi_task_set_pdu(task3, pdu3);
+	task3->tag = 13;
+
+	rc = add_transfer_task(&conn, task3);
 	CU_ASSERT(rc == 0);
 
 	pdu4 = iscsi_get_pdu(&conn);
 	SPDK_CU_ASSERT_FATAL(pdu4 != NULL);
 
 	pdu4->data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
-	task4.scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
-	iscsi_task_set_pdu(&task4, pdu4);
-	task4.tag = 14;
 
-	rc = add_transfer_task(&conn, &task4);
+	task4 = iscsi_task_get(&conn, NULL, NULL);
+	SPDK_CU_ASSERT_FATAL(task4 != NULL);
+
+	task4->scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	iscsi_task_set_pdu(task4, pdu4);
+	task4->tag = 14;
+
+	rc = add_transfer_task(&conn, task4);
 	CU_ASSERT(rc == 0);
 
 	pdu5 = iscsi_get_pdu(&conn);
 	SPDK_CU_ASSERT_FATAL(pdu5 != NULL);
 
 	pdu5->data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
-	task5.scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
-	iscsi_task_set_pdu(&task5, pdu5);
-	task5.tag = 15;
 
-	rc = add_transfer_task(&conn, &task5);
+	task5 = iscsi_task_get(&conn, NULL, NULL);
+	SPDK_CU_ASSERT_FATAL(task5 != NULL);
+
+	task5->scsi.transfer_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	iscsi_task_set_pdu(task5, pdu5);
+	task5->tag = 15;
+
+	rc = add_transfer_task(&conn, task5);
 	CU_ASSERT(rc == 0);
 
-	CU_ASSERT(get_transfer_task(&conn, 1) == &task1);
+	CU_ASSERT(get_transfer_task(&conn, 1) == task1);
 	CU_ASSERT(get_transfer_task(&conn, 5) == NULL);
 	iscsi_del_transfer_task(&conn, 11);
 	CU_ASSERT(get_transfer_task(&conn, 1) == NULL);
-	CU_ASSERT(get_transfer_task(&conn, 5) == &task5);
+	CU_ASSERT(get_transfer_task(&conn, 5) == task5);
 
-	CU_ASSERT(get_transfer_task(&conn, 2) == &task2);
+	CU_ASSERT(get_transfer_task(&conn, 2) == task2);
 	iscsi_del_transfer_task(&conn, 12);
 	CU_ASSERT(get_transfer_task(&conn, 2) == NULL);
 
-	CU_ASSERT(get_transfer_task(&conn, 3) == &task3);
+	CU_ASSERT(get_transfer_task(&conn, 3) == task3);
 	iscsi_del_transfer_task(&conn, 13);
 	CU_ASSERT(get_transfer_task(&conn, 3) == NULL);
 
-	CU_ASSERT(get_transfer_task(&conn, 4) == &task4);
+	CU_ASSERT(get_transfer_task(&conn, 4) == task4);
 	iscsi_del_transfer_task(&conn, 14);
 	CU_ASSERT(get_transfer_task(&conn, 4) == NULL);
 
-	CU_ASSERT(get_transfer_task(&conn, 5) == &task5);
+	CU_ASSERT(get_transfer_task(&conn, 5) == task5);
 	iscsi_del_transfer_task(&conn, 15);
 	CU_ASSERT(get_transfer_task(&conn, 5) == NULL);
 
-	while (!TAILQ_EMPTY(&conn.active_r2t_tasks)) {
-		task = TAILQ_FIRST(&conn.active_r2t_tasks);
-		TAILQ_REMOVE(&conn.active_r2t_tasks, task, link);
-	}
+	CU_ASSERT(TAILQ_EMPTY(&conn.active_r2t_tasks));
 
 	while (!TAILQ_EMPTY(&g_write_pdu_list)) {
 		pdu = TAILQ_FIRST(&g_write_pdu_list);

@@ -1226,14 +1226,11 @@ process_non_read_task_completion(struct spdk_iscsi_conn *conn,
 			 *  iscsi_clear_all_transfer_task() in iscsi.c.)
 			 */
 			if (primary->is_r2t_active) {
-				iscsi_del_transfer_task(conn, primary->tag);
 				if (primary->rsp_scsi_status != SPDK_SCSI_STATUS_GOOD) {
 					iscsi_task_copy_from_rsp_scsi_status(&primary->scsi, primary);
 				}
 				iscsi_task_response(conn, primary);
-				TAILQ_REMOVE(&conn->active_r2t_tasks, primary, link);
-				primary->is_r2t_active = false;
-				iscsi_task_put(primary);
+				iscsi_del_transfer_task(conn, primary->tag);
 			}
 		} else {
 			iscsi_task_response(conn, task);

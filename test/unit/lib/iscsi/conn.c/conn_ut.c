@@ -209,8 +209,22 @@ DEFINE_STUB_V(iscsi_task_mgmt_response,
 
 DEFINE_STUB_V(iscsi_send_nopin, (struct spdk_iscsi_conn *conn));
 
-DEFINE_STUB(iscsi_del_transfer_task, bool,
-	    (struct spdk_iscsi_conn *conn, uint32_t task_tag), true);
+bool
+iscsi_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t task_tag)
+{
+	struct spdk_iscsi_task *task;
+
+	task = TAILQ_FIRST(&conn->active_r2t_tasks);
+	if (task == NULL || task->tag != task_tag) {
+		return false;
+	}
+
+	TAILQ_REMOVE(&conn->active_r2t_tasks, task, link);
+	task->is_r2t_active = false;
+	iscsi_task_put(task);
+
+	return true;
+}
 
 DEFINE_STUB(iscsi_handle_incoming_pdus, int, (struct spdk_iscsi_conn *conn), 0);
 
@@ -424,6 +438,7 @@ process_non_read_task_completion_test(void)
 	primary.scsi.ref = 1;
 	TAILQ_INSERT_TAIL(&conn.active_r2t_tasks, &primary, link);
 	primary.is_r2t_active = true;
+	primary.tag = 1;
 
 	/* First subtask which failed. */
 	task.scsi.length = 4096;
