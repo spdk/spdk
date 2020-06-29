@@ -59,7 +59,7 @@ Vagrant.configure(2) do |config|
   # service so use sshfs+rsync combo instead.
   plugins_sync_backend = {type: :sshfs}
   files_sync_backend = {type: "rsync", rsync__auto: false}
-  if distro.include? "freebsd"
+  if (distro.include? "freebsd") || (distro.include? "clearlinux")
     plugins_sync_backend = {type: :nfs, nfs_udp: false}
     files_sync_backend = {type: :nfs, nfs_udp: false,  mount_options: ['ro']}
   end
@@ -117,11 +117,12 @@ Vagrant.configure(2) do |config|
     end
   end
 
-  # freebsd boxes in order to have spdk sources synced from host properly
-  # will use NFS with "ro" option enabled to prevent changes on host filesystem.
+  # freebsd and clearlinux boxes in order to have spdk sources synced from
+  # host properly will use NFS with "ro" option enabled to prevent changes
+  # on host filesystem.
   # To make sources usable in the guest VM we need to unmount them and use
   # local copy.
-  if distro.include?("freebsd")
+  if distro.include? "freebsd"
     $freebsd_spdk_repo = <<-SCRIPT
     sudo -s
     cp -R /home/vagrant/spdk_repo/spdk /tmp/spdk
@@ -130,6 +131,15 @@ Vagrant.configure(2) do |config|
     chown -R vagrant:vagrant /home/vagrant/spdk_repo/spdk
     SCRIPT
     config.vm.provision "shell", inline: $freebsd_spdk_repo
+  elsif distro.include? "clearlinux"
+    $clearlinux_spdk_repo = <<-SCRIPT
+    sudo -s
+    cp -R /home/vagrant/spdk_repo/spdk /tmp/spdk
+    umount /home/vagrant/spdk_repo/spdk && rm -rf /home/vagrant/spdk_repo/spdk
+    mv /tmp/spdk /home/vagrant/spdk_repo/spdk
+    chown -R clear:clear /home/vagrant/spdk_repo/spdk
+    SCRIPT
+    config.vm.provision "shell", inline: $clearlinux_spdk_repo
   end
 
   config.ssh.forward_agent = true
