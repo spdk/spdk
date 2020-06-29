@@ -2462,6 +2462,18 @@ nvmf_tcp_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
 }
 
 static void
+nvmf_tcp_req_set_abort_status(struct spdk_nvmf_request *req,
+			      struct spdk_nvmf_tcp_req *tcp_req_to_abort)
+{
+	tcp_req_to_abort->req.rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	tcp_req_to_abort->req.rsp->nvme_cpl.status.sc = SPDK_NVME_SC_ABORTED_BY_REQUEST;
+
+	nvmf_tcp_req_set_state(tcp_req_to_abort, TCP_REQUEST_STATE_READY_TO_COMPLETE);
+
+	req->rsp->nvme_cpl.cdw0 &= ~1U; /* Command was successfully aborted. */
+}
+
+static void
 nvmf_tcp_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
 			     struct spdk_nvmf_request *req)
 {
@@ -2494,6 +2506,18 @@ nvmf_tcp_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
 			return;
 		}
 		break;
+
+	case TCP_REQUEST_STATE_NEED_BUFFER:
+		STAILQ_REMOVE(&tqpair->group->group.pending_buf_queue,
+			      &tcp_req_to_abort->req, spdk_nvmf_request, buf_link);
+
+		nvmf_tcp_req_set_abort_status(req, tcp_req_to_abort);
+		break;
+
+	case TCP_REQUEST_STATE_AWAITING_R2T_ACK:
+		nvmf_tcp_req_set_abort_status(req, tcp_req_to_abort);
+		break;
+
 	default:
 		break;
 	}
