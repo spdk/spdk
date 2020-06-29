@@ -194,23 +194,26 @@ function get_ip_address() {
 
 function nvmfcleanup() {
 	sync
-	set +e
-	for i in {1..20}; do
-		modprobe -v -r nvme-$TEST_TRANSPORT
-		if modprobe -v -r nvme-fabrics; then
-			set -e
-			return 0
-		fi
-		sleep 1
-	done
-	set -e
 
-	# So far unable to remove the kernel modules. Try
-	# one more time and let it fail.
-	# Allow the transport module to fail for now. See Jim's comment
-	# about the nvme-tcp module below.
-	modprobe -v -r nvme-$TEST_TRANSPORT || true
-	modprobe -v -r nvme-fabrics
+	if [ "$TEST_TRANSPORT" == "tcp" ] || [ "$TEST_TRANSPORT" == "rdma" ]; then
+		set +e
+		for i in {1..20}; do
+			modprobe -v -r nvme-$TEST_TRANSPORT
+			if modprobe -v -r nvme-fabrics; then
+				set -e
+				return 0
+			fi
+			sleep 1
+		done
+		set -e
+
+		# So far unable to remove the kernel modules. Try
+		# one more time and let it fail.
+		# Allow the transport module to fail for now. See Jim's comment
+		# about the nvme-tcp module below.
+		modprobe -v -r nvme-$TEST_TRANSPORT || true
+		modprobe -v -r nvme-fabrics
+	fi
 }
 
 function nvmf_veth_init() {
@@ -329,12 +332,14 @@ function nvmftestinit() {
 		NVMF_TRANSPORT_OPTS="$NVMF_TRANSPORT_OPTS -o"
 	fi
 
-	# currently we run the host/perf test for TCP even on systems without kernel nvme-tcp
-	#  support; that's fine since the host/perf test uses the SPDK initiator
-	# maybe later we will enforce modprobe to succeed once we have systems in the test pool
-	#  with nvme-tcp kernel support - but until then let this pass so we can still run the
-	#  host/perf test with the tcp transport
-	modprobe nvme-$TEST_TRANSPORT || true
+	if [ "$TEST_TRANSPORT" == "tcp" ] || [ "$TEST_TRANSPORT" == "rdma" ]; then
+		# currently we run the host/perf test for TCP even on systems without kernel nvme-tcp
+		#  support; that's fine since the host/perf test uses the SPDK initiator
+		# maybe later we will enforce modprobe to succeed once we have systems in the test pool
+		#  with nvme-tcp kernel support - but until then let this pass so we can still run the
+		#  host/perf test with the tcp transport
+		modprobe nvme-$TEST_TRANSPORT || true
+	fi
 }
 
 function nvmfappstart() {
