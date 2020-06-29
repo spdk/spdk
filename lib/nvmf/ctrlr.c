@@ -867,8 +867,8 @@ nvmf_prop_set_aqa(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
 
 	aqa.raw = value;
 
-	if (aqa.bits.asqs > ctrlr->vcprop.cap.bits.mqes ||
-	    aqa.bits.acqs > ctrlr->vcprop.cap.bits.mqes) {
+	if (aqa.bits.asqs < SPDK_NVME_ADMIN_QUEUE_MIN_ENTRIES - 1 ||
+	    aqa.bits.acqs < SPDK_NVME_ADMIN_QUEUE_MIN_ENTRIES - 1) {
 		return false;
 	}
 
