@@ -2734,7 +2734,6 @@ add_transfer_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 	size_t segment_len;
 	size_t data_len;
 	int len;
-	int idx;
 	int rc;
 	int data_out_req;
 
@@ -2756,9 +2755,8 @@ add_transfer_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 	}
 
 	conn->data_out_cnt += data_out_req;
-	idx = conn->pending_r2t++;
+	conn->pending_r2t++;
 
-	conn->outstanding_r2t_tasks[idx] = task;
 	task->next_expected_r2t_offset = data_len;
 	task->current_r2t_length = 0;
 	task->R2TSN = 0;
@@ -2813,20 +2811,14 @@ start_queued_transfer_tasks(struct spdk_iscsi_conn *conn)
 bool
 iscsi_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t task_tag)
 {
-	struct spdk_iscsi_task *task;
-	int i;
+	struct spdk_iscsi_task *task, *tmp;
 
-	for (i = 0; i < conn->pending_r2t; i++) {
-		if (conn->outstanding_r2t_tasks[i]->tag == task_tag) {
-			task = conn->outstanding_r2t_tasks[i];
+	TAILQ_FOREACH_SAFE(task, &conn->active_r2t_tasks, link, tmp) {
+		if (task->tag == task_tag) {
 			assert(conn->data_out_cnt >= task->data_out_cnt);
 			conn->data_out_cnt -= task->data_out_cnt;
 
 			conn->pending_r2t--;
-			for (; i < conn->pending_r2t; i++) {
-				conn->outstanding_r2t_tasks[i] = conn->outstanding_r2t_tasks[i + 1];
-			}
-			conn->outstanding_r2t_tasks[conn->pending_r2t] = NULL;
 
 			assert(task->is_r2t_active == true);
 			TAILQ_REMOVE(&conn->active_r2t_tasks, task, link);
@@ -2840,26 +2832,25 @@ iscsi_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t task_tag)
 	return false;
 }
 
-static void
-del_connection_queued_task(struct spdk_iscsi_conn *conn, void *tailq,
-			   struct spdk_scsi_lun *lun,
-			   struct spdk_iscsi_pdu *pdu)
+void iscsi_clear_all_transfer_task(struct spdk_iscsi_conn *conn,
+				   struct spdk_scsi_lun *lun,
+				   struct spdk_iscsi_pdu *pdu)
 {
 	struct spdk_iscsi_task *task, *task_tmp;
 	struct spdk_iscsi_pdu *pdu_tmp;
 
-	/*
-	 * Temporary used to index spdk_scsi_task related
-	 *  queues of the connection.
-	 */
-	TAILQ_HEAD(queued_tasks, spdk_iscsi_task) *head;
-	head = (struct queued_tasks *)tailq;
-
-	TAILQ_FOREACH_SAFE(task, head, link, task_tmp) {
+	TAILQ_FOREACH_SAFE(task, &conn->active_r2t_tasks, link, task_tmp) {
 		pdu_tmp = iscsi_task_get_pdu(task);
 		if ((lun == NULL || lun == task->scsi.lun) &&
 		    (pdu == NULL || spdk_sn32_lt(pdu_tmp->cmd_sn, pdu->cmd_sn))) {
-			TAILQ_REMOVE(head, task, link);
+			task->outstanding_r2t = 0;
+			task->next_r2t_offset = 0;
+			task->next_expected_r2t_offset = 0;
+			assert(conn->data_out_cnt >= task->data_out_cnt);
+			conn->data_out_cnt -= task->data_out_cnt;
+			conn->pending_r2t--;
+
+			TAILQ_REMOVE(&conn->active_r2t_tasks, task, link);
 			task->is_r2t_active = false;
 			if (lun != NULL && spdk_scsi_lun_is_removing(lun)) {
 				spdk_scsi_task_process_null_lun(&task->scsi);
@@ -2868,47 +2859,20 @@ del_connection_queued_task(struct spdk_iscsi_conn *conn, void *tailq,
 			iscsi_task_put(task);
 		}
 	}
-}
 
-void iscsi_clear_all_transfer_task(struct spdk_iscsi_conn *conn,
-				   struct spdk_scsi_lun *lun,
-				   struct spdk_iscsi_pdu *pdu)
-{
-	int i, j, pending_r2t;
-	struct spdk_iscsi_task *task;
-	struct spdk_iscsi_pdu *pdu_tmp;
-
-	pending_r2t = conn->pending_r2t;
-	for (i = 0; i < pending_r2t; i++) {
-		task = conn->outstanding_r2t_tasks[i];
+	TAILQ_FOREACH_SAFE(task, &conn->queued_r2t_tasks, link, task_tmp) {
 		pdu_tmp = iscsi_task_get_pdu(task);
 		if ((lun == NULL || lun == task->scsi.lun) &&
 		    (pdu == NULL || spdk_sn32_lt(pdu_tmp->cmd_sn, pdu->cmd_sn))) {
-			conn->outstanding_r2t_tasks[i] = NULL;
-			task->outstanding_r2t = 0;
-			task->next_r2t_offset = 0;
-			task->next_expected_r2t_offset = 0;
-			assert(conn->data_out_cnt >= task->data_out_cnt);
-			conn->data_out_cnt -= task->data_out_cnt;
-			conn->pending_r2t--;
-		}
-	}
-
-	for (i = 0; i < pending_r2t; i++) {
-		if (conn->outstanding_r2t_tasks[i] != NULL) {
-			continue;
-		}
-		for (j = i + 1; j < pending_r2t; j++) {
-			if (conn->outstanding_r2t_tasks[j] != NULL) {
-				conn->outstanding_r2t_tasks[i] = conn->outstanding_r2t_tasks[j];
-				conn->outstanding_r2t_tasks[j] = NULL;
-				break;
+			TAILQ_REMOVE(&conn->queued_r2t_tasks, task, link);
+			task->is_r2t_active = false;
+			if (lun != NULL && spdk_scsi_lun_is_removing(lun)) {
+				spdk_scsi_task_process_null_lun(&task->scsi);
+				iscsi_task_response(conn, task);
 			}
+			iscsi_task_put(task);
 		}
 	}
-
-	del_connection_queued_task(conn, &conn->active_r2t_tasks, lun, pdu);
-	del_connection_queued_task(conn, &conn->queued_r2t_tasks, lun, pdu);
 
 	start_queued_transfer_tasks(conn);
 }
@@ -2916,11 +2880,11 @@ void iscsi_clear_all_transfer_task(struct spdk_iscsi_conn *conn,
 static struct spdk_iscsi_task *
 get_transfer_task(struct spdk_iscsi_conn *conn, uint32_t transfer_tag)
 {
-	int i;
+	struct spdk_iscsi_task *task;
 
-	for (i = 0; i < conn->pending_r2t; i++) {
-		if (conn->outstanding_r2t_tasks[i]->ttt == transfer_tag) {
-			return (conn->outstanding_r2t_tasks[i]);
+	TAILQ_FOREACH(task, &conn->active_r2t_tasks, link) {
+		if (task->ttt == transfer_tag) {
+			return task;
 		}
 	}
 

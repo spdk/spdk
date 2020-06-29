@@ -687,7 +687,6 @@ add_transfer_task_test(void)
 
 	CU_ASSERT(conn.data_out_cnt == 255);
 	CU_ASSERT(conn.pending_r2t == 1);
-	CU_ASSERT(conn.outstanding_r2t_tasks[0] == &task);
 	CU_ASSERT(conn.ttt == 1);
 
 	CU_ASSERT(task.data_out_cnt == 255);
@@ -1871,6 +1870,7 @@ pdu_hdr_op_data_test(void)
 
 	conn.sess = &sess;
 	conn.dev = &dev;
+	TAILQ_INIT(&conn.active_r2t_tasks);
 
 	/* Case 1 - SCSI Data-Out PDU is acceptable only on normal session. */
 	sess.session_type = SESSION_TYPE_DISCOVERY;
@@ -1898,7 +1898,7 @@ pdu_hdr_op_data_test(void)
 	 */
 	primary.desired_data_transfer_length = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH - 1;
 	conn.pending_r2t = 1;
-	conn.outstanding_r2t_tasks[0] = &primary;
+	TAILQ_INSERT_TAIL(&conn.active_r2t_tasks, &primary, link);
 
 	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
 	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
