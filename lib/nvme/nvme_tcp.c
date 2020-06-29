@@ -187,7 +187,6 @@ nvme_tcp_req_put(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_req *tcp_req)
 {
 	assert(tcp_req->state != NVME_TCP_REQ_FREE);
 	tcp_req->state = NVME_TCP_REQ_FREE;
-	TAILQ_REMOVE(&tqpair->outstanding_reqs, tcp_req, link);
 	TAILQ_INSERT_TAIL(&tqpair->free_reqs, tcp_req, link);
 }
 
@@ -603,6 +602,7 @@ nvme_tcp_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 
 	if (nvme_tcp_req_init(tqpair, req, tcp_req)) {
 		SPDK_ERRLOG("nvme_tcp_req_init() failed\n");
+		TAILQ_REMOVE(&tcp_req->tqpair->outstanding_reqs, tcp_req, link);
 		nvme_tcp_req_put(tqpair, tcp_req);
 		return -1;
 	}
@@ -625,6 +625,7 @@ nvme_tcp_req_complete(struct nvme_tcp_req *tcp_req,
 	assert(tcp_req->req != NULL);
 	req = tcp_req->req;
 
+	TAILQ_REMOVE(&tcp_req->tqpair->outstanding_reqs, tcp_req, link);
 	nvme_complete_request(req->cb_fn, req->cb_arg, req->qpair, req, rsp);
 	nvme_free_request(req);
 }
