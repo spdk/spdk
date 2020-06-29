@@ -46,11 +46,9 @@ enum nvmf_tgt_state {
 	NVMF_TGT_INIT_PARSE_CONFIG,
 	NVMF_TGT_INIT_CREATE_POLL_GROUPS,
 	NVMF_TGT_INIT_START_SUBSYSTEMS,
-	NVMF_TGT_INIT_START_ACCEPTOR,
 	NVMF_TGT_RUNNING,
 	NVMF_TGT_FINI_STOP_SUBSYSTEMS,
 	NVMF_TGT_FINI_DESTROY_POLL_GROUPS,
-	NVMF_TGT_FINI_STOP_ACCEPTOR,
 	NVMF_TGT_FINI_FREE_RESOURCES,
 	NVMF_TGT_STOPPED,
 	NVMF_TGT_ERROR,
@@ -71,8 +69,6 @@ static struct spdk_thread *g_tgt_fini_thread = NULL;
 
 static TAILQ_HEAD(, nvmf_tgt_poll_group) g_poll_groups = TAILQ_HEAD_INITIALIZER(g_poll_groups);
 static size_t g_num_poll_groups = 0;
-
-static struct spdk_poller *g_acceptor_poller = NULL;
 
 static void nvmf_tgt_advance_state(void);
 
@@ -103,28 +99,13 @@ nvmf_subsystem_fini(void)
 	nvmf_shutdown_cb(NULL);
 }
 
-static int
-acceptor_poll(void *arg)
-{
-	struct spdk_nvmf_tgt *tgt = arg;
-	uint32_t count;
-
-	count = spdk_nvmf_tgt_accept(tgt);
-
-	if (count > 0) {
-		return SPDK_POLLER_BUSY;
-	} else {
-		return SPDK_POLLER_IDLE;
-	}
-}
-
 static void
 _nvmf_tgt_destroy_poll_group_done(void *ctx)
 {
 	assert(g_num_poll_groups > 0);
 
 	if (--g_num_poll_groups == 0) {
-		g_tgt_state = NVMF_TGT_FINI_STOP_ACCEPTOR;
+		g_tgt_state = NVMF_TGT_FINI_FREE_RESOURCES;
 		nvmf_tgt_advance_state();
 	}
 }
@@ -236,7 +217,7 @@ nvmf_tgt_subsystem_started(struct spdk_nvmf_subsystem *subsystem,
 		return;
 	}
 
-	g_tgt_state = NVMF_TGT_INIT_START_ACCEPTOR;
+	g_tgt_state = NVMF_TGT_RUNNING;
 	nvmf_tgt_advance_state();
 }
 
@@ -406,15 +387,10 @@ nvmf_tgt_advance_state(void)
 					g_tgt_state = NVMF_TGT_FINI_STOP_SUBSYSTEMS;
 				}
 			} else {
-				g_tgt_state = NVMF_TGT_INIT_START_ACCEPTOR;
+				g_tgt_state = NVMF_TGT_RUNNING;
 			}
 			break;
 		}
-		case NVMF_TGT_INIT_START_ACCEPTOR:
-			g_acceptor_poller = SPDK_POLLER_REGISTER(acceptor_poll, g_spdk_nvmf_tgt,
-					    g_spdk_nvmf_tgt_conf->acceptor_poll_rate);
-			g_tgt_state = NVMF_TGT_RUNNING;
-			break;
 		case NVMF_TGT_RUNNING:
 			spdk_subsystem_init_next(0);
 			break;
@@ -436,10 +412,6 @@ nvmf_tgt_advance_state(void)
 		case NVMF_TGT_FINI_DESTROY_POLL_GROUPS:
 			/* Send a message to each poll group thread, and terminate the thread */
 			nvmf_tgt_destroy_poll_groups();
-			break;
-		case NVMF_TGT_FINI_STOP_ACCEPTOR:
-			spdk_poller_unregister(&g_acceptor_poller);
-			g_tgt_state = NVMF_TGT_FINI_FREE_RESOURCES;
 			break;
 		case NVMF_TGT_FINI_FREE_RESOURCES:
 			spdk_nvmf_tgt_destroy(g_spdk_nvmf_tgt, nvmf_tgt_destroy_done, NULL);

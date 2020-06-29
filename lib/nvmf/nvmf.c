@@ -50,6 +50,7 @@
 SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 
 #define SPDK_NVMF_DEFAULT_MAX_SUBSYSTEMS 1024
+#define SPDK_NVMF_DEFAULT_ACCEPT_POLL_RATE_US 10000
 
 static TAILQ_HEAD(, spdk_nvmf_tgt) g_nvmf_tgts = TAILQ_HEAD_INITIALIZER(g_nvmf_tgts);
 
@@ -231,10 +232,25 @@ nvmf_tgt_destroy_poll_group_qpairs(struct spdk_nvmf_poll_group *group)
 	_nvmf_tgt_disconnect_next_qpair(ctx);
 }
 
+static int
+nvmf_tgt_accept(void *ctx)
+{
+	struct spdk_nvmf_tgt *tgt = ctx;
+	struct spdk_nvmf_transport *transport, *tmp;
+	int count = 0;
+
+	TAILQ_FOREACH_SAFE(transport, &tgt->transports, link, tmp) {
+		count += nvmf_transport_accept(transport);
+	}
+
+	return count;
+}
+
 struct spdk_nvmf_tgt *
 spdk_nvmf_tgt_create(struct spdk_nvmf_target_opts *opts)
 {
 	struct spdk_nvmf_tgt *tgt, *tmp_tgt;
+	uint32_t acceptor_poll_rate;
 
 	if (strnlen(opts->name, NVMF_TGT_NAME_MAX_LENGTH) == NVMF_TGT_NAME_MAX_LENGTH) {
 		SPDK_ERRLOG("Provided target name exceeds the max length of %u.\n", NVMF_TGT_NAME_MAX_LENGTH);
@@ -261,6 +277,12 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_target_opts *opts)
 		tgt->max_subsystems = opts->max_subsystems;
 	}
 
+	if (!opts || !opts->acceptor_poll_rate) {
+		acceptor_poll_rate = SPDK_NVMF_DEFAULT_ACCEPT_POLL_RATE_US;
+	} else {
+		acceptor_poll_rate = opts->acceptor_poll_rate;
+	}
+
 	tgt->discovery_genctr = 0;
 	TAILQ_INIT(&tgt->transports);
 	TAILQ_INIT(&tgt->poll_groups);
@@ -273,13 +295,20 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_target_opts *opts)
 
 	pthread_mutex_init(&tgt->mutex, NULL);
 
-	TAILQ_INSERT_HEAD(&g_nvmf_tgts, tgt, link);
+	tgt->accept_poller = SPDK_POLLER_REGISTER(nvmf_tgt_accept, tgt, acceptor_poll_rate);
+	if (!tgt->accept_poller) {
+		free(tgt->subsystems);
+		free(tgt);
+		return NULL;
+	}
 
 	spdk_io_device_register(tgt,
 				nvmf_tgt_create_poll_group,
 				nvmf_tgt_destroy_poll_group,
 				sizeof(struct spdk_nvmf_poll_group),
 				tgt->name);
+
+	TAILQ_INSERT_HEAD(&g_nvmf_tgts, tgt, link);
 
 	return tgt;
 }
@@ -325,6 +354,8 @@ spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt,
 {
 	tgt->destroy_cb_fn = cb_fn;
 	tgt->destroy_cb_arg = cb_arg;
+
+	spdk_poller_unregister(&tgt->accept_poller);
 
 	TAILQ_REMOVE(&g_nvmf_tgts, tgt, link);
 
@@ -772,19 +803,6 @@ spdk_nvmf_tgt_new_qpair(struct spdk_nvmf_tgt *tgt, struct spdk_nvmf_qpair *qpair
 	ctx->group = group;
 
 	spdk_thread_send_msg(group->thread, _nvmf_poll_group_add, ctx);
-}
-
-uint32_t
-spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt)
-{
-	struct spdk_nvmf_transport *transport, *tmp;
-	uint32_t count = 0;
-
-	TAILQ_FOREACH_SAFE(transport, &tgt->transports, link, tmp) {
-		count += nvmf_transport_accept(transport);
-	}
-
-	return count;
 }
 
 struct spdk_nvmf_poll_group *

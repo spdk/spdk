@@ -68,6 +68,7 @@ struct spdk_nvmf_transport;
 struct spdk_nvmf_target_opts {
 	char		name[NVMF_TGT_NAME_MAX_LENGTH];
 	uint32_t	max_subsystems;
+	uint32_t	acceptor_poll_rate;
 };
 
 struct spdk_nvmf_transport_opts {
@@ -227,13 +228,6 @@ int spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
  */
 int spdk_nvmf_tgt_stop_listen(struct spdk_nvmf_tgt *tgt,
 			      struct spdk_nvme_transport_id *trid);
-
-/**
- * Poll the target for incoming connections.
- *
- * \param tgt The target associated with the listen address.
- */
-uint32_t spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt);
 
 /**
  * Create a poll group.

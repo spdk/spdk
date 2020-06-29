@@ -117,10 +117,10 @@ implementations of the transport interface will have to implement that function.
 The NVMe-oF target no longer supports connecting scheduling configuration and instead
 always uses what was previously called "transport" scheduling.
 
-`spdk_nvmf_tgt_accept` no longer takes a function pointer as an argument. New connections
-are automatically assigned to poll groups by the underlying transport. Further,
-`spdk_nvmf_transport_ops` has changed such that the accept function pointer no longer
-takes a function pointer as an argument. Instead, transports should call
+`spdk_nvmf_tgt_accept` no longer exists. The accept process now occurs automatically after
+the creation of an nvmf target and queue pairs are assigned to poll groups by the underlying
+transport. Further, `spdk_nvmf_transport_ops` has changed such that the accept function
+pointer no longer takes a function pointer as an argument. Instead, transports should call
 `spdk_nvmf_tgt_new_qpair` whenever they previously would have called that callback.
 
 The NVMe-oF target now supports aborting any submitted NVM or Admin command. Previously,

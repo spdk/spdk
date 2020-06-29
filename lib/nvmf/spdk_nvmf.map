@@ -11,7 +11,6 @@
 	spdk_nvmf_tgt_write_config_json;
 	spdk_nvmf_tgt_listen;
 	spdk_nvmf_tgt_stop_listen;
-	spdk_nvmf_tgt_accept;
 	spdk_nvmf_poll_group_create;
 	spdk_nvmf_get_optimal_poll_group;
 	spdk_nvmf_poll_group_destroy;

@@ -199,6 +199,7 @@ nvmf_parse_nvmf_tgt(void)
 	}
 
 	opts.max_subsystems = g_spdk_nvmf_tgt_max_subsystems;
+	opts.acceptor_poll_rate = g_spdk_nvmf_tgt_conf->acceptor_poll_rate;
 	g_spdk_nvmf_tgt = spdk_nvmf_tgt_create(&opts);
 
 	g_spdk_nvmf_tgt_max_subsystems = 0;

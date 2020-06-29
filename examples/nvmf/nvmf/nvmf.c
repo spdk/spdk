@@ -54,11 +54,9 @@ enum nvmf_target_state {
 	NVMF_INIT_TARGET,
 	NVMF_INIT_POLL_GROUPS,
 	NVMF_INIT_START_SUBSYSTEMS,
-	NVMF_INIT_START_ACCEPTOR,
 	NVMF_RUNNING,
 	NVMF_FINI_STOP_SUBSYSTEMS,
 	NVMF_FINI_POLL_GROUPS,
-	NVMF_FINI_STOP_ACCEPTOR,
 	NVMF_FINI_TARGET,
 	NVMF_FINI_SUBSYSTEM,
 };
@@ -99,7 +97,7 @@ static struct spdk_thread *g_fini_thread = NULL;
 static struct nvmf_target g_nvmf_tgt = {
 	.max_subsystems = NVMF_DEFAULT_SUBSYSTEMS,
 };
-static struct spdk_poller *g_acceptor_poller = NULL;
+
 static struct nvmf_target_poll_group *g_next_pg = NULL;
 static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
 static bool g_reactors_exit = false;
@@ -528,16 +526,6 @@ nvmf_tgt_stop_subsystems(struct nvmf_target *nvmf_tgt)
 	}
 }
 
-static int
-nvmf_tgt_acceptor_poll(void *arg)
-{
-	struct nvmf_target *nvmf_tgt = arg;
-
-	spdk_nvmf_tgt_accept(nvmf_tgt->tgt);
-
-	return -1;
-}
-
 static void
 nvmf_tgt_subsystem_start_next(struct spdk_nvmf_subsystem *subsystem,
 			      void *cb_arg, int status)
@@ -558,7 +546,7 @@ nvmf_tgt_subsystem_start_next(struct spdk_nvmf_subsystem *subsystem,
 
 	fprintf(stdout, "all subsystems of target started\n");
 
-	g_target_state = NVMF_INIT_START_ACCEPTOR;
+	g_target_state = NVMF_RUNNING;
 	nvmf_target_advance_state();
 }
 
@@ -587,7 +575,7 @@ nvmf_tgt_start_subsystems(struct nvmf_target *nvmf_tgt)
 			g_target_state = NVMF_FINI_STOP_SUBSYSTEMS;
 		}
 	} else {
-		g_target_state = NVMF_INIT_START_ACCEPTOR;
+		g_target_state = NVMF_RUNNING;
 	}
 }
 
@@ -670,7 +658,7 @@ _nvmf_tgt_destroy_poll_groups_done(void *ctx)
 	if (--g_num_poll_groups == 0) {
 		fprintf(stdout, "destroy targets's poll groups done\n");
 
-		g_target_state = NVMF_FINI_STOP_ACCEPTOR;
+		g_target_state = NVMF_FINI_TARGET;
 		nvmf_target_advance_state();
 	}
 }
@@ -779,12 +767,6 @@ nvmf_target_advance_state(void)
 		case NVMF_INIT_START_SUBSYSTEMS:
 			nvmf_tgt_start_subsystems(&g_nvmf_tgt);
 			break;
-		case NVMF_INIT_START_ACCEPTOR:
-			g_acceptor_poller = SPDK_POLLER_REGISTER(nvmf_tgt_acceptor_poll, &g_nvmf_tgt,
-					    g_acceptor_poll_rate);
-			fprintf(stdout, "Acceptor running\n");
-			g_target_state = NVMF_RUNNING;
-			break;
 		case NVMF_RUNNING:
 			fprintf(stdout, "nvmf target is running\n");
 			if (g_migrate_pg_period_us != 0) {
@@ -798,10 +780,6 @@ nvmf_target_advance_state(void)
 			break;
 		case NVMF_FINI_POLL_GROUPS:
 			nvmf_poll_groups_destroy();
-			break;
-		case NVMF_FINI_STOP_ACCEPTOR:
-			spdk_poller_unregister(&g_acceptor_poller);
-			g_target_state = NVMF_FINI_TARGET;
 			break;
 		case NVMF_FINI_TARGET:
 			nvmf_destroy_nvmf_tgt();

@@ -67,6 +67,8 @@ struct spdk_nvmf_tgt {
 
 	uint64_t				discovery_genctr;
 
+	struct spdk_poller			*accept_poller;
+
 	uint32_t				max_subsystems;
 
 	/* Array of subsystem pointers of size max_subsystems indexed by sid */
