@@ -1785,7 +1785,7 @@ nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 
 			rc = nvme_tcp_read_payload_data(tqpair->sock, pdu);
 			if (rc < 0) {
-				return NVME_TCP_PDU_IN_PROGRESS;
+				return NVME_TCP_PDU_FATAL;
 			}
 			pdu->readv_offset += rc;
 
