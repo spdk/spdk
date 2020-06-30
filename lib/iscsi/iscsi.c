@@ -3439,31 +3439,6 @@ iscsi_pdu_payload_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 	return SPDK_ISCSI_CONNECTION_FATAL;
 }
 
-static void
-abort_transfer_task_in_task_mgmt_resp(struct spdk_iscsi_conn *conn,
-				      struct spdk_iscsi_task *task)
-{
-	struct spdk_iscsi_pdu *pdu;
-
-	pdu = iscsi_task_get_pdu(task);
-
-	switch (task->scsi.function) {
-	/* abort task identified by Reference Task Tag field */
-	case ISCSI_TASK_FUNC_ABORT_TASK:
-		iscsi_del_transfer_task(conn, task->scsi.abort_id);
-		break;
-
-	/* abort all tasks issued via this session on the LUN */
-	case ISCSI_TASK_FUNC_ABORT_TASK_SET:
-		iscsi_clear_all_transfer_task(conn, task->scsi.lun, pdu);
-		break;
-
-	case ISCSI_TASK_FUNC_LOGICAL_UNIT_RESET:
-		iscsi_clear_all_transfer_task(conn, task->scsi.lun, pdu);
-		break;
-	}
-}
-
 void
 iscsi_task_mgmt_response(struct spdk_iscsi_conn *conn,
 			 struct spdk_iscsi_task *task)
@@ -3488,11 +3463,9 @@ iscsi_task_mgmt_response(struct spdk_iscsi_conn *conn,
 	rsph->flags |= 0x80; /* bit 0 default to 1 */
 	switch (task->scsi.response) {
 	case SPDK_SCSI_TASK_MGMT_RESP_COMPLETE:
-		abort_transfer_task_in_task_mgmt_resp(conn, task);
 		rsph->response = ISCSI_TASK_FUNC_RESP_COMPLETE;
 		break;
 	case SPDK_SCSI_TASK_MGMT_RESP_SUCCESS:
-		abort_transfer_task_in_task_mgmt_resp(conn, task);
 		rsph->response = ISCSI_TASK_FUNC_RESP_COMPLETE;
 		break;
 	case SPDK_SCSI_TASK_MGMT_RESP_REJECT:
@@ -3644,6 +3617,7 @@ iscsi_pdu_hdr_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	case ISCSI_TASK_FUNC_ABORT_TASK:
 		SPDK_NOTICELOG("ABORT_TASK\n");
 
+		iscsi_del_transfer_task(conn, ref_task_tag);
 		iscsi_op_abort_task(task, ref_task_tag);
 		return 0;
 
@@ -3651,6 +3625,7 @@ iscsi_pdu_hdr_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	case ISCSI_TASK_FUNC_ABORT_TASK_SET:
 		SPDK_NOTICELOG("ABORT_TASK_SET\n");
 
+		iscsi_clear_all_transfer_task(conn, task->scsi.lun, pdu);
 		iscsi_op_abort_task_set(task, SPDK_SCSI_TASK_FUNC_ABORT_TASK_SET);
 		return 0;
 
@@ -3667,6 +3642,7 @@ iscsi_pdu_hdr_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	case ISCSI_TASK_FUNC_LOGICAL_UNIT_RESET:
 		SPDK_NOTICELOG("LOGICAL_UNIT_RESET\n");
 
+		iscsi_clear_all_transfer_task(conn, task->scsi.lun, pdu);
 		iscsi_op_abort_task_set(task, SPDK_SCSI_TASK_FUNC_LUN_RESET);
 		return 0;
 
