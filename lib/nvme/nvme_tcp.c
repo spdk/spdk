@@ -1017,7 +1017,9 @@ nvme_tcp_capsule_resp_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_
 
 	assert(tcp_req->req != NULL);
 	nvme_tcp_req_complete(tcp_req->req, &cpl);
-	(*reaped)++;
+	if (tcp_req->ordering.send_ack) {
+		(*reaped)++;
+	}
 
 	tcp_req->ordering.data_recv = 1;
 	nvme_tcp_req_put_safe(tcp_req);
