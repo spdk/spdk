@@ -1153,6 +1153,22 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 	return 0;
 }
 
+/* Used when dst points to MMIO (i.e. CMB) in a virtual machine - in these cases we must
+ * not use wide instructions because QEMU will not emulate such instructions to MMIO space.
+ * So this function ensures we only copy 8 bytes at a time.
+ */
+static inline void
+nvme_pcie_copy_command_mmio(struct spdk_nvme_cmd *dst, const struct spdk_nvme_cmd *src)
+{
+	uint64_t *dst64 = (uint64_t *)dst;
+	const uint64_t *src64 = (const uint64_t *)src;
+	uint32_t i;
+
+	for (i = 0; i < sizeof(*dst) / 8; i++) {
+		dst64[i] = src64[i];
+	}
+}
+
 static inline void
 nvme_pcie_copy_command(struct spdk_nvme_cmd *dst, const struct spdk_nvme_cmd *src)
 {
@@ -1336,7 +1352,7 @@ nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 	 * virtual NVMe controller, the maximum access width is 8 Bytes for one time.
 	 */
 	if (spdk_unlikely((ctrlr->quirks & NVME_QUIRK_MAXIMUM_PCI_ACCESS_WIDTH) && pqpair->sq_in_cmb)) {
-		pqpair->cmd[pqpair->sq_tail] = req->cmd;
+		nvme_pcie_copy_command_mmio(&pqpair->cmd[pqpair->sq_tail], &req->cmd);
 	} else {
 		/* Copy the command from the tracker to the submission queue. */
 		nvme_pcie_copy_command(&pqpair->cmd[pqpair->sq_tail], &req->cmd);
