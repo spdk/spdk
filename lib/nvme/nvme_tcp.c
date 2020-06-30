@@ -617,9 +617,14 @@ nvme_tcp_qpair_reset(struct spdk_nvme_qpair *qpair)
 }
 
 static void
-nvme_tcp_req_complete(struct nvme_request *req,
+nvme_tcp_req_complete(struct nvme_tcp_req *tcp_req,
 		      struct spdk_nvme_cpl *rsp)
 {
+	struct nvme_request *req;
+
+	assert(tcp_req->req != NULL);
+	req = tcp_req->req;
+
 	nvme_complete_request(req->cb_fn, req->cb_arg, req->qpair, req, rsp);
 	nvme_free_request(req);
 }
@@ -628,7 +633,6 @@ static void
 nvme_tcp_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 {
 	struct nvme_tcp_req *tcp_req, *tmp;
-	struct nvme_request *req;
 	struct spdk_nvme_cpl cpl;
 	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
 
@@ -637,10 +641,7 @@ nvme_tcp_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 	cpl.status.dnr = dnr;
 
 	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->outstanding_reqs, link, tmp) {
-		assert(tcp_req->req != NULL);
-		req = tcp_req->req;
-
-		nvme_tcp_req_complete(req, &cpl);
+		nvme_tcp_req_complete(tcp_req, &cpl);
 		nvme_tcp_req_put(tqpair, tcp_req);
 	}
 }
@@ -843,7 +844,7 @@ nvme_tcp_c2h_data_payload_handle(struct nvme_tcp_qpair *tqpair,
 
 		cpl.cid = tcp_req->cid;
 		cpl.sqid = tqpair->qpair.id;
-		nvme_tcp_req_complete(tcp_req->req, &cpl);
+		nvme_tcp_req_complete(tcp_req, &cpl);
 		(*reaped)++;
 
 		tcp_req->ordering.data_recv = 1;
@@ -1022,8 +1023,7 @@ nvme_tcp_capsule_resp_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_
 
 	}
 
-	assert(tcp_req->req != NULL);
-	nvme_tcp_req_complete(tcp_req->req, &cpl);
+	nvme_tcp_req_complete(tcp_req, &cpl);
 	if (tcp_req->ordering.send_ack) {
 		(*reaped)++;
 	}
@@ -1775,7 +1775,6 @@ static void
 nvme_tcp_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_tcp_req *tcp_req, *tmp;
-	struct nvme_request *req;
 	struct spdk_nvme_cpl cpl;
 	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
 
@@ -1784,12 +1783,11 @@ nvme_tcp_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 
 	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->outstanding_reqs, link, tmp) {
 		assert(tcp_req->req != NULL);
-		req = tcp_req->req;
-		if (req->cmd.opc != SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
+		if (tcp_req->req->cmd.opc != SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
 			continue;
 		}
 
-		nvme_tcp_req_complete(req, &cpl);
+		nvme_tcp_req_complete(tcp_req, &cpl);
 		nvme_tcp_req_put(tqpair, tcp_req);
 	}
 }
