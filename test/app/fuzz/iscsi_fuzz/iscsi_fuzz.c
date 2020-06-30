@@ -597,54 +597,54 @@ fuzz_iscsi_send_login_request(struct fuzz_iscsi_dev_ctx *dev_ctx, uint8_t sessio
 	req_pdu->bhs.flags = ISCSI_LOGIN_TRANSIT | (ISCSI_OPERATIONAL_NEGOTIATION_PHASE << 2) |
 			     ISCSI_FULL_FEATURE_PHASE;
 
-	req_pdu->data_segment_len = iscsi_append_text(conn, "InitiatorName", g_init_name,
+	req_pdu->data_segment_len = iscsi_append_text("InitiatorName", g_init_name,
 				    req_pdu->data, req_pdu->data_buf_len, req_pdu->data_segment_len);
-	req_pdu->data_segment_len = iscsi_append_text(conn, "HeaderDigest", "None",
+	req_pdu->data_segment_len = iscsi_append_text("HeaderDigest", "None",
 				    req_pdu->data, req_pdu->data_buf_len, req_pdu->data_segment_len);
-	req_pdu->data_segment_len = iscsi_append_text(conn, "DataDigest", "None",
+	req_pdu->data_segment_len = iscsi_append_text("DataDigest", "None",
 				    req_pdu->data, req_pdu->data_buf_len, req_pdu->data_segment_len);
-	req_pdu->data_segment_len = iscsi_append_text(conn, "DefaultTime2Wait", "2",
+	req_pdu->data_segment_len = iscsi_append_text("DefaultTime2Wait", "2",
 				    req_pdu->data, req_pdu->data_buf_len, req_pdu->data_segment_len);
-	req_pdu->data_segment_len = iscsi_append_text(conn, "DefaultTime2Retain", "0",
+	req_pdu->data_segment_len = iscsi_append_text("DefaultTime2Retain", "0",
 				    req_pdu->data, req_pdu->data_buf_len, req_pdu->data_segment_len);
-	req_pdu->data_segment_len = iscsi_append_text(conn, "IFMarker", "No",
+	req_pdu->data_segment_len = iscsi_append_text("IFMarker", "No",
 				    req_pdu->data, req_pdu->data_buf_len, req_pdu->data_segment_len);
-	req_pdu->data_segment_len = iscsi_append_text(conn, "OFMarker", "No",
+	req_pdu->data_segment_len = iscsi_append_text("OFMarker", "No",
 				    req_pdu->data, req_pdu->data_buf_len, req_pdu->data_segment_len);
-	req_pdu->data_segment_len = iscsi_append_text(conn, "ErrorRecoveryLevel", "0",
+	req_pdu->data_segment_len = iscsi_append_text("ErrorRecoveryLevel", "0",
 				    req_pdu->data, req_pdu->data_buf_len, req_pdu->data_segment_len);
 
 	if (session_type == SESSION_TYPE_DISCOVERY) {
 		/* Discovery PDU */
 		conn->sess->session_type = SESSION_TYPE_DISCOVERY;
-		req_pdu->data_segment_len = iscsi_append_text(conn, "SessionType", "Discovery",
+		req_pdu->data_segment_len = iscsi_append_text("SessionType", "Discovery",
 					    req_pdu->data, req_pdu->data_buf_len, req_pdu->data_segment_len);
-		req_pdu->data_segment_len = iscsi_append_text(conn, "MaxRecvDataSegmentLength", "32768",
+		req_pdu->data_segment_len = iscsi_append_text("MaxRecvDataSegmentLength", "32768",
 					    req_pdu->data, req_pdu->data_buf_len, req_pdu->data_segment_len);
 	} else {
 		/* Login PDU */
 		conn->sess->session_type = SESSION_TYPE_NORMAL;
-		req_pdu->data_segment_len = iscsi_append_text(conn, "SessionType", "Normal",
+		req_pdu->data_segment_len = iscsi_append_text("SessionType", "Normal",
 					    req_pdu->data, req_pdu->data_buf_len, req_pdu->data_segment_len);
-		req_pdu->data_segment_len = iscsi_append_text(conn, "TargetName", g_tgt_name,
+		req_pdu->data_segment_len = iscsi_append_text("TargetName", g_tgt_name,
 					    req_pdu->data, req_pdu->data_buf_len, req_pdu->data_segment_len);
-		req_pdu->data_segment_len = iscsi_append_text(conn, "InitialR2T", "No",
+		req_pdu->data_segment_len = iscsi_append_text("InitialR2T", "No",
 					    req_pdu->data, req_pdu->data_buf_len, req_pdu->data_segment_len);
-		req_pdu->data_segment_len = iscsi_append_text(conn, "ImmediateData", "Yes",
+		req_pdu->data_segment_len = iscsi_append_text("ImmediateData", "Yes",
 					    req_pdu->data, req_pdu->data_buf_len, req_pdu->data_segment_len);
-		req_pdu->data_segment_len = iscsi_append_text(conn, "MaxBurstLength", "16776192",
+		req_pdu->data_segment_len = iscsi_append_text("MaxBurstLength", "16776192",
 					    req_pdu->data, req_pdu->data_buf_len, req_pdu->data_segment_len);
-		req_pdu->data_segment_len = iscsi_append_text(conn, "FirstBurstLength", "262144",
+		req_pdu->data_segment_len = iscsi_append_text("FirstBurstLength", "262144",
 					    req_pdu->data, req_pdu->data_buf_len, req_pdu->data_segment_len);
-		req_pdu->data_segment_len = iscsi_append_text(conn, "MaxOutstandingR2T", "1",
+		req_pdu->data_segment_len = iscsi_append_text("MaxOutstandingR2T", "1",
 					    req_pdu->data, req_pdu->data_buf_len, req_pdu->data_segment_len);
-		req_pdu->data_segment_len = iscsi_append_text(conn, "MaxConnections", "1",
+		req_pdu->data_segment_len = iscsi_append_text("MaxConnections", "1",
 					    req_pdu->data, req_pdu->data_buf_len, req_pdu->data_segment_len);
-		req_pdu->data_segment_len = iscsi_append_text(conn, "DataPDUInOrder", "Yes",
+		req_pdu->data_segment_len = iscsi_append_text("DataPDUInOrder", "Yes",
 					    req_pdu->data, req_pdu->data_buf_len, req_pdu->data_segment_len);
-		req_pdu->data_segment_len = iscsi_append_text(conn, "DataSequenceInOrder", "Yes",
+		req_pdu->data_segment_len = iscsi_append_text("DataSequenceInOrder", "Yes",
 					    req_pdu->data, req_pdu->data_buf_len, req_pdu->data_segment_len);
-		req_pdu->data_segment_len = iscsi_append_text(conn, "MaxRecvDataSegmentLength", "262144",
+		req_pdu->data_segment_len = iscsi_append_text("MaxRecvDataSegmentLength", "262144",
 					    req_pdu->data, req_pdu->data_buf_len, req_pdu->data_segment_len);
 	}
 
