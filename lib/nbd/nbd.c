@@ -546,6 +546,7 @@ static int
 nbd_io_exec(struct spdk_nbd_disk *nbd)
 {
 	struct nbd_io *io, *io_tmp;
+	int io_count = 0;
 	int ret = 0;
 
 	/*
@@ -561,12 +562,14 @@ nbd_io_exec(struct spdk_nbd_disk *nbd)
 			TAILQ_REMOVE(&nbd->received_io_list, io, tailq);
 			ret = nbd_submit_bdev_io(nbd, io);
 			if (ret < 0) {
-				break;
+				return ret;
 			}
+
+			io_count++;
 		}
 	}
 
-	return ret;
+	return io_count;
 }
 
 static int
@@ -574,6 +577,7 @@ nbd_io_recv_internal(struct spdk_nbd_disk *nbd)
 {
 	struct nbd_io *io;
 	int ret = 0;
+	int received = 0;
 
 	if (nbd->io_in_recv == NULL) {
 		nbd->io_in_recv = nbd_get_io(nbd);
@@ -594,6 +598,7 @@ nbd_io_recv_internal(struct spdk_nbd_disk *nbd)
 		}
 
 		io->offset += ret;
+		received = ret;
 
 		/* request is fully received */
 		if (io->offset == sizeof(io->req)) {
@@ -649,6 +654,7 @@ nbd_io_recv_internal(struct spdk_nbd_disk *nbd)
 		}
 
 		io->offset += ret;
+		received += ret;
 
 		/* request payload is fully received */
 		if (io->offset == io->payload_size) {
@@ -660,13 +666,13 @@ nbd_io_recv_internal(struct spdk_nbd_disk *nbd)
 
 	}
 
-	return 0;
+	return received;
 }
 
 static int
 nbd_io_recv(struct spdk_nbd_disk *nbd)
 {
-	int i, ret = 0;
+	int i, rc, ret = 0;
 
 	/*
 	 * nbd server should not accept request in both soft and hard
@@ -677,13 +683,14 @@ nbd_io_recv(struct spdk_nbd_disk *nbd)
 	}
 
 	for (i = 0; i < GET_IO_LOOP_COUNT; i++) {
-		ret = nbd_io_recv_internal(nbd);
-		if (ret != 0) {
-			return ret;
+		rc = nbd_io_recv_internal(nbd);
+		if (rc < 0) {
+			return rc;
 		}
+		ret += rc;
 	}
 
-	return 0;
+	return ret;
 }
 
 static int
@@ -691,6 +698,7 @@ nbd_io_xmit_internal(struct spdk_nbd_disk *nbd)
 {
 	struct nbd_io *io;
 	int ret = 0;
+	int sent = 0;
 
 	io = TAILQ_FIRST(&nbd->executed_io_list);
 	if (io == NULL) {
@@ -713,6 +721,7 @@ nbd_io_xmit_internal(struct spdk_nbd_disk *nbd)
 		}
 
 		io->offset += ret;
+		sent = ret;
 
 		/* response is fully transmitted */
 		if (io->offset == sizeof(io->resp)) {
@@ -735,23 +744,25 @@ nbd_io_xmit_internal(struct spdk_nbd_disk *nbd)
 		}
 
 		io->offset += ret;
+		sent += ret;
 
 		/* read payload is fully transmitted */
 		if (io->offset == io->payload_size) {
 			nbd_put_io(nbd, io);
-			return 0;
+			return sent;
 		}
 	}
 
 reinsert:
 	TAILQ_INSERT_HEAD(&nbd->executed_io_list, io, tailq);
-	return ret;
+	return ret < 0 ? ret : sent;
 }
 
 static int
 nbd_io_xmit(struct spdk_nbd_disk *nbd)
 {
 	int ret = 0;
+	int rc;
 
 	/*
 	 * For soft disconnection, nbd server must handle all outstanding
@@ -762,10 +773,12 @@ nbd_io_xmit(struct spdk_nbd_disk *nbd)
 	}
 
 	while (!TAILQ_EMPTY(&nbd->executed_io_list)) {
-		ret = nbd_io_xmit_internal(nbd);
-		if (ret != 0) {
-			return ret;
+		rc = nbd_io_xmit_internal(nbd);
+		if (rc < 0) {
+			return rc;
 		}
+
+		ret += rc;
 	}
 
 	/*
@@ -776,7 +789,7 @@ nbd_io_xmit(struct spdk_nbd_disk *nbd)
 		return -1;
 	}
 
-	return 0;
+	return ret;
 }
 
 /**
@@ -787,22 +800,25 @@ nbd_io_xmit(struct spdk_nbd_disk *nbd)
 static int
 _nbd_poll(struct spdk_nbd_disk *nbd)
 {
-	int rc;
+	int received, sent, executed;
 
 	/* transmit executed io first */
-	rc = nbd_io_xmit(nbd);
-	if (rc < 0) {
-		return rc;
+	sent = nbd_io_xmit(nbd);
+	if (sent < 0) {
+		return sent;
 	}
 
-	rc = nbd_io_recv(nbd);
-	if (rc < 0) {
-		return rc;
+	received = nbd_io_recv(nbd);
+	if (received < 0) {
+		return received;
 	}
 
-	rc = nbd_io_exec(nbd);
+	executed = nbd_io_exec(nbd);
+	if (executed < 0) {
+		return executed;
+	}
 
-	return rc;
+	return sent + received + executed;
 }
 
 static int
@@ -818,7 +834,7 @@ nbd_poll(void *arg)
 		spdk_nbd_stop(nbd);
 	}
 
-	return SPDK_POLLER_BUSY;
+	return rc > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
 static void *
