@@ -1863,6 +1863,7 @@ nvme_rdma_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	rqpair = nvme_rdma_qpair(qpair);
 	nvme_transport_ctrlr_disconnect_qpair(ctrlr, qpair);
 	if (rqpair->defer_deletion_to_pg) {
+		nvme_qpair_set_state(qpair, NVME_QPAIR_DESTROYING);
 		return 0;
 	}
 
