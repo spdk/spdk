@@ -374,6 +374,12 @@ ioat_channel_destruct(struct spdk_ioat_chan *ioat)
 	}
 }
 
+uint32_t
+spdk_ioat_get_max_descriptors(struct spdk_ioat_chan *ioat)
+{
+	return 1 << ioat->ring_size_order;
+}
+
 static int
 ioat_channel_start(struct spdk_ioat_chan *ioat)
 {

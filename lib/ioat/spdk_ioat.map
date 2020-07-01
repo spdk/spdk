@@ -11,6 +11,7 @@
 	spdk_ioat_flush;
 	spdk_ioat_process_events;
 	spdk_ioat_get_dma_capabilities;
+	spdk_ioat_get_max_descriptors;
 
 	local: *;
 };

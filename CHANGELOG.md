@@ -2,6 +2,10 @@
 
 ## v20.07: (Upcoming Release)
 
+### ioat
+
+A new API `spdk_ioat_get_max_descriptors` was added.
+
 ### nvmf
 
 The NVMe-oF target no longer supports connecting scheduling configuration and instead
