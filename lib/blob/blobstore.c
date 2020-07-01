@@ -6878,6 +6878,7 @@ blob_insert_cluster_msg(void *arg)
 		if (ctx->extent_page != 0) {
 			assert(spdk_bit_array_get(ctx->blob->bs->used_md_pages, ctx->extent_page) == true);
 			bs_release_md_page(ctx->blob->bs, ctx->extent_page);
+			ctx->extent_page = 0;
 		}
 		/* Extent page already allocated.
 		 * Every cluster allocation, requires just an update of single extent page. */
