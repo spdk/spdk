@@ -63,6 +63,7 @@ struct spdk_conf {
 };
 
 #define CF_DELIM " \t"
+#define CF_DELIM_KEY " \t="
 
 #define LIB_MAX_TMPBUF 1024
 
@@ -501,7 +502,7 @@ parse_line(struct spdk_conf *cp, char *lp)
 			SPDK_ERRLOG("unknown section\n");
 			return -1;
 		}
-		key = spdk_strsepq(&arg, CF_DELIM);
+		key = spdk_strsepq(&arg, CF_DELIM_KEY);
 		if (key == NULL) {
 			SPDK_ERRLOG("broken key\n");
 			return -1;
