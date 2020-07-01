@@ -1355,7 +1355,7 @@ nvme_ctrlr_identify_done(void *arg, const struct spdk_nvme_cpl *cpl)
 		SPDK_DEBUGLOG(SPDK_LOG_NVME, "transport max_sges %u\n", ctrlr->max_sges);
 	}
 
-	if (ctrlr->cdata.oacs.security) {
+	if (ctrlr->cdata.oacs.security && !(ctrlr->quirks & NVME_QUIRK_OACS_SECURITY)) {
 		ctrlr->flags |= SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED;
 	}
 

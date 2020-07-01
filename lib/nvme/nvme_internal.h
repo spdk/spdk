@@ -145,6 +145,11 @@ extern pid_t g_spdk_nvme_pid;
  */
 #define NVME_QUIRK_MAXIMUM_PCI_ACCESS_WIDTH 0x1000
 
+/**
+ * The SSD does not support OPAL even through it sets the security bit in OACS.
+ */
+#define NVME_QUIRK_OACS_SECURITY 0x2000
+
 #define NVME_MAX_ASYNC_EVENTS	(8)
 
 #define NVME_MAX_ADMIN_TIMEOUT_IN_SECS	(30)
