@@ -216,13 +216,14 @@ iscsi_portal_close(struct spdk_iscsi_portal *p)
 static int
 iscsi_parse_portal(const char *portalstring, struct spdk_iscsi_portal **ip)
 {
-	char *host = NULL, *port = NULL;
-	int len, rc = -1;
+	char host[MAX_PORTAL_ADDR + 1] = {};
+	char port[MAX_PORTAL_PORT + 1] = {};
+	int len;
 	const char *p;
 
 	if (portalstring == NULL) {
 		SPDK_ERRLOG("portal error\n");
-		goto error_out;
+		return -EINVAL;
 	}
 
 	/* IP address */
@@ -231,7 +232,7 @@ iscsi_parse_portal(const char *portalstring, struct spdk_iscsi_portal **ip)
 		p = strchr(portalstring + 1, ']');
 		if (p == NULL) {
 			SPDK_ERRLOG("portal error\n");
-			goto error_out;
+			return -EINVAL;
 		}
 		p++;
 	} else {
@@ -243,29 +244,20 @@ iscsi_parse_portal(const char *portalstring, struct spdk_iscsi_portal **ip)
 	}
 
 	len = p - portalstring;
-	host = malloc(len + 1);
-	if (host == NULL) {
-		SPDK_ERRLOG("malloc() failed for host\n");
-		goto error_out;
+	if (len > MAX_PORTAL_ADDR) {
+		return -EINVAL;
 	}
 	memcpy(host, portalstring, len);
 	host[len] = '\0';
 
 	/* Port number (IPv4 and IPv6 are the same) */
 	if (p[0] == '\0') {
-		port = malloc(PORTNUMSTRLEN);
-		if (!port) {
-			SPDK_ERRLOG("malloc() failed for port\n");
-			goto error_out;
-		}
-		snprintf(port, PORTNUMSTRLEN, "%d", DEFAULT_PORT);
+		snprintf(port, MAX_PORTAL_PORT, "%d", DEFAULT_PORT);
 	} else {
 		p++;
 		len = strlen(p);
-		port = malloc(len + 1);
-		if (port == NULL) {
-			SPDK_ERRLOG("malloc() failed for port\n");
-			goto error_out;
+		if (len > MAX_PORTAL_PORT) {
+			return -EINVAL;
 		}
 		memcpy(port, p, len);
 		port[len] = '\0';
@@ -273,15 +265,10 @@ iscsi_parse_portal(const char *portalstring, struct spdk_iscsi_portal **ip)
 
 	*ip = iscsi_portal_create(host, port);
 	if (!*ip) {
-		goto error_out;
+		return -EINVAL;
 	}
 
-	rc = 0;
-error_out:
-	free(host);
-	free(port);
-
-	return rc;
+	return 0;
 }
 
 struct spdk_iscsi_portal_grp *
