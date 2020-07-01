@@ -544,8 +544,8 @@ _init_thread(void *arg1)
 	g_num_workers++;
 	pthread_mutex_unlock(&g_workers_lock);
 
-	/* TODO: remove batch check once implemented for IOAT */
-	if ((g_capabilites & ACCEL_BATCH) == ACCEL_BATCH && g_queue_depth > 1) {
+	/* Batching is only possible if there is at least 2 operations. */
+	if (g_queue_depth > 1) {
 
 		/* Selected engine supports batching and we have enough, so do it. */
 		max_per_batch = spdk_accel_batch_get_max(worker->ch);

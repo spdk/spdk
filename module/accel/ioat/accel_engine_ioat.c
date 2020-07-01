@@ -288,8 +288,14 @@ static int
 ioat_batch_prep_copy(void *cb_arg, struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
 		     void *dst, void *src, uint64_t nbytes, spdk_accel_completion_cb cb)
 {
-	/* TODO - HW ACCELERATED */
-	return 0;;
+	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
+	struct ioat_task *ioat_task = (struct ioat_task *)cb_arg;
+
+	ioat_task->cb = cb;
+	ioat_ch->hw_batch = true;
+
+	/* Call the IOAT library prep function. */
+	return spdk_ioat_build_copy(ioat_ch->ioat_ch, ioat_task, ioat_done, dst, src, nbytes);
 }
 
 static int
@@ -297,8 +303,14 @@ ioat_batch_prep_fill(void *cb_arg, struct spdk_io_channel *ch,
 		     struct spdk_accel_batch *batch, void *dst, uint8_t fill,
 		     uint64_t nbytes, spdk_accel_completion_cb cb)
 {
-	/* TODO - HW ACCELERATED */
-	return 0;
+	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
+	struct ioat_task *ioat_task = (struct ioat_task *)cb_arg;
+
+	ioat_task->cb = cb;
+	ioat_ch->hw_batch = true;
+
+	/* Call the IOAT library prep function. */
+	return spdk_ioat_build_fill(ioat_ch->ioat_ch, ioat_task, ioat_done, dst, fill, nbytes);
 }
 
 static int
@@ -391,7 +403,9 @@ ioat_batch_submit(void *cb_arg, struct spdk_io_channel *ch, struct spdk_accel_ba
 		return -EINVAL;
 	}
 
-	/* TODO submit the batched HW items first. */
+	/* Flush the batched HW items first. */
+	spdk_ioat_flush(ioat_ch->ioat_ch);
+	ioat_ch->hw_batch = false;
 
 	/* Complete the batched software items. */
 	while ((op = TAILQ_FIRST(&ioat_ch->sw_batch))) {
