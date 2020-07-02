@@ -720,13 +720,6 @@ __attribute__((constructor)) static void pci_drv ## _register(void)	\
 }
 
 /**
- * Get the NVMe PCI driver object.
- *
- * \return PCI driver.
- */
-struct spdk_pci_driver *spdk_pci_nvme_get_driver(void);
-
-/**
  * Get the VMD PCI driver object.
  *
  * \return PCI driver.
@@ -758,6 +751,13 @@ struct spdk_pci_driver *spdk_pci_virtio_get_driver(void);
  * Get PCI driver by name (e.g. "nvme", "vmd", "ioat").
  */
 struct spdk_pci_driver *spdk_pci_get_driver(const char *name);
+
+/**
+ * Get the NVMe PCI driver object.
+ *
+ * \return PCI driver.
+ */
+struct spdk_pci_driver *spdk_pci_nvme_get_driver(void);
 
 /**
  * Enumerate all PCI devices supported by the provided driver and try to

@@ -189,6 +189,12 @@ spdk_pci_driver_register(const char *name, struct spdk_pci_id *id_table, uint32_
 }
 
 struct spdk_pci_driver *
+spdk_pci_nvme_get_driver(void)
+{
+	return spdk_pci_get_driver("nvme");
+}
+
+struct spdk_pci_driver *
 spdk_pci_get_driver(const char *name)
 {
 	struct spdk_pci_driver *driver;

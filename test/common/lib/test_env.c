@@ -47,6 +47,8 @@ void free_cores(void);
 
 DEFINE_STUB(spdk_process_is_primary, bool, (void), true)
 DEFINE_STUB(spdk_memzone_lookup, void *, (const char *name), NULL)
+DEFINE_STUB_V(spdk_pci_driver_register, (const char *name, struct spdk_pci_id *id_table,
+		uint32_t flags));
 DEFINE_STUB(spdk_pci_nvme_get_driver, struct spdk_pci_driver *, (void), NULL)
 DEFINE_STUB(spdk_pci_ioat_get_driver, struct spdk_pci_driver *, (void), NULL)
 DEFINE_STUB(spdk_pci_virtio_get_driver, struct spdk_pci_driver *, (void), NULL)

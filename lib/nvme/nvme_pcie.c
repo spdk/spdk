@@ -2546,6 +2546,20 @@ nvme_pcie_poll_group_destroy(struct spdk_nvme_transport_poll_group *tgroup)
 	return 0;
 }
 
+static struct spdk_pci_id nvme_pci_driver_id[] = {
+	{
+		.class_id = SPDK_PCI_CLASS_NVME,
+		.vendor_id = SPDK_PCI_ANY_ID,
+		.device_id = SPDK_PCI_ANY_ID,
+		.subvendor_id = SPDK_PCI_ANY_ID,
+		.subdevice_id = SPDK_PCI_ANY_ID,
+	},
+	{ .vendor_id = 0, /* sentinel */ },
+};
+
+SPDK_PCI_DRIVER_REGISTER("nvme", nvme_pci_driver_id,
+			 SPDK_PCI_DRIVER_NEED_MAPPING | SPDK_PCI_DRIVER_WC_ACTIVATE);
+
 const struct spdk_nvme_transport_ops pcie_ops = {
 	.name = "PCIE",
 	.type = SPDK_NVME_TRANSPORT_PCIE,
