@@ -2738,7 +2738,7 @@ nvme_rdma_poll_group_process_completions(struct spdk_nvme_transport_poll_group *
 	STAILQ_FOREACH_SAFE(qpair_tracker, &group->destroyed_qpairs, link, tmp_qpair_tracker) {
 		qpair_tracker->completed_cycles++;
 		rqpair = qpair_tracker->destroyed_qpair_tracker;
-		if ((rqpair->current_num_sends == 0 && rqpair->current_num_sends == 0) ||
+		if ((rqpair->current_num_sends == 0 && rqpair->current_num_recvs == 0) ||
 		    qpair_tracker->completed_cycles > NVME_RDMA_DESTROYED_QPAIR_EXPIRATION_CYCLES) {
 			nvme_rdma_poll_group_delete_qpair(group, qpair_tracker);
 		}
