@@ -38,6 +38,9 @@
 
 #include "spdk/bdev.h"
 
+#define LB_SIZE_4K	0x1000UL
+#define LB_SIZE_512B	0x200UL
+
 /**
  * Get the first compression bdev.
  *
@@ -85,9 +88,10 @@ typedef void (*spdk_delete_compress_complete)(void *cb_arg, int bdeverrno);
  *
  * \param bdev_name Bdev on which compression bdev will be created.
  * \param pm_path Path to persistent memory.
+ * \param lb_size Logical block size for the compressed volume in bytes. Must be 4K or 512.
  * \return 0 on success, other on failure.
  */
-int create_compress_bdev(const char *bdev_name, const char *pm_path);
+int create_compress_bdev(const char *bdev_name, const char *pm_path, uint32_t lb_size);
 
 /**
  * Delete compress bdev.

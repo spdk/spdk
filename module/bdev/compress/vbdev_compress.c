@@ -188,7 +188,7 @@ static struct rte_comp_xform g_decomp_xform = {
 static void vbdev_compress_examine(struct spdk_bdev *bdev);
 static void vbdev_compress_claim(struct vbdev_compress *comp_bdev);
 static void vbdev_compress_queue_io(struct spdk_bdev_io *bdev_io);
-struct vbdev_compress *_prepare_for_load_init(struct spdk_bdev *bdev);
+struct vbdev_compress *_prepare_for_load_init(struct spdk_bdev *bdev, uint32_t lb_size);
 static void vbdev_compress_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
 static void comp_bdev_ch_destroy_cb(void *io_device, void *ctx_buf);
 static void vbdev_compress_delete_done(void *cb_arg, int bdeverrno);
@@ -1284,7 +1284,7 @@ vbdev_compress_base_bdev_hotremove_cb(void *ctx)
  * information for reducelib to init or load.
  */
 struct vbdev_compress *
-_prepare_for_load_init(struct spdk_bdev *bdev)
+_prepare_for_load_init(struct spdk_bdev *bdev, uint32_t lb_size)
 {
 	struct vbdev_compress *meta_ctx;
 
@@ -1306,7 +1306,12 @@ _prepare_for_load_init(struct spdk_bdev *bdev)
 	meta_ctx->backing_dev.blockcnt = bdev->blockcnt;
 
 	meta_ctx->params.chunk_size = CHUNK_SIZE;
-	meta_ctx->params.logical_block_size = bdev->blocklen;
+	if (lb_size == 0) {
+		meta_ctx->params.logical_block_size = bdev->blocklen;
+	} else {
+		meta_ctx->params.logical_block_size = lb_size;
+	}
+
 	meta_ctx->params.backing_io_unit_size = BACKING_IO_SZ;
 	return meta_ctx;
 }
@@ -1334,12 +1339,12 @@ _set_pmd(struct vbdev_compress *comp_dev)
 
 /* Call reducelib to initialize a new volume */
 static int
-vbdev_init_reduce(struct spdk_bdev *bdev, const char *pm_path)
+vbdev_init_reduce(struct spdk_bdev *bdev, const char *pm_path, uint32_t lb_size)
 {
 	struct vbdev_compress *meta_ctx;
 	int rc;
 
-	meta_ctx = _prepare_for_load_init(bdev);
+	meta_ctx = _prepare_for_load_init(bdev, lb_size);
 	if (meta_ctx == NULL) {
 		return -EINVAL;
 	}
@@ -1471,7 +1476,7 @@ comp_bdev_ch_destroy_cb(void *io_device, void *ctx_buf)
 
 /* RPC entry point for compression vbdev creation. */
 int
-create_compress_bdev(const char *bdev_name, const char *pm_path)
+create_compress_bdev(const char *bdev_name, const char *pm_path, uint32_t lb_size)
 {
 	struct spdk_bdev *bdev;
 
@@ -1480,7 +1485,12 @@ create_compress_bdev(const char *bdev_name, const char *pm_path)
 		return -ENODEV;
 	}
 
-	return vbdev_init_reduce(bdev, pm_path);;
+	if ((lb_size != 0) && (lb_size != LB_SIZE_4K) && (lb_size != LB_SIZE_512B)) {
+		SPDK_ERRLOG("Logical block size must be 512 or 4096\n");
+		return -EINVAL;
+	}
+
+	return vbdev_init_reduce(bdev, pm_path, lb_size);
 }
 
 /* On init, just init the compress drivers. All metadata is stored on disk. */
@@ -1822,7 +1832,7 @@ vbdev_compress_examine(struct spdk_bdev *bdev)
 		return;
 	}
 
-	meta_ctx = _prepare_for_load_init(bdev);
+	meta_ctx = _prepare_for_load_init(bdev, 0);
 	if (meta_ctx == NULL) {
 		spdk_bdev_module_examine_done(&compress_if);
 		return;

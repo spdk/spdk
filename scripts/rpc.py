@@ -177,12 +177,14 @@ if __name__ == "__main__":
     def bdev_compress_create(args):
         print_json(rpc.bdev.bdev_compress_create(args.client,
                                                  base_bdev_name=args.base_bdev_name,
-                                                 pm_path=args.pm_path))
+                                                 pm_path=args.pm_path,
+                                                 lb_size=args.lb_size))
 
     p = subparsers.add_parser('bdev_compress_create', aliases=['construct_compress_bdev'],
                               help='Add a compress vbdev')
     p.add_argument('-b', '--base_bdev_name', help="Name of the base bdev")
     p.add_argument('-p', '--pm_path', help="Path to persistent memory")
+    p.add_argument('-l', '--lb_size', help="Compressed vol logical block size (optional, if used must be 512 or 4096)", type=int, default=0)
     p.set_defaults(func=bdev_compress_create)
 
     def bdev_compress_delete(args):
