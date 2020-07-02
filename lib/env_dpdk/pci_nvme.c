@@ -35,30 +35,22 @@
 
 #include "spdk/pci_ids.h"
 
-static struct rte_pci_id nvme_pci_driver_id[] = {
+static struct spdk_pci_id nvme_pci_driver_id[] = {
 	{
 		.class_id = SPDK_PCI_CLASS_NVME,
-		.vendor_id = PCI_ANY_ID,
-		.device_id = PCI_ANY_ID,
-		.subsystem_vendor_id = PCI_ANY_ID,
-		.subsystem_device_id = PCI_ANY_ID,
+		.vendor_id = SPDK_PCI_ANY_ID,
+		.device_id = SPDK_PCI_ANY_ID,
+		.subvendor_id = SPDK_PCI_ANY_ID,
+		.subdevice_id = SPDK_PCI_ANY_ID,
 	},
 	{ .vendor_id = 0, /* sentinel */ },
 };
 
 static struct spdk_pci_driver g_nvme_pci_drv = {
-	.driver = {
-		.drv_flags	= RTE_PCI_DRV_NEED_MAPPING
-		| RTE_PCI_DRV_WC_ACTIVATE
-		,
-		.id_table	= nvme_pci_driver_id,
-		.probe		= pci_device_init,
-		.remove		= pci_device_fini,
-		.driver.name	= "spdk_nvme",
-	},
-
-	.cb_fn = NULL,
-	.cb_arg = NULL,
+	.name = "nvme",
+	.id_table = nvme_pci_driver_id,
+	.drv_flags	= SPDK_PCI_DRIVER_NEED_MAPPING |
+	SPDK_PCI_DRIVER_WC_ACTIVATE
 };
 
 struct spdk_pci_driver *
@@ -67,4 +59,4 @@ spdk_pci_nvme_get_driver(void)
 	return &g_nvme_pci_drv;
 }
 
-SPDK_PMD_REGISTER_PCI(g_nvme_pci_drv);
+SPDK_PCI_DRIVER_REGISTER(g_nvme_pci_drv);

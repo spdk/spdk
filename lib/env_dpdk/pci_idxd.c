@@ -35,23 +35,16 @@
 
 #include "spdk/pci_ids.h"
 
-#define SPDK_IDXD_PCI_DEVICE(DEVICE_ID) RTE_PCI_DEVICE(SPDK_PCI_VID_INTEL, DEVICE_ID)
-static struct rte_pci_id idxd_driver_id[] = {
+#define SPDK_IDXD_PCI_DEVICE(DEVICE_ID) SPDK_PCI_DEVICE(SPDK_PCI_VID_INTEL, DEVICE_ID)
+static struct spdk_pci_id idxd_driver_id[] = {
 	{SPDK_IDXD_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IDXD)},
 	{ .vendor_id = 0, /* sentinel */ },
 };
 
 static struct spdk_pci_driver g_idxd_pci_drv = {
-	.driver = {
-		.drv_flags	= RTE_PCI_DRV_NEED_MAPPING,
-		.id_table	= idxd_driver_id,
-		.probe		= pci_device_init,
-		.remove		= pci_device_fini,
-		.driver.name	= "spdk_idxd",
-	},
-
-	.cb_fn = NULL,
-	.cb_arg = NULL,
+	.name = "idxd",
+	.id_table = idxd_driver_id,
+	.drv_flags = SPDK_PCI_DRIVER_NEED_MAPPING
 };
 
 struct spdk_pci_driver *
@@ -60,4 +53,4 @@ spdk_pci_idxd_get_driver(void)
 	return &g_idxd_pci_drv;
 }
 
-SPDK_PMD_REGISTER_PCI(g_idxd_pci_drv);
+SPDK_PCI_DRIVER_REGISTER(g_idxd_pci_drv);

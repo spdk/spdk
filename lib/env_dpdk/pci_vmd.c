@@ -35,24 +35,16 @@
 
 #include "spdk/pci_ids.h"
 
-static struct rte_pci_id vmd_pci_driver_id[] = {
-	{ RTE_PCI_DEVICE(SPDK_PCI_VID_INTEL, PCI_DEVICE_ID_INTEL_VMD) },
+static struct spdk_pci_id vmd_pci_driver_id[] = {
+	{ SPDK_PCI_DEVICE(SPDK_PCI_VID_INTEL, PCI_DEVICE_ID_INTEL_VMD) },
 	{ .vendor_id = 0, /* sentinel */ },
 };
 
 static struct spdk_pci_driver g_vmd_pci_drv = {
-	.driver = {
-		.drv_flags	= RTE_PCI_DRV_NEED_MAPPING
-		| RTE_PCI_DRV_WC_ACTIVATE
-		,
-		.id_table	= vmd_pci_driver_id,
-		.probe		= pci_device_init,
-		.remove		= pci_device_fini,
-		.driver.name	= "spdk_vmd",
-	},
-
-	.cb_fn = NULL,
-	.cb_arg = NULL,
+	.name = "vmd",
+	.id_table = vmd_pci_driver_id,
+	.drv_flags = SPDK_PCI_DRIVER_NEED_MAPPING |
+	SPDK_PCI_DRIVER_WC_ACTIVATE
 };
 
 struct spdk_pci_driver *
@@ -61,4 +53,4 @@ spdk_pci_vmd_get_driver(void)
 	return &g_vmd_pci_drv;
 }
 
-SPDK_PMD_REGISTER_PCI(g_vmd_pci_drv);
+SPDK_PCI_DRIVER_REGISTER(g_vmd_pci_drv);

@@ -35,27 +35,19 @@
 
 #include "spdk/pci_ids.h"
 
-static struct rte_pci_id virtio_pci_driver_id[] = {
-	{ RTE_PCI_DEVICE(SPDK_PCI_VID_VIRTIO, PCI_DEVICE_ID_VIRTIO_SCSI_MODERN) },
-	{ RTE_PCI_DEVICE(SPDK_PCI_VID_VIRTIO, PCI_DEVICE_ID_VIRTIO_BLK_MODERN) },
-	{ RTE_PCI_DEVICE(SPDK_PCI_VID_VIRTIO, PCI_DEVICE_ID_VIRTIO_SCSI_LEGACY) },
-	{ RTE_PCI_DEVICE(SPDK_PCI_VID_VIRTIO, PCI_DEVICE_ID_VIRTIO_BLK_LEGACY) },
+static struct spdk_pci_id virtio_pci_driver_id[] = {
+	{ SPDK_PCI_DEVICE(SPDK_PCI_VID_VIRTIO, PCI_DEVICE_ID_VIRTIO_SCSI_MODERN) },
+	{ SPDK_PCI_DEVICE(SPDK_PCI_VID_VIRTIO, PCI_DEVICE_ID_VIRTIO_BLK_MODERN) },
+	{ SPDK_PCI_DEVICE(SPDK_PCI_VID_VIRTIO, PCI_DEVICE_ID_VIRTIO_SCSI_LEGACY) },
+	{ SPDK_PCI_DEVICE(SPDK_PCI_VID_VIRTIO, PCI_DEVICE_ID_VIRTIO_BLK_LEGACY) },
 	{ .vendor_id = 0, /* sentinel */ },
 };
 
 static struct spdk_pci_driver g_virtio_pci_drv = {
-	.driver = {
-		.drv_flags	= RTE_PCI_DRV_NEED_MAPPING
-		| RTE_PCI_DRV_WC_ACTIVATE
-		,
-		.id_table	= virtio_pci_driver_id,
-		.probe		= pci_device_init,
-		.remove		= pci_device_fini,
-		.driver.name	= "spdk_virtio",
-	},
-
-	.cb_fn = NULL,
-	.cb_arg = NULL,
+	.name = "virtio",
+	.id_table = virtio_pci_driver_id,
+	.drv_flags = SPDK_PCI_DRIVER_NEED_MAPPING |
+	SPDK_PCI_DRIVER_WC_ACTIVATE
 };
 
 struct spdk_pci_driver *
@@ -64,4 +56,4 @@ spdk_pci_virtio_get_driver(void)
 	return &g_virtio_pci_drv;
 }
 
-SPDK_PMD_REGISTER_PCI(g_virtio_pci_drv);
+SPDK_PCI_DRIVER_REGISTER(g_virtio_pci_drv);
