@@ -41,6 +41,7 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/queue.h"
+#include "spdk/pci_ids.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -663,6 +664,13 @@ struct spdk_pci_id {
 	uint16_t	subdevice_id;	/**< Subsystem device ID or SPDK_PCI_ANY_ID. */
 };
 
+/** Device needs PCI BAR mapping (done with either IGB_UIO or VFIO) */
+#define SPDK_PCI_DRIVER_NEED_MAPPING 0x0001
+/** Device needs PCI BAR mapping with enabled write combining (wc) */
+#define SPDK_PCI_DRIVER_WC_ACTIVATE 0x0002
+
+void spdk_pci_driver_register(const char *name, struct spdk_pci_id *id_table, uint32_t flags);
+
 struct spdk_pci_device {
 	struct spdk_pci_device		*parent;
 	void				*dev_handle;
@@ -697,6 +705,19 @@ struct spdk_pci_device {
 };
 
 typedef int (*spdk_pci_enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev);
+
+#define SPDK_PCI_DEVICE(vend, dev)	        \
+	.class_id = SPDK_PCI_CLASS_ANY_ID,      \
+	.vendor_id = (vend),                    \
+	.device_id = (dev),                     \
+	.subvendor_id = SPDK_PCI_ANY_ID,        \
+	.subdevice_id = SPDK_PCI_ANY_ID
+
+#define SPDK_PCI_DRIVER_REGISTER(name, id_table, flags)			\
+__attribute__((constructor)) static void pci_drv ## _register(void)	\
+{									\
+	spdk_pci_driver_register(name, id_table, flags);		\
+}
 
 /**
  * Get the NVMe PCI driver object.

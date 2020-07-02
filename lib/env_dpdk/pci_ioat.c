@@ -89,16 +89,10 @@ static struct spdk_pci_id ioat_driver_id[] = {
 	{ .vendor_id = 0, /* sentinel */ },
 };
 
-static struct spdk_pci_driver g_ioat_pci_drv = {
-	.name = "ioat",
-	.id_table = ioat_driver_id,
-	.drv_flags = SPDK_PCI_DRIVER_NEED_MAPPING
-};
-
 struct spdk_pci_driver *
 spdk_pci_ioat_get_driver(void)
 {
-	return &g_ioat_pci_drv;
+	return spdk_pci_get_driver("ioat");
 }
 
-SPDK_PCI_DRIVER_REGISTER(g_ioat_pci_drv);
+SPDK_PCI_DRIVER_REGISTER("ioat", ioat_driver_id, SPDK_PCI_DRIVER_NEED_MAPPING);

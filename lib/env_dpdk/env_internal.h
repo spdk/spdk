@@ -59,24 +59,6 @@
 #define SHIFT_1GB	30 /* (1 << 30) == 1 GB */
 #define MASK_1GB	((1ULL << SHIFT_1GB) - 1)
 
-#define SPDK_PCI_DRIVER_REGISTER(pci_drv)								\
-__attribute__((constructor)) static void pci_drv ## _register(void)					\
-{													\
-	pci_driver_register(&pci_drv);									\
-}
-
-/** Device needs PCI BAR mapping (done with either IGB_UIO or VFIO) */
-#define SPDK_PCI_DRIVER_NEED_MAPPING 0x0001
-/** Device needs PCI BAR mapping with enabled write combining (wc) */
-#define SPDK_PCI_DRIVER_WC_ACTIVATE 0x0002
-
-#define SPDK_PCI_DEVICE(vend, dev)	        \
-	.class_id = SPDK_PCI_CLASS_ANY_ID,      \
-	.vendor_id = (vend),                    \
-	.device_id = (dev),                     \
-	.subvendor_id = SPDK_PCI_ANY_ID,        \
-	.subdevice_id = SPDK_PCI_ANY_ID
-
 #define SPDK_PCI_DRIVER_MAX_NAME_LEN 32
 struct spdk_pci_driver {
 	struct rte_pci_driver		driver;
@@ -90,7 +72,6 @@ struct spdk_pci_driver {
 	TAILQ_ENTRY(spdk_pci_driver)	tailq;
 };
 
-void pci_driver_register(struct spdk_pci_driver *driver);
 int pci_device_init(struct rte_pci_driver *driver, struct rte_pci_device *device);
 int pci_device_fini(struct rte_pci_device *device);
 

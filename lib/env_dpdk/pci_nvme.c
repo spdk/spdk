@@ -46,17 +46,11 @@ static struct spdk_pci_id nvme_pci_driver_id[] = {
 	{ .vendor_id = 0, /* sentinel */ },
 };
 
-static struct spdk_pci_driver g_nvme_pci_drv = {
-	.name = "nvme",
-	.id_table = nvme_pci_driver_id,
-	.drv_flags	= SPDK_PCI_DRIVER_NEED_MAPPING |
-	SPDK_PCI_DRIVER_WC_ACTIVATE
-};
-
 struct spdk_pci_driver *
 spdk_pci_nvme_get_driver(void)
 {
-	return &g_nvme_pci_drv;
+	return spdk_pci_get_driver("nvme");
 }
 
-SPDK_PCI_DRIVER_REGISTER(g_nvme_pci_drv);
+SPDK_PCI_DRIVER_REGISTER("nvme", nvme_pci_driver_id,
+			 SPDK_PCI_DRIVER_NEED_MAPPING | SPDK_PCI_DRIVER_WC_ACTIVATE);

@@ -41,16 +41,10 @@ static struct spdk_pci_id idxd_driver_id[] = {
 	{ .vendor_id = 0, /* sentinel */ },
 };
 
-static struct spdk_pci_driver g_idxd_pci_drv = {
-	.name = "idxd",
-	.id_table = idxd_driver_id,
-	.drv_flags = SPDK_PCI_DRIVER_NEED_MAPPING
-};
-
 struct spdk_pci_driver *
 spdk_pci_idxd_get_driver(void)
 {
-	return &g_idxd_pci_drv;
+	return spdk_pci_get_driver("idxd");
 }
 
-SPDK_PCI_DRIVER_REGISTER(g_idxd_pci_drv);
+SPDK_PCI_DRIVER_REGISTER("idxd", idxd_driver_id, SPDK_PCI_DRIVER_NEED_MAPPING);

@@ -172,8 +172,19 @@ detach_rte(struct spdk_pci_device *dev)
 }
 
 void
-pci_driver_register(struct spdk_pci_driver *driver)
+spdk_pci_driver_register(const char *name, struct spdk_pci_id *id_table, uint32_t flags)
 {
+	struct spdk_pci_driver *driver;
+
+	driver = calloc(1, sizeof(*driver));
+	if (!driver) {
+		/* we can't do any better than bailing atm */
+		return;
+	}
+
+	driver->name = name;
+	driver->id_table = id_table;
+	driver->drv_flags = flags;
 	TAILQ_INSERT_TAIL(&g_pci_drivers, driver, tailq);
 }
 
