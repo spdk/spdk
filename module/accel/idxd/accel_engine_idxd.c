@@ -110,7 +110,7 @@ struct idxd_task {
 	spdk_accel_completion_cb	cb;
 };
 
-pthread_mutex_t g_num_channels_lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t g_configuration_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static struct spdk_io_channel *idxd_get_io_channel(void);
 
@@ -458,9 +458,9 @@ _config_max_desc(struct spdk_io_channel_iter *i)
 	ch = spdk_io_channel_iter_get_channel(i);
 	chan = spdk_io_channel_get_ctx(ch);
 
-	pthread_mutex_lock(&g_num_channels_lock);
+	pthread_mutex_lock(&g_configuration_lock);
 	rc = spdk_idxd_reconfigure_chan(chan->chan, chan->dev->num_channels);
-	pthread_mutex_unlock(&g_num_channels_lock);
+	pthread_mutex_unlock(&g_configuration_lock);
 	if (rc == 0) {
 		chan->state = IDXD_CHANNEL_ACTIVE;
 	} else {
@@ -521,18 +521,19 @@ idxd_create_cb(void *io_device, void *ctx_buf)
 	 * channels. This enables dynamic load balancing for HW
 	 * flow control.
 	 */
+	pthread_mutex_lock(&g_configuration_lock);
 	rc = spdk_idxd_configure_chan(chan->chan);
 	if (rc) {
 		SPDK_ERRLOG("Failed to configure new channel rc = %d\n", rc);
 		chan->state = IDXD_CHANNEL_ERROR;
 		spdk_poller_unregister(&chan->poller);
+		pthread_mutex_unlock(&g_configuration_lock);
 		return rc;
 	}
 
 	chan->state = IDXD_CHANNEL_PAUSED;
-	pthread_mutex_lock(&g_num_channels_lock);
 	chan->dev->num_channels++;
-	pthread_mutex_unlock(&g_num_channels_lock);
+	pthread_mutex_unlock(&g_configuration_lock);
 
 	/*
 	 * Pause all channels so that we can set proper flow control
@@ -558,12 +559,12 @@ idxd_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct idxd_io_channel *chan = ctx_buf;
 
-	pthread_mutex_lock(&g_num_channels_lock);
+	pthread_mutex_lock(&g_configuration_lock);
 	assert(chan->dev->num_channels > 0);
 	chan->dev->num_channels--;
-	pthread_mutex_unlock(&g_num_channels_lock);
-
 	spdk_idxd_reconfigure_chan(chan->chan, 0);
+	pthread_mutex_unlock(&g_configuration_lock);
+
 	spdk_poller_unregister(&chan->poller);
 	spdk_idxd_put_channel(chan->chan);
 
