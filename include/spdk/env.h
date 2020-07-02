@@ -645,10 +645,11 @@ struct spdk_pci_addr {
 };
 
 struct spdk_pci_id {
-	uint16_t	vendor_id;
-	uint16_t	device_id;
-	uint16_t	subvendor_id;
-	uint16_t	subdevice_id;
+	uint32_t	class_id;	/**< Class ID or SPDK_PCI_CLASS_ANY_ID. */
+	uint16_t	vendor_id;	/**< Vendor ID or SPDK_PCI_ANY_ID. */
+	uint16_t	device_id;	/**< Device ID or SPDK_PCI_ANY_ID. */
+	uint16_t	subvendor_id;	/**< Subsystem vendor ID or SPDK_PCI_ANY_ID. */
+	uint16_t	subdevice_id;	/**< Subsystem device ID or SPDK_PCI_ANY_ID. */
 };
 
 struct spdk_pci_device {

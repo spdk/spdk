@@ -53,6 +53,7 @@ extern "C" {
 #define SPDK_PCI_VID_CNEXLABS		0x1d1d
 #define SPDK_PCI_VID_VMWARE		0x15ad
 
+#define SPDK_PCI_CLASS_ANY_ID		0xffffff
 /**
  * PCI class code for NVMe devices.
  *

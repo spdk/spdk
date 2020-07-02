@@ -48,6 +48,7 @@ test_nvme_quirks_striping(void)
 	CU_ASSERT((quirks & NVME_INTEL_QUIRK_STRIPING) == 0);
 
 	/* Set the vendor id to Intel, but no device id. No striping. */
+	pci_id.class_id = SPDK_PCI_CLASS_NVME;
 	pci_id.vendor_id = SPDK_PCI_VID_INTEL;
 	quirks = nvme_get_quirks(&pci_id);
 	CU_ASSERT((quirks & NVME_INTEL_QUIRK_STRIPING) == 0);

@@ -313,6 +313,7 @@ pci_device_init(struct rte_pci_driver *_drv,
 	dev->addr.bus = _dev->addr.bus;
 	dev->addr.dev = _dev->addr.devid;
 	dev->addr.func = _dev->addr.function;
+	dev->id.class_id = _dev->id.class_id;
 	dev->id.vendor_id = _dev->id.vendor_id;
 	dev->id.device_id = _dev->id.device_id;
 	dev->id.subvendor_id = _dev->id.subsystem_vendor_id;
