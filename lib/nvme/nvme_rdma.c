@@ -667,7 +667,7 @@ static inline int
 nvme_rdma_qpair_submit_recvs(struct nvme_rdma_qpair *rqpair)
 {
 	struct ibv_recv_wr *bad_recv_wr;
-	int rc;
+	int rc = 0;
 
 	if (rqpair->recvs_to_post.first) {
 		rc = ibv_post_recv(rqpair->rdma_qp->qp, rqpair->recvs_to_post.first, &bad_recv_wr);
@@ -679,12 +679,11 @@ nvme_rdma_qpair_submit_recvs(struct nvme_rdma_qpair *rqpair)
 				rqpair->current_num_recvs--;
 				bad_recv_wr = bad_recv_wr->next;
 			}
-			return rc;
 		}
 
 		rqpair->recvs_to_post.first = NULL;
 	}
-	return 0;
+	return rc;
 }
 
 /* Append the given send wr structure to the qpair's outstanding sends list. */
