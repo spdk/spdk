@@ -23,17 +23,18 @@ def bdev_set_options(client, bdev_io_pool_size=None, bdev_io_cache_size=None, bd
 
 
 @deprecated_alias('construct_compress_bdev')
-def bdev_compress_create(client, base_bdev_name, pm_path):
+def bdev_compress_create(client, base_bdev_name, pm_path, lb_size):
     """Construct a compress virtual block device.
 
     Args:
         base_bdev_name: name of the underlying base bdev
         pm_path: path to persistent memory
+        lb_size: logical block size for the compressed vol in bytes.  Must be 4K or 512.
 
     Returns:
         Name of created virtual block device.
     """
-    params = {'base_bdev_name': base_bdev_name, 'pm_path': pm_path}
+    params = {'base_bdev_name': base_bdev_name, 'pm_path': pm_path, 'lb_size': lb_size}
 
     return client.call('bdev_compress_create', params)
 

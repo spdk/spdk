@@ -149,6 +149,7 @@ SPDK_RPC_REGISTER_ALIAS_DEPRECATED(compress_set_pmd, set_compress_pmd)
 struct rpc_construct_compress {
 	char *base_bdev_name;
 	char *pm_path;
+	uint32_t lb_size;
 };
 
 /* Free the allocated memory resource after the RPC handling. */
@@ -163,6 +164,7 @@ free_rpc_construct_compress(struct rpc_construct_compress *r)
 static const struct spdk_json_object_decoder rpc_construct_compress_decoders[] = {
 	{"base_bdev_name", offsetof(struct rpc_construct_compress, base_bdev_name), spdk_json_decode_string},
 	{"pm_path", offsetof(struct rpc_construct_compress, pm_path), spdk_json_decode_string},
+	{"lb_size", offsetof(struct rpc_construct_compress, lb_size), spdk_json_decode_uint32},
 };
 
 /* Decode the parameters for this RPC method and properly construct the compress
@@ -181,12 +183,12 @@ rpc_bdev_compress_create(struct spdk_jsonrpc_request *request,
 				    SPDK_COUNTOF(rpc_construct_compress_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_COMPRESS, "spdk_json_decode_object failed\n");
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
 						 "spdk_json_decode_object failed");
 		goto cleanup;
 	}
 
-	rc = create_compress_bdev(req.base_bdev_name, req.pm_path);
+	rc = create_compress_bdev(req.base_bdev_name, req.pm_path, req.lb_size);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;

@@ -33,7 +33,11 @@ function create_vols() {
 	waitforbdev lvs0/lv0
 
 	$rpc_py compress_set_pmd -p "$pmd"
-	$rpc_py bdev_compress_create -b lvs0/lv0 -p /tmp/pmem
+	if [ -z "$1" ]; then
+		$rpc_py bdev_compress_create -b lvs0/lv0 -p /tmp/pmem
+	else
+		$rpc_py bdev_compress_create -b lvs0/lv0 -p /tmp/pmem -l $1
+	fi
 	waitforbdev COMP_lvs0/lv0
 }
 
@@ -54,7 +58,7 @@ function run_bdevperf() {
 	bdevperf_pid=$!
 	trap 'killprocess $bdevperf_pid; error_cleanup; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $bdevperf_pid
-	create_vols
+	create_vols $4
 	$rootdir/test/bdev/bdevperf/bdevperf.py perform_tests
 	destroy_vols
 	trap - SIGINT SIGTERM EXIT
@@ -78,7 +82,10 @@ esac
 mkdir -p /tmp/pmem
 
 # per patch bdevperf uses slightly different params than nightly
+# logical block size same as underlying device, then 512 then 4096
 run_bdevperf 32 4096 3
+run_bdevperf 32 4096 3 512
+run_bdevperf 32 4096 3 4096
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_bdevio
