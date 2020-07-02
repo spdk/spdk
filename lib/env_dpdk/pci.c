@@ -177,6 +177,20 @@ pci_driver_register(struct spdk_pci_driver *driver)
 	TAILQ_INSERT_TAIL(&g_pci_drivers, driver, tailq);
 }
 
+struct spdk_pci_driver *
+spdk_pci_get_driver(const char *name)
+{
+	struct spdk_pci_driver *driver;
+
+	TAILQ_FOREACH(driver, &g_pci_drivers, tailq) {
+		if (strcmp(driver->name, name) == 0) {
+			return driver;
+		}
+	}
+
+	return NULL;
+}
+
 static void
 pci_device_rte_hotremove(const char *device_name,
 			 enum rte_dev_event_type event,

@@ -734,6 +734,11 @@ struct spdk_pci_driver *spdk_pci_idxd_get_driver(void);
 struct spdk_pci_driver *spdk_pci_virtio_get_driver(void);
 
 /**
+ * Get PCI driver by name (e.g. "nvme", "vmd", "ioat").
+ */
+struct spdk_pci_driver *spdk_pci_get_driver(const char *name);
+
+/**
  * Enumerate all PCI devices supported by the provided driver and try to
  * attach those that weren't attached yet. The provided callback will be
  * called for each such device and its return code will decide whether that
