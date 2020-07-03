@@ -84,18 +84,6 @@ struct ap_task {
 	int			expected_status; /* used for compare */
 };
 
-inline static struct ap_task *
-__ap_task_from_accel_task(struct spdk_accel_task *at)
-{
-	return (struct ap_task *)((uintptr_t)at - sizeof(struct ap_task));
-}
-
-inline static struct spdk_accel_task *
-__accel_task_from_ap_task(struct ap_task *ap)
-{
-	return (struct spdk_accel_task *)((uintptr_t)ap + sizeof(struct ap_task));
-}
-
 static void
 dump_user_config(struct spdk_app_opts *opts)
 {
@@ -210,18 +198,18 @@ _submit_single(void *arg1, void *arg2)
 	task->worker->current_queue_depth++;
 	switch (g_workload_selection) {
 	case ACCEL_COPY:
-		rc = spdk_accel_submit_copy(worker->ch, task->dst,
-					    task->src, g_xfer_size_bytes, accel_done,
-					    __accel_task_from_ap_task(task));
+		rc = spdk_accel_submit_copy(worker->ch, task->dst, task->src,
+					    g_xfer_size_bytes, accel_done, task);
 		break;
 	case ACCEL_FILL:
 		/* For fill use the first byte of the task->dst buffer */
 		rc = spdk_accel_submit_fill(worker->ch, task->dst, *(uint8_t *)task->src,
-					    g_xfer_size_bytes, accel_done, __accel_task_from_ap_task(task));
+					    g_xfer_size_bytes, accel_done, task);
 		break;
 	case ACCEL_CRC32C:
-		rc = spdk_accel_submit_crc32c(worker->ch, (uint32_t *)task->dst, task->src, g_crc32c_seed,
-					      g_xfer_size_bytes, accel_done, __accel_task_from_ap_task(task));
+		rc = spdk_accel_submit_crc32c(worker->ch, (uint32_t *)task->dst,
+					      task->src, g_crc32c_seed,
+					      g_xfer_size_bytes, accel_done, task);
 		break;
 	case ACCEL_COMPARE:
 		random_num = rand() % 100;
@@ -233,12 +221,11 @@ _submit_single(void *arg1, void *arg2)
 			*(uint8_t *)task->dst = DATA_PATTERN;
 		}
 		rc = spdk_accel_submit_compare(worker->ch, task->dst, task->src,
-					       g_xfer_size_bytes, accel_done, __accel_task_from_ap_task(task));
+					       g_xfer_size_bytes, accel_done, task);
 		break;
 	case ACCEL_DUALCAST:
 		rc = spdk_accel_submit_dualcast(worker->ch, task->dst, task->dst2,
-						task->src, g_xfer_size_bytes, accel_done,
-						__accel_task_from_ap_task(task));
+						task->src, g_xfer_size_bytes, accel_done, task);
 		break;
 	default:
 		assert(false);
@@ -247,7 +234,7 @@ _submit_single(void *arg1, void *arg2)
 	}
 
 	if (rc) {
-		accel_done(__accel_task_from_ap_task(task), rc);
+		accel_done(task, rc);
 	}
 }
 
@@ -325,9 +312,9 @@ _accel_done(void *arg1)
 }
 
 static void
-batch_done(void *ref, int status)
+batch_done(void *cb_arg, int status)
 {
-	struct ap_task *task = __ap_task_from_accel_task(ref);
+	struct ap_task *task = (struct ap_task *)cb_arg;
 	struct worker_thread *worker = task->worker;
 
 	worker->current_queue_depth--;
@@ -468,28 +455,24 @@ _batch_prep_cmd(struct worker_thread *worker, struct ap_task *task, struct spdk_
 	switch (g_workload_selection) {
 	case ACCEL_COPY:
 		rc = spdk_accel_batch_prep_copy(worker->ch, batch, task->dst,
-						task->src, g_xfer_size_bytes, accel_done,
-						__accel_task_from_ap_task(task));
+						task->src, g_xfer_size_bytes, accel_done, task);
 		break;
 	case ACCEL_DUALCAST:
 		rc = spdk_accel_batch_prep_dualcast(worker->ch, batch, task->dst, task->dst2,
-						    task->src, g_xfer_size_bytes, accel_done,
-						    __accel_task_from_ap_task(task));
+						    task->src, g_xfer_size_bytes, accel_done, task);
 		break;
 	case ACCEL_COMPARE:
 		rc = spdk_accel_batch_prep_compare(worker->ch, batch, task->dst, task->src,
-						   g_xfer_size_bytes, accel_done,
-						   __accel_task_from_ap_task(task));
+						   g_xfer_size_bytes, accel_done, task);
 		break;
 	case ACCEL_FILL:
-		rc = spdk_accel_batch_prep_fill(worker->ch, batch, task->dst, *(uint8_t *)task->src,
-						g_xfer_size_bytes, accel_done,
-						__accel_task_from_ap_task(task));
+		rc = spdk_accel_batch_prep_fill(worker->ch, batch, task->dst,
+						*(uint8_t *)task->src,
+						g_xfer_size_bytes, accel_done, task);
 		break;
 	case ACCEL_CRC32C:
-		rc = spdk_accel_batch_prep_crc32c(worker->ch, batch, (uint32_t *)task->dst, task->src,
-						  g_crc32c_seed, g_xfer_size_bytes, accel_done,
-						  __accel_task_from_ap_task(task));
+		rc = spdk_accel_batch_prep_crc32c(worker->ch, batch, (uint32_t *)task->dst,
+						  task->src, g_crc32c_seed, g_xfer_size_bytes, accel_done, task);
 		break;
 	default:
 		assert(false);
@@ -523,7 +506,7 @@ _init_thread(void *arg1)
 	snprintf(task_pool_name, sizeof(task_pool_name), "task_pool_%d", g_num_workers);
 	worker->task_pool = spdk_mempool_create(task_pool_name,
 						g_queue_depth * 2,
-						spdk_accel_task_size() + sizeof(struct ap_task),
+						sizeof(struct ap_task),
 						SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 						SPDK_ENV_SOCKET_ID_ANY);
 	if (!worker->task_pool) {
@@ -591,7 +574,7 @@ _init_thread(void *arg1)
 			task->worker = worker;
 			task->worker->current_queue_depth++;
 
-			rc = spdk_accel_batch_submit(worker->ch, batch, batch_done, __accel_task_from_ap_task(task));
+			rc = spdk_accel_batch_submit(worker->ch, batch, batch_done, task);
 			if (rc) {
 				fprintf(stderr, "error ending batch %d\n", rc);
 				goto error;
@@ -633,9 +616,9 @@ error:
 }
 
 static void
-accel_done(void *ref, int status)
+accel_done(void *cb_arg, int status)
 {
-	struct ap_task *task = __ap_task_from_accel_task(ref);
+	struct ap_task *task = (struct ap_task *)cb_arg;
 	struct worker_thread *worker = task->worker;
 
 	assert(worker);
