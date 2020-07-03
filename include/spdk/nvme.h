@@ -2975,6 +2975,22 @@ void spdk_nvme_qpair_print_command(struct spdk_nvme_qpair *qpair,
 void spdk_nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair,
 				      struct spdk_nvme_cpl *cpl);
 
+/**
+ * \brief Prints (SPDK_NOTICELOG) the contents of an NVMe submission queue entry (command).
+ *
+ * \param qid Queue identifier.
+ * \param cmd Pointer to the submission queue command to be formatted.
+ */
+void spdk_nvme_print_command(uint16_t qid, struct spdk_nvme_cmd *cmd);
+
+/**
+ * \brief Prints (SPDK_NOTICELOG) the contents of an NVMe completion queue entry.
+ *
+ * \param qid Queue identifier.
+ * \param cpl Pointer to the completion queue element to be formatted.
+ */
+void spdk_nvme_print_completion(uint16_t qid, struct spdk_nvme_cpl *cpl);
+
 struct ibv_context;
 struct ibv_pd;
 struct ibv_mr;

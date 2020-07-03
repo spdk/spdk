@@ -135,6 +135,8 @@
 	spdk_nvme_qpair_remove_cmd_error_injection;
 	spdk_nvme_qpair_print_command;
 	spdk_nvme_qpair_print_completion;
+	spdk_nvme_print_command;
+	spdk_nvme_print_completion;
 
 	spdk_nvme_cpl_get_status_string;
 

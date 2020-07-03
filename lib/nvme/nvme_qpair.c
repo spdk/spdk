@@ -108,22 +108,20 @@ nvme_get_string(const struct nvme_string *strings, uint16_t value)
 }
 
 static void
-nvme_admin_qpair_print_command(struct spdk_nvme_qpair *qpair,
-			       struct spdk_nvme_cmd *cmd)
+nvme_admin_qpair_print_command(uint16_t qid, struct spdk_nvme_cmd *cmd)
 {
+	assert(cmd != NULL);
 
-	SPDK_NOTICELOG("%s (%02x) sqid:%d cid:%d nsid:%x "
-		       "cdw10:%08x cdw11:%08x\n",
-		       nvme_get_string(admin_opcode, cmd->opc), cmd->opc, qpair->id, cmd->cid,
-		       cmd->nsid, cmd->cdw10, cmd->cdw11);
+	SPDK_NOTICELOG("%s (%02x) qid:%d cid:%d nsid:%x cdw10:%08x cdw11:%08x\n",
+		       nvme_get_string(admin_opcode, cmd->opc), cmd->opc, qid, cmd->cid, cmd->nsid, cmd->cdw10,
+		       cmd->cdw11);
 }
 
 static void
-nvme_io_qpair_print_command(struct spdk_nvme_qpair *qpair,
-			    struct spdk_nvme_cmd *cmd)
+nvme_io_qpair_print_command(uint16_t qid, struct spdk_nvme_cmd *cmd)
 {
-	assert(qpair != NULL);
 	assert(cmd != NULL);
+
 	switch ((int)cmd->opc) {
 	case SPDK_NVME_OPC_WRITE:
 	case SPDK_NVME_OPC_READ:
@@ -131,22 +129,31 @@ nvme_io_qpair_print_command(struct spdk_nvme_qpair *qpair,
 	case SPDK_NVME_OPC_COMPARE:
 		SPDK_NOTICELOG("%s sqid:%d cid:%d nsid:%d "
 			       "lba:%llu len:%d\n",
-			       nvme_get_string(io_opcode, cmd->opc), qpair->id, cmd->cid,
-			       cmd->nsid,
+			       nvme_get_string(io_opcode, cmd->opc), qid, cmd->cid, cmd->nsid,
 			       ((unsigned long long)cmd->cdw11 << 32) + cmd->cdw10,
 			       (cmd->cdw12 & 0xFFFF) + 1);
 		break;
 	case SPDK_NVME_OPC_FLUSH:
 	case SPDK_NVME_OPC_DATASET_MANAGEMENT:
 		SPDK_NOTICELOG("%s sqid:%d cid:%d nsid:%d\n",
-			       nvme_get_string(io_opcode, cmd->opc), qpair->id, cmd->cid,
-			       cmd->nsid);
+			       nvme_get_string(io_opcode, cmd->opc), qid, cmd->cid, cmd->nsid);
 		break;
 	default:
 		SPDK_NOTICELOG("%s (%02x) sqid:%d cid:%d nsid:%d\n",
-			       nvme_get_string(io_opcode, cmd->opc), cmd->opc, qpair->id,
-			       cmd->cid, cmd->nsid);
+			       nvme_get_string(io_opcode, cmd->opc), cmd->opc, qid, cmd->cid, cmd->nsid);
 		break;
+	}
+}
+
+void
+spdk_nvme_print_command(uint16_t qid, struct spdk_nvme_cmd *cmd)
+{
+	assert(cmd != NULL);
+
+	if (qid == 0 || cmd->opc == SPDK_NVME_OPC_FABRIC) {
+		nvme_admin_qpair_print_command(qid, cmd);
+	} else {
+		nvme_io_qpair_print_command(qid, cmd);
 	}
 }
 
@@ -156,11 +163,7 @@ spdk_nvme_qpair_print_command(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cm
 	assert(qpair != NULL);
 	assert(cmd != NULL);
 
-	if (nvme_qpair_is_admin_queue(qpair)) {
-		nvme_admin_qpair_print_command(qpair, cmd);
-	} else {
-		nvme_io_qpair_print_command(qpair, cmd);
-	}
+	spdk_nvme_print_command(qpair->id, cmd);
 }
 
 static const struct nvme_string generic_status[] = {
@@ -297,13 +300,26 @@ spdk_nvme_cpl_get_status_string(const struct spdk_nvme_status *status)
 }
 
 void
-spdk_nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair,
-				 struct spdk_nvme_cpl *cpl)
+spdk_nvme_print_completion(uint16_t qid, struct spdk_nvme_cpl *cpl)
 {
-	SPDK_NOTICELOG("%s (%02x/%02x) sqid:%d cid:%d cdw0:%x sqhd:%04x p:%x m:%x dnr:%x\n",
+	assert(cpl != NULL);
+
+	/* Check that sqid matches qid. Note that sqid is reserved
+	 * for fabrics so don't print an error when sqid is 0. */
+	if (cpl->sqid != qid && cpl->sqid != 0) {
+		SPDK_ERRLOG("sqid %u doesn't match qid\n", cpl->sqid);
+	}
+
+	SPDK_NOTICELOG("%s (%02x/%02x) qid:%d cid:%d cdw0:%x sqhd:%04x p:%x m:%x dnr:%x\n",
 		       spdk_nvme_cpl_get_status_string(&cpl->status),
-		       cpl->status.sct, cpl->status.sc, cpl->sqid, cpl->cid, cpl->cdw0,
+		       cpl->status.sct, cpl->status.sc, qid, cpl->cid, cpl->cdw0,
 		       cpl->sqhd, cpl->status.p, cpl->status.m, cpl->status.dnr);
+}
+
+void
+spdk_nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cpl *cpl)
+{
+	spdk_nvme_print_completion(qpair->id, cpl);
 }
 
 bool
