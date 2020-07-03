@@ -427,13 +427,6 @@ spdk_accel_submit_crc32c(struct spdk_io_channel *ch, uint32_t *dst, void *src, u
 	}
 }
 
-/* Returns the largest context size of the accel modules. */
-size_t
-spdk_accel_task_size(void)
-{
-	return g_max_accel_module_size;
-}
-
 /* Helper function when when accel modules register with the framework. */
 void spdk_accel_module_list_add(struct spdk_accel_module_if *accel_module)
 {

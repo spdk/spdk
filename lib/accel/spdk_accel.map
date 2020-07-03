@@ -21,7 +21,6 @@
 	spdk_accel_submit_compare;
 	spdk_accel_submit_fill;
 	spdk_accel_submit_crc32c;
-	spdk_accel_task_size;
 	spdk_accel_write_config_json;
 
 	# functions needed by modules

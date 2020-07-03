@@ -71,8 +71,6 @@ typedef void (*spdk_accel_fini_cb)(void *cb_arg);
 
 struct spdk_io_channel;
 
-struct spdk_accel_task;
-
 struct spdk_accel_batch;
 
 /**
@@ -335,13 +333,6 @@ int spdk_accel_batch_prep_crc32c(struct spdk_io_channel *ch, struct spdk_accel_b
  */
 int spdk_accel_submit_crc32c(struct spdk_io_channel *ch, uint32_t *dst, void *src, uint32_t seed,
 			     uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg);
-
-/**
- * Get the size of an acceleration task.
- *
- * \return the size of acceleration task.
- */
-size_t spdk_accel_task_size(void);
 
 struct spdk_json_write_ctx;
 
