@@ -193,36 +193,6 @@ function install_qemu() {
 	sudo make -C "$GIT_REPOS/qemu/$SPDK_QEMU_BRANCH" install
 }
 
-function install_vpp() {
-	if [[ -d /usr/local/src/vpp-19.04 ]]; then
-		echo "vpp already cloned."
-		if [[ ! -d /usr/local/src/vpp-19.04/build-root ]]; then
-			echo "build-root has not been done"
-			echo "remove the $(pwd) and start again"
-			exit 1
-		fi
-	else
-		git clone "${GIT_REPO_VPP}" "$GIT_REPOS/vpp"
-		git -C "$GIT_REPOS/vpp" checkout v19.04.2
-
-		if [ "${OSID}" == 'fedora' ]; then
-			if [ ${OSVERSION} -eq 29 ]; then
-				git -C "$GIT_REPOS/vpp" apply ${VM_SETUP_PATH}/patch/vpp/fedora29-fix.patch
-			fi
-			if [ ${OSVERSION} -eq 30 ]; then
-				git -C "$GIT_REPOS/vpp" apply ${VM_SETUP_PATH}/patch/vpp/fedora30-fix.patch
-			fi
-		fi
-
-		# Installing required dependencies for building VPP
-		yes | make -C "$GIT_REPOS/vpp" install-dep
-
-		make -C "$GIT_REPOS/vpp" build -j${jobs}
-
-		sudo mv "$GIT_REPOS/vpp" /usr/local/src/vpp-19.04
-	fi
-}
-
 function install_nvmecli() {
 	SPDK_NVME_CLI_BRANCH=spdk-1.6
 	if [[ ! -d $GIT_REPOS/nvme-cli ]]; then
@@ -292,8 +262,6 @@ export GIT_REPO_FIO
 export GIT_REPO_FLAMEGRAPH
 : ${GIT_REPO_QEMU=https://github.com/spdk/qemu}
 export GIT_REPO_QEMU
-: ${GIT_REPO_VPP=https://gerrit.fd.io/r/vpp}
-export GIT_REPO_VPP
 : ${GIT_REPO_LIBISCSI=https://github.com/sahlberg/libiscsi}
 export GIT_REPO_LIBISCSI
 : ${GIT_REPO_SPDK_NVME_CLI=https://github.com/spdk/nvme-cli}
@@ -324,7 +292,6 @@ else
 	jobs=$(($(nproc) * 2))
 	sources+=(
 		install_libiscsi
-		install_vpp
 		install_nvmecli
 		install_qat
 		install_rocksdb
