@@ -49,6 +49,14 @@
 #include "spdk/log.h"
 #include "spdk/likely.h"
 
+#ifdef SPDK_CONFIG_URING
+#include <liburing.h>
+
+#ifndef __NR_sys_io_uring_enter
+#define __NR_sys_io_uring_enter         426
+#endif
+#endif
+
 #if HAVE_LIBAIO
 #include <libaio.h>
 #endif
@@ -67,6 +75,7 @@ struct ctrlr_entry {
 enum entry_type {
 	ENTRY_TYPE_NVME_NS,
 	ENTRY_TYPE_AIO_FILE,
+	ENTRY_TYPE_URING_FILE,
 };
 
 struct ns_fn_table;
@@ -80,9 +89,14 @@ struct ns_entry {
 			struct spdk_nvme_ctrlr	*ctrlr;
 			struct spdk_nvme_ns	*ns;
 		} nvme;
-#if HAVE_LIBAIO
+#ifdef SPDK_CONFIG_URING
 		struct {
 			int			fd;
+		} uring;
+#endif
+#if HAVE_LIBAIO
+		struct {
+			int                     fd;
 		} aio;
 #endif
 	} u;
@@ -139,6 +153,15 @@ struct ns_worker_ctx {
 			int				last_qpair;
 		} nvme;
 
+#ifdef SPDK_CONFIG_URING
+		struct {
+			struct io_uring		ring;
+			uint64_t		io_inflight;
+			uint64_t		io_pending;
+			struct io_uring_cqe	**cqes;
+
+		} uring;
+#endif
 #if HAVE_LIBAIO
 		struct {
 			struct io_event		*events;
@@ -217,6 +240,7 @@ static uint32_t g_max_completions;
 static int g_dpdk_mem;
 static int g_shm_id = -1;
 static uint32_t g_disable_sq_cmb;
+static bool g_use_uring;
 static bool g_no_pci;
 static bool g_warn;
 static bool g_header_digest;
@@ -236,12 +260,132 @@ struct trid_entry {
 
 static TAILQ_HEAD(, trid_entry) g_trid_list = TAILQ_HEAD_INITIALIZER(g_trid_list);
 
-static int g_aio_optind; /* Index of first AIO filename in argv */
+static int g_file_optind; /* Index of first filename in argv */
 
 static inline void
 task_complete(struct perf_task *task);
 
-#if HAVE_LIBAIO
+#ifdef SPDK_CONFIG_URING
+
+static void
+uring_setup_payload(struct perf_task *task, uint8_t pattern)
+{
+	task->iov.iov_base = spdk_dma_zmalloc(g_io_size_bytes, g_io_align, NULL);
+	task->iov.iov_len = g_io_size_bytes;
+	if (task->iov.iov_base == NULL) {
+		fprintf(stderr, "spdk_dma_zmalloc() for task->iov.iov_base failed\n");
+		exit(1);
+	}
+	memset(task->iov.iov_base, pattern, task->iov.iov_len);
+}
+
+static int
+uring_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
+		struct ns_entry *entry, uint64_t offset_in_ios)
+{
+	struct io_uring_sqe *sqe;
+
+	sqe = io_uring_get_sqe(&ns_ctx->u.uring.ring);
+	if (!sqe) {
+		fprintf(stderr, "Cannot get sqe\n");
+		return -1;
+	}
+
+	if (task->is_read) {
+		io_uring_prep_readv(sqe, entry->u.uring.fd, &task->iov, 1, offset_in_ios * task->iov.iov_len);
+	} else {
+		io_uring_prep_writev(sqe, entry->u.uring.fd, &task->iov, 1, offset_in_ios * task->iov.iov_len);
+	}
+
+	io_uring_sqe_set_data(sqe, task);
+	ns_ctx->u.uring.io_pending++;
+
+	return 0;
+}
+
+static void
+uring_check_io(struct ns_worker_ctx *ns_ctx)
+{
+	int i, count, to_complete, to_submit, ret = 0;
+	struct perf_task *task;
+
+	to_submit = ns_ctx->u.uring.io_pending;
+	to_complete = ns_ctx->u.uring.io_inflight;
+
+	if (to_submit > 0) {
+		/* If there are I/O to submit, use io_uring_submit here.
+		 * It will automatically call spdk_io_uring_enter appropriately. */
+		ret = io_uring_submit(&ns_ctx->u.uring.ring);
+		ns_ctx->u.uring.io_pending = 0;
+		ns_ctx->u.uring.io_inflight += to_submit;
+	} else if (to_complete > 0) {
+		/* If there are I/O in flight but none to submit, we need to
+		 * call io_uring_enter ourselves. */
+		ret = syscall(__NR_sys_io_uring_enter, ns_ctx->u.uring.ring.ring_fd, 0,
+			      0, IORING_ENTER_GETEVENTS, NULL, 0);
+	}
+
+	if (ret < 0) {
+		return;
+	}
+
+	if (to_complete > 0) {
+		count = io_uring_peek_batch_cqe(&ns_ctx->u.uring.ring, ns_ctx->u.uring.cqes, to_complete);
+		ns_ctx->u.uring.io_inflight -= count;
+		for (i = 0; i < count; i++) {
+			assert(ns_ctx->u.uring.cqes[i] != NULL);
+			task = (struct perf_task *)ns_ctx->u.uring.cqes[i]->user_data;
+			if (ns_ctx->u.uring.cqes[i]->res != (int)task->iov.iov_len) {
+				fprintf(stderr, "cqe[i]->status=%d\n", ns_ctx->u.uring.cqes[i]->res);
+				exit(0);
+			}
+			io_uring_cqe_seen(&ns_ctx->u.uring.ring, ns_ctx->u.uring.cqes[i]);
+			task_complete(task);
+		}
+	}
+}
+
+static void
+uring_verify_io(struct perf_task *task, struct ns_entry *entry)
+{
+}
+
+static int
+uring_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
+{
+	if (io_uring_queue_init(g_queue_depth, &ns_ctx->u.uring.ring, IORING_SETUP_IOPOLL) < 0) {
+		SPDK_ERRLOG("uring I/O context setup failure\n");
+		return -1;
+	}
+
+	ns_ctx->u.uring.cqes = calloc(g_queue_depth, sizeof(struct io_uring_cqe *));
+	if (!ns_ctx->u.uring.cqes) {
+		io_uring_queue_exit(&ns_ctx->u.uring.ring);
+		return -1;
+	}
+
+	return 0;
+}
+
+static void
+uring_cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
+{
+	io_uring_queue_exit(&ns_ctx->u.uring.ring);
+	free(ns_ctx->u.uring.cqes);
+}
+
+static const struct ns_fn_table uring_fn_table = {
+	.setup_payload          = uring_setup_payload,
+	.submit_io              = uring_submit_io,
+	.check_io               = uring_check_io,
+	.verify_io              = uring_verify_io,
+	.init_ns_worker_ctx     = uring_init_ns_worker_ctx,
+	.cleanup_ns_worker_ctx  = uring_cleanup_ns_worker_ctx,
+};
+
+#endif
+
+#ifdef HAVE_LIBAIO
 static void
 aio_setup_payload(struct perf_task *task, uint8_t pattern)
 {
@@ -344,8 +488,12 @@ static const struct ns_fn_table aio_fn_table = {
 	.cleanup_ns_worker_ctx	= aio_cleanup_ns_worker_ctx,
 };
 
+#endif /* HAVE_LIBAIO */
+
+#if defined(HAVE_LIBAIO) || defined(SPDK_CONFIG_URING)
+
 static int
-register_aio_file(const char *path)
+register_file(const char *path)
 {
 	struct ns_entry *entry;
 
@@ -365,20 +513,20 @@ register_aio_file(const char *path)
 
 	fd = open(path, flags);
 	if (fd < 0) {
-		fprintf(stderr, "Could not open AIO device %s: %s\n", path, strerror(errno));
+		fprintf(stderr, "Could not open device %s: %s\n", path, strerror(errno));
 		return -1;
 	}
 
 	size = spdk_fd_get_size(fd);
 	if (size == 0) {
-		fprintf(stderr, "Could not determine size of AIO device %s\n", path);
+		fprintf(stderr, "Could not determine size of device %s\n", path);
 		close(fd);
 		return -1;
 	}
 
 	blklen = spdk_fd_get_blocklen(fd);
 	if (blklen == 0) {
-		fprintf(stderr, "Could not determine block size of AIO device %s\n", path);
+		fprintf(stderr, "Could not determine block size of device %s\n", path);
 		close(fd);
 		return -1;
 	}
@@ -394,13 +542,23 @@ register_aio_file(const char *path)
 	entry = malloc(sizeof(struct ns_entry));
 	if (entry == NULL) {
 		close(fd);
-		perror("aio ns_entry malloc");
+		perror("ns_entry malloc");
 		return -1;
 	}
 
-	entry->type = ENTRY_TYPE_AIO_FILE;
-	entry->fn_table = &aio_fn_table;
-	entry->u.aio.fd = fd;
+	if (g_use_uring) {
+#ifdef SPDK_CONFIG_URING
+		entry->type = ENTRY_TYPE_URING_FILE;
+		entry->fn_table = &uring_fn_table;
+		entry->u.uring.fd = fd;
+#endif
+	} else {
+#if HAVE_LIBAIO
+		entry->type = ENTRY_TYPE_AIO_FILE;
+		entry->fn_table = &aio_fn_table;
+		entry->u.aio.fd = fd;
+#endif
+	}
 	entry->size_in_ios = size / g_io_size_bytes;
 	entry->io_size_blocks = g_io_size_bytes / blklen;
 
@@ -414,20 +572,20 @@ register_aio_file(const char *path)
 }
 
 static int
-register_aio_files(int argc, char **argv)
+register_files(int argc, char **argv)
 {
 	int i;
 
-	/* Treat everything after the options as files for AIO */
-	for (i = g_aio_optind; i < argc; i++) {
-		if (register_aio_file(argv[i]) != 0) {
+	/* Treat everything after the options as files for AIO/URING */
+	for (i = g_file_optind; i < argc; i++) {
+		if (register_file(argv[i]) != 0) {
 			return 1;
 		}
 	}
 
 	return 0;
 }
-#endif /* HAVE_LIBAIO */
+#endif
 
 static void io_complete(void *ctx, const struct spdk_nvme_cpl *cpl);
 
@@ -1157,8 +1315,8 @@ work_fn(void *arg)
 static void usage(char *program_name)
 {
 	printf("%s options", program_name);
-#if HAVE_LIBAIO
-	printf(" [AIO device(s)]...");
+#if defined(SPDK_CONFIG_URING) || defined(HAVE_LIBAIO)
+	printf(" [Kernel device(s)]...");
 #endif
 	printf("\n");
 	printf("\t[-q io depth]\n");
@@ -1201,7 +1359,9 @@ static void usage(char *program_name)
 	printf("\t[-i shared memory group ID]\n");
 	printf("\t");
 	spdk_log_usage(stdout, "-T");
-	printf("\t[-V enable VMD enumeration]\n");
+#ifdef SPDK_CONFIG_URING
+	printf("\t[-R enable using liburing to drive kernel devices (Default: libaio)]\n");
+#endif
 #ifdef DEBUG
 	printf("\t[-G enable debug logging]\n");
 #else
@@ -1612,7 +1772,7 @@ parse_args(int argc, char **argv)
 	long int val;
 	int rc;
 
-	while ((op = getopt(argc, argv, "c:e:i:lo:q:r:k:s:t:w:C:DGHILM:NP:T:U:V")) != -1) {
+	while ((op = getopt(argc, argv, "c:e:i:lo:q:r:k:s:t:w:C:DGHILM:NP:RT:U:V")) != -1) {
 		switch (op) {
 		case 'i':
 		case 'C':
@@ -1710,6 +1870,15 @@ parse_args(int argc, char **argv)
 		case 'N':
 			g_no_shn_notification = true;
 			break;
+		case 'R':
+#ifndef SPDK_CONFIG_URING
+			fprintf(stderr, "%s must be rebuilt with CONFIG_URING=y for -R flag.\n",
+				argv[0]);
+			usage(argv[0]);
+			return 0;
+#endif
+			g_use_uring = true;
+			break;
 		case 'T':
 			rc = spdk_log_set_flag(optarg);
 			if (rc < 0) {
@@ -1801,7 +1970,7 @@ parse_args(int argc, char **argv)
 		}
 	}
 
-	g_aio_optind = optind;
+	g_file_optind = optind;
 
 	return 0;
 }
@@ -2077,8 +2246,8 @@ int main(int argc, char **argv)
 		goto cleanup;
 	}
 
-#if HAVE_LIBAIO
-	if (register_aio_files(argc, argv) != 0) {
+#if defined(HAVE_LIBAIO) || defined(SPDK_CONFIG_URING)
+	if (register_files(argc, argv) != 0) {
 		rc = -1;
 		goto cleanup;
 	}
@@ -2094,7 +2263,7 @@ int main(int argc, char **argv)
 	}
 
 	if (g_num_namespaces == 0) {
-		fprintf(stderr, "No valid NVMe controllers or AIO devices found\n");
+		fprintf(stderr, "No valid NVMe controllers or AIO or URING devices found\n");
 		goto cleanup;
 	}
 
