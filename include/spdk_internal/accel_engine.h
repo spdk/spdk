@@ -41,36 +41,38 @@
 
 struct spdk_accel_task {
 	spdk_accel_completion_cb	cb;
+	void				*cb_arg;
 	uint8_t				offload_ctx[0];
 };
 
 struct spdk_accel_engine {
 	uint64_t (*get_capabilities)(void);
-	int (*copy)(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src,
-		    uint64_t nbytes, spdk_accel_completion_cb cb);
-	int (*dualcast)(void *cb_arg, struct spdk_io_channel *ch, void *dst1, void *dst2, void *src,
-			uint64_t nbytes, spdk_accel_completion_cb cb);
+	int (*copy)(struct spdk_io_channel *ch, void *dst, void *src,
+		    uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg);
+	int (*dualcast)(struct spdk_io_channel *ch, void *dst1, void *dst2, void *src,
+			uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg);
 	uint32_t (*batch_get_max)(void);
 	struct spdk_accel_batch *(*batch_create)(struct spdk_io_channel *ch);
-	int (*batch_prep_copy)(void *cb_arg, struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
-			       void *dst, void *src, uint64_t nbytes, spdk_accel_completion_cb cb);
-	int (*batch_prep_dualcast)(void *cb_arg, struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
-				   void *dst1, void *dst2, void *src, uint64_t nbytes, spdk_accel_completion_cb cb);
-	int (*batch_prep_compare)(void *cb_arg, struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
-				  void *src1, void *src2, uint64_t nbytes, spdk_accel_completion_cb cb);
-	int (*batch_prep_fill)(void *cb_arg, struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
-			       void *dst, uint8_t fill, uint64_t nbytes, spdk_accel_completion_cb cb);
-	int (*batch_prep_crc32c)(void *cb_arg, struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
+	int (*batch_prep_copy)(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
+			       void *dst, void *src, uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg);
+	int (*batch_prep_dualcast)(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
+				   void *dst1, void *dst2, void *src, uint64_t nbytes,
+				   spdk_accel_completion_cb cb_fn, void *cb_arg);
+	int (*batch_prep_compare)(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
+				  void *src1, void *src2, uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg);
+	int (*batch_prep_fill)(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
+			       void *dst, uint8_t fill, uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg);
+	int (*batch_prep_crc32c)(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
 				 uint32_t *dst, void *src, uint32_t seed, uint64_t nbytes,
-				 spdk_accel_completion_cb cb);
-	int (*batch_submit)(void *cb_arg, struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
-			    spdk_accel_completion_cb cb);
-	int (*compare)(void *cb_arg, struct spdk_io_channel *ch, void *src1, void *src2,
-		       uint64_t nbytes, spdk_accel_completion_cb cb);
-	int (*fill)(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill,
-		    uint64_t nbytes, spdk_accel_completion_cb cb);
-	int (*crc32c)(void *cb_arg, struct spdk_io_channel *ch, uint32_t *dst, void *src,
-		      uint32_t seed, uint64_t nbytes, spdk_accel_completion_cb cb);
+				 spdk_accel_completion_cb cb_fn, void *cb_arg);
+	int (*batch_submit)(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
+			    spdk_accel_completion_cb cb_fn, void *cb_arg);
+	int (*compare)(struct spdk_io_channel *ch, void *src1, void *src2,
+		       uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg);
+	int (*fill)(struct spdk_io_channel *ch, void *dst, uint8_t fill,
+		    uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg);
+	int (*crc32c)(struct spdk_io_channel *ch, uint32_t *dst, void *src,
+		      uint32_t seed, uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg);
 	struct spdk_io_channel *(*get_io_channel)(void);
 };
 

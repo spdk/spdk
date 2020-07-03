@@ -123,20 +123,20 @@ uint64_t spdk_accel_get_capabilities(struct spdk_io_channel *ch);
 /**
  * Submit a copy request.
  *
- * \param accel_req Accel request task.
- * \param ch I/O channel to submit request to the accel engine.
+ * \param ch I/O channel associated with this call.
  * \param dst Destination to copy to.
  * \param src Source to copy from.
  * \param nbytes Length in bytes to copy.
- * \param cb Called when this copy operation completes.
+ * \param cb_fn Called when this copy operation completes.
+ * \param cb_arg Callback argument.
  *
  * \return 0 on success, negative errno on failure.
  */
-int spdk_accel_submit_copy(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch, void *dst,
-			   void *src, uint64_t nbytes, spdk_accel_completion_cb cb);
+int spdk_accel_submit_copy(struct spdk_io_channel *ch, void *dst, void *src, uint64_t nbytes,
+			   spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
- * Synchronous call to get batch size.  This is the maximum number of
+ * Synchronous call to get batch size. This is the maximum number of
  *  descriptors that a batch can contain. Once this limit is reached the batch
  *  should be processed with spdk_accel_batch_submit().
  *
@@ -158,15 +158,15 @@ struct spdk_accel_batch *spdk_accel_batch_create(struct spdk_io_channel *ch);
 /**
  * Asynchronous call to submit a batch sequence.
  *
- * \param accel_req Accel request task.
  * \param ch I/O channel associated with this call.
  * \param batch Handle provided when the batch was started with spdk_accel_batch_create().
- * \param cb Called when this operation completes.
+ * \param cb_fn Called when this operation completes.
+ * \param cb_arg Callback argument.
  *
  * \return 0 on success, negative errno on failure.
  */
-int spdk_accel_batch_submit(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
-			    struct spdk_accel_batch *batch, spdk_accel_completion_cb cb);
+int spdk_accel_batch_submit(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
+			    spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
  * Synchronous call to prepare a copy request into a previously initialized batch
@@ -174,19 +174,19 @@ int spdk_accel_batch_submit(struct spdk_accel_task *accel_req, struct spdk_io_ch
  *  completes after the batch has been submitted by an asynchronous call to
  *  spdk_accel_batch_submit().
  *
- * \param accel_req Accel request task.
  * \param ch I/O channel associated with this call.
  * \param batch Handle provided when the batch was started with spdk_accel_batch_create().
  * \param dst Destination to copy to.
  * \param src Source to copy from.
  * \param nbytes Length in bytes to copy.
- * \param cb Called when this operation completes.
+ * \param cb_fn Called when this operation completes.
+ * \param cb_arg Callback argument.
  *
  * \return 0 on success, negative errno on failure.
  */
-int spdk_accel_batch_prep_copy(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
-			       struct spdk_accel_batch *batch, void *dst, void *src,
-			       uint64_t nbytes, spdk_accel_completion_cb cb);
+int spdk_accel_batch_prep_copy(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
+			       void *dst, void *src, uint64_t nbytes, spdk_accel_completion_cb cb_fn,
+			       void *cb_arg);
 
 /**
  * Synchronous call to prepare a dualcast request into a previously initialized batch
@@ -194,37 +194,36 @@ int spdk_accel_batch_prep_copy(struct spdk_accel_task *accel_req, struct spdk_io
  *  completes after the batch has been submitted by an asynchronous call to
  *  spdk_accel_batch_submit().
  *
- * \param accel_req Accel request task.
  * \param ch I/O channel associated with this call.
  * \param batch Handle provided when the batch was started with spdk_accel_batch_create().
  * \param dst1 First destination to copy to (must be 4K aligned).
  * \param dst2 Second destination to copy to (must be 4K aligned).
  * \param src Source to copy from.
  * \param nbytes Length in bytes to copy.
- * \param cb Called when this operation completes.
+ * \param cb_fn Called when this operation completes.
+ * \param cb_arg Callback argument.
  *
  * \return 0 on success, negative errno on failure.
  */
-int spdk_accel_batch_prep_dualcast(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
-				   struct spdk_accel_batch *batch, void *dst1, void *dst2, void *src,
-				   uint64_t nbytes, spdk_accel_completion_cb cb);
+int spdk_accel_batch_prep_dualcast(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
+				   void *dst1, void *dst2, void *src, uint64_t nbytes,
+				   spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
  * Submit a dual cast copy request.
  *
- * \param accel_req Accel request task.
- * \param ch I/O channel to submit request to the accel engine.
+ * \param ch I/O channel associated with this call.
  * \param dst1 First destination to copy to (must be 4K aligned).
  * \param dst2 Second destination to copy to (must be 4K aligned).
  * \param src Source to copy from.
  * \param nbytes Length in bytes to copy.
- * \param cb Called when this copy operation completes.
+ * \param cb_fn Called when this copy operation completes.
+ * \param cb_arg Callback argument.
  *
  * \return 0 on success, negative errno on failure.
  */
-int spdk_accel_submit_dualcast(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
-			       void *dst1, void *dst2, void *src, uint64_t nbytes,
-			       spdk_accel_completion_cb cb);
+int spdk_accel_submit_dualcast(struct spdk_io_channel *ch, void *dst1, void *dst2, void *src,
+			       uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
  * Synchronous call to prepare a compare request into a previously initialized batch
@@ -232,35 +231,34 @@ int spdk_accel_submit_dualcast(struct spdk_accel_task *accel_req, struct spdk_io
  *  completes after the batch has been submitted by an asynchronous call to
  *  spdk_accel_batch_submit().
  *
- * \param accel_req Accel request task.
- * \param ch I/O channel to submit request to the accel engine.
+ * \param ch I/O channel associated with this call.
  * \param batch Handle provided when the batch was started with spdk_accel_batch_create().
  * \param src1 First location to perform compare on.
  * \param src2 Second location to perform compare on.
  * \param nbytes Length in bytes to compare.
- * \param cb Called when this operation completes.
+ * \param cb_fn Called when this operation completes.
+ * \param cb_arg Callback argument.
  *
  * \return 0 on success, negative errno on failure.
  */
-int spdk_accel_batch_prep_compare(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
-				  struct spdk_accel_batch *batch, void *src1, void *src2,
-				  uint64_t nbytes, spdk_accel_completion_cb cb);
+int spdk_accel_batch_prep_compare(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
+				  void *src1, void *src2, uint64_t nbytes, spdk_accel_completion_cb cb_fn,
+				  void *cb_arg);
 
 /**
  * Submit a compare request.
  *
- * \param accel_req Accel request task.
- * \param ch I/O channel to submit request to the accel engine.
+ * \param ch I/O channel associated with this call.
  * \param src1 First location to perform compare on.
  * \param src2 Second location to perform compare on.
  * \param nbytes Length in bytes to compare.
- * \param cb Called when this compare operation completes.
+ * \param cb_fn Called when this compare operation completes.
+ * \param cb_arg Callback argument.
  *
  * \return 0 on success, any other value means there was a miscompare.
  */
-int spdk_accel_submit_compare(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
-			      void *src1, void *src2, uint64_t nbytes,
-			      spdk_accel_completion_cb cb);
+int spdk_accel_submit_compare(struct spdk_io_channel *ch, void *src1, void *src2, uint64_t nbytes,
+			      spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
  * Synchronous call to prepare a fill request into a previously initialized batch
@@ -268,36 +266,36 @@ int spdk_accel_submit_compare(struct spdk_accel_task *accel_req, struct spdk_io_
  *  completes after the batch has been submitted by an asynchronous call to
  *  spdk_accel_batch_submit().
  *
- * \param accel_req Accel request task.
- * \param ch I/O channel to submit request to the accel engine.
+ * \param ch I/O channel associated with this call.
  * \param batch Handle provided when the batch was started with spdk_accel_batch_create().
  * \param dst Destination to fill.
  * \param fill Constant byte to fill to the destination.
  * \param nbytes Length in bytes to fill.
- * \param cb Called when this operation completes.
+ * \param cb_fn Called when this operation completes.
+ * \param cb_arg Callback argument.
  *
  * \return 0 on success, negative errno on failure.
  */
-int spdk_accel_batch_prep_fill(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
-			       struct spdk_accel_batch *batch, void *dst, uint8_t fill,
-			       uint64_t nbytes, spdk_accel_completion_cb cb);
+int spdk_accel_batch_prep_fill(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
+			       void *dst, uint8_t fill, uint64_t nbytes,
+			       spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
  * Submit a fill request.
  *
  * This operation will fill the destination buffer with the specified value.
  *
- * \param accel_req Accel request task.
- * \param ch I/O channel to submit request to the accel engine.
+ * \param ch I/O channel associated with this call.
  * \param dst Destination to fill.
  * \param fill Constant byte to fill to the destination.
  * \param nbytes Length in bytes to fill.
- * \param cb Called when this fill operation completes.
+ * \param cb_fn Called when this fill operation completes.
+ * \param cb_arg Callback argument.
  *
  * \return 0 on success, negative errno on failure.
  */
-int spdk_accel_submit_fill(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
-			   void *dst, uint8_t fill, uint64_t nbytes, spdk_accel_completion_cb cb);
+int spdk_accel_submit_fill(struct spdk_io_channel *ch, void *dst, uint8_t fill, uint64_t nbytes,
+			   spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
  * Synchronous call to prepare a crc32c request into a previously initialized batch
@@ -305,38 +303,38 @@ int spdk_accel_submit_fill(struct spdk_accel_task *accel_req, struct spdk_io_cha
  *  completes after the batch has been submitted by an asynchronous call to
  *  spdk_accel_batch_submit().
  *
- * \param accel_req Accel request task.
- * \param ch I/O channel to submit request to the accel engine.
+ * \param ch I/O channel associated with this call.
  * \param batch Handle provided when the batch was started with spdk_accel_batch_create().
  * \param dst Destination to write the CRC-32C to.
  * \param src The source address for the data.
  * \param seed Four byte seed value.
  * \param nbytes Length in bytes.
- * \param cb Called when this operation completes.
+ * \param cb_fn Called when this operation completes.
+ * \param cb_arg Callback argument.
  *
  * \return 0 on success, negative errno on failure.
  */
-int spdk_accel_batch_prep_crc32c(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
-				 struct spdk_accel_batch *batch, uint32_t *dst, void *src, uint32_t seed,
-				 uint64_t nbytes, spdk_accel_completion_cb cb);
+int spdk_accel_batch_prep_crc32c(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
+				 uint32_t *dst, void *src, uint32_t seed, uint64_t nbytes,
+				 spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
  * Submit a CRC-32C calculation request.
  *
  * This operation will calculate the 4 byte CRC32-C for the given data.
  *
- * \param accel_req Accel request task.
- * \param ch I/O channel to submit request to the accel engine.
+ * \param ch I/O channel associated with this call.
  * \param dst Destination to write the CRC-32C to.
  * \param src The source address for the data.
  * \param seed Four byte seed value.
  * \param nbytes Length in bytes.
- * \param cb Called when this CRC-32C operation completes.
+ * \param cb_fn Called when this CRC-32C operation completes.
+ * \param cb_arg Callback argument.
  *
  * \return 0 on success, negative errno on failure.
  */
-int spdk_accel_submit_crc32c(struct spdk_accel_task *accel_req, struct spdk_io_channel *ch,
-			     uint32_t *dst, void *src, uint32_t seed, uint64_t nbytes, spdk_accel_completion_cb cb);
+int spdk_accel_submit_crc32c(struct spdk_io_channel *ch, uint32_t *dst, void *src, uint32_t seed,
+			     uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
  * Get the size of an acceleration task.

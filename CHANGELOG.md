@@ -4,6 +4,10 @@
 
 ### accel_fw
 
+The accel_fw was updated to no longer require the app to allocate an
+accel_task on its behalf. All public APIs now take a callback arg as
+the parameter that used to be the accel_task.
+
 The accel_fw was updated to support compare, dualcast, crc32c.
 
 The accel_fw introduced batching support for all commands in all plug-ins.

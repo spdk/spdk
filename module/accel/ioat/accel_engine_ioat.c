@@ -182,22 +182,22 @@ ioat_done(void *cb_arg)
 }
 
 static int
-ioat_submit_copy(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src, uint64_t nbytes,
-		 spdk_accel_completion_cb cb)
+ioat_submit_copy(struct spdk_io_channel *ch, void *dst, void *src, uint64_t nbytes,
+		 spdk_accel_completion_cb cb_fn, void *cb_arg)
 {
 	struct ioat_task *ioat_task = (struct ioat_task *)cb_arg;
 	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
 
 	assert(ioat_ch->ioat_ch != NULL);
 
-	ioat_task->cb = cb;
+	ioat_task->cb = cb_fn;
 
 	return spdk_ioat_submit_copy(ioat_ch->ioat_ch, ioat_task, ioat_done, dst, src, nbytes);
 }
 
 static int
-ioat_submit_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill,
-		 uint64_t nbytes, spdk_accel_completion_cb cb)
+ioat_submit_fill(struct spdk_io_channel *ch, void *dst, uint8_t fill,
+		 uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg)
 {
 	struct ioat_task *ioat_task = (struct ioat_task *)cb_arg;
 	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
@@ -205,7 +205,7 @@ ioat_submit_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fi
 
 	assert(ioat_ch->ioat_ch != NULL);
 
-	ioat_task->cb = cb;
+	ioat_task->cb = cb_fn;
 
 	return spdk_ioat_submit_fill(ioat_ch->ioat_ch, ioat_task, ioat_done, dst, fill64, nbytes);
 }
@@ -259,8 +259,8 @@ ioat_batch_create(struct spdk_io_channel *ch)
 }
 
 static struct ioat_accel_op *
-_prep_op(void *cb_arg, struct ioat_io_channel *ioat_ch, struct spdk_accel_batch *batch,
-	 spdk_accel_completion_cb cb)
+_prep_op(struct ioat_io_channel *ioat_ch, struct spdk_accel_batch *batch,
+	 spdk_accel_completion_cb cb_fn, void *cb_arg)
 {
 	struct ioat_accel_op *op;
 
@@ -278,20 +278,20 @@ _prep_op(void *cb_arg, struct ioat_io_channel *ioat_ch, struct spdk_accel_batch 
 	}
 
 	op->cb_arg = cb_arg;
-	op->cb_fn = cb;
+	op->cb_fn = cb_fn;
 	op->ioat_ch = ioat_ch;
 
 	return op;
 }
 
 static int
-ioat_batch_prep_copy(void *cb_arg, struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
-		     void *dst, void *src, uint64_t nbytes, spdk_accel_completion_cb cb)
+ioat_batch_prep_copy(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
+		     void *dst, void *src, uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg)
 {
 	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
 	struct ioat_task *ioat_task = (struct ioat_task *)cb_arg;
 
-	ioat_task->cb = cb;
+	ioat_task->cb = cb_fn;
 	ioat_ch->hw_batch = true;
 
 	/* Call the IOAT library prep function. */
@@ -299,14 +299,13 @@ ioat_batch_prep_copy(void *cb_arg, struct spdk_io_channel *ch, struct spdk_accel
 }
 
 static int
-ioat_batch_prep_fill(void *cb_arg, struct spdk_io_channel *ch,
-		     struct spdk_accel_batch *batch, void *dst, uint8_t fill,
-		     uint64_t nbytes, spdk_accel_completion_cb cb)
+ioat_batch_prep_fill(struct spdk_io_channel *ch, struct spdk_accel_batch *batch, void *dst,
+		     uint8_t fill, uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg)
 {
 	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
 	struct ioat_task *ioat_task = (struct ioat_task *)cb_arg;
 
-	ioat_task->cb = cb;
+	ioat_task->cb = cb_fn;
 	ioat_ch->hw_batch = true;
 
 	/* Call the IOAT library prep function. */
@@ -314,9 +313,9 @@ ioat_batch_prep_fill(void *cb_arg, struct spdk_io_channel *ch,
 }
 
 static int
-ioat_batch_prep_dualcast(void *cb_arg, struct spdk_io_channel *ch,
+ioat_batch_prep_dualcast(struct spdk_io_channel *ch,
 			 struct spdk_accel_batch *batch, void *dst1, void *dst2,
-			 void *src, uint64_t nbytes, spdk_accel_completion_cb cb)
+			 void *src, uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg)
 {
 	struct ioat_accel_op *op;
 	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
@@ -326,7 +325,7 @@ ioat_batch_prep_dualcast(void *cb_arg, struct spdk_io_channel *ch,
 		return -EINVAL;
 	}
 
-	op = _prep_op(cb_arg, ioat_ch, batch, cb);
+	op = _prep_op(ioat_ch, batch, cb_fn, cb_arg);
 	if (op == NULL) {
 		return -EINVAL;
 	}
@@ -343,14 +342,14 @@ ioat_batch_prep_dualcast(void *cb_arg, struct spdk_io_channel *ch,
 }
 
 static int
-ioat_batch_prep_compare(void *cb_arg, struct spdk_io_channel *ch,
+ioat_batch_prep_compare(struct spdk_io_channel *ch,
 			struct spdk_accel_batch *batch, void *src1,
-			void *src2, uint64_t nbytes, spdk_accel_completion_cb cb)
+			void *src2, uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg)
 {
 	struct ioat_accel_op *op;
 	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
 
-	op = _prep_op(cb_arg, ioat_ch, batch, cb);
+	op = _prep_op(ioat_ch, batch, cb_fn, cb_arg);
 	if (op == NULL) {
 		return -EINVAL;
 	}
@@ -366,14 +365,14 @@ ioat_batch_prep_compare(void *cb_arg, struct spdk_io_channel *ch,
 }
 
 static int
-ioat_batch_prep_crc32c(void *cb_arg, struct spdk_io_channel *ch,
+ioat_batch_prep_crc32c(struct spdk_io_channel *ch,
 		       struct spdk_accel_batch *batch, uint32_t *dst, void *src,
-		       uint32_t seed, uint64_t nbytes, spdk_accel_completion_cb cb)
+		       uint32_t seed, uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg)
 {
 	struct ioat_accel_op *op;
 	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
 
-	op = _prep_op(cb_arg, ioat_ch, batch, cb);
+	op = _prep_op(ioat_ch, batch, cb_fn, cb_arg);
 	if (op == NULL) {
 		return -EINVAL;
 	}
@@ -390,8 +389,8 @@ ioat_batch_prep_crc32c(void *cb_arg, struct spdk_io_channel *ch,
 }
 
 static int
-ioat_batch_submit(void *cb_arg, struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
-		  spdk_accel_completion_cb cb)
+ioat_batch_submit(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
+		  spdk_accel_completion_cb cb_fn, void *cb_arg)
 {
 	struct ioat_accel_op *op;
 	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
@@ -437,7 +436,7 @@ ioat_batch_submit(void *cb_arg, struct spdk_io_channel *ch, struct spdk_accel_ba
 	/* Now complete the batch request itself. */
 	accel_req = (struct spdk_accel_task *)((uintptr_t)cb_arg -
 					       offsetof(struct spdk_accel_task, offload_ctx));
-	cb(accel_req, batch_status);
+	cb_fn(accel_req, batch_status);
 
 	return 0;
 }
