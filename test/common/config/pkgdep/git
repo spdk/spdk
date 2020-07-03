@@ -77,7 +77,9 @@ function install_qat() {
 	kernel_maj=$(uname -r | cut -d'.' -f1)
 	kernel_min=$(uname -r | cut -d'.' -f2)
 
-	sudo modprobe -r qat_c62x
+	if [[ -e /sys/module/qat_c62x ]]; then
+		sudo modprobe -r qat_c62x || :
+	fi
 	if [[ -d $GIT_REPOS/QAT ]]; then
 		sudo rm -rf "$GIT_REPOS/QAT"
 	fi
