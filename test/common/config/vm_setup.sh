@@ -72,6 +72,8 @@ elif hash pacman &> /dev/null; then
 	source "$vmsetupdir/pkgdep/pacman"
 elif hash pkg &> /dev/null; then
 	source "$vmsetupdir/pkgdep/pkg"
+elif hash swupd &> /dev/null; then
+	source "$vmsetupdir/pkgdep/swupd"
 else
 	package_manager="undefined"
 fi

@@ -1,0 +1,21 @@
+package_manager=swupd
+
+upgrade() {
+	sudo "$package_manager" update -y
+}
+
+install() {
+	(($#)) || return 0
+
+	sudo "$package_manager" bundle-add -y "$@"
+}
+
+packages=(
+	jq
+)
+
+pre_install() {
+	if [[ $INTSALL_TSOCKS == true ]]; then
+		install tsocks || echo "Installation of the tsocks package failed, proxy may not be available"
+	fi
+}

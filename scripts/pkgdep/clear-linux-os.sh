@@ -3,7 +3,7 @@
 # Install main dependencies
 swupd bundle-add -y c-basic make dev-utils openssl devpkg-libiscsi \
 	devpkg-ncurses python3-basic python-extras devpkg-open-iscsi \
-	jq storage-utils
+	storage-utils
 # Additional dependencies for ISA-L used in compression
 swupd bundle-add -y dev-utils-dev
 # Additional dependencies for DPDK
