@@ -235,7 +235,7 @@ function install_nvmecli() {
 		# nvme-cli, however not released yet.
 		# Support for SPDK should be released in nvme-cli >1.11.1
 		git clone "https://github.com/linux-nvme/nvme-cli.git" "$GIT_REPOS/nvme-cli-cuse"
-		git -C "$GIT_REPOS/nvme-cli-cuse checkout" "e770466615096a6d41f038a28819b00bc3078e1d"
+		git -C "$GIT_REPOS/nvme-cli-cuse" checkout "e770466615096a6d41f038a28819b00bc3078e1d"
 		make -C "$GIT_REPOS/nvme-cli-cuse"
 		sudo mv "$GIT_REPOS/nvme-cli-cuse" /usr/local/src/nvme-cli
 	fi
