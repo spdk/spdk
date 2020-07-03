@@ -131,7 +131,7 @@ as a runtime environment parameter.
 When the test completes, you will find a csv file (nvmf_results.csv) containing the results in the target node
 directory /tmp/results.
 
-#Processor Counter Monitor (PCM)
+# Processor Counter Monitor (PCM)
 PCM Tools provides a number of command-line utilities for real-time monitoring.
 Before using PCM Tools in nvmf perf scripts it needs to be installed on Target machine.
 PCM source and instructions are available on https://github.com/opcm/pcm.
@@ -145,3 +145,15 @@ example:
 ```
 Example above will run PCM measure for cpu and memory, with start delay 10s, sample every 1 second,
 and 30 samples for cpu measure. PCM memory do not support sample count.
+
+# Bandwidth monitor (bwm-ng)
+PCM Tools provides a number of command-line utilities for real-time monitoring.
+Before using bwm-ng in nvmf perf scripts it needs to be installed on Target machine.
+To enable bandwidth monitor in perf test you need to add Target setting in config.json file:
+```
+"bandwidth_settings": [bool, sample_count]
+```
+example:
+```
+"bandwidth_settings": [true, 30]
+```
