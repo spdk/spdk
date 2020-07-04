@@ -74,6 +74,15 @@ static const struct nvme_string admin_opcode[] = {
 	{ 0xFFFF, "ADMIN COMMAND" }
 };
 
+static const struct nvme_string fabric_opcode[] = {
+	{ SPDK_NVMF_FABRIC_COMMAND_PROPERTY_SET, "PROPERTY SET" },
+	{ SPDK_NVMF_FABRIC_COMMAND_CONNECT, "CONNECT" },
+	{ SPDK_NVMF_FABRIC_COMMAND_PROPERTY_GET, "PROPERTY GET" },
+	{ SPDK_NVMF_FABRIC_COMMAND_AUTHENTICATION_SEND, "AUTHENTICATION SEND" },
+	{ SPDK_NVMF_FABRIC_COMMAND_AUTHENTICATION_RECV, "AUTHENTICATION RECV" },
+	{ 0xFFFF, "RESERVED / VENDOR SPECIFIC" }
+};
+
 static const struct nvme_string feat_opcode[] = {
 	{ SPDK_NVME_FEAT_ARBITRATION, "ARBITRATION" },
 	{ SPDK_NVME_FEAT_POWER_MANAGEMENT, "POWER MANAGEMENT" },
@@ -138,6 +147,7 @@ static void
 nvme_admin_qpair_print_command(uint16_t qid, struct spdk_nvme_cmd *cmd)
 {
 	assert(cmd != NULL);
+	struct spdk_nvmf_capsule_cmd *fcmd = (void *)cmd;
 
 	switch ((int)cmd->opc) {
 	case SPDK_NVME_OPC_SET_FEATURES:
@@ -145,6 +155,11 @@ nvme_admin_qpair_print_command(uint16_t qid, struct spdk_nvme_cmd *cmd)
 		SPDK_NOTICELOG("%s %s cid:%d cdw10:%08x\n",
 			       nvme_get_string(admin_opcode, cmd->opc), nvme_get_string(feat_opcode,
 					       cmd->cdw10_bits.set_features.fid), cmd->cid, cmd->cdw10);
+		break;
+	case SPDK_NVME_OPC_FABRIC:
+		SPDK_NOTICELOG("%s %s qid:%d cid:%d\n",
+			       nvme_get_string(admin_opcode, cmd->opc), nvme_get_string(fabric_opcode, fcmd->fctype), qid,
+			       fcmd->cid);
 		break;
 	default:
 		SPDK_NOTICELOG("%s (%02x) qid:%d cid:%d nsid:%x cdw10:%08x cdw11:%08x\n",
