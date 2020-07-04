@@ -2967,57 +2967,15 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 }
 
 static void
-nvmf_trace_command(union nvmf_h2c_msg *h2c_msg, bool is_admin_queue)
-{
-	struct spdk_nvmf_capsule_cmd *cap_hdr = &h2c_msg->nvmf_cmd;
-	struct spdk_nvme_cmd *cmd = &h2c_msg->nvme_cmd;
-	struct spdk_nvme_sgl_descriptor *sgl = &cmd->dptr.sgl1;
-	uint8_t opc;
-
-	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
-		opc = cap_hdr->fctype;
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "%s Fabrics cmd: fctype 0x%02x cid %u\n",
-			      is_admin_queue ? "Admin" : "I/O",
-			      cap_hdr->fctype, cap_hdr->cid);
-	} else {
-		opc = cmd->opc;
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "%s cmd: opc 0x%02x fuse %u cid %u nsid %u cdw10 0x%08x\n",
-			      is_admin_queue ? "Admin" : "I/O",
-			      cmd->opc, cmd->fuse, cmd->cid, cmd->nsid, cmd->cdw10);
-		if (cmd->mptr) {
-			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "mptr 0x%" PRIx64 "\n", cmd->mptr);
-		}
-		if (cmd->psdt != SPDK_NVME_PSDT_SGL_MPTR_CONTIG &&
-		    cmd->psdt != SPDK_NVME_PSDT_SGL_MPTR_SGL) {
-			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "psdt %u\n", cmd->psdt);
-		}
-	}
-
-	if (spdk_nvme_opc_get_data_transfer(opc) != SPDK_NVME_DATA_NONE) {
-		if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK) {
-			SPDK_DEBUGLOG(SPDK_LOG_NVMF,
-				      "SGL: Keyed%s: addr 0x%" PRIx64 " key 0x%x len 0x%x\n",
-				      sgl->generic.subtype == SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY ? " (Inv)" : "",
-				      sgl->address, sgl->keyed.key, sgl->keyed.length);
-		} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK) {
-			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "SGL: Data block: %s 0x%" PRIx64 " len 0x%x\n",
-				      sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET ? "offs" : "addr",
-				      sgl->address, sgl->unkeyed.length);
-		} else {
-			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "SGL type 0x%x subtype 0x%x\n",
-				      sgl->generic.type, sgl->generic.subtype);
-		}
-	}
-}
-
-static void
 _nvmf_request_exec(struct spdk_nvmf_request *req,
 		   struct spdk_nvmf_subsystem_poll_group *sgroup)
 {
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 	enum spdk_nvmf_request_exec_status status;
 
-	nvmf_trace_command(req->cmd, nvmf_qpair_is_admin_queue(qpair));
+	if (SPDK_DEBUGLOG_FLAG_ENABLED("nvmf")) {
+		spdk_nvme_print_command(qpair->qid, &req->cmd->nvme_cmd);
+	}
 
 	if (sgroup) {
 		sgroup->io_outstanding++;
