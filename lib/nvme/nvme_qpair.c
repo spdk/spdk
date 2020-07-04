@@ -74,6 +74,31 @@ static const struct nvme_string admin_opcode[] = {
 	{ 0xFFFF, "ADMIN COMMAND" }
 };
 
+static const struct nvme_string feat_opcode[] = {
+	{ SPDK_NVME_FEAT_ARBITRATION, "ARBITRATION" },
+	{ SPDK_NVME_FEAT_POWER_MANAGEMENT, "POWER MANAGEMENT" },
+	{ SPDK_NVME_FEAT_LBA_RANGE_TYPE, "LBA RANGE TYPE" },
+	{ SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD, "TEMPERATURE THRESHOLD" },
+	{ SPDK_NVME_FEAT_ERROR_RECOVERY, "ERROR_RECOVERY" },
+	{ SPDK_NVME_FEAT_VOLATILE_WRITE_CACHE, "VOLATILE WRITE CACHE" },
+	{ SPDK_NVME_FEAT_NUMBER_OF_QUEUES, "NUMBER OF QUEUES" },
+	{ SPDK_NVME_FEAT_INTERRUPT_COALESCING, "INTERRUPT COALESCING" },
+	{ SPDK_NVME_FEAT_INTERRUPT_VECTOR_CONFIGURATION, "INTERRUPT VECTOR CONFIGURATION" },
+	{ SPDK_NVME_FEAT_WRITE_ATOMICITY, "WRITE ATOMICITY" },
+	{ SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION, "ASYNC EVENT CONFIGURATION" },
+	{ SPDK_NVME_FEAT_AUTONOMOUS_POWER_STATE_TRANSITION, "AUTONOMOUS POWER STATE TRANSITION" },
+	{ SPDK_NVME_FEAT_HOST_MEM_BUFFER, "HOST MEM BUFFER" },
+	{ SPDK_NVME_FEAT_TIMESTAMP, "TIMESTAMP" },
+	{ SPDK_NVME_FEAT_KEEP_ALIVE_TIMER, "KEEP ALIVE TIMER" },
+	{ SPDK_NVME_FEAT_HOST_CONTROLLED_THERMAL_MANAGEMENT, "HOST CONTROLLED THERMAL MANAGEMENT" },
+	{ SPDK_NVME_FEAT_NON_OPERATIONAL_POWER_STATE_CONFIG, "NON OPERATIONAL POWER STATE CONFIG" },
+	{ SPDK_NVME_FEAT_SOFTWARE_PROGRESS_MARKER, "SOFTWARE PROGRESS MARKER" },
+	{ SPDK_NVME_FEAT_HOST_IDENTIFIER, "HOST IDENTIFIER" },
+	{ SPDK_NVME_FEAT_HOST_RESERVE_MASK, "HOST RESERVE MASK" },
+	{ SPDK_NVME_FEAT_HOST_RESERVE_PERSIST, "HOST RESERVE PERSIST" },
+	{ 0xFFFF, "RESERVED" }
+};
+
 static const struct nvme_string io_opcode[] = {
 	{ SPDK_NVME_OPC_FLUSH, "FLUSH" },
 	{ SPDK_NVME_OPC_WRITE, "WRITE" },
@@ -114,9 +139,18 @@ nvme_admin_qpair_print_command(uint16_t qid, struct spdk_nvme_cmd *cmd)
 {
 	assert(cmd != NULL);
 
-	SPDK_NOTICELOG("%s (%02x) qid:%d cid:%d nsid:%x cdw10:%08x cdw11:%08x\n",
-		       nvme_get_string(admin_opcode, cmd->opc), cmd->opc, qid, cmd->cid, cmd->nsid, cmd->cdw10,
-		       cmd->cdw11);
+	switch ((int)cmd->opc) {
+	case SPDK_NVME_OPC_SET_FEATURES:
+	case SPDK_NVME_OPC_GET_FEATURES:
+		SPDK_NOTICELOG("%s %s cid:%d cdw10:%08x\n",
+			       nvme_get_string(admin_opcode, cmd->opc), nvme_get_string(feat_opcode,
+					       cmd->cdw10_bits.set_features.fid), cmd->cid, cmd->cdw10);
+		break;
+	default:
+		SPDK_NOTICELOG("%s (%02x) qid:%d cid:%d nsid:%x cdw10:%08x cdw11:%08x\n",
+			       nvme_get_string(admin_opcode, cmd->opc), cmd->opc, qid, cmd->cid, cmd->nsid, cmd->cdw10,
+			       cmd->cdw11);
+	}
 }
 
 static void
