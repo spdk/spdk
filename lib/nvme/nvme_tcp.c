@@ -122,7 +122,8 @@ struct nvme_tcp_req {
 	struct {
 		uint8_t				send_ack : 1;
 		uint8_t				data_recv : 1;
-		uint8_t				reserved : 6;
+		uint8_t				r2t_recv : 1;
+		uint8_t				reserved : 5;
 	} ordering;
 	struct nvme_tcp_pdu			*send_pdu;
 	struct iovec				iov[NVME_TCP_MAX_SGL_DESCRIPTORS];
@@ -174,6 +175,7 @@ nvme_tcp_req_get(struct nvme_tcp_qpair *tqpair)
 	tcp_req->iovcnt = 0;
 	tcp_req->ordering.send_ack = 0;
 	tcp_req->ordering.data_recv = 0;
+	tcp_req->ordering.r2t_recv = 0;
 	memset(tcp_req->send_pdu, 0, sizeof(struct nvme_tcp_pdu));
 	TAILQ_INSERT_TAIL(&tqpair->outstanding_reqs, tcp_req, link);
 
@@ -517,7 +519,12 @@ nvme_tcp_qpair_cmd_send_complete(void *cb_arg)
 	struct nvme_tcp_req *tcp_req = cb_arg;
 
 	tcp_req->ordering.send_ack = 1;
-	nvme_tcp_req_put_safe(tcp_req);
+	/* Handle the r2t case */
+	if (spdk_unlikely(tcp_req->ordering.r2t_recv)) {
+		nvme_tcp_send_h2c_data(tcp_req);
+	} else {
+		nvme_tcp_req_put_safe(tcp_req);
+	}
 }
 
 static int
@@ -1144,8 +1151,9 @@ nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req)
 	struct spdk_nvme_tcp_h2c_data_hdr *h2c_data;
 	uint32_t plen, pdo, alignment;
 
-	/* Reinit the send_ack */
+	/* Reinit the send_ack and r2t_recv bits */
 	tcp_req->ordering.send_ack = 0;
+	tcp_req->ordering.r2t_recv = 0;
 	rsp_pdu = tcp_req->send_pdu;
 	memset(rsp_pdu, 0, sizeof(*rsp_pdu));
 	h2c_data = &rsp_pdu->hdr.h2c_data;
@@ -1213,6 +1221,7 @@ nvme_tcp_r2t_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu *pdu)
 		goto end;
 	}
 
+	tcp_req->ordering.r2t_recv = 1;
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "r2t info: r2to=%u, r2tl=%u for tqpair=%p\n", r2t->r2to, r2t->r2tl,
 		      tqpair);
 
@@ -1248,7 +1257,9 @@ nvme_tcp_r2t_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu *pdu)
 	tcp_req->r2tl_remain = r2t->r2tl;
 	nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
 
-	nvme_tcp_send_h2c_data(tcp_req);
+	if (spdk_likely(tcp_req->ordering.send_ack)) {
+		nvme_tcp_send_h2c_data(tcp_req);
+	}
 	return;
 
 end:
