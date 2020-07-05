@@ -206,7 +206,7 @@ void iscsi_task_mgmt_cpl(struct spdk_scsi_task *scsi_task);
 
 int initialize_iscsi_conns(void);
 void shutdown_iscsi_conns(void);
-void iscsi_conns_request_logout(struct spdk_iscsi_tgt_node *target);
+void iscsi_conns_request_logout(struct spdk_iscsi_tgt_node *target, int pg_tag);
 int iscsi_get_active_conns(struct spdk_iscsi_tgt_node *target);
 
 int iscsi_conn_construct(struct spdk_iscsi_portal *portal, struct spdk_sock *sock);

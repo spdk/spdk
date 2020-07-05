@@ -687,7 +687,7 @@ iscsi_tgt_node_destruct(struct spdk_iscsi_tgt_node *target,
 	target->destruct_cb_fn = cb_fn;
 	target->destruct_cb_arg = cb_arg;
 
-	iscsi_conns_request_logout(target);
+	iscsi_conns_request_logout(target, -1);
 
 	if (iscsi_get_active_conns(target) != 0) {
 		target->destruct_poller = SPDK_POLLER_REGISTER(iscsi_tgt_node_check_active_conns,

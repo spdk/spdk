@@ -862,7 +862,7 @@ iscsi_conn_request_logout(struct spdk_iscsi_conn *conn)
 }
 
 void
-iscsi_conns_request_logout(struct spdk_iscsi_tgt_node *target)
+iscsi_conns_request_logout(struct spdk_iscsi_tgt_node *target, int pg_tag)
 {
 	struct spdk_iscsi_conn	*conn;
 
@@ -872,7 +872,8 @@ iscsi_conns_request_logout(struct spdk_iscsi_tgt_node *target)
 
 	pthread_mutex_lock(&g_conns_mutex);
 	TAILQ_FOREACH(conn, &g_active_conns, conn_link) {
-		if (target == NULL || conn->target == target) {
+		if ((target == NULL) ||
+		    (conn->target == target && (pg_tag < 0 || conn->pg_tag == pg_tag))) {
 			iscsi_conn_request_logout(conn);
 		}
 	}
@@ -882,7 +883,7 @@ iscsi_conns_request_logout(struct spdk_iscsi_tgt_node *target)
 void
 shutdown_iscsi_conns(void)
 {
-	iscsi_conns_request_logout(NULL);
+	iscsi_conns_request_logout(NULL, -1);
 
 	g_shutdown_timer = SPDK_POLLER_REGISTER(iscsi_conn_check_shutdown, NULL, 1000);
 }
