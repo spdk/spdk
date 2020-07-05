@@ -34,6 +34,8 @@
 #include "nvme_internal.h"
 #include "spdk/nvme_ocssd.h"
 
+#define NVME_CMD_DPTR_STR_SIZE 256
+
 static int nvme_qpair_resubmit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req);
 
 struct nvme_string {
@@ -127,6 +129,24 @@ static const struct nvme_string io_opcode[] = {
 	{ 0xFFFF, "IO COMMAND" }
 };
 
+static const struct nvme_string sgl_type[] = {
+	{ SPDK_NVME_SGL_TYPE_DATA_BLOCK, "DATA BLOCK" },
+	{ SPDK_NVME_SGL_TYPE_BIT_BUCKET, "BIT BUCKET" },
+	{ SPDK_NVME_SGL_TYPE_SEGMENT, "SEGMENT" },
+	{ SPDK_NVME_SGL_TYPE_LAST_SEGMENT, "LAST SEGMENT" },
+	{ SPDK_NVME_SGL_TYPE_TRANSPORT_DATA_BLOCK, "TRANSPORT DATA BLOCK" },
+	{ SPDK_NVME_SGL_TYPE_VENDOR_SPECIFIC, "VENDOR SPECIFIC" },
+	{ 0xFFFF, "RESERVED" }
+};
+
+static const struct nvme_string sgl_subtype[] = {
+	{ SPDK_NVME_SGL_SUBTYPE_ADDRESS, "ADDRESS" },
+	{ SPDK_NVME_SGL_SUBTYPE_OFFSET, "OFFSET" },
+	{ SPDK_NVME_SGL_SUBTYPE_TRANSPORT, "TRANSPORT" },
+	{ SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY, "INVALIDATE KEY" },
+	{ 0xFFFF, "RESERVED" }
+};
+
 static const char *
 nvme_get_string(const struct nvme_string *strings, uint16_t value)
 {
@@ -144,34 +164,101 @@ nvme_get_string(const struct nvme_string *strings, uint16_t value)
 }
 
 static void
+nvme_get_sgl_unkeyed(char *buf, size_t size, struct spdk_nvme_cmd *cmd)
+{
+	struct spdk_nvme_sgl_descriptor *sgl = &cmd->dptr.sgl1;
+
+	snprintf(buf, size, " len:0x%x", sgl->unkeyed.length);
+}
+
+static void
+nvme_get_sgl_keyed(char *buf, size_t size, struct spdk_nvme_cmd *cmd)
+{
+	struct spdk_nvme_sgl_descriptor *sgl = &cmd->dptr.sgl1;
+
+	snprintf(buf, size, " len:0x%x key:0x%x", sgl->keyed.length, sgl->keyed.key);
+}
+
+static void
+nvme_get_sgl(char *buf, size_t size, struct spdk_nvme_cmd *cmd)
+{
+	struct spdk_nvme_sgl_descriptor *sgl = &cmd->dptr.sgl1;
+	int c;
+
+	c = snprintf(buf, size, "SGL %s %s 0x%" PRIx64, nvme_get_string(sgl_type, sgl->generic.type),
+		     nvme_get_string(sgl_subtype, sgl->generic.subtype), sgl->address);
+	assert(c >= 0 && (size_t)c < size);
+
+	if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK) {
+		nvme_get_sgl_unkeyed(buf + c, size - c, cmd);
+	}
+
+	if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK) {
+		nvme_get_sgl_keyed(buf + c, size - c, cmd);
+	}
+}
+
+static void
+nvme_get_prp(char *buf, size_t size, struct spdk_nvme_cmd *cmd)
+{
+	snprintf(buf, size, "PRP1 0x%" PRIx64 " PRP2 0x%" PRIx64, cmd->dptr.prp.prp1, cmd->dptr.prp.prp2);
+}
+
+static void
+nvme_get_dptr(char *buf, size_t size, struct spdk_nvme_cmd *cmd)
+{
+	if (spdk_nvme_opc_get_data_transfer(cmd->opc) != SPDK_NVME_DATA_NONE) {
+		switch (cmd->psdt) {
+		case SPDK_NVME_PSDT_PRP:
+			nvme_get_prp(buf, size, cmd);
+			break;
+		case SPDK_NVME_PSDT_SGL_MPTR_CONTIG:
+		case SPDK_NVME_PSDT_SGL_MPTR_SGL:
+			nvme_get_sgl(buf, size, cmd);
+			break;
+		default:
+			;
+		}
+	}
+}
+
+static void
 nvme_admin_qpair_print_command(uint16_t qid, struct spdk_nvme_cmd *cmd)
 {
-	assert(cmd != NULL);
 	struct spdk_nvmf_capsule_cmd *fcmd = (void *)cmd;
+	char dptr[NVME_CMD_DPTR_STR_SIZE] = {'\0'};
+
+	assert(cmd != NULL);
+
+	nvme_get_dptr(dptr, sizeof(dptr), cmd);
 
 	switch ((int)cmd->opc) {
 	case SPDK_NVME_OPC_SET_FEATURES:
 	case SPDK_NVME_OPC_GET_FEATURES:
-		SPDK_NOTICELOG("%s %s cid:%d cdw10:%08x\n",
+		SPDK_NOTICELOG("%s %s cid:%d cdw10:%08x %s\n",
 			       nvme_get_string(admin_opcode, cmd->opc), nvme_get_string(feat_opcode,
-					       cmd->cdw10_bits.set_features.fid), cmd->cid, cmd->cdw10);
+					       cmd->cdw10_bits.set_features.fid), cmd->cid, cmd->cdw10, dptr);
 		break;
 	case SPDK_NVME_OPC_FABRIC:
-		SPDK_NOTICELOG("%s %s qid:%d cid:%d\n",
+		SPDK_NOTICELOG("%s %s qid:%d cid:%d %s\n",
 			       nvme_get_string(admin_opcode, cmd->opc), nvme_get_string(fabric_opcode, fcmd->fctype), qid,
-			       fcmd->cid);
+			       fcmd->cid, dptr);
 		break;
 	default:
-		SPDK_NOTICELOG("%s (%02x) qid:%d cid:%d nsid:%x cdw10:%08x cdw11:%08x\n",
+		SPDK_NOTICELOG("%s (%02x) qid:%d cid:%d nsid:%x cdw10:%08x cdw11:%08x %s\n",
 			       nvme_get_string(admin_opcode, cmd->opc), cmd->opc, qid, cmd->cid, cmd->nsid, cmd->cdw10,
-			       cmd->cdw11);
+			       cmd->cdw11, dptr);
 	}
 }
 
 static void
 nvme_io_qpair_print_command(uint16_t qid, struct spdk_nvme_cmd *cmd)
 {
+	char dptr[NVME_CMD_DPTR_STR_SIZE] = {'\0'};
+
 	assert(cmd != NULL);
+
+	nvme_get_dptr(dptr, sizeof(dptr), cmd);
 
 	switch ((int)cmd->opc) {
 	case SPDK_NVME_OPC_WRITE:
@@ -179,10 +266,10 @@ nvme_io_qpair_print_command(uint16_t qid, struct spdk_nvme_cmd *cmd)
 	case SPDK_NVME_OPC_WRITE_UNCORRECTABLE:
 	case SPDK_NVME_OPC_COMPARE:
 		SPDK_NOTICELOG("%s sqid:%d cid:%d nsid:%d "
-			       "lba:%llu len:%d\n",
+			       "lba:%llu len:%d %s\n",
 			       nvme_get_string(io_opcode, cmd->opc), qid, cmd->cid, cmd->nsid,
 			       ((unsigned long long)cmd->cdw11 << 32) + cmd->cdw10,
-			       (cmd->cdw12 & 0xFFFF) + 1);
+			       (cmd->cdw12 & 0xFFFF) + 1, dptr);
 		break;
 	case SPDK_NVME_OPC_FLUSH:
 	case SPDK_NVME_OPC_DATASET_MANAGEMENT:
