@@ -96,7 +96,7 @@ if hash astyle; then
 			| xargs -P$(nproc) -n10 astyle --options=.astylerc >> astyle.log
 		if grep -q "^Formatted" astyle.log; then
 			echo " errors detected"
-			git diff
+			git diff --ignore-submodules=all
 			sed -i -e 's/  / /g' astyle.log
 			grep --color=auto "^Formatted.*" astyle.log
 			echo "Incorrect code style detected in one or more files."
