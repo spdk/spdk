@@ -147,6 +147,11 @@ fi
 
 ID=${ID:-$OS} ID=${ID,,}
 
+#Link suse related OS to sles
+if [[ ${ID,,} == *"suse"* ]]; then
+	ID="sles"
+fi
+
 if [[ -e $scriptsdir/pkgdep/$ID.sh ]]; then
 	source "$scriptsdir/pkgdep/$ID.sh"
 else
