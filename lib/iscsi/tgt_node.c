@@ -47,7 +47,7 @@
 #include "iscsi/init_grp.h"
 #include "iscsi/task.h"
 
-#define MAX_TMPBUF 1024
+#define MAX_TMPBUF 4096
 #define MAX_MASKBUF 128
 
 static bool
