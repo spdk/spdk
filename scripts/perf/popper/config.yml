@@ -1,0 +1,6 @@
+engine:
+    name: docker
+    options:
+        privileged: True
+        volumes:
+        - /dev:/dev

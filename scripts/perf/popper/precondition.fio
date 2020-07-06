@@ -1,0 +1,12 @@
+[nvme0]
+ioengine=libaio
+threads=1
+group_reporting=1
+size=5m
+filename=${DEVICE}
+time_based
+ss=iops:1%
+ss_dur=30s
+ss_ramp=10s
+rw=${RW}
+iodepth=${IOD}

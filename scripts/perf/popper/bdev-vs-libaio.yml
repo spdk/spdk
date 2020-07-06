@@ -1,0 +1,84 @@
+options:
+  env:
+    DEVICE: /dev/nvme0n1
+
+steps:
+- id: build-img
+  uses: docker://docker:19.03.10
+  dir: /workspace/scripts/perf/docker
+  args: [build, --tag=spdk, .]
+
+- id: prepare
+  uses: docker://spdk
+  skip_pull: true
+  runs: [bash, -ex, -c]
+  args:
+  - |
+    nvme format $DEVICE --ses=2 -n=1
+    chmod -R 777 ./scripts/perf/popper/results
+    jq \
+      '.subsystems[0]["config"][0].params.name=env.DEVICE' scripts/perf/popper/bdev.json >> tmp.json
+    mv tmp.json scripts/perf/popper/bdev.json
+
+- id: run-read-benchmark
+  uses: docker://spdk
+  skip_pull: true
+  runs: [bash, -ex, -c]
+  args:
+  - |
+    export RW=read IOD=256
+    fio scripts/perf/popper/precondition.fio
+
+    export RW=randread IOD=256 MIX=100
+    LD_PRELOAD=/root/spdk/examples/bdev/fio_plugin/fio_plugin \
+    fio \
+      --output-format=json \
+      --output=scripts/perf/popper/results/bdev_read.json \
+      scripts/perf/popper/spdk_jobfile.fio
+    fio \
+      --output-format=json \
+      --output=scripts/perf/popper/results/libaio_read.json \
+      scripts/perf/popper/libaio_jobfile.fio
+
+- id: run-write-benchmark
+  uses: docker://spdk
+  skip_pull: true
+  runs: [bash, -ex, -c]
+  args:
+  - |
+    export RW=write IOD=128
+    fio scripts/perf/popper/precondition.fio
+
+    export RW=randwrite IOD=32 MIX=0
+    LD_PRELOAD=/root/spdk/examples/bdev/fio_plugin/fio_plugin \
+    fio \
+      --output-format=json \
+      --output=scripts/perf/popper/results/bdev_write.json \
+      scripts/perf/popper/spdk_jobfile.fio
+    fio \
+      --output-format=json \
+      --output=scripts/perf/popper/results/libaio_write.json \
+      scripts/perf/popper/libaio_jobfile.fio
+
+- id: run-mix-benchmark
+  uses: docker://spdk
+  skip_pull: true
+  runs: [bash, -ex, -c]
+  args:
+  - |
+    export RW=readwrite IOD=256 MIX=70
+    LD_PRELOAD=/root/spdk/examples/bdev/fio_plugin/fio_plugin \
+    fio \
+      --output-format=json \
+      --output=scripts/perf/popper/results/bdev_mix.json \
+      scripts/perf/popper/spdk_jobfile.fio
+    fio \
+      --output-format=json \
+      --output=scripts/perf/popper/results/libaio_mix.json \
+      scripts/perf/popper/libaio_jobfile.fio
+
+- id: plot-results
+  uses: docker://jupyter/scipy-notebook:04f7f60d34a6
+  dir: /workspace/scripts/perf/popper/results
+  runs: [python3]
+  args: [results.py]
