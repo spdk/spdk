@@ -17,6 +17,7 @@ packages=(
 	ceph
 	gdb
 	fio
+	libaio-devel
 	librbd-devel
 	kernel-devel
 	gflags-devel

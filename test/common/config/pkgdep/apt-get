@@ -69,6 +69,7 @@ packages=(
 	ceph
 	gdb
 	fio
+	libaio-dev
 	librbd-dev
 	linux-headers-generic
 	libgflags-dev
