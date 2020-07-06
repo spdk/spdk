@@ -2,6 +2,11 @@
 
 ## v20.10: (Upcoming Release)
 
+### bdev
+
+A new API was added `bdev_examine_bdev` that allows users to examine a
+bdev explicitly. It can be used only if auto_examine is disabled.
+
 ## v20.07: SPDK CSI driver, new accel_fw commands, I/O abort support
 
 ### accel

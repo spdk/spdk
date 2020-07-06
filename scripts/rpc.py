@@ -174,6 +174,15 @@ if __name__ == "__main__":
     p.set_defaults(bdev_auto_examine=True)
     p.set_defaults(func=bdev_set_options)
 
+    def bdev_examine(args):
+        rpc.bdev.bdev_examine(args.client,
+                              name=args.name)
+
+    p = subparsers.add_parser('bdev_examine',
+                              help="""examine a bdev if it exists, or will examine it after it is created""")
+    p.add_argument('-b', '--name', help='Name or alias of the bdev')
+    p.set_defaults(func=bdev_examine)
+
     def bdev_compress_create(args):
         print_json(rpc.bdev.bdev_compress_create(args.client,
                                                  base_bdev_name=args.base_bdev_name,

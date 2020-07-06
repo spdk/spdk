@@ -484,6 +484,54 @@ bdev_examine(struct spdk_bdev *bdev)
 	}
 }
 
+int
+spdk_bdev_examine(const char *name)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_examine_item *item;
+
+	if (g_bdev_opts.bdev_auto_examine) {
+		SPDK_ERRLOG("Manual examine is not allowed if auto examine is enabled");
+		return -EINVAL;
+	}
+
+	if (bdev_examine_allowlist_check(name)) {
+		SPDK_ERRLOG("Duplicate bdev name for manual examine: %s\n", name);
+		return -EEXIST;
+	}
+
+	item = calloc(1, sizeof(*item));
+	if (!item) {
+		return -ENOMEM;
+	}
+	item->name = strdup(name);
+	if (!item->name) {
+		free(item);
+		return -ENOMEM;
+	}
+	TAILQ_INSERT_TAIL(&g_bdev_examine_allowlist, item, link);
+
+	bdev = spdk_bdev_get_by_name(name);
+	if (bdev) {
+		bdev_examine(bdev);
+	}
+	return 0;
+}
+
+static inline void
+bdev_examine_allowlist_config_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_bdev_examine_item *item;
+	TAILQ_FOREACH(item, &g_bdev_examine_allowlist, link) {
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "method", "bdev_examine");
+		spdk_json_write_named_object_begin(w, "params");
+		spdk_json_write_named_string(w, "name", item->name);
+		spdk_json_write_object_end(w);
+		spdk_json_write_object_end(w);
+	}
+}
+
 struct spdk_bdev *
 spdk_bdev_first(void)
 {
@@ -983,6 +1031,8 @@ spdk_bdev_subsystem_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_bool(w, "bdev_auto_examine", g_bdev_opts.bdev_auto_examine);
 	spdk_json_write_object_end(w);
 	spdk_json_write_object_end(w);
+
+	bdev_examine_allowlist_config_json(w);
 
 	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, internal.tailq) {
 		if (bdev_module->config_json) {

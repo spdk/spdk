@@ -22,6 +22,19 @@ def bdev_set_options(client, bdev_io_pool_size=None, bdev_io_cache_size=None, bd
     return client.call('bdev_set_options', params)
 
 
+def bdev_examine(client, name):
+    """Examine a bdev manually. If the bdev does not exist yet when this RPC is called,
+    it will be examined when it is created
+
+    Args:
+        name: name of the bdev
+    """
+    params = {
+        'name': name
+    }
+    return client.call('bdev_examine', params)
+
+
 @deprecated_alias('construct_compress_bdev')
 def bdev_compress_create(client, base_bdev_name, pm_path, lb_size):
     """Construct a compress virtual block device.

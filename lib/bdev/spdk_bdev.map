@@ -4,6 +4,7 @@
 	# Public functions in bdev.h
 	spdk_bdev_get_opts;
 	spdk_bdev_set_opts;
+	spdk_bdev_examine;
 	spdk_bdev_initialize;
 	spdk_bdev_finish;
 	spdk_bdev_config_text;

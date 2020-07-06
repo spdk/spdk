@@ -194,6 +194,14 @@ void spdk_bdev_get_opts(struct spdk_bdev_opts *opts);
 int spdk_bdev_set_opts(struct spdk_bdev_opts *opts);
 
 /**
+ * Examine a block device explicitly
+ *
+ * \param name the name or alias of the block device
+ * \return 0 if block device was examined successfully, suitable errno value otherwise
+ */
+int spdk_bdev_examine(const char *name);
+
+/**
  * Block device initialization callback.
  *
  * \param cb_arg Callback argument.
