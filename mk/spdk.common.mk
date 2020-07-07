@@ -153,6 +153,14 @@ ifeq ($(CONFIG_RDMA),y)
 SYS_LIBS += -libverbs -lrdmacm
 endif
 
+ifeq ($(CONFIG_URING),y)
+SYS_LIBS += -luring
+ifneq ($(strip $(CONFIG_URING_PATH)),)
+CFLAGS += -I$(CONFIG_URING_PATH)
+LDFLAGS += -L$(CONFIG_URING_PATH)
+endif
+endif
+
 IPSEC_MB_DIR=$(SPDK_ROOT_DIR)/intel-ipsec-mb
 
 ISAL_DIR=$(SPDK_ROOT_DIR)/isa-l
