@@ -258,8 +258,17 @@ function set_test_storage() {
 	local source fs size avail mount use
 
 	local storage_fallback storage_candidates
+	local storage_fallback_purge
 
-	storage_fallback=/tmp/spdk
+	storage_fallback_purge=("${TMPDIR:-/tmp}/spdk."??????)
+
+	if ((${#storage_fallback_purge[@]} > 0)); then
+		printf '* Purging old temporary test storage (%s)\n' \
+			"${storage_fallback_purge[*]}" >&2
+		rm -rf "${storage_fallback_purge[@]}"
+	fi
+
+	storage_fallback=$(mktemp -udt spdk.XXXXXX)
 	storage_candidates=(
 		"$testdir"
 		"$storage_fallback/tests/${testdir##*/}"
