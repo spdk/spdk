@@ -165,16 +165,18 @@ vbdev_delay_destruct(void *ctx)
 	return 0;
 }
 
-static void
+static int
 _process_io_stailq(void *arg, uint64_t ticks)
 {
 	STAILQ_HEAD(, delay_bdev_io) *head = arg;
 	struct delay_bdev_io *io_ctx, *tmp;
+	int completions = 0;
 
 	STAILQ_FOREACH_SAFE(io_ctx, head, link, tmp) {
 		if (io_ctx->completion_tick <= ticks) {
 			STAILQ_REMOVE(head, io_ctx, delay_bdev_io, link);
 			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(io_ctx), io_ctx->status);
+			completions++;
 		} else {
 			/* In the general case, I/O will become ready in an fifo order. When timeouts are dynamically
 			 * changed, this is not necessarily the case. However, the normal behavior will be restored
@@ -186,6 +188,8 @@ _process_io_stailq(void *arg, uint64_t ticks)
 			break;
 		}
 	}
+
+	return completions;
 }
 
 static int
@@ -193,13 +197,14 @@ _delay_finish_io(void *arg)
 {
 	struct delay_io_channel *delay_ch = arg;
 	uint64_t ticks = spdk_get_ticks();
+	int completions = 0;
 
-	_process_io_stailq(&delay_ch->avg_read_io, ticks);
-	_process_io_stailq(&delay_ch->avg_write_io, ticks);
-	_process_io_stailq(&delay_ch->p99_read_io, ticks);
-	_process_io_stailq(&delay_ch->p99_write_io, ticks);
+	completions += _process_io_stailq(&delay_ch->avg_read_io, ticks);
+	completions += _process_io_stailq(&delay_ch->avg_write_io, ticks);
+	completions += _process_io_stailq(&delay_ch->p99_read_io, ticks);
+	completions += _process_io_stailq(&delay_ch->p99_write_io, ticks);
 
-	return SPDK_POLLER_BUSY;
+	return completions == 0 ? SPDK_POLLER_IDLE : SPDK_POLLER_BUSY;
 }
 
 /* Completion callback for IO that were issued from this bdev. The original bdev_io
