@@ -667,10 +667,15 @@ file_alloc(struct spdk_filesystem *fs)
 		return NULL;
 	}
 
+	if (pthread_spin_init(&file->lock, 0)) {
+		free(file->tree);
+		free(file);
+		return NULL;
+	}
+
 	file->fs = fs;
 	TAILQ_INIT(&file->open_requests);
 	TAILQ_INIT(&file->sync_requests);
-	pthread_spin_init(&file->lock, 0);
 	TAILQ_INSERT_TAIL(&fs->files, file, tailq);
 	file->priority = SPDK_FILE_PRIORITY_LOW;
 	return file;
@@ -1996,11 +2001,15 @@ spdk_fs_alloc_thread_ctx(struct spdk_filesystem *fs)
 		return NULL;
 	}
 
+	if (pthread_spin_init(&ctx->ch.lock, 0)) {
+		free(ctx);
+		return NULL;
+	}
+
 	fs_channel_create(fs, &ctx->ch, 512);
 
 	ctx->ch.send_request = fs->send_request;
 	ctx->ch.sync = 1;
-	pthread_spin_init(&ctx->ch.lock, 0);
 
 	return ctx;
 }

@@ -216,15 +216,21 @@ jsonrpc_server_accept(struct spdk_jsonrpc_server *server)
 		conn->closed = false;
 		conn->recv_len = 0;
 		conn->outstanding_requests = 0;
-		pthread_spin_init(&conn->queue_lock, PTHREAD_PROCESS_PRIVATE);
 		STAILQ_INIT(&conn->send_queue);
 		conn->send_request = NULL;
+
+		if (pthread_spin_init(&conn->queue_lock, PTHREAD_PROCESS_PRIVATE)) {
+			SPDK_ERRLOG("Unable to create queue lock for socket: %d", conn->sockfd);
+			close(conn->sockfd);
+			return -1;
+		}
 
 		flag = fcntl(conn->sockfd, F_GETFL);
 		if (fcntl(conn->sockfd, F_SETFL, flag | O_NONBLOCK) < 0) {
 			SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n",
 				    conn->sockfd, spdk_strerror(errno));
 			close(conn->sockfd);
+			pthread_spin_destroy(&conn->queue_lock);
 			return -1;
 		}
 

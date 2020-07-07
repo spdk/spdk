@@ -133,13 +133,18 @@ static int
 ftl_band_init_md(struct ftl_band *band)
 {
 	struct ftl_lba_map *lba_map = &band->lba_map;
+	int rc;
 
 	lba_map->vld = spdk_bit_array_create(ftl_get_num_blocks_in_band(band->dev));
 	if (!lba_map->vld) {
 		return -ENOMEM;
 	}
 
-	pthread_spin_init(&lba_map->lock, PTHREAD_PROCESS_PRIVATE);
+	rc = pthread_spin_init(&lba_map->lock, PTHREAD_PROCESS_PRIVATE);
+	if (rc) {
+		spdk_bit_array_free(&lba_map->vld);
+		return rc;
+	}
 	ftl_band_md_clear(band);
 	return 0;
 }
