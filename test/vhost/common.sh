@@ -1142,6 +1142,14 @@ function run_fio() {
 	$fio_start_cmd
 	sleep 1
 
+	if [[ "$fio_output_format" == "json" ]]; then
+		# Fio in client-server mode produces a lot of "trash" output
+		# preceding JSON structure, making it not possible to parse.
+		# Remove these lines from file.
+		# shellcheck disable=SC2005
+		echo "$(grep -vP '^[<\w]' "$out/$log_fname")" > "$out/$log_fname"
+	fi
+
 	if [[ ! $hide_results ]]; then
 		cat $out/$log_fname
 	fi
