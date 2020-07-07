@@ -1054,7 +1054,7 @@ nvme_ctrlr_set_state(struct spdk_nvme_ctrlr *ctrlr, enum nvme_ctrlr_state state,
 
 	ctrlr->state_timeout_tsc = timeout_in_ticks + now_ticks;
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "setting state to %s (timeout %" PRIu64 " ms)\n",
-		      nvme_ctrlr_state_string(ctrlr->state), ctrlr->state_timeout_tsc);
+		      nvme_ctrlr_state_string(ctrlr->state), timeout_in_ms);
 	return;
 inf:
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "setting state to %s (no timeout)\n",
