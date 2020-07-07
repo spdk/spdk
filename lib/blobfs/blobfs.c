@@ -554,6 +554,7 @@ static void
 fs_conf_parse(void)
 {
 	struct spdk_conf_section *sp;
+	int cache_buffer_shift;
 
 	sp = spdk_conf_find_section(NULL, "Blobfs");
 	if (sp == NULL) {
@@ -561,9 +562,11 @@ fs_conf_parse(void)
 		return;
 	}
 
-	g_fs_cache_buffer_shift = spdk_conf_section_get_intval(sp, "CacheBufferShift");
-	if (g_fs_cache_buffer_shift <= 0) {
+	cache_buffer_shift = spdk_conf_section_get_intval(sp, "CacheBufferShift");
+	if (cache_buffer_shift <= 0) {
 		g_fs_cache_buffer_shift = CACHE_BUFFER_SHIFT_DEFAULT;
+	} else {
+		g_fs_cache_buffer_shift = cache_buffer_shift;
 	}
 }
 
