@@ -76,6 +76,10 @@ get_timestamp_prefix(char *buf, int buf_size)
 	clock_gettime(CLOCK_REALTIME, &ts);
 	info = localtime(&ts.tv_sec);
 	usec = ts.tv_nsec / 1000;
+	if (info == NULL) {
+		snprintf(buf, buf_size, "[%s.%06ld] ", "unknown date", usec);
+		return;
+	}
 
 	strftime(date, sizeof(date), "%Y-%m-%d %H:%M:%S", info);
 	snprintf(buf, buf_size, "[%s.%06ld] ", date, usec);
