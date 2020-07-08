@@ -45,7 +45,7 @@ nvme_bdev_ctrlr_get(const struct spdk_nvme_transport_id *trid)
 	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
 
 	TAILQ_FOREACH(nvme_bdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
-		if (spdk_nvme_transport_id_compare(trid, nvme_bdev_ctrlr->trid) == 0) {
+		if (spdk_nvme_transport_id_compare(trid, nvme_bdev_ctrlr->connected_trid) == 0) {
 			return nvme_bdev_ctrlr;
 		}
 	}
@@ -128,7 +128,7 @@ nvme_bdev_unregister_cb(void *io_device)
 		free(nvme_bdev_ctrlr->namespaces[i]);
 	}
 	free(nvme_bdev_ctrlr->namespaces);
-	free(nvme_bdev_ctrlr->trid);
+	free(nvme_bdev_ctrlr->connected_trid);
 	free(nvme_bdev_ctrlr);
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);

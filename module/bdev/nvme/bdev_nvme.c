@@ -852,13 +852,13 @@ bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 
 	spdk_json_write_named_object_begin(w, "nvme");
 
-	if (nvme_bdev_ctrlr->trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
-		spdk_json_write_named_string(w, "pci_address", nvme_bdev_ctrlr->trid->traddr);
+	if (nvme_bdev_ctrlr->connected_trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
+		spdk_json_write_named_string(w, "pci_address", nvme_bdev_ctrlr->connected_trid->traddr);
 	}
 
 	spdk_json_write_named_object_begin(w, "trid");
 
-	nvme_bdev_dump_trid_json(nvme_bdev_ctrlr->trid, w);
+	nvme_bdev_dump_trid_json(nvme_bdev_ctrlr->connected_trid, w);
 
 	spdk_json_write_object_end(w);
 
@@ -1370,8 +1370,8 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 		return -ENOMEM;
 	}
 
-	nvme_bdev_ctrlr->trid = calloc(1, sizeof(*nvme_bdev_ctrlr->trid));
-	if (nvme_bdev_ctrlr->trid == NULL) {
+	nvme_bdev_ctrlr->connected_trid = calloc(1, sizeof(*nvme_bdev_ctrlr->connected_trid));
+	if (nvme_bdev_ctrlr->connected_trid == NULL) {
 		SPDK_ERRLOG("Failed to allocate device trid struct\n");
 		free(nvme_bdev_ctrlr);
 		return -ENOMEM;
@@ -1381,7 +1381,7 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	nvme_bdev_ctrlr->namespaces = calloc(nvme_bdev_ctrlr->num_ns, sizeof(struct nvme_bdev_ns *));
 	if (!nvme_bdev_ctrlr->namespaces) {
 		SPDK_ERRLOG("Failed to allocate block namespaces pointer\n");
-		free(nvme_bdev_ctrlr->trid);
+		free(nvme_bdev_ctrlr->connected_trid);
 		free(nvme_bdev_ctrlr);
 		return -ENOMEM;
 	}
@@ -1394,7 +1394,7 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 				free(nvme_bdev_ctrlr->namespaces[i - 1]);
 			}
 			free(nvme_bdev_ctrlr->namespaces);
-			free(nvme_bdev_ctrlr->trid);
+			free(nvme_bdev_ctrlr->connected_trid);
 			free(nvme_bdev_ctrlr);
 			return -ENOMEM;
 		}
@@ -1404,11 +1404,11 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	nvme_bdev_ctrlr->adminq_timer_poller = NULL;
 	nvme_bdev_ctrlr->ctrlr = ctrlr;
 	nvme_bdev_ctrlr->ref = 0;
-	*nvme_bdev_ctrlr->trid = *trid;
+	*nvme_bdev_ctrlr->connected_trid = *trid;
 	nvme_bdev_ctrlr->name = strdup(name);
 	if (nvme_bdev_ctrlr->name == NULL) {
 		free(nvme_bdev_ctrlr->namespaces);
-		free(nvme_bdev_ctrlr->trid);
+		free(nvme_bdev_ctrlr->connected_trid);
 		free(nvme_bdev_ctrlr);
 		return -ENOMEM;
 	}
@@ -1419,7 +1419,7 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 			SPDK_ERRLOG("Unable to initialize OCSSD controller\n");
 			free(nvme_bdev_ctrlr->name);
 			free(nvme_bdev_ctrlr->namespaces);
-			free(nvme_bdev_ctrlr->trid);
+			free(nvme_bdev_ctrlr->connected_trid);
 			free(nvme_bdev_ctrlr);
 			return rc;
 		}
@@ -1810,12 +1810,12 @@ bdev_nvme_delete(const char *name)
 		return -ENODEV;
 	}
 
-	if (nvme_bdev_ctrlr->trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
+	if (nvme_bdev_ctrlr->connected_trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
 		entry = calloc(1, sizeof(*entry));
 		if (!entry) {
 			return -ENOMEM;
 		}
-		entry->trid = *nvme_bdev_ctrlr->trid;
+		entry->trid = *nvme_bdev_ctrlr->connected_trid;
 		TAILQ_INSERT_TAIL(&g_skipped_nvme_ctrlrs, entry, tailq);
 	}
 
@@ -2735,31 +2735,31 @@ bdev_nvme_get_spdk_running_config(FILE *fp)
 		const char *trtype;
 		const char *prchk_flags;
 
-		trtype = spdk_nvme_transport_id_trtype_str(nvme_bdev_ctrlr->trid->trtype);
+		trtype = spdk_nvme_transport_id_trtype_str(nvme_bdev_ctrlr->connected_trid->trtype);
 		if (!trtype) {
 			continue;
 		}
 
-		if (nvme_bdev_ctrlr->trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
+		if (nvme_bdev_ctrlr->connected_trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
 			fprintf(fp, "TransportID \"trtype:%s traddr:%s\" %s\n",
 				trtype,
-				nvme_bdev_ctrlr->trid->traddr, nvme_bdev_ctrlr->name);
+				nvme_bdev_ctrlr->connected_trid->traddr, nvme_bdev_ctrlr->name);
 		} else {
 			const char *adrfam;
 
-			adrfam = spdk_nvme_transport_id_adrfam_str(nvme_bdev_ctrlr->trid->adrfam);
+			adrfam = spdk_nvme_transport_id_adrfam_str(nvme_bdev_ctrlr->connected_trid->adrfam);
 			prchk_flags = spdk_nvme_prchk_flags_str(nvme_bdev_ctrlr->prchk_flags);
 
 			if (adrfam) {
 				fprintf(fp, "TransportID \"trtype:%s adrfam:%s traddr:%s trsvcid:%s subnqn:%s\" %s",
 					trtype,	adrfam,
-					nvme_bdev_ctrlr->trid->traddr, nvme_bdev_ctrlr->trid->trsvcid,
-					nvme_bdev_ctrlr->trid->subnqn, nvme_bdev_ctrlr->name);
+					nvme_bdev_ctrlr->connected_trid->traddr, nvme_bdev_ctrlr->connected_trid->trsvcid,
+					nvme_bdev_ctrlr->connected_trid->subnqn, nvme_bdev_ctrlr->name);
 			} else {
 				fprintf(fp, "TransportID \"trtype:%s traddr:%s trsvcid:%s subnqn:%s\" %s",
 					trtype,
-					nvme_bdev_ctrlr->trid->traddr, nvme_bdev_ctrlr->trid->trsvcid,
-					nvme_bdev_ctrlr->trid->subnqn, nvme_bdev_ctrlr->name);
+					nvme_bdev_ctrlr->connected_trid->traddr, nvme_bdev_ctrlr->connected_trid->trsvcid,
+					nvme_bdev_ctrlr->connected_trid->subnqn, nvme_bdev_ctrlr->name);
 			}
 
 			if (prchk_flags) {
@@ -2867,7 +2867,7 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_FOREACH(nvme_bdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
-		trid = nvme_bdev_ctrlr->trid;
+		trid = nvme_bdev_ctrlr->connected_trid;
 
 		spdk_json_write_object_begin(w);
 

@@ -211,13 +211,13 @@ create_nvme_bdev_controller(const struct spdk_nvme_transport_id *trid, const cha
 	nvme_bdev_ctrlr->namespaces = calloc(ctrlr->ns_count, sizeof(struct nvme_bdev_ns *));
 	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr->namespaces != NULL);
 
-	nvme_bdev_ctrlr->trid = calloc(1, sizeof(struct spdk_nvme_transport_id));
-	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr->trid != NULL);
+	nvme_bdev_ctrlr->connected_trid = calloc(1, sizeof(struct spdk_nvme_transport_id));
+	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr->connected_trid != NULL);
 
 	nvme_bdev_ctrlr->ctrlr = ctrlr;
 	nvme_bdev_ctrlr->num_ns = ctrlr->ns_count;
 	nvme_bdev_ctrlr->ref = 0;
-	*nvme_bdev_ctrlr->trid = *trid;
+	*nvme_bdev_ctrlr->connected_trid = *trid;
 	nvme_bdev_ctrlr->name = strdup(name);
 
 	for (nsid = 0; nsid < ctrlr->ns_count; ++nsid) {
