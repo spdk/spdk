@@ -258,6 +258,10 @@ static uint32_t g_keep_alive_timeout_in_ms = 10000;
 
 static const char *g_core_mask;
 
+#define MAX_ALLOWED_PCI_DEVICE_NUM 128
+static struct spdk_pci_addr g_allowed_pci_addr[MAX_ALLOWED_PCI_DEVICE_NUM];
+static uint32_t g_allowed_pci_addr_num;
+
 struct trid_entry {
 	struct spdk_nvme_transport_id	trid;
 	uint16_t			nsid;
@@ -1369,6 +1373,8 @@ static void usage(char *program_name)
 	printf(" [Kernel device(s)]...");
 #endif
 	printf("\n");
+	printf("\t[-b allowed local PCIe device address]\n");
+	printf("\t Example: -b 0000:d8:00.0 -b 0000:d9:00.0\n");
 	printf("\t[-q io depth]\n");
 	printf("\t[-o io size in bytes]\n");
 	printf("\t[-P number of io queues per namespace. default: 1]\n");
@@ -1712,6 +1718,27 @@ add_trid(const char *trid_str)
 	return 0;
 }
 
+static int
+add_allowed_pci_device(const char *bdf_str)
+{
+	int rc;
+
+	if (g_allowed_pci_addr_num >= MAX_ALLOWED_PCI_DEVICE_NUM) {
+		fprintf(stderr, "Currently we only support allowed PCI device num=%d\n",
+			MAX_ALLOWED_PCI_DEVICE_NUM);
+		return -1;
+	}
+
+	rc = spdk_pci_addr_parse(&g_allowed_pci_addr[g_allowed_pci_addr_num], bdf_str);
+	if (rc < 0) {
+		fprintf(stderr, "Failed to parse the given bdf_str=%s\n", bdf_str);
+		return -1;
+	}
+
+	g_allowed_pci_addr_num++;
+	return 0;
+}
+
 static size_t
 parse_next_key(const char **str, char *key, char *val, size_t key_buf_size,
 	       size_t val_buf_size)
@@ -1809,7 +1836,7 @@ parse_args(int argc, char **argv)
 	long int val;
 	int rc;
 
-	while ((op = getopt(argc, argv, "a:c:e:gi:lo:q:r:k:s:t:w:z:A:C:DGHILM:NP:RS:T:U:VZ:")) != -1) {
+	while ((op = getopt(argc, argv, "a:b:c:e:gi:lo:q:r:k:s:t:w:z:A:C:DGHILM:NP:RS:T:U:VZ:")) != -1) {
 		switch (op) {
 		case 'a':
 		case 'A':
@@ -1873,6 +1900,12 @@ parse_args(int argc, char **argv)
 				}
 				g_io_align_specified = true;
 				break;
+			}
+			break;
+		case 'b':
+			if (add_allowed_pci_device(optarg)) {
+				usage(argv[0]);
+				return 1;
 			}
 			break;
 		case 'c':
@@ -2298,6 +2331,11 @@ int main(int argc, char **argv)
 	opts.hugepage_single_segments = g_dpdk_mem_single_seg;
 	if (g_no_pci) {
 		opts.no_pci = g_no_pci;
+	}
+
+	if (g_allowed_pci_addr_num) {
+		opts.pci_whitelist = g_allowed_pci_addr;
+		opts.num_pci_addr = g_allowed_pci_addr_num;
 	}
 	if (spdk_env_init(&opts) < 0) {
 		fprintf(stderr, "Unable to initialize SPDK env\n");
