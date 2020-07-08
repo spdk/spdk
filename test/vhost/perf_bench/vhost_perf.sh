@@ -446,6 +446,8 @@ for fio_job in ${fio_jobs//,/ }; do
 		mv $VHOST_DIR/fio_results/$fio_log_fname $VHOST_DIR/fio_results/$fio_log_fname.$i
 		sleep 1
 	done
+
+	parse_fio_results "$VHOST_DIR/fio_results" "$fio_log_fname"
 done
 
 notice "Shutting down virtual machines..."
