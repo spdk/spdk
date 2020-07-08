@@ -511,8 +511,6 @@ spdk_env_init(const struct spdk_env_opts *opts)
 	int orig_optind;
 	bool legacy_mem;
 
-	g_external_init = false;
-
 	rc = build_eal_cmdline(opts);
 	if (rc < 0) {
 		fprintf(stderr, "Invalid arguments to initialize DPDK\n");
@@ -559,7 +557,12 @@ spdk_env_init(const struct spdk_env_opts *opts)
 		legacy_mem = true;
 	}
 
-	return spdk_env_dpdk_post_init(legacy_mem);
+	rc = spdk_env_dpdk_post_init(legacy_mem);
+	if (rc == 0) {
+		g_external_init = false;
+	}
+
+	return rc;
 }
 
 void
