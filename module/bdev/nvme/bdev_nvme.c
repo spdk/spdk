@@ -1389,6 +1389,7 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 		}
 	}
 
+	nvme_bdev_ctrlr->thread = spdk_get_thread();
 	nvme_bdev_ctrlr->adminq_timer_poller = NULL;
 	nvme_bdev_ctrlr->ctrlr = ctrlr;
 	nvme_bdev_ctrlr->ref = 0;

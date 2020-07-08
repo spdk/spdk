@@ -95,6 +95,7 @@ struct nvme_bdev_ctrlr {
 
 	struct spdk_poller		*adminq_timer_poller;
 	struct spdk_poller		*destruct_poller;
+	struct spdk_thread		*thread;
 
 	struct ocssd_bdev_ctrlr		*ocssd_ctrlr;
 
