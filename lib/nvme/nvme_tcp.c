@@ -846,7 +846,9 @@ nvme_tcp_c2h_data_payload_handle(struct nvme_tcp_qpair *tqpair,
 		cpl.cid = tcp_req->cid;
 		cpl.sqid = tqpair->qpair.id;
 		nvme_tcp_req_complete(tcp_req, &cpl);
-		(*reaped)++;
+		if (tcp_req->ordering.send_ack) {
+			(*reaped)++;
+		}
 
 		tcp_req->ordering.data_recv = 1;
 		nvme_tcp_req_put_safe(tcp_req);
