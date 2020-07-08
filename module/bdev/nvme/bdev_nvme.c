@@ -793,7 +793,7 @@ bdev_nvme_poll_group_create_cb(void *io_device, void *ctx_buf)
 		return -1;
 	}
 
-	group->poller = spdk_poller_register(bdev_nvme_poll, group, g_opts.nvme_ioq_poll_period_us);
+	group->poller = SPDK_POLLER_REGISTER(bdev_nvme_poll, group, g_opts.nvme_ioq_poll_period_us);
 
 	if (group->poller == NULL) {
 		spdk_nvme_poll_group_destroy(group->group);
