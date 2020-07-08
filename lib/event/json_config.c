@@ -384,14 +384,17 @@ app_json_config_load_subsystem_config_entry(void *_ctx)
 		goto out;
 	}
 
-	/* Get _END by skipping params and going back by one element. */
-	params_end = cfg.params + spdk_json_val_len(cfg.params) - 1;
-
-	/* Need to add one character to include '}' */
-	params_len = params_end->start - cfg.params->start + 1;
-
 	SPDK_DEBUG_APP_CFG("\tmethod: %s\n", cfg.method);
-	SPDK_DEBUG_APP_CFG("\tparams: %.*s\n", (int)params_len, (char *)cfg.params->start);
+
+	if (cfg.params) {
+		/* Get _END by skipping params and going back by one element. */
+		params_end = cfg.params + spdk_json_val_len(cfg.params) - 1;
+
+		/* Need to add one character to include '}' */
+		params_len = params_end->start - cfg.params->start + 1;
+
+		SPDK_DEBUG_APP_CFG("\tparams: %.*s\n", (int)params_len, (char *)cfg.params->start);
+	}
 
 	rpc_request = spdk_jsonrpc_client_create_request();
 	if (!rpc_request) {
@@ -408,10 +411,13 @@ app_json_config_load_subsystem_config_entry(void *_ctx)
 
 	spdk_json_write_named_string(w, "method", cfg.method);
 
-	/* No need to parse "params". Just dump the whole content of "params"
-	 * directly into the request and let the remote side verify it. */
-	spdk_json_write_name(w, "params");
-	spdk_json_write_val_raw(w, cfg.params->start, params_len);
+	if (cfg.params) {
+		/* No need to parse "params". Just dump the whole content of "params"
+		 * directly into the request and let the remote side verify it. */
+		spdk_json_write_name(w, "params");
+		spdk_json_write_val_raw(w, cfg.params->start, params_len);
+	}
+
 	spdk_jsonrpc_end_request(rpc_request, w);
 
 	rc = client_send_request(ctx, rpc_request, app_json_config_load_subsystem_config_entry_next);
