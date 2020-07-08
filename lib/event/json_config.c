@@ -367,10 +367,7 @@ app_json_config_load_subsystem_config_entry(void *_ctx)
 
 	if (spdk_json_decode_object(ctx->config_it, jsonrpc_cmd_decoders,
 				    SPDK_COUNTOF(jsonrpc_cmd_decoders), &cfg)) {
-		params_end = spdk_json_next(ctx->config_it);
-		assert(params_end != NULL);
-		params_len = params_end->start - ctx->config->start + 1;
-		SPDK_ERRLOG("Failed to decode config entry: %.*s!\n", (int)params_len, (char *)ctx->config_it);
+		SPDK_ERRLOG("Failed to decode config entry\n");
 		app_json_config_load_done(ctx, -EINVAL);
 		goto out;
 	}
