@@ -67,13 +67,9 @@ static const char *g_workload_type = NULL;
 static int g_io_size = 0;
 /* initialize to invalid value so we can detect if user overrides it. */
 static int g_rw_percentage = -1;
-static int g_is_random;
 static bool g_verify = false;
 static bool g_reset = false;
 static bool g_continue_on_failure = false;
-static bool g_unmap = false;
-static bool g_write_zeroes = false;
-static bool g_flush = false;
 static bool g_abort = false;
 static int g_queue_depth = 0;
 static uint64_t g_time_in_usec;
@@ -152,6 +148,20 @@ static struct spdk_bdevperf g_bdevperf = {
 	.running_jobs = 0,
 };
 
+enum job_config_rw {
+	JOB_CONFIG_RW_READ = 0,
+	JOB_CONFIG_RW_WRITE,
+	JOB_CONFIG_RW_RANDREAD,
+	JOB_CONFIG_RW_RANDWRITE,
+	JOB_CONFIG_RW_RW,
+	JOB_CONFIG_RW_RANDRW,
+	JOB_CONFIG_RW_VERIFY,
+	JOB_CONFIG_RW_RESET,
+	JOB_CONFIG_RW_UNMAP,
+	JOB_CONFIG_RW_FLUSH,
+	JOB_CONFIG_RW_WRITE_ZEROES,
+};
+
 /* Storing values from a section of job config file */
 struct job_config {
 	const char			*name;
@@ -162,6 +172,7 @@ struct job_config {
 	int				rwmixread;
 	int				offset;
 	int				length;
+	enum job_config_rw		rw;
 	TAILQ_ENTRY(job_config)	link;
 };
 
@@ -1168,6 +1179,51 @@ end:
 	spdk_thread_send_msg(g_master_thread, _bdevperf_construct_job_done, NULL);
 }
 
+static void
+job_init_rw(struct bdevperf_job *job, enum job_config_rw rw)
+{
+	switch (rw) {
+	case JOB_CONFIG_RW_READ:
+		job->rw_percentage = 100;
+		break;
+	case JOB_CONFIG_RW_WRITE:
+		job->rw_percentage = 0;
+		break;
+	case JOB_CONFIG_RW_RANDREAD:
+		job->is_random = true;
+		job->rw_percentage = 100;
+		break;
+	case JOB_CONFIG_RW_RANDWRITE:
+		job->is_random = true;
+		job->rw_percentage = 0;
+		break;
+	case JOB_CONFIG_RW_RW:
+		job->is_random = false;
+		break;
+	case JOB_CONFIG_RW_RANDRW:
+		job->is_random = true;
+		break;
+	case JOB_CONFIG_RW_VERIFY:
+		job->verify = true;
+		job->rw_percentage = 50;
+		break;
+	case JOB_CONFIG_RW_RESET:
+		job->reset = true;
+		job->verify = true;
+		job->rw_percentage = 50;
+		break;
+	case JOB_CONFIG_RW_UNMAP:
+		job->unmap = true;
+		break;
+	case JOB_CONFIG_RW_FLUSH:
+		job->flush = true;
+		break;
+	case JOB_CONFIG_RW_WRITE_ZEROES:
+		job->write_zeroes = true;
+		break;
+	}
+}
+
 static int
 bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 		       struct spdk_thread *thread)
@@ -1197,19 +1253,12 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 	job->workload_type = g_workload_type;
 	job->io_size = config->bs;
 	job->rw_percentage = config->rwmixread;
-	job->is_random = g_is_random;
-	job->verify = g_verify;
-	job->reset = g_reset;
 	job->continue_on_failure = g_continue_on_failure;
-	job->unmap = g_unmap;
-	job->write_zeroes = g_write_zeroes;
-	job->flush = g_flush;
-	job->abort = g_abort;
 	job->queue_depth = config->iodepth;
-
 	job->bdev = bdev;
 	job->io_size_blocks = job->io_size / data_block_size;
 	job->buf_size = job->io_size_blocks * block_size;
+	job_init_rw(job, config->rw);
 
 	if ((job->io_size % data_block_size) != 0) {
 		SPDK_ERRLOG("IO size (%d) is not multiples of data block size of bdev %s (%"PRIu32")\n",
@@ -1309,6 +1358,44 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 	return rc;
 }
 
+static int
+parse_rw(const char *str, enum job_config_rw ret)
+{
+	if (str == NULL) {
+		return ret;
+	}
+
+	if (!strcmp(str, "read")) {
+		ret = JOB_CONFIG_RW_READ;
+	} else if (!strcmp(str, "randread")) {
+		ret = JOB_CONFIG_RW_RANDREAD;
+	} else if (!strcmp(str, "write")) {
+		ret = JOB_CONFIG_RW_WRITE;
+	} else if (!strcmp(str, "randwrite")) {
+		ret = JOB_CONFIG_RW_RANDWRITE;
+	} else if (!strcmp(str, "verify")) {
+		ret = JOB_CONFIG_RW_VERIFY;
+	} else if (!strcmp(str, "reset")) {
+		ret = JOB_CONFIG_RW_RESET;
+	} else if (!strcmp(str, "unmap")) {
+		ret = JOB_CONFIG_RW_UNMAP;
+	} else if (!strcmp(str, "write_zeroes")) {
+		ret = JOB_CONFIG_RW_WRITE_ZEROES;
+	} else if (!strcmp(str, "flush")) {
+		ret = JOB_CONFIG_RW_FLUSH;
+	} else if (!strcmp(str, "rw")) {
+		ret = JOB_CONFIG_RW_RW;
+	} else if (!strcmp(str, "randrw")) {
+		ret = JOB_CONFIG_RW_RANDRW;
+	} else {
+		fprintf(stderr, "rw must be one of\n"
+			"(read, write, randread, randwrite, rw, randrw, verify, reset, unmap, flush)\n");
+		ret = BDEVPERF_CONFIG_ERROR;
+	}
+
+	return ret;
+}
+
 static const char *
 config_filename_next(const char *filename, char *out)
 {
@@ -1396,6 +1483,10 @@ make_cli_job_config(const char *filename, int offset, int range)
 	config->rwmixread = g_rw_percentage;
 	config->offset = offset;
 	config->length = range;
+	config->rw = parse_rw(g_workload_type, BDEVPERF_CONFIG_ERROR);
+	if ((int)config->rw == BDEVPERF_CONFIG_ERROR) {
+		return -EINVAL;
+	}
 
 	TAILQ_INSERT_TAIL(&job_config_list, config, link);
 	return 0;
@@ -1575,6 +1666,9 @@ config_set_cli_args(struct job_config *config)
 	if (g_rw_percentage > 0) {
 		config->rwmixread = g_rw_percentage;
 	}
+	if (g_workload_type) {
+		config->rw = parse_rw(g_workload_type, config->rw);
+	}
 }
 
 static int
@@ -1585,6 +1679,7 @@ read_job_config(void)
 	struct spdk_conf_section *s;
 	struct job_config *config;
 	const char *cpumask;
+	const char *rw;
 	bool is_global;
 	int n = 0;
 
@@ -1621,7 +1716,12 @@ read_job_config(void)
 	global_default_config.offset = 0;
 	/* length 0 means 100% */
 	global_default_config.length = 0;
+	global_default_config.rw = BDEVPERF_CONFIG_UNDEFINED;
 	config_set_cli_args(&global_default_config);
+
+	if ((int)global_default_config.rw == BDEVPERF_CONFIG_ERROR) {
+		return 1;
+	}
 
 	/* There is only a single instance of global job_config
 	 * We just reset its value when we encounter new [global] section */
@@ -1703,6 +1803,16 @@ read_job_config(void)
 
 		config->length = parse_uint_option(s, "length", global_config.length);
 		if (config->length == BDEVPERF_CONFIG_ERROR) {
+			goto error;
+		}
+
+		rw = spdk_conf_section_get_val(s, "rw");
+		config->rw = parse_rw(rw, global_config.rw);
+		if ((int)config->rw == BDEVPERF_CONFIG_ERROR) {
+			fprintf(stderr, "Job '%s' has bad 'rw' value\n", config->name);
+			goto error;
+		} else if (!is_global && (int)config->rw == BDEVPERF_CONFIG_UNDEFINED) {
+			fprintf(stderr, "Job '%s' has no 'rw' assigned\n", config->name);
 			goto error;
 		}
 
@@ -1914,7 +2024,7 @@ verify_test_params(struct spdk_app_opts *opts)
 		bdevperf_usage();
 		return 1;
 	}
-	if (!g_workload_type) {
+	if (!g_bdevperf_conf_file && !g_workload_type) {
 		spdk_app_usage();
 		bdevperf_usage();
 		return 1;
@@ -1938,43 +2048,16 @@ verify_test_params(struct spdk_app_opts *opts)
 		return 1;
 	}
 
-	if (strcmp(g_workload_type, "read") &&
-	    strcmp(g_workload_type, "write") &&
-	    strcmp(g_workload_type, "randread") &&
-	    strcmp(g_workload_type, "randwrite") &&
-	    strcmp(g_workload_type, "rw") &&
-	    strcmp(g_workload_type, "randrw") &&
-	    strcmp(g_workload_type, "verify") &&
-	    strcmp(g_workload_type, "reset") &&
-	    strcmp(g_workload_type, "unmap") &&
-	    strcmp(g_workload_type, "write_zeroes") &&
-	    strcmp(g_workload_type, "flush")) {
-		fprintf(stderr,
-			"io pattern type must be one of\n"
-			"(read, write, randread, randwrite, rw, randrw, verify, reset, unmap, flush)\n");
-		return 1;
+	if (g_io_size > SPDK_BDEV_LARGE_BUF_MAX_SIZE) {
+		printf("I/O size of %d is greater than zero copy threshold (%d).\n",
+		       g_io_size, SPDK_BDEV_LARGE_BUF_MAX_SIZE);
+		printf("Zero copy mechanism will not be used.\n");
+		g_zcopy = false;
 	}
 
-	if (!strcmp(g_workload_type, "read") ||
-	    !strcmp(g_workload_type, "randread")) {
-		g_rw_percentage = 100;
-	}
-
-	if (!strcmp(g_workload_type, "write") ||
-	    !strcmp(g_workload_type, "randwrite")) {
-		g_rw_percentage = 0;
-	}
-
-	if (!strcmp(g_workload_type, "unmap")) {
-		g_unmap = true;
-	}
-
-	if (!strcmp(g_workload_type, "write_zeroes")) {
-		g_write_zeroes = true;
-	}
-
-	if (!strcmp(g_workload_type, "flush")) {
-		g_flush = true;
+	if (g_bdevperf_conf_file) {
+		/* workload_type verification happens during config file parsing */
+		return 0;
 	}
 
 	if (!strcmp(g_workload_type, "verify") ||
@@ -2006,34 +2089,14 @@ verify_test_params(struct spdk_app_opts *opts)
 		}
 	}
 
-	if (!g_bdevperf_conf_file &&
-	    (!strcmp(g_workload_type, "rw") ||
-	     !strcmp(g_workload_type, "randrw"))) {
+	if (!strcmp(g_workload_type, "rw") ||
+	    !strcmp(g_workload_type, "randrw")) {
 		if (g_rw_percentage < 0 || g_rw_percentage > 100) {
 			fprintf(stderr,
 				"-M must be specified to value from 0 to 100 "
 				"for rw or randrw.\n");
 			return 1;
 		}
-	}
-
-	if (!strcmp(g_workload_type, "read") ||
-	    !strcmp(g_workload_type, "write") ||
-	    !strcmp(g_workload_type, "rw") ||
-	    !strcmp(g_workload_type, "verify") ||
-	    !strcmp(g_workload_type, "reset") ||
-	    !strcmp(g_workload_type, "unmap") ||
-	    !strcmp(g_workload_type, "write_zeroes")) {
-		g_is_random = 0;
-	} else {
-		g_is_random = 1;
-	}
-
-	if (g_io_size > SPDK_BDEV_LARGE_BUF_MAX_SIZE) {
-		printf("I/O size of %d is greater than zero copy threshold (%d).\n",
-		       g_io_size, SPDK_BDEV_LARGE_BUF_MAX_SIZE);
-		printf("Zero copy mechanism will not be used.\n");
-		g_zcopy = false;
 	}
 
 	return 0;
