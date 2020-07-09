@@ -33,7 +33,7 @@ function install_liburing() {
 	local GIT_REPO_LIBURING=https://github.com/axboe/liburing.git
 	local liburing_dir=/usr/local/src/liburing
 
-	if [[ -e /usr/lib/liburing.so ]]; then
+	if [[ -e /usr/lib64/liburing.so ]]; then
 		echo "liburing is already installed. skipping"
 	else
 		if [[ -d $liburing_dir ]]; then
@@ -42,7 +42,7 @@ function install_liburing() {
 			mkdir $liburing_dir
 			git clone "${GIT_REPO_LIBURING}" "$liburing_dir"
 		fi
-		(cd "$liburing_dir" && ./configure && make install)
+		(cd "$liburing_dir" && ./configure --libdir=/usr/lib64 && make install)
 	fi
 }
 
