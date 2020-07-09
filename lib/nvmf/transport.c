@@ -254,6 +254,85 @@ spdk_nvmf_transport_stop_listen(struct spdk_nvmf_transport *transport,
 	return 0;
 }
 
+struct nvmf_stop_listen_ctx {
+	struct spdk_nvmf_transport *transport;
+	struct spdk_nvme_transport_id trid;
+	spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn;
+	void *cb_arg;
+};
+
+static void
+nvmf_stop_listen_fini(struct spdk_io_channel_iter *i, int status)
+{
+	struct nvmf_stop_listen_ctx *ctx;
+	struct spdk_nvmf_transport *transport;
+	int rc = status;
+
+	ctx = spdk_io_channel_iter_get_ctx(i);
+	transport = ctx->transport;
+	assert(transport != NULL);
+
+	rc = spdk_nvmf_transport_stop_listen(transport, &ctx->trid);
+	if (rc) {
+		SPDK_ERRLOG("Failed to stop listening on address '%s'\n", ctx->trid.traddr);
+	}
+
+	if (ctx->cb_fn) {
+		ctx->cb_fn(ctx->cb_arg, rc);
+	}
+	free(ctx);
+}
+
+static void
+nvmf_stop_listen_disconnect_qpairs(struct spdk_io_channel_iter *i)
+{
+	struct nvmf_stop_listen_ctx *ctx;
+	struct spdk_nvmf_poll_group *group;
+	struct spdk_io_channel *ch;
+	struct spdk_nvmf_qpair *qpair, *tmp_qpair;
+	struct spdk_nvme_transport_id tmp_trid;
+
+	ctx = spdk_io_channel_iter_get_ctx(i);
+	ch = spdk_io_channel_iter_get_channel(i);
+	group = spdk_io_channel_get_ctx(ch);
+
+	TAILQ_FOREACH_SAFE(qpair, &group->qpairs, link, tmp_qpair) {
+		/* skip qpairs that don't match the TRID. */
+		if (spdk_nvmf_qpair_get_listen_trid(qpair, &tmp_trid)) {
+			continue;
+		}
+
+		if (!spdk_nvme_transport_id_compare(&ctx->trid, &tmp_trid)) {
+			spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+		}
+	}
+	spdk_for_each_channel_continue(i, 0);
+}
+
+int
+spdk_nvmf_transport_stop_listen_async(struct spdk_nvmf_transport *transport,
+				      const struct spdk_nvme_transport_id *trid,
+				      spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn,
+				      void *cb_arg)
+{
+	struct nvmf_stop_listen_ctx *ctx;
+
+	ctx = calloc(1, sizeof(struct nvmf_stop_listen_ctx));
+	if (ctx == NULL) {
+		return -ENOMEM;
+	}
+
+	ctx->trid = *trid;
+	ctx->transport = transport;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	spdk_for_each_channel(transport->tgt, nvmf_stop_listen_disconnect_qpairs, ctx,
+			      nvmf_stop_listen_fini);
+
+	return 0;
+}
+
 uint32_t
 nvmf_transport_accept(struct spdk_nvmf_transport *transport)
 {

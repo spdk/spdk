@@ -117,7 +117,9 @@ struct spdk_nvmf_transport_poll_group_stat {
 };
 
 /**
- * Function to be called once the listener is associated with a subsystem.
+ * Function to be called once asynchronous listen add and remove
+ * operations are completed. See spdk_nvmf_subsystem_add_listener()
+ * and spdk_nvmf_transport_stop_listen_async().
  *
  * \param ctx Context argument passed to this function.
  * \param status 0 if it completed successfully, or negative errno if it failed.
@@ -993,6 +995,26 @@ spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
 int
 spdk_nvmf_transport_stop_listen(struct spdk_nvmf_transport *transport,
 				const struct spdk_nvme_transport_id *trid);
+
+/**
+ * Stop accepting new connections at the provided address.
+ *
+ * This is a counterpart to spdk_nvmf_tgt_listen(). It differs
+ * from spdk_nvmf_transport_stop_listen() in that it also destroys all
+ * qpairs that are connected to the specified listener. Because
+ * this function disconnects the qpairs, it has to be asynchronous.
+ *
+ * \param transport The transport associated with the listen address.
+ * \param trid The address to stop listening at.
+ * \param cb_fn The function to call on completion.
+ * \param cb_arg The argument to pass to the cb_fn.
+ *
+ * \return int. 0 when the asynchronous process starts successfully or a negated errno on failure.
+ */
+int spdk_nvmf_transport_stop_listen_async(struct spdk_nvmf_transport *transport,
+		const struct spdk_nvme_transport_id *trid,
+		spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn,
+		void *cb_arg);
 
 /**
  * \brief Get current transport poll group statistics.
