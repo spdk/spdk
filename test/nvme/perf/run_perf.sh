@@ -126,9 +126,7 @@ for ((j = 0; j < REPEAT_NO; j++)); do
 
 			cp $NVME_FIO_RESULTS $result_dir/perf_results_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.output
 		else
-			create_fio_config $k $PLUGIN "$DISK_NAMES" "$DISKS_NUMA" "$CORES"
 			desc="Running Test: Blocksize=${BLK_SIZE} Workload=$RW MIX=${MIX} qd=${IODEPTH} io_plugin/driver=$PLUGIN"
-
 			cat <<- EOF >> $BASE_DIR/config.fio
 				rw=$RW
 				rwmixread=$MIX
@@ -142,6 +140,7 @@ for ((j = 0; j < REPEAT_NO; j++)); do
 				log_avg_msec=250
 			EOF
 
+			create_fio_config $k $PLUGIN "$DISK_NAMES" "$DISKS_NUMA" "$CORES"
 			echo "USING CONFIG:"
 			cat $BASE_DIR/config.fio
 
