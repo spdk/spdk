@@ -474,7 +474,8 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 		     "  max_io_qpairs_per_ctrlr=%d, io_unit_size=%d,\n"
 		     "  in_capsule_data_size=%d, max_aq_depth=%d\n"
 		     "  num_shared_buffers=%d, c2h_success=%d,\n"
-		     "  dif_insert_or_strip=%d, sock_priority=%d\n",
+		     "  dif_insert_or_strip=%d, sock_priority=%d\n"
+		     "  abort_timeout_sec=%d\n",
 		     opts->max_queue_depth,
 		     opts->max_io_size,
 		     opts->max_qpairs_per_ctrlr - 1,
@@ -484,7 +485,8 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 		     opts->num_shared_buffers,
 		     opts->c2h_success,
 		     opts->dif_insert_or_strip,
-		     opts->sock_priority);
+		     opts->sock_priority,
+		     opts->abort_timeout_sec);
 
 	if (opts->sock_priority > SPDK_NVMF_TCP_DEFAULT_MAX_SOCK_PRIORITY) {
 		SPDK_ERRLOG("Unsupported socket_priority=%d, the current range is: 0 to %d\n"
@@ -2473,8 +2475,6 @@ nvmf_tcp_req_set_abort_status(struct spdk_nvmf_request *req,
 	req->rsp->nvme_cpl.cdw0 &= ~1U; /* Command was successfully aborted. */
 }
 
-#define NVMF_TCP_ABORT_TIMEOUT_SEC	1
-
 static int
 _nvmf_tcp_qpair_abort_request(void *ctx)
 {
@@ -2526,11 +2526,16 @@ nvmf_tcp_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
 			     struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_tcp_qpair *tqpair;
+	struct spdk_nvmf_tcp_transport *ttransport;
+	struct spdk_nvmf_transport *transport;
 	uint16_t cid;
 	uint32_t i;
 	struct spdk_nvmf_tcp_req *tcp_req_to_abort = NULL;
 
 	tqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_tcp_qpair, qpair);
+	ttransport = SPDK_CONTAINEROF(qpair->transport, struct spdk_nvmf_tcp_transport, transport);
+	transport = &ttransport->transport;
+
 	cid = req->cmd->nvme_cmd.cdw10_bits.abort.cid;
 
 	for (i = 0; i < tqpair->resource_count; i++) {
@@ -2548,7 +2553,8 @@ nvmf_tcp_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
 	}
 
 	req->req_to_abort = &tcp_req_to_abort->req;
-	req->timeout_tsc = spdk_get_ticks() + NVMF_TCP_ABORT_TIMEOUT_SEC * spdk_get_ticks_hz();
+	req->timeout_tsc = spdk_get_ticks() +
+			   transport->opts.abort_timeout_sec * spdk_get_ticks_hz();
 	req->poller = NULL;
 
 	_nvmf_tcp_qpair_abort_request(req);
@@ -2565,6 +2571,7 @@ nvmf_tcp_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
 #define SPDK_NVMF_TCP_DEFAULT_SUCCESS_OPTIMIZATION true
 #define SPDK_NVMF_TCP_DEFAULT_DIF_INSERT_OR_STRIP false
 #define SPDK_NVMF_TCP_DEFAULT_SOCK_PRIORITY 0
+#define SPDK_NVMF_TCP_DEFAULT_ABORT_TIMEOUT_SEC 1
 
 static void
 nvmf_tcp_opts_init(struct spdk_nvmf_transport_opts *opts)
@@ -2580,6 +2587,7 @@ nvmf_tcp_opts_init(struct spdk_nvmf_transport_opts *opts)
 	opts->c2h_success =		SPDK_NVMF_TCP_DEFAULT_SUCCESS_OPTIMIZATION;
 	opts->dif_insert_or_strip =	SPDK_NVMF_TCP_DEFAULT_DIF_INSERT_OR_STRIP;
 	opts->sock_priority =		SPDK_NVMF_TCP_DEFAULT_SOCK_PRIORITY;
+	opts->abort_timeout_sec =	SPDK_NVMF_TCP_DEFAULT_ABORT_TIMEOUT_SEC;
 }
 
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp = {

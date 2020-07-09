@@ -546,6 +546,7 @@ spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_
 		if (transport->ops->type == SPDK_NVME_TRANSPORT_RDMA) {
 			spdk_json_write_named_uint32(w, "max_srq_depth", transport->opts.max_srq_depth);
 		}
+		spdk_json_write_named_uint32(w, "abort_timeout_sec", transport->opts.abort_timeout_sec);
 		spdk_json_write_object_end(w);
 
 		spdk_json_write_object_end(w);

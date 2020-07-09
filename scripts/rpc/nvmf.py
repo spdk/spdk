@@ -108,7 +108,8 @@ def nvmf_create_transport(client,
                           c2h_success=True,
                           dif_insert_or_strip=None,
                           sock_priority=None,
-                          acceptor_backlog=None):
+                          acceptor_backlog=None,
+                          abort_timeout_sec=None):
     """NVMf Transport Create options.
 
     Args:
@@ -127,6 +128,7 @@ def nvmf_create_transport(client,
         c2h_success: Boolean flag to disable the C2H success optimization - TCP specific (optional)
         dif_insert_or_strip: Boolean flag to enable DIF insert/strip for I/O - TCP specific (optional)
         acceptor_backlog: Pending connections allowed at one time - RDMA specific (optional)
+        abort_timeout_sec: Abort execution timeout value, in seconds (optional)
 
     Returns:
         True or False
@@ -167,6 +169,8 @@ def nvmf_create_transport(client,
         params['sock_priority'] = sock_priority
     if acceptor_backlog is not None:
         params['acceptor_backlog'] = acceptor_backlog
+    if abort_timeout_sec:
+        params['abort_timeout_sec'] = abort_timeout_sec
     return client.call('nvmf_create_transport', params)
 
 

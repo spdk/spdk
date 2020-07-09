@@ -2222,6 +2222,7 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 #define SPDK_NVMF_RDMA_DEFAULT_NO_SRQ false
 #define SPDK_NVMF_RDMA_DIF_INSERT_OR_STRIP false
 #define SPDK_NVMF_RDMA_ACCEPTOR_BACKLOG 100
+#define SPDK_NVMF_RDMA_DEFAULT_ABORT_TIMEOUT_SEC 1
 
 static void
 nvmf_rdma_opts_init(struct spdk_nvmf_transport_opts *opts)
@@ -2238,6 +2239,7 @@ nvmf_rdma_opts_init(struct spdk_nvmf_transport_opts *opts)
 	opts->no_srq =			SPDK_NVMF_RDMA_DEFAULT_NO_SRQ;
 	opts->dif_insert_or_strip =	SPDK_NVMF_RDMA_DIF_INSERT_OR_STRIP;
 	opts->acceptor_backlog =	SPDK_NVMF_RDMA_ACCEPTOR_BACKLOG;
+	opts->abort_timeout_sec =	SPDK_NVMF_RDMA_DEFAULT_ABORT_TIMEOUT_SEC;
 }
 
 const struct spdk_mem_map_ops g_nvmf_rdma_map_ops = {
@@ -2299,7 +2301,7 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		     "  max_io_qpairs_per_ctrlr=%d, io_unit_size=%d,\n"
 		     "  in_capsule_data_size=%d, max_aq_depth=%d,\n"
 		     "  num_shared_buffers=%d, max_srq_depth=%d, no_srq=%d,"
-		     "  acceptor_backlog=%d\n",
+		     "  acceptor_backlog=%d, abort_timeout_sec=%d\n",
 		     opts->max_queue_depth,
 		     opts->max_io_size,
 		     opts->max_qpairs_per_ctrlr - 1,
@@ -2309,7 +2311,8 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		     opts->num_shared_buffers,
 		     opts->max_srq_depth,
 		     opts->no_srq,
-		     opts->acceptor_backlog);
+		     opts->acceptor_backlog,
+		     opts->abort_timeout_sec);
 
 	/* I/O unit size cannot be larger than max I/O size */
 	if (opts->io_unit_size > opts->max_io_size) {
@@ -4040,8 +4043,6 @@ nvmf_rdma_request_set_abort_status(struct spdk_nvmf_request *req,
 	req->rsp->nvme_cpl.cdw0 &= ~1U;	/* Command was successfully aborted. */
 }
 
-#define NVMF_RDMA_ABORT_TIMEOUT_SEC	1
-
 static int
 _nvmf_rdma_qpair_abort_request(void *ctx)
 {
@@ -4103,11 +4104,16 @@ nvmf_rdma_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
 			      struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_rdma_qpair *rqpair;
+	struct spdk_nvmf_rdma_transport *rtransport;
+	struct spdk_nvmf_transport *transport;
 	uint16_t cid;
 	uint32_t i;
 	struct spdk_nvmf_rdma_request *rdma_req_to_abort = NULL;
 
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+	rtransport = SPDK_CONTAINEROF(qpair->transport, struct spdk_nvmf_rdma_transport, transport);
+	transport = &rtransport->transport;
+
 	cid = req->cmd->nvme_cmd.cdw10_bits.abort.cid;
 
 	for (i = 0; i < rqpair->max_queue_depth; i++) {
@@ -4125,7 +4131,8 @@ nvmf_rdma_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
 	}
 
 	req->req_to_abort = &rdma_req_to_abort->req;
-	req->timeout_tsc = spdk_get_ticks() + NVMF_RDMA_ABORT_TIMEOUT_SEC * spdk_get_ticks_hz();
+	req->timeout_tsc = spdk_get_ticks() +
+			   transport->opts.abort_timeout_sec * spdk_get_ticks_hz();
 	req->poller = NULL;
 
 	_nvmf_rdma_qpair_abort_request(req);

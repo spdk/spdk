@@ -4120,6 +4120,7 @@ c2h_success                 | Optional | boolean | Disable C2H success optimizat
 dif_insert_or_strip         | Optional | boolean | Enable DIF insert for write I/O and DIF strip for read I/O DIF
 sock_priority               | Optional | number  | The socket priority of the connection owned by this transport (TCP only)
 acceptor_backlog            | Optional | number  | The number of pending connections allowed in backlog before failing new connection attempts (RDMA only)
+abort_timeout_sec           | Optional | number  | Abort execution timeout value, in seconds
 
 ### Example
 
@@ -4655,7 +4656,8 @@ Example response:
       "max_io_qpairs_per_ctrlr": 64,
       "in_capsule_data_size": 4096,
       "max_io_size": 131072,
-      "io_unit_size": 131072
+      "io_unit_size": 131072,
+      "abort_timeout_sec": 1
     }
   ]
 }

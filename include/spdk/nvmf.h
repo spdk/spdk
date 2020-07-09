@@ -85,6 +85,7 @@ struct spdk_nvmf_transport_opts {
 	bool		dif_insert_or_strip;
 	uint32_t	sock_priority;
 	int		acceptor_backlog;
+	uint32_t	abort_timeout_sec;
 };
 
 struct spdk_nvmf_poll_group_stat {

@@ -1651,6 +1651,10 @@ static const struct spdk_json_object_decoder nvmf_rpc_create_transport_decoder[]
 		spdk_json_decode_int32, true
 	},
 	{
+		"abort_timeout_sec", offsetof(struct nvmf_rpc_create_transport_ctx, opts.abort_timeout_sec),
+		spdk_json_decode_uint32, true
+	},
+	{
 		"tgt_name", offsetof(struct nvmf_rpc_create_transport_ctx, tgt_name),
 		spdk_json_decode_string, true
 	},
@@ -1802,6 +1806,7 @@ dump_nvmf_transport(struct spdk_json_write_ctx *w, struct spdk_nvmf_transport *t
 		spdk_json_write_named_bool(w, "c2h_success", opts->c2h_success);
 		spdk_json_write_named_uint32(w, "sock_priority", opts->sock_priority);
 	}
+	spdk_json_write_named_uint32(w, "abort_timeout_sec", opts->abort_timeout_sec);
 
 	spdk_json_write_object_end(w);
 }
