@@ -94,6 +94,9 @@ struct spdk_nvmf_request {
 	struct spdk_nvmf_dif_info	dif;
 	spdk_nvmf_nvme_passthru_cmd_cb	cmd_cb_fn;
 	struct spdk_nvmf_request	*first_fused_req;
+	struct spdk_nvmf_request	*req_to_abort;
+	struct spdk_poller		*poller;
+	uint64_t			timeout_tsc;
 
 	STAILQ_ENTRY(spdk_nvmf_request)	buf_link;
 	TAILQ_ENTRY(spdk_nvmf_request)	link;
