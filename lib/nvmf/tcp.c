@@ -2473,37 +2473,25 @@ nvmf_tcp_req_set_abort_status(struct spdk_nvmf_request *req,
 	req->rsp->nvme_cpl.cdw0 &= ~1U; /* Command was successfully aborted. */
 }
 
-static void
-nvmf_tcp_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
-			     struct spdk_nvmf_request *req)
+#define NVMF_TCP_ABORT_TIMEOUT_SEC	1
+
+static int
+_nvmf_tcp_qpair_abort_request(void *ctx)
 {
-	struct spdk_nvmf_tcp_qpair *tqpair;
-	uint16_t cid;
-	uint32_t i;
-	struct spdk_nvmf_tcp_req *tcp_req_to_abort = NULL;
+	struct spdk_nvmf_request *req = ctx;
+	struct spdk_nvmf_tcp_req *tcp_req_to_abort = SPDK_CONTAINEROF(req->req_to_abort,
+			struct spdk_nvmf_tcp_req, req);
+	struct spdk_nvmf_tcp_qpair *tqpair = SPDK_CONTAINEROF(req->req_to_abort->qpair,
+					     struct spdk_nvmf_tcp_qpair, qpair);
 	int rc;
 
-	tqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_tcp_qpair, qpair);
-	cid = req->cmd->nvme_cmd.cdw10_bits.abort.cid;
-
-	for (i = 0; i < tqpair->resource_count; i++) {
-		tcp_req_to_abort = &tqpair->reqs[i];
-
-		if (tcp_req_to_abort->state != TCP_REQUEST_STATE_FREE &&
-		    tcp_req_to_abort->req.cmd->nvme_cmd.cid == cid) {
-			break;
-		}
-	}
-
-	if (tcp_req_to_abort == NULL) {
-		goto complete;
-	}
+	spdk_poller_unregister(&req->poller);
 
 	switch (tcp_req_to_abort->state) {
 	case TCP_REQUEST_STATE_EXECUTING:
 		rc = nvmf_ctrlr_abort_request(req, &tcp_req_to_abort->req);
 		if (rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS) {
-			return;
+			return SPDK_POLLER_BUSY;
 		}
 		break;
 
@@ -2518,12 +2506,52 @@ nvmf_tcp_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
 		nvmf_tcp_req_set_abort_status(req, tcp_req_to_abort);
 		break;
 
+	case TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER:
+		if (spdk_get_ticks() < req->timeout_tsc) {
+			req->poller = SPDK_POLLER_REGISTER(_nvmf_tcp_qpair_abort_request, req, 0);
+			return SPDK_POLLER_BUSY;
+		}
+		break;
+
 	default:
 		break;
 	}
 
-complete:
 	spdk_nvmf_request_complete(req);
+	return SPDK_POLLER_BUSY;
+}
+
+static void
+nvmf_tcp_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
+			     struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_tcp_qpair *tqpair;
+	uint16_t cid;
+	uint32_t i;
+	struct spdk_nvmf_tcp_req *tcp_req_to_abort = NULL;
+
+	tqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_tcp_qpair, qpair);
+	cid = req->cmd->nvme_cmd.cdw10_bits.abort.cid;
+
+	for (i = 0; i < tqpair->resource_count; i++) {
+		tcp_req_to_abort = &tqpair->reqs[i];
+
+		if (tcp_req_to_abort->state != TCP_REQUEST_STATE_FREE &&
+		    tcp_req_to_abort->req.cmd->nvme_cmd.cid == cid) {
+			break;
+		}
+	}
+
+	if (tcp_req_to_abort == NULL) {
+		spdk_nvmf_request_complete(req);
+		return;
+	}
+
+	req->req_to_abort = &tcp_req_to_abort->req;
+	req->timeout_tsc = spdk_get_ticks() + NVMF_TCP_ABORT_TIMEOUT_SEC * spdk_get_ticks_hz();
+	req->poller = NULL;
+
+	_nvmf_tcp_qpair_abort_request(req);
 }
 
 #define SPDK_NVMF_TCP_DEFAULT_MAX_QUEUE_DEPTH 128
