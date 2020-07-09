@@ -2928,9 +2928,9 @@ _nvmf_request_complete(void *ctx)
 		sgroup = nvmf_subsystem_pg_from_connect_cmd(req);
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF,
-		      "cpl: cdw0=0x%08x sct=0x%01x sc=0x%02x cid=0x%04x\n",
-		      rsp->cdw0, rsp->status.sct, rsp->status.sc, rsp->cid);
+	if (SPDK_DEBUGLOG_FLAG_ENABLED("nvmf")) {
+		spdk_nvme_print_completion(qpair->qid, rsp);
+	}
 
 	TAILQ_REMOVE(&qpair->outstanding, req, link);
 	if (nvmf_transport_req_complete(req)) {
