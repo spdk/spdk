@@ -153,15 +153,23 @@ for ((j = 0; j < REPEAT_NO; j++)); do
 			fi
 
 			#Store values for every number of used disks
-			iops_disks[$k]=$((${iops_disks[$k]} + $(get_results iops $MIX)))
-			mean_lat_disks_usec[$k]=$((${mean_lat_disks_usec[$k]} + $(get_results mean_lat_usec $MIX)))
-			p99_lat_disks_usec[$k]=$((${p99_lat_disks_usec[$k]} + $(get_results p99_lat_usec $MIX)))
-			p99_99_lat_disks_usec[$k]=$((${p99_99_lat_disks_usec[$k]} + $(get_results p99_99_lat_usec $MIX)))
-			stdev_disks_usec[$k]=$((${stdev_disks_usec[$k]} + $(get_results stdev_usec $MIX)))
+			#Use recalculated value for mixread param in case rw mode is not rw.
+			rwmixread=$MIX
+			if [[ $RW = *"read"* ]]; then
+				rwmixread=100
+			elif [[ $RW = *"write"* ]]; then
+				rwmixread=0
+			fi
+			iops_disks[$k]=$((iops_disks[k] + $(get_results iops $rwmixread)))
+			mean_lat_disks_usec[$k]=$((mean_lat_disks_usec[k] + $(get_results mean_lat_usec $rwmixread)))
+			p99_lat_disks_usec[$k]=$((p99_lat_disks_usec[k] + $(get_results p99_lat_usec $rwmixread)))
+			p99_99_lat_disks_usec[$k]=$((p99_99_lat_disks_usec[k] + $(get_results p99_99_lat_usec $rwmixread)))
+			stdev_disks_usec[$k]=$((stdev_disks_usec[k] + $(get_results stdev_usec $rwmixread)))
 
-			mean_slat_disks_usec[$k]=$((${mean_slat_disks_usec[$k]} + $(get_results mean_slat_usec $MIX)))
-			mean_clat_disks_usec[$k]=$((${mean_clat_disks_usec[$k]} + $(get_results mean_clat_usec $MIX)))
-			bw[$k]=$((${bw[$k]} + $(get_results bw_Kibs $MIX)))
+			mean_slat_disks_usec[$k]=$((mean_slat_disks_usec[k] + $(get_results mean_slat_usec $rwmixread)))
+			mean_clat_disks_usec[$k]=$((mean_clat_disks_usec[k] + $(get_results mean_clat_usec $rwmixread)))
+			bw[$k]=$((bw[k] + $(get_results bw_Kibs $rwmixread)))
+
 			cp $NVME_FIO_RESULTS $result_dir/perf_results_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.json
 			cp $BASE_DIR/config.fio $result_dir/config_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.fio
 			rm -f $BASE_DIR/config.fio

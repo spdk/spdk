@@ -263,44 +263,46 @@ function preconditioning() {
 }
 
 function get_results() {
-	local reads_pct=$2
-	local writes_pct=$((100 - $2))
+	local reads_pct
+	local writes_pct
 
+	reads_pct=$(bc -l <<< "scale=3; $2/100")
+	writes_pct=$(bc -l <<< "scale=3; 1-$reads_pct")
 	case "$1" in
 		iops)
-			iops=$(jq -r '.jobs[] | (.read.iops + .write.iops)' $NVME_FIO_RESULTS)
+			iops=$(jq -r '.jobs[] | .read.iops + .write.iops' $NVME_FIO_RESULTS)
 			iops=${iops%.*}
 			echo $iops
 			;;
 		mean_lat_usec)
 			mean_lat=$(jq -r ".jobs[] | (.read.lat_ns.mean * $reads_pct + .write.lat_ns.mean * $writes_pct)" $NVME_FIO_RESULTS)
 			mean_lat=${mean_lat%.*}
-			echo $((mean_lat / 100000))
+			echo $((mean_lat / 1000))
 			;;
 		p99_lat_usec)
-			p99_lat=$(jq -r ".jobs[] | (.read.clat_ns.percentile.\"99.000000\" * $reads_pct + .write.clat_ns.percentile.\"99.000000\" * $writes_pct)" $NVME_FIO_RESULTS)
+			p99_lat=$(jq -r ".jobs[] | (.read.clat_ns.percentile.\"99.000000\"  // 0 * $reads_pct + .write.clat_ns.percentile.\"99.000000\" // 0 * $writes_pct)" $NVME_FIO_RESULTS)
 			p99_lat=${p99_lat%.*}
-			echo $((p99_lat / 100000))
+			echo $((p99_lat / 1000))
 			;;
 		p99_99_lat_usec)
-			p99_99_lat=$(jq -r ".jobs[] | (.read.clat_ns.percentile.\"99.990000\" * $reads_pct + .write.clat_ns.percentile.\"99.990000\" * $writes_pct)" $NVME_FIO_RESULTS)
+			p99_99_lat=$(jq -r ".jobs[] | (.read.clat_ns.percentile.\"99.990000\" // 0 * $reads_pct + .write.clat_ns.percentile.\"99.990000\" // 0 * $writes_pct)" $NVME_FIO_RESULTS)
 			p99_99_lat=${p99_99_lat%.*}
-			echo $((p99_99_lat / 100000))
+			echo $((p99_99_lat / 1000))
 			;;
 		stdev_usec)
 			stdev=$(jq -r ".jobs[] | (.read.clat_ns.stddev * $reads_pct + .write.clat_ns.stddev * $writes_pct)" $NVME_FIO_RESULTS)
 			stdev=${stdev%.*}
-			echo $((stdev / 100000))
+			echo $((stdev / 1000))
 			;;
 		mean_slat_usec)
 			mean_slat=$(jq -r ".jobs[] | (.read.slat_ns.mean * $reads_pct + .write.slat_ns.mean * $writes_pct)" $NVME_FIO_RESULTS)
 			mean_slat=${mean_slat%.*}
-			echo $((mean_slat / 100000))
+			echo $((mean_slat / 1000))
 			;;
 		mean_clat_usec)
 			mean_clat=$(jq -r ".jobs[] | (.read.clat_ns.mean * $reads_pct + .write.clat_ns.mean * $writes_pct)" $NVME_FIO_RESULTS)
 			mean_clat=${mean_clat%.*}
-			echo $((mean_clat / 100000))
+			echo $((mean_clat / 1000))
 			;;
 		bw_Kibs)
 			bw=$(jq -r ".jobs[] | (.read.bw + .write.bw)" $NVME_FIO_RESULTS)
