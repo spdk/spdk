@@ -925,8 +925,6 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 					sock->pending_recv = true;
 					TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
 				}
-			} else {
-				SPDK_UNREACHABLE();
 			}
 			break;
 		case SPDK_SOCK_TASK_WRITE:
