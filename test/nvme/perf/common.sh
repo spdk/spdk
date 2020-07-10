@@ -28,7 +28,8 @@ NUMJOBS=1
 REPEAT_NO=3
 FIO_BIN=$CONFIG_FIO_SOURCE_DIR/fio
 PLUGIN="nvme"
-DISKNO=1
+DISKCFG=""
+DISKNO="ALL"
 CPUS_ALLOWED=1
 NOIOSCALING=false
 PRECONDITIONING=true
@@ -68,6 +69,44 @@ function discover_bdevs() {
 	kill $stubpid
 	wait $stubpid
 	rm -f /var/run/spdk_bdev0
+}
+
+function create_spdk_bdev_conf() {
+	local output
+	local disk_cfg
+	local bdev_json_cfg
+
+	disk_cfg=($(grep -vP "^\s*#" "$DISKCFG"))
+
+	bdev_json_cfg=()
+	for i in "${!disk_cfg[@]}"; do
+		bdev_json_cfg+=("$(
+			cat <<- JSON
+				{
+					"method": "bdev_nvme_attach_controller",
+					"params": {
+						"trtype": "PCIe",
+						"name":"Nvme${i}",
+						"traddr":"${disk_cfg[i]}"
+					}
+				}
+			JSON
+		)")
+	done
+
+	local IFS=","
+	jq -r '.' <<- JSON > $BASE_DIR/bdev.conf
+		{
+			"subsystems": [
+				{
+					"subsystem": "bdev",
+					"config": [
+						${bdev_json_cfg[*]}
+					]
+				}
+			]
+		}
+	JSON
 }
 
 function is_bdf_not_mounted() {
@@ -114,28 +153,36 @@ function get_numa_node() {
 			cat /sys/bus/pci/devices/$bdev_bdf/numa_node
 		done
 	else
-		# Only target not mounted NVMes
-		for bdf in $(get_nvme_bdfs); do
-			if is_bdf_not_mounted $bdf; then
-				cat /sys/bus/pci/devices/$bdf/numa_node
-			fi
+		for name in $disks; do
+			local bdf
+			# Not reading directly from /sys/block/nvme* because of a kernel bug
+			# which results in NUMA 0 always getting reported.
+			bdf=$(cat /sys/block/$name/device/address)
+			cat /sys/bus/pci/devices/$bdf/numa_node
 		done
 	fi
 }
 
 function get_disks() {
 	local plugin=$1
+	local disk_cfg
+
+	disk_cfg=($(grep -vP "^\s*#" "$DISKCFG"))
 	if [[ "$plugin" =~ "nvme" ]]; then
-		for bdf in $(get_nvme_bdfs); do
-			echo "$bdf"
-		done
+		# PCI BDF address is enough for nvme-perf and nvme-fio-plugin,
+		# so just print them from configuration file
+		echo "${disk_cfg[*]}"
 	elif [[ "$plugin" =~ "bdev" ]]; then
+		# Generate NvmeXn1 bdev name configuration file for bdev-perf
+		# and bdev-fio-plugin
 		local bdevs
-		bdevs=$(discover_bdevs $ROOT_DIR $BASE_DIR/bdev.conf --json)
-		jq -r '.[].name' <<< $bdevs
+		local disk_no
+		disk_no=${#disk_cfg[@]}
+		eval echo "Nvme{0..$((disk_no - 1))}n1"
 	else
-		# Only target not mounted NVMes
-		for bdf in $(get_nvme_bdfs); do
+		# Find nvme block devices and only use the ones which
+		# are not mounted
+		for bdf in "${disk_cfg[@]}"; do
 			if is_bdf_not_mounted $bdf; then
 				local blkname
 				blkname=$(ls -l /sys/block/ | grep $bdf | awk '{print $9}')
@@ -403,14 +450,6 @@ function wait_for_nvme_reload() {
 
 function verify_disk_number() {
 	# Check if we have appropriate number of disks to carry out the test
-	if [[ "$PLUGIN" =~ "bdev" ]]; then
-		cat <<- JSON > "$BASE_DIR/bdev.conf"
-			{"subsystems":[
-			$("$ROOT_DIR/scripts/gen_nvme.sh" --json)
-			]}
-		JSON
-	fi
-
 	disks=($(get_disks $PLUGIN))
 	if [[ $DISKNO == "ALL" ]] || [[ $DISKNO == "all" ]]; then
 		DISKNO=${#disks[@]}
@@ -455,6 +494,10 @@ function usage() {
 	echo "                             - kernel-hybrid-polling"
 	echo "                             - kernel-libaio"
 	echo "                             - kernel-io-uring"
+	echo "    --disk-config         Configuration file containing PCI BDF addresses of NVMe disks to use in test."
+	echo "                          It consists a single column of PCI addresses. SPDK Bdev names will be assigned"
+	echo "                          and Kernel block device names detected."
+	echo "                          Lines starting with # are ignored as comments."
 	echo "    --max-disk=INT,ALL    Number of disks to test on, this will run multiple workloads with increasing number of disk each run."
 	echo "                          If =ALL then test on all found disk. [default=$DISKNO]"
 	echo "    --cpu-allowed=INT     Comma-separated list of CPU cores used to run the workload. [default=$CPUS_ALLOWED]"
@@ -481,6 +524,13 @@ while getopts 'h-:' optchar; do
 				repeat-no=*) REPEAT_NO="${OPTARG#*=}" ;;
 				fio-bin=*) FIO_BIN="${OPTARG#*=}" ;;
 				driver=*) PLUGIN="${OPTARG#*=}" ;;
+				disk-config=*)
+					DISKCFG="${OPTARG#*=}"
+					if [[ ! -f "$DISKCFG" ]]; then
+						echo "Disk confiuration file $DISKCFG does not exist!"
+						exit 1
+					fi
+					;;
 				max-disk=*) DISKNO="${OPTARG#*=}" ;;
 				cpu-allowed=*) CPUS_ALLOWED="${OPTARG#*=}" ;;
 				no-preconditioning) PRECONDITIONING=false ;;
