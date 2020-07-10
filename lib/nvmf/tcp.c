@@ -50,7 +50,6 @@
 
 #define NVMF_TCP_MAX_ACCEPT_SOCK_ONE_TIME 16
 #define SPDK_NVMF_TCP_DEFAULT_MAX_SOCK_PRIORITY 6
-#define SPDK_NVMF_TCP_RECV_BUF_SIZE_FACTOR 4
 
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp;
 
