@@ -240,7 +240,9 @@ function set_test_storage() {
 	local storage_fallback storage_candidates
 	local storage_fallback_purge
 
+	shopt -s nullglob
 	storage_fallback_purge=("${TMPDIR:-/tmp}/spdk."??????)
+	shopt -u nullglob
 
 	if ((${#storage_fallback_purge[@]} > 0)); then
 		printf '* Purging old temporary test storage (%s)\n' \
