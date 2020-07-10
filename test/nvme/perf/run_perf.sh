@@ -97,127 +97,110 @@ printf "%s,%s,%s,%s,%s,%s,%s,%s\n" $RUNTIME $RAMP_TIME $PLUGIN $IODEPTH $BLK_SIZ
 echo "num_of_disks,iops,avg_lat[usec],p99[usec],p99.99[usec],stdev[usec],avg_slat[usec],avg_clat[usec],bw[Kib/s]" >> $result_file
 #Run each workolad $REPEAT_NO times
 for ((j = 0; j < REPEAT_NO; j++)); do
-	#Start with $DISKNO disks and remove 2 disks for each run to avoid preconditioning before each run.
-	for ((k = DISKNO; k >= 1; k -= 2)); do
-		cp $BASE_DIR/config.fio.tmp $BASE_DIR/config.fio
-		echo "" >> $BASE_DIR/config.fio
-		#The SPDK fio plugin supports submitting/completing I/Os to multiple SSDs from a single thread.
-		#Therefore, the per thread queue depth is set to the desired IODEPTH/device X the number of devices per thread.
-		if [[ "$PLUGIN" =~ "spdk-plugin" ]] && [[ "$NOIOSCALING" = false ]]; then
-			qd=$((IODEPTH * k))
-		else
-			qd=$IODEPTH
-		fi
+	cp $BASE_DIR/config.fio.tmp $BASE_DIR/config.fio
+	echo "" >> $BASE_DIR/config.fio
+	#The SPDK fio plugin supports submitting/completing I/Os to multiple SSDs from a single thread.
+	#Therefore, the per thread queue depth is set to the desired IODEPTH/device X the number of devices per thread.
+	if [[ "$PLUGIN" =~ "spdk-plugin" ]] && [[ "$NOIOSCALING" = false ]]; then
+		qd=$((IODEPTH * DISKNO))
+	else
+		qd=$IODEPTH
+	fi
 
-		if [ $PLUGIN = "spdk-perf-bdev" ]; then
-			run_bdevperf > $NVME_FIO_RESULTS
-			iops_disks[$k]=$((${iops_disks[$k]} + $(get_bdevperf_results iops)))
-			bw[$k]=$((${bw[$k]} + $(get_bdevperf_results bw_Kibs)))
-			cp $NVME_FIO_RESULTS $result_dir/perf_results_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.output
-		elif [ $PLUGIN = "spdk-perf-nvme" ]; then
-			run_nvmeperf $k > $NVME_FIO_RESULTS
-			read -r iops bandwidth mean_lat min_lat max_lat <<< $(get_nvmeperf_results)
+	if [ $PLUGIN = "spdk-perf-bdev" ]; then
+		run_bdevperf > $NVME_FIO_RESULTS
+		iops_disks=$((iops_disks + $(get_bdevperf_results iops)))
+		bw=$((bw + $(get_bdevperf_results bw_Kibs)))
+		cp $NVME_FIO_RESULTS $result_dir/perf_results_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.output
+	elif [ $PLUGIN = "spdk-perf-nvme" ]; then
+		run_nvmeperf $DISKNO > $NVME_FIO_RESULTS
+		read -r iops bandwidth mean_lat min_lat max_lat <<< $(get_nvmeperf_results)
 
-			iops_disks[$k]=$((${iops_disks[$k]} + iops))
-			bw[$k]=$((${bw[$k]} + bandwidth))
-			mean_lat_disks_usec[$k]=$((${mean_lat_disks_usec[$k]} + mean_lat))
-			min_lat_disks_usec[$k]=$((${min_lat_disks_usec[$k]} + min_lat))
-			max_lat_disks_usec[$k]=$((${max_lat_disks_usec[$k]} + max_lat))
+		iops_disks=$((iops_disks + iops))
+		bw=$((bw + bandwidth))
+		mean_lat_disks_usec=$((mean_lat_disks_usec + mean_lat))
+		min_lat_disks_usec=$((min_lat_disks_usec + min_lat))
+		max_lat_disks_usec=$((max_lat_disks_usec + max_lat))
 
-			cp $NVME_FIO_RESULTS $result_dir/perf_results_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.output
-		else
-			desc="Running Test: Blocksize=${BLK_SIZE} Workload=$RW MIX=${MIX} qd=${IODEPTH} io_plugin/driver=$PLUGIN"
-			cat <<- EOF >> $BASE_DIR/config.fio
-				rw=$RW
-				rwmixread=$MIX
-				iodepth=$qd
-				bs=$BLK_SIZE
-				runtime=$RUNTIME
-				ramp_time=$RAMP_TIME
-				numjobs=$NUMJOBS
-				time_based=1
-				description=$desc
-				log_avg_msec=250
-			EOF
-
-			create_fio_config $k $PLUGIN "$DISK_NAMES" "$DISKS_NUMA" "$CORES"
-			echo "USING CONFIG:"
-			cat $BASE_DIR/config.fio
-
-			if [[ "$PLUGIN" =~ "spdk-plugin" ]]; then
-				run_spdk_nvme_fio $PLUGIN "--output=$NVME_FIO_RESULTS" \
-					"--write_lat_log=$result_dir/perf_lat_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}_${k}disks_${j}"
-			else
-				run_nvme_fio $fio_ioengine_opt "--output=$NVME_FIO_RESULTS" \
-					"--write_lat_log=$result_dir/perf_lat_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}_${k}disks_${j}"
-			fi
-
-			#Store values for every number of used disks
-			#Use recalculated value for mixread param in case rw mode is not rw.
+		cp $NVME_FIO_RESULTS $result_dir/perf_results_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.output
+	else
+		desc="Running Test: Blocksize=${BLK_SIZE} Workload=$RW MIX=${MIX} qd=${IODEPTH} io_plugin/driver=$PLUGIN"
+		cat <<- EOF >> $BASE_DIR/config.fio
+			rw=$RW
 			rwmixread=$MIX
-			if [[ $RW = *"read"* ]]; then
-				rwmixread=100
-			elif [[ $RW = *"write"* ]]; then
-				rwmixread=0
-			fi
-			iops_disks[$k]=$((iops_disks[k] + $(get_results iops $rwmixread)))
-			mean_lat_disks_usec[$k]=$((mean_lat_disks_usec[k] + $(get_results mean_lat_usec $rwmixread)))
-			p99_lat_disks_usec[$k]=$((p99_lat_disks_usec[k] + $(get_results p99_lat_usec $rwmixread)))
-			p99_99_lat_disks_usec[$k]=$((p99_99_lat_disks_usec[k] + $(get_results p99_99_lat_usec $rwmixread)))
-			stdev_disks_usec[$k]=$((stdev_disks_usec[k] + $(get_results stdev_usec $rwmixread)))
+			iodepth=$qd
+			bs=$BLK_SIZE
+			runtime=$RUNTIME
+			ramp_time=$RAMP_TIME
+			numjobs=$NUMJOBS
+			time_based=1
+			description=$desc
+			log_avg_msec=250
+		EOF
 
-			mean_slat_disks_usec[$k]=$((mean_slat_disks_usec[k] + $(get_results mean_slat_usec $rwmixread)))
-			mean_clat_disks_usec[$k]=$((mean_clat_disks_usec[k] + $(get_results mean_clat_usec $rwmixread)))
-			bw[$k]=$((bw[k] + $(get_results bw_Kibs $rwmixread)))
+		create_fio_config $DISKNO $PLUGIN "$DISK_NAMES" "$DISKS_NUMA" "$CORES"
+		echo "USING CONFIG:"
+		cat $BASE_DIR/config.fio
 
-			cp $NVME_FIO_RESULTS $result_dir/perf_results_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.json
-			cp $BASE_DIR/config.fio $result_dir/config_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.fio
-			rm -f $BASE_DIR/config.fio
+		if [[ "$PLUGIN" =~ "spdk-plugin" ]]; then
+			run_spdk_nvme_fio $PLUGIN "--output=$NVME_FIO_RESULTS" \
+				"--write_lat_log=$result_dir/perf_lat_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}_${k}disks_${j}"
+		else
+			run_nvme_fio $fio_ioengine_opt "--output=$NVME_FIO_RESULTS" \
+				"--write_lat_log=$result_dir/perf_lat_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}_${k}disks_${j}"
 		fi
 
-		#if tested on only one number of disk
-		if $ONEWORKLOAD; then
-			break
+		#Store values for every number of used disks
+		#Use recalculated value for mixread param in case rw mode is not rw.
+		rwmixread=$MIX
+		if [[ $RW = *"read"* ]]; then
+			rwmixread=100
+		elif [[ $RW = *"write"* ]]; then
+			rwmixread=0
 		fi
-	done
+		iops_disks=$((iops_disks + $(get_results iops $rwmixread)))
+		mean_lat_disks_usec=$((mean_lat_disks_usec + $(get_results mean_lat_usec $rwmixread)))
+		p99_lat_disks_usec=$((p99_lat_disks_usec + $(get_results p99_lat_usec $rwmixread)))
+		p99_99_lat_disks_usec=$((p99_99_lat_disks_usec + $(get_results p99_99_lat_usec $rwmixread)))
+		stdev_disks_usec=$((stdev_disks_usec + $(get_results stdev_usec $rwmixread)))
+
+		mean_slat_disks_usec=$((mean_slat_disks_usec + $(get_results mean_slat_usec $rwmixread)))
+		mean_clat_disks_usec=$((mean_clat_disks_usec + $(get_results mean_clat_usec $rwmixread)))
+		bw=$((bw + $(get_results bw_Kibs $rwmixread)))
+
+		cp $NVME_FIO_RESULTS $result_dir/perf_results_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.json
+		cp $BASE_DIR/config.fio $result_dir/config_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.fio
+		rm -f $BASE_DIR/config.fio
+	fi
 done
 #Write results to csv file
-for ((k = DISKNO; k >= 1; k -= 2)); do
-	iops_disks[$k]=$((${iops_disks[$k]} / REPEAT_NO))
+iops_disks=$((iops_disks / REPEAT_NO))
+bw=$((bw / REPEAT_NO))
+if [[ "$PLUGIN" =~ "plugin" ]]; then
+	mean_lat_disks_usec=$((mean_lat_disks_usec / REPEAT_NO))
+	p99_lat_disks_usec=$((p99_lat_disks_usec / REPEAT_NO))
+	p99_99_lat_disks_usec=$((p99_99_lat_disks_usec / REPEAT_NO))
+	stdev_disks_usec=$((stdev_disks_usec / REPEAT_NO))
+	mean_slat_disks_usec=$((mean_slat_disks_usec / REPEAT_NO))
+	mean_clat_disks_usec=$((mean_clat_disks_usec / REPEAT_NO))
+elif [[ "$PLUGIN" == "spdk-perf-bdev" ]]; then
+	mean_lat_disks_usec=0
+	p99_lat_disks_usec=0
+	p99_99_lat_disks_usec=0
+	stdev_disks_usec=0
+	mean_slat_disks_usec=0
+	mean_clat_disks_usec=0
+elif [[ "$PLUGIN" == "spdk-perf-nvme" ]]; then
+	mean_lat_disks_usec=$((mean_lat_disks_usec / REPEAT_NO))
+	p99_lat_disks_usec=0
+	p99_99_lat_disks_usec=0
+	stdev_disks_usec=0
+	mean_slat_disks_usec=0
+	mean_clat_disks_usec=0
+fi
 
-	if [[ "$PLUGIN" =~ "plugin" ]]; then
-		mean_lat_disks_usec[$k]=$((${mean_lat_disks_usec[$k]} / REPEAT_NO))
-		p99_lat_disks_usec[$k]=$((${p99_lat_disks_usec[$k]} / REPEAT_NO))
-		p99_99_lat_disks_usec[$k]=$((${p99_99_lat_disks_usec[$k]} / REPEAT_NO))
-		stdev_disks_usec[$k]=$((${stdev_disks_usec[$k]} / REPEAT_NO))
-		mean_slat_disks_usec[$k]=$((${mean_slat_disks_usec[$k]} / REPEAT_NO))
-		mean_clat_disks_usec[$k]=$((${mean_clat_disks_usec[$k]} / REPEAT_NO))
-	elif [[ "$PLUGIN" == "spdk-perf-bdev" ]]; then
-		mean_lat_disks_usec[$k]=0
-		p99_lat_disks_usec[$k]=0
-		p99_99_lat_disks_usec[$k]=0
-		stdev_disks_usec[$k]=0
-		mean_slat_disks_usec[$k]=0
-		mean_clat_disks_usec[$k]=0
-	elif [[ "$PLUGIN" == "spdk-perf-nvme" ]]; then
-		mean_lat_disks_usec[$k]=$((${mean_lat_disks_usec[$k]} / REPEAT_NO))
-		p99_lat_disks_usec[$k]=0
-		p99_99_lat_disks_usec[$k]=0
-		stdev_disks_usec[$k]=0
-		mean_slat_disks_usec[$k]=0
-		mean_clat_disks_usec[$k]=0
-	fi
-
-	bw[$k]=$((${bw[$k]} / REPEAT_NO))
-
-	printf "%s,%s,%s,%s,%s,%s,%s,%s,%s\n" ${k} ${iops_disks[$k]} ${mean_lat_disks_usec[$k]} ${p99_lat_disks_usec[$k]} \
-		${p99_99_lat_disks_usec[$k]} ${stdev_disks_usec[$k]} ${mean_slat_disks_usec[$k]} ${mean_clat_disks_usec[$k]} ${bw[$k]} >> $result_file
-
-	#if tested on only one numeber of disk
-	if $ONEWORKLOAD; then
-		break
-	fi
-done
+printf "%s,%s,%s,%s,%s,%s,%s,%s,%s\n" ${DISKNO} ${iops_disks} ${mean_lat_disks_usec} ${p99_lat_disks_usec} \
+	${p99_99_lat_disks_usec} ${stdev_disks_usec} ${mean_slat_disks_usec} ${mean_clat_disks_usec} ${bw} >> $result_file
 
 if [ $PLUGIN = "kernel-io-uring" ]; then
 	# Reload the nvme driver so that other test runs are not affected

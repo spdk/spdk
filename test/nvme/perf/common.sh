@@ -32,7 +32,6 @@ DISKNO=1
 CPUS_ALLOWED=1
 NOIOSCALING=false
 PRECONDITIONING=true
-ONEWORKLOAD=false
 DATE="$(date +'%m_%d_%Y_%H%M%S')"
 
 function discover_bdevs() {
@@ -456,8 +455,6 @@ function usage() {
 	echo "                             - kernel-hybrid-polling"
 	echo "                             - kernel-libaio"
 	echo "                             - kernel-io-uring"
-	echo "    --disk-no=INT,ALL     Number of disks to test on, this will run one workload on selected number od disks,"
-	echo "                          it discards max-disk setting, if =ALL then test on all found disk. [default=$DISKNO]"
 	echo "    --max-disk=INT,ALL    Number of disks to test on, this will run multiple workloads with increasing number of disk each run."
 	echo "                          If =ALL then test on all found disk. [default=$DISKNO]"
 	echo "    --cpu-allowed=INT     Comma-separated list of CPU cores used to run the workload. [default=$CPUS_ALLOWED]"
@@ -484,10 +481,6 @@ while getopts 'h-:' optchar; do
 				repeat-no=*) REPEAT_NO="${OPTARG#*=}" ;;
 				fio-bin=*) FIO_BIN="${OPTARG#*=}" ;;
 				driver=*) PLUGIN="${OPTARG#*=}" ;;
-				disk-no=*)
-					DISKNO="${OPTARG#*=}"
-					ONEWORKLOAD=true
-					;;
 				max-disk=*) DISKNO="${OPTARG#*=}" ;;
 				cpu-allowed=*) CPUS_ALLOWED="${OPTARG#*=}" ;;
 				no-preconditioning) PRECONDITIONING=false ;;
