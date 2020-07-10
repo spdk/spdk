@@ -1519,6 +1519,7 @@ nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 
 	/* AER cmd is an exception */
 	sgroup = &req->qpair->group->sgroups[ctrlr->subsys->id];
+	assert(sgroup != NULL);
 	sgroup->io_outstanding--;
 
 	ctrlr->aer_req[ctrlr->nr_aer_reqs++] = req;
@@ -2897,6 +2898,7 @@ _nvmf_request_complete(void *ctx)
 	qpair = req->qpair;
 	if (qpair->ctrlr) {
 		sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
+		assert(sgroup != NULL);
 		is_aer = req->cmd->nvme_cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST;
 	} else if (spdk_unlikely(nvmf_request_is_fabric_connect(req))) {
 		sgroup = nvmf_subsystem_pg_from_connect_cmd(req);
@@ -3023,6 +3025,7 @@ spdk_nvmf_request_exec_fabrics(struct spdk_nvmf_request *req)
 
 	if (qpair->ctrlr) {
 		sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
+		assert(sgroup != NULL);
 	} else {
 		sgroup = nvmf_subsystem_pg_from_connect_cmd(req);
 	}
@@ -3038,6 +3041,7 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 
 	if (qpair->ctrlr) {
 		sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
+		assert(sgroup != NULL);
 	} else if (spdk_unlikely(nvmf_request_is_fabric_connect(req))) {
 		sgroup = nvmf_subsystem_pg_from_connect_cmd(req);
 	}
