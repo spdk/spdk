@@ -1016,13 +1016,11 @@ static void
 rpc_dump_lvol_store_info(struct spdk_json_write_ctx *w, struct lvol_store_bdev *lvs_bdev)
 {
 	struct spdk_blob_store *bs;
-	uint64_t cluster_size, block_size;
+	uint64_t cluster_size;
 	char uuid[SPDK_UUID_STRING_LEN];
 
 	bs = lvs_bdev->lvs->blobstore;
 	cluster_size = spdk_bs_get_cluster_size(bs);
-	/* Block size of lvols is always size of blob store page */
-	block_size = spdk_bs_get_page_size(bs);
 
 	spdk_json_write_object_begin(w);
 
@@ -1037,7 +1035,7 @@ rpc_dump_lvol_store_info(struct spdk_json_write_ctx *w, struct lvol_store_bdev *
 
 	spdk_json_write_named_uint64(w, "free_clusters", spdk_bs_free_cluster_count(bs));
 
-	spdk_json_write_named_uint64(w, "block_size", block_size);
+	spdk_json_write_named_uint64(w, "block_size", spdk_bs_get_io_unit_size(bs));
 
 	spdk_json_write_named_uint64(w, "cluster_size", cluster_size);
 
