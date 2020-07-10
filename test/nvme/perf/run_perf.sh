@@ -37,7 +37,7 @@ BASE_DIR=$(readlink -f $(dirname $0))
 trap 'rm -f *.state $BASE_DIR/bdev.conf; print_backtrace' ERR SIGTERM SIGABRT
 
 if [[ "$PLUGIN" =~ "bdev" ]]; then
-	create_spdk_bdev_conf
+	create_spdk_bdev_conf "$BDEV_CACHE" "$BDEV_POOL"
 fi
 verify_disk_number
 DISK_NAMES=$(get_disks $PLUGIN)

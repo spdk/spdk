@@ -29,6 +29,8 @@ REPEAT_NO=3
 FIO_BIN=$CONFIG_FIO_SOURCE_DIR/fio
 PLUGIN="nvme"
 DISKCFG=""
+BDEV_CACHE=""
+BDEV_POOL=""
 DISKNO="ALL"
 CPUS_ALLOWED=1
 NOIOSCALING=false
@@ -74,11 +76,35 @@ function discover_bdevs() {
 function create_spdk_bdev_conf() {
 	local output
 	local disk_cfg
-	local bdev_json_cfg
+	local bdev_io_cache_size=$1
+	local bdev_io_pool_size=$2
+	local bdev_json_cfg=()
+	local bdev_opts=()
 
 	disk_cfg=($(grep -vP "^\s*#" "$DISKCFG"))
 
-	bdev_json_cfg=()
+	if [[ -n "$bdev_io_cache_size" ]]; then
+		bdev_opts+=("\"bdev_io_cache_size\": $bdev_io_cache_size")
+	fi
+
+	if [[ -n "$bdev_io_pool_size" ]]; then
+		bdev_opts+=("\"bdev_io_pool_size\": $bdev_io_pool_size")
+	fi
+
+	local IFS=","
+	if [[ ${#bdev_opts[@]} -gt 0 ]]; then
+		bdev_json_cfg+=("$(
+			cat <<- JSON
+				{
+					"method": "bdev_set_options",
+					"params": {
+						${bdev_opts[*]}
+					}
+				}
+			JSON
+		)")
+	fi
+
 	for i in "${!disk_cfg[@]}"; do
 		bdev_json_cfg+=("$(
 			cat <<- JSON
@@ -94,7 +120,6 @@ function create_spdk_bdev_conf() {
 		)")
 	done
 
-	local IFS=","
 	jq -r '.' <<- JSON > $BASE_DIR/bdev.conf
 		{
 			"subsystems": [
@@ -498,6 +523,8 @@ function usage() {
 	echo "                          It consists a single column of PCI addresses. SPDK Bdev names will be assigned"
 	echo "                          and Kernel block device names detected."
 	echo "                          Lines starting with # are ignored as comments."
+	echo "    --bdev-io-cache-size  Set IO cache size for for SPDK bdev subsystem."
+	echo "    --bdev-io-pool-size   Set IO pool size for for SPDK bdev subsystem."
 	echo "    --max-disk=INT,ALL    Number of disks to test on, this will run multiple workloads with increasing number of disk each run."
 	echo "                          If =ALL then test on all found disk. [default=$DISKNO]"
 	echo "    --cpu-allowed=INT     Comma-separated list of CPU cores used to run the workload. [default=$CPUS_ALLOWED]"
@@ -531,6 +558,8 @@ while getopts 'h-:' optchar; do
 						exit 1
 					fi
 					;;
+				bdev-io-cache-size=*) BDEV_CACHE="${OPTARG#*=}" ;;
+				bdev-io-pool-size=*) BDEV_POOL="${OPTARG#*=}" ;;
 				max-disk=*) DISKNO="${OPTARG#*=}" ;;
 				cpu-allowed=*) CPUS_ALLOWED="${OPTARG#*=}" ;;
 				no-preconditioning) PRECONDITIONING=false ;;
