@@ -187,7 +187,7 @@ nvme_tcp_req_put(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_req *tcp_req)
 {
 	assert(tcp_req->state != NVME_TCP_REQ_FREE);
 	tcp_req->state = NVME_TCP_REQ_FREE;
-	TAILQ_INSERT_TAIL(&tqpair->free_reqs, tcp_req, link);
+	TAILQ_INSERT_HEAD(&tqpair->free_reqs, tcp_req, link);
 }
 
 static int
