@@ -20,6 +20,8 @@ def checkboxtype(distro)
         return "generic/fedora30"
       when "fedora31"
         return "generic/fedora31"
+      when "fedora32"
+        return "generic/fedora32"
       when "arch"
         return "generic/arch"
       when "freebsd11"
