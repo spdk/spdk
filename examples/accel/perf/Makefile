@@ -40,7 +40,7 @@ APP = accel_perf
 C_SRCS := accel_perf.c
 
 SPDK_LIB_LIST = $(ALL_MODULES_LIST)
-SPDK_LIB_LIST += event_bdev event_accel event_vmd
+SPDK_LIB_LIST += $(EVENT_BDEV_SUBSYSTEM)
 SPDK_LIB_LIST += bdev accel event thread util conf trace \
 		log jsonrpc json rpc sock notify
 
