@@ -304,12 +304,14 @@ ioat_batch_prep_fill(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
 {
 	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
 	struct ioat_task *ioat_task = (struct ioat_task *)cb_arg;
+	uint64_t fill_pattern;
 
 	ioat_task->cb = cb_fn;
 	ioat_ch->hw_batch = true;
+	memset(&fill_pattern, fill, sizeof(uint64_t));
 
 	/* Call the IOAT library prep function. */
-	return spdk_ioat_build_fill(ioat_ch->ioat_ch, ioat_task, ioat_done, dst, fill, nbytes);
+	return spdk_ioat_build_fill(ioat_ch->ioat_ch, ioat_task, ioat_done, dst, fill_pattern, nbytes);
 }
 
 static int
