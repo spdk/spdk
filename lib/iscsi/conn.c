@@ -665,10 +665,9 @@ _iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 {
 	int rc;
 
-	iscsi_clear_all_transfer_task(conn, NULL, NULL);
-
 	iscsi_poll_group_remove_conn(conn->pg, conn);
 	spdk_sock_close(&conn->sock);
+	iscsi_clear_all_transfer_task(conn, NULL, NULL);
 	spdk_poller_unregister(&conn->logout_request_timer);
 	spdk_poller_unregister(&conn->logout_timer);
 
