@@ -301,11 +301,6 @@ if [ ${DRY_RUN} != 1 ]; then
 	if [ -n "${http_proxy}" ]; then
 		export http_proxy
 		export https_proxy
-		if vagrant plugin list | grep -q vagrant-proxyconf; then
-			echo "vagrant-proxyconf already installed... skipping"
-		else
-			vagrant plugin install vagrant-proxyconf
-		fi
 		if echo "$SPDK_VAGRANT_DISTRO" | grep -q freebsd; then
 			cat > ~/vagrant_pkg.conf << EOF
 pkg_env: {
