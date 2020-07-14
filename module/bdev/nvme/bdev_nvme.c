@@ -266,14 +266,12 @@ static int
 bdev_nvme_poll_adminq(void *arg)
 {
 	int32_t rc;
-	struct spdk_nvme_ctrlr *ctrlr = arg;
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = arg;
 
-	rc = spdk_nvme_ctrlr_process_admin_completions(ctrlr);
+	assert(nvme_bdev_ctrlr != NULL);
 
+	rc = spdk_nvme_ctrlr_process_admin_completions(nvme_bdev_ctrlr->ctrlr);
 	if (rc < 0) {
-		nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(spdk_nvme_ctrlr_get_transport_id(ctrlr));
-		assert(nvme_bdev_ctrlr != NULL);
 		bdev_nvme_reset(nvme_bdev_ctrlr, NULL);
 	}
 
@@ -1435,7 +1433,7 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 				sizeof(struct nvme_io_channel),
 				name);
 
-	nvme_bdev_ctrlr->adminq_timer_poller = SPDK_POLLER_REGISTER(bdev_nvme_poll_adminq, ctrlr,
+	nvme_bdev_ctrlr->adminq_timer_poller = SPDK_POLLER_REGISTER(bdev_nvme_poll_adminq, nvme_bdev_ctrlr,
 					       g_opts.nvme_adminq_poll_period_us);
 
 	TAILQ_INSERT_TAIL(&g_nvme_bdev_ctrlrs, nvme_bdev_ctrlr, tailq);
