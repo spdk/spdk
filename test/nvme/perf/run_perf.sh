@@ -138,7 +138,7 @@ for ((j = 0; j < REPEAT_NO; j++)); do
 			numjobs=$NUMJOBS
 			time_based=1
 			description=$desc
-			log_avg_msec=250
+			log_avg_msec=$SAMPLING_INT
 		EOF
 
 		create_fio_config $DISKNO $PLUGIN "$DISK_NAMES" "$DISKS_NUMA" "$CORES"
