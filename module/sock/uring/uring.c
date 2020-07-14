@@ -286,15 +286,12 @@ uring_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
 
 	assert(sock != NULL);
 
-#ifndef __aarch64__
-	/* On ARM systems, this buffering does not help. Skip it. */
 	/* The size of the pipe is purely derived from benchmarks. It seems to work well. */
 	rc = uring_sock_alloc_pipe(sock, sz);
 	if (rc) {
 		SPDK_ERRLOG("unable to allocate sufficient recvbuf with sz=%d on sock=%p\n", sz, _sock);
 		return rc;
 	}
-#endif
 
 	if (sz < SO_RCVBUF_SIZE) {
 		sz = SO_RCVBUF_SIZE;
