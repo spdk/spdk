@@ -510,26 +510,27 @@ function usage() {
 	echo "                          Applicable only for fio-based tests."
 	echo
 	echo "Test setup parameters:"
-	echo "    --driver=STR          Selects tool used for testing. Choices available:"
-	echo "                             - spdk-perf-nvme (SPDK nvme perf)"
-	echo "                             - spdk-perf-bdev (SPDK bdev perf)"
-	echo "                             - spdk-plugin-nvme (SPDK nvme fio plugin)"
-	echo "                             - spdk-plugin-bdev (SPDK bdev fio plugin)"
-	echo "                             - kernel-classic-polling"
-	echo "                             - kernel-hybrid-polling"
-	echo "                             - kernel-libaio"
-	echo "                             - kernel-io-uring"
-	echo "    --disk-config         Configuration file containing PCI BDF addresses of NVMe disks to use in test."
-	echo "                          It consists a single column of PCI addresses. SPDK Bdev names will be assigned"
-	echo "                          and Kernel block device names detected."
-	echo "                          Lines starting with # are ignored as comments."
-	echo "    --bdev-io-cache-size  Set IO cache size for for SPDK bdev subsystem."
-	echo "    --bdev-io-pool-size   Set IO pool size for for SPDK bdev subsystem."
-	echo "    --max-disk=INT,ALL    Number of disks to test on, this will run multiple workloads with increasing number of disk each run."
-	echo "                          If =ALL then test on all found disk. [default=$DISKNO]"
-	echo "    --cpu-allowed=INT     Comma-separated list of CPU cores used to run the workload. [default=$CPUS_ALLOWED]"
-	echo "    --no-preconditioning  Skip preconditioning"
-	echo "    --no-io-scaling       Do not scale iodepth for each device in SPDK fio plugin. [default=$NOIOSCALING]"
+	echo "    --driver=STR            Selects tool used for testing. Choices available:"
+	echo "                               - spdk-perf-nvme (SPDK nvme perf)"
+	echo "                               - spdk-perf-bdev (SPDK bdev perf)"
+	echo "                               - spdk-plugin-nvme (SPDK nvme fio plugin)"
+	echo "                               - spdk-plugin-bdev (SPDK bdev fio plugin)"
+	echo "                               - kernel-classic-polling"
+	echo "                               - kernel-hybrid-polling"
+	echo "                               - kernel-libaio"
+	echo "                               - kernel-io-uring"
+	echo "    --disk-config           Configuration file containing PCI BDF addresses of NVMe disks to use in test."
+	echo "                            It consists a single column of PCI addresses. SPDK Bdev names will be assigned"
+	echo "                            and Kernel block device names detected."
+	echo "                            Lines starting with # are ignored as comments."
+	echo "    --bdev-io-cache-size    Set IO cache size for for SPDK bdev subsystem."
+	echo "    --bdev-io-pool-size     Set IO pool size for for SPDK bdev subsystem."
+	echo "    --max-disk=INT,ALL      Number of disks to test on, this will run multiple workloads with increasing number of disk each run."
+	echo "                            If =ALL then test on all found disk. [default=$DISKNO]"
+	echo "    --cpu-allowed=INT/PATH  Comma-separated list of CPU cores used to run the workload. Ranges allowed."
+	echo "                            Can also point to a file containing list of CPUs. [default=$CPUS_ALLOWED]"
+	echo "    --no-preconditioning    Skip preconditioning"
+	echo "    --no-io-scaling         Do not scale iodepth for each device in SPDK fio plugin. [default=$NOIOSCALING]"
 	set -x
 }
 
@@ -561,7 +562,12 @@ while getopts 'h-:' optchar; do
 				bdev-io-cache-size=*) BDEV_CACHE="${OPTARG#*=}" ;;
 				bdev-io-pool-size=*) BDEV_POOL="${OPTARG#*=}" ;;
 				max-disk=*) DISKNO="${OPTARG#*=}" ;;
-				cpu-allowed=*) CPUS_ALLOWED="${OPTARG#*=}" ;;
+				cpu-allowed=*)
+					CPUS_ALLOWED="${OPTARG#*=}"
+					if [[ -f "$CPUS_ALLOWED" ]]; then
+						CPUS_ALLOWED=$(cat "$CPUS_ALLOWED")
+					fi
+					;;
 				no-preconditioning) PRECONDITIONING=false ;;
 				no-io-scaling) NOIOSCALING=true ;;
 				*)
