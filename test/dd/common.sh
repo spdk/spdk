@@ -127,3 +127,28 @@ get_native_nvme_bs() {
 
 	echo "$lbaf"
 }
+
+check_liburing() {
+	# Simply check if spdk_dd links to liburing. If yes, log that information.
+	local lib so
+	local -g liburing_in_use=0
+
+	while read -r lib _ so _; do
+		if [[ $lib == liburing.so.* ]]; then
+			printf '* spdk_dd linked to liburing\n'
+			# For sanity, check build config to see if liburing was requested.
+			if [[ -e $rootdir/test/common/build_config.sh ]]; then
+				source "$rootdir/test/common/build_config.sh"
+			fi
+			if [[ $CONFIG_URING != y ]]; then
+				printf '* spdk_dd built with liburing, but no liburing support requested?\n'
+			fi
+			if [[ ! -e $so ]]; then
+				printf '* %s is missing, aborting\n' "$lib"
+				return 1
+			fi
+			export liburing_in_use=1
+			return 0
+		fi
+	done < <(LD_TRACE_LOADED_OBJECTS=1 "${DD_APP[@]}") >&2
+}
