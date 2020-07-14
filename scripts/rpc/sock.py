@@ -15,7 +15,8 @@ def sock_impl_set_options(client,
                           impl_name=None,
                           recv_buf_size=None,
                           send_buf_size=None,
-                          enable_recv_pipe=None):
+                          enable_recv_pipe=None,
+                          enable_zerocopy_send=None):
     """Set parameters for the socket layer implementation.
 
     Args:
@@ -23,6 +24,7 @@ def sock_impl_set_options(client,
         recv_buf_size: size of socket receive buffer in bytes (optional)
         send_buf_size: size of socket send buffer in bytes (optional)
         enable_recv_pipe: enable or disable receive pipe (optional)
+        enable_zerocopy_send: enable or disable zerocopy on send (optional)
     """
     params = {}
 
@@ -33,5 +35,7 @@ def sock_impl_set_options(client,
         params['send_buf_size'] = send_buf_size
     if enable_recv_pipe is not None:
         params['enable_recv_pipe'] = enable_recv_pipe
+    if enable_zerocopy_send is not None:
+        params['enable_zerocopy_send'] = enable_zerocopy_send
 
     return client.call('sock_impl_set_options', params)

@@ -74,6 +74,7 @@ rpc_sock_impl_get_options(struct spdk_jsonrpc_request *request,
 	spdk_json_write_named_uint32(w, "recv_buf_size", sock_opts.recv_buf_size);
 	spdk_json_write_named_uint32(w, "send_buf_size", sock_opts.send_buf_size);
 	spdk_json_write_named_bool(w, "enable_recv_pipe", sock_opts.enable_recv_pipe);
+	spdk_json_write_named_bool(w, "enable_zerocopy_send", sock_opts.enable_zerocopy_send);
 	spdk_json_write_object_end(w);
 	spdk_jsonrpc_end_result(request, w);
 	free(impl_name);
@@ -101,6 +102,10 @@ static const struct spdk_json_object_decoder rpc_sock_impl_set_opts_decoders[] =
 	},
 	{
 		"enable_recv_pipe", offsetof(struct spdk_rpc_sock_impl_set_opts, sock_opts.enable_recv_pipe),
+		spdk_json_decode_bool, true
+	},
+	{
+		"enable_zerocopy_send", offsetof(struct spdk_rpc_sock_impl_set_opts, sock_opts.enable_zerocopy_send),
 		spdk_json_decode_bool, true
 	},
 };

@@ -102,6 +102,11 @@ struct spdk_sock_impl_opts {
 	 * Enable or disable receive pipe. Used by posix socket module.
 	 */
 	bool enable_recv_pipe;
+
+	/**
+	 * Enable or disable use of zero copy flow on send. Used by posix socket module.
+	 */
+	bool enable_zerocopy_send;
 };
 
 /**

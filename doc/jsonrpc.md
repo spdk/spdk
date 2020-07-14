@@ -6587,6 +6587,7 @@ Example response:
     "recv_buf_size": 2097152,
     "send_buf_size": 2097152,
     "enable_recv_pipe": true
+    "enable_zerocopy_send": true
   }
 }
 ~~~
@@ -6603,6 +6604,7 @@ impl_name               | Required | string      | Name of socket implementation
 recv_buf_size           | Optional | number      | Size of socket receive buffer in bytes
 send_buf_size           | Optional | number      | Size of socket send buffer in bytes
 enable_recv_pipe        | Optional | boolean     | Enable or disable receive pipe
+enable_zerocopy_send    | Optional | boolean     | Enable or disable zero copy on send
 
 ### Response
 
@@ -6622,6 +6624,7 @@ Example request:
     "recv_buf_size": 2097152,
     "send_buf_size": 2097152,
     "enable_recv_pipe": false
+    "enable_zerocopy_send": true
   }
 }
 ~~~

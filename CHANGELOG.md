@@ -110,6 +110,9 @@ based socket tests for iSCSI target and also the tests for SPDK NVMe-oF tcp tran
 Added `enable_recv_pipe` socket layer option to allow disabling of double buffering on receive.
 New option is used only in posix implementation.
 
+Added `enable_zerocopy_send` socket layer option to allow disabling of zero copy flow on send.
+New option is used only in posix implementation.
+
 ### vhost
 
 The function `spdk_vhost_blk_get_dev` has been removed.

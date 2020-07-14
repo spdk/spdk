@@ -2398,7 +2398,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                        impl_name=args.impl,
                                        recv_buf_size=args.recv_buf_size,
                                        send_buf_size=args.send_buf_size,
-                                       enable_recv_pipe=args.enable_recv_pipe)
+                                       enable_recv_pipe=args.enable_recv_pipe,
+                                       enable_zerocopy_send=args.enable_zerocopy_send)
 
     p = subparsers.add_parser('sock_impl_set_options', help="""Set options of socket layer implementation""")
     p.add_argument('-i', '--impl', help='Socket implementation name, e.g. posix', required=True)
@@ -2408,7 +2409,11 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    action='store_true', dest='enable_recv_pipe')
     p.add_argument('--disable-recv-pipe', help='Disable receive pipe',
                    action='store_false', dest='enable_recv_pipe')
-    p.set_defaults(func=sock_impl_set_options, enable_recv_pipe=None)
+    p.add_argument('--enable-zerocopy-send', help='Enable zerocopy on send',
+                   action='store_true', dest='enable_zerocopy_send')
+    p.add_argument('--disable-zerocopy-send', help='Disable zerocopy on send',
+                   action='store_false', dest='enable_zerocopy_send')
+    p.set_defaults(func=sock_impl_set_options, enable_recv_pipe=None, enable_zerocopy_send=None)
 
     def check_called_name(name):
         if name in deprecated_aliases:

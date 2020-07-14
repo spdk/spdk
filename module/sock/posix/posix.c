@@ -82,7 +82,8 @@ struct spdk_posix_sock_group_impl {
 static struct spdk_sock_impl_opts g_spdk_posix_sock_impl_opts = {
 	.recv_buf_size = MIN_SO_RCVBUF_SIZE,
 	.send_buf_size = MIN_SO_SNDBUF_SIZE,
-	.enable_recv_pipe = true
+	.enable_recv_pipe = true,
+	.enable_zerocopy_send = true
 };
 
 static int
@@ -326,7 +327,7 @@ posix_sock_alloc(int fd, bool enable_zero_copy)
 	sock->fd = fd;
 
 #ifdef SPDK_ZEROCOPY
-	if (!enable_zero_copy) {
+	if (!enable_zero_copy || !g_spdk_posix_sock_impl_opts.enable_zerocopy_send) {
 		return sock;
 	}
 
@@ -1336,6 +1337,7 @@ posix_sock_impl_get_opts(struct spdk_sock_impl_opts *opts, size_t *len)
 	GET_FIELD(recv_buf_size);
 	GET_FIELD(send_buf_size);
 	GET_FIELD(enable_recv_pipe);
+	GET_FIELD(enable_zerocopy_send);
 
 #undef GET_FIELD
 #undef FIELD_OK
@@ -1363,6 +1365,7 @@ posix_sock_impl_set_opts(const struct spdk_sock_impl_opts *opts, size_t len)
 	SET_FIELD(recv_buf_size);
 	SET_FIELD(send_buf_size);
 	SET_FIELD(enable_recv_pipe);
+	SET_FIELD(enable_zerocopy_send);
 
 #undef SET_FIELD
 #undef FIELD_OK
