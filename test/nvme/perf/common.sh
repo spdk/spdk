@@ -1,43 +1,5 @@
 #!/usr/bin/env bash
 
-set -e
-BASE_DIR=$(readlink -f $(dirname $0))
-ROOT_DIR=$(readlink -f $BASE_DIR/../../..)
-rootdir=$ROOT_DIR
-PLUGIN_DIR=$ROOT_DIR/build/fio
-BDEVPERF_DIR=$ROOT_DIR/test/bdev/bdevperf
-NVMEPERF_DIR=$ROOT_DIR/build/examples
-. $ROOT_DIR/scripts/common.sh || exit 1
-. $ROOT_DIR/test/common/autotest_common.sh
-NVME_FIO_RESULTS=$BASE_DIR/result.json
-
-declare -A KERNEL_ENGINES
-KERNEL_ENGINES=(
-	["kernel-libaio"]="--ioengine=libaio"
-	["kernel-classic-polling"]="--ioengine=pvsync2 --hipri=100"
-	["kernel-hybrid-polling"]="--ioengine=pvsync2 --hipri=100"
-	["kernel-io-uring"]="--ioengine=io_uring")
-
-RW=randrw
-MIX=100
-IODEPTH=256
-BLK_SIZE=4096
-RUNTIME=600
-RAMP_TIME=30
-NUMJOBS=1
-REPEAT_NO=3
-SAMPLING_INT=0
-FIO_BIN=$CONFIG_FIO_SOURCE_DIR/fio
-PLUGIN="nvme"
-DISKCFG=""
-BDEV_CACHE=""
-BDEV_POOL=""
-DISKNO="ALL"
-CPUS_ALLOWED=1
-NOIOSCALING=false
-PRECONDITIONING=true
-DATE="$(date +'%m_%d_%Y_%H%M%S')"
-
 function discover_bdevs() {
 	local rootdir=$1
 	local config_file=$2
@@ -121,7 +83,8 @@ function create_spdk_bdev_conf() {
 		)")
 	done
 
-	jq -r '.' <<- JSON > $BASE_DIR/bdev.conf
+	local IFS=","
+	jq -r '.' <<- JSON > $testdir/bdev.conf
 		{
 			"subsystems": [
 				{
@@ -172,7 +135,7 @@ function get_numa_node() {
 		done
 	elif [[ "$plugin" =~ "bdev" ]]; then
 		local bdevs
-		bdevs=$(discover_bdevs $ROOT_DIR $BASE_DIR/bdev.conf --json)
+		bdevs=$(discover_bdevs $rootdir $testdir/bdev.conf --json)
 		for name in $disks; do
 			local bdev_bdf
 			bdev_bdf=$(jq -r ".[] | select(.name==\"$name\").driver_specific.nvme.pci_address" <<< $bdevs)
@@ -251,9 +214,9 @@ function create_fio_config() {
 	# For kernel dirver, each disk will be alligned with all cpus on the same NUMA node
 	if [[ "$plugin" =~ "kernel" ]]; then
 		for ((i = 0; i < disk_no; i++)); do
-			sed -i -e "\$a[filename${i}]" $BASE_DIR/config.fio
+			sed -i -e "\$a[filename${i}]" $testdir/config.fio
 			filename="/dev/${disks[$i]}"
-			sed -i -e "\$afilename=$filename" $BASE_DIR/config.fio
+			sed -i -e "\$afilename=$filename" $testdir/config.fio
 			cpu_used=""
 			for ((j = 0; j < no_cores; j++)); do
 				core_numa=${cores_numa[$j]}
@@ -261,8 +224,8 @@ function create_fio_config() {
 					cpu_used+="${cores[$j]},"
 				fi
 			done
-			sed -i -e "\$acpus_allowed=$cpu_used" $BASE_DIR/config.fio
-			echo "" >> $BASE_DIR/config.fio
+			sed -i -e "\$acpus_allowed=$cpu_used" $testdir/config.fio
+			echo "" >> $testdir/config.fio
 		done
 	else
 		for ((i = 0; i < no_cores; i++)); do
@@ -277,9 +240,9 @@ function create_fio_config() {
 				break
 			fi
 
-			sed -i -e "\$a[filename${i}]" $BASE_DIR/config.fio
+			sed -i -e "\$a[filename${i}]" $testdir/config.fio
 			#use cpus_allowed as cpumask works only for cores 1-32
-			sed -i -e "\$acpus_allowed=${cores[$i]}" $BASE_DIR/config.fio
+			sed -i -e "\$acpus_allowed=${cores[$i]}" $testdir/config.fio
 			m=0 #counter of disks per cpu core numa
 			n=0 #counter of all disks
 			while [ "$m" -lt "$total_disks_per_core" ]; do
@@ -290,7 +253,7 @@ function create_fio_config() {
 					elif [[ "$plugin" = "spdk-plugin-bdev" ]]; then
 						filename=${disks[$n]}
 					fi
-					sed -i -e "\$afilename=$filename" $BASE_DIR/config.fio
+					sed -i -e "\$afilename=$filename" $testdir/config.fio
 					#Mark numa of n'th disk as "x" to mark it as claimed
 					disks_numa[$n]="x"
 				fi
@@ -305,7 +268,7 @@ function create_fio_config() {
 					n=0
 				fi
 			done
-			echo "" >> $BASE_DIR/config.fio
+			echo "" >> $testdir/config.fio
 		done
 	fi
 }
@@ -315,9 +278,9 @@ function preconditioning() {
 	local filename=""
 	local nvme_list
 
-	HUGEMEM=8192 $ROOT_DIR/scripts/setup.sh
-	cp $BASE_DIR/config.fio.tmp $BASE_DIR/config.fio
-	echo "[Preconditioning]" >> $BASE_DIR/config.fio
+	HUGEMEM=8192 $rootdir/scripts/setup.sh
+	cp $testdir/config.fio.tmp $testdir/config.fio
+	echo "[Preconditioning]" >> $testdir/config.fio
 
 	# Generate filename argument for FIO.
 	# We only want to target NVMes not bound to nvme driver.
@@ -331,7 +294,7 @@ function preconditioning() {
 	echo "** Preconditioning disks, this can take a while, depending on the size of disks."
 	run_spdk_nvme_fio "spdk-plugin-nvme" --filename="$filename" --size=100% --loops=2 --bs=1M \
 		--rw=write --iodepth=32 --output-format=normal
-	rm -f $BASE_DIR/config.fio
+	rm -f $testdir/config.fio
 }
 
 function get_results() {
@@ -342,42 +305,42 @@ function get_results() {
 	writes_pct=$(bc -l <<< "scale=3; 1-$reads_pct")
 	case "$1" in
 		iops)
-			iops=$(jq -r '.jobs[] | .read.iops + .write.iops' $NVME_FIO_RESULTS)
+			iops=$(jq -r '.jobs[] | .read.iops + .write.iops' $TMP_RESULT_FILE)
 			iops=${iops%.*}
 			echo $iops
 			;;
 		mean_lat_usec)
-			mean_lat=$(jq -r ".jobs[] | (.read.lat_ns.mean * $reads_pct + .write.lat_ns.mean * $writes_pct)" $NVME_FIO_RESULTS)
+			mean_lat=$(jq -r ".jobs[] | (.read.lat_ns.mean * $reads_pct + .write.lat_ns.mean * $writes_pct)" $TMP_RESULT_FILE)
 			mean_lat=${mean_lat%.*}
 			echo $((mean_lat / 1000))
 			;;
 		p99_lat_usec)
-			p99_lat=$(jq -r ".jobs[] | (.read.clat_ns.percentile.\"99.000000\"  // 0 * $reads_pct + .write.clat_ns.percentile.\"99.000000\" // 0 * $writes_pct)" $NVME_FIO_RESULTS)
+			p99_lat=$(jq -r ".jobs[] | (.read.clat_ns.percentile.\"99.000000\"  // 0 * $reads_pct + .write.clat_ns.percentile.\"99.000000\" // 0 * $writes_pct)" $TMP_RESULT_FILE)
 			p99_lat=${p99_lat%.*}
 			echo $((p99_lat / 1000))
 			;;
 		p99_99_lat_usec)
-			p99_99_lat=$(jq -r ".jobs[] | (.read.clat_ns.percentile.\"99.990000\" // 0 * $reads_pct + .write.clat_ns.percentile.\"99.990000\" // 0 * $writes_pct)" $NVME_FIO_RESULTS)
+			p99_99_lat=$(jq -r ".jobs[] | (.read.clat_ns.percentile.\"99.990000\" // 0 * $reads_pct + .write.clat_ns.percentile.\"99.990000\" // 0 * $writes_pct)" $TMP_RESULT_FILE)
 			p99_99_lat=${p99_99_lat%.*}
 			echo $((p99_99_lat / 1000))
 			;;
 		stdev_usec)
-			stdev=$(jq -r ".jobs[] | (.read.clat_ns.stddev * $reads_pct + .write.clat_ns.stddev * $writes_pct)" $NVME_FIO_RESULTS)
+			stdev=$(jq -r ".jobs[] | (.read.clat_ns.stddev * $reads_pct + .write.clat_ns.stddev * $writes_pct)" $TMP_RESULT_FILE)
 			stdev=${stdev%.*}
 			echo $((stdev / 1000))
 			;;
 		mean_slat_usec)
-			mean_slat=$(jq -r ".jobs[] | (.read.slat_ns.mean * $reads_pct + .write.slat_ns.mean * $writes_pct)" $NVME_FIO_RESULTS)
+			mean_slat=$(jq -r ".jobs[] | (.read.slat_ns.mean * $reads_pct + .write.slat_ns.mean * $writes_pct)" $TMP_RESULT_FILE)
 			mean_slat=${mean_slat%.*}
 			echo $((mean_slat / 1000))
 			;;
 		mean_clat_usec)
-			mean_clat=$(jq -r ".jobs[] | (.read.clat_ns.mean * $reads_pct + .write.clat_ns.mean * $writes_pct)" $NVME_FIO_RESULTS)
+			mean_clat=$(jq -r ".jobs[] | (.read.clat_ns.mean * $reads_pct + .write.clat_ns.mean * $writes_pct)" $TMP_RESULT_FILE)
 			mean_clat=${mean_clat%.*}
 			echo $((mean_clat / 1000))
 			;;
 		bw_Kibs)
-			bw=$(jq -r ".jobs[] | (.read.bw + .write.bw)" $NVME_FIO_RESULTS)
+			bw=$(jq -r ".jobs[] | (.read.bw + .write.bw)" $TMP_RESULT_FILE)
 			bw=${bw%.*}
 			echo $((bw))
 			;;
@@ -387,12 +350,12 @@ function get_results() {
 function get_bdevperf_results() {
 	case "$1" in
 		iops)
-			iops=$(grep Total $NVME_FIO_RESULTS | awk -F 'Total' '{print $2}' | awk '{print $2}')
+			iops=$(grep Total $TMP_RESULT_FILE | awk -F 'Total' '{print $2}' | awk '{print $2}')
 			iops=${iops%.*}
 			echo $iops
 			;;
 		bw_Kibs)
-			bw_MBs=$(grep Total $NVME_FIO_RESULTS | awk -F 'Total' '{print $2}' | awk '{print $4}')
+			bw_MBs=$(grep Total $TMP_RESULT_FILE | awk -F 'Total' '{print $2}' | awk '{print $4}')
 			bw_MBs=${bw_MBs%.*}
 			echo $((bw_MBs * 1024))
 			;;
@@ -406,7 +369,7 @@ function get_nvmeperf_results() {
 	local max_lat_usec
 	local min_lat_usec
 
-	read -r iops bw_MBs mean_lat_usec min_lat_usec max_lat_usec <<< $(tr -s " " < $NVME_FIO_RESULTS | grep -oP "(?<=Total : )(.*+)")
+	read -r iops bw_MBs mean_lat_usec min_lat_usec max_lat_usec <<< $(tr -s " " < $TMP_RESULT_FILE | grep -oP "(?<=Total : )(.*+)")
 
 	# We need to get rid of the decimal spaces due
 	# to use of arithmetic expressions instead of "bc" for calculations
@@ -423,9 +386,9 @@ function run_spdk_nvme_fio() {
 	local plugin=$1
 	echo "** Running fio test, this can take a while, depending on the run-time and ramp-time setting."
 	if [[ "$plugin" = "spdk-plugin-nvme" ]]; then
-		LD_PRELOAD=$PLUGIN_DIR/spdk_nvme $FIO_BIN $BASE_DIR/config.fio --output-format=json "${@:2}" --ioengine=spdk
+		LD_PRELOAD=$plugin_dir/spdk_nvme $FIO_BIN $testdir/config.fio --output-format=json "${@:2}" --ioengine=spdk
 	elif [[ "$plugin" = "spdk-plugin-bdev" ]]; then
-		LD_PRELOAD=$PLUGIN_DIR/spdk_bdev $FIO_BIN $BASE_DIR/config.fio --output-format=json "${@:2}" --ioengine=spdk_bdev --spdk_json_conf=$BASE_DIR/bdev.conf --spdk_mem=4096
+		LD_PRELOAD=$plugin_dir/spdk_bdev $FIO_BIN $testdir/config.fio --output-format=json "${@:2}" --ioengine=spdk_bdev --spdk_json_conf=$testdir/bdev.conf --spdk_mem=4096
 	fi
 
 	sleep 1
@@ -433,13 +396,13 @@ function run_spdk_nvme_fio() {
 
 function run_nvme_fio() {
 	echo "** Running fio test, this can take a while, depending on the run-time and ramp-time setting."
-	$FIO_BIN $BASE_DIR/config.fio --output-format=json "$@"
+	$FIO_BIN $testdir/config.fio --output-format=json "$@"
 	sleep 1
 }
 
 function run_bdevperf() {
 	echo "** Running bdevperf test, this can take a while, depending on the run-time setting."
-	$BDEVPERF_DIR/bdevperf --json $BASE_DIR/bdev.conf -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME -m "[$CPUS_ALLOWED]"
+	$bdevperf_dir/bdevperf --json $testdir/bdev.conf -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME -m "[$CPUS_ALLOWED]"
 	sleep 1
 }
 
@@ -456,7 +419,7 @@ function run_nvmeperf() {
 	echo "** Running nvme perf test, this can take a while, depending on the run-time setting."
 
 	# Run command in separate shell as this solves quoting issues related to r_opt var
-	$SHELL -c "$NVMEPERF_DIR/perf $r_opt -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME -c [$CPUS_ALLOWED]"
+	$SHELL -c "$nvmeperf_dir/perf $r_opt -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME -c [$CPUS_ALLOWED]"
 	sleep 1
 }
 
@@ -484,108 +447,3 @@ function verify_disk_number() {
 		false
 	fi
 }
-
-function usage() {
-	set +x
-	[[ -n $2 ]] && (
-		echo "$2"
-		echo ""
-	)
-	echo "Run NVMe PMD/BDEV performance test. Change options for easier debug and setup configuration"
-	echo "Usage: $(basename $1) [options]"
-	echo "-h, --help                Print help and exit"
-	echo
-	echo "Workload parameters:"
-	echo "    --rw=STR              Type of I/O pattern. Accepted values are randrw,rw. [default=$RW]"
-	echo "    --rwmixread=INT       Percentage of a mixed workload that should be reads. [default=$MIX]"
-	echo "    --iodepth=INT         Number of I/Os to keep in flight against the file. [default=$IODEPTH]"
-	echo "    --block-size=INT      The  block  size  in  bytes  used for I/O units. [default=$BLK_SIZE]"
-	echo "    --run-time=TIME[s]    Tell fio to run the workload for the specified period of time. [default=$RUNTIME]"
-	echo "    --ramp-time=TIME[s]   Fio will run the specified workload for this amount of time before"
-	echo "                          logging any performance numbers. [default=$RAMP_TIME]. Applicable only for fio-based tests."
-	echo "    --numjobs=INT         Create the specified number of clones of this job. [default=$NUMJOBS]"
-	echo "                          Applicable only for fio-based tests."
-	echo "    --repeat-no=INT       How many times to repeat workload test. [default=$REPEAT_NO]"
-	echo "                          Test result will be an average of repeated test runs."
-	echo "    --sampling-int=INT    Value for fio log_avg_msec parameters [default=$SAMPLING_INT]"
-	echo "    --fio-bin=PATH        Path to fio binary. [default=$FIO_BIN]"
-	echo "                          Applicable only for fio-based tests."
-	echo
-	echo "Test setup parameters:"
-	echo "    --driver=STR            Selects tool used for testing. Choices available:"
-	echo "                               - spdk-perf-nvme (SPDK nvme perf)"
-	echo "                               - spdk-perf-bdev (SPDK bdev perf)"
-	echo "                               - spdk-plugin-nvme (SPDK nvme fio plugin)"
-	echo "                               - spdk-plugin-bdev (SPDK bdev fio plugin)"
-	echo "                               - kernel-classic-polling"
-	echo "                               - kernel-hybrid-polling"
-	echo "                               - kernel-libaio"
-	echo "                               - kernel-io-uring"
-	echo "    --disk-config           Configuration file containing PCI BDF addresses of NVMe disks to use in test."
-	echo "                            It consists a single column of PCI addresses. SPDK Bdev names will be assigned"
-	echo "                            and Kernel block device names detected."
-	echo "                            Lines starting with # are ignored as comments."
-	echo "    --bdev-io-cache-size    Set IO cache size for for SPDK bdev subsystem."
-	echo "    --bdev-io-pool-size     Set IO pool size for for SPDK bdev subsystem."
-	echo "    --max-disk=INT,ALL      Number of disks to test on, this will run multiple workloads with increasing number of disk each run."
-	echo "                            If =ALL then test on all found disk. [default=$DISKNO]"
-	echo "    --cpu-allowed=INT/PATH  Comma-separated list of CPU cores used to run the workload. Ranges allowed."
-	echo "                            Can also point to a file containing list of CPUs. [default=$CPUS_ALLOWED]"
-	echo "    --no-preconditioning    Skip preconditioning"
-	echo "    --no-io-scaling         Do not scale iodepth for each device in SPDK fio plugin. [default=$NOIOSCALING]"
-	set -x
-}
-
-while getopts 'h-:' optchar; do
-	case "$optchar" in
-		-)
-			case "$OPTARG" in
-				help)
-					usage $0
-					exit 0
-					;;
-				rw=*) RW="${OPTARG#*=}" ;;
-				rwmixread=*) MIX="${OPTARG#*=}" ;;
-				iodepth=*) IODEPTH="${OPTARG#*=}" ;;
-				block-size=*) BLK_SIZE="${OPTARG#*=}" ;;
-				run-time=*) RUNTIME="${OPTARG#*=}" ;;
-				ramp-time=*) RAMP_TIME="${OPTARG#*=}" ;;
-				numjobs=*) NUMJOBS="${OPTARG#*=}" ;;
-				repeat-no=*) REPEAT_NO="${OPTARG#*=}" ;;
-				sampling-int=*) SAMPLING_INT="${OPTARG#*=}" ;;
-				fio-bin=*) FIO_BIN="${OPTARG#*=}" ;;
-				driver=*) PLUGIN="${OPTARG#*=}" ;;
-				disk-config=*)
-					DISKCFG="${OPTARG#*=}"
-					if [[ ! -f "$DISKCFG" ]]; then
-						echo "Disk confiuration file $DISKCFG does not exist!"
-						exit 1
-					fi
-					;;
-				bdev-io-cache-size=*) BDEV_CACHE="${OPTARG#*=}" ;;
-				bdev-io-pool-size=*) BDEV_POOL="${OPTARG#*=}" ;;
-				max-disk=*) DISKNO="${OPTARG#*=}" ;;
-				cpu-allowed=*)
-					CPUS_ALLOWED="${OPTARG#*=}"
-					if [[ -f "$CPUS_ALLOWED" ]]; then
-						CPUS_ALLOWED=$(cat "$CPUS_ALLOWED")
-					fi
-					;;
-				no-preconditioning) PRECONDITIONING=false ;;
-				no-io-scaling) NOIOSCALING=true ;;
-				*)
-					usage $0 echo "Invalid argument '$OPTARG'"
-					exit 1
-					;;
-			esac
-			;;
-		h)
-			usage $0
-			exit 0
-			;;
-		*)
-			usage $0 "Invalid argument '$optchar'"
-			exit 1
-			;;
-	esac
-done
