@@ -2397,13 +2397,18 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         rpc.sock.sock_impl_set_options(args.client,
                                        impl_name=args.impl,
                                        recv_buf_size=args.recv_buf_size,
-                                       send_buf_size=args.send_buf_size)
+                                       send_buf_size=args.send_buf_size,
+                                       enable_recv_pipe=args.enable_recv_pipe)
 
     p = subparsers.add_parser('sock_impl_set_options', help="""Set options of socket layer implementation""")
     p.add_argument('-i', '--impl', help='Socket implementation name, e.g. posix', required=True)
     p.add_argument('-r', '--recv-buf-size', help='Size of receive buffer on socket in bytes', type=int)
     p.add_argument('-s', '--send-buf-size', help='Size of send buffer on socket in bytes', type=int)
-    p.set_defaults(func=sock_impl_set_options)
+    p.add_argument('--enable-recv-pipe', help='Enable receive pipe',
+                   action='store_true', dest='enable_recv_pipe')
+    p.add_argument('--disable-recv-pipe', help='Disable receive pipe',
+                   action='store_false', dest='enable_recv_pipe')
+    p.set_defaults(func=sock_impl_set_options, enable_recv_pipe=None)
 
     def check_called_name(name):
         if name in deprecated_aliases:

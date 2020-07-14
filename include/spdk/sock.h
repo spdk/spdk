@@ -97,6 +97,11 @@ struct spdk_sock_impl_opts {
 	 * Size of sock send buffer. Used by posix socket module.
 	 */
 	uint32_t send_buf_size;
+
+	/**
+	 * Enable or disable receive pipe. Used by posix socket module.
+	 */
+	bool enable_recv_pipe;
 };
 
 /**

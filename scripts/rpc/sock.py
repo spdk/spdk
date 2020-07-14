@@ -11,13 +11,18 @@ def sock_impl_get_options(client, impl_name=None):
     return client.call('sock_impl_get_options', params)
 
 
-def sock_impl_set_options(client, impl_name=None, recv_buf_size=None, send_buf_size=None):
+def sock_impl_set_options(client,
+                          impl_name=None,
+                          recv_buf_size=None,
+                          send_buf_size=None,
+                          enable_recv_pipe=None):
     """Set parameters for the socket layer implementation.
 
     Args:
         impl_name: name of socket implementation, e.g. posix
         recv_buf_size: size of socket receive buffer in bytes (optional)
         send_buf_size: size of socket send buffer in bytes (optional)
+        enable_recv_pipe: enable or disable receive pipe (optional)
     """
     params = {}
 
@@ -26,5 +31,7 @@ def sock_impl_set_options(client, impl_name=None, recv_buf_size=None, send_buf_s
         params['recv_buf_size'] = recv_buf_size
     if send_buf_size is not None:
         params['send_buf_size'] = send_buf_size
+    if enable_recv_pipe is not None:
+        params['enable_recv_pipe'] = enable_recv_pipe
 
     return client.call('sock_impl_set_options', params)

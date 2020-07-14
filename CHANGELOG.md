@@ -107,6 +107,9 @@ Added `uring` based socket implementation, the code is located in module/sock/ur
 available in Linux which requires kernel version is greater than 5.4.3. Currently, our CI pool added the uring
 based socket tests for iSCSI target and also the tests for SPDK NVMe-oF tcp transport.
 
+Added `enable_recv_pipe` socket layer option to allow disabling of double buffering on receive.
+New option is used only in posix implementation.
+
 ### vhost
 
 The function `spdk_vhost_blk_get_dev` has been removed.

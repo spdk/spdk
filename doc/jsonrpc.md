@@ -6585,7 +6585,8 @@ Example response:
   "id": 1,
   "result": {
     "recv_buf_size": 2097152,
-    "send_buf_size": 2097152
+    "send_buf_size": 2097152,
+    "enable_recv_pipe": true
   }
 }
 ~~~
@@ -6601,6 +6602,7 @@ Name                    | Optional | Type        | Description
 impl_name               | Required | string      | Name of socket implementation, e.g. posix
 recv_buf_size           | Optional | number      | Size of socket receive buffer in bytes
 send_buf_size           | Optional | number      | Size of socket send buffer in bytes
+enable_recv_pipe        | Optional | boolean     | Enable or disable receive pipe
 
 ### Response
 
@@ -6618,7 +6620,8 @@ Example request:
   "params": {
     "impl_name": "posix",
     "recv_buf_size": 2097152,
-    "send_buf_size": 2097152
+    "send_buf_size": 2097152,
+    "enable_recv_pipe": false
   }
 }
 ~~~

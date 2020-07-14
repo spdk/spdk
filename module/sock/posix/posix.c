@@ -81,7 +81,8 @@ struct spdk_posix_sock_group_impl {
 
 static struct spdk_sock_impl_opts g_spdk_posix_sock_impl_opts = {
 	.recv_buf_size = MIN_SO_RCVBUF_SIZE,
-	.send_buf_size = MIN_SO_SNDBUF_SIZE
+	.send_buf_size = MIN_SO_SNDBUF_SIZE,
+	.enable_recv_pipe = true
 };
 
 static int
@@ -267,9 +268,11 @@ posix_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
 
 	assert(sock != NULL);
 
-	rc = posix_sock_alloc_pipe(sock, sz);
-	if (rc) {
-		return rc;
+	if (g_spdk_posix_sock_impl_opts.enable_recv_pipe) {
+		rc = posix_sock_alloc_pipe(sock, sz);
+		if (rc) {
+			return rc;
+		}
 	}
 
 	/* Set kernel buffer size to be at least MIN_SO_RCVBUF_SIZE */
@@ -1332,6 +1335,7 @@ posix_sock_impl_get_opts(struct spdk_sock_impl_opts *opts, size_t *len)
 
 	GET_FIELD(recv_buf_size);
 	GET_FIELD(send_buf_size);
+	GET_FIELD(enable_recv_pipe);
 
 #undef GET_FIELD
 #undef FIELD_OK
@@ -1358,6 +1362,7 @@ posix_sock_impl_set_opts(const struct spdk_sock_impl_opts *opts, size_t len)
 
 	SET_FIELD(recv_buf_size);
 	SET_FIELD(send_buf_size);
+	SET_FIELD(enable_recv_pipe);
 
 #undef SET_FIELD
 #undef FIELD_OK
