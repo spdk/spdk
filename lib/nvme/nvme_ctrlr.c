@@ -463,6 +463,7 @@ int
 spdk_nvme_ctrlr_reconnect_io_qpair(struct spdk_nvme_qpair *qpair)
 {
 	struct spdk_nvme_ctrlr *ctrlr;
+	enum nvme_qpair_state qpair_state;
 	int rc;
 
 	assert(qpair != NULL);
@@ -471,23 +472,24 @@ spdk_nvme_ctrlr_reconnect_io_qpair(struct spdk_nvme_qpair *qpair)
 
 	ctrlr = qpair->ctrlr;
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	qpair_state = nvme_qpair_get_state(qpair);
 
 	if (ctrlr->is_removed) {
 		rc = -ENODEV;
 		goto out;
 	}
 
-	if (ctrlr->is_resetting) {
+	if (ctrlr->is_resetting || qpair_state == NVME_QPAIR_DISCONNECTING) {
 		rc = -EAGAIN;
 		goto out;
 	}
 
-	if (ctrlr->is_failed) {
+	if (ctrlr->is_failed || qpair_state == NVME_QPAIR_DESTROYING) {
 		rc = -ENXIO;
 		goto out;
 	}
 
-	if (nvme_qpair_get_state(qpair) != NVME_QPAIR_DISCONNECTED) {
+	if (qpair_state != NVME_QPAIR_DISCONNECTED) {
 		rc = 0;
 		goto out;
 	}
