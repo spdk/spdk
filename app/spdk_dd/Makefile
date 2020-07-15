@@ -31,25 +31,17 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-DIRS-y += trace
-DIRS-y += trace_record
-DIRS-y += nvmf_tgt
-DIRS-y += iscsi_top
-DIRS-y += iscsi_tgt
-DIRS-y += spdk_tgt
-DIRS-y += spdk_lspci
-DIRS-y += spdk_top
-ifeq ($(OS),Linux)
-DIRS-$(CONFIG_VHOST) += vhost
-DIRS-y += spdk_dd
-endif
+APP = spdk_dd
 
-.PHONY: all clean $(DIRS-y)
+C_SRCS := spdk_dd.c
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+SPDK_LIB_LIST = $(ALL_MODULES_LIST)
+SPDK_LIB_LIST += event_sock event_bdev event_accel event_vmd
+SPDK_LIB_LIST += bdev accel event thread util conf trace \
+		log jsonrpc json rpc sock notify
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
