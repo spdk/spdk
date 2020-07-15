@@ -271,6 +271,7 @@ LINK_CXX=\
 # Provide function to ease build of a shared lib
 define spdk_build_realname_shared_lib
 	$(CC) -o $@ -shared $(CPPFLAGS) $(LDFLAGS) \
+	    -Wl,-rpath=$(DESTDIR)/$(libdir) \
 	    -Wl,--soname,$(notdir $@) \
 	    -Wl,--whole-archive $(1) -Wl,--no-whole-archive \
 	    -Wl,--version-script=$(2) \
