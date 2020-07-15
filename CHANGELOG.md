@@ -75,6 +75,10 @@ options. Options can be set independently for each implementation.
 
 Added `recv_buf_size` and 'send_buf_size' socket layer options. They are used only in posix implementation.
 
+Added `uring` based socket implementation, the code is located in module/sock/uring. This feature is only
+available in Linux which requires kernel version is greater than 5.4.3. Currently, our CI pool added the uring
+based socket tests for iSCSI target and also the tests for SPDK NVMe-oF tcp transport.
+
 ### vhost
 
 The function `spdk_vhost_blk_get_dev` has been removed.
