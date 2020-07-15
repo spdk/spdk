@@ -212,16 +212,6 @@ fi
 
 #Run each workolad $REPEAT_NO times
 for ((j = 0; j < REPEAT_NO; j++)); do
-	cp $testdir/config.fio.tmp $testdir/config.fio
-	echo "" >> $testdir/config.fio
-	#The SPDK fio plugin supports submitting/completing I/Os to multiple SSDs from a single thread.
-	#Therefore, the per thread queue depth is set to the desired IODEPTH/device X the number of devices per thread.
-	if [[ "$PLUGIN" =~ "spdk-plugin" ]] && [[ "$NOIOSCALING" = false ]]; then
-		qd=$((IODEPTH * DISKNO))
-	else
-		qd=$IODEPTH
-	fi
-
 	if [ $PLUGIN = "spdk-perf-bdev" ]; then
 		run_bdevperf > $TMP_RESULT_FILE
 		iops_disks=$((iops_disks + $(get_bdevperf_results iops)))
@@ -239,23 +229,7 @@ for ((j = 0; j < REPEAT_NO; j++)); do
 
 		cp $TMP_RESULT_FILE $result_dir/perf_results_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.output
 	else
-		desc="Running Test: Blocksize=${BLK_SIZE} Workload=$RW MIX=${MIX} qd=${IODEPTH} io_plugin/driver=$PLUGIN"
-		cat <<- EOF >> $testdir/config.fio
-			rw=$RW
-			rwmixread=$MIX
-			iodepth=$qd
-			bs=$BLK_SIZE
-			runtime=$RUNTIME
-			ramp_time=$RAMP_TIME
-			numjobs=$NUMJOBS
-			time_based=1
-			description=$desc
-			log_avg_msec=$SAMPLING_INT
-		EOF
-
 		create_fio_config $DISKNO $PLUGIN "$DISK_NAMES" "$DISKS_NUMA" "$CORES"
-		echo "USING CONFIG:"
-		cat $testdir/config.fio
 
 		if [[ "$PLUGIN" =~ "spdk-plugin" ]]; then
 			run_spdk_nvme_fio $PLUGIN "--output=$TMP_RESULT_FILE" \

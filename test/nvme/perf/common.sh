@@ -211,6 +211,34 @@ function create_fio_config() {
 	local disks_per_core=$((disk_no / no_cores))
 	local disks_per_core_mod=$((disk_no % no_cores))
 
+	# SPDK fio plugin supports submitting/completing I/Os to multiple SSDs from a single thread.
+	# Therefore, the per thread queue depth is set to the desired IODEPTH/device X the number of devices per thread.
+	# TODO: Shouldn't this be applicable to running kernel fio tests as well? Because, what's the difference?
+	QD=$IODEPTH
+	if [[ "$PLUGIN" =~ "spdk-plugin" ]] && [[ "$NOIOSCALING" = false ]]; then
+		QD=$((IODEPTH * DISKNO))
+	fi
+
+	# Following part of this function still leverages global variables a lot.
+	# It's a mix of local variables passed as aruments to function with global variables. This is messy.
+	# TODO: Modify this to be consistent with how variables are used here. Aim for using only
+	# local variables to get rid of globals as much as possible.
+	desc="\"Test io_plugin=$PLUGIN Blocksize=${BLK_SIZE} Workload=$RW MIX=${MIX} qd=${IODEPTH}\""
+	cp "$testdir/config.fio.tmp" "$testdir/config.fio"
+	cat <<- EOF >> $testdir/config.fio
+		description=$desc
+
+		rw=$RW
+		rwmixread=$MIX
+		iodepth=$QD
+		bs=$BLK_SIZE
+		runtime=$RUNTIME
+		ramp_time=$RAMP_TIME
+		numjobs=$NUMJOBS
+		log_avg_msec=$SAMPLING_INT
+
+	EOF
+
 	# For kernel dirver, each disk will be alligned with all cpus on the same NUMA node
 	if [[ "$plugin" =~ "kernel" ]]; then
 		for ((i = 0; i < disk_no; i++)); do
@@ -271,6 +299,9 @@ function create_fio_config() {
 			echo "" >> $testdir/config.fio
 		done
 	fi
+
+	echo "INFO: Generated fio configuration file:"
+	cat $testdir/config.fio
 }
 
 function preconditioning() {
