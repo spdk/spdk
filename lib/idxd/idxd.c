@@ -927,6 +927,26 @@ _does_batch_exist(struct idxd_batch *batch, struct spdk_idxd_io_channel *chan)
 }
 
 int
+spdk_idxd_batch_cancel(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch)
+{
+	if (_does_batch_exist(batch, chan) == false) {
+		SPDK_ERRLOG("Attempt to cancel a batch that doesn't exist\n.");
+		return -EINVAL;
+	}
+
+	if (batch->remaining > 0) {
+		SPDK_ERRLOG("Cannot cancel batch, already submitted to HW\n.");
+		return -EINVAL;
+	}
+
+	TAILQ_REMOVE(&chan->batches, batch, link);
+	spdk_bit_array_clear(chan->ring_ctrl.user_ring_slots, batch->batch_num);
+	TAILQ_INSERT_TAIL(&chan->batch_pool, batch, link);
+
+	return 0;
+}
+
+int
 spdk_idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
 		       spdk_idxd_req_cb cb_fn, void *cb_arg)
 {

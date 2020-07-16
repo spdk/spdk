@@ -231,6 +231,17 @@ spdk_accel_batch_get_max(struct spdk_io_channel *ch)
 	return accel_ch->engine->batch_get_max();
 }
 
+/* Accel framework public API for for when an app is unable to complete a batch sequence,
+ * it cancels with this API.
+ */
+int
+spdk_accel_batch_cancel(struct spdk_io_channel *ch, struct spdk_accel_batch *batch)
+{
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+
+	return accel_ch->engine->batch_cancel(accel_ch->ch, batch);
+}
+
 /* Accel framework public API for batch prep_copy function. All engines are
  * required to implement this API.
  */
@@ -791,6 +802,27 @@ sw_accel_batch_prep_crc32c(struct spdk_io_channel *ch, struct spdk_accel_batch *
 	return 0;
 }
 
+
+static int
+sw_accel_batch_cancel(struct spdk_io_channel *ch, struct spdk_accel_batch *batch)
+{
+	struct sw_accel_op *op;
+	struct sw_accel_io_channel *sw_ch = spdk_io_channel_get_ctx(ch);
+
+	if ((struct spdk_accel_batch *)&sw_ch->batch != batch) {
+		SPDK_ERRLOG("Invalid batch\n");
+		return -EINVAL;
+	}
+
+	/* Cancel the batch items by moving them back to the op_pool. */
+	while ((op = TAILQ_FIRST(&sw_ch->batch))) {
+		TAILQ_REMOVE(&sw_ch->batch, op, link);
+		TAILQ_INSERT_TAIL(&sw_ch->op_pool, op, link);
+	}
+
+	return 0;
+}
+
 static int
 sw_accel_batch_submit(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
 		      spdk_accel_completion_cb cb_fn, void *cb_arg)
@@ -927,6 +959,7 @@ static struct spdk_accel_engine sw_accel_engine = {
 	.dualcast		= sw_accel_submit_dualcast,
 	.batch_get_max		= sw_accel_batch_get_max,
 	.batch_create		= sw_accel_batch_start,
+	.batch_cancel		= sw_accel_batch_cancel,
 	.batch_prep_copy	= sw_accel_batch_prep_copy,
 	.batch_prep_dualcast	= sw_accel_batch_prep_dualcast,
 	.batch_prep_compare	= sw_accel_batch_prep_compare,

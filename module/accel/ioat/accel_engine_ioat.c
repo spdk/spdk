@@ -391,6 +391,30 @@ ioat_batch_prep_crc32c(struct spdk_io_channel *ch,
 }
 
 static int
+ioat_batch_cancel(struct spdk_io_channel *ch, struct spdk_accel_batch *batch)
+{
+	struct ioat_accel_op *op;
+	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
+
+	if ((struct spdk_accel_batch *)&ioat_ch->hw_batch != batch) {
+		SPDK_ERRLOG("Invalid batch\n");
+		return -EINVAL;
+	}
+
+	/* Flush the batched HW items, there's no way to cancel these without resetting. */
+	spdk_ioat_flush(ioat_ch->ioat_ch);
+	ioat_ch->hw_batch = false;
+
+	/* Return batched software items to the pool. */
+	while ((op = TAILQ_FIRST(&ioat_ch->sw_batch))) {
+		TAILQ_REMOVE(&ioat_ch->sw_batch, op, link);
+		TAILQ_INSERT_TAIL(&ioat_ch->op_pool, op, link);
+	}
+
+	return 0;
+}
+
+static int
 ioat_batch_submit(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
 		  spdk_accel_completion_cb cb_fn, void *cb_arg)
 {
@@ -449,6 +473,7 @@ static struct spdk_accel_engine ioat_accel_engine = {
 	.fill			= ioat_submit_fill,
 	.batch_get_max		= ioat_batch_get_max,
 	.batch_create		= ioat_batch_create,
+	.batch_cancel		= ioat_batch_cancel,
 	.batch_prep_copy	= ioat_batch_prep_copy,
 	.batch_prep_dualcast	= ioat_batch_prep_dualcast,
 	.batch_prep_compare	= ioat_batch_prep_compare,
