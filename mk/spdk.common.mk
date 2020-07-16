@@ -254,14 +254,16 @@ COMPILE_CXX=\
 	$(CXX) -o $@ $(DEPFLAGS) $(CXXFLAGS) -c $< && \
 	mv -f $*.d.tmp $*.d && touch -c $@
 
+ENV_LDFLAGS = $(if $(SPDK_NO_LINK_ENV),,$(ENV_LINKER_ARGS))
+
 # Link $(OBJS) and $(LIBS) into $@ (app)
 LINK_C=\
 	$(Q)echo "  LINK $(notdir $@)"; \
-	$(CC) -o $@ $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $(ENV_LINKER_ARGS) $(SYS_LIBS)
+	$(CC) -o $@ $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $(ENV_LDFLAGS) $(SYS_LIBS)
 
 LINK_CXX=\
 	$(Q)echo "  LINK $(notdir $@)"; \
-	$(CXX) -o $@ $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $(ENV_LINKER_ARGS) $(SYS_LIBS)
+	$(CXX) -o $@ $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $(ENV_LDFLAGS) $(SYS_LIBS)
 
 # Provide function to ease build of a shared lib
 define spdk_build_realname_shared_lib

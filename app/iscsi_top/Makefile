@@ -36,8 +36,8 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 APP = iscsi_top
+SPDK_NO_LINK_ENV = 1
 
-CXXFLAGS += $(ENV_CXXFLAGS)
 CXXFLAGS += -I$(SPDK_ROOT_DIR)/lib
 
 CXX_SRCS := iscsi_top.cpp
