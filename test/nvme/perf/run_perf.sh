@@ -38,6 +38,7 @@ DISKNO="ALL"
 CPUS_ALLOWED=1
 NOIOSCALING=false
 PRECONDITIONING=true
+CPUFREQ=""
 PERFTOP=false
 DATE="$(date +'%m_%d_%Y_%H%M%S')"
 
@@ -89,6 +90,9 @@ function usage() {
 	echo "                            Can also point to a file containing list of CPUs. [default=$CPUS_ALLOWED]"
 	echo "    --no-preconditioning    Skip preconditioning"
 	echo "    --no-io-scaling         Do not scale iodepth for each device in SPDK fio plugin. [default=$NOIOSCALING]"
+	echo "    --cpu-frequency=INT     Run tests with CPUs set to a desired frequency. 'intel_pstate=disable' must be set in"
+	echo "                            GRUB options. You can use 'cpupower frequency-info' and 'cpupower frequency-set' to"
+	echo "                            check list of available frequencies. Example: --cpu-frequency=1100000."
 	echo
 	echo "Other options:"
 	echo "    --perftop           Run perftop measurements on the same CPU cores as specified in --cpu-allowed option."
@@ -132,6 +136,7 @@ while getopts 'h-:' optchar; do
 					;;
 				no-preconditioning) PRECONDITIONING=false ;;
 				no-io-scaling) NOIOSCALING=true ;;
+				cpu-frequency=*) CPUFREQ="${OPTARG#*=}" ;;
 				perftop) PERFTOP=true ;;
 				*)
 					usage $0 echo "Invalid argument '$OPTARG'"
@@ -212,6 +217,17 @@ if [[ "$PLUGIN" =~ "kernel" ]]; then
 			echo 2 > $sysfs/nomerges
 			echo 0 > $sysfs/io_poll_delay
 		done
+	fi
+fi
+
+if [[ -n "$CPUFREQ" ]]; then
+	if [[ ! "$(cat /proc/cmdline)" =~ "intel_pstate=disable" ]]; then
+		echo "ERROR: Cannot set custom CPU frequency for test. intel_pstate=disable not in boot options."
+		false
+	else
+		cpu_governor="$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)"
+		cpupower frequency-set -g userspace
+		cpupower frequency-set -f $CPUFREQ
 	fi
 fi
 
@@ -310,6 +326,10 @@ fi
 
 printf "%s,%s,%s,%s,%s,%s,%s,%s,%s\n" ${DISKNO} ${iops_disks} ${mean_lat_disks_usec} ${p99_lat_disks_usec} \
 	${p99_99_lat_disks_usec} ${stdev_disks_usec} ${mean_slat_disks_usec} ${mean_clat_disks_usec} ${bw} >> $result_file
+
+if [[ -n "$CPUFREQ" ]]; then
+	cpupower frequency-set -g $cpu_governor
+fi
 
 if [ $PLUGIN = "kernel-io-uring" ]; then
 	# Reload the nvme driver so that other test runs are not affected
