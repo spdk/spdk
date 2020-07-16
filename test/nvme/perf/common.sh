@@ -203,21 +203,12 @@ function create_fio_config() {
 	local disks_numa=($4)
 	local cores=($5)
 	local total_disks=${#disks[@]}
-	local no_cores=${#cores[@]}
-	local filename=""
-
+	local fio_job_section=()
+	local num_cores=${#cores[@]}
+	local disks_per_core=$((disk_no / num_cores))
+	local disks_per_core_mod=$((disk_no % num_cores))
 	local cores_numa
-	cores_numa=($(get_cores_numa_node "$5"))
-	local disks_per_core=$((disk_no / no_cores))
-	local disks_per_core_mod=$((disk_no % no_cores))
-
-	# SPDK fio plugin supports submitting/completing I/Os to multiple SSDs from a single thread.
-	# Therefore, the per thread queue depth is set to the desired IODEPTH/device X the number of devices per thread.
-	# TODO: Shouldn't this be applicable to running kernel fio tests as well? Because, what's the difference?
-	QD=$IODEPTH
-	if [[ "$PLUGIN" =~ "spdk-plugin" ]] && [[ "$NOIOSCALING" = false ]]; then
-		QD=$((IODEPTH * DISKNO))
-	fi
+	cores_numa=($(get_cores_numa_node "${cores[*]}"))
 
 	# Following part of this function still leverages global variables a lot.
 	# It's a mix of local variables passed as aruments to function with global variables. This is messy.
@@ -230,76 +221,72 @@ function create_fio_config() {
 
 		rw=$RW
 		rwmixread=$MIX
-		iodepth=$QD
 		bs=$BLK_SIZE
 		runtime=$RUNTIME
 		ramp_time=$RAMP_TIME
 		numjobs=$NUMJOBS
 		log_avg_msec=$SAMPLING_INT
-
 	EOF
 
-	# For kernel dirver, each disk will be alligned with all cpus on the same NUMA node
-	if [[ "$plugin" =~ "kernel" ]]; then
-		for ((i = 0; i < disk_no; i++)); do
-			sed -i -e "\$a[filename${i}]" $testdir/config.fio
-			filename="/dev/${disks[$i]}"
-			sed -i -e "\$afilename=$filename" $testdir/config.fio
-			cpu_used=""
-			for ((j = 0; j < no_cores; j++)); do
-				core_numa=${cores_numa[$j]}
-				if [ "${disks_numa[$i]}" = "$core_numa" ]; then
-					cpu_used+="${cores[$j]},"
+	for i in "${!cores[@]}"; do
+		local m=0 #Counter of disks per NUMA node
+		local n=0 #Counter of all disks in test
+		core_numa=${cores_numa[$i]}
+
+		total_disks_per_core=$disks_per_core
+		# Check how many "stray" disks are unassigned to CPU cores
+		# Assign one disk to current CPU core and substract it from the total of
+		# unassigned disks
+		if [[ "$disks_per_core_mod" -gt "0" ]]; then
+			total_disks_per_core=$((disks_per_core + 1))
+			disks_per_core_mod=$((disks_per_core_mod - 1))
+		fi
+		# SPDK fio plugin supports submitting/completing I/Os to multiple SSDs from a single thread.
+		# Therefore, the per thread queue depth is set to the desired IODEPTH/device X the number of devices per thread.
+		QD=$IODEPTH
+		if [[ "$NOIOSCALING" = false ]]; then
+			QD=$((IODEPTH * total_disks_per_core))
+		fi
+
+		fio_job_section+=("")
+		fio_job_section+=("[filename${i}]")
+		fio_job_section+=("iodepth=$QD")
+		fio_job_section+=("cpus_allowed=${cores[$i]} #CPU NUMA Node ${cores_numa[$i]}")
+
+		while [[ "$m" -lt "$total_disks_per_core" ]]; do
+			# Try to add disks to job section if it's NUMA node matches NUMA
+			# for currently selected CPU
+			if [[ "${disks_numa[$n]}" == "$core_numa" ]]; then
+				if [[ "$plugin" == "spdk-plugin-nvme" ]]; then
+					fio_job_section+=("filename=trtype=PCIe traddr=${disks[$n]//:/.} ns=1 #NVMe NUMA Node ${disks_numa[$n]}")
+				elif [[ "$plugin" == "spdk-plugin-bdev" ]]; then
+					fio_job_section+=("filename=${disks[$n]} #NVMe NUMA Node ${disks_numa[$n]}")
+				elif [[ "$plugin" =~ "kernel" ]]; then
+					fio_job_section+=("filename=/dev/${disks[$n]} #NVMe NUMA Node ${disks_numa[$n]}")
 				fi
-			done
-			sed -i -e "\$acpus_allowed=$cpu_used" $testdir/config.fio
-			echo "" >> $testdir/config.fio
-		done
-	else
-		for ((i = 0; i < no_cores; i++)); do
-			core_numa=${cores_numa[$i]}
-			total_disks_per_core=$disks_per_core
-			if [ "$disks_per_core_mod" -gt "0" ]; then
-				total_disks_per_core=$((disks_per_core + 1))
-				disks_per_core_mod=$((disks_per_core_mod - 1))
+				m=$((m + 1))
+
+				#Mark numa of n'th disk as "x" to mark it as claimed for next loop iterations
+				disks_numa[$n]="x"
 			fi
+			n=$((n + 1))
 
-			if [ "$total_disks_per_core" = "0" ]; then
-				break
+			# If there is no more disks with numa node same as cpu numa node, switch to
+			# other numa node, go back to start of loop and try again.
+			if [[ $n -ge $total_disks ]]; then
+				echo "WARNING! Cannot assign any more NVMes for CPU ${cores[$i]}"
+				echo "NVMe assignment for this CPU will be cross-NUMA."
+				if [[ "$core_numa" == "1" ]]; then
+					core_numa=0
+				else
+					core_numa=1
+				fi
+				n=0
 			fi
-
-			sed -i -e "\$a[filename${i}]" $testdir/config.fio
-			#use cpus_allowed as cpumask works only for cores 1-32
-			sed -i -e "\$acpus_allowed=${cores[$i]}" $testdir/config.fio
-			m=0 #counter of disks per cpu core numa
-			n=0 #counter of all disks
-			while [ "$m" -lt "$total_disks_per_core" ]; do
-				if [ ${disks_numa[$n]} = $core_numa ]; then
-					m=$((m + 1))
-					if [[ "$plugin" = "spdk-plugin-nvme" ]]; then
-						filename='trtype=PCIe traddr='${disks[$n]//:/.}' ns=1'
-					elif [[ "$plugin" = "spdk-plugin-bdev" ]]; then
-						filename=${disks[$n]}
-					fi
-					sed -i -e "\$afilename=$filename" $testdir/config.fio
-					#Mark numa of n'th disk as "x" to mark it as claimed
-					disks_numa[$n]="x"
-				fi
-				n=$((n + 1))
-				# If there is no more disks with numa node same as cpu numa node, switch to other numa node.
-				if [ $n -ge $total_disks ]; then
-					if [ "$core_numa" = "1" ]; then
-						core_numa=0
-					else
-						core_numa=1
-					fi
-					n=0
-				fi
-			done
-			echo "" >> $testdir/config.fio
 		done
-	fi
+	done
 
+	printf "%s\n" "${fio_job_section[@]}" >> $testdir/config.fio
 	echo "INFO: Generated fio configuration file:"
 	cat $testdir/config.fio
 }
