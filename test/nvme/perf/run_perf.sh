@@ -38,6 +38,7 @@ DISKNO="ALL"
 CPUS_ALLOWED=1
 NOIOSCALING=false
 PRECONDITIONING=true
+PERFTOP=false
 DATE="$(date +'%m_%d_%Y_%H%M%S')"
 
 function usage() {
@@ -88,6 +89,9 @@ function usage() {
 	echo "                            Can also point to a file containing list of CPUs. [default=$CPUS_ALLOWED]"
 	echo "    --no-preconditioning    Skip preconditioning"
 	echo "    --no-io-scaling         Do not scale iodepth for each device in SPDK fio plugin. [default=$NOIOSCALING]"
+	echo
+	echo "Other options:"
+	echo "    --perftop           Run perftop measurements on the same CPU cores as specified in --cpu-allowed option."
 	set -x
 }
 
@@ -128,6 +132,7 @@ while getopts 'h-:' optchar; do
 					;;
 				no-preconditioning) PRECONDITIONING=false ;;
 				no-io-scaling) NOIOSCALING=true ;;
+				perftop) PERFTOP=true ;;
 				*)
 					usage $0 echo "Invalid argument '$OPTARG'"
 					exit 1
@@ -153,7 +158,7 @@ echo "run-time,ramp-time,fio-plugin,QD,block-size,num-cpu-cores,workload,workloa
 printf "%s,%s,%s,%s,%s,%s,%s,%s\n" $RUNTIME $RAMP_TIME $PLUGIN $IODEPTH $BLK_SIZE $NO_CORES $RW $MIX >> $result_file
 echo "num_of_disks,iops,avg_lat[usec],p99[usec],p99.99[usec],stdev[usec],avg_slat[usec],avg_clat[usec],bw[Kib/s]" >> $result_file
 
-trap 'rm -f *.state $testdir/bdev.conf; print_backtrace' ERR SIGTERM SIGABRT
+trap 'rm -f *.state $testdir/bdev.conf; kill $perf_pid; print_backtrace' ERR SIGTERM SIGABRT
 
 if [[ "$PLUGIN" =~ "bdev" ]]; then
 	create_spdk_bdev_conf "$BDEV_CACHE" "$BDEV_POOL"
@@ -210,6 +215,12 @@ if [[ "$PLUGIN" =~ "kernel" ]]; then
 	fi
 fi
 
+if $PERFTOP; then
+	echo "INFO: starting perf record on cores $CPUS_ALLOWED"
+	perf record -C $CPUS_ALLOWED -o "$testdir/perf.data" &
+	perf_pid=$!
+fi
+
 #Run each workolad $REPEAT_NO times
 for ((j = 0; j < REPEAT_NO; j++)); do
 	if [ $PLUGIN = "spdk-perf-bdev" ]; then
@@ -262,6 +273,15 @@ for ((j = 0; j < REPEAT_NO; j++)); do
 		rm -f $testdir/config.fio
 	fi
 done
+
+if $PERFTOP; then
+	echo "INFO: Stopping perftop measurements."
+	kill $perf_pid
+	wait $perf_pid || true
+	perf report -i "$testdir/perf.data" > $result_dir/perftop_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}.txt
+	rm -f "$testdir/perf.data"
+fi
+
 #Write results to csv file
 iops_disks=$((iops_disks / REPEAT_NO))
 bw=$((bw / REPEAT_NO))
