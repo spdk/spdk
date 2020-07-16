@@ -110,19 +110,26 @@ def bdev_crypto_delete(client, name):
 
 
 @deprecated_alias('construct_ocf_bdev')
-def bdev_ocf_create(client, name, mode, cache_bdev_name, core_bdev_name):
+def bdev_ocf_create(client, name, mode, cache_line_size, cache_bdev_name, core_bdev_name):
     """Add an OCF block device
 
     Args:
         name: name of constructed OCF bdev
         mode: OCF cache mode: {'wb', 'wt', 'pt', 'wa', 'wi', 'wo'}
+        cache_line_size: OCF cache line size. The unit is KiB: {4, 8, 16, 32, 64}
         cache_bdev_name: name of underlying cache bdev
         core_bdev_name: name of underlying core bdev
 
     Returns:
         Name of created block device
     """
-    params = {'name': name, 'mode': mode, 'cache_bdev_name': cache_bdev_name, 'core_bdev_name': core_bdev_name}
+    params = {
+        'name': name,
+        'mode': mode,
+        'cache_line_size': cache_line_size,
+        'cache_bdev_name': cache_bdev_name,
+        'core_bdev_name': core_bdev_name,
+    }
 
     return client.call('bdev_ocf_create', params)
 

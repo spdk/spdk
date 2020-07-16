@@ -39,10 +39,11 @@
 
 /* Structure to hold the parameters for this RPC method. */
 struct rpc_bdev_ocf_create {
-	char *name;             /* master vbdev */
-	char *mode;             /* OCF mode (choose one) */
-	char *cache_bdev_name;  /* sub bdev */
-	char *core_bdev_name;   /* sub bdev */
+	char *name;			/* master vbdev */
+	char *mode;			/* OCF mode (choose one) */
+	uint64_t cache_line_size;	/* OCF cache line size */
+	char *cache_bdev_name;		/* sub bdev */
+	char *core_bdev_name;		/* sub bdev */
 };
 
 static void
@@ -58,6 +59,7 @@ free_rpc_bdev_ocf_create(struct rpc_bdev_ocf_create *r)
 static const struct spdk_json_object_decoder rpc_bdev_ocf_create_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_ocf_create, name), spdk_json_decode_string},
 	{"mode", offsetof(struct rpc_bdev_ocf_create, mode), spdk_json_decode_string},
+	{"cache_line_size", offsetof(struct rpc_bdev_ocf_create, cache_line_size), spdk_json_decode_uint64, true},
 	{"cache_bdev_name", offsetof(struct rpc_bdev_ocf_create, cache_bdev_name), spdk_json_decode_string},
 	{"core_bdev_name", offsetof(struct rpc_bdev_ocf_create, core_bdev_name), spdk_json_decode_string},
 };
@@ -96,8 +98,8 @@ rpc_bdev_ocf_create(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	vbdev_ocf_construct(req.name, req.mode, req.cache_bdev_name, req.core_bdev_name, false,
-			    construct_cb, request);
+	vbdev_ocf_construct(req.name, req.mode, req.cache_line_size, req.cache_bdev_name,
+			    req.core_bdev_name, false, construct_cb, request);
 	free_rpc_bdev_ocf_create(&req);
 }
 SPDK_RPC_REGISTER("bdev_ocf_create", rpc_bdev_ocf_create, SPDK_RPC_RUNTIME)
