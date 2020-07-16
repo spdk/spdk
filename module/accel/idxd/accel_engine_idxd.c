@@ -444,6 +444,15 @@ idxd_batch_start(struct spdk_io_channel *ch)
 }
 
 static int
+idxd_batch_cancel(struct spdk_io_channel *ch, struct spdk_accel_batch *_batch)
+{
+	struct idxd_io_channel *chan = spdk_io_channel_get_ctx(ch);
+	struct idxd_batch *batch = (struct idxd_batch *)_batch;
+
+	return spdk_idxd_batch_cancel(chan->chan, batch);
+}
+
+static int
 idxd_batch_submit(struct spdk_io_channel *ch, struct spdk_accel_batch *_batch,
 		  spdk_accel_completion_cb cb_fn, void *cb_arg)
 {
@@ -561,6 +570,7 @@ static struct spdk_accel_engine idxd_accel_engine = {
 	.copy			= idxd_submit_copy,
 	.batch_get_max		= idxd_batch_get_max,
 	.batch_create		= idxd_batch_start,
+	.batch_cancel		= idxd_batch_cancel,
 	.batch_prep_copy	= idxd_batch_prep_copy,
 	.batch_prep_fill	= idxd_batch_prep_fill,
 	.batch_prep_dualcast	= idxd_batch_prep_dualcast,

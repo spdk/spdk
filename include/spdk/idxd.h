@@ -173,6 +173,16 @@ int spdk_idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch 
 			   spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**
+ * Cancel a batch sequence.
+ *
+ * \param chan IDXD channel to submit request.
+ * \param batch Handle provided when the batch was started with spdk_idxd_batch_create().
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_idxd_batch_cancel(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch);
+
+/**
  * Synchronous call to prepare a copy request into a previously initialized batch
  *  created with spdk_idxd_batch_create(). The callback will be called when the copy
  *  completes after the batch has been submitted by an asynchronous call to

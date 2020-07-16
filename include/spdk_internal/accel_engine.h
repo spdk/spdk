@@ -67,6 +67,7 @@ struct spdk_accel_engine {
 				 spdk_accel_completion_cb cb_fn, void *cb_arg);
 	int (*batch_submit)(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
 			    spdk_accel_completion_cb cb_fn, void *cb_arg);
+	int (*batch_cancel)(struct spdk_io_channel *ch, struct spdk_accel_batch *batch);
 	int (*compare)(struct spdk_io_channel *ch, void *src1, void *src2,
 		       uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg);
 	int (*fill)(struct spdk_io_channel *ch, void *dst, uint8_t fill,

@@ -167,6 +167,17 @@ int spdk_accel_batch_submit(struct spdk_io_channel *ch, struct spdk_accel_batch 
 			    spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
+ * Synchronous call to cancel a batch sequence. In some cases prepared commands will be
+ * processed if they cannot be cancelled.
+ *
+ * \param ch I/O channel associated with this call.
+ * \param batch Handle provided when the batch was started with spdk_accel_batch_create().
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_accel_batch_cancel(struct spdk_io_channel *ch, struct spdk_accel_batch *batch);
+
+/**
  * Synchronous call to prepare a copy request into a previously initialized batch
  *  created with spdk_accel_batch_create(). The callback will be called when the copy
  *  completes after the batch has been submitted by an asynchronous call to
