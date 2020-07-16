@@ -27,6 +27,7 @@ RUNTIME=600
 RAMP_TIME=30
 NUMJOBS=1
 REPEAT_NO=3
+GTOD_REDUCE=false
 SAMPLING_INT=0
 FIO_BIN=$CONFIG_FIO_SOURCE_DIR/fio
 TMP_RESULT_FILE=$testdir/result.json
@@ -64,6 +65,7 @@ function usage() {
 	echo "                          Applicable only for fio-based tests."
 	echo "    --repeat-no=INT       How many times to repeat workload test. [default=$REPEAT_NO]"
 	echo "                          Test result will be an average of repeated test runs."
+	echo "    --gtod-reduce         Enable fio gtod_reduce option. [default=$GTOD_REDUCE]"
 	echo "    --sampling-int=INT    Value for fio log_avg_msec parameters [default=$SAMPLING_INT]"
 	echo "    --fio-bin=PATH        Path to fio binary. [default=$FIO_BIN]"
 	echo "                          Applicable only for fio-based tests."
@@ -115,6 +117,7 @@ while getopts 'h-:' optchar; do
 				ramp-time=*) RAMP_TIME="${OPTARG#*=}" ;;
 				numjobs=*) NUMJOBS="${OPTARG#*=}" ;;
 				repeat-no=*) REPEAT_NO="${OPTARG#*=}" ;;
+				gtod-reduce) GTOD_REDUCE=true ;;
 				sampling-int=*) SAMPLING_INT="${OPTARG#*=}" ;;
 				fio-bin=*) FIO_BIN="${OPTARG#*=}" ;;
 				driver=*) PLUGIN="${OPTARG#*=}" ;;

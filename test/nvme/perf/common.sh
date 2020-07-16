@@ -228,6 +228,10 @@ function create_fio_config() {
 		log_avg_msec=$SAMPLING_INT
 	EOF
 
+	if $GTOD_REDUCE; then
+		echo "gtod_reduce=1" >> $testdir/config.fio
+	fi
+
 	for i in "${!cores[@]}"; do
 		local m=0 #Counter of disks per NUMA node
 		local n=0 #Counter of all disks in test
