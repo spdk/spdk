@@ -139,6 +139,18 @@ endif
 # Allow users to specify EXTRA_DPDK_CFLAGS if they want to build DPDK using unsupported compiler versions
 DPDK_CFLAGS += $(EXTRA_DPDK_CFLAGS)
 
+ifeq ($(CC),gcc)
+GCC_MAJOR = $(shell echo __GNUC__ | $(CC) -E -x c - | tail -n 1)
+ifeq ($(shell test $(GCC_MAJOR) -ge 10 && echo 1), 1)
+#1. gcc 10 complains on operations with zero size arrays in rte_cryptodev.c, so
+#disable this warning
+#2. gcc 10 disables fcommon by default and complains on multiple definition of
+#aesni_mb_logtype_driver symbol which is defined in header file and presented in sevral
+#translation units
+DPDK_CFLAGS += -Wno-stringop-overflow -fcommon
+endif
+endif
+
 # Force-disable scan-build
 SUB_CC = $(patsubst %ccc-analyzer,$(DEFAULT_CC),$(CC))
 
