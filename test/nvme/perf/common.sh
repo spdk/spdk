@@ -424,7 +424,7 @@ function run_nvme_fio() {
 
 function run_bdevperf() {
 	echo "** Running bdevperf test, this can take a while, depending on the run-time setting."
-	$bdevperf_dir/bdevperf --json $testdir/bdev.conf -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME -m "[$CPUS_ALLOWED]"
+	$bdevperf_dir/bdevperf --json $testdir/bdev.conf -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME -m "[$CPUS_ALLOWED]" -r /var/tmp/spdk.sock
 	sleep 1
 }
 

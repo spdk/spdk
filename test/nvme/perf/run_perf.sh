@@ -41,6 +41,7 @@ NOIOSCALING=false
 PRECONDITIONING=true
 CPUFREQ=""
 PERFTOP=false
+DPDKMEM=false
 DATE="$(date +'%m_%d_%Y_%H%M%S')"
 
 function usage() {
@@ -98,6 +99,7 @@ function usage() {
 	echo
 	echo "Other options:"
 	echo "    --perftop           Run perftop measurements on the same CPU cores as specified in --cpu-allowed option."
+	echo "    --dpdk-mem-stats    Dump DPDK memory stats during the test."
 	set -x
 }
 
@@ -141,6 +143,7 @@ while getopts 'h-:' optchar; do
 				no-io-scaling) NOIOSCALING=true ;;
 				cpu-frequency=*) CPUFREQ="${OPTARG#*=}" ;;
 				perftop) PERFTOP=true ;;
+				dpdk-mem-stats) DPDKMEM=true ;;
 				*)
 					usage $0 echo "Invalid argument '$OPTARG'"
 					exit 1
@@ -166,7 +169,7 @@ echo "run-time,ramp-time,fio-plugin,QD,block-size,num-cpu-cores,workload,workloa
 printf "%s,%s,%s,%s,%s,%s,%s,%s\n" $RUNTIME $RAMP_TIME $PLUGIN $IODEPTH $BLK_SIZE $NO_CORES $RW $MIX >> $result_file
 echo "num_of_disks,iops,avg_lat[usec],p99[usec],p99.99[usec],stdev[usec],avg_slat[usec],avg_clat[usec],bw[Kib/s]" >> $result_file
 
-trap 'rm -f *.state $testdir/bdev.conf; kill $perf_pid; print_backtrace' ERR SIGTERM SIGABRT
+trap 'rm -f *.state $testdir/bdev.conf; kill $perf_pid; wait $dpdk_mem_pid; print_backtrace' ERR SIGTERM SIGABRT
 
 if [[ "$PLUGIN" =~ "bdev" ]]; then
 	create_spdk_bdev_conf "$BDEV_CACHE" "$BDEV_POOL"
@@ -240,6 +243,20 @@ if $PERFTOP; then
 	perf_pid=$!
 fi
 
+if $DPDKMEM; then
+	echo "INFO: waiting to generate DPDK memory usage"
+	wait_time=$((RUNTIME / 2))
+	if [[ ! "$PLUGIN" =~ "perf" ]]; then
+		wait_time=$((wait_time + RAMP_TIME))
+	fi
+	(
+		sleep $wait_time
+		echo "INFO: generating DPDK memory usage"
+		$rootdir/scripts/rpc.py env_dpdk_get_mem_stats
+	) &
+	dpdk_mem_pid=$!
+fi
+
 #Run each workolad $REPEAT_NO times
 for ((j = 0; j < REPEAT_NO; j++)); do
 	if [ $PLUGIN = "spdk-perf-bdev" ]; then
@@ -299,6 +316,11 @@ if $PERFTOP; then
 	wait $perf_pid || true
 	perf report -i "$testdir/perf.data" > $result_dir/perftop_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}.txt
 	rm -f "$testdir/perf.data"
+fi
+
+if $DPDKMEM; then
+	mv "/tmp/spdk_mem_dump.txt" $result_dir/spdk_mem_dump_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}.txt
+	echo "INFO: DPDK memory usage saved in $result_dir"
 fi
 
 #Write results to csv file
