@@ -111,6 +111,7 @@ test3(void)
 	struct nvme_request		*req;
 	struct spdk_nvme_ctrlr		ctrlr = {};
 
+	qpair.state = NVME_QPAIR_ENABLED;
 	prepare_submit_request_test(&qpair, &ctrlr);
 
 	req = nvme_allocate_request_null(&qpair, expected_success_callback, NULL);
