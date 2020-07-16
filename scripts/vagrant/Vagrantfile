@@ -60,7 +60,11 @@ Vagrant.configure(2) do |config|
   # generic/fedora boxes on the other hand have problems running NFS
   # service so use sshfs+rsync combo instead.
   plugins_sync_backend = {type: :sshfs}
-  files_sync_backend = {type: "rsync", rsync__auto: false}
+  # Remove --copy-links from default rsync cmdline since we do want to sync
+  # actual symlinks as well. Also, since copy is made between host and its
+  # local VM we don't need to worry about saturating the local link so skip
+  # the compression to speed up the whole transfer.
+  files_sync_backend = {type: "rsync", rsync__auto: false, rsync__args: ["--archive", "--verbose", "--delete"]}
   if (distro.include? "freebsd") || (distro.include? "clearlinux")
     plugins_sync_backend = {type: :nfs, nfs_udp: false}
     files_sync_backend = {type: :nfs, nfs_udp: false,  mount_options: ['ro']}
