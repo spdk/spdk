@@ -370,6 +370,31 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 	free(subsystem);
 }
 
+
+/* we have to use the typedef in the function declaration to appease astyle. */
+typedef enum spdk_nvmf_subsystem_state spdk_nvmf_subsystem_state_t;
+
+static spdk_nvmf_subsystem_state_t
+nvmf_subsystem_get_intermediate_state(enum spdk_nvmf_subsystem_state current_state,
+				      enum spdk_nvmf_subsystem_state requested_state)
+{
+	switch (requested_state) {
+	case SPDK_NVMF_SUBSYSTEM_INACTIVE:
+		return SPDK_NVMF_SUBSYSTEM_DEACTIVATING;
+	case SPDK_NVMF_SUBSYSTEM_ACTIVE:
+		if (current_state == SPDK_NVMF_SUBSYSTEM_PAUSED) {
+			return SPDK_NVMF_SUBSYSTEM_RESUMING;
+		} else {
+			return SPDK_NVMF_SUBSYSTEM_ACTIVATING;
+		}
+	case SPDK_NVMF_SUBSYSTEM_PAUSED:
+		return SPDK_NVMF_SUBSYSTEM_PAUSING;
+	default:
+		assert(false);
+		return SPDK_NVMF_SUBSYSTEM_NUM_STATES;
+	}
+}
+
 static int
 nvmf_subsystem_set_state(struct spdk_nvmf_subsystem *subsystem,
 			 enum spdk_nvmf_subsystem_state state)
@@ -500,22 +525,8 @@ nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 	enum spdk_nvmf_subsystem_state intermediate_state;
 	int rc;
 
-	switch (requested_state) {
-	case SPDK_NVMF_SUBSYSTEM_INACTIVE:
-		intermediate_state = SPDK_NVMF_SUBSYSTEM_DEACTIVATING;
-		break;
-	case SPDK_NVMF_SUBSYSTEM_ACTIVE:
-		if (subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED) {
-			intermediate_state = SPDK_NVMF_SUBSYSTEM_RESUMING;
-		} else {
-			intermediate_state = SPDK_NVMF_SUBSYSTEM_ACTIVATING;
-		}
-		break;
-	case SPDK_NVMF_SUBSYSTEM_PAUSED:
-		intermediate_state = SPDK_NVMF_SUBSYSTEM_PAUSING;
-		break;
-	default:
-		assert(false);
+	intermediate_state = nvmf_subsystem_get_intermediate_state(subsystem->state, requested_state);
+	if (intermediate_state == SPDK_NVMF_SUBSYSTEM_NUM_STATES) {
 		return -EINVAL;
 	}
 
