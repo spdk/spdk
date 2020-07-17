@@ -963,6 +963,24 @@ nvmf_rpc_ns_ctx_free(struct nvmf_rpc_ns_ctx *ctx)
 }
 
 static void
+nvmf_rpc_ns_failback_resumed(struct spdk_nvmf_subsystem *subsystem,
+			     void *cb_arg, int status)
+{
+	struct nvmf_rpc_ns_ctx *ctx = cb_arg;
+	struct spdk_jsonrpc_request *request = ctx->request;
+
+	if (status) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Unable to add ns, subsystem in invalid state");
+	} else {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Unable to add ns, subsystem in active state");
+	}
+
+	nvmf_rpc_ns_ctx_free(ctx);
+}
+
+static void
 nvmf_rpc_ns_resumed(struct spdk_nvmf_subsystem *subsystem,
 		    void *cb_arg, int status)
 {
@@ -971,6 +989,27 @@ nvmf_rpc_ns_resumed(struct spdk_nvmf_subsystem *subsystem,
 	uint32_t nsid = ctx->ns_params.nsid;
 	bool response_sent = ctx->response_sent;
 	struct spdk_json_write_ctx *w;
+	int rc;
+
+	/* The case where the call to add the namespace was successful, but the subsystem couldn't be resumed. */
+	if (status && !ctx->response_sent) {
+		rc = spdk_nvmf_subsystem_remove_ns(subsystem, nsid);
+		if (rc != 0) {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							 "Unable to add ns, subsystem in invalid state");
+			nvmf_rpc_ns_ctx_free(ctx);
+			return;
+		}
+
+		rc = spdk_nvmf_subsystem_resume(subsystem, nvmf_rpc_ns_failback_resumed, ctx);
+		if (rc != 0) {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+			nvmf_rpc_ns_ctx_free(ctx);
+			return;
+		}
+
+		return;
+	}
 
 	nvmf_rpc_ns_ctx_free(ctx);
 
