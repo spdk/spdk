@@ -2001,6 +2001,14 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			/* The next state transition depends on the data transfer needs of this request. */
 			rdma_req->req.xfer = spdk_nvmf_req_get_xfer(&rdma_req->req);
 
+			if (spdk_unlikely(rdma_req->req.xfer == SPDK_NVME_DATA_BIDIRECTIONAL)) {
+				rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+				rsp->status.sc = SPDK_NVME_SC_INVALID_OPCODE;
+				rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE;
+				SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Request %p: invalid xfer type (BIDIRECTIONAL)\n", rdma_req);
+				break;
+			}
+
 			/* If no data to transfer, ready to execute. */
 			if (rdma_req->req.xfer == SPDK_NVME_DATA_NONE) {
 				rdma_req->state = RDMA_REQUEST_STATE_READY_TO_EXECUTE;

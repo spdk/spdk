@@ -2121,6 +2121,14 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			/* The next state transition depends on the data transfer needs of this request. */
 			tcp_req->req.xfer = spdk_nvmf_req_get_xfer(&tcp_req->req);
 
+			if (spdk_unlikely(tcp_req->req.xfer == SPDK_NVME_DATA_BIDIRECTIONAL)) {
+				tcp_req->req.rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+				tcp_req->req.rsp->nvme_cpl.status.sct = SPDK_NVME_SC_INVALID_OPCODE;
+				nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_COMPLETE);
+				SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Request %p: invalid xfer type (BIDIRECTIONAL)\n", tcp_req);
+				break;
+			}
+
 			/* If no data to transfer, ready to execute. */
 			if (tcp_req->req.xfer == SPDK_NVME_DATA_NONE) {
 				/* Reset the tqpair receving pdu state */
