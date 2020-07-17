@@ -228,6 +228,17 @@ load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	}
 
 	snprintf(lvol->name, sizeof(lvol->name), "%s", attr);
+	/*
+	 * unique_id becomes bdev.name which is why we use lvol name instead
+	 * of randomly generated uuid.
+	 */
+	if (snprintf(lvol->unique_id, sizeof(lvol->unique_id), "%s", lvol->name) < 0) {
+		/*
+		 * we don't care if name is longer than unique_id because
+		 * with mayastor that does not happen
+		 */
+		abort();
+	}
 
 	TAILQ_INSERT_TAIL(&lvs->lvols, lvol, link);
 
