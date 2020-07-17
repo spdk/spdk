@@ -1087,6 +1087,24 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     *** The Portal/Initiator Groups must be precreated ***""")
     p.set_defaults(func=iscsi_target_node_remove_pg_ig_maps)
 
+    def iscsi_target_node_set_redirect(args):
+        rpc.iscsi.iscsi_target_node_set_redirect(
+            args.client,
+            name=args.name,
+            pg_tag=args.pg_tag,
+            redirect_host=args.redirect_host,
+            redirect_port=args.redirect_port)
+
+    p = subparsers.add_parser('iscsi_target_node_set_redirect',
+                              help="""Update redirect portal of the public portal group for
+    the target node, and send asynchronous logout request to all corresponding initiators.
+    Omit redirect host and port to clear previously set redirect settings.""")
+    p.add_argument('name', help='Target node name (ASCII)')
+    p.add_argument('pg_tag', help='Portal group tag (unique, integer > 0)', type=int)
+    p.add_argument('-a', '--redirect_host', help='Numeric IP address for redirect portal', required=False)
+    p.add_argument('-p', '--redirect_port', help='Numeric TCP port for redirect portal', required=False)
+    p.set_defaults(func=iscsi_target_node_set_redirect)
+
     def iscsi_create_portal_group(args):
         portals = []
         for p in args.portal_list.strip().split(' '):

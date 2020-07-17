@@ -1149,6 +1149,75 @@ SPDK_RPC_REGISTER("iscsi_target_node_set_auth", rpc_iscsi_target_node_set_auth,
 		  SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_target_node_set_auth, set_iscsi_target_node_auth)
 
+struct rpc_target_redirect {
+	char *name;
+	int32_t pg_tag;
+	char *redirect_host;
+	char *redirect_port;
+};
+
+static void
+free_rpc_target_redirect(struct rpc_target_redirect *req)
+{
+	free(req->name);
+	free(req->redirect_host);
+	free(req->redirect_port);
+}
+
+static const struct spdk_json_object_decoder rpc_target_redirect_decoders[] = {
+	{"name", offsetof(struct rpc_target_redirect, name), spdk_json_decode_string},
+	{"pg_tag", offsetof(struct rpc_target_redirect, pg_tag), spdk_json_decode_int32},
+	{"redirect_host", offsetof(struct rpc_target_redirect, redirect_host), spdk_json_decode_string, true},
+	{"redirect_port", offsetof(struct rpc_target_redirect, redirect_port), spdk_json_decode_string, true},
+};
+
+static void
+rpc_iscsi_target_node_set_redirect(struct spdk_jsonrpc_request *request,
+				   const struct spdk_json_val *params)
+{
+	struct rpc_target_redirect req = {};
+	struct spdk_iscsi_tgt_node *target;
+	struct spdk_json_write_ctx *w;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_target_redirect_decoders,
+				    SPDK_COUNTOF(rpc_target_redirect_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		free_rpc_target_redirect(&req);
+		return;
+	}
+
+	target = iscsi_find_tgt_node(req.name);
+	if (target == NULL) {
+		SPDK_ERRLOG("target %s is not found\n", req.name);
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						     "Target %s is not found", req.name);
+		free_rpc_target_redirect(&req);
+		return;
+	}
+
+	rc = iscsi_tgt_node_redirect(target, req.pg_tag, req.redirect_host, req.redirect_port);
+	if (rc != 0) {
+		SPDK_ERRLOG("failed to redirect target %s\n", req.name);
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						     "Failed to redirect target %s, (%d): %s",
+						     req.name, rc, spdk_strerror(-rc));
+		free_rpc_target_redirect(&req);
+		return;
+	}
+
+	free_rpc_target_redirect(&req);
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("iscsi_target_node_set_redirect", rpc_iscsi_target_node_set_redirect,
+		  SPDK_RPC_RUNTIME)
+
 static void
 rpc_iscsi_get_options(struct spdk_jsonrpc_request *request,
 		      const struct spdk_json_val *params)

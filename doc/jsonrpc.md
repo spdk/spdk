@@ -4098,6 +4098,51 @@ Example response:
 }
 ~~~
 
+## iscsi_target_node_set_redirect method {#rpc_iscsi_target_node_set_redirect}
+
+Update redirect portal of the primary portal group for the target node,
+and send asynchronous logout request to all corresponding initiators.
+
+### Parameters
+
+Name                        | Optional | Type    | Description
+--------------------------- | -------- | --------| -----------
+name                        | Required | string  | Target node name (ASCII)
+pg_tag                      | Required | number  | Existing portal group tag
+redirect_host               | Optional | string  | Numeric IP address to which the target node is redirected
+redirect_port               | Optional | string  | Numeric TCP port to which the target node is redirected
+
+If both redirect_host and redirect_port are omitted, clear the redirect portal.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "name": "iqn.2016-06.io.spdk:target1",
+    "pg_tag": 1,
+    "redirect_host": "10.0.0.3",
+    "redirect_port": "3260"
+  },
+  "jsonrpc": "2.0",
+  "method": "iscsi_target_node_set_redirect",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+
 # NVMe-oF Target {#jsonrpc_components_nvmf_tgt}
 
 ## nvmf_create_transport method {#rpc_nvmf_create_transport}

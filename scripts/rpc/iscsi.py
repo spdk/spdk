@@ -374,6 +374,31 @@ def iscsi_target_node_add_pg_ig_maps(client, pg_ig_maps, name):
     return client.call('iscsi_target_node_add_pg_ig_maps', params)
 
 
+def iscsi_target_node_set_redirect(client, name, pg_tag, redirect_host, redirect_port):
+    """Update redirect portal of the public portal group for the target node,
+       and send asynchronous logout request to all corresponding initiators.
+
+    Args:
+        name: Target node name (ASCII)
+        pg_tag: Portal group tag (unique, integer > 0)
+        redirect_host: Numeric IP address to which the target node is redirected
+        redirect_port: Numeric TCP port to which the target node is redirected
+
+    Returns:
+        True or False
+    """
+    params = {
+        'name': name,
+        'pg_tag': pg_tag
+    }
+
+    if redirect_host:
+        params['redirect_host'] = redirect_host
+    if redirect_port:
+        params['redirect_port'] = redirect_port
+    return client.call('iscsi_target_node_set_redirect', params)
+
+
 @deprecated_alias('add_portal_group')
 def iscsi_create_portal_group(client, portals, tag, private):
     """Add a portal group.
