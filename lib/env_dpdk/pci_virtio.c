@@ -56,7 +56,6 @@ static struct spdk_pci_driver g_virtio_pci_drv = {
 
 	.cb_fn = NULL,
 	.cb_arg = NULL,
-	.is_registered = false,
 };
 
 struct spdk_pci_driver *

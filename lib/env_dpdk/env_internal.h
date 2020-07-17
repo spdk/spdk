@@ -69,7 +69,6 @@ struct spdk_pci_driver {
 	struct rte_pci_driver		driver;
 	spdk_pci_enum_cb		cb_fn;
 	void				*cb_arg;
-	bool				is_registered;
 	TAILQ_ENTRY(spdk_pci_driver)	tailq;
 };
 

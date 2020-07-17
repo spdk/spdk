@@ -59,9 +59,7 @@ pci_claim_test(struct spdk_pci_device *dev)
 	}
 }
 
-static struct spdk_pci_driver ut_pci_driver = {
-	.is_registered = true,
-};
+static struct spdk_pci_driver ut_pci_driver;
 
 struct ut_pci_dev {
 	struct spdk_pci_device pci;
