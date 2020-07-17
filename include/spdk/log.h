@@ -132,6 +132,12 @@ void spdk_log_set_print_level(enum spdk_log_level level);
  */
 enum spdk_log_level spdk_log_get_print_level(void);
 
+#ifdef DEBUG
+#define SPDK_DEBUGLOG_FLAG_ENABLED(name) spdk_log_get_flag(name)
+#else
+#define SPDK_DEBUGLOG_FLAG_ENABLED(name) false
+#endif
+
 #define SPDK_NOTICELOG(...) \
 	spdk_log(SPDK_LOG_NOTICE, __FILE__, __LINE__, __func__, __VA_ARGS__)
 #define SPDK_WARNLOG(...) \
