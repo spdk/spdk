@@ -1386,7 +1386,9 @@ nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
 		goto fini;
 	}
 
-	assert(sgroup->state == SPDK_NVMF_SUBSYSTEM_ACTIVE);
+	if (sgroup->state == SPDK_NVMF_SUBSYSTEM_PAUSED) {
+		goto fini;
+	}
 	sgroup->state = SPDK_NVMF_SUBSYSTEM_PAUSING;
 
 	if (sgroup->io_outstanding > 0) {
@@ -1419,7 +1421,9 @@ nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 
 	sgroup = &group->sgroups[subsystem->id];
 
-	assert(sgroup->state == SPDK_NVMF_SUBSYSTEM_PAUSED);
+	if (sgroup->state == SPDK_NVMF_SUBSYSTEM_ACTIVE) {
+		goto fini;
+	}
 
 	rc = poll_group_update_subsystem(group, subsystem);
 	if (rc) {

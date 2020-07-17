@@ -232,6 +232,8 @@ nvmf_valid_nqn(const char *nqn)
 	return true;
 }
 
+static void subsystem_state_change_on_pg(struct spdk_io_channel_iter *i);
+
 struct spdk_nvmf_subsystem *
 spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 			   const char *nqn,
@@ -442,6 +444,11 @@ nvmf_subsystem_set_state(struct spdk_nvmf_subsystem *subsystem,
 		    state == SPDK_NVMF_SUBSYSTEM_DEACTIVATING) {
 			expected_old_state = SPDK_NVMF_SUBSYSTEM_ACTIVATING;
 		}
+		/* This is for the case when resuming the subsystem fails. */
+		if (actual_old_state == SPDK_NVMF_SUBSYSTEM_RESUMING &&
+		    state == SPDK_NVMF_SUBSYSTEM_PAUSING) {
+			expected_old_state = SPDK_NVMF_SUBSYSTEM_RESUMING;
+		}
 		actual_old_state = expected_old_state;
 		__atomic_compare_exchange_n(&subsystem->state, &actual_old_state, state, false,
 					    __ATOMIC_RELAXED, __ATOMIC_RELAXED);
@@ -453,6 +460,8 @@ nvmf_subsystem_set_state(struct spdk_nvmf_subsystem *subsystem,
 struct subsystem_state_change_ctx {
 	struct spdk_nvmf_subsystem *subsystem;
 
+	enum spdk_nvmf_subsystem_state original_state;
+
 	enum spdk_nvmf_subsystem_state requested_state;
 
 	spdk_nvmf_subsystem_state_change_done cb_fn;
@@ -460,9 +469,27 @@ struct subsystem_state_change_ctx {
 };
 
 static void
+subsystem_state_change_revert_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct subsystem_state_change_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+
+	/* Nothing to be done here if the state setting fails, we are just screwed. */
+	if (nvmf_subsystem_set_state(ctx->subsystem, ctx->requested_state)) {
+		SPDK_ERRLOG("Unable to revert the subsystem state after operation failure.\n");
+	}
+
+	if (ctx->cb_fn) {
+		/* return a failure here. This function only exists in an error path. */
+		ctx->cb_fn(ctx->subsystem, ctx->cb_arg, -1);
+	}
+	free(ctx);
+}
+
+static void
 subsystem_state_change_done(struct spdk_io_channel_iter *i, int status)
 {
 	struct subsystem_state_change_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	enum spdk_nvmf_subsystem_state intermediate_state;
 
 	if (status == 0) {
 		status = nvmf_subsystem_set_state(ctx->subsystem, ctx->requested_state);
@@ -471,6 +498,23 @@ subsystem_state_change_done(struct spdk_io_channel_iter *i, int status)
 		}
 	}
 
+	if (status) {
+		intermediate_state = nvmf_subsystem_get_intermediate_state(ctx->requested_state,
+				     ctx->original_state);
+		assert(intermediate_state != SPDK_NVMF_SUBSYSTEM_NUM_STATES);
+
+		if (nvmf_subsystem_set_state(ctx->subsystem, intermediate_state)) {
+			goto out;
+		}
+		ctx->requested_state = ctx->original_state;
+		spdk_for_each_channel(ctx->subsystem->tgt,
+				      subsystem_state_change_on_pg,
+				      ctx,
+				      subsystem_state_change_revert_done);
+		return;
+	}
+
+out:
 	if (ctx->cb_fn) {
 		ctx->cb_fn(ctx->subsystem, ctx->cb_arg, status);
 	}
@@ -526,15 +570,14 @@ nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 	int rc;
 
 	intermediate_state = nvmf_subsystem_get_intermediate_state(subsystem->state, requested_state);
-	if (intermediate_state == SPDK_NVMF_SUBSYSTEM_NUM_STATES) {
-		return -EINVAL;
-	}
+	assert(intermediate_state != SPDK_NVMF_SUBSYSTEM_NUM_STATES);
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
 		return -ENOMEM;
 	}
 
+	ctx->original_state = subsystem->state;
 	rc = nvmf_subsystem_set_state(subsystem, intermediate_state);
 	if (rc) {
 		free(ctx);
