@@ -341,6 +341,21 @@ iscsi_portal_grp_add_portal(struct spdk_iscsi_portal_grp *pg,
 	TAILQ_INSERT_TAIL(&pg->head, p, per_pg_tailq);
 }
 
+struct spdk_iscsi_portal *
+iscsi_portal_grp_find_portal_by_addr(struct spdk_iscsi_portal_grp *pg,
+				     const char *host, const char *port)
+{
+	struct spdk_iscsi_portal *p;
+
+	TAILQ_FOREACH(p, &pg->head, per_pg_tailq) {
+		if (!strcmp(p->host, host) && !strcmp(p->port, port)) {
+			return p;
+		}
+	}
+
+	return NULL;
+}
+
 int
 iscsi_portal_grp_set_chap_params(struct spdk_iscsi_portal_grp *pg,
 				 bool disable_chap, bool require_chap,

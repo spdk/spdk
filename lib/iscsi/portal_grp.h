@@ -70,6 +70,9 @@ void iscsi_portal_destroy(struct spdk_iscsi_portal *p);
 struct spdk_iscsi_portal_grp *iscsi_portal_grp_create(int tag);
 void iscsi_portal_grp_add_portal(struct spdk_iscsi_portal_grp *pg,
 				 struct spdk_iscsi_portal *p);
+struct spdk_iscsi_portal *iscsi_portal_grp_find_portal_by_addr(
+	struct spdk_iscsi_portal_grp *pg, const char *host, const char *port);
+
 void iscsi_portal_grp_destroy(struct spdk_iscsi_portal_grp *pg);
 void iscsi_portal_grp_release(struct spdk_iscsi_portal_grp *pg);
 int iscsi_parse_portal_grps(void);
