@@ -17,6 +17,7 @@
 	spdk_conf_section_get_intval;
 	spdk_conf_section_get_boolval;
 	spdk_conf_set_as_default;
+	spdk_conf_disable_sections_merge;
 
 	local: *;
 };

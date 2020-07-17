@@ -201,6 +201,13 @@ bool spdk_conf_section_get_boolval(struct spdk_conf_section *sp, const char *key
  */
 void spdk_conf_set_as_default(struct spdk_conf *cp);
 
+/**
+ * Disable sections merging during 'spdk_conf_read()'
+ *
+ * \param cp Configuration to be read
+ */
+void spdk_conf_disable_sections_merge(struct spdk_conf *cp);
+
 #ifdef __cplusplus
 }
 #endif

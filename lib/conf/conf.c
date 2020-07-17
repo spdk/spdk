@@ -60,6 +60,7 @@ struct spdk_conf {
 	char *file;
 	struct spdk_conf_section *current_section;
 	struct spdk_conf_section *section;
+	bool merge_sections;
 };
 
 #define CF_DELIM " \t"
@@ -72,7 +73,13 @@ static struct spdk_conf *default_config = NULL;
 struct spdk_conf *
 spdk_conf_allocate(void)
 {
-	return calloc(1, sizeof(struct spdk_conf));
+	struct spdk_conf *ret = calloc(1, sizeof(struct spdk_conf));
+
+	if (ret) {
+		ret->merge_sections = true;
+	}
+
+	return ret;
 }
 
 static void
@@ -480,7 +487,12 @@ parse_line(struct spdk_conf *cp, char *lp)
 			num = 0;
 		}
 
-		sp = spdk_conf_find_section(cp, key);
+		if (cp->merge_sections) {
+			sp = spdk_conf_find_section(cp, key);
+		} else {
+			sp = NULL;
+		}
+
 		if (sp == NULL) {
 			sp = allocate_cf_section();
 			append_cf_section(cp, sp);
@@ -683,4 +695,10 @@ void
 spdk_conf_set_as_default(struct spdk_conf *cp)
 {
 	default_config = cp;
+}
+
+void
+spdk_conf_disable_sections_merge(struct spdk_conf *cp)
+{
+	cp->merge_sections = false;
 }
