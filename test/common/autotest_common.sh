@@ -848,7 +848,12 @@ function nvme_cli_build() {
 	# Build against the version of SPDK under test
 	pushd $spdk_nvme_cli
 
-	git clean -dfx
+	# Remove and recreate git index in case it became corrupted
+	if ! git clean -dfx; then
+		rm -f .git/index
+		git clean -dfx
+		git reset --hard
+	fi
 
 	rm -f "$spdk_nvme_cli/spdk"
 	ln -sf "$rootdir" "$spdk_nvme_cli/spdk"
