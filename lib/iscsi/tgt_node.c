@@ -298,8 +298,7 @@ iscsi_tgt_node_allow_iscsi_name(struct spdk_iscsi_tgt_node *target, const char *
 
 int
 iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
-		const char *iaddr, const char *tiqn, uint8_t *data, int alloc_len,
-		int data_len)
+		const char *tiqn, uint8_t *data, int alloc_len, int data_len)
 {
 	char buf[MAX_TMPBUF];
 	struct spdk_iscsi_portal_grp	*pg;

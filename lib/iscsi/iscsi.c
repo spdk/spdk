@@ -2377,7 +2377,6 @@ iscsi_pdu_payload_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 
 			data_len = iscsi_send_tgts(conn,
 						   conn->initiator_name,
-						   conn->initiator_addr,
 						   val, data, alloc_len,
 						   data_len);
 		} else {
@@ -2392,7 +2391,6 @@ iscsi_pdu_payload_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 			} else {
 				data_len = iscsi_send_tgts(conn,
 							   conn->initiator_name,
-							   conn->initiator_addr,
 							   val, data, alloc_len,
 							   data_len);
 			}

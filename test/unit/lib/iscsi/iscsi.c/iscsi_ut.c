@@ -80,7 +80,7 @@ iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
 }
 
 DEFINE_STUB(iscsi_send_tgts, int,
-	    (struct spdk_iscsi_conn *conn, const char *iiqn, const char *iaddr,
+	    (struct spdk_iscsi_conn *conn, const char *iiqn,
 	     const char *tiqn, uint8_t *data, int alloc_len, int data_len),
 	    0);
 
