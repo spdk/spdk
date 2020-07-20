@@ -1657,6 +1657,9 @@ parse_uint_option(struct spdk_conf_section *s, const char *name, int def)
 static void
 config_set_cli_args(struct job_config *config)
 {
+	if (g_job_bdev_name) {
+		config->filename = g_job_bdev_name;
+	}
 	if (g_io_size > 0) {
 		config->bs = g_io_size;
 	}
@@ -1685,10 +1688,6 @@ read_job_config(void)
 
 	if (g_bdevperf_conf_file == NULL) {
 		return 0;
-	}
-
-	if (g_job_bdev_name) {
-		fprintf(stderr, "-T options will be ignored since -j is used\n");
 	}
 
 	g_bdevperf_conf = spdk_conf_allocate();
