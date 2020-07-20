@@ -1,5 +1,9 @@
 # Block Device User Guide {#bdev}
 
+# Target Audience {#bdev_ug_targetaudience}
+
+This user guide is intended for software developers who have knowledge of block storage, storage drivers, issuing JSON-RPC commands and storage services such as RAID, compression, crypto, and others.
+
 # Introduction {#bdev_ug_introduction}
 
 The SPDK block device layer, often simply called *bdev*, is a C library
@@ -35,72 +39,12 @@ directly from SPDK application by running `scripts/rpc.py rpc_get_methods`.
 Detailed help for each command can be displayed by adding `-h` flag as a
 command parameter.
 
-# General Purpose RPCs {#bdev_ug_general_rpcs}
+# Configuring Block Device Modules {#bdev_ug_general_rpcs}
 
-## bdev_get_bdevs {#bdev_ug_get_bdevs}
+Block devices can be configured using JSON RPCs. A complete list of available RPC commands
+with detailed information can be found on the @ref jsonrpc_components_bdev page.
 
-List of currently available block devices including detailed information about
-them can be get by using `bdev_get_bdevs` RPC command. User can add optional
-parameter `name` to get details about specified by that name bdev.
-
-Example response
-
-~~~
-{
-  "num_blocks": 32768,
-  "assigned_rate_limits": {
-    "rw_ios_per_sec": 10000,
-    "rw_mbytes_per_sec": 20
-  },
-  "supported_io_types": {
-    "reset": true,
-    "nvme_admin": false,
-    "unmap": true,
-    "read": true,
-    "write_zeroes": true,
-    "write": true,
-    "flush": true,
-    "nvme_io": false
-  },
-  "driver_specific": {},
-  "claimed": false,
-  "block_size": 4096,
-  "product_name": "Malloc disk",
-  "name": "Malloc0"
-}
-~~~
-
-## bdev_set_qos_limit {#bdev_set_qos_limit}
-
-Users can use the `bdev_set_qos_limit` RPC command to enable, adjust, and disable
-rate limits on an existing bdev.  Two types of rate limits are supported:
-IOPS and bandwidth.  The rate limits can be enabled, adjusted, and disabled at any
-time for the specified bdev.  The bdev name is a required parameter for this
-RPC command and at least one of `rw_ios_per_sec` and `rw_mbytes_per_sec` must be
-specified.  When both rate limits are enabled, the first met limit will
-take effect.  The value 0 may be specified to disable the corresponding rate
-limit. Users can run this command with `-h` or `--help` for more information.
-
-## Histograms {#rpc_bdev_histogram}
-
-The `bdev_enable_histogram` RPC command allows to enable or disable gathering
-latency data for specified bdev. Histogram can be downloaded by the user by
-calling `bdev_get_histogram` and parsed using scripts/histogram.py script.
-
-Example command
-
-`rpc.py bdev_enable_histogram Nvme0n1 --enable`
-
-The command will enable gathering data for histogram on Nvme0n1 device.
-
-`rpc.py bdev_get_histogram Nvme0n1 | histogram.py`
-
-The command will download gathered histogram data. The script will parse
-the data and show table containing IO count for latency ranges.
-
-`rpc.py bdev_enable_histogram Nvme0n1 --disable`
-
-The command will disable histogram on Nvme0n1 device.
+# Common Block Device Configuration Examples
 
 # Ceph RBD {#bdev_config_rbd}
 
@@ -378,6 +322,14 @@ please visit [OCF documentation](https://open-cas.github.io/).
 Malloc bdevs are ramdisks. Because of its nature they are volatile. They are created from hugepage memory given to SPDK
 application.
 
+Example command for creating malloc bdev:
+
+`rpc.py bdev_malloc_create -b Malloc0 64 512`
+
+Example command for removing malloc bdev:
+
+`rpc.py bdev_malloc_delete Malloc0`
+
 # Null {#bdev_config_null}
 
 The SPDK null bdev driver is a dummy block I/O target that discards all writes and returns undefined
@@ -460,7 +412,6 @@ User can get list of available lvol stores using `bdev_lvol_get_lvstores` RPC co
 parameters available).
 
 Example response
-
 ~~~
 {
   "uuid": "330a6ab2-f468-11e7-983e-001e67edf35d",
