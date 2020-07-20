@@ -2088,6 +2088,14 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 	group = &tqpair->group->group;
 	assert(tcp_req->state != TCP_REQUEST_STATE_FREE);
 
+	/* If the qpair is not active, we need to abort the outstanding requests. */
+	if (tqpair->qpair.state != SPDK_NVMF_QPAIR_ACTIVE) {
+		if (tcp_req->state == TCP_REQUEST_STATE_NEED_BUFFER) {
+			STAILQ_REMOVE(&group->pending_buf_queue, &tcp_req->req, spdk_nvmf_request, buf_link);
+		}
+		nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_COMPLETED);
+	}
+
 	/* The loop here is to allow for several back-to-back state changes. */
 	do {
 		prev_state = tcp_req->state;

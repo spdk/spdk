@@ -644,6 +644,7 @@ test_nvmf_tcp_incapsule_data_handle(void)
 	tqpair.qpair.transport = &ttransport.transport;
 	tqpair.state = NVME_TCP_QPAIR_STATE_RUNNING;
 	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH;
+	tqpair.qpair.state = SPDK_NVMF_QPAIR_ACTIVE;
 
 	/* init a null tcp_req into tqpair TCP_REQUEST_STATE_FREE queue */
 	tcp_req2.req.qpair = &tqpair.qpair;
