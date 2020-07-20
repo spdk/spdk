@@ -241,6 +241,7 @@ _dd_write_bdev_done(struct spdk_bdev_io *bdev_io,
 {
 	struct dd_io *io = cb_arg;
 
+	assert(g_job.outstanding > 0);
 	g_job.outstanding--;
 	spdk_bdev_free_io(bdev_io);
 	dd_target_populate_buffer(io);
@@ -288,11 +289,11 @@ dd_target_write(struct dd_io *io)
 
 	if (rc != 0) {
 		SPDK_ERRLOG("%s\n", strerror(-rc));
+		assert(g_job.outstanding > 0);
 		g_job.outstanding--;
+		g_error = rc;
 		if (g_job.outstanding == 0) {
 			dd_exit(rc);
-		} else {
-			g_error = rc;
 		}
 		return;
 	}
@@ -306,6 +307,8 @@ _dd_read_bdev_done(struct spdk_bdev_io *bdev_io,
 	struct dd_io *io = cb_arg;
 
 	spdk_bdev_free_io(bdev_io);
+
+	assert(g_job.outstanding > 0);
 	g_job.outstanding--;
 	dd_target_write(io);
 }
@@ -341,11 +344,11 @@ dd_target_read(struct dd_io *io)
 
 	if (rc != 0) {
 		SPDK_ERRLOG("%s\n", strerror(-rc));
+		assert(g_job.outstanding > 0);
 		g_job.outstanding--;
+		g_error = rc;
 		if (g_job.outstanding == 0) {
 			dd_exit(rc);
-		} else {
-			g_error = rc;
 		}
 		return;
 	}
@@ -358,6 +361,7 @@ _dd_target_populate_buffer_done(struct spdk_bdev_io *bdev_io,
 {
 	struct dd_io *io = cb_arg;
 
+	assert(g_job.outstanding > 0);
 	g_job.outstanding--;
 	spdk_bdev_free_io(bdev_io);
 	dd_target_read(io);
@@ -416,11 +420,11 @@ dd_target_populate_buffer(struct dd_io *io)
 
 	if (rc != 0) {
 		SPDK_ERRLOG("%s\n", strerror(-rc));
+		assert(g_job.outstanding > 0);
 		g_job.outstanding--;
+		g_error = rc;
 		if (g_job.outstanding == 0) {
 			dd_exit(rc);
-		} else {
-			g_error = rc;
 		}
 		return;
 	}
@@ -429,6 +433,7 @@ dd_target_populate_buffer(struct dd_io *io)
 static void
 dd_complete_poll(struct dd_io *io)
 {
+	assert(g_job.outstanding > 0);
 	g_job.outstanding--;
 
 	switch (io->type) {
@@ -483,11 +488,11 @@ dd_input_poll(void *ctx)
 {
 	int rc = 0;
 
-	if (g_job.input.type == DD_TARGET_TYPE_FILE) {
-		rc = dd_aio_poll(g_job.input.u.aio.io_ctx);
-		if (rc == -ENOSPC) {
-			SPDK_ERRLOG("No more file content to read\n");
-		}
+	assert(g_job.input.type == DD_TARGET_TYPE_FILE);
+
+	rc = dd_aio_poll(g_job.input.u.aio.io_ctx);
+	if (rc == -ENOSPC) {
+		SPDK_ERRLOG("No more file content to read\n");
 	}
 
 	return rc;
@@ -498,11 +503,11 @@ dd_output_poll(void *ctx)
 {
 	int rc = 0;
 
-	if (g_job.output.type == DD_TARGET_TYPE_FILE) {
-		rc = dd_aio_poll(g_job.output.u.aio.io_ctx);
-		if (rc == -ENOSPC) {
-			SPDK_ERRLOG("No space left on device\n");
-		}
+	assert(g_job.output.type == DD_TARGET_TYPE_FILE);
+
+	rc = dd_aio_poll(g_job.output.u.aio.io_ctx);
+	if (rc == -ENOSPC) {
+		SPDK_ERRLOG("No space left on device\n");
 	}
 
 	return rc;
