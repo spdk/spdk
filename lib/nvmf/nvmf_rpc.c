@@ -587,6 +587,7 @@ struct nvmf_rpc_listener_ctx {
 	char				*nqn;
 	char				*tgt_name;
 	struct spdk_nvmf_tgt		*tgt;
+	struct spdk_nvmf_transport	*transport;
 	struct spdk_nvmf_subsystem	*subsystem;
 	struct rpc_listen_address	address;
 
@@ -656,6 +657,26 @@ nvmf_rpc_subsystem_listen(void *cb_arg, int status)
 		/* Can't really do anything to recover here - subsystem will remain paused. */
 	}
 }
+static void
+nvmf_rpc_stop_listen_async_done(void *cb_arg, int status)
+{
+	struct nvmf_rpc_listener_ctx *ctx = cb_arg;
+
+	if (status) {
+		SPDK_ERRLOG("Unable to remove listener.\n");
+		spdk_jsonrpc_send_error_response_fmt(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "error stopping listener: %d\n", status);
+		ctx->response_sent = true;
+	}
+
+	if (spdk_nvmf_subsystem_resume(ctx->subsystem, nvmf_rpc_listen_resumed, ctx)) {
+		if (!ctx->response_sent) {
+			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+		}
+		nvmf_rpc_listener_ctx_free(ctx);
+		/* Can't really do anything to recover here - subsystem will remain paused. */
+	}
+}
 
 static void
 nvmf_rpc_listen_paused(struct spdk_nvmf_subsystem *subsystem,
@@ -683,7 +704,9 @@ nvmf_rpc_listen_paused(struct spdk_nvmf_subsystem *subsystem,
 							 "Invalid parameters");
 			ctx->response_sent = true;
 		}
-		spdk_nvmf_tgt_stop_listen(ctx->tgt, &ctx->trid);
+		spdk_nvmf_transport_stop_listen_async(ctx->transport, &ctx->trid, nvmf_rpc_stop_listen_async_done,
+						      ctx);
+		return;
 	} else {
 		SPDK_UNREACHABLE();
 	}
@@ -851,6 +874,14 @@ rpc_nvmf_subsystem_remove_listener(struct spdk_jsonrpc_request *request,
 	ctx->subsystem = subsystem;
 
 	if (rpc_listen_address_to_trid(&ctx->address, &ctx->trid)) {
+		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		nvmf_rpc_listener_ctx_free(ctx);
+		return;
+	}
+
+	ctx->transport = spdk_nvmf_tgt_get_transport(tgt, ctx->trid.trstring);
+	if (!ctx->transport) {
 		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
 		nvmf_rpc_listener_ctx_free(ctx);
