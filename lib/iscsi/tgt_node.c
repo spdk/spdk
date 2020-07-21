@@ -319,14 +319,9 @@ iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
 	if (alloc_len < 1) {
 		return 0;
 	}
-	if (total > alloc_len) {
+	if (total >= alloc_len) {
 		total = alloc_len;
 		data[total - 1] = '\0';
-		return total;
-	}
-
-	if (alloc_len - total < 1) {
-		SPDK_ERRLOG("data space small %d\n", alloc_len);
 		return total;
 	}
 
@@ -352,8 +347,11 @@ iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
 			TAILQ_FOREACH(p, &pg->head, per_pg_tailq) {
 				if (alloc_len - total < 1) {
 					pthread_mutex_unlock(&g_iscsi.mutex);
-					SPDK_ERRLOG("data space small %d\n", alloc_len);
-					return total;
+					/* TODO: long text responses support */
+					SPDK_ERRLOG("SPDK doesn't support long text responses now, "
+						    "you can use larger MaxRecvDataSegmentLength"
+						    "value in initiator\n");
+					return alloc_len;
 				}
 				host = p->host;
 				/* wildcard? */
