@@ -90,4 +90,7 @@ void iscsi_portal_grps_config_text(FILE *fp);
 void iscsi_portal_grps_info_json(struct spdk_json_write_ctx *w);
 void iscsi_portal_grps_config_json(struct spdk_json_write_ctx *w);
 
+int iscsi_parse_redirect_addr(struct sockaddr_storage *sa,
+			      const char *host, const char *port);
+
 #endif /* SPDK_PORTAL_GRP_H */

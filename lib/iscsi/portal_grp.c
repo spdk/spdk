@@ -271,6 +271,40 @@ iscsi_parse_portal(const char *portalstring, struct spdk_iscsi_portal **ip)
 	return 0;
 }
 
+int
+iscsi_parse_redirect_addr(struct sockaddr_storage *sa,
+			  const char *host, const char *port)
+{
+	struct addrinfo hints, *res;
+	int rc;
+
+	if (host == NULL || port == NULL) {
+		return -EINVAL;
+	}
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = PF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_NUMERICSERV;
+	hints.ai_flags |= AI_NUMERICHOST;
+	rc = getaddrinfo(host, port, &hints, &res);
+	if (rc != 0) {
+		SPDK_ERRLOG("getaddinrfo failed: %s (%d)\n", gai_strerror(rc), rc);
+		return -EINVAL;
+	}
+
+	if (res->ai_addrlen > sizeof(*sa)) {
+		SPDK_ERRLOG("getaddrinfo() ai_addrlen %zu too large\n",
+			    (size_t)res->ai_addrlen);
+		rc = -EINVAL;
+	} else {
+		memcpy(sa, res->ai_addr, res->ai_addrlen);
+	}
+
+	freeaddrinfo(res);
+	return rc;
+}
+
 struct spdk_iscsi_portal_grp *
 iscsi_portal_grp_create(int tag)
 {

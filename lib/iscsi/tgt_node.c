@@ -320,7 +320,7 @@ iscsi_send_tgt_portals(struct spdk_iscsi_conn *conn,
 			}
 			host = p->host;
 			/* wildcard? */
-			if (!strcasecmp(host, "[::]") || !strcasecmp(host, "0.0.0.0")) {
+			if (strcasecmp(host, "[::]") == 0 || strcasecmp(host, "0.0.0.0") == 0) {
 				if (spdk_sock_is_ipv6(conn->sock)) {
 					snprintf(buf, sizeof buf, "[%s]", conn->target_addr);
 					host = buf;
