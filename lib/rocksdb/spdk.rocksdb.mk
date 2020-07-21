@@ -41,7 +41,7 @@ CXXFLAGS +=  -I$(SPDK_DIR)/include -Iinclude/
 
 # The SPDK makefiles turn this on, but RocksDB won't compile with it.  So
 #  turn it off after including the SPDK makefiles.
-CXXFLAGS += -Wno-missing-declarations
+CXXFLAGS += -Wno-missing-declarations -Wno-maybe-uninitialized
 
 # The SPDK Makefiles may turn these options on but we do not want to enable
 #  them for the RocksDB source files.

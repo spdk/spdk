@@ -416,7 +416,7 @@ public:
 	virtual ~SpdkEnv();
 
 	virtual Status NewSequentialFile(const std::string &fname,
-					 unique_ptr<SequentialFile> *result,
+					 std::unique_ptr<SequentialFile> *result,
 					 const EnvOptions &options) override
 	{
 		if (fname.compare(0, mDirectory.length(), mDirectory) == 0) {
@@ -444,7 +444,7 @@ public:
 	}
 
 	virtual Status NewRandomAccessFile(const std::string &fname,
-					   unique_ptr<RandomAccessFile> *result,
+					   std::unique_ptr<RandomAccessFile> *result,
 					   const EnvOptions &options) override
 	{
 		if (fname.compare(0, mDirectory.length(), mDirectory) == 0) {
@@ -468,7 +468,7 @@ public:
 	}
 
 	virtual Status NewWritableFile(const std::string &fname,
-				       unique_ptr<WritableFile> *result,
+				       std::unique_ptr<WritableFile> *result,
 				       const EnvOptions &options) override
 	{
 		if (fname.compare(0, mDirectory.length(), mDirectory) == 0) {
@@ -493,14 +493,14 @@ public:
 
 	virtual Status ReuseWritableFile(const std::string &fname,
 					 const std::string &old_fname,
-					 unique_ptr<WritableFile> *result,
+					 std::unique_ptr<WritableFile> *result,
 					 const EnvOptions &options) override
 	{
 		return EnvWrapper::ReuseWritableFile(fname, old_fname, result, options);
 	}
 
 	virtual Status NewDirectory(__attribute__((unused)) const std::string &name,
-				    unique_ptr<Directory> *result) override
+				    std::unique_ptr<Directory> *result) override
 	{
 		result->reset(new SpdkDirectory());
 		return Status::OK();
