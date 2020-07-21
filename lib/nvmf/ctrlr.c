@@ -790,6 +790,10 @@ nvmf_ctrlr_cc_reset_done(struct spdk_io_channel_iter *i, int status)
 	ctrlr->vcprop.cc.raw = 0;
 	ctrlr->vcprop.csts.raw = 0;
 
+	/* After CC.EN transitions to 0 (due to shutdown or reset), the association
+	 * between the host and controller shall be preserved for at least 2 minutes */
+	ctrlr->association_timer = SPDK_POLLER_REGISTER(nvmf_ctrlr_association_remove, ctrlr,
+				   ctrlr->admin_qpair->transport->opts.association_timeout);
 }
 
 const struct spdk_nvmf_registers *
