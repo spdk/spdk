@@ -223,7 +223,7 @@ portal_grp_register_unregister_case(void)
 	const char *host = "192.168.2.0";
 	const char *port = "3260";
 
-	pg1 = iscsi_portal_grp_create(1);
+	pg1 = iscsi_portal_grp_create(1, false);
 	CU_ASSERT(pg1 != NULL);
 
 	p = iscsi_portal_create(host, port);
@@ -254,7 +254,7 @@ portal_grp_register_twice_case(void)
 	const char *host = "192.168.2.0";
 	const char *port = "3260";
 
-	pg1 = iscsi_portal_grp_create(1);
+	pg1 = iscsi_portal_grp_create(1, false);
 	CU_ASSERT(pg1 != NULL);
 
 	p = iscsi_portal_create(host, port);
@@ -294,7 +294,7 @@ portal_grp_add_delete_case(void)
 	set_thread(0);
 
 	/* internal of iscsi_create_portal_group */
-	pg1 = iscsi_portal_grp_create(1);
+	pg1 = iscsi_portal_grp_create(1, false);
 	CU_ASSERT(pg1 != NULL);
 
 	p = iscsi_portal_create(host, port);
@@ -340,7 +340,7 @@ portal_grp_add_delete_twice_case(void)
 	set_thread(0);
 
 	/* internal of iscsi_create_portal_group related */
-	pg1 = iscsi_portal_grp_create(1);
+	pg1 = iscsi_portal_grp_create(1, false);
 	CU_ASSERT(pg1 != NULL);
 
 	p = iscsi_portal_create(host, port1);
@@ -356,7 +356,7 @@ portal_grp_add_delete_twice_case(void)
 	CU_ASSERT(rc == 0);
 
 	/* internal of iscsi_create_portal_group related */
-	pg2 = iscsi_portal_grp_create(2);
+	pg2 = iscsi_portal_grp_create(2, false);
 	CU_ASSERT(pg2 != NULL);
 
 	p = iscsi_portal_create(host, port2);

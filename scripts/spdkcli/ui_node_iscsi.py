@@ -315,7 +315,7 @@ class UIPortalGroups(UINode):
             if cpumask:
                 print("WARNING: Specifying a CPU mask for portal groups is no longer supported. Ignoring.")
         tag = self.ui_eval_param(tag, "number", None)
-        self.get_root().construct_portal_group(tag=tag, portals=portals)
+        self.get_root().construct_portal_group(tag=tag, portals=portals, private=None)
 
     def ui_command_delete(self, tag):
         """Delete a portal group with given tag (unique, integer > 0))"""

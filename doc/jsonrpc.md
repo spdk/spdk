@@ -3868,7 +3868,8 @@ Example response:
           "port": "3260"
         }
       ],
-      "tag": 1
+      "tag": 1,
+      "private": false
     }
   ]
 }
@@ -3884,6 +3885,7 @@ Name                        | Optional | Type    | Description
 --------------------------- | -------- | --------| -----------
 tag                         | Required | number  | Portal group tag
 portals                     | Required | array   | Not empty array of portals
+private                     | Optional | boolean | When true, portals in this group are not returned by a discovery session. Used for login redirection. (default: `false`)
 
 Portal object
 

@@ -1103,7 +1103,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         rpc.iscsi.iscsi_create_portal_group(
             args.client,
             portals=portals,
-            tag=args.tag)
+            tag=args.tag,
+            private=args.private)
 
     p = subparsers.add_parser('iscsi_create_portal_group', aliases=['add_portal_group'],
                               help='Add a portal group')
@@ -1111,6 +1112,10 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         'tag', help='Portal group tag (unique, integer > 0)', type=int)
     p.add_argument('portal_list', help="""List of portals in host:port format, separated by whitespace
     Example: '192.168.100.100:3260 192.168.100.100:3261 192.168.100.100:3262""")
+    p.add_argument('-p', '--private', help="""Public (false) or private (true) portal group.
+    Private portal groups do not have their portals returned by a discovery session. A public
+    portal group may optionally specify a redirect portal for non-discovery logins. This redirect
+    portal must be from a private portal group.""", action='store_true')
     p.set_defaults(func=iscsi_create_portal_group)
 
     def iscsi_create_initiator_group(args):

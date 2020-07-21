@@ -375,17 +375,21 @@ def iscsi_target_node_add_pg_ig_maps(client, pg_ig_maps, name):
 
 
 @deprecated_alias('add_portal_group')
-def iscsi_create_portal_group(client, portals, tag):
+def iscsi_create_portal_group(client, portals, tag, private):
     """Add a portal group.
 
     Args:
         portals: List of portals, e.g. [{'host': ip, 'port': port}]
         tag: Initiator group tag (unique, integer > 0)
+        private: Public (false) or private (true) portal group for login redirection.
 
     Returns:
         True or False
     """
     params = {'tag': tag, 'portals': portals}
+
+    if private:
+        params['private'] = private
     return client.call('iscsi_create_portal_group', params)
 
 
