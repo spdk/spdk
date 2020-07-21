@@ -18,7 +18,7 @@ how to write a module.
 
 ## Creating A New Module
 
-Block device modules are located in subdirectories under lib/bdev today. It is not
+Block device modules are located in subdirectories under module/bdev today. It is not
 currently possible to place the code for a bdev module elsewhere, but updates
 to the build system could be made to enable this in the future. To create a
 module, add a new directory with a single C file and a Makefile. A great
@@ -136,6 +136,15 @@ The `submit_request` function is called to actually submit I/O requests to the
 block device. Once the I/O request is completed, the module must call
 spdk_bdev_io_complete(). The I/O does not have to finish within the calling
 context of `submit_request`.
+
+Integrating a new bdev module into the build system requires updates to various
+files in the /mk directory.
+
+## Creating Bdevs in an External Repository
+
+A User can build their own bdev module and application on top of existing SPDK libraries. The example in
+test/external_code serves as a template for creating, building and linking an external
+bdev module. Refer to test/external_code/README.md and @ref so_linking for further information.
 
 ## Creating Virtual Bdevs
 
