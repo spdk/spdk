@@ -1224,7 +1224,6 @@ iscsi_op_login_rsp_init(struct spdk_iscsi_conn *conn,
 {
 	struct iscsi_bhs_login_req *reqh;
 	struct iscsi_bhs_login_rsp *rsph;
-	uint32_t alloc_len;
 
 	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 	rsph->opcode = ISCSI_OP_LOGIN_RSP;
@@ -1232,21 +1231,15 @@ iscsi_op_login_rsp_init(struct spdk_iscsi_conn *conn,
 	rsph->status_detail = ISCSI_LOGIN_ACCEPT;
 	rsp_pdu->data_segment_len = 0;
 
-	/* Default MaxRecvDataSegmentLength - RFC3720(12.12) */
-	if (conn->MaxRecvDataSegmentLength < 8192) {
-		alloc_len = 8192;
-	} else {
-		alloc_len = conn->MaxRecvDataSegmentLength;
-	}
-
-	rsp_pdu->data = calloc(1, alloc_len);
+	/* The default MaxRecvDataSegmentLength 8192 is used during login. - RFC3720 */
+	rsp_pdu->data = calloc(1, 8192);
 	if (!rsp_pdu->data) {
 		SPDK_ERRLOG("calloc() failed for data segment\n");
 		rsph->status_class = ISCSI_CLASS_TARGET_ERROR;
 		rsph->status_detail = ISCSI_LOGIN_STATUS_NO_RESOURCES;
 		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
 	}
-	rsp_pdu->data_buf_len = alloc_len;
+	rsp_pdu->data_buf_len = 8192;
 
 	reqh = (struct iscsi_bhs_login_req *)&pdu->bhs;
 	rsph->flags |= (reqh->flags & ISCSI_LOGIN_TRANSIT);
