@@ -46,6 +46,7 @@
 #include "spdk/bit_array.h"
 #include "spdk/conf.h"
 
+#define BDEVPERF_CONFIG_MAX_FILENAME 1024
 #define BDEVPERF_CONFIG_UNDEFINED -1
 #define BDEVPERF_CONFIG_ERROR -2
 
@@ -1308,29 +1309,70 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 	return rc;
 }
 
+static const char *
+config_filename_next(const char *filename, char *out)
+{
+	int i, k;
+
+	if (filename == NULL) {
+		out[0] = '\0';
+		return NULL;
+	}
+
+	if (filename[0] == ':') {
+		filename++;
+	}
+
+	for (i = 0, k = 0;
+	     filename[i] != '\0' &&
+	     filename[i] != ':' &&
+	     i < BDEVPERF_CONFIG_MAX_FILENAME;
+	     i++) {
+		if (filename[i] == ' ' || filename[i] == '\t') {
+			continue;
+		}
+
+		out[k++] = filename[i];
+	}
+	out[k] = 0;
+
+	return filename + i;
+}
+
 static void
 bdevperf_construct_config_jobs(void)
 {
+	char filename[BDEVPERF_CONFIG_MAX_FILENAME];
 	struct spdk_thread *thread;
 	struct job_config *config;
 	struct spdk_bdev *bdev;
+	const char *filenames;
 	int rc;
 
 	TAILQ_FOREACH(config, &job_config_list, link) {
-		bdev = spdk_bdev_get_by_name(config->filename);
-		if (!bdev) {
-			fprintf(stderr, "Unable to find bdev '%s'\n", config->filename);
-			g_run_rc = -EINVAL;
-			return;
-		}
+		filenames = config->filename;
 
 		thread = construct_job_thread(&config->cpumask, config->name);
 		assert(thread);
 
-		rc = bdevperf_construct_job(bdev, config, thread);
-		if (rc < 0) {
-			g_run_rc = rc;
-			return;
+		while (filenames) {
+			filenames = config_filename_next(filenames, filename);
+			if (strlen(filename) == 0) {
+				break;
+			}
+
+			bdev = spdk_bdev_get_by_name(filename);
+			if (!bdev) {
+				fprintf(stderr, "Unable to find bdev '%s'\n", filename);
+				g_run_rc = -EINVAL;
+				return;
+			}
+
+			rc = bdevperf_construct_job(bdev, config, thread);
+			if (rc < 0) {
+				g_run_rc = rc;
+				return;
+			}
 		}
 	}
 }
@@ -1605,9 +1647,17 @@ read_job_config(void)
 		if (config->filename == NULL) {
 			config->filename = global_config.filename;
 		}
-		if (!is_global && config->filename == NULL) {
-			fprintf(stderr, "Job '%s' expects 'filename' parameter\n", config->name);
-			goto error;
+		if (!is_global) {
+			if (config->filename == NULL) {
+				fprintf(stderr, "Job '%s' expects 'filename' parameter\n", config->name);
+				goto error;
+			} else if (strnlen(config->filename, BDEVPERF_CONFIG_MAX_FILENAME)
+				   >= BDEVPERF_CONFIG_MAX_FILENAME) {
+				fprintf(stderr,
+					"filename for '%s' job is too long. Max length is %d\n",
+					config->name, BDEVPERF_CONFIG_MAX_FILENAME);
+				goto error;
+			}
 		}
 
 		cpumask = spdk_conf_section_get_val(s, "cpumask");
