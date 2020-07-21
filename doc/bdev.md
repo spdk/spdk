@@ -512,6 +512,23 @@ To remove a block device representation use the bdev_pmem_delete command.
 
 `rpc.py bdev_pmem_delete pmem`
 
+# Uring {#bdev_ug_uring}
+
+The uring bdev module issues I/O to kernel block devices using the io_uring Linux kernel API. This module requires liburing.
+For more information on io_uring refer to kernel [IO_uring] (https://kernel.dk/io_uring.pdf)
+
+The user needs to configure SPDK to include io_uring support:
+
+`configure --with-uring`
+
+To create a uring bdev with given filename, bdev name and block size use the `bdev_uring_create` RPC.
+
+`rpc.py  bdev_uring_create /path/to/device bdev_u0 512`
+
+To remove a uring bdev use the `bdev_uring_delete` RPC.
+
+`rpc.py bdev_uring_delete bdev_u0`
+
 # Virtio Block {#bdev_config_virtio_blk}
 
 The Virtio-Block driver allows creating SPDK bdevs from Virtio-Block devices.
