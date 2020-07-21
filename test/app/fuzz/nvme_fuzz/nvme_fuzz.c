@@ -456,7 +456,9 @@ submit_qp_cmds(struct nvme_fuzz_ns *ns, struct nvme_fuzz_qp *qp)
 	while ((qp->submitted_cmd_counter < g_cmd_array_size || g_cmd_array_size == 0) &&
 	       !TAILQ_EMPTY(&qp->free_ctx_objs)) {
 		ctx = TAILQ_FIRST(&qp->free_ctx_objs);
-		prep_nvme_cmd(ns, qp, ctx);
+		do {
+			prep_nvme_cmd(ns, qp, ctx);
+		} while (qp->is_admin && ctx->cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST);
 
 		TAILQ_REMOVE(&qp->free_ctx_objs, ctx, link);
 		TAILQ_INSERT_HEAD(&qp->outstanding_ctx_objs, ctx, link);
