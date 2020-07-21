@@ -860,6 +860,10 @@ nvmf_prop_set_cc(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
 					      nvmf_ctrlr_disconnect_io_qpairs_on_pg,
 					      ctrlr,
 					      nvmf_ctrlr_cc_shn_done);
+
+			/* From the time a shutdown is initiated the controller shall disable
+			 * Keep Alive timer */
+			nvmf_ctrlr_stop_keep_alive_timer(ctrlr);
 		} else if (cc.bits.shn == 0) {
 			ctrlr->vcprop.cc.bits.shn = 0;
 		} else {
