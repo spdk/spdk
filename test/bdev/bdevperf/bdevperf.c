@@ -1055,6 +1055,25 @@ _bdevperf_construct_job_done(void *ctx)
 	}
 }
 
+/* Checkformat will not allow to use inlined type,
+   this is a workaround */
+typedef struct spdk_thread *spdk_thread_t;
+
+static spdk_thread_t
+construct_job_thread(struct spdk_cpuset *cpumask, const char *tag)
+{
+	char thread_name[32];
+
+	/* This function runs on the master thread. */
+	assert(g_master_thread == spdk_get_thread());
+
+	snprintf(thread_name, sizeof(thread_name), "%s_%s",
+		 tag,
+		 spdk_cpuset_fmt(cpumask));
+
+	return spdk_thread_create(thread_name, cpumask);
+}
+
 static void
 _bdevperf_construct_job(void *ctx)
 {
@@ -1081,7 +1100,7 @@ end:
 }
 
 static int
-bdevperf_construct_job(struct spdk_bdev *bdev, struct spdk_cpuset *cpumask,
+bdevperf_construct_job(struct spdk_bdev *bdev, struct spdk_thread *thread,
 		       uint32_t offset, uint32_t length)
 {
 	struct bdevperf_job *job;
@@ -1089,18 +1108,6 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct spdk_cpuset *cpumask,
 	int block_size, data_block_size;
 	int rc;
 	int task_num, n;
-	char thread_name[32];
-	struct spdk_thread *thread;
-
-	/* This function runs on the master thread. */
-	assert(g_master_thread == spdk_get_thread());
-
-	snprintf(thread_name, sizeof(thread_name), "%s_%s", spdk_bdev_get_name(bdev),
-		 spdk_cpuset_fmt(cpumask));
-
-	/* Create a new thread for the job */
-	thread = spdk_thread_create(thread_name, cpumask);
-	assert(thread != NULL);
 
 	block_size = spdk_bdev_get_block_size(bdev);
 	data_block_size = spdk_bdev_get_data_block_size(bdev);
@@ -1240,6 +1247,7 @@ bdevperf_construct_multithread_jobs(void)
 	struct spdk_bdev *bdev;
 	uint32_t i;
 	struct spdk_cpuset cpumask;
+	struct spdk_thread *thread;
 	uint32_t num_cores;
 	uint32_t blocks_per_job;
 	uint32_t offset;
@@ -1268,9 +1276,11 @@ bdevperf_construct_multithread_jobs(void)
 		SPDK_ENV_FOREACH_CORE(i) {
 			spdk_cpuset_zero(&cpumask);
 			spdk_cpuset_set_cpu(&cpumask, i, true);
+			thread = construct_job_thread(&cpumask, spdk_bdev_get_name(bdev));
+			assert(thread);
 
 			/* Construct the job */
-			rc = bdevperf_construct_job(bdev, &cpumask, offset, blocks_per_job);
+			rc = bdevperf_construct_job(bdev, thread, offset, blocks_per_job);
 			if (rc < 0) {
 				g_run_rc = rc;
 				break;
@@ -1287,9 +1297,11 @@ bdevperf_construct_multithread_jobs(void)
 			SPDK_ENV_FOREACH_CORE(i) {
 				spdk_cpuset_zero(&cpumask);
 				spdk_cpuset_set_cpu(&cpumask, i, true);
+				thread = construct_job_thread(&cpumask, spdk_bdev_get_name(bdev));
+				assert(thread);
 
 				/* Construct the job */
-				rc = bdevperf_construct_job(bdev, &cpumask, offset, blocks_per_job);
+				rc = bdevperf_construct_job(bdev, thread, offset, blocks_per_job);
 				if (rc < 0) {
 					g_run_rc = rc;
 					break;
@@ -1331,6 +1343,7 @@ bdevperf_construct_jobs(void)
 	struct spdk_bdev *bdev;
 	uint32_t lcore;
 	struct spdk_cpuset cpumask;
+	struct spdk_thread *thread;
 	int rc;
 
 	/* There are two entirely separate modes for allocating jobs. Standard mode
@@ -1358,9 +1371,11 @@ bdevperf_construct_jobs(void)
 
 			spdk_cpuset_zero(&cpumask);
 			spdk_cpuset_set_cpu(&cpumask, lcore, true);
+			thread = construct_job_thread(&cpumask, spdk_bdev_get_name(bdev));
+			assert(thread);
 
 			/* Construct the job */
-			rc = bdevperf_construct_job(bdev, &cpumask, 0, 0);
+			rc = bdevperf_construct_job(bdev, thread, 0, 0);
 			if (rc < 0) {
 				g_run_rc = rc;
 			}
@@ -1375,9 +1390,11 @@ bdevperf_construct_jobs(void)
 
 			spdk_cpuset_zero(&cpumask);
 			spdk_cpuset_set_cpu(&cpumask, lcore, true);
+			thread = construct_job_thread(&cpumask, spdk_bdev_get_name(bdev));
+			assert(thread);
 
 			/* Construct the job */
-			rc = bdevperf_construct_job(bdev, &cpumask, 0, 0);
+			rc = bdevperf_construct_job(bdev, thread, 0, 0);
 			if (rc < 0) {
 				g_run_rc = rc;
 				break;
