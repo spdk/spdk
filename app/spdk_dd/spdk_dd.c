@@ -41,6 +41,10 @@
 
 #include <libaio.h>
 
+#ifdef SPDK_CONFIG_URING
+#include <liburing.h>
+#endif
+
 #define DD_NSEC_SINCE_X(time_now, time_x) ((1000000000 * time_now.tv_sec + time_now.tv_nsec) \
 											- (1000000000 * time_x.tv_sec + time_x.tv_nsec))
 
@@ -74,6 +78,9 @@ struct dd_io {
 	uint64_t		length;
 	struct iocb		iocb;
 	enum dd_submit_type	type;
+#ifdef SPDK_CONFIG_URING
+	struct iovec		iov;
+#endif
 	void			*buf;
 };
 
@@ -92,11 +99,19 @@ struct dd_target {
 			struct spdk_io_channel *ch;
 		} bdev;
 
+#ifdef SPDK_CONFIG_URING
+		struct {
+			int fd;
+			struct io_uring ring;
+			struct spdk_poller *poller;
+		} uring;
+#else
 		struct {
 			int fd;
 			io_context_t io_ctx;
 			struct spdk_poller *poller;
 		} aio;
+#endif
 	} u;
 
 	/* Block size of underlying device. */
@@ -150,18 +165,28 @@ static void
 dd_exit(int rc)
 {
 	if (g_job.input.type == DD_TARGET_TYPE_FILE) {
+#ifdef SPDK_CONFIG_URING
+		spdk_poller_unregister(&g_job.input.u.uring.poller);
+		close(g_job.input.u.uring.fd);
+#else
 		spdk_poller_unregister(&g_job.input.u.aio.poller);
 		io_destroy(g_job.input.u.aio.io_ctx);
 		close(g_job.input.u.aio.fd);
+#endif
 	} else if (g_job.input.type == DD_TARGET_TYPE_BDEV && g_job.input.open) {
 		spdk_put_io_channel(g_job.input.u.bdev.ch);
 		spdk_bdev_close(g_job.input.u.bdev.desc);
 	}
 
 	if (g_job.output.type == DD_TARGET_TYPE_FILE) {
+#ifdef SPDK_CONFIG_URING
+		spdk_poller_unregister(&g_job.output.u.uring.poller);
+		close(g_job.output.u.uring.fd);
+#else
 		spdk_poller_unregister(&g_job.output.u.aio.poller);
 		io_destroy(g_job.output.u.aio.io_ctx);
 		close(g_job.output.u.aio.fd);
+#endif
 	} else if (g_job.output.type == DD_TARGET_TYPE_BDEV && g_job.output.open) {
 		spdk_put_io_channel(g_job.output.u.bdev.ch);
 		spdk_bdev_close(g_job.output.u.bdev.desc);
@@ -234,6 +259,25 @@ dd_show_progress(uint64_t offset, uint64_t length, bool finish)
 	g_time_last = time_now;
 }
 
+#ifdef SPDK_CONFIG_URING
+static void
+dd_uring_submit(struct dd_io *io, struct dd_target *target, uint64_t length, uint64_t offset)
+{
+	struct io_uring_sqe *sqe;
+
+	io->iov.iov_base = io->buf;
+	io->iov.iov_len = length;
+	sqe = io_uring_get_sqe(&target->u.uring.ring);
+	if (io->type == DD_READ || io->type == DD_POPULATE) {
+		io_uring_prep_readv(sqe, target->u.uring.fd, &io->iov, 1, offset);
+	} else {
+		io_uring_prep_writev(sqe, target->u.uring.fd, &io->iov, 1, offset);
+	}
+	io_uring_sqe_set_data(sqe, io);
+	io_uring_submit(&target->u.uring.ring);
+}
+#endif
+
 static void
 _dd_write_bdev_done(struct spdk_bdev_io *bdev_io,
 		    bool success,
@@ -275,6 +319,9 @@ dd_target_write(struct dd_io *io)
 	io->type = DD_WRITE;
 
 	if (target->type == DD_TARGET_TYPE_FILE) {
+#ifdef SPDK_CONFIG_URING
+		dd_uring_submit(io, target, length, write_offset);
+#else
 		struct iocb *iocb = &io->iocb;
 
 		io_prep_pwrite(iocb, target->u.aio.fd, io->buf, length, write_offset);
@@ -282,6 +329,7 @@ dd_target_write(struct dd_io *io)
 		if (io_submit(target->u.aio.io_ctx, 1, &iocb) < 0) {
 			rc = -errno;
 		}
+#endif
 	} else if (target->type == DD_TARGET_TYPE_BDEV) {
 		rc = spdk_bdev_write(target->u.bdev.desc, target->u.bdev.ch, io->buf, write_offset, length,
 				     _dd_write_bdev_done, io);
@@ -330,6 +378,9 @@ dd_target_read(struct dd_io *io)
 	io->type = DD_READ;
 
 	if (target->type == DD_TARGET_TYPE_FILE) {
+#ifdef SPDK_CONFIG_URING
+		dd_uring_submit(io, target, io->length, io->offset);
+#else
 		struct iocb *iocb = &io->iocb;
 
 		io_prep_pread(iocb, target->u.aio.fd, io->buf, io->length, io->offset);
@@ -337,6 +388,7 @@ dd_target_read(struct dd_io *io)
 		if (io_submit(target->u.aio.io_ctx, 1, &iocb) < 0) {
 			rc = -errno;
 		}
+#endif
 	} else if (target->type == DD_TARGET_TYPE_BDEV) {
 		rc = spdk_bdev_read(target->u.bdev.desc, target->u.bdev.ch, io->buf, io->offset, io->length,
 				    _dd_read_bdev_done, io);
@@ -406,6 +458,9 @@ dd_target_populate_buffer(struct dd_io *io)
 	length = SPDK_CEIL_DIV(io->length, target->block_size) * target->block_size;
 
 	if (target->type == DD_TARGET_TYPE_FILE) {
+#ifdef SPDK_CONFIG_URING
+		dd_uring_submit(io, target, length, write_offset);
+#else
 		struct iocb *iocb = &io->iocb;
 
 		io_prep_pread(iocb, target->u.aio.fd, io->buf, length, write_offset);
@@ -413,6 +468,7 @@ dd_target_populate_buffer(struct dd_io *io)
 		if (io_submit(target->u.aio.io_ctx, 1, &iocb) < 0) {
 			rc = -errno;
 		}
+#endif
 	} else if (target->type == DD_TARGET_TYPE_BDEV) {
 		rc = spdk_bdev_read(target->u.bdev.desc, target->u.bdev.ch, io->buf, write_offset, length,
 				    _dd_target_populate_buffer_done, io);
@@ -451,6 +507,41 @@ dd_complete_poll(struct dd_io *io)
 		break;
 	}
 }
+
+#ifdef SPDK_CONFIG_URING
+static int
+dd_uring_poll(void *ctx)
+{
+	struct dd_target *target = ctx;
+	struct io_uring_cqe *cqe;
+	struct dd_io *io;
+	int rc = 0;
+	int i;
+
+	for (i = 0; i < (int)g_opts.queue_depth; i++) {
+		rc = io_uring_peek_cqe(&target->u.uring.ring, &cqe);
+		if (rc == 0) {
+			if (cqe->res == -EAGAIN) {
+				continue;
+			} else if (cqe->res < 0) {
+				SPDK_ERRLOG("%s\n", strerror(-cqe->res));
+				g_error = cqe->res;
+			}
+
+			io = io_uring_cqe_get_data(cqe);
+			io_uring_cqe_seen(&target->u.uring.ring, cqe);
+
+			dd_complete_poll(io);
+		} else if (rc != - EAGAIN) {
+			SPDK_ERRLOG("%s\n", strerror(-rc));
+			g_error = rc;
+		}
+	}
+
+	return rc;
+}
+
+#else
 
 static int
 dd_aio_poll(io_context_t io_ctx)
@@ -512,11 +603,18 @@ dd_output_poll(void *ctx)
 
 	return rc;
 }
+#endif
 
 static int
 dd_open_file(struct dd_target *target, const char *fname, int flags, uint64_t skip_blocks,
 	     bool input)
 {
+#ifdef SPDK_CONFIG_URING
+	int *fd = &target->u.uring.fd;
+#else
+	int *fd = &target->u.aio.fd;
+#endif
+
 	flags |= O_RDWR;
 
 	if (input == false && ((flags & O_DIRECTORY) == 0)) {
@@ -527,15 +625,23 @@ dd_open_file(struct dd_target *target, const char *fname, int flags, uint64_t sk
 		flags |= O_TRUNC;
 	}
 
+#ifdef SPDK_CONFIG_URING
+	/* io_uring does not work correctly with O_NONBLOCK flag */
+	if (flags & O_NONBLOCK) {
+		flags &= ~O_NONBLOCK;
+		SPDK_WARNLOG("Skipping 'nonblock' flag due to existing issue with uring implementation and this flag\n");
+	}
+#endif
+
 	target->type = DD_TARGET_TYPE_FILE;
-	target->u.aio.fd = open(fname, flags, 0600);
-	if (target->u.aio.fd < 0) {
+	*fd = open(fname, flags, 0600);
+	if (*fd < 0) {
 		SPDK_ERRLOG("Could not open file %s: %s\n", fname, strerror(errno));
-		return target->u.aio.fd;
+		return *fd;
 	}
 
-	target->block_size = spdk_max(spdk_fd_get_blocklen(target->u.aio.fd), 1);
-	target->total_size = spdk_fd_get_size(target->u.aio.fd);
+	target->block_size = spdk_max(spdk_fd_get_blocklen(*fd), 1);
+	target->total_size = spdk_fd_get_size(*fd);
 
 	if (input == true) {
 		g_opts.queue_depth = spdk_min(g_opts.queue_depth,
@@ -546,7 +652,13 @@ dd_open_file(struct dd_target *target, const char *fname, int flags, uint64_t sk
 		g_opts.queue_depth = spdk_min(g_opts.queue_depth, g_opts.io_unit_count);
 	}
 
+#ifdef SPDK_CONFIG_URING
+	io_uring_queue_init(g_opts.queue_depth, &target->u.uring.ring, 0);
+	target->open = true;
+	return 0;
+#else
 	return io_setup(g_opts.queue_depth, &target->u.aio.io_ctx);
+#endif
 }
 
 static int
@@ -641,7 +753,11 @@ dd_run(void *arg1)
 			dd_exit(-errno);
 			return;
 		}
+#ifdef SPDK_CONFIG_URING
+		g_job.input.u.uring.poller = spdk_poller_register(dd_uring_poll, &g_job.input, 0);
+#else
 		g_job.input.u.aio.poller = spdk_poller_register(dd_input_poll, NULL, 0);
+#endif
 	} else if (g_opts.input_bdev) {
 		rc = dd_open_bdev(&g_job.input, g_opts.input_bdev, g_opts.input_offset);
 		if (rc < 0) {
@@ -691,7 +807,11 @@ dd_run(void *arg1)
 			dd_exit(-errno);
 			return;
 		}
+#ifdef SPDK_CONFIG_URING
+		g_job.output.u.uring.poller = spdk_poller_register(dd_uring_poll, &g_job.output, 0);
+#else
 		g_job.output.u.aio.poller = spdk_poller_register(dd_output_poll, NULL, 0);
+#endif
 	} else if (g_opts.output_bdev) {
 		rc = dd_open_bdev(&g_job.output, g_opts.output_bdev, g_opts.output_offset);
 		if (rc < 0) {
@@ -915,6 +1035,16 @@ dd_free(void)
 	free(g_opts.output_bdev);
 	free(g_opts.input_file_flags);
 	free(g_opts.output_file_flags);
+
+#ifdef SPDK_CONFIG_URING
+	if (g_job.input.type == DD_TARGET_TYPE_FILE && g_job.input.open == true) {
+		io_uring_queue_exit(&g_job.input.u.uring.ring);
+	}
+
+	if (g_job.output.type == DD_TARGET_TYPE_FILE && g_job.output.open == true) {
+		io_uring_queue_exit(&g_job.output.u.uring.ring);
+	}
+#endif
 
 	if (g_job.ios) {
 		for (i = 0; i < g_opts.queue_depth; i++) {
