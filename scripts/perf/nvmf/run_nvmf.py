@@ -481,7 +481,7 @@ class KernelTarget(Target):
             "allowed_hosts": [],
             "attr": {
                 "allow_any_host": "1",
-                "serial": "SPDK0001"
+                "serial": "SPDK0001",
                 "version": "1.3"
             },
             "namespaces": [
@@ -531,7 +531,7 @@ class KernelTarget(Target):
                     "allowed_hosts": [],
                     "attr": {
                         "allow_any_host": "1",
-                        "serial": "SPDK00%s" % subsys_no
+                        "serial": "SPDK00%s" % subsys_no,
                         "version": "1.3"
                     },
                     "namespaces": [
