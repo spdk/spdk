@@ -2,39 +2,27 @@
 # vi: set ft=ruby :
 
 require 'open3'
-def checkboxtype(distro)
+def get_box_type(distro)
+  spdk_distro = 'spdk/' + distro
   localboxes, stderr, status = Open3.capture3("vagrant box list")
-  if localboxes.include? "spdk/"+distro
-    return "spdk/"+distro
-  else
-      case distro
-      when "centos7"
-        return "centos/7"
-      when "centos8"
-        return "centos/8"
-      when "ubuntu1604"
-        return "peru/ubuntu-16.04-server-amd64"
-      when "ubuntu1804"
-        return "peru/ubuntu-18.04-server-amd64"
-      when "fedora30"
-        return "generic/fedora30"
-      when "fedora31"
-        return "generic/fedora31"
-      when "fedora32"
-        return "generic/fedora32"
-      when "arch"
-        return "generic/arch"
-      when "freebsd11"
-        return "generic/freebsd11"
-      when "freebsd12"
-        return "generic/freebsd12"
-      when "clearlinux"
-        return "AntonioMeireles/ClearLinux"
-      else
-        "Invalid argument #{distro}"
-        abort("Invalid argument!")
-      end
-  end
+  return spdk_distro if localboxes.include?(spdk_distro)
+
+  distro_to_type = {
+    'centos7'    => 'centos/7',
+    'centos8'    => 'centos/8',
+    'ubuntu1604' => 'peru/ubuntu-16.04-server-amd64',
+    'ubuntu1804' => 'peru/ubuntu-18.04-server-amd64',
+    'fedora30'   => 'generic/fedora30',
+    'fedora31'   => 'generic/fedora31',
+    'fedora32'   => 'generic/fedora32',
+    'arch'       => 'generic/arch',
+    'freebsd11'  => 'generic/freebsd11',
+    'freebsd12'  => 'generic/freebsd12',
+    'clearlinux' => 'AntonioMeireles/ClearLinux'
+  }
+  abort("Invalid argument! #{distro}") unless distro_to_type.key?(distro)
+
+  return distro_to_type[distro]
 end
 
 Vagrant.configure(2) do |config|
@@ -69,7 +57,7 @@ Vagrant.configure(2) do |config|
     plugins_sync_backend = {type: :nfs, nfs_udp: false}
     files_sync_backend = {type: :nfs, nfs_udp: false,  mount_options: ['ro']}
   end
-  config.vm.box = checkboxtype(distro)
+  config.vm.box = get_box_type(distro)
   config.vm.box_check_update = false
   config.vm.synced_folder '.', '/vagrant', disabled: true
 
