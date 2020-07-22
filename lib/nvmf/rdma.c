@@ -403,6 +403,11 @@ struct spdk_nvmf_rdma_qpair {
 
 	struct spdk_poller			*destruct_poller;
 
+	/*
+	 * io_channel which is used to destroy qpair when it is removed from poll group
+	 */
+	struct spdk_io_channel		*destruct_channel;
+
 	/* List of ibv async events */
 	STAILQ_HEAD(, spdk_nvmf_rdma_ibv_event_ctx)	ibv_events;
 
@@ -909,6 +914,11 @@ nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 	}
 
 	nvmf_rdma_qpair_clean_ibv_events(rqpair);
+
+	if (rqpair->destruct_channel) {
+		spdk_put_io_channel(rqpair->destruct_channel);
+		rqpair->destruct_channel = NULL;
+	}
 
 	free(rqpair);
 }
@@ -3076,22 +3086,36 @@ nvmf_rdma_send_qpair_async_event(struct spdk_nvmf_rdma_qpair *rqpair,
 				 spdk_nvmf_rdma_qpair_ibv_event fn)
 {
 	struct spdk_nvmf_rdma_ibv_event_ctx *ctx;
+	struct spdk_thread *thr = NULL;
+	int rc;
 
-	if (!rqpair->qpair.group) {
-		return EINVAL;
+	if (rqpair->qpair.group) {
+		thr = rqpair->qpair.group->thread;
+	} else if (rqpair->destruct_channel) {
+		thr = spdk_io_channel_get_thread(rqpair->destruct_channel);
+	}
+
+	if (!thr) {
+		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "rqpair %p has no thread\n", rqpair);
+		return -EINVAL;
 	}
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	ctx->rqpair = rqpair;
 	ctx->cb_fn = fn;
 	STAILQ_INSERT_TAIL(&rqpair->ibv_events, ctx, link);
 
-	return spdk_thread_send_msg(rqpair->qpair.group->thread, nvmf_rdma_qpair_process_ibv_event,
-				    ctx);
+	rc = spdk_thread_send_msg(thr, nvmf_rdma_qpair_process_ibv_event, ctx);
+	if (rc) {
+		STAILQ_REMOVE(&rqpair->ibv_events, ctx, spdk_nvmf_rdma_ibv_event_ctx, link);
+		free(ctx);
+	}
+
+	return rc;
 }
 
 static void
@@ -3115,8 +3139,9 @@ nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 		SPDK_ERRLOG("Fatal event received for rqpair %p\n", rqpair);
 		spdk_trace_record(TRACE_RDMA_IBV_ASYNC_EVENT, 0, 0,
 				  (uintptr_t)rqpair->cm_id, event.event_type);
-		if (nvmf_rdma_send_qpair_async_event(rqpair, nvmf_rdma_handle_qp_fatal)) {
-			SPDK_ERRLOG("Failed to send QP_FATAL event for rqpair %p\n", rqpair);
+		rc = nvmf_rdma_send_qpair_async_event(rqpair, nvmf_rdma_handle_qp_fatal);
+		if (rc) {
+			SPDK_WARNLOG("Failed to send QP_FATAL event. rqpair %p, err %d\n", rqpair, rc);
 			nvmf_rdma_handle_qp_fatal(rqpair);
 		}
 		break;
@@ -3124,8 +3149,9 @@ nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 		/* This event only occurs for shared receive queues. */
 		rqpair = event.element.qp->qp_context;
 		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Last WQE reached event received for rqpair %p\n", rqpair);
-		if (nvmf_rdma_send_qpair_async_event(rqpair, nvmf_rdma_handle_last_wqe_reached)) {
-			SPDK_ERRLOG("Failed to send LAST_WQE_REACHED event for rqpair %p\n", rqpair);
+		rc = nvmf_rdma_send_qpair_async_event(rqpair, nvmf_rdma_handle_last_wqe_reached);
+		if (rc) {
+			SPDK_WARNLOG("Failed to send LAST_WQE_REACHED event. rqpair %p, err %d\n", rqpair, rc);
 			rqpair->last_wqe_reached = true;
 		}
 		break;
@@ -3137,8 +3163,9 @@ nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 		spdk_trace_record(TRACE_RDMA_IBV_ASYNC_EVENT, 0, 0,
 				  (uintptr_t)rqpair->cm_id, event.event_type);
 		if (nvmf_rdma_update_ibv_state(rqpair) == IBV_QPS_ERR) {
-			if (nvmf_rdma_send_qpair_async_event(rqpair, nvmf_rdma_handle_sq_drained)) {
-				SPDK_ERRLOG("Failed to send SQ_DRAINED event for rqpair %p\n", rqpair);
+			rc = nvmf_rdma_send_qpair_async_event(rqpair, nvmf_rdma_handle_sq_drained);
+			if (rc) {
+				SPDK_WARNLOG("Failed to send SQ_DRAINED event. rqpair %p, err %d\n", rqpair, rc);
 				nvmf_rdma_handle_sq_drained(rqpair);
 			}
 		}
@@ -3506,6 +3533,30 @@ nvmf_rdma_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 	}
 
 	nvmf_rdma_update_ibv_state(rqpair);
+
+	return 0;
+}
+
+static int
+nvmf_rdma_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
+			    struct spdk_nvmf_qpair *qpair)
+{
+	struct spdk_nvmf_rdma_qpair		*rqpair;
+
+	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+	assert(group->transport->tgt != NULL);
+
+	rqpair->destruct_channel = spdk_get_io_channel(group->transport->tgt);
+
+	if (!rqpair->destruct_channel) {
+		SPDK_WARNLOG("failed to get io_channel, qpair %p\n", qpair);
+		return 0;
+	}
+
+	/* Sanity check that we get io_channel on the correct thread */
+	if (qpair->group) {
+		assert(qpair->group->thread == spdk_io_channel_get_thread(rqpair->destruct_channel));
+	}
 
 	return 0;
 }
@@ -4225,6 +4276,7 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 	.get_optimal_poll_group = nvmf_rdma_get_optimal_poll_group,
 	.poll_group_destroy = nvmf_rdma_poll_group_destroy,
 	.poll_group_add = nvmf_rdma_poll_group_add,
+	.poll_group_remove = nvmf_rdma_poll_group_remove,
 	.poll_group_poll = nvmf_rdma_poll_group_poll,
 
 	.req_free = nvmf_rdma_request_free,
