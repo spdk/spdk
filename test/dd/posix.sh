@@ -86,13 +86,37 @@ io() {
 	done
 }
 
+tests() {
+	printf '* First test run%s\n' \
+		"${msg[liburing_in_use]}" >&2
+
+	run_test "dd_flag_append" append
+	run_test "dd_flag_directory" directory
+	run_test "dd_flag_nofollow" nofollow
+	run_test "dd_flag_noatime" noatime
+	run_test "dd_flags_misc" io
+}
+
+tests_forced_aio() {
+	printf '* Second test run%s\n' \
+		"${msg[liburing_in_use ? 2 : 0]}" >&2
+
+	DD_APP+=("--aio")
+	run_test "dd_flag_append_forced_aio" append
+	run_test "dd_flag_directory_forced_aio" directory
+	run_test "dd_flag_nofollow_forced_aio" nofollow
+	run_test "dd_flag_noatime_forced_aio" noatime
+	run_test "dd_flags_misc_forced_aio" io
+}
+
+msg[0]=", using AIO"
+msg[1]=", liburing in use"
+msg[2]=", disabling liburing, forcing AIO"
+
 trap "cleanup" EXIT
 
 test_file0=$SPDK_TEST_STORAGE/dd.dump0
 test_file1=$SPDK_TEST_STORAGE/dd.dump1
 
-run_test "dd_flag_append" append
-run_test "dd_flag_directory" directory
-run_test "dd_flag_nofollow" nofollow
-run_test "dd_flag_noatime" noatime
-run_test "dd_flags_misc" io
+tests
+tests_forced_aio
