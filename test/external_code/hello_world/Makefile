@@ -54,7 +54,7 @@ alone_static:
 	$(CC) $(COMMON_CFLAGS) -o hello_bdev ./hello_bdev.c -Wl,--whole-archive -lspdk_bdev_malloc -lspdk_event_bdev -lspdk_event_accel -lspdk_event_vmd \
 	-lspdk_event_sock -lspdk_bdev -lspdk_accel -lspdk_event -lspdk_thread -lspdk_util -lspdk_conf -lspdk_trace -lspdk_log -lspdk_json \
 	-lspdk_jsonrpc -lspdk_rpc -lspdk_sock -lspdk_notify -lspdk_vmd -lspdk_env_dpdk -lrte_eal -lrte_mempool -lrte_ring \
-	-lrte_mbuf -lrte_mempool_ring -lrte_pci -lrte_bus_pci -lrte_kvargs -lrte_vhost -lrte_net -lrte_hash \
+	-lrte_mbuf -lrte_mempool_ring -lrte_pci -lrte_bus_pci -lrte_kvargs -lrte_vhost -lrte_net -lrte_hash -lrte_telemetry \
 	-lrte_cryptodev -Wl,--no-whole-archive -lnuma -luuid -lpthread -ldl -lrt
 
 # Shows how to compile and external bdev and application sgainst the SPDK archives.
@@ -62,5 +62,5 @@ bdev_static:
 	$(CC) $(COMMON_CFLAGS) -L../passthru -o hello_bdev ./hello_bdev.c -Wl,--whole-archive -lpassthru_external -lspdk_bdev_malloc -lspdk_event_bdev \
 	-lspdk_event_accel -lspdk_event_vmd -lspdk_event_sock -lspdk_bdev -lspdk_accel -lspdk_event -lspdk_thread -lspdk_util -lspdk_conf -lspdk_trace \
 	-lspdk_log -lspdk_json -lspdk_jsonrpc -lspdk_rpc -lspdk_sock -lspdk_notify -lspdk_vmd -lspdk_env_dpdk -lrte_eal -lrte_mempool \
-	-lrte_ring -lrte_mbuf -lrte_mempool_ring -lrte_pci -lrte_bus_pci -lrte_kvargs -lrte_vhost -lrte_net -lrte_hash -lrte_cryptodev \
+	-lrte_ring -lrte_mbuf -lrte_mempool_ring -lrte_pci -lrte_bus_pci -lrte_kvargs -lrte_vhost -lrte_net -lrte_hash -lrte_telemetry -lrte_cryptodev \
 	-Wl,--no-whole-archive -lnuma -luuid -lpthread -ldl -lrt

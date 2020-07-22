@@ -79,8 +79,7 @@ The software accel engine implemenation has added support for compare.
 
 ### dpdk
 
-Updated DPDK submodule to DPDK 19.11.2, which includes fixes for DPDK vulnerabilities:
-CVE-2020-10722, CVE-2020-10723, CVE-2020-10724, CVE-2020-10725, CVE-2020-10724.
+Updated DPDK submodule to DPDK 20.05.
 
 ### idxd
 
