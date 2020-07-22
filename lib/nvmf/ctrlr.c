@@ -721,6 +721,19 @@ nvmf_ctrlr_cmd_connect(struct spdk_nvmf_request *req)
 }
 
 static void
+nvmf_ctrlr_cc_shn_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = spdk_io_channel_iter_get_ctx(i);
+
+	if (status < 0) {
+		SPDK_ERRLOG("Fail to disconnect io ctrlr qpairs\n");
+		assert(false);
+	}
+
+	ctrlr->vcprop.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
+}
+
+static void
 nvmf_ctrlr_cc_reset_done(struct spdk_io_channel_iter *i, int status)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = spdk_io_channel_iter_get_ctx(i);
@@ -800,7 +813,10 @@ nvmf_prop_set_cc(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
 			ctrlr->vcprop.cc.bits.shn = cc.bits.shn;
 			ctrlr->vcprop.cc.bits.en = 0;
 			ctrlr->vcprop.csts.bits.rdy = 0;
-			ctrlr->vcprop.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
+			spdk_for_each_channel(ctrlr->subsys->tgt,
+					      nvmf_ctrlr_disconnect_io_qpairs_on_pg,
+					      ctrlr,
+					      nvmf_ctrlr_cc_shn_done);
 		} else if (cc.bits.shn == 0) {
 			ctrlr->vcprop.cc.bits.shn = 0;
 		} else {
