@@ -553,7 +553,7 @@ iscsi_tgt_node_add_pg_map(struct spdk_iscsi_tgt_node *target,
 		return NULL;
 	}
 
-	pg_map = malloc(sizeof(*pg_map));
+	pg_map = calloc(1, sizeof(*pg_map));
 	if (pg_map == NULL) {
 		return NULL;
 	}
@@ -855,6 +855,63 @@ invalid:
 	}
 	pthread_mutex_unlock(&g_iscsi.mutex);
 	return -1;
+}
+
+int
+iscsi_tgt_node_redirect(struct spdk_iscsi_tgt_node *target, int pg_tag,
+			const char *host, const char *port)
+{
+	struct spdk_iscsi_portal_grp *pg;
+	struct spdk_iscsi_pg_map *pg_map;
+	struct sockaddr_storage sa;
+
+	if (target == NULL) {
+		return -EINVAL;
+	}
+
+	pg = iscsi_portal_grp_find_by_tag(pg_tag);
+	if (pg == NULL) {
+		SPDK_ERRLOG("Portal group %d is not found.\n", pg_tag);
+		return -EINVAL;
+	}
+
+	if (pg->is_private) {
+		SPDK_ERRLOG("Portal group %d is not public portal group.\n", pg_tag);
+		return -EINVAL;
+	}
+
+	pg_map = iscsi_tgt_node_find_pg_map(target, pg);
+	if (pg_map == NULL) {
+		SPDK_ERRLOG("Portal group %d is not mapped.\n", pg_tag);
+		return -EINVAL;
+	}
+
+	if (host == NULL && port == NULL) {
+		/* Clear redirect setting. */
+		memset(pg_map->redirect_host, 0, MAX_PORTAL_ADDR + 1);
+		memset(pg_map->redirect_port, 0, MAX_PORTAL_PORT + 1);
+	} else {
+		if (iscsi_parse_redirect_addr(&sa, host, port) != 0) {
+			SPDK_ERRLOG("IP address-port pair is not valid.\n");
+			return -EINVAL;
+		}
+
+		if (iscsi_portal_grp_find_portal_by_addr(pg, port, host) != NULL) {
+			SPDK_ERRLOG("IP address-port pair must be chosen from a "
+				    "different private portal group\n");
+			return -EINVAL;
+		}
+
+		snprintf(pg_map->redirect_host, MAX_PORTAL_ADDR + 1, "%s", host);
+		snprintf(pg_map->redirect_port, MAX_PORTAL_PORT + 1, "%s", port);
+	}
+
+	/* Terminate connections to this public portal group by asynchronous
+	 * logout message.
+	 */
+	iscsi_conns_request_logout(target, pg_tag);
+
+	return 0;
 }
 
 static int

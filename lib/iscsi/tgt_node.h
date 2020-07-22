@@ -59,6 +59,8 @@ struct spdk_iscsi_pg_map {
 	struct spdk_iscsi_portal_grp *pg;
 	int num_ig_maps;
 	TAILQ_HEAD(, spdk_iscsi_ig_map) ig_map_head;
+	char redirect_host[MAX_PORTAL_ADDR + 1];
+	char redirect_port[MAX_PORTAL_PORT + 1];
 	TAILQ_ENTRY(spdk_iscsi_pg_map) tailq ;
 };
 
@@ -126,6 +128,8 @@ int iscsi_target_node_add_pg_ig_maps(struct spdk_iscsi_tgt_node *target,
 int iscsi_target_node_remove_pg_ig_maps(struct spdk_iscsi_tgt_node *target,
 					int *pg_tag_list, int *ig_tag_list,
 					uint16_t num_maps);
+int iscsi_tgt_node_redirect(struct spdk_iscsi_tgt_node *target, int pg_tag,
+			    const char *host, const char *port);
 
 bool iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
 			   struct spdk_iscsi_tgt_node *target, const char *iqn,
