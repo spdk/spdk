@@ -30,10 +30,21 @@ are automatically assigned to poll groups by the underlying transport. Further,
 takes a function pointer as an argument. Instead, transports should call
 `spdk_nvmf_tgt_new_qpair` whenever they previously would have called that callback.
 
+The NVMe-oF target now supports aborting any submitted NVM or Admin command. Previously,
+the NVMe-oF target could abort only Asynchronous Event Request commands.
+
 ### nvme
 
 Add `opts_size` in `spdk_nvme_ctrlr_opts` structure in order to solve the compatiblity issue
 for different ABI version.
+
+A new API `spdk_nvme_ctrlr_cmd_abort_ext` has been added to abort previously submitted
+commands whose callback argument match.
+
+### bdev
+
+A new API `spdk_bdev_abort` has been added to submit abort requests to abort all I/Os
+whose callback context match to the bdev on the given channel.
 
 ### RPC
 
