@@ -760,6 +760,8 @@ class KernelInitiator(Initiator):
             header = "[filename%s]" % i
             disks = "\n".join(["filename=%s" % x for x in r])
             job_section_qd = round((io_depth * len(r)) / num_jobs)
+            if job_section_qd == 0:
+                job_section_qd = 1
             iodepth = "iodepth=%s" % job_section_qd
             filename_section = "\n".join([filename_section, header, disks, iodepth])
 
@@ -822,6 +824,8 @@ class SPDKInitiator(Initiator):
             header = "[filename%s]" % i
             disks = "\n".join(["filename=%s" % x for x in r])
             job_section_qd = round((io_depth * len(r)) / num_jobs)
+            if job_section_qd == 0:
+                job_section_qd = 1
             iodepth = "iodepth=%s" % job_section_qd
             filename_section = "\n".join([filename_section, header, disks, iodepth])
 
