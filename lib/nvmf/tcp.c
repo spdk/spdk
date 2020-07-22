@@ -2496,7 +2496,7 @@ _nvmf_tcp_qpair_abort_request(void *ctx)
 
 	switch (tcp_req_to_abort->state) {
 	case TCP_REQUEST_STATE_EXECUTING:
-		rc = nvmf_ctrlr_abort_request(req, &tcp_req_to_abort->req);
+		rc = nvmf_ctrlr_abort_request(req);
 		if (rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS) {
 			return SPDK_POLLER_BUSY;
 		}

@@ -2163,13 +2163,15 @@ nvmf_ctrlr_abort(struct spdk_nvmf_request *req)
 }
 
 int
-nvmf_ctrlr_abort_request(struct spdk_nvmf_request *req,
-			 struct spdk_nvmf_request *req_to_abort)
+nvmf_ctrlr_abort_request(struct spdk_nvmf_request *req)
 {
+	struct spdk_nvmf_request *req_to_abort = req->req_to_abort;
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc;
 	struct spdk_io_channel *ch;
 	int rc;
+
+	assert(req_to_abort != NULL);
 
 	rc = spdk_nvmf_request_get_bdev(req_to_abort->cmd->nvme_cmd.nsid, req_to_abort,
 					&bdev, &desc, &ch);
