@@ -140,7 +140,7 @@ endif
 # Allow users to specify EXTRA_DPDK_CFLAGS if they want to build DPDK using unsupported compiler versions
 DPDK_CFLAGS += $(EXTRA_DPDK_CFLAGS)
 
-ifeq ($(CC),gcc)
+ifeq ($(CC_TYPE),gcc)
 GCC_MAJOR = $(shell echo __GNUC__ | $(CC) -E -x c - | tail -n 1)
 ifeq ($(shell test $(GCC_MAJOR) -ge 10 && echo 1), 1)
 #1. gcc 10 complains on operations with zero size arrays in rte_cryptodev.c, so
