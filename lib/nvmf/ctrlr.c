@@ -811,8 +811,6 @@ nvmf_prop_set_cc(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
 			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Property Set CC Shutdown %u%ub!\n",
 				      cc.bits.shn >> 1, cc.bits.shn & 1);
 			ctrlr->vcprop.cc.bits.shn = cc.bits.shn;
-			ctrlr->vcprop.cc.bits.en = 0;
-			ctrlr->vcprop.csts.bits.rdy = 0;
 			spdk_for_each_channel(ctrlr->subsys->tgt,
 					      nvmf_ctrlr_disconnect_io_qpairs_on_pg,
 					      ctrlr,
