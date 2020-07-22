@@ -60,6 +60,7 @@ struct spdk_dd_opts {
 	int64_t		io_unit_size;
 	int64_t		io_unit_count;
 	uint32_t	queue_depth;
+	bool		aio;
 };
 
 static struct spdk_dd_opts g_opts = {
@@ -105,13 +106,12 @@ struct dd_target {
 			struct io_uring ring;
 			struct spdk_poller *poller;
 		} uring;
-#else
+#endif
 		struct {
 			int fd;
 			io_context_t io_ctx;
 			struct spdk_poller *poller;
 		} aio;
-#endif
 	} u;
 
 	/* Block size of underlying device. */
@@ -166,13 +166,16 @@ dd_exit(int rc)
 {
 	if (g_job.input.type == DD_TARGET_TYPE_FILE) {
 #ifdef SPDK_CONFIG_URING
-		spdk_poller_unregister(&g_job.input.u.uring.poller);
-		close(g_job.input.u.uring.fd);
-#else
-		spdk_poller_unregister(&g_job.input.u.aio.poller);
-		io_destroy(g_job.input.u.aio.io_ctx);
-		close(g_job.input.u.aio.fd);
+		if (g_opts.aio == false) {
+			spdk_poller_unregister(&g_job.input.u.uring.poller);
+			close(g_job.input.u.uring.fd);
+		} else
 #endif
+		{
+			spdk_poller_unregister(&g_job.input.u.aio.poller);
+			io_destroy(g_job.input.u.aio.io_ctx);
+			close(g_job.input.u.aio.fd);
+		}
 	} else if (g_job.input.type == DD_TARGET_TYPE_BDEV && g_job.input.open) {
 		spdk_put_io_channel(g_job.input.u.bdev.ch);
 		spdk_bdev_close(g_job.input.u.bdev.desc);
@@ -180,13 +183,16 @@ dd_exit(int rc)
 
 	if (g_job.output.type == DD_TARGET_TYPE_FILE) {
 #ifdef SPDK_CONFIG_URING
-		spdk_poller_unregister(&g_job.output.u.uring.poller);
-		close(g_job.output.u.uring.fd);
-#else
-		spdk_poller_unregister(&g_job.output.u.aio.poller);
-		io_destroy(g_job.output.u.aio.io_ctx);
-		close(g_job.output.u.aio.fd);
+		if (g_opts.aio == false) {
+			spdk_poller_unregister(&g_job.output.u.uring.poller);
+			close(g_job.output.u.uring.fd);
+		} else
 #endif
+		{
+			spdk_poller_unregister(&g_job.output.u.aio.poller);
+			io_destroy(g_job.output.u.aio.io_ctx);
+			close(g_job.output.u.aio.fd);
+		}
 	} else if (g_job.output.type == DD_TARGET_TYPE_BDEV && g_job.output.open) {
 		spdk_put_io_channel(g_job.output.u.bdev.ch);
 		spdk_bdev_close(g_job.output.u.bdev.desc);
@@ -320,16 +326,19 @@ dd_target_write(struct dd_io *io)
 
 	if (target->type == DD_TARGET_TYPE_FILE) {
 #ifdef SPDK_CONFIG_URING
-		dd_uring_submit(io, target, length, write_offset);
-#else
-		struct iocb *iocb = &io->iocb;
-
-		io_prep_pwrite(iocb, target->u.aio.fd, io->buf, length, write_offset);
-		iocb->data = io;
-		if (io_submit(target->u.aio.io_ctx, 1, &iocb) < 0) {
-			rc = -errno;
-		}
+		if (g_opts.aio == false) {
+			dd_uring_submit(io, target, length, write_offset);
+		} else
 #endif
+		{
+			struct iocb *iocb = &io->iocb;
+
+			io_prep_pwrite(iocb, target->u.aio.fd, io->buf, length, write_offset);
+			iocb->data = io;
+			if (io_submit(target->u.aio.io_ctx, 1, &iocb) < 0) {
+				rc = -errno;
+			}
+		}
 	} else if (target->type == DD_TARGET_TYPE_BDEV) {
 		rc = spdk_bdev_write(target->u.bdev.desc, target->u.bdev.ch, io->buf, write_offset, length,
 				     _dd_write_bdev_done, io);
@@ -379,16 +388,19 @@ dd_target_read(struct dd_io *io)
 
 	if (target->type == DD_TARGET_TYPE_FILE) {
 #ifdef SPDK_CONFIG_URING
-		dd_uring_submit(io, target, io->length, io->offset);
-#else
-		struct iocb *iocb = &io->iocb;
-
-		io_prep_pread(iocb, target->u.aio.fd, io->buf, io->length, io->offset);
-		iocb->data = io;
-		if (io_submit(target->u.aio.io_ctx, 1, &iocb) < 0) {
-			rc = -errno;
-		}
+		if (g_opts.aio == false) {
+			dd_uring_submit(io, target, io->length, io->offset);
+		} else
 #endif
+		{
+			struct iocb *iocb = &io->iocb;
+
+			io_prep_pread(iocb, target->u.aio.fd, io->buf, io->length, io->offset);
+			iocb->data = io;
+			if (io_submit(target->u.aio.io_ctx, 1, &iocb) < 0) {
+				rc = -errno;
+			}
+		}
 	} else if (target->type == DD_TARGET_TYPE_BDEV) {
 		rc = spdk_bdev_read(target->u.bdev.desc, target->u.bdev.ch, io->buf, io->offset, io->length,
 				    _dd_read_bdev_done, io);
@@ -459,16 +471,19 @@ dd_target_populate_buffer(struct dd_io *io)
 
 	if (target->type == DD_TARGET_TYPE_FILE) {
 #ifdef SPDK_CONFIG_URING
-		dd_uring_submit(io, target, length, write_offset);
-#else
-		struct iocb *iocb = &io->iocb;
-
-		io_prep_pread(iocb, target->u.aio.fd, io->buf, length, write_offset);
-		iocb->data = io;
-		if (io_submit(target->u.aio.io_ctx, 1, &iocb) < 0) {
-			rc = -errno;
-		}
+		if (g_opts.aio == false) {
+			dd_uring_submit(io, target, length, write_offset);
+		} else
 #endif
+		{
+			struct iocb *iocb = &io->iocb;
+
+			io_prep_pread(iocb, target->u.aio.fd, io->buf, length, write_offset);
+			iocb->data = io;
+			if (io_submit(target->u.aio.io_ctx, 1, &iocb) < 0) {
+				rc = -errno;
+			}
+		}
 	} else if (target->type == DD_TARGET_TYPE_BDEV) {
 		rc = spdk_bdev_read(target->u.bdev.desc, target->u.bdev.ch, io->buf, write_offset, length,
 				    _dd_target_populate_buffer_done, io);
@@ -540,8 +555,7 @@ dd_uring_poll(void *ctx)
 
 	return rc;
 }
-
-#else
+#endif
 
 static int
 dd_aio_poll(io_context_t io_ctx)
@@ -603,17 +617,21 @@ dd_output_poll(void *ctx)
 
 	return rc;
 }
-#endif
 
 static int
 dd_open_file(struct dd_target *target, const char *fname, int flags, uint64_t skip_blocks,
 	     bool input)
 {
+	int *fd;
+
 #ifdef SPDK_CONFIG_URING
-	int *fd = &target->u.uring.fd;
-#else
-	int *fd = &target->u.aio.fd;
+	if (g_opts.aio == false) {
+		fd = &target->u.uring.fd;
+	} else
 #endif
+	{
+		fd = &target->u.aio.fd;
+	}
 
 	flags |= O_RDWR;
 
@@ -627,7 +645,7 @@ dd_open_file(struct dd_target *target, const char *fname, int flags, uint64_t sk
 
 #ifdef SPDK_CONFIG_URING
 	/* io_uring does not work correctly with O_NONBLOCK flag */
-	if (flags & O_NONBLOCK) {
+	if (flags & O_NONBLOCK && g_opts.aio == false) {
 		flags &= ~O_NONBLOCK;
 		SPDK_WARNLOG("Skipping 'nonblock' flag due to existing issue with uring implementation and this flag\n");
 	}
@@ -653,12 +671,15 @@ dd_open_file(struct dd_target *target, const char *fname, int flags, uint64_t sk
 	}
 
 #ifdef SPDK_CONFIG_URING
-	io_uring_queue_init(g_opts.queue_depth, &target->u.uring.ring, 0);
-	target->open = true;
-	return 0;
-#else
-	return io_setup(g_opts.queue_depth, &target->u.aio.io_ctx);
+	if (g_opts.aio == false) {
+		io_uring_queue_init(g_opts.queue_depth, &target->u.uring.ring, 0);
+		target->open = true;
+		return 0;
+	} else
 #endif
+	{
+		return io_setup(g_opts.queue_depth, &target->u.aio.io_ctx);
+	}
 }
 
 static int
@@ -754,10 +775,13 @@ dd_run(void *arg1)
 			return;
 		}
 #ifdef SPDK_CONFIG_URING
-		g_job.input.u.uring.poller = spdk_poller_register(dd_uring_poll, &g_job.input, 0);
-#else
-		g_job.input.u.aio.poller = spdk_poller_register(dd_input_poll, NULL, 0);
+		if (g_opts.aio == false) {
+			g_job.input.u.uring.poller = spdk_poller_register(dd_uring_poll, &g_job.input, 0);
+		} else
 #endif
+		{
+			g_job.input.u.aio.poller = spdk_poller_register(dd_input_poll, NULL, 0);
+		}
 	} else if (g_opts.input_bdev) {
 		rc = dd_open_bdev(&g_job.input, g_opts.input_bdev, g_opts.input_offset);
 		if (rc < 0) {
@@ -808,10 +832,13 @@ dd_run(void *arg1)
 			return;
 		}
 #ifdef SPDK_CONFIG_URING
-		g_job.output.u.uring.poller = spdk_poller_register(dd_uring_poll, &g_job.output, 0);
-#else
-		g_job.output.u.aio.poller = spdk_poller_register(dd_output_poll, NULL, 0);
+		if (g_opts.aio == false) {
+			g_job.output.u.uring.poller = spdk_poller_register(dd_uring_poll, &g_job.output, 0);
+		} else
 #endif
+		{
+			g_job.output.u.aio.poller = spdk_poller_register(dd_output_poll, NULL, 0);
+		}
 	} else if (g_opts.output_bdev) {
 		rc = dd_open_bdev(&g_job.output, g_opts.output_bdev, g_opts.output_offset);
 		if (rc < 0) {
@@ -879,6 +906,7 @@ enum dd_cmdline_opts {
 	DD_OPTION_BS,
 	DD_OPTION_QD,
 	DD_OPTION_COUNT,
+	DD_OPTION_AIO,
 };
 
 static struct option g_cmdline_opts[] = {
@@ -949,6 +977,12 @@ static struct option g_cmdline_opts[] = {
 		.val = DD_OPTION_COUNT,
 	},
 	{
+		.name = "aio",
+		.has_arg = 0,
+		.flag = NULL,
+		.val = DD_OPTION_AIO,
+	},
+	{
 		.name = NULL
 	}
 };
@@ -968,6 +1002,7 @@ usage(void)
 	printf(" --count I/O unit count. The number of I/O units to copy. (default: all)\n");
 	printf(" --skip Skip this many I/O units at start of input. (default: 0)\n");
 	printf(" --seek Skip this many I/O units at start of output. (default: 0)\n");
+	printf(" --aio Force usage of AIO. (by default io_uring is used if available)\n");
 	printf(" Available iflag and oflag values:\n");
 	printf("  append - append mode\n");
 	printf("  direct - use direct I/O for data\n");
@@ -1017,6 +1052,9 @@ parse_args(int argc, char *argv)
 	case DD_OPTION_COUNT:
 		g_opts.io_unit_count = spdk_strtol(optarg, 10);
 		break;
+	case DD_OPTION_AIO:
+		g_opts.aio = true;
+		break;
 	default:
 		usage();
 		return 1;
@@ -1037,12 +1075,14 @@ dd_free(void)
 	free(g_opts.output_file_flags);
 
 #ifdef SPDK_CONFIG_URING
-	if (g_job.input.type == DD_TARGET_TYPE_FILE && g_job.input.open == true) {
-		io_uring_queue_exit(&g_job.input.u.uring.ring);
-	}
+	if (g_opts.aio == false) {
+		if (g_job.input.type == DD_TARGET_TYPE_FILE && g_job.input.open == true) {
+			io_uring_queue_exit(&g_job.input.u.uring.ring);
+		}
 
-	if (g_job.output.type == DD_TARGET_TYPE_FILE && g_job.output.open == true) {
-		io_uring_queue_exit(&g_job.output.u.uring.ring);
+		if (g_job.output.type == DD_TARGET_TYPE_FILE && g_job.output.open == true) {
+			io_uring_queue_exit(&g_job.output.u.uring.ring);
+		}
 	}
 #endif
 
