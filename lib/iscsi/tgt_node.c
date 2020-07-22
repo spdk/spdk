@@ -310,6 +310,14 @@ iscsi_send_tgt_portals(struct spdk_iscsi_conn *conn,
 
 	TAILQ_FOREACH(pg_map, &target->pg_map_head, tailq) {
 		pg = pg_map->pg;
+
+		if (pg->is_private) {
+			/* Skip the private portal group. Portals in the private portal group
+			 * will be returned only by temporary login redirection responses.
+			 */
+			continue;
+		}
+
 		TAILQ_FOREACH(p, &pg->head, per_pg_tailq) {
 			if (alloc_len - total < 1) {
 				/* TODO: long text responses support */
