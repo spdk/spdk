@@ -1102,6 +1102,7 @@ main(int argc, char **argv)
 	int rc = 1;
 
 	spdk_app_opts_init(&opts);
+	opts.name = "spdk_dd";
 	opts.reactor_mask = "0x1";
 	opts.shutdown_cb = dd_finish;
 	rc = spdk_app_parse_args(argc, argv, &opts, "", g_cmdline_opts, parse_args, usage);
