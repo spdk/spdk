@@ -578,7 +578,6 @@ class KernelTarget(Target):
             self.kernel_tgt_gen_nullblock_conf(self.nic_ips[0])
         else:
             print("Configuring with NVMe drives.")
-            self.subsys_no = get_nvme_devices_count()
             nvme_list = get_nvme_devices()
             self.kernel_tgt_gen_subsystem_conf(nvme_list, self.nic_ips)
             self.subsys_no = len(nvme_list)
