@@ -324,11 +324,4 @@ At the iSCSI level, we provide the following support for Hotplug:
   wait for all the commands which have already been submitted to block device to
   return back; after all the commands return back, the LUN will be deleted.
 
-## Known bugs and limitations {#iscsi_hotplug_bugs}
-
-For write command, if you want to test hotplug with write command which will
-cause r2t, for example 1M size IO, it will crash the iscsi tgt.
-For read command, if you want to test hotplug with large read IO, for example 1M
-size IO, it will probably crash the iscsi tgt.
-
 @sa spdk_nvme_probe
