@@ -93,13 +93,15 @@ function install_qat() {
 
 	# Patch use of hidden types in kernels >= 5.6.3. See .patch for details
 	if ((kernel_ver >= 0x050603)); then
-		patch --dir="$GIT_REPOS/QAT" -p1 < "$rootdir/test/common/config/pkgdep/patches/qat/0001-timespec.patch"
-	fi
+		# Patch only the driver version that was tested
+		[[ ${DRIVER_LOCATION_QAT##*/} == qat1.7.l.4.9.0-00008.tar.gz ]] && patch --dir="$GIT_REPOS/QAT" -p1
+	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-timespec.patch"
 
 	# Patch name of the pci_aer function which was renamed in kernels >= 5.7.1. See .patch for details
 	if ((kernel_ver >= 0x050701)); then
-		patch --dir="$GIT_REPOS/QAT" -p1 < "$rootdir/test/common/config/pkgdep/patches/qat/0001-pci_aer.patch"
-	fi
+		# Patch only the driver version that was tested
+		[[ ${DRIVER_LOCATION_QAT##*/} == qat1.7.l.4.9.0-00008.tar.gz ]] && patch --dir="$GIT_REPOS/QAT" -p1
+	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-pci_aer.patch"
 
 	(cd "$GIT_REPOS/QAT" && sudo ./configure --enable-icp-sriov=host && sudo make install)
 
