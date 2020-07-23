@@ -1203,9 +1203,8 @@ iscsi_op_login_response(struct spdk_iscsi_conn *conn,
 
 	/* Set T/CSG/NSG to reserved if login error. */
 	if (rsph->status_class != 0) {
-		rsph->flags &= ~ISCSI_LOGIN_TRANSIT;
-		rsph->flags &= ~ISCSI_LOGIN_CURRENT_STAGE_MASK;
-		rsph->flags &= ~ISCSI_LOGIN_NEXT_STAGE_MASK;
+		rsph->flags &= ~(ISCSI_LOGIN_TRANSIT | ISCSI_LOGIN_CURRENT_STAGE_MASK |
+				 ISCSI_LOGIN_NEXT_STAGE_MASK);
 	}
 	iscsi_param_free(params);
 	iscsi_conn_write_pdu(conn, rsp_pdu, cb_fn, conn);
@@ -1242,9 +1241,8 @@ iscsi_op_login_rsp_init(struct spdk_iscsi_conn *conn,
 	rsp_pdu->data_buf_len = 8192;
 
 	reqh = (struct iscsi_bhs_login_req *)&pdu->bhs;
-	rsph->flags |= (reqh->flags & ISCSI_LOGIN_TRANSIT);
-	rsph->flags |= (reqh->flags & ISCSI_LOGIN_CONTINUE);
-	rsph->flags |= (reqh->flags & ISCSI_LOGIN_CURRENT_STAGE_MASK);
+	rsph->flags |= (reqh->flags & (ISCSI_LOGIN_TRANSIT | ISCSI_LOGIN_CONTINUE |
+				       ISCSI_LOGIN_CURRENT_STAGE_MASK));
 	if (ISCSI_BHS_LOGIN_GET_TBIT(rsph->flags)) {
 		rsph->flags |= (reqh->flags & ISCSI_LOGIN_NEXT_STAGE_MASK);
 	}
@@ -1303,11 +1301,9 @@ iscsi_op_login_rsp_init(struct spdk_iscsi_conn *conn,
 
 	if ((ISCSI_BHS_LOGIN_GET_NSG(rsph->flags) == ISCSI_NSG_RESERVED_CODE) &&
 	    ISCSI_BHS_LOGIN_GET_TBIT(rsph->flags)) {
-		/* set NSG to zero */
-		rsph->flags &= ~ISCSI_LOGIN_NEXT_STAGE_MASK;
-		/* also set other bits to zero */
-		rsph->flags &= ~ISCSI_LOGIN_TRANSIT;
-		rsph->flags &= ~ISCSI_LOGIN_CURRENT_STAGE_MASK;
+		/* set NSG and other bits to zero */
+		rsph->flags &= ~(ISCSI_LOGIN_NEXT_STAGE_MASK | ISCSI_LOGIN_TRANSIT |
+				 ISCSI_LOGIN_CURRENT_STAGE_MASK);
 		SPDK_ERRLOG("Received reserved NSG code: %d\n", ISCSI_NSG_RESERVED_CODE);
 		/* Initiator error */
 		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
@@ -3055,8 +3051,7 @@ iscsi_transfer_in(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 		for (; offset < sequence_end; offset += segment_len) {
 			len = spdk_min(segment_len, (sequence_end - offset));
 
-			datain_flag &= ~ISCSI_FLAG_FINAL;
-			datain_flag &= ~ISCSI_DATAIN_STATUS;
+			datain_flag &= ~(ISCSI_FLAG_FINAL | ISCSI_DATAIN_STATUS);
 
 			if (offset + len == sequence_end) {
 				/* last PDU in a sequence */
