@@ -373,7 +373,7 @@ runtime={run_time}
         else:
             ioengine = "libaio"
             spdk_conf = ""
-            out, err = self.remote_call("sudo nvme list | grep 'SPDK' | awk '{print $1}'")
+            out, err = self.remote_call("sudo nvme list | grep -E 'SPDK|Linux' | awk '{print $1}'")
             subsystems = [x for x in out.split("\n") if "nvme" in x]
 
         if self.cpus_allowed is not None:
@@ -742,7 +742,7 @@ class KernelInitiator(Initiator):
             time.sleep(1)
 
     def gen_fio_filename_conf(self, threads, io_depth, num_jobs=1):
-        out, err = self.remote_call("sudo nvme list | grep 'SPDK' | awk '{print $1}'")
+        out, err = self.remote_call("sudo nvme list | grep -E 'SPDK|Linux' | awk '{print $1}'")
         nvme_list = [x for x in out.split("\n") if "nvme" in x]
 
         filename_section = ""
