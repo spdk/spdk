@@ -96,6 +96,11 @@ function install_qat() {
 		patch --dir="$GIT_REPOS/QAT" -p1 < "$rootdir/test/common/config/pkgdep/patches/qat/0001-timespec.patch"
 	fi
 
+	# Patch name of the pci_aer function which was renamed in kernels >= 5.7.1. See .patch for details
+	if ((kernel_ver >= 0x050701)); then
+		patch --dir="$GIT_REPOS/QAT" -p1 < "$rootdir/test/common/config/pkgdep/patches/qat/0001-pci_aer.patch"
+	fi
+
 	(cd "$GIT_REPOS/QAT" && sudo ./configure --enable-icp-sriov=host && sudo make install)
 
 	if sudo service qat_service start; then
