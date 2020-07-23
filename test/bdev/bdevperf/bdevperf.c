@@ -159,6 +159,8 @@ struct job_config {
 	int				bs;
 	int				iodepth;
 	int				rwmixread;
+	int				offset;
+	int				length;
 	TAILQ_ENTRY(job_config)	link;
 };
 
@@ -1307,7 +1309,7 @@ bdevperf_construct_config_jobs(void)
 		thread = construct_job_thread(&config->cpumask, config->name);
 		assert(thread);
 
-		rc = bdevperf_construct_job(bdev, config, thread, 0, 0);
+		rc = bdevperf_construct_job(bdev, config, thread, config->offset, config->length);
 		if (rc < 0) {
 			g_run_rc = rc;
 			return;
@@ -1589,6 +1591,9 @@ read_job_config(void)
 	global_default_config.iodepth = BDEVPERF_CONFIG_UNDEFINED;
 	/* bdevperf has no default for -M option but in FIO the default is 50 */
 	global_default_config.rwmixread = 50;
+	global_default_config.offset = 0;
+	/* length 0 means 100% */
+	global_default_config.length = 0;
 	config_set_cli_args(&global_default_config);
 
 	/* There is only a single instance of global job_config
@@ -1653,6 +1658,16 @@ read_job_config(void)
 			fprintf(stderr,
 				"'rwmixread' value of '%s' job is not in 0-100 range\n",
 				config->name);
+			goto error;
+		}
+
+		config->offset = parse_uint_option(s, "offset", global_config.offset);
+		if (config->offset == BDEVPERF_CONFIG_ERROR) {
+			goto error;
+		}
+
+		config->length = parse_uint_option(s, "length", global_config.length);
+		if (config->length == BDEVPERF_CONFIG_ERROR) {
 			goto error;
 		}
 
