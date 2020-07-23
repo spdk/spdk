@@ -567,7 +567,6 @@ class KernelTarget(Target):
 
     def tgt_start(self):
         self.log_print("Configuring kernel NVMeOF Target")
-        self.subsys_no = get_nvme_devices_count()
 
         if self.null_block:
             print("Configuring with null block device.")
@@ -579,6 +578,7 @@ class KernelTarget(Target):
             self.kernel_tgt_gen_nullblock_conf(self.nic_ips[0])
         else:
             print("Configuring with NVMe drives.")
+            self.subsys_no = get_nvme_devices_count()
             nvme_list = get_nvme_devices()
             self.kernel_tgt_gen_subsystem_conf(nvme_list, self.nic_ips)
             self.subsys_no = len(nvme_list)
@@ -674,9 +674,10 @@ class SPDKTarget(Target):
         rpc.client.print_dict(rpc.nvmf.nvmf_get_subsystems(self.client))
 
     def tgt_start(self):
-        self.subsys_no = get_nvme_devices_count()
         if self.null_block:
             self.subsys_no = 1
+        else:
+            self.subsys_no = get_nvme_devices_count()
         self.log_print("Starting SPDK NVMeOF Target process")
         nvmf_app_path = os.path.join(self.spdk_dir, "build/bin/nvmf_tgt")
         command = " ".join([nvmf_app_path, "-m", self.num_cores])
