@@ -73,9 +73,12 @@ function install_refspdk() {
 }
 
 function install_qat() {
+	# Disect the kernel version into maj, min, release and local version
+	local kernel_maj kernel_min kernel_rel kernel_loc
+	local kernel_ver
 
-	kernel_maj=$(uname -r | cut -d'.' -f1)
-	kernel_min=$(uname -r | cut -d'.' -f2)
+	IFS=".-" read -r kernel_{maj,min,rel,loc} < /proc/sys/kernel/osrelease
+	kernel_ver=$((kernel_maj << 16 | kernel_min << 8 | kernel_rel))
 
 	if [[ -e /sys/module/qat_c62x ]]; then
 		sudo modprobe -r qat_c62x || :
