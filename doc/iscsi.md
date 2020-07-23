@@ -325,3 +325,37 @@ At the iSCSI level, we provide the following support for Hotplug:
   return back; after all the commands return back, the LUN will be deleted.
 
 @sa spdk_nvme_probe
+
+# iSCSI Login Redirection {#iscsi_login_redirection}
+
+The SPDK iSCSI target application supports iSCSI login redirection feature.
+
+A portal refers to an IP address and TCP port number pair, and a portal group
+contains a set of portals. Users for the SPDK iSCSI target application configure
+portals through portal groups.
+
+To support login redirection feature, we utilize two types of portal groups,
+public portal group and private portal group.
+
+The SPDK iSCSI target application usually has a discovery portal. The discovery
+portal is connected by an initiator to get a list of targets, as well as the list
+of portals on which these target may be accessed, by a discovery session.
+
+Public portal groups have their portals returned by a discovery session. Private
+portal groups do not have their portals returned by a discovery session. A public
+portal group may optionally have a redirect portal for non-discovery logins for
+each associated target. This redirect portal must be from a private portal group.
+
+Initiators configure portals in public portal groups as target portals. When an
+initator logs in to a target through a portal in an associated public portal group,
+the target sends a temporary redirection response with a redirect portal. Then the
+initiator logs in to the target again through the redirect portal.
+
+Users set a portal group to public or private at creation using the
+`iscsi_create_portal_group` RPC, associate portal groups with a target using the
+`iscsi_create_target_node` RPC or the `iscsi_target_node_add_pg_ig_maps` RPC, and
+specify a up-to-date redirect portal in a public portal group for a target using
+`iscsi_target_node_set_redirect` RPC.
+
+Typically users will use the login redirection feature in scale out iSCSI target
+system, which runs multiple SPDK iSCSI target applications.
