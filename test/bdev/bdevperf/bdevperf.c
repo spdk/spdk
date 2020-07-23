@@ -1124,6 +1124,24 @@ construct_job_thread(struct spdk_cpuset *cpumask, const char *tag)
 	return spdk_thread_create(thread_name, cpumask);
 }
 
+static uint32_t
+_get_next_core(void)
+{
+	static uint32_t current_core = SPDK_ENV_LCORE_ID_ANY;
+
+	if (current_core == SPDK_ENV_LCORE_ID_ANY) {
+		current_core = spdk_env_get_first_core();
+		return current_core;
+	}
+
+	current_core = spdk_env_get_next_core(current_core);
+	if (current_core == SPDK_ENV_LCORE_ID_ANY) {
+		current_core = spdk_env_get_first_core();
+	}
+
+	return current_core;
+}
+
 static void
 _bdevperf_construct_job(void *ctx)
 {
@@ -1151,7 +1169,7 @@ end:
 
 static int
 bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
-		       struct spdk_thread *thread, uint32_t offset, uint32_t length)
+		       struct spdk_thread *thread)
 {
 	struct bdevperf_job *job;
 	struct bdevperf_task *task;
@@ -1176,8 +1194,8 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 	}
 
 	job->workload_type = g_workload_type;
-	job->io_size = config ? config->bs : g_io_size;
-	job->rw_percentage = config ? config->rwmixread : g_rw_percentage;
+	job->io_size = config->bs;
+	job->rw_percentage = config->rwmixread;
 	job->is_random = g_is_random;
 	job->verify = g_verify;
 	job->reset = g_reset;
@@ -1186,7 +1204,7 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 	job->write_zeroes = g_write_zeroes;
 	job->flush = g_flush;
 	job->abort = g_abort;
-	job->queue_depth = config ? config->iodepth : g_queue_depth;
+	job->queue_depth = config->iodepth;
 
 	job->bdev = bdev;
 	job->io_size_blocks = job->io_size / data_block_size;
@@ -1216,10 +1234,10 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 
 	job->offset_in_ios = 0;
 
-	if (length != 0) {
+	if (config->length != 0) {
 		/* Use subset of disk */
-		job->size_in_ios = length / job->io_size_blocks;
-		job->ios_base = offset / job->io_size_blocks;
+		job->size_in_ios = config->length / job->io_size_blocks;
+		job->ios_base = config->offset / job->io_size_blocks;
 	} else {
 		/* Use whole disk */
 		job->size_in_ios = spdk_bdev_get_num_blocks(bdev) / job->io_size_blocks;
@@ -1309,7 +1327,7 @@ bdevperf_construct_config_jobs(void)
 		thread = construct_job_thread(&config->cpumask, config->name);
 		assert(thread);
 
-		rc = bdevperf_construct_job(bdev, config, thread, config->offset, config->length);
+		rc = bdevperf_construct_job(bdev, config, thread);
 		if (rc < 0) {
 			g_run_rc = rc;
 			return;
@@ -1317,17 +1335,38 @@ bdevperf_construct_config_jobs(void)
 	}
 }
 
+static int
+make_cli_job_config(const char *filename, int offset, int range)
+{
+	struct job_config *config = calloc(1, sizeof(*config));
+
+	if (config == NULL) {
+		fprintf(stderr, "Unable to allocate memory for job config\n");
+		return -ENOMEM;
+	}
+
+	config->name = filename;
+	config->filename = filename;
+	spdk_cpuset_zero(&config->cpumask);
+	spdk_cpuset_set_cpu(&config->cpumask, _get_next_core(), true);
+	config->bs = g_io_size;
+	config->iodepth = g_queue_depth;
+	config->rwmixread = g_rw_percentage;
+	config->offset = offset;
+	config->length = range;
+
+	TAILQ_INSERT_TAIL(&job_config_list, config, link);
+	return 0;
+}
+
 static void
 bdevperf_construct_multithread_jobs(void)
 {
 	struct spdk_bdev *bdev;
 	uint32_t i;
-	struct spdk_cpuset cpumask;
-	struct spdk_thread *thread;
 	uint32_t num_cores;
 	uint32_t blocks_per_job;
 	uint32_t offset;
-	int rc;
 
 	num_cores = 0;
 	SPDK_ENV_FOREACH_CORE(i) {
@@ -1350,16 +1389,9 @@ bdevperf_construct_multithread_jobs(void)
 		offset = 0;
 
 		SPDK_ENV_FOREACH_CORE(i) {
-			spdk_cpuset_zero(&cpumask);
-			spdk_cpuset_set_cpu(&cpumask, i, true);
-			thread = construct_job_thread(&cpumask, spdk_bdev_get_name(bdev));
-			assert(thread);
-
-			/* Construct the job */
-			rc = bdevperf_construct_job(bdev, NULL, thread, offset, blocks_per_job);
-			if (rc < 0) {
-				g_run_rc = rc;
-				break;
+			g_run_rc = make_cli_job_config(g_job_bdev_name, offset, blocks_per_job);
+			if (g_run_rc) {
+				return;
 			}
 
 			offset += blocks_per_job;
@@ -1371,23 +1403,13 @@ bdevperf_construct_multithread_jobs(void)
 			offset = 0;
 
 			SPDK_ENV_FOREACH_CORE(i) {
-				spdk_cpuset_zero(&cpumask);
-				spdk_cpuset_set_cpu(&cpumask, i, true);
-				thread = construct_job_thread(&cpumask, spdk_bdev_get_name(bdev));
-				assert(thread);
-
-				/* Construct the job */
-				rc = bdevperf_construct_job(bdev, NULL, thread, offset, blocks_per_job);
-				if (rc < 0) {
-					g_run_rc = rc;
-					break;
+				g_run_rc = make_cli_job_config(spdk_bdev_get_name(bdev),
+							       offset, blocks_per_job);
+				if (g_run_rc) {
+					return;
 				}
 
 				offset += blocks_per_job;
-			}
-
-			if (g_run_rc != 0) {
-				break;
 			}
 
 			bdev = spdk_bdev_next_leaf(bdev);
@@ -1395,32 +1417,10 @@ bdevperf_construct_multithread_jobs(void)
 	}
 }
 
-static uint32_t
-_get_next_core(void)
-{
-	static uint32_t current_core = SPDK_ENV_LCORE_ID_ANY;
-
-	if (current_core == SPDK_ENV_LCORE_ID_ANY) {
-		current_core = spdk_env_get_first_core();
-		return current_core;
-	}
-
-	current_core = spdk_env_get_next_core(current_core);
-	if (current_core == SPDK_ENV_LCORE_ID_ANY) {
-		current_core = spdk_env_get_first_core();
-	}
-
-	return current_core;
-}
-
 static void
 bdevperf_construct_jobs(void)
 {
 	struct spdk_bdev *bdev;
-	uint32_t lcore;
-	struct spdk_cpuset cpumask;
-	struct spdk_thread *thread;
-	int rc;
 
 	/* There are three different modes for allocating jobs. Standard mode
 	 * (the default) creates one spdk_thread per bdev and runs the I/O job there.
@@ -1441,7 +1441,6 @@ bdevperf_construct_jobs(void)
 	g_construct_job_count = 1;
 
 	if (g_bdevperf_conf) {
-		bdevperf_construct_config_jobs();
 		goto end;
 	} else if (g_multithread_mode) {
 		bdevperf_construct_multithread_jobs();
@@ -1451,18 +1450,8 @@ bdevperf_construct_jobs(void)
 	if (g_job_bdev_name != NULL) {
 		bdev = spdk_bdev_get_by_name(g_job_bdev_name);
 		if (bdev) {
-			lcore = _get_next_core();
-
-			spdk_cpuset_zero(&cpumask);
-			spdk_cpuset_set_cpu(&cpumask, lcore, true);
-			thread = construct_job_thread(&cpumask, spdk_bdev_get_name(bdev));
-			assert(thread);
-
 			/* Construct the job */
-			rc = bdevperf_construct_job(bdev, NULL, thread, 0, 0);
-			if (rc < 0) {
-				g_run_rc = rc;
-			}
+			g_run_rc = make_cli_job_config(g_job_bdev_name, 0, 0);
 		} else {
 			fprintf(stderr, "Unable to find bdev '%s'\n", g_job_bdev_name);
 		}
@@ -1470,17 +1459,9 @@ bdevperf_construct_jobs(void)
 		bdev = spdk_bdev_first_leaf();
 
 		while (bdev != NULL) {
-			lcore = _get_next_core();
-
-			spdk_cpuset_zero(&cpumask);
-			spdk_cpuset_set_cpu(&cpumask, lcore, true);
-			thread = construct_job_thread(&cpumask, spdk_bdev_get_name(bdev));
-			assert(thread);
-
 			/* Construct the job */
-			rc = bdevperf_construct_job(bdev, NULL, thread, 0, 0);
-			if (rc < 0) {
-				g_run_rc = rc;
+			g_run_rc = make_cli_job_config(spdk_bdev_get_name(bdev), 0, 0);
+			if (g_run_rc) {
 				break;
 			}
 
@@ -1489,6 +1470,10 @@ bdevperf_construct_jobs(void)
 	}
 
 end:
+	if (g_run_rc == 0) {
+		bdevperf_construct_config_jobs();
+	}
+
 	if (--g_construct_job_count == 0) {
 		if (g_run_rc != 0) {
 			/* Something failed. */
