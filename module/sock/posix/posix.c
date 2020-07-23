@@ -1325,13 +1325,15 @@ posix_sock_impl_get_opts(struct spdk_sock_impl_opts *opts, size_t *len)
 #define FIELD_OK(field) \
 	offsetof(struct spdk_sock_impl_opts, field) + sizeof(opts->field) <= *len
 
-	if (FIELD_OK(recv_buf_size)) {
-		opts->recv_buf_size = g_spdk_posix_sock_impl_opts.recv_buf_size;
-	}
-	if (FIELD_OK(send_buf_size)) {
-		opts->send_buf_size = g_spdk_posix_sock_impl_opts.send_buf_size;
+#define GET_FIELD(field) \
+	if (FIELD_OK(field)) { \
+		opts->field = g_spdk_posix_sock_impl_opts.field; \
 	}
 
+	GET_FIELD(recv_buf_size);
+	GET_FIELD(send_buf_size);
+
+#undef GET_FIELD
 #undef FIELD_OK
 
 	*len = spdk_min(*len, sizeof(g_spdk_posix_sock_impl_opts));
@@ -1349,13 +1351,15 @@ posix_sock_impl_set_opts(const struct spdk_sock_impl_opts *opts, size_t len)
 #define FIELD_OK(field) \
 	offsetof(struct spdk_sock_impl_opts, field) + sizeof(opts->field) <= len
 
-	if (FIELD_OK(recv_buf_size)) {
-		g_spdk_posix_sock_impl_opts.recv_buf_size = opts->recv_buf_size;
-	}
-	if (FIELD_OK(send_buf_size)) {
-		g_spdk_posix_sock_impl_opts.send_buf_size = opts->send_buf_size;
+#define SET_FIELD(field) \
+	if (FIELD_OK(field)) { \
+		g_spdk_posix_sock_impl_opts.field = opts->field; \
 	}
 
+	SET_FIELD(recv_buf_size);
+	SET_FIELD(send_buf_size);
+
+#undef SET_FIELD
 #undef FIELD_OK
 
 	return 0;
