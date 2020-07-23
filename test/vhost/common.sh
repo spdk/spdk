@@ -1049,6 +1049,7 @@ function run_fio() {
 	local run_plugin_mode=false
 	local fio_start_cmd
 	local fio_output_format="normal"
+	local fio_gtod_reduce=false
 	local wait_for_fio=true
 
 	for arg in "$@"; do
@@ -1069,6 +1070,7 @@ function run_fio() {
 			--json) fio_output_format="json" ;;
 			--hide-results) hide_results=true ;;
 			--no-wait-for-fio) wait_for_fio=false ;;
+			--gtod-reduce) fio_gtod_reduce=true ;;
 			*)
 				error "Invalid argument '$arg'"
 				return 1
@@ -1103,6 +1105,11 @@ function run_fio() {
 		local vmdisks=${vm#*:}
 
 		sed "s@filename=@filename=$vmdisks@" $job_file | vm_exec $vm_num "cat > /root/$job_fname"
+
+		if $fio_gtod_reduce; then
+			vm_exec $vm_num "echo 'gtod_reduce=1' >> /root/$job_fname"
+		fi
+
 		vm_exec $vm_num cat /root/$job_fname
 
 		if $run_server_mode; then

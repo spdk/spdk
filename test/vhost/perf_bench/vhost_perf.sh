@@ -25,6 +25,7 @@ wwpn_prefix="naa.5001405bc6498"
 packed_ring=false
 
 fio_iterations=1
+fio_gtod=""
 precond_fio_bin=$CONFIG_FIO_SOURCE_DIR/fio
 disk_map=""
 
@@ -48,6 +49,7 @@ function usage() {
 	echo "                            of binary is recommended."
 	echo "    --fio-jobs=PATH         Comma separated list of fio config files to use for test."
 	echo "    --fio-iterations=INT    Number of times to run specified workload."
+	echo "    --fio-gtod-reduce       Enable fio gtod_reduce option in test."
 	echo "    --vm-memory=INT         Amount of RAM memory (in MB) to pass to a single VM."
 	echo "                            Default: 2048 MB"
 	echo "    --vm-image=PATH         OS image to use for running the VMs."
@@ -161,6 +163,7 @@ while getopts 'xh-:' optchar; do
 				fio-bin=*) fio_bin="--fio-bin=${OPTARG#*=}" ;;
 				fio-jobs=*) fio_jobs="${OPTARG#*=}" ;;
 				fio-iterations=*) fio_iterations="${OPTARG#*=}" ;;
+				fio-gtod-reduce) fio_gtod="--gtod-reduce" ;;
 				vm-memory=*) vm_memory="${OPTARG#*=}" ;;
 				vm-image=*) VM_IMAGE="${OPTARG#*=}" ;;
 				vm-sar-enable) vm_sar_enable=true ;;
@@ -411,7 +414,7 @@ for fio_job in ${fio_jobs//,/ }; do
 	fio_log_fname="${fio_job_fname%%.*}.log"
 	for i in $(seq 1 $fio_iterations); do
 		echo "Running FIO iteration $i for $fio_job_fname"
-		run_fio $fio_bin --hide-results --job-file="$fio_job" --out="$VHOST_DIR/fio_results" --json $fio_disks &
+		run_fio $fio_bin --hide-results --job-file="$fio_job" --out="$VHOST_DIR/fio_results" --json $fio_disks $fio_gtod &
 		fio_pid=$!
 
 		if $host_sar_enable || $vm_sar_enable; then
