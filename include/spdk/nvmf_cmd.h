@@ -133,6 +133,19 @@ int spdk_nvmf_bdev_ctrlr_nvme_passthru_admin(struct spdk_bdev *bdev, struct spdk
 		struct spdk_io_channel *ch, struct spdk_nvmf_request *req, spdk_nvmf_nvme_passthru_cmd_cb cb_fn);
 
 /**
+ * Attempts to abort a request in the specified bdev
+ *
+ * \param bdev Bdev that is processing req_to_abort
+ * \param desc Bdev desc
+ * \param ch Channel on which req_to_abort was originally submitted
+ * \param req Abort cmd req
+ * \param req_to_abort The request that should be aborted
+ */
+int spdk_nvmf_bdev_ctrlr_abort_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+				   struct spdk_io_channel *ch, struct spdk_nvmf_request *req,
+				   struct spdk_nvmf_request *req_to_abort);
+
+/**
  * Provide access to the underlying bdev that is associated with a namespace.
  *
  * This function can be used to communicate with the bdev. For example,
@@ -199,5 +212,15 @@ struct spdk_nvme_cmd *spdk_nvmf_request_get_cmd(struct spdk_nvmf_request *req);
  * \return The NVMe completion
  */
 struct spdk_nvme_cpl *spdk_nvmf_request_get_response(struct spdk_nvmf_request *req);
+
+/**
+ * Get the request to abort that is associated with this request.
+ * The req to abort is only set if the request processing a SPDK_NVME_OPC_ABORT cmd
+ *
+ * \param req The NVMe-oF abort request
+ *
+ * \return req_to_abort The NVMe-oF request that is in process of being aborted
+ */
+struct spdk_nvmf_request *spdk_nvmf_request_get_req_to_abort(struct spdk_nvmf_request *req);
 
 #endif /* SPDK_NVMF_CMD_H_ */

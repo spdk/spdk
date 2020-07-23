@@ -309,9 +309,6 @@ int nvmf_bdev_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 			    struct spdk_io_channel *ch, struct spdk_nvmf_request *req);
 int nvmf_bdev_ctrlr_nvme_passthru_io(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 				     struct spdk_io_channel *ch, struct spdk_nvmf_request *req);
-int nvmf_bdev_ctrlr_abort_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
-			      struct spdk_io_channel *ch, struct spdk_nvmf_request *req,
-			      struct spdk_nvmf_request *req_to_abort);
 bool nvmf_bdev_ctrlr_get_dif_ctx(struct spdk_bdev *bdev, struct spdk_nvme_cmd *cmd,
 				 struct spdk_dif_ctx *dif_ctx);
 

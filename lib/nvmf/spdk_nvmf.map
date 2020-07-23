@@ -91,6 +91,8 @@
 	spdk_nvmf_request_get_data;
 	spdk_nvmf_request_get_cmd;
 	spdk_nvmf_request_get_response;
+	spdk_nvmf_request_get_req_to_abort;
+	spdk_nvmf_bdev_ctrlr_abort_cmd;
 
 	# public functions in nvmf_transport.h
 	spdk_nvmf_transport_register;

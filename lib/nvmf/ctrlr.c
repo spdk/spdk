@@ -2173,13 +2173,18 @@ nvmf_ctrlr_abort_request(struct spdk_nvmf_request *req)
 
 	assert(req_to_abort != NULL);
 
+	if (g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_ABORT].hdlr &&
+	    nvmf_qpair_is_admin_queue(req_to_abort->qpair)) {
+		return g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_ABORT].hdlr(req);
+	}
+
 	rc = spdk_nvmf_request_get_bdev(req_to_abort->cmd->nvme_cmd.nsid, req_to_abort,
 					&bdev, &desc, &ch);
 	if (rc != 0) {
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	return nvmf_bdev_ctrlr_abort_cmd(bdev, desc, ch, req, req_to_abort);
+	return spdk_nvmf_bdev_ctrlr_abort_cmd(bdev, desc, ch, req, req_to_abort);
 }
 
 static int
@@ -2340,7 +2345,8 @@ nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 		}
 	}
 
-	if (g_nvmf_custom_admin_cmd_hdlrs[cmd->opc].hdlr) {
+	/* Call a custom adm cmd handler if set. Aborts are handled in a different path (see nvmf_passthru_admin_cmd) */
+	if (g_nvmf_custom_admin_cmd_hdlrs[cmd->opc].hdlr && cmd->opc != SPDK_NVME_OPC_ABORT) {
 		rc = g_nvmf_custom_admin_cmd_hdlrs[cmd->opc].hdlr(req);
 		if (rc >= SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
 			/* The handler took care of this commmand */
@@ -3210,4 +3216,9 @@ struct spdk_nvmf_subsystem *spdk_nvmf_ctrlr_get_subsystem(struct spdk_nvmf_ctrlr
 uint16_t spdk_nvmf_ctrlr_get_id(struct spdk_nvmf_ctrlr *ctrlr)
 {
 	return ctrlr->cntlid;
+}
+
+struct spdk_nvmf_request *spdk_nvmf_request_get_req_to_abort(struct spdk_nvmf_request *req)
+{
+	return req->req_to_abort;
 }

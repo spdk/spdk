@@ -707,9 +707,9 @@ nvmf_bdev_ctrlr_complete_abort_cmd(struct spdk_bdev_io *bdev_io, bool success, v
 }
 
 int
-nvmf_bdev_ctrlr_abort_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
-			  struct spdk_io_channel *ch, struct spdk_nvmf_request *req,
-			  struct spdk_nvmf_request *req_to_abort)
+spdk_nvmf_bdev_ctrlr_abort_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+			       struct spdk_io_channel *ch, struct spdk_nvmf_request *req,
+			       struct spdk_nvmf_request *req_to_abort)
 {
 	int rc;
 
