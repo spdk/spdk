@@ -296,16 +296,58 @@ iscsi_tgt_node_allow_iscsi_name(struct spdk_iscsi_tgt_node *target, const char *
 	return false;
 }
 
+static int
+iscsi_send_tgt_portals(struct spdk_iscsi_conn *conn,
+		       struct spdk_iscsi_tgt_node *target,
+		       uint8_t *data, int alloc_len, int total)
+{
+	char buf[MAX_TMPBUF];
+	struct spdk_iscsi_portal_grp *pg;
+	struct spdk_iscsi_pg_map *pg_map;
+	struct spdk_iscsi_portal *p;
+	char *host;
+	int len;
+
+	TAILQ_FOREACH(pg_map, &target->pg_map_head, tailq) {
+		pg = pg_map->pg;
+		TAILQ_FOREACH(p, &pg->head, per_pg_tailq) {
+			if (alloc_len - total < 1) {
+				/* TODO: long text responses support */
+				SPDK_ERRLOG("SPDK doesn't support long text responses now, "
+					    "you can use larger MaxRecvDataSegmentLength"
+					    "value in initiator\n");
+				return alloc_len;
+			}
+			host = p->host;
+			/* wildcard? */
+			if (!strcasecmp(host, "[::]") || !strcasecmp(host, "0.0.0.0")) {
+				if (spdk_sock_is_ipv6(conn->sock)) {
+					snprintf(buf, sizeof buf, "[%s]", conn->target_addr);
+					host = buf;
+				} else if (spdk_sock_is_ipv4(conn->sock)) {
+					snprintf(buf, sizeof buf, "%s", conn->target_addr);
+					host = buf;
+				} else {
+					/* skip portal for the family */
+					continue;
+				}
+			}
+			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "TargetAddress=%s:%s,%d\n",
+				      host, p->port, pg->tag);
+			len = snprintf((char *)data + total, alloc_len - total,
+				       "TargetAddress=%s:%s,%d", host, p->port, pg->tag);
+			total += len + 1;
+		}
+	}
+
+	return total;
+}
+
 int
 iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
 		const char *tiqn, uint8_t *data, int alloc_len, int data_len)
 {
-	char buf[MAX_TMPBUF];
-	struct spdk_iscsi_portal_grp	*pg;
-	struct spdk_iscsi_pg_map	*pg_map;
-	struct spdk_iscsi_portal	*p;
-	struct spdk_iscsi_tgt_node	*target;
-	char *host;
+	struct spdk_iscsi_tgt_node *target;
 	int total;
 	int len;
 	int rc;
@@ -335,49 +377,13 @@ iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
 			continue;
 		}
 
-		/* DO SENDTARGETS */
-		len = snprintf((char *) data + total, alloc_len - total,
-			       "TargetName=%s", target->name);
+		len = snprintf((char *)data + total, alloc_len - total, "TargetName=%s",
+			       target->name);
 		total += len + 1;
 
-		/* write to data */
-		TAILQ_FOREACH(pg_map, &target->pg_map_head, tailq) {
-			pg = pg_map->pg;
-			TAILQ_FOREACH(p, &pg->head, per_pg_tailq) {
-				if (alloc_len - total < 1) {
-					pthread_mutex_unlock(&g_iscsi.mutex);
-					/* TODO: long text responses support */
-					SPDK_ERRLOG("SPDK doesn't support long text responses now, "
-						    "you can use larger MaxRecvDataSegmentLength"
-						    "value in initiator\n");
-					return alloc_len;
-				}
-				host = p->host;
-				/* wildcard? */
-				if (strcasecmp(host, "[::]") == 0
-				    || strcasecmp(host, "0.0.0.0") == 0) {
-					if (spdk_sock_is_ipv6(conn->sock)) {
-						snprintf(buf, sizeof buf, "[%s]",
-							 conn->target_addr);
-						host = buf;
-					} else if (spdk_sock_is_ipv4(conn->sock)) {
-						snprintf(buf, sizeof buf, "%s",
-							 conn->target_addr);
-						host = buf;
-					} else {
-						/* skip portal for the family */
-						continue;
-					}
-				}
-				SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
-					      "TargetAddress=%s:%s,%d\n",
-					      host, p->port, pg->tag);
-				len = snprintf((char *) data + total,
-					       alloc_len - total,
-					       "TargetAddress=%s:%s,%d",
-					       host, p->port, pg->tag);
-				total += len + 1;
-			}
+		total = iscsi_send_tgt_portals(conn, target, data, alloc_len, total);
+		if (alloc_len - total < 1) {
+			break;
 		}
 	}
 	pthread_mutex_unlock(&g_iscsi.mutex);
