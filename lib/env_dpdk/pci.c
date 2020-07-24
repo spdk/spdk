@@ -209,36 +209,39 @@ spdk_pci_get_driver(const char *name)
 }
 
 static void
-pci_device_rte_hotremove(const char *device_name,
+pci_device_rte_dev_event(const char *device_name,
 			 enum rte_dev_event_type event,
 			 void *cb_arg)
 {
 	struct spdk_pci_device *dev;
 	bool can_detach = false;
 
-	if (event != RTE_DEV_EVENT_REMOVE) {
-		return;
-	}
+	switch (event) {
+	default:
+	case RTE_DEV_EVENT_ADD:
+		/* Nothing to do here yet. */
+		break;
+	case RTE_DEV_EVENT_REMOVE:
+		pthread_mutex_lock(&g_pci_mutex);
+		TAILQ_FOREACH(dev, &g_pci_devices, internal.tailq) {
+			struct rte_pci_device *rte_dev = dev->dev_handle;
 
-	pthread_mutex_lock(&g_pci_mutex);
-	TAILQ_FOREACH(dev, &g_pci_devices, internal.tailq) {
-		struct rte_pci_device *rte_dev = dev->dev_handle;
-
-		if (strcmp(rte_dev->name, device_name) == 0 &&
-		    !dev->internal.pending_removal) {
-			can_detach = !dev->internal.attached;
-			/* prevent any further attaches */
-			dev->internal.pending_removal = true;
-			break;
+			if (strcmp(rte_dev->name, device_name) == 0 &&
+			    !dev->internal.pending_removal) {
+				can_detach = !dev->internal.attached;
+				/* prevent any further attaches */
+				dev->internal.pending_removal = true;
+				break;
+			}
 		}
-	}
-	pthread_mutex_unlock(&g_pci_mutex);
+		pthread_mutex_unlock(&g_pci_mutex);
 
-	if (dev != NULL && can_detach) {
-		/* if device is not attached we can remove it right away.
-		 * Otherwise it will be removed at detach.
-		 */
-		remove_rte_dev(dev->dev_handle);
+		if (dev != NULL && can_detach) {
+			/* if device is not attached we can remove it right away.
+			* Otherwise it will be removed at detach. */
+			remove_rte_dev(dev->dev_handle);
+		}
+		break;
 	}
 }
 
@@ -342,7 +345,7 @@ _pci_env_init(void)
 
 	/* Register a single hotremove callback for all devices. */
 	if (spdk_process_is_primary()) {
-		rte_dev_event_callback_register(NULL, pci_device_rte_hotremove, NULL);
+		rte_dev_event_callback_register(NULL, pci_device_rte_dev_event, NULL);
 	}
 }
 
@@ -383,7 +386,7 @@ pci_env_fini(void)
 	}
 
 	if (spdk_process_is_primary()) {
-		rte_dev_event_callback_unregister(NULL, pci_device_rte_hotremove, NULL);
+		rte_dev_event_callback_unregister(NULL, pci_device_rte_dev_event, NULL);
 	}
 }
 
