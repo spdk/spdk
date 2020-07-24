@@ -14,7 +14,7 @@ source "$1"
 source "$rootdir/test/common/autotest_common.sh"
 
 out=$output_dir
-scanbuild="scan-build -o $output_dir/scan-build-tmp --status-bugs"
+scanbuild="scan-build -o $output_dir/scan-build-tmp --exclude $rootdir/dpdk/ --status-bugs"
 config_params=$(get_config_params)
 
 trap '[[ -d $SPDK_WORKSPACE ]] && rm -rf "$SPDK_WORKSPACE"' 0
