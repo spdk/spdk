@@ -13,7 +13,6 @@ pip3 install pexpect
 pip3 install configshell_fb
 if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	swupd bundle-add -y git os-testsuite-0day
-	install_shfmt
 fi
 if [[ $INSTALL_PMEM == "true" ]]; then
 	# Additional dependencies for building pmem based backends

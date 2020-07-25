@@ -32,7 +32,6 @@ if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 		makepkg -si --needed --noconfirm;
 		cd .. && rm -rf lcov-git;
 		popd"
-	install_shfmt
 fi
 if [[ $INSTALL_PMEM == "true" ]]; then
 	# Additional dependencies for building pmem based backends
@@ -71,7 +70,4 @@ if [[ $INSTALL_DOCS == "true" ]]; then
 		makepkg -si --needed --noconfirm;
 		cd .. && rm -rf mscgen;
 		popd"
-fi
-if [[ $INSTALL_LIBURING == "true" ]]; then
-	install_liburing
 fi

@@ -28,7 +28,6 @@ if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	apt-get install -y pycodestyle || true
 	# Additional dependecies for nvmf performance test script
 	apt-get install -y python3-paramiko
-	install_shfmt
 fi
 if [[ $INSTALL_PMEM == "true" ]]; then
 	# Additional dependencies for building pmem based backends
@@ -52,7 +51,4 @@ fi
 if [[ $INSTALL_DOCS == "true" ]]; then
 	# Additional dependencies for building docs
 	apt-get install -y doxygen mscgen graphviz
-fi
-if [[ $INSTALL_LIBURING == "true" ]]; then
-	install_liburing
 fi

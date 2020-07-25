@@ -11,7 +11,6 @@ if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	# Tools for developers
 	zypper install -y git-core lcov python-pycodestyle sg3_utils \
 		pciutils ShellCheck
-	install_shfmt
 fi
 if [[ $INSTALL_PMEM == "true" ]]; then
 	# Additional dependencies for building pmem based backends
@@ -28,7 +27,4 @@ fi
 if [[ $INSTALL_DOCS == "true" ]]; then
 	# Additional dependencies for building docs
 	zypper install -y doxygen mscgen graphviz
-fi
-if [[ $INSTALL_LIBURING == "true" ]]; then
-	install_liburing
 fi

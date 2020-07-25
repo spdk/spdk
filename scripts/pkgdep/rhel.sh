@@ -49,7 +49,6 @@ if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 		yum install -y python-pycodestyle lcov ShellCheck
 	fi
 	yum install -y git astyle sg3_utils pciutils
-	install_shfmt
 fi
 if [[ $INSTALL_PMEM == "true" ]]; then
 	# Additional dependencies for building pmem based backends
@@ -67,7 +66,4 @@ if [[ $INSTALL_DOCS == "true" ]]; then
 	# Additional dependencies for building docs
 	yum install -y mscgen || echo "Warning: couldn't install mscgen via yum. Please install mscgen manually."
 	yum install -y doxygen graphviz
-fi
-if [[ $INSTALL_LIBURING == "true" ]]; then
-	install_liburing
 fi
