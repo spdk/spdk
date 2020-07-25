@@ -64,8 +64,20 @@ install_shfmt() {
 	echo "$shfmt installed"
 }
 
+install_spdk_bash_completion() {
+	[[ -e /usr/share/bash-completion/bash_completion ]] || return 0
+
+	local compat_dir=/etc/bash_completion.d
+	mkdir -p "$compat_dir"
+
+	if [[ ! -e $compat_dir/spdk ]]; then
+		ln -vs "$scriptsdir/bash-completion/spdk" "$compat_dir"
+	fi
+}
+
 if [[ $INSTALL_DEV_TOOLS == true ]]; then
 	install_shfmt
+	install_spdk_bash_completion
 fi
 
 if [[ $INSTALL_LIBURING == true ]]; then

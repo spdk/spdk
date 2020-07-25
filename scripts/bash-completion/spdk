@@ -1,0 +1,269 @@
+# shellcheck disable=SC2016,SC2207
+
+_get_help() {
+	"$@" -h 2>&1
+}
+
+_get_help_opt() {
+	# Fetch all the optional parameters with help from _parse_help()
+	_parse_help - < <(printf '%s\n' "$@")
+}
+
+_get_help_pos() {
+	local pos
+
+	# Fetch all the positional parameters, i.e. get first word prefixed
+	# with 20h x 2. This may not be 100% accurate. Also, it won't return
+	# any usuable strings, it's just meant to point out what type of
+	# mandatory argument given method depends on, like bdev_name, etc.
+	# TODO: separate completion for such arguments, e.g., get all bdevs
+	# for parameter like bdev_name?
+	while read -r; do
+		[[ $REPLY =~ ^\ {2}[^\ -] ]] || continue
+		read -r pos _ <<< "$REPLY" && echo "$pos"
+	done < <(printf '%s\n' "$@")
+}
+
+_get_default_rpc_methods() {
+	if [[ -S $rpc_sock ]]; then
+		_get_supported_methods "$1"
+		return 0
+	fi
+
+	local aliases method names
+	# Don't squash whitespaces, slurp the entire line
+	while read -r; do
+		# Each method name seems to be prefixed with 20h x 4. Then it can
+		# be followed with list of aliases enclosed inside (). Example:
+		#    ioat_scan_accel_engine (ioat_scan_copy_engine, scan_ioat_copy_engine)
+		[[ $REPLY =~ ^\ {4}([a-z]+(_[a-z]+)*)(\ *\((.+)\))? ]] || continue
+
+		names=("${BASH_REMATCH[1]}")
+		if [[ $SPDK_RPC_ALIASES == yes ]] && [[ -n ${BASH_REMATCH[4]} ]]; then
+			IFS=", " read -ra aliases <<< "${BASH_REMATCH[4]}"
+			names+=("${aliases[@]}")
+		fi
+
+		for method in "${names[@]}"; do
+			rpc_methods["$method"]=1
+		done
+	done < <(_get_help "$1" 2> /dev/null)
+}
+
+_get_supported_methods() {
+	local method methods
+
+	mapfile -t methods < <("$1" -s "$rpc_sock" rpc_get_methods 2> /dev/null)
+	((${#methods[@]} > 0)) || return 0
+
+	# Kill the json flavor
+	methods=("${methods[@]//+(\"|,| )/}")
+	unset -v "methods[0]" "methods[-1]" # []
+
+	for method in "${methods[@]}"; do
+		rpc_methods["$method"]=1
+	done
+}
+
+_get_help_rpc_method() {
+	local rpc=$1
+	local method=$2
+	local rpc_help opt
+
+	mapfile -t rpc_help < <(_get_help "$rpc" "$method")
+
+	_get_help_pos "${rpc_help[@]}"
+	_get_help_opt "${rpc_help[@]}"
+}
+
+_is_rpc_method() {
+	local word=$1
+
+	[[ -v rpc_methods["$word"] ]]
+}
+
+_method_in_words() {
+	for word in "${words[@]}"; do
+		if _is_rpc_method "$word"; then
+			echo "$word"
+			return 0
+		fi
+	done
+	return 1
+}
+
+_set_rpc_sock() {
+	# Look for unix sock each app creates upon its execution. In
+	# first instance, check the cmdline for an -s arg, if it's
+	# followed by the path to the sock, use it.
+
+	local word
+	for ((word = 0; word < ${#words[@]}; word++)); do
+		if [[ ${words[word]} == -s && -S ${words[word + 1]} ]]; then
+			rpc_sock=${words[word + 1]}
+			return 0
+		fi
+	done
+
+	# default .sock
+	[[ -S /var/tmp/spdk.sock ]] && rpc_sock=/var/tmp/spdk.sock
+
+	return 0
+}
+
+_spdk_opt_to_complete() {
+	local opt=$1
+
+	case "$opt" in
+		--pci-blacklist | -B | --pci-whitelist | -W)
+			local pcis
+			if [[ -e /sys/bus/pci/devices ]]; then
+				pcis=(/sys/bus/pci/devices/*)
+				pcis=("${pcis[@]##*/}")
+			fi
+			COMPREPLY=($(compgen -W '${pcis[*]}' -- "$cur"))
+			compopt -o filenames
+			;;
+		--master-core | -p) # FIXME: Is this meant to be an actual core id or thread id? Assume the latter
+			local cpus
+			if [[ -e /sys/devices/system/cpu ]]; then
+				cpus=(/sys/devices/system/cpu/cpu+([0-9]))
+				cpus=("${cpus[@]##*cpu}")
+			fi
+			COMPREPLY=($(compgen -W '${cpus[*]}' -- "$cur"))
+			;;
+		--iova-mode)
+			COMPREPLY=($(compgen -W 'pa va' -- "$cur"))
+			;;
+		--tpoint-group-mask | -e)
+			COMPREPLY=($(compgen -W '$(_get_tpoint_g_masks)' -- "$cur"))
+			compopt -o nosort
+			;;
+		--logflag)
+			COMPREPLY=($(compgen -W '$(_get_log_flags)' -- "$cur"))
+			;;
+		--huge-dir)
+			COMPREPLY=($(compgen -W '$(_get_fs_mounts "hugetlbfs")' -- "$cur"))
+			compopt -o filenames
+			;;
+		--iflag | --oflag) # spdk_dd specific
+			if [[ ${app##*/} == spdk_dd ]]; then
+				COMPREPLY=($(compgen -W '$(_get_help_pos "${app_help[@]}")' -- "$cur"))
+			fi
+			;;
+		*) return 1 ;;
+	esac
+	return 0
+}
+
+_get_fs_mounts() {
+	[[ $(< /proc/filesystems) == *"$1"* ]] || return 0
+
+	local mount fs mounts
+	while read -r _ mount fs _; do
+		[[ $fs == "$1" ]] && mounts+=("$mount")
+	done < /proc/mounts
+
+	if ((${#mounts[@]} > 0)); then
+		printf '%s\n' "${mounts[@]}"
+	fi
+}
+
+_get_from_spdk_help() {
+	_get_help "$app" |& grep "$1"
+}
+
+_get_tpoint_g_masks() {
+	local g_masks
+
+	g_masks=$(_get_from_spdk_help "tracepoint group mask for spdk trace buffers") || return 0
+	[[ $g_masks =~ \((.+)\) ]] || return 0
+
+	IFS=", " read -ra g_masks <<< "${BASH_REMATCH[1]}"
+	printf '%s\n' "${g_masks[@]}"
+}
+
+_get_log_flags() {
+	local logflags
+
+	logflags=$(_get_from_spdk_help "enable debug log flag") || return 0
+	[[ $logflags =~ \((.+)\) ]] || return 0
+
+	if [[ -n ${BASH_REMATCH[1]} && ${BASH_REMATCH[1]} != "not supported"* ]]; then
+		IFS=", " read -ra logflags <<< "${BASH_REMATCH[1]}"
+		printf '%s\n' "${logflags[@]}"
+	fi
+}
+
+_is_app() {
+	type -P "$1" > /dev/null
+}
+
+_rpc() {
+	local cur prev words
+
+	_init_completion || return
+	_is_app "$1" || return
+
+	local rpc=$1 rpc_sock="" method=""
+	local -A rpc_methods=()
+
+	_set_rpc_sock
+	_get_default_rpc_methods "$rpc"
+
+	if method=$(_method_in_words); then
+		COMPREPLY=($(compgen -W '$(_get_help_rpc_method "$rpc" "$method")' -- "$cur"))
+		compopt -o nosort
+	elif [[ $cur == -* ]]; then
+		COMPREPLY=($(compgen -W '$(_parse_help "$rpc")' -- "$cur"))
+	elif [[ $prev == --verbose ]]; then
+		COMPREPLY=($(compgen -W 'DEBUG INFO ERROR' -- "$cur"))
+	elif [[ $prev == -s ]]; then
+		_filedir
+	else
+		COMPREPLY=($(compgen -W '${!rpc_methods[*]}' -- "$cur"))
+	fi
+}
+
+_spdk_app() {
+	local cur prev
+
+	_init_completion || return
+	_is_app "$1" || return
+
+	local app=$1 app_help
+
+	mapfile -t app_help < <(_get_help "$app")
+
+	if [[ $cur == -* ]]; then
+		COMPREPLY=($(compgen -W '$(_get_help_opt "${app_help[@]}")' -- "$cur"))
+	else
+		_spdk_opt_to_complete "$prev" || _filedir
+	fi
+}
+
+# Build simple completion for some common spdk apps|tools
+_spdk_apps() {
+	local apps
+
+	apps=(
+		iscsi_tgt
+		iscsi_top
+		nvmf_tgt
+		spdk_dd
+		spdk_tgt
+		spdk_top
+		spdk_trace_record
+		vhost
+		create_vbox.sh
+		create_vhost_vm.sh
+		pkgdep.sh
+		run-autorun.sh
+		vm_setup.sh
+	) # TODO: Add more?
+
+	complete -F _spdk_app "${apps[@]}"
+	complete -F _rpc rpc.py
+}
+
+_spdk_apps
