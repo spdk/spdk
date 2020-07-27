@@ -84,7 +84,7 @@ function install_qat() {
 		sudo rm -rf "$GIT_REPOS/QAT"
 	fi
 
-	sudo mkdir "$GIT_REPOS/QAT"
+	mkdir "$GIT_REPOS/QAT"
 
 	tar -C "$GIT_REPOS/QAT" -xzof - < <(wget -O- "$DRIVER_LOCATION_QAT")
 
