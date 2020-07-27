@@ -17,7 +17,7 @@ source "$rootdir/test/common/autotest_common.sh"
 
 libdir="$rootdir/build/lib"
 libdeps_file="$rootdir/mk/spdk.lib_deps.mk"
-source_abi_dir="$HOME/spdk_20_04/build/lib"
+source_abi_dir="$HOME/spdk_abi_latest/build/lib"
 suppression_file="$HOME/abigail_suppressions.ini"
 
 function confirm_abi_deps() {
