@@ -11,6 +11,7 @@ install() {
 }
 
 packages=(
+	etc_os-release
 	pciutils
 	jq
 	gdb

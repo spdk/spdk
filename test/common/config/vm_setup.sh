@@ -23,24 +23,14 @@ sudo() {
 }
 
 set -e
+shopt -s extglob
 
 VM_SETUP_PATH=$(readlink -f ${BASH_SOURCE%/*})
 
 UPGRADE=false
 INSTALL=false
 CONF="rocksdb,fio,flamegraph,tsocks,qemu,libiscsi,nvmecli,qat,spdk,refspdk"
-
-if [[ -e /etc/os-release ]]; then
-	source /etc/os-release
-fi
-
-if [ $(uname -s) == "FreeBSD" ]; then
-	OSID="freebsd"
-	OSVERSION=$(freebsd-version | cut -d. -f1)
-else
-	OSID=$(source /etc/os-release && echo $ID)
-	OSVERSION=$(source /etc/os-release && echo $VERSION_ID)
-fi
+package_manager=
 
 function usage() {
 	echo "This script is intended to automate the environment setup for a linux virtual machine."
@@ -54,29 +44,58 @@ function usage() {
 	echo "  -c --conf-path Path to configuration file"
 	echo "  -d --dir-git Path to where git sources should be saved"
 	echo "  -s --disable-tsocks Disable use of tsocks"
-	exit 0
+	exit ${1:-0}
+}
+
+function error() {
+	printf "%s\n\n" "$1" >&2
+	usage 1
+}
+
+function set_os_id_version() {
+	if [[ $(uname -s) == FreeBSD ]] && ! pkg info -q etc_os-release; then
+		echo "Please install 'etc_os-release' package" >&2
+		echo "pkg install -y etc_os-release" >&2
+		exit 2
+	fi
+
+	if [[ -f /etc/os-release ]]; then
+		source /etc/os-release
+	elif [[ -f /usr/local/etc/os-release ]]; then
+		# On FreeBSD file is located under /usr/local if etc_os-release package is installed
+		source /usr/local/etc/os-release
+	else
+		echo "File os-release not found" >&2
+		exit 3
+	fi
+
+	OSID=$ID
+	OSVERSION=$VERSION_ID
+
+	echo "OS-ID: $OSID | OS-Version: $OSVERSION"
+}
+
+function detect_package_manager() {
+	local manager_scripts
+	manager_scripts=("$vmsetupdir/pkgdep/"!(git))
+
+	local package_manager_lib
+	for package_manager_lib in "${manager_scripts[@]}"; do
+		package_manager=${package_manager_lib##*/}
+		if hash "${package_manager}" &> /dev/null; then
+			source "${package_manager_lib}"
+			return
+		fi
+	done
+
+	package_manager="undefined"
 }
 
 vmsetupdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$vmsetupdir/../../../")
 
-managers=("$vmsetupdir/pkgdep/"*)
-# Get package manager #
-if hash dnf &> /dev/null; then
-	source "$vmsetupdir/pkgdep/dnf"
-elif hash yum &> /dev/null; then
-	source "$vmsetupdir/pkgdep/yum"
-elif hash apt-get &> /dev/null; then
-	source "$vmsetupdir/pkgdep/apt-get"
-elif hash pacman &> /dev/null; then
-	source "$vmsetupdir/pkgdep/pacman"
-elif hash pkg &> /dev/null; then
-	source "$vmsetupdir/pkgdep/pkg"
-elif hash swupd &> /dev/null; then
-	source "$vmsetupdir/pkgdep/swupd"
-else
-	package_manager="undefined"
-fi
+set_os_id_version
+detect_package_manager
 
 if [[ -e $vmsetupdir/pkgdep/os/$OSID ]]; then
 	source "$vmsetupdir/pkgdep/os/$OSID"
@@ -94,10 +113,7 @@ while getopts 'd:siuht:c:-:' optchar; do
 				conf-path=*) CONF_PATH="${OPTARG#*=}" ;;
 				dir-git=*) GIT_REPOS="${OPTARG#*=}" ;;
 				disable-tsocks) NO_TSOCKS=true ;;
-				*)
-					echo "Invalid argument '$OPTARG'"
-					usage
-					;;
+				*) error "Invalid argument '$OPTARG'" ;;
 			esac
 			;;
 		h) usage ;;
@@ -107,25 +123,21 @@ while getopts 'd:siuht:c:-:' optchar; do
 		c) CONF_PATH="$OPTARG" ;;
 		d) GIT_REPOS="$OPTARG" ;;
 		s) NO_TSOCKS=true ;;
-		*)
-			echo "Invalid argument '$OPTARG'"
-			usage
-			;;
+		*) error "Invalid argument '$OPTARG'" ;;
 	esac
 done
 
-if [[ "$package_manager" == "undefined" ]]; then
+if [[ $package_manager == undefined ]]; then
 	echo "Supported package manager not found. Script supports:"
-	printf ' * %s\n' "${managers[@]##*/}"
+	printf " * %s\n" "${manager_scripts[@]##*/}"
 	exit 1
 fi
 
-if [ -n "$CONF_PATH" ]; then
-	if [ ! -f "$CONF_PATH" ]; then
-		echo Configuration file does not exist: "$CONF_PATH"
-		exit 1
-	else
+if [[ -n $CONF_PATH ]]; then
+	if [[ -f $CONF_PATH ]]; then
 		source "$CONF_PATH"
+	else
+		error "Configuration file does not exist: '$CONF_PATH'"
 	fi
 fi
 
@@ -147,7 +159,7 @@ source "$vmsetupdir/pkgdep/git"
 # probably best to only run the tests that you believe your changes have modified along with
 # Scanbuild and check format. This is because running the whole suite of tests in series can
 # take ~40 minutes to complete.
-if [ ! -e ~/autorun-spdk.conf ]; then
+if [[ ! -e ~/autorun-spdk.conf ]]; then
 	cat > ~/autorun-spdk.conf << EOF
 # assign a value of 1 to all of the pertinent tests
 SPDK_RUN_VALGRIND=1
