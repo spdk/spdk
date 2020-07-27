@@ -3428,7 +3428,6 @@ nvmf_rdma_qpair_reject_connection(struct spdk_nvmf_rdma_qpair *rqpair)
 	if (rqpair->cm_id != NULL) {
 		nvmf_rdma_event_reject(rqpair->cm_id, SPDK_NVMF_RDMA_ERROR_NO_RESOURCES);
 	}
-	nvmf_rdma_qpair_destroy(rqpair);
 }
 
 static int
@@ -3568,6 +3567,7 @@ nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 	 */
 	if (rqpair->qpair.state == SPDK_NVMF_QPAIR_UNINITIALIZED) {
 		nvmf_rdma_qpair_reject_connection(rqpair);
+		nvmf_rdma_qpair_destroy(rqpair);
 		return;
 	}
 
