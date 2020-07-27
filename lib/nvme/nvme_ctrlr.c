@@ -563,7 +563,16 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 
 	/* Do not retry. */
 	nvme_qpair_set_state(qpair, NVME_QPAIR_DESTROYING);
-	nvme_qpair_abort_reqs(qpair, 1);
+
+	/* In the multi-process case, a process may call this function on a foreign
+	 * I/O qpair (i.e. one that this process did not create) when that qpairs process
+	 * exits unexpectedly.  In that case, we must not try to abort any reqs associated
+	 * with that qpair, since the callbacks will also be foreign to this process.
+	 */
+	if (qpair->active_proc == nvme_ctrlr_get_current_process(ctrlr)) {
+		nvme_qpair_abort_reqs(qpair, 1);
+	}
+
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
 	nvme_ctrlr_proc_remove_io_qpair(qpair);
