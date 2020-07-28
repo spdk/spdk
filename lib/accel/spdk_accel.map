@@ -26,7 +26,7 @@
 	# functions needed by modules
 	spdk_accel_hw_engine_register;
 	spdk_accel_module_list_add;
-
+	spdk_accel_task_complete;
 
 	local: *;
 };

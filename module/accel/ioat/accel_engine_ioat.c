@@ -42,36 +42,7 @@
 #include "spdk/event.h"
 #include "spdk/thread.h"
 #include "spdk/ioat.h"
-#include "spdk/crc32.h"
 
-#define ALIGN_4K 0x1000
-
-enum ioat_accel_opcode {
-	IOAT_ACCEL_OPCODE_MEMMOVE	= 0,
-	IOAT_ACCEL_OPCODE_MEMFILL	= 1,
-	IOAT_ACCEL_OPCODE_COMPARE	= 2,
-	IOAT_ACCEL_OPCODE_CRC32C	= 3,
-	IOAT_ACCEL_OPCODE_DUALCAST	= 4,
-};
-
-struct ioat_accel_op {
-	struct ioat_io_channel		*ioat_ch;
-	void				*cb_arg;
-	spdk_accel_completion_cb	cb_fn;
-	void				*src;
-	union {
-		void			*dst;
-		void			*src2;
-	};
-	void				*dst2;
-	uint32_t			seed;
-	uint64_t			fill_pattern;
-	enum ioat_accel_opcode		op_code;
-	uint64_t			nbytes;
-	TAILQ_ENTRY(ioat_accel_op)	link;
-};
-
-static int g_batch_size;
 static bool g_ioat_enable = false;
 static bool g_ioat_initialized = false;
 
@@ -103,9 +74,6 @@ struct ioat_io_channel {
 	struct spdk_ioat_chan		*ioat_ch;
 	struct ioat_device		*ioat_dev;
 	struct spdk_poller		*poller;
-	TAILQ_HEAD(, ioat_accel_op)	op_pool;
-	TAILQ_HEAD(, ioat_accel_op)	sw_batch; /* for operations not hw accelerated */
-	bool				hw_batch; /* for operations that are hw accelerated */
 };
 
 static int
@@ -149,17 +117,13 @@ ioat_free_device(struct ioat_device *dev)
 	pthread_mutex_unlock(&g_ioat_mutex);
 }
 
-struct ioat_task {
-	spdk_accel_completion_cb	cb;
-};
-
 static int accel_engine_ioat_init(void);
 static void accel_engine_ioat_exit(void *ctx);
 
 static size_t
 accel_engine_ioat_get_ctx_size(void)
 {
-	return sizeof(struct ioat_task) + sizeof(struct spdk_accel_task);
+	return 0;
 }
 
 SPDK_ACCEL_MODULE_REGISTER(accel_engine_ioat_init, accel_engine_ioat_exit,
@@ -168,43 +132,9 @@ SPDK_ACCEL_MODULE_REGISTER(accel_engine_ioat_init, accel_engine_ioat_exit,
 static void
 ioat_done(void *cb_arg)
 {
-	struct spdk_accel_task *accel_task;
-	struct ioat_task *ioat_task = cb_arg;
+	struct spdk_accel_task *accel_task = cb_arg;
 
-	accel_task = (struct spdk_accel_task *)
-		     ((uintptr_t)ioat_task -
-		      offsetof(struct spdk_accel_task, offload_ctx));
-
-	ioat_task->cb(accel_task, 0);
-}
-
-static int
-ioat_submit_copy(struct spdk_io_channel *ch, void *dst, void *src, uint64_t nbytes,
-		 spdk_accel_completion_cb cb_fn, void *cb_arg)
-{
-	struct ioat_task *ioat_task = (struct ioat_task *)cb_arg;
-	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
-
-	assert(ioat_ch->ioat_ch != NULL);
-
-	ioat_task->cb = cb_fn;
-
-	return spdk_ioat_submit_copy(ioat_ch->ioat_ch, ioat_task, ioat_done, dst, src, nbytes);
-}
-
-static int
-ioat_submit_fill(struct spdk_io_channel *ch, void *dst, uint8_t fill,
-		 uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg)
-{
-	struct ioat_task *ioat_task = (struct ioat_task *)cb_arg;
-	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
-	uint64_t fill64 = 0x0101010101010101ULL * fill;
-
-	assert(ioat_ch->ioat_ch != NULL);
-
-	ioat_task->cb = cb_fn;
-
-	return spdk_ioat_submit_fill(ioat_ch->ioat_ch, ioat_task, ioat_done, dst, fill64, nbytes);
+	spdk_accel_task_complete(accel_task, 0);
 }
 
 static int
@@ -218,266 +148,62 @@ ioat_poll(void *arg)
 
 static struct spdk_io_channel *ioat_get_io_channel(void);
 
-/*
- * The IOAT engine only supports these capabilities as hardware
- * accelerated. The accel fw will handle unsupported functions
- * by calling the software implementations of the functions.
- */
 static uint64_t
 ioat_get_capabilities(void)
 {
-	return ACCEL_COPY | ACCEL_FILL | ACCEL_BATCH;
+	return ACCEL_COPY | ACCEL_FILL;
 }
 
-/* The IOAT batch functions exposed by the accel fw do not match up 1:1
- * with the functions in the IOAT library. The IOAT library directly only
- * supports construction of accelerated functions via the IOAT native
- * interface.  The accel_fw batch capabilities are implemented here in the
- * plug-in and rely on either the IOAT library for accelerated commands
- * or software functions for non-accelerated.
- */
 static uint32_t
-ioat_batch_get_max(void)
-{
-	return g_batch_size;
-}
-
-static struct spdk_accel_batch *
-ioat_batch_create(struct spdk_io_channel *ch)
+ioat_batch_get_max(struct spdk_io_channel *ch)
 {
 	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
 
-	if (!TAILQ_EMPTY(&ioat_ch->sw_batch) || (ioat_ch->hw_batch == true)) {
-		SPDK_ERRLOG("IOAT accel engine only supports one batch at a time.\n");
-		return NULL;
-	}
-
-	return (struct spdk_accel_batch *)&ioat_ch->hw_batch;
-}
-
-static struct ioat_accel_op *
-_prep_op(struct ioat_io_channel *ioat_ch, struct spdk_accel_batch *batch,
-	 spdk_accel_completion_cb cb_fn, void *cb_arg)
-{
-	struct ioat_accel_op *op;
-
-	if ((struct spdk_accel_batch *)&ioat_ch->hw_batch != batch) {
-		SPDK_ERRLOG("Invalid batch\n");
-		return NULL;
-	}
-
-	if (!TAILQ_EMPTY(&ioat_ch->op_pool)) {
-		op = TAILQ_FIRST(&ioat_ch->op_pool);
-		TAILQ_REMOVE(&ioat_ch->op_pool, op, link);
-	} else {
-		SPDK_ERRLOG("Ran out of operations for batch\n");
-		return NULL;
-	}
-
-	op->cb_arg = cb_arg;
-	op->cb_fn = cb_fn;
-	op->ioat_ch = ioat_ch;
-
-	return op;
+	return spdk_ioat_get_max_descriptors(ioat_ch->ioat_dev->ioat);
 }
 
 static int
-ioat_batch_prep_copy(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
-		     void *dst, void *src, uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg)
+ioat_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_task)
 {
 	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
-	struct ioat_task *ioat_task = (struct ioat_task *)cb_arg;
+	struct spdk_accel_task *tmp;
+	int rc = 0;
 
-	ioat_task->cb = cb_fn;
-	ioat_ch->hw_batch = true;
-
-	/* Call the IOAT library prep function. */
-	return spdk_ioat_build_copy(ioat_ch->ioat_ch, ioat_task, ioat_done, dst, src, nbytes);
-}
-
-static int
-ioat_batch_prep_fill(struct spdk_io_channel *ch, struct spdk_accel_batch *batch, void *dst,
-		     uint8_t fill, uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg)
-{
-	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
-	struct ioat_task *ioat_task = (struct ioat_task *)cb_arg;
-	uint64_t fill_pattern;
-
-	ioat_task->cb = cb_fn;
-	ioat_ch->hw_batch = true;
-	memset(&fill_pattern, fill, sizeof(uint64_t));
-
-	/* Call the IOAT library prep function. */
-	return spdk_ioat_build_fill(ioat_ch->ioat_ch, ioat_task, ioat_done, dst, fill_pattern, nbytes);
-}
-
-static int
-ioat_batch_prep_dualcast(struct spdk_io_channel *ch,
-			 struct spdk_accel_batch *batch, void *dst1, void *dst2,
-			 void *src, uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg)
-{
-	struct ioat_accel_op *op;
-	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
-
-	if ((uintptr_t)dst1 & (ALIGN_4K - 1) || (uintptr_t)dst2 & (ALIGN_4K - 1)) {
-		SPDK_ERRLOG("Dualcast requires 4K alignment on dst addresses\n");
-		return -EINVAL;
-	}
-
-	op = _prep_op(ioat_ch, batch, cb_fn, cb_arg);
-	if (op == NULL) {
-		return -EINVAL;
-	}
-
-	/* Command specific. */
-	op->src = src;
-	op->dst = dst1;
-	op->dst2 = dst2;
-	op->nbytes = nbytes;
-	op->op_code = IOAT_ACCEL_OPCODE_DUALCAST;
-	TAILQ_INSERT_TAIL(&ioat_ch->sw_batch, op, link);
-
-	return 0;
-}
-
-static int
-ioat_batch_prep_compare(struct spdk_io_channel *ch,
-			struct spdk_accel_batch *batch, void *src1,
-			void *src2, uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg)
-{
-	struct ioat_accel_op *op;
-	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
-
-	op = _prep_op(ioat_ch, batch, cb_fn, cb_arg);
-	if (op == NULL) {
-		return -EINVAL;
-	}
-
-	/* Command specific. */
-	op->src = src1;
-	op->src2 = src2;
-	op->nbytes = nbytes;
-	op->op_code = IOAT_ACCEL_OPCODE_COMPARE;
-	TAILQ_INSERT_TAIL(&ioat_ch->sw_batch, op, link);
-
-	return 0;
-}
-
-static int
-ioat_batch_prep_crc32c(struct spdk_io_channel *ch,
-		       struct spdk_accel_batch *batch, uint32_t *dst, void *src,
-		       uint32_t seed, uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg)
-{
-	struct ioat_accel_op *op;
-	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
-
-	op = _prep_op(ioat_ch, batch, cb_fn, cb_arg);
-	if (op == NULL) {
-		return -EINVAL;
-	}
-
-	/* Command specific. */
-	op->dst = (void *)dst;
-	op->src = src;
-	op->seed = seed;
-	op->nbytes = nbytes;
-	op->op_code = IOAT_ACCEL_OPCODE_CRC32C;
-	TAILQ_INSERT_TAIL(&ioat_ch->sw_batch, op, link);
-
-	return 0;
-}
-
-static int
-ioat_batch_cancel(struct spdk_io_channel *ch, struct spdk_accel_batch *batch)
-{
-	struct ioat_accel_op *op;
-	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
-
-	if ((struct spdk_accel_batch *)&ioat_ch->hw_batch != batch) {
-		SPDK_ERRLOG("Invalid batch\n");
-		return -EINVAL;
-	}
-
-	/* Flush the batched HW items, there's no way to cancel these without resetting. */
-	spdk_ioat_flush(ioat_ch->ioat_ch);
-	ioat_ch->hw_batch = false;
-
-	/* Return batched software items to the pool. */
-	while ((op = TAILQ_FIRST(&ioat_ch->sw_batch))) {
-		TAILQ_REMOVE(&ioat_ch->sw_batch, op, link);
-		TAILQ_INSERT_TAIL(&ioat_ch->op_pool, op, link);
-	}
-
-	return 0;
-}
-
-static int
-ioat_batch_submit(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
-		  spdk_accel_completion_cb cb_fn, void *cb_arg)
-{
-	struct ioat_accel_op *op;
-	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
-	struct spdk_accel_task *accel_task;
-	int batch_status = 0, cmd_status = 0;
-
-	if ((struct spdk_accel_batch *)&ioat_ch->hw_batch != batch) {
-		SPDK_ERRLOG("Invalid batch\n");
-		return -EINVAL;
-	}
-
-	/* Flush the batched HW items first. */
-	spdk_ioat_flush(ioat_ch->ioat_ch);
-	ioat_ch->hw_batch = false;
-
-	/* Complete the batched software items. */
-	while ((op = TAILQ_FIRST(&ioat_ch->sw_batch))) {
-		TAILQ_REMOVE(&ioat_ch->sw_batch, op, link);
-		accel_task = (struct spdk_accel_task *)((uintptr_t)op->cb_arg -
-							offsetof(struct spdk_accel_task, offload_ctx));
-
-		switch (op->op_code) {
-		case IOAT_ACCEL_OPCODE_DUALCAST:
-			memcpy(op->dst, op->src, op->nbytes);
-			memcpy(op->dst2, op->src, op->nbytes);
+	do {
+		switch (accel_task->op_code) {
+		case ACCEL_OPCODE_MEMFILL:
+			rc = spdk_ioat_build_fill(ioat_ch->ioat_ch, accel_task, ioat_done,
+						  accel_task->dst, accel_task->fill_pattern, accel_task->nbytes);
 			break;
-		case IOAT_ACCEL_OPCODE_COMPARE:
-			cmd_status = memcmp(op->src, op->src2, op->nbytes);
-			break;
-		case IOAT_ACCEL_OPCODE_CRC32C:
-			*(uint32_t *)op->dst = spdk_crc32c_update(op->src, op->nbytes, ~op->seed);
+		case ACCEL_OPCODE_MEMMOVE:
+			rc = spdk_ioat_build_copy(ioat_ch->ioat_ch, accel_task, ioat_done,
+						  accel_task->dst, accel_task->src, accel_task->nbytes);
 			break;
 		default:
 			assert(false);
 			break;
 		}
 
-		batch_status |= cmd_status;
-		op->cb_fn(accel_task, cmd_status);
-		TAILQ_INSERT_TAIL(&ioat_ch->op_pool, op, link);
-	}
+		tmp = TAILQ_NEXT(accel_task, link);
 
-	/* Now complete the batch request itself. */
-	accel_task = (struct spdk_accel_task *)((uintptr_t)cb_arg -
-						offsetof(struct spdk_accel_task, offload_ctx));
-	cb_fn(accel_task, batch_status);
+		/* Report any build errors via the callback now. */
+		if (rc) {
+			spdk_accel_task_complete(accel_task, rc);
+		}
+
+		accel_task = tmp;
+	} while (accel_task);
+
+	spdk_ioat_flush(ioat_ch->ioat_ch);
 
 	return 0;
 }
 
 static struct spdk_accel_engine ioat_accel_engine = {
 	.get_capabilities	= ioat_get_capabilities,
-	.copy			= ioat_submit_copy,
-	.fill			= ioat_submit_fill,
-	.batch_get_max		= ioat_batch_get_max,
-	.batch_create		= ioat_batch_create,
-	.batch_cancel		= ioat_batch_cancel,
-	.batch_prep_copy	= ioat_batch_prep_copy,
-	.batch_prep_dualcast	= ioat_batch_prep_dualcast,
-	.batch_prep_compare	= ioat_batch_prep_compare,
-	.batch_prep_fill	= ioat_batch_prep_fill,
-	.batch_prep_crc32c	= ioat_batch_prep_crc32c,
-	.batch_submit		= ioat_batch_submit,
 	.get_io_channel		= ioat_get_io_channel,
+	.batch_get_max		= ioat_batch_get_max,
+	.submit_tasks		= ioat_submit_tasks,
 };
 
 static int
@@ -485,35 +211,16 @@ ioat_create_cb(void *io_device, void *ctx_buf)
 {
 	struct ioat_io_channel *ch = ctx_buf;
 	struct ioat_device *ioat_dev;
-	struct ioat_accel_op *op;
-	int i;
 
 	ioat_dev = ioat_allocate_device();
 	if (ioat_dev == NULL) {
 		return -1;
 	}
 
-	TAILQ_INIT(&ch->sw_batch);
-	ch->hw_batch = false;
-	TAILQ_INIT(&ch->op_pool);
-
-	g_batch_size = spdk_ioat_get_max_descriptors(ioat_dev->ioat);
-	for (i = 0 ; i < g_batch_size ; i++) {
-		op = calloc(1, sizeof(struct ioat_accel_op));
-		if (op == NULL) {
-			SPDK_ERRLOG("Failed to allocate operation for batch.\n");
-			while ((op = TAILQ_FIRST(&ch->op_pool))) {
-				TAILQ_REMOVE(&ch->op_pool, op, link);
-				free(op);
-			}
-			return -ENOMEM;
-		}
-		TAILQ_INSERT_TAIL(&ch->op_pool, op, link);
-	}
-
 	ch->ioat_dev = ioat_dev;
 	ch->ioat_ch = ioat_dev->ioat;
 	ch->poller = SPDK_POLLER_REGISTER(ioat_poll, ch->ioat_ch, 0);
+
 	return 0;
 }
 
@@ -521,12 +228,6 @@ static void
 ioat_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct ioat_io_channel *ch = ctx_buf;
-	struct ioat_accel_op *op;
-
-	while ((op = TAILQ_FIRST(&ch->op_pool))) {
-		TAILQ_REMOVE(&ch->op_pool, op, link);
-		free(op);
-	}
 
 	ioat_free_device(ch->ioat_dev);
 	spdk_poller_unregister(&ch->poller);

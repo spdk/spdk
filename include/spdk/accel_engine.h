@@ -49,9 +49,8 @@ enum accel_capability {
 	ACCEL_FILL		= 1 << 1,
 	ACCEL_DUALCAST		= 1 << 2,
 	ACCEL_COMPARE		= 1 << 3,
-	ACCEL_BATCH		= 1 << 4,
-	ACCEL_CRC32C		= 1 << 5,
-	ACCEL_DIF		= 1 << 6,
+	ACCEL_CRC32C		= 1 << 4,
+	ACCEL_DIF		= 1 << 5,
 };
 
 /**
@@ -68,10 +67,6 @@ typedef void (*spdk_accel_completion_cb)(void *ref, int status);
  * \param cb_arg Callback argument.
  */
 typedef void (*spdk_accel_fini_cb)(void *cb_arg);
-
-struct spdk_io_channel;
-
-struct spdk_accel_batch;
 
 /**
  * Initialize the acceleration engine.
@@ -103,11 +98,11 @@ void spdk_accel_engine_module_finish(void);
 struct spdk_io_channel *spdk_accel_engine_get_io_channel(void);
 
 /**
- * Retrieve accel engine capabilities.
+ * Retrieve accel engine HW acceleration capabilities.
  *
  * \param ch I/O channel associated with this call.
  *
- * \return bitmap of capabilities defined by enum accel_capability.
+ * \return bitmap of HW acceleration capabilities defined by enum accel_capability.
  */
 uint64_t spdk_accel_get_capabilities(struct spdk_io_channel *ch);
 
