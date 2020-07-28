@@ -199,6 +199,7 @@ static void
 unregister_finish(struct vbdev_ocf *vbdev)
 {
 	spdk_bdev_destruct_done(&vbdev->exp_bdev, vbdev->state.stop_status);
+	ocf_mngt_cache_put(vbdev->ocf_cache);
 	vbdev_ocf_cache_ctx_put(vbdev->cache_ctx);
 	vbdev_ocf_mngt_continue(vbdev, 0);
 }
@@ -1059,6 +1060,7 @@ start_cache(struct vbdev_ocf *vbdev)
 		SPDK_NOTICELOG("OCF bdev %s connects to existing cache device %s\n",
 			       vbdev->name, vbdev->cache.name);
 		vbdev->ocf_cache = existing;
+		ocf_mngt_cache_get(vbdev->ocf_cache);
 		vbdev->cache_ctx = ocf_cache_get_priv(existing);
 		vbdev_ocf_cache_ctx_get(vbdev->cache_ctx);
 		vbdev_ocf_mngt_continue(vbdev, 0);
@@ -1079,6 +1081,7 @@ start_cache(struct vbdev_ocf *vbdev)
 		vbdev_ocf_mngt_exit(vbdev, unregister_path_dirty, rc);
 		return;
 	}
+	ocf_mngt_cache_get(vbdev->ocf_cache);
 
 	ocf_cache_set_priv(vbdev->ocf_cache, vbdev->cache_ctx);
 
