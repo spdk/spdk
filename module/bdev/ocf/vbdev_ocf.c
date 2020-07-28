@@ -135,6 +135,15 @@ get_other_cache_base(struct vbdev_ocf_base *base)
 	return NULL;
 }
 
+static bool
+is_ocf_cache_running(struct vbdev_ocf *vbdev)
+{
+	if (vbdev->cache.attached && vbdev->ocf_cache) {
+		return ocf_cache_is_running(vbdev->ocf_cache);
+	}
+	return false;
+}
+
 /* Get existing OCF cache instance
  * that is started by other vbdev */
 static ocf_cache_t
@@ -149,7 +158,7 @@ get_other_cache_instance(struct vbdev_ocf *vbdev)
 		if (strcmp(cmp->cache.name, vbdev->cache.name)) {
 			continue;
 		}
-		if (cmp->ocf_cache) {
+		if (is_ocf_cache_running(cmp)) {
 			return cmp->ocf_cache;
 		}
 	}
@@ -230,7 +239,7 @@ remove_core_cache_lock_cmpl(ocf_cache_t cache, void *priv, int error)
 static void
 detach_core(struct vbdev_ocf *vbdev)
 {
-	if (vbdev->ocf_cache && ocf_cache_is_running(vbdev->ocf_cache)) {
+	if (is_ocf_cache_running(vbdev)) {
 		ocf_mngt_cache_lock(vbdev->ocf_cache, remove_core_cache_lock_cmpl, vbdev);
 	} else {
 		vbdev_ocf_mngt_continue(vbdev, 0);
@@ -291,7 +300,7 @@ stop_vbdev_cache_lock_cmpl(ocf_cache_t cache, void *priv, int error)
 static void
 stop_vbdev(struct vbdev_ocf *vbdev)
 {
-	if (!ocf_cache_is_running(vbdev->ocf_cache)) {
+	if (!is_ocf_cache_running(vbdev)) {
 		vbdev_ocf_mngt_continue(vbdev, 0);
 		return;
 	}
@@ -334,7 +343,7 @@ flush_vbdev_cache_lock_cmpl(ocf_cache_t cache, void *priv, int error)
 static void
 flush_vbdev(struct vbdev_ocf *vbdev)
 {
-	if (!ocf_cache_is_running(vbdev->ocf_cache)) {
+	if (!is_ocf_cache_running(vbdev)) {
 		vbdev_ocf_mngt_continue(vbdev, -EINVAL);
 		return;
 	}
@@ -1040,7 +1049,7 @@ start_cache(struct vbdev_ocf *vbdev)
 	ocf_cache_t existing;
 	int rc;
 
-	if (vbdev->ocf_cache) {
+	if (is_ocf_cache_running(vbdev)) {
 		vbdev_ocf_mngt_stop(vbdev, NULL, -EALREADY);
 		return;
 	}
