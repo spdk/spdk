@@ -27,6 +27,7 @@ function install_all_dependencies() {
 	INSTALL_FUSE=true
 	INSTALL_RDMA=true
 	INSTALL_DOCS=true
+	INSTALL_LIBURING=true
 }
 
 function install_liburing() {
