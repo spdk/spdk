@@ -280,6 +280,8 @@ nvme_transport_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_
 {
 	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
 
+	assert(transport != NULL);
+
 	/* Do not rely on qpair->transport.  For multi-process cases, a foreign process may delete
 	 * the IO qpair, in which case the transport object would be invalid (each process has their
 	 * own unique transport objects since they contain function pointers).  So we look up the
