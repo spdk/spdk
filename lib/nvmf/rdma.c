@@ -3567,6 +3567,23 @@ nvmf_rdma_request_free(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_rdma_request	*rdma_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_rdma_request, req);
 	struct spdk_nvmf_rdma_transport	*rtransport = SPDK_CONTAINEROF(req->qpair->transport,
 			struct spdk_nvmf_rdma_transport, transport);
+	struct spdk_nvmf_rdma_qpair *rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair,
+					      struct spdk_nvmf_rdma_qpair, qpair);
+
+	/*
+	 * AER requests are freed when a qpair is destroyed. The recv corresponding to that request
+	 * needs to be returned to the shared receive queue or the poll group will eventually be
+	 * starved of RECV structures.
+	 */
+	if (rqpair->srq && rdma_req->recv) {
+		int rc;
+		struct ibv_recv_wr *bad_recv_wr;
+
+		rc = ibv_post_srq_recv(rqpair->srq, &rdma_req->recv->wr, &bad_recv_wr);
+		if (rc) {
+			SPDK_ERRLOG("Unable to re-post rx descriptor\n");
+		}
+	}
 
 	_nvmf_rdma_request_free(rdma_req, rtransport);
 	return 0;
