@@ -51,10 +51,6 @@
 
 #ifdef SPDK_CONFIG_URING
 #include <liburing.h>
-
-#ifndef __NR_sys_io_uring_enter
-#define __NR_sys_io_uring_enter         426
-#endif
 #endif
 
 #if HAVE_LIBAIO
@@ -310,25 +306,19 @@ uring_check_io(struct ns_worker_ctx *ns_ctx)
 	struct perf_task *task;
 
 	to_submit = ns_ctx->u.uring.io_pending;
-	to_complete = ns_ctx->u.uring.io_inflight;
 
 	if (to_submit > 0) {
 		/* If there are I/O to submit, use io_uring_submit here.
 		 * It will automatically call spdk_io_uring_enter appropriately. */
 		ret = io_uring_submit(&ns_ctx->u.uring.ring);
+		if (ret < 0) {
+			return;
+		}
 		ns_ctx->u.uring.io_pending = 0;
 		ns_ctx->u.uring.io_inflight += to_submit;
-	} else if (to_complete > 0) {
-		/* If there are I/O in flight but none to submit, we need to
-		 * call io_uring_enter ourselves. */
-		ret = syscall(__NR_sys_io_uring_enter, ns_ctx->u.uring.ring.ring_fd, 0,
-			      0, IORING_ENTER_GETEVENTS, NULL, 0);
 	}
 
-	if (ret < 0) {
-		return;
-	}
-
+	to_complete = ns_ctx->u.uring.io_inflight;
 	if (to_complete > 0) {
 		count = io_uring_peek_batch_cqe(&ns_ctx->u.uring.ring, ns_ctx->u.uring.cqes, to_complete);
 		ns_ctx->u.uring.io_inflight -= count;
@@ -353,7 +343,7 @@ uring_verify_io(struct perf_task *task, struct ns_entry *entry)
 static int
 uring_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 {
-	if (io_uring_queue_init(g_queue_depth, &ns_ctx->u.uring.ring, IORING_SETUP_IOPOLL) < 0) {
+	if (io_uring_queue_init(g_queue_depth, &ns_ctx->u.uring.ring, 0) < 0) {
 		SPDK_ERRLOG("uring I/O context setup failure\n");
 		return -1;
 	}
