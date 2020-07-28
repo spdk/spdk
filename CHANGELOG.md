@@ -15,6 +15,11 @@ A new capability, compare, was added via `spdk_accel_submit_compare`.
 
 The software accel engine implemenation has added support for compare.
 
+Several APIs were added to `accel_engine.h` to support batched submission
+of operations.
+
+Several APIs were added to `accel_engine.h` to support dualcast operations.
+
 ### accel_fw
 
 The accel_fw was updated to no longer require the app to allocate an
@@ -43,6 +48,11 @@ Existing fio configuration files will need to be updated.
 
 Updated DPDK submodule to DPDK 20.05.
 
+### env
+
+Several new APIs have been added to provide greater flexibility in registering and
+accessing polled mode PCI drivers. See `env.h` for more details.
+
 ### idxd
 
 The idxd library and plug-in module for the accel_fw were updated to support
@@ -57,11 +67,20 @@ A new API `spdk_ioat_get_max_descriptors` was added.
 
 ### nvme
 
-Add `opts_size` in `spdk_nvme_ctrlr_opts` structure in order to solve the compatiblity issue
-for different ABI version.
+An `opts_size`element was added in the  `spdk_nvme_ctrlr_opts` structure
+to solve the ABI compatiblity issue between different SPDK version.
 
 A new API `spdk_nvme_ctrlr_cmd_abort_ext` has been added to abort previously submitted
 commands whose callback argument match.
+
+Convenience functions, `spdk_nvme_print_command` and `spdk_nvme-print_completion` were added
+to the public API.
+
+A new function, `spdk_nvmf_cuse_update_namespaces`, updates the cuse representation of an NVMe
+controller.
+
+A new function `qpair_iterate_requests` has been added to the nvme transport interface. ALl
+implementations of the transport interface will have to implement that function.
 
 ### nvmf
 
@@ -87,16 +106,19 @@ Using mlx5_dv requires libmlx5 installed on the system.
 ### rpc
 
 Parameter `-p` or `--max-qpairs-per-ctrlr` of `nvmf_create_transport` RPC command accepted by the
-rpc.py script is deprecated, new parameter `-m` or `--max-io-qpairs-per-ctrlr` is added.
-
-Parameter `max_qpairs_per_ctrlr` of `nvmf_create_transport` RPC command accepted by the NVMF target
-is deprecated, new parameter `max_io_qpairs_per_ctrlr` is added.
+rpc.py script is deprecated, new parameter `-m` or `--max-io-qpairs-per-ctrlr` was added.
 
 Added `sock_impl_get_options` and `sock_impl_set_options` RPC methods.
 
 Command line parameters `-r` and `--rpc-socket` will longer accept TCP ports. RPC server
 must now be started on a Unix domain socket. Exposing RPC on the network, as well as providing
 proper authentication (if needed) is now a responsibility of the user.
+
+The `bdev_set_options` RPC has a new option, `bdev_auto_examine` to control the auto examine function
+of bdev modules.
+
+New RPCs `sock_impl_get_options` and `sock_impl_set_options` been added to expose new socket features.
+See `sock` section for more details.
 
 ### sock
 
@@ -114,6 +136,11 @@ New option is used only in posix implementation.
 
 Added `enable_zerocopy_send` socket layer option to allow disabling of zero copy flow on send.
 New option is used only in posix implementation.
+
+### util
+
+Some previously exposed CRC32 functions have been removed from the public API -
+`spdk_crc32_update`, `spdk_crc32_table_init`, and the `spdk_crc32_table` struct.
 
 ### vhost
 
