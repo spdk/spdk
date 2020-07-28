@@ -2,6 +2,19 @@
 
 ## v20.07: (Upcoming Release)
 
+### accel
+
+A new API was added `spdk_accel_get_capabilities` that allows applications to
+query the capabilities of the currently enabled accel engine back-end.
+
+A new capability, CRC-32C, was added via `spdk_accel_submit_crc32c`.
+
+The software accel engine implemenation has added support for CRC-32C.
+
+A new capability, compare, was added via `spdk_accel_submit_compare`.
+
+The software accel engine implemenation has added support for compare.
+
 ### accel_fw
 
 The accel_fw was updated to no longer require the app to allocate an
@@ -16,15 +29,39 @@ The accel_fw was updated to support compare, dualcast, crc32c.
 The accel_fw introduced batching support for all commands in all plug-ins.
 See docs for detailed information.
 
+### bdev
+
+A new API `spdk_bdev_abort` has been added to submit abort requests to abort all I/Os
+whose callback context match to the bdev on the given channel.
+
+### build
+
+The fio plugins now compile to `build/fio` and are named `spdk_bdev` and `spdk_nvme`.
+Existing fio configuration files will need to be updated.
+
+### dpdk
+
+Updated DPDK submodule to DPDK 20.05.
+
 ### idxd
 
 The idxd library and plug-in module for the accel_fw were updated to support
 all accel_fw commands as well as batching.  Batching is supported both
 through the library and the plug-in module.
 
+IDXD engine support for CRC-32C has been added.
+
 ### ioat
 
 A new API `spdk_ioat_get_max_descriptors` was added.
+
+### nvme
+
+Add `opts_size` in `spdk_nvme_ctrlr_opts` structure in order to solve the compatiblity issue
+for different ABI version.
+
+A new API `spdk_nvme_ctrlr_cmd_abort_ext` has been added to abort previously submitted
+commands whose callback argument match.
 
 ### nvmf
 
@@ -39,51 +76,6 @@ takes a function pointer as an argument. Instead, transports should call
 
 The NVMe-oF target now supports aborting any submitted NVM or Admin command. Previously,
 the NVMe-oF target could abort only Asynchronous Event Request commands.
-
-### nvme
-
-Add `opts_size` in `spdk_nvme_ctrlr_opts` structure in order to solve the compatiblity issue
-for different ABI version.
-
-A new API `spdk_nvme_ctrlr_cmd_abort_ext` has been added to abort previously submitted
-commands whose callback argument match.
-
-### bdev
-
-A new API `spdk_bdev_abort` has been added to submit abort requests to abort all I/Os
-whose callback context match to the bdev on the given channel.
-
-### RPC
-
-Command line parameters `-r` and `--rpc-socket` will longer accept TCP ports. RPC server
-must now be started on a Unix domain socket. Exposing RPC on the network, as well as providing
-proper authentication (if needed) is now a responsibility of the user.
-
-### build
-
-The fio plugins now compile to `build/fio` and are named `spdk_bdev` and `spdk_nvme`.
-Existing fio configuration files will need to be updated.
-
-### accel
-
-A new API was added `spdk_accel_get_capabilities` that allows applications to
-query the capabilities of the currently enabled accel engine back-end.
-
-A new capability, CRC-32C, was added via `spdk_accel_submit_crc32c`.
-
-The software accel engine implemenation has added support for CRC-32C.
-
-A new capability, compare, was added via `spdk_accel_submit_compare`.
-
-The software accel engine implemenation has added support for compare.
-
-### dpdk
-
-Updated DPDK submodule to DPDK 20.05.
-
-### idxd
-
-IDXD engine support for CRC-32C has been added.
 
 ### rdma
 
@@ -101,6 +93,10 @@ Parameter `max_qpairs_per_ctrlr` of `nvmf_create_transport` RPC command accepted
 is deprecated, new parameter `max_io_qpairs_per_ctrlr` is added.
 
 Added `sock_impl_get_options` and `sock_impl_set_options` RPC methods.
+
+Command line parameters `-r` and `--rpc-socket` will longer accept TCP ports. RPC server
+must now be started on a Unix domain socket. Exposing RPC on the network, as well as providing
+proper authentication (if needed) is now a responsibility of the user.
 
 ### sock
 
