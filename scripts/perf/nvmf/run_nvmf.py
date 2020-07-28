@@ -38,7 +38,7 @@ class Server:
 class Target(Server):
     def __init__(self, name, username, password, mode, nic_ips, transport="rdma",
                  use_null_block=False, sar_settings=None, pcm_settings=None,
-                 bandwidth_settings=None):
+                 bandwidth_settings=None, dpdk_settings=None):
 
         super(Target, self).__init__(name, username, password, mode, nic_ips, transport)
         self.null_block = bool(use_null_block)
@@ -46,6 +46,7 @@ class Target(Server):
         self.enable_pcm_memory = False
         self.enable_pcm = False
         self.enable_bandwidth = False
+        self.enable_dpdk_memory = False
 
         if sar_settings:
             self.enable_sar, self.sar_delay, self.sar_interval, self.sar_count = sar_settings
@@ -55,6 +56,9 @@ class Target(Server):
 
         if bandwidth_settings:
             self.enable_bandwidth, self.bandwidth_count = bandwidth_settings
+
+        if dpdk_settings:
+            self.enable_dpdk_memory, self.dpdk_wait_time = dpdk_settings
 
         self.script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
         self.spdk_dir = os.path.abspath(os.path.join(self.script_dir, "../../../"))
@@ -259,6 +263,13 @@ class Target(Server):
         bwm = subprocess.run("bwm-ng -o csv -F %s/%s -a 1 -t 1000 -c %s" % (results_dir, bandwidth_file_name,
                              self.bandwidth_count), shell=True, check=True)
 
+    def measure_dpdk_memory(self, results_dir):
+        self.log_print("INFO: waiting to generate DPDK memory usage")
+        time.sleep(self.dpdk_wait_time)
+        self.log_print("INFO: generating DPDK memory usage")
+        rpc.env.env_dpdk_get_mem_stats
+        os.rename("/tmp/spdk_mem_dump.txt", "%s/spdk_mem_dump.txt" % (results_dir))
+
 
 class Initiator(Server):
     def __init__(self, name, username, password, mode, nic_ips, ip, transport="rdma", cpu_frequency=None,
@@ -461,10 +472,11 @@ runtime={run_time}
 class KernelTarget(Target):
     def __init__(self, name, username, password, mode, nic_ips, transport="rdma",
                  use_null_block=False, sar_settings=None, pcm_settings=None,
-                 bandwidth_settings=None, nvmet_bin="nvmetcli", **kwargs):
+                 bandwidth_settings=None, dpdk_settings=None, nvmet_bin="nvmetcli", **kwargs):
 
         super(KernelTarget, self).__init__(name, username, password, mode, nic_ips, transport,
-                                           use_null_block, sar_settings, pcm_settings, bandwidth_settings)
+                                           use_null_block, sar_settings, pcm_settings, bandwidth_settings,
+                                           dpdk_settings)
         self.nvmet_bin = nvmet_bin
 
     def __del__(self):
@@ -591,10 +603,12 @@ class SPDKTarget(Target):
 
     def __init__(self, name, username, password, mode, nic_ips, transport="rdma",
                  use_null_block=False, sar_settings=None, pcm_settings=None,
-                 bandwidth_settings=None, num_shared_buffers=4096, num_cores=1, **kwargs):
+                 bandwidth_settings=None, dpdk_settings=None, num_shared_buffers=4096,
+                 num_cores=1, **kwargs):
 
         super(SPDKTarget, self).__init__(name, username, password, mode, nic_ips, transport,
-                                         use_null_block, sar_settings, pcm_settings, bandwidth_settings)
+                                         use_null_block, sar_settings, pcm_settings, bandwidth_settings,
+                                         dpdk_settings)
         self.num_cores = num_cores
         self.num_shared_buffers = num_shared_buffers
 
@@ -926,6 +940,10 @@ if __name__ == "__main__":
             bandwidth_file_name = "_".join(["bandwidth", str(block_size), str(rw), str(io_depth)])
             bandwidth_file_name = ".".join([bandwidth_file_name, "csv"])
             t = threading.Thread(target=target_obj.measure_bandwidth, args=(target_results_dir, bandwidth_file_name,))
+            threads.append(t)
+
+        if target_obj.enable_dpdk_memory:
+            t = threading.Thread(target=target_obj.measure_dpdk_memory args=(target_results_dir))
             threads.append(t)
 
         for t in threads:
