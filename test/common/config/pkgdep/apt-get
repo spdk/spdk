@@ -97,6 +97,23 @@ packages=(
 	xfsprogs
 )
 
+install_vagrant_dependencies() {
+	local vagrant_packages
+	vagrant_packages=(
+		qemu
+		libvirt-bin
+		ebtables
+		dnsmasq-base
+		libxslt-dev
+		libxml2-dev
+		libvirt-dev
+		zlib1g-dev
+		ruby-dev
+	)
+
+	install "${vagrant_packages[@]}"
+}
+
 if [[ $OSID != ubuntu ]]; then
 	echo "Located apt-get package manager, but it was tested for Ubuntu only"
 fi

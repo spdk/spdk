@@ -273,6 +273,10 @@ function install_vagrant() {
 		error "Currently only ubuntu is supported"
 	fi
 
+	# Install vagrant and it's plugins dependencies
+	# function should be defined in pkgdep/$package_manager file
+	install_vagrant_dependencies
+
 	# Download and install vagrant
 	if hash vagrant &> /dev/null; then
 		echo "Vagrant is already installed"
