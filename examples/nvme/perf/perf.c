@@ -178,7 +178,10 @@ struct ns_worker_ctx {
 
 struct perf_task {
 	struct ns_worker_ctx	*ns_ctx;
-	struct iovec		iov;
+	struct iovec		*iovs; /* array of iovecs to transfer. */
+	int			iovcnt; /* Number of iovecs in iovs array. */
+	int			iovpos; /* Current iovec position. */
+	uint32_t		iov_offset; /* Offset in current iovec. */
 	struct iovec		md_iov;
 	uint64_t		submit_tsc;
 	bool			is_read;
@@ -208,6 +211,8 @@ struct ns_fn_table {
 
 	void	(*cleanup_ns_worker_ctx)(struct ns_worker_ctx *ns_ctx);
 };
+
+static uint32_t g_io_unit_size = (UINT32_MAX & (~0x03));
 
 static int g_outstanding_commands;
 
@@ -309,18 +314,90 @@ perf_set_sock_zcopy(const char *impl_name, bool enable)
 	}
 }
 
+static void
+nvme_perf_reset_sgl(void *ref, uint32_t sgl_offset)
+{
+	struct iovec *iov;
+	struct perf_task *task = (struct perf_task *)ref;
+
+	task->iov_offset = sgl_offset;
+	for (task->iovpos = 0; task->iovpos < task->iovcnt; task->iovpos++) {
+		iov = &task->iovs[task->iovpos];
+		if (task->iov_offset < iov->iov_len) {
+			break;
+		}
+
+		task->iov_offset -= iov->iov_len;
+	}
+}
+
+static int
+nvme_perf_next_sge(void *ref, void **address, uint32_t *length)
+{
+	struct iovec *iov;
+	struct perf_task *task = (struct perf_task *)ref;
+
+	assert(task->iovpos < task->iovcnt);
+
+	iov = &task->iovs[task->iovpos];
+	assert(task->iov_offset <= iov->iov_len);
+
+	*address = iov->iov_base + task->iov_offset;
+	*length = iov->iov_len - task->iov_offset;
+	task->iovpos++;
+	task->iov_offset = 0;
+
+	return 0;
+}
+
+static int
+nvme_perf_allocate_iovs(struct perf_task *task, void *buf, uint32_t length)
+{
+	int iovpos = 0;
+	struct iovec *iov;
+	uint32_t offset = 0;
+
+	task->iovcnt = SPDK_CEIL_DIV(length, (uint64_t)g_io_unit_size);
+	task->iovs = calloc(task->iovcnt, sizeof(struct iovec));
+	if (!task->iovs) {
+		return -1;
+	}
+
+	while (length > 0) {
+		iov = &task->iovs[iovpos];
+		iov->iov_len = spdk_min(length, g_io_unit_size);
+		iov->iov_base = buf + offset;
+		length -= iov->iov_len;
+		offset += iov->iov_len;
+		iovpos++;
+	}
+
+	return 0;
+}
+
 #ifdef SPDK_CONFIG_URING
 
 static void
 uring_setup_payload(struct perf_task *task, uint8_t pattern)
 {
-	task->iov.iov_base = spdk_dma_zmalloc(g_io_size_bytes, g_io_align, NULL);
-	task->iov.iov_len = g_io_size_bytes;
-	if (task->iov.iov_base == NULL) {
-		fprintf(stderr, "spdk_dma_zmalloc() for task->iov.iov_base failed\n");
+	struct iovec *iov;
+
+	task->iovs = calloc(1, sizeof(struct iovec));
+	if (!task->iovs) {
+		fprintf(stderr, "perf task failed to allocate iovs\n");
 		exit(1);
 	}
-	memset(task->iov.iov_base, pattern, task->iov.iov_len);
+	task->iovcnt = 1;
+
+	iov = &task->iovs[0];
+	iov->iov_base = spdk_dma_zmalloc(g_io_size_bytes, g_io_align, NULL);
+	iov->iov_len = g_io_size_bytes;
+	if (iov->iov_base == NULL) {
+		fprintf(stderr, "spdk_dma_zmalloc() for task->iovs[0].iov_base failed\n");
+		free(task->iovs);
+		exit(1);
+	}
+	memset(iov->iov_base, pattern, iov->iov_len);
 }
 
 static int
@@ -336,9 +413,9 @@ uring_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 	}
 
 	if (task->is_read) {
-		io_uring_prep_readv(sqe, entry->u.uring.fd, &task->iov, 1, offset_in_ios * task->iov.iov_len);
+		io_uring_prep_readv(sqe, entry->u.uring.fd, task->iovs, 1, offset_in_ios * task->iovs[0].iov_len);
 	} else {
-		io_uring_prep_writev(sqe, entry->u.uring.fd, &task->iov, 1, offset_in_ios * task->iov.iov_len);
+		io_uring_prep_writev(sqe, entry->u.uring.fd, task->iovs, 1, offset_in_ios * task->iovs[0].iov_len);
 	}
 
 	io_uring_sqe_set_data(sqe, task);
@@ -373,7 +450,7 @@ uring_check_io(struct ns_worker_ctx *ns_ctx)
 		for (i = 0; i < count; i++) {
 			assert(ns_ctx->u.uring.cqes[i] != NULL);
 			task = (struct perf_task *)ns_ctx->u.uring.cqes[i]->user_data;
-			if (ns_ctx->u.uring.cqes[i]->res != (int)task->iov.iov_len) {
+			if (ns_ctx->u.uring.cqes[i]->res != (int)task->iovs[0].iov_len) {
 				fprintf(stderr, "cqe[i]->status=%d\n", ns_ctx->u.uring.cqes[i]->res);
 				exit(0);
 			}
@@ -427,13 +504,24 @@ static const struct ns_fn_table uring_fn_table = {
 static void
 aio_setup_payload(struct perf_task *task, uint8_t pattern)
 {
-	task->iov.iov_base = spdk_dma_zmalloc(g_io_size_bytes, g_io_align, NULL);
-	task->iov.iov_len = g_io_size_bytes;
-	if (task->iov.iov_base == NULL) {
-		fprintf(stderr, "spdk_dma_zmalloc() for task->buf failed\n");
+	struct iovec *iov;
+
+	task->iovs = calloc(1, sizeof(struct iovec));
+	if (!task->iovs) {
+		fprintf(stderr, "perf task failed to allocate iovs\n");
 		exit(1);
 	}
-	memset(task->iov.iov_base, pattern, task->iov.iov_len);
+	task->iovcnt = 1;
+
+	iov = &task->iovs[0];
+	iov->iov_base = spdk_dma_zmalloc(g_io_size_bytes, g_io_align, NULL);
+	iov->iov_len = g_io_size_bytes;
+	if (iov->iov_base == NULL) {
+		fprintf(stderr, "spdk_dma_zmalloc() for task->iovs[0].iov_base failed\n");
+		free(task->iovs);
+		exit(1);
+	}
+	memset(iov->iov_base, pattern, iov->iov_len);
 }
 
 static int
@@ -462,10 +550,10 @@ aio_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 {
 	if (task->is_read) {
 		return aio_submit(ns_ctx->u.aio.ctx, &task->iocb, entry->u.aio.fd, IO_CMD_PREAD,
-				  &task->iov, offset_in_ios, task);
+				  task->iovs, offset_in_ios, task);
 	} else {
 		return aio_submit(ns_ctx->u.aio.ctx, &task->iocb, entry->u.aio.fd, IO_CMD_PWRITE,
-				  &task->iov, offset_in_ios, task);
+				  task->iovs, offset_in_ios, task);
 	}
 }
 
@@ -637,18 +725,26 @@ static void
 nvme_setup_payload(struct perf_task *task, uint8_t pattern)
 {
 	uint32_t max_io_size_bytes, max_io_md_size;
+	void *buf;
+	int rc;
 
 	/* maximum extended lba format size from all active namespace,
 	 * it's same with g_io_size_bytes for namespace without metadata.
 	 */
 	max_io_size_bytes = g_io_size_bytes + g_max_io_md_size * g_max_io_size_blocks;
-	task->iov.iov_base = spdk_dma_zmalloc(max_io_size_bytes, g_io_align, NULL);
-	task->iov.iov_len = max_io_size_bytes;
-	if (task->iov.iov_base == NULL) {
+	buf = spdk_dma_zmalloc(max_io_size_bytes, g_io_align, NULL);
+	if (buf == NULL) {
 		fprintf(stderr, "task->buf spdk_dma_zmalloc failed\n");
 		exit(1);
 	}
-	memset(task->iov.iov_base, pattern, task->iov.iov_len);
+	memset(buf, pattern, max_io_size_bytes);
+
+	rc = nvme_perf_allocate_iovs(task, buf, max_io_size_bytes);
+	if (rc < 0) {
+		fprintf(stderr, "perf task failed to allocate iovs\n");
+		spdk_dma_free(buf);
+		exit(1);
+	}
 
 	max_io_md_size = g_max_io_md_size * g_max_io_size_blocks;
 	if (max_io_md_size != 0) {
@@ -656,7 +752,8 @@ nvme_setup_payload(struct perf_task *task, uint8_t pattern)
 		task->md_iov.iov_len = max_io_md_size;
 		if (task->md_iov.iov_base == NULL) {
 			fprintf(stderr, "task->md_buf spdk_dma_zmalloc failed\n");
-			spdk_dma_free(task->iov.iov_base);
+			spdk_dma_free(task->iovs[0].iov_base);
+			free(task->iovs);
 			exit(1);
 		}
 	}
@@ -704,23 +801,32 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 	}
 
 	if (task->is_read) {
-		return spdk_nvme_ns_cmd_read_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair[qp_num],
-						     task->iov.iov_base, task->md_iov.iov_base,
-						     lba,
-						     entry->io_size_blocks, io_complete,
-						     task, entry->io_flags,
-						     task->dif_ctx.apptag_mask, task->dif_ctx.app_tag);
+		if (task->iovcnt == 1) {
+			return spdk_nvme_ns_cmd_read_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair[qp_num],
+							     task->iovs[0].iov_base, task->md_iov.iov_base,
+							     lba,
+							     entry->io_size_blocks, io_complete,
+							     task, entry->io_flags,
+							     task->dif_ctx.apptag_mask, task->dif_ctx.app_tag);
+		} else {
+			return spdk_nvme_ns_cmd_readv_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair[qp_num],
+							      lba, entry->io_size_blocks,
+							      io_complete, task, entry->io_flags,
+							      nvme_perf_reset_sgl, nvme_perf_next_sge,
+							      task->md_iov.iov_base,
+							      task->dif_ctx.apptag_mask, task->dif_ctx.app_tag);
+		}
 	} else {
 		switch (mode) {
 		case DIF_MODE_DIF:
-			rc = spdk_dif_generate(&task->iov, 1, entry->io_size_blocks, &task->dif_ctx);
+			rc = spdk_dif_generate(task->iovs, task->iovcnt, entry->io_size_blocks, &task->dif_ctx);
 			if (rc != 0) {
 				fprintf(stderr, "Generation of DIF failed\n");
 				return rc;
 			}
 			break;
 		case DIF_MODE_DIX:
-			rc = spdk_dix_generate(&task->iov, 1, &task->md_iov, entry->io_size_blocks,
+			rc = spdk_dix_generate(task->iovs, task->iovcnt, &task->md_iov, entry->io_size_blocks,
 					       &task->dif_ctx);
 			if (rc != 0) {
 				fprintf(stderr, "Generation of DIX failed\n");
@@ -731,12 +837,21 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 			break;
 		}
 
-		return spdk_nvme_ns_cmd_write_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair[qp_num],
-						      task->iov.iov_base, task->md_iov.iov_base,
-						      lba,
-						      entry->io_size_blocks, io_complete,
-						      task, entry->io_flags,
-						      task->dif_ctx.apptag_mask, task->dif_ctx.app_tag);
+		if (task->iovcnt == 1) {
+			return spdk_nvme_ns_cmd_write_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair[qp_num],
+							      task->iovs[0].iov_base, task->md_iov.iov_base,
+							      lba,
+							      entry->io_size_blocks, io_complete,
+							      task, entry->io_flags,
+							      task->dif_ctx.apptag_mask, task->dif_ctx.app_tag);
+		} else {
+			return spdk_nvme_ns_cmd_writev_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair[qp_num],
+							       lba, entry->io_size_blocks,
+							       io_complete, task, entry->io_flags,
+							       nvme_perf_reset_sgl, nvme_perf_next_sge,
+							       task->md_iov.iov_base,
+							       task->dif_ctx.apptag_mask, task->dif_ctx.app_tag);
+		}
 	}
 }
 
@@ -769,14 +884,14 @@ nvme_verify_io(struct perf_task *task, struct ns_entry *entry)
 	}
 
 	if (entry->md_interleave) {
-		rc = spdk_dif_verify(&task->iov, 1, entry->io_size_blocks, &task->dif_ctx,
+		rc = spdk_dif_verify(task->iovs, task->iovcnt, entry->io_size_blocks, &task->dif_ctx,
 				     &err_blk);
 		if (rc != 0) {
 			fprintf(stderr, "DIF error detected. type=%d, offset=%" PRIu32 "\n",
 				err_blk.err_type, err_blk.err_offset);
 		}
 	} else {
-		rc = spdk_dix_verify(&task->iov, 1, &task->md_iov, entry->io_size_blocks,
+		rc = spdk_dix_verify(task->iovs, task->iovcnt, &task->md_iov, entry->io_size_blocks,
 				     &task->dif_ctx, &err_blk);
 		if (rc != 0) {
 			fprintf(stderr, "DIX error detected. type=%d, offset=%" PRIu32 "\n",
@@ -1183,7 +1298,8 @@ task_complete(struct perf_task *task)
 	 * the one just completed.
 	 */
 	if (spdk_unlikely(ns_ctx->is_draining)) {
-		spdk_dma_free(task->iov.iov_base);
+		spdk_dma_free(task->iovs[0].iov_base);
+		free(task->iovs);
 		spdk_dma_free(task->md_iov.iov_base);
 		free(task);
 	} else {
@@ -1388,6 +1504,7 @@ static void usage(char *program_name)
 	printf("\t Example: -b 0000:d8:00.0 -b 0000:d9:00.0\n");
 	printf("\t[-q io depth]\n");
 	printf("\t[-o io size in bytes]\n");
+	printf("\t[-O io unit size in bytes (4-byte aligned) for SPDK driver. default: same as io size]\n");
 	printf("\t[-P number of io queues per namespace. default: 1]\n");
 	printf("\t[-U number of unused io queues per controller. default: 0]\n");
 	printf("\t[-w io pattern type, must be one of\n");
@@ -1866,7 +1983,7 @@ parse_args(int argc, char **argv)
 	long int val;
 	int rc;
 
-	while ((op = getopt(argc, argv, "a:b:c:e:gi:lo:q:r:k:s:t:w:z:A:C:DGHILM:NP:RS:T:U:VZ:")) != -1) {
+	while ((op = getopt(argc, argv, "a:b:c:e:gi:lo:q:r:k:s:t:w:z:A:C:DGHILM:NO:P:RS:T:U:VZ:")) != -1) {
 		switch (op) {
 		case 'a':
 		case 'A':
@@ -1874,6 +1991,7 @@ parse_args(int argc, char **argv)
 		case 'C':
 		case 'P':
 		case 'o':
+		case 'O':
 		case 'q':
 		case 'k':
 		case 's':
@@ -1900,6 +2018,9 @@ parse_args(int argc, char **argv)
 				break;
 			case 'o':
 				g_io_size_bytes = val;
+				break;
+			case 'O':
+				g_io_unit_size = val;
 				break;
 			case 'q':
 				g_queue_depth = val;
@@ -2043,6 +2164,10 @@ parse_args(int argc, char **argv)
 	if (!g_io_size_bytes) {
 		fprintf(stderr, "missing -o (block size) operand\n");
 		usage(argv[0]);
+		return 1;
+	}
+	if (!g_io_unit_size || g_io_unit_size % 4) {
+		fprintf(stderr, "io unit size can not be 0 or non 4-byte aligned\n");
 		return 1;
 	}
 	if (!g_workload_type) {
