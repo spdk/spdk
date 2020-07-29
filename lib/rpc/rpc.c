@@ -127,10 +127,21 @@ jsonrpc_handler(struct spdk_jsonrpc_request *request,
 	if ((m->state_mask & g_rpc_state) == g_rpc_state) {
 		m->func(request, params);
 	} else {
-		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_STATE,
-						     "Method is allowed in any state in the mask (%"PRIx32"),"
-						     " but current state is (%"PRIx32")",
-						     m->state_mask, g_rpc_state);
+		if (g_rpc_state == SPDK_RPC_STARTUP) {
+			spdk_jsonrpc_send_error_response_fmt(request,
+							     SPDK_JSONRPC_ERROR_INVALID_STATE,
+							     "Method may only be called after "
+							     "framework is initialized "
+							     "using framework_start_init RPC.");
+		} else {
+			spdk_jsonrpc_send_error_response_fmt(request,
+							     SPDK_JSONRPC_ERROR_INVALID_STATE,
+							     "Method may only be called before "
+							     "framework is initialized. "
+							     "Use --wait-for-rpc command line "
+							     "parameter and then issue this RPC "
+							     "before the framework_start_init RPC.");
+		}
 	}
 }
 
