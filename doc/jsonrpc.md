@@ -5798,7 +5798,7 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | RAID bdev name
 strip_size_kb           | Required | number      | Strip size in KB
-raid_level              | Required | number      | RAID level
+raid_level              | Required | string      | RAID level
 base_bdevs              | Required | string      | Base bdevs name, whitespace separated list in quotes
 
 ### Example
@@ -5812,7 +5812,7 @@ Example request:
   "id": 1,
   "params": {
     "name": "Raid0",
-    "raid_level": 0,
+    "raid_level": "0",
     "base_bdevs": [
       "Malloc0",
       "Malloc1",
