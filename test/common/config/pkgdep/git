@@ -264,6 +264,38 @@ function install_extra_pkgs() {
 	fi
 }
 
+function install_vagrant() {
+	local vagrant_version="2.2.7"
+	local vagrant_installer="vagrant_${vagrant_version}_x86_64.deb"
+	local vagrant_plugins=(vagrant-libvirt vagrant-sshfs vagrant-cachier vagrant-proxyconf)
+
+	if [[ $OSID != ubuntu ]]; then
+		error "Currently only ubuntu is supported"
+	fi
+
+	# Download and install vagrant
+	if hash vagrant &> /dev/null; then
+		echo "Vagrant is already installed"
+	else
+		wget "https://releases.hashicorp.com/vagrant/${vagrant_version}/${vagrant_installer}"
+		sudo dpkg -i "${vagrant_installer}"
+	fi
+	vagrant --version
+
+	# Install vagrant plugins
+	local vagrant_plugin_list
+	vagrant_plugin_list=$(vagrant plugin list)
+
+	local plugin
+	for plugin in "${vagrant_plugins[@]}"; do
+		if grep -Fq "$plugin" <<< "$vagrant_plugin_list"; then
+			echo "$plugin already installed"
+		else
+			vagrant plugin install "$plugin"
+		fi
+	done
+}
+
 GIT_VERSION=2.25.1
 : ${GIT_REPO_SPDK=https://github.com/spdk/spdk.git}
 export GIT_REPO_SPDK
@@ -315,6 +347,7 @@ else
 	)
 fi
 sources+=(install_fio)
+sources+=(install_vagrant)
 
 sudo mkdir -p /usr/{,local}/src
 sudo mkdir -p "$GIT_REPOS"
