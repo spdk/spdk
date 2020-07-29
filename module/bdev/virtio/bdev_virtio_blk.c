@@ -554,9 +554,7 @@ virtio_pci_blk_dev_create(const char *name, struct virtio_pci_ctx *pci_ctx)
 
 	rc = virtio_dev_reset(vdev, VIRTIO_BLK_DEV_SUPPORTED_FEATURES);
 	if (rc != 0) {
-		virtio_dev_destruct(vdev);
-		free(bvdev);
-		return NULL;
+		goto fail;
 	}
 
 	/* TODO: add a way to limit usable virtqueues */
@@ -565,9 +563,7 @@ virtio_pci_blk_dev_create(const char *name, struct virtio_pci_ctx *pci_ctx)
 						&num_queues, sizeof(num_queues));
 		if (rc) {
 			SPDK_ERRLOG("%s: config read failed: %s\n", vdev->name, spdk_strerror(-rc));
-			virtio_dev_destruct(vdev);
-			free(bvdev);
-			return NULL;
+			goto fail;
 		}
 	} else {
 		num_queues = 1;
@@ -575,12 +571,16 @@ virtio_pci_blk_dev_create(const char *name, struct virtio_pci_ctx *pci_ctx)
 
 	rc = virtio_blk_dev_init(bvdev, num_queues);
 	if (rc != 0) {
-		virtio_dev_destruct(vdev);
-		free(bvdev);
-		return NULL;
+		goto fail;
 	}
 
 	return bvdev;
+
+fail:
+	vdev->ctx = NULL;
+	virtio_dev_destruct(vdev);
+	free(bvdev);
+	return NULL;
 }
 
 static struct virtio_blk_dev *
