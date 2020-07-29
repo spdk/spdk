@@ -3854,6 +3854,7 @@ nvmf_fc_master_enqueue_event(enum spdk_fc_event event_type, void *args,
 {
 	int err = 0;
 	struct spdk_nvmf_fc_adm_api_data *api_data = NULL;
+	spdk_msg_fn event_fn = NULL;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API, "Enqueue event %d.\n", event_type);
 
@@ -3882,53 +3883,43 @@ nvmf_fc_master_enqueue_event(enum spdk_fc_event event_type, void *args,
 
 	switch (event_type) {
 	case SPDK_FC_HW_PORT_INIT:
-		nvmf_fc_adm_run_on_master_thread(nvmf_fc_adm_evnt_hw_port_init,
-						 (void *)api_data);
+		event_fn = nvmf_fc_adm_evnt_hw_port_init;
 		break;
 
 	case SPDK_FC_HW_PORT_ONLINE:
-		nvmf_fc_adm_run_on_master_thread(nvmf_fc_adm_evnt_hw_port_online,
-						 (void *)api_data);
+		event_fn = nvmf_fc_adm_evnt_hw_port_online;
 		break;
 
 	case SPDK_FC_HW_PORT_OFFLINE:
-		nvmf_fc_adm_run_on_master_thread(nvmf_fc_adm_evnt_hw_port_offline,
-						 (void *)api_data);
+		event_fn = nvmf_fc_adm_evnt_hw_port_offline;
 		break;
 
 	case SPDK_FC_NPORT_CREATE:
-		nvmf_fc_adm_run_on_master_thread(nvmf_fc_adm_evnt_nport_create,
-						 (void *)api_data);
+		event_fn = nvmf_fc_adm_evnt_nport_create;
 		break;
 
 	case SPDK_FC_NPORT_DELETE:
-		nvmf_fc_adm_run_on_master_thread(nvmf_fc_adm_evnt_nport_delete,
-						 (void *)api_data);
+		event_fn = nvmf_fc_adm_evnt_nport_delete;
 		break;
 
 	case SPDK_FC_IT_ADD:
-		nvmf_fc_adm_run_on_master_thread(nvmf_fc_adm_evnt_i_t_add,
-						 (void *)api_data);
+		event_fn = nvmf_fc_adm_evnt_i_t_add;
 		break;
 
 	case SPDK_FC_IT_DELETE:
-		nvmf_fc_adm_run_on_master_thread(nvmf_fc_adm_evnt_i_t_delete,
-						 (void *)api_data);
+		event_fn = nvmf_fc_adm_evnt_i_t_delete;
 		break;
 
 	case SPDK_FC_ABTS_RECV:
-		nvmf_fc_adm_run_on_master_thread(nvmf_fc_adm_evnt_abts_recv,
-						 (void *)api_data);
+		event_fn = nvmf_fc_adm_evnt_abts_recv;
 		break;
 
 	case SPDK_FC_LINK_BREAK:
-		nvmf_fc_adm_run_on_master_thread(nvmf_fc_adm_evnt_hw_port_link_break,
-						 (void *)api_data);
+		event_fn = nvmf_fc_adm_evnt_hw_port_link_break;
 		break;
 
 	case SPDK_FC_HW_PORT_RESET:
-		nvmf_fc_adm_run_on_master_thread(nvmf_fc_adm_evnt_hw_port_reset,
-						 (void *)api_data);
+		event_fn = nvmf_fc_adm_evnt_hw_port_reset;
 		break;
 
 	case SPDK_FC_UNRECOVERABLE_ERR:
@@ -3941,6 +3932,8 @@ nvmf_fc_master_enqueue_event(enum spdk_fc_event event_type, void *args,
 done:
 
 	if (err == 0) {
+		assert(event_fn != NULL);
+		nvmf_fc_adm_run_on_master_thread(event_fn, (void *)api_data);
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API, "Enqueue event %d done successfully\n", event_type);
 	} else {
 		SPDK_ERRLOG("Enqueue event %d failed, err = %d\n", event_type, err);
