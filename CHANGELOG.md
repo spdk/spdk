@@ -50,9 +50,6 @@ Updated DPDK submodule to DPDK 20.05.
 
 ### env
 
-A new public API `spdk_env_get_primary_core` returns the index of the primary core of
-the SPDK process.
-
 Several new APIs have been added to provide greater flexibility in registering and
 accessing polled mode PCI drivers. See `env.h` for more details.
 
