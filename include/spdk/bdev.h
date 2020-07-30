@@ -1894,6 +1894,18 @@ size_t spdk_bdev_get_media_events(struct spdk_bdev_desc *bdev_desc,
 int spdk_bdev_get_memory_domains(struct spdk_bdev *bdev, struct spdk_memory_domain **domains,
 				 int array_size);
 
+typedef void (*lock_range_cb)(void *ctx, int status);
+
+int
+bdev_lock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
+		    uint64_t offset, uint64_t length,
+		    lock_range_cb cb_fn, void *cb_arg);
+
+int
+bdev_unlock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
+		      uint64_t offset, uint64_t length,
+		      lock_range_cb cb_fn, void *cb_arg);
+
 #ifdef __cplusplus
 }
 #endif
