@@ -12,11 +12,6 @@ rpc_py="$rootdir/scripts/rpc.py"
 
 nvmftestinit
 
-if check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
-	echo "Using software RDMA, Likely not enough memory to run this test. aborting."
-	exit 0
-fi
-
 nvmfappstart -m 0xF
 
 # create the rdma transport with an intentionally small SRQ depth

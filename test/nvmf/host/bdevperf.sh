@@ -21,13 +21,6 @@ function tgt_init() {
 }
 
 nvmftestinit
-# There is an intermittent error relating to this test and Soft-RoCE. for now, just
-# skip this test if we are using rxe. TODO: get to the bottom of GitHub issue #1165
-if check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
-	echo "Using software RDMA, skipping the host bdevperf tests."
-	exit 0
-fi
-
 tgt_init
 
 "$rootdir/test/bdev/bdevperf/bdevperf" --json <(gen_nvmf_target_json) -q 128 -o 4096 -w verify -t 1
