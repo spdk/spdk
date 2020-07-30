@@ -24,6 +24,7 @@ if [ $EUID -ne 0 ]; then
 fi
 
 if [ $(uname -s) = Linux ]; then
+	old_core_pattern=$(< /proc/sys/kernel/core_pattern)
 	# set core_pattern to a known value to avoid ABRT, systemd-coredump, etc.
 	echo "core" > /proc/sys/kernel/core_pattern
 

@@ -1208,6 +1208,9 @@ function autotest_cleanup() {
 		fi
 	fi
 	rm -rf "$asan_suppression_file"
+	if [[ -n $old_core_pattern ]]; then
+		echo "$old_core_pattern" > /proc/sys/kernel/core_pattern
+	fi
 }
 
 function freebsd_update_contigmem_mod() {
