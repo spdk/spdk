@@ -36,16 +36,4 @@
 
 #include <liburing.h>
 
-#ifndef __NR_sys_io_uring_enter
-#define __NR_sys_io_uring_enter         426
-#endif
-
-static int
-spdk_io_uring_enter(int ring_fd, unsigned int to_submit,
-		    unsigned int min_complete, unsigned int flags)
-{
-	return syscall(__NR_sys_io_uring_enter, ring_fd, to_submit,
-		       min_complete, flags, NULL, 0);
-}
-
 #endif /* SPDK_INTERNAL_URING_H */
