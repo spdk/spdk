@@ -671,6 +671,7 @@ rocksdb_run(__attribute__((unused)) void *arg1)
 
 	if (bdev == NULL) {
 		SPDK_ERRLOG("bdev %s not found\n", g_bdev_name.c_str());
+		spdk_app_stop(0);
 		exit(1);
 	}
 
