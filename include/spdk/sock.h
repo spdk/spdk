@@ -107,6 +107,11 @@ struct spdk_sock_impl_opts {
 	 * Enable or disable use of zero copy flow on send. Used by posix socket module.
 	 */
 	bool enable_zerocopy_send;
+
+	/**
+	 * Enable or disable quick ACK. Used by posix socket module.
+	 */
+	bool enable_quickack;
 };
 
 /**

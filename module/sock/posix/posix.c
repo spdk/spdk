@@ -83,7 +83,8 @@ static struct spdk_sock_impl_opts g_spdk_posix_sock_impl_opts = {
 	.recv_buf_size = MIN_SO_RCVBUF_SIZE,
 	.send_buf_size = MIN_SO_SNDBUF_SIZE,
 	.enable_recv_pipe = true,
-	.enable_zerocopy_send = true
+	.enable_zerocopy_send = true,
+	.enable_quickack = false,
 };
 
 static int
@@ -313,9 +314,9 @@ static struct spdk_posix_sock *
 posix_sock_alloc(int fd, bool enable_zero_copy)
 {
 	struct spdk_posix_sock *sock;
-#ifdef SPDK_ZEROCOPY
-	int rc;
+#if defined(SPDK_ZEROCOPY) || defined(__linux__)
 	int flag;
+	int rc;
 #endif
 
 	sock = calloc(1, sizeof(*sock));
@@ -326,16 +327,28 @@ posix_sock_alloc(int fd, bool enable_zero_copy)
 
 	sock->fd = fd;
 
-#ifdef SPDK_ZEROCOPY
+#if defined(SPDK_ZEROCOPY)
+	flag = 1;
+
 	if (!enable_zero_copy || !g_spdk_posix_sock_impl_opts.enable_zerocopy_send) {
 		return sock;
 	}
 
 	/* Try to turn on zero copy sends */
-	flag = 1;
 	rc = setsockopt(sock->fd, SOL_SOCKET, SO_ZEROCOPY, &flag, sizeof(flag));
 	if (rc == 0) {
 		sock->zcopy = true;
+	}
+#endif
+
+#if defined(__linux__)
+	flag = 1;
+
+	if (g_spdk_posix_sock_impl_opts.enable_quickack) {
+		rc = setsockopt(sock->fd, IPPROTO_TCP, TCP_QUICKACK, &flag, sizeof(flag));
+		if (rc != 0) {
+			SPDK_ERRLOG("quickack was failed to set\n");
+		}
 	}
 #endif
 
@@ -1338,6 +1351,7 @@ posix_sock_impl_get_opts(struct spdk_sock_impl_opts *opts, size_t *len)
 	GET_FIELD(send_buf_size);
 	GET_FIELD(enable_recv_pipe);
 	GET_FIELD(enable_zerocopy_send);
+	GET_FIELD(enable_quickack);
 
 #undef GET_FIELD
 #undef FIELD_OK
@@ -1366,6 +1380,7 @@ posix_sock_impl_set_opts(const struct spdk_sock_impl_opts *opts, size_t len)
 	SET_FIELD(send_buf_size);
 	SET_FIELD(enable_recv_pipe);
 	SET_FIELD(enable_zerocopy_send);
+	SET_FIELD(enable_quickack);
 
 #undef SET_FIELD
 #undef FIELD_OK

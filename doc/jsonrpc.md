@@ -6608,6 +6608,7 @@ recv_buf_size           | Optional | number      | Size of socket receive buffer
 send_buf_size           | Optional | number      | Size of socket send buffer in bytes
 enable_recv_pipe        | Optional | boolean     | Enable or disable receive pipe
 enable_zerocopy_send    | Optional | boolean     | Enable or disable zero copy on send
+enable_quick_ack        | Optional | boolean     | Enable or disable quick ACK
 
 ### Response
 
@@ -6626,8 +6627,9 @@ Example request:
     "impl_name": "posix",
     "recv_buf_size": 2097152,
     "send_buf_size": 2097152,
-    "enable_recv_pipe": false
-    "enable_zerocopy_send": true
+    "enable_recv_pipe": false,
+    "enable_zerocopy_send": true,
+    "enable_quick_ack": false
   }
 }
 ~~~

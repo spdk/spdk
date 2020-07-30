@@ -2401,7 +2401,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                        recv_buf_size=args.recv_buf_size,
                                        send_buf_size=args.send_buf_size,
                                        enable_recv_pipe=args.enable_recv_pipe,
-                                       enable_zerocopy_send=args.enable_zerocopy_send)
+                                       enable_zerocopy_send=args.enable_zerocopy_send,
+                                       enable_quickack=args.enable_quickack)
 
     p = subparsers.add_parser('sock_impl_set_options', help="""Set options of socket layer implementation""")
     p.add_argument('-i', '--impl', help='Socket implementation name, e.g. posix', required=True)
@@ -2415,7 +2416,12 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    action='store_true', dest='enable_zerocopy_send')
     p.add_argument('--disable-zerocopy-send', help='Disable zerocopy on send',
                    action='store_false', dest='enable_zerocopy_send')
-    p.set_defaults(func=sock_impl_set_options, enable_recv_pipe=None, enable_zerocopy_send=None)
+    p.add_argument('--enable-quickack', help='Enable quick ACK',
+                   action='store_true', dest='enable_quickack')
+    p.add_argument('--disable-quickack', help='Disable quick ACK',
+                   action='store_false', dest='enable_quickack')
+    p.set_defaults(func=sock_impl_set_options, enable_recv_pipe=None, enable_zerocopy_send=None,
+                   enable_quickack=None)
 
     def check_called_name(name):
         if name in deprecated_aliases:
