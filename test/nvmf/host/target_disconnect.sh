@@ -75,7 +75,7 @@ function nvmf_target_disconnect_tc3() {
 nvmftestinit
 # There is an intermittent error relating to this test and Soft-RoCE. for now, just
 # skip this test if we are using rxe. TODO: get to the bottom of GitHub issue #1043
-if [ $TEST_TRANSPORT == "rdma" ] && check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
+if check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
 	echo "Using software RDMA, skipping the target disconnect tests."
 else
 	run_test "nvmf_target_disconnect_tc1" nvmf_target_disconnect_tc1

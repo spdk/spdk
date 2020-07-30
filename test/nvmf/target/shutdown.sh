@@ -149,7 +149,7 @@ function nvmf_shutdown_tc3() {
 # The shutdown tests create a lot of edge cases that Soft-RoCE doesn't respond well to.
 # Specifically Soft-RoCE will return invalid values in the WC field after a qp has been
 # destroyed which lead to NULL pointer references not seen in real hardware.
-if [ $TEST_TRANSPORT == "rdma" ] && check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
+if check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
 	echo "Using software RDMA, skipping the shutdown tests."
 	exit 0
 fi

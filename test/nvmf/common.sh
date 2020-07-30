@@ -217,6 +217,9 @@ function revert_soft_roce() {
 }
 
 function check_ip_is_soft_roce() {
+	if [ "$TEST_TRANSPORT" != "rdma" ]; then
+		return 0
+	fi
 	rxe_cfg status rxe | grep -wq "$1"
 }
 
