@@ -215,7 +215,7 @@ struct spdk_nvmf_tcp_qpair {
 	/* This is a spare PDU used for sending special management
 	 * operations. Primarily, this is used for the initial
 	 * connection response and c2h termination request. */
-	struct nvme_tcp_pdu			mgmt_pdu;
+	struct nvme_tcp_pdu			*mgmt_pdu;
 
 	TAILQ_HEAD(, nvme_tcp_pdu)		send_queue;
 
@@ -779,8 +779,6 @@ nvmf_tcp_qpair_init_mem_resource(struct spdk_nvmf_tcp_qpair *tqpair)
 
 	tqpair->resource_count = opts->max_queue_depth;
 
-	tqpair->mgmt_pdu.qpair = tqpair;
-
 	tqpair->reqs = calloc(tqpair->resource_count, sizeof(*tqpair->reqs));
 	if (!tqpair->reqs) {
 		SPDK_ERRLOG("Unable to allocate reqs on tqpair=%p\n", tqpair);
@@ -797,7 +795,8 @@ nvmf_tcp_qpair_init_mem_resource(struct spdk_nvmf_tcp_qpair *tqpair)
 		}
 	}
 
-	tqpair->pdus = spdk_dma_malloc(tqpair->resource_count * sizeof(*tqpair->pdus), 0x1000, NULL);
+	/* Add addtional one member, which will be used for mgmt_pdu owned by the tqpair */
+	tqpair->pdus = spdk_dma_malloc((tqpair->resource_count + 1) * sizeof(*tqpair->pdus), 0x1000, NULL);
 	if (!tqpair->pdus) {
 		SPDK_ERRLOG("Unable to allocate pdu pool on tqpair =%p.\n", tqpair);
 		return -1;
@@ -826,6 +825,9 @@ nvmf_tcp_qpair_init_mem_resource(struct spdk_nvmf_tcp_qpair *tqpair)
 		TAILQ_INSERT_TAIL(&tqpair->state_queue[tcp_req->state], tcp_req, state_link);
 		tqpair->state_cntr[TCP_REQUEST_STATE_FREE]++;
 	}
+
+	tqpair->mgmt_pdu = &tqpair->pdus[i];
+	tqpair->mgmt_pdu->qpair = tqpair;
 
 	tqpair->recv_buf_size = (in_capsule_data_size + sizeof(struct spdk_nvme_tcp_cmd) + 2 *
 				 SPDK_NVME_TCP_DIGEST_LEN) * SPDK_NVMF_TCP_RECV_BUF_SIZE_FACTOR;
@@ -1082,7 +1084,7 @@ nvmf_tcp_send_c2h_term_req(struct spdk_nvmf_tcp_qpair *tqpair, struct nvme_tcp_p
 	uint32_t c2h_term_req_hdr_len = sizeof(*c2h_term_req);
 	uint32_t copy_len;
 
-	rsp_pdu = &tqpair->mgmt_pdu;
+	rsp_pdu = tqpair->mgmt_pdu;
 
 	c2h_term_req = &rsp_pdu->hdr.term_req;
 	c2h_term_req->common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_C2H_TERM_REQ;
@@ -1521,7 +1523,7 @@ nvmf_tcp_icreq_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	tqpair->cpda = spdk_min(ic_req->hpda, SPDK_NVME_TCP_CPDA_MAX);
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "cpda of tqpair=(%p) is : %u\n", tqpair, tqpair->cpda);
 
-	rsp_pdu = &tqpair->mgmt_pdu;
+	rsp_pdu = tqpair->mgmt_pdu;
 
 	ic_resp = &rsp_pdu->hdr.ic_resp;
 	ic_resp->common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_IC_RESP;

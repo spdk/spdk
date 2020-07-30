@@ -81,7 +81,7 @@ struct nvme_tcp_qpair {
 
 	TAILQ_HEAD(, nvme_tcp_pdu)		send_queue;
 	struct nvme_tcp_pdu			recv_pdu;
-	struct nvme_tcp_pdu			send_pdu; /* only for error pdu and init pdu */
+	struct nvme_tcp_pdu			*send_pdu; /* only for error pdu and init pdu */
 	struct nvme_tcp_pdu			*send_pdus; /* Used by tcp_reqs */
 	enum nvme_tcp_pdu_recv_state		recv_state;
 
@@ -241,7 +241,8 @@ nvme_tcp_alloc_reqs(struct nvme_tcp_qpair *tqpair)
 		goto fail;
 	}
 
-	tqpair->send_pdus = spdk_zmalloc(tqpair->num_entries * sizeof(struct nvme_tcp_pdu),
+	/* Add additional one member for the send_pdu owned by the tqpair */
+	tqpair->send_pdus = spdk_zmalloc((tqpair->num_entries + 1) * sizeof(struct nvme_tcp_pdu),
 					 0x1000, NULL,
 					 SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 
@@ -260,6 +261,8 @@ nvme_tcp_alloc_reqs(struct nvme_tcp_qpair *tqpair)
 		tcp_req->send_pdu = &tqpair->send_pdus[i];
 		TAILQ_INSERT_TAIL(&tqpair->free_reqs, tcp_req, link);
 	}
+
+	tqpair->send_pdu = &tqpair->send_pdus[i];
 
 	return 0;
 fail:
@@ -688,7 +691,7 @@ nvme_tcp_qpair_send_h2c_term_req(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_
 	uint32_t h2c_term_req_hdr_len = sizeof(*h2c_term_req);
 	uint8_t copy_len;
 
-	rsp_pdu = &tqpair->send_pdu;
+	rsp_pdu = tqpair->send_pdu;
 	memset(rsp_pdu, 0, sizeof(*rsp_pdu));
 	h2c_term_req = &rsp_pdu->hdr.term_req;
 	h2c_term_req->common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_H2C_TERM_REQ;
@@ -1539,8 +1542,8 @@ nvme_tcp_qpair_icreq_send(struct nvme_tcp_qpair *tqpair)
 	uint64_t icreq_timeout_tsc;
 	int rc;
 
-	pdu = &tqpair->send_pdu;
-	memset(&tqpair->send_pdu, 0, sizeof(tqpair->send_pdu));
+	pdu = tqpair->send_pdu;
+	memset(tqpair->send_pdu, 0, sizeof(*tqpair->send_pdu));
 	ic_req = &pdu->hdr.ic_req;
 
 	ic_req->common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_IC_REQ;
