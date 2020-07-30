@@ -1349,6 +1349,7 @@ static void usage(char *program_name)
 	printf("\t[-i shared memory group ID]\n");
 	printf("\t");
 	spdk_log_usage(stdout, "-T");
+	printf("\t[-V enable VMD enumeration]\n");
 #ifdef SPDK_CONFIG_URING
 	printf("\t[-R enable using liburing to drive kernel devices (Default: libaio)]\n");
 #endif
