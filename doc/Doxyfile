@@ -803,6 +803,7 @@ INPUT                  += \
                          accel_fw.md \
                          applications.md \
                          bdev.md \
+                         bdevperf.md \
                          bdev_module.md \
                          bdev_pg.md \
                          blob.md \
