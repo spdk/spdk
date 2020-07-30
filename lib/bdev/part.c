@@ -484,12 +484,13 @@ spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base
 	part->internal.bdev.dif_check_flags = base->bdev->dif_check_flags;
 
 	part->internal.bdev.name = strdup(name);
-	part->internal.bdev.product_name = strdup(product_name);
-
 	if (part->internal.bdev.name == NULL) {
 		SPDK_ERRLOG("Failed to allocate name for new part of bdev %s\n", spdk_bdev_get_name(base->bdev));
 		return -1;
-	} else if (part->internal.bdev.product_name == NULL) {
+	}
+
+	part->internal.bdev.product_name = strdup(product_name);
+	if (part->internal.bdev.product_name == NULL) {
 		free(part->internal.bdev.name);
 		SPDK_ERRLOG("Failed to allocate product name for new part of bdev %s\n",
 			    spdk_bdev_get_name(base->bdev));
