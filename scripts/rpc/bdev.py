@@ -442,10 +442,10 @@ def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvc
 
     Args:
         name: bdev name prefix; "n" + namespace ID will be appended to create unique names
-        trtype: transport type ("PCIe", "RDMA")
+        trtype: transport type ("PCIe", "RDMA", "FC", "TCP")
         traddr: transport address (PCI BDF or IP address)
-        adrfam: address family ("IPv4", "IPv6", "IB", or "FC") (optional for PCIe)
-        trsvcid: transport service ID (port number for IP-based addresses; optional for PCIe)
+        adrfam: address family ("IPv4", "IPv6", "IB", or "FC")
+        trsvcid: transport service ID (port number for IP-based addresses)
         priority: transport connection priority (Sock priority for TCP-based transports; optional)
         subnqn: subsystem NQN to connect to (optional)
         hostnqn: NQN to connect from (optional)
