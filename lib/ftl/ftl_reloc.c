@@ -747,20 +747,20 @@ ftl_reloc_resume(struct ftl_reloc *reloc)
 	reloc->halt = false;
 }
 
-void
+bool
 ftl_reloc(struct ftl_reloc *reloc)
 {
 	struct ftl_band_reloc *breloc, *tbreloc;
 
 	if (ftl_reloc_is_halted(reloc)) {
-		return;
+		return false;
 	}
 
 	/* Process first band from priority queue and return */
 	breloc = TAILQ_FIRST(&reloc->prio_queue);
 	if (breloc) {
 		ftl_process_reloc(breloc);
-		return;
+		return true;
 	}
 
 	TAILQ_FOREACH_SAFE(breloc, &reloc->pending_queue, entry, tbreloc) {
@@ -784,6 +784,8 @@ ftl_reloc(struct ftl_reloc *reloc)
 		assert(breloc->state == FTL_BAND_RELOC_STATE_ACTIVE);
 		ftl_process_reloc(breloc);
 	}
+
+	return reloc->num_active != 0;
 }
 
 void

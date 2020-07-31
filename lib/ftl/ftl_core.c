@@ -1942,15 +1942,15 @@ error:
 	return 0;
 }
 
-static int
+static bool
 ftl_process_writes(struct spdk_ftl_dev *dev)
 {
 	struct ftl_wptr *wptr, *twptr;
-	size_t num_active = 0;
+	size_t num_active = 0, num_writes = 0;
 	enum ftl_band_state state;
 
 	LIST_FOREACH_SAFE(wptr, &dev->wptr_list, list_entry, twptr) {
-		ftl_wptr_process_writes(wptr);
+		num_writes += ftl_wptr_process_writes(wptr);
 		state = wptr->band->state;
 
 		if (state != FTL_BAND_STATE_FULL &&
@@ -1964,7 +1964,7 @@ ftl_process_writes(struct spdk_ftl_dev *dev)
 		ftl_add_wptr(dev);
 	}
 
-	return 0;
+	return num_writes != 0;
 }
 
 static void
@@ -2104,7 +2104,7 @@ ftl_select_defrag_band(struct spdk_ftl_dev *dev)
 	return mband;
 }
 
-static void
+static bool
 ftl_process_relocs(struct spdk_ftl_dev *dev)
 {
 	struct ftl_band *band;
@@ -2117,7 +2117,7 @@ ftl_process_relocs(struct spdk_ftl_dev *dev)
 		}
 	}
 
-	ftl_reloc(dev->reloc);
+	return ftl_reloc(dev->reloc);
 }
 
 int
@@ -2443,6 +2443,7 @@ int
 ftl_task_core(void *ctx)
 {
 	struct spdk_ftl_dev *dev = ctx;
+	bool busy;
 
 	if (dev->halt) {
 		if (ftl_shutdown_complete(dev)) {
@@ -2451,10 +2452,9 @@ ftl_task_core(void *ctx)
 		}
 	}
 
-	ftl_process_writes(dev);
-	ftl_process_relocs(dev);
+	busy = ftl_process_writes(dev) || ftl_process_relocs(dev);
 
-	return SPDK_POLLER_BUSY;
+	return busy ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
 SPDK_LOG_REGISTER_COMPONENT("ftl_core", SPDK_LOG_FTL_CORE)
