@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+
+testdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $testdir/../../..)
+source $rootdir/test/common/autotest_common.sh
+source $rootdir/test/nvmf/common.sh
+
+rpc_py="$rootdir/scripts/rpc.py"
+
+MALLOC_BDEV_SIZE=64
+MALLOC_BLOCK_SIZE=512
+NVMF_SECOND_PORT="4421"
+NVMF_HOST_FIRST_PORT="60000"
+NVMF_HOST_SECOND_PORT="60001"
+
+bdevperf_rpc_sock=/var/tmp/bdevperf.sock
+
+if [ "$TEST_TRANSPORT" == "rdma" ]; then
+	echo "Skipping tests on RDMA because the rdma stack fails to configure the same IP for host and target."
+	exit 0
+fi
+
+nvmftestinit
+
+nvmfappstart -m 0xF
+
+$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
+$rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc0
+$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
+$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc0
+$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_SECOND_PORT
+
+$rootdir/test/bdev/bdevperf/bdevperf -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 1 -f &> $testdir/try.txt &
+bdevperf_pid=$!
+
+trap 'process_shm --id $NVMF_APP_SHM_ID; rm -f $testdir/try.txt; killprocess $bdevperf_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
+waitforlisten $bdevperf_pid $bdevperf_rpc_sock
+
+# Create a controller from the first IP/Port combination.
+$rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b NVMe0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
+	-s $NVMF_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1 -i $NVMF_FIRST_TARGET_IP -c $NVMF_HOST_FIRST_PORT
+
+# wait for the first controller to show up.
+while ! $rpc_py -s $bdevperf_rpc_sock bdev_nvme_get_controllers | grep -c NVMe; do
+	pass
+done
+
+# try to attach to the second port with a different hostsvcid (this should fail).
+if $rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b NVMe0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
+	-s $NVMF_SECOND_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1 -i $NVMF_FIRST_TARGET_IP -c $NVMF_HOST_SECOND_PORT; then
+	echo "Successfully added second path when we should have failed."
+	exit 1
+fi
+
+# Add a second path without specifying the host information. Should pass.
+$rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b NVMe0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
+	-s $NVMF_SECOND_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1
+
+# Add a second controller by attaching to the same subsystem from a different hostid.
+$rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b NVMe1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
+	-s $NVMF_SECOND_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1 -i $NVMF_FIRST_TARGET_IP -c $NVMF_HOST_SECOND_PORT
+
+if [ "$($rpc_py -s $bdevperf_rpc_sock bdev_nvme_get_controllers | grep -c NVMe)" != "2" ]; then
+	echo "actual number of controllers is not equal to expected count."
+	exit 1
+fi
+
+$rootdir/test/bdev/bdevperf/bdevperf.py -s $bdevperf_rpc_sock perform_tests
+
+killprocess $bdevperf_pid
+
+$rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
+
+trap - SIGINT SIGTERM EXIT
+
+rm -f $testdir/try.txt
+nvmftestfini
