@@ -258,6 +258,7 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	struct spdk_nvme_host_id hostid = {};
 	uint32_t prchk_flags = 0;
 	struct nvme_bdev_ctrlr *ctrlr = NULL;
+	size_t len, maxlen;
 	int rc;
 
 	ctx = calloc(1, sizeof(*ctx));
@@ -291,7 +292,14 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	ctrlr = nvme_bdev_ctrlr_get_by_name(ctx->req.name);
 
 	/* Parse traddr */
-	snprintf(trid.traddr, sizeof(trid.traddr), "%s", ctx->req.traddr);
+	maxlen = sizeof(trid.traddr);
+	len = strnlen(ctx->req.traddr, maxlen);
+	if (len == maxlen) {
+		spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "traddr too long: %s",
+						     ctx->req.traddr);
+		goto cleanup;
+	}
+	memcpy(trid.traddr, ctx->req.traddr, len + 1);
 
 	/* Parse adrfam */
 	if (ctx->req.adrfam) {
@@ -306,7 +314,14 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 
 	/* Parse trsvcid */
 	if (ctx->req.trsvcid) {
-		snprintf(trid.trsvcid, sizeof(trid.trsvcid), "%s", ctx->req.trsvcid);
+		maxlen = sizeof(trid.trsvcid);
+		len = strnlen(ctx->req.trsvcid, maxlen);
+		if (len == maxlen) {
+			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "trsvcid too long: %s",
+							     ctx->req.trsvcid);
+			goto cleanup;
+		}
+		memcpy(trid.trsvcid, ctx->req.trsvcid, len + 1);
 	}
 
 	/* Parse priority for the NVMe-oF transport connection */
@@ -316,7 +331,14 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 
 	/* Parse subnqn */
 	if (ctx->req.subnqn) {
-		snprintf(trid.subnqn, sizeof(trid.subnqn), "%s", ctx->req.subnqn);
+		maxlen = sizeof(trid.subnqn);
+		len = strnlen(ctx->req.subnqn, maxlen);
+		if (len == maxlen) {
+			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "subnqn too long: %s",
+							     ctx->req.subnqn);
+			goto cleanup;
+		}
+		memcpy(trid.subnqn, ctx->req.subnqn, len + 1);
 	}
 
 	if (ctrlr && (ctx->req.hostaddr || ctx->req.hostnqn || ctx->req.hostsvcid || ctx->req.prchk_guard ||
@@ -325,11 +347,25 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	}
 
 	if (ctx->req.hostaddr) {
-		snprintf(hostid.hostaddr, sizeof(hostid.hostaddr), "%s", ctx->req.hostaddr);
+		maxlen = sizeof(hostid.hostaddr);
+		len = strnlen(ctx->req.hostaddr, maxlen);
+		if (len == maxlen) {
+			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "hostaddr too long: %s",
+							     ctx->req.hostaddr);
+			goto cleanup;
+		}
+		memcpy(hostid.hostaddr, ctx->req.hostaddr, len + 1);
 	}
 
 	if (ctx->req.hostsvcid) {
-		snprintf(hostid.hostsvcid, sizeof(hostid.hostsvcid), "%s", ctx->req.hostsvcid);
+		maxlen = sizeof(hostid.hostsvcid);
+		len = strnlen(ctx->req.hostsvcid, maxlen);
+		if (len == maxlen) {
+			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "hostsvcid too long: %s",
+							     ctx->req.hostsvcid);
+			goto cleanup;
+		}
+		memcpy(hostid.hostsvcid, ctx->req.hostsvcid, len + 1);
 	}
 
 	if (ctx->req.prchk_reftag) {
