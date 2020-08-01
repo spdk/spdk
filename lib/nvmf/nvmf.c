@@ -840,8 +840,8 @@ spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 	return rc;
 }
 
-static
-void _nvmf_ctrlr_destruct(void *ctx)
+static void
+_nvmf_ctrlr_destruct(void *ctx)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = ctx;
 
