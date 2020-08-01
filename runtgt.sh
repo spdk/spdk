@@ -1,0 +1,28 @@
+#!/bin/bash
+
+echo "[Transport]
+Type RDMA
+MaxQueueDepth 256
+# number of queues in emulation configuration (JSON file) plus 2
+MaxQueuesPerSession 34
+
+[Malloc]
+NumberOfLuns 2
+LunSizeInMB 512
+
+[Null]
+# Dev <name> <size_in_MiB> <block_size>
+Dev Nullb0 4294967296 512
+Dev Nullb1 4294967296 512
+
+[Subsystem0]
+NQN nqn.2016-06.io.spdk.cnode:null0
+SN SPDK000DEADNULL0
+Namespace Nullb0 1
+Namespace Nullb1 2
+Listen RDMA 192.168.130.$1:4420
+AllowAnyHost yes" > test.conf
+
+build/bin/spdk_tgt -m 0x0F -c ./test.conf
+
+
