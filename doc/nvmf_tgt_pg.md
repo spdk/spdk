@@ -91,13 +91,12 @@ spdk_nvmf_poll_group_create(). They automatically request to begin polling
 upon creation on the thread from which they were created. Most importantly, *a
 poll group may only be accessed from the thread on which it was created.*
 
-When spdk_nvmf_tgt_accept() detects a new connection, it will construct a new
-struct spdk_nvmf_qpair object and call the user provided `new_qpair_fn`
-callback for each new qpair. In response to this callback, the user must
-assign the qpair to a poll group by calling spdk_nvmf_poll_group_add().
-Remember, a poll group may only be accessed from the thread on which it was created,
-so making a call to spdk_nvmf_poll_group_add() may require passing a message
-to the appropriate thread.
+When spdk_nvmf_tgt_accept() detects a new connection, it chooses an optimal
+poll group by first calling spdk_nvmf_get_optimal_poll_group(), which calls down
+into the transport, and then assigns the qpair to the optimal poll group by
+calling spdk_nvmf_poll_group_add(). This all happens within the NVMe-oF target
+library and the NVMe-oF target application is not required to do anything other
+than continue to periodically poll spdk_nvmf_tgt_accept().
 
 ## Access Control
 
