@@ -16,11 +16,14 @@ addons:
       - libnuma-dev
       - uuid-dev
       - lcov
+      - python3-setuptools
+      - python3-pip
 
 before_script:
   - git submodule update --init
   # temporarily disable shellcheck which gives errors in upstream
   - sudo rm `which shellcheck`
+  - pip3 install meson
   - export MAKEFLAGS="-j$(nproc)"
 
 script:
