@@ -59,25 +59,37 @@ static inline void movdir64b(void *dst, const void *src)
 #define IDXD_REGISTER_TIMEOUT_US		50
 #define IDXD_DRAIN_TIMEOUT_US			500000
 
-/* TODO: make some of these RPC selectable */
 #define WQ_MODE_DEDICATED	1
-#define LOG2_WQ_MAX_BATCH	8  /* 2^8 = 256 */
+
+/* TODO: consider setting the max per batch limit via RPC. */
+
+/* The following sets up a max desc count per batch of 16 */
+#define LOG2_WQ_MAX_BATCH	4  /* 2^4 = 16 */
+#define DESC_PER_BATCH		(1 << LOG2_WQ_MAX_BATCH)
+/* We decide how many batches we want to support based on what max queue
+ * depth makes sense resource wise. There is a small price to pay with
+ * larger numbers wrt polling for completions.
+ */
+#define NUM_BATCHES_PER_CHANNEL	0x400
+#define MIN_USER_DESC_COUNT	2
+
 #define LOG2_WQ_MAX_XFER	30 /* 2^30 = 1073741824 */
 #define WQCFG_NUM_DWORDS	8
 #define WQ_PRIORITY_1		1
 #define IDXD_MAX_QUEUES		64
 
-#define TOTAL_USER_DESC		(1 << LOG2_WQ_MAX_BATCH)
-#define DESC_PER_BATCH		16 /* TODO maybe make this a startup RPC */
-#define NUM_BATCHES		(TOTAL_USER_DESC / DESC_PER_BATCH)
-#define MIN_USER_DESC_COUNT	2
-
+/* Each pre-allocated batch structure goes on a per channel list and
+ * contains the memory for both user descriptors. The array of comp_ctx
+ * holds the list of completion contexts that we will add to the list
+ * used by the poller.  The list is updated when the batch is submitted.
+ */
 struct idxd_batch {
-	uint32_t			batch_desc_index;
-	uint32_t			batch_num;
-	uint32_t			cur_index;
-	uint32_t			start_index;
+	struct idxd_hw_desc		*user_desc;
+	struct idxd_comp		*user_completions;
 	uint32_t			remaining;
+	bool				submitted;
+	void				*comp_ctx[DESC_PER_BATCH];
+	uint8_t				index;
 	TAILQ_ENTRY(idxd_batch)		link;
 };
 
@@ -90,40 +102,44 @@ struct device_config {
 	uint16_t	total_engines;
 };
 
-struct idxd_ring_control {
-	void				*portal;
+struct idxd_comp ;
 
+struct spdk_idxd_io_channel {
+	struct spdk_idxd_device		*idxd;
+	/* The portal is the address that we write descriptors to for submission. */
+	void				*portal;
 	uint16_t			ring_size;
 
 	/*
-	 * Rings for this channel, one for descriptors and one
-	 * for completions, share the same index. Batch descriptors
-	 * are managed independently from data descriptors.
+	 * Descriptors and completions share the same index. User descriptors
+	 * (those included in a batch) are managed independently from data descriptors
+	 * and are located in the batch structure.
 	 */
 	struct idxd_hw_desc		*desc;
 	struct idxd_comp		*completions;
-	struct idxd_hw_desc		*user_desc;
-	struct idxd_comp		*user_completions;
+
+	/* Current list of oustanding completion addresses to poll. */
+	TAILQ_HEAD(, idxd_comp)		comp_ctx_oustanding;
 
 	/*
 	 * We use one bit array to track ring slots for both
 	 * desc and completions.
+	 *
+	 * TODO: We can get rid of the bit array and just use a uint
+	 * to manage flow control as the current implementation saves
+	 * enough info in comp_ctx that it doesn't need the index. Keeping
+	 * the bit arrays for now as (a) they provide some extra debug benefit
+	 * until we have silicon and (b) they may still be needed depending on
+	 * polling implementation experiments that we need to run with real silicon.
 	 */
 	struct spdk_bit_array		*ring_slots;
 	uint32_t			max_ring_slots;
 
-	/*
-	 * We use a separate bit array to track ring slots for
-	 * descriptors submitted via the user in a batch.
-	 */
-	struct spdk_bit_array		*user_ring_slots;
-};
+	/* Lists of batches, free and in use. */
+	TAILQ_HEAD(, idxd_batch)	batch_pool;
+	TAILQ_HEAD(, idxd_batch)	batches;
 
-struct spdk_idxd_io_channel {
-	struct spdk_idxd_device		*idxd;
-	struct idxd_ring_control	ring_ctrl;
-	TAILQ_HEAD(, idxd_batch)	batch_pool; /* free batches */
-	TAILQ_HEAD(, idxd_batch)	batches; /* in use batches */
+	void				*batch_base;
 };
 
 struct pci_dev_id {
@@ -154,9 +170,13 @@ struct idxd_comp {
 	void				*cb_arg;
 	spdk_idxd_req_cb		cb_fn;
 	struct idxd_batch		*batch;
-	uint64_t			pad2;
-} __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct idxd_comp) == 64, "size mismatch");
+	bool				batch_op;
+	struct idxd_hw_desc		*desc;
+	uint32_t			index;
+	char				pad[3];
+	TAILQ_ENTRY(idxd_comp)		link;
+};
+SPDK_STATIC_ASSERT(sizeof(struct idxd_comp) == 96, "size mismatch");
 
 struct idxd_wq {
 	struct spdk_idxd_device		*idxd;

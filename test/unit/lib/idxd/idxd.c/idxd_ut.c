@@ -95,7 +95,7 @@ test_idxd_wq_config(void)
 {
 	struct spdk_idxd_device idxd = {};
 	union idxd_wqcfg wqcfg = {};
-	uint32_t expected[8] = {0x10, 0, 0x11, 0x11e, 0, 0, 0x40000000, 0};
+	uint32_t expected[8] = {0x10, 0, 0x11, 0x9e, 0, 0, 0x40000000, 0};
 	uint32_t wq_size;
 	int rc, i, j;
 
@@ -260,18 +260,18 @@ test_spdk_idxd_reconfigure_chan(void)
 	uint32_t test_ring_size = 8;
 	uint32_t num_channels = 2;
 
-	chan.ring_ctrl.ring_slots = spdk_bit_array_create(test_ring_size);
-	chan.ring_ctrl.ring_size = test_ring_size;
-	chan.ring_ctrl.completions = spdk_zmalloc(test_ring_size * sizeof(struct idxd_hw_desc), 0, NULL,
-				     SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
-	SPDK_CU_ASSERT_FATAL(chan.ring_ctrl.completions != NULL);
+	chan.ring_slots = spdk_bit_array_create(test_ring_size);
+	chan.ring_size = test_ring_size;
+	chan.completions = spdk_zmalloc(test_ring_size * sizeof(struct idxd_hw_desc), 0, NULL,
+					SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+	SPDK_CU_ASSERT_FATAL(chan.completions != NULL);
 
 	rc = spdk_idxd_reconfigure_chan(&chan, num_channels);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(chan.ring_ctrl.max_ring_slots == test_ring_size / num_channels);
+	CU_ASSERT(chan.max_ring_slots == test_ring_size / num_channels);
 
-	spdk_bit_array_free(&chan.ring_ctrl.ring_slots);
-	spdk_free(chan.ring_ctrl.completions);
+	spdk_bit_array_free(&chan.ring_slots);
+	spdk_free(chan.completions);
 	return 0;
 }
 

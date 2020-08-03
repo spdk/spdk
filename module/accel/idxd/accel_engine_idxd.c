@@ -113,6 +113,7 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 {
 	struct idxd_io_channel *chan = spdk_io_channel_get_ctx(ch);
 	int rc = 0;
+	uint8_t fill_pattern = (uint8_t)task->fill_pattern;
 
 	switch (task->op_code) {
 	case ACCEL_OPCODE_MEMMOVE:
@@ -126,6 +127,7 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 		rc = spdk_idxd_submit_compare(chan->chan, task->src, task->src2, task->nbytes, idxd_done, task);
 		break;
 	case ACCEL_OPCODE_MEMFILL:
+		memset(&task->fill_pattern, fill_pattern, sizeof(uint64_t));
 		rc = spdk_idxd_submit_fill(chan->chan, task->dst, task->fill_pattern, task->nbytes, idxd_done,
 					   task);
 		break;
@@ -148,6 +150,7 @@ idxd_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *first_task
 	struct idxd_io_channel *chan = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *task, *tmp, *batch_task;
 	struct idxd_batch *idxd_batch;
+	uint8_t fill_pattern;
 	TAILQ_HEAD(, spdk_accel_task) batch_tasks;
 	int rc = 0;
 	uint32_t task_count = 0;
@@ -178,14 +181,25 @@ idxd_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *first_task
 		return 0;
 	}
 
+	/* TODO: The DSA batch interface has performance tradeoffs that we need to measure with real
+	 * silicon.  It's unclear which workloads will benefit from batching and with what sizes. Or
+	 * if there are some cases where batching is more beneficial on the completion side by turning
+	 * off completion notifications for elements within the batch. Need to run some experiments where
+	 * we use the batching interface versus not to help provide guidance on how to use these batching
+	 * API.  Here below is one such place, currently those batching using the framework will end up
+	 * also using the DSA batch interface.  We could send each of these operations as single commands
+	 * to the low level library.
+	 */
+
 	/* More than one task, create IDXD batch(es). */
 	do {
 		idxd_batch = spdk_idxd_batch_create(chan->chan);
-		task_count = 0;
 		if (idxd_batch == NULL) {
 			/* Queue them all and try again later */
 			goto queue_tasks;
 		}
+
+		task_count = 0;
 
 		/* Keep track of each batch's tasks in case we need to cancel. */
 		TAILQ_INIT(&batch_tasks);
@@ -204,6 +218,8 @@ idxd_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *first_task
 								  task->nbytes, idxd_done, task);
 				break;
 			case ACCEL_OPCODE_MEMFILL:
+				fill_pattern = (uint8_t)task->fill_pattern;
+				memset(&task->fill_pattern, fill_pattern, sizeof(uint64_t));
 				rc = spdk_idxd_batch_prep_fill(chan->chan, idxd_batch, task->dst, task->fill_pattern,
 							       task->nbytes, idxd_done, task);
 				break;
@@ -232,25 +248,21 @@ idxd_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *first_task
 		if (!TAILQ_EMPTY(&batch_tasks)) {
 			rc = spdk_idxd_batch_submit(chan->chan, idxd_batch, NULL, NULL);
 
-			/* If we can't submit the batch, just destroy it and queue up all the operations
-			 * from the latest batch and try again later. If this list was from an accel_fw batch,
-			 * all of the batch info is still associated with the tasks that we're about to
-			 * queue up so nothing is lost.
-			 */
 			if (rc) {
+				/* Cancel the batch, requeue the items in the batch adn then
+				 * any tasks that still hadn't been processed yet.
+				 */
 				spdk_idxd_batch_cancel(chan->chan, idxd_batch);
+
 				while (!TAILQ_EMPTY(&batch_tasks)) {
 					batch_task = TAILQ_FIRST(&batch_tasks);
 					TAILQ_REMOVE(&batch_tasks, batch_task, link);
 					TAILQ_INSERT_TAIL(&chan->queued_tasks, batch_task, link);
 				}
-				rc = 0;
+				goto queue_tasks;
 			}
-		} else {
-			/* the last batch task list was empty so all tasks had their cb_fn called. */
-			rc = 0;
 		}
-	} while (task && rc == 0);
+	} while (task);
 
 	return 0;
 
