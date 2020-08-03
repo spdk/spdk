@@ -353,7 +353,7 @@ app_json_config_load_subsystem_config_entry(void *_ctx)
 	struct spdk_json_write_ctx *w;
 	struct config_entry cfg = {};
 	struct spdk_json_val *params_end;
-	size_t params_len;
+	size_t params_len = 0;
 	int rc;
 
 	if (ctx->config_it == NULL) {
