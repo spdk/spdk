@@ -1186,6 +1186,9 @@ function autotest_cleanup() {
 	if [[ -n $old_core_pattern ]]; then
 		echo "$old_core_pattern" > /proc/sys/kernel/core_pattern
 	fi
+	if [[ -e /proc/$udevadm_pid/status ]]; then
+		kill "$udevadm_pid" || :
+	fi
 }
 
 function freebsd_update_contigmem_mod() {

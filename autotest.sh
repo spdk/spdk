@@ -36,6 +36,11 @@ if [ $(uname -s) = Linux ]; then
 	# make sure nbd (network block device) driver is loaded if it is available
 	# this ensures that when tests need to use nbd, it will be fully initialized
 	modprobe nbd || true
+
+	if udevadm=$(type -P udevadm); then
+		"$udevadm" monitor --property &> "$output_dir/udev.log" &
+		udevadm_pid=$!
+	fi
 fi
 
 trap "process_core; autotest_cleanup; exit 1" SIGINT SIGTERM EXIT
