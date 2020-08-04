@@ -148,7 +148,7 @@ def nvmf_create_transport(client,
         params['max_qpairs_per_ctrlr'] = max_qpairs_per_ctrlr
     if max_io_qpairs_per_ctrlr:
         params['max_io_qpairs_per_ctrlr'] = max_io_qpairs_per_ctrlr
-    if in_capsule_data_size:
+    if in_capsule_data_size is not None:
         params['in_capsule_data_size'] = in_capsule_data_size
     if max_io_size:
         params['max_io_size'] = max_io_size
@@ -158,7 +158,7 @@ def nvmf_create_transport(client,
         params['max_aq_depth'] = max_aq_depth
     if num_shared_buffers:
         params['num_shared_buffers'] = num_shared_buffers
-    if buf_cache_size:
+    if buf_cache_size is not None:
         params['buf_cache_size'] = buf_cache_size
     if max_srq_depth:
         params['max_srq_depth'] = max_srq_depth
@@ -168,7 +168,7 @@ def nvmf_create_transport(client,
         params['c2h_success'] = c2h_success
     if dif_insert_or_strip:
         params['dif_insert_or_strip'] = dif_insert_or_strip
-    if sock_priority:
+    if sock_priority is not None:
         params['sock_priority'] = sock_priority
     if acceptor_backlog is not None:
         params['acceptor_backlog'] = acceptor_backlog
@@ -258,7 +258,7 @@ def nvmf_create_subsystem(client,
     if allow_any_host:
         params['allow_any_host'] = True
 
-    if max_namespaces:
+    if max_namespaces is not None:
         params['max_namespaces'] = max_namespaces
 
     if tgt_name:
