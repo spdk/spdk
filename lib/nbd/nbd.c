@@ -1060,7 +1060,7 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path,
 		goto err;
 	}
 
-	nbd->dev_fd = open(nbd_path, O_RDWR);
+	nbd->dev_fd = open(nbd_path, O_RDWR | O_DIRECT);
 	if (nbd->dev_fd == -1) {
 		SPDK_ERRLOG("open(\"%s\") failed: %s\n", nbd_path, spdk_strerror(errno));
 		rc = -errno;
