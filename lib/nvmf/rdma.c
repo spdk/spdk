@@ -61,9 +61,6 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma;
 #define DEFAULT_NVMF_RDMA_CQ_SIZE	4096
 #define MAX_WR_PER_QP(queue_depth)	(queue_depth * 3 + 2)
 
-/* Timeout for destroying defunct rqpairs */
-#define NVMF_RDMA_QPAIR_DESTROY_TIMEOUT_US	4000000
-
 static int g_spdk_nvmf_ibv_query_mask =
 	IBV_QP_STATE |
 	IBV_QP_PKEY_INDEX |
@@ -384,12 +381,6 @@ struct spdk_nvmf_rdma_qpair {
 	 */
 	enum ibv_qp_state			ibv_state;
 
-	/* Poller registered in case the qpair doesn't properly
-	 * complete the qpair destruct process and becomes defunct.
-	 */
-
-	struct spdk_poller			*destruct_poller;
-
 	/*
 	 * io_channel which is used to destroy qpair when it is removed from poll group
 	 */
@@ -400,6 +391,9 @@ struct spdk_nvmf_rdma_qpair {
 
 	/* Lets us know that we have received the last_wqe event. */
 	bool					last_wqe_reached;
+
+	/* Indicate that nvmf_rdma_close_qpair is called */
+	bool					to_close;
 };
 
 struct spdk_nvmf_rdma_poller_stat {
@@ -828,8 +822,6 @@ nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 	int				rc;
 
 	spdk_trace_record(TRACE_RDMA_QP_DESTROY, 0, 0, (uintptr_t)rqpair->cm_id, 0);
-
-	spdk_poller_unregister(&rqpair->destruct_poller);
 
 	if (rqpair->qd != 0) {
 		struct spdk_nvmf_qpair *qpair = &rqpair->qpair;
@@ -2746,11 +2738,18 @@ nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport,
 	}
 }
 
-static void nvmf_rdma_destroy_drained_qpair(void *ctx)
+static void
+nvmf_rdma_destroy_drained_qpair(struct spdk_nvmf_rdma_qpair *rqpair)
 {
-	struct spdk_nvmf_rdma_qpair *rqpair = ctx;
 	struct spdk_nvmf_rdma_transport *rtransport = SPDK_CONTAINEROF(rqpair->qpair.transport,
 			struct spdk_nvmf_rdma_transport, transport);
+
+	nvmf_rdma_qpair_process_pending(rtransport, rqpair, true);
+
+	/* nvmr_rdma_close_qpair is not called */
+	if (!rqpair->to_close) {
+		return;
+	}
 
 	/* In non SRQ path, we will reach rqpair->max_queue_depth. In SRQ path, we will get the last_wqe event. */
 	if (rqpair->current_send_depth != 0) {
@@ -2761,20 +2760,18 @@ static void nvmf_rdma_destroy_drained_qpair(void *ctx)
 		return;
 	}
 
-	if (rqpair->srq != NULL && rqpair->last_wqe_reached == false) {
+	/* Judge whether the device is emulated by Software RoCE.
+	 * And it will not send last_wqe event
+	 */
+	if (rqpair->srq != NULL && rqpair->device->attr.vendor_id != 0 &&
+	    rqpair->last_wqe_reached == false) {
 		return;
 	}
 
-	nvmf_rdma_qpair_process_pending(rtransport, rqpair, true);
-
-	/* Qpair will be destroyed after nvmf layer closes this qpair */
-	if (rqpair->qpair.state != SPDK_NVMF_QPAIR_ERROR) {
-		return;
-	}
+	assert(rqpair->qpair.state == SPDK_NVMF_QPAIR_ERROR);
 
 	nvmf_rdma_qpair_destroy(rqpair);
 }
-
 
 static int
 nvmf_rdma_disconnect(struct rdma_cm_event *evt)
@@ -3540,26 +3537,12 @@ nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 	return 0;
 }
 
-static int
-nvmf_rdma_destroy_defunct_qpair(void *ctx)
-{
-	struct spdk_nvmf_rdma_qpair	*rqpair = ctx;
-	struct spdk_nvmf_rdma_transport *rtransport = SPDK_CONTAINEROF(rqpair->qpair.transport,
-			struct spdk_nvmf_rdma_transport, transport);
-
-	SPDK_INFOLOG(SPDK_LOG_RDMA, "QP#%d hasn't been drained as expected, manually destroy it\n",
-		     rqpair->qpair.qid);
-
-	nvmf_rdma_qpair_process_pending(rtransport, rqpair, true);
-	nvmf_rdma_qpair_destroy(rqpair);
-
-	return SPDK_POLLER_BUSY;
-}
-
 static void
 nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 {
 	struct spdk_nvmf_rdma_qpair *rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+
+	rqpair->to_close = true;
 
 	/* This happens only when the qpair is disconnected before
 	 * it is added to the poll group. Since there is no poll group,
@@ -3575,8 +3558,7 @@ nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 		spdk_rdma_qp_disconnect(rqpair->rdma_qp);
 	}
 
-	rqpair->destruct_poller = SPDK_POLLER_REGISTER(nvmf_rdma_destroy_defunct_qpair, (void *)rqpair,
-				  NVMF_RDMA_QPAIR_DESTROY_TIMEOUT_US);
+	nvmf_rdma_destroy_drained_qpair(rqpair);
 }
 
 static struct spdk_nvmf_rdma_qpair *
