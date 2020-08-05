@@ -266,12 +266,6 @@ struct spdk_nvmf_rdma_request {
 	STAILQ_ENTRY(spdk_nvmf_rdma_request)	state_link;
 };
 
-enum spdk_nvmf_rdma_qpair_disconnect_flags {
-	RDMA_QP_DISCONNECTING		= 1,
-	RDMA_QP_RECV_DRAINED		= 1 << 1,
-	RDMA_QP_SEND_DRAINED		= 1 << 2
-};
-
 struct spdk_nvmf_rdma_resource_opts {
 	struct spdk_nvmf_rdma_qpair	*qpair;
 	/* qp points either to an ibv_qp object or an ibv_srq object depending on the value of shared. */
@@ -395,8 +389,6 @@ struct spdk_nvmf_rdma_qpair {
 	 */
 	enum ibv_qp_state			ibv_state;
 
-	uint32_t				disconnect_flags;
-
 	/* Poller registered in case the qpair doesn't properly
 	 * complete the qpair destruct process and becomes defunct.
 	 */
@@ -411,11 +403,6 @@ struct spdk_nvmf_rdma_qpair {
 	/* List of ibv async events */
 	STAILQ_HEAD(, spdk_nvmf_rdma_ibv_event_ctx)	ibv_events;
 
-	/* There are several ways a disconnect can start on a qpair
-	 * and they are not all mutually exclusive. It is important
-	 * that we only initialize one of these paths.
-	 */
-	bool					disconnect_started;
 	/* Lets us know that we have received the last_wqe event. */
 	bool					last_wqe_reached;
 };
@@ -516,9 +503,6 @@ struct spdk_nvmf_rdma_transport {
 	TAILQ_HEAD(, spdk_nvmf_rdma_port)	ports;
 	TAILQ_HEAD(, spdk_nvmf_rdma_poll_group)	poll_groups;
 };
-
-static inline void
-nvmf_rdma_start_disconnect(struct spdk_nvmf_rdma_qpair *rqpair);
 
 static bool
 nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
@@ -2104,7 +2088,7 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 					if (rc != 0) {
 						SPDK_ERRLOG("DIF generation failed\n");
 						rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
-						nvmf_rdma_start_disconnect(rqpair);
+						spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
 						break;
 					}
 				}
@@ -2767,45 +2751,6 @@ nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport,
 	}
 }
 
-static void
-_nvmf_rdma_qpair_disconnect(void *ctx)
-{
-	struct spdk_nvmf_qpair *qpair = ctx;
-
-	spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
-}
-
-static void
-_nvmf_rdma_try_disconnect(void *ctx)
-{
-	struct spdk_nvmf_qpair *qpair = ctx;
-	struct spdk_nvmf_poll_group *group;
-
-	/* Read the group out of the qpair. This is normally set and accessed only from
-	 * the thread that created the group. Here, we're not on that thread necessarily.
-	 * The data member qpair->group begins it's life as NULL and then is assigned to
-	 * a pointer and never changes. So fortunately reading this and checking for
-	 * non-NULL is thread safe in the x86_64 memory model. */
-	group = qpair->group;
-
-	if (group == NULL) {
-		/* The qpair hasn't been assigned to a group yet, so we can't
-		 * process a disconnect. Send a message to ourself and try again. */
-		spdk_thread_send_msg(spdk_get_thread(), _nvmf_rdma_try_disconnect, qpair);
-		return;
-	}
-
-	spdk_thread_send_msg(group->thread, _nvmf_rdma_qpair_disconnect, qpair);
-}
-
-static inline void
-nvmf_rdma_start_disconnect(struct spdk_nvmf_rdma_qpair *rqpair)
-{
-	if (!__atomic_test_and_set(&rqpair->disconnect_started, __ATOMIC_RELAXED)) {
-		_nvmf_rdma_try_disconnect(&rqpair->qpair);
-	}
-}
-
 static void nvmf_rdma_destroy_drained_qpair(void *ctx)
 {
 	struct spdk_nvmf_rdma_qpair *rqpair = ctx;
@@ -2857,7 +2802,7 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 
 	spdk_trace_record(TRACE_RDMA_QP_DISCONNECT, 0, 0, (uintptr_t)rqpair->cm_id, 0);
 
-	nvmf_rdma_start_disconnect(rqpair);
+	spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
 
 	return 0;
 }
@@ -2895,7 +2840,7 @@ nvmf_rdma_disconnect_qpairs_on_port(struct spdk_nvmf_rdma_transport *rtransport,
 		TAILQ_FOREACH(rpoller, &rgroup->pollers, link) {
 			TAILQ_FOREACH(rqpair, &rpoller->qpairs, link) {
 				if (rqpair->listen_id == port->id) {
-					nvmf_rdma_start_disconnect(rqpair);
+					spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
 				}
 			}
 		}
@@ -3059,7 +3004,7 @@ static void
 nvmf_rdma_handle_qp_fatal(struct spdk_nvmf_rdma_qpair *rqpair)
 {
 	nvmf_rdma_update_ibv_state(rqpair);
-	nvmf_rdma_start_disconnect(rqpair);
+	spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
 }
 
 static void
@@ -3072,7 +3017,7 @@ nvmf_rdma_handle_last_wqe_reached(struct spdk_nvmf_rdma_qpair *rqpair)
 static void
 nvmf_rdma_handle_sq_drained(struct spdk_nvmf_rdma_qpair *rqpair)
 {
-	nvmf_rdma_start_disconnect(rqpair);
+	spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
 }
 
 static void
@@ -3641,12 +3586,6 @@ nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 {
 	struct spdk_nvmf_rdma_qpair *rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
-	if (rqpair->disconnect_flags & RDMA_QP_DISCONNECTING) {
-		return;
-	}
-
-	rqpair->disconnect_flags |= RDMA_QP_DISCONNECTING;
-
 	/* This happens only when the qpair is disconnected before
 	 * it is added to the poll group. Since there is no poll group,
 	 * the RDMA qp has not been initialized yet and the RDMA CM
@@ -3703,7 +3642,7 @@ _poller_reset_failed_recvs(struct spdk_nvmf_rdma_poller *rpoller, struct ibv_rec
 		rdma_recv->qpair->current_recv_depth++;
 		bad_recv_wr = bad_recv_wr->next;
 		SPDK_ERRLOG("Failed to post a recv for the qpair %p with errno %d\n", rdma_recv->qpair, -rc);
-		nvmf_rdma_start_disconnect(rdma_recv->qpair);
+		spdk_nvmf_qpair_disconnect(&rdma_recv->qpair->qpair, NULL, NULL);
 	}
 }
 
@@ -3715,7 +3654,7 @@ _qp_reset_failed_recvs(struct spdk_nvmf_rdma_qpair *rqpair, struct ibv_recv_wr *
 		bad_recv_wr = bad_recv_wr->next;
 		rqpair->current_recv_depth++;
 	}
-	nvmf_rdma_start_disconnect(rqpair);
+	spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
 }
 
 static void
@@ -3806,7 +3745,7 @@ _qp_reset_failed_sends(struct spdk_nvmf_rdma_transport *rtransport,
 
 	if (rqpair->qpair.state == SPDK_NVMF_QPAIR_ACTIVE) {
 		/* Disconnect the connection. */
-		nvmf_rdma_start_disconnect(rqpair);
+		spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
 	}
 
 }
@@ -3907,7 +3846,7 @@ nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			if (!wc[i].status) {
 				assert(wc[i].opcode == IBV_WC_RECV);
 				if (rqpair->current_recv_depth >= rqpair->max_queue_depth) {
-					nvmf_rdma_start_disconnect(rqpair);
+					spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
 					break;
 				}
 			}
@@ -3969,7 +3908,7 @@ nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 
 			if (rqpair->qpair.state == SPDK_NVMF_QPAIR_ACTIVE) {
 				/* Disconnect the connection. */
-				nvmf_rdma_start_disconnect(rqpair);
+				spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
 			} else {
 				nvmf_rdma_destroy_drained_qpair(rqpair);
 			}
