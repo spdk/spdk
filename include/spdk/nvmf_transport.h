@@ -123,6 +123,7 @@ struct spdk_nvmf_qpair {
 	uint16_t				qid;
 	uint16_t				sq_head;
 	uint16_t				sq_head_max;
+	bool					disconnect_started;
 
 	struct spdk_nvmf_request		*first_fused_req;
 

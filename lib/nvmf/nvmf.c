@@ -940,10 +940,26 @@ _nvmf_qpair_destroy(void *ctx, int status)
 	spdk_thread_send_msg(ctrlr->thread, _nvmf_ctrlr_free_from_qpair, qpair_ctx);
 }
 
+static void
+_nvmf_qpair_disconnect_msg(void *ctx)
+{
+	struct nvmf_qpair_disconnect_ctx *qpair_ctx = ctx;
+
+	spdk_nvmf_qpair_disconnect(qpair_ctx->qpair, qpair_ctx->cb_fn, qpair_ctx->ctx);
+	free(ctx);
+}
+
 int
 spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_cb cb_fn, void *ctx)
 {
 	struct nvmf_qpair_disconnect_ctx *qpair_ctx;
+
+	if (__atomic_test_and_set(&qpair->disconnect_started, __ATOMIC_RELAXED)) {
+		if (cb_fn) {
+			cb_fn(ctx);
+		}
+		return 0;
+	}
 
 	/* If we get a qpair in the uninitialized state, we can just destroy it immediately */
 	if (qpair->state == SPDK_NVMF_QPAIR_UNINITIALIZED) {
@@ -954,19 +970,20 @@ spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_
 		return 0;
 	}
 
-	/* The queue pair must be disconnected from the thread that owns it */
-	assert(qpair->group->thread == spdk_get_thread());
-
-	if (qpair->state != SPDK_NVMF_QPAIR_ACTIVE) {
-		/* This can occur if the connection is killed by the target,
-		 * which results in a notification that the connection
-		 * died. Send a message to defer the processing of this
-		 * callback. This allows the stack to unwind in the case
-		 * where a bunch of connections are disconnected in
-		 * a loop. */
-		if (cb_fn) {
-			spdk_thread_send_msg(qpair->group->thread, cb_fn, ctx);
+	assert(qpair->group != NULL);
+	if (spdk_get_thread() != qpair->group->thread) {
+		/* clear the atomic so we can set it on the next call on the proper thread. */
+		__atomic_clear(&qpair->disconnect_started, __ATOMIC_RELAXED);
+		qpair_ctx = calloc(1, sizeof(struct nvmf_qpair_disconnect_ctx));
+		if (!qpair_ctx) {
+			SPDK_ERRLOG("Unable to allocate context for nvmf_qpair_disconnect\n");
+			return -ENOMEM;
 		}
+		qpair_ctx->qpair = qpair;
+		qpair_ctx->cb_fn = cb_fn;
+		qpair_ctx->thread = qpair->group->thread;
+		qpair_ctx->ctx = ctx;
+		spdk_thread_send_msg(qpair->group->thread, _nvmf_qpair_disconnect_msg, qpair_ctx);
 		return 0;
 	}
 
@@ -1337,7 +1354,7 @@ nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
 		_nvmf_poll_group_remove_subsystem_cb(ctx, 0);
 	}
 
-	if (rc != 0) {
+	if (rc != 0 && rc != -EINPROGRESS) {
 		free(ctx);
 		goto fini;
 	}
