@@ -87,6 +87,8 @@ struct spdk_fio_thread {
 	struct io_u		**iocq;		/* io completion queue */
 	unsigned int		iocq_count;	/* number of iocq entries filled by last getevents */
 	unsigned int		iocq_size;	/* number of iocq entries allocated */
+
+	TAILQ_ENTRY(spdk_fio_thread)	link;
 };
 
 static bool g_spdk_env_initialized = false;
@@ -95,6 +97,12 @@ static const char *g_json_config_file = NULL;
 static int spdk_fio_init(struct thread_data *td);
 static void spdk_fio_cleanup(struct thread_data *td);
 static size_t spdk_fio_poll_thread(struct spdk_fio_thread *fio_thread);
+
+static pthread_t g_init_thread_id = 0;
+static pthread_mutex_t g_init_mtx = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t g_init_cond;
+static bool g_poll_loop = true;
+static TAILQ_HEAD(, spdk_fio_thread) g_threads = TAILQ_HEAD_INITIALIZER(g_threads);
 
 /* Default polling timeout (ns) */
 #define SPDK_FIO_POLLING_TIMEOUT 1000000000ULL
@@ -149,19 +157,9 @@ spdk_fio_cleanup_thread(struct spdk_fio_thread *fio_thread)
 {
 	spdk_thread_send_msg(fio_thread->thread, spdk_fio_bdev_close_targets, fio_thread);
 
-	while (!spdk_thread_is_idle(fio_thread->thread)) {
-		spdk_fio_poll_thread(fio_thread);
-	}
-
-	spdk_set_thread(fio_thread->thread);
-
-	spdk_thread_exit(fio_thread->thread);
-	while (!spdk_thread_is_exited(fio_thread->thread)) {
-		spdk_thread_poll(fio_thread->thread, 0, 0);
-	}
-	spdk_thread_destroy(fio_thread->thread);
-	free(fio_thread->iocq);
-	free(fio_thread);
+	pthread_mutex_lock(&g_init_mtx);
+	TAILQ_INSERT_TAIL(&g_threads, fio_thread, link);
+	pthread_mutex_unlock(&g_init_mtx);
 }
 
 static void
@@ -188,11 +186,6 @@ spdk_fio_calc_timeout(struct spdk_fio_thread *fio_thread, struct timespec *ts)
 		ts->tv_nsec = timeout % SPDK_SEC_TO_NSEC;
 	}
 }
-
-static pthread_t g_init_thread_id = 0;
-static pthread_mutex_t g_init_mtx = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t g_init_cond;
-static bool g_poll_loop = true;
 
 static void
 spdk_fio_bdev_init_done(int rc, void *cb_arg)
@@ -232,6 +225,7 @@ spdk_init_thread_poll(void *arg)
 {
 	struct spdk_fio_options		*eo = arg;
 	struct spdk_fio_thread		*fio_thread;
+	struct spdk_fio_thread		*thread, *tmp;
 	struct spdk_conf		*config = NULL;
 	struct spdk_env_opts		opts;
 	bool				done;
@@ -325,19 +319,37 @@ spdk_init_thread_poll(void *arg)
 	pthread_mutex_lock(&g_init_mtx);
 	pthread_cond_signal(&g_init_cond);
 
+	pthread_mutex_unlock(&g_init_mtx);
+
 	while (g_poll_loop) {
 		spdk_fio_poll_thread(fio_thread);
 
+		pthread_mutex_lock(&g_init_mtx);
+		if (!TAILQ_EMPTY(&g_threads)) {
+			TAILQ_FOREACH_SAFE(thread, &g_threads, link, tmp) {
+				spdk_fio_poll_thread(thread);
+			}
+
+			/* If there are exiting threads to poll, don't sleep. */
+			pthread_mutex_unlock(&g_init_mtx);
+			continue;
+		}
+
+		/* Figure out how long to sleep. */
 		clock_gettime(CLOCK_MONOTONIC, &ts);
 		spdk_fio_calc_timeout(fio_thread, &ts);
 
 		rc = pthread_cond_timedwait(&g_init_cond, &g_init_mtx, &ts);
+		pthread_mutex_unlock(&g_init_mtx);
+
 		if (rc != ETIMEDOUT) {
 			break;
 		}
+
+
 	}
 
-	pthread_mutex_unlock(&g_init_mtx);
+	spdk_fio_cleanup_thread(fio_thread);
 
 	/* Finalize the bdev layer */
 	done = false;
@@ -345,9 +357,32 @@ spdk_init_thread_poll(void *arg)
 
 	do {
 		spdk_fio_poll_thread(fio_thread);
-	} while (!done && !spdk_thread_is_idle(fio_thread->thread));
 
-	spdk_fio_cleanup_thread(fio_thread);
+		TAILQ_FOREACH_SAFE(thread, &g_threads, link, tmp) {
+			spdk_fio_poll_thread(thread);
+		}
+	} while (!done);
+
+	/* Now exit all the threads */
+	TAILQ_FOREACH(thread, &g_threads, link) {
+		spdk_set_thread(thread->thread);
+		spdk_thread_exit(thread->thread);
+		spdk_set_thread(NULL);
+	}
+
+	/* And wait for them to gracefully exit */
+	while (!TAILQ_EMPTY(&g_threads)) {
+		TAILQ_FOREACH_SAFE(thread, &g_threads, link, tmp) {
+			if (spdk_thread_is_exited(thread->thread)) {
+				TAILQ_REMOVE(&g_threads, thread, link);
+				spdk_thread_destroy(thread->thread);
+				free(thread->iocq);
+				free(thread);
+			} else {
+				spdk_thread_poll(thread->thread, 0, 0);
+			}
+		}
+	}
 
 	pthread_exit(NULL);
 
