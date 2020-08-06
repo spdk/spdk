@@ -443,26 +443,6 @@ Example commands
 
 `rpc.py bdev_lvol_create lvol2 25 -u 330a6ab2-f468-11e7-983e-001e67edf35d`
 
-# RAID {#bdev_ug_raid}
-
-RAID virtual bdev module provides functionality to combine any SPDK bdevs into
-one RAID bdev. Currently SPDK supports only RAID 0. RAID functionality does not
-store on-disk metadata on the member disks, so user must recreate the RAID
-volume when restarting application. User may specify member disks to create RAID
-volume event if they do not exists yet - as the member disks are registered at
-a later time, the RAID module will claim them and will surface the RAID volume
-after all of the member disks are available. It is allowed to use disks of
-different sizes - the smallest disk size will be the amount of space used on
-each member disk.
-
-Example commands
-
-`rpc.py bdev_raid_create -n Raid0 -z 64 -r 0 -b "lvol0 lvol1 lvol2 lvol3"`
-
-`rpc.py bdev_raid_get_bdevs`
-
-`rpc.py bdev_raid_delete Raid0`
-
 # Passthru {#bdev_config_passthru}
 
 The SPDK Passthru virtual block device module serves as an example of how to write a
@@ -511,6 +491,26 @@ Example command
 To remove a block device representation use the bdev_pmem_delete command.
 
 `rpc.py bdev_pmem_delete pmem`
+
+# RAID {#bdev_ug_raid}
+
+RAID virtual bdev module provides functionality to combine any SPDK bdevs into
+one RAID bdev. Currently SPDK supports only RAID 0. RAID functionality does not
+store on-disk metadata on the member disks, so user must recreate the RAID
+volume when restarting application. User may specify member disks to create RAID
+volume event if they do not exists yet - as the member disks are registered at
+a later time, the RAID module will claim them and will surface the RAID volume
+after all of the member disks are available. It is allowed to use disks of
+different sizes - the smallest disk size will be the amount of space used on
+each member disk.
+
+Example commands
+
+`rpc.py bdev_raid_create -n Raid0 -z 64 -r 0 -b "lvol0 lvol1 lvol2 lvol3"`
+
+`rpc.py bdev_raid_get_bdevs`
+
+`rpc.py bdev_raid_delete Raid0`
 
 # Uring {#bdev_ug_uring}
 
