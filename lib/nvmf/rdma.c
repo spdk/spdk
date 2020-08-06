@@ -3001,23 +3001,10 @@ nvmf_process_cm_event(struct spdk_nvmf_transport *transport)
 }
 
 static void
-nvmf_rdma_handle_qp_fatal(struct spdk_nvmf_rdma_qpair *rqpair)
-{
-	nvmf_rdma_update_ibv_state(rqpair);
-	spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
-}
-
-static void
 nvmf_rdma_handle_last_wqe_reached(struct spdk_nvmf_rdma_qpair *rqpair)
 {
 	rqpair->last_wqe_reached = true;
 	nvmf_rdma_destroy_drained_qpair(rqpair);
-}
-
-static void
-nvmf_rdma_handle_sq_drained(struct spdk_nvmf_rdma_qpair *rqpair)
-{
-	spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
 }
 
 static void
@@ -3092,11 +3079,8 @@ nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 		SPDK_ERRLOG("Fatal event received for rqpair %p\n", rqpair);
 		spdk_trace_record(TRACE_RDMA_IBV_ASYNC_EVENT, 0, 0,
 				  (uintptr_t)rqpair->cm_id, event.event_type);
-		rc = nvmf_rdma_send_qpair_async_event(rqpair, nvmf_rdma_handle_qp_fatal);
-		if (rc) {
-			SPDK_WARNLOG("Failed to send QP_FATAL event. rqpair %p, err %d\n", rqpair, rc);
-			nvmf_rdma_handle_qp_fatal(rqpair);
-		}
+		nvmf_rdma_update_ibv_state(rqpair);
+		spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
 		break;
 	case IBV_EVENT_QP_LAST_WQE_REACHED:
 		/* This event only occurs for shared receive queues. */
@@ -3116,11 +3100,7 @@ nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 		spdk_trace_record(TRACE_RDMA_IBV_ASYNC_EVENT, 0, 0,
 				  (uintptr_t)rqpair->cm_id, event.event_type);
 		if (nvmf_rdma_update_ibv_state(rqpair) == IBV_QPS_ERR) {
-			rc = nvmf_rdma_send_qpair_async_event(rqpair, nvmf_rdma_handle_sq_drained);
-			if (rc) {
-				SPDK_WARNLOG("Failed to send SQ_DRAINED event. rqpair %p, err %d\n", rqpair, rc);
-				nvmf_rdma_handle_sq_drained(rqpair);
-			}
+			spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
 		}
 		break;
 	case IBV_EVENT_QP_REQ_ERR:
