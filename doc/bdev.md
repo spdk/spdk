@@ -512,6 +512,28 @@ Example commands
 
 `rpc.py bdev_raid_delete Raid0`
 
+# Split {#bdev_ug_split}
+
+The split block device module takes an underlying block device and splits it into
+several smaller equal-sized virtual block devices. This serves as an example to create
+more vbdevs on a given base bdev for user testing.
+
+Example commands
+
+To create four split bdevs with base bdev_b0 use the `bdev_split_create` command.
+Each split bdev will be one fourth the size of the base bdev.
+
+`rpc.py bdev_split_create bdev_b0 4`
+
+The `split_size_mb`(-s) parameter restricts the size of each split bdev.
+The total size of all split bdevs must not exceed the base bdev size.
+
+`rpc.py bdev_split_create bdev_b0 4 -s 128`
+
+To remove the split bdevs, use the `bdev_split_delete` command with the base bdev name.
+
+`rpc.py bdev_split_delete bdev_b0`
+
 # Uring {#bdev_ug_uring}
 
 The uring bdev module issues I/O to kernel block devices using the io_uring Linux kernel API. This module requires liburing.
