@@ -406,31 +406,31 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, retry
     if action_on_timeout:
         params['action_on_timeout'] = action_on_timeout
 
-    if timeout_us:
+    if timeout_us is not None:
         params['timeout_us'] = timeout_us
 
-    if retry_count:
+    if retry_count is not None:
         params['retry_count'] = retry_count
 
-    if arbitration_burst:
+    if arbitration_burst is not None:
         params['arbitration_burst'] = arbitration_burst
 
-    if low_priority_weight:
+    if low_priority_weight is not None:
         params['low_priority_weight'] = low_priority_weight
 
-    if medium_priority_weight:
+    if medium_priority_weight is not None:
         params['medium_priority_weight'] = medium_priority_weight
 
-    if high_priority_weight:
+    if high_priority_weight is not None:
         params['high_priority_weight'] = high_priority_weight
 
     if nvme_adminq_poll_period_us:
         params['nvme_adminq_poll_period_us'] = nvme_adminq_poll_period_us
 
-    if nvme_ioq_poll_period_us:
+    if nvme_ioq_poll_period_us is not None:
         params['nvme_ioq_poll_period_us'] = nvme_ioq_poll_period_us
 
-    if io_queue_requests:
+    if io_queue_requests is not None:
         params['io_queue_requests'] = io_queue_requests
 
     if delay_cmd_submit is not None:
