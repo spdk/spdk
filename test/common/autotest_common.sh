@@ -1318,7 +1318,7 @@ function nvme_namespace_revert() {
 			nvme create-ns ${nvme_ctrlr} -s ${size} -c ${size} -b ${blksize}
 			nvme attach-ns ${nvme_ctrlr} -n 1 -c 0
 			nvme reset ${nvme_ctrlr}
-			waitforblk "${nvme_ctrlr}n1"
+			waitforfile "${nvme_ctrlr}n1"
 		fi
 	done
 }
