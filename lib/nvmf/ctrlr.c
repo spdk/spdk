@@ -403,7 +403,7 @@ _nvmf_ctrlr_destruct(void *ctx)
 	struct spdk_nvmf_reservation_log *log, *log_tmp;
 
 	nvmf_ctrlr_stop_keep_alive_timer(ctrlr);
-
+	spdk_bit_array_free(&ctrlr->qpair_mask);
 	TAILQ_FOREACH_SAFE(log, &ctrlr->log_head, link, log_tmp) {
 		TAILQ_REMOVE(&ctrlr->log_head, log, link);
 		free(log);

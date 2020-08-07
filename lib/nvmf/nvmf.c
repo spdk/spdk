@@ -866,8 +866,6 @@ _nvmf_ctrlr_free_from_qpair(void *ctx)
 	spdk_bit_array_clear(ctrlr->qpair_mask, qpair_ctx->qid);
 	count = spdk_bit_array_count_set(ctrlr->qpair_mask);
 	if (count == 0) {
-		spdk_bit_array_free(&ctrlr->qpair_mask);
-
 		spdk_thread_send_msg(ctrlr->subsys->thread, _nvmf_ctrlr_destruct, ctrlr);
 	}
 
