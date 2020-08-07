@@ -234,6 +234,7 @@ struct spdk_nvmf_ctrlr {
 	struct spdk_poller		*association_timer;
 
 	bool				dif_insert_or_strip;
+	bool				in_destruct;
 
 	TAILQ_ENTRY(spdk_nvmf_ctrlr)	link;
 };

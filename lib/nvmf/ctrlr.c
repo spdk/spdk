@@ -451,6 +451,13 @@ nvmf_ctrlr_add_io_qpair(void *ctx)
 	  */
 	qpair->ctrlr = NULL;
 
+	/* Make sure the controller is not being destroyed. */
+	if (ctrlr->in_destruct) {
+		SPDK_ERRLOG("Got I/O connect while ctrlr was being destroyed.\n");
+		SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
+		goto end;
+	}
+
 	if (ctrlr->subsys->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
 		SPDK_ERRLOG("I/O connect not allowed on discovery controller\n");
 		SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
@@ -504,6 +511,14 @@ _nvmf_ctrlr_add_io_qpair(void *ctx)
 	if (ctrlr == NULL) {
 		SPDK_ERRLOG("Unknown controller ID 0x%x\n", data->cntlid);
 		SPDK_NVMF_INVALID_CONNECT_DATA(rsp, cntlid);
+		spdk_nvmf_request_complete(req);
+		return;
+	}
+
+	/* fail before passing a message to the controller thread. */
+	if (ctrlr->in_destruct) {
+		SPDK_ERRLOG("Got I/O connect while ctrlr was being destroyed.\n");
+		SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
 		spdk_nvmf_request_complete(req);
 		return;
 	}
