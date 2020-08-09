@@ -78,9 +78,7 @@ struct bdev_rbd_io_channel {
 };
 
 struct bdev_rbd_io {
-	uint64_t remaining_len;
-	int num_segments;
-	bool failed;
+	size_t	total_len;
 };
 
 static void
@@ -235,11 +233,12 @@ bdev_rbd_finish_aiocb(rbd_completion_t cb, void *arg)
 
 static int
 bdev_rbd_start_aio(rbd_image_t image, struct spdk_bdev_io *bdev_io,
-		   void *buf, uint64_t offset, size_t len)
+		   struct iovec *iov, int iovcnt, uint64_t offset, size_t len)
 {
 	int ret;
 	rbd_completion_t comp;
 
+	struct bdev_rbd_io *rbd_io;
 	ret = rbd_aio_create_completion(bdev_io, bdev_rbd_finish_aiocb,
 					&comp);
 	if (ret < 0) {
@@ -247,11 +246,11 @@ bdev_rbd_start_aio(rbd_image_t image, struct spdk_bdev_io *bdev_io,
 	}
 
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
-		ret = rbd_aio_read(image, offset, len,
-				   buf, comp);
+		rbd_io = (struct bdev_rbd_io *)bdev_io->driver_ctx;
+		rbd_io->total_len = len;
+		ret = rbd_aio_readv(image, iov, iovcnt, offset, comp);
 	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-		ret = rbd_aio_write(image, offset, len,
-				    buf, comp);
+		ret = rbd_aio_writev(image, iov, iovcnt, offset, comp);
 	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_FLUSH) {
 		ret = rbd_aio_flush(image, comp);
 	}
@@ -285,40 +284,9 @@ bdev_rbd_rw(struct bdev_rbd *disk, struct spdk_io_channel *ch,
 	    struct spdk_bdev_io *bdev_io, struct iovec *iov,
 	    int iovcnt, size_t len, uint64_t offset)
 {
-	struct bdev_rbd_io *rbd_io = (struct bdev_rbd_io *)bdev_io->driver_ctx;
 	struct bdev_rbd_io_channel *rbdio_ch = spdk_io_channel_get_ctx(ch);
-	size_t remaining = len;
-	int i, rc;
 
-	rbd_io->remaining_len = 0;
-	rbd_io->num_segments = 0;
-	rbd_io->failed = false;
-
-	for (i = 0; i < iovcnt && remaining > 0; i++) {
-		size_t seg_len = spdk_min(remaining, iov[i].iov_len);
-
-		rc = bdev_rbd_start_aio(rbdio_ch->image, bdev_io, iov[i].iov_base, offset, seg_len);
-		if (rc) {
-			/*
-			 * This bdev_rbd_start_aio() call failed, but if any previous ones were
-			 * submitted, we need to wait for them to finish.
-			 */
-			if (rbd_io->num_segments == 0) {
-				/* No previous I/O submitted - return error code immediately. */
-				return rc;
-			}
-
-			/* Return and wait for outstanding I/O to complete. */
-			rbd_io->failed = true;
-			return 0;
-		}
-
-		rbd_io->num_segments++;
-		rbd_io->remaining_len += seg_len;
-
-		offset += seg_len;
-		remaining -= seg_len;
-	}
+	return bdev_rbd_start_aio(rbdio_ch->image, bdev_io, iov, iovcnt, offset, len);
 
 	return 0;
 }
@@ -328,10 +296,8 @@ bdev_rbd_flush(struct bdev_rbd *disk, struct spdk_io_channel *ch,
 	       struct spdk_bdev_io *bdev_io, uint64_t offset, uint64_t nbytes)
 {
 	struct bdev_rbd_io_channel *rbdio_ch = spdk_io_channel_get_ctx(ch);
-	struct bdev_rbd_io *rbd_io = (struct bdev_rbd_io *)bdev_io->driver_ctx;
 
-	rbd_io->num_segments++;
-	return bdev_rbd_start_aio(rbdio_ch->image, bdev_io, NULL, offset, nbytes);
+	return bdev_rbd_start_aio(rbdio_ch->image, bdev_io, NULL, 0, offset, nbytes);
 }
 
 static int
@@ -463,6 +429,7 @@ bdev_rbd_io_poll(void *arg)
 	rbd_completion_t comps[SPDK_RBD_QUEUE_DEPTH];
 	struct spdk_bdev_io *bdev_io;
 	struct bdev_rbd_io *rbd_io;
+	enum spdk_bdev_io_status bio_status;
 
 	rc = poll(&ch->pfd, 1, 0);
 
@@ -476,32 +443,22 @@ bdev_rbd_io_poll(void *arg)
 		bdev_io = rbd_aio_get_arg(comps[i]);
 		rbd_io = (struct bdev_rbd_io *)bdev_io->driver_ctx;
 		io_status = rbd_aio_get_return_value(comps[i]);
-
-		assert(rbd_io->num_segments > 0);
-		rbd_io->num_segments--;
+		bio_status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
 		if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
-			if (io_status > 0) {
-				/* For reads, io_status is the length */
-				rbd_io->remaining_len -= io_status;
-			}
-
-			if (rbd_io->num_segments == 0 && rbd_io->remaining_len != 0) {
-				rbd_io->failed = true;
+			if ((int)rbd_io->total_len != io_status) {
+				bio_status = SPDK_BDEV_IO_STATUS_FAILED;
 			}
 		} else {
 			/* For others, 0 means success */
 			if (io_status != 0) {
-				rbd_io->failed = true;
+				bio_status = SPDK_BDEV_IO_STATUS_FAILED;
 			}
 		}
 
 		rbd_aio_release(comps[i]);
 
-		if (rbd_io->num_segments == 0) {
-			spdk_bdev_io_complete(bdev_io,
-					      rbd_io->failed ? SPDK_BDEV_IO_STATUS_FAILED : SPDK_BDEV_IO_STATUS_SUCCESS);
-		}
+		spdk_bdev_io_complete(bdev_io, bio_status);
 	}
 
 	return rc > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
