@@ -914,6 +914,31 @@ iscsi_tgt_node_redirect(struct spdk_iscsi_tgt_node *target, int pg_tag,
 	return 0;
 }
 
+bool
+iscsi_tgt_node_is_redirected(struct spdk_iscsi_conn *conn,
+			     struct spdk_iscsi_tgt_node *target,
+			     char *buf, int buf_len)
+{
+	struct spdk_iscsi_pg_map *pg_map;
+
+	if (conn == NULL || target == NULL || buf == NULL || buf_len == 0) {
+		return false;
+	}
+
+	pg_map = iscsi_tgt_node_find_pg_map(target, conn->portal->group);
+	if (pg_map == NULL) {
+		return false;
+	}
+
+	if (pg_map->redirect_host[0] == '\0' || pg_map->redirect_port[0] == '\0') {
+		return false;
+	}
+
+	snprintf(buf, buf_len, "%s:%s", pg_map->redirect_host, pg_map->redirect_port);
+
+	return true;
+}
+
 static int
 check_iscsi_name(const char *name)
 {

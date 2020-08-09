@@ -1427,8 +1427,8 @@ iscsi_op_login_check_target(struct spdk_iscsi_conn *conn,
 			    const char *target_name,
 			    struct spdk_iscsi_tgt_node **target)
 {
-	bool result;
 	struct iscsi_bhs_login_rsp *rsph;
+	char buf[MAX_TMPBUF] = {};
 
 	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 	*target = iscsi_find_tgt_node(target_name);
@@ -1445,10 +1445,19 @@ iscsi_op_login_check_target(struct spdk_iscsi_conn *conn,
 		rsph->status_detail = ISCSI_LOGIN_TARGET_REMOVED;
 		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
 	}
-	result = iscsi_tgt_node_access(conn, *target,
-				       conn->initiator_name,
-				       conn->initiator_addr);
-	if (!result) {
+	if (iscsi_tgt_node_is_redirected(conn, *target, buf, MAX_TMPBUF)) {
+		SPDK_INFOLOG(SPDK_LOG_ISCSI, "target %s is redirectd\n", target_name);
+		rsp_pdu->data_segment_len = iscsi_append_text("TargetAddress",
+					    buf,
+					    rsp_pdu->data,
+					    rsp_pdu->data_buf_len,
+					    rsp_pdu->data_segment_len);
+		rsph->status_class = ISCSI_CLASS_REDIRECT;
+		rsph->status_detail = ISCSI_LOGIN_TARGET_TEMPORARILY_MOVED;
+		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
+	}
+	if (!iscsi_tgt_node_access(conn, *target, conn->initiator_name,
+				   conn->initiator_addr)) {
 		SPDK_ERRLOG("access denied\n");
 		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
 		rsph->status_detail = ISCSI_LOGIN_AUTHORIZATION_FAIL;

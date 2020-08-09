@@ -130,6 +130,9 @@ int iscsi_target_node_remove_pg_ig_maps(struct spdk_iscsi_tgt_node *target,
 					uint16_t num_maps);
 int iscsi_tgt_node_redirect(struct spdk_iscsi_tgt_node *target, int pg_tag,
 			    const char *host, const char *port);
+bool iscsi_tgt_node_is_redirected(struct spdk_iscsi_conn *conn,
+				  struct spdk_iscsi_tgt_node *target,
+				  char *buf, int buf_len);
 
 bool iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
 			   struct spdk_iscsi_tgt_node *target, const char *iqn,
