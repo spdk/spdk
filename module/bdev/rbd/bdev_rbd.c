@@ -536,12 +536,24 @@ bdev_rbd_handle(void *arg)
 {
 	struct bdev_rbd_io_channel *ch = arg;
 	void *ret = arg;
+	int rc;
+
+	rc = bdev_rados_context_init(ch->disk->user_id, ch->disk->pool_name,
+				     (const char *const *)ch->disk->config,
+				     &ch->cluster, &ch->io_ctx);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to create rados context for user_id %s and rbd_pool=%s\n",
+			    ch->disk->user_id ? ch->disk->user_id : "admin (the default)", ch->disk->pool_name);
+		ret = NULL;
+		goto end;
+	}
 
 	if (rbd_open(ch->io_ctx, ch->disk->rbd_name, &ch->image, NULL) < 0) {
 		SPDK_ERRLOG("Failed to open specified rbd device\n");
 		ret = NULL;
 	}
 
+end:
 	return ret;
 }
 
@@ -555,15 +567,6 @@ bdev_rbd_create_cb(void *io_device, void *ctx_buf)
 	ch->image = NULL;
 	ch->io_ctx = NULL;
 	ch->pfd.fd = -1;
-
-	ret = bdev_rados_context_init(ch->disk->user_id, ch->disk->pool_name,
-				      (const char *const *)ch->disk->config,
-				      &ch->cluster, &ch->io_ctx);
-	if (ret < 0) {
-		SPDK_ERRLOG("Failed to create rados context for user_id %s and rbd_pool=%s\n",
-			    ch->disk->user_id ? ch->disk->user_id : "admin (the default)", ch->disk->pool_name);
-		goto err;
-	}
 
 	if (spdk_call_unaffinitized(bdev_rbd_handle, ch) == NULL) {
 		goto err;
