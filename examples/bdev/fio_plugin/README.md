@@ -49,7 +49,7 @@ directory as this README).
 
 The fio configuration file must contain one new parameter:
 
-    spdk_conf=./examples/bdev/fio_plugin/bdev.conf
+    spdk_json_conf=./examples/bdev/fio_plugin/bdev.json
 
 This must point at an SPDK configuration file. There are a number of example configuration
 files in the SPDK repository under etc/spdk.

@@ -35,7 +35,6 @@
 
 #include "spdk/bdev.h"
 #include "spdk/accel_engine.h"
-#include "spdk/conf.h"
 #include "spdk/env.h"
 #include "spdk/thread.h"
 #include "spdk/log.h"
@@ -198,12 +197,8 @@ spdk_fio_bdev_init_start(void *arg)
 {
 	bool *done = arg;
 
-	if (g_json_config_file != NULL) {
-		spdk_app_json_config_load(g_json_config_file, SPDK_DEFAULT_RPC_ADDR,
-					  spdk_fio_bdev_init_done, done, true);
-	} else {
-		spdk_subsystem_init(spdk_fio_bdev_init_done, done);
-	}
+	spdk_app_json_config_load(g_json_config_file, SPDK_DEFAULT_RPC_ADDR,
+				  spdk_fio_bdev_init_done, done, true);
 }
 
 static void
@@ -226,7 +221,6 @@ spdk_init_thread_poll(void *arg)
 	struct spdk_fio_options		*eo = arg;
 	struct spdk_fio_thread		*fio_thread;
 	struct spdk_fio_thread		*thread, *tmp;
-	struct spdk_conf		*config = NULL;
 	struct spdk_env_opts		opts;
 	bool				done;
 	int				rc;
@@ -245,26 +239,7 @@ spdk_init_thread_poll(void *arg)
 		rc = EINVAL;
 		goto err_exit;
 	} else if (eo->conf && strlen(eo->conf)) {
-		config = spdk_conf_allocate();
-		if (!config) {
-			SPDK_ERRLOG("Unable to allocate configuration file\n");
-			rc = ENOMEM;
-			goto err_exit;
-		}
-
-		rc = spdk_conf_read(config, eo->conf);
-		if (rc != 0) {
-			SPDK_ERRLOG("Invalid configuration file format\n");
-			spdk_conf_free(config);
-			goto err_exit;
-		}
-		if (spdk_conf_first_section(config) == NULL) {
-			SPDK_ERRLOG("Invalid configuration file format\n");
-			spdk_conf_free(config);
-			rc = EINVAL;
-			goto err_exit;
-		}
-		spdk_conf_set_as_default(config);
+		g_json_config_file = eo->conf;
 	} else if (eo->json_conf && strlen(eo->json_conf)) {
 		g_json_config_file = eo->json_conf;
 	} else {
@@ -284,7 +259,6 @@ spdk_init_thread_poll(void *arg)
 
 	if (spdk_env_init(&opts) < 0) {
 		SPDK_ERRLOG("Unable to initialize SPDK env\n");
-		spdk_conf_free(config);
 		rc = EINVAL;
 		goto err_exit;
 	}
@@ -781,7 +755,7 @@ static struct fio_option options[] = {
 		.lname		= "SPDK configuration file",
 		.type		= FIO_OPT_STR_STORE,
 		.off1		= offsetof(struct spdk_fio_options, conf),
-		.help		= "A SPDK configuration file",
+		.help		= "A SPDK JSON configuration file",
 		.category	= FIO_OPT_C_ENGINE,
 		.group		= FIO_OPT_G_INVALID,
 	},

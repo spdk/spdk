@@ -34,6 +34,11 @@ and removed `usr1_handler` from `struct spdk_app_opts` callback that was used to
 
 Updated DPDK submodule to DPDK 20.08.
 
+### fio
+
+Bdev fio_plugin no longer supports legacy configuration files. Options `spdk_conf` and
+`spdk_json_conf` have to point to valid JSON configuration.
+
 ### gpt
 
 Removed option to disable GPT probing via legacy configuration. Please use generic
