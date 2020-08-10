@@ -94,6 +94,24 @@ def copy_spdk_artifacts(config, plugins_sync_backend)
   config.vm.synced_folder "#{vagrantfile_dir}/output", "/home/vagrant/spdk_repo/output", plugins_sync_backend
 end
 
+def make_spdk_local_copy_of_nfs(config,distro)
+  user_group = 'vagrant:vagrant'
+  if distro.include? 'clearlinux'
+    user_group = 'clear:clear'
+  end
+
+  spdk_path = '/home/vagrant/spdk_repo/spdk'
+  spdk_tmp_path = '/tmp/spdk'
+  $spdk_repo_cmd = <<-SCRIPT
+  sudo -s
+  cp -R '#{spdk_path}' '#{spdk_tmp_path}'
+  umount '#{spdk_path}' && rm -rf '#{spdk_path}'
+  mv '#{spdk_tmp_path}' '#{spdk_path}'
+  chown -R #{user_group} '#{spdk_path}'
+  SCRIPT
+
+  config.vm.provision "shell", inline: $spdk_repo_cmd
+end
 
 Vagrant.configure(2) do |config|
 
@@ -165,25 +183,7 @@ Vagrant.configure(2) do |config|
   # on host filesystem.
   # To make sources usable in the guest VM we need to unmount them and use
   # local copy.
-  if distro.include? "freebsd"
-    $freebsd_spdk_repo = <<-SCRIPT
-    sudo -s
-    cp -R /home/vagrant/spdk_repo/spdk /tmp/spdk
-    umount /home/vagrant/spdk_repo/spdk && rm -rf /home/vagrant/spdk_repo/spdk
-    mv /tmp/spdk /home/vagrant/spdk_repo/spdk
-    chown -R vagrant:vagrant /home/vagrant/spdk_repo/spdk
-    SCRIPT
-    config.vm.provision "shell", inline: $freebsd_spdk_repo
-  elsif distro.include? "clearlinux"
-    $clearlinux_spdk_repo = <<-SCRIPT
-    sudo -s
-    cp -R /home/vagrant/spdk_repo/spdk /tmp/spdk
-    umount /home/vagrant/spdk_repo/spdk && rm -rf /home/vagrant/spdk_repo/spdk
-    mv /tmp/spdk /home/vagrant/spdk_repo/spdk
-    chown -R clear:clear /home/vagrant/spdk_repo/spdk
-    SCRIPT
-    config.vm.provision "shell", inline: $clearlinux_spdk_repo
-  end
+  make_spdk_local_copy_of_nfs(config,distro) if plugins_sync_backend[:type] == :nfs
 
   config.ssh.forward_agent = true
   config.ssh.forward_x11 = true
