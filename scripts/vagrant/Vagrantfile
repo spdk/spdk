@@ -226,6 +226,55 @@ def setup_virtualbox(config, vmcpu, vmram)
   end
 end
 
+def setup_libvirt(config, vmcpu, vmram, distro)
+  emulated_nvme_types=(ENV['NVME_DISKS_TYPE'] || "nvme").split(',')
+
+  config.vm.provider "libvirt" do |libvirt, override|
+    libvirt.random_hostname = "1"
+    libvirt.driver = "kvm"
+    libvirt.graphics_type = "vnc"
+    libvirt.memory = vmram
+    libvirt.cpus = vmcpu
+    libvirt.video_type = "cirrus"
+
+    if (distro.include?("freebsd"))
+      # generic/freebsd boxes need to be explicitly run with SCSI bus,
+      # otherwise boot process fails on mounting the disk
+      libvirt.disk_bus = "scsi"
+    elsif (distro.include?("arch"))
+      # Run generic/arch boxes explicitly with IDE bus,
+      # otherwise boot process fails on mounting the disk
+      libvirt.disk_bus = "ide"
+    else
+      libvirt.disk_bus = "virtio"
+    end
+
+    if ENV['SPDK_QEMU_EMULATOR']
+      libvirt.emulator_path = ENV['SPDK_QEMU_EMULATOR']
+      libvirt.machine_type = "pc"
+    end
+
+    # we put nvme_disk inside default pool to eliminate libvirt/SELinux Permissions Problems
+    # and to be able to run vagrant from user $HOME directory
+
+    # Loop to create all emulated disks set
+    emulated_nvme_types.each_with_index { |disk, index|
+      if disk == "nvme"
+        setup_nvme_disk(libvirt, disk, index)
+      elsif disk == "ocssd"
+        setup_ocssd_disk(libvirt, disk, index)
+      end
+    }
+
+    if ENV['VAGRANT_HUGE_MEM'] == "1"
+      libvirt.memorybacking :hugepages
+    end
+
+    # Optional field if we want use other storage pools than default
+    # libvirt.storage_pool_name = "vm"
+  end
+end
+
 Vagrant.configure(2) do |config|
 
   # Pick the right distro and bootstrap, default is fedora30
@@ -304,52 +353,7 @@ Vagrant.configure(2) do |config|
   # This setup was Tested on Fedora 27
   # libvirt configuration need modern Qemu(tested on 2.10) & vagrant-libvirt in version 0.0.39+
   # There are few limitation for SElinux - The file added outside libvirt must have proper SE ACL policy or setenforce 0
-  config.vm.provider "libvirt" do |libvirt, override|
-    libvirt.random_hostname = "1"
-    libvirt.disk_bus = "virtio"
-
-    # generic/freebsd boxes need to be explicitly run with SCSI bus,
-    # otherwise boot process fails on mounting the disk
-    if (distro.include?("freebsd"))
-      libvirt.disk_bus = "scsi"
-    end
-
-    # Run generic/arch boxes explicitly with IDE bus,
-    # otherwise boot process fails on mounting the disk
-    if (distro.include?("arch"))
-      libvirt.disk_bus = "ide"
-    end
-
-    if not vmemulator.empty?
-      libvirt.emulator_path = vmemulator
-      libvirt.machine_type = "pc"
-    end
-
-    # we put nvme_disk inside default pool to eliminate libvirt/SELinux Permissions Problems
-    # and to be able to run vagrant from user $HOME directory
-
-    # Loop to create all emulated disks set
-    emulated_nvme_types.each_with_index { |disk, index|
-      if disk == "nvme"
-        setup_nvme_disk(libvirt, disk, index)
-      elsif disk == "ocssd"
-        setup_ocssd_disk(libvirt, disk, index)
-      end
-    }
-
-    libvirt.driver = "kvm"
-    libvirt.graphics_type = "vnc"
-    libvirt.memory = vmram
-    libvirt.cpus = vmcpu
-    libvirt.video_type = "cirrus"
-
-    if ENV['VAGRANT_HUGE_MEM'] == "1"
-      libvirt.memorybacking :hugepages
-    end
-
-    # Optional field if we want use other storage pools than default
-    # libvirt.storage_pool_name = "vm"
-  end
+  setup_libvirt(config,vmcpu,vmram,distro)
 
   # provision the vm with all of the necessary spdk dependencies for running the autorun.sh tests
   deploy_test_vm(config)
