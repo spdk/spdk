@@ -275,38 +275,34 @@ def setup_libvirt(config, vmcpu, vmram, distro)
   end
 end
 
-Vagrant.configure(2) do |config|
+#################################################################################################
+# Pick the right distro and bootstrap, default is fedora30
+distro = (ENV['SPDK_VAGRANT_DISTRO'] || "fedora30")
+provider = (ENV['SPDK_VAGRANT_PROVIDER'] || "virtualbox")
 
-  # Pick the right distro and bootstrap, default is fedora30
-  distro = ( ENV['SPDK_VAGRANT_DISTRO'] || "fedora30")
-  provider = (ENV['SPDK_VAGRANT_PROVIDER'] || "virtualbox")
+# Get all variables for creating vm
+vmcpu = (ENV['SPDK_VAGRANT_VMCPU'] || 2)
+vmram = (ENV['SPDK_VAGRANT_VMRAM'] || 4096)
+nfs_sync_backend_distros = ['freebsd', 'clearlinux']
 
-  # Get all variables for creating vm
-  vmcpu=(ENV['SPDK_VAGRANT_VMCPU'] || 2)
-  vmram=(ENV['SPDK_VAGRANT_VMRAM'] || 4096)
-  spdk_dir=(ENV['SPDK_DIR'] || "none")
-  vmemulator=(ENV['SPDK_QEMU_EMULATOR'] || "")
-  emulated_nvme_types=(ENV['NVME_DISKS_TYPE'] || "nvme").split(',')
-  nvme_namespaces=(ENV['NVME_DISKS_NAMESPACES'] || "").split(',')
-  nvme_file=(ENV['NVME_FILE'] || "").split(',')
-  nvme_cmbs=(ENV['NVME_CMB'] || "").split(',')
-  vagrantfile_dir=(ENV['VAGRANTFILE_DIR'] || "none")
-
-  # generic/freebsd boxes do not work properly with vagrant-proxyconf and
-  # have issues installing rsync and sshfs for syncing files. NFS is
-  # pre-installed, so use it.
-  # generic/fedora boxes on the other hand have problems running NFS
-  # service so use sshfs+rsync combo instead.
-  plugins_sync_backend = {type: :sshfs}
+# generic/freebsd boxes do not work properly with vagrant-proxyconf and
+# have issues installing rsync and sshfs for syncing files. NFS is
+# pre-installed, so use it.
+# generic/fedora boxes on the other hand have problems running NFS
+# service so use sshfs+rsync combo instead.
+if (nfs_sync_backend_distros.any? { |d| distro.include?(d) })
+  files_sync_backend = {type: :nfs, nfs_udp: false,  mount_options: ['ro']}
+  plugins_sync_backend = {type: :nfs, nfs_udp: false}
+else
   # Remove --copy-links from default rsync cmdline since we do want to sync
   # actual symlinks as well. Also, since copy is made between host and its
   # local VM we don't need to worry about saturating the local link so skip
   # the compression to speed up the whole transfer.
   files_sync_backend = {type: "rsync", rsync__auto: false, rsync__args: ["--archive", "--verbose", "--delete"]}
-  if (distro.include? "freebsd") || (distro.include? "clearlinux")
-    plugins_sync_backend = {type: :nfs, nfs_udp: false}
-    files_sync_backend = {type: :nfs, nfs_udp: false,  mount_options: ['ro']}
-  end
+  plugins_sync_backend = {type: :sshfs}
+end
+
+Vagrant.configure(2) do |config|
   config.vm.box = get_box_type(distro)
   config.vm.box_check_update = false
   config.vm.synced_folder '.', '/vagrant', disabled: true
