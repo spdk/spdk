@@ -113,6 +113,17 @@ def make_spdk_local_copy_of_nfs(config,distro)
   config.vm.provision "shell", inline: $spdk_repo_cmd
 end
 
+def clear_cflags(config)
+  $clearcflags_cmd = <<-SCRIPT
+  echo "export CFLAGS=" >> /etc/profile.d/clearcflags.sh
+  echo "export CFFLAGS=" >> /etc/profile.d/clearcflags.sh
+  echo "export CXXFLAGS=" >> /etc/profile.d/clearcflags.sh
+  echo "export FFLAGS=" >> /etc/profile.d/clearcflags.sh
+  echo "export THEANO_FLAGS=" >> /etc/profile.d/clearcflags.sh
+  SCRIPT
+  config.vm.provision "shell", inline: $clearcflags_cmd, run: "always"
+end
+
 Vagrant.configure(2) do |config|
 
   # Pick the right distro and bootstrap, default is fedora30
@@ -177,6 +188,9 @@ Vagrant.configure(2) do |config|
 
   # use http proxy if avaiable
   setup_proxy(config, distro)
+
+  # Clear CFLAGS in clear linux
+  clear_cflags(config) if distro == 'clearlinux'
 
   # freebsd and clearlinux boxes in order to have spdk sources synced from
   # host properly will use NFS with "ro" option enabled to prevent changes
@@ -296,17 +310,5 @@ Vagrant.configure(2) do |config|
       setup.privileged = false
       setup.args = ["-u", "-i"]
     end
-  end
-
-  # Clear CFLAGS in clear linux
-  if distro == "clearlinux"
-    $clearcflags = <<-SCRIPT
-    echo "export CFLAGS=" >> /etc/profile.d/clearcflags.sh
-    echo "export CFFLAGS=" >> /etc/profile.d/clearcflags.sh
-    echo "export CXXFLAGS=" >> /etc/profile.d/clearcflags.sh
-    echo "export FFLAGS=" >> /etc/profile.d/clearcflags.sh
-    echo "export THEANO_FLAGS=" >> /etc/profile.d/clearcflags.sh
-    SCRIPT
-    config.vm.provision "shell", inline: $clearcflags, run: "always"
   end
 end
