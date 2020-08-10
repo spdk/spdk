@@ -25,6 +25,30 @@ def get_box_type(distro)
   return distro_to_type[distro]
 end
 
+def setup_proxy(config,distro)
+  return unless ENV['http_proxy']
+
+  if Vagrant.has_plugin?("vagrant-proxyconf")
+    config.proxy.http     = ENV['http_proxy']
+    config.proxy.https    = ENV['https_proxy']
+    config.proxy.no_proxy = "localhost,127.0.0.1"
+  end
+
+  # Proxyconf does not seem to support FreeBSD boxes or at least it's
+  # docs do not mention that. Set up proxy configuration manually.
+  if distro.include?("freebsd")
+    $freebsd_proxy = <<-SCRIPT
+    sudo -s
+    echo "export http_proxy=#{ENV['http_proxy']}" >> /etc/profile
+    echo "export https_proxy=#{ENV['http_proxy']}" >> /etc/profile
+    echo "pkg_env: {http_proxy: #{ENV['http_proxy']}}" > /usr/local/etc/pkg.conf
+    chown root:wheel /usr/local/etc/pkg.conf
+    chmod 644 /usr/local/etc/pkg.conf
+    SCRIPT
+    config.vm.provision "shell", inline: $freebsd_proxy
+  end
+end
+
 Vagrant.configure(2) do |config|
 
   # Pick the right distro and bootstrap, default is fedora30
@@ -89,27 +113,7 @@ Vagrant.configure(2) do |config|
   end
 
   # use http proxy if avaiable
-  if ENV['http_proxy']
-    if Vagrant.has_plugin?("vagrant-proxyconf")
-      config.proxy.http     = ENV['http_proxy']
-      config.proxy.https    = ENV['https_proxy']
-      config.proxy.no_proxy = "localhost,127.0.0.1"
-    end
-
-    # Proxyconf does not seem to support FreeBSD boxes or at least it's
-    # docs do not mention that. Set up proxy configuration manually.
-    if distro.include?("freebsd")
-      $freebsd_proxy = <<-SCRIPT
-      sudo -s
-      echo "export http_proxy=#{ENV['http_proxy']}" >> /etc/profile
-      echo "export https_proxy=#{ENV['http_proxy']}" >> /etc/profile
-      echo "pkg_env: {http_proxy: #{ENV['http_proxy']}}" > /usr/local/etc/pkg.conf
-      chown root:wheel /usr/local/etc/pkg.conf
-      chmod 644 /usr/local/etc/pkg.conf
-      SCRIPT
-      config.vm.provision "shell", inline: $freebsd_proxy
-    end
-  end
+  setup_proxy(config, distro)
 
   # freebsd and clearlinux boxes in order to have spdk sources synced from
   # host properly will use NFS with "ro" option enabled to prevent changes
