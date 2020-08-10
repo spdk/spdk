@@ -49,6 +49,52 @@ def setup_proxy(config,distro)
   end
 end
 
+def copy_gitconfig(config)
+  src_path = '~/.gitconfig'
+  return unless File.file?(File.expand_path(src_path))
+
+  config.vm.provision  "file", source: src_path, destination: ".gitconfig"
+end
+
+def copy_tsocks(config)
+  tsocks_file = 'tsocks.conf'
+  tsocks_file_path = '/etc/' + tsocks_file
+
+  return unless File.file?(tsocks_file_path)
+
+  $tsocks_copy_cmd = <<-SCRIPT
+  sudo -s
+  mv -f "#{tsocks_file}" "#{tsocks_file_path}"
+  chown root "#{tsocks_file_path}"
+  chmod 644 "#{tsocks_file_path}"
+  SCRIPT
+
+  config.vm.provision  "file", source: tsocks_file_path, destination: tsocks_file
+  config.vm.provision "shell", inline: $tsocks_copy_cmd
+end
+
+def copy_vagrant_tools(config,files_sync_backend)
+  src_path = '~/vagrant_tools'
+  return unless File.directory?(File.expand_path(src_path))
+
+  config.vm.synced_folder src_path, "/home/vagrant/tools", files_sync_backend
+end
+
+def copy_spdk_dir(config, files_sync_backend)
+  return unless ENV['COPY_SPDK_DIR'] == "1"
+  return unless ENV['SPDK_DIR']
+
+  config.vm.synced_folder ENV['SPDK_DIR'], '/home/vagrant/spdk_repo/spdk', files_sync_backend
+end
+
+def copy_spdk_artifacts(config, plugins_sync_backend)
+  return unless ENV['COPY_SPDK_ARTIFACTS'] == "1"
+
+  vagrantfile_dir=(ENV['VAGRANTFILE_DIR'] || "none")
+  config.vm.synced_folder "#{vagrantfile_dir}/output", "/home/vagrant/spdk_repo/output", plugins_sync_backend
+end
+
+
 Vagrant.configure(2) do |config|
 
   # Pick the right distro and bootstrap, default is fedora30
@@ -86,21 +132,20 @@ Vagrant.configure(2) do |config|
   config.vm.synced_folder '.', '/vagrant', disabled: true
 
   # Copy in the .gitconfig if it exists
-  if File.file?(File.expand_path("~/.gitconfig"))
-    config.vm.provision  "file", source: "~/.gitconfig", destination: ".gitconfig"
-  end
+  copy_gitconfig(config)
 
   # Copy the tsocks configuration file for use when installing some spdk test pool dependencies
-  if File.file?("/etc/tsocks.conf")
-    $tsocks_copy = <<-SCRIPT
-    sudo -s
-    mv -f tsocks.conf /etc/tsocks.conf
-    chown root /etc/tsocks.conf
-    chmod 644 /etc/tsocks.conf
-    SCRIPT
-    config.vm.provision  "file", source: "/etc/tsocks.conf", destination: "tsocks.conf"
-    config.vm.provision "shell", inline: $tsocks_copy
-  end
+  copy_tsocks(config)
+
+  # Copy in the user's tools if they exists
+  copy_vagrant_tools(config,files_sync_backend)
+
+  # rsync the spdk directory if provision hasn't happened yet
+  # Warning: rsync does not work with freebsd boxes, so this step is disabled
+  copy_spdk_dir(config, files_sync_backend)
+
+  # rsync artifacts from build
+  copy_spdk_artifacts(config, plugins_sync_backend)
 
   # vagrant-cachier caches apt/yum etc to speed subsequent
   # vagrant up
@@ -244,17 +289,6 @@ Vagrant.configure(2) do |config|
     # libvirt.storage_pool_name = "vm"
   end
 
-  # rsync the spdk directory if provision hasn't happened yet
-  # Warning: rsync does not work with freebsd boxes, so this step is disabled
-  if ENV['COPY_SPDK_DIR'] == "1" && spdk_dir != "none"
-    config.vm.synced_folder spdk_dir, "/home/vagrant/spdk_repo/spdk", files_sync_backend
-  end
-
-  # rsync artifacts from build
-  if ENV['COPY_SPDK_ARTIFACTS'] == "1"
-    config.vm.synced_folder "#{vagrantfile_dir}/output", "/home/vagrant/spdk_repo/output", plugins_sync_backend
-  end
-
   # provision the vm with all of the necessary spdk dependencies for running the autorun.sh tests
   if ENV['DEPLOY_TEST_VM'] == "1" && spdk_dir != "none"
     config.vm.provision "shell" do |setup|
@@ -274,10 +308,5 @@ Vagrant.configure(2) do |config|
     echo "export THEANO_FLAGS=" >> /etc/profile.d/clearcflags.sh
     SCRIPT
     config.vm.provision "shell", inline: $clearcflags, run: "always"
-  end
-
-  # Copy in the user's tools if they exists
-  if File.directory?(File.expand_path("~/vagrant_tools"))
-    config.vm.synced_folder "~/vagrant_tools", "/home/vagrant/tools", files_sync_backend
   end
 end
