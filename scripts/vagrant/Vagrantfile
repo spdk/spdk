@@ -196,6 +196,17 @@ def setup_vagrant_cachier(config, plugins_sync_backend)
   end
 end
 
+def deploy_test_vm(config)
+  return unless ENV['DEPLOY_TEST_VM'] == "1"
+  return unless ENV['SPDK_DIR']
+
+  config.vm.provision "shell" do |setup|
+    setup.path = ENV['SPDK_DIR'] + '/test/common/config/vm_setup.sh'
+    setup.privileged = false
+    setup.args = ["-u", "-i"]
+  end
+end
+
 Vagrant.configure(2) do |config|
 
   # Pick the right distro and bootstrap, default is fedora30
@@ -336,11 +347,5 @@ Vagrant.configure(2) do |config|
   end
 
   # provision the vm with all of the necessary spdk dependencies for running the autorun.sh tests
-  if ENV['DEPLOY_TEST_VM'] == "1" && spdk_dir != "none"
-    config.vm.provision "shell" do |setup|
-      setup.path = "#{spdk_dir}/test/common/config/vm_setup.sh"
-      setup.privileged = false
-      setup.args = ["-u", "-i"]
-    end
-  end
+  deploy_test_vm(config)
 end
