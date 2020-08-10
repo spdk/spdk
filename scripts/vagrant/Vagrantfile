@@ -207,6 +207,25 @@ def deploy_test_vm(config)
   end
 end
 
+def setup_virtualbox(config, vmcpu, vmram)
+  config.vm.provider "virtualbox" do |vb|
+    vb.customize ["modifyvm", :id, "--ioapic", "on"]
+    vb.memory = vmram
+    vb.cpus = vmcpu
+
+    nvme_disk=(ENV['NVME_FILE'] || "nvme_disk.img")
+    unless File.exist? (nvme_disk)
+      vb.customize ["createhd", "--filename", nvme_disk, "--variant", "Fixed", "--size", "1024"]
+      vb.customize ["storagectl", :id, "--name", "nvme", "--add", "pcie", "--controller", "NVMe", "--portcount", "1", "--bootable", "off"]
+      vb.customize ["storageattach", :id, "--storagectl", "nvme", "--type", "hdd", "--medium", nvme_disk, "--port", "0"]
+    end
+
+    #support for the SSE4.x instruction is required in some versions of VB.
+    vb.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
+    vb.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
+  end
+end
+
 Vagrant.configure(2) do |config|
 
   # Pick the right distro and bootstrap, default is fedora30
@@ -279,22 +298,8 @@ Vagrant.configure(2) do |config|
   # Setup SSH
   setup_ssh(config)
 
-  config.vm.provider "virtualbox" do |vb|
-    vb.customize ["modifyvm", :id, "--ioapic", "on"]
-    vb.memory = vmram
-    vb.cpus = vmcpu
-
-    nvme_disk=(ENV['NVME_FILE'] || "nvme_disk.img")
-    unless File.exist? (nvme_disk)
-      vb.customize ["createhd", "--filename", nvme_disk, "--variant", "Fixed", "--size", "1024"]
-      vb.customize ["storagectl", :id, "--name", "nvme", "--add", "pcie", "--controller", "NVMe", "--portcount", "1", "--bootable", "off"]
-      vb.customize ["storageattach", :id, "--storagectl", "nvme", "--type", "hdd", "--medium", nvme_disk, "--port", "0"]
-    end
-
-    #support for the SSE4.x instruction is required in some versions of VB.
-    vb.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
-    vb.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
-  end
+  # Virtualbox configuration
+  setup_virtualbox(config,vmcpu,vmram)
 
   # This setup was Tested on Fedora 27
   # libvirt configuration need modern Qemu(tested on 2.10) & vagrant-libvirt in version 0.0.39+
