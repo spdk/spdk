@@ -81,9 +81,6 @@ if [ "$TEST_TYPE" != "posix" ] && [ "$TEST_TYPE" != "vpp" ]; then
 fi
 
 HELLO_SOCK_APP="${TARGET_NS_CMD[*]} $SPDK_EXAMPLE_DIR/hello_sock"
-if [ $SPDK_TEST_VPP -eq 1 ]; then
-	HELLO_SOCK_APP+=" -L sock_vpp"
-fi
 SOCAT_APP="socat"
 
 # ----------------

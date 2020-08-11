@@ -100,8 +100,6 @@ export SPDK_TEST_LVOL
 export SPDK_TEST_JSON
 : ${SPDK_TEST_REDUCE=0}
 export SPDK_TEST_REDUCE
-: ${SPDK_TEST_VPP=0}
-export SPDK_TEST_VPP
 : ${SPDK_RUN_ASAN=0}
 export SPDK_RUN_ASAN
 : ${SPDK_RUN_UBSAN=0}
@@ -236,12 +234,6 @@ if [[ -z $RPC_PIPE_PID ]] || ! kill -0 "$RPC_PIPE_PID" &> /dev/null; then
 	exec {RPC_PIPE_OUTPUT}<&${RPC_PIPE[0]} {RPC_PIPE_INPUT}>&${RPC_PIPE[1]}
 	# all descriptors will automatically close together with this bash
 	# process, this will make rpc.py stop reading and exit gracefully
-fi
-
-if [ $SPDK_TEST_VPP -eq 1 ]; then
-	VPP_PATH="/usr/local/src/vpp-19.04/build-root/install-vpp_debug-native/vpp/"
-	export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${VPP_PATH}/lib/
-	export PATH=${PATH}:${VPP_PATH}/bin/
 fi
 
 function set_test_storage() {
@@ -379,10 +371,6 @@ function get_config_params() {
 
 	if [ -d /usr/include/rbd ] && [ -d /usr/include/rados ] && [ $SPDK_TEST_RBD -eq 1 ]; then
 		config_params+=' --with-rbd'
-	fi
-
-	if [ $SPDK_TEST_VPP -eq 1 ]; then
-		config_params+=" --with-vpp=${VPP_PATH}"
 	fi
 
 	# for options with no required dependencies, just test flags, set them here

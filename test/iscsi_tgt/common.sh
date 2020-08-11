@@ -13,9 +13,6 @@ INITIATOR_TAG=2
 INITIATOR_NAME=ANY
 PORTAL_TAG=1
 ISCSI_APP=("${TARGET_NS_CMD[@]}" "${ISCSI_APP[@]}")
-if [ $SPDK_TEST_VPP -eq 1 ]; then
-	ISCSI_APP+=(-L sock_vpp)
-fi
 ISCSI_TEST_CORE_MASK=0xFF
 
 function create_veth_interfaces() {
