@@ -239,13 +239,15 @@ bdev_rbd_finish_aiocb(rbd_completion_t cb, void *arg)
 }
 
 static int
-bdev_rbd_start_aio(rbd_image_t image, struct spdk_bdev_io *bdev_io,
+bdev_rbd_start_aio(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 		   struct iovec *iov, int iovcnt, uint64_t offset, size_t len)
 {
+	struct bdev_rbd_io_channel *rbdio_ch = spdk_io_channel_get_ctx(ch);
 	int ret;
 	rbd_completion_t comp;
-
 	struct bdev_rbd_io *rbd_io;
+	rbd_image_t image = rbdio_ch->image;
+
 	ret = rbd_aio_create_completion(bdev_io, bdev_rbd_finish_aiocb,
 					&comp);
 	if (ret < 0) {
@@ -288,27 +290,6 @@ static struct spdk_bdev_module rbd_if = {
 
 };
 SPDK_BDEV_MODULE_REGISTER(rbd, &rbd_if)
-
-static int64_t
-bdev_rbd_rw(struct bdev_rbd *disk, struct spdk_io_channel *ch,
-	    struct spdk_bdev_io *bdev_io, struct iovec *iov,
-	    int iovcnt, size_t len, uint64_t offset)
-{
-	struct bdev_rbd_io_channel *rbdio_ch = spdk_io_channel_get_ctx(ch);
-
-	return bdev_rbd_start_aio(rbdio_ch->image, bdev_io, iov, iovcnt, offset, len);
-
-	return 0;
-}
-
-static int64_t
-bdev_rbd_flush(struct bdev_rbd *disk, struct spdk_io_channel *ch,
-	       struct spdk_bdev_io *bdev_io, uint64_t offset, uint64_t nbytes)
-{
-	struct bdev_rbd_io_channel *rbdio_ch = spdk_io_channel_get_ctx(ch);
-
-	return bdev_rbd_start_aio(rbdio_ch->image, bdev_io, NULL, 0, offset, nbytes);
-}
 
 static int
 bdev_rbd_reset_timer(void *arg)
@@ -362,13 +343,12 @@ bdev_rbd_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 		return;
 	}
 
-	ret = bdev_rbd_rw(bdev_io->bdev->ctxt,
-			  ch,
-			  bdev_io,
-			  bdev_io->u.bdev.iovs,
-			  bdev_io->u.bdev.iovcnt,
-			  bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen,
-			  bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen);
+	ret = bdev_rbd_start_aio(ch,
+				 bdev_io,
+				 bdev_io->u.bdev.iovs,
+				 bdev_io->u.bdev.iovcnt,
+				 bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen,
+				 bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 
 	if (ret != 0) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -384,20 +364,13 @@ static int _bdev_rbd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		return bdev_rbd_rw((struct bdev_rbd *)bdev_io->bdev->ctxt,
-				   ch,
-				   bdev_io,
-				   bdev_io->u.bdev.iovs,
-				   bdev_io->u.bdev.iovcnt,
-				   bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen,
-				   bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen);
-
 	case SPDK_BDEV_IO_TYPE_FLUSH:
-		return bdev_rbd_flush((struct bdev_rbd *)bdev_io->bdev->ctxt,
-				      ch,
-				      bdev_io,
-				      bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen,
-				      bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
+		return bdev_rbd_start_aio(ch,
+					  bdev_io,
+					  bdev_io->u.bdev.iovs,
+					  bdev_io->u.bdev.iovcnt,
+					  bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen,
+					  bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 
 	case SPDK_BDEV_IO_TYPE_RESET:
 		return bdev_rbd_reset((struct bdev_rbd *)bdev_io->bdev->ctxt,
