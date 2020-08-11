@@ -191,13 +191,13 @@ accel_engine_idxd_get_ctx_size(void)
 static void
 idxd_done(void *cb_arg, int status)
 {
-	struct spdk_accel_task *accel_req;
+	struct spdk_accel_task *accel_task;
 	struct idxd_task *idxd_task = cb_arg;
 
-	accel_req = SPDK_CONTAINEROF(idxd_task, struct spdk_accel_task,
-				     offload_ctx);
+	accel_task = SPDK_CONTAINEROF(idxd_task, struct spdk_accel_task,
+				      offload_ctx);
 
-	idxd_task->cb(accel_req, status);
+	idxd_task->cb(accel_task, status);
 }
 
 static struct idxd_op *

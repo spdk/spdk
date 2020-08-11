@@ -171,14 +171,14 @@ SPDK_ACCEL_MODULE_REGISTER(accel_engine_ioat_init, accel_engine_ioat_exit,
 static void
 ioat_done(void *cb_arg)
 {
-	struct spdk_accel_task *accel_req;
+	struct spdk_accel_task *accel_task;
 	struct ioat_task *ioat_task = cb_arg;
 
-	accel_req = (struct spdk_accel_task *)
-		    ((uintptr_t)ioat_task -
-		     offsetof(struct spdk_accel_task, offload_ctx));
+	accel_task = (struct spdk_accel_task *)
+		     ((uintptr_t)ioat_task -
+		      offsetof(struct spdk_accel_task, offload_ctx));
 
-	ioat_task->cb(accel_req, 0);
+	ioat_task->cb(accel_task, 0);
 }
 
 static int
@@ -420,7 +420,7 @@ ioat_batch_submit(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
 {
 	struct ioat_accel_op *op;
 	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
-	struct spdk_accel_task *accel_req;
+	struct spdk_accel_task *accel_task;
 	int batch_status = 0, cmd_status = 0;
 
 	if ((struct spdk_accel_batch *)&ioat_ch->hw_batch != batch) {
@@ -435,8 +435,8 @@ ioat_batch_submit(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
 	/* Complete the batched software items. */
 	while ((op = TAILQ_FIRST(&ioat_ch->sw_batch))) {
 		TAILQ_REMOVE(&ioat_ch->sw_batch, op, link);
-		accel_req = (struct spdk_accel_task *)((uintptr_t)op->cb_arg -
-						       offsetof(struct spdk_accel_task, offload_ctx));
+		accel_task = (struct spdk_accel_task *)((uintptr_t)op->cb_arg -
+							offsetof(struct spdk_accel_task, offload_ctx));
 
 		switch (op->op_code) {
 		case IOAT_ACCEL_OPCODE_DUALCAST:
@@ -455,14 +455,14 @@ ioat_batch_submit(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
 		}
 
 		batch_status |= cmd_status;
-		op->cb_fn(accel_req, cmd_status);
+		op->cb_fn(accel_task, cmd_status);
 		TAILQ_INSERT_TAIL(&ioat_ch->op_pool, op, link);
 	}
 
 	/* Now complete the batch request itself. */
-	accel_req = (struct spdk_accel_task *)((uintptr_t)cb_arg -
-					       offsetof(struct spdk_accel_task, offload_ctx));
-	cb_fn(accel_req, batch_status);
+	accel_task = (struct spdk_accel_task *)((uintptr_t)cb_arg -
+						offsetof(struct spdk_accel_task, offload_ctx));
+	cb_fn(accel_task, batch_status);
 
 	return 0;
 }

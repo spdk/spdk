@@ -42,6 +42,8 @@
 struct spdk_accel_task {
 	spdk_accel_completion_cb	cb;
 	void				*cb_arg;
+	struct accel_io_channel		*accel_ch;
+	TAILQ_ENTRY(spdk_accel_task)	link;
 	uint8_t				offload_ctx[0];
 };
 

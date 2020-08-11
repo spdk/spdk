@@ -57,7 +57,7 @@ enum accel_capability {
 /**
  * Acceleration operation callback.
  *
- * \param ref 'accel_req' passed to the corresponding spdk_accel_submit* call.
+ * \param ref 'accel_task' passed to the corresponding spdk_accel_submit* call.
  * \param status 0 if it completed successfully, or negative errno if it failed.
  */
 typedef void (*spdk_accel_completion_cb)(void *ref, int status);
