@@ -40,9 +40,8 @@ function setup_bdev_conf() {
 		bdev_passthru_create -p TestPT -b Malloc3
 		bdev_raid_create -n raid0 -z 64 -r 0 -b "Malloc4 Malloc5"
 	RPC
-	# FIXME: QoS doesn't work properly with json_config, see issue 1146
-	#$rpc_py bdev_set_qos_limit --rw_mbytes_per_sec 100 Malloc3
-	#$rpc_py bdev_set_qos_limit --rw_ios_per_sec 20000 Malloc0
+	$rpc_py bdev_set_qos_limit --rw_mbytes_per_sec 100 Malloc3
+	$rpc_py bdev_set_qos_limit --rw_ios_per_sec 20000 Malloc0
 	if [[ $(uname -s) != "FreeBSD" ]]; then
 		dd if=/dev/zero of="$SPDK_TEST_STORAGE/aiofile" bs=2048 count=5000
 		"$rpc_py" bdev_aio_create "$SPDK_TEST_STORAGE/aiofile" AIO0 2048
