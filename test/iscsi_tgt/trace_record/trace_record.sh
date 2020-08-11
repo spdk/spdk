@@ -5,8 +5,7 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
-# $1 = test type posix or vpp. defaults to posix.
-iscsitestinit $1
+iscsitestinit
 
 TRACE_TMP_FOLDER=./tmp-trace
 TRACE_RECORD_OUTPUT=${TRACE_TMP_FOLDER}/record.trace
@@ -41,7 +40,7 @@ echo "start iscsi_tgt with trace enabled"
 iscsi_pid=$!
 echo "Process pid: $iscsi_pid"
 
-trap 'killprocess $iscsi_pid; iscsitestfini $1; exit 1' SIGINT SIGTERM EXIT
+trap 'killprocess $iscsi_pid; iscsitestfini; exit 1' SIGINT SIGTERM EXIT
 
 waitforlisten $iscsi_pid
 
@@ -72,7 +71,7 @@ iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 waitforiscsidevices $((CONNECTION_NUMBER + 1))
 
-trap 'iscsicleanup; killprocess $iscsi_pid; killprocess $record_pid; delete_tmp_files; iscsitestfini $1; exit 1' SIGINT SIGTERM EXIT
+trap 'iscsicleanup; killprocess $iscsi_pid; killprocess $record_pid; delete_tmp_files; iscsitestfini; exit 1' SIGINT SIGTERM EXIT
 
 echo "Running FIO"
 $fio_py -p iscsi -i 131072 -d 32 -t randrw -r 1
@@ -87,7 +86,7 @@ for i in $(seq 0 $CONNECTION_NUMBER); do
 done
 echo -e $RPCS | $rpc_py
 
-trap 'delete_tmp_files; iscsitestfini $1; exit 1' SIGINT SIGTERM EXIT
+trap 'delete_tmp_files; iscsitestfini; exit 1' SIGINT SIGTERM EXIT
 
 killprocess $iscsi_pid
 killprocess $record_pid
@@ -131,4 +130,4 @@ for i in $(seq 0 $((len_arr_record_num - 1))); do
 done
 
 trap - SIGINT SIGTERM EXIT
-iscsitestfini $1
+iscsitestfini

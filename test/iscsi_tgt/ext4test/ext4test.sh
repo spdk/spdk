@@ -5,8 +5,7 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
-# $1 = test type posix or vpp. defaults to posix.
-iscsitestinit $1
+iscsitestinit
 
 rpc_py="$rootdir/scripts/rpc.py"
 node_base="iqn.2013-06.com.intel.ch.spdk"
@@ -17,7 +16,7 @@ timing_enter start_iscsi_tgt
 pid=$!
 echo "Process pid: $pid"
 
-trap '$rpc_py bdev_split_delete Name0n1 || true; killprocess $pid; iscsitestfini $1; exit 1' SIGINT SIGTERM EXIT
+trap '$rpc_py bdev_split_delete Name0n1 || true; killprocess $pid; iscsitestfini; exit 1' SIGINT SIGTERM EXIT
 
 waitforlisten $pid
 $rpc_py iscsi_set_options -o 30 -a 4 -b $node_base
@@ -42,7 +41,7 @@ iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 waitforiscsidevices 1
 
 trap 'for new_dir in $(dir -d /mnt/*dir); do umount $new_dir; rm -rf $new_dir; done;
-	iscsicleanup; killprocess $pid; iscsitestfini $1; exit 1' SIGINT SIGTERM EXIT
+	iscsicleanup; killprocess $pid; iscsitestfini; exit 1' SIGINT SIGTERM EXIT
 
 echo "Test error injection"
 $rpc_py bdev_error_inject_error EE_Malloc0 'all' 'failure' -n 1000
@@ -127,4 +126,4 @@ if [ -z "$NO_NVME" ]; then
 fi
 
 killprocess $pid
-iscsitestfini $1
+iscsitestfini

@@ -5,8 +5,7 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
-# $1 = test type posix or vpp. defaults to posix.
-iscsitestinit $1
+iscsitestinit
 
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
@@ -53,7 +52,7 @@ $fio_py -p iscsi -i 512 -d 1 -t read -r 60 &
 fiopid=$!
 echo "FIO pid: $fiopid"
 
-trap 'iscsicleanup; killprocess $pid; killprocess $fiopid; iscsitestfini $1; exit 1' SIGINT SIGTERM EXIT
+trap 'iscsicleanup; killprocess $pid; killprocess $fiopid; iscsitestfini; exit 1' SIGINT SIGTERM EXIT
 
 # Do 3 resets while making sure iscsi_tgt and fio are still running
 for i in 1 2 3; do
@@ -73,4 +72,4 @@ trap - SIGINT SIGTERM EXIT
 
 iscsicleanup
 killprocess $pid
-iscsitestfini $1
+iscsitestfini

@@ -5,8 +5,7 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
-# $1 = test type posix or vpp. defaults to posix.
-iscsitestinit $1
+iscsitestinit
 
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
@@ -35,7 +34,7 @@ $rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
 # "-d" ==> disable CHAP authentication
 $rpc_py iscsi_create_target_node disk1 disk1_alias 'Malloc0:0' $PORTAL_TAG:$INITIATOR_TAG 256 -d
 sleep 1
-trap 'killprocess $pid; iscsitestfini $1; exit 1' SIGINT SIGTERM EXIT
+trap 'killprocess $pid; iscsitestfini; exit 1' SIGINT SIGTERM EXIT
 
 "$rootdir/test/bdev/bdevperf/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w verify -t 5 -s 512
 if [ $RUN_NIGHTLY -eq 1 ]; then
@@ -48,4 +47,4 @@ trap - SIGINT SIGTERM EXIT
 
 killprocess $pid
 
-iscsitestfini $1
+iscsitestfini

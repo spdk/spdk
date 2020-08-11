@@ -5,15 +5,7 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
-# $1 = test type posix or vpp.
-iscsitestinit $1
-
-if [ "$1" == "posix" ] || [ "$1" == "vpp" ]; then
-	TEST_TYPE=$1
-else
-	echo "No iSCSI test type specified"
-	exit 1
-fi
+iscsitestinit
 
 MALLOC_BDEV_SIZE=64
 
@@ -59,4 +51,4 @@ trap - SIGINT SIGTERM EXIT
 iscsicleanup
 killprocess $pid
 
-iscsitestfini $1
+iscsitestfini

@@ -5,8 +5,7 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
-# $1 = test type posix or vpp. defaults to posix.
-iscsitestinit $1
+iscsitestinit
 
 MALLOC_BDEV_SIZE=128
 MALLOC_BLOCK_SIZE=512
@@ -27,7 +26,7 @@ timing_enter start_iscsi_tgt
 pid=$!
 echo "Process pid: $pid"
 
-trap 'iscsicleanup; killprocess $pid; iscsitestfini $1; exit 1' SIGINT SIGTERM EXIT
+trap 'iscsicleanup; killprocess $pid; iscsitestfini; exit 1' SIGINT SIGTERM EXIT
 
 waitforlisten $pid
 $rpc_py iscsi_set_options -o 30 -a 16
@@ -81,4 +80,4 @@ trap - SIGINT SIGTERM EXIT
 rm -f ./local-job*
 iscsicleanup
 killprocess $pid
-iscsitestfini $1
+iscsitestfini

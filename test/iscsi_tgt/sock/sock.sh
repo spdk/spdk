@@ -62,23 +62,7 @@ function waitfortcp() {
 	return $ret
 }
 
-# $1 = test type posix or vpp. defaults to posix.
-iscsitestinit $1
-
-if [ "$1" == "iso" ]; then
-	TEST_TYPE=$2
-else
-	TEST_TYPE=$1
-fi
-
-if [ -z "$TEST_TYPE" ]; then
-	TEST_TYPE="posix"
-fi
-
-if [ "$TEST_TYPE" != "posix" ] && [ "$TEST_TYPE" != "vpp" ]; then
-	echo "No correct sock implmentation specified"
-	exit 1
-fi
+iscsitestinit
 
 HELLO_SOCK_APP="${TARGET_NS_CMD[*]} $SPDK_EXAMPLE_DIR/hello_sock"
 SOCAT_APP="socat"
@@ -92,13 +76,13 @@ echo "Testing client path"
 # start echo server using socat
 $SOCAT_APP tcp-l:$ISCSI_PORT,fork,bind=$INITIATOR_IP exec:'/bin/cat' &
 server_pid=$!
-trap 'killprocess $server_pid;iscsitestfini $1; exit 1' SIGINT SIGTERM EXIT
+trap 'killprocess $server_pid;iscsitestfini; exit 1' SIGINT SIGTERM EXIT
 
 waitfortcp $server_pid $INITIATOR_IP:$ISCSI_PORT
 
 # send message using hello_sock client
 message="**MESSAGE:This is a test message from the client**"
-response=$(echo $message | $HELLO_SOCK_APP -H $INITIATOR_IP -P $ISCSI_PORT -N $TEST_TYPE)
+response=$(echo $message | $HELLO_SOCK_APP -H $INITIATOR_IP -P $ISCSI_PORT -N "posix")
 
 if ! echo "$response" | grep -q "$message"; then
 	exit 1
@@ -117,9 +101,9 @@ timing_exit sock_client
 timing_enter sock_server
 
 # start echo server using hello_sock echo server
-$HELLO_SOCK_APP -H $TARGET_IP -P $ISCSI_PORT -S -N $TEST_TYPE &
+$HELLO_SOCK_APP -H $TARGET_IP -P $ISCSI_PORT -S -N "posix" &
 server_pid=$!
-trap 'killprocess $server_pid; iscsitestfini $1; exit 1' SIGINT SIGTERM EXIT
+trap 'killprocess $server_pid; iscsitestfini; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $server_pid
 
 # send message to server using socat
@@ -134,5 +118,5 @@ trap - SIGINT SIGTERM EXIT
 
 killprocess $server_pid
 
-iscsitestfini $1
+iscsitestfini
 timing_exit sock_server

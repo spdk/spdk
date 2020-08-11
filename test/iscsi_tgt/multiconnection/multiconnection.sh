@@ -5,8 +5,7 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
-# $1 = test type posix or vpp. defaults to posix.
-iscsitestinit $1
+iscsitestinit
 
 rpc_py="$rootdir/scripts/rpc.py"
 fio_py="$rootdir/scripts/fio.py"
@@ -37,7 +36,7 @@ timing_enter start_iscsi_tgt
 "${ISCSI_APP[@]}" --wait-for-rpc &
 iscsipid=$!
 echo "iSCSI target launched. pid: $iscsipid"
-trap 'remove_backends; iscsicleanup; killprocess $iscsipid; iscsitestfini $1; exit 1' SIGINT SIGTERM EXIT
+trap 'remove_backends; iscsicleanup; killprocess $iscsipid; iscsitestfini; exit 1' SIGINT SIGTERM EXIT
 
 waitforlisten $iscsipid
 $rpc_py iscsi_set_options -o 30 -a 128
@@ -80,4 +79,4 @@ rm -f ./local-job*
 iscsicleanup
 remove_backends
 killprocess $iscsipid
-iscsitestfini $1
+iscsitestfini

@@ -5,8 +5,7 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
-# $1 = test type posix or vpp. defaults to posix.
-iscsitestinit $1
+iscsitestinit
 
 function node_login_fio_logout() {
 	for arg in "$@"; do
@@ -56,7 +55,7 @@ timing_enter start_iscsi_tgt
 pid=$!
 echo "Process pid: $pid"
 
-trap 'killprocess $pid; iscsitestfini $1; exit 1' SIGINT SIGTERM EXIT
+trap 'killprocess $pid; iscsitestfini; exit 1' SIGINT SIGTERM EXIT
 
 waitforlisten $pid
 $rpc_py iscsi_set_options -o 30 -a 16
@@ -90,4 +89,4 @@ trap - SIGINT SIGTERM EXIT
 
 iscsicleanup
 killprocess $pid
-iscsitestfini $1
+iscsitestfini

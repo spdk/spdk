@@ -5,8 +5,7 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
-# $1 = test type posix or vpp. defaults to posix.
-iscsitestinit $1
+iscsitestinit
 
 rpc_py="$rootdir/scripts/rpc.py"
 fio_py="$rootdir/scripts/fio.py"
@@ -96,7 +95,7 @@ for ((i = 0; i < 2; i++)); do
 	timing_exit start_iscsi_tgt_$i
 
 	rpc_config $rpc_addr $NETMASK
-	trap 'kill_all_iscsi_target;  iscsitestfini $1; exit 1' \
+	trap 'kill_all_iscsi_target;  iscsitestfini; exit 1' \
 		SIGINT SIGTERM EXIT
 done
 
@@ -127,4 +126,4 @@ trap - SIGINT SIGTERM EXIT
 iscsicleanup
 
 $rpc_py -s $rpc_second_addr spdk_kill_instance SIGTERM
-iscsitestfini $1
+iscsitestfini
