@@ -1,9 +1,6 @@
 # Not configured to test vtune.
 lib/bdev/vtune
 
-# Not configured to test VPP
-module/sock/vpp/vpp
-
 # Not configured to test rocksdb env file
 lib/rocksdb/env_spdk.cc
 
