@@ -3906,6 +3906,7 @@ bdev_comparev_and_writev_blocks_locked(void *ctx, int status)
 	if (status) {
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FIRST_FUSED_FAILED;
 		bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
+		return;
 	}
 
 	bdev_compare_and_write_do_compare(bdev_io);
