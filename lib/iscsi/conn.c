@@ -976,7 +976,7 @@ _iscsi_conn_abort_queued_datain_task(struct spdk_iscsi_conn *conn,
 	struct spdk_iscsi_task *subtask;
 	uint32_t remaining_size;
 
-	if (conn->data_in_cnt >= MAX_LARGE_DATAIN_PER_CONNECTION) {
+	if (conn->data_in_cnt >= g_iscsi.MaxLargeDataInPerConnection) {
 		return -1;
 	}
 
@@ -1048,7 +1048,7 @@ iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 	struct spdk_iscsi_task *task;
 
 	while (!TAILQ_EMPTY(&conn->queued_datain_tasks) &&
-	       conn->data_in_cnt < MAX_LARGE_DATAIN_PER_CONNECTION) {
+	       conn->data_in_cnt < g_iscsi.MaxLargeDataInPerConnection) {
 		task = TAILQ_FIRST(&conn->queued_datain_tasks);
 		assert(task->current_datain_offset <= task->scsi.transfer_len);
 		if (task->current_datain_offset < task->scsi.transfer_len) {
