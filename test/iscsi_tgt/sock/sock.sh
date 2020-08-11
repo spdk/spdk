@@ -62,9 +62,8 @@ function waitfortcp() {
 	return $ret
 }
 
-# $1 = "iso" - triggers isolation mode (setting up required environment).
-# $2 = test type posix or vpp. defaults to posix.
-iscsitestinit $1 $2
+# $1 = test type posix or vpp. defaults to posix.
+iscsitestinit $1
 
 if [ "$1" == "iso" ]; then
 	TEST_TYPE=$2
@@ -96,7 +95,7 @@ echo "Testing client path"
 # start echo server using socat
 $SOCAT_APP tcp-l:$ISCSI_PORT,fork,bind=$INITIATOR_IP exec:'/bin/cat' &
 server_pid=$!
-trap 'killprocess $server_pid;iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
+trap 'killprocess $server_pid;iscsitestfini $1; exit 1' SIGINT SIGTERM EXIT
 
 waitfortcp $server_pid $INITIATOR_IP:$ISCSI_PORT
 
@@ -123,7 +122,7 @@ timing_enter sock_server
 # start echo server using hello_sock echo server
 $HELLO_SOCK_APP -H $TARGET_IP -P $ISCSI_PORT -S -N $TEST_TYPE &
 server_pid=$!
-trap 'killprocess $server_pid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
+trap 'killprocess $server_pid; iscsitestfini $1; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $server_pid
 
 # send message to server using socat
@@ -138,5 +137,5 @@ trap - SIGINT SIGTERM EXIT
 
 killprocess $server_pid
 
-iscsitestfini $1 $2
+iscsitestfini $1
 timing_exit sock_server

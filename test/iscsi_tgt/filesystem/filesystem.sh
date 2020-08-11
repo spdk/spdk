@@ -6,9 +6,8 @@ source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 source $rootdir/scripts/common.sh
 
-# $1 = "iso" - triggers isolation mode (setting up required environment).
-# $2 = test type posix or vpp. defaults to posix.
-iscsitestinit $1 $2
+# $1 = test type posix or vpp. defaults to posix.
+iscsitestinit $1
 
 rpc_py="$rootdir/scripts/rpc.py"
 # Remove lvol bdevs and stores.
@@ -31,7 +30,7 @@ timing_enter start_iscsi_tgt
 pid=$!
 echo "Process pid: $pid"
 
-trap 'killprocess $pid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
+trap 'killprocess $pid; iscsitestfini $1; exit 1' SIGINT SIGTERM EXIT
 
 waitforlisten $pid
 $rpc_py iscsi_set_options -o 30 -a 16
@@ -64,7 +63,7 @@ iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 waitforiscsidevices 1
 
-trap 'iscsicleanup; remove_backends; umount /mnt/device; rm -rf /mnt/device; killprocess $pid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
+trap 'iscsicleanup; remove_backends; umount /mnt/device; rm -rf /mnt/device; killprocess $pid; iscsitestfini $1; exit 1' SIGINT SIGTERM EXIT
 
 mkdir -p /mnt/device
 
@@ -142,4 +141,4 @@ trap - SIGINT SIGTERM EXIT
 iscsicleanup
 remove_backends
 killprocess $pid
-iscsitestfini $1 $2
+iscsitestfini $1

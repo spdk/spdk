@@ -5,9 +5,8 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
-# $1 = "iso" - triggers isolation mode (setting up required environment).
-# $2 = test type posix or vpp. defaults to posix.
-iscsitestinit $1 $2
+# $1 = test type posix or vpp. defaults to posix.
+iscsitestinit $1
 
 delete_tmp_files() {
 	rm -f $testdir/iscsi2.json
@@ -94,7 +93,7 @@ iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 waitforiscsidevices 2
 
-trap 'iscsicleanup; killprocess $pid; iscsitestfini $1 $2; delete_tmp_files; exit 1' SIGINT SIGTERM EXIT
+trap 'iscsicleanup; killprocess $pid; iscsitestfini $1; delete_tmp_files; exit 1' SIGINT SIGTERM EXIT
 
 $fio_py -p iscsi -i 4096 -d 1 -t randrw -r 1 -v
 $fio_py -p iscsi -i 131072 -d 32 -t randrw -r 1 -v
@@ -147,4 +146,4 @@ trap - SIGINT SIGTERM EXIT
 
 killprocess $pid
 
-iscsitestfini $1 $2
+iscsitestfini $1

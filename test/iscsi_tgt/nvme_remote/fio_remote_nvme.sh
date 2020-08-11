@@ -7,9 +7,8 @@ source $rootdir/test/nvmf/common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
 nvmftestinit
-# $1 = "iso" - triggers isolation mode (setting up required environment).
-# $2 = test type posix or vpp. defaults to posix.
-iscsitestinit $1 $2
+# $1 = test type posix or vpp. defaults to posix.
+iscsitestinit $1
 
 rpc_py="$rootdir/scripts/rpc.py"
 fio_py="$rootdir/scripts/fio.py"
@@ -26,7 +25,7 @@ function run_nvme_remote() {
 	"${ISCSI_APP[@]}" -r "$iscsi_rpc_addr" -m 0x1 -p 0 -s 512 --wait-for-rpc &
 	iscsipid=$!
 	echo "iSCSI target launched. pid: $iscsipid"
-	trap 'killprocess $iscsipid; iscsitestfini $1 $2; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
+	trap 'killprocess $iscsipid; iscsitestfini $1; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $iscsipid "$iscsi_rpc_addr"
 	$rpc_py -s "$iscsi_rpc_addr" iscsi_set_options -o 30 -a 16
 	$rpc_py -s "$iscsi_rpc_addr" framework_start_init
@@ -56,7 +55,7 @@ function run_nvme_remote() {
 "${NVMF_APP[@]}" -m 0x2 -p 1 -s 512 --wait-for-rpc &
 nvmfpid=$!
 echo "NVMf target launched. pid: $nvmfpid"
-trap 'iscsitestfini $1 $2; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
+trap 'iscsitestfini $1; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $nvmfpid
 $rpc_py framework_start_init
 $rpc_py nvmf_create_transport -t RDMA -u 8192
@@ -74,7 +73,7 @@ timing_enter start_iscsi_tgt
 run_nvme_remote "local"
 
 trap 'iscsicleanup; killprocess $iscsipid;
-	rm -f ./local-job0-0-verify.state; iscsitestfini $1 $2; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
+	rm -f ./local-job0-0-verify.state; iscsitestfini $1; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 
 echo "Running FIO"
 $fio_py -p iscsi -i 4096 -d 1 -t randrw -r 1 -v
@@ -95,5 +94,5 @@ iscsicleanup
 killprocess $iscsipid
 $rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 
-iscsitestfini $1 $2
+iscsitestfini $1
 nvmftestfini

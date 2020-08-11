@@ -5,7 +5,7 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
-iscsitestinit $1 $2
+iscsitestinit $1
 
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
@@ -17,7 +17,7 @@ timing_enter start_iscsi_tgt
 "${ISCSI_APP[@]}" -m 0x2 -p 1 -s 512 --wait-for-rpc &
 pid=$!
 echo "iSCSI target launched. pid: $pid"
-trap 'killprocess $pid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
+trap 'killprocess $pid; iscsitestfini $1; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $pid
 $rpc_py iscsi_set_options -o 30 -a 4
 # Minimal number of bdev io pool (5) and cache (1)
@@ -36,7 +36,7 @@ $rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
 # "-d" ==> disable CHAP authentication
 $rpc_py iscsi_create_target_node disk1 disk1_alias 'Malloc0:0' $PORTAL_TAG:$INITIATOR_TAG 256 -d
 sleep 1
-trap 'killprocess $pid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
+trap 'killprocess $pid; iscsitestfini $1; exit 1' SIGINT SIGTERM EXIT
 
 "$rootdir/test/bdev/bdevperf/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w write -t 1
 "$rootdir/test/bdev/bdevperf/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w read -t 1
@@ -47,4 +47,4 @@ trap - SIGINT SIGTERM EXIT
 
 killprocess $pid
 
-iscsitestfini $1 $2
+iscsitestfini $1

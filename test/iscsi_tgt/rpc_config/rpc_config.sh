@@ -6,8 +6,7 @@ source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
 # $1 = test type posix or vpp.
-# $2 = "iso" - triggers isolation mode (setting up required environment).
-iscsitestinit $2 $1
+iscsitestinit $1
 
 if [ "$1" == "posix" ] || [ "$1" == "vpp" ]; then
 	TEST_TYPE=$1
@@ -60,4 +59,4 @@ trap - SIGINT SIGTERM EXIT
 iscsicleanup
 killprocess $pid
 
-iscsitestfini $2 $1
+iscsitestfini $1
