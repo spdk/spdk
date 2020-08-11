@@ -14,7 +14,7 @@ of the libraries contained in these two directories.
 The SPDK libraries are divided into two directories. The `lib` directory contains the base libraries that
 compose SPDK. Some of these base libraries define plug-in systems. Instances of those plug-ins are called
 modules and are located in the `module` directory. For example, the `spdk_sock` library is contained in the
-`lib` directory while the implementations of socket abstractions, `sock_posix`, `sock_uring`, and `sock_vpp`
+`lib` directory while the implementations of socket abstractions, `sock_posix` and `sock_uring`
 are contained in the `module` directory.
 
 ## lib {#lib}
