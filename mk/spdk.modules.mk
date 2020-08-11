@@ -99,16 +99,6 @@ SOCK_MODULES_LIST += sock_uring
 endif
 endif
 
-ifeq ($(CONFIG_VPP),y)
-SYS_LIBS += -Wl,--whole-archive
-ifneq ($(CONFIG_VPP_DIR),)
-SYS_LIBS += -L$(CONFIG_VPP_DIR)/lib
-endif
-SYS_LIBS += -lvppinfra -lsvm -lvlibmemoryclient
-SYS_LIBS += -Wl,--no-whole-archive
-SOCK_MODULES_LIST += sock_vpp
-endif
-
 ACCEL_MODULES_LIST = accel_ioat ioat
 ifeq ($(CONFIG_IDXD),y)
 ACCEL_MODULES_LIST += accel_idxd idxd

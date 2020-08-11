@@ -171,7 +171,7 @@ int spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, uint16_t *s
  * \param impl_name The sock_implementation to use, such as "posix". If impl_name is
  * specified, it will *only* try to connect on that impl. If it is NULL, it will try
  * all the sock implementations in order and uses the first sock implementation which
- * can connect. For example, it may try vpp first, then fall back to posix.
+ * can connect.
  *
  * \return a pointer to the connected socket on success, or NULL on failure.
  */
@@ -187,7 +187,7 @@ struct spdk_sock *spdk_sock_connect(const char *ip, int port, char *impl_name);
  * \param impl_name The sock_implementation to use, such as "posix". If impl_name is
  * specified, it will *only* try to connect on that impl. If it is NULL, it will try
  * all the sock implementations in order and uses the first sock implementation which
- * can connect. For example, it may try vpp first, then fall back to posix.
+ * can connect.
  * \param opts The sock option pointer provided by the user which should not be NULL pointer.
  *
  * \return a pointer to the connected socket on success, or NULL on failure.
@@ -205,7 +205,7 @@ struct spdk_sock *spdk_sock_connect_ext(const char *ip, int port, char *impl_nam
  * \param impl_name The sock_implementation to use, such as "posix". If impl_name is
  * specified, it will *only* try to listen on that impl. If it is NULL, it will try
  * all the sock implementations in order and uses the first sock implementation which
- * can listen. For example, it may try vpp first, then fall back to posix.
+ * can listen.
  *
  * \return a pointer to the listened socket on success, or NULL on failure.
  */
@@ -221,7 +221,7 @@ struct spdk_sock *spdk_sock_listen(const char *ip, int port, char *impl_name);
  * \param impl_name The sock_implementation to use, such as "posix". If impl_name is
  * specified, it will *only* try to listen on that impl. If it is NULL, it will try
  * all the sock implementations in order and uses the first sock implementation which
- * can listen. For example, it may try vpp first, then fall back to posix.
+ * can listen.
  * \param opts The sock option pointer provided by the user, which should not be NULL pointer.
  *
  * \return a pointer to the listened socket on success, or NULL on failure.

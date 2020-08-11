@@ -125,10 +125,6 @@ CONFIG_PMDK_DIR=
 # Enable the dependencies for building the compress vbdev
 CONFIG_REDUCE=n
 
-# Build with VPP
-CONFIG_VPP=n
-CONFIG_VPP_DIR=
-
 # Requires libiscsi development libraries.
 CONFIG_ISCSI_INITIATOR=n
 

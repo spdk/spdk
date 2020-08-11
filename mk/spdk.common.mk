@@ -144,11 +144,6 @@ LIBS += -L$(CONFIG_PMDK_DIR)/src/nondebug
 COMMON_CFLAGS += -I$(CONFIG_PMDK_DIR)/src/include
 endif
 
-ifneq ($(CONFIG_VPP_DIR),)
-LIBS += -L$(CONFIG_VPP_DIR)/lib64
-COMMON_CFLAGS += -I$(CONFIG_VPP_DIR)/include
-endif
-
 ifeq ($(CONFIG_RDMA),y)
 SYS_LIBS += -libverbs -lrdmacm
 endif

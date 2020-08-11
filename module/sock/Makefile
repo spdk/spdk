@@ -38,7 +38,6 @@ DIRS-y = posix
 ifeq ($(OS), Linux)
 DIRS-$(CONFIG_URING) += uring
 endif
-DIRS-$(CONFIG_VPP) += vpp
 
 .PHONY: all clean $(DIRS-y)
 

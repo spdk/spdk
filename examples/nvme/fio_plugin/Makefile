@@ -40,8 +40,7 @@ FIO_PLUGIN := spdk_nvme
 
 C_SRCS = fio_plugin.c
 
-# Unable to combine the FIO plugin and the VPP socket abstraction (license incompatibility)
-SPDK_LIB_LIST = $(filter-out sock_vpp,$(SOCK_MODULES_LIST))
+SPDK_LIB_LIST = $(SOCK_MODULES_LIST)
 SPDK_LIB_LIST += nvme thread util log sock vmd jsonrpc json rpc
 
 ifeq ($(CONFIG_RDMA),y)

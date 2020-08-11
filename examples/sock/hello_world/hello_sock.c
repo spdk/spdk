@@ -86,7 +86,7 @@ hello_sock_usage(void)
 {
 	printf(" -H host_addr  host address\n");
 	printf(" -P port       port number\n");
-	printf(" -N sock_impl  socket implementation, e.g., -N posix or -N vpp\n");
+	printf(" -N sock_impl  socket implementation, e.g., -N posix or -N uring\n");
 	printf(" -S            start in server mode\n");
 	printf(" -V            print out additional informations");
 }

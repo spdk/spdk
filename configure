@@ -68,8 +68,6 @@ function usage()
 	echo "                           example: /usr/share/pmdk"
 	echo " reduce                    Build vbdev compression module."
 	echo "                           No path required."
-	echo " vpp                       Build VPP net module."
-	echo "                           example: /vpp_repo/build-root/rpmbuild/vpp-18.01.1.0/build-root/install-vpp-native/vpp"
 	echo " rbd                       Build Ceph RBD bdev module."
 	echo "                           No path required."
 	echo " rdma                      Build RDMA transport for NVMf target and initiator."
@@ -362,17 +360,6 @@ for i in "$@"; do
 			;;
 		--without-reduce)
 			CONFIG[REDUCE]=n
-			;;
-		--with-vpp)
-			CONFIG[VPP]=y
-			;;
-		--with-vpp=*)
-			CONFIG[VPP]=y
-			check_dir "$i"
-			CONFIG[VPP_DIR]=$(readlink -f ${i#*=})
-			;;
-		--without-vpp)
-			CONFIG[VPP]=n
 			;;
 		--with-fio) ;&
 		--with-fio=*)
@@ -701,18 +688,6 @@ if [[ "${CONFIG[REDUCE]}" = "y" ]]; then
 	if ! echo -e '#include <libpmem.h>\nint main(void) { return 0; }\n' \
 		| ${BUILD_CMD[@]} -lpmem - 2>/dev/null; then
 		echo --with-reduce requires libpmem.
-		echo Please install then re-run this script.
-		exit 1
-	fi
-fi
-
-if [[ "${CONFIG[VPP]}" = "y" ]]; then
-	if [ ! -z "${CONFIG[VPP_DIR]}" ]; then
-		VPP_CFLAGS="-L${CONFIG[VPP_DIR]}/lib -I${CONFIG[VPP_DIR]}/include"
-	fi
-	if ! echo -e '#include <vnet/session/application_interface.h>\nint main(void) { return 0; }\n' \
-		| ${BUILD_CMD[@]} ${VPP_CFLAGS} -lvppinfra -lsvm -lvlibmemoryclient - 2>/dev/null; then
-		echo --with-vpp requires installed vpp.
 		echo Please install then re-run this script.
 		exit 1
 	fi

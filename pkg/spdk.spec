@@ -86,7 +86,6 @@ BuildArch: noarch
 	--without-fio \
 	--with-vhost \
 	--without-pmdk \
-	--without-vpp \
 	--without-rbd \
 	--with-rdma \
 	--with-shared \

@@ -119,7 +119,6 @@ DEPDIRS-env_dpdk_rpc := log $(JSON_LIBS)
 # module/sock
 DEPDIRS-sock_posix := log sock util
 DEPDIRS-sock_uring := log sock util
-DEPDIRS-sock_vpp := log sock util thread
 
 # module/bdev
 DEPDIRS-bdev_gpt := bdev conf json log thread util
