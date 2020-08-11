@@ -3750,6 +3750,41 @@ _poller_submit_sends(struct spdk_nvmf_rdma_transport *rtransport,
 	}
 }
 
+static const char *
+nvmf_rdma_wr_type_str(enum spdk_nvmf_rdma_wr_type wr_type)
+{
+	switch (wr_type) {
+	case RDMA_WR_TYPE_RECV:
+		return "RECV";
+	case RDMA_WR_TYPE_SEND:
+		return "SEND";
+	case RDMA_WR_TYPE_DATA:
+		return "DATA";
+	default:
+		SPDK_ERRLOG("Unknown WR type %d\n", wr_type);
+		SPDK_UNREACHABLE();
+	}
+}
+
+static inline void
+nvmf_rdma_log_wc_status(struct spdk_nvmf_rdma_qpair *rqpair, struct ibv_wc *wc)
+{
+	enum spdk_nvmf_rdma_wr_type wr_type = ((struct spdk_nvmf_rdma_wr *)wc->wr_id)->type;
+
+	if (wc->status == IBV_WC_WR_FLUSH_ERR) {
+		/* If qpair is in ERR state, we will receive completions for all posted and not completed
+		 * Work Requests with IBV_WC_WR_FLUSH_ERR status. Don't log an error in that case */
+		SPDK_DEBUGLOG(SPDK_LOG_RDMA,
+			      "Error on CQ %p, (qp state %d ibv_state %d) request 0x%lu, type %s, status: (%d): %s\n",
+			      rqpair->poller->cq, rqpair->qpair.state, rqpair->ibv_state, wc->wr_id,
+			      nvmf_rdma_wr_type_str(wr_type), wc->status, ibv_wc_status_str(wc->status));
+	} else {
+		SPDK_ERRLOG("Error on CQ %p, (qp state %d ibv_state %d) request 0x%lu, type %s, status: (%d): %s\n",
+			    rqpair->poller->cq, rqpair->qpair.state, rqpair->ibv_state, wc->wr_id,
+			    nvmf_rdma_wr_type_str(wr_type), wc->status, ibv_wc_status_str(wc->status));
+	}
+}
+
 static int
 nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 		      struct spdk_nvmf_rdma_poller *rpoller)
@@ -3873,16 +3908,8 @@ nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 
 		/* Handle error conditions */
 		if (wc[i].status) {
-			if ((rdma_wr->type == RDMA_WR_TYPE_RECV && !rpoller->srq)) {
-				/* When we don't use SRQ and close a qpair, we will receive completions with error
-				 * status for all posted ibv_recv_wrs. This is expected and we don't want to log
-				 * an error in that case. */
-				SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Error on CQ %p, request 0x%lu, type %d, status: (%d): %s\n",
-					      rpoller->cq, wc[i].wr_id, rdma_wr->type, wc[i].status, ibv_wc_status_str(wc[i].status));
-			} else {
-				SPDK_ERRLOG("Error on CQ %p, request 0x%lu, type %d, status: (%d): %s\n",
-					    rpoller->cq, wc[i].wr_id, rdma_wr->type, wc[i].status, ibv_wc_status_str(wc[i].status));
-			}
+			nvmf_rdma_update_ibv_state(rqpair);
+			nvmf_rdma_log_wc_status(rqpair, &wc[i]);
 
 			error = true;
 
