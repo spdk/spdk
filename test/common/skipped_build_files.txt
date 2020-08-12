@@ -24,21 +24,6 @@ lib/rte_vhost/vhost_user
 lib/vhost/vhost_nvme
 lib/virtio/vhost_user
 
-# Cuse related files, enable when ready.
-lib/nvme/nvme_cuse
-module/bdev/nvme/bdev_nvme_cuse_rpc
-test/nvme/cuse/cuse
-
-# Currently we don't have this plumbed for testing, enable when ready.
-module/bdev/uring/bdev_uring
-module/bdev/uring/bdev_uring_rpc
-module/sock/uring/uring
-
-# Currently not testing blobfs_fuse, enable when ready.
-module/blobfs/bdev/blobfs_fuse
-test/blobfs/fuse/fuse
-
-
 # These files all represent c files that are only compiled by direct inclusion in other files.
 test/common/lib/test_env
 test/common/lib/test_sock
