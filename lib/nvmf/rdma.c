@@ -276,11 +276,6 @@ struct spdk_nvmf_rdma_resource_opts {
 	bool				shared;
 };
 
-struct spdk_nvmf_send_wr_list {
-	struct ibv_send_wr	*first;
-	struct ibv_send_wr	*last;
-};
-
 struct spdk_nvmf_recv_wr_list {
 	struct ibv_recv_wr	*first;
 	struct ibv_recv_wr	*last;
