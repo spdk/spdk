@@ -1618,7 +1618,7 @@ test_ctrlr_get_default_ctrlr_opts(void)
 		CU_ASSERT(opts.host_id[i] == 0);
 	}
 	CU_ASSERT_STRING_EQUAL(opts.hostnqn,
-			       "2014-08.org.nvmexpress:uuid:e53e9258-c93b-48b5-be1a-f025af6d232a");
+			       "nqn.2014-08.org.nvmexpress:uuid:e53e9258-c93b-48b5-be1a-f025af6d232a");
 	CU_ASSERT(memcmp(opts.extended_host_id, &g_spdk_nvme_driver->default_extended_host_id,
 			 sizeof(opts.extended_host_id)) == 0);
 	CU_ASSERT(strlen(opts.src_addr) == 0);
