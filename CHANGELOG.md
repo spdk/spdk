@@ -2,7 +2,7 @@
 
 ## v20.10: (Upcoming Release)
 
-## v20.07:
+## v20.07: SPDK CSI driver, new accel_fw commands, I/O abort support
 
 ### accel
 
@@ -148,7 +148,7 @@ Some previously exposed CRC32 functions have been removed from the public API -
 
 The function `spdk_vhost_blk_get_dev` has been removed.
 
-## v20.04:
+## v20.04: SPDK Top, IDXD, NVMe qpair groups
 
 IDXD engine support for compare has been added.
 
@@ -351,7 +351,7 @@ Poll groups per session have been replaced by SPDK threads per vhost controller.
 A new function, `spdk_vmd_fini`, has been added. It releases all resources acquired by the VMD
 library through the `spdk_vmd_init` call.
 
-## v20.01
+## v20.01: Optimized thin provisioning, FTL bdev, VMD hot plug, FUSED support
 
 ### bdev
 
@@ -541,7 +541,7 @@ code for fused compare-and-write operation.
 
 Added spdk_bdev_get_acwu function for getting block device atomic compare and write unit size.
 
-## v19.10
+## v19.10: Zoned bdev API, Opal bdev, NVMe character devices
 
 ### rpc
 
@@ -771,7 +771,7 @@ New cache modes added to use via RPC, wi - write invalidate and wa - write aroun
 
 New version of OCF provides fully asynchronous management API.
 
-## v19.07
+## v19.07: NVMe-oF FC Transport, VMD, NVMe-oF Persistent reservations, Bdev I/O with separate metadata
 
 ### ftl
 
@@ -1047,7 +1047,7 @@ with SPDK thread when necessary.
 Added spdk_thread_destroy() to allow framework polling the thread to
 release resources associated with that thread.
 
-## v19.04
+## v19.04: Compression bdev, Notification library, NVMe Opal support
 
 ### nvme
 
@@ -1268,7 +1268,7 @@ Added "reduce" block compression scheme based on using SSDs for storing
 compressed blocks of storage and presistent memory for metadata. Please see
 [compression](https://spdk.io/doc/bdev.html) for more details.
 
-## v19.01
+## v19.01: NVMe-oF TCP/IP Transport, Open Channel SSD Flash Translation Layer, Caching bdev based on OCF, ISA-L Support, DIF/DIX library
 
 ### ocf bdev
 
@@ -1523,7 +1523,7 @@ JSON RPC client is now running in non-blocking mode. Requests are sent and recei
 JSON RPC server can now recieve a callback on connection termination or server shutdown using `spdk_jsonrpc_conn_add_close_cb`
 and `spdk_jsonrpc_conn_del_close_cb`.
 
-## v18.10
+## v18.10: Dynamic memory allocation, Crypto Virtual Bdev, jsonrpc-client, SPDKCLI iSCSI and NVMe-oF support
 
 ### nvme
 
@@ -1720,7 +1720,7 @@ in QEMU.
 The SPDKCLI interactive command tool for managing SPDK is no longer considered experimental.
 Support for the iSCSI and NVMe-oF targets has been added.
 
-## v18.07
+## v18.07: Raid, Infrastructure Improvements, Bug Fixes
 
 ### bdev
 
