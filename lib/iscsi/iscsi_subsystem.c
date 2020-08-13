@@ -139,7 +139,9 @@ mobj_ctor(struct spdk_mempool *mp, __attribute__((unused)) void *arg,
 			  ~ISCSI_DATA_BUFFER_MASK);
 }
 
-#define NUM_PDU_PER_CONNECTION(iscsi)	(2 * (iscsi->MaxQueueDepth + iscsi->MaxLargeDataInPerConnection + 8))
+#define NUM_PDU_PER_CONNECTION(iscsi)	(2 * (iscsi->MaxQueueDepth +	\
+					 iscsi->MaxLargeDataInPerConnection +	\
+					 2 * DEFAULT_MAXR2T + 8))
 #define PDU_POOL_SIZE(iscsi)		(iscsi->MaxConnections * NUM_PDU_PER_CONNECTION(iscsi))
 #define IMMEDIATE_DATA_POOL_SIZE(iscsi)	(iscsi->MaxConnections * 128)
 #define DATA_OUT_POOL_SIZE(iscsi)	(iscsi->MaxConnections * MAX_DATA_OUT_PER_CONNECTION)
