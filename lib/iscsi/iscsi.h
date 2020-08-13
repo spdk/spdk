@@ -320,6 +320,7 @@ struct spdk_iscsi_opts {
 	bool ImmediateData;
 	uint32_t ErrorRecoveryLevel;
 	bool AllowDuplicateIsid;
+	uint32_t MaxLargeDataInPerConnection;
 };
 
 struct spdk_iscsi_globals {

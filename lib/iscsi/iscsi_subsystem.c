@@ -401,6 +401,7 @@ iscsi_opts_init(struct spdk_iscsi_opts *opts)
 	opts->chap_group = 0;
 	opts->authfile = NULL;
 	opts->nodebase = NULL;
+	opts->MaxLargeDataInPerConnection = DEFAULT_MAX_LARGE_DATAIN_PER_CONNECTION;
 }
 
 struct spdk_iscsi_opts *
@@ -473,6 +474,7 @@ iscsi_opts_copy(struct spdk_iscsi_opts *src)
 	dst->require_chap = src->require_chap;
 	dst->mutual_chap = src->mutual_chap;
 	dst->chap_group = src->chap_group;
+	dst->MaxLargeDataInPerConnection = src->MaxLargeDataInPerConnection;
 
 	return dst;
 }
@@ -697,6 +699,11 @@ iscsi_opts_verify(struct spdk_iscsi_opts *opts)
 		return -EINVAL;
 	}
 
+	if (opts->MaxLargeDataInPerConnection == 0) {
+		SPDK_ERRLOG("0 is invalid. MaxLargeDataInPerConnection must be more than 0\n");
+		return -EINVAL;
+	}
+
 	return 0;
 }
 
@@ -770,7 +777,7 @@ iscsi_set_global_params(struct spdk_iscsi_opts *opts)
 	g_iscsi.require_chap = opts->require_chap;
 	g_iscsi.mutual_chap = opts->mutual_chap;
 	g_iscsi.chap_group = opts->chap_group;
-	g_iscsi.MaxLargeDataInPerConnection = DEFAULT_MAX_LARGE_DATAIN_PER_CONNECTION;
+	g_iscsi.MaxLargeDataInPerConnection = opts->MaxLargeDataInPerConnection;
 
 	iscsi_log_globals();
 
@@ -1486,6 +1493,9 @@ iscsi_opts_info_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_bool(w, "require_chap", g_iscsi.require_chap);
 	spdk_json_write_named_bool(w, "mutual_chap", g_iscsi.mutual_chap);
 	spdk_json_write_named_int32(w, "chap_group", g_iscsi.chap_group);
+
+	spdk_json_write_named_uint32(w, "max_large_datain_per_connection",
+				     g_iscsi.MaxLargeDataInPerConnection);
 
 	spdk_json_write_object_end(w);
 }
