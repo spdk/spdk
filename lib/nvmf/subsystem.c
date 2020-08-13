@@ -575,6 +575,15 @@ nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 		return -EBUSY;
 	}
 
+	/* If we are already in the requested state, just call the callback immediately. */
+	if (subsystem->state == requested_state) {
+		subsystem->changing_state = false;
+		if (cb_fn) {
+			cb_fn(subsystem, cb_arg, 0);
+		}
+		return 0;
+	}
+
 	intermediate_state = nvmf_subsystem_get_intermediate_state(subsystem->state, requested_state);
 	assert(intermediate_state != SPDK_NVMF_SUBSYSTEM_NUM_STATES);
 
