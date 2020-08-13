@@ -2804,6 +2804,7 @@ iscsi_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t task_tag)
 			assert(conn->data_out_cnt >= task->data_out_cnt);
 			conn->data_out_cnt -= task->data_out_cnt;
 
+			assert(conn->pending_r2t > 0);
 			conn->pending_r2t--;
 
 			assert(task->is_r2t_active == true);
@@ -2834,6 +2835,7 @@ void iscsi_clear_all_transfer_task(struct spdk_iscsi_conn *conn,
 			task->next_expected_r2t_offset = 0;
 			assert(conn->data_out_cnt >= task->data_out_cnt);
 			conn->data_out_cnt -= task->data_out_cnt;
+			assert(conn->pending_r2t > 0);
 			conn->pending_r2t--;
 
 			TAILQ_REMOVE(&conn->active_r2t_tasks, task, link);

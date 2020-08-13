@@ -137,7 +137,7 @@ struct spdk_iscsi_conn {
 	TAILQ_HEAD(, spdk_iscsi_pdu) write_pdu_list;
 	TAILQ_HEAD(, spdk_iscsi_pdu) snack_pdu_list;
 
-	int pending_r2t;
+	uint32_t pending_r2t;
 
 	uint16_t cid;
 
