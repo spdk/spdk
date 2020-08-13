@@ -2903,22 +2903,22 @@ nvme_keep_alive_completion(void *cb_ctx, const struct spdk_nvme_cpl *cpl)
  * Check if we need to send a Keep Alive command.
  * Caller must hold ctrlr->ctrlr_lock.
  */
-static void
+static int
 nvme_ctrlr_keep_alive(struct spdk_nvme_ctrlr *ctrlr)
 {
 	uint64_t now;
 	struct nvme_request *req;
 	struct spdk_nvme_cmd *cmd;
-	int rc;
+	int rc = 0;
 
 	now = spdk_get_ticks();
 	if (now < ctrlr->next_keep_alive_tick) {
-		return;
+		return rc;
 	}
 
 	req = nvme_allocate_request_null(ctrlr->adminq, nvme_keep_alive_completion, NULL);
 	if (req == NULL) {
-		return;
+		return rc;
 	}
 
 	cmd = &req->cmd;
@@ -2927,9 +2927,11 @@ nvme_ctrlr_keep_alive(struct spdk_nvme_ctrlr *ctrlr)
 	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
 	if (rc != 0) {
 		SPDK_ERRLOG("Submitting Keep Alive failed\n");
+		rc = -ENXIO;
 	}
 
 	ctrlr->next_keep_alive_tick = now + ctrlr->keep_alive_interval_ticks;
+	return rc;
 }
 
 int32_t
@@ -2941,7 +2943,11 @@ spdk_nvme_ctrlr_process_admin_completions(struct spdk_nvme_ctrlr *ctrlr)
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
 	if (ctrlr->keep_alive_interval_ticks) {
-		nvme_ctrlr_keep_alive(ctrlr);
+		rc = nvme_ctrlr_keep_alive(ctrlr);
+		if (rc) {
+			nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+			return rc;
+		}
 	}
 
 	rc = nvme_io_msg_process(ctrlr);
