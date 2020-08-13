@@ -478,6 +478,7 @@ subsystem_state_change_revert_done(struct spdk_io_channel_iter *i, int status)
 		SPDK_ERRLOG("Unable to revert the subsystem state after operation failure.\n");
 	}
 
+	ctx->subsystem->changing_state = false;
 	if (ctx->cb_fn) {
 		/* return a failure here. This function only exists in an error path. */
 		ctx->cb_fn(ctx->subsystem, ctx->cb_arg, -1);
@@ -515,6 +516,7 @@ subsystem_state_change_done(struct spdk_io_channel_iter *i, int status)
 	}
 
 out:
+	ctx->subsystem->changing_state = false;
 	if (ctx->cb_fn) {
 		ctx->cb_fn(ctx->subsystem, ctx->cb_arg, status);
 	}
@@ -569,11 +571,16 @@ nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 	enum spdk_nvmf_subsystem_state intermediate_state;
 	int rc;
 
+	if (__sync_val_compare_and_swap(&subsystem->changing_state, false, true)) {
+		return -EBUSY;
+	}
+
 	intermediate_state = nvmf_subsystem_get_intermediate_state(subsystem->state, requested_state);
 	assert(intermediate_state != SPDK_NVMF_SUBSYSTEM_NUM_STATES);
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
+		subsystem->changing_state = false;
 		return -ENOMEM;
 	}
 
@@ -581,6 +588,7 @@ nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 	rc = nvmf_subsystem_set_state(subsystem, intermediate_state);
 	if (rc) {
 		free(ctx);
+		subsystem->changing_state = false;
 		return rc;
 	}
 
@@ -1060,51 +1068,118 @@ spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t ns
 	return 0;
 }
 
+struct subsystem_ns_change_ctx {
+	struct spdk_nvmf_subsystem		*subsystem;
+	spdk_nvmf_subsystem_state_change_done	cb_fn;
+	uint32_t				nsid;
+};
+
 static void
 _nvmf_ns_hot_remove(struct spdk_nvmf_subsystem *subsystem,
 		    void *cb_arg, int status)
 {
-	struct spdk_nvmf_ns *ns = cb_arg;
+	struct subsystem_ns_change_ctx *ctx = cb_arg;
 	int rc;
 
-	rc = spdk_nvmf_subsystem_remove_ns(subsystem, ns->opts.nsid);
+	rc = spdk_nvmf_subsystem_remove_ns(subsystem, ctx->nsid);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to make changes to NVME-oF subsystem with id: %u\n", subsystem->id);
 	}
 
 	spdk_nvmf_subsystem_resume(subsystem, NULL, NULL);
+
+	free(ctx);
+}
+
+static void
+nvmf_ns_change_msg(void *ns_ctx)
+{
+	struct subsystem_ns_change_ctx *ctx = ns_ctx;
+	int rc;
+
+	rc = spdk_nvmf_subsystem_pause(ctx->subsystem, ctx->cb_fn, ctx);
+	if (rc) {
+		if (rc == -EBUSY) {
+			/* Try again, this is not a permanent situation. */
+			spdk_thread_send_msg(spdk_get_thread(), nvmf_ns_change_msg, ctx);
+		} else {
+			free(ctx);
+			SPDK_ERRLOG("Unable to pause subsystem to process namespace removal!\n");
+		}
+	}
 }
 
 static void
 nvmf_ns_hot_remove(void *remove_ctx)
 {
 	struct spdk_nvmf_ns *ns = remove_ctx;
+	struct subsystem_ns_change_ctx *ns_ctx;
 	int rc;
 
-	rc = spdk_nvmf_subsystem_pause(ns->subsystem, _nvmf_ns_hot_remove, ns);
+	/* We have to allocate a new context because this op
+	 * is asynchronous and we could lose the ns in the middle.
+	 */
+	ns_ctx = calloc(1, sizeof(struct subsystem_ns_change_ctx));
+	if (!ns_ctx) {
+		SPDK_ERRLOG("Unable to allocate context to process namespace removal!\n");
+		return;
+	}
+
+	ns_ctx->subsystem = ns->subsystem;
+	ns_ctx->nsid = ns->opts.nsid;
+	ns_ctx->cb_fn = _nvmf_ns_hot_remove;
+
+	rc = spdk_nvmf_subsystem_pause(ns->subsystem, _nvmf_ns_hot_remove, ns_ctx);
 	if (rc) {
-		SPDK_ERRLOG("Unable to pause subsystem to process namespace removal!\n");
+		if (rc == -EBUSY) {
+			/* Try again, this is not a permanent situation. */
+			spdk_thread_send_msg(spdk_get_thread(), nvmf_ns_change_msg, ns_ctx);
+		} else {
+			SPDK_ERRLOG("Unable to pause subsystem to process namespace removal!\n");
+			free(ns_ctx);
+		}
 	}
 }
 
 static void
 _nvmf_ns_resize(struct spdk_nvmf_subsystem *subsystem, void *cb_arg, int status)
 {
-	struct spdk_nvmf_ns *ns = cb_arg;
+	struct subsystem_ns_change_ctx *ctx = cb_arg;
 
-	nvmf_subsystem_ns_changed(subsystem, ns->opts.nsid);
+	nvmf_subsystem_ns_changed(subsystem, ctx->nsid);
 	spdk_nvmf_subsystem_resume(subsystem, NULL, NULL);
+
+	free(ctx);
 }
 
 static void
 nvmf_ns_resize(void *event_ctx)
 {
 	struct spdk_nvmf_ns *ns = event_ctx;
+	struct subsystem_ns_change_ctx *ns_ctx;
 	int rc;
 
-	rc = spdk_nvmf_subsystem_pause(ns->subsystem, _nvmf_ns_resize, ns);
+	/* We have to allocate a new context because this op
+	 * is asynchronous and we could lose the ns in the middle.
+	 */
+	ns_ctx = calloc(1, sizeof(struct subsystem_ns_change_ctx));
+	if (!ns_ctx) {
+		SPDK_ERRLOG("Unable to allocate context to process namespace removal!\n");
+		return;
+	}
+
+	ns_ctx->subsystem = ns->subsystem;
+	ns_ctx->nsid = ns->opts.nsid;
+	ns_ctx->cb_fn = _nvmf_ns_resize;
+
+	rc = spdk_nvmf_subsystem_pause(ns->subsystem, _nvmf_ns_resize, ns_ctx);
 	if (rc) {
+		if (rc == -EBUSY) {
+			/* Try again, this is not a permanent situation. */
+			spdk_thread_send_msg(spdk_get_thread(), nvmf_ns_change_msg, ns_ctx);
+		}
 		SPDK_ERRLOG("Unable to pause subsystem to process namespace resize!\n");
+		free(ns_ctx);
 	}
 }
 

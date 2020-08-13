@@ -496,6 +496,7 @@ rpc_nvmf_delete_subsystem(struct spdk_jsonrpc_request *request,
 	struct rpc_delete_subsystem req = { 0 };
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvmf_tgt *tgt;
+	int rc;
 
 	if (spdk_json_decode_object(params, rpc_delete_subsystem_decoders,
 				    SPDK_COUNTOF(rpc_delete_subsystem_decoders),
@@ -523,9 +524,18 @@ rpc_nvmf_delete_subsystem(struct spdk_jsonrpc_request *request,
 
 	free_rpc_delete_subsystem(&req);
 
-	spdk_nvmf_subsystem_stop(subsystem,
-				 rpc_nvmf_subsystem_stopped,
-				 request);
+	rc = spdk_nvmf_subsystem_stop(subsystem,
+				      rpc_nvmf_subsystem_stopped,
+				      request);
+	if (rc == -EBUSY) {
+		SPDK_ERRLOG("Subsystem currently in another state change try again later.\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Subsystem currently in another state change try again later.");
+	} else if (rc != 0) {
+		SPDK_ERRLOG("Unable to change state on subsystem. rc=%d\n", rc);
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "Unable to change state on subsystem. rc=%d", rc);
+	}
 
 	return;
 
@@ -770,6 +780,7 @@ rpc_nvmf_subsystem_add_listener(struct spdk_jsonrpc_request *request,
 	struct nvmf_rpc_listener_ctx *ctx;
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvmf_tgt *tgt;
+	int rc;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
@@ -817,8 +828,14 @@ rpc_nvmf_subsystem_add_listener(struct spdk_jsonrpc_request *request,
 
 	ctx->op = NVMF_RPC_LISTEN_ADD;
 
-	if (spdk_nvmf_subsystem_pause(subsystem, nvmf_rpc_listen_paused, ctx)) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+	rc = spdk_nvmf_subsystem_pause(subsystem, nvmf_rpc_listen_paused, ctx);
+	if (rc != 0) {
+		if (rc == -EBUSY) {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							 "subsystem busy, retry later.\n");
+		} else {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+		}
 		nvmf_rpc_listener_ctx_free(ctx);
 	}
 }
@@ -832,6 +849,7 @@ rpc_nvmf_subsystem_remove_listener(struct spdk_jsonrpc_request *request,
 	struct nvmf_rpc_listener_ctx *ctx;
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvmf_tgt *tgt;
+	int rc;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
@@ -887,8 +905,14 @@ rpc_nvmf_subsystem_remove_listener(struct spdk_jsonrpc_request *request,
 
 	ctx->op = NVMF_RPC_LISTEN_REMOVE;
 
-	if (spdk_nvmf_subsystem_pause(subsystem, nvmf_rpc_listen_paused, ctx)) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+	rc = spdk_nvmf_subsystem_pause(subsystem, nvmf_rpc_listen_paused, ctx);
+	if (rc != 0) {
+		if (rc == -EBUSY) {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							 "subsystem busy, retry later.\n");
+		} else {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+		}
 		nvmf_rpc_listener_ctx_free(ctx);
 	}
 }
@@ -1062,6 +1086,7 @@ rpc_nvmf_subsystem_add_ns(struct spdk_jsonrpc_request *request,
 	struct nvmf_rpc_ns_ctx *ctx;
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvmf_tgt *tgt;
+	int rc;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
@@ -1098,8 +1123,14 @@ rpc_nvmf_subsystem_add_ns(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	if (spdk_nvmf_subsystem_pause(subsystem, nvmf_rpc_ns_paused, ctx)) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+	rc = spdk_nvmf_subsystem_pause(subsystem, nvmf_rpc_ns_paused, ctx);
+	if (rc != 0) {
+		if (rc == -EBUSY) {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							 "subsystem busy, retry later.\n");
+		} else {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+		}
 		nvmf_rpc_ns_ctx_free(ctx);
 	}
 }
@@ -1178,6 +1209,7 @@ rpc_nvmf_subsystem_remove_ns(struct spdk_jsonrpc_request *request,
 	struct nvmf_rpc_remove_ns_ctx *ctx;
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvmf_tgt *tgt;
+	int rc;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
@@ -1214,8 +1246,14 @@ rpc_nvmf_subsystem_remove_ns(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	if (spdk_nvmf_subsystem_pause(subsystem, nvmf_rpc_remove_ns_paused, ctx)) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+	rc = spdk_nvmf_subsystem_pause(subsystem, nvmf_rpc_remove_ns_paused, ctx);
+	if (rc != 0) {
+		if (rc == -EBUSY) {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							 "subsystem busy, retry later.\n");
+		} else {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+		}
 		nvmf_rpc_remove_ns_ctx_free(ctx);
 	}
 }
@@ -1316,6 +1354,7 @@ rpc_nvmf_subsystem_add_host(struct spdk_jsonrpc_request *request,
 	struct nvmf_rpc_host_ctx *ctx;
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvmf_tgt *tgt;
+	int rc;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
@@ -1353,8 +1392,14 @@ rpc_nvmf_subsystem_add_host(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	if (spdk_nvmf_subsystem_pause(subsystem, nvmf_rpc_host_paused, ctx)) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+	rc = spdk_nvmf_subsystem_pause(subsystem, nvmf_rpc_host_paused, ctx);
+	if (rc != 0) {
+		if (rc == -EBUSY) {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							 "subsystem busy, retry later.\n");
+		} else {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+		}
 		nvmf_rpc_host_ctx_free(ctx);
 	}
 }
@@ -1367,6 +1412,7 @@ rpc_nvmf_subsystem_remove_host(struct spdk_jsonrpc_request *request,
 	struct nvmf_rpc_host_ctx *ctx;
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvmf_tgt *tgt;
+	int rc;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
@@ -1404,8 +1450,14 @@ rpc_nvmf_subsystem_remove_host(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	if (spdk_nvmf_subsystem_pause(subsystem, nvmf_rpc_host_paused, ctx)) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+	rc = spdk_nvmf_subsystem_pause(subsystem, nvmf_rpc_host_paused, ctx);
+	if (rc != 0) {
+		if (rc == -EBUSY) {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							 "subsystem busy, retry later.\n");
+		} else {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+		}
 		nvmf_rpc_host_ctx_free(ctx);
 	}
 }
@@ -1426,6 +1478,7 @@ rpc_nvmf_subsystem_allow_any_host(struct spdk_jsonrpc_request *request,
 	struct nvmf_rpc_host_ctx *ctx;
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvmf_tgt *tgt;
+	int rc;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
@@ -1463,8 +1516,14 @@ rpc_nvmf_subsystem_allow_any_host(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	if (spdk_nvmf_subsystem_pause(subsystem, nvmf_rpc_host_paused, ctx)) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+	rc = spdk_nvmf_subsystem_pause(subsystem, nvmf_rpc_host_paused, ctx);
+	if (rc != 0) {
+		if (rc == -EBUSY) {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							 "subsystem busy, retry later.\n");
+		} else {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+		}
 		nvmf_rpc_host_ctx_free(ctx);
 	}
 }

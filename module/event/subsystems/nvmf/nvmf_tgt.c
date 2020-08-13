@@ -224,9 +224,15 @@ nvmf_tgt_subsystem_started(struct spdk_nvmf_subsystem *subsystem,
 			   void *cb_arg, int status)
 {
 	subsystem = spdk_nvmf_subsystem_get_next(subsystem);
+	int rc;
 
 	if (subsystem) {
-		spdk_nvmf_subsystem_start(subsystem, nvmf_tgt_subsystem_started, NULL);
+		rc = spdk_nvmf_subsystem_start(subsystem, nvmf_tgt_subsystem_started, NULL);
+		if (rc) {
+			g_tgt_state = NVMF_TGT_FINI_STOP_SUBSYSTEMS;
+			SPDK_ERRLOG("Unable to start NVMe-oF subsystem. Stopping app.\n");
+			nvmf_tgt_advance_state();
+		}
 		return;
 	}
 
@@ -239,9 +245,14 @@ nvmf_tgt_subsystem_stopped(struct spdk_nvmf_subsystem *subsystem,
 			   void *cb_arg, int status)
 {
 	subsystem = spdk_nvmf_subsystem_get_next(subsystem);
+	int rc;
 
 	if (subsystem) {
-		spdk_nvmf_subsystem_stop(subsystem, nvmf_tgt_subsystem_stopped, NULL);
+		rc = spdk_nvmf_subsystem_stop(subsystem, nvmf_tgt_subsystem_stopped, NULL);
+		if (rc) {
+			SPDK_ERRLOG("Unable to stop NVMe-oF subsystem. Trying others.\n");
+			nvmf_tgt_subsystem_stopped(subsystem, NULL, 0);
+		}
 		return;
 	}
 
@@ -356,6 +367,7 @@ nvmf_tgt_advance_state(void)
 {
 	enum nvmf_tgt_state prev_state;
 	int rc = -1;
+	int ret;
 
 	do {
 		prev_state = g_tgt_state;
@@ -388,7 +400,11 @@ nvmf_tgt_advance_state(void)
 			subsystem = spdk_nvmf_subsystem_get_first(g_spdk_nvmf_tgt);
 
 			if (subsystem) {
-				spdk_nvmf_subsystem_start(subsystem, nvmf_tgt_subsystem_started, NULL);
+				ret = spdk_nvmf_subsystem_start(subsystem, nvmf_tgt_subsystem_started, NULL);
+				if (ret) {
+					SPDK_ERRLOG("Unable to start NVMe-oF subsystem. Stopping app.\n");
+					g_tgt_state = NVMF_TGT_FINI_STOP_SUBSYSTEMS;
+				}
 			} else {
 				g_tgt_state = NVMF_TGT_INIT_START_ACCEPTOR;
 			}
@@ -408,7 +424,10 @@ nvmf_tgt_advance_state(void)
 			subsystem = spdk_nvmf_subsystem_get_first(g_spdk_nvmf_tgt);
 
 			if (subsystem) {
-				spdk_nvmf_subsystem_stop(subsystem, nvmf_tgt_subsystem_stopped, NULL);
+				ret = spdk_nvmf_subsystem_stop(subsystem, nvmf_tgt_subsystem_stopped, NULL);
+				if (ret) {
+					nvmf_tgt_subsystem_stopped(subsystem, NULL, 0);
+				}
 			} else {
 				g_tgt_state = NVMF_TGT_FINI_DESTROY_POLL_GROUPS;
 			}
