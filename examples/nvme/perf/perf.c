@@ -243,6 +243,8 @@ static bool g_header_digest;
 static bool g_data_digest;
 static bool g_no_shn_notification;
 static bool g_mix_specified;
+/* The flag is used to exit the program while keep alive fails on the transport */
+static bool g_exit;
 /* Default to 10 seconds for the keep alive value. This value is arbitrary. */
 static uint32_t g_keep_alive_timeout_in_ms = 10000;
 
@@ -1253,7 +1255,7 @@ work_fn(void *arg)
 		ns_ctx = ns_ctx->next;
 	}
 
-	while (1) {
+	while (spdk_likely(!g_exit)) {
 		/*
 		 * Check for completed I/O for each controller. A new
 		 * I/O will be submitted in the io_complete callback
@@ -2176,6 +2178,7 @@ nvme_poll_ctrlrs(void *arg)
 {
 	struct ctrlr_entry *entry;
 	int oldstate;
+	int rc;
 
 	spdk_unaffinitize_thread();
 
@@ -2185,7 +2188,10 @@ nvme_poll_ctrlrs(void *arg)
 		entry = g_controllers;
 		while (entry) {
 			if (entry->trtype != SPDK_NVME_TRANSPORT_PCIE) {
-				spdk_nvme_ctrlr_process_admin_completions(entry->ctrlr);
+				rc = spdk_nvme_ctrlr_process_admin_completions(entry->ctrlr);
+				if (spdk_unlikely(rc < 0 && !g_exit)) {
+					g_exit = true;
+				}
 			}
 			entry = entry->next;
 		}
