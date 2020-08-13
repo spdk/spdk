@@ -10,9 +10,6 @@ MALLOC_BLOCK_SIZE=512
 
 rpc_py="$rootdir/scripts/rpc.py"
 
-NVMF_SECOND_PORT="4421"
-NVMF_THIRD_PORT="4422"
-
 bdevperf_rpc_sock=/var/tmp/bdevperf.sock
 
 nvmftestinit
