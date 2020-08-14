@@ -398,6 +398,23 @@ def iscsi_target_node_set_redirect(client, name, pg_tag, redirect_host, redirect
     return client.call('iscsi_target_node_set_redirect', params)
 
 
+def iscsi_target_node_request_logout(client, name, pg_tag):
+    """Request connections to the target node to logout.
+
+    Args:
+        name: Target node name (ASCII)
+        pg_tag: Portal group tag (unique, integer > 0) (optional)
+
+    Returns:
+        True or False
+    """
+    params = {'name': name}
+
+    if pg_tag:
+        params['pg_tag'] = pg_tag
+    return client.call('iscsi_target_node_request_logout', params)
+
+
 @deprecated_alias('add_portal_group')
 def iscsi_create_portal_group(client, portals, tag, private):
     """Add a portal group.

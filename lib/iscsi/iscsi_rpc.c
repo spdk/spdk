@@ -1218,6 +1218,65 @@ rpc_iscsi_target_node_set_redirect(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("iscsi_target_node_set_redirect", rpc_iscsi_target_node_set_redirect,
 		  SPDK_RPC_RUNTIME)
 
+struct rpc_target_logout {
+	char *name;
+	int32_t pg_tag;
+};
+
+static void
+free_rpc_target_logout(struct rpc_target_logout *req)
+{
+	free(req->name);
+}
+
+static const struct spdk_json_object_decoder rpc_target_logout_decoders[] = {
+	{"name", offsetof(struct rpc_target_logout, name), spdk_json_decode_string},
+	{"pg_tag", offsetof(struct rpc_target_logout, pg_tag), spdk_json_decode_int32, true},
+};
+
+static void
+rpc_iscsi_target_node_request_logout(struct spdk_jsonrpc_request *request,
+				     const struct spdk_json_val *params)
+{
+	struct rpc_target_logout req = {};
+	struct spdk_iscsi_tgt_node *target;
+	struct spdk_json_write_ctx *w;
+
+	/* If pg_tag is omitted, request all connections to the specified target
+	 * to logout.
+	 */
+	req.pg_tag = -1;
+
+	if (spdk_json_decode_object(params, rpc_target_logout_decoders,
+				    SPDK_COUNTOF(rpc_target_logout_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		free_rpc_target_logout(&req);
+		return;
+	}
+
+	target = iscsi_find_tgt_node(req.name);
+	if (target == NULL) {
+		SPDK_ERRLOG("target %s is not found\n", req.name);
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						     "Target %s is not found", req.name);
+		free_rpc_target_logout(&req);
+		return;
+	}
+
+	iscsi_conns_request_logout(target, req.pg_tag);
+
+	free_rpc_target_logout(&req);
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("iscsi_target_node_request_logout", rpc_iscsi_target_node_request_logout,
+		  SPDK_RPC_RUNTIME)
+
 static void
 rpc_iscsi_get_options(struct spdk_jsonrpc_request *request,
 		      const struct spdk_json_val *params)

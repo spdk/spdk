@@ -4153,6 +4153,43 @@ Example response:
 }
 ~~~
 
+## iscsi_target_node_request_logout method {#rpc_iscsi_target_node_request_logout}
+
+For the target node, request connections whose portal group tag match to logout,
+or request all connections to logout if portal group tag is omitted.
+
+### Parameters
+
+Name                        | Optional | Type    | Description
+--------------------------- | -------- | --------| -----------
+name                        | Required | string  | Target node name (ASCII)
+pg_tag                      | Optional | number  | Existing portal group tag
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "name": "iqn.2016-06.io.spdk:target1",
+    "pg_tag": 1
+  },
+  "jsonrpc": "2.0",
+  "method": "iscsi_target_node_request_logout",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
 
 # NVMe-oF Target {#jsonrpc_components_nvmf_tgt}
 

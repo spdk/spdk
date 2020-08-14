@@ -1127,6 +1127,19 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-p', '--redirect_port', help='Numeric TCP port for redirect portal', required=False)
     p.set_defaults(func=iscsi_target_node_set_redirect)
 
+    def iscsi_target_node_request_logout(args):
+        rpc.iscsi.iscsi_target_node_request_logout(
+            args.client,
+            name=args.name,
+            pg_tag=args.pg_tag)
+
+    p = subparsers.add_parser('iscsi_target_node_request_logout',
+                              help="""For the target node, request connections whose portal group tag
+    match to logout, or request all connections if portal group tag is omitted.""")
+    p.add_argument('name', help='Target node name (ASCII)')
+    p.add_argument('-t', '--pg-tag', help='Portal group tag (unique, integer > 0)', type=int, required=False)
+    p.set_defaults(func=iscsi_target_node_request_logout)
+
     def iscsi_create_portal_group(args):
         portals = []
         for p in args.portal_list.strip().split(' '):
