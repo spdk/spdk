@@ -40,13 +40,6 @@
 #include "spdk/endian.h"
 #include "spdk/string.h"
 
-#ifdef DEBUG
-#define NVME_FABRIC_CONNECT_COMMAND_TIMEOUT 0
-#else
-/* 500 millisecond timeout. */
-#define NVME_FABRIC_CONNECT_COMMAND_TIMEOUT 500000
-#endif
-
 static int
 nvme_fabric_prop_set_cmd(struct spdk_nvme_ctrlr *ctrlr,
 			 uint32_t offset, uint8_t size, uint64_t value)
@@ -462,7 +455,7 @@ nvme_fabric_qpair_connect(struct spdk_nvme_qpair *qpair, uint32_t num_entries)
 	}
 
 	/* If we time out, the qpair will abort the request upon destruction. */
-	if (nvme_wait_for_completion_timeout(qpair, status, NVME_FABRIC_CONNECT_COMMAND_TIMEOUT)) {
+	if (nvme_wait_for_completion_timeout(qpair, status, ctrlr->opts.fabrics_connect_timeout_us)) {
 		SPDK_ERRLOG("Connect command failed\n");
 		spdk_free(nvmf_data);
 		if (!status->timed_out) {

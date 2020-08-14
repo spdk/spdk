@@ -206,6 +206,11 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 	if (FIELD_OK(admin_queue_size)) {
 		opts->admin_queue_size = DEFAULT_ADMIN_QUEUE_SIZE;
 	}
+
+	if (FIELD_OK(fabrics_connect_timeout_us)) {
+		opts->fabrics_connect_timeout_us = NVME_FABRIC_CONNECT_COMMAND_TIMEOUT;
+	}
+
 #undef FIELD_OK
 }
 

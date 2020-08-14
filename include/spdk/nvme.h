@@ -248,6 +248,12 @@ struct spdk_nvme_ctrlr_opts {
 	 * structure are valid. And the library will populate any remaining fields with default values.
 	 */
 	size_t opts_size;
+
+	/**
+	 * The amount of time to spend before timing out during fabric connect on qpairs associated with
+	 * this controller in microseconds.
+	 */
+	uint64_t fabrics_connect_timeout_us;
 };
 
 /**

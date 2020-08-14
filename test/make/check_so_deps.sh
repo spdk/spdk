@@ -40,6 +40,8 @@ function confirm_abi_deps() {
 	name = spdk_nvme_ns_data
 [suppress_type]
 	name = spdk_nvme_log_page
+[suppress_type]
+	name = spdk_nvme_ctrlr_opts
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do

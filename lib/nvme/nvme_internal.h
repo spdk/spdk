@@ -183,6 +183,14 @@ extern pid_t g_spdk_nvme_pid;
 						sizeof(struct spdk_nvme_cmd), \
 						sizeof(struct spdk_nvme_cpl)))
 
+/* Default timeout for fabrics connect commands. */
+#ifdef DEBUG
+#define NVME_FABRIC_CONNECT_COMMAND_TIMEOUT 0
+#else
+/* 500 millisecond timeout. */
+#define NVME_FABRIC_CONNECT_COMMAND_TIMEOUT 500000
+#endif
+
 enum nvme_payload_type {
 	NVME_PAYLOAD_TYPE_INVALID = 0,
 
