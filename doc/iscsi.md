@@ -353,9 +353,10 @@ initiator logs in to the target again through the redirect portal.
 
 Users set a portal group to public or private at creation using the
 `iscsi_create_portal_group` RPC, associate portal groups with a target using the
-`iscsi_create_target_node` RPC or the `iscsi_target_node_add_pg_ig_maps` RPC, and
+`iscsi_create_target_node` RPC or the `iscsi_target_node_add_pg_ig_maps` RPC,
 specify a up-to-date redirect portal in a public portal group for a target using
-`iscsi_target_node_set_redirect` RPC.
+the `iscsi_target_node_set_redirect` RPC, and terminate the corresponding connections
+by asynchronous logout request using the `iscsi_target_node_request_logout` RPC.
 
 Typically users will use the login redirection feature in scale out iSCSI target
 system, which runs multiple SPDK iSCSI target applications.
