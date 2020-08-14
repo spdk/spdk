@@ -129,13 +129,17 @@ static const double g_latency_cutoffs[] = {
 	-1,
 };
 
-struct ns_worker_ctx {
-	struct ns_entry		*entry;
+struct ns_worker_stats {
 	uint64_t		io_completed;
 	uint64_t		last_io_completed;
 	uint64_t		total_tsc;
 	uint64_t		min_tsc;
 	uint64_t		max_tsc;
+};
+
+struct ns_worker_ctx {
+	struct ns_entry		*entry;
+	struct ns_worker_stats	stats;
 	uint64_t		current_queue_depth;
 	uint64_t		offset_in_ios;
 	bool			is_draining;
@@ -232,6 +236,7 @@ static int g_queue_depth;
 static int g_nr_io_queues_per_ns = 1;
 static int g_nr_unused_io_queues;
 static int g_time_in_sec;
+static int g_warmup_time_in_sec;
 static uint32_t g_max_completions;
 static int g_dpdk_mem;
 static int g_shm_id = -1;
@@ -1106,14 +1111,14 @@ task_complete(struct perf_task *task)
 	ns_ctx = task->ns_ctx;
 	entry = ns_ctx->entry;
 	ns_ctx->current_queue_depth--;
-	ns_ctx->io_completed++;
+	ns_ctx->stats.io_completed++;
 	tsc_diff = spdk_get_ticks() - task->submit_tsc;
-	ns_ctx->total_tsc += tsc_diff;
-	if (spdk_unlikely(ns_ctx->min_tsc > tsc_diff)) {
-		ns_ctx->min_tsc = tsc_diff;
+	ns_ctx->stats.total_tsc += tsc_diff;
+	if (spdk_unlikely(ns_ctx->stats.min_tsc > tsc_diff)) {
+		ns_ctx->stats.min_tsc = tsc_diff;
 	}
-	if (spdk_unlikely(ns_ctx->max_tsc < tsc_diff)) {
-		ns_ctx->max_tsc = tsc_diff;
+	if (spdk_unlikely(ns_ctx->stats.max_tsc < tsc_diff)) {
+		ns_ctx->stats.max_tsc = tsc_diff;
 	}
 	if (spdk_unlikely(g_latency_sw_tracking_level > 0)) {
 		spdk_histogram_data_tally(ns_ctx->histogram, tsc_diff);
@@ -1195,7 +1200,7 @@ cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 }
 
 static void
-print_periodic_performance(void)
+print_periodic_performance(bool warmup)
 {
 	uint64_t io_this_second;
 	double mb_this_second;
@@ -1214,15 +1219,15 @@ print_periodic_performance(void)
 	while (worker) {
 		ns_ctx = worker->ns_ctx;
 		while (ns_ctx) {
-			io_this_second += ns_ctx->io_completed - ns_ctx->last_io_completed;
-			ns_ctx->last_io_completed = ns_ctx->io_completed;
+			io_this_second += ns_ctx->stats.io_completed - ns_ctx->stats.last_io_completed;
+			ns_ctx->stats.last_io_completed = ns_ctx->stats.io_completed;
 			ns_ctx = ns_ctx->next;
 		}
 		worker = worker->next;
 	}
 
 	mb_this_second = (double)io_this_second * g_io_size_bytes / (1024 * 1024);
-	printf("%9ju IOPS, %8.2f MiB/s\r", io_this_second, mb_this_second);
+	printf("%s%9ju IOPS, %8.2f MiB/s\r", warmup ? "[warmup] " : "", io_this_second, mb_this_second);
 	fflush(stdout);
 }
 
@@ -1230,9 +1235,10 @@ static int
 work_fn(void *arg)
 {
 	uint64_t tsc_end, tsc_current, tsc_next_print;
-	struct worker_thread *worker = (struct worker_thread *)arg;
+	struct worker_thread *worker = (struct worker_thread *) arg;
 	struct ns_worker_ctx *ns_ctx = NULL;
 	uint32_t unfinished_ns_ctx;
+	bool warmup = false;
 
 	/* Allocate queue pairs for each namespace. */
 	ns_ctx = worker->ns_ctx;
@@ -1245,8 +1251,14 @@ work_fn(void *arg)
 	}
 
 	tsc_current = spdk_get_ticks();
-	tsc_end = tsc_current + g_time_in_sec * g_tsc_rate;
 	tsc_next_print = tsc_current + g_tsc_rate;
+
+	if (g_warmup_time_in_sec) {
+		warmup = true;
+		tsc_end = tsc_current + g_warmup_time_in_sec * g_tsc_rate;
+	} else {
+		tsc_end = tsc_current + g_time_in_sec * g_tsc_rate;
+	}
 
 	/* Submit initial I/O for each namespace. */
 	ns_ctx = worker->ns_ctx;
@@ -1271,11 +1283,30 @@ work_fn(void *arg)
 
 		if (worker->lcore == g_master_core && tsc_current > tsc_next_print) {
 			tsc_next_print += g_tsc_rate;
-			print_periodic_performance();
+			print_periodic_performance(warmup);
 		}
 
 		if (tsc_current > tsc_end) {
-			break;
+			if (warmup) {
+				/* Update test end time, clear statistics */
+				tsc_end = tsc_current + g_time_in_sec * g_tsc_rate;
+				ns_ctx = worker->ns_ctx;
+
+				while (ns_ctx != NULL) {
+					memset(&ns_ctx->stats, 0, sizeof(ns_ctx->stats));
+					ns_ctx->stats.min_tsc = UINT64_MAX;
+					ns_ctx = ns_ctx->next;
+				}
+
+				if (worker->lcore == g_master_core && isatty(STDOUT_FILENO)) {
+					/* warmup stage prints a longer string to stdout, need to erase it */
+					printf("%c[2K", 27);
+				}
+
+				warmup = false;
+			} else {
+				break;
+			}
 		}
 	}
 
@@ -1322,6 +1353,7 @@ static void usage(char *program_name)
 	printf("\t\t-L for latency summary, -LL for detailed histogram\n");
 	printf("\t[-l enable latency tracking via ssd (if supported), default: disabled]\n");
 	printf("\t[-t time in seconds]\n");
+	printf("\t[-a warmup time in seconds]\n");
 	printf("\t[-c core mask for I/O submission/completion.]\n");
 	printf("\t\t(default: 1)\n");
 	printf("\t[-D disable submission queue in controller memory buffer, default: enabled]\n");
@@ -1437,16 +1469,17 @@ print_performance(void)
 	while (worker) {
 		ns_ctx = worker->ns_ctx;
 		while (ns_ctx) {
-			if (ns_ctx->io_completed != 0) {
-				io_per_second = (double)ns_ctx->io_completed / g_time_in_sec;
+			if (ns_ctx->stats.io_completed != 0) {
+				io_per_second = (double)ns_ctx->stats.io_completed / g_time_in_sec;
 				mb_per_second = io_per_second * g_io_size_bytes / (1024 * 1024);
-				average_latency = ((double)ns_ctx->total_tsc / ns_ctx->io_completed) * 1000 * 1000 / g_tsc_rate;
-				min_latency = (double)ns_ctx->min_tsc * 1000 * 1000 / g_tsc_rate;
+				average_latency = ((double)ns_ctx->stats.total_tsc / ns_ctx->stats.io_completed) * 1000 * 1000 /
+						  g_tsc_rate;
+				min_latency = (double)ns_ctx->stats.min_tsc * 1000 * 1000 / g_tsc_rate;
 				if (min_latency < min_latency_so_far) {
 					min_latency_so_far = min_latency;
 				}
 
-				max_latency = (double)ns_ctx->max_tsc * 1000 * 1000 / g_tsc_rate;
+				max_latency = (double)ns_ctx->stats.max_tsc * 1000 * 1000 / g_tsc_rate;
 				if (max_latency > max_latency_so_far) {
 					max_latency_so_far = max_latency;
 				}
@@ -1457,8 +1490,8 @@ print_performance(void)
 				       average_latency, min_latency, max_latency);
 				total_io_per_second += io_per_second;
 				total_mb_per_second += mb_per_second;
-				total_io_completed += ns_ctx->io_completed;
-				total_io_tsc += ns_ctx->total_tsc;
+				total_io_completed += ns_ctx->stats.io_completed;
+				total_io_tsc += ns_ctx->stats.total_tsc;
 				ns_count++;
 			}
 			ns_ctx = ns_ctx->next;
@@ -1765,8 +1798,9 @@ parse_args(int argc, char **argv)
 	long int val;
 	int rc;
 
-	while ((op = getopt(argc, argv, "c:e:i:lo:q:r:k:s:t:w:C:DGHILM:NP:RT:U:V")) != -1) {
+	while ((op = getopt(argc, argv, "a:c:e:i:lo:q:r:k:s:t:w:C:DGHILM:NP:RT:U:V")) != -1) {
 		switch (op) {
+		case 'a':
 		case 'i':
 		case 'C':
 		case 'P':
@@ -1783,6 +1817,9 @@ parse_args(int argc, char **argv)
 				return val;
 			}
 			switch (op) {
+			case 'a':
+				g_warmup_time_in_sec = val;
+				break;
 			case 'i':
 				g_shm_id = val;
 				break;
@@ -2152,7 +2189,7 @@ associate_workers_with_ns(void)
 		}
 
 		printf("Associating %s with lcore %d\n", entry->name, worker->lcore);
-		ns_ctx->min_tsc = UINT64_MAX;
+		ns_ctx->stats.min_tsc = UINT64_MAX;
 		ns_ctx->entry = entry;
 		ns_ctx->next = worker->ns_ctx;
 		ns_ctx->histogram = spdk_histogram_data_alloc();
