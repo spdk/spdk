@@ -2978,6 +2978,7 @@ immediate_data                  | Optional | boolean | Session specific paramete
 error_recovery_level            | Optional | number  | Session specific parameter, ErrorRecoveryLevel (default: 0)
 allow_duplicated_isid           | Optional | boolean | Allow duplicated initiator session ID (default: `false`)
 max_large_datain_per_connection | Optional | number  | Max number of outstanding split read I/Os per connection (default: 64)
+max_r2t_per_connection          | Optional | number  | Max number of outstanding R2Ts per connection (default: 4)
 
 To load CHAP shared secret file, its path is required to specify explicitly in the parameter `auth_file`.
 
@@ -3063,7 +3064,8 @@ Example response:
     "disable_chap": true,
     "default_time2wait": 2,
     "require_chap": false,
-    "max_large_datain_per_connection": 64
+    "max_large_datain_per_connection": 64,
+    "max_r2t_per_connection": 4
   }
 }
 ~~~

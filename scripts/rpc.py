@@ -853,7 +853,8 @@ if __name__ == "__main__":
             immediate_data=args.immediate_data,
             error_recovery_level=args.error_recovery_level,
             allow_duplicated_isid=args.allow_duplicated_isid,
-            max_large_datain_per_connection=args.max_large_datain_per_connection)
+            max_large_datain_per_connection=args.max_large_datain_per_connection,
+            max_r2t_per_connection=args.max_r2t_per_connection)
 
     p = subparsers.add_parser('iscsi_set_options', aliases=['set_iscsi_options'],
                               help="""Set options of iSCSI subsystem""")
@@ -878,6 +879,7 @@ if __name__ == "__main__":
     p.add_argument('-l', '--error-recovery-level', help='Negotiated parameter, ErrorRecoveryLevel', type=int)
     p.add_argument('-p', '--allow-duplicated-isid', help='Allow duplicated initiator session ID.', action='store_true')
     p.add_argument('-x', '--max-large-datain-per-connection', help='Max number of outstanding split read I/Os per connection', type=int)
+    p.add_argument('-k', '--max-r2t-per-connection', help='Max number of outstanding R2Ts per connection', type=int)
     p.set_defaults(func=iscsi_set_options)
 
     def iscsi_set_discovery_auth(args):

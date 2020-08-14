@@ -407,6 +407,7 @@ iscsi_opts_init(struct spdk_iscsi_opts *opts)
 	opts->authfile = NULL;
 	opts->nodebase = NULL;
 	opts->MaxLargeDataInPerConnection = DEFAULT_MAX_LARGE_DATAIN_PER_CONNECTION;
+	opts->MaxR2TPerConnection = DEFAULT_MAXR2T;
 }
 
 struct spdk_iscsi_opts *
@@ -480,6 +481,7 @@ iscsi_opts_copy(struct spdk_iscsi_opts *src)
 	dst->mutual_chap = src->mutual_chap;
 	dst->chap_group = src->chap_group;
 	dst->MaxLargeDataInPerConnection = src->MaxLargeDataInPerConnection;
+	dst->MaxR2TPerConnection = src->MaxR2TPerConnection;
 
 	return dst;
 }
@@ -709,6 +711,11 @@ iscsi_opts_verify(struct spdk_iscsi_opts *opts)
 		return -EINVAL;
 	}
 
+	if (opts->MaxR2TPerConnection == 0) {
+		SPDK_ERRLOG("0 is invalid. MaxR2TPerConnection must be more than 0\n");
+		return -EINVAL;
+	}
+
 	return 0;
 }
 
@@ -783,7 +790,7 @@ iscsi_set_global_params(struct spdk_iscsi_opts *opts)
 	g_iscsi.mutual_chap = opts->mutual_chap;
 	g_iscsi.chap_group = opts->chap_group;
 	g_iscsi.MaxLargeDataInPerConnection = opts->MaxLargeDataInPerConnection;
-	g_iscsi.MaxR2TPerConnection = DEFAULT_MAXR2T;
+	g_iscsi.MaxR2TPerConnection = opts->MaxR2TPerConnection;
 
 	iscsi_log_globals();
 
@@ -1502,6 +1509,8 @@ iscsi_opts_info_json(struct spdk_json_write_ctx *w)
 
 	spdk_json_write_named_uint32(w, "max_large_datain_per_connection",
 				     g_iscsi.MaxLargeDataInPerConnection);
+	spdk_json_write_named_uint32(w, "max_r2t_per_connection",
+				     g_iscsi.MaxR2TPerConnection);
 
 	spdk_json_write_object_end(w);
 }

@@ -321,6 +321,7 @@ struct spdk_iscsi_opts {
 	uint32_t ErrorRecoveryLevel;
 	bool AllowDuplicateIsid;
 	uint32_t MaxLargeDataInPerConnection;
+	uint32_t MaxR2TPerConnection;
 };
 
 struct spdk_iscsi_globals {
