@@ -141,7 +141,7 @@ mobj_ctor(struct spdk_mempool *mp, __attribute__((unused)) void *arg,
 
 #define NUM_PDU_PER_CONNECTION(iscsi)	(2 * (iscsi->MaxQueueDepth +	\
 					 iscsi->MaxLargeDataInPerConnection +	\
-					 2 * DEFAULT_MAXR2T + 8))
+					 2 * iscsi->MaxR2TPerConnection + 8))
 #define PDU_POOL_SIZE(iscsi)		(iscsi->MaxConnections * NUM_PDU_PER_CONNECTION(iscsi))
 #define IMMEDIATE_DATA_POOL_SIZE(iscsi)	(iscsi->MaxConnections * 128)
 #define DATA_OUT_POOL_SIZE(iscsi)	(iscsi->MaxConnections * MAX_DATA_OUT_PER_CONNECTION)
@@ -381,6 +381,9 @@ iscsi_log_globals(void)
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "MaxLargeDataInPerConnection %d\n",
 		      g_iscsi.MaxLargeDataInPerConnection);
+
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "MaxR2TPerConnection %d\n",
+		      g_iscsi.MaxR2TPerConnection);
 }
 
 static void
@@ -780,6 +783,7 @@ iscsi_set_global_params(struct spdk_iscsi_opts *opts)
 	g_iscsi.mutual_chap = opts->mutual_chap;
 	g_iscsi.chap_group = opts->chap_group;
 	g_iscsi.MaxLargeDataInPerConnection = opts->MaxLargeDataInPerConnection;
+	g_iscsi.MaxR2TPerConnection = DEFAULT_MAXR2T;
 
 	iscsi_log_globals();
 

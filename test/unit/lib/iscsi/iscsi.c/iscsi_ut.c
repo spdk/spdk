@@ -280,6 +280,8 @@ maxburstlength_test(void)
 	struct spdk_iscsi_pdu *response_pdu;
 	int rc;
 
+	g_iscsi.MaxR2TPerConnection = DEFAULT_MAXR2T;
+
 	req_pdu = iscsi_get_pdu(&conn);
 	data_out_pdu = iscsi_get_pdu(&conn);
 
@@ -653,6 +655,8 @@ add_transfer_task_test(void)
 	struct iscsi_bhs_r2t *r2th;
 	int rc, count = 0;
 	uint32_t buffer_offset, desired_xfer_len;
+
+	g_iscsi.MaxR2TPerConnection = DEFAULT_MAXR2T;
 
 	sess.MaxBurstLength = SPDK_ISCSI_MAX_BURST_LENGTH;	/* 1M */
 	sess.MaxOutstandingR2T = DEFAULT_MAXR2T;	/* 4 */

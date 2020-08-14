@@ -2735,7 +2735,7 @@ add_transfer_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 	 *  and start sending R2T for it after some of the tasks using R2T/data
 	 *  out buffers complete.
 	 */
-	if (conn->pending_r2t >= DEFAULT_MAXR2T) {
+	if (conn->pending_r2t >= g_iscsi.MaxR2TPerConnection) {
 		TAILQ_INSERT_TAIL(&conn->queued_r2t_tasks, task, link);
 		return 0;
 	}
@@ -2785,7 +2785,7 @@ start_queued_transfer_tasks(struct spdk_iscsi_conn *conn)
 	struct spdk_iscsi_task *task, *tmp;
 
 	TAILQ_FOREACH_SAFE(task, &conn->queued_r2t_tasks, link, tmp) {
-		if (conn->pending_r2t < DEFAULT_MAXR2T) {
+		if (conn->pending_r2t < g_iscsi.MaxR2TPerConnection) {
 			TAILQ_REMOVE(&conn->queued_r2t_tasks, task, link);
 			add_transfer_task(conn, task);
 		} else {
