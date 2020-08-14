@@ -43,7 +43,8 @@
 #ifdef DEBUG
 #define NVME_FABRIC_CONNECT_COMMAND_TIMEOUT 0
 #else
-#define NVME_FABRIC_CONNECT_COMMAND_TIMEOUT 1
+/* 500 millisecond timeout. */
+#define NVME_FABRIC_CONNECT_COMMAND_TIMEOUT 500000
 #endif
 
 static int

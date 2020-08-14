@@ -1233,15 +1233,15 @@ test_nvme_request_check_timeout(void)
 }
 
 struct nvme_completion_poll_status g_status;
-uint64_t completion_delay, timeout_in_secs;
+uint64_t completion_delay_us, timeout_in_usecs;
 int g_process_comp_result;
 
 int
 spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
-	spdk_delay_us(completion_delay * spdk_get_ticks_hz());
+	spdk_delay_us(completion_delay_us);
 
-	g_status.done = completion_delay < timeout_in_secs && g_process_comp_result == 0 ? true : false;
+	g_status.done = completion_delay_us < timeout_in_usecs && g_process_comp_result == 0 ? true : false;
 
 	return g_process_comp_result;
 }
@@ -1256,9 +1256,9 @@ test_nvme_wait_for_completion(void)
 
 	/* completion timeout */
 	memset(&g_status, 0, sizeof(g_status));
-	completion_delay = 2;
-	timeout_in_secs = 1;
-	rc = nvme_wait_for_completion_timeout(&qpair, &g_status, timeout_in_secs);
+	completion_delay_us = 2000000;
+	timeout_in_usecs = 1000000;
+	rc = nvme_wait_for_completion_timeout(&qpair, &g_status, timeout_in_usecs);
 	CU_ASSERT(g_status.timed_out == true);
 	CU_ASSERT(g_status.done == false);
 	CU_ASSERT(rc == -ECANCELED);
@@ -1266,9 +1266,9 @@ test_nvme_wait_for_completion(void)
 	/* spdk_nvme_qpair_process_completions returns error */
 	memset(&g_status, 0, sizeof(g_status));
 	g_process_comp_result = -1;
-	completion_delay = 1;
-	timeout_in_secs = 2;
-	rc = nvme_wait_for_completion_timeout(&qpair, &g_status, timeout_in_secs);
+	completion_delay_us = 1000000;
+	timeout_in_usecs = 2000000;
+	rc = nvme_wait_for_completion_timeout(&qpair, &g_status, timeout_in_usecs);
 	CU_ASSERT(rc == -ECANCELED);
 	CU_ASSERT(g_status.timed_out == true);
 	CU_ASSERT(g_status.done == false);
@@ -1279,9 +1279,9 @@ test_nvme_wait_for_completion(void)
 
 	/* complete in time */
 	memset(&g_status, 0, sizeof(g_status));
-	completion_delay = 1;
-	timeout_in_secs = 2;
-	rc = nvme_wait_for_completion_timeout(&qpair, &g_status, timeout_in_secs);
+	completion_delay_us = 1000000;
+	timeout_in_usecs = 2000000;
+	rc = nvme_wait_for_completion_timeout(&qpair, &g_status, timeout_in_usecs);
 	CU_ASSERT(g_status.timed_out == false);
 	CU_ASSERT(g_status.done == true);
 	CU_ASSERT(rc == 0);

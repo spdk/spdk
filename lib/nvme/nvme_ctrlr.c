@@ -653,7 +653,7 @@ static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	if (nvme_wait_for_completion_timeout(ctrlr->adminq, status,
-					     ctrlr->opts.admin_timeout_ms / 1000)) {
+					     ctrlr->opts.admin_timeout_ms * 1000)) {
 		spdk_free(log_page_directory);
 		SPDK_WARNLOG("Intel log pages not supported on Intel drive!\n");
 		if (!status->timed_out) {
@@ -738,7 +738,7 @@ nvme_ctrlr_set_arbitration_feature(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	if (nvme_wait_for_completion_timeout(ctrlr->adminq, status,
-					     ctrlr->opts.admin_timeout_ms / 1000)) {
+					     ctrlr->opts.admin_timeout_ms * 1000)) {
 		SPDK_ERRLOG("Timeout to set arbitration feature\n");
 	}
 

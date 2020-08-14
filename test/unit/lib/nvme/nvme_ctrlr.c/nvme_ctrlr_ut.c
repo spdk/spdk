@@ -318,7 +318,7 @@ nvme_wait_for_completion(struct spdk_nvme_qpair *qpair,
 int
 nvme_wait_for_completion_timeout(struct spdk_nvme_qpair *qpair,
 				 struct nvme_completion_poll_status *status,
-				 uint64_t timeout_in_secs)
+				 uint64_t timeout_in_usecs)
 {
 	return nvme_wait_for_completion_robust_lock(qpair, status, NULL);
 }
