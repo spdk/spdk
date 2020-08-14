@@ -375,8 +375,7 @@ def iscsi_target_node_add_pg_ig_maps(client, pg_ig_maps, name):
 
 
 def iscsi_target_node_set_redirect(client, name, pg_tag, redirect_host, redirect_port):
-    """Update redirect portal of the public portal group for the target node,
-       and send asynchronous logout request to all corresponding initiators.
+    """Update redirect portal of the public portal group for the target node.
 
     Args:
         name: Target node name (ASCII)

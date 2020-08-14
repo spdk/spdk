@@ -1119,8 +1119,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             redirect_port=args.redirect_port)
 
     p = subparsers.add_parser('iscsi_target_node_set_redirect',
-                              help="""Update redirect portal of the public portal group for
-    the target node, and send asynchronous logout request to all corresponding initiators.
+                              help="""Update redirect portal of the public portal group for the target node.
     Omit redirect host and port to clear previously set redirect settings.""")
     p.add_argument('name', help='Target node name (ASCII)')
     p.add_argument('pg_tag', help='Portal group tag (unique, integer > 0)', type=int)

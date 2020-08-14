@@ -4113,7 +4113,6 @@ Example response:
 ## iscsi_target_node_set_redirect method {#rpc_iscsi_target_node_set_redirect}
 
 Update redirect portal of the primary portal group for the target node,
-and send asynchronous logout request to all corresponding initiators.
 
 ### Parameters
 

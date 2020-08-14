@@ -906,11 +906,6 @@ iscsi_tgt_node_redirect(struct spdk_iscsi_tgt_node *target, int pg_tag,
 		snprintf(pg_map->redirect_port, MAX_PORTAL_PORT + 1, "%s", port);
 	}
 
-	/* Terminate connections to this public portal group by asynchronous
-	 * logout message.
-	 */
-	iscsi_conns_request_logout(target, pg_tag);
-
 	return 0;
 }
 
