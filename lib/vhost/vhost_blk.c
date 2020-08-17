@@ -72,6 +72,7 @@ struct spdk_vhost_blk_task {
 	uint16_t req_idx;
 	uint16_t num_descs;
 	uint16_t buffer_id;
+	uint16_t inflight_head;
 
 	/* for io wait */
 	struct spdk_bdev_io_wait_entry bdev_io_wait;
@@ -141,7 +142,8 @@ blk_task_enqueue(struct spdk_vhost_blk_task *task)
 	if (task->vq->packed.packed_ring) {
 		vhost_vq_packed_ring_enqueue(&task->bvsession->vsession, task->vq,
 					     task->num_descs,
-					     task->buffer_id, task->used_len);
+					     task->buffer_id, task->used_len,
+					     task->inflight_head);
 	} else {
 		vhost_vq_used_ring_enqueue(&task->bvsession->vsession, task->vq,
 					   task->req_idx, task->used_len);
@@ -578,6 +580,10 @@ process_blk_task(struct spdk_vhost_virtqueue *vq, uint16_t req_idx)
 		task->req_idx = req_idx;
 		task->num_descs = num_descs;
 		task->buffer_id = task_idx;
+
+		rte_vhost_set_inflight_desc_packed(task->bvsession->vsession.vid, vq->vring_idx,
+						   req_idx, (req_idx + num_descs - 1) % vq->vring.size,
+						   &task->inflight_head);
 	}
 
 	task->bvsession->vsession.task_cnt++;
@@ -752,7 +758,8 @@ no_bdev_process_packed_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_
 		SPDK_ERRLOG("%s: request with idx '%"PRIu16"' is already pending.\n",
 			    vsession->name, req_idx);
 		vhost_vq_packed_ring_enqueue(vsession, vq, num_descs,
-					     task->buffer_id, task->used_len);
+					     task->buffer_id, task->used_len,
+					     task->inflight_head);
 		return;
 	}
 
@@ -769,7 +776,8 @@ no_bdev_process_packed_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_
 
 	task->used = false;
 	vhost_vq_packed_ring_enqueue(vsession, vq, num_descs,
-				     task->buffer_id, task->used_len);
+				     task->buffer_id, task->used_len,
+				     task->inflight_head);
 }
 
 static int

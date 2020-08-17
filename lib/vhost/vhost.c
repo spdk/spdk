@@ -546,7 +546,7 @@ void
 vhost_vq_packed_ring_enqueue(struct spdk_vhost_session *vsession,
 			     struct spdk_vhost_virtqueue *virtqueue,
 			     uint16_t num_descs, uint16_t buffer_id,
-			     uint32_t length)
+			     uint32_t length, uint16_t inflight_head)
 {
 	struct vring_packed_desc *desc = &virtqueue->vring.desc_packed[virtqueue->last_used_idx];
 	bool used, avail;
@@ -587,6 +587,8 @@ vhost_vq_packed_ring_enqueue(struct spdk_vhost_session *vsession,
 	 * written to the descriptor.
 	 */
 	spdk_smp_wmb();
+
+	rte_vhost_set_last_inflight_io_packed(vsession->vid, virtqueue->vring_idx, inflight_head);
 	/* To mark a desc as used, the device sets the F_USED bit in flags to match
 	 * the internal Device ring wrap counter. It also sets the F_AVAIL bit to
 	 * match the same value.
@@ -596,6 +598,7 @@ vhost_vq_packed_ring_enqueue(struct spdk_vhost_session *vsession,
 	} else {
 		desc->flags &= ~VRING_DESC_F_AVAIL_USED;
 	}
+	rte_vhost_clr_inflight_desc_packed(vsession->vid, virtqueue->vring_idx, inflight_head);
 
 	vhost_log_used_vring_elem(vsession, virtqueue, virtqueue->last_used_idx);
 	virtqueue->last_used_idx += num_descs;

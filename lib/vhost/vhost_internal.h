@@ -324,11 +324,12 @@ void vhost_vq_used_ring_enqueue(struct spdk_vhost_session *vsession,
  * \buffer_id descriptor buffer ID.
  * \length device write length. Specify the length of the buffer that has been initialized
  * (written to) by the device
+ * \inflight_head the head idx of this IO inflight desc chain.
  */
 void vhost_vq_packed_ring_enqueue(struct spdk_vhost_session *vsession,
 				  struct spdk_vhost_virtqueue *virtqueue,
 				  uint16_t num_descs, uint16_t buffer_id,
-				  uint32_t length);
+				  uint32_t length, uint16_t inflight_head);
 
 /**
  * Get subsequent descriptor from given table.

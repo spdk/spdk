@@ -75,6 +75,10 @@ DEFINE_STUB(rte_vhost_set_last_inflight_io_split, int,
 	    (int vid, uint16_t vring_idx, uint16_t idx), 0);
 DEFINE_STUB(rte_vhost_clr_inflight_desc_split, int,
 	    (int vid, uint16_t vring_idx, uint16_t last_used_idx, uint16_t idx), 0);
+DEFINE_STUB(rte_vhost_set_last_inflight_io_packed, int,
+	    (int vid, uint16_t vring_idx, uint16_t head), 0);
+DEFINE_STUB(rte_vhost_clr_inflight_desc_packed, int,
+	    (int vid, uint16_t vring_idx, uint16_t head), 0);
 DEFINE_STUB_V(rte_vhost_log_write, (int vid, uint64_t addr, uint64_t len));
 DEFINE_STUB_V(vhost_session_mem_register, (struct rte_vhost_memory *mem));
 DEFINE_STUB_V(vhost_session_mem_unregister, (struct rte_vhost_memory *mem));
@@ -473,9 +477,9 @@ vq_packed_ring_test(void)
 	}
 
 	/* Host complete them out of order: 1, 0, 2. */
-	vhost_vq_packed_ring_enqueue(&vs, &vq, 1, 1, 1);
-	vhost_vq_packed_ring_enqueue(&vs, &vq, 1, 0, 1);
-	vhost_vq_packed_ring_enqueue(&vs, &vq, 1, 2, 1);
+	vhost_vq_packed_ring_enqueue(&vs, &vq, 1, 1, 1, 0);
+	vhost_vq_packed_ring_enqueue(&vs, &vq, 1, 0, 1, 0);
+	vhost_vq_packed_ring_enqueue(&vs, &vq, 1, 2, 1, 0);
 
 	/* Host has got all the available request but only complete three requests */
 	CU_ASSERT(vq.last_avail_idx == 0);
@@ -511,10 +515,10 @@ vq_packed_ring_test(void)
 	CU_ASSERT(vq.packed.avail_phase == 0);
 
 	/* Host complete all the requests */
-	vhost_vq_packed_ring_enqueue(&vs, &vq, 1, 1, 1);
-	vhost_vq_packed_ring_enqueue(&vs, &vq, 1, 0, 1);
-	vhost_vq_packed_ring_enqueue(&vs, &vq, 1, 3, 1);
-	vhost_vq_packed_ring_enqueue(&vs, &vq, 1, 2, 1);
+	vhost_vq_packed_ring_enqueue(&vs, &vq, 1, 1, 1, 0);
+	vhost_vq_packed_ring_enqueue(&vs, &vq, 1, 0, 1, 0);
+	vhost_vq_packed_ring_enqueue(&vs, &vq, 1, 3, 1, 0);
+	vhost_vq_packed_ring_enqueue(&vs, &vq, 1, 2, 1, 0);
 
 	CU_ASSERT(vq.last_used_idx == vq.last_avail_idx);
 	CU_ASSERT(vq.packed.used_phase == vq.packed.avail_phase);
