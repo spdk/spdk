@@ -247,7 +247,7 @@ function set_test_storage() {
 	if ((${#storage_fallback_purge[@]} > 0)); then
 		printf '* Purging old temporary test storage (%s)\n' \
 			"${storage_fallback_purge[*]}" >&2
-		rm -rf "${storage_fallback_purge[@]}"
+		sudo rm -rf "${storage_fallback_purge[@]}"
 	fi
 
 	storage_fallback=$(mktemp -udt spdk.XXXXXX)
