@@ -43,6 +43,7 @@ function load_ib_rdma_modules() {
 }
 
 function detect_soft_roce_nics() {
+	rxe_cfg stop # make sure we run tests with a clean slate
 	rxe_cfg start
 }
 
