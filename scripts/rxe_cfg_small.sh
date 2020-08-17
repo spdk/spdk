@@ -10,6 +10,10 @@ declare -r rdma_rxe_rm=$rdma_rxe/parameters/remove
 declare -r infiniband=/sys/class/infiniband
 declare -r net=/sys/class/net
 
+declare -A net_devices
+declare -A net_to_rxe
+declare -A rxe_to_net
+
 uevent() (
 	[[ -e $1/uevent ]] || return 0
 
@@ -70,11 +74,7 @@ start() {
 }
 
 stop() {
-	local rxe
-
-	for rxe in "$infiniband/rxe"+([0-9]); do
-		remove_rxe "${rxe##*/}"
-	done
+	remove_rxe
 
 	if ! modprobeq -r rdma_rxe \
 		|| [[ -e $rdma_rxe ]]; then
@@ -93,7 +93,7 @@ status() {
 		printf 'rdma_rxe module not loaded\n' >&2
 	fi
 
-	local dev net_devs
+	local dev
 	local link_map
 
 	link_map[0]=no
@@ -102,21 +102,14 @@ status() {
 	status_header
 
 	local name link driver speed mtu ip rxe rxe_dev active_mtu
-	for dev in "$net/"!(bonding_masters); do
-		(($(< "$dev/type") == 1)) || continue
-
+	for dev in "${net_devices[@]}"; do
 		name="" link="" driver=""
 		speed="" mtu="" ip=""
 		rxe_dev="" active_mtu=""
 
 		name=${dev##*/}
-		for rxe in "$infiniband/rxe"+([0-9]); do
-			if [[ $(< "$rxe/parent") == "$name" ]]; then
-				rxe_dev=${rxe##*/}
-				active_mtu=$(get_rxe_mtu "$rxe_dev")
-				break
-			fi
-		done
+		rxe_dev=${net_to_rxe["$name"]}
+		active_mtu=$(get_rxe_mtu "$rxe_dev")
 
 		link=${link_map[$(< "$dev/carrier")]}
 
@@ -206,23 +199,42 @@ add_rxe() {
 	[[ -e $rdma_rxe/parameters ]] || return 1
 
 	if [[ -z $1 || $1 == all ]]; then
-		net_devs=("$net/"!(bonding_masters))
-	elif [[ -e $net/$1 ]]; then
-		net_devs=("$net/$1")
+		net_devs=("${!net_devices[@]}")
+	elif [[ -n ${net_to_rxe["$1"]} ]]; then
+		printf '%s interface already in use (%s)\n' \
+			"$1" "${net_to_rxe["$1"]}"
+		return 0
+	elif [[ -n ${net_devices["$1"]} ]]; then
+		net_devs=("$1")
 	else
 		printf '%s interface does not exist\n' "$1"
 		return 1
 	fi
 
 	for dev in "${net_devs[@]}"; do
-		(($(< "$dev/type") != 1)) && continue
-		echo "${dev##*/}" > "$rdma_rxe_add"
+		if [[ -z ${net_to_rxe["$dev"]} ]]; then
+			echo "${dev##*/}" > "$rdma_rxe_add"
+		fi
 		link_up "${dev##*/}"
 	done 2> /dev/null
 }
 
 remove_rxe() {
-	[[ -e $infiniband/${1##*/} ]] && echo "${1##*/}" > "$rdma_rxe_rm"
+	local rxes rxe
+
+	rxes=("${!rxe_to_net[@]}")
+	if [[ -z $1 || $1 == all ]]; then
+		rxes=("${!rxe_to_net[@]}")
+	elif [[ -z ${rxe_to_net["$1"]} ]]; then
+		printf '%s rxe interface does not exist\n' "$1"
+		return 0
+	elif [[ -n ${rxe_to_net["$1"]} ]]; then
+		rxes=("$1")
+	fi
+
+	for rxe in "${rxes[@]}"; do
+		echo "$rxe" > "$rdma_rxe_rm"
+	done
 }
 
 link_up() {
@@ -230,6 +242,24 @@ link_up() {
 
 	echo $(($(< "$net/$1/flags") | 0x1)) > "$net/$1/flags"
 }
+
+collect_devices() {
+	local net_dev rxe_dev
+
+	for net_dev in "$net/"!(bonding_masters); do
+		(($(< "$net_dev/type") != 1)) && continue
+		net_devices["${net_dev##*/}"]=$net_dev
+		for rxe_dev in "$infiniband/rxe"+([0-9]); do
+			if [[ $(< "$rxe_dev/parent") == "${net_dev##*/}" ]]; then
+				net_to_rxe["${net_dev##*/}"]=${rxe_dev##*/}
+				rxe_to_net["${rxe_dev##*/}"]=${net_dev##*/}
+				continue 2
+			fi
+		done
+	done
+}
+
+collect_devices
 
 case "${1:-status}" in
 	start)
@@ -242,7 +272,7 @@ case "${1:-status}" in
 		add_rxe "${2:-all}"
 		;;
 	remove)
-		remove_rxe "$2"
+		remove_rxe "${2:-all}"
 		;;
 	status)
 		IFS= read -r match < <(
