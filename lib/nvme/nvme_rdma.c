@@ -171,11 +171,6 @@ struct nvme_rdma_poll_group {
 	STAILQ_HEAD(, nvme_rdma_destroyed_qpair)	destroyed_qpairs;
 };
 
-struct spdk_nvme_send_wr_list {
-	struct ibv_send_wr	*first;
-	struct ibv_send_wr	*last;
-};
-
 struct spdk_nvme_recv_wr_list {
 	struct ibv_recv_wr	*first;
 	struct ibv_recv_wr	*last;
@@ -215,7 +210,6 @@ struct nvme_rdma_qpair {
 
 	struct ibv_recv_wr			*rsp_recv_wrs;
 
-	struct spdk_nvme_send_wr_list		sends_to_post;
 	struct spdk_nvme_recv_wr_list		recvs_to_post;
 
 	/* Memory region describing all rsps for this qpair */
