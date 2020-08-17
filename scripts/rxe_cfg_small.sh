@@ -217,20 +217,12 @@ add_rxe() {
 	for dev in "${net_devs[@]}"; do
 		(($(< "$dev/type") != 1)) && continue
 		echo "${dev##*/}" > "$rdma_rxe_add"
+		link_up "${dev##*/}"
 	done 2> /dev/null
 }
 
 remove_rxe() {
 	[[ -e $infiniband/${1##*/} ]] && echo "${1##*/}" > "$rdma_rxe_rm"
-}
-
-link_up_rxes() {
-	local rxe parent
-
-	for rxe in "$infiniband/rxe"+([0-9]); do
-		parent=$(< /"$rxe/parent")
-		link_up "$parent"
-	done
 }
 
 link_up() {
