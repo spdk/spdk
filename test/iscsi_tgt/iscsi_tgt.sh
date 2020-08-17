@@ -32,6 +32,7 @@ run_test "iscsi_tgt_fio" ./test/iscsi_tgt/fio/fio.sh
 run_test "iscsi_tgt_qos" ./test/iscsi_tgt/qos/qos.sh
 run_test "iscsi_tgt_ip_migration" ./test/iscsi_tgt/ip_migration/ip_migration.sh
 run_test "iscsi_tgt_trace_record" ./test/iscsi_tgt/trace_record/trace_record.sh
+run_test "iscsi_tgt_login_redirection" ./test/iscsi_tgt/login_redirection/login_redirection.sh
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	if [ $SPDK_TEST_PMDK -eq 1 ]; then
