@@ -3050,7 +3050,7 @@ nvmf_rdma_send_qpair_async_event(struct spdk_nvmf_rdma_qpair *rqpair,
 	return rc;
 }
 
-static void
+static int
 nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 {
 	int				rc;
@@ -3060,9 +3060,8 @@ nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 	rc = ibv_get_async_event(device->context, &event);
 
 	if (rc) {
-		SPDK_ERRLOG("Failed to get async_event (%d): %s\n",
-			    errno, spdk_strerror(errno));
-		return;
+		/* In non-blocking mode -1 means there are no events available */
+		return rc;
 	}
 
 	switch (event.event_type) {
@@ -3125,6 +3124,24 @@ nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 		break;
 	}
 	ibv_ack_async_event(&event);
+
+	return 0;
+}
+
+static void
+nvmf_process_ib_events(struct spdk_nvmf_rdma_device *device, uint32_t max_events)
+{
+	int rc = 0;
+	uint32_t i = 0;
+
+	for (i = 0; i < max_events; i++) {
+		rc = nvmf_process_ib_event(device);
+		if (rc) {
+			break;
+		}
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Device %s: %u events processed\n", device->context->device->name, i);
 }
 
 static uint32_t
@@ -3155,7 +3172,7 @@ nvmf_rdma_accept(struct spdk_nvmf_transport *transport)
 	/* Second and subsequent poll descriptors are IB async events */
 	TAILQ_FOREACH_SAFE(device, &rtransport->devices, link, tmp) {
 		if (rtransport->poll_fds[i++].revents & POLLIN) {
-			nvmf_process_ib_event(device);
+			nvmf_process_ib_events(device, 32);
 			nfds--;
 		}
 	}
