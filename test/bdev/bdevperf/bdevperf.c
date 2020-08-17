@@ -170,7 +170,7 @@ struct job_config {
 	int				bs;
 	int				iodepth;
 	int				rwmixread;
-	int				offset;
+	int64_t				offset;
 	int				length;
 	enum job_config_rw		rw;
 	TAILQ_ENTRY(job_config)	link;
@@ -1465,7 +1465,7 @@ bdevperf_construct_config_jobs(void)
 }
 
 static int
-make_cli_job_config(const char *filename, int offset, int range)
+make_cli_job_config(const char *filename, int64_t offset, int range)
 {
 	struct job_config *config = calloc(1, sizeof(*config));
 
@@ -1499,7 +1499,7 @@ bdevperf_construct_multithread_jobs(void)
 	uint32_t i;
 	uint32_t num_cores;
 	uint32_t blocks_per_job;
-	uint32_t offset;
+	int64_t offset;
 
 	num_cores = 0;
 	SPDK_ENV_FOREACH_CORE(i) {
