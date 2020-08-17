@@ -210,7 +210,7 @@ nvme_tcp_parse_addr(struct sockaddr_storage *sa, int family, const char *addr, c
 
 	if (res->ai_addrlen > sizeof(*sa)) {
 		SPDK_ERRLOG("getaddrinfo() ai_addrlen %zu too large\n", (size_t)res->ai_addrlen);
-		ret = EINVAL;
+		ret = -EINVAL;
 	} else {
 		memcpy(sa, res->ai_addr, res->ai_addrlen);
 	}
@@ -1595,7 +1595,8 @@ nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpa
 		break;
 	default:
 		SPDK_ERRLOG("Unhandled ADRFAM %d\n", ctrlr->trid.adrfam);
-		return -1;
+		rc = -1;
+		return rc;
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "adrfam %d ai_family %d\n", ctrlr->trid.adrfam, family);
@@ -1606,7 +1607,7 @@ nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpa
 	rc = nvme_tcp_parse_addr(&dst_addr, family, ctrlr->trid.traddr, ctrlr->trid.trsvcid);
 	if (rc != 0) {
 		SPDK_ERRLOG("dst_addr nvme_tcp_parse_addr() failed\n");
-		return -1;
+		return rc;
 	}
 
 	if (ctrlr->opts.src_addr[0] || ctrlr->opts.src_svcid[0]) {
@@ -1614,14 +1615,15 @@ nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpa
 		rc = nvme_tcp_parse_addr(&src_addr, family, ctrlr->opts.src_addr, ctrlr->opts.src_svcid);
 		if (rc != 0) {
 			SPDK_ERRLOG("src_addr nvme_tcp_parse_addr() failed\n");
-			return -1;
+			return rc;
 		}
 	}
 
 	port = spdk_strtol(ctrlr->trid.trsvcid, 10);
 	if (port <= 0 || port >= INT_MAX) {
 		SPDK_ERRLOG("Invalid port: %s\n", ctrlr->trid.trsvcid);
-		return -1;
+		rc = -1;
+		return rc;
 	}
 
 	opts.opts_size = sizeof(opts);
@@ -1631,7 +1633,8 @@ nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpa
 	if (!tqpair->sock) {
 		SPDK_ERRLOG("sock connection error of tqpair=%p with addr=%s, port=%ld\n",
 			    tqpair, ctrlr->trid.traddr, port);
-		return -1;
+		rc = -1;
+		return rc;
 	}
 
 	tqpair->maxr2t = NVME_TCP_MAX_R2T_DEFAULT;
@@ -1643,13 +1646,13 @@ nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpa
 	rc = nvme_tcp_qpair_icreq_send(tqpair);
 	if (rc != 0) {
 		SPDK_ERRLOG("Unable to connect the tqpair\n");
-		return -1;
+		return rc;
 	}
 
 	rc = nvme_fabric_qpair_connect(&tqpair->qpair, tqpair->num_entries);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to send an NVMe-oF Fabric CONNECT command\n");
-		return -1;
+		return rc;
 	}
 
 	return 0;
