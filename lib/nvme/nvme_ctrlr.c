@@ -457,6 +457,7 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	rc = spdk_nvme_ctrlr_connect_io_qpair(ctrlr, qpair);
 	if (rc != 0) {
 		SPDK_ERRLOG("nvme_transport_ctrlr_connect_io_qpair() failed\n");
+		TAILQ_REMOVE(&ctrlr->active_io_qpairs, qpair, tailq);
 		nvme_transport_ctrlr_delete_io_qpair(ctrlr, qpair);
 		return NULL;
 	}
