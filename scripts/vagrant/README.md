@@ -184,7 +184,8 @@ Following VM initialization you must:
 
 ```
   $ sudo scripts/setup.sh
-  $ sudo ./build/examples/hello_bdev
+  $ sudo scripts/gen_nvme.sh --json-with-subsystems > ./build/examples/hello_bdev.json
+  $ sudo ./build/examples/hello_bdev --json ./build/examples/hello_bdev.json -b Nvme0n1
 ```
 
 ### Running autorun.sh with vagrant

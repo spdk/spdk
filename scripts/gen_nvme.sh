@@ -34,10 +34,22 @@ function create_json_config() {
 	echo '}'
 }
 
+function create_json_config_with_subsystems() {
+	cat <<- JSON
+		{
+			"subsystems": [
+				$(create_json_config)
+			]
+		}
+	JSON
+}
+
 bdfs=($(nvme_in_userspace))
 
 if [ "$1" = "--json" ]; then
 	create_json_config
+elif [ "$1" = "--json-with-subsystems" ]; then
+	create_json_config_with_subsystems
 else
 	create_classic_config
 fi
