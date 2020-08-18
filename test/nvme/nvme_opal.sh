@@ -9,7 +9,7 @@ source "$rootdir/scripts/common.sh"
 source "$rootdir/test/common/autotest_common.sh"
 
 # The OPAL CI tests is only used for P4510 devices.
-mapfile -t bdfs < <(get_nvme_bdfs_by_id 0x0a59)
+mapfile -t bdfs < <(get_nvme_bdfs_by_id 0x0a54)
 if [[ -z ${bdfs[0]} ]]; then
 	echo "No P4510 device found, exit the tests"
 	exit 1
