@@ -251,6 +251,12 @@ vhost_vring_packed_desc_is_indirect(struct vring_packed_desc *cur_desc)
 	return (cur_desc->flags & VRING_DESC_F_INDIRECT) != 0;
 }
 
+static bool
+vhost_inflight_packed_desc_is_indirect(spdk_vhost_inflight_desc *cur_desc)
+{
+	return (cur_desc->flags & VRING_DESC_F_INDIRECT) != 0;
+}
+
 int
 vhost_vq_get_desc(struct spdk_vhost_session *vsession, struct spdk_vhost_virtqueue *virtqueue,
 		  uint16_t req_idx, struct vring_desc **desc, struct vring_desc **desc_table,
@@ -280,6 +286,22 @@ vhost_vq_get_desc(struct spdk_vhost_session *vsession, struct spdk_vhost_virtque
 	return 0;
 }
 
+static bool
+vhost_packed_desc_indirect_to_desc_table(struct spdk_vhost_session *vsession,
+		uint64_t addr, uint32_t len,
+		struct vring_packed_desc **desc_table,
+		uint32_t *desc_table_size)
+{
+	*desc_table_size = len / sizeof(struct vring_packed_desc);
+
+	*desc_table = vhost_gpa_to_vva(vsession, addr, len);
+	if (spdk_unlikely(*desc_table == NULL)) {
+		return false;
+	}
+
+	return true;
+}
+
 int
 vhost_vq_get_desc_packed(struct spdk_vhost_session *vsession,
 			 struct spdk_vhost_virtqueue *virtqueue,
@@ -294,16 +316,43 @@ vhost_vq_get_desc_packed(struct spdk_vhost_session *vsession,
 	 * different from split ring.
 	 */
 	if (vhost_vring_packed_desc_is_indirect(*desc)) {
-		*desc_table_size = (*desc)->len / sizeof(struct vring_packed_desc);
-		*desc_table = vhost_gpa_to_vva(vsession, (*desc)->addr,
-					       (*desc)->len);
-		*desc = *desc_table;
-		if (spdk_unlikely(*desc == NULL)) {
+		if (!vhost_packed_desc_indirect_to_desc_table(vsession, (*desc)->addr, (*desc)->len,
+				desc_table, desc_table_size)) {
 			return -1;
 		}
+
+		*desc = *desc_table;
 	} else {
 		*desc_table = NULL;
 		*desc_table_size  = 0;
+	}
+
+	return 0;
+}
+
+int
+vhost_inflight_queue_get_desc(struct spdk_vhost_session *vsession,
+			      spdk_vhost_inflight_desc *desc_array,
+			      uint16_t req_idx, spdk_vhost_inflight_desc **desc,
+			      struct vring_packed_desc  **desc_table, uint32_t *desc_table_size)
+{
+	*desc = &desc_array[req_idx];
+
+	if (vhost_inflight_packed_desc_is_indirect(*desc)) {
+		if (!vhost_packed_desc_indirect_to_desc_table(vsession, (*desc)->addr, (*desc)->len,
+				desc_table, desc_table_size)) {
+			return -1;
+		}
+
+		/* This desc is the inflight desc not the packed desc.
+		 * When set the F_INDIRECT the table entry should be the packed desc
+		 * so set the inflight desc NULL.
+		 */
+		*desc = NULL;
+	} else {
+		/* When not set the F_INDIRECT means there is no packed desc table */
+		*desc_table = NULL;
+		*desc_table_size = 0;
 	}
 
 	return 0;
@@ -624,6 +673,12 @@ vhost_vring_packed_desc_is_wr(struct vring_packed_desc *cur_desc)
 	return (cur_desc->flags & VRING_DESC_F_WRITE) != 0;
 }
 
+bool
+vhost_vring_inflight_desc_is_wr(spdk_vhost_inflight_desc *cur_desc)
+{
+	return (cur_desc->flags & VRING_DESC_F_WRITE) != 0;
+}
+
 int
 vhost_vring_packed_desc_get_next(struct vring_packed_desc **desc, uint16_t *req_idx,
 				 struct spdk_vhost_virtqueue *vq,
@@ -690,6 +745,14 @@ vhost_vring_desc_payload_to_iov(struct spdk_vhost_session *vsession, struct iove
 int
 vhost_vring_packed_desc_to_iov(struct spdk_vhost_session *vsession, struct iovec *iov,
 			       uint16_t *iov_index, const struct vring_packed_desc *desc)
+{
+	return vhost_vring_desc_payload_to_iov(vsession, iov, iov_index,
+					       desc->addr, desc->len);
+}
+
+int
+vhost_vring_inflight_desc_to_iov(struct spdk_vhost_session *vsession, struct iovec *iov,
+				 uint16_t *iov_index, const spdk_vhost_inflight_desc *desc)
 {
 	return vhost_vring_desc_payload_to_iov(vsession, iov, iov_index,
 					       desc->addr, desc->len);

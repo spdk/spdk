@@ -246,26 +246,20 @@ blk_iovs_split_queue_setup(struct spdk_vhost_blk_session *bvsession,
 }
 
 static int
-blk_iovs_packed_queue_setup(struct spdk_vhost_blk_session *bvsession,
-			    struct spdk_vhost_virtqueue *vq,
-			    uint16_t req_idx, struct iovec *iovs, uint16_t *iovs_cnt, uint32_t *length)
+blk_iovs_packed_desc_setup(struct spdk_vhost_session *vsession,
+			   struct spdk_vhost_virtqueue *vq, uint16_t req_idx,
+			   struct vring_packed_desc *desc_table, uint16_t desc_table_size,
+			   struct iovec *iovs, uint16_t *iovs_cnt, uint32_t *length)
 {
-	struct spdk_vhost_session *vsession = &bvsession->vsession;
-	struct spdk_vhost_dev *vdev = vsession->vdev;
-	struct vring_packed_desc *desc = NULL, *desc_table;
-	uint16_t out_cnt = 0, cnt = 0;
-	uint32_t desc_table_size, len = 0;
-	int rc = 0;
+	struct vring_packed_desc *desc;
+	uint16_t cnt = 0, out_cnt = 0;
+	uint32_t len = 0;
 
-	rc = vhost_vq_get_desc_packed(vsession, vq, req_idx, &desc,
-				      &desc_table, &desc_table_size);
-	if (spdk_unlikely(rc != 0)) {
-		SPDK_ERRLOG("%s: Invalid descriptor at index %"PRIu16".\n", vdev->name, req_idx);
-		return rc;
-	}
-
-	if (desc_table != NULL) {
+	if (desc_table == NULL) {
+		desc = &vq->vring.desc_packed[req_idx];
+	} else {
 		req_idx = 0;
+		desc = desc_table;
 	}
 
 	while (1) {
@@ -293,6 +287,96 @@ blk_iovs_packed_queue_setup(struct spdk_vhost_blk_session *bvsession,
 		if (desc == NULL) {
 			break;
 		}
+	}
+
+	/*
+	 * There must be least two descriptors.
+	 * First contain request so it must be readable.
+	 * Last descriptor contain buffer for response so it must be writable.
+	 */
+	if (spdk_unlikely(out_cnt == 0 || cnt < 2)) {
+		return -EINVAL;
+	}
+
+	*length = len;
+	*iovs_cnt = cnt;
+
+	return 0;
+}
+
+static int
+blk_iovs_packed_queue_setup(struct spdk_vhost_blk_session *bvsession,
+			    struct spdk_vhost_virtqueue *vq, uint16_t req_idx,
+			    struct iovec *iovs, uint16_t *iovs_cnt, uint32_t *length)
+{
+	struct spdk_vhost_session *vsession = &bvsession->vsession;
+	struct spdk_vhost_dev *vdev = vsession->vdev;
+	struct vring_packed_desc *desc = NULL, *desc_table;
+	uint32_t desc_table_size;
+	int rc;
+
+	rc = vhost_vq_get_desc_packed(vsession, vq, req_idx, &desc,
+				      &desc_table, &desc_table_size);
+	if (spdk_unlikely(rc != 0)) {
+		SPDK_ERRLOG("%s: Invalid descriptor at index %"PRIu16".\n", vdev->name, req_idx);
+		return rc;
+	}
+
+	return blk_iovs_packed_desc_setup(vsession, vq, req_idx, desc_table, desc_table_size,
+					  iovs, iovs_cnt, length);
+}
+
+static int
+blk_iovs_inflight_queue_setup(struct spdk_vhost_blk_session *bvsession,
+			      struct spdk_vhost_virtqueue *vq, uint16_t req_idx,
+			      struct iovec *iovs, uint16_t *iovs_cnt, uint32_t *length)
+{
+	struct spdk_vhost_session *vsession = &bvsession->vsession;
+	struct spdk_vhost_dev *vdev = vsession->vdev;
+	spdk_vhost_inflight_desc *inflight_desc;
+	struct vring_packed_desc *desc_table;
+	uint16_t out_cnt = 0, cnt = 0;
+	uint32_t desc_table_size, len = 0;
+	int rc = 0;
+
+	rc = vhost_inflight_queue_get_desc(vsession, vq->vring_inflight.inflight_packed->desc,
+					   req_idx, &inflight_desc, &desc_table, &desc_table_size);
+	if (spdk_unlikely(rc != 0)) {
+		SPDK_ERRLOG("%s: Invalid descriptor at index %"PRIu16".\n", vdev->name, req_idx);
+		return rc;
+	}
+
+	if (desc_table != NULL) {
+		return blk_iovs_packed_desc_setup(vsession, vq, req_idx, desc_table, desc_table_size,
+						  iovs, iovs_cnt, length);
+	}
+
+	while (1) {
+		/*
+		 * Maximum cnt reached?
+		 * Should not happen if request is well formatted, otherwise this is a BUG.
+		 */
+		if (spdk_unlikely(cnt == *iovs_cnt)) {
+			SPDK_ERRLOG("%s: max IOVs in request reached (req_idx = %"PRIu16").\n",
+				    vsession->name, req_idx);
+			return -EINVAL;
+		}
+
+		if (spdk_unlikely(vhost_vring_inflight_desc_to_iov(vsession, iovs, &cnt, inflight_desc))) {
+			SPDK_ERRLOG("%s: invalid descriptor %" PRIu16" (req_idx = %"PRIu16").\n",
+				    vsession->name, req_idx, cnt);
+			return -EINVAL;
+		}
+
+		len += inflight_desc->len;
+		out_cnt += vhost_vring_inflight_desc_is_wr(inflight_desc);
+
+		/* Without F_NEXT means it's the last desc */
+		if ((inflight_desc->flags & VRING_DESC_F_NEXT) == 0) {
+			break;
+		}
+
+		inflight_desc = &vq->vring_inflight.inflight_packed->desc[inflight_desc->next];
 	}
 
 	/*
@@ -640,6 +724,64 @@ process_packed_blk_task(struct spdk_vhost_virtqueue *vq, uint16_t req_idx)
 }
 
 static void
+process_packed_inflight_blk_task(struct spdk_vhost_virtqueue *vq,
+				 uint16_t req_idx)
+{
+	spdk_vhost_inflight_desc *desc_array = vq->vring_inflight.inflight_packed->desc;
+	spdk_vhost_inflight_desc *desc = &desc_array[req_idx];
+	struct spdk_vhost_blk_task *task;
+	uint16_t task_idx, num_descs;
+	int rc;
+
+	task_idx = desc_array[desc->last].id;
+	num_descs = desc->num;
+	/* In packed ring reconnection, we use the last_used_idx as the
+	 * initial value. So when we process the inflight descs we still
+	 * need to update the available ring index.
+	 */
+	vq->last_avail_idx += num_descs;
+	if (vq->last_avail_idx >= vq->vring.size) {
+		vq->last_avail_idx -= vq->vring.size;
+		vq->packed.avail_phase = !vq->packed.avail_phase;
+	}
+
+	task = &((struct spdk_vhost_blk_task *)vq->tasks)[task_idx];
+	if (spdk_unlikely(task->used)) {
+		SPDK_ERRLOG("%s: request with idx '%"PRIu16"' is already pending.\n",
+			    task->bvsession->vsession.name, task_idx);
+		task->used_len = 0;
+		blk_task_enqueue(task);
+		return;
+	}
+
+	task->req_idx = req_idx;
+	task->num_descs = num_descs;
+	task->buffer_id = task_idx;
+	/* It's for cleaning inflight entries */
+	task->inflight_head = req_idx;
+
+	task->bvsession->vsession.task_cnt++;
+
+	blk_task_init(task);
+
+	rc = blk_iovs_inflight_queue_setup(task->bvsession, vq, task->req_idx, task->iovs, &task->iovcnt,
+					   &task->payload_size);
+	if (rc) {
+		SPDK_DEBUGLOG(vhost_blk, "Invalid request (req_idx = %"PRIu16").\n", task->req_idx);
+		/* Only READ and WRITE are supported for now. */
+		invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
+		return;
+	}
+
+	if (process_blk_request(task, task->bvsession) == 0) {
+		SPDK_DEBUGLOG(vhost_blk, "====== Task %p req_idx %d submitted ======\n", task,
+			      task_idx);
+	} else {
+		SPDK_ERRLOG("====== Task %p req_idx %d failed ======\n", task, task_idx);
+	}
+}
+
+static void
 submit_inflight_desc(struct spdk_vhost_blk_session *bvsession,
 		     struct spdk_vhost_virtqueue *vq)
 {
@@ -665,7 +807,11 @@ submit_inflight_desc(struct spdk_vhost_blk_session *bvsession,
 			continue;
 		}
 
-		process_blk_task(vq, req_idx);
+		if (vq->packed.packed_ring) {
+			process_packed_inflight_blk_task(vq, req_idx);
+		} else {
+			process_blk_task(vq, req_idx);
+		}
 	}
 
 	free(resubmit_list);
@@ -707,6 +853,8 @@ static void
 process_packed_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtqueue *vq)
 {
 	uint16_t i = 0;
+
+	submit_inflight_desc(bvsession, vq);
 
 	while (i++ < SPDK_VHOST_VQ_MAX_SUBMISSIONS &&
 	       vhost_vq_packed_ring_is_avail(vq)) {
