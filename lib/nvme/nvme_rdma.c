@@ -1355,7 +1355,7 @@ _nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_q
 	if (rc < 0) {
 		rqpair->qpair.transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_UNKNOWN;
 		SPDK_ERRLOG("Failed to send an NVMe-oF Fabric CONNECT command\n");
-		return -1;
+		return rc;
 	}
 
 	return 0;
