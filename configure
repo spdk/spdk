@@ -741,6 +741,8 @@ if [[ "${CONFIG[UBSAN]}" = "y" ]]; then
 		| ${BUILD_CMD[@]} -fsanitize=undefined - 2>/dev/null; then
 		echo --enable-ubsan requires libubsan.
 		echo Please install then re-run this script.
+		echo If installed, please check that the GCC version is at least 6.4 \
+		     and synchronize CC accordingly.
 		exit 1
 	fi
 fi
