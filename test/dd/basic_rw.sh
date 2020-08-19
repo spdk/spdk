@@ -10,7 +10,7 @@ basic_rw() {
 
 	qds=(1 64)
 	# Generate some bs for tests based on the native_bs
-	for bs in {0..4}; do
+	for bs in {0..2}; do
 		bss+=($((native_bs << bs)))
 	done
 
