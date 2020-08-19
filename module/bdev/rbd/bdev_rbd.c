@@ -459,6 +459,10 @@ bdev_rbd_free_channel(struct bdev_rbd_io_channel *ch)
 	if (ch->pfd >= 0) {
 		close(ch->pfd);
 	}
+
+	if (ch->group_ch) {
+		spdk_put_io_channel(spdk_io_channel_from_ctx(ch->group_ch));
+	}
 }
 
 static void *
@@ -549,7 +553,6 @@ bdev_rbd_destroy_cb(void *io_device, void *ctx_buf)
 	}
 
 	bdev_rbd_free_channel(io_channel);
-	spdk_put_io_channel(spdk_io_channel_from_ctx(io_channel->group_ch));
 }
 
 static struct spdk_io_channel *
