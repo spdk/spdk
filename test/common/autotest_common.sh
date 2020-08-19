@@ -1189,6 +1189,7 @@ function autotest_cleanup() {
 	if [[ -e /proc/$udevadm_pid/status ]]; then
 		kill "$udevadm_pid" || :
 	fi
+	revert_soft_roce
 }
 
 function freebsd_update_contigmem_mod() {
