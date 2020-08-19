@@ -6648,11 +6648,21 @@ static void
 bs_open_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob *blob = cb_arg;
+	struct spdk_blob *existing;
 
 	if (bserrno != 0) {
 		blob_free(blob);
 		seq->cpl.u.blob_handle.blob = NULL;
 		bs_sequence_finish(seq, bserrno);
+		return;
+	}
+
+	existing = blob_lookup(blob->bs, blob->id);
+	if (existing) {
+		blob_free(blob);
+		existing->open_ref++;
+		seq->cpl.u.blob_handle.blob = existing;
+		bs_sequence_finish(seq, 0);
 		return;
 	}
 

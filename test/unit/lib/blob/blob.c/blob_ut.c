@@ -47,8 +47,8 @@
 
 struct spdk_blob_store *g_bs;
 spdk_blob_id g_blobid;
-struct spdk_blob *g_blob;
-int g_bserrno;
+struct spdk_blob *g_blob, *g_blob2;
+int g_bserrno, g_bserrno2;
 struct spdk_xattr_names *g_names;
 int g_done;
 char *g_xattr_names[] = {"first", "second", "third"};
@@ -168,6 +168,18 @@ blob_op_with_handle_complete(void *cb_arg, struct spdk_blob *blb, int bserrno)
 {
 	g_blob = blb;
 	g_bserrno = bserrno;
+}
+
+static void
+blob_op_with_handle_complete2(void *cb_arg, struct spdk_blob *blob, int bserrno)
+{
+	if (g_blob == NULL) {
+		g_blob = blob;
+		g_bserrno = bserrno;
+	} else {
+		g_blob2 = blob;
+		g_bserrno2 = bserrno;
+	}
 }
 
 static void
@@ -322,8 +334,32 @@ blob_open(void)
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blob != NULL);
 	blob = g_blob;
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
 
-	ut_blob_close_and_delete(bs, blob);
+	/* Try to open file twice in succession.  This should return the same
+	 * blob object.
+	 */
+	g_blob = NULL;
+	g_blob2 = NULL;
+	g_bserrno = -1;
+	g_bserrno2 = -1;
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete2, NULL);
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete2, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_bserrno2 == 0);
+	CU_ASSERT(g_blob != NULL);
+	CU_ASSERT(g_blob2 != NULL);
+	CU_ASSERT(g_blob == g_blob2);
+
+	g_bserrno = -1;
+	spdk_blob_close(g_blob, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	ut_blob_close_and_delete(bs, g_blob);
 }
 
 static void
