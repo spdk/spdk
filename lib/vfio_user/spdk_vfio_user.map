@@ -1,0 +1,11 @@
+{
+	global:
+
+	# public functions from vfio_user_pci.h
+	spdk_vfio_user_pci_bar_access;
+	spdk_vfio_user_get_bar_addr;
+	spdk_vfio_user_setup;
+	spdk_vfio_user_release;
+
+	local: *;
+};

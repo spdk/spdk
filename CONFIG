@@ -117,7 +117,7 @@ CONFIG_VHOST=y
 # Build vhost initiator (Virtio) driver.
 CONFIG_VIRTIO=y
 
-# Build NVMf custom vfio-user target.
+# Build custom vfio-user transport for NVMf target and NVMe initiator.
 CONFIG_VFIO_USER=y
 
 # Build with PMDK backends

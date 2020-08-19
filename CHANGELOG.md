@@ -54,6 +54,9 @@ dwords.
 Added a new custom transport `SPDK_NVME_TRANSPORT_VFIOUSER` to enable NVMe
 driver running with NVMe over vfio-user target.
 
+Added the vfio-user custom transport implementation in NVMe driver which can connect
+to NVMe over vfio-user target via vfio-user transport.
+
 ### event
 
 The pci_whitelist and pci_blacklist members of struct spdk_app_opts have been
@@ -101,6 +104,9 @@ be notified of any discovery log changes.
 An `opts_size`element was added in the `spdk_nvmf_transport_opts` structure
 to solve the ABI compatiblity issue between different SPDK version. And also add
 `opts_size` parameter in spdk_nvmf_transport_opts_init function.
+
+Added a new custom vfio-user transport implementation in NVMf which can provide
+emulated NVMe devices to QEMU and SPDK NVMe driver.
 
 ### json
 

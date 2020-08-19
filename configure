@@ -62,7 +62,7 @@ function usage()
 	echo "                           No path required."
 	echo " virtio                    Build vhost initiator and virtio-pci bdev modules."
 	echo "                           No path required."
-	echo " vfio-user                 Build NVMf custom vfio-user target."
+	echo " vfio-user                 Build custom vfio-user transport for NVMf target and NVMe initiator."
 	echo "                           No path required."
 	echo " pmdk                      Build persistent memory bdev."
 	echo "                           example: /usr/share/pmdk"

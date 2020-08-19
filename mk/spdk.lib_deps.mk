@@ -49,6 +49,9 @@ DEPDIRS-idxd := log util
 DEPDIRS-sock := log $(JSON_LIBS)
 DEPDIRS-util := log
 DEPDIRS-vmd := log
+ifeq ($(CONFIG_VFIO_USER),y)
+DEPDIRS-vfio_user := log
+endif
 
 DEPDIRS-conf := log util
 DEPDIRS-json := log util
@@ -59,6 +62,9 @@ DEPDIRS-thread := log util
 DEPDIRS-nvme := log sock util
 ifeq ($(CONFIG_RDMA),y)
 DEPDIRS-nvme += rdma
+endif
+ifeq ($(CONFIG_VFIO_USER),y)
+DEPDIRS-nvme += vfio_user
 endif
 
 DEPDIRS-blob := log util thread
