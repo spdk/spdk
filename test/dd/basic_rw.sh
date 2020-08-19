@@ -68,12 +68,6 @@ basic_offset() {
 	[[ $data == "$data_check" ]]
 }
 
-plain_copy() {
-	# Test if copy between plain files works as well
-	"${DD_APP[@]}" --if="$test_file0" --of="$test_file1"
-	diff -q "$test_file0" "$test_file1"
-}
-
 cleanup() {
 	clear_nvme "$bdev0"
 	rm -f "$test_file0" "$test_file1"
@@ -104,4 +98,3 @@ run_test "dd_bs_lt_native_bs" \
 
 run_test "dd_rw" basic_rw "$native_bs"
 run_test "dd_rw_offset" basic_offset
-run_test "dd_rw_file_copy" plain_copy
