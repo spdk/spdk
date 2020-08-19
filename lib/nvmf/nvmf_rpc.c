@@ -344,6 +344,7 @@ struct rpc_subsystem_create {
 	char *tgt_name;
 	uint32_t max_namespaces;
 	bool allow_any_host;
+	bool ana_reporting;
 };
 
 static const struct spdk_json_object_decoder rpc_subsystem_create_decoders[] = {
@@ -353,6 +354,7 @@ static const struct spdk_json_object_decoder rpc_subsystem_create_decoders[] = {
 	{"tgt_name", offsetof(struct rpc_subsystem_create, tgt_name), spdk_json_decode_string, true},
 	{"max_namespaces", offsetof(struct rpc_subsystem_create, max_namespaces), spdk_json_decode_uint32, true},
 	{"allow_any_host", offsetof(struct rpc_subsystem_create, allow_any_host), spdk_json_decode_bool, true},
+	{"ana_reporting", offsetof(struct rpc_subsystem_create, ana_reporting), spdk_json_decode_bool, true},
 };
 
 static void
@@ -434,6 +436,8 @@ rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 	}
 
 	spdk_nvmf_subsystem_set_allow_any_host(subsystem, req->allow_any_host);
+
+	spdk_nvmf_subsystem_set_ana_reporting(subsystem, req->ana_reporting);
 
 	rc = spdk_nvmf_subsystem_start(subsystem,
 				       rpc_nvmf_subsystem_started,

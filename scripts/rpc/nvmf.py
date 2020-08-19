@@ -221,7 +221,8 @@ def nvmf_create_subsystem(client,
                           tgt_name=None,
                           model_number='SPDK bdev Controller',
                           allow_any_host=False,
-                          max_namespaces=0):
+                          max_namespaces=0,
+                          ana_reporting=False):
     """Construct an NVMe over Fabrics target subsystem.
 
     Args:
@@ -231,6 +232,8 @@ def nvmf_create_subsystem(client,
         model_number: Model number of virtual controller.
         allow_any_host: Allow any host (True) or enforce allowed host whitelist (False). Default: False.
         max_namespaces: Maximum number of namespaces that can be attached to the subsystem (optional). Default: 0 (Unlimited).
+        ana_reporting: Enable ANA reporting feature. Default: False.
+
 
     Returns:
         True or False
@@ -253,6 +256,9 @@ def nvmf_create_subsystem(client,
 
     if tgt_name:
         params['tgt_name'] = tgt_name
+
+    if ana_reporting:
+        params['ana_reporting'] = ana_reporting
 
     return client.call('nvmf_create_subsystem', params)
 

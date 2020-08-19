@@ -4324,6 +4324,7 @@ serial_number           | Optional | string      | Serial number of virtual cont
 model_number            | Optional | string      | Model number of virtual controller
 max_namespaces          | Optional | number      | Maximum number of namespaces that can be attached to the subsystem. Default: 0 (Unlimited)
 allow_any_host          | Optional | boolean     | Allow any host (`true`) or enforce allowed host whitelist (`false`). Default: `false`.
+ana_reporting           | Optional | boolean     | Enable ANA reporting feature (default: `false`).
 
 ### Example
 
