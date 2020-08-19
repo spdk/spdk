@@ -86,6 +86,8 @@ DEFINE_STUB(vhost_get_negotiated_features, int,
 	    (int vid, uint64_t *negotiated_features), 0);
 DEFINE_STUB(rte_vhost_get_vhost_ring_inflight, int,
 	    (int vid, uint16_t vring_idx, struct rte_vhost_ring_inflight *vring), 0);
+DEFINE_STUB(rte_vhost_get_vring_base_from_inflight, int,
+	    (int vid, uint16_t queue_id, uint16_t *last_avail_idx, uint16_t *last_used_idx), 0);
 DEFINE_STUB(vhost_get_mem_table, int, (int vid, struct rte_vhost_memory **mem), 0);
 
 void *

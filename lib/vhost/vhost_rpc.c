@@ -237,6 +237,7 @@ struct rpc_vhost_blk_ctrlr {
 	char *cpumask;
 	bool readonly;
 	bool packed_ring;
+	bool packed_ring_recovery;
 };
 
 static const struct spdk_json_object_decoder rpc_construct_vhost_blk_ctrlr[] = {
@@ -245,6 +246,7 @@ static const struct spdk_json_object_decoder rpc_construct_vhost_blk_ctrlr[] = {
 	{"cpumask", offsetof(struct rpc_vhost_blk_ctrlr, cpumask), spdk_json_decode_string, true},
 	{"readonly", offsetof(struct rpc_vhost_blk_ctrlr, readonly), spdk_json_decode_bool, true},
 	{"packed_ring", offsetof(struct rpc_vhost_blk_ctrlr, packed_ring), spdk_json_decode_bool, true},
+	{"packed_ring_recovery", offsetof(struct rpc_vhost_blk_ctrlr, packed_ring_recovery), spdk_json_decode_bool, true},
 };
 
 static void
@@ -269,6 +271,8 @@ rpc_vhost_create_blk_controller(struct spdk_jsonrpc_request *request,
 		rc = -EINVAL;
 		goto invalid;
 	}
+
+	g_packed_ring_recovery = req.packed_ring_recovery;
 
 	rc = spdk_vhost_blk_construct(req.ctrlr, req.cpumask, req.dev_name,
 				      req.readonly, req.packed_ring);

@@ -45,6 +45,8 @@
 #include "spdk/rpc.h"
 #include "spdk/config.h"
 
+extern bool g_packed_ring_recovery;
+
 #define SPDK_VHOST_MAX_VQUEUES	256
 #define SPDK_VHOST_MAX_VQ_SIZE	1024
 
