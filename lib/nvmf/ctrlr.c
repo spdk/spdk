@@ -1578,6 +1578,11 @@ nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Async Event Request\n");
 
+	/* AER cmd is an exception */
+	sgroup = &req->qpair->group->sgroups[ctrlr->subsys->id];
+	assert(sgroup != NULL);
+	sgroup->io_outstanding--;
+
 	/* Four asynchronous events are supported for now */
 	if (ctrlr->nr_aer_reqs >= NVMF_MAX_ASYNC_EVENTS) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "AERL exceeded\n");
@@ -1599,11 +1604,6 @@ nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 		ctrlr->reservation_event.raw = 0;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
-
-	/* AER cmd is an exception */
-	sgroup = &req->qpair->group->sgroups[ctrlr->subsys->id];
-	assert(sgroup != NULL);
-	sgroup->io_outstanding--;
 
 	ctrlr->aer_req[ctrlr->nr_aer_reqs++] = req;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
