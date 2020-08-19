@@ -1903,8 +1903,12 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 			nvmf_get_firmware_slot_log_page(req->data, offset, len);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		case SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS:
-			nvmf_get_ana_log_page(ctrlr, req->data, offset, len);
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+			if (subsystem->ana_reporting) {
+				nvmf_get_ana_log_page(ctrlr, req->data, offset, len);
+				return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+			} else {
+				goto invalid_log_page;
+			}
 		case SPDK_NVME_LOG_COMMAND_EFFECTS_LOG:
 			nvmf_get_cmds_and_effects_log_page(req->data, offset, len);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -1965,8 +1969,10 @@ spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 		nsdata->noiob = max_num_blocks;
 	}
 
-	/* ANA group ID matches NSID. */
-	nsdata->anagrpid = ns->nsid;
+	if (subsystem->ana_reporting) {
+		/* ANA group ID matches NSID. */
+		nsdata->anagrpid = ns->nsid;
+	}
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
@@ -2017,7 +2023,9 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 	cdata->sgls = ctrlr->cdata.sgls;
 	cdata->fuses.compare_and_write = 1;
 	cdata->acwu = 1;
-	cdata->mnan = subsystem->max_nsid;
+	if (subsystem->ana_reporting) {
+		cdata->mnan = subsystem->max_nsid;
+	}
 	spdk_strcpy_pad(cdata->subnqn, subsystem->subnqn, sizeof(cdata->subnqn), '\0');
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "ctrlr data: maxcmd 0x%x\n", cdata->maxcmd);
@@ -2034,8 +2042,10 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->rab = 6;
 		cdata->cmic.multi_port = 1;
 		cdata->cmic.multi_host = 1;
-		/* Asymmetric Namespace Access Reporting is supported. */
-		cdata->cmic.ana_reporting = 1;
+		if (subsystem->ana_reporting) {
+			/* Asymmetric Namespace Access Reporting is supported. */
+			cdata->cmic.ana_reporting = 1;
+		}
 		cdata->oaes.ns_attribute_notices = 1;
 		cdata->ctratt.host_id_exhid_supported = 1;
 		/* TODO: Concurrent execution of multiple abort commands. */
@@ -2059,11 +2069,13 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->oncs.dsm = nvmf_ctrlr_dsm_supported(ctrlr);
 		cdata->oncs.write_zeroes = nvmf_ctrlr_write_zeroes_supported(ctrlr);
 		cdata->oncs.reservations = 1;
-		cdata->anacap.ana_optimized_state = 1;
-		/* ANAGRPID does not change while namespace is attached to controller */
-		cdata->anacap.no_change_anagrpid = 1;
-		cdata->anagrpmax = subsystem->max_nsid;
-		cdata->nanagrpid = subsystem->max_nsid;
+		if (subsystem->ana_reporting) {
+			cdata->anacap.ana_optimized_state = 1;
+			/* ANAGRPID does not change while namespace is attached to controller */
+			cdata->anacap.no_change_anagrpid = 1;
+			cdata->anagrpmax = subsystem->max_nsid;
+			cdata->nanagrpid = subsystem->max_nsid;
+		}
 
 		nvmf_ctrlr_populate_oacs(ctrlr, cdata);
 

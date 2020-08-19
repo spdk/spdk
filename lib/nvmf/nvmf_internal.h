@@ -249,6 +249,7 @@ struct spdk_nvmf_subsystem {
 	uint16_t next_cntlid;
 	bool allow_any_host;
 	bool allow_any_listener;
+	bool ana_reporting;
 
 	struct spdk_nvmf_tgt			*tgt;
 

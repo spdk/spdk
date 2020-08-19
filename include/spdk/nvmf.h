@@ -654,6 +654,20 @@ void spdk_nvmf_subsystem_allow_any_listener(
 bool spdk_nvmf_subsytem_any_listener_allowed(
 	struct spdk_nvmf_subsystem *subsystem);
 
+/**
+ * Set whether a subsystem supports Asymmetric Namespace Access (ANA)
+ * reporting.
+ *
+ * May only be performed on subsystems in the INACTIVE state.
+ *
+ * \param subsystem Subsystem to modify.
+ * \param ana_reporting true to support or false not to support ANA reporting.
+ *
+ * \return 0 on success, or negated errno value on failure.
+ */
+int spdk_nvmf_subsystem_set_ana_reporting(struct spdk_nvmf_subsystem *subsystem,
+		bool ana_reporting);
+
 /** NVMe-oF target namespace creation options */
 struct spdk_nvmf_ns_opts {
 	/**

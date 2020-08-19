@@ -2513,3 +2513,16 @@ nvmf_ns_reservation_request(void *ctx)
 update_done:
 	_nvmf_ns_reservation_update_done(ctrlr->subsys, (void *)req, 0);
 }
+
+int
+spdk_nvmf_subsystem_set_ana_reporting(struct spdk_nvmf_subsystem *subsystem,
+				      bool ana_reporting)
+{
+	if (subsystem->state != SPDK_NVMF_SUBSYSTEM_INACTIVE) {
+		return -EAGAIN;
+	}
+
+	subsystem->ana_reporting = ana_reporting;
+
+	return 0;
+}
