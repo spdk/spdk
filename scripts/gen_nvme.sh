@@ -13,25 +13,32 @@ function create_classic_config() {
 }
 
 function create_json_config() {
-	echo "{"
-	echo '"subsystem": "bdev",'
-	echo '"config": ['
-	for ((i = 0; i < ${#bdfs[@]}; i++)); do
-		echo '{'
-		echo '"params": {'
-		echo '"trtype": "PCIe",'
-		echo "\"name\": \"Nvme$i\","
-		echo "\"traddr\": \"${bdfs[i]}\""
-		echo '},'
-		echo '"method": "bdev_nvme_attach_controller"'
-		if [ -z ${bdfs[i + 1]} ]; then
-			echo '}'
-		else
-			echo '},'
-		fi
+	local bdev_json_cfg=()
+
+	for i in "${!bdfs[@]}"; do
+		bdev_json_cfg+=("$(
+			cat <<- JSON
+				{
+					"method": "bdev_nvme_attach_controller",
+					"params": {
+						"trtype": "PCIe",
+						"name":"Nvme${i}",
+						"traddr":"${bdfs[i]}"
+					}
+				}
+			JSON
+		)")
 	done
-	echo ']'
-	echo '}'
+
+	local IFS=","
+	cat <<- JSON
+		{
+			"subsystem": "bdev",
+			"config": [
+				${bdev_json_cfg[*]}
+			]
+		}
+	JSON
 }
 
 function create_json_config_with_subsystems() {
