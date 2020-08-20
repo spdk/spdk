@@ -7,6 +7,10 @@
 A new API was added `bdev_examine_bdev` that allows users to examine a
 bdev explicitly. It can be used only if auto_examine is disabled.
 
+### dpdk
+
+Updated DPDK submodule to DPDK 20.08.
+
 ### isa-l
 
 Updated ISA-L submodule to v2.29.0.
