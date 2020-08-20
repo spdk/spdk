@@ -373,6 +373,11 @@ int nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,
 		return rc;
 	}
 
+	/* skip Identify NS ID Descriptor List for inactive NS */
+	if (!spdk_nvme_ctrlr_is_active_ns(ctrlr, id)) {
+		return 0;
+	}
+
 	return nvme_ctrlr_identify_id_desc(ns);
 }
 

@@ -46,6 +46,9 @@ DEFINE_STUB(nvme_wait_for_completion_robust_lock, int,
 	     struct nvme_completion_poll_status *status,
 	     pthread_mutex_t *robust_mutex), 0);
 
+DEFINE_STUB(spdk_nvme_ctrlr_is_active_ns, bool,
+	    (struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid), 1);
+
 int
 nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr, uint8_t cns, uint16_t cntid, uint32_t nsid,
 			void *payload, size_t payload_size,
