@@ -788,7 +788,7 @@ nvmf_ctrlr_cc_shn_done(struct spdk_io_channel_iter *i, int status)
 	/* After CC.EN transitions to 0 (due to shutdown or reset), the association
 	 * between the host and controller shall be preserved for at least 2 minutes */
 	ctrlr->association_timer = SPDK_POLLER_REGISTER(nvmf_ctrlr_association_remove, ctrlr,
-				   ctrlr->admin_qpair->transport->opts.association_timeout);
+				   ctrlr->admin_qpair->transport->opts.association_timeout * 1000);
 }
 
 static void
@@ -808,7 +808,7 @@ nvmf_ctrlr_cc_reset_done(struct spdk_io_channel_iter *i, int status)
 	/* After CC.EN transitions to 0 (due to shutdown or reset), the association
 	 * between the host and controller shall be preserved for at least 2 minutes */
 	ctrlr->association_timer = SPDK_POLLER_REGISTER(nvmf_ctrlr_association_remove, ctrlr,
-				   ctrlr->admin_qpair->transport->opts.association_timeout);
+				   ctrlr->admin_qpair->transport->opts.association_timeout * 1000);
 }
 
 const struct spdk_nvmf_registers *

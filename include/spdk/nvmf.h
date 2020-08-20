@@ -86,6 +86,7 @@ struct spdk_nvmf_transport_opts {
 	uint32_t	sock_priority;
 	int		acceptor_backlog;
 	uint32_t	abort_timeout_sec;
+	/* ms */
 	uint32_t	association_timeout;
 };
 

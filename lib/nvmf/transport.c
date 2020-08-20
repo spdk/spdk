@@ -44,7 +44,7 @@
 #include "spdk/util.h"
 
 #define MAX_MEMPOOL_NAME_LENGTH 40
-#define NVMF_TRANSPORT_DEFAULT_ASSOCIATION_TIMEOUT 120000 /* ms */
+#define NVMF_TRANSPORT_DEFAULT_ASSOCIATION_TIMEOUT_IN_MS 120000
 
 struct nvmf_transport_ops_list_element {
 	struct spdk_nvmf_transport_ops			ops;
@@ -500,7 +500,7 @@ spdk_nvmf_transport_opts_init(const char *transport_name,
 		return false;
 	}
 
-	opts->association_timeout = NVMF_TRANSPORT_DEFAULT_ASSOCIATION_TIMEOUT;
+	opts->association_timeout = NVMF_TRANSPORT_DEFAULT_ASSOCIATION_TIMEOUT_IN_MS;
 	ops->opts_init(opts);
 	return true;
 }
