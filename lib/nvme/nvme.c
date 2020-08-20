@@ -895,8 +895,10 @@ spdk_nvme_trid_populate_transport(struct spdk_nvme_transport_id *trid,
 		trstring = SPDK_NVME_TRANSPORT_NAME_TCP;
 		break;
 	case SPDK_NVME_TRANSPORT_CUSTOM:
+		trstring = SPDK_NVME_TRANSPORT_NAME_CUSTOM;
+		break;
 	default:
-		SPDK_ERRLOG("don't use this for custom transports\n");
+		SPDK_ERRLOG("no available transports\n");
 		assert(0);
 		return;
 	}
