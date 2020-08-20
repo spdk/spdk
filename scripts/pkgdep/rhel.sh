@@ -1,5 +1,24 @@
 #!/usr/bin/env bash
 
+# First, add extra EPEL repo to have a chance of covering most of the packages
+# on the enterprise systems, like RHEL.
+if [[ $ID == centos || $ID == rhel ]]; then
+	if ! rpm --quiet -q epel-release; then
+		[[ $VERSION_ID == 7* ]] && epel=https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+		[[ $VERSION_ID == 8* ]] && epel=https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+		if [[ -n $epel ]]; then
+			yum install -y "$epel"
+		fi
+	fi
+	# Potential dependencies for EPEL packages can be needed from other repos, enable them
+	if [[ $ID == rhel ]]; then
+		[[ $VERSION_ID == 7* ]] && subscription-manager repos --enable "rhel-*-optional-rpms" --enable "rhel-*-extras-rpms"
+		[[ $VERSION_ID == 8* ]] && subscription-manager repos --enable codeready-builder-for-rhel-8-x86_64-rpms
+	elif [[ $ID == centos ]]; then
+		yum --enablerepo=extras install -y epel-release
+	fi
+fi
+
 # Minimal install
 if echo "$ID $VERSION_ID" | grep -E -q 'centos 8'; then
 	# Add PowerTools needed for install CUnit-devel in Centos8
@@ -31,19 +50,6 @@ yum install -y autoconf automake libtool help2man
 yum install -y numactl-devel nasm
 if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	# Tools for developers
-	# Includes Fedora, CentOS 7, RHEL 7
-	# Add EPEL repository for CUnit-devel
-	if echo "$ID $VERSION_ID" | grep -E -q 'rhel 7|centos 7|centos 8'; then
-		if ! rpm --quiet -q epel-release; then
-			yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-		fi
-
-		if [[ $ID = 'rhel' ]]; then
-			subscription-manager repos --enable "rhel-*-optional-rpms" --enable "rhel-*-extras-rpms"
-		elif [[ $ID = 'centos' ]]; then
-			yum --enablerepo=extras install -y epel-release
-		fi
-	fi
 	if echo "$ID $VERSION_ID" | grep -E -q 'centos 8'; then
 		yum install -y python3-pycodestyle
 		echo "Centos 8 does not have lcov and ShellCheck dependencies"
