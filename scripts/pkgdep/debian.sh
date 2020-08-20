@@ -13,7 +13,7 @@ apt-get install -y python3-configshell-fb python3-pexpect || echo \
 
 # Additional dependencies for DPDK
 if [[ $NAME == "Ubuntu" ]] && [[ $VERSION_ID_NUM -lt 1900 ]]; then
-	echo "Ubuntu $VERSION_ID needs NASM version 2.13.03 for DPDK but is not in the mainline repository."
+	echo "Ubuntu $VERSION_ID needs NASM version 2.14 for DPDK but is not in the mainline repository."
 	echo "You can install it manually"
 else
 	apt-get install -y nasm

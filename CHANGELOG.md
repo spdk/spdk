@@ -11,6 +11,10 @@ bdev explicitly. It can be used only if auto_examine is disabled.
 
 Updated DPDK submodule to DPDK 20.08.
 
+### intel-ipsec-mb
+
+Updated intel-ipsec-mb submodule to v0.54
+
 ### isa-l
 
 Updated ISA-L submodule to v2.29.0.
