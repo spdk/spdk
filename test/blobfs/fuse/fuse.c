@@ -56,7 +56,7 @@ static void
 fuse_run_cb(void *cb_arg, int fserrno)
 {
 	if (fserrno) {
-		printf("Failed to mount filesystem on bdev %s to path %s: %s",
+		printf("Failed to mount filesystem on bdev %s to path %s: %s\n",
 		       g_bdev_name, g_mountpoint, spdk_strerror(fserrno));
 
 		spdk_app_stop(0);
@@ -69,7 +69,7 @@ fuse_run_cb(void *cb_arg, int fserrno)
 static void
 spdk_fuse_run(void *arg1)
 {
-	printf("Mounting filesystem on bdev %s to path %s...",
+	printf("Mounting filesystem on bdev %s to path %s...\n",
 	       g_bdev_name, g_mountpoint);
 	fflush(stdout);
 

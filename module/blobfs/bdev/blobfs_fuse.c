@@ -353,6 +353,8 @@ err:
 void
 blobfs_fuse_stop(struct spdk_blobfs_fuse *bfuse)
 {
-	fuse_session_exit(fuse_get_session(bfuse->fuse_handle));
-	pthread_kill(bfuse->fuse_tid, SIGINT);
+	if (bfuse) {
+		fuse_session_exit(fuse_get_session(bfuse->fuse_handle));
+		pthread_kill(bfuse->fuse_tid, SIGINT);
+	}
 }
