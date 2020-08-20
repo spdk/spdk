@@ -1,5 +1,29 @@
 #!/usr/bin/env bash
 
+disclaimer() {
+	case "$ID" in
+		rhel)
+			cat <<- WARN
+
+				WARNING: $PRETTY_NAME system detected.
+
+				Please, note that the support for this platform is considered to be "best-effort",
+				as in, access to some packages may be limited and/or missing. Review your repo
+				setup to make sure installation of all dependencies is possible.
+
+			WARN
+
+			# Don't trigger errexit, simply install what's available. This is default
+			# behavior of older yum versions (e.g. the one present on RHEL 7.x) anyway.
+			yum() { "$(type -P yum)" --skip-broken "$@"; }
+			;;
+
+		*) ;;
+	esac
+}
+
+disclaimer
+
 # First, add extra EPEL repo to have a chance of covering most of the packages
 # on the enterprise systems, like RHEL.
 if [[ $ID == centos || $ID == rhel ]]; then
