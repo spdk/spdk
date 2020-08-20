@@ -144,9 +144,7 @@ parse_event(const char *buf, struct spdk_uevent *event)
 			return -1;
 		}
 		spdk_pci_addr_fmt(event->traddr, sizeof(event->traddr), &pci_addr);
-		return 1;
-	}
-	if (!strncmp(driver, "vfio-pci", 8)) {
+	} else if (!strncmp(driver, "vfio-pci", 8)) {
 		struct spdk_pci_addr pci_addr;
 
 		event->subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_VFIO;
@@ -161,10 +159,11 @@ parse_event(const char *buf, struct spdk_uevent *event)
 			return -1;
 		}
 		spdk_pci_addr_fmt(event->traddr, sizeof(event->traddr), &pci_addr);
-		return 1;
-
+	} else {
+		event->subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_UNRECOGNIZED;
 	}
-	return -1;
+
+	return 1;
 }
 
 int

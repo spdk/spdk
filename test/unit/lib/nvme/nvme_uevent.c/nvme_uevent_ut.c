@@ -47,8 +47,6 @@ enum uevent_parse_event_return_type {
 	uevent_expected_continue = 1
 };
 
-#define SPDK_NVME_UEVENT_SUBSYSTEM_NULL 0xFF
-
 static void
 test_nvme_uevent_parse_event(void)
 {
@@ -62,19 +60,19 @@ test_nvme_uevent_parse_event(void)
 	/* Case 1: Add wrong non-uio or vfio-pci /devices/pci0000:80/0000:80:01.0/0000:81:00.0/uio/uio0 */
 	commands =
 		"ACTION=add\0DEVPATH=/devices/pci0000:80/0000:80:01.0/0000:81:00.0/uio/uio0\0SUBSYSTEM= \0DRIVER= \0PCI_SLOT_NAME= \0";
-	uevent.subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_NULL;
+	uevent.subsystem = 0xFF;
 	uevent.action = 0;
 
 	rc = parse_event(commands, &uevent);
 
-	CU_ASSERT(rc == uevent_abnormal_exit);
-	CU_ASSERT(uevent.subsystem == SPDK_NVME_UEVENT_SUBSYSTEM_NULL);
+	CU_ASSERT(rc == uevent_expected_continue);
+	CU_ASSERT(uevent.subsystem == SPDK_NVME_UEVENT_SUBSYSTEM_UNRECOGNIZED);
 	CU_ASSERT(uevent.action == SPDK_NVME_UEVENT_ADD);
 
 	/* Case 2: Add uio /devices/pci0000:80/0000:80:01.0/0000:81:00.0/uio/uio0 */
 	commands =
 		"ACTION=add \0DEVPATH=/devices/pci0000:80/0000:80:01.0/0000:81:00.0/uio/uio0\0SUBSYSTEM=uio\0DRIVER=\0PCI_SLOT_NAME= \0";
-	uevent.subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_NULL;
+	uevent.subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_UNRECOGNIZED;
 	uevent.action = 0;
 
 	rc = parse_event(commands, &uevent);
@@ -86,7 +84,7 @@ test_nvme_uevent_parse_event(void)
 	/* Case 3: Remove uio /devices/pci0000:80/0000:80:01.0/0000:81:00.0/uio/uio0 */
 	commands =
 		"ACTION=remove\0DEVPATH=/devices/pci0000:80/0000:80:01.0/0000:81:00.0/uio/uio0\0SUBSYSTEM=uio\0DRIVER=\0PCI_SLOT_NAME= \0";
-	uevent.subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_NULL;
+	uevent.subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_UNRECOGNIZED;
 
 	rc = parse_event(commands, &uevent);
 
@@ -96,7 +94,7 @@ test_nvme_uevent_parse_event(void)
 
 	/* Case 4: Add vfio-pci 0000:81:00.0 */
 	commands = "ACTION=bind\0DEVPATH=\0SUBSYSTEM= \0DRIVER=vfio-pci\0PCI_SLOT_NAME=0000:81:00.0\0";
-	uevent.subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_NULL;
+	uevent.subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_UNRECOGNIZED;
 
 	rc = parse_event(commands, &uevent);
 
@@ -106,7 +104,7 @@ test_nvme_uevent_parse_event(void)
 
 	/* Case 5: Remove vfio-pci 0000:81:00.0 */
 	commands = "ACTION=remove\0DEVPATH= \0SUBSYSTEM= \0DRIVER=vfio-pci \0PCI_SLOT_NAME=0000:81:00.0\0";
-	uevent.subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_NULL;
+	uevent.subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_UNRECOGNIZED;
 
 	rc = parse_event(commands, &uevent);
 
@@ -116,7 +114,7 @@ test_nvme_uevent_parse_event(void)
 
 	/* Case 6: Add wrong vfio-pci addr 000000 */
 	commands = "ACTION=bind\0DEVPATH= \0SUBSYSTEM= \0DRIVER=vfio-pci \0PCI_SLOT_NAME=000000\0";
-	uevent.subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_NULL;
+	uevent.subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_UNRECOGNIZED;
 
 	rc = parse_event(commands, &uevent);
 
@@ -126,12 +124,12 @@ test_nvme_uevent_parse_event(void)
 
 	/* Case 7: Add wrong type vfio 0000:81:00.0 */
 	commands = "ACTION=bind\0DEVPATH= \0SUBSYSTEM= \0DRIVER=vfio \0PCI_SLOT_NAME=0000:81:00.0\0";
-	uevent.subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_NULL;
+	uevent.subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_UIO;
 	uevent.action = 0;
 	rc = parse_event(commands, &uevent);
 
-	CU_ASSERT(rc == uevent_abnormal_exit);
-	CU_ASSERT(uevent.subsystem == SPDK_NVME_UEVENT_SUBSYSTEM_NULL);
+	CU_ASSERT(rc == uevent_expected_continue);
+	CU_ASSERT(uevent.subsystem == SPDK_NVME_UEVENT_SUBSYSTEM_UNRECOGNIZED);
 	CU_ASSERT(uevent.action == SPDK_NVME_UEVENT_ADD);
 }
 
