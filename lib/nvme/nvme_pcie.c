@@ -613,8 +613,6 @@ nvme_pcie_ctrlr_map_io_cmb(struct spdk_nvme_ctrlr *ctrlr, size_t *size)
 				       VALUE_2MB - 1);
 	mem_register_end = _2MB_PAGE((uintptr_t)pctrlr->cmb.bar_va + pctrlr->cmb.current_offset +
 				     pctrlr->cmb.size);
-	pctrlr->cmb.mem_register_addr = (void *)mem_register_start;
-	pctrlr->cmb.mem_register_size = mem_register_end - mem_register_start;
 
 	rc = spdk_mem_register((void *)mem_register_start, mem_register_end - mem_register_start);
 	if (rc) {
