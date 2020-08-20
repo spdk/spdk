@@ -18,6 +18,7 @@ addons:
       - lcov
       - python3-setuptools
       - python3-pip
+      - ninja-build
 
 before_script:
   - git submodule update --init
