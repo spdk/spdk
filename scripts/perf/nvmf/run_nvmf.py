@@ -37,11 +37,11 @@ class Server:
 
 class Target(Server):
     def __init__(self, name, username, password, mode, nic_ips, transport="rdma",
-                 use_null_block=False, sar_settings=None, pcm_settings=None,
+                 null_block_devices=0, sar_settings=None, pcm_settings=None,
                  bandwidth_settings=None, dpdk_settings=None):
 
         super(Target, self).__init__(name, username, password, mode, nic_ips, transport)
-        self.null_block = bool(use_null_block)
+        self.null_block = null_block_devices
         self.enable_sar = False
         self.enable_pcm_memory = False
         self.enable_pcm = False
@@ -471,57 +471,16 @@ runtime={run_time}
 
 class KernelTarget(Target):
     def __init__(self, name, username, password, mode, nic_ips, transport="rdma",
-                 use_null_block=False, sar_settings=None, pcm_settings=None,
+                 null_block_devices=0, sar_settings=None, pcm_settings=None,
                  bandwidth_settings=None, dpdk_settings=None, nvmet_bin="nvmetcli", **kwargs):
 
         super(KernelTarget, self).__init__(name, username, password, mode, nic_ips, transport,
-                                           use_null_block, sar_settings, pcm_settings, bandwidth_settings,
+                                           null_block_devices, sar_settings, pcm_settings, bandwidth_settings,
                                            dpdk_settings)
         self.nvmet_bin = nvmet_bin
 
     def __del__(self):
         nvmet_command(self.nvmet_bin, "clear")
-
-    def kernel_tgt_gen_nullblock_conf(self, address):
-        nvmet_cfg = {
-            "ports": [],
-            "hosts": [],
-            "subsystems": [],
-        }
-
-        nvmet_cfg["subsystems"].append({
-            "allowed_hosts": [],
-            "attr": {
-                "allow_any_host": "1",
-                "serial": "SPDK0001",
-                "version": "1.3"
-            },
-            "namespaces": [
-                {
-                    "device": {
-                        "path": "/dev/nullb0",
-                        "uuid": "%s" % uuid.uuid4()
-                    },
-                    "enable": 1,
-                    "nsid": 1
-                }
-            ],
-            "nqn": "nqn.2018-09.io.spdk:cnode1"
-        })
-
-        nvmet_cfg["ports"].append({
-            "addr": {
-                "adrfam": "ipv4",
-                "traddr": address,
-                "trsvcid": "4420",
-                "trtype": "%s" % self.transport,
-            },
-            "portid": 1,
-            "referrals": [],
-            "subsystems": ["nqn.2018-09.io.spdk:cnode1"]
-        })
-        with open("kernel.conf", 'w') as fh:
-            fh.write(json.dumps(nvmet_cfg, indent=2))
 
     def kernel_tgt_gen_subsystem_conf(self, nvme_list, address_list):
 
@@ -582,12 +541,9 @@ class KernelTarget(Target):
 
         if self.null_block:
             print("Configuring with null block device.")
-            if len(self.nic_ips) > 1:
-                print("Testing with null block limited to single RDMA NIC.")
-                print("Please specify only 1 IP address.")
-                exit(1)
-            self.subsys_no = 1
-            self.kernel_tgt_gen_nullblock_conf(self.nic_ips[0])
+            null_blk_list = ["/dev/nullb{}".format(x) for x in range(self.null_block)]
+            self.kernel_tgt_gen_subsystem_conf(null_blk_list, self.nic_ips)
+            self.subsys_no = len(null_blk_list)
         else:
             print("Configuring with NVMe drives.")
             nvme_list = get_nvme_devices()
@@ -602,12 +558,12 @@ class KernelTarget(Target):
 class SPDKTarget(Target):
 
     def __init__(self, name, username, password, mode, nic_ips, transport="rdma",
-                 use_null_block=False, sar_settings=None, pcm_settings=None,
+                 null_block_devices=0, sar_settings=None, pcm_settings=None,
                  bandwidth_settings=None, dpdk_settings=None, num_shared_buffers=4096,
                  num_cores=1, **kwargs):
 
         super(SPDKTarget, self).__init__(name, username, password, mode, nic_ips, transport,
-                                         use_null_block, sar_settings, pcm_settings, bandwidth_settings,
+                                         null_block_devices, sar_settings, pcm_settings, bandwidth_settings,
                                          dpdk_settings)
         self.num_cores = num_cores
         self.num_shared_buffers = num_shared_buffers
@@ -622,16 +578,17 @@ class SPDKTarget(Target):
         rpc.client.print_dict(rpc.nvmf.nvmf_get_transports(self.client))
 
         if self.null_block:
-            nvme_section = self.spdk_tgt_add_nullblock()
-            subsystems_section = self.spdk_tgt_add_subsystem_conf(self.nic_ips, req_num_disks=1)
+            nvme_section = self.spdk_tgt_add_nullblock(self.null_block)
+            subsystems_section = self.spdk_tgt_add_subsystem_conf(self.nic_ips, self.null_block)
         else:
             nvme_section = self.spdk_tgt_add_nvme_conf()
             subsystems_section = self.spdk_tgt_add_subsystem_conf(self.nic_ips)
         self.log_print("Done configuring SPDK NVMeOF Target")
 
-    def spdk_tgt_add_nullblock(self):
-        self.log_print("Adding null block bdev to config via RPC")
-        rpc.bdev.bdev_null_create(self.client, 102400, 4096, "Nvme0n1")
+    def spdk_tgt_add_nullblock(self, null_block_count):
+        self.log_print("Adding null block bdevices to config via RPC")
+        for i in range(null_block_count):
+            rpc.bdev.bdev_null_create(self.client, 102400, 4096, "Nvme{}n1".format(i))
         self.log_print("SPDK Bdevs configuration:")
         rpc.client.print_dict(rpc.bdev.bdev_get_bdevs(self.client))
 

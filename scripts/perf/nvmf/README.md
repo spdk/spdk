@@ -33,10 +33,10 @@ So for example providing 2 IP's with 16 NVMe drives present will result in each 
 
 "spdk" or "kernel" values allowed.
 
-### use_null_block
+### null_block_devices
 
-Use null block device instead of present NVMe drives. Used for latency measurements as described
-in Test Case 3 of performance report.
+Integer. Use null block devices instead of present NVMe drives.
+If set to 1, can be used for latency measurements as described in Test Case 3 of performance report.
 
 ### num_cores
 
