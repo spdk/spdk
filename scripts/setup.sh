@@ -179,6 +179,31 @@ function get_virtio_names_from_bdf() {
 	eval "$2=( " "${virtio_names[@]}" " )"
 }
 
+function collect_devices() {
+	# NVMe, IOAT, IDXD, VIRTIO, VMD
+
+	local ids dev_type dev_id bdf bdfs
+
+	ids+="PCI_DEVICE_ID_INTEL_IOAT"
+	ids+="|PCI_DEVICE_ID_INTEL_IDXD"
+	ids+="|PCI_DEVICE_ID_VIRTIO"
+	ids+="|PCI_DEVICE_ID_INTEL_VMD"
+	ids+="|SPDK_PCI_CLASS_NVME"
+
+	local -gA nvme_d ioat_d idxd_d virtio_d vmd_d all_devices_d
+
+	while read -r _ dev_type dev_id; do
+		bdfs=(${pci_bus_cache["0x8086:$dev_id"]})
+		[[ $dev_type == *NVME* ]] && bdfs=(${pci_bus_cache["$dev_id"]})
+		[[ $dev_type == *VIRT* ]] && bdfs=(${pci_bus_cache["0x1af4:$dev_id"]})
+		[[ $dev_type =~ (NVME|IOAT|IDXD|VIRTIO|VMD) ]]
+		for bdf in "${bdfs[@]}"; do
+			eval "${BASH_REMATCH[1],,}_d[$bdf]=1"
+			all_devices_d["$bdf"]=1
+		done
+	done < <(grep -E "$ids" "$rootdir/include/spdk/pci_ids.h")
+}
+
 function configure_linux_pci() {
 	local driver_path=""
 	driver_name=""
@@ -850,6 +875,7 @@ if [ -z "$TARGET_USER" ]; then
 	fi
 fi
 
+collect_devices "$mode"
 if [[ $os == Linux ]]; then
 	HUGEPGSZ=$(($(grep Hugepagesize /proc/meminfo | cut -d : -f 2 | tr -dc '0-9')))
 	HUGEPGSZ_MB=$((HUGEPGSZ / 1024))
