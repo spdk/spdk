@@ -943,7 +943,7 @@ if __name__ == "__main__":
             threads.append(t)
 
         if target_obj.enable_dpdk_memory:
-            t = threading.Thread(target=target_obj.measure_dpdk_memory args=(target_results_dir))
+            t = threading.Thread(target=target_obj.measure_dpdk_memory, args=(target_results_dir))
             threads.append(t)
 
         for t in threads:
