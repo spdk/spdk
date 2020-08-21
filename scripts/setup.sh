@@ -274,9 +274,19 @@ function configure_linux_pci() {
 
 	for bdf in "${!all_devices_d[@]}"; do
 		if ((all_devices_d["$bdf"] == 0)); then
-			linux_bind_driver "$bdf" "$driver_name"
+			if [[ -n ${nvme_d["$bdf"]} ]]; then
+				# Some nvme controllers may take significant amount of time while being
+				# unbound from the driver. Put that task into background to speed up the
+				# whole process. Currently this is done only for the devices bound to the
+				# nvme driver as other, i.e., ioatdma's, trigger a kernel BUG when being
+				# unbound in parallel. See https://bugzilla.kernel.org/show_bug.cgi?id=209041.
+				linux_bind_driver "$bdf" "$driver_name" &
+			else
+				linux_bind_driver "$bdf" "$driver_name"
+			fi
 		fi
 	done
+	wait
 
 	echo "1" > "/sys/bus/pci/rescan"
 }
