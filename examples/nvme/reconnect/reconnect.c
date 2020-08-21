@@ -263,7 +263,10 @@ build_nvme_name(char *name, size_t length, struct spdk_nvme_ctrlr *ctrlr)
 		snprintf(name, length, "RDMA (addr:%s subnqn:%s)", trid->traddr, trid->subnqn);
 		break;
 	case SPDK_NVME_TRANSPORT_TCP:
-		snprintf(name, length, "TCP  (addr:%s subnqn:%s)", trid->traddr, trid->subnqn);
+		snprintf(name, length, "TCP (addr:%s subnqn:%s)", trid->traddr, trid->subnqn);
+		break;
+	case SPDK_NVME_TRANSPORT_CUSTOM:
+		snprintf(name, length, "CUSTOM (%s)", trid->traddr);
 		break;
 	default:
 		fprintf(stderr, "Unknown transport type %d\n", trid->trtype);

@@ -847,7 +847,10 @@ build_nvme_name(char *name, size_t length, struct spdk_nvme_ctrlr *ctrlr)
 		res = snprintf(name, length, "RDMA (addr:%s subnqn:%s)", trid->traddr, trid->subnqn);
 		break;
 	case SPDK_NVME_TRANSPORT_TCP:
-		res = snprintf(name, length, "TCP  (addr:%s subnqn:%s)", trid->traddr, trid->subnqn);
+		res = snprintf(name, length, "TCP (addr:%s subnqn:%s)", trid->traddr, trid->subnqn);
+		break;
+	case SPDK_NVME_TRANSPORT_CUSTOM:
+		res = snprintf(name, length, "CUSTOM (%s)", trid->traddr);
 		break;
 
 	default:
