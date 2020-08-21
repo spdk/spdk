@@ -146,37 +146,31 @@ function linux_hugetlbfs_mounts() {
 	mount | grep ' type hugetlbfs ' | awk '{ print $3 }'
 }
 
-function get_nvme_name_from_bdf() {
-	local blknames=()
+function get_block_dev_from_bdf() {
+	local bdf=$1
+	local block
 
-	set +e
-	nvme_devs=$(lsblk -d --output NAME | grep "^nvme")
-	set -e
-	for dev in $nvme_devs; do
-		link_name=$(readlink /sys/block/$dev/device/device) || true
-		if [ -z "$link_name" ]; then
-			link_name=$(readlink /sys/block/$dev/device)
-		fi
-		link_bdf=$(basename "$link_name")
-		if [ "$link_bdf" = "$1" ]; then
-			blknames+=($dev)
+	for block in /sys/block/*; do
+		if [[ $(readlink -f "$block/device") == *"/$bdf/"* ]]; then
+			echo "${block##*/}"
+			return 0
 		fi
 	done
-
-	printf '%s\n' "${blknames[@]}"
 }
 
-function get_virtio_names_from_bdf() {
-	blk_devs=$(lsblk --nodeps --output NAME)
-	virtio_names=()
+function get_mounted_part_dev_from_bdf_block() {
+	local bdf=$1
+	local blocks block part
 
-	for dev in $blk_devs; do
-		if readlink "/sys/block/$dev" | grep -q "$1"; then
-			virtio_names+=("$dev")
-		fi
+	blocks=($(get_block_dev_from_bdf "$bdf"))
+
+	for block in "${blocks[@]}"; do
+		for part in "/sys/block/$block/$block"*; do
+			if [[ $(< /proc/mounts) == *"/dev/${part##*/} "* ]]; then
+				echo "${part##*/}"
+			fi
+		done
 	done
-
-	eval "$2=( " "${virtio_names[@]}" " )"
 }
 
 function collect_devices() {
@@ -246,22 +240,13 @@ function configure_linux_pci() {
 
 	# NVMe
 	for bdf in ${pci_bus_cache["0x010802"]}; do
-		blknames=()
+		blknames=($(get_mounted_part_dev_from_bdf_block "$bdf"))
 		if ! pci_can_use $bdf; then
 			pci_dev_echo "$bdf" "Skipping un-whitelisted NVMe controller at $bdf"
 			continue
 		fi
 
-		mount=false
-		for blkname in $(get_nvme_name_from_bdf $bdf); do
-			mountpoints=$(lsblk /dev/$blkname --output MOUNTPOINT -n | wc -w)
-			if [ "$mountpoints" != "0" ]; then
-				mount=true
-				blknames+=($blkname)
-			fi
-		done
-
-		if ! $mount; then
+		if ((${#blknames[@]} == 0)); then
 			linux_bind_driver "$bdf" "$driver_name"
 		else
 			for name in "${blknames[@]}"; do
@@ -318,14 +303,11 @@ function configure_linux_pci() {
 				pci_dev_echo "$bdf" "Skipping un-whitelisted Virtio device at $bdf"
 				continue
 			fi
-			blknames=()
-			get_virtio_names_from_bdf "$bdf" blknames
-			for blkname in "${blknames[@]}"; do
-				if [ "$(lsblk /dev/$blkname --output MOUNTPOINT -n | wc -w)" != "0" ]; then
-					pci_dev_echo "$bdf" "Active mountpoints on /dev/$blkname, so not binding"
-					continue 2
-				fi
-			done
+			blknames=($(get_mounted_part_dev_from_bdf_block "$bdf"))
+			if ((${#blknames[@]} > 0)); then
+				pci_dev_echo "$bdf" "Active mountpoints on ${blknames[*]}, so not binding"
+				continue
+			fi
 
 			linux_bind_driver "$bdf" "$driver_name"
 		done
@@ -715,8 +697,7 @@ function status_linux() {
 			fi
 			device=$(cat /sys/bus/pci/devices/$bdf/device)
 			vendor=$(cat /sys/bus/pci/devices/$bdf/vendor)
-			blknames=()
-			get_virtio_names_from_bdf "$bdf" blknames
+			blknames=($(get_mounted_part_dev_from_bdf_block "$bdf"))
 			echo -e "$bdf\t${vendor#0x}\t${device#0x}\t$node\t\t${driver:--}\t\t" "${blknames[@]}"
 		done
 	done
