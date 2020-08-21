@@ -229,6 +229,7 @@ iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	conn->timeout = g_iscsi.timeout * spdk_get_ticks_hz(); /* seconds to TSC */
 	conn->nopininterval = g_iscsi.nopininterval;
 	conn->nopininterval *= spdk_get_ticks_hz(); /* seconds to TSC */
+	conn->last_nopin = spdk_get_ticks();
 	conn->nop_outstanding = false;
 	conn->data_out_cnt = 0;
 	conn->data_in_cnt = 0;
@@ -1626,7 +1627,6 @@ iscsi_conn_schedule(struct spdk_iscsi_conn *conn)
 	/* Remove this connection from the previous poll group */
 	iscsi_poll_group_remove_conn(conn->pg, conn);
 
-	conn->last_nopin = spdk_get_ticks();
 	conn->pg = pg;
 
 	spdk_thread_send_msg(spdk_io_channel_get_thread(spdk_io_channel_from_ctx(pg)),
