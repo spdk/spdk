@@ -10,7 +10,7 @@ install_liburing() {
 		if [[ -d $liburing_dir ]]; then
 			echo "liburing source already present, not cloning"
 		else
-			mkdir $liburing_dir
+			mkdir -p $liburing_dir
 			git clone "${GIT_REPO_LIBURING}" "$liburing_dir"
 		fi
 		(cd "$liburing_dir" && ./configure --libdir=/usr/lib64 && make install)
