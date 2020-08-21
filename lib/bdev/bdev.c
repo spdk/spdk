@@ -425,6 +425,18 @@ bdev_examine_allowlist_check(const char *name)
 	return false;
 }
 
+static inline void
+bdev_examine_allowlist_free(void)
+{
+	struct spdk_bdev_examine_item *item;
+	while (!TAILQ_EMPTY(&g_bdev_examine_allowlist)) {
+		item = TAILQ_FIRST(&g_bdev_examine_allowlist);
+		TAILQ_REMOVE(&g_bdev_examine_allowlist, item, link);
+		free(item->name);
+		free(item);
+	}
+}
+
 static inline bool
 bdev_in_examine_allowlist(struct spdk_bdev *bdev)
 {
@@ -1378,6 +1390,8 @@ bdev_mgr_unregister_cb(void *io_device)
 	}
 
 	spdk_free(g_bdev_mgr.zero_buffer);
+
+	bdev_examine_allowlist_free();
 
 	cb_fn(g_fini_cb_arg);
 	g_fini_cb_fn = NULL;
