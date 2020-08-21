@@ -352,7 +352,8 @@ struct spdk_nvmf_transport_poll_group *
 nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport)
 {
 	struct spdk_nvmf_transport_poll_group *group;
-	struct spdk_nvmf_transport_pg_cache_buf *buf;
+	struct spdk_nvmf_transport_pg_cache_buf **bufs;
+	uint32_t i;
 
 	group = transport->ops->poll_group_create(transport);
 	if (!group) {
@@ -364,17 +365,34 @@ nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport)
 	STAILQ_INIT(&group->buf_cache);
 
 	if (transport->opts.buf_cache_size) {
-		group->buf_cache_count = 0;
 		group->buf_cache_size = transport->opts.buf_cache_size;
-		while (group->buf_cache_count < group->buf_cache_size) {
-			buf = (struct spdk_nvmf_transport_pg_cache_buf *)spdk_mempool_get(transport->data_buf_pool);
-			if (!buf) {
-				SPDK_NOTICELOG("Unable to reserve the full number of buffers for the pg buffer cache.\n");
-				break;
-			}
-			STAILQ_INSERT_HEAD(&group->buf_cache, buf, link);
-			group->buf_cache_count++;
+		bufs = calloc(group->buf_cache_size, sizeof(struct spdk_nvmf_transport_pg_cache_buf *));
+
+		if (!bufs) {
+			SPDK_ERRLOG("Memory allocation failed, can't reserve buffers for the pg buffer cache\n");
+			return group;
 		}
+
+		if (spdk_mempool_get_bulk(transport->data_buf_pool, (void **)bufs, group->buf_cache_size)) {
+			group->buf_cache_size = (uint32_t)spdk_mempool_count(transport->data_buf_pool);
+			SPDK_NOTICELOG("Unable to reserve the full number of buffers for the pg buffer cache. "
+				       "Decrease the number of cached buffers from %u to %u\n",
+				       transport->opts.buf_cache_size, group->buf_cache_size);
+			/* Sanity check */
+			assert(group->buf_cache_size <= transport->opts.buf_cache_size);
+			/* Try again with less number of buffers */
+			if (spdk_mempool_get_bulk(transport->data_buf_pool, (void **)bufs, group->buf_cache_size)) {
+				SPDK_NOTICELOG("Failed to reserve %u buffers\n", group->buf_cache_size);
+				group->buf_cache_size = 0;
+			}
+		}
+
+		for (i = 0; i < group->buf_cache_size; i++) {
+			STAILQ_INSERT_HEAD(&group->buf_cache, bufs[i], link);
+		}
+		group->buf_cache_count = group->buf_cache_size;
+
+		free(bufs);
 	}
 	return group;
 }
