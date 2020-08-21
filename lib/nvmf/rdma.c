@@ -2323,7 +2323,7 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		return NULL;
 	}
 
-	min_shared_buffers = spdk_thread_get_count() * opts->buf_cache_size;
+	min_shared_buffers = spdk_env_get_core_count() * opts->buf_cache_size;
 	if (min_shared_buffers > opts->num_shared_buffers) {
 		SPDK_ERRLOG("There are not enough buffers to satisfy"
 			    "per-poll group caches for each thread. (%" PRIu32 ")"
