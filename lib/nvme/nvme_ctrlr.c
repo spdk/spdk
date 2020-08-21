@@ -1194,7 +1194,7 @@ nvme_ctrlr_abort_queued_aborts(struct spdk_nvme_ctrlr *ctrlr)
 int
 spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 {
-	int rc = 0;
+	int rc = 0, rc_tmp = 0;
 	struct spdk_nvme_qpair	*qpair;
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
@@ -1226,9 +1226,9 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 
 	ctrlr->adminq->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_LOCAL;
 	nvme_transport_ctrlr_disconnect_qpair(ctrlr, ctrlr->adminq);
-	if (nvme_transport_ctrlr_connect_qpair(ctrlr, ctrlr->adminq) != 0) {
+	rc = nvme_transport_ctrlr_connect_qpair(ctrlr, ctrlr->adminq);
+	if (rc != 0) {
 		SPDK_ERRLOG("Controller reinitialization failed.\n");
-		rc = -1;
 		goto out;
 	}
 
@@ -1257,9 +1257,10 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	if (rc == 0 && ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
 		/* Reinitialize qpairs */
 		TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
-			if (nvme_transport_ctrlr_connect_qpair(ctrlr, qpair) != 0) {
+			rc_tmp = nvme_transport_ctrlr_connect_qpair(ctrlr, qpair);
+			if (rc_tmp != 0) {
+				rc = rc_tmp;
 				qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_LOCAL;
-				rc = -1;
 				continue;
 			}
 		}
