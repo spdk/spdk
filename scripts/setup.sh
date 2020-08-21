@@ -198,6 +198,22 @@ function collect_devices() {
 	done < <(grep -E "$ids" "$rootdir/include/spdk/pci_ids.h")
 }
 
+function collect_driver() {
+	local bdf=$1
+	local override_driver=$2
+	local drivers driver
+
+	[[ -e /sys/bus/pci/devices/$bdf/modalias ]] || return 1
+	if drivers=($(modprobe -R "$(< "/sys/bus/pci/devices/$bdf/modalias")")); then
+		# Pick first entry in case multiple aliases are bound to a driver.
+		driver=$(readlink -f "/sys/module/${drivers[0]}/drivers/pci:"*)
+		driver=${driver##*/}
+	else
+		driver=$override_driver
+	fi 2> /dev/null
+	echo "$driver"
+}
+
 function configure_linux_pci() {
 	local driver_path=""
 	driver_name=""
@@ -455,17 +471,14 @@ function configure_linux() {
 
 function reset_linux_pci() {
 	# NVMe
-	set +e
-	check_for_driver nvme
-	driver_loaded=$?
-	set -e
 	for bdf in ${pci_bus_cache["0x010802"]}; do
 		if ! pci_can_use $bdf; then
 			pci_dev_echo "$bdf" "Skipping un-whitelisted NVMe controller $blkname"
 			continue
 		fi
-		if [ $driver_loaded -ne 0 ]; then
-			linux_bind_driver "$bdf" nvme
+		driver=$(collect_driver "$bdf")
+		if ! check_for_driver "$driver"; then
+			linux_bind_driver "$bdf" "$driver"
 		else
 			linux_unbind_driver "$bdf"
 		fi
@@ -477,18 +490,15 @@ function reset_linux_pci() {
 	grep "PCI_DEVICE_ID_INTEL_IOAT" $rootdir/include/spdk/pci_ids.h \
 		| awk -F"x" '{print $2}' > $TMP
 
-	set +e
-	check_for_driver ioatdma
-	driver_loaded=$?
-	set -e
 	while IFS= read -r dev_id; do
 		for bdf in ${pci_bus_cache["0x8086:0x$dev_id"]}; do
 			if ! pci_can_use $bdf; then
 				pci_dev_echo "$bdf" "Skipping un-whitelisted I/OAT device"
 				continue
 			fi
-			if [ $driver_loaded -ne 0 ]; then
-				linux_bind_driver "$bdf" ioatdma
+			driver=$(collect_driver "$bdf")
+			if ! check_for_driver "$driver"; then
+				linux_bind_driver "$bdf" "$driver"
 			else
 				linux_unbind_driver "$bdf"
 			fi
@@ -501,18 +511,15 @@ function reset_linux_pci() {
 	#collect all the device_id info of idxd devices.
 	grep "PCI_DEVICE_ID_INTEL_IDXD" $rootdir/include/spdk/pci_ids.h \
 		| awk -F"x" '{print $2}' > $TMP
-	set +e
-	check_for_driver idxd
-	driver_loaded=$?
-	set -e
 	while IFS= read -r dev_id; do
 		for bdf in ${pci_bus_cache["0x8086:0x$dev_id"]}; do
 			if ! pci_can_use $bdf; then
 				pci_dev_echo "$bdf" "Skipping un-whitelisted IDXD device"
 				continue
 			fi
-			if [ $driver_loaded -ne 0 ]; then
-				linux_bind_driver "$bdf" idxd
+			driver=$(collect_driver "$bdf")
+			if ! check_for_driver "$driver"; then
+				linux_bind_driver "$bdf" "$driver"
 			else
 				linux_unbind_driver "$bdf"
 			fi
@@ -525,7 +532,6 @@ function reset_linux_pci() {
 	#collect all the device_id info of virtio devices.
 	grep "PCI_DEVICE_ID_VIRTIO" $rootdir/include/spdk/pci_ids.h \
 		| awk -F"x" '{print $2}' > $TMP
-
 	# TODO: check if virtio-pci is loaded first and just unbind if it is not loaded
 	# Requires some more investigation - for example, some kernels do not seem to have
 	#  virtio-pci but just virtio_scsi instead.  Also need to make sure we get the
@@ -537,7 +543,10 @@ function reset_linux_pci() {
 				pci_dev_echo "$bdf" "Skipping un-whitelisted Virtio device at"
 				continue
 			fi
-			linux_bind_driver "$bdf" virtio-pci
+			driver=$(collect_driver "$bdf" virtio-pci)
+			if ! check_for_driver "$driver"; then
+				linux_bind_driver "$bdf" "$driver"
+			fi
 		done
 	done < $TMP
 	rm $TMP
@@ -548,20 +557,15 @@ function reset_linux_pci() {
 	grep "PCI_DEVICE_ID_INTEL_VMD" $rootdir/include/spdk/pci_ids.h \
 		| awk -F"x" '{print $2}' > $TMP
 
-	set +e
-	check_for_driver vmd
-	driver_loaded=$?
-	set -e
 	while IFS= read -r dev_id; do
 		for bdf in ${pci_bus_cache["0x8086:0x$dev_id"]}; do
 			if ! pci_can_use $bdf; then
 				echo "Skipping un-whitelisted VMD device at $bdf"
 				continue
 			fi
-			if [ $driver_loaded -ne 0 ]; then
-				linux_bind_driver "$bdf" vmd
-			else
-				linux_unbind_driver "$bdf"
+			driver=$(collect_driver "$bdf")
+			if ! check_for_driver "$driver"; then
+				linux_bind_driver "$bdf" "$driver"
 			fi
 		done
 	done < $TMP
