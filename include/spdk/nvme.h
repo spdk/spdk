@@ -1994,6 +1994,27 @@ const struct spdk_nvme_transport_id *spdk_nvme_ctrlr_get_transport_id(
 	struct spdk_nvme_ctrlr *ctrlr);
 
 /**
+ * \brief Alloc NVMe I/O queue identifier.
+ *
+ * This function is only needed for the non-standard case of allocating queues using the raw
+ * command interface. In most cases \ref spdk_nvme_ctrlr_alloc_io_qpair should be sufficient.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ * \return qid on success, -1 on failure.
+ */
+int32_t spdk_nvme_ctrlr_alloc_qid(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
+ * \brief Free NVMe I/O queue identifier.
+ *
+ * This function must only be called with qids previously allocated with \ref spdk_nvme_ctrlr_alloc_qid.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ * \param qid NVMe Queue Identifier.
+ */
+void spdk_nvme_ctrlr_free_qid(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid);
+
+/**
  * Opaque handle for a poll group. A poll group is a collection of spdk_nvme_qpair
  * objects that are polled for completions as a unit.
  *

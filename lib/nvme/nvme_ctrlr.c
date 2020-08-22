@@ -323,7 +323,7 @@ static struct spdk_nvme_qpair *
 nvme_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 			   const struct spdk_nvme_io_qpair_opts *opts)
 {
-	uint32_t				qid;
+	int32_t					qid;
 	struct spdk_nvme_qpair			*qpair;
 	union spdk_nvme_cc_register		cc;
 
@@ -353,12 +353,8 @@ nvme_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 		return NULL;
 	}
 
-	/*
-	 * Get the first available I/O queue ID.
-	 */
-	qid = spdk_bit_array_find_first_set(ctrlr->free_io_qids, 1);
-	if (qid > ctrlr->opts.num_io_queues) {
-		SPDK_ERRLOG("No free I/O queue IDs\n");
+	qid = spdk_nvme_ctrlr_alloc_qid(ctrlr);
+	if (qid < 0) {
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return NULL;
 	}
@@ -366,11 +362,11 @@ nvme_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	qpair = nvme_transport_ctrlr_create_io_qpair(ctrlr, qid, opts);
 	if (qpair == NULL) {
 		SPDK_ERRLOG("nvme_transport_ctrlr_create_io_qpair() failed\n");
+		spdk_nvme_ctrlr_free_qid(ctrlr, qid);
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return NULL;
 	}
 
-	spdk_bit_array_clear(ctrlr->free_io_qids, qid);
 	TAILQ_INSERT_TAIL(&ctrlr->active_io_qpairs, qpair, tailq);
 
 	nvme_ctrlr_proc_add_io_qpair(qpair);
@@ -584,7 +580,7 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 	nvme_ctrlr_proc_remove_io_qpair(qpair);
 
 	TAILQ_REMOVE(&ctrlr->active_io_qpairs, qpair, tailq);
-	spdk_bit_array_set(ctrlr->free_io_qids, qpair->id);
+	spdk_nvme_ctrlr_free_qid(ctrlr, qpair->id);
 
 	if (nvme_transport_ctrlr_delete_io_qpair(ctrlr, qpair)) {
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
@@ -1811,11 +1807,11 @@ nvme_ctrlr_set_num_queues_done(void *arg, const struct spdk_nvme_cpl *cpl)
 		return;
 	}
 
-	/* Initialize list of free I/O queue IDs. QID 0 is the admin queue. */
-	spdk_bit_array_clear(ctrlr->free_io_qids, 0);
+	/* Initialize list of free I/O queue IDs. QID 0 is the admin queue (implicitly allocated). */
 	for (i = 1; i <= ctrlr->opts.num_io_queues; i++) {
-		spdk_bit_array_set(ctrlr->free_io_qids, i);
+		spdk_nvme_ctrlr_free_qid(ctrlr, i);
 	}
+
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CONSTRUCT_NS,
 			     ctrlr->opts.admin_timeout_ms);
 }
@@ -3580,6 +3576,34 @@ const struct spdk_nvme_transport_id *
 spdk_nvme_ctrlr_get_transport_id(struct spdk_nvme_ctrlr *ctrlr)
 {
 	return &ctrlr->trid;
+}
+
+int32_t
+spdk_nvme_ctrlr_alloc_qid(struct spdk_nvme_ctrlr *ctrlr)
+{
+	uint32_t qid;
+
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	qid = spdk_bit_array_find_first_set(ctrlr->free_io_qids, 1);
+	if (qid > ctrlr->opts.num_io_queues) {
+		SPDK_ERRLOG("No free I/O queue IDs\n");
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+		return -1;
+	}
+
+	spdk_bit_array_clear(ctrlr->free_io_qids, qid);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+	return qid;
+}
+
+void
+spdk_nvme_ctrlr_free_qid(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid)
+{
+	assert(qid <= ctrlr->opts.num_io_queues);
+
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	spdk_bit_array_set(ctrlr->free_io_qids, qid);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 }
 
 /* FIXME need to specify max number of iovs */
