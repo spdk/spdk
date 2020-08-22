@@ -494,19 +494,10 @@ static void
 _schedule_thread(void *arg1, void *arg2)
 {
 	struct spdk_lw_thread *lw_thread = arg1;
-	struct spdk_thread *thread;
-	struct spdk_cpuset *cpumask;
 	struct spdk_reactor *reactor;
 	uint32_t current_core;
 
 	current_core = spdk_env_get_current_core();
-
-	thread = spdk_thread_get_from_ctx(lw_thread);
-	cpumask = spdk_thread_get_cpumask(thread);
-	if (!spdk_cpuset_get_cpu(cpumask, current_core)) {
-		SPDK_ERRLOG("Thread was scheduled to the wrong core %d\n", current_core);
-		assert(false);
-	}
 
 	reactor = spdk_reactor_get(current_core);
 	assert(reactor != NULL);
