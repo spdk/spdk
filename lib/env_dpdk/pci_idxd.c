@@ -47,4 +47,4 @@ spdk_pci_idxd_get_driver(void)
 	return spdk_pci_get_driver("idxd");
 }
 
-SPDK_PCI_DRIVER_REGISTER("idxd", idxd_driver_id, SPDK_PCI_DRIVER_NEED_MAPPING);
+SPDK_PCI_DRIVER_REGISTER(idxd, idxd_driver_id, SPDK_PCI_DRIVER_NEED_MAPPING);

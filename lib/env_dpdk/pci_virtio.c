@@ -49,5 +49,5 @@ spdk_pci_virtio_get_driver(void)
 	return spdk_pci_get_driver("virtio");
 }
 
-SPDK_PCI_DRIVER_REGISTER("virtio", virtio_pci_driver_id,
+SPDK_PCI_DRIVER_REGISTER(virtio, virtio_pci_driver_id,
 			 SPDK_PCI_DRIVER_NEED_MAPPING | SPDK_PCI_DRIVER_WC_ACTIVATE);

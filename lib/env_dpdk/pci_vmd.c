@@ -46,5 +46,5 @@ spdk_pci_vmd_get_driver(void)
 	return spdk_pci_get_driver("vmd");
 }
 
-SPDK_PCI_DRIVER_REGISTER("vmd", vmd_pci_driver_id,
+SPDK_PCI_DRIVER_REGISTER(vmd, vmd_pci_driver_id,
 			 SPDK_PCI_DRIVER_NEED_MAPPING | SPDK_PCI_DRIVER_WC_ACTIVATE);

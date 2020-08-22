@@ -699,17 +699,17 @@ struct spdk_pci_device {
 
 typedef int (*spdk_pci_enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev);
 
-#define SPDK_PCI_DEVICE(vend, dev)	        \
+#define SPDK_PCI_DEVICE(vend, dev)          \
 	.class_id = SPDK_PCI_CLASS_ANY_ID,      \
 	.vendor_id = (vend),                    \
 	.device_id = (dev),                     \
 	.subvendor_id = SPDK_PCI_ANY_ID,        \
 	.subdevice_id = SPDK_PCI_ANY_ID
 
-#define SPDK_PCI_DRIVER_REGISTER(name, id_table, flags)			\
-__attribute__((constructor)) static void pci_drv ## _register(void)	\
-{									\
-	spdk_pci_driver_register(name, id_table, flags);		\
+#define SPDK_PCI_DRIVER_REGISTER(name, id_table, flags) \
+__attribute__((constructor)) static void _spdk_pci_driver_register_##name(void) \
+{ \
+	spdk_pci_driver_register(#name, id_table, flags); \
 }
 
 /**

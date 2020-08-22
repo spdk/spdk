@@ -2555,7 +2555,7 @@ static struct spdk_pci_id nvme_pci_driver_id[] = {
 	{ .vendor_id = 0, /* sentinel */ },
 };
 
-SPDK_PCI_DRIVER_REGISTER("nvme", nvme_pci_driver_id,
+SPDK_PCI_DRIVER_REGISTER(nvme, nvme_pci_driver_id,
 			 SPDK_PCI_DRIVER_NEED_MAPPING | SPDK_PCI_DRIVER_WC_ACTIVATE);
 
 const struct spdk_nvme_transport_ops pcie_ops = {
