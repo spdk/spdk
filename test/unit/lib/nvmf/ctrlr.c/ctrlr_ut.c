@@ -70,16 +70,6 @@ DEFINE_STUB(spdk_nvmf_subsystem_get_mn,
 	    (const struct spdk_nvmf_subsystem *subsystem),
 	    subsystem_default_mn);
 
-DEFINE_STUB(spdk_nvmf_subsystem_get_first_ns,
-	    struct spdk_nvmf_ns *,
-	    (struct spdk_nvmf_subsystem *subsystem),
-	    NULL);
-
-DEFINE_STUB(spdk_nvmf_subsystem_get_next_ns,
-	    struct spdk_nvmf_ns *,
-	    (struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ns *prev_ns),
-	    NULL);
-
 DEFINE_STUB(spdk_nvmf_subsystem_host_allowed,
 	    bool,
 	    (struct spdk_nvmf_subsystem *subsystem, const char *hostnqn),
@@ -211,6 +201,33 @@ nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *n
 	nsdata->nlbaf = 0;
 	nsdata->flbas.format = 0;
 	nsdata->lbaf[0].lbads = spdk_u32log2(512);
+}
+
+struct spdk_nvmf_ns *
+spdk_nvmf_subsystem_get_first_ns(struct spdk_nvmf_subsystem *subsystem)
+{
+	SPDK_CU_ASSERT_FATAL(subsystem->ns != NULL);
+	return subsystem->ns[0];
+}
+
+struct spdk_nvmf_ns *
+spdk_nvmf_subsystem_get_next_ns(struct spdk_nvmf_subsystem *subsystem,
+				struct spdk_nvmf_ns *prev_ns)
+{
+	uint32_t nsid;
+
+	SPDK_CU_ASSERT_FATAL(subsystem->ns != NULL);
+	nsid = prev_ns->nsid;
+
+	if (nsid >= subsystem->max_nsid) {
+		return NULL;
+	}
+	for (nsid = nsid + 1; nsid <= subsystem->max_nsid; nsid++) {
+		if (subsystem->ns[nsid - 1]) {
+			return subsystem->ns[nsid - 1];
+		}
+	}
+	return NULL;
 }
 
 static void
@@ -1685,6 +1702,67 @@ test_multi_async_event_reqs(void)
 	TAILQ_REMOVE(&qpair.outstanding, &req[1], link);
 }
 
+#define UT_ANA_DESC_SIZE (sizeof(struct spdk_nvme_ana_group_descriptor) + sizeof(uint32_t))
+#define UT_ANA_LOG_PAGE_SIZE (sizeof(struct spdk_nvme_ana_page) + 3 * UT_ANA_DESC_SIZE)
+static void
+test_get_ana_log_page(void)
+{
+	struct spdk_nvmf_subsystem subsystem = {};
+	struct spdk_nvmf_ctrlr ctrlr = {};
+	struct spdk_nvmf_subsystem_listener listener = {};
+	struct spdk_nvmf_ns ns[3];
+	struct spdk_nvmf_ns *ns_arr[3] = {&ns[0], &ns[1], &ns[2]};
+	uint64_t offset;
+	uint32_t length;
+	int i;
+	char expected_page[UT_ANA_LOG_PAGE_SIZE] = {0};
+	char actual_page[UT_ANA_LOG_PAGE_SIZE] = {0};
+	struct spdk_nvme_ana_page *ana_hdr;
+	char _ana_desc[UT_ANA_DESC_SIZE];
+	struct spdk_nvme_ana_group_descriptor *ana_desc;
+
+	subsystem.ns = ns_arr;
+	subsystem.max_nsid = 3;
+	ctrlr.subsys = &subsystem;
+	ctrlr.listener = &listener;
+	listener.ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+
+	for (i = 0; i < 3; i++) {
+		ns_arr[i]->nsid = i + 1;
+	}
+
+	/* create expected page */
+	ana_hdr = (void *)&expected_page[0];
+	ana_hdr->num_ana_group_desc = 3;
+	ana_hdr->change_count = 0;
+
+	/* descriptor may be unaligned. So create data and then copy it to the location. */
+	ana_desc = (void *)_ana_desc;
+	offset = sizeof(struct spdk_nvme_ana_page);
+
+	for (i = 0; i < 3; i++) {
+		memset(ana_desc, 0, UT_ANA_DESC_SIZE);
+		ana_desc->ana_group_id = ns_arr[i]->nsid;
+		ana_desc->num_of_nsid = 1;
+		ana_desc->change_count = 0;
+		ana_desc->ana_state = ctrlr.listener->ana_state;
+		ana_desc->nsid[0] = ns_arr[i]->nsid;
+		memcpy(&expected_page[offset], ana_desc, UT_ANA_DESC_SIZE);
+		offset += UT_ANA_DESC_SIZE;
+	}
+
+	/* read entire actual log page */
+	offset = 0;
+	while (offset < UT_ANA_LOG_PAGE_SIZE) {
+		length = spdk_min(16, UT_ANA_LOG_PAGE_SIZE - offset);
+		nvmf_get_ana_log_page(&ctrlr, &actual_page[offset], offset, length);
+		offset += length;
+	}
+
+	/* compare expected page and actual page */
+	CU_ASSERT(memcmp(expected_page, actual_page, UT_ANA_LOG_PAGE_SIZE) == 0);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1710,6 +1788,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_custom_admin_cmd);
 	CU_ADD_TEST(suite, test_fused_compare_and_write);
 	CU_ADD_TEST(suite, test_multi_async_event_reqs);
+	CU_ADD_TEST(suite, test_get_ana_log_page);
 
 	allocate_threads(1);
 	set_thread(0);
