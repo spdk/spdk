@@ -715,7 +715,8 @@ union spdk_nvme_feat_async_event_configuration {
 		uint32_t ns_attr_notice		: 1;
 		uint32_t fw_activation_notice	: 1;
 		uint32_t telemetry_log_notice	: 1;
-		uint32_t reserved		: 21;
+		uint32_t ana_change_notice	: 1;
+		uint32_t reserved		: 20;
 	} bits;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_async_event_configuration) == 4, "Incorrect size");
@@ -1270,6 +1271,9 @@ enum spdk_nvme_media_error_status_code {
  */
 enum spdk_nvme_path_status_code {
 	SPDK_NVME_SC_INTERNAL_PATH_ERROR		= 0x00,
+	SPDK_NVME_SC_ASYMMETRIC_ACCESS_PERSISTENT_LOSS	= 0x01,
+	SPDK_NVME_SC_ASYMMETRIC_ACCESS_INACCESSIBLE	= 0x02,
+	SPDK_NVME_SC_ASYMMETRIC_ACCESS_TRANSITION	= 0x03,
 
 	SPDK_NVME_SC_CONTROLLER_PATH_ERROR		= 0x60,
 
@@ -1651,7 +1655,12 @@ struct __attribute__((packed)) __attribute__((aligned)) spdk_nvme_ctrlr_data {
 		/** Supports sending Firmware Activation Notices. */
 		uint32_t	fw_activation_notices : 1;
 
-		uint32_t	reserved2 : 22;
+		uint32_t	reserved2 : 1;
+
+		/** Supports Asymmetric Namespace Access Change Notices. */
+		uint32_t	ana_change_notices : 1;
+
+		uint32_t	reserved3 : 20;
 	} oaes;
 
 	/** controller attributes */
@@ -1855,7 +1864,10 @@ struct __attribute__((packed)) __attribute__((aligned)) spdk_nvme_ctrlr_data {
 	} sanicap;
 
 	/* bytes 332-342 */
-	uint8_t			reserved3[11];
+	uint8_t			reserved3[10];
+
+	/** ANA transition time */
+	uint8_t			anatt;
 
 	/* bytes 343: Asymmetric namespace access capabilities */
 	struct {
@@ -2711,8 +2723,10 @@ enum spdk_nvme_async_event_info_notice {
 	SPDK_NVME_ASYNC_EVENT_FW_ACTIVATION_START	= 0x1,
 	/* Telemetry Log Changed */
 	SPDK_NVME_ASYNC_EVENT_TELEMETRY_LOG_CHANGED	= 0x2,
+	/* Asymmetric Namespace Access Change */
+	SPDK_NVME_ASYNC_EVENT_ANA_CHANGE		= 0x3,
 
-	/* 0x3 - 0xFF Reserved */
+	/* 0x4 - 0xFF Reserved */
 };
 
 /**
