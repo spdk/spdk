@@ -57,6 +57,10 @@ by default. Not used if "mode" is set to "spdk".
 
 Number of shared buffers to use when creating transport layer.
 
+### dif_insert_strip
+
+Boolean. If set to true - enable "dif_insert_or_strip" option for TCP transport layer.
+
 ## Initiator
 
 Describes initiator arguments. There can be more than one initiator section in the configuration file.

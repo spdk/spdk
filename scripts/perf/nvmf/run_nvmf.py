@@ -560,7 +560,7 @@ class SPDKTarget(Target):
     def __init__(self, name, username, password, mode, nic_ips, transport="rdma",
                  null_block_devices=0, null_block_dif_type=0, sar_settings=None, pcm_settings=None,
                  bandwidth_settings=None, dpdk_settings=None, num_shared_buffers=4096,
-                 num_cores=1, **kwargs):
+                 num_cores=1, dif_insert_strip=False, **kwargs):
 
         super(SPDKTarget, self).__init__(name, username, password, mode, nic_ips, transport,
                                          null_block_devices, sar_settings, pcm_settings, bandwidth_settings,
@@ -568,13 +568,16 @@ class SPDKTarget(Target):
         self.num_cores = num_cores
         self.num_shared_buffers = num_shared_buffers
         self.null_block_dif_type = null_block_dif_type
+        self.dif_insert_strip = dif_insert_strip
 
     def spdk_tgt_configure(self):
         self.log_print("Configuring SPDK NVMeOF target via RPC")
         numa_list = get_used_numa_nodes()
 
         # Create RDMA transport layer
-        rpc.nvmf.nvmf_create_transport(self.client, trtype=self.transport, num_shared_buffers=self.num_shared_buffers)
+        rpc.nvmf.nvmf_create_transport(self.client, trtype=self.transport,
+                                       num_shared_buffers=self.num_shared_buffers,
+                                       dif_insert_or_strip=self.dif_insert_strip)
         self.log_print("SPDK NVMeOF transport layer:")
         rpc.client.print_dict(rpc.nvmf.nvmf_get_transports(self.client))
 
