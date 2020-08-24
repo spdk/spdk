@@ -1132,8 +1132,32 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	}
 	printf("Per-Namespace SMART Log:               %s\n",
 	       cdata->lpa.ns_smart ? "Yes" : "No");
-	printf("Asymmetric Namespace Access Log Page:  %s\n",
-	       cdata->cmic.ana_reporting ? "Supported" : "Not Supported");
+	if (cdata->cmic.ana_reporting == 0) {
+		printf("Asymmetric Namespace Access Log Page:  Not Supported\n");
+	} else {
+		printf("Asymmetric Namespace Access Log Page:  Supported\n");
+		printf("ANA Transition Time                 :  %u sec\n", cdata->anatt);
+		printf("\n");
+		printf("Aymmetric Namespace Access Capabilities\n");
+		printf("  ANA Optimized State               : %s\n",
+		       cdata->anacap.ana_optimized_state ? "Supported" : "Not Supported");
+		printf("  ANA Non-Optimized State           : %s\n",
+		       cdata->anacap.ana_non_optimized_state ? "Supported" : "Not Supported");
+		printf("  ANA Inaccessible State            : %s\n",
+		       cdata->anacap.ana_inaccessible_state ? "Supported" : "Not Supported");
+		printf("  ANA Persistent Loss State         : %s\n",
+		       cdata->anacap.ana_persistent_loss_state ? "Supported" : "Not Supported");
+		printf("  ANA Change State                  : %s\n",
+		       cdata->anacap.ana_change_state ? "Supported" : "Not Supported");
+		printf("  ANAGRPID is not changed           : %s\n",
+		       cdata->anacap.no_change_anagrpid ? "Yes" : "No");
+		printf("  Non-Zero ANAGRPID for NS Mgmt Cmd : %s\n",
+		       cdata->anacap.non_zero_anagrpid ? "Supported" : "Not Supported");
+		printf("\n");
+		printf("ANA Group Identifier Maximum        : %u\n", cdata->anagrpmax);
+		printf("Number of ANA Group Identifiers     : %u\n", cdata->nanagrpid);
+		printf("Max Number of Allowed Namespaces    : %u\n", cdata->mnan);
+	}
 	printf("Command Effects Log Page:              %s\n",
 	       cdata->lpa.celp ? "Supported" : "Not Supported");
 	printf("Get Log Page Extended Data:            %s\n",
