@@ -59,6 +59,8 @@
  */
 #define FW_VERSION SPDK_VERSION_MAJOR_STRING SPDK_VERSION_MINOR_STRING SPDK_VERSION_PATCH_STRING
 
+#define ANA_TRANSITION_TIME_IN_SEC 10
+
 /*
  * Support for custom admin command handlers
  */
@@ -2070,6 +2072,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->oncs.write_zeroes = nvmf_ctrlr_write_zeroes_supported(ctrlr);
 		cdata->oncs.reservations = 1;
 		if (subsystem->ana_reporting) {
+			cdata->anatt = ANA_TRANSITION_TIME_IN_SEC;
 			cdata->anacap.ana_optimized_state = 1;
 			/* ANAGRPID does not change while namespace is attached to controller */
 			cdata->anacap.no_change_anagrpid = 1;
