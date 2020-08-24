@@ -1335,6 +1335,17 @@ function opal_revert_cleanup() {
 	killprocess $spdk_tgt_pid
 }
 
+function pap() {
+	while read -r file; do
+		cat <<- FILE
+			--- $file ---
+			$(<"$file")
+			--- $file ---
+		FILE
+		rm -f "$file"
+	done < <(find "$@" -type f | sort -u)
+}
+
 # Define temp storage for all the tests. Look for 2GB at minimum
 set_test_storage "${TEST_MIN_STORAGE_SIZE:-$((1 << 31))}"
 
