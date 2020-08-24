@@ -826,7 +826,18 @@ _nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *r
 
 	nvme_qpair_check_enabled(qpair);
 
-	if (nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTED) {
+	if (spdk_unlikely(nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTED ||
+			  nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING ||
+			  nvme_qpair_get_state(qpair) == NVME_QPAIR_DESTROYING)) {
+		TAILQ_FOREACH_SAFE(child_req, &req->children, child_tailq, tmp) {
+			nvme_request_remove_child(req, child_req);
+			nvme_request_free_children(child_req);
+			nvme_free_request(child_req);
+		}
+		if (req->parent != NULL) {
+			nvme_request_remove_child(req->parent, req);
+		}
+		nvme_free_request(req);
 		return -ENXIO;
 	}
 
@@ -945,16 +956,6 @@ int
 nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
 	int rc;
-
-	/* This prevents us from entering an infinite loop when freeing queued I/O in disconnect. */
-	if (spdk_unlikely(nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING ||
-			  nvme_qpair_get_state(qpair) == NVME_QPAIR_DESTROYING)) {
-		if (req->parent != NULL) {
-			nvme_request_remove_child(req->parent, req);
-		}
-		nvme_free_request(req);
-		return -ENXIO;
-	}
 
 	if (spdk_unlikely(!STAILQ_EMPTY(&qpair->queued_req) && req->num_children == 0)) {
 		/*

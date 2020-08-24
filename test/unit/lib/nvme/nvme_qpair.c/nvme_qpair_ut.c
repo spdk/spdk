@@ -496,15 +496,10 @@ test_nvme_qpair_add_cmd_error_injection(void)
 	cleanup_submit_request_test(&qpair);
 }
 
-static void
-test_nvme_qpair_submit_request(void)
+static struct nvme_request *
+allocate_request_tree(struct spdk_nvme_qpair *qpair)
 {
-	int				rc;
-	struct spdk_nvme_qpair		qpair = {};
-	struct spdk_nvme_ctrlr		ctrlr = {};
-	struct nvme_request		*req, *req1, *req2, *req3, *req2_1, *req2_2, *req2_3;
-
-	prepare_submit_request_test(&qpair, &ctrlr);
+	struct nvme_request	*req, *req1, *req2, *req3, *req2_1, *req2_2, *req2_3;
 
 	/*
 	 *  Build a request chain like the following:
@@ -518,48 +513,68 @@ test_nvme_qpair_submit_request(void)
 	 *     |       |       |
 	 *   req2_1  req2_2  req2_3
 	 */
-	req = nvme_allocate_request_null(&qpair, NULL, NULL);
+	req = nvme_allocate_request_null(qpair, NULL, NULL);
 	CU_ASSERT(req != NULL);
 	TAILQ_INIT(&req->children);
 
-	req1 = nvme_allocate_request_null(&qpair, NULL, NULL);
+	req1 = nvme_allocate_request_null(qpair, NULL, NULL);
 	CU_ASSERT(req1 != NULL);
 	req->num_children++;
 	TAILQ_INSERT_TAIL(&req->children, req1, child_tailq);
 	req1->parent = req;
 
-	req2 = nvme_allocate_request_null(&qpair, NULL, NULL);
+	req2 = nvme_allocate_request_null(qpair, NULL, NULL);
 	CU_ASSERT(req2 != NULL);
 	TAILQ_INIT(&req2->children);
 	req->num_children++;
 	TAILQ_INSERT_TAIL(&req->children, req2, child_tailq);
 	req2->parent = req;
 
-	req3 = nvme_allocate_request_null(&qpair, NULL, NULL);
+	req3 = nvme_allocate_request_null(qpair, NULL, NULL);
 	CU_ASSERT(req3 != NULL);
 	req->num_children++;
 	TAILQ_INSERT_TAIL(&req->children, req3, child_tailq);
 	req3->parent = req;
 
-	req2_1 = nvme_allocate_request_null(&qpair, NULL, NULL);
+	req2_1 = nvme_allocate_request_null(qpair, NULL, NULL);
 	CU_ASSERT(req2_1 != NULL);
 	req2->num_children++;
 	TAILQ_INSERT_TAIL(&req2->children, req2_1, child_tailq);
 	req2_1->parent = req2;
 
-	req2_2 = nvme_allocate_request_null(&qpair, NULL, NULL);
+	req2_2 = nvme_allocate_request_null(qpair, NULL, NULL);
 	CU_ASSERT(req2_2 != NULL);
 	req2->num_children++;
 	TAILQ_INSERT_TAIL(&req2->children, req2_2, child_tailq);
 	req2_2->parent = req2;
 
-	req2_3 = nvme_allocate_request_null(&qpair, NULL, NULL);
+	req2_3 = nvme_allocate_request_null(qpair, NULL, NULL);
 	CU_ASSERT(req2_3 != NULL);
 	req2->num_children++;
 	TAILQ_INSERT_TAIL(&req2->children, req2_3, child_tailq);
 	req2_3->parent = req2;
 
+	return req;
+}
+
+static void
+test_nvme_qpair_submit_request(void)
+{
+	int				rc;
+	struct spdk_nvme_qpair		qpair = {};
+	struct spdk_nvme_ctrlr		ctrlr = {};
+	struct nvme_request		*req;
+
+	prepare_submit_request_test(&qpair, &ctrlr);
+
+	req = allocate_request_tree(&qpair);
 	ctrlr.is_failed = true;
+	rc = nvme_qpair_submit_request(&qpair, req);
+	SPDK_CU_ASSERT_FATAL(rc == -ENXIO);
+
+	req = allocate_request_tree(&qpair);
+	ctrlr.is_failed = false;
+	qpair.state = NVME_QPAIR_DISCONNECTING;
 	rc = nvme_qpair_submit_request(&qpair, req);
 	SPDK_CU_ASSERT_FATAL(rc == -ENXIO);
 
