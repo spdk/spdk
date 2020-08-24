@@ -357,6 +357,10 @@ class Initiator(Server):
 
         return subsystems
 
+    def gen_fio_filename_conf(self, *args, **kwargs):
+        # Logic implemented in SPDKInitiator and KernelInitiator classes
+        pass
+
     def gen_fio_config(self, rw, rwmixread, block_size, io_depth, subsys_no, num_jobs=None, ramp_time=0, run_time=10):
         fio_conf_template = """
 [global]
