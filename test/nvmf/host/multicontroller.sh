@@ -34,7 +34,7 @@ $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPOR
 $rootdir/test/bdev/bdevperf/bdevperf -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 1 -f &> $testdir/try.txt &
 bdevperf_pid=$!
 
-trap 'process_shm --id $NVMF_APP_SHM_ID; rm -f $testdir/try.txt; killprocess $bdevperf_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
+trap 'process_shm --id $NVMF_APP_SHM_ID; pap "$testdir/try.txt"; killprocess $bdevperf_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $bdevperf_pid $bdevperf_rpc_sock
 
 # Create a controller from the first IP/Port combination.
@@ -75,5 +75,5 @@ $rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 
 trap - SIGINT SIGTERM EXIT
 
-rm -f $testdir/try.txt
+pap "$testdir/try.txt"
 nvmftestfini
