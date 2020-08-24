@@ -1,5 +1,9 @@
 # Performance Reports {#performance_reports}
 
+## Release 20.07
+
+- [SPDK 20.07 Vhost Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_vhost_perf_report_2007.pdf)
+
 ## Release 20.04
 
 - [SPDK 20.04 NVMe-oF TCP Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_tcp_perf_report_2004.pdf)
