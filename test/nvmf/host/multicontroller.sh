@@ -43,7 +43,8 @@ $rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b NVMe0 -t $TEST_TRAN
 
 # wait for the first controller to show up.
 while ! $rpc_py -s $bdevperf_rpc_sock bdev_nvme_get_controllers | grep -c NVMe; do
-	pass
+	((++bdev_nvme_get_controllers_timeout <= 10))
+	sleep 1s
 done
 
 # try to attach to the second port with a different hostsvcid (this should fail).
