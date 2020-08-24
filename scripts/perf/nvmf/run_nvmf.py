@@ -558,7 +558,7 @@ class KernelTarget(Target):
 class SPDKTarget(Target):
 
     def __init__(self, name, username, password, mode, nic_ips, transport="rdma",
-                 null_block_devices=0, sar_settings=None, pcm_settings=None,
+                 null_block_devices=0, null_block_dif_type=0, sar_settings=None, pcm_settings=None,
                  bandwidth_settings=None, dpdk_settings=None, num_shared_buffers=4096,
                  num_cores=1, **kwargs):
 
@@ -567,6 +567,7 @@ class SPDKTarget(Target):
                                          dpdk_settings)
         self.num_cores = num_cores
         self.num_shared_buffers = num_shared_buffers
+        self.null_block_dif_type = null_block_dif_type
 
     def spdk_tgt_configure(self):
         self.log_print("Configuring SPDK NVMeOF target via RPC")
@@ -586,9 +587,16 @@ class SPDKTarget(Target):
         self.log_print("Done configuring SPDK NVMeOF Target")
 
     def spdk_tgt_add_nullblock(self, null_block_count):
+        md_size = 0
+        block_size = 4096
+        if self.null_block_dif_type != 0:
+            md_size = 128
+
         self.log_print("Adding null block bdevices to config via RPC")
         for i in range(null_block_count):
-            rpc.bdev.bdev_null_create(self.client, 102400, 4096, "Nvme{}n1".format(i))
+            self.log_print("Setting bdev protection to :%s" % self.null_block_dif_type)
+            rpc.bdev.bdev_null_create(self.client, 102400, block_size + md_size, "Nvme{}n1".format(i),
+                                      dif_type=self.null_block_dif_type, md_size=md_size)
         self.log_print("SPDK Bdevs configuration:")
         rpc.client.print_dict(rpc.bdev.bdev_get_bdevs(self.client))
 
