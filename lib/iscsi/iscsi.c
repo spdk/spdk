@@ -4582,6 +4582,17 @@ iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 				}
 			}
 
+			/* conn->is_logged_out must be checked after completing to process
+			 * logout request, i.e., before processing PDU header in this state
+			 * machine, otherwise logout response may not be sent to initiator
+			 * and initiator may get logout timeout.
+			 */
+			if (spdk_unlikely(conn->is_logged_out)) {
+				SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "pdu received after logout\n");
+				conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
+				break;
+			}
+
 			pdu->data_segment_len = ISCSI_ALIGN(DGET24(pdu->bhs.data_segment_len));
 
 			/* AHS */
@@ -4707,12 +4718,6 @@ iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 					conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
 					break;
 				}
-			}
-
-			if (conn->is_logged_out) {
-				SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "pdu received after logout\n");
-				conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
-				break;
 			}
 
 			if (!pdu->is_rejected) {
