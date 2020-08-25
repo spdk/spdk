@@ -180,6 +180,15 @@ test_cpuset_parse(void)
 	rc = spdk_cpuset_parse(core_mask, "[184467440737095516150]");
 	CU_ASSERT(rc < 0);
 
+	/* Test mask with cores 4-7 and 168-171 set. */
+	rc = spdk_cpuset_parse(core_mask, "0xF0000000000000000000000000000000000000000F0");
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(cpuset_check_range(core_mask, 0, 3, false) == 0);
+	CU_ASSERT(cpuset_check_range(core_mask, 4, 7, true) == 0);
+	CU_ASSERT(cpuset_check_range(core_mask, 8, 167, false) == 0);
+	CU_ASSERT(cpuset_check_range(core_mask, 168, 171, true) == 0);
+	CU_ASSERT(cpuset_check_range(core_mask, 172, SPDK_CPUSET_SIZE - 1, false) == 0);
+
 	spdk_cpuset_free(core_mask);
 }
 

@@ -293,7 +293,7 @@ parse_mask(const char *mask, struct spdk_cpuset *set, size_t len)
 			SPDK_ERRLOG("Invalid character in core mask '%s' (%c)\n", mask, c);
 			return -1;
 		}
-		for (j = 0; j < 4 && lcore < sizeof(set->cpus); j++, lcore++) {
+		for (j = 0; j < 4 && lcore < SPDK_CPUSET_SIZE; j++, lcore++) {
 			if ((1 << j) & val) {
 				spdk_cpuset_set_cpu(set, lcore, true);
 			}
