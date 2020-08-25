@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/bit_array.h"
+#include "spdk/bit_pool.h"
 #include "spdk/env.h"
 
 #include "spdk/likely.h"
@@ -360,4 +361,161 @@ spdk_bit_array_clear_mask(struct spdk_bit_array *ba)
 	for (i = 0; i < num_bits % CHAR_BIT; i++) {
 		spdk_bit_array_clear(ba, i + size * CHAR_BIT);
 	}
+}
+
+struct spdk_bit_pool {
+	struct spdk_bit_array	*array;
+	uint32_t		lowest_free_bit;
+	uint32_t		free_count;
+};
+
+struct spdk_bit_pool *
+spdk_bit_pool_create(uint32_t num_bits)
+{
+	struct spdk_bit_pool *pool = NULL;
+	struct spdk_bit_array *array;
+
+	array = spdk_bit_array_create(num_bits);
+	if (array == NULL) {
+		return NULL;
+	}
+
+	pool = calloc(1, sizeof(*pool));
+	if (pool == NULL) {
+		spdk_bit_array_free(&array);
+		return NULL;
+	}
+
+	pool->array = array;
+	pool->lowest_free_bit = 0;
+	pool->free_count = num_bits;
+
+	return pool;
+}
+
+struct spdk_bit_pool *
+spdk_bit_pool_create_from_array(struct spdk_bit_array *array)
+{
+	struct spdk_bit_pool *pool = NULL;
+
+	pool = calloc(1, sizeof(*pool));
+	if (pool == NULL) {
+		return NULL;
+	}
+
+	pool->array = array;
+	pool->lowest_free_bit = spdk_bit_array_find_first_clear(array, 0);
+	pool->free_count = spdk_bit_array_count_clear(array);
+
+	return pool;
+}
+
+void
+spdk_bit_pool_free(struct spdk_bit_pool **ppool)
+{
+	struct spdk_bit_pool *pool;
+
+	if (!ppool) {
+		return;
+	}
+
+	pool = *ppool;
+	*ppool = NULL;
+	if (pool != NULL) {
+		spdk_bit_array_free(&pool->array);
+		free(pool);
+	}
+}
+
+int
+spdk_bit_pool_resize(struct spdk_bit_pool **ppool, uint32_t num_bits)
+{
+	struct spdk_bit_pool *pool;
+	int rc;
+
+	assert(ppool != NULL);
+
+	pool = *ppool;
+	rc = spdk_bit_array_resize(&pool->array, num_bits);
+	if (rc) {
+		return rc;
+	}
+
+	pool->lowest_free_bit = spdk_bit_array_find_first_clear(pool->array, 0);
+	pool->free_count = spdk_bit_array_count_clear(pool->array);
+
+	return 0;
+}
+
+uint32_t
+spdk_bit_pool_capacity(const struct spdk_bit_pool *pool)
+{
+	return spdk_bit_array_capacity(pool->array);
+}
+
+bool
+spdk_bit_pool_is_allocated(const struct spdk_bit_pool *pool, uint32_t bit_index)
+{
+	return spdk_bit_array_get(pool->array, bit_index);
+}
+
+uint32_t
+spdk_bit_pool_allocate_bit(struct spdk_bit_pool *pool)
+{
+	uint32_t bit_index = pool->lowest_free_bit;
+
+	if (bit_index == UINT32_MAX) {
+		return UINT32_MAX;
+	}
+
+	spdk_bit_array_set(pool->array, bit_index);
+	pool->lowest_free_bit = spdk_bit_array_find_first_clear(pool->array, bit_index);
+	pool->free_count--;
+	return bit_index;
+}
+
+void
+spdk_bit_pool_free_bit(struct spdk_bit_pool *pool, uint32_t bit_index)
+{
+	assert(spdk_bit_array_get(pool->array, bit_index) == true);
+
+	spdk_bit_array_clear(pool->array, bit_index);
+	if (pool->lowest_free_bit > bit_index) {
+		pool->lowest_free_bit = bit_index;
+	}
+	pool->free_count++;
+}
+
+uint32_t
+spdk_bit_pool_count_allocated(const struct spdk_bit_pool *pool)
+{
+	return spdk_bit_array_capacity(pool->array) - pool->free_count;
+}
+
+uint32_t
+spdk_bit_pool_count_free(const struct spdk_bit_pool *pool)
+{
+	return pool->free_count;
+}
+
+void
+spdk_bit_pool_store_mask(const struct spdk_bit_pool *pool, void *mask)
+{
+	spdk_bit_array_store_mask(pool->array, mask);
+}
+
+void
+spdk_bit_pool_load_mask(struct spdk_bit_pool *pool, const void *mask)
+{
+	spdk_bit_array_load_mask(pool->array, mask);
+	pool->lowest_free_bit = spdk_bit_array_find_first_clear(pool->array, 0);
+	pool->free_count = spdk_bit_array_count_clear(pool->array);
+}
+
+void
+spdk_bit_pool_free_all_bits(struct spdk_bit_pool *pool)
+{
+	spdk_bit_array_clear_mask(pool->array);
+	pool->lowest_free_bit = 0;
+	pool->free_count = spdk_bit_array_capacity(pool->array);
 }

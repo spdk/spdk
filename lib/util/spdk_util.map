@@ -23,6 +23,21 @@
 	spdk_bit_array_load_mask;
 	spdk_bit_array_clear_mask;
 
+	# public functions in bit_pool.h
+	spdk_bit_pool_capacity;
+	spdk_bit_pool_create;
+	spdk_bit_pool_create_from_array;
+	spdk_bit_pool_free;
+	spdk_bit_pool_resize;
+	spdk_bit_pool_is_allocated;
+	spdk_bit_pool_allocate_bit;
+	spdk_bit_pool_free_bit;
+	spdk_bit_pool_count_allocated;
+	spdk_bit_pool_count_free;
+	spdk_bit_pool_store_mask;
+	spdk_bit_pool_load_mask;
+	spdk_bit_pool_free_all_bits;
+
 	# public functions in cpuset.h
 	spdk_cpuset_alloc;
 	spdk_cpuset_free;
