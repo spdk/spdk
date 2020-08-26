@@ -4,6 +4,11 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 
+sanitize_results() {
+	process_core
+	[[ -d $RESULTS_DIR ]] && chmod 644 "$RESULTS_DIR/"*
+}
+
 dump_db_bench_on_err() {
 	# Fetch std dump of the last run_step that might have failed
 	[[ -e $db_bench ]] || return 0
@@ -74,7 +79,7 @@ $rootdir/scripts/gen_nvme.sh > $ROCKSDB_CONF
 echo "[Global]" >> $ROCKSDB_CONF
 echo "TpointGroupMask 0x80" >> $ROCKSDB_CONF
 
-trap 'dump_db_bench_on_err; run_bsdump || :; rm -f $ROCKSDB_CONF; exit 1' SIGINT SIGTERM EXIT
+trap 'dump_db_bench_on_err; run_bsdump || :; rm -f $ROCKSDB_CONF; sanitize_results; exit 1' SIGINT SIGTERM EXIT
 
 if [ -z "$SKIP_MKFS" ]; then
 	run_test "blobfs_mkfs" $rootdir/test/blobfs/mkfs/mkfs $ROCKSDB_CONF Nvme0n1
@@ -162,3 +167,4 @@ trap - SIGINT SIGTERM EXIT
 
 run_bsdump
 rm -f $ROCKSDB_CONF
+sanitize_results
