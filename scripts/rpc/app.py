@@ -60,6 +60,19 @@ def thread_set_cpumask(client, id, cpumask):
     return client.call('thread_set_cpumask', params)
 
 
+def log_enable_timestamps(client, enabled):
+    """Enable or disable timestamps.
+
+    Args:
+        value: on or off
+
+    Returns:
+        None
+    """
+    params = {'enabled': enabled}
+    return client.call('log_enable_timestamps', params)
+
+
 def thread_get_pollers(client):
     """Query current pollers.
 

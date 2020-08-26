@@ -46,6 +46,7 @@ static const char *const spdk_level_names[] = {
 #define MAX_TMPBUF 1024
 
 static logfunc *g_log = NULL;
+static bool g_log_timestamps = true;
 
 void
 spdk_log_open(logfunc *logf)
@@ -65,6 +66,12 @@ spdk_log_close(void)
 	}
 }
 
+void
+spdk_log_enable_timestamps(bool value)
+{
+	g_log_timestamps = value;
+}
+
 static void
 get_timestamp_prefix(char *buf, int buf_size)
 {
@@ -72,6 +79,11 @@ get_timestamp_prefix(char *buf, int buf_size)
 	char date[24];
 	struct timespec ts;
 	long usec;
+
+	if (!g_log_timestamps) {
+		buf[0] = '\0';
+		return;
+	}
 
 	clock_gettime(CLOCK_REALTIME, &ts);
 	info = localtime(&ts.tv_sec);

@@ -2411,6 +2411,15 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-m', '--cpumask', help='cpumask for this thread')
     p.set_defaults(func=thread_set_cpumask)
 
+    def log_enable_timestamps(args):
+        ret = rpc.app.log_enable_timestamps(args.client,
+                                            enabled=args.enabled)
+    p = subparsers.add_parser('log_enable_timestamps',
+                              help='Enable or disable timestamps.')
+    p.add_argument('-d', '--disable', dest='enabled', default=False, action='store_false', help="Disable timestamps")
+    p.add_argument('-e', '--enable', dest='enabled', action='store_true', help="Enable timestamps")
+    p.set_defaults(func=log_enable_timestamps)
+
     def thread_get_pollers(args):
         print_dict(rpc.app.thread_get_pollers(args.client))
 

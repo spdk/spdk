@@ -70,6 +70,11 @@ void spdk_log_open(logfunc *logf);
  */
 void spdk_log_close(void);
 
+/**
+ * Enable or disable timestamps
+ */
+void spdk_log_enable_timestamps(bool value);
+
 enum spdk_log_level {
 	/** All messages will be suppressed. */
 	SPDK_LOG_DISABLED = -1,

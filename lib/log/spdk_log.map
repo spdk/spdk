@@ -15,6 +15,7 @@
 	spdk_log_set_flag;
 	spdk_log_clear_flag;
 	spdk_log_usage;
+	spdk_log_enable_timestamps;
 
 	# functions used by other SPDK libraries
 	spdk_log_register_flag;

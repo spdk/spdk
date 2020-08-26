@@ -708,6 +708,41 @@ Example response:
 }
 ~~~
 
+## log_enable_timestamps {#rpc_log_enable_timestamps}
+
+Enable or disable timestamps.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+enabled                 | Required | boolean     | on or off
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "log_enable_timestamps",
+  "id": 1,
+  "params": {
+    "enabled": true
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## thread_get_pollers {#rpc_thread_get_pollers}
 
 Retrieve current pollers of all the threads.
