@@ -412,7 +412,6 @@ iscsi_find_tgt_node(const char *target_name)
 			return target;
 		}
 	}
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "can't find target %s\n", target_name);
 	return NULL;
 }
 
