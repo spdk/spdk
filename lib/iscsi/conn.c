@@ -810,6 +810,7 @@ iscsi_send_logout_request(struct spdk_iscsi_conn *conn)
 	to_be16(&rsph->param3, ISCSI_LOGOUT_REQUEST_TIMEOUT);
 
 	to_be32(&rsph->stat_sn, conn->StatSN);
+	conn->StatSN++;
 	to_be32(&rsph->exp_cmd_sn, conn->sess->ExpCmdSN);
 	to_be32(&rsph->max_cmd_sn, conn->sess->MaxCmdSN);
 
