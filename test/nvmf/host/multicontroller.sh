@@ -31,7 +31,7 @@ $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc0
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_SECOND_PORT
 
-$rootdir/test/bdev/bdevperf/bdevperf -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 1 -f &> $testdir/try.txt &
+$rootdir/test/bdev/bdevperf/bdevperf -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w write -t 1 -f &> $testdir/try.txt &
 bdevperf_pid=$!
 
 trap 'process_shm --id $NVMF_APP_SHM_ID; pap "$testdir/try.txt"; killprocess $bdevperf_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
