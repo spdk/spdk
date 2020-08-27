@@ -433,6 +433,53 @@ rpc_framework_get_reactors(struct spdk_jsonrpc_request *request,
 
 SPDK_RPC_REGISTER("framework_get_reactors", rpc_framework_get_reactors, SPDK_RPC_RUNTIME)
 
+struct rpc_set_scheduler_ctx {
+	char *name;
+};
+
+static void
+free_rpc_framework_set_scheduler(struct rpc_set_scheduler_ctx *r)
+{
+	free(r->name);
+}
+
+static const struct spdk_json_object_decoder rpc_set_scheduler_decoders[] = {
+	{"name", offsetof(struct rpc_set_scheduler_ctx, name), spdk_json_decode_string},
+};
+
+static void
+rpc_framework_set_scheduler(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
+{
+	struct rpc_set_scheduler_ctx req = {NULL};
+	struct spdk_json_write_ctx *w;
+	int ret;
+
+	ret = spdk_json_decode_object(params, rpc_set_scheduler_decoders,
+				      SPDK_COUNTOF(rpc_set_scheduler_decoders),
+				      &req);
+	if (ret) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		goto end;
+	}
+
+	ret = _spdk_scheduler_set(req.name);
+	if (ret) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 spdk_strerror(ret));
+		goto end;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+
+end:
+	free_rpc_framework_set_scheduler(&req);
+}
+SPDK_RPC_REGISTER("framework_set_scheduler", rpc_framework_set_scheduler, SPDK_RPC_STARTUP)
+
 struct rpc_thread_set_cpumask_ctx {
 	struct spdk_jsonrpc_request *request;
 	struct spdk_cpuset cpumask;

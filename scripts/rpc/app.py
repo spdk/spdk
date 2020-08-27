@@ -37,6 +37,18 @@ def framework_get_reactors(client):
     return client.call('framework_get_reactors')
 
 
+def framework_set_scheduler(client, name):
+    """Select threads scheduler that will be activated.
+
+    Args:
+        name: Name of a scheduler
+    Returns:
+        True or False
+    """
+    params = {'name': name}
+    return client.call('framework_set_scheduler', params)
+
+
 def thread_get_stats(client):
     """Query threads statistics.
 

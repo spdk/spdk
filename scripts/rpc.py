@@ -157,6 +157,15 @@ if __name__ == "__main__":
         'framework_get_reactors', help='Display list of all reactors')
     p.set_defaults(func=framework_get_reactors)
 
+    def framework_set_scheduler(args):
+        rpc.app.framework_set_scheduler(args.client,
+                                        name=args.name)
+
+    p = subparsers.add_parser(
+        'framework_set_scheduler', help='Select thread scheduler that will be activated (experimental)')
+    p.add_argument('name', help="Name of a scheduler")
+    p.set_defaults(func=framework_set_scheduler)
+
     # bdev
     def bdev_set_options(args):
         rpc.bdev.bdev_set_options(args.client,

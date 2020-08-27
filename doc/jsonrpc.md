@@ -620,6 +620,46 @@ Example response:
 }
 ~~~
 
+## framework_set_scheduler {#rpc_framework_set_scheduler}
+
+Select thread scheduler that will be activated.
+This feature is considered as experimental.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Name of a scheduler
+
+### Response
+
+Completion status of the operation is returned as a boolean.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "framework_set_scheduler",
+  "id": 1,
+  "params": {
+    "name": "static"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## thread_get_stats {#rpc_thread_get_stats}
 
 Retrieve current statistics of all the threads.
