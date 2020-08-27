@@ -118,6 +118,21 @@ bs_claim_cluster(struct spdk_blob_store *bs, uint32_t cluster_num)
 	bs->num_free_clusters--;
 }
 
+static void
+bs_release_cluster(struct spdk_blob_store *bs, uint32_t cluster_num)
+{
+	assert(cluster_num < spdk_bit_array_capacity(bs->used_clusters));
+	assert(spdk_bit_array_get(bs->used_clusters, cluster_num) == true);
+	assert(bs->num_free_clusters < bs->total_clusters);
+
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Releasing cluster %u\n", cluster_num);
+
+	pthread_mutex_lock(&bs->used_clusters_mutex);
+	spdk_bit_array_clear(bs->used_clusters, cluster_num);
+	bs->num_free_clusters++;
+	pthread_mutex_unlock(&bs->used_clusters_mutex);
+}
+
 static int
 blob_insert_cluster(struct spdk_blob *blob, uint32_t cluster_num, uint64_t cluster)
 {
@@ -176,21 +191,6 @@ bs_allocate_cluster(struct spdk_blob *blob, uint32_t cluster_num,
 	}
 
 	return 0;
-}
-
-static void
-bs_release_cluster(struct spdk_blob_store *bs, uint32_t cluster_num)
-{
-	assert(cluster_num < spdk_bit_array_capacity(bs->used_clusters));
-	assert(spdk_bit_array_get(bs->used_clusters, cluster_num) == true);
-	assert(bs->num_free_clusters < bs->total_clusters);
-
-	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Releasing cluster %u\n", cluster_num);
-
-	pthread_mutex_lock(&bs->used_clusters_mutex);
-	spdk_bit_array_clear(bs->used_clusters, cluster_num);
-	bs->num_free_clusters++;
-	pthread_mutex_unlock(&bs->used_clusters_mutex);
 }
 
 static void
