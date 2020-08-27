@@ -120,6 +120,12 @@ rpc_bdev_null_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
+	if (req.dif_type != SPDK_DIF_DISABLE && !req.md_size) {
+		spdk_jsonrpc_send_error_response(request, -EINVAL,
+						 "Interleaved metadata size should be set for DIF");
+		goto cleanup;
+	}
+
 	opts.name = req.name;
 	opts.uuid = uuid;
 	opts.num_blocks = req.num_blocks;

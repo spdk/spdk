@@ -1558,9 +1558,9 @@ name                    | Optional | string      | Bdev name to use
 block_size              | Required | number      | Block size in bytes
 num_blocks              | Required | number      | Number of blocks
 uuid                    | Optional | string      | UUID of new bdev
-md_size                 | Optional | number      | Metadata size in bytes
-dif_type                | Optional | number      | Protection information type (0, 1, 2 or 3). Default: 0 - no protection.
-dif_is_head_of_md       | Optional | boolean     | Protection information is in the first 8 bytes of MD. Default: in the last 8 bytes.
+md_size                 | Optional | number      | Metadata size for this bdev. Default=0.
+dif_type                | Optional | number      | Protection information type. Parameter --md-size needs to be set along --dif-type. Default=0 - no protection.
+dif_is_head_of_md       | Optional | boolean     | Protection information is in the first 8 bytes of metadata. Default=false.
 
 ### Result
 

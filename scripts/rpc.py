@@ -323,6 +323,9 @@ if __name__ == "__main__":
 
     def bdev_null_create(args):
         num_blocks = (args.total_size * 1024 * 1024) // args.block_size
+        if args.dif_type and not args.md_size:
+            print("ERROR: --md-size must be > 0 when --dif-type is > 0")
+            exit(1)
         print_json(rpc.bdev.bdev_null_create(args.client,
                                              num_blocks=num_blocks,
                                              block_size=args.block_size,
@@ -336,15 +339,16 @@ if __name__ == "__main__":
                               help='Add a bdev with null backend')
     p.add_argument('name', help='Block device name')
     p.add_argument('-u', '--uuid', help='UUID of the bdev')
-    p.add_argument(
-        'total_size', help='Size of null bdev in MB (int > 0)', type=int)
-    p.add_argument('block_size', help='Block size for this bdev', type=int)
+    p.add_argument('total_size', help='Size of null bdev in MB (int > 0). Includes only data blocks.', type=int)
+    p.add_argument('block_size', help='Block size for this bdev.'
+                                      'Should be a sum of block size and metadata size if --md-size is used.', type=int)
     p.add_argument('-m', '--md-size', type=int,
-                   help='Metadata size for this bdev. Default 0')
-    p.add_argument('-t', '--dif-type', type=int, choices=[0, 1, 2, 3],
-                   help='Protection information type. Default: 0 - no protection')
+                   help='Metadata size for this bdev. Default=0.')
+    p.add_argument('-t', '--dif-type', type=int, default=0, choices=[0, 1, 2, 3],
+                   help='Protection information type. Parameter --md-size needs'
+                        'to be set along --dif-type. Default=0 - no protection.')
     p.add_argument('-d', '--dif-is-head-of-md', action='store_true',
-                   help='Protection information is in the first 8 bytes of metadata. Default: in the last 8 bytes')
+                   help='Protection information is in the first 8 bytes of metadata. Default=false.')
     p.set_defaults(func=bdev_null_create)
 
     def bdev_null_delete(args):
