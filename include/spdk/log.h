@@ -96,26 +96,6 @@ void spdk_log_set_level(enum spdk_log_level level);
 enum spdk_log_level spdk_log_get_level(void);
 
 /**
- * Set the log level threshold to include stack trace in log messages.
- * Messages with a higher level than this will not contain stack trace. You
- * can use \c SPDK_LOG_DISABLED to completely disable stack trace printing
- * even if it is supported.
- *
- * \note This function has no effect if SPDK is built without stack trace
- *  printing support.
- *
- * \param level Log level threshold for stacktrace.
- */
-void spdk_log_set_backtrace_level(enum spdk_log_level level);
-
-/**
- * Get the current log level threshold for showing stack trace in log message.
- *
- * \return the current log level threshold for stack trace.
- */
-enum spdk_log_level spdk_log_get_backtrace_level(void);
-
-/**
  * Set the current log level threshold for printing to stderr.
  * Messages with a level less than or equal to this level
  * are also printed to stderr. You can use \c SPDK_LOG_DISABLED to completely
