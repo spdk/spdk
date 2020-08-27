@@ -5922,7 +5922,7 @@ static void
 bs_inflate_blob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
 {
 	struct spdk_clone_snapshot_ctx *ctx = (struct spdk_clone_snapshot_ctx *)cb_arg;
-	uint64_t lfc; /* lowest free cluster */
+	uint64_t clusters_needed;
 	uint64_t i;
 
 	if (bserrno != 0) {
@@ -5957,17 +5957,17 @@ bs_inflate_blob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
 	/* Do two passes - one to verify that we can obtain enough clusters
 	 * and another to actually claim them.
 	 */
-	lfc = 0;
+	clusters_needed = 0;
 	for (i = 0; i < _blob->active.num_clusters; i++) {
 		if (bs_cluster_needs_allocation(_blob, i, ctx->allocate_all)) {
-			lfc = spdk_bit_array_find_first_clear(_blob->bs->used_clusters, lfc);
-			if (lfc == UINT32_MAX) {
-				/* No more free clusters. Cannot satisfy the request */
-				bs_clone_snapshot_origblob_cleanup(ctx, -ENOSPC);
-				return;
-			}
-			lfc++;
+			clusters_needed++;
 		}
+	}
+
+	if (clusters_needed > _blob->bs->num_free_clusters) {
+		/* Not enough free clusters. Cannot satisfy the request. */
+		bs_clone_snapshot_origblob_cleanup(ctx, -ENOSPC);
+		return;
 	}
 
 	ctx->cluster = 0;
