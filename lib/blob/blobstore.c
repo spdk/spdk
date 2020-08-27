@@ -1873,19 +1873,10 @@ blob_resize(struct spdk_blob *blob, uint64_t sz)
 		current_num_ep = spdk_divide_round_up(num_clusters, SPDK_EXTENTS_PER_EP);
 	}
 
-	/* Do two passes - one to verify that we can obtain enough clusters
-	 * and md pages, another to actually claim them.
-	 */
-
-	if (spdk_blob_is_thin_provisioned(blob) == false) {
-		lfc = 0;
-		for (i = num_clusters; i < sz; i++) {
-			lfc = spdk_bit_array_find_first_clear(bs->used_clusters, lfc);
-			if (lfc == UINT32_MAX) {
-				/* No more free clusters. Cannot satisfy the request */
-				return -ENOSPC;
-			}
-			lfc++;
+	/* Check first that we have enough clusters and md pages before we start claiming them. */
+	if (sz > num_clusters && spdk_blob_is_thin_provisioned(blob) == false) {
+		if ((sz - num_clusters) > bs->num_free_clusters) {
+			return -ENOSPC;
 		}
 		lfmd = 0;
 		for (i = current_num_ep; i < new_num_ep ; i++) {
