@@ -3903,8 +3903,9 @@ bs_load_replay_md_chain_cpl(struct spdk_bs_load_ctx *ctx)
 		/* Claim all of the clusters used by the metadata */
 		num_md_clusters = spdk_divide_round_up(ctx->super->md_len, ctx->bs->pages_per_cluster);
 		for (i = 0; i < num_md_clusters; i++) {
-			bs_claim_cluster(ctx->bs, i);
+			spdk_bit_array_set(ctx->bs->used_clusters, i);
 		}
+		ctx->bs->num_free_clusters -= num_md_clusters;
 		spdk_free(ctx->page);
 		bs_load_write_used_md(ctx);
 	}
@@ -4709,9 +4710,10 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	}
 	/* Claim all of the clusters used by the metadata */
 	for (i = 0; i < num_md_clusters; i++) {
-		bs_claim_cluster(bs, i);
+		spdk_bit_array_set(bs->used_clusters, i);
 	}
 
+	bs->num_free_clusters -= num_md_clusters;
 	bs->total_data_clusters = bs->num_free_clusters;
 
 	cpl.type = SPDK_BS_CPL_TYPE_BS_HANDLE;
