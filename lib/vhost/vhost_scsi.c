@@ -993,7 +993,11 @@ spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, int scsi_tgt_num,
 	const char *bdev_names_list[1];
 
 	svdev = to_scsi_dev(vdev);
-	assert(svdev != NULL);
+	if (!svdev) {
+		SPDK_ERRLOG("Before adding a SCSI target, there should be a SCSI device.");
+		return -EINVAL;
+	}
+
 	if (scsi_tgt_num < 0) {
 		for (scsi_tgt_num = 0; scsi_tgt_num < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; scsi_tgt_num++) {
 			if (svdev->scsi_dev_state[scsi_tgt_num].dev == NULL) {
@@ -1118,7 +1122,11 @@ spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_nu
 	}
 
 	svdev = to_scsi_dev(vdev);
-	assert(svdev != NULL);
+	if (!svdev) {
+		SPDK_ERRLOG("An invalid SCSI device that removing from a SCSI target.");
+		return -EINVAL;
+	}
+
 	scsi_dev_state = &svdev->scsi_dev_state[scsi_tgt_num];
 
 	if (scsi_dev_state->status != VHOST_SCSI_DEV_PRESENT) {
