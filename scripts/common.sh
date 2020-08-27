@@ -49,8 +49,6 @@ cache_pci() {
 	fi
 	if [[ -n $vendor && -n $device ]]; then
 		vendor=0x${vendor/0x/} device=0x${device/0x/}
-		pci_bus_cache["$vendor"]="${pci_bus_cache["$vendor"]:+${pci_bus_cache["$vendor"]} }$pci"
-		pci_bus_cache["$device"]="${pci_bus_cache["$device"]:+${pci_bus_cache["$device"]} }$pci"
 		pci_bus_cache["$vendor:$device"]="${pci_bus_cache["$vendor:$device"]:+${pci_bus_cache["$vendor:$device"]} }$pci"
 
 		pci_ids_vendor["$pci"]=$vendor
