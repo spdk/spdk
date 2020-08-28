@@ -252,6 +252,9 @@ IGNORED_LIBS=()
 if grep -q 'CONFIG_VHOST_INTERNAL_LIB?=n' $rootdir/mk/config.mk; then
 	IGNORED_LIBS+=("rte_vhost")
 fi
+if grep -q 'CONFIG_RDMA?=n' $rootdir/mk/config.mk; then
+	IGNORED_LIBS+=("rdma")
+fi
 
 (
 	for lib in $SPDK_LIBS; do confirm_deps $lib & done
