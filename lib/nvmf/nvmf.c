@@ -185,6 +185,8 @@ nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 
 	free(group->sgroups);
 
+	spdk_poller_unregister(&group->poller);
+
 	if (group->destroy_cb_fn) {
 		group->destroy_cb_fn(group->destroy_cb_arg, 0);
 	}
@@ -224,8 +226,6 @@ nvmf_tgt_destroy_poll_group_qpairs(struct spdk_nvmf_poll_group *group)
 		SPDK_ERRLOG("Failed to allocate memory for destroy poll group ctx\n");
 		return;
 	}
-
-	spdk_poller_unregister(&group->poller);
 
 	ctx->group = group;
 	_nvmf_tgt_disconnect_next_qpair(ctx);
