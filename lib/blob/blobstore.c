@@ -3135,6 +3135,29 @@ bs_opts_verify(struct spdk_bs_opts *opts)
 	return 0;
 }
 
+/* START spdk_bs_load, spdk_bs_load_ctx will used for both load and unload. */
+
+struct spdk_bs_load_ctx {
+	struct spdk_blob_store		*bs;
+	struct spdk_bs_super_block	*super;
+
+	struct spdk_bs_md_mask		*mask;
+	bool				in_page_chain;
+	uint32_t			page_index;
+	uint32_t			cur_page;
+	struct spdk_blob_md_page	*page;
+
+	uint64_t			num_extent_pages;
+	uint32_t			*extent_page_num;
+	struct spdk_blob_md_page	*extent_pages;
+
+	spdk_bs_sequence_t			*seq;
+	spdk_blob_op_with_handle_complete	iter_cb_fn;
+	void					*iter_cb_arg;
+	struct spdk_blob			*blob;
+	spdk_blob_id				blobid;
+};
+
 static int
 bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts, struct spdk_blob_store **_bs)
 {
@@ -3213,29 +3236,6 @@ bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts, struct spdk_blob_st
 	*_bs = bs;
 	return 0;
 }
-
-/* START spdk_bs_load, spdk_bs_load_ctx will used for both load and unload. */
-
-struct spdk_bs_load_ctx {
-	struct spdk_blob_store		*bs;
-	struct spdk_bs_super_block	*super;
-
-	struct spdk_bs_md_mask		*mask;
-	bool				in_page_chain;
-	uint32_t			page_index;
-	uint32_t			cur_page;
-	struct spdk_blob_md_page	*page;
-
-	uint64_t			num_extent_pages;
-	uint32_t			*extent_page_num;
-	struct spdk_blob_md_page	*extent_pages;
-
-	spdk_bs_sequence_t			*seq;
-	spdk_blob_op_with_handle_complete	iter_cb_fn;
-	void					*iter_cb_arg;
-	struct spdk_blob			*blob;
-	spdk_blob_id				blobid;
-};
 
 static void
 bs_load_ctx_fail(struct spdk_bs_load_ctx *ctx, int bserrno)
