@@ -50,6 +50,12 @@ EOF
 			echo "No corresponding object for $so_file in canonical directory. Skipping."
 			continue
 		fi
+		if [ "$so_file" == "libspdk_blobfs_bdev.so" ]; then
+			# FIXME: Disable checking for blobfs_bdev.so. Allows updating ABI reference repo
+			# without affecting outstanding patches and requiring immediate rebase.
+			echo "Checking objects for $so_file temporarily disabled. Skipping."
+			continue
+		fi
 
 		if ! output=$(abidiff "$source_abi_dir/$so_file" "$libdir/$so_file" --headers-dir1 "$source_abi_dir/../../include/" --headers-dir2 "$rootdir/include" --leaf-changes-only --suppressions $suppression_file --stat); then
 			# remove any filtered out variables.
@@ -245,7 +251,9 @@ echo "---------------------------------------------------------------------"
 # users can define their own environment abstraction. However we do want to still check it
 # for dependencies to avoid printing out a bunch of confusing symbols under the missing
 # symbols section.
-SPDK_LIBS=$(ls -1 $libdir/libspdk_*.so | grep -v libspdk_env_dpdk.so)
+# FIXME: Disable checking for blobfs_bdev.so. Allows updating ABI reference repo
+# without affecting outstanding patches and requiring immediate rebase.
+SPDK_LIBS=$(ls -1 $libdir/libspdk_*.so | grep -v libspdk_env_dpdk.so | grep -v blobfs_bdev.so)
 DEP_LIBS=$(ls -1 $libdir/libspdk_*.so)
 
 IGNORED_LIBS=()
