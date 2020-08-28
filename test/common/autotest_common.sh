@@ -595,7 +595,7 @@ function process_core() {
 		mv $core $output_dir
 		chmod a+r $output_dir/$core
 		ret=1
-	done < <(find . -type f \( -name 'core.[0-9]*' -o name 'core' -o -name '*.core' \) -print0)
+	done < <(find . -type f \( -name 'core.[0-9]*' -o -name 'core' -o -name '*.core' \) -print0)
 	return $ret
 }
 
