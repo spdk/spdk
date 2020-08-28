@@ -3135,7 +3135,9 @@ bs_opts_verify(struct spdk_bs_opts *opts)
 	return 0;
 }
 
-/* START spdk_bs_load, spdk_bs_load_ctx will used for both load and unload. */
+/* START spdk_bs_load */
+
+/* spdk_bs_load_ctx is used for init, load, unload and dump code paths. */
 
 struct spdk_bs_load_ctx {
 	struct spdk_blob_store		*bs;
@@ -3156,6 +3158,11 @@ struct spdk_bs_load_ctx {
 	void					*iter_cb_arg;
 	struct spdk_blob			*blob;
 	spdk_blob_id				blobid;
+
+	/* These fields are used in the spdk_bs_dump path. */
+	FILE					*fp;
+	spdk_bs_dump_print_xattr		print_xattr_fn;
+	char					xattr_name[4096];
 };
 
 static int
@@ -4284,19 +4291,8 @@ spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 
 /* START spdk_bs_dump */
 
-struct spdk_bs_dump_ctx {
-	struct spdk_blob_store		*bs;
-	struct spdk_bs_super_block	*super;
-	uint32_t			cur_page;
-	struct spdk_blob_md_page	*page;
-	spdk_bs_sequence_t		*seq;
-	FILE				*fp;
-	spdk_bs_dump_print_xattr	print_xattr_fn;
-	char				xattr_name[4096];
-};
-
 static void
-bs_dump_finish(spdk_bs_sequence_t *seq, struct spdk_bs_dump_ctx *ctx, int bserrno)
+bs_dump_finish(spdk_bs_sequence_t *seq, struct spdk_bs_load_ctx *ctx, int bserrno)
 {
 	spdk_free(ctx->super);
 
@@ -4316,7 +4312,7 @@ bs_dump_finish(spdk_bs_sequence_t *seq, struct spdk_bs_dump_ctx *ctx, int bserrn
 static void bs_dump_read_md_page(spdk_bs_sequence_t *seq, void *cb_arg);
 
 static void
-bs_dump_print_md_page(struct spdk_bs_dump_ctx *ctx)
+bs_dump_print_md_page(struct spdk_bs_load_ctx *ctx)
 {
 	uint32_t page_idx = ctx->cur_page;
 	struct spdk_blob_md_page *page = ctx->page;
@@ -4419,7 +4415,7 @@ bs_dump_print_md_page(struct spdk_bs_dump_ctx *ctx)
 static void
 bs_dump_read_md_page_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
-	struct spdk_bs_dump_ctx *ctx = cb_arg;
+	struct spdk_bs_load_ctx *ctx = cb_arg;
 
 	if (bserrno != 0) {
 		bs_dump_finish(seq, ctx, bserrno);
@@ -4443,7 +4439,7 @@ bs_dump_read_md_page_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 static void
 bs_dump_read_md_page(spdk_bs_sequence_t *seq, void *cb_arg)
 {
-	struct spdk_bs_dump_ctx *ctx = cb_arg;
+	struct spdk_bs_load_ctx *ctx = cb_arg;
 	uint64_t lba;
 
 	assert(ctx->cur_page < ctx->super->md_len);
@@ -4456,7 +4452,7 @@ bs_dump_read_md_page(spdk_bs_sequence_t *seq, void *cb_arg)
 static void
 bs_dump_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
-	struct spdk_bs_dump_ctx *ctx = cb_arg;
+	struct spdk_bs_load_ctx *ctx = cb_arg;
 
 	fprintf(ctx->fp, "Signature: \"%.8s\" ", ctx->super->signature);
 	if (memcmp(ctx->super->signature, SPDK_BS_SUPER_BLOCK_SIG,
@@ -4505,7 +4501,7 @@ spdk_bs_dump(struct spdk_bs_dev *dev, FILE *fp, spdk_bs_dump_print_xattr print_x
 	struct spdk_blob_store	*bs;
 	struct spdk_bs_cpl	cpl;
 	spdk_bs_sequence_t	*seq;
-	struct spdk_bs_dump_ctx *ctx;
+	struct spdk_bs_load_ctx *ctx;
 	struct spdk_bs_opts	opts = {};
 	int err;
 
@@ -4564,15 +4560,10 @@ spdk_bs_dump(struct spdk_bs_dev *dev, FILE *fp, spdk_bs_dump_print_xattr print_x
 
 /* START spdk_bs_init */
 
-struct spdk_bs_init_ctx {
-	struct spdk_blob_store		*bs;
-	struct spdk_bs_super_block	*super;
-};
-
 static void
 bs_init_persist_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
-	struct spdk_bs_init_ctx *ctx = cb_arg;
+	struct spdk_bs_load_ctx *ctx = cb_arg;
 
 	spdk_free(ctx->super);
 	free(ctx);
@@ -4583,7 +4574,7 @@ bs_init_persist_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 static void
 bs_init_trim_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
-	struct spdk_bs_init_ctx *ctx = cb_arg;
+	struct spdk_bs_load_ctx *ctx = cb_arg;
 
 	/* Write super block */
 	bs_sequence_write_dev(seq, ctx->super, bs_page_to_lba(ctx->bs, 0),
@@ -4595,7 +4586,7 @@ void
 spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	     spdk_bs_op_with_handle_complete cb_fn, void *cb_arg)
 {
-	struct spdk_bs_init_ctx *ctx;
+	struct spdk_bs_load_ctx *ctx;
 	struct spdk_blob_store	*bs;
 	struct spdk_bs_cpl	cpl;
 	spdk_bs_sequence_t	*seq;
@@ -4804,7 +4795,7 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 static void
 bs_destroy_trim_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
-	struct spdk_bs_init_ctx *ctx = cb_arg;
+	struct spdk_bs_load_ctx *ctx = cb_arg;
 	struct spdk_blob_store *bs = ctx->bs;
 
 	/*
@@ -4827,7 +4818,7 @@ spdk_bs_destroy(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn,
 {
 	struct spdk_bs_cpl	cpl;
 	spdk_bs_sequence_t	*seq;
-	struct spdk_bs_init_ctx *ctx;
+	struct spdk_bs_load_ctx *ctx;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Destroying blobstore\n");
 
