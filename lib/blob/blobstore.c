@@ -3166,9 +3166,11 @@ struct spdk_bs_load_ctx {
 };
 
 static int
-bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts, struct spdk_blob_store **_bs)
+bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts, struct spdk_blob_store **_bs,
+	 struct spdk_bs_load_ctx **_ctx)
 {
 	struct spdk_blob_store	*bs;
+	struct spdk_bs_load_ctx	*ctx;
 	uint64_t dev_size;
 	int rc;
 
@@ -3187,6 +3189,24 @@ bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts, struct spdk_blob_st
 	}
 	bs = calloc(1, sizeof(struct spdk_blob_store));
 	if (!bs) {
+		return -ENOMEM;
+	}
+
+	ctx = calloc(1, sizeof(struct spdk_bs_load_ctx));
+	if (!ctx) {
+		free(bs);
+		return -ENOMEM;
+	}
+
+	ctx->bs = bs;
+	ctx->iter_cb_fn = opts->iter_cb_fn;
+	ctx->iter_cb_arg = opts->iter_cb_arg;
+
+	ctx->super = spdk_zmalloc(sizeof(*ctx->super), 0x1000, NULL,
+				  SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+	if (!ctx->super) {
+		free(ctx);
+		free(bs);
 		return -ENOMEM;
 	}
 
@@ -3210,6 +3230,8 @@ bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts, struct spdk_blob_st
 	bs->used_clusters = spdk_bit_array_create(bs->total_clusters);
 	bs->io_unit_size = dev->blocklen;
 	if (bs->used_clusters == NULL) {
+		spdk_free(ctx->super);
+		free(ctx);
 		free(bs);
 		return -ENOMEM;
 	}
@@ -3235,11 +3257,14 @@ bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts, struct spdk_blob_st
 		spdk_bit_array_free(&bs->used_blobids);
 		spdk_bit_array_free(&bs->used_md_pages);
 		spdk_bit_array_free(&bs->used_clusters);
+		spdk_free(ctx->super);
+		free(ctx);
 		free(bs);
 		/* FIXME: this is a lie but don't know how to get a proper error code here */
 		return -ENOMEM;
 	}
 
+	*_ctx = ctx;
 	*_bs = bs;
 	return 0;
 }
@@ -4239,31 +4264,10 @@ spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 		return;
 	}
 
-	err = bs_alloc(dev, &opts, &bs);
+	err = bs_alloc(dev, &opts, &bs, &ctx);
 	if (err) {
 		dev->destroy(dev);
 		cb_fn(cb_arg, NULL, err);
-		return;
-	}
-
-	ctx = calloc(1, sizeof(*ctx));
-	if (!ctx) {
-		bs_free(bs);
-		cb_fn(cb_arg, NULL, -ENOMEM);
-		return;
-	}
-
-	ctx->bs = bs;
-	ctx->iter_cb_fn = opts.iter_cb_fn;
-	ctx->iter_cb_arg = opts.iter_cb_arg;
-
-	/* Allocate memory for the super block */
-	ctx->super = spdk_zmalloc(sizeof(*ctx->super), 0x1000, NULL,
-				  SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
-	if (!ctx->super) {
-		free(ctx);
-		bs_free(bs);
-		cb_fn(cb_arg, NULL, -ENOMEM);
 		return;
 	}
 
@@ -4509,33 +4513,15 @@ spdk_bs_dump(struct spdk_bs_dev *dev, FILE *fp, spdk_bs_dump_print_xattr print_x
 
 	spdk_bs_opts_init(&opts);
 
-	err = bs_alloc(dev, &opts, &bs);
+	err = bs_alloc(dev, &opts, &bs, &ctx);
 	if (err) {
 		dev->destroy(dev);
 		cb_fn(cb_arg, err);
 		return;
 	}
 
-	ctx = calloc(1, sizeof(*ctx));
-	if (!ctx) {
-		bs_free(bs);
-		cb_fn(cb_arg, -ENOMEM);
-		return;
-	}
-
-	ctx->bs = bs;
 	ctx->fp = fp;
 	ctx->print_xattr_fn = print_xattr_fn;
-
-	/* Allocate memory for the super block */
-	ctx->super = spdk_zmalloc(sizeof(*ctx->super), 0x1000, NULL,
-				  SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
-	if (!ctx->super) {
-		free(ctx);
-		bs_free(bs);
-		cb_fn(cb_arg, -ENOMEM);
-		return;
-	}
 
 	cpl.type = SPDK_BS_CPL_TYPE_BS_BASIC;
 	cpl.u.bs_basic.cb_fn = cb_fn;
@@ -4620,7 +4606,7 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 		return;
 	}
 
-	rc = bs_alloc(dev, &opts, &bs);
+	rc = bs_alloc(dev, &opts, &bs, &ctx);
 	if (rc) {
 		dev->destroy(dev);
 		cb_fn(cb_arg, NULL, rc);
@@ -4640,6 +4626,8 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	}
 	rc = spdk_bit_array_resize(&bs->used_md_pages, bs->md_len);
 	if (rc < 0) {
+		spdk_free(ctx->super);
+		free(ctx);
 		bs_free(bs);
 		cb_fn(cb_arg, NULL, -ENOMEM);
 		return;
@@ -4647,6 +4635,8 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 
 	rc = spdk_bit_array_resize(&bs->used_blobids, bs->md_len);
 	if (rc < 0) {
+		spdk_free(ctx->super);
+		free(ctx);
 		bs_free(bs);
 		cb_fn(cb_arg, NULL, -ENOMEM);
 		return;
@@ -4654,29 +4644,13 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 
 	rc = spdk_bit_array_resize(&bs->open_blobids, bs->md_len);
 	if (rc < 0) {
-		bs_free(bs);
-		cb_fn(cb_arg, NULL, -ENOMEM);
-		return;
-	}
-
-	ctx = calloc(1, sizeof(*ctx));
-	if (!ctx) {
-		bs_free(bs);
-		cb_fn(cb_arg, NULL, -ENOMEM);
-		return;
-	}
-
-	ctx->bs = bs;
-
-	/* Allocate memory for the super block */
-	ctx->super = spdk_zmalloc(sizeof(*ctx->super), 0x1000, NULL,
-				  SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
-	if (!ctx->super) {
+		spdk_free(ctx->super);
 		free(ctx);
 		bs_free(bs);
 		cb_fn(cb_arg, NULL, -ENOMEM);
 		return;
 	}
+
 	memcpy(ctx->super->signature, SPDK_BS_SUPER_BLOCK_SIG,
 	       sizeof(ctx->super->signature));
 	ctx->super->version = SPDK_BS_VERSION;
