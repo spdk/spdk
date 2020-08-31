@@ -2,6 +2,7 @@
 #  BSD LICENSE
 #
 #  Copyright (c) Intel Corporation.
+#  Copyright (c) 2020, Mellanox Corporation.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -84,6 +85,7 @@ clean: $(DIRS-y)
 	$(Q)rm -rf build/fio
 	$(Q)rm -rf build/examples
 	$(Q)rm -rf build/include
+	$(Q)find build/lib ! -name .gitignore -type f -delete
 
 install: all
 	$(Q)echo "Installed to $(DESTDIR)$(CONFIG_PREFIX)"
