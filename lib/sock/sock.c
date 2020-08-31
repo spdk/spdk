@@ -146,13 +146,29 @@ sock_remove_sock_group_from_map_table(struct spdk_sock_group *group)
 
 }
 
+static int
+sock_get_placement_id(struct spdk_sock *sock)
+{
+	int rc;
+	int placement_id;
+
+	if (!sock->placement_id) {
+		rc = sock->net_impl->get_placement_id(sock, &placement_id);
+		if (!rc && (placement_id != 0)) {
+			sock->placement_id = placement_id;
+		}
+	}
+
+	return sock->placement_id;
+}
+
 int
 spdk_sock_get_optimal_sock_group(struct spdk_sock *sock, struct spdk_sock_group **group)
 {
-	int placement_id = 0, rc;
+	int placement_id;
 
-	rc = sock->net_impl->get_placement_id(sock, &placement_id);
-	if (!rc && (placement_id != 0)) {
+	placement_id = sock_get_placement_id(sock);
+	if (placement_id != 0) {
 		sock_map_lookup(placement_id, group);
 		return 0;
 	} else {
@@ -508,8 +524,8 @@ spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 		return -1;
 	}
 
-	rc = sock->net_impl->get_placement_id(sock, &placement_id);
-	if (!rc && (placement_id != 0)) {
+	placement_id = sock_get_placement_id(sock);
+	if (placement_id != 0) {
 		rc = sock_map_insert(placement_id, group);
 		if (rc < 0) {
 			return -1;
@@ -557,8 +573,8 @@ spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *soc
 
 	assert(group_impl == sock->group_impl);
 
-	rc = sock->net_impl->get_placement_id(sock, &placement_id);
-	if (!rc && (placement_id != 0)) {
+	placement_id = sock_get_placement_id(sock);
+	if (placement_id != 0) {
 		sock_map_release(placement_id);
 	}
 

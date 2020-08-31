@@ -63,6 +63,7 @@ struct spdk_sock {
 	TAILQ_HEAD(, spdk_sock_request)	queued_reqs;
 	TAILQ_HEAD(, spdk_sock_request)	pending_reqs;
 	int				queued_iovcnt;
+	int				placement_id;
 
 	struct {
 		uint8_t		closed		: 1;
