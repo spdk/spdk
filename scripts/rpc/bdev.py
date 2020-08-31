@@ -1118,7 +1118,7 @@ def bdev_set_qos_limit(
 
     Args:
         name: name of block device
-        rw_ios_per_sec: R/W IOs per second limit (>=10000, example: 20000). 0 means unlimited.
+        rw_ios_per_sec: R/W IOs per second limit (>=1000, example: 20000). 0 means unlimited.
         rw_mbytes_per_sec: R/W megabytes per second limit (>=10, example: 100). 0 means unlimited.
         r_mbytes_per_sec: Read megabytes per second limit (>=10, example: 100). 0 means unlimited.
         w_mbytes_per_sec: Write megabytes per second limit (>=10, example: 100). 0 means unlimited.

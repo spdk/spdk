@@ -805,7 +805,7 @@ if __name__ == "__main__":
                               help='Set QoS rate limit on a blockdev')
     p.add_argument('name', help='Blockdev name to set QoS. Example: Malloc0')
     p.add_argument('--rw_ios_per_sec',
-                   help='R/W IOs per second limit (>=10000, example: 20000). 0 means unlimited.',
+                   help='R/W IOs per second limit (>=1000, example: 20000). 0 means unlimited.',
                    type=int, required=False)
     p.add_argument('--rw_mbytes_per_sec',
                    help="R/W megabytes per second limit (>=10, example: 100). 0 means unlimited.",
