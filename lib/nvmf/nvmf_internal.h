@@ -333,6 +333,7 @@ struct spdk_nvmf_listener *nvmf_transport_find_listener(
 	const struct spdk_nvme_transport_id *trid);
 
 int nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr);
+int nvmf_ctrlr_async_event_ana_change_notice(struct spdk_nvmf_ctrlr *ctrlr);
 void nvmf_ctrlr_async_event_reservation_notification(struct spdk_nvmf_ctrlr *ctrlr);
 void nvmf_ns_reservation_request(void *ctx);
 void nvmf_ctrlr_reservation_notice_log(struct spdk_nvmf_ctrlr *ctrlr,

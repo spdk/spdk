@@ -2670,6 +2670,37 @@ nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr)
 	return nvmf_ctrlr_async_event_notification(ctrlr, &event);
 }
 
+int
+nvmf_ctrlr_async_event_ana_change_notice(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	union spdk_nvme_async_event_completion event = {0};
+
+	/* Users may disable the event notification */
+	if (!ctrlr->feat.async_event_configuration.bits.ana_change_notice) {
+		return 0;
+	}
+
+	event.bits.async_event_type = SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE;
+	event.bits.async_event_info = SPDK_NVME_ASYNC_EVENT_ANA_CHANGE;
+	event.bits.log_page_identifier = SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS;
+
+	/* If there is no outstanding AER request, queue the event.  Then
+	 * if an AER is later submited, this event can be sent as a
+	 * response.
+	 */
+	if (ctrlr->nr_aer_reqs == 0) {
+		if (ctrlr->notice_event.bits.async_event_type ==
+		    SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) {
+			return 0;
+		}
+
+		ctrlr->notice_event.raw = event.raw;
+		return 0;
+	}
+
+	return nvmf_ctrlr_async_event_notification(ctrlr, &event);
+}
+
 void
 nvmf_ctrlr_async_event_reservation_notification(struct spdk_nvmf_ctrlr *ctrlr)
 {
