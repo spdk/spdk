@@ -154,6 +154,8 @@ struct nvme_tcp_req {
 };
 
 static void nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req);
+static int64_t nvme_tcp_poll_group_process_completions(struct spdk_nvme_transport_poll_group
+		*tgroup, uint32_t completions_per_qpair, spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb);
 
 static inline struct nvme_tcp_qpair *
 nvme_tcp_qpair(struct spdk_nvme_qpair *qpair)
@@ -1601,6 +1603,11 @@ nvme_tcp_qpair_sock_cb(void *ctx, struct spdk_sock_group *group, struct spdk_soc
 	}
 }
 
+static void
+dummy_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_ctx)
+{
+}
+
 static int
 nvme_tcp_qpair_icreq_send(struct nvme_tcp_qpair *tqpair)
 {
@@ -1626,7 +1633,12 @@ nvme_tcp_qpair_icreq_send(struct nvme_tcp_qpair *tqpair)
 
 	icreq_timeout_tsc = spdk_get_ticks() + (NVME_TCP_TIME_OUT_IN_SECONDS * spdk_get_ticks_hz());
 	do {
-		rc = nvme_tcp_qpair_process_completions(&tqpair->qpair, 0);
+		if (tqpair->qpair.poll_group) {
+			rc = (int)nvme_tcp_poll_group_process_completions(tqpair->qpair.poll_group, 0,
+					dummy_disconnected_qpair_cb);
+		} else {
+			rc = nvme_tcp_qpair_process_completions(&tqpair->qpair, 0);
+		}
 	} while ((tqpair->state == NVME_TCP_QPAIR_STATE_INVALID) &&
 		 (rc == 0) && (spdk_get_ticks() <= icreq_timeout_tsc));
 
@@ -1702,6 +1714,14 @@ nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpa
 			    tqpair, ctrlr->trid.traddr, port);
 		rc = -1;
 		return rc;
+	}
+
+	if (qpair->poll_group) {
+		rc = nvme_poll_group_connect_qpair(qpair);
+		if (rc) {
+			SPDK_ERRLOG("Unable to activate the tcp qpair.\n");
+			return rc;
+		}
 	}
 
 	tqpair->maxr2t = NVME_TCP_MAX_R2T_DEFAULT;

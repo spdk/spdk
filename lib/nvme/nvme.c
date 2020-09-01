@@ -104,6 +104,11 @@ nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	status->done = true;
 }
 
+static void
+dummy_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_ctx)
+{
+}
+
 /**
  * Poll qpair for completions until a command completes.
  *
@@ -139,7 +144,12 @@ nvme_wait_for_completion_robust_lock_timeout(
 			nvme_robust_mutex_lock(robust_mutex);
 		}
 
-		rc = spdk_nvme_qpair_process_completions(qpair, 0);
+		if (qpair->poll_group) {
+			rc = (int)spdk_nvme_poll_group_process_completions(qpair->poll_group->group, 0,
+					dummy_disconnected_qpair_cb);
+		} else {
+			rc = spdk_nvme_qpair_process_completions(qpair, 0);
+		}
 
 		if (robust_mutex) {
 			nvme_robust_mutex_unlock(robust_mutex);
