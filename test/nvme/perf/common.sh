@@ -336,6 +336,11 @@ function get_results() {
 			mean_lat=${mean_lat%.*}
 			echo $((mean_lat / 1000))
 			;;
+		p90_lat_usec)
+			p90_lat=$(jq -r ".jobs[] | (.read.clat_ns.percentile.\"90.000000\"  // 0 * $reads_pct + .write.clat_ns.percentile.\"90.000000\" // 0 * $writes_pct)" $TMP_RESULT_FILE)
+			p90_lat=${p90_lat%.*}
+			echo $((p90_lat / 1000))
+			;;
 		p99_lat_usec)
 			p99_lat=$(jq -r ".jobs[] | (.read.clat_ns.percentile.\"99.000000\"  // 0 * $reads_pct + .write.clat_ns.percentile.\"99.000000\" // 0 * $writes_pct)" $TMP_RESULT_FILE)
 			p99_lat=${p99_lat%.*}

@@ -164,10 +164,10 @@ done
 result_dir=$testdir/results/perf_results_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}
 result_file=$result_dir/perf_results_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}.csv
 mkdir -p $result_dir
-unset iops_disks bw mean_lat_disks_usec p99_lat_disks_usec p99_99_lat_disks_usec stdev_disks_usec
+unset iops_disks bw mean_lat_disks_usec p90_lat_disks_usec p99_lat_disks_usec p99_99_lat_disks_usec stdev_disks_usec
 echo "run-time,ramp-time,fio-plugin,QD,block-size,num-cpu-cores,workload,workload-mix" > $result_file
 printf "%s,%s,%s,%s,%s,%s,%s,%s\n" $RUNTIME $RAMP_TIME $PLUGIN $IODEPTH $BLK_SIZE $NO_CORES $RW $MIX >> $result_file
-echo "num_of_disks,iops,avg_lat[usec],p99[usec],p99.99[usec],stdev[usec],avg_slat[usec],avg_clat[usec],bw[Kib/s]" >> $result_file
+echo "num_of_disks,iops,avg_lat[usec],p90[usec],p99[usec],p99.99[usec],stdev[usec],avg_slat[usec],avg_clat[usec],bw[Kib/s]" >> $result_file
 
 trap 'rm -f *.state $testdir/bdev.conf; kill $perf_pid; wait $dpdk_mem_pid; print_backtrace' ERR SIGTERM SIGABRT
 
@@ -296,6 +296,7 @@ for ((j = 0; j < REPEAT_NO; j++)); do
 		fi
 		iops_disks=$((iops_disks + $(get_results iops $rwmixread)))
 		mean_lat_disks_usec=$((mean_lat_disks_usec + $(get_results mean_lat_usec $rwmixread)))
+		p90_lat_disks_usec=$((p90_lat_disks_usec + $(get_results p90_lat_usec $rwmixread)))
 		p99_lat_disks_usec=$((p99_lat_disks_usec + $(get_results p99_lat_usec $rwmixread)))
 		p99_99_lat_disks_usec=$((p99_99_lat_disks_usec + $(get_results p99_99_lat_usec $rwmixread)))
 		stdev_disks_usec=$((stdev_disks_usec + $(get_results stdev_usec $rwmixread)))
@@ -328,6 +329,7 @@ iops_disks=$((iops_disks / REPEAT_NO))
 bw=$((bw / REPEAT_NO))
 if [[ "$PLUGIN" =~ "plugin" ]]; then
 	mean_lat_disks_usec=$((mean_lat_disks_usec / REPEAT_NO))
+	p90_lat_disks_usec=$((p90_lat_disks_usec / REPEAT_NO))
 	p99_lat_disks_usec=$((p99_lat_disks_usec / REPEAT_NO))
 	p99_99_lat_disks_usec=$((p99_99_lat_disks_usec / REPEAT_NO))
 	stdev_disks_usec=$((stdev_disks_usec / REPEAT_NO))
@@ -335,6 +337,7 @@ if [[ "$PLUGIN" =~ "plugin" ]]; then
 	mean_clat_disks_usec=$((mean_clat_disks_usec / REPEAT_NO))
 elif [[ "$PLUGIN" == "spdk-perf-bdev" ]]; then
 	mean_lat_disks_usec=0
+	p90_lat_disks_usec=0
 	p99_lat_disks_usec=0
 	p99_99_lat_disks_usec=0
 	stdev_disks_usec=0
@@ -342,6 +345,7 @@ elif [[ "$PLUGIN" == "spdk-perf-bdev" ]]; then
 	mean_clat_disks_usec=0
 elif [[ "$PLUGIN" == "spdk-perf-nvme" ]]; then
 	mean_lat_disks_usec=$((mean_lat_disks_usec / REPEAT_NO))
+	p90_lat_disks_usec=0
 	p99_lat_disks_usec=0
 	p99_99_lat_disks_usec=0
 	stdev_disks_usec=0
@@ -349,7 +353,7 @@ elif [[ "$PLUGIN" == "spdk-perf-nvme" ]]; then
 	mean_clat_disks_usec=0
 fi
 
-printf "%s,%s,%s,%s,%s,%s,%s,%s,%s\n" ${DISKNO} ${iops_disks} ${mean_lat_disks_usec} ${p99_lat_disks_usec} \
+printf "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" ${DISKNO} ${iops_disks} ${mean_lat_disks_usec} ${p90_lat_disks_usec} ${p99_lat_disks_usec} \
 	${p99_99_lat_disks_usec} ${stdev_disks_usec} ${mean_slat_disks_usec} ${mean_clat_disks_usec} ${bw} >> $result_file
 
 if [[ -n "$CPUFREQ" ]]; then
