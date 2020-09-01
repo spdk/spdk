@@ -1708,7 +1708,7 @@ nvmf_get_ana_log_page(struct spdk_nvmf_ctrlr *ctrlr, void *data,
 
 		ana_desc->ana_group_id = ns->nsid;
 		ana_desc->num_of_nsid = 1;
-		ana_desc->ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+		ana_desc->ana_state = ctrlr->listener->ana_state;
 		ana_desc->nsid[0] = ns->nsid;
 		/* TODO: Support Change Count. */
 		ana_desc->change_count = 0;

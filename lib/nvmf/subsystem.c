@@ -828,6 +828,7 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 	listener->cb_fn = cb_fn;
 	listener->cb_arg = cb_arg;
 	listener->subsystem = subsystem;
+	listener->ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
 
 	if (transport->ops->listen_associate != NULL) {
 		transport->ops->listen_associate(transport, subsystem, trid,
