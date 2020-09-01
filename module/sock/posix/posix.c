@@ -556,7 +556,7 @@ retry:
 
 	if (type == SPDK_SOCK_CREATE_LISTEN) {
 		/* Only enable zero copy for non-loopback sockets. */
-		enable_zero_copy = !sock_is_loopback(fd);
+		enable_zero_copy = opts->zcopy && !sock_is_loopback(fd);
 	} else if (type == SPDK_SOCK_CREATE_CONNECT) {
 		/* Disable zero copy for client sockets until support is added */
 		enable_zero_copy = false;
