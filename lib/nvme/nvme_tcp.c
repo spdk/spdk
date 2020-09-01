@@ -89,8 +89,11 @@ struct nvme_tcp_qpair {
 
 	uint16_t				num_entries;
 
-	bool					host_hdgst_enable;
-	bool					host_ddgst_enable;
+	struct {
+		uint16_t host_hdgst_enable: 1;
+		uint16_t host_ddgst_enable: 1;
+		uint16_t reserved: 14;
+	} flags;
 
 	/** Specifies the maximum number of PDU-Data bytes per H2C Data Transfer PDU */
 	uint32_t				maxh2cdata;
@@ -379,13 +382,14 @@ nvme_tcp_qpair_write_pdu(struct nvme_tcp_qpair *tqpair,
 	hlen = pdu->hdr.common.hlen;
 
 	/* Header Digest */
-	if (g_nvme_tcp_hdgst[pdu->hdr.common.pdu_type] && tqpair->host_hdgst_enable) {
+	if (g_nvme_tcp_hdgst[pdu->hdr.common.pdu_type] && tqpair->flags.host_hdgst_enable) {
 		crc32c = nvme_tcp_pdu_calc_header_digest(pdu);
 		MAKE_DIGEST_WORD((uint8_t *)pdu->hdr.raw + hlen, crc32c);
 	}
 
 	/* Data Digest */
-	if (pdu->data_len > 0 && g_nvme_tcp_ddgst[pdu->hdr.common.pdu_type] && tqpair->host_ddgst_enable) {
+	if (pdu->data_len > 0 && g_nvme_tcp_ddgst[pdu->hdr.common.pdu_type] &&
+	    tqpair->flags.host_ddgst_enable) {
 		crc32c = nvme_tcp_pdu_calc_data_digest(pdu);
 		MAKE_DIGEST_WORD(pdu->data_digest, crc32c);
 	}
@@ -394,7 +398,7 @@ nvme_tcp_qpair_write_pdu(struct nvme_tcp_qpair *tqpair,
 	pdu->cb_arg = cb_arg;
 
 	pdu->sock_req.iovcnt = nvme_tcp_build_iovs(pdu->iov, NVME_TCP_MAX_SGL_DESCRIPTORS, pdu,
-			       tqpair->host_hdgst_enable, tqpair->host_ddgst_enable,
+			       (bool)tqpair->flags.host_hdgst_enable, (bool)tqpair->flags.host_ddgst_enable,
 			       &mapped_length);
 	pdu->qpair = tqpair;
 	pdu->sock_req.cb_fn = _pdu_write_done;
@@ -593,7 +597,7 @@ nvme_tcp_qpair_capsule_cmd_send(struct nvme_tcp_qpair *tqpair,
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "capsule_cmd cid=%u on tqpair(%p)\n", tcp_req->req->cmd.cid, tqpair);
 
-	if (tqpair->host_hdgst_enable) {
+	if (tqpair->flags.host_hdgst_enable) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Header digest is enabled for capsule command on tcp_req=%p\n",
 			      tcp_req);
 		capsule_cmd->common.flags |= SPDK_NVME_TCP_CH_FLAGS_HDGSTF;
@@ -617,7 +621,7 @@ nvme_tcp_qpair_capsule_cmd_send(struct nvme_tcp_qpair *tqpair,
 
 	capsule_cmd->common.pdo = pdo;
 	plen += tcp_req->req->payload_size;
-	if (tqpair->host_ddgst_enable) {
+	if (tqpair->flags.host_ddgst_enable) {
 		capsule_cmd->common.flags |= SPDK_NVME_TCP_CH_FLAGS_DDGSTF;
 		plen += SPDK_NVME_TCP_DIGEST_LEN;
 	}
@@ -848,7 +852,7 @@ nvme_tcp_pdu_ch_handle(struct nvme_tcp_qpair *tqpair)
 		goto err;
 	} else {
 		nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH);
-		nvme_tcp_pdu_calc_psh_len(&tqpair->recv_pdu, tqpair->host_hdgst_enable);
+		nvme_tcp_pdu_calc_psh_len(&tqpair->recv_pdu, tqpair->flags.host_hdgst_enable);
 		return;
 	}
 err:
@@ -1013,21 +1017,21 @@ nvme_tcp_icresp_handle(struct nvme_tcp_qpair *tqpair,
 	}
 	tqpair->cpda = ic_resp->cpda;
 
-	tqpair->host_hdgst_enable = ic_resp->dgst.bits.hdgst_enable ? true : false;
-	tqpair->host_ddgst_enable = ic_resp->dgst.bits.ddgst_enable ? true : false;
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "host_hdgst_enable: %u\n", tqpair->host_hdgst_enable);
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "host_ddgst_enable: %u\n", tqpair->host_ddgst_enable);
+	tqpair->flags.host_hdgst_enable = ic_resp->dgst.bits.hdgst_enable ? true : false;
+	tqpair->flags.host_ddgst_enable = ic_resp->dgst.bits.ddgst_enable ? true : false;
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "host_hdgst_enable: %u\n", tqpair->flags.host_hdgst_enable);
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "host_ddgst_enable: %u\n", tqpair->flags.host_ddgst_enable);
 
 	/* Now that we know whether digests are enabled, properly size the receive buffer to
 	 * handle several incoming 4K read commands according to SPDK_NVMF_TCP_RECV_BUF_SIZE_FACTOR
 	 * parameter. */
 	recv_buf_size = 0x1000 + sizeof(struct spdk_nvme_tcp_c2h_data_hdr);
 
-	if (tqpair->host_hdgst_enable) {
+	if (tqpair->flags.host_hdgst_enable) {
 		recv_buf_size += SPDK_NVME_TCP_DIGEST_LEN;
 	}
 
-	if (tqpair->host_ddgst_enable) {
+	if (tqpair->flags.host_ddgst_enable) {
 		recv_buf_size += SPDK_NVME_TCP_DIGEST_LEN;
 	}
 
@@ -1226,7 +1230,7 @@ nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req)
 				  h2c_data->datao, h2c_data->datal);
 	tcp_req->r2tl_remain -= h2c_data->datal;
 
-	if (tqpair->host_hdgst_enable) {
+	if (tqpair->flags.host_hdgst_enable) {
 		h2c_data->common.flags |= SPDK_NVME_TCP_CH_FLAGS_HDGSTF;
 		plen += SPDK_NVME_TCP_DIGEST_LEN;
 	}
@@ -1243,7 +1247,7 @@ nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req)
 
 	h2c_data->common.pdo = pdo;
 	plen += h2c_data->datal;
-	if (tqpair->host_ddgst_enable) {
+	if (tqpair->flags.host_ddgst_enable) {
 		h2c_data->common.flags |= SPDK_NVME_TCP_CH_FLAGS_DDGSTF;
 		plen += SPDK_NVME_TCP_DIGEST_LEN;
 	}
@@ -1456,7 +1460,7 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 			data_len = pdu->data_len;
 			/* data digest */
 			if (spdk_unlikely((pdu->hdr.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_C2H_DATA) &&
-					  tqpair->host_ddgst_enable)) {
+					  tqpair->flags.host_ddgst_enable)) {
 				data_len += SPDK_NVME_TCP_DIGEST_LEN;
 				pdu->ddgst_enable = true;
 			}
