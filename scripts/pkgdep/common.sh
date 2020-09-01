@@ -4,7 +4,7 @@ install_liburing() {
 	local GIT_REPO_LIBURING=https://github.com/axboe/liburing.git
 	local liburing_dir=/usr/local/src/liburing
 
-	if [[ -e /usr/lib64/liburing.so ]]; then
+	if [[ $(ldconfig -p) == *liburing.so* ]]; then
 		echo "liburing is already installed. skipping"
 	else
 		if [[ -d $liburing_dir ]]; then
