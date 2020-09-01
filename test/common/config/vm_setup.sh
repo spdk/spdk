@@ -78,6 +78,10 @@ else
 	package_manager="undefined"
 fi
 
+if [[ -e $vmsetupdir/pkgdep/os/$OSID ]]; then
+	source "$vmsetupdir/pkgdep/os/$OSID"
+fi
+
 # Parse input arguments #
 while getopts 'd:siuht:c:-:' optchar; do
 	case "$optchar" in
