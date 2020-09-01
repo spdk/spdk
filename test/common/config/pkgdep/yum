@@ -64,6 +64,7 @@ pre_install() {
 	fi
 
 	install nbd || {
+		install wget
 		wget -O nbd.rpm https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/n/nbd-3.14-2.el7.x86_64.rpm
 		install nbd.rpm
 	}
