@@ -418,6 +418,8 @@ posix_sock_create(const char *ip, int port,
 	int rc, sz;
 	bool enable_zero_copy = true;
 
+	assert(opts != NULL);
+
 	if (ip == NULL) {
 		return NULL;
 	}
@@ -479,7 +481,7 @@ retry:
 		}
 
 #if defined(SO_PRIORITY)
-		if (opts != NULL && opts->priority) {
+		if (opts->priority) {
 			rc = setsockopt(fd, SOL_SOCKET, SO_PRIORITY, &opts->priority, sizeof val);
 			if (rc != 0) {
 				close(fd);
@@ -554,13 +556,8 @@ retry:
 		return NULL;
 	}
 
-	if (type == SPDK_SOCK_CREATE_LISTEN) {
-		/* Only enable zero copy for non-loopback sockets. */
-		enable_zero_copy = opts->zcopy && !sock_is_loopback(fd);
-	} else if (type == SPDK_SOCK_CREATE_CONNECT) {
-		/* Disable zero copy for client sockets until support is added */
-		enable_zero_copy = false;
-	}
+	/* Only enable zero copy for non-loopback sockets. */
+	enable_zero_copy = opts->zcopy && !sock_is_loopback(fd);
 
 	sock = posix_sock_alloc(fd, enable_zero_copy);
 	if (sock == NULL) {
