@@ -126,7 +126,9 @@ struct nvme_tcp_req {
 			uint8_t				send_ack : 1;
 			/* Data transfer completed - target send resp or last data bit */
 			uint8_t				data_recv : 1;
-			uint8_t				r2t_recv : 1;
+			/* tcp_req is waiting for completion of the previous send operation (buffer reclaim notification
+			 * from kernel) to send H2C */
+			uint8_t				h2c_send_waiting_ack : 1;
 			uint8_t				reserved : 5;
 		} bits;
 	} ordering;
@@ -525,7 +527,7 @@ nvme_tcp_qpair_cmd_send_complete(void *cb_arg)
 
 	tcp_req->ordering.bits.send_ack = 1;
 	/* Handle the r2t case */
-	if (spdk_unlikely(tcp_req->ordering.bits.r2t_recv)) {
+	if (spdk_unlikely(tcp_req->ordering.bits.h2c_send_waiting_ack)) {
 		nvme_tcp_send_h2c_data(tcp_req);
 	} else {
 		nvme_tcp_req_put_safe(tcp_req);
@@ -1161,9 +1163,9 @@ nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req)
 	struct spdk_nvme_tcp_h2c_data_hdr *h2c_data;
 	uint32_t plen, pdo, alignment;
 
-	/* Reinit the send_ack and r2t_recv bits */
+	/* Reinit the send_ack and h2c_send_waiting_ack bits */
 	tcp_req->ordering.bits.send_ack = 0;
-	tcp_req->ordering.bits.r2t_recv = 0;
+	tcp_req->ordering.bits.h2c_send_waiting_ack = 0;
 	rsp_pdu = tcp_req->send_pdu;
 	memset(rsp_pdu, 0, sizeof(*rsp_pdu));
 	h2c_data = &rsp_pdu->hdr.h2c_data;
@@ -1231,7 +1233,6 @@ nvme_tcp_r2t_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu *pdu)
 		goto end;
 	}
 
-	tcp_req->ordering.bits.r2t_recv = 1;
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "r2t info: r2to=%u, r2tl=%u for tqpair=%p\n", r2t->r2to, r2t->r2tl,
 		      tqpair);
 
@@ -1269,7 +1270,10 @@ nvme_tcp_r2t_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu *pdu)
 
 	if (spdk_likely(tcp_req->ordering.bits.send_ack)) {
 		nvme_tcp_send_h2c_data(tcp_req);
+	} else {
+		tcp_req->ordering.bits.h2c_send_waiting_ack = 1;
 	}
+
 	return;
 
 end:
