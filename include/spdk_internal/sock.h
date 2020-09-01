@@ -55,18 +55,16 @@ extern "C" {
 struct spdk_sock {
 	struct spdk_net_impl		*net_impl;
 	struct spdk_sock_opts		opts;
-	int				cb_cnt;
-	spdk_sock_cb			cb_fn;
-	void				*cb_arg;
 	struct spdk_sock_group_impl	*group_impl;
 	TAILQ_ENTRY(spdk_sock)		link;
 
-	int				max_iovcnt;
 	TAILQ_HEAD(, spdk_sock_request)	queued_reqs;
 	TAILQ_HEAD(, spdk_sock_request)	pending_reqs;
 	int				queued_iovcnt;
+	int				cb_cnt;
+	spdk_sock_cb			cb_fn;
+	void				*cb_arg;
 	int				placement_id;
-
 	struct {
 		uint8_t		closed		: 1;
 		uint8_t		reserved	: 7;
