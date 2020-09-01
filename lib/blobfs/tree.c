@@ -87,6 +87,7 @@ tree_insert_buffer(struct cache_tree *root, struct cache_buffer *buffer)
 	while (offset >= CACHE_TREE_LEVEL_SIZE(root->level + 1)) {
 		if (root->present_mask != 0) {
 			tree = calloc(1, sizeof(*tree));
+			assert(tree != NULL);
 			tree->level = root->level + 1;
 			tree->u.tree[0] = root;
 			root = tree;
@@ -103,6 +104,7 @@ tree_insert_buffer(struct cache_tree *root, struct cache_buffer *buffer)
 		offset &= CACHE_TREE_LEVEL_MASK(tree->level);
 		if (tree->u.tree[index] == NULL) {
 			tree->u.tree[index] = calloc(1, sizeof(*tree));
+			assert(tree->u.tree[index] != NULL);
 			tree->u.tree[index]->level = tree->level - 1;
 			tree->present_mask |= (1ULL << index);
 		}
