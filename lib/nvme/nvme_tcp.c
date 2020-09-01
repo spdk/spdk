@@ -119,11 +119,16 @@ struct nvme_tcp_req {
 	uint32_t				active_r2ts;
 	bool					in_capsule_data;
 	/* It is used to track whether the req can be safely freed */
-	struct {
-		uint8_t				send_ack : 1;
-		uint8_t				data_recv : 1;
-		uint8_t				r2t_recv : 1;
-		uint8_t				reserved : 5;
+	union {
+		uint8_t raw;
+		struct {
+			/* The last send operation completed - kernel released send buffer */
+			uint8_t				send_ack : 1;
+			/* Data transfer completed - target send resp or last data bit */
+			uint8_t				data_recv : 1;
+			uint8_t				r2t_recv : 1;
+			uint8_t				reserved : 5;
+		} bits;
 	} ordering;
 	struct nvme_tcp_pdu			*send_pdu;
 	struct iovec				iov[NVME_TCP_MAX_SGL_DESCRIPTORS];
@@ -173,9 +178,7 @@ nvme_tcp_req_get(struct nvme_tcp_qpair *tqpair)
 	tcp_req->r2tl_remain = 0;
 	tcp_req->active_r2ts = 0;
 	tcp_req->iovcnt = 0;
-	tcp_req->ordering.send_ack = 0;
-	tcp_req->ordering.data_recv = 0;
-	tcp_req->ordering.r2t_recv = 0;
+	tcp_req->ordering.raw = 0;
 	memset(tcp_req->send_pdu, 0, sizeof(struct nvme_tcp_pdu));
 	TAILQ_INSERT_TAIL(&tqpair->outstanding_reqs, tcp_req, link);
 
@@ -508,7 +511,7 @@ nvme_tcp_req_init(struct nvme_tcp_qpair *tqpair, struct nvme_request *req,
 static inline void
 nvme_tcp_req_put_safe(struct nvme_tcp_req *tcp_req)
 {
-	if (tcp_req->ordering.send_ack && tcp_req->ordering.data_recv) {
+	if (tcp_req->ordering.bits.send_ack && tcp_req->ordering.bits.data_recv) {
 		assert(tcp_req->state == NVME_TCP_REQ_ACTIVE);
 		assert(tcp_req->tqpair != NULL);
 		nvme_tcp_req_put(tcp_req->tqpair, tcp_req);
@@ -520,9 +523,9 @@ nvme_tcp_qpair_cmd_send_complete(void *cb_arg)
 {
 	struct nvme_tcp_req *tcp_req = cb_arg;
 
-	tcp_req->ordering.send_ack = 1;
+	tcp_req->ordering.bits.send_ack = 1;
 	/* Handle the r2t case */
-	if (spdk_unlikely(tcp_req->ordering.r2t_recv)) {
+	if (spdk_unlikely(tcp_req->ordering.bits.r2t_recv)) {
 		nvme_tcp_send_h2c_data(tcp_req);
 	} else {
 		nvme_tcp_req_put_safe(tcp_req);
@@ -849,11 +852,11 @@ nvme_tcp_c2h_data_payload_handle(struct nvme_tcp_qpair *tqpair,
 		cpl.cid = tcp_req->cid;
 		cpl.sqid = tqpair->qpair.id;
 		nvme_tcp_req_complete(tcp_req, &cpl);
-		if (tcp_req->ordering.send_ack) {
+		if (tcp_req->ordering.bits.send_ack) {
 			(*reaped)++;
 		}
 
-		tcp_req->ordering.data_recv = 1;
+		tcp_req->ordering.bits.data_recv = 1;
 		nvme_tcp_req_put_safe(tcp_req);
 	}
 }
@@ -1031,11 +1034,11 @@ nvme_tcp_capsule_resp_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_
 	}
 
 	nvme_tcp_req_complete(tcp_req, &cpl);
-	if (tcp_req->ordering.send_ack) {
+	if (tcp_req->ordering.bits.send_ack) {
 		(*reaped)++;
 	}
 
-	tcp_req->ordering.data_recv = 1;
+	tcp_req->ordering.bits.data_recv = 1;
 	nvme_tcp_req_put_safe(tcp_req);
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "complete tcp_req(%p) on tqpair=%p\n", tcp_req, tqpair);
@@ -1138,7 +1141,7 @@ nvme_tcp_qpair_h2c_data_send_complete(void *cb_arg)
 
 	assert(tcp_req != NULL);
 
-	tcp_req->ordering.send_ack = 1;
+	tcp_req->ordering.bits.send_ack = 1;
 	if (tcp_req->r2tl_remain) {
 		nvme_tcp_send_h2c_data(tcp_req);
 	} else {
@@ -1159,8 +1162,8 @@ nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req)
 	uint32_t plen, pdo, alignment;
 
 	/* Reinit the send_ack and r2t_recv bits */
-	tcp_req->ordering.send_ack = 0;
-	tcp_req->ordering.r2t_recv = 0;
+	tcp_req->ordering.bits.send_ack = 0;
+	tcp_req->ordering.bits.r2t_recv = 0;
 	rsp_pdu = tcp_req->send_pdu;
 	memset(rsp_pdu, 0, sizeof(*rsp_pdu));
 	h2c_data = &rsp_pdu->hdr.h2c_data;
@@ -1228,7 +1231,7 @@ nvme_tcp_r2t_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu *pdu)
 		goto end;
 	}
 
-	tcp_req->ordering.r2t_recv = 1;
+	tcp_req->ordering.bits.r2t_recv = 1;
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "r2t info: r2to=%u, r2tl=%u for tqpair=%p\n", r2t->r2to, r2t->r2tl,
 		      tqpair);
 
@@ -1264,7 +1267,7 @@ nvme_tcp_r2t_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu *pdu)
 	tcp_req->r2tl_remain = r2t->r2tl;
 	nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
 
-	if (spdk_likely(tcp_req->ordering.send_ack)) {
+	if (spdk_likely(tcp_req->ordering.bits.send_ack)) {
 		nvme_tcp_send_h2c_data(tcp_req);
 	}
 	return;
