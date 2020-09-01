@@ -257,22 +257,33 @@ if $DPDKMEM; then
 	dpdk_mem_pid=$!
 fi
 
+iops_disks=0
+bw=0
+min_lat_disks_usec=0
+max_lat_disks_usec=0
+mean_lat_disks_usec=0
+p90_lat_disks_usec=0
+p99_lat_disks_usec=0
+p99_99_lat_disks_usec=0
+stdev_disks_usec=0
+mean_slat_disks_usec=0
+mean_clat_disks_usec=0
 #Run each workolad $REPEAT_NO times
 for ((j = 0; j < REPEAT_NO; j++)); do
 	if [ $PLUGIN = "spdk-perf-bdev" ]; then
 		run_bdevperf > $TMP_RESULT_FILE
-		iops_disks=$((iops_disks + $(get_bdevperf_results iops)))
-		bw=$((bw + $(get_bdevperf_results bw_Kibs)))
+		iops_disks=$(bc "$iops_disks + $(get_bdevperf_results iops)")
+		bw=$(bc "$bw + $(get_bdevperf_results bw_Kibs)")
 		cp $TMP_RESULT_FILE $result_dir/perf_results_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.output
 	elif [ $PLUGIN = "spdk-perf-nvme" ]; then
 		run_nvmeperf $DISKNO > $TMP_RESULT_FILE
 		read -r iops bandwidth mean_lat min_lat max_lat <<< $(get_nvmeperf_results)
 
-		iops_disks=$((iops_disks + iops))
-		bw=$((bw + bandwidth))
-		mean_lat_disks_usec=$((mean_lat_disks_usec + mean_lat))
-		min_lat_disks_usec=$((min_lat_disks_usec + min_lat))
-		max_lat_disks_usec=$((max_lat_disks_usec + max_lat))
+		iops_disks=$(bc "$iops_disks+$iops")
+		bw=$(bc "$bw+$bandwidth")
+		mean_lat_disks_usec=$(bc "$mean_lat_disks_usec + $mean_lat")
+		min_lat_disks_usec=$(bc "$min_lat_disks_usec + $min_lat")
+		max_lat_disks_usec=$(bc "$max_lat_disks_usec + $max_lat")
 
 		cp $TMP_RESULT_FILE $result_dir/perf_results_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.output
 	else
@@ -294,16 +305,15 @@ for ((j = 0; j < REPEAT_NO; j++)); do
 		elif [[ $RW = *"write"* ]]; then
 			rwmixread=0
 		fi
-		iops_disks=$((iops_disks + $(get_results iops $rwmixread)))
-		mean_lat_disks_usec=$((mean_lat_disks_usec + $(get_results mean_lat_usec $rwmixread)))
-		p90_lat_disks_usec=$((p90_lat_disks_usec + $(get_results p90_lat_usec $rwmixread)))
-		p99_lat_disks_usec=$((p99_lat_disks_usec + $(get_results p99_lat_usec $rwmixread)))
-		p99_99_lat_disks_usec=$((p99_99_lat_disks_usec + $(get_results p99_99_lat_usec $rwmixread)))
-		stdev_disks_usec=$((stdev_disks_usec + $(get_results stdev_usec $rwmixread)))
-
-		mean_slat_disks_usec=$((mean_slat_disks_usec + $(get_results mean_slat_usec $rwmixread)))
-		mean_clat_disks_usec=$((mean_clat_disks_usec + $(get_results mean_clat_usec $rwmixread)))
-		bw=$((bw + $(get_results bw_Kibs $rwmixread)))
+		iops_disks=$(bc "$iops_disks + $(get_results iops $rwmixread)")
+		mean_lat_disks_usec=$(bc "$mean_lat_disks_usec + $(get_results mean_lat_usec $rwmixread)")
+		p90_lat_disks_usec=$(bc "$p90_lat_disks_usec + $(get_results p90_lat_usec $rwmixread)")
+		p99_lat_disks_usec=$(bc "$p99_lat_disks_usec + $(get_results p99_lat_usec $rwmixread)")
+		p99_99_lat_disks_usec=$(bc "$p99_99_lat_disks_usec + $(get_results p99_99_lat_usec $rwmixread)")
+		stdev_disks_usec=$(bc "$stdev_disks_usec + $(get_results stdev_usec $rwmixread)")
+		mean_slat_disks_usec=$(bc "$mean_slat_disks_usec + $(get_results mean_slat_usec $rwmixread)")
+		mean_clat_disks_usec=$(bc "$mean_clat_disks_usec + $(get_results mean_clat_usec $rwmixread)")
+		bw=$(bc "$bw + $(get_results bw_Kibs $rwmixread)")
 
 		cp $TMP_RESULT_FILE $result_dir/perf_results_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.json
 		cp $testdir/config.fio $result_dir/config_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.fio
@@ -325,32 +335,18 @@ if $DPDKMEM; then
 fi
 
 #Write results to csv file
-iops_disks=$((iops_disks / REPEAT_NO))
-bw=$((bw / REPEAT_NO))
+iops_disks=$(bc "$iops_disks / $REPEAT_NO")
+bw=$(bc "$bw / $REPEAT_NO")
 if [[ "$PLUGIN" =~ "plugin" ]]; then
-	mean_lat_disks_usec=$((mean_lat_disks_usec / REPEAT_NO))
-	p90_lat_disks_usec=$((p90_lat_disks_usec / REPEAT_NO))
-	p99_lat_disks_usec=$((p99_lat_disks_usec / REPEAT_NO))
-	p99_99_lat_disks_usec=$((p99_99_lat_disks_usec / REPEAT_NO))
-	stdev_disks_usec=$((stdev_disks_usec / REPEAT_NO))
-	mean_slat_disks_usec=$((mean_slat_disks_usec / REPEAT_NO))
-	mean_clat_disks_usec=$((mean_clat_disks_usec / REPEAT_NO))
-elif [[ "$PLUGIN" == "spdk-perf-bdev" ]]; then
-	mean_lat_disks_usec=0
-	p90_lat_disks_usec=0
-	p99_lat_disks_usec=0
-	p99_99_lat_disks_usec=0
-	stdev_disks_usec=0
-	mean_slat_disks_usec=0
-	mean_clat_disks_usec=0
+	mean_lat_disks_usec=$(bc "$mean_lat_disks_usec / $REPEAT_NO")
+	p90_lat_disks_usec=$(bc "$p90_lat_disks_usec / $REPEAT_NO")
+	p99_lat_disks_usec=$(bc "$p99_lat_disks_usec / $REPEAT_NO")
+	p99_99_lat_disks_usec=$(bc "$p99_99_lat_disks_usec / $REPEAT_NO")
+	stdev_disks_usec=$(bc "$stdev_disks_usec / $REPEAT_NO")
+	mean_slat_disks_usec=$(bc "$mean_slat_disks_usec / $REPEAT_NO")
+	mean_clat_disks_usec=$(bc "$mean_clat_disks_usec / $REPEAT_NO")
 elif [[ "$PLUGIN" == "spdk-perf-nvme" ]]; then
-	mean_lat_disks_usec=$((mean_lat_disks_usec / REPEAT_NO))
-	p90_lat_disks_usec=0
-	p99_lat_disks_usec=0
-	p99_99_lat_disks_usec=0
-	stdev_disks_usec=0
-	mean_slat_disks_usec=0
-	mean_clat_disks_usec=0
+	mean_lat_disks_usec=$(bc "$mean_lat_disks_usec/$REPEAT_NO")
 fi
 
 printf "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" ${DISKNO} ${iops_disks} ${mean_lat_disks_usec} ${p90_lat_disks_usec} ${p99_lat_disks_usec} \

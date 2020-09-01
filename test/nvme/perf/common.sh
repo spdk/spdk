@@ -319,57 +319,52 @@ function preconditioning() {
 	rm -f $testdir/config.fio
 }
 
+function bc() {
+	$(type -P bc) -l <<< "scale=3; $1"
+}
+
 function get_results() {
 	local reads_pct
 	local writes_pct
 
-	reads_pct=$(bc -l <<< "scale=3; $2/100")
-	writes_pct=$(bc -l <<< "scale=3; 1-$reads_pct")
+	reads_pct=$(bc "$2 / 100")
+	writes_pct=$(bc "1 - $reads_pct")
 	case "$1" in
 		iops)
 			iops=$(jq -r '.jobs[] | .read.iops + .write.iops' $TMP_RESULT_FILE)
-			iops=${iops%.*}
 			echo $iops
 			;;
 		mean_lat_usec)
-			mean_lat=$(jq -r ".jobs[] | (.read.lat_ns.mean * $reads_pct + .write.lat_ns.mean * $writes_pct)" $TMP_RESULT_FILE)
-			mean_lat=${mean_lat%.*}
-			echo $((mean_lat / 1000))
+			mean_lat=$(jq -r ".jobs[] | (.read.lat_ns.mean * $reads_pct + .write.lat_ns.mean * $writes_pct)/1000" $TMP_RESULT_FILE)
+			echo $mean_lat
 			;;
 		p90_lat_usec)
-			p90_lat=$(jq -r ".jobs[] | (.read.clat_ns.percentile.\"90.000000\"  // 0 * $reads_pct + .write.clat_ns.percentile.\"90.000000\" // 0 * $writes_pct)" $TMP_RESULT_FILE)
-			p90_lat=${p90_lat%.*}
-			echo $((p90_lat / 1000))
+			p90_lat=$(jq -r ".jobs[] | (.read.clat_ns.percentile.\"90.000000\"  // 0 * $reads_pct + .write.clat_ns.percentile.\"90.000000\" // 0 * $writes_pct)/1000" $TMP_RESULT_FILE)
+			echo $p90_lat
 			;;
 		p99_lat_usec)
-			p99_lat=$(jq -r ".jobs[] | (.read.clat_ns.percentile.\"99.000000\"  // 0 * $reads_pct + .write.clat_ns.percentile.\"99.000000\" // 0 * $writes_pct)" $TMP_RESULT_FILE)
-			p99_lat=${p99_lat%.*}
-			echo $((p99_lat / 1000))
+			p99_lat=$(jq -r ".jobs[] | (.read.clat_ns.percentile.\"99.000000\"  // 0 * $reads_pct + .write.clat_ns.percentile.\"99.000000\" // 0 * $writes_pct)/1000" $TMP_RESULT_FILE)
+			echo $p99_lat
 			;;
 		p99_99_lat_usec)
-			p99_99_lat=$(jq -r ".jobs[] | (.read.clat_ns.percentile.\"99.990000\" // 0 * $reads_pct + .write.clat_ns.percentile.\"99.990000\" // 0 * $writes_pct)" $TMP_RESULT_FILE)
-			p99_99_lat=${p99_99_lat%.*}
-			echo $((p99_99_lat / 1000))
+			p99_99_lat=$(jq -r ".jobs[] | (.read.clat_ns.percentile.\"99.990000\" // 0 * $reads_pct + .write.clat_ns.percentile.\"99.990000\" // 0 * $writes_pct)/1000" $TMP_RESULT_FILE)
+			echo $p99_99_lat
 			;;
 		stdev_usec)
-			stdev=$(jq -r ".jobs[] | (.read.clat_ns.stddev * $reads_pct + .write.clat_ns.stddev * $writes_pct)" $TMP_RESULT_FILE)
-			stdev=${stdev%.*}
-			echo $((stdev / 1000))
+			stdev=$(jq -r ".jobs[] | (.read.clat_ns.stddev * $reads_pct + .write.clat_ns.stddev * $writes_pct)/1000" $TMP_RESULT_FILE)
+			echo $stdev
 			;;
 		mean_slat_usec)
-			mean_slat=$(jq -r ".jobs[] | (.read.slat_ns.mean * $reads_pct + .write.slat_ns.mean * $writes_pct)" $TMP_RESULT_FILE)
-			mean_slat=${mean_slat%.*}
-			echo $((mean_slat / 1000))
+			mean_slat=$(jq -r ".jobs[] | (.read.slat_ns.mean * $reads_pct + .write.slat_ns.mean * $writes_pct)/1000" $TMP_RESULT_FILE)
+			echo $mean_slat
 			;;
 		mean_clat_usec)
-			mean_clat=$(jq -r ".jobs[] | (.read.clat_ns.mean * $reads_pct + .write.clat_ns.mean * $writes_pct)" $TMP_RESULT_FILE)
-			mean_clat=${mean_clat%.*}
-			echo $((mean_clat / 1000))
+			mean_clat=$(jq -r ".jobs[] | (.read.clat_ns.mean * $reads_pct + .write.clat_ns.mean * $writes_pct)/1000" $TMP_RESULT_FILE)
+			echo $mean_clat
 			;;
 		bw_Kibs)
 			bw=$(jq -r ".jobs[] | (.read.bw + .write.bw)" $TMP_RESULT_FILE)
-			bw=${bw%.*}
-			echo $((bw))
+			echo $bw
 			;;
 	esac
 }
@@ -378,13 +373,11 @@ function get_bdevperf_results() {
 	case "$1" in
 		iops)
 			iops=$(grep Total $TMP_RESULT_FILE | awk -F 'Total' '{print $2}' | awk '{print $2}')
-			iops=${iops%.*}
 			echo $iops
 			;;
 		bw_Kibs)
-			bw_MBs=$(grep Total $TMP_RESULT_FILE | awk -F 'Total' '{print $2}' | awk '{print $4}')
-			bw_MBs=${bw_MBs%.*}
-			echo $((bw_MBs * 1024))
+			bw_KBs=$(grep Total $TMP_RESULT_FILE | awk -F 'Total' '{print $2}' | awk '{print $4}')
+			bc "$bw_KBs * 1024"
 			;;
 	esac
 }
@@ -397,16 +390,7 @@ function get_nvmeperf_results() {
 	local min_lat_usec
 
 	read -r iops bw_MBs mean_lat_usec min_lat_usec max_lat_usec <<< $(tr -s " " < $TMP_RESULT_FILE | grep -oP "(?<=Total : )(.*+)")
-
-	# We need to get rid of the decimal spaces due
-	# to use of arithmetic expressions instead of "bc" for calculations
-	iops=${iops%.*}
-	bw_MBs=${bw_MBs%.*}
-	mean_lat_usec=${mean_lat_usec%.*}
-	min_lat_usec=${min_lat_usec%.*}
-	max_lat_usec=${max_lat_usec%.*}
-
-	echo "$iops $(bc <<< "$bw_MBs * 1024") $mean_lat_usec $min_lat_usec $max_lat_usec"
+	echo "$iops $(bc "$bw_MBs * 1024") $mean_lat_usec $min_lat_usec $max_lat_usec"
 }
 
 function run_spdk_nvme_fio() {
