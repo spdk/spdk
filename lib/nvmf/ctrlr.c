@@ -409,6 +409,16 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 
 	ctrlr->dif_insert_or_strip = transport->opts.dif_insert_or_strip;
 
+	if (ctrlr->subsys->subtype == SPDK_NVMF_SUBTYPE_NVME) {
+		ctrlr->listener = nvmf_subsystem_find_listener(ctrlr->subsys,
+				  req->qpair->trid);
+		if (!ctrlr->listener) {
+			SPDK_ERRLOG("Listener was not found\n");
+			free(ctrlr);
+			return NULL;
+		}
+	}
+
 	req->qpair->ctrlr = ctrlr;
 	spdk_thread_send_msg(subsystem->thread, _nvmf_subsystem_add_ctrlr, req);
 

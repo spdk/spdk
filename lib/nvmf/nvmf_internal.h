@@ -216,6 +216,8 @@ struct spdk_nvmf_ctrlr {
 	struct spdk_thread	*thread;
 	struct spdk_bit_array	*qpair_mask;
 
+	const struct spdk_nvmf_subsystem_listener	*listener;
+
 	struct spdk_nvmf_request *aer_req[NVMF_MAX_ASYNC_EVENTS];
 	union spdk_nvme_async_event_completion notice_event;
 	union spdk_nvme_async_event_completion reservation_event;
