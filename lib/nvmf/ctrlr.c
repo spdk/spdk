@@ -512,6 +512,7 @@ _nvmf_ctrlr_add_io_qpair(void *ctx)
 	struct spdk_nvmf_qpair *admin_qpair;
 	struct spdk_nvmf_tgt *tgt = qpair->transport->tgt;
 	struct spdk_nvmf_subsystem *subsystem;
+	const struct spdk_nvmf_subsystem_listener *listener;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Connect I/O Queue for controller id 0x%x\n", data->cntlid);
 
@@ -533,6 +534,17 @@ _nvmf_ctrlr_add_io_qpair(void *ctx)
 		SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
 		spdk_nvmf_request_complete(req);
 		return;
+	}
+
+	/* If ANA reporting is enabled, check if I/O connect is on the same listener. */
+	if (subsystem->ana_reporting) {
+		listener = nvmf_subsystem_find_listener(subsystem, qpair->trid);
+		if (listener != ctrlr->listener) {
+			SPDK_ERRLOG("I/O connect is on a listener different from admin connect\n");
+			SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
+			spdk_nvmf_request_complete(req);
+			return;
+		}
 	}
 
 	admin_qpair = ctrlr->admin_qpair;
