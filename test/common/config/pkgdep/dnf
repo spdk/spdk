@@ -67,6 +67,9 @@ pre_install() {
 		# FIXME: Review when fedora starts to successfully build this package again.
 		install tsocks || echo "Installation of the tsocks package failed, proxy may not be available"
 	fi
+	if [[ $ID == centos ]] && (( VERSION_ID == 8 )); then
+		sudo "$package_manager" update -y --refresh
+	fi
 }
 
 if [[ $OSID != fedora ]]; then
