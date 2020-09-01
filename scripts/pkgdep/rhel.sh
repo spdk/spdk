@@ -24,32 +24,35 @@ disclaimer() {
 
 disclaimer
 
-# First, add extra EPEL repo to have a chance of covering most of the packages
+# First, add extra EPEL, ELRepo, Ceph repos to have a chance of covering most of the packages
 # on the enterprise systems, like RHEL.
 if [[ $ID == centos || $ID == rhel ]]; then
-	if ! rpm --quiet -q epel-release; then
-		[[ $VERSION_ID == 7* ]] && epel=https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-		[[ $VERSION_ID == 8* ]] && epel=https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
-		if [[ -n $epel ]]; then
-			yum install -y "$epel"
-		fi
+	repos=() enable=("epel" "elrepo" "elrepo-testing")
+	[[ $ID == centos ]] && enable+=("extras")
+	if [[ $VERSION_ID == 7* ]]; then
+		repos+=("https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm")
+		repos+=("https://www.elrepo.org/elrepo-release-7.el7.elrepo.noarch.rpm")
+		[[ $ID == centos ]] && repos+=("centos-release-ceph-nautilus.noarch")
 	fi
-	# Potential dependencies for EPEL packages can be needed from other repos, enable them
+	if [[ $VERSION_ID == 8* ]]; then
+		repos+=("https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm")
+		repos+=("https://www.elrepo.org/elrepo-release-8.el8.elrepo.noarch.rpm")
+		[[ $ID == centos ]] && repos+=("centos-release-ceph-nautilus.noarch")
+		# Add PowerTools needed for install CUnit-devel in Centos8
+		[[ $ID == centos ]] && repos+=("yum-utils") && enable+=("PowerTools")
+	fi
+	if ((${#repos[@]} > 0)); then
+		yum install -y "${repos[@]}"
+		yum-config-manager --enable "${enable[@]}"
+	fi
+	# Potential dependencies can be needed from other RHEL repos, enable them
 	if [[ $ID == rhel ]]; then
 		[[ $VERSION_ID == 7* ]] && subscription-manager repos --enable "rhel-*-optional-rpms" --enable "rhel-*-extras-rpms"
 		[[ $VERSION_ID == 8* ]] && subscription-manager repos --enable codeready-builder-for-rhel-8-x86_64-rpms
-	elif [[ $ID == centos ]]; then
-		yum --enablerepo=extras install -y epel-release
 	fi
 fi
 
 # Minimal install
-if echo "$ID $VERSION_ID" | grep -E -q 'centos 8'; then
-	# Add PowerTools needed for install CUnit-devel in Centos8
-	yum install -y yum-utils
-	yum config-manager --set-enabled PowerTools
-fi
-
 # workaround for arm: ninja fails with dep on skbuild python module
 if [ "$(uname -m)" = "aarch64" ]; then
 	pip3 install scikit-build
