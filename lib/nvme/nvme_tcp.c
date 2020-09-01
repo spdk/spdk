@@ -117,6 +117,9 @@ struct nvme_tcp_req {
 	uint32_t				datao;
 	uint32_t				r2tl_remain;
 	uint32_t				active_r2ts;
+	/* Used to hold a value received from subsequent R2T while we are still
+	 * waiting for H2C complete */
+	uint16_t				ttag_r2t_next;
 	bool					in_capsule_data;
 	/* It is used to track whether the req can be safely freed */
 	union {
@@ -129,12 +132,19 @@ struct nvme_tcp_req {
 			/* tcp_req is waiting for completion of the previous send operation (buffer reclaim notification
 			 * from kernel) to send H2C */
 			uint8_t				h2c_send_waiting_ack : 1;
-			uint8_t				reserved : 5;
+			/* tcp_req received subsequent r2t while it is still waiting for send_ack.
+			 * Rare case, actual when dealing with target that can send several R2T requests.
+			 * SPDK TCP target sends 1 R2T for the whole data buffer */
+			uint8_t				r2t_waiting_h2c_complete : 1;
+			uint8_t				reserved : 4;
 		} bits;
 	} ordering;
 	struct nvme_tcp_pdu			*send_pdu;
 	struct iovec				iov[NVME_TCP_MAX_SGL_DESCRIPTORS];
 	uint32_t				iovcnt;
+	/* Used to hold a value received from subsequent R2T while we are still
+	 * waiting for H2C ack */
+	uint32_t				r2tl_remain_next;
 	struct nvme_tcp_qpair			*tqpair;
 	TAILQ_ENTRY(nvme_tcp_req)		link;
 };
@@ -178,6 +188,7 @@ nvme_tcp_req_get(struct nvme_tcp_qpair *tqpair)
 	tcp_req->req = NULL;
 	tcp_req->in_capsule_data = false;
 	tcp_req->r2tl_remain = 0;
+	tcp_req->r2tl_remain_next = 0;
 	tcp_req->active_r2ts = 0;
 	tcp_req->iovcnt = 0;
 	tcp_req->ordering.raw = 0;
@@ -1150,6 +1161,18 @@ nvme_tcp_qpair_h2c_data_send_complete(void *cb_arg)
 		assert(tcp_req->active_r2ts > 0);
 		tcp_req->active_r2ts--;
 		tcp_req->state = NVME_TCP_REQ_ACTIVE;
+
+		if (tcp_req->ordering.bits.r2t_waiting_h2c_complete) {
+			tcp_req->ordering.bits.r2t_waiting_h2c_complete = 0;
+			SPDK_DEBUGLOG(SPDK_LOG_NVME, "tcp_req %p: continue r2t\n", tcp_req);
+			assert(tcp_req->active_r2ts > 0);
+			tcp_req->ttag = tcp_req->ttag_r2t_next;
+			tcp_req->r2tl_remain = tcp_req->r2tl_remain_next;
+			tcp_req->state = NVME_TCP_REQ_ACTIVE_R2T;
+			nvme_tcp_send_h2c_data(tcp_req);
+			return;
+		}
+
 		/* Need also call this function to free the resource */
 		nvme_tcp_req_put_safe(tcp_req);
 	}
@@ -1241,14 +1264,6 @@ nvme_tcp_r2t_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu *pdu)
 		tcp_req->state = NVME_TCP_REQ_ACTIVE_R2T;
 	}
 
-	tcp_req->active_r2ts++;
-	if (tcp_req->active_r2ts > tqpair->maxr2t) {
-		fes = SPDK_NVME_TCP_TERM_REQ_FES_R2T_LIMIT_EXCEEDED;
-		SPDK_ERRLOG("Invalid R2T: Maximum number of R2T exceeded! Max: %u for tqpair=%p\n", tqpair->maxr2t,
-			    tqpair);
-		goto end;
-	}
-
 	if (tcp_req->datao != r2t->r2to) {
 		fes = SPDK_NVME_TCP_TERM_REQ_FES_INVALID_HEADER_FIELD;
 		error_offset = offsetof(struct spdk_nvme_tcp_r2t_hdr, r2to);
@@ -1262,7 +1277,25 @@ nvme_tcp_r2t_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu *pdu)
 		fes = SPDK_NVME_TCP_TERM_REQ_FES_DATA_TRANSFER_OUT_OF_RANGE;
 		error_offset = offsetof(struct spdk_nvme_tcp_r2t_hdr, r2tl);
 		goto end;
+	}
 
+	tcp_req->active_r2ts++;
+	if (spdk_unlikely(tcp_req->active_r2ts > tqpair->maxr2t)) {
+		if (tcp_req->state == NVME_TCP_REQ_ACTIVE_R2T && !tcp_req->ordering.bits.send_ack) {
+			/* We receive a subsequent R2T while we are waiting for H2C transfer to complete */
+			SPDK_DEBUGLOG(SPDK_LOG_NVME, "received a subsequent R2T\n");
+			assert(tcp_req->active_r2ts == tqpair->maxr2t + 1);
+			tcp_req->ttag_r2t_next = r2t->ttag;
+			tcp_req->r2tl_remain_next = r2t->r2tl;
+			tcp_req->ordering.bits.r2t_waiting_h2c_complete = 1;
+			nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
+			return;
+		} else {
+			fes = SPDK_NVME_TCP_TERM_REQ_FES_R2T_LIMIT_EXCEEDED;
+			SPDK_ERRLOG("Invalid R2T: Maximum number of R2T exceeded! Max: %u for tqpair=%p\n", tqpair->maxr2t,
+				    tqpair);
+			goto end;
+		}
 	}
 
 	tcp_req->ttag = r2t->ttag;
