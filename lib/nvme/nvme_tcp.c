@@ -88,6 +88,7 @@ struct nvme_tcp_qpair {
 	struct nvme_tcp_req			*tcp_reqs;
 
 	uint16_t				num_entries;
+	uint16_t				async_complete;
 
 	struct {
 		uint16_t host_hdgst_enable: 1;
@@ -549,6 +550,10 @@ nvme_tcp_req_complete_safe(struct nvme_tcp_req *tcp_req)
 	assert(tcp_req->req != NULL);
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "complete tcp_req(%p) on tqpair=%p\n", tcp_req, tcp_req->tqpair);
+
+	if (!tcp_req->tqpair->qpair.in_completion_context) {
+		tcp_req->tqpair->async_complete++;
+	}
 
 	/* Cache arguments to be passed to nvme_complete_request since tcp_req can be zeroed when released */
 	memcpy(&cpl, &tcp_req->rsp, sizeof(cpl));
@@ -1442,7 +1447,8 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 				}
 				pdu->ch_valid_bytes += rc;
 				if (pdu->ch_valid_bytes < sizeof(struct spdk_nvme_tcp_common_pdu_hdr)) {
-					return NVME_TCP_PDU_IN_PROGRESS;
+					rc =  NVME_TCP_PDU_IN_PROGRESS;
+					goto out;
 				}
 			}
 
@@ -1462,7 +1468,8 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 
 			pdu->psh_valid_bytes += rc;
 			if (pdu->psh_valid_bytes < pdu->psh_len) {
-				return NVME_TCP_PDU_IN_PROGRESS;
+				rc =  NVME_TCP_PDU_IN_PROGRESS;
+				goto out;
 			}
 
 			/* All header(ch, psh, head digist) of this PDU has now been read from the socket. */
@@ -1491,7 +1498,8 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 
 			pdu->readv_offset += rc;
 			if (pdu->readv_offset < data_len) {
-				return NVME_TCP_PDU_IN_PROGRESS;
+				rc =  NVME_TCP_PDU_IN_PROGRESS;
+				goto out;
 			}
 
 			assert(pdu->readv_offset == data_len);
@@ -1506,6 +1514,10 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 			break;
 		}
 	} while (prev_state != tqpair->recv_state);
+
+out:
+	*reaped += tqpair->async_complete;
+	tqpair->async_complete = 0;
 
 	return rc;
 }
