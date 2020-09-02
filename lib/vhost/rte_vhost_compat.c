@@ -175,7 +175,6 @@ extern_vhost_pre_msg_handler(int vid, void *_msg)
 	case VHOST_USER_SET_VRING_BASE:
 	case VHOST_USER_SET_VRING_ADDR:
 	case VHOST_USER_SET_VRING_NUM:
-	case VHOST_USER_SET_VRING_KICK:
 		if (vsession->forced_polling && vsession->started) {
 			/* Additional queues are being initialized, so we either processed
 			 * enough I/Os and are switching from SeaBIOS to the OS now, or
@@ -186,6 +185,12 @@ extern_vhost_pre_msg_handler(int vid, void *_msg)
 			vsession->forced_polling = false;
 		}
 		break;
+	case VHOST_USER_SET_VRING_KICK:
+		/* rte_vhost(after 20.08) will call new_device after one active vring is
+		 * configured, we will start the session before all vrings are available,
+		 * so for each new vring, if the session is started, we need to restart it
+		 * again.
+		 */
 	case VHOST_USER_SET_VRING_CALL:
 		/* rte_vhost will close the previous callfd and won't notify
 		 * us about any change. This will effectively make SPDK fail
