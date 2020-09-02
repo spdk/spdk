@@ -127,6 +127,9 @@ export SPDK_TEST_RAID5
 : ${SPDK_TEST_URING=0}
 export SPDK_TEST_URING
 
+# Tell setup.sh to wait for block devices upon each reset
+export PCI_BLOCK_SYNC_ON_RESET=yes
+
 # Export PYTHONPATH with addition of RPC framework. New scripts can be created
 # specific use cases for tests.
 export PYTHONPATH=$PYTHONPATH:$rootdir/scripts

@@ -65,6 +65,9 @@ function usage() {
 	echo "DRIVER_OVERRIDE   Disable automatic vfio-pci/uio_pci_generic selection and forcefully"
 	echo "                  bind devices to the given driver."
 	echo "                  E.g. DRIVER_OVERRIDE=uio_pci_generic or DRIVER_OVERRIDE=/home/public/dpdk/build/kmod/igb_uio.ko"
+	echo "PCI_BLOCK_SYNC_ON_RESET"
+	echo "                  If set in the environment, the attempt to wait for block devices associated"
+	echo "                  with given PCI device will be made upon reset"
 	exit 0
 }
 
@@ -660,6 +663,32 @@ if [ -z "$TARGET_USER" ]; then
 fi
 
 collect_devices "$mode"
+
+if [[ $mode == reset && $PCI_BLOCK_SYNC_ON_RESET == yes ]]; then
+	# Note that this will wait only for the first block device attached to
+	# a given storage controller. For nvme this may miss some of the devs
+	# in case multiple namespaces are being in place.
+	# FIXME: Wait for nvme controller(s) to be in live state and determine
+	# number of configured namespaces, build list of potential block devs
+	# and pass them to sync_dev_uevents. Is it worth the effort?
+	bdfs_to_wait_for=()
+	for bdf in "${!all_devices_d[@]}"; do
+		((all_devices_d["$bdf"] == 0)) || continue
+		if [[ -n ${nvme_d["$bdf"]} || -n ${virtio_d["$bdf"]} ]]; then
+			[[ $(collect_driver "$bdf") != "${drivers_d["$bdf"]}" ]] || continue
+			bdfs_to_wait_for+=("$bdf")
+		fi
+	done
+	if ((${#bdfs_to_wait_for[@]} > 0)); then
+		echo "Waiting for block devices as requested"
+		export UEVENT_TIMEOUT=5 DEVPATH_LOOKUP=yes DEVPATH_SUBSYSTEM=pci
+		"$rootdir/scripts/sync_dev_uevents.sh" \
+			block/disk \
+			"${bdfs_to_wait_for[@]}" &
+		sync_pid=$!
+	fi
+fi
+
 if [[ $os == Linux ]]; then
 	HUGEPGSZ=$(($(grep Hugepagesize /proc/meminfo | cut -d : -f 2 | tr -dc '0-9')))
 	HUGEPGSZ_MB=$((HUGEPGSZ / 1024))
@@ -692,4 +721,8 @@ else
 	else
 		usage $0 "Invalid argument '$mode'"
 	fi
+fi
+
+if [[ -e /proc/$sync_pid/status ]]; then
+	wait "$sync_pid"
 fi
