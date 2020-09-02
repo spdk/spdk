@@ -472,10 +472,9 @@ function status_linux() {
 		printf "%-6s %10s %8s / %6s\n" $node $huge_size $free_pages $all_pages
 	fi
 
-	echo ""
+	echo -e "\nBDF\t\tVendor\tDevice\tNUMA\tDriver\t\tDevice name\n"
 	echo "NVMe devices"
 
-	echo -e "BDF\t\tVendor\tDevice\tNUMA\tDriver\t\tDevice name"
 	for bdf in "${!nvme_d[@]}"; do
 		driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent | awk -F"=" '{print $2}')
 		if [ "$numa_nodes" = "0" ]; then
