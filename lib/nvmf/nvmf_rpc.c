@@ -2107,7 +2107,7 @@ dump_nvmf_ctrlr(struct spdk_json_write_ctx *w, struct spdk_nvmf_ctrlr *ctrlr)
 	spdk_json_write_object_end(w);
 }
 
-struct rpc_nvmf_get_ctrlr_ctx {
+struct rpc_subsystem_query_ctx {
 	char *nqn;
 	char *tgt_name;
 	struct spdk_nvmf_subsystem *subsystem;
@@ -2115,13 +2115,13 @@ struct rpc_nvmf_get_ctrlr_ctx {
 	struct spdk_json_write_ctx *w;
 };
 
-static const struct spdk_json_object_decoder rpc_nvmf_get_ctrlr_decoders[] = {
-	{"nqn", offsetof(struct rpc_nvmf_get_ctrlr_ctx, nqn), spdk_json_decode_string},
-	{"tgt_name", offsetof(struct rpc_nvmf_get_ctrlr_ctx, tgt_name), spdk_json_decode_string, true},
+static const struct spdk_json_object_decoder rpc_subsystem_query_decoders[] = {
+	{"nqn", offsetof(struct rpc_subsystem_query_ctx, nqn), spdk_json_decode_string},
+	{"tgt_name", offsetof(struct rpc_subsystem_query_ctx, tgt_name), spdk_json_decode_string, true},
 };
 
 static void
-free_rpc_nvmf_get_ctrlr_ctx(struct rpc_nvmf_get_ctrlr_ctx *ctx)
+free_rpc_subsystem_query_ctx(struct rpc_subsystem_query_ctx *ctx)
 {
 	free(ctx->nqn);
 	free(ctx->tgt_name);
@@ -2132,7 +2132,7 @@ static void
 rpc_nvmf_get_controllers_paused(struct spdk_nvmf_subsystem *subsystem,
 				void *cb_arg, int status)
 {
-	struct rpc_nvmf_get_ctrlr_ctx *ctx = cb_arg;
+	struct rpc_subsystem_query_ctx *ctx = cb_arg;
 	struct spdk_json_write_ctx *w;
 	struct spdk_nvmf_ctrlr *ctrlr;
 
@@ -2151,14 +2151,15 @@ rpc_nvmf_get_controllers_paused(struct spdk_nvmf_subsystem *subsystem,
 		/* FIXME: RPC should fail if resuming the subsystem failed. */
 	}
 
-	free_rpc_nvmf_get_ctrlr_ctx(ctx);
+	free_rpc_subsystem_query_ctx(ctx);
 }
 
 static void
-rpc_nvmf_subsystem_get_controllers(struct spdk_jsonrpc_request *request,
-				   const struct spdk_json_val *params)
+_rpc_nvmf_subsystem_query(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params,
+			  spdk_nvmf_subsystem_state_change_done cb_fn)
 {
-	struct rpc_nvmf_get_ctrlr_ctx *ctx;
+	struct rpc_subsystem_query_ctx *ctx;
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvmf_tgt *tgt;
 
@@ -2171,13 +2172,13 @@ rpc_nvmf_subsystem_get_controllers(struct spdk_jsonrpc_request *request,
 
 	ctx->request = request;
 
-	if (spdk_json_decode_object(params, rpc_nvmf_get_ctrlr_decoders,
-				    SPDK_COUNTOF(rpc_nvmf_get_ctrlr_decoders),
+	if (spdk_json_decode_object(params, rpc_subsystem_query_decoders,
+				    SPDK_COUNTOF(rpc_subsystem_query_decoders),
 				    ctx)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
-		free_rpc_nvmf_get_ctrlr_ctx(ctx);
+		free_rpc_subsystem_query_ctx(ctx);
 		return;
 	}
 
@@ -2186,7 +2187,7 @@ rpc_nvmf_subsystem_get_controllers(struct spdk_jsonrpc_request *request,
 		SPDK_ERRLOG("Unable to find a target object.\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Unable to find a target");
-		free_rpc_nvmf_get_ctrlr_ctx(ctx);
+		free_rpc_subsystem_query_ctx(ctx);
 		return;
 	}
 
@@ -2195,18 +2196,25 @@ rpc_nvmf_subsystem_get_controllers(struct spdk_jsonrpc_request *request,
 		SPDK_ERRLOG("Unable to find subsystem with NQN %s\n", ctx->nqn);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
-		free_rpc_nvmf_get_ctrlr_ctx(ctx);
+		free_rpc_subsystem_query_ctx(ctx);
 		return;
 	}
 
 	ctx->subsystem = subsystem;
 
-	if (spdk_nvmf_subsystem_pause(subsystem, rpc_nvmf_get_controllers_paused, ctx)) {
+	if (spdk_nvmf_subsystem_pause(subsystem, cb_fn, ctx)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Internal error");
-		free_rpc_nvmf_get_ctrlr_ctx(ctx);
+		free_rpc_subsystem_query_ctx(ctx);
 		return;
 	}
+}
+
+static void
+rpc_nvmf_subsystem_get_controllers(struct spdk_jsonrpc_request *request,
+				   const struct spdk_json_val *params)
+{
+	_rpc_nvmf_subsystem_query(request, params, rpc_nvmf_get_controllers_paused);
 }
 SPDK_RPC_REGISTER("nvmf_subsystem_get_controllers", rpc_nvmf_subsystem_get_controllers,
 		  SPDK_RPC_RUNTIME);
