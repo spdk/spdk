@@ -95,20 +95,16 @@ function pci_dev_echo() {
 function linux_bind_driver() {
 	bdf="$1"
 	driver_name="$2"
-	old_driver_name="no driver"
+	old_driver_name=${drivers_d["$bdf"]:-no driver}
 	ven_dev_id="${pci_ids_vendor["$bdf"]#0x} ${pci_ids_device["$bdf"]#0x}"
 
-	if [ -e "/sys/bus/pci/devices/$bdf/driver" ]; then
-		old_driver_name=$(basename $(readlink /sys/bus/pci/devices/$bdf/driver))
-
-		if [ "$driver_name" = "$old_driver_name" ]; then
-			pci_dev_echo "$bdf" "Already using the $old_driver_name driver"
-			return 0
-		fi
-
-		echo "$ven_dev_id" > "/sys/bus/pci/devices/$bdf/driver/remove_id" 2> /dev/null || true
-		echo "$bdf" > "/sys/bus/pci/devices/$bdf/driver/unbind"
+	if [[ $driver_name == "$old_driver_name" ]]; then
+		pci_dev_echo "$bdf" "Already using the $old_driver_name driver"
+		return 0
 	fi
+
+	echo "$ven_dev_id" > "/sys/bus/pci/devices/$bdf/driver/remove_id" 2> /dev/null || true
+	echo "$bdf" > "/sys/bus/pci/devices/$bdf/driver/unbind"
 
 	pci_dev_echo "$bdf" "$old_driver_name -> $driver_name"
 
@@ -127,12 +123,11 @@ function linux_unbind_driver() {
 	local bdf="$1"
 	local ven_dev_id
 	ven_dev_id="${pci_ids_vendor["$bdf"]#0x} ${pci_ids_device["$bdf"]#0x}"
-	local old_driver_name="no driver"
+	local old_driver_name=${drivers_d["$bdf"]:-no driver}
 
-	if [ -e "/sys/bus/pci/devices/$bdf/driver" ]; then
-		old_driver_name=$(basename $(readlink /sys/bus/pci/devices/$bdf/driver))
-		echo "$ven_dev_id" > "/sys/bus/pci/devices/$bdf/driver/remove_id" 2> /dev/null || true
-		echo "$bdf" > "/sys/bus/pci/devices/$bdf/driver/unbind"
+	if [[ -e /sys/bus/pci/drivers/$old_driver_name ]]; then
+		echo "$ven_dev_id" > "/sys/bus/pci/drivers/$old_driver_name/remove_id" 2> /dev/null || true
+		echo "$bdf" > "/sys/bus/pci/drivers/$old_driver_name/unbind"
 	fi
 
 	pci_dev_echo "$bdf" "$old_driver_name -> no driver"
@@ -172,7 +167,7 @@ function get_mounted_part_dev_from_bdf_block() {
 function collect_devices() {
 	# NVMe, IOAT, IDXD, VIRTIO, VMD
 
-	local ids dev_type dev_id bdf bdfs in_use
+	local ids dev_type dev_id bdf bdfs in_use driver
 
 	ids+="PCI_DEVICE_ID_INTEL_IOAT"
 	ids+="|PCI_DEVICE_ID_INTEL_IDXD"
@@ -180,7 +175,7 @@ function collect_devices() {
 	ids+="|PCI_DEVICE_ID_INTEL_VMD"
 	ids+="|SPDK_PCI_CLASS_NVME"
 
-	local -gA nvme_d ioat_d idxd_d virtio_d vmd_d all_devices_d
+	local -gA nvme_d ioat_d idxd_d virtio_d vmd_d all_devices_d drivers_d
 
 	while read -r _ dev_type dev_id; do
 		bdfs=(${pci_bus_cache["0x8086:$dev_id"]})
@@ -200,6 +195,10 @@ function collect_devices() {
 			fi
 			eval "${dev_type}_d[$bdf]=$in_use"
 			all_devices_d["$bdf"]=$in_use
+			if [[ -e /sys/bus/pci/devices/$bdf/driver ]]; then
+				driver=$(readlink -f "/sys/bus/pci/devices/$bdf/driver")
+				drivers_d["$bdf"]=${driver##*/}
+			fi
 		done
 	done < <(grep -E "$ids" "$rootdir/include/spdk/pci_ids.h")
 }
@@ -476,7 +475,7 @@ function status_linux() {
 	echo "NVMe devices"
 
 	for bdf in "${!nvme_d[@]}"; do
-		driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent | awk -F"=" '{print $2}')
+		driver=${drivers_d["$bdf"]}
 		if [ "$numa_nodes" = "0" ]; then
 			node="-"
 		else
@@ -497,7 +496,7 @@ function status_linux() {
 	echo "I/OAT Engine"
 
 	for bdf in "${!ioat_d[@]}"; do
-		driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent | awk -F"=" '{print $2}')
+		driver=${drivers_d["$bdf"]}
 		if [ "$numa_nodes" = "0" ]; then
 			node="-"
 		else
@@ -513,7 +512,7 @@ function status_linux() {
 	echo "IDXD Engine"
 
 	for bdf in "${!idxd_d[@]}"; do
-		driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent | awk -F"=" '{print $2}')
+		driver=${drivers_d["$bdf"]}
 		if [ "$numa_nodes" = "0" ]; then
 			node="-"
 		else
@@ -526,7 +525,7 @@ function status_linux() {
 	echo "virtio"
 
 	for bdf in "${!virtio_d[@]}"; do
-		driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent | awk -F"=" '{print $2}')
+		driver=${drivers_d["$bdf"]}
 		if [ "$numa_nodes" = "0" ]; then
 			node="-"
 		else
@@ -543,7 +542,7 @@ function status_linux() {
 	echo "VMD"
 
 	for bdf in "${!vmd_d[@]}"; do
-		driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent | awk -F"=" '{print $2}')
+		driver=${drivers_d["$bdf"]}
 		node=$(cat /sys/bus/pci/devices/$bdf/numa_node)
 		if ((node == -1)); then
 			node=unknown
