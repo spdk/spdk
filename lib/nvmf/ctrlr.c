@@ -1996,6 +1996,11 @@ spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 	if (subsystem->ana_reporting) {
 		/* ANA group ID matches NSID. */
 		nsdata->anagrpid = ns->nsid;
+
+		if (ctrlr->listener->ana_state == SPDK_NVME_ANA_INACCESSIBLE_STATE ||
+		    ctrlr->listener->ana_state == SPDK_NVME_ANA_PERSISTENT_LOSS_STATE) {
+			nsdata->nuse = 0;
+		}
 	}
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -2403,6 +2408,24 @@ get_features_generic(struct spdk_nvmf_request *req, uint32_t cdw0)
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
+/* we have to use the typedef in the function declaration to appease astyle. */
+typedef enum spdk_nvme_path_status_code spdk_nvme_path_status_code_t;
+
+static spdk_nvme_path_status_code_t
+_nvme_ana_state_to_path_status(enum spdk_nvme_ana_state ana_state)
+{
+	switch (ana_state) {
+	case SPDK_NVME_ANA_INACCESSIBLE_STATE:
+		return SPDK_NVME_SC_ASYMMETRIC_ACCESS_INACCESSIBLE;
+	case SPDK_NVME_ANA_PERSISTENT_LOSS_STATE:
+		return SPDK_NVME_SC_ASYMMETRIC_ACCESS_PERSISTENT_LOSS;
+	case SPDK_NVME_ANA_CHANGE_STATE:
+		return SPDK_NVME_SC_ASYMMETRIC_ACCESS_TRANSITION;
+	default:
+		return SPDK_NVME_SC_INTERNAL_PATH_ERROR;
+	}
+}
+
 static int
 nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 {
@@ -2410,8 +2433,31 @@ nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+	enum spdk_nvme_ana_state ana_state;
 
 	feature = cmd->cdw10_bits.get_features.fid;
+
+	ana_state = ctrlr->listener->ana_state;
+	switch (ana_state) {
+	case SPDK_NVME_ANA_INACCESSIBLE_STATE:
+	case SPDK_NVME_ANA_PERSISTENT_LOSS_STATE:
+	case SPDK_NVME_ANA_CHANGE_STATE:
+		switch (feature) {
+		case SPDK_NVME_FEAT_ERROR_RECOVERY:
+		case SPDK_NVME_FEAT_WRITE_ATOMICITY:
+		case SPDK_NVME_FEAT_HOST_RESERVE_MASK:
+		case SPDK_NVME_FEAT_HOST_RESERVE_PERSIST:
+			response->status.sct = SPDK_NVME_SCT_PATH;
+			response->status.sc = _nvme_ana_state_to_path_status(ana_state);
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		default:
+			break;
+		}
+		break;
+	default:
+		break;
+	}
+
 	switch (feature) {
 	case SPDK_NVME_FEAT_ARBITRATION:
 		return get_features_generic(req, ctrlr->feat.arbitration.raw);
@@ -2448,9 +2494,10 @@ static int
 nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
 {
 	uint8_t feature, save;
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
-
+	enum spdk_nvme_ana_state ana_state;
 	/*
 	 * Features are not saveable by the controller as indicated by
 	 * ONCS field of the Identify Controller data.
@@ -2463,6 +2510,37 @@ nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
 	}
 
 	feature = cmd->cdw10_bits.set_features.fid;
+
+	ana_state = ctrlr->listener->ana_state;
+	switch (ana_state) {
+	case SPDK_NVME_ANA_INACCESSIBLE_STATE:
+	case SPDK_NVME_ANA_CHANGE_STATE:
+		if (cmd->nsid == 0xffffffffu) {
+			response->status.sct = SPDK_NVME_SCT_PATH;
+			response->status.sc = _nvme_ana_state_to_path_status(ana_state);
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		} else {
+			switch (feature) {
+			case SPDK_NVME_FEAT_ERROR_RECOVERY:
+			case SPDK_NVME_FEAT_WRITE_ATOMICITY:
+			case SPDK_NVME_FEAT_HOST_RESERVE_MASK:
+			case SPDK_NVME_FEAT_HOST_RESERVE_PERSIST:
+				response->status.sct = SPDK_NVME_SCT_PATH;
+				response->status.sc = _nvme_ana_state_to_path_status(ana_state);
+				return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+			default:
+				break;
+			}
+		}
+		break;
+	case SPDK_NVME_ANA_PERSISTENT_LOSS_STATE:
+		response->status.sct = SPDK_NVME_SCT_PATH;
+		response->status.sc = SPDK_NVME_SC_ASYMMETRIC_ACCESS_PERSISTENT_LOSS;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	default:
+		break;
+	}
+
 	switch (feature) {
 	case SPDK_NVME_FEAT_ARBITRATION:
 		return nvmf_ctrlr_set_features_arbitration(req);
@@ -3047,6 +3125,7 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_subsystem_pg_ns_info *ns_info;
+	enum spdk_nvme_ana_state ana_state;
 
 	/* pre-set response details for this command */
 	response->status.sc = SPDK_NVME_SC_SUCCESS;
@@ -3063,6 +3142,19 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 		SPDK_ERRLOG("I/O command sent to disabled controller\n");
 		response->status.sct = SPDK_NVME_SCT_GENERIC;
 		response->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	/* It will be lower overhead to check if ANA state is optimized or
+	 * non-optimized.
+	 */
+	ana_state = ctrlr->listener->ana_state;
+	if (spdk_unlikely(ana_state != SPDK_NVME_ANA_OPTIMIZED_STATE &&
+			  ana_state != SPDK_NVME_ANA_NON_OPTIMIZED_STATE)) {
+		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Fail I/O command due to ANA state %d\n",
+			      ana_state);
+		response->status.sct = SPDK_NVME_SCT_PATH;
+		response->status.sc = _nvme_ana_state_to_path_status(ana_state);
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
