@@ -103,6 +103,12 @@ function install_qat() {
 		[[ ${DRIVER_LOCATION_QAT##*/} == qat1.7.l.4.9.0-00008.tar.gz ]] && patch --dir="$GIT_REPOS/QAT" -p1
 	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-pci_aer.patch"
 
+	# Patch use of cryptohash.h which was removed in favor of crypto/sha.h in kernels >= 5.8. See .patch for details
+	if ((kernel_ver >= 0x050800)); then
+		# Patch only the driver version that was tested
+		[[ ${DRIVER_LOCATION_QAT##*/} == qat1.7.l.4.9.0-00008.tar.gz ]] && patch --dir="$GIT_REPOS/QAT" -p1
+	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-cryptohash.patch"
+
 	(cd "$GIT_REPOS/QAT" && sudo ./configure --enable-icp-sriov=host && sudo make install)
 
 	if ! sudo service qat_service start; then
