@@ -50,8 +50,6 @@ if [ $(uname) = Linux ]; then
 	# check that our setup.sh script does not bind NVMe devices to uio/vfio if they
 	# have an active mountpoint
 	$rootdir/scripts/setup.sh reset
-	# give kernel nvme driver some time to create the block devices before we start looking for them
-	sleep 1
 	blkname=''
 	# first, find an NVMe device that does not have an active mountpoint already;
 	# this covers rare case where someone is running this test script on a system

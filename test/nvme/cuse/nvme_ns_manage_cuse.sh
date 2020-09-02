@@ -15,7 +15,6 @@ sleep 1
 bdfs=$(get_nvme_bdfs)
 
 $rootdir/scripts/setup.sh reset
-sleep 1
 
 # Find bdf that supports Namespace Managment
 for bdf in $bdfs; do

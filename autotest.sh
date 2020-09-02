@@ -83,9 +83,6 @@ rm -f /var/tmp/spdk*.sock
 # Load the kernel driver
 ./scripts/setup.sh reset
 
-# Let the kernel discover any filesystems or partitions
-sleep 10
-
 if [ $(uname -s) = Linux ]; then
 	# OCSSD devices drivers don't support IO issues by kernel so
 	# detect OCSSD devices and blacklist them (unbind from any driver).

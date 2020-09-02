@@ -15,7 +15,6 @@ function clear_nvme() {
 
 	# Clear metadata on NVMe device
 	$rootdir/scripts/setup.sh reset
-	sleep 5
 
 	name=$(get_nvme_name_from_bdf "${bdf[0]}")
 	mountpoints=$(lsblk /dev/$name --output MOUNTPOINT -n | wc -w)

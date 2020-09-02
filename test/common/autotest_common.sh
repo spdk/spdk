@@ -1267,7 +1267,6 @@ function nvme_namespace_revert() {
 	bdfs=$(get_nvme_bdfs)
 
 	$rootdir/scripts/setup.sh reset
-	sleep 1
 
 	for bdf in $bdfs; do
 		nvme_ctrlr=/dev/$(get_nvme_ctrlr_from_bdf ${bdf})

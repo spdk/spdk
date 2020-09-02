@@ -11,7 +11,6 @@ rpc_py=$rootdir/scripts/rpc.py
 bdf=$(get_first_nvme_bdf)
 
 PCI_WHITELIST="${bdf}" $rootdir/scripts/setup.sh reset
-sleep 1
 nvme_name=$(get_nvme_ctrlr_from_bdf ${bdf})
 if [[ -z "$nvme_name" ]]; then
 	echo "setup.sh failed bind kernel driver to ${bdf}"

@@ -55,11 +55,6 @@ function setup_nvme_conf() {
 function setup_gpt_conf() {
 	if [[ $(uname -s) = Linux ]] && hash sgdisk; then
 		$rootdir/scripts/setup.sh reset
-		# FIXME: Note that we are racing with the kernel here. There's no guarantee that
-		# proper object will be already in place under sysfs nor that any udev-like
-		# helper created proper block devices for us. Replace the below sleep with proper
-		# udev settle routine.
-		sleep 1s
 		# Get nvme devices by following drivers' links towards nvme class
 		local nvme_devs=(/sys/bus/pci/drivers/nvme/*/nvme/nvme*/nvme*n*) nvme_dev
 		gpt_nvme=""
@@ -398,7 +393,6 @@ fi
 #-----------------------------------------------------
 if [ "$test_type" = "gpt" ]; then
 	"$rootdir/scripts/setup.sh" reset
-	sleep 1s
 	if [[ -b $gpt_nvme ]]; then
 		dd if=/dev/zero of="$gpt_nvme" bs=4096 count=8 oflag=direct
 	fi
