@@ -127,10 +127,8 @@ bs_release_cluster(struct spdk_blob_store *bs, uint32_t cluster_num)
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Releasing cluster %u\n", cluster_num);
 
-	pthread_mutex_lock(&bs->used_clusters_mutex);
 	spdk_bit_array_clear(bs->used_clusters, cluster_num);
 	bs->num_free_clusters++;
-	pthread_mutex_unlock(&bs->used_clusters_mutex);
 }
 
 static int
@@ -154,12 +152,10 @@ bs_allocate_cluster(struct spdk_blob *blob, uint32_t cluster_num,
 {
 	uint32_t *extent_page = 0;
 
-	pthread_mutex_lock(&blob->bs->used_clusters_mutex);
 	*lowest_free_cluster = spdk_bit_array_find_first_clear(blob->bs->used_clusters,
 			       *lowest_free_cluster);
 	if (*lowest_free_cluster == UINT32_MAX) {
 		/* No more free clusters. Cannot satisfy the request */
-		pthread_mutex_unlock(&blob->bs->used_clusters_mutex);
 		return -ENOSPC;
 	}
 
@@ -171,7 +167,6 @@ bs_allocate_cluster(struct spdk_blob *blob, uint32_t cluster_num,
 					       *lowest_free_md_page);
 			if (*lowest_free_md_page == UINT32_MAX) {
 				/* No more free md pages. Cannot satisfy the request */
-				pthread_mutex_unlock(&blob->bs->used_clusters_mutex);
 				return -ENOSPC;
 			}
 			bs_claim_md_page(blob->bs, *lowest_free_md_page);
@@ -180,8 +175,6 @@ bs_allocate_cluster(struct spdk_blob *blob, uint32_t cluster_num,
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Claiming cluster %lu for blob %lu\n", *lowest_free_cluster, blob->id);
 	bs_claim_cluster(blob->bs, *lowest_free_cluster);
-
-	pthread_mutex_unlock(&blob->bs->used_clusters_mutex);
 
 	if (update_map) {
 		blob_insert_cluster(blob, cluster_num, *lowest_free_cluster);
@@ -1657,6 +1650,7 @@ blob_persist_clear_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserr
 		return;
 	}
 
+	pthread_mutex_lock(&bs->used_clusters_mutex);
 	/* Release all clusters that were truncated */
 	for (i = blob->active.num_clusters; i < blob->active.cluster_array_size; i++) {
 		uint32_t cluster_num = bs_lba_to_cluster(bs, blob->active.clusters[i]);
@@ -1666,6 +1660,7 @@ blob_persist_clear_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserr
 			bs_release_cluster(bs, cluster_num);
 		}
 	}
+	pthread_mutex_unlock(&bs->used_clusters_mutex);
 
 	if (blob->active.num_clusters == 0) {
 		free(blob->active.clusters);
@@ -1966,11 +1961,13 @@ blob_resize(struct spdk_blob *blob, uint64_t sz)
 	if (spdk_blob_is_thin_provisioned(blob) == false) {
 		lfc = 0;
 		lfmd = 0;
+		pthread_mutex_lock(&blob->bs->used_clusters_mutex);
 		for (i = num_clusters; i < sz; i++) {
 			bs_allocate_cluster(blob, i, &lfc, &lfmd, true);
 			lfc++;
 			lfmd++;
 		}
+		pthread_mutex_unlock(&blob->bs->used_clusters_mutex);
 	}
 
 	blob->active.num_clusters = sz;
@@ -2255,7 +2252,9 @@ blob_insert_cluster_cpl(void *cb_arg, int bserrno)
 			 * but continue without error. */
 			bserrno = 0;
 		}
+		pthread_mutex_lock(&ctx->blob->bs->used_clusters_mutex);
 		bs_release_cluster(ctx->blob->bs, ctx->new_cluster);
+		pthread_mutex_unlock(&ctx->blob->bs->used_clusters_mutex);
 		if (ctx->new_extent_page != 0) {
 			bs_release_md_page(ctx->blob->bs, ctx->new_extent_page);
 		}
@@ -2352,8 +2351,10 @@ bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 		}
 	}
 
+	pthread_mutex_lock(&blob->bs->used_clusters_mutex);
 	rc = bs_allocate_cluster(blob, cluster_number, &ctx->new_cluster, &ctx->new_extent_page,
 				 false);
+	pthread_mutex_unlock(&blob->bs->used_clusters_mutex);
 	if (rc != 0) {
 		spdk_free(ctx->buf);
 		free(ctx);
@@ -2367,7 +2368,9 @@ bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 
 	ctx->seq = bs_sequence_start(_ch, &cpl);
 	if (!ctx->seq) {
+		pthread_mutex_lock(&blob->bs->used_clusters_mutex);
 		bs_release_cluster(blob->bs, ctx->new_cluster);
+		pthread_mutex_unlock(&blob->bs->used_clusters_mutex);
 		spdk_free(ctx->buf);
 		free(ctx);
 		bs_user_op_abort(op);
