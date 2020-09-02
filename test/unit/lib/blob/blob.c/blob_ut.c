@@ -443,6 +443,36 @@ blob_create(void)
 	CU_ASSERT(g_bserrno == -ENOSPC);
 }
 
+/*
+ * Create and delete one blob in a loop over and over again.  This helps ensure
+ * that the internal bit masks tracking used clusters and md_pages are being
+ * tracked correctly.
+ */
+static void
+blob_create_loop(void)
+{
+	struct spdk_blob_store *bs = g_bs;
+	struct spdk_blob_opts opts;
+	uint32_t i, loop_count;
+
+	loop_count = 4 * spdk_max(spdk_bit_array_capacity(bs->used_md_pages),
+				  spdk_bit_array_capacity(bs->used_clusters));
+
+	for (i = 0; i < loop_count; i++) {
+		ut_spdk_blob_opts_init(&opts);
+		opts.num_clusters = 1;
+		g_bserrno = -1;
+		g_blobid = SPDK_BLOBID_INVALID;
+		spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
+		poll_threads();
+		CU_ASSERT(g_bserrno == 0);
+		CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+		spdk_bs_delete_blob(bs, g_blobid, blob_op_complete, NULL);
+		poll_threads();
+		CU_ASSERT(g_bserrno == 0);
+	}
+}
+
 static void
 blob_create_fail(void)
 {
@@ -6648,6 +6678,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, blob_init);
 	CU_ADD_TEST(suite_bs, blob_open);
 	CU_ADD_TEST(suite_bs, blob_create);
+	CU_ADD_TEST(suite_bs, blob_create_loop);
 	CU_ADD_TEST(suite_bs, blob_create_fail);
 	CU_ADD_TEST(suite_bs, blob_create_internal);
 	CU_ADD_TEST(suite, blob_thin_provision);
