@@ -89,6 +89,13 @@ done
 
 rm -Rf $testdir/match_files
 
+# Verify read/write path
+tr < /dev/urandom -dc "a-zA-Z0-9" | fold -w 512 | head -n 1 > $testdir/write_file
+${NVME_CMD} write $ns --data-size=512 --data=$testdir/write_file
+${NVME_CMD} read $ns --data-size=512 --data=$testdir/read_file
+diff --ignore-trailing-space $testdir/write_file $testdir/read_file
+rm -f $testdir/write_file $testdir/read_file
+
 # Verify admin cmd when no data is transferred,
 # by creating and deleting completion queue.
 ${NVME_CMD} admin-passthru $ctrlr -o 5 --cdw10=0x3ff0003 --cdw11=0x1 -r

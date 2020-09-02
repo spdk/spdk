@@ -407,7 +407,7 @@ cuse_nvme_submit_io_read(struct cuse_device *cuse_device, fuse_req_t req, int cm
 
 	ctx->req = req;
 	ctx->lba = user_io->slba;
-	ctx->lba_count = user_io->nblocks;
+	ctx->lba_count = user_io->nblocks + 1;
 
 	ctx->data_len = ctx->lba_count * block_size;
 	ctx->data = spdk_zmalloc(ctx->data_len, 0x1000, NULL, SPDK_ENV_SOCKET_ID_ANY,
@@ -454,7 +454,7 @@ cuse_nvme_submit_io(fuse_req_t req, int cmd, void *arg,
 	switch (user_io->opcode) {
 	case SPDK_NVME_OPC_READ:
 		out_iov.iov_base = (void *)user_io->addr;
-		out_iov.iov_len = (user_io->nblocks + 1) * 512;
+		out_iov.iov_len = (user_io->nblocks + 1) * block_size;
 		if (out_bufsz == 0) {
 			fuse_reply_ioctl_retry(req, in_iov, 1, &out_iov, 1);
 			return;
@@ -465,7 +465,7 @@ cuse_nvme_submit_io(fuse_req_t req, int cmd, void *arg,
 		break;
 	case SPDK_NVME_OPC_WRITE:
 		in_iov[1].iov_base = (void *)user_io->addr;
-		in_iov[1].iov_len = (user_io->nblocks + 1) * 512;
+		in_iov[1].iov_len = (user_io->nblocks + 1) * block_size;
 		if (in_bufsz == sizeof(*user_io)) {
 			fuse_reply_ioctl_retry(req, in_iov, 2, NULL, 0);
 			return;
