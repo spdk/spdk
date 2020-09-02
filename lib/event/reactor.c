@@ -70,6 +70,17 @@ static struct spdk_reactor *g_scheduling_reactor;
 static uint32_t g_scheduler_period;
 static struct spdk_scheduler_core_info *g_core_infos = NULL;
 
+TAILQ_HEAD(, spdk_governor) g_governor_list
+	= TAILQ_HEAD_INITIALIZER(g_governor_list);
+
+static int _governor_get_capabilities(uint32_t lcore_id,
+				      struct spdk_governor_capabilities *capabilities);
+
+static struct spdk_governor g_governor = {
+	.name = "default",
+	.get_core_capabilities = _governor_get_capabilities,
+};
+
 static int reactor_interrupt_init(struct spdk_reactor *reactor);
 static void reactor_interrupt_fini(struct spdk_reactor *reactor);
 
@@ -98,8 +109,12 @@ _spdk_scheduler_set(char *name)
 		return -ENOENT;
 	}
 
+	if (g_scheduler != NULL && g_scheduler->deinit != NULL) {
+		g_scheduler->deinit(&g_governor);
+	}
+
 	if (scheduler->init != NULL) {
-		scheduler->init();
+		scheduler->init(&g_governor);
 	}
 
 	g_scheduler = scheduler;
@@ -232,7 +247,7 @@ spdk_reactors_fini(void)
 	}
 
 	if (g_scheduler->deinit != NULL) {
-		g_scheduler->deinit();
+		g_scheduler->deinit(&g_governor);
 	}
 
 	spdk_thread_lib_fini();
@@ -477,7 +492,7 @@ _reactors_scheduler_fini(void *arg1, void *arg2)
 
 	if (g_reactor_state == SPDK_REACTOR_STATE_RUNNING) {
 		last_core = spdk_env_get_last_core();
-		g_scheduler->balance(g_core_infos, last_core + 1);
+		g_scheduler->balance(g_core_infos, last_core + 1, &g_governor);
 
 		/* Reschedule based on the balancing output */
 		_threads_reschedule(g_core_infos);
@@ -1113,6 +1128,81 @@ _spdk_lw_thread_get_current_stats(struct spdk_lw_thread *thread, struct spdk_thr
 {
 	assert(thread != NULL);
 	*stats = thread->current_stats;
+}
+
+static int
+_governor_get_capabilities(uint32_t lcore_id, struct spdk_governor_capabilities *capabilities)
+{
+	capabilities->freq_change = false;
+	capabilities->freq_getset = false;
+	capabilities->freq_up = false;
+	capabilities->freq_down = false;
+	capabilities->freq_max = false;
+	capabilities->freq_min = false;
+	capabilities->turbo_set = false;
+	capabilities->priority = false;
+	capabilities->turbo_available = false;
+
+	return 0;
+}
+
+static struct spdk_governor *
+_governor_find(char *name)
+{
+	struct spdk_governor *governor, *tmp;
+
+	TAILQ_FOREACH_SAFE(governor, &g_governor_list, link, tmp) {
+		if (strcmp(name, governor->name) == 0) {
+			return governor;
+		}
+	}
+
+	return NULL;
+}
+
+int
+_spdk_governor_set(char *name)
+{
+	struct spdk_governor *governor;
+	uint32_t i;
+	int rc;
+
+	governor = _governor_find(name);
+	if (governor == NULL) {
+		return -EINVAL;
+	}
+
+	g_governor = *governor;
+
+	if (g_governor.init) {
+		rc = g_governor.init();
+		if (rc != 0) {
+			return rc;
+		}
+	}
+
+	SPDK_ENV_FOREACH_CORE(i) {
+		if (g_governor.init_core) {
+			rc = g_governor.init_core(i);
+			if (rc != 0) {
+				return rc;
+			}
+		}
+	}
+
+	return 0;
+}
+
+void
+_spdk_governor_list_add(struct spdk_governor *governor)
+{
+	if (_governor_find(governor->name)) {
+		SPDK_ERRLOG("governor named '%s' already registered.\n", governor->name);
+		assert(false);
+		return;
+	}
+
+	TAILQ_INSERT_TAIL(&g_governor_list, governor, link);
 }
 
 SPDK_LOG_REGISTER_COMPONENT(reactor)

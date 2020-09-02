@@ -175,6 +175,91 @@ void spdk_subsystem_config_json(struct spdk_json_write_ctx *w, struct spdk_subsy
 void spdk_rpc_initialize(const char *listen_addr);
 void spdk_rpc_finish(void);
 
+struct spdk_governor_capabilities {
+	bool freq_change;
+	bool freq_getset;
+	bool freq_up;
+	bool freq_down;
+	bool freq_max;
+	bool freq_min;
+	bool turbo_set;
+	bool turbo_available;
+	bool priority;
+};
+
+/** Cores governor */
+struct spdk_governor {
+	char *name;
+
+	/* freqs - the buffer array to save the frequencies; num - the number of frequencies to get; return - the number of available frequencies */
+	uint32_t (*get_core_freqs)(uint32_t lcore_id, uint32_t *freqs, uint32_t num);
+
+	/* return - current frequency */
+	uint32_t (*get_core_curr_freq)(uint32_t lcore_id);
+
+	/**
+	 * freq_index - index of available frequencies returned from get_core_freqs call
+	 *
+	 * return
+	 *  - 1 on success with frequency changed.
+	 *  - 0 on success without frequency changed.
+	 *  - Negative on error.
+	 */
+	int (*set_core_freq)(uint32_t lcore_id, uint32_t freq_index);
+	int (*core_freq_up)(uint32_t lcore_id);
+	int (*core_freq_down)(uint32_t lcore_id);
+	int (*set_core_freq_max)(uint32_t lcore_id);
+	int (*set_core_freq_min)(uint32_t lcore_id);
+
+	/**
+	 * return
+	 *  - 1 Turbo Boost is enabled for this lcore.
+	 *  - 0 Turbo Boost is disabled for this lcore.
+	 *  - Negative on error.
+	 */
+	int (*get_core_turbo_status)(uint32_t lcore_id);
+
+	/* return - 0 on success; negative on error */
+	int (*enable_core_turbo)(uint32_t lcore_id);
+	int (*disable_core_turbo)(uint32_t lcore_id);
+	int (*get_core_capabilities)(uint32_t lcore_id, struct spdk_governor_capabilities *capabilities);
+	int (*init_core)(uint32_t lcore_id);
+	int (*deinit_core)(uint32_t lcore_id);
+	int (*init)(void);
+	int (*deinit)(void);
+
+	TAILQ_ENTRY(spdk_governor) link;
+};
+
+/**
+ * Add the given governor to the list of registered governors.
+ * This function should be invoked by referencing the macro
+ * SPDK_GOVERNOR_REGISTER in the governor c file.
+ *
+ * \param governor Governor to be added.
+ *
+ * \return 0 on success or non-zero on failure.
+ */
+void _spdk_governor_list_add(struct spdk_governor *governor);
+
+/**
+ * Change current governor.
+ *
+ * \param name Name of the governor to be used.
+ *
+ * \return 0 on success or non-zero on failure.
+ */
+int _spdk_governor_set(char *name);
+
+/**
+ * Macro used to register new cores governor.
+ */
+#define SPDK_GOVERNOR_REGISTER(governor) \
+	static void __attribute__((constructor)) _spdk_governor_register_##name(void) \
+	{ \
+		_spdk_governor_list_add(governor); \
+	} \
+
 /**
  * A list of cores and threads which is used for scheduling.
  */
@@ -190,19 +275,20 @@ struct spdk_scheduler_core_info {
  * Scheduler balance function type.
  * Accepts array of core_info which is of size 'count' and returns updated array.
  */
-typedef void (*spdk_scheduler_balance_fn)(struct spdk_scheduler_core_info *core_info, int count);
+typedef void (*spdk_scheduler_balance_fn)(struct spdk_scheduler_core_info *core_info, int count,
+		struct spdk_governor *governor);
 
 /**
  * Scheduler init function type.
  * Called on scheduler module initialization.
  */
-typedef int (*spdk_scheduler_init_fn)(void);
+typedef int (*spdk_scheduler_init_fn)(struct spdk_governor *governor);
 
 /**
  * Scheduler deinitialization function type.
  * Called on reactor fini.
  */
-typedef int (*spdk_scheduler_deinit_fn)(void);
+typedef int (*spdk_scheduler_deinit_fn)(struct spdk_governor *governor);
 
 /** Thread scheduler */
 struct spdk_scheduler {
