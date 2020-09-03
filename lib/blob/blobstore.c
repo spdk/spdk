@@ -1582,6 +1582,71 @@ blob_persist_complete(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 }
 
 static void
+blob_persist_clear_extents_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_blob_persist_ctx	*ctx = cb_arg;
+	struct spdk_blob		*blob = ctx->blob;
+	struct spdk_blob_store		*bs = blob->bs;
+	size_t				i;
+
+	if (bserrno != 0) {
+		blob_persist_complete(seq, ctx, bserrno);
+		return;
+	}
+
+	/* Release all extent_pages that were truncated */
+	for (i = blob->active.num_extent_pages; i < blob->active.extent_pages_array_size; i++) {
+		/* Nothing to release if it was not allocated */
+		if (blob->active.extent_pages[i] != 0) {
+			bs_release_md_page(bs, blob->active.extent_pages[i]);
+		}
+	}
+
+	if (blob->active.num_extent_pages == 0) {
+		free(blob->active.extent_pages);
+		blob->active.extent_pages = NULL;
+		blob->active.extent_pages_array_size = 0;
+	} else if (blob->active.num_extent_pages != blob->active.extent_pages_array_size) {
+#ifndef __clang_analyzer__
+		void *tmp;
+
+		/* scan-build really can't figure reallocs, workaround it */
+		tmp = realloc(blob->active.extent_pages, sizeof(uint32_t) * blob->active.num_extent_pages);
+		assert(tmp != NULL);
+		blob->active.extent_pages = tmp;
+#endif
+		blob->active.extent_pages_array_size = blob->active.num_extent_pages;
+	}
+
+	blob_persist_complete(seq, ctx, bserrno);
+}
+
+static void
+blob_persist_clear_extents(spdk_bs_sequence_t *seq, struct spdk_blob_persist_ctx *ctx)
+{
+	struct spdk_blob		*blob = ctx->blob;
+	struct spdk_blob_store		*bs = blob->bs;
+	size_t				i;
+	uint64_t                        lba;
+	uint32_t                        lba_count;
+	spdk_bs_batch_t                 *batch;
+
+	batch = bs_sequence_to_batch(seq, blob_persist_clear_extents_cpl, ctx);
+	lba_count = bs_byte_to_lba(bs, SPDK_BS_PAGE_SIZE);
+
+	/* Clear all extent_pages that were truncated */
+	for (i = blob->active.num_extent_pages; i < blob->active.extent_pages_array_size; i++) {
+		/* Nothing to clear if it was not allocated */
+		if (blob->active.extent_pages[i] != 0) {
+			lba = bs_md_page_to_lba(bs, blob->clean.extent_pages[i]);
+			bs_batch_write_zeroes_dev(batch, lba, lba_count);
+		}
+	}
+
+	bs_batch_close(batch);
+}
+
+static void
 blob_persist_clear_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_persist_ctx	*ctx = cb_arg;
@@ -1617,16 +1682,12 @@ blob_persist_clear_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserr
 		assert(tmp != NULL);
 		blob->active.clusters = tmp;
 
-		tmp = realloc(blob->active.extent_pages, sizeof(uint32_t) * blob->active.num_extent_pages);
-		assert(tmp != NULL);
-		blob->active.extent_pages = tmp;
 #endif
-		blob->active.extent_pages_array_size = blob->active.num_extent_pages;
 		blob->active.cluster_array_size = blob->active.num_clusters;
 	}
 
-	/* TODO: Add path to persist clear extent pages. */
-	blob_persist_complete(seq, ctx, bserrno);
+	/* Move on to clearing extent pages */
+	blob_persist_clear_extents(seq, ctx);
 }
 
 static void
