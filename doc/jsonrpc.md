@@ -4823,6 +4823,50 @@ Example response:
 }
 ~~~
 
+## nvmf_subsystem_get_listeners {#rpc_nvmf_subsystem_get_listeners}
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+nqn                     | Required | string      | Subsystem NQN
+tgt_name                | Optional | string      | Parent NVMe-oF target name.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "nvmf_subsystem_get_listeners",
+  "params": {
+    "nqn": "nqn.2016-06.io.spdk:cnode1"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "address": {
+        "trtype": "RDMA",
+        "adrfam": "IPv4",
+        "traddr": "192.168.0.123",
+        "trsvcid": "4420"
+      },
+      "ana_state": "optimized"
+    }
+  ]
+}
+~~~
+
 ## nvmf_set_max_subsystems {#rpc_nvmf_set_max_subsystems}
 
 Set the maximum allowed subsystems for the NVMe-oF target.  This RPC may only be called

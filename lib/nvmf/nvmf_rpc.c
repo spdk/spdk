@@ -2136,6 +2136,51 @@ dump_nvmf_qpair(struct spdk_json_write_ctx *w, struct spdk_nvmf_qpair *qpair)
 	spdk_json_write_object_end(w);
 }
 
+static const char *
+nvme_ana_state_str(enum spdk_nvme_ana_state ana_state)
+{
+	switch (ana_state) {
+	case SPDK_NVME_ANA_OPTIMIZED_STATE:
+		return "optimized";
+	case SPDK_NVME_ANA_NON_OPTIMIZED_STATE:
+		return "non_optimized";
+	case SPDK_NVME_ANA_INACCESSIBLE_STATE:
+		return "inaccessible";
+	case SPDK_NVME_ANA_PERSISTENT_LOSS_STATE:
+		return "persistent_loss";
+	case SPDK_NVME_ANA_CHANGE_STATE:
+		return "change";
+	default:
+		return NULL;
+	}
+}
+
+static void
+dump_nvmf_subsystem_listener(struct spdk_json_write_ctx *w,
+			     struct spdk_nvmf_subsystem_listener *listener)
+{
+	const struct spdk_nvme_transport_id *trid = listener->trid;
+	const char *adrfam;
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_object_begin(w, "address");
+	adrfam = spdk_nvme_transport_id_adrfam_str(trid->adrfam);
+	if (adrfam == NULL) {
+		adrfam = "unknown";
+	}
+	spdk_json_write_named_string(w, "trtype", trid->trstring);
+	spdk_json_write_named_string(w, "adrfam", adrfam);
+	spdk_json_write_named_string(w, "traddr", trid->traddr);
+	spdk_json_write_named_string(w, "trsvcid", trid->trsvcid);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_named_string(w, "ana_state",
+				     nvme_ana_state_str(listener->ana_state));
+
+	spdk_json_write_object_end(w);
+}
+
 struct rpc_subsystem_query_ctx {
 	char *nqn;
 	char *tgt_name;
@@ -2236,6 +2281,35 @@ rpc_nvmf_get_qpairs_paused(struct spdk_nvmf_subsystem *subsystem,
 }
 
 static void
+rpc_nvmf_get_listeners_paused(struct spdk_nvmf_subsystem *subsystem,
+			      void *cb_arg, int status)
+{
+	struct rpc_subsystem_query_ctx *ctx = cb_arg;
+	struct spdk_json_write_ctx *w;
+	struct spdk_nvmf_subsystem_listener *listener;
+
+	w = spdk_jsonrpc_begin_result(ctx->request);
+
+	spdk_json_write_array_begin(w);
+
+	for (listener = spdk_nvmf_subsystem_get_first_listener(ctx->subsystem);
+	     listener != NULL;
+	     listener = spdk_nvmf_subsystem_get_next_listener(ctx->subsystem, listener)) {
+		dump_nvmf_subsystem_listener(w, listener);
+	}
+	spdk_json_write_array_end(w);
+
+	spdk_jsonrpc_end_result(ctx->request, w);
+
+	if (spdk_nvmf_subsystem_resume(ctx->subsystem, NULL, NULL)) {
+		SPDK_ERRLOG("Resuming subsystem with NQN %s failed\n", ctx->nqn);
+		/* FIXME: RPC should fail if resuming the subsystem failed. */
+	}
+
+	free_rpc_subsystem_query_ctx(ctx);
+}
+
+static void
 _rpc_nvmf_subsystem_query(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params,
 			  spdk_nvmf_subsystem_state_change_done cb_fn)
@@ -2307,3 +2381,12 @@ rpc_nvmf_subsystem_get_qpairs(struct spdk_jsonrpc_request *request,
 	_rpc_nvmf_subsystem_query(request, params, rpc_nvmf_get_qpairs_paused);
 }
 SPDK_RPC_REGISTER("nvmf_subsystem_get_qpairs", rpc_nvmf_subsystem_get_qpairs, SPDK_RPC_RUNTIME);
+
+static void
+rpc_nvmf_subsystem_get_listeners(struct spdk_jsonrpc_request *request,
+				 const struct spdk_json_val *params)
+{
+	_rpc_nvmf_subsystem_query(request, params, rpc_nvmf_get_listeners_paused);
+}
+SPDK_RPC_REGISTER("nvmf_subsystem_get_listeners", rpc_nvmf_subsystem_get_listeners,
+		  SPDK_RPC_RUNTIME);
