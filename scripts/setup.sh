@@ -421,11 +421,12 @@ function reset_linux_pci() {
 	for bdf in "${!all_devices_d[@]}"; do
 		((all_devices_d["$bdf"] == 0)) || continue
 
-		if [[ -n ${virtio_d["$bdf"]} ]]; then
-			driver=$(collect_driver "$bdf" virtio-pci)
-		else
-			driver=$(collect_driver "$bdf")
-		fi
+		[[ -n ${nvme_d["$bdf"]} ]] && fallback_driver=nvme
+		[[ -n ${ioat_d["$bdf"]} ]] && fallback_driver=ioatdma
+		[[ -n ${idxd_d["$bdf"]} ]] && fallback_driver=idxd
+		[[ -n ${virtio_d["$bdf"]} ]] && fallback_driver=virtio-pci
+		[[ -n ${vmd_d["$bdf"]} ]] && fallback_driver=vmd
+		driver=$(collect_driver "$bdf" "$fallback_driver")
 
 		if ! check_for_driver "$driver"; then
 			linux_bind_driver "$bdf" "$driver"
