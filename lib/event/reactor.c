@@ -92,7 +92,12 @@ _spdk_scheduler_set(char *name)
 
 	scheduler = _scheduler_find(name);
 	if (scheduler == NULL) {
+		SPDK_ERRLOG("Requested scheduler is missing\n");
 		return -ENOENT;
+	}
+
+	if (scheduler->init != NULL) {
+		scheduler->init();
 	}
 
 	g_scheduler = scheduler;
@@ -163,6 +168,12 @@ spdk_reactors_init(void)
 	uint32_t i, last_core;
 	char mempool_name[32];
 
+	rc = _spdk_scheduler_set("static");
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed setting up scheduler\n");
+		return rc;
+	}
+
 	snprintf(mempool_name, sizeof(mempool_name), "evtpool_%d", getpid());
 	g_spdk_event_mempool = spdk_mempool_create(mempool_name,
 			       262144 - 1, /* Power of 2 minus 1 is optimal for memory consumption */
@@ -208,6 +219,10 @@ spdk_reactors_fini(void)
 
 	if (g_reactor_state == SPDK_REACTOR_STATE_UNINITIALIZED) {
 		return;
+	}
+
+	if (g_scheduler->deinit != NULL) {
+		g_scheduler->deinit();
 	}
 
 	spdk_thread_lib_fini();

@@ -37,6 +37,7 @@
 #include "common/lib/test_env.c"
 #include "event/reactor.c"
 #include "spdk_internal/thread.h"
+#include "event/scheduler_static.c"
 
 static void
 test_create_reactor(void)

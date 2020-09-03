@@ -245,7 +245,7 @@ void _spdk_scheduler_period_set(uint32_t period);
 #define SPDK_SCHEDULER_REGISTER(scheduler) \
 static void __attribute__((constructor)) _spdk_scheduler_register_##name(void) \
 { \
-	spdk_scheduler_list_add(scheduler); \
+	_spdk_scheduler_list_add(scheduler); \
 } \
 
 /**
