@@ -487,6 +487,24 @@ def nvmf_subsystem_get_controllers(client, nqn, tgt_name=None):
     return client.call('nvmf_subsystem_get_controllers', params)
 
 
+def nvmf_subsystem_get_qpairs(client, nqn, tgt_name=None):
+    """Get list of queue pairs of an NVMe-oF subsystem.
+
+    Args:
+        nqn: Subsystem NQN.
+        tgt_name: name of the parent NVMe-oF target (optional).
+
+    Returns:
+        List of queue pair objects of an NVMe-oF subsystem.
+    """
+    params = {'nqn': nqn}
+
+    if tgt_name:
+        params['tgt_name'] = tgt_name
+
+    return client.call('nvmf_subsystem_get_qpairs', params)
+
+
 def nvmf_get_stats(client, tgt_name=None):
     """Query NVMf statistics.
 

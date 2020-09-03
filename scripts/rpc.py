@@ -2001,6 +2001,17 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_subsystem_get_controllers)
 
+    def nvmf_subsystem_get_qpairs(args):
+        print_dict(rpc.nvmf.nvmf_subsystem_get_qpairs(args.client,
+                                                      nqn=args.nqn,
+                                                      tgt_name=args.tgt_name))
+
+    p = subparsers.add_parser('nvmf_subsystem_get_qpairs',
+                              help='Display queue pairs of an NVMe-oF subsystem.')
+    p.add_argument('nqn', help='NVMe-oF subsystem NQN')
+    p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.set_defaults(func=nvmf_subsystem_get_qpairs)
+
     def nvmf_get_stats(args):
         print_dict(rpc.nvmf.nvmf_get_stats(args.client, tgt_name=args.tgt_name))
 
