@@ -50,6 +50,10 @@ DPDK_INC := -I$(DPDK_INC_DIR)
 
 DPDK_LIB_LIST = rte_eal rte_mempool rte_ring rte_mbuf rte_pci rte_bus_pci rte_mempool_ring
 
+ifeq ($(OS),Linux)
+DPDK_LIB_LIST += rte_power
+endif
+
 # DPDK 20.05 eal dependency
 ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_telemetry.*))
 DPDK_LIB_LIST += rte_telemetry
