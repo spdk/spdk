@@ -160,7 +160,8 @@ function get_mounted_part_dev_from_bdf_block() {
 
 	for block in "${blocks[@]}"; do
 		for part in "/sys/block/$block/$block"*; do
-			if [[ $(< /proc/mounts) == *"/dev/${part##*/} "* ]]; then
+			[[ -b /dev/${part##*/} ]] || continue
+			if [[ $(< /proc/self/mountinfo) == *" $(< "$part/dev") "* ]]; then
 				echo "${part##*/}"
 			fi
 		done
