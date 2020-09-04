@@ -567,6 +567,19 @@ function check_changelog() {
 	return $rc
 }
 
+function check_json_rpc() {
+	local rc=0
+
+	while IFS='"' read -r _ rpc _; do
+		if ! grep -q "^## $rpc" doc/jsonrpc.md; then
+			echo "Missing JSON-RPC documentation for ${rpc}"
+			rc=1
+		fi
+	done < <(git grep -h "^SPDK_RPC_REGISTER(" ':!test/*')
+
+	return $rc
+}
+
 rc=0
 
 check_permissions || rc=1
@@ -593,5 +606,6 @@ check_python_style || rc=1
 check_bash_style || rc=1
 check_bash_static_analysis || rc=1
 check_changelog || rc=1
+check_json_rpc || rc=1
 
 exit $rc
