@@ -544,14 +544,6 @@ struct rpc_listen_address {
 	char *trsvcid;
 };
 
-#define RPC_MAX_LISTEN_ADDRESSES 255
-#define RPC_MAX_NAMESPACES 255
-
-struct rpc_listen_addresses {
-	size_t num_listen_address;
-	struct rpc_listen_address addresses[RPC_MAX_LISTEN_ADDRESSES];
-};
-
 static const struct spdk_json_object_decoder rpc_listen_address_decoders[] = {
 	/* NOTE: "transport" is kept for compatibility; new code should use "trtype" */
 	{"transport", offsetof(struct rpc_listen_address, transport), spdk_json_decode_string, true},
@@ -911,12 +903,6 @@ struct spdk_nvmf_ns_params {
 	char eui64[8];
 	struct spdk_uuid uuid;
 };
-
-struct rpc_namespaces {
-	size_t num_ns;
-	struct spdk_nvmf_ns_params ns_params[RPC_MAX_NAMESPACES];
-};
-
 
 static const struct spdk_json_object_decoder rpc_ns_params_decoders[] = {
 	{"nsid", offsetof(struct spdk_nvmf_ns_params, nsid), spdk_json_decode_uint32, true},
