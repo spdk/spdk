@@ -1404,7 +1404,7 @@ nvmf_ctrlr_get_features_reservation_notification_mask(struct spdk_nvmf_request *
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "get Features - Reservation Notificaton Mask\n");
 
-	if (cmd->nsid == 0xffffffffu) {
+	if (cmd->nsid == SPDK_NVME_GLOBAL_NS_TAG) {
 		SPDK_ERRLOG("get Features - Invalid Namespace ID\n");
 		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -1432,7 +1432,7 @@ nvmf_ctrlr_set_features_reservation_notification_mask(struct spdk_nvmf_request *
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Reservation Notificaton Mask\n");
 
-	if (cmd->nsid == 0xffffffffu) {
+	if (cmd->nsid == SPDK_NVME_GLOBAL_NS_TAG) {
 		for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
 		     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
 			ns->mask = cmd->cdw11;
@@ -1462,7 +1462,7 @@ nvmf_ctrlr_get_features_reservation_persistence(struct spdk_nvmf_request *req)
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Get Features - Reservation Persistence\n");
 
 	ns = _nvmf_subsystem_get_ns(ctrlr->subsys, cmd->nsid);
-	/* NSID with 0xffffffffu also included */
+	/* NSID with SPDK_NVME_GLOBAL_NS_TAG (=0xffffffff) also included */
 	if (ns == NULL) {
 		SPDK_ERRLOG("Get Features - Invalid Namespace ID\n");
 		response->status.sct = SPDK_NVME_SCT_GENERIC;
@@ -1491,9 +1491,9 @@ nvmf_ctrlr_set_features_reservation_persistence(struct spdk_nvmf_request *req)
 	ns = _nvmf_subsystem_get_ns(ctrlr->subsys, cmd->nsid);
 	ptpl = cmd->cdw11_bits.feat_rsv_persistence.bits.ptpl;
 
-	if (cmd->nsid != 0xffffffffu && ns && ns->ptpl_file) {
+	if (cmd->nsid != SPDK_NVME_GLOBAL_NS_TAG && ns && ns->ptpl_file) {
 		ns->ptpl_activated = ptpl;
-	} else if (cmd->nsid == 0xffffffffu) {
+	} else if (cmd->nsid == SPDK_NVME_GLOBAL_NS_TAG) {
 		for (ns = spdk_nvmf_subsystem_get_first_ns(ctrlr->subsys); ns && ns->ptpl_file;
 		     ns = spdk_nvmf_subsystem_get_next_ns(ctrlr->subsys, ns)) {
 			ns->ptpl_activated = ptpl;
@@ -2515,7 +2515,7 @@ nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
 	switch (ana_state) {
 	case SPDK_NVME_ANA_INACCESSIBLE_STATE:
 	case SPDK_NVME_ANA_CHANGE_STATE:
-		if (cmd->nsid == 0xffffffffu) {
+		if (cmd->nsid == SPDK_NVME_GLOBAL_NS_TAG) {
 			response->status.sct = SPDK_NVME_SCT_PATH;
 			response->status.sc = _nvme_ana_state_to_path_status(ana_state);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
