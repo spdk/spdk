@@ -1351,4 +1351,4 @@ vbdev_lvol_get_from_bdev(struct spdk_bdev *bdev)
 	return (struct spdk_lvol *)bdev->ctxt;
 }
 
-SPDK_LOG_REGISTER_COMPONENT("vbdev_lvol", SPDK_LOG_VBDEV_LVOL);
+SPDK_LOG_REGISTER_COMPONENT("vbdev_lvol", SPDK_LOG_VBDEV_LVOL)
