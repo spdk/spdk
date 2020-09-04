@@ -221,7 +221,7 @@ _vbdev_gpt_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev
 	rc = spdk_bdev_part_submit_request(&ch->part_ch, bdev_io);
 	if (rc) {
 		if (rc == -ENOMEM) {
-			SPDK_DEBUGLOG(SPDK_LOG_VBDEV_GPT, "gpt: no memory, queue io\n");
+			SPDK_DEBUGLOG(vbdev_gpt, "gpt: no memory, queue io\n");
 			io->ch = _ch;
 			io->bdev_io = bdev_io;
 			vbdev_gpt_queue_io(io);
@@ -385,7 +385,7 @@ gpt_read_secondary_table_complete(struct spdk_bdev_io *bdev_io, bool status, voi
 
 	rc = gpt_parse_partition_table(&gpt_base->gpt);
 	if (rc) {
-		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_GPT, "Failed to parse secondary partition table\n");
+		SPDK_DEBUGLOG(vbdev_gpt, "Failed to parse secondary partition table\n");
 		goto end;
 	}
 
@@ -394,7 +394,7 @@ gpt_read_secondary_table_complete(struct spdk_bdev_io *bdev_io, bool status, voi
 
 	num_partitions = vbdev_gpt_create_bdevs(gpt_base);
 	if (num_partitions < 0) {
-		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_GPT, "Failed to split dev=%s by gpt table\n",
+		SPDK_DEBUGLOG(vbdev_gpt, "Failed to split dev=%s by gpt table\n",
 			      spdk_bdev_get_name(bdev));
 	}
 
@@ -443,13 +443,13 @@ gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 
 	rc = gpt_parse_mbr(&gpt_base->gpt);
 	if (rc) {
-		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_GPT, "Failed to parse mbr\n");
+		SPDK_DEBUGLOG(vbdev_gpt, "Failed to parse mbr\n");
 		goto end;
 	}
 
 	rc = gpt_parse_partition_table(&gpt_base->gpt);
 	if (rc) {
-		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_GPT, "Failed to parse primary partition table\n");
+		SPDK_DEBUGLOG(vbdev_gpt, "Failed to parse primary partition table\n");
 		rc = vbdev_gpt_read_secondary_table(gpt_base);
 		if (rc) {
 			SPDK_ERRLOG("Failed to read secondary table\n");
@@ -460,7 +460,7 @@ gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 
 	num_partitions = vbdev_gpt_create_bdevs(gpt_base);
 	if (num_partitions < 0) {
-		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_GPT, "Failed to split dev=%s by gpt table\n",
+		SPDK_DEBUGLOG(vbdev_gpt, "Failed to split dev=%s by gpt table\n",
 			      spdk_bdev_get_name(bdev));
 	}
 
@@ -549,7 +549,7 @@ vbdev_gpt_examine(struct spdk_bdev *bdev)
 	}
 
 	if (spdk_bdev_get_block_size(bdev) % 512 != 0) {
-		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_GPT,
+		SPDK_DEBUGLOG(vbdev_gpt,
 			      "GPT module does not support block size %" PRIu32 " for bdev %s\n",
 			      spdk_bdev_get_block_size(bdev), spdk_bdev_get_name(bdev));
 		spdk_bdev_module_examine_done(&gpt_if);
@@ -563,4 +563,4 @@ vbdev_gpt_examine(struct spdk_bdev *bdev)
 	}
 }
 
-SPDK_LOG_REGISTER_COMPONENT("vbdev_gpt", SPDK_LOG_VBDEV_GPT)
+SPDK_LOG_REGISTER_COMPONENT(vbdev_gpt)

@@ -67,13 +67,13 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 
 	if (nsdata->noiob) {
 		ns->sectors_per_stripe = nsdata->noiob;
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "ns %u optimal IO boundary %" PRIu32 " blocks\n",
+		SPDK_DEBUGLOG(nvme, "ns %u optimal IO boundary %" PRIu32 " blocks\n",
 			      ns->id, ns->sectors_per_stripe);
 	} else if (ns->ctrlr->quirks & NVME_INTEL_QUIRK_STRIPING &&
 		   ns->ctrlr->cdata.vs[3] != 0) {
 		ns->sectors_per_stripe = (1ULL << ns->ctrlr->cdata.vs[3]) * ns->ctrlr->min_page_size /
 					 ns->sector_size;
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "ns %u stripe size quirk %" PRIu32 " blocks\n",
+		SPDK_DEBUGLOG(nvme, "ns %u stripe size quirk %" PRIu32 " blocks\n",
 			      ns->id, ns->sectors_per_stripe);
 	} else {
 		ns->sectors_per_stripe = 0;
@@ -218,7 +218,7 @@ nvme_ctrlr_identify_id_desc(struct spdk_nvme_ns *ns)
 	if ((ns->ctrlr->vs.raw < SPDK_NVME_VERSION(1, 3, 0) &&
 	     !(ns->ctrlr->cap.bits.css & SPDK_NVME_CAP_CSS_IOCS)) ||
 	    (ns->ctrlr->quirks & NVME_QUIRK_IDENTIFY_CNS)) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Version < 1.3; not attempting to retrieve NS ID Descriptor List\n");
+		SPDK_DEBUGLOG(nvme, "Version < 1.3; not attempting to retrieve NS ID Descriptor List\n");
 		return 0;
 	}
 
@@ -228,7 +228,7 @@ nvme_ctrlr_identify_id_desc(struct spdk_nvme_ns *ns)
 		return -ENOMEM;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "Attempting to retrieve NS ID Descriptor List\n");
+	SPDK_DEBUGLOG(nvme, "Attempting to retrieve NS ID Descriptor List\n");
 	rc = nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST, 0, ns->id,
 				     0, ns->id_desc_list, sizeof(ns->id_desc_list),
 				     nvme_completion_poll_cb, status);

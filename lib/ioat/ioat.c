@@ -772,4 +772,4 @@ spdk_ioat_process_events(struct spdk_ioat_chan *ioat)
 	return ioat_process_channel_events(ioat);
 }
 
-SPDK_LOG_REGISTER_COMPONENT("ioat", SPDK_LOG_IOAT)
+SPDK_LOG_REGISTER_COMPONENT(ioat)

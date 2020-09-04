@@ -157,7 +157,7 @@ _vbdev_split_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bd
 	rc = spdk_bdev_part_submit_request(&ch->part_ch, bdev_io);
 	if (rc) {
 		if (rc == -ENOMEM) {
-			SPDK_DEBUGLOG(SPDK_LOG_VBDEV_SPLIT, "split: no memory, queue io.\n");
+			SPDK_DEBUGLOG(vbdev_split, "split: no memory, queue io.\n");
 			io_ctx->ch = _ch;
 			io_ctx->bdev_io = bdev_io;
 			vbdev_split_queue_io(io_ctx);
@@ -250,11 +250,11 @@ vbdev_split_create(struct spdk_vbdev_split_config *cfg)
 			return -EINVAL;
 		}
 		split_size_blocks = (cfg->split_size_mb * mb) / base_bdev->blocklen;
-		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_SPLIT, "Split size %" PRIu64 " MB specified by user\n",
+		SPDK_DEBUGLOG(vbdev_split, "Split size %" PRIu64 " MB specified by user\n",
 			      cfg->split_size_mb);
 	} else {
 		split_size_blocks = base_bdev->blockcnt / cfg->split_count;
-		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_SPLIT, "Split size not specified by user\n");
+		SPDK_DEBUGLOG(vbdev_split, "Split size not specified by user\n");
 	}
 
 	max_split_count = base_bdev->blockcnt / split_size_blocks;
@@ -265,7 +265,7 @@ vbdev_split_create(struct spdk_vbdev_split_config *cfg)
 		split_count = max_split_count;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_VBDEV_SPLIT, "base_bdev: %s split_count: %" PRIu64
+	SPDK_DEBUGLOG(vbdev_split, "base_bdev: %s split_count: %" PRIu64
 		      " split_size_blocks: %" PRIu64 "\n",
 		      spdk_bdev_get_name(base_bdev), split_count, split_size_blocks);
 
@@ -579,4 +579,4 @@ vbdev_split_get_ctx_size(void)
 	return sizeof(struct vbdev_split_bdev_io);
 }
 
-SPDK_LOG_REGISTER_COMPONENT("vbdev_split", SPDK_LOG_VBDEV_SPLIT)
+SPDK_LOG_REGISTER_COMPONENT(vbdev_split)

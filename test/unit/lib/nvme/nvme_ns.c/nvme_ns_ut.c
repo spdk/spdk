@@ -39,7 +39,7 @@
 
 #include "common/lib/test_env.c"
 
-SPDK_LOG_REGISTER_COMPONENT("nvme", SPDK_LOG_NVME)
+SPDK_LOG_REGISTER_COMPONENT(nvme)
 
 DEFINE_STUB(nvme_wait_for_completion_robust_lock, int,
 	    (struct spdk_nvme_qpair *qpair,

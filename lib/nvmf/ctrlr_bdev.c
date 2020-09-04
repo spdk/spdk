@@ -62,7 +62,7 @@ nvmf_subsystem_bdev_io_type_supported(struct spdk_nvmf_subsystem *subsystem,
 		}
 
 		if (!spdk_bdev_io_type_supported(ns->bdev, io_type)) {
-			SPDK_DEBUGLOG(SPDK_LOG_NVMF,
+			SPDK_DEBUGLOG(nvmf,
 				      "Subsystem %s namespace %u (%s) does not support io_type %d\n",
 				      spdk_nvmf_subsystem_get_nqn(subsystem),
 				      ns->opts.nsid, spdk_bdev_get_name(ns->bdev), (int)io_type);
@@ -70,7 +70,7 @@ nvmf_subsystem_bdev_io_type_supported(struct spdk_nvmf_subsystem *subsystem,
 		}
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "All devices in Subsystem %s support io_type %d\n",
+	SPDK_DEBUGLOG(nvmf, "All devices in Subsystem %s support io_type %d\n",
 		      spdk_nvmf_subsystem_get_nqn(subsystem), (int)io_type);
 	return true;
 }
@@ -172,7 +172,7 @@ nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *n
 				nsdata->dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_TYPE3;
 				break;
 			default:
-				SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Protection Disabled\n");
+				SPDK_DEBUGLOG(nvmf, "Protection Disabled\n");
 				nsdata->dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_DISABLE;
 				break;
 			}

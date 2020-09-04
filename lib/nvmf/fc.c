@@ -520,7 +520,7 @@ nvmf_fc_poll_group_remove_hwqp(struct spdk_nvmf_fc_hwqp *hwqp)
 {
 	assert(hwqp);
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC,
+	SPDK_DEBUGLOG(nvmf_fc,
 		      "Remove hwqp from poller: for port: %d, hwqp: %d\n",
 		      hwqp->fc_port->port_hdl, hwqp->hwqp_id);
 
@@ -566,7 +566,7 @@ nvmf_fc_queue_synced_cb(void *cb_data, enum spdk_nvmf_fc_poller_api_ret ret)
 	ctx->hwqps_responded = 0;
 	ctx->handled = false;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC,
+	SPDK_DEBUGLOG(nvmf_fc,
 		      "QueueSync(0x%lx) completed for nport: %d, rpi: 0x%x, oxid: 0x%x, rxid: 0x%x\n",
 		      ctx->u_id, ctx->nport->nport_hdl, ctx->rpi, ctx->oxid, ctx->rxid);
 
@@ -625,7 +625,7 @@ nvmf_fc_handle_abts_notfound(struct spdk_nvmf_fc_abts_ctx *ctx)
 					poller_arg);
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC,
+	SPDK_DEBUGLOG(nvmf_fc,
 		      "QueueSync(0x%lx) Sent for nport: %d, rpi: 0x%x, oxid: 0x%x, rxid: 0x%x\n",
 		      ctx->u_id, ctx->nport->nport_hdl, ctx->rpi, ctx->oxid, ctx->rxid);
 
@@ -664,7 +664,7 @@ nvmf_fc_abts_handled_cb(void *cb_data, enum spdk_nvmf_fc_poller_api_ret ret)
 		if (!ctx->handled) {
 			/* Try syncing the queues and try one more time */
 			if (!ctx->queue_synced && (nvmf_fc_handle_abts_notfound(ctx) == 0)) {
-				SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC,
+				SPDK_DEBUGLOG(nvmf_fc,
 					      "QueueSync(0x%lx) for nport: %d, rpi: 0x%x, oxid: 0x%x, rxid: 0x%x\n",
 					      ctx->u_id, ctx->nport->nport_hdl, ctx->rpi, ctx->oxid, ctx->rxid);
 				return;
@@ -1106,7 +1106,7 @@ nvmf_ctrlr_is_on_nport(uint8_t port_hdl, uint16_t nport_hdl,
 
 	assoc = nvmf_ctrlr_get_fc_assoc(ctrlr);
 	if (assoc && assoc->tgtport == fc_nport) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC,
+		SPDK_DEBUGLOG(nvmf_fc,
 			      "Controller: %d corresponding to association: %p(%lu:%d) is on port: %d nport: %d\n",
 			      ctrlr->cntlid, assoc, assoc->assoc_id, assoc->assoc_state, port_hdl,
 			      nport_hdl);
@@ -1254,7 +1254,7 @@ nvmf_fc_request_abort(struct spdk_nvmf_fc_request *fc_req, bool send_abts,
 		nvmf_fc_issue_abort(fc_req->hwqp, fc_req->xchg, NULL, NULL);
 	} else if (nvmf_fc_req_in_get_buff(fc_req)) {
 		/* Will be completed by request_complete callback. */
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC, "Abort req when getting buffers.\n");
+		SPDK_DEBUGLOG(nvmf_fc, "Abort req when getting buffers.\n");
 	} else if (nvmf_fc_req_in_pending(fc_req)) {
 		/* Remove from pending */
 		STAILQ_REMOVE(&fc_req->hwqp->fgroup->group.pending_buf_queue, &fc_req->req,
@@ -1310,7 +1310,7 @@ nvmf_fc_request_execute(struct spdk_nvmf_fc_request *fc_req)
 	}
 
 	if (fc_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC, "WRITE CMD.\n");
+		SPDK_DEBUGLOG(nvmf_fc, "WRITE CMD.\n");
 
 		nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_WRITE_XFER);
 
@@ -1320,7 +1320,7 @@ nvmf_fc_request_execute(struct spdk_nvmf_fc_request *fc_req)
 			_nvmf_fc_request_free(fc_req);
 		}
 	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC, "READ/NONE CMD\n");
+		SPDK_DEBUGLOG(nvmf_fc, "READ/NONE CMD\n");
 
 		if (fc_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
 			nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_READ_BDEV);
@@ -1475,7 +1475,7 @@ nvmf_fc_request_set_state(struct spdk_nvmf_fc_request *fc_req,
 {
 	assert(fc_req->magic != 0xDEADBEEF);
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC,
+	SPDK_DEBUGLOG(nvmf_fc,
 		      "FC Request(%p):\n\tState Old:%s New:%s\n", fc_req,
 		      nvmf_fc_request_get_state_str(fc_req->state),
 		      nvmf_fc_request_get_state_str(state));
@@ -1513,7 +1513,7 @@ nvmf_fc_hwqp_process_frame(struct spdk_nvmf_fc_hwqp *hwqp,
 	 * ox_id Since these are fields, we can't pass address to from_be16().
 	 * Since ox_id and rx_id are only needed for tracelog, assigning to local
 	 * vars. and doing conversion is a waste of time in non-debug builds. */
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC,
+	SPDK_DEBUGLOG(nvmf_fc,
 		      "Process NVME frame s_id:0x%x d_id:0x%x oxid:0x%x rxid:0x%x.\n",
 		      s_id, d_id,
 		      ((frame->ox_id << 8) & 0xff00) | ((frame->ox_id >> 8) & 0xff),
@@ -1546,7 +1546,7 @@ nvmf_fc_hwqp_process_frame(struct spdk_nvmf_fc_hwqp *hwqp,
 		struct spdk_nvmf_fc_rq_buf_ls_request *req_buf = buffer->virt;
 		struct spdk_nvmf_fc_ls_rqst *ls_rqst;
 
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC, "Process LS NVME frame\n");
+		SPDK_DEBUGLOG(nvmf_fc, "Process LS NVME frame\n");
 
 		/* Use the RQ buffer for holding LS request. */
 		ls_rqst = (struct spdk_nvmf_fc_ls_rqst *)&req_buf->ls_rqst;
@@ -1585,7 +1585,7 @@ nvmf_fc_hwqp_process_frame(struct spdk_nvmf_fc_hwqp *hwqp,
 	} else if ((frame->r_ctl == FCNVME_R_CTL_CMD_REQ) &&
 		   (frame->type == FCNVME_TYPE_FC_EXCHANGE)) {
 
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC, "Process IO NVME frame\n");
+		SPDK_DEBUGLOG(nvmf_fc, "Process IO NVME frame\n");
 		rc = nvmf_fc_hwqp_handle_request(hwqp, frame, buff_idx, buffer, plen);
 	} else {
 
@@ -1706,11 +1706,11 @@ nvmf_fc_handle_rsp(struct spdk_nvmf_fc_request *fc_req)
 		/* Fill transfer length */
 		to_be32(&fc_req->ersp.transferred_data_len, fc_req->transfered_len);
 
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC, "Posting ERSP.\n");
+		SPDK_DEBUGLOG(nvmf_fc, "Posting ERSP.\n");
 		rc = nvmf_fc_xmt_rsp(fc_req, (uint8_t *)&fc_req->ersp,
 				     sizeof(struct spdk_nvmf_fc_ersp_iu));
 	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC, "Posting RSP.\n");
+		SPDK_DEBUGLOG(nvmf_fc, "Posting RSP.\n");
 		rc = nvmf_fc_xmt_rsp(fc_req, NULL, 0);
 	}
 
@@ -1822,7 +1822,7 @@ nvmf_fc_create(struct spdk_nvmf_transport_opts *opts)
 {
 	uint32_t sge_count;
 
-	SPDK_INFOLOG(SPDK_LOG_NVMF_FC, "*** FC Transport Init ***\n"
+	SPDK_INFOLOG(nvmf_fc, "*** FC Transport Init ***\n"
 		     "  Transport opts:  max_ioq_depth=%d, max_io_size=%d,\n"
 		     "  max_io_qpairs_per_ctrlr=%d, io_unit_size=%d,\n"
 		     "  max_aq_depth=%d\n",
@@ -2380,7 +2380,7 @@ out:
 	if (err != 0) {
 		SPDK_ERRLOG("%s", log_str);
 	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API, "%s", log_str);
+		SPDK_DEBUGLOG(nvmf_fc_adm_api, "%s", log_str);
 	}
 	return;
 }
@@ -2442,7 +2442,7 @@ out:
 	if (err != 0) {
 		SPDK_ERRLOG("%s", log_str);
 	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API, "%s", log_str);
+		SPDK_DEBUGLOG(nvmf_fc_adm_api, "%s", log_str);
 	}
 }
 
@@ -2504,7 +2504,7 @@ nvmf_fc_adm_i_t_delete_assoc_cb(void *args, uint32_t err)
 	if (err != 0) {
 		SPDK_ERRLOG("%s", log_str);
 	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API, "%s", log_str);
+		SPDK_DEBUGLOG(nvmf_fc_adm_api, "%s", log_str);
 	}
 }
 
@@ -2529,7 +2529,7 @@ nvmf_fc_adm_i_t_delete_assoc(struct spdk_nvmf_fc_nport *nport,
 	uint32_t assoc_count = rport->assoc_count;
 	char log_str[256];
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API, "IT delete associations on nport:%d begin.\n",
+	SPDK_DEBUGLOG(nvmf_fc_adm_api, "IT delete associations on nport:%d begin.\n",
 		      nport->nport_hdl);
 
 	/*
@@ -2588,7 +2588,7 @@ out:
 		 nport->nport_hdl, s_id, rpi, assoc_count, num_assoc, num_assoc_del_scheduled, err);
 
 	if (err == 0) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API, "%s", log_str);
+		SPDK_DEBUGLOG(nvmf_fc_adm_api, "%s", log_str);
 	} else {
 		SPDK_ERRLOG("%s", log_str);
 	}
@@ -2614,7 +2614,7 @@ nvmf_fc_adm_queue_quiesce_cb(void *cb_data, enum spdk_nvmf_fc_poller_api_ret ret
 	 * Decrement the callback/quiesced queue count.
 	 */
 	port_quiesce_ctx->quiesce_count--;
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API, "Queue%d Quiesced\n", quiesce_api_data->hwqp->hwqp_id);
+	SPDK_DEBUGLOG(nvmf_fc_adm_api, "Queue%d Quiesced\n", quiesce_api_data->hwqp->hwqp_id);
 
 	free(quiesce_api_data);
 	/*
@@ -2627,7 +2627,7 @@ nvmf_fc_adm_queue_quiesce_cb(void *cb_data, enum spdk_nvmf_fc_poller_api_ret ret
 	if (fc_port->hw_port_status == SPDK_FC_PORT_QUIESCED) {
 		SPDK_ERRLOG("Port %d already in quiesced state.\n", fc_port->port_hdl);
 	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API, "HW port %d quiesced.\n", fc_port->port_hdl);
+		SPDK_DEBUGLOG(nvmf_fc_adm_api, "HW port %d quiesced.\n", fc_port->port_hdl);
 		fc_port->hw_port_status = SPDK_FC_PORT_QUIESCED;
 	}
 
@@ -2643,7 +2643,7 @@ nvmf_fc_adm_queue_quiesce_cb(void *cb_data, enum spdk_nvmf_fc_poller_api_ret ret
 	 */
 	free(port_quiesce_ctx);
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API, "HW port %d quiesce done, rc = %d.\n", fc_port->port_hdl,
+	SPDK_DEBUGLOG(nvmf_fc_adm_api, "HW port %d quiesce done, rc = %d.\n", fc_port->port_hdl,
 		      err);
 }
 
@@ -2668,7 +2668,7 @@ nvmf_fc_adm_hw_queue_quiesce(struct spdk_nvmf_fc_hwqp *fc_hwqp, void *ctx,
 	args->cb_info.cb_data = args;
 	args->cb_info.cb_thread = spdk_get_thread();
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API, "Quiesce queue %d\n", fc_hwqp->hwqp_id);
+	SPDK_DEBUGLOG(nvmf_fc_adm_api, "Quiesce queue %d\n", fc_hwqp->hwqp_id);
 	rc = nvmf_fc_poller_api_func(fc_hwqp, SPDK_NVMF_FC_POLLER_API_QUIESCE_QUEUE, args);
 	if (rc) {
 		free(args);
@@ -2690,7 +2690,7 @@ nvmf_fc_adm_hw_port_quiesce(struct spdk_nvmf_fc_port *fc_port, void *ctx,
 	uint32_t i = 0;
 	int err = 0;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API, "HW port:%d is being quiesced.\n", fc_port->port_hdl);
+	SPDK_DEBUGLOG(nvmf_fc_adm_api, "HW port:%d is being quiesced.\n", fc_port->port_hdl);
 
 	/*
 	 * If the port is in an OFFLINE state, set the state to QUIESCED
@@ -2701,7 +2701,7 @@ nvmf_fc_adm_hw_port_quiesce(struct spdk_nvmf_fc_port *fc_port, void *ctx,
 	}
 
 	if (fc_port->hw_port_status == SPDK_FC_PORT_QUIESCED) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API, "Port %d already in quiesced state.\n",
+		SPDK_DEBUGLOG(nvmf_fc_adm_api, "Port %d already in quiesced state.\n",
 			      fc_port->port_hdl);
 		/*
 		 * Execute the callback function directly.
@@ -2833,7 +2833,7 @@ abort_port_init:
 
 	free(arg);
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API, "HW port %d initialize done, rc = %d.\n",
+	SPDK_DEBUGLOG(nvmf_fc_adm_api, "HW port %d initialize done, rc = %d.\n",
 		      args->port_handle, err);
 }
 
@@ -2885,7 +2885,7 @@ out:
 
 	free(arg);
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API, "HW port %d online done, rc = %d.\n", args->port_handle,
+	SPDK_DEBUGLOG(nvmf_fc_adm_api, "HW port %d online done, rc = %d.\n", args->port_handle,
 		      err);
 }
 
@@ -2940,7 +2940,7 @@ out:
 
 	free(arg);
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API, "HW port %d offline done, rc = %d.\n", args->port_handle,
+	SPDK_DEBUGLOG(nvmf_fc_adm_api, "HW port %d offline done, rc = %d.\n", args->port_handle,
 		      err);
 }
 
@@ -3169,7 +3169,7 @@ out:
 	if (err != 0) {
 		SPDK_ERRLOG("%s", log_str);
 	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API, "%s", log_str);
+		SPDK_DEBUGLOG(nvmf_fc_adm_api, "%s", log_str);
 	}
 }
 
@@ -3299,7 +3299,7 @@ out:
 		}
 
 	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API,
+		SPDK_DEBUGLOG(nvmf_fc_adm_api,
 			      "NPort %d delete done succesfully, fc port:%d. "
 			      "rport_cnt:%d\n",
 			      args->nport_handle, args->port_handle, rport_cnt);
@@ -3392,7 +3392,7 @@ out:
 
 	free(arg);
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API,
+	SPDK_DEBUGLOG(nvmf_fc_adm_api,
 		      "IT add on nport %d done, rc = %d.\n",
 		      args->nport_handle, err);
 }
@@ -3415,7 +3415,7 @@ nvmf_fc_adm_evnt_i_t_delete(void *arg)
 	uint32_t num_rport = 0;
 	char log_str[256];
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API, "IT delete on nport:%d begin.\n", args->nport_handle);
+	SPDK_DEBUGLOG(nvmf_fc_adm_api, "IT delete on nport:%d begin.\n", args->nport_handle);
 
 	/*
 	 * Make sure the nport port exists. If it does not, error out.
@@ -3521,7 +3521,7 @@ out:
 	if (rc != 0) {
 		SPDK_ERRLOG("%s", log_str);
 	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API, "%s", log_str);
+		SPDK_DEBUGLOG(nvmf_fc_adm_api, "%s", log_str);
 	}
 
 	free(arg);
@@ -3539,7 +3539,7 @@ nvmf_fc_adm_evnt_abts_recv(void *arg)
 	struct spdk_nvmf_fc_nport *nport = NULL;
 	int err = 0;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API, "FC ABTS received. RPI:%d, oxid:%d, rxid:%d\n", args->rpi,
+	SPDK_DEBUGLOG(nvmf_fc_adm_api, "FC ABTS received. RPI:%d, oxid:%d, rxid:%d\n", args->rpi,
 		      args->oxid, args->rxid);
 
 	/*
@@ -3556,7 +3556,7 @@ nvmf_fc_adm_evnt_abts_recv(void *arg)
 	 * 2. If the nport is in the process of being deleted, drop the ABTS.
 	 */
 	if (nport->nport_state == SPDK_NVMF_FC_OBJECT_TO_BE_DELETED) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API,
+		SPDK_DEBUGLOG(nvmf_fc_adm_api,
 			      "FC ABTS dropped because the nport is being deleted; RPI:%d, oxid:%d, rxid:%d\n",
 			      args->rpi, args->oxid, args->rxid);
 		err = 0;
@@ -3655,7 +3655,7 @@ nvmf_fc_adm_hw_port_quiesce_reset_cb(void *ctx, int err)
 				fc_port->num_io_queues, &dump_info);
 
 out:
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API, "HW port %d reset done, queues_dumped = %d, rc = %d.\n",
+	SPDK_DEBUGLOG(nvmf_fc_adm_api, "HW port %d reset done, queues_dumped = %d, rc = %d.\n",
 		      args->port_handle, args->dump_queues, err);
 
 	if (cb_func != NULL) {
@@ -3678,7 +3678,7 @@ nvmf_fc_adm_evnt_hw_port_reset(void *arg)
 	struct spdk_nvmf_fc_adm_hw_port_reset_ctx *ctx = NULL;
 	int err = 0;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API, "HW port %d dump\n", args->port_handle);
+	SPDK_DEBUGLOG(nvmf_fc_adm_api, "HW port %d dump\n", args->port_handle);
 
 	/*
 	 * Make sure the physical port exists.
@@ -3721,7 +3721,7 @@ fail:
 	free(ctx);
 
 out:
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API, "HW port %d dump done, rc = %d.\n", args->port_handle,
+	SPDK_DEBUGLOG(nvmf_fc_adm_api, "HW port %d dump done, rc = %d.\n", args->port_handle,
 		      err);
 
 	if (api_data->cb_func != NULL) {
@@ -3821,7 +3821,7 @@ out:
 	if (err != 0) {
 		SPDK_ERRLOG("%s", log_str);
 	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API, "%s", log_str);
+		SPDK_DEBUGLOG(nvmf_fc_adm_api, "%s", log_str);
 	}
 
 	if ((api_data->cb_func != NULL) && (nport_deletes_sent == 0)) {
@@ -3856,7 +3856,7 @@ nvmf_fc_master_enqueue_event(enum spdk_fc_event event_type, void *args,
 	struct spdk_nvmf_fc_adm_api_data *api_data = NULL;
 	spdk_msg_fn event_fn = NULL;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API, "Enqueue event %d.\n", event_type);
+	SPDK_DEBUGLOG(nvmf_fc_adm_api, "Enqueue event %d.\n", event_type);
 
 	if (event_type >= SPDK_FC_EVENT_MAX) {
 		SPDK_ERRLOG("Invalid spdk_fc_event_t %d.\n", event_type);
@@ -3934,7 +3934,7 @@ done:
 	if (err == 0) {
 		assert(event_fn != NULL);
 		nvmf_fc_adm_run_on_master_thread(event_fn, (void *)api_data);
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_ADM_API, "Enqueue event %d done successfully\n", event_type);
+		SPDK_DEBUGLOG(nvmf_fc_adm_api, "Enqueue event %d done successfully\n", event_type);
 	} else {
 		SPDK_ERRLOG("Enqueue event %d failed, err = %d\n", event_type, err);
 		if (api_data) {
@@ -3946,5 +3946,5 @@ done:
 }
 
 SPDK_NVMF_TRANSPORT_REGISTER(fc, &spdk_nvmf_transport_fc);
-SPDK_LOG_REGISTER_COMPONENT("nvmf_fc_adm_api", SPDK_LOG_NVMF_FC_ADM_API)
-SPDK_LOG_REGISTER_COMPONENT("nvmf_fc", SPDK_LOG_NVMF_FC)
+SPDK_LOG_REGISTER_COMPONENT(nvmf_fc_adm_api)
+SPDK_LOG_REGISTER_COMPONENT(nvmf_fc)

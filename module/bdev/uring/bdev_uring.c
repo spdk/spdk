@@ -156,7 +156,7 @@ bdev_uring_readv(struct bdev_uring *uring, struct spdk_io_channel *ch,
 	uring_task->len = nbytes;
 	uring_task->ch = uring_ch;
 
-	SPDK_DEBUGLOG(SPDK_LOG_URING, "read %d iovs size %lu to off: %#lx\n",
+	SPDK_DEBUGLOG(uring, "read %d iovs size %lu to off: %#lx\n",
 		      iovcnt, nbytes, offset);
 
 	group_ch->io_pending++;
@@ -178,7 +178,7 @@ bdev_uring_writev(struct bdev_uring *uring, struct spdk_io_channel *ch,
 	uring_task->len = nbytes;
 	uring_task->ch = uring_ch;
 
-	SPDK_DEBUGLOG(SPDK_LOG_URING, "write %d iovs size %lu from off: %#lx\n",
+	SPDK_DEBUGLOG(uring, "write %d iovs size %lu from off: %#lx\n",
 		      iovcnt, nbytes, offset);
 
 	group_ch->io_pending++;
@@ -669,4 +669,4 @@ bdev_uring_get_spdk_running_config(FILE *fp)
 	fprintf(fp, "\n");
 }
 
-SPDK_LOG_REGISTER_COMPONENT("uring", SPDK_LOG_URING)
+SPDK_LOG_REGISTER_COMPONENT(uring)

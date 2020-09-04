@@ -42,7 +42,7 @@
 #include "nvme/nvme_ctrlr.c"
 #include "nvme/nvme_quirks.c"
 
-SPDK_LOG_REGISTER_COMPONENT("nvme", SPDK_LOG_NVME)
+SPDK_LOG_REGISTER_COMPONENT(nvme)
 
 pid_t g_spdk_nvme_pid;
 

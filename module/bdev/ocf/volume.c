@@ -182,7 +182,7 @@ vbdev_ocf_volume_submit_io_cb(struct spdk_bdev_io *bdev_io, bool success, void *
 	}
 
 	if (io_ctx->error) {
-		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_OCF_VOLUME,
+		SPDK_DEBUGLOG(vbdev_ocf_volume,
 			      "base returned error on io submission: %d\n", io_ctx->error);
 	}
 
@@ -441,4 +441,4 @@ vbdev_ocf_volume_cleanup(void)
 	ocf_ctx_unregister_volume_type(vbdev_ocf_ctx, SPDK_OBJECT);
 }
 
-SPDK_LOG_REGISTER_COMPONENT("vbdev_ocf_volume", SPDK_LOG_VBDEV_OCF_VOLUME)
+SPDK_LOG_REGISTER_COMPONENT(vbdev_ocf_volume)

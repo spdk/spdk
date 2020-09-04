@@ -119,7 +119,7 @@ rpc_bdev_rbd_create(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_create_rbd_decoders,
 				    SPDK_COUNTOF(rpc_create_rbd_decoders),
 				    &req)) {
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV_RBD, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(bdev_rbd, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
 		goto cleanup;

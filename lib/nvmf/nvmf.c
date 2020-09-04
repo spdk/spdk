@@ -47,7 +47,7 @@
 #include "nvmf_internal.h"
 #include "transport.h"
 
-SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
+SPDK_LOG_REGISTER_COMPONENT(nvmf)
 
 #define SPDK_NVMF_DEFAULT_MAX_SUBSYSTEMS 1024
 #define SPDK_NVMF_DEFAULT_ACCEPT_POLL_RATE_US 10000
@@ -1195,7 +1195,7 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 			ns_info->channel = ch;
 		} else if (ns_info->num_blocks != spdk_bdev_get_num_blocks(ns->bdev)) {
 			/* Namespace is still there but size has changed */
-			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Namespace resized: subsystem_id %d,"
+			SPDK_DEBUGLOG(nvmf, "Namespace resized: subsystem_id %d,"
 				      " nsid %u, pg %p, old %lu, new %lu\n",
 				      subsystem->id,
 				      ns->nsid,

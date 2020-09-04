@@ -183,7 +183,7 @@ rpc_bdev_compress_create(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_construct_compress_decoders,
 				    SPDK_COUNTOF(rpc_construct_compress_decoders),
 				    &req)) {
-		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_COMPRESS, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(vbdev_compress, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
 						 "spdk_json_decode_object failed");
 		goto cleanup;

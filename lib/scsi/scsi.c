@@ -107,4 +107,4 @@ spdk_scsi_lun_id_fmt_to_int(uint64_t fmt_lun)
 	return lun_i;
 }
 
-SPDK_LOG_REGISTER_COMPONENT("scsi", SPDK_LOG_SCSI)
+SPDK_LOG_REGISTER_COMPONENT(scsi)

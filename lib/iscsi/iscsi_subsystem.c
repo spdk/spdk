@@ -334,54 +334,54 @@ struct spdk_iscsi_pdu *iscsi_get_pdu(struct spdk_iscsi_conn *conn)
 static void
 iscsi_log_globals(void)
 {
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "AuthFile %s\n",
+	SPDK_DEBUGLOG(iscsi, "AuthFile %s\n",
 		      g_iscsi.authfile ? g_iscsi.authfile : "(none)");
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "NodeBase %s\n", g_iscsi.nodebase);
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "MaxSessions %d\n", g_iscsi.MaxSessions);
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "MaxConnectionsPerSession %d\n",
+	SPDK_DEBUGLOG(iscsi, "NodeBase %s\n", g_iscsi.nodebase);
+	SPDK_DEBUGLOG(iscsi, "MaxSessions %d\n", g_iscsi.MaxSessions);
+	SPDK_DEBUGLOG(iscsi, "MaxConnectionsPerSession %d\n",
 		      g_iscsi.MaxConnectionsPerSession);
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "MaxQueueDepth %d\n", g_iscsi.MaxQueueDepth);
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "DefaultTime2Wait %d\n",
+	SPDK_DEBUGLOG(iscsi, "MaxQueueDepth %d\n", g_iscsi.MaxQueueDepth);
+	SPDK_DEBUGLOG(iscsi, "DefaultTime2Wait %d\n",
 		      g_iscsi.DefaultTime2Wait);
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "DefaultTime2Retain %d\n",
+	SPDK_DEBUGLOG(iscsi, "DefaultTime2Retain %d\n",
 		      g_iscsi.DefaultTime2Retain);
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "FirstBurstLength %d\n",
+	SPDK_DEBUGLOG(iscsi, "FirstBurstLength %d\n",
 		      g_iscsi.FirstBurstLength);
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "ImmediateData %s\n",
+	SPDK_DEBUGLOG(iscsi, "ImmediateData %s\n",
 		      g_iscsi.ImmediateData ? "Yes" : "No");
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "AllowDuplicateIsid %s\n",
+	SPDK_DEBUGLOG(iscsi, "AllowDuplicateIsid %s\n",
 		      g_iscsi.AllowDuplicateIsid ? "Yes" : "No");
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "ErrorRecoveryLevel %d\n",
+	SPDK_DEBUGLOG(iscsi, "ErrorRecoveryLevel %d\n",
 		      g_iscsi.ErrorRecoveryLevel);
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Timeout %d\n", g_iscsi.timeout);
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "NopInInterval %d\n",
+	SPDK_DEBUGLOG(iscsi, "Timeout %d\n", g_iscsi.timeout);
+	SPDK_DEBUGLOG(iscsi, "NopInInterval %d\n",
 		      g_iscsi.nopininterval);
 	if (g_iscsi.disable_chap) {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
+		SPDK_DEBUGLOG(iscsi,
 			      "DiscoveryAuthMethod None\n");
 	} else if (!g_iscsi.require_chap) {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
+		SPDK_DEBUGLOG(iscsi,
 			      "DiscoveryAuthMethod Auto\n");
 	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
+		SPDK_DEBUGLOG(iscsi,
 			      "DiscoveryAuthMethod %s %s\n",
 			      g_iscsi.require_chap ? "CHAP" : "",
 			      g_iscsi.mutual_chap ? "Mutual" : "");
 	}
 
 	if (g_iscsi.chap_group == 0) {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
+		SPDK_DEBUGLOG(iscsi,
 			      "DiscoveryAuthGroup None\n");
 	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
+		SPDK_DEBUGLOG(iscsi,
 			      "DiscoveryAuthGroup AuthGroup%d\n",
 			      g_iscsi.chap_group);
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "MaxLargeDataInPerConnection %d\n",
+	SPDK_DEBUGLOG(iscsi, "MaxLargeDataInPerConnection %d\n",
 		      g_iscsi.MaxLargeDataInPerConnection);
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "MaxR2TPerConnection %d\n",
+	SPDK_DEBUGLOG(iscsi, "MaxR2TPerConnection %d\n",
 		      g_iscsi.MaxR2TPerConnection);
 }
 
@@ -505,7 +505,7 @@ iscsi_read_config_file_params(struct spdk_conf_section *sp,
 
 	val = spdk_conf_section_get_val(sp, "Comment");
 	if (val != NULL) {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Comment %s\n", val);
+		SPDK_DEBUGLOG(iscsi, "Comment %s\n", val);
 	}
 
 	val = spdk_conf_section_get_val(sp, "AuthFile");
@@ -732,7 +732,7 @@ iscsi_parse_options(struct spdk_iscsi_opts **popts)
 	}
 
 	/* Process parameters */
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "iscsi_read_config_file_parmas\n");
+	SPDK_DEBUGLOG(iscsi, "iscsi_read_config_file_parmas\n");
 	sp = spdk_conf_find_section(NULL, "iSCSI");
 	if (sp != NULL) {
 		rc = iscsi_read_config_file_params(sp, opts);
@@ -993,7 +993,7 @@ iscsi_parse_auth_group(struct spdk_conf_section *sp)
 
 	val = spdk_conf_section_get_val(sp, "Comment");
 	if (val != NULL) {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Comment %s\n", val);
+		SPDK_DEBUGLOG(iscsi, "Comment %s\n", val);
 	}
 
 	tag = spdk_conf_section_get_num(sp);
@@ -1041,7 +1041,7 @@ iscsi_parse_auth_info(void)
 
 	rc = spdk_conf_read(config, g_iscsi.authfile);
 	if (rc != 0) {
-		SPDK_INFOLOG(SPDK_LOG_ISCSI, "Failed to load auth file\n");
+		SPDK_INFOLOG(iscsi, "Failed to load auth file\n");
 		spdk_conf_free(config);
 		return rc;
 	}
@@ -1195,7 +1195,7 @@ iscsi_parse_configuration(void)
 				SPDK_ERRLOG("iscsi_parse_auth_info() failed\n");
 			}
 		} else {
-			SPDK_INFOLOG(SPDK_LOG_ISCSI, "CHAP secret file is not found in the path %s\n",
+			SPDK_INFOLOG(iscsi, "CHAP secret file is not found in the path %s\n",
 				     g_iscsi.authfile);
 		}
 	}
@@ -1602,4 +1602,4 @@ spdk_iscsi_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_array_end(w);
 }
 
-SPDK_LOG_REGISTER_COMPONENT("iscsi", SPDK_LOG_ISCSI)
+SPDK_LOG_REGISTER_COMPONENT(iscsi)

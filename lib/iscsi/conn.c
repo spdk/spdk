@@ -123,7 +123,7 @@ int initialize_iscsi_conns(void)
 {
 	uint32_t i;
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_init\n");
+	SPDK_DEBUGLOG(iscsi, "spdk_iscsi_init\n");
 
 	g_conns_array = calloc(MAX_ISCSI_CONNECTIONS, sizeof(struct spdk_iscsi_conn));
 	if (g_conns_array == NULL) {
@@ -257,7 +257,7 @@ iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	conn->logout_request_timer = NULL;
 	conn->logout_timer = NULL;
 	conn->shutdown_timer = NULL;
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Launching connection on acceptor thread\n");
+	SPDK_DEBUGLOG(iscsi, "Launching connection on acceptor thread\n");
 	conn->pending_task_cnt = 0;
 
 	/* Get the first poll group. */
@@ -390,17 +390,17 @@ iscsi_conn_free(struct spdk_iscsi_conn *conn)
 
 		if (sess->connections == 0) {
 			/* cleanup last connection */
-			SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
+			SPDK_DEBUGLOG(iscsi,
 				      "cleanup last conn free sess\n");
 			iscsi_free_sess(sess);
 		}
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Terminating connections(tsih %d): %d\n",
+	SPDK_DEBUGLOG(iscsi, "Terminating connections(tsih %d): %d\n",
 		      sess->tsih, sess->connections);
 
 end:
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "cleanup free conn\n");
+	SPDK_DEBUGLOG(iscsi, "cleanup free conn\n");
 	iscsi_param_free(conn->params);
 	_free_conn(conn);
 
@@ -877,7 +877,7 @@ iscsi_drop_conns(struct spdk_iscsi_conn *conn, const char *conn_match,
 	struct spdk_thread	*thread;
 	int			num;
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "iscsi_drop_conns\n");
+	SPDK_DEBUGLOG(iscsi, "iscsi_drop_conns\n");
 
 	num = 0;
 	pthread_mutex_lock(&g_conns_mutex);
@@ -912,12 +912,12 @@ iscsi_drop_conns(struct spdk_iscsi_conn *conn, const char *conn_match,
 			SPDK_ERRLOG("exiting conn by %s (%s)\n",
 				    xconn_match, xconn->initiator_addr);
 			if (xconn->sess != NULL) {
-				SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "TSIH=%u\n", xconn->sess->tsih);
+				SPDK_DEBUGLOG(iscsi, "TSIH=%u\n", xconn->sess->tsih);
 			} else {
-				SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "TSIH=xx\n");
+				SPDK_DEBUGLOG(iscsi, "TSIH=xx\n");
 			}
 
-			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "CID=%u\n", xconn->cid);
+			SPDK_DEBUGLOG(iscsi, "CID=%u\n", xconn->cid);
 
 			thread = spdk_io_channel_get_thread(spdk_io_channel_from_ctx(xconn->pg));
 			spdk_thread_send_msg(thread, _iscsi_conn_drop, xconn);
@@ -1235,9 +1235,9 @@ iscsi_conn_send_nopin(struct spdk_iscsi_conn *conn)
 	    !iscsi_param_eq_val(conn->sess->params, "SessionType", "Normal")) {
 		return;
 	}
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "send NOPIN isid=%"PRIx64", tsih=%u, cid=%u\n",
+	SPDK_DEBUGLOG(iscsi, "send NOPIN isid=%"PRIx64", tsih=%u, cid=%u\n",
 		      conn->sess->isid, conn->sess->tsih, conn->cid);
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "StatSN=%u, ExpCmdSN=%u, MaxCmdSN=%u\n",
+	SPDK_DEBUGLOG(iscsi, "StatSN=%u, ExpCmdSN=%u, MaxCmdSN=%u\n",
 		      conn->StatSN, conn->sess->ExpCmdSN,
 		      conn->sess->MaxCmdSN);
 	rsp_pdu = iscsi_get_pdu(conn);
@@ -1329,7 +1329,7 @@ iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int bytes,
 
 		/* For connect reset issue, do not output error log */
 		if (errno == ECONNRESET) {
-			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_sock_recv() failed, errno %d: %s\n",
+			SPDK_DEBUGLOG(iscsi, "spdk_sock_recv() failed, errno %d: %s\n",
 				      errno, spdk_strerror(errno));
 		} else {
 			SPDK_ERRLOG("spdk_sock_recv() failed, errno %d: %s\n",
@@ -1370,7 +1370,7 @@ iscsi_conn_readv_data(struct spdk_iscsi_conn *conn,
 
 		/* For connect reset issue, do not output error log */
 		if (errno == ECONNRESET) {
-			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_sock_readv() failed, errno %d: %s\n",
+			SPDK_DEBUGLOG(iscsi, "spdk_sock_readv() failed, errno %d: %s\n",
 				      errno, spdk_strerror(errno));
 		} else {
 			SPDK_ERRLOG("spdk_sock_readv() failed, errno %d: %s\n",
@@ -1442,7 +1442,7 @@ _iscsi_conn_pdu_write_done(void *cb_arg, int err)
 	if ((conn->full_feature) &&
 	    (conn->sess->ErrorRecoveryLevel >= 1) &&
 	    iscsi_is_free_pdu_deferred(pdu)) {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "stat_sn=%d\n",
+		SPDK_DEBUGLOG(iscsi, "stat_sn=%d\n",
 			      from_be32(&pdu->bhs.stat_sn));
 		TAILQ_INSERT_TAIL(&conn->snack_pdu_list, pdu,
 				  tailq);
@@ -1531,7 +1531,7 @@ iscsi_conn_full_feature_migrate(void *arg)
 
 	if (conn->state >= ISCSI_CONN_STATE_EXITING) {
 		/* Connection is being exited before this callback is executed. */
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Connection is already exited.\n");
+		SPDK_DEBUGLOG(iscsi, "Connection is already exited.\n");
 		return;
 	}
 

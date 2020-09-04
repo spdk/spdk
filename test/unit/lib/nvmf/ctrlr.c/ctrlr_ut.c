@@ -40,7 +40,7 @@
 #include "common/lib/ut_multithread.c"
 #include "nvmf/ctrlr.c"
 
-SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
+SPDK_LOG_REGISTER_COMPONENT(nvmf)
 
 struct spdk_bdev {
 	int ut_mock;

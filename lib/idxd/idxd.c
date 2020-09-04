@@ -971,7 +971,7 @@ spdk_idxd_batch_create(struct spdk_idxd_io_channel *chan)
 	batch->start_index = batch->cur_index = batch->batch_num * DESC_PER_BATCH;
 
 	TAILQ_INSERT_TAIL(&chan->batches, batch, link);
-	SPDK_DEBUGLOG(SPDK_LOG_IDXD, "New batch %p num %u\n", batch, batch->batch_num);
+	SPDK_DEBUGLOG(idxd, "New batch %p num %u\n", batch, batch->batch_num);
 
 	return batch;
 }
@@ -1026,7 +1026,7 @@ spdk_idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *bat
 	/* Common prep. */
 	desc = _idxd_prep_command(chan, cb_fn, cb_arg, batch);
 	if (desc == NULL) {
-		SPDK_DEBUGLOG(SPDK_LOG_IDXD, "Can't submit batch %p busy batch num %u\n", batch, batch->batch_num);
+		SPDK_DEBUGLOG(idxd, "Can't submit batch %p busy batch num %u\n", batch, batch->batch_num);
 		return -EBUSY;
 	}
 
@@ -1070,7 +1070,7 @@ _idxd_prep_batch_cmd(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
 
 	desc = &chan->ring_ctrl.user_desc[batch->cur_index];
 	comp = &chan->ring_ctrl.user_completions[batch->cur_index];
-	SPDK_DEBUGLOG(SPDK_LOG_IDXD, "Prep batch %p index %u\n", batch, batch->cur_index);
+	SPDK_DEBUGLOG(idxd, "Prep batch %p index %u\n", batch, batch->cur_index);
 
 	batch->cur_index++;
 	assert(batch->cur_index > batch->start_index);
@@ -1422,4 +1422,4 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 	}
 }
 
-SPDK_LOG_REGISTER_COMPONENT("idxd", SPDK_LOG_IDXD)
+SPDK_LOG_REGISTER_COMPONENT(idxd)

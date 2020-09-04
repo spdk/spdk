@@ -100,7 +100,7 @@ nvmf_ctrlr_stop_keep_alive_timer(struct spdk_nvmf_ctrlr *ctrlr)
 		return;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Stop keep alive poller\n");
+	SPDK_DEBUGLOG(nvmf, "Stop keep alive poller\n");
 	spdk_poller_unregister(&ctrlr->keep_alive_poller);
 }
 
@@ -117,7 +117,7 @@ nvmf_ctrlr_stop_association_timer(struct spdk_nvmf_ctrlr *ctrlr)
 		return;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Stop association timer\n");
+	SPDK_DEBUGLOG(nvmf, "Stop association timer\n");
 	spdk_poller_unregister(&ctrlr->association_timer);
 }
 
@@ -125,7 +125,7 @@ static void
 nvmf_ctrlr_disconnect_qpairs_done(struct spdk_io_channel_iter *i, int status)
 {
 	if (status == 0) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "ctrlr disconnect qpairs complete successfully\n");
+		SPDK_DEBUGLOG(nvmf, "ctrlr disconnect qpairs complete successfully\n");
 	} else {
 		SPDK_ERRLOG("Fail to disconnect ctrlr qpairs\n");
 	}
@@ -176,7 +176,7 @@ nvmf_ctrlr_keep_alive_poll(void *ctx)
 	uint64_t now = spdk_get_ticks();
 	struct spdk_nvmf_ctrlr *ctrlr = ctx;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Polling ctrlr keep alive timeout\n");
+	SPDK_DEBUGLOG(nvmf, "Polling ctrlr keep alive timeout\n");
 
 	/* If the Keep alive feature is in use and the timer expires */
 	keep_alive_timeout_tick = ctrlr->last_keep_alive_tick +
@@ -216,7 +216,7 @@ nvmf_ctrlr_start_keep_alive_timer(struct spdk_nvmf_ctrlr *ctrlr)
 
 		ctrlr->last_keep_alive_tick = spdk_get_ticks();
 
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Ctrlr add keep alive poller\n");
+		SPDK_DEBUGLOG(nvmf, "Ctrlr add keep alive poller\n");
 		ctrlr->keep_alive_poller = SPDK_POLLER_REGISTER(nvmf_ctrlr_keep_alive_poll, ctrlr,
 					   ctrlr->feat.keep_alive_timer.bits.kato * 1000);
 	}
@@ -250,7 +250,7 @@ ctrlr_add_qpair_and_update_rsp(struct spdk_nvmf_qpair *qpair,
 
 	rsp->status.sc = SPDK_NVME_SC_SUCCESS;
 	rsp->status_code_specific.success.cntlid = ctrlr->cntlid;
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "connect capsule response: cntlid = 0x%04x\n",
+	SPDK_DEBUGLOG(nvmf, "connect capsule response: cntlid = 0x%04x\n",
 		      rsp->status_code_specific.success.cntlid);
 }
 
@@ -405,10 +405,10 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	ctrlr->vcprop.csts.raw = 0;
 	ctrlr->vcprop.csts.bits.rdy = 0; /* Init controller as not ready */
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "cap 0x%" PRIx64 "\n", ctrlr->vcprop.cap.raw);
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "vs 0x%x\n", ctrlr->vcprop.vs.raw);
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "cc 0x%x\n", ctrlr->vcprop.cc.raw);
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "csts 0x%x\n", ctrlr->vcprop.csts.raw);
+	SPDK_DEBUGLOG(nvmf, "cap 0x%" PRIx64 "\n", ctrlr->vcprop.cap.raw);
+	SPDK_DEBUGLOG(nvmf, "vs 0x%x\n", ctrlr->vcprop.vs.raw);
+	SPDK_DEBUGLOG(nvmf, "cc 0x%x\n", ctrlr->vcprop.cc.raw);
+	SPDK_DEBUGLOG(nvmf, "csts 0x%x\n", ctrlr->vcprop.csts.raw);
 
 	ctrlr->dif_insert_or_strip = transport->opts.dif_insert_or_strip;
 
@@ -517,7 +517,7 @@ _nvmf_ctrlr_add_io_qpair(void *ctx)
 	struct spdk_nvmf_subsystem *subsystem;
 	const struct spdk_nvmf_subsystem_listener *listener;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Connect I/O Queue for controller id 0x%x\n", data->cntlid);
+	SPDK_DEBUGLOG(nvmf, "Connect I/O Queue for controller id 0x%x\n", data->cntlid);
 
 	subsystem = spdk_nvmf_tgt_find_subsystem(tgt, data->subnqn);
 	/* We already checked this in spdk_nvmf_ctrlr_connect */
@@ -592,12 +592,12 @@ _nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_ctrlr *ctrlr;
 	struct spdk_nvmf_subsystem *subsystem;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "recfmt 0x%x qid %u sqsize %u\n",
+	SPDK_DEBUGLOG(nvmf, "recfmt 0x%x qid %u sqsize %u\n",
 		      cmd->recfmt, cmd->qid, cmd->sqsize);
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Connect data:\n");
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "  cntlid:  0x%04x\n", data->cntlid);
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "  hostid: %08x-%04x-%04x-%02x%02x-%04x%08x ***\n",
+	SPDK_DEBUGLOG(nvmf, "Connect data:\n");
+	SPDK_DEBUGLOG(nvmf, "  cntlid:  0x%04x\n", data->cntlid);
+	SPDK_DEBUGLOG(nvmf, "  hostid: %08x-%04x-%04x-%02x%02x-%04x%08x ***\n",
 		      ntohl(*(uint32_t *)&data->hostid[0]),
 		      ntohs(*(uint16_t *)&data->hostid[4]),
 		      ntohs(*(uint16_t *)&data->hostid[6]),
@@ -605,8 +605,8 @@ _nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 		      data->hostid[9],
 		      ntohs(*(uint16_t *)&data->hostid[10]),
 		      ntohl(*(uint32_t *)&data->hostid[12]));
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "  subnqn: \"%s\"\n", data->subnqn);
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "  hostnqn: \"%s\"\n", data->hostnqn);
+	SPDK_DEBUGLOG(nvmf, "  subnqn: \"%s\"\n", data->subnqn);
+	SPDK_DEBUGLOG(nvmf, "  hostnqn: \"%s\"\n", data->hostnqn);
 
 	subsystem = spdk_nvmf_tgt_find_subsystem(transport->tgt, data->subnqn);
 	if (!subsystem) {
@@ -655,7 +655,7 @@ _nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	}
 
 	if (cmd->qid == 0) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Connect Admin Queue for controller ID 0x%x\n", data->cntlid);
+		SPDK_DEBUGLOG(nvmf, "Connect Admin Queue for controller ID 0x%x\n", data->cntlid);
 
 		if (data->cntlid != 0xFFFF) {
 			/* This NVMf target only supports dynamic mode. */
@@ -787,7 +787,7 @@ nvmf_ctrlr_association_remove(void *ctx)
 	struct spdk_nvmf_ctrlr *ctrlr = ctx;
 	int rc;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Disconnecting host from subsystem %s due to association timeout.\n",
+	SPDK_DEBUGLOG(nvmf, "Disconnecting host from subsystem %s due to association timeout.\n",
 		      ctrlr->subsys->subnqn);
 
 	rc = spdk_nvmf_qpair_disconnect(ctrlr->admin_qpair, NULL, NULL);
@@ -869,8 +869,8 @@ nvmf_prop_set_cc(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
 
 	cc.raw = value;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "cur CC: 0x%08x\n", ctrlr->vcprop.cc.raw);
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "new CC: 0x%08x\n", cc.raw);
+	SPDK_DEBUGLOG(nvmf, "cur CC: 0x%08x\n", ctrlr->vcprop.cc.raw);
+	SPDK_DEBUGLOG(nvmf, "new CC: 0x%08x\n", cc.raw);
 
 	/*
 	 * Calculate which bits changed between the current and new CC.
@@ -880,13 +880,13 @@ nvmf_prop_set_cc(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
 
 	if (diff.bits.en) {
 		if (cc.bits.en) {
-			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Property Set CC Enable!\n");
+			SPDK_DEBUGLOG(nvmf, "Property Set CC Enable!\n");
 			nvmf_ctrlr_stop_association_timer(ctrlr);
 
 			ctrlr->vcprop.cc.bits.en = 1;
 			ctrlr->vcprop.csts.bits.rdy = 1;
 		} else {
-			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Property Set CC Disable!\n");
+			SPDK_DEBUGLOG(nvmf, "Property Set CC Disable!\n");
 			ctrlr->vcprop.cc.bits.en = 0;
 			spdk_for_each_channel(ctrlr->subsys->tgt,
 					      nvmf_ctrlr_disconnect_io_qpairs_on_pg,
@@ -899,7 +899,7 @@ nvmf_prop_set_cc(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
 	if (diff.bits.shn) {
 		if (cc.bits.shn == SPDK_NVME_SHN_NORMAL ||
 		    cc.bits.shn == SPDK_NVME_SHN_ABRUPT) {
-			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Property Set CC Shutdown %u%ub!\n",
+			SPDK_DEBUGLOG(nvmf, "Property Set CC Shutdown %u%ub!\n",
 				      cc.bits.shn >> 1, cc.bits.shn & 1);
 			ctrlr->vcprop.cc.bits.shn = cc.bits.shn;
 			spdk_for_each_channel(ctrlr->subsys->tgt,
@@ -921,14 +921,14 @@ nvmf_prop_set_cc(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
 	}
 
 	if (diff.bits.iosqes) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Prop Set IOSQES = %u (%u bytes)\n",
+		SPDK_DEBUGLOG(nvmf, "Prop Set IOSQES = %u (%u bytes)\n",
 			      cc.bits.iosqes, 1u << cc.bits.iosqes);
 		ctrlr->vcprop.cc.bits.iosqes = cc.bits.iosqes;
 		diff.bits.iosqes = 0;
 	}
 
 	if (diff.bits.iocqes) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Prop Set IOCQES = %u (%u bytes)\n",
+		SPDK_DEBUGLOG(nvmf, "Prop Set IOCQES = %u (%u bytes)\n",
 			      cc.bits.iocqes, 1u << cc.bits.iocqes);
 		ctrlr->vcprop.cc.bits.iocqes = cc.bits.iocqes;
 		diff.bits.iocqes = 0;
@@ -1086,7 +1086,7 @@ nvmf_property_get(struct spdk_nvmf_request *req)
 	response->status.sc = 0;
 	response->value.u64 = 0;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "size %d, offset 0x%x\n",
+	SPDK_DEBUGLOG(nvmf, "size %d, offset 0x%x\n",
 		      cmd->attrib.size, cmd->ofst);
 
 	switch (cmd->attrib.size) {
@@ -1110,11 +1110,11 @@ nvmf_property_get(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "name: %s\n", prop->name);
+	SPDK_DEBUGLOG(nvmf, "name: %s\n", prop->name);
 
 	response->value.u64 = prop->get_cb(ctrlr);
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "response value: 0x%" PRIx64 "\n", response->value.u64);
+	SPDK_DEBUGLOG(nvmf, "response value: 0x%" PRIx64 "\n", response->value.u64);
 
 	if (size != prop->size) {
 		/* The size must be 4 and the prop->size is 8. Figure out which part of the property to read. */
@@ -1144,7 +1144,7 @@ nvmf_property_set(struct spdk_nvmf_request *req)
 	uint8_t size;
 	bool ret;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "size %d, offset 0x%x, value 0x%" PRIx64 "\n",
+	SPDK_DEBUGLOG(nvmf, "size %d, offset 0x%x, value 0x%" PRIx64 "\n",
 		      cmd->attrib.size, cmd->ofst, cmd->value.u64);
 
 	switch (cmd->attrib.size) {
@@ -1169,7 +1169,7 @@ nvmf_property_set(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "name: %s\n", prop->name);
+	SPDK_DEBUGLOG(nvmf, "name: %s\n", prop->name);
 
 	value = cmd->value.u64;
 
@@ -1208,7 +1208,7 @@ nvmf_ctrlr_set_features_arbitration(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Arbitration (cdw11 = 0x%0x)\n", cmd->cdw11);
+	SPDK_DEBUGLOG(nvmf, "Set Features - Arbitration (cdw11 = 0x%0x)\n", cmd->cdw11);
 
 	ctrlr->feat.arbitration.raw = cmd->cdw11;
 	ctrlr->feat.arbitration.bits.reserved = 0;
@@ -1223,7 +1223,7 @@ nvmf_ctrlr_set_features_power_management(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Power Management (cdw11 = 0x%0x)\n", cmd->cdw11);
+	SPDK_DEBUGLOG(nvmf, "Set Features - Power Management (cdw11 = 0x%0x)\n", cmd->cdw11);
 
 	/* Only PS = 0 is allowed, since we report NPSS = 0 */
 	if (cmd->cdw11_bits.feat_power_management.bits.ps != 0) {
@@ -1273,7 +1273,7 @@ nvmf_ctrlr_set_features_temperature_threshold(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Temperature Threshold (cdw11 = 0x%0x)\n", cmd->cdw11);
+	SPDK_DEBUGLOG(nvmf, "Set Features - Temperature Threshold (cdw11 = 0x%0x)\n", cmd->cdw11);
 
 	if (!temp_threshold_opts_valid(&cmd->cdw11_bits.feat_temp_threshold)) {
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
@@ -1291,7 +1291,7 @@ nvmf_ctrlr_get_features_temperature_threshold(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Get Features - Temperature Threshold (cdw11 = 0x%0x)\n", cmd->cdw11);
+	SPDK_DEBUGLOG(nvmf, "Get Features - Temperature Threshold (cdw11 = 0x%0x)\n", cmd->cdw11);
 
 	if (!temp_threshold_opts_valid(&cmd->cdw11_bits.feat_temp_threshold)) {
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
@@ -1312,7 +1312,7 @@ nvmf_ctrlr_set_features_error_recovery(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Error Recovery (cdw11 = 0x%0x)\n", cmd->cdw11);
+	SPDK_DEBUGLOG(nvmf, "Set Features - Error Recovery (cdw11 = 0x%0x)\n", cmd->cdw11);
 
 	if (cmd->cdw11_bits.feat_error_recovery.bits.dulbe) {
 		/*
@@ -1337,12 +1337,12 @@ nvmf_ctrlr_set_features_volatile_write_cache(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Volatile Write Cache (cdw11 = 0x%0x)\n", cmd->cdw11);
+	SPDK_DEBUGLOG(nvmf, "Set Features - Volatile Write Cache (cdw11 = 0x%0x)\n", cmd->cdw11);
 
 	ctrlr->feat.volatile_write_cache.raw = cmd->cdw11;
 	ctrlr->feat.volatile_write_cache.bits.reserved = 0;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Volatile Write Cache %s\n",
+	SPDK_DEBUGLOG(nvmf, "Set Features - Volatile Write Cache %s\n",
 		      ctrlr->feat.volatile_write_cache.bits.wce ? "Enabled" : "Disabled");
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
@@ -1353,7 +1353,7 @@ nvmf_ctrlr_set_features_write_atomicity(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Write Atomicity (cdw11 = 0x%0x)\n", cmd->cdw11);
+	SPDK_DEBUGLOG(nvmf, "Set Features - Write Atomicity (cdw11 = 0x%0x)\n", cmd->cdw11);
 
 	ctrlr->feat.write_atomicity.raw = cmd->cdw11;
 	ctrlr->feat.write_atomicity.bits.reserved = 0;
@@ -1378,7 +1378,7 @@ nvmf_ctrlr_get_features_host_identifier(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Get Features - Host Identifier\n");
+	SPDK_DEBUGLOG(nvmf, "Get Features - Host Identifier\n");
 
 	if (!cmd->cdw11_bits.feat_host_identifier.bits.exhid) {
 		/* NVMe over Fabrics requires EXHID=1 (128-bit/16-byte host ID) */
@@ -1405,7 +1405,7 @@ nvmf_ctrlr_get_features_reservation_notification_mask(struct spdk_nvmf_request *
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_ns *ns;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "get Features - Reservation Notificaton Mask\n");
+	SPDK_DEBUGLOG(nvmf, "get Features - Reservation Notificaton Mask\n");
 
 	if (cmd->nsid == SPDK_NVME_GLOBAL_NS_TAG) {
 		SPDK_ERRLOG("get Features - Invalid Namespace ID\n");
@@ -1433,7 +1433,7 @@ nvmf_ctrlr_set_features_reservation_notification_mask(struct spdk_nvmf_request *
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_ns *ns;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Reservation Notificaton Mask\n");
+	SPDK_DEBUGLOG(nvmf, "Set Features - Reservation Notificaton Mask\n");
 
 	if (cmd->nsid == SPDK_NVME_GLOBAL_NS_TAG) {
 		for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
@@ -1462,7 +1462,7 @@ nvmf_ctrlr_get_features_reservation_persistence(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_ns *ns;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Get Features - Reservation Persistence\n");
+	SPDK_DEBUGLOG(nvmf, "Get Features - Reservation Persistence\n");
 
 	ns = _nvmf_subsystem_get_ns(ctrlr->subsys, cmd->nsid);
 	/* NSID with SPDK_NVME_GLOBAL_NS_TAG (=0xffffffff) also included */
@@ -1489,7 +1489,7 @@ nvmf_ctrlr_set_features_reservation_persistence(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_ns *ns;
 	bool ptpl;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Reservation Persistence\n");
+	SPDK_DEBUGLOG(nvmf, "Set Features - Reservation Persistence\n");
 
 	ns = _nvmf_subsystem_get_ns(ctrlr->subsys, cmd->nsid);
 	ptpl = cmd->cdw11_bits.feat_rsv_persistence.bits.ptpl;
@@ -1521,7 +1521,7 @@ nvmf_ctrlr_set_features_keep_alive_timer(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Keep Alive Timer (%u ms)\n", cmd->cdw11);
+	SPDK_DEBUGLOG(nvmf, "Set Features - Keep Alive Timer (%u ms)\n", cmd->cdw11);
 
 	/*
 	 * if attempts to disable keep alive by setting kato to 0h
@@ -1551,7 +1551,7 @@ nvmf_ctrlr_set_features_keep_alive_timer(struct spdk_nvmf_request *req)
 					   ctrlr->feat.keep_alive_timer.bits.kato * 1000);
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Keep Alive Timer set to %u ms\n",
+	SPDK_DEBUGLOG(nvmf, "Set Features - Keep Alive Timer set to %u ms\n",
 		      ctrlr->feat.keep_alive_timer.bits.kato);
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -1564,13 +1564,13 @@ nvmf_ctrlr_set_features_number_of_queues(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	uint32_t count;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Number of Queues, cdw11 0x%x\n",
+	SPDK_DEBUGLOG(nvmf, "Set Features - Number of Queues, cdw11 0x%x\n",
 		      req->cmd->nvme_cmd.cdw11);
 
 	count = spdk_bit_array_count_set(ctrlr->qpair_mask);
 	/* verify that the controller is ready to process commands */
 	if (count > 1) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Queue pairs already active!\n");
+		SPDK_DEBUGLOG(nvmf, "Queue pairs already active!\n");
 		rsp->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
 	} else {
 		/*
@@ -1589,7 +1589,7 @@ nvmf_ctrlr_set_features_async_event_configuration(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Async Event Configuration, cdw11 0x%08x\n",
+	SPDK_DEBUGLOG(nvmf, "Set Features - Async Event Configuration, cdw11 0x%08x\n",
 		      cmd->cdw11);
 	ctrlr->feat.async_event_configuration.raw = cmd->cdw11;
 	ctrlr->feat.async_event_configuration.bits.reserved = 0;
@@ -1603,7 +1603,7 @@ nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Async Event Request\n");
+	SPDK_DEBUGLOG(nvmf, "Async Event Request\n");
 
 	/* AER cmd is an exception */
 	sgroup = &req->qpair->group->sgroups[ctrlr->subsys->id];
@@ -1612,7 +1612,7 @@ nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 
 	/* Four asynchronous events are supported for now */
 	if (ctrlr->nr_aer_reqs >= NVMF_MAX_ASYNC_EVENTS) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "AERL exceeded\n");
+		SPDK_DEBUGLOG(nvmf, "AERL exceeded\n");
 		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		rsp->status.sc = SPDK_NVME_SC_ASYNC_EVENT_REQUEST_LIMIT_EXCEEDED;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -1908,7 +1908,7 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 	}
 
 	lid = cmd->cdw10_bits.get_log_page.lid;
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Get log page: LID=0x%02X offset=0x%" PRIx64 " len=0x%" PRIx64 "\n",
+	SPDK_DEBUGLOG(nvmf, "Get log page: LID=0x%02X offset=0x%" PRIx64 " len=0x%" PRIx64 "\n",
 		      lid, offset, len);
 
 	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
@@ -1981,7 +1981,7 @@ spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 		 * The data buffer is already zeroed by nvmf_ctrlr_process_admin_cmd(),
 		 * so we can just return early here.
 		 */
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Identify Namespace for inactive NSID %u\n", cmd->nsid);
+		SPDK_DEBUGLOG(nvmf, "Identify Namespace for inactive NSID %u\n", cmd->nsid);
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 		rsp->status.sc = SPDK_NVME_SC_SUCCESS;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -2060,8 +2060,8 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 	}
 	spdk_strcpy_pad(cdata->subnqn, subsystem->subnqn, sizeof(cdata->subnqn), '\0');
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "ctrlr data: maxcmd 0x%x\n", cdata->maxcmd);
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "sgls data: 0x%x\n", from_le32(&cdata->sgls));
+	SPDK_DEBUGLOG(nvmf, "ctrlr data: maxcmd 0x%x\n", cdata->maxcmd);
+	SPDK_DEBUGLOG(nvmf, "sgls data: 0x%x\n", from_le32(&cdata->sgls));
 
 	/*
 	 * NVM subsystem fields (reserved for discovery subsystems)
@@ -2120,15 +2120,15 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 
 		nvmf_ctrlr_populate_oacs(ctrlr, cdata);
 
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "ext ctrlr data: ioccsz 0x%x\n",
+		SPDK_DEBUGLOG(nvmf, "ext ctrlr data: ioccsz 0x%x\n",
 			      cdata->nvmf_specific.ioccsz);
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "ext ctrlr data: iorcsz 0x%x\n",
+		SPDK_DEBUGLOG(nvmf, "ext ctrlr data: iorcsz 0x%x\n",
 			      cdata->nvmf_specific.iorcsz);
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "ext ctrlr data: icdoff 0x%x\n",
+		SPDK_DEBUGLOG(nvmf, "ext ctrlr data: icdoff 0x%x\n",
 			      cdata->nvmf_specific.icdoff);
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "ext ctrlr data: ctrattr 0x%x\n",
+		SPDK_DEBUGLOG(nvmf, "ext ctrlr data: ctrattr 0x%x\n",
 			      *(uint8_t *)&cdata->nvmf_specific.ctrattr);
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "ext ctrlr data: msdbd 0x%x\n",
+		SPDK_DEBUGLOG(nvmf, "ext ctrlr data: msdbd 0x%x\n",
 			      cdata->nvmf_specific.msdbd);
 	}
 
@@ -2289,7 +2289,7 @@ nvmf_qpair_abort_aer(struct spdk_nvmf_qpair *qpair, uint16_t cid)
 
 	for (i = 0; i < ctrlr->nr_aer_reqs; i++) {
 		if (ctrlr->aer_req[i]->cmd->nvme_cmd.cid == cid) {
-			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Aborting AER request\n");
+			SPDK_DEBUGLOG(nvmf, "Aborting AER request\n");
 			req = ctrlr->aer_req[i];
 			ctrlr->aer_req[i] = NULL;
 			ctrlr->nr_aer_reqs--;
@@ -2318,7 +2318,7 @@ nvmf_qpair_abort_request(struct spdk_nvmf_qpair *qpair, struct spdk_nvmf_request
 	uint16_t cid = req->cmd->nvme_cmd.cdw10_bits.abort.cid;
 
 	if (nvmf_qpair_abort_aer(qpair, cid)) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "abort ctrlr=%p sqid=%u cid=%u successful\n",
+		SPDK_DEBUGLOG(nvmf, "abort ctrlr=%p sqid=%u cid=%u successful\n",
 			      qpair->ctrlr, qpair->qid, cid);
 		req->rsp->nvme_cpl.cdw0 &= ~1U; /* Command successfully aborted */
 
@@ -2589,7 +2589,7 @@ nvmf_ctrlr_keep_alive(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Keep Alive\n");
+	SPDK_DEBUGLOG(nvmf, "Keep Alive\n");
 	/*
 	 * To handle keep alive just clear or reset the
 	 * ctrlr based keep alive duration counter.
@@ -2697,7 +2697,7 @@ nvmf_ctrlr_process_fabrics_cmd(struct spdk_nvmf_request *req)
 		if (cap_hdr->fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT) {
 			return nvmf_ctrlr_cmd_connect(req);
 		} else {
-			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Got fctype 0x%x, expected Connect\n",
+			SPDK_DEBUGLOG(nvmf, "Got fctype 0x%x, expected Connect\n",
 				      cap_hdr->fctype);
 			req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
@@ -2714,7 +2714,7 @@ nvmf_ctrlr_process_fabrics_cmd(struct spdk_nvmf_request *req)
 		case SPDK_NVMF_FABRIC_COMMAND_PROPERTY_GET:
 			return nvmf_property_get(req);
 		default:
-			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "unknown fctype 0x%02x\n",
+			SPDK_DEBUGLOG(nvmf, "unknown fctype 0x%02x\n",
 				      cap_hdr->fctype);
 			req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_OPCODE;
@@ -2723,7 +2723,7 @@ nvmf_ctrlr_process_fabrics_cmd(struct spdk_nvmf_request *req)
 	} else {
 		/* Controller session is established, and this is an I/O queue */
 		/* For now, no I/O-specific Fabrics commands are implemented (other than Connect) */
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Unexpected I/O fctype 0x%x\n", cap_hdr->fctype);
+		SPDK_DEBUGLOG(nvmf, "Unexpected I/O fctype 0x%x\n", cap_hdr->fctype);
 		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_OPCODE;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -3162,7 +3162,7 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	ana_state = ctrlr->listener->ana_state;
 	if (spdk_unlikely(ana_state != SPDK_NVME_ANA_OPTIMIZED_STATE &&
 			  ana_state != SPDK_NVME_ANA_NON_OPTIMIZED_STATE)) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Fail I/O command due to ANA state %d\n",
+		SPDK_DEBUGLOG(nvmf, "Fail I/O command due to ANA state %d\n",
 			      ana_state);
 		response->status.sct = SPDK_NVME_SCT_PATH;
 		response->status.sc = _nvme_ana_state_to_path_status(ana_state);
@@ -3181,7 +3181,7 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	assert(group != NULL && group->sgroups != NULL);
 	ns_info = &group->sgroups[ctrlr->subsys->id].ns_info[nsid - 1];
 	if (nvmf_ns_reservation_request_check(ns_info, ctrlr, req)) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Reservation Conflict for nsid %u, opcode %u\n",
+		SPDK_DEBUGLOG(nvmf, "Reservation Conflict for nsid %u, opcode %u\n",
 			      cmd->nsid, cmd->opc);
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}

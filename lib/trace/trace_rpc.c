@@ -59,12 +59,12 @@ rpc_trace_enable_tpoint_group(struct spdk_jsonrpc_request *request,
 
 	if (spdk_json_decode_object(params, rpc_tpoint_group_decoders,
 				    SPDK_COUNTOF(rpc_tpoint_group_decoders), &req)) {
-		SPDK_DEBUGLOG(SPDK_LOG_TRACE, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(trace, "spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
 	if (req.name == NULL) {
-		SPDK_DEBUGLOG(SPDK_LOG_TRACE, "flag was NULL\n");
+		SPDK_DEBUGLOG(trace, "flag was NULL\n");
 		goto invalid;
 	}
 
@@ -96,12 +96,12 @@ rpc_trace_disable_tpoint_group(struct spdk_jsonrpc_request *request,
 
 	if (spdk_json_decode_object(params, rpc_tpoint_group_decoders,
 				    SPDK_COUNTOF(rpc_tpoint_group_decoders), &req)) {
-		SPDK_DEBUGLOG(SPDK_LOG_TRACE, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(trace, "spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
 	if (req.name == NULL) {
-		SPDK_DEBUGLOG(SPDK_LOG_TRACE, "flag was NULL\n");
+		SPDK_DEBUGLOG(trace, "flag was NULL\n");
 		goto invalid;
 	}
 

@@ -159,7 +159,7 @@ iscsi_portal_destroy(struct spdk_iscsi_portal *p)
 {
 	assert(p != NULL);
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "iscsi_portal_destroy\n");
+	SPDK_DEBUGLOG(iscsi, "iscsi_portal_destroy\n");
 
 	pthread_mutex_lock(&g_iscsi.mutex);
 	TAILQ_REMOVE(&g_iscsi.portal_head, p, g_tailq);
@@ -206,7 +206,7 @@ static void
 iscsi_portal_close(struct spdk_iscsi_portal *p)
 {
 	if (p->sock) {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "close portal (%s, %s)\n",
+		SPDK_DEBUGLOG(iscsi, "close portal (%s, %s)\n",
 			      p->host, p->port);
 		spdk_poller_unregister(&p->acceptor_poller);
 		spdk_sock_close(&p->sock);
@@ -338,7 +338,7 @@ iscsi_portal_grp_destroy(struct spdk_iscsi_portal_grp *pg)
 
 	assert(pg != NULL);
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "iscsi_portal_grp_destroy\n");
+	SPDK_DEBUGLOG(iscsi, "iscsi_portal_grp_destroy\n");
 	while (!TAILQ_EMPTY(&pg->head)) {
 		p = TAILQ_FIRST(&pg->head);
 		TAILQ_REMOVE(&pg->head, p, per_pg_tailq);
@@ -418,12 +418,12 @@ iscsi_parse_portal_grp(struct spdk_conf_section *sp)
 	char *label, *portal;
 	int i = 0, rc = 0;
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "add portal group (from config file) %d\n",
+	SPDK_DEBUGLOG(iscsi, "add portal group (from config file) %d\n",
 		      spdk_conf_section_get_num(sp));
 
 	val = spdk_conf_section_get_val(sp, "Comment");
 	if (val != NULL) {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Comment %s\n", val);
+		SPDK_DEBUGLOG(iscsi, "Comment %s\n", val);
 	}
 
 	pg = iscsi_portal_grp_create(spdk_conf_section_get_num(sp), false);
@@ -445,7 +445,7 @@ iscsi_parse_portal_grp(struct spdk_conf_section *sp)
 			goto error;
 		}
 
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
+		SPDK_DEBUGLOG(iscsi,
 			      "RIndex=%d, Host=%s, Port=%s, Tag=%d\n",
 			      i, p->host, p->port, spdk_conf_section_get_num(sp));
 
@@ -517,7 +517,7 @@ iscsi_portal_grps_destroy(void)
 {
 	struct spdk_iscsi_portal_grp *pg;
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "iscsi_portal_grps_destroy\n");
+	SPDK_DEBUGLOG(iscsi, "iscsi_portal_grps_destroy\n");
 	pthread_mutex_lock(&g_iscsi.mutex);
 	while (!TAILQ_EMPTY(&g_iscsi.pg_head)) {
 		pg = TAILQ_FIRST(&g_iscsi.pg_head);
@@ -559,7 +559,7 @@ iscsi_portal_grp_close_all(void)
 {
 	struct spdk_iscsi_portal_grp *pg;
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "iscsi_portal_grp_close_all\n");
+	SPDK_DEBUGLOG(iscsi, "iscsi_portal_grp_close_all\n");
 	pthread_mutex_lock(&g_iscsi.mutex);
 	TAILQ_FOREACH(pg, &g_iscsi.pg_head, tailq) {
 		iscsi_portal_grp_close(pg);

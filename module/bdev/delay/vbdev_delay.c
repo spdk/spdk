@@ -848,4 +848,4 @@ vbdev_delay_examine(struct spdk_bdev *bdev)
 	spdk_bdev_module_examine_done(&delay_if);
 }
 
-SPDK_LOG_REGISTER_COMPONENT("vbdev_delay", SPDK_LOG_VBDEV_DELAY)
+SPDK_LOG_REGISTER_COMPONENT(vbdev_delay)

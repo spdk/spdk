@@ -914,4 +914,4 @@ bdev_rbd_library_fini(void)
 	spdk_io_device_unregister(&rbd_if, NULL);
 }
 
-SPDK_LOG_REGISTER_COMPONENT("bdev_rbd", SPDK_LOG_BDEV_RBD)
+SPDK_LOG_REGISTER_COMPONENT(bdev_rbd)

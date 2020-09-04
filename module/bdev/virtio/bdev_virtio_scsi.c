@@ -1282,7 +1282,7 @@ process_scan_inquiry_vpd_block_thin_provision(struct virtio_scsi_scan_base *base
 		base->info.unmap_supported = !!(vpd_data[5] & SPDK_SCSI_UNMAP_LBPU);
 	}
 
-	SPDK_INFOLOG(SPDK_LOG_VIRTIO, "Target %u: unmap supported = %d\n",
+	SPDK_INFOLOG(virtio, "Target %u: unmap supported = %d\n",
 		     base->info.target, (int)base->info.unmap_supported);
 
 	return send_read_cap_10(base);
@@ -1304,7 +1304,7 @@ process_scan_inquiry(struct virtio_scsi_scan_base *base)
 	case SPDK_SPC_VPD_BLOCK_THIN_PROVISION:
 		return process_scan_inquiry_vpd_block_thin_provision(base);
 	default:
-		SPDK_DEBUGLOG(SPDK_LOG_VIRTIO, "Unexpected VPD page 0x%02x\n", inquiry_cdb->page_code);
+		SPDK_DEBUGLOG(virtio, "Unexpected VPD page 0x%02x\n", inquiry_cdb->page_code);
 		return -1;
 	}
 }
@@ -1469,8 +1469,8 @@ process_scan_resp(struct virtio_scsi_scan_base *base)
 		base->retries--;
 		if (base->retries == 0) {
 			SPDK_NOTICELOG("Target %"PRIu8" is present, but unavailable.\n", target_id);
-			SPDK_LOGDUMP(SPDK_LOG_VIRTIO, "CDB", req->cdb, sizeof(req->cdb));
-			SPDK_LOGDUMP(SPDK_LOG_VIRTIO, "SENSE DATA", resp->sense, sizeof(resp->sense));
+			SPDK_LOGDUMP(virtio, "CDB", req->cdb, sizeof(req->cdb));
+			SPDK_LOGDUMP(virtio, "SENSE DATA", resp->sense, sizeof(resp->sense));
 			_virtio_scsi_dev_scan_next(base, -EBUSY);
 			return;
 		}
@@ -2036,4 +2036,4 @@ bdev_virtio_scsi_dev_list(struct spdk_json_write_ctx *w)
 	spdk_json_write_array_end(w);
 }
 
-SPDK_LOG_REGISTER_COMPONENT("virtio", SPDK_LOG_VIRTIO)
+SPDK_LOG_REGISTER_COMPONENT(virtio)

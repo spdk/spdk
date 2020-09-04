@@ -41,7 +41,7 @@
 struct spdk_trace_flags *g_trace_flags = NULL;
 static struct spdk_trace_register_fn *g_reg_fn_head = NULL;
 
-SPDK_LOG_REGISTER_COMPONENT("trace", SPDK_LOG_TRACE)
+SPDK_LOG_REGISTER_COMPONENT(trace)
 
 uint64_t
 spdk_trace_get_tpoint_mask(uint32_t group_id)

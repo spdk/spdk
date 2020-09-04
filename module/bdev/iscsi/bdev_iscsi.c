@@ -226,7 +226,7 @@ bdev_iscsi_readv(struct bdev_iscsi_lun *lun, struct bdev_iscsi_io *iscsi_io,
 {
 	struct scsi_task *task;
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI_INIT, "read %d iovs size %lu to lba: %#lx\n",
+	SPDK_DEBUGLOG(iscsi_init, "read %d iovs size %lu to lba: %#lx\n",
 		      iovcnt, nbytes, lba);
 
 	task = iscsi_read16_task(lun->context, lun->lun_id, lba, nbytes, lun->bdev.blocklen, 0, 0, 0, 0, 0,
@@ -253,7 +253,7 @@ bdev_iscsi_writev(struct bdev_iscsi_lun *lun, struct bdev_iscsi_io *iscsi_io,
 {
 	struct scsi_task *task;
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI_INIT, "write %d iovs size %lu to lba: %#lx\n",
+	SPDK_DEBUGLOG(iscsi_init, "write %d iovs size %lu to lba: %#lx\n",
 		      iovcnt, nbytes, lba);
 
 	task = iscsi_write16_task(lun->context, lun->lun_id, lba, NULL, nbytes, lun->bdev.blocklen, 0, 0, 0,
@@ -933,4 +933,4 @@ bdev_iscsi_initialize(void)
 	return rc;
 }
 
-SPDK_LOG_REGISTER_COMPONENT("iscsi_init", SPDK_LOG_ISCSI_INIT)
+SPDK_LOG_REGISTER_COMPONENT(iscsi_init)

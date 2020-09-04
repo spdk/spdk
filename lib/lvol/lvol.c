@@ -43,7 +43,7 @@
 
 #define LVOL_NAME "name"
 
-SPDK_LOG_REGISTER_COMPONENT("lvol", SPDK_LOG_LVOL)
+SPDK_LOG_REGISTER_COMPONENT(lvol)
 
 static TAILQ_HEAD(, spdk_lvol_store) g_lvol_stores = TAILQ_HEAD_INITIALIZER(g_lvol_stores);
 static pthread_mutex_t g_lvol_stores_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -95,7 +95,7 @@ lvol_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	struct spdk_lvol *lvol = req->lvol;
 
 	if (lvolerrno != 0) {
-		SPDK_INFOLOG(SPDK_LOG_LVOL, "Failed to open lvol %s\n", lvol->unique_id);
+		SPDK_INFOLOG(lvol, "Failed to open lvol %s\n", lvol->unique_id);
 		goto end;
 	}
 
@@ -184,7 +184,7 @@ load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	blob_id = spdk_blob_get_id(blob);
 
 	if (blob_id == lvs->super_blob_id) {
-		SPDK_INFOLOG(SPDK_LOG_LVOL, "found superblob %"PRIu64"\n", (uint64_t)blob_id);
+		SPDK_INFOLOG(lvol, "found superblob %"PRIu64"\n", (uint64_t)blob_id);
 		spdk_bs_iter_next(bs, blob, load_next_lvol, req);
 		return;
 	}
@@ -204,7 +204,7 @@ load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	rc = spdk_blob_get_xattr_value(blob, "uuid", (const void **)&attr, &value_len);
 	if (rc != 0 || value_len != SPDK_UUID_STRING_LEN || attr[SPDK_UUID_STRING_LEN - 1] != '\0' ||
 	    spdk_uuid_parse(&lvol->uuid, attr) != 0) {
-		SPDK_INFOLOG(SPDK_LOG_LVOL, "Missing or corrupt lvol uuid\n");
+		SPDK_INFOLOG(lvol, "Missing or corrupt lvol uuid\n");
 		memset(&lvol->uuid, 0, sizeof(lvol->uuid));
 	}
 	spdk_uuid_fmt_lower(lvol->uuid_str, sizeof(lvol->uuid_str), &lvol->uuid);
@@ -232,7 +232,7 @@ load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 
 	lvs->lvol_count++;
 
-	SPDK_INFOLOG(SPDK_LOG_LVOL, "added lvol %s (%s)\n", lvol->unique_id, lvol->uuid_str);
+	SPDK_INFOLOG(lvol, "added lvol %s (%s)\n", lvol->unique_id, lvol->uuid_str);
 
 	spdk_bs_iter_next(bs, blob, load_next_lvol, req);
 
@@ -256,7 +256,7 @@ close_super_cb(void *cb_arg, int lvolerrno)
 	struct spdk_blob_store *bs = lvs->blobstore;
 
 	if (lvolerrno != 0) {
-		SPDK_INFOLOG(SPDK_LOG_LVOL, "Could not close super blob\n");
+		SPDK_INFOLOG(lvol, "Could not close super blob\n");
 		lvs_free(lvs);
 		req->lvserrno = -ENODEV;
 		spdk_bs_unload(bs, bs_unload_with_error_cb, req);
@@ -290,7 +290,7 @@ lvs_read_uuid(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	int rc;
 
 	if (lvolerrno != 0) {
-		SPDK_INFOLOG(SPDK_LOG_LVOL, "Could not open super blob\n");
+		SPDK_INFOLOG(lvol, "Could not open super blob\n");
 		lvs_free(lvs);
 		req->lvserrno = -ENODEV;
 		spdk_bs_unload(bs, bs_unload_with_error_cb, req);
@@ -299,14 +299,14 @@ lvs_read_uuid(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 
 	rc = spdk_blob_get_xattr_value(blob, "uuid", (const void **)&attr, &value_len);
 	if (rc != 0 || value_len != SPDK_UUID_STRING_LEN || attr[SPDK_UUID_STRING_LEN - 1] != '\0') {
-		SPDK_INFOLOG(SPDK_LOG_LVOL, "missing or incorrect UUID\n");
+		SPDK_INFOLOG(lvol, "missing or incorrect UUID\n");
 		req->lvserrno = -EINVAL;
 		spdk_blob_close(blob, close_super_blob_with_error_cb, req);
 		return;
 	}
 
 	if (spdk_uuid_parse(&lvs->uuid, attr)) {
-		SPDK_INFOLOG(SPDK_LOG_LVOL, "incorrect UUID '%s'\n", attr);
+		SPDK_INFOLOG(lvol, "incorrect UUID '%s'\n", attr);
 		req->lvserrno = -EINVAL;
 		spdk_blob_close(blob, close_super_blob_with_error_cb, req);
 		return;
@@ -314,7 +314,7 @@ lvs_read_uuid(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 
 	rc = spdk_blob_get_xattr_value(blob, "name", (const void **)&attr, &value_len);
 	if (rc != 0 || value_len > SPDK_LVS_NAME_MAX) {
-		SPDK_INFOLOG(SPDK_LOG_LVOL, "missing or invalid name\n");
+		SPDK_INFOLOG(lvol, "missing or invalid name\n");
 		req->lvserrno = -EINVAL;
 		spdk_blob_close(blob, close_super_blob_with_error_cb, req);
 		return;
@@ -324,7 +324,7 @@ lvs_read_uuid(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 
 	rc = add_lvs_to_list(lvs);
 	if (rc) {
-		SPDK_INFOLOG(SPDK_LOG_LVOL, "lvolstore with name %s already exists\n", lvs->name);
+		SPDK_INFOLOG(lvol, "lvolstore with name %s already exists\n", lvs->name);
 		req->lvserrno = -EEXIST;
 		spdk_blob_close(blob, close_super_blob_with_error_cb, req);
 		return;
@@ -343,7 +343,7 @@ lvs_open_super(void *cb_arg, spdk_blob_id blobid, int lvolerrno)
 	struct spdk_blob_store *bs = lvs->blobstore;
 
 	if (lvolerrno != 0) {
-		SPDK_INFOLOG(SPDK_LOG_LVOL, "Super blob not found\n");
+		SPDK_INFOLOG(lvol, "Super blob not found\n");
 		lvs_free(lvs);
 		req->lvserrno = -ENODEV;
 		spdk_bs_unload(bs, bs_unload_with_error_cb, req);
@@ -549,7 +549,7 @@ lvs_init_cb(void *cb_arg, struct spdk_blob_store *bs, int lvserrno)
 	TAILQ_INIT(&lvs->lvols);
 	TAILQ_INIT(&lvs->pending_lvols);
 
-	SPDK_INFOLOG(SPDK_LOG_LVOL, "Lvol store initialized\n");
+	SPDK_INFOLOG(lvol, "Lvol store initialized\n");
 
 	/* create super blob */
 	spdk_bs_create_blob(lvs->blobstore, super_blob_create_cb, lvs_req);
@@ -635,7 +635,7 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 
 	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "LVOLSTORE");
 
-	SPDK_INFOLOG(SPDK_LOG_LVOL, "Initializing lvol store\n");
+	SPDK_INFOLOG(lvol, "Initializing lvol store\n");
 	spdk_bs_init(bs_dev, &opts, lvs_init_cb, lvs_req);
 
 	return 0;
@@ -749,7 +749,7 @@ _lvs_unload_cb(void *cb_arg, int lvserrno)
 {
 	struct spdk_lvs_req *lvs_req = cb_arg;
 
-	SPDK_INFOLOG(SPDK_LOG_LVOL, "Lvol store unloaded\n");
+	SPDK_INFOLOG(lvol, "Lvol store unloaded\n");
 	assert(lvs_req->cb_fn != NULL);
 	lvs_req->cb_fn(lvs_req->cb_arg, lvserrno);
 	free(lvs_req);
@@ -793,7 +793,7 @@ spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 	lvs_req->cb_fn = cb_fn;
 	lvs_req->cb_arg = cb_arg;
 
-	SPDK_INFOLOG(SPDK_LOG_LVOL, "Unloading lvol store\n");
+	SPDK_INFOLOG(lvol, "Unloading lvol store\n");
 	spdk_bs_unload(lvs->blobstore, _lvs_unload_cb, lvs_req);
 	lvs_free(lvs);
 
@@ -805,7 +805,7 @@ _lvs_destroy_cb(void *cb_arg, int lvserrno)
 {
 	struct spdk_lvs_destroy_req *lvs_req = cb_arg;
 
-	SPDK_INFOLOG(SPDK_LOG_LVOL, "Lvol store destroyed\n");
+	SPDK_INFOLOG(lvol, "Lvol store destroyed\n");
 	assert(lvs_req->cb_fn != NULL);
 	lvs_req->cb_fn(lvs_req->cb_arg, lvserrno);
 	free(lvs_req);
@@ -819,7 +819,7 @@ _lvs_destroy_super_cb(void *cb_arg, int bserrno)
 
 	assert(lvs != NULL);
 
-	SPDK_INFOLOG(SPDK_LOG_LVOL, "Destroying lvol store\n");
+	SPDK_INFOLOG(lvol, "Destroying lvol store\n");
 	spdk_bs_destroy(lvs->blobstore, _lvs_destroy_cb, lvs_req);
 	lvs_free(lvs);
 }
@@ -862,7 +862,7 @@ spdk_lvs_destroy(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 	lvs_req->cb_arg = cb_arg;
 	lvs_req->lvs = lvs;
 
-	SPDK_INFOLOG(SPDK_LOG_LVOL, "Deleting super blob\n");
+	SPDK_INFOLOG(lvol, "Deleting super blob\n");
 	spdk_bs_delete_blob(lvs->blobstore, lvs->super_blob_id, _lvs_destroy_super_cb, lvs_req);
 
 	return 0;
@@ -882,7 +882,7 @@ lvol_close_blob_cb(void *cb_arg, int lvolerrno)
 
 	lvol->ref_count--;
 	lvol->action_in_progress = false;
-	SPDK_INFOLOG(SPDK_LOG_LVOL, "Lvol %s closed\n", lvol->unique_id);
+	SPDK_INFOLOG(lvol, "Lvol %s closed\n", lvol->unique_id);
 
 end:
 	req->cb_fn(req->cb_arg, lvolerrno);
@@ -907,7 +907,7 @@ lvol_delete_blob_cb(void *cb_arg, int lvolerrno)
 	if (lvolerrno < 0) {
 		SPDK_ERRLOG("Could not remove blob on lvol gracefully - forced removal\n");
 	} else {
-		SPDK_INFOLOG(SPDK_LOG_LVOL, "Lvol %s deleted\n", lvol->unique_id);
+		SPDK_INFOLOG(lvol, "Lvol %s deleted\n", lvol->unique_id);
 	}
 
 	TAILQ_REMOVE(&lvol->lvol_store->lvols, lvol, link);
@@ -988,7 +988,7 @@ lvs_verify_lvol_name(struct spdk_lvol_store *lvs, const char *name)
 	struct spdk_lvol *tmp;
 
 	if (name == NULL || strnlen(name, SPDK_LVOL_NAME_MAX) == 0) {
-		SPDK_INFOLOG(SPDK_LOG_LVOL, "lvol name not provided.\n");
+		SPDK_INFOLOG(lvol, "lvol name not provided.\n");
 		return -EINVAL;
 	}
 
@@ -1090,7 +1090,7 @@ spdk_lvol_create_snapshot(struct spdk_lvol *origlvol, const char *snapshot_name,
 	int rc;
 
 	if (origlvol == NULL) {
-		SPDK_INFOLOG(SPDK_LOG_LVOL, "Lvol not provided.\n");
+		SPDK_INFOLOG(lvol, "Lvol not provided.\n");
 		cb_fn(cb_arg, NULL, -EINVAL);
 		return;
 	}
@@ -1154,7 +1154,7 @@ spdk_lvol_create_clone(struct spdk_lvol *origlvol, const char *clone_name,
 	int rc;
 
 	if (origlvol == NULL) {
-		SPDK_INFOLOG(SPDK_LOG_LVOL, "Lvol not provided.\n");
+		SPDK_INFOLOG(lvol, "Lvol not provided.\n");
 		cb_fn(cb_arg, NULL, -EINVAL);
 		return;
 	}

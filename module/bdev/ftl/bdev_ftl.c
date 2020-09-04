@@ -313,9 +313,9 @@ bdev_ftl_create_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 	ftl_bdev->bdev.blockcnt = attrs.num_blocks;
 	ftl_bdev->bdev.uuid = attrs.uuid;
 
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_FTL, "Creating bdev %s:\n", ftl_bdev->bdev.name);
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_FTL, "\tblock_len:\t%zu\n", attrs.block_size);
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_FTL, "\tnum_blocks:\t%"PRIu64"\n", attrs.num_blocks);
+	SPDK_DEBUGLOG(bdev_ftl, "Creating bdev %s:\n", ftl_bdev->bdev.name);
+	SPDK_DEBUGLOG(bdev_ftl, "\tblock_len:\t%zu\n", attrs.block_size);
+	SPDK_DEBUGLOG(bdev_ftl, "\tnum_blocks:\t%"PRIu64"\n", attrs.num_blocks);
 
 	ftl_bdev->bdev.ctxt = ftl_bdev;
 	ftl_bdev->bdev.fn_table = &ftl_fn_table;
@@ -514,4 +514,4 @@ bdev_ftl_examine(struct spdk_bdev *bdev)
 	spdk_bdev_module_examine_done(&g_ftl_if);
 }
 
-SPDK_LOG_REGISTER_COMPONENT("bdev_ftl", SPDK_LOG_BDEV_FTL)
+SPDK_LOG_REGISTER_COMPONENT(bdev_ftl)

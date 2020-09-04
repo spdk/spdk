@@ -520,7 +520,7 @@ nvme_transport_poll_group_process_completions(struct spdk_nvme_transport_poll_gr
 			}
 		}
 		/* Just in case. */
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Mismatch between qpairs to delete and poll group number.\n");
+		SPDK_DEBUGLOG(nvme, "Mismatch between qpairs to delete and poll group number.\n");
 		tgroup->num_qpairs_to_delete = 0;
 	}
 

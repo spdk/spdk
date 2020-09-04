@@ -35,7 +35,7 @@
 
 #include "nvme/nvme_quirks.c"
 
-SPDK_LOG_REGISTER_COMPONENT("nvme", SPDK_LOG_NVME)
+SPDK_LOG_REGISTER_COMPONENT(nvme)
 
 static void
 test_nvme_quirks_striping(void)

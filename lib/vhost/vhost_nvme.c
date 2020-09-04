@@ -407,7 +407,7 @@ vhost_nvme_resubmit_task(void *arg)
 
 	rc = nvme_process_sq(task->nvme, task->sq, task);
 	if (rc) {
-		SPDK_DEBUGLOG(SPDK_LOG_VHOST_NVME, "vhost_nvme: task resubmit failed, rc = %d.\n", rc);
+		SPDK_DEBUGLOG(vhost_nvme, "vhost_nvme: task resubmit failed, rc = %d.\n", rc);
 	}
 }
 
@@ -482,7 +482,7 @@ nvme_process_sq(struct spdk_vhost_nvme_dev *nvme, struct spdk_vhost_nvme_sq *sq,
 	if (cmd->opc == SPDK_NVME_OPC_READ || cmd->opc == SPDK_NVME_OPC_WRITE ||
 	    cmd->opc == SPDK_NVME_OPC_DATASET_MANAGEMENT) {
 		if (cmd->psdt != SPDK_NVME_PSDT_PRP) {
-			SPDK_DEBUGLOG(SPDK_LOG_VHOST_NVME, "Invalid PSDT %u%ub in command\n",
+			SPDK_DEBUGLOG(vhost_nvme, "Invalid PSDT %u%ub in command\n",
 				      cmd->psdt >> 1, cmd->psdt & 1u);
 			task->dnr = 1;
 			task->sct = SPDK_NVME_SCT_GENERIC;
@@ -555,7 +555,7 @@ nvme_process_sq(struct spdk_vhost_nvme_dev *nvme, struct spdk_vhost_nvme_sq *sq,
 
 	if (spdk_unlikely(ret)) {
 		if (ret == -ENOMEM) {
-			SPDK_DEBUGLOG(SPDK_LOG_VHOST_NVME, "No memory, start to queue io.\n");
+			SPDK_DEBUGLOG(vhost_nvme, "No memory, start to queue io.\n");
 			task->sq = sq;
 			ret = vhost_nvme_queue_task(task);
 		} else {
@@ -709,7 +709,7 @@ vhost_nvme_create_io_sq(struct spdk_vhost_nvme_dev *nvme,
 	sq = vhost_nvme_get_sq_from_qid(nvme, qid);
 	cq = vhost_nvme_get_cq_from_qid(nvme, cqid);
 	if (!sq || !cq) {
-		SPDK_DEBUGLOG(SPDK_LOG_VHOST_NVME, "User requested invalid QID %u or CQID %u\n",
+		SPDK_DEBUGLOG(vhost_nvme, "User requested invalid QID %u or CQID %u\n",
 			      qid, cqid);
 		cpl->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		cpl->status.sc = SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER;
@@ -789,7 +789,7 @@ vhost_nvme_create_io_cq(struct spdk_vhost_nvme_dev *nvme,
 
 	cq = vhost_nvme_get_cq_from_qid(nvme, qid);
 	if (!cq) {
-		SPDK_DEBUGLOG(SPDK_LOG_VHOST_NVME, "User requested invalid QID %u\n", qid);
+		SPDK_DEBUGLOG(vhost_nvme, "User requested invalid QID %u\n", qid);
 		cpl->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		cpl->status.sc = SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER;
 		return -1;
@@ -890,7 +890,7 @@ vhost_nvme_admin_passthrough(int vid, void *cmd, void *cqe, void *buf)
 		return -1;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_VHOST_NVME, "Admin Command Opcode %u\n", req->opc);
+	SPDK_DEBUGLOG(vhost_nvme, "Admin Command Opcode %u\n", req->opc);
 	switch (req->opc) {
 	case SPDK_NVME_OPC_IDENTIFY:
 		if (req->cdw10 == SPDK_NVME_IDENTIFY_CTRLR) {
@@ -1108,7 +1108,7 @@ destroy_device_poller_cb(void *arg)
 	struct spdk_vhost_nvme_ns *ns_dev;
 	uint32_t i;
 
-	SPDK_DEBUGLOG(SPDK_LOG_VHOST_NVME, "Destroy device poller callback\n");
+	SPDK_DEBUGLOG(vhost_nvme, "Destroy device poller callback\n");
 
 	/* FIXME wait for pending I/Os to complete */
 
@@ -1497,4 +1497,4 @@ vhost_nvme_controller_construct(void)
 	return 0;
 }
 
-SPDK_LOG_REGISTER_COMPONENT("vhost_nvme", SPDK_LOG_VHOST_NVME)
+SPDK_LOG_REGISTER_COMPONENT(vhost_nvme)

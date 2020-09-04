@@ -1622,4 +1622,4 @@ void spdk_reduce_vol_print_info(struct spdk_reduce_vol *vol)
 	SPDK_NOTICELOG("\tchunk_map_size = 0x%" PRIx64 "\n", chunk_map_size);
 }
 
-SPDK_LOG_REGISTER_COMPONENT("reduce", SPDK_LOG_REDUCE)
+SPDK_LOG_REGISTER_COMPONENT(reduce)

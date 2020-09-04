@@ -202,7 +202,7 @@ vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *virtqueue, uint16_t *reqs,
 		reqs[i] = vring->avail->ring[(last_idx + i) & size_mask];
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING,
+	SPDK_DEBUGLOG(vhost_ring,
 		      "AVAIL: last_idx=%"PRIu16" avail_idx=%"PRIu16" count=%"PRIu16"\n",
 		      last_idx, avail_idx, count);
 
@@ -290,7 +290,7 @@ vhost_vq_used_signal(struct spdk_vhost_session *vsession,
 	virtqueue->req_cnt += virtqueue->used_req_cnt;
 	virtqueue->used_req_cnt = 0;
 
-	SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING,
+	SPDK_DEBUGLOG(vhost_ring,
 		      "Queue %td - USED RING: sending IRQ: last used %"PRIu16"\n",
 		      virtqueue - vsession->virtqueue, virtqueue->last_used_idx);
 
@@ -472,7 +472,7 @@ vhost_vq_used_ring_enqueue(struct spdk_vhost_session *vsession,
 	uint16_t last_idx = virtqueue->last_used_idx & (vring->size - 1);
 	uint16_t vq_idx = virtqueue->vring_idx;
 
-	SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING,
+	SPDK_DEBUGLOG(vhost_ring,
 		      "Queue %td - USED RING: last_idx=%"PRIu16" req id=%"PRIu16" len=%"PRIu32"\n",
 		      virtqueue - vsession->virtqueue, virtqueue->last_used_idx, id, len);
 
@@ -505,7 +505,7 @@ vhost_vq_packed_ring_enqueue(struct spdk_vhost_session *vsession,
 	struct vring_packed_desc *desc = &virtqueue->vring.desc_packed[virtqueue->last_used_idx];
 	bool used, avail;
 
-	SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING,
+	SPDK_DEBUGLOG(vhost_ring,
 		      "Queue %td - RING: buffer_id=%"PRIu16"\n",
 		      virtqueue - vsession->virtqueue, buffer_id);
 
@@ -892,7 +892,7 @@ vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *ma
 
 	TAILQ_INSERT_TAIL(&g_vhost_devices, vdev, tailq);
 
-	SPDK_INFOLOG(SPDK_LOG_VHOST, "Controller %s: new controller added\n", vdev->name);
+	SPDK_INFOLOG(vhost, "Controller %s: new controller added\n", vdev->name);
 	return 0;
 
 out:
@@ -916,7 +916,7 @@ vhost_dev_unregister(struct spdk_vhost_dev *vdev)
 		return -EIO;
 	}
 
-	SPDK_INFOLOG(SPDK_LOG_VHOST, "Controller %s: removed\n", vdev->name);
+	SPDK_INFOLOG(vhost, "Controller %s: removed\n", vdev->name);
 
 	spdk_thread_send_msg(vdev->thread, vhost_dev_thread_exit, NULL);
 
@@ -1570,7 +1570,7 @@ session_shutdown(void *arg)
 		vdev->registered = false;
 	}
 
-	SPDK_INFOLOG(SPDK_LOG_VHOST, "Exiting\n");
+	SPDK_INFOLOG(vhost, "Exiting\n");
 	spdk_thread_send_msg(g_vhost_init_thread, vhost_fini, NULL);
 	return NULL;
 }
@@ -1630,5 +1630,5 @@ spdk_vhost_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_array_end(w);
 }
 
-SPDK_LOG_REGISTER_COMPONENT("vhost", SPDK_LOG_VHOST)
-SPDK_LOG_REGISTER_COMPONENT("vhost_ring", SPDK_LOG_VHOST_RING)
+SPDK_LOG_REGISTER_COMPONENT(vhost)
+SPDK_LOG_REGISTER_COMPONENT(vhost_ring)

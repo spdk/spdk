@@ -68,7 +68,7 @@ rpc_bdev_pmem_create(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_construct_pmem_decoders,
 				    SPDK_COUNTOF(rpc_construct_pmem_decoders),
 				    &req)) {
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV_PMEM, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(bdev_pmem, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
 		goto cleanup;
@@ -123,14 +123,14 @@ rpc_bdev_pmem_delete(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_delete_pmem_decoders,
 				    SPDK_COUNTOF(rpc_delete_pmem_decoders),
 				    &req)) {
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV_PMEM, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(bdev_pmem, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
 	}
 
 	bdev = spdk_bdev_get_by_name(req.name);
 	if (bdev == NULL) {
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV_PMEM, "bdev '%s' does not exist\n", req.name);
+		SPDK_DEBUGLOG(bdev_pmem, "bdev '%s' does not exist\n", req.name);
 		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
 		goto cleanup;
 	}
@@ -173,7 +173,7 @@ rpc_bdev_pmem_create_pool(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_bdev_pmem_create_pool_decoders,
 				    SPDK_COUNTOF(rpc_bdev_pmem_create_pool_decoders),
 				    &req)) {
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV_PMEM, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(bdev_pmem, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
 		goto cleanup;
@@ -197,7 +197,7 @@ rpc_bdev_pmem_create_pool(struct spdk_jsonrpc_request *request,
 	if (pbp == NULL) {
 		const char *msg = pmemblk_errormsg();
 
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV_PMEM, "pmemblk_create() failed: %s\n", msg ? msg : "(logs disabled)");
+		SPDK_DEBUGLOG(bdev_pmem, "pmemblk_create() failed: %s\n", msg ? msg : "(logs disabled)");
 		spdk_jsonrpc_send_error_response_fmt(request, -SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						     "pmemblk_create failed: %s", msg ? msg : "(logs disabled)");
 		goto cleanup;

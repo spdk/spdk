@@ -464,7 +464,7 @@ nvme_driver_init(void)
 	g_spdk_nvme_driver->initialized = false;
 	g_spdk_nvme_driver->hotplug_fd = nvme_uevent_connect();
 	if (g_spdk_nvme_driver->hotplug_fd < 0) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Failed to open uevent netlink socket\n");
+		SPDK_DEBUGLOG(nvme, "Failed to open uevent netlink socket\n");
 	}
 
 	TAILQ_INIT(&g_spdk_nvme_driver->shared_attached_ctrlrs);
@@ -1453,4 +1453,4 @@ spdk_nvme_connect_async(const struct spdk_nvme_transport_id *trid,
 	return probe_ctx;
 }
 
-SPDK_LOG_REGISTER_COMPONENT("nvme", SPDK_LOG_NVME)
+SPDK_LOG_REGISTER_COMPONENT(nvme)

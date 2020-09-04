@@ -236,15 +236,15 @@ iscsi_reject(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
 		return -ENOMEM;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Reject PDU reason=%d\n", reason);
+	SPDK_DEBUGLOG(iscsi, "Reject PDU reason=%d\n", reason);
 
 	if (conn->sess != NULL) {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
+		SPDK_DEBUGLOG(iscsi,
 			      "StatSN=%u, ExpCmdSN=%u, MaxCmdSN=%u\n",
 			      conn->StatSN, conn->sess->ExpCmdSN,
 			      conn->sess->MaxCmdSN);
 	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "StatSN=%u\n", conn->StatSN);
+		SPDK_DEBUGLOG(iscsi, "StatSN=%u\n", conn->StatSN);
 	}
 
 	memcpy(data, &pdu->bhs, ISCSI_BHS_LEN);
@@ -286,7 +286,7 @@ iscsi_reject(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
 		to_be32(&rsph->max_cmd_sn, 1);
 	}
 
-	SPDK_LOGDUMP(SPDK_LOG_ISCSI, "PDU", (void *)&rsp_pdu->bhs, ISCSI_BHS_LEN);
+	SPDK_LOGDUMP(iscsi, "PDU", (void *)&rsp_pdu->bhs, ISCSI_BHS_LEN);
 
 	iscsi_conn_write_pdu(conn, rsp_pdu, iscsi_conn_pdu_generic_complete, NULL);
 
@@ -719,7 +719,7 @@ append_iscsi_sess(struct spdk_iscsi_conn *conn,
 {
 	struct spdk_iscsi_sess *sess;
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "append session: init port name=%s, tsih=%u, cid=%u\n",
+	SPDK_DEBUGLOG(iscsi, "append session: init port name=%s, tsih=%u, cid=%u\n",
 		      initiator_port_name, tsih, cid);
 
 	sess = get_iscsi_sess_by_tsih(tsih);
@@ -743,7 +743,7 @@ append_iscsi_sess(struct spdk_iscsi_conn *conn,
 		return ISCSI_LOGIN_TOO_MANY_CONNECTIONS;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Connections (tsih %d): %d\n", sess->tsih, sess->connections);
+	SPDK_DEBUGLOG(iscsi, "Connections (tsih %d): %d\n", sess->tsih, sess->connections);
 	conn->sess = sess;
 
 	/*
@@ -793,7 +793,7 @@ iscsi_append_param(struct spdk_iscsi_conn *conn, const char *key,
 	if (param == NULL) {
 		param = iscsi_param_find(conn->sess->params, key);
 		if (param == NULL) {
-			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "no key %.64s\n", key);
+			SPDK_DEBUGLOG(iscsi, "no key %.64s\n", key);
 			return data_len;
 		}
 	}
@@ -867,7 +867,7 @@ iscsi_auth_params(struct spdk_iscsi_conn *conn,
 			goto error_return;
 		}
 		/* selected algorithm is 5 (MD5) */
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "got CHAP_A=%s\n", new_val);
+		SPDK_DEBUGLOG(iscsi, "got CHAP_A=%s\n", new_val);
 		total = iscsi_append_text("CHAP_A", new_val, data, alloc_len, total);
 
 		/* Identifier is one octet */
@@ -920,9 +920,9 @@ iscsi_auth_params(struct spdk_iscsi_conn *conn,
 			SPDK_ERRLOG("response format error\n");
 			goto error_return;
 		}
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "got CHAP_N/CHAP_R\n");
+		SPDK_DEBUGLOG(iscsi, "got CHAP_N/CHAP_R\n");
 
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "ag_tag=%d\n", conn->chap_group);
+		SPDK_DEBUGLOG(iscsi, "ag_tag=%d\n", conn->chap_group);
 
 		rc = iscsi_chap_get_authinfo(&conn->auth, name, conn->chap_group);
 		if (rc < 0) {
@@ -951,7 +951,7 @@ iscsi_auth_params(struct spdk_iscsi_conn *conn,
 		bin2hex(in_val, ISCSI_TEXT_MAX_VAL_LEN, tgtmd5, SPDK_MD5DIGEST_LEN);
 
 #if 0
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "tgtmd5=%s, resmd5=%s\n", in_val, response);
+		SPDK_DEBUGLOG(iscsi, "tgtmd5=%s, resmd5=%s\n", in_val, response);
 		spdk_dump("tgtmd5", tgtmd5, SPDK_MD5DIGEST_LEN);
 		spdk_dump("resmd5", resmd5, SPDK_MD5DIGEST_LEN);
 #endif
@@ -1002,7 +1002,7 @@ iscsi_auth_params(struct spdk_iscsi_conn *conn,
 			spdk_dump("MChallenge", conn->auth.chap_mchallenge,
 				  conn->auth.chap_mchallenge_len);
 #endif
-			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "got CHAP_I/CHAP_C\n");
+			SPDK_DEBUGLOG(iscsi, "got CHAP_I/CHAP_C\n");
 
 			if (conn->auth.muser[0] == '\0' || conn->auth.msecret[0] == '\0') {
 				/* SPDK_ERRLOG("mutual auth user or secret is missing\n"); */
@@ -1038,7 +1038,7 @@ iscsi_auth_params(struct spdk_iscsi_conn *conn,
 		conn->auth.chap_phase = ISCSI_CHAP_PHASE_END;
 	} else {
 		/* not found CHAP keys */
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "start CHAP\n");
+		SPDK_DEBUGLOG(iscsi, "start CHAP\n");
 		conn->auth.chap_phase = ISCSI_CHAP_PHASE_WAIT_A;
 	}
 
@@ -1150,7 +1150,7 @@ iscsi_conn_login_pdu_success_complete(void *arg)
 
 	if (conn->state >= ISCSI_CONN_STATE_EXITING) {
 		/* Connection is being exited before this callback is executed. */
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Connection is already exited.\n");
+		SPDK_DEBUGLOG(iscsi, "Connection is already exited.\n");
 		return;
 	}
 	if (conn->full_feature) {
@@ -1190,8 +1190,8 @@ iscsi_op_login_response(struct spdk_iscsi_conn *conn,
 		to_be32(&rsph->max_cmd_sn, rsp_pdu->cmd_sn);
 	}
 
-	SPDK_LOGDUMP(SPDK_LOG_ISCSI, "PDU", (uint8_t *)rsph, ISCSI_BHS_LEN);
-	SPDK_LOGDUMP(SPDK_LOG_ISCSI, "DATA", rsp_pdu->data, rsp_pdu->data_segment_len);
+	SPDK_LOGDUMP(iscsi, "PDU", (uint8_t *)rsph, ISCSI_BHS_LEN);
+	SPDK_LOGDUMP(iscsi, "DATA", rsp_pdu->data, rsp_pdu->data_segment_len);
 
 	/* Set T/CSG/NSG to reserved if login error. */
 	if (rsph->status_class != 0) {
@@ -1249,9 +1249,9 @@ iscsi_op_login_rsp_init(struct spdk_iscsi_conn *conn,
 		rsph->stat_sn = reqh->exp_stat_sn;
 	}
 
-	SPDK_LOGDUMP(SPDK_LOG_ISCSI, "PDU", (uint8_t *)&pdu->bhs, ISCSI_BHS_LEN);
+	SPDK_LOGDUMP(iscsi, "PDU", (uint8_t *)&pdu->bhs, ISCSI_BHS_LEN);
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
+	SPDK_DEBUGLOG(iscsi,
 		      "T=%d, C=%d, CSG=%d, NSG=%d, Min=%d, Max=%d, ITT=%x\n",
 		      ISCSI_BHS_LOGIN_GET_TBIT(rsph->flags),
 		      ISCSI_BHS_LOGIN_GET_CBIT(rsph->flags),
@@ -1260,14 +1260,14 @@ iscsi_op_login_rsp_init(struct spdk_iscsi_conn *conn,
 		      reqh->version_min, reqh->version_max, from_be32(&rsph->itt));
 
 	if (conn->sess != NULL) {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
+		SPDK_DEBUGLOG(iscsi,
 			      "CmdSN=%u, ExpStatSN=%u, StatSN=%u, ExpCmdSN=%u,"
 			      "MaxCmdSN=%u\n", rsp_pdu->cmd_sn,
 			      from_be32(&rsph->stat_sn), conn->StatSN,
 			      conn->sess->ExpCmdSN,
 			      conn->sess->MaxCmdSN);
 	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
+		SPDK_DEBUGLOG(iscsi,
 			      "CmdSN=%u, ExpStatSN=%u, StatSN=%u\n",
 			      rsp_pdu->cmd_sn, from_be32(&rsph->stat_sn),
 			      conn->StatSN);
@@ -1363,8 +1363,8 @@ iscsi_op_login_initialize_port(struct spdk_iscsi_conn *conn,
 		 "%s,i,0x%12.12" PRIx64, val, iscsi_get_isid(rsph->isid));
 	spdk_strlwr(conn->initiator_name);
 	spdk_strlwr(initiator_port_name);
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Initiator name: %s\n", conn->initiator_name);
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Initiator port: %s\n", initiator_port_name);
+	SPDK_DEBUGLOG(iscsi, "Initiator name: %s\n", conn->initiator_name);
+	SPDK_DEBUGLOG(iscsi, "Initiator port: %s\n", initiator_port_name);
 
 	return 0;
 }
@@ -1410,7 +1410,7 @@ iscsi_op_login_session_type(struct spdk_iscsi_conn *conn,
 			return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
 		}
 	}
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Session Type: %s\n", session_type_str);
+	SPDK_DEBUGLOG(iscsi, "Session Type: %s\n", session_type_str);
 
 	return 0;
 }
@@ -1446,7 +1446,7 @@ iscsi_op_login_check_target(struct spdk_iscsi_conn *conn,
 		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
 	}
 	if (iscsi_tgt_node_is_redirected(conn, *target, buf, MAX_TMPBUF)) {
-		SPDK_INFOLOG(SPDK_LOG_ISCSI, "target %s is redirectd\n", target_name);
+		SPDK_INFOLOG(iscsi, "target %s is redirectd\n", target_name);
 		rsp_pdu->data_segment_len = iscsi_append_text("TargetAddress",
 					    buf,
 					    rsp_pdu->data,
@@ -1484,7 +1484,7 @@ iscsi_op_login_check_session(struct spdk_iscsi_conn *conn,
 
 	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 	/* check existing session */
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "isid=%"PRIx64", tsih=%u, cid=%u\n",
+	SPDK_DEBUGLOG(iscsi, "isid=%"PRIx64", tsih=%u, cid=%u\n",
 		      iscsi_get_isid(rsph->isid), from_be16(&rsph->tsih), cid);
 	if (rsph->tsih != 0) {
 		/* multiple connections */
@@ -1981,11 +1981,11 @@ iscsi_op_login_rsp_handle_csg_bit(struct spdk_iscsi_conn *conn,
 				rsph->flags &= ~ISCSI_LOGIN_TRANSIT;
 			} else {
 				if (conn->auth.chap_phase != ISCSI_CHAP_PHASE_END) {
-					SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "CHAP phase not complete");
+					SPDK_DEBUGLOG(iscsi, "CHAP phase not complete");
 				}
 			}
 
-			SPDK_LOGDUMP(SPDK_LOG_ISCSI, "Negotiated Auth Params",
+			SPDK_LOGDUMP(iscsi, "Negotiated Auth Params",
 				     rsp_pdu->data, rsp_pdu->data_segment_len);
 		}
 		break;
@@ -2045,7 +2045,7 @@ iscsi_op_login_notify_session_info(struct spdk_iscsi_conn *conn,
 	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 	if (conn->sess->session_type == SESSION_TYPE_NORMAL) {
 		/* normal session */
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Login from %s (%s) on %s tgt_node%d"
+		SPDK_DEBUGLOG(iscsi, "Login from %s (%s) on %s tgt_node%d"
 			      " (%s:%s,%d), ISID=%"PRIx64", TSIH=%u,"
 			      " CID=%u, HeaderDigest=%s, DataDigest=%s\n",
 			      conn->initiator_name, conn->initiator_addr,
@@ -2058,7 +2058,7 @@ iscsi_op_login_notify_session_info(struct spdk_iscsi_conn *conn,
 			       ? "on" : "off"));
 	} else if (conn->sess->session_type == SESSION_TYPE_DISCOVERY) {
 		/* discovery session */
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Login(discovery) from %s (%s) on"
+		SPDK_DEBUGLOG(iscsi, "Login(discovery) from %s (%s) on"
 			      " (%s:%s,%d), ISID=%"PRIx64", TSIH=%u,"
 			      " CID=%u, HeaderDigest=%s, DataDigest=%s\n",
 			      conn->initiator_name, conn->initiator_addr,
@@ -2159,7 +2159,7 @@ iscsi_op_login_rsp_handle(struct spdk_iscsi_conn *conn,
 	}
 
 	rsp_pdu->data_segment_len = rc;
-	SPDK_LOGDUMP(SPDK_LOG_ISCSI, "Negotiated Params", rsp_pdu->data, rc);
+	SPDK_LOGDUMP(iscsi, "Negotiated Params", rsp_pdu->data, rc);
 
 	/* handle the CSG bit case */
 	rc = iscsi_op_login_rsp_handle_csg_bit(conn, rsp_pdu, *params);
@@ -2274,10 +2274,10 @@ iscsi_pdu_hdr_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	task_tag = from_be32(&reqh->itt);
 	ExpStatSN = from_be32(&reqh->exp_stat_sn);
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "I=%d, F=%d, C=%d, ITT=%x, TTT=%x\n",
+	SPDK_DEBUGLOG(iscsi, "I=%d, F=%d, C=%d, ITT=%x, TTT=%x\n",
 		      reqh->immediate, F_bit, C_bit, task_tag, from_be32(&reqh->ttt));
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
+	SPDK_DEBUGLOG(iscsi,
 		      "CmdSN=%u, ExpStatSN=%u, StatSN=%u, ExpCmdSN=%u, MaxCmdSN=%u\n",
 		      pdu->cmd_sn, ExpStatSN, conn->StatSN, conn->sess->ExpCmdSN,
 		      conn->sess->MaxCmdSN);
@@ -2288,7 +2288,7 @@ iscsi_pdu_hdr_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		return -1;
 #else
 		/* StarPort have a bug */
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "StatSN(%u) rewound\n", ExpStatSN);
+		SPDK_DEBUGLOG(iscsi, "StatSN(%u) rewound\n", ExpStatSN);
 		conn->StatSN = ExpStatSN;
 #endif
 	}
@@ -2413,7 +2413,7 @@ iscsi_pdu_payload_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 	}
 
 	iscsi_param_free(params);
-	SPDK_LOGDUMP(SPDK_LOG_ISCSI, "Negotiated Params", data, data_len);
+	SPDK_LOGDUMP(iscsi, "Negotiated Params", data, data_len);
 
 	/* response PDU */
 	rsp_pdu = iscsi_get_pdu(conn);
@@ -2468,12 +2468,12 @@ static void iscsi_conn_logout_pdu_complete(void *arg)
 		 * login failed but initiator still sent a logout rather than
 		 *  just closing the TCP connection.
 		 */
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Logout(login failed) from %s (%s) on"
+		SPDK_DEBUGLOG(iscsi, "Logout(login failed) from %s (%s) on"
 			      " (%s:%s,%d)\n",
 			      conn->initiator_name, conn->initiator_addr,
 			      conn->portal_host, conn->portal_port, conn->pg_tag);
 	} else if (iscsi_param_eq_val(conn->sess->params, "SessionType", "Normal")) {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Logout from %s (%s) on %s tgt_node%d"
+		SPDK_DEBUGLOG(iscsi, "Logout from %s (%s) on %s tgt_node%d"
 			      " (%s:%s,%d), ISID=%"PRIx64", TSIH=%u,"
 			      " CID=%u, HeaderDigest=%s, DataDigest=%s\n",
 			      conn->initiator_name, conn->initiator_addr,
@@ -2486,7 +2486,7 @@ static void iscsi_conn_logout_pdu_complete(void *arg)
 			       ? "on" : "off"));
 	} else {
 		/* discovery session */
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Logout(discovery) from %s (%s) on"
+		SPDK_DEBUGLOG(iscsi, "Logout(discovery) from %s (%s) on"
 			      " (%s:%s,%d), ISID=%"PRIx64", TSIH=%u,"
 			      " CID=%u, HeaderDigest=%s, DataDigest=%s\n",
 			      conn->initiator_name, conn->initiator_addr,
@@ -2516,7 +2516,7 @@ iscsi_pdu_hdr_op_logout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu
 	task_tag = from_be32(&reqh->itt);
 	ExpStatSN = from_be32(&reqh->exp_stat_sn);
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "reason=%d, ITT=%x, cid=%d\n",
+	SPDK_DEBUGLOG(iscsi, "reason=%d, ITT=%x, cid=%d\n",
 		      reqh->reason, task_tag, cid);
 
 	if (conn->sess != NULL) {
@@ -2528,22 +2528,22 @@ iscsi_pdu_hdr_op_logout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu
 			return SPDK_ISCSI_CONNECTION_FATAL;
 		}
 
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
+		SPDK_DEBUGLOG(iscsi,
 			      "CmdSN=%u, ExpStatSN=%u, StatSN=%u, ExpCmdSN=%u, MaxCmdSN=%u\n",
 			      pdu->cmd_sn, ExpStatSN, conn->StatSN,
 			      conn->sess->ExpCmdSN, conn->sess->MaxCmdSN);
 
 		if (pdu->cmd_sn != conn->sess->ExpCmdSN) {
-			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "CmdSN(%u) might have dropped\n", pdu->cmd_sn);
+			SPDK_DEBUGLOG(iscsi, "CmdSN(%u) might have dropped\n", pdu->cmd_sn);
 			/* ignore error */
 		}
 	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "CmdSN=%u, ExpStatSN=%u, StatSN=%u\n",
+		SPDK_DEBUGLOG(iscsi, "CmdSN=%u, ExpStatSN=%u, StatSN=%u\n",
 			      pdu->cmd_sn, ExpStatSN, conn->StatSN);
 	}
 
 	if (ExpStatSN != conn->StatSN) {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "StatSN(%u/%u) might have dropped\n",
+		SPDK_DEBUGLOG(iscsi, "StatSN(%u/%u) might have dropped\n",
 			      ExpStatSN, conn->StatSN);
 		/* ignore error */
 	}
@@ -2678,7 +2678,7 @@ iscsi_send_r2t_recovery(struct spdk_iscsi_conn *conn,
 	/* remove the r2t pdu from the snack_list */
 	pdu = iscsi_remove_r2t_pdu_from_snack_list(conn, task, r2t_sn);
 	if (!pdu) {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "No pdu is found\n");
+		SPDK_DEBUGLOG(iscsi, "No pdu is found\n");
 		return -1;
 	}
 
@@ -3022,17 +3022,17 @@ iscsi_transfer_in(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 
 	if (data_len < transfer_len) {
 		/* underflow */
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Underflow %u/%u\n", data_len, transfer_len);
+		SPDK_DEBUGLOG(iscsi, "Underflow %u/%u\n", data_len, transfer_len);
 		residual_len = transfer_len - data_len;
 		transfer_len = data_len;
 		datain_flag |= ISCSI_DATAIN_UNDERFLOW;
 	} else if (data_len > transfer_len) {
 		/* overflow */
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Overflow %u/%u\n", data_len, transfer_len);
+		SPDK_DEBUGLOG(iscsi, "Overflow %u/%u\n", data_len, transfer_len);
 		residual_len = data_len - transfer_len;
 		datain_flag |= ISCSI_DATAIN_OVERFLOW;
 	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Transfer %u\n", transfer_len);
+		SPDK_DEBUGLOG(iscsi, "Transfer %u\n", transfer_len);
 		residual_len = 0;
 	}
 
@@ -3065,9 +3065,9 @@ iscsi_transfer_in(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 				}
 			}
 
-			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Transfer=%d, Offset=%d, Len=%d\n",
+			SPDK_DEBUGLOG(iscsi, "Transfer=%d, Offset=%d, Len=%d\n",
 				      sequence_end, offset, len);
-			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "StatSN=%u, DataSN=%u, Offset=%u, Len=%d\n",
+			SPDK_DEBUGLOG(iscsi, "StatSN=%u, DataSN=%u, Offset=%u, Len=%d\n",
 				      conn->StatSN, DataSN, offset, len);
 
 			DataSN = iscsi_send_datain(conn, task, datain_flag, residual_len,
@@ -3123,16 +3123,16 @@ void iscsi_task_response(struct spdk_iscsi_conn *conn,
 	    (task->scsi.status == SPDK_SCSI_STATUS_GOOD)) {
 		if (data_len < transfer_len) {
 			/* underflow */
-			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Underflow %zu/%u\n", data_len, transfer_len);
+			SPDK_DEBUGLOG(iscsi, "Underflow %zu/%u\n", data_len, transfer_len);
 			residual_len = transfer_len - data_len;
 			U_bit = 1;
 		} else if (data_len > transfer_len) {
 			/* overflow */
-			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Overflow %zu/%u\n", data_len, transfer_len);
+			SPDK_DEBUGLOG(iscsi, "Overflow %zu/%u\n", data_len, transfer_len);
 			residual_len = data_len - transfer_len;
 			O_bit = 1;
 		} else {
-			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Transfer %u\n", transfer_len);
+			SPDK_DEBUGLOG(iscsi, "Transfer %u\n", transfer_len);
 		}
 	}
 
@@ -3319,7 +3319,7 @@ iscsi_pdu_hdr_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	transfer_len = from_be32(&reqh->expected_data_xfer_len);
 	cdb = reqh->cdb;
 
-	SPDK_LOGDUMP(SPDK_LOG_ISCSI, "CDB", cdb, 16);
+	SPDK_LOGDUMP(iscsi, "CDB", cdb, 16);
 
 	task = iscsi_task_get(conn, NULL, iscsi_task_cpl);
 	if (!task) {
@@ -3582,10 +3582,10 @@ iscsi_pdu_hdr_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	task_tag = from_be32(&reqh->itt);
 	ref_task_tag = from_be32(&reqh->ref_task_tag);
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "I=%d, func=%d, ITT=%x, ref TT=%x, LUN=0x%16.16"PRIx64"\n",
+	SPDK_DEBUGLOG(iscsi, "I=%d, func=%d, ITT=%x, ref TT=%x, LUN=0x%16.16"PRIx64"\n",
 		      reqh->immediate, function, task_tag, ref_task_tag, lun);
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "StatSN=%u, ExpCmdSN=%u, MaxCmdSN=%u\n",
+	SPDK_DEBUGLOG(iscsi, "StatSN=%u, ExpCmdSN=%u, MaxCmdSN=%u\n",
 		      conn->StatSN, conn->sess->ExpCmdSN, conn->sess->MaxCmdSN);
 
 	lun_i = spdk_scsi_lun_id_fmt_to_int(lun);
@@ -3694,10 +3694,10 @@ iscsi_pdu_hdr_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu
 	task_tag = from_be32(&reqh->itt);
 	transfer_tag = from_be32(&reqh->ttt);
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "I=%d, ITT=%x, TTT=%x\n",
+	SPDK_DEBUGLOG(iscsi, "I=%d, ITT=%x, TTT=%x\n",
 		      I_bit, task_tag, transfer_tag);
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "CmdSN=%u, StatSN=%u, ExpCmdSN=%u, MaxCmdSN=%u\n",
+	SPDK_DEBUGLOG(iscsi, "CmdSN=%u, StatSN=%u, ExpCmdSN=%u, MaxCmdSN=%u\n",
 		      pdu->cmd_sn, conn->StatSN, conn->sess->ExpCmdSN,
 		      conn->sess->MaxCmdSN);
 
@@ -3750,7 +3750,7 @@ iscsi_pdu_payload_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu 
 
 	if (task_tag == 0xffffffffU) {
 		assert(I_bit == 1);
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "got NOPOUT ITT=0xffffffff\n");
+		SPDK_DEBUGLOG(iscsi, "got NOPOUT ITT=0xffffffff\n");
 		return 0;
 	}
 
@@ -3892,7 +3892,7 @@ iscsi_handle_recovery_datain(struct spdk_iscsi_conn *conn,
 
 	task = iscsi_task_get_primary(task);
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "iscsi_handle_recovery_datain\n");
+	SPDK_DEBUGLOG(iscsi, "iscsi_handle_recovery_datain\n");
 
 	if (beg_run < task->acked_data_sn) {
 		SPDK_ERRLOG("ITT: 0x%08x, DATA IN SNACK requests retransmission of"
@@ -3951,7 +3951,7 @@ iscsi_handle_status_snack(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 	beg_run = from_be32(&reqh->beg_run);
 	run_length = from_be32(&reqh->run_len);
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "beg_run=%d, run_length=%d, conn->StatSN="
+	SPDK_DEBUGLOG(iscsi, "beg_run=%d, run_length=%d, conn->StatSN="
 		      "%d, conn->exp_statsn=%d\n", beg_run, run_length,
 		      conn->StatSN, conn->exp_statsn);
 
@@ -4011,7 +4011,7 @@ iscsi_handle_data_ack(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	task = NULL;
 	datain_header = NULL;
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "beg_run=%d,transfer_tag=%d,run_len=%d\n",
+	SPDK_DEBUGLOG(iscsi, "beg_run=%d,transfer_tag=%d,run_len=%d\n",
 		      beg_run, transfer_tag, run_length);
 
 	task = get_scsi_task_from_ttt(conn, transfer_tag);
@@ -4045,7 +4045,7 @@ iscsi_handle_data_ack(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		}
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Received Data ACK SNACK for TTT: 0x%08x,"
+	SPDK_DEBUGLOG(iscsi, "Received Data ACK SNACK for TTT: 0x%08x,"
 		      " updated acked DataSN to 0x%08x.\n", transfer_tag,
 		      (task->acked_data_sn - 1));
 
@@ -4079,7 +4079,7 @@ iscsi_pdu_hdr_op_snack(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	}
 
 	type = reqh->flags & ISCSI_FLAG_SNACK_TYPE_MASK;
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "The value of type is %d\n", type);
+	SPDK_DEBUGLOG(iscsi, "The value of type is %d\n", type);
 
 	switch (type) {
 	case 0:
@@ -4088,7 +4088,7 @@ iscsi_pdu_hdr_op_snack(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		beg_run = from_be32(&reqh->beg_run);
 		run_length = from_be32(&reqh->run_len);
 
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "beg_run=%d, run_length=%d, "
+		SPDK_DEBUGLOG(iscsi, "beg_run=%d, run_length=%d, "
 			      "task_tag=%x, transfer_tag=%u\n", beg_run,
 			      run_length, task_tag, from_be32(&reqh->ttt));
 
@@ -4236,7 +4236,7 @@ iscsi_pdu_hdr_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	}
 
 	if (lun_dev == NULL) {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "LUN %d is removed, complete the task immediately\n",
+		SPDK_DEBUGLOG(iscsi, "LUN %d is removed, complete the task immediately\n",
 			      task->lun_id);
 		subtask->scsi.transfer_len = subtask->scsi.length;
 		spdk_scsi_task_process_null_lun(&subtask->scsi);
@@ -4292,7 +4292,7 @@ iscsi_pdu_payload_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 	}
 
 	if (spdk_scsi_dev_get_lun(conn->dev, subtask->lun_id) == NULL) {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "LUN %d is removed, complete the task immediately\n",
+		SPDK_DEBUGLOG(iscsi, "LUN %d is removed, complete the task immediately\n",
 			      subtask->lun_id);
 		subtask->scsi.transfer_len = subtask->scsi.length;
 		spdk_scsi_task_process_null_lun(&subtask->scsi);
@@ -4372,7 +4372,7 @@ iscsi_update_cmdsn(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 					    pdu->cmd_sn, sess->ExpCmdSN, sess->MaxCmdSN);
 
 				if (sess->ErrorRecoveryLevel >= 1) {
-					SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Skip the error in ERL 1 and 2\n");
+					SPDK_DEBUGLOG(iscsi, "Skip the error in ERL 1 and 2\n");
 				} else {
 					return SPDK_PDU_FATAL;
 				}
@@ -4382,7 +4382,7 @@ iscsi_update_cmdsn(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		SPDK_ERRLOG("CmdSN(%u) error ExpCmdSN=%u\n", pdu->cmd_sn, sess->ExpCmdSN);
 
 		if (sess->ErrorRecoveryLevel >= 1) {
-			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Skip the error in ERL 1 and 2\n");
+			SPDK_DEBUGLOG(iscsi, "Skip the error in ERL 1 and 2\n");
 		} else if (opcode != ISCSI_OP_NOPOUT) {
 			/*
 			 * The Linux initiator does not send valid CmdSNs for
@@ -4395,7 +4395,7 @@ iscsi_update_cmdsn(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	ExpStatSN = from_be32(&reqh->exp_stat_sn);
 	if (spdk_sn32_gt(ExpStatSN, conn->StatSN)) {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "StatSN(%u) advanced\n", ExpStatSN);
+		SPDK_DEBUGLOG(iscsi, "StatSN(%u) advanced\n", ExpStatSN);
 		ExpStatSN = conn->StatSN;
 	}
 
@@ -4423,7 +4423,7 @@ iscsi_pdu_hdr_handle(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	opcode = pdu->bhs.opcode;
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "opcode %x\n", opcode);
+	SPDK_DEBUGLOG(iscsi, "opcode %x\n", opcode);
 
 	if (opcode == ISCSI_OP_LOGIN) {
 		return iscsi_pdu_hdr_op_login(conn, pdu);
@@ -4503,7 +4503,7 @@ iscsi_pdu_payload_handle(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pd
 
 	opcode = pdu->bhs.opcode;
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "opcode %x\n", opcode);
+	SPDK_DEBUGLOG(iscsi, "opcode %x\n", opcode);
 
 	switch (opcode) {
 	case ISCSI_OP_LOGIN:
@@ -4588,7 +4588,7 @@ iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 			 * and initiator may get logout timeout.
 			 */
 			if (spdk_unlikely(conn->is_logged_out)) {
-				SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "pdu received after logout\n");
+				SPDK_DEBUGLOG(iscsi, "pdu received after logout\n");
 				conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
 				break;
 			}

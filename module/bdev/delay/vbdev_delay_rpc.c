@@ -70,7 +70,7 @@ rpc_bdev_delay_update_latency(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_update_latency_decoders,
 				    SPDK_COUNTOF(rpc_update_latency_decoders),
 				    &req)) {
-		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_DELAY, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(vbdev_delay, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
 		goto cleanup;
@@ -149,7 +149,7 @@ rpc_bdev_delay_create(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_construct_delay_decoders,
 				    SPDK_COUNTOF(rpc_construct_delay_decoders),
 				    &req)) {
-		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_DELAY, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(vbdev_delay, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
 		goto cleanup;

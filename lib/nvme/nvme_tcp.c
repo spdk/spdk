@@ -426,7 +426,7 @@ nvme_tcp_build_contig_request(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_req
 	tcp_req->iov[0].iov_len = req->payload_size;
 	tcp_req->iovcnt = 1;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "enter\n");
+	SPDK_DEBUGLOG(nvme, "enter\n");
 
 	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG);
 
@@ -443,7 +443,7 @@ nvme_tcp_build_sgl_request(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_req *t
 	uint32_t length, remaining_size, iovcnt = 0, max_num_sgl;
 	struct nvme_request *req = tcp_req->req;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "enter\n");
+	SPDK_DEBUGLOG(nvme, "enter\n");
 
 	assert(req->payload_size != 0);
 	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_SGL);
@@ -549,7 +549,7 @@ nvme_tcp_req_complete_safe(struct nvme_tcp_req *tcp_req)
 	assert(tcp_req->tqpair != NULL);
 	assert(tcp_req->req != NULL);
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "complete tcp_req(%p) on tqpair=%p\n", tcp_req, tcp_req->tqpair);
+	SPDK_DEBUGLOG(nvme, "complete tcp_req(%p) on tqpair=%p\n", tcp_req, tcp_req->tqpair);
 
 	if (!tcp_req->tqpair->qpair.in_completion_context) {
 		tcp_req->tqpair->async_complete++;
@@ -575,12 +575,12 @@ nvme_tcp_qpair_cmd_send_complete(void *cb_arg)
 {
 	struct nvme_tcp_req *tcp_req = cb_arg;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "tcp req %p, cid %u, qid %u\n", tcp_req, tcp_req->cid,
+	SPDK_DEBUGLOG(nvme, "tcp req %p, cid %u, qid %u\n", tcp_req, tcp_req->cid,
 		      tcp_req->tqpair->qpair.id);
 	tcp_req->ordering.bits.send_ack = 1;
 	/* Handle the r2t case */
 	if (spdk_unlikely(tcp_req->ordering.bits.h2c_send_waiting_ack)) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "tcp req %p, send H2C data\n", tcp_req);
+		SPDK_DEBUGLOG(nvme, "tcp req %p, send H2C data\n", tcp_req);
 		nvme_tcp_send_h2c_data(tcp_req);
 	} else {
 		nvme_tcp_req_complete_safe(tcp_req);
@@ -596,7 +596,7 @@ nvme_tcp_qpair_capsule_cmd_send(struct nvme_tcp_qpair *tqpair,
 	uint32_t plen = 0, alignment;
 	uint8_t pdo;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "enter\n");
+	SPDK_DEBUGLOG(nvme, "enter\n");
 	pdu = tcp_req->send_pdu;
 
 	capsule_cmd = &pdu->hdr.capsule_cmd;
@@ -604,10 +604,10 @@ nvme_tcp_qpair_capsule_cmd_send(struct nvme_tcp_qpair *tqpair,
 	plen = capsule_cmd->common.hlen = sizeof(*capsule_cmd);
 	capsule_cmd->ccsqe = tcp_req->req->cmd;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "capsule_cmd cid=%u on tqpair(%p)\n", tcp_req->req->cmd.cid, tqpair);
+	SPDK_DEBUGLOG(nvme, "capsule_cmd cid=%u on tqpair(%p)\n", tcp_req->req->cmd.cid, tqpair);
 
 	if (tqpair->flags.host_hdgst_enable) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Header digest is enabled for capsule command on tcp_req=%p\n",
+		SPDK_DEBUGLOG(nvme, "Header digest is enabled for capsule command on tcp_req=%p\n",
 			      tcp_req);
 		capsule_cmd->common.flags |= SPDK_NVME_TCP_CH_FLAGS_HDGSTF;
 		plen += SPDK_NVME_TCP_DIGEST_LEN;
@@ -787,7 +787,7 @@ nvme_tcp_pdu_ch_handle(struct nvme_tcp_qpair *tqpair)
 
 	pdu = &tqpair->recv_pdu;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "pdu type = %d\n", pdu->hdr.common.pdu_type);
+	SPDK_DEBUGLOG(nvme, "pdu type = %d\n", pdu->hdr.common.pdu_type);
 	if (pdu->hdr.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_IC_RESP) {
 		if (tqpair->state != NVME_TCP_QPAIR_STATE_INVALID) {
 			SPDK_ERRLOG("Already received IC_RESP PDU, and we should reject this pdu=%p\n", pdu);
@@ -890,7 +890,7 @@ nvme_tcp_c2h_data_payload_handle(struct nvme_tcp_qpair *tqpair,
 	tcp_req = pdu->req;
 	assert(tcp_req != NULL);
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "enter\n");
+	SPDK_DEBUGLOG(nvme, "enter\n");
 	c2h_data = &pdu->hdr.c2h_data;
 	tcp_req->datao += pdu->data_len;
 	flags = c2h_data->common.flags;
@@ -929,7 +929,7 @@ nvme_tcp_c2h_term_req_dump(struct spdk_nvme_tcp_term_req_hdr *c2h_term_req)
 		    spdk_nvme_tcp_term_req_fes_str[c2h_term_req->fes]);
 	if ((c2h_term_req->fes == SPDK_NVME_TCP_TERM_REQ_FES_INVALID_HEADER_FIELD) ||
 	    (c2h_term_req->fes == SPDK_NVME_TCP_TERM_REQ_FES_INVALID_DATA_UNSUPPORTED_PARAMETER)) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "The offset from the start of the PDU header is %u\n",
+		SPDK_DEBUGLOG(nvme, "The offset from the start of the PDU header is %u\n",
 			      DGET32(c2h_term_req->fei));
 	}
 	/* we may also need to dump some other info here */
@@ -955,7 +955,7 @@ nvme_tcp_pdu_payload_handle(struct nvme_tcp_qpair *tqpair,
 	assert(tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD);
 	pdu = &tqpair->recv_pdu;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "enter\n");
+	SPDK_DEBUGLOG(nvme, "enter\n");
 
 	/* check data digest if need */
 	if (pdu->ddgst_enable) {
@@ -990,12 +990,12 @@ nvme_tcp_send_icreq_complete(void *cb_arg)
 {
 	struct nvme_tcp_qpair *tqpair = cb_arg;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "Complete the icreq send for tqpair=%p\n", tqpair);
+	SPDK_DEBUGLOG(nvme, "Complete the icreq send for tqpair=%p\n", tqpair);
 
 	tqpair->flags.icreq_send_ack = true;
 
 	if (tqpair->state == NVME_TCP_QPAIR_STATE_INITIALIZING) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "qpair %u, finilize icresp\n", tqpair->qpair.id);
+		SPDK_DEBUGLOG(nvme, "qpair %u, finilize icresp\n", tqpair->qpair.id);
 		nvme_tcp_icresp_handle(tqpair, &tqpair->recv_pdu);
 	}
 }
@@ -1011,7 +1011,7 @@ nvme_tcp_icresp_handle(struct nvme_tcp_qpair *tqpair,
 
 	if (!tqpair->flags.icreq_send_ack) {
 		tqpair->state = NVME_TCP_QPAIR_STATE_INITIALIZING;
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "qpair %u, waiting icreq ack\n", tqpair->qpair.id);
+		SPDK_DEBUGLOG(nvme, "qpair %u, waiting icreq ack\n", tqpair->qpair.id);
 		return;
 	}
 
@@ -1042,8 +1042,8 @@ nvme_tcp_icresp_handle(struct nvme_tcp_qpair *tqpair,
 
 	tqpair->flags.host_hdgst_enable = ic_resp->dgst.bits.hdgst_enable ? true : false;
 	tqpair->flags.host_ddgst_enable = ic_resp->dgst.bits.ddgst_enable ? true : false;
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "host_hdgst_enable: %u\n", tqpair->flags.host_hdgst_enable);
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "host_ddgst_enable: %u\n", tqpair->flags.host_ddgst_enable);
+	SPDK_DEBUGLOG(nvme, "host_hdgst_enable: %u\n", tqpair->flags.host_hdgst_enable);
+	SPDK_DEBUGLOG(nvme, "host_ddgst_enable: %u\n", tqpair->flags.host_ddgst_enable);
 
 	/* Now that we know whether digests are enabled, properly size the receive buffer to
 	 * handle several incoming 4K read commands according to SPDK_NVMF_TCP_RECV_BUF_SIZE_FACTOR
@@ -1082,7 +1082,7 @@ nvme_tcp_capsule_resp_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_
 	uint32_t cid, error_offset = 0;
 	enum spdk_nvme_tcp_term_req_fes fes;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "enter\n");
+	SPDK_DEBUGLOG(nvme, "enter\n");
 	cid = capsule_resp->rccqe.cid;
 	tcp_req = get_nvme_active_req_by_cid(tqpair, cid);
 
@@ -1145,8 +1145,8 @@ nvme_tcp_c2h_data_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu 
 	uint32_t error_offset = 0;
 	enum spdk_nvme_tcp_term_req_fes fes;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "enter\n");
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "c2h_data info on tqpair(%p): datao=%u, datal=%u, cccid=%d\n",
+	SPDK_DEBUGLOG(nvme, "enter\n");
+	SPDK_DEBUGLOG(nvme, "c2h_data info on tqpair(%p): datao=%u, datal=%u, cccid=%d\n",
 		      tqpair, c2h_data->datao, c2h_data->datal, c2h_data->cccid);
 	tcp_req = get_nvme_active_req_by_cid(tqpair, c2h_data->cccid);
 	if (!tcp_req) {
@@ -1157,7 +1157,7 @@ nvme_tcp_c2h_data_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu 
 
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "tcp_req(%p) on tqpair(%p): datao=%u, payload_size=%u\n",
+	SPDK_DEBUGLOG(nvme, "tcp_req(%p) on tqpair(%p): datao=%u, payload_size=%u\n",
 		      tcp_req, tqpair, tcp_req->datao, tcp_req->req->payload_size);
 
 	if (c2h_data->datal > tcp_req->req->payload_size) {
@@ -1213,7 +1213,7 @@ nvme_tcp_qpair_h2c_data_send_complete(void *cb_arg)
 
 		if (tcp_req->ordering.bits.r2t_waiting_h2c_complete) {
 			tcp_req->ordering.bits.r2t_waiting_h2c_complete = 0;
-			SPDK_DEBUGLOG(SPDK_LOG_NVME, "tcp_req %p: continue r2t\n", tcp_req);
+			SPDK_DEBUGLOG(nvme, "tcp_req %p: continue r2t\n", tcp_req);
 			assert(tcp_req->active_r2ts > 0);
 			tcp_req->ttag = tcp_req->ttag_r2t_next;
 			tcp_req->r2tl_remain = tcp_req->r2tl_remain_next;
@@ -1281,7 +1281,7 @@ nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req)
 		h2c_data->common.flags |= SPDK_NVME_TCP_H2C_DATA_FLAGS_LAST_PDU;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "h2c_data info: datao=%u, datal=%u, pdu_len=%u for tqpair=%p\n",
+	SPDK_DEBUGLOG(nvme, "h2c_data info: datao=%u, datal=%u, pdu_len=%u for tqpair=%p\n",
 		      h2c_data->datao, h2c_data->datal, h2c_data->common.plen, tqpair);
 
 	nvme_tcp_qpair_write_pdu(tqpair, rsp_pdu, nvme_tcp_qpair_h2c_data_send_complete, tcp_req);
@@ -1295,7 +1295,7 @@ nvme_tcp_r2t_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu *pdu)
 	uint32_t cid, error_offset = 0;
 	enum spdk_nvme_tcp_term_req_fes fes;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "enter\n");
+	SPDK_DEBUGLOG(nvme, "enter\n");
 	cid = r2t->cccid;
 	tcp_req = get_nvme_active_req_by_cid(tqpair, cid);
 	if (!tcp_req) {
@@ -1305,7 +1305,7 @@ nvme_tcp_r2t_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu *pdu)
 		goto end;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "r2t info: r2to=%u, r2tl=%u for tqpair=%p\n", r2t->r2to, r2t->r2tl,
+	SPDK_DEBUGLOG(nvme, "r2t info: r2to=%u, r2tl=%u for tqpair=%p\n", r2t->r2to, r2t->r2tl,
 		      tqpair);
 
 	if (tcp_req->state == NVME_TCP_REQ_ACTIVE) {
@@ -1332,7 +1332,7 @@ nvme_tcp_r2t_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu *pdu)
 	if (spdk_unlikely(tcp_req->active_r2ts > tqpair->maxr2t)) {
 		if (tcp_req->state == NVME_TCP_REQ_ACTIVE_R2T && !tcp_req->ordering.bits.send_ack) {
 			/* We receive a subsequent R2T while we are waiting for H2C transfer to complete */
-			SPDK_DEBUGLOG(SPDK_LOG_NVME, "received a subsequent R2T\n");
+			SPDK_DEBUGLOG(nvme, "received a subsequent R2T\n");
 			assert(tcp_req->active_r2ts == tqpair->maxr2t + 1);
 			tcp_req->ttag_r2t_next = r2t->ttag;
 			tcp_req->r2tl_remain_next = r2t->r2tl;
@@ -1376,7 +1376,7 @@ nvme_tcp_pdu_psh_handle(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 	assert(tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH);
 	pdu = &tqpair->recv_pdu;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "enter: pdu type =%u\n", pdu->hdr.common.pdu_type);
+	SPDK_DEBUGLOG(nvme, "enter: pdu type =%u\n", pdu->hdr.common.pdu_type);
 	/* check header digest if needed */
 	if (pdu->has_hdgst) {
 		crc32c = nvme_tcp_pdu_calc_header_digest(pdu);
@@ -1583,7 +1583,7 @@ nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_c
 	do {
 		rc = nvme_tcp_read_pdu(tqpair, &reaped);
 		if (rc < 0) {
-			SPDK_DEBUGLOG(SPDK_LOG_NVME, "Error polling CQ! (%d): %s\n",
+			SPDK_DEBUGLOG(nvme, "Error polling CQ! (%d): %s\n",
 				      errno, spdk_strerror(errno));
 			goto fail;
 		} else if (rc == 0) {
@@ -1675,7 +1675,7 @@ nvme_tcp_qpair_icreq_send(struct nvme_tcp_qpair *tqpair)
 		return -1;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "Succesfully construct the tqpair=%p via correct icresp\n", tqpair);
+	SPDK_DEBUGLOG(nvme, "Succesfully construct the tqpair=%p via correct icresp\n", tqpair);
 
 	return 0;
 }
@@ -1706,11 +1706,11 @@ nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpa
 		return rc;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "adrfam %d ai_family %d\n", ctrlr->trid.adrfam, family);
+	SPDK_DEBUGLOG(nvme, "adrfam %d ai_family %d\n", ctrlr->trid.adrfam, family);
 
 	memset(&dst_addr, 0, sizeof(dst_addr));
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "trsvcid is %s\n", ctrlr->trid.trsvcid);
+	SPDK_DEBUGLOG(nvme, "trsvcid is %s\n", ctrlr->trid.trsvcid);
 	rc = nvme_tcp_parse_addr(&dst_addr, family, ctrlr->trid.traddr, ctrlr->trid.trsvcid);
 	if (rc != 0) {
 		SPDK_ERRLOG("dst_addr nvme_tcp_parse_addr() failed\n");

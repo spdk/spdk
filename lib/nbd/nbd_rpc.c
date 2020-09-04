@@ -153,7 +153,7 @@ rpc_start_nbd_done(void *cb_arg, struct spdk_nbd_disk *nbd, int rc)
 			return;
 		}
 
-		SPDK_INFOLOG(SPDK_LOG_NBD, "There is no available nbd device.\n");
+		SPDK_INFOLOG(nbd, "There is no available nbd device.\n");
 	}
 
 	if (rc) {
@@ -199,13 +199,13 @@ rpc_nbd_start_disk(struct spdk_jsonrpc_request *request,
 		req->nbd_idx_specified = true;
 		rc = check_available_nbd_disk(req->nbd_device);
 		if (rc == -EBUSY) {
-			SPDK_DEBUGLOG(SPDK_LOG_NBD, "NBD device %s is in using.\n", req->nbd_device);
+			SPDK_DEBUGLOG(nbd, "NBD device %s is in using.\n", req->nbd_device);
 			spdk_jsonrpc_send_error_response(request, -EBUSY, spdk_strerror(-rc));
 			goto invalid;
 		}
 
 		if (rc != 0) {
-			SPDK_DEBUGLOG(SPDK_LOG_NBD, "Illegal nbd_device %s.\n", req->nbd_device);
+			SPDK_DEBUGLOG(nbd, "Illegal nbd_device %s.\n", req->nbd_device);
 			spdk_jsonrpc_send_error_response_fmt(request, -ENODEV,
 							     "illegal nbd device %s", req->nbd_device);
 			goto invalid;
@@ -214,7 +214,7 @@ rpc_nbd_start_disk(struct spdk_jsonrpc_request *request,
 		req->nbd_idx = 0;
 		req->nbd_device = find_available_nbd_disk(req->nbd_idx, &req->nbd_idx);
 		if (req->nbd_device == NULL) {
-			SPDK_INFOLOG(SPDK_LOG_NBD, "There is no available nbd device.\n");
+			SPDK_INFOLOG(nbd, "There is no available nbd device.\n");
 			spdk_jsonrpc_send_error_response(request, -ENODEV,
 							 "nbd device not found");
 			goto invalid;

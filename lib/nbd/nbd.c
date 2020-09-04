@@ -470,7 +470,7 @@ nbd_resubmit_io(void *arg)
 
 	rc = nbd_submit_bdev_io(nbd, io);
 	if (rc) {
-		SPDK_INFOLOG(SPDK_LOG_NBD, "nbd: io resubmit for dev %s , io_type %d, returned %d.\n",
+		SPDK_INFOLOG(nbd, "nbd: io resubmit for dev %s , io_type %d, returned %d.\n",
 			     nbd_disk_get_bdev_name(nbd), from_be32(&io->req.type), rc);
 	}
 }
@@ -531,7 +531,7 @@ nbd_submit_bdev_io(struct spdk_nbd_disk *nbd, struct nbd_io *io)
 
 	if (rc < 0) {
 		if (rc == -ENOMEM) {
-			SPDK_INFOLOG(SPDK_LOG_NBD, "No memory, start to queue io.\n");
+			SPDK_INFOLOG(nbd, "No memory, start to queue io.\n");
 			nbd_queue_io(io);
 		} else {
 			SPDK_ERRLOG("nbd io failed in nbd_queue_io, rc=%d.\n", rc);
@@ -829,7 +829,7 @@ nbd_poll(void *arg)
 
 	rc = _nbd_poll(nbd);
 	if (rc < 0) {
-		SPDK_INFOLOG(SPDK_LOG_NBD, "nbd_poll() returned %s (%d); closing connection\n",
+		SPDK_INFOLOG(nbd, "nbd_poll() returned %s (%d); closing connection\n",
 			     spdk_strerror(-rc), rc);
 		spdk_nbd_stop(nbd);
 	}
@@ -1067,7 +1067,7 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path,
 		goto err;
 	}
 
-	SPDK_INFOLOG(SPDK_LOG_NBD, "Enabling kernel access to bdev %s via %s\n",
+	SPDK_INFOLOG(nbd, "Enabling kernel access to bdev %s via %s\n",
 		     spdk_bdev_get_name(bdev), nbd_path);
 
 	nbd_enable_kernel(ctx);
@@ -1090,4 +1090,4 @@ spdk_nbd_get_path(struct spdk_nbd_disk *nbd)
 	return nbd->nbd_path;
 }
 
-SPDK_LOG_REGISTER_COMPONENT("nbd", SPDK_LOG_NBD)
+SPDK_LOG_REGISTER_COMPONENT(nbd)

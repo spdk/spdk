@@ -37,7 +37,7 @@
 #include "common/lib/nvme/common_stubs.h"
 #include "common/lib/test_rdma.c"
 
-SPDK_LOG_REGISTER_COMPONENT("nvme", SPDK_LOG_NVME)
+SPDK_LOG_REGISTER_COMPONENT(nvme)
 
 DEFINE_STUB(spdk_mem_map_set_translation, int, (struct spdk_mem_map *map, uint64_t vaddr,
 		uint64_t size, uint64_t translation), 0);

@@ -40,7 +40,7 @@
 
 #include "spdk_internal/mock.h"
 
-SPDK_LOG_REGISTER_COMPONENT("scsi", SPDK_LOG_SCSI)
+SPDK_LOG_REGISTER_COMPONENT(scsi)
 
 void
 spdk_scsi_task_set_status(struct spdk_scsi_task *task, int sc, int sk,

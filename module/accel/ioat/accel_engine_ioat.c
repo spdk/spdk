@@ -548,7 +548,7 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev)
 	struct spdk_pci_addr pci_addr = spdk_pci_device_get_addr(pci_dev);
 	struct pci_device *pdev;
 
-	SPDK_INFOLOG(SPDK_LOG_ACCEL_IOAT,
+	SPDK_INFOLOG(accel_ioat,
 		     " Found matching device at %04x:%02x:%02x.%x vendor:0x%04x device:0x%04x\n",
 		     pci_addr.domain,
 		     pci_addr.bus,
@@ -761,4 +761,4 @@ accel_engine_ioat_config_text(FILE *fp)
 	}
 }
 
-SPDK_LOG_REGISTER_COMPONENT("accel_ioat", SPDK_LOG_ACCEL_IOAT)
+SPDK_LOG_REGISTER_COMPONENT(accel_ioat)

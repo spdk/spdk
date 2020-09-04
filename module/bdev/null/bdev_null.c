@@ -547,4 +547,4 @@ bdev_null_get_spdk_running_config(FILE *fp)
 	}
 }
 
-SPDK_LOG_REGISTER_COMPONENT("bdev_null", SPDK_LOG_BDEV_NULL)
+SPDK_LOG_REGISTER_COMPONENT(bdev_null)

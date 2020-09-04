@@ -806,4 +806,4 @@ vbdev_passthru_examine(struct spdk_bdev *bdev)
 	spdk_bdev_module_examine_done(&passthru_if);
 }
 
-SPDK_LOG_REGISTER_COMPONENT("vbdev_passthru", SPDK_LOG_VBDEV_PASSTHRU)
+SPDK_LOG_REGISTER_COMPONENT(vbdev_passthru)

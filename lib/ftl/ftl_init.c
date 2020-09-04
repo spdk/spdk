@@ -281,7 +281,7 @@ ftl_dev_init_nv_cache(struct spdk_ftl_dev *dev, const char *bdev_name)
 		return -1;
 	}
 
-	SPDK_INFOLOG(SPDK_LOG_FTL_INIT, "Using %s as write buffer cache\n",
+	SPDK_INFOLOG(ftl_init, "Using %s as write buffer cache\n",
 		     spdk_bdev_get_name(bdev));
 
 	if (spdk_bdev_get_block_size(bdev) != FTL_BLOCK_SIZE) {
@@ -1685,4 +1685,4 @@ spdk_ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_init_fn cb_fn, void *cb_arg
 	return ftl_dev_free(dev, cb_fn, cb_arg, spdk_get_thread());
 }
 
-SPDK_LOG_REGISTER_COMPONENT("ftl_init", SPDK_LOG_FTL_INIT)
+SPDK_LOG_REGISTER_COMPONENT(ftl_init)

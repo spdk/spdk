@@ -421,7 +421,7 @@ opal_response_parse(const uint8_t *buf, size_t length,
 	clen = from_be32(&hdr->com_packet.length);
 	plen = from_be32(&hdr->packet.length);
 	slen = from_be32(&hdr->sub_packet.length);
-	SPDK_DEBUGLOG(SPDK_LOG_OPAL, "Response size: cp: %u, pkt: %u, subpkt: %u\n",
+	SPDK_DEBUGLOG(opal, "Response size: cp: %u, pkt: %u, subpkt: %u\n",
 		      clen, plen, slen);
 
 	if (clen == 0 || plen == 0 || slen == 0 ||
@@ -819,7 +819,7 @@ opal_discovery0_end(struct spdk_opal_dev *dev, void *payload, uint32_t payload_s
 			supported = true;
 			break;
 		default:
-			SPDK_INFOLOG(SPDK_LOG_OPAL, "Unknow feature code: %d\n", feat_code);
+			SPDK_INFOLOG(opal, "Unknow feature code: %d\n", feat_code);
 		}
 		cpos += feat_hdr->length + sizeof(*feat_hdr);
 	}
@@ -830,7 +830,7 @@ opal_discovery0_end(struct spdk_opal_dev *dev, void *payload, uint32_t payload_s
 	}
 
 	if (single_user == false) {
-		SPDK_INFOLOG(SPDK_LOG_OPAL, "Single User Mode Not Supported\n");
+		SPDK_INFOLOG(opal, "Single User Mode Not Supported\n");
 	}
 
 	dev->comid = comid;
@@ -1006,7 +1006,7 @@ opal_get_msid_cpin_pin_done(struct opal_session *sess,
 	opal_key->key_len = strlen;
 	memcpy(opal_key->key, msid_pin, opal_key->key_len);
 
-	SPDK_DEBUGLOG(SPDK_LOG_OPAL, "MSID = %p\n", opal_key->key);
+	SPDK_DEBUGLOG(opal, "MSID = %p\n", opal_key->key);
 	return 0;
 }
 
@@ -1839,7 +1839,7 @@ struct spdk_opal_dev *
 	}
 
 	if (opal_discovery0(dev, payload, IO_BUFFER_LENGTH)) {
-		SPDK_INFOLOG(SPDK_LOG_OPAL, "Opal is not supported on this device\n");
+		SPDK_INFOLOG(opal, "Opal is not supported on this device\n");
 		free(dev);
 		free(payload);
 		return NULL;
@@ -1938,7 +1938,7 @@ opal_get_active_key_done(struct opal_session *sess, struct spdk_opal_key *active
 	active_key->key_len = str_len;
 	memcpy(active_key->key, key, active_key->key_len);
 
-	SPDK_DEBUGLOG(SPDK_LOG_OPAL, "active key = %p\n", active_key->key);
+	SPDK_DEBUGLOG(opal, "active key = %p\n", active_key->key);
 	return 0;
 }
 
@@ -2563,4 +2563,4 @@ spdk_opal_free_locking_range_info(struct spdk_opal_dev *dev, enum spdk_opal_lock
 }
 
 /* Log component for opal submodule */
-SPDK_LOG_REGISTER_COMPONENT("opal", SPDK_LOG_OPAL)
+SPDK_LOG_REGISTER_COMPONENT(opal)

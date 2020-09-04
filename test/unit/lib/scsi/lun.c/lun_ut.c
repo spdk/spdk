@@ -49,7 +49,7 @@ struct spdk_bdev {
 	int x;
 };
 
-SPDK_LOG_REGISTER_COMPONENT("scsi", SPDK_LOG_SCSI)
+SPDK_LOG_REGISTER_COMPONENT(scsi)
 
 struct spdk_scsi_globals g_spdk_scsi;
 

@@ -712,7 +712,7 @@ ftl_add_direct_wptr(struct ftl_band *band)
 
 	LIST_INSERT_HEAD(&dev->wptr_list, wptr, list_entry);
 
-	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "wptr: direct band %u\n", band->id);
+	SPDK_DEBUGLOG(ftl_core, "wptr: direct band %u\n", band->id);
 	ftl_trace_write_band(dev, band);
 	return 0;
 }
@@ -765,7 +765,7 @@ ftl_add_wptr(struct spdk_ftl_dev *dev)
 
 	LIST_INSERT_HEAD(&dev->wptr_list, wptr, list_entry);
 
-	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "wptr: band %u\n", band->id);
+	SPDK_DEBUGLOG(ftl_core, "wptr: band %u\n", band->id);
 	ftl_trace_write_band(dev, band);
 	return 0;
 }
@@ -795,7 +795,7 @@ ftl_wptr_advance(struct ftl_wptr *wptr, size_t xfer_size)
 
 	assert(!ftl_addr_invalid(wptr->addr));
 
-	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "wptr: pu:%lu band:%lu, offset:%lu\n",
+	SPDK_DEBUGLOG(ftl_core, "wptr: pu:%lu band:%lu, offset:%lu\n",
 		      ftl_addr_get_punit(dev, wptr->addr),
 		      ftl_addr_get_band(dev, wptr->addr),
 		      wptr->addr.offset);
@@ -1131,7 +1131,7 @@ ftl_read_next_logical_addr(struct ftl_io *io, struct ftl_addr *addr)
 
 	*addr = ftl_l2p_get(dev, ftl_io_current_lba(io));
 
-	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Read addr:%lx, lba:%lu\n",
+	SPDK_DEBUGLOG(ftl_core, "Read addr:%lx, lba:%lu\n",
 		      addr->offset, ftl_io_current_lba(io));
 
 	/* If the address is invalid, skip it (the buffer should already be zero'ed) */
@@ -1584,7 +1584,7 @@ ftl_write_cb(struct ftl_io *io, void *arg, int status)
 			pthread_spin_unlock(&entry->lock);
 		}
 
-		SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Write addr:%lu, lba:%lu\n",
+		SPDK_DEBUGLOG(ftl_core, "Write addr:%lu, lba:%lu\n",
 			      entry->addr.offset, entry->lba);
 
 		addr = ftl_band_next_addr(io->band, addr, 1);
@@ -1926,7 +1926,7 @@ ftl_wptr_process_writes(struct ftl_wptr *wptr)
 		ftl_update_stats(dev, entry);
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Write addr:%lx\n", wptr->addr.offset);
+	SPDK_DEBUGLOG(ftl_core, "Write addr:%lx\n", wptr->addr.offset);
 
 	if (ftl_submit_write(wptr, io)) {
 		/* TODO: we need some recovery here */
@@ -2457,4 +2457,4 @@ ftl_task_core(void *ctx)
 	return busy ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
-SPDK_LOG_REGISTER_COMPONENT("ftl_core", SPDK_LOG_FTL_CORE)
+SPDK_LOG_REGISTER_COMPONENT(ftl_core)

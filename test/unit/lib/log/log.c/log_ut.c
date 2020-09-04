@@ -65,20 +65,20 @@ log_test(void)
 	CU_ASSERT_EQUAL(spdk_log_get_print_level(), SPDK_LOG_DEBUG);
 
 #ifdef DEBUG
-	CU_ASSERT(spdk_log_get_flag("log") == false);
+	CU_ASSERT(spdk_log_get_flag("LOG") == false);
 
 	spdk_log_set_flag("log");
-	CU_ASSERT(spdk_log_get_flag("log") == true);
+	CU_ASSERT(spdk_log_get_flag("LOG") == true);
 
-	spdk_log_clear_flag("log");
-	CU_ASSERT(spdk_log_get_flag("log") == false);
+	spdk_log_clear_flag("LOG");
+	CU_ASSERT(spdk_log_get_flag("LOG") == false);
 #endif
 
 	spdk_log_open(NULL);
 	spdk_log_set_flag("log");
 	SPDK_WARNLOG("log warning unit test\n");
-	SPDK_DEBUGLOG(SPDK_LOG_LOG, "log test\n");
-	SPDK_LOGDUMP(SPDK_LOG_LOG, "log dump test:", "log dump", 8);
+	SPDK_DEBUGLOG(log, "log test\n");
+	SPDK_LOGDUMP(log, "log dump test:", "log dump", 8);
 	spdk_log_dump(stderr, "spdk dump test:", "spdk dump", 9);
 	/* Test spdk_log_dump with more than 16 chars and less than 32 chars */
 	spdk_log_dump(stderr, "spdk dump test:", "spdk dump 16 more chars", 23);

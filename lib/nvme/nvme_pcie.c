@@ -223,7 +223,7 @@ nvme_sigbus_fault_sighandler(int signum, siginfo_t *info, void *ctx)
 
 	if (!__atomic_compare_exchange_n(&g_signal_lock, &flag, 1, false, __ATOMIC_ACQUIRE,
 					 __ATOMIC_RELAXED)) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "request g_signal_lock failed\n");
+		SPDK_DEBUGLOG(nvme, "request g_signal_lock failed\n");
 		return;
 	}
 
@@ -278,7 +278,7 @@ _nvme_pcie_hotplug_monitor(struct spdk_nvme_probe_ctx *probe_ctx)
 		if (event.subsystem == SPDK_NVME_UEVENT_SUBSYSTEM_UIO ||
 		    event.subsystem == SPDK_NVME_UEVENT_SUBSYSTEM_VFIO) {
 			if (event.action == SPDK_NVME_UEVENT_ADD) {
-				SPDK_DEBUGLOG(SPDK_LOG_NVME, "add nvme address: %s\n",
+				SPDK_DEBUGLOG(nvme, "add nvme address: %s\n",
 					      event.traddr);
 				if (spdk_process_is_primary()) {
 					if (!spdk_pci_addr_parse(&pci_addr, event.traddr)) {
@@ -296,7 +296,7 @@ _nvme_pcie_hotplug_monitor(struct spdk_nvme_probe_ctx *probe_ctx)
 				if (ctrlr == NULL) {
 					return 0;
 				}
-				SPDK_DEBUGLOG(SPDK_LOG_NVME, "remove nvme address: %s\n",
+				SPDK_DEBUGLOG(nvme, "remove nvme address: %s\n",
 					      event.traddr);
 
 				nvme_ctrlr_fail(ctrlr, true);
@@ -555,7 +555,7 @@ nvme_pcie_ctrlr_reserve_cmb(struct spdk_nvme_ctrlr *ctrlr)
 	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
 
 	if (pctrlr->cmb.bar_va == NULL) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "CMB not available\n");
+		SPDK_DEBUGLOG(nvme, "CMB not available\n");
 		return -ENOTSUP;
 	}
 
@@ -584,7 +584,7 @@ nvme_pcie_ctrlr_map_io_cmb(struct spdk_nvme_ctrlr *ctrlr, size_t *size)
 	*size = 0;
 
 	if (pctrlr->cmb.bar_va == NULL) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "CMB not available\n");
+		SPDK_DEBUGLOG(nvme, "CMB not available\n");
 		return NULL;
 	}
 
@@ -1044,7 +1044,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 	pqpair->max_completions_cap = spdk_min(pqpair->max_completions_cap, NVME_MAX_COMPLETIONS);
 	num_trackers = pqpair->num_entries - pqpair->max_completions_cap;
 
-	SPDK_INFOLOG(SPDK_LOG_NVME, "max_completions_cap = %" PRIu16 " num_trackers = %" PRIu16 "\n",
+	SPDK_INFOLOG(nvme, "max_completions_cap = %" PRIu16 " num_trackers = %" PRIu16 "\n",
 		     pqpair->max_completions_cap, num_trackers);
 
 	assert(num_trackers != 0);
@@ -1852,7 +1852,7 @@ nvme_pcie_prp_list_append(struct nvme_tracker *tr, uint32_t *prp_index, void *vi
 	uint64_t phys_addr;
 	uint32_t i;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "prp_index:%u virt_addr:%p len:%u\n",
+	SPDK_DEBUGLOG(nvme, "prp_index:%u virt_addr:%p len:%u\n",
 		      *prp_index, virt_addr, (uint32_t)len);
 
 	if (spdk_unlikely(((uintptr_t)virt_addr & 3) != 0)) {
@@ -1880,7 +1880,7 @@ nvme_pcie_prp_list_append(struct nvme_tracker *tr, uint32_t *prp_index, void *vi
 		}
 
 		if (i == 0) {
-			SPDK_DEBUGLOG(SPDK_LOG_NVME, "prp1 = %p\n", (void *)phys_addr);
+			SPDK_DEBUGLOG(nvme, "prp1 = %p\n", (void *)phys_addr);
 			cmd->dptr.prp.prp1 = phys_addr;
 			seg_len = page_size - ((uintptr_t)virt_addr & page_mask);
 		} else {
@@ -1889,7 +1889,7 @@ nvme_pcie_prp_list_append(struct nvme_tracker *tr, uint32_t *prp_index, void *vi
 				return -EFAULT;
 			}
 
-			SPDK_DEBUGLOG(SPDK_LOG_NVME, "prp[%u] = %p\n", i - 1, (void *)phys_addr);
+			SPDK_DEBUGLOG(nvme, "prp[%u] = %p\n", i - 1, (void *)phys_addr);
 			tr->u.prp[i - 1] = phys_addr;
 			seg_len = page_size;
 		}
@@ -1905,10 +1905,10 @@ nvme_pcie_prp_list_append(struct nvme_tracker *tr, uint32_t *prp_index, void *vi
 		cmd->dptr.prp.prp2 = 0;
 	} else if (i == 2) {
 		cmd->dptr.prp.prp2 = tr->u.prp[0];
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "prp2 = %p\n", (void *)cmd->dptr.prp.prp2);
+		SPDK_DEBUGLOG(nvme, "prp2 = %p\n", (void *)cmd->dptr.prp.prp2);
 	} else {
 		cmd->dptr.prp.prp2 = tr->prp_sgl_bus_addr;
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "prp2 = %p (PRP list)\n", (void *)cmd->dptr.prp.prp2);
+		SPDK_DEBUGLOG(nvme, "prp2 = %p (PRP list)\n", (void *)cmd->dptr.prp.prp2);
 	}
 
 	*prp_index = i;

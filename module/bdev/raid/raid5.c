@@ -111,4 +111,4 @@ static struct raid_bdev_module g_raid5_module = {
 };
 RAID_MODULE_REGISTER(&g_raid5_module)
 
-SPDK_LOG_REGISTER_COMPONENT("bdev_raid5", SPDK_LOG_BDEV_RAID5)
+SPDK_LOG_REGISTER_COMPONENT(bdev_raid5)

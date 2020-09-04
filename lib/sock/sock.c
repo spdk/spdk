@@ -256,7 +256,7 @@ spdk_sock_connect_ext(const char *ip, int port, char *_impl_name, struct spdk_so
 			continue;
 		}
 
-		SPDK_DEBUGLOG(SPDK_LOG_SOCK, "Creating a client socket using impl %s\n", impl->name);
+		SPDK_DEBUGLOG(sock, "Creating a client socket using impl %s\n", impl->name);
 		sock_init_opts(&opts_local, opts);
 		sock = impl->connect(ip, port, &opts_local);
 		if (sock != NULL) {
@@ -306,7 +306,7 @@ spdk_sock_listen_ext(const char *ip, int port, char *_impl_name, struct spdk_soc
 			continue;
 		}
 
-		SPDK_DEBUGLOG(SPDK_LOG_SOCK, "Creating a listening socket using impl %s\n", impl->name);
+		SPDK_DEBUGLOG(sock, "Creating a listening socket using impl %s\n", impl->name);
 		sock_init_opts(&opts_local, opts);
 		sock = impl->listen(ip, port, &opts_local);
 		if (sock != NULL) {
@@ -878,10 +878,10 @@ int spdk_sock_set_default_impl(const char *impl_name)
 	}
 
 	if (g_default_impl) {
-		SPDK_DEBUGLOG(SPDK_LOG_SOCK, "Change the default sock impl from %s to %s\n", g_default_impl->name,
+		SPDK_DEBUGLOG(sock, "Change the default sock impl from %s to %s\n", g_default_impl->name,
 			      impl->name);
 	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_SOCK, "Set default sock implementation to %s\n", impl_name);
+		SPDK_DEBUGLOG(sock, "Set default sock implementation to %s\n", impl_name);
 	}
 
 	g_default_impl = impl;
@@ -889,4 +889,4 @@ int spdk_sock_set_default_impl(const char *impl_name)
 	return 0;
 }
 
-SPDK_LOG_REGISTER_COMPONENT("sock", SPDK_LOG_SOCK)
+SPDK_LOG_REGISTER_COMPONENT(sock)

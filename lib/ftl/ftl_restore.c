@@ -455,7 +455,7 @@ ftl_nv_cache_restore_done(struct ftl_nv_cache_restore *restore, uint64_t current
 	nv_cache->ready = true;
 	pthread_spin_unlock(&nv_cache->lock);
 
-	SPDK_DEBUGLOG(SPDK_LOG_FTL_INIT, "Enabling non-volatile cache (phase: %u, addr: %"
+	SPDK_DEBUGLOG(ftl_init, "Enabling non-volatile cache (phase: %u, addr: %"
 		      PRIu64")\n", nv_cache->phase, current_addr);
 
 	ftl_nv_cache_restore_complete(restore, 0);
@@ -588,7 +588,7 @@ ftl_nv_cache_recovery_done(struct ftl_nv_cache_restore *restore)
 	if ((range_prev->num_blocks + range_current->num_blocks < nv_cache->num_data_blocks) ||
 	    (range_prev->start_addr < range_current->last_addr &&
 	     range_current->start_addr < range_prev->last_addr)) {
-		SPDK_DEBUGLOG(SPDK_LOG_FTL_INIT, "Non-volatile cache inconsistency detected\n");
+		SPDK_DEBUGLOG(ftl_init, "Non-volatile cache inconsistency detected\n");
 
 		rc = ftl_flush_wbuf(dev, ftl_nv_cache_wbuf_flush_cb, restore);
 		if (spdk_unlikely(rc != 0)) {
@@ -656,7 +656,7 @@ ftl_nv_cache_recover_range(struct ftl_nv_cache_restore *restore)
 
 	/* There are no ranges to be recovered, we're done */
 	if (range->num_recovered == range->num_blocks || !range->recovery) {
-		SPDK_DEBUGLOG(SPDK_LOG_FTL_INIT, "Non-volatile cache recovery done\n");
+		SPDK_DEBUGLOG(ftl_init, "Non-volatile cache recovery done\n");
 		ftl_nv_cache_recovery_done(restore);
 		return;
 	}
@@ -664,7 +664,7 @@ ftl_nv_cache_recover_range(struct ftl_nv_cache_restore *restore)
 	range->current_addr = range->start_addr;
 	restore->phase = phase;
 
-	SPDK_DEBUGLOG(SPDK_LOG_FTL_INIT, "Recovering range %u %"PRIu64"-%"PRIu64" (%"PRIu64")\n",
+	SPDK_DEBUGLOG(ftl_init, "Recovering range %u %"PRIu64"-%"PRIu64" (%"PRIu64")\n",
 		      phase, range->start_addr, range->last_addr, range->num_blocks);
 
 	ftl_nv_cache_recover_block(&restore->block[0]);
@@ -791,7 +791,7 @@ ftl_nv_cache_scan_done(struct ftl_nv_cache_restore *restore)
 
 	for (i = 0; i < FTL_NV_CACHE_PHASE_COUNT; ++i) {
 		range = &restore->range[i];
-		SPDK_DEBUGLOG(SPDK_LOG_FTL_INIT, "Range %"PRIu64": %"PRIu64"-%"PRIu64" (%" PRIu64
+		SPDK_DEBUGLOG(ftl_init, "Range %"PRIu64": %"PRIu64"-%"PRIu64" (%" PRIu64
 			      ")\n", i, range->start_addr, range->last_addr, range->num_blocks);
 		num_blocks += range->num_blocks;
 	}
@@ -979,7 +979,7 @@ ftl_nv_cache_read_header_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb
 	 * by scrubbing the device once again.
 	 */
 	if (hdr->phase == 0) {
-		SPDK_DEBUGLOG(SPDK_LOG_FTL_INIT, "Detected phase 0, restarting scrub\n");
+		SPDK_DEBUGLOG(ftl_init, "Detected phase 0, restarting scrub\n");
 		rc = ftl_nv_cache_scrub(nv_cache, ftl_nv_cache_scrub_cb, restore);
 		if (spdk_unlikely(rc != 0)) {
 			SPDK_ERRLOG("Unable to scrub the non-volatile cache: %s\n",

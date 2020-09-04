@@ -208,17 +208,17 @@ nvme_fabric_discover_probe(struct spdk_nvmf_discovery_log_page_entry *entry,
 	len = spdk_strlen_pad(entry->traddr, sizeof(entry->traddr), ' ');
 	memcpy(trid.traddr, entry->traddr, len);
 	if (spdk_str_chomp(trid.traddr) != 0) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Trailing newlines removed from discovery TRADDR\n");
+		SPDK_DEBUGLOG(nvme, "Trailing newlines removed from discovery TRADDR\n");
 	}
 
 	/* Convert trsvcid to a null terminated string. */
 	len = spdk_strlen_pad(entry->trsvcid, sizeof(entry->trsvcid), ' ');
 	memcpy(trid.trsvcid, entry->trsvcid, len);
 	if (spdk_str_chomp(trid.trsvcid) != 0) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Trailing newlines removed from discovery TRSVCID\n");
+		SPDK_DEBUGLOG(nvme, "Trailing newlines removed from discovery TRSVCID\n");
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "subnqn=%s, trtype=%u, traddr=%s, trsvcid=%s\n",
+	SPDK_DEBUGLOG(nvme, "subnqn=%s, trtype=%u, traddr=%s, trsvcid=%s\n",
 		      trid.subnqn, trid.trtype,
 		      trid.traddr, trid.trsvcid);
 
@@ -361,7 +361,7 @@ nvme_fabric_ctrlr_discover(struct spdk_nvme_ctrlr *ctrlr,
 	do {
 		rc = nvme_fabric_get_discovery_log_page(ctrlr, buffer, sizeof(buffer), log_page_offset);
 		if (rc < 0) {
-			SPDK_DEBUGLOG(SPDK_LOG_NVME, "Get Log Page - Discovery error\n");
+			SPDK_DEBUGLOG(nvme, "Get Log Page - Discovery error\n");
 			return rc;
 		}
 
@@ -467,7 +467,7 @@ nvme_fabric_qpair_connect(struct spdk_nvme_qpair *qpair, uint32_t num_entries)
 	if (nvme_qpair_is_admin_queue(qpair)) {
 		rsp = (struct spdk_nvmf_fabric_connect_rsp *)&status->cpl;
 		ctrlr->cntlid = rsp->status_code_specific.success.cntlid;
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "CNTLID 0x%04" PRIx16 "\n", ctrlr->cntlid);
+		SPDK_DEBUGLOG(nvme, "CNTLID 0x%04" PRIx16 "\n", ctrlr->cntlid);
 	}
 
 	spdk_free(nvmf_data);

@@ -422,7 +422,7 @@ nvme_rdma_qpair_process_cm_event(struct nvme_rdma_qpair *rqpair)
 			if (accept_data == NULL) {
 				rc = -1;
 			} else {
-				SPDK_DEBUGLOG(SPDK_LOG_NVME, "Requested queue depth %d. Actually got queue depth %d.\n",
+				SPDK_DEBUGLOG(nvme, "Requested queue depth %d. Actually got queue depth %d.\n",
 					      rqpair->num_entries, accept_data->crqsize);
 				rqpair->num_entries = spdk_min(rqpair->num_entries, accept_data->crqsize);
 			}
@@ -736,7 +736,7 @@ nvme_rdma_qpair_queue_recv_wr(struct nvme_rdma_qpair *rqpair, struct ibv_recv_wr
 
 #define nvme_rdma_trace_ibv_sge(sg_list) \
 	if (sg_list) { \
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "local addr %p length 0x%x lkey 0x%x\n", \
+		SPDK_DEBUGLOG(nvme, "local addr %p length 0x%x lkey 0x%x\n", \
 			      (void *)(sg_list)->addr, (sg_list)->length, (sg_list)->lkey); \
 	}
 
@@ -1023,7 +1023,7 @@ nvme_rdma_resolve_addr(struct nvme_rdma_qpair *rqpair,
 			SPDK_NOTICELOG("Can't apply RDMA_OPTION_ID_ACK_TIMEOUT %d, ret %d\n", timeout, ret);
 		}
 #else
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "transport_ack_timeout is not supported\n");
+		SPDK_DEBUGLOG(nvme, "transport_ack_timeout is not supported\n");
 #endif
 	}
 
@@ -1280,11 +1280,11 @@ _nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_q
 		return -1;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "adrfam %d ai_family %d\n", ctrlr->trid.adrfam, family);
+	SPDK_DEBUGLOG(nvme, "adrfam %d ai_family %d\n", ctrlr->trid.adrfam, family);
 
 	memset(&dst_addr, 0, sizeof(dst_addr));
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "trsvcid is %s\n", ctrlr->trid.trsvcid);
+	SPDK_DEBUGLOG(nvme, "trsvcid is %s\n", ctrlr->trid.trsvcid);
 	rc = nvme_rdma_parse_addr(&dst_addr, family, ctrlr->trid.traddr, ctrlr->trid.trsvcid);
 	if (rc != 0) {
 		SPDK_ERRLOG("dst_addr nvme_rdma_parse_addr() failed\n");
@@ -1330,20 +1330,20 @@ _nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_q
 	}
 
 	rc = nvme_rdma_register_reqs(rqpair);
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "rc =%d\n", rc);
+	SPDK_DEBUGLOG(nvme, "rc =%d\n", rc);
 	if (rc) {
 		SPDK_ERRLOG("Unable to register rqpair RDMA requests\n");
 		return -1;
 	}
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "RDMA requests registered\n");
+	SPDK_DEBUGLOG(nvme, "RDMA requests registered\n");
 
 	rc = nvme_rdma_register_rsps(rqpair);
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "rc =%d\n", rc);
+	SPDK_DEBUGLOG(nvme, "rc =%d\n", rc);
 	if (rc < 0) {
 		SPDK_ERRLOG("Unable to register rqpair RDMA responses\n");
 		return -1;
 	}
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "RDMA responses registered\n");
+	SPDK_DEBUGLOG(nvme, "RDMA responses registered\n");
 
 	rc = nvme_rdma_register_mem(rqpair);
 	if (rc < 0) {
@@ -1677,7 +1677,7 @@ nvme_rdma_build_sgl_inline_request(struct nvme_rdma_qpair *rqpair,
 	}
 
 	if (length < req->payload_size) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Inline SGL request split so sending separately.\n");
+		SPDK_DEBUGLOG(nvme, "Inline SGL request split so sending separately.\n");
 		return nvme_rdma_build_sgl_request(rqpair, rdma_req);
 	}
 
@@ -1788,23 +1788,23 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	rc = nvme_rdma_alloc_reqs(rqpair);
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "rc =%d\n", rc);
+	SPDK_DEBUGLOG(nvme, "rc =%d\n", rc);
 	if (rc) {
 		SPDK_ERRLOG("Unable to allocate rqpair RDMA requests\n");
 		nvme_rdma_free(rqpair);
 		return NULL;
 	}
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "RDMA requests allocated\n");
+	SPDK_DEBUGLOG(nvme, "RDMA requests allocated\n");
 
 	rc = nvme_rdma_alloc_rsps(rqpair);
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "rc =%d\n", rc);
+	SPDK_DEBUGLOG(nvme, "rc =%d\n", rc);
 	if (rc < 0) {
 		SPDK_ERRLOG("Unable to allocate rqpair RDMA responses\n");
 		nvme_rdma_free_reqs(rqpair);
 		nvme_rdma_free(rqpair);
 		return NULL;
 	}
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "RDMA responses allocated\n");
+	SPDK_DEBUGLOG(nvme, "RDMA responses allocated\n");
 
 	return qpair;
 }
@@ -1845,7 +1845,7 @@ nvme_rdma_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 			spdk_rdma_qp_disconnect(rqpair->rdma_qp);
 			if (rctrlr != NULL) {
 				if (nvme_rdma_process_event(rqpair, rctrlr->cm_channel, RDMA_CM_EVENT_DISCONNECTED)) {
-					SPDK_DEBUGLOG(SPDK_LOG_NVME, "Target did not respond to qpair disconnect.\n");
+					SPDK_DEBUGLOG(nvme, "Target did not respond to qpair disconnect.\n");
 				}
 			}
 			spdk_rdma_qp_destroy(rqpair->rdma_qp);
@@ -2021,7 +2021,7 @@ static struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_
 
 	nvme_ctrlr_init_cap(&rctrlr->ctrlr, &cap, &vs);
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "successfully initialized the nvmf ctrlr\n");
+	SPDK_DEBUGLOG(nvme, "successfully initialized the nvmf ctrlr\n");
 	return &rctrlr->ctrlr;
 
 destruct_ctrlr:
@@ -2241,7 +2241,7 @@ nvme_rdma_cq_process_completions(struct ibv_cq *cq, uint32_t batch_size,
 				continue;
 			}
 
-			SPDK_DEBUGLOG(SPDK_LOG_NVME, "CQ recv completion\n");
+			SPDK_DEBUGLOG(nvme, "CQ recv completion\n");
 
 			if (wc[i].byte_len < sizeof(struct spdk_nvme_cpl)) {
 				SPDK_ERRLOG("recv length %u less than expected response size\n", wc[i].byte_len);
@@ -2573,7 +2573,7 @@ nvme_rdma_resize_cq(struct nvme_rdma_qpair *rqpair, struct nvme_rdma_poller *pol
 	}
 
 	if (poller->current_num_wc != current_num_wc) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Resize RDMA CQ from %d to %d\n", poller->current_num_wc,
+		SPDK_DEBUGLOG(nvme, "Resize RDMA CQ from %d to %d\n", poller->current_num_wc,
 			      current_num_wc);
 		if (ibv_resize_cq(poller->cq, current_num_wc)) {
 			SPDK_ERRLOG("RDMA CQ resize failed: errno %d: %s\n", errno, spdk_strerror(errno));

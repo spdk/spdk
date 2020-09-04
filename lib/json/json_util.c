@@ -36,7 +36,7 @@
 #include "spdk_internal/utf.h"
 #include "spdk_internal/log.h"
 
-#define SPDK_JSON_DEBUG(...) SPDK_DEBUGLOG(SPDK_LOG_JSON_UTIL, __VA_ARGS__)
+#define SPDK_JSON_DEBUG(...) SPDK_DEBUGLOG(json_util, __VA_ARGS__)
 
 size_t
 spdk_json_val_len(const struct spdk_json_val *val)
@@ -664,4 +664,4 @@ spdk_json_next(struct spdk_json_val *it)
 	}
 }
 
-SPDK_LOG_REGISTER_COMPONENT("json_util", SPDK_LOG_JSON_UTIL)
+SPDK_LOG_REGISTER_COMPONENT(json_util)

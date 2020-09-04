@@ -346,7 +346,7 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 
 	assert(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE);
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "subsystem is %p\n", subsystem);
+	SPDK_DEBUGLOG(nvmf, "subsystem is %p\n", subsystem);
 
 	nvmf_subsystem_remove_all_listeners(subsystem, false);
 
@@ -1225,7 +1225,7 @@ nvmf_ns_event(enum spdk_bdev_event_type type,
 	      struct spdk_bdev *bdev,
 	      void *event_ctx)
 {
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Bdev event: type %d, name %s, subsystem_id %d, ns_id %d\n",
+	SPDK_DEBUGLOG(nvmf, "Bdev event: type %d, name %s, subsystem_id %d, ns_id %d\n",
 		      type,
 		      bdev->name,
 		      ((struct spdk_nvmf_ns *)event_ctx)->subsystem->id,
@@ -1382,7 +1382,7 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 		ns->ptpl_file = strdup(ptpl_file);
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Subsystem %s: bdev %s assigned nsid %" PRIu32 "\n",
+	SPDK_DEBUGLOG(nvmf, "Subsystem %s: bdev %s assigned nsid %" PRIu32 "\n",
 		      spdk_nvmf_subsystem_get_nqn(subsystem),
 		      spdk_bdev_get_name(bdev),
 		      opts.nsid);
@@ -1470,14 +1470,14 @@ spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn
 	max_len = sizeof(subsystem->sn) - 1;
 	len = strlen(sn);
 	if (len > max_len) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Invalid sn \"%s\": length %zu > max %zu\n",
+		SPDK_DEBUGLOG(nvmf, "Invalid sn \"%s\": length %zu > max %zu\n",
 			      sn, len, max_len);
 		return -1;
 	}
 
 	if (!nvmf_valid_ascii_string(sn, len)) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Non-ASCII sn\n");
-		SPDK_LOGDUMP(SPDK_LOG_NVMF, "sn", sn, len);
+		SPDK_DEBUGLOG(nvmf, "Non-ASCII sn\n");
+		SPDK_LOGDUMP(nvmf, "sn", sn, len);
 		return -1;
 	}
 
@@ -1503,14 +1503,14 @@ spdk_nvmf_subsystem_set_mn(struct spdk_nvmf_subsystem *subsystem, const char *mn
 	max_len = sizeof(subsystem->mn) - 1;
 	len = strlen(mn);
 	if (len > max_len) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Invalid mn \"%s\": length %zu > max %zu\n",
+		SPDK_DEBUGLOG(nvmf, "Invalid mn \"%s\": length %zu > max %zu\n",
 			      mn, len, max_len);
 		return -1;
 	}
 
 	if (!nvmf_valid_ascii_string(mn, len)) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Non-ASCII mn\n");
-		SPDK_LOGDUMP(SPDK_LOG_NVMF, "mn", mn, len);
+		SPDK_DEBUGLOG(nvmf, "Non-ASCII mn\n");
+		SPDK_LOGDUMP(nvmf, "mn", mn, len);
 		return -1;
 	}
 
@@ -1752,7 +1752,7 @@ nvmf_ns_reservation_restore(struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservatio
 	struct spdk_nvmf_registrant *reg, *holder = NULL;
 	struct spdk_uuid bdev_uuid, holder_uuid;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "NSID %u, PTPL %u, Number of registrants %u\n",
+	SPDK_DEBUGLOG(nvmf, "NSID %u, PTPL %u, Number of registrants %u\n",
 		      ns->nsid, info->ptpl_activated, info->num_regs);
 
 	/* it's not an error */
@@ -1771,9 +1771,9 @@ nvmf_ns_reservation_restore(struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservatio
 	ns->ptpl_activated = info->ptpl_activated;
 	spdk_uuid_parse(&holder_uuid, info->holder_uuid);
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Bdev UUID %s\n", info->bdev_uuid);
+	SPDK_DEBUGLOG(nvmf, "Bdev UUID %s\n", info->bdev_uuid);
 	if (info->rtype) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Holder UUID %s, RTYPE %u, RKEY 0x%"PRIx64"\n",
+		SPDK_DEBUGLOG(nvmf, "Holder UUID %s, RTYPE %u, RKEY 0x%"PRIx64"\n",
 			      info->holder_uuid, info->rtype, info->crkey);
 	}
 
@@ -1788,7 +1788,7 @@ nvmf_ns_reservation_restore(struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservatio
 		if (!spdk_uuid_compare(&holder_uuid, &reg->hostid)) {
 			holder = reg;
 		}
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Registrant RKEY 0x%"PRIx64", Host UUID %s\n",
+		SPDK_DEBUGLOG(nvmf, "Registrant RKEY 0x%"PRIx64", Host UUID %s\n",
 			      info->registrants[i].rkey, info->registrants[i].host_uuid);
 	}
 
@@ -2160,7 +2160,7 @@ nvmf_ns_reservation_register(struct spdk_nvmf_ns *ns,
 		goto exit;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "REGISTER: RREGA %u, IEKEY %u, CPTPL %u, "
+	SPDK_DEBUGLOG(nvmf, "REGISTER: RREGA %u, IEKEY %u, CPTPL %u, "
 		      "NRKEY 0x%"PRIx64", NRKEY 0x%"PRIx64"\n",
 		      rrega, iekey, cptpl, key.crkey, key.nrkey);
 
@@ -2296,7 +2296,7 @@ nvmf_ns_reservation_acquire(struct spdk_nvmf_ns *ns,
 		goto exit;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "ACQUIRE: RACQA %u, IEKEY %u, RTYPE %u, "
+	SPDK_DEBUGLOG(nvmf, "ACQUIRE: RACQA %u, IEKEY %u, RTYPE %u, "
 		      "NRKEY 0x%"PRIx64", PRKEY 0x%"PRIx64"\n",
 		      racqa, iekey, rtype, key.crkey, key.prkey);
 
@@ -2458,7 +2458,7 @@ nvmf_ns_reservation_release(struct spdk_nvmf_ns *ns,
 		goto exit;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "RELEASE: RRELA %u, IEKEY %u, RTYPE %u, "
+	SPDK_DEBUGLOG(nvmf, "RELEASE: RRELA %u, IEKEY %u, RTYPE %u, "
 		      "CRKEY 0x%"PRIx64"\n",  rrela, iekey, rtype, crkey);
 
 	if (iekey) {
@@ -2484,7 +2484,7 @@ nvmf_ns_reservation_release(struct spdk_nvmf_ns *ns,
 	switch (rrela) {
 	case SPDK_NVME_RESERVE_RELEASE:
 		if (!ns->holder) {
-			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "RELEASE: no holder\n");
+			SPDK_DEBUGLOG(nvmf, "RELEASE: no holder\n");
 			update_sgroup = false;
 			goto exit;
 		}

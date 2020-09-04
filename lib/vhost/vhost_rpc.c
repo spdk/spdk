@@ -72,7 +72,7 @@ rpc_vhost_create_scsi_controller(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_vhost_create_scsi_ctrlr,
 				    SPDK_COUNTOF(rpc_vhost_create_scsi_ctrlr),
 				    &req)) {
-		SPDK_DEBUGLOG(SPDK_LOG_VHOST_RPC, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(vhost_rpc, "spdk_json_decode_object failed\n");
 		rc = -EINVAL;
 		goto invalid;
 	}
@@ -129,7 +129,7 @@ rpc_vhost_scsi_controller_add_target(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_vhost_scsi_ctrlr_add_target,
 				    SPDK_COUNTOF(rpc_vhost_scsi_ctrlr_add_target),
 				    &req)) {
-		SPDK_DEBUGLOG(SPDK_LOG_VHOST_RPC, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(vhost_rpc, "spdk_json_decode_object failed\n");
 		rc = -EINVAL;
 		goto invalid;
 	}
@@ -203,7 +203,7 @@ rpc_vhost_scsi_controller_remove_target(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_vhost_remove_target,
 				    SPDK_COUNTOF(rpc_vhost_remove_target),
 				    &req)) {
-		SPDK_DEBUGLOG(SPDK_LOG_VHOST_RPC, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(vhost_rpc, "spdk_json_decode_object failed\n");
 		rc = -EINVAL;
 		goto invalid;
 	}
@@ -272,7 +272,7 @@ rpc_vhost_create_blk_controller(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_construct_vhost_blk_ctrlr,
 				    SPDK_COUNTOF(rpc_construct_vhost_blk_ctrlr),
 				    &req)) {
-		SPDK_DEBUGLOG(SPDK_LOG_VHOST_RPC, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(vhost_rpc, "spdk_json_decode_object failed\n");
 		rc = -EINVAL;
 		goto invalid;
 	}
@@ -325,7 +325,7 @@ rpc_vhost_delete_controller(struct spdk_jsonrpc_request *request,
 
 	if (spdk_json_decode_object(params, rpc_delete_vhost_ctrlr_decoder,
 				    SPDK_COUNTOF(rpc_delete_vhost_ctrlr_decoder), &req)) {
-		SPDK_DEBUGLOG(SPDK_LOG_VHOST_RPC, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(vhost_rpc, "spdk_json_decode_object failed\n");
 		rc = -EINVAL;
 		goto invalid;
 	}
@@ -490,7 +490,7 @@ rpc_vhost_controller_set_coalescing(struct spdk_jsonrpc_request *request,
 
 	if (spdk_json_decode_object(params, rpc_set_vhost_ctrlr_coalescing,
 				    SPDK_COUNTOF(rpc_set_vhost_ctrlr_coalescing), &req)) {
-		SPDK_DEBUGLOG(SPDK_LOG_VHOST_RPC, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(vhost_rpc, "spdk_json_decode_object failed\n");
 		rc = -EINVAL;
 		goto invalid;
 	}
@@ -613,7 +613,7 @@ rpc_vhost_nvme_controller_add_ns(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_vhost_nvme_add_ns,
 				    SPDK_COUNTOF(rpc_vhost_nvme_add_ns),
 				    &req)) {
-		SPDK_DEBUGLOG(SPDK_LOG_VHOST_RPC, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(vhost_rpc, "spdk_json_decode_object failed\n");
 		rc = -EINVAL;
 		goto invalid;
 	}
@@ -649,4 +649,4 @@ SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_nvme_controller_add_ns, add_vhost_nvme_
 
 #endif /* SPDK_CONFIG_VHOST_INTERNAL_LIB */
 
-SPDK_LOG_REGISTER_COMPONENT("vhost_rpc", SPDK_LOG_VHOST_RPC)
+SPDK_LOG_REGISTER_COMPONENT(vhost_rpc)

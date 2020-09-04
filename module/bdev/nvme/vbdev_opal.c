@@ -187,7 +187,7 @@ _vbdev_opal_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bde
 	rc = spdk_bdev_part_submit_request(&ch->part_ch, bdev_io);
 	if (rc) {
 		if (rc == -ENOMEM) {
-			SPDK_DEBUGLOG(SPDK_LOG_VBDEV_OPAL, "opal: no memory, queue io.\n");
+			SPDK_DEBUGLOG(vbdev_opal, "opal: no memory, queue io.\n");
 			io_ctx->ch = _ch;
 			io_ctx->bdev_io = bdev_io;
 			vbdev_opal_queue_io(io_ctx);
@@ -627,4 +627,4 @@ vbdev_opal_enable_new_user(const char *bdev_name, const char *admin_password, ui
 	return 0;
 }
 
-SPDK_LOG_REGISTER_COMPONENT("vbdev_opal", SPDK_LOG_VBDEV_OPAL)
+SPDK_LOG_REGISTER_COMPONENT(vbdev_opal)

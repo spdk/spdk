@@ -270,7 +270,7 @@ get_rusage(struct spdk_reactor *reactor)
 	}
 
 	if (rusage.ru_nvcsw != reactor->rusage.ru_nvcsw || rusage.ru_nivcsw != reactor->rusage.ru_nivcsw) {
-		SPDK_INFOLOG(SPDK_LOG_REACTOR,
+		SPDK_INFOLOG(reactor,
 			     "Reactor %d: %ld voluntary context switches and %ld involuntary context switches in the last second.\n",
 			     reactor->lcore, rusage.ru_nvcsw - reactor->rusage.ru_nvcsw,
 			     rusage.ru_nivcsw - reactor->rusage.ru_nivcsw);
@@ -610,12 +610,12 @@ on_reactor(void *arg1, void *arg2)
 	cr->cur_core = spdk_env_get_next_core(cr->cur_core);
 
 	if (cr->cur_core > spdk_env_get_last_core()) {
-		SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "Completed reactor iteration\n");
+		SPDK_DEBUGLOG(reactor, "Completed reactor iteration\n");
 
 		evt = spdk_event_allocate(cr->orig_core, cr->cpl, cr->arg1, cr->arg2);
 		free(cr);
 	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "Continuing reactor iteration to %d\n",
+		SPDK_DEBUGLOG(reactor, "Continuing reactor iteration to %d\n",
 			      cr->cur_core);
 
 		evt = spdk_event_allocate(cr->cur_core, on_reactor, arg1, NULL);
@@ -644,7 +644,7 @@ spdk_for_each_reactor(spdk_event_fn fn, void *arg1, void *arg2, spdk_event_fn cp
 	cr->orig_core = spdk_env_get_current_core();
 	cr->cur_core = spdk_env_get_first_core();
 
-	SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "Starting reactor iteration from %d\n", cr->orig_core);
+	SPDK_DEBUGLOG(reactor, "Starting reactor iteration from %d\n", cr->orig_core);
 
 	evt = spdk_event_allocate(cr->cur_core, on_reactor, cr, NULL);
 	assert(evt != NULL);
@@ -652,4 +652,4 @@ spdk_for_each_reactor(spdk_event_fn fn, void *arg1, void *arg2, spdk_event_fn cp
 	spdk_event_call(evt);
 }
 
-SPDK_LOG_REGISTER_COMPONENT("reactor", SPDK_LOG_REACTOR)
+SPDK_LOG_REGISTER_COMPONENT(reactor)

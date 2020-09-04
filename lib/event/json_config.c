@@ -44,7 +44,7 @@
 #include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
 
-#define SPDK_DEBUG_APP_CFG(...) SPDK_DEBUGLOG(SPDK_LOG_APP_CONFIG, __VA_ARGS__)
+#define SPDK_DEBUG_APP_CFG(...) SPDK_DEBUGLOG(app_config, __VA_ARGS__)
 
 /* JSON configuration format is as follows
  *
@@ -630,4 +630,4 @@ fail:
 	app_json_config_load_done(ctx, -EINVAL);
 }
 
-SPDK_LOG_REGISTER_COMPONENT("app_config", SPDK_LOG_APP_CONFIG)
+SPDK_LOG_REGISTER_COMPONENT(app_config)

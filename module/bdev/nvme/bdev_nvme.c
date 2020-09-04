@@ -233,7 +233,7 @@ SPDK_BDEV_MODULE_REGISTER(nvme, &nvme_if)
 static void
 bdev_nvme_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_ctx)
 {
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "qpar %p is disconnected, attempting reconnect.\n", qpair);
+	SPDK_DEBUGLOG(bdev_nvme, "qpar %p is disconnected, attempting reconnect.\n", qpair);
 	/*
 	 * Currently, just try to reconnect indefinitely. If we are doing a reset, the reset will
 	 * reconnect a qpair and we will stop getting a callback for this one.
@@ -1038,7 +1038,7 @@ nvme_ctrlr_populate_standard_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 
 	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nvme_ns->id);
 	if (!ns) {
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Invalid NS %d\n", nvme_ns->id);
+		SPDK_DEBUGLOG(bdev_nvme, "Invalid NS %d\n", nvme_ns->id);
 		nvme_ctrlr_populate_namespace_done(ctx, nvme_ns, -EINVAL);
 		return;
 	}
@@ -1127,7 +1127,7 @@ hotplug_probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	opts->medium_priority_weight = (uint8_t)g_opts.medium_priority_weight;
 	opts->high_priority_weight = (uint8_t)g_opts.high_priority_weight;
 
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Attaching to %s\n", trid->traddr);
+	SPDK_DEBUGLOG(bdev_nvme, "Attaching to %s\n", trid->traddr);
 
 	return true;
 }
@@ -1138,7 +1138,7 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 {
 	struct nvme_probe_ctx *ctx = cb_ctx;
 
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Probing device %s\n", trid->traddr);
+	SPDK_DEBUGLOG(bdev_nvme, "Probing device %s\n", trid->traddr);
 
 	if (nvme_bdev_ctrlr_get(trid)) {
 		SPDK_ERRLOG("A controller with the provided trid (traddr: %s) already exists.\n",
@@ -1158,7 +1158,7 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		}
 
 		if (!claim_device) {
-			SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Not claiming device at %s\n", trid->traddr);
+			SPDK_DEBUGLOG(bdev_nvme, "Not claiming device at %s\n", trid->traddr);
 			return false;
 		}
 	}
@@ -1227,7 +1227,7 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 		bdev_nvme_reset(nvme_bdev_ctrlr, NULL, false);
 		break;
 	case SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE:
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "No action for nvme controller timeout.\n");
+		SPDK_DEBUGLOG(bdev_nvme, "No action for nvme controller timeout.\n");
 		break;
 	default:
 		SPDK_ERRLOG("An invalid timeout action value is found.\n");
@@ -1530,7 +1530,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		return;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Attached to %s (%s)\n", trid->traddr, name);
+	SPDK_DEBUGLOG(bdev_nvme, "Attached to %s (%s)\n", trid->traddr, name);
 
 	create_ctrlr(ctrlr, name, trid, prchk_flags);
 
@@ -2574,7 +2574,7 @@ bdev_nvme_no_pi_readv(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme
 {
 	int rc;
 
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "read %lu blocks with offset %#lx without PI check\n",
+	SPDK_DEBUGLOG(bdev_nvme, "read %lu blocks with offset %#lx without PI check\n",
 		      lba_count, lba);
 
 	bio->iovs = iov;
@@ -2600,7 +2600,7 @@ bdev_nvme_readv(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
 {
 	int rc;
 
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "read %lu blocks with offset %#lx\n",
+	SPDK_DEBUGLOG(bdev_nvme, "read %lu blocks with offset %#lx\n",
 		      lba_count, lba);
 
 	bio->iovs = iov;
@@ -2635,7 +2635,7 @@ bdev_nvme_writev(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
 {
 	int rc;
 
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "write %lu blocks with offset %#lx\n",
+	SPDK_DEBUGLOG(bdev_nvme, "write %lu blocks with offset %#lx\n",
 		      lba_count, lba);
 
 	bio->iovs = iov;
@@ -2670,7 +2670,7 @@ bdev_nvme_comparev(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch
 {
 	int rc;
 
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "compare %lu blocks with offset %#lx\n",
+	SPDK_DEBUGLOG(bdev_nvme, "compare %lu blocks with offset %#lx\n",
 		      lba_count, lba);
 
 	bio->iovs = iov;
@@ -2698,7 +2698,7 @@ bdev_nvme_comparev_and_writev(struct nvme_bdev_ns *nvme_ns, struct nvme_io_chann
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 	int rc;
 
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "compare and write %lu blocks with offset %#lx\n",
+	SPDK_DEBUGLOG(bdev_nvme, "compare and write %lu blocks with offset %#lx\n",
 		      lba_count, lba);
 
 	bio->iovs = cmp_iov;
@@ -3120,4 +3120,4 @@ bdev_nvme_get_ctrlr(struct spdk_bdev *bdev)
 	return SPDK_CONTAINEROF(bdev, struct nvme_bdev, disk)->nvme_ns->ctrlr->ctrlr;
 }
 
-SPDK_LOG_REGISTER_COMPONENT("bdev_nvme", SPDK_LOG_BDEV_NVME)
+SPDK_LOG_REGISTER_COMPONENT(bdev_nvme)

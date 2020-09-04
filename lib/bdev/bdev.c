@@ -551,7 +551,7 @@ spdk_bdev_first(void)
 
 	bdev = TAILQ_FIRST(&g_bdev_mgr.bdevs);
 	if (bdev) {
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Starting bdev iteration at %s\n", bdev->name);
+		SPDK_DEBUGLOG(bdev, "Starting bdev iteration at %s\n", bdev->name);
 	}
 
 	return bdev;
@@ -564,7 +564,7 @@ spdk_bdev_next(struct spdk_bdev *prev)
 
 	bdev = TAILQ_NEXT(prev, internal.link);
 	if (bdev) {
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Continuing bdev iteration at %s\n", bdev->name);
+		SPDK_DEBUGLOG(bdev, "Continuing bdev iteration at %s\n", bdev->name);
 	}
 
 	return bdev;
@@ -592,7 +592,7 @@ spdk_bdev_first_leaf(void)
 	bdev = _bdev_next_leaf(TAILQ_FIRST(&g_bdev_mgr.bdevs));
 
 	if (bdev) {
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Starting bdev iteration at %s\n", bdev->name);
+		SPDK_DEBUGLOG(bdev, "Starting bdev iteration at %s\n", bdev->name);
 	}
 
 	return bdev;
@@ -606,7 +606,7 @@ spdk_bdev_next_leaf(struct spdk_bdev *prev)
 	bdev = _bdev_next_leaf(TAILQ_NEXT(prev, internal.link));
 
 	if (bdev) {
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Continuing bdev iteration at %s\n", bdev->name);
+		SPDK_DEBUGLOG(bdev, "Continuing bdev iteration at %s\n", bdev->name);
 	}
 
 	return bdev;
@@ -1478,7 +1478,7 @@ bdev_finish_unregister_bdevs_iter(void *cb_arg, int bdeverrno)
 	}
 
 	if (TAILQ_EMPTY(&g_bdev_mgr.bdevs)) {
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Done unregistering bdevs\n");
+		SPDK_DEBUGLOG(bdev, "Done unregistering bdevs\n");
 		/*
 		 * Bdev module finish need to be deferred as we might be in the middle of some context
 		 * (like bdev part free) that will use this bdev (or private bdev driver ctx data)
@@ -1499,12 +1499,12 @@ bdev_finish_unregister_bdevs_iter(void *cb_arg, int bdeverrno)
 	for (bdev = TAILQ_LAST(&g_bdev_mgr.bdevs, spdk_bdev_list);
 	     bdev; bdev = TAILQ_PREV(bdev, spdk_bdev_list, internal.link)) {
 		if (bdev->internal.claim_module != NULL) {
-			SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Skipping claimed bdev '%s'(<-'%s').\n",
+			SPDK_DEBUGLOG(bdev, "Skipping claimed bdev '%s'(<-'%s').\n",
 				      bdev->name, bdev->internal.claim_module->name);
 			continue;
 		}
 
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Unregistering bdev '%s'\n", bdev->name);
+		SPDK_DEBUGLOG(bdev, "Unregistering bdev '%s'\n", bdev->name);
 		spdk_bdev_unregister(bdev, bdev_finish_unregister_bdevs_iter, bdev);
 		return;
 	}
@@ -2458,7 +2458,7 @@ bdev_enable_qos(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch)
 		if (qos->ch == NULL) {
 			struct spdk_io_channel *io_ch;
 
-			SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Selecting channel %p as QoS channel for bdev %s on thread %p\n", ch,
+			SPDK_DEBUGLOG(bdev, "Selecting channel %p as QoS channel for bdev %s on thread %p\n", ch,
 				      bdev->name, spdk_get_thread());
 
 			/* No qos channel has been selected, so set one up */
@@ -2831,7 +2831,7 @@ bdev_qos_channel_destroy(void *cb_arg)
 	spdk_put_io_channel(spdk_io_channel_from_ctx(qos->ch));
 	spdk_poller_unregister(&qos->poller);
 
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Free QoS %p.\n", qos);
+	SPDK_DEBUGLOG(bdev, "Free QoS %p.\n", qos);
 
 	free(qos);
 }
@@ -2915,7 +2915,7 @@ bdev_channel_destroy(void *io_device, void *ctx_buf)
 	struct spdk_bdev_mgmt_channel	*mgmt_ch;
 	struct spdk_bdev_shared_resource *shared_resource = ch->shared_resource;
 
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Destroying channel %p for bdev %s on thread %p\n", ch, ch->bdev->name,
+	SPDK_DEBUGLOG(bdev, "Destroying channel %p for bdev %s on thread %p\n", ch, ch->bdev->name,
 		      spdk_get_thread());
 
 	/* This channel is going away, so add its statistics into the bdev so that they don't get lost. */
@@ -2984,7 +2984,7 @@ spdk_bdev_alias_del(struct spdk_bdev *bdev, const char *alias)
 		}
 	}
 
-	SPDK_INFOLOG(SPDK_LOG_BDEV, "Alias %s does not exists\n", alias);
+	SPDK_INFOLOG(bdev, "Alias %s does not exists\n", alias);
 
 	return -ENOENT;
 }
@@ -5260,7 +5260,7 @@ bdev_qos_config_limit(struct spdk_bdev *bdev, uint64_t *limits)
 
 	for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
 		bdev->internal.qos->rate_limits[i].limit = limits[i];
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Bdev:%s QoS type:%d set:%lu\n",
+		SPDK_DEBUGLOG(bdev, "Bdev:%s QoS type:%d set:%lu\n",
 			      bdev->name, i, limits[i]);
 	}
 
@@ -5436,7 +5436,7 @@ bdev_fini(struct spdk_bdev *bdev)
 static void
 bdev_start(struct spdk_bdev *bdev)
 {
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Inserting bdev %s into list\n", bdev->name);
+	SPDK_DEBUGLOG(bdev, "Inserting bdev %s into list\n", bdev->name);
 	TAILQ_INSERT_TAIL(&g_bdev_mgr.bdevs, bdev, internal.link);
 
 	/* Examine configuration before initializing I/O */
@@ -5526,7 +5526,7 @@ bdev_unregister_unsafe(struct spdk_bdev *bdev)
 	/* If there are no descriptors, proceed removing the bdev */
 	if (rc == 0) {
 		TAILQ_REMOVE(&g_bdev_mgr.bdevs, bdev, internal.link);
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Removing bdev %s from list done\n", bdev->name);
+		SPDK_DEBUGLOG(bdev, "Removing bdev %s from list done\n", bdev->name);
 		spdk_notify_send("bdev_unregister", spdk_bdev_get_name(bdev));
 	}
 
@@ -5539,7 +5539,7 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	struct spdk_thread	*thread;
 	int			rc;
 
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Removing bdev %s from list\n", bdev->name);
+	SPDK_DEBUGLOG(bdev, "Removing bdev %s from list\n", bdev->name);
 
 	thread = spdk_get_thread();
 	if (!thread) {
@@ -5578,7 +5578,7 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 static void
 bdev_dummy_event_cb(void *remove_ctx)
 {
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Bdev remove event received with no remove callback specified");
+	SPDK_DEBUGLOG(bdev, "Bdev remove event received with no remove callback specified");
 }
 
 static int
@@ -5614,7 +5614,7 @@ bdev_open(struct spdk_bdev *bdev, bool write, struct spdk_bdev_desc *desc)
 		return -ENOTSUP;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Opening descriptor %p for bdev %s on thread %p\n", desc, bdev->name,
+	SPDK_DEBUGLOG(bdev, "Opening descriptor %p for bdev %s on thread %p\n", desc, bdev->name,
 		      spdk_get_thread());
 
 	desc->bdev = bdev;
@@ -5762,7 +5762,7 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 	int rc;
 
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Closing descriptor %p for bdev %s on thread %p\n", desc, bdev->name,
+	SPDK_DEBUGLOG(bdev, "Closing descriptor %p for bdev %s on thread %p\n", desc, bdev->name,
 		      spdk_get_thread());
 
 	assert(desc->thread == spdk_get_thread());
@@ -5785,7 +5785,7 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 
 	/* If no more descriptors, kill QoS channel */
 	if (bdev->internal.qos && TAILQ_EMPTY(&bdev->internal.open_descs)) {
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Closed last descriptor for bdev %s on thread %p. Stopping QoS.\n",
+		SPDK_DEBUGLOG(bdev, "Closed last descriptor for bdev %s on thread %p. Stopping QoS.\n",
 			      bdev->name, spdk_get_thread());
 
 		if (bdev_qos_destroy(bdev)) {
@@ -6815,7 +6815,7 @@ bdev_unlock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
 	return 0;
 }
 
-SPDK_LOG_REGISTER_COMPONENT("bdev", SPDK_LOG_BDEV)
+SPDK_LOG_REGISTER_COMPONENT(bdev)
 
 SPDK_TRACE_REGISTER_FN(bdev_trace, "bdev", TRACE_GROUP_BDEV)
 {

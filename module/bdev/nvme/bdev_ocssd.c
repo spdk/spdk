@@ -870,7 +870,7 @@ bdev_ocssd_chunk_notification_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 		}
 
 		if (nvme_bdev == NULL) {
-			SPDK_INFOLOG(SPDK_LOG_BDEV_OCSSD, "Dropping media management event\n");
+			SPDK_INFOLOG(bdev_ocssd, "Dropping media management event\n");
 			continue;
 		}
 
@@ -881,7 +881,7 @@ bdev_ocssd_chunk_notification_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 
 			rc = spdk_bdev_push_media_events(&nvme_bdev->disk, &event, 1);
 			if (spdk_unlikely(rc < 0)) {
-				SPDK_DEBUGLOG(SPDK_LOG_BDEV_OCSSD, "Failed to push media event: %s\n",
+				SPDK_DEBUGLOG(bdev_ocssd, "Failed to push media event: %s\n",
 					      spdk_strerror(-rc));
 				break;
 			}
@@ -1494,4 +1494,4 @@ bdev_ocssd_fini_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 	nvme_bdev_ctrlr->ocssd_ctrlr = NULL;
 }
 
-SPDK_LOG_REGISTER_COMPONENT("bdev_ocssd", SPDK_LOG_BDEV_OCSSD)
+SPDK_LOG_REGISTER_COMPONENT(bdev_ocssd)

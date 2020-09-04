@@ -1862,4 +1862,4 @@ compress_set_pmd(enum compress_pmd *opts)
 	return 0;
 }
 
-SPDK_LOG_REGISTER_COMPONENT("vbdev_compress", SPDK_LOG_VBDEV_COMPRESS)
+SPDK_LOG_REGISTER_COMPONENT(vbdev_compress)

@@ -142,7 +142,7 @@ spdk_blobfs_bdev_detect(const char *bdev_name,
 
 	rc = spdk_bdev_open_ext(bdev_name, true, blobfs_bdev_event_cb, NULL, &desc);
 	if (rc != 0) {
-		SPDK_INFOLOG(SPDK_LOG_BLOBFS_BDEV, "Failed to open bdev(%s): %s\n", ctx->bdev_name,
+		SPDK_INFOLOG(blobfs_bdev, "Failed to open bdev(%s): %s\n", ctx->bdev_name,
 			     spdk_strerror(rc));
 
 		goto invalid;
@@ -150,7 +150,7 @@ spdk_blobfs_bdev_detect(const char *bdev_name,
 
 	bs_dev = spdk_bdev_create_bs_dev_from_desc(desc);
 	if (bs_dev == NULL) {
-		SPDK_INFOLOG(SPDK_LOG_BLOBFS_BDEV,  "Failed to create a blobstore block device from bdev desc");
+		SPDK_INFOLOG(blobfs_bdev,  "Failed to create a blobstore block device from bdev desc");
 		rc = -ENOMEM;
 		spdk_bdev_close(desc);
 
@@ -192,7 +192,7 @@ spdk_blobfs_bdev_create(const char *bdev_name, uint32_t cluster_sz,
 	/* Creation requires WRITE operation */
 	rc = spdk_bdev_open_ext(bdev_name, true, blobfs_bdev_event_cb, NULL, &desc);
 	if (rc != 0) {
-		SPDK_INFOLOG(SPDK_LOG_BLOBFS_BDEV, "Failed to open bdev(%s): %s\n", ctx->bdev_name,
+		SPDK_INFOLOG(blobfs_bdev, "Failed to open bdev(%s): %s\n", ctx->bdev_name,
 			     spdk_strerror(rc));
 
 		goto invalid;
@@ -200,7 +200,7 @@ spdk_blobfs_bdev_create(const char *bdev_name, uint32_t cluster_sz,
 
 	bs_dev = spdk_bdev_create_bs_dev_from_desc(desc);
 	if (bs_dev == NULL) {
-		SPDK_INFOLOG(SPDK_LOG_BLOBFS_BDEV,  "Failed to create a blobstore block device from bdev desc\n");
+		SPDK_INFOLOG(blobfs_bdev,  "Failed to create a blobstore block device from bdev desc\n");
 		rc = -ENOMEM;
 		spdk_bdev_close(desc);
 
@@ -209,7 +209,7 @@ spdk_blobfs_bdev_create(const char *bdev_name, uint32_t cluster_sz,
 
 	rc = spdk_bs_bdev_claim(bs_dev, &blobfs_bdev_module);
 	if (rc) {
-		SPDK_INFOLOG(SPDK_LOG_BLOBFS_BDEV, "Blobfs base bdev already claimed by another bdev\n");
+		SPDK_INFOLOG(blobfs_bdev, "Blobfs base bdev already claimed by another bdev\n");
 		bs_dev->destroy(bs_dev);
 
 		goto invalid;
@@ -229,7 +229,7 @@ invalid:
 
 	cb_fn(cb_arg, rc);
 }
-SPDK_LOG_REGISTER_COMPONENT("blobfs_bdev", SPDK_LOG_BLOBFS_BDEV)
+SPDK_LOG_REGISTER_COMPONENT(blobfs_bdev)
 #ifdef SPDK_CONFIG_FUSE
 
 static void
@@ -325,7 +325,7 @@ spdk_blobfs_bdev_mount(const char *bdev_name, const char *mountpoint,
 
 	rc = spdk_bdev_open_ext(bdev_name, true, blobfs_bdev_fuse_event_cb, ctx, &desc);
 	if (rc != 0) {
-		SPDK_INFOLOG(SPDK_LOG_BLOBFS_BDEV, "Failed to open bdev(%s): %s\n", ctx->bdev_name,
+		SPDK_INFOLOG(blobfs_bdev, "Failed to open bdev(%s): %s\n", ctx->bdev_name,
 			     spdk_strerror(rc));
 
 		goto invalid;
@@ -333,7 +333,7 @@ spdk_blobfs_bdev_mount(const char *bdev_name, const char *mountpoint,
 
 	bs_dev = spdk_bdev_create_bs_dev_from_desc(desc);
 	if (bs_dev == NULL) {
-		SPDK_INFOLOG(SPDK_LOG_BLOBFS_BDEV,  "Failed to create a blobstore block device from bdev desc");
+		SPDK_INFOLOG(blobfs_bdev,  "Failed to create a blobstore block device from bdev desc");
 		rc = -ENOMEM;
 		spdk_bdev_close(desc);
 
@@ -342,7 +342,7 @@ spdk_blobfs_bdev_mount(const char *bdev_name, const char *mountpoint,
 
 	rc = spdk_bs_bdev_claim(bs_dev, &blobfs_bdev_module);
 	if (rc != 0) {
-		SPDK_INFOLOG(SPDK_LOG_BLOBFS_BDEV, "Blobfs base bdev already claimed by another bdev\n");
+		SPDK_INFOLOG(blobfs_bdev, "Blobfs base bdev already claimed by another bdev\n");
 		bs_dev->destroy(bs_dev);
 
 		goto invalid;

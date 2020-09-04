@@ -298,12 +298,12 @@ jsonrpc_server_conn_recv(struct spdk_jsonrpc_server_conn *conn)
 		if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
 			return 0;
 		}
-		SPDK_DEBUGLOG(SPDK_LOG_RPC, "recv() failed: %s\n", spdk_strerror(errno));
+		SPDK_DEBUGLOG(rpc, "recv() failed: %s\n", spdk_strerror(errno));
 		return -1;
 	}
 
 	if (rc == 0) {
-		SPDK_DEBUGLOG(SPDK_LOG_RPC, "remote closed connection\n");
+		SPDK_DEBUGLOG(rpc, "remote closed connection\n");
 		conn->closed = true;
 		return 0;
 	}
@@ -375,7 +375,7 @@ more:
 				return 0;
 			}
 
-			SPDK_DEBUGLOG(SPDK_LOG_RPC, "send() failed: %s\n", spdk_strerror(errno));
+			SPDK_DEBUGLOG(rpc, "send() failed: %s\n", spdk_strerror(errno));
 			return -1;
 		}
 

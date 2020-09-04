@@ -243,7 +243,7 @@ _raid0_split_io_range(struct raid_bdev_io_range *io_range, uint8_t disk_idx,
 	nblocks_in_disk = (n_strips_in_disk - 1) * io_range->strip_size
 			  + end_offset_in_disk - start_offset_in_disk + 1;
 
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID0,
+	SPDK_DEBUGLOG(bdev_raid0,
 		      "raid_bdev (strip_size 0x%lx) splits IO to base_bdev (%u) at (0x%lx, 0x%lx).\n",
 		      io_range->strip_size, disk_idx, offset_in_disk, nblocks_in_disk);
 
@@ -369,7 +369,7 @@ static int raid0_start(struct raid_bdev *raid_bdev)
 	 * of raid bdev is the number of base bdev times the minimum block count
 	 * of any base bdev.
 	 */
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID0, "min blockcount %lu,  numbasedev %u, strip size shift %u\n",
+	SPDK_DEBUGLOG(bdev_raid0, "min blockcount %lu,  numbasedev %u, strip size shift %u\n",
 		      min_blockcnt, raid_bdev->num_base_bdevs, raid_bdev->strip_size_shift);
 	raid_bdev->bdev.blockcnt = ((min_blockcnt >> raid_bdev->strip_size_shift) <<
 				    raid_bdev->strip_size_shift)  * raid_bdev->num_base_bdevs;
@@ -395,4 +395,4 @@ static struct raid_bdev_module g_raid0_module = {
 };
 RAID_MODULE_REGISTER(&g_raid0_module)
 
-SPDK_LOG_REGISTER_COMPONENT("bdev_raid0", SPDK_LOG_BDEV_RAID0)
+SPDK_LOG_REGISTER_COMPONENT(bdev_raid0)

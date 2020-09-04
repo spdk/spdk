@@ -160,7 +160,7 @@ jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, const void *json, s
 
 	request = calloc(1, sizeof(*request));
 	if (request == NULL) {
-		SPDK_DEBUGLOG(SPDK_LOG_RPC, "Out of memory allocating request\n");
+		SPDK_DEBUGLOG(rpc, "Out of memory allocating request\n");
 		return -1;
 	}
 
@@ -208,7 +208,7 @@ jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, const void *json, s
 	}
 
 	if (rc <= 0 || rc > SPDK_JSONRPC_MAX_VALUES) {
-		SPDK_DEBUGLOG(SPDK_LOG_RPC, "JSON parse error\n");
+		SPDK_DEBUGLOG(rpc, "JSON parse error\n");
 		jsonrpc_server_handle_error(request, SPDK_JSONRPC_ERROR_PARSE_ERROR);
 
 		/*
@@ -222,7 +222,7 @@ jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, const void *json, s
 	rc = spdk_json_parse(request->recv_buffer, size, request->values, request->values_cnt, &end,
 			     SPDK_JSON_PARSE_FLAG_DECODE_IN_PLACE);
 	if (rc < 0 || rc > SPDK_JSONRPC_MAX_VALUES) {
-		SPDK_DEBUGLOG(SPDK_LOG_RPC, "JSON parse error on second pass\n");
+		SPDK_DEBUGLOG(rpc, "JSON parse error on second pass\n");
 		jsonrpc_server_handle_error(request, SPDK_JSONRPC_ERROR_PARSE_ERROR);
 		return -1;
 	}
@@ -232,10 +232,10 @@ jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, const void *json, s
 	if (request->values[0].type == SPDK_JSON_VAL_OBJECT_BEGIN) {
 		parse_single_request(request, request->values);
 	} else if (request->values[0].type == SPDK_JSON_VAL_ARRAY_BEGIN) {
-		SPDK_DEBUGLOG(SPDK_LOG_RPC, "Got batch array (not currently supported)\n");
+		SPDK_DEBUGLOG(rpc, "Got batch array (not currently supported)\n");
 		jsonrpc_server_handle_error(request, SPDK_JSONRPC_ERROR_INVALID_REQUEST);
 	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_RPC, "top-level JSON value was not array or object\n");
+		SPDK_DEBUGLOG(rpc, "top-level JSON value was not array or object\n");
 		jsonrpc_server_handle_error(request, SPDK_JSONRPC_ERROR_INVALID_REQUEST);
 	}
 
@@ -358,4 +358,4 @@ spdk_jsonrpc_send_error_response_fmt(struct spdk_jsonrpc_request *request,
 	end_response(request);
 }
 
-SPDK_LOG_REGISTER_COMPONENT("rpc", SPDK_LOG_RPC)
+SPDK_LOG_REGISTER_COMPONENT(rpc)

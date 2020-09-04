@@ -11,7 +11,7 @@
 
 #include "scsi/scsi_internal.h"
 
-SPDK_LOG_REGISTER_COMPONENT("iscsi", SPDK_LOG_ISCSI)
+SPDK_LOG_REGISTER_COMPONENT(iscsi)
 
 struct spdk_trace_histories *g_trace_histories;
 DEFINE_STUB_V(spdk_trace_add_register_fn, (struct spdk_trace_register_fn *reg_fn));

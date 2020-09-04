@@ -38,7 +38,7 @@
 #include "iscsi/init_grp.c"
 #include "unit/lib/json_mock.c"
 
-SPDK_LOG_REGISTER_COMPONENT("iscsi", SPDK_LOG_ISCSI)
+SPDK_LOG_REGISTER_COMPONENT(iscsi)
 
 struct spdk_iscsi_globals g_iscsi;
 

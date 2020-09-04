@@ -211,7 +211,7 @@ bool
 nvmf_fc_assign_conn_to_hwqp(struct spdk_nvmf_fc_hwqp *hwqp,
 			    uint64_t *conn_id, uint32_t sq_size)
 {
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_LS, "Assign connection to HWQP\n");
+	SPDK_DEBUGLOG(nvmf_fc_ls, "Assign connection to HWQP\n");
 
 
 	if (hwqp->rq_size < sq_size) {
@@ -224,7 +224,7 @@ nvmf_fc_assign_conn_to_hwqp(struct spdk_nvmf_fc_hwqp *hwqp,
 	/* create connection ID */
 	*conn_id = nvmf_fc_gen_conn_id(hwqp->hwqp_id, hwqp);
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_LS,
+	SPDK_DEBUGLOG(nvmf_fc_ls,
 		      "New connection assigned to HWQP%d (free %d), conn_id 0x%lx\n",
 		      hwqp->hwqp_id, hwqp->rq_size, *conn_id);
 	return true;

@@ -73,7 +73,7 @@ rpc_bdev_malloc_create(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_construct_malloc_decoders,
 				    SPDK_COUNTOF(rpc_construct_malloc_decoders),
 				    &req)) {
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV_MALLOC, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(bdev_malloc, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
 		goto cleanup;
@@ -147,7 +147,7 @@ rpc_bdev_malloc_delete(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_delete_malloc_decoders,
 				    SPDK_COUNTOF(rpc_delete_malloc_decoders),
 				    &req)) {
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV_MALLOC, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(bdev_malloc, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
 		goto cleanup;
@@ -155,7 +155,7 @@ rpc_bdev_malloc_delete(struct spdk_jsonrpc_request *request,
 
 	bdev = spdk_bdev_get_by_name(req.name);
 	if (bdev == NULL) {
-		SPDK_INFOLOG(SPDK_LOG_BDEV_MALLOC, "bdev '%s' does not exist\n", req.name);
+		SPDK_INFOLOG(bdev_malloc, "bdev '%s' does not exist\n", req.name);
 		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
 		goto cleanup;
 	}

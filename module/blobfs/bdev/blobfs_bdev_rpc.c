@@ -201,7 +201,7 @@ rpc_decode_cluster_sz(const struct spdk_json_val *val, void *out)
 		return -EINVAL;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_BLOBFS_BDEV_RPC, "cluster_sz of blobfs: %ld\n", *cluster_sz);
+	SPDK_DEBUGLOG(blobfs_bdev_rpc, "cluster_sz of blobfs: %ld\n", *cluster_sz);
 	return 0;
 }
 
@@ -261,7 +261,7 @@ rpc_blobfs_create(struct spdk_jsonrpc_request *request,
 
 SPDK_RPC_REGISTER("blobfs_create", rpc_blobfs_create, SPDK_RPC_RUNTIME)
 
-SPDK_LOG_REGISTER_COMPONENT("blobfs_bdev_rpc", SPDK_LOG_BLOBFS_BDEV_RPC)
+SPDK_LOG_REGISTER_COMPONENT(blobfs_bdev_rpc)
 #ifdef SPDK_CONFIG_FUSE
 
 struct rpc_blobfs_mount {

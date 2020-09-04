@@ -341,7 +341,7 @@ nvmf_tcp_request_free(struct spdk_nvmf_tcp_req *tcp_req)
 
 	assert(tcp_req != NULL);
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "tcp_req=%p will be freed\n", tcp_req);
+	SPDK_DEBUGLOG(nvmf_tcp, "tcp_req=%p will be freed\n", tcp_req);
 	ttransport = SPDK_CONTAINEROF(tcp_req->req.qpair->transport,
 				      struct spdk_nvmf_tcp_transport, transport);
 	nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_COMPLETED);
@@ -413,7 +413,7 @@ nvmf_tcp_qpair_destroy(struct spdk_nvmf_tcp_qpair *tqpair)
 {
 	int err = 0;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "enter\n");
+	SPDK_DEBUGLOG(nvmf_tcp, "enter\n");
 
 	err = spdk_sock_close(&tqpair->sock);
 	assert(err == 0);
@@ -434,7 +434,7 @@ nvmf_tcp_qpair_destroy(struct spdk_nvmf_tcp_qpair *tqpair)
 	free(tqpair->reqs);
 	spdk_free(tqpair->bufs);
 	free(tqpair);
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Leave\n");
+	SPDK_DEBUGLOG(nvmf_tcp, "Leave\n");
 }
 
 static int
@@ -468,7 +468,7 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 
 	SPDK_NOTICELOG("*** TCP Transport Init ***\n");
 
-	SPDK_INFOLOG(SPDK_LOG_NVMF_TCP, "*** TCP Transport Init ***\n"
+	SPDK_INFOLOG(nvmf_tcp, "*** TCP Transport Init ***\n"
 		     "  Transport opts:  max_ioq_depth=%d, max_io_size=%d,\n"
 		     "  max_io_qpairs_per_ctrlr=%d, io_unit_size=%d,\n"
 		     "  in_capsule_data_size=%d, max_aq_depth=%d\n"
@@ -664,7 +664,7 @@ nvmf_tcp_stop_listen(struct spdk_nvmf_transport *transport,
 
 	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Removing listen address %s port %s\n",
+	SPDK_DEBUGLOG(nvmf_tcp, "Removing listen address %s port %s\n",
 		      trid->traddr, trid->trsvcid);
 
 	pthread_mutex_lock(&ttransport->lock);
@@ -684,7 +684,7 @@ static void nvmf_tcp_qpair_set_recv_state(struct spdk_nvmf_tcp_qpair *tqpair,
 static void
 nvmf_tcp_qpair_disconnect(struct spdk_nvmf_tcp_qpair *tqpair)
 {
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Disconnecting qpair %p\n", tqpair);
+	SPDK_DEBUGLOG(nvmf_tcp, "Disconnecting qpair %p\n", tqpair);
 
 	if (tqpair->state <= NVME_TCP_QPAIR_STATE_RUNNING) {
 		tqpair->state = NVME_TCP_QPAIR_STATE_EXITING;
@@ -843,7 +843,7 @@ nvmf_tcp_qpair_init(struct spdk_nvmf_qpair *qpair)
 
 	tqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_tcp_qpair, qpair);
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "New TCP Connection: %p\n", qpair);
+	SPDK_DEBUGLOG(nvmf_tcp, "New TCP Connection: %p\n", qpair);
 
 	TAILQ_INIT(&tqpair->send_queue);
 
@@ -881,7 +881,7 @@ nvmf_tcp_handle_connect(struct spdk_nvmf_transport *transport,
 	struct spdk_nvmf_tcp_qpair *tqpair;
 	int rc;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "New connection accepted on %s port %s\n",
+	SPDK_DEBUGLOG(nvmf_tcp, "New connection accepted on %s port %s\n",
 		      port->trid->traddr, port->trid->trsvcid);
 
 	tqpair = calloc(1, sizeof(struct spdk_nvmf_tcp_qpair));
@@ -1028,7 +1028,7 @@ nvmf_tcp_qpair_set_recv_state(struct spdk_nvmf_tcp_qpair *tqpair,
 		TAILQ_INSERT_TAIL(&tqpair->group->qpairs, tqpair, link);
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "tqpair(%p) recv state=%d\n", tqpair, state);
+	SPDK_DEBUGLOG(nvmf_tcp, "tqpair(%p) recv state=%d\n", tqpair, state);
 	tqpair->recv_state = state;
 
 	switch (state) {
@@ -1206,7 +1206,7 @@ nvmf_tcp_h2c_data_hdr_handle(struct spdk_nvmf_tcp_transport *ttransport,
 
 	h2c_data = &pdu->hdr.h2c_data;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "tqpair=%p, r2t_info: datao=%u, datal=%u, cccid=%u, ttag=%u\n",
+	SPDK_DEBUGLOG(nvmf_tcp, "tqpair=%p, r2t_info: datao=%u, datal=%u, cccid=%u, ttag=%u\n",
 		      tqpair, h2c_data->datao, h2c_data->datal, h2c_data->cccid, h2c_data->ttag);
 
 	rc = nvmf_tcp_find_req_in_state(tqpair, TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER,
@@ -1217,7 +1217,7 @@ nvmf_tcp_h2c_data_hdr_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	}
 
 	if (!tcp_req) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "tcp_req is not found for tqpair=%p\n", tqpair);
+		SPDK_DEBUGLOG(nvmf_tcp, "tcp_req is not found for tqpair=%p\n", tqpair);
 		fes = SPDK_NVME_TCP_TERM_REQ_FES_INVALID_DATA_UNSUPPORTED_PARAMETER;
 		if (rc == 0) {
 			error_offset = offsetof(struct spdk_nvme_tcp_h2c_data_hdr, cccid);
@@ -1228,7 +1228,7 @@ nvmf_tcp_h2c_data_hdr_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	}
 
 	if (tcp_req->h2c_offset != h2c_data->datao) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP,
+		SPDK_DEBUGLOG(nvmf_tcp,
 			      "tcp_req(%p), tqpair=%p, expected data offset %u, but data offset is %u\n",
 			      tcp_req, tqpair, tcp_req->h2c_offset, h2c_data->datao);
 		fes = SPDK_NVME_TCP_TERM_REQ_FES_DATA_TRANSFER_OUT_OF_RANGE;
@@ -1236,7 +1236,7 @@ nvmf_tcp_h2c_data_hdr_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	}
 
 	if ((h2c_data->datao + h2c_data->datal) > tcp_req->req.length) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP,
+		SPDK_DEBUGLOG(nvmf_tcp,
 			      "tcp_req(%p), tqpair=%p,  (datao=%u + datal=%u) execeeds requested length=%u\n",
 			      tcp_req, tqpair, h2c_data->datao, h2c_data->datal, tcp_req->req.length);
 		fes = SPDK_NVME_TCP_TERM_REQ_FES_DATA_TRANSFER_OUT_OF_RANGE;
@@ -1272,7 +1272,7 @@ nvmf_tcp_send_capsule_resp_pdu(struct spdk_nvmf_tcp_req *tcp_req,
 	struct nvme_tcp_pdu *rsp_pdu;
 	struct spdk_nvme_tcp_rsp *capsule_resp;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "enter, tqpair=%p\n", tqpair);
+	SPDK_DEBUGLOG(nvmf_tcp, "enter, tqpair=%p\n", tqpair);
 
 	rsp_pdu = nvmf_tcp_req_pdu_init(tcp_req);
 	assert(rsp_pdu != NULL);
@@ -1350,7 +1350,7 @@ nvmf_tcp_send_r2t_pdu(struct spdk_nvmf_tcp_qpair *tqpair,
 
 	nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_AWAITING_R2T_ACK);
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP,
+	SPDK_DEBUGLOG(nvmf_tcp,
 		      "tcp_req(%p) on tqpair(%p), r2t_info: cccid=%u, ttag=%u, r2to=%u, r2tl=%u\n",
 		      tcp_req, tqpair, r2t->cccid, r2t->ttag, r2t->r2to, r2t->r2tl);
 	nvmf_tcp_qpair_write_pdu(tqpair, rsp_pdu, nvmf_tcp_r2t_complete, tcp_req);
@@ -1366,7 +1366,7 @@ nvmf_tcp_h2c_data_payload_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	tcp_req = pdu->req;
 	assert(tcp_req != NULL);
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "enter\n");
+	SPDK_DEBUGLOG(nvmf_tcp, "enter\n");
 
 	tcp_req->h2c_offset += pdu->data_len;
 
@@ -1388,7 +1388,7 @@ nvmf_tcp_h2c_term_req_dump(struct spdk_nvme_tcp_term_req_hdr *h2c_term_req)
 		    spdk_nvmf_tcp_term_req_fes_str[h2c_term_req->fes]);
 	if ((h2c_term_req->fes == SPDK_NVME_TCP_TERM_REQ_FES_INVALID_HEADER_FIELD) ||
 	    (h2c_term_req->fes == SPDK_NVME_TCP_TERM_REQ_FES_INVALID_DATA_UNSUPPORTED_PARAMETER)) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "The offset from the start of the PDU header is %u\n",
+		SPDK_DEBUGLOG(nvmf_tcp, "The offset from the start of the PDU header is %u\n",
 			      DGET32(h2c_term_req->fei));
 	}
 }
@@ -1440,7 +1440,7 @@ nvmf_tcp_pdu_payload_handle(struct spdk_nvmf_tcp_qpair *tqpair,
 	assert(tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD);
 	pdu = &tqpair->pdu_in_progress;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "enter\n");
+	SPDK_DEBUGLOG(nvmf_tcp, "enter\n");
 	/* check data digest if need */
 	if (pdu->ddgst_enable) {
 		crc32c = nvme_tcp_pdu_calc_data_digest(pdu);
@@ -1501,7 +1501,7 @@ nvmf_tcp_icreq_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	}
 
 	/* MAXR2T is 0's based */
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "maxr2t =%u\n", (ic_req->maxr2t + 1u));
+	SPDK_DEBUGLOG(nvmf_tcp, "maxr2t =%u\n", (ic_req->maxr2t + 1u));
 
 	tqpair->host_hdgst_enable = ic_req->dgst.bits.hdgst_enable ? true : false;
 	if (!tqpair->host_hdgst_enable) {
@@ -1522,7 +1522,7 @@ nvmf_tcp_icreq_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	}
 
 	tqpair->cpda = spdk_min(ic_req->hpda, SPDK_NVME_TCP_CPDA_MAX);
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "cpda of tqpair=(%p) is : %u\n", tqpair, tqpair->cpda);
+	SPDK_DEBUGLOG(nvmf_tcp, "cpda of tqpair=(%p) is : %u\n", tqpair, tqpair->cpda);
 
 	rsp_pdu = tqpair->mgmt_pdu;
 
@@ -1535,8 +1535,8 @@ nvmf_tcp_icreq_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	ic_resp->dgst.bits.hdgst_enable = tqpair->host_hdgst_enable ? 1 : 0;
 	ic_resp->dgst.bits.ddgst_enable = tqpair->host_ddgst_enable ? 1 : 0;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "host_hdgst_enable: %u\n", tqpair->host_hdgst_enable);
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "host_ddgst_enable: %u\n", tqpair->host_ddgst_enable);
+	SPDK_DEBUGLOG(nvmf_tcp, "host_hdgst_enable: %u\n", tqpair->host_hdgst_enable);
+	SPDK_DEBUGLOG(nvmf_tcp, "host_ddgst_enable: %u\n", tqpair->host_ddgst_enable);
 
 	tqpair->state = NVME_TCP_QPAIR_STATE_INITIALIZING;
 	nvmf_tcp_qpair_write_pdu(tqpair, rsp_pdu, nvmf_tcp_send_icresp_complete, tqpair);
@@ -1558,11 +1558,11 @@ nvmf_tcp_pdu_psh_handle(struct spdk_nvmf_tcp_qpair *tqpair,
 	assert(tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH);
 	pdu = &tqpair->pdu_in_progress;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "pdu type of tqpair(%p) is %d\n", tqpair,
+	SPDK_DEBUGLOG(nvmf_tcp, "pdu type of tqpair(%p) is %d\n", tqpair,
 		      pdu->hdr.common.pdu_type);
 	/* check header digest if needed */
 	if (pdu->has_hdgst) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Compare the header of pdu=%p on tqpair=%p\n", pdu, tqpair);
+		SPDK_DEBUGLOG(nvmf_tcp, "Compare the header of pdu=%p on tqpair=%p\n", pdu, tqpair);
 		crc32c = nvme_tcp_pdu_calc_header_digest(pdu);
 		rc = MATCH_DIGEST_WORD((uint8_t *)pdu->hdr.raw + pdu->hdr.common.hlen, crc32c);
 		if (rc == 0) {
@@ -1719,7 +1719,7 @@ nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 	/* The loop here is to allow for several back-to-back state changes. */
 	do {
 		prev_state = tqpair->recv_state;
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "tqpair(%p) recv pdu entering state %d\n", tqpair, prev_state);
+		SPDK_DEBUGLOG(nvmf_tcp, "tqpair(%p) recv pdu entering state %d\n", tqpair, prev_state);
 
 		pdu = &tqpair->pdu_in_progress;
 		switch (tqpair->recv_state) {
@@ -1734,7 +1734,7 @@ nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 						sizeof(struct spdk_nvme_tcp_common_pdu_hdr) - pdu->ch_valid_bytes,
 						(void *)&pdu->hdr.common + pdu->ch_valid_bytes);
 			if (rc < 0) {
-				SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "will disconnect tqpair=%p\n", tqpair);
+				SPDK_DEBUGLOG(nvmf_tcp, "will disconnect tqpair=%p\n", tqpair);
 				return NVME_TCP_PDU_FATAL;
 			} else if (rc > 0) {
 				pdu->ch_valid_bytes += rc;
@@ -1853,7 +1853,7 @@ nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_req *tcp_req,
 		/* fill request length and populate iovs */
 		req->length = length;
 
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Data requested length= 0x%x\n", length);
+		SPDK_DEBUGLOG(nvmf_tcp, "Data requested length= 0x%x\n", length);
 
 		if (spdk_unlikely(req->dif.dif_insert_or_strip)) {
 			req->dif.orig_length = length;
@@ -1863,7 +1863,7 @@ nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_req *tcp_req,
 
 		if (spdk_nvmf_request_get_buffers(req, group, transport, length)) {
 			/* No available buffers. Queue this request up. */
-			SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "No available large data buffers. Queueing request %p\n",
+			SPDK_DEBUGLOG(nvmf_tcp, "No available large data buffers. Queueing request %p\n",
 				      tcp_req);
 			return 0;
 		}
@@ -1871,7 +1871,7 @@ nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_req *tcp_req,
 		/* backward compatible */
 		req->data = req->iov[0].iov_base;
 
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Request %p took %d buffer/s from central pool, and data=%p\n",
+		SPDK_DEBUGLOG(nvmf_tcp, "Request %p took %d buffer/s from central pool, and data=%p\n",
 			      tcp_req, req->iovcnt, req->data);
 
 		return 0;
@@ -1880,7 +1880,7 @@ nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_req *tcp_req,
 		uint64_t offset = sgl->address;
 		uint32_t max_len = transport->opts.in_capsule_data_size;
 
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "In-capsule data: offset 0x%" PRIx64 ", length 0x%x\n",
+		SPDK_DEBUGLOG(nvmf_tcp, "In-capsule data: offset 0x%" PRIx64 ", length 0x%x\n",
 			      offset, length);
 
 		if (offset > max_len) {
@@ -1952,7 +1952,7 @@ nvmf_tcp_send_c2h_data(struct spdk_nvmf_tcp_qpair *tqpair,
 	uint32_t plen, pdo, alignment;
 	int rc;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "enter\n");
+	SPDK_DEBUGLOG(nvmf_tcp, "enter\n");
 
 	rsp_pdu = nvmf_tcp_req_pdu_init(tcp_req);
 	assert(rsp_pdu != NULL);
@@ -2031,7 +2031,7 @@ request_transfer_out(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_tcp_qpair	*tqpair;
 	struct spdk_nvme_cpl		*rsp;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "enter\n");
+	SPDK_DEBUGLOG(nvmf_tcp, "enter\n");
 
 	qpair = req->qpair;
 	rsp = &req->rsp->nvme_cpl;
@@ -2102,7 +2102,7 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 	do {
 		prev_state = tcp_req->state;
 
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Request %p entering state %d on tqpair=%p\n", tcp_req, prev_state,
+		SPDK_DEBUGLOG(nvmf_tcp, "Request %p entering state %d on tqpair=%p\n", tcp_req, prev_state,
 			      tqpair);
 
 		switch (tcp_req->state) {
@@ -2128,7 +2128,7 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 				tcp_req->req.rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 				tcp_req->req.rsp->nvme_cpl.status.sct = SPDK_NVME_SC_INVALID_OPCODE;
 				nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_COMPLETE);
-				SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Request %p: invalid xfer type (BIDIRECTIONAL)\n", tcp_req);
+				SPDK_DEBUGLOG(nvmf_tcp, "Request %p: invalid xfer type (BIDIRECTIONAL)\n", tcp_req);
 				break;
 			}
 
@@ -2155,7 +2155,7 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			assert(tcp_req->req.xfer != SPDK_NVME_DATA_NONE);
 
 			if (!tcp_req->has_incapsule_data && (&tcp_req->req != STAILQ_FIRST(&group->pending_buf_queue))) {
-				SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP,
+				SPDK_DEBUGLOG(nvmf_tcp,
 					      "Not the first element to wait for the buf for tcp_req(%p) on tqpair=%p\n",
 					      tcp_req, tqpair);
 				/* This request needs to wait in line to obtain a buffer */
@@ -2173,7 +2173,7 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			}
 
 			if (!tcp_req->req.data) {
-				SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "No buffer allocated for tcp_req(%p) on tqpair(%p\n)",
+				SPDK_DEBUGLOG(nvmf_tcp, "No buffer allocated for tcp_req(%p) on tqpair(%p\n)",
 					      tcp_req, tqpair);
 				/* No buffers available. */
 				break;
@@ -2184,7 +2184,7 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			/* If data is transferring from host to controller, we need to do a transfer from the host. */
 			if (tcp_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
 				if (tcp_req->req.data_from_pool) {
-					SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Sending R2T for tcp_req(%p) on tqpair=%p\n", tcp_req, tqpair);
+					SPDK_DEBUGLOG(nvmf_tcp, "Sending R2T for tcp_req(%p) on tqpair=%p\n", tcp_req, tqpair);
 					nvmf_tcp_send_r2t_pdu(tqpair, tcp_req);
 				} else {
 					struct nvme_tcp_pdu *pdu;
@@ -2192,7 +2192,7 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 					nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
 
 					pdu = &tqpair->pdu_in_progress;
-					SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Not need to send r2t for tcp_req(%p) on tqpair=%p\n", tcp_req,
+					SPDK_DEBUGLOG(nvmf_tcp, "Not need to send r2t for tcp_req(%p) on tqpair=%p\n", tcp_req,
 						      tqpair);
 					/* No need to send r2t, contained in the capsuled data */
 					nvme_tcp_pdu_set_data_buf(pdu, tcp_req->req.iov, tcp_req->req.iovcnt,
@@ -2351,7 +2351,7 @@ nvmf_tcp_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
 
 	assert(tqpair->group == tgroup);
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "remove tqpair=%p from the tgroup=%p\n", tqpair, tgroup);
+	SPDK_DEBUGLOG(nvmf_tcp, "remove tqpair=%p from the tgroup=%p\n", tqpair, tgroup);
 	if (tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_REQ) {
 		TAILQ_REMOVE(&tgroup->await_req, tqpair, link);
 	} else {
@@ -2387,7 +2387,7 @@ nvmf_tcp_close_qpair(struct spdk_nvmf_qpair *qpair)
 {
 	struct spdk_nvmf_tcp_qpair *tqpair;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Qpair: %p\n", qpair);
+	SPDK_DEBUGLOG(nvmf_tcp, "Qpair: %p\n", qpair);
 
 	tqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_tcp_qpair, qpair);
 	tqpair->state = NVME_TCP_QPAIR_STATE_EXITED;
@@ -2639,4 +2639,4 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp = {
 };
 
 SPDK_NVMF_TRANSPORT_REGISTER(tcp, &spdk_nvmf_transport_tcp);
-SPDK_LOG_REGISTER_COMPONENT("nvmf_tcp", SPDK_LOG_NVMF_TCP)
+SPDK_LOG_REGISTER_COMPONENT(nvmf_tcp)

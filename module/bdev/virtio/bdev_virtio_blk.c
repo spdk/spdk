@@ -753,4 +753,4 @@ bdev_virtio_blk_get_ctx_size(void)
 	return sizeof(struct virtio_blk_io_ctx);
 }
 
-SPDK_LOG_REGISTER_COMPONENT("virtio_blk", SPDK_LOG_VIRTIO_BLK)
+SPDK_LOG_REGISTER_COMPONENT(virtio_blk)

@@ -126,7 +126,7 @@ spdk_thread_lib_init(spdk_new_thread_fn new_thread_fn, size_t ctx_sz)
 	assert(g_thread_op_fn == NULL);
 
 	if (new_thread_fn == NULL) {
-		SPDK_INFOLOG(SPDK_LOG_THREAD, "new_thread_fn was not specified at spdk_thread_lib_init\n");
+		SPDK_INFOLOG(thread, "new_thread_fn was not specified at spdk_thread_lib_init\n");
 	} else {
 		g_new_thread_fn = new_thread_fn;
 	}
@@ -149,7 +149,7 @@ spdk_thread_lib_init_ext(spdk_thread_op_fn thread_op_fn,
 	}
 
 	if (thread_op_fn == NULL && thread_op_supported_fn == NULL) {
-		SPDK_INFOLOG(SPDK_LOG_THREAD, "thread_op_fn and thread_op_supported_fn were not specified\n");
+		SPDK_INFOLOG(thread, "thread_op_fn and thread_op_supported_fn were not specified\n");
 	} else {
 		g_thread_op_fn = thread_op_fn;
 		g_thread_op_supported_fn = thread_op_supported_fn;
@@ -301,7 +301,7 @@ spdk_thread_create(const char *name, struct spdk_cpuset *cpumask)
 	g_thread_count++;
 	pthread_mutex_unlock(&g_devlist_mutex);
 
-	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Allocating new thread (%" PRIu64 ", %s)\n",
+	SPDK_DEBUGLOG(thread, "Allocating new thread (%" PRIu64 ", %s)\n",
 		      thread->id, thread->name);
 
 	if (g_new_thread_fn) {
@@ -340,7 +340,7 @@ thread_exit(struct spdk_thread *thread, uint64_t now)
 
 	TAILQ_FOREACH(poller, &thread->active_pollers, tailq) {
 		if (poller->state != SPDK_POLLER_STATE_UNREGISTERED) {
-			SPDK_INFOLOG(SPDK_LOG_THREAD,
+			SPDK_INFOLOG(thread,
 				     "thread %s still has active poller %s\n",
 				     thread->name, poller->name);
 			return;
@@ -349,7 +349,7 @@ thread_exit(struct spdk_thread *thread, uint64_t now)
 
 	TAILQ_FOREACH(poller, &thread->timed_pollers, tailq) {
 		if (poller->state != SPDK_POLLER_STATE_UNREGISTERED) {
-			SPDK_INFOLOG(SPDK_LOG_THREAD,
+			SPDK_INFOLOG(thread,
 				     "thread %s still has active timed poller %s\n",
 				     thread->name, poller->name);
 			return;
@@ -357,14 +357,14 @@ thread_exit(struct spdk_thread *thread, uint64_t now)
 	}
 
 	TAILQ_FOREACH(poller, &thread->paused_pollers, tailq) {
-		SPDK_INFOLOG(SPDK_LOG_THREAD,
+		SPDK_INFOLOG(thread,
 			     "thread %s still has paused poller %s\n",
 			     thread->name, poller->name);
 		return;
 	}
 
 	TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
-		SPDK_INFOLOG(SPDK_LOG_THREAD,
+		SPDK_INFOLOG(thread,
 			     "thread %s still has channel for io_device %s\n",
 			     thread->name, ch->dev->name);
 		return;
@@ -377,12 +377,12 @@ exited:
 int
 spdk_thread_exit(struct spdk_thread *thread)
 {
-	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Exit thread %s\n", thread->name);
+	SPDK_DEBUGLOG(thread, "Exit thread %s\n", thread->name);
 
 	assert(tls_thread == thread);
 
 	if (thread->state >= SPDK_THREAD_STATE_EXITING) {
-		SPDK_INFOLOG(SPDK_LOG_THREAD,
+		SPDK_INFOLOG(thread,
 			     "thread %s is already exiting\n",
 			     thread->name);
 		return 0;
@@ -403,7 +403,7 @@ spdk_thread_is_exited(struct spdk_thread *thread)
 void
 spdk_thread_destroy(struct spdk_thread *thread)
 {
-	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Destroy thread %s\n", thread->name);
+	SPDK_DEBUGLOG(thread, "Destroy thread %s\n", thread->name);
 
 	assert(thread->state == SPDK_THREAD_STATE_EXITED);
 
@@ -610,7 +610,7 @@ thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 
 #ifdef DEBUG
 		if (poller_rc == -1) {
-			SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Poller %s returned -1\n", poller->name);
+			SPDK_DEBUGLOG(thread, "Poller %s returned -1\n", poller->name);
 		}
 #endif
 
@@ -654,7 +654,7 @@ thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 
 #ifdef DEBUG
 		if (timer_rc == -1) {
-			SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Timed poller %s returned -1\n", poller->name);
+			SPDK_DEBUGLOG(thread, "Timed poller %s returned -1\n", poller->name);
 		}
 #endif
 
@@ -1108,12 +1108,12 @@ _on_thread(void *ctx)
 	pthread_mutex_unlock(&g_devlist_mutex);
 
 	if (!ct->cur_thread) {
-		SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Completed thread iteration\n");
+		SPDK_DEBUGLOG(thread, "Completed thread iteration\n");
 
 		rc = spdk_thread_send_msg(ct->orig_thread, ct->cpl, ct->ctx);
 		free(ctx);
 	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Continuing thread iteration to %s\n",
+		SPDK_DEBUGLOG(thread, "Continuing thread iteration to %s\n",
 			      ct->cur_thread->name);
 
 		rc = spdk_thread_send_msg(ct->cur_thread, _on_thread, ctx);
@@ -1152,7 +1152,7 @@ spdk_for_each_thread(spdk_msg_fn fn, void *ctx, spdk_msg_fn cpl)
 	ct->cur_thread = TAILQ_FIRST(&g_threads);
 	pthread_mutex_unlock(&g_devlist_mutex);
 
-	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Starting thread iteration from %s\n",
+	SPDK_DEBUGLOG(thread, "Starting thread iteration from %s\n",
 		      ct->orig_thread->name);
 
 	rc = spdk_thread_send_msg(ct->cur_thread, _on_thread, ct);
@@ -1198,7 +1198,7 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 	dev->unregistered = false;
 	dev->refcnt = 0;
 
-	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Registering io_device %s (%p) on thread %s\n",
+	SPDK_DEBUGLOG(thread, "Registering io_device %s (%p) on thread %s\n",
 		      dev->name, dev->io_device, thread->name);
 
 	pthread_mutex_lock(&g_devlist_mutex);
@@ -1220,7 +1220,7 @@ _finish_unregister(void *arg)
 {
 	struct io_device *dev = arg;
 
-	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Finishing unregistration of io_device %s (%p) on thread %s\n",
+	SPDK_DEBUGLOG(thread, "Finishing unregistration of io_device %s (%p) on thread %s\n",
 		      dev->name, dev->io_device, dev->unregister_thread->name);
 
 	dev->unregister_cb(dev->io_device);
@@ -1236,7 +1236,7 @@ io_device_free(struct io_device *dev)
 		free(dev);
 	} else {
 		assert(dev->unregister_thread != NULL);
-		SPDK_DEBUGLOG(SPDK_LOG_THREAD, "io_device %s (%p) needs to unregister from thread %s\n",
+		SPDK_DEBUGLOG(thread, "io_device %s (%p) needs to unregister from thread %s\n",
 			      dev->name, dev->io_device, dev->unregister_thread->name);
 		rc = spdk_thread_send_msg(dev->unregister_thread, _finish_unregister, dev);
 		assert(rc == 0);
@@ -1285,7 +1285,7 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 	dev->unregister_thread = thread;
 	pthread_mutex_unlock(&g_devlist_mutex);
 
-	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Unregistering io_device %s (%p) from thread %s\n",
+	SPDK_DEBUGLOG(thread, "Unregistering io_device %s (%p) from thread %s\n",
 		      dev->name, dev->io_device, thread->name);
 
 	if (refcnt > 0) {
@@ -1339,7 +1339,7 @@ spdk_get_io_channel(void *io_device)
 		if (ch->dev == dev) {
 			ch->ref++;
 
-			SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Get io_channel %p for io_device %s (%p) on thread %s refcnt %u\n",
+			SPDK_DEBUGLOG(thread, "Get io_channel %p for io_device %s (%p) on thread %s refcnt %u\n",
 				      ch, dev->name, dev->io_device, thread->name, ch->ref);
 
 			/*
@@ -1365,7 +1365,7 @@ spdk_get_io_channel(void *io_device)
 	ch->destroy_ref = 0;
 	TAILQ_INSERT_TAIL(&thread->io_channels, ch, tailq);
 
-	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Get io_channel %p for io_device %s (%p) on thread %s refcnt %u\n",
+	SPDK_DEBUGLOG(thread, "Get io_channel %p for io_device %s (%p) on thread %s refcnt %u\n",
 		      ch, dev->name, dev->io_device, thread->name, ch->ref);
 
 	dev->refcnt++;
@@ -1399,7 +1399,7 @@ put_io_channel(void *arg)
 		return;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_THREAD,
+	SPDK_DEBUGLOG(thread,
 		      "Releasing io_channel %p for io_device %s (%p) on thread %s\n",
 		      ch, ch->dev->name, ch->dev->io_device, thread->name);
 
@@ -1461,7 +1461,7 @@ spdk_put_io_channel(struct spdk_io_channel *ch)
 		return;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_THREAD,
+	SPDK_DEBUGLOG(thread,
 		      "Putting io_channel %p for io_device %s (%p) on thread %s refcnt %u\n",
 		      ch, ch->dev->name, ch->dev->io_device, thread->name, ch->ref);
 
@@ -1639,4 +1639,4 @@ end:
 }
 
 
-SPDK_LOG_REGISTER_COMPONENT("thread", SPDK_LOG_THREAD)
+SPDK_LOG_REGISTER_COMPONENT(thread)

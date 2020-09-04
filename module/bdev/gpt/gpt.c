@@ -239,7 +239,7 @@ gpt_check_mbr(struct spdk_gpt *gpt)
 
 	mbr = (struct spdk_mbr *)gpt->buf;
 	if (from_le16(&mbr->mbr_signature) != SPDK_MBR_SIGNATURE) {
-		SPDK_DEBUGLOG(SPDK_LOG_GPT_PARSE, "Signature mismatch, provided=%x,"
+		SPDK_DEBUGLOG(gpt_parse, "Signature mismatch, provided=%x,"
 			      "expected=%x\n", from_le16(&mbr->disk_signature),
 			      SPDK_MBR_SIGNATURE);
 		return -1;
@@ -256,7 +256,7 @@ gpt_check_mbr(struct spdk_gpt *gpt)
 	if (ret == GPT_PROTECTIVE_MBR) {
 		expected_start_lba = GPT_PRIMARY_PARTITION_TABLE_LBA;
 		if (from_le32(&mbr->partitions[primary_partition].start_lba) != expected_start_lba) {
-			SPDK_DEBUGLOG(SPDK_LOG_GPT_PARSE, "start lba mismatch, provided=%u, expected=%u\n",
+			SPDK_DEBUGLOG(gpt_parse, "start lba mismatch, provided=%u, expected=%u\n",
 				      from_le32(&mbr->partitions[primary_partition].start_lba),
 				      expected_start_lba);
 			return -1;
@@ -265,13 +265,13 @@ gpt_check_mbr(struct spdk_gpt *gpt)
 		total_lba_size = from_le32(&mbr->partitions[primary_partition].size_lba);
 		if ((total_lba_size != ((uint32_t) gpt->total_sectors - 1)) &&
 		    (total_lba_size != 0xFFFFFFFF)) {
-			SPDK_DEBUGLOG(SPDK_LOG_GPT_PARSE,
+			SPDK_DEBUGLOG(gpt_parse,
 				      "GPT Primary MBR size does not equal: (record_size %u != actual_size %u)!\n",
 				      total_lba_size, (uint32_t) gpt->total_sectors - 1);
 			return -1;
 		}
 	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_GPT_PARSE, "Currently only support GPT Protective MBR format\n");
+		SPDK_DEBUGLOG(gpt_parse, "Currently only support GPT Protective MBR format\n");
 		return -1;
 	}
 
@@ -290,7 +290,7 @@ gpt_parse_mbr(struct spdk_gpt *gpt)
 
 	rc = gpt_check_mbr(gpt);
 	if (rc) {
-		SPDK_DEBUGLOG(SPDK_LOG_GPT_PARSE, "Failed to detect gpt in MBR\n");
+		SPDK_DEBUGLOG(gpt_parse, "Failed to detect gpt in MBR\n");
 		return rc;
 	}
 
@@ -317,4 +317,4 @@ gpt_parse_partition_table(struct spdk_gpt *gpt)
 	return 0;
 }
 
-SPDK_LOG_REGISTER_COMPONENT("gpt_parse", SPDK_LOG_GPT_PARSE)
+SPDK_LOG_REGISTER_COMPONENT(gpt_parse)

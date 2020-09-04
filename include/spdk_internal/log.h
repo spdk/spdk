@@ -56,14 +56,14 @@ void spdk_log_register_flag(const char *name, struct spdk_log_flag *flag);
 struct spdk_log_flag *spdk_log_get_first_flag(void);
 struct spdk_log_flag *spdk_log_get_next_flag(struct spdk_log_flag *flag);
 
-#define SPDK_LOG_REGISTER_COMPONENT(str, FLAG) \
+#define SPDK_LOG_REGISTER_COMPONENT(FLAG) \
 struct spdk_log_flag SPDK_LOG_##FLAG = { \
 	.enabled = false, \
-	.name = str, \
+	.name = #FLAG, \
 }; \
 __attribute__((constructor)) static void register_flag_##FLAG(void) \
 { \
-	spdk_log_register_flag(str, &SPDK_LOG_##FLAG); \
+	spdk_log_register_flag(#FLAG, &SPDK_LOG_##FLAG); \
 }
 
 #define SPDK_INFOLOG(FLAG, ...)									\

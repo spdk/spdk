@@ -665,7 +665,7 @@ bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 
 		default:
 			if (pc >= 0xc0 && pc <= 0xff) {
-				SPDK_DEBUGLOG(SPDK_LOG_SCSI, "Vendor specific INQUIRY VPD page 0x%x\n", pc);
+				SPDK_DEBUGLOG(scsi, "Vendor specific INQUIRY VPD page 0x%x\n", pc);
 			} else {
 				SPDK_ERRLOG("unsupported INQUIRY VPD page 0x%x\n", pc);
 			}
@@ -840,7 +840,7 @@ bdev_scsi_mode_sense_page(struct spdk_bdev *bdev,
 		break;
 	case 0x01:
 		/* Read-Write Error Recovery */
-		SPDK_DEBUGLOG(SPDK_LOG_SCSI,
+		SPDK_DEBUGLOG(scsi,
 			      "MODE_SENSE Read-Write Error Recovery\n");
 		if (subpage != 0x00) {
 			break;
@@ -851,7 +851,7 @@ bdev_scsi_mode_sense_page(struct spdk_bdev *bdev,
 		break;
 	case 0x02:
 		/* Disconnect-Reconnect */
-		SPDK_DEBUGLOG(SPDK_LOG_SCSI,
+		SPDK_DEBUGLOG(scsi,
 			      "MODE_SENSE Disconnect-Reconnect\n");
 		if (subpage != 0x00) {
 			break;
@@ -874,7 +874,7 @@ bdev_scsi_mode_sense_page(struct spdk_bdev *bdev,
 		break;
 	case 0x07:
 		/* Verify Error Recovery */
-		SPDK_DEBUGLOG(SPDK_LOG_SCSI,
+		SPDK_DEBUGLOG(scsi,
 			      "MODE_SENSE Verify Error Recovery\n");
 
 		if (subpage != 0x00) {
@@ -887,7 +887,7 @@ bdev_scsi_mode_sense_page(struct spdk_bdev *bdev,
 		break;
 	case 0x08: {
 		/* Caching */
-		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "MODE_SENSE Caching\n");
+		SPDK_DEBUGLOG(scsi, "MODE_SENSE Caching\n");
 		if (subpage != 0x00) {
 			break;
 		}
@@ -914,7 +914,7 @@ bdev_scsi_mode_sense_page(struct spdk_bdev *bdev,
 		switch (subpage) {
 		case 0x00:
 			/* Control */
-			SPDK_DEBUGLOG(SPDK_LOG_SCSI,
+			SPDK_DEBUGLOG(scsi,
 				      "MODE_SENSE Control\n");
 			plen = 0x0a + 2;
 			mode_sense_page_init(cp, plen, page, subpage);
@@ -922,7 +922,7 @@ bdev_scsi_mode_sense_page(struct spdk_bdev *bdev,
 			break;
 		case 0x01:
 			/* Control Extension */
-			SPDK_DEBUGLOG(SPDK_LOG_SCSI,
+			SPDK_DEBUGLOG(scsi,
 				      "MODE_SENSE Control Extension\n");
 			plen = 0x1c + 4;
 			mode_sense_page_init(cp, plen, page, subpage);
@@ -959,7 +959,7 @@ bdev_scsi_mode_sense_page(struct spdk_bdev *bdev,
 		break;
 	case 0x10:
 		/* XOR Control */
-		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "MODE_SENSE XOR Control\n");
+		SPDK_DEBUGLOG(scsi, "MODE_SENSE XOR Control\n");
 		if (subpage != 0x00) {
 			break;
 		}
@@ -988,7 +988,7 @@ bdev_scsi_mode_sense_page(struct spdk_bdev *bdev,
 		break;
 	case 0x1a:
 		/* Power Condition */
-		SPDK_DEBUGLOG(SPDK_LOG_SCSI,
+		SPDK_DEBUGLOG(scsi,
 			      "MODE_SENSE Power Condition\n");
 		if (subpage != 0x00) {
 			break;
@@ -1002,7 +1002,7 @@ bdev_scsi_mode_sense_page(struct spdk_bdev *bdev,
 		break;
 	case 0x1c:
 		/* Informational Exceptions Control */
-		SPDK_DEBUGLOG(SPDK_LOG_SCSI,
+		SPDK_DEBUGLOG(scsi,
 			      "MODE_SENSE Informational Exceptions Control\n");
 		if (subpage != 0x00) {
 			break;
@@ -1305,7 +1305,7 @@ bdev_scsi_readwrite(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 
 	bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
 	if (spdk_unlikely(bdev_num_blocks <= lba || bdev_num_blocks - lba < xfer_len)) {
-		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "end of media\n");
+		SPDK_DEBUGLOG(scsi, "end of media\n");
 		sk = SPDK_SCSI_SENSE_ILLEGAL_REQUEST;
 		asc = SPDK_SCSI_ASC_LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE;
 		goto check_condition;
@@ -1345,7 +1345,7 @@ bdev_scsi_readwrite(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 
 	offset_blocks += lba;
 
-	SPDK_DEBUGLOG(SPDK_LOG_SCSI,
+	SPDK_DEBUGLOG(scsi,
 		      "%s: lba=%"PRIu64", len=%"PRIu64"\n",
 		      is_read ? "Read" : "Write", offset_blocks, num_blocks);
 
@@ -1724,14 +1724,14 @@ bdev_scsi_process_primary(struct spdk_scsi_task *task)
 			break;
 		}
 
-		SPDK_LOGDUMP(SPDK_LOG_SCSI, "INQUIRY", data, data_len);
+		SPDK_LOGDUMP(scsi, "INQUIRY", data, data_len);
 		break;
 
 	case SPDK_SPC_REPORT_LUNS: {
 		int sel;
 
 		sel = cdb[2];
-		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "sel=%x\n", sel);
+		SPDK_DEBUGLOG(scsi, "sel=%x\n", sel);
 
 		alloc_len = from_be32(&cdb[6]);
 		rc = bdev_scsi_check_len(task, alloc_len, 16);
@@ -1752,7 +1752,7 @@ bdev_scsi_process_primary(struct spdk_scsi_task *task)
 			break;
 		}
 
-		SPDK_LOGDUMP(SPDK_LOG_SCSI, "REPORT LUNS", data, data_len);
+		SPDK_LOGDUMP(scsi, "REPORT LUNS", data, data_len);
 		break;
 	}
 
@@ -1869,12 +1869,12 @@ bdev_scsi_process_primary(struct spdk_scsi_task *task)
 	}
 
 	case SPDK_SPC_LOG_SELECT:
-		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "LOG_SELECT\n");
+		SPDK_DEBUGLOG(scsi, "LOG_SELECT\n");
 		cmd_parsed = 1;
 	/* FALLTHROUGH */
 	case SPDK_SPC_LOG_SENSE:
 		if (!cmd_parsed) {
-			SPDK_DEBUGLOG(SPDK_LOG_SCSI, "LOG_SENSE\n");
+			SPDK_DEBUGLOG(scsi, "LOG_SENSE\n");
 		}
 
 		/* INVALID COMMAND OPERATION CODE */
@@ -1886,12 +1886,12 @@ bdev_scsi_process_primary(struct spdk_scsi_task *task)
 		break;
 
 	case SPDK_SPC_TEST_UNIT_READY:
-		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "TEST_UNIT_READY\n");
+		SPDK_DEBUGLOG(scsi, "TEST_UNIT_READY\n");
 		cmd_parsed = 1;
 	/* FALLTHROUGH */
 	case SPDK_SBC_START_STOP_UNIT:
 		if (!cmd_parsed) {
-			SPDK_DEBUGLOG(SPDK_LOG_SCSI, "START_STOP_UNIT\n");
+			SPDK_DEBUGLOG(scsi, "START_STOP_UNIT\n");
 		}
 
 		rc = 0;
@@ -1975,7 +1975,7 @@ bdev_scsi_execute(struct spdk_scsi_task *task)
 
 	if ((rc = bdev_scsi_process_block(task)) == SPDK_SCSI_TASK_UNKNOWN) {
 		if ((rc = bdev_scsi_process_primary(task)) == SPDK_SCSI_TASK_UNKNOWN) {
-			SPDK_DEBUGLOG(SPDK_LOG_SCSI, "unsupported SCSI OP=0x%x\n", task->cdb[0]);
+			SPDK_DEBUGLOG(scsi, "unsupported SCSI OP=0x%x\n", task->cdb[0]);
 			/* INVALID COMMAND OPERATION CODE */
 			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 						  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,

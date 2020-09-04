@@ -92,7 +92,7 @@ jsonrpc_parse_response(struct spdk_jsonrpc_client *client)
 		return 0;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_RPC_CLIENT, "JSON string is :\n%s\n", client->recv_buf);
+	SPDK_DEBUGLOG(rpc_client, "JSON string is :\n%s\n", client->recv_buf);
 	if (rc < 0 || rc > SPDK_JSONRPC_CLIENT_MAX_VALUES) {
 		SPDK_ERRLOG("JSON parse error (rc: %zd)\n", rc);
 		/*
@@ -224,4 +224,4 @@ spdk_jsonrpc_end_request(struct spdk_jsonrpc_client_request *request, struct spd
 	jsonrpc_client_write_cb(request, "\n", 1);
 }
 
-SPDK_LOG_REGISTER_COMPONENT("rpc_client", SPDK_LOG_RPC_CLIENT)
+SPDK_LOG_REGISTER_COMPONENT(rpc_client)

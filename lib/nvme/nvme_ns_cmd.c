@@ -57,7 +57,7 @@ nvme_ns_check_request_length(uint32_t lba_count, uint32_t sectors_per_max_io,
 		child_per_io = (lba_count + sectors_per_max_io - 1) / sectors_per_max_io;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "checking maximum i/o length %d\n", child_per_io);
+	SPDK_DEBUGLOG(nvme, "checking maximum i/o length %d\n", child_per_io);
 
 	return child_per_io >= qdepth;
 }

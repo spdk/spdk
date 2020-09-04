@@ -72,7 +72,7 @@ vhost_session_mem_register(struct rte_vhost_memory *mem)
 
 	for (i = 0; i < mem->nregions; i++) {
 		vhost_session_mem_region_calc(&previous_start, &start, &end, &len, &mem->regions[i]);
-		SPDK_INFOLOG(SPDK_LOG_VHOST, "Registering VM memory for vtophys translation - 0x%jx len:0x%jx\n",
+		SPDK_INFOLOG(vhost, "Registering VM memory for vtophys translation - 0x%jx len:0x%jx\n",
 			     start, len);
 
 		if (spdk_mem_register((void *)start, len) != 0) {

@@ -102,14 +102,14 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 	struct virtqueue *vq;
 	int rc;
 
-	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "setting up queue: %"PRIu16"\n", vtpci_queue_idx);
+	SPDK_DEBUGLOG(virtio_dev, "setting up queue: %"PRIu16"\n", vtpci_queue_idx);
 
 	/*
 	 * Read the virtqueue size from the Queue Size field
 	 * Always power of 2 and if 0 virtqueue does not exist
 	 */
 	vq_size = virtio_dev_backend_ops(dev)->get_queue_size(dev, vtpci_queue_idx);
-	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "vq_size: %u\n", vq_size);
+	SPDK_DEBUGLOG(virtio_dev, "vq_size: %u\n", vq_size);
 	if (vq_size == 0) {
 		SPDK_ERRLOG("virtqueue %"PRIu16" does not exist\n", vtpci_queue_idx);
 		return -EINVAL;
@@ -139,7 +139,7 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 	 */
 	size = vring_size(vq_size, VIRTIO_PCI_VRING_ALIGN);
 	vq->vq_ring_size = SPDK_ALIGN_CEIL(size, VIRTIO_PCI_VRING_ALIGN);
-	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "vring_size: %u, rounded_vring_size: %u\n",
+	SPDK_DEBUGLOG(virtio_dev, "vring_size: %u, rounded_vring_size: %u\n",
 		      size, vq->vq_ring_size);
 
 	vq->owner_thread = NULL;
@@ -152,9 +152,9 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 		return rc;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "vq->vq_ring_mem:      0x%" PRIx64 "\n",
+	SPDK_DEBUGLOG(virtio_dev, "vq->vq_ring_mem:      0x%" PRIx64 "\n",
 		      vq->vq_ring_mem);
-	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "vq->vq_ring_virt_mem: 0x%" PRIx64 "\n",
+	SPDK_DEBUGLOG(virtio_dev, "vq->vq_ring_virt_mem: 0x%" PRIx64 "\n",
 		      (uint64_t)(uintptr_t)vq->vq_ring_virt_mem);
 
 	virtio_init_vring(vq);
@@ -231,8 +231,8 @@ virtio_negotiate_features(struct virtio_dev *dev, uint64_t req_features)
 	uint64_t host_features = virtio_dev_backend_ops(dev)->get_features(dev);
 	int rc;
 
-	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "guest features = %" PRIx64 "\n", req_features);
-	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "device features = %" PRIx64 "\n", host_features);
+	SPDK_DEBUGLOG(virtio_dev, "guest features = %" PRIx64 "\n", req_features);
+	SPDK_DEBUGLOG(virtio_dev, "device features = %" PRIx64 "\n", host_features);
 
 	rc = virtio_dev_backend_ops(dev)->set_features(dev, req_features & host_features);
 	if (rc != 0) {
@@ -240,7 +240,7 @@ virtio_negotiate_features(struct virtio_dev *dev, uint64_t req_features)
 		return rc;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "negotiated features = %" PRIx64 "\n",
+	SPDK_DEBUGLOG(virtio_dev, "negotiated features = %" PRIx64 "\n",
 		      dev->negotiated_features);
 
 	virtio_dev_set_status(dev, VIRTIO_CONFIG_S_FEATURES_OK);
@@ -473,7 +473,7 @@ virtqueue_req_flush(struct virtqueue *vq)
 	}
 
 	virtio_dev_backend_ops(vq->vdev)->notify_queue(vq->vdev, vq);
-	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "Notified backend after xmit\n");
+	SPDK_DEBUGLOG(virtio_dev, "Notified backend after xmit\n");
 }
 
 void
@@ -714,4 +714,4 @@ virtio_dev_dump_json_info(struct virtio_dev *hw, struct spdk_json_write_ctx *w)
 	spdk_json_write_object_end(w);
 }
 
-SPDK_LOG_REGISTER_COMPONENT("virtio_dev", SPDK_LOG_VIRTIO_DEV)
+SPDK_LOG_REGISTER_COMPONENT(virtio_dev)

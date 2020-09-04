@@ -767,7 +767,7 @@ zone_block_register(struct spdk_bdev *base_bdev)
 		bdev_node->bdev.blockcnt = bdev_node->num_zones * zone_size;
 
 		if (bdev_node->num_zones * name->zone_capacity != base_bdev->blockcnt) {
-			SPDK_DEBUGLOG(SPDK_LOG_VBDEV_ZONE_BLOCK,
+			SPDK_DEBUGLOG(vbdev_zone_block,
 				      "Lost %lu blocks due to zone capacity and base bdev size misalignment\n",
 				      base_bdev->blockcnt - bdev_node->num_zones * name->zone_capacity);
 		}
@@ -913,4 +913,4 @@ zone_block_examine(struct spdk_bdev *bdev)
 	spdk_bdev_module_examine_done(&bdev_zoned_if);
 }
 
-SPDK_LOG_REGISTER_COMPONENT("vbdev_zone_block", SPDK_LOG_VBDEV_ZONE_BLOCK)
+SPDK_LOG_REGISTER_COMPONENT(vbdev_zone_block)

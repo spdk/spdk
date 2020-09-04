@@ -40,7 +40,7 @@
 
 #include "nvmf/subsystem.c"
 
-SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
+SPDK_LOG_REGISTER_COMPONENT(nvmf)
 
 DEFINE_STUB(spdk_bdev_module_claim_bdev,
 	    int,
