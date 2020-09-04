@@ -1236,9 +1236,8 @@ blob_md_page_calc_crc(void *page)
 }
 
 static void
-blob_load_final(void *cb_arg, int bserrno)
+blob_load_final(struct spdk_blob_load_ctx *ctx, int bserrno)
 {
-	struct spdk_blob_load_ctx	*ctx = cb_arg;
 	struct spdk_blob		*blob = ctx->blob;
 
 	if (bserrno == 0) {
@@ -1554,9 +1553,8 @@ bs_batch_clear_dev(struct spdk_blob_persist_ctx *ctx, spdk_bs_batch_t *batch, ui
 static void blob_persist_check_dirty(struct spdk_blob_persist_ctx *ctx);
 
 static void
-blob_persist_complete(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+blob_persist_complete(spdk_bs_sequence_t *seq, struct spdk_blob_persist_ctx *ctx, int bserrno)
 {
-	struct spdk_blob_persist_ctx	*ctx = cb_arg;
 	struct spdk_blob_persist_ctx	*next_persist;
 	struct spdk_blob		*blob = ctx->blob;
 
@@ -1691,20 +1689,14 @@ blob_persist_clear_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserr
 }
 
 static void
-blob_persist_clear_clusters(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+blob_persist_clear_clusters(spdk_bs_sequence_t *seq, struct spdk_blob_persist_ctx *ctx)
 {
-	struct spdk_blob_persist_ctx	*ctx = cb_arg;
 	struct spdk_blob		*blob = ctx->blob;
 	struct spdk_blob_store		*bs = blob->bs;
 	spdk_bs_batch_t			*batch;
 	size_t				i;
 	uint64_t			lba;
 	uint32_t			lba_count;
-
-	if (bserrno != 0) {
-		blob_persist_complete(seq, ctx, bserrno);
-		return;
-	}
 
 	/* Clusters don't move around in blobs. The list shrinks or grows
 	 * at the end, but no changes ever occur in the middle of the list.
@@ -1778,7 +1770,7 @@ blob_persist_zero_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	}
 
 	/* Move on to clearing clusters */
-	blob_persist_clear_clusters(seq, ctx, 0);
+	blob_persist_clear_clusters(seq, ctx);
 }
 
 static void
@@ -1857,9 +1849,8 @@ blob_persist_write_page_root(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 }
 
 static void
-blob_persist_write_page_chain(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+blob_persist_write_page_chain(spdk_bs_sequence_t *seq, struct spdk_blob_persist_ctx *ctx)
 {
-	struct spdk_blob_persist_ctx	*ctx = cb_arg;
 	struct spdk_blob		*blob = ctx->blob;
 	struct spdk_blob_store		*bs = blob->bs;
 	uint64_t			lba;
@@ -1867,11 +1858,6 @@ blob_persist_write_page_chain(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno
 	struct spdk_blob_md_page	*page;
 	spdk_bs_batch_t			*batch;
 	size_t				i;
-
-	if (bserrno != 0) {
-		blob_persist_complete(seq, ctx, bserrno);
-		return;
-	}
 
 	/* Clusters don't move around in blobs. The list shrinks or grows
 	 * at the end, but no changes ever occur in the middle of the list.
@@ -2050,7 +2036,7 @@ blob_persist_generate_new_md(struct spdk_blob_persist_ctx *ctx)
 	ctx->pages[i - 1].crc = blob_md_page_calc_crc(&ctx->pages[i - 1]);
 	/* Start writing the metadata from last page to first */
 	blob->state = SPDK_BLOB_STATE_CLEAN;
-	blob_persist_write_page_chain(seq, ctx, 0);
+	blob_persist_write_page_chain(seq, ctx);
 }
 
 static void
@@ -5451,9 +5437,8 @@ bs_clone_snapshot_origblob_cleanup(void *cb_arg, int bserrno)
 }
 
 static void
-bs_clone_snapshot_newblob_cleanup(void *cb_arg, int bserrno)
+bs_clone_snapshot_newblob_cleanup(struct spdk_clone_snapshot_ctx *ctx, int bserrno)
 {
-	struct spdk_clone_snapshot_ctx *ctx = (struct spdk_clone_snapshot_ctx *)cb_arg;
 	struct spdk_blob *newblob = ctx->new.blob;
 
 	if (bserrno != 0) {
@@ -5877,16 +5862,10 @@ bs_inflate_blob_set_parent_cpl(void *cb_arg, struct spdk_blob *_parent, int bser
 }
 
 static void
-bs_inflate_blob_done(void *cb_arg, int bserrno)
+bs_inflate_blob_done(struct spdk_clone_snapshot_ctx *ctx)
 {
-	struct spdk_clone_snapshot_ctx *ctx = (struct spdk_clone_snapshot_ctx *)cb_arg;
 	struct spdk_blob *_blob = ctx->original.blob;
 	struct spdk_blob *_parent;
-
-	if (bserrno != 0) {
-		bs_clone_snapshot_origblob_cleanup(ctx, bserrno);
-		return;
-	}
 
 	if (ctx->allocate_all) {
 		/* remove thin provisioning */
@@ -5966,7 +5945,7 @@ bs_inflate_blob_touch_next(void *cb_arg, int bserrno)
 		spdk_blob_io_write(_blob, ctx->channel, NULL, offset, 0,
 				   bs_inflate_blob_touch_next, ctx);
 	} else {
-		bs_inflate_blob_done(cb_arg, bserrno);
+		bs_inflate_blob_done(ctx);
 	}
 }
 
