@@ -549,8 +549,9 @@ vbdev_gpt_examine(struct spdk_bdev *bdev)
 	}
 
 	if (spdk_bdev_get_block_size(bdev) % 512 != 0) {
-		SPDK_ERRLOG("GPT module does not support block size %" PRIu32 " for bdev %s\n",
-			    spdk_bdev_get_block_size(bdev), spdk_bdev_get_name(bdev));
+		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_GPT,
+			      "GPT module does not support block size %" PRIu32 " for bdev %s\n",
+			      spdk_bdev_get_block_size(bdev), spdk_bdev_get_name(bdev));
 		spdk_bdev_module_examine_done(&gpt_if);
 		return;
 	}
