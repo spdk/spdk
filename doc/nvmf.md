@@ -158,8 +158,8 @@ and an in capsule data size of 0 bytes. The TCP transport is configured with an 
 
 ~~~{.sh}
 build/bin/nvmf_tgt
-scripts/rpc.py nvmf_create_transport -t RDMA -u 8192 -p 4 -c 0
-scripts/rpc.py nvmf_create_transport -t TCP -u 16384 -p 8 -c 8192
+scripts/rpc.py nvmf_create_transport -t RDMA -u 8192 -m 4 -c 0
+scripts/rpc.py nvmf_create_transport -t TCP -u 16384 -m 8 -c 8192
 ~~~
 
 Below is an example of creating a malloc bdev and assigning it to a subsystem. Adjust the bdevs,
