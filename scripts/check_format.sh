@@ -428,9 +428,8 @@ SC2119,SC2120,SC2148,SC2153,SC2154,SC2164,SC2174,SC2001,SC2206,SC2207,SC2223"
 	SHCK_APPLY=false
 	SHCH_ARGS=" -x -e $SHCK_EXCLUDE -f $SHCK_FORMAT"
 
-	error=0
-	git ls-files '*.sh' | xargs -P$(nproc) -n1 shellcheck $SHCH_ARGS &> shellcheck.log || error=1
-	if [ $error -ne 0 ]; then
+	git ls-files '*.sh' | xargs -P$(nproc) -n1 shellcheck $SHCH_ARGS &> shellcheck.log
+	if [[ -s shellcheck.log ]]; then
 		echo " Bash formatting errors detected!"
 
 		cat shellcheck.log
