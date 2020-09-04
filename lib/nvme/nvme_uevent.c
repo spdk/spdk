@@ -43,13 +43,14 @@
 #include <linux/netlink.h>
 
 #define SPDK_UEVENT_MSG_LEN 4096
+#define SPDK_UEVENT_RECVBUF_SIZE 1024 * 1024
 
 int
 nvme_uevent_connect(void)
 {
 	struct sockaddr_nl addr;
 	int netlink_fd;
-	int size = 64 * 1024;
+	int size = SPDK_UEVENT_RECVBUF_SIZE;
 	int flag;
 
 	memset(&addr, 0, sizeof(addr));
