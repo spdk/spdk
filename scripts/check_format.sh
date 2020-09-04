@@ -424,26 +424,14 @@ if hash shellcheck 2> /dev/null; then
 	SHCK_EXCLUDE="$SHCK_EXCLUDE,SC1083,SC1090,SC1091,SC2010,SC2015,SC2016,SC2034,SC2046,SC2086,\
 SC2119,SC2120,SC2148,SC2153,SC2154,SC2164,SC2174,SC2001,SC2206,SC2207,SC2223"
 
-	SHCK_FORMAT="diff"
-	SHCK_APPLY=true
-	if [ "$shellcheck_v" \< "0.7.0" ]; then
-		SHCK_FORMAT="tty"
-		SHCK_APPLY=false
-	fi
+	SHCK_FORMAT="tty"
+	SHCK_APPLY=false
 	SHCH_ARGS=" -x -e $SHCK_EXCLUDE -f $SHCK_FORMAT"
 
 	error=0
 	git ls-files '*.sh' | xargs -P$(nproc) -n1 shellcheck $SHCH_ARGS &> shellcheck.log || error=1
 	if [ $error -ne 0 ]; then
 		echo " Bash formatting errors detected!"
-
-		# Some errors are not auto-fixable. Fall back to tty output.
-		if grep -q "Use another format to see them." shellcheck.log; then
-			SHCK_FORMAT="tty"
-			SHCK_APPLY=false
-			SHCH_ARGS=" -e $SHCK_EXCLUDE -f $SHCK_FORMAT"
-			git ls-files '*.sh' | xargs -P$(nproc) -n1 shellcheck $SHCH_ARGS > shellcheck.log || error=1
-		fi
 
 		cat shellcheck.log
 		if $SHCK_APPLY; then
