@@ -588,6 +588,7 @@ free_rpc_listen_address(struct rpc_listen_address *r)
 enum nvmf_rpc_listen_op {
 	NVMF_RPC_LISTEN_ADD,
 	NVMF_RPC_LISTEN_REMOVE,
+	NVMF_RPC_LISTEN_SET_ANA_STATE,
 };
 
 struct nvmf_rpc_listener_ctx {
@@ -597,6 +598,8 @@ struct nvmf_rpc_listener_ctx {
 	struct spdk_nvmf_transport	*transport;
 	struct spdk_nvmf_subsystem	*subsystem;
 	struct rpc_listen_address	address;
+	char				*ana_state_str;
+	enum spdk_nvme_ana_state	ana_state;
 
 	struct spdk_jsonrpc_request	*request;
 	struct spdk_nvme_transport_id	trid;
@@ -616,6 +619,7 @@ nvmf_rpc_listener_ctx_free(struct nvmf_rpc_listener_ctx *ctx)
 	free(ctx->nqn);
 	free(ctx->tgt_name);
 	free_rpc_listen_address(&ctx->address);
+	free(ctx->ana_state_str);
 	free(ctx);
 }
 
@@ -658,7 +662,8 @@ nvmf_rpc_subsystem_listen(void *cb_arg, int status)
 
 	if (spdk_nvmf_subsystem_resume(ctx->subsystem, nvmf_rpc_listen_resumed, ctx)) {
 		if (!ctx->response_sent) {
-			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							 "Internal error");
 		}
 		nvmf_rpc_listener_ctx_free(ctx);
 		/* Can't really do anything to recover here - subsystem will remain paused. */
@@ -670,15 +675,38 @@ nvmf_rpc_stop_listen_async_done(void *cb_arg, int status)
 	struct nvmf_rpc_listener_ctx *ctx = cb_arg;
 
 	if (status) {
-		SPDK_ERRLOG("Unable to remove listener.\n");
+		SPDK_ERRLOG("Unable to stop listener.\n");
 		spdk_jsonrpc_send_error_response_fmt(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						     "error stopping listener: %d\n", status);
+						     "error stopping listener: %d", status);
 		ctx->response_sent = true;
 	}
 
 	if (spdk_nvmf_subsystem_resume(ctx->subsystem, nvmf_rpc_listen_resumed, ctx)) {
 		if (!ctx->response_sent) {
-			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							 "Internal error");
+		}
+		nvmf_rpc_listener_ctx_free(ctx);
+		/* Can't really do anything to recover here - subsystem will remain paused. */
+	}
+}
+
+static void
+nvmf_rpc_set_ana_state_done(void *cb_arg, int status)
+{
+	struct nvmf_rpc_listener_ctx *ctx = cb_arg;
+
+	if (status) {
+		SPDK_ERRLOG("Unable to set ANA state.\n");
+		spdk_jsonrpc_send_error_response_fmt(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "error setting ANA state: %d", status);
+		ctx->response_sent = true;
+	}
+
+	if (spdk_nvmf_subsystem_resume(ctx->subsystem, nvmf_rpc_listen_resumed, ctx)) {
+		if (!ctx->response_sent) {
+			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							 "Internal error");
 		}
 		nvmf_rpc_listener_ctx_free(ctx);
 		/* Can't really do anything to recover here - subsystem will remain paused. */
@@ -714,13 +742,18 @@ nvmf_rpc_listen_paused(struct spdk_nvmf_subsystem *subsystem,
 		spdk_nvmf_transport_stop_listen_async(ctx->transport, &ctx->trid, nvmf_rpc_stop_listen_async_done,
 						      ctx);
 		return;
+	} else if (ctx->op == NVMF_RPC_LISTEN_SET_ANA_STATE) {
+		nvmf_subsystem_set_ana_state(subsystem, &ctx->trid, ctx->ana_state,
+					     nvmf_rpc_set_ana_state_done, ctx);
+		return;
 	} else {
 		SPDK_UNREACHABLE();
 	}
 
 	if (spdk_nvmf_subsystem_resume(subsystem, nvmf_rpc_listen_resumed, ctx)) {
 		if (!ctx->response_sent) {
-			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							 "Internal error");
 		}
 		nvmf_rpc_listener_ctx_free(ctx);
 		/* Can't really do anything to recover here - subsystem will remain paused. */
@@ -918,6 +951,108 @@ rpc_nvmf_subsystem_remove_listener(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("nvmf_subsystem_remove_listener", rpc_nvmf_subsystem_remove_listener,
 		  SPDK_RPC_RUNTIME);
+
+static const struct spdk_json_object_decoder nvmf_rpc_set_ana_state_decoder[] = {
+	{"nqn", offsetof(struct nvmf_rpc_listener_ctx, nqn), spdk_json_decode_string},
+	{"listen_address", offsetof(struct nvmf_rpc_listener_ctx, address), decode_rpc_listen_address},
+	{"ana_state", offsetof(struct nvmf_rpc_listener_ctx, ana_state_str), spdk_json_decode_string},
+	{"tgt_name", offsetof(struct nvmf_rpc_listener_ctx, tgt_name), spdk_json_decode_string, true},
+};
+
+static int
+rpc_ana_state_parse(const char *str, enum spdk_nvme_ana_state *ana_state)
+{
+	if (ana_state == NULL || str == NULL) {
+		return -EINVAL;
+	}
+
+	if (strcasecmp(str, "optimized") == 0) {
+		*ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+	} else if (strcasecmp(str, "non_optimized") == 0) {
+		*ana_state = SPDK_NVME_ANA_NON_OPTIMIZED_STATE;
+	} else if (strcasecmp(str, "inaccessible") == 0) {
+		*ana_state = SPDK_NVME_ANA_INACCESSIBLE_STATE;
+	} else {
+		return -ENOENT;
+	}
+
+	return 0;
+}
+
+static void
+rpc_nvmf_subsystem_listener_set_ana_state(struct spdk_jsonrpc_request *request,
+		const struct spdk_json_val *params)
+{
+	struct nvmf_rpc_listener_ctx *ctx;
+	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvmf_tgt *tgt;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Out of memory");
+		return;
+	}
+
+	ctx->request = request;
+
+	if (spdk_json_decode_object(params, nvmf_rpc_set_ana_state_decoder,
+				    SPDK_COUNTOF(nvmf_rpc_set_ana_state_decoder),
+				    ctx)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		nvmf_rpc_listener_ctx_free(ctx);
+		return;
+	}
+
+	tgt = spdk_nvmf_get_tgt(ctx->tgt_name);
+	if (!tgt) {
+		SPDK_ERRLOG("Unable to find a target object.\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Unable to find a target.\n");
+		nvmf_rpc_listener_ctx_free(ctx);
+		return;
+	}
+
+	ctx->tgt = tgt;
+
+	subsystem = spdk_nvmf_tgt_find_subsystem(tgt, ctx->nqn);
+	if (!subsystem) {
+		SPDK_ERRLOG("Unable to find subsystem with NQN %s\n", ctx->nqn);
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						     "Unable to find subsystem with NQN %s",
+						     ctx->nqn);
+		nvmf_rpc_listener_ctx_free(ctx);
+		return;
+	}
+
+	ctx->subsystem = subsystem;
+
+	if (rpc_listen_address_to_trid(&ctx->address, &ctx->trid)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		nvmf_rpc_listener_ctx_free(ctx);
+		return;
+	}
+
+	if (rpc_ana_state_parse(ctx->ana_state_str, &ctx->ana_state)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		nvmf_rpc_listener_ctx_free(ctx);
+		return;
+	}
+
+	ctx->op = NVMF_RPC_LISTEN_SET_ANA_STATE;
+
+	if (spdk_nvmf_subsystem_pause(subsystem, nvmf_rpc_listen_paused, ctx)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Internal error");
+		nvmf_rpc_listener_ctx_free(ctx);
+	}
+}
+SPDK_RPC_REGISTER("nvmf_subsystem_listener_set_ana_state",
+		  rpc_nvmf_subsystem_listener_set_ana_state, SPDK_RPC_RUNTIME);
 
 struct spdk_nvmf_ns_params {
 	char *bdev_name;

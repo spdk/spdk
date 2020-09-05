@@ -4659,6 +4659,51 @@ Example response:
 }
 ~~~
 
+## nvmf_subsystem_listener_set_ana_state  method {#rpc_nvmf_subsystem_listener_set_ana_state}
+
+Set ANA state of a listener for an NVMe-oF subsystem.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+nqn                     | Required | string      | Subsystem NQN
+tgt_name                | Optional | string      | Parent NVMe-oF target name.
+listen_address          | Required | object      | @ref rpc_nvmf_listen_address object
+ana_state               | Required | string      | ANA state to set ("optimized", "non_optimized", or "inaccessible")
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "nvmf_subsystem_listener_set_ana_state",
+  "params": {
+    "nqn": "nqn.2016-06.io.spdk:cnode1",
+    "listen_address": {
+      "trtype": "RDMA",
+      "adrfam": "IPv4",
+      "traddr": "192.168.0.123",
+      "trsvcid": "4420"
+    },
+    "ana_state", "inaccessible"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## nvmf_subsystem_add_ns method {#rpc_nvmf_subsystem_add_ns}
 
 Add a namespace to a subsystem. The namespace ID is returned as the result.

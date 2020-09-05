@@ -330,6 +330,46 @@ def nvmf_subsystem_remove_listener(
     return client.call('nvmf_subsystem_remove_listener', params)
 
 
+def nvmf_subsystem_listener_set_ana_state(
+        client,
+        nqn,
+        ana_state,
+        trtype,
+        traddr,
+        trsvcid,
+        adrfam,
+        tgt_name=None):
+    """Set ANA state of a listener for an NVMe-oF subsystem.
+
+    Args:
+        nqn: Subsystem NQN.
+        ana_state: ANA state to set ("optimized", "non_optimized", or "inaccessible").
+        trtype: Transport type ("RDMA").
+        traddr: Transport address.
+        trsvcid: Transport service ID.
+        tgt_name: name of the parent NVMe-oF target (optional).
+        adrfam: Address family ("IPv4", "IPv6", "IB", or "FC").
+
+    Returns:
+            True or False
+    """
+    listen_address = {'trtype': trtype,
+                      'traddr': traddr,
+                      'trsvcid': trsvcid}
+
+    if adrfam:
+        listen_address['adrfam'] = adrfam
+
+    params = {'nqn': nqn,
+              'listen_address': listen_address,
+              'ana_state': ana_state}
+
+    if tgt_name:
+        params['tgt_name'] = tgt_name
+
+    return client.call('nvmf_subsystem_listener_set_ana_state', params)
+
+
 def nvmf_subsystem_add_ns(client, nqn, bdev_name, tgt_name=None, ptpl_file=None, nsid=None, nguid=None, eui64=None, uuid=None):
     """Add a namespace to a subsystem.
 
