@@ -4477,6 +4477,49 @@ Example response:
 }
 ~~~
 
+## nvmf_subsystem_remove_listener  method {#rpc_nvmf_subsystem_remove_listener}
+
+Remove a listen address from an NVMe-oF subsystem.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+nqn                     | Required | string      | Subsystem NQN
+tgt_name                | Optional | string      | Parent NVMe-oF target name.
+listen_address          | Required | object      | @ref rpc_nvmf_listen_address object
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "nvmf_subsystem_remove_listener",
+  "params": {
+    "nqn": "nqn.2016-06.io.spdk:cnode1",
+    "listen_address": {
+      "trtype": "RDMA",
+      "adrfam": "IPv4",
+      "traddr": "192.168.0.123",
+      "trsvcid": "4420"
+    }
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## nvmf_subsystem_add_ns method {#rpc_nvmf_subsystem_add_ns}
 
 Add a namespace to a subsystem. The namespace ID is returned as the result.
