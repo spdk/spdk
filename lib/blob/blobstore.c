@@ -4596,6 +4596,7 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	uint32_t		i;
 	struct spdk_bs_opts	opts = {};
 	int			rc;
+	uint64_t		lba, lba_count;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Initializing blobstore on dev %p\n", dev);
 
@@ -4758,18 +4759,23 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	/* Clear metadata space */
 	bs_batch_write_zeroes_dev(batch, 0, num_md_lba);
 
-	switch (opts.clear_method) {
-	case BS_CLEAR_WITH_UNMAP:
-		/* Trim data clusters */
-		bs_batch_unmap_dev(batch, num_md_lba, ctx->bs->dev->blockcnt - num_md_lba);
-		break;
-	case BS_CLEAR_WITH_WRITE_ZEROES:
-		/* Write_zeroes to data clusters */
-		bs_batch_write_zeroes_dev(batch, num_md_lba, ctx->bs->dev->blockcnt - num_md_lba);
-		break;
-	case BS_CLEAR_WITH_NONE:
-	default:
-		break;
+	lba = num_md_lba;
+	while (lba < ctx->bs->dev->blockcnt) {
+		lba_count = spdk_min(UINT32_MAX, ctx->bs->dev->blockcnt - lba);
+		switch (opts.clear_method) {
+		case BS_CLEAR_WITH_UNMAP:
+			/* Trim data clusters */
+			bs_batch_unmap_dev(batch, lba, lba_count);
+			break;
+		case BS_CLEAR_WITH_WRITE_ZEROES:
+			/* Write_zeroes to data clusters */
+			bs_batch_write_zeroes_dev(batch, lba, lba_count);
+			break;
+		case BS_CLEAR_WITH_NONE:
+		default:
+			break;
+		}
+		lba += lba_count;
 	}
 
 	bs_batch_close(batch);
