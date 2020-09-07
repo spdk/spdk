@@ -25,6 +25,11 @@ build_nvmf_example_args
 
 function nvmfexamplestart() {
 	timing_enter start_nvmf_example
+
+	if [ "$TEST_TRANSPORT" == "tcp" ]; then
+		NVMF_EXAMPLE=("${NVMF_TARGET_NS_CMD[@]}" "${NVMF_EXAMPLE[@]}")
+	fi
+
 	"${NVMF_EXAMPLE[@]}" $1 &
 	nvmfpid=$!
 	trap 'process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1' SIGINT SIGTERM EXIT

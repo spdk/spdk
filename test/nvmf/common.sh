@@ -153,6 +153,96 @@ function nvmfcleanup() {
 	modprobe -v -r nvme-fabrics
 }
 
+function nvmf_veth_init() {
+	NVMF_INITIATOR_IP=10.0.0.1
+	NVMF_FIRST_TARGET_IP=10.0.0.2
+	NVMF_SECOND_TARGET_IP=10.0.0.3
+	NVMF_BRIDGE="nvmf_br"
+	NVMF_INITIATOR_INTERFACE="nvmf_init_if"
+	NVMF_INITIATOR_BRIDGE="nvmf_init_br"
+	NVMF_TARGET_NAMESPACE="nvmf_tgt_ns"
+	NVMF_TARGET_NS_CMD=(ip netns exec "$NVMF_TARGET_NAMESPACE")
+	NVMF_TARGET_INTERFACE="nvmf_tgt_if"
+	NVMF_TARGET_INTERFACE2="nvmf_tgt_if2"
+	NVMF_TARGET_BRIDGE="nvmf_tgt_br"
+	NVMF_TARGET_BRIDGE2="nvmf_tgt_br2"
+
+	ip link set $NVMF_INITIATOR_BRIDGE nomaster || true
+	ip link set $NVMF_TARGET_BRIDGE nomaster || true
+	ip link set $NVMF_TARGET_BRIDGE2 nomaster || true
+	ip link set $NVMF_INITIATOR_BRIDGE down || true
+	ip link set $NVMF_TARGET_BRIDGE down || true
+	ip link set $NVMF_TARGET_BRIDGE2 down || true
+	ip link delete $NVMF_BRIDGE type bridge || true
+	ip link delete $NVMF_INITIATOR_INTERFACE || true
+	"${NVMF_TARGET_NS_CMD[@]}" ip link delete $NVMF_TARGET_INTERFACE || true
+	"${NVMF_TARGET_NS_CMD[@]}" ip link delete $NVMF_TARGET_INTERFACE2 || true
+	ip netns del $NVMF_TARGET_NAMESPACE || true
+
+	trap 'nvmf_veth_fini; exit 1' SIGINT SIGTERM EXIT
+
+	# Create network namespace
+	ip netns add $NVMF_TARGET_NAMESPACE
+
+	# Create veth (Virtual ethernet) interface pairs
+	ip link add $NVMF_INITIATOR_INTERFACE type veth peer name $NVMF_INITIATOR_BRIDGE
+	ip link add $NVMF_TARGET_INTERFACE type veth peer name $NVMF_TARGET_BRIDGE
+	ip link add $NVMF_TARGET_INTERFACE2 type veth peer name $NVMF_TARGET_BRIDGE2
+
+	# Associate veth interface pairs with network namespace
+	ip link set $NVMF_TARGET_INTERFACE netns $NVMF_TARGET_NAMESPACE
+	ip link set $NVMF_TARGET_INTERFACE2 netns $NVMF_TARGET_NAMESPACE
+
+	# Allocate IP addresses
+	ip addr add $NVMF_INITIATOR_IP/24 dev $NVMF_INITIATOR_INTERFACE
+	"${NVMF_TARGET_NS_CMD[@]}" ip addr add $NVMF_FIRST_TARGET_IP/24 dev $NVMF_TARGET_INTERFACE
+	"${NVMF_TARGET_NS_CMD[@]}" ip addr add $NVMF_SECOND_TARGET_IP/24 dev $NVMF_TARGET_INTERFACE2
+
+	# Link up veth interfaces
+	ip link set $NVMF_INITIATOR_INTERFACE up
+	ip link set $NVMF_INITIATOR_BRIDGE up
+	ip link set $NVMF_TARGET_BRIDGE up
+	ip link set $NVMF_TARGET_BRIDGE2 up
+	"${NVMF_TARGET_NS_CMD[@]}" ip link set $NVMF_TARGET_INTERFACE up
+	"${NVMF_TARGET_NS_CMD[@]}" ip link set $NVMF_TARGET_INTERFACE2 up
+	"${NVMF_TARGET_NS_CMD[@]}" ip link set lo up
+
+	# Create a bridge
+	ip link add $NVMF_BRIDGE type bridge
+	ip link set $NVMF_BRIDGE up
+
+	# Add veth interfaces to the bridge
+	ip link set $NVMF_INITIATOR_BRIDGE master $NVMF_BRIDGE
+	ip link set $NVMF_TARGET_BRIDGE master $NVMF_BRIDGE
+	ip link set $NVMF_TARGET_BRIDGE2 master $NVMF_BRIDGE
+
+	# Accept connections from veth interface
+	iptables -I INPUT 1 -i $NVMF_INITIATOR_INTERFACE -p tcp --dport $NVMF_PORT -j ACCEPT
+
+	# Verify connectivity
+	ping -c 1 $NVMF_FIRST_TARGET_IP
+	ping -c 1 $NVMF_SECOND_TARGET_IP
+	"${NVMF_TARGET_NS_CMD[@]}" ping -c 1 $NVMF_INITIATOR_IP
+
+	NVMF_APP=("${NVMF_TARGET_NS_CMD[@]}" "${NVMF_APP[@]}")
+}
+
+function nvmf_veth_fini() {
+	# Cleanup bridge, veth interfaces, and network namespace
+	# Note: removing one veth removes the pair
+	ip link set $NVMF_INITIATOR_BRIDGE nomaster
+	ip link set $NVMF_TARGET_BRIDGE nomaster
+	ip link set $NVMF_TARGET_BRIDGE2 nomaster
+	ip link set $NVMF_INITIATOR_BRIDGE down
+	ip link set $NVMF_TARGET_BRIDGE down
+	ip link set $NVMF_TARGET_BRIDGE2 down
+	ip link delete $NVMF_BRIDGE type bridge
+	ip link delete $NVMF_INITIATOR_INTERFACE
+	"${NVMF_TARGET_NS_CMD[@]}" ip link delete $NVMF_TARGET_INTERFACE
+	"${NVMF_TARGET_NS_CMD[@]}" ip link delete $NVMF_TARGET_INTERFACE2
+	ip netns del $NVMF_TARGET_NAMESPACE
+}
+
 function nvmftestinit() {
 	if [ -z $TEST_TRANSPORT ]; then
 		echo "transport not specified - use --transport= to specify"
@@ -175,7 +265,7 @@ function nvmftestinit() {
 			exit 0
 		fi
 	elif [ "$TEST_TRANSPORT" == "tcp" ]; then
-		NVMF_FIRST_TARGET_IP=127.0.0.1
+		nvmf_veth_init
 		NVMF_TRANSPORT_OPTS="$NVMF_TRANSPORT_OPTS -o"
 	fi
 
@@ -205,6 +295,8 @@ function nvmftestfini() {
 		$rootdir/scripts/setup.sh reset
 		if [ "$TEST_TRANSPORT" == "rdma" ]; then
 			rdma_device_init
+		elif [ "$TEST_TRANSPORT" == "tcp" ]; then
+			nvmf_veth_fini
 		fi
 	fi
 }
