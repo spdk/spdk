@@ -349,6 +349,9 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	}
 
 	ctrlr->feat.async_event_configuration.bits.ns_attr_notice = 1;
+	if (ctrlr->subsys->ana_reporting) {
+		ctrlr->feat.async_event_configuration.bits.ana_change_notice = 1;
+	}
 	ctrlr->feat.volatile_write_cache.bits.wce = 1;
 
 	if (ctrlr->subsys->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
@@ -2076,6 +2079,9 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 			cdata->cmic.ana_reporting = 1;
 		}
 		cdata->oaes.ns_attribute_notices = 1;
+		if (subsystem->ana_reporting) {
+			cdata->oaes.ana_change_notices = 1;
+		}
 		cdata->ctratt.host_id_exhid_supported = 1;
 		/* TODO: Concurrent execution of multiple abort commands. */
 		cdata->acl = 0;
@@ -2100,7 +2106,12 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->oncs.reservations = 1;
 		if (subsystem->ana_reporting) {
 			cdata->anatt = ANA_TRANSITION_TIME_IN_SEC;
+			/* ANA Change state is not used, and ANA Persistent Loss state
+			 * is not supported for now.
+			 */
 			cdata->anacap.ana_optimized_state = 1;
+			cdata->anacap.ana_non_optimized_state = 1;
+			cdata->anacap.ana_inaccessible_state = 1;
 			/* ANAGRPID does not change while namespace is attached to controller */
 			cdata->anacap.no_change_anagrpid = 1;
 			cdata->anagrpmax = subsystem->max_nsid;
