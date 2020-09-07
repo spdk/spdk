@@ -56,8 +56,6 @@
 
 static int bdev_rbd_count = 0;
 
-#define BDEV_RBD_POLL_US 50
-
 struct bdev_rbd {
 	struct spdk_bdev disk;
 	char *rbd_name;
@@ -808,7 +806,7 @@ bdev_rbd_group_create_cb(void *io_device, void *ctx_buf)
 		return -1;
 	}
 
-	ch->poller = SPDK_POLLER_REGISTER(bdev_rbd_group_poll, ch, BDEV_RBD_POLL_US);
+	ch->poller = SPDK_POLLER_REGISTER(bdev_rbd_group_poll, ch, 0);
 
 	return 0;
 }
