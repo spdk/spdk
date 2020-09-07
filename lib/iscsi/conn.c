@@ -1088,15 +1088,14 @@ process_completed_read_subtask_list(struct spdk_iscsi_conn *conn,
 		if (subtask->scsi.offset == primary->bytes_completed) {
 			TAILQ_REMOVE(&primary->subtask_list, subtask, subtask_link);
 			primary->bytes_completed += subtask->scsi.length;
+			if (primary->bytes_completed  == primary->scsi.transfer_len) {
+				iscsi_task_put(primary);
+			}
 			iscsi_task_response(conn, subtask);
 			iscsi_task_put(subtask);
 		} else {
 			break;
 		}
-	}
-
-	if (primary->bytes_completed == primary->scsi.transfer_len) {
-		iscsi_task_put(primary);
 	}
 }
 
