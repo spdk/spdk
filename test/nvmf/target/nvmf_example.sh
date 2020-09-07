@@ -7,22 +7,25 @@ source $rootdir/test/nvmf/common.sh
 
 rpc_py="$rootdir/scripts/rpc.py"
 
+NVMF_EXAMPLE=("$SPDK_EXAMPLE_DIR/nvmf")
+
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
 function build_nvmf_example_args() {
 	if [ $SPDK_RUN_NON_ROOT -eq 1 ]; then
-		echo "sudo -u $USER $SPDK_EXAMPLE_DIR/nvmf -i $NVMF_APP_SHM_ID" -g 10000
+		NVMF_EXAMPLE=(sudo -u "$USER" "${NVMF_EXAMPLE[@]}")
+		NVMF_EXAMPLE+=(-i "$NVMF_APP_SHM_ID" -g 10000)
 	else
-		echo "$SPDK_EXAMPLE_DIR/nvmf -i $NVMF_APP_SHM_ID" -g 10000
+		NVMF_EXAMPLE+=(-i "$NVMF_APP_SHM_ID" -g 10000)
 	fi
 }
 
-NVMF_EXAMPLE="$(build_nvmf_example_args)"
+build_nvmf_example_args
 
 function nvmfexamplestart() {
 	timing_enter start_nvmf_example
-	$NVMF_EXAMPLE $1 &
+	"${NVMF_EXAMPLE[@]}" $1 &
 	nvmfpid=$!
 	trap 'process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $nvmfpid
