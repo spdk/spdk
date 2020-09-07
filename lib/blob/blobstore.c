@@ -1732,6 +1732,8 @@ blob_persist_clear_clusters(spdk_bs_sequence_t *seq, struct spdk_blob_persist_ct
 			/* This cluster is contiguous with the previous one. */
 			lba_count += next_lba_count;
 			continue;
+		} else if (next_lba == 0) {
+			continue;
 		}
 
 		/* This cluster is not contiguous with the previous one. */
