@@ -1846,7 +1846,7 @@ nvme_ctrlr_set_num_queues(struct spdk_nvme_ctrlr *ctrlr)
 static void
 nvme_ctrlr_set_keep_alive_timeout_done(void *arg, const struct spdk_nvme_cpl *cpl)
 {
-	uint32_t keep_alive_interval_ms;
+	uint32_t keep_alive_interval_us;
 	struct spdk_nvme_ctrlr *ctrlr = (struct spdk_nvme_ctrlr *)arg;
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
@@ -1869,16 +1869,20 @@ nvme_ctrlr_set_keep_alive_timeout_done(void *arg, const struct spdk_nvme_cpl *cp
 		ctrlr->opts.keep_alive_timeout_ms = cpl->cdw0;
 	}
 
-	keep_alive_interval_ms = ctrlr->opts.keep_alive_timeout_ms / 2;
-	if (keep_alive_interval_ms == 0) {
-		keep_alive_interval_ms = 1;
+	if (ctrlr->opts.keep_alive_timeout_ms == 0) {
+		ctrlr->keep_alive_interval_ticks = 0;
+	} else {
+		keep_alive_interval_us = ctrlr->opts.keep_alive_timeout_ms * 1000 / 2;
+
+		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Sending keep alive every %u us\n", keep_alive_interval_us);
+
+		ctrlr->keep_alive_interval_ticks = (keep_alive_interval_us * spdk_get_ticks_hz()) /
+						   UINT64_C(1000000);
+
+		/* Schedule the first Keep Alive to be sent as soon as possible. */
+		ctrlr->next_keep_alive_tick = spdk_get_ticks();
 	}
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "Sending keep alive every %u ms\n", keep_alive_interval_ms);
 
-	ctrlr->keep_alive_interval_ticks = (keep_alive_interval_ms * spdk_get_ticks_hz()) / UINT64_C(1000);
-
-	/* Schedule the first Keep Alive to be sent as soon as possible. */
-	ctrlr->next_keep_alive_tick = spdk_get_ticks();
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_HOST_ID,
 			     ctrlr->opts.admin_timeout_ms);
 }
