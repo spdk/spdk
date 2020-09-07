@@ -12,7 +12,7 @@ MALLOC_BLOCK_SIZE=512
 
 function build_nvmf_example_args() {
 	if [ $SPDK_RUN_NON_ROOT -eq 1 ]; then
-		echo "sudo -u $(logname) $SPDK_EXAMPLE_DIR/nvmf -i $NVMF_APP_SHM_ID" -g 10000
+		echo "sudo -u $USER $SPDK_EXAMPLE_DIR/nvmf -i $NVMF_APP_SHM_ID" -g 10000
 	else
 		echo "$SPDK_EXAMPLE_DIR/nvmf -i $NVMF_APP_SHM_ID" -g 10000
 	fi
