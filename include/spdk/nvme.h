@@ -2275,6 +2275,15 @@ uint32_t spdk_nvme_ns_get_optimal_io_boundary(struct spdk_nvme_ns *ns);
 const struct spdk_uuid *spdk_nvme_ns_get_uuid(const struct spdk_nvme_ns *ns);
 
 /**
+ * Get the Command Set Identifier for the given namespace.
+ *
+ * \param ns Namespace to query.
+ *
+ * \return the namespace Command Set Identifier.
+ */
+enum spdk_nvme_csi spdk_nvme_ns_get_csi(const struct spdk_nvme_ns *ns);
+
+/**
  * \brief Namespace command support flags.
  */
 enum spdk_nvme_ns_flags {

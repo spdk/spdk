@@ -981,6 +981,14 @@ union spdk_nvme_cmd_cdw11 {
 	uint32_t raw;
 
 	struct {
+		/* NVM Set Identifier */
+		uint32_t nvmsetid  : 16;
+		uint32_t reserved  : 8;
+		/* Command Set Identifier */
+		uint32_t csi       : 8;
+	} identify;
+
+	struct {
 		/* Physically Contiguous */
 		uint32_t pc       : 1;
 		/* Queue Priority */
@@ -2852,6 +2860,9 @@ enum spdk_nvme_nidt {
 
 	/** Namespace UUID */
 	SPDK_NVME_NIDT_UUID		= 0x03,
+
+	/** Namespace Command Set Identifier */
+	SPDK_NVME_NIDT_CSI		= 0x04,
 };
 
 struct spdk_nvme_ns_id_desc {
@@ -2874,6 +2885,12 @@ struct spdk_nvme_ctrlr_list {
 	uint16_t ctrlr_list[2047];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ctrlr_list) == 4096, "Incorrect size");
+
+enum spdk_nvme_csi {
+	SPDK_NVME_CSI_NVM	= 0x0,
+	SPDK_NVME_CSI_KV	= 0x1,
+	SPDK_NVME_CSI_ZNS	= 0x2,
+};
 
 enum spdk_nvme_secure_erase_setting {
 	SPDK_NVME_FMT_NVM_SES_NO_SECURE_ERASE	= 0x0,

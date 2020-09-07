@@ -157,7 +157,8 @@ nvme_ctrlr_identify_id_desc(struct spdk_nvme_ns *ns)
 
 	memset(ns->id_desc_list, 0, sizeof(ns->id_desc_list));
 
-	if (ns->ctrlr->vs.raw < SPDK_NVME_VERSION(1, 3, 0) ||
+	if ((ns->ctrlr->vs.raw < SPDK_NVME_VERSION(1, 3, 0) &&
+	     !(ns->ctrlr->cap.bits.css & SPDK_NVME_CAP_CSS_IOCS)) ||
 	    (ns->ctrlr->quirks & NVME_QUIRK_IDENTIFY_CNS)) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Version < 1.3; not attempting to retrieve NS ID Descriptor List\n");
 		return 0;
@@ -358,6 +359,29 @@ spdk_nvme_ns_get_uuid(const struct spdk_nvme_ns *ns)
 	}
 
 	return uuid;
+}
+
+enum spdk_nvme_csi
+spdk_nvme_ns_get_csi(const struct spdk_nvme_ns *ns) {
+	const uint8_t *csi;
+	size_t csi_size;
+
+	csi = nvme_ns_find_id_desc(ns, SPDK_NVME_NIDT_CSI, &csi_size);
+	if (csi && csi_size != sizeof(*csi))
+	{
+		SPDK_WARNLOG("Invalid NIDT_CSI descriptor length reported: %zu (expected: %zu)\n",
+			     csi_size, sizeof(*csi));
+		return SPDK_NVME_CSI_NVM;
+	}
+	if (!csi)
+	{
+		if (ns->ctrlr->cap.bits.css & SPDK_NVME_CAP_CSS_IOCS) {
+			SPDK_WARNLOG("CSI not reported for NSID: %" PRIu32 "\n", ns->id);
+		}
+		return SPDK_NVME_CSI_NVM;
+	}
+
+	return *csi;
 }
 
 int nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,

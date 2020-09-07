@@ -135,6 +135,49 @@ test_nvme_ns_uuid(void)
 	CU_ASSERT(memcmp(uuid, &expected_uuid, sizeof(*uuid)) == 0);
 }
 
+static void
+test_nvme_ns_csi(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_ns ns = { .ctrlr = &ctrlr };
+	enum spdk_nvme_csi csi;
+
+	/* Empty list - SPDK_NVME_CSI_NVM should be returned */
+	memset(ns.id_desc_list, 0, sizeof(ns.id_desc_list));
+	csi = spdk_nvme_ns_get_csi(&ns);
+	CU_ASSERT(csi == SPDK_NVME_CSI_NVM);
+
+	/* NVM CSI - SPDK_NVME_CSI_NVM should be returned */
+	memset(ns.id_desc_list, 0, sizeof(ns.id_desc_list));
+	ns.id_desc_list[0] = 0x4; /* NIDT == CSI */
+	ns.id_desc_list[1] = 0x1; /* NIDL */
+	ns.id_desc_list[4] = 0x0; /* SPDK_NVME_CSI_NVM */
+	csi = spdk_nvme_ns_get_csi(&ns);
+	CU_ASSERT(csi == SPDK_NVME_CSI_NVM);
+
+	/* NGUID followed by ZNS CSI - SPDK_NVME_CSI_ZNS should be returned */
+	memset(ns.id_desc_list, 0, sizeof(ns.id_desc_list));
+	ns.id_desc_list[0] = 0x02; /* NIDT == NGUID */
+	ns.id_desc_list[1] = 0x10; /* NIDL */
+	memset(&ns.id_desc_list[4], 0xCC, 0x10);
+	ns.id_desc_list[20] = 0x4; /* NIDT == CSI */
+	ns.id_desc_list[21] = 0x1; /* NIDL */
+	ns.id_desc_list[24] = 0x2; /* SPDK_NVME_CSI_ZNS */
+	csi = spdk_nvme_ns_get_csi(&ns);
+	CU_ASSERT(csi == SPDK_NVME_CSI_ZNS);
+
+	/* KV CSI followed by NGUID - SPDK_NVME_CSI_KV should be returned */
+	memset(ns.id_desc_list, 0, sizeof(ns.id_desc_list));
+	ns.id_desc_list[0] = 0x4; /* NIDT == CSI */
+	ns.id_desc_list[1] = 0x1; /* NIDL */
+	ns.id_desc_list[4] = 0x1; /* SPDK_NVME_CSI_KV */
+	ns.id_desc_list[5] = 0x02; /* NIDT == NGUID */
+	ns.id_desc_list[6] = 0x10; /* NIDL */
+	memset(&ns.id_desc_list[9], 0xCC, 0x10);
+	csi = spdk_nvme_ns_get_csi(&ns);
+	CU_ASSERT(csi == SPDK_NVME_CSI_KV);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -147,6 +190,7 @@ int main(int argc, char **argv)
 
 	CU_ADD_TEST(suite, test_nvme_ns_construct);
 	CU_ADD_TEST(suite, test_nvme_ns_uuid);
+	CU_ADD_TEST(suite, test_nvme_ns_csi);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

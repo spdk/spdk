@@ -1731,7 +1731,8 @@ nvme_ctrlr_identify_id_desc_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 	struct spdk_nvme_ns *ns;
 	int rc;
 
-	if (ctrlr->vs.raw < SPDK_NVME_VERSION(1, 3, 0) ||
+	if ((ctrlr->vs.raw < SPDK_NVME_VERSION(1, 3, 0) &&
+	     !(ctrlr->cap.bits.css & SPDK_NVME_CAP_CSS_IOCS)) ||
 	    (ctrlr->quirks & NVME_QUIRK_IDENTIFY_CNS)) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Version < 1.3; not attempting to retrieve NS ID Descriptor List\n");
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CONFIGURE_AER,
