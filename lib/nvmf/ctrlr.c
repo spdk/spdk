@@ -1655,15 +1655,15 @@ nvmf_get_firmware_slot_log_page(void *buffer, uint64_t offset, uint32_t length)
 	}
 }
 
+#define SPDK_NVMF_ANA_DESC_SIZE	(sizeof(struct spdk_nvme_ana_group_descriptor) +	\
+				 sizeof(uint32_t))
 static void
 nvmf_get_ana_log_page(struct spdk_nvmf_ctrlr *ctrlr, void *data,
 		      uint64_t offset, uint32_t length)
 {
 	char *buf = data;
 	struct spdk_nvme_ana_page ana_hdr;
-	const size_t ana_desc_size = sizeof(struct spdk_nvme_ana_group_descriptor) +
-				     sizeof(uint32_t);
-	char _ana_desc[ana_desc_size];
+	char _ana_desc[SPDK_NVMF_ANA_DESC_SIZE];
 	struct spdk_nvme_ana_group_descriptor *ana_desc;
 	size_t copy_len;
 	uint32_t num_ns = 0;
@@ -1702,12 +1702,12 @@ nvmf_get_ana_log_page(struct spdk_nvmf_ctrlr *ctrlr, void *data,
 
 	for (ns = spdk_nvmf_subsystem_get_first_ns(ctrlr->subsys); ns != NULL;
 	     ns = spdk_nvmf_subsystem_get_next_ns(ctrlr->subsys, ns)) {
-		if (offset >= ana_desc_size) {
-			offset -= ana_desc_size;
+		if (offset >= SPDK_NVMF_ANA_DESC_SIZE) {
+			offset -= SPDK_NVMF_ANA_DESC_SIZE;
 			continue;
 		}
 
-		memset(ana_desc, 0, ana_desc_size);
+		memset(ana_desc, 0, SPDK_NVMF_ANA_DESC_SIZE);
 
 		ana_desc->ana_group_id = ns->nsid;
 		ana_desc->num_of_nsid = 1;
@@ -1716,7 +1716,7 @@ nvmf_get_ana_log_page(struct spdk_nvmf_ctrlr *ctrlr, void *data,
 		/* TODO: Support Change Count. */
 		ana_desc->change_count = 0;
 
-		copy_len = spdk_min(ana_desc_size - offset, length);
+		copy_len = spdk_min(SPDK_NVMF_ANA_DESC_SIZE - offset, length);
 		memcpy(buf, (const char *)ana_desc + offset, copy_len);
 		length -= copy_len;
 		buf += copy_len;
