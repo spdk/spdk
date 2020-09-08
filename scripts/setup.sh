@@ -106,8 +106,10 @@ function linux_bind_driver() {
 		return 0
 	fi
 
-	echo "$ven_dev_id" > "/sys/bus/pci/devices/$bdf/driver/remove_id" 2> /dev/null || true
-	echo "$bdf" > "/sys/bus/pci/devices/$bdf/driver/unbind"
+	if [[ $old_driver_name != "no driver" ]]; then
+		echo "$ven_dev_id" > "/sys/bus/pci/devices/$bdf/driver/remove_id" 2> /dev/null || true
+		echo "$bdf" > "/sys/bus/pci/devices/$bdf/driver/unbind"
+	fi
 
 	pci_dev_echo "$bdf" "$old_driver_name -> $driver_name"
 
