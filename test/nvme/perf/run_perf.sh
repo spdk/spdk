@@ -337,7 +337,7 @@ fi
 #Write results to csv file
 iops_disks=$(bc "$iops_disks / $REPEAT_NO")
 bw=$(bc "$bw / $REPEAT_NO")
-if [[ "$PLUGIN" =~ "plugin" ]]; then
+if [[ "$PLUGIN" =~ "plugin" ]] || [[ "$PLUGIN" =~ "kernel" ]]; then
 	mean_lat_disks_usec=$(bc "$mean_lat_disks_usec / $REPEAT_NO")
 	p90_lat_disks_usec=$(bc "$p90_lat_disks_usec / $REPEAT_NO")
 	p99_lat_disks_usec=$(bc "$p99_lat_disks_usec / $REPEAT_NO")
