@@ -941,6 +941,48 @@ Example response:
 }
 ~~~
 
+## bdev_examine {#rpc_bdev_examine}
+
+Request that the bdev layer examines the given bdev for metadata and creates
+new bdevs if metadata is found. This is only necessary if `auto_examine` has
+been set to false using `bdev_set_options`. By default, `auto_examine` is true
+and bdev examination is automatic.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Block device name
+
+### Response
+
+The response is an array of objects containing I/O statistics of the requested block devices.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "bdev_examine",
+  "params": {
+    "name": "Nvme0n1"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## bdev_get_iostat {#rpc_bdev_get_iostat}
 
 Get I/O statistics of block devices (bdevs).
