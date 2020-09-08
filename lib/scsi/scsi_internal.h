@@ -141,6 +141,12 @@ struct spdk_scsi_lun {
 	/** Argument for hotremove_cb */
 	void *hotremove_ctx;
 
+	/** Callback to be fired when the bdev size of related LUN has changed. */
+	void (*resize_cb)(const struct spdk_scsi_lun *, void *);
+
+	/** Argument for resize_cb */
+	void *resize_ctx;
+
 	/** Registrant head for I_T nexus */
 	TAILQ_HEAD(, spdk_scsi_pr_registrant) reg_head;
 	/** Persistent Reservation Generation */
@@ -170,6 +176,8 @@ struct spdk_scsi_lun {
 };
 
 struct spdk_scsi_lun *scsi_lun_construct(struct spdk_bdev *bdev,
+		void (*resize_cb)(const struct spdk_scsi_lun *, void *),
+		void *resize_ctx,
 		void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
 		void *hotremove_ctx);
 void scsi_lun_destruct(struct spdk_scsi_lun *lun);

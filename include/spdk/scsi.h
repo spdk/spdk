@@ -343,6 +343,35 @@ struct spdk_scsi_dev *spdk_scsi_dev_construct(const char *name,
 		void *hotremove_ctx);
 
 /**
+ * Construct a SCSI device object using the more given parameters.
+ *
+ * \param name Name for the SCSI device.
+ * \param bdev_name_list List of bdev names to attach to the LUNs for this SCSI
+ * device.
+ * \param lun_id_list List of LUN IDs for the LUN in this SCSI device. Caller is
+ * responsible for managing the memory containing this list. lun_id_list[x] is
+ * the LUN ID for lun_list[x].
+ * \param num_luns Number of entries in lun_list and lun_id_list.
+ * \param protocol_id SCSI SPC protocol identifier to report in INQUIRY data
+ * \param resize_cb Callback of lun resize.
+ * \param resize_ctx Additional argument to resize_cb.
+ * \param hotremove_cb Callback to lun hotremoval. Will be called once hotremove
+ * is first triggered.
+ * \param hotremove_ctx Additional argument to hotremove_cb.
+ *
+ * \return the constructed spdk_scsi_dev object.
+ */
+struct spdk_scsi_dev *spdk_scsi_dev_construct_ext(const char *name,
+		const char *bdev_name_list[],
+		int *lun_id_list,
+		int num_luns,
+		uint8_t protocol_id,
+		void (*resize_cb)(const struct spdk_scsi_lun *, void *),
+		void *resize_ctx,
+		void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
+		void *hotremove_ctx);
+
+/**
  * Delete a logical unit of the given SCSI device.
  *
  * \param dev SCSI device.
@@ -363,6 +392,24 @@ void spdk_scsi_dev_delete_lun(struct spdk_scsi_dev *dev, struct spdk_scsi_lun *l
 int spdk_scsi_dev_add_lun(struct spdk_scsi_dev *dev, const char *bdev_name, int lun_id,
 			  void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
 			  void *hotremove_ctx);
+
+/**
+ * Add a new logical unit to the given SCSI device with more callbacks.
+ *
+ * \param dev SCSI device.
+ * \param bdev_name Name of the bdev attached to the logical unit.
+ * \param lun_id LUN id for the new logical unit.
+ * \param resize_cb Callback of lun resize.
+ * \param resize_ctx Additional argument to resize_cb.
+ * \param hotremove_cb Callback to lun hotremoval. Will be called once hotremove
+ * is first triggered.
+ * \param hotremove_ctx Additional argument to hotremove_cb.
+ */
+int spdk_scsi_dev_add_lun_ext(struct spdk_scsi_dev *dev, const char *bdev_name, int lun_id,
+			      void (*resize_cb)(const struct spdk_scsi_lun *, void *),
+			      void *resize_ctx,
+			      void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
+			      void *hotremove_ctx);
 
 /**
  * Create a new SCSI port.

@@ -44,6 +44,8 @@
 	spdk_scsi_port_set_iscsi_transport_id;
 	spdk_scsi_lun_id_int_to_fmt;
 	spdk_scsi_lun_id_fmt_to_int;
+	spdk_scsi_dev_construct_ext;
+	spdk_scsi_dev_add_lun_ext;
 
 	local: *;
 };

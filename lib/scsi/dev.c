@@ -139,6 +139,18 @@ spdk_scsi_dev_add_lun(struct spdk_scsi_dev *dev, const char *bdev_name, int lun_
 		      void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
 		      void *hotremove_ctx)
 {
+	return spdk_scsi_dev_add_lun_ext(dev, bdev_name, lun_id,
+					 NULL, NULL,
+					 hotremove_cb, hotremove_ctx);
+}
+
+int
+spdk_scsi_dev_add_lun_ext(struct spdk_scsi_dev *dev, const char *bdev_name, int lun_id,
+			  void (*resize_cb)(const struct spdk_scsi_lun *, void *),
+			  void *resize_ctx,
+			  void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
+			  void *hotremove_ctx)
+{
 	struct spdk_bdev *bdev;
 	struct spdk_scsi_lun *lun;
 
@@ -158,7 +170,7 @@ spdk_scsi_dev_add_lun(struct spdk_scsi_dev *dev, const char *bdev_name, int lun_
 		}
 	}
 
-	lun = scsi_lun_construct(bdev, hotremove_cb, hotremove_ctx);
+	lun = scsi_lun_construct(bdev, resize_cb, resize_ctx, hotremove_cb, hotremove_ctx);
 	if (lun == NULL) {
 		return -1;
 	}
@@ -193,6 +205,19 @@ spdk_scsi_dev_delete_lun(struct spdk_scsi_dev *dev,
 
 struct spdk_scsi_dev *spdk_scsi_dev_construct(const char *name, const char *bdev_name_list[],
 		int *lun_id_list, int num_luns, uint8_t protocol_id,
+		void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
+		void *hotremove_ctx)
+{
+	return spdk_scsi_dev_construct_ext(name, bdev_name_list, lun_id_list,
+					   num_luns, protocol_id,
+					   NULL, NULL,
+					   hotremove_cb, hotremove_ctx);
+}
+
+struct spdk_scsi_dev *spdk_scsi_dev_construct_ext(const char *name, const char *bdev_name_list[],
+		int *lun_id_list, int num_luns, uint8_t protocol_id,
+		void (*resize_cb)(const struct spdk_scsi_lun *, void *),
+		void *resize_ctx,
 		void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
 		void *hotremove_ctx)
 {
@@ -245,8 +270,9 @@ struct spdk_scsi_dev *spdk_scsi_dev_construct(const char *name, const char *bdev
 	dev->protocol_id = protocol_id;
 
 	for (i = 0; i < num_luns; i++) {
-		rc = spdk_scsi_dev_add_lun(dev, bdev_name_list[i], lun_id_list[i],
-					   hotremove_cb, hotremove_ctx);
+		rc = spdk_scsi_dev_add_lun_ext(dev, bdev_name_list[i], lun_id_list[i],
+					       resize_cb, resize_ctx,
+					       hotremove_cb, hotremove_ctx);
 		if (rc < 0) {
 			spdk_scsi_dev_destruct(dev, NULL, NULL);
 			return NULL;

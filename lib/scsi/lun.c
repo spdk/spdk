@@ -393,6 +393,28 @@ scsi_lun_hot_remove(void *remove_ctx)
 	}
 }
 
+static void
+bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
+	      void *event_ctx)
+{
+	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)event_ctx;
+	switch (type) {
+	case SPDK_BDEV_EVENT_REMOVE:
+		SPDK_NOTICELOG("bdev name (%s) received event(SPDK_BDEV_EVENT_REMOVE)\n", spdk_bdev_get_name(bdev));
+		scsi_lun_hot_remove(event_ctx);
+		break;
+	case SPDK_BDEV_EVENT_RESIZE:
+		SPDK_NOTICELOG("bdev name (%s) received event(SPDK_BDEV_EVENT_RESIZE)\n", spdk_bdev_get_name(bdev));
+		if (lun->resize_cb) {
+			lun->resize_cb(lun, lun->resize_ctx);
+		}
+		break;
+	default:
+		SPDK_NOTICELOG("Unsupported bdev event: type %d\n", type);
+		break;
+	}
+}
+
 /**
  * \brief Constructs a new spdk_scsi_lun object based on the provided parameters.
  *
@@ -402,6 +424,8 @@ scsi_lun_hot_remove(void *remove_ctx)
  * \return pointer to the new spdk_scsi_lun object otherwise
  */
 struct spdk_scsi_lun *scsi_lun_construct(struct spdk_bdev *bdev,
+		void (*resize_cb)(const struct spdk_scsi_lun *, void *),
+		void *resize_ctx,
 		void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
 		void *hotremove_ctx)
 {
@@ -419,7 +443,7 @@ struct spdk_scsi_lun *scsi_lun_construct(struct spdk_bdev *bdev,
 		return NULL;
 	}
 
-	rc = spdk_bdev_open(bdev, true, scsi_lun_hot_remove, lun, &lun->bdev_desc);
+	rc = spdk_bdev_open_ext(spdk_bdev_get_name(bdev), true, bdev_event_cb, lun, &lun->bdev_desc);
 
 	if (rc != 0) {
 		SPDK_ERRLOG("bdev %s cannot be opened, error=%d\n", spdk_bdev_get_name(bdev), rc);
@@ -438,6 +462,10 @@ struct spdk_scsi_lun *scsi_lun_construct(struct spdk_bdev *bdev,
 	lun->io_channel = NULL;
 	lun->hotremove_cb = hotremove_cb;
 	lun->hotremove_ctx = hotremove_ctx;
+
+	lun->resize_cb = resize_cb;
+	lun->resize_ctx = resize_ctx;
+
 	TAILQ_INIT(&lun->open_descs);
 	TAILQ_INIT(&lun->reg_head);
 

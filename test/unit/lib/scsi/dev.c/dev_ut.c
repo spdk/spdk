@@ -82,6 +82,8 @@ spdk_scsi_task_put(struct spdk_scsi_task *task)
 }
 
 struct spdk_scsi_lun *scsi_lun_construct(struct spdk_bdev *bdev,
+		void (*resize_cb)(const struct spdk_scsi_lun *, void *),
+		void *resize_ctx,
 		void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
 		void *hotremove_ctx)
 {

@@ -45,6 +45,14 @@ library now no longer exists.
 The contents of the bdev_rpc library have been moved to the bdev library. The app_rpc
 library now no longer exists.
 
+### scsi
+Two new APIs have been added `spdk_scsi_dev_construct_ext` and
+`spdk_scsi_dev_add_lun_ext` that allow the upper layer(e.g. vhost-scsi) to
+receive the notification when the scsi bdev has been resized.
+
+The `spdk_scsi_dev_construct` and `spdk_scsi_dev_add_lun` eventually may be
+deprecated and removed.
+
 ## v20.07: SPDK CSI driver, new accel_fw commands, I/O abort support
 
 ### accel

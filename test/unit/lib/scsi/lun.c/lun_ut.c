@@ -95,6 +95,11 @@ DEFINE_STUB(spdk_bdev_open, int,
 	     void *remove_ctx, struct spdk_bdev_desc **desc),
 	    0);
 
+DEFINE_STUB(spdk_bdev_open_ext, int,
+	    (const char *bdev_name, bool write, spdk_bdev_event_cb_t event_cb,
+	     void *event_ctx, struct spdk_bdev_desc **desc),
+	    0);
+
 DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
 
 DEFINE_STUB(spdk_bdev_get_name, const char *,
@@ -144,7 +149,7 @@ static struct spdk_scsi_lun *lun_construct(void)
 	struct spdk_scsi_lun		*lun;
 	struct spdk_bdev		bdev;
 
-	lun = scsi_lun_construct(&bdev, NULL, NULL);
+	lun = scsi_lun_construct(&bdev, NULL, NULL, NULL, NULL);
 
 	SPDK_CU_ASSERT_FATAL(lun != NULL);
 	return lun;
@@ -450,7 +455,7 @@ lun_construct_null_ctx(void)
 {
 	struct spdk_scsi_lun		*lun;
 
-	lun = scsi_lun_construct(NULL, NULL, NULL);
+	lun = scsi_lun_construct(NULL, NULL, NULL, NULL, NULL);
 
 	/* lun should be NULL since we passed NULL for the ctx pointer. */
 	CU_ASSERT(lun == NULL);
@@ -585,7 +590,7 @@ lun_check_pending_tasks_only_for_specific_initiator(void)
 	struct spdk_scsi_port initiator_port2 = {};
 	struct spdk_scsi_port initiator_port3 = {};
 
-	lun = scsi_lun_construct(&bdev, NULL, NULL);
+	lun = scsi_lun_construct(&bdev, NULL, NULL, NULL, NULL);
 
 	task1.initiator_port = &initiator_port1;
 	task2.initiator_port = &initiator_port2;
@@ -651,7 +656,7 @@ abort_pending_mgmt_tasks_when_lun_is_removed(void)
 	struct spdk_scsi_lun *lun;
 	struct spdk_scsi_task task1, task2, task3;
 
-	lun = scsi_lun_construct(&bdev, NULL, NULL);
+	lun = scsi_lun_construct(&bdev, NULL, NULL, NULL, NULL);
 
 	/* Normal case */
 	ut_init_task(&task1);
