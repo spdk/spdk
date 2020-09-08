@@ -4237,7 +4237,7 @@ Example response:
 }
 ~~~
 
-### iscsi_portal_group_set_auth method {#rpc_iscsi_portal_group_set_auth}
+## iscsi_portal_group_set_auth method {#rpc_iscsi_portal_group_set_auth}
 
 Set CHAP authentication for discovery sessions specific for the existing iSCSI portal group.
 This RPC overwrites the setting by the global parameters for the iSCSI portal group.
