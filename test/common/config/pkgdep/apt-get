@@ -36,10 +36,6 @@ pre_install() {
 	fi
 	if ! install rdma-core; then
 		echo "Package rdma-core is avaliable at Ubuntu 18 [universe] repositorium" >&2
-		install rdmacm-utils
-		install ibverbs-utils
-	else
-		LIBRXE_INSTALL=false
 	fi
 	if ! install libpmempool1; then
 		echo "Package libpmempool1 is available at Ubuntu 18 [universe] repositorium" >&2
@@ -95,6 +91,8 @@ packages=(
 	smartmontools
 	wget
 	xfsprogs
+	ibverbs-utils
+	rdmacm-utils
 )
 
 install_vagrant_dependencies() {
