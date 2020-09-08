@@ -3731,6 +3731,51 @@ response:
 }
 ~~~
 
+## iscsi_initiator_group_remove_initiators method {#rpc_iscsi_initiator_group_remove_initiators}
+
+Remove initiators from an initiator group.
+
+### Parameters
+
+Name                        | Optional | Type    | Description
+--------------------------- | -------- | --------| -----------
+tag                         | Required | number  | Existing initiator group tag.
+initiators                  | Optional | array   | Array of initiator hostnames or IP addresses
+netmasks                    | Optional | array   | Array of initiator netmasks
+
+### Example
+
+Example request:
+
+~~~
+request:
+{
+  "params": {
+    "initiators": [
+      "iqn.2016-06.io.spdk:host3"
+    ],
+    "tag": 1,
+    "netmasks": [
+      "255.255.255.1"
+    ]
+  },
+  "jsonrpc": "2.0",
+  "method": "iscsi_initiator_group_remove_initiators",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+response:
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## iscsi_get_target_nodes method {#rpc_iscsi_get_target_nodes}
 
 Show information about all available iSCSI target nodes.
