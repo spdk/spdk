@@ -29,6 +29,8 @@ NUMJOBS=1
 REPEAT_NO=3
 GTOD_REDUCE=false
 SAMPLING_INT=0
+IO_BATCH_SUBMIT=0
+IO_BATCH_COMPLETE=0
 FIO_BIN=$CONFIG_FIO_SOURCE_DIR/fio
 TMP_RESULT_FILE=$testdir/result.json
 PLUGIN="nvme"
@@ -55,21 +57,23 @@ function usage() {
 	echo "-h, --help                Print help and exit"
 	echo
 	echo "Workload parameters:"
-	echo "    --rw=STR              Type of I/O pattern. Accepted values are randrw,rw. [default=$RW]"
-	echo "    --rwmixread=INT       Percentage of a mixed workload that should be reads. [default=$MIX]"
-	echo "    --iodepth=INT         Number of I/Os to keep in flight against the file. [default=$IODEPTH]"
-	echo "    --block-size=INT      The  block  size  in  bytes  used for I/O units. [default=$BLK_SIZE]"
-	echo "    --run-time=TIME[s]    Tell fio to run the workload for the specified period of time. [default=$RUNTIME]"
-	echo "    --ramp-time=TIME[s]   Fio will run the specified workload for this amount of time before"
-	echo "                          logging any performance numbers. [default=$RAMP_TIME]. Applicable only for fio-based tests."
-	echo "    --numjobs=INT         Create the specified number of clones of this job. [default=$NUMJOBS]"
-	echo "                          Applicable only for fio-based tests."
-	echo "    --repeat-no=INT       How many times to repeat workload test. [default=$REPEAT_NO]"
-	echo "                          Test result will be an average of repeated test runs."
-	echo "    --gtod-reduce         Enable fio gtod_reduce option. [default=$GTOD_REDUCE]"
-	echo "    --sampling-int=INT    Value for fio log_avg_msec parameters [default=$SAMPLING_INT]"
-	echo "    --fio-bin=PATH        Path to fio binary. [default=$FIO_BIN]"
-	echo "                          Applicable only for fio-based tests."
+	echo "    --rw=STR                 Type of I/O pattern. Accepted values are randrw,rw. [default=$RW]"
+	echo "    --rwmixread=INT          Percentage of a mixed workload that should be reads. [default=$MIX]"
+	echo "    --iodepth=INT            Number of I/Os to keep in flight against the file. [default=$IODEPTH]"
+	echo "    --block-size=INT         The  block  size  in  bytes  used for I/O units. [default=$BLK_SIZE]"
+	echo "    --run-time=TIME[s]       Tell fio to run the workload for the specified period of time. [default=$RUNTIME]"
+	echo "    --ramp-time=TIME[s]      Fio will run the specified workload for this amount of time before"
+	echo "                             logging any performance numbers. [default=$RAMP_TIME]. Applicable only for fio-based tests."
+	echo "    --numjobs=INT            Create the specified number of clones of this job. [default=$NUMJOBS]"
+	echo "                             Applicable only for fio-based tests."
+	echo "    --repeat-no=INT          How many times to repeat workload test. [default=$REPEAT_NO]"
+	echo "                             Test result will be an average of repeated test runs."
+	echo "    --gtod-reduce            Enable fio gtod_reduce option. [default=$GTOD_REDUCE]"
+	echo "    --sampling-int=INT       Value for fio log_avg_msec parameters [default=$SAMPLING_INT]"
+	echo "    --io-batch-submit=INT    Value for iodepth_batch_submit fio option [default=$IO_BATCH_SUBMIT]"
+	echo "    --io-batch-complete=INT  Value for iodepth_batch_complete fio option [default=$IO_BATCH_COMPLETE]"
+	echo "    --fio-bin=PATH           Path to fio binary. [default=$FIO_BIN]"
+	echo "                             Applicable only for fio-based tests."
 	echo
 	echo "Test setup parameters:"
 	echo "    --driver=STR            Selects tool used for testing. Choices available:"
@@ -121,6 +125,8 @@ while getopts 'h-:' optchar; do
 				repeat-no=*) REPEAT_NO="${OPTARG#*=}" ;;
 				gtod-reduce) GTOD_REDUCE=true ;;
 				sampling-int=*) SAMPLING_INT="${OPTARG#*=}" ;;
+				io-batch-submit=*) IO_BATCH_SUBMIT="${OPTARG#*=}" ;;
+				io-batch-complete=*) IO_BATCH_COMPLETE="${OPTARG#*=}" ;;
 				fio-bin=*) FIO_BIN="${OPTARG#*=}" ;;
 				driver=*) PLUGIN="${OPTARG#*=}" ;;
 				disk-config=*)

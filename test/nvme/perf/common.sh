@@ -232,6 +232,14 @@ function create_fio_config() {
 		echo "gtod_reduce=1" >> $testdir/config.fio
 	fi
 
+	if [[ "$IO_BATCH_SUBMIT" -gt 0 ]]; then
+		echo "iodepth_batch_submit=$IO_BATCH_SUBMIT" >> $testdir/config.fio
+	fi
+
+	if [[ "$IO_BATCH_COMPLETE" -gt 0 ]]; then
+		echo "iodepth_batch_complete=$IO_BATCH_COMPLETE" >> $testdir/config.fio
+	fi
+
 	for i in "${!cores[@]}"; do
 		local m=0 #Counter of disks per NUMA node
 		local n=0 #Counter of all disks in test
