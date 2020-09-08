@@ -324,62 +324,33 @@ function bc() {
 }
 
 function get_results() {
+	local iops bw stdev
+	local p90_lat p99_lat p99_99_lat
+	local mean_slat mean_clat
 	local reads_pct
 	local writes_pct
 
-	reads_pct=$(bc "$2 / 100")
+	reads_pct=$(bc "$1 / 100")
 	writes_pct=$(bc "1 - $reads_pct")
-	case "$1" in
-		iops)
-			iops=$(jq -r '.jobs[] | .read.iops + .write.iops' $TMP_RESULT_FILE)
-			echo $iops
-			;;
-		mean_lat_usec)
-			mean_lat=$(jq -r ".jobs[] | (.read.lat_ns.mean * $reads_pct + .write.lat_ns.mean * $writes_pct)/1000" $TMP_RESULT_FILE)
-			echo $mean_lat
-			;;
-		p90_lat_usec)
-			p90_lat=$(jq -r ".jobs[] | (.read.clat_ns.percentile.\"90.000000\"  // 0 * $reads_pct + .write.clat_ns.percentile.\"90.000000\" // 0 * $writes_pct)/1000" $TMP_RESULT_FILE)
-			echo $p90_lat
-			;;
-		p99_lat_usec)
-			p99_lat=$(jq -r ".jobs[] | (.read.clat_ns.percentile.\"99.000000\"  // 0 * $reads_pct + .write.clat_ns.percentile.\"99.000000\" // 0 * $writes_pct)/1000" $TMP_RESULT_FILE)
-			echo $p99_lat
-			;;
-		p99_99_lat_usec)
-			p99_99_lat=$(jq -r ".jobs[] | (.read.clat_ns.percentile.\"99.990000\" // 0 * $reads_pct + .write.clat_ns.percentile.\"99.990000\" // 0 * $writes_pct)/1000" $TMP_RESULT_FILE)
-			echo $p99_99_lat
-			;;
-		stdev_usec)
-			stdev=$(jq -r ".jobs[] | (.read.clat_ns.stddev * $reads_pct + .write.clat_ns.stddev * $writes_pct)/1000" $TMP_RESULT_FILE)
-			echo $stdev
-			;;
-		mean_slat_usec)
-			mean_slat=$(jq -r ".jobs[] | (.read.slat_ns.mean * $reads_pct + .write.slat_ns.mean * $writes_pct)/1000" $TMP_RESULT_FILE)
-			echo $mean_slat
-			;;
-		mean_clat_usec)
-			mean_clat=$(jq -r ".jobs[] | (.read.clat_ns.mean * $reads_pct + .write.clat_ns.mean * $writes_pct)/1000" $TMP_RESULT_FILE)
-			echo $mean_clat
-			;;
-		bw_Kibs)
-			bw=$(jq -r ".jobs[] | (.read.bw + .write.bw)" $TMP_RESULT_FILE)
-			echo $bw
-			;;
-	esac
+
+	iops=$(jq -r '.jobs[] | .read.iops + .write.iops' $TMP_RESULT_FILE)
+	bw=$(jq -r ".jobs[] | (.read.bw + .write.bw)" $TMP_RESULT_FILE)
+	mean_lat=$(jq -r ".jobs[] | (.read.lat_ns.mean * $reads_pct + .write.lat_ns.mean * $writes_pct)/1000" $TMP_RESULT_FILE)
+	p90_lat=$(jq -r ".jobs[] | (.read.clat_ns.percentile.\"90.000000\"  // 0 * $reads_pct + .write.clat_ns.percentile.\"90.000000\" // 0 * $writes_pct)/1000" $TMP_RESULT_FILE)
+	p99_lat=$(jq -r ".jobs[] | (.read.clat_ns.percentile.\"99.000000\"  // 0 * $reads_pct + .write.clat_ns.percentile.\"99.000000\" // 0 * $writes_pct)/1000" $TMP_RESULT_FILE)
+	p99_99_lat=$(jq -r ".jobs[] | (.read.clat_ns.percentile.\"99.990000\" // 0 * $reads_pct + .write.clat_ns.percentile.\"99.990000\" // 0 * $writes_pct)/1000" $TMP_RESULT_FILE)
+	stdev=$(jq -r ".jobs[] | (.read.clat_ns.stddev * $reads_pct + .write.clat_ns.stddev * $writes_pct)/1000" $TMP_RESULT_FILE)
+	mean_slat=$(jq -r ".jobs[] | (.read.slat_ns.mean * $reads_pct + .write.slat_ns.mean * $writes_pct)/1000" $TMP_RESULT_FILE)
+	mean_clat=$(jq -r ".jobs[] | (.read.clat_ns.mean * $reads_pct + .write.clat_ns.mean * $writes_pct)/1000" $TMP_RESULT_FILE)
+
+	echo "$iops $bw $mean_lat $p90_lat $p99_lat $p99_99_lat $stdev $mean_slat $mean_clat"
 }
 
 function get_bdevperf_results() {
-	case "$1" in
-		iops)
-			iops=$(grep Total $TMP_RESULT_FILE | awk -F 'Total' '{print $2}' | awk '{print $2}')
-			echo $iops
-			;;
-		bw_Kibs)
-			bw_KBs=$(grep Total $TMP_RESULT_FILE | awk -F 'Total' '{print $2}' | awk '{print $4}')
-			bc "$bw_KBs * 1024"
-			;;
-	esac
+	local iops
+	local bw_MBs
+	read -r iops bw_MBs <<< $(grep Total $TMP_RESULT_FILE | tr -s " " | awk -F ":| " '{print $5" "$7}')
+	echo "$iops $(bc "$bw_MBs * 1024")"
 }
 
 function get_nvmeperf_results() {
