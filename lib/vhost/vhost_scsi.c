@@ -60,6 +60,9 @@
 #define SPDK_VHOST_SCSI_DISABLED_FEATURES	(SPDK_VHOST_DISABLED_FEATURES | \
 						(1ULL << VIRTIO_SCSI_F_T10_PI ))
 
+/* Vhost-user-scsi support protocol features */
+#define SPDK_VHOST_SCSI_PROTOCOL_FEATURES	(1ULL << VHOST_USER_PROTOCOL_F_INFLIGHT_SHMFD)
+
 #define MGMT_POLL_PERIOD_US (1000 * 5)
 
 #define VIRTIO_SCSI_CONTROLQ   0
@@ -733,11 +736,48 @@ process_scsi_task(struct spdk_vhost_session *vsession,
 }
 
 static void
+submit_inflight_desc(struct spdk_vhost_scsi_session *svsession,
+		     struct spdk_vhost_virtqueue *vq)
+{
+	struct spdk_vhost_session *vsession = &svsession->vsession;
+	spdk_vhost_resubmit_info *resubmit = vq->vring_inflight.resubmit_inflight;
+	spdk_vhost_resubmit_desc *resubmit_list;
+	uint16_t req_idx;
+
+	if (spdk_likely(resubmit == NULL || resubmit->resubmit_list == NULL)) {
+		return;
+	}
+
+	resubmit_list = resubmit->resubmit_list;
+	while (resubmit->resubmit_num-- > 0) {
+		req_idx = resubmit_list[resubmit->resubmit_num].index;
+		SPDK_DEBUGLOG(SPDK_LOG_VHOST_SCSI, "====== Start processing request idx %"PRIu16"======\n",
+			      req_idx);
+
+		if (spdk_unlikely(req_idx >= vq->vring.size)) {
+			SPDK_ERRLOG("%s: request idx '%"PRIu16"' exceeds virtqueue size (%"PRIu16").\n",
+				    vsession->name, req_idx, vq->vring.size);
+			vhost_vq_used_ring_enqueue(vsession, vq, req_idx, 0);
+			continue;
+		}
+
+		process_scsi_task(vsession, vq, req_idx);
+	}
+	/* reset the submit_num to 0 to avoid underflow. */
+	resubmit->resubmit_num = 0;
+
+	free(resubmit_list);
+	resubmit->resubmit_list = NULL;
+}
+
+static void
 process_vq(struct spdk_vhost_scsi_session *svsession, struct spdk_vhost_virtqueue *vq)
 {
 	struct spdk_vhost_session *vsession = &svsession->vsession;
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;
+
+	submit_inflight_desc(svsession, vq);
 
 	reqs_cnt = vhost_vq_avail_ring_get(vq, reqs, SPDK_COUNTOF(reqs));
 	assert(reqs_cnt <= 32);
@@ -752,6 +792,8 @@ process_vq(struct spdk_vhost_scsi_session *svsession, struct spdk_vhost_virtqueu
 			vhost_vq_used_ring_enqueue(vsession, vq, reqs[i], 0);
 			continue;
 		}
+
+		rte_vhost_set_inflight_desc_split(vsession->vid, vq->vring_idx, reqs[i]);
 
 		process_scsi_task(vsession, vq, reqs[i]);
 	}
@@ -822,6 +864,7 @@ spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask)
 
 	svdev->vdev.virtio_features = SPDK_VHOST_SCSI_FEATURES;
 	svdev->vdev.disabled_features = SPDK_VHOST_SCSI_DISABLED_FEATURES;
+	svdev->vdev.protocol_features = SPDK_VHOST_SCSI_PROTOCOL_FEATURES;
 
 	spdk_vhost_lock();
 	rc = vhost_dev_register(&svdev->vdev, name, cpumask,
