@@ -126,6 +126,7 @@ test_nvme_rdma_build_sgl_request(void)
 
 	ctrlr.max_sges = NVME_RDMA_MAX_SGL_DESCRIPTORS;
 	ctrlr.cdata.nvmf_specific.msdbd = 16;
+	ctrlr.ioccsz_bytes = 4096;
 
 	rqpair.mr_map = &rmap;
 	rqpair.qpair.ctrlr = &ctrlr;
@@ -208,6 +209,17 @@ test_nvme_rdma_build_sgl_request(void)
 	bio.iovs[1].iov_len = 1 << 24;
 	rc = nvme_rdma_build_sgl_request(&rqpair, &rdma_req);
 	SPDK_CU_ASSERT_FATAL(rc != 0);
+
+	/* Test case 6: 4 SGL descriptors, size of SGL descriptors exceeds ICD. Expected: FAIL */
+	ctrlr.ioccsz_bytes = 60;
+	bio.iovpos = 0;
+	req.payload_offset = 0;
+	req.payload_size = 0x4000;
+	for (i = 0; i < 4; i++) {
+		bio.iovs[i].iov_len = 0x1000;
+	}
+	rc = nvme_rdma_build_sgl_request(&rqpair, &rdma_req);
+	SPDK_CU_ASSERT_FATAL(rc == -1);
 }
 
 static void

@@ -1634,12 +1634,18 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair,
 		 * Otherwise, The SGL descriptor embedded in the command must point to the list of
 		 * SGL descriptors used to describe the operation. In that case it is a last segment descriptor.
 		 */
-		rdma_req->send_sgl[0].length = sizeof(struct spdk_nvme_cmd) + sizeof(struct
-					       spdk_nvme_sgl_descriptor) * num_sgl_desc;
+		uint32_t descriptors_size = sizeof(struct spdk_nvme_sgl_descriptor) * num_sgl_desc;
+
+		if (spdk_unlikely(descriptors_size > rqpair->qpair.ctrlr->ioccsz_bytes)) {
+			SPDK_ERRLOG("Size of SGL descriptors (%u) exceeds ICD (%u)\n",
+				    descriptors_size, rqpair->qpair.ctrlr->ioccsz_bytes);
+			return -1;
+		}
+		rdma_req->send_sgl[0].length = sizeof(struct spdk_nvme_cmd) + descriptors_size;
 
 		req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_LAST_SEGMENT;
 		req->cmd.dptr.sgl1.unkeyed.subtype = SPDK_NVME_SGL_SUBTYPE_OFFSET;
-		req->cmd.dptr.sgl1.unkeyed.length = num_sgl_desc * sizeof(struct spdk_nvme_sgl_descriptor);
+		req->cmd.dptr.sgl1.unkeyed.length = descriptors_size;
 		req->cmd.dptr.sgl1.address = (uint64_t)0;
 	}
 
