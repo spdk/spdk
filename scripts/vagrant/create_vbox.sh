@@ -38,6 +38,7 @@ display_help() {
 	echo "  -l                              Use a local copy of spdk, don't try to rsync from the host."
 	echo "  -a                              Copy spdk/autorun.sh artifacts from VM to host system."
 	echo "  -d                              Deploy a test vm by provisioning all prerequisites for spdk autotest"
+	echo "  -o                              Add network interface for openstack tests"
 	echo "  --qemu-emulator=<path>          Path to custom QEMU binary. Only works with libvirt provider"
 	echo "  --vagrantfiles-dir=<path>       Destination directory to put Vagrantfile into."
 	echo "  --package-box                   Install all dependencies for SPDK and create a local vagrant box version."
@@ -72,6 +73,7 @@ SPDK_VAGRANT_VMCPU=4
 SPDK_VAGRANT_VMRAM=4096
 SPDK_VAGRANT_PROVIDER="virtualbox"
 SPDK_QEMU_EMULATOR=""
+SPDK_OPENSTACK_NETWORK=0
 OPTIND=1
 NVME_DISKS_TYPE=""
 NVME_DISKS_NAMESPACES=""
@@ -82,7 +84,7 @@ VAGRANT_PASSWORD_AUTH=0
 VAGRANT_PACKAGE_BOX=0
 VAGRANT_HUGE_MEM=0
 
-while getopts ":b:n:s:x:p:u:vcraldHh-:" opt; do
+while getopts ":b:n:s:x:p:u:vcraldoHh-:" opt; do
 	case "${opt}" in
 		-)
 			case "${OPTARG}" in
@@ -127,6 +129,9 @@ while getopts ":b:n:s:x:p:u:vcraldHh-:" opt; do
 			;;
 		d)
 			DEPLOY_TEST_VM=1
+			;;
+		o)
+			SPDK_OPENSTACK_NETWORK=1
 			;;
 		b)
 			NVME_FILE+="${OPTARG#*=} "
@@ -239,6 +244,7 @@ if [ ${VERBOSE} = 1 ]; then
 	echo SPDK_VAGRANT_PROVIDER=$SPDK_VAGRANT_PROVIDER
 	echo SPDK_VAGRANT_HTTP_PROXY=$SPDK_VAGRANT_HTTP_PROXY
 	echo SPDK_QEMU_EMULATOR=$SPDK_QEMU_EMULATOR
+	echo SPDK_OPENSTACK_NETWORK=$SPDK_OPENSTACK_NETWORK
 	echo VAGRANT_PACKAGE_BOX=$VAGRANT_PACKAGE_BOX
 	echo
 fi
@@ -247,6 +253,7 @@ export SPDK_VAGRANT_HTTP_PROXY
 export SPDK_VAGRANT_VMCPU
 export SPDK_VAGRANT_VMRAM
 export SPDK_DIR
+export SPDK_OPENSTACK_NETWORK
 export COPY_SPDK_DIR
 export COPY_SPDK_ARTIFACTS
 export DEPLOY_TEST_VM

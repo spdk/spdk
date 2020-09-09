@@ -284,6 +284,7 @@ provider = (ENV['SPDK_VAGRANT_PROVIDER'] || "virtualbox")
 vmcpu = (ENV['SPDK_VAGRANT_VMCPU'] || 2)
 vmram = (ENV['SPDK_VAGRANT_VMRAM'] || 4096)
 nfs_sync_backend_distros = ['freebsd', 'clearlinux']
+openstack_network = (ENV['SPDK_OPENSTACK_NETWORK'] || false)
 
 # generic/freebsd boxes do not work properly with vagrant-proxyconf and
 # have issues installing rsync and sshfs for syncing files. NFS is
@@ -307,6 +308,10 @@ Vagrant.configure(2) do |config|
   config.vm.box_check_update = false
   config.vm.synced_folder '.', '/vagrant', disabled: true
 
+  # Add network interface for openstack tests
+  if openstack_network
+    config.vm.network "private_network", ip: "10.0.2.15"
+  end
   # Copy in the .gitconfig if it exists
   copy_gitconfig(config)
 
