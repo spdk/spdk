@@ -47,6 +47,8 @@ if ! check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
 	# run_test "nvmf_srq_overwhelm" test/nvmf/target/srq_overwhelm.sh $TEST_ARGS
 fi
 
+run_test "nvmf_multipath" test/nvmf/target/multipath.sh "${TEST_ARGS[@]}"
+
 timing_enter host
 
 run_test "nvmf_identify" test/nvmf/host/identify.sh "${TEST_ARGS[@]}"
