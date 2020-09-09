@@ -351,7 +351,9 @@ spdk_nvme_ns_get_uuid(const struct spdk_nvme_ns *ns)
 	size_t uuid_size;
 
 	uuid = nvme_ns_find_id_desc(ns, SPDK_NVME_NIDT_UUID, &uuid_size);
-	if (uuid == NULL || uuid_size != sizeof(*uuid)) {
+	if (uuid && uuid_size != sizeof(*uuid)) {
+		SPDK_WARNLOG("Invalid NIDT_UUID descriptor length reported: %zu (expected: %zu)\n",
+			     uuid_size, sizeof(*uuid));
 		return NULL;
 	}
 
