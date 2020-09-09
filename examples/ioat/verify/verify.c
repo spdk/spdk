@@ -307,7 +307,9 @@ submit_xfers(struct thread_entry *thread_entry, uint64_t queue_depth)
 	while (queue_depth-- > 0) {
 		struct ioat_task *ioat_task = NULL;
 		ioat_task = spdk_mempool_get(thread_entry->task_pool);
+		assert(ioat_task != NULL);
 		ioat_task->buffer = spdk_mempool_get(thread_entry->data_pool);
+		assert(ioat_task->buffer != NULL);
 
 		ioat_task->type = IOAT_COPY_TYPE;
 		if (spdk_ioat_get_dma_capabilities(thread_entry->chan) & SPDK_IOAT_ENGINE_FILL_SUPPORTED) {
