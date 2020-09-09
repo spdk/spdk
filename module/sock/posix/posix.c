@@ -801,7 +801,7 @@ _sock_flush(struct spdk_sock *sock)
 	}
 	rc = sendmsg(psock->fd, &msg, flags);
 	if (rc <= 0) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK || (errno == ENOBUFS && psock->zcopy)) {
 			return 0;
 		}
 		return rc;
