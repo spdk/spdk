@@ -205,13 +205,13 @@ if __name__ == "__main__":
     p.add_argument('name', help='compress bdev name')
     p.set_defaults(func=bdev_compress_delete)
 
-    def compress_set_pmd(args):
-        rpc.bdev.compress_set_pmd(args.client,
-                                  pmd=args.pmd)
-    p = subparsers.add_parser('compress_set_pmd', aliases=['set_compress_pmd'],
+    def bdev_compress_set_pmd(args):
+        rpc.bdev.bdev_compress_set_pmd(args.client,
+                                       pmd=args.pmd)
+    p = subparsers.add_parser('bdev_compress_set_pmd', aliases=['set_compress_pmd', 'compress_set_pmd'],
                               help='Set pmd option for a compress disk')
     p.add_argument('-p', '--pmd', type=int, help='0 = auto-select, 1= QAT only, 2 = ISAL only')
-    p.set_defaults(func=compress_set_pmd)
+    p.set_defaults(func=bdev_compress_set_pmd)
 
     def bdev_compress_get_orphans(args):
         print_dict(rpc.bdev.bdev_compress_get_orphans(args.client,

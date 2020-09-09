@@ -107,8 +107,8 @@ static const struct spdk_json_object_decoder rpc_compress_pmd_decoder[] = {
 };
 
 static void
-rpc_compress_set_pmd(struct spdk_jsonrpc_request *request,
-		     const struct spdk_json_val *params)
+rpc_bdev_compress_set_pmd(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
 {
 	struct rpc_compress_set_pmd req;
 	struct spdk_json_write_ctx *w;
@@ -141,9 +141,10 @@ rpc_compress_set_pmd(struct spdk_jsonrpc_request *request,
 		spdk_jsonrpc_end_result(request, w);
 	}
 }
-SPDK_RPC_REGISTER("compress_set_pmd", rpc_compress_set_pmd,
+SPDK_RPC_REGISTER("bdev_compress_set_pmd", rpc_bdev_compress_set_pmd,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(compress_set_pmd, set_compress_pmd)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_compress_set_pmd, set_compress_pmd)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_compress_set_pmd, compress_set_pmd)
 
 /* Structure to hold the parameters for this RPC method. */
 struct rpc_construct_compress {
