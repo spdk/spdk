@@ -47,6 +47,7 @@
 #include "spdk/json.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
+#include "spdk/likely.h"
 
 #include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
@@ -255,9 +256,17 @@ bdev_rbd_start_aio(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
 		rbd_io = (struct bdev_rbd_io *)bdev_io->driver_ctx;
 		rbd_io->total_len = len;
-		ret = rbd_aio_readv(image, iov, iovcnt, offset, comp);
+		if (spdk_likely(iovcnt == 1)) {
+			ret = rbd_aio_read(image, offset, iov[0].iov_len, iov[0].iov_base, comp);
+		} else {
+			ret = rbd_aio_readv(image, iov, iovcnt, offset, comp);
+		}
 	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-		ret = rbd_aio_writev(image, iov, iovcnt, offset, comp);
+		if (spdk_likely(iovcnt == 1)) {
+			ret = rbd_aio_write(image, offset, iov[0].iov_len, iov[0].iov_base, comp);
+		} else {
+			ret = rbd_aio_writev(image, iov, iovcnt, offset, comp);
+		}
 	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_FLUSH) {
 		ret = rbd_aio_flush(image, comp);
 	}
