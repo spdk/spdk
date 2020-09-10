@@ -1131,6 +1131,145 @@ Example response:
 }
 ~~~
 
+## bdev_compress_create {#rpc_bdev_compress_create}
+
+Create a new compress bdev on a given base bdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+base_bdev_name          | Required | string      | Name of the base bdev
+pm_path                 | Required | string      | Path to persistent memory
+lb_size                 | Optional | int         | Compressed vol logical block size (512 or 4096)
+
+### Result
+
+Name of newly created bdev.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "base_bdev_name": "Nvme0n1",
+    "pm_path": "/pm_files",
+    "lb_size": 4096
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_compress_create",
+  "id": 1
+}
+~~~
+
+## bdev_compress_delete {#rpc_bdev_compress_delete}
+
+Delete a compressed bdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Name of the compress bdev
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "name": "COMP_Nvme0n1"
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_compress_delete",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## bdev_compress_get_orphans {#rpc_bdev_compress_get_orphans}
+
+Get a list of compressed volumes that are missing their pmem metadata.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Name of the compress bdev
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "name": "COMP_Nvme0n1"
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_compress_get_orphans",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "name": "COMP_Nvme0n1"
+}
+~~~
+
+## bdev_compress_set_pmd {#rpc_bdev_compress_set_pmd}
+
+Select the DPDK polled mode driver (pmd) for a compressed bdev,
+0 = auto-select, 1= QAT only, 2 = ISAL only.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+pmd                     | Required | int         | pmd selection
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "pmd": 1
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_compress_set_pmd",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## bdev_ocf_create {#rpc_bdev_ocf_create}
 
 Construct new OCF bdev.
