@@ -458,7 +458,7 @@ get_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 		}
 	}
 
-	if (cdata->cmic.ana_reporting) {
+	if (spdk_nvme_ctrlr_is_log_page_supported(ctrlr, SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS)) {
 		/* We always set RGO (Return Groups Only) to 0 in this tool, an ANA group
 		 * descriptor is returned only if that ANA group contains namespaces
 		 * that are attached to the controller processing the command, and
