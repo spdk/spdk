@@ -50,8 +50,6 @@
 
 #define MAX_TMPBUF 1024
 #define PORTNUMLEN 32
-#define SO_RCVBUF_SIZE (2 * 1024 * 1024)
-#define SO_SNDBUF_SIZE (2 * 1024 * 1024)
 #define SPDK_SOCK_GROUP_QUEUE_DEPTH 4096
 #define IOV_BATCH_SIZE 64
 
@@ -99,6 +97,12 @@ struct spdk_uring_sock_group_impl {
 	uint32_t				io_queued;
 	uint32_t				io_avail;
 	TAILQ_HEAD(, spdk_uring_sock)		pending_recv;
+};
+
+static struct spdk_sock_impl_opts g_spdk_uring_sock_impl_opts = {
+	.recv_buf_size = MIN_SO_RCVBUF_SIZE,
+	.send_buf_size = MIN_SO_SNDBUF_SIZE,
+	.enable_recv_pipe = true,
 };
 
 #define SPDK_URING_SOCK_REQUEST_IOV(req) ((struct iovec *)((uint8_t *)req + sizeof(struct spdk_sock_request)))
@@ -286,15 +290,16 @@ uring_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
 
 	assert(sock != NULL);
 
-	/* The size of the pipe is purely derived from benchmarks. It seems to work well. */
-	rc = uring_sock_alloc_pipe(sock, sz);
-	if (rc) {
-		SPDK_ERRLOG("unable to allocate sufficient recvbuf with sz=%d on sock=%p\n", sz, _sock);
-		return rc;
+	if (g_spdk_uring_sock_impl_opts.enable_recv_pipe) {
+		rc = uring_sock_alloc_pipe(sock, sz);
+		if (rc) {
+			SPDK_ERRLOG("unable to allocate sufficient recvbuf with sz=%d on sock=%p\n", sz, _sock);
+			return rc;
+		}
 	}
 
-	if (sz < SO_RCVBUF_SIZE) {
-		sz = SO_RCVBUF_SIZE;
+	if (sz < MIN_SO_RCVBUF_SIZE) {
+		sz = MIN_SO_RCVBUF_SIZE;
 	}
 
 	rc = setsockopt(sock->fd, SOL_SOCKET, SO_RCVBUF, &sz, sizeof(sz));
@@ -313,8 +318,8 @@ uring_sock_set_sendbuf(struct spdk_sock *_sock, int sz)
 
 	assert(sock != NULL);
 
-	if (sz < SO_SNDBUF_SIZE) {
-		sz = SO_SNDBUF_SIZE;
+	if (sz < MIN_SO_SNDBUF_SIZE) {
+		sz = MIN_SO_SNDBUF_SIZE;
 	}
 
 	rc = setsockopt(sock->fd, SOL_SOCKET, SO_SNDBUF, &sz, sizeof(sz));
@@ -389,13 +394,13 @@ retry:
 			continue;
 		}
 
-		val = SO_RCVBUF_SIZE;
+		val = g_spdk_uring_sock_impl_opts.recv_buf_size;
 		rc = setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &val, sizeof val);
 		if (rc) {
 			/* Not fatal */
 		}
 
-		val = SO_SNDBUF_SIZE;
+		val = g_spdk_uring_sock_impl_opts.send_buf_size;
 		rc = setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &val, sizeof val);
 		if (rc) {
 			/* Not fatal */
@@ -1285,6 +1290,59 @@ uring_sock_group_impl_close(struct spdk_sock_group_impl *_group)
 }
 
 static int
+uring_sock_impl_get_opts(struct spdk_sock_impl_opts *opts, size_t *len)
+{
+	if (!opts || !len) {
+		errno = EINVAL;
+		return -1;
+	}
+
+#define FIELD_OK(field) \
+	offsetof(struct spdk_sock_impl_opts, field) + sizeof(opts->field) <= *len
+
+#define GET_FIELD(field) \
+	if (FIELD_OK(field)) { \
+		opts->field = g_spdk_uring_sock_impl_opts.field; \
+	}
+
+	GET_FIELD(recv_buf_size);
+	GET_FIELD(send_buf_size);
+	GET_FIELD(enable_recv_pipe);
+
+#undef GET_FIELD
+#undef FIELD_OK
+
+	*len = spdk_min(*len, sizeof(g_spdk_uring_sock_impl_opts));
+	return 0;
+}
+
+static int
+uring_sock_impl_set_opts(const struct spdk_sock_impl_opts *opts, size_t len)
+{
+	if (!opts) {
+		errno = EINVAL;
+		return -1;
+	}
+
+#define FIELD_OK(field) \
+	offsetof(struct spdk_sock_impl_opts, field) + sizeof(opts->field) <= len
+
+#define SET_FIELD(field) \
+	if (FIELD_OK(field)) { \
+		g_spdk_uring_sock_impl_opts.field = opts->field; \
+	}
+
+	SET_FIELD(recv_buf_size);
+	SET_FIELD(send_buf_size);
+	SET_FIELD(enable_recv_pipe);
+
+#undef SET_FIELD
+#undef FIELD_OK
+
+	return 0;
+}
+
+static int
 uring_sock_flush(struct spdk_sock *_sock)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
@@ -1320,6 +1378,8 @@ static struct spdk_net_impl g_uring_net_impl = {
 	.group_impl_remove_sock = uring_sock_group_impl_remove_sock,
 	.group_impl_poll	= uring_sock_group_impl_poll,
 	.group_impl_close	= uring_sock_group_impl_close,
+	.get_opts		= uring_sock_impl_get_opts,
+	.set_opts		= uring_sock_impl_set_opts,
 };
 
 SPDK_NET_IMPL_REGISTER(uring, &g_uring_net_impl, DEFAULT_SOCK_PRIORITY + 1);

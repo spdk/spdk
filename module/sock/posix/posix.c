@@ -49,8 +49,6 @@
 
 #define MAX_TMPBUF 1024
 #define PORTNUMLEN 32
-#define MIN_SO_RCVBUF_SIZE (2 * 1024 * 1024)
-#define MIN_SO_SNDBUF_SIZE (2 * 1024 * 1024)
 #define IOV_BATCH_SIZE 64
 
 #if defined(SO_ZEROCOPY) && defined(MSG_ZEROCOPY)

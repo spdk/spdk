@@ -89,17 +89,17 @@ struct spdk_sock_request {
  */
 struct spdk_sock_impl_opts {
 	/**
-	 * Size of sock receive buffer. Used by posix socket module.
+	 * Size of sock receive buffer. Used by posix and uring socket modules.
 	 */
 	uint32_t recv_buf_size;
 
 	/**
-	 * Size of sock send buffer. Used by posix socket module.
+	 * Size of sock send buffer. Used by posix and uring socket modules.
 	 */
 	uint32_t send_buf_size;
 
 	/**
-	 * Enable or disable receive pipe. Used by posix socket module.
+	 * Enable or disable receive pipe. Used by posix and uring socket modules.
 	 */
 	bool enable_recv_pipe;
 
