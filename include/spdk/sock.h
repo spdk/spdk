@@ -109,7 +109,7 @@ struct spdk_sock_impl_opts {
 	bool enable_zerocopy_send;
 
 	/**
-	 * Enable or disable quick ACK. Used by posix socket module.
+	 * Enable or disable quick ACK. Used by posix and uring socket modules.
 	 */
 	bool enable_quickack;
 };

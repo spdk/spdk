@@ -103,6 +103,7 @@ static struct spdk_sock_impl_opts g_spdk_uring_sock_impl_opts = {
 	.recv_buf_size = MIN_SO_RCVBUF_SIZE,
 	.send_buf_size = MIN_SO_SNDBUF_SIZE,
 	.enable_recv_pipe = true,
+	.enable_quickack = false,
 };
 
 #define SPDK_URING_SOCK_REQUEST_IOV(req) ((struct iovec *)((uint8_t *)req + sizeof(struct spdk_sock_request)))
@@ -334,6 +335,10 @@ static struct spdk_uring_sock *
 uring_sock_alloc(int fd)
 {
 	struct spdk_uring_sock *sock;
+#if defined(__linux__)
+	int flag;
+	int rc;
+#endif
 
 	sock = calloc(1, sizeof(*sock));
 	if (sock == NULL) {
@@ -342,6 +347,17 @@ uring_sock_alloc(int fd)
 	}
 
 	sock->fd = fd;
+
+#if defined(__linux__)
+	flag = 1;
+
+	if (g_spdk_uring_sock_impl_opts.enable_quickack) {
+		rc = setsockopt(sock->fd, IPPROTO_TCP, TCP_QUICKACK, &flag, sizeof(flag));
+		if (rc != 0) {
+			SPDK_ERRLOG("quickack was failed to set\n");
+		}
+	}
+#endif
 	return sock;
 }
 
@@ -1308,6 +1324,7 @@ uring_sock_impl_get_opts(struct spdk_sock_impl_opts *opts, size_t *len)
 	GET_FIELD(recv_buf_size);
 	GET_FIELD(send_buf_size);
 	GET_FIELD(enable_recv_pipe);
+	GET_FIELD(enable_quickack);
 
 #undef GET_FIELD
 #undef FIELD_OK
@@ -1335,6 +1352,7 @@ uring_sock_impl_set_opts(const struct spdk_sock_impl_opts *opts, size_t len)
 	SET_FIELD(recv_buf_size);
 	SET_FIELD(send_buf_size);
 	SET_FIELD(enable_recv_pipe);
+	SET_FIELD(enable_quickack);
 
 #undef SET_FIELD
 #undef FIELD_OK
