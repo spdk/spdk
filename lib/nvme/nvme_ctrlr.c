@@ -2228,6 +2228,9 @@ nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 		if (ctrlr->cdata.oaes.fw_activation_notices) {
 			config.bits.fw_activation_notice = 1;
 		}
+		if (ctrlr->cdata.oaes.ana_change_notices) {
+			config.bits.ana_change_notice = 1;
+		}
 	}
 	if (ctrlr->vs.raw >= SPDK_NVME_VERSION(1, 3, 0) && ctrlr->cdata.lpa.telemetry) {
 		config.bits.telemetry_log_notice = 1;
