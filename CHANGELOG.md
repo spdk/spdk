@@ -19,6 +19,17 @@ Updated ISA-L submodule to v2.29.0.
 
 Updated OCF submodule to v20.03.1
 
+### sock
+
+The `enable_placement_id` field was added in the struct spdk_sock_impl_opts to
+make the placement_id feature configurable by users. The default setting is
+not enabled.
+
+### rpc
+
+A new optional parameter `enable_placement_id` was added to the `sock_impl_set_options`
+RPC.
+
 ## v20.07: SPDK CSI driver, new accel_fw commands, I/O abort support
 
 ### accel

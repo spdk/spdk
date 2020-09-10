@@ -83,6 +83,7 @@ static struct spdk_sock_impl_opts g_spdk_posix_sock_impl_opts = {
 	.enable_recv_pipe = true,
 	.enable_zerocopy_send = true,
 	.enable_quickack = false,
+	.enable_placement_id = false,
 };
 
 static int
@@ -1103,6 +1104,10 @@ posix_sock_get_placement_id(struct spdk_sock *_sock, int *placement_id)
 {
 	int rc = -1;
 
+	if (!g_spdk_posix_sock_impl_opts.enable_placement_id) {
+		return rc;
+	}
+
 #if defined(SO_INCOMING_NAPI_ID)
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
 	socklen_t salen = sizeof(int);
@@ -1356,6 +1361,7 @@ posix_sock_impl_get_opts(struct spdk_sock_impl_opts *opts, size_t *len)
 	GET_FIELD(enable_recv_pipe);
 	GET_FIELD(enable_zerocopy_send);
 	GET_FIELD(enable_quickack);
+	GET_FIELD(enable_placement_id);
 
 #undef GET_FIELD
 #undef FIELD_OK
@@ -1385,6 +1391,7 @@ posix_sock_impl_set_opts(const struct spdk_sock_impl_opts *opts, size_t len)
 	SET_FIELD(enable_recv_pipe);
 	SET_FIELD(enable_zerocopy_send);
 	SET_FIELD(enable_quickack);
+	SET_FIELD(enable_placement_id);
 
 #undef SET_FIELD
 #undef FIELD_OK

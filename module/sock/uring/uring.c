@@ -104,6 +104,7 @@ static struct spdk_sock_impl_opts g_spdk_uring_sock_impl_opts = {
 	.send_buf_size = MIN_SO_SNDBUF_SIZE,
 	.enable_recv_pipe = true,
 	.enable_quickack = false,
+	.enable_placement_id = false,
 };
 
 #define SPDK_URING_SOCK_REQUEST_IOV(req) ((struct iovec *)((uint8_t *)req + sizeof(struct spdk_sock_request)))
@@ -1140,6 +1141,10 @@ uring_sock_get_placement_id(struct spdk_sock *_sock, int *placement_id)
 {
 	int rc = -1;
 
+	if (!g_spdk_uring_sock_impl_opts.enable_placement_id) {
+		return rc;
+	}
+
 #if defined(SO_INCOMING_NAPI_ID)
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
 	socklen_t salen = sizeof(int);
@@ -1325,6 +1330,7 @@ uring_sock_impl_get_opts(struct spdk_sock_impl_opts *opts, size_t *len)
 	GET_FIELD(send_buf_size);
 	GET_FIELD(enable_recv_pipe);
 	GET_FIELD(enable_quickack);
+	GET_FIELD(enable_placement_id);
 
 #undef GET_FIELD
 #undef FIELD_OK
@@ -1353,6 +1359,7 @@ uring_sock_impl_set_opts(const struct spdk_sock_impl_opts *opts, size_t len)
 	SET_FIELD(send_buf_size);
 	SET_FIELD(enable_recv_pipe);
 	SET_FIELD(enable_quickack);
+	SET_FIELD(enable_placement_id);
 
 #undef SET_FIELD
 #undef FIELD_OK

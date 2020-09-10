@@ -2521,7 +2521,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                        send_buf_size=args.send_buf_size,
                                        enable_recv_pipe=args.enable_recv_pipe,
                                        enable_zerocopy_send=args.enable_zerocopy_send,
-                                       enable_quickack=args.enable_quickack)
+                                       enable_quickack=args.enable_quickack,
+                                       enable_placement_id=args.enable_placement_id)
 
     p = subparsers.add_parser('sock_impl_set_options', help="""Set options of socket layer implementation""")
     p.add_argument('-i', '--impl', help='Socket implementation name, e.g. posix', required=True)
@@ -2539,8 +2540,12 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    action='store_true', dest='enable_quickack')
     p.add_argument('--disable-quickack', help='Disable quick ACK',
                    action='store_false', dest='enable_quickack')
+    p.add_argument('--enable-placement_id', help='Enable placement_id',
+                   action='store_true', dest='enable_placement_id')
+    p.add_argument('--disable-placement_id', help='Disable placement_id',
+                   action='store_false', dest='enable_placement_id')
     p.set_defaults(func=sock_impl_set_options, enable_recv_pipe=None, enable_zerocopy_send=None,
-                   enable_quickack=None)
+                   enable_quickack=None, enable_placement_id=None)
 
     def check_called_name(name):
         if name in deprecated_aliases:

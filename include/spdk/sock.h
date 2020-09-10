@@ -112,6 +112,12 @@ struct spdk_sock_impl_opts {
 	 * Enable or disable quick ACK. Used by posix and uring socket modules.
 	 */
 	bool enable_quickack;
+
+	/**
+	 * Enable or disable placement_id. Used by posix and uring socket modules.
+	 */
+	bool enable_placement_id;
+
 };
 
 /**
