@@ -23,7 +23,7 @@ function install_refspdk() {
 	output_dir="$GIT_REPOS/spdk_$(tr . _ < <(tr -d '[:alpha:]' <<< $last_release))"
 
 	if [[ ! -d $output_dir ]]; then
-		cp -r "$GIT_REPOS/spdk_repo/spdk" "$output_dir"
+		cp -R "$GIT_REPOS/spdk_repo/spdk" "$output_dir"
 	fi
 
 	git -C "$output_dir" checkout "$last_release"
