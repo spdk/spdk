@@ -336,7 +336,6 @@ IFS="," read -ra conf_env <<< "$CONF"
 for conf in "${conf_env[@]}"; do
 	export "INSTALL_${conf^^}=true"
 done
-sources=(install_refspdk)
 
 if [[ $OSID == freebsd ]]; then
 	jobs=$(($(sysctl -n hw.ncpu) * 2))
@@ -354,17 +353,10 @@ else
 fi
 sources+=(install_fio)
 sources+=(install_vagrant)
+sources+=(install_spdk)
 
 sudo mkdir -p /usr/{,local}/src
 sudo mkdir -p "$GIT_REPOS"
-
-if [[ $INSTALL_REFSPDK == true ]]; then
-	# Serialize builds as refspdk depends on spdk
-	install_spdk
-	install_refspdk
-else
-	sources+=(install_spdk)
-fi
 
 for source in "${sources[@]}"; do
 	source_conf=${source^^}
@@ -373,3 +365,9 @@ for source in "${sources[@]}"; do
 	fi
 done
 wait
+
+if [[ $INSTALL_REFSPDK == true ]]; then
+	# Serialize builds as refspdk depends on spdk
+	[[ $INSTALL_SPDK != true ]] && install_spdk
+	install_refspdk
+fi
