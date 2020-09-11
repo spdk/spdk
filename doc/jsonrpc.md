@@ -1268,6 +1268,74 @@ Example response:
 }
 ~~~
 
+# Acceleration Framework Layer {#jsonrpc_components_accel_fw}
+
+## idxd_scan_accel_engine {#rpc_idxd_scan_accel_engine}
+
+Set config and enable idxd accel engine offload.
+This feature is considered as experimental.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+config_number           | Required | number      | Pre-defined config # to use (ie 0, 1). See [docs.](https://spdk.io/doc/idxd.html)
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "config_number": 0
+  },
+  "jsonrpc": "2.0",
+  "method": "idxd_scan_accel_engine",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## ioat_scan_accel_engine {#rpc_ioat_scan_accel_engine}
+
+Enable ioat accel engine offload.
+
+### Parameters
+
+None
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "ioat_scan_accel_engine",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 # Block Device Abstraction Layer {#jsonrpc_components_bdev}
 
 ## bdev_set_options {#rpc_bdev_set_options}
