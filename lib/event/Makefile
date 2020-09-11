@@ -44,7 +44,7 @@ C_SRCS = app.c reactor.c rpc.c subsystem.c json_config.c log_rpc.c \
 	 app_rpc.c subsystem_rpc.c scheduler_static.c
 
 ifeq ($(OS),Linux)
-C_SRCS += dpdk_governor.c
+C_SRCS += gscheduler.c dpdk_governor.c
 endif
 
 SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_event.map)
