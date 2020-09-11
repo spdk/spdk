@@ -349,14 +349,13 @@ else
 		install_flamegraph
 		install_qemu
 	)
+	install_extra_pkgs
 fi
 sources+=(install_fio)
 sources+=(install_vagrant)
 
 sudo mkdir -p /usr/{,local}/src
 sudo mkdir -p "$GIT_REPOS"
-
-install_extra_pkgs
 
 if [[ $INSTALL_REFSPDK == true ]]; then
 	# Serialize builds as refspdk depends on spdk
