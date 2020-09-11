@@ -337,7 +337,7 @@ for conf in "${conf_env[@]}"; do
 done
 sources=(install_refspdk)
 
-if [[ $OS == FreeBSD ]]; then
+if [[ $OSID == freebsd ]]; then
 	jobs=$(($(sysctl -n hw.ncpu) * 2))
 else
 	jobs=$(($(nproc) * 2))
