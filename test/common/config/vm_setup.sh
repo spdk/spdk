@@ -32,6 +32,10 @@ INSTALL=false
 CONF="rocksdb,fio,flamegraph,tsocks,qemu,libiscsi,nvmecli,qat,spdk,refspdk,vagrant"
 package_manager=
 
+function pre_install() { :; }
+function install() { :; }
+function upgrade() { :; }
+
 function usage() {
 	echo "This script is intended to automate the environment setup for a linux virtual machine."
 	echo "Please run this script as your regular user. The script will make calls to sudo as needed."
