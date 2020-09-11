@@ -1649,6 +1649,90 @@ Example response:
 }
 ~~~
 
+## bdev_crypto_create {#rpc_bdev_crypto_create}
+
+Create a new crypto bdev on a given base bdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+base_bdev_name          | Required | string      | Name of the base bdev
+name                    | Required | string      | Name of the crypto vbdev to create
+crypto_pmd              | Required | string      | Name of the crypto device driver
+key                     | Required | string      | Key
+cipher                  | Required | string      | Cipher to use, AES_CBC or AES_XTS (QAT only)
+key2                    | Required | string      | 2nd key only required for cipher AET_XTS
+
+### Result
+
+Name of newly created bdev.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "base_bdev_name": "Nvme0n1",
+    "name": "my_crypto_bdev",
+    "crypto_pmd": "crypto_aesni_mb",
+    "key": "1234567890123456",
+    "cipher": "AES_CBC"
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_crypto_create",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "my_crypto_bdev"
+}
+~~~
+
+## bdev_crypto_delete {#rpc_bdev_crypto_delete}
+
+Delete a crypto bdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Name of the crypto bdev
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "name": "my_crypto_bdev"
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_crypto_delete",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## bdev_ocf_create {#rpc_bdev_ocf_create}
 
 Construct new OCF bdev.
