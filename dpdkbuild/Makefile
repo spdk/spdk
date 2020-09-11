@@ -51,15 +51,20 @@ DPDK_OPTS += -Denable_kmods=$(DPDK_KMODS)
 # the drivers we use
 DPDK_DRIVERS = bus bus/pci bus/vdev mempool/ring
 
+# common crypto/reduce drivers
+ifeq ($(findstring y,$(CONFIG_CRYPTO)$(CONFIG_REDUCE)),y)
+DPDK_DRIVERS += crypto/qat compress/qat common/qat
+endif
+
 ifeq ($(CONFIG_CRYPTO),y)
 # crypto/qat is just a stub, the compress/qat pmd is used instead
-DPDK_DRIVERS += crypto crypto/aesni_mb crypto/qat compress/qat common/qat
+DPDK_DRIVERS += crypto crypto/aesni_mb
 DPDK_CFLAGS += -I$(IPSEC_MB_DIR)
 DPDK_LDFLAGS += -L$(IPSEC_MB_DIR)
 endif
 
 ifeq ($(CONFIG_REDUCE),y)
-DPDK_DRIVERS += compress compress/isal compress/qat common/qat
+DPDK_DRIVERS += compress compress/isal
 DPDK_CFLAGS += -I$(ISAL_DIR)
 DPDK_LDFLAGS += -L$(ISAL_DIR)/.libs -lisal
 endif
