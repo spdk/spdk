@@ -270,7 +270,8 @@ function install_vagrant() {
 	local vagrant_plugins=(vagrant-libvirt vagrant-sshfs vagrant-cachier vagrant-proxyconf)
 
 	if [[ $OSID != ubuntu ]]; then
-		error "Currently only ubuntu is supported"
+		echo "Currently, Vagrant installation is supported only on ubuntu"
+		return 0
 	fi
 
 	# Install vagrant and it's plugins dependencies
