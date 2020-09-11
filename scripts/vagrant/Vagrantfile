@@ -150,7 +150,7 @@ def setup_nvme_disk(libvirt, disk, index)
   libvirt.qemuargs :value => "format=raw,file=#{nvme_disk},if=none,id=#{nvme_disk_id}"
   libvirt.qemuargs :value => "-device"
   nvme_drive = "nvme,drive=#{nvme_disk_id},serial=1234#{index}"
-  if !nvme_namespaces[index].nil? && nvme_namespaces[index] != 1
+  if !nvme_namespaces[index].nil? && nvme_namespaces[index] != "1"
     nvme_drive << ",namespaces=#{nvme_namespaces[index]}"
   end
 
