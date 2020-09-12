@@ -3336,24 +3336,6 @@ _nvmf_request_exec(struct spdk_nvmf_request *req,
 }
 
 void
-spdk_nvmf_request_exec_fabrics(struct spdk_nvmf_request *req)
-{
-	struct spdk_nvmf_qpair *qpair = req->qpair;
-	struct spdk_nvmf_subsystem_poll_group *sgroup = NULL;
-
-	assert(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC);
-
-	if (qpair->ctrlr) {
-		sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
-		assert(sgroup != NULL);
-	} else {
-		sgroup = nvmf_subsystem_pg_from_connect_cmd(req);
-	}
-
-	_nvmf_request_exec(req, sgroup);
-}
-
-void
 spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_qpair *qpair = req->qpair;
