@@ -242,17 +242,11 @@ struct spdk_nvmf_transport_ops {
 	 * action here, as the enforcement of the association is done in the generic
 	 * code.
 	 *
-	 * The association is not considered complete until cb_fn is called. New
-	 * connections on the listener targeting this subsystem will be rejected
-	 * until that time.
-	 *
-	 * Pass a negated errno code to `cb_fn` to block the association. 0 to allow.
+	 * Returns a negated errno code to block the association. 0 to allow.
 	 */
-	void (*listen_associate)(struct spdk_nvmf_transport *transport,
-				 const struct spdk_nvmf_subsystem *subsystem,
-				 const struct spdk_nvme_transport_id *trid,
-				 spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn,
-				 void *cb_arg);
+	int (*listen_associate)(struct spdk_nvmf_transport *transport,
+				const struct spdk_nvmf_subsystem *subsystem,
+				const struct spdk_nvme_transport_id *trid);
 
 	/**
 	 * Check for new connections on the transport.

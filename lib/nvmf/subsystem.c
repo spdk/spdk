@@ -831,6 +831,7 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 	struct spdk_nvmf_transport *transport;
 	struct spdk_nvmf_subsystem_listener *listener;
 	struct spdk_nvmf_listener *tr_listener;
+	int rc = 0;
 
 	assert(cb_fn != NULL);
 
@@ -874,12 +875,10 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 	listener->ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
 
 	if (transport->ops->listen_associate != NULL) {
-		transport->ops->listen_associate(transport, subsystem, trid,
-						 _nvmf_subsystem_add_listener_done,
-						 listener);
-	} else {
-		_nvmf_subsystem_add_listener_done(listener, 0);
+		rc = transport->ops->listen_associate(transport, subsystem, trid);
 	}
+
+	_nvmf_subsystem_add_listener_done(listener, rc);
 }
 
 int
