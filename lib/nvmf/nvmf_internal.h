@@ -96,6 +96,7 @@ struct spdk_nvmf_subsystem_listener {
 	struct spdk_nvme_transport_id			*trid;
 	struct spdk_nvmf_transport			*transport;
 	enum spdk_nvme_ana_state			ana_state;
+	uint64_t					ana_state_change_count;
 	TAILQ_ENTRY(spdk_nvmf_subsystem_listener)	link;
 };
 
@@ -337,6 +338,10 @@ struct spdk_nvmf_subsystem_listener *nvmf_subsystem_find_listener(
 struct spdk_nvmf_listener *nvmf_transport_find_listener(
 	struct spdk_nvmf_transport *transport,
 	const struct spdk_nvme_transport_id *trid);
+void nvmf_subsystem_set_ana_state(struct spdk_nvmf_subsystem *subsystem,
+				  const struct spdk_nvme_transport_id *trid,
+				  enum spdk_nvme_ana_state ana_state,
+				  spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn, void *cb_arg);
 
 int nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr);
 int nvmf_ctrlr_async_event_ana_change_notice(struct spdk_nvmf_ctrlr *ctrlr);

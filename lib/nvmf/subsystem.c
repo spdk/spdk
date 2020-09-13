@@ -2664,3 +2664,103 @@ spdk_nvmf_subsystem_set_ana_reporting(struct spdk_nvmf_subsystem *subsystem,
 
 	return 0;
 }
+
+struct subsystem_listener_update_ctx {
+	struct spdk_nvmf_subsystem_listener *listener;
+
+	spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn;
+	void *cb_arg;
+};
+
+static void
+subsystem_listener_update_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct subsystem_listener_update_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+
+	if (ctx->cb_fn) {
+		ctx->cb_fn(ctx->cb_arg, status);
+	}
+	free(ctx);
+}
+
+static void
+subsystem_listener_update_on_pg(struct spdk_io_channel_iter *i)
+{
+	struct subsystem_listener_update_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_nvmf_subsystem_listener *listener;
+	struct spdk_nvmf_poll_group *group;
+	struct spdk_nvmf_ctrlr *ctrlr;
+
+	listener = ctx->listener;
+	group = spdk_io_channel_get_ctx(spdk_io_channel_iter_get_channel(i));
+
+	TAILQ_FOREACH(ctrlr, &listener->subsystem->ctrlrs, link) {
+		if (ctrlr->admin_qpair->group == group && ctrlr->listener == listener) {
+			nvmf_ctrlr_async_event_ana_change_notice(ctrlr);
+		}
+	}
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+void
+nvmf_subsystem_set_ana_state(struct spdk_nvmf_subsystem *subsystem,
+			     const struct spdk_nvme_transport_id *trid,
+			     enum spdk_nvme_ana_state ana_state,
+			     spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn, void *cb_arg)
+{
+	struct spdk_nvmf_subsystem_listener *listener;
+	struct subsystem_listener_update_ctx *ctx;
+
+	assert(cb_fn != NULL);
+	assert(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
+	       subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED);
+
+	if (!subsystem->ana_reporting) {
+		SPDK_ERRLOG("ANA reporting is disabled\n");
+		cb_fn(cb_arg, -EINVAL);
+		return;
+	}
+
+	/* ANA Change state is not used, ANA Persistent Loss state
+	 * is not supported yet.
+	 */
+	if (!(ana_state == SPDK_NVME_ANA_OPTIMIZED_STATE ||
+	      ana_state == SPDK_NVME_ANA_NON_OPTIMIZED_STATE ||
+	      ana_state == SPDK_NVME_ANA_INACCESSIBLE_STATE)) {
+		SPDK_ERRLOG("ANA state %d is not supported\n", ana_state);
+		cb_fn(cb_arg, -ENOTSUP);
+		return;
+	}
+
+	listener = nvmf_subsystem_find_listener(subsystem, trid);
+	if (!listener) {
+		SPDK_ERRLOG("Unable to find listener.\n");
+		cb_fn(cb_arg, -EINVAL);
+		return;
+	}
+
+	if (listener->ana_state == ana_state) {
+		cb_fn(cb_arg, 0);
+		return;
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		SPDK_ERRLOG("Unable to allocate context\n");
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	listener->ana_state = ana_state;
+	listener->ana_state_change_count++;
+
+	ctx->listener = listener;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	spdk_for_each_channel(subsystem->tgt,
+			      subsystem_listener_update_on_pg,
+			      ctx,
+			      subsystem_listener_update_done);
+}
