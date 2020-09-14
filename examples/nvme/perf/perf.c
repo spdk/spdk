@@ -48,6 +48,7 @@
 #include "spdk/util.h"
 #include "spdk/log.h"
 #include "spdk/likely.h"
+#include "spdk/sock.h"
 
 #ifdef SPDK_CONFIG_URING
 #include <liburing.h>
@@ -267,6 +268,38 @@ static int g_file_optind; /* Index of first filename in argv */
 
 static inline void
 task_complete(struct perf_task *task);
+
+static void
+perf_set_sock_zcopy(const char *impl_name, bool enable)
+{
+	struct spdk_sock_impl_opts sock_opts = {};
+	size_t opts_size = sizeof(sock_opts);
+	int rc;
+
+	rc = spdk_sock_impl_get_opts(impl_name, &sock_opts, &opts_size);
+	if (rc != 0) {
+		if (errno == EINVAL) {
+			fprintf(stderr, "Unknown sock impl %s\n", impl_name);
+		} else {
+			fprintf(stderr, "Failed to get opts for sock impl %s: error %d (%s)\n", impl_name, errno,
+				strerror(errno));
+		}
+		return;
+	}
+
+	if (opts_size != sizeof(sock_opts)) {
+		fprintf(stderr, "Warning: sock_opts size mismatch. Expected %zu, received %zu\n",
+			sizeof(sock_opts), opts_size);
+		opts_size = sizeof(sock_opts);
+	}
+
+	sock_opts.enable_zerocopy_send = enable;
+
+	if (spdk_sock_impl_set_opts(impl_name, &sock_opts, opts_size)) {
+		fprintf(stderr, "Failed to %s zcopy send for sock impl %s: error %d (%s)\n",
+			enable ? "enable" : "disable", impl_name, errno, strerror(errno));
+	}
+}
 
 #ifdef SPDK_CONFIG_URING
 
@@ -1387,6 +1420,8 @@ static void usage(char *program_name)
 	printf("\t");
 	spdk_log_usage(stdout, "-T");
 	printf("\t[-V enable VMD enumeration]\n");
+	printf("\t[-z disable zero copy send for the given sock implementation]\n");
+	printf("\t[-Z enable zero copy send for the given sock implementation. Default for posix impl]\n");
 #ifdef SPDK_CONFIG_URING
 	printf("\t[-R enable using liburing to drive kernel devices (Default: libaio)]\n");
 #endif
@@ -1801,7 +1836,7 @@ parse_args(int argc, char **argv)
 	long int val;
 	int rc;
 
-	while ((op = getopt(argc, argv, "a:c:e:i:lo:q:r:k:s:t:w:C:DGHILM:NP:RT:U:V")) != -1) {
+	while ((op = getopt(argc, argv, "a:c:e:i:lo:q:r:k:s:t:w:z:C:DGHILM:NP:RT:U:VZ:")) != -1) {
 		switch (op) {
 		case 'a':
 		case 'i':
@@ -1929,6 +1964,12 @@ parse_args(int argc, char **argv)
 			break;
 		case 'V':
 			g_vmd = true;
+			break;
+		case 'z':
+			perf_set_sock_zcopy(optarg, false);
+			break;
+		case 'Z':
+			perf_set_sock_zcopy(optarg, true);
 			break;
 		default:
 			usage(argv[0]);
