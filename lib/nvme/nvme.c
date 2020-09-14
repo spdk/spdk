@@ -111,21 +111,28 @@ nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl)
  * \param status completion status. The user must fill this structure with zeroes before calling
  * this function
  * \param robust_mutex optional robust mutex to lock while polling qpair
+ * \param timeout_in_usecs optional timeout
  *
  * \return 0 if command completed without error,
  * -EIO if command completed with error,
- * -ECANCELED if command is not completed due to transport/device error
+ * -ECANCELED if command is not completed due to transport/device error or time expired
  *
- * The command to wait upon must be submitted with nvme_completion_poll_cb as the callback
- * and status as the callback argument.
+ *  The command to wait upon must be submitted with nvme_completion_poll_cb as the callback
+ *  and status as the callback argument.
  */
 int
-nvme_wait_for_completion_robust_lock(
+nvme_wait_for_completion_robust_lock_timeout(
 	struct spdk_nvme_qpair *qpair,
 	struct nvme_completion_poll_status *status,
-	pthread_mutex_t *robust_mutex)
+	pthread_mutex_t *robust_mutex,
+	uint64_t timeout_in_usecs)
 {
-	int rc;
+	uint64_t timeout_tsc = 0;
+	int rc = 0;
+
+	if (timeout_in_usecs) {
+		timeout_tsc = spdk_get_ticks() + timeout_in_usecs * spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
+	}
 
 	while (status->done == false) {
 		if (robust_mutex) {
@@ -141,21 +148,54 @@ nvme_wait_for_completion_robust_lock(
 		if (rc < 0) {
 			status->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 			status->cpl.status.sc = SPDK_NVME_SC_ABORTED_SQ_DELETION;
-			if (status->done == false) {
-				status->timed_out = true;
-			}
-			return -ECANCELED;
+			break;
+		}
+		if (timeout_tsc && spdk_get_ticks() > timeout_tsc) {
+			rc = -1;
+			break;
 		}
 	}
 
+	if (status->done == false) {
+		status->timed_out = true;
+	}
+
+	if (rc < 0) {
+		return -ECANCELED;
+	}
+
 	return spdk_nvme_cpl_is_error(&status->cpl) ? -EIO : 0;
+}
+
+/**
+ * Poll qpair for completions until a command completes.
+ *
+ * \param qpair queue to poll
+ * \param status completion status. The user must fill this structure with zeroes before calling
+ * this function
+ * \param robust_mutex optional robust mutex to lock while polling qpair
+ *
+ * \return 0 if command completed without error,
+ * -EIO if command completed with error,
+ * -ECANCELED if command is not completed due to transport/device error
+ *
+ * The command to wait upon must be submitted with nvme_completion_poll_cb as the callback
+ * and status as the callback argument.
+ */
+int
+nvme_wait_for_completion_robust_lock(
+	struct spdk_nvme_qpair *qpair,
+	struct nvme_completion_poll_status *status,
+	pthread_mutex_t *robust_mutex)
+{
+	return nvme_wait_for_completion_robust_lock_timeout(qpair, status, robust_mutex, 0);
 }
 
 int
 nvme_wait_for_completion(struct spdk_nvme_qpair *qpair,
 			 struct nvme_completion_poll_status *status)
 {
-	return nvme_wait_for_completion_robust_lock(qpair, status, NULL);
+	return nvme_wait_for_completion_robust_lock_timeout(qpair, status, NULL, 0);
 }
 
 /**
@@ -178,34 +218,7 @@ nvme_wait_for_completion_timeout(struct spdk_nvme_qpair *qpair,
 				 struct nvme_completion_poll_status *status,
 				 uint64_t timeout_in_usecs)
 {
-	uint64_t timeout_tsc = 0;
-	int rc = 0;
-
-	if (timeout_in_usecs) {
-		timeout_tsc = spdk_get_ticks() + timeout_in_usecs * spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
-	}
-
-	while (status->done == false) {
-		rc = spdk_nvme_qpair_process_completions(qpair, 0);
-
-		if (rc < 0) {
-			status->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
-			status->cpl.status.sc = SPDK_NVME_SC_ABORTED_SQ_DELETION;
-			break;
-		}
-		if (timeout_tsc && spdk_get_ticks() > timeout_tsc) {
-			break;
-		}
-	}
-
-	if (status->done == false || rc < 0) {
-		if (status->done == false) {
-			status->timed_out = true;
-		}
-		return -ECANCELED;
-	}
-
-	return spdk_nvme_cpl_is_error(&status->cpl) ? -EIO : 0;
+	return nvme_wait_for_completion_robust_lock_timeout(qpair, status, NULL, timeout_in_usecs);
 }
 
 static void

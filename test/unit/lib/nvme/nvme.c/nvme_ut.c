@@ -1235,6 +1235,7 @@ test_nvme_request_check_timeout(void)
 struct nvme_completion_poll_status g_status;
 uint64_t completion_delay_us, timeout_in_usecs;
 int g_process_comp_result;
+pthread_mutex_t g_robust_lock = PTHREAD_MUTEX_INITIALIZER;
 
 int
 spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
@@ -1301,6 +1302,60 @@ test_nvme_wait_for_completion(void)
 	memset(&g_status, 0, sizeof(g_status));
 	g_process_comp_result = 0;
 	rc = nvme_wait_for_completion(&qpair, &g_status);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_status.timed_out == false);
+	CU_ASSERT(g_status.done == true);
+
+	/* completion  timeout */
+	memset(&g_status, 0, sizeof(g_status));
+	completion_delay_us = 2000000;
+	timeout_in_usecs = 1000000;
+	rc = nvme_wait_for_completion_robust_lock_timeout(&qpair, &g_status, &g_robust_lock,
+			timeout_in_usecs);
+	CU_ASSERT(g_status.timed_out == true);
+	CU_ASSERT(g_status.done == false);
+	CU_ASSERT(rc == -ECANCELED);
+
+	/* spdk_nvme_qpair_process_completions returns error */
+	memset(&g_status, 0, sizeof(g_status));
+	g_process_comp_result = -1;
+	completion_delay_us = 1000000;
+	timeout_in_usecs = 2000000;
+	rc = nvme_wait_for_completion_robust_lock_timeout(&qpair, &g_status, &g_robust_lock,
+			timeout_in_usecs);
+	CU_ASSERT(rc == -ECANCELED);
+	CU_ASSERT(g_status.timed_out == true);
+	CU_ASSERT(g_status.done == false);
+	CU_ASSERT(g_status.cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(g_status.cpl.status.sc == SPDK_NVME_SC_ABORTED_SQ_DELETION);
+
+	g_process_comp_result = 0;
+
+	/* complete in time */
+	memset(&g_status, 0, sizeof(g_status));
+	completion_delay_us = 1000000;
+	timeout_in_usecs = 2000000;
+	rc = nvme_wait_for_completion_robust_lock_timeout(&qpair, &g_status, &g_robust_lock,
+			timeout_in_usecs);
+	CU_ASSERT(g_status.timed_out == false);
+	CU_ASSERT(g_status.done == true);
+	CU_ASSERT(rc == 0);
+
+	/* nvme_wait_for_completion */
+	/* spdk_nvme_qpair_process_completions returns error */
+	memset(&g_status, 0, sizeof(g_status));
+	g_process_comp_result = -1;
+	rc = nvme_wait_for_completion_robust_lock(&qpair, &g_status, &g_robust_lock);
+	CU_ASSERT(rc == -ECANCELED);
+	CU_ASSERT(g_status.timed_out == true);
+	CU_ASSERT(g_status.done == false);
+	CU_ASSERT(g_status.cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(g_status.cpl.status.sc == SPDK_NVME_SC_ABORTED_SQ_DELETION);
+
+	/* successful completion */
+	memset(&g_status, 0, sizeof(g_status));
+	g_process_comp_result = 0;
+	rc = nvme_wait_for_completion_robust_lock(&qpair, &g_status, &g_robust_lock);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_status.timed_out == false);
 	CU_ASSERT(g_status.done == true);
