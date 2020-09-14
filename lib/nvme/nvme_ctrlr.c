@@ -671,6 +671,61 @@ static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static int
+nvme_ctrlr_update_ana_log_page(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct nvme_completion_poll_status *status;
+	int rc;
+
+	status = calloc(1, sizeof(*status));
+	if (status == NULL) {
+		SPDK_ERRLOG("Failed to allocaate status tracker\n");
+		return -ENOMEM;
+	}
+
+	rc = spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS,
+					      SPDK_NVME_GLOBAL_NS_TAG, ctrlr->ana_log_page,
+					      ctrlr->ana_log_page_size, 0,
+					      nvme_completion_poll_cb, status);
+	if (rc != 0) {
+		free(status);
+		return rc;
+	}
+
+	if (nvme_wait_for_completion_robust_lock_timeout(ctrlr->adminq, status, &ctrlr->ctrlr_lock,
+			ctrlr->opts.admin_timeout_ms * 1000)) {
+		if (!status->timed_out) {
+			free(status);
+		}
+		return -EIO;
+	}
+
+	free(status);
+	return 0;
+}
+
+static int
+nvme_ctrlr_init_ana_log_page(struct spdk_nvme_ctrlr *ctrlr)
+{
+	uint32_t ana_log_page_size;
+
+	ana_log_page_size = sizeof(struct spdk_nvme_ana_page) + ctrlr->cdata.nanagrpid *
+			    sizeof(struct spdk_nvme_ana_group_descriptor) + ctrlr->cdata.nn *
+			    sizeof(uint32_t);
+
+	ctrlr->ana_log_page = spdk_zmalloc(ana_log_page_size, 64, NULL, SPDK_ENV_SOCKET_ID_ANY,
+					   SPDK_MALLOC_DMA);
+	if (ctrlr->ana_log_page == NULL) {
+		SPDK_ERRLOG("could not allocate ANA log page buffer\n");
+		return -ENXIO;
+	}
+	ctrlr->ana_log_page_size = ana_log_page_size;
+
+	ctrlr->log_page_supported[SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS] = true;
+
+	return nvme_ctrlr_update_ana_log_page(ctrlr);
+}
+
+static int
 nvme_ctrlr_set_supported_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int	rc = 0;
@@ -685,11 +740,15 @@ nvme_ctrlr_set_supported_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 	}
 	if (ctrlr->cdata.vid == SPDK_PCI_VID_INTEL && !(ctrlr->quirks & NVME_INTEL_QUIRK_NO_LOG_PAGES)) {
 		rc = nvme_ctrlr_set_intel_support_log_pages(ctrlr);
+		if (rc != 0) {
+			goto out;
+		}
 	}
 	if (ctrlr->cdata.cmic.ana_reporting) {
-		ctrlr->log_page_supported[SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS] = true;
+		rc = nvme_ctrlr_init_ana_log_page(ctrlr);
 	}
 
+out:
 	return rc;
 }
 
@@ -2135,6 +2194,14 @@ nvme_ctrlr_async_event_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 		nvme_io_msg_ctrlr_update(ctrlr);
 	}
 
+	if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
+	    (event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_ANA_CHANGE)) {
+		rc = nvme_ctrlr_update_ana_log_page(ctrlr);
+		if (rc) {
+			return;
+		}
+	}
+
 	active_proc = nvme_ctrlr_get_current_process(ctrlr);
 	if (active_proc && active_proc->aer_cb_fn) {
 		active_proc->aer_cb_fn(active_proc->aer_cb_arg, cpl);
@@ -2822,6 +2889,9 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 	STAILQ_INIT(&ctrlr->queued_aborts);
 	ctrlr->outstanding_aborts = 0;
 
+	ctrlr->ana_log_page = NULL;
+	ctrlr->ana_log_page_size = 0;
+
 	rc = nvme_robust_mutex_init_recursive_shared(&ctrlr->ctrlr_lock);
 	if (rc != 0) {
 		return rc;
@@ -2893,6 +2963,10 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	nvme_ctrlr_destruct_namespaces(ctrlr);
 
 	spdk_bit_array_free(&ctrlr->free_io_qids);
+
+	spdk_free(ctrlr->ana_log_page);
+	ctrlr->ana_log_page = NULL;
+	ctrlr->ana_log_page_size = 0;
 
 	nvme_transport_ctrlr_destruct(ctrlr);
 }

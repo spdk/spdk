@@ -796,6 +796,9 @@ struct spdk_nvme_ctrlr {
 	struct spdk_ring		*external_io_msgs;
 
 	STAILQ_HEAD(, nvme_io_msg_producer) io_producers;
+
+	struct spdk_nvme_ana_page	*ana_log_page;
+	uint32_t			ana_log_page_size;
 };
 
 struct spdk_nvme_probe_ctx {
