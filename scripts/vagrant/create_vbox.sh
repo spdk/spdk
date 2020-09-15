@@ -84,7 +84,7 @@ VAGRANT_PASSWORD_AUTH=0
 VAGRANT_PACKAGE_BOX=0
 VAGRANT_HUGE_MEM=0
 
-while getopts ":b:n:s:x:p:u:vcraldoHh-:" opt; do
+while getopts ":b:n:s:x:p:uvcraldoHh-:" opt; do
 	case "${opt}" in
 		-)
 			case "${OPTARG}" in
