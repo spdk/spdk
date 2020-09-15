@@ -1617,9 +1617,9 @@ nvme_ctrlr_identify_ns_async_done(void *arg, const struct spdk_nvme_cpl *cpl)
 	if (spdk_nvme_cpl_is_error(cpl)) {
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 		return;
-	} else {
-		nvme_ns_set_identify_data(ns);
 	}
+
+	nvme_ns_set_identify_data(ns);
 
 	/* move on to the next active NS */
 	nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, ns->id);
