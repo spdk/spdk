@@ -832,6 +832,43 @@ Example response:
 }
 ~~~
 
+## log_set_flag {#rpc_log_set_flag}
+
+Enable logging for specific portions of the application. The list of possible
+log flags can be obtained using the `log_get_flags` RPC and may be different
+for each application.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+flag                    | Required | string      | A log flag, or 'all'
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "log_set_flag",
+  "id": 1,
+  "params": {
+    "flag": "all"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## log_enable_timestamps {#rpc_log_enable_timestamps}
 
 Enable or disable timestamps.
