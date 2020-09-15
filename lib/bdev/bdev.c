@@ -2137,7 +2137,7 @@ bdev_io_split_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 		return;
 	}
 
-	bdev_io_split(ch, bdev_io);
+	_bdev_io_split(bdev_io);
 }
 
 /* Explicitly mark this inline, since it's used as a function pointer and otherwise won't
