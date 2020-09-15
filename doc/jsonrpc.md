@@ -806,6 +806,32 @@ Example response:
 }
 ~~~
 
+## log_get_level {#rpc_log_get_level}
+
+Get the current logging level output by the `log` module.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "log_get_level",
+  "id": 1,
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "NOTICE"
+}
+~~~
+
 ## log_enable_timestamps {#rpc_log_enable_timestamps}
 
 Enable or disable timestamps.
