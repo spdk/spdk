@@ -771,6 +771,41 @@ Example response:
 }
 ~~~
 
+## log_set_level {#rpc_log_set_level}
+
+Set the current logging level output by the `log` module.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+level                   | Required | string      | ERROR, WARNING, NOTICE, INFO, DEBUG
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "log_set_level",
+  "id": 1,
+  "params": {
+    "level": "ERROR"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## log_enable_timestamps {#rpc_log_enable_timestamps}
 
 Enable or disable timestamps.
