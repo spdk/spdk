@@ -906,6 +906,38 @@ Example response:
 }
 ~~~
 
+## log_get_flags {#rpc_log_get_flags}
+
+Get the list of valid flags for this application and whether
+they are currently enabled.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "log_get_flags",
+  "id": 1,
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "nvmf": true,
+    "nvme": true,
+    "aio": false,
+    "bdev" false
+  }
+}
+~~~
+
 ## log_enable_timestamps {#rpc_log_enable_timestamps}
 
 Enable or disable timestamps.
