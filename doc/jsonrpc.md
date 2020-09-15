@@ -744,6 +744,33 @@ Example response:
 }
 ~~~
 
+## log_get_print_level {#rpc_log_get_print_level}
+
+Get the current level at which output will additionally be
+sent to the current console.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "log_get_print_level",
+  "id": 1,
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "NOTICE"
+}
+~~~
+
 ## log_enable_timestamps {#rpc_log_enable_timestamps}
 
 Enable or disable timestamps.
