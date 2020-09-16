@@ -179,6 +179,8 @@ trap 'rm -f *.state $testdir/bdev.conf; kill $perf_pid; wait $dpdk_mem_pid; prin
 
 if [[ "$PLUGIN" =~ "bdev" ]]; then
 	create_spdk_bdev_conf "$BDEV_CACHE" "$BDEV_POOL"
+	echo "INFO: Generated bdev.conf file:"
+	cat $testdir/bdev.conf
 fi
 verify_disk_number
 DISK_NAMES=$(get_disks $PLUGIN)
