@@ -476,6 +476,9 @@ struct spdk_nvme_ns {
 	uint32_t			id;
 	uint16_t			flags;
 
+	/* Command Set Identifier */
+	enum spdk_nvme_csi		csi;
+
 	/* Namespace Identification Descriptor List (CNS = 03h) */
 	uint8_t				id_desc_list[4096];
 };
@@ -947,6 +950,7 @@ void	nvme_qpair_resubmit_requests(struct spdk_nvme_qpair *qpair, uint32_t num_re
 
 int	nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ns_set_identify_data(struct spdk_nvme_ns *ns);
+void	nvme_ns_set_id_desc_list_data(struct spdk_nvme_ns *ns);
 int	nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,
 			  struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ns_destruct(struct spdk_nvme_ns *ns);

@@ -154,7 +154,7 @@ test_nvme_ns_csi(void)
 
 	/* Empty list - SPDK_NVME_CSI_NVM should be returned */
 	nvme_ns_construct(&ns, id, &ctrlr);
-	csi = spdk_nvme_ns_get_csi(&ns);
+	csi = nvme_ns_get_csi(&ns);
 	CU_ASSERT(csi == SPDK_NVME_CSI_NVM);
 	nvme_ns_destruct(&ns);
 
@@ -163,7 +163,7 @@ test_nvme_ns_csi(void)
 	ns.id_desc_list[0] = 0x4; /* NIDT == CSI */
 	ns.id_desc_list[1] = 0x1; /* NIDL */
 	ns.id_desc_list[4] = 0x0; /* SPDK_NVME_CSI_NVM */
-	csi = spdk_nvme_ns_get_csi(&ns);
+	csi = nvme_ns_get_csi(&ns);
 	CU_ASSERT(csi == SPDK_NVME_CSI_NVM);
 	nvme_ns_destruct(&ns);
 
@@ -175,7 +175,7 @@ test_nvme_ns_csi(void)
 	ns.id_desc_list[20] = 0x4; /* NIDT == CSI */
 	ns.id_desc_list[21] = 0x1; /* NIDL */
 	ns.id_desc_list[24] = 0x2; /* SPDK_NVME_CSI_ZNS */
-	csi = spdk_nvme_ns_get_csi(&ns);
+	csi = nvme_ns_get_csi(&ns);
 	CU_ASSERT(csi == SPDK_NVME_CSI_ZNS);
 	nvme_ns_destruct(&ns);
 
@@ -187,7 +187,7 @@ test_nvme_ns_csi(void)
 	ns.id_desc_list[5] = 0x02; /* NIDT == NGUID */
 	ns.id_desc_list[6] = 0x10; /* NIDL */
 	memset(&ns.id_desc_list[9], 0xCC, 0x10);
-	csi = spdk_nvme_ns_get_csi(&ns);
+	csi = nvme_ns_get_csi(&ns);
 	CU_ASSERT(csi == SPDK_NVME_CSI_KV);
 	nvme_ns_destruct(&ns);
 }

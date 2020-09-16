@@ -1694,6 +1694,8 @@ nvme_ctrlr_identify_id_desc_async_done(void *arg, const struct spdk_nvme_cpl *cp
 		return;
 	}
 
+	nvme_ns_set_id_desc_list_data(ns);
+
 	/* move on to the next active NS */
 	nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, ns->id);
 	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);

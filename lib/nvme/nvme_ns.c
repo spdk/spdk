@@ -189,6 +189,8 @@ nvme_ctrlr_identify_id_desc(struct spdk_nvme_ns *ns)
 		free(status);
 	}
 
+	nvme_ns_set_id_desc_list_data(ns);
+
 	return rc;
 }
 
@@ -361,8 +363,8 @@ spdk_nvme_ns_get_uuid(const struct spdk_nvme_ns *ns)
 	return uuid;
 }
 
-enum spdk_nvme_csi
-spdk_nvme_ns_get_csi(const struct spdk_nvme_ns *ns) {
+static enum spdk_nvme_csi
+nvme_ns_get_csi(const struct spdk_nvme_ns *ns) {
 	const uint8_t *csi;
 	size_t csi_size;
 
@@ -382,6 +384,17 @@ spdk_nvme_ns_get_csi(const struct spdk_nvme_ns *ns) {
 	}
 
 	return *csi;
+}
+
+void
+nvme_ns_set_id_desc_list_data(struct spdk_nvme_ns *ns)
+{
+	ns->csi = nvme_ns_get_csi(ns);
+}
+
+enum spdk_nvme_csi
+spdk_nvme_ns_get_csi(const struct spdk_nvme_ns *ns) {
+	return ns->csi;
 }
 
 int nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,
@@ -425,6 +438,7 @@ void nvme_ns_destruct(struct spdk_nvme_ns *ns)
 	ns->sectors_per_max_io = 0;
 	ns->sectors_per_stripe = 0;
 	ns->flags = 0;
+	ns->csi = SPDK_NVME_CSI_NVM;
 }
 
 int nvme_ns_update(struct spdk_nvme_ns *ns)
