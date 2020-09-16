@@ -8,6 +8,12 @@ SPDK has switched to DPDK's rte_vhost library since 19.07 release, removed the i
 rte_vhost library which is used for DPDK older than 19.05, removed the experimental vhost
 nvme target which depends on the internal rte_vhost library.
 
+### util
+
+A new utility named `fd_group` was add. It is now
+implemented by epoll on Linux platform. It can be used by
+spdk_thread and reactor to implement interrupt mode.
+
 ### bdev
 
 A new `spdk_bdev_part_base_construct_ext` function has been added and the
