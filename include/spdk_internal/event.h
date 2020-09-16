@@ -82,6 +82,7 @@ struct spdk_reactor {
 	uint64_t					tsc_last;
 
 	struct spdk_ring				*events;
+	int						events_fd;
 
 	/* The last known rusage values */
 	struct rusage					rusage;
@@ -89,6 +90,10 @@ struct spdk_reactor {
 
 	uint64_t					busy_tsc;
 	uint64_t					idle_tsc;
+
+	bool						interrupt_mode;
+	struct spdk_fd_group				*fgrp;
+	int						resched_fd;
 } __attribute__((aligned(SPDK_CACHE_LINE_SIZE)));
 
 int spdk_reactors_init(void);

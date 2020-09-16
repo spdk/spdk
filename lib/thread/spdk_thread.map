@@ -46,6 +46,12 @@
 	spdk_io_channel_iter_get_channel;
 	spdk_io_channel_iter_get_ctx;
 	spdk_for_each_channel_continue;
+	spdk_interrupt_register;
+	spdk_interrupt_unregister;
+	spdk_interrupt_set_event_types;
+	spdk_thread_get_interrupt_fd;
+	spdk_interrupt_mode_enable;
+	spdk_interrupt_mode_is_enabled;
 
 	# internal functions in spdk_internal/thread.h
 	spdk_poller_state_str;

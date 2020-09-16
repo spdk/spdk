@@ -8,6 +8,14 @@ SPDK has switched to DPDK's rte_vhost library since 19.07 release, removed the i
 rte_vhost library which is used for DPDK older than 19.05, removed the experimental vhost
 nvme target which depends on the internal rte_vhost library.
 
+### thread
+
+`fd_group` is applied to support interrupt mode.
+New APIs were added to support an experimental interrupt mode.  This allows modules or
+libraries to selectively register file descriptors that the spdk_thread can wait on,
+as an alternative to polling. In v20.10, this functionality is enabled in a very small
+subset of SPDK libraries and modules.
+
 ### util
 
 A new utility named `fd_group` was add. It is now

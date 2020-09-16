@@ -40,9 +40,12 @@
 #include "spdk/thread.h"
 #include "spdk/env.h"
 #include "spdk/util.h"
+#include "spdk/string.h"
+#include "spdk/fd_group.h"
 
 #ifdef __linux__
 #include <sys/prctl.h>
+#include <sys/eventfd.h>
 #endif
 
 #ifdef __FreeBSD__
@@ -59,6 +62,9 @@ static bool g_framework_context_switch_monitor_enabled = true;
 
 static struct spdk_mempool *g_spdk_event_mempool = NULL;
 
+static int reactor_interrupt_init(struct spdk_reactor *reactor);
+static void reactor_interrupt_fini(struct spdk_reactor *reactor);
+
 static void
 reactor_construct(struct spdk_reactor *reactor, uint32_t lcore)
 {
@@ -70,6 +76,10 @@ reactor_construct(struct spdk_reactor *reactor, uint32_t lcore)
 
 	reactor->events = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536, SPDK_ENV_SOCKET_ID_ANY);
 	assert(reactor->events != NULL);
+
+	if (spdk_interrupt_mode_is_enabled()) {
+		reactor_interrupt_init(reactor);
+	}
 }
 
 struct spdk_reactor *
@@ -157,6 +167,10 @@ spdk_reactors_fini(void)
 		if (reactor->events != NULL) {
 			spdk_ring_free(reactor->events);
 		}
+
+		if (reactor->interrupt_mode) {
+			reactor_interrupt_fini(reactor);
+		}
 	}
 
 	spdk_mempool_free(g_spdk_event_mempool);
@@ -205,6 +219,15 @@ spdk_event_call(struct spdk_event *event)
 	if (rc != 1) {
 		assert(false);
 	}
+
+	if (reactor->interrupt_mode) {
+		uint64_t notify = 1;
+
+		rc = write(reactor->events_fd, &notify, sizeof(notify));
+		if (rc < 0) {
+			SPDK_ERRLOG("failed to notify event queue: %s.\n", spdk_strerror(errno));
+		}
+	}
 }
 
 static inline uint32_t
@@ -224,7 +247,34 @@ event_queue_run_batch(struct spdk_reactor *reactor)
 	memset(events, 0, sizeof(events));
 #endif
 
-	count = spdk_ring_dequeue(reactor->events, events, SPDK_EVENT_BATCH_SIZE);
+	if (reactor->interrupt_mode) {
+		uint64_t notify = 1;
+		int rc;
+
+		/* There may be race between event_acknowledge and another producer's event_notify,
+		 * so event_acknowledge should be applied ahead. And then check for self's event_notify.
+		 * This can avoid event notification missing.
+		 */
+		rc = read(reactor->events_fd, &notify, sizeof(notify));
+		if (rc < 0) {
+			SPDK_ERRLOG("failed to acknowledge event queue: %s.\n", spdk_strerror(errno));
+			return -errno;
+		}
+
+		count = spdk_ring_dequeue(reactor->events, events, SPDK_EVENT_BATCH_SIZE);
+
+		if (spdk_ring_count(reactor->events) != 0) {
+			/* Trigger new notification if there are still events in event-queue waiting for processing. */
+			rc = write(reactor->events_fd, &notify, sizeof(notify));
+			if (rc < 0) {
+				SPDK_ERRLOG("failed to notify event queue: %s.\n", spdk_strerror(errno));
+				return -errno;
+			}
+		}
+	} else {
+		count = spdk_ring_dequeue(reactor->events, events, SPDK_EVENT_BATCH_SIZE);
+	}
+
 	if (count == 0) {
 		return 0;
 	}
@@ -313,12 +363,18 @@ static bool
 reactor_post_process_lw_thread(struct spdk_reactor *reactor, struct spdk_lw_thread *lw_thread)
 {
 	struct spdk_thread *thread = spdk_thread_get_from_ctx(lw_thread);
+	int efd;
 
 	if (spdk_unlikely(lw_thread->resched)) {
 		lw_thread->resched = false;
 		TAILQ_REMOVE(&reactor->threads, lw_thread, link);
 		assert(reactor->thread_count > 0);
 		reactor->thread_count--;
+
+		if (reactor->interrupt_mode) {
+			efd = spdk_thread_get_interrupt_fd(thread);
+			spdk_fd_group_remove(reactor->fgrp, efd);
+		}
 		_reactor_schedule_thread(thread);
 		return true;
 	}
@@ -328,11 +384,26 @@ reactor_post_process_lw_thread(struct spdk_reactor *reactor, struct spdk_lw_thre
 		TAILQ_REMOVE(&reactor->threads, lw_thread, link);
 		assert(reactor->thread_count > 0);
 		reactor->thread_count--;
+
+		if (reactor->interrupt_mode) {
+			efd = spdk_thread_get_interrupt_fd(thread);
+			spdk_fd_group_remove(reactor->fgrp, efd);
+		}
 		spdk_thread_destroy(thread);
 		return true;
 	}
 
 	return false;
+}
+
+static void
+reactor_interrupt_run(struct spdk_reactor *reactor)
+{
+	int block_timeout = -1; /* _EPOLL_WAIT_FOREVER */
+
+	spdk_fd_group_wait(reactor->fgrp, block_timeout);
+
+	/* TODO: add tsc records and g_framework_context_switch_monitor_enabled */
 }
 
 static void
@@ -387,7 +458,11 @@ reactor_run(void *arg)
 	reactor->tsc_last = spdk_get_ticks();
 
 	while (1) {
-		_reactor_run(reactor);
+		if (spdk_unlikely(reactor->interrupt_mode)) {
+			reactor_interrupt_run(reactor);
+		} else {
+			_reactor_run(reactor);
+		}
 
 		if (g_reactor_state != SPDK_REACTOR_STATE_RUNNING) {
 			break;
@@ -408,6 +483,11 @@ reactor_run(void *arg)
 				TAILQ_REMOVE(&reactor->threads, lw_thread, link);
 				assert(reactor->thread_count > 0);
 				reactor->thread_count--;
+				if (reactor->interrupt_mode) {
+					int efd = spdk_thread_get_interrupt_fd(thread);
+
+					spdk_fd_group_remove(reactor->fgrp, efd);
+				}
 				spdk_thread_destroy(thread);
 			} else {
 				spdk_thread_poll(thread, 0, 0);
@@ -492,11 +572,36 @@ spdk_reactors_start(void)
 void
 spdk_reactors_stop(void *arg1)
 {
+	uint32_t i;
+	int rc;
+	struct spdk_reactor *reactor;
+	uint64_t notify = 1;
+
 	g_reactor_state = SPDK_REACTOR_STATE_EXITING;
+
+	if (spdk_interrupt_mode_is_enabled()) {
+		SPDK_ENV_FOREACH_CORE(i) {
+			reactor = spdk_reactor_get(i);
+
+			rc = write(reactor->events_fd, &notify, sizeof(notify));
+			if (rc < 0) {
+				SPDK_ERRLOG("failed to notify event queue for reactor(%u): %s.\n", i, spdk_strerror(errno));
+				continue;
+			}
+		}
+	}
 }
 
 static pthread_mutex_t g_scheduler_mtx = PTHREAD_MUTEX_INITIALIZER;
 static uint32_t g_next_core = UINT32_MAX;
+
+static int
+thread_process_interrupts(void *arg)
+{
+	struct spdk_thread *thread = arg;
+
+	return spdk_thread_poll(thread, 0, 0);
+}
 
 static void
 _schedule_thread(void *arg1, void *arg2)
@@ -504,6 +609,7 @@ _schedule_thread(void *arg1, void *arg2)
 	struct spdk_lw_thread *lw_thread = arg1;
 	struct spdk_reactor *reactor;
 	uint32_t current_core;
+	int efd;
 
 	current_core = spdk_env_get_current_core();
 
@@ -512,6 +618,18 @@ _schedule_thread(void *arg1, void *arg2)
 
 	TAILQ_INSERT_TAIL(&reactor->threads, lw_thread, link);
 	reactor->thread_count++;
+
+	if (reactor->interrupt_mode) {
+		int rc;
+		struct spdk_thread *thread;
+
+		thread = spdk_thread_get_from_ctx(lw_thread);
+		efd = spdk_thread_get_interrupt_fd(thread);
+		rc = spdk_fd_group_add(reactor->fgrp, efd, thread_process_interrupts, thread);
+		if (rc < 0) {
+			SPDK_ERRLOG("Failed to schedule spdk_thread: %s.\n", spdk_strerror(-rc));
+		}
+	}
 }
 
 static int
@@ -561,6 +679,8 @@ static void
 _reactor_request_thread_reschedule(struct spdk_thread *thread)
 {
 	struct spdk_lw_thread *lw_thread;
+	struct spdk_reactor *reactor;
+	uint32_t current_core;
 
 	assert(thread == spdk_get_thread());
 
@@ -569,6 +689,17 @@ _reactor_request_thread_reschedule(struct spdk_thread *thread)
 	assert(lw_thread != NULL);
 
 	lw_thread->resched = true;
+
+	current_core = spdk_env_get_current_core();
+	reactor = spdk_reactor_get(current_core);
+	assert(reactor != NULL);
+	if (reactor->interrupt_mode) {
+		uint64_t notify = 1;
+
+		if (write(reactor->resched_fd, &notify, sizeof(notify)) < 0) {
+			SPDK_ERRLOG("failed to notify reschedule: %s.\n", spdk_strerror(errno));
+		}
+	}
 }
 
 static int
@@ -658,6 +789,104 @@ spdk_for_each_reactor(spdk_event_fn fn, void *arg1, void *arg2, spdk_event_fn cp
 	assert(evt != NULL);
 
 	spdk_event_call(evt);
+}
+
+#ifdef __linux__
+static int
+reactor_schedule_thread_event(void *arg)
+{
+	struct spdk_reactor *reactor = arg;
+	struct spdk_lw_thread *lw_thread, *tmp;
+	uint32_t count = 0;
+	uint64_t notify = 1;
+
+	assert(reactor->interrupt_mode);
+
+	if (read(reactor->resched_fd, &notify, sizeof(notify)) < 0) {
+		SPDK_ERRLOG("failed to acknowledge reschedule: %s.\n", spdk_strerror(errno));
+		return -errno;
+	}
+
+	TAILQ_FOREACH_SAFE(lw_thread, &reactor->threads, link, tmp) {
+		count += reactor_post_process_lw_thread(reactor, lw_thread) ? 1 : 0;
+	}
+
+	return count;
+}
+
+static int
+reactor_interrupt_init(struct spdk_reactor *reactor)
+{
+	int rc;
+
+	rc = spdk_fd_group_create(&reactor->fgrp);
+	if (rc != 0) {
+		return rc;
+	}
+
+	reactor->resched_fd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+	if (reactor->resched_fd < 0) {
+		rc = -EBADF;
+		goto err;
+	}
+
+	rc = spdk_fd_group_add(reactor->fgrp, reactor->resched_fd, reactor_schedule_thread_event,
+			       reactor);
+	if (rc) {
+		close(reactor->resched_fd);
+		goto err;
+	}
+
+	reactor->events_fd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+	if (reactor->events_fd < 0) {
+		spdk_fd_group_remove(reactor->fgrp, reactor->resched_fd);
+		close(reactor->resched_fd);
+
+		rc = -EBADF;
+		goto err;
+	}
+
+	rc = spdk_fd_group_add(reactor->fgrp, reactor->events_fd,
+			       (spdk_fd_fn)event_queue_run_batch, reactor);
+	if (rc) {
+		spdk_fd_group_remove(reactor->fgrp, reactor->resched_fd);
+		close(reactor->resched_fd);
+		close(reactor->events_fd);
+		goto err;
+	}
+
+	reactor->interrupt_mode = true;
+	return 0;
+
+err:
+	spdk_fd_group_destroy(reactor->fgrp);
+	return rc;
+}
+#else
+static int
+reactor_interrupt_init(struct spdk_reactor *reactor)
+{
+	return -ENOTSUP;
+}
+#endif
+
+static void
+reactor_interrupt_fini(struct spdk_reactor *reactor)
+{
+	struct spdk_fd_group *fgrp = reactor->fgrp;
+
+	if (!fgrp) {
+		return;
+	}
+
+	spdk_fd_group_remove(fgrp, reactor->events_fd);
+	spdk_fd_group_remove(fgrp, reactor->resched_fd);
+
+	close(reactor->events_fd);
+	close(reactor->resched_fd);
+
+	spdk_fd_group_destroy(fgrp);
+	reactor->fgrp = NULL;
 }
 
 SPDK_LOG_REGISTER_COMPONENT(reactor)

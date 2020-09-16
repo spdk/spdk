@@ -39,9 +39,15 @@
 #include "spdk/string.h"
 #include "spdk/thread.h"
 #include "spdk/util.h"
+#include "spdk/fd_group.h"
 
 #include "spdk/log.h"
 #include "spdk_internal/thread.h"
+
+#ifdef __linux__
+#include <sys/timerfd.h>
+#include <sys/eventfd.h>
+#endif
 
 #define SPDK_MSG_BATCH_SIZE		8
 #define SPDK_MAX_DEVICE_NAME_LEN	256
@@ -178,6 +184,9 @@ spdk_thread_lib_fini(void)
 	g_ctx_sz = 0;
 }
 
+static void thread_interrupt_destroy(struct spdk_thread *thread);
+static int thread_interrupt_create(struct spdk_thread *thread);
+
 static void
 _free_thread(struct spdk_thread *thread)
 {
@@ -232,6 +241,10 @@ _free_thread(struct spdk_thread *thread)
 	}
 
 	assert(thread->msg_cache_count == 0);
+
+	if (thread->interrupt_mode) {
+		thread_interrupt_destroy(thread);
+	}
 
 	spdk_ring_free(thread->messages);
 	free(thread);
@@ -303,6 +316,15 @@ spdk_thread_create(const char *name, struct spdk_cpuset *cpumask)
 
 	SPDK_DEBUGLOG(thread, "Allocating new thread (%" PRIu64 ", %s)\n",
 		      thread->id, thread->name);
+
+	if (spdk_interrupt_mode_is_enabled()) {
+		thread->interrupt_mode = true;
+		rc = thread_interrupt_create(thread);
+		if (rc != 0) {
+			_free_thread(thread);
+			return NULL;
+		}
+	}
 
 	if (g_new_thread_fn) {
 		rc = g_new_thread_fn(thread);
@@ -477,6 +499,7 @@ msg_queue_run_batch(struct spdk_thread *thread, uint32_t max_msgs)
 {
 	unsigned count, i;
 	void *messages[SPDK_MSG_BATCH_SIZE];
+	uint64_t notify = 1;
 
 #ifdef DEBUG
 	/*
@@ -492,8 +515,18 @@ msg_queue_run_batch(struct spdk_thread *thread, uint32_t max_msgs)
 	} else {
 		max_msgs = SPDK_MSG_BATCH_SIZE;
 	}
+	if (thread->interrupt_mode) {
+		/* There may be race between msg_acknowledge and another producer's msg_notify,
+		 * so msg_acknowledge should be applied ahead. And then check for self's msg_notify.
+		 * This can avoid msg notification missing.
+		 */
+		read(thread->msg_fd, &notify, sizeof(notify));
+	}
 
 	count = spdk_ring_dequeue(thread->messages, messages, max_msgs);
+	if (thread->interrupt_mode && spdk_ring_count(thread->messages) != 0) {
+		write(thread->msg_fd, &notify, sizeof(notify));
+	}
 	if (count == 0) {
 		return 0;
 	}
@@ -688,7 +721,13 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 		now = spdk_get_ticks();
 	}
 
-	rc = thread_poll(thread, max_msgs, now);
+	if (!thread->interrupt_mode) {
+		rc = thread_poll(thread, max_msgs, now);
+	} else {
+		/* Non-block wait on thread's fd_group */
+		rc = spdk_fd_group_wait(thread->fgrp, 0);
+	}
+
 
 	if (spdk_unlikely(thread->state == SPDK_THREAD_STATE_EXITING)) {
 		thread_exit(thread, now);
@@ -875,6 +914,12 @@ spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx
 		return -EIO;
 	}
 
+	if (thread->interrupt_mode) {
+		uint64_t notify = 1;
+
+		write(thread->msg_fd, &notify, sizeof(notify));
+	}
+
 	return 0;
 }
 
@@ -885,10 +930,103 @@ spdk_thread_send_critical_msg(struct spdk_thread *thread, spdk_msg_fn fn)
 
 	if (__atomic_compare_exchange_n(&thread->critical_msg, &expected, fn, false, __ATOMIC_SEQ_CST,
 					__ATOMIC_SEQ_CST)) {
+		if (thread->interrupt_mode) {
+			uint64_t notify = 1;
+
+			write(thread->msg_fd, &notify, sizeof(notify));
+		}
+
 		return 0;
 	}
 
 	return -EIO;
+}
+
+#ifdef __linux__
+static int
+interrupt_timerfd_prepare(uint64_t period_microseconds)
+{
+	int timerfd;
+	int ret;
+	struct itimerspec new_tv;
+	uint64_t period_seconds;
+	uint64_t period_nanoseconds;
+
+	if (period_microseconds == 0) {
+		return -EINVAL;
+	}
+
+	period_seconds = period_microseconds / SPDK_SEC_TO_USEC;
+	period_nanoseconds = period_microseconds % SPDK_SEC_TO_USEC * 1000;
+
+	new_tv.it_value.tv_sec = period_seconds;
+	new_tv.it_value.tv_nsec = period_nanoseconds;
+
+	new_tv.it_interval.tv_sec = period_seconds;
+	new_tv.it_interval.tv_nsec = period_nanoseconds;
+
+	timerfd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK & TFD_CLOEXEC);
+	if (timerfd < 0) {
+		return -errno;
+	}
+
+	ret = timerfd_settime(timerfd, 0, &new_tv, NULL);
+	if (ret < 0) {
+		close(timerfd);
+		return -errno;
+	}
+
+	return timerfd;
+}
+#else
+static int
+interrupt_timerfd_prepare(uint64_t period_microseconds)
+{
+	return -ENOTSUP;
+}
+#endif
+
+static int
+interrupt_timerfd_process(void *arg)
+{
+	struct spdk_poller *poller = arg;
+	uint64_t exp;
+	int rc;
+
+	/* clear the level of interval timer */
+	rc = read(poller->timerfd, &exp, sizeof(exp));
+	if (rc < 0) {
+		if (rc == -EAGAIN) {
+			return 0;
+		}
+
+		return rc;
+	}
+
+	return poller->fn(poller->arg);
+}
+
+static int
+thread_interrupt_register_timerfd(struct spdk_fd_group *fgrp,
+				  uint64_t period_microseconds,
+				  struct spdk_poller *poller)
+{
+	int timerfd;
+	int rc;
+
+	timerfd = interrupt_timerfd_prepare(period_microseconds);
+	if (timerfd < 0) {
+		return timerfd;
+	}
+
+	rc = spdk_fd_group_add(fgrp, timerfd,
+			       interrupt_timerfd_process, poller);
+	if (rc < 0) {
+		close(timerfd);
+		return rc;
+	}
+
+	return timerfd;
 }
 
 static struct spdk_poller *
@@ -939,6 +1077,18 @@ poller_register(spdk_poller_fn fn,
 		poller->period_ticks = 0;
 	}
 
+	if (thread->interrupt_mode && period_microseconds != 0) {
+		int rc;
+
+		rc = thread_interrupt_register_timerfd(thread->fgrp, period_microseconds, poller);
+		if (rc < 0) {
+			SPDK_ERRLOG("Failed to register timerfd for periodic poller: %s\n", spdk_strerror(-rc));
+			free(poller);
+			return NULL;
+		}
+		poller->timerfd = rc;
+	}
+
 	thread_insert_poller(thread, poller);
 
 	return poller;
@@ -984,6 +1134,12 @@ spdk_poller_unregister(struct spdk_poller **ppoller)
 		SPDK_ERRLOG("different from the thread that called spdk_poller_register()\n");
 		assert(false);
 		return;
+	}
+
+	if (thread->interrupt_mode && poller->timerfd) {
+		spdk_fd_group_remove(thread->fgrp, poller->timerfd);
+		close(poller->timerfd);
+		poller->timerfd = 0;
 	}
 
 	/* If the poller was paused, put it on the active_pollers list so that
@@ -1638,5 +1794,209 @@ end:
 	assert(rc == 0);
 }
 
+struct spdk_interrupt {
+	int			efd;
+	struct spdk_thread	*thread;
+	char			name[SPDK_MAX_POLLER_NAME_LEN + 1];
+};
+
+static void
+thread_interrupt_destroy(struct spdk_thread *thread)
+{
+	struct spdk_fd_group *fgrp = thread->fgrp;
+
+	SPDK_INFOLOG(thread, "destroy fgrp for thread (%s)\n", thread->name);
+
+	if (thread->msg_fd <= 0) {
+		return;
+	}
+
+	spdk_fd_group_remove(fgrp, thread->msg_fd);
+	close(thread->msg_fd);
+
+	spdk_fd_group_destroy(fgrp);
+	thread->fgrp = NULL;
+}
+
+#ifdef __linux__
+static int
+thread_interrupt_msg_process(void *arg)
+{
+	struct spdk_thread *thread = arg;
+	struct spdk_thread *orig_thread;
+	uint32_t msg_count;
+	spdk_msg_fn critical_msg;
+	int rc = 0;
+	uint64_t now = spdk_get_ticks();
+
+	orig_thread = _get_thread();
+	tls_thread = thread;
+
+	critical_msg = thread->critical_msg;
+	if (spdk_unlikely(critical_msg != NULL)) {
+		critical_msg(NULL);
+		thread->critical_msg = NULL;
+	}
+
+	msg_count = msg_queue_run_batch(thread, 0);
+	if (msg_count) {
+		rc = 1;
+	}
+
+	thread_update_stats(thread, spdk_get_ticks(), now, rc);
+
+	tls_thread = orig_thread;
+
+	return rc;
+}
+
+static int
+thread_interrupt_create(struct spdk_thread *thread)
+{
+	int rc;
+
+	SPDK_INFOLOG(thread, "Create fgrp for thread (%s)\n", thread->name);
+
+	rc = spdk_fd_group_create(&thread->fgrp);
+	if (rc) {
+		return rc;
+	}
+
+	thread->msg_fd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+	if (thread->msg_fd < 0) {
+		rc = -errno;
+		spdk_fd_group_destroy(thread->fgrp);
+		thread->fgrp = NULL;
+
+		return rc;
+	}
+
+	return spdk_fd_group_add(thread->fgrp, thread->msg_fd, thread_interrupt_msg_process, thread);
+}
+#else
+static int
+thread_interrupt_create(struct spdk_thread *thread)
+{
+	return -ENOTSUP;
+}
+#endif
+
+struct spdk_interrupt *
+spdk_interrupt_register(int efd, spdk_interrupt_fn fn,
+			void *arg, const char *name)
+{
+	struct spdk_thread *thread;
+	struct spdk_interrupt *intr;
+
+	thread = spdk_get_thread();
+	if (!thread) {
+		assert(false);
+		return NULL;
+	}
+
+	if (spdk_unlikely(thread->state != SPDK_THREAD_STATE_RUNNING)) {
+		SPDK_ERRLOG("thread %s is marked as exited\n", thread->name);
+		return NULL;
+	}
+
+	if (spdk_fd_group_add(thread->fgrp, efd, fn, arg)) {
+		return NULL;
+	}
+
+	intr = calloc(1, sizeof(*intr));
+	if (intr == NULL) {
+		SPDK_ERRLOG("Interrupt handler allocation failed\n");
+		return NULL;
+	}
+
+	if (name) {
+		snprintf(intr->name, sizeof(intr->name), "%s", name);
+	} else {
+		snprintf(intr->name, sizeof(intr->name), "%p", fn);
+	}
+
+	intr->efd = efd;
+	intr->thread = thread;
+
+	return intr;
+}
+
+void
+spdk_interrupt_unregister(struct spdk_interrupt **pintr)
+{
+	struct spdk_thread *thread;
+	struct spdk_interrupt *intr;
+
+	intr = *pintr;
+	if (intr == NULL) {
+		return;
+	}
+
+	*pintr = NULL;
+
+	thread = spdk_get_thread();
+	if (!thread) {
+		assert(false);
+		return;
+	}
+
+	if (intr->thread != thread) {
+		SPDK_ERRLOG("different from the thread that called spdk_interrupt_register()\n");
+		assert(false);
+		return;
+	}
+
+	spdk_fd_group_remove(thread->fgrp, intr->efd);
+	free(intr);
+}
+
+int
+spdk_interrupt_set_event_types(struct spdk_interrupt *intr,
+			       enum spdk_interrupt_event_types event_types)
+{
+	struct spdk_thread *thread;
+
+	thread = spdk_get_thread();
+	if (!thread) {
+		assert(false);
+		return -EINVAL;
+	}
+
+	if (intr->thread != thread) {
+		SPDK_ERRLOG("different from the thread that called spdk_interrupt_register()\n");
+		assert(false);
+		return -EINVAL;
+	}
+
+	return spdk_fd_group_event_modify(thread->fgrp, intr->efd, event_types);
+}
+
+int
+spdk_thread_get_interrupt_fd(struct spdk_thread *thread)
+{
+	return spdk_fd_group_get_fd(thread->fgrp);
+}
+
+static bool g_interrupt_mode = false;
+
+int
+spdk_interrupt_mode_enable(void)
+{
+#ifdef __linux__
+	SPDK_NOTICELOG("Set SPDK running in interrupt mode.\n");
+	g_interrupt_mode = true;
+	return 0;
+#else
+	SPDK_ERRLOG("SPDK interrupt mode supports only Linux platform now.\n");
+	g_interrupt_mode = false;
+	return -ENOTSUP;
+#endif
+}
+
+bool
+spdk_interrupt_mode_is_enabled(void)
+{
+	return g_interrupt_mode;
+}
 
 SPDK_LOG_REGISTER_COMPONENT(thread)

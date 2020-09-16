@@ -74,6 +74,7 @@ struct spdk_poller {
 	spdk_poller_fn			fn;
 	void				*arg;
 	struct spdk_thread		*thread;
+	int				timerfd;
 
 	char				name[SPDK_MAX_POLLER_NAME_LEN + 1];
 };
@@ -112,6 +113,7 @@ struct spdk_thread {
 	 */
 	TAILQ_HEAD(paused_pollers_head, spdk_poller)	paused_pollers;
 	struct spdk_ring		*messages;
+	int				msg_fd;
 	SLIST_HEAD(, spdk_msg)		msg_cache;
 	size_t				msg_cache_count;
 	spdk_msg_fn			critical_msg;
@@ -124,6 +126,9 @@ struct spdk_thread {
 	char				name[SPDK_MAX_THREAD_NAME_LEN + 1];
 	struct spdk_cpuset		cpumask;
 	uint64_t			exit_timeout_tsc;
+
+	bool				interrupt_mode;
+	struct spdk_fd_group		*fgrp;
 
 	/* User context allocated at the end */
 	uint8_t				ctx[0];

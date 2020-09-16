@@ -729,6 +729,93 @@ void *spdk_io_channel_iter_get_ctx(struct spdk_io_channel_iter *i);
  */
 void spdk_for_each_channel_continue(struct spdk_io_channel_iter *i, int status);
 
+/**
+ * A representative for registered interrupt file descriptor.
+ */
+struct spdk_interrupt;
+
+/**
+ * Callback function registered for interrupt file descriptor.
+ *
+ * \param ctx Context passed as arg to spdk_interrupt_register().
+ *
+ * \return 0 to indicate that interrupt took place but no events were found;
+ * positive to indicate that interrupt took place and some events were processed;
+ * negative if no event information is provided.
+ */
+typedef int (*spdk_interrupt_fn)(void *ctx);
+
+/**
+ * Register an spdk_interrupt on the current thread. The provided function
+ * will be called any time the associated file descriptor is written to.
+ *
+ * \param efd File descriptor of the spdk_interrupt.
+ * \param fn Called each time there are events in spdk_interrupt.
+ * \param arg Function argument for fn.
+ * \param name Human readable name for the spdk_interrupt. Pointer of the spdk_interrupt
+ * name is set if NULL.
+ *
+ * \return a pointer to the spdk_interrupt registered on the current thread on success
+ * or NULL on failure.
+ */
+struct spdk_interrupt *spdk_interrupt_register(int efd, spdk_interrupt_fn fn,
+		void *arg, const char *name);
+
+/*
+ * \brief Register an spdk_interrupt on the current thread with setting its name
+ * to the string of the spdk_interrupt function name.
+ */
+#define SPDK_INTERRUPT_REGISTER(efd, fn, arg)	\
+	spdk_interrupt_register(efd, fn, arg, #fn)
+
+/**
+ * Unregister an spdk_interrupt on the current thread.
+ *
+ * \param pintr The spdk_interrupt to unregister.
+ */
+void spdk_interrupt_unregister(struct spdk_interrupt **pintr);
+
+enum spdk_interrupt_event_types {
+	SPDK_INTERRUPT_EVENT_IN = 0x001,
+	SPDK_INTERRUPT_EVENT_OUT = 0x004,
+	SPDK_INTERRUPT_EVENT_ET = 1u << 31
+};
+
+/**
+ * Change the event_types associated with the spdk_interrupt on the current thread.
+ *
+ * \param intr The pointer to the spdk_interrupt registered on the current thread.
+ * \param event_types New event_types for the spdk_interrupt.
+ *
+ * \return 0 if success or -errno if failed.
+ */
+int spdk_interrupt_set_event_types(struct spdk_interrupt *intr,
+				   enum spdk_interrupt_event_types event_types);
+
+/**
+ * Return a file descriptor that becomes ready whenever any of the registered
+ * interrupt file descriptors are ready
+ *
+ * \param thread The thread to get.
+ *
+ * \return The spdk_interrupt fd of thread itself.
+ */
+int spdk_thread_get_interrupt_fd(struct spdk_thread *thread);
+
+/**
+ * Set SPDK run as event driven mode
+ *
+ * \return 0 on success or -errno on failure
+ */
+int spdk_interrupt_mode_enable(void);
+
+/**
+ * Reports whether interrupt mode is set.
+ *
+ * \return True if interrupt mode is set, false otherwise.
+ */
+bool spdk_interrupt_mode_is_enabled(void);
+
 #ifdef __cplusplus
 }
 #endif
