@@ -83,35 +83,41 @@ static void
 test_nvme_ns_uuid(void)
 {
 	struct spdk_nvme_ns ns = {};
+	uint32_t id = 1;
+	struct spdk_nvme_ns_data nsdata = {};
+	struct spdk_nvme_ctrlr ctrlr = { .nsdata = &nsdata };
 	const struct spdk_uuid *uuid;
 	struct spdk_uuid expected_uuid;
 
 	memset(&expected_uuid, 0xA5, sizeof(expected_uuid));
 
 	/* Empty list - no UUID should be found */
-	memset(ns.id_desc_list, 0, sizeof(ns.id_desc_list));
+	nvme_ns_construct(&ns, id, &ctrlr);
 	uuid = spdk_nvme_ns_get_uuid(&ns);
 	CU_ASSERT(uuid == NULL);
+	nvme_ns_destruct(&ns);
 
 	/* NGUID only (no UUID in list) */
-	memset(ns.id_desc_list, 0, sizeof(ns.id_desc_list));
+	nvme_ns_construct(&ns, id, &ctrlr);
 	ns.id_desc_list[0] = 0x02; /* NIDT == NGUID */
 	ns.id_desc_list[1] = 0x10; /* NIDL */
 	memset(&ns.id_desc_list[4], 0xCC, 0x10);
 	uuid = spdk_nvme_ns_get_uuid(&ns);
 	CU_ASSERT(uuid == NULL);
+	nvme_ns_destruct(&ns);
 
 	/* Just UUID in the list */
-	memset(ns.id_desc_list, 0, sizeof(ns.id_desc_list));
+	nvme_ns_construct(&ns, id, &ctrlr);
 	ns.id_desc_list[0] = 0x03; /* NIDT == UUID */
 	ns.id_desc_list[1] = 0x10; /* NIDL */
 	memcpy(&ns.id_desc_list[4], &expected_uuid, sizeof(expected_uuid));
 	uuid = spdk_nvme_ns_get_uuid(&ns);
 	SPDK_CU_ASSERT_FATAL(uuid != NULL);
 	CU_ASSERT(memcmp(uuid, &expected_uuid, sizeof(*uuid)) == 0);
+	nvme_ns_destruct(&ns);
 
 	/* UUID followed by NGUID */
-	memset(ns.id_desc_list, 0, sizeof(ns.id_desc_list));
+	nvme_ns_construct(&ns, id, &ctrlr);
 	ns.id_desc_list[0] = 0x03; /* NIDT == UUID */
 	ns.id_desc_list[1] = 0x10; /* NIDL */
 	memcpy(&ns.id_desc_list[4], &expected_uuid, sizeof(expected_uuid));
@@ -121,9 +127,10 @@ test_nvme_ns_uuid(void)
 	uuid = spdk_nvme_ns_get_uuid(&ns);
 	SPDK_CU_ASSERT_FATAL(uuid != NULL);
 	CU_ASSERT(memcmp(uuid, &expected_uuid, sizeof(*uuid)) == 0);
+	nvme_ns_destruct(&ns);
 
 	/* NGUID followed by UUID */
-	memset(ns.id_desc_list, 0, sizeof(ns.id_desc_list));
+	nvme_ns_construct(&ns, id, &ctrlr);
 	ns.id_desc_list[0] = 0x02; /* NIDT == NGUID */
 	ns.id_desc_list[1] = 0x10; /* NIDL */
 	memset(&ns.id_desc_list[4], 0xCC, 0x10);
@@ -133,30 +140,35 @@ test_nvme_ns_uuid(void)
 	uuid = spdk_nvme_ns_get_uuid(&ns);
 	SPDK_CU_ASSERT_FATAL(uuid != NULL);
 	CU_ASSERT(memcmp(uuid, &expected_uuid, sizeof(*uuid)) == 0);
+	nvme_ns_destruct(&ns);
 }
 
 static void
 test_nvme_ns_csi(void)
 {
-	struct spdk_nvme_ctrlr ctrlr = {};
-	struct spdk_nvme_ns ns = { .ctrlr = &ctrlr };
+	struct spdk_nvme_ns ns = {};
+	uint32_t id = 1;
+	struct spdk_nvme_ns_data nsdata = {};
+	struct spdk_nvme_ctrlr ctrlr = { .nsdata = &nsdata };
 	enum spdk_nvme_csi csi;
 
 	/* Empty list - SPDK_NVME_CSI_NVM should be returned */
-	memset(ns.id_desc_list, 0, sizeof(ns.id_desc_list));
+	nvme_ns_construct(&ns, id, &ctrlr);
 	csi = spdk_nvme_ns_get_csi(&ns);
 	CU_ASSERT(csi == SPDK_NVME_CSI_NVM);
+	nvme_ns_destruct(&ns);
 
 	/* NVM CSI - SPDK_NVME_CSI_NVM should be returned */
-	memset(ns.id_desc_list, 0, sizeof(ns.id_desc_list));
+	nvme_ns_construct(&ns, id, &ctrlr);
 	ns.id_desc_list[0] = 0x4; /* NIDT == CSI */
 	ns.id_desc_list[1] = 0x1; /* NIDL */
 	ns.id_desc_list[4] = 0x0; /* SPDK_NVME_CSI_NVM */
 	csi = spdk_nvme_ns_get_csi(&ns);
 	CU_ASSERT(csi == SPDK_NVME_CSI_NVM);
+	nvme_ns_destruct(&ns);
 
 	/* NGUID followed by ZNS CSI - SPDK_NVME_CSI_ZNS should be returned */
-	memset(ns.id_desc_list, 0, sizeof(ns.id_desc_list));
+	nvme_ns_construct(&ns, id, &ctrlr);
 	ns.id_desc_list[0] = 0x02; /* NIDT == NGUID */
 	ns.id_desc_list[1] = 0x10; /* NIDL */
 	memset(&ns.id_desc_list[4], 0xCC, 0x10);
@@ -165,9 +177,10 @@ test_nvme_ns_csi(void)
 	ns.id_desc_list[24] = 0x2; /* SPDK_NVME_CSI_ZNS */
 	csi = spdk_nvme_ns_get_csi(&ns);
 	CU_ASSERT(csi == SPDK_NVME_CSI_ZNS);
+	nvme_ns_destruct(&ns);
 
 	/* KV CSI followed by NGUID - SPDK_NVME_CSI_KV should be returned */
-	memset(ns.id_desc_list, 0, sizeof(ns.id_desc_list));
+	nvme_ns_construct(&ns, id, &ctrlr);
 	ns.id_desc_list[0] = 0x4; /* NIDT == CSI */
 	ns.id_desc_list[1] = 0x1; /* NIDL */
 	ns.id_desc_list[4] = 0x1; /* SPDK_NVME_CSI_KV */
@@ -176,6 +189,7 @@ test_nvme_ns_csi(void)
 	memset(&ns.id_desc_list[9], 0xCC, 0x10);
 	csi = spdk_nvme_ns_get_csi(&ns);
 	CU_ASSERT(csi == SPDK_NVME_CSI_KV);
+	nvme_ns_destruct(&ns);
 }
 
 int main(int argc, char **argv)
