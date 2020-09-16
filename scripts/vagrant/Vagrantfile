@@ -182,6 +182,7 @@ def setup_ssh(config)
   if ENV['VAGRANT_PASSWORD_AUTH'] == "1"
     config.ssh.username = "vagrant"
     config.ssh.password = "vagrant"
+    config.ssh.private_key_path = nil
   end
 end
 
