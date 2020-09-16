@@ -545,10 +545,14 @@ static void
 _nvme_qpair_abort_queued_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 {
 	struct nvme_request		*req;
+	STAILQ_HEAD(, nvme_request)	tmp;
 
-	while (!STAILQ_EMPTY(&qpair->queued_req)) {
-		req = STAILQ_FIRST(&qpair->queued_req);
-		STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
+	STAILQ_INIT(&tmp);
+	STAILQ_SWAP(&tmp, &qpair->queued_req, nvme_request);
+
+	while (!STAILQ_EMPTY(&tmp)) {
+		req = STAILQ_FIRST(&tmp);
+		STAILQ_REMOVE_HEAD(&tmp, stailq);
 		if (!qpair->ctrlr->opts.disable_error_logging) {
 			SPDK_ERRLOG("aborting queued i/o\n");
 		}
