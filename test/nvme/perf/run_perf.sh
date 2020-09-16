@@ -227,7 +227,7 @@ if [[ "$PLUGIN" =~ "kernel" ]]; then
 			echo 0 > $sysfs/iostats
 			echo 0 > $sysfs/rq_affinity
 			echo 2 > $sysfs/nomerges
-			echo 0 > $sysfs/io_poll_delay
+			echo -1 > $sysfs/io_poll_delay
 		done
 	fi
 fi
