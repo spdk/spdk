@@ -45,6 +45,8 @@ SPDK_LIB_LIST += jsonrpc json rpc trace conf util log
 # Basic bdev libraries
 SPDK_LIB_LIST += bdev notify accel vmd sock
 SPDK_LIB_LIST += $(EVENT_BDEV_SUBSYSTEM) # event_bdev depends on some other event modules, but they dont support edriven yet
+# Aio bdev library
+SPDK_LIB_LIST += bdev_aio
 
 ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
 SPDK_LIB_LIST += env_dpdk_rpc

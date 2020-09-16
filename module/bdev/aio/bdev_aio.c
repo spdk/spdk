@@ -48,6 +48,7 @@
 
 #include "spdk/log.h"
 
+#include <sys/eventfd.h>
 #include <libaio.h>
 
 struct bdev_aio_io_channel {
@@ -58,6 +59,8 @@ struct bdev_aio_io_channel {
 };
 
 struct bdev_aio_group_channel {
+	int					efd;
+	struct spdk_interrupt			*intr;
 	struct spdk_poller			*poller;
 	TAILQ_HEAD(, bdev_aio_io_channel)	io_ch_head;
 };
@@ -170,6 +173,9 @@ bdev_aio_readv(struct file_disk *fdisk, struct spdk_io_channel *ch,
 	int rc;
 
 	io_prep_preadv(iocb, fdisk->fd, iov, iovcnt, offset);
+	if (aio_ch->group_ch->efd) {
+		io_set_eventfd(iocb, aio_ch->group_ch->efd);
+	}
 	iocb->data = aio_task;
 	aio_task->len = nbytes;
 	aio_task->ch = aio_ch;
@@ -201,6 +207,9 @@ bdev_aio_writev(struct file_disk *fdisk, struct spdk_io_channel *ch,
 	int rc;
 
 	io_prep_pwritev(iocb, fdisk->fd, iov, iovcnt, offset);
+	if (aio_ch->group_ch->efd) {
+		io_set_eventfd(iocb, aio_ch->group_ch->efd);
+	}
 	iocb->data = aio_task;
 	aio_task->len = len;
 	aio_task->ch = aio_ch;
@@ -351,6 +360,34 @@ bdev_aio_group_poll(void *arg)
 	}
 
 	return nr > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
+}
+
+static int
+bdev_aio_group_interrupt(void *arg)
+{
+	struct bdev_aio_group_channel *group_ch = arg;
+	int rc;
+	uint64_t num_events;
+
+	assert(group_ch->efd);
+
+	/* if completed IO number is larger than SPDK_AIO_QUEUE_DEPTH,
+	 * io_getevent should be called again to ensure all completed IO are processed.
+	 */
+	rc = read(group_ch->efd, &num_events, sizeof(num_events));
+	if (rc < 0) {
+		SPDK_ERRLOG("failed to acknowledge aio group: %s.\n", spdk_strerror(errno));
+		return -errno;
+	}
+
+	if (num_events > SPDK_AIO_QUEUE_DEPTH) {
+		num_events -= SPDK_AIO_QUEUE_DEPTH;
+		if (write(group_ch->efd, &num_events, sizeof(num_events))) {
+			SPDK_ERRLOG("failed to notify aio group: %s.\n", spdk_strerror(errno));
+		}
+	}
+
+	return bdev_aio_group_poll(group_ch);
 }
 
 static void
@@ -580,13 +617,46 @@ static void aio_free_disk(struct file_disk *fdisk)
 }
 
 static int
+bdev_aio_register_interrupt(struct bdev_aio_group_channel *ch)
+{
+	int efd;
+
+	efd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+	if (efd < 0) {
+		return -1;
+	}
+
+	ch->intr = SPDK_INTERRUPT_REGISTER(efd, bdev_aio_group_interrupt, ch);
+	if (ch->intr == NULL) {
+		close(efd);
+		return -1;
+	}
+	ch->efd = efd;
+
+	return 0;
+}
+
+static void
+bdev_aio_unregister_interrupt(struct bdev_aio_group_channel *ch)
+{
+	spdk_interrupt_unregister(&ch->intr);
+	close(ch->efd);
+	ch->efd = 0;
+}
+
+static int
 bdev_aio_group_create_cb(void *io_device, void *ctx_buf)
 {
 	struct bdev_aio_group_channel *ch = ctx_buf;
 
 	TAILQ_INIT(&ch->io_ch_head);
 
+	if (spdk_interrupt_mode_is_enabled()) {
+		return bdev_aio_register_interrupt(ch);
+	}
+
 	ch->poller = SPDK_POLLER_REGISTER(bdev_aio_group_poll, ch, 0);
+
 	return 0;
 }
 
@@ -597,6 +667,11 @@ bdev_aio_group_destroy_cb(void *io_device, void *ctx_buf)
 
 	if (!TAILQ_EMPTY(&ch->io_ch_head)) {
 		SPDK_ERRLOG("Group channel of bdev aio has uncleared io channel\n");
+	}
+
+	if (ch->intr) {
+		bdev_aio_unregister_interrupt(ch);
+		return;
 	}
 
 	spdk_poller_unregister(&ch->poller);
