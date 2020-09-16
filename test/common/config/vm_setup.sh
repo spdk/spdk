@@ -68,6 +68,10 @@ function set_os_id_version() {
 	elif [[ -f /usr/local/etc/os-release ]]; then
 		# On FreeBSD file is located under /usr/local if etc_os-release package is installed
 		source /usr/local/etc/os-release
+	elif [[ $(uname -s) == FreeBSD ]]; then
+		ID=freebsd
+		VERSION_ID=$(freebsd-version)
+		VERSION_ID=${VERSION_ID//.*/}
 	else
 		echo "File os-release not found" >&2
 		exit 3
