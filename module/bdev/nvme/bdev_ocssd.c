@@ -150,7 +150,7 @@ bdev_ocssd_namespace_config_json(struct spdk_json_write_ctx *w, struct nvme_bdev
 	int rc;
 
 	TAILQ_FOREACH(nvme_bdev, &ns->bdevs, tailq) {
-		nvme_bdev_ctrlr = nvme_bdev->nvme_bdev_ctrlr;
+		nvme_bdev_ctrlr = nvme_bdev->nvme_ns->ctrlr;
 		ocssd_bdev = SPDK_CONTAINEROF(nvme_bdev, struct ocssd_bdev, nvme_bdev);
 
 		rc = snprintf(range_buf, sizeof(range_buf), "%"PRIu64"-%"PRIu64,
@@ -649,7 +649,7 @@ _bdev_ocssd_get_zone_info(struct spdk_bdev_io *bdev_io)
 	bdev_ocssd_translate_lba(ocssd_bdev, lba, &grp, &pu, &chk, &lbk);
 	offset = grp * geo->num_pu * geo->num_chk + pu * geo->num_chk + chk;
 
-	return spdk_nvme_ctrlr_cmd_get_log_page(nvme_bdev->nvme_bdev_ctrlr->ctrlr,
+	return spdk_nvme_ctrlr_cmd_get_log_page(nvme_bdev->nvme_ns->ctrlr->ctrlr,
 						SPDK_OCSSD_LOG_CHUNK_INFO,
 						spdk_nvme_ns_get_id(nvme_bdev->nvme_ns->ns),
 						&ocdev_io->zone_info.chunk_info,
@@ -798,7 +798,7 @@ bdev_ocssd_get_io_channel(void *ctx)
 {
 	struct ocssd_bdev *ocssd_bdev = ctx;
 
-	return spdk_get_io_channel(ocssd_bdev->nvme_bdev.nvme_bdev_ctrlr);
+	return spdk_get_io_channel(ocssd_bdev->nvme_bdev.nvme_ns->ctrlr);
 }
 
 static void
@@ -1081,7 +1081,7 @@ bdev_ocssd_init_zone(struct bdev_ocssd_create_ctx *create_ctx)
 					  OCSSD_BDEV_CHUNK_INFO_COUNT);
 	assert(create_ctx->num_chunks > 0);
 
-	return spdk_nvme_ctrlr_cmd_get_log_page(nvme_bdev->nvme_bdev_ctrlr->ctrlr,
+	return spdk_nvme_ctrlr_cmd_get_log_page(nvme_bdev->nvme_ns->ctrlr->ctrlr,
 						SPDK_OCSSD_LOG_CHUNK_INFO,
 						spdk_nvme_ns_get_id(nvme_bdev->nvme_ns->ns),
 						&create_ctx->chunk_info,
@@ -1236,7 +1236,6 @@ bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, uint32_t n
 
 	nvme_bdev = &ocssd_bdev->nvme_bdev;
 	nvme_bdev->nvme_ns = nvme_ns;
-	nvme_bdev->nvme_bdev_ctrlr = nvme_bdev_ctrlr;
 	geometry = &ocssd_ns->geometry;
 
 	if (range != NULL) {
