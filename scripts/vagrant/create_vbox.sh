@@ -22,7 +22,7 @@ display_help() {
 	echo "  distro = <centos7 | centos8| ubuntu1604 | ubuntu1804 | fedora30 |"
 	echo "            fedora31 | fedora32 | freebsd11 | freebsd12 | arch | clearlinux>"
 	echo
-	echo "  -s <ram-size> in kb             Default: ${SPDK_VAGRANT_VMRAM}"
+	echo "  -s <ram-size> in MB             Default: ${SPDK_VAGRANT_VMRAM}"
 	echo "  -n <num-cpus> 1 to 4            Default: ${SPDK_VAGRANT_VMCPU}"
 	echo "  -x <http-proxy>                 Default: \"${SPDK_VAGRANT_HTTP_PROXY}\""
 	echo "  -p <provider>                   \"libvirt\" or \"virtualbox\". Default: ${SPDK_VAGRANT_PROVIDER}"
