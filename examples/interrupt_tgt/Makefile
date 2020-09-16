@@ -31,18 +31,23 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-DIRS-y += accel bdev blob ioat nvme sock vmd nvmf
+APP = interrupt_tgt
 
-ifeq ($(OS),Linux)
-DIRS-y += interrupt_tgt
+C_SRCS := interrupt_tgt.c
+
+# Basic libaries to support spdk application
+SPDK_LIB_LIST += event thread
+SPDK_LIB_LIST += jsonrpc json rpc trace conf util log
+# Basic bdev libraries
+SPDK_LIB_LIST += bdev notify accel vmd sock
+SPDK_LIB_LIST += $(EVENT_BDEV_SUBSYSTEM) # event_bdev depends on some other event modules, but they dont support edriven yet
+
+ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
+SPDK_LIB_LIST += env_dpdk_rpc
 endif
 
-.PHONY: all clean $(DIRS-y)
-
-all: $(DIRS-y)
-clean: $(DIRS-y)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
