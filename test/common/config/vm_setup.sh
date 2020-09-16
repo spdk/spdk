@@ -141,6 +141,10 @@ if [[ $package_manager == undefined ]]; then
 	exit 1
 fi
 
+if [[ $package_manager == apt-get ]]; then
+	export DEBIAN_FRONTEND=noninteractive
+fi
+
 if [[ -n $CONF_PATH ]]; then
 	if [[ -f $CONF_PATH ]]; then
 		source "$CONF_PATH"
