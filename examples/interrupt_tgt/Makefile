@@ -49,6 +49,12 @@ SPDK_LIB_LIST += $(EVENT_BDEV_SUBSYSTEM) # event_bdev depends on some other even
 SPDK_LIB_LIST += bdev_aio
 # NBD libraries
 SPDK_LIB_LIST += nbd event_nbd
+# some bdev modules don't have pollers, so they can be directly runnning in edriven mode
+SPDK_LIB_LIST += bdev_malloc bdev_passthru bdev_error bdev_gpt bdev_split bdev_raid
+# logical volume and blobstore can directly run in edriven mode
+SPDK_LIB_LIST += bdev_lvol lvol blob_bdev blob
+# blobfs libraries
+SPDK_LIB_LIST += blobfs blobfs_bdev
 
 ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
 SPDK_LIB_LIST += env_dpdk_rpc
