@@ -101,6 +101,7 @@ struct spdk_nbd_disk {
 	int			kernel_sp_fd;
 	int			spdk_sp_fd;
 	struct spdk_poller	*nbd_poller;
+	struct spdk_interrupt	*intr;
 	uint32_t		buf_align;
 
 	struct nbd_io		*io_in_recv;
@@ -353,6 +354,14 @@ _nbd_stop(struct spdk_nbd_disk *nbd)
 		spdk_bdev_close(nbd->bdev_desc);
 	}
 
+	if (nbd->nbd_poller) {
+		spdk_poller_unregister(&nbd->nbd_poller);
+	}
+
+	if (nbd->intr) {
+		spdk_interrupt_unregister(&nbd->intr);
+	}
+
 	if (nbd->spdk_sp_fd >= 0) {
 		close(nbd->spdk_sp_fd);
 	}
@@ -372,10 +381,6 @@ _nbd_stop(struct spdk_nbd_disk *nbd)
 
 	if (nbd->nbd_path) {
 		free(nbd->nbd_path);
-	}
-
-	if (nbd->nbd_poller) {
-		spdk_poller_unregister(&nbd->nbd_poller);
 	}
 
 	nbd_disk_unregister(nbd);
@@ -449,6 +454,14 @@ nbd_io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	}
 
 	memcpy(&io->resp.handle, &io->req.handle, sizeof(io->resp.handle));
+
+	/* When there begins to have executed_io, enable socket writable notice in order to
+	 * get it processed in nbd_io_xmit
+	 */
+	if (nbd->intr && TAILQ_EMPTY(&nbd->executed_io_list)) {
+		spdk_interrupt_set_event_types(nbd->intr, SPDK_INTERRUPT_EVENT_IN | SPDK_INTERRUPT_EVENT_OUT);
+	}
+
 	TAILQ_INSERT_TAIL(&nbd->executed_io_list, io, tailq);
 
 	if (bdev_io != NULL) {
@@ -523,6 +536,12 @@ nbd_submit_bdev_io(struct spdk_nbd_disk *nbd, struct nbd_io *io)
 	case NBD_CMD_DISC:
 		nbd_put_io(nbd, io);
 		nbd->state = NBD_DISK_STATE_SOFTDISC;
+
+		/* when there begins to have executed_io to send, enable socket writable notice */
+		if (nbd->intr && TAILQ_EMPTY(&nbd->executed_io_list)) {
+			spdk_interrupt_set_event_types(nbd->intr, SPDK_INTERRUPT_EVENT_IN | SPDK_INTERRUPT_EVENT_OUT);
+		}
+
 		break;
 	default:
 		rc = -1;
@@ -780,6 +799,11 @@ nbd_io_xmit(struct spdk_nbd_disk *nbd)
 		ret += rc;
 	}
 
+	/* When there begins to have no executed_io, disable socket writable notice */
+	if (nbd->intr) {
+		spdk_interrupt_set_event_types(nbd->intr, SPDK_INTERRUPT_EVENT_IN);
+	}
+
 	/*
 	 * For soft disconnection, nbd server can close connection after all
 	 * outstanding request are transmitted.
@@ -937,7 +961,11 @@ nbd_start_complete(struct spdk_nbd_start_ctx *ctx)
 		goto err;
 	}
 
-	ctx->nbd->nbd_poller = SPDK_POLLER_REGISTER(nbd_poll, ctx->nbd, 0);
+	if (spdk_interrupt_mode_is_enabled()) {
+		ctx->nbd->intr = SPDK_INTERRUPT_REGISTER(ctx->nbd->spdk_sp_fd, nbd_poll, ctx->nbd);
+	} else {
+		ctx->nbd->nbd_poller = SPDK_POLLER_REGISTER(nbd_poll, ctx->nbd, 0);
+	}
 
 	if (ctx->cb_fn) {
 		ctx->cb_fn(ctx->cb_arg, ctx->nbd, 0);
