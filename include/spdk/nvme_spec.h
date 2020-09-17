@@ -1986,6 +1986,14 @@ struct __attribute__((packed)) __attribute__((aligned)) spdk_nvme_ctrlr_data {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ctrlr_data) == 4096, "Incorrect size");
 
+struct spdk_nvme_ctrlr_data_zns {
+	/** zone append size limit */
+	uint8_t			zasl;
+
+	uint8_t			reserved1[4095];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ctrlr_data_zns) == 4096, "Incorrect size");
+
 struct __attribute__((packed)) spdk_nvme_primary_ctrl_capabilities {
 	/**  controller id */
 	uint16_t		cntlid;
@@ -2261,6 +2269,51 @@ struct spdk_nvme_ns_data {
 	uint8_t			vendor_specific[3712];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ns_data) == 4096, "Incorrect size");
+
+struct spdk_nvme_ns_data_zns {
+	/** zone operation characteristics */
+	struct {
+		uint16_t	variable_zone_capacity : 1;
+		uint16_t	zone_active_excursions : 1;
+		uint16_t	reserved0 : 14;
+	} zoc;
+
+	/** optional zoned command support */
+	struct {
+		uint16_t	read_across_zone_boundaries : 1;
+		uint16_t	reserved0 : 15;
+	} ozcs;
+
+	/** maximum active resources */
+	uint32_t		mar;
+
+	/** maximum open resources */
+	uint32_t		mor;
+
+	/** reset recommended limit */
+	uint32_t		rrl;
+
+	/** finish recommended limit */
+	uint32_t		frl;
+
+	uint8_t			reserved20[2796];
+
+	/** zns lba format extension support */
+	struct {
+		/** zone size */
+		uint64_t	zsze;
+
+		/** zone descriptor extension size */
+		uint64_t	zdes : 8;
+
+		uint64_t	reserved15 : 56;
+	} lbafe[16];
+
+	uint8_t			reserved3072[768];
+
+	uint8_t			vendor_specific[256];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ns_data_zns) == 4096, "Incorrect size");
 
 /**
  * Deallocated logical block features - read value
