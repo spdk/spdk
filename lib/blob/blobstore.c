@@ -165,6 +165,10 @@ bs_allocate_cluster(struct spdk_blob *blob, uint32_t cluster_num,
 	if (blob->use_extent_table) {
 		extent_page = bs_cluster_to_extent_page(blob, cluster_num);
 		if (*extent_page == 0) {
+			/* Extent page shall never occupy md_page so start the search from 1 */
+			if (*lowest_free_md_page == 0) {
+				*lowest_free_md_page = 1;
+			}
 			/* No extent_page is allocated for the cluster */
 			*lowest_free_md_page = spdk_bit_array_find_first_clear(blob->bs->used_md_pages,
 					       *lowest_free_md_page);

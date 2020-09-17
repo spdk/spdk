@@ -3769,7 +3769,7 @@ blob_thin_prov_rw(void)
 {
 	static const uint8_t zero[10 * 4096] = { 0 };
 	struct spdk_blob_store *bs = g_bs;
-	struct spdk_blob *blob;
+	struct spdk_blob *blob, *blob_id0;
 	struct spdk_io_channel *channel, *channel_thread1;
 	struct spdk_blob_opts opts;
 	uint64_t free_clusters;
@@ -3788,7 +3788,11 @@ blob_thin_prov_rw(void)
 	ut_spdk_blob_opts_init(&opts);
 	opts.thin_provision = true;
 
+	/* Create and delete blob at md page 0, so that next md page allocation
+	 * for extent will use that. */
+	blob_id0 = ut_blob_create_and_open(bs, &opts);
 	blob = ut_blob_create_and_open(bs, &opts);
+	ut_blob_close_and_delete(bs, blob_id0);
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
 
 	CU_ASSERT(blob->active.num_clusters == 0);
