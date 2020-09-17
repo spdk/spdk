@@ -53,18 +53,16 @@ function iscsi_tgt_start() {
 }
 
 echo "Running ip migration tests"
-for ((i = 0; i < 2; i++)); do
-	timing_enter start_iscsi_tgt_$i
-
-	rpc_addr="/var/tmp/spdk${i}.sock"
-	mask=$((1 << i))
-
-	iscsi_tgt_start $rpc_addr $mask
-
-	timing_exit start_iscsi_tgt_$i
-done
-
+timing_enter start_iscsi_tgt_0
 rpc_first_addr="/var/tmp/spdk0.sock"
+iscsi_tgt_start $rpc_first_addr 1
+timing_exit start_iscsi_tgt_0
+
+timing_enter start_iscsi_tgt_1
+rpc_second_addr="/var/tmp/spdk1.sock"
+iscsi_tgt_start $rpc_second_addr 2
+timing_exit start_iscsi_tgt_1
+
 rpc_add_target_node $rpc_first_addr
 
 sleep 1
@@ -80,7 +78,6 @@ sleep 3
 
 $rpc_py -s $rpc_first_addr spdk_kill_instance SIGTERM
 
-rpc_second_addr="/var/tmp/spdk1.sock"
 rpc_add_target_node $rpc_second_addr
 
 wait $fiopid
