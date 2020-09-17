@@ -124,7 +124,7 @@ nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 	}
 
 	nsdata = _nvme_ns_get_data(ns);
-	rc = nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS, 0, ns->id,
+	rc = nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS, 0, ns->id, 0,
 				     nsdata, sizeof(*nsdata),
 				     nvme_completion_poll_cb, status);
 	if (rc != 0) {
@@ -172,7 +172,7 @@ nvme_ctrlr_identify_id_desc(struct spdk_nvme_ns *ns)
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "Attempting to retrieve NS ID Descriptor List\n");
 	rc = nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST, 0, ns->id,
-				     ns->id_desc_list, sizeof(ns->id_desc_list),
+				     0, ns->id_desc_list, sizeof(ns->id_desc_list),
 				     nvme_completion_poll_cb, status);
 	if (rc < 0) {
 		free(status);

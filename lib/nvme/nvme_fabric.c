@@ -306,7 +306,7 @@ nvme_fabric_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 	}
 
 	/* get the cdata info */
-	rc = nvme_ctrlr_cmd_identify(discovery_ctrlr, SPDK_NVME_IDENTIFY_CTRLR, 0, 0,
+	rc = nvme_ctrlr_cmd_identify(discovery_ctrlr, SPDK_NVME_IDENTIFY_CTRLR, 0, 0, 0,
 				     &discovery_ctrlr->cdata, sizeof(discovery_ctrlr->cdata),
 				     nvme_completion_poll_cb, status);
 	if (rc != 0) {

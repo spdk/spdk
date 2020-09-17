@@ -135,7 +135,7 @@ spdk_nvme_ctrlr_cmd_admin_raw(struct spdk_nvme_ctrlr *ctrlr,
 
 int
 nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr, uint8_t cns, uint16_t cntid, uint32_t nsid,
-			void *payload, size_t payload_size,
+			uint8_t csi, void *payload, size_t payload_size,
 			spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	struct nvme_request *req;
@@ -152,6 +152,7 @@ nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr, uint8_t cns, uint16_t cnt
 	cmd->opc = SPDK_NVME_OPC_IDENTIFY;
 	cmd->cdw10_bits.identify.cns = cns;
 	cmd->cdw10_bits.identify.cntid = cntid;
+	cmd->cdw11_bits.identify.csi = csi;
 	cmd->nsid = nsid;
 
 	return nvme_ctrlr_submit_admin_request(ctrlr, req);

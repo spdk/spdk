@@ -1394,7 +1394,7 @@ nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr)
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY,
 			     ctrlr->opts.admin_timeout_ms);
 
-	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_CTRLR, 0, 0,
+	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_CTRLR, 0, 0, 0,
 				     &ctrlr->cdata, sizeof(ctrlr->cdata),
 				     nvme_ctrlr_identify_done, ctrlr);
 	if (rc != 0) {
@@ -1524,7 +1524,7 @@ nvme_ctrlr_identify_active_ns_async(struct nvme_active_ns_ctx *ctx)
 	}
 
 	ctx->state = NVME_ACTIVE_NS_STATE_PROCESSING;
-	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST, 0, ctx->next_nsid,
+	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST, 0, ctx->next_nsid, 0,
 				     &ctx->new_ns_list[1024 * ctx->page], sizeof(struct spdk_nvme_ns_list),
 				     nvme_ctrlr_identify_active_ns_async_done, ctx);
 	if (rc != 0) {
@@ -1648,7 +1648,7 @@ nvme_ctrlr_identify_ns_async(struct spdk_nvme_ns *ns)
 
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS,
 			     ctrlr->opts.admin_timeout_ms);
-	return nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS, 0, ns->id,
+	return nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS, 0, ns->id, 0,
 				       nsdata, sizeof(*nsdata),
 				       nvme_ctrlr_identify_ns_async_done, ns);
 }
@@ -1721,7 +1721,7 @@ nvme_ctrlr_identify_id_desc_async(struct spdk_nvme_ns *ns)
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_ID_DESCS,
 			     ctrlr->opts.admin_timeout_ms);
 	return nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST,
-				       0, ns->id, ns->id_desc_list, sizeof(ns->id_desc_list),
+				       0, ns->id, 0, ns->id_desc_list, sizeof(ns->id_desc_list),
 				       nvme_ctrlr_identify_id_desc_async_done, ns);
 }
 
