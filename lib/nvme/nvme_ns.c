@@ -150,6 +150,64 @@ nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 }
 
 static int
+nvme_ctrlr_identify_ns_iocs_specific(struct spdk_nvme_ns *ns)
+{
+	struct nvme_completion_poll_status *status;
+	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
+	struct spdk_nvme_zns_ns_data **nsdata_zns;
+	int rc;
+
+	switch (ns->csi) {
+	case SPDK_NVME_CSI_ZNS:
+		break;
+	default:
+		/*
+		 * This switch must handle all cases for which
+		 * nvme_ns_has_supported_iocs_specific_data() returns true,
+		 * other cases should never happen.
+		 */
+		assert(0);
+	}
+
+	assert(ctrlr->nsdata_zns);
+	nsdata_zns = &ctrlr->nsdata_zns[ns->id - 1];
+	assert(!*nsdata_zns);
+	*nsdata_zns = spdk_zmalloc(sizeof(**nsdata_zns), 64, NULL, SPDK_ENV_SOCKET_ID_ANY,
+				   SPDK_MALLOC_SHARE | SPDK_MALLOC_DMA);
+	if (!*nsdata_zns) {
+		return -ENOMEM;
+	}
+
+	status = calloc(1, sizeof(*status));
+	if (!status) {
+		SPDK_ERRLOG("Failed to allocate status tracker\n");
+		nvme_ns_free_zns_specific_data(ns);
+		return -ENOMEM;
+	}
+
+	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_NS_IOCS, 0, ns->id, ns->csi,
+				     *nsdata_zns, sizeof(**nsdata_zns),
+				     nvme_completion_poll_cb, status);
+	if (rc != 0) {
+		nvme_ns_free_zns_specific_data(ns);
+		free(status);
+		return rc;
+	}
+
+	if (nvme_wait_for_completion_robust_lock(ctrlr->adminq, status, &ctrlr->ctrlr_lock)) {
+		SPDK_ERRLOG("Failed to retrieve Identify IOCS Specific Namespace Data Structure\n");
+		nvme_ns_free_zns_specific_data(ns);
+		if (!status->timed_out) {
+			free(status);
+		}
+		return -ENXIO;
+	}
+	free(status);
+
+	return 0;
+}
+
+static int
 nvme_ctrlr_identify_id_desc(struct spdk_nvme_ns *ns)
 {
 	struct nvme_completion_poll_status      *status;
@@ -397,6 +455,43 @@ spdk_nvme_ns_get_csi(const struct spdk_nvme_ns *ns) {
 	return ns->csi;
 }
 
+void
+nvme_ns_free_zns_specific_data(struct spdk_nvme_ns *ns)
+{
+	if (!ns->id) {
+		return;
+	}
+
+	if (ns->ctrlr->nsdata_zns) {
+		spdk_free(ns->ctrlr->nsdata_zns[ns->id - 1]);
+		ns->ctrlr->nsdata_zns[ns->id - 1] = NULL;
+	}
+}
+
+void
+nvme_ns_free_iocs_specific_data(struct spdk_nvme_ns *ns)
+{
+	nvme_ns_free_zns_specific_data(ns);
+}
+
+bool
+nvme_ns_has_supported_iocs_specific_data(struct spdk_nvme_ns *ns)
+{
+	switch (ns->csi) {
+	case SPDK_NVME_CSI_NVM:
+		/*
+		 * NVM Command Set Specific Identify Namespace data structure
+		 * is currently all-zeroes, reserved for future use.
+		 */
+		return false;
+	case SPDK_NVME_CSI_ZNS:
+		return true;
+	default:
+		SPDK_WARNLOG("Unsupported CSI: %u for NSID: %u\n", ns->csi, ns->id);
+		return false;
+	}
+}
+
 uint32_t
 spdk_nvme_ns_get_ana_group_id(const struct spdk_nvme_ns *ns)
 {
@@ -428,7 +523,20 @@ int nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,
 		return 0;
 	}
 
-	return nvme_ctrlr_identify_id_desc(ns);
+	rc = nvme_ctrlr_identify_id_desc(ns);
+	if (rc != 0) {
+		return rc;
+	}
+
+	if (nvme_ctrlr_multi_iocs_enabled(ctrlr) &&
+	    nvme_ns_has_supported_iocs_specific_data(ns)) {
+		rc = nvme_ctrlr_identify_ns_iocs_specific(ns);
+		if (rc != 0) {
+			return rc;
+		}
+	}
+
+	return 0;
 }
 
 void nvme_ns_destruct(struct spdk_nvme_ns *ns)
@@ -442,6 +550,7 @@ void nvme_ns_destruct(struct spdk_nvme_ns *ns)
 	nsdata = _nvme_ns_get_data(ns);
 	memset(nsdata, 0, sizeof(*nsdata));
 	memset(ns->id_desc_list, 0, sizeof(ns->id_desc_list));
+	nvme_ns_free_iocs_specific_data(ns);
 	ns->sector_size = 0;
 	ns->extended_lba_size = 0;
 	ns->md_size = 0;

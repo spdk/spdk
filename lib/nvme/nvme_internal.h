@@ -586,6 +586,16 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_IDENTIFY_ID_DESCS,
 
 	/**
+	 * Get Identify I/O Command Set Specific Namespace data structure for each NS.
+	 */
+	NVME_CTRLR_STATE_IDENTIFY_NS_IOCS_SPECIFIC,
+
+	/**
+	 * Waiting for the Identify I/O Command Set Specific Namespace commands to be completed.
+	 */
+	NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS_IOCS_SPECIFIC,
+
+	/**
 	 * Waiting for the Identify Namespace Identification
 	 * Descriptors to be completed.
 	 */
@@ -788,6 +798,11 @@ struct spdk_nvme_ctrlr {
 	 */
 	struct spdk_nvme_ns_data	*nsdata;
 
+	/**
+	 * Array of pointers to Zoned Namespace Command Set Specific Identify Namespace data.
+	 */
+	struct spdk_nvme_zns_ns_data	**nsdata_zns;
+
 	struct spdk_bit_array		*free_io_qids;
 	TAILQ_HEAD(, spdk_nvme_qpair)	active_io_qpairs;
 
@@ -977,6 +992,9 @@ void	nvme_qpair_resubmit_requests(struct spdk_nvme_qpair *qpair, uint32_t num_re
 int	nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ns_set_identify_data(struct spdk_nvme_ns *ns);
 void	nvme_ns_set_id_desc_list_data(struct spdk_nvme_ns *ns);
+void	nvme_ns_free_zns_specific_data(struct spdk_nvme_ns *ns);
+void	nvme_ns_free_iocs_specific_data(struct spdk_nvme_ns *ns);
+bool	nvme_ns_has_supported_iocs_specific_data(struct spdk_nvme_ns *ns);
 int	nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,
 			  struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ns_destruct(struct spdk_nvme_ns *ns);

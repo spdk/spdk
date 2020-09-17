@@ -46,6 +46,7 @@ static int nvme_ctrlr_construct_and_submit_aer(struct spdk_nvme_ctrlr *ctrlr,
 		struct nvme_async_event_request *aer);
 static void nvme_ctrlr_identify_active_ns_async(struct nvme_active_ns_ctx *ctx);
 static int nvme_ctrlr_identify_ns_async(struct spdk_nvme_ns *ns);
+static int nvme_ctrlr_identify_ns_iocs_specific_async(struct spdk_nvme_ns *ns);
 static int nvme_ctrlr_identify_id_desc_async(struct spdk_nvme_ns *ns);
 
 static int
@@ -1138,6 +1139,10 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "identify namespace id descriptors";
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_ID_DESCS:
 		return "wait for identify namespace id descriptors";
+	case NVME_CTRLR_STATE_IDENTIFY_NS_IOCS_SPECIFIC:
+		return "identify ns iocs specific";
+	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS_IOCS_SPECIFIC:
+		return "wait for identify ns iocs specific";
 	case NVME_CTRLR_STATE_CONFIGURE_AER:
 		return "configure AER";
 	case NVME_CTRLR_STATE_WAIT_FOR_CONFIGURE_AER:
@@ -1888,6 +1893,114 @@ nvme_ctrlr_identify_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 	return rc;
 }
 
+static int
+nvme_ctrlr_identify_namespaces_iocs_specific_next(struct spdk_nvme_ctrlr *ctrlr, uint32_t prev_nsid)
+{
+	uint32_t nsid;
+	struct spdk_nvme_ns *ns;
+	int rc;
+
+	if (!prev_nsid) {
+		nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
+	} else {
+		/* move on to the next active NS */
+		nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, prev_nsid);
+	}
+
+	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+	if (ns == NULL) {
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CONFIGURE_AER,
+				     ctrlr->opts.admin_timeout_ms);
+		return 0;
+	}
+
+	/* loop until we find a ns which has (supported) iocs specific data */
+	while (!nvme_ns_has_supported_iocs_specific_data(ns)) {
+		nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, ns->id);
+		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+		if (ns == NULL) {
+			/* no namespace with (supported) iocs specific data found */
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CONFIGURE_AER,
+					     ctrlr->opts.admin_timeout_ms);
+			return 0;
+		}
+	}
+
+	rc = nvme_ctrlr_identify_ns_iocs_specific_async(ns);
+	if (rc) {
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+	}
+
+	return rc;
+}
+
+static void
+nvme_ctrlr_identify_ns_zns_specific_async_done(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_nvme_ns *ns = (struct spdk_nvme_ns *)arg;
+	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		nvme_ns_free_zns_specific_data(ns);
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+		return;
+	}
+
+	nvme_ctrlr_identify_namespaces_iocs_specific_next(ctrlr, ns->id);
+}
+
+static int
+nvme_ctrlr_identify_ns_iocs_specific_async(struct spdk_nvme_ns *ns)
+{
+	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
+	struct spdk_nvme_zns_ns_data **nsdata_zns;
+	int rc;
+
+	switch (ns->csi) {
+	case SPDK_NVME_CSI_ZNS:
+		break;
+	default:
+		/*
+		 * This switch must handle all cases for which
+		 * nvme_ns_has_supported_iocs_specific_data() returns true,
+		 * other cases should never happen.
+		 */
+		assert(0);
+	}
+
+	assert(ctrlr->nsdata_zns);
+	nsdata_zns = &ctrlr->nsdata_zns[ns->id - 1];
+	assert(!*nsdata_zns);
+	*nsdata_zns = spdk_zmalloc(sizeof(**nsdata_zns), 64, NULL, SPDK_ENV_SOCKET_ID_ANY,
+				   SPDK_MALLOC_SHARE | SPDK_MALLOC_DMA);
+	if (!*nsdata_zns) {
+		return -ENOMEM;
+	}
+
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS_IOCS_SPECIFIC,
+			     ctrlr->opts.admin_timeout_ms);
+	rc = nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS_IOCS, 0, ns->id, ns->csi,
+				     *nsdata_zns, sizeof(**nsdata_zns),
+				     nvme_ctrlr_identify_ns_zns_specific_async_done, ns);
+	if (rc) {
+		nvme_ns_free_zns_specific_data(ns);
+	}
+
+	return rc;
+}
+
+static int
+nvme_ctrlr_identify_namespaces_iocs_specific(struct spdk_nvme_ctrlr *ctrlr)
+{
+	if (!nvme_ctrlr_multi_iocs_enabled(ctrlr)) {
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CONFIGURE_AER,
+				     ctrlr->opts.admin_timeout_ms);
+		return 0;
+	}
+
+	return nvme_ctrlr_identify_namespaces_iocs_specific_next(ctrlr, 0);
+}
+
 static void
 nvme_ctrlr_identify_id_desc_async_done(void *arg, const struct spdk_nvme_cpl *cpl)
 {
@@ -1908,7 +2021,7 @@ nvme_ctrlr_identify_id_desc_async_done(void *arg, const struct spdk_nvme_cpl *cp
 	nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, ns->id);
 	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
 	if (ns == NULL) {
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CONFIGURE_AER,
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_NS_IOCS_SPECIFIC,
 				     ctrlr->opts.admin_timeout_ms);
 		return;
 	}
@@ -2221,6 +2334,9 @@ nvme_ctrlr_destruct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 		ctrlr->nsdata = NULL;
 	}
 
+	spdk_free(ctrlr->nsdata_zns);
+	ctrlr->nsdata_zns = NULL;
+
 	spdk_free(ctrlr->active_ns_list);
 	ctrlr->active_ns_list = NULL;
 }
@@ -2262,7 +2378,7 @@ static int
 nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc = 0;
-	uint32_t nn = ctrlr->cdata.nn;
+	uint32_t i, nn = ctrlr->cdata.nn;
 
 	/* ctrlr->num_ns may be 0 (startup) or a different number of namespaces (reset),
 	 * so check if we need to reallocate.
@@ -2290,7 +2406,22 @@ nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 			goto fail;
 		}
 
+		ctrlr->nsdata_zns = spdk_zmalloc(nn * sizeof(struct spdk_nvme_zns_ns_data *), 64,
+						 NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
+		if (ctrlr->nsdata_zns == NULL) {
+			rc = -ENOMEM;
+			goto fail;
+		}
+
 		ctrlr->num_ns = nn;
+	} else {
+		/*
+		 * The controller could have been reset with the same number of namespaces.
+		 * If so, we still need to free the iocs specific data, to get a clean slate.
+		 */
+		for (i = 0; i < ctrlr->num_ns; i++) {
+			nvme_ns_free_iocs_specific_data(&ctrlr->ns[i]);
+		}
 	}
 
 	return 0;
@@ -2923,6 +3054,14 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		break;
 
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_ID_DESCS:
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
+		break;
+
+	case NVME_CTRLR_STATE_IDENTIFY_NS_IOCS_SPECIFIC:
+		rc = nvme_ctrlr_identify_namespaces_iocs_specific(ctrlr);
+		break;
+
+	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS_IOCS_SPECIFIC:
 		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 		break;
 
