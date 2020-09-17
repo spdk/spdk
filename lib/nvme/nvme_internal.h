@@ -536,6 +536,16 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY,
 
 	/**
+	 * Get Identify I/O Command Set Specific Controller data structure.
+	 */
+	NVME_CTRLR_STATE_IDENTIFY_IOCS_SPECIFIC,
+
+	/**
+	 * Waiting for Identify I/O Command Set Specific Controller command to be completed.
+	 */
+	NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_IOCS_SPECIFIC,
+
+	/**
 	 * Set Number of Queues of the controller.
 	 */
 	NVME_CTRLR_STATE_SET_NUM_QUEUES,
@@ -762,6 +772,11 @@ struct spdk_nvme_ctrlr {
 	struct spdk_nvme_ctrlr_data	cdata;
 
 	/**
+	 * Zoned Namespace Command Set Specific Identify Controller data.
+	 */
+	struct spdk_nvme_zns_ctrlr_data	*cdata_zns;
+
+	/**
 	 * Keep track of active namespaces
 	 */
 	uint32_t			*active_ns_list;
@@ -943,6 +958,7 @@ int	nvme_ctrlr_submit_admin_request(struct spdk_nvme_ctrlr *ctrlr,
 int	nvme_ctrlr_get_cap(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cap_register *cap);
 int	nvme_ctrlr_get_vs(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_vs_register *vs);
 int	nvme_ctrlr_get_cmbsz(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cmbsz_register *cmbsz);
+bool	nvme_ctrlr_multi_iocs_enabled(struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cap_register *cap,
 			    const union spdk_nvme_vs_register *vs);
 void nvme_ctrlr_disconnect_qpair(struct spdk_nvme_qpair *qpair);

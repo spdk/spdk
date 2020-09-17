@@ -90,6 +90,13 @@ nvme_ctrlr_get_cmbsz(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cmbsz_regist
 					      &cmbsz->raw);
 }
 
+bool
+nvme_ctrlr_multi_iocs_enabled(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return ctrlr->cap.bits.css & SPDK_NVME_CAP_CSS_IOCS &&
+	       ctrlr->opts.command_set == SPDK_NVME_CC_CSS_IOCS;
+}
+
 /* When the field in spdk_nvme_ctrlr_opts are changed and you change this function, please
  * also update the nvme_ctrl_opts_init function in nvme_ctrlr.c
  */
@@ -1109,6 +1116,10 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "identify controller";
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY:
 		return "wait for identify controller";
+	case NVME_CTRLR_STATE_IDENTIFY_IOCS_SPECIFIC:
+		return "identify controller iocs specific";
+	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_IOCS_SPECIFIC:
+		return "wait for identify controller iocs specific";
 	case NVME_CTRLR_STATE_SET_NUM_QUEUES:
 		return "set number of queues";
 	case NVME_CTRLR_STATE_WAIT_FOR_SET_NUM_QUEUES:
@@ -1188,6 +1199,19 @@ inf:
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "setting state to %s (no timeout)\n",
 		      nvme_ctrlr_state_string(ctrlr->state));
 	ctrlr->state_timeout_tsc = NVME_TIMEOUT_INFINITE;
+}
+
+static void
+nvme_ctrlr_free_zns_specific_data(struct spdk_nvme_ctrlr *ctrlr)
+{
+	spdk_free(ctrlr->cdata_zns);
+	ctrlr->cdata_zns = NULL;
+}
+
+static void
+nvme_ctrlr_free_iocs_specific_data(struct spdk_nvme_ctrlr *ctrlr)
+{
+	nvme_ctrlr_free_zns_specific_data(ctrlr);
 }
 
 static void
@@ -1346,6 +1370,9 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	/* Doorbell buffer config is invalid during reset */
 	nvme_ctrlr_free_doorbell_buffer(ctrlr);
 
+	/* I/O Command Set Specific Identify Controller data is invalidated during reset */
+	nvme_ctrlr_free_iocs_specific_data(ctrlr);
+
 	/* Set the state back to INIT to cause a full hardware reset. */
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT, NVME_TIMEOUT_INFINITE);
 
@@ -1494,7 +1521,7 @@ nvme_ctrlr_identify_done(void *arg, const struct spdk_nvme_cpl *cpl)
 		ctrlr->flags |= SPDK_NVME_CTRLR_COMPARE_AND_WRITE_SUPPORTED;
 	}
 
-	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_NUM_QUEUES,
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_IOCS_SPECIFIC,
 			     ctrlr->opts.admin_timeout_ms);
 }
 
@@ -1515,6 +1542,75 @@ nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	return 0;
+}
+
+static void
+nvme_ctrlr_identify_zns_specific_done(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_nvme_ctrlr *ctrlr = (struct spdk_nvme_ctrlr *)arg;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		/* no need to print an error, the controller simply does not support ZNS */
+		nvme_ctrlr_free_zns_specific_data(ctrlr);
+	}
+
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_NUM_QUEUES,
+			     ctrlr->opts.admin_timeout_ms);
+}
+
+/**
+ * This function will try to fetch the I/O Command Specific Controller data structure for
+ * each I/O Command Set supported by SPDK.
+ *
+ * If an I/O Command Set is not supported by the controller, "Invalid Field in Command"
+ * will be returned. Since we are fetching in a exploratively way, getting an error back
+ * from the controller should not be treated as fatal.
+ *
+ * I/O Command Sets not supported by SPDK will be skipped (e.g. Key Value Command Set).
+ *
+ * I/O Command Sets without a IOCS specific data structure (i.e. a zero-filled IOCS specific
+ * data structure) will be skipped (e.g. NVM Command Set, Key Value Command Set).
+ */
+static int
+nvme_ctrlr_identify_iocs_specific(struct spdk_nvme_ctrlr *ctrlr)
+{
+	int	rc;
+
+	if (!nvme_ctrlr_multi_iocs_enabled(ctrlr)) {
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_NUM_QUEUES,
+				     ctrlr->opts.admin_timeout_ms);
+		return 0;
+	}
+
+	/*
+	 * Since SPDK currently only needs to fetch a single Command Set, keep the code here,
+	 * instead of creating multiple NVME_CTRLR_STATE_IDENTIFY_IOCS_SPECIFIC substates,
+	 * which would require additional functions and complexity for no good reason.
+	 */
+	assert(!ctrlr->cdata_zns);
+	ctrlr->cdata_zns = spdk_zmalloc(sizeof(*ctrlr->cdata_zns), 64, NULL, SPDK_ENV_SOCKET_ID_ANY,
+					SPDK_MALLOC_SHARE | SPDK_MALLOC_DMA);
+	if (!ctrlr->cdata_zns) {
+		rc = -ENOMEM;
+		goto error;
+	}
+
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_IOCS_SPECIFIC,
+			     ctrlr->opts.admin_timeout_ms);
+
+	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_CTRLR_IOCS, 0, 0, SPDK_NVME_CSI_ZNS,
+				     ctrlr->cdata_zns, sizeof(*ctrlr->cdata_zns),
+				     nvme_ctrlr_identify_zns_specific_done, ctrlr);
+	if (rc != 0) {
+		goto error;
+	}
+
+	return 0;
+
+error:
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+	nvme_ctrlr_free_zns_specific_data(ctrlr);
+	return rc;
 }
 
 enum nvme_active_ns_state {
@@ -2783,6 +2879,14 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 		break;
 
+	case NVME_CTRLR_STATE_IDENTIFY_IOCS_SPECIFIC:
+		rc = nvme_ctrlr_identify_iocs_specific(ctrlr);
+		break;
+
+	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_IOCS_SPECIFIC:
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
+		break;
+
 	case NVME_CTRLR_STATE_SET_NUM_QUEUES:
 		nvme_ctrlr_update_nvmf_ioccsz(ctrlr);
 		rc = nvme_ctrlr_set_num_queues(ctrlr);
@@ -3005,6 +3109,7 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	nvme_ctrlr_free_doorbell_buffer(ctrlr);
+	nvme_ctrlr_free_iocs_specific_data(ctrlr);
 
 	if (ctrlr->opts.no_shn_notification) {
 		SPDK_INFOLOG(SPDK_LOG_NVME, "Disable SSD: %s without shutdown notification\n",
