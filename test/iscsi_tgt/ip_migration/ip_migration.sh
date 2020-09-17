@@ -81,7 +81,7 @@ for ((i = 0; i < 2; i++)); do
 	rpc_addr="/var/tmp/spdk${i}.sock"
 
 	# TODO: run the different iSCSI instances on non-overlapping CPU masks
-	"${ISCSI_APP[@]}" -r $rpc_addr -i $i -m $ISCSI_TEST_CORE_MASK --wait-for-rpc &
+	"${ISCSI_APP[@]}" -r $rpc_addr -m $ISCSI_TEST_CORE_MASK --wait-for-rpc &
 	pid=$!
 	echo "Process pid: $pid"
 
