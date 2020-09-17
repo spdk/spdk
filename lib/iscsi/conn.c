@@ -40,7 +40,6 @@
 #include "spdk/thread.h"
 #include "spdk/queue.h"
 #include "spdk/trace.h"
-#include "spdk/net.h"
 #include "spdk/sock.h"
 #include "spdk/string.h"
 

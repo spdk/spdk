@@ -37,7 +37,6 @@
 #include "spdk/event.h"
 #include "iscsi/iscsi.h"
 #include "spdk/log.h"
-#include "spdk/net.h"
 
 static int g_daemon_mode = 0;
 

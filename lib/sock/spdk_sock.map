@@ -34,13 +34,6 @@
 	spdk_sock_set_default_impl;
 	spdk_sock_write_config_json;
 
-	# public functions in spdk/net.h
-	spdk_net_framework_register;
-	spdk_net_framework_start;
-	spdk_net_framework_fini;
-	spdk_net_framework_init_next;
-	spdk_net_framework_fini_next;
-
 	# internal function in spdk_internal/sock.h
 	spdk_net_impl_register;
 	spdk_sock_map_insert;

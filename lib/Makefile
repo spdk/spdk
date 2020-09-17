@@ -36,7 +36,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.lib_deps.mk
 
 DIRS-y += bdev blob blobfs conf accel event json jsonrpc \
-          log lvol net rpc sock thread trace util nvme vmd nvmf scsi \
+          log lvol rpc sock thread trace util nvme vmd nvmf scsi \
           ioat ut_mock iscsi notify init
 ifeq ($(OS),Linux)
 DIRS-y += nbd ftl

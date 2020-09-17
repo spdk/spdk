@@ -1861,32 +1861,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-n', '--nbd-device', help="Path of the nbd device. Example: /dev/nbd0", required=False)
     p.set_defaults(func=nbd_get_disks)
 
-    # net
-    def net_interface_add_ip_address(args):
-        rpc.net.net_interface_add_ip_address(args.client, ifc_index=args.ifc_index, ip_addr=args.ip_addr)
-
-    p = subparsers.add_parser('net_interface_add_ip_address', aliases=['add_ip_address'],
-                              help='Add IP address')
-    p.add_argument('ifc_index', help='ifc index of the nic device.', type=int)
-    p.add_argument('ip_addr', help='ip address will be added.')
-    p.set_defaults(func=net_interface_add_ip_address)
-
-    def net_interface_delete_ip_address(args):
-        rpc.net.net_interface_delete_ip_address(args.client, ifc_index=args.ifc_index, ip_addr=args.ip_addr)
-
-    p = subparsers.add_parser('net_interface_delete_ip_address', aliases=['delete_ip_address'],
-                              help='Delete IP address')
-    p.add_argument('ifc_index', help='ifc index of the nic device.', type=int)
-    p.add_argument('ip_addr', help='ip address will be deleted.')
-    p.set_defaults(func=net_interface_delete_ip_address)
-
-    def net_get_interfaces(args):
-        print_dict(rpc.net.net_get_interfaces(args.client))
-
-    p = subparsers.add_parser(
-        'net_get_interfaces', aliases=['get_interfaces'], help='Display current interface list')
-    p.set_defaults(func=net_get_interfaces)
-
     # NVMe-oF
     def nvmf_set_max_subsystems(args):
         rpc.nvmf.nvmf_set_max_subsystems(args.client,

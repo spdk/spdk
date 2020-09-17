@@ -38,6 +38,6 @@ APP = hello_sock
 C_SRCS := hello_sock.c
 
 SPDK_LIB_LIST = $(SOCK_MODULES_LIST)
-SPDK_LIB_LIST += event event_net sock
+SPDK_LIB_LIST += event sock
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk

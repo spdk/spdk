@@ -43,7 +43,7 @@ CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 
 C_SRCS := iscsi_tgt.c
 
-SPDK_LIB_LIST = $(ALL_MODULES_LIST) event event_iscsi event_net
+SPDK_LIB_LIST = $(ALL_MODULES_LIST) event event_iscsi
 
 ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
 SPDK_LIB_LIST += env_dpdk_rpc

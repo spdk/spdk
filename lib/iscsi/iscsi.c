@@ -43,7 +43,6 @@
 #include "spdk/sock.h"
 #include "spdk/string.h"
 #include "spdk/queue.h"
-#include "spdk/net.h"
 
 #include "iscsi/md5.h"
 #include "iscsi/iscsi.h"

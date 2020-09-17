@@ -39,7 +39,6 @@
 #include "spdk/string.h"
 
 #include "spdk/sock.h"
-#include "spdk/net.h"
 
 #define ACCEPT_TIMEOUT_US 1000
 #define CLOSE_TIMEOUT_US 1000000

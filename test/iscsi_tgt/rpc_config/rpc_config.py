@@ -191,10 +191,6 @@ def verify_portal_groups_rpc_methods(rpc_py, rpc_param):
            "iscsi_get_portal_groups returned {} groups, expected empty".format(jsonvalues))
 
     lo_ip = (target_ip, other_ip)
-    nics = json.loads(rpc.net_get_interfaces())
-    for x in nics:
-        if x["ifc_index"] == 'lo':
-            rpc.net_interface_add_ip_address(x["ifc_index"], lo_ip[1])
     for idx, value in enumerate(lo_ip):
         # The portal group tag must start at 1
         tag = idx + 1
@@ -230,10 +226,6 @@ def verify_portal_groups_rpc_methods(rpc_py, rpc_param):
                    "port value is {}, expected {}".format(jvalue['portals'][0]['port'], str(rpc_param['port'])))
             verify(jvalue['tag'] != value or jvalue['tag'] == tag_list[idx + jidx + 1], 1,
                    "tag value is {}, expected {} and not {}".format(jvalue['tag'], tag_list[idx + jidx + 1], value))
-
-    for x in nics:
-        if x["ifc_index"] == 'lo':
-            rpc.net_interface_delete_ip_address(x["ifc_index"], lo_ip[1])
 
     print("verify_portal_groups_rpc_methods passed")
 
@@ -398,17 +390,6 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
     print("verify_target_nodes_rpc_methods passed.")
 
 
-def verify_net_get_interfaces(rpc_py):
-    rpc = spdk_rpc(rpc_py)
-    nics = json.loads(rpc.net_get_interfaces())
-    nics_names = set(x["name"] for x in nics)
-    # parse ip link show to verify the net_get_interfaces result
-    ip_show = ns_cmd + " ip link show"
-    ifcfg_nics = set(re.findall(r'\S+:\s(\S+?)(?:@\S+){0,1}:\s<.*', check_output(ip_show.split()).decode()))
-    verify(nics_names == ifcfg_nics, 1, "net_get_interfaces returned {}".format(nics))
-    print("verify_net_get_interfaces passed.")
-
-
 def help_get_interface_ip_list(rpc_py, nic_name):
     rpc = spdk_rpc(rpc_py)
     nics = json.loads(rpc.net_get_interfaces())
@@ -418,50 +399,12 @@ def help_get_interface_ip_list(rpc_py, nic_name):
     return nic[0]["ip_addr"]
 
 
-def verify_net_interface_add_delete_ip_address(rpc_py):
-    rpc = spdk_rpc(rpc_py)
-    nics = json.loads(rpc.net_get_interfaces())
-    # add ip on up to first 2 nics
-    for x in nics[:2]:
-        faked_ip = "123.123.{}.{}".format(random.randint(1, 254), random.randint(1, 254))
-        ping_cmd = ns_cmd + " ping -c 1 -W 1 " + faked_ip
-        rpc.net_interface_add_ip_address(x["ifc_index"], faked_ip)
-        verify(faked_ip in help_get_interface_ip_list(rpc_py, x["name"]), 1,
-               "add ip {} to nic {} failed.".format(faked_ip, x["name"]))
-        try:
-            check_call(ping_cmd.split())
-        except BaseException:
-            verify(False, 1,
-                   "ping ip {} for {} was failed(adding was successful)".format
-                   (faked_ip, x["name"]))
-        rpc.net_interface_delete_ip_address(x["ifc_index"], faked_ip)
-        verify(faked_ip not in help_get_interface_ip_list(rpc_py, x["name"]), 1,
-               "delete ip {} from nic {} failed.(adding and ping were successful)".format
-               (faked_ip, x["name"]))
-        # ping should be failed and throw an CalledProcessError exception
-        try:
-            check_call(ping_cmd.split())
-        except CalledProcessError as _:
-            pass
-        except Exception as e:
-            verify(False, 1,
-                   "Unexpected exception was caught {}(adding/ping/delete were successful)".format
-                   (str(e)))
-        else:
-            verify(False, 1,
-                   "ip {} for {} could be pinged after delete ip(adding/ping/delete were successful)".format
-                   (faked_ip, x["name"]))
-    print("verify_net_interface_add_delete_ip_address passed.")
-
-
 if __name__ == "__main__":
 
     rpc_py = sys.argv[1]
 
     try:
         verify_log_flag_rpc_methods(rpc_py, rpc_param)
-        verify_net_get_interfaces(rpc_py)
-        verify_net_interface_add_delete_ip_address(rpc_py)
         create_malloc_bdevs_rpc_methods(rpc_py, rpc_param)
         verify_portal_groups_rpc_methods(rpc_py, rpc_param)
         verify_initiator_groups_rpc_methods(rpc_py, rpc_param)
