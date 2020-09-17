@@ -74,29 +74,35 @@ function rpc_add_target_node() {
 	$rpc_py -s $1 net_interface_delete_ip_address 1 $MIGRATION_ADDRESS
 }
 
+function iscsi_tgt_start() {
+	# $1 = RPC server address
+
+	# TODO: run the different iSCSI instances on non-overlapping CPU masks
+	"${ISCSI_APP[@]}" -r $1 -m $ISCSI_TEST_CORE_MASK --wait-for-rpc &
+	pid=$!
+	echo "Process pid: $pid"
+
+	trap 'kill_all_iscsi_target; exit 1' SIGINT SIGTERM EXIT
+
+	waitforlisten $pid $1
+	$rpc_py -s $1 iscsi_set_options -o 30 -a 64
+	$rpc_py -s $1 framework_start_init
+	echo "iscsi_tgt is listening. Running tests..."
+
+	rpc_config $1 $NETMASK
+	trap 'kill_all_iscsi_target;  iscsitestfini; exit 1' \
+		SIGINT SIGTERM EXIT
+}
+
 echo "Running ip migration tests"
 for ((i = 0; i < 2; i++)); do
 	timing_enter start_iscsi_tgt_$i
 
 	rpc_addr="/var/tmp/spdk${i}.sock"
 
-	# TODO: run the different iSCSI instances on non-overlapping CPU masks
-	"${ISCSI_APP[@]}" -r $rpc_addr -m $ISCSI_TEST_CORE_MASK --wait-for-rpc &
-	pid=$!
-	echo "Process pid: $pid"
-
-	trap 'kill_all_iscsi_target; exit 1' SIGINT SIGTERM EXIT
-
-	waitforlisten $pid $rpc_addr
-	$rpc_py -s $rpc_addr iscsi_set_options -o 30 -a 64
-	$rpc_py -s $rpc_addr framework_start_init
-	echo "iscsi_tgt is listening. Running tests..."
+	iscsi_tgt_start $rpc_addr
 
 	timing_exit start_iscsi_tgt_$i
-
-	rpc_config $rpc_addr $NETMASK
-	trap 'kill_all_iscsi_target;  iscsitestfini; exit 1' \
-		SIGINT SIGTERM EXIT
 done
 
 rpc_first_addr="/var/tmp/spdk0.sock"
