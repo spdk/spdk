@@ -62,37 +62,3 @@ static struct spdk_subsystem g_spdk_subsystem_interface = {
 };
 
 SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_interface);
-
-static void
-net_start_complete(void *cb_arg, int rc)
-{
-	spdk_subsystem_init_next(rc);
-}
-
-static void
-net_subsystem_start(void)
-{
-	spdk_net_framework_start(net_start_complete, NULL);
-}
-
-static void
-net_fini_done(void *cb_arg)
-{
-	spdk_subsystem_fini_next();
-}
-
-static void
-net_subsystem_fini(void)
-{
-	spdk_net_framework_fini(net_fini_done, NULL);
-}
-
-static struct spdk_subsystem g_spdk_subsystem_net_framework = {
-	.name = "net_framework",
-	.init = net_subsystem_start,
-	.fini = net_subsystem_fini,
-	.config = NULL,
-};
-
-SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_net_framework);
-SPDK_SUBSYSTEM_DEPEND(net_framework, interface)

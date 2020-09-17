@@ -162,7 +162,7 @@ DEPDIRS-app_rpc := log util thread event $(JSON_LIBS)
 # are not related to symbols, but are defined directly in
 # the SPDK event subsystem code.
 DEPDIRS-event_accel := accel event
-DEPDIRS-event_net := sock net event
+DEPDIRS-event_net := net event
 DEPDIRS-event_vmd := vmd conf $(JSON_LIBS) event log thread
 
 DEPDIRS-event_bdev := bdev event event_accel event_vmd event_sock

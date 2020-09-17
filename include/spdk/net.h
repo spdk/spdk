@@ -48,28 +48,6 @@ extern "C" {
 
 struct spdk_sock;
 
-struct spdk_net_framework {
-	const char *name;
-
-	void (*init)(void);
-	void (*fini)(void);
-
-	STAILQ_ENTRY(spdk_net_framework) link;
-};
-
-/**
- * Register a net framework.
- *
- * \param frame Net framework to register.
- */
-void spdk_net_framework_register(struct spdk_net_framework *frame);
-
-#define SPDK_NET_FRAMEWORK_REGISTER(name, frame) \
-static void __attribute__((constructor)) net_framework_register_##name(void) \
-{ \
-	spdk_net_framework_register(frame); \
-}
-
 /**
  * Initialize the network interfaces by getting information through netlink socket.
  *
@@ -81,37 +59,6 @@ int spdk_interface_init(void);
  * Destroy the network interfaces.
  */
 void spdk_interface_destroy(void);
-
-/**
- * Net framework initialization callback.
- *
- * \param cb_arg Callback argument.
- * \param rc 0 if net framework initialized successfully or negative errno if it failed.
- */
-typedef void (*spdk_net_init_cb)(void *cb_arg, int rc);
-
-/**
- * Net framework finish callback.
- *
- * \param cb_arg Callback argument.
- */
-typedef void (*spdk_net_fini_cb)(void *cb_arg);
-
-void spdk_net_framework_init_next(int rc);
-
-/**
- * Start all registered frameworks.
- *
- * \return 0 on success.
- */
-void spdk_net_framework_start(spdk_net_init_cb cb_fn, void *cb_arg);
-
-void spdk_net_framework_fini_next(void);
-
-/**
- * Stop all registered frameworks.
- */
-void spdk_net_framework_fini(spdk_net_fini_cb cb_fn, void *cb_arg);
 
 #ifdef __cplusplus
 }
