@@ -24,13 +24,6 @@ function kill_all_iscsi_target() {
 	done
 }
 
-function rpc_config() {
-	# $1 = RPC server address
-	# $2 = Netmask
-	$rpc_py -s $1 iscsi_create_initiator_group $INITIATOR_TAG $INITIATOR_NAME $2
-	$rpc_py -s $1 bdev_malloc_create 64 512
-}
-
 function rpc_validate_ip() {
 	# Always delete the IP first in case it is there already
 	cmd="$rpc_py -s $1 net_interface_delete_ip_address 1 $MIGRATION_ADDRESS"
@@ -89,9 +82,10 @@ function iscsi_tgt_start() {
 	$rpc_py -s $1 framework_start_init
 	echo "iscsi_tgt is listening. Running tests..."
 
-	rpc_config $1 $NETMASK
-	trap 'kill_all_iscsi_target;  iscsitestfini; exit 1' \
-		SIGINT SIGTERM EXIT
+	$rpc_py -s $1 iscsi_create_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
+	$rpc_py -s $1 bdev_malloc_create 64 512
+
+	trap 'kill_all_iscsi_target;  iscsitestfini; exit 1' SIGINT SIGTERM EXIT
 }
 
 echo "Running ip migration tests"
