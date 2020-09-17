@@ -413,7 +413,7 @@ int nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,
 	}
 
 	/* skip Identify NS ID Descriptor List for inactive NS */
-	if (!spdk_nvme_ctrlr_is_active_ns(ctrlr, id)) {
+	if (!spdk_nvme_ns_is_active(ns)) {
 		return 0;
 	}
 
