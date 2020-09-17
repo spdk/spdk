@@ -24,42 +24,6 @@ function kill_all_iscsi_target() {
 	done
 }
 
-function rpc_validate_ip() {
-	# Always delete the IP first in case it is there already
-	cmd="$rpc_py -s $1 net_interface_delete_ip_address 1 $MIGRATION_ADDRESS"
-	if $cmd; then
-		echo "Delete existing IP succeeded."
-	else
-		echo "Ignore the failure as IP did not exist."
-	fi
-
-	cmd="$rpc_py -s $1 net_interface_add_ip_address 1 $MIGRATION_ADDRESS"
-	if $cmd; then
-		echo "Add new IP succeeded."
-	else
-		echo "Add new IP failed. Expected to succeed..."
-		exit 1
-	fi
-	# Add same IP again
-	if $cmd; then
-		echo "Same IP existed. Expected to fail..."
-		exit 1
-	fi
-
-	cmd="$rpc_py -s $1 net_interface_delete_ip_address 1 $MIGRATION_ADDRESS"
-	if $cmd; then
-		echo "Delete existing IP succeeded."
-	else
-		echo "Delete existing IP failed. Expected to succeed..."
-		exit 1
-	fi
-	# Delete same IP again
-	if $cmd; then
-		echo "No required IP existed. Expected to fail..."
-		exit 1
-	fi
-}
-
 function rpc_add_target_node() {
 	$rpc_py -s $1 net_interface_add_ip_address 1 $MIGRATION_ADDRESS
 	$rpc_py -s $1 iscsi_create_portal_group $PORTAL_TAG $MIGRATION_ADDRESS:$ISCSI_PORT
@@ -101,7 +65,6 @@ for ((i = 0; i < 2; i++)); do
 done
 
 rpc_first_addr="/var/tmp/spdk0.sock"
-rpc_validate_ip $rpc_first_addr
 rpc_add_target_node $rpc_first_addr
 
 sleep 1
