@@ -76,9 +76,9 @@ function rpc_add_target_node() {
 
 function iscsi_tgt_start() {
 	# $1 = RPC server address
+	# $2 = Core Mask
 
-	# TODO: run the different iSCSI instances on non-overlapping CPU masks
-	"${ISCSI_APP[@]}" -r $1 -m $ISCSI_TEST_CORE_MASK --wait-for-rpc &
+	"${ISCSI_APP[@]}" -r $1 -m $2 --wait-for-rpc &
 	pid=$!
 	echo "Process pid: $pid"
 
@@ -99,8 +99,9 @@ for ((i = 0; i < 2; i++)); do
 	timing_enter start_iscsi_tgt_$i
 
 	rpc_addr="/var/tmp/spdk${i}.sock"
+	mask=$((1 << i))
 
-	iscsi_tgt_start $rpc_addr
+	iscsi_tgt_start $rpc_addr $mask
 
 	timing_exit start_iscsi_tgt_$i
 done
