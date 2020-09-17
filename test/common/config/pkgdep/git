@@ -250,6 +250,8 @@ function install_git() {
 		&& sudo make -j${jobs} install)
 	sudo sh -c "echo 'export PATH=/usr/local/git/bin:$PATH' >> /etc/bashrc"
 	export "PATH=/usr/local/git/bin:$PATH"
+	# Be nice for vagrant-proxyconf setup
+	mkdir -p "/usr/local/git/etc"
 }
 
 function install_extra_pkgs() {
