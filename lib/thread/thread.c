@@ -822,6 +822,10 @@ spdk_thread_get_stats(struct spdk_thread_stats *stats)
 uint64_t
 spdk_thread_get_last_tsc(struct spdk_thread *thread)
 {
+	if (thread == NULL) {
+		thread = _get_thread();
+	}
+
 	return thread->tsc_last;
 }
 
