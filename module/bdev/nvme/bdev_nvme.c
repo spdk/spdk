@@ -574,8 +574,12 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		spdk_bdev_io_get_buf(bdev_io, bdev_nvme_get_buf_cb,
-				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
+		if (bdev_io->u.bdev.iovs && bdev_io->u.bdev.iovs[0].iov_base) {
+			bdev_nvme_get_buf_cb(ch, bdev_io, true);
+		} else {
+			spdk_bdev_io_get_buf(bdev_io, bdev_nvme_get_buf_cb,
+					     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
+		}
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
