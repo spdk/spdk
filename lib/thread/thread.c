@@ -572,6 +572,8 @@ thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 	spdk_msg_fn critical_msg;
 	int rc = 0;
 
+	thread->tsc_last = now;
+
 	critical_msg = thread->critical_msg;
 	if (spdk_unlikely(critical_msg != NULL)) {
 		critical_msg(NULL);
