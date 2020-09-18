@@ -169,15 +169,17 @@ static const struct option g_cmdline_options[] = {
 static void
 app_config_dump_global_section(FILE *fp)
 {
-	struct spdk_cpuset *coremask;
+	const struct spdk_cpuset *coremask;
+	struct spdk_cpuset tmp_mask;
 
 	if (NULL == fp) {
 		return;
 	}
 
 	coremask = spdk_app_get_core_mask();
+	spdk_cpuset_copy(&tmp_mask, coremask);
 
-	fprintf(fp, GLOBAL_CONFIG_TMPL, spdk_cpuset_fmt(coremask),
+	fprintf(fp, GLOBAL_CONFIG_TMPL, spdk_cpuset_fmt(&tmp_mask),
 		spdk_trace_get_tpoint_group_mask());
 }
 

@@ -484,6 +484,8 @@ rpc_thread_set_cpumask(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_thread_set_cpumask req = {};
 	struct rpc_thread_set_cpumask_ctx *ctx;
+	const struct spdk_cpuset *coremask;
+	struct spdk_cpuset tmp_mask;
 	struct spdk_thread *thread;
 	int rc;
 
@@ -521,9 +523,11 @@ rpc_thread_set_cpumask(struct spdk_jsonrpc_request *request,
 	}
 
 	if (spdk_cpuset_count(&ctx->cpumask) == 0) {
+		coremask = spdk_app_get_core_mask();
+		spdk_cpuset_copy(&tmp_mask, coremask);
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						     "No CPU is selected from reactor mask %s\n",
-						     spdk_cpuset_fmt(spdk_app_get_core_mask()));
+						     spdk_cpuset_fmt(&tmp_mask));
 		goto err;
 	}
 

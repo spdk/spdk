@@ -1257,7 +1257,8 @@ __construct_targets(void *arg)
 static void
 test_main(void *arg1)
 {
-	struct spdk_cpuset tmpmask = {}, *appmask;
+	struct spdk_cpuset tmpmask = {};
+	const struct spdk_cpuset *appmask;
 	uint32_t cpu, init_cpu;
 
 	pthread_mutex_init(&g_test_mutex, NULL);

@@ -239,7 +239,7 @@ int spdk_app_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask);
  *
  * \return the bitmask of the active CPU cores.
  */
-struct spdk_cpuset *spdk_app_get_core_mask(void);
+const struct spdk_cpuset *spdk_app_get_core_mask(void);
 
 #define SPDK_APP_GETOPT_STRING "c:de:ghi:m:n:p:r:s:uvB:L:RW:"
 

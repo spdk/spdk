@@ -414,7 +414,7 @@ int
 spdk_app_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 {
 	int ret;
-	struct spdk_cpuset *validmask;
+	const struct spdk_cpuset *validmask;
 
 	ret = spdk_cpuset_parse(cpumask, mask);
 	if (ret < 0) {
@@ -427,7 +427,7 @@ spdk_app_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 	return 0;
 }
 
-struct spdk_cpuset *
+const struct spdk_cpuset *
 spdk_app_get_core_mask(void)
 {
 	return &g_reactor_core_mask;
