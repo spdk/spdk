@@ -2630,10 +2630,18 @@ bdev_nvme_writev(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 	bio->iovpos = 0;
 	bio->iov_offset = 0;
 
-	rc = spdk_nvme_ns_cmd_writev_with_md(nbdev->nvme_ns->ns, nvme_ch->qpair, lba, lba_count,
-					     bdev_nvme_writev_done, bio, nbdev->disk.dif_check_flags,
-					     bdev_nvme_queued_reset_sgl, bdev_nvme_queued_next_sge,
-					     md, 0, 0);
+	if (iovcnt == 1) {
+		rc = spdk_nvme_ns_cmd_write_with_md(nbdev->nvme_ns->ns, nvme_ch->qpair, iov[0].iov_base, md, lba,
+						    lba_count,
+						    bdev_nvme_readv_done, bio,
+						    nbdev->disk.dif_check_flags,
+						    0, 0);
+	} else {
+		rc = spdk_nvme_ns_cmd_writev_with_md(nbdev->nvme_ns->ns, nvme_ch->qpair, lba, lba_count,
+						     bdev_nvme_writev_done, bio, nbdev->disk.dif_check_flags,
+						     bdev_nvme_queued_reset_sgl, bdev_nvme_queued_next_sge,
+						     md, 0, 0);
+	}
 
 	if (rc != 0 && rc != -ENOMEM) {
 		SPDK_ERRLOG("writev failed: rc = %d\n", rc);
