@@ -80,7 +80,7 @@ static uint64_t g_show_performance_ema_period = 0;
 static int g_run_rc = 0;
 static bool g_shutdown = false;
 static uint64_t g_shutdown_tsc;
-static bool g_zcopy = true;
+static bool g_zcopy = false;
 static struct spdk_thread *g_master_thread;
 static int g_time_in_sec = 0;
 static bool g_mix_specified = false;
@@ -1929,8 +1929,8 @@ bdevperf_parse_arg(int ch, char *arg)
 		g_job_bdev_name = optarg;
 	} else if (ch == 'z') {
 		g_wait_for_tests = true;
-	} else if (ch == 'x') {
-		g_zcopy = false;
+	} else if (ch == 'Z') {
+		g_zcopy = true;
 	} else if (ch == 'A') {
 		g_abort = true;
 	} else if (ch == 'C') {
@@ -1996,7 +1996,7 @@ bdevperf_usage(void)
 	printf(" -S <period>               show performance result in real time every <period> seconds\n");
 	printf(" -T <bdev>                 bdev to run against. Default: all available bdevs.\n");
 	printf(" -f                        continue processing I/O even after failures\n");
-	printf(" -x                        disable using zcopy bdev API for read or write I/O\n");
+	printf(" -Z                        enable using zcopy bdev API for read or write I/O\n");
 	printf(" -z                        start bdevperf, but wait for RPC to start tests\n");
 	printf(" -A                        abort the timeout I/O\n");
 	printf(" -C                        enable every core to send I/Os to each bdev\n");
@@ -2112,7 +2112,7 @@ main(int argc, char **argv)
 	opts.rpc_addr = NULL;
 	opts.shutdown_cb = spdk_bdevperf_shutdown_cb;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "xzfq:o:t:w:k:ACM:P:S:T:j:", NULL,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "Zzfq:o:t:w:k:ACM:P:S:T:j:", NULL,
 				      bdevperf_parse_arg, bdevperf_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;

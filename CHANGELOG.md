@@ -131,6 +131,13 @@ library now no longer exists.
 The contents of the bdev_rpc library have been moved to the bdev library. The app_rpc
 library now no longer exists.
 
+The bdevperf application now disables the zcopy API by default. Prior to this change,
+bdevperf enabled using the zcopy API by default which caused a performance impact of
+up to 25% on bdevs that don't natively support zcopy because the API emulates zero-copy
+by allocating a buffer. The bdevperf `-x` param was renamed to `-Z` and the default
+value changed to false. For bdevs that support zcopy, use the -Z flag to enable
+using zcopy API.
+
 ### nvmf
 
 Add 'no_wr_batching' parameter to 'spdk_nvmf_transport_opts' struct to disable
