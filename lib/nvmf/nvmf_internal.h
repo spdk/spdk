@@ -298,7 +298,6 @@ void nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, const char *hostnqn,
 				 uint32_t iovcnt, uint64_t offset, uint32_t length);
 
 void nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr);
-int nvmf_ctrlr_process_fabrics_cmd(struct spdk_nvmf_request *req);
 int nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req);
 int nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req);
 bool nvmf_ctrlr_dsm_supported(struct spdk_nvmf_ctrlr *ctrlr);

@@ -2684,7 +2684,7 @@ invalid_opcode:
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
-int
+static int
 nvmf_ctrlr_process_fabrics_cmd(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_qpair *qpair = req->qpair;
