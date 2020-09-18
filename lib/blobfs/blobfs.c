@@ -183,6 +183,7 @@ struct spdk_fs_cb_args {
 	struct spdk_filesystem *fs;
 	struct spdk_file *file;
 	int rc;
+	int *rwerrno;
 	struct iovec *iovs;
 	uint32_t iovcnt;
 	struct iovec iov;
@@ -607,6 +608,9 @@ __wake_caller(void *arg, int fserrno)
 {
 	struct spdk_fs_cb_args *args = arg;
 
+	if ((args->rwerrno != NULL) && (*(args->rwerrno) == 0) && fserrno) {
+		*(args->rwerrno) = fserrno;
+	}
 	args->rc = fserrno;
 	sem_post(args->sem);
 }
@@ -2435,27 +2439,33 @@ __rw_from_file(void *ctx)
 	}
 }
 
+struct rw_from_file_arg {
+	struct spdk_fs_channel *channel;
+	int rwerrno;
+};
+
 static int
 __send_rw_from_file(struct spdk_file *file, void *payload,
 		    uint64_t offset, uint64_t length, bool is_read,
-		    struct spdk_fs_channel *channel)
+		    struct rw_from_file_arg *arg)
 {
 	struct spdk_fs_request *req;
 	struct spdk_fs_cb_args *args;
 
-	req = alloc_fs_request_with_iov(channel, 1);
+	req = alloc_fs_request_with_iov(arg->channel, 1);
 	if (req == NULL) {
-		sem_post(&channel->sem);
+		sem_post(&arg->channel->sem);
 		return -ENOMEM;
 	}
 
 	args = &req->args;
 	args->file = file;
-	args->sem = &channel->sem;
+	args->sem = &arg->channel->sem;
 	args->iovs[0].iov_base = payload;
 	args->iovs[0].iov_len = (size_t)length;
 	args->op.rw.offset = offset;
 	args->op.rw.is_read = is_read;
+	args->rwerrno = &arg->rwerrno;
 	file->fs->send_request(__rw_from_file, req);
 	return 0;
 }
@@ -2490,13 +2500,19 @@ spdk_file_write(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 	}
 
 	if (file->last == NULL) {
+		struct rw_from_file_arg arg = {};
 		int rc;
 
+		arg.channel = channel;
+		arg.rwerrno = 0;
 		file->append_pos += length;
 		pthread_spin_unlock(&file->lock);
-		rc = __send_rw_from_file(file, payload, offset, length, false, channel);
+		rc = __send_rw_from_file(file, payload, offset, length, false, &arg);
+		if (rc != 0) {
+			return rc;
+		}
 		sem_wait(&channel->sem);
-		return rc;
+		return arg.rwerrno;
 	}
 
 	blob_size = __file_get_blob_size(file);
@@ -2658,7 +2674,7 @@ spdk_file_read(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 	uint32_t sub_reads = 0;
 	struct cache_buffer *buf;
 	uint64_t read_len;
-	int rc = 0;
+	struct rw_from_file_arg arg = {};
 
 	pthread_spin_lock(&file->lock);
 
@@ -2685,9 +2701,12 @@ spdk_file_read(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 		check_readahead(file, offset + CACHE_BUFFER_SIZE, channel);
 	}
 
+	arg.channel = channel;
+	arg.rwerrno = 0;
 	final_length = 0;
 	final_offset = offset + length;
 	while (offset < final_offset) {
+		int ret = 0;
 		length = NEXT_CACHE_BUFFER_OFFSET(offset) - offset;
 		if (length > (final_offset - offset)) {
 			length = final_offset - offset;
@@ -2696,9 +2715,9 @@ spdk_file_read(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 		buf = tree_find_filled_buffer(file->tree, offset);
 		if (buf == NULL) {
 			pthread_spin_unlock(&file->lock);
-			rc = __send_rw_from_file(file, payload, offset, length, true, channel);
+			ret = __send_rw_from_file(file, payload, offset, length, true, &arg);
 			pthread_spin_lock(&file->lock);
-			if (rc == 0) {
+			if (ret == 0) {
 				sub_reads++;
 			}
 		} else {
@@ -2716,9 +2735,10 @@ spdk_file_read(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 			}
 		}
 
-		if (rc == 0) {
+		if (ret == 0) {
 			final_length += length;
 		} else {
+			arg.rwerrno = ret;
 			break;
 		}
 		payload += length;
@@ -2729,10 +2749,10 @@ spdk_file_read(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 		sem_wait(&channel->sem);
 		sub_reads--;
 	}
-	if (rc == 0) {
+	if (arg.rwerrno == 0) {
 		return final_length;
 	} else {
-		return rc;
+		return arg.rwerrno;
 	}
 }
 
