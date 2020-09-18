@@ -226,6 +226,7 @@ static uint32_t g_master_core;
 static uint64_t g_tsc_rate;
 
 static uint32_t g_io_align = 0x200;
+static bool g_io_align_specified;
 static uint32_t g_io_size_bytes;
 static uint32_t g_max_io_md_size;
 static uint32_t g_max_io_size_blocks;
@@ -566,6 +567,13 @@ register_file(const char *path)
 	 * For now, it's fairly safe to just assume all block sizes are powers of 2.
 	 */
 	if (g_io_align < blklen) {
+		if (g_io_align_specified) {
+			fprintf(stderr, "Wrong IO alignment (%u). aio requires block-sized alignment (%u)\n", g_io_align,
+				blklen);
+			close(fd);
+			return -1;
+		}
+
 		g_io_align = blklen;
 	}
 
@@ -1422,6 +1430,8 @@ static void usage(char *program_name)
 	printf("\t[-V enable VMD enumeration]\n");
 	printf("\t[-z disable zero copy send for the given sock implementation]\n");
 	printf("\t[-Z enable zero copy send for the given sock implementation. Default for posix impl]\n");
+	printf("\t[-A IO buffer alignment. Must be power of 2 and not less than cache line (%u)]\n",
+	       SPDK_CACHE_LINE_SIZE);
 #ifdef SPDK_CONFIG_URING
 	printf("\t[-R enable using liburing to drive kernel devices (Default: libaio)]\n");
 #endif
@@ -1836,9 +1846,10 @@ parse_args(int argc, char **argv)
 	long int val;
 	int rc;
 
-	while ((op = getopt(argc, argv, "a:c:e:i:lo:q:r:k:s:t:w:z:C:DGHILM:NP:RT:U:VZ:")) != -1) {
+	while ((op = getopt(argc, argv, "a:c:e:i:lo:q:r:k:s:t:w:z:A:C:DGHILM:NP:RT:U:VZ:")) != -1) {
 		switch (op) {
 		case 'a':
+		case 'A':
 		case 'i':
 		case 'C':
 		case 'P':
@@ -1888,6 +1899,16 @@ parse_args(int argc, char **argv)
 				break;
 			case 'U':
 				g_nr_unused_io_queues = val;
+				break;
+			case 'A':
+				g_io_align = val;
+				if (!spdk_u32_is_pow2(g_io_align) || g_io_align < SPDK_CACHE_LINE_SIZE) {
+					fprintf(stderr, "Wrong alignment %u. Must be power of 2 and not less than cache lize (%u)\n",
+						g_io_align, SPDK_CACHE_LINE_SIZE);
+					usage(argv[0]);
+					return 1;
+				}
+				g_io_align_specified = true;
 				break;
 			}
 			break;
