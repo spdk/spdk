@@ -7327,7 +7327,7 @@ Example response:
   "id": 1,
   "result": "true"
 }
-~~
+~~~
 
 ## blobfs_set_cache_size {#rpc_blobfs_set_cache_size}
 
