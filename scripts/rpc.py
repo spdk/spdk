@@ -1871,6 +1871,18 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument("-r", "--ana-reporting", action='store_true', help="Enable ANA reporting feature")
     p.set_defaults(func=nvmf_create_subsystem)
 
+    def nvmf_subsystem_set_options(args):
+        rpc.nvmf.nvmf_subsystem_set_options(args.client,
+                                            nqn=args.nqn,
+                                            trtype=args.trtype,
+                                            tgt_name=args.tgt_name)
+
+    p = subparsers.add_parser('nvmf_subsystem_set_options', help='Set a transport specific options for an NVMe-oF subsystem')
+    p.add_argument('nqn', help='Subsystem NQN (ASCII)')
+    p.add_argument('-t', '--trtype', help='NVMe-oF transport type: e.g., rdma, tcp, pcie', required=True)
+    p.add_argument('-g', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.set_defaults(func=nvmf_subsystem_set_options)
+
     def nvmf_delete_subsystem(args):
         rpc.nvmf.nvmf_delete_subsystem(args.client,
                                        nqn=args.subsystem_nqn,
