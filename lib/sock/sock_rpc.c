@@ -143,6 +143,7 @@ rpc_sock_impl_set_options(struct spdk_jsonrpc_request *request,
 	len = sizeof(opts.sock_opts);
 	rc = spdk_sock_impl_get_opts(opts.impl_name, &opts.sock_opts, &len);
 	if (rc) {
+		free(opts.impl_name);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
 		return;
@@ -159,6 +160,7 @@ rpc_sock_impl_set_options(struct spdk_jsonrpc_request *request,
 
 	rc = spdk_sock_impl_set_opts(opts.impl_name, &opts.sock_opts, sizeof(opts.sock_opts));
 	if (rc != 0) {
+		free(opts.impl_name);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
 		return;
