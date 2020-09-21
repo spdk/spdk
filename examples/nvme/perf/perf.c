@@ -1432,6 +1432,7 @@ static void usage(char *program_name)
 	printf("\t[-Z enable zero copy send for the given sock implementation. Default for posix impl]\n");
 	printf("\t[-A IO buffer alignment. Must be power of 2 and not less than cache line (%u)]\n",
 	       SPDK_CACHE_LINE_SIZE);
+	printf("\t[-S set the default sock impl, e.g. \"posix\"]\n");
 #ifdef SPDK_CONFIG_URING
 	printf("\t[-R enable using liburing to drive kernel devices (Default: libaio)]\n");
 #endif
@@ -1846,7 +1847,7 @@ parse_args(int argc, char **argv)
 	long int val;
 	int rc;
 
-	while ((op = getopt(argc, argv, "a:c:e:i:lo:q:r:k:s:t:w:z:A:C:DGHILM:NP:RT:U:VZ:")) != -1) {
+	while ((op = getopt(argc, argv, "a:c:e:i:lo:q:r:k:s:t:w:z:A:C:DGHILM:NP:RS:T:U:VZ:")) != -1) {
 		switch (op) {
 		case 'a':
 		case 'A':
@@ -1991,6 +1992,13 @@ parse_args(int argc, char **argv)
 			break;
 		case 'Z':
 			perf_set_sock_zcopy(optarg, true);
+			break;
+		case 'S':
+			rc = spdk_sock_set_default_impl(optarg);
+			if (rc) {
+				fprintf(stderr, "Failed to set sock impl %s, err %d (%s)\n", optarg, errno, strerror(errno));
+				return 1;
+			}
 			break;
 		default:
 			usage(argv[0]);
