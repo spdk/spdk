@@ -7467,6 +7467,45 @@ Example response:
 }
 ~~~
 
+## sock_set_default_impl {#rpc_sock_set_default_impl}
+
+Set the default sock implementation.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+impl_name               | Required | string      | Name of socket implementation, e.g. posix
+
+### Response
+
+True if the default socket layer configuration was set successfully.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "sock_set_default_impl",
+  "id": 1,
+  "params": {
+    "impl_name": "posix"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 # Miscellaneous RPC commands
 
 ## bdev_nvme_send_cmd {#rpc_bdev_nvme_send_cmd}

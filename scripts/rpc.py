@@ -2567,6 +2567,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=sock_impl_set_options, enable_recv_pipe=None, enable_zerocopy_send=None,
                    enable_quickack=None, enable_placement_id=None)
 
+    def sock_set_default_impl(args):
+        print_json(rpc.sock.sock_set_default_impl(args.client,
+                                                  impl_name=args.impl))
+
+    p = subparsers.add_parser('sock_set_default_impl', help="""Set the default sock implementation""")
+    p.add_argument('-i', '--impl', help='Socket implementation name, e.g. posix', required=True)
+    p.set_defaults(func=sock_set_default_impl)
+
     def check_called_name(name):
         if name in deprecated_aliases:
             print("{} is deprecated, use {} instead.".format(name, deprecated_aliases[name]), file=sys.stderr)

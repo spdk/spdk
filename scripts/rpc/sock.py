@@ -47,3 +47,16 @@ def sock_impl_set_options(client,
         params['enable_placement_id'] = enable_placement_id
 
     return client.call('sock_impl_set_options', params)
+
+
+def sock_set_default_impl(client, impl_name=None):
+    """Set the default socket implementation.
+
+    Args:
+        impl_name: name of socket implementation, e.g. posix
+    """
+    params = {}
+
+    params['impl_name'] = impl_name
+
+    return client.call('sock_set_default_impl', params)

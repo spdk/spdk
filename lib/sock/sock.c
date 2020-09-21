@@ -803,6 +803,15 @@ spdk_sock_write_config_json(struct spdk_json_write_ctx *w)
 
 	spdk_json_write_array_begin(w);
 
+	if (g_default_impl) {
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "method", "sock_set_default_impl");
+		spdk_json_write_named_object_begin(w, "params");
+		spdk_json_write_named_string(w, "impl_name", g_default_impl->name);
+		spdk_json_write_object_end(w);
+		spdk_json_write_object_end(w);
+	}
+
 	STAILQ_FOREACH(impl, &g_net_impls, link) {
 		if (!impl->get_opts) {
 			continue;
