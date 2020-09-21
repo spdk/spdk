@@ -33,16 +33,16 @@
 
 #include "spdk/stdinc.h"
 
-#include "spdk/log.h"
 #include "spdk/sock.h"
 #include "spdk_internal/sock.h"
-#include "spdk/queue.h"
+#include "spdk_internal/log.h"
 
 #define SPDK_SOCK_DEFAULT_PRIORITY 0
 #define SPDK_SOCK_DEFAULT_ZCOPY true
 #define SPDK_SOCK_OPTS_FIELD_OK(opts, field) (offsetof(struct spdk_sock_opts, field) + sizeof(opts->field) <= (opts->opts_size))
 
 static STAILQ_HEAD(, spdk_net_impl) g_net_impls = STAILQ_HEAD_INITIALIZER(g_net_impls);
+static struct spdk_net_impl *g_default_impl;
 
 struct spdk_sock_placement_id_entry {
 	int placement_id;
@@ -233,15 +233,22 @@ spdk_sock_connect(const char *ip, int port, char *impl_name)
 }
 
 struct spdk_sock *
-spdk_sock_connect_ext(const char *ip, int port, char *impl_name, struct spdk_sock_opts *opts)
+spdk_sock_connect_ext(const char *ip, int port, char *_impl_name, struct spdk_sock_opts *opts)
 {
 	struct spdk_net_impl *impl = NULL;
 	struct spdk_sock *sock;
 	struct spdk_sock_opts opts_local;
+	const char *impl_name = NULL;
 
 	if (opts == NULL) {
 		SPDK_ERRLOG("the opts should not be NULL pointer\n");
 		return NULL;
+	}
+
+	if (_impl_name) {
+		impl_name = _impl_name;
+	} else if (g_default_impl) {
+		impl_name = g_default_impl->name;
 	}
 
 	STAILQ_FOREACH_FROM(impl, &g_net_impls, link) {
@@ -249,6 +256,7 @@ spdk_sock_connect_ext(const char *ip, int port, char *impl_name, struct spdk_soc
 			continue;
 		}
 
+		SPDK_DEBUGLOG(SPDK_LOG_SOCK, "Creating a client socket using impl %s\n", impl->name);
 		sock_init_opts(&opts_local, opts);
 		sock = impl->connect(ip, port, &opts_local);
 		if (sock != NULL) {
@@ -275,15 +283,22 @@ spdk_sock_listen(const char *ip, int port, char *impl_name)
 }
 
 struct spdk_sock *
-spdk_sock_listen_ext(const char *ip, int port, char *impl_name, struct spdk_sock_opts *opts)
+spdk_sock_listen_ext(const char *ip, int port, char *_impl_name, struct spdk_sock_opts *opts)
 {
 	struct spdk_net_impl *impl = NULL;
 	struct spdk_sock *sock;
 	struct spdk_sock_opts opts_local;
+	const char *impl_name = NULL;
 
 	if (opts == NULL) {
 		SPDK_ERRLOG("the opts should not be NULL pointer\n");
 		return NULL;
+	}
+
+	if (_impl_name) {
+		impl_name = _impl_name;
+	} else if (g_default_impl) {
+		impl_name = g_default_impl->name;
 	}
 
 	STAILQ_FOREACH_FROM(impl, &g_net_impls, link) {
@@ -291,6 +306,7 @@ spdk_sock_listen_ext(const char *ip, int port, char *impl_name, struct spdk_sock
 			continue;
 		}
 
+		SPDK_DEBUGLOG(SPDK_LOG_SOCK, "Creating a listening socket using impl %s\n", impl->name);
 		sock_init_opts(&opts_local, opts);
 		sock = impl->listen(ip, port, &opts_local);
 		if (sock != NULL) {
@@ -832,3 +848,36 @@ spdk_net_impl_register(struct spdk_net_impl *impl, int priority)
 		STAILQ_INSERT_HEAD(&g_net_impls, impl, link);
 	}
 }
+
+int spdk_sock_set_default_impl(const char *impl_name)
+{
+	struct spdk_net_impl *impl;
+
+	if (!impl_name) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	impl = sock_get_impl_by_name(impl_name);
+	if (!impl) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	if (impl == g_default_impl) {
+		return 0;
+	}
+
+	if (g_default_impl) {
+		SPDK_DEBUGLOG(SPDK_LOG_SOCK, "Change the default sock impl from %s to %s\n", g_default_impl->name,
+			      impl->name);
+	} else {
+		SPDK_DEBUGLOG(SPDK_LOG_SOCK, "Set default sock implementation to %s\n", impl_name);
+	}
+
+	g_default_impl = impl;
+
+	return 0;
+}
+
+SPDK_LOG_REGISTER_COMPONENT("sock", SPDK_LOG_SOCK)
