@@ -33,19 +33,14 @@
 
 #include "spdk/stdinc.h"
 
-#include <algorithm>
-#include <map>
-#include <vector>
-
-extern "C" {
 #include "spdk/event.h"
 #include "spdk/jsonrpc.h"
 #include "spdk/rpc.h"
+#include "spdk/string.h"
 #include "spdk/trace.h"
 #include "spdk/util.h"
 
 #include "iscsi/conn.h"
-}
 
 static char *exe_name;
 static int g_shm_id = 0;
@@ -162,7 +157,7 @@ int main(int argc, char **argv)
 	while ((op = getopt(argc, argv, "i:r:")) != -1) {
 		switch (op) {
 		case 'i':
-			g_shm_id = atoi(optarg);
+			g_shm_id = spdk_strtol(optarg, 10);
 			break;
 		case 'r':
 			rpc_socket_path = optarg;

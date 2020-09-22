@@ -39,8 +39,8 @@ APP = iscsi_top
 
 SPDK_LIB_LIST = jsonrpc json rpc log util
 
-CXXFLAGS += -I$(SPDK_ROOT_DIR)/lib
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 
-CXX_SRCS := iscsi_top.cpp
+C_SRCS := iscsi_top.c
 
-include $(SPDK_ROOT_DIR)/mk/spdk.app_cxx.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
