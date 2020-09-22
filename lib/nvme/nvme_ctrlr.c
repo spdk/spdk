@@ -725,6 +725,32 @@ nvme_ctrlr_init_ana_log_page(struct spdk_nvme_ctrlr *ctrlr)
 	return nvme_ctrlr_update_ana_log_page(ctrlr);
 }
 
+int
+nvme_ctrlr_parse_ana_log_page(struct spdk_nvme_ctrlr *ctrlr,
+			      spdk_nvme_parse_ana_log_page_cb cb_fn, void *cb_arg)
+{
+	struct spdk_nvme_ana_group_descriptor *desc;
+	uint32_t i;
+	int rc = 0;
+
+	if (ctrlr->ana_log_page == NULL) {
+		return -EINVAL;
+	}
+
+	desc = (void *)((uint8_t *)ctrlr->ana_log_page + sizeof(struct spdk_nvme_ana_page));
+
+	for (i = 0; i < ctrlr->ana_log_page->num_ana_group_desc; i++) {
+		rc = cb_fn(desc, cb_arg);
+		if (rc != 0) {
+			break;
+		}
+		desc = (void *)((uint8_t *)desc + sizeof(struct spdk_nvme_ana_group_descriptor) +
+				desc->num_of_nsid * sizeof(uint32_t));
+	}
+
+	return rc;
+}
+
 static int
 nvme_ctrlr_set_supported_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 {
