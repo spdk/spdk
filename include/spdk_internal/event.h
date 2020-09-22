@@ -249,6 +249,24 @@ static void __attribute__((constructor)) _spdk_scheduler_register_##name(void) \
 } \
 
 /**
+ * Set new CPU core index. Used for scheduling, assigns new CPU core index and marks it =
+ * for rescheduling - does not actually change it. Can be used with SPDK_ENV_LCORE_ID_ANY
+ *
+ * \param thread thread to change core.
+ * \param lcore new CPU core index.
+ */
+void _spdk_lw_thread_set_core(struct spdk_lw_thread *thread, uint32_t lcore);
+
+/**
+ * Get threads stats
+ *
+ * \param thread thread that stats regards to.
+ * \param stats Output parameter for accumulated TSC counts while the thread was busy.
+ */
+void _spdk_lw_thread_get_current_stats(struct spdk_lw_thread *thread,
+				       struct spdk_thread_stats *stats);
+
+/**
  * \brief Register a new subsystem
  */
 #define SPDK_SUBSYSTEM_REGISTER(_name) \

@@ -738,10 +738,7 @@ _reactor_request_thread_reschedule(struct spdk_thread *thread)
 
 	lw_thread = spdk_thread_get_ctx(thread);
 
-	assert(lw_thread != NULL);
-
-	lw_thread->resched = true;
-	lw_thread->lcore = SPDK_ENV_LCORE_ID_ANY;
+	_spdk_lw_thread_set_core(lw_thread, SPDK_ENV_LCORE_ID_ANY);
 
 	current_core = spdk_env_get_current_core();
 	reactor = spdk_reactor_get(current_core);
@@ -940,6 +937,21 @@ reactor_interrupt_fini(struct spdk_reactor *reactor)
 
 	spdk_fd_group_destroy(fgrp);
 	reactor->fgrp = NULL;
+}
+
+void
+_spdk_lw_thread_set_core(struct spdk_lw_thread *thread, uint32_t lcore)
+{
+	assert(thread != NULL);
+	thread->lcore = lcore;
+	thread->resched = true;
+}
+
+void
+_spdk_lw_thread_get_current_stats(struct spdk_lw_thread *thread, struct spdk_thread_stats *stats)
+{
+	assert(thread != NULL);
+	*stats = thread->current_stats;
 }
 
 SPDK_LOG_REGISTER_COMPONENT(reactor)
