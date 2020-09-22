@@ -2335,6 +2335,36 @@ enum spdk_nvme_ns_flags {
 uint32_t spdk_nvme_ns_get_flags(struct spdk_nvme_ns *ns);
 
 /**
+ * Get the ANA group ID for the given namespace.
+ *
+ * This function should be called only if spdk_nvme_ctrlr_is_log_page_supported() returns
+ * true for the controller and log page ID SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS.
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
+ * \param ns Namespace to query.
+ *
+ * \return the ANA group ID for the given namespace.
+ */
+uint32_t spdk_nvme_ns_get_ana_group_id(const struct spdk_nvme_ns *ns);
+
+/**
+ * Get the ANA state for the given namespace.
+ *
+ * This function should be called only if spdk_nvme_ctrlr_is_log_page_supported() returns
+ * true for the controller and log page ID SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS.
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
+ * \param ns Namespace to query.
+ *
+ * \return the ANA state for the given namespace.
+ */
+enum spdk_nvme_ana_state spdk_nvme_ns_get_ana_state(const struct spdk_nvme_ns *ns);
+
+/**
  * Restart the SGL walk to the specified offset when the command has scattered payloads.
  *
  * \param cb_arg Argument passed to readv/writev.

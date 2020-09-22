@@ -397,6 +397,17 @@ spdk_nvme_ns_get_csi(const struct spdk_nvme_ns *ns) {
 	return ns->csi;
 }
 
+uint32_t
+spdk_nvme_ns_get_ana_group_id(const struct spdk_nvme_ns *ns)
+{
+	return ns->ana_group_id;
+}
+
+enum spdk_nvme_ana_state
+spdk_nvme_ns_get_ana_state(const struct spdk_nvme_ns *ns) {
+	return ns->ana_state;
+}
+
 int nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,
 		      struct spdk_nvme_ctrlr *ctrlr)
 {
