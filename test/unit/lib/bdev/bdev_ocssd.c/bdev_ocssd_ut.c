@@ -58,7 +58,6 @@ DEFINE_STUB(spdk_bdev_push_media_events, int, (struct spdk_bdev *bdev,
 		const struct spdk_bdev_media_event *events,
 		size_t num_events), 0);
 DEFINE_STUB_V(spdk_bdev_notify_media_management, (struct spdk_bdev *bdev));
-DEFINE_STUB_V(nvme_ctrlr_depopulate_namespace_done, (struct nvme_bdev_ctrlr *ctrlr));
 DEFINE_STUB_V(spdk_bdev_module_finish_done, (void));
 DEFINE_STUB(spdk_nvme_transport_id_trtype_str, const char *, (enum spdk_nvme_transport_type trtype),
 	    NULL);
@@ -194,6 +193,18 @@ nvme_ctrlr_populate_namespace_done(struct nvme_async_probe_ctx *ctx,
 				   struct nvme_bdev_ns *ns, int rc)
 {
 	CU_ASSERT_EQUAL(rc, 0);
+	ns->ctrlr->ref++;
+}
+
+void
+nvme_ctrlr_depopulate_namespace_done(struct nvme_bdev_ctrlr *ctrlr)
+{
+	CU_ASSERT(ctrlr->ref > 0);
+	ctrlr->ref--;
+
+	if (ctrlr->ref == 0 && ctrlr->destruct) {
+		nvme_bdev_ctrlr_destruct(ctrlr);
+	}
 }
 
 static struct nvme_bdev_ctrlr *
@@ -221,7 +232,7 @@ create_nvme_bdev_controller(const struct spdk_nvme_transport_id *trid, const cha
 
 	nvme_bdev_ctrlr->ctrlr = ctrlr;
 	nvme_bdev_ctrlr->num_ns = ctrlr->ns_count;
-	nvme_bdev_ctrlr->ref = 0;
+	nvme_bdev_ctrlr->ref = 1;
 	nvme_bdev_ctrlr->connected_trid = &trid_entry->trid;
 	nvme_bdev_ctrlr->name = strdup(name);
 	for (nsid = 0; nsid < ctrlr->ns_count; ++nsid) {
@@ -517,30 +528,17 @@ create_bdev(const char *ctrlr_name, const char *bdev_name, uint32_t nsid,
 static void
 delete_nvme_bdev_controller(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
-	struct nvme_bdev *nvme_bdev, *tmp;
-	struct nvme_bdev_ns *nvme_ns;
-	bool empty = true;
 	uint32_t nsid;
 
 	nvme_bdev_ctrlr->destruct = true;
 
 	for (nsid = 0; nsid < nvme_bdev_ctrlr->num_ns; ++nsid) {
-		nvme_ns = nvme_bdev_ctrlr->namespaces[nsid];
-
-		if (!TAILQ_EMPTY(&nvme_ns->bdevs)) {
-			TAILQ_FOREACH_SAFE(nvme_bdev, &nvme_ns->bdevs, tailq, tmp) {
-				spdk_bdev_unregister(&nvme_bdev->disk, NULL, NULL);
-			}
-
-			empty = false;
-		}
-
 		bdev_ocssd_depopulate_namespace(nvme_bdev_ctrlr->namespaces[nsid]);
 	}
 
-	if (empty) {
-		nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
-	}
+	CU_ASSERT(nvme_bdev_ctrlr->ref == 1);
+	nvme_bdev_ctrlr->ref--;
+	nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
 
 	while (spdk_thread_poll(g_thread, 0, 0) > 0) {}
 
