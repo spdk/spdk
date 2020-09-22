@@ -116,6 +116,18 @@ function linux_bind_driver() {
 	echo "$ven_dev_id" > "/sys/bus/pci/drivers/$driver_name/new_id" 2> /dev/null || true
 	echo "$bdf" > "/sys/bus/pci/drivers/$driver_name/bind" 2> /dev/null || true
 
+	if [[ $driver_name == uio_pci_generic && -e /sys/module/igb_uio ]]; then
+		# Check if the uio_pci_generic driver is broken as it might be in
+		# some 4.18.x kernels (see centos8 for instance) - if our device
+		# didn't get a proper uio entry, fallback to igb_uio
+		if [[ ! -e /sys/bus/pci/devices/$bdf/uio ]]; then
+			pci_dev_echo "$bdf" "uio_pci_generic potentially broken, moving to igb_uio"
+			drivers_d["$bdf"]="no driver"
+			# This call will override $driver_name for remaining devices as well
+			linux_bind_driver "$bdf" igb_uio
+		fi
+	fi
+
 	iommu_group=$(basename $(readlink -f /sys/bus/pci/devices/$bdf/iommu_group))
 	if [ -e "/dev/vfio/$iommu_group" ]; then
 		if [ -n "$TARGET_USER" ]; then
@@ -248,6 +260,15 @@ function verify_bdf_mounts() {
 function configure_linux_pci() {
 	local driver_path=""
 	driver_name=""
+	igb_uio_fallback=""
+
+	# igb_uio is a common driver to override with and it depends on uio.
+	modprobe uio
+	if [[ -r "$rootdir/dpdk/build-tmp/kernel/linux/igb_uio/igb_uio.ko" ]]; then
+		igb_uio_fallback=$rootdir/dpdk/build-tmp/kernel/linux/igb_uio/igb_uio.ko
+		insmod "$igb_uio_fallback" || true
+	fi
+
 	if [[ -n "${DRIVER_OVERRIDE}" ]]; then
 		driver_path="$DRIVER_OVERRIDE"
 		driver_name="${DRIVER_OVERRIDE##*/}"
@@ -257,20 +278,14 @@ function configure_linux_pci() {
 		if [[ "$driver_path" = "$driver_name" ]]; then
 			driver_path=""
 		fi
-		# igb_uio is a common driver to override with and it depends on uio.
-		if [[ "$driver_name" = "igb_uio" ]]; then
-			modprobe uio
-		fi
 	elif [[ -n "$(ls /sys/kernel/iommu_groups)" || (-e \
 	/sys/module/vfio/parameters/enable_unsafe_noiommu_mode && \
 	"$(cat /sys/module/vfio/parameters/enable_unsafe_noiommu_mode)" == "Y") ]]; then
 		driver_name=vfio-pci
 	elif modinfo uio_pci_generic > /dev/null 2>&1; then
 		driver_name=uio_pci_generic
-	elif [[ -r "$rootdir/dpdk/build-tmp/kernel/linux/igb_uio/igb_uio.ko" ]]; then
-		driver_path="$rootdir/dpdk/build-tmp/kernel/linux/igb_uio/igb_uio.ko"
+	elif [[ -e $igb_uio_fallback ]]; then
 		driver_name="igb_uio"
-		modprobe uio
 		echo "WARNING: uio_pci_generic not detected - using $driver_name"
 	else
 		echo "No valid drivers found [vfio-pci, uio_pci_generic, igb_uio]. Please either enable the vfio-pci or uio_pci_generic"
