@@ -38,12 +38,19 @@
 #include <vector>
 
 extern "C" {
+#include "spdk/event.h"
+#include "spdk/jsonrpc.h"
+#include "spdk/rpc.h"
 #include "spdk/trace.h"
+#include "spdk/util.h"
+
 #include "iscsi/conn.h"
 }
 
 static char *exe_name;
 static int g_shm_id = 0;
+
+struct spdk_jsonrpc_client *g_rpc_client;
 
 static void usage(void)
 {
@@ -51,75 +58,86 @@ static void usage(void)
 	fprintf(stderr, "   %s <option>\n", exe_name);
 	fprintf(stderr, "        option = '-i' to specify the shared memory ID,"
 		" (required)\n");
+	fprintf(stderr, " -r <path>  RPC listen address (default: /var/tmp/spdk.sock\n");
 }
 
-/* Group by poll group */
-static bool
-conns_compare(struct spdk_iscsi_conn *first, struct spdk_iscsi_conn *second)
+struct rpc_conn_info {
+	uint32_t	id;
+	uint32_t	cid;
+	uint32_t	tsih;
+	uint32_t	lcore_id;
+	char		*initiator_addr;
+	char		*target_addr;
+	char		*target_node_name;
+};
+
+static struct rpc_conn_info g_conn_info[1024];
+
+static const struct spdk_json_object_decoder rpc_conn_info_decoders[] = {
+	{"id", offsetof(struct rpc_conn_info, id), spdk_json_decode_uint32},
+	{"cid", offsetof(struct rpc_conn_info, cid), spdk_json_decode_uint32},
+	{"tsih", offsetof(struct rpc_conn_info, tsih), spdk_json_decode_uint32},
+	{"lcore_id", offsetof(struct rpc_conn_info, lcore_id), spdk_json_decode_uint32},
+	{"initiator_addr", offsetof(struct rpc_conn_info, initiator_addr), spdk_json_decode_string},
+	{"target_addr", offsetof(struct rpc_conn_info, target_addr), spdk_json_decode_string},
+	{"target_node_name", offsetof(struct rpc_conn_info, target_node_name), spdk_json_decode_string},
+};
+
+static int
+rpc_decode_conn_object(const struct spdk_json_val *val, void *out)
 {
-	if ((uintptr_t)first->pg < (uintptr_t)second->pg) {
-		return true;
-	}
+	struct rpc_conn_info *info = (struct rpc_conn_info *)out;
 
-	if ((uintptr_t)first->pg > (uintptr_t)second->pg) {
-		return false;
-	}
-
-	if (first->id < second->id) {
-		return true;
-	}
-
-	return false;
+	return spdk_json_decode_object(val, rpc_conn_info_decoders,
+				       SPDK_COUNTOF(rpc_conn_info_decoders), info);
 }
 
 static void
 print_connections(void)
 {
-	std::vector<struct spdk_iscsi_conn *>		v;
-	std::vector<struct spdk_iscsi_conn *>::iterator	iter;
-	size_t			conns_size;
-	struct spdk_iscsi_conn	*conns, *conn;
-	void			*conns_ptr;
-	int			fd, i;
-	char			shm_name[64];
+	struct spdk_jsonrpc_client_response *json_resp = NULL;
+	struct spdk_json_write_ctx *w;
+	struct spdk_jsonrpc_client_request *request;
+	int rc;
+	size_t conn_count, i;
+	struct rpc_conn_info *conn;
 
-	snprintf(shm_name, sizeof(shm_name), "/spdk_iscsi_conns.%d", g_shm_id);
-	fd = shm_open(shm_name, O_RDONLY, 0600);
-	if (fd < 0) {
-		fprintf(stderr, "Cannot open shared memory: %s\n", shm_name);
-		usage();
-		exit(1);
+	request = spdk_jsonrpc_client_create_request();
+	if (request == NULL) {
+		return;
 	}
 
-	conns_size = sizeof(*conns) * MAX_ISCSI_CONNECTIONS;
+	w = spdk_jsonrpc_begin_request(request, 1, "iscsi_get_connections");
+	spdk_jsonrpc_end_request(request, w);
+	spdk_jsonrpc_client_send_request(g_rpc_client, request);
 
-	conns_ptr = mmap(NULL, conns_size, PROT_READ, MAP_SHARED, fd, 0);
-	if (conns_ptr == MAP_FAILED) {
-		fprintf(stderr, "Cannot mmap shared memory (%d)\n", errno);
-		exit(1);
+	do {
+		rc = spdk_jsonrpc_client_poll(g_rpc_client, 1);
+	} while (rc == 0 || rc == -ENOTCONN);
+
+	if (rc <= 0) {
+		goto end;
 	}
 
-	conns = (struct spdk_iscsi_conn *)conns_ptr;
-
-	for (i = 0; i < MAX_ISCSI_CONNECTIONS; i++) {
-		if (!conns[i].is_valid) {
-			continue;
-		}
-		v.push_back(&conns[i]);
+	json_resp = spdk_jsonrpc_client_get_response(g_rpc_client);
+	if (json_resp == NULL) {
+		goto end;
 	}
 
-	stable_sort(v.begin(), v.end(), conns_compare);
-	for (iter = v.begin(); iter != v.end(); iter++) {
-		conn = *iter;
-		printf("pg %p conn %3d T:%-8s I:%s (%s)\n",
-		       conn->pg, conn->id,
-		       conn->target_short_name, conn->initiator_name,
-		       conn->initiator_addr);
+	if (spdk_json_decode_array(json_resp->result, rpc_decode_conn_object, g_conn_info,
+				   SPDK_COUNTOF(g_conn_info), &conn_count, sizeof(struct rpc_conn_info))) {
+		goto end;
 	}
 
-	printf("\n");
-	munmap(conns, conns_size);
-	close(fd);
+	for (i = 0; i < conn_count; i++) {
+		conn = &g_conn_info[i];
+
+		printf("Connection: %u CID: %u TSIH: %u Initiator Address: %s Target Address: %s Target Node Name: %s\n",
+		       conn->id, conn->cid, conn->tsih, conn->initiator_addr, conn->target_addr, conn->target_node_name);
+	}
+
+end:
+	spdk_jsonrpc_client_free_request(request);
 }
 
 int main(int argc, char **argv)
@@ -127,6 +145,7 @@ int main(int argc, char **argv)
 	void			*history_ptr;
 	struct spdk_trace_histories *histories;
 	struct spdk_trace_history *history;
+	const char *rpc_socket_path = SPDK_DEFAULT_RPC_ADDR;
 
 	uint64_t		tasks_done, last_tasks_done[SPDK_TRACE_MAX_LCORE];
 	int			delay, old_delay, history_fd, i, quit, rc;
@@ -140,15 +159,24 @@ int main(int argc, char **argv)
 	int			op;
 
 	exe_name = argv[0];
-	while ((op = getopt(argc, argv, "i:")) != -1) {
+	while ((op = getopt(argc, argv, "i:r:")) != -1) {
 		switch (op) {
 		case 'i':
 			g_shm_id = atoi(optarg);
+			break;
+		case 'r':
+			rpc_socket_path = optarg;
 			break;
 		default:
 			usage();
 			exit(1);
 		}
+	}
+
+	g_rpc_client = spdk_jsonrpc_client_connect(rpc_socket_path, AF_UNIX);
+	if (!g_rpc_client) {
+		fprintf(stderr, "spdk_jsonrpc_client_connect() failed: %d\n", errno);
+		return 1;
 	}
 
 	snprintf(spdk_trace_shm_name, sizeof(spdk_trace_shm_name), "/iscsi_trace.%d", g_shm_id);
@@ -247,6 +275,8 @@ cleanup:
 
 	munmap(history_ptr, sizeof(*histories));
 	close(history_fd);
+
+	spdk_jsonrpc_client_close(g_rpc_client);
 
 	return (0);
 }

@@ -36,7 +36,8 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 APP = iscsi_top
-SPDK_NO_LINK_ENV = 1
+
+SPDK_LIB_LIST = jsonrpc json rpc log util
 
 CXXFLAGS += -I$(SPDK_ROOT_DIR)/lib
 
