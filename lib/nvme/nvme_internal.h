@@ -481,6 +481,9 @@ struct spdk_nvme_ns {
 
 	/* Namespace Identification Descriptor List (CNS = 03h) */
 	uint8_t				id_desc_list[4096];
+
+	uint32_t			ana_group_id;
+	enum spdk_nvme_ana_state	ana_state;
 };
 
 /**

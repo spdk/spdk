@@ -725,6 +725,29 @@ nvme_ctrlr_init_ana_log_page(struct spdk_nvme_ctrlr *ctrlr)
 	return nvme_ctrlr_update_ana_log_page(ctrlr);
 }
 
+static int
+nvme_ctrlr_update_ns_ana_states(const struct spdk_nvme_ana_group_descriptor *desc,
+				void *cb_arg)
+{
+	struct spdk_nvme_ctrlr *ctrlr = cb_arg;
+	struct spdk_nvme_ns *ns;
+	uint32_t i, nsid;
+
+	for (i = 0; i < desc->num_of_nsid; i++) {
+		nsid = desc->nsid[i];
+		if (nsid == 0 || nsid > ctrlr->cdata.nn) {
+			continue;
+		}
+
+		ns = &ctrlr->ns[nsid - 1];
+
+		ns->ana_group_id = desc->ana_group_id;
+		ns->ana_state = desc->ana_state;
+	}
+
+	return 0;
+}
+
 int
 nvme_ctrlr_parse_ana_log_page(struct spdk_nvme_ctrlr *ctrlr,
 			      spdk_nvme_parse_ana_log_page_cb cb_fn, void *cb_arg)
@@ -772,6 +795,10 @@ nvme_ctrlr_set_supported_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 	}
 	if (ctrlr->cdata.cmic.ana_reporting) {
 		rc = nvme_ctrlr_init_ana_log_page(ctrlr);
+		if (rc == 0) {
+			nvme_ctrlr_parse_ana_log_page(ctrlr, nvme_ctrlr_update_ns_ana_states,
+						      ctrlr);
+		}
 	}
 
 out:
@@ -2226,6 +2253,7 @@ nvme_ctrlr_async_event_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 		if (rc) {
 			return;
 		}
+		nvme_ctrlr_parse_ana_log_page(ctrlr, nvme_ctrlr_update_ns_ana_states, ctrlr);
 	}
 
 	active_proc = nvme_ctrlr_get_current_process(ctrlr);
