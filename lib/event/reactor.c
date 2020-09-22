@@ -62,8 +62,60 @@ static bool g_framework_context_switch_monitor_enabled = true;
 
 static struct spdk_mempool *g_spdk_event_mempool = NULL;
 
+TAILQ_HEAD(, spdk_scheduler) g_scheduler_list
+	= TAILQ_HEAD_INITIALIZER(g_scheduler_list);
+
+static struct spdk_scheduler *g_scheduler;
+static uint32_t g_scheduler_period;
+
 static int reactor_interrupt_init(struct spdk_reactor *reactor);
 static void reactor_interrupt_fini(struct spdk_reactor *reactor);
+
+static struct spdk_scheduler *
+_scheduler_find(char *name)
+{
+	struct spdk_scheduler *tmp;
+
+	TAILQ_FOREACH(tmp, &g_scheduler_list, link) {
+		if (strcmp(name, tmp->name) == 0) {
+			return tmp;
+		}
+	}
+
+	return NULL;
+}
+
+int
+_spdk_scheduler_set(char *name)
+{
+	struct spdk_scheduler *scheduler;
+
+	scheduler = _scheduler_find(name);
+	if (scheduler == NULL) {
+		return -ENOENT;
+	}
+
+	g_scheduler = scheduler;
+	return 0;
+}
+
+void
+_spdk_scheduler_period_set(uint32_t period)
+{
+	g_scheduler_period = period;
+}
+
+void
+_spdk_scheduler_list_add(struct spdk_scheduler *scheduler)
+{
+	if (_scheduler_find(scheduler->name)) {
+		SPDK_ERRLOG("scheduler named '%s' already registered.\n", scheduler->name);
+		assert(false);
+		return;
+	}
+
+	TAILQ_INSERT_TAIL(&g_scheduler_list, scheduler, link);
+}
 
 static void
 reactor_construct(struct spdk_reactor *reactor, uint32_t lcore)
@@ -689,6 +741,7 @@ _reactor_request_thread_reschedule(struct spdk_thread *thread)
 	assert(lw_thread != NULL);
 
 	lw_thread->resched = true;
+	lw_thread->lcore = SPDK_ENV_LCORE_ID_ANY;
 
 	current_core = spdk_env_get_current_core();
 	reactor = spdk_reactor_get(current_core);

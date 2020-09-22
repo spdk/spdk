@@ -62,8 +62,11 @@ enum spdk_reactor_state {
 
 struct spdk_lw_thread {
 	TAILQ_ENTRY(spdk_lw_thread)	link;
-	bool				resched;
 	uint64_t			tsc_start;
+	uint32_t                        lcore;
+	uint32_t                        new_lcore;
+	bool				resched;
+	struct spdk_thread_stats        current_stats;
 };
 
 struct spdk_reactor {
@@ -76,7 +79,8 @@ struct spdk_reactor {
 
 	struct {
 		uint32_t				is_valid : 1;
-		uint32_t				reserved : 31;
+		uint32_t				is_scheduling : 1;
+		uint32_t				reserved : 30;
 	} flags;
 
 	uint64_t					tsc_last;
@@ -170,6 +174,79 @@ void spdk_subsystem_config_json(struct spdk_json_write_ctx *w, struct spdk_subsy
 
 void spdk_rpc_initialize(const char *listen_addr);
 void spdk_rpc_finish(void);
+
+/**
+ * A list of cores and threads which is used for scheduling.
+ */
+struct spdk_scheduler_core_info {
+	uint64_t core_idle_tsc;
+	uint64_t core_busy_tsc;
+	uint32_t lcore;
+	uint32_t threads_count;
+	struct spdk_lw_thread **threads;
+};
+
+/**
+ * Scheduler balance function type.
+ * Accepts array of core_info which is of size 'count' and returns updated array.
+ */
+typedef void (*spdk_scheduler_balance_fn)(struct spdk_scheduler_core_info *core_info, int count);
+
+/**
+ * Scheduler init function type.
+ * Called on scheduler module initialization.
+ */
+typedef int (*spdk_scheduler_init_fn)(void);
+
+/**
+ * Scheduler deinitialization function type.
+ * Called on reactor fini.
+ */
+typedef int (*spdk_scheduler_deinit_fn)(void);
+
+/** Thread scheduler */
+struct spdk_scheduler {
+	char                        *name;
+	spdk_scheduler_init_fn       init;
+	spdk_scheduler_deinit_fn     deinit;
+	spdk_scheduler_balance_fn    balance;
+	TAILQ_ENTRY(spdk_scheduler)  link;
+};
+
+/**
+ * Add the given scheduler to the list of registered schedulers.
+ * This function should be invoked by referencing the macro
+ * SPDK_SCHEDULER_REGISTER in the scheduler c file.
+ *
+ * \param scheduler Scheduler to be added.
+ */
+void _spdk_scheduler_list_add(struct spdk_scheduler *scheduler);
+
+/**
+ * Change current scheduler.
+ *
+ * \param name Name of the scheduler to be used.
+ *
+ * \return 0 on success or non-zero on failure.
+ */
+int _spdk_scheduler_set(char *name);
+
+/**
+ * Change current scheduling period.
+ *
+ * \param period New period (ticks).
+ *               Use spdk_get_ticks_hz() to translate seconds to ticks.
+ */
+void _spdk_scheduler_period_set(uint32_t period);
+
+/*
+ * Macro used to register new reactor balancer.
+ */
+#define SPDK_SCHEDULER_REGISTER(scheduler) \
+static void __attribute__((constructor)) _spdk_scheduler_register_##name(void) \
+{ \
+	spdk_scheduler_list_add(scheduler); \
+} \
 
 /**
  * \brief Register a new subsystem
