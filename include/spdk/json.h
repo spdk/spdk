@@ -144,6 +144,8 @@ struct spdk_json_object_decoder {
 
 int spdk_json_decode_object(const struct spdk_json_val *values,
 			    const struct spdk_json_object_decoder *decoders, size_t num_decoders, void *out);
+int spdk_json_decode_object_relaxed(const struct spdk_json_val *values,
+				    const struct spdk_json_object_decoder *decoders, size_t num_decoders, void *out);
 int spdk_json_decode_array(const struct spdk_json_val *values, spdk_json_decode_fn decode_func,
 			   void *out, size_t max_size, size_t *out_size, size_t stride);
 

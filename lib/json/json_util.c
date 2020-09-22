@@ -298,9 +298,9 @@ spdk_json_number_to_uint64(const struct spdk_json_val *val, uint64_t *num)
 	return 0;
 }
 
-int
-spdk_json_decode_object(const struct spdk_json_val *values,
-			const struct spdk_json_object_decoder *decoders, size_t num_decoders, void *out)
+static int
+_json_decode_object(const struct spdk_json_val *values,
+		    const struct spdk_json_object_decoder *decoders, size_t num_decoders, void *out, bool relaxed)
 {
 	uint32_t i;
 	bool invalid = false;
@@ -344,7 +344,7 @@ spdk_json_decode_object(const struct spdk_json_val *values,
 			}
 		}
 
-		if (!found) {
+		if (!relaxed && !found) {
 			invalid = true;
 			SPDK_JSON_DEBUG("Decoder not found for key '%.*s'\n", name->len, (char *)name->start);
 		}
@@ -362,6 +362,20 @@ spdk_json_decode_object(const struct spdk_json_val *values,
 
 	free(seen);
 	return invalid ? -1 : 0;
+}
+
+int
+spdk_json_decode_object(const struct spdk_json_val *values,
+			const struct spdk_json_object_decoder *decoders, size_t num_decoders, void *out)
+{
+	return _json_decode_object(values, decoders, num_decoders, out, false);
+}
+
+int
+spdk_json_decode_object_relaxed(const struct spdk_json_val *values,
+				const struct spdk_json_object_decoder *decoders, size_t num_decoders, void *out)
+{
+	return _json_decode_object(values, decoders, num_decoders, out, true);
 }
 
 int

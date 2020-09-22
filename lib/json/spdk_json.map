@@ -4,6 +4,7 @@
 	# public functions
 	spdk_json_parse;
 	spdk_json_decode_object;
+	spdk_json_decode_object_relaxed;
 	spdk_json_decode_array;
 	spdk_json_decode_bool;
 	spdk_json_decode_uint16;
