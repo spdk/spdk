@@ -128,6 +128,8 @@ export SPDK_AUTOTEST_X
 export SPDK_TEST_RAID5
 : ${SPDK_TEST_URING=0}
 export SPDK_TEST_URING
+: ${SPDK_TEST_USE_IGB_UIO:=0}
+export SPDK_TEST_USE_IGB_UIO
 
 export DPDK_LIB_DIR="${SPDK_RUN_EXTERNAL_DPDK:-$rootdir/dpdk/build}/lib"
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SPDK_LIB_DIR:$DPDK_LIB_DIR
@@ -198,6 +200,11 @@ if [ "$(uname -s)" = "Linux" ]; then
 	MAKEFLAGS=${MAKEFLAGS:--j$(nproc)}
 	# Override the default HUGEMEM in scripts/setup.sh to allocate 8GB in hugepages.
 	export HUGEMEM=8192
+	if [[ $SPDK_TEST_USE_IGB_UIO -eq 1 ]]; then
+		export DRIVER_OVERRIDE=$rootdir/dpdk/build-tmp/kernel/linux/igb_uio/igb_uio.ko
+		# Building kernel modules requires root privileges
+		MAKE="sudo $MAKE"
+	fi
 elif [ "$(uname -s)" = "FreeBSD" ]; then
 	MAKE="gmake"
 	MAKEFLAGS=${MAKEFLAGS:--j$(sysctl -a | grep -E -i 'hw.ncpu' | awk '{print $2}')}
@@ -419,6 +426,9 @@ function get_config_params() {
 		config_params+=" --with-dpdk=$SPDK_RUN_EXTERNAL_DPDK"
 	fi
 
+	if [[ $SPDK_TEST_USE_IGB_UIO -eq 1 ]]; then
+		config_params+=" --with-igb-uio-driver"
+	fi
 	echo "$config_params"
 	xtrace_restore
 }
