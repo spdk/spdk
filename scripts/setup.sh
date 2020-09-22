@@ -267,8 +267,8 @@ function configure_linux_pci() {
 		driver_name=vfio-pci
 	elif modinfo uio_pci_generic > /dev/null 2>&1; then
 		driver_name=uio_pci_generic
-	elif [[ -r "$rootdir/dpdk/build/kmod/igb_uio.ko" ]]; then
-		driver_path="$rootdir/dpdk/build/kmod/igb_uio.ko"
+	elif [[ -r "$rootdir/dpdk/build-tmp/kernel/linux/igb_uio/igb_uio.ko" ]]; then
+		driver_path="$rootdir/dpdk/build-tmp/kernel/linux/igb_uio/igb_uio.ko"
 		driver_name="igb_uio"
 		modprobe uio
 		echo "WARNING: uio_pci_generic not detected - using $driver_name"
