@@ -283,7 +283,11 @@ function check_naming_conventions() {
 		# Capture the names of removed symbols to catch edge cases where we just move definitions around.
 		mapfile -t removed_symbols < <(git diff -U0 $commit_to_compare HEAD -- $c_file | sed -En 's/(^[-])(spdk[a-z,A-Z,0-9,_]*)(\(.*)/\2/p')
 		for symbol in "${removed_symbols[@]}"; do
-			defined_symbols=("${defined_symbols[@]/$symbol/}")
+			for i in "${!defined_symbols[@]}"; do
+				if [[ ${defined_symbols[i]} = "$symbol" ]]; then
+					unset -v 'defined_symbols[i]'
+				fi
+			done
 		done
 		# It's possible that we just modified a functions arguments so unfortunately we can't just look at changed lines in this function.
 		# matching groups are 1. All leading whitespace 2. function name. Capture just the symbol name.
