@@ -45,7 +45,6 @@
 #include "iscsi/task.h"
 #include "iscsi/tgt_node.h"
 
-#include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
 
 struct spdk_iscsi_opts *g_spdk_iscsi_opts = NULL;

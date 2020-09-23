@@ -199,8 +199,6 @@ struct spdk_iscsi_conn {
 	TAILQ_ENTRY(spdk_iscsi_conn)	conn_link;
 };
 
-extern struct spdk_iscsi_conn *g_conns_array;
-
 void iscsi_task_cpl(struct spdk_scsi_task *scsi_task);
 void iscsi_task_mgmt_cpl(struct spdk_scsi_task *scsi_task);
 

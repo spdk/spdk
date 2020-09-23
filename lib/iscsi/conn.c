@@ -36,7 +36,6 @@
 
 #include "spdk/endian.h"
 #include "spdk/env.h"
-#include "spdk/event.h"
 #include "spdk/likely.h"
 #include "spdk/thread.h"
 #include "spdk/queue.h"
@@ -62,9 +61,7 @@
 	memset(&(conn)->portal, 0, sizeof(*(conn)) -	\
 		offsetof(struct spdk_iscsi_conn, portal));
 
-struct spdk_iscsi_conn *g_conns_array = MAP_FAILED;
-static int g_conns_array_fd = -1;
-static char g_shm_name[64];
+static struct spdk_iscsi_conn *g_conns_array = NULL;
 
 static TAILQ_HEAD(, spdk_iscsi_conn) g_free_conns = TAILQ_HEAD_INITIALIZER(g_free_conns);
 static TAILQ_HEAD(, spdk_iscsi_conn) g_active_conns = TAILQ_HEAD_INITIALIZER(g_active_conns);
@@ -119,46 +116,19 @@ free_conn(struct spdk_iscsi_conn *conn)
 static void
 _iscsi_conns_cleanup(void)
 {
-	if (g_conns_array != MAP_FAILED) {
-		munmap(g_conns_array, sizeof(struct spdk_iscsi_conn) *
-		       MAX_ISCSI_CONNECTIONS);
-		g_conns_array = MAP_FAILED;
-	}
-
-	if (g_conns_array_fd >= 0) {
-		close(g_conns_array_fd);
-		g_conns_array_fd = -1;
-		shm_unlink(g_shm_name);
-	}
+	free(g_conns_array);
 }
 
 int initialize_iscsi_conns(void)
 {
-	size_t conns_size = sizeof(struct spdk_iscsi_conn) * MAX_ISCSI_CONNECTIONS;
 	uint32_t i;
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_init\n");
 
-	snprintf(g_shm_name, sizeof(g_shm_name), "/spdk_iscsi_conns.%d", spdk_app_get_shm_id());
-	g_conns_array_fd = shm_open(g_shm_name, O_RDWR | O_CREAT, 0600);
-	if (g_conns_array_fd < 0) {
-		SPDK_ERRLOG("could not shm_open %s\n", g_shm_name);
-		goto err;
+	g_conns_array = calloc(MAX_ISCSI_CONNECTIONS, sizeof(struct spdk_iscsi_conn));
+	if (g_conns_array == NULL) {
+		return -ENOMEM;
 	}
-
-	if (ftruncate(g_conns_array_fd, conns_size) != 0) {
-		SPDK_ERRLOG("could not ftruncate\n");
-		goto err;
-	}
-	g_conns_array = mmap(0, conns_size, PROT_READ | PROT_WRITE, MAP_SHARED,
-			     g_conns_array_fd, 0);
-
-	if (g_conns_array == MAP_FAILED) {
-		SPDK_ERRLOG("could not mmap cons array file %s (%d)\n", g_shm_name, errno);
-		goto err;
-	}
-
-	memset(g_conns_array, 0, conns_size);
 
 	for (i = 0; i < MAX_ISCSI_CONNECTIONS; i++) {
 		g_conns_array[i].id = i;
@@ -166,11 +136,6 @@ int initialize_iscsi_conns(void)
 	}
 
 	return 0;
-
-err:
-	_iscsi_conns_cleanup();
-
-	return -1;
 }
 
 static void
