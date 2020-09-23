@@ -43,7 +43,7 @@ C_SRCS-$(CONFIG_RDMA) += nvme_rdma.c
 C_SRCS-$(CONFIG_NVME_CUSE) += nvme_cuse.c
 
 LIBNAME = nvme
-LOCAL_SYS_LIBS = -luuid
+LOCAL_SYS_LIBS =
 ifeq ($(CONFIG_RDMA),y)
 LOCAL_SYS_LIBS += -libverbs -lrdmacm
 #Attach only if FreeBSD and RDMA is specified with configure
