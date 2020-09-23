@@ -52,7 +52,7 @@ endif
 
 SPDK_LIB_LIST += $(EVENT_BDEV_SUBSYSTEM) event_iscsi event_net event_scsi event_nvmf event
 SPDK_LIB_LIST += nvmf trace log conf thread util bdev iscsi scsi accel rpc jsonrpc json
-SPDK_LIB_LIST += app_rpc log_rpc bdev_rpc net sock notify
+SPDK_LIB_LIST += app_rpc bdev_rpc net sock notify
 
 ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
 SPDK_LIB_LIST += env_dpdk_rpc

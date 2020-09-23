@@ -42,7 +42,7 @@ C_SRCS := bdev_svc.c
 SPDK_LIB_LIST = $(ALL_MODULES_LIST)
 SPDK_LIB_LIST += $(EVENT_BDEV_SUBSYSTEM)
 SPDK_LIB_LIST += nvmf event log trace conf thread util bdev accel rpc jsonrpc json sock blobfs_bdev
-SPDK_LIB_LIST += app_rpc log_rpc bdev_rpc notify
+SPDK_LIB_LIST += app_rpc bdev_rpc notify
 
 ifeq ($(OS),Linux)
 SPDK_LIB_LIST += event_nbd nbd

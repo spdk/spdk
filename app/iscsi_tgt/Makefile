@@ -46,7 +46,7 @@ C_SRCS := iscsi_tgt.c
 SPDK_LIB_LIST = $(ALL_MODULES_LIST)
 SPDK_LIB_LIST += $(EVENT_BDEV_SUBSYSTEM) event_iscsi event_net event_scsi event
 SPDK_LIB_LIST += jsonrpc json rpc bdev_rpc bdev iscsi scsi accel trace conf
-SPDK_LIB_LIST += thread util log log_rpc app_rpc net sock notify
+SPDK_LIB_LIST += thread util log app_rpc net sock notify
 
 ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
 SPDK_LIB_LIST += env_dpdk_rpc

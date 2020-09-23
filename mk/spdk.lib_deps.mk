@@ -69,7 +69,6 @@ DEPDIRS-virtio := log util json thread
 DEPDIRS-lvol := log util blob
 DEPDIRS-rpc := log util json jsonrpc
 
-DEPDIRS-log_rpc := log $(JSON_LIBS)
 DEPDIRS-net := log util $(JSON_LIBS)
 DEPDIRS-notify := log util $(JSON_LIBS)
 DEPDIRS-trace := log util $(JSON_LIBS)
