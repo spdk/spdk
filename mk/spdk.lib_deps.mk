@@ -153,8 +153,6 @@ DEPDIRS-bdev_uring := $(BDEV_DEPS_CONF_THREAD)
 DEPDIRS-bdev_virtio := $(BDEV_DEPS_CONF_THREAD) virtio
 
 # module/event
-# module/event/app
-DEPDIRS-app_rpc := log util thread event $(JSON_LIBS)
 
 # module/event/subsystems
 # These depdirs include subsystem interdependencies which

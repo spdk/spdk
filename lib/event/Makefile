@@ -38,7 +38,8 @@ SO_VER := 5
 SO_MINOR := 0
 
 LIBNAME = event
-C_SRCS = app.c reactor.c rpc.c subsystem.c json_config.c log_rpc.c
+C_SRCS = app.c reactor.c rpc.c subsystem.c json_config.c log_rpc.c \
+	 app_rpc.c subsystem_rpc.c
 
 SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_event.map)
 
