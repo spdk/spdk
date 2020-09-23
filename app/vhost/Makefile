@@ -47,7 +47,7 @@ SPDK_LIB_LIST += rte_vhost
 endif
 
 SPDK_LIB_LIST += $(EVENT_BDEV_SUBSYSTEM) event_net event_scsi event
-SPDK_LIB_LIST += jsonrpc json rpc bdev_rpc bdev scsi accel trace conf
+SPDK_LIB_LIST += jsonrpc json rpc bdev scsi accel trace conf
 SPDK_LIB_LIST += thread util log
 SPDK_LIB_LIST += event_nbd nbd net sock notify
 

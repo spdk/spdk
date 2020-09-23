@@ -42,6 +42,9 @@ library now no longer exists.
 The contents of the app_rpc library have been moved to the event library. The app_rpc
 library now no longer exists.
 
+The contents of the bdev_rpc library have been moved to the bdev library. The app_rpc
+library now no longer exists.
+
 ## v20.07: SPDK CSI driver, new accel_fw commands, I/O abort support
 
 ### accel

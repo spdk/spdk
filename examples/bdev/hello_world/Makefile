@@ -39,6 +39,6 @@ C_SRCS := hello_bdev.c
 
 SPDK_LIB_LIST = $(ALL_MODULES_LIST)
 SPDK_LIB_LIST += $(EVENT_BDEV_SUBSYSTEM)
-SPDK_LIB_LIST += bdev_rpc bdev accel event thread util conf trace log jsonrpc json rpc sock notify
+SPDK_LIB_LIST += bdev accel event thread util conf trace log jsonrpc json rpc sock notify
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
