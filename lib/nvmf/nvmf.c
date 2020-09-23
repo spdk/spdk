@@ -297,6 +297,7 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_target_opts *opts)
 
 	tgt->accept_poller = SPDK_POLLER_REGISTER(nvmf_tgt_accept, tgt, acceptor_poll_rate);
 	if (!tgt->accept_poller) {
+		pthread_mutex_destroy(&tgt->mutex);
 		free(tgt->subsystems);
 		free(tgt);
 		return NULL;
@@ -340,6 +341,7 @@ nvmf_tgt_destroy_cb(void *io_device)
 	destroy_cb_fn = tgt->destroy_cb_fn;
 	destroy_cb_arg = tgt->destroy_cb_arg;
 
+	pthread_mutex_destroy(&tgt->mutex);
 	free(tgt);
 
 	if (destroy_cb_fn) {
