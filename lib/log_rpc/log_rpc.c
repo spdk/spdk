@@ -337,4 +337,35 @@ rpc_log_get_flags(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("log_get_flags", rpc_log_get_flags, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(log_get_flags, get_log_flags)
 
+struct rpc_log_enable_timestamps {
+	bool enabled;
+};
+
+static const struct spdk_json_object_decoder rpc_log_enable_timestamps_decoders[] = {
+	{"enabled", offsetof(struct rpc_log_enable_timestamps, enabled), spdk_json_decode_bool},
+};
+
+static void
+rpc_log_enable_timestamps(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
+{
+	struct rpc_log_enable_timestamps req = {};
+	struct spdk_json_write_ctx *w;
+
+	if (spdk_json_decode_object(params, rpc_log_enable_timestamps_decoders,
+				    SPDK_COUNTOF(rpc_log_enable_timestamps_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "spdk_json_decode_object failed");
+		return;
+	}
+
+	spdk_log_enable_timestamps(req.enabled);
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("log_enable_timestamps", rpc_log_enable_timestamps, SPDK_RPC_RUNTIME)
 SPDK_LOG_REGISTER_COMPONENT("log_rpc", SPDK_LOG_LOG_RPC)
