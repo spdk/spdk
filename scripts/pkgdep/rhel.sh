@@ -44,10 +44,10 @@ if [[ $ID == centos || $ID == rhel ]]; then
 		repos+=("https://www.elrepo.org/elrepo-release-8.el8.elrepo.noarch.rpm")
 		[[ $ID == centos ]] && repos+=("centos-release-ceph-nautilus.noarch")
 		# Add PowerTools needed for install CUnit-devel in Centos8
-		[[ $ID == centos ]] && repos+=("yum-utils") && enable+=("PowerTools")
+		[[ $ID == centos ]] && enable+=("PowerTools")
 	fi
 	if ((${#repos[@]} > 0)); then
-		yum install -y "${repos[@]}"
+		yum install -y "${repos[@]}" yum-utils
 		yum-config-manager --enable "${enable[@]}"
 	fi
 	# Potential dependencies can be needed from other RHEL repos, enable them
