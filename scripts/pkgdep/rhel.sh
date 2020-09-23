@@ -16,6 +16,9 @@ disclaimer() {
 			# Don't trigger errexit, simply install what's available. This is default
 			# behavior of older yum versions (e.g. the one present on RHEL 7.x) anyway.
 			yum() { "$(type -P yum)" --skip-broken "$@"; }
+			# For systems which are not registered, subscription-manager will most likely
+			# fail on most calls so simply ignore its failures.
+			sub() { subscription-manager "$@" || :; }
 			;;
 
 		*) ;;
@@ -52,8 +55,8 @@ if [[ $ID == centos || $ID == rhel ]]; then
 	fi
 	# Potential dependencies can be needed from other RHEL repos, enable them
 	if [[ $ID == rhel ]]; then
-		[[ $VERSION_ID == 7* ]] && subscription-manager repos --enable "rhel-*-optional-rpms" --enable "rhel-*-extras-rpms"
-		[[ $VERSION_ID == 8* ]] && subscription-manager repos --enable codeready-builder-for-rhel-8-x86_64-rpms
+		[[ $VERSION_ID == 7* ]] && sub repos --enable "rhel-*-optional-rpms" --enable "rhel-*-extras-rpms"
+		[[ $VERSION_ID == 8* ]] && sub repos --enable codeready-builder-for-rhel-8-x86_64-rpms
 	fi
 fi
 
