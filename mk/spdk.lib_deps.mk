@@ -158,14 +158,14 @@ DEPDIRS-bdev_virtio := $(BDEV_DEPS_CONF_THREAD) virtio
 # These depdirs include subsystem interdependencies which
 # are not related to symbols, but are defined directly in
 # the SPDK event subsystem code.
-DEPDIRS-event_accel := accel event
-DEPDIRS-event_net := net event
-DEPDIRS-event_vmd := vmd conf $(JSON_LIBS) event log thread
+DEPDIRS-event_accel := event accel
+DEPDIRS-event_net := event net
+DEPDIRS-event_vmd := event vmd conf $(JSON_LIBS) log thread
 
-DEPDIRS-event_bdev := bdev event event_accel event_vmd event_sock
+DEPDIRS-event_bdev := event bdev event_accel event_vmd event_sock
 
 DEPDIRS-event_nbd := event nbd event_bdev
-DEPDIRS-event_nvmf := $(BDEV_DEPS_CONF_THREAD) event nvme nvmf event_bdev event_sock
+DEPDIRS-event_nvmf := event nvmf event_bdev event_sock $(BDEV_DEPS_CONF_THREAD) nvme
 DEPDIRS-event_scsi := event scsi event_bdev
 
 DEPDIRS-event_iscsi := event iscsi event_scsi event_sock
