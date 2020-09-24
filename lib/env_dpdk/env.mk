@@ -62,12 +62,6 @@ ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_mempool_ring.*))
 DPDK_LIB_LIST += rte_mempool_ring
 endif
 
-# librte_malloc was removed after DPDK 2.1.  Link this library conditionally based on its
-#  existence to maintain backward compatibility.
-ifneq ($(wildcard $(DPDK_ABS_DIR)/lib/librte_malloc.*),)
-DPDK_LIB_LIST += rte_malloc
-endif
-
 # librte_pci and librte_bus_pci were added in DPDK 17.11. Link these libraries conditionally
 # based on their existence to maintain backward compatibility.
 ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_pci.*))
