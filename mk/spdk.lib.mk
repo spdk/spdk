@@ -60,9 +60,7 @@ DEP := $(LIB)
 endif
 
 ifeq ($(OS),FreeBSD)
-LOCAL_SYS_LIBS += -L/usr/local/lib -lrt
-else
-LOCAL_SYS_LIBS += -lrt
+LOCAL_SYS_LIBS += -L/usr/local/lib
 endif
 
 define subdirs_rule
