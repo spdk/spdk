@@ -1359,7 +1359,7 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	/*
-	 * For PCIe controllers, the memory locations of the tranpsort qpair
+	 * For PCIe controllers, the memory locations of the transport qpair
 	 * don't change when the controller is reset. They simply need to be
 	 * re-enabled with admin commands to the controller. For fabric
 	 * controllers we need to disconnect and reconnect the qpair on its
