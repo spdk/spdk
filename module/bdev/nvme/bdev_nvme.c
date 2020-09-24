@@ -1773,7 +1773,7 @@ bdev_nvme_async_poll(void *arg)
 	return SPDK_POLLER_BUSY;
 }
 
-int
+static int
 bdev_nvme_add_trid(const char *name, struct spdk_nvme_transport_id *trid)
 {
 	struct nvme_bdev_ctrlr		*nvme_bdev_ctrlr;
