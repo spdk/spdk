@@ -1774,9 +1774,8 @@ bdev_nvme_async_poll(void *arg)
 }
 
 static int
-bdev_nvme_add_trid(const char *name, struct spdk_nvme_transport_id *trid)
+bdev_nvme_add_trid(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct spdk_nvme_transport_id *trid)
 {
-	struct nvme_bdev_ctrlr		*nvme_bdev_ctrlr;
 	struct spdk_nvme_ctrlr		*new_ctrlr;
 	struct spdk_nvme_ctrlr_opts	opts;
 	uint32_t			i;
@@ -1785,13 +1784,7 @@ bdev_nvme_add_trid(const char *name, struct spdk_nvme_transport_id *trid)
 	struct nvme_bdev_ctrlr_trid	*new_trid;
 	int				rc = 0;
 
-	assert(name != NULL);
-
-	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name(name);
-	if (nvme_bdev_ctrlr == NULL) {
-		SPDK_ERRLOG("Failed to find NVMe controller\n");
-		return -ENODEV;
-	}
+	assert(nvme_bdev_ctrlr != NULL);
 
 	/* Currently we only support failover to the same transport type. */
 	if (nvme_bdev_ctrlr->connected_trid->trtype != trid->trtype) {
@@ -1942,7 +1935,7 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 			free(ctx);
 			return -EEXIST;
 		}
-		rc = bdev_nvme_add_trid(existing_ctrlr->name, trid);
+		rc = bdev_nvme_add_trid(existing_ctrlr, trid);
 		if (rc) {
 			free(ctx);
 			return rc;
