@@ -190,13 +190,16 @@ to do the following steps:
 - run ldconfig specifying the directory containing SPDK shared libraries
 - provide proper `LD_LIBRARY_PATH`
 
+If DPDK shared libraries are used, you may also need to add DPDK shared
+libraries to `LD_LIBRARY_PATH`
+
 Linux:
 
 ~~~{.sh}
 ./configure --with-shared
 make
 ldconfig -v -n ./build/lib
-LD_LIBRARY_PATH=./build/lib/ ./build/bin/spdk_tgt
+LD_LIBRARY_PATH=./build/lib/:./dpdk/build/lib/ ./build/bin/spdk_tgt
 ~~~
 
 <a id="huge"></a>
