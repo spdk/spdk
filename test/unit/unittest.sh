@@ -26,7 +26,11 @@ function unittest_bdev() {
 }
 
 function unittest_blob() {
-	$valgrind $testdir/lib/blob/blob.c/blob_ut
+	# We do not compile blob_ut on systems with too old Cunit, so do
+	# not try to execute it if it doesn't exist
+	if [[ -e $testdir/lib/blob/blob.c/blob_ut ]]; then
+		$valgrind $testdir/lib/blob/blob.c/blob_ut
+	fi
 	$valgrind $testdir/lib/blobfs/tree.c/tree_ut
 	$valgrind $testdir/lib/blobfs/blobfs_async_ut/blobfs_async_ut
 	# blobfs_sync_ut hangs when run under valgrind, so don't use $valgrind
