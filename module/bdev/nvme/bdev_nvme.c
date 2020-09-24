@@ -1947,6 +1947,9 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 			free(ctx);
 			return rc;
 		}
+
+		nvme_ctrlr_populate_namespaces_done(ctx);
+		return 0;
 	}
 
 	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
@@ -1957,11 +1960,6 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 				break;
 			}
 		}
-	}
-
-	if (existing_ctrlr) {
-		nvme_ctrlr_populate_namespaces_done(ctx);
-		return 0;
 	}
 
 	spdk_nvme_ctrlr_get_default_ctrlr_opts(&ctx->opts, sizeof(ctx->opts));
