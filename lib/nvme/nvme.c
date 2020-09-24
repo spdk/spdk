@@ -491,8 +491,16 @@ nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid,
 	if (!probe_ctx->probe_cb || probe_ctx->probe_cb(probe_ctx->cb_ctx, trid, &opts)) {
 		ctrlr = nvme_get_ctrlr_by_trid_unsafe(trid);
 		if (ctrlr) {
-			/* This ctrlr already exists.
-			* Increase the ref count before calling attach_cb() as the user may
+			/* This ctrlr already exists. */
+
+			if (ctrlr->is_destructed) {
+				/* This ctrlr is being destructed asynchronously. */
+				SPDK_ERRLOG("NVMe controller for SSD: %s is being destructed\n",
+					    trid->traddr);
+				return -EBUSY;
+			}
+
+			/* Increase the ref count before calling attach_cb() as the user may
 			* call nvme_detach() immediately. */
 			nvme_ctrlr_proc_get_ref(ctrlr);
 
