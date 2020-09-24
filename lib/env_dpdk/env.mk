@@ -54,22 +54,12 @@ else
 DPDK_LIB_EXT = .a
 endif
 
-DPDK_LIB_LIST = rte_eal rte_mempool rte_ring rte_mbuf
+DPDK_LIB_LIST = rte_eal rte_mempool rte_ring rte_mbuf rte_pci rte_bus_pci
 
 # librte_mempool_ring was new added from DPDK 17.05. Link this library used for
 #   ring based mempool management API.
 ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_mempool_ring.*))
 DPDK_LIB_LIST += rte_mempool_ring
-endif
-
-# librte_pci and librte_bus_pci were added in DPDK 17.11. Link these libraries conditionally
-# based on their existence to maintain backward compatibility.
-ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_pci.*))
-DPDK_LIB_LIST += rte_pci
-endif
-
-ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_bus_pci.*))
-DPDK_LIB_LIST += rte_bus_pci
 endif
 
 # DPDK 20.05 eal dependency
