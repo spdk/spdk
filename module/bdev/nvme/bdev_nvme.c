@@ -1786,6 +1786,11 @@ bdev_nvme_add_trid(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct spdk_nvme_tra
 
 	assert(nvme_bdev_ctrlr != NULL);
 
+	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
+		SPDK_ERRLOG("PCIe failover is not supported.\n");
+		return -ENOTSUP;
+	}
+
 	/* Currently we only support failover to the same transport type. */
 	if (nvme_bdev_ctrlr->connected_trid->trtype != trid->trtype) {
 		return -EINVAL;
@@ -1929,12 +1934,6 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 
 	existing_ctrlr = nvme_bdev_ctrlr_get_by_name(base_name);
 	if (existing_ctrlr) {
-		if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
-			SPDK_ERRLOG("A controller with the provided name (name: %s) already exists with transport type PCIe. PCIe multipath is not supported.\n",
-				    base_name);
-			free(ctx);
-			return -EEXIST;
-		}
 		rc = bdev_nvme_add_trid(existing_ctrlr, trid);
 		if (rc) {
 			free(ctx);
