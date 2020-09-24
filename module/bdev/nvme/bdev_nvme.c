@@ -1914,6 +1914,14 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	struct nvme_bdev_ctrlr		*existing_ctrlr;
 	int				rc;
 
+	/* TODO expand this check to include both the host and target TRIDs.
+	 * Only if both are the same should we fail.
+	 */
+	if (nvme_bdev_ctrlr_get(trid) != NULL) {
+		SPDK_ERRLOG("A controller with the provided trid (traddr: %s) already exists.\n", trid->traddr);
+		return -EEXIST;
+	}
+
 	existing_ctrlr = nvme_bdev_ctrlr_get_by_name(base_name);
 	if (existing_ctrlr) {
 		if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
@@ -1925,10 +1933,6 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		if (rc) {
 			return rc;
 		}
-		/* TODO expand this check to include both the host and target TRIDs. Only if both are the same should we fail. */
-	} else if (nvme_bdev_ctrlr_get(trid) != NULL) {
-		SPDK_ERRLOG("A controller with the provided trid (traddr: %s) already exists.\n", trid->traddr);
-		return -EEXIST;
 	}
 
 	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
