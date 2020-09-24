@@ -846,6 +846,7 @@ struct spdk_nvme_probe_ctx {
 struct nvme_ctrlr_detach_ctx {
 	uint64_t	shutdown_start_tsc;
 	uint32_t	shutdown_timeout_ms;
+	bool		shutdown_complete;
 };
 
 struct nvme_driver {
@@ -967,6 +968,10 @@ int	nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid,
 int	nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ctrlr_destruct_finish(struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr);
+void	nvme_ctrlr_destruct_async(struct spdk_nvme_ctrlr *ctrlr,
+				  struct nvme_ctrlr_detach_ctx *ctx);
+int	nvme_ctrlr_destruct_poll_async(struct spdk_nvme_ctrlr *ctrlr,
+				       struct nvme_ctrlr_detach_ctx *ctx);
 void	nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove);
 int	nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr);
 int	nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr);

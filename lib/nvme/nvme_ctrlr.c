@@ -944,11 +944,13 @@ nvme_ctrlr_shutdown_async(struct spdk_nvme_ctrlr *ctrlr,
 	union spdk_nvme_cc_register	cc;
 
 	if (ctrlr->is_removed) {
+		ctx->shutdown_complete = true;
 		return;
 	}
 
 	if (nvme_ctrlr_get_cc(ctrlr, &cc)) {
 		SPDK_ERRLOG("ctrlr %s get_cc() failed\n", ctrlr->trid.traddr);
+		ctx->shutdown_complete = true;
 		return;
 	}
 
@@ -956,6 +958,7 @@ nvme_ctrlr_shutdown_async(struct spdk_nvme_ctrlr *ctrlr,
 
 	if (nvme_ctrlr_set_cc(ctrlr, &cc)) {
 		SPDK_ERRLOG("ctrlr %s set_cc() failed\n", ctrlr->trid.traddr);
+		ctx->shutdown_complete = true;
 		return;
 	}
 
@@ -3269,11 +3272,10 @@ nvme_ctrlr_destruct_finish(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 void
-nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
+nvme_ctrlr_destruct_async(struct spdk_nvme_ctrlr *ctrlr,
+			  struct nvme_ctrlr_detach_ctx *ctx)
 {
 	struct spdk_nvme_qpair *qpair, *tmp;
-	struct nvme_ctrlr_detach_ctx ctx = {};
-	int rc;
 
 	SPDK_DEBUGLOG(nvme, "Prepare to destruct SSD: %s\n", ctrlr->trid.traddr);
 
@@ -3295,15 +3297,24 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 		SPDK_INFOLOG(nvme, "Disable SSD: %s without shutdown notification\n",
 			     ctrlr->trid.traddr);
 		nvme_ctrlr_disable(ctrlr);
+		ctx->shutdown_complete = true;
 	} else {
-		nvme_ctrlr_shutdown_async(ctrlr, &ctx);
-		while (1) {
-			rc = nvme_ctrlr_shutdown_poll_async(ctrlr, &ctx);
-			if (rc != -EAGAIN) {
-				break;
-			}
-			nvme_delay(1000);
+		nvme_ctrlr_shutdown_async(ctrlr, ctx);
+	}
+}
+
+int
+nvme_ctrlr_destruct_poll_async(struct spdk_nvme_ctrlr *ctrlr,
+			       struct nvme_ctrlr_detach_ctx *ctx)
+{
+	int rc = 0;
+
+	if (!ctx->shutdown_complete) {
+		rc = nvme_ctrlr_shutdown_poll_async(ctrlr, ctx);
+		if (rc == -EAGAIN) {
+			return -EAGAIN;
 		}
+		/* Destruct ctrlr forcefully for any other error. */
 	}
 
 	nvme_ctrlr_destruct_namespaces(ctrlr);
@@ -3315,6 +3326,25 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	ctrlr->ana_log_page_size = 0;
 
 	nvme_transport_ctrlr_destruct(ctrlr);
+
+	return rc;
+}
+
+void
+nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct nvme_ctrlr_detach_ctx ctx = {};
+	int rc;
+
+	nvme_ctrlr_destruct_async(ctrlr, &ctx);
+
+	while (1) {
+		rc = nvme_ctrlr_destruct_poll_async(ctrlr, &ctx);
+		if (rc != -EAGAIN) {
+			break;
+		}
+		nvme_delay(1000);
+	}
 }
 
 int
