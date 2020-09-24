@@ -413,3 +413,7 @@ endef
 define add_whole_archive
 -Wl,--whole-archive $(1) -Wl,--no-whole-archive
 endef
+
+define pkgconfig_filename
+$(SPDK_ROOT_DIR)/build/lib/pkgconfig/$(1).pc
+endef

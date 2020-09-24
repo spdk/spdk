@@ -45,3 +45,12 @@ LIBNAME = env_dpdk
 SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_env_dpdk.map)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
+
+LIBDPDK_PKGCONFIG = $(call pkgconfig_filename,spdk_dpdklibs)
+
+$(LIBDPDK_PKGCONFIG): $(PKGCONFIG)
+	$(Q)$(SPDK_ROOT_DIR)/scripts/pc_libs.sh \
+		"-L$(DPDK_ABS_DIR)/lib $(DPDK_LIB_LIST:%=-l%)" "" DPDK spdk_dpdklibs > $@
+	$(Q)echo Requires: spdk_dpdklibs >> $(PKGCONFIG)
+
+all : $(LIBDPDK_PKGCONFIG)

@@ -33,6 +33,7 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 DIRS-y = bdev blob blobfs accel event sock
 ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
@@ -49,7 +50,33 @@ DEPDIRS-event := bdev blob
 
 .PHONY: all clean $(DIRS-y)
 
-all: $(DIRS-y)
+BDEV_MODULES_PKGCONFIG = $(call pkgconfig_filename,spdk_bdev_modules)
+ACCEL_MODULES_PKGCONFIG = $(call pkgconfig_filename,spdk_accel_modules)
+SOCK_MODULES_PKGCONFIG = $(call pkgconfig_filename,spdk_sock_modules)
+SYSLIBS_PKGCONFIG = $(call pkgconfig_filename,spdk_syslibs)
+
+PRIVATE_SYSLIBS = $(SYS_LIBS)
+ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
+PRIVATE_SYSLIBS += $(DPDK_PRIVATE_LINKER_ARGS)
+endif
+
+MODULES_PKGCONFIG = $(BDEV_MODULES_PKGCONFIG) $(ACCEL_MODULES_PKGCONFIG)
+MODULES_PKGCONFIG += $(SOCK_MODULES_PKGCONFIG) $(SYSLIBS_PKGCONFIG)
+
+$(BDEV_MODULES_PKGCONFIG):
+	$(Q)$(SPDK_ROOT_DIR)/scripts/pc_modules.sh bdev "$(BLOCKDEV_MODULES_LIST:%=spdk_%)" > $@
+
+$(ACCEL_MODULES_PKGCONFIG):
+	$(Q)$(SPDK_ROOT_DIR)/scripts/pc_modules.sh accel "$(ACCEL_MODULES_LIST:%=spdk_%)" > $@
+
+$(SOCK_MODULES_PKGCONFIG):
+	$(Q)$(SPDK_ROOT_DIR)/scripts/pc_modules.sh sock "$(SOCK_MODULES_LIST:%=spdk_%)" > $@
+
+$(SYSLIBS_PKGCONFIG):
+	$(Q)$(SPDK_ROOT_DIR)/scripts/pc_libs.sh "" "$(PRIVATE_SYSLIBS)" System spdk_syslibs > $@
+
+all: $(DIRS-y) $(MODULES_PKGCONFIG)
+
 clean: $(DIRS-y)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk

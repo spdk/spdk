@@ -2,6 +2,7 @@
 
 - @subpage system_configuration
 - @subpage libraries
+- @subpage pkgconfig
 - @subpage app_overview
 - @subpage iscsi
 - @subpage nvmf

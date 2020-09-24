@@ -833,6 +833,7 @@ INPUT                  += \
                          nvmf_tracing.md \
                          overview.md \
                          peer_2_peer.md \
+                         pkgconfig.md \
                          porting.md \
                          shfmt.md \
                          spdkcli.md \

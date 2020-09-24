@@ -33,7 +33,7 @@
 
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.lib_deps.mk
-
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 ifeq ($(SPDK_MAP_FILE),)
 $(error SPDK_MAP_FILE is not set for lib $(LIBNAME))
@@ -53,10 +53,12 @@ LIB := $(call spdk_lib_list_to_static_libs,$(LIBNAME))
 SHARED_LINKED_LIB := $(LIB:.a=.so)
 SHARED_REALNAME_LIB := $(SHARED_LINKED_LIB:.so=.so.$(SO_SUFFIX))
 
+PKGCONFIG = $(call pkgconfig_filename,spdk_$(LIBNAME))
+
 ifeq ($(CONFIG_SHARED),y)
-DEP := $(SHARED_LINKED_LIB)
+DEP := $(SHARED_LINKED_LIB) $(PKGCONFIG)
 else
-DEP := $(LIB)
+DEP := $(LIB) $(PKGCONFIG)
 endif
 
 ifeq ($(OS),FreeBSD)
@@ -80,6 +82,13 @@ ifeq ($(SPDK_NO_LIB_DEPS),)
 SPDK_DEP_LIBS = $(call spdk_lib_list_to_shared_libs,$(DEPDIRS-$(LIBNAME)))
 endif
 
+MODULES-bdev = spdk_bdev_modules
+MODULES-sock = spdk_sock_modules
+MODULES-accel = spdk_accel_modules
+ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
+MODULES-event = spdk_env_dpdk_rpc
+endif
+
 .PHONY: all clean $(DIRS-y)
 
 all: $(BUILD_DEP)
@@ -94,6 +103,11 @@ $(SHARED_LINKED_LIB): $(SHARED_REALNAME_LIB)
 $(SHARED_REALNAME_LIB): $(LIB)
 	$(Q)echo "  SO $(notdir $@)"; \
 	$(call spdk_build_realname_shared_lib,$^,$(SPDK_MAP_FILE),$(LOCAL_SYS_LIBS),$(SPDK_DEP_LIBS))
+
+$(PKGCONFIG): $(LIB)
+	$(Q)$(SPDK_ROOT_DIR)/scripts/pc.sh $(SPDK_ROOT_DIR) $(LIBNAME) $(SO_SUFFIX) \
+		"$(DEPDIRS-$(LIBNAME):%=spdk_%) $(MODULES-$(LIBNAME))" \
+		"" > $@
 
 $(LIB): $(OBJS)
 	$(LIB_C)

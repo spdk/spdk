@@ -91,6 +91,7 @@ clean: $(DIRS-y)
 	$(Q)rm -rf build/fio
 	$(Q)rm -rf build/examples
 	$(Q)rm -rf build/include
+	$(Q)rm -rf build/lib/pkgconfig
 	$(Q)find build/lib ! -name .gitignore -type f -delete
 
 install: all
@@ -119,7 +120,7 @@ mk/cc.mk:
 	false
 
 build_dir: mk/cc.mk
-	$(Q)mkdir -p build/lib
+	$(Q)mkdir -p build/lib/pkgconfig
 	$(Q)mkdir -p build/bin
 	$(Q)mkdir -p build/fio
 	$(Q)mkdir -p build/examples

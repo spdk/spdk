@@ -83,6 +83,11 @@ parameter is added into `spdk_app_opts_init` function.
 Change the return type of function `spdk_nbd_stop` from void to int. And update the
 `spdk_nbd_fini` with two parameters to make its behavior from sync to async.
 
+### build
+
+SPDK now generates pkg-config files to simplify the process of determining which
+libraries must be linked into an SPDK application.
+
 ### nvmf
 
 nvmf_fc_lld_fini() now takes callback and hence updating FC Broadcom LLD driver
