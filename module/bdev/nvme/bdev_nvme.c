@@ -1922,15 +1922,29 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		return -EEXIST;
 	}
 
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		return -ENOMEM;
+	}
+	ctx->base_name = base_name;
+	ctx->names = names;
+	ctx->count = count;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_ctx = cb_ctx;
+	ctx->prchk_flags = prchk_flags;
+	ctx->trid = *trid;
+
 	existing_ctrlr = nvme_bdev_ctrlr_get_by_name(base_name);
 	if (existing_ctrlr) {
 		if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
 			SPDK_ERRLOG("A controller with the provided name (name: %s) already exists with transport type PCIe. PCIe multipath is not supported.\n",
 				    base_name);
+			free(ctx);
 			return -EEXIST;
 		}
 		rc = bdev_nvme_add_trid(existing_ctrlr->name, trid);
 		if (rc) {
+			free(ctx);
 			return rc;
 		}
 	}
@@ -1944,18 +1958,6 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 			}
 		}
 	}
-
-	ctx = calloc(1, sizeof(*ctx));
-	if (!ctx) {
-		return -ENOMEM;
-	}
-	ctx->base_name = base_name;
-	ctx->names = names;
-	ctx->count = count;
-	ctx->cb_fn = cb_fn;
-	ctx->cb_ctx = cb_ctx;
-	ctx->prchk_flags = prchk_flags;
-	ctx->trid = *trid;
 
 	if (existing_ctrlr) {
 		nvme_ctrlr_populate_namespaces_done(ctx);
