@@ -48,12 +48,6 @@ DPDK_INC_DIR := $(DPDK_ABS_DIR)/include/dpdk
 endif
 DPDK_INC := -I$(DPDK_INC_DIR)
 
-ifeq ($(CONFIG_SHARED),y)
-DPDK_LIB_EXT = .so
-else
-DPDK_LIB_EXT = .a
-endif
-
 DPDK_LIB_LIST = rte_eal rte_mempool rte_ring rte_mbuf rte_pci rte_bus_pci rte_mempool_ring
 
 # DPDK 20.05 eal dependency
@@ -103,27 +97,14 @@ ifeq ($(LINK_HASH),y)
 DPDK_LIB_LIST += rte_hash
 endif
 
-define dpdk_lib_list_to_libs
-$(1:%=$(DPDK_ABS_DIR)/lib/lib%$(DPDK_LIB_EXT))
-endef
-
-define dpdk_env_linker_args
-$(ENV_DPDK_FILE) -Wl,--whole-archive,--no-as-needed $(call dpdk_lib_list_to_libs,$1) -Wl,--no-whole-archive
-endef
-
-DPDK_LIB = $(call dpdk_lib_list_to_libs,$(DPDK_LIB_LIST))
+DPDK_SHARED_LIB = $(DPDK_LIB_LIST:%=$(DPDK_ABS_DIR)/lib/lib%.so)
+DPDK_STATIC_LIB = $(DPDK_LIB_LIST:%=$(DPDK_ABS_DIR)/lib/lib%.a)
+DPDK_SHARED_LIB_LINKER_ARGS = $(call add_no_as_needed,$(DPDK_SHARED_LIB))
+DPDK_STATIC_LIB_LINKER_ARGS = $(call add_whole_archive,$(DPDK_STATIC_LIB))
 
 # SPDK memory registration requires experimental (deprecated) rte_memory API for DPDK 18.05
 ENV_CFLAGS = $(DPDK_INC) -Wno-deprecated-declarations
 ENV_CXXFLAGS = $(ENV_CFLAGS)
-ifeq ($(CONFIG_SHARED),y)
-ENV_DPDK_FILE = $(call spdk_lib_list_to_shared_libs,env_dpdk)
-else
-ENV_DPDK_FILE = $(call spdk_lib_list_to_static_libs,env_dpdk)
-endif
-ENV_LIBS = $(ENV_DPDK_FILE) $(DPDK_LIB)
-ENV_LINKER_ARGS = -Wl,-rpath-link $(DPDK_ABS_DIR)/lib
-ENV_LINKER_ARGS += $(call dpdk_env_linker_args,$(DPDK_LIB_LIST))
 
 DPDK_PRIVATE_LINKER_ARGS =
 
@@ -155,4 +136,15 @@ ifeq ($(OS),FreeBSD)
 DPDK_PRIVATE_LINKER_ARGS += -lexecinfo
 endif
 
+ifeq ($(CONFIG_SHARED),y)
+ENV_DPDK_FILE = $(call spdk_lib_list_to_shared_libs,env_dpdk)
+ENV_LIBS = $(ENV_DPDK_FILE) $(DPDK_SHARED_LIB)
+DPDK_LINKER_ARGS = -Wl,-rpath-link $(DPDK_ABS_DIR)/lib $(DPDK_SHARED_LIB_LINKER_ARGS)
+ENV_LINKER_ARGS = $(ENV_DPDK_FILE) $(DPDK_LINKER_ARGS)
+else
+ENV_DPDK_FILE = $(call spdk_lib_list_to_static_libs,env_dpdk)
+ENV_LIBS = $(ENV_DPDK_FILE) $(DPDK_STATIC_LIB)
+DPDK_LINKER_ARGS = -Wl,-rpath-link $(DPDK_ABS_DIR)/lib $(DPDK_STATIC_LIB_LINKER_ARGS)
+ENV_LINKER_ARGS = $(ENV_DPDK_FILE) $(DPDK_LINKER_ARGS)
 ENV_LINKER_ARGS += $(DPDK_PRIVATE_LINKER_ARGS)
+endif
