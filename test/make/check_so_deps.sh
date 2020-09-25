@@ -131,6 +131,11 @@ EOF
 					echo "SO minor version for $so_file was incremented more than once. Please revert minor version to $expected_new_so_min."
 					touch $fail_file
 				fi
+
+				if ((new_so_maj > old_so_maj + 1)); then
+					echo "SO major version for $so_file was incremented more than once. Please revert major version to $((old_so_maj + 1))."
+					touch $fail_file
+				fi
 			fi
 
 			continue
