@@ -265,6 +265,7 @@ deallocate_test(void)
 		ns_entry->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ns_entry->ctrlr, NULL, 0);
 		if (ns_entry->qpair == NULL) {
 			printf("ERROR: spdk_nvme_ctrlr_alloc_io_qpair() failed.\n");
+			cleanup(&context);
 			return;
 		}
 
