@@ -148,6 +148,8 @@ static void vhost_scsi_dump_info_json(struct spdk_vhost_dev *vdev,
 static void vhost_scsi_write_config_json(struct spdk_vhost_dev *vdev,
 		struct spdk_json_write_ctx *w);
 static int vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev);
+static int vhost_scsi_dev_param_changed(struct spdk_vhost_dev *vdev,
+					unsigned scsi_tgt_num);
 
 static const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
 	.session_ctx_size = sizeof(struct spdk_vhost_scsi_session) - sizeof(struct spdk_vhost_session),
@@ -933,10 +935,10 @@ spdk_vhost_scsi_dev_get_tgt(struct spdk_vhost_dev *vdev, uint8_t num)
 	return svdev->scsi_dev_state[num].dev;
 }
 
-static void
-vhost_scsi_lun_hotremove(const struct spdk_scsi_lun *lun, void *arg)
+static unsigned
+get_scsi_dev_num(const struct spdk_vhost_scsi_dev *svdev,
+		 const struct spdk_scsi_lun *lun)
 {
-	struct spdk_vhost_scsi_dev *svdev = arg;
 	const struct spdk_scsi_dev *scsi_dev;
 	unsigned scsi_dev_num;
 
@@ -949,6 +951,31 @@ vhost_scsi_lun_hotremove(const struct spdk_scsi_lun *lun, void *arg)
 		}
 	}
 
+	return scsi_dev_num;
+}
+
+static void
+vhost_scsi_lun_resize(const struct spdk_scsi_lun *lun, void *arg)
+{
+	struct spdk_vhost_scsi_dev *svdev = arg;
+	unsigned scsi_dev_num;
+
+	scsi_dev_num = get_scsi_dev_num(svdev, lun);
+	if (scsi_dev_num == SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
+		/* The entire device has been already removed. */
+		return;
+	}
+
+	vhost_scsi_dev_param_changed(&svdev->vdev, scsi_dev_num);
+}
+
+static void
+vhost_scsi_lun_hotremove(const struct spdk_scsi_lun *lun, void *arg)
+{
+	struct spdk_vhost_scsi_dev *svdev = arg;
+	unsigned scsi_dev_num;
+
+	scsi_dev_num = get_scsi_dev_num(svdev, lun);
 	if (scsi_dev_num == SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
 		/* The entire device has been already removed. */
 		return;
@@ -1079,9 +1106,10 @@ spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, int scsi_tgt_num,
 	bdev_names_list[0] = (char *)bdev_name;
 
 	state->status = VHOST_SCSI_DEV_ADDING;
-	state->dev = spdk_scsi_dev_construct(target_name, bdev_names_list, lun_id_list, 1,
-					     SPDK_SPC_PROTOCOL_IDENTIFIER_SAS,
-					     vhost_scsi_lun_hotremove, svdev);
+	state->dev = spdk_scsi_dev_construct_ext(target_name, bdev_names_list, lun_id_list, 1,
+			SPDK_SPC_PROTOCOL_IDENTIFIER_SAS,
+			vhost_scsi_lun_resize, svdev,
+			vhost_scsi_lun_hotremove, svdev);
 
 	if (state->dev == NULL) {
 		state->status = VHOST_SCSI_DEV_EMPTY;
@@ -1138,7 +1166,7 @@ vhost_scsi_session_remove_tgt(struct spdk_vhost_dev *vdev,
 	assert(state->status == VHOST_SCSI_DEV_PRESENT);
 	state->status = VHOST_SCSI_DEV_REMOVING;
 
-	/* Send a hotremove Virtio event */
+	/* Send a hotremove virtio event */
 	if (vhost_dev_has_feature(vsession, VIRTIO_SCSI_F_HOTPLUG)) {
 		eventq_enqueue(svsession, scsi_tgt_num,
 			       VIRTIO_SCSI_T_TRANSPORT_RESET, VIRTIO_SCSI_EVT_RESET_REMOVED);
@@ -1197,6 +1225,73 @@ spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_nu
 
 	vhost_dev_foreach_session(vdev, vhost_scsi_session_remove_tgt,
 				  vhost_scsi_dev_remove_tgt_cpl_cb, ctx);
+	return 0;
+}
+
+static int
+vhost_scsi_session_param_changed(struct spdk_vhost_dev *vdev,
+				 struct spdk_vhost_session *vsession, void *ctx)
+{
+	unsigned scsi_tgt_num = (unsigned)(uintptr_t)ctx;
+	struct spdk_vhost_scsi_session *svsession = (struct spdk_vhost_scsi_session *)vsession;
+	struct spdk_scsi_dev_session_state *state = &svsession->scsi_dev_state[scsi_tgt_num];
+
+	if (!vsession->started || state->dev == NULL) {
+		/* Nothing to do */
+		return 0;
+	}
+
+	/* Send a parameter change virtio event */
+	if (vhost_dev_has_feature(vsession, VIRTIO_SCSI_F_CHANGE)) {
+		/*
+		 * virtio 1.0 spec says:
+		 * By sending this event, the device signals a change in the configuration
+		 * parameters of a logical unit, for example the capacity or cache mode.
+		 * event is set to VIRTIO_SCSI_T_PARAM_CHANGE. lun addresses a logical unit
+		 * in the SCSI host. The same event SHOULD also be reported as a unit
+		 * attention condition. reason contains the additional sense code and
+		 * additional sense code qualifier, respectively in bits 0…7 and 8…15.
+		 * Note: For example, a change in * capacity will be reported as asc
+		 * 0x2a, ascq 0x09 (CAPACITY DATA HAS CHANGED).
+		 */
+		eventq_enqueue(svsession, scsi_tgt_num, VIRTIO_SCSI_T_PARAM_CHANGE, 0x2a | (0x09 << 8));
+	}
+
+	return 0;
+}
+
+static int
+vhost_scsi_dev_param_changed(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num)
+{
+	struct spdk_vhost_scsi_dev *svdev;
+	struct spdk_scsi_dev_vhost_state *scsi_dev_state;
+
+	if (scsi_tgt_num >= SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
+		SPDK_ERRLOG("%s: invalid SCSI target number %d\n", vdev->name, scsi_tgt_num);
+		return -EINVAL;
+	}
+
+	svdev = to_scsi_dev(vdev);
+	if (!svdev) {
+		SPDK_ERRLOG("An invalid SCSI device that removing from a SCSI target.");
+		return -EINVAL;
+	}
+
+	scsi_dev_state = &svdev->scsi_dev_state[scsi_tgt_num];
+
+	if (scsi_dev_state->status != VHOST_SCSI_DEV_PRESENT) {
+		return -EBUSY;
+	}
+
+	if (scsi_dev_state->dev == NULL || scsi_dev_state->status == VHOST_SCSI_DEV_ADDING) {
+		SPDK_ERRLOG("%s: SCSI target %u is not occupied\n", vdev->name, scsi_tgt_num);
+		return -ENODEV;
+	}
+
+	assert(scsi_dev_state->status != VHOST_SCSI_DEV_EMPTY);
+
+	vhost_dev_foreach_session(vdev, vhost_scsi_session_param_changed,
+				  NULL, (void *)(uintptr_t)scsi_tgt_num);
 	return 0;
 }
 
