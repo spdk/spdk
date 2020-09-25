@@ -923,7 +923,11 @@ vtophys_get_paddr_memseg(uint64_t vaddr)
 
 	seg = rte_mem_virt2memseg((void *)(uintptr_t)vaddr, NULL);
 	if (seg != NULL) {
+#if RTE_VERSION >= RTE_VERSION_NUM(19, 11, 0, 0)
+		paddr = seg->iova;
+#else
 		paddr = seg->phys_addr;
+#endif
 		if (paddr == RTE_BAD_IOVA) {
 			return SPDK_VTOPHYS_ERROR;
 		}
