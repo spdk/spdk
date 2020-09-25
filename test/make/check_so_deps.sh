@@ -126,9 +126,8 @@ EOF
 					touch $fail_file
 				fi
 
-				expected_new_so_min=$((old_so_min + 1))
-				if ((new_so_min > old_so_min && expected_new_so_min != new_so_min)); then
-					echo "SO minor version for $so_file was incremented more than once. Please revert minor version to $expected_new_so_min."
+				if ((new_so_min > old_so_min + 1)); then
+					echo "SO minor version for $so_file was incremented more than once. Please revert minor version to $((old_so_min + 1))."
 					touch $fail_file
 				fi
 
