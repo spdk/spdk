@@ -190,13 +190,21 @@ function collect_devices() {
 		[[ $dev_type =~ (NVME|IOAT|IDXD|VIRTIO|VMD) ]] && dev_type=${BASH_REMATCH[1],,}
 		for bdf in "${bdfs[@]}"; do
 			in_use=0
-			if [[ $1 != status ]] && ! pci_can_use "$bdf"; then
-				pci_dev_echo "$bdf" "Skipping un-whitelisted controller at $bdf"
-				in_use=1
-			fi
-			if [[ $1 != status ]] && [[ $dev_type == nvme || $dev_type == virtio ]]; then
-				if ! verify_bdf_mounts "$bdf"; then
+			if [[ $1 != status ]]; then
+				if ! pci_can_use "$bdf"; then
+					pci_dev_echo "$bdf" "Skipping denied controller at $bdf"
 					in_use=1
+				fi
+				if [[ $dev_type == nvme || $dev_type == virtio ]]; then
+					if ! verify_bdf_mounts "$bdf"; then
+						in_use=1
+					fi
+				fi
+				if [[ $dev_type == vmd ]]; then
+					if [[ $PCI_WHITELIST != *"$bdf"* ]]; then
+						pci_dev_echo "$bdf" "Skipping not allowed VMD controller at $bdf"
+						in_use=1
+					fi
 				fi
 			fi
 			eval "${dev_type}_d[$bdf]=$in_use"
