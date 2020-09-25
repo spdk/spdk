@@ -156,6 +156,9 @@
 
 	spdk_nvme_map_prps;
 
+	spdk_nvme_zns_ns_get_data;
+	spdk_nvme_zns_ctrlr_get_data;
+
 	# public functions from nvme_ocssd.h
 	spdk_nvme_ctrlr_is_ocssd_supported;
 	spdk_nvme_ocssd_ctrlr_cmd_geometry;

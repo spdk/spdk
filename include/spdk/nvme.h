@@ -827,7 +827,8 @@ int spdk_nvme_ctrlr_set_trid(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_tra
  * This function should be called from a single thread while no other threads
  * are actively using the NVMe device.
  *
- * Any pointers returned from spdk_nvme_ctrlr_get_ns() and spdk_nvme_ns_get_data()
+ * Any pointers returned from spdk_nvme_ctrlr_get_ns(), spdk_nvme_ns_get_data(),
+ * spdk_nvme_zns_ns_get_data(), and spdk_nvme_zns_ctrlr_get_data()
  * may be invalidated by calling this function. The number of namespaces as returned
  * by spdk_nvme_ctrlr_get_num_ns() may also change.
  *
@@ -3186,6 +3187,34 @@ int spdk_nvme_cuse_unregister(struct spdk_nvme_ctrlr *ctrlr);
 int spdk_nvme_map_prps(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs,
 		       uint32_t len, size_t mps,
 		       void *(*gpa_to_vva)(void *prv, uint64_t addr, uint64_t len));
+
+/**
+ * Get the Zoned Namespace Command Set Specific Identify Namespace data
+ * as defined by the NVMe Zoned Namespace Command Set Specification.
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
+ * \param ns Namespace.
+ *
+ * \return a pointer to the namespace data, or NULL if the namespace is not
+ * a Zoned Namespace.
+ */
+const struct spdk_nvme_zns_ns_data *spdk_nvme_zns_ns_get_data(struct spdk_nvme_ns *ns);
+
+/**
+ * Get the Zoned Namespace Command Set Specific Identify Controller data
+ * as defined by the NVMe Zoned Namespace Command Set Specification.
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return pointer to the controller data, or NULL if the controller does not
+ * support the Zoned Command Set.
+ */
+const struct spdk_nvme_zns_ctrlr_data *spdk_nvme_zns_ctrlr_get_data(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
  * Opaque handle for a transport poll group. Used by the transport function table.
