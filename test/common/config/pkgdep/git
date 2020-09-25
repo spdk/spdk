@@ -256,13 +256,14 @@ function install_git() {
 
 function install_extra_pkgs() {
 	if [[ $INSTALL_QAT == true ]]; then
-		install libudev-devel || install libudev-dev
+		install libudev-devel || install libudev-dev || :
 	fi
 
 	if [[ $INSTALL_QEMU == true ]]; then
 		install qemu-system-x86 qemu-img \
 			|| install qemu-system-x86 qemu-utils \
-			|| install qemu
+			|| install qemu \
+			|| :
 	fi
 }
 
