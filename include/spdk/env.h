@@ -1294,6 +1294,16 @@ int spdk_mem_unregister(void *vaddr, size_t len);
  */
 int spdk_mem_reserve(void *vaddr, size_t len);
 
+/**
+ * Get the address's file descriptor and offset, it works with spdk memory allocation APIs
+ *
+ * \param vaddr Virtual address to get
+ * \param offset Virtual address's map offset to the file descriptor
+ *
+ * \ return negative errno on failure, otherwise return the file descriptor
+ */
+int spdk_mem_get_fd_and_offset(void *vaddr, uint64_t *offset);
+
 #ifdef __cplusplus
 }
 #endif

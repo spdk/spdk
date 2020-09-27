@@ -103,6 +103,7 @@
 	spdk_mem_map_translate;
 	spdk_mem_register;
 	spdk_mem_unregister;
+	spdk_mem_get_fd_and_offset;
 
 	# Public functions in env_dpdk.h
 	spdk_env_dpdk_post_init;

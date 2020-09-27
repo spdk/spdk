@@ -1445,3 +1445,28 @@ spdk_vtophys(const void *buf, uint64_t *size)
 		return paddr_2mb + (vaddr & MASK_2MB);
 	}
 }
+
+int
+spdk_mem_get_fd_and_offset(void *vaddr, uint64_t *offset)
+{
+	struct rte_memseg *seg;
+	int ret, fd;
+
+	seg = rte_mem_virt2memseg(vaddr, NULL);
+	if (!seg) {
+		SPDK_ERRLOG("memory %p doesn't exist\n", vaddr);
+		return -ENOENT;
+	}
+
+	fd = rte_memseg_get_fd_thread_unsafe(seg);
+	if (fd < 0) {
+		return fd;
+	}
+
+	ret = rte_memseg_get_fd_offset_thread_unsafe(seg, offset);
+	if (ret < 0) {
+		return ret;
+	}
+
+	return fd;
+}
