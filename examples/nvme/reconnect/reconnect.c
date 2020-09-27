@@ -47,7 +47,7 @@ struct ctrlr_entry {
 	struct spdk_nvme_ctrlr			*ctrlr;
 	struct spdk_nvme_transport_id		failover_trid;
 	enum spdk_nvme_transport_type		trtype;
-	struct ctrlr_entry			*next;
+	TAILQ_ENTRY(ctrlr_entry)		link;
 	char					name[1024];
 	int					num_resets;
 };
@@ -56,7 +56,7 @@ struct ns_entry {
 	struct spdk_nvme_ctrlr	*ctrlr;
 	struct spdk_nvme_ns	*ns;
 
-	struct ns_entry		*next;
+	TAILQ_ENTRY(ns_entry)	link;
 	uint32_t		io_size_blocks;
 	uint32_t		num_io_requests;
 	uint64_t		size_in_ios;
@@ -66,17 +66,17 @@ struct ns_entry {
 };
 
 struct ns_worker_ctx {
-	struct ns_entry		*entry;
-	uint64_t		io_completed;
-	uint64_t		current_queue_depth;
-	uint64_t		offset_in_ios;
-	bool			is_draining;
+	struct ns_entry			*entry;
+	uint64_t			io_completed;
+	uint64_t			current_queue_depth;
+	uint64_t			offset_in_ios;
+	bool				is_draining;
 
-	int			num_qpairs;
-	struct spdk_nvme_qpair	**qpair;
-	int			last_qpair;
+	int				num_qpairs;
+	struct spdk_nvme_qpair		**qpair;
+	int				last_qpair;
 
-	struct ns_worker_ctx	*next;
+	TAILQ_ENTRY(ns_worker_ctx)	link;
 };
 
 struct perf_task {
@@ -86,18 +86,18 @@ struct perf_task {
 };
 
 struct worker_thread {
-	struct ns_worker_ctx	*ns_ctx;
-	struct worker_thread	*next;
-	unsigned		lcore;
+	TAILQ_HEAD(, ns_worker_ctx)	ns_ctx;
+	TAILQ_ENTRY(worker_thread)	link;
+	unsigned			lcore;
 };
 
 /* For basic reset handling. */
 static int g_max_ctrlr_resets = 15;
 
-static struct ctrlr_entry *g_controllers = NULL;
-static struct ns_entry *g_namespaces = NULL;
+static TAILQ_HEAD(, ctrlr_entry) g_controllers = TAILQ_HEAD_INITIALIZER(g_controllers);
+static TAILQ_HEAD(, ns_entry) g_namespaces = TAILQ_HEAD_INITIALIZER(g_namespaces);
 static int g_num_namespaces = 0;
-static struct worker_thread *g_workers = NULL;
+static TAILQ_HEAD(, worker_thread) g_workers = TAILQ_HEAD_INITIALIZER(g_workers);
 static int g_num_workers = 0;
 
 static uint64_t g_tsc_rate;
@@ -347,19 +347,17 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	build_nvme_name(entry->name, sizeof(entry->name), ctrlr);
 
 	g_num_namespaces++;
-	entry->next = g_namespaces;
-	g_namespaces = entry;
+	TAILQ_INSERT_TAIL(&g_namespaces, entry, link);
 }
 
 static void
 unregister_namespaces(void)
 {
-	struct ns_entry *entry = g_namespaces;
+	struct ns_entry *entry, *tmp;
 
-	while (entry) {
-		struct ns_entry *next = entry->next;
+	TAILQ_FOREACH_SAFE(entry, &g_namespaces, link, tmp) {
+		TAILQ_REMOVE(&g_namespaces, entry, link);
 		free(entry);
-		entry = next;
 	}
 }
 
@@ -396,8 +394,7 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr, struct trid_entry *trid_entry)
 
 	entry->ctrlr = ctrlr;
 	entry->trtype = trid_entry->trid.trtype;
-	entry->next = g_controllers;
-	g_controllers = entry;
+	TAILQ_INSERT_TAIL(&g_controllers, entry, link);
 
 	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
 	     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid)) {
@@ -527,22 +524,18 @@ work_fn(void *arg)
 	printf("Starting thread on core %u\n", worker->lcore);
 
 	/* Allocate queue pairs for each namespace. */
-	ns_ctx = worker->ns_ctx;
-	while (ns_ctx != NULL) {
+	TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
 		if (nvme_init_ns_worker_ctx(ns_ctx) != 0) {
 			printf("ERROR: init_ns_worker_ctx() failed\n");
 			return 1;
 		}
-		ns_ctx = ns_ctx->next;
 	}
 
 	tsc_end = spdk_get_ticks() + g_time_in_sec * g_tsc_rate;
 
 	/* Submit initial I/O for each namespace. */
-	ns_ctx = worker->ns_ctx;
-	while (ns_ctx != NULL) {
+	TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
 		submit_io(ns_ctx, g_queue_depth);
-		ns_ctx = ns_ctx->next;
 	}
 
 	while (1) {
@@ -551,10 +544,8 @@ work_fn(void *arg)
 		 * I/O will be submitted in the io_complete callback
 		 * to replace each I/O that is completed.
 		 */
-		ns_ctx = worker->ns_ctx;
-		while (ns_ctx != NULL) {
+		TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
 			check_io(ns_ctx);
-			ns_ctx = ns_ctx->next;
 		}
 
 		if (spdk_get_ticks() > tsc_end) {
@@ -565,8 +556,7 @@ work_fn(void *arg)
 	/* drain the io of each ns_ctx in round robin to make the fairness */
 	do {
 		unfinished_ns_ctx = 0;
-		ns_ctx = worker->ns_ctx;
-		while (ns_ctx != NULL) {
+		TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
 			/* first time will enter into this if case */
 			if (!ns_ctx->is_draining) {
 				ns_ctx->is_draining = true;
@@ -580,7 +570,6 @@ work_fn(void *arg)
 					unfinished_ns_ctx++;
 				}
 			}
-			ns_ctx = ns_ctx->next;
 		}
 	} while (unfinished_ns_ctx > 0);
 
@@ -875,9 +864,6 @@ register_workers(void)
 	uint32_t i;
 	struct worker_thread *worker;
 
-	g_workers = NULL;
-	g_num_workers = 0;
-
 	SPDK_ENV_FOREACH_CORE(i) {
 		worker = calloc(1, sizeof(*worker));
 		if (worker == NULL) {
@@ -885,9 +871,9 @@ register_workers(void)
 			return -1;
 		}
 
+		TAILQ_INIT(&worker->ns_ctx);
 		worker->lcore = i;
-		worker->next = g_workers;
-		g_workers = worker;
+		TAILQ_INSERT_TAIL(&g_workers, worker, link);
 		g_num_workers++;
 	}
 
@@ -897,21 +883,18 @@ register_workers(void)
 static void
 unregister_workers(void)
 {
-	struct worker_thread *worker = g_workers;
+	struct worker_thread *worker, *tmp_worker;
+	struct ns_worker_ctx *ns_ctx, *tmp_ns_ctx;
 
 	/* Free namespace context and worker thread */
-	while (worker) {
-		struct worker_thread *next_worker = worker->next;
-		struct ns_worker_ctx *ns_ctx = worker->ns_ctx;
-
-		while (ns_ctx) {
-			struct ns_worker_ctx *next_ns_ctx = ns_ctx->next;
+	TAILQ_FOREACH_SAFE(worker, &g_workers, link, tmp_worker) {
+		TAILQ_REMOVE(&g_workers, worker, link);
+		TAILQ_FOREACH_SAFE(ns_ctx, &worker->ns_ctx, link, tmp_ns_ctx) {
+			TAILQ_REMOVE(&worker->ns_ctx, ns_ctx, link);
 			free(ns_ctx);
-			ns_ctx = next_ns_ctx;
 		}
 
 		free(worker);
-		worker = next_worker;
 	}
 }
 
@@ -975,22 +958,20 @@ register_controllers(void)
 static void
 unregister_controllers(void)
 {
-	struct ctrlr_entry *entry = g_controllers;
+	struct ctrlr_entry *entry, *tmp;
 
-	while (entry) {
-		struct ctrlr_entry *next = entry->next;
-
+	TAILQ_FOREACH_SAFE(entry, &g_controllers, link, tmp) {
+		TAILQ_REMOVE(&g_controllers, entry, link);
 		spdk_nvme_detach(entry->ctrlr);
 		free(entry);
-		entry = next;
 	}
 }
 
 static int
 associate_workers_with_ns(void)
 {
-	struct ns_entry		*entry = g_namespaces;
-	struct worker_thread	*worker = g_workers;
+	struct ns_entry		*entry = TAILQ_FIRST(&g_namespaces);
+	struct worker_thread	*worker = TAILQ_FIRST(&g_workers);
 	struct ns_worker_ctx	*ns_ctx;
 	int			i, count;
 
@@ -1008,17 +989,17 @@ associate_workers_with_ns(void)
 
 		printf("Associating %s with lcore %d\n", entry->name, worker->lcore);
 		ns_ctx->entry = entry;
-		ns_ctx->next = worker->ns_ctx;
-		worker->ns_ctx = ns_ctx;
 
-		worker = worker->next;
+		TAILQ_INSERT_TAIL(&worker->ns_ctx, ns_ctx, link);
+
+		worker = TAILQ_NEXT(worker, link);
 		if (worker == NULL) {
-			worker = g_workers;
+			worker = TAILQ_FIRST(&g_workers);
 		}
 
-		entry = entry->next;
+		entry = TAILQ_NEXT(entry, link);
 		if (entry == NULL) {
-			entry = g_namespaces;
+			entry = TAILQ_FIRST(&g_namespaces);
 		}
 
 	}
@@ -1040,8 +1021,7 @@ nvme_poll_ctrlrs(void *arg)
 	while (true) {
 		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &oldstate);
 
-		entry = g_controllers;
-		while (entry) {
+		TAILQ_FOREACH(entry, &g_controllers, link) {
 			rc = spdk_nvme_ctrlr_process_admin_completions(entry->ctrlr);
 			/* This controller has encountered a failure at the transport level. reset it. */
 			if (rc == -ENXIO) {
@@ -1071,7 +1051,6 @@ nvme_poll_ctrlrs(void *arg)
 					fprintf(stderr, "Controller properly reset.\n");
 				}
 			}
-			entry = entry->next;
 		}
 
 		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &oldstate);
@@ -1148,15 +1127,13 @@ int main(int argc, char **argv)
 	/* Launch all of the slave workers */
 	master_core = spdk_env_get_current_core();
 	master_worker = NULL;
-	worker = g_workers;
-	while (worker != NULL) {
+	TAILQ_FOREACH(worker, &g_workers, link) {
 		if (worker->lcore != master_core) {
 			spdk_env_thread_launch_pinned(worker->lcore, work_fn, worker);
 		} else {
 			assert(master_worker == NULL);
 			master_worker = worker;
 		}
-		worker = worker->next;
 	}
 
 	assert(master_worker != NULL);

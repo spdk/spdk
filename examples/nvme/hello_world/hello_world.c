@@ -38,20 +38,20 @@
 #include "spdk/env.h"
 
 struct ctrlr_entry {
-	struct spdk_nvme_ctrlr	*ctrlr;
-	struct ctrlr_entry	*next;
-	char			name[1024];
+	struct spdk_nvme_ctrlr		*ctrlr;
+	TAILQ_ENTRY(ctrlr_entry)	link;
+	char				name[1024];
 };
 
 struct ns_entry {
 	struct spdk_nvme_ctrlr	*ctrlr;
 	struct spdk_nvme_ns	*ns;
-	struct ns_entry		*next;
+	TAILQ_ENTRY(ns_entry)	link;
 	struct spdk_nvme_qpair	*qpair;
 };
 
-static struct ctrlr_entry *g_controllers = NULL;
-static struct ns_entry *g_namespaces = NULL;
+static TAILQ_HEAD(, ctrlr_entry) g_controllers = TAILQ_HEAD_INITIALIZER(g_controllers);
+static TAILQ_HEAD(, ns_entry) g_namespaces = TAILQ_HEAD_INITIALIZER(g_namespaces);
 
 static bool g_vmd = false;
 
@@ -72,8 +72,7 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 
 	entry->ctrlr = ctrlr;
 	entry->ns = ns;
-	entry->next = g_namespaces;
-	g_namespaces = entry;
+	TAILQ_INSERT_TAIL(&g_namespaces, entry, link);
 
 	printf("  Namespace ID: %d size: %juGB\n", spdk_nvme_ns_get_id(ns),
 	       spdk_nvme_ns_get_size(ns) / 1000000000);
@@ -162,8 +161,7 @@ hello_world(void)
 	int				rc;
 	size_t				sz;
 
-	ns_entry = g_namespaces;
-	while (ns_entry != NULL) {
+	TAILQ_FOREACH(ns_entry, &g_namespaces, link) {
 		/*
 		 * Allocate an I/O qpair that we can use to submit read/write requests
 		 *  to namespaces on the controller.  NVMe controllers typically support
@@ -259,7 +257,6 @@ hello_world(void)
 		 *  pending I/O are completed before trying to free the qpair.
 		 */
 		spdk_nvme_ctrlr_free_io_qpair(ns_entry->qpair);
-		ns_entry = ns_entry->next;
 	}
 }
 
@@ -302,8 +299,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	snprintf(entry->name, sizeof(entry->name), "%-20.20s (%-20.20s)", cdata->mn, cdata->sn);
 
 	entry->ctrlr = ctrlr;
-	entry->next = g_controllers;
-	g_controllers = entry;
+	TAILQ_INSERT_TAIL(&g_controllers, entry, link);
 
 	/*
 	 * Each controller has one or more namespaces.  An NVMe namespace is basically
@@ -327,21 +323,18 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 static void
 cleanup(void)
 {
-	struct ns_entry *ns_entry = g_namespaces;
-	struct ctrlr_entry *ctrlr_entry = g_controllers;
+	struct ns_entry *ns_entry, *tmp_ns_entry;
+	struct ctrlr_entry *ctrlr_entry, *tmp_ctrlr_entry;
 
-	while (ns_entry) {
-		struct ns_entry *next = ns_entry->next;
+	TAILQ_FOREACH_SAFE(ns_entry, &g_namespaces, link, tmp_ns_entry) {
+		TAILQ_REMOVE(&g_namespaces, ns_entry, link);
 		free(ns_entry);
-		ns_entry = next;
 	}
 
-	while (ctrlr_entry) {
-		struct ctrlr_entry *next = ctrlr_entry->next;
-
+	TAILQ_FOREACH_SAFE(ctrlr_entry, &g_controllers, link, tmp_ctrlr_entry) {
+		TAILQ_REMOVE(&g_controllers, ctrlr_entry, link);
 		spdk_nvme_detach(ctrlr_entry->ctrlr);
 		free(ctrlr_entry);
-		ctrlr_entry = next;
 	}
 }
 
@@ -418,7 +411,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	if (g_controllers == NULL) {
+	if (TAILQ_EMPTY(&g_controllers)) {
 		fprintf(stderr, "no NVMe controllers found\n");
 		cleanup();
 		return 1;
