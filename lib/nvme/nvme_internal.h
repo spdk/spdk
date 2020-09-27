@@ -720,7 +720,7 @@ struct spdk_nvme_ctrlr {
 	union spdk_nvme_cap_register	cap;
 	union spdk_nvme_vs_register	vs;
 
-	enum nvme_ctrlr_state		state;
+	int				state;
 	uint64_t			state_timeout_tsc;
 
 	uint64_t			next_keep_alive_tick;
