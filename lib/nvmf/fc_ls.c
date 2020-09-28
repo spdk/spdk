@@ -357,6 +357,7 @@ nvmf_fc_ls_new_connection(struct spdk_nvmf_fc_association *assoc, uint16_t qid,
 	 */
 	nvmf_fc_create_trid(&fc_conn->trid, tgtport->fc_nodename.u.wwn,
 			    tgtport->fc_portname.u.wwn);
+	fc_conn->qpair.trid = &fc_conn->trid;
 
 	return fc_conn;
 }
