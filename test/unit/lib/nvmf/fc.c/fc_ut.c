@@ -451,7 +451,6 @@ destroy_transport_test(void)
 {
 	unsigned i;
 
-	set_thread(0);
 	SPDK_CU_ASSERT_FATAL(g_nvmf_tprt != NULL);
 
 	for (i = 0; i < MAX_FC_UT_POLL_THREADS; i++) {
@@ -460,6 +459,7 @@ destroy_transport_test(void)
 		poll_thread(0);
 	}
 
+	set_thread(0);
 	SPDK_CU_ASSERT_FATAL(g_nvmf_tgt != NULL);
 	g_lld_fini_called = false;
 	spdk_nvmf_tgt_destroy(g_nvmf_tgt, NULL, NULL);
