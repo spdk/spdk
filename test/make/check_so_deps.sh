@@ -22,6 +22,7 @@ suppression_file="$HOME/abigail_suppressions.ini"
 
 function confirm_abi_deps() {
 	local processed_so=0
+	local abidiff_output
 
 	if ! hash abidiff; then
 		echo "Unable to check ABI compatibility. Please install abidiff."
@@ -45,6 +46,8 @@ function confirm_abi_deps() {
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do
+		abidiff_output=0
+
 		so_file=$(basename $object)
 		if [ ! -f "$source_abi_dir/$so_file" ]; then
 			echo "No corresponding object for $so_file in canonical directory. Skipping."
@@ -88,6 +91,7 @@ EOF
 
 			if ((changed_leaf_types != 0)); then
 				if ((new_so_maj == old_so_maj)); then
+					abidiff_output=1
 					touch $fail_file
 					echo "Please update the major SO version for $so_file. A header accesible type has been modified since last release."
 				fi
@@ -96,6 +100,7 @@ EOF
 
 			if ((removed_functions != 0)) || ((removed_vars != 0)); then
 				if ((new_so_maj == old_so_maj)); then
+					abidiff_output=1
 					touch $fail_file
 					echo "Please update the major SO version for $so_file. API functions or variables have been removed since last release."
 				fi
@@ -104,6 +109,7 @@ EOF
 
 			if ((changed_functions != 0)) || ((changed_vars != 0)); then
 				if ((new_so_maj == old_so_maj)); then
+					abidiff_output=1
 					touch $fail_file
 					echo "Please update the major SO version for $so_file. API functions or variables have been changed since last release."
 				fi
@@ -112,6 +118,7 @@ EOF
 
 			if ((added_functions != 0)) || ((added_vars != 0)); then
 				if ((new_so_min == old_so_min && new_so_maj == old_so_maj)) && ! $found_abi_change; then
+					abidiff_output=1
 					touch $fail_file
 					echo "Please update the minor SO version for $so_file. API functions or variables have been added since last release."
 				fi
@@ -141,6 +148,10 @@ EOF
 					echo "SO major version for $so_file was incremented more than once. Please revert major version to $((old_so_maj + 1))."
 					touch $fail_file
 				fi
+			fi
+
+			if ((abidiff_output == 1)); then
+				"${cmd_args[@]}" --impacted-interfaces
 			fi
 
 			continue
