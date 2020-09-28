@@ -43,22 +43,20 @@ static struct spdk_poller *g_poller;
 
 struct ctrlr_entry {
 	struct spdk_nvme_ctrlr *ctrlr;
-	struct ctrlr_entry *next;
+	TAILQ_ENTRY(ctrlr_entry) link;
 };
 
-static struct ctrlr_entry *g_controllers = NULL;
+static TAILQ_HEAD(, ctrlr_entry) g_controllers = TAILQ_HEAD_INITIALIZER(g_controllers);
 
 static void
 cleanup(void)
 {
-	struct ctrlr_entry *ctrlr_entry = g_controllers;
+	struct ctrlr_entry *ctrlr_entry, *tmp;
 
-	while (ctrlr_entry) {
-		struct ctrlr_entry *next = ctrlr_entry->next;
-
+	TAILQ_FOREACH_SAFE(ctrlr_entry, &g_controllers, link, tmp) {
+		TAILQ_REMOVE(&g_controllers, ctrlr_entry, link);
 		spdk_nvme_detach(ctrlr_entry->ctrlr);
 		free(ctrlr_entry);
-		ctrlr_entry = next;
 	}
 }
 
@@ -100,8 +98,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	}
 
 	entry->ctrlr = ctrlr;
-	entry->next = g_controllers;
-	g_controllers = entry;
+	TAILQ_INSERT_TAIL(&g_controllers, entry, link);
 }
 
 static int
