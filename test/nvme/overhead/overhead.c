@@ -47,7 +47,7 @@
 
 struct ctrlr_entry {
 	struct spdk_nvme_ctrlr			*ctrlr;
-	struct ctrlr_entry			*next;
+	TAILQ_ENTRY(ctrlr_entry)		link;
 	char					name[1024];
 };
 
@@ -95,7 +95,7 @@ struct perf_task {
 
 static bool g_enable_histogram = false;
 
-static struct ctrlr_entry *g_ctrlr = NULL;
+static TAILQ_HEAD(, ctrlr_entry) g_ctrlr = TAILQ_HEAD_INITIALIZER(g_ctrlr);
 static struct ns_entry *g_ns = NULL;
 
 static uint64_t g_tsc_rate;
@@ -176,8 +176,7 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 
 	entry->ctrlr = ctrlr;
 
-	entry->next = g_ctrlr;
-	g_ctrlr = entry;
+	TAILQ_INSERT_TAIL(&g_ctrlr, entry, link);
 
 	num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
 	/* Only register the first namespace. */
@@ -645,7 +644,7 @@ static void
 cleanup(void)
 {
 	struct ns_entry *ns_entry = g_ns;
-	struct ctrlr_entry *ctrlr_entry = g_ctrlr;
+	struct ctrlr_entry *ctrlr_entry, *tmp_ctrlr_entry;
 
 	while (ns_entry) {
 		struct ns_entry *next = ns_entry->next;
@@ -656,12 +655,10 @@ cleanup(void)
 		ns_entry = next;
 	}
 
-	while (ctrlr_entry) {
-		struct ctrlr_entry *next = ctrlr_entry->next;
-
+	TAILQ_FOREACH_SAFE(ctrlr_entry, &g_ctrlr, link, tmp_ctrlr_entry) {
+		TAILQ_REMOVE(&g_ctrlr, ctrlr_entry, link);
 		spdk_nvme_detach(ctrlr_entry->ctrlr);
 		free(ctrlr_entry);
-		ctrlr_entry = next;
 	}
 }
 
