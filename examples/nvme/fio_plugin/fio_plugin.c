@@ -108,42 +108,42 @@ struct spdk_fio_ctrlr {
 	struct spdk_nvme_transport_id	tr_id;
 	struct spdk_nvme_ctrlr_opts	opts;
 	struct spdk_nvme_ctrlr		*ctrlr;
-	struct spdk_fio_ctrlr		*next;
+	TAILQ_ENTRY(spdk_fio_ctrlr)	link;
 };
 
-static struct spdk_fio_ctrlr *g_ctrlr;
+static TAILQ_HEAD(, spdk_fio_ctrlr) g_ctrlrs = TAILQ_HEAD_INITIALIZER(g_ctrlrs);
 static int g_td_count;
 static pthread_t g_ctrlr_thread_id = 0;
 static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
 static bool g_error;
 
 struct spdk_fio_qpair {
-	struct fio_file		*f;
-	struct spdk_nvme_qpair	*qpair;
-	struct spdk_nvme_ns	*ns;
-	uint32_t		io_flags;
-	bool			nvme_pi_enabled;
+	struct fio_file			*f;
+	struct spdk_nvme_qpair		*qpair;
+	struct spdk_nvme_ns		*ns;
+	uint32_t			io_flags;
+	bool				nvme_pi_enabled;
 	/* True for DIF and false for DIX, and this is valid only if nvme_pi_enabled is true. */
-	bool			extended_lba;
+	bool				extended_lba;
 	/* True for protection info transferred at start of metadata,
 	 * false for protection info transferred at end of metadata, and
 	 * this is valid only if nvme_pi_enabled is true.
 	 */
-	bool			md_start;
-	struct spdk_fio_qpair	*next;
-	struct spdk_fio_ctrlr	*fio_ctrlr;
+	bool				md_start;
+	TAILQ_ENTRY(spdk_fio_qpair)	link;
+	struct spdk_fio_ctrlr		*fio_ctrlr;
 };
 
 struct spdk_fio_thread {
-	struct thread_data	*td;
+	struct thread_data		*td;
 
-	struct spdk_fio_qpair	*fio_qpair;
-	struct spdk_fio_qpair	*fio_qpair_current;	/* the current fio_qpair to be handled. */
+	TAILQ_HEAD(, spdk_fio_qpair)	fio_qpair;
+	struct spdk_fio_qpair		*fio_qpair_current;	/* the current fio_qpair to be handled. */
 
-	struct io_u		**iocq;		/* io completion queue */
-	unsigned int		iocq_count;	/* number of iocq entries filled by last getevents */
-	unsigned int		iocq_size;	/* number of iocq entries allocated */
-	struct fio_file		*current_f;	/* fio_file given by user */
+	struct io_u			**iocq;		/* io completion queue */
+	unsigned int			iocq_count;	/* number of iocq entries filled by last getevents */
+	unsigned int			iocq_size;	/* number of iocq entries allocated */
+	struct fio_file			*current_f;	/* fio_file given by user */
 
 };
 
@@ -163,11 +163,9 @@ spdk_fio_poll_ctrlrs(void *arg)
 		}
 
 		pthread_mutex_lock(&g_mutex);
-		fio_ctrlr = g_ctrlr;
 
-		while (fio_ctrlr) {
+		TAILQ_FOREACH(fio_ctrlr, &g_ctrlrs, link) {
 			spdk_nvme_ctrlr_process_admin_completions(fio_ctrlr->ctrlr);
-			fio_ctrlr = fio_ctrlr->next;
 		}
 
 		pthread_mutex_unlock(&g_mutex);
@@ -221,13 +219,12 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 static struct spdk_fio_ctrlr *
 get_fio_ctrlr(const struct spdk_nvme_transport_id *trid)
 {
-	struct spdk_fio_ctrlr	*fio_ctrlr = g_ctrlr;
-	while (fio_ctrlr) {
+	struct spdk_fio_ctrlr	*fio_ctrlr;
+
+	TAILQ_FOREACH(fio_ctrlr, &g_ctrlrs, link) {
 		if (spdk_nvme_transport_id_compare(trid, &fio_ctrlr->tr_id) == 0) {
 			return fio_ctrlr;
 		}
-
-		fio_ctrlr = fio_ctrlr->next;
 	}
 
 	return NULL;
@@ -282,8 +279,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		fio_ctrlr->opts = *opts;
 		fio_ctrlr->ctrlr = ctrlr;
 		fio_ctrlr->tr_id = *trid;
-		fio_ctrlr->next = g_ctrlr;
-		g_ctrlr = fio_ctrlr;
+		TAILQ_INSERT_TAIL(&g_ctrlrs, fio_ctrlr, link);
 	}
 	pthread_mutex_unlock(&g_mutex);
 
@@ -301,15 +297,13 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	}
 	nsdata = spdk_nvme_ns_get_data(ns);
 
-	fio_qpair = fio_thread->fio_qpair;
-	while (fio_qpair != NULL) {
+	TAILQ_FOREACH(fio_qpair, &fio_thread->fio_qpair, link) {
 		if ((fio_qpair->f == f) ||
 		    ((spdk_nvme_transport_id_compare(trid, &fio_qpair->fio_ctrlr->tr_id) == 0) &&
 		     (spdk_nvme_ns_get_id(fio_qpair->ns) == ns_id))) {
 			/* Not the error case. Avoid duplicated connection */
 			return;
 		}
-		fio_qpair = fio_qpair->next;
 	}
 
 	/* create a new qpair */
@@ -337,8 +331,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	fio_qpair->ns = ns;
 	fio_qpair->f = f;
 	fio_qpair->fio_ctrlr = fio_ctrlr;
-	fio_qpair->next = fio_thread->fio_qpair;
-	fio_thread->fio_qpair = fio_qpair;
+	TAILQ_INSERT_TAIL(&fio_thread->fio_qpair, fio_qpair, link);
 
 	if (spdk_nvme_ns_get_flags(ns) & SPDK_NVME_NS_DPS_PI_SUPPORTED) {
 		assert(spdk_nvme_ns_get_pi_type(ns) != SPDK_NVME_FMT_NVM_PROTECTION_DISABLE);
@@ -435,6 +428,8 @@ static int spdk_fio_setup(struct thread_data *td)
 	fio_thread->iocq_size = td->o.iodepth;
 	fio_thread->iocq = calloc(fio_thread->iocq_size, sizeof(struct io_u *));
 	assert(fio_thread->iocq != NULL);
+
+	TAILQ_INIT(&fio_thread->fio_qpair);
 
 	if (!g_spdk_env_initialized) {
 		spdk_env_opts_init(&opts);
@@ -839,13 +834,11 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 	uint32_t		lba_count;
 
 	/* Find the namespace that corresponds to the file in the io_u */
-	fio_qpair = fio_thread->fio_qpair;
-	while (fio_qpair != NULL) {
+	TAILQ_FOREACH(fio_qpair, &fio_thread->fio_qpair, link) {
 		if (fio_qpair->f == io_u->file) {
 			ns = fio_qpair->ns;
 			break;
 		}
-		fio_qpair = fio_qpair->next;
 	}
 	if (fio_qpair == NULL || ns == NULL) {
 		return -ENXIO;
@@ -951,12 +944,12 @@ static int spdk_fio_getevents(struct thread_data *td, unsigned int min,
 
 	/* fetch the next qpair */
 	if (fio_thread->fio_qpair_current) {
-		fio_qpair = fio_thread->fio_qpair_current->next;
+		fio_qpair = TAILQ_NEXT(fio_thread->fio_qpair_current, link);
 	}
 
 	for (;;) {
 		if (fio_qpair == NULL) {
-			fio_qpair = fio_thread->fio_qpair;
+			fio_qpair = TAILQ_FIRST(&fio_thread->fio_qpair);
 		}
 
 		while (fio_qpair != NULL) {
@@ -968,7 +961,7 @@ static int spdk_fio_getevents(struct thread_data *td, unsigned int min,
 				return fio_thread->iocq_count;
 			}
 
-			fio_qpair = fio_qpair->next;
+			fio_qpair = TAILQ_NEXT(fio_qpair, link);
 		}
 
 		if (t) {
@@ -1000,12 +993,10 @@ static void spdk_fio_cleanup(struct thread_data *td)
 	struct spdk_fio_qpair	*fio_qpair, *fio_qpair_tmp;
 	struct spdk_fio_options *fio_options = td->eo;
 
-	fio_qpair = fio_thread->fio_qpair;
-	while (fio_qpair != NULL) {
+	TAILQ_FOREACH_SAFE(fio_qpair, &fio_thread->fio_qpair, link, fio_qpair_tmp) {
+		TAILQ_REMOVE(&fio_thread->fio_qpair, fio_qpair, link);
 		spdk_nvme_ctrlr_free_io_qpair(fio_qpair->qpair);
-		fio_qpair_tmp = fio_qpair->next;
 		free(fio_qpair);
-		fio_qpair = fio_qpair_tmp;
 	}
 
 	free(fio_thread->iocq);
@@ -1016,21 +1007,18 @@ static void spdk_fio_cleanup(struct thread_data *td)
 	if (g_td_count == 0) {
 		struct spdk_fio_ctrlr	*fio_ctrlr, *fio_ctrlr_tmp;
 
-		fio_ctrlr = g_ctrlr;
-		while (fio_ctrlr != NULL) {
+		TAILQ_FOREACH_SAFE(fio_ctrlr, &g_ctrlrs, link, fio_ctrlr_tmp) {
+			TAILQ_REMOVE(&g_ctrlrs, fio_ctrlr, link);
 			spdk_nvme_detach(fio_ctrlr->ctrlr);
-			fio_ctrlr_tmp = fio_ctrlr->next;
 			free(fio_ctrlr);
-			fio_ctrlr = fio_ctrlr_tmp;
 		}
-		g_ctrlr = NULL;
 
 		if (fio_options->enable_vmd) {
 			spdk_vmd_fini();
 		}
 	}
 	pthread_mutex_unlock(&g_mutex);
-	if (!g_ctrlr) {
+	if (TAILQ_EMPTY(&g_ctrlrs)) {
 		if (pthread_cancel(g_ctrlr_thread_id) == 0) {
 			pthread_join(g_ctrlr_thread_id, NULL);
 		}
