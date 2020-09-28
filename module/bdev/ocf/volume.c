@@ -231,6 +231,9 @@ prepare_submit(struct ocf_io *io)
 
 	cache = ocf_queue_get_cache(q);
 	cctx = ocf_cache_get_priv(cache);
+	if (cctx == NULL) {
+		return -EFAULT;
+	}
 
 	if (q == cctx->cleaner_queue || q == cctx->mngt_queue) {
 		io_ctx->ch = base->management_channel;
