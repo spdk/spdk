@@ -525,7 +525,6 @@ spdk_aer_changed_ns_test(void)
 int main(int argc, char **argv)
 {
 	struct dev		*dev;
-	int			i;
 	struct spdk_env_opts	opts;
 	int			rc;
 
@@ -597,9 +596,7 @@ int main(int argc, char **argv)
 		spdk_nvme_ctrlr_register_aer_callback(dev->ctrlr, NULL, NULL);
 	}
 
-	for (i = 0; i < g_num_devs; i++) {
-		struct dev *dev = &g_devs[i];
-
+	foreach_dev(dev) {
 		spdk_nvme_detach(dev->ctrlr);
 	}
 

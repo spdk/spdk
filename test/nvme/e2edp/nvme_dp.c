@@ -605,7 +605,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 int main(int argc, char **argv)
 {
 	struct dev		*iter;
-	int			rc, i;
+	int			rc;
 	struct spdk_env_opts	opts;
 
 	spdk_env_opts_init(&opts);
@@ -642,10 +642,8 @@ int main(int argc, char **argv)
 
 	printf("Cleaning up...\n");
 
-	for (i = 0; i < num_devs; i++) {
-		struct dev *dev = &devs[i];
-
-		spdk_nvme_detach(dev->ctrlr);
+	foreach_dev(iter) {
+		spdk_nvme_detach(iter->ctrlr);
 	}
 
 	return rc;

@@ -213,7 +213,6 @@ cleanup:
 int main(int argc, char **argv)
 {
 	struct dev		*dev;
-	int			i;
 	struct spdk_env_opts	opts;
 	int			rc;
 
@@ -270,8 +269,7 @@ int main(int argc, char **argv)
 
 exit:
 	printf("Cleaning up...\n");
-	for (i = 0; i < num_devs; i++) {
-		struct dev *dev = &devs[i];
+	foreach_dev(dev) {
 		spdk_nvme_detach(dev->ctrlr);
 	}
 

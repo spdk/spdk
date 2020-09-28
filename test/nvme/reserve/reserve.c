@@ -412,7 +412,6 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 int main(int argc, char **argv)
 {
 	struct dev		*iter;
-	int			i;
 	struct spdk_env_opts	opts;
 	int			ret = 0;
 
@@ -448,9 +447,8 @@ int main(int argc, char **argv)
 
 	printf("Reservation test %s\n", ret ? "failed" : "passed");
 
-	for (i = 0; i < g_num_devs; i++) {
-		struct dev *dev = &g_devs[i];
-		spdk_nvme_detach(dev->ctrlr);
+	foreach_dev(iter) {
+		spdk_nvme_detach(iter->ctrlr);
 	}
 
 	return ret;
