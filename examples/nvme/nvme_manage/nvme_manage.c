@@ -1613,8 +1613,9 @@ parse_args(int argc, char **argv)
 
 int main(int argc, char **argv)
 {
-	int			i, rc;
+	int			rc;
 	struct spdk_env_opts	opts;
+	struct dev		*dev;
 
 	rc = parse_args(argc, argv);
 	if (rc != 0) {
@@ -1694,8 +1695,7 @@ int main(int argc, char **argv)
 
 	printf("Cleaning up...\n");
 
-	for (i = 0; i < num_devs; i++) {
-		struct dev *dev = &devs[i];
+	foreach_dev(dev) {
 		spdk_nvme_detach(dev->ctrlr);
 	}
 
