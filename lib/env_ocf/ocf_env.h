@@ -629,8 +629,7 @@ static inline void env_bit_clear(int nr, volatile void *addr)
 	char *byte = (char *)addr + (nr >> 3);
 	char mask = 1 << (nr & 7);
 
-	mask = ~mask;
-	__sync_and_and_fetch(byte, mask);
+	__sync_and_and_fetch(byte, ~mask);
 }
 
 static inline bool env_bit_test(int nr, const volatile unsigned long *addr)
