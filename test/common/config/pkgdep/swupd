@@ -15,7 +15,7 @@ packages=(
 )
 
 pre_install() {
-	if [[ $INTSALL_TSOCKS == true ]]; then
-		install tsocks || echo "Installation of the tsocks package failed, proxy may not be available"
+	if [[ $INSTALL_TSOCKS == true ]]; then
+		"tsocks package not present in clearlinux, proxy may not be available"
 	fi
 }
