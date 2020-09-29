@@ -1986,13 +1986,13 @@ struct __attribute__((packed)) __attribute__((aligned)) spdk_nvme_ctrlr_data {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ctrlr_data) == 4096, "Incorrect size");
 
-struct spdk_nvme_ctrlr_data_zns {
+struct spdk_nvme_zns_ctrlr_data {
 	/** zone append size limit */
 	uint8_t			zasl;
 
 	uint8_t			reserved1[4095];
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ctrlr_data_zns) == 4096, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_zns_ctrlr_data) == 4096, "Incorrect size");
 
 struct __attribute__((packed)) spdk_nvme_primary_ctrl_capabilities {
 	/**  controller id */
@@ -2270,7 +2270,7 @@ struct spdk_nvme_ns_data {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ns_data) == 4096, "Incorrect size");
 
-struct spdk_nvme_ns_data_zns {
+struct spdk_nvme_zns_ns_data {
 	/** zone operation characteristics */
 	struct {
 		uint16_t	variable_zone_capacity : 1;
@@ -2313,7 +2313,7 @@ struct spdk_nvme_ns_data_zns {
 
 	uint8_t			vendor_specific[256];
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ns_data_zns) == 4096, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_zns_ns_data) == 4096, "Incorrect size");
 
 /**
  * Deallocated logical block features - read value
