@@ -43,6 +43,9 @@ SPDK_LIB_LIST += nvme thread util log sock vmd jsonrpc json rpc
 
 ifeq ($(CONFIG_RDMA),y)
 SPDK_LIB_LIST += rdma
+ifeq ($(CONFIG_RDMA_PROV),mlx5_dv)
+SYS_LIBS += -lmlx5
+endif
 endif
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
