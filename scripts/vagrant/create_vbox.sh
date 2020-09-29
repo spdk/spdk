@@ -42,6 +42,7 @@ display_help() {
 	echo "  --qemu-emulator=<path>          Path to custom QEMU binary. Only works with libvirt provider"
 	echo "  --vagrantfiles-dir=<path>       Destination directory to put Vagrantfile into."
 	echo "  --package-box                   Install all dependencies for SPDK and create a local vagrant box version."
+	echo " --vagrantfile=<path>             Path to a custom Vagrantfile"
 	echo "  -r dry-run"
 	echo "  -h help"
 	echo "  -v verbose"
@@ -83,6 +84,7 @@ VAGRANTFILE_DIR=""
 VAGRANT_PASSWORD_AUTH=0
 VAGRANT_PACKAGE_BOX=0
 VAGRANT_HUGE_MEM=0
+VAGRANTFILE=$DIR/Vagrantfile
 
 while getopts ":b:n:s:x:p:uvcraldoHh-:" opt; do
 	case "${opt}" in
@@ -91,6 +93,7 @@ while getopts ":b:n:s:x:p:uvcraldoHh-:" opt; do
 				package-box) VAGRANT_PACKAGE_BOX=1 ;;
 				qemu-emulator=*) SPDK_QEMU_EMULATOR="${OPTARG#*=}" ;;
 				vagrantfiles-dir=*) VAGRANTFILE_DIR="${OPTARG#*=}" ;;
+				vagrantfile=*) [[ -n ${OPTARG#*=} ]] && VAGRANTFILE="${OPTARG#*=}" ;;
 				*) echo "Invalid argument '$OPTARG'" ;;
 			esac
 			;;
@@ -246,6 +249,7 @@ if [ ${VERBOSE} = 1 ]; then
 	echo SPDK_QEMU_EMULATOR=$SPDK_QEMU_EMULATOR
 	echo SPDK_OPENSTACK_NETWORK=$SPDK_OPENSTACK_NETWORK
 	echo VAGRANT_PACKAGE_BOX=$VAGRANT_PACKAGE_BOX
+	echo VAGRANTFILE=$VAGRANTFILE
 	echo
 fi
 
@@ -290,6 +294,7 @@ if [ ${DRY_RUN} = 1 ]; then
 	printenv NVME_FILE
 	printenv SPDK_DIR
 	printenv VAGRANT_HUGE_MEM
+	printenv VAGRANTFILE
 fi
 if [ -z "$VAGRANTFILE_DIR" ]; then
 	VAGRANTFILE_DIR="${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${SPDK_VAGRANT_PROVIDER}"
@@ -301,9 +306,14 @@ if [ -d "${VAGRANTFILE_DIR}" ]; then
 	exit 1
 fi
 
+if [[ ! -f $VAGRANTFILE ]]; then
+	echo "$VAGRANTFILE is not a regular file!"
+	exit 1
+fi
+
 if [ ${DRY_RUN} != 1 ]; then
 	mkdir -vp "${VAGRANTFILE_DIR}"
-	cp ${DIR}/Vagrantfile ${VAGRANTFILE_DIR}
+	ln -s "$VAGRANTFILE" "${VAGRANTFILE_DIR}/Vagrantfile"
 	pushd "${VAGRANTFILE_DIR}"
 	if [ -n "${http_proxy}" ]; then
 		export http_proxy
