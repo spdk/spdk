@@ -125,30 +125,34 @@ ENV_LIBS = $(ENV_DPDK_FILE) $(DPDK_LIB)
 ENV_LINKER_ARGS = -Wl,-rpath-link $(DPDK_ABS_DIR)/lib
 ENV_LINKER_ARGS += $(call dpdk_env_linker_args,$(DPDK_LIB_LIST))
 
+DPDK_PRIVATE_LINKER_ARGS =
+
 ifeq ($(CONFIG_IPSEC_MB),y)
-ENV_LINKER_ARGS += -lIPSec_MB -L$(IPSEC_MB_DIR)
+DPDK_PRIVATE_LINKER_ARGS += -lIPSec_MB -L$(IPSEC_MB_DIR)
 endif
 
 ifeq ($(CONFIG_REDUCE),y)
-ENV_LINKER_ARGS += -lisal -L$(ISAL_DIR)/.libs
+DPDK_PRIVATE_LINKER_ARGS += -lisal -L$(ISAL_DIR)/.libs
 endif
 
 ifneq (,$(wildcard $(DPDK_INC_DIR)/rte_config.h))
 ifneq (,$(shell grep -e "define RTE_LIBRTE_VHOST_NUMA 1" -e "define RTE_EAL_NUMA_AWARE_HUGEPAGES 1" $(DPDK_INC_DIR)/rte_config.h))
-ENV_LINKER_ARGS += -lnuma
+DPDK_PRIVATE_LINKER_ARGS += -lnuma
 endif
 endif
 
 # DPDK built with meson puts those defines elsewhere
 ifneq (,$(wildcard $(DPDK_INC_DIR)/rte_build_config.h))
 ifneq (,$(shell grep -e "define RTE_LIBRTE_VHOST_NUMA 1" -e "define RTE_EAL_NUMA_AWARE_HUGEPAGES 1" $(DPDK_INC_DIR)/rte_build_config.h))
-ENV_LINKER_ARGS += -lnuma
+DPDK_PRIVATE_LINKER_ARGS += -lnuma
 endif
 endif
 
 ifeq ($(OS),Linux)
-ENV_LINKER_ARGS += -ldl
+DPDK_PRIVATE_LINKER_ARGS += -ldl
 endif
 ifeq ($(OS),FreeBSD)
-ENV_LINKER_ARGS += -lexecinfo
+DPDK_PRIVATE_LINKER_ARGS += -lexecinfo
 endif
+
+ENV_LINKER_ARGS += $(DPDK_PRIVATE_LINKER_ARGS)
