@@ -141,12 +141,16 @@ all: $(SPDK_ROOT_DIR)/dpdk/build-tmp
 	# /usr/local) instead of replacing it. --prefix needs to be an absolute path, so we set \
 	# it to / and then set DESTDIR directly, so libs and headers are copied to "DESTDIR//". \
 	# DPDK kernel modules are set to install in $DESTDIR/boot/modules, but we move them \
-	# to DESTDIR/kmod to be consistent with the makefile build.
+	# to DESTDIR/kmod to be consistent with the makefile build. \
+	# \
+	# Also use meson install --only-changed instead of ninja install so that the shared \
+	# libraries don't get reinstalled when they haven't been rebuilt - this avoids all of \
+	# our applications getting relinked even when nothing has changed.
 	$(Q)if [ "$(OS)" = "FreeBSD" ]; then \
 		env -u MAKEFLAGS DESTDIR=$(SPDK_ROOT_DIR)/dpdk/build ninja -C $(SPDK_ROOT_DIR)/dpdk/build-tmp $(MAKE_NUMJOBS) install > /dev/null && \
 		mv $(SPDK_ROOT_DIR)/dpdk/build/boot/modules $(SPDK_ROOT_DIR)/dpdk/build/kmod; \
 	else \
-		env -u MAKEFLAGS ninja -C $(SPDK_ROOT_DIR)/dpdk/build-tmp $(MAKE_NUMJOBS) install > /dev/null; \
+		env -u MAKEFLAGS meson install -C $(SPDK_ROOT_DIR)/dpdk/build-tmp --only-changed > /dev/null; \
 	fi
 
 $(SPDK_ROOT_DIR)/dpdk/build-tmp: $(SPDK_ROOT_DIR)/mk/cc.mk $(SPDK_ROOT_DIR)/include/spdk/config.h
