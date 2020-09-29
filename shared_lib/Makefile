@@ -55,7 +55,7 @@ $(SHARED_REALNAME_LIB):
 $(SHARED_LINKED_LIB) : $(SHARED_REALNAME_LIB)
 	$(Q)echo "  SYMLINK $(notdir $@)"; $(BUILD_LINKERNAME_LIB)
 
-.PHONY: all clean $(DIRS-y) $(SHARED_LINKED_LIB) install uninstall
+.PHONY: all clean $(DIRS-y) install uninstall
 
 all: $(SHARED_LINKED_LIB)
 
