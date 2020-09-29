@@ -47,48 +47,48 @@ endif
 
 ifeq ($(CONFIG_REDUCE),y)
 BLOCKDEV_MODULES_LIST += bdev_compress reduce
-SYS_LIBS += -lpmem
+BLOCKDEV_MODULES_PRIVATE_LIBS += -lpmem
 endif
 
 ifeq ($(CONFIG_RDMA),y)
 BLOCKDEV_MODULES_LIST += rdma
-SYS_LIBS += -libverbs -lrdmacm
+BLOCKDEV_MODULES_PRIVATE_LIBS += -libverbs -lrdmacm
 ifeq ($(CONFIG_RDMA_PROV),mlx5_dv)
-SYS_LIBS += -lmlx5
+BLOCKDEV_MODULES_PRIVATE_LIBS += -lmlx5
 endif
 endif
 
 ifeq ($(OS),Linux)
 BLOCKDEV_MODULES_LIST += bdev_ftl ftl
 BLOCKDEV_MODULES_LIST += bdev_aio
-SYS_LIBS += -laio
+BLOCKDEV_MODULES_PRIVATE_LIBS += -laio
 ifeq ($(CONFIG_VIRTIO),y)
 BLOCKDEV_MODULES_LIST += bdev_virtio virtio
 endif
 ifeq ($(CONFIG_ISCSI_INITIATOR),y)
 BLOCKDEV_MODULES_LIST += bdev_iscsi
 # Fedora installs libiscsi to /usr/lib64/iscsi for some reason.
-SYS_LIBS += -L/usr/lib64/iscsi -liscsi
+BLOCKDEV_MODULES_PRIVATE_LIBS += -L/usr/lib64/iscsi -liscsi
 endif
 endif
 
 ifeq ($(CONFIG_URING),y)
 BLOCKDEV_MODULES_LIST += bdev_uring
-SYS_LIBS += -luring
+BLOCKDEV_MODULES_PRIVATE_LIBS += -luring
 ifneq ($(strip $(CONFIG_URING_PATH)),)
 CFLAGS += -I$(CONFIG_URING_PATH)
-LDFLAGS += -L$(CONFIG_URING_PATH)
+BLOCKDEV_MODULES_PRIVATE_LIBS += -L$(CONFIG_URING_PATH)
 endif
 endif
 
 ifeq ($(CONFIG_RBD),y)
 BLOCKDEV_MODULES_LIST += bdev_rbd
-SYS_LIBS += -lrados -lrbd
+BLOCKDEV_MODULES_PRIVATE_LIBS += -lrados -lrbd
 endif
 
 ifeq ($(CONFIG_PMDK),y)
 BLOCKDEV_MODULES_LIST += bdev_pmem
-SYS_LIBS += -lpmemblk -lpmem
+BLOCKDEV_MODULES_PRIVATE_LIBS += -lpmemblk -lpmem
 endif
 
 SOCK_MODULES_LIST = sock_posix
@@ -107,3 +107,4 @@ endif
 EVENT_BDEV_SUBSYSTEM = event_bdev event_accel event_vmd event_sock
 
 ALL_MODULES_LIST = $(BLOCKDEV_MODULES_LIST) $(ACCEL_MODULES_LIST) $(SOCK_MODULES_LIST)
+SYS_LIBS += $(BLOCKDEV_MODULES_PRIVATE_LIBS)
