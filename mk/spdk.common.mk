@@ -381,3 +381,11 @@ endef
 define spdk_lib_list_to_shared_libs
 $(1:%=$(SPDK_ROOT_DIR)/build/lib/libspdk_%.so)
 endef
+
+define add_no_as_needed
+-Wl,--no-as-needed $(1) -Wl,-as-needed
+endef
+
+define add_whole_archive
+-Wl,--whole-archive $(1) -Wl,--no-whole-archive
+endef
