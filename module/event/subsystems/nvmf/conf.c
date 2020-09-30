@@ -365,7 +365,6 @@ nvmf_parse_subsystem(struct spdk_conf_section *sp)
 
 	for (i = 0; ; i++) {
 		struct spdk_nvmf_ns_opts ns_opts;
-		struct spdk_bdev *bdev;
 		const char *bdev_name;
 		const char *uuid_str;
 		char *nsid_str;
@@ -373,14 +372,6 @@ nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		bdev_name = spdk_conf_section_get_nmval(sp, "Namespace", i, 0);
 		if (!bdev_name) {
 			break;
-		}
-
-		bdev = spdk_bdev_get_by_name(bdev_name);
-		if (bdev == NULL) {
-			SPDK_ERRLOG("Could not find namespace bdev '%s'\n", bdev_name);
-			spdk_nvmf_subsystem_destroy(subsystem);
-			subsystem = NULL;
-			goto done;
 		}
 
 		spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
@@ -410,7 +401,7 @@ nvmf_parse_subsystem(struct spdk_conf_section *sp)
 			}
 		}
 
-		if (spdk_nvmf_subsystem_add_ns(subsystem, bdev, &ns_opts, sizeof(ns_opts), NULL) == 0) {
+		if (spdk_nvmf_subsystem_add_ns_ext(subsystem, bdev_name, &ns_opts, sizeof(ns_opts), NULL) == 0) {
 			SPDK_ERRLOG("Unable to add namespace\n");
 			spdk_nvmf_subsystem_destroy(subsystem);
 			subsystem = NULL;

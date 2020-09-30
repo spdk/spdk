@@ -47,6 +47,7 @@
 	spdk_nvmf_subsytem_any_listener_allowed;
 	spdk_nvmf_ns_opts_get_defaults;
 	spdk_nvmf_subsystem_add_ns;
+	spdk_nvmf_subsystem_add_ns_ext;
 	spdk_nvmf_subsystem_remove_ns;
 	spdk_nvmf_subsystem_get_first_ns;
 	spdk_nvmf_subsystem_get_next_ns;

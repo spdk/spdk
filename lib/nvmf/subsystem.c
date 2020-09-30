@@ -1262,9 +1262,9 @@ static int
 nvmf_ns_reservation_restore(struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservation_info *info);
 
 uint32_t
-spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev,
-			   const struct spdk_nvmf_ns_opts *user_opts, size_t opts_size,
-			   const char *ptpl_file)
+spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char *bdev_name,
+			       const struct spdk_nvmf_ns_opts *user_opts, size_t opts_size,
+			       const char *ptpl_file)
 {
 	struct spdk_nvmf_ns_opts opts;
 	struct spdk_nvmf_ns *ns;
@@ -1276,18 +1276,9 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 		return 0;
 	}
 
-	if (spdk_bdev_get_md_size(bdev) != 0 && !spdk_bdev_is_md_interleaved(bdev)) {
-		SPDK_ERRLOG("Can't attach bdev with separate metadata.\n");
-		return 0;
-	}
-
 	spdk_nvmf_ns_opts_get_defaults(&opts, sizeof(opts));
 	if (user_opts) {
 		memcpy(&opts, user_opts, spdk_min(sizeof(opts), opts_size));
-	}
-
-	if (spdk_mem_all_zero(&opts.uuid, sizeof(opts.uuid))) {
-		opts.uuid = *spdk_bdev_get_uuid(bdev);
 	}
 
 	if (opts.nsid == SPDK_NVME_GLOBAL_NS_TAG) {
@@ -1347,22 +1338,36 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 		return 0;
 	}
 
-	ns->bdev = bdev;
-	ns->opts = opts;
-	ns->subsystem = subsystem;
-	rc = spdk_bdev_open_ext(bdev->name, true, nvmf_ns_event, ns, &ns->desc);
+	rc = spdk_bdev_open_ext(bdev_name, true, nvmf_ns_event, ns, &ns->desc);
 	if (rc != 0) {
 		SPDK_ERRLOG("Subsystem %s: bdev %s cannot be opened, error=%d\n",
-			    subsystem->subnqn, spdk_bdev_get_name(bdev), rc);
+			    subsystem->subnqn, bdev_name, rc);
 		free(ns);
 		return 0;
 	}
-	rc = spdk_bdev_module_claim_bdev(bdev, ns->desc, &ns_bdev_module);
+
+	ns->bdev = spdk_bdev_desc_get_bdev(ns->desc);
+
+	if (spdk_bdev_get_md_size(ns->bdev) != 0 && !spdk_bdev_is_md_interleaved(ns->bdev)) {
+		SPDK_ERRLOG("Can't attach bdev with separate metadata.\n");
+		spdk_bdev_close(ns->desc);
+		free(ns);
+		return 0;
+	}
+
+	rc = spdk_bdev_module_claim_bdev(ns->bdev, ns->desc, &ns_bdev_module);
 	if (rc != 0) {
 		spdk_bdev_close(ns->desc);
 		free(ns);
 		return 0;
 	}
+
+	if (spdk_mem_all_zero(&opts.uuid, sizeof(opts.uuid))) {
+		opts.uuid = *spdk_bdev_get_uuid(ns->bdev);
+	}
+
+	ns->opts = opts;
+	ns->subsystem = subsystem;
 	subsystem->ns[opts.nsid - 1] = ns;
 	ns->nsid = opts.nsid;
 	TAILQ_INIT(&ns->registrants);
@@ -1374,6 +1379,7 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 			if (rc) {
 				SPDK_ERRLOG("Subsystem restore reservation failed\n");
 				subsystem->ns[opts.nsid - 1] = NULL;
+				spdk_bdev_module_release_bdev(ns->bdev);
 				spdk_bdev_close(ns->desc);
 				free(ns);
 				return 0;
@@ -1384,12 +1390,21 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 
 	SPDK_DEBUGLOG(nvmf, "Subsystem %s: bdev %s assigned nsid %" PRIu32 "\n",
 		      spdk_nvmf_subsystem_get_nqn(subsystem),
-		      spdk_bdev_get_name(bdev),
+		      bdev_name,
 		      opts.nsid);
 
 	nvmf_subsystem_ns_changed(subsystem, opts.nsid);
 
 	return opts.nsid;
+}
+
+uint32_t
+spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev,
+			   const struct spdk_nvmf_ns_opts *user_opts, size_t opts_size,
+			   const char *ptpl_file)
+{
+	return spdk_nvmf_subsystem_add_ns_ext(subsystem, spdk_bdev_get_name(bdev),
+					      user_opts, opts_size, ptpl_file);
 }
 
 static uint32_t

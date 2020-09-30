@@ -701,7 +701,7 @@ struct spdk_nvmf_ns_opts {
 void spdk_nvmf_ns_opts_get_defaults(struct spdk_nvmf_ns_opts *opts, size_t opts_size);
 
 /**
- * Add a namespace to a subsytem.
+ * Add a namespace to a subsytem (deprecated, please use spdk_nvmf_subsystem_add_ns_ext).
  *
  * May only be performed on subsystems in the PAUSED or INACTIVE states.
  *
@@ -716,6 +716,24 @@ void spdk_nvmf_ns_opts_get_defaults(struct spdk_nvmf_ns_opts *opts, size_t opts_
 uint32_t spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev,
 				    const struct spdk_nvmf_ns_opts *opts, size_t opts_size,
 				    const char *ptpl_file);
+
+/**
+ * Add a namespace to a subsystems in the PAUSED or INACTIVE states.
+ *
+ * May only be performed on subsystems in the PAUSED or INACTIVE states.
+ *
+ * \param subsystem Subsystem to add namespace to.
+ * \param bdev_name Block device name to add as a namespace.
+ * \param opts Namespace options, or NULL to use defaults.
+ * \param opts_size sizeof(*opts)
+ * \param ptpl_file Persist through power loss file path.
+ *
+ * \return newly added NSID on success, or 0 on failure.
+ */
+uint32_t spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem,
+					const char *bdev_name,
+					const struct spdk_nvmf_ns_opts *opts, size_t opts_size,
+					const char *ptpl_file);
 
 /**
  * Remove a namespace from a subsytem.

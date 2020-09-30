@@ -1262,16 +1262,6 @@ nvmf_rpc_ns_paused(struct spdk_nvmf_subsystem *subsystem,
 {
 	struct nvmf_rpc_ns_ctx *ctx = cb_arg;
 	struct spdk_nvmf_ns_opts ns_opts;
-	struct spdk_bdev *bdev;
-
-	bdev = spdk_bdev_get_by_name(ctx->ns_params.bdev_name);
-	if (!bdev) {
-		SPDK_ERRLOG("No bdev with name %s\n", ctx->ns_params.bdev_name);
-		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "Invalid parameters");
-		ctx->response_sent = true;
-		goto resume;
-	}
 
 	spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
 	ns_opts.nsid = ctx->ns_params.nsid;
@@ -1286,7 +1276,8 @@ nvmf_rpc_ns_paused(struct spdk_nvmf_subsystem *subsystem,
 		ns_opts.uuid = ctx->ns_params.uuid;
 	}
 
-	ctx->ns_params.nsid = spdk_nvmf_subsystem_add_ns(subsystem, bdev, &ns_opts, sizeof(ns_opts),
+	ctx->ns_params.nsid = spdk_nvmf_subsystem_add_ns_ext(subsystem, ctx->ns_params.bdev_name,
+			      &ns_opts, sizeof(ns_opts),
 			      ctx->ns_params.ptpl_file);
 	if (ctx->ns_params.nsid == 0) {
 		SPDK_ERRLOG("Unable to add namespace\n");

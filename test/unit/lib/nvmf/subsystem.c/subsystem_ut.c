@@ -200,16 +200,47 @@ nvmf_ctrlr_ns_changed(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid)
 	g_ns_changed_nsid = nsid;
 }
 
+static struct spdk_bdev g_bdevs[] = {
+	{ .name = "bdev1" },
+	{ .name = "bdev2" },
+};
+
+struct spdk_bdev_desc {
+	struct spdk_bdev	*bdev;
+};
+
 int
 spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event_cb,
 		   void *event_ctx, struct spdk_bdev_desc **_desc)
 {
-	return 0;
+	struct spdk_bdev_desc *desc;
+	size_t i;
+
+	for (i = 0; i < sizeof(g_bdevs); i++) {
+		if (strcmp(bdev_name, g_bdevs[i].name) == 0) {
+
+			desc = calloc(1, sizeof(*desc));
+			SPDK_CU_ASSERT_FATAL(desc != NULL);
+
+			desc->bdev = &g_bdevs[i];
+			*_desc = desc;
+			return 0;
+		}
+	}
+
+	return -EINVAL;
 }
 
 void
 spdk_bdev_close(struct spdk_bdev_desc *desc)
 {
+	free(desc);
+}
+
+struct spdk_bdev *
+spdk_bdev_desc_get_bdev(struct spdk_bdev_desc *desc)
+{
+	return desc->bdev;
 }
 
 const char *
@@ -233,7 +264,6 @@ test_spdk_nvmf_subsystem_add_ns(void)
 		.ns = NULL,
 		.tgt = &tgt
 	};
-	struct spdk_bdev bdev1 = {}, bdev2 = {};
 	struct spdk_nvmf_ns_opts ns_opts;
 	uint32_t nsid;
 	int rc;
@@ -244,34 +274,34 @@ test_spdk_nvmf_subsystem_add_ns(void)
 
 	/* Allow NSID to be assigned automatically */
 	spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
-	nsid = spdk_nvmf_subsystem_add_ns(&subsystem, &bdev1, &ns_opts, sizeof(ns_opts), NULL);
+	nsid = spdk_nvmf_subsystem_add_ns_ext(&subsystem, "bdev1", &ns_opts, sizeof(ns_opts), NULL);
 	/* NSID 1 is the first unused ID */
 	CU_ASSERT(nsid == 1);
 	CU_ASSERT(subsystem.max_nsid == 1);
 	SPDK_CU_ASSERT_FATAL(subsystem.ns != NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem.ns[nsid - 1] != NULL);
-	CU_ASSERT(subsystem.ns[nsid - 1]->bdev == &bdev1);
+	CU_ASSERT(subsystem.ns[nsid - 1]->bdev == &g_bdevs[nsid - 1]);
 
 	/* Request a specific NSID */
 	spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
 	ns_opts.nsid = 5;
-	nsid = spdk_nvmf_subsystem_add_ns(&subsystem, &bdev2, &ns_opts, sizeof(ns_opts), NULL);
+	nsid = spdk_nvmf_subsystem_add_ns_ext(&subsystem, "bdev2", &ns_opts, sizeof(ns_opts), NULL);
 	CU_ASSERT(nsid == 5);
 	CU_ASSERT(subsystem.max_nsid == 5);
 	SPDK_CU_ASSERT_FATAL(subsystem.ns[nsid - 1] != NULL);
-	CU_ASSERT(subsystem.ns[nsid - 1]->bdev == &bdev2);
+	CU_ASSERT(subsystem.ns[nsid - 1]->bdev == &g_bdevs[1]);
 
 	/* Request an NSID that is already in use */
 	spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
 	ns_opts.nsid = 5;
-	nsid = spdk_nvmf_subsystem_add_ns(&subsystem, &bdev2, &ns_opts, sizeof(ns_opts), NULL);
+	nsid = spdk_nvmf_subsystem_add_ns_ext(&subsystem, "bdev2", &ns_opts, sizeof(ns_opts), NULL);
 	CU_ASSERT(nsid == 0);
 	CU_ASSERT(subsystem.max_nsid == 5);
 
 	/* Request 0xFFFFFFFF (invalid NSID, reserved for broadcast) */
 	spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
 	ns_opts.nsid = 0xFFFFFFFF;
-	nsid = spdk_nvmf_subsystem_add_ns(&subsystem, &bdev2, &ns_opts, sizeof(ns_opts), NULL);
+	nsid = spdk_nvmf_subsystem_add_ns_ext(&subsystem, "bdev2", &ns_opts, sizeof(ns_opts), NULL);
 	CU_ASSERT(nsid == 0);
 	CU_ASSERT(subsystem.max_nsid == 5);
 
@@ -1253,9 +1283,9 @@ test_spdk_nvmf_ns_event(void)
 	struct spdk_nvmf_ctrlr ctrlr = {
 		.subsys = &subsystem
 	};
-	struct spdk_bdev bdev1 = {};
 	struct spdk_nvmf_ns_opts ns_opts;
 	uint32_t nsid;
+	struct spdk_bdev *bdev;
 
 	tgt.max_subsystems = 1024;
 	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
@@ -1263,9 +1293,12 @@ test_spdk_nvmf_ns_event(void)
 
 	/* Add one namespace */
 	spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
-	nsid = spdk_nvmf_subsystem_add_ns(&subsystem, &bdev1, &ns_opts, sizeof(ns_opts), NULL);
+	nsid = spdk_nvmf_subsystem_add_ns_ext(&subsystem, "bdev1", &ns_opts, sizeof(ns_opts), NULL);
 	CU_ASSERT(nsid == 1);
 	CU_ASSERT(NULL != subsystem.ns[0]);
+	CU_ASSERT(subsystem.ns[nsid - 1]->bdev == &g_bdevs[nsid - 1]);
+
+	bdev = subsystem.ns[nsid - 1]->bdev;
 
 	/* Add one controller */
 	TAILQ_INIT(&subsystem.ctrlrs);
@@ -1275,7 +1308,7 @@ test_spdk_nvmf_ns_event(void)
 	subsystem.state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 	g_ns_changed_nsid = 0xFFFFFFFF;
 	g_ns_changed_ctrlr = NULL;
-	nvmf_ns_event(SPDK_BDEV_EVENT_RESIZE, &bdev1, subsystem.ns[0]);
+	nvmf_ns_event(SPDK_BDEV_EVENT_RESIZE, bdev, subsystem.ns[0]);
 	CU_ASSERT(SPDK_NVMF_SUBSYSTEM_PAUSING == subsystem.state);
 
 	poll_threads();
@@ -1287,7 +1320,7 @@ test_spdk_nvmf_ns_event(void)
 	subsystem.state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 	g_ns_changed_nsid = 0xFFFFFFFF;
 	g_ns_changed_ctrlr = NULL;
-	nvmf_ns_event(SPDK_BDEV_EVENT_REMOVE, &bdev1, subsystem.ns[0]);
+	nvmf_ns_event(SPDK_BDEV_EVENT_REMOVE, bdev, subsystem.ns[0]);
 	CU_ASSERT(SPDK_NVMF_SUBSYSTEM_PAUSING == subsystem.state);
 	CU_ASSERT(0xFFFFFFFF == g_ns_changed_nsid);
 	CU_ASSERT(NULL == g_ns_changed_ctrlr);
