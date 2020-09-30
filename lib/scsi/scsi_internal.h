@@ -175,7 +175,7 @@ struct spdk_scsi_lun {
 	struct spdk_poller *reset_poller;
 };
 
-struct spdk_scsi_lun *scsi_lun_construct(struct spdk_bdev *bdev,
+struct spdk_scsi_lun *scsi_lun_construct(const char *bdev_name,
 		void (*resize_cb)(const struct spdk_scsi_lun *, void *),
 		void *resize_ctx,
 		void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),

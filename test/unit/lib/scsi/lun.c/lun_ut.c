@@ -105,6 +105,9 @@ DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
 DEFINE_STUB(spdk_bdev_get_name, const char *,
 	    (const struct spdk_bdev *bdev), "test");
 
+DEFINE_STUB(spdk_bdev_desc_get_bdev, struct spdk_bdev *,
+	    (struct spdk_bdev_desc *bdev_desc), NULL);
+
 DEFINE_STUB_V(spdk_scsi_dev_queue_mgmt_task,
 	      (struct spdk_scsi_dev *dev, struct spdk_scsi_task *task));
 
@@ -147,9 +150,8 @@ DEFINE_STUB(spdk_bdev_get_io_channel, struct spdk_io_channel *,
 static struct spdk_scsi_lun *lun_construct(void)
 {
 	struct spdk_scsi_lun		*lun;
-	struct spdk_bdev		bdev;
 
-	lun = scsi_lun_construct(&bdev, NULL, NULL, NULL, NULL);
+	lun = scsi_lun_construct("ut_bdev", NULL, NULL, NULL, NULL);
 
 	SPDK_CU_ASSERT_FATAL(lun != NULL);
 	return lun;
@@ -582,7 +584,6 @@ lun_reset_task_suspend_scsi_task(void)
 static void
 lun_check_pending_tasks_only_for_specific_initiator(void)
 {
-	struct spdk_bdev bdev = {};
 	struct spdk_scsi_lun *lun;
 	struct spdk_scsi_task task1 = {};
 	struct spdk_scsi_task task2 = {};
@@ -590,7 +591,7 @@ lun_check_pending_tasks_only_for_specific_initiator(void)
 	struct spdk_scsi_port initiator_port2 = {};
 	struct spdk_scsi_port initiator_port3 = {};
 
-	lun = scsi_lun_construct(&bdev, NULL, NULL, NULL, NULL);
+	lun = scsi_lun_construct("ut_bdev", NULL, NULL, NULL, NULL);
 
 	task1.initiator_port = &initiator_port1;
 	task2.initiator_port = &initiator_port2;
@@ -652,11 +653,10 @@ lun_check_pending_tasks_only_for_specific_initiator(void)
 static void
 abort_pending_mgmt_tasks_when_lun_is_removed(void)
 {
-	struct spdk_bdev bdev = {};
 	struct spdk_scsi_lun *lun;
 	struct spdk_scsi_task task1, task2, task3;
 
-	lun = scsi_lun_construct(&bdev, NULL, NULL, NULL, NULL);
+	lun = scsi_lun_construct("ut_bdev", NULL, NULL, NULL, NULL);
 
 	/* Normal case */
 	ut_init_task(&task1);

@@ -151,15 +151,7 @@ spdk_scsi_dev_add_lun_ext(struct spdk_scsi_dev *dev, const char *bdev_name, int 
 			  void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
 			  void *hotremove_ctx)
 {
-	struct spdk_bdev *bdev;
 	struct spdk_scsi_lun *lun;
-
-	bdev = spdk_bdev_get_by_name(bdev_name);
-	if (bdev == NULL) {
-		SPDK_ERRLOG("device %s: cannot find bdev '%s' (target %d)\n",
-			    dev->name, bdev_name, lun_id);
-		return -1;
-	}
 
 	/* Search the lowest free LUN ID if LUN ID is default */
 	if (lun_id == -1) {
@@ -170,7 +162,7 @@ spdk_scsi_dev_add_lun_ext(struct spdk_scsi_dev *dev, const char *bdev_name, int 
 		}
 	}
 
-	lun = scsi_lun_construct(bdev, resize_cb, resize_ctx, hotremove_cb, hotremove_ctx);
+	lun = scsi_lun_construct(bdev_name, resize_cb, resize_ctx, hotremove_cb, hotremove_ctx);
 	if (lun == NULL) {
 		return -1;
 	}

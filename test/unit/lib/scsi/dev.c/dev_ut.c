@@ -43,24 +43,13 @@
 
 #include "spdk_internal/mock.h"
 
-/* Unit test bdev mockup */
-struct spdk_bdev {
-	char name[100];
-};
-
-static struct spdk_bdev g_bdevs[] = {
-	{"malloc0"},
-	{"malloc1"},
+static char *g_bdev_names[] = {
+	"malloc0",
+	"malloc1",
 };
 
 static struct spdk_scsi_port *g_initiator_port_with_pending_tasks = NULL;
 static struct spdk_scsi_port *g_initiator_port_with_pending_mgmt_tasks = NULL;
-
-const char *
-spdk_bdev_get_name(const struct spdk_bdev *bdev)
-{
-	return bdev->name;
-}
 
 static struct spdk_scsi_task *
 spdk_get_task(uint32_t *owner_task_ctr)
@@ -81,40 +70,31 @@ spdk_scsi_task_put(struct spdk_scsi_task *task)
 	free(task);
 }
 
-struct spdk_scsi_lun *scsi_lun_construct(struct spdk_bdev *bdev,
+struct spdk_scsi_lun *scsi_lun_construct(const char *bdev_name,
 		void (*resize_cb)(const struct spdk_scsi_lun *, void *),
 		void *resize_ctx,
 		void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
 		void *hotremove_ctx)
 {
 	struct spdk_scsi_lun *lun;
+	size_t i;
 
-	lun = calloc(1, sizeof(struct spdk_scsi_lun));
-	SPDK_CU_ASSERT_FATAL(lun != NULL);
+	for (i = 0; i < SPDK_COUNTOF(g_bdev_names); i++) {
+		if (strcmp(bdev_name, g_bdev_names[i]) == 0) {
+			lun = calloc(1, sizeof(struct spdk_scsi_lun));
+			SPDK_CU_ASSERT_FATAL(lun != NULL);
 
-	lun->bdev = bdev;
+			return lun;
+		}
+	}
 
-	return lun;
+	return NULL;
 }
 
 void
 scsi_lun_destruct(struct spdk_scsi_lun *lun)
 {
 	free(lun);
-}
-
-struct spdk_bdev *
-spdk_bdev_get_by_name(const char *bdev_name)
-{
-	size_t i;
-
-	for (i = 0; i < SPDK_COUNTOF(g_bdevs); i++) {
-		if (strcmp(bdev_name, g_bdevs[i].name) == 0) {
-			return &g_bdevs[i];
-		}
-	}
-
-	return NULL;
 }
 
 DEFINE_STUB_V(scsi_lun_execute_mgmt_task,

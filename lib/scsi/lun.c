@@ -418,12 +418,12 @@ bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
 /**
  * \brief Constructs a new spdk_scsi_lun object based on the provided parameters.
  *
- * \param bdev  bdev associated with this LUN
+ * \param bdev_name Bdev name to open and associate with this LUN
  *
- * \return NULL if bdev == NULL
+ * \return NULL if bdev whose name matches is not found
  * \return pointer to the new spdk_scsi_lun object otherwise
  */
-struct spdk_scsi_lun *scsi_lun_construct(struct spdk_bdev *bdev,
+struct spdk_scsi_lun *scsi_lun_construct(const char *bdev_name,
 		void (*resize_cb)(const struct spdk_scsi_lun *, void *),
 		void *resize_ctx,
 		void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
@@ -432,8 +432,8 @@ struct spdk_scsi_lun *scsi_lun_construct(struct spdk_bdev *bdev,
 	struct spdk_scsi_lun *lun;
 	int rc;
 
-	if (bdev == NULL) {
-		SPDK_ERRLOG("bdev must be non-NULL\n");
+	if (bdev_name == NULL) {
+		SPDK_ERRLOG("bdev_name must be non-NULL\n");
 		return NULL;
 	}
 
@@ -443,10 +443,10 @@ struct spdk_scsi_lun *scsi_lun_construct(struct spdk_bdev *bdev,
 		return NULL;
 	}
 
-	rc = spdk_bdev_open_ext(spdk_bdev_get_name(bdev), true, bdev_event_cb, lun, &lun->bdev_desc);
+	rc = spdk_bdev_open_ext(bdev_name, true, bdev_event_cb, lun, &lun->bdev_desc);
 
 	if (rc != 0) {
-		SPDK_ERRLOG("bdev %s cannot be opened, error=%d\n", spdk_bdev_get_name(bdev), rc);
+		SPDK_ERRLOG("bdev %s cannot be opened, error=%d\n", bdev_name, rc);
 		free(lun);
 		return NULL;
 	}
@@ -458,7 +458,8 @@ struct spdk_scsi_lun *scsi_lun_construct(struct spdk_bdev *bdev,
 	TAILQ_INIT(&lun->mgmt_tasks);
 	TAILQ_INIT(&lun->pending_mgmt_tasks);
 
-	lun->bdev = bdev;
+	/* Bdev is not removed while it is opened. */
+	lun->bdev = spdk_bdev_desc_get_bdev(lun->bdev_desc);
 	lun->io_channel = NULL;
 	lun->hotremove_cb = hotremove_cb;
 	lun->hotremove_ctx = hotremove_ctx;
