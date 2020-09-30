@@ -40,11 +40,4 @@ APP := nvmf
 C_SRCS := nvmf.c
 SPDK_LIB_LIST = $(ALL_MODULES_LIST) event_bdev nvmf
 
-ifeq ($(CONFIG_FC),y)
-ifneq ($(strip $(CONFIG_FC_PATH)),)
-SYS_LIBS += -L$(CONFIG_FC_PATH)
-endif
-SYS_LIBS += -lufc
-endif
-
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk

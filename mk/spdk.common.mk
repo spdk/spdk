@@ -182,6 +182,13 @@ endif
 endif
 endif
 
+ifeq ($(CONFIG_FC),y)
+ifneq ($(strip $(CONFIG_FC_PATH)),)
+SYS_LIBS += -L$(CONFIG_FC_PATH)
+endif
+SYS_LIBS += -lufc
+endif
+
 ifeq ($(CONFIG_DEBUG), y)
 COMMON_CFLAGS += -DDEBUG -O0 -fno-omit-frame-pointer
 else
