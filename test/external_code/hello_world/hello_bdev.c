@@ -263,10 +263,10 @@ main(int argc, char **argv)
 
 	/*
 	 * The user can provide the config file and bdev name at run time.
-	 * For example, to use Malloc0 in file bdev.conf run with params
-	 * ./hello_bdev -c bdev.conf -b Malloc0
+	 * For example, to use Malloc0 in file bdev.json run with params
+	 * ./hello_bdev --json bdev.json -b Malloc0
 	 * To use passthru bdev PT0 run with params
-	 * ./hello_bdev -c bdev.conf -b PT0
+	 * ./hello_bdev --json bdev.json -b PT0
 	 * If the bdev name is not specified,
 	 * then Malloc0 is used by default
 	 */
@@ -275,7 +275,7 @@ main(int argc, char **argv)
 		exit(rc);
 	}
 	if (opts.json_config_file == NULL) {
-		SPDK_ERRLOG("configfile must be specified using --json <conffile> e.g. -c bdev.conf\n");
+		SPDK_ERRLOG("configfile must be specified using --json <conffile> e.g. --json bdev.json\n");
 		exit(1);
 	}
 	hello_context.bdev_name = g_bdev_name;
