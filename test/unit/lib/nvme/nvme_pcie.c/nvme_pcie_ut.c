@@ -74,10 +74,7 @@ DEFINE_STUB(spdk_pci_device_get_id, struct spdk_pci_id, (struct spdk_pci_device 
 
 DEFINE_STUB(nvme_uevent_connect, int, (void), 0);
 
-struct spdk_log_flag SPDK_LOG_NVME = {
-	.name = "nvme",
-	.enabled = false,
-};
+SPDK_LOG_REGISTER_COMPONENT("nvme", SPDK_LOG_NVME)
 
 struct nvme_driver *g_spdk_nvme_driver = NULL;
 

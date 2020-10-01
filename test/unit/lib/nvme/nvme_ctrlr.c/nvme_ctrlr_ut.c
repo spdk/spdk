@@ -39,13 +39,10 @@
 
 #include "common/lib/test_env.c"
 
-struct spdk_log_flag SPDK_LOG_NVME = {
-	.name = "nvme",
-	.enabled = false,
-};
-
 #include "nvme/nvme_ctrlr.c"
 #include "nvme/nvme_quirks.c"
+
+SPDK_LOG_REGISTER_COMPONENT("nvme", SPDK_LOG_NVME)
 
 pid_t g_spdk_nvme_pid;
 

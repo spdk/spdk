@@ -60,10 +60,7 @@ int			g_num_active_threads;
 bool			g_run = true;
 bool			g_is_valid_opcode = true;
 
-struct spdk_log_flag SPDK_LOG_ISCSI = {
-	.name = "iscsi",
-	.enabled = false,
-};
+SPDK_LOG_REGISTER_COMPONENT("iscsi", SPDK_LOG_ISCSI)
 
 /* Global resources */
 TAILQ_HEAD(, spdk_iscsi_pdu)		g_get_pdu_list;
