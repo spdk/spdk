@@ -1066,7 +1066,7 @@ crypto_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 				    bdev_io);
 	if (rc != 0) {
 		if (rc == -ENOMEM) {
-			SPDK_DEBUGLOG(SPDK_LOG_CRYPTO, "No memory, queue the IO.\n");
+			SPDK_DEBUGLOG(SPDK_LOG_VBDEV_CRYPTO, "No memory, queue the IO.\n");
 			io_ctx->ch = ch;
 			vbdev_crypto_queue_io(bdev_io);
 		} else {
@@ -1091,7 +1091,7 @@ crypto_write_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
 	if (rc != 0) {
 		spdk_bdev_io_put_aux_buf(bdev_io, aux_buf);
 		if (rc == -ENOMEM) {
-			SPDK_DEBUGLOG(SPDK_LOG_CRYPTO, "No memory, queue the IO.\n");
+			SPDK_DEBUGLOG(SPDK_LOG_VBDEV_CRYPTO, "No memory, queue the IO.\n");
 			io_ctx->ch = ch;
 			vbdev_crypto_queue_io(bdev_io);
 		} else {
@@ -1159,7 +1159,7 @@ vbdev_crypto_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bde
 
 	if (rc != 0) {
 		if (rc == -ENOMEM) {
-			SPDK_DEBUGLOG(SPDK_LOG_CRYPTO, "No memory, queue the IO.\n");
+			SPDK_DEBUGLOG(SPDK_LOG_VBDEV_CRYPTO, "No memory, queue the IO.\n");
 			io_ctx->ch = ch;
 			vbdev_crypto_queue_io(bdev_io);
 		} else {
@@ -1765,7 +1765,7 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 	int rc = 0;
 
 	if (g_number_of_claimed_volumes >= MAX_CRYPTO_VOLUMES) {
-		SPDK_DEBUGLOG(SPDK_LOG_CRYPTO, "Reached max number of claimed volumes\n");
+		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_CRYPTO, "Reached max number of claimed volumes\n");
 		rc = -EINVAL;
 		goto error_vbdev_alloc;
 	}
@@ -1778,7 +1778,7 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 		if (strcmp(name->bdev_name, bdev->name) != 0) {
 			continue;
 		}
-		SPDK_DEBUGLOG(SPDK_LOG_CRYPTO, "Match on %s\n", bdev->name);
+		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_CRYPTO, "Match on %s\n", bdev->name);
 
 		vbdev = calloc(1, sizeof(struct vbdev_crypto));
 		if (!vbdev) {
@@ -1954,7 +1954,7 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 			rc = -EINVAL;
 			goto error_bdev_register;
 		}
-		SPDK_DEBUGLOG(SPDK_LOG_CRYPTO, "registered io_device and virtual bdev for: %s\n",
+		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_CRYPTO, "registered io_device and virtual bdev for: %s\n",
 			      name->vbdev_name);
 		break;
 	}
@@ -2037,4 +2037,4 @@ vbdev_crypto_examine(struct spdk_bdev *bdev)
 	spdk_bdev_module_examine_done(&crypto_if);
 }
 
-SPDK_LOG_REGISTER_COMPONENT("vbdev_crypto", SPDK_LOG_CRYPTO)
+SPDK_LOG_REGISTER_COMPONENT("vbdev_crypto", SPDK_LOG_VBDEV_CRYPTO)

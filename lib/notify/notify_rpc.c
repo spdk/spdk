@@ -104,7 +104,7 @@ rpc_notify_get_notifications(struct spdk_jsonrpc_request *request,
 	if (params &&
 	    spdk_json_decode_object(params, rpc_notify_get_notifications_decoders,
 				    SPDK_COUNTOF(rpc_notify_get_notifications_decoders), &req)) {
-		SPDK_DEBUGLOG(SPDK_NOTIFY_RPC, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(SPDK_LOG_NOTIFY_RPC, "spdk_json_decode_object failed\n");
 
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 spdk_strerror(EINVAL));
@@ -123,4 +123,4 @@ rpc_notify_get_notifications(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("notify_get_notifications", rpc_notify_get_notifications, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(notify_get_notifications, get_notifications)
 
-SPDK_LOG_REGISTER_COMPONENT("notify_rpc", SPDK_NOTIFY_RPC)
+SPDK_LOG_REGISTER_COMPONENT("notify_rpc", SPDK_LOG_NOTIFY_RPC)
