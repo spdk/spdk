@@ -843,6 +843,8 @@ spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 
 	TAILQ_INIT(&qpair->outstanding);
 	qpair->group = group;
+	qpair->ctrlr = NULL;
+	qpair->disconnect_started = false;
 
 	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
 		if (tgroup->transport == qpair->transport) {
