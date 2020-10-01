@@ -40,62 +40,9 @@
 #define SPDK_INTERNAL_LOG_H
 
 #include "spdk/log.h"
-#include "spdk/queue.h"
 
 extern enum spdk_log_level g_spdk_log_level;
 extern enum spdk_log_level g_spdk_log_print_level;
-
-struct spdk_log_flag {
-	TAILQ_ENTRY(spdk_log_flag) tailq;
-	const char *name;
-	bool enabled;
-};
-
-void spdk_log_register_flag(const char *name, struct spdk_log_flag *flag);
-
-struct spdk_log_flag *spdk_log_get_first_flag(void);
-struct spdk_log_flag *spdk_log_get_next_flag(struct spdk_log_flag *flag);
-
-#define SPDK_LOG_REGISTER_COMPONENT(FLAG) \
-struct spdk_log_flag SPDK_LOG_##FLAG = { \
-	.enabled = false, \
-	.name = #FLAG, \
-}; \
-__attribute__((constructor)) static void register_flag_##FLAG(void) \
-{ \
-	spdk_log_register_flag(#FLAG, &SPDK_LOG_##FLAG); \
-}
-
-#define SPDK_INFOLOG(FLAG, ...)									\
-	do {											\
-		extern struct spdk_log_flag SPDK_LOG_##FLAG;						\
-		if (SPDK_LOG_##FLAG.enabled) {								\
-			spdk_log(SPDK_LOG_INFO, __FILE__, __LINE__, __func__, __VA_ARGS__);	\
-		}										\
-	} while (0)
-
-#ifdef DEBUG
-
-#define SPDK_DEBUGLOG(FLAG, ...)								\
-	do {											\
-		extern struct spdk_log_flag SPDK_LOG_##FLAG;						\
-		if (SPDK_LOG_##FLAG.enabled) {								\
-			spdk_log(SPDK_LOG_DEBUG, __FILE__, __LINE__, __func__, __VA_ARGS__);	\
-		}										\
-	} while (0)
-
-#define SPDK_LOGDUMP(FLAG, LABEL, BUF, LEN)						\
-	do {										\
-		extern struct spdk_log_flag SPDK_LOG_##FLAG;					\
-		if ((SPDK_LOG_##FLAG.enabled) && (LEN)) {						\
-			spdk_log_dump(stderr, (LABEL), (BUF), (LEN));			\
-		}									\
-	} while (0)
-
-#else
-#define SPDK_DEBUGLOG(...) do { } while (0)
-#define SPDK_LOGDUMP(...) do { } while (0)
-#endif
 
 #define SPDK_ERRLOGDUMP(LABEL, BUF, LEN)				\
 	do {								\

@@ -19,6 +19,13 @@ Updated intel-ipsec-mb submodule to v0.54
 
 Updated ISA-L submodule to v2.29.0.
 
+## log
+
+A log flag structure, `spdk_log_register_flag`, `spdk_log_get_first_flag`,
+`spdk_log_get_next_flag` and macro `SPDK_LOG_REGISTER_COMPONENT`, have been added which
+enable registering and interacting with log flags. Added `SPDK_INFOLOG`, `SPDK_DEBUGLOG`
+and `SPDK_LOGDUMP` macros to display logs for specified log flag.
+
 ### ocf
 
 Updated OCF submodule to v20.03.1
