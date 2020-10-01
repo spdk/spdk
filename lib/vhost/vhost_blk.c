@@ -1250,19 +1250,20 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 	int ret = 0;
 
 	spdk_vhost_lock();
-	bdev = spdk_bdev_get_by_name(dev_name);
-	if (bdev == NULL) {
-		SPDK_ERRLOG("%s: bdev '%s' not found\n",
-			    name, dev_name);
-		ret = -ENODEV;
-		goto out;
-	}
 
 	bvdev = calloc(1, sizeof(*bvdev));
 	if (bvdev == NULL) {
 		ret = -ENOMEM;
 		goto out;
 	}
+
+	ret = spdk_bdev_open_ext(dev_name, true, bdev_event_cb, bvdev, &bvdev->bdev_desc);
+	if (ret != 0) {
+		SPDK_ERRLOG("%s: could not open bdev '%s', error=%d\n",
+			    name, dev_name, ret);
+		goto out;
+	}
+	bdev = spdk_bdev_desc_get_bdev(bvdev->bdev_desc);
 
 	vdev = &bvdev->vdev;
 	vdev->virtio_features = SPDK_VHOST_BLK_FEATURES_BASE;
@@ -1282,13 +1283,6 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 	}
 	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_FLUSH)) {
 		vdev->virtio_features |= (1ULL << VIRTIO_BLK_F_FLUSH);
-	}
-
-	ret = spdk_bdev_open_ext(dev_name, true, bdev_event_cb, bvdev, &bvdev->bdev_desc);
-	if (ret != 0) {
-		SPDK_ERRLOG("%s: could not open bdev '%s', error=%d\n",
-			    name, dev_name, ret);
-		goto out;
 	}
 
 	/*
