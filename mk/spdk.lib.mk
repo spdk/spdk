@@ -76,7 +76,9 @@ else
 BUILD_DEP := $(DEP)
 endif
 
+ifeq ($(SPDK_NO_LIB_DEPS),)
 SPDK_DEP_LIBS = $(call spdk_lib_list_to_shared_libs,$(DEPDIRS-$(LIBNAME)))
+endif
 
 .PHONY: all clean $(DIRS-y)
 

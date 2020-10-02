@@ -223,11 +223,6 @@ function confirm_deps() {
 	fi
 }
 
-# By removing the spdk.lib_deps.mk file from spdk.lib.mk, we ensure that we won't
-# create any link dependencies. Then we can be sure we get a valid accounting of the
-# symbol dependencies we have.
-sed -i -e 's,include $(SPDK_ROOT_DIR)/mk/spdk.lib_deps.mk,,g' "$rootdir/mk/spdk.lib.mk"
-
 source ~/autorun-spdk.conf
 config_params=$(get_config_params)
 if [ "$SPDK_TEST_OCF" -eq 1 ]; then
@@ -236,7 +231,9 @@ fi
 
 $MAKE $MAKEFLAGS clean
 ./configure $config_params --with-shared
-$MAKE $MAKEFLAGS
+# By setting SPDK_NO_LIB_DEPS=1, we ensure that we won't create any link dependencies.
+# Then we can be sure we get a valid accounting of the symbol dependencies we have.
+SPDK_NO_LIB_DEPS=1 $MAKE $MAKEFLAGS
 
 xtrace_disable
 
@@ -265,7 +262,6 @@ fi
 )
 
 $MAKE $MAKEFLAGS clean
-git checkout "$rootdir/mk/spdk.lib.mk"
 
 if [ -f $fail_file ]; then
 	rm -f $fail_file
