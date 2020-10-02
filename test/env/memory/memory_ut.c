@@ -65,6 +65,13 @@ DEFINE_STUB(rte_dev_event_callback_unregister, int, (const char *device_name,
 		rte_dev_event_cb_fn cb_fn, void *cb_arg), 0);
 DEFINE_STUB(rte_dev_event_monitor_start, int, (void), 0);
 DEFINE_STUB(rte_dev_event_monitor_stop, int, (void), 0);
+DEFINE_STUB(rte_extmem_register, int, (void *va_addr, size_t len, rte_iova_t iova_addrs[],
+				       unsigned int n_pages, size_t page_sz), 0);
+DEFINE_STUB(rte_extmem_unregister, int, (void *va_addr, size_t len), 0);
+DEFINE_STUB(rte_dev_dma_map, int, (struct rte_device *dev, void *addr, uint64_t iova,
+				   size_t len), 0);
+DEFINE_STUB(rte_dev_dma_unmap, int, (struct rte_device *dev, void *addr, uint64_t iova,
+				     size_t len), 0);
 
 static int
 test_mem_map_notify(void *cb_ctx, struct spdk_mem_map *map,

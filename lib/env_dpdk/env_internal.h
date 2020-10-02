@@ -50,6 +50,18 @@
 #error RTE_VERSION is too old! Minimum 19.11 is required.
 #endif
 
+extern __thread bool g_spdk_mem_do_not_notify;
+extern struct spdk_mem_region_head g_spdk_mem_regions;
+extern pthread_mutex_t g_spdk_mem_region_mutex;
+
+struct spdk_mem_region {
+	void *addr;
+	size_t len;
+	TAILQ_ENTRY(spdk_mem_region) tailq;
+};
+
+TAILQ_HEAD(spdk_mem_region_head, spdk_mem_region);
+
 /* x86-64 and ARM userspace virtual addresses use only the low 48 bits [0..47],
  * which is enough to cover 256 TB.
  */

@@ -98,7 +98,19 @@ spdk_realloc(void *buf, size_t size, size_t align)
 void
 spdk_free(void *buf)
 {
+	struct spdk_mem_region *region, *tmp;
+
 	rte_free(buf);
+	pthread_mutex_lock(&g_spdk_mem_region_mutex);
+	g_spdk_mem_do_not_notify = true;
+	/* Perform memory unregister previously postponed in memory_hotplug_cb() */
+	TAILQ_FOREACH_SAFE(region, &g_spdk_mem_regions, tailq, tmp) {
+		spdk_mem_unregister(region->addr, region->len);
+		TAILQ_REMOVE(&g_spdk_mem_regions, region, tailq);
+		free(region);
+	}
+	g_spdk_mem_do_not_notify = false;
+	pthread_mutex_unlock(&g_spdk_mem_region_mutex);
 }
 
 void *

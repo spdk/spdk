@@ -146,7 +146,10 @@ struct spdk_mem_map {
 static struct spdk_mem_map *g_mem_reg_map;
 static TAILQ_HEAD(spdk_mem_map_head, spdk_mem_map) g_spdk_mem_maps =
 	TAILQ_HEAD_INITIALIZER(g_spdk_mem_maps);
+struct spdk_mem_region_head g_spdk_mem_regions = TAILQ_HEAD_INITIALIZER(g_spdk_mem_regions);
 static pthread_mutex_t g_spdk_mem_map_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t g_spdk_mem_region_mutex = PTHREAD_MUTEX_INITIALIZER;
+__thread bool g_spdk_mem_do_not_notify;
 
 static bool g_legacy_mem;
 
@@ -732,7 +735,19 @@ memory_hotplug_cb(enum rte_mem_event event_type,
 			len -= seg->hugepage_sz;
 		}
 	} else if (event_type == RTE_MEM_EVENT_FREE) {
-		spdk_mem_unregister((void *)addr, len);
+		/* We need to postpone spdk_mem_unregister() call here to avoid
+		 * double lock of SPDK mutex (g_spdk_mem_map_mutex) and DPDK mutex
+		 * (memory_hotplug_lock) which may happen when one thread is calling
+		 * spdk_free() and another one is calling vhost_session_mem_unregister() */
+		struct spdk_mem_region *region;
+
+		region = calloc(1, sizeof(*region));
+		assert(region != NULL);
+		region->addr = (void *)addr;
+		region->len = len;
+		pthread_mutex_lock(&g_spdk_mem_region_mutex);
+		TAILQ_INSERT_TAIL(&g_spdk_mem_regions, region, tailq);
+		pthread_mutex_unlock(&g_spdk_mem_region_mutex);
 	}
 }
 
@@ -784,126 +799,6 @@ static TAILQ_HEAD(, spdk_vtophys_pci_device) g_vtophys_pci_devices =
 
 static struct spdk_mem_map *g_vtophys_map;
 static struct spdk_mem_map *g_phys_ref_map;
-
-#if VFIO_ENABLED
-static int
-vtophys_iommu_map_dma(uint64_t vaddr, uint64_t iova, uint64_t size)
-{
-	struct spdk_vfio_dma_map *dma_map;
-	uint64_t refcount;
-	int ret;
-
-	refcount = spdk_mem_map_translate(g_phys_ref_map, iova, NULL);
-	assert(refcount < UINT64_MAX);
-	if (refcount > 0) {
-		spdk_mem_map_set_translation(g_phys_ref_map, iova, size, refcount + 1);
-		return 0;
-	}
-
-	dma_map = calloc(1, sizeof(*dma_map));
-	if (dma_map == NULL) {
-		return -ENOMEM;
-	}
-
-	dma_map->map.argsz = sizeof(dma_map->map);
-	dma_map->map.flags = VFIO_DMA_MAP_FLAG_READ | VFIO_DMA_MAP_FLAG_WRITE;
-	dma_map->map.vaddr = vaddr;
-	dma_map->map.iova = iova;
-	dma_map->map.size = size;
-
-	pthread_mutex_lock(&g_vfio.mutex);
-	if (g_vfio.device_ref == 0) {
-		/* VFIO requires at least one device (IOMMU group) to be added to
-		 * a VFIO container before it is possible to perform any IOMMU
-		 * operations on that container. This memory will be mapped once
-		 * the first device (IOMMU group) is hotplugged.
-		 *
-		 * Since the vfio container is managed internally by DPDK, it is
-		 * also possible that some device is already in that container, but
-		 * it's not managed by SPDK -  e.g. an NIC attached internally
-		 * inside DPDK. We could map the memory straight away in such
-		 * scenario, but there's no need to do it. DPDK devices clearly
-		 * don't need our mappings and hence we defer the mapping
-		 * unconditionally until the first SPDK-managed device is
-		 * hotplugged.
-		 */
-		goto out_insert;
-	}
-
-	ret = ioctl(g_vfio.fd, VFIO_IOMMU_MAP_DMA, &dma_map->map);
-	if (ret) {
-		DEBUG_PRINT("Cannot set up DMA mapping, error %d\n", errno);
-		pthread_mutex_unlock(&g_vfio.mutex);
-		free(dma_map);
-		return ret;
-	}
-
-out_insert:
-	TAILQ_INSERT_TAIL(&g_vfio.maps, dma_map, tailq);
-	pthread_mutex_unlock(&g_vfio.mutex);
-	spdk_mem_map_set_translation(g_phys_ref_map, iova, size, refcount + 1);
-	return 0;
-}
-
-static int
-vtophys_iommu_unmap_dma(uint64_t iova, uint64_t size)
-{
-	struct spdk_vfio_dma_map *dma_map;
-	uint64_t refcount;
-	int ret;
-	struct vfio_iommu_type1_dma_unmap unmap = {};
-
-	pthread_mutex_lock(&g_vfio.mutex);
-	TAILQ_FOREACH(dma_map, &g_vfio.maps, tailq) {
-		if (dma_map->map.iova == iova) {
-			break;
-		}
-	}
-
-	if (dma_map == NULL) {
-		DEBUG_PRINT("Cannot clear DMA mapping for IOVA %"PRIx64" - it's not mapped\n", iova);
-		pthread_mutex_unlock(&g_vfio.mutex);
-		return -ENXIO;
-	}
-
-	refcount = spdk_mem_map_translate(g_phys_ref_map, iova, NULL);
-	assert(refcount < UINT64_MAX);
-	if (refcount > 0) {
-		spdk_mem_map_set_translation(g_phys_ref_map, iova, size, refcount - 1);
-	}
-
-	/* We still have outstanding references, don't clear it. */
-	if (refcount > 1) {
-		pthread_mutex_unlock(&g_vfio.mutex);
-		return 0;
-	}
-
-	/** don't support partial or multiple-page unmap for now */
-	assert(dma_map->map.size == size);
-
-	if (g_vfio.device_ref == 0) {
-		/* Memory is not mapped anymore, just remove it's references */
-		goto out_remove;
-	}
-
-	unmap.argsz = sizeof(unmap);
-	unmap.flags = 0;
-	unmap.iova = dma_map->map.iova;
-	unmap.size = dma_map->map.size;
-	ret = ioctl(g_vfio.fd, VFIO_IOMMU_UNMAP_DMA, &unmap);
-	if (ret) {
-		DEBUG_PRINT("Cannot clear DMA mapping, error %d\n", errno);
-		pthread_mutex_unlock(&g_vfio.mutex);
-		return ret;
-	}
-
-out_remove:
-	TAILQ_REMOVE(&g_vfio.maps, dma_map, tailq);
-	pthread_mutex_unlock(&g_vfio.mutex);
-	free(dma_map);
-	return 0;
-}
-#endif
 
 static uint64_t
 vtophys_get_paddr_memseg(uint64_t vaddr)
@@ -988,6 +883,14 @@ vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 {
 	int rc = 0, pci_phys = 0;
 	uint64_t paddr;
+#if VFIO_ENABLED
+	uint32_t num_pages, i;
+	rte_iova_t *iovas = NULL;
+	rte_iova_t iova;
+	struct rte_dev_iterator dev_iter;
+	struct rte_device *dev;
+	const char *devstr = "bus=pci";
+#endif
 
 	if ((uintptr_t)vaddr & ~MASK_256TB) {
 		DEBUG_PRINT("invalid usermode virtual address %p\n", vaddr);
@@ -1006,7 +909,9 @@ vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 	switch (action) {
 	case SPDK_MEM_MAP_NOTIFY_REGISTER:
 		if (paddr == SPDK_VTOPHYS_ERROR) {
-			/* This is not an address that DPDK is managing. */
+			/* This is not an address that DPDK is managing currently.
+			 * Let's register it. */
+
 #if VFIO_ENABLED
 			enum rte_iova_mode iova_mode;
 
@@ -1015,19 +920,38 @@ vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 			if (spdk_iommu_is_enabled() && iova_mode == RTE_IOVA_VA) {
 				/* We'll use the virtual address as the iova to match DPDK. */
 				paddr = (uint64_t)vaddr;
-				rc = vtophys_iommu_map_dma((uint64_t)vaddr, paddr, len);
-				if (rc) {
-					return -EFAULT;
+
+				num_pages = len / VALUE_2MB;
+				iovas = calloc(num_pages, sizeof(rte_iova_t));
+				if (iovas == NULL) {
+					return -ENOMEM;
 				}
-				while (len > 0) {
-					rc = spdk_mem_map_set_translation(map, (uint64_t)vaddr, VALUE_2MB, paddr);
-					if (rc != 0) {
-						return rc;
-					}
-					vaddr += VALUE_2MB;
+
+				for (i = 0; i < num_pages; i++) {
+					iovas[i] = paddr;
 					paddr += VALUE_2MB;
-					len -= VALUE_2MB;
 				}
+
+				rc = rte_extmem_register(vaddr, len, iovas, num_pages, VALUE_2MB);
+				if (rc != 0) {
+					goto error;
+				}
+
+				/* For each device, map the memory */
+				RTE_DEV_FOREACH(dev, devstr, &dev_iter) {
+					rte_dev_dma_map(dev, vaddr, (uint64_t)vaddr, len);
+				}
+
+				for (i = 0; i < num_pages; i++) {
+					rc = spdk_mem_map_set_translation(map, (uint64_t)vaddr, VALUE_2MB, iovas[i]);
+					if (rc != 0) {
+						goto error;
+					}
+
+					vaddr += VALUE_2MB;
+				}
+
+				free(iovas);
 			} else
 #endif
 			{
@@ -1038,7 +962,8 @@ vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 					paddr = vtophys_get_paddr_pci((uint64_t)vaddr);
 					if (paddr == SPDK_VTOPHYS_ERROR) {
 						DEBUG_PRINT("could not get phys addr for %p\n", vaddr);
-						return -EFAULT;
+						rc = -EFAULT;
+						goto error;
 					}
 					/* The beginning of this address range points to a PCI resource,
 					 * so the rest must point to a PCI resource as well.
@@ -1057,29 +982,39 @@ vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 
 					if (paddr == SPDK_VTOPHYS_ERROR) {
 						DEBUG_PRINT("could not get phys addr for %p\n", vaddr);
-						return -EFAULT;
+						rc = -EFAULT;
+						goto error;
+
 					}
 
 					/* Since PCI paddr can break the 2MiB physical alignment skip this check for that. */
 					if (!pci_phys && (paddr & MASK_2MB)) {
 						DEBUG_PRINT("invalid paddr 0x%" PRIx64 " - must be 2MB aligned\n", paddr);
-						return -EINVAL;
+						rc = -EINVAL;
+						goto error;
+
 					}
 #if VFIO_ENABLED
 					/* If the IOMMU is on, but DPDK is using iova-mode=pa, we want to register this memory
 					 * with the IOMMU using the physical address to match. */
 					if (spdk_iommu_is_enabled()) {
-						rc = vtophys_iommu_map_dma((uint64_t)vaddr, paddr, VALUE_2MB);
-						if (rc) {
-							DEBUG_PRINT("Unable to assign vaddr %p to paddr 0x%" PRIx64 "\n", vaddr, paddr);
-							return -EFAULT;
+						iova = paddr;
+
+						rc = rte_extmem_register(vaddr, VALUE_2MB, &iova, 1, VALUE_2MB);
+						if (rc != 0) {
+							goto error;
+						}
+
+						/* For each device, map the memory */
+						RTE_DEV_FOREACH(dev, devstr, &dev_iter) {
+							rte_dev_dma_map(dev, vaddr, paddr, len);
 						}
 					}
 #endif
 
 					rc = spdk_mem_map_set_translation(map, (uint64_t)vaddr, VALUE_2MB, paddr);
 					if (rc != 0) {
-						return rc;
+						goto error;
 					}
 
 					vaddr += VALUE_2MB;
@@ -1108,11 +1043,8 @@ vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 		break;
 	case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
 #if VFIO_ENABLED
-		if (paddr == SPDK_VTOPHYS_ERROR) {
-			/*
-			 * This is not an address that DPDK is managing. If vfio is enabled,
-			 * we need to unmap the range from the IOMMU
-			 */
+		if (g_spdk_mem_do_not_notify == false) {
+			/* If vfio is enabled, we need to unmap the range from the IOMMU */
 			if (spdk_iommu_is_enabled()) {
 				uint64_t buffer_len = len;
 				uint8_t *va = vaddr;
@@ -1131,29 +1063,33 @@ vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 							    va, len, paddr, buffer_len);
 						return -EINVAL;
 					}
-					rc = vtophys_iommu_unmap_dma(paddr, len);
-					if (rc) {
-						DEBUG_PRINT("Failed to iommu unmap paddr 0x%" PRIx64 "\n", paddr);
-						return -EFAULT;
+
+					/* For each device, map the memory */
+					RTE_DEV_FOREACH(dev, devstr, &dev_iter) {
+						rte_dev_dma_unmap(dev, vaddr, (uint64_t)vaddr, len);
+					}
+
+					rc = rte_extmem_unregister(vaddr, len);
+					if (rc != 0) {
+						return rc;
 					}
 				} else if (iova_mode == RTE_IOVA_PA) {
 					/* Get paddr for each 2MB chunk in this address range */
-					while (buffer_len > 0) {
-						paddr = spdk_mem_map_translate(map, (uint64_t)va, NULL);
+					paddr = spdk_mem_map_translate(map, (uint64_t)va, NULL);
 
-						if (paddr == SPDK_VTOPHYS_ERROR || buffer_len < VALUE_2MB) {
-							DEBUG_PRINT("could not get phys addr for %p\n", va);
-							return -EFAULT;
-						}
+					if (paddr == SPDK_VTOPHYS_ERROR || buffer_len < VALUE_2MB) {
+						DEBUG_PRINT("could not get phys addr for %p\n", va);
+						return -EFAULT;
+					}
 
-						rc = vtophys_iommu_unmap_dma(paddr, VALUE_2MB);
-						if (rc) {
-							DEBUG_PRINT("Failed to iommu unmap paddr 0x%" PRIx64 "\n", paddr);
-							return -EFAULT;
-						}
+					/* For each device, map the memory */
+					RTE_DEV_FOREACH(dev, devstr, &dev_iter) {
+						rte_dev_dma_unmap(dev, vaddr, (uint64_t)vaddr, len);
+					}
 
-						va += VALUE_2MB;
-						buffer_len -= VALUE_2MB;
+					rc = rte_extmem_unregister(vaddr, len);
+					if (rc != 0) {
+						return rc;
 					}
 				}
 			}
@@ -1173,6 +1109,13 @@ vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 	default:
 		SPDK_UNREACHABLE();
 	}
+
+	return rc;
+
+error:
+#if VFIO_ENABLED
+	free(iovas);
+#endif
 
 	return rc;
 }
