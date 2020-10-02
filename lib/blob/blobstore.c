@@ -766,6 +766,7 @@ blob_parse(const struct spdk_blob_md_page *pages, uint32_t page_count,
 	const struct spdk_blob_md_page *page;
 	uint32_t i;
 	int rc;
+	void *tmp;
 
 	assert(page_count > 0);
 	assert(pages[0].sequence_num == 0);
@@ -781,6 +782,20 @@ blob_parse(const struct spdk_blob_md_page *pages, uint32_t page_count,
 			    blob->id, pages[0].id);
 		return -ENOENT;
 	}
+
+	tmp = realloc(blob->active.pages, page_count * sizeof(*blob->active.pages));
+	if (!tmp) {
+		return -ENOMEM;
+	}
+	blob->active.pages = tmp;
+
+	blob->active.pages[0] = pages[0].id;
+
+	for (i = 1; i < page_count; i++) {
+		assert(spdk_bit_array_get(blob->bs->used_md_pages, pages[i - 1].next));
+		blob->active.pages[i] = pages[i - 1].next;
+	}
+	blob->active.num_pages = page_count;
 
 	for (i = 0; i < page_count; i++) {
 		page = &pages[i];

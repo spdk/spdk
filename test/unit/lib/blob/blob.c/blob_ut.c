@@ -2116,6 +2116,37 @@ blob_xattr(void)
 }
 
 static void
+blob_parse_md(void)
+{
+	struct spdk_blob_store *bs = g_bs;
+	struct spdk_blob *blob;
+	int rc;
+	uint32_t used_pages;
+	size_t xattr_length;
+	char *xattr;
+
+	used_pages = spdk_bit_array_count_set(bs->used_md_pages);
+	blob = ut_blob_create_and_open(bs, NULL);
+
+	/* Create large extent to force more than 1 page of metadata. */
+	xattr_length = SPDK_BS_MAX_DESC_SIZE - sizeof(struct spdk_blob_md_descriptor_xattr) -
+		       strlen("large_xattr");
+	xattr = calloc(xattr_length, sizeof(char));
+	SPDK_CU_ASSERT_FATAL(xattr != NULL);
+	rc = spdk_blob_set_xattr(blob, "large_xattr", xattr, xattr_length);
+	free(xattr);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	spdk_blob_sync_md(blob, blob_op_complete, NULL);
+	poll_threads();
+
+	/* Delete the blob and verify that number of pages returned to before its creation. */
+	SPDK_CU_ASSERT_FATAL(used_pages != spdk_bit_array_count_set(bs->used_md_pages));
+	ut_blob_close_and_delete(bs, blob);
+	SPDK_CU_ASSERT_FATAL(used_pages == spdk_bit_array_count_set(bs->used_md_pages));
+}
+
+static void
 bs_load(void)
 {
 	struct spdk_blob_store *bs;
@@ -6699,6 +6730,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite_bs, blob_unmap);
 	CU_ADD_TEST(suite_bs, blob_iter);
 	CU_ADD_TEST(suite_blob, blob_xattr);
+	CU_ADD_TEST(suite_bs, blob_parse_md);
 	CU_ADD_TEST(suite, bs_load);
 	CU_ADD_TEST(suite_bs, bs_load_pending_removal);
 	CU_ADD_TEST(suite, bs_load_custom_cluster_size);
