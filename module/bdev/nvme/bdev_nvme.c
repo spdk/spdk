@@ -434,8 +434,6 @@ _bdev_nvme_reset(struct spdk_io_channel_iter *i, int status)
 			      _bdev_nvme_reset_create_qpair,
 			      bio,
 			      _bdev_nvme_reset_create_qpairs_done);
-
-
 }
 
 static void
@@ -458,36 +456,31 @@ bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bi
 {
 	struct spdk_io_channel *ch;
 	struct nvme_io_channel *nvme_ch;
-	struct nvme_bdev_ctrlr_trid *next_trid = NULL, *tmp_trid = NULL;
+	struct nvme_bdev_ctrlr_trid *curr_trid = NULL, *next_trid = NULL;
 	int rc = 0;
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	if (nvme_bdev_ctrlr->destruct) {
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
 		/* Don't bother resetting if the controller is in the process of being destructed. */
 		if (bio) {
 			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), SPDK_BDEV_IO_STATUS_FAILED);
 		}
-		pthread_mutex_unlock(&g_bdev_nvme_mutex);
 		return 0;
 	}
 
 	if (failover) {
-		tmp_trid = TAILQ_FIRST(&nvme_bdev_ctrlr->trids);
-		assert(tmp_trid);
-		assert(&tmp_trid->trid == nvme_bdev_ctrlr->connected_trid);
-		next_trid = TAILQ_NEXT(tmp_trid, link);
+		curr_trid = TAILQ_FIRST(&nvme_bdev_ctrlr->trids);
+		assert(curr_trid);
+		assert(&curr_trid->trid == nvme_bdev_ctrlr->connected_trid);
+		next_trid = TAILQ_NEXT(curr_trid, link);
 		if (!next_trid) {
 			failover = false;
 		}
 	}
 
-	if (!nvme_bdev_ctrlr->resetting) {
-		nvme_bdev_ctrlr->resetting = true;
-		if (failover) {
-			nvme_bdev_ctrlr->failover_in_progress = true;
-		}
-	} else {
-		if (next_trid && !nvme_bdev_ctrlr->failover_in_progress) {
+	if (nvme_bdev_ctrlr->resetting) {
+		if (failover && !nvme_bdev_ctrlr->failover_in_progress) {
 			rc = -EAGAIN;
 		}
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
@@ -507,7 +500,10 @@ bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bi
 		return rc;
 	}
 
+	nvme_bdev_ctrlr->resetting = true;
 	if (failover) {
+		nvme_bdev_ctrlr->failover_in_progress = true;
+
 		spdk_nvme_ctrlr_fail(nvme_bdev_ctrlr->ctrlr);
 		nvme_bdev_ctrlr->connected_trid = &next_trid->trid;
 		rc = spdk_nvme_ctrlr_set_trid(nvme_bdev_ctrlr->ctrlr, &next_trid->trid);
@@ -515,8 +511,8 @@ bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bi
 		/** Shuffle the old trid to the end of the list and use the new one.
 		 * Allows for round robin through multiple connections.
 		 */
-		TAILQ_REMOVE(&nvme_bdev_ctrlr->trids, tmp_trid, link);
-		TAILQ_INSERT_TAIL(&nvme_bdev_ctrlr->trids, tmp_trid, link);
+		TAILQ_REMOVE(&nvme_bdev_ctrlr->trids, curr_trid, link);
+		TAILQ_INSERT_TAIL(&nvme_bdev_ctrlr->trids, curr_trid, link);
 	}
 
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
