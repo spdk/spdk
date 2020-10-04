@@ -737,37 +737,38 @@ bdev_ocssd_delay_request(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev
 	spdk_poller_resume(ocssd_ioch->pending_poller);
 }
 
-static void
-bdev_ocssd_submit_request(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
+static int
+_bdev_ocssd_submit_request(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
 {
-	int rc = 0;
-
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 		spdk_bdev_io_get_buf(bdev_io, bdev_ocssd_io_get_buf_cb,
 				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
-		break;
+		return 0;
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		rc = bdev_ocssd_write(ioch, bdev_io);
-		break;
+		return bdev_ocssd_write(ioch, bdev_io);
 
 	case SPDK_BDEV_IO_TYPE_ZONE_MANAGEMENT:
-		rc = bdev_ocssd_zone_management(ioch, bdev_io);
-		break;
+		return bdev_ocssd_zone_management(ioch, bdev_io);
 
 	case SPDK_BDEV_IO_TYPE_GET_ZONE_INFO:
-		rc = bdev_ocssd_get_zone_info(ioch, bdev_io);
-		break;
+		return bdev_ocssd_get_zone_info(ioch, bdev_io);
 
 	case SPDK_BDEV_IO_TYPE_ZONE_APPEND:
-		rc = bdev_ocssd_zone_append(ioch, bdev_io);
-		break;
+		return bdev_ocssd_zone_append(ioch, bdev_io);
 
 	default:
-		rc = -EINVAL;
-		break;
+		return -EINVAL;
 	}
+
+	return 0;
+}
+
+static void
+bdev_ocssd_submit_request(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
+{
+	int rc = _bdev_ocssd_submit_request(ioch, bdev_io);
 
 	if (spdk_unlikely(rc != 0)) {
 		switch (rc) {
