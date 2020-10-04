@@ -1060,7 +1060,7 @@ test_get_zone_info(void)
 	set_chunk_state(chunk_info, CHUNK_STATE_FREE);
 	chunk_info->wp = 0;
 
-	rc = bdev_ocssd_get_zone_info(NULL, bdev_io);
+	rc = bdev_ocssd_get_zone_info(bdev_io);
 	CU_ASSERT_EQUAL(rc, 0);
 
 	CU_ASSERT_EQUAL(zone_info[0].state, SPDK_BDEV_ZONE_STATE_EMPTY);
@@ -1078,7 +1078,7 @@ test_get_zone_info(void)
 	chunk_info->cnlb = 511;
 	chunk_info->ct.size_deviate = 1;
 
-	rc = bdev_ocssd_get_zone_info(NULL, bdev_io);
+	rc = bdev_ocssd_get_zone_info(bdev_io);
 	CU_ASSERT_EQUAL(rc, 0);
 
 	CU_ASSERT_EQUAL(zone_info[0].state, SPDK_BDEV_ZONE_STATE_OPEN);
@@ -1094,7 +1094,7 @@ test_get_zone_info(void)
 	set_chunk_state(chunk_info, CHUNK_STATE_OFFLINE);
 	chunk_info->wp = chunk_info->slba;
 
-	rc = bdev_ocssd_get_zone_info(NULL, bdev_io);
+	rc = bdev_ocssd_get_zone_info(bdev_io);
 	CU_ASSERT_EQUAL(rc, 0);
 
 	CU_ASSERT_EQUAL(zone_info[0].state, SPDK_BDEV_ZONE_STATE_OFFLINE);
@@ -1119,7 +1119,7 @@ test_get_zone_info(void)
 		chunk_info->ct.size_deviate = 0;
 	}
 
-	rc = bdev_ocssd_get_zone_info(NULL, bdev_io);
+	rc = bdev_ocssd_get_zone_info(bdev_io);
 	CU_ASSERT_EQUAL(rc, 0);
 
 	for (offset = 0; offset < MAX_ZONE_INFO_COUNT; ++offset) {
@@ -1134,7 +1134,7 @@ test_get_zone_info(void)
 	bdev_io->u.zone_mgmt.num_zones = MAX_ZONE_INFO_COUNT;
 	bdev_io->u.zone_mgmt.buf = &zone_info;
 
-	rc = bdev_ocssd_get_zone_info(NULL, bdev_io);
+	rc = bdev_ocssd_get_zone_info(bdev_io);
 	CU_ASSERT_EQUAL(rc, -EINVAL);
 
 	/* Verify correct NVMe error forwarding */
@@ -1144,7 +1144,7 @@ test_get_zone_info(void)
 	chunk_info = get_chunk_info(ctrlr, 0);
 	set_chunk_state(chunk_info, CHUNK_STATE_FREE);
 
-	rc = bdev_ocssd_get_zone_info(NULL, bdev_io);
+	rc = bdev_ocssd_get_zone_info(bdev_io);
 	CU_ASSERT_EQUAL(rc, 0);
 	g_chunk_info_cpl = (struct spdk_nvme_cpl) {
 		.status = {

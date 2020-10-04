@@ -665,7 +665,7 @@ _bdev_ocssd_get_zone_info(struct spdk_bdev_io *bdev_io)
 }
 
 static int
-bdev_ocssd_get_zone_info(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
+bdev_ocssd_get_zone_info(struct spdk_bdev_io *bdev_io)
 {
 	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
 
@@ -753,7 +753,7 @@ _bdev_ocssd_submit_request(struct spdk_io_channel *ioch, struct spdk_bdev_io *bd
 		return bdev_ocssd_zone_management(ioch, bdev_io);
 
 	case SPDK_BDEV_IO_TYPE_GET_ZONE_INFO:
-		return bdev_ocssd_get_zone_info(ioch, bdev_io);
+		return bdev_ocssd_get_zone_info(bdev_io);
 
 	case SPDK_BDEV_IO_TYPE_ZONE_APPEND:
 		return bdev_ocssd_zone_append(ioch, bdev_io);
