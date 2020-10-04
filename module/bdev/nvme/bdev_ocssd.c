@@ -62,8 +62,10 @@ struct bdev_ocssd_io {
 	union {
 		struct {
 			struct bdev_ocssd_zone	*zone;
-			size_t			iov_pos;
-			size_t			iov_off;
+			struct iovec		*iovs;
+			int			iovcnt;
+			int			iovpos;
+			uint32_t		iov_offset;
 			uint64_t		lba[SPDK_NVME_OCSSD_MAX_LBAL_ENTRIES];
 		} io;
 		struct {
@@ -320,50 +322,49 @@ bdev_ocssd_lba_in_range(struct ocssd_bdev *ocssd_bdev, uint64_t lba)
 }
 
 static void
-bdev_ocssd_reset_sgl(void *cb_arg, uint32_t offset)
+bdev_ocssd_reset_sgl(void *ref, uint32_t sgl_offset)
 {
-	struct spdk_bdev_io *bdev_io = cb_arg;
+	struct spdk_bdev_io *bdev_io = ref;
 	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
 	struct iovec *iov;
 
-	ocdev_io->io.iov_pos = 0;
-	ocdev_io->io.iov_off = 0;
-
-	for (; ocdev_io->io.iov_pos < (size_t)bdev_io->u.bdev.iovcnt; ++ocdev_io->io.iov_pos) {
-		iov = &bdev_io->u.bdev.iovs[ocdev_io->io.iov_pos];
-		if (offset < iov->iov_len) {
-			ocdev_io->io.iov_off = offset;
-			return;
+	ocdev_io->io.iov_offset = sgl_offset;
+	for (ocdev_io->io.iovpos = 0; ocdev_io->io.iovpos < ocdev_io->io.iovcnt;
+	     ocdev_io->io.iovpos++) {
+		iov = &ocdev_io->io.iovs[ocdev_io->io.iovpos];
+		if (ocdev_io->io.iov_offset < iov->iov_len) {
+			break;
 		}
 
-		offset -= iov->iov_len;
+		ocdev_io->io.iov_offset -= iov->iov_len;
 	}
-
-	assert(false && "Invalid offset length");
 }
 
 static int
-bdev_ocssd_next_sge(void *cb_arg, void **address, uint32_t *length)
+bdev_ocssd_next_sge(void *ref, void **address, uint32_t *length)
 {
-	struct spdk_bdev_io *bdev_io = cb_arg;
+	struct spdk_bdev_io *bdev_io = ref;
 	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
 	struct iovec *iov;
 
-	assert(ocdev_io->io.iov_pos < (size_t)bdev_io->u.bdev.iovcnt);
-	iov = &bdev_io->u.bdev.iovs[ocdev_io->io.iov_pos];
+	assert(ocdev_io->io.iovpos < ocdev_io->io.iovcnt);
+
+	iov = &ocdev_io->io.iovs[ocdev_io->io.iovpos];
 
 	*address = iov->iov_base;
 	*length = iov->iov_len;
 
-	if (ocdev_io->io.iov_off != 0) {
-		assert(ocdev_io->io.iov_off < iov->iov_len);
-		*address = (char *)*address + ocdev_io->io.iov_off;
-		*length -= ocdev_io->io.iov_off;
+	if (ocdev_io->io.iov_offset) {
+		assert(ocdev_io->io.iov_offset <= iov->iov_len);
+		*address += ocdev_io->io.iov_offset;
+		*length -= ocdev_io->io.iov_offset;
 	}
 
-	assert(ocdev_io->io.iov_off + *length == iov->iov_len);
-	ocdev_io->io.iov_off = 0;
-	ocdev_io->io.iov_pos++;
+	ocdev_io->io.iov_offset += *length;
+	if (ocdev_io->io.iov_offset == iov->iov_len) {
+		ocdev_io->io.iovpos++;
+		ocdev_io->io.iov_offset = 0;
+	}
 
 	return 0;
 }
@@ -391,8 +392,10 @@ bdev_ocssd_read(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
 		return -EINVAL;
 	}
 
-	ocdev_io->io.iov_pos = 0;
-	ocdev_io->io.iov_off = 0;
+	ocdev_io->io.iovs = bdev_io->u.bdev.iovs;
+	ocdev_io->io.iovcnt = bdev_io->u.bdev.iovcnt;
+	ocdev_io->io.iovpos = 0;
+	ocdev_io->io.iov_offset = 0;
 
 	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, bdev_io->u.bdev.offset_blocks);
 
@@ -442,8 +445,10 @@ bdev_ocssd_write(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
 		return -EINVAL;
 	}
 
-	ocdev_io->io.iov_pos = 0;
-	ocdev_io->io.iov_off = 0;
+	ocdev_io->io.iovs = bdev_io->u.bdev.iovs;
+	ocdev_io->io.iovcnt = bdev_io->u.bdev.iovcnt;
+	ocdev_io->io.iovpos = 0;
+	ocdev_io->io.iov_offset = 0;
 
 	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, bdev_io->u.bdev.offset_blocks);
 	rc = spdk_nvme_ns_cmd_writev_with_md(nvme_bdev->nvme_ns->ns, nvme_ioch->qpair, lba,
@@ -485,8 +490,10 @@ bdev_ocssd_zone_append(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_i
 	}
 
 	ocdev_io->io.zone = zone;
-	ocdev_io->io.iov_pos = 0;
-	ocdev_io->io.iov_off = 0;
+	ocdev_io->io.iovs = bdev_io->u.bdev.iovs;
+	ocdev_io->io.iovcnt = bdev_io->u.bdev.iovcnt;
+	ocdev_io->io.iovpos = 0;
+	ocdev_io->io.iov_offset = 0;
 
 	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, zone->write_pointer);
 	rc = spdk_nvme_ns_cmd_writev_with_md(nvme_bdev->nvme_ns->ns, nvme_ioch->qpair, lba,
