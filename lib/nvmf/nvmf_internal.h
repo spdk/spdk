@@ -252,8 +252,6 @@ struct spdk_nvmf_subsystem {
 	uint32_t					id;
 
 	enum spdk_nvmf_subsystem_state			state;
-
-	char						subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 	enum spdk_nvmf_subtype				subtype;
 
 	uint16_t					next_cntlid;
@@ -269,9 +267,6 @@ struct spdk_nvmf_subsystem {
 
 	struct spdk_nvmf_tgt				*tgt;
 
-	char						sn[SPDK_NVME_CTRLR_SN_LEN + 1];
-	char						mn[SPDK_NVME_CTRLR_MN_LEN + 1];
-
 	/* Array of pointers to namespaces of size max_nsid indexed by nsid - 1 */
 	struct spdk_nvmf_ns				**ns;
 	uint32_t					max_nsid;
@@ -283,6 +278,10 @@ struct spdk_nvmf_subsystem {
 	TAILQ_HEAD(, spdk_nvmf_subsystem_listener)	listeners;
 
 	TAILQ_ENTRY(spdk_nvmf_subsystem)		entries;
+
+	char						sn[SPDK_NVME_CTRLR_SN_LEN + 1];
+	char						mn[SPDK_NVME_CTRLR_MN_LEN + 1];
+	char						subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 };
 
 int nvmf_poll_group_add_transport(struct spdk_nvmf_poll_group *group,
