@@ -41,9 +41,6 @@
 
 #include "spdk/log.h"
 
-extern enum spdk_log_level g_spdk_log_level;
-extern enum spdk_log_level g_spdk_log_print_level;
-
 #define SPDK_ERRLOGDUMP(LABEL, BUF, LEN)				\
 	do {								\
 		if ((LEN)) {						\

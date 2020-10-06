@@ -48,6 +48,9 @@ static const char *const spdk_level_names[] = {
 static logfunc *g_log = NULL;
 static bool g_log_timestamps = true;
 
+extern enum spdk_log_level g_spdk_log_level;
+extern enum spdk_log_level g_spdk_log_print_level;
+
 void
 spdk_log_open(logfunc *logf)
 {
