@@ -544,4 +544,4 @@ err:
 	free(ctx);
 }
 SPDK_RPC_REGISTER("thread_set_cpumask", rpc_thread_set_cpumask, SPDK_RPC_RUNTIME)
-SPDK_LOG_REGISTER_COMPONENT("APP_RPC", SPDK_LOG_APP_RPC)
+SPDK_LOG_REGISTER_COMPONENT("app_rpc", SPDK_LOG_APP_RPC)
