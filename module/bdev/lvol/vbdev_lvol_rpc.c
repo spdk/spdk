@@ -38,7 +38,7 @@
 #include "spdk/string.h"
 #include "spdk_internal/log.h"
 
-SPDK_LOG_REGISTER_COMPONENT("lvolrpc", SPDK_LOG_LVOL_RPC)
+SPDK_LOG_REGISTER_COMPONENT("lvol_rpc", SPDK_LOG_LVOL_RPC)
 
 struct rpc_bdev_lvol_create_lvstore {
 	char *lvs_name;
