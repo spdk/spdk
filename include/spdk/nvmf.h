@@ -462,8 +462,6 @@ struct spdk_nvmf_subsystem *spdk_nvmf_subsystem_get_next(struct spdk_nvmf_subsys
 /**
  * Allow the given host NQN to connect to the given subsystem.
  *
- * May only be performed on subsystems in the PAUSED or INACTIVE states.
- *
  * \param subsystem Subsystem to add host to.
  * \param hostnqn The NQN for the host.
  *
@@ -473,9 +471,11 @@ int spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem,
 				 const char *hostnqn);
 
 /**
- * Remove the given host NQN from the allowed hosts whitelist.
+ * Remove the given host NQN from the list of allowed hosts.
  *
- * May only be performed on subsystems in the PAUSED or INACTIVE states.
+ * This call only removes the host from the allowed list of hosts.
+ * If a host with the given NQN is already connected it will not be disconnected,
+ * but it will not be able to create new connections.
  *
  * \param subsystem Subsystem to remove host from.
  * \param hostnqn The NQN for the host.

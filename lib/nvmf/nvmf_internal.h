@@ -274,6 +274,13 @@ struct spdk_nvmf_subsystem {
 	uint32_t					max_allowed_nsid;
 
 	TAILQ_HEAD(, spdk_nvmf_ctrlr)			ctrlrs;
+
+	/* A mutex used to protect the hosts list. Unlike the namespace
+	 * array, this list is not used on the I/O path (it's needed for handling things like
+	 * the CONNECT command), so use a mutex to protect it instead of requiring the subsystem
+	 * state to be paused. This removes the requirement to pause the subsystem when hosts
+	 * are added or removed dynamically. */
+	pthread_mutex_t					mutex;
 	TAILQ_HEAD(, spdk_nvmf_host)			hosts;
 	TAILQ_HEAD(, spdk_nvmf_subsystem_listener)	listeners;
 
