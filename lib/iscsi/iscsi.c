@@ -4322,7 +4322,7 @@ init_login_reject_response(struct spdk_iscsi_pdu *pdu, struct spdk_iscsi_pdu *rs
 static void
 iscsi_pdu_dump(struct spdk_iscsi_pdu *pdu)
 {
-	SPDK_ERRLOGDUMP("PDU", (uint8_t *)&pdu->bhs, ISCSI_BHS_LEN);
+	spdk_log_dump(stderr, "PDU", (uint8_t *)&pdu->bhs, ISCSI_BHS_LEN);
 }
 
 /* This function is used to refree the pdu when it is acknowledged */

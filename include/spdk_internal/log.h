@@ -41,11 +41,4 @@
 
 #include "spdk/log.h"
 
-#define SPDK_ERRLOGDUMP(LABEL, BUF, LEN)				\
-	do {								\
-		if ((LEN)) {						\
-			spdk_log_dump(stderr, (LABEL), (BUF), (LEN));	\
-		}							\
-	} while (0)
-
 #endif /* SPDK_INTERNAL_LOG_H */
