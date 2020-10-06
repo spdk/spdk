@@ -247,36 +247,36 @@ struct spdk_nvmf_ctrlr {
 };
 
 struct spdk_nvmf_subsystem {
-	struct spdk_thread		*thread;
-	uint32_t			id;
-	enum spdk_nvmf_subsystem_state	state;
+	struct spdk_thread				*thread;
+	uint32_t					id;
+	enum spdk_nvmf_subsystem_state			state;
 
-	char subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
-	enum spdk_nvmf_subtype subtype;
-	uint16_t next_cntlid;
-	bool allow_any_host;
-	bool allow_any_listener;
-	bool ana_reporting;
+	char						subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
+	enum spdk_nvmf_subtype				subtype;
+	uint16_t					next_cntlid;
+	bool						allow_any_host;
+	bool						allow_any_listener;
+	bool						ana_reporting;
 
-	struct spdk_nvmf_tgt			*tgt;
+	struct spdk_nvmf_tgt				*tgt;
 
-	char sn[SPDK_NVME_CTRLR_SN_LEN + 1];
-	char mn[SPDK_NVME_CTRLR_MN_LEN + 1];
+	char						sn[SPDK_NVME_CTRLR_SN_LEN + 1];
+	char						mn[SPDK_NVME_CTRLR_MN_LEN + 1];
 
 	/* boolean for state change synchronization. */
-	bool changing_state;
+	bool						changing_state;
 
 	/* Array of pointers to namespaces of size max_nsid indexed by nsid - 1 */
-	struct spdk_nvmf_ns			**ns;
-	uint32_t				max_nsid;
+	struct spdk_nvmf_ns				**ns;
+	uint32_t					max_nsid;
 	/* This is the maximum allowed nsid to a subsystem */
-	uint32_t				max_allowed_nsid;
+	uint32_t					max_allowed_nsid;
 
 	TAILQ_HEAD(, spdk_nvmf_ctrlr)			ctrlrs;
 	TAILQ_HEAD(, spdk_nvmf_host)			hosts;
 	TAILQ_HEAD(, spdk_nvmf_subsystem_listener)	listeners;
 
-	TAILQ_ENTRY(spdk_nvmf_subsystem)	entries;
+	TAILQ_ENTRY(spdk_nvmf_subsystem)		entries;
 };
 
 int nvmf_poll_group_add_transport(struct spdk_nvmf_poll_group *group,
