@@ -38,7 +38,7 @@
 #include "spdk/util.h"
 #include "spdk/memory.h"
 
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 #include "spdk_internal/idxd.h"
 
 #include "idxd.h"

@@ -38,7 +38,7 @@
 #include "spdk/env.h"
 #include "spdk/util.h"
 
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 static int
 notify_get_types_cb(const struct spdk_notify_type *type, void *ctx)

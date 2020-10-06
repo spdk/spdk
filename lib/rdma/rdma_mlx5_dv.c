@@ -39,7 +39,7 @@
 #include "spdk/likely.h"
 
 #include "spdk_internal/rdma.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 struct spdk_rdma_mlx5_dv_qp {
 	struct spdk_rdma_qp common;

@@ -43,7 +43,7 @@
 #include "spdk/trace.h"
 #include "spdk/dif.h"
 
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 enum {
 	SPDK_SCSI_TASK_UNKNOWN = -1,

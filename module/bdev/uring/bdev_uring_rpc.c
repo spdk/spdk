@@ -35,7 +35,7 @@
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 #include "spdk/string.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 /* Structure to hold the parameters for this RPC method. */
 struct rpc_create_uring {

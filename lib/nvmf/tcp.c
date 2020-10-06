@@ -43,7 +43,7 @@
 #include "spdk/util.h"
 
 #include "spdk_internal/assert.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 #include "spdk_internal/nvme_tcp.h"
 
 #include "nvmf_internal.h"

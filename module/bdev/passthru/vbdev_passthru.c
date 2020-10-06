@@ -48,7 +48,7 @@
 #include "spdk/util.h"
 
 #include "spdk/bdev_module.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 
 static int vbdev_passthru_init(void);

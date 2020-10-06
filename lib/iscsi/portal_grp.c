@@ -38,7 +38,7 @@
 #include "spdk/sock.h"
 #include "spdk/string.h"
 
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 #include "iscsi/iscsi.h"
 #include "iscsi/conn.h"

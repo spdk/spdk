@@ -50,7 +50,7 @@
 #include "spdk/likely.h"
 
 #include "spdk/bdev_module.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 #define SPDK_RBD_QUEUE_DEPTH 128
 #define MAX_EVENTS_PER_POLL 128

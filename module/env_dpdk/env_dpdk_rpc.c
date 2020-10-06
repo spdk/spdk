@@ -34,7 +34,7 @@
 #include "spdk/stdinc.h"
 #include "spdk/rpc.h"
 #include "spdk/env_dpdk.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 static void
 rpc_env_dpdk_get_mem_stats(struct spdk_jsonrpc_request *request,

@@ -36,7 +36,7 @@
 #include "bdev_raid.h"
 #include "spdk/util.h"
 #include "spdk/string.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 #include "spdk/env.h"
 
 #define RPC_MAX_BASE_BDEVS 255

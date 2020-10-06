@@ -40,7 +40,7 @@
 #include <linux/virtio_pci.h>
 #include <linux/virtio_config.h>
 
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 #include "spdk/likely.h"
 #include "spdk/queue.h"
 #include "spdk/json.h"

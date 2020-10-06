@@ -34,7 +34,7 @@
 #include <execinfo.h>
 
 #include "spdk/env.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 #include "ctx.h"
 #include "ocf_env.h"

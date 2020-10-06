@@ -36,7 +36,7 @@
 
 #include "spdk/stdinc.h"
 
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 #include "spdk_internal/virtio.h"
 #include "spdk_internal/vhost_user.h"
 

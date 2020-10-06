@@ -36,7 +36,7 @@
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 #include "event_vmd.h"
 
 static void

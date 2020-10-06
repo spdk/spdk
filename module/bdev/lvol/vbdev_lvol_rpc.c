@@ -36,7 +36,7 @@
 #include "spdk/util.h"
 #include "vbdev_lvol.h"
 #include "spdk/string.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 SPDK_LOG_REGISTER_COMPONENT(lvol_rpc)
 

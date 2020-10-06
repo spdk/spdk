@@ -46,7 +46,7 @@
 #include "spdk/util.h"
 #include "spdk/version.h"
 
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 #define MIN_KEEP_ALIVE_TIMEOUT_IN_MS 10000
 #define NVMF_DISC_KATO_IN_MS 120000

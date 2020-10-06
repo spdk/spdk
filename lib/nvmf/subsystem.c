@@ -45,7 +45,7 @@
 #include "spdk/file.h"
 
 #include "spdk/bdev_module.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 #include "spdk_internal/utf.h"
 
 #define MODEL_NUMBER_DEFAULT "SPDK bdev Controller"

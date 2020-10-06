@@ -39,7 +39,7 @@
 #include "spdk/queue.h"
 #include "spdk/assert.h"
 #include "spdk/env.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 uint32_t g_fs_cache_buffer_shift = CACHE_BUFFER_SHIFT_DEFAULT;
 

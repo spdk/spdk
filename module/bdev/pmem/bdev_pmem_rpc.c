@@ -37,7 +37,7 @@
 #include "spdk/string.h"
 #include "libpmemblk.h"
 
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 struct rpc_construct_pmem {
 	char *pmem_file;

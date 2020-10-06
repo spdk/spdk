@@ -31,7 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 #include "spdk/ftl.h"
 #include "ftl_debug.h"
 #include "ftl_band.h"

@@ -36,7 +36,7 @@
 #include "spdk/util.h"
 #include "spdk/string.h"
 
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 
 static const struct spdk_json_object_decoder rpc_sock_impl_get_opts_decoders[] = {

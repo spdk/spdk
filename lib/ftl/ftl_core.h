@@ -38,7 +38,7 @@
 #include "spdk/uuid.h"
 #include "spdk/thread.h"
 #include "spdk/util.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 #include "spdk/likely.h"
 #include "spdk/queue.h"
 #include "spdk/ftl.h"

@@ -40,7 +40,7 @@
 #include "iscsi/conn.h"
 #include "spdk/string.h"
 
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 #define MAX_TMPBUF 1024
 

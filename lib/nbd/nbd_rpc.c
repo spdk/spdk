@@ -39,7 +39,7 @@
 #include <linux/nbd.h>
 
 #include "nbd_internal.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 struct rpc_nbd_start_disk {
 	char *bdev_name;

@@ -36,7 +36,7 @@
 #include "spdk/string.h"
 
 #include "vbdev_split.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 struct rpc_construct_split {
 	char *base_bdev;

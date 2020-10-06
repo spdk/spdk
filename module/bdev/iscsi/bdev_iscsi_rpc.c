@@ -36,7 +36,7 @@
 #include "spdk/util.h"
 #include "spdk/string.h"
 
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 struct rpc_bdev_iscsi_create {
 	char *name;

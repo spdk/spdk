@@ -45,7 +45,6 @@
 #include "spdk/util.h"
 #include "spdk/thread.h"
 
-#include "spdk_internal/log.h"
 #include "spdk/queue.h"
 
 #define GET_IO_LOOP_COUNT		16

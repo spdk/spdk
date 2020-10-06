@@ -37,7 +37,7 @@
 #include "spdk/util.h"
 #include "spdk/rpc.h"
 #include "spdk/bdev_module.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 #include "spdk/config.h"
 
 #include "bdev_pmem.h"

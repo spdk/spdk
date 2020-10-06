@@ -34,7 +34,7 @@
 #include "spdk/json.h"
 
 #include "spdk_internal/utf.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 #define SPDK_JSON_DEBUG(...) SPDK_DEBUGLOG(json_util, __VA_ARGS__)
 

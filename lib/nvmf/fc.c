@@ -46,8 +46,6 @@
 #include "spdk/log.h"
 #include "spdk/thread.h"
 
-#include "spdk_internal/log.h"
-
 #include "nvmf_fc.h"
 #include "fc_lld.h"
 

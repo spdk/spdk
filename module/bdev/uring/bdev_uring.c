@@ -46,7 +46,7 @@
 #include "spdk/util.h"
 #include "spdk/string.h"
 
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 #include "spdk_internal/uring.h"
 
 struct bdev_uring_io_channel {

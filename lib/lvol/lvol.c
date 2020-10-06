@@ -32,7 +32,7 @@
  */
 
 #include "spdk_internal/lvolstore.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 #include "spdk/string.h"
 #include "spdk/thread.h"
 #include "spdk/blob_bdev.h"

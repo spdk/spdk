@@ -44,7 +44,7 @@
 #include "spdk/string.h"
 #include "spdk/iscsi_spec.h"
 
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 #include "spdk/bdev_module.h"
 
 #include "iscsi/iscsi.h"

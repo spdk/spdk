@@ -42,7 +42,6 @@
 #include "spdk/rpc.h"
 
 #include "spdk_internal/event.h"
-#include "spdk_internal/log.h"
 
 #define SPDK_DEBUG_APP_CFG(...) SPDK_DEBUGLOG(app_config, __VA_ARGS__)
 

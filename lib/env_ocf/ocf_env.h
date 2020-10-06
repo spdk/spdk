@@ -49,7 +49,7 @@
 #include "spdk/likely.h"
 #include "spdk/env.h"
 #include "spdk/util.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 #include "ocf_env_list.h"
 #include "ocf/ocf_err.h"

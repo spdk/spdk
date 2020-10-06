@@ -41,7 +41,7 @@
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 #include "spdk/string.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 static void
 rpc_iscsi_get_initiator_groups(struct spdk_jsonrpc_request *request,

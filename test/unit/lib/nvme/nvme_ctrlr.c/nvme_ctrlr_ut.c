@@ -35,7 +35,7 @@
 
 #include "spdk_cunit.h"
 
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 #include "common/lib/test_env.c"
 

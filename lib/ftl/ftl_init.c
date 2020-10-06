@@ -36,7 +36,7 @@
 #include "spdk/thread.h"
 #include "spdk/string.h"
 #include "spdk/likely.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 #include "spdk/ftl.h"
 #include "spdk/likely.h"
 #include "spdk/string.h"

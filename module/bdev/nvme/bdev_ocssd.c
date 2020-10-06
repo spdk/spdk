@@ -40,7 +40,6 @@
 #include "spdk/util.h"
 #include "spdk/nvme_ocssd.h"
 #include "spdk/nvme_ocssd_spec.h"
-#include "spdk_internal/log.h"
 #include "spdk/nvme.h"
 #include "common.h"
 #include "bdev_ocssd.h"

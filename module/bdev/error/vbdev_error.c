@@ -44,7 +44,7 @@
 #include "spdk/string.h"
 
 #include "spdk/bdev_module.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 #include "vbdev_error.h"
 

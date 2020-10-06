@@ -40,7 +40,7 @@
 #include "spdk/util.h"
 #include "spdk/nvme.h"
 
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 struct rpc_nvme_cuse_register {
 	char *name;

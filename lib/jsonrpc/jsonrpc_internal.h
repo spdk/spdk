@@ -38,7 +38,7 @@
 
 #include "spdk/jsonrpc.h"
 
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 #define SPDK_JSONRPC_RECV_BUF_SIZE	(32 * 1024)
 #define SPDK_JSONRPC_SEND_BUF_SIZE_INIT	(32 * 1024)

@@ -34,7 +34,7 @@
 #include "spdk/blob_bdev.h"
 #include "spdk/rpc.h"
 #include "spdk/bdev_module.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 #include "spdk/string.h"
 #include "spdk/uuid.h"
 

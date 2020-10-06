@@ -34,7 +34,7 @@
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 #include "spdk/trace.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 struct rpc_tpoint_group {
 	char *name;

@@ -56,7 +56,7 @@
 #include "spdk/uuid.h"
 
 #include "spdk_internal/assert.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 extern pid_t g_spdk_nvme_pid;
 

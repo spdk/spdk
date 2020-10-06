@@ -38,7 +38,7 @@
 #include "spdk/vmd.h"
 #include "spdk/env.h"
 #include "spdk/util.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 #include "vmd_spec.h"
 
 struct vmd_hot_plug;

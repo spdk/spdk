@@ -45,7 +45,7 @@
 #include "spdk/conf.h"
 #include "spdk/thread.h"
 #include "spdk/string.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 #include "spdk/cpuset.h"
 
 static struct spdk_bdev_module ocf_if;

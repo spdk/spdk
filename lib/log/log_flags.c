@@ -33,7 +33,7 @@
 
 #include "spdk/stdinc.h"
 
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 static TAILQ_HEAD(, spdk_log_flag) g_log_flags = TAILQ_HEAD_INITIALIZER(g_log_flags);
 

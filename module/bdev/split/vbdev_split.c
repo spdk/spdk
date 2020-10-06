@@ -46,7 +46,7 @@
 #include "spdk/util.h"
 
 #include "spdk/bdev_module.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 struct spdk_vbdev_split_config {
 	char *base_bdev;

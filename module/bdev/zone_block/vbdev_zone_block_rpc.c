@@ -39,7 +39,7 @@
 #include "spdk/string.h"
 #include "spdk/rpc.h"
 
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 struct rpc_construct_zone_block {
 	char *name;

@@ -36,7 +36,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk_internal/accel_engine.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 #include "spdk_internal/idxd.h"
 
 #include "spdk/env.h"

@@ -35,7 +35,7 @@
 #include "spdk/util.h"
 #include "spdk/bdev_module.h"
 #include "spdk/string.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 #include "bdev_ftl.h"
 

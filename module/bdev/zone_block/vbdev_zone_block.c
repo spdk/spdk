@@ -39,7 +39,7 @@
 #include "spdk/nvme.h"
 #include "spdk/bdev_zone.h"
 
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 static int zone_block_init(void);
 static int zone_block_get_ctx_size(void);

@@ -43,8 +43,6 @@
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 
-#include "spdk_internal/log.h"
-
 #include "blobfs_fuse.h"
 
 /* Dummy bdev module used to to claim bdevs. */

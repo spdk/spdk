@@ -37,7 +37,7 @@
 #include "spdk/endian.h"
 #include "spdk/event.h"
 
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 #define GPT_PRIMARY_PARTITION_TABLE_LBA 0x1
 #define PRIMARY_PARTITION_NUMBER 4

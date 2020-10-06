@@ -36,7 +36,7 @@
 #include "spdk/util.h"
 #include "spdk/uuid.h"
 #include "spdk/string.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 struct rpc_construct_malloc {
 	char *name;

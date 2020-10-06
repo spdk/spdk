@@ -39,7 +39,7 @@
 #include "spdk/thread.h"
 #include "spdk/queue.h"
 
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 void
 bs_call_cpl(struct spdk_bs_cpl *cpl, int bserrno)

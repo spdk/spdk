@@ -42,7 +42,7 @@
 #include "spdk/endian.h"
 #include "spdk/string.h"
 
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 #include "nvmf_internal.h"
 #include "transport.h"

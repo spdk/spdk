@@ -35,7 +35,7 @@
 #include "spdk/env.h"
 #include "spdk/thread.h"
 #include "spdk/conf.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
 #include "spdk/json.h"

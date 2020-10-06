@@ -38,7 +38,7 @@
 #include "spdk/nvmf.h"
 #include "spdk/endian.h"
 #include "spdk/trace.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 #include "ut_multithread.c"
 

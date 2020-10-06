@@ -35,7 +35,7 @@
 
 #include "spdk/sock.h"
 #include "spdk_internal/sock.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 #define SPDK_SOCK_DEFAULT_PRIORITY 0
 #define SPDK_SOCK_DEFAULT_ZCOPY true

@@ -41,7 +41,6 @@
 #include "spdk/util.h"
 #include "spdk/bit_array.h"
 
-#include "spdk_internal/log.h"
 #include "spdk_internal/assert.h"
 
 #include "nvmf_internal.h"

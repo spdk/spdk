@@ -38,7 +38,7 @@
 #include "spdk/string.h"
 #include "spdk/bit_array.h"
 #include "spdk/util.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 #include "libpmem.h"
 

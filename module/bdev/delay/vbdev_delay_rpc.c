@@ -36,7 +36,7 @@
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 #include "spdk/string.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 #include "spdk_internal/assert.h"
 
 struct rpc_update_latency {

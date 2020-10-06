@@ -37,7 +37,7 @@
 #include "spdk/conf.h"
 #include "spdk/string.h"
 
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 #include "iscsi/iscsi.h"
 #include "iscsi/init_grp.h"

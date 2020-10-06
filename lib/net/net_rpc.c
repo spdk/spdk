@@ -39,7 +39,7 @@
 #include "spdk/net.h"
 #include "spdk/util.h"
 
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 struct rpc_ip_address {
 	int32_t ifc_index;

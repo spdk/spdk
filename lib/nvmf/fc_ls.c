@@ -39,7 +39,7 @@
 #include "spdk/trace.h"
 #include "spdk/util.h"
 #include "spdk/endian.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 #include "nvmf_internal.h"
 #include "transport.h"
 

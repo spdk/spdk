@@ -33,7 +33,7 @@
 
 #include "spdk/stdinc.h"
 
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 static const char *const spdk_level_names[] = {
 	[SPDK_LOG_ERROR]	= "ERROR",

@@ -35,7 +35,7 @@
 
 #include "spdk/crc32.h"
 #include "spdk/env.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 /* Number of buffers for mempool
  * Need to be power of two - 1 for better memory utilization

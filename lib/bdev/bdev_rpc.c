@@ -40,7 +40,7 @@
 #include "spdk/base64.h"
 #include "spdk/bdev_module.h"
 
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 struct spdk_rpc_set_bdev_opts {
 	uint32_t bdev_io_pool_size;

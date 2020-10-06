@@ -38,7 +38,7 @@
 #include "spdk/likely.h"
 
 #include "spdk_internal/rdma.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 struct spdk_rdma_qp *
 spdk_rdma_qp_create(struct rdma_cm_id *cm_id, struct spdk_rdma_qp_init_attr *qp_attr)

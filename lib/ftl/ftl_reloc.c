@@ -32,7 +32,7 @@
  */
 
 #include "spdk/likely.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 #include "spdk/ftl.h"
 
 #include "ftl_reloc.h"

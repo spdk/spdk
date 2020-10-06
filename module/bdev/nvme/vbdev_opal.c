@@ -34,7 +34,7 @@
 #include "spdk/opal.h"
 #include "spdk/bdev_module.h"
 #include "vbdev_opal.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 #include "spdk/string.h"
 
 /* OPAL locking range only supports operations on nsid=1 for now */

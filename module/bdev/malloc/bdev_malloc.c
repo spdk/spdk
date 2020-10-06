@@ -45,7 +45,7 @@
 #include "spdk/string.h"
 
 #include "spdk/bdev_module.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 struct malloc_disk {
 	struct spdk_bdev		disk;

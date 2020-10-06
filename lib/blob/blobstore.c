@@ -45,7 +45,7 @@
 #include "spdk/string.h"
 
 #include "spdk_internal/assert.h"
-#include "spdk_internal/log.h"
+#include "spdk/log.h"
 
 #include "blobstore.h"
 
