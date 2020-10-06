@@ -757,7 +757,7 @@ spdk_nvmf_subsystem_set_allow_any_host(struct spdk_nvmf_subsystem *subsystem, bo
 		return -EAGAIN;
 	}
 
-	subsystem->allow_any_host = allow_any_host;
+	subsystem->flags.allow_any_host = allow_any_host;
 
 	return 0;
 }
@@ -765,7 +765,7 @@ spdk_nvmf_subsystem_set_allow_any_host(struct spdk_nvmf_subsystem *subsystem, bo
 bool
 spdk_nvmf_subsystem_get_allow_any_host(const struct spdk_nvmf_subsystem *subsystem)
 {
-	return subsystem->allow_any_host;
+	return subsystem->flags.allow_any_host;
 }
 
 bool
@@ -775,7 +775,7 @@ spdk_nvmf_subsystem_host_allowed(struct spdk_nvmf_subsystem *subsystem, const ch
 		return false;
 	}
 
-	if (subsystem->allow_any_host) {
+	if (subsystem->flags.allow_any_host) {
 		return true;
 	}
 
@@ -972,13 +972,13 @@ void
 spdk_nvmf_subsystem_allow_any_listener(struct spdk_nvmf_subsystem *subsystem,
 				       bool allow_any_listener)
 {
-	subsystem->allow_any_listener = allow_any_listener;
+	subsystem->flags.allow_any_listener = allow_any_listener;
 }
 
 bool
 spdk_nvmf_subsytem_any_listener_allowed(struct spdk_nvmf_subsystem *subsystem)
 {
-	return subsystem->allow_any_listener;
+	return subsystem->flags.allow_any_listener;
 }
 
 
@@ -2660,7 +2660,7 @@ spdk_nvmf_subsystem_set_ana_reporting(struct spdk_nvmf_subsystem *subsystem,
 		return -EAGAIN;
 	}
 
-	subsystem->ana_reporting = ana_reporting;
+	subsystem->flags.ana_reporting = ana_reporting;
 
 	return 0;
 }
@@ -2716,7 +2716,7 @@ nvmf_subsystem_set_ana_state(struct spdk_nvmf_subsystem *subsystem,
 	assert(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
 	       subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED);
 
-	if (!subsystem->ana_reporting) {
+	if (!subsystem->flags.ana_reporting) {
 		SPDK_ERRLOG("ANA reporting is disabled\n");
 		cb_fn(cb_arg, -EINVAL);
 		return;

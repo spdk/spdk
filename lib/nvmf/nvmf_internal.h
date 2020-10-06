@@ -248,23 +248,29 @@ struct spdk_nvmf_ctrlr {
 
 struct spdk_nvmf_subsystem {
 	struct spdk_thread				*thread;
+
 	uint32_t					id;
+
 	enum spdk_nvmf_subsystem_state			state;
 
 	char						subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 	enum spdk_nvmf_subtype				subtype;
+
 	uint16_t					next_cntlid;
-	bool						allow_any_host;
-	bool						allow_any_listener;
-	bool						ana_reporting;
+	struct {
+		uint8_t					allow_any_host : 1;
+		uint8_t					allow_any_listener : 1;
+		uint8_t					ana_reporting : 1;
+		uint8_t					reserved : 5;
+	} flags;
+
+	/* boolean for state change synchronization */
+	bool						changing_state;
 
 	struct spdk_nvmf_tgt				*tgt;
 
 	char						sn[SPDK_NVME_CTRLR_SN_LEN + 1];
 	char						mn[SPDK_NVME_CTRLR_MN_LEN + 1];
-
-	/* boolean for state change synchronization. */
-	bool						changing_state;
 
 	/* Array of pointers to namespaces of size max_nsid indexed by nsid - 1 */
 	struct spdk_nvmf_ns				**ns;

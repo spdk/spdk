@@ -349,7 +349,7 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	}
 
 	ctrlr->feat.async_event_configuration.bits.ns_attr_notice = 1;
-	if (ctrlr->subsys->ana_reporting) {
+	if (ctrlr->subsys->flags.ana_reporting) {
 		ctrlr->feat.async_event_configuration.bits.ana_change_notice = 1;
 	}
 	ctrlr->feat.volatile_write_cache.bits.wce = 1;
@@ -540,7 +540,7 @@ _nvmf_ctrlr_add_io_qpair(void *ctx)
 	}
 
 	/* If ANA reporting is enabled, check if I/O connect is on the same listener. */
-	if (subsystem->ana_reporting) {
+	if (subsystem->flags.ana_reporting) {
 		listener = nvmf_subsystem_find_listener(subsystem, qpair->trid);
 		if (listener != ctrlr->listener) {
 			SPDK_ERRLOG("I/O connect is on a listener different from admin connect\n");
@@ -1930,7 +1930,7 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 			nvmf_get_firmware_slot_log_page(req->data, offset, len);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		case SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS:
-			if (subsystem->ana_reporting) {
+			if (subsystem->flags.ana_reporting) {
 				nvmf_get_ana_log_page(ctrlr, req->data, offset, len);
 				return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 			} else {
@@ -1996,7 +1996,7 @@ spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 		nsdata->noiob = max_num_blocks;
 	}
 
-	if (subsystem->ana_reporting) {
+	if (subsystem->flags.ana_reporting) {
 		/* ANA group ID matches NSID. */
 		nsdata->anagrpid = ns->nsid;
 
@@ -2055,7 +2055,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 	cdata->sgls = ctrlr->cdata.sgls;
 	cdata->fuses.compare_and_write = 1;
 	cdata->acwu = 1;
-	if (subsystem->ana_reporting) {
+	if (subsystem->flags.ana_reporting) {
 		cdata->mnan = subsystem->max_nsid;
 	}
 	spdk_strcpy_pad(cdata->subnqn, subsystem->subnqn, sizeof(cdata->subnqn), '\0');
@@ -2074,12 +2074,12 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->rab = 6;
 		cdata->cmic.multi_port = 1;
 		cdata->cmic.multi_host = 1;
-		if (subsystem->ana_reporting) {
+		if (subsystem->flags.ana_reporting) {
 			/* Asymmetric Namespace Access Reporting is supported. */
 			cdata->cmic.ana_reporting = 1;
 		}
 		cdata->oaes.ns_attribute_notices = 1;
-		if (subsystem->ana_reporting) {
+		if (subsystem->flags.ana_reporting) {
 			cdata->oaes.ana_change_notices = 1;
 		}
 		cdata->ctratt.host_id_exhid_supported = 1;
@@ -2104,7 +2104,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->oncs.dsm = nvmf_ctrlr_dsm_supported(ctrlr);
 		cdata->oncs.write_zeroes = nvmf_ctrlr_write_zeroes_supported(ctrlr);
 		cdata->oncs.reservations = 1;
-		if (subsystem->ana_reporting) {
+		if (subsystem->flags.ana_reporting) {
 			cdata->anatt = ANA_TRANSITION_TIME_IN_SEC;
 			/* ANA Change state is not used, and ANA Persistent Loss state
 			 * is not supported for now.
