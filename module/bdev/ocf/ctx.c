@@ -561,5 +561,3 @@ vbdev_ocf_ctx_cleanup(void)
 	ocf_ctx_put(vbdev_ocf_ctx);
 	vbdev_ocf_ctx = NULL;
 }
-
-SPDK_LOG_REGISTER_COMPONENT("ocf_ocfctx", SPDK_LOG_OCFCTX)

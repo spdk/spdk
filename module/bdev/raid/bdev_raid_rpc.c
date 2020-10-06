@@ -41,8 +41,6 @@
 
 #define RPC_MAX_BASE_BDEVS 255
 
-SPDK_LOG_REGISTER_COMPONENT("raidrpc", SPDK_LOG_RAID_RPC)
-
 /*
  * Input structure for bdev_raid_get_bdevs RPC
  */
