@@ -1,0 +1,9 @@
+paramiko
+pexpect
+pandas
+configshell-fb
+gdb
+pyparsing
+ninja
+meson
+scikit-build
