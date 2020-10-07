@@ -1830,12 +1830,8 @@ parse_args(int argc, char **argv)
 				usage(argv[0]);
 				exit(EXIT_FAILURE);
 			}
+#ifdef DEBUG
 			spdk_log_set_print_level(SPDK_LOG_DEBUG);
-#ifndef DEBUG
-			fprintf(stderr, "%s must be rebuilt with CONFIG_DEBUG=y for -L flag.\n",
-				argv[0]);
-			usage(argv[0]);
-			return 0;
 #endif
 			break;
 		case 'H':

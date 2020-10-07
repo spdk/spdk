@@ -26,6 +26,10 @@ A log flag structure, `spdk_log_register_flag`, `spdk_log_get_first_flag`,
 enable registering and interacting with log flags. Added `SPDK_INFOLOG`, `SPDK_DEBUGLOG`
 and `SPDK_LOGDUMP` macros to display logs for specified log flag.
 
+The log flags in the event framework `-L` and several SPDK applications has been enabled on
+release builds of SPDK. On debug builds this option will additionally set
+log print level to `SPDK_LOG_DEBUG`.
+
 ### ocf
 
 Updated OCF submodule to v20.03.1

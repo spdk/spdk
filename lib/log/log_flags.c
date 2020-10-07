@@ -172,17 +172,12 @@ spdk_log_get_next_flag(struct spdk_log_flag *flag)
 void
 spdk_log_usage(FILE *f, const char *log_arg)
 {
-#ifdef DEBUG
 	struct spdk_log_flag *flag;
-	fprintf(f, " %s, --logflag <flag>    enable debug log flag (all", log_arg);
+	fprintf(f, " %s, --logflag <flag>    enable log flag (all", log_arg);
 
 	TAILQ_FOREACH(flag, &g_log_flags, tailq) {
 		fprintf(f, ", %s", flag->name);
 	}
 
 	fprintf(f, ")\n");
-#else
-	fprintf(f, " %s, --logflag <flag>    enable debug log flag (not supported"
-		" - must reconfigure with --enable-debug)\n", log_arg);
-#endif
 }

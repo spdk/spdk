@@ -45,7 +45,7 @@ Param    | Long Param             | Type     | Default                | Descript
 -W       | --pci-whitelist        | B:D:F    |                        | @ref cmd_arg_pci_blacklist_whitelist.
 -R       | --huge-unlink          | flag     |                        | @ref cmd_arg_huge_unlink
 |        | --huge-dir             | string   | the first discovered   | allocate hugepages from a specific mount
--L       | --logflag              | string   |                        | @ref cmd_arg_debug_log_flags
+-L       | --logflag              | string   |                        | @ref cmd_arg_log_flags
 
 ### Configuration file {#cmd_arg_config_file}
 
@@ -137,11 +137,11 @@ By default, each DPDK-based application tries to remove any orphaned hugetlbfs
 files during its initialization. This option removes hugetlbfs files of the current
 process as soon as they're created, but is not compatible with `--shm-id`.
 
-### Debug log {#cmd_arg_debug_log_flags}
+### Log flag {#cmd_arg_log_flags}
 
-Enable a specific debug log type. This option can be used more than once. A list of
+Enable a specific log type. This option can be used more than once. A list of
 all available types is provided in the `--help` output, with `--logflag all`
-enabling all of them. Debug logs are only available in debug builds of SPDK.
+enabling all of them. Additionally enables debug print level in debug builds of SPDK.
 
 ## CPU mask {#cpu_mask}
 

@@ -964,18 +964,13 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			}
 			break;
 		case LOGFLAG_OPT_IDX:
-#ifndef DEBUG
-			SPDK_ERRLOG("%s must be configured with --enable-debug for -L flag\n",
-				    argv[0]);
-			usage(app_usage);
-			goto out;
-#else
 			rc = spdk_log_set_flag(optarg);
 			if (rc < 0) {
 				SPDK_ERRLOG("unknown flag\n");
 				usage(app_usage);
 				goto out;
 			}
+#ifdef DEBUG
 			opts->print_level = SPDK_LOG_DEBUG;
 			break;
 #endif
