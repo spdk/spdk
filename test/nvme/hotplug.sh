@@ -54,9 +54,8 @@ function devices_delete() {
 }
 
 password=$1
-base_img=${DEPENDENCY_DIR}/fedora-hotplug.qcow2
-test_img=${DEPENDENCY_DIR}/fedora-hotplug-test.qcow2
-qemu_pidfile=${DEPENDENCY_DIR}/qemupid
+base_img=$HOME/spdk_test_image.qcow2
+qemu_pidfile=$HOME/qemupid
 
 if [ ! -e "$base_img" ]; then
 	echo "Hotplug VM image not found; skipping test"
@@ -65,8 +64,6 @@ fi
 
 timing_enter start_qemu
 
-qemu-img create -b "$base_img" -f qcow2 "$test_img"
-
 for i in {0..3}; do
 	dd if=/dev/zero of="$SPDK_TEST_STORAGE/nvme$i.img" bs=1M count=1024
 done
@@ -74,7 +71,7 @@ done
 qemu-system-x86_64 \
 	-daemonize -display none -m 8192 \
 	-pidfile "$qemu_pidfile" \
-	-hda "$test_img" \
+	-hda "$base_img" \
 	-net user,hostfwd=tcp::10022-:22 \
 	-net nic \
 	-cpu host \
@@ -85,7 +82,8 @@ qemu-system-x86_64 \
 	-drive format=raw,file="$SPDK_TEST_STORAGE/nvme0.img",if=none,id=drive0 \
 	-drive format=raw,file="$SPDK_TEST_STORAGE/nvme1.img",if=none,id=drive1 \
 	-drive format=raw,file="$SPDK_TEST_STORAGE/nvme2.img",if=none,id=drive2 \
-	-drive format=raw,file="$SPDK_TEST_STORAGE/nvme3.img",if=none,id=drive3
+	-drive format=raw,file="$SPDK_TEST_STORAGE/nvme3.img",if=none,id=drive3 \
+	-snapshot
 
 timing_exit start_qemu
 
@@ -129,6 +127,5 @@ trap - SIGINT SIGTERM EXIT
 qemupid=$(awk '{printf $0}' "$qemu_pidfile")
 kill -9 $qemupid
 rm "$qemu_pidfile"
-rm "$test_img"
 
 timing_exit hotplug_test

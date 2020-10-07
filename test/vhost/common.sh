@@ -8,8 +8,7 @@ VM_DIR=$VHOST_DIR/vms
 TARGET_DIR=$VHOST_DIR/vhost
 VM_PASSWORD="root"
 
-#TODO: Move vhost_vm_image.qcow2 into VHOST_DIR on test systems.
-VM_IMAGE=$HOME/vhost_vm_image.qcow2
+VM_IMAGE=$HOME/spdk_test_image.qcow2
 
 if ! hash $QEMU_IMG_BIN $QEMU_BIN; then
 	error 'QEMU is not installed on this system. Unable to run vhost tests.'
