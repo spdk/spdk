@@ -26,6 +26,7 @@ CONFIG.local
 .project
 .cproject
 .settings
+.gitreview
 mk/cc.mk
 mk/config.mk
 mk/cc.flags.mk
