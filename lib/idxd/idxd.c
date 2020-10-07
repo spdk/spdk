@@ -742,6 +742,8 @@ spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan, void *dst, const void *
 		      uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
+	uint64_t src_addr, dst_addr;
+	uint64_t src_nbytes, dst_nbytes;
 
 	/* Common prep. */
 	desc = _idxd_prep_command(chan, cb_fn, cb_arg, NULL);
@@ -749,10 +751,21 @@ spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan, void *dst, const void *
 		return -EBUSY;
 	}
 
+	src_addr = spdk_vtophys(src, &src_nbytes);
+	dst_addr = spdk_vtophys(dst, &dst_nbytes);
+
+	if (src_addr == SPDK_VTOPHYS_ERROR || dst_addr == SPDK_VTOPHYS_ERROR) {
+		return -EINVAL;
+	}
+
+	if (src_nbytes < nbytes || dst_nbytes < nbytes) {
+		return -EINVAL;
+	}
+
 	/* Command specific. */
 	desc->opcode = IDXD_OPCODE_MEMMOVE;
-	desc->src_addr = (uintptr_t)src;
-	desc->dst_addr = (uintptr_t)dst;
+	desc->src_addr = src_addr;
+	desc->dst_addr = dst_addr;
 	desc->xfer_size = nbytes;
 
 	/* Submit operation. */
@@ -767,6 +780,8 @@ spdk_idxd_submit_dualcast(struct spdk_idxd_io_channel *chan, void *dst1, void *d
 			  const void *src, uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
+	uint64_t src_addr, dst1_addr, dst2_addr;
+	uint64_t src_nbytes, dst1_nbytes, dst2_nbytes;
 
 	if ((uintptr_t)dst1 & (ALIGN_4K - 1) || (uintptr_t)dst2 & (ALIGN_4K - 1)) {
 		SPDK_ERRLOG("Dualcast requires 4K alignment on dst addresses\n");
@@ -779,11 +794,24 @@ spdk_idxd_submit_dualcast(struct spdk_idxd_io_channel *chan, void *dst1, void *d
 		return -EBUSY;
 	}
 
+	src_addr = spdk_vtophys(src, &src_nbytes);
+	dst1_addr = spdk_vtophys(dst1, &dst1_nbytes);
+	dst2_addr = spdk_vtophys(dst2, &dst2_nbytes);
+
+	if (src_addr == SPDK_VTOPHYS_ERROR || dst1_addr == SPDK_VTOPHYS_ERROR ||
+	    dst2_addr == SPDK_VTOPHYS_ERROR) {
+		return -EINVAL;
+	}
+
+	if (src_nbytes < nbytes || dst1_nbytes < nbytes || dst2_nbytes < nbytes) {
+		return -EINVAL;
+	}
+
 	/* Command specific. */
 	desc->opcode = IDXD_OPCODE_DUALCAST;
-	desc->src_addr = (uintptr_t)src;
-	desc->dst_addr = (uintptr_t)dst1;
-	desc->dest2 = (uintptr_t)dst2;
+	desc->src_addr = src_addr;
+	desc->dst_addr = dst1_addr;
+	desc->dest2 = dst2_addr;
 	desc->xfer_size = nbytes;
 
 	/* Submit operation. */
@@ -798,6 +826,8 @@ spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan, void *src1, const vo
 			 spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
+	uint64_t src1_addr, src2_addr;
+	uint64_t src1_nbytes, src2_nbytes;
 
 	/* Common prep. */
 	desc = _idxd_prep_command(chan, cb_fn, cb_arg, NULL);
@@ -805,10 +835,21 @@ spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan, void *src1, const vo
 		return -EBUSY;
 	}
 
+	src1_addr = spdk_vtophys(src1, &src1_nbytes);
+	src2_addr = spdk_vtophys(src2, &src2_nbytes);
+
+	if (src1_addr == SPDK_VTOPHYS_ERROR || src2_addr == SPDK_VTOPHYS_ERROR) {
+		return -EINVAL;
+	}
+
+	if (src1_nbytes < nbytes || src2_nbytes < nbytes) {
+		return -EINVAL;
+	}
+
 	/* Command specific. */
 	desc->opcode = IDXD_OPCODE_COMPARE;
-	desc->src_addr = (uintptr_t)src1;
-	desc->src2_addr = (uintptr_t)src2;
+	desc->src_addr = src1_addr;
+	desc->src2_addr = src2_addr;
 	desc->xfer_size = nbytes;
 
 	/* Submit operation. */
@@ -822,6 +863,8 @@ spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan, void *dst, uint64_t fil
 		      uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
+	uint64_t dst_addr;
+	uint64_t dst_nbytes;
 
 	/* Common prep. */
 	desc = _idxd_prep_command(chan, cb_fn, cb_arg, NULL);
@@ -829,10 +872,20 @@ spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan, void *dst, uint64_t fil
 		return -EBUSY;
 	}
 
+	dst_addr = spdk_vtophys(dst, &dst_nbytes);
+
+	if (dst_addr == SPDK_VTOPHYS_ERROR) {
+		return -EINVAL;
+	}
+
+	if (dst_nbytes < nbytes) {
+		return -EINVAL;
+	}
+
 	/* Command specific. */
 	desc->opcode = IDXD_OPCODE_MEMFILL;
 	desc->pattern = fill_pattern;
-	desc->dst_addr = (uintptr_t)dst;
+	desc->dst_addr = dst_addr;
 	desc->xfer_size = nbytes;
 
 	/* Submit operation. */
@@ -847,6 +900,8 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan, uint32_t *dst, void *
 			spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
+	uint64_t src_addr, dst_addr;
+	uint64_t src_nbytes, dst_nbytes;
 
 	/* Common prep. */
 	desc = _idxd_prep_command(chan, cb_fn, cb_arg, NULL);
@@ -854,10 +909,21 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan, uint32_t *dst, void *
 		return -EBUSY;
 	}
 
+	src_addr = spdk_vtophys(src, &src_nbytes);
+	dst_addr = spdk_vtophys(dst, &dst_nbytes);
+
+	if (src_addr == SPDK_VTOPHYS_ERROR || dst_addr == SPDK_VTOPHYS_ERROR) {
+		return -EINVAL;
+	}
+
+	if (src_nbytes < nbytes || dst_nbytes < nbytes) {
+		return -EINVAL;
+	}
+
 	/* Command specific. */
 	desc->opcode = IDXD_OPCODE_CRC32C_GEN;
-	desc->dst_addr = (uintptr_t)dst;
-	desc->src_addr = (uintptr_t)src;
+	desc->dst_addr = dst_addr;
+	desc->src_addr = src_addr;
 	desc->flags &= IDXD_CLEAR_CRC_FLAGS;
 	desc->crc32c.seed = seed;
 	desc->xfer_size = nbytes;
@@ -1023,6 +1089,8 @@ spdk_idxd_batch_prep_copy(struct spdk_idxd_io_channel *chan, struct idxd_batch *
 			  void *dst, const void *src, uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
+	uint64_t src_addr, dst_addr;
+	uint64_t src_nbytes, dst_nbytes;
 
 	/* Common prep. */
 	desc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch);
@@ -1030,10 +1098,21 @@ spdk_idxd_batch_prep_copy(struct spdk_idxd_io_channel *chan, struct idxd_batch *
 		return -EINVAL;
 	}
 
+	src_addr = spdk_vtophys(src, &src_nbytes);
+	dst_addr = spdk_vtophys(dst, &dst_nbytes);
+
+	if (src_addr == SPDK_VTOPHYS_ERROR || dst_addr == SPDK_VTOPHYS_ERROR) {
+		return -EINVAL;
+	}
+
+	if (src_nbytes < nbytes || dst_nbytes < nbytes) {
+		return -EINVAL;
+	}
+
 	/* Command specific. */
 	desc->opcode = IDXD_OPCODE_MEMMOVE;
-	desc->src_addr = (uintptr_t)src;
-	desc->dst_addr = (uintptr_t)dst;
+	desc->src_addr = src_addr;
+	desc->dst_addr = dst_addr;
 	desc->xfer_size = nbytes;
 
 	return 0;
@@ -1045,6 +1124,8 @@ spdk_idxd_batch_prep_fill(struct spdk_idxd_io_channel *chan, struct idxd_batch *
 			  spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
+	uint64_t dst_addr;
+	uint64_t dst_nbytes;
 
 	/* Common prep. */
 	desc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch);
@@ -1052,10 +1133,20 @@ spdk_idxd_batch_prep_fill(struct spdk_idxd_io_channel *chan, struct idxd_batch *
 		return -EINVAL;
 	}
 
+	dst_addr = spdk_vtophys(dst, &dst_nbytes);
+
+	if (dst_addr == SPDK_VTOPHYS_ERROR) {
+		return -EINVAL;
+	}
+
+	if (dst_nbytes < nbytes) {
+		return -EINVAL;
+	}
+
 	/* Command specific. */
 	desc->opcode = IDXD_OPCODE_MEMFILL;
 	desc->pattern = fill_pattern;
-	desc->dst_addr = (uintptr_t)dst;
+	desc->dst_addr = dst_addr;
 	desc->xfer_size = nbytes;
 
 	return 0;
@@ -1066,6 +1157,8 @@ spdk_idxd_batch_prep_dualcast(struct spdk_idxd_io_channel *chan, struct idxd_bat
 			      void *dst1, void *dst2, const void *src, uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
+	uint64_t src_addr, dst1_addr, dst2_addr;
+	uint64_t src_nbytes, dst1_nbytes, dst2_nbytes;
 
 	if ((uintptr_t)dst1 & (ALIGN_4K - 1) || (uintptr_t)dst2 & (ALIGN_4K - 1)) {
 		SPDK_ERRLOG("Dualcast requires 4K alignment on dst addresses\n");
@@ -1077,10 +1170,24 @@ spdk_idxd_batch_prep_dualcast(struct spdk_idxd_io_channel *chan, struct idxd_bat
 	if (desc == NULL) {
 		return -EINVAL;
 	}
+
+	src_addr = spdk_vtophys(src, &src_nbytes);
+	dst1_addr = spdk_vtophys(dst1, &dst1_nbytes);
+	dst2_addr = spdk_vtophys(dst2, &dst2_nbytes);
+
+	if (src_addr == SPDK_VTOPHYS_ERROR || dst1_addr == SPDK_VTOPHYS_ERROR ||
+	    dst2_addr == SPDK_VTOPHYS_ERROR) {
+		return -EINVAL;
+	}
+
+	if (src_nbytes < nbytes || dst1_nbytes < nbytes || dst2_nbytes < nbytes) {
+		return -EINVAL;
+	}
+
 	desc->opcode = IDXD_OPCODE_DUALCAST;
-	desc->src_addr = (uintptr_t)src;
-	desc->dst_addr = (uintptr_t)dst1;
-	desc->dest2 = (uintptr_t)dst2;
+	desc->src_addr = src_addr;
+	desc->dst_addr = dst1_addr;
+	desc->dest2 = dst2_addr;
 	desc->xfer_size = nbytes;
 
 	return 0;
@@ -1092,6 +1199,8 @@ spdk_idxd_batch_prep_crc32c(struct spdk_idxd_io_channel *chan, struct idxd_batch
 			    spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
+	uint64_t src_addr, dst_addr;
+	uint64_t src_nbytes, dst_nbytes;
 
 	/* Common prep. */
 	desc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch);
@@ -1099,10 +1208,21 @@ spdk_idxd_batch_prep_crc32c(struct spdk_idxd_io_channel *chan, struct idxd_batch
 		return -EINVAL;
 	}
 
+	src_addr = spdk_vtophys(src, &src_nbytes);
+	dst_addr = spdk_vtophys(dst, &dst_nbytes);
+
+	if (src_addr == SPDK_VTOPHYS_ERROR || dst_addr == SPDK_VTOPHYS_ERROR) {
+		return -EINVAL;
+	}
+
+	if (src_nbytes < nbytes || dst_nbytes < nbytes) {
+		return -EINVAL;
+	}
+
 	/* Command specific. */
 	desc->opcode = IDXD_OPCODE_CRC32C_GEN;
-	desc->dst_addr = (uintptr_t)dst;
-	desc->src_addr = (uintptr_t)src;
+	desc->dst_addr = dst_addr;
+	desc->src_addr = src_addr;
 	desc->flags &= IDXD_CLEAR_CRC_FLAGS;
 	desc->crc32c.seed = seed;
 	desc->xfer_size = nbytes;
@@ -1116,6 +1236,8 @@ spdk_idxd_batch_prep_compare(struct spdk_idxd_io_channel *chan, struct idxd_batc
 			     void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
+	uint64_t src1_addr, src2_addr;
+	uint64_t src1_nbytes, src2_nbytes;
 
 	/* Common prep. */
 	desc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch);
@@ -1123,10 +1245,21 @@ spdk_idxd_batch_prep_compare(struct spdk_idxd_io_channel *chan, struct idxd_batc
 		return -EINVAL;
 	}
 
+	src1_addr = spdk_vtophys(src1, &src1_nbytes);
+	src2_addr = spdk_vtophys(src2, &src2_nbytes);
+
+	if (src1_addr == SPDK_VTOPHYS_ERROR || src2_addr == SPDK_VTOPHYS_ERROR) {
+		return -EINVAL;
+	}
+
+	if (src1_nbytes < nbytes || src2_nbytes < nbytes) {
+		return -EINVAL;
+	}
+
 	/* Command specific. */
 	desc->opcode = IDXD_OPCODE_COMPARE;
-	desc->src_addr = (uintptr_t)src1;
-	desc->src2_addr = (uintptr_t)src2;
+	desc->src_addr = src1_addr;
+	desc->src2_addr = src2_addr;
 	desc->xfer_size = nbytes;
 
 	return 0;
