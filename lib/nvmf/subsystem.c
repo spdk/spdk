@@ -760,6 +760,79 @@ spdk_nvmf_subsystem_remove_host(struct spdk_nvmf_subsystem *subsystem, const cha
 	return 0;
 }
 
+struct nvmf_subsystem_disconnect_host_ctx {
+	struct spdk_nvmf_subsystem		*subsystem;
+	char					*hostnqn;
+	spdk_nvmf_tgt_subsystem_listen_done_fn	cb_fn;
+	void					*cb_arg;
+};
+
+static void
+nvmf_subsystem_disconnect_host_fini(struct spdk_io_channel_iter *i, int status)
+{
+	struct nvmf_subsystem_disconnect_host_ctx *ctx;
+
+	ctx = spdk_io_channel_iter_get_ctx(i);
+
+	if (ctx->cb_fn) {
+		ctx->cb_fn(ctx->cb_arg, status);
+	}
+	free(ctx->hostnqn);
+	free(ctx);
+}
+
+static void
+nvmf_subsystem_disconnect_qpairs_by_host(struct spdk_io_channel_iter *i)
+{
+	struct nvmf_subsystem_disconnect_host_ctx *ctx;
+	struct spdk_nvmf_poll_group *group;
+	struct spdk_io_channel *ch;
+	struct spdk_nvmf_qpair *qpair, *tmp_qpair;
+	struct spdk_nvmf_ctrlr *ctrlr;
+
+	ctx = spdk_io_channel_iter_get_ctx(i);
+	ch = spdk_io_channel_iter_get_channel(i);
+	group = spdk_io_channel_get_ctx(ch);
+
+	TAILQ_FOREACH_SAFE(qpair, &group->qpairs, link, tmp_qpair) {
+		ctrlr = qpair->ctrlr;
+
+		if (ctrlr == NULL || ctrlr->subsys != ctx->subsystem) {
+			continue;
+		}
+
+		if (strncmp(ctrlr->hostnqn, ctx->hostnqn, sizeof(ctrlr->hostnqn)) == 0) {
+			/* Right now this does not wait for the queue pairs to actually disconnect. */
+			spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+		}
+	}
+	spdk_for_each_channel_continue(i, 0);
+}
+
+int
+spdk_nvmf_subsystem_disconnect_host(struct spdk_nvmf_subsystem *subsystem,
+				    const char *hostnqn,
+				    spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn,
+				    void *cb_arg)
+{
+	struct nvmf_subsystem_disconnect_host_ctx *ctx;
+
+	ctx = calloc(1, sizeof(struct nvmf_subsystem_disconnect_host_ctx));
+	if (ctx == NULL) {
+		return -ENOMEM;
+	}
+
+	ctx->subsystem = subsystem;
+	ctx->hostnqn = strdup(hostnqn);
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	spdk_for_each_channel(subsystem->tgt, nvmf_subsystem_disconnect_qpairs_by_host, ctx,
+			      nvmf_subsystem_disconnect_host_fini);
+
+	return 0;
+}
+
 int
 spdk_nvmf_subsystem_set_allow_any_host(struct spdk_nvmf_subsystem *subsystem, bool allow_any_host)
 {

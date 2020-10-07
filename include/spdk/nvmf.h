@@ -485,6 +485,25 @@ int spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem,
 int spdk_nvmf_subsystem_remove_host(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn);
 
 /**
+ * Disconnect all connections originating from the provided hostnqn
+ *
+ * To disconnect and block all new connections from a host, first call
+ * spdk_nvmf_subsystem_remove_host() to remove it from the list of allowed hosts, then
+ * call spdk_nvmf_subsystem_disconnect_host() to close any remaining connections.
+ *
+ * \param subsystem Subsystem to operate on
+ * \param hostnqn The NQN for the host
+ * \param cb_fn The function to call on completion.
+ * \param cb_arg The argument to pass to the cb_fn.
+ *
+ * \return int. 0 when the asynchronous process starts successfully or a negated errno on failure.
+ */
+int spdk_nvmf_subsystem_disconnect_host(struct spdk_nvmf_subsystem *subsystem,
+					const char *hostnqn,
+					spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn,
+					void *cb_arg);
+
+/**
  * Set whether a subsystem should allow any host or only hosts in the allowed list.
  *
  * \param subsystem Subsystem to modify.
