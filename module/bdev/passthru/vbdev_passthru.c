@@ -614,12 +614,10 @@ static const struct spdk_bdev_fn_table vbdev_passthru_fn_table = {
 	.write_config_json	= vbdev_passthru_write_config_json,
 };
 
-/* Called when the underlying base bdev goes away. */
 static void
-vbdev_passthru_base_bdev_hotremove_cb(void *ctx)
+vbdev_passthru_base_bdev_hotremove_cb(struct spdk_bdev *bdev_find)
 {
 	struct vbdev_passthru *pt_node, *tmp;
-	struct spdk_bdev *bdev_find = ctx;
 
 	TAILQ_FOREACH_SAFE(pt_node, &g_pt_nodes, link, tmp) {
 		if (bdev_find == pt_node->base_bdev) {
@@ -628,25 +626,41 @@ vbdev_passthru_base_bdev_hotremove_cb(void *ctx)
 	}
 }
 
+/* Called when the underlying base bdev triggers asynchronous event such as bdev removal. */
+static void
+vbdev_passthru_base_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
+				  void *event_ctx)
+{
+	switch (type) {
+	case SPDK_BDEV_EVENT_REMOVE:
+		vbdev_passthru_base_bdev_hotremove_cb(bdev);
+		break;
+	default:
+		SPDK_NOTICELOG("Unsupported bdev event: type %d\n", type);
+		break;
+	}
+}
+
 /* Create and register the passthru vbdev if we find it in our list of bdev names.
  * This can be called either by the examine path or RPC method.
  */
 static int
-vbdev_passthru_register(struct spdk_bdev *bdev)
+vbdev_passthru_register(const char *bdev_name)
 {
 	struct bdev_names *name;
 	struct vbdev_passthru *pt_node;
+	struct spdk_bdev *bdev;
 	int rc = 0;
 
 	/* Check our list of names from config versus this bdev and if
 	 * there's a match, create the pt_node & bdev accordingly.
 	 */
 	TAILQ_FOREACH(name, &g_bdev_names, link) {
-		if (strcmp(name->bdev_name, bdev->name) != 0) {
+		if (strcmp(name->bdev_name, bdev_name) != 0) {
 			continue;
 		}
 
-		SPDK_NOTICELOG("Match on %s\n", bdev->name);
+		SPDK_NOTICELOG("Match on %s\n", bdev_name);
 		pt_node = calloc(1, sizeof(struct vbdev_passthru));
 		if (!pt_node) {
 			rc = -ENOMEM;
@@ -654,8 +668,6 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 			break;
 		}
 
-		/* The base bdev that we're attaching to. */
-		pt_node->base_bdev = bdev;
 		pt_node->pt_bdev.name = strdup(name->vbdev_name);
 		if (!pt_node->pt_bdev.name) {
 			rc = -ENOMEM;
@@ -664,6 +676,22 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 			break;
 		}
 		pt_node->pt_bdev.product_name = "passthru";
+
+		/* The base bdev that we're attaching to. */
+		rc = spdk_bdev_open_ext(bdev_name, true, vbdev_passthru_base_bdev_event_cb,
+					NULL, &pt_node->base_desc);
+		if (rc) {
+			if (rc != -ENODEV) {
+				SPDK_ERRLOG("could not open bdev %s\n", bdev_name);
+			}
+			free(pt_node->pt_bdev.name);
+			free(pt_node);
+			break;
+		}
+		SPDK_NOTICELOG("base bdev opened\n");
+
+		bdev = spdk_bdev_desc_get_bdev(pt_node->base_desc);
+		pt_node->base_bdev = bdev;
 
 		/* Copy some properties from the underlying base bdev. */
 		pt_node->pt_bdev.write_cache = bdev->write_cache;
@@ -691,24 +719,12 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 					name->vbdev_name);
 		SPDK_NOTICELOG("io_device created at: 0x%p\n", pt_node);
 
-		rc = spdk_bdev_open(bdev, true, vbdev_passthru_base_bdev_hotremove_cb,
-				    bdev, &pt_node->base_desc);
-		if (rc) {
-			SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(bdev));
-			TAILQ_REMOVE(&g_pt_nodes, pt_node, link);
-			spdk_io_device_unregister(pt_node, NULL);
-			free(pt_node->pt_bdev.name);
-			free(pt_node);
-			break;
-		}
-		SPDK_NOTICELOG("bdev opened\n");
-
 		/* Save the thread where the base device is opened */
 		pt_node->thread = spdk_get_thread();
 
 		rc = spdk_bdev_module_claim_bdev(bdev, pt_node->base_desc, pt_node->pt_bdev.module);
 		if (rc) {
-			SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(bdev));
+			SPDK_ERRLOG("could not claim bdev %s\n", bdev_name);
 			spdk_bdev_close(pt_node->base_desc);
 			TAILQ_REMOVE(&g_pt_nodes, pt_node, link);
 			spdk_io_device_unregister(pt_node, NULL);
@@ -740,10 +756,9 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 int
 bdev_passthru_create_disk(const char *bdev_name, const char *vbdev_name)
 {
-	struct spdk_bdev *bdev = NULL;
-	int rc = 0;
+	int rc;
 
-	/* Insert the bdev into our global name list even if it doesn't exist yet,
+	/* Insert the bdev name into our global name list even if it doesn't exist yet,
 	 * it may show up soon...
 	 */
 	rc = vbdev_passthru_insert_name(bdev_name, vbdev_name);
@@ -751,16 +766,16 @@ bdev_passthru_create_disk(const char *bdev_name, const char *vbdev_name)
 		return rc;
 	}
 
-	bdev = spdk_bdev_get_by_name(bdev_name);
-	if (!bdev) {
+	rc = vbdev_passthru_register(bdev_name);
+	if (rc == -ENODEV) {
 		/* This is not an error, we tracked the name above and it still
 		 * may show up later.
 		 */
 		SPDK_NOTICELOG("vbdev creation deferred pending base bdev arrival\n");
-		return 0;
+		rc = 0;
 	}
 
-	return vbdev_passthru_register(bdev);
+	return rc;
 }
 
 void
@@ -801,7 +816,7 @@ bdev_passthru_delete_disk(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn,
 static void
 vbdev_passthru_examine(struct spdk_bdev *bdev)
 {
-	vbdev_passthru_register(bdev);
+	vbdev_passthru_register(bdev->name);
 
 	spdk_bdev_module_examine_done(&passthru_if);
 }
