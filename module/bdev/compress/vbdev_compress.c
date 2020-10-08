@@ -1258,18 +1258,31 @@ bdev_hotremove_vol_unload_cb(void *cb_arg, int reduce_errno)
 	spdk_bdev_unregister(&comp_bdev->comp_bdev, NULL, NULL);
 }
 
-/* Called when the underlying base bdev goes away. */
 static void
-vbdev_compress_base_bdev_hotremove_cb(void *ctx)
+vbdev_compress_base_bdev_hotremove_cb(struct spdk_bdev *bdev_find)
 {
 	struct vbdev_compress *comp_bdev, *tmp;
-	struct spdk_bdev *bdev_find = ctx;
 
 	TAILQ_FOREACH_SAFE(comp_bdev, &g_vbdev_comp, link, tmp) {
 		if (bdev_find == comp_bdev->base_bdev) {
 			/* Tell reduceLib that we're done with this volume. */
 			spdk_reduce_vol_unload(comp_bdev->vol, bdev_hotremove_vol_unload_cb, comp_bdev);
 		}
+	}
+}
+
+/* Called when the underlying base bdev triggers asynchronous event such as bdev removal. */
+static void
+vbdev_compress_base_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
+				  void *event_ctx)
+{
+	switch (type) {
+	case SPDK_BDEV_EVENT_REMOVE:
+		vbdev_compress_base_bdev_hotremove_cb(bdev);
+		break;
+	default:
+		SPDK_NOTICELOG("Unsupported bdev event: type %d\n", type);
+		break;
 	}
 }
 
@@ -1355,8 +1368,8 @@ vbdev_init_reduce(struct spdk_bdev *bdev, const char *pm_path, uint32_t lb_size)
 		return -EINVAL;
 	}
 
-	rc = spdk_bdev_open(meta_ctx->base_bdev, true, vbdev_compress_base_bdev_hotremove_cb,
-			    meta_ctx->base_bdev, &meta_ctx->base_desc);
+	rc = spdk_bdev_open_ext(spdk_bdev_get_name(meta_ctx->base_bdev), true,
+				vbdev_compress_base_bdev_event_cb, NULL, &meta_ctx->base_desc);
 	if (rc) {
 		SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(meta_ctx->base_bdev));
 		free(meta_ctx);
@@ -1618,8 +1631,8 @@ vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 
 	pthread_mutex_init(&comp_bdev->reduce_lock, NULL);
 
-	rc = spdk_bdev_open(comp_bdev->base_bdev, true, vbdev_compress_base_bdev_hotremove_cb,
-			    comp_bdev->base_bdev, &comp_bdev->base_desc);
+	rc = spdk_bdev_open_ext(spdk_bdev_get_name(comp_bdev->base_bdev), true,
+				vbdev_compress_base_bdev_event_cb, NULL, &comp_bdev->base_desc);
 	if (rc) {
 		SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(comp_bdev->base_bdev));
 		goto error_open;
@@ -1752,8 +1765,8 @@ _vbdev_reduce_load_cb(void *ctx)
 		/* We still want to open and claim the backing device to protect the data until
 		 * either the pm metadata file is recovered or the comp bdev is deleted.
 		 */
-		rc = spdk_bdev_open(meta_ctx->base_bdev, true, vbdev_compress_base_bdev_hotremove_cb,
-				    meta_ctx->base_bdev, &meta_ctx->base_desc);
+		rc = spdk_bdev_open_ext(spdk_bdev_get_name(meta_ctx->base_bdev), true,
+					vbdev_compress_base_bdev_event_cb, NULL, &meta_ctx->base_desc);
 		if (rc) {
 			SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(meta_ctx->base_bdev));
 			free(meta_ctx->comp_bdev.name);
@@ -1838,8 +1851,8 @@ vbdev_compress_examine(struct spdk_bdev *bdev)
 		return;
 	}
 
-	rc = spdk_bdev_open(meta_ctx->base_bdev, false, vbdev_compress_base_bdev_hotremove_cb,
-			    meta_ctx->base_bdev, &meta_ctx->base_desc);
+	rc = spdk_bdev_open_ext(spdk_bdev_get_name(meta_ctx->base_bdev), false,
+				vbdev_compress_base_bdev_event_cb, NULL, &meta_ctx->base_desc);
 	if (rc) {
 		SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(meta_ctx->base_bdev));
 		free(meta_ctx);
