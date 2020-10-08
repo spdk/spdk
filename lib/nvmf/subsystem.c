@@ -763,12 +763,9 @@ spdk_nvmf_subsystem_remove_host(struct spdk_nvmf_subsystem *subsystem, const cha
 int
 spdk_nvmf_subsystem_set_allow_any_host(struct spdk_nvmf_subsystem *subsystem, bool allow_any_host)
 {
-	if (!(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
-	      subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED)) {
-		return -EAGAIN;
-	}
-
+	pthread_mutex_lock(&subsystem->mutex);
 	subsystem->flags.allow_any_host = allow_any_host;
+	pthread_mutex_unlock(&subsystem->mutex);
 
 	return 0;
 }
@@ -776,7 +773,19 @@ spdk_nvmf_subsystem_set_allow_any_host(struct spdk_nvmf_subsystem *subsystem, bo
 bool
 spdk_nvmf_subsystem_get_allow_any_host(const struct spdk_nvmf_subsystem *subsystem)
 {
-	return subsystem->flags.allow_any_host;
+	bool allow_any_host;
+	struct spdk_nvmf_subsystem *sub;
+
+	/* Technically, taking the mutex modifies data in the subsystem. But the const
+	 * is still important to convey that this doesn't mutate any other data. Cast
+	 * it away to work around this. */
+	sub = (struct spdk_nvmf_subsystem *)subsystem;
+
+	pthread_mutex_lock(&sub->mutex);
+	allow_any_host = sub->flags.allow_any_host;
+	pthread_mutex_unlock(&sub->mutex);
+
+	return allow_any_host;
 }
 
 bool
@@ -788,11 +797,13 @@ spdk_nvmf_subsystem_host_allowed(struct spdk_nvmf_subsystem *subsystem, const ch
 		return false;
 	}
 
+	pthread_mutex_lock(&subsystem->mutex);
+
 	if (subsystem->flags.allow_any_host) {
+		pthread_mutex_unlock(&subsystem->mutex);
 		return true;
 	}
 
-	pthread_mutex_lock(&subsystem->mutex);
 	allowed =  nvmf_subsystem_find_host(subsystem, hostnqn) != NULL;
 	pthread_mutex_unlock(&subsystem->mutex);
 

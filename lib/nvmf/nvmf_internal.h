@@ -275,7 +275,7 @@ struct spdk_nvmf_subsystem {
 
 	TAILQ_HEAD(, spdk_nvmf_ctrlr)			ctrlrs;
 
-	/* A mutex used to protect the hosts list. Unlike the namespace
+	/* A mutex used to protect the hosts list and allow_any_host flag. Unlike the namespace
 	 * array, this list is not used on the I/O path (it's needed for handling things like
 	 * the CONNECT command), so use a mutex to protect it instead of requiring the subsystem
 	 * state to be paused. This removes the requirement to pause the subsystem when hosts

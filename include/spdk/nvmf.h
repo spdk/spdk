@@ -487,8 +487,6 @@ int spdk_nvmf_subsystem_remove_host(struct spdk_nvmf_subsystem *subsystem, const
 /**
  * Set whether a subsystem should allow any host or only hosts in the allowed list.
  *
- * May only be performed on subsystems in the PAUSED or INACTIVE states.
- *
  * \param subsystem Subsystem to modify.
  * \param allow_any_host true to allow any host to connect to this subsystem,
  * or false to enforce the whitelist configured with spdk_nvmf_subsystem_add_host().
