@@ -186,7 +186,7 @@ static struct rte_comp_xform g_decomp_xform = {
 };
 
 static void vbdev_compress_examine(struct spdk_bdev *bdev);
-static void vbdev_compress_claim(struct vbdev_compress *comp_bdev);
+static int vbdev_compress_claim(struct vbdev_compress *comp_bdev);
 static void vbdev_compress_queue_io(struct spdk_bdev_io *bdev_io);
 struct vbdev_compress *_prepare_for_load_init(struct spdk_bdev *bdev, uint32_t lb_size);
 static void vbdev_compress_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
@@ -1109,18 +1109,23 @@ static void
 _vbdev_reduce_init_cb(void *ctx)
 {
 	struct vbdev_compress *meta_ctx = ctx;
+	int rc;
+
+	assert(meta_ctx->base_desc != NULL);
 
 	/* We're done with metadata operations */
 	spdk_put_io_channel(meta_ctx->base_ch);
-	/* Close the underlying bdev on its same opened thread. */
-	spdk_bdev_close(meta_ctx->base_desc);
-	meta_ctx->base_desc = NULL;
 
 	if (meta_ctx->vol) {
-		vbdev_compress_claim(meta_ctx);
-	} else {
-		free(meta_ctx);
+		rc = vbdev_compress_claim(meta_ctx);
+		if (rc == 0) {
+			return;
+		}
 	}
+
+	/* Close the underlying bdev on its same opened thread. */
+	spdk_bdev_close(meta_ctx->base_desc);
+	free(meta_ctx);
 }
 
 /* Callback from reduce for when init is complete. We'll pass the vbdev_comp struct
@@ -1588,13 +1593,13 @@ static int _set_compbdev_name(struct vbdev_compress *comp_bdev)
 	return 0;
 }
 
-static void
+static int
 vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 {
 	int rc;
 
 	if (_set_compbdev_name(comp_bdev)) {
-		goto error_bdev_name;
+		return -EINVAL;
 	}
 
 	/* Note: some of the fields below will change in the future - for example,
@@ -1631,13 +1636,6 @@ vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 
 	pthread_mutex_init(&comp_bdev->reduce_lock, NULL);
 
-	rc = spdk_bdev_open_ext(spdk_bdev_get_name(comp_bdev->base_bdev), true,
-				vbdev_compress_base_bdev_event_cb, NULL, &comp_bdev->base_desc);
-	if (rc) {
-		SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(comp_bdev->base_bdev));
-		goto error_open;
-	}
-
 	/* Save the thread where the base device is opened */
 	comp_bdev->thread = spdk_get_thread();
 
@@ -1662,17 +1660,15 @@ vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 
 	SPDK_NOTICELOG("registered io_device and virtual bdev for: %s\n", comp_bdev->comp_bdev.name);
 
-	return;
+	return 0;
+
 	/* Error cleanup paths. */
 error_bdev_register:
 	spdk_bdev_module_release_bdev(comp_bdev->base_bdev);
 error_claim:
 	spdk_io_device_unregister(comp_bdev, NULL);
-	spdk_bdev_close(comp_bdev->base_desc);
-error_open:
 	free(comp_bdev->comp_bdev.name);
-error_bdev_name:
-	free(comp_bdev);
+	return rc;
 }
 
 static void
@@ -1744,11 +1740,10 @@ _vbdev_reduce_load_cb(void *ctx)
 	struct vbdev_compress *meta_ctx = ctx;
 	int rc;
 
+	assert(meta_ctx->base_desc != NULL);
+
 	/* Done with metadata operations */
 	spdk_put_io_channel(meta_ctx->base_ch);
-	/* Close the underlying bdev on its same opened thread. */
-	spdk_bdev_close(meta_ctx->base_desc);
-	meta_ctx->base_desc = NULL;
 
 	if (meta_ctx->reduce_errno == 0) {
 		if (_set_pmd(meta_ctx) == false) {
@@ -1756,20 +1751,12 @@ _vbdev_reduce_load_cb(void *ctx)
 			goto err;
 		}
 
-		vbdev_compress_claim(meta_ctx);
-	} else if (meta_ctx->reduce_errno == -ENOENT) {
-		if (_set_compbdev_name(meta_ctx)) {
+		rc = vbdev_compress_claim(meta_ctx);
+		if (rc != 0) {
 			goto err;
 		}
-
-		/* We still want to open and claim the backing device to protect the data until
-		 * either the pm metadata file is recovered or the comp bdev is deleted.
-		 */
-		rc = spdk_bdev_open_ext(spdk_bdev_get_name(meta_ctx->base_bdev), true,
-					vbdev_compress_base_bdev_event_cb, NULL, &meta_ctx->base_desc);
-		if (rc) {
-			SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(meta_ctx->base_bdev));
-			free(meta_ctx->comp_bdev.name);
+	} else if (meta_ctx->reduce_errno == -ENOENT) {
+		if (_set_compbdev_name(meta_ctx)) {
 			goto err;
 		}
 
@@ -1782,7 +1769,6 @@ _vbdev_reduce_load_cb(void *ctx)
 						 meta_ctx->comp_bdev.module);
 		if (rc) {
 			SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(meta_ctx->base_bdev));
-			spdk_bdev_close(meta_ctx->base_desc);
 			free(meta_ctx->comp_bdev.name);
 			goto err;
 		}
@@ -1801,6 +1787,8 @@ _vbdev_reduce_load_cb(void *ctx)
 	return;
 
 err:
+	/* Close the underlying bdev on its same opened thread. */
+	spdk_bdev_close(meta_ctx->base_desc);
 	free(meta_ctx);
 	spdk_bdev_module_examine_done(&compress_if);
 }
