@@ -683,12 +683,10 @@ static const struct spdk_bdev_fn_table vbdev_delay_fn_table = {
 	.write_config_json	= vbdev_delay_write_config_json,
 };
 
-/* Called when the underlying base bdev goes away. */
 static void
-vbdev_delay_base_bdev_hotremove_cb(void *ctx)
+vbdev_delay_base_bdev_hotremove_cb(struct spdk_bdev *bdev_find)
 {
 	struct vbdev_delay *delay_node, *tmp;
-	struct spdk_bdev *bdev_find = ctx;
 
 	TAILQ_FOREACH_SAFE(delay_node, &g_delay_nodes, link, tmp) {
 		if (bdev_find == delay_node->base_bdev) {
@@ -697,14 +695,30 @@ vbdev_delay_base_bdev_hotremove_cb(void *ctx)
 	}
 }
 
+/* Called when the underlying base bdev triggers asynchronous event such as bdev removal. */
+static void
+vbdev_delay_base_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
+			       void *event_ctx)
+{
+	switch (type) {
+	case SPDK_BDEV_EVENT_REMOVE:
+		vbdev_delay_base_bdev_hotremove_cb(bdev);
+		break;
+	default:
+		SPDK_NOTICELOG("Unsupported bdev event: type %d\n", type);
+		break;
+	}
+}
+
 /* Create and register the delay vbdev if we find it in our list of bdev names.
  * This can be called either by the examine path or RPC method.
  */
 static int
-vbdev_delay_register(struct spdk_bdev *bdev)
+vbdev_delay_register(const char *bdev_name)
 {
 	struct bdev_association *assoc;
 	struct vbdev_delay *delay_node;
+	struct spdk_bdev *bdev;
 	uint64_t ticks_mhz = spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
 	int rc = 0;
 
@@ -712,7 +726,7 @@ vbdev_delay_register(struct spdk_bdev *bdev)
 	 * there's a match, create the delay_node & bdev accordingly.
 	 */
 	TAILQ_FOREACH(assoc, &g_bdev_associations, link) {
-		if (strcmp(assoc->bdev_name, bdev->name) != 0) {
+		if (strcmp(assoc->bdev_name, bdev_name) != 0) {
 			continue;
 		}
 
@@ -722,9 +736,6 @@ vbdev_delay_register(struct spdk_bdev *bdev)
 			SPDK_ERRLOG("could not allocate delay_node\n");
 			break;
 		}
-
-		/* The base bdev that we're attaching to. */
-		delay_node->base_bdev = bdev;
 		delay_node->delay_bdev.name = strdup(assoc->vbdev_name);
 		if (!delay_node->delay_bdev.name) {
 			rc = -ENOMEM;
@@ -733,6 +744,21 @@ vbdev_delay_register(struct spdk_bdev *bdev)
 			break;
 		}
 		delay_node->delay_bdev.product_name = "delay";
+
+		/* The base bdev that we're attaching to. */
+		rc = spdk_bdev_open_ext(bdev_name, true, vbdev_delay_base_bdev_event_cb,
+					NULL, &delay_node->base_desc);
+		if (rc) {
+			if (rc != -ENODEV) {
+				SPDK_ERRLOG("could not open bdev %s\n", bdev_name);
+			}
+			free(delay_node->delay_bdev.name);
+			free(delay_node);
+			break;
+		}
+
+		bdev = spdk_bdev_desc_get_bdev(delay_node->base_desc);
+		delay_node->base_bdev = bdev;
 
 		delay_node->delay_bdev.write_cache = bdev->write_cache;
 		delay_node->delay_bdev.required_alignment = bdev->required_alignment;
@@ -754,19 +780,12 @@ vbdev_delay_register(struct spdk_bdev *bdev)
 					sizeof(struct delay_io_channel),
 					assoc->vbdev_name);
 
-		rc = spdk_bdev_open(bdev, true, vbdev_delay_base_bdev_hotremove_cb,
-				    bdev, &delay_node->base_desc);
-		if (rc) {
-			SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(bdev));
-			goto error_unregister;
-		}
-
 		/* Save the thread where the base device is opened */
 		delay_node->thread = spdk_get_thread();
 
 		rc = spdk_bdev_module_claim_bdev(bdev, delay_node->base_desc, delay_node->delay_bdev.module);
 		if (rc) {
-			SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(bdev));
+			SPDK_ERRLOG("could not claim bdev %s\n", bdev_name);
 			goto error_close;
 		}
 
@@ -784,7 +803,6 @@ vbdev_delay_register(struct spdk_bdev *bdev)
 
 error_close:
 	spdk_bdev_close(delay_node->base_desc);
-error_unregister:
 	spdk_io_device_unregister(delay_node, NULL);
 	free(delay_node->delay_bdev.name);
 	free(delay_node);
@@ -795,7 +813,6 @@ int
 create_delay_disk(const char *bdev_name, const char *vbdev_name, uint64_t avg_read_latency,
 		  uint64_t p99_read_latency, uint64_t avg_write_latency, uint64_t p99_write_latency)
 {
-	struct spdk_bdev *bdev = NULL;
 	int rc = 0;
 
 	if (p99_read_latency < avg_read_latency || p99_write_latency < avg_write_latency) {
@@ -809,12 +826,16 @@ create_delay_disk(const char *bdev_name, const char *vbdev_name, uint64_t avg_re
 		return rc;
 	}
 
-	bdev = spdk_bdev_get_by_name(bdev_name);
-	if (!bdev) {
-		return 0;
+	rc = vbdev_delay_register(bdev_name);
+	if (rc == -ENODEV) {
+		/* This is not an error, we tracked the name above and it still
+		 * may show up later.
+		 */
+		SPDK_NOTICELOG("vbdev creation deferred pending base bdev arrival\n");
+		rc = 0;
 	}
 
-	return vbdev_delay_register(bdev);
+	return rc;
 }
 
 void
@@ -843,7 +864,7 @@ delete_delay_disk(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *c
 static void
 vbdev_delay_examine(struct spdk_bdev *bdev)
 {
-	vbdev_delay_register(bdev);
+	vbdev_delay_register(bdev->name);
 
 	spdk_bdev_module_examine_done(&delay_if);
 }
