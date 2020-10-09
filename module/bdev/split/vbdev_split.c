@@ -237,17 +237,29 @@ vbdev_split_create(struct spdk_vbdev_split_config *cfg)
 
 	assert(cfg->split_count > 0);
 
-	base_bdev = spdk_bdev_get_by_name(cfg->base_bdev);
-	if (!base_bdev) {
-		return -ENODEV;
+	TAILQ_INIT(&cfg->splits);
+	rc = spdk_bdev_part_base_construct_ext(cfg->base_bdev,
+					       vbdev_split_base_bdev_hotremove_cb,
+					       &split_if, &vbdev_split_fn_table,
+					       &cfg->splits, vbdev_split_base_free, cfg,
+					       sizeof(struct vbdev_split_channel),
+					       NULL, NULL, &cfg->split_base);
+	if (rc != 0) {
+		if (rc != -ENODEV) {
+			SPDK_ERRLOG("Cannot construct bdev part base\n");
+		}
+		return rc;
 	}
+
+	base_bdev = spdk_bdev_part_base_get_bdev(cfg->split_base);
 
 	if (cfg->split_size_mb) {
 		if (((cfg->split_size_mb * mb) % base_bdev->blocklen) != 0) {
 			SPDK_ERRLOG("Split size %" PRIu64 " MB is not possible with block size "
 				    "%" PRIu32 "\n",
 				    cfg->split_size_mb, base_bdev->blocklen);
-			return -EINVAL;
+			rc = -EINVAL;
+			goto err;
 		}
 		split_size_blocks = (cfg->split_size_mb * mb) / base_bdev->blocklen;
 		SPDK_DEBUGLOG(vbdev_split, "Split size %" PRIu64 " MB specified by user\n",
@@ -267,18 +279,7 @@ vbdev_split_create(struct spdk_vbdev_split_config *cfg)
 
 	SPDK_DEBUGLOG(vbdev_split, "base_bdev: %s split_count: %" PRIu64
 		      " split_size_blocks: %" PRIu64 "\n",
-		      spdk_bdev_get_name(base_bdev), split_count, split_size_blocks);
-
-	TAILQ_INIT(&cfg->splits);
-	cfg->split_base = spdk_bdev_part_base_construct(base_bdev,
-			  vbdev_split_base_bdev_hotremove_cb,
-			  &split_if, &vbdev_split_fn_table,
-			  &cfg->splits, vbdev_split_base_free, cfg,
-			  sizeof(struct vbdev_split_channel), NULL, NULL);
-	if (!cfg->split_base) {
-		SPDK_ERRLOG("Cannot construct bdev part base\n");
-		return -ENOMEM;
-	}
+		      cfg->base_bdev, split_count, split_size_blocks);
 
 	offset_blocks = 0;
 	for (i = 0; i < split_count; i++) {
