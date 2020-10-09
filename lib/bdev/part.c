@@ -56,6 +56,7 @@ struct spdk_bdev_part_base {
 	struct bdev_part_tailq		*tailq;
 	spdk_io_channel_create_cb	ch_create_cb;
 	spdk_io_channel_destroy_cb	ch_destroy_cb;
+	spdk_bdev_remove_cb_t		remove_cb;
 	struct spdk_thread		*thread;
 };
 
@@ -416,6 +417,22 @@ bdev_part_channel_destroy_cb(void *io_device, void *ctx_buf)
 	spdk_put_io_channel(ch->base_ch);
 }
 
+static void
+bdev_part_base_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
+			void *event_ctx)
+{
+	struct spdk_bdev_part_base *base = event_ctx;
+
+	switch (type) {
+	case SPDK_BDEV_EVENT_REMOVE:
+		base->remove_cb(base);
+		break;
+	default:
+		SPDK_NOTICELOG("Unsupported bdev event: type %d\n", type);
+		break;
+	}
+}
+
 struct spdk_bdev_part_base *
 	spdk_bdev_part_base_construct(struct spdk_bdev *bdev,
 			      spdk_bdev_remove_cb_t remove_cb, struct spdk_bdev_module *module,
@@ -447,8 +464,10 @@ struct spdk_bdev_part_base *
 	base->channel_size = channel_size;
 	base->ch_create_cb = ch_create_cb;
 	base->ch_destroy_cb = ch_destroy_cb;
+	base->remove_cb = remove_cb;
 
-	rc = spdk_bdev_open(bdev, false, remove_cb, base, &base->desc);
+	rc = spdk_bdev_open_ext(spdk_bdev_get_name(bdev), false, bdev_part_base_event_cb,
+				base, &base->desc);
 	if (rc) {
 		spdk_bdev_part_base_free(base);
 		SPDK_ERRLOG("could not open bdev %s: %s\n", spdk_bdev_get_name(bdev),
