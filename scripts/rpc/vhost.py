@@ -62,40 +62,6 @@ def vhost_scsi_controller_remove_target(client, ctrlr, scsi_target_num):
     return client.call('vhost_scsi_controller_remove_target', params)
 
 
-@deprecated_alias('construct_vhost_nvme_controller')
-def vhost_create_nvme_controller(client, ctrlr, io_queues, cpumask=None):
-    """Construct vhost NVMe controller.
-    Args:
-        ctrlr: controller name
-        io_queues: number of IO queues for the controller
-        cpumask: cpu mask for this controller
-    """
-    params = {
-        'ctrlr': ctrlr,
-        'io_queues': io_queues
-    }
-
-    if cpumask:
-        params['cpumask'] = cpumask
-
-    return client.call('vhost_create_nvme_controller', params)
-
-
-@deprecated_alias('add_vhost_nvme_ns')
-def vhost_nvme_controller_add_ns(client, ctrlr, bdev_name):
-    """Add namespace to vhost nvme controller.
-    Args:
-        ctrlr: controller name where to add a namespace
-        bdev_name: block device name for a new namespace
-    """
-    params = {
-        'ctrlr': ctrlr,
-        'bdev_name': bdev_name,
-    }
-
-    return client.call('vhost_nvme_controller_add_ns', params)
-
-
 @deprecated_alias('construct_vhost_blk_controller')
 def vhost_create_blk_controller(client, ctrlr, dev_name, cpumask=None, readonly=None, packed_ring=None):
     """Create vhost BLK controller.

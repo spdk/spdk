@@ -44,9 +44,6 @@ SPDK_LIB_LIST = $(ALL_MODULES_LIST)
 ifeq ($(OS),Linux)
 ifeq ($(CONFIG_VHOST),y)
 SPDK_LIB_LIST += vhost event_vhost
-ifeq ($(CONFIG_VHOST_INTERNAL_LIB),y)
-SPDK_LIB_LIST += rte_vhost
-endif
 endif
 endif
 

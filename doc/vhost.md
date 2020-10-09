@@ -171,26 +171,6 @@ extra `-r` or `--readonly` parameter.
 scripts/rpc.py vhost_create_blk_controller --cpumask 0x1 -r vhost.1 Malloc0
 ~~~
 
-### Vhost-NVMe (experimental)
-
-The following RPC will attach the Malloc0 bdev to the vhost.0 vhost-nvme
-controller. Malloc0 will appear as Namespace 1 of vhost.0 controller. Users
-can use `--cpumask` parameter to specify which cores should be used for this
-controller. Users must specify the maximum I/O queues supported for the
-controller, at least 1 Namespace is required for each controller.
-
-~~~{.sh}
-$rpc_py vhost_create_nvme_controller --cpumask 0x1 vhost.2 16
-$rpc_py vhost_nvme_controller_add_ns vhost.2 Malloc0
-~~~
-
-Users can use the following command to remove the controller, all the block
-devices attached to controller's Namespace will be removed automatically.
-
-~~~{.sh}
-$rpc_py vhost_delete_controller vhost.2
-~~~
-
 ## QEMU {#vhost_qemu_config}
 
 Now the virtual machine can be started with QEMU.  The following command-line
@@ -227,13 +207,6 @@ Finally, specify the SPDK vhost devices:
 ~~~{.sh}
 -chardev socket,id=char1,path=/var/tmp/vhost.1
 -device vhost-user-blk-pci,id=blk0,chardev=char1
-~~~
-
-### Vhost-NVMe (experimental)
-
-~~~{.sh}
--chardev socket,id=char2,path=/var/tmp/vhost.2
--device vhost-user-nvme,id=nvme0,chardev=char2,num_io_queues=4
 ~~~
 
 ## Example output {#vhost_example}

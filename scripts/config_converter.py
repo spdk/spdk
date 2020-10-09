@@ -20,7 +20,6 @@ bdev_dict["bdev_virtio_attach_controller"] = []
 vhost_dict = OrderedDict()
 vhost_dict["vhost_create_scsi_controller"] = []
 vhost_dict["vhost_create_blk_controller"] = []
-vhost_dict["vhost_create_nvme_controller"] = []
 
 iscsi_dict = OrderedDict()
 iscsi_dict["iscsi_set_options"] = []
@@ -438,34 +437,6 @@ def get_vhost_blk_json(config, section):
             "params": to_json_params(params)}]
 
 
-def get_vhost_nvme_json(config, section):
-    params = [
-        ["Name", "ctrlr", str, ""],
-        ["NumberOfQueues", "io_queues", int, -1],
-        ["Cpumask", "cpumask", "hex", 0x1],
-        ["Namespace", "bdev_name", list, []]
-    ]
-    for option in config.options(section):
-        values = config.get(section, option).split("\n")
-        for value in values:
-            set_param(params, option, value)
-    vhost_nvme_json = []
-    vhost_nvme_json.append({
-        "params": to_json_params(params[:3]),
-        "method": "vhost_create_nvme_controller"
-    })
-    for namespace in params[3][3]:
-        vhost_nvme_json.append({
-            "params": {
-                "ctrlr": params[0][3],
-                "bdev_name": namespace,
-            },
-            "method": "vhost_nvme_controller_add_ns"
-        })
-
-    return vhost_nvme_json
-
-
 def get_virtio_user_json(config, section):
     params = [
         ["Path", "traddr", str, ""],
@@ -665,7 +636,7 @@ if __name__ == "__main__":
         match = re.match(r'(Bdev|Nvme|Malloc|VirtioUser\d+|Split|Pmem|AIO|'
                          r'iSCSI|PortalGroup\d+|InitiatorGroup\d+|'
                          r'TargetNode\d+|Nvmf|Subsystem\d+|VhostScsi\d+|'
-                         r'VhostBlk\d+|VhostNvme\d+)', section)
+                         r'VhostBlk\d+)', section)
         if match:
             match_section = ''.join(letter for letter in match.group(0)
                                     if not letter.isdigit())
@@ -689,8 +660,6 @@ if __name__ == "__main__":
                 items = get_vhost_scsi_json(config, section)
             elif match_section == "VhostBlk":
                 items = get_vhost_blk_json(config, section)
-            elif match_section == "VhostNvme":
-                items = get_vhost_nvme_json(config, section)
             elif match_section == "VirtioUser":
                 items = get_virtio_user_json(config, section)
             elif match_section == "iSCSI":
@@ -704,8 +673,6 @@ if __name__ == "__main__":
             for item in items:
                 if match_section == "VhostScsi":
                     section_to_subsystem[match_section]["vhost_create_scsi_controller"].append(item)
-                elif match_section == "VhostNvme":
-                    section_to_subsystem[match_section]["vhost_create_nvme_controller"].append(item)
                 elif match_section == "Subsystem":
                     section_to_subsystem[match_section]["subsystems"].append(item)
                 else:

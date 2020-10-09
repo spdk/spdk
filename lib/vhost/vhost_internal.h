@@ -393,12 +393,6 @@ int vhost_start_device_cb(int vid);
 int vhost_stop_device_cb(int vid);
 int vhost_destroy_connection_cb(int vid);
 
-#ifdef SPDK_CONFIG_VHOST_INTERNAL_LIB
-int vhost_get_config_cb(int vid, uint8_t *config, uint32_t len);
-int vhost_set_config_cb(int vid, uint8_t *config, uint32_t offset,
-			uint32_t size, uint32_t flags);
-#endif
-
 /*
  * Memory registration functions used in start/stop device callbacks
  */
@@ -480,17 +474,5 @@ int vhost_get_mem_table(int vid, struct rte_vhost_memory **mem);
 int vhost_get_negotiated_features(int vid, uint64_t *negotiated_features);
 
 int remove_vhost_controller(struct spdk_vhost_dev *vdev);
-
-#ifdef SPDK_CONFIG_VHOST_INTERNAL_LIB
-int vhost_nvme_admin_passthrough(int vid, void *cmd, void *cqe, void *buf);
-int vhost_nvme_set_cq_call(int vid, uint16_t qid, int fd);
-int vhost_nvme_set_bar_mr(int vid, void *bar_addr, uint64_t bar_size);
-int vhost_nvme_get_cap(int vid, uint64_t *cap);
-int vhost_nvme_controller_construct(void);
-int vhost_nvme_dev_construct(const char *name, const char *cpumask, uint32_t io_queues);
-int vhost_nvme_dev_remove(struct spdk_vhost_dev *vdev);
-int vhost_nvme_dev_add_ns(struct spdk_vhost_dev *vdev,
-			  const char *bdev_name);
-#endif
 
 #endif /* SPDK_VHOST_INTERNAL_H */

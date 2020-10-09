@@ -2183,30 +2183,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument("-p", "--packed_ring", action='store_true', help='Set controller as packed ring supported')
     p.set_defaults(func=vhost_create_blk_controller)
 
-    def vhost_create_nvme_controller(args):
-        rpc.vhost.vhost_create_nvme_controller(args.client,
-                                               ctrlr=args.ctrlr,
-                                               io_queues=args.io_queues,
-                                               cpumask=args.cpumask)
-
-    p = subparsers.add_parser('vhost_create_nvme_controller', aliases=['vhost_create_nvme_controller'],
-                              help='Add new vhost controller')
-    p.add_argument('ctrlr', help='controller name')
-    p.add_argument('io_queues', help='number of IO queues for the controller', type=int)
-    p.add_argument('--cpumask', help='cpu mask for this controller')
-    p.set_defaults(func=vhost_create_nvme_controller)
-
-    def vhost_nvme_controller_add_ns(args):
-        rpc.vhost.vhost_nvme_controller_add_ns(args.client,
-                                               ctrlr=args.ctrlr,
-                                               bdev_name=args.bdev_name)
-
-    p = subparsers.add_parser('vhost_nvme_controller_add_ns', aliases=['add_vhost_nvme_ns'],
-                              help='Add a Namespace to vhost controller')
-    p.add_argument('ctrlr', help='conntroller name where add a Namespace')
-    p.add_argument('bdev_name', help='block device name for a new Namespace')
-    p.set_defaults(func=vhost_nvme_controller_add_ns)
-
     def vhost_get_controllers(args):
         print_dict(rpc.vhost.vhost_get_controllers(args.client, args.name))
 

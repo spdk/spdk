@@ -1288,56 +1288,6 @@ out:
 	return rc;
 }
 
-#ifdef SPDK_CONFIG_VHOST_INTERNAL_LIB
-int
-vhost_get_config_cb(int vid, uint8_t *config, uint32_t len)
-{
-	struct spdk_vhost_session *vsession;
-	struct spdk_vhost_dev *vdev;
-	int rc = -1;
-
-	pthread_mutex_lock(&g_vhost_mutex);
-	vsession = vhost_session_find_by_vid(vid);
-	if (vsession == NULL) {
-		SPDK_ERRLOG("Couldn't find session with vid %d.\n", vid);
-		goto out;
-	}
-
-	vdev = vsession->vdev;
-	if (vdev->backend->vhost_get_config) {
-		rc = vdev->backend->vhost_get_config(vdev, config, len);
-	}
-
-out:
-	pthread_mutex_unlock(&g_vhost_mutex);
-	return rc;
-}
-
-int
-vhost_set_config_cb(int vid, uint8_t *config, uint32_t offset, uint32_t size, uint32_t flags)
-{
-	struct spdk_vhost_session *vsession;
-	struct spdk_vhost_dev *vdev;
-	int rc = -1;
-
-	pthread_mutex_lock(&g_vhost_mutex);
-	vsession = vhost_session_find_by_vid(vid);
-	if (vsession == NULL) {
-		SPDK_ERRLOG("Couldn't find session with vid %d.\n", vid);
-		goto out;
-	}
-
-	vdev = vsession->vdev;
-	if (vdev->backend->vhost_set_config) {
-		rc = vdev->backend->vhost_set_config(vdev, config, offset, size, flags);
-	}
-
-out:
-	pthread_mutex_unlock(&g_vhost_mutex);
-	return rc;
-}
-#endif
-
 int
 spdk_vhost_set_socket_path(const char *basename)
 {
@@ -1519,14 +1469,6 @@ spdk_vhost_init(spdk_vhost_init_cb init_cb)
 		SPDK_ERRLOG("Cannot construct vhost block controllers\n");
 		goto out;
 	}
-
-#ifdef SPDK_CONFIG_VHOST_INTERNAL_LIB
-	ret = vhost_nvme_controller_construct();
-	if (ret != 0) {
-		SPDK_ERRLOG("Cannot construct vhost NVMe controllers\n");
-		goto out;
-	}
-#endif
 
 	spdk_cpuset_zero(&g_vhost_core_mask);
 

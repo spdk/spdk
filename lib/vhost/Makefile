@@ -42,11 +42,6 @@ CFLAGS += $(ENV_CFLAGS)
 
 C_SRCS = vhost.c vhost_rpc.c vhost_scsi.c vhost_blk.c rte_vhost_compat.c
 
-ifeq ($(CONFIG_VHOST_INTERNAL_LIB),y)
-C_SRCS += vhost_nvme.c
-CFLAGS := -I../rte_vhost $(CFLAGS)
-endif
-
 LIBNAME = vhost
 
 SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_vhost.map)

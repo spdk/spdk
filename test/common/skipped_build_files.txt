@@ -16,14 +16,6 @@ lib/util/base64_neon
 # Not configured for mlx5 dv testing
 lib/rdma/rdma_mlx5_dv
 
-# Files related to testing our internal vhost implementation.
-lib/rte_vhost/fd_man
-lib/rte_vhost/socket
-lib/rte_vhost/vhost
-lib/rte_vhost/vhost_user
-lib/vhost/vhost_nvme
-lib/virtio/vhost_user
-
 # These files all represent c files that are only compiled by direct inclusion in other files.
 test/common/lib/test_env
 test/common/lib/test_sock

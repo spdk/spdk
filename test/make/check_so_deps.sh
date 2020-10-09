@@ -252,9 +252,6 @@ echo "---------------------------------------------------------------------"
 SPDK_LIBS=("$libdir/"libspdk_!(env_dpdk).so)
 
 declare -A IGNORED_LIBS=()
-if grep -q 'CONFIG_VHOST_INTERNAL_LIB?=n' $rootdir/mk/config.mk; then
-	IGNORED_LIBS["rte_vhost"]=1
-fi
 if grep -q 'CONFIG_RDMA?=n' $rootdir/mk/config.mk; then
 	IGNORED_LIBS["rdma"]=1
 fi

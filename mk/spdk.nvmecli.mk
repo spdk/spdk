@@ -62,11 +62,7 @@ NVMECLI_SPDK_LIBS += -lspdk_ocfenv
 endif
 
 ifeq ($(CONFIG_VHOST),y)
-ifneq ($(CONFIG_VHOST_INTERNAL_LIB),y)
 DPDK_LIB_LIST += -lrte_vhost -lrte_net -lrte_cryptodev -lrte_hash
-else
-NVMECLI_SPDK_LIBS += -lrte_vhost
-endif
 endif
 
 override CFLAGS += -I$(SPDK_ROOT_DIR)/include

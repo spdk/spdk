@@ -42,10 +42,6 @@ C_SRCS := vhost.c
 SPDK_LIB_LIST = $(ALL_MODULES_LIST)
 SPDK_LIB_LIST += vhost event_vhost
 
-ifeq ($(CONFIG_VHOST_INTERNAL_LIB),y)
-SPDK_LIB_LIST += rte_vhost
-endif
-
 SPDK_LIB_LIST += $(EVENT_BDEV_SUBSYSTEM) event_net event_scsi event
 SPDK_LIB_LIST += jsonrpc json rpc bdev scsi accel trace conf
 SPDK_LIB_LIST += thread util log
