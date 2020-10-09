@@ -5709,7 +5709,7 @@ spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event
 	if (bdev == NULL) {
 		SPDK_ERRLOG("Failed to find bdev with name: %s\n", bdev_name);
 		pthread_mutex_unlock(&g_bdev_mgr.mutex);
-		return -EINVAL;
+		return -ENODEV;
 	}
 
 	desc = calloc(1, sizeof(*desc));
