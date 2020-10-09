@@ -57,6 +57,7 @@ static struct spdk_thread *g_thread_ut;
 static struct spdk_thread *g_thread_io;
 static bool g_wait_for_tests = false;
 static int g_num_failures = 0;
+static bool g_shutdown = false;
 
 struct io_target {
 	struct spdk_bdev	*bdev;
@@ -1117,7 +1118,7 @@ __stop_init_thread(void *arg)
 	g_num_failures = 0;
 
 	bdevio_cleanup_targets();
-	if (g_wait_for_tests) {
+	if (g_wait_for_tests && !g_shutdown) {
 		/* Do not stop the app yet, wait for another RPC */
 		rpc_perform_tests_cb(num_failures, request);
 		return;
@@ -1411,6 +1412,13 @@ invalid:
 }
 SPDK_RPC_REGISTER("perform_tests", rpc_perform_tests, SPDK_RPC_RUNTIME)
 
+static void
+spdk_bdevio_shutdown_cb(void)
+{
+	g_shutdown = true;
+	spdk_thread_send_msg(g_thread_init, __stop_init_thread, NULL);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1420,6 +1428,7 @@ main(int argc, char **argv)
 	spdk_app_opts_init(&opts);
 	opts.name = "bdevio";
 	opts.reactor_mask = "0x7";
+	opts.shutdown_cb = spdk_bdevio_shutdown_cb;
 
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, "w", NULL,
 				      bdevio_parse_arg, bdevio_usage)) !=
