@@ -378,15 +378,19 @@ vbdev_opal_create(const char *nvme_ctrlr_name, uint32_t nsid, uint8_t locking_ra
 		}
 		TAILQ_INIT(&opal_part_base->part_tailq);
 
-		opal_part_base->part_base = spdk_bdev_part_base_construct(spdk_bdev_get_by_name(base_bdev_name),
-					    vbdev_opal_base_bdev_hotremove_cb, &opal_if,
-					    &opal_vbdev_fn_table, &opal_part_base->part_tailq, vbdev_opal_base_free,
-					    opal_part_base, sizeof(struct vbdev_opal_channel), NULL, NULL);
-		if (opal_part_base->part_base == NULL) {
-			SPDK_ERRLOG("Could not allocate part_base\n");
+		rc = spdk_bdev_part_base_construct_ext(base_bdev_name,
+						       vbdev_opal_base_bdev_hotremove_cb, &opal_if,
+						       &opal_vbdev_fn_table, &opal_part_base->part_tailq,
+						       vbdev_opal_base_free, opal_part_base,
+						       sizeof(struct vbdev_opal_channel), NULL, NULL,
+						       &opal_part_base->part_base);
+		if (rc != 0) {
+			if (rc != -ENODEV) {
+				SPDK_ERRLOG("Could not allocate part_base\n");
+			}
 			free(opal_bdev);
 			free(opal_part_base);
-			return -ENOMEM;
+			return rc;
 		}
 		opal_part_base->nvme_ctrlr_name = strdup(nvme_ctrlr_name);
 		if (opal_part_base->nvme_ctrlr_name == NULL) {
