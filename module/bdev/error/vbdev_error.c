@@ -255,22 +255,27 @@ vbdev_error_base_bdev_hotremove_cb(void *_part_base)
 }
 
 static int
-_vbdev_error_create(struct spdk_bdev *base_bdev)
+_vbdev_error_create(const char *base_bdev_name)
 {
 	struct spdk_bdev_part_base *base = NULL;
 	struct error_disk *disk = NULL;
+	struct spdk_bdev *base_bdev;
 	char *name;
 	int rc;
 
-	base = spdk_bdev_part_base_construct(base_bdev,
-					     vbdev_error_base_bdev_hotremove_cb,
-					     &error_if, &vbdev_error_fn_table, &g_error_disks,
-					     NULL, NULL, sizeof(struct error_channel),
-					     NULL, NULL);
-	if (!base) {
-		SPDK_ERRLOG("could not construct part base for bdev %s\n", spdk_bdev_get_name(base_bdev));
-		return -ENOMEM;
+	rc = spdk_bdev_part_base_construct_ext(base_bdev_name,
+					       vbdev_error_base_bdev_hotremove_cb,
+					       &error_if, &vbdev_error_fn_table, &g_error_disks,
+					       NULL, NULL, sizeof(struct error_channel),
+					       NULL, NULL, &base);
+	if (rc != 0) {
+		if (rc != -ENODEV) {
+			SPDK_ERRLOG("could not construct part base for bdev %s\n", base_bdev_name);
+		}
+		return rc;
 	}
+
+	base_bdev = spdk_bdev_part_base_get_bdev(base);
 
 	disk = calloc(1, sizeof(*disk));
 	if (!disk) {
@@ -279,7 +284,7 @@ _vbdev_error_create(struct spdk_bdev *base_bdev)
 		return -ENOMEM;
 	}
 
-	name = spdk_sprintf_alloc("EE_%s", spdk_bdev_get_name(base_bdev));
+	name = spdk_sprintf_alloc("EE_%s", base_bdev_name);
 	if (!name) {
 		SPDK_ERRLOG("name allocation failure\n");
 		spdk_bdev_part_base_free(base);
@@ -291,7 +296,7 @@ _vbdev_error_create(struct spdk_bdev *base_bdev)
 				      "Error Injection Disk");
 	free(name);
 	if (rc) {
-		SPDK_ERRLOG("could not construct part for bdev %s\n", spdk_bdev_get_name(base_bdev));
+		SPDK_ERRLOG("could not construct part for bdev %s\n", base_bdev_name);
 		/* spdk_bdev_part_construct will free name on failure */
 		spdk_bdev_part_base_free(base);
 		free(disk);
@@ -307,7 +312,6 @@ int
 vbdev_error_create(const char *base_bdev_name)
 {
 	int rc;
-	struct spdk_bdev *base_bdev;
 
 	rc = vbdev_error_config_add(base_bdev_name);
 	if (rc != 0) {
@@ -316,13 +320,10 @@ vbdev_error_create(const char *base_bdev_name)
 		return rc;
 	}
 
-	base_bdev = spdk_bdev_get_by_name(base_bdev_name);
-	if (!base_bdev) {
-		return 0;
-	}
-
-	rc = _vbdev_error_create(base_bdev);
-	if (rc != 0) {
+	rc = _vbdev_error_create(base_bdev_name);
+	if (rc == -ENODEV) {
+		rc = 0;
+	} else if (rc != 0) {
 		vbdev_error_config_remove(base_bdev_name);
 		SPDK_ERRLOG("Could not create ErrorInjection bdev %s (rc=%d)\n",
 			    base_bdev_name, rc);
@@ -478,7 +479,7 @@ vbdev_error_examine(struct spdk_bdev *bdev)
 
 	cfg = vbdev_error_config_find_by_base_name(bdev->name);
 	if (cfg != NULL) {
-		rc = _vbdev_error_create(bdev);
+		rc = _vbdev_error_create(bdev->name);
 		if (rc != 0) {
 			SPDK_ERRLOG("could not create error vbdev for bdev %s at examine\n",
 				    bdev->name);
