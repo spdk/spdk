@@ -303,7 +303,7 @@ int g_small_size_counter = 0;
 int g_small_size_modify = 0;
 uint64_t g_small_size = 0;
 uint64_t
-spdk_vtophys(void *buf, uint64_t *size)
+spdk_vtophys(const void *buf, uint64_t *size)
 {
 	g_small_size_counter++;
 	if (g_small_size_counter == g_small_size_modify) {

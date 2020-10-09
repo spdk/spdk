@@ -130,7 +130,7 @@ static uint64_t g_vtophys_size = 0;
 
 DEFINE_RETURN_MOCK(spdk_vtophys, uint64_t);
 uint64_t
-spdk_vtophys(void *buf, uint64_t *size)
+spdk_vtophys(const void *buf, uint64_t *size)
 {
 	if (size) {
 		*size = g_vtophys_size;

@@ -640,7 +640,7 @@ bool spdk_iommu_is_enabled(void);
  * \return the physical address of this buffer on success, or SPDK_VTOPHYS_ERROR
  * on failure.
  */
-uint64_t spdk_vtophys(void *buf, uint64_t *size);
+uint64_t spdk_vtophys(const void *buf, uint64_t *size);
 
 struct spdk_pci_addr {
 	uint32_t			domain;

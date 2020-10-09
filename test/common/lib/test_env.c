@@ -276,7 +276,7 @@ spdk_dma_free(void *buf)
 #ifndef UNIT_TEST_NO_VTOPHYS
 DEFINE_RETURN_MOCK(spdk_vtophys, uint64_t);
 uint64_t
-spdk_vtophys(void *buf, uint64_t *size)
+spdk_vtophys(const void *buf, uint64_t *size)
 {
 	HANDLE_RETURN_MOCK(spdk_vtophys);
 

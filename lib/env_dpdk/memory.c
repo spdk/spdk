@@ -1421,7 +1421,7 @@ vtophys_init(void)
 }
 
 uint64_t
-spdk_vtophys(void *buf, uint64_t *size)
+spdk_vtophys(const void *buf, uint64_t *size)
 {
 	uint64_t vaddr, paddr_2mb;
 
