@@ -433,26 +433,30 @@ bdev_part_base_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
 	}
 }
 
-struct spdk_bdev_part_base *
-	spdk_bdev_part_base_construct(struct spdk_bdev *bdev,
-			      spdk_bdev_remove_cb_t remove_cb, struct spdk_bdev_module *module,
-			      struct spdk_bdev_fn_table *fn_table, struct bdev_part_tailq *tailq,
-			      spdk_bdev_part_base_free_fn free_fn, void *ctx,
-			      uint32_t channel_size, spdk_io_channel_create_cb ch_create_cb,
-			      spdk_io_channel_destroy_cb ch_destroy_cb)
+int
+spdk_bdev_part_base_construct_ext(const char *bdev_name,
+				  spdk_bdev_remove_cb_t remove_cb, struct spdk_bdev_module *module,
+				  struct spdk_bdev_fn_table *fn_table, struct bdev_part_tailq *tailq,
+				  spdk_bdev_part_base_free_fn free_fn, void *ctx,
+				  uint32_t channel_size, spdk_io_channel_create_cb ch_create_cb,
+				  spdk_io_channel_destroy_cb ch_destroy_cb,
+				  struct spdk_bdev_part_base **_base)
 {
 	int rc;
 	struct spdk_bdev_part_base *base;
 
+	if (_base == NULL) {
+		return -EINVAL;
+	}
+
 	base = calloc(1, sizeof(*base));
 	if (!base) {
 		SPDK_ERRLOG("Memory allocation failure\n");
-		return NULL;
+		return -ENOMEM;
 	}
 	fn_table->get_io_channel = bdev_part_get_io_channel;
 	fn_table->io_type_supported = bdev_part_io_type_supported;
 
-	base->bdev = bdev;
 	base->desc = NULL;
 	base->ref = 0;
 	base->module = module;
@@ -466,19 +470,46 @@ struct spdk_bdev_part_base *
 	base->ch_destroy_cb = ch_destroy_cb;
 	base->remove_cb = remove_cb;
 
-	rc = spdk_bdev_open_ext(spdk_bdev_get_name(bdev), false, bdev_part_base_event_cb,
-				base, &base->desc);
+	rc = spdk_bdev_open_ext(bdev_name, false, bdev_part_base_event_cb, base, &base->desc);
 	if (rc) {
-		spdk_bdev_part_base_free(base);
-		SPDK_ERRLOG("could not open bdev %s: %s\n", spdk_bdev_get_name(bdev),
-			    spdk_strerror(-rc));
-		return NULL;
+		if (rc == -ENODEV) {
+			free(base);
+		} else {
+			SPDK_ERRLOG("could not open bdev %s: %s\n", bdev_name, spdk_strerror(-rc));
+			spdk_bdev_part_base_free(base);
+		}
+		return rc;
 	}
+
+	base->bdev = spdk_bdev_desc_get_bdev(base->desc);
 
 	/* Save the thread where the base device is opened */
 	base->thread = spdk_get_thread();
 
-	return base;
+	*_base = base;
+
+	return 0;
+}
+
+struct spdk_bdev_part_base *
+	spdk_bdev_part_base_construct(struct spdk_bdev *bdev,
+			      spdk_bdev_remove_cb_t remove_cb, struct spdk_bdev_module *module,
+			      struct spdk_bdev_fn_table *fn_table, struct bdev_part_tailq *tailq,
+			      spdk_bdev_part_base_free_fn free_fn, void *ctx,
+			      uint32_t channel_size, spdk_io_channel_create_cb ch_create_cb,
+			      spdk_io_channel_destroy_cb ch_destroy_cb)
+{
+	struct spdk_bdev_part_base *base = NULL;
+	int rc;
+
+	rc = spdk_bdev_part_base_construct_ext(spdk_bdev_get_name(bdev), remove_cb, module,
+					       fn_table, tailq, free_fn, ctx,
+					       channel_size, ch_create_cb, ch_destroy_cb, &base);
+	if (rc == 0) {
+		return base;
+	} else {
+		return NULL;
+	}
 }
 
 int

@@ -129,6 +129,7 @@
 	spdk_bdev_part_free;
 	spdk_bdev_part_base_hotremove;
 	spdk_bdev_part_base_construct;
+	spdk_bdev_part_base_construct_ext;
 	spdk_bdev_part_construct;
 	spdk_bdev_part_submit_request;
 	spdk_bdev_part_get_bdev;

@@ -2,6 +2,14 @@
 
 ## v20.10: (Upcoming Release)
 
+### bdev
+
+A new `spdk_bdev_part_base_construct_ext` function has been added and the
+`spdk_bdev_part_base_construct` has been deprecated.  The
+`spdk_bdev_part_base_construct_ext` function takes bdev name as an argument instead
+of bdev structure to avoid a race condition that can happen when the bdev is being
+removed between a call to get its structure based on a name and actually openning it.
+
 ### dpdk
 
 Updated DPDK submodule to DPDK 20.08.
