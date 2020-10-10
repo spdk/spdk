@@ -142,7 +142,7 @@ static void _complete_internal_io(struct spdk_bdev_io *bdev_io, bool success, vo
 static void _complete_internal_read(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 static void _complete_internal_write(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 static void vbdev_crypto_examine(struct spdk_bdev *bdev);
-static int vbdev_crypto_claim(struct spdk_bdev *bdev);
+static int vbdev_crypto_claim(const char *bdev_name);
 static void vbdev_crypto_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
 
 /* List of crypto_bdev names and their base bdevs via configuration file. */
@@ -1528,24 +1528,17 @@ create_crypto_disk(const char *bdev_name, const char *vbdev_name,
 		   const char *crypto_pmd, const char *key,
 		   const char *cipher, const char *key2)
 {
-	struct spdk_bdev *bdev = NULL;
-	int rc = 0;
-
-	bdev = spdk_bdev_get_by_name(bdev_name);
+	int rc;
 
 	rc = vbdev_crypto_insert_name(bdev_name, vbdev_name, crypto_pmd, key, cipher, key2);
 	if (rc) {
 		return rc;
 	}
 
-	if (!bdev) {
+	rc = vbdev_crypto_claim(bdev_name);
+	if (rc == -ENODEV) {
 		SPDK_NOTICELOG("vbdev creation deferred pending base bdev arrival\n");
-		return 0;
-	}
-
-	rc = vbdev_crypto_claim(bdev);
-	if (rc) {
-		return rc;
+		rc = 0;
 	}
 
 	return rc;
@@ -1713,17 +1706,30 @@ vbdev_crypto_get_spdk_running_config(FILE *fp)
 	fprintf(fp, "\n");
 }
 
-/* Called when the underlying base bdev goes away. */
 static void
-vbdev_crypto_examine_hotremove_cb(void *ctx)
+vbdev_crypto_base_bdev_hotremove_cb(struct spdk_bdev *bdev_find)
 {
 	struct vbdev_crypto *crypto_bdev, *tmp;
-	struct spdk_bdev *bdev_find = ctx;
 
 	TAILQ_FOREACH_SAFE(crypto_bdev, &g_vbdev_crypto, link, tmp) {
 		if (bdev_find == crypto_bdev->base_bdev) {
 			spdk_bdev_unregister(&crypto_bdev->crypto_bdev, NULL, NULL);
 		}
+	}
+}
+
+/* Called when the underlying base bdev triggers asynchronous event such as bdev removal. */
+static void
+vbdev_crypto_base_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
+				void *event_ctx)
+{
+	switch (type) {
+	case SPDK_BDEV_EVENT_REMOVE:
+		vbdev_crypto_base_bdev_hotremove_cb(bdev);
+		break;
+	default:
+		SPDK_NOTICELOG("Unsupported bdev event: type %d\n", type);
+		break;
 	}
 }
 
@@ -1756,11 +1762,12 @@ static struct spdk_bdev_module crypto_if = {
 SPDK_BDEV_MODULE_REGISTER(crypto, &crypto_if)
 
 static int
-vbdev_crypto_claim(struct spdk_bdev *bdev)
+vbdev_crypto_claim(const char *bdev_name)
 {
 	struct bdev_names *name;
 	struct vbdev_crypto *vbdev;
 	struct vbdev_dev *device;
+	struct spdk_bdev *bdev;
 	bool found = false;
 	int rc = 0;
 
@@ -1775,10 +1782,10 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 	 * there's a match, create the crypto_bdev & bdev accordingly.
 	 */
 	TAILQ_FOREACH(name, &g_bdev_names, link) {
-		if (strcmp(name->bdev_name, bdev->name) != 0) {
+		if (strcmp(name->bdev_name, bdev_name) != 0) {
 			continue;
 		}
-		SPDK_DEBUGLOG(vbdev_crypto, "Match on %s\n", bdev->name);
+		SPDK_DEBUGLOG(vbdev_crypto, "Match on %s\n", bdev_name);
 
 		vbdev = calloc(1, sizeof(struct vbdev_crypto));
 		if (!vbdev) {
@@ -1787,8 +1794,6 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 			goto error_vbdev_alloc;
 		}
 
-		/* The base bdev that we're attaching to. */
-		vbdev->base_bdev = bdev;
 		vbdev->crypto_bdev.name = strdup(name->vbdev_name);
 		if (!vbdev->crypto_bdev.name) {
 			SPDK_ERRLOG("could not allocate crypto_bdev name\n");
@@ -1820,6 +1825,19 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 		}
 
 		vbdev->crypto_bdev.product_name = "crypto";
+
+		rc = spdk_bdev_open_ext(bdev_name, true, vbdev_crypto_base_bdev_event_cb,
+					NULL, &vbdev->base_desc);
+		if (rc) {
+			if (rc != -ENODEV) {
+				SPDK_ERRLOG("could not open bdev %s\n", bdev_name);
+			}
+			goto error_open;
+		}
+
+		bdev = spdk_bdev_desc_get_bdev(vbdev->base_desc);
+		vbdev->base_bdev = bdev;
+
 		vbdev->crypto_bdev.write_cache = bdev->write_cache;
 		vbdev->cipher = AES_CBC;
 		if (strcmp(vbdev->drv_name, QAT) == 0) {
@@ -1869,13 +1887,6 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 
 		spdk_io_device_register(vbdev, crypto_bdev_ch_create_cb, crypto_bdev_ch_destroy_cb,
 					sizeof(struct crypto_io_channel), vbdev->crypto_bdev.name);
-
-		rc = spdk_bdev_open(bdev, true, vbdev_crypto_examine_hotremove_cb,
-				    bdev, &vbdev->base_desc);
-		if (rc) {
-			SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(bdev));
-			goto error_open;
-		}
 
 		/* Save the thread where the base device is opened */
 		vbdev->thread = spdk_get_thread();
@@ -1971,11 +1982,11 @@ error_session_en_create:
 error_cant_find_devid:
 error_claim:
 	spdk_bdev_close(vbdev->base_desc);
-error_open:
 	TAILQ_REMOVE(&g_vbdev_crypto, vbdev, link);
 	spdk_io_device_unregister(vbdev, NULL);
 	free(vbdev->xts_key);
 error_xts_key:
+error_open:
 	free(vbdev->drv_name);
 error_drv_name:
 	free(vbdev->key2);
@@ -2033,7 +2044,7 @@ delete_crypto_disk(struct spdk_bdev *bdev, spdk_delete_crypto_complete cb_fn,
 static void
 vbdev_crypto_examine(struct spdk_bdev *bdev)
 {
-	vbdev_crypto_claim(bdev);
+	vbdev_crypto_claim(spdk_bdev_get_name(bdev));
 	spdk_bdev_module_examine_done(&crypto_if);
 }
 
