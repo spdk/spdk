@@ -1100,8 +1100,8 @@ void spdk_bdev_part_base_hotremove(struct spdk_bdev_part_base *part_base,
  * \param ch_create_cb Called after a new channel is allocated.
  * \param ch_destroy_cb Called upon channel deletion.
  *
- * \return 0 on success
- * \return -1 if the underlying bdev cannot be opened.
+ * \return The part object on top of the bdev if operation is successful, or
+ * NULL otherwise.
  */
 struct spdk_bdev_part_base *spdk_bdev_part_base_construct(struct spdk_bdev *bdev,
 		spdk_bdev_remove_cb_t remove_cb,
