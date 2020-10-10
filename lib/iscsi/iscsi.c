@@ -4597,7 +4597,12 @@ iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 
 			/* AHS */
 			ahs_len = pdu->bhs.total_ahs_len * 4;
-			assert(ahs_len <= ISCSI_AHS_LEN);
+			if (ahs_len > ISCSI_AHS_LEN) {
+				SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "pdu ahs length %d is invalid\n", ahs_len);
+				conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
+				break;
+			}
+
 			if (pdu->ahs_valid_bytes < ahs_len) {
 				rc = iscsi_conn_read_data(conn,
 							  ahs_len - pdu->ahs_valid_bytes,
