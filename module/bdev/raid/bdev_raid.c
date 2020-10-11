@@ -1304,24 +1304,29 @@ raid_bdev_create(struct raid_bdev_config *raid_cfg)
  * raid_bdev_alloc_base_bdev_resource allocates resource of base bdev.
  * params:
  * raid_bdev - pointer to raid bdev
- * bdev - pointer to base bdev
+ * bdev_name - base bdev name
  * base_bdev_slot - position to add base bdev
  * returns:
  * 0 - success
  * non zero - failure
  */
 static int
-raid_bdev_alloc_base_bdev_resource(struct raid_bdev *raid_bdev, struct spdk_bdev *bdev,
+raid_bdev_alloc_base_bdev_resource(struct raid_bdev *raid_bdev, const char *bdev_name,
 				   uint8_t base_bdev_slot)
 {
 	struct spdk_bdev_desc *desc;
+	struct spdk_bdev *bdev;
 	int rc;
 
-	rc = spdk_bdev_open_ext(bdev->name, true, raid_bdev_event_base_bdev, NULL, &desc);
+	rc = spdk_bdev_open_ext(bdev_name, true, raid_bdev_event_base_bdev, NULL, &desc);
 	if (rc != 0) {
-		SPDK_ERRLOG("Unable to create desc on bdev '%s'\n", bdev->name);
+		if (rc != -ENODEV) {
+			SPDK_ERRLOG("Unable to create desc on bdev '%s'\n", bdev_name);
+		}
 		return rc;
 	}
+
+	bdev = spdk_bdev_desc_get_bdev(desc);
 
 	rc = spdk_bdev_module_claim_bdev(bdev, NULL, &g_raid_if);
 	if (rc != 0) {
@@ -1330,7 +1335,7 @@ raid_bdev_alloc_base_bdev_resource(struct raid_bdev *raid_bdev, struct spdk_bdev
 		return rc;
 	}
 
-	SPDK_DEBUGLOG(bdev_raid, "bdev %s is claimed\n", bdev->name);
+	SPDK_DEBUGLOG(bdev_raid, "bdev %s is claimed\n", bdev_name);
 
 	assert(raid_bdev->state != RAID_BDEV_STATE_ONLINE);
 	assert(base_bdev_slot < raid_bdev->num_base_bdevs);
@@ -1640,7 +1645,7 @@ raid_bdev_remove_base_devices(struct raid_bdev_config *raid_cfg,
  * non zero - failure
  */
 static int
-raid_bdev_add_base_device(struct raid_bdev_config *raid_cfg, struct spdk_bdev *bdev,
+raid_bdev_add_base_device(struct raid_bdev_config *raid_cfg, const char *bdev_name,
 			  uint8_t base_bdev_slot)
 {
 	struct raid_bdev	*raid_bdev;
@@ -1652,9 +1657,11 @@ raid_bdev_add_base_device(struct raid_bdev_config *raid_cfg, struct spdk_bdev *b
 		return -ENODEV;
 	}
 
-	rc = raid_bdev_alloc_base_bdev_resource(raid_bdev, bdev, base_bdev_slot);
+	rc = raid_bdev_alloc_base_bdev_resource(raid_bdev, bdev_name, base_bdev_slot);
 	if (rc != 0) {
-		SPDK_ERRLOG("Failed to allocate resource for bdev '%s'\n", bdev->name);
+		if (rc != -ENODEV) {
+			SPDK_ERRLOG("Failed to allocate resource for bdev '%s'\n", bdev_name);
+		}
 		return rc;
 	}
 
@@ -1688,20 +1695,15 @@ raid_bdev_add_base_device(struct raid_bdev_config *raid_cfg, struct spdk_bdev *b
 int
 raid_bdev_add_base_devices(struct raid_bdev_config *raid_cfg)
 {
-	struct spdk_bdev	*base_bdev;
-	uint8_t			i;
-	int			rc = 0, _rc;
+	uint8_t	i;
+	int	rc = 0, _rc;
 
 	for (i = 0; i < raid_cfg->num_base_bdevs; i++) {
-		base_bdev = spdk_bdev_get_by_name(raid_cfg->base_bdev[i].name);
-		if (base_bdev == NULL) {
+		_rc = raid_bdev_add_base_device(raid_cfg, raid_cfg->base_bdev[i].name, i);
+		if (_rc == -ENODEV) {
 			SPDK_DEBUGLOG(bdev_raid, "base bdev %s doesn't exist now\n",
 				      raid_cfg->base_bdev[i].name);
-			continue;
-		}
-
-		_rc = raid_bdev_add_base_device(raid_cfg, base_bdev, i);
-		if (_rc != 0) {
+		} else if (_rc != 0) {
 			SPDK_ERRLOG("Failed to add base bdev %s to RAID bdev %s: %s\n",
 				    raid_cfg->base_bdev[i].name, raid_cfg->name,
 				    spdk_strerror(-_rc));
@@ -1731,7 +1733,7 @@ raid_bdev_examine(struct spdk_bdev *bdev)
 	uint8_t			base_bdev_slot;
 
 	if (raid_bdev_can_claim_bdev(bdev->name, &raid_cfg, &base_bdev_slot)) {
-		raid_bdev_add_base_device(raid_cfg, bdev, base_bdev_slot);
+		raid_bdev_add_base_device(raid_cfg, bdev->name, base_bdev_slot);
 	} else {
 		SPDK_DEBUGLOG(bdev_raid, "bdev %s can't be claimed\n",
 			      bdev->name);
