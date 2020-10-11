@@ -277,6 +277,7 @@ DEFINE_STUB_V(spdk_bdev_unregister, (struct spdk_bdev *bdev, spdk_bdev_unregiste
 DEFINE_STUB(spdk_bdev_open_ext, int, (const char *bdev_name, bool write,
 				      spdk_bdev_event_cb_t event_cb,
 				      void *event_ctx, struct spdk_bdev_desc **_desc), 0);
+DEFINE_STUB(spdk_bdev_desc_get_bdev, struct spdk_bdev *, (struct spdk_bdev_desc *desc), NULL);
 DEFINE_STUB(spdk_bdev_module_claim_bdev, int, (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 		struct spdk_bdev_module *module), 0);
 DEFINE_STUB_V(spdk_bdev_module_examine_done, (struct spdk_bdev_module *module));

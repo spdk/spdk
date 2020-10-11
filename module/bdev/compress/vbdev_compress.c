@@ -188,7 +188,7 @@ static struct rte_comp_xform g_decomp_xform = {
 static void vbdev_compress_examine(struct spdk_bdev *bdev);
 static int vbdev_compress_claim(struct vbdev_compress *comp_bdev);
 static void vbdev_compress_queue_io(struct spdk_bdev_io *bdev_io);
-struct vbdev_compress *_prepare_for_load_init(struct spdk_bdev *bdev, uint32_t lb_size);
+struct vbdev_compress *_prepare_for_load_init(struct spdk_bdev_desc *bdev_desc, uint32_t lb_size);
 static void vbdev_compress_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
 static void comp_bdev_ch_destroy_cb(void *io_device, void *ctx_buf);
 static void vbdev_compress_delete_done(void *cb_arg, int bdeverrno);
@@ -1302,9 +1302,10 @@ vbdev_compress_base_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bd
  * information for reducelib to init or load.
  */
 struct vbdev_compress *
-_prepare_for_load_init(struct spdk_bdev *bdev, uint32_t lb_size)
+_prepare_for_load_init(struct spdk_bdev_desc *bdev_desc, uint32_t lb_size)
 {
 	struct vbdev_compress *meta_ctx;
+	struct spdk_bdev *bdev;
 
 	meta_ctx = calloc(1, sizeof(struct vbdev_compress));
 	if (meta_ctx == NULL) {
@@ -1313,12 +1314,15 @@ _prepare_for_load_init(struct spdk_bdev *bdev, uint32_t lb_size)
 	}
 
 	meta_ctx->drv_name = "None";
-	meta_ctx->base_bdev = bdev;
 	meta_ctx->backing_dev.unmap = _comp_reduce_unmap;
 	meta_ctx->backing_dev.readv = _comp_reduce_readv;
 	meta_ctx->backing_dev.writev = _comp_reduce_writev;
 	meta_ctx->backing_dev.compress = _comp_reduce_compress;
 	meta_ctx->backing_dev.decompress = _comp_reduce_decompress;
+
+	meta_ctx->base_desc = bdev_desc;
+	bdev = spdk_bdev_desc_get_bdev(bdev_desc);
+	meta_ctx->base_bdev = bdev;
 
 	meta_ctx->backing_dev.blocklen = bdev->blocklen;
 	meta_ctx->backing_dev.blockcnt = bdev->blockcnt;
@@ -1357,27 +1361,29 @@ _set_pmd(struct vbdev_compress *comp_dev)
 
 /* Call reducelib to initialize a new volume */
 static int
-vbdev_init_reduce(struct spdk_bdev *bdev, const char *pm_path, uint32_t lb_size)
+vbdev_init_reduce(const char *bdev_name, const char *pm_path, uint32_t lb_size)
 {
+	struct spdk_bdev_desc *bdev_desc = NULL;
 	struct vbdev_compress *meta_ctx;
 	int rc;
 
-	meta_ctx = _prepare_for_load_init(bdev, lb_size);
+	rc = spdk_bdev_open_ext(bdev_name, true, vbdev_compress_base_bdev_event_cb,
+				NULL, &bdev_desc);
+	if (rc) {
+		SPDK_ERRLOG("could not open bdev %s\n", bdev_name);
+		return rc;
+	}
+
+	meta_ctx = _prepare_for_load_init(bdev_desc, lb_size);
 	if (meta_ctx == NULL) {
+		spdk_bdev_close(bdev_desc);
 		return -EINVAL;
 	}
 
 	if (_set_pmd(meta_ctx) == false) {
 		SPDK_ERRLOG("could not find required pmd\n");
 		free(meta_ctx);
-		return -EINVAL;
-	}
-
-	rc = spdk_bdev_open_ext(spdk_bdev_get_name(meta_ctx->base_bdev), true,
-				vbdev_compress_base_bdev_event_cb, NULL, &meta_ctx->base_desc);
-	if (rc) {
-		SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(meta_ctx->base_bdev));
-		free(meta_ctx);
+		spdk_bdev_close(bdev_desc);
 		return -EINVAL;
 	}
 
@@ -1496,19 +1502,12 @@ comp_bdev_ch_destroy_cb(void *io_device, void *ctx_buf)
 int
 create_compress_bdev(const char *bdev_name, const char *pm_path, uint32_t lb_size)
 {
-	struct spdk_bdev *bdev;
-
-	bdev = spdk_bdev_get_by_name(bdev_name);
-	if (!bdev) {
-		return -ENODEV;
-	}
-
 	if ((lb_size != 0) && (lb_size != LB_SIZE_4K) && (lb_size != LB_SIZE_512B)) {
 		SPDK_ERRLOG("Logical block size must be 512 or 4096\n");
 		return -EINVAL;
 	}
 
-	return vbdev_init_reduce(bdev, pm_path, lb_size);
+	return vbdev_init_reduce(bdev_name, pm_path, lb_size);
 }
 
 /* On init, just init the compress drivers. All metadata is stored on disk. */
@@ -1825,6 +1824,7 @@ vbdev_reduce_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno
 static void
 vbdev_compress_examine(struct spdk_bdev *bdev)
 {
+	struct spdk_bdev_desc *bdev_desc = NULL;
 	struct vbdev_compress *meta_ctx;
 	int rc;
 
@@ -1833,17 +1833,17 @@ vbdev_compress_examine(struct spdk_bdev *bdev)
 		return;
 	}
 
-	meta_ctx = _prepare_for_load_init(bdev, 0);
-	if (meta_ctx == NULL) {
+	rc = spdk_bdev_open_ext(spdk_bdev_get_name(bdev), false,
+				vbdev_compress_base_bdev_event_cb, NULL, &bdev_desc);
+	if (rc) {
+		SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(bdev));
 		spdk_bdev_module_examine_done(&compress_if);
 		return;
 	}
 
-	rc = spdk_bdev_open_ext(spdk_bdev_get_name(meta_ctx->base_bdev), false,
-				vbdev_compress_base_bdev_event_cb, NULL, &meta_ctx->base_desc);
-	if (rc) {
-		SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(meta_ctx->base_bdev));
-		free(meta_ctx);
+	meta_ctx = _prepare_for_load_init(bdev_desc, 0);
+	if (meta_ctx == NULL) {
+		spdk_bdev_close(bdev_desc);
 		spdk_bdev_module_examine_done(&compress_if);
 		return;
 	}
