@@ -97,7 +97,8 @@ static void	raid_bdev_examine(struct spdk_bdev *bdev);
 static int	raid_bdev_init(void);
 static void	raid_bdev_deconfigure(struct raid_bdev *raid_bdev,
 				      raid_bdev_destruct_cb cb_fn, void *cb_arg);
-static void	raid_bdev_remove_base_bdev(void *ctx);
+static void	raid_bdev_event_base_bdev(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
+		void *event_ctx);
 
 /*
  * brief:
@@ -1316,7 +1317,7 @@ raid_bdev_alloc_base_bdev_resource(struct raid_bdev *raid_bdev, struct spdk_bdev
 	struct spdk_bdev_desc *desc;
 	int rc;
 
-	rc = spdk_bdev_open(bdev, true, raid_bdev_remove_base_bdev, bdev, &desc);
+	rc = spdk_bdev_open_ext(bdev->name, true, raid_bdev_event_base_bdev, NULL, &desc);
 	if (rc != 0) {
 		SPDK_ERRLOG("Unable to create desc on bdev '%s'\n", bdev->name);
 		return rc;
@@ -1495,14 +1496,13 @@ raid_bdev_find_by_base_bdev(struct spdk_bdev *base_bdev, struct raid_bdev **_rai
  * is removed. This function checks if this base bdev is part of any raid bdev
  * or not. If yes, it takes necessary action on that particular raid bdev.
  * params:
- * ctx - pointer to base bdev pointer which got removed
+ * base_bdev - pointer to base bdev pointer which got removed
  * returns:
  * none
  */
 static void
-raid_bdev_remove_base_bdev(void *ctx)
+raid_bdev_remove_base_bdev(struct spdk_bdev *base_bdev)
 {
-	struct spdk_bdev	*base_bdev = ctx;
 	struct raid_bdev	*raid_bdev = NULL;
 	struct raid_base_bdev_info *base_info;
 
@@ -1532,6 +1532,31 @@ raid_bdev_remove_base_bdev(void *ctx)
 	}
 
 	raid_bdev_deconfigure(raid_bdev, NULL, NULL);
+}
+
+/*
+ * brief:
+ * raid_bdev_event_base_bdev function is called by below layers when base_bdev
+ * triggers asynchronous event.
+ * params:
+ * type - event details.
+ * bdev - bdev that triggered event.
+ * event_ctx - context for event.
+ * returns:
+ * none
+ */
+static void
+raid_bdev_event_base_bdev(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
+			  void *event_ctx)
+{
+	switch (type) {
+	case SPDK_BDEV_EVENT_REMOVE:
+		raid_bdev_remove_base_bdev(bdev);
+		break;
+	default:
+		SPDK_NOTICELOG("Unsupported bdev event: type %d\n", type);
+		break;
+	}
 }
 
 /*

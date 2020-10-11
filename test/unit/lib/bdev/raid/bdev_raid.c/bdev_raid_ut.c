@@ -50,6 +50,10 @@ struct spdk_bdev_channel {
 	struct spdk_io_channel *channel;
 };
 
+struct spdk_bdev_desc {
+	struct spdk_bdev *bdev;
+};
+
 /* Data structure to capture the output of IO for verification */
 struct io_output {
 	struct spdk_bdev_desc       *desc;
@@ -363,11 +367,24 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 }
 
 int
-spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
-	       void *remove_ctx, struct spdk_bdev_desc **_desc)
+spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event_cb,
+		   void *event_ctx, struct spdk_bdev_desc **_desc)
 {
-	*_desc = (void *)0x1;
+	struct spdk_bdev *bdev;
+
+	bdev = spdk_bdev_get_by_name(bdev_name);
+	if (bdev == NULL) {
+		return -ENODEV;
+	}
+
+	*_desc = (void *)bdev;
 	return 0;
+}
+
+struct spdk_bdev *
+spdk_bdev_desc_get_bdev(struct spdk_bdev_desc *desc)
+{
+	return (void *)desc;
 }
 
 char *
