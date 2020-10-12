@@ -14,6 +14,12 @@ removed between a call to get its structure based on a name and actually opennin
 
 Updated DPDK submodule to DPDK 20.08.
 
+### gpt
+
+Removed option to disable GPT probing via legacy configuration. Please use generic
+bdev functionality to replicate the behavior. See `bdev_set_options --disable-auto-examine`
+and `bdev_examine` RPC.
+
 ### intel-ipsec-mb
 
 Updated intel-ipsec-mb submodule to v0.54

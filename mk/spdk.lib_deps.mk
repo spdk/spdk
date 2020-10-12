@@ -123,7 +123,7 @@ DEPDIRS-sock_posix := log sock util
 DEPDIRS-sock_uring := log sock util
 
 # module/bdev
-DEPDIRS-bdev_gpt := bdev conf json log thread util
+DEPDIRS-bdev_gpt := bdev json log thread util
 
 DEPDIRS-bdev_error := $(BDEV_DEPS)
 DEPDIRS-bdev_lvol := $(BDEV_DEPS) lvol blob blob_bdev

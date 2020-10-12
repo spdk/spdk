@@ -38,7 +38,6 @@
 
 #include "gpt.h"
 
-#include "spdk/conf.h"
 #include "spdk/endian.h"
 #include "spdk/env.h"
 #include "spdk/thread.h"
@@ -89,8 +88,6 @@ struct gpt_io {
 	/* for bdev_io_wait */
 	struct spdk_bdev_io_wait_entry bdev_io_wait;
 };
-
-static bool g_gpt_disabled;
 
 static void
 gpt_base_free(void *ctx)
@@ -519,13 +516,6 @@ vbdev_gpt_read_gpt(struct spdk_bdev *bdev)
 static int
 vbdev_gpt_init(void)
 {
-	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Gpt");
-
-	if (sp && spdk_conf_section_get_boolval(sp, "Disable", false)) {
-		/* Disable Gpt probe */
-		g_gpt_disabled = true;
-	}
-
 	return 0;
 }
 
@@ -543,7 +533,7 @@ vbdev_gpt_examine(struct spdk_bdev *bdev)
 	/* A bdev with fewer than 2 blocks cannot have a GPT. Block 0 has
 	 * the MBR and block 1 has the GPT header.
 	 */
-	if (g_gpt_disabled || spdk_bdev_get_num_blocks(bdev) < 2) {
+	if (spdk_bdev_get_num_blocks(bdev) < 2) {
 		spdk_bdev_module_examine_done(&gpt_if);
 		return;
 	}
