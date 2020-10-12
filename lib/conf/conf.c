@@ -623,7 +623,6 @@ spdk_conf_read(struct spdk_conf *cp, const char *file)
 	if (file == NULL || file[0] == '\0') {
 		return -1;
 	}
-	SPDK_ERRLOG("INI configuration has been deprecated and will be removed in a future release. Please switch to JSON-RPC.\n");
 
 	fp = fopen(file, "r");
 	if (fp == NULL) {

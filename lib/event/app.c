@@ -38,7 +38,6 @@
 
 #include "spdk/env.h"
 #include "spdk/log.h"
-#include "spdk/conf.h"
 #include "spdk/thread.h"
 #include "spdk/trace.h"
 #include "spdk/string.h"
@@ -57,7 +56,6 @@
 #define SPDK_APP_DEFAULT_CORE_LIMIT		0x140000000 /* 5 GiB */
 
 struct spdk_app {
-	struct spdk_conf		*config;
 	const char			*json_config_file;
 	bool				json_config_ignore_errors;
 	const char			*rpc_addr;
@@ -268,33 +266,6 @@ app_start_rpc(int rc, void *arg1)
 	}
 }
 
-static struct spdk_conf *
-app_setup_conf(const char *config_file)
-{
-	struct spdk_conf *config;
-	int rc;
-
-	config = spdk_conf_allocate();
-	assert(config != NULL);
-	if (config_file) {
-		rc = spdk_conf_read(config, config_file);
-		if (rc != 0) {
-			SPDK_ERRLOG("Could not read config file %s\n", config_file);
-			goto error;
-		}
-		if (spdk_conf_first_section(config) == NULL) {
-			SPDK_ERRLOG("Invalid config file %s\n", config_file);
-			goto error;
-		}
-	}
-	spdk_conf_set_as_default(config);
-	return config;
-
-error:
-	spdk_conf_free(config);
-	return NULL;
-}
-
 static int
 app_opts_add_pci_addr(struct spdk_app_opts *opts, struct spdk_pci_addr **list, char *bdf)
 {
@@ -314,69 +285,6 @@ app_opts_add_pci_addr(struct spdk_app_opts *opts, struct spdk_pci_addr **list, c
 	}
 
 	opts->num_pci_addr++;
-	return 0;
-}
-
-static int
-app_read_config_file_global_params(struct spdk_app_opts *opts)
-{
-	struct spdk_conf_section *sp;
-	char *bdf;
-	int i, rc = 0;
-
-	sp = spdk_conf_find_section(NULL, "Global");
-
-	if (opts->shm_id == -1) {
-		if (sp != NULL) {
-			opts->shm_id = spdk_conf_section_get_intval(sp, "SharedMemoryID");
-		}
-	}
-
-	if (!opts->no_pci && sp) {
-		opts->no_pci = spdk_conf_section_get_boolval(sp, "NoPci", false);
-	}
-
-	if (opts->tpoint_group_mask == NULL) {
-		if (sp != NULL) {
-			opts->tpoint_group_mask = spdk_conf_section_get_val(sp, "TpointGroupMask");
-		}
-	}
-
-	if (sp == NULL) {
-		return 0;
-	}
-
-	for (i = 0; ; i++) {
-		bdf = spdk_conf_section_get_nmval(sp, "PciBlacklist", i, 0);
-		if (!bdf) {
-			break;
-		}
-
-		rc = app_opts_add_pci_addr(opts, &opts->pci_blacklist, bdf);
-		if (rc != 0) {
-			free(opts->pci_blacklist);
-			return rc;
-		}
-	}
-
-	for (i = 0; ; i++) {
-		bdf = spdk_conf_section_get_nmval(sp, "PciWhitelist", i, 0);
-		if (!bdf) {
-			break;
-		}
-
-		if (opts->pci_blacklist != NULL) {
-			SPDK_ERRLOG("PciBlacklist and PciWhitelist cannot be used at the same time\n");
-			free(opts->pci_blacklist);
-			return -EINVAL;
-		}
-
-		rc = app_opts_add_pci_addr(opts, &opts->pci_whitelist, bdf);
-		if (rc != 0) {
-			free(opts->pci_whitelist);
-			return rc;
-		}
-	}
 	return 0;
 }
 
@@ -483,7 +391,6 @@ int
 spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
 	       void *arg1)
 {
-	struct spdk_conf	*config = NULL;
 	int			rc;
 	char			*tty;
 	struct spdk_cpuset	tmp_cpumask = {};
@@ -522,18 +429,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
 	}
 #endif
 
-	config = app_setup_conf(opts->config_file);
-	if (config == NULL) {
-		return 1;
-	}
-
-	if (app_read_config_file_global_params(opts) < 0) {
-		spdk_conf_free(config);
-		return 1;
-	}
-
 	memset(&g_spdk_app, 0, sizeof(g_spdk_app));
-	g_spdk_app.config = config;
 	g_spdk_app.json_config_file = opts->json_config_file;
 	g_spdk_app.json_config_ignore_errors = opts->json_config_ignore_errors;
 	g_spdk_app.rpc_addr = opts->rpc_addr;
@@ -603,7 +499,6 @@ spdk_app_fini(void)
 	spdk_trace_cleanup();
 	spdk_reactors_fini();
 	spdk_env_fini();
-	spdk_conf_free(g_spdk_app.config);
 	spdk_log_close();
 }
 
@@ -633,8 +528,8 @@ usage(void (*app_usage)(void))
 {
 	printf("%s [options]\n", g_executable_name);
 	printf("options:\n");
-	printf(" -c, --config <config>     config file (default %s)\n",
-	       g_default_opts.config_file != NULL ? g_default_opts.config_file : "none");
+	printf(" -c, --config <config>     JSON config file (default %s)\n",
+	       g_default_opts.json_config_file != NULL ? g_default_opts.json_config_file : "none");
 	printf("     --json <config>       JSON config file (default %s)\n",
 	       g_default_opts.json_config_file != NULL ? g_default_opts.json_config_file : "none");
 	printf("     --json-ignore-init-errors\n");
@@ -694,7 +589,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 	memcpy(&g_default_opts, opts, sizeof(g_default_opts));
 
 	if (opts->config_file && access(opts->config_file, R_OK) != 0) {
-		SPDK_WARNLOG("Can't read legacy configuration file '%s'\n", opts->config_file);
+		SPDK_WARNLOG("Can't read JSON configuration file '%s'\n", opts->config_file);
 		opts->config_file = NULL;
 	}
 
@@ -928,21 +823,19 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		}
 	}
 
-	if (opts->config_file && opts->json_config_file) {
-		SPDK_ERRLOG("ERROR: Legacy config and JSON config can't be used together.\n");
-		goto out;
+	if (opts->config_file) {
+		if (opts->json_config_file) {
+			SPDK_ERRLOG("ERROR: --config and --json options can't be used together.\n");
+			goto out;
+		}
+
+		opts->json_config_file = opts->config_file;
+		opts->config_file = NULL;
 	}
 
 	if (opts->json_config_file && opts->delay_subsystem_init) {
-		SPDK_ERRLOG("ERROR: JSON configuration file can't be used together with --wait-for-rpc.\n");
+		SPDK_ERRLOG("JSON configuration file can't be used together with --wait-for-rpc.\n");
 		goto out;
-	}
-
-	/* TBD: Replace warning by failure when RPCs for startup are prepared. */
-	if (opts->config_file && opts->delay_subsystem_init) {
-		fprintf(stderr,
-			"WARNING: --wait-for-rpc and config file are used at the same time. "
-			"- Please be careful one options might overwrite others.\n");
 	}
 
 	retval = SPDK_APP_PARSE_ARGS_SUCCESS;

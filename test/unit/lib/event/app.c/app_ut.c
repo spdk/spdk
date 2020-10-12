@@ -79,7 +79,7 @@ test_spdk_app_parse_args(void)
 	struct spdk_app_opts opts = {};
 	struct option my_options[2] = {};
 	char *valid_argv[test_argc] = {"app_ut",
-				       "--wait-for-rpc",
+				       "--single-file-segments",
 				       "-d",
 				       "-p0",
 				       "-B",
@@ -96,7 +96,7 @@ test_spdk_app_parse_args(void)
 	char *argv_added_short_opt[test_argc] = {"app_ut",
 						 "-z",
 						 "-d",
-						 "--wait-for-rpc",
+						 "--single-file-segments",
 						 "-p0",
 						 "-cspdk.conf"
 						};
@@ -105,12 +105,12 @@ test_spdk_app_parse_args(void)
 						"-d",
 						"-r/var/tmp/spdk.sock",
 						"--test-long-opt",
-						"--wait-for-rpc"
+						"--single-file-segments"
 					       };
 	char *invalid_argv_missing_option[test_argc] = {"app_ut",
 							"-d",
 							"-p",
-							"--wait-for-rpc",
+							"--single-file-segments",
 							"--silence-noticelog"
 							"-R"
 						       };
