@@ -132,6 +132,7 @@ DEPDIRS-bdev_error := $(BDEV_DEPS_CONF)
 DEPDIRS-bdev_malloc := $(BDEV_DEPS_CONF) accel
 DEPDIRS-bdev_split := $(BDEV_DEPS_CONF)
 
+DEPDIRS-bdev_aio := $(BDEV_DEPS_THREAD)
 DEPDIRS-bdev_compress := $(BDEV_DEPS_THREAD) reduce
 DEPDIRS-bdev_delay := $(BDEV_DEPS_THREAD)
 DEPDIRS-bdev_zone_block := $(BDEV_DEPS_THREAD)
@@ -139,7 +140,6 @@ ifeq ($(OS),Linux)
 DEPDIRS-bdev_ftl := $(BDEV_DEPS_THREAD) ftl
 endif
 
-DEPDIRS-bdev_aio := $(BDEV_DEPS_CONF_THREAD)
 DEPDIRS-bdev_crypto := $(BDEV_DEPS_CONF_THREAD)
 DEPDIRS-bdev_iscsi := $(BDEV_DEPS_CONF_THREAD)
 DEPDIRS-bdev_null := $(BDEV_DEPS_CONF_THREAD)

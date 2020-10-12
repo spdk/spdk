@@ -38,7 +38,6 @@
 #include "spdk/barrier.h"
 #include "spdk/bdev.h"
 #include "spdk/bdev_module.h"
-#include "spdk/conf.h"
 #include "spdk/env.h"
 #include "spdk/fd.h"
 #include "spdk/likely.h"
@@ -98,7 +97,6 @@ struct spdk_aio_ring {
 static int bdev_aio_initialize(void);
 static void bdev_aio_fini(void);
 static void aio_free_disk(struct file_disk *fdisk);
-static void bdev_aio_get_spdk_running_config(FILE *fp);
 static TAILQ_HEAD(, file_disk) g_aio_disk_head = TAILQ_HEAD_INITIALIZER(g_aio_disk_head);
 
 #define SPDK_AIO_QUEUE_DEPTH 128
@@ -114,7 +112,6 @@ static struct spdk_bdev_module aio_if = {
 	.name		= "aio",
 	.module_init	= bdev_aio_initialize,
 	.module_fini	= bdev_aio_fini,
-	.config_text	= bdev_aio_get_spdk_running_config,
 	.get_ctx_size	= bdev_aio_get_ctx_size,
 };
 
@@ -755,57 +752,8 @@ bdev_aio_delete(struct spdk_bdev *bdev, delete_aio_bdev_complete cb_fn, void *cb
 static int
 bdev_aio_initialize(void)
 {
-	size_t i;
-	struct spdk_conf_section *sp;
-	int rc = 0;
-
 	spdk_io_device_register(&aio_if, bdev_aio_group_create_cb, bdev_aio_group_destroy_cb,
-				sizeof(struct bdev_aio_group_channel),
-				"aio_module");
-
-	sp = spdk_conf_find_section(NULL, "AIO");
-	if (!sp) {
-		return 0;
-	}
-
-	i = 0;
-	while (true) {
-		const char *file;
-		const char *name;
-		const char *block_size_str;
-		uint32_t block_size = 0;
-		long int tmp;
-
-		file = spdk_conf_section_get_nmval(sp, "AIO", i, 0);
-		if (!file) {
-			break;
-		}
-
-		name = spdk_conf_section_get_nmval(sp, "AIO", i, 1);
-		if (!name) {
-			SPDK_ERRLOG("No name provided for AIO disk with file %s\n", file);
-			i++;
-			continue;
-		}
-
-		block_size_str = spdk_conf_section_get_nmval(sp, "AIO", i, 2);
-		if (block_size_str) {
-			tmp = spdk_strtol(block_size_str, 10);
-			if (tmp < 0) {
-				SPDK_ERRLOG("Invalid block size for AIO disk with file %s\n", file);
-				i++;
-				continue;
-			}
-			block_size = (uint32_t)tmp;
-		}
-
-		rc = create_aio_bdev(name, file, block_size);
-		if (rc) {
-			SPDK_ERRLOG("Unable to create AIO bdev from file %s, err is %s\n", file, spdk_strerror(-rc));
-		}
-
-		i++;
-	}
+				sizeof(struct bdev_aio_group_channel), "aio_module");
 
 	return 0;
 }
@@ -814,38 +762,6 @@ static void
 bdev_aio_fini(void)
 {
 	spdk_io_device_unregister(&aio_if, NULL);
-}
-
-static void
-bdev_aio_get_spdk_running_config(FILE *fp)
-{
-	char			*file;
-	char			*name;
-	uint32_t		block_size;
-	struct file_disk	*fdisk;
-
-	fprintf(fp,
-		"\n"
-		"# Users must change this section to match the /dev/sdX devices to be\n"
-		"# exported as iSCSI LUNs. The devices are accessed using Linux AIO.\n"
-		"# The format is:\n"
-		"# AIO <file name> <bdev name> [<block size>]\n"
-		"# The file name is the backing device\n"
-		"# The bdev name can be referenced from elsewhere in the configuration file.\n"
-		"# Block size may be omitted to automatically detect the block size of a disk.\n"
-		"[AIO]\n");
-
-	TAILQ_FOREACH(fdisk, &g_aio_disk_head, link) {
-		file = fdisk->filename;
-		name = fdisk->disk.name;
-		block_size = fdisk->disk.blocklen;
-		fprintf(fp, "  AIO %s %s ", file, name);
-		if (fdisk->block_size_override) {
-			fprintf(fp, "%d", block_size);
-		}
-		fprintf(fp, "\n");
-	}
-	fprintf(fp, "\n");
 }
 
 SPDK_LOG_REGISTER_COMPONENT(aio)
