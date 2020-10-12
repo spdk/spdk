@@ -129,8 +129,7 @@ DEPDIRS-bdev_error := $(BDEV_DEPS)
 DEPDIRS-bdev_lvol := $(BDEV_DEPS) lvol blob blob_bdev
 DEPDIRS-bdev_malloc := $(BDEV_DEPS) accel
 DEPDIRS-bdev_rpc := $(BDEV_DEPS)
-
-DEPDIRS-bdev_split := $(BDEV_DEPS_CONF)
+DEPDIRS-bdev_split := $(BDEV_DEPS)
 
 DEPDIRS-bdev_aio := $(BDEV_DEPS_THREAD)
 DEPDIRS-bdev_compress := $(BDEV_DEPS_THREAD) reduce

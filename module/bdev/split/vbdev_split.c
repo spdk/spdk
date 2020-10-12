@@ -39,7 +39,6 @@
 #include "vbdev_split.h"
 
 #include "spdk/rpc.h"
-#include "spdk/conf.h"
 #include "spdk/endian.h"
 #include "spdk/string.h"
 #include "spdk/thread.h"
@@ -416,66 +415,7 @@ vbdev_split_add_config(const char *base_bdev_name, unsigned split_count, uint64_
 static int
 vbdev_split_init(void)
 {
-
-	struct spdk_conf_section *sp;
-	const char *base_bdev_name;
-	const char *split_count_str;
-	const char *split_size_str;
-	int rc, i, split_count, split_size;
-
-	sp = spdk_conf_find_section(NULL, "Split");
-	if (sp == NULL) {
-		return 0;
-	}
-
-	for (i = 0; ; i++) {
-		if (!spdk_conf_section_get_nval(sp, "Split", i)) {
-			break;
-		}
-
-		base_bdev_name = spdk_conf_section_get_nmval(sp, "Split", i, 0);
-		if (!base_bdev_name) {
-			SPDK_ERRLOG("Split configuration missing bdev name\n");
-			rc = -EINVAL;
-			goto err;
-		}
-
-		split_count_str = spdk_conf_section_get_nmval(sp, "Split", i, 1);
-		if (!split_count_str) {
-			SPDK_ERRLOG("Split configuration missing split count\n");
-			rc = -EINVAL;
-			goto err;
-		}
-
-		split_count = spdk_strtol(split_count_str, 10);
-		if (split_count < 1) {
-			SPDK_ERRLOG("Invalid Split count %d\n", split_count);
-			rc = -EINVAL;
-			goto err;
-		}
-
-		/* Optional split size in MB */
-		split_size = 0;
-		split_size_str = spdk_conf_section_get_nmval(sp, "Split", i, 2);
-		if (split_size_str) {
-			split_size = spdk_strtol(split_size_str, 10);
-			if (split_size <= 0) {
-				SPDK_ERRLOG("Invalid Split size %d\n", split_size);
-				rc = -EINVAL;
-				goto err;
-			}
-		}
-
-		rc = vbdev_split_add_config(base_bdev_name, split_count, split_size, NULL);
-		if (rc != 0) {
-			goto err;
-		}
-	}
-
 	return 0;
-err:
-	vbdev_split_clear_config();
-	return rc;
 }
 
 static void
