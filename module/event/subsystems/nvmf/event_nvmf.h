@@ -60,8 +60,4 @@ extern uint32_t g_spdk_nvmf_tgt_max_subsystems;
 
 extern struct spdk_nvmf_tgt *g_spdk_nvmf_tgt;
 
-typedef void (*nvmf_parse_conf_done_fn)(int status);
-
-int nvmf_parse_conf(nvmf_parse_conf_done_fn cb_fn);
-
 #endif

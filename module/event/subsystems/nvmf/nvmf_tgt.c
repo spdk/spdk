@@ -43,7 +43,7 @@
 
 enum nvmf_tgt_state {
 	NVMF_TGT_INIT_NONE = 0,
-	NVMF_TGT_INIT_PARSE_CONFIG,
+	NVMF_TGT_INIT_CREATE_TARGET,
 	NVMF_TGT_INIT_CREATE_POLL_GROUPS,
 	NVMF_TGT_INIT_START_SUBSYSTEMS,
 	NVMF_TGT_RUNNING,
@@ -255,13 +255,6 @@ nvmf_tgt_destroy_done(void *ctx, int status)
 	nvmf_tgt_advance_state();
 }
 
-static void
-nvmf_tgt_parse_conf_done(int status)
-{
-	g_tgt_state = (status == 0) ? NVMF_TGT_INIT_CREATE_POLL_GROUPS : NVMF_TGT_ERROR;
-	nvmf_tgt_advance_state();
-}
-
 static int
 nvmf_add_discovery_subsystem(void)
 {
@@ -279,8 +272,8 @@ nvmf_add_discovery_subsystem(void)
 	return 0;
 }
 
-static void
-nvmf_tgt_parse_conf_start(void *ctx)
+static int
+nvmf_tgt_create_target(void)
 {
 	struct spdk_nvmf_target_opts opts = {
 		.name = "nvmf_tgt"
@@ -291,24 +284,15 @@ nvmf_tgt_parse_conf_start(void *ctx)
 	g_spdk_nvmf_tgt = spdk_nvmf_tgt_create(&opts);
 	if (!g_spdk_nvmf_tgt) {
 		SPDK_ERRLOG("spdk_nvmf_tgt_create() failed\n");
-		goto error;
-	}
-
-	if (nvmf_parse_conf(nvmf_tgt_parse_conf_done)) {
-		SPDK_ERRLOG("nvmf_parse_conf() failed\n");
-		goto error;
+		return -1;
 	}
 
 	if (nvmf_add_discovery_subsystem() != 0) {
 		SPDK_ERRLOG("nvmf_add_discovery_subsystem failed\n");
-		goto error;
+		return -1;
 	}
 
-	return;
-
-error:
-	g_tgt_state = NVMF_TGT_ERROR;
-	nvmf_tgt_advance_state();
+	return 0;
 }
 
 static void
@@ -398,17 +382,14 @@ nvmf_tgt_advance_state(void)
 
 		switch (g_tgt_state) {
 		case NVMF_TGT_INIT_NONE: {
-			g_tgt_state = NVMF_TGT_INIT_PARSE_CONFIG;
+			g_tgt_state = NVMF_TGT_INIT_CREATE_TARGET;
 			break;
 		}
-		case NVMF_TGT_INIT_PARSE_CONFIG:
-			/* Send message to self to call parse conf func.
-			 * Prevents it from possibly performing cb before getting
-			 * out of this function, which causes problems. */
-			spdk_thread_send_msg(spdk_get_thread(), nvmf_tgt_parse_conf_start, NULL);
+		case NVMF_TGT_INIT_CREATE_TARGET:
+			ret = nvmf_tgt_create_target();
+			g_tgt_state = (ret == 0) ? NVMF_TGT_INIT_CREATE_POLL_GROUPS : NVMF_TGT_ERROR;
 			break;
 		case NVMF_TGT_INIT_CREATE_POLL_GROUPS:
-			/* Config parsed */
 			if (g_spdk_nvmf_tgt_conf.admin_passthru.identify_ctrlr) {
 				SPDK_NOTICELOG("Custom identify ctrlr handler enabled\n");
 				spdk_nvmf_set_custom_admin_cmd_hdlr(SPDK_NVME_OPC_IDENTIFY, nvmf_custom_identify_hdlr);

@@ -37,7 +37,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 SO_VER := 2
 SO_MINOR := 0
 
-C_SRCS = conf.c nvmf_rpc.c nvmf_tgt.c
+C_SRCS = nvmf_rpc.c nvmf_tgt.c
 LIBNAME = event_nvmf
 
 SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/mk/spdk_blank.map
