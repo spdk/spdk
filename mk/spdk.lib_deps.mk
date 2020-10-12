@@ -156,7 +156,7 @@ DEPDIRS-bdev_virtio := $(BDEV_DEPS_CONF_THREAD) virtio
 # the SPDK event subsystem code.
 DEPDIRS-event_accel := event accel
 DEPDIRS-event_net := event net
-DEPDIRS-event_vmd := event vmd conf $(JSON_LIBS) log thread
+DEPDIRS-event_vmd := event vmd $(JSON_LIBS) log thread
 
 DEPDIRS-event_bdev := event bdev event_accel event_vmd event_sock
 
