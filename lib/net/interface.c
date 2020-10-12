@@ -44,7 +44,7 @@
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
 
-static TAILQ_HEAD(, spdk_interface) g_interface_head;
+static TAILQ_HEAD(, spdk_interface) g_interface_head = TAILQ_HEAD_INITIALIZER(g_interface_head);
 
 static pthread_mutex_t interface_lock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -458,7 +458,6 @@ spdk_interface_init(void)
 {
 	int rc = 0;
 
-	TAILQ_INIT(&g_interface_head);
 	rc = prepare_ifc_list();
 	if (!rc) {
 		rc = get_ifc_ipv4();
