@@ -41,7 +41,6 @@
 #include "vbdev_passthru.h"
 #include "spdk/rpc.h"
 #include "spdk/env.h"
-#include "spdk/conf.h"
 #include "spdk/endian.h"
 #include "spdk/string.h"
 #include "spdk/thread.h"
@@ -52,7 +51,6 @@
 
 
 static int vbdev_passthru_init(void);
-static void vbdev_passthru_get_spdk_running_config(FILE *fp);
 static int vbdev_passthru_get_ctx_size(void);
 static void vbdev_passthru_examine(struct spdk_bdev *bdev);
 static void vbdev_passthru_finish(void);
@@ -61,7 +59,6 @@ static int vbdev_passthru_config_json(struct spdk_json_write_ctx *w);
 static struct spdk_bdev_module passthru_if = {
 	.name = "passthru",
 	.module_init = vbdev_passthru_init,
-	.config_text = vbdev_passthru_get_spdk_running_config,
 	.get_ctx_size = vbdev_passthru_get_ctx_size,
 	.examine_config = vbdev_passthru_examine,
 	.module_fini = vbdev_passthru_finish,
@@ -512,46 +509,10 @@ vbdev_passthru_insert_name(const char *bdev_name, const char *vbdev_name)
 	return 0;
 }
 
-/* On init, just parse config file and build list of pt vbdevs and bdev name pairs. */
+/* On init, just perform bdev module specific initialization. */
 static int
 vbdev_passthru_init(void)
 {
-	struct spdk_conf_section *sp = NULL;
-	const char *conf_bdev_name = NULL;
-	const char *conf_vbdev_name = NULL;
-	struct bdev_names *name;
-	int i, rc;
-
-	sp = spdk_conf_find_section(NULL, "Passthru");
-	if (sp == NULL) {
-		return 0;
-	}
-
-	for (i = 0; ; i++) {
-		if (!spdk_conf_section_get_nval(sp, "PT", i)) {
-			break;
-		}
-
-		conf_bdev_name = spdk_conf_section_get_nmval(sp, "PT", i, 0);
-		if (!conf_bdev_name) {
-			SPDK_ERRLOG("Passthru configuration missing bdev name\n");
-			break;
-		}
-
-		conf_vbdev_name = spdk_conf_section_get_nmval(sp, "PT", i, 1);
-		if (!conf_vbdev_name) {
-			SPDK_ERRLOG("Passthru configuration missing pt_bdev name\n");
-			break;
-		}
-
-		rc = vbdev_passthru_insert_name(conf_bdev_name, conf_vbdev_name);
-		if (rc != 0) {
-			return rc;
-		}
-	}
-	TAILQ_FOREACH(name, &g_bdev_names, link) {
-		SPDK_NOTICELOG("conf parse matched: %s\n", name->bdev_name);
-	}
 	return 0;
 }
 
@@ -577,21 +538,6 @@ static int
 vbdev_passthru_get_ctx_size(void)
 {
 	return sizeof(struct passthru_bdev_io);
-}
-
-/* Called when SPDK wants to save the current config of this vbdev module to
- * a file.
- */
-static void
-vbdev_passthru_get_spdk_running_config(FILE *fp)
-{
-	struct bdev_names *names = NULL;
-
-	fprintf(fp, "\n[Passthru]\n");
-	TAILQ_FOREACH(names, &g_bdev_names, link) {
-		fprintf(fp, "  PT %s %s\n", names->bdev_name, names->vbdev_name);
-	}
-	fprintf(fp, "\n");
 }
 
 /* Where vbdev_passthru_config_json() is used to generate per module JSON config data, this
