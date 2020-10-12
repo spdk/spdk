@@ -34,7 +34,6 @@
 
 #include "spdk/stdinc.h"
 
-#include "spdk/conf.h"
 #include "spdk/sock.h"
 #include "spdk/string.h"
 

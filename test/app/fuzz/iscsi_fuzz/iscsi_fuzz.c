@@ -32,7 +32,6 @@
  */
 
 #include "spdk/stdinc.h"
-#include "spdk/conf.h"
 #include "spdk/event.h"
 #include "spdk/util.h"
 #include "spdk/string.h"

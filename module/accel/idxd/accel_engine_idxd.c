@@ -40,7 +40,6 @@
 #include "spdk_internal/idxd.h"
 
 #include "spdk/env.h"
-#include "spdk/conf.h"
 #include "spdk/event.h"
 #include "spdk/thread.h"
 #include "spdk/idxd.h"

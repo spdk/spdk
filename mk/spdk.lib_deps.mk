@@ -95,9 +95,7 @@ DEPDIRS-vhost = log util thread $(JSON_LIBS) bdev scsi
 # determine the unique dependencies of a given module. It is also grouped by directory.
 
 BDEV_DEPS = log util $(JSON_LIBS) bdev
-BDEV_DEPS_CONF = $(BDEV_DEPS) conf
 BDEV_DEPS_THREAD = $(BDEV_DEPS) thread
-BDEV_DEPS_CONF_THREAD = $(BDEV_DEPS) conf thread
 
 # module/blob
 DEPDIRS-blob_bdev := log thread bdev

@@ -35,7 +35,6 @@
 
 #include "spdk/bdev.h"
 #include "spdk/bit_array.h"
-#include "spdk/conf.h"
 #include "spdk/thread.h"
 #include "spdk/nvmf.h"
 #include "spdk/trace.h"

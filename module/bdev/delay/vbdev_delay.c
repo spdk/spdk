@@ -36,7 +36,6 @@
 #include "vbdev_delay.h"
 #include "spdk/rpc.h"
 #include "spdk/env.h"
-#include "spdk/conf.h"
 #include "spdk/endian.h"
 #include "spdk/string.h"
 #include "spdk/thread.h"
