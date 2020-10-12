@@ -37,7 +37,6 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/rpc.h"
-#include "spdk/conf.h"
 #include "spdk/util.h"
 #include "spdk/endian.h"
 #include "spdk/nvme_spec.h"
@@ -418,51 +417,7 @@ vbdev_error_config_remove(const char *base_bdev_name)
 static int
 vbdev_error_init(void)
 {
-	struct spdk_conf_section *sp;
-	struct spdk_vbdev_error_config *cfg;
-	const char *base_bdev_name;
-	int i, rc;
-
-	sp = spdk_conf_find_section(NULL, "BdevError");
-	if (sp == NULL) {
-		return 0;
-	}
-
-	for (i = 0; ; i++) {
-		if (!spdk_conf_section_get_nval(sp, "BdevError", i)) {
-			break;
-		}
-
-		base_bdev_name = spdk_conf_section_get_nmval(sp, "BdevError", i, 0);
-		if (!base_bdev_name) {
-			SPDK_ERRLOG("ErrorInjection configuration missing bdev name\n");
-			rc = -EINVAL;
-			goto error;
-		}
-
-		cfg = calloc(1, sizeof(*cfg));
-		if (!cfg) {
-			SPDK_ERRLOG("calloc() failed for vbdev_error_config\n");
-			rc = -ENOMEM;
-			goto error;
-		}
-
-		cfg->base_bdev = strdup(base_bdev_name);
-		if (!cfg->base_bdev) {
-			free(cfg);
-			SPDK_ERRLOG("strdup() failed for bdev name\n");
-			rc = -ENOMEM;
-			goto error;
-		}
-
-		TAILQ_INSERT_TAIL(&g_error_config, cfg, tailq);
-	}
-
 	return 0;
-
-error:
-	vbdev_error_clear_config();
-	return rc;
 }
 
 static void
