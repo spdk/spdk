@@ -1861,10 +1861,13 @@ bdev_io_type_can_split(uint8_t type)
 static bool
 bdev_io_should_split(struct spdk_bdev_io *bdev_io)
 {
-	uint64_t start_stripe, end_stripe;
 	uint32_t io_boundary = bdev_io->bdev->optimal_io_boundary;
+	uint32_t max_size = bdev_io->bdev->max_segment_size;
+	int max_segs = bdev_io->bdev->max_num_segments;
 
-	if (io_boundary == 0) {
+	io_boundary = bdev_io->bdev->split_on_optimal_io_boundary ? io_boundary : 0;
+
+	if (spdk_likely(!io_boundary && !max_segs && !max_size)) {
 		return false;
 	}
 
@@ -1872,17 +1875,40 @@ bdev_io_should_split(struct spdk_bdev_io *bdev_io)
 		return false;
 	}
 
-	start_stripe = bdev_io->u.bdev.offset_blocks;
-	end_stripe = start_stripe + bdev_io->u.bdev.num_blocks - 1;
-	/* Avoid expensive div operations if possible.  These spdk_u32 functions are very cheap. */
-	if (spdk_likely(spdk_u32_is_pow2(io_boundary))) {
-		start_stripe >>= spdk_u32log2(io_boundary);
-		end_stripe >>= spdk_u32log2(io_boundary);
-	} else {
-		start_stripe /= io_boundary;
-		end_stripe /= io_boundary;
+	if (io_boundary) {
+		uint64_t start_stripe, end_stripe;
+
+		start_stripe = bdev_io->u.bdev.offset_blocks;
+		end_stripe = start_stripe + bdev_io->u.bdev.num_blocks - 1;
+		/* Avoid expensive div operations if possible.  These spdk_u32 functions are very cheap. */
+		if (spdk_likely(spdk_u32_is_pow2(io_boundary))) {
+			start_stripe >>= spdk_u32log2(io_boundary);
+			end_stripe >>= spdk_u32log2(io_boundary);
+		} else {
+			start_stripe /= io_boundary;
+			end_stripe /= io_boundary;
+		}
+
+		if (start_stripe != end_stripe) {
+			return true;
+		}
 	}
-	return (start_stripe != end_stripe);
+
+	if (max_segs) {
+		if (bdev_io->u.bdev.iovcnt > max_segs) {
+			return true;
+		}
+	}
+
+	if (max_size) {
+		for (int i = 0; i < bdev_io->u.bdev.iovcnt; i++) {
+			if (bdev_io->u.bdev.iovs[i].iov_len > max_size) {
+				return true;
+			}
+		}
+	}
+
+	return false;
 }
 
 static uint32_t
@@ -1897,19 +1923,28 @@ bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 static void
 _bdev_io_split(void *_bdev_io)
 {
-	struct spdk_bdev_io *bdev_io = _bdev_io;
-	uint64_t parent_offset, current_offset, remaining;
-	uint32_t blocklen, to_next_boundary, to_next_boundary_bytes, to_last_block_bytes;
 	struct iovec *parent_iov, *iov;
-	uint64_t parent_iov_offset, iov_len;
-	uint32_t parent_iovpos, parent_iovcnt, child_iovcnt, iovcnt;
+	struct spdk_bdev_io *bdev_io = _bdev_io;
+	struct spdk_bdev *bdev = bdev_io->bdev;
+	uint64_t parent_offset, current_offset, remaining;
+	uint32_t parent_iov_offset, parent_iovcnt, parent_iovpos, child_iovcnt;
+	uint32_t to_next_boundary, to_next_boundary_bytes, to_last_block_bytes;
+	uint32_t iovcnt, iov_len, child_iovsize;
+	uint32_t blocklen = bdev->blocklen;
+	uint32_t io_boundary = bdev->optimal_io_boundary;
+	uint32_t max_segment_size = bdev->max_segment_size;
+	uint32_t max_child_iovcnt = bdev->max_num_segments;
 	void *md_buf = NULL;
 	int rc;
+
+	max_segment_size = max_segment_size ? max_segment_size : UINT32_MAX;
+	max_child_iovcnt = max_child_iovcnt ? spdk_min(max_child_iovcnt, BDEV_IO_NUM_CHILD_IOV) :
+			   BDEV_IO_NUM_CHILD_IOV;
+	io_boundary = bdev->split_on_optimal_io_boundary ? io_boundary : UINT32_MAX;
 
 	remaining = bdev_io->u.bdev.split_remaining_num_blocks;
 	current_offset = bdev_io->u.bdev.split_current_offset_blocks;
 	parent_offset = bdev_io->u.bdev.offset_blocks;
-	blocklen = bdev_io->bdev->blocklen;
 	parent_iov_offset = (current_offset - parent_offset) * blocklen;
 	parent_iovcnt = bdev_io->u.bdev.iovcnt;
 
@@ -1923,21 +1958,26 @@ _bdev_io_split(void *_bdev_io)
 
 	child_iovcnt = 0;
 	while (remaining > 0 && parent_iovpos < parent_iovcnt && child_iovcnt < BDEV_IO_NUM_CHILD_IOV) {
-		to_next_boundary = _to_next_boundary(current_offset, bdev_io->bdev->optimal_io_boundary);
+		to_next_boundary = _to_next_boundary(current_offset, io_boundary);
 		to_next_boundary = spdk_min(remaining, to_next_boundary);
 		to_next_boundary_bytes = to_next_boundary * blocklen;
+
 		iov = &bdev_io->child_iov[child_iovcnt];
 		iovcnt = 0;
 
 		if (bdev_io->u.bdev.md_buf) {
 			md_buf = (char *)bdev_io->u.bdev.md_buf +
-				 (current_offset - parent_offset) * spdk_bdev_get_md_size(bdev_io->bdev);
+				 (current_offset - parent_offset) * spdk_bdev_get_md_size(bdev);
 		}
 
+		child_iovsize = spdk_min(BDEV_IO_NUM_CHILD_IOV - child_iovcnt, max_child_iovcnt);
 		while (to_next_boundary_bytes > 0 && parent_iovpos < parent_iovcnt &&
-		       child_iovcnt < BDEV_IO_NUM_CHILD_IOV) {
+		       iovcnt < child_iovsize) {
 			parent_iov = &bdev_io->u.bdev.iovs[parent_iovpos];
-			iov_len = spdk_min(to_next_boundary_bytes, parent_iov->iov_len - parent_iov_offset);
+			iov_len = parent_iov->iov_len - parent_iov_offset;
+
+			iov_len = spdk_min(iov_len, max_segment_size);
+			iov_len = spdk_min(iov_len, to_next_boundary_bytes);
 			to_next_boundary_bytes -= iov_len;
 
 			bdev_io->child_iov[child_iovcnt].iov_base = parent_iov->iov_base + parent_iov_offset;
@@ -1955,15 +1995,19 @@ _bdev_io_split(void *_bdev_io)
 
 		if (to_next_boundary_bytes > 0) {
 			/* We had to stop this child I/O early because we ran out of
-			 * child_iov space.  Ensure the iovs to be aligned with block
-			 * size and then adjust to_next_boundary before starting the
+			 * child_iov space or were limited by max_num_segments.
+			 * Ensure the iovs to be aligned with block size and
+			 * then adjust to_next_boundary before starting the
 			 * child I/O.
 			 */
-			assert(child_iovcnt == BDEV_IO_NUM_CHILD_IOV);
+			assert(child_iovcnt == BDEV_IO_NUM_CHILD_IOV ||
+			       iovcnt == child_iovsize);
 			to_last_block_bytes = to_next_boundary_bytes % blocklen;
 			if (to_last_block_bytes != 0) {
 				uint32_t child_iovpos = child_iovcnt - 1;
-				/* don't decrease child_iovcnt so the loop will naturally end */
+				/* don't decrease child_iovcnt when it equals to BDEV_IO_NUM_CHILD_IOV
+				 * so the loop will naturally end
+				 */
 
 				to_last_block_bytes = blocklen - to_last_block_bytes;
 				to_next_boundary_bytes += to_last_block_bytes;
@@ -1974,10 +2018,30 @@ _bdev_io_split(void *_bdev_io)
 					if (bdev_io->child_iov[child_iovpos].iov_len == 0) {
 						child_iovpos--;
 						if (--iovcnt == 0) {
+							/* If the child IO is less than a block size just return.
+							 * If the first child IO of any split round is less than
+							 * a block size, an error exit.
+							 */
+							if (bdev_io->u.bdev.split_outstanding == 0) {
+								SPDK_ERRLOG("The first child io was less than a block size\n");
+								bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+								spdk_trace_record_tsc(spdk_get_ticks(), TRACE_BDEV_IO_DONE, 0, 0,
+										      (uintptr_t)bdev_io, 0);
+								TAILQ_REMOVE(&bdev_io->internal.ch->io_submitted, bdev_io, internal.ch_link);
+								bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
+							}
+
 							return;
 						}
 					}
+
 					to_last_block_bytes -= iov_len;
+
+					if (parent_iov_offset == 0) {
+						parent_iovpos--;
+						parent_iov_offset = bdev_io->u.bdev.iovs[parent_iovpos].iov_len;
+					}
+					parent_iov_offset -= iov_len;
 				}
 
 				assert(to_last_block_bytes == 0);
@@ -2215,7 +2279,7 @@ bdev_io_submit(struct spdk_bdev_io *bdev_io)
 
 	TAILQ_INSERT_TAIL(&ch->io_submitted, bdev_io, internal.ch_link);
 
-	if (bdev->split_on_optimal_io_boundary && bdev_io_should_split(bdev_io)) {
+	if (bdev_io_should_split(bdev_io)) {
 		bdev_io->internal.submit_tsc = spdk_get_ticks();
 		spdk_trace_record_tsc(bdev_io->internal.submit_tsc, TRACE_BDEV_IO_START, 0, 0,
 				      (uintptr_t)bdev_io, bdev_io->type);

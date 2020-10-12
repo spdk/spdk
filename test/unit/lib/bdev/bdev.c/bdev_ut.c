@@ -1014,19 +1014,24 @@ bdev_io_wait_test(void)
 }
 
 static void
-bdev_io_spans_boundary_test(void)
+bdev_io_spans_split_test(void)
 {
 	struct spdk_bdev bdev;
 	struct spdk_bdev_io bdev_io;
+	struct iovec iov[BDEV_IO_NUM_CHILD_IOV];
 
 	memset(&bdev, 0, sizeof(bdev));
+	bdev_io.u.bdev.iovs = iov;
 
 	bdev.optimal_io_boundary = 0;
+	bdev.max_segment_size = 0;
+	bdev.max_num_segments = 0;
 	bdev_io.bdev = &bdev;
 
-	/* bdev has no optimal_io_boundary set - so this should return false. */
+	/* bdev has no optimal_io_boundary and max_size set - so this should return false. */
 	CU_ASSERT(bdev_io_should_split(&bdev_io) == false);
 
+	bdev.split_on_optimal_io_boundary = true;
 	bdev.optimal_io_boundary = 32;
 	bdev_io.type = SPDK_BDEV_IO_TYPE_RESET;
 
@@ -1043,6 +1048,30 @@ bdev_io_spans_boundary_test(void)
 	bdev_io.u.bdev.num_blocks = 33;
 
 	/* This I/O spans a boundary. */
+	CU_ASSERT(bdev_io_should_split(&bdev_io) == true);
+
+	bdev_io.u.bdev.num_blocks = 32;
+	bdev.max_segment_size = 512 * 32;
+	bdev.max_num_segments = 1;
+	bdev_io.u.bdev.iovcnt = 1;
+	iov[0].iov_len = 512;
+
+	/* Does not cross and exceed max_size or max_segs */
+	CU_ASSERT(bdev_io_should_split(&bdev_io) == false);
+
+	bdev.split_on_optimal_io_boundary = false;
+	bdev.max_segment_size = 512;
+	bdev.max_num_segments = 1;
+	bdev_io.u.bdev.iovcnt = 2;
+
+	/* Exceed max_segs */
+	CU_ASSERT(bdev_io_should_split(&bdev_io) == true);
+
+	bdev.max_num_segments = 2;
+	iov[0].iov_len = 513;
+	iov[1].iov_len = 512;
+
+	/* Exceed max_sizes */
 	CU_ASSERT(bdev_io_should_split(&bdev_io) == true);
 }
 
@@ -3430,7 +3459,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, get_device_stat_test);
 	CU_ADD_TEST(suite, bdev_io_types_test);
 	CU_ADD_TEST(suite, bdev_io_wait_test);
-	CU_ADD_TEST(suite, bdev_io_spans_boundary_test);
+	CU_ADD_TEST(suite, bdev_io_spans_split_test);
 	CU_ADD_TEST(suite, bdev_io_split_test);
 	CU_ADD_TEST(suite, bdev_io_split_with_io_wait);
 	CU_ADD_TEST(suite, bdev_io_alignment_with_boundary);
