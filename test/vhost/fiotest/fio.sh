@@ -16,6 +16,7 @@ vms=()
 used_vms=""
 x=""
 readonly=""
+packed=false
 
 function usage() {
 	[[ -n $2 ]] && (
@@ -43,6 +44,7 @@ function usage() {
 	echo "                          OS - VM os disk path (optional)"
 	echo "                          DISKS - VM os test disks/devices path (virtio - optional, kernel_vhost - mandatory)"
 	echo "    --readonly            Use readonly for fio"
+	echo "    --packed              Virtqueue format is packed"
 	exit 0
 }
 
@@ -60,6 +62,7 @@ while getopts 'xh-:' optchar; do
 				test-type=*) test_type="${OPTARG#*=}" ;;
 				vm=*) vms+=("${OPTARG#*=}") ;;
 				readonly) readonly="--readonly" ;;
+				packed) packed=true ;;
 				*) usage $0 "Invalid argument '$OPTARG'" ;;
 			esac
 			;;
@@ -164,6 +167,10 @@ for vm_conf in "${vms[@]}"; do
 	setup_cmd="vm_setup --force=${conf[0]} --disk-type=$test_type"
 	[[ x"${conf[1]}" != x"" ]] && setup_cmd+=" --os=${conf[1]}"
 	[[ x"${conf[2]}" != x"" ]] && setup_cmd+=" --disks=${conf[2]}"
+
+	if [[ "$test_type" == "spdk_vhost_blk" ]] && $packed; then
+		setup_cmd+=" --packed"
+	fi
 
 	$setup_cmd
 done

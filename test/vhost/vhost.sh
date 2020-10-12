@@ -104,4 +104,11 @@ echo 'Running lvol integrity suite...'
 run_test "vhost_blk_lvol_integrity" $WORKDIR/lvol/lvol_test.sh -x --fio-bin=$FIO_BIN \
 	--ctrl-type=spdk_vhost_blk
 
+echo 'Running blk packed ring integrity suite...'
+run_test "vhost_blk_packed_ring_integrity" $WORKDIR/fiotest/fio.sh -x --fio-bin=$FIO_BIN \
+	--vm=0,$VM_IMAGE,Nvme0n1p0 \
+	--test-type=spdk_vhost_blk \
+	--fio-job=$WORKDIR/common/fio_jobs/default_integrity.job \
+	--packed
+
 run_test "spdkcli_vhost" ./test/spdkcli/vhost.sh
