@@ -35,7 +35,6 @@
 
 #include "bdev_malloc.h"
 #include "spdk/bdev.h"
-#include "spdk/conf.h"
 #include "spdk/endian.h"
 #include "spdk/env.h"
 #include "spdk/accel_engine.h"
@@ -81,7 +80,6 @@ static TAILQ_HEAD(, malloc_disk) g_malloc_disks = TAILQ_HEAD_INITIALIZER(g_mallo
 int malloc_disk_count = 0;
 
 static int bdev_malloc_initialize(void);
-static void bdev_malloc_get_spdk_running_config(FILE *fp);
 
 static int
 bdev_malloc_get_ctx_size(void)
@@ -92,7 +90,6 @@ bdev_malloc_get_ctx_size(void)
 static struct spdk_bdev_module malloc_if = {
 	.name = "malloc",
 	.module_init = bdev_malloc_initialize,
-	.config_text = bdev_malloc_get_spdk_running_config,
 	.get_ctx_size = bdev_malloc_get_ctx_size,
 
 };
@@ -462,71 +459,11 @@ delete_malloc_disk(struct spdk_bdev *bdev, spdk_delete_malloc_complete cb_fn, vo
 
 static int bdev_malloc_initialize(void)
 {
-	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Malloc");
-	int NumberOfLuns, LunSizeInMB, BlockSize, i, rc = 0;
-	uint64_t size;
-	struct spdk_bdev *bdev;
-
+	/* This needs to be reset for each reinitialization of submodules.
+	 * Otherwise after enough devices or reinitializations the value gets too high.
+	 * TODO: Make malloc bdev name mandatory and remove this counter. */
 	malloc_disk_count = 0;
-
-	if (sp != NULL) {
-		NumberOfLuns = spdk_conf_section_get_intval(sp, "NumberOfLuns");
-		LunSizeInMB = spdk_conf_section_get_intval(sp, "LunSizeInMB");
-		BlockSize = spdk_conf_section_get_intval(sp, "BlockSize");
-		if ((NumberOfLuns < 1) || (LunSizeInMB < 1)) {
-			SPDK_ERRLOG("Malloc section present, but no devices specified\n");
-			goto end;
-		}
-		if (BlockSize < 1) {
-			/* Default is 512 bytes */
-			BlockSize = 512;
-		}
-		size = (uint64_t)LunSizeInMB * 1024 * 1024;
-		for (i = 0; i < NumberOfLuns; i++) {
-			rc = create_malloc_disk(&bdev, NULL, NULL, size / BlockSize, BlockSize);
-			if (rc) {
-				SPDK_ERRLOG("Could not create malloc disk\n");
-				goto end;
-			}
-		}
-	}
-
-end:
-	return rc;
-}
-
-static void
-bdev_malloc_get_spdk_running_config(FILE *fp)
-{
-	int num_malloc_luns = 0;
-	uint64_t malloc_lun_size = 0;
-	struct malloc_disk *mdisk;
-
-	/* count number of malloc LUNs, get LUN size */
-	TAILQ_FOREACH(mdisk, &g_malloc_disks, link) {
-		if (0 == malloc_lun_size) {
-			/* assume all malloc luns the same size */
-			malloc_lun_size = mdisk->disk.blocklen * mdisk->disk.blockcnt;
-			malloc_lun_size /= (1024 * 1024);
-		}
-		num_malloc_luns++;
-	}
-
-	if (num_malloc_luns > 0) {
-		fprintf(fp,
-			"\n"
-			"# Users may change this section to create a different number or size of\n"
-			"# malloc LUNs.\n"
-			"# This will generate %d LUNs with a malloc-allocated backend. Each LUN\n"
-			"# will be %" PRIu64 "MB in size and these will be named Malloc0 through Malloc%d.\n"
-			"# Not all LUNs defined here are necessarily used below.\n"
-			"[Malloc]\n"
-			"  NumberOfLuns %d\n"
-			"  LunSizeInMB %" PRIu64 "\n",
-			num_malloc_luns, malloc_lun_size,
-			num_malloc_luns - 1, num_malloc_luns,
-			malloc_lun_size);
-	}
+	return 0;
 }
 
 SPDK_LOG_REGISTER_COMPONENT(bdev_malloc)
