@@ -56,7 +56,7 @@ struct null_io_channel {
 	TAILQ_HEAD(, spdk_bdev_io)	io;
 };
 
-static TAILQ_HEAD(, null_bdev) g_null_bdev_head;
+static TAILQ_HEAD(, null_bdev) g_null_bdev_head = TAILQ_HEAD_INITIALIZER(g_null_bdev_head);
 static void *g_null_read_buf;
 
 static int bdev_null_initialize(void);
@@ -415,8 +415,6 @@ bdev_null_initialize(void)
 	struct spdk_bdev *bdev;
 	const char *name, *val;
 	struct spdk_null_bdev_opts opts = {};
-
-	TAILQ_INIT(&g_null_bdev_head);
 
 	/*
 	 * This will be used if upper layer expects us to allocate the read buffer.

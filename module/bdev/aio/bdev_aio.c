@@ -99,7 +99,7 @@ static int bdev_aio_initialize(void);
 static void bdev_aio_fini(void);
 static void aio_free_disk(struct file_disk *fdisk);
 static void bdev_aio_get_spdk_running_config(FILE *fp);
-static TAILQ_HEAD(, file_disk) g_aio_disk_head;
+static TAILQ_HEAD(, file_disk) g_aio_disk_head = TAILQ_HEAD_INITIALIZER(g_aio_disk_head);
 
 #define SPDK_AIO_QUEUE_DEPTH 128
 #define MAX_EVENTS_PER_POLL 32
@@ -759,7 +759,6 @@ bdev_aio_initialize(void)
 	struct spdk_conf_section *sp;
 	int rc = 0;
 
-	TAILQ_INIT(&g_aio_disk_head);
 	spdk_io_device_register(&aio_if, bdev_aio_group_create_cb, bdev_aio_group_destroy_cb,
 				sizeof(struct bdev_aio_group_channel),
 				"aio_module");

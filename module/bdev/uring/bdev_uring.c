@@ -77,7 +77,7 @@ static int bdev_uring_init(void);
 static void bdev_uring_fini(void);
 static void uring_free_bdev(struct bdev_uring *uring);
 static void bdev_uring_get_spdk_running_config(FILE *fp);
-static TAILQ_HEAD(, bdev_uring) g_uring_bdev_head;
+static TAILQ_HEAD(, bdev_uring) g_uring_bdev_head = TAILQ_HEAD_INITIALIZER(g_uring_bdev_head);
 
 #define SPDK_URING_QUEUE_DEPTH 512
 #define MAX_EVENTS_PER_POLL 32
@@ -581,7 +581,6 @@ bdev_uring_init(void)
 	struct spdk_conf_section *sp;
 	struct spdk_bdev *bdev;
 
-	TAILQ_INIT(&g_uring_bdev_head);
 	spdk_io_device_register(&uring_if, bdev_uring_group_create_cb, bdev_uring_group_destroy_cb,
 				sizeof(struct bdev_uring_group_channel),
 				"uring_module");
