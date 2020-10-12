@@ -290,7 +290,7 @@ spdk_app_opts_init(struct spdk_app_opts *opts)
 	opts->mem_size = SPDK_APP_DPDK_DEFAULT_MEM_SIZE;
 	opts->master_core = SPDK_APP_DPDK_DEFAULT_MASTER_CORE;
 	opts->mem_channel = SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL;
-	opts->reactor_mask = NULL;
+	opts->reactor_mask = SPDK_APP_DPDK_DEFAULT_CORE_MASK;
 	opts->base_virtaddr = SPDK_APP_DPDK_DEFAULT_BASE_VIRTADDR;
 	opts->print_level = SPDK_APP_DEFAULT_LOG_PRINT_LEVEL;
 	opts->rpc_addr = SPDK_DEFAULT_RPC_ADDR;
@@ -432,16 +432,6 @@ app_read_config_file_global_params(struct spdk_app_opts *opts)
 	if (opts->shm_id == -1) {
 		if (sp != NULL) {
 			opts->shm_id = spdk_conf_section_get_intval(sp, "SharedMemoryID");
-		}
-	}
-
-	if (opts->reactor_mask == NULL) {
-		if (sp && spdk_conf_section_get_val(sp, "ReactorMask")) {
-			SPDK_ERRLOG("ReactorMask config option is deprecated.  Use -m/--cpumask\n"
-				    "command line parameter instead.\n");
-			opts->reactor_mask = spdk_conf_section_get_val(sp, "ReactorMask");
-		} else {
-			opts->reactor_mask = SPDK_APP_DPDK_DEFAULT_CORE_MASK;
 		}
 	}
 
@@ -666,11 +656,6 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
 	spdk_log_open(opts->log);
 	SPDK_NOTICELOG("Total cores available: %d\n", spdk_env_get_core_count());
 
-	/*
-	 * If mask not specified on command line or in configuration file,
-	 *  reactor_mask will be 0x1 which will enable core 0 to run one
-	 *  reactor.
-	 */
 	if ((rc = spdk_reactors_init()) != 0) {
 		SPDK_ERRLOG("Reactor Initilization failed: rc = %d\n", rc);
 		return 1;

@@ -81,11 +81,13 @@ main(int argc, char **argv)
 {
 	int rc;
 	struct spdk_app_opts opts = {};
+	const char *reactor_mask = "0x1";
 
 	/* default value in opts structure */
 	spdk_app_opts_init(&opts);
 
 	opts.name = "bdev_svc";
+	opts.reactor_mask = reactor_mask;
 	opts.shutdown_cb = bdev_svc_shutdown;
 
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, "", NULL,
@@ -100,7 +102,7 @@ main(int argc, char **argv)
 	 *  in the bdev_svc_start routine, which will allow the scheduler to move this
 	 *  thread so it doesn't conflict with pinned threads in the secondary processes.
 	 */
-	if (opts.reactor_mask == NULL) {
+	if (opts.reactor_mask == reactor_mask) {
 		g_unaffinitize_thread = true;
 	}
 
