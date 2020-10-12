@@ -39,7 +39,6 @@
 #include "spdk/log.h"
 
 #include "spdk/env.h"
-#include "spdk/conf.h"
 #include "spdk/event.h"
 #include "spdk/thread.h"
 #include "spdk/ioat.h"
@@ -156,7 +155,6 @@ struct ioat_task {
 
 static int accel_engine_ioat_init(void);
 static void accel_engine_ioat_exit(void *ctx);
-static void accel_engine_ioat_config_text(FILE *fp);
 
 static size_t
 accel_engine_ioat_get_ctx_size(void)
@@ -165,8 +163,7 @@ accel_engine_ioat_get_ctx_size(void)
 }
 
 SPDK_ACCEL_MODULE_REGISTER(accel_engine_ioat_init, accel_engine_ioat_exit,
-			   accel_engine_ioat_config_text, NULL,
-			   accel_engine_ioat_get_ctx_size)
+			   NULL, NULL, accel_engine_ioat_get_ctx_size)
 
 static void
 ioat_done(void *cb_arg)
@@ -637,57 +634,8 @@ accel_engine_ioat_add_whitelist_devices(const char *pci_bdfs[], size_t num_pci_b
 }
 
 static int
-accel_engine_ioat_read_config_file_params(struct spdk_conf_section *sp)
-{
-	int i;
-	char *val, *pci_bdf;
-
-	if (spdk_conf_section_get_boolval(sp, "Enable", false)) {
-		g_ioat_enable = true;
-		/* Enable Ioat */
-	}
-
-	val = spdk_conf_section_get_val(sp, "Disable");
-	if (val != NULL) {
-		SPDK_WARNLOG("\"Disable\" option is deprecated and will be removed in a future release.\n");
-		SPDK_WARNLOG("IOAT is now disabled by default. It may be enabled by \"Enable Yes\"\n");
-
-		if (g_ioat_enable && (strcasecmp(val, "Yes") == 0)) {
-			SPDK_ERRLOG("\"Enable Yes\" and \"Disable Yes\" cannot be set at the same time\n");
-			return -1;
-		}
-	}
-
-	/* Init the whitelist */
-	for (i = 0; ; i++) {
-		pci_bdf = spdk_conf_section_get_nmval(sp, "Whitelist", i, 0);
-		if (!pci_bdf) {
-			break;
-		}
-
-		if (accel_engine_ioat_add_whitelist_device(pci_bdf) < 0) {
-			return -1;
-		}
-	}
-
-	return 0;
-}
-
-static int
 accel_engine_ioat_init(void)
 {
-	struct spdk_conf_section *sp;
-	int rc;
-
-	sp = spdk_conf_find_section(NULL, "Ioat");
-	if (sp != NULL) {
-		rc = accel_engine_ioat_read_config_file_params(sp);
-		if (rc != 0) {
-			SPDK_ERRLOG("accel_engine_ioat_read_config_file_params() failed\n");
-			return rc;
-		}
-	}
-
 	if (!g_ioat_enable) {
 		return 0;
 	}
@@ -731,34 +679,6 @@ accel_engine_ioat_exit(void *ctx)
 	}
 
 	spdk_accel_engine_module_finish();
-}
-
-#define ACCEL_ENGINE_IOAT_HEADER_TMPL \
-"[Ioat]\n" \
-"  # Users may not want to use offload even it is available.\n" \
-"  # Users may use the whitelist to initialize specified devices, IDS\n" \
-"  #  uses BUS:DEVICE.FUNCTION to identify each Ioat channel.\n"
-
-#define ACCEL_ENGINE_IOAT_ENABLE_TMPL \
-"  Enable %s\n"
-
-#define ACCEL_ENGINE_IOAT_WHITELIST_TMPL \
-"  Whitelist %.4" PRIx16 ":%.2" PRIx8 ":%.2" PRIx8 ".%" PRIx8 "\n"
-
-static void
-accel_engine_ioat_config_text(FILE *fp)
-{
-	int i;
-	struct spdk_pci_addr *dev;
-
-	fprintf(fp, ACCEL_ENGINE_IOAT_HEADER_TMPL);
-	fprintf(fp, ACCEL_ENGINE_IOAT_ENABLE_TMPL, g_ioat_enable ? "Yes" : "No");
-
-	for (i = 0; i < g_probe_ctx.num_whitelist_devices; i++) {
-		dev = &g_probe_ctx.whitelist[i];
-		fprintf(fp, ACCEL_ENGINE_IOAT_WHITELIST_TMPL,
-			dev->domain, dev->bus, dev->dev, dev->func);
-	}
 }
 
 SPDK_LOG_REGISTER_COMPONENT(accel_ioat)
