@@ -412,7 +412,7 @@ virtio_blk_dev_init(struct virtio_blk_dev *bvdev, uint16_t max_queues)
 	struct virtio_dev *vdev = &bvdev->vdev;
 	struct spdk_bdev *bdev = &bvdev->bdev;
 	uint64_t capacity, num_blocks;
-	uint32_t block_size;
+	uint32_t block_size, size_max, seg_max;
 	uint16_t host_max_queues;
 	int rc;
 
@@ -463,6 +463,39 @@ virtio_blk_dev_init(struct virtio_blk_dev *bvdev, uint16_t max_queues)
 		}
 	} else {
 		host_max_queues = 1;
+	}
+
+	if (virtio_dev_has_feature(vdev, VIRTIO_BLK_F_SIZE_MAX)) {
+		rc = virtio_dev_read_dev_config(vdev, offsetof(struct virtio_blk_config, size_max),
+						&size_max, sizeof(size_max));
+		if (rc) {
+			SPDK_ERRLOG("%s: config read failed: %s\n", vdev->name, spdk_strerror(-rc));
+			return rc;
+		}
+
+		if (spdk_unlikely(size_max < block_size)) {
+			SPDK_WARNLOG("%s: minimum segment size is set to block size %u forcefully.\n",
+				     vdev->name, block_size);
+			size_max = block_size;
+		}
+
+		bdev->max_segment_size = size_max;
+	}
+
+	if (virtio_dev_has_feature(vdev, VIRTIO_BLK_F_SEG_MAX)) {
+		rc = virtio_dev_read_dev_config(vdev, offsetof(struct virtio_blk_config, seg_max),
+						&seg_max, sizeof(seg_max));
+		if (rc) {
+			SPDK_ERRLOG("%s: config read failed: %s\n", vdev->name, spdk_strerror(-rc));
+			return rc;
+		}
+
+		if (spdk_unlikely(seg_max == 0)) {
+			SPDK_ERRLOG("%s: virtio blk SEG_MAX can't be 0\n", vdev->name);
+			return -EINVAL;
+		}
+
+		bdev->max_num_segments = seg_max;
 	}
 
 	if (virtio_dev_has_feature(vdev, VIRTIO_BLK_F_RO)) {

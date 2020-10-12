@@ -306,6 +306,17 @@ struct spdk_bdev {
 	uint32_t optimal_io_boundary;
 
 	/**
+	 * Max io size in bytes of a single segment
+	 *
+	 * Note: both max_segment_size and max_num_segments
+	 * should be zero or non-zero.
+	 */
+	uint32_t max_segment_size;
+
+	/* Maximum number of segments in a I/O */
+	uint32_t max_num_segments;
+
+	/**
 	 * UUID for this bdev.
 	 *
 	 * Fill with zeroes if no uuid is available. The bdev layer
