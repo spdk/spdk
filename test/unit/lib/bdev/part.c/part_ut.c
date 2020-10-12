@@ -45,12 +45,6 @@
 #include "bdev/bdev.c"
 #include "bdev/part.c"
 
-DEFINE_STUB(spdk_conf_find_section, struct spdk_conf_section *, (struct spdk_conf *cp,
-		const char *name), NULL);
-DEFINE_STUB(spdk_conf_section_get_nmval, char *,
-	    (struct spdk_conf_section *sp, const char *key, int idx1, int idx2), NULL);
-DEFINE_STUB(spdk_conf_section_get_intval, int, (struct spdk_conf_section *sp, const char *key), -1);
-
 struct spdk_trace_histories *g_trace_histories;
 DEFINE_STUB_V(spdk_trace_add_register_fn, (struct spdk_trace_register_fn *reg_fn));
 DEFINE_STUB_V(spdk_trace_register_owner, (uint8_t type, char id_prefix));

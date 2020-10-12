@@ -34,7 +34,6 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/bdev.h"
-#include "spdk/conf.h"
 
 #include "spdk/config.h"
 #include "spdk/env.h"
@@ -85,9 +84,6 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 
 #define SPDK_BDEV_POOL_ALIGNMENT 512
 
-static const char *qos_conf_type[] = {"Limit_IOPS",
-				      "Limit_BPS", "Limit_Read_BPS", "Limit_Write_BPS"
-				     };
 static const char *qos_rpc_type[] = {"rw_ios_per_sec",
 				     "rw_mbytes_per_sec", "r_mbytes_per_sec", "w_mbytes_per_sec"
 				    };
@@ -1238,36 +1234,11 @@ bdev_modules_init(void)
 void
 spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 {
-	struct spdk_conf_section *sp;
-	struct spdk_bdev_opts bdev_opts;
-	int32_t bdev_io_pool_size, bdev_io_cache_size;
 	int cache_size;
 	int rc = 0;
 	char mempool_name[32];
 
 	assert(cb_fn != NULL);
-
-	sp = spdk_conf_find_section(NULL, "Bdev");
-	if (sp != NULL) {
-		spdk_bdev_get_opts(&bdev_opts);
-
-		bdev_io_pool_size = spdk_conf_section_get_intval(sp, "BdevIoPoolSize");
-		if (bdev_io_pool_size >= 0) {
-			bdev_opts.bdev_io_pool_size = bdev_io_pool_size;
-		}
-
-		bdev_io_cache_size = spdk_conf_section_get_intval(sp, "BdevIoCacheSize");
-		if (bdev_io_cache_size >= 0) {
-			bdev_opts.bdev_io_cache_size = bdev_io_cache_size;
-		}
-
-		if (spdk_bdev_set_opts(&bdev_opts)) {
-			bdev_init_complete(-1);
-			return;
-		}
-
-		assert(memcmp(&bdev_opts, &g_bdev_opts, sizeof(bdev_opts)) == 0);
-	}
 
 	g_init_cb_fn = cb_fn;
 	g_init_cb_arg = cb_arg;
@@ -5214,111 +5185,6 @@ spdk_bdev_io_get_io_channel(struct spdk_bdev_io *bdev_io)
 	return bdev_io->internal.ch->channel;
 }
 
-static void
-bdev_qos_config_limit(struct spdk_bdev *bdev, uint64_t *limits)
-{
-	uint64_t	min_qos_set;
-	int		i;
-
-	for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
-		if (limits[i] != SPDK_BDEV_QOS_LIMIT_NOT_DEFINED) {
-			break;
-		}
-	}
-
-	if (i == SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES) {
-		SPDK_ERRLOG("Invalid rate limits set.\n");
-		return;
-	}
-
-	for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
-		if (limits[i] == SPDK_BDEV_QOS_LIMIT_NOT_DEFINED) {
-			continue;
-		}
-
-		if (bdev_qos_is_iops_rate_limit(i) == true) {
-			min_qos_set = SPDK_BDEV_QOS_MIN_IOS_PER_SEC;
-		} else {
-			min_qos_set = SPDK_BDEV_QOS_MIN_BYTES_PER_SEC;
-		}
-
-		if (limits[i] == 0 || limits[i] % min_qos_set) {
-			SPDK_ERRLOG("Assigned limit %" PRIu64 " on bdev %s is not multiple of %" PRIu64 "\n",
-				    limits[i], bdev->name, min_qos_set);
-			SPDK_ERRLOG("Failed to enable QoS on this bdev %s\n", bdev->name);
-			return;
-		}
-	}
-
-	if (!bdev->internal.qos) {
-		bdev->internal.qos = calloc(1, sizeof(*bdev->internal.qos));
-		if (!bdev->internal.qos) {
-			SPDK_ERRLOG("Unable to allocate memory for QoS tracking\n");
-			return;
-		}
-	}
-
-	for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
-		bdev->internal.qos->rate_limits[i].limit = limits[i];
-		SPDK_DEBUGLOG(bdev, "Bdev:%s QoS type:%d set:%lu\n",
-			      bdev->name, i, limits[i]);
-	}
-
-	return;
-}
-
-static void
-bdev_qos_config(struct spdk_bdev *bdev)
-{
-	struct spdk_conf_section	*sp = NULL;
-	const char			*val = NULL;
-	int				i = 0, j = 0;
-	uint64_t			limits[SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES] = {};
-	bool				config_qos = false;
-
-	sp = spdk_conf_find_section(NULL, "QoS");
-	if (!sp) {
-		return;
-	}
-
-	while (j < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES) {
-		limits[j] = SPDK_BDEV_QOS_LIMIT_NOT_DEFINED;
-
-		i = 0;
-		while (true) {
-			val = spdk_conf_section_get_nmval(sp, qos_conf_type[j], i, 0);
-			if (!val) {
-				break;
-			}
-
-			if (strcmp(bdev->name, val) != 0) {
-				i++;
-				continue;
-			}
-
-			val = spdk_conf_section_get_nmval(sp, qos_conf_type[j], i, 1);
-			if (val) {
-				if (bdev_qos_is_iops_rate_limit(j) == true) {
-					limits[j] = strtoull(val, NULL, 10);
-				} else {
-					limits[j] = strtoull(val, NULL, 10) * 1024 * 1024;
-				}
-				config_qos = true;
-			}
-
-			break;
-		}
-
-		j++;
-	}
-
-	if (config_qos == true) {
-		bdev_qos_config_limit(bdev, limits);
-	}
-
-	return;
-}
-
 static int
 bdev_init(struct spdk_bdev *bdev)
 {
@@ -5387,8 +5253,6 @@ bdev_init(struct spdk_bdev *bdev)
 	TAILQ_INIT(&bdev->aliases);
 
 	bdev->internal.reset_in_progress = NULL;
-
-	bdev_qos_config(bdev);
 
 	spdk_io_device_register(__bdev_to_io_dev(bdev),
 				bdev_channel_create, bdev_channel_destroy,
