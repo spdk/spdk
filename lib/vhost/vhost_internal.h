@@ -380,8 +380,6 @@ int vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char
 		       const struct spdk_vhost_dev_backend *backend);
 int vhost_dev_unregister(struct spdk_vhost_dev *vdev);
 
-int vhost_scsi_controller_construct(void);
-int vhost_blk_controller_construct(void);
 void vhost_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
 
 /*

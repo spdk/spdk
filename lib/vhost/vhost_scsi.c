@@ -39,7 +39,6 @@
 #include "spdk/thread.h"
 #include "spdk/scsi.h"
 #include "spdk/scsi_spec.h"
-#include "spdk/conf.h"
 #include "spdk/util.h"
 #include "spdk/likely.h"
 
@@ -1292,74 +1291,6 @@ vhost_scsi_dev_param_changed(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num)
 
 	vhost_dev_foreach_session(vdev, vhost_scsi_session_param_changed,
 				  NULL, (void *)(uintptr_t)scsi_tgt_num);
-	return 0;
-}
-
-int
-vhost_scsi_controller_construct(void)
-{
-	struct spdk_conf_section *sp = spdk_conf_first_section(NULL);
-	struct spdk_vhost_dev *vdev;
-	int i, dev_num;
-	unsigned ctrlr_num = 0;
-	char *bdev_name, *tgt_num_str;
-	char *cpumask;
-	char *name;
-	char *tgt = NULL;
-
-	while (sp != NULL) {
-		if (!spdk_conf_section_match_prefix(sp, "VhostScsi")) {
-			sp = spdk_conf_next_section(sp);
-			continue;
-		}
-
-		if (sscanf(spdk_conf_section_get_name(sp), "VhostScsi%u", &ctrlr_num) != 1) {
-			SPDK_ERRLOG("Section '%s' has non-numeric suffix.\n",
-				    spdk_conf_section_get_name(sp));
-			return -1;
-		}
-
-		name =  spdk_conf_section_get_val(sp, "Name");
-		cpumask = spdk_conf_section_get_val(sp, "Cpumask");
-
-		if (spdk_vhost_scsi_dev_construct(name, cpumask) < 0) {
-			return -1;
-		}
-
-		vdev = spdk_vhost_dev_find(name);
-		assert(vdev);
-
-		for (i = 0; ; i++) {
-
-			tgt = spdk_conf_section_get_nval(sp, "Target", i);
-			if (tgt == NULL) {
-				break;
-			}
-
-			tgt_num_str = spdk_conf_section_get_nmval(sp, "Target", i, 0);
-			if (tgt_num_str == NULL) {
-				SPDK_ERRLOG("%s: invalid or missing SCSI target number\n", name);
-				return -1;
-			}
-
-			dev_num = (int)strtol(tgt_num_str, NULL, 10);
-			bdev_name = spdk_conf_section_get_nmval(sp, "Target", i, 1);
-			if (bdev_name == NULL) {
-				SPDK_ERRLOG("%s: invalid or missing bdev name for SCSI target %d\n", name, dev_num);
-				return -1;
-			} else if (spdk_conf_section_get_nmval(sp, "Target", i, 2)) {
-				SPDK_ERRLOG("%s: only one LUN per SCSI target is supported\n", name);
-				return -1;
-			}
-
-			if (spdk_vhost_scsi_dev_add_tgt(vdev, dev_num, bdev_name) < 0) {
-				return -1;
-			}
-		}
-
-		sp = spdk_conf_next_section(sp);
-	}
-
 	return 0;
 }
 

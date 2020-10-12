@@ -86,7 +86,7 @@ endif
 DEPDIRS-scsi := log util thread $(JSON_LIBS) trace bdev
 
 DEPDIRS-iscsi := log sock util conf thread $(JSON_LIBS) trace scsi
-DEPDIRS-vhost = log util conf thread $(JSON_LIBS) bdev scsi
+DEPDIRS-vhost = log util thread $(JSON_LIBS) bdev scsi
 
 # ------------------------------------------------------------------------
 # Start module/ directory - This section extends the organizational pattern from

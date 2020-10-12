@@ -36,7 +36,6 @@
 #include "spdk/env.h"
 #include "spdk/bdev.h"
 #include "spdk/bdev_module.h"
-#include "spdk/conf.h"
 #include "spdk/thread.h"
 #include "spdk/likely.h"
 #include "spdk/string.h"
@@ -1189,52 +1188,6 @@ static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	.write_config_json = vhost_blk_write_config_json,
 	.remove_device = vhost_blk_destroy,
 };
-
-int
-vhost_blk_controller_construct(void)
-{
-	struct spdk_conf_section *sp;
-	unsigned ctrlr_num;
-	char *bdev_name;
-	char *cpumask;
-	char *name;
-	bool readonly;
-	bool packed_ring;
-
-	for (sp = spdk_conf_first_section(NULL); sp != NULL; sp = spdk_conf_next_section(sp)) {
-		if (!spdk_conf_section_match_prefix(sp, "VhostBlk")) {
-			continue;
-		}
-
-		if (sscanf(spdk_conf_section_get_name(sp), "VhostBlk%u", &ctrlr_num) != 1) {
-			SPDK_ERRLOG("Section '%s' has non-numeric suffix.\n",
-				    spdk_conf_section_get_name(sp));
-			return -1;
-		}
-
-		name = spdk_conf_section_get_val(sp, "Name");
-		if (name == NULL) {
-			SPDK_ERRLOG("VhostBlk%u: missing Name\n", ctrlr_num);
-			return -1;
-		}
-
-		cpumask = spdk_conf_section_get_val(sp, "Cpumask");
-		readonly = spdk_conf_section_get_boolval(sp, "ReadOnly", false);
-		packed_ring = spdk_conf_section_get_boolval(sp, "PackedRing", false);
-
-		bdev_name = spdk_conf_section_get_val(sp, "Dev");
-		if (bdev_name == NULL) {
-			continue;
-		}
-
-		if (spdk_vhost_blk_construct(name, cpumask, bdev_name,
-					     readonly, packed_ring) < 0) {
-			return -1;
-		}
-	}
-
-	return 0;
-}
 
 int
 spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_name,

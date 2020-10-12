@@ -1458,18 +1458,6 @@ spdk_vhost_init(spdk_vhost_init_cb init_cb)
 		goto out;
 	}
 
-	ret = vhost_scsi_controller_construct();
-	if (ret != 0) {
-		SPDK_ERRLOG("Cannot construct vhost controllers\n");
-		goto out;
-	}
-
-	ret = vhost_blk_controller_construct();
-	if (ret != 0) {
-		SPDK_ERRLOG("Cannot construct vhost block controllers\n");
-		goto out;
-	}
-
 	spdk_cpuset_zero(&g_vhost_core_mask);
 
 	/* iterate threads instead of using SPDK_ENV_FOREACH_CORE to ensure that threads are really
