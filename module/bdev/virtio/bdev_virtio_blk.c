@@ -34,7 +34,6 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/bdev.h"
-#include "spdk/conf.h"
 #include "spdk/endian.h"
 #include "spdk/env.h"
 #include "spdk/thread.h"
@@ -657,80 +656,9 @@ bdev_virtio_pci_blk_dev_create(const char *name, struct spdk_pci_addr *pci_addr)
 }
 
 static int
-virtio_pci_blk_dev_enumerate_cb(struct virtio_pci_ctx *pci_ctx, void *ctx)
-{
-	struct virtio_blk_dev *bvdev;
-
-	bvdev = virtio_pci_blk_dev_create(NULL, pci_ctx);
-	return bvdev == NULL ? -1 : 0;
-}
-
-static int
 bdev_virtio_initialize(void)
 {
-	struct spdk_conf_section *sp;
-	struct virtio_blk_dev *bvdev;
-	char *default_name = NULL;
-	char *path, *type, *name;
-	unsigned vdev_num;
-	int num_queues;
-	bool enable_pci;
-	int rc = 0;
-
-	for (sp = spdk_conf_first_section(NULL); sp != NULL; sp = spdk_conf_next_section(sp)) {
-		if (!spdk_conf_section_match_prefix(sp, "VirtioUser")) {
-			continue;
-		}
-
-		if (sscanf(spdk_conf_section_get_name(sp), "VirtioUser%u", &vdev_num) != 1) {
-			SPDK_ERRLOG("Section '%s' has non-numeric suffix.\n",
-				    spdk_conf_section_get_name(sp));
-			return -1;
-		}
-
-		path = spdk_conf_section_get_val(sp, "Path");
-		if (path == NULL) {
-			SPDK_ERRLOG("VirtioUserBlk%u: missing Path\n", vdev_num);
-			return -1;
-		}
-
-		type = spdk_conf_section_get_val(sp, "Type");
-		if (type == NULL || strcmp(type, "Blk") != 0) {
-			continue;
-		}
-
-		num_queues = spdk_conf_section_get_intval(sp, "Queues");
-		if (num_queues < 1) {
-			num_queues = 1;
-		}
-
-		name = spdk_conf_section_get_val(sp, "Name");
-		if (name == NULL) {
-			default_name = spdk_sprintf_alloc("VirtioBlk%u", vdev_num);
-			name = default_name;
-		}
-
-		bvdev = virtio_user_blk_dev_create(name, path, num_queues, 512);
-		free(default_name);
-		default_name = NULL;
-
-		if (bvdev == NULL) {
-			return -1;
-		}
-	}
-
-	sp = spdk_conf_find_section(NULL, "VirtioPci");
-	if (sp == NULL) {
-		return 0;
-	}
-
-	enable_pci = spdk_conf_section_get_boolval(sp, "Enable", false);
-	if (enable_pci) {
-		rc = virtio_pci_dev_enumerate(virtio_pci_blk_dev_enumerate_cb, NULL,
-					      PCI_DEVICE_ID_VIRTIO_BLK_MODERN);
-	}
-
-	return rc;
+	return 0;
 }
 
 struct spdk_bdev *

@@ -34,7 +34,6 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/bdev.h"
-#include "spdk/conf.h"
 #include "spdk/endian.h"
 #include "spdk/env.h"
 #include "spdk/thread.h"
@@ -456,7 +455,6 @@ static struct spdk_bdev_module virtio_scsi_if = {
 	.module_fini = bdev_virtio_finish,
 	.get_ctx_size = bdev_virtio_get_ctx_size,
 	.config_json = bdev_virtio_scsi_config_json,
-	.async_init = true,
 	.async_fini = true,
 };
 
@@ -1569,89 +1567,6 @@ _virtio_scsi_dev_scan_next(struct virtio_scsi_scan_base *base, int rc)
 }
 
 static int
-virtio_pci_scsi_dev_enumerate_cb(struct virtio_pci_ctx *pci_ctx, void *ctx)
-{
-	struct virtio_scsi_dev *svdev;
-
-	svdev = virtio_pci_scsi_dev_create(NULL, pci_ctx);
-	return svdev == NULL ? -1 : 0;
-}
-
-static int
-bdev_virtio_process_config(void)
-{
-	struct spdk_conf_section *sp;
-	struct virtio_scsi_dev *svdev;
-	char *default_name = NULL;
-	char *path, *type, *name;
-	unsigned vdev_num;
-	int num_queues;
-	bool enable_pci;
-	int rc = 0;
-
-	for (sp = spdk_conf_first_section(NULL); sp != NULL; sp = spdk_conf_next_section(sp)) {
-		if (!spdk_conf_section_match_prefix(sp, "VirtioUser")) {
-			continue;
-		}
-
-		if (sscanf(spdk_conf_section_get_name(sp), "VirtioUser%u", &vdev_num) != 1) {
-			SPDK_ERRLOG("Section '%s' has non-numeric suffix.\n",
-				    spdk_conf_section_get_name(sp));
-			rc = -1;
-			goto out;
-		}
-
-		path = spdk_conf_section_get_val(sp, "Path");
-		if (path == NULL) {
-			SPDK_ERRLOG("VirtioUser%u: missing Path\n", vdev_num);
-			rc = -1;
-			goto out;
-		}
-
-		type = spdk_conf_section_get_val(sp, "Type");
-		if (type != NULL && strcmp(type, "SCSI") != 0) {
-			continue;
-		}
-
-		num_queues = spdk_conf_section_get_intval(sp, "Queues");
-		if (num_queues < 1) {
-			num_queues = 1;
-		} else if (num_queues > SPDK_VIRTIO_MAX_VIRTQUEUES) {
-			num_queues = SPDK_VIRTIO_MAX_VIRTQUEUES;
-		}
-
-		name = spdk_conf_section_get_val(sp, "Name");
-		if (name == NULL) {
-			default_name = spdk_sprintf_alloc("VirtioScsi%u", vdev_num);
-			name = default_name;
-		}
-
-		svdev = virtio_user_scsi_dev_create(name, path, num_queues, 512);
-		free(default_name);
-		default_name = NULL;
-
-		if (svdev == NULL) {
-			rc = -1;
-			goto out;
-		}
-	}
-
-	sp = spdk_conf_find_section(NULL, "VirtioPci");
-	if (sp == NULL) {
-		return 0;
-	}
-
-	enable_pci = spdk_conf_section_get_boolval(sp, "Enable", false);
-	if (enable_pci) {
-		rc = virtio_pci_dev_enumerate(virtio_pci_scsi_dev_enumerate_cb, NULL,
-					      PCI_DEVICE_ID_VIRTIO_SCSI_MODERN);
-	}
-
-out:
-	return rc;
-}
-
-static int
 _virtio_scsi_dev_scan_init(struct virtio_scsi_dev *svdev)
 {
 	struct virtio_scsi_scan_base *base;
@@ -1777,63 +1692,10 @@ virtio_scsi_dev_scan_tgt(struct virtio_scsi_dev *svdev, uint8_t target)
 	return 0;
 }
 
-static void
-bdev_virtio_initial_scan_complete(void *ctx, int result,
-				  struct spdk_bdev **bdevs, size_t bdevs_cnt)
-{
-	struct virtio_scsi_dev *svdev;
-
-	pthread_mutex_lock(&g_virtio_scsi_mutex);
-	TAILQ_FOREACH(svdev, &g_virtio_scsi_devs, tailq) {
-		if (svdev->scan_ctx) {
-			/* another device is still being scanned */
-			pthread_mutex_unlock(&g_virtio_scsi_mutex);
-			return;
-		}
-	}
-
-	pthread_mutex_unlock(&g_virtio_scsi_mutex);
-	spdk_bdev_module_init_done(&virtio_scsi_if);
-}
-
 static int
 bdev_virtio_initialize(void)
 {
-	struct virtio_scsi_dev *svdev, *next_svdev;
-	int rc;
-
-	rc = bdev_virtio_process_config();
-	pthread_mutex_lock(&g_virtio_scsi_mutex);
-
-	if (rc != 0) {
-		goto err_unlock;
-	}
-
-	if (TAILQ_EMPTY(&g_virtio_scsi_devs)) {
-		goto out_unlock;
-	}
-
-	/* Initialize all created devices and scan available targets */
-	TAILQ_FOREACH(svdev, &g_virtio_scsi_devs, tailq) {
-		rc = virtio_scsi_dev_scan(svdev, bdev_virtio_initial_scan_complete, NULL);
-		if (rc != 0) {
-			goto err_unlock;
-		}
-	}
-
-	pthread_mutex_unlock(&g_virtio_scsi_mutex);
 	return 0;
-
-err_unlock:
-	/* Remove any created devices */
-	TAILQ_FOREACH_SAFE(svdev, &g_virtio_scsi_devs, tailq, next_svdev) {
-		virtio_scsi_dev_remove(svdev, NULL, NULL);
-	}
-
-out_unlock:
-	pthread_mutex_unlock(&g_virtio_scsi_mutex);
-	spdk_bdev_module_init_done(&virtio_scsi_if);
-	return rc;
 }
 
 static void
