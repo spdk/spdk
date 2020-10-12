@@ -57,7 +57,7 @@ struct ioat_device {
 	TAILQ_ENTRY(ioat_device) tailq;
 };
 
-static TAILQ_HEAD(, ioat_device) g_devices;
+static TAILQ_HEAD(, ioat_device) g_devices = TAILQ_HEAD_INITIALIZER(g_devices);
 static struct ioat_device *g_next_device;
 
 static struct user_config g_user_config;
@@ -227,8 +227,6 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_ioat_chan *
 static int
 ioat_init(void)
 {
-	TAILQ_INIT(&g_devices);
-
 	if (spdk_ioat_probe(NULL, probe_cb, attach_cb) != 0) {
 		fprintf(stderr, "ioat_probe() failed\n");
 		return 1;
