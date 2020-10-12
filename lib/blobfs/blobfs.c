@@ -58,7 +58,7 @@
 
 static uint64_t g_fs_cache_size = BLOBFS_DEFAULT_CACHE_SIZE;
 static struct spdk_mempool *g_cache_pool;
-static TAILQ_HEAD(, spdk_file) g_caches;
+static TAILQ_HEAD(, spdk_file) g_caches = TAILQ_HEAD_INITIALIZER(g_caches);
 static struct spdk_poller *g_cache_pool_mgmt_poller;
 static struct spdk_thread *g_cache_pool_thread;
 #define BLOBFS_CACHE_POOL_POLL_PERIOD_IN_US 1000ULL
@@ -292,7 +292,6 @@ __start_cache_pool_mgmt(void *ctx)
 			    "increase the memory and try again\n");
 		assert(false);
 	}
-	TAILQ_INIT(&g_caches);
 
 	assert(g_cache_pool_mgmt_poller == NULL);
 	g_cache_pool_mgmt_poller = SPDK_POLLER_REGISTER(_blobfs_cache_pool_reclaim, NULL,
