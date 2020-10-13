@@ -591,15 +591,28 @@ static const struct spdk_bdev_fn_table zone_block_fn_table = {
 };
 
 static void
-zone_block_base_bdev_hotremove_cb(void *ctx)
+zone_block_base_bdev_hotremove_cb(struct spdk_bdev *bdev_find)
 {
 	struct bdev_zone_block *bdev_node, *tmp;
-	struct spdk_bdev *bdev_find = ctx;
 
 	TAILQ_FOREACH_SAFE(bdev_node, &g_bdev_nodes, link, tmp) {
 		if (bdev_find == spdk_bdev_desc_get_bdev(bdev_node->base_desc)) {
 			spdk_bdev_unregister(&bdev_node->bdev, NULL, NULL);
 		}
+	}
+}
+
+static void
+zone_block_base_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
+			      void *event_ctx)
+{
+	switch (type) {
+	case SPDK_BDEV_EVENT_REMOVE:
+		zone_block_base_bdev_hotremove_cb(bdev);
+		break;
+	default:
+		SPDK_NOTICELOG("Unsupported bdev event: type %d\n", type);
+		break;
 	}
 }
 
@@ -803,8 +816,8 @@ zone_block_register(struct spdk_bdev *base_bdev)
 					sizeof(struct zone_block_io_channel),
 					name->vbdev_name);
 
-		rc = spdk_bdev_open(base_bdev, true, zone_block_base_bdev_hotremove_cb,
-				    base_bdev, &bdev_node->base_desc);
+		rc = spdk_bdev_open_ext(spdk_bdev_get_name(base_bdev), true, zone_block_base_bdev_event_cb,
+					NULL, &bdev_node->base_desc);
 		if (rc) {
 			SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(base_bdev));
 			goto open_failed;

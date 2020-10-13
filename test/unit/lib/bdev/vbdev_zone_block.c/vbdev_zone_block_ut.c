@@ -116,11 +116,19 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 }
 
 int
-spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
-	       void *remove_ctx, struct spdk_bdev_desc **_desc)
+spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event_cb,
+		   void *event_ctx, struct spdk_bdev_desc **_desc)
 {
-	*_desc = (void *)bdev;
-	return 0;
+	struct spdk_bdev *bdev;
+
+	TAILQ_FOREACH(bdev, &g_bdev_list, internal.link) {
+		if (strcmp(bdev_name, bdev->name) == 0) {
+			*_desc = (void *)bdev;
+			return 0;
+		}
+	}
+
+	return -ENODEV;
 }
 
 struct spdk_bdev *

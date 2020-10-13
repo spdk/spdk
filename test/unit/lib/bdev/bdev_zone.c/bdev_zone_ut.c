@@ -206,8 +206,8 @@ bdev_channel_get_io(struct spdk_bdev_channel *channel)
 }
 
 int
-spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
-	       void *remove_ctx, struct spdk_bdev_desc **_desc)
+spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event_cb,
+		   void *event_ctx, struct spdk_bdev_desc **_desc)
 {
 	*_desc = (void *)0x1;
 	return 0;
@@ -305,7 +305,7 @@ test_zone_get_operation(void)
     int rc; \
     memset(&bdev, 0, sizeof(bdev)); \
     bdev.name = "bdev_zone_ut"; \
-    rc = spdk_bdev_open(&bdev, true, NULL, NULL, &desc); \
+    rc = spdk_bdev_open_ext(bdev.name, true, NULL, NULL, &desc); \
     CU_ASSERT(rc == 0); \
     SPDK_CU_ASSERT_FATAL(desc != NULL); \
     ch = spdk_bdev_get_io_channel(desc); \
