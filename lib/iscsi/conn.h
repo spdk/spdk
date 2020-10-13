@@ -131,6 +131,11 @@ struct spdk_iscsi_conn {
 	 */
 	struct spdk_poller *shutdown_timer;
 
+	/* Timer used to destroy connection after creating this connection
+	 *  if login process does not complete.
+	 */
+	struct spdk_poller *login_timer;
+
 	struct spdk_iscsi_pdu *pdu_in_progress;
 	enum iscsi_pdu_recv_state pdu_recv_state;
 

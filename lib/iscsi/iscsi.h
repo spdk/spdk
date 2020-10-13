@@ -132,6 +132,9 @@
  */
 #define ISCSI_LOGOUT_TIMEOUT 5 /* in seconds */
 
+/** Defines how long we should wait until login process completes. */
+#define ISCSI_LOGIN_TIMEOUT 30 /* in seconds */
+
 /* For spdk_iscsi_login_in related function use, we need to avoid the conflict
  * with other errors
  * */

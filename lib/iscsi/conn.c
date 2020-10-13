@@ -170,12 +170,26 @@ iscsi_poll_group_remove_conn(struct spdk_iscsi_poll_group *pg, struct spdk_iscsi
 	STAILQ_REMOVE(&pg->connections, conn, spdk_iscsi_conn, pg_link);
 }
 
+static int
+login_timeout(void *arg)
+{
+	struct spdk_iscsi_conn *conn = arg;
+
+	if (conn->state < ISCSI_CONN_STATE_EXITING) {
+		conn->state = ISCSI_CONN_STATE_EXITING;
+	}
+
+	return SPDK_POLLER_BUSY;
+}
+
 static void
 iscsi_conn_start(void *ctx)
 {
 	struct spdk_iscsi_conn *conn = ctx;
 
 	iscsi_poll_group_add_conn(conn->pg, conn);
+
+	conn->login_timer = SPDK_POLLER_REGISTER(login_timeout, conn, ISCSI_LOGIN_TIMEOUT * 1000000);
 }
 
 int
