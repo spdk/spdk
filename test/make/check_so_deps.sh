@@ -204,13 +204,13 @@ function confirm_deps() {
 		done
 	done
 
-	symbols=$(readelf -s $lib | grep -E "NOTYPE.*GLOBAL.*UND" | awk '{print $8}' | sort | uniq)
+	symbols=$(readelf -s --wide $lib | grep -E "NOTYPE.*GLOBAL.*UND" | awk '{print $8}' | sort | uniq)
 	for symbol in $symbols; do
 		for deplib in $DEP_LIBS; do
 			if [ "$deplib" == "$lib" ]; then
 				continue
 			fi
-			found_symbol=$(readelf -s $deplib | grep -E "DEFAULT\s+[0-9]+\s$symbol$") || true
+			found_symbol=$(readelf -s --wide $deplib | grep -E "DEFAULT\s+[0-9]+\s$symbol$") || true
 			if [ "$found_symbol" != "" ]; then
 				found_symbol_lib=$(basename $deplib | sed 's,libspdk_,,g' | sed 's,\.so,,g')
 				break
