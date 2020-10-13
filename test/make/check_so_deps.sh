@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+shopt -s extglob
 
 if [ "$(uname -s)" = "FreeBSD" ]; then
 	echo "Not testing for shared object dependencies on FreeBSD."
@@ -162,27 +163,21 @@ EOF
 	echo "Processed $processed_so objects."
 }
 
-# This function is needed to properly evaluate the Make variables into actual dependencies.
-function replace_defined_variables() {
-	local arr=("$@")
-	local bad_values=()
-	local good_values=()
-	local new_values
-	for dep in "${arr[@]}"; do
-		if [[ $dep == *'$'* ]]; then
-			raw_dep=${dep/$\(/}
-			raw_dep=${raw_dep/\)/ }
-			bad_values+=("$raw_dep")
-		else
-			good_values+=("$dep")
+function import_libs_deps_mk() {
+	local var_mk val_mk dep_mk fun_mk
+	while read -r var_mk _ val_mk; do
+		if [[ $var_mk == "#"* || ! $var_mk =~ (DEPDIRS-|_DEPS|_LIBS) ]]; then
+			continue
 		fi
-	done
-	for dep in "${bad_values[@]}"; do
-		dep_def_arr=($(grep -v "#" $libdeps_file | grep "${dep}" | cut -d "=" -f 2 | xargs))
-		new_values=($(replace_defined_variables "${dep_def_arr[@]}"))
-		good_values=("${good_values[@]}" "${new_values[@]}")
-	done
-	echo ${good_values[*]}
+		var_mk=${var_mk#*-}
+		for dep_mk in $val_mk; do
+			fun_mk=${dep_mk//@('$('|')')/}
+			if [[ $fun_mk != "$dep_mk" ]]; then
+				eval "${fun_mk}() { echo \$$fun_mk ; }"
+			fi
+			eval "$var_mk=\${$var_mk:+\$$var_mk }$dep_mk"
+		done
+	done < "$libdeps_file"
 }
 
 function confirm_deps() {
@@ -191,10 +186,8 @@ function confirm_deps() {
 	dep_names=()
 	found_symbol_lib=""
 
-	#keep the space here to differentiate bdev and bdev_*
-	lib_shortname=$(basename $lib | sed 's,libspdk_,,g' | sed 's,\.so, ,g')
-	lib_make_deps=($(grep "DEPDIRS-${lib_shortname}" $libdeps_file | cut -d "=" -f 2 | xargs))
-	lib_make_deps=($(replace_defined_variables "${lib_make_deps[@]}"))
+	lib_shortname=$(basename "$lib" | sed 's,libspdk_,,g' | sed 's,\.so,,g')
+	lib_make_deps=(${!lib_shortname})
 
 	for ign_dep in "${IGNORED_LIBS[@]}"; do
 		for i in "${!lib_make_deps[@]}"; do
@@ -278,6 +271,7 @@ if grep -q 'CONFIG_RDMA?=n' $rootdir/mk/config.mk; then
 fi
 
 (
+	import_libs_deps_mk
 	for lib in $SPDK_LIBS; do confirm_deps $lib & done
 	wait
 )
