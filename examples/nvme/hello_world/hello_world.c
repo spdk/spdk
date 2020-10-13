@@ -35,6 +35,7 @@
 
 #include "spdk/nvme.h"
 #include "spdk/vmd.h"
+#include "spdk/nvme_zns.h"
 #include "spdk/env.h"
 
 struct ctrlr_entry {
@@ -154,6 +155,43 @@ write_complete(void *arg, const struct spdk_nvme_cpl *completion)
 }
 
 static void
+reset_zone_complete(void *arg, const struct spdk_nvme_cpl *completion)
+{
+	struct hello_world_sequence *sequence = arg;
+
+	/* Assume the I/O was successful */
+	sequence->is_completed = 1;
+	/* See if an error occurred. If so, display information
+	 * about it, and set completion value so that I/O
+	 * caller is aware that an error occurred.
+	 */
+	if (spdk_nvme_cpl_is_error(completion)) {
+		spdk_nvme_qpair_print_completion(sequence->ns_entry->qpair, (struct spdk_nvme_cpl *)completion);
+		fprintf(stderr, "I/O error status: %s\n", spdk_nvme_cpl_get_status_string(&completion->status));
+		fprintf(stderr, "Reset zone I/O failed, aborting run\n");
+		sequence->is_completed = 2;
+		exit(1);
+	}
+}
+
+static void
+reset_zone_and_wait_for_completion(struct hello_world_sequence *sequence)
+{
+	if (spdk_nvme_zns_reset_zone(sequence->ns_entry->ns, sequence->ns_entry->qpair,
+				     0, /* starting LBA of the zone to reset */
+				     false, /* don't reset all zones */
+				     reset_zone_complete,
+				     sequence)) {
+		fprintf(stderr, "starting reset zone I/O failed\n");
+		exit(1);
+	}
+	while (!sequence->is_completed) {
+		spdk_nvme_qpair_process_completions(sequence->ns_entry->qpair, 0);
+	}
+	sequence->is_completed = 0;
+}
+
+static void
 hello_world(void)
 {
 	struct ns_entry			*ns_entry;
@@ -202,6 +240,15 @@ hello_world(void)
 		}
 		sequence.is_completed = 0;
 		sequence.ns_entry = ns_entry;
+
+		/*
+		 * If the namespace is a Zoned Namespace, rather than a regular
+		 * NVM namespace, we need to reset the first zone, before we
+		 * write to it. This not needed for regular NVM namespaces.
+		 */
+		if (spdk_nvme_ns_get_csi(ns_entry->ns) == SPDK_NVME_CSI_ZNS) {
+			reset_zone_and_wait_for_completion(&sequence);
+		}
 
 		/*
 		 * Print "Hello world!" to sequence.buf.  We will write this data to LBA
