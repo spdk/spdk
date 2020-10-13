@@ -179,6 +179,8 @@ function import_libs_deps_mk() {
 			fun_mk=${dep_mk//@('$('|')')/}
 			if [[ $fun_mk != "$dep_mk" ]]; then
 				eval "${fun_mk}() { echo \$$fun_mk ; }"
+			elif ((IGNORED_LIBS["$dep_mk"] == 1)); then
+				continue
 			fi
 			eval "$var_mk=\${$var_mk:+\$$var_mk }$dep_mk"
 		done
@@ -193,14 +195,6 @@ function confirm_deps() {
 
 	lib_shortname=$(get_lib_shortname "$lib")
 	lib_make_deps=(${!lib_shortname})
-
-	for ign_dep in "${IGNORED_LIBS[@]}"; do
-		for i in "${!lib_make_deps[@]}"; do
-			if [[ ${lib_make_deps[i]} == "$ign_dep" ]]; then
-				unset 'lib_make_deps[i]'
-			fi
-		done
-	done
 
 	symbols=$(readelf -s --wide $lib | grep -E "NOTYPE.*GLOBAL.*UND" | awk '{print $8}' | sort | uniq)
 	for symbol in $symbols; do
@@ -267,12 +261,12 @@ echo "---------------------------------------------------------------------"
 SPDK_LIBS=$(ls -1 $libdir/libspdk_*.so | grep -v libspdk_env_dpdk.so)
 DEP_LIBS=$(ls -1 $libdir/libspdk_*.so)
 
-IGNORED_LIBS=()
+declare -A IGNORED_LIBS=()
 if grep -q 'CONFIG_VHOST_INTERNAL_LIB?=n' $rootdir/mk/config.mk; then
-	IGNORED_LIBS+=("rte_vhost")
+	IGNORED_LIBS["rte_vhost"]=1
 fi
 if grep -q 'CONFIG_RDMA?=n' $rootdir/mk/config.mk; then
-	IGNORED_LIBS+=("rdma")
+	IGNORED_LIBS["rdma"]=1
 fi
 
 (
