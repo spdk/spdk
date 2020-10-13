@@ -2,11 +2,6 @@
 
 ## v20.10: (Upcoming Release)
 
-### bdev
-
-A new API was added `bdev_examine_bdev` that allows users to examine a
-bdev explicitly. It can be used only if auto_examine is disabled.
-
 ### dpdk
 
 Updated DPDK submodule to DPDK 20.08.
@@ -45,6 +40,9 @@ not enabled.
 A new optional parameter `enable_placement_id` was added to the `sock_impl_set_options`
 RPC.
 
+A new RPC `bdev_examine_bdev` was added to allow users to examine a bdev explicitly.
+It can be used only if bdev_auto_examine is set to false by the RPC `bdev_set_options`.
+
 ### Miscellaneous
 
 The contents of the log_rpc library have been moved to the event library. The log_rpc
@@ -57,6 +55,7 @@ The contents of the bdev_rpc library have been moved to the bdev library. The ap
 library now no longer exists.
 
 ### scsi
+
 Two new APIs have been added `spdk_scsi_dev_construct_ext` and
 `spdk_scsi_dev_add_lun_ext` that allow the upper layer(e.g. vhost-scsi) to
 receive the notification when the scsi bdev has been resized.
