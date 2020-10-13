@@ -179,7 +179,8 @@ function import_libs_deps_mk() {
 			fun_mk=${dep_mk//@('$('|')')/}
 			if [[ $fun_mk != "$dep_mk" ]]; then
 				eval "${fun_mk}() { echo \$$fun_mk ; }"
-			elif ((IGNORED_LIBS["$dep_mk"] == 1)); then
+			# Ignore any event_* dependencies. Those are based on the subsystem configuration and not readelf.
+			elif ((IGNORED_LIBS["$dep_mk"] == 1)) || [[ $dep_mk =~ event_ ]]; then
 				continue
 			fi
 			eval "$var_mk=\${$var_mk:+\$$var_mk }$dep_mk"
@@ -188,38 +189,28 @@ function import_libs_deps_mk() {
 }
 
 function confirm_deps() {
-	lib=$1
-	missing_syms=()
-	dep_names=()
-	found_symbol_lib=""
+	local lib=$1 deplib lib_shortname
 
 	lib_shortname=$(get_lib_shortname "$lib")
 	lib_make_deps=(${!lib_shortname})
 
-	symbols=$(readelf -s --wide $lib | grep -E "NOTYPE.*GLOBAL.*UND" | awk '{print $8}' | sort | uniq)
-	for symbol in $symbols; do
-		for deplib in $DEP_LIBS; do
-			if [ "$deplib" == "$lib" ]; then
-				continue
-			fi
-			found_symbol=$(readelf -s --wide $deplib | grep -E "DEFAULT\s+[0-9]+\s$symbol$") || true
-			if [ "$found_symbol" != "" ]; then
-				found_symbol_lib=$(get_lib_shortname "$deplib")
-				break
+	symbols=($(readelf -s --wide "$lib" | grep -E "NOTYPE.*GLOBAL.*UND" | awk '{print $8}' | sort -u))
+	symbols_regx=$(
+		IFS="|"
+		echo "(${symbols[*]})"
+	)
+
+	if ((${#symbols[@]} > 0)); then
+		for deplib in "$libdir/"libspdk_!("$lib_shortname").so; do
+			readelf -s --wide "$deplib" | grep -m1 -qE "DEFAULT\s+[0-9]+\s$symbols_regx$" || continue
+			found_symbol_lib=$(get_lib_shortname "$deplib")
+			# Ignore the env_dpdk readelf dependency. We don't want people explicitly linking against it.
+			if [[ $found_symbol_lib != *env_dpdk* ]]; then
+				dep_names+=("$found_symbol_lib")
 			fi
 		done
-		if [ "$found_symbol" == "" ]; then
-			missing_syms+=("$symbol")
-		else
-			dep_names+=("$found_symbol_lib")
-		fi
-	done
-	IFS=$'\n'
-	# Ignore any event_* dependencies. Those are based on the subsystem configuration and not readelf.
-	lib_make_deps=($(printf "%s\n" "${lib_make_deps[@]}" | sort | grep -v "event_"))
-	# Ignore the env_dpdk readelf dependency. We don't want people explicitly linking against it.
-	dep_names=($(printf "%s\n" "${dep_names[@]}" | sort | uniq | grep -v "env_dpdk"))
-	unset IFS
+	fi
+
 	diff=$(echo "${dep_names[@]}" "${lib_make_deps[@]}" | tr ' ' '\n' | sort | uniq -u)
 	if [ "$diff" != "" ]; then
 		touch $fail_file
@@ -258,8 +249,7 @@ echo "---------------------------------------------------------------------"
 # users can define their own environment abstraction. However we do want to still check it
 # for dependencies to avoid printing out a bunch of confusing symbols under the missing
 # symbols section.
-SPDK_LIBS=$(ls -1 $libdir/libspdk_*.so | grep -v libspdk_env_dpdk.so)
-DEP_LIBS=$(ls -1 $libdir/libspdk_*.so)
+SPDK_LIBS=("$libdir/"libspdk_!(env_dpdk).so)
 
 declare -A IGNORED_LIBS=()
 if grep -q 'CONFIG_VHOST_INTERNAL_LIB?=n' $rootdir/mk/config.mk; then
@@ -271,7 +261,7 @@ fi
 
 (
 	import_libs_deps_mk
-	for lib in $SPDK_LIBS; do confirm_deps $lib & done
+	for lib in "${SPDK_LIBS[@]}"; do confirm_deps "$lib" & done
 	wait
 )
 
