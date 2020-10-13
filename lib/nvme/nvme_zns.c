@@ -61,6 +61,42 @@ spdk_nvme_zns_ctrlr_get_data(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static int
+nvme_zns_zone_mgmt_recv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			void *payload, uint32_t payload_size, uint64_t slba,
+			uint8_t zone_recv_action, uint8_t zra_spec_field, bool zra_spec_feats,
+			spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	struct nvme_request *req;
+	struct spdk_nvme_cmd *cmd;
+
+	req = nvme_allocate_request_user_copy(qpair, payload, payload_size, cb_fn, cb_arg, false);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_NVME_OPC_ZONE_MGMT_RECV;
+	cmd->nsid = ns->id;
+
+	*(uint64_t *)&cmd->cdw10 = slba;
+	cmd->cdw12 = payload_size / sizeof(uint32_t) - 1u;
+	cmd->cdw13 = zone_recv_action | zra_spec_field << 8 | zra_spec_feats << 16;
+
+	return nvme_qpair_submit_request(qpair, req);
+}
+
+int
+spdk_nvme_zns_report_zones(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			   void *payload, uint32_t payload_size, uint64_t slba,
+			   enum spdk_nvme_zns_zra_report_opts report_opts, bool partial_report,
+			   spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	return nvme_zns_zone_mgmt_recv(ns, qpair, payload, payload_size, slba,
+				       SPDK_NVME_ZONE_REPORT, report_opts, partial_report,
+				       cb_fn, cb_arg);
+}
+
+static int
 nvme_zns_zone_mgmt_send(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			uint64_t slba, bool select_all, uint8_t zone_send_action,
 			spdk_nvme_cmd_cb cb_fn, void *cb_arg)

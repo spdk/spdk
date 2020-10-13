@@ -3078,6 +3078,41 @@ enum spdk_nvme_zns_zone_send_action {
 	SPDK_NVME_ZONE_OFFLINE	= 0x5,
 };
 
+/* ZNS Zone Receive Action (ZRA) cdw13 */
+enum spdk_nvme_zns_zone_receive_action {
+	SPDK_NVME_ZONE_REPORT	= 0x0,
+};
+
+enum spdk_nvme_zns_zra_report_opts {
+	SPDK_NVME_ZRA_LIST_ALL	= 0x0,
+	SPDK_NVME_ZRA_LIST_ZSE	= 0x1,
+	SPDK_NVME_ZRA_LIST_ZSIO	= 0x2,
+	SPDK_NVME_ZRA_LIST_ZSEO	= 0x3,
+	SPDK_NVME_ZRA_LIST_ZSC	= 0x4,
+	SPDK_NVME_ZRA_LIST_ZSF	= 0x5,
+	SPDK_NVME_ZRA_LIST_ZSRO	= 0x6,
+	SPDK_NVME_ZRA_LIST_ZSO	= 0x7,
+};
+
+struct spdk_nvme_zns_zone_desc {
+	uint8_t zt;
+	uint8_t zs;
+	uint8_t za;
+	uint8_t reserved3[5];
+	uint64_t zcap;
+	uint64_t zslba;
+	uint64_t wp;
+	uint8_t reserved32[32];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_zns_zone_desc) == 64, "Incorrect size");
+
+struct spdk_nvme_zns_zone_report {
+	uint64_t nr_zones;
+	uint8_t reserved8[56];
+	struct spdk_nvme_zns_zone_desc descs[];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_zns_zone_report) == 64, "Incorrect size");
+
 #define spdk_nvme_cpl_is_error(cpl)			\
 	((cpl)->status.sc != SPDK_NVME_SC_SUCCESS ||	\
 	 (cpl)->status.sct != SPDK_NVME_SCT_GENERIC)
