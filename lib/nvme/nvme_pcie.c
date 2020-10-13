@@ -299,7 +299,9 @@ _nvme_pcie_hotplug_monitor(struct spdk_nvme_probe_ctx *probe_ctx)
 				SPDK_DEBUGLOG(nvme, "remove nvme address: %s\n",
 					      event.traddr);
 
+				nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 				nvme_ctrlr_fail(ctrlr, true);
+				nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 				/* get the user app to clean up and stop I/O */
 				if (ctrlr->remove_cb) {
@@ -328,7 +330,9 @@ _nvme_pcie_hotplug_monitor(struct spdk_nvme_probe_ctx *probe_ctx)
 		}
 
 		if (do_remove) {
+			nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 			nvme_ctrlr_fail(ctrlr, true);
+			nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 			if (ctrlr->remove_cb) {
 				nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
 				ctrlr->remove_cb(probe_ctx->cb_ctx, ctrlr);
