@@ -44,3 +44,69 @@ spdk_nvme_zns_ctrlr_get_data(struct spdk_nvme_ctrlr *ctrlr)
 {
 	return ctrlr->cdata_zns;
 }
+
+static int
+nvme_zns_zone_mgmt_send(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			uint64_t slba, bool select_all, uint8_t zone_send_action,
+			spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	struct nvme_request *req;
+	struct spdk_nvme_cmd *cmd;
+
+	req = nvme_allocate_request_null(qpair, cb_fn, cb_arg);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_NVME_OPC_ZONE_MGMT_SEND;
+	cmd->nsid = ns->id;
+
+	if (!select_all) {
+		*(uint64_t *)&cmd->cdw10 = slba;
+	}
+
+	cmd->cdw13 = zone_send_action | select_all << 8;
+
+	return nvme_qpair_submit_request(qpair, req);
+}
+
+int
+spdk_nvme_zns_close_zone(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, uint64_t slba,
+			 bool select_all, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	return nvme_zns_zone_mgmt_send(ns, qpair, slba, select_all, SPDK_NVME_ZONE_CLOSE,
+				       cb_fn, cb_arg);
+}
+
+int
+spdk_nvme_zns_finish_zone(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, uint64_t slba,
+			  bool select_all, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	return nvme_zns_zone_mgmt_send(ns, qpair, slba, select_all, SPDK_NVME_ZONE_FINISH,
+				       cb_fn, cb_arg);
+}
+
+int
+spdk_nvme_zns_open_zone(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, uint64_t slba,
+			bool select_all, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	return nvme_zns_zone_mgmt_send(ns, qpair, slba, select_all, SPDK_NVME_ZONE_OPEN,
+				       cb_fn, cb_arg);
+}
+
+int
+spdk_nvme_zns_reset_zone(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, uint64_t slba,
+			 bool select_all, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	return nvme_zns_zone_mgmt_send(ns, qpair, slba, select_all, SPDK_NVME_ZONE_RESET,
+				       cb_fn, cb_arg);
+}
+
+int
+spdk_nvme_zns_offline_zone(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, uint64_t slba,
+			   bool select_all, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	return nvme_zns_zone_mgmt_send(ns, qpair, slba, select_all, SPDK_NVME_ZONE_OFFLINE,
+				       cb_fn, cb_arg);
+}

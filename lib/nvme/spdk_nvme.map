@@ -159,6 +159,11 @@
 	# public functions from nvme_zns.h
 	spdk_nvme_zns_ns_get_data;
 	spdk_nvme_zns_ctrlr_get_data;
+	spdk_nvme_zns_close_zone;
+	spdk_nvme_zns_finish_zone;
+	spdk_nvme_zns_open_zone;
+	spdk_nvme_zns_reset_zone;
+	spdk_nvme_zns_offline_zone;
 
 	# public functions from nvme_ocssd.h
 	spdk_nvme_ctrlr_is_ocssd_supported;

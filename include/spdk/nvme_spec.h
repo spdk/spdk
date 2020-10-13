@@ -1357,6 +1357,18 @@ enum spdk_nvme_nvm_opcode {
 };
 
 /**
+ * Zoned Namespace command set opcodes
+ *
+ * In addition to the opcodes of the NVM command set, the Zoned Namespace
+ * command set supports the following opcodes.
+ */
+enum spdk_nvme_zns_opcode {
+	SPDK_NVME_OPC_ZONE_MGMT_SEND			= 0x79,
+	SPDK_NVME_OPC_ZONE_MGMT_RECV			= 0x7a,
+	SPDK_NVME_OPC_ZONE_APPEND			= 0x7d,
+};
+
+/**
  * Data transfer (bits 1:0) of an NVMe opcode.
  *
  * \sa spdk_nvme_opc_get_data_transfer
@@ -3056,6 +3068,15 @@ struct spdk_nvme_fw_commit {
 	uint32_t	reserved	: 26;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_fw_commit) == 4, "Incorrect size");
+
+/* ZNS Zone Send Action (ZSA) cdw13 */
+enum spdk_nvme_zns_zone_send_action {
+	SPDK_NVME_ZONE_CLOSE	= 0x1,
+	SPDK_NVME_ZONE_FINISH	= 0x2,
+	SPDK_NVME_ZONE_OPEN	= 0x3,
+	SPDK_NVME_ZONE_RESET	= 0x4,
+	SPDK_NVME_ZONE_OFFLINE	= 0x5,
+};
 
 #define spdk_nvme_cpl_is_error(cpl)			\
 	((cpl)->status.sc != SPDK_NVME_SC_SUCCESS ||	\

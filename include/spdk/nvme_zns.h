@@ -74,6 +74,91 @@ const struct spdk_nvme_zns_ns_data *spdk_nvme_zns_ns_get_data(struct spdk_nvme_n
  */
 const struct spdk_nvme_zns_ctrlr_data *spdk_nvme_zns_ctrlr_get_data(struct spdk_nvme_ctrlr *ctrlr);
 
+/**
+ * Submit a Close Zone operation to the specified NVMe namespace.
+ *
+ * \param ns Namespace.
+ * \param qpair I/O queue pair to submit the request.
+ * \param slba starting LBA of the zone to operate on.
+ * \param select_all If this is set, slba will be ignored, and operation will
+ * be performed on all zones that are in ZSIO or ZSEO state.
+ * \param cb_fn Callback function invoked when the I/O command completes.
+ * \param cb_arg Argument passed to callback function.
+ *
+ * \return 0 on success. Negated errno on failure.
+ */
+int spdk_nvme_zns_close_zone(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			     uint64_t slba, bool select_all,
+			     spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+
+/**
+ * Submit a Finish Zone operation to the specified NVMe namespace.
+ *
+ * \param ns Namespace.
+ * \param qpair I/O queue pair to submit the request.
+ * \param slba starting LBA of the zone to operate on.
+ * \param select_all If this is set, slba will be ignored, and operation will
+ * be performed on all zones that are in ZSIO, ZSEO, or ZSC state.
+ * \param cb_fn Callback function invoked when the I/O command completes.
+ * \param cb_arg Argument passed to callback function.
+ *
+ * \return 0 on success. Negated errno on failure.
+ */
+int spdk_nvme_zns_finish_zone(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			      uint64_t slba, bool select_all,
+			      spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+
+/**
+ * Submit a Open Zone operation to the specified NVMe namespace.
+ *
+ * \param ns Namespace.
+ * \param qpair I/O queue pair to submit the request.
+ * \param slba starting LBA of the zone to operate on.
+ * \param select_all If this is set, slba will be ignored, and operation will
+ * be performed on all zones that are in ZSC state.
+ * \param cb_fn Callback function invoked when the I/O command completes.
+ * \param cb_arg Argument passed to callback function.
+ *
+ * \return 0 on success. Negated errno on failure.
+ */
+int spdk_nvme_zns_open_zone(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			    uint64_t slba, bool select_all,
+			    spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+
+/**
+ * Submit a Reset Zone operation to the specified NVMe namespace.
+ *
+ * \param ns Namespace.
+ * \param qpair I/O queue pair to submit the request.
+ * \param slba starting LBA of the zone to operate on.
+ * \param select_all If this is set, slba will be ignored, and operation will
+ * be performed on all zones that are in ZSIO, ZSEO, ZSC, or ZSF state.
+ * \param cb_fn Callback function invoked when the I/O command completes.
+ * \param cb_arg Argument passed to callback function.
+ *
+ * \return 0 on success. Negated errno on failure.
+ */
+int spdk_nvme_zns_reset_zone(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			     uint64_t slba, bool select_all,
+			     spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+
+/**
+ * Submit a Offline Zone operation to the specified NVMe namespace.
+ *
+ * \param ns Namespace.
+ * \param qpair I/O queue pair to submit the request.
+ * \param slba starting LBA of the zone to operate on.
+ * \param select_all If this is set, slba will be ignored, and operation will
+ * be performed on all zones that are in ZSRO state.
+ * \param cb_fn Callback function invoked when the I/O command completes.
+ * \param cb_arg Argument passed to callback function.
+ *
+ * \return 0 on success. Negated errno on failure.
+ */
+int spdk_nvme_zns_offline_zone(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			       uint64_t slba, bool select_all,
+			       spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+
 #ifdef __cplusplus
 }
 #endif
