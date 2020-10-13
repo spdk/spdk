@@ -93,7 +93,7 @@ EOF
 				if ((new_so_maj == old_so_maj)); then
 					abidiff_output=1
 					touch $fail_file
-					echo "Please update the major SO version for $so_file. A header accesible type has been modified since last release."
+					echo "Please update the major SO version for $so_file. A header accessible type has been modified since last release."
 				fi
 				found_abi_change=true
 			fi
