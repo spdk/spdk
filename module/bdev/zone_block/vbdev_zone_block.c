@@ -714,8 +714,10 @@ zone_block_init_zone_info(struct bdev_zone_block *bdev_node)
 }
 
 static int
-zone_block_register(struct spdk_bdev *base_bdev)
+zone_block_register(const char *base_bdev_name)
 {
+	struct spdk_bdev_desc *base_desc;
+	struct spdk_bdev *base_bdev;
 	struct bdev_zone_block_config *name, *tmp;
 	struct bdev_zone_block *bdev_node;
 	uint64_t zone_size;
@@ -725,22 +727,35 @@ zone_block_register(struct spdk_bdev *base_bdev)
 	 * there's a match, create the bdev_node & bdev accordingly.
 	 */
 	TAILQ_FOREACH_SAFE(name, &g_bdev_configs, link, tmp) {
-		if (strcmp(name->bdev_name, base_bdev->name) != 0) {
+		if (strcmp(name->bdev_name, base_bdev_name) != 0) {
 			continue;
 		}
 
-		if (spdk_bdev_is_zoned(base_bdev)) {
-			SPDK_ERRLOG("Base bdev %s is already a zoned bdev\n", base_bdev->name);
-			rc = -EEXIST;
+		rc = spdk_bdev_open_ext(base_bdev_name, true, zone_block_base_bdev_event_cb,
+					NULL, &base_desc);
+		if (rc == -ENODEV) {
+			return -ENODEV;
+		} else if (rc) {
+			SPDK_ERRLOG("could not open bdev %s\n", base_bdev_name);
 			goto free_config;
+		}
+
+		base_bdev = spdk_bdev_desc_get_bdev(base_desc);
+
+		if (spdk_bdev_is_zoned(base_bdev)) {
+			SPDK_ERRLOG("Base bdev %s is already a zoned bdev\n", base_bdev_name);
+			rc = -EEXIST;
+			goto zone_exist;
 		}
 
 		bdev_node = calloc(1, sizeof(struct bdev_zone_block));
 		if (!bdev_node) {
 			rc = -ENOMEM;
 			SPDK_ERRLOG("could not allocate bdev_node\n");
-			goto free_config;
+			goto zone_exist;
 		}
+
+		bdev_node->base_desc = base_desc;
 
 		/* The base bdev that we're attaching to. */
 		bdev_node->bdev.name = strdup(name->vbdev_name);
@@ -816,19 +831,12 @@ zone_block_register(struct spdk_bdev *base_bdev)
 					sizeof(struct zone_block_io_channel),
 					name->vbdev_name);
 
-		rc = spdk_bdev_open_ext(spdk_bdev_get_name(base_bdev), true, zone_block_base_bdev_event_cb,
-					NULL, &bdev_node->base_desc);
-		if (rc) {
-			SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(base_bdev));
-			goto open_failed;
-		}
-
 		/* Save the thread where the base device is opened */
 		bdev_node->thread = spdk_get_thread();
 
-		rc = spdk_bdev_module_claim_bdev(base_bdev, bdev_node->base_desc, bdev_node->bdev.module);
+		rc = spdk_bdev_module_claim_bdev(base_bdev, base_desc, bdev_node->bdev.module);
 		if (rc) {
-			SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(base_bdev));
+			SPDK_ERRLOG("could not claim bdev %s\n", base_bdev_name);
 			goto claim_failed;
 		}
 
@@ -844,8 +852,6 @@ zone_block_register(struct spdk_bdev *base_bdev)
 register_failed:
 	spdk_bdev_module_release_bdev(&bdev_node->bdev);
 claim_failed:
-	spdk_bdev_close(bdev_node->base_desc);
-open_failed:
 	TAILQ_REMOVE(&g_bdev_nodes, bdev_node, link);
 	spdk_io_device_unregister(bdev_node, NULL);
 zone_info_failed:
@@ -855,6 +861,8 @@ roundup_failed:
 	free(bdev_node->bdev.name);
 strdup_failed:
 	free(bdev_node);
+zone_exist:
+	spdk_bdev_close(base_desc);
 free_config:
 	zone_block_remove_config(name);
 	return rc;
@@ -864,7 +872,6 @@ int
 vbdev_zone_block_create(const char *bdev_name, const char *vbdev_name, uint64_t zone_capacity,
 			uint64_t optimal_open_zones)
 {
-	struct spdk_bdev *bdev = NULL;
 	int rc = 0;
 
 	if (zone_capacity == 0) {
@@ -885,15 +892,14 @@ vbdev_zone_block_create(const char *bdev_name, const char *vbdev_name, uint64_t 
 		return rc;
 	}
 
-	bdev = spdk_bdev_get_by_name(bdev_name);
-	if (!bdev) {
+	rc = zone_block_register(bdev_name);
+	if (rc == -ENODEV) {
 		/* This is not an error, even though the bdev is not present at this time it may
 		 * still show up later.
 		 */
-		return 0;
+		rc = 0;
 	}
-
-	return zone_block_register(bdev);
+	return rc;
 }
 
 void
@@ -921,7 +927,7 @@ vbdev_zone_block_delete(const char *name, spdk_bdev_unregister_cb cb_fn, void *c
 static void
 zone_block_examine(struct spdk_bdev *bdev)
 {
-	zone_block_register(bdev);
+	zone_block_register(bdev->name);
 
 	spdk_bdev_module_examine_done(&bdev_zoned_if);
 }
