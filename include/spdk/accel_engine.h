@@ -89,13 +89,6 @@ int spdk_accel_engine_initialize(void);
 void spdk_accel_engine_finish(spdk_accel_fini_cb cb_fn, void *cb_arg);
 
 /**
- * Get the configuration for the acceleration engine.
- *
- * \param fp The pointer to a file that will be written to the configuration.
- */
-void spdk_accel_engine_config_text(FILE *fp);
-
-/**
  * Close the acceleration engine module and perform any necessary cleanup.
  */
 void spdk_accel_engine_module_finish(void);

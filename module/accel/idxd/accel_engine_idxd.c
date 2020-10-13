@@ -841,7 +841,7 @@ accel_engine_idxd_write_config_json(struct spdk_json_write_ctx *w)
 }
 
 SPDK_ACCEL_MODULE_REGISTER(accel_engine_idxd_init, accel_engine_idxd_exit,
-			   NULL, accel_engine_idxd_write_config_json,
+			   accel_engine_idxd_write_config_json,
 			   accel_engine_idxd_get_ctx_size)
 
 SPDK_LOG_REGISTER_COMPONENT(accel_idxd)

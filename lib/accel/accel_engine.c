@@ -571,18 +571,6 @@ spdk_accel_engine_finish(spdk_accel_fini_cb cb_fn, void *cb_arg)
 	spdk_accel_engine_module_finish();
 }
 
-void
-spdk_accel_engine_config_text(FILE *fp)
-{
-	struct spdk_accel_module_if *accel_engine_module;
-
-	TAILQ_FOREACH(accel_engine_module, &spdk_accel_module_list, tailq) {
-		if (accel_engine_module->config_text) {
-			accel_engine_module->config_text(fp);
-		}
-	}
-}
-
 /*
  * The SW Accelerator module is "built in" here (rest of file)
  */
@@ -1031,4 +1019,4 @@ sw_accel_engine_fini(void *ctxt)
 }
 
 SPDK_ACCEL_MODULE_REGISTER(sw_accel_engine_init, sw_accel_engine_fini,
-			   NULL, NULL, sw_accel_engine_get_ctx_size)
+			   NULL, sw_accel_engine_get_ctx_size)

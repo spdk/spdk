@@ -163,7 +163,7 @@ accel_engine_ioat_get_ctx_size(void)
 }
 
 SPDK_ACCEL_MODULE_REGISTER(accel_engine_ioat_init, accel_engine_ioat_exit,
-			   NULL, NULL, accel_engine_ioat_get_ctx_size)
+			   NULL, accel_engine_ioat_get_ctx_size)
 
 static void
 ioat_done(void *cb_arg)

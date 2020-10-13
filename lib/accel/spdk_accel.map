@@ -4,7 +4,6 @@
 	# public functions
 	spdk_accel_engine_initialize;
 	spdk_accel_engine_finish;
-	spdk_accel_engine_config_text;
 	spdk_accel_engine_module_finish;
 	spdk_accel_engine_get_io_channel;
 	spdk_accel_get_capabilities;
