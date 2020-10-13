@@ -30,17 +30,52 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/nvme_zns.h"
-#include "nvme_internal.h"
+/**
+ * \file
+ * NVMe driver public API extension for Zoned Namespace Command Set
+ */
 
-const struct spdk_nvme_zns_ns_data *
-spdk_nvme_zns_ns_get_data(struct spdk_nvme_ns *ns)
-{
-	return ns->ctrlr->nsdata_zns[ns->id - 1];
-}
+#ifndef SPDK_NVME_ZNS_H
+#define SPDK_NVME_ZNS_H
 
-const struct spdk_nvme_zns_ctrlr_data *
-spdk_nvme_zns_ctrlr_get_data(struct spdk_nvme_ctrlr *ctrlr)
-{
-	return ctrlr->cdata_zns;
+#include "spdk/stdinc.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "spdk/nvme.h"
+
+/**
+ * Get the Zoned Namespace Command Set Specific Identify Namespace data
+ * as defined by the NVMe Zoned Namespace Command Set Specification.
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
+ * \param ns Namespace.
+ *
+ * \return a pointer to the namespace data, or NULL if the namespace is not
+ * a Zoned Namespace.
+ */
+const struct spdk_nvme_zns_ns_data *spdk_nvme_zns_ns_get_data(struct spdk_nvme_ns *ns);
+
+/**
+ * Get the Zoned Namespace Command Set Specific Identify Controller data
+ * as defined by the NVMe Zoned Namespace Command Set Specification.
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return pointer to the controller data, or NULL if the controller does not
+ * support the Zoned Command Set.
+ */
+const struct spdk_nvme_zns_ctrlr_data *spdk_nvme_zns_ctrlr_get_data(struct spdk_nvme_ctrlr *ctrlr);
+
+#ifdef __cplusplus
 }
+#endif
+
+#endif
