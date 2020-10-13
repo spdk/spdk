@@ -61,6 +61,8 @@
 	memset(&(conn)->portal, 0, sizeof(*(conn)) -	\
 		offsetof(struct spdk_iscsi_conn, portal));
 
+#define SPDK_ISCSI_CONNECTION_STATUS(status, rnstr) case(status): return(rnstr)
+
 static struct spdk_iscsi_conn *g_conns_array = NULL;
 
 static TAILQ_HEAD(, spdk_iscsi_conn) g_free_conns = TAILQ_HEAD_INITIALIZER(g_free_conns);
@@ -1617,6 +1619,29 @@ iscsi_conn_logout(struct spdk_iscsi_conn *conn)
 	conn->logout_timer = SPDK_POLLER_REGISTER(logout_timeout, conn, ISCSI_LOGOUT_TIMEOUT * 1000000);
 }
 
+static const char *
+iscsi_conn_get_state(struct spdk_iscsi_conn *conn)
+{
+	switch (conn->state) {
+		SPDK_ISCSI_CONNECTION_STATUS(ISCSI_CONN_STATE_INVALID, "invalid");
+		SPDK_ISCSI_CONNECTION_STATUS(ISCSI_CONN_STATE_RUNNING, "running");
+		SPDK_ISCSI_CONNECTION_STATUS(ISCSI_CONN_STATE_EXITING, "exiting");
+		SPDK_ISCSI_CONNECTION_STATUS(ISCSI_CONN_STATE_EXITED, "exited");
+	}
+	return "unknown";
+}
+
+static const char *
+iscsi_conn_get_login_phase(struct spdk_iscsi_conn *conn)
+{
+	switch (conn->login_phase) {
+		SPDK_ISCSI_CONNECTION_STATUS(ISCSI_SECURITY_NEGOTIATION_PHASE, "security_negotiation_phase");
+		SPDK_ISCSI_CONNECTION_STATUS(ISCSI_OPERATIONAL_NEGOTIATION_PHASE, "operational_negotiation_phase");
+		SPDK_ISCSI_CONNECTION_STATUS(ISCSI_FULL_FEATURE_PHASE, "full_feature_phase");
+	}
+	return "not_started";
+}
+
 SPDK_TRACE_REGISTER_FN(iscsi_conn_trace, "iscsi_conn", TRACE_GROUP_ISCSI)
 {
 	spdk_trace_register_owner(OWNER_ISCSI_CONN, 'c');
@@ -1666,6 +1691,10 @@ iscsi_conn_info_json(struct spdk_json_write_ctx *w, struct spdk_iscsi_conn *conn
 		tsih = conn->sess->tsih;
 	}
 	spdk_json_write_named_int32(w, "tsih", tsih);
+
+	spdk_json_write_named_string(w, "state", iscsi_conn_get_state(conn));
+
+	spdk_json_write_named_string(w, "login_phase", iscsi_conn_get_login_phase(conn));
 
 	spdk_json_write_named_string(w, "initiator_addr", conn->initiator_addr);
 
