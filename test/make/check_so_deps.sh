@@ -163,6 +163,11 @@ EOF
 	echo "Processed $processed_so objects."
 }
 
+function get_lib_shortname() {
+	local lib=${1##*/}
+	echo "${lib//@(libspdk_|.so)/}"
+}
+
 function import_libs_deps_mk() {
 	local var_mk val_mk dep_mk fun_mk
 	while read -r var_mk _ val_mk; do
@@ -186,7 +191,7 @@ function confirm_deps() {
 	dep_names=()
 	found_symbol_lib=""
 
-	lib_shortname=$(basename "$lib" | sed 's,libspdk_,,g' | sed 's,\.so,,g')
+	lib_shortname=$(get_lib_shortname "$lib")
 	lib_make_deps=(${!lib_shortname})
 
 	for ign_dep in "${IGNORED_LIBS[@]}"; do
@@ -205,7 +210,7 @@ function confirm_deps() {
 			fi
 			found_symbol=$(readelf -s --wide $deplib | grep -E "DEFAULT\s+[0-9]+\s$symbol$") || true
 			if [ "$found_symbol" != "" ]; then
-				found_symbol_lib=$(basename $deplib | sed 's,libspdk_,,g' | sed 's,\.so,,g')
+				found_symbol_lib=$(get_lib_shortname "$deplib")
 				break
 			fi
 		done
