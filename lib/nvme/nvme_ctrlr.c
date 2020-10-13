@@ -938,12 +938,10 @@ spdk_nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static void
-nvme_ctrlr_shutdown(struct spdk_nvme_ctrlr *ctrlr)
+nvme_ctrlr_shutdown_async(struct spdk_nvme_ctrlr *ctrlr,
+			  struct nvme_ctrlr_detach_ctx *ctx)
 {
 	union spdk_nvme_cc_register	cc;
-	union spdk_nvme_csts_register	csts;
-	uint32_t			ms_waited = 0;
-	uint32_t			shutdown_timeout_ms;
 
 	if (ctrlr->is_removed) {
 		return;
@@ -970,31 +968,45 @@ nvme_ctrlr_shutdown(struct spdk_nvme_ctrlr *ctrlr)
 	 *  wait before proceeding.
 	 */
 	SPDK_DEBUGLOG(nvme, "RTD3E = %" PRIu32 " us\n", ctrlr->cdata.rtd3e);
-	shutdown_timeout_ms = (ctrlr->cdata.rtd3e + 999) / 1000;
-	shutdown_timeout_ms = spdk_max(shutdown_timeout_ms, 10000);
-	SPDK_DEBUGLOG(nvme, "shutdown timeout = %" PRIu32 " ms\n", shutdown_timeout_ms);
+	ctx->shutdown_timeout_ms = SPDK_CEIL_DIV(ctrlr->cdata.rtd3e, 1000);
+	ctx->shutdown_timeout_ms = spdk_max(ctx->shutdown_timeout_ms, 10000);
+	SPDK_DEBUGLOG(nvme, "shutdown timeout = %" PRIu32 " ms\n",
+		      ctx->shutdown_timeout_ms);
 
-	do {
-		if (nvme_ctrlr_get_csts(ctrlr, &csts)) {
-			SPDK_ERRLOG("ctrlr %s get_csts() failed\n", ctrlr->trid.traddr);
-			return;
-		}
+	ctx->shutdown_start_tsc = spdk_get_ticks();
+}
 
-		if (csts.bits.shst == SPDK_NVME_SHST_COMPLETE) {
-			SPDK_DEBUGLOG(nvme, "ctrlr %s shutdown complete in %u milliseconds\n",
-				      ctrlr->trid.traddr, ms_waited);
-			return;
-		}
+static int
+nvme_ctrlr_shutdown_poll_async(struct spdk_nvme_ctrlr *ctrlr,
+			       struct nvme_ctrlr_detach_ctx *ctx)
+{
+	union spdk_nvme_csts_register	csts;
+	uint32_t			ms_waited;
 
-		nvme_delay(1000);
-		ms_waited++;
-	} while (ms_waited < shutdown_timeout_ms);
+	ms_waited = (spdk_get_ticks() - ctx->shutdown_start_tsc) * 1000 / spdk_get_ticks_hz();
+
+	if (nvme_ctrlr_get_csts(ctrlr, &csts)) {
+		SPDK_ERRLOG("ctrlr %s get_csts() failed\n", ctrlr->trid.traddr);
+		return -EIO;
+	}
+
+	if (csts.bits.shst == SPDK_NVME_SHST_COMPLETE) {
+		SPDK_DEBUGLOG(nvme, "ctrlr %s shutdown complete in %u milliseconds\n",
+			      ctrlr->trid.traddr, ms_waited);
+		return 0;
+	}
+
+	if (ms_waited < ctx->shutdown_timeout_ms) {
+		return -EAGAIN;
+	}
 
 	SPDK_ERRLOG("ctrlr %s did not shutdown within %u milliseconds\n",
-		    ctrlr->trid.traddr, shutdown_timeout_ms);
+		    ctrlr->trid.traddr, ctx->shutdown_timeout_ms);
 	if (ctrlr->quirks & NVME_QUIRK_SHST_COMPLETE) {
 		SPDK_ERRLOG("likely due to shutdown handling in the VMWare emulated NVMe SSD\n");
 	}
+
+	return 0;
 }
 
 static int
@@ -3260,6 +3272,8 @@ void
 nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct spdk_nvme_qpair *qpair, *tmp;
+	struct nvme_ctrlr_detach_ctx ctx = {};
+	int rc;
 
 	SPDK_DEBUGLOG(nvme, "Prepare to destruct SSD: %s\n", ctrlr->trid.traddr);
 
@@ -3282,7 +3296,14 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 			     ctrlr->trid.traddr);
 		nvme_ctrlr_disable(ctrlr);
 	} else {
-		nvme_ctrlr_shutdown(ctrlr);
+		nvme_ctrlr_shutdown_async(ctrlr, &ctx);
+		while (1) {
+			rc = nvme_ctrlr_shutdown_poll_async(ctrlr, &ctx);
+			if (rc != -EAGAIN) {
+				break;
+			}
+			nvme_delay(1000);
+		}
 	}
 
 	nvme_ctrlr_destruct_namespaces(ctrlr);

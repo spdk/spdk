@@ -843,6 +843,11 @@ struct spdk_nvme_probe_ctx {
 	TAILQ_HEAD(, spdk_nvme_ctrlr)		init_ctrlrs;
 };
 
+struct nvme_ctrlr_detach_ctx {
+	uint64_t	shutdown_start_tsc;
+	uint32_t	shutdown_timeout_ms;
+};
+
 struct nvme_driver {
 	pthread_mutex_t			lock;
 
