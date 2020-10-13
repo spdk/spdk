@@ -38,6 +38,7 @@
 #include "spdk/nvme.h"
 #include "spdk/vmd.h"
 #include "spdk/nvme_ocssd.h"
+#include "spdk/nvme_zns.h"
 #include "spdk/env.h"
 #include "spdk/nvme_intel.h"
 #include "spdk/nvmf_spec.h"
@@ -49,6 +50,7 @@
 #define MAX_DISCOVERY_LOG_ENTRIES	((uint64_t)1000)
 
 #define NUM_CHUNK_INFO_ENTRIES		8
+#define MAX_ZONE_DESC_ENTRIES		8
 
 static int outstanding_commands;
 
@@ -84,6 +86,10 @@ static uint64_t g_discovery_page_numrec;
 static struct spdk_ocssd_geometry_data geometry_data;
 
 static struct spdk_ocssd_chunk_information_entry g_ocssd_chunk_info_page[NUM_CHUNK_INFO_ENTRIES ];
+
+static struct spdk_nvme_zns_zone_report *g_zone_report;
+static size_t g_zone_report_size;
+static uint64_t g_nr_zones_requested;
 
 static bool g_hex_dump = false;
 
@@ -150,6 +156,15 @@ hex_dump(const void *data, size_t size)
 }
 
 static void
+exit_and_free_qpair(struct spdk_nvme_qpair *qpair)
+{
+	if (qpair) {
+		spdk_nvme_ctrlr_free_io_qpair(qpair);
+	}
+	exit(1);
+}
+
+static void
 get_feature_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct feature *feature = cb_arg;
@@ -178,6 +193,27 @@ get_ocssd_geometry_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 {
 	if (spdk_nvme_cpl_is_error(cpl)) {
 		printf("get ocssd geometry failed\n");
+	}
+	outstanding_commands--;
+}
+
+static void
+get_zns_zone_report_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_nvme_qpair *qpair = cb_arg;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		printf("get zns zone report failed\n");
+	}
+
+	/*
+	 * Since we requested a partial report, verify that the firmware returned the
+	 * correct number of zones.
+	 */
+	if (g_zone_report->nr_zones != g_nr_zones_requested) {
+		printf("Invalid number of zones returned: %"PRIu64" (expected: %"PRIu64")\n",
+		       g_zone_report->nr_zones, g_nr_zones_requested);
+		exit_and_free_qpair(qpair);
 	}
 	outstanding_commands--;
 }
@@ -566,6 +602,39 @@ get_ocssd_geometry(struct spdk_nvme_ns *ns, struct spdk_ocssd_geometry_data *geo
 }
 
 static void
+get_zns_zone_report(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair)
+{
+	g_nr_zones_requested = spdk_nvme_zns_ns_get_num_zones(ns);
+	/*
+	 * Rather than getting the whole zone report, which could contain thousands of zones,
+	 * get maximum MAX_ZONE_DESC_ENTRIES, so that we don't flood stdout.
+	 */
+	g_nr_zones_requested = spdk_min(g_nr_zones_requested, MAX_ZONE_DESC_ENTRIES);
+	outstanding_commands = 0;
+
+	g_zone_report_size = sizeof(struct spdk_nvme_zns_zone_report) +
+			     g_nr_zones_requested * sizeof(struct spdk_nvme_zns_zone_desc);
+	g_zone_report = calloc(1, g_zone_report_size);
+	if (g_zone_report == NULL) {
+		printf("Zone report allocation failed!\n");
+		exit_and_free_qpair(qpair);
+	}
+
+	if (spdk_nvme_zns_report_zones(ns, qpair, g_zone_report, g_zone_report_size,
+				       0, SPDK_NVME_ZRA_LIST_ALL, true,
+				       get_zns_zone_report_completion, qpair)) {
+		printf("spdk_nvme_zns_report_zones() failed\n");
+		exit_and_free_qpair(qpair);
+	} else {
+		outstanding_commands++;
+	}
+
+	while (outstanding_commands) {
+		spdk_nvme_qpair_process_completions(qpair, 0);
+	}
+}
+
+static void
 print_hex_be(const void *v, size_t size)
 {
 	const uint8_t *buf = v;
@@ -701,6 +770,23 @@ print_ocssd_geometry(struct spdk_ocssd_geometry_data *geometry_data)
 }
 
 static void
+print_zns_zone_report(void)
+{
+	uint64_t i;
+
+	printf("NVMe ZNS Zone Report Glance\n");
+	printf("===========================\n");
+
+	for (i = 0; i < g_zone_report->nr_zones; i++) {
+		struct spdk_nvme_zns_zone_desc *desc = &g_zone_report->descs[i];
+		printf("Zone: %"PRIu64" ZSLBA: 0x%016"PRIx64" ZCAP: 0x%016"PRIx64" WP: 0x%016"PRIx64" ZS: %x ZT: %x ZA: %x\n",
+		       i, desc->zslba, desc->zcap, desc->wp, desc->zs >> 4, desc->zt, desc->za);
+	}
+	free(g_zone_report);
+	g_zone_report = NULL;
+}
+
+static void
 print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 {
 	const struct spdk_nvme_ctrlr_data	*cdata;
@@ -823,6 +909,15 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		print_ocssd_geometry(&geometry_data);
 		get_ocssd_chunk_info_log_page(ns);
 		print_ocssd_chunk_info(g_ocssd_chunk_info_page, NUM_CHUNK_INFO_ENTRIES);
+	} else if (spdk_nvme_ns_get_csi(ns) == SPDK_NVME_CSI_ZNS) {
+		struct spdk_nvme_qpair *qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, NULL, 0);
+		if (qpair == NULL) {
+			printf("ERROR: spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
+			exit(1);
+		}
+		get_zns_zone_report(ns, qpair);
+		print_zns_zone_report();
+		spdk_nvme_ctrlr_free_io_qpair(qpair);
 	}
 }
 
