@@ -184,6 +184,8 @@ vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *virtqueue, uint16_t *reqs,
 	uint16_t last_idx = virtqueue->last_avail_idx, avail_idx = avail->idx;
 	uint16_t count, i;
 
+	spdk_smp_rmb();
+
 	count = avail_idx - last_idx;
 	if (spdk_likely(count == 0)) {
 		return 0;
