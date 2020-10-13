@@ -91,6 +91,8 @@ static int g_shm_id = -1;
 
 static int g_dpdk_mem = 0;
 
+static bool g_dpdk_mem_single_seg = false;
+
 static int g_master_core = 0;
 
 static char g_core_mask[16] = "0x1";
@@ -1776,6 +1778,7 @@ usage(const char *program_name)
 	printf(" -i         shared memory group ID\n");
 	printf(" -p         core number in decimal to run this application which started from 0\n");
 	printf(" -d         DPDK huge memory size in MB\n");
+	printf(" -g         use single file descriptor for DPDK memory segments\n");
 	printf(" -x         print hex dump of raw data\n");
 	printf(" -v         verbose (enable warnings)\n");
 	printf(" -V         enumerate VMD\n");
@@ -1790,7 +1793,7 @@ parse_args(int argc, char **argv)
 	spdk_nvme_trid_populate_transport(&g_trid, SPDK_NVME_TRANSPORT_PCIE);
 	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
-	while ((op = getopt(argc, argv, "d:i:p:r:xHL:V")) != -1) {
+	while ((op = getopt(argc, argv, "d:gi:p:r:xHL:V")) != -1) {
 		switch (op) {
 		case 'd':
 			g_dpdk_mem = spdk_strtol(optarg, 10);
@@ -1798,6 +1801,9 @@ parse_args(int argc, char **argv)
 				fprintf(stderr, "Invalid DPDK memory size\n");
 				return g_dpdk_mem;
 			}
+			break;
+		case 'g':
+			g_dpdk_mem_single_seg = true;
 			break;
 		case 'i':
 			g_shm_id = spdk_strtol(optarg, 10);
@@ -1883,6 +1889,7 @@ int main(int argc, char **argv)
 	opts.mem_channel = 1;
 	opts.master_core = g_master_core;
 	opts.core_mask = g_core_mask;
+	opts.hugepage_single_segments = g_dpdk_mem_single_seg;
 	if (g_trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
 		opts.no_pci = true;
 	}

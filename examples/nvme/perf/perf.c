@@ -241,6 +241,7 @@ static int g_time_in_sec;
 static int g_warmup_time_in_sec;
 static uint32_t g_max_completions;
 static int g_dpdk_mem;
+static bool g_dpdk_mem_single_seg = false;
 static int g_shm_id = -1;
 static uint32_t g_disable_sq_cmb;
 static bool g_use_uring;
@@ -1404,6 +1405,7 @@ static void usage(char *program_name)
 	printf("\t          -e 'PRACT=1,PRCHK=GUARD'\n");
 	printf("\t[-k keep alive timeout period in millisecond]\n");
 	printf("\t[-s DPDK huge memory size in MB.]\n");
+	printf("\t[-g use single file descriptor for DPDK memory segments]\n");
 	printf("\t[-C max completions per poll]\n");
 	printf("\t\t(default: 0 - unlimited)\n");
 	printf("\t[-i shared memory group ID]\n");
@@ -1807,7 +1809,7 @@ parse_args(int argc, char **argv)
 	long int val;
 	int rc;
 
-	while ((op = getopt(argc, argv, "a:c:e:i:lo:q:r:k:s:t:w:z:A:C:DGHILM:NP:RS:T:U:VZ:")) != -1) {
+	while ((op = getopt(argc, argv, "a:c:e:gi:lo:q:r:k:s:t:w:z:A:C:DGHILM:NP:RS:T:U:VZ:")) != -1) {
 		switch (op) {
 		case 'a':
 		case 'A':
@@ -1881,6 +1883,9 @@ parse_args(int argc, char **argv)
 				usage(argv[0]);
 				return 1;
 			}
+			break;
+		case 'g':
+			g_dpdk_mem_single_seg = true;
 			break;
 		case 'l':
 			g_latency_ssd_tracking_enable = true;
@@ -2285,6 +2290,7 @@ int main(int argc, char **argv)
 	if (g_dpdk_mem) {
 		opts.mem_size = g_dpdk_mem;
 	}
+	opts.hugepage_single_segments = g_dpdk_mem_single_seg;
 	if (g_no_pci) {
 		opts.no_pci = g_no_pci;
 	}
