@@ -850,11 +850,23 @@ nbd_start_kernel(void *arg)
 }
 
 static void
-nbd_bdev_hot_remove(void *remove_ctx)
+nbd_bdev_hot_remove(struct spdk_nbd_disk *nbd)
 {
-	struct spdk_nbd_disk *nbd = remove_ctx;
-
 	spdk_nbd_stop(nbd);
+}
+
+static void
+nbd_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
+		  void *event_ctx)
+{
+	switch (type) {
+	case SPDK_BDEV_EVENT_REMOVE:
+		nbd_bdev_hot_remove(event_ctx);
+		break;
+	default:
+		SPDK_NOTICELOG("Unsupported bdev event: type %d\n", type);
+		break;
+	}
 }
 
 struct spdk_nbd_start_ctx {
@@ -994,13 +1006,6 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path,
 	int				rc;
 	int				sp[2];
 
-	bdev = spdk_bdev_get_by_name(bdev_name);
-	if (bdev == NULL) {
-		SPDK_ERRLOG("no bdev %s exists\n", bdev_name);
-		rc = -EINVAL;
-		goto err;
-	}
-
 	nbd = calloc(1, sizeof(*nbd));
 	if (nbd == NULL) {
 		rc = -ENOMEM;
@@ -1022,12 +1027,13 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path,
 	ctx->cb_arg = cb_arg;
 	ctx->polling_count = NBD_BUSY_WAITING_MS * 1000ULL / NBD_BUSY_POLLING_INTERVAL_US;
 
-	rc = spdk_bdev_open(bdev, true, nbd_bdev_hot_remove, nbd, &nbd->bdev_desc);
+	rc = spdk_bdev_open_ext(bdev_name, true, nbd_bdev_event_cb, nbd, &nbd->bdev_desc);
 	if (rc != 0) {
-		SPDK_ERRLOG("could not open bdev %s, error=%d\n", spdk_bdev_get_name(bdev), rc);
+		SPDK_ERRLOG("could not open bdev %s, error=%d\n", bdev_name, rc);
 		goto err;
 	}
 
+	bdev = spdk_bdev_desc_get_bdev(nbd->bdev_desc);
 	nbd->bdev = bdev;
 
 	nbd->ch = spdk_bdev_get_io_channel(nbd->bdev_desc);
@@ -1067,7 +1073,7 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path,
 	}
 
 	SPDK_INFOLOG(nbd, "Enabling kernel access to bdev %s via %s\n",
-		     spdk_bdev_get_name(bdev), nbd_path);
+		     bdev_name, nbd_path);
 
 	nbd_enable_kernel(ctx);
 	return;
