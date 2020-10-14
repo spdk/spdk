@@ -43,7 +43,6 @@
 
 #define SPDK_NVMF_MAX_NAMESPACES (1 << 14)
 
-struct spdk_nvmf_tgt_conf *g_spdk_nvmf_tgt_conf = NULL;
 uint32_t g_spdk_nvmf_tgt_max_subsystems = 0;
 
 static int
@@ -140,32 +139,21 @@ nvmf_parse_tgt_max_subsystems(void)
 	return deprecated_values;
 }
 
-static struct spdk_nvmf_tgt_conf *
+static int
 nvmf_parse_tgt_conf(void)
 {
-	struct spdk_nvmf_tgt_conf *conf;
 	struct spdk_conf_section *sp;
 	int rc;
 
-	conf = calloc(1, sizeof(*conf));
-	if (!conf) {
-		SPDK_ERRLOG("calloc() failed for target conf\n");
-		return NULL;
-	}
-
-	conf->acceptor_poll_rate = ACCEPT_TIMEOUT_US;
-	conf->admin_passthru.identify_ctrlr = false;
-
 	sp = spdk_conf_find_section(NULL, "Nvmf");
 	if (sp != NULL) {
-		rc = nvmf_read_config_file_tgt_conf(sp, conf);
+		rc = nvmf_read_config_file_tgt_conf(sp, &g_spdk_nvmf_tgt_conf);
 		if (rc) {
-			free(conf);
-			return NULL;
+			return -1;
 		}
 	}
 
-	return conf;
+	return 0;
 }
 
 static int
@@ -190,16 +178,13 @@ nvmf_parse_nvmf_tgt(void)
 		}
 	}
 
-	if (!g_spdk_nvmf_tgt_conf) {
-		g_spdk_nvmf_tgt_conf = nvmf_parse_tgt_conf();
-		if (!g_spdk_nvmf_tgt_conf) {
-			SPDK_ERRLOG("nvmf_parse_tgt_conf() failed\n");
-			return -1;
-		}
+	if (nvmf_parse_tgt_conf() != 0) {
+		SPDK_ERRLOG("nvmf_parse_tgt_conf() failed\n");
+		return -1;
 	}
 
 	opts.max_subsystems = g_spdk_nvmf_tgt_max_subsystems;
-	opts.acceptor_poll_rate = g_spdk_nvmf_tgt_conf->acceptor_poll_rate;
+	opts.acceptor_poll_rate = g_spdk_nvmf_tgt_conf.acceptor_poll_rate;
 	g_spdk_nvmf_tgt = spdk_nvmf_tgt_create(&opts);
 
 	g_spdk_nvmf_tgt_max_subsystems = 0;

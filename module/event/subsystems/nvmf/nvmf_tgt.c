@@ -60,6 +60,11 @@ struct nvmf_tgt_poll_group {
 	TAILQ_ENTRY(nvmf_tgt_poll_group)	link;
 };
 
+struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf = {
+	.acceptor_poll_rate = ACCEPT_TIMEOUT_US,
+	.admin_passthru.identify_ctrlr = false
+};
+
 struct spdk_nvmf_tgt *g_spdk_nvmf_tgt = NULL;
 
 static enum nvmf_tgt_state g_tgt_state;
@@ -246,8 +251,6 @@ nvmf_tgt_destroy_done(void *ctx, int status)
 {
 	g_tgt_state = NVMF_TGT_STOPPED;
 
-	free(g_spdk_nvmf_tgt_conf);
-	g_spdk_nvmf_tgt_conf = NULL;
 	nvmf_tgt_advance_state();
 }
 
@@ -366,7 +369,7 @@ nvmf_tgt_advance_state(void)
 			break;
 		case NVMF_TGT_INIT_CREATE_POLL_GROUPS:
 			/* Config parsed */
-			if (g_spdk_nvmf_tgt_conf->admin_passthru.identify_ctrlr) {
+			if (g_spdk_nvmf_tgt_conf.admin_passthru.identify_ctrlr) {
 				SPDK_NOTICELOG("Custom identify ctrlr handler enabled\n");
 				spdk_nvmf_set_custom_admin_cmd_hdlr(SPDK_NVME_OPC_IDENTIFY, nvmf_custom_identify_hdlr);
 			}
@@ -443,10 +446,10 @@ nvmf_subsystem_write_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_string(w, "method", "nvmf_set_config");
 
 	spdk_json_write_named_object_begin(w, "params");
-	spdk_json_write_named_uint32(w, "acceptor_poll_rate", g_spdk_nvmf_tgt_conf->acceptor_poll_rate);
+	spdk_json_write_named_uint32(w, "acceptor_poll_rate", g_spdk_nvmf_tgt_conf.acceptor_poll_rate);
 	spdk_json_write_named_object_begin(w, "admin_cmd_passthru");
 	spdk_json_write_named_bool(w, "identify_ctrlr",
-				   g_spdk_nvmf_tgt_conf->admin_passthru.identify_ctrlr);
+				   g_spdk_nvmf_tgt_conf.admin_passthru.identify_ctrlr);
 	spdk_json_write_object_end(w);
 	spdk_json_write_object_end(w);
 	spdk_json_write_object_end(w);

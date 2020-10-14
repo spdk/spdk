@@ -54,7 +54,7 @@ struct spdk_nvmf_tgt_conf {
 	struct spdk_nvmf_admin_passthru_conf admin_passthru;
 };
 
-extern struct spdk_nvmf_tgt_conf *g_spdk_nvmf_tgt_conf;
+extern struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;
 
 extern uint32_t g_spdk_nvmf_tgt_max_subsystems;
 

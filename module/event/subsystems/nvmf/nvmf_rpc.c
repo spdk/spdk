@@ -111,31 +111,14 @@ static void
 rpc_nvmf_set_config(struct spdk_jsonrpc_request *request,
 		    const struct spdk_json_val *params)
 {
-	struct spdk_nvmf_tgt_conf *conf;
+	struct spdk_nvmf_tgt_conf conf;
 	struct spdk_json_write_ctx *w;
 
-	if (g_spdk_nvmf_tgt_conf != NULL) {
-		SPDK_ERRLOG("this RPC must not be called more than once.\n");
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 "Must not call more than once");
-		return;
-	}
-
-	conf = calloc(1, sizeof(*conf));
-	if (conf == NULL) {
-		SPDK_ERRLOG("calloc() failed for target config\n");
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 "Out of memory");
-		return;
-	}
-
-	conf->acceptor_poll_rate = ACCEPT_TIMEOUT_US;
-	conf->admin_passthru.identify_ctrlr = false;
+	memcpy(&conf, &g_spdk_nvmf_tgt_conf, sizeof(conf));
 
 	if (params != NULL) {
 		if (spdk_json_decode_object(params, nvmf_rpc_subsystem_tgt_conf_decoder,
-					    SPDK_COUNTOF(nvmf_rpc_subsystem_tgt_conf_decoder), conf)) {
-			free(conf);
+					    SPDK_COUNTOF(nvmf_rpc_subsystem_tgt_conf_decoder), &conf)) {
 			SPDK_ERRLOG("spdk_json_decode_object() failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 							 "Invalid parameters");
@@ -143,7 +126,7 @@ rpc_nvmf_set_config(struct spdk_jsonrpc_request *request,
 		}
 	}
 
-	g_spdk_nvmf_tgt_conf = conf;
+	memcpy(&g_spdk_nvmf_tgt_conf, &conf, sizeof(conf));
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_bool(w, true);
