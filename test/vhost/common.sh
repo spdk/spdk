@@ -41,7 +41,7 @@ function vhosttestinit() {
 	fi
 
 	# Look for the VM image
-	if [[ ! -f $VM_IMAGE ]]; then
+	if [[ "$1" != "--no_vm" ]] && [[ ! -f $VM_IMAGE ]]; then
 		error "VM image not found at $VM_IMAGE"
 		exit 1
 	fi

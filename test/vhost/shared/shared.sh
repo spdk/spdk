@@ -13,7 +13,7 @@ function run_spdk_fio() {
 		--spdk_mem=1024 --spdk_single_seg=1 --spdk_json_conf=$testdir/bdev.json "$@"
 }
 
-vhosttestinit
+vhosttestinit "--no_vm"
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR SIGTERM SIGABRT
 
