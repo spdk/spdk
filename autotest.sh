@@ -116,8 +116,10 @@ if [ $(uname -s) = Linux ]; then
 	fi
 fi
 
-# Revert NVMe namespaces to default state
-nvme_namespace_revert
+if [[ $(uname -s) == Linux ]]; then
+	# Revert NVMe namespaces to default state
+	nvme_namespace_revert
+fi
 
 # Delete all leftover lvols and gpt partitions
 # Matches both /dev/nvmeXnY on Linux and /dev/nvmeXnsY on BSD
