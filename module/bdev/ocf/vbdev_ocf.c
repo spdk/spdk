@@ -1348,9 +1348,8 @@ vbdev_ocf_module_fini(void)
  * We will unregister cache vbdev here
  * When cache device is removed, we delete every OCF bdev that used it */
 static void
-hotremove_cb(void *ctx)
+hotremove_cb(struct vbdev_ocf_base *base)
 {
-	struct vbdev_ocf_base *base = ctx;
 	struct vbdev_ocf *vbdev;
 
 	if (!base->is_cache) {
@@ -1377,6 +1376,22 @@ hotremove_cb(void *ctx)
 	}
 }
 
+static void
+base_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
+		   void *event_ctx)
+{
+	switch (type) {
+	case SPDK_BDEV_EVENT_REMOVE:
+		if (event_ctx) {
+			hotremove_cb(event_ctx);
+		}
+		break;
+	default:
+		SPDK_NOTICELOG("Unsupported bdev event: type %d\n", type);
+		break;
+	}
+}
+
 /* Open base SPDK bdev and claim it */
 static int
 attach_base(struct vbdev_ocf_base *base)
@@ -1399,7 +1414,7 @@ attach_base(struct vbdev_ocf_base *base)
 		}
 	}
 
-	status = spdk_bdev_open(base->bdev, true, hotremove_cb, base, &base->desc);
+	status = spdk_bdev_open_ext(base->name, true, base_bdev_event_cb, base, &base->desc);
 	if (status) {
 		SPDK_ERRLOG("Unable to open device '%s' for writing\n", base->name);
 		return status;
@@ -1736,7 +1751,7 @@ vbdev_ocf_examine_disk(struct spdk_bdev *bdev)
 	ctx->base.bdev = bdev;
 	ctx->refcnt = 1;
 
-	rc = spdk_bdev_open(ctx->base.bdev, true, NULL, NULL, &ctx->base.desc);
+	rc = spdk_bdev_open_ext(bdev_name, true, base_bdev_event_cb, NULL, &ctx->base.desc);
 	if (rc) {
 		ctx->result = rc;
 		examine_ctx_put(ctx);
