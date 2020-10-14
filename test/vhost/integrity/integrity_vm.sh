@@ -36,7 +36,7 @@ for fs in $fs; do
 		$parted_cmd mkpart primary 2048s 100%
 
 		mkfs_cmd="mkfs.$fs"
-		if [[ $fs == "ntfs" ]]; then
+		if [[ $fs == "ntfs" ]] || [[ $fs == "btrfs" ]]; then
 			mkfs_cmd+=" -f"
 		fi
 		mkfs_cmd+=" /dev/${dev}1"
