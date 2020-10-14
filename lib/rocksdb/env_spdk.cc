@@ -663,21 +663,27 @@ fs_load_cb(__attribute__((unused)) void *ctx,
 }
 
 static void
+base_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
+		   void *event_ctx)
+{
+	printf("Unsupported bdev event: type %d\n", type);
+}
+
+static void
 rocksdb_run(__attribute__((unused)) void *arg1)
 {
-	struct spdk_bdev *bdev;
+	int rc;
 
-	bdev = spdk_bdev_get_by_name(g_bdev_name.c_str());
-
-	if (bdev == NULL) {
-		SPDK_ERRLOG("bdev %s not found\n", g_bdev_name.c_str());
+	rc = spdk_bdev_create_bs_dev_ext(g_bdev_name.c_str(), base_bdev_event_cb, NULL,
+					 &g_bs_dev);
+	if (rc != 0) {
+		printf("Could not create blob bdev\n");
 		spdk_app_stop(0);
 		exit(1);
 	}
 
 	g_lcore = spdk_env_get_first_core();
 
-	g_bs_dev = spdk_bdev_create_bs_dev(bdev, NULL, NULL);
 	printf("using bdev %s\n", g_bdev_name.c_str());
 	spdk_fs_load(g_bs_dev, __send_request, fs_load_cb, NULL);
 }
