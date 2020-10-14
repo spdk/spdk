@@ -184,6 +184,13 @@ hello_write(void *arg)
 	}
 }
 
+static void
+hello_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
+		    void *event_ctx)
+{
+	SPDK_NOTICELOG("Unsupported bdev event: type %d\n", type);
+}
+
 /*
  * Our initial event that kicks off everything from main().
  */
@@ -199,28 +206,24 @@ hello_start(void *arg1)
 	SPDK_NOTICELOG("Successfully started the application\n");
 
 	/*
-	 * Get the bdev. There can be many bdevs configured, but this
-	 * application will only use the one input by the user at runtime so
-	 * we get it via its name.
-	 */
-	hello_context->bdev = spdk_bdev_get_by_name(hello_context->bdev_name);
-	if (hello_context->bdev == NULL) {
-		SPDK_ERRLOG("Could not find the bdev: %s\n", hello_context->bdev_name);
-		spdk_app_stop(-1);
-		return;
-	}
-
-	/*
-	 * Open the bdev by calling spdk_bdev_open()
+	 * There can be many bdevs configured, but this application will only use
+	 * the one input by the user at runtime.
+	 *
+	 * Open the bdev by calling spdk_bdev_open_ext() with its name.
 	 * The function will return a descriptor
 	 */
 	SPDK_NOTICELOG("Opening the bdev %s\n", hello_context->bdev_name);
-	rc = spdk_bdev_open(hello_context->bdev, true, NULL, NULL, &hello_context->bdev_desc);
+	rc = spdk_bdev_open_ext(hello_context->bdev_name, true, hello_bdev_event_cb, NULL,
+				&hello_context->bdev_desc);
 	if (rc) {
 		SPDK_ERRLOG("Could not open bdev: %s\n", hello_context->bdev_name);
 		spdk_app_stop(-1);
 		return;
 	}
+
+	/* A bdev pointer is valid while the bdev is opened. */
+	hello_context->bdev = spdk_bdev_desc_get_bdev(hello_context->bdev_desc);
+
 
 	SPDK_NOTICELOG("Opening io channel\n");
 	/* Open I/O channel */
