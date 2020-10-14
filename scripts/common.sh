@@ -227,7 +227,7 @@ function nvme_in_userspace() {
 
 	for bdf in "${nvmes[@]}"; do
 		if [[ -e /sys/bus/pci/drivers/nvme/$bdf ]] \
-			|| [[ $(uname -s) == FreeBSD && $(pciconf -l "pci$bdf") == nvme* ]]; then
+			|| [[ $(uname -s) == FreeBSD && $(pciconf -l "pci${bdf/./:}") == nvme* ]]; then
 			continue
 		fi
 		bdfs+=("$bdf")
