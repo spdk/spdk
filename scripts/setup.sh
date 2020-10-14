@@ -89,6 +89,20 @@ function check_for_driver() {
 	return 0
 }
 
+function check_for_driver_freebsd() {
+	# Check if dpdk drivers (nic_uio, contigmem) are in the kernel's module path.
+	local search_paths path driver
+	IFS=";" read -ra search_paths < <(kldconfig -rU)
+
+	for driver in contigmem.ko nic_uio.ko; do
+		for path in "${search_paths[@]}"; do
+			[[ -f $path/$driver ]] && continue 2
+		done
+		return 1
+	done
+	return 0
+}
+
 function pci_dev_echo() {
 	local bdf="$1"
 	shift
@@ -651,6 +665,10 @@ function configure_freebsd_pci() {
 }
 
 function configure_freebsd() {
+	if ! check_for_driver_freebsd; then
+		echo "DPDK drivers (contigmem and/or nic_uio) are missing, aborting" >&2
+		return 1
+	fi
 	configure_freebsd_pci
 	# If contigmem is already loaded but the HUGEMEM specified doesn't match the
 	#  previous value, unload contigmem so that we can reload with the new value.
