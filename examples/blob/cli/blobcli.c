@@ -857,25 +857,26 @@ load_bs_cb(void *arg1, struct spdk_blob_store *bs, int bserrno)
 	}
 }
 
+static void
+base_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
+		   void *event_ctx)
+{
+	printf("Unsupported bdev event: type %d\n", type);
+}
+
 /*
  * Load the blobstore.
  */
 static void
 load_bs(struct cli_context_t *cli_context)
 {
-	struct spdk_bdev *bdev = NULL;
 	struct spdk_bs_dev *bs_dev = NULL;
+	int rc;
 
-	bdev = spdk_bdev_get_by_name(cli_context->bdev_name);
-	if (bdev == NULL) {
-		printf("Could not find a bdev\n");
-		spdk_app_stop(-1);
-		return;
-	}
-
-	bs_dev = spdk_bdev_create_bs_dev(bdev, NULL, NULL);
-	if (bs_dev == NULL) {
-		printf("Could not create blob bdev!!\n");
+	rc = spdk_bdev_create_bs_dev_ext(cli_context->bdev_name, base_bdev_event_cb,
+					 NULL, &bs_dev);
+	if (rc != 0) {
+		printf("Could not create blob bdev, %s!!\n", spdk_strerror(-rc));
 		spdk_app_stop(-1);
 		return;
 	}
@@ -939,20 +940,14 @@ bs_init_cb(void *cb_arg, struct spdk_blob_store *bs,
 static void
 init_bs(struct cli_context_t *cli_context)
 {
-	struct spdk_bdev *bdev = NULL;
+	int rc;
 
-	bdev = spdk_bdev_get_by_name(cli_context->bdev_name);
-	if (bdev == NULL) {
-		printf("Could not find a bdev\n");
-		spdk_app_stop(-1);
-		return;
-	}
-	printf("Init blobstore using bdev Product Name: %s\n",
-	       spdk_bdev_get_product_name(bdev));
+	printf("Init blobstore using bdev Name: %s\n", cli_context->bdev_name);
 
-	cli_context->bs_dev = spdk_bdev_create_bs_dev(bdev, NULL, NULL);
-	if (cli_context->bs_dev == NULL) {
-		printf("Could not create blob bdev!!\n");
+	rc = spdk_bdev_create_bs_dev_ext(cli_context->bdev_name, base_bdev_event_cb, NULL,
+					 &cli_context->bs_dev);
+	if (rc != 0) {
+		printf("Could not create blob bdev, %s!!\n", spdk_strerror(-rc));
 		spdk_app_stop(-1);
 		return;
 	}
@@ -1011,20 +1006,14 @@ bsdump_print_xattr(FILE *fp, const char *bstype, const char *name, const void *v
 static void
 dump_bs(struct cli_context_t *cli_context)
 {
-	struct spdk_bdev *bdev = NULL;
+	int rc;
 
-	bdev = spdk_bdev_get_by_name(cli_context->bdev_name);
-	if (bdev == NULL) {
-		printf("Could not find a bdev\n");
-		spdk_app_stop(-1);
-		return;
-	}
-	printf("Init blobstore using bdev Product Name: %s\n",
-	       spdk_bdev_get_product_name(bdev));
+	printf("Init blobstore using bdev Name: %s\n", cli_context->bdev_name);
 
-	cli_context->bs_dev = spdk_bdev_create_bs_dev(bdev, NULL, NULL);
-	if (cli_context->bs_dev == NULL) {
-		printf("Could not create blob bdev!!\n");
+	rc = spdk_bdev_create_bs_dev_ext(cli_context->bdev_name, base_bdev_event_cb, NULL,
+					 &cli_context->bs_dev);
+	if (rc != 0) {
+		printf("Could not create blob bdev, %s!!\n", spdk_strerror(-rc));
 		spdk_app_stop(-1);
 		return;
 	}
