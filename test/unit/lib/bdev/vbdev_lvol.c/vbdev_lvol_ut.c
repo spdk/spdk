@@ -293,20 +293,23 @@ bdev_blob_destroy(struct spdk_bs_dev *bs_dev)
 	lvol_already_opened = false;
 }
 
-struct spdk_bs_dev *
-spdk_bdev_create_bs_dev(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb, void *remove_ctx)
+int
+spdk_bdev_create_bs_dev_ext(const char *bdev_name, spdk_bdev_event_cb_t event_cb,
+			    void *event_ctx, struct spdk_bs_dev **_bs_dev)
 {
 	struct spdk_bs_dev *bs_dev;
 
-	if (lvol_already_opened == true || bdev == NULL) {
-		return NULL;
+	if (lvol_already_opened == true) {
+		return -EINVAL;
 	}
 
 	bs_dev = calloc(1, sizeof(*bs_dev));
 	SPDK_CU_ASSERT_FATAL(bs_dev != NULL);
 	bs_dev->destroy = bdev_blob_destroy;
 
-	return bs_dev;
+	*_bs_dev = bs_dev;
+
+	return 0;
 }
 
 void

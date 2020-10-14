@@ -150,14 +150,27 @@ vbdev_get_lvs_bdev_by_bdev(struct spdk_bdev *bdev_orig)
 }
 
 static void
-vbdev_lvs_hotremove_cb(void *ctx)
+vbdev_lvs_hotremove_cb(struct spdk_bdev *bdev)
 {
-	struct spdk_bdev *bdev = ctx;
 	struct lvol_store_bdev *lvs_bdev;
 
 	lvs_bdev = vbdev_get_lvs_bdev_by_bdev(bdev);
 	if (lvs_bdev != NULL) {
 		vbdev_lvs_unload(lvs_bdev->lvs, NULL, NULL);
+	}
+}
+
+static void
+vbdev_lvs_base_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
+			     void *event_ctx)
+{
+	switch (type) {
+	case SPDK_BDEV_EVENT_REMOVE:
+		vbdev_lvs_hotremove_cb(bdev);
+		break;
+	default:
+		SPDK_NOTICELOG("Unsupported bdev event: type %d\n", type);
+		break;
 	}
 }
 
@@ -246,11 +259,12 @@ vbdev_lvs_create(struct spdk_bdev *base_bdev, const char *name, uint32_t cluster
 		return -ENOMEM;
 	}
 
-	bs_dev = spdk_bdev_create_bs_dev(base_bdev, vbdev_lvs_hotremove_cb, base_bdev);
-	if (!bs_dev) {
+	rc = spdk_bdev_create_bs_dev_ext(base_bdev->name, vbdev_lvs_base_bdev_event_cb,
+					 NULL, &bs_dev);
+	if (rc < 0) {
 		SPDK_ERRLOG("Cannot create blobstore device\n");
 		free(lvs_req);
-		return -ENODEV;
+		return rc;
 	}
 
 	lvs_req->bs_dev = bs_dev;
@@ -1299,6 +1313,7 @@ vbdev_lvs_examine(struct spdk_bdev *bdev)
 {
 	struct spdk_bs_dev *bs_dev;
 	struct spdk_lvs_with_handle_req *req;
+	int rc;
 
 	req = calloc(1, sizeof(*req));
 	if (req == NULL) {
@@ -1307,8 +1322,9 @@ vbdev_lvs_examine(struct spdk_bdev *bdev)
 		return;
 	}
 
-	bs_dev = spdk_bdev_create_bs_dev(bdev, vbdev_lvs_hotremove_cb, bdev);
-	if (!bs_dev) {
+	rc = spdk_bdev_create_bs_dev_ext(bdev->name, vbdev_lvs_base_bdev_event_cb,
+					 NULL, &bs_dev);
+	if (rc < 0) {
 		SPDK_INFOLOG(vbdev_lvol, "Cannot create bs dev on %s\n", bdev->name);
 		spdk_bdev_module_examine_done(&g_lvol_if);
 		free(req);
