@@ -39,6 +39,7 @@
 #include "spdk/blob_bdev.h"
 #include "spdk/blob.h"
 #include "spdk/log.h"
+#include "spdk/string.h"
 
 /*
  * We'll use this struct to gather housekeeping hello_context to pass between
@@ -393,6 +394,13 @@ bs_init_complete(void *cb_arg, struct spdk_blob_store *bs,
 	create_blob(hello_context);
 }
 
+static void
+base_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
+		   void *event_ctx)
+{
+	SPDK_WARNLOG("Unsupported bdev event: type %d\n", type);
+}
+
 /*
  * Our initial event that kicks off everything from main().
  */
@@ -400,24 +408,16 @@ static void
 hello_start(void *arg1)
 {
 	struct hello_context_t *hello_context = arg1;
-	struct spdk_bdev *bdev = NULL;
 	struct spdk_bs_dev *bs_dev = NULL;
+	int rc;
 
 	SPDK_NOTICELOG("entry\n");
-	/*
-	 * Get the bdev. For this example it is our malloc (RAM)
-	 * disk configured via hello_blob.conf that was passed
-	 * in when we started the SPDK app framework so we can
-	 * get it via its name.
-	 */
-	bdev = spdk_bdev_get_by_name("Malloc0");
-	if (bdev == NULL) {
-		SPDK_ERRLOG("Could not find a bdev\n");
-		spdk_app_stop(-1);
-		return;
-	}
 
 	/*
+	 * In this example, use our malloc (RAM) disk configured via
+	 * hello_blob.conf that was passed in when we started the
+	 * SPDK app framework.
+	 *
 	 * spdk_bs_init() requires us to fill out the structure
 	 * spdk_bs_dev with a set of callbacks. These callbacks
 	 * implement read, write, and other operations on the
@@ -430,9 +430,10 @@ hello_start(void *arg1)
 	 * However blobstore can be more tightly integrated into
 	 * any lower layer, such as NVMe for example.
 	 */
-	bs_dev = spdk_bdev_create_bs_dev(bdev, NULL, NULL);
-	if (bs_dev == NULL) {
-		SPDK_ERRLOG("Could not create blob bdev!!\n");
+	rc = spdk_bdev_create_bs_dev_ext("Malloc0", base_bdev_event_cb, NULL, &bs_dev);
+	if (rc != 0) {
+		SPDK_ERRLOG("Could not create blob bdev, %s!!\n",
+			    spdk_strerror(-rc));
 		spdk_app_stop(-1);
 		return;
 	}
