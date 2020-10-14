@@ -290,6 +290,7 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 		subsystem->ns = calloc(num_ns, sizeof(struct spdk_nvmf_ns *));
 		if (subsystem->ns == NULL) {
 			SPDK_ERRLOG("Namespace memory allocation failed\n");
+			pthread_mutex_destroy(&subsystem->mutex);
 			free(subsystem);
 			return NULL;
 		}
