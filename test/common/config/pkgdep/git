@@ -240,7 +240,7 @@ function install_libiscsi() {
 		echo "libiscsi already checked out. Skipping"
 	fi
 	(cd "$GIT_REPOS/libiscsi" && ./autogen.sh && ./configure --prefix=/usr/local/libiscsi)
-	make -C "$GIT_REPOS/libiscsi" -j${jobs}
+	make -C "$GIT_REPOS/libiscsi" -j${jobs} WARN_CFLAGS=
 	sudo make -C "$GIT_REPOS/libiscsi" install
 }
 
