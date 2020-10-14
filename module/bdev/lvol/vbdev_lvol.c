@@ -217,7 +217,7 @@ end:
 }
 
 int
-vbdev_lvs_create(struct spdk_bdev *base_bdev, const char *name, uint32_t cluster_sz,
+vbdev_lvs_create(const char *base_bdev_name, const char *name, uint32_t cluster_sz,
 		 enum lvs_clear_method clear_method, spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_bs_dev *bs_dev;
@@ -226,9 +226,9 @@ vbdev_lvs_create(struct spdk_bdev *base_bdev, const char *name, uint32_t cluster
 	int rc;
 	int len;
 
-	if (base_bdev == NULL) {
-		SPDK_ERRLOG("Bdev does not exist\n");
-		return -ENODEV;
+	if (base_bdev_name == NULL) {
+		SPDK_ERRLOG("missing base_bdev_name param\n");
+		return -EINVAL;
 	}
 
 	spdk_lvs_opts_init(&opts);
@@ -259,7 +259,7 @@ vbdev_lvs_create(struct spdk_bdev *base_bdev, const char *name, uint32_t cluster
 		return -ENOMEM;
 	}
 
-	rc = spdk_bdev_create_bs_dev_ext(base_bdev->name, vbdev_lvs_base_bdev_event_cb,
+	rc = spdk_bdev_create_bs_dev_ext(base_bdev_name, vbdev_lvs_base_bdev_event_cb,
 					 NULL, &bs_dev);
 	if (rc < 0) {
 		SPDK_ERRLOG("Cannot create blobstore device\n");
@@ -268,7 +268,7 @@ vbdev_lvs_create(struct spdk_bdev *base_bdev, const char *name, uint32_t cluster
 	}
 
 	lvs_req->bs_dev = bs_dev;
-	lvs_req->base_bdev = base_bdev;
+	lvs_req->base_bdev = bs_dev->get_base_bdev(bs_dev);
 	lvs_req->cb_fn = cb_fn;
 	lvs_req->cb_arg = cb_arg;
 

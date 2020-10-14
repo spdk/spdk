@@ -47,7 +47,7 @@ struct lvol_store_bdev {
 	TAILQ_ENTRY(lvol_store_bdev)	lvol_stores;
 };
 
-int vbdev_lvs_create(struct spdk_bdev *base_bdev, const char *name, uint32_t cluster_sz,
+int vbdev_lvs_create(const char *base_bdev_name, const char *name, uint32_t cluster_sz,
 		     enum lvs_clear_method clear_method, spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg);
 void vbdev_lvs_destruct(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void *cb_arg);
 void vbdev_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void *cb_arg);

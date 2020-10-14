@@ -120,7 +120,6 @@ rpc_bdev_lvol_create_lvstore(struct spdk_jsonrpc_request *request,
 			     const struct spdk_json_val *params)
 {
 	struct rpc_bdev_lvol_create_lvstore req = {};
-	struct spdk_bdev *bdev;
 	int rc = 0;
 	enum lvs_clear_method clear_method;
 
@@ -130,13 +129,6 @@ rpc_bdev_lvol_create_lvstore(struct spdk_jsonrpc_request *request,
 		SPDK_INFOLOG(lvol_rpc, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
-		goto cleanup;
-	}
-
-	bdev = spdk_bdev_get_by_name(req.bdev_name);
-	if (bdev == NULL) {
-		SPDK_ERRLOG("bdev '%s' does not exist\n", req.bdev_name);
-		spdk_jsonrpc_send_error_response_fmt(request, -ENODEV, "Bdev %s not found", req.bdev_name);
 		goto cleanup;
 	}
 
@@ -155,7 +147,7 @@ rpc_bdev_lvol_create_lvstore(struct spdk_jsonrpc_request *request,
 		clear_method = LVS_CLEAR_WITH_UNMAP;
 	}
 
-	rc = vbdev_lvs_create(bdev, req.lvs_name, req.cluster_sz, clear_method,
+	rc = vbdev_lvs_create(req.bdev_name, req.lvs_name, req.cluster_sz, clear_method,
 			      rpc_lvol_store_construct_cb, request);
 	if (rc < 0) {
 		spdk_jsonrpc_send_error_response(request, -rc, spdk_strerror(rc));
