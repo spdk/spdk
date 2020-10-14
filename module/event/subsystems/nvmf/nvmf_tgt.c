@@ -66,6 +66,7 @@ struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf = {
 };
 
 struct spdk_nvmf_tgt *g_spdk_nvmf_tgt = NULL;
+uint32_t g_spdk_nvmf_tgt_max_subsystems = 0;
 
 static enum nvmf_tgt_state g_tgt_state;
 
@@ -264,11 +265,28 @@ nvmf_tgt_parse_conf_done(int status)
 static void
 nvmf_tgt_parse_conf_start(void *ctx)
 {
+	struct spdk_nvmf_target_opts opts = {
+		.name = "nvmf_tgt"
+	};
+
+	opts.max_subsystems = g_spdk_nvmf_tgt_max_subsystems;
+	opts.acceptor_poll_rate = g_spdk_nvmf_tgt_conf.acceptor_poll_rate;
+	g_spdk_nvmf_tgt = spdk_nvmf_tgt_create(&opts);
+	if (!g_spdk_nvmf_tgt) {
+		SPDK_ERRLOG("spdk_nvmf_tgt_create() failed\n");
+		goto error;
+	}
+
 	if (nvmf_parse_conf(nvmf_tgt_parse_conf_done)) {
 		SPDK_ERRLOG("nvmf_parse_conf() failed\n");
-		g_tgt_state = NVMF_TGT_ERROR;
-		nvmf_tgt_advance_state();
+		goto error;
 	}
+
+	return;
+
+error:
+	g_tgt_state = NVMF_TGT_ERROR;
+	nvmf_tgt_advance_state();
 }
 
 static void

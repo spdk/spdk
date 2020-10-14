@@ -43,8 +43,6 @@
 
 #define SPDK_NVMF_MAX_NAMESPACES (1 << 14)
 
-uint32_t g_spdk_nvmf_tgt_max_subsystems = 0;
-
 static int
 nvmf_add_discovery_subsystem(void)
 {
@@ -161,10 +159,6 @@ nvmf_parse_nvmf_tgt(void)
 {
 	int rc;
 	int using_deprecated_options;
-	struct spdk_nvmf_target_opts opts = {
-		.name = "nvmf_tgt",
-		.max_subsystems = 0
-	};
 
 	if (!g_spdk_nvmf_tgt_max_subsystems) {
 		using_deprecated_options = nvmf_parse_tgt_max_subsystems();
@@ -178,19 +172,10 @@ nvmf_parse_nvmf_tgt(void)
 		}
 	}
 
+	/* max_subsystems and acceptor_poll_rate options from config file are now disregarded.
+	 * The function bellow does practically nothing. */
 	if (nvmf_parse_tgt_conf() != 0) {
 		SPDK_ERRLOG("nvmf_parse_tgt_conf() failed\n");
-		return -1;
-	}
-
-	opts.max_subsystems = g_spdk_nvmf_tgt_max_subsystems;
-	opts.acceptor_poll_rate = g_spdk_nvmf_tgt_conf.acceptor_poll_rate;
-	g_spdk_nvmf_tgt = spdk_nvmf_tgt_create(&opts);
-
-	g_spdk_nvmf_tgt_max_subsystems = 0;
-
-	if (!g_spdk_nvmf_tgt) {
-		SPDK_ERRLOG("spdk_nvmf_tgt_create() failed\n");
 		return -1;
 	}
 
