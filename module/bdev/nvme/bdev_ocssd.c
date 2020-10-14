@@ -382,7 +382,7 @@ bdev_ocssd_read(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
 {
 	struct ocssd_bdev *ocssd_bdev = bdev_io->bdev->ctxt;
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
-	struct nvme_io_channel *nvme_ioch = spdk_io_channel_get_ctx(ioch);
+	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ioch);
 	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
 	const size_t zone_size = nvme_bdev->disk.zone_size;
 	uint64_t lba;
@@ -399,7 +399,7 @@ bdev_ocssd_read(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
 
 	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, bdev_io->u.bdev.offset_blocks);
 
-	return spdk_nvme_ns_cmd_readv_with_md(nvme_bdev->nvme_ns->ns, nvme_ioch->qpair, lba,
+	return spdk_nvme_ns_cmd_readv_with_md(nvme_bdev->nvme_ns->ns, nvme_ch->qpair, lba,
 					      bdev_io->u.bdev.num_blocks, bdev_ocssd_read_cb,
 					      bdev_io, 0, bdev_ocssd_reset_sgl,
 					      bdev_ocssd_next_sge, bdev_io->u.bdev.md_buf, 0, 0);
@@ -429,7 +429,7 @@ bdev_ocssd_write(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
 {
 	struct ocssd_bdev *ocssd_bdev = bdev_io->bdev->ctxt;
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
-	struct nvme_io_channel *nvme_ioch = spdk_io_channel_get_ctx(ioch);
+	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ioch);
 	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
 	const size_t zone_size = nvme_bdev->disk.zone_size;
 	uint64_t lba;
@@ -451,7 +451,7 @@ bdev_ocssd_write(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
 	ocdev_io->io.iov_offset = 0;
 
 	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, bdev_io->u.bdev.offset_blocks);
-	rc = spdk_nvme_ns_cmd_writev_with_md(nvme_bdev->nvme_ns->ns, nvme_ioch->qpair, lba,
+	rc = spdk_nvme_ns_cmd_writev_with_md(nvme_bdev->nvme_ns->ns, nvme_ch->qpair, lba,
 					     bdev_io->u.bdev.num_blocks, bdev_ocssd_write_cb,
 					     bdev_io, 0, bdev_ocssd_reset_sgl,
 					     bdev_ocssd_next_sge, bdev_io->u.bdev.md_buf, 0, 0);
@@ -467,7 +467,7 @@ bdev_ocssd_zone_append(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_i
 {
 	struct ocssd_bdev *ocssd_bdev = bdev_io->bdev->ctxt;
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
-	struct nvme_io_channel *nvme_ioch = spdk_io_channel_get_ctx(ioch);
+	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ioch);
 	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
 	struct bdev_ocssd_zone *zone;
 	uint64_t lba;
@@ -496,7 +496,7 @@ bdev_ocssd_zone_append(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_i
 	ocdev_io->io.iov_offset = 0;
 
 	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, zone->write_pointer);
-	rc = spdk_nvme_ns_cmd_writev_with_md(nvme_bdev->nvme_ns->ns, nvme_ioch->qpair, lba,
+	rc = spdk_nvme_ns_cmd_writev_with_md(nvme_bdev->nvme_ns->ns, nvme_ch->qpair, lba,
 					     bdev_io->u.bdev.num_blocks, bdev_ocssd_write_cb,
 					     bdev_io, 0, bdev_ocssd_reset_sgl,
 					     bdev_ocssd_next_sge, bdev_io->u.bdev.md_buf, 0, 0);
@@ -545,7 +545,7 @@ bdev_ocssd_reset_zone(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io
 {
 	struct ocssd_bdev *ocssd_bdev = bdev_io->bdev->ctxt;
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
-	struct nvme_io_channel *nvme_ioch = spdk_io_channel_get_ctx(ioch);
+	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ioch);
 	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
 	uint64_t offset, zone_size = nvme_bdev->disk.zone_size;
 	int rc;
@@ -565,7 +565,7 @@ bdev_ocssd_reset_zone(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io
 					   slba + offset * zone_size);
 	}
 
-	rc = spdk_nvme_ocssd_ns_cmd_vector_reset(nvme_bdev->nvme_ns->ns, nvme_ioch->qpair,
+	rc = spdk_nvme_ocssd_ns_cmd_vector_reset(nvme_bdev->nvme_ns->ns, nvme_ch->qpair,
 			ocdev_io->io.lba, num_zones, NULL,
 			bdev_ocssd_reset_zone_cb, bdev_io);
 	if (spdk_unlikely(rc != 0)) {
@@ -702,14 +702,14 @@ static int
 bdev_ocssd_poll_pending(void *ctx)
 {
 	struct spdk_io_channel *ioch = ctx;
-	struct nvme_io_channel *nvme_ioch;
+	struct nvme_io_channel *nvme_ch;
 	struct ocssd_io_channel *ocssd_ioch;
 	struct spdk_bdev_io *bdev_io;
 	TAILQ_HEAD(, spdk_bdev_io) pending_requests;
 	int num_requests = 0;
 
-	nvme_ioch = spdk_io_channel_get_ctx(ioch);
-	ocssd_ioch = nvme_ioch->ocssd_ioch;
+	nvme_ch = spdk_io_channel_get_ctx(ioch);
+	ocssd_ioch = nvme_ch->ocssd_ioch;
 
 	TAILQ_INIT(&pending_requests);
 	TAILQ_SWAP(&ocssd_ioch->pending_requests, &pending_requests, spdk_bdev_io, module_link);
@@ -730,8 +730,8 @@ bdev_ocssd_poll_pending(void *ctx)
 static void
 bdev_ocssd_delay_request(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
 {
-	struct nvme_io_channel *nvme_ioch = spdk_io_channel_get_ctx(ioch);
-	struct ocssd_io_channel *ocssd_ioch = nvme_ioch->ocssd_ioch;
+	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ioch);
+	struct ocssd_io_channel *ocssd_ioch = nvme_ch->ocssd_ioch;
 
 	TAILQ_INSERT_TAIL(&ocssd_ioch->pending_requests, bdev_io, module_link);
 	spdk_poller_resume(ocssd_ioch->pending_poller);
@@ -1438,7 +1438,7 @@ bdev_ocssd_depopulate_namespace(struct nvme_bdev_ns *ns)
 }
 
 int
-bdev_ocssd_create_io_channel(struct nvme_io_channel *ioch)
+bdev_ocssd_create_io_channel(struct nvme_io_channel *nvme_ch)
 {
 	struct ocssd_io_channel *ocssd_ioch;
 
@@ -1448,7 +1448,7 @@ bdev_ocssd_create_io_channel(struct nvme_io_channel *ioch)
 	}
 
 	ocssd_ioch->pending_poller = SPDK_POLLER_REGISTER(bdev_ocssd_poll_pending,
-				     spdk_io_channel_from_ctx(ioch), 0);
+				     spdk_io_channel_from_ctx(nvme_ch), 0);
 	if (ocssd_ioch->pending_poller == NULL) {
 		SPDK_ERRLOG("Failed to register pending requests poller\n");
 		free(ocssd_ioch);
@@ -1459,16 +1459,16 @@ bdev_ocssd_create_io_channel(struct nvme_io_channel *ioch)
 	spdk_poller_pause(ocssd_ioch->pending_poller);
 
 	TAILQ_INIT(&ocssd_ioch->pending_requests);
-	ioch->ocssd_ioch = ocssd_ioch;
+	nvme_ch->ocssd_ioch = ocssd_ioch;
 
 	return 0;
 }
 
 void
-bdev_ocssd_destroy_io_channel(struct nvme_io_channel *ioch)
+bdev_ocssd_destroy_io_channel(struct nvme_io_channel *nvme_ch)
 {
-	spdk_poller_unregister(&ioch->ocssd_ioch->pending_poller);
-	free(ioch->ocssd_ioch);
+	spdk_poller_unregister(&nvme_ch->ocssd_ioch->pending_poller);
+	free(nvme_ch->ocssd_ioch);
 }
 
 int
