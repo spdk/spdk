@@ -43,23 +43,6 @@
 
 #define SPDK_NVMF_MAX_NAMESPACES (1 << 14)
 
-static int
-nvmf_add_discovery_subsystem(void)
-{
-	struct spdk_nvmf_subsystem *subsystem;
-
-	subsystem = spdk_nvmf_subsystem_create(g_spdk_nvmf_tgt, SPDK_NVMF_DISCOVERY_NQN,
-					       SPDK_NVMF_SUBTYPE_DISCOVERY, 0);
-	if (subsystem == NULL) {
-		SPDK_ERRLOG("Failed creating discovery nvmf library subsystem\n");
-		return -1;
-	}
-
-	spdk_nvmf_subsystem_set_allow_any_host(subsystem, true);
-
-	return 0;
-}
-
 static void
 nvmf_read_config_file_tgt_max_subsystems(struct spdk_conf_section *sp,
 		int *deprecated_values)
@@ -157,7 +140,6 @@ nvmf_parse_tgt_conf(void)
 static int
 nvmf_parse_nvmf_tgt(void)
 {
-	int rc;
 	int using_deprecated_options;
 
 	if (!g_spdk_nvmf_tgt_max_subsystems) {
@@ -177,12 +159,6 @@ nvmf_parse_nvmf_tgt(void)
 	if (nvmf_parse_tgt_conf() != 0) {
 		SPDK_ERRLOG("nvmf_parse_tgt_conf() failed\n");
 		return -1;
-	}
-
-	rc = nvmf_add_discovery_subsystem();
-	if (rc != 0) {
-		SPDK_ERRLOG("nvmf_add_discovery_subsystem failed\n");
-		return rc;
 	}
 
 	return 0;

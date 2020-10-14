@@ -262,6 +262,23 @@ nvmf_tgt_parse_conf_done(int status)
 	nvmf_tgt_advance_state();
 }
 
+static int
+nvmf_add_discovery_subsystem(void)
+{
+	struct spdk_nvmf_subsystem *subsystem;
+
+	subsystem = spdk_nvmf_subsystem_create(g_spdk_nvmf_tgt, SPDK_NVMF_DISCOVERY_NQN,
+					       SPDK_NVMF_SUBTYPE_DISCOVERY, 0);
+	if (subsystem == NULL) {
+		SPDK_ERRLOG("Failed creating discovery nvmf library subsystem\n");
+		return -1;
+	}
+
+	spdk_nvmf_subsystem_set_allow_any_host(subsystem, true);
+
+	return 0;
+}
+
 static void
 nvmf_tgt_parse_conf_start(void *ctx)
 {
@@ -279,6 +296,11 @@ nvmf_tgt_parse_conf_start(void *ctx)
 
 	if (nvmf_parse_conf(nvmf_tgt_parse_conf_done)) {
 		SPDK_ERRLOG("nvmf_parse_conf() failed\n");
+		goto error;
+	}
+
+	if (nvmf_add_discovery_subsystem() != 0) {
+		SPDK_ERRLOG("nvmf_add_discovery_subsystem failed\n");
 		goto error;
 	}
 
