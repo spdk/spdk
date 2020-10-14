@@ -468,6 +468,11 @@ bdev_unregister_cb(void *cb_arg, int rc)
 }
 
 static void
+bdev_ut_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
+{
+}
+
+static void
 bdev_open_cb1(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
 {
 	struct spdk_bdev_desc *desc = *(struct spdk_bdev_desc **)event_ctx;
@@ -579,51 +584,55 @@ open_write_test(void)
 	bdev[8] = allocate_vbdev("bdev8");
 
 	/* Open bdev0 read-only.  This should succeed. */
-	rc = spdk_bdev_open(bdev[0], false, NULL, NULL, &desc[0]);
+	rc = spdk_bdev_open_ext("bdev0", false, bdev_ut_event_cb, NULL, &desc[0]);
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(desc[0] != NULL);
+	CU_ASSERT(bdev[0] == spdk_bdev_desc_get_bdev(desc[0]));
 	spdk_bdev_close(desc[0]);
 
 	/*
 	 * Open bdev1 read/write.  This should fail since bdev1 has been claimed
 	 * by a vbdev module.
 	 */
-	rc = spdk_bdev_open(bdev[1], true, NULL, NULL, &desc[1]);
+	rc = spdk_bdev_open_ext("bdev1", true, bdev_ut_event_cb, NULL, &desc[1]);
 	CU_ASSERT(rc == -EPERM);
 
 	/*
 	 * Open bdev4 read/write.  This should fail since bdev3 has been claimed
 	 * by a vbdev module.
 	 */
-	rc = spdk_bdev_open(bdev[4], true, NULL, NULL, &desc[4]);
+	rc = spdk_bdev_open_ext("bdev4", true, bdev_ut_event_cb, NULL, &desc[4]);
 	CU_ASSERT(rc == -EPERM);
 
 	/* Open bdev4 read-only.  This should succeed. */
-	rc = spdk_bdev_open(bdev[4], false, NULL, NULL, &desc[4]);
+	rc = spdk_bdev_open_ext("bdev4", false, bdev_ut_event_cb, NULL, &desc[4]);
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(desc[4] != NULL);
+	CU_ASSERT(bdev[4] == spdk_bdev_desc_get_bdev(desc[4]));
 	spdk_bdev_close(desc[4]);
 
 	/*
 	 * Open bdev8 read/write.  This should succeed since it is a leaf
 	 * bdev.
 	 */
-	rc = spdk_bdev_open(bdev[8], true, NULL, NULL, &desc[8]);
+	rc = spdk_bdev_open_ext("bdev8", true, bdev_ut_event_cb, NULL, &desc[8]);
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(desc[8] != NULL);
+	CU_ASSERT(bdev[8] == spdk_bdev_desc_get_bdev(desc[8]));
 	spdk_bdev_close(desc[8]);
 
 	/*
 	 * Open bdev5 read/write.  This should fail since bdev4 has been claimed
 	 * by a vbdev module.
 	 */
-	rc = spdk_bdev_open(bdev[5], true, NULL, NULL, &desc[5]);
+	rc = spdk_bdev_open_ext("bdev5", true, bdev_ut_event_cb, NULL, &desc[5]);
 	CU_ASSERT(rc == -EPERM);
 
 	/* Open bdev4 read-only.  This should succeed. */
-	rc = spdk_bdev_open(bdev[5], false, NULL, NULL, &desc[5]);
+	rc = spdk_bdev_open_ext("bdev5", false, bdev_ut_event_cb, NULL, &desc[5]);
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(desc[5] != NULL);
+	CU_ASSERT(bdev[5] == spdk_bdev_desc_get_bdev(desc[5]));
 	spdk_bdev_close(desc[5]);
 
 	free_vbdev(bdev[8]);
@@ -710,6 +719,7 @@ num_blocks_test(void)
 	rc = spdk_bdev_open_ext("num_blocks", false, bdev_open_cb1, &desc_ext, &desc_ext);
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(desc_ext != NULL);
+	CU_ASSERT(&bdev == spdk_bdev_desc_get_bdev(desc_ext));
 
 	g_event_type1 = 0xFF;
 	/* Growing block number */
@@ -902,10 +912,11 @@ bdev_io_types_test(void)
 
 	bdev = allocate_bdev("bdev0");
 
-	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc);
 	CU_ASSERT(rc == 0);
 	poll_threads();
 	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
 	io_ch = spdk_bdev_get_io_channel(desc);
 	CU_ASSERT(io_ch != NULL);
 
@@ -945,10 +956,11 @@ bdev_io_wait_test(void)
 
 	bdev = allocate_bdev("bdev0");
 
-	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc);
 	CU_ASSERT(rc == 0);
 	poll_threads();
 	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
 	io_ch = spdk_bdev_get_io_channel(desc);
 	CU_ASSERT(io_ch != NULL);
 
@@ -1056,9 +1068,10 @@ bdev_io_split_test(void)
 
 	bdev = allocate_bdev("bdev0");
 
-	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc);
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
 	io_ch = spdk_bdev_get_io_channel(desc);
 	CU_ASSERT(io_ch != NULL);
 
@@ -1670,9 +1683,10 @@ bdev_io_split_with_io_wait(void)
 
 	bdev = allocate_bdev("bdev0");
 
-	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(desc != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
 	io_ch = spdk_bdev_get_io_channel(desc);
 	CU_ASSERT(io_ch != NULL);
 	channel = spdk_io_channel_get_ctx(io_ch);
@@ -1806,9 +1820,10 @@ bdev_io_alignment(void)
 	fn_table.submit_request = stub_submit_request_get_buf;
 	bdev = allocate_bdev("bdev0");
 
-	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(desc != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
 	io_ch = spdk_bdev_get_io_channel(desc);
 	CU_ASSERT(io_ch != NULL);
 
@@ -2025,9 +2040,10 @@ bdev_io_alignment_with_boundary(void)
 	fn_table.submit_request = stub_submit_request_get_buf;
 	bdev = allocate_bdev("bdev0");
 
-	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(desc != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
 	io_ch = spdk_bdev_get_io_channel(desc);
 	CU_ASSERT(io_ch != NULL);
 
@@ -2174,9 +2190,10 @@ bdev_histograms(void)
 
 	bdev = allocate_bdev("bdev");
 
-	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	rc = spdk_bdev_open_ext("bdev", true, bdev_ut_event_cb, NULL, &desc);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(desc != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
 
 	ch = spdk_bdev_get_io_channel(desc);
 	CU_ASSERT(ch != NULL);
@@ -2278,9 +2295,10 @@ _bdev_compare(bool emulated)
 	fn_table.submit_request = stub_submit_request_get_buf;
 	bdev = allocate_bdev("bdev");
 
-	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	rc = spdk_bdev_open_ext("bdev", true, bdev_ut_event_cb, NULL, &desc);
 	CU_ASSERT_EQUAL(rc, 0);
 	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
 	ioch = spdk_bdev_get_io_channel(desc);
 	SPDK_CU_ASSERT_FATAL(ioch != NULL);
 
@@ -2364,9 +2382,10 @@ bdev_compare_and_write(void)
 	fn_table.submit_request = stub_submit_request_get_buf;
 	bdev = allocate_bdev("bdev");
 
-	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	rc = spdk_bdev_open_ext("bdev", true, bdev_ut_event_cb, NULL, &desc);
 	CU_ASSERT_EQUAL(rc, 0);
 	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
 	ioch = spdk_bdev_get_io_channel(desc);
 	SPDK_CU_ASSERT_FATAL(ioch != NULL);
 
@@ -2457,9 +2476,10 @@ bdev_write_zeroes(void)
 	spdk_bdev_initialize(bdev_init_cb, NULL);
 	bdev = allocate_bdev("bdev");
 
-	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	rc = spdk_bdev_open_ext("bdev", true, bdev_ut_event_cb, NULL, &desc);
 	CU_ASSERT_EQUAL(rc, 0);
 	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
 	ioch = spdk_bdev_get_io_channel(desc);
 	SPDK_CU_ASSERT_FATAL(ioch != NULL);
 
@@ -2556,13 +2576,14 @@ bdev_open_while_hotremove(void)
 
 	bdev = allocate_bdev("bdev");
 
-	rc = spdk_bdev_open(bdev, false, NULL, NULL, &desc[0]);
+	rc = spdk_bdev_open_ext("bdev", false, bdev_ut_event_cb, NULL, &desc[0]);
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(desc[0] != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc[0]));
 
 	spdk_bdev_unregister(bdev, NULL, NULL);
 
-	rc = spdk_bdev_open(bdev, false, NULL, NULL, &desc[1]);
+	rc = spdk_bdev_open_ext("bdev", false, bdev_ut_event_cb, NULL, &desc[1]);
 	CU_ASSERT(rc == -ENODEV);
 	SPDK_CU_ASSERT_FATAL(desc[1] == NULL);
 
@@ -2581,6 +2602,8 @@ bdev_close_while_hotremove(void)
 
 	rc = spdk_bdev_open_ext("bdev", true, bdev_open_cb1, &desc, &desc);
 	CU_ASSERT_EQUAL(rc, 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
 
 	/* Simulate hot-unplug by unregistering bdev */
 	g_event_type1 = 0xFF;
@@ -2684,8 +2707,10 @@ bdev_set_io_timeout(void)
 
 	bdev = allocate_bdev("bdev");
 
-	CU_ASSERT(spdk_bdev_open(bdev, true, NULL, NULL, &desc) == 0);
+	CU_ASSERT(spdk_bdev_open_ext("bdev", true, bdev_ut_event_cb, NULL, &desc) == 0);
 	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
+
 	io_ch = spdk_bdev_get_io_channel(desc);
 	CU_ASSERT(io_ch != NULL);
 
@@ -2888,9 +2913,10 @@ lock_lba_range_check_ranges(void)
 
 	bdev = allocate_bdev("bdev0");
 
-	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(desc != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
 	io_ch = spdk_bdev_get_io_channel(desc);
 	CU_ASSERT(io_ch != NULL);
 	channel = spdk_io_channel_get_ctx(io_ch);
@@ -2944,9 +2970,10 @@ lock_lba_range_with_io_outstanding(void)
 
 	bdev = allocate_bdev("bdev0");
 
-	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(desc != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
 	io_ch = spdk_bdev_get_io_channel(desc);
 	CU_ASSERT(io_ch != NULL);
 	channel = spdk_io_channel_get_ctx(io_ch);
@@ -3038,9 +3065,10 @@ lock_lba_range_overlapped(void)
 
 	bdev = allocate_bdev("bdev0");
 
-	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(desc != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
 	io_ch = spdk_bdev_get_io_channel(desc);
 	CU_ASSERT(io_ch != NULL);
 	channel = spdk_io_channel_get_ctx(io_ch);
@@ -3191,9 +3219,10 @@ bdev_io_abort(void)
 
 	bdev = allocate_bdev("bdev0");
 
-	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(desc != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
 	io_ch = spdk_bdev_get_io_channel(desc);
 	CU_ASSERT(io_ch != NULL);
 	channel = spdk_io_channel_get_ctx(io_ch);
