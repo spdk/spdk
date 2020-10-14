@@ -16,6 +16,11 @@ A new `spdk_bdev_part_base_construct_ext` function has been added and the
 of bdev structure to avoid a race condition that can happen when the bdev is being
 removed between a call to get its structure based on a name and actually openning it.
 
+### blobstore
+
+A new `spdk_bdev_create_bs_dev_ext` function has been added and `spdk_bdev_create_bs_dev_from_desc`
+function has been deprecated.
+
 ### dpdk
 
 Updated DPDK submodule to DPDK 20.08.

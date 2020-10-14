@@ -50,8 +50,7 @@ struct spdk_bdev;
 struct spdk_bdev_module;
 
 /**
- * Create a blobstore block device from a bdev. (deprecated, please use spdk_bdev_create_bs_dev_from_desc,
- * together with spdk_bdev_open_ext).
+ * Create a blobstore block device from a bdev (deprecated, please use spdk_bdev_create_bs_dev_ext).
  *
  * \param bdev Bdev to use.
  * \param remove_cb Called when the block device is removed.
@@ -63,13 +62,26 @@ struct spdk_bs_dev *spdk_bdev_create_bs_dev(struct spdk_bdev *bdev, spdk_bdev_re
 		void *remove_ctx);
 
 /**
- * Create a blobstore block device from the descriptor of a bdev.
+ * Create a blobstore block device from the descriptor of a bdev (deprecated, please use spdk_bdev_create_bs_dev_ext).
  *
  * \param desc Descriptor of a bdev. spdk_bdev_open_ext() is recommended to get the desc.
  *
  * \return a pointer to the blobstore block device on success or NULL otherwise.
  */
 struct spdk_bs_dev *spdk_bdev_create_bs_dev_from_desc(struct spdk_bdev_desc *desc);
+
+/**
+ * Create a blobstore block device from a bdev.
+ *
+ * \param bdev_name Name of the bdev to use.
+ * \param event_cb Called when the bdev triggers asynchronous event.
+ * \param event_ctx Argument passed to function event_cb.
+ * \param bs_dev Output parameter for a pointer to the blobstore block device.
+ *
+ * \return 0 if operation is successful, or suitable errno value otherwise.
+ */
+int spdk_bdev_create_bs_dev_ext(const char *bdev_name, spdk_bdev_event_cb_t event_cb,
+				void *event_ctx, struct spdk_bs_dev **bs_dev);
 
 /**
  * Claim the bdev module for the given blobstore.

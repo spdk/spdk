@@ -383,3 +383,32 @@ spdk_bdev_create_bs_dev_from_desc(struct spdk_bdev_desc *desc)
 
 	return &b->bs_dev;
 }
+
+
+int
+spdk_bdev_create_bs_dev_ext(const char *bdev_name, spdk_bdev_event_cb_t event_cb,
+			    void *event_ctx, struct spdk_bs_dev **_bs_dev)
+{
+	struct blob_bdev *b;
+	struct spdk_bdev_desc *desc;
+	int rc;
+
+	b = calloc(1, sizeof(*b));
+
+	if (b == NULL) {
+		SPDK_ERRLOG("could not allocate blob_bdev\n");
+		return -ENOMEM;
+	}
+
+	rc = spdk_bdev_open_ext(bdev_name, true, event_cb, event_ctx, &desc);
+	if (rc != 0) {
+		free(b);
+		return rc;
+	}
+
+	blob_bdev_init(b, desc);
+
+	*_bs_dev = &b->bs_dev;
+
+	return 0;
+}
