@@ -776,10 +776,49 @@ print_zns_zone_report(void)
 }
 
 static void
+print_zns_ns_data(const struct spdk_nvme_zns_ns_data *nsdata_zns)
+{
+	printf("ZNS Specific Namespace Data\n");
+	printf("===========================\n");
+	printf("Variable Zone Capacity:                %s\n",
+	       nsdata_zns->zoc.variable_zone_capacity ? "Yes" : "No");
+	printf("Zone Active Excursions:                %s\n",
+	       nsdata_zns->zoc.zone_active_excursions ? "Yes" : "No");
+	printf("Read Across Zone Boundaries:           %s\n",
+	       nsdata_zns->ozcs.read_across_zone_boundaries ? "Yes" : "No");
+	if (nsdata_zns->mar == 0xffffffff) {
+		printf("Max Active Resources:                  No Limit\n");
+	} else {
+		printf("Max Active Resources:                  %"PRIu32"\n",
+		       nsdata_zns->mar + 1);
+	}
+	if (nsdata_zns->mor == 0xffffffff) {
+		printf("Max Open Resources:                    No Limit\n");
+	} else {
+		printf("Max Open Resources:                    %"PRIu32"\n",
+		       nsdata_zns->mor + 1);
+	}
+	if (nsdata_zns->rrl == 0) {
+		printf("Reset Recommended Limit:               Not Reported\n");
+	} else {
+		printf("Reset Recommended Limit:               %"PRIu32"\n",
+		       nsdata_zns->rrl);
+	}
+	if (nsdata_zns->frl == 0) {
+		printf("Finish Recommended Limit:              Not Reported\n");
+	} else {
+		printf("Finish Recommended Limit:              %"PRIu32"\n",
+		       nsdata_zns->frl);
+	}
+	printf("\n");
+}
+
+static void
 print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 {
 	const struct spdk_nvme_ctrlr_data	*cdata;
 	const struct spdk_nvme_ns_data		*nsdata;
+	const struct spdk_nvme_zns_ns_data	*nsdata_zns;
 	const struct spdk_uuid			*uuid;
 	uint32_t				i;
 	uint32_t				flags;
@@ -788,6 +827,7 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 	nsdata = spdk_nvme_ns_get_data(ns);
+	nsdata_zns = spdk_nvme_zns_ns_get_data(ns);
 	flags  = spdk_nvme_ns_get_flags(ns);
 
 	printf("Namespace ID:%d\n", spdk_nvme_ns_get_id(ns));
@@ -888,9 +928,15 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	printf("Number of LBA Formats:                 %d\n", nsdata->nlbaf + 1);
 	printf("Current LBA Format:                    LBA Format #%02d\n",
 	       nsdata->flbas.format);
-	for (i = 0; i <= nsdata->nlbaf; i++)
+	for (i = 0; i <= nsdata->nlbaf; i++) {
 		printf("LBA Format #%02d: Data Size: %5d  Metadata Size: %5d\n",
 		       i, 1 << nsdata->lbaf[i].lbads, nsdata->lbaf[i].ms);
+		if (spdk_nvme_ns_get_csi(ns) == SPDK_NVME_CSI_ZNS) {
+			printf("LBA Format Extension #%02d: Zone Size (in LBAs): 0x%"PRIx64" Zone Descriptor Extension Size: %d bytes\n",
+			       i, nsdata_zns->lbafe[i].zsze, nsdata_zns->lbafe[i].zdes << 6);
+		}
+
+	}
 	printf("\n");
 
 	if (spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
@@ -904,6 +950,7 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 			printf("ERROR: spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
 			exit(1);
 		}
+		print_zns_ns_data(nsdata_zns);
 		get_zns_zone_report(ns, qpair);
 		print_zns_zone_report();
 		spdk_nvme_ctrlr_free_io_qpair(qpair);
@@ -1750,6 +1797,15 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 		printf("==================\n");
 		snprintf(str, sizeof(intel_md_page.marketing_product), "%s", intel_md_page.marketing_product);
 		printf("Marketing Product Information:		%s\n", str);
+		printf("\n");
+		printf("\n");
+	}
+
+	if (spdk_nvme_zns_ctrlr_get_data(ctrlr)) {
+		printf("ZNS Specific Controller Data\n");
+		printf("============================\n");
+		printf("Zone Append Size Limit:      %u\n",
+		       spdk_nvme_zns_ctrlr_get_data(ctrlr)->zasl);
 		printf("\n");
 		printf("\n");
 	}
