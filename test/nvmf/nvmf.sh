@@ -17,6 +17,7 @@ run_test "nvmf_example" test/nvmf/target/nvmf_example.sh "${TEST_ARGS[@]}"
 run_test "nvmf_filesystem" test/nvmf/target/filesystem.sh "${TEST_ARGS[@]}"
 run_test "nvmf_discovery" test/nvmf/target/discovery.sh "${TEST_ARGS[@]}"
 run_test "nvmf_connect_disconnect" test/nvmf/target/connect_disconnect.sh "${TEST_ARGS[@]}"
+run_test "nvmf_host_management" test/nvmf/target/host_management.sh "${TEST_ARGS[@]}"
 if [ $SPDK_TEST_NVME_CLI -eq 1 ]; then
 	run_test "nvmf_nvme_cli" test/nvmf/target/nvme_cli.sh "${TEST_ARGS[@]}"
 fi

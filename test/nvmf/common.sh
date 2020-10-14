@@ -364,7 +364,8 @@ function gen_nvmf_target_json() {
 					    "traddr": "$NVMF_FIRST_TARGET_IP",
 					    "adrfam": "ipv4",
 					    "trsvcid": "$NVMF_PORT",
-					    "subnqn": "nqn.2016-06.io.spdk:cnode$subsystem"
+					    "subnqn": "nqn.2016-06.io.spdk:cnode$subsystem",
+					    "hostnqn": "nqn.2016-06.io.spdk:host$subsystem"
 					  },
 					  "method": "bdev_nvme_attach_controller"
 					}
