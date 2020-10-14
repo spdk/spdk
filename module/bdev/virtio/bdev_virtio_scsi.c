@@ -1310,12 +1310,24 @@ process_scan_inquiry(struct virtio_scsi_scan_base *base)
 }
 
 static void
-bdev_virtio_disc_notify_remove(void *remove_ctx)
+bdev_virtio_disk_notify_remove(struct virtio_scsi_disk *disk)
 {
-	struct virtio_scsi_disk *disk = remove_ctx;
-
 	disk->removed = true;
 	spdk_bdev_close(disk->notify_desc);
+}
+
+static void
+bdev_virtio_disk_notify_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
+				 void *event_ctx)
+{
+	switch (type) {
+	case SPDK_BDEV_EVENT_REMOVE:
+		bdev_virtio_disk_notify_remove(event_ctx);
+		break;
+	default:
+		SPDK_NOTICELOG("Unsupported bdev event: type %d\n", type);
+		break;
+	}
 }
 
 /* To be called only from the thread performing target scan */
@@ -1373,7 +1385,8 @@ virtio_scsi_dev_add_tgt(struct virtio_scsi_dev *svdev, struct virtio_scsi_scan_i
 		return rc;
 	}
 
-	rc = spdk_bdev_open(bdev, false, bdev_virtio_disc_notify_remove, disk, &disk->notify_desc);
+	rc = spdk_bdev_open_ext(bdev->name, false, bdev_virtio_disk_notify_event_cb,
+				disk, &disk->notify_desc);
 	if (rc) {
 		assert(false);
 	}
