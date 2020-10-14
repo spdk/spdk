@@ -191,6 +191,8 @@ struct spdk_bs_dev {
 		      uint64_t lba, uint32_t lba_count,
 		      struct spdk_bs_dev_cb_args *cb_args);
 
+	struct spdk_bdev *(*get_base_bdev)(struct spdk_bs_dev *dev);
+
 	uint64_t	blockcnt;
 	uint32_t	blocklen; /* In bytes */
 };
