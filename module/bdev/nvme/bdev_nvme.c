@@ -37,7 +37,6 @@
 #include "bdev_ocssd.h"
 
 #include "spdk/config.h"
-#include "spdk/conf.h"
 #include "spdk/endian.h"
 #include "spdk/bdev.h"
 #include "spdk/json.h"
@@ -53,7 +52,6 @@
 
 #define SPDK_BDEV_NVME_DEFAULT_DELAY_CMD_SUBMIT true
 
-static void bdev_nvme_get_spdk_running_config(FILE *fp);
 static int bdev_nvme_config_json(struct spdk_json_write_ctx *w);
 
 struct nvme_bdev_io {
@@ -131,7 +129,6 @@ static bool g_nvme_hotplug_enabled = false;
 static struct spdk_thread *g_bdev_nvme_init_thread;
 static struct spdk_poller *g_hotplug_poller;
 static struct spdk_nvme_probe_ctx *g_hotplug_probe_ctx;
-static char *g_nvme_hostnqn = NULL;
 
 static void nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 		struct nvme_async_probe_ctx *ctx);
@@ -223,7 +220,6 @@ static struct spdk_bdev_module nvme_if = {
 	.async_fini = true,
 	.module_init = bdev_nvme_library_init,
 	.module_fini = bdev_nvme_library_fini,
-	.config_text = bdev_nvme_get_spdk_running_config,
 	.config_json = bdev_nvme_config_json,
 	.get_ctx_size = bdev_nvme_get_ctx_size,
 
@@ -1128,49 +1124,6 @@ hotplug_probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	return true;
 }
 
-static bool
-probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
-	 struct spdk_nvme_ctrlr_opts *opts)
-{
-	struct nvme_probe_ctx *ctx = cb_ctx;
-
-	SPDK_DEBUGLOG(bdev_nvme, "Probing device %s\n", trid->traddr);
-
-	if (nvme_bdev_ctrlr_get(trid)) {
-		SPDK_ERRLOG("A controller with the provided trid (traddr: %s) already exists.\n",
-			    trid->traddr);
-		return false;
-	}
-
-	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
-		bool claim_device = false;
-		size_t i;
-
-		for (i = 0; i < ctx->count; i++) {
-			if (spdk_nvme_transport_id_compare(trid, &ctx->trids[i]) == 0) {
-				claim_device = true;
-				break;
-			}
-		}
-
-		if (!claim_device) {
-			SPDK_DEBUGLOG(bdev_nvme, "Not claiming device at %s\n", trid->traddr);
-			return false;
-		}
-	}
-
-	if (ctx->hostnqn) {
-		snprintf(opts->hostnqn, sizeof(opts->hostnqn), "%s", ctx->hostnqn);
-	}
-
-	opts->arbitration_burst = (uint8_t)g_opts.arbitration_burst;
-	opts->low_priority_weight = (uint8_t)g_opts.low_priority_weight;
-	opts->medium_priority_weight = (uint8_t)g_opts.medium_priority_weight;
-	opts->high_priority_weight = (uint8_t)g_opts.high_priority_weight;
-
-	return true;
-}
-
 static void
 nvme_abort_cpl(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
@@ -2020,215 +1973,13 @@ bdev_nvme_delete(const char *name)
 static int
 bdev_nvme_library_init(void)
 {
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
-	struct spdk_conf_section *sp;
-	const char *val;
-	int rc = 0;
-	int64_t intval = 0;
-	size_t i;
-	struct nvme_probe_ctx *probe_ctx = NULL;
-	int retry_count;
-	uint32_t local_nvme_num = 0;
-	int64_t hotplug_period;
-	bool hotplug_enabled = g_nvme_hotplug_enabled;
-
 	g_bdev_nvme_init_thread = spdk_get_thread();
 
 	spdk_io_device_register(&g_nvme_bdev_ctrlrs, bdev_nvme_poll_group_create_cb,
 				bdev_nvme_poll_group_destroy_cb,
 				sizeof(struct nvme_bdev_poll_group),  "bdev_nvme_poll_groups");
 
-	sp = spdk_conf_find_section(NULL, "Nvme");
-	if (sp == NULL) {
-		goto end;
-	}
-
-	probe_ctx = calloc(1, sizeof(*probe_ctx));
-	if (probe_ctx == NULL) {
-		SPDK_ERRLOG("Failed to allocate probe_ctx\n");
-		rc = -1;
-		goto end;
-	}
-
-	retry_count = spdk_conf_section_get_intval(sp, "RetryCount");
-	if (retry_count >= 0) {
-		g_opts.retry_count = retry_count;
-	}
-
-	val = spdk_conf_section_get_val(sp, "TimeoutUsec");
-	if (val != NULL) {
-		intval = spdk_strtoll(val, 10);
-		if (intval < 0) {
-			SPDK_ERRLOG("Invalid TimeoutUsec value\n");
-			rc = -1;
-			goto end;
-		}
-	}
-
-	g_opts.timeout_us = intval;
-
-	if (g_opts.timeout_us > 0) {
-		val = spdk_conf_section_get_val(sp, "ActionOnTimeout");
-		if (val != NULL) {
-			if (!strcasecmp(val, "Reset")) {
-				g_opts.action_on_timeout = SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET;
-			} else if (!strcasecmp(val, "Abort")) {
-				g_opts.action_on_timeout = SPDK_BDEV_NVME_TIMEOUT_ACTION_ABORT;
-			}
-		}
-	}
-
-	intval = spdk_conf_section_get_intval(sp, "AdminPollRate");
-	if (intval > 0) {
-		g_opts.nvme_adminq_poll_period_us = intval;
-	}
-
-	intval = spdk_conf_section_get_intval(sp, "IOPollRate");
-	if (intval > 0) {
-		g_opts.nvme_ioq_poll_period_us = intval;
-	}
-
-	if (spdk_process_is_primary()) {
-		hotplug_enabled = spdk_conf_section_get_boolval(sp, "HotplugEnable", false);
-	}
-
-	hotplug_period = spdk_conf_section_get_intval(sp, "HotplugPollRate");
-	if (hotplug_period < 0) {
-		hotplug_period = 0;
-	}
-
-	g_nvme_hostnqn = spdk_conf_section_get_val(sp, "HostNQN");
-	probe_ctx->hostnqn = g_nvme_hostnqn;
-
-	g_opts.delay_cmd_submit = spdk_conf_section_get_boolval(sp, "DelayCmdSubmit",
-				  SPDK_BDEV_NVME_DEFAULT_DELAY_CMD_SUBMIT);
-
-	for (i = 0; i < NVME_MAX_CONTROLLERS; i++) {
-		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 0);
-		if (val == NULL) {
-			break;
-		}
-
-		rc = spdk_nvme_transport_id_parse(&probe_ctx->trids[i], val);
-		if (rc < 0) {
-			SPDK_ERRLOG("Unable to parse TransportID: %s\n", val);
-			rc = -1;
-			goto end;
-		}
-
-		rc = spdk_nvme_host_id_parse(&probe_ctx->hostids[i], val);
-		if (rc < 0) {
-			SPDK_ERRLOG("Unable to parse HostID: %s\n", val);
-			rc = -1;
-			goto end;
-		}
-
-		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 1);
-		if (val == NULL) {
-			SPDK_ERRLOG("No name provided for TransportID\n");
-			rc = -1;
-			goto end;
-		}
-
-		probe_ctx->names[i] = val;
-
-		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 2);
-		if (val != NULL) {
-			rc = spdk_nvme_prchk_flags_parse(&probe_ctx->prchk_flags[i], val);
-			if (rc < 0) {
-				SPDK_ERRLOG("Unable to parse prchk: %s\n", val);
-				rc = -1;
-				goto end;
-			}
-		}
-
-		probe_ctx->count++;
-
-		if (probe_ctx->trids[i].trtype != SPDK_NVME_TRANSPORT_PCIE) {
-			struct spdk_nvme_ctrlr *ctrlr;
-			struct spdk_nvme_ctrlr_opts opts;
-
-			if (nvme_bdev_ctrlr_get(&probe_ctx->trids[i])) {
-				SPDK_ERRLOG("A controller with the provided trid (traddr: %s) already exists.\n",
-					    probe_ctx->trids[i].traddr);
-				rc = -1;
-				goto end;
-			}
-
-			if (probe_ctx->trids[i].subnqn[0] == '\0') {
-				SPDK_ERRLOG("Need to provide subsystem nqn\n");
-				rc = -1;
-				goto end;
-			}
-
-			spdk_nvme_ctrlr_get_default_ctrlr_opts(&opts, sizeof(opts));
-			opts.transport_retry_count = g_opts.retry_count;
-
-			if (probe_ctx->hostnqn != NULL) {
-				snprintf(opts.hostnqn, sizeof(opts.hostnqn), "%s", probe_ctx->hostnqn);
-			}
-
-			if (probe_ctx->hostids[i].hostaddr[0] != '\0') {
-				snprintf(opts.src_addr, sizeof(opts.src_addr), "%s", probe_ctx->hostids[i].hostaddr);
-			}
-
-			if (probe_ctx->hostids[i].hostsvcid[0] != '\0') {
-				snprintf(opts.src_svcid, sizeof(opts.src_svcid), "%s", probe_ctx->hostids[i].hostsvcid);
-			}
-
-			ctrlr = spdk_nvme_connect(&probe_ctx->trids[i], &opts, sizeof(opts));
-			if (ctrlr == NULL) {
-				SPDK_ERRLOG("Unable to connect to provided trid (traddr: %s)\n",
-					    probe_ctx->trids[i].traddr);
-				rc = -1;
-				goto end;
-			}
-
-			rc = nvme_bdev_ctrlr_create(ctrlr, probe_ctx->names[i], &probe_ctx->trids[i], 0);
-			if (rc) {
-				goto end;
-			}
-
-			nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(&probe_ctx->trids[i]);
-			if (!nvme_bdev_ctrlr) {
-				SPDK_ERRLOG("Failed to find new NVMe controller\n");
-				rc = -ENODEV;
-				goto end;
-			}
-
-			nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr, NULL);
-		} else {
-			local_nvme_num++;
-		}
-	}
-
-	if (local_nvme_num > 0) {
-		/* used to probe local NVMe device */
-		if (spdk_nvme_probe(NULL, probe_ctx, probe_cb, attach_cb, remove_cb)) {
-			rc = -1;
-			goto end;
-		}
-
-		for (i = 0; i < probe_ctx->count; i++) {
-			if (probe_ctx->trids[i].trtype != SPDK_NVME_TRANSPORT_PCIE) {
-				continue;
-			}
-
-			if (!nvme_bdev_ctrlr_get(&probe_ctx->trids[i])) {
-				SPDK_ERRLOG("NVMe SSD \"%s\" could not be found.\n", probe_ctx->trids[i].traddr);
-				SPDK_ERRLOG("Check PCIe BDF and that it is attached to UIO/VFIO driver.\n");
-			}
-		}
-	}
-
-	rc = bdev_nvme_set_hotplug(hotplug_enabled, hotplug_period, NULL, NULL);
-	if (rc) {
-		SPDK_ERRLOG("Failed to setup hotplug (%d): %s", rc, spdk_strerror(rc));
-		rc = -1;
-	}
-end:
-	free(probe_ctx);
-	return rc;
+	return 0;
 }
 
 static void
@@ -2911,107 +2662,6 @@ bdev_nvme_abort(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
 	}
 
 	return rc;
-}
-
-static void
-bdev_nvme_get_spdk_running_config(FILE *fp)
-{
-	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
-
-	fprintf(fp, "\n[Nvme]");
-	fprintf(fp, "\n"
-		"# NVMe Device Whitelist\n"
-		"# Users may specify which NVMe devices to claim by their transport id.\n"
-		"# See spdk_nvme_transport_id_parse() in spdk/nvme.h for the correct format.\n"
-		"# The second argument is the assigned name, which can be referenced from\n"
-		"# other sections in the configuration file. For NVMe devices, a namespace\n"
-		"# is automatically appended to each name in the format <YourName>nY, where\n"
-		"# Y is the NSID (starts at 1).\n");
-
-	TAILQ_FOREACH(nvme_bdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
-		const char *trtype;
-		const char *prchk_flags;
-
-		trtype = spdk_nvme_transport_id_trtype_str(nvme_bdev_ctrlr->connected_trid->trtype);
-		if (!trtype) {
-			continue;
-		}
-
-		if (nvme_bdev_ctrlr->connected_trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
-			fprintf(fp, "TransportID \"trtype:%s traddr:%s\" %s\n",
-				trtype,
-				nvme_bdev_ctrlr->connected_trid->traddr, nvme_bdev_ctrlr->name);
-		} else {
-			const char *adrfam;
-
-			adrfam = spdk_nvme_transport_id_adrfam_str(nvme_bdev_ctrlr->connected_trid->adrfam);
-			prchk_flags = spdk_nvme_prchk_flags_str(nvme_bdev_ctrlr->prchk_flags);
-
-			if (adrfam) {
-				fprintf(fp, "TransportID \"trtype:%s adrfam:%s traddr:%s trsvcid:%s subnqn:%s\" %s",
-					trtype,	adrfam,
-					nvme_bdev_ctrlr->connected_trid->traddr, nvme_bdev_ctrlr->connected_trid->trsvcid,
-					nvme_bdev_ctrlr->connected_trid->subnqn, nvme_bdev_ctrlr->name);
-			} else {
-				fprintf(fp, "TransportID \"trtype:%s traddr:%s trsvcid:%s subnqn:%s\" %s",
-					trtype,
-					nvme_bdev_ctrlr->connected_trid->traddr, nvme_bdev_ctrlr->connected_trid->trsvcid,
-					nvme_bdev_ctrlr->connected_trid->subnqn, nvme_bdev_ctrlr->name);
-			}
-
-			if (prchk_flags) {
-				fprintf(fp, " \"%s\"\n", prchk_flags);
-			} else {
-				fprintf(fp, "\n");
-			}
-		}
-	}
-
-	fprintf(fp, "\n"
-		"# The number of attempts per I/O when an I/O fails. Do not include\n"
-		"# this key to get the default behavior.\n");
-	fprintf(fp, "RetryCount %d\n", g_opts.retry_count);
-	fprintf(fp, "\n"
-		"# Timeout for each command, in microseconds. If 0, don't track timeouts.\n");
-	fprintf(fp, "TimeoutUsec %"PRIu64"\n", g_opts.timeout_us);
-
-	fprintf(fp, "\n"
-		"# Action to take on command time out. Only valid when Timeout is greater\n"
-		"# than 0. This may be 'Reset' to reset the controller, 'Abort' to abort\n"
-		"# the command, or 'None' to just print a message but do nothing.\n"
-		"# Admin command timeouts will always result in a reset.\n");
-	switch (g_opts.action_on_timeout) {
-	case SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE:
-		fprintf(fp, "ActionOnTimeout None\n");
-		break;
-	case SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET:
-		fprintf(fp, "ActionOnTimeout Reset\n");
-		break;
-	case SPDK_BDEV_NVME_TIMEOUT_ACTION_ABORT:
-		fprintf(fp, "ActionOnTimeout Abort\n");
-		break;
-	}
-
-	fprintf(fp, "\n"
-		"# Set how often the admin queue is polled for asynchronous events.\n"
-		"# Units in microseconds.\n");
-	fprintf(fp, "AdminPollRate %"PRIu64"\n", g_opts.nvme_adminq_poll_period_us);
-	fprintf(fp, "IOPollRate %" PRIu64"\n", g_opts.nvme_ioq_poll_period_us);
-	fprintf(fp, "\n"
-		"# Disable handling of hotplug (runtime insert and remove) events,\n"
-		"# users can set to Yes if want to enable it.\n"
-		"# Default: No\n");
-	fprintf(fp, "HotplugEnable %s\n", g_nvme_hotplug_enabled ? "Yes" : "No");
-	fprintf(fp, "\n"
-		"# Set how often the hotplug is processed for insert and remove events."
-		"# Units in microseconds.\n");
-	fprintf(fp, "HotplugPollRate %"PRIu64"\n", g_nvme_hotplug_poll_period_us);
-	if (g_nvme_hostnqn) {
-		fprintf(fp, "HostNQN %s\n",  g_nvme_hostnqn);
-	}
-	fprintf(fp, "DelayCmdSubmit %s\n", g_opts.delay_cmd_submit ? "True" : "False");
-
-	fprintf(fp, "\n");
 }
 
 static void

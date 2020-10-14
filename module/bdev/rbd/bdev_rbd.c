@@ -40,7 +40,6 @@
 #include <sys/eventfd.h>
 #include <sys/epoll.h>
 
-#include "spdk/conf.h"
 #include "spdk/env.h"
 #include "spdk/bdev.h"
 #include "spdk/thread.h"
@@ -835,77 +834,10 @@ bdev_rbd_group_destroy_cb(void *io_device, void *ctx_buf)
 static int
 bdev_rbd_library_init(void)
 {
-	int i, rc = 0;
-	const char *val;
-	const char *pool_name;
-	const char *rbd_name;
-	struct spdk_bdev *bdev;
-	uint32_t block_size;
-	long int tmp;
-	struct spdk_conf_section *sp;
-
 	spdk_io_device_register(&rbd_if, bdev_rbd_group_create_cb, bdev_rbd_group_destroy_cb,
-				sizeof(struct bdev_rbd_group_channel),
-				"bdev_rbd_poll_groups");
+				sizeof(struct bdev_rbd_group_channel), "bdev_rbd_poll_groups");
 
-	sp = spdk_conf_find_section(NULL, "Ceph");
-	if (sp == NULL) {
-		/*
-		 * Ceph section not found.  Do not initialize any rbd LUNS.
-		 */
-		goto end;
-	}
-
-	/* Init rbd block devices */
-	for (i = 0; ; i++) {
-		val = spdk_conf_section_get_nval(sp, "Ceph", i);
-		if (val == NULL) {
-			break;
-		}
-
-		/* get the Rbd_pool name */
-		pool_name = spdk_conf_section_get_nmval(sp, "Ceph", i, 0);
-		if (pool_name == NULL) {
-			SPDK_ERRLOG("Ceph%d: rbd pool name needs to be provided\n", i);
-			rc = -1;
-			goto end;
-		}
-
-		rbd_name = spdk_conf_section_get_nmval(sp, "Ceph", i, 1);
-		if (rbd_name == NULL) {
-			SPDK_ERRLOG("Ceph%d: format error\n", i);
-			rc = -1;
-			goto end;
-		}
-
-		val = spdk_conf_section_get_nmval(sp, "Ceph", i, 2);
-
-		if (val == NULL) {
-			block_size = 512; /* default value */
-		} else {
-			tmp = spdk_strtol(val, 10);
-			if (tmp <= 0) {
-				SPDK_ERRLOG("Invalid block size\n");
-				rc = -1;
-				goto end;
-			} else if (tmp & 0x1ff) {
-				SPDK_ERRLOG("current block_size = %ld, it should be multiple of 512\n",
-					    tmp);
-				rc = -1;
-				goto end;
-			}
-			block_size = (uint32_t)tmp;
-		}
-
-		/* TODO(?): user_id and rbd config values */
-		rc = bdev_rbd_create(&bdev, NULL, NULL, pool_name, NULL, rbd_name, block_size);
-		if (rc) {
-			goto end;
-		}
-	}
-
-end:
-	return rc;
+	return 0;
 }
 
 static void

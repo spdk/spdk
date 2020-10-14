@@ -464,75 +464,6 @@ spdk_bdev_module_release_bdev(struct spdk_bdev *bdev)
 	bdev->internal.claim_module = NULL;
 }
 
-struct spdk_conf_section *
-spdk_conf_first_section(struct spdk_conf *cp)
-{
-	if (g_config_level_create) {
-		return (void *) 0x1;
-	}
-
-	return NULL;
-}
-
-bool
-spdk_conf_section_match_prefix(const struct spdk_conf_section *sp, const char *name_prefix)
-{
-	if (g_config_level_create) {
-		return true;
-	}
-
-	return false;
-}
-
-char *
-spdk_conf_section_get_val(struct spdk_conf_section *sp, const char *key)
-{
-	struct rpc_bdev_raid_create  *req = g_rpc_req;
-
-	if (g_config_level_create) {
-		if (strcmp(key, "Name") == 0) {
-			return req->name;
-		} else if (strcmp(key, "RaidLevel") == 0) {
-			return (char *)raid_bdev_level_to_str(req->level);
-		}
-	}
-
-	return NULL;
-}
-
-int
-spdk_conf_section_get_intval(struct spdk_conf_section *sp, const char *key)
-{
-	struct rpc_bdev_raid_create  *req = g_rpc_req;
-
-	if (g_config_level_create) {
-		if (strcmp(key, "StripSize") == 0) {
-			return req->strip_size_kb;
-		} else if (strcmp(key, "NumDevices") == 0) {
-			return req->base_bdevs.num_base_bdevs;
-		}
-	}
-
-	return 0;
-}
-
-char *
-spdk_conf_section_get_nmval(struct spdk_conf_section *sp, const char *key, int idx1, int idx2)
-{
-	struct rpc_bdev_raid_create  *req = g_rpc_req;
-
-	if (g_config_level_create) {
-		if (strcmp(key, "Devices") == 0) {
-			if (idx2 >= g_max_base_drives) {
-				return NULL;
-			}
-			return req->base_bdevs.base_bdevs[idx2];
-		}
-	}
-
-	return NULL;
-}
-
 int
 spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 			    struct spdk_bdev_module *module)
@@ -1098,16 +1029,6 @@ create_raid_bdev_create_req(struct rpc_bdev_raid_create *r, const char *raid_nam
 	g_json_decode_obj_create = 1;
 	g_json_decode_obj_err = json_decode_obj_err;
 	g_config_level_create = 0;
-	g_test_multi_raids = 0;
-}
-
-static void
-create_raid_bdev_create_config(struct rpc_bdev_raid_create *r, const char *raid_name,
-			       uint8_t bbdev_start_idx, bool create_base_bdev)
-{
-	create_test_req(r, raid_name, bbdev_start_idx, create_base_bdev);
-
-	g_config_level_create = 1;
 	g_test_multi_raids = 0;
 }
 
@@ -2064,111 +1985,6 @@ test_io_type_supported(void)
 }
 
 static void
-test_create_raid_from_config(void)
-{
-	struct rpc_bdev_raid_create req;
-	struct spdk_bdev *bdev;
-	struct rpc_bdev_raid_delete destroy_req;
-	bool can_claim;
-	struct raid_bdev_config *raid_cfg;
-	uint8_t base_bdev_slot;
-
-	set_globals();
-	create_raid_bdev_create_config(&req, "raid1", 0, true);
-	CU_ASSERT(raid_bdev_init() == 0);
-
-	verify_raid_config_present("raid1", true);
-	verify_raid_bdev_present("raid1", true);
-
-	TAILQ_FOREACH(bdev, &g_bdev_list, internal.link) {
-		raid_bdev_examine(bdev);
-	}
-
-	can_claim = raid_bdev_can_claim_bdev("Invalid", &raid_cfg, &base_bdev_slot);
-	CU_ASSERT(can_claim == false);
-
-	verify_raid_config(&req, true);
-	verify_raid_bdev(&req, true, RAID_BDEV_STATE_ONLINE);
-
-	create_raid_bdev_delete_req(&destroy_req, "raid1", 0);
-	rpc_bdev_raid_delete(NULL, NULL);
-	CU_ASSERT(g_rpc_err == 0);
-	verify_raid_config_present("raid1", false);
-	verify_raid_bdev_present("raid1", false);
-
-	raid_bdev_exit();
-	free_test_req(&req);
-	base_bdevs_cleanup();
-	reset_globals();
-}
-
-static void
-test_create_raid_from_config_invalid_params(void)
-{
-	struct rpc_bdev_raid_create req;
-
-	set_globals();
-
-	create_raid_bdev_create_config(&req, "raid1", 0, true);
-	free(req.name);
-	req.name = NULL;
-	CU_ASSERT(raid_bdev_init() != 0);
-	free_test_req(&req);
-	verify_raid_config_present("raid1", false);
-	verify_raid_bdev_present("raid1", false);
-
-	create_raid_bdev_create_config(&req, "raid1", 0, false);
-	req.strip_size_kb = 1234;
-	CU_ASSERT(raid_bdev_init() != 0);
-	free_test_req(&req);
-	verify_raid_config_present("raid1", false);
-	verify_raid_bdev_present("raid1", false);
-
-	create_raid_bdev_create_config(&req, "raid1", 0, false);
-	req.level = INVALID_RAID_LEVEL;
-	CU_ASSERT(raid_bdev_init() != 0);
-	free_test_req(&req);
-	verify_raid_config_present("raid1", false);
-	verify_raid_bdev_present("raid1", false);
-
-	create_raid_bdev_create_config(&req, "raid1", 0, false);
-	req.level = INVALID_RAID_LEVEL;
-	CU_ASSERT(raid_bdev_init() != 0);
-	free_test_req(&req);
-	verify_raid_config_present("raid1", false);
-	verify_raid_bdev_present("raid1", false);
-
-	create_raid_bdev_create_config(&req, "raid1", 0, false);
-	req.base_bdevs.num_base_bdevs++;
-	CU_ASSERT(raid_bdev_init() != 0);
-	req.base_bdevs.num_base_bdevs--;
-	free_test_req(&req);
-	verify_raid_config_present("raid1", false);
-	verify_raid_bdev_present("raid1", false);
-
-	create_raid_bdev_create_config(&req, "raid1", 0, false);
-	req.base_bdevs.num_base_bdevs--;
-	CU_ASSERT(raid_bdev_init() != 0);
-	req.base_bdevs.num_base_bdevs++;
-	free_test_req(&req);
-	verify_raid_config_present("raid1", false);
-	verify_raid_bdev_present("raid1", false);
-
-	if (g_max_base_drives > 1) {
-		create_raid_bdev_create_config(&req, "raid1", 0, false);
-		snprintf(req.base_bdevs.base_bdevs[g_max_base_drives - 1], 15, "%s", "Nvme0n1");
-		CU_ASSERT(raid_bdev_init() != 0);
-		free_test_req(&req);
-		verify_raid_config_present("raid1", false);
-		verify_raid_bdev_present("raid1", false);
-	}
-
-	raid_bdev_exit();
-	base_bdevs_cleanup();
-	reset_globals();
-}
-
-static void
 test_raid_json_dump_info(void)
 {
 	struct rpc_bdev_raid_create req;
@@ -2254,8 +2070,6 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_multi_raid_no_io);
 	CU_ADD_TEST(suite, test_multi_raid_with_io);
 	CU_ADD_TEST(suite, test_io_type_supported);
-	CU_ADD_TEST(suite, test_create_raid_from_config);
-	CU_ADD_TEST(suite, test_create_raid_from_config_invalid_params);
 	CU_ADD_TEST(suite, test_raid_json_dump_info);
 	CU_ADD_TEST(suite, test_context_size);
 	CU_ADD_TEST(suite, test_raid_level_conversions);

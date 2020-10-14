@@ -34,7 +34,6 @@
 #include "bdev_raid.h"
 #include "spdk/env.h"
 #include "spdk/thread.h"
-#include "spdk/conf.h"
 #include "spdk/log.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
@@ -906,154 +905,6 @@ raid_bdev_level_to_str(enum raid_level level)
 
 /*
  * brief:
- * raid_bdev_parse_raid is used to parse the raid bdev from config file based on
- * pre-defined raid bdev format in config file.
- * Format of config file:
- *   [RAID1]
- *   Name raid1
- *   StripSize 64
- *   NumDevices 2
- *   RaidLevel 0
- *   Devices Nvme0n1 Nvme1n1
- *
- *   [RAID2]
- *   Name raid2
- *   StripSize 64
- *   NumDevices 3
- *   RaidLevel 0
- *   Devices Nvme2n1 Nvme3n1 Nvme4n1
- *
- * params:
- * conf_section - pointer to config section
- * returns:
- * 0 - success
- * non zero - failure
- */
-static int
-raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
-{
-	const char *raid_name;
-	uint32_t strip_size;
-	uint8_t num_base_bdevs;
-	const char *raid_level_str;
-	enum raid_level level;
-	const char *base_bdev_name;
-	struct raid_bdev_config *raid_cfg;
-	int rc, i, val;
-
-	raid_name = spdk_conf_section_get_val(conf_section, "Name");
-	if (raid_name == NULL) {
-		SPDK_ERRLOG("raid_name is null\n");
-		return -EINVAL;
-	}
-
-	val = spdk_conf_section_get_intval(conf_section, "StripSize");
-	if (val < 0) {
-		return -EINVAL;
-	}
-	strip_size = val;
-
-	val = spdk_conf_section_get_intval(conf_section, "NumDevices");
-	if (val < 0) {
-		return -EINVAL;
-	}
-	num_base_bdevs = val;
-
-	raid_level_str = spdk_conf_section_get_val(conf_section, "RaidLevel");
-	if (raid_level_str == NULL) {
-		SPDK_ERRLOG("Missing RaidLevel\n");
-		return -EINVAL;
-	}
-	level = raid_bdev_parse_raid_level(raid_level_str);
-	if (level == INVALID_RAID_LEVEL) {
-		SPDK_ERRLOG("Invalid RaidLevel\n");
-		return -EINVAL;
-	}
-
-	SPDK_DEBUGLOG(bdev_raid, "%s %" PRIu32 " %u %u\n",
-		      raid_name, strip_size, num_base_bdevs, level);
-
-	rc = raid_bdev_config_add(raid_name, strip_size, num_base_bdevs, level,
-				  &raid_cfg);
-	if (rc != 0) {
-		SPDK_ERRLOG("Failed to add raid bdev config\n");
-		return rc;
-	}
-
-	for (i = 0; true; i++) {
-		base_bdev_name = spdk_conf_section_get_nmval(conf_section, "Devices", 0, i);
-		if (base_bdev_name == NULL) {
-			break;
-		}
-		if (i >= num_base_bdevs) {
-			raid_bdev_config_cleanup(raid_cfg);
-			SPDK_ERRLOG("Number of devices mentioned is more than count\n");
-			return -EINVAL;
-		}
-
-		rc = raid_bdev_config_add_base_bdev(raid_cfg, base_bdev_name, i);
-		if (rc != 0) {
-			raid_bdev_config_cleanup(raid_cfg);
-			SPDK_ERRLOG("Failed to add base bdev to raid bdev config\n");
-			return rc;
-		}
-	}
-
-	if (i != raid_cfg->num_base_bdevs) {
-		raid_bdev_config_cleanup(raid_cfg);
-		SPDK_ERRLOG("Number of devices mentioned is less than count\n");
-		return -EINVAL;
-	}
-
-	rc = raid_bdev_create(raid_cfg);
-	if (rc != 0) {
-		raid_bdev_config_cleanup(raid_cfg);
-		SPDK_ERRLOG("Failed to create raid bdev\n");
-		return rc;
-	}
-
-	rc = raid_bdev_add_base_devices(raid_cfg);
-	if (rc != 0) {
-		SPDK_ERRLOG("Failed to add any base bdev to raid bdev\n");
-		/* Config is not removed in this case. */
-	}
-
-	return 0;
-}
-
-/*
- * brief:
- * raid_bdev_parse_config is used to find the raid bdev config section and parse it
- * Format of config file:
- * params:
- * none
- * returns:
- * 0 - success
- * non zero - failure
- */
-static int
-raid_bdev_parse_config(void)
-{
-	int                      ret;
-	struct spdk_conf_section *conf_section;
-
-	conf_section = spdk_conf_first_section(NULL);
-	while (conf_section != NULL) {
-		if (spdk_conf_section_match_prefix(conf_section, "RAID")) {
-			ret = raid_bdev_parse_raid(conf_section);
-			if (ret < 0) {
-				SPDK_ERRLOG("Unable to parse raid bdev section\n");
-				return ret;
-			}
-		}
-		conf_section = spdk_conf_next_section(conf_section);
-	}
-
-	return 0;
-}
-
-/*
- * brief:
  * raid_bdev_fini_start is called when bdev layer is starting the
  * shutdown process
  * params:
@@ -1097,48 +948,6 @@ raid_bdev_get_ctx_size(void)
 {
 	SPDK_DEBUGLOG(bdev_raid, "raid_bdev_get_ctx_size\n");
 	return sizeof(struct raid_bdev_io);
-}
-
-/*
- * brief:
- * raid_bdev_get_running_config is used to get the configuration options.
- *
- * params:
- * fp - The pointer to a file that will be written to the configuration options.
- * returns:
- * none
- */
-static void
-raid_bdev_get_running_config(FILE *fp)
-{
-	struct raid_bdev *raid_bdev;
-	struct raid_base_bdev_info *base_info;
-	int index = 1;
-
-	TAILQ_FOREACH(raid_bdev, &g_raid_bdev_configured_list, state_link) {
-		fprintf(fp,
-			"\n"
-			"[RAID%d]\n"
-			"  Name %s\n"
-			"  StripSize %" PRIu32 "\n"
-			"  NumDevices %u\n"
-			"  RaidLevel %s\n",
-			index, raid_bdev->bdev.name, raid_bdev->strip_size_kb,
-			raid_bdev->num_base_bdevs,
-			raid_bdev_level_to_str(raid_bdev->level));
-		fprintf(fp,
-			"  Devices ");
-		RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-			if (base_info->bdev) {
-				fprintf(fp,
-					"%s ",
-					base_info->bdev->name);
-			}
-		}
-		fprintf(fp,
-			"\n");
-		index++;
-	}
 }
 
 /*
@@ -1187,7 +996,6 @@ static struct spdk_bdev_module g_raid_if = {
 	.module_fini = raid_bdev_exit,
 	.get_ctx_size = raid_bdev_get_ctx_size,
 	.examine_config = raid_bdev_examine,
-	.config_text = raid_bdev_get_running_config,
 	.async_init = false,
 	.async_fini = false,
 };
@@ -1205,18 +1013,6 @@ SPDK_BDEV_MODULE_REGISTER(raid, &g_raid_if)
 static int
 raid_bdev_init(void)
 {
-	int ret;
-
-	/* Parse config file for raids */
-	ret = raid_bdev_parse_config();
-	if (ret < 0) {
-		SPDK_ERRLOG("raid bdev init failed parsing\n");
-		raid_bdev_free();
-		return ret;
-	}
-
-	SPDK_DEBUGLOG(bdev_raid, "raid_bdev_init completed successfully\n");
-
 	return 0;
 }
 

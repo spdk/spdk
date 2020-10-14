@@ -42,7 +42,6 @@
 #include "vbdev_ocf.h"
 
 #include "spdk/bdev_module.h"
-#include "spdk/conf.h"
 #include "spdk/thread.h"
 #include "spdk/string.h"
 #include "spdk/log.h"
@@ -1260,10 +1259,7 @@ error_free:
 static int
 vbdev_ocf_init(void)
 {
-	const char *vbdev_name, *modename, *cache_line_size, *cache_name, *core_name;
-	struct spdk_conf_section *sp;
 	int status;
-	uint64_t cache_line_size_uint64;
 
 	status = vbdev_ocf_ctx_init();
 	if (status) {
@@ -1276,53 +1272,6 @@ vbdev_ocf_init(void)
 		vbdev_ocf_ctx_cleanup();
 		SPDK_ERRLOG("OCF volume initialization failed with=%d\n", status);
 		return status;
-	}
-
-	sp = spdk_conf_find_section(NULL, "OCF");
-	if (sp == NULL) {
-		return 0;
-	}
-
-	for (int i = 0; ; i++) {
-		if (!spdk_conf_section_get_nval(sp, "OCF", i)) {
-			break;
-		}
-
-		vbdev_name = spdk_conf_section_get_nmval(sp, "OCF", i, 0);
-		if (!vbdev_name) {
-			SPDK_ERRLOG("No vbdev name specified\n");
-			continue;
-		}
-
-		modename = spdk_conf_section_get_nmval(sp, "OCF", i, 1);
-		if (!modename) {
-			SPDK_ERRLOG("No modename specified for OCF vbdev '%s'\n", vbdev_name);
-			continue;
-		}
-
-		cache_line_size = spdk_conf_section_get_nmval(sp, "OCF", i, 2);
-		if (!cache_line_size) {
-			SPDK_ERRLOG("No cache line size specified for OCF vbdev '%s'\n", vbdev_name);
-			continue;
-		}
-		cache_line_size_uint64 = strtoull(cache_line_size, NULL, 10);
-
-		cache_name = spdk_conf_section_get_nmval(sp, "OCF", i, 3);
-		if (!cache_name) {
-			SPDK_ERRLOG("No cache device specified for OCF vbdev '%s'\n", vbdev_name);
-			continue;
-		}
-
-		core_name = spdk_conf_section_get_nmval(sp, "OCF", i, 4);
-		if (!core_name) {
-			SPDK_ERRLOG("No core devices specified for OCF vbdev '%s'\n", vbdev_name);
-			continue;
-		}
-
-		status = init_vbdev(vbdev_name, modename, cache_line_size_uint64, cache_name, core_name, false);
-		if (status) {
-			SPDK_ERRLOG("Config initialization failed with code: %d\n", status);
-		}
 	}
 
 	return status;
@@ -1797,7 +1746,6 @@ static struct spdk_bdev_module ocf_if = {
 	.module_init = vbdev_ocf_init,
 	.fini_start = fini_start,
 	.module_fini = vbdev_ocf_module_fini,
-	.config_text = NULL,
 	.get_ctx_size = vbdev_ocf_get_ctx_size,
 	.examine_config = vbdev_ocf_examine,
 	.examine_disk   = vbdev_ocf_examine_disk,

@@ -34,7 +34,6 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/bdev.h"
-#include "spdk/conf.h"
 #include "spdk/env.h"
 #include "spdk/fd.h"
 #include "spdk/thread.h"
@@ -175,7 +174,6 @@ static struct spdk_bdev_module g_iscsi_bdev_module = {
 	.module_init	= bdev_iscsi_initialize,
 	.module_fini	= bdev_iscsi_finish,
 	.get_ctx_size	= bdev_iscsi_get_ctx_size,
-	.async_init	= true,
 };
 
 SPDK_BDEV_MODULE_REGISTER(iscsi, &g_iscsi_bdev_module);
@@ -884,53 +882,10 @@ delete_iscsi_disk(struct spdk_bdev *bdev, spdk_delete_iscsi_complete cb_fn, void
 	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
 }
 
-static void
-bdev_iscsi_initialize_cb(void *cb_arg, struct spdk_bdev *bdev, int status)
-{
-	if (TAILQ_EMPTY(&g_iscsi_conn_req)) {
-		spdk_bdev_module_init_done(&g_iscsi_bdev_module);
-	}
-}
-
 static int
 bdev_iscsi_initialize(void)
 {
-	struct spdk_conf_section *sp;
-
-	const char *url, *bdev_name, *initiator_iqn;
-	int i, rc;
-
-	sp = spdk_conf_find_section(NULL, "iSCSI_Initiator");
-	if (sp == NULL) {
-		spdk_bdev_module_init_done(&g_iscsi_bdev_module);
-		return 0;
-	}
-
-	initiator_iqn = spdk_conf_section_get_val(sp, "initiator_name");
-	if (!initiator_iqn) {
-		initiator_iqn = DEFAULT_INITIATOR_NAME;
-	}
-
-	rc = 0;
-	for (i = 0; (url = spdk_conf_section_get_nmval(sp, "URL", i, 0)) != NULL; i++) {
-		bdev_name = spdk_conf_section_get_nmval(sp, "URL", i, 1);
-		if (bdev_name == NULL) {
-			SPDK_ERRLOG("no bdev name specified for URL %s\n", url);
-			rc = -EINVAL;
-			break;
-		}
-
-		rc = create_iscsi_disk(bdev_name, url, initiator_iqn, bdev_iscsi_initialize_cb, NULL);
-		if (rc) {
-			break;
-		}
-	}
-
-	if (i == 0) {
-		spdk_bdev_module_init_done(&g_iscsi_bdev_module);
-	}
-
-	return rc;
+	return 0;
 }
 
 SPDK_LOG_REGISTER_COMPONENT(iscsi_init)

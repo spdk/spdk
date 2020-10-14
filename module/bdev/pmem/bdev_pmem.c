@@ -31,7 +31,6 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/conf.h"
 #include "spdk/string.h"
 #include "spdk/likely.h"
 #include "spdk/util.h"
@@ -401,41 +400,6 @@ delete_pmem_disk(struct spdk_bdev *bdev, spdk_delete_pmem_complete cb_fn, void *
 	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
 }
 
-static void
-bdev_pmem_read_conf(void)
-{
-	struct spdk_conf_section *sp;
-	struct spdk_bdev *bdev;
-	const char *pmem_file;
-	const char *bdev_name;
-	int i;
-
-	sp = spdk_conf_find_section(NULL, "Pmem");
-	if (sp == NULL) {
-		return;
-	}
-
-	for (i = 0; ; i++) {
-		if (!spdk_conf_section_get_nval(sp, "Blk", i)) {
-			break;
-		}
-
-		pmem_file = spdk_conf_section_get_nmval(sp, "Blk", i, 0);
-		if (pmem_file == NULL) {
-			SPDK_ERRLOG("Pmem: missing filename\n");
-			continue;
-		}
-
-		bdev_name = spdk_conf_section_get_nmval(sp, "Blk", i, 1);
-		if (bdev_name == NULL) {
-			SPDK_ERRLOG("Pmem: missing bdev name\n");
-			continue;
-		}
-
-		create_pmem_disk(pmem_file, bdev_name, &bdev);
-	}
-}
-
 static int
 bdev_pmem_initialize(void)
 {
@@ -451,8 +415,6 @@ bdev_pmem_initialize(void)
 	setenv("PMEMBLK_LOG_LEVEL", "1", 1);
 #endif
 	spdk_io_device_register(&g_pmem_disks, bdev_pmem_create_cb, bdev_pmem_destroy_cb, 0, "pmem_bdev");
-
-	bdev_pmem_read_conf();
 
 	return 0;
 

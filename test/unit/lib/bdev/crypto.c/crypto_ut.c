@@ -142,12 +142,6 @@ mock_rte_lcore_count(void)
 /* SPDK stubs */
 DEFINE_STUB(spdk_bdev_queue_io_wait, int, (struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		struct spdk_bdev_io_wait_entry *entry), 0);
-DEFINE_STUB(spdk_conf_find_section, struct spdk_conf_section *,
-	    (struct spdk_conf *cp, const char *name), NULL);
-DEFINE_STUB(spdk_conf_section_get_nval, char *,
-	    (struct spdk_conf_section *sp, const char *key, int idx), NULL);
-DEFINE_STUB(spdk_conf_section_get_nmval, char *,
-	    (struct spdk_conf_section *sp, const char *key, int idx1, int idx2), NULL);
 DEFINE_STUB_V(spdk_bdev_module_list_add, (struct spdk_bdev_module *bdev_module));
 DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *g_bdev_io));
 DEFINE_STUB_V(spdk_bdev_io_put_aux_buf, (struct spdk_bdev_io *bdev_io, void *aux_buf));

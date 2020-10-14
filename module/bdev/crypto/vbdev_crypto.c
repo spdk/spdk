@@ -34,7 +34,6 @@
 #include "vbdev_crypto.h"
 
 #include "spdk/env.h"
-#include "spdk/conf.h"
 #include "spdk/endian.h"
 #include "spdk/thread.h"
 #include "spdk/bdev_module.h"
@@ -1550,72 +1549,12 @@ create_crypto_disk(const char *bdev_name, const char *vbdev_name,
 static int
 vbdev_crypto_init(void)
 {
-	struct spdk_conf_section *sp = NULL;
-	const char *conf_bdev_name = NULL;
-	const char *conf_vbdev_name = NULL;
-	const char *crypto_pmd = NULL;
-	int i;
 	int rc = 0;
-	const char *key = NULL;
-	const char *cipher = NULL;
-	const char *key2 = NULL;
 
 	/* Fully configure both SW and HW drivers. */
 	rc = vbdev_crypto_init_crypto_drivers();
 	if (rc) {
 		SPDK_ERRLOG("Error setting up crypto devices\n");
-		return rc;
-	}
-
-	sp = spdk_conf_find_section(NULL, "crypto");
-	if (sp == NULL) {
-		return 0;
-	}
-
-	for (i = 0; ; i++) {
-
-		if (!spdk_conf_section_get_nval(sp, "CRY", i)) {
-			break;
-		}
-
-		conf_bdev_name = spdk_conf_section_get_nmval(sp, "CRY", i, 0);
-		if (!conf_bdev_name) {
-			SPDK_ERRLOG("crypto configuration missing bdev name\n");
-			return -EINVAL;
-		}
-
-		conf_vbdev_name = spdk_conf_section_get_nmval(sp, "CRY", i, 1);
-		if (!conf_vbdev_name) {
-			SPDK_ERRLOG("crypto configuration missing crypto_bdev name\n");
-			return -EINVAL;
-		}
-
-		key = spdk_conf_section_get_nmval(sp, "CRY", i, 2);
-		if (!key) {
-			SPDK_ERRLOG("crypto configuration missing crypto_bdev key\n");
-			return -EINVAL;
-		}
-		SPDK_NOTICELOG("WARNING: You are storing your key in a plain text file!!\n");
-
-		crypto_pmd = spdk_conf_section_get_nmval(sp, "CRY", i, 3);
-		if (!crypto_pmd) {
-			SPDK_ERRLOG("crypto configuration missing driver type\n");
-			return -EINVAL;
-		}
-
-		/* These are optional. */
-		cipher = spdk_conf_section_get_nmval(sp, "CRY", i, 4);
-		if (cipher == NULL) {
-			cipher = AES_CBC;
-		}
-		key2 = spdk_conf_section_get_nmval(sp, "CRY", i, 5);
-
-		/* Note: config file options do not support QAT AES_XTS, use RPC */
-		rc = vbdev_crypto_insert_name(conf_bdev_name, conf_vbdev_name,
-					      crypto_pmd, key, cipher, key2);
-		if (rc != 0) {
-			return rc;
-		}
 	}
 
 	return rc;
@@ -1690,22 +1629,6 @@ vbdev_crypto_get_ctx_size(void)
 	return sizeof(struct crypto_bdev_io);
 }
 
-/* Called when SPDK wants to save the current config of this vbdev module to
- * a file.
- */
-static void
-vbdev_crypto_get_spdk_running_config(FILE *fp)
-{
-	struct bdev_names *names = NULL;
-	fprintf(fp, "\n[crypto]\n");
-	TAILQ_FOREACH(names, &g_bdev_names, link) {
-		fprintf(fp, "  crypto %s %s ", names->bdev_name, names->vbdev_name);
-		fprintf(fp, "\n");
-	}
-
-	fprintf(fp, "\n");
-}
-
 static void
 vbdev_crypto_base_bdev_hotremove_cb(struct spdk_bdev *bdev_find)
 {
@@ -1752,7 +1675,6 @@ static const struct spdk_bdev_fn_table vbdev_crypto_fn_table = {
 static struct spdk_bdev_module crypto_if = {
 	.name = "crypto",
 	.module_init = vbdev_crypto_init,
-	.config_text = vbdev_crypto_get_spdk_running_config,
 	.get_ctx_size = vbdev_crypto_get_ctx_size,
 	.examine_config = vbdev_crypto_examine,
 	.module_fini = vbdev_crypto_finish,
