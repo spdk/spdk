@@ -41,8 +41,6 @@
 #include "spdk/env.h"
 #include "spdk/log.h"
 
-uint32_t g_fs_cache_buffer_shift = CACHE_BUFFER_SHIFT_DEFAULT;
-
 struct cache_buffer *
 tree_find_buffer(struct cache_tree *tree, uint64_t offset)
 {

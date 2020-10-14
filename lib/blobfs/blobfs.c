@@ -34,7 +34,6 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/blobfs.h"
-#include "spdk/conf.h"
 #include "tree.h"
 
 #include "spdk/queue.h"
@@ -550,26 +549,6 @@ init_cb(void *ctx, struct spdk_blob_store *bs, int bserrno)
 	free_fs_request(req);
 }
 
-static void
-fs_conf_parse(void)
-{
-	struct spdk_conf_section *sp;
-	int cache_buffer_shift;
-
-	sp = spdk_conf_find_section(NULL, "Blobfs");
-	if (sp == NULL) {
-		g_fs_cache_buffer_shift = CACHE_BUFFER_SHIFT_DEFAULT;
-		return;
-	}
-
-	cache_buffer_shift = spdk_conf_section_get_intval(sp, "CacheBufferShift");
-	if (cache_buffer_shift <= 0) {
-		g_fs_cache_buffer_shift = CACHE_BUFFER_SHIFT_DEFAULT;
-	} else {
-		g_fs_cache_buffer_shift = cache_buffer_shift;
-	}
-}
-
 static struct spdk_filesystem *
 fs_alloc(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn)
 {
@@ -630,8 +609,6 @@ spdk_fs_init(struct spdk_bs_dev *dev, struct spdk_blobfs_opts *opt,
 		cb_fn(cb_arg, NULL, -ENOMEM);
 		return;
 	}
-
-	fs_conf_parse();
 
 	req = alloc_fs_request(fs->md_target.md_fs_channel);
 	if (req == NULL) {
@@ -874,8 +851,6 @@ spdk_fs_load(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 		cb_fn(cb_arg, NULL, -ENOMEM);
 		return;
 	}
-
-	fs_conf_parse();
 
 	req = alloc_fs_request(fs->md_target.md_fs_channel);
 	if (req == NULL) {

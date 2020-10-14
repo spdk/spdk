@@ -58,20 +58,6 @@ DEFINE_STUB_V(spdk_trace_register_description, (const char *name,
 DEFINE_STUB_V(_spdk_trace_record, (uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
 				   uint32_t size, uint64_t object_id, uint64_t arg1));
 
-/* Return NULL to test hardcoded defaults. */
-struct spdk_conf_section *
-spdk_conf_find_section(struct spdk_conf *cp, const char *name)
-{
-	return NULL;
-}
-
-/* Return -1 to test hardcoded defaults. */
-int
-spdk_conf_section_get_intval(struct spdk_conf_section *sp, const char *key)
-{
-	return -1;
-}
-
 static void
 fs_op_complete(void *ctx, int fserrno)
 {
