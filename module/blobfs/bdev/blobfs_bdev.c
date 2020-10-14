@@ -123,7 +123,6 @@ spdk_blobfs_bdev_detect(const char *bdev_name,
 {
 	struct blobfs_bdev_operation_ctx *ctx;
 	struct spdk_bs_dev *bs_dev;
-	struct spdk_bdev_desc *desc;
 	int rc;
 
 	ctx = calloc(1, sizeof(*ctx));
@@ -138,19 +137,10 @@ spdk_blobfs_bdev_detect(const char *bdev_name,
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
 
-	rc = spdk_bdev_open_ext(bdev_name, true, blobfs_bdev_event_cb, NULL, &desc);
+	rc = spdk_bdev_create_bs_dev_ext(bdev_name, blobfs_bdev_event_cb, NULL, &bs_dev);
 	if (rc != 0) {
-		SPDK_INFOLOG(blobfs_bdev, "Failed to open bdev(%s): %s\n", ctx->bdev_name,
-			     spdk_strerror(rc));
-
-		goto invalid;
-	}
-
-	bs_dev = spdk_bdev_create_bs_dev_from_desc(desc);
-	if (bs_dev == NULL) {
-		SPDK_INFOLOG(blobfs_bdev,  "Failed to create a blobstore block device from bdev desc");
-		rc = -ENOMEM;
-		spdk_bdev_close(desc);
+		SPDK_INFOLOG(blobfs_bdev, "Failed to create a blobstore block device from bdev (%s)",
+			     bdev_name);
 
 		goto invalid;
 	}
@@ -172,7 +162,6 @@ spdk_blobfs_bdev_create(const char *bdev_name, uint32_t cluster_sz,
 	struct blobfs_bdev_operation_ctx *ctx;
 	struct spdk_blobfs_opts blobfs_opt;
 	struct spdk_bs_dev *bs_dev;
-	struct spdk_bdev_desc *desc;
 	int rc;
 
 	ctx = calloc(1, sizeof(*ctx));
@@ -187,20 +176,10 @@ spdk_blobfs_bdev_create(const char *bdev_name, uint32_t cluster_sz,
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
 
-	/* Creation requires WRITE operation */
-	rc = spdk_bdev_open_ext(bdev_name, true, blobfs_bdev_event_cb, NULL, &desc);
-	if (rc != 0) {
-		SPDK_INFOLOG(blobfs_bdev, "Failed to open bdev(%s): %s\n", ctx->bdev_name,
-			     spdk_strerror(rc));
-
-		goto invalid;
-	}
-
-	bs_dev = spdk_bdev_create_bs_dev_from_desc(desc);
-	if (bs_dev == NULL) {
-		SPDK_INFOLOG(blobfs_bdev,  "Failed to create a blobstore block device from bdev desc\n");
-		rc = -ENOMEM;
-		spdk_bdev_close(desc);
+	rc = spdk_bdev_create_bs_dev_ext(bdev_name, blobfs_bdev_event_cb, NULL, &bs_dev);
+	if (rc) {
+		SPDK_INFOLOG(blobfs_bdev, "Failed to create a blobstore block device from bdev (%s)\n",
+			     bdev_name);
 
 		goto invalid;
 	}
@@ -305,7 +284,6 @@ spdk_blobfs_bdev_mount(const char *bdev_name, const char *mountpoint,
 {
 	struct blobfs_bdev_operation_ctx *ctx;
 	struct spdk_bs_dev *bs_dev;
-	struct spdk_bdev_desc *desc;
 	int rc;
 
 	ctx = calloc(1, sizeof(*ctx));
@@ -321,19 +299,10 @@ spdk_blobfs_bdev_mount(const char *bdev_name, const char *mountpoint,
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
 
-	rc = spdk_bdev_open_ext(bdev_name, true, blobfs_bdev_fuse_event_cb, ctx, &desc);
+	rc = spdk_bdev_create_bs_dev_ext(bdev_name, blobfs_bdev_fuse_event_cb, ctx, &bs_dev);
 	if (rc != 0) {
-		SPDK_INFOLOG(blobfs_bdev, "Failed to open bdev(%s): %s\n", ctx->bdev_name,
-			     spdk_strerror(rc));
-
-		goto invalid;
-	}
-
-	bs_dev = spdk_bdev_create_bs_dev_from_desc(desc);
-	if (bs_dev == NULL) {
-		SPDK_INFOLOG(blobfs_bdev,  "Failed to create a blobstore block device from bdev desc");
-		rc = -ENOMEM;
-		spdk_bdev_close(desc);
+		SPDK_INFOLOG(blobfs_bdev, "Failed to create a blobstore block device from bdev (%s)",
+			     bdev_name);
 
 		goto invalid;
 	}
