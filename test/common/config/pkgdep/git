@@ -367,10 +367,9 @@ sudo mkdir -p "$GIT_REPOS"
 for source in "${sources[@]}"; do
 	source_conf=${source^^}
 	if [[ ${!source_conf} == true ]]; then
-		"$source" &
+		"$source"
 	fi
 done
-wait
 
 if [[ $INSTALL_REFSPDK == true ]]; then
 	# Serialize builds as refspdk depends on spdk
