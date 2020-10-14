@@ -271,6 +271,22 @@ bdev_init_cb(void *done, int rc)
 }
 
 static void
+_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
+	       void *event_ctx)
+{
+	switch (type) {
+	case SPDK_BDEV_EVENT_REMOVE:
+		if (event_ctx != NULL) {
+			*(bool *)event_ctx = true;
+		}
+		break;
+	default:
+		CU_ASSERT(false);
+		break;
+	}
+}
+
+static void
 setup_test(void)
 {
 	bool done = false;
@@ -282,7 +298,7 @@ setup_test(void)
 	spdk_io_device_register(&g_io_device, stub_create_ch, stub_destroy_ch,
 				sizeof(struct ut_bdev_channel), NULL);
 	register_bdev(&g_bdev, "ut_bdev", &g_io_device);
-	spdk_bdev_open(&g_bdev.bdev, true, NULL, NULL, &g_desc);
+	spdk_bdev_open_ext("ut_bdev", true, _bdev_event_cb, NULL, &g_desc);
 }
 
 static void
@@ -352,12 +368,6 @@ basic(void)
 }
 
 static void
-_bdev_removed(void *done)
-{
-	*(bool *)done = true;
-}
-
-static void
 _bdev_unregistered(void *done, int rc)
 {
 	CU_ASSERT(rc == 0);
@@ -380,8 +390,8 @@ unregister_and_close(void)
 	poll_threads();
 
 	/* Try hotremoving a bdev with descriptors which don't provide
-	 * the notification callback */
-	spdk_bdev_open(&g_bdev.bdev, true, NULL, NULL, &desc);
+	 * any context to the notification callback */
+	spdk_bdev_open_ext("ut_bdev", true, _bdev_event_cb, NULL, &desc);
 	SPDK_CU_ASSERT_FATAL(desc != NULL);
 
 	/* There is an open descriptor on the device. Unregister it,
@@ -408,7 +418,7 @@ unregister_and_close(void)
 	register_bdev(&g_bdev, "ut_bdev", &g_io_device);
 
 	remove_notify = false;
-	spdk_bdev_open(&g_bdev.bdev, true, _bdev_removed, &remove_notify, &desc);
+	spdk_bdev_open_ext("ut_bdev", true, _bdev_event_cb, &remove_notify, &desc);
 	SPDK_CU_ASSERT_FATAL(desc != NULL);
 	CU_ASSERT(remove_notify == false);
 
@@ -435,7 +445,7 @@ unregister_and_close(void)
 
 	/* Restore the original g_bdev so that we can use teardown_test(). */
 	register_bdev(&g_bdev, "ut_bdev", &g_io_device);
-	spdk_bdev_open(&g_bdev.bdev, true, NULL, NULL, &g_desc);
+	spdk_bdev_open_ext("ut_bdev", true, _bdev_event_cb, NULL, &g_desc);
 	teardown_test();
 }
 
@@ -777,7 +787,7 @@ basic_qos(void)
 	 * Open the bdev again which shall setup the qos channel as the
 	 * channels are valid.
 	 */
-	spdk_bdev_open(bdev, true, NULL, NULL, &g_desc);
+	spdk_bdev_open_ext("ut_bdev", true, _bdev_event_cb, NULL, &g_desc);
 	poll_threads();
 	CU_ASSERT(bdev->internal.qos->ch != NULL);
 
@@ -795,7 +805,7 @@ basic_qos(void)
 	CU_ASSERT(bdev->internal.qos->ch == NULL);
 
 	/* Open the bdev again, no qos channel setup without valid channels. */
-	spdk_bdev_open(bdev, true, NULL, NULL, &g_desc);
+	spdk_bdev_open_ext("ut_bdev", true, _bdev_event_cb, NULL, &g_desc);
 	poll_threads();
 	CU_ASSERT(bdev->internal.qos->ch == NULL);
 
@@ -1139,7 +1149,7 @@ enomem_multi_bdev(void)
 	second_bdev = calloc(1, sizeof(*second_bdev));
 	SPDK_CU_ASSERT_FATAL(second_bdev != NULL);
 	register_bdev(second_bdev, "ut_bdev2", g_bdev.io_target);
-	spdk_bdev_open(&second_bdev->bdev, true, NULL, NULL, &second_desc);
+	spdk_bdev_open_ext("ut_bdev2", true, _bdev_event_cb, NULL, &second_desc);
 	SPDK_CU_ASSERT_FATAL(second_desc != NULL);
 
 	set_thread(0);
@@ -1215,7 +1225,7 @@ enomem_multi_io_target(void)
 	second_bdev = calloc(1, sizeof(*second_bdev));
 	SPDK_CU_ASSERT_FATAL(second_bdev != NULL);
 	register_bdev(second_bdev, "ut_bdev2", &new_io_device);
-	spdk_bdev_open(&second_bdev->bdev, true, NULL, NULL, &second_desc);
+	spdk_bdev_open_ext("ut_bdev2", true, _bdev_event_cb, NULL, &second_desc);
 	SPDK_CU_ASSERT_FATAL(second_desc != NULL);
 
 	set_thread(0);
