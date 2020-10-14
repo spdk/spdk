@@ -601,14 +601,23 @@ function status_freebsd() {
 	)
 
 	local contigmem=present
+	local contigmem_buffer_size
+	local contigmem_num_buffers
+
 	if ! kldstat -q -m contigmem; then
 		contigmem="not present"
+	fi
+	if ! contigmem_buffer_size=$(kenv hw.contigmem.buffer_size 2> /dev/null); then
+		contigmem_buffer_size="not set"
+	fi
+	if ! contigmem_num_buffers=$(kenv hw.contigmem.num_buffers 2> /dev/null); then
+		contigmem_num_buffers="not set"
 	fi
 
 	cat <<- BSD_INFO
 		Contigmem ($contigmem)
-		Buffer Size: $(kenv hw.contigmem.buffer_size)
-		Num Buffers: $(kenv hw.contigmem.num_buffers)
+		Buffer Size: $contigmem_buffer_size
+		Num Buffers: $contigmem_num_buffers
 
 		NVMe devices
 		$(status_print "${!nvme_d[@]}")
