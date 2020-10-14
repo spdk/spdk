@@ -1924,7 +1924,7 @@ nvmf_rpc_tgt_add_transport_done(void *cb_arg, int status)
 	if (status) {
 		SPDK_ERRLOG("Failed to add transport to tgt.(%d)\n", status);
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						     "Failed to add transport to tgt.(%d)\n",
+						     "Failed to add transport to tgt.(%d)",
 						     status);
 		return;
 	}
@@ -1971,7 +1971,7 @@ rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 	if (spdk_nvme_transport_id_parse_trtype(&trtype, ctx->trtype)) {
 		SPDK_ERRLOG("Invalid transport type '%s'\n", ctx->trtype);
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						     "Invalid transport type '%s'\n", ctx->trtype);
+						     "Invalid transport type '%s'", ctx->trtype);
 		nvmf_rpc_create_transport_ctx_free(ctx);
 		return;
 	}
@@ -1985,7 +1985,7 @@ rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 		 */
 		SPDK_ERRLOG("Invalid transport type '%s'\n", ctx->trtype);
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						     "Invalid transport type '%s'\n", ctx->trtype);
+						     "Invalid transport type '%s'", ctx->trtype);
 		nvmf_rpc_create_transport_ctx_free(ctx);
 		return;
 	}
@@ -2002,7 +2002,7 @@ rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 	if (spdk_nvmf_tgt_get_transport(tgt, ctx->trtype)) {
 		SPDK_ERRLOG("Transport type '%s' already exists\n", ctx->trtype);
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						     "Transport type '%s' already exists\n", ctx->trtype);
+						     "Transport type '%s' already exists", ctx->trtype);
 		nvmf_rpc_create_transport_ctx_free(ctx);
 		return;
 	}
@@ -2012,7 +2012,7 @@ rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 	if (!transport) {
 		SPDK_ERRLOG("Transport type '%s' create failed\n", ctx->trtype);
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						     "Transport type '%s' create failed\n", ctx->trtype);
+						     "Transport type '%s' create failed", ctx->trtype);
 		nvmf_rpc_create_transport_ctx_free(ctx);
 		return;
 	}
