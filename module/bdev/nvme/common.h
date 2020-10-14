@@ -148,7 +148,7 @@ struct nvme_io_channel {
 	struct spdk_nvme_qpair		*qpair;
 	struct nvme_bdev_poll_group	*group;
 	TAILQ_HEAD(, spdk_bdev_io)	pending_resets;
-	struct ocssd_io_channel		*ocssd_ioch;
+	struct ocssd_io_channel		*ocssd_ch;
 };
 
 void nvme_ctrlr_populate_namespace_done(struct nvme_async_probe_ctx *ctx,

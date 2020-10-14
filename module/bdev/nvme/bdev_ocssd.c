@@ -703,16 +703,16 @@ bdev_ocssd_poll_pending(void *ctx)
 {
 	struct spdk_io_channel *ch = ctx;
 	struct nvme_io_channel *nvme_ch;
-	struct ocssd_io_channel *ocssd_ioch;
+	struct ocssd_io_channel *ocssd_ch;
 	struct spdk_bdev_io *bdev_io;
 	TAILQ_HEAD(, spdk_bdev_io) pending_requests;
 	int num_requests = 0;
 
 	nvme_ch = spdk_io_channel_get_ctx(ch);
-	ocssd_ioch = nvme_ch->ocssd_ioch;
+	ocssd_ch = nvme_ch->ocssd_ch;
 
 	TAILQ_INIT(&pending_requests);
-	TAILQ_SWAP(&ocssd_ioch->pending_requests, &pending_requests, spdk_bdev_io, module_link);
+	TAILQ_SWAP(&ocssd_ch->pending_requests, &pending_requests, spdk_bdev_io, module_link);
 
 	while ((bdev_io = TAILQ_FIRST(&pending_requests))) {
 		TAILQ_REMOVE(&pending_requests, bdev_io, module_link);
@@ -720,8 +720,8 @@ bdev_ocssd_poll_pending(void *ctx)
 		num_requests++;
 	}
 
-	if (TAILQ_EMPTY(&ocssd_ioch->pending_requests)) {
-		spdk_poller_pause(ocssd_ioch->pending_poller);
+	if (TAILQ_EMPTY(&ocssd_ch->pending_requests)) {
+		spdk_poller_pause(ocssd_ch->pending_poller);
 	}
 
 	return num_requests;
@@ -731,10 +731,10 @@ static void
 bdev_ocssd_delay_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
-	struct ocssd_io_channel *ocssd_ioch = nvme_ch->ocssd_ioch;
+	struct ocssd_io_channel *ocssd_ch = nvme_ch->ocssd_ch;
 
-	TAILQ_INSERT_TAIL(&ocssd_ioch->pending_requests, bdev_io, module_link);
-	spdk_poller_resume(ocssd_ioch->pending_poller);
+	TAILQ_INSERT_TAIL(&ocssd_ch->pending_requests, bdev_io, module_link);
+	spdk_poller_resume(ocssd_ch->pending_poller);
 }
 
 static int
@@ -1440,26 +1440,26 @@ bdev_ocssd_depopulate_namespace(struct nvme_bdev_ns *ns)
 int
 bdev_ocssd_create_io_channel(struct nvme_io_channel *nvme_ch)
 {
-	struct ocssd_io_channel *ocssd_ioch;
+	struct ocssd_io_channel *ocssd_ch;
 
-	ocssd_ioch = calloc(1, sizeof(*ocssd_ioch));
-	if (ocssd_ioch == NULL) {
+	ocssd_ch = calloc(1, sizeof(*ocssd_ch));
+	if (ocssd_ch == NULL) {
 		return -ENOMEM;
 	}
 
-	ocssd_ioch->pending_poller = SPDK_POLLER_REGISTER(bdev_ocssd_poll_pending,
-				     spdk_io_channel_from_ctx(nvme_ch), 0);
-	if (ocssd_ioch->pending_poller == NULL) {
+	ocssd_ch->pending_poller = SPDK_POLLER_REGISTER(bdev_ocssd_poll_pending,
+				   spdk_io_channel_from_ctx(nvme_ch), 0);
+	if (ocssd_ch->pending_poller == NULL) {
 		SPDK_ERRLOG("Failed to register pending requests poller\n");
-		free(ocssd_ioch);
+		free(ocssd_ch);
 		return -ENOMEM;
 	}
 
 	/* Start the poller paused and only resume it once there are pending requests */
-	spdk_poller_pause(ocssd_ioch->pending_poller);
+	spdk_poller_pause(ocssd_ch->pending_poller);
 
-	TAILQ_INIT(&ocssd_ioch->pending_requests);
-	nvme_ch->ocssd_ioch = ocssd_ioch;
+	TAILQ_INIT(&ocssd_ch->pending_requests);
+	nvme_ch->ocssd_ch = ocssd_ch;
 
 	return 0;
 }
@@ -1467,8 +1467,8 @@ bdev_ocssd_create_io_channel(struct nvme_io_channel *nvme_ch)
 void
 bdev_ocssd_destroy_io_channel(struct nvme_io_channel *nvme_ch)
 {
-	spdk_poller_unregister(&nvme_ch->ocssd_ioch->pending_poller);
-	free(nvme_ch->ocssd_ioch);
+	spdk_poller_unregister(&nvme_ch->ocssd_ch->pending_poller);
+	free(nvme_ch->ocssd_ch);
 }
 
 int
