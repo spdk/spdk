@@ -646,7 +646,13 @@ function configure_freebsd() {
 	# If contigmem is already loaded but the HUGEMEM specified doesn't match the
 	#  previous value, unload contigmem so that we can reload with the new value.
 	if kldstat -q -m contigmem; then
-		if [ $(kenv hw.contigmem.num_buffers) -ne "$((HUGEMEM / 256))" ]; then
+		# contigmem may be loaded, but the kernel environment doesn't have to
+		# be necessarily set at this point. If it isn't, kenv will fail to
+		# pick up the hw. options. Handle it.
+		if ! contigmem_num_buffers=$(kenv hw.contigmem.num_buffers); then
+			contigmem_num_buffers=-1
+		fi 2> /dev/null
+		if ((contigmem_num_buffers != HUGEMEM / 256)); then
 			kldunload contigmem.ko
 		fi
 	fi
