@@ -37,7 +37,6 @@
 
 #include "spdk/barrier.h"
 #include "spdk/bdev.h"
-#include "spdk/conf.h"
 #include "spdk/env.h"
 #include "spdk/fd.h"
 #include "spdk/likely.h"
@@ -76,7 +75,6 @@ struct bdev_uring {
 static int bdev_uring_init(void);
 static void bdev_uring_fini(void);
 static void uring_free_bdev(struct bdev_uring *uring);
-static void bdev_uring_get_spdk_running_config(FILE *fp);
 static TAILQ_HEAD(, bdev_uring) g_uring_bdev_head = TAILQ_HEAD_INITIALIZER(g_uring_bdev_head);
 
 #define SPDK_URING_QUEUE_DEPTH 512
@@ -92,7 +90,6 @@ static struct spdk_bdev_module uring_if = {
 	.name		= "uring",
 	.module_init	= bdev_uring_init,
 	.module_fini	= bdev_uring_fini,
-	.config_text	= bdev_uring_get_spdk_running_config,
 	.get_ctx_size	= bdev_uring_get_ctx_size,
 };
 
@@ -577,59 +574,8 @@ delete_uring_bdev(struct spdk_bdev *bdev, spdk_delete_uring_complete cb_fn, void
 static int
 bdev_uring_init(void)
 {
-	size_t i;
-	struct spdk_conf_section *sp;
-	struct spdk_bdev *bdev;
-
 	spdk_io_device_register(&uring_if, bdev_uring_group_create_cb, bdev_uring_group_destroy_cb,
-				sizeof(struct bdev_uring_group_channel),
-				"uring_module");
-
-	sp = spdk_conf_find_section(NULL, "URING");
-	if (!sp) {
-		return 0;
-	}
-
-	i = 0;
-	while (true) {
-		const char *file;
-		const char *name;
-		const char *block_size_str;
-		uint32_t block_size = 0;
-		long int tmp;
-
-		file = spdk_conf_section_get_nmval(sp, "URING", i, 0);
-		if (!file) {
-			break;
-		}
-
-		name = spdk_conf_section_get_nmval(sp, "URING", i, 1);
-		if (!name) {
-			SPDK_ERRLOG("No name provided for URING bdev with file %s\n", file);
-			i++;
-			continue;
-		}
-
-		block_size_str = spdk_conf_section_get_nmval(sp, "URING", i, 2);
-		if (block_size_str) {
-			tmp = spdk_strtol(block_size_str, 10);
-			if (tmp < 0) {
-				SPDK_ERRLOG("Invalid block size for URING bdev with file %s\n", file);
-				i++;
-				continue;
-			}
-			block_size = (uint32_t)tmp;
-		}
-
-		bdev = create_uring_bdev(name, file, block_size);
-		if (!bdev) {
-			SPDK_ERRLOG("Unable to create URING bdev from file %s\n", file);
-			i++;
-			continue;
-		}
-
-		i++;
-	}
+				sizeof(struct bdev_uring_group_channel), "uring_module");
 
 	return 0;
 }
@@ -638,34 +584,6 @@ static void
 bdev_uring_fini(void)
 {
 	spdk_io_device_unregister(&uring_if, NULL);
-}
-
-static void
-bdev_uring_get_spdk_running_config(FILE *fp)
-{
-	char *file;
-	char *name;
-	uint32_t block_size;
-	struct bdev_uring *uring;
-
-	fprintf(fp,
-		"\n"
-		"# Users must change this section to match the /dev/sdX devices to be\n"
-		"# exported as iSCSI LUNs. The devices are accessed using io_uring.\n"
-		"# The format is:\n"
-		"# URING <file name> <bdev name> [<block size>]\n"
-		"# The file name is the backing device\n"
-		"# The bdev name can be referenced from elsewhere in the configuration file.\n"
-		"# Block size may be omitted to automatically detect the block size of a bdev.\n"
-		"[URING]\n");
-
-	TAILQ_FOREACH(uring, &g_uring_bdev_head, link) {
-		file = uring->filename;
-		name = uring->bdev.name;
-		block_size = uring->bdev.blocklen;
-		fprintf(fp, "  URING %s %s %d\n", file, name, block_size);
-	}
-	fprintf(fp, "\n");
 }
 
 SPDK_LOG_REGISTER_COMPONENT(uring)

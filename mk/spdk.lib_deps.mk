@@ -136,6 +136,7 @@ DEPDIRS-bdev_compress := $(BDEV_DEPS_THREAD) reduce
 DEPDIRS-bdev_delay := $(BDEV_DEPS_THREAD)
 DEPDIRS-bdev_null := $(BDEV_DEPS_THREAD)
 DEPDIRS-bdev_passthru := $(BDEV_DEPS_THREAD)
+DEPDIRS-bdev_uring := $(BDEV_DEPS_THREAD)
 DEPDIRS-bdev_zone_block := $(BDEV_DEPS_THREAD)
 ifeq ($(OS),Linux)
 DEPDIRS-bdev_ftl := $(BDEV_DEPS_THREAD) ftl
@@ -148,7 +149,6 @@ DEPDIRS-bdev_ocf := $(BDEV_DEPS_CONF_THREAD)
 DEPDIRS-bdev_pmem := $(BDEV_DEPS_CONF_THREAD)
 DEPDIRS-bdev_raid := $(BDEV_DEPS_CONF_THREAD)
 DEPDIRS-bdev_rbd := $(BDEV_DEPS_CONF_THREAD)
-DEPDIRS-bdev_uring := $(BDEV_DEPS_CONF_THREAD)
 DEPDIRS-bdev_virtio := $(BDEV_DEPS_CONF_THREAD) virtio
 
 # module/event
