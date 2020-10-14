@@ -245,7 +245,6 @@ function collect_devices() {
 
 function collect_driver() {
 	local bdf=$1
-	local override_driver=$2
 	local drivers driver
 
 	[[ -e /sys/bus/pci/devices/$bdf/modalias ]] || return 1
@@ -254,7 +253,11 @@ function collect_driver() {
 		driver=$(readlink -f "/sys/module/${drivers[0]}/drivers/pci:"*)
 		driver=${driver##*/}
 	else
-		driver=$override_driver
+		[[ -n ${nvme_d["$bdf"]} ]] && driver=nvme
+		[[ -n ${ioat_d["$bdf"]} ]] && driver=ioatdma
+		[[ -n ${idxd_d["$bdf"]} ]] && driver=idxd
+		[[ -n ${virtio_d["$bdf"]} ]] && driver=virtio-pci
+		[[ -n ${vmd_d["$bdf"]} ]] && driver=vmd
 	fi 2> /dev/null
 	echo "$driver"
 }
@@ -460,13 +463,7 @@ function reset_linux_pci() {
 	for bdf in "${!all_devices_d[@]}"; do
 		((all_devices_d["$bdf"] == 0)) || continue
 
-		[[ -n ${nvme_d["$bdf"]} ]] && fallback_driver=nvme
-		[[ -n ${ioat_d["$bdf"]} ]] && fallback_driver=ioatdma
-		[[ -n ${idxd_d["$bdf"]} ]] && fallback_driver=idxd
-		[[ -n ${virtio_d["$bdf"]} ]] && fallback_driver=virtio-pci
-		[[ -n ${vmd_d["$bdf"]} ]] && fallback_driver=vmd
-		driver=$(collect_driver "$bdf" "$fallback_driver")
-
+		driver=$(collect_driver "$bdf")
 		if ! check_for_driver "$driver"; then
 			linux_bind_driver "$bdf" "$driver"
 		else
