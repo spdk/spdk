@@ -71,7 +71,6 @@ static struct spdk_subsystem g_spdk_subsystem_iscsi = {
 	.name = "iscsi",
 	.init = iscsi_subsystem_init,
 	.fini = iscsi_subsystem_fini,
-	.config = spdk_iscsi_config_text,
 	.write_config_json = iscsi_subsystem_config_json,
 };
 

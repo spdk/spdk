@@ -138,83 +138,6 @@ portal_create_twice_case(void)
 }
 
 static void
-parse_portal_ipv4_normal_case(void)
-{
-	const char *string = "192.168.2.0:3260";
-	const char *host_str = "192.168.2.0";
-	const char *port_str = "3260";
-	struct spdk_iscsi_portal *p = NULL;
-	int rc;
-
-	rc = iscsi_parse_portal(string, &p);
-	CU_ASSERT(rc == 0);
-	SPDK_CU_ASSERT_FATAL(p != NULL);
-	CU_ASSERT(strcmp(p->host, host_str) == 0);
-	CU_ASSERT(strcmp(p->port, port_str) == 0);
-
-	iscsi_portal_destroy(p);
-	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
-
-}
-
-static void
-parse_portal_ipv6_normal_case(void)
-{
-	const char *string = "[2001:ad6:1234::]:3260";
-	const char *host_str = "[2001:ad6:1234::]";
-	const char *port_str = "3260";
-	struct spdk_iscsi_portal *p = NULL;
-	int rc;
-
-	rc = iscsi_parse_portal(string, &p);
-	CU_ASSERT(rc == 0);
-	SPDK_CU_ASSERT_FATAL(p != NULL);
-	CU_ASSERT(strcmp(p->host, host_str) == 0);
-	CU_ASSERT(strcmp(p->port, port_str) == 0);
-
-	iscsi_portal_destroy(p);
-	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
-}
-
-static void
-parse_portal_ipv4_skip_port_case(void)
-{
-	const char *string = "192.168.2.0";
-	const char *host_str = "192.168.2.0";
-	const char *port_str = "3260";
-	struct spdk_iscsi_portal *p = NULL;
-	int rc;
-
-	rc = iscsi_parse_portal(string, &p);
-	CU_ASSERT(rc == 0);
-	SPDK_CU_ASSERT_FATAL(p != NULL);
-	CU_ASSERT(strcmp(p->host, host_str) == 0);
-	CU_ASSERT(strcmp(p->port, port_str) == 0);
-
-	iscsi_portal_destroy(p);
-	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
-}
-
-static void
-parse_portal_ipv6_skip_port_case(void)
-{
-	const char *string = "[2001:ad6:1234::]";
-	const char *host_str = "[2001:ad6:1234::]";
-	const char *port_str = "3260";
-	struct spdk_iscsi_portal *p = NULL;
-	int rc;
-
-	rc = iscsi_parse_portal(string, &p);
-	CU_ASSERT(rc == 0);
-	SPDK_CU_ASSERT_FATAL(p != NULL);
-	CU_ASSERT(strcmp(p->host, host_str) == 0);
-	CU_ASSERT(strcmp(p->port, port_str) == 0);
-
-	iscsi_portal_destroy(p);
-	CU_ASSERT(TAILQ_EMPTY(&g_iscsi.portal_head));
-}
-
-static void
 portal_grp_register_unregister_case(void)
 {
 	struct spdk_iscsi_portal *p;
@@ -402,10 +325,6 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, portal_create_ipv4_wildcard_case);
 	CU_ADD_TEST(suite, portal_create_ipv6_wildcard_case);
 	CU_ADD_TEST(suite, portal_create_twice_case);
-	CU_ADD_TEST(suite, parse_portal_ipv4_normal_case);
-	CU_ADD_TEST(suite, parse_portal_ipv6_normal_case);
-	CU_ADD_TEST(suite, parse_portal_ipv4_skip_port_case);
-	CU_ADD_TEST(suite, parse_portal_ipv6_skip_port_case);
 	CU_ADD_TEST(suite, portal_grp_register_unregister_case);
 	CU_ADD_TEST(suite, portal_grp_register_twice_case);
 	CU_ADD_TEST(suite, portal_grp_add_delete_case);

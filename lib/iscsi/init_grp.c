@@ -325,121 +325,6 @@ cleanup:
 	return -1;
 }
 
-/* Read spdk iscsi target's config file and create initiator group */
-static int
-iscsi_parse_init_grp(struct spdk_conf_section *sp)
-{
-	int i, rc = 0;
-	const char *val = NULL;
-	int num_initiator_names;
-	int num_initiator_masks;
-	char **initiators = NULL, **netmasks = NULL;
-	int tag = spdk_conf_section_get_num(sp);
-
-	SPDK_DEBUGLOG(iscsi, "add initiator group %d\n", tag);
-
-	val = spdk_conf_section_get_val(sp, "Comment");
-	if (val != NULL) {
-		SPDK_DEBUGLOG(iscsi, "Comment %s\n", val);
-	}
-
-	/* counts number of definitions */
-	for (i = 0; ; i++) {
-		val = spdk_conf_section_get_nval(sp, "InitiatorName", i);
-		if (val == NULL) {
-			break;
-		}
-	}
-	if (i == 0) {
-		SPDK_ERRLOG("num_initiator_names = 0\n");
-		return -EINVAL;
-	}
-	num_initiator_names = i;
-	if (num_initiator_names > MAX_INITIATOR) {
-		SPDK_ERRLOG("%d > MAX_INITIATOR\n", num_initiator_names);
-		return -E2BIG;
-	}
-	for (i = 0; ; i++) {
-		val = spdk_conf_section_get_nval(sp, "Netmask", i);
-		if (val == NULL) {
-			break;
-		}
-	}
-	if (i == 0) {
-		SPDK_ERRLOG("num_initiator_mask = 0\n");
-		return -EINVAL;
-	}
-	num_initiator_masks = i;
-	if (num_initiator_masks > MAX_NETMASK) {
-		SPDK_ERRLOG("%d > MAX_NETMASK\n", num_initiator_masks);
-		return -E2BIG;
-	}
-
-	initiators = calloc(num_initiator_names, sizeof(char *));
-	if (!initiators) {
-		SPDK_ERRLOG("calloc() failed for temp initiator name array\n");
-		return -ENOMEM;
-	}
-	for (i = 0; i < num_initiator_names; i++) {
-		val = spdk_conf_section_get_nval(sp, "InitiatorName", i);
-		if (!val) {
-			SPDK_ERRLOG("InitiatorName %d not found\n", i);
-			rc = -EINVAL;
-			goto cleanup;
-		}
-		SPDK_DEBUGLOG(iscsi, "InitiatorName %s\n", val);
-		initiators[i] = strdup(val);
-		if (!initiators[i]) {
-			SPDK_ERRLOG("strdup() failed for temp initiator name\n");
-			rc = -ENOMEM;
-			goto cleanup;
-		}
-	}
-	netmasks = calloc(num_initiator_masks, sizeof(char *));
-	if (!netmasks) {
-		SPDK_ERRLOG("malloc() failed for portal group\n");
-		rc = -ENOMEM;
-		goto cleanup;
-	}
-	for (i = 0; i < num_initiator_masks; i++) {
-		val = spdk_conf_section_get_nval(sp, "Netmask", i);
-		if (!val) {
-			SPDK_ERRLOG("Netmask %d not found\n", i);
-			rc = -EINVAL;
-			goto cleanup;
-		}
-		SPDK_DEBUGLOG(iscsi, "Netmask %s\n", val);
-		netmasks[i] = strdup(val);
-		if (!netmasks[i]) {
-			SPDK_ERRLOG("strdup() failed for temp initiator mask\n");
-			rc = -ENOMEM;
-			goto cleanup;
-		}
-	}
-
-	rc = iscsi_init_grp_create_from_initiator_list(tag,
-			num_initiator_names, initiators, num_initiator_masks, netmasks);
-
-cleanup:
-	if (initiators) {
-		for (i = 0; i < num_initiator_names; i++) {
-			if (initiators[i]) {
-				free(initiators[i]);
-			}
-		}
-		free(initiators);
-	}
-	if (netmasks) {
-		for (i = 0; i < num_initiator_masks; i++) {
-			if (netmasks[i]) {
-				free(netmasks[i]);
-			}
-		}
-		free(netmasks);
-	}
-	return rc;
-}
-
 int
 iscsi_init_grp_register(struct spdk_iscsi_init_grp *ig)
 {
@@ -621,30 +506,6 @@ iscsi_init_grp_find_by_tag(int tag)
 	return NULL;
 }
 
-int
-iscsi_parse_init_grps(void)
-{
-	struct spdk_conf_section *sp;
-	int rc;
-
-	sp = spdk_conf_first_section(NULL);
-	while (sp != NULL) {
-		if (spdk_conf_section_match_prefix(sp, "InitiatorGroup")) {
-			if (spdk_conf_section_get_num(sp) == 0) {
-				SPDK_ERRLOG("Group 0 is invalid\n");
-				return -1;
-			}
-			rc = iscsi_parse_init_grp(sp);
-			if (rc < 0) {
-				SPDK_ERRLOG("parse_init_group() failed\n");
-				return -1;
-			}
-		}
-		sp = spdk_conf_next_section(sp);
-	}
-	return 0;
-}
-
 void
 iscsi_init_grps_destroy(void)
 {
@@ -674,55 +535,6 @@ iscsi_init_grp_unregister(int tag)
 	}
 	pthread_mutex_unlock(&g_iscsi.mutex);
 	return NULL;
-}
-
-static const char *initiator_group_section = \
-		"\n"
-		"# Users must change the InitiatorGroup section(s) to match the IP\n"
-		"#  addresses and initiator configuration in their environment.\n"
-		"# Netmask can be used to specify a single IP address or a range of IP addresses\n"
-		"#  Netmask 192.168.1.20   <== single IP address\n"
-		"#  Netmask 192.168.1.0/24 <== IP range 192.168.1.*\n";
-
-#define INITIATOR_GROUP_TMPL \
-"[InitiatorGroup%d]\n" \
-"  Comment \"Initiator Group%d\"\n"
-
-#define INITIATOR_TMPL \
-"  InitiatorName "
-
-#define NETMASK_TMPL \
-"  Netmask "
-
-void
-iscsi_init_grps_config_text(FILE *fp)
-{
-	struct spdk_iscsi_init_grp *ig;
-	struct spdk_iscsi_initiator_name *iname;
-	struct spdk_iscsi_initiator_netmask *imask;
-
-	/* Create initiator group section */
-	fprintf(fp, "%s", initiator_group_section);
-
-	/* Dump initiator groups */
-	TAILQ_FOREACH(ig, &g_iscsi.ig_head, tailq) {
-		if (NULL == ig) { continue; }
-		fprintf(fp, INITIATOR_GROUP_TMPL, ig->tag, ig->tag);
-
-		/* Dump initiators */
-		fprintf(fp, INITIATOR_TMPL);
-		TAILQ_FOREACH(iname, &ig->initiator_head, tailq) {
-			fprintf(fp, "%s ", iname->name);
-		}
-		fprintf(fp, "\n");
-
-		/* Dump netmasks */
-		fprintf(fp, NETMASK_TMPL);
-		TAILQ_FOREACH(imask, &ig->netmask_head, tailq) {
-			fprintf(fp, "%s ", imask->mask);
-		}
-		fprintf(fp, "\n");
-	}
 }
 
 static void

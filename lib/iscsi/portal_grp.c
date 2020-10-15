@@ -212,64 +212,6 @@ iscsi_portal_close(struct spdk_iscsi_portal *p)
 	}
 }
 
-static int
-iscsi_parse_portal(const char *portalstring, struct spdk_iscsi_portal **ip)
-{
-	char host[MAX_PORTAL_ADDR + 1] = {};
-	char port[MAX_PORTAL_PORT + 1] = {};
-	int len;
-	const char *p;
-
-	if (portalstring == NULL) {
-		SPDK_ERRLOG("portal error\n");
-		return -EINVAL;
-	}
-
-	/* IP address */
-	if (portalstring[0] == '[') {
-		/* IPv6 */
-		p = strchr(portalstring + 1, ']');
-		if (p == NULL) {
-			SPDK_ERRLOG("portal error\n");
-			return -EINVAL;
-		}
-		p++;
-	} else {
-		/* IPv4 */
-		p = strchr(portalstring, ':');
-		if (p == NULL) {
-			p = portalstring + strlen(portalstring);
-		}
-	}
-
-	len = p - portalstring;
-	if (len > MAX_PORTAL_ADDR) {
-		return -EINVAL;
-	}
-	memcpy(host, portalstring, len);
-	host[len] = '\0';
-
-	/* Port number (IPv4 and IPv6 are the same) */
-	if (p[0] == '\0') {
-		snprintf(port, MAX_PORTAL_PORT, "%d", DEFAULT_PORT);
-	} else {
-		p++;
-		len = strlen(p);
-		if (len > MAX_PORTAL_PORT) {
-			return -EINVAL;
-		}
-		memcpy(port, p, len);
-		port[len] = '\0';
-	}
-
-	*ip = iscsi_portal_create(host, port);
-	if (!*ip) {
-		return -EINVAL;
-	}
-
-	return 0;
-}
-
 int
 iscsi_parse_redirect_addr(struct sockaddr_storage *sa,
 			  const char *host, const char *port)
@@ -408,69 +350,6 @@ iscsi_portal_grp_set_chap_params(struct spdk_iscsi_portal_grp *pg,
 	return 0;
 }
 
-static int
-iscsi_parse_portal_grp(struct spdk_conf_section *sp)
-{
-	struct spdk_iscsi_portal_grp *pg;
-	struct spdk_iscsi_portal *p;
-	const char *val;
-	char *label, *portal;
-	int i = 0, rc = 0;
-
-	SPDK_DEBUGLOG(iscsi, "add portal group (from config file) %d\n",
-		      spdk_conf_section_get_num(sp));
-
-	val = spdk_conf_section_get_val(sp, "Comment");
-	if (val != NULL) {
-		SPDK_DEBUGLOG(iscsi, "Comment %s\n", val);
-	}
-
-	pg = iscsi_portal_grp_create(spdk_conf_section_get_num(sp), false);
-	if (!pg) {
-		SPDK_ERRLOG("portal group malloc error (%s)\n", spdk_conf_section_get_name(sp));
-		return -1;
-	}
-
-	for (i = 0; ; i++) {
-		label = spdk_conf_section_get_nmval(sp, "Portal", i, 0);
-		portal = spdk_conf_section_get_nmval(sp, "Portal", i, 1);
-		if (label == NULL || portal == NULL) {
-			break;
-		}
-
-		rc = iscsi_parse_portal(portal, &p);
-		if (rc < 0) {
-			SPDK_ERRLOG("parse portal error (%s)\n", portal);
-			goto error;
-		}
-
-		SPDK_DEBUGLOG(iscsi,
-			      "RIndex=%d, Host=%s, Port=%s, Tag=%d\n",
-			      i, p->host, p->port, spdk_conf_section_get_num(sp));
-
-		iscsi_portal_grp_add_portal(pg, p);
-	}
-
-	rc = iscsi_portal_grp_open(pg);
-	if (rc != 0) {
-		SPDK_ERRLOG("portal_grp_open failed\n");
-		goto error;
-	}
-
-	/* Add portal group to the end of the pg list */
-	rc = iscsi_portal_grp_register(pg);
-	if (rc != 0) {
-		SPDK_ERRLOG("register portal failed\n");
-		goto error;
-	}
-
-	return 0;
-
-error:
-	iscsi_portal_grp_release(pg);
-	return -1;
-}
-
 struct spdk_iscsi_portal_grp *
 iscsi_portal_grp_find_by_tag(int tag)
 {
@@ -483,32 +362,6 @@ iscsi_portal_grp_find_by_tag(int tag)
 	}
 
 	return NULL;
-}
-
-int
-iscsi_parse_portal_grps(void)
-{
-	int rc = 0;
-	struct spdk_conf_section *sp;
-
-	sp = spdk_conf_first_section(NULL);
-	while (sp != NULL) {
-		if (spdk_conf_section_match_prefix(sp, "PortalGroup")) {
-			if (spdk_conf_section_get_num(sp) == 0) {
-				SPDK_ERRLOG("Group 0 is invalid\n");
-				return -1;
-			}
-
-			/* Build portal group from cfg section PortalGroup */
-			rc = iscsi_parse_portal_grp(sp);
-			if (rc < 0) {
-				SPDK_ERRLOG("parse_portal_group() failed\n");
-				return -1;
-			}
-		}
-		sp = spdk_conf_next_section(sp);
-	}
-	return 0;
 }
 
 void
@@ -588,48 +441,6 @@ iscsi_portal_grp_release(struct spdk_iscsi_portal_grp *pg)
 {
 	iscsi_portal_grp_close(pg);
 	iscsi_portal_grp_destroy(pg);
-}
-
-static const char *portal_group_section = \
-		"\n"
-		"# Users must change the PortalGroup section(s) to match the IP addresses\n"
-		"#  for their environment.\n"
-		"# PortalGroup sections define which network portals the iSCSI target\n"
-		"# will use to listen for incoming connections.  These are also used to\n"
-		"#  determine which targets are accessible over each portal group.\n"
-		"# Up to 1024 Portal directives are allowed.  These define the network\n"
-		"#  portals of the portal group. The user must specify a IP address\n"
-		"#  for each network portal, and may optionally specify a port.\n"
-		"# If the port is omitted, 3260 will be used\n"
-		"#  Syntax:\n"
-		"#    Portal <Name> <IP address>[:<port>]\n";
-
-#define PORTAL_GROUP_TMPL \
-"[PortalGroup%d]\n" \
-"  Comment \"Portal%d\"\n"
-
-#define PORTAL_TMPL \
-"  Portal DA1 %s:%s\n"
-
-void
-iscsi_portal_grps_config_text(FILE *fp)
-{
-	struct spdk_iscsi_portal *p = NULL;
-	struct spdk_iscsi_portal_grp *pg = NULL;
-
-	/* Create portal group section */
-	fprintf(fp, "%s", portal_group_section);
-
-	/* Dump portal groups */
-	TAILQ_FOREACH(pg, &g_iscsi.pg_head, tailq) {
-		if (NULL == pg) { continue; }
-		fprintf(fp, PORTAL_GROUP_TMPL, pg->tag, pg->tag);
-		/* Dump portals */
-		TAILQ_FOREACH(p, &pg->head, per_pg_tailq) {
-			if (NULL == p) { continue; }
-			fprintf(fp, PORTAL_TMPL, p->host, p->port);
-		}
-	}
 }
 
 static void

@@ -96,7 +96,6 @@ int iscsi_portal_grp_set_chap_params(struct spdk_iscsi_portal_grp *pg,
 				     bool mutual_chap, int32_t chap_group);
 
 void iscsi_portal_grp_close_all(void);
-void iscsi_portal_grps_config_text(FILE *fp);
 void iscsi_portal_grps_info_json(struct spdk_json_write_ctx *w);
 void iscsi_portal_grps_config_json(struct spdk_json_write_ctx *w);
 

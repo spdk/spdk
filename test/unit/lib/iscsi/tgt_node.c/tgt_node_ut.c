@@ -148,35 +148,6 @@ add_lun_test_cases(void)
 }
 
 static void
-config_file_fail_cases(void)
-{
-	struct spdk_conf *config;
-	struct spdk_conf_section *sp;
-	char section_name[64];
-	int section_index;
-	int rc;
-
-	config = spdk_conf_allocate();
-
-	rc = spdk_conf_read(config, config_file);
-	CU_ASSERT(rc == 0);
-
-	section_index = 0;
-	while (true) {
-		snprintf(section_name, sizeof(section_name), "Failure%d", section_index);
-		sp = spdk_conf_find_section(config, section_name);
-		if (sp == NULL) {
-			break;
-		}
-		rc = iscsi_parse_tgt_node(sp);
-		CU_ASSERT(rc < 0);
-		section_index++;
-	}
-
-	spdk_conf_free(config);
-}
-
-static void
 allow_any_allowed(void)
 {
 	bool result;
@@ -810,7 +781,6 @@ main(int argc, char **argv)
 	suite = CU_add_suite("iscsi_target_node_suite", NULL, NULL);
 
 	CU_ADD_TEST(suite, add_lun_test_cases);
-	CU_ADD_TEST(suite, config_file_fail_cases);
 	CU_ADD_TEST(suite, allow_any_allowed);
 	CU_ADD_TEST(suite, allow_ipv6_allowed);
 	CU_ADD_TEST(suite, allow_ipv6_denied);

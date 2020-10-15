@@ -56,73 +56,6 @@ static void *g_init_cb_arg = NULL;
 static spdk_iscsi_fini_cb g_fini_cb_fn;
 static void *g_fini_cb_arg;
 
-#define ISCSI_CONFIG_TMPL \
-"[iSCSI]\n" \
-"  # node name (not include optional part)\n" \
-"  # Users can optionally change this to fit their environment.\n" \
-"  NodeBase \"%s\"\n" \
-"\n" \
-"  # files\n" \
-"  %s %s\n" \
-"\n" \
-"  # socket I/O timeout sec. (polling is infinity)\n" \
-"  Timeout %d\n" \
-"\n" \
-"  # authentication information for discovery session\n" \
-"  DiscoveryAuthMethod %s\n" \
-"  DiscoveryAuthGroup %s\n" \
-"\n" \
-"  MaxSessions %d\n" \
-"  MaxConnectionsPerSession %d\n" \
-"  MaxConnections %d\n" \
-"  MaxQueueDepth %d\n" \
-"\n" \
-"  # iSCSI initial parameters negotiate with initiators\n" \
-"  # NOTE: incorrect values might crash\n" \
-"  DefaultTime2Wait %d\n" \
-"  DefaultTime2Retain %d\n" \
-"\n" \
-"  FirstBurstLength %d\n" \
-"  ImmediateData %s\n" \
-"  ErrorRecoveryLevel %d\n" \
-"\n"
-
-static void
-iscsi_globals_config_text(FILE *fp)
-{
-	const char *authmethod = "None";
-	char authgroup[32] = "None";
-
-	if (NULL == fp) {
-		return;
-	}
-
-	if (g_iscsi.require_chap) {
-		authmethod = "CHAP";
-	} else if (g_iscsi.mutual_chap) {
-		authmethod = "CHAP Mutual";
-	} else if (!g_iscsi.disable_chap) {
-		authmethod = "Auto";
-	}
-
-	if (g_iscsi.chap_group) {
-		snprintf(authgroup, sizeof(authgroup), "AuthGroup%d", g_iscsi.chap_group);
-	}
-
-	fprintf(fp, ISCSI_CONFIG_TMPL,
-		g_iscsi.nodebase,
-		g_iscsi.authfile ? "AuthFile" : "",
-		g_iscsi.authfile ? g_iscsi.authfile : "",
-		g_iscsi.timeout, authmethod, authgroup,
-		g_iscsi.MaxSessions, g_iscsi.MaxConnectionsPerSession,
-		g_iscsi.MaxConnections,
-		g_iscsi.MaxQueueDepth,
-		g_iscsi.DefaultTime2Wait, g_iscsi.DefaultTime2Retain,
-		g_iscsi.FirstBurstLength,
-		(g_iscsi.ImmediateData) ? "Yes" : "No",
-		g_iscsi.ErrorRecoveryLevel);
-}
-
 #define ISCSI_DATA_BUFFER_ALIGNMENT	(0x1000)
 #define ISCSI_DATA_BUFFER_MASK		(ISCSI_DATA_BUFFER_ALIGNMENT - 1)
 
@@ -486,151 +419,6 @@ iscsi_opts_copy(struct spdk_iscsi_opts *src)
 }
 
 static int
-iscsi_read_config_file_params(struct spdk_conf_section *sp,
-			      struct spdk_iscsi_opts *opts)
-{
-	const char *val;
-	int MaxSessions;
-	int MaxConnectionsPerSession;
-	int MaxQueueDepth;
-	int DefaultTime2Wait;
-	int DefaultTime2Retain;
-	int FirstBurstLength;
-	int ErrorRecoveryLevel;
-	int timeout;
-	int nopininterval;
-	const char *ag_tag;
-	int ag_tag_i;
-	int i;
-
-	val = spdk_conf_section_get_val(sp, "Comment");
-	if (val != NULL) {
-		SPDK_DEBUGLOG(iscsi, "Comment %s\n", val);
-	}
-
-	val = spdk_conf_section_get_val(sp, "AuthFile");
-	if (val != NULL) {
-		opts->authfile = strdup(val);
-		if (!opts->authfile) {
-			SPDK_ERRLOG("strdup() failed for AuthFile\n");
-			return -ENOMEM;
-		}
-	}
-
-	val = spdk_conf_section_get_val(sp, "NodeBase");
-	if (val != NULL) {
-		opts->nodebase = strdup(val);
-		if (!opts->nodebase) {
-			free(opts->authfile);
-			SPDK_ERRLOG("strdup() failed for NodeBase\n");
-			return -ENOMEM;
-		}
-	}
-
-	MaxSessions = spdk_conf_section_get_intval(sp, "MaxSessions");
-	if (MaxSessions >= 0) {
-		opts->MaxSessions = MaxSessions;
-	}
-
-	MaxConnectionsPerSession = spdk_conf_section_get_intval(sp, "MaxConnectionsPerSession");
-	if (MaxConnectionsPerSession >= 0) {
-		opts->MaxConnectionsPerSession = MaxConnectionsPerSession;
-	}
-
-	MaxQueueDepth = spdk_conf_section_get_intval(sp, "MaxQueueDepth");
-	if (MaxQueueDepth >= 0) {
-		opts->MaxQueueDepth = MaxQueueDepth;
-	}
-
-	DefaultTime2Wait = spdk_conf_section_get_intval(sp, "DefaultTime2Wait");
-	if (DefaultTime2Wait >= 0) {
-		opts->DefaultTime2Wait = DefaultTime2Wait;
-	}
-
-	DefaultTime2Retain = spdk_conf_section_get_intval(sp, "DefaultTime2Retain");
-	if (DefaultTime2Retain >= 0) {
-		opts->DefaultTime2Retain = DefaultTime2Retain;
-	}
-
-	FirstBurstLength = spdk_conf_section_get_intval(sp, "FirstBurstLength");
-	if (FirstBurstLength >= 0) {
-		opts->FirstBurstLength = FirstBurstLength;
-	}
-
-	opts->ImmediateData = spdk_conf_section_get_boolval(sp, "ImmediateData",
-			      opts->ImmediateData);
-
-	/* This option is only for test.
-	 * If AllowDuplicateIsid is enabled, it allows different connections carrying
-	 * TSIH=0 login the target within the same session.
-	 */
-	opts->AllowDuplicateIsid = spdk_conf_section_get_boolval(sp, "AllowDuplicateIsid",
-				   opts->AllowDuplicateIsid);
-
-	ErrorRecoveryLevel = spdk_conf_section_get_intval(sp, "ErrorRecoveryLevel");
-	if (ErrorRecoveryLevel >= 0) {
-		opts->ErrorRecoveryLevel = ErrorRecoveryLevel;
-	}
-	timeout = spdk_conf_section_get_intval(sp, "Timeout");
-	if (timeout >= 0) {
-		opts->timeout = timeout;
-	}
-	nopininterval = spdk_conf_section_get_intval(sp, "NopInInterval");
-	if (nopininterval >= 0) {
-		opts->nopininterval = nopininterval;
-	}
-	val = spdk_conf_section_get_val(sp, "DiscoveryAuthMethod");
-	if (val != NULL) {
-		for (i = 0; ; i++) {
-			val = spdk_conf_section_get_nmval(sp, "DiscoveryAuthMethod", 0, i);
-			if (val == NULL) {
-				break;
-			}
-			if (strcasecmp(val, "CHAP") == 0) {
-				opts->require_chap = true;
-			} else if (strcasecmp(val, "Mutual") == 0) {
-				opts->require_chap = true;
-				opts->mutual_chap = true;
-			} else if (strcasecmp(val, "Auto") == 0) {
-				opts->disable_chap = false;
-				opts->require_chap = false;
-				opts->mutual_chap = false;
-			} else if (strcasecmp(val, "None") == 0) {
-				opts->disable_chap = true;
-				opts->require_chap = false;
-				opts->mutual_chap = false;
-			} else {
-				SPDK_ERRLOG("unknown CHAP mode %s\n", val);
-			}
-		}
-		if (opts->mutual_chap && !opts->require_chap) {
-			free(opts->authfile);
-			free(opts->nodebase);
-			SPDK_ERRLOG("CHAP must set to be required when using mutual CHAP.\n");
-			return -EINVAL;
-		}
-	}
-	val = spdk_conf_section_get_val(sp, "DiscoveryAuthGroup");
-	if (val != NULL) {
-		ag_tag = val;
-		if (strcasecmp(ag_tag, "None") == 0) {
-			opts->chap_group = 0;
-		} else {
-			if (strncasecmp(ag_tag, "AuthGroup",
-					strlen("AuthGroup")) != 0
-			    || sscanf(ag_tag, "%*[^0-9]%d", &ag_tag_i) != 1
-			    || ag_tag_i == 0) {
-				SPDK_ERRLOG("invalid auth group %s, ignoring\n", ag_tag);
-			} else {
-				opts->chap_group = ag_tag_i;
-			}
-		}
-	}
-
-	return 0;
-}
-
-static int
 iscsi_opts_verify(struct spdk_iscsi_opts *opts)
 {
 	if (!opts->nodebase) {
@@ -714,36 +502,6 @@ iscsi_opts_verify(struct spdk_iscsi_opts *opts)
 		SPDK_ERRLOG("0 is invalid. MaxR2TPerConnection must be more than 0\n");
 		return -EINVAL;
 	}
-
-	return 0;
-}
-
-static int
-iscsi_parse_options(struct spdk_iscsi_opts **popts)
-{
-	struct spdk_iscsi_opts *opts;
-	struct spdk_conf_section *sp;
-	int rc;
-
-	opts = iscsi_opts_alloc();
-	if (!opts) {
-		SPDK_ERRLOG("iscsi_opts_alloc_failed() failed\n");
-		return -ENOMEM;
-	}
-
-	/* Process parameters */
-	SPDK_DEBUGLOG(iscsi, "iscsi_read_config_file_parmas\n");
-	sp = spdk_conf_find_section(NULL, "iSCSI");
-	if (sp != NULL) {
-		rc = iscsi_read_config_file_params(sp, opts);
-		if (rc != 0) {
-			free(opts);
-			SPDK_ERRLOG("iscsi_read_config_file_params() failed\n");
-			return rc;
-		}
-	}
-
-	*popts = opts;
 
 	return 0;
 }
@@ -1136,10 +894,10 @@ iscsi_initialize_global_params(void)
 	int rc;
 
 	if (!g_spdk_iscsi_opts) {
-		rc = iscsi_parse_options(&g_spdk_iscsi_opts);
-		if (rc != 0) {
-			SPDK_ERRLOG("iscsi_parse_options() failed\n");
-			return rc;
+		g_spdk_iscsi_opts = iscsi_opts_alloc();
+		if (!g_spdk_iscsi_opts) {
+			SPDK_ERRLOG("iscsi_opts_alloc_failed() failed\n");
+			return -ENOMEM;
 		}
 	}
 
@@ -1169,24 +927,7 @@ iscsi_init_complete(int rc)
 static void
 iscsi_parse_configuration(void)
 {
-	int rc;
-
-	rc = iscsi_parse_portal_grps();
-	if (rc < 0) {
-		SPDK_ERRLOG("iscsi_parse_portal_grps() failed\n");
-		goto end;
-	}
-
-	rc = iscsi_parse_init_grps();
-	if (rc < 0) {
-		SPDK_ERRLOG("iscsi_parse_init_grps() failed\n");
-		goto end;
-	}
-
-	rc = iscsi_parse_tgt_nodes();
-	if (rc < 0) {
-		SPDK_ERRLOG("iscsi_parse_tgt_nodes() failed\n");
-	}
+	int rc = 0;
 
 	if (g_iscsi.authfile != NULL) {
 		if (access(g_iscsi.authfile, R_OK) == 0) {
@@ -1200,7 +941,6 @@ iscsi_parse_configuration(void)
 		}
 	}
 
-end:
 	iscsi_init_complete(rc);
 }
 
@@ -1460,15 +1200,6 @@ void
 shutdown_iscsi_conns_done(void)
 {
 	spdk_for_each_channel(&g_iscsi, _iscsi_fini_thread, NULL, _iscsi_fini_dev_unreg);
-}
-
-void
-spdk_iscsi_config_text(FILE *fp)
-{
-	iscsi_globals_config_text(fp);
-	iscsi_portal_grps_config_text(fp);
-	iscsi_init_grps_config_text(fp);
-	iscsi_tgt_nodes_config_text(fp);
 }
 
 void

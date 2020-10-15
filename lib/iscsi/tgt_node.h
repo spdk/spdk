@@ -97,8 +97,6 @@ struct spdk_iscsi_tgt_node {
 	void *destruct_cb_arg;
 };
 
-int iscsi_parse_tgt_nodes(void);
-
 void iscsi_shutdown_tgt_nodes(void);
 void iscsi_shutdown_tgt_node_by_name(const char *target_name,
 				     iscsi_tgt_node_destruct_cb cb_fn, void *cb_arg);
@@ -147,7 +145,6 @@ int iscsi_tgt_node_add_lun(struct spdk_iscsi_tgt_node *target,
 int iscsi_tgt_node_set_chap_params(struct spdk_iscsi_tgt_node *target,
 				   bool disable_chap, bool require_chap,
 				   bool mutual_chap, int32_t chap_group);
-void iscsi_tgt_nodes_config_text(FILE *fp);
 void iscsi_tgt_nodes_info_json(struct spdk_json_write_ctx *w);
 void iscsi_tgt_nodes_config_json(struct spdk_json_write_ctx *w);
 #endif /* SPDK_ISCSI_TGT_NODE_H_ */

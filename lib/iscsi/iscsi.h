@@ -407,7 +407,6 @@ void spdk_iscsi_init(spdk_iscsi_init_cb cb_fn, void *cb_arg);
 typedef void (*spdk_iscsi_fini_cb)(void *arg);
 void spdk_iscsi_fini(spdk_iscsi_fini_cb cb_fn, void *cb_arg);
 void shutdown_iscsi_conns_done(void);
-void spdk_iscsi_config_text(FILE *fp);
 void spdk_iscsi_config_json(struct spdk_json_write_ctx *w);
 
 struct spdk_iscsi_opts *iscsi_opts_alloc(void);

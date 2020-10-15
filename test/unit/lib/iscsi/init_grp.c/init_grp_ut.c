@@ -52,58 +52,6 @@ test_setup(void)
 }
 
 static void
-create_from_config_file_cases(void)
-{
-	struct spdk_conf *config;
-	struct spdk_conf_section *sp;
-	char section_name[64];
-	int section_index;
-	int rc;
-
-	config = spdk_conf_allocate();
-
-	rc = spdk_conf_read(config, config_file);
-	CU_ASSERT(rc == 0);
-
-	section_index = 0;
-	while (true) {
-		snprintf(section_name, sizeof(section_name), "IG_Valid%d", section_index);
-
-		sp = spdk_conf_find_section(config, section_name);
-		if (sp == NULL) {
-			break;
-		}
-
-		rc = iscsi_parse_init_grp(sp);
-		CU_ASSERT(rc == 0);
-
-		iscsi_init_grps_destroy();
-
-		section_index++;
-	}
-
-	section_index = 0;
-	while (true) {
-		snprintf(section_name, sizeof(section_name), "IG_Invalid%d", section_index);
-
-		sp = spdk_conf_find_section(config, section_name);
-		if (sp == NULL) {
-			break;
-		}
-
-		rc = iscsi_parse_init_grp(sp);
-		CU_ASSERT(rc != 0);
-
-		iscsi_init_grps_destroy();
-
-		section_index++;
-	}
-
-	spdk_conf_free(config);
-}
-
-
-static void
 create_initiator_group_success_case(void)
 {
 	struct spdk_iscsi_init_grp *ig;
@@ -647,7 +595,6 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("init_grp_suite", test_setup, NULL);
 
-	CU_ADD_TEST(suite, create_from_config_file_cases);
 	CU_ADD_TEST(suite, create_initiator_group_success_case);
 	CU_ADD_TEST(suite, find_initiator_group_success_case);
 	CU_ADD_TEST(suite, register_initiator_group_twice_case);
