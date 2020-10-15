@@ -1006,11 +1006,16 @@ static void spdk_fio_cleanup(struct thread_data *td)
 	g_td_count--;
 	if (g_td_count == 0) {
 		struct spdk_fio_ctrlr	*fio_ctrlr, *fio_ctrlr_tmp;
+		struct spdk_nvme_detach_ctx	*detach_ctx = NULL;
 
 		TAILQ_FOREACH_SAFE(fio_ctrlr, &g_ctrlrs, link, fio_ctrlr_tmp) {
 			TAILQ_REMOVE(&g_ctrlrs, fio_ctrlr, link);
-			spdk_nvme_detach(fio_ctrlr->ctrlr);
+			spdk_nvme_detach_async(fio_ctrlr->ctrlr, &detach_ctx);
 			free(fio_ctrlr);
+		}
+
+		while (detach_ctx && spdk_nvme_detach_poll_async(detach_ctx) == -EAGAIN) {
+			;
 		}
 
 		if (fio_options->enable_vmd) {

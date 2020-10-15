@@ -372,6 +372,7 @@ cleanup(void)
 {
 	struct ns_entry *ns_entry, *tmp_ns_entry;
 	struct ctrlr_entry *ctrlr_entry, *tmp_ctrlr_entry;
+	struct spdk_nvme_detach_ctx *detach_ctx = NULL;
 
 	TAILQ_FOREACH_SAFE(ns_entry, &g_namespaces, link, tmp_ns_entry) {
 		TAILQ_REMOVE(&g_namespaces, ns_entry, link);
@@ -380,8 +381,12 @@ cleanup(void)
 
 	TAILQ_FOREACH_SAFE(ctrlr_entry, &g_controllers, link, tmp_ctrlr_entry) {
 		TAILQ_REMOVE(&g_controllers, ctrlr_entry, link);
-		spdk_nvme_detach(ctrlr_entry->ctrlr);
+		spdk_nvme_detach_async(ctrlr_entry->ctrlr, &detach_ctx);
 		free(ctrlr_entry);
+	}
+
+	while (detach_ctx && spdk_nvme_detach_poll_async(detach_ctx) == -EAGAIN) {
+		;
 	}
 }
 
