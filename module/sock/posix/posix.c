@@ -1344,6 +1344,7 @@ posix_sock_impl_get_opts(struct spdk_sock_impl_opts *opts, size_t *len)
 		errno = EINVAL;
 		return -1;
 	}
+	memset(opts, 0, *len);
 
 #define FIELD_OK(field) \
 	offsetof(struct spdk_sock_impl_opts, field) + sizeof(opts->field) <= *len
