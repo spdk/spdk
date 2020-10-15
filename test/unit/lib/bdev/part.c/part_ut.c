@@ -40,8 +40,6 @@
 /* HACK: disable VTune integration so the unit test doesn't need VTune headers and libs to build */
 #undef SPDK_CONFIG_VTUNE
 
-#include "spdk_internal/thread.h"
-
 #include "bdev/bdev.c"
 #include "bdev/part.c"
 

@@ -31,8 +31,6 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk_internal/thread.h"
-
 #include "spdk/ftl.h"
 #include "ftl/ftl_core.h"
 

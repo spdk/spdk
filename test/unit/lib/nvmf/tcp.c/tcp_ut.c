@@ -36,7 +36,6 @@
 #include "spdk_cunit.h"
 
 #include "spdk_internal/mock.h"
-#include "spdk_internal/thread.h"
 
 #include "common/lib/test_env.c"
 #include "common/lib/test_sock.c"

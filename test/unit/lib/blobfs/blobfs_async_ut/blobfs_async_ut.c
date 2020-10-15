@@ -42,8 +42,6 @@
 #include "blobfs/tree.c"
 #include "blob/blobstore.h"
 
-#include "spdk_internal/thread.h"
-
 #include "unit/lib/blob/bs_dev_common.c"
 
 struct spdk_filesystem *g_fs;

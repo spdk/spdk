@@ -42,7 +42,6 @@
 #include "spdk/queue.h"
 #include "spdk/util.h"
 
-#include "spdk_internal/thread.h"
 #include "spdk_internal/event.h"
 
 #include "config-host.h"

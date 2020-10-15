@@ -36,7 +36,6 @@
 #include "spdk_cunit.h"
 #include "spdk/blob.h"
 #include "spdk/string.h"
-#include "spdk_internal/thread.h"
 
 #include "common/lib/ut_multithread.c"
 #include "../bs_dev_common.c"

@@ -45,8 +45,6 @@ extern "C" {
 #include "spdk/log.h"
 #include "spdk/thread.h"
 #include "spdk/bdev.h"
-
-#include "spdk_internal/thread.h"
 }
 
 namespace rocksdb

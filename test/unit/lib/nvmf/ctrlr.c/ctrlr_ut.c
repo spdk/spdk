@@ -35,7 +35,6 @@
 
 #include "spdk_cunit.h"
 #include "spdk_internal/mock.h"
-#include "spdk_internal/thread.h"
 
 #include "common/lib/ut_multithread.c"
 #include "nvmf/ctrlr.c"

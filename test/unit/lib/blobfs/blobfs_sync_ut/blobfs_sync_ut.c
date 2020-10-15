@@ -38,7 +38,6 @@
 #include "spdk/log.h"
 #include "spdk/thread.h"
 #include "spdk/barrier.h"
-#include "spdk_internal/thread.h"
 
 #include "spdk_cunit.h"
 #include "unit/lib/blob/bs_dev_common.c"

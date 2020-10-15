@@ -42,8 +42,6 @@
 #include "iscsi/portal_grp.c"
 #include "unit/lib/json_mock.c"
 
-#include "spdk_internal/thread.h"
-
 DEFINE_STUB(iscsi_conn_construct, int,
 	    (struct spdk_iscsi_portal *portal, struct spdk_sock *sock),
 	    0);

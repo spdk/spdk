@@ -36,8 +36,6 @@
 #include "common/lib/ut_multithread.c"
 #include "unit/lib/json_mock.c"
 
-#include "spdk_internal/thread.h"
-
 #include "bdev/pmem/bdev_pmem.c"
 
 static struct spdk_bdev_module *g_bdev_pmem_module;
