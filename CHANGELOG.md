@@ -23,6 +23,10 @@ Removed `spdk_bdev_config_text` function for bdev modules to report legacy confi
 A new `spdk_bdev_create_bs_dev_ext` function has been added and `spdk_bdev_create_bs_dev_from_desc`
 function has been deprecated.
 
+### event
+
+Removed `spdk_subsystem_config` callback for submodules as part of legacy config removal.
+
 ### dpdk
 
 Updated DPDK submodule to DPDK 20.08.

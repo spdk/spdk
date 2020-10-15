@@ -58,7 +58,6 @@ static struct spdk_subsystem g_spdk_subsystem_interface = {
 	.name = "interface",
 	.init = interface_subsystem_init,
 	.fini = interface_subsystem_destroy,
-	.config = NULL,
 };
 
 SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_interface);

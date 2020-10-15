@@ -58,7 +58,6 @@ static struct spdk_subsystem g_spdk_subsystem_scsi = {
 	.name = "scsi",
 	.init = scsi_subsystem_init,
 	.fini = scsi_subsystem_fini,
-	.config = NULL,
 };
 
 SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_scsi);

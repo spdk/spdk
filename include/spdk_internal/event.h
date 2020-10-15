@@ -118,7 +118,6 @@ struct spdk_subsystem {
 	/* User must call spdk_subsystem_init_next() when they are done with their initialization. */
 	void (*init)(void);
 	void (*fini)(void);
-	void (*config)(FILE *fp);
 
 	/**
 	 * Write JSON configuration handler.
@@ -151,7 +150,6 @@ void spdk_subsystem_init(spdk_subsystem_init_fn cb_fn, void *cb_arg);
 void spdk_subsystem_fini(spdk_msg_fn cb_fn, void *cb_arg);
 void spdk_subsystem_init_next(int rc);
 void spdk_subsystem_fini_next(void);
-void spdk_subsystem_config(FILE *fp);
 void spdk_app_json_config_load(const char *json_config_file, const char *rpc_addr,
 			       spdk_subsystem_init_fn cb_fn, void *cb_arg,
 			       bool stop_on_error);

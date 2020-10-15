@@ -266,18 +266,6 @@ spdk_subsystem_fini(spdk_msg_fn cb_fn, void *cb_arg)
 }
 
 void
-spdk_subsystem_config(FILE *fp)
-{
-	struct spdk_subsystem *subsystem;
-
-	TAILQ_FOREACH(subsystem, &g_subsystems, tailq) {
-		if (subsystem->config) {
-			subsystem->config(fp);
-		}
-	}
-}
-
-void
 spdk_subsystem_config_json(struct spdk_json_write_ctx *w, struct spdk_subsystem *subsystem)
 {
 	if (subsystem && subsystem->write_config_json) {

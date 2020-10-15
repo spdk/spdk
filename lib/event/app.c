@@ -209,7 +209,6 @@ spdk_app_get_running_config(char **config_str, char *name)
 	setvbuf(fp, vbuf, _IOFBF, BUFSIZ);
 
 	app_config_dump_global_section(fp);
-	spdk_subsystem_config(fp);
 
 	length = ftell(fp);
 

@@ -54,7 +54,6 @@ set_up_subsystem(struct spdk_subsystem *subsystem, const char *name)
 {
 	subsystem->init = NULL;
 	subsystem->fini = NULL;
-	subsystem->config = NULL;
 	subsystem->name = name;
 }
 

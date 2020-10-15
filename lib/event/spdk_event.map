@@ -36,7 +36,6 @@
 	spdk_subsystem_fini;
 	spdk_subsystem_init_next;
 	spdk_subsystem_fini_next;
-	spdk_subsystem_config;
 	spdk_app_json_config_load;
 	spdk_subsystem_config_json;
 	spdk_rpc_initialize;

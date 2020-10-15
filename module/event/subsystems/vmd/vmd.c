@@ -107,7 +107,6 @@ vmd_write_config_json(struct spdk_json_write_ctx *w)
 static struct spdk_subsystem g_spdk_subsystem_vmd = {
 	.name = "vmd",
 	.fini = vmd_subsystem_fini,
-	.config = NULL,
 	.write_config_json = vmd_write_config_json,
 };
 
