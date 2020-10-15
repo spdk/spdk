@@ -162,6 +162,10 @@ A new API `spdk_ioat_get_max_descriptors` was added.
 
 ### nvme
 
+If no specific command set is requested (by setting the command_set member in the
+`spdk_nvme_ctrlr_opts` structure), SPDK will automatically select the most appropriate
+command set based on what the controller supports.
+
 An `opts_size`element was added in the  `spdk_nvme_ctrlr_opts` structure
 to solve the ABI compatiblity issue between different SPDK version.
 

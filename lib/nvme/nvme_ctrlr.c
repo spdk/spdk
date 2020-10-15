@@ -188,7 +188,7 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 	}
 
 	if (FIELD_OK(command_set)) {
-		opts->command_set = SPDK_NVME_CC_CSS_NVM;
+		opts->command_set = CHAR_BIT;
 	}
 
 	if (FIELD_OK(admin_timeout_ms)) {
@@ -1028,12 +1028,35 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 	/* Page size is 2 ^ (12 + mps). */
 	cc.bits.mps = spdk_u32log2(ctrlr->page_size) - 12;
 
+	/*
+	 * Since NVMe 1.0, a controller should have at least one bit set in CAP.CSS.
+	 * A controller that does not have any bit set in CAP.CSS is not spec compliant.
+	 * Try to support such a controller regardless.
+	 */
 	if (ctrlr->cap.bits.css == 0) {
 		SPDK_INFOLOG(nvme,
 			     "Drive reports no command sets supported. Assuming NVM is supported.\n");
 		ctrlr->cap.bits.css = SPDK_NVME_CAP_CSS_NVM;
 	}
 
+	/*
+	 * If the user did not explicitly request a command set, or supplied a value larger than
+	 * what can be saved in CC.CSS, use the most reasonable default.
+	 */
+	if (ctrlr->opts.command_set >= CHAR_BIT) {
+		if (ctrlr->cap.bits.css & SPDK_NVME_CAP_CSS_IOCS) {
+			ctrlr->opts.command_set = SPDK_NVME_CC_CSS_IOCS;
+		} else if (ctrlr->cap.bits.css & SPDK_NVME_CAP_CSS_NVM) {
+			ctrlr->opts.command_set = SPDK_NVME_CC_CSS_NVM;
+		} else if (ctrlr->cap.bits.css & SPDK_NVME_CAP_CSS_NOIO) {
+			ctrlr->opts.command_set = SPDK_NVME_CC_CSS_NOIO;
+		} else {
+			/* Invalid supported bits detected, falling back to NVM. */
+			ctrlr->opts.command_set = SPDK_NVME_CC_CSS_NVM;
+		}
+	}
+
+	/* Verify that the selected command set is supported by the controller. */
 	if (!(ctrlr->cap.bits.css & (1u << ctrlr->opts.command_set))) {
 		SPDK_DEBUGLOG(nvme, "Requested I/O command set %u but supported mask is 0x%x\n",
 			      ctrlr->opts.command_set, ctrlr->cap.bits.css);
