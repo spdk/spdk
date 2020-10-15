@@ -53,17 +53,7 @@ DEFINE_STUB(spdk_nvmf_transport_stop_listen,
 	    (struct spdk_nvmf_transport *transport,
 	     const struct spdk_nvme_transport_id *trid), 0);
 
-int
-spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
-	       void *remove_ctx, struct spdk_bdev_desc **desc)
-{
-	return 0;
-}
-
-void
-spdk_bdev_close(struct spdk_bdev_desc *desc)
-{
-}
+DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
 
 const char *
 spdk_bdev_get_name(const struct spdk_bdev *bdev)
