@@ -35,7 +35,6 @@
 #include "spdk/likely.h"
 
 #include "spdk_internal/event.h"
-#include "spdk_internal/thread.h"
 
 #include "spdk/log.h"
 #include "spdk/thread.h"

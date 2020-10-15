@@ -36,6 +36,7 @@
 #include "spdk_cunit.h"
 #include "common/lib/test_env.c"
 #include "event/reactor.c"
+#include "spdk_internal/thread.h"
 
 static void
 test_create_reactor(void)
