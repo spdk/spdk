@@ -743,7 +743,7 @@ spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan, void *dst, const void *
 {
 	struct idxd_hw_desc *desc;
 	uint64_t src_addr, dst_addr;
-	uint64_t src_nbytes, dst_nbytes;
+	uint64_t src_nbytes = 0, dst_nbytes = 0;
 
 	/* Common prep. */
 	desc = _idxd_prep_command(chan, cb_fn, cb_arg, NULL);
@@ -781,7 +781,7 @@ spdk_idxd_submit_dualcast(struct spdk_idxd_io_channel *chan, void *dst1, void *d
 {
 	struct idxd_hw_desc *desc;
 	uint64_t src_addr, dst1_addr, dst2_addr;
-	uint64_t src_nbytes, dst1_nbytes, dst2_nbytes;
+	uint64_t src_nbytes = 0, dst1_nbytes = 0, dst2_nbytes = 0;
 
 	if ((uintptr_t)dst1 & (ALIGN_4K - 1) || (uintptr_t)dst2 & (ALIGN_4K - 1)) {
 		SPDK_ERRLOG("Dualcast requires 4K alignment on dst addresses\n");
@@ -827,7 +827,7 @@ spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan, void *src1, const vo
 {
 	struct idxd_hw_desc *desc;
 	uint64_t src1_addr, src2_addr;
-	uint64_t src1_nbytes, src2_nbytes;
+	uint64_t src1_nbytes = 0, src2_nbytes = 0;
 
 	/* Common prep. */
 	desc = _idxd_prep_command(chan, cb_fn, cb_arg, NULL);
@@ -864,7 +864,7 @@ spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan, void *dst, uint64_t fil
 {
 	struct idxd_hw_desc *desc;
 	uint64_t dst_addr;
-	uint64_t dst_nbytes;
+	uint64_t dst_nbytes = 0;
 
 	/* Common prep. */
 	desc = _idxd_prep_command(chan, cb_fn, cb_arg, NULL);
@@ -901,7 +901,7 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan, uint32_t *dst, void *
 {
 	struct idxd_hw_desc *desc;
 	uint64_t src_addr, dst_addr;
-	uint64_t src_nbytes, dst_nbytes;
+	uint64_t src_nbytes = 0, dst_nbytes = 0;
 
 	/* Common prep. */
 	desc = _idxd_prep_command(chan, cb_fn, cb_arg, NULL);
@@ -1090,7 +1090,7 @@ spdk_idxd_batch_prep_copy(struct spdk_idxd_io_channel *chan, struct idxd_batch *
 {
 	struct idxd_hw_desc *desc;
 	uint64_t src_addr, dst_addr;
-	uint64_t src_nbytes, dst_nbytes;
+	uint64_t src_nbytes = 0, dst_nbytes = 0;
 
 	/* Common prep. */
 	desc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch);
@@ -1125,7 +1125,7 @@ spdk_idxd_batch_prep_fill(struct spdk_idxd_io_channel *chan, struct idxd_batch *
 {
 	struct idxd_hw_desc *desc;
 	uint64_t dst_addr;
-	uint64_t dst_nbytes;
+	uint64_t dst_nbytes = 0;
 
 	/* Common prep. */
 	desc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch);
@@ -1158,7 +1158,7 @@ spdk_idxd_batch_prep_dualcast(struct spdk_idxd_io_channel *chan, struct idxd_bat
 {
 	struct idxd_hw_desc *desc;
 	uint64_t src_addr, dst1_addr, dst2_addr;
-	uint64_t src_nbytes, dst1_nbytes, dst2_nbytes;
+	uint64_t src_nbytes = 0, dst1_nbytes = 0, dst2_nbytes = 0;
 
 	if ((uintptr_t)dst1 & (ALIGN_4K - 1) || (uintptr_t)dst2 & (ALIGN_4K - 1)) {
 		SPDK_ERRLOG("Dualcast requires 4K alignment on dst addresses\n");
@@ -1200,7 +1200,7 @@ spdk_idxd_batch_prep_crc32c(struct spdk_idxd_io_channel *chan, struct idxd_batch
 {
 	struct idxd_hw_desc *desc;
 	uint64_t src_addr, dst_addr;
-	uint64_t src_nbytes, dst_nbytes;
+	uint64_t src_nbytes = 0, dst_nbytes = 0;
 
 	/* Common prep. */
 	desc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch);
@@ -1237,7 +1237,7 @@ spdk_idxd_batch_prep_compare(struct spdk_idxd_io_channel *chan, struct idxd_batc
 {
 	struct idxd_hw_desc *desc;
 	uint64_t src1_addr, src2_addr;
-	uint64_t src1_nbytes, src2_nbytes;
+	uint64_t src1_nbytes = 0, src2_nbytes = 0;
 
 	/* Common prep. */
 	desc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch);
