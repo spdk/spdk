@@ -682,27 +682,27 @@ dd_open_file(struct dd_target *target, const char *fname, int flags, uint64_t sk
 	}
 }
 
+static void
+dd_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
+		 void *event_ctx)
+{
+	SPDK_NOTICELOG("Unsupported bdev event: type %d\n", type);
+}
+
 static int
 dd_open_bdev(struct dd_target *target, const char *bdev_name, uint64_t skip_blocks)
 {
 	int rc;
 
 	target->type = DD_TARGET_TYPE_BDEV;
-	target->u.bdev.bdev = spdk_bdev_get_by_name(bdev_name);
-	if (target->u.bdev.bdev == NULL) {
-		SPDK_ERRLOG("Could not find bdev %s\n", bdev_name);
-		return -EINVAL;
-	}
 
-	target->block_size = spdk_bdev_get_block_size(target->u.bdev.bdev);
-	target->total_size = spdk_bdev_get_num_blocks(target->u.bdev.bdev) * target->block_size;
-
-	rc = spdk_bdev_open(target->u.bdev.bdev, true, NULL, NULL, &target->u.bdev.desc);
+	rc = spdk_bdev_open_ext(bdev_name, true, dd_bdev_event_cb, NULL, &target->u.bdev.desc);
 	if (rc < 0) {
 		SPDK_ERRLOG("Could not open bdev %s: %s\n", bdev_name, strerror(-rc));
 		return rc;
 	}
 
+	target->u.bdev.bdev = spdk_bdev_desc_get_bdev(target->u.bdev.desc);
 	target->open = true;
 
 	target->u.bdev.ch = spdk_bdev_get_io_channel(target->u.bdev.desc);
@@ -711,6 +711,9 @@ dd_open_bdev(struct dd_target *target, const char *bdev_name, uint64_t skip_bloc
 		SPDK_ERRLOG("Could not get I/O channel: %s\n", strerror(ENOMEM));
 		return -ENOMEM;
 	}
+
+	target->block_size = spdk_bdev_get_block_size(target->u.bdev.bdev);
+	target->total_size = spdk_bdev_get_num_blocks(target->u.bdev.bdev) * target->block_size;
 
 	g_opts.queue_depth = spdk_min(g_opts.queue_depth,
 				      (target->total_size / g_opts.io_unit_size) - skip_blocks + 1);
