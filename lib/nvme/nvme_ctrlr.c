@@ -1378,6 +1378,8 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	/* I/O Command Set Specific Identify Controller data is invalidated during reset */
 	nvme_ctrlr_free_iocs_specific_data(ctrlr);
 
+	spdk_bit_array_free(&ctrlr->free_io_qids);
+
 	/* Set the state back to INIT to cause a full hardware reset. */
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT, NVME_TIMEOUT_INFINITE);
 
@@ -1400,6 +1402,8 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	if (rc == 0 && ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
 		/* Reinitialize qpairs */
 		TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
+			assert(spdk_bit_array_get(ctrlr->free_io_qids, qpair->id));
+			spdk_bit_array_clear(ctrlr->free_io_qids, qpair->id);
 			rc_tmp = nvme_transport_ctrlr_connect_qpair(ctrlr, qpair);
 			if (rc_tmp != 0) {
 				rc = rc_tmp;
