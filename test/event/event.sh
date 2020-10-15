@@ -25,7 +25,10 @@ function app_repeat_test() {
 		$rootdir/scripts/rpc.py -s $rpc_server bdev_malloc_create 64 4096
 
 		nbd_rpc_data_verify $rpc_server "${bdev_list[*]}" "${nbd_list[*]}"
-		./scripts/rpc.py -s $rpc_server spdk_kill_instance SIGUSR1
+		# This SIGTERM is sent to the app_repeat test app - it doesn't actually
+		# terminate the app, it just causes it go through another
+		# spdk_app_stop/spdk_app_start cycle
+		./scripts/rpc.py -s $rpc_server spdk_kill_instance SIGTERM
 	done
 
 	waitforlisten $repeat_pid $rpc_server

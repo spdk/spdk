@@ -40,7 +40,6 @@
 struct spdk_app_opts g_opts = {};
 static const char g_app_repeat_get_opts_string[] = "t:";
 static int g_repeat_times = 2;
-static bool g_exit;
 
 static void
 app_repeat_usage(void)
@@ -74,14 +73,7 @@ app_repeat_started(void *arg1)
 
 static void _app_repeat_shutdown_cb(void)
 {
-	printf("Shutdown signal received, exit.\n");
-	g_exit = true;
-	spdk_app_stop(0);
-}
-
-static void _app_repeat_usr1_handler(int signal)
-{
-	printf("USR1 signal received, restart spdk application framework.\n");
+	printf("Shutdown signal received, stop current app iteration\n");
 	spdk_app_stop(0);
 }
 
@@ -94,7 +86,6 @@ main(int argc, char **argv)
 	spdk_app_opts_init(&g_opts);
 	g_opts.name = "app_repeat";
 	g_opts.shutdown_cb = _app_repeat_shutdown_cb;
-	g_opts.usr1_handler = _app_repeat_usr1_handler;
 	if ((rc = spdk_app_parse_args(argc, argv, &g_opts, g_app_repeat_get_opts_string,
 				      NULL, app_repeat_parse_arg, app_repeat_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {

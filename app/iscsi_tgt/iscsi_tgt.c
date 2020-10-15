@@ -42,21 +42,6 @@
 static int g_daemon_mode = 0;
 
 static void
-spdk_sigusr1(int signo __attribute__((__unused__)))
-{
-	char *config_str = NULL;
-	if (spdk_app_get_running_config(&config_str, "iscsi.conf") < 0) {
-		fprintf(stderr, "Error getting config\n");
-	} else {
-		fprintf(stdout, "============================\n");
-		fprintf(stdout, " iSCSI target running config\n");
-		fprintf(stdout, "=============================\n");
-		fprintf(stdout, "%s", config_str);
-	}
-	free(config_str);
-}
-
-static void
 iscsi_usage(void)
 {
 	printf(" -b                        run iscsi target background, the default is foreground\n");
@@ -106,7 +91,6 @@ main(int argc, char **argv)
 	}
 
 	opts.shutdown_cb = NULL;
-	opts.usr1_handler = spdk_sigusr1;
 
 	/* Blocks until the application is exiting */
 	rc = spdk_app_start(&opts, spdk_startup, NULL);

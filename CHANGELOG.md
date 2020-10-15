@@ -27,6 +27,9 @@ function has been deprecated.
 
 Removed `spdk_subsystem_config` callback for submodules as part of legacy config removal.
 
+Removed `spdk_app_get_running_config` function that printed configuration in legacy format,
+and removed `usr1_handler` from `struct spdk_app_opts` callback that was used to call it.
+
 ### dpdk
 
 Updated DPDK submodule to DPDK 20.08.

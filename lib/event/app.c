@@ -137,98 +137,6 @@ static const struct option g_cmdline_options[] = {
 	{"base-virtaddr",		required_argument,	NULL, BASE_VIRTADDR_OPT_IDX},
 };
 
-/* Global section */
-#define GLOBAL_CONFIG_TMPL \
-"# Configuration file\n" \
-"#\n" \
-"# Please write all parameters using ASCII.\n" \
-"# The parameter must be quoted if it includes whitespace.\n" \
-"#\n" \
-"# Configuration syntax:\n" \
-"# Spaces at head of line are deleted, other spaces are as separator\n" \
-"# Lines starting with '#' are comments and not evaluated.\n" \
-"# Lines ending with '\\' are concatenated with the next line.\n" \
-"# Bracketed keys are section keys grouping the following value keys.\n" \
-"# Number of section key is used as a tag number.\n" \
-"#  Ex. [TargetNode1] = TargetNode section key with tag number 1\n" \
-"[Global]\n" \
-"  Comment \"Global section\"\n" \
-"\n" \
-"  # Users can restrict work items to only run on certain cores by\n" \
-"  #  specifying a ReactorMask.  Default is to allow work items to run\n" \
-"  #  on all cores.  Core 0 must be set in the mask if one is specified.\n" \
-"  # Default: 0xFFFF (cores 0-15)\n" \
-"  ReactorMask \"0x%s\"\n" \
-"\n" \
-"  # Tracepoint group mask for spdk trace buffers\n" \
-"  # Default: 0x0 (all tracepoint groups disabled)\n" \
-"  # Set to 0xFFFF to enable all tracepoint groups.\n" \
-"  TpointGroupMask \"0x%" PRIX64 "\"\n" \
-"\n" \
-
-static void
-app_config_dump_global_section(FILE *fp)
-{
-	const struct spdk_cpuset *coremask;
-	struct spdk_cpuset tmp_mask;
-
-	if (NULL == fp) {
-		return;
-	}
-
-	coremask = spdk_app_get_core_mask();
-	spdk_cpuset_copy(&tmp_mask, coremask);
-
-	fprintf(fp, GLOBAL_CONFIG_TMPL, spdk_cpuset_fmt(&tmp_mask),
-		spdk_trace_get_tpoint_group_mask());
-}
-
-int
-spdk_app_get_running_config(char **config_str, char *name)
-{
-	FILE *fp = NULL;
-	int fd = -1;
-	long length = 0, ret = 0;
-	char vbuf[BUFSIZ];
-	char config_template[64];
-
-	snprintf(config_template, sizeof(config_template), "/tmp/%s.XXXXXX", name);
-	/* Create temporary file to hold config */
-	fd = mkstemp(config_template);
-	if (fd == -1) {
-		SPDK_ERRLOG("mkstemp failed\n");
-		return -1;
-	}
-	fp = fdopen(fd, "wb+");
-	if (NULL == fp) {
-		SPDK_ERRLOG("error opening tmpfile fd = %d\n", fd);
-		return -1;
-	}
-
-	/* Buffered IO */
-	setvbuf(fp, vbuf, _IOFBF, BUFSIZ);
-
-	app_config_dump_global_section(fp);
-
-	length = ftell(fp);
-
-	*config_str = malloc(length + 1);
-	if (!*config_str) {
-		SPDK_ERRLOG("out-of-memory for config\n");
-		fclose(fp);
-		return -1;
-	}
-	fseek(fp, 0, SEEK_SET);
-	ret = fread(*config_str, sizeof(char), length, fp);
-	if (ret < length) {
-		SPDK_ERRLOG("short read\n");
-	}
-	fclose(fp);
-	(*config_str)[length] = '\0';
-
-	return 0;
-}
-
 static void
 app_start_shutdown(void *ctx)
 {
@@ -331,16 +239,6 @@ app_setup_signal_handlers(struct spdk_app_opts *opts)
 		return rc;
 	}
 	sigaddset(&sigmask, SIGTERM);
-
-	if (opts->usr1_handler != NULL) {
-		sigact.sa_handler = opts->usr1_handler;
-		rc = sigaction(SIGUSR1, &sigact, NULL);
-		if (rc < 0) {
-			SPDK_ERRLOG("sigaction(SIGUSR1) failed\n");
-			return rc;
-		}
-		sigaddset(&sigmask, SIGUSR1);
-	}
 
 	pthread_sigmask(SIG_UNBLOCK, &sigmask, NULL);
 

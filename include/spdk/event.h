@@ -99,7 +99,6 @@ struct spdk_app_opts {
 	int shm_id;
 
 	spdk_app_shutdown_cb	shutdown_cb;
-	spdk_sighandler_t	usr1_handler;
 
 	bool			enable_coredump;
 	int			mem_channel;
@@ -206,16 +205,6 @@ void spdk_app_start_shutdown(void);
  * \param rc The rc value specified here will be returned to caller of spdk_app_start().
  */
 void spdk_app_stop(int rc);
-
-/**
- * Generate a configuration file that corresponds to the current running state.
- *
- * \param config_str Values obtained from the generated configuration file.
- * \param name Prefix for name of temporary configuration file to save the current config.
- *
- * \return 0 on success, -1 on failure.
- */
-int spdk_app_get_running_config(char **config_str, char *name);
 
 /**
  * Return the shared memory id for this application.
