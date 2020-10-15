@@ -134,7 +134,8 @@ enum spdk_log_level spdk_log_get_print_level(void);
 	spdk_log(SPDK_LOG_NOTICE, NULL, -1, NULL, __VA_ARGS__)
 #define SPDK_INFOLOG(FLAG, ...)									\
 	do {											\
-		if (spdk_log_get_flag(#FLAG)) {							\
+		extern struct spdk_log_flag SPDK_LOG_##FLAG;					\
+		if (SPDK_LOG_##FLAG.enabled) {							\
 			spdk_log(SPDK_LOG_INFO, __FILE__, __LINE__, __func__, __VA_ARGS__);	\
 		}										\
 	} while (0)
@@ -142,14 +143,16 @@ enum spdk_log_level spdk_log_get_print_level(void);
 #ifdef DEBUG
 #define SPDK_DEBUGLOG(FLAG, ...)								\
 	do {											\
-		if (SPDK_DEBUGLOG_FLAG_ENABLED(#FLAG)) {					\
+		extern struct spdk_log_flag SPDK_LOG_##FLAG;					\
+		if (SPDK_LOG_##FLAG.enabled) {							\
 			spdk_log(SPDK_LOG_DEBUG, __FILE__, __LINE__, __func__, __VA_ARGS__);	\
 		}										\
 	} while (0)
 
 #define SPDK_LOGDUMP(FLAG, LABEL, BUF, LEN)				\
 	do {								\
-		if (SPDK_DEBUGLOG_FLAG_ENABLED(#FLAG)) {		\
+		extern struct spdk_log_flag SPDK_LOG_##FLAG;		\
+		if (SPDK_LOG_##FLAG.enabled) {				\
 			spdk_log_dump(stderr, (LABEL), (BUF), (LEN));	\
 		}							\
 	} while (0)
