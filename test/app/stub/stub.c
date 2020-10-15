@@ -52,11 +52,16 @@ static void
 cleanup(void)
 {
 	struct ctrlr_entry *ctrlr_entry, *tmp;
+	struct spdk_nvme_detach_ctx *detach_ctx = NULL;
 
 	TAILQ_FOREACH_SAFE(ctrlr_entry, &g_controllers, link, tmp) {
 		TAILQ_REMOVE(&g_controllers, ctrlr_entry, link);
-		spdk_nvme_detach(ctrlr_entry->ctrlr);
+		spdk_nvme_detach_async(ctrlr_entry->ctrlr, &detach_ctx);
 		free(ctrlr_entry);
+	}
+
+	while (detach_ctx && spdk_nvme_detach_poll_async(detach_ctx) == -EAGAIN) {
+		;
 	}
 }
 

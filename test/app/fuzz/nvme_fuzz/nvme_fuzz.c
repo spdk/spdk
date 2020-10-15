@@ -537,11 +537,16 @@ static void
 free_controllers(void)
 {
 	struct nvme_fuzz_ctrlr *ctrlr, *tmp;
+	struct spdk_nvme_detach_ctx *detach_ctx = NULL;
 
 	TAILQ_FOREACH_SAFE(ctrlr, &g_ctrlr_list, tailq, tmp) {
 		TAILQ_REMOVE(&g_ctrlr_list, ctrlr, tailq);
-		spdk_nvme_detach(ctrlr->ctrlr);
+		spdk_nvme_detach_async(ctrlr->ctrlr, &detach_ctx);
 		free(ctrlr);
+	}
+
+	while (detach_ctx && spdk_nvme_detach_poll_async(detach_ctx) == -EAGAIN) {
+		;
 	}
 }
 
