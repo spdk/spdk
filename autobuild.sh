@@ -79,18 +79,21 @@ function build_native_dpdk() {
 	fi
 
 	if [[ "$SPDK_TEST_REDUCE" -eq 1 ]]; then
-		git clone --branch v2.29.0 --depth 1 https://github.com/intel/isa-l.git "$external_dpdk_base_dir/isa-l"
-		cd "$external_dpdk_base_dir/isa-l"
+		isal_dir="$external_dpdk_base_dir/isa-l"
+		git clone --branch v2.29.0 --depth 1 https://github.com/intel/isa-l.git "$isal_dir"
+
+		cd $isal_dir
 		./autogen.sh
-		./configure CFLAGS="-fPIC -g -O2" --enable-shared=no
+		./configure CFLAGS="-fPIC -g -O2" --enable-shared=yes --prefix="$isal_dir/build"
 		ln -s $PWD/include $PWD/isa-l
 		$MAKE $MAKEFLAGS all
+		$MAKE install
 		DPDK_DRIVERS+=("compress")
 		DPDK_DRIVERS+=("compress/isal")
 		DPDK_DRIVERS+=("compress/qat")
 		DPDK_DRIVERS+=("common/qat")
-		dpdk_cflags+=" -I$external_dpdk_base_dir/isa-l"
-		dpdk_ldflags+=" -L$external_dpdk_base_dir/isa-l/.libs"
+		export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$isal_dir/build/lib/pkgconfig"
+		export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$isal_dir/build/lib"
 	fi
 
 	# Use difference between DPDK_ALL_DRIVERS and DPDK_DRIVERS as a set of DPDK drivers we don't want or
