@@ -972,8 +972,8 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			}
 #ifdef DEBUG
 			opts->print_level = SPDK_LOG_DEBUG;
-			break;
 #endif
+			break;
 		case HUGE_UNLINK_OPT_IDX:
 			opts->unlink_hugepage = true;
 			break;
