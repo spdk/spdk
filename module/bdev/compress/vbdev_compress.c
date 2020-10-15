@@ -1561,7 +1561,6 @@ static const struct spdk_bdev_fn_table vbdev_compress_fn_table = {
 static struct spdk_bdev_module compress_if = {
 	.name = "compress",
 	.module_init = vbdev_compress_init,
-	.config_text = NULL,
 	.get_ctx_size = vbdev_compress_get_ctx_size,
 	.examine_disk = vbdev_compress_examine,
 	.module_fini = vbdev_compress_finish,

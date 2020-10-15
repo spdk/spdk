@@ -88,6 +88,7 @@ struct spdk_bdev_module {
 	/**
 	 * Function called to return a text string representing the
 	 * module's configuration options for inclusion in a configuration file.
+	 * (Deprecated and shall not be called by bdev layer)
 	 */
 	void (*config_text)(FILE *fp);
 

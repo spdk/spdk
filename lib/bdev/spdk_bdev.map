@@ -7,7 +7,6 @@
 	spdk_bdev_examine;
 	spdk_bdev_initialize;
 	spdk_bdev_finish;
-	spdk_bdev_config_text;
 	spdk_bdev_subsystem_config_json;
 	spdk_bdev_get_by_name;
 	spdk_bdev_first;

@@ -981,18 +981,6 @@ bdev_module_get_max_ctx_size(void)
 	return max_bdev_module_size;
 }
 
-void
-spdk_bdev_config_text(FILE *fp)
-{
-	struct spdk_bdev_module *bdev_module;
-
-	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, internal.tailq) {
-		if (bdev_module->config_text) {
-			bdev_module->config_text(fp);
-		}
-	}
-}
-
 static void
 bdev_qos_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 {

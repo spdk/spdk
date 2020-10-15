@@ -243,13 +243,6 @@ void spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg);
 void spdk_bdev_finish(spdk_bdev_fini_cb cb_fn, void *cb_arg);
 
 /**
- * Get the configuration options for the registered block device modules.
- *
- * \param fp The pointer to a file that will be written to the configuration options.
- */
-void spdk_bdev_config_text(FILE *fp);
-
-/**
  * Get the full configuration options for the registered block device modules and created bdevs.
  *
  * \param w pointer to a JSON write context where the configuration will be written.

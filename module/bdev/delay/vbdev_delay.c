@@ -54,7 +54,6 @@ static int vbdev_delay_config_json(struct spdk_json_write_ctx *w);
 static struct spdk_bdev_module delay_if = {
 	.name = "delay",
 	.module_init = vbdev_delay_init,
-	.config_text = NULL,
 	.get_ctx_size = vbdev_delay_get_ctx_size,
 	.examine_config = vbdev_delay_examine,
 	.module_fini = vbdev_delay_finish,

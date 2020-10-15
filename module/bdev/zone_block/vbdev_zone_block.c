@@ -51,7 +51,6 @@ static struct spdk_bdev_module bdev_zoned_if = {
 	.name = "bdev_zoned_block",
 	.module_init = zone_block_init,
 	.module_fini = zone_block_finish,
-	.config_text = NULL,
 	.config_json = zone_block_config_json,
 	.examine_config = zone_block_examine,
 	.get_ctx_size = zone_block_get_ctx_size,
