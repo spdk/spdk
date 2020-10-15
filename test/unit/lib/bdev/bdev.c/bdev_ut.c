@@ -1800,7 +1800,7 @@ bdev_io_alignment(void)
 		.bdev_io_cache_size = 2,
 	};
 	int rc;
-	void *buf;
+	void *buf = NULL;
 	struct iovec iovs[2];
 	int iovcnt;
 	uint64_t alignment;
@@ -2019,7 +2019,7 @@ bdev_io_alignment_with_boundary(void)
 		.bdev_io_cache_size = 2,
 	};
 	int rc;
-	void *buf;
+	void *buf = NULL;
 	struct iovec iovs[2];
 	int iovcnt;
 	uint64_t alignment;
