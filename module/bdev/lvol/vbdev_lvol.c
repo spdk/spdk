@@ -758,8 +758,6 @@ lvol_op_comp(void *cb_arg, int bserrno)
 		}
 	}
 
-	SPDK_INFOLOG(vbdev_lvol, "Vbdev processing callback on device %s with type %d\n",
-		     bdev_io->bdev->name, bdev_io->type);
 	spdk_bdev_io_complete(bdev_io, status);
 }
 
@@ -772,9 +770,6 @@ lvol_unmap(struct spdk_lvol *lvol, struct spdk_io_channel *ch, struct spdk_bdev_
 	start_page = bdev_io->u.bdev.offset_blocks;
 	num_pages = bdev_io->u.bdev.num_blocks;
 
-	SPDK_INFOLOG(vbdev_lvol,
-		     "Vbdev doing unmap at offset %" PRIu64 " using %" PRIu64 " pages on device %s\n", start_page,
-		     num_pages, bdev_io->bdev->name);
 	spdk_blob_io_unmap(blob, ch, start_page, num_pages, lvol_op_comp, bdev_io);
 }
 
@@ -787,9 +782,6 @@ lvol_write_zeroes(struct spdk_lvol *lvol, struct spdk_io_channel *ch, struct spd
 	start_page = bdev_io->u.bdev.offset_blocks;
 	num_pages = bdev_io->u.bdev.num_blocks;
 
-	SPDK_INFOLOG(vbdev_lvol,
-		     "Vbdev doing write zeros at offset %" PRIu64 " using %" PRIu64 " pages on device %s\n", start_page,
-		     num_pages, bdev_io->bdev->name);
 	spdk_blob_io_write_zeroes(blob, ch, start_page, num_pages, lvol_op_comp, bdev_io);
 }
 
@@ -803,9 +795,6 @@ lvol_read(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	start_page = bdev_io->u.bdev.offset_blocks;
 	num_pages = bdev_io->u.bdev.num_blocks;
 
-	SPDK_INFOLOG(vbdev_lvol,
-		     "Vbdev doing read at offset %" PRIu64 " using %" PRIu64 " pages on device %s\n", start_page,
-		     num_pages, bdev_io->bdev->name);
 	spdk_blob_io_readv(blob, ch, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, start_page,
 			   num_pages, lvol_op_comp, bdev_io);
 }
@@ -819,9 +808,6 @@ lvol_write(struct spdk_lvol *lvol, struct spdk_io_channel *ch, struct spdk_bdev_
 	start_page = bdev_io->u.bdev.offset_blocks;
 	num_pages = bdev_io->u.bdev.num_blocks;
 
-	SPDK_INFOLOG(vbdev_lvol,
-		     "Vbdev doing write at offset %" PRIu64 " using %" PRIu64 " pages on device %s\n", start_page,
-		     num_pages, bdev_io->bdev->name);
 	spdk_blob_io_writev(blob, ch, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, start_page,
 			    num_pages, lvol_op_comp, bdev_io);
 }
@@ -849,8 +835,6 @@ static void
 vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_lvol *lvol = bdev_io->bdev->ctxt;
-
-	SPDK_INFOLOG(vbdev_lvol, "Vbdev request type %d submitted\n", bdev_io->type);
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
