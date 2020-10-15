@@ -886,6 +886,8 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	struct spdk_nvme_sgl_descriptor *sgl;
 	struct spdk_nvme_sgl_descriptor sgl_desc[SPDK_NVMF_MAX_SGL_ENTRIES] = {{0}};
 	struct spdk_nvmf_rdma_request_data data;
+	char data2_buffer[8192];
+	struct spdk_nvmf_rdma_request_data *data2 = (struct spdk_nvmf_rdma_request_data *)data2_buffer;
 	struct spdk_nvmf_transport_pg_cache_buf	buffer;
 	struct spdk_nvmf_transport_pg_cache_buf	*buffer_ptr;
 	const uint32_t data_bs = 512;
@@ -1138,8 +1140,8 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 
 	/* Part 7: simple I/O, number of SGL entries exceeds the number of entries
 	   one WR can hold. Additional WR is chained */
-	MOCK_SET(spdk_mempool_get, &data);
-	aligned_buffer = (void *)((uintptr_t)((char *)&data + NVMF_DATA_BUFFER_MASK) &
+	MOCK_SET(spdk_mempool_get, data2_buffer);
+	aligned_buffer = (void *)((uintptr_t)(data2_buffer + NVMF_DATA_BUFFER_MASK) &
 				  ~NVMF_DATA_BUFFER_MASK);
 	reset_nvmf_rdma_request(&rdma_req);
 	spdk_dif_ctx_init(&rdma_req.req.dif.dif_ctx, data_bs + md_size, md_size, true, false,
@@ -1162,7 +1164,7 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.rkey == 0xEEEE);
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.remote_addr == 0xFFFF);
 	/* additional wr from pool */
-	CU_ASSERT(rdma_req.data.wr.next == (void *)&data.wr);
+	CU_ASSERT(rdma_req.data.wr.next == (void *)&data2->wr);
 	CU_ASSERT(rdma_req.data.wr.next->num_sge == 1);
 	CU_ASSERT(rdma_req.data.wr.next->next == &rdma_req.rsp.wr);
 
