@@ -152,10 +152,8 @@ elif [[ -e /sys/kernel/uevent_helper ]]; then
 		# mdev keeps count of the seqnums on its own on each execution
 		# and saves the count under /dev/mdev.seq. This is then set to
 		# + 1 after the uevents finally settled.
-		while ((timeout--)); do
-			if (($(< /sys/kernel/uevent_seqnum) + 1 != $(< /dev/mdev.seq))); then
-				sleep 1s
-			fi
+		while ((timeout-- && $(< /sys/kernel/uevent_seqnum) + 1 != $(< /dev/mdev.seq))); do
+			sleep 1s
 		done
 		if ((timeout < 0)); then
 			printf '* Events not synced in time, %s devices (%s) may be missing\n' \
