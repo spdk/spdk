@@ -555,7 +555,7 @@ cuse_ctrlr_ioctl(fuse_req_t req, int cmd, void *arg,
 		return;
 	}
 
-	switch (cmd) {
+	switch ((unsigned int)cmd) {
 	case NVME_IOCTL_ADMIN_CMD:
 		cuse_nvme_admin_cmd(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
 		break;
@@ -580,7 +580,7 @@ cuse_ns_ioctl(fuse_req_t req, int cmd, void *arg,
 		return;
 	}
 
-	switch (cmd) {
+	switch ((unsigned int)cmd) {
 	case NVME_IOCTL_ADMIN_CMD:
 		cuse_nvme_admin_cmd(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
 		break;
