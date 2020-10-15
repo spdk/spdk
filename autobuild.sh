@@ -218,7 +218,7 @@ function build_doc() {
 
 function autobuild_test_suite() {
 	run_test "autobuild_check_format" ./scripts/check_format.sh
-	run_test "autobuild_external_code" sudo -E --preserve-env=PATH $rootdir/test/external_code/test_make.sh $rootdir
+	run_test "autobuild_external_code" sudo -E --preserve-env=PATH LD_LIBRARY_PATH=$LD_LIBRARY_PATH $rootdir/test/external_code/test_make.sh $rootdir
 	if [ "$SPDK_TEST_OCF" -eq 1 ]; then
 		run_test "autobuild_ocf_precompile" ocf_precompile
 	fi
