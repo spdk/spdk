@@ -648,7 +648,7 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 static inline int
 nvme_rdma_qpair_submit_sends(struct nvme_rdma_qpair *rqpair)
 {
-	struct ibv_send_wr *bad_send_wr;
+	struct ibv_send_wr *bad_send_wr = NULL;
 	int rc;
 
 	rc = spdk_rdma_qp_flush_send_wrs(rqpair->rdma_qp, &bad_send_wr);
