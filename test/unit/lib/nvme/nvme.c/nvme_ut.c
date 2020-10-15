@@ -75,6 +75,23 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 void
+nvme_ctrlr_destruct_async(struct spdk_nvme_ctrlr *ctrlr, struct nvme_ctrlr_detach_ctx *ctx)
+{
+	ut_destruct_called = true;
+}
+
+int
+nvme_ctrlr_destruct_poll_async(struct spdk_nvme_ctrlr *ctrlr,
+			       struct nvme_ctrlr_detach_ctx *ctx)
+{
+	if (ctx->cb_fn) {
+		ctx->cb_fn(ctrlr);
+	}
+
+	return 0;
+}
+
+void
 spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t opts_size)
 {
 	memset(opts, 0, opts_size);
@@ -284,6 +301,7 @@ test_spdk_nvme_connect(void)
 	CU_ASSERT_EQUAL(ret_ctrlr->opts.num_io_queues, 1);
 	CU_ASSERT_EQUAL(ret_ctrlr->opts.opts_size, 4);
 	/* remove the attached ctrlr on the attached_list */
+	MOCK_SET(nvme_ctrlr_get_ref_count, 1);
 	CU_ASSERT(spdk_nvme_detach(&ctrlr) == 0);
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_nvme_driver->shared_attached_ctrlrs));
 
@@ -506,7 +524,7 @@ test_spdk_nvme_detach(void)
 	 * called (we aren't testing what the real destruct function does
 	 * here.)
 	 */
-	MOCK_SET(nvme_ctrlr_get_ref_count, 0);
+	MOCK_SET(nvme_ctrlr_get_ref_count, 1);
 	rc = spdk_nvme_detach(&ctrlr);
 	ret_ctrlr = TAILQ_FIRST(&test_driver.shared_attached_ctrlrs);
 	CU_ASSERT(ret_ctrlr == NULL);
@@ -518,7 +536,7 @@ test_spdk_nvme_detach(void)
 	 * function is not called and that attached ctrl list is
 	 * not empty.
 	 */
-	MOCK_SET(nvme_ctrlr_get_ref_count, 1);
+	MOCK_SET(nvme_ctrlr_get_ref_count, 2);
 	TAILQ_INSERT_TAIL(&test_driver.shared_attached_ctrlrs, &ctrlr, tailq);
 	ut_destruct_called = false;
 	rc = spdk_nvme_detach(&ctrlr);
@@ -536,7 +554,7 @@ test_spdk_nvme_detach(void)
 	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
 	TAILQ_INIT(&g_nvme_attached_ctrlrs);
 	TAILQ_INSERT_TAIL(&g_nvme_attached_ctrlrs, &ctrlr, tailq);
-	MOCK_SET(nvme_ctrlr_get_ref_count, 0);
+	MOCK_SET(nvme_ctrlr_get_ref_count, 1);
 	rc = spdk_nvme_detach(&ctrlr);
 	CU_ASSERT(TAILQ_EMPTY(&g_nvme_attached_ctrlrs));
 	CU_ASSERT(ut_destruct_called == true);

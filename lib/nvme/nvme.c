@@ -63,24 +63,98 @@ nvme_ctrlr_connected(struct spdk_nvme_probe_ctx *probe_ctx,
 	TAILQ_INSERT_TAIL(&probe_ctx->init_ctrlrs, ctrlr, tailq);
 }
 
-int
-spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr)
+static void
+nvme_ctrlr_detach_async_finish(struct spdk_nvme_ctrlr *ctrlr)
 {
 	nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
+	if (nvme_ctrlr_shared(ctrlr)) {
+		TAILQ_REMOVE(&g_spdk_nvme_driver->shared_attached_ctrlrs, ctrlr, tailq);
+	} else {
+		TAILQ_REMOVE(&g_nvme_attached_ctrlrs, ctrlr, tailq);
+	}
+	nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
+}
 
-	nvme_ctrlr_proc_put_ref(ctrlr);
+static int
+nvme_ctrlr_detach_async(struct spdk_nvme_ctrlr *ctrlr,
+			struct nvme_ctrlr_detach_ctx **_ctx)
+{
+	struct nvme_ctrlr_detach_ctx *ctx;
+	int ref_count;
 
-	if (nvme_ctrlr_get_ref_count(ctrlr) == 0) {
-		nvme_io_msg_ctrlr_detach(ctrlr);
-		if (nvme_ctrlr_shared(ctrlr)) {
-			TAILQ_REMOVE(&g_spdk_nvme_driver->shared_attached_ctrlrs, ctrlr, tailq);
-		} else {
-			TAILQ_REMOVE(&g_nvme_attached_ctrlrs, ctrlr, tailq);
+	nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
+
+	ref_count = nvme_ctrlr_get_ref_count(ctrlr);
+	assert(ref_count > 0);
+
+	if (ref_count == 1) {
+		/* This is the last reference to the controller, so we need to
+		 * allocate a context to destruct it.
+		 */
+		ctx = calloc(1, sizeof(*ctx));
+		if (ctx == NULL) {
+			nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
+
+			return -ENOMEM;
 		}
-		nvme_ctrlr_destruct(ctrlr);
+		ctx->cb_fn = nvme_ctrlr_detach_async_finish;
+
+		nvme_ctrlr_proc_put_ref(ctrlr);
+
+		nvme_io_msg_ctrlr_detach(ctrlr);
+
+		nvme_ctrlr_destruct_async(ctrlr, ctx);
+
+		*_ctx = ctx;
+	} else {
+		nvme_ctrlr_proc_put_ref(ctrlr);
 	}
 
 	nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
+
+	return 0;
+}
+
+static int
+nvme_ctrlr_detach_poll_async(struct spdk_nvme_ctrlr *ctrlr,
+			     struct nvme_ctrlr_detach_ctx *ctx)
+{
+	int rc;
+
+	rc = nvme_ctrlr_destruct_poll_async(ctrlr, ctx);
+	if (rc == -EAGAIN) {
+		return -EAGAIN;
+	}
+
+	free(ctx);
+
+	return rc;
+}
+
+int
+spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct nvme_ctrlr_detach_ctx *ctx = NULL;
+	int rc;
+
+	rc = nvme_ctrlr_detach_async(ctrlr, &ctx);
+	if (rc != 0) {
+		return rc;
+	} else if (ctx == NULL) {
+		/* ctrlr was detached from the caller process but any other process
+		 * still attaches it.
+		 */
+		return 0;
+	}
+
+	while (1) {
+		rc = nvme_ctrlr_detach_poll_async(ctrlr, ctx);
+		if (rc != -EAGAIN) {
+			break;
+		}
+		nvme_delay(1000);
+	}
+
 	return 0;
 }
 

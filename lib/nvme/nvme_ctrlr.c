@@ -3317,6 +3317,10 @@ nvme_ctrlr_destruct_poll_async(struct spdk_nvme_ctrlr *ctrlr,
 		/* Destruct ctrlr forcefully for any other error. */
 	}
 
+	if (ctx->cb_fn) {
+		ctx->cb_fn(ctrlr);
+	}
+
 	nvme_ctrlr_destruct_namespaces(ctrlr);
 
 	spdk_bit_array_free(&ctrlr->free_io_qids);
