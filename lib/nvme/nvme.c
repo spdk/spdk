@@ -97,6 +97,7 @@ nvme_ctrlr_detach_async(struct spdk_nvme_ctrlr *ctrlr,
 
 			return -ENOMEM;
 		}
+		ctx->ctrlr = ctrlr;
 		ctx->cb_fn = nvme_ctrlr_detach_async_finish;
 
 		nvme_ctrlr_proc_put_ref(ctrlr);
@@ -116,12 +117,11 @@ nvme_ctrlr_detach_async(struct spdk_nvme_ctrlr *ctrlr,
 }
 
 static int
-nvme_ctrlr_detach_poll_async(struct spdk_nvme_ctrlr *ctrlr,
-			     struct nvme_ctrlr_detach_ctx *ctx)
+nvme_ctrlr_detach_poll_async(struct nvme_ctrlr_detach_ctx *ctx)
 {
 	int rc;
 
-	rc = nvme_ctrlr_destruct_poll_async(ctrlr, ctx);
+	rc = nvme_ctrlr_destruct_poll_async(ctx->ctrlr, ctx);
 	if (rc == -EAGAIN) {
 		return -EAGAIN;
 	}
@@ -148,13 +148,89 @@ spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	while (1) {
-		rc = nvme_ctrlr_detach_poll_async(ctrlr, ctx);
+		rc = nvme_ctrlr_detach_poll_async(ctx);
 		if (rc != -EAGAIN) {
 			break;
 		}
 		nvme_delay(1000);
 	}
 
+	return 0;
+}
+
+int
+spdk_nvme_detach_async(struct spdk_nvme_ctrlr *ctrlr,
+		       struct spdk_nvme_detach_ctx **_detach_ctx)
+{
+	struct spdk_nvme_detach_ctx *detach_ctx;
+	struct nvme_ctrlr_detach_ctx *ctx = NULL;
+	int rc;
+
+	if (ctrlr == NULL || _detach_ctx == NULL) {
+		return -EINVAL;
+	}
+
+	/* Use a context header to poll detachement for multiple controllers.
+	 * Allocate an new one if not allocated yet, or use the passed one otherwise.
+	 */
+	detach_ctx = *_detach_ctx;
+	if (detach_ctx == NULL) {
+		detach_ctx = calloc(1, sizeof(*detach_ctx));
+		if (detach_ctx == NULL) {
+			return -ENOMEM;
+		}
+		TAILQ_INIT(&detach_ctx->head);
+	} else if (detach_ctx->polling_started) {
+		SPDK_ERRLOG("Busy at polling detachment now.\n");
+		return -EBUSY;
+	}
+
+	rc = nvme_ctrlr_detach_async(ctrlr, &ctx);
+	if (rc != 0 || ctx == NULL) {
+		/* If this detach failed and the context header is empty, it means we just
+		 * allocated the header and need to free it before returning.
+		 */
+		if (TAILQ_EMPTY(&detach_ctx->head)) {
+			free(detach_ctx);
+		}
+		return rc;
+	}
+
+	/* Append a context for this detachment to the context header. */
+	TAILQ_INSERT_TAIL(&detach_ctx->head, ctx, link);
+
+	*_detach_ctx = detach_ctx;
+
+	return 0;
+}
+
+int
+spdk_nvme_detach_poll_async(struct spdk_nvme_detach_ctx *detach_ctx)
+{
+	struct nvme_ctrlr_detach_ctx *ctx, *tmp_ctx;
+	int rc;
+
+	if (detach_ctx == NULL) {
+		return -EINVAL;
+	}
+
+	detach_ctx->polling_started = true;
+
+	TAILQ_FOREACH_SAFE(ctx, &detach_ctx->head, link, tmp_ctx) {
+		TAILQ_REMOVE(&detach_ctx->head, ctx, link);
+
+		rc = nvme_ctrlr_detach_poll_async(ctx);
+		if (rc == -EAGAIN) {
+			/* If not -EAGAIN, ctx was freed by nvme_ctrlr_detach_poll_async(). */
+			TAILQ_INSERT_HEAD(&detach_ctx->head, ctx, link);
+		}
+	}
+
+	if (!TAILQ_EMPTY(&detach_ctx->head)) {
+		return -EAGAIN;
+	}
+
+	free(detach_ctx);
 	return 0;
 }
 

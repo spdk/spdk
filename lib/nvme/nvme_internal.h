@@ -846,10 +846,17 @@ struct spdk_nvme_probe_ctx {
 typedef void (*nvme_ctrlr_detach_cb)(struct spdk_nvme_ctrlr *ctrlr);
 
 struct nvme_ctrlr_detach_ctx {
-	nvme_ctrlr_detach_cb	cb_fn;
-	uint64_t		shutdown_start_tsc;
-	uint32_t		shutdown_timeout_ms;
-	bool			shutdown_complete;
+	struct spdk_nvme_ctrlr			*ctrlr;
+	nvme_ctrlr_detach_cb			cb_fn;
+	uint64_t				shutdown_start_tsc;
+	uint32_t				shutdown_timeout_ms;
+	bool					shutdown_complete;
+	TAILQ_ENTRY(nvme_ctrlr_detach_ctx)	link;
+};
+
+struct spdk_nvme_detach_ctx {
+	TAILQ_HEAD(, nvme_ctrlr_detach_ctx)	head;
+	bool					polling_started;
 };
 
 struct nvme_driver {

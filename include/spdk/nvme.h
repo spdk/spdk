@@ -802,6 +802,45 @@ int spdk_nvme_probe_poll_async(struct spdk_nvme_probe_ctx *probe_ctx);
  */
 int spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr);
 
+struct spdk_nvme_detach_ctx;
+
+/**
+ * Allocate a context to track detachment of multiple controllers if this call is the
+ * first successful start of detachment in a sequence, or use the passed context otherwise.
+ *
+ * Then, start detaching the specified device returned by spdk_nvme_probe()'s attach_cb
+ * from the NVMe driver, and append this detachment to the context.
+ *
+ * User must call spdk_nvme_detach_poll_async() to complete the detachment.
+ *
+ * If the context is not allocated before this call, and if the specified device is detached
+ * locally from the caller process but any other process still attaches it or failed to be
+ * detached, context is not allocated.
+ *
+ * This function should be called from a single thread while no other threads are
+ * actively using the NVMe device.
+ *
+ * \param ctrlr Opaque handle to HVMe controller.
+ * \param detach_ctx Reference to the context in a sequence. An new context is allocated
+ * if this call is the first successful start of detachment in a sequence, or use the
+ * passed context.
+ */
+int spdk_nvme_detach_async(struct spdk_nvme_ctrlr *ctrlr,
+			   struct spdk_nvme_detach_ctx **detach_ctx);
+
+/**
+ * Poll detachment of multiple controllers until they complete.
+ *
+ * User must call this function until it returns 0.
+ *
+ * \param detach_ctx Context to track the detachment.
+ *
+ * \return 0 if all detachments complete; the context is also freed and no longer valid.
+ * \return -EAGAIN if any detachment is still in progress; users must call
+ * spdk_nvme_detach_poll_async() again to continue progress.
+ */
+int spdk_nvme_detach_poll_async(struct spdk_nvme_detach_ctx *detach_ctx);
+
 /**
  * Update the transport ID for a given controller.
  *
