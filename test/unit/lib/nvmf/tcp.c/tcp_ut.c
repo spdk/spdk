@@ -459,6 +459,7 @@ test_nvmf_tcp_poll_group_create(void)
 {
 	struct spdk_nvmf_transport *transport;
 	struct spdk_nvmf_transport_poll_group *group;
+	struct spdk_nvmf_tcp_poll_group *tgroup;
 	struct spdk_thread *thread;
 	struct spdk_nvmf_transport_opts opts;
 	struct spdk_sock_group grp = {};
@@ -482,6 +483,10 @@ test_nvmf_tcp_poll_group_create(void)
 	group = nvmf_tcp_poll_group_create(transport);
 	MOCK_CLEAR_P(spdk_sock_group_create);
 	SPDK_CU_ASSERT_FATAL(group);
+	if (opts.in_capsule_data_size < SPDK_NVME_TCP_IN_CAPSULE_DATA_MAX_SIZE) {
+		tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
+		SPDK_CU_ASSERT_FATAL(tgroup->control_msg_list);
+	}
 	group->transport = transport;
 	nvmf_tcp_poll_group_destroy(group);
 	nvmf_tcp_destroy(transport);

@@ -254,12 +254,23 @@ struct spdk_nvmf_tcp_qpair {
 	TAILQ_ENTRY(spdk_nvmf_tcp_qpair)	link;
 };
 
+struct spdk_nvmf_tcp_control_msg {
+	STAILQ_ENTRY(spdk_nvmf_tcp_control_msg) link;
+};
+
+struct spdk_nvmf_tcp_control_msg_list {
+	void *msg_buf;
+	STAILQ_HEAD(, spdk_nvmf_tcp_control_msg) free_msgs;
+};
+
 struct spdk_nvmf_tcp_poll_group {
 	struct spdk_nvmf_transport_poll_group	group;
 	struct spdk_sock_group			*sock_group;
 
 	TAILQ_HEAD(, spdk_nvmf_tcp_qpair)	qpairs;
 	TAILQ_HEAD(, spdk_nvmf_tcp_qpair)	await_req;
+
+	struct spdk_nvmf_tcp_control_msg_list	*control_msg_list;
 };
 
 struct spdk_nvmf_tcp_port {
@@ -295,6 +306,7 @@ static const struct spdk_json_object_decoder tcp_transport_opts_decoder[] = {
 
 static bool nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 				 struct spdk_nvmf_tcp_req *tcp_req);
+static void nvmf_tcp_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group);
 
 static void
 nvmf_tcp_req_set_state(struct spdk_nvmf_tcp_req *tcp_req,
@@ -1001,6 +1013,49 @@ nvmf_tcp_discover(struct spdk_nvmf_transport *transport,
 	entry->tsas.tcp.sectype = SPDK_NVME_TCP_SECURITY_NONE;
 }
 
+static struct spdk_nvmf_tcp_control_msg_list *
+nvmf_tcp_control_msg_list_create(uint16_t num_messages)
+{
+	struct spdk_nvmf_tcp_control_msg_list *list;
+	struct spdk_nvmf_tcp_control_msg *msg;
+	uint16_t i;
+
+	list = calloc(1, sizeof(*list));
+	if (!list) {
+		SPDK_ERRLOG("Failed to allocate memory for list structure\n");
+		return NULL;
+	}
+
+	list->msg_buf = spdk_zmalloc(num_messages * SPDK_NVME_TCP_IN_CAPSULE_DATA_MAX_SIZE,
+				     NVMF_DATA_BUFFER_ALIGNMENT, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+	if (!list->msg_buf) {
+		SPDK_ERRLOG("Failed to allocate memory for control message buffers\n");
+		free(list);
+		return NULL;
+	}
+
+	STAILQ_INIT(&list->free_msgs);
+
+	for (i = 0; i < num_messages; i++) {
+		msg = (struct spdk_nvmf_tcp_control_msg *)((char *)list->msg_buf + i *
+				SPDK_NVME_TCP_IN_CAPSULE_DATA_MAX_SIZE);
+		STAILQ_INSERT_TAIL(&list->free_msgs, msg, link);
+	}
+
+	return list;
+}
+
+static void
+nvmf_tcp_control_msg_list_free(struct spdk_nvmf_tcp_control_msg_list *list)
+{
+	if (!list) {
+		return;
+	}
+
+	spdk_free(list->msg_buf);
+	free(list);
+}
+
 static struct spdk_nvmf_transport_poll_group *
 nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport)
 {
@@ -1019,10 +1074,20 @@ nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport)
 	TAILQ_INIT(&tgroup->qpairs);
 	TAILQ_INIT(&tgroup->await_req);
 
+	if (transport->opts.in_capsule_data_size < SPDK_NVME_TCP_IN_CAPSULE_DATA_MAX_SIZE) {
+		SPDK_DEBUGLOG(nvmf_tcp, "ICD %u is less than min required for admin/fabric commands (%u). "
+			      "Creating control messages list\n", transport->opts.in_capsule_data_size,
+			      SPDK_NVME_TCP_IN_CAPSULE_DATA_MAX_SIZE);
+		tgroup->control_msg_list = nvmf_tcp_control_msg_list_create(32);
+		if (!tgroup->control_msg_list) {
+			goto cleanup;
+		}
+	}
+
 	return &tgroup->group;
 
 cleanup:
-	free(tgroup);
+	nvmf_tcp_poll_group_destroy(&tgroup->group);
 	return NULL;
 }
 
@@ -1049,6 +1114,9 @@ nvmf_tcp_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 
 	tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
 	spdk_sock_group_close(&tgroup->sock_group);
+	if (tgroup->control_msg_list) {
+		nvmf_tcp_control_msg_list_free(tgroup->control_msg_list);
+	}
 
 	free(tgroup);
 }
@@ -1867,6 +1935,31 @@ nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 	return rc;
 }
 
+static inline void *
+nvmf_tcp_control_msg_get(struct spdk_nvmf_tcp_control_msg_list *list)
+{
+	struct spdk_nvmf_tcp_control_msg *msg;
+
+	assert(list);
+
+	msg = STAILQ_FIRST(&list->free_msgs);
+	if (!msg) {
+		SPDK_DEBUGLOG(nvmf_tcp, "Out of control messages\n");
+		return NULL;
+	}
+	STAILQ_REMOVE_HEAD(&list->free_msgs, link);
+	return msg;
+}
+
+static inline void
+nvmf_tcp_control_msg_put(struct spdk_nvmf_tcp_control_msg_list *list, void *_msg)
+{
+	struct spdk_nvmf_tcp_control_msg *msg = _msg;
+
+	assert(list);
+	STAILQ_INSERT_HEAD(&list->free_msgs, msg, link);
+}
+
 static int
 nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_req *tcp_req,
 		       struct spdk_nvmf_transport *transport,
@@ -1876,6 +1969,7 @@ nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_req *tcp_req,
 	struct spdk_nvme_cmd			*cmd;
 	struct spdk_nvme_cpl			*rsp;
 	struct spdk_nvme_sgl_descriptor		*sgl;
+	struct spdk_nvmf_tcp_poll_group		*tgroup;
 	uint32_t				length;
 
 	cmd = &req->cmd->nvme_cmd;
@@ -1922,6 +2016,7 @@ nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_req *tcp_req,
 		   sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET) {
 		uint64_t offset = sgl->address;
 		uint32_t max_len = transport->opts.in_capsule_data_size;
+		assert(tcp_req->has_incapsule_data);
 
 		SPDK_DEBUGLOG(nvmf_tcp, "In-capsule data: offset 0x%" PRIx64 ", length 0x%x\n",
 			      offset, length);
@@ -1934,16 +2029,33 @@ nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_req *tcp_req,
 		}
 		max_len -= (uint32_t)offset;
 
-		if (length > max_len) {
-			SPDK_ERRLOG("In-capsule data length 0x%x exceeds capsule length 0x%x\n",
-				    length, max_len);
-			rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
-			return -1;
+		if (spdk_unlikely(length > max_len)) {
+			/* According to the SPEC we should support ICD up to 8192 bytes for admin and fabric commands */
+			if (length <= SPDK_NVME_TCP_IN_CAPSULE_DATA_MAX_SIZE &&
+			    (cmd->opc == SPDK_NVME_OPC_FABRIC || req->qpair->qid == 0)) {
+
+				/* Get a buffer from dedicated list */
+				SPDK_DEBUGLOG(nvmf_tcp, "Getting a buffer from control msg list\n");
+				tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
+				assert(tgroup->control_msg_list);
+				req->data = nvmf_tcp_control_msg_get(tgroup->control_msg_list);
+				if (!req->data) {
+					/* No available buffers. Queue this request up. */
+					SPDK_DEBUGLOG(nvmf_tcp, "No available ICD buffers. Queueing request %p\n", tcp_req);
+					return 0;
+				}
+			} else {
+				SPDK_ERRLOG("In-capsule data length 0x%x exceeds capsule length 0x%x\n",
+					    length, max_len);
+				rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
+				return -1;
+			}
+		} else {
+			req->data = tcp_req->buf;
 		}
 
-		req->data = tcp_req->buf + offset;
-		req->data_from_pool = false;
 		req->length = length;
+		req->data_from_pool = false;
 
 		if (spdk_unlikely(req->dif.dif_insert_or_strip)) {
 			length = spdk_dif_get_length_with_md(length, &req->dif.dif_ctx);
@@ -2130,6 +2242,7 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 	bool					progress = false;
 	struct spdk_nvmf_transport		*transport = &ttransport->transport;
 	struct spdk_nvmf_transport_poll_group	*group;
+	struct spdk_nvmf_tcp_poll_group		*tgroup;
 
 	tqpair = SPDK_CONTAINEROF(tcp_req->req.qpair, struct spdk_nvmf_tcp_qpair, qpair);
 	group = &tqpair->group->group;
@@ -2301,6 +2414,12 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			spdk_trace_record(TRACE_TCP_REQUEST_STATE_COMPLETED, 0, 0, (uintptr_t)tcp_req, 0);
 			if (tcp_req->req.data_from_pool) {
 				spdk_nvmf_request_free_buffers(&tcp_req->req, group, transport);
+			} else if (spdk_unlikely(tcp_req->has_incapsule_data && (tcp_req->cmd.opc == SPDK_NVME_OPC_FABRIC ||
+						 tqpair->qpair.qid == 0) && tcp_req->req.length > transport->opts.in_capsule_data_size)) {
+				tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
+				assert(tgroup->control_msg_list);
+				SPDK_DEBUGLOG(nvmf_tcp, "Put buf to control msg list\n");
+				nvmf_tcp_control_msg_put(tgroup->control_msg_list, tcp_req->req.data);
 			}
 			tcp_req->req.length = 0;
 			tcp_req->req.iovcnt = 0;
