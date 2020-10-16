@@ -35,11 +35,12 @@ fi
 
 timing_enter build_release
 
+config_params="$(get_config_params | sed 's/--enable-debug//g')"
 if [ $(uname -s) = Linux ]; then
-	./configure $(get_config_params) --disable-debug --enable-lto
+	./configure $config_params --enable-lto
 else
 	# LTO needs a special compiler to work on BSD.
-	./configure $(get_config_params) --disable-debug
+	./configure $config_params
 fi
 $MAKE ${MAKEFLAGS}
 $MAKE ${MAKEFLAGS} clean
