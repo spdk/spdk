@@ -45,7 +45,7 @@ Updated intel-ipsec-mb submodule to v0.54
 
 Updated ISA-L submodule to v2.29.0.
 
-## log
+### log
 
 A log flag structure, `spdk_log_register_flag`, `spdk_log_get_first_flag`,
 `spdk_log_get_next_flag` and macro `SPDK_LOG_REGISTER_COMPONENT`, have been added which
@@ -55,6 +55,17 @@ and `SPDK_LOGDUMP` macros to display logs for specified log flag.
 The log flags in the event framework `-L` and several SPDK applications has been enabled on
 release builds of SPDK. On debug builds this option will additionally set
 log print level to `SPDK_LOG_DEBUG`.
+
+### nvme
+
+New APIs, `spdk_nvme_detach_async` and `spdk_nvme_detach_poll_async`, have been added to
+detach multiple controllers in parallel to mitigate lengthy shutdown notification of
+a few NVMe SSDs.
+
+### nvmf
+
+A new API `spdk_nvmf_subsystem_add_ns_ext` has been added and the API `spdk_nvmf_subsystem_add_ns`
+has been deprecated.
 
 ### ocf
 
