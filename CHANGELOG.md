@@ -68,10 +68,16 @@ New APIs, `spdk_nvme_detach_async` and `spdk_nvme_detach_poll_async`, have been 
 detach multiple controllers in parallel to mitigate lengthy shutdown notification of
 a few NVMe SSDs.
 
+New APIs, `spdk_nvme_ns_get_ana_group_id` and `spdk_nvme_ns_get_ana_state`, have been
+added to get ANA group ID and ANA state of the given namespace, respectively.
+
 ### nvmf
 
 A new API `spdk_nvmf_subsystem_add_ns_ext` has been added and the API `spdk_nvmf_subsystem_add_ns`
 has been deprecated.
+
+The NVMe-oF target now supports Asymmetric Namespace Access (ANA) Reporting to provide
+multipath to NVMe-oF initiator.
 
 ### ocf
 
@@ -99,6 +105,12 @@ Add optional 'no_wr_batching' parameter to 'nvmf_create_transport' RPC method.
 New RPCs, `iscsi_target_node_set_redirect` and `iscsi_target_node_request_logout`, have
 been added, and a new optional parameter `private` has been added to the RPC
 `iscsi_create_portal_group` to support iSCSI login redirection feature.
+
+A new optional parameter `ana_reporting` was added to the RPC `nvmf_create_subsystem`, and
+a new RPC `nvmf_subsystem_listner_set_ana_state` was added for ANA reporting.
+
+New RPCs, `nvmf_subsystem_get_listeners` and `nvmf_subsystem_get_qpairs`, were added to
+retrieve configuration of the NVMe-oF subsystem.
 
 ### Miscellaneous
 
