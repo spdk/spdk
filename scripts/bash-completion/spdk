@@ -256,7 +256,6 @@ _spdk_apps() {
 		spdk_trace_record
 		vhost
 		create_vbox.sh
-		create_vhost_vm.sh
 		pkgdep.sh
 		run-autorun.sh
 		vm_setup.sh
