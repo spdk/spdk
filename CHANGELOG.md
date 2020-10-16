@@ -83,10 +83,13 @@ The `enable_placement_id` field was added in the struct spdk_sock_impl_opts to
 make the placement_id feature configurable by users. The default setting is
 not enabled.
 
+The `enable_quick_ack` field was added in the struct spdk_sock_impl_opts to enable
+or disable quick ack for the POSIX sock module. The default setting is not enabled.
+
 ### rpc
 
-A new optional parameter `enable_placement_id` was added to the `sock_impl_set_options`
-RPC.
+New optional parameters, `enable_placement_id` and `enable_quickack` were added to the
+`sock_impl_set_options` RPC.
 
 A new RPC `bdev_examine_bdev` was added to allow users to examine a bdev explicitly.
 It can be used only if bdev_auto_examine is set to false by the RPC `bdev_set_options`.
