@@ -57,6 +57,7 @@ function build_native_dpdk() {
 
 	rm -rf "$external_dpdk_base_dir"
 	git clone --branch $SPDK_TEST_NATIVE_DPDK --depth 1 http://dpdk.org/git/dpdk "$external_dpdk_base_dir"
+
 	dpdk_cflags="-fPIC -g -Werror -fcommon"
 	dpdk_ldflags=""
 
@@ -104,6 +105,16 @@ function build_native_dpdk() {
 	cd $external_dpdk_base_dir
 	if [ "$(uname -s)" = "Linux" ]; then
 		dpdk_cflags+=" -Wno-stringop-overflow"
+		# Fix for freeing device if not kernel driver configured.
+		# TODO: Remove once this is merged in upstream DPDK
+		if grep "20.08.0" $external_dpdk_base_dir/VERSION; then
+			wget https://github.com/spdk/dpdk/commit/64f1ced13f974e8b3d46b87c361a09eca68126f9.patch -O dpdk.patch
+		else
+			wget https://github.com/karlatec/dpdk/commit/3219c0cfc38803aec10c809dde16e013b370bda9.patch -O dpdk.patch
+		fi
+		git config --local user.name "spdk"
+		git config --local user.email "nomail@all.com"
+		git am dpdk.patch
 	fi
 
 	meson build-tmp --prefix="$external_dpdk_dir" --libdir lib \
