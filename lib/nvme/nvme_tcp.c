@@ -57,7 +57,6 @@
 #define NVME_TCP_HPDA_DEFAULT			0
 #define NVME_TCP_MAX_R2T_DEFAULT		1
 #define NVME_TCP_PDU_H2C_MIN_DATA_SIZE		4096
-#define NVME_TCP_IN_CAPSULE_DATA_MAX_SIZE	8192
 
 /* NVMe TCP transport extensions for spdk_nvme_ctrlr */
 struct nvme_tcp_ctrlr {
@@ -518,7 +517,7 @@ nvme_tcp_req_init(struct nvme_tcp_qpair *tqpair, struct nvme_request *req,
 	if (xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
 		max_incapsule_data_size = ctrlr->ioccsz_bytes;
 		if ((req->cmd.opc == SPDK_NVME_OPC_FABRIC) || nvme_qpair_is_admin_queue(&tqpair->qpair)) {
-			max_incapsule_data_size = NVME_TCP_IN_CAPSULE_DATA_MAX_SIZE;
+			max_incapsule_data_size = SPDK_NVME_TCP_IN_CAPSULE_DATA_MAX_SIZE;
 		}
 
 		if (req->payload_size <= max_incapsule_data_size) {
