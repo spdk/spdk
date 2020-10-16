@@ -553,11 +553,16 @@ static void
 unregister_controllers(void)
 {
 	struct ctrlr_entry *entry, *tmp;
+	struct spdk_nvme_detach_ctx *detach_ctx = NULL;
 
 	TAILQ_FOREACH_SAFE(entry, &g_controllers, link, tmp) {
 		TAILQ_REMOVE(&g_controllers, entry, link);
-		spdk_nvme_detach(entry->ctrlr);
+		spdk_nvme_detach_async(entry->ctrlr, &detach_ctx);
 		free(entry);
+	}
+
+	while (detach_ctx && spdk_nvme_detach_poll_async(detach_ctx) == -EAGAIN) {
+		;
 	}
 }
 

@@ -414,6 +414,7 @@ int main(int argc, char **argv)
 	struct dev		*iter;
 	struct spdk_env_opts	opts;
 	int			ret = 0;
+	struct spdk_nvme_detach_ctx *detach_ctx = NULL;
 
 	spdk_env_opts_init(&opts);
 	opts.name = "reserve";
@@ -448,7 +449,11 @@ int main(int argc, char **argv)
 	printf("Reservation test %s\n", ret ? "failed" : "passed");
 
 	foreach_dev(iter) {
-		spdk_nvme_detach(iter->ctrlr);
+		spdk_nvme_detach_async(iter->ctrlr, &detach_ctx);
+	}
+
+	while (detach_ctx && spdk_nvme_detach_poll_async(detach_ctx) == -EAGAIN) {
+		;
 	}
 
 	return ret;

@@ -607,6 +607,7 @@ int main(int argc, char **argv)
 	struct dev		*iter;
 	int			rc;
 	struct spdk_env_opts	opts;
+	struct spdk_nvme_detach_ctx *detach_ctx = NULL;
 
 	spdk_env_opts_init(&opts);
 	opts.name = "nvme_dp";
@@ -643,7 +644,11 @@ int main(int argc, char **argv)
 	printf("Cleaning up...\n");
 
 	foreach_dev(iter) {
-		spdk_nvme_detach(iter->ctrlr);
+		spdk_nvme_detach_async(iter->ctrlr, &detach_ctx);
+	}
+
+	while (detach_ctx && spdk_nvme_detach_poll_async(detach_ctx) == -EAGAIN) {
+		;
 	}
 
 	return rc;
