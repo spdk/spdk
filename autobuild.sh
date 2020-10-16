@@ -68,7 +68,7 @@ function build_native_dpdk() {
 	if [[ "$SPDK_TEST_CRYPTO" -eq 1 ]]; then
 		git clone --branch v0.54 --depth 1 https://github.com/intel/intel-ipsec-mb.git "$external_dpdk_base_dir/intel-ipsec-mb"
 		cd "$external_dpdk_base_dir/intel-ipsec-mb"
-		$MAKE $MAKEFLAGS all SHARED=n EXTRA_CFLAGS=-fPIC
+		$MAKE $MAKEFLAGS all SHARED=y EXTRA_CFLAGS=-fPIC
 		DPDK_DRIVERS+=("crypto")
 		DPDK_DRIVERS+=("crypto/aesni_mb")
 		DPDK_DRIVERS+=("crypto/qat")
@@ -76,6 +76,7 @@ function build_native_dpdk() {
 		DPDK_DRIVERS+=("common/qat")
 		dpdk_cflags+=" -I$external_dpdk_base_dir/intel-ipsec-mb"
 		dpdk_ldflags+=" -L$external_dpdk_base_dir/intel-ipsec-mb"
+		export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$external_dpdk_base_dir/intel-ipsec-mb
 	fi
 
 	if [[ "$SPDK_TEST_REDUCE" -eq 1 ]]; then
@@ -107,10 +108,14 @@ function build_native_dpdk() {
 
 	meson build-tmp --prefix="$external_dpdk_dir" --libdir lib \
 		-Denable_docs=false -Denable_kmods=false -Dtests=false \
-		-Dc_args="$dpdk_cflags $dpdk_ldflags" \
+		-Dc_link_args="$dpdk_ldflags" -Dc_args="$dpdk_cflags" \
 		-Dmachine=native -Ddisable_drivers=$(printf "%s," "${DPDK_DISABLED_DRIVERS[@]}")
 	ninja -C "$external_dpdk_base_dir/build-tmp" $MAKEFLAGS
 	ninja -C "$external_dpdk_base_dir/build-tmp" $MAKEFLAGS install
+
+	# Save this path. In tests are run using autorun.sh then autotest.sh
+	# script will be unaware of LD_LIBRARY_PATH and will fail tests.
+	echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH" > /tmp/spdk-ld-path
 
 	cd "$orgdir"
 }
