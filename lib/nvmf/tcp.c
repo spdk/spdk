@@ -37,14 +37,14 @@
 #include "spdk/assert.h"
 #include "spdk/thread.h"
 #include "spdk/nvmf_transport.h"
-#include "spdk/sock.h"
 #include "spdk/string.h"
 #include "spdk/trace.h"
 #include "spdk/util.h"
+#include "spdk/log.h"
 
 #include "spdk_internal/assert.h"
-#include "spdk/log.h"
 #include "spdk_internal/nvme_tcp.h"
+#include "spdk_internal/sock.h"
 
 #include "nvmf_internal.h"
 
@@ -1624,6 +1624,7 @@ nvmf_tcp_icreq_handle(struct spdk_nvmf_tcp_transport *ttransport,
 		tqpair->recv_buf_size -= SPDK_NVME_TCP_DIGEST_LEN * SPDK_NVMF_TCP_RECV_BUF_SIZE_FACTOR;
 	}
 
+	tqpair->recv_buf_size = spdk_max(tqpair->recv_buf_size, MIN_SOCK_PIPE_SIZE);
 	/* Now that we know whether digests are enabled, properly size the receive buffer */
 	if (spdk_sock_set_recvbuf(tqpair->sock, tqpair->recv_buf_size) < 0) {
 		SPDK_WARNLOG("Unable to allocate enough memory for receive buffer on tqpair=%p with size=%d\n",
