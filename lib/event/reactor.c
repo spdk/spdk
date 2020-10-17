@@ -309,6 +309,32 @@ _set_thread_name(const char *thread_name)
 static int _reactor_schedule_thread(struct spdk_thread *thread);
 static uint64_t g_rusage_period;
 
+static bool
+reactor_post_process_lw_thread(struct spdk_reactor *reactor, struct spdk_lw_thread *lw_thread)
+{
+	struct spdk_thread *thread = spdk_thread_get_from_ctx(lw_thread);
+
+	if (spdk_unlikely(lw_thread->resched)) {
+		lw_thread->resched = false;
+		TAILQ_REMOVE(&reactor->threads, lw_thread, link);
+		assert(reactor->thread_count > 0);
+		reactor->thread_count--;
+		_reactor_schedule_thread(thread);
+		return true;
+	}
+
+	if (spdk_unlikely(spdk_thread_is_exited(thread) &&
+			  spdk_thread_is_idle(thread))) {
+		TAILQ_REMOVE(&reactor->threads, lw_thread, link);
+		assert(reactor->thread_count > 0);
+		reactor->thread_count--;
+		spdk_thread_destroy(thread);
+		return true;
+	}
+
+	return false;
+}
+
 static void
 _reactor_run(struct spdk_reactor *reactor)
 {
@@ -331,23 +357,7 @@ _reactor_run(struct spdk_reactor *reactor)
 		}
 		reactor->tsc_last = now;
 
-		if (spdk_unlikely(lw_thread->resched)) {
-			lw_thread->resched = false;
-			TAILQ_REMOVE(&reactor->threads, lw_thread, link);
-			assert(reactor->thread_count > 0);
-			reactor->thread_count--;
-			_reactor_schedule_thread(thread);
-			continue;
-		}
-
-		if (spdk_unlikely(spdk_thread_is_exited(thread) &&
-				  spdk_thread_is_idle(thread))) {
-			TAILQ_REMOVE(&reactor->threads, lw_thread, link);
-			assert(reactor->thread_count > 0);
-			reactor->thread_count--;
-			spdk_thread_destroy(thread);
-			continue;
-		}
+		reactor_post_process_lw_thread(reactor, lw_thread);
 	}
 
 	if (g_framework_context_switch_monitor_enabled) {
