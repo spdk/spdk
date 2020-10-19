@@ -203,7 +203,6 @@ struct spdk_nvmf_tcp_req  {
 struct spdk_nvmf_tcp_qpair {
 	struct spdk_nvmf_qpair			qpair;
 	struct spdk_nvmf_tcp_poll_group		*group;
-	struct spdk_nvmf_tcp_port		*port;
 	struct spdk_sock			*sock;
 
 	enum nvme_tcp_pdu_recv_state		recv_state;
@@ -211,21 +210,6 @@ struct spdk_nvmf_tcp_qpair {
 
 	/* PDU being actively received */
 	struct nvme_tcp_pdu			pdu_in_progress;
-	uint32_t				recv_buf_size;
-
-	/* This is a spare PDU used for sending special management
-	 * operations. Primarily, this is used for the initial
-	 * connection response and c2h termination request. */
-	struct nvme_tcp_pdu			*mgmt_pdu;
-
-	TAILQ_HEAD(, nvme_tcp_pdu)		send_queue;
-
-	/* Arrays of in-capsule buffers, requests, and pdus.
-	 * Each array is 'resource_count' number of elements */
-	void					*bufs;
-	struct spdk_nvmf_tcp_req		*reqs;
-	struct nvme_tcp_pdu			*pdus;
-	uint32_t				resource_count;
 
 	/* Queues to track the requests in all states */
 	TAILQ_HEAD(, spdk_nvmf_tcp_req)		state_queue[TCP_REQUEST_NUM_STATES];
@@ -236,6 +220,23 @@ struct spdk_nvmf_tcp_qpair {
 
 	bool					host_hdgst_enable;
 	bool					host_ddgst_enable;
+
+	TAILQ_HEAD(, nvme_tcp_pdu)		send_queue;
+
+	/* This is a spare PDU used for sending special management
+	 * operations. Primarily, this is used for the initial
+	 * connection response and c2h termination request. */
+	struct nvme_tcp_pdu			*mgmt_pdu;
+
+	/* Arrays of in-capsule buffers, requests, and pdus.
+	 * Each array is 'resource_count' number of elements */
+	void					*bufs;
+	struct spdk_nvmf_tcp_req		*reqs;
+	struct nvme_tcp_pdu			*pdus;
+	uint32_t				resource_count;
+	uint32_t				recv_buf_size;
+
+	struct spdk_nvmf_tcp_port		*port;
 
 	/* IP address */
 	char					initiator_addr[SPDK_NVMF_TRADDR_MAX_LEN];
