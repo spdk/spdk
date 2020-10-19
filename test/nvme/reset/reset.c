@@ -703,8 +703,8 @@ int main(int argc, char **argv)
 	}
 
 cleanup:
-	unregister_worker();
 	unregister_controllers();
+	unregister_worker();
 	free_tasks();
 
 	if (rc != 0) {
