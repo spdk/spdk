@@ -175,6 +175,8 @@ struct spdk_nvmf_tcp_req  {
 	 * not the incoming PDU! */
 	struct nvme_tcp_pdu			*pdu;
 
+	/* In-capsule data buffer */
+	uint8_t					*buf;
 	/*
 	 * The PDU for a request may be used multiple times in serial over
 	 * the request's lifetime. For example, first to send an R2T, then
@@ -182,10 +184,6 @@ struct spdk_nvmf_tcp_req  {
 	 * twice at the same time, add a debug flag here for init/fini.
 	 */
 	bool					pdu_in_use;
-
-	/* In-capsule data buffer */
-	uint8_t					*buf;
-
 	bool					has_incapsule_data;
 
 	/* transfer_tag */
