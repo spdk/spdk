@@ -384,7 +384,7 @@ runtime={run_time}
             bdev_conf = self.gen_spdk_bdev_conf(subsystems)
             self.remote_call("echo '%s' > %s/bdev.conf" % (bdev_conf, self.spdk_dir))
             ioengine = "%s/build/fio/spdk_bdev" % self.spdk_dir
-            spdk_conf = "spdk_conf=%s/bdev.conf" % self.spdk_dir
+            spdk_conf = "spdk_json_conf=%s/bdev.conf" % self.spdk_dir
         else:
             ioengine = "libaio"
             spdk_conf = ""
@@ -778,17 +778,31 @@ class SPDKInitiator(Initiator):
         self.remote_call("sudo %s/scripts/setup.sh" % self.spdk_dir)
 
     def gen_spdk_bdev_conf(self, remote_subsystem_list):
-        header = "[Nvme]"
-        row_template = """  TransportId "trtype:{transport} adrfam:IPv4 traddr:{ip} trsvcid:{svc} subnqn:{nqn}" Nvme{i}"""
+        bdev_cfg_section = {
+            "subsystems": [
+                {
+                    "subsystem": "bdev",
+                    "config": []
+                }
+            ]
+        }
 
-        bdev_rows = [row_template.format(transport=self.transport,
-                                         svc=x[0],
-                                         nqn=x[1],
-                                         ip=x[2],
-                                         i=i) for i, x in enumerate(remote_subsystem_list)]
-        bdev_rows = "\n".join(bdev_rows)
-        bdev_section = "\n".join([header, bdev_rows])
-        return bdev_section
+        for i, subsys in enumerate(remote_subsystem_list):
+            sub_port, sub_nqn, sub_addr = map(lambda x: str(x), subsys)
+            nvme_ctrl = {
+                "method": "bdev_nvme_attach_controller",
+                "params": {
+                    "name": "Nvme{}".format(i),
+                    "trtype": self.transport,
+                    "traddr": sub_addr,
+                    "trsvcid": sub_port,
+                    "subnqn": sub_nqn,
+                    "adrfam": "IPv4"
+                }
+            }
+            bdev_cfg_section["subsystems"][0]["config"].append(nvme_ctrl)
+
+        return json.dumps(bdev_cfg_section, indent=2)
 
     def gen_fio_filename_conf(self, subsystems, threads, io_depth, num_jobs=1):
         filename_section = ""
