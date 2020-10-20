@@ -39,6 +39,15 @@ spdk_nvme_zns_ns_get_data(struct spdk_nvme_ns *ns)
 	return ns->ctrlr->nsdata_zns[ns->id - 1];
 }
 
+uint64_t
+spdk_nvme_zns_ns_get_zone_size(struct spdk_nvme_ns *ns)
+{
+	const struct spdk_nvme_zns_ns_data *nsdata_zns = spdk_nvme_zns_ns_get_data(ns);
+	const struct spdk_nvme_ns_data *nsdata = spdk_nvme_ns_get_data(ns);
+
+	return nsdata_zns->lbafe[nsdata->flbas.format].zsze * spdk_nvme_ns_get_sector_size(ns);
+}
+
 const struct spdk_nvme_zns_ctrlr_data *
 spdk_nvme_zns_ctrlr_get_data(struct spdk_nvme_ctrlr *ctrlr)
 {
