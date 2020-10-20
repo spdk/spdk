@@ -305,15 +305,31 @@ vhost_vq_used_signal(struct spdk_vhost_session *vsession,
 	}
 }
 
+static void
+session_vq_io_stats_update(struct spdk_vhost_session *vsession,
+			   struct spdk_vhost_virtqueue *virtqueue, uint64_t now)
+{
+	uint32_t irq_delay_base = vsession->coalescing_delay_time_base;
+	uint32_t io_threshold = vsession->coalescing_io_rate_threshold;
+	int32_t irq_delay;
+	uint32_t req_cnt;
+
+	req_cnt = virtqueue->req_cnt + virtqueue->used_req_cnt;
+	if (req_cnt <= io_threshold) {
+		return;
+	}
+
+	irq_delay = (irq_delay_base * (req_cnt - io_threshold)) / io_threshold;
+	virtqueue->irq_delay_time = (uint32_t) spdk_max(0, irq_delay);
+
+	virtqueue->req_cnt = 0;
+	virtqueue->next_event_time = now;
+}
 
 static void
 check_session_io_stats(struct spdk_vhost_session *vsession, uint64_t now)
 {
 	struct spdk_vhost_virtqueue *virtqueue;
-	uint32_t irq_delay_base = vsession->coalescing_delay_time_base;
-	uint32_t io_threshold = vsession->coalescing_io_rate_threshold;
-	int32_t irq_delay;
-	uint32_t req_cnt;
 	uint16_t q_idx;
 
 	if (now < vsession->next_stats_check_time) {
@@ -323,17 +339,7 @@ check_session_io_stats(struct spdk_vhost_session *vsession, uint64_t now)
 	vsession->next_stats_check_time = now + vsession->stats_check_interval;
 	for (q_idx = 0; q_idx < vsession->max_queues; q_idx++) {
 		virtqueue = &vsession->virtqueue[q_idx];
-
-		req_cnt = virtqueue->req_cnt + virtqueue->used_req_cnt;
-		if (req_cnt <= io_threshold) {
-			continue;
-		}
-
-		irq_delay = (irq_delay_base * (req_cnt - io_threshold)) / io_threshold;
-		virtqueue->irq_delay_time = (uint32_t) spdk_max(0, irq_delay);
-
-		virtqueue->req_cnt = 0;
-		virtqueue->next_event_time = now;
+		session_vq_io_stats_update(vsession, virtqueue, now);
 	}
 }
 
