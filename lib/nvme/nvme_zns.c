@@ -48,6 +48,12 @@ spdk_nvme_zns_ns_get_zone_size(struct spdk_nvme_ns *ns)
 	return nsdata_zns->lbafe[nsdata->flbas.format].zsze * spdk_nvme_ns_get_sector_size(ns);
 }
 
+uint64_t
+spdk_nvme_zns_ns_get_num_zones(struct spdk_nvme_ns *ns)
+{
+	return spdk_nvme_ns_get_size(ns) / spdk_nvme_zns_ns_get_zone_size(ns);
+}
+
 const struct spdk_nvme_zns_ctrlr_data *
 spdk_nvme_zns_ctrlr_get_data(struct spdk_nvme_ctrlr *ctrlr)
 {

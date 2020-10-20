@@ -73,6 +73,18 @@ const struct spdk_nvme_zns_ns_data *spdk_nvme_zns_ns_get_data(struct spdk_nvme_n
 uint64_t spdk_nvme_zns_ns_get_zone_size(struct spdk_nvme_ns *ns);
 
 /**
+ * Get the number of zones for the given namespace.
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
+ * \param ns Namespace to query.
+ *
+ * \return the number of zones.
+ */
+uint64_t spdk_nvme_zns_ns_get_num_zones(struct spdk_nvme_ns *ns);
+
+/**
  * Get the Zoned Namespace Command Set Specific Identify Controller data
  * as defined by the NVMe Zoned Namespace Command Set Specification.
  *
