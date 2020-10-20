@@ -322,8 +322,7 @@ function create_nvmf_subsystem_config() {
 function create_virtio_initiator_config() {
 	timing_enter "${FUNCNAME[0]}"
 	initiator_rpc bdev_virtio_attach_controller -t user -a /var/tmp/VhostScsiCtrlr0 -d scsi VirtioScsiCtrlr0
-	# FIXME: Specifying --vq-count is workaround issue #1583.
-	initiator_rpc bdev_virtio_attach_controller -t user -a /var/tmp/VhostBlkCtrlr0 -d blk --vq-count 2 VirtioBlk0
+	initiator_rpc bdev_virtio_attach_controller -t user -a /var/tmp/VhostBlkCtrlr0 -d blk VirtioBlk0
 	# TODO: initiator_rpc bdev_virtio_attach_controller -t user -a /var/tmp/VhostNvmeCtrlr0 -d nvme VirtioNvme0
 	timing_exit "${FUNCNAME[0]}"
 }
