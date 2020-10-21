@@ -712,14 +712,11 @@ _track_comp(struct spdk_idxd_io_channel *chan, bool batch_op, uint32_t index,
 	/* Tag this as a batched operation or not so we know which bit array index to clear. */
 	comp_ctx->batch_op = batch_op;
 
+	/* Only add non-batch completions here.  Batch completions are added when the batch is
+	 * submitted.
+	 */
 	if (batch_op == false) {
 		TAILQ_INSERT_TAIL(&chan->comp_ctx_oustanding, comp_ctx, link);
-	} else {
-		/* Build up completion addresses for batches but don't add them to
-		 * the outstanding list until submission as it simplifies batch
-		 * cancellation.
-		 */
-		batch->comp_ctx[index] = comp_ctx;
 	}
 }
 
@@ -1090,7 +1087,8 @@ spdk_idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *bat
 
 	/* Add the batch elements completion contexts to the outstanding list to be polled. */
 	for (i = 0 ; i < batch->index; i++) {
-		TAILQ_INSERT_TAIL(&chan->comp_ctx_oustanding, (struct idxd_comp *)batch->comp_ctx[i], link);
+		TAILQ_INSERT_TAIL(&chan->comp_ctx_oustanding, (struct idxd_comp *)&batch->user_completions[i],
+				  link);
 	}
 
 	/* Add one for the batch desc itself, we use this to determine when

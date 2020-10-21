@@ -79,16 +79,13 @@ static inline void movdir64b(void *dst, const void *src)
 #define IDXD_MAX_QUEUES		64
 
 /* Each pre-allocated batch structure goes on a per channel list and
- * contains the memory for both user descriptors. The array of comp_ctx
- * holds the list of completion contexts that we will add to the list
- * used by the poller.  The list is updated when the batch is submitted.
+ * contains the memory for both user descriptors.
  */
 struct idxd_batch {
 	struct idxd_hw_desc		*user_desc;
 	struct idxd_comp		*user_completions;
 	uint32_t			remaining;
 	bool				submitted;
-	void				*comp_ctx[DESC_PER_BATCH];
 	uint8_t				index;
 	TAILQ_ENTRY(idxd_batch)		link;
 };
