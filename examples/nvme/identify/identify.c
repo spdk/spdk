@@ -156,15 +156,6 @@ hex_dump(const void *data, size_t size)
 }
 
 static void
-exit_and_free_qpair(struct spdk_nvme_qpair *qpair)
-{
-	if (qpair) {
-		spdk_nvme_ctrlr_free_io_qpair(qpair);
-	}
-	exit(1);
-}
-
-static void
 get_feature_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct feature *feature = cb_arg;
@@ -200,8 +191,6 @@ get_ocssd_geometry_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 static void
 get_zns_zone_report_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 {
-	struct spdk_nvme_qpair *qpair = cb_arg;
-
 	if (spdk_nvme_cpl_is_error(cpl)) {
 		printf("get zns zone report failed\n");
 	}
@@ -213,7 +202,7 @@ get_zns_zone_report_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 	if (g_zone_report->nr_zones != g_nr_zones_requested) {
 		printf("Invalid number of zones returned: %"PRIu64" (expected: %"PRIu64")\n",
 		       g_zone_report->nr_zones, g_nr_zones_requested);
-		exit_and_free_qpair(qpair);
+		exit(1);
 	}
 	outstanding_commands--;
 }
@@ -617,14 +606,14 @@ get_zns_zone_report(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair)
 	g_zone_report = calloc(1, g_zone_report_size);
 	if (g_zone_report == NULL) {
 		printf("Zone report allocation failed!\n");
-		exit_and_free_qpair(qpair);
+		exit(1);
 	}
 
 	if (spdk_nvme_zns_report_zones(ns, qpair, g_zone_report, g_zone_report_size,
 				       0, SPDK_NVME_ZRA_LIST_ALL, true,
-				       get_zns_zone_report_completion, qpair)) {
+				       get_zns_zone_report_completion, NULL)) {
 		printf("spdk_nvme_zns_report_zones() failed\n");
-		exit_and_free_qpair(qpair);
+		exit(1);
 	} else {
 		outstanding_commands++;
 	}
