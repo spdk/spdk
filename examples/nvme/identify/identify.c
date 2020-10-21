@@ -780,7 +780,7 @@ print_zns_zone_report(void)
 	for (i = 0; i < g_zone_report->nr_zones; i++) {
 		struct spdk_nvme_zns_zone_desc *desc = &g_zone_report->descs[i];
 		printf("Zone: %"PRIu64" ZSLBA: 0x%016"PRIx64" ZCAP: 0x%016"PRIx64" WP: 0x%016"PRIx64" ZS: %x ZT: %x ZA: %x\n",
-		       i, desc->zslba, desc->zcap, desc->wp, desc->zs >> 4, desc->zt, desc->za);
+		       i, desc->zslba, desc->zcap, desc->wp, desc->zs, desc->zt, desc->za.raw);
 	}
 	free(g_zone_report);
 	g_zone_report = NULL;

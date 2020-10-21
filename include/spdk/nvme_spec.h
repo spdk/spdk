@@ -3109,13 +3109,50 @@ enum spdk_nvme_zns_zone_state {
 };
 
 struct spdk_nvme_zns_zone_desc {
-	uint8_t zt;
-	uint8_t zs;
-	uint8_t za;
-	uint8_t reserved3[5];
+	/** Zone Type */
+	uint8_t zt		: 4;
+
+	uint8_t rsvd0		: 4;
+
+	uint8_t rsvd1		: 4;
+
+	/** Zone State */
+	uint8_t zs		: 4;
+
+	/**
+	 * Zone Attributes
+	 */
+	union {
+		uint8_t raw;
+
+		struct {
+			/** Zone Finished by controller */
+			uint8_t zfc: 1;
+
+			/** Zone Finish Recommended */
+			uint8_t zfr: 1;
+
+			/** Reset Zone Recommended */
+			uint8_t rzr: 1;
+
+			uint8_t rsvd3 : 4;
+
+			/** Zone Descriptor Valid */
+			uint8_t zdev: 1;
+		} bits;
+	} za;
+
+	uint8_t reserved[5];
+
+	/** Zone Capacity (in number of LBAs) */
 	uint64_t zcap;
+
+	/** Zone Start LBA */
 	uint64_t zslba;
+
+	/** Write Pointer (LBA) */
 	uint64_t wp;
+
 	uint8_t reserved32[32];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_zns_zone_desc) == 64, "Incorrect size");
