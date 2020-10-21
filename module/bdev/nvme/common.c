@@ -196,6 +196,7 @@ nvme_bdev_detach_bdev_from_ns(struct nvme_bdev *nvme_disk)
 	struct nvme_bdev_ctrlr *ctrlr = nvme_disk->nvme_ns->ctrlr;
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	assert(ctrlr->ref > 0);
 	ctrlr->ref--;
 
 	TAILQ_REMOVE(&nvme_disk->nvme_ns->bdevs, nvme_disk, tailq);
