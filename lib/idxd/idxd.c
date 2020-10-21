@@ -747,7 +747,7 @@ _idxd_prep_command(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
 	uint32_t index;
 	struct idxd_hw_desc *desc;
 	struct idxd_comp *comp;
-	uint64_t comp_hw_addr, desc_addr;
+	uint64_t comp_hw_addr;
 	int rc;
 
 	index = spdk_bit_array_find_first_clear(chan->ring_slots, 0);
@@ -762,12 +762,6 @@ _idxd_prep_command(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
 	comp = &chan->completions[index];
 
 	rc = _vtophys(&comp->hw, &comp_hw_addr, sizeof(struct idxd_hw_comp_record));
-	if (rc) {
-		spdk_bit_array_clear(chan->ring_slots, index);
-		return NULL;
-	}
-
-	rc = _vtophys(desc, &desc_addr, sizeof(struct idxd_hw_desc));
 	if (rc) {
 		spdk_bit_array_clear(chan->ring_slots, index);
 		return NULL;
@@ -1110,8 +1104,6 @@ _idxd_prep_batch_cmd(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
 {
 	struct idxd_hw_desc *desc;
 	struct idxd_comp *comp;
-	uint64_t desc_addr;
-	int rc;
 
 	if (_is_batch_valid(batch, chan) == false) {
 		SPDK_ERRLOG("Attempt to add to an invalid batch.\n");
@@ -1125,11 +1117,6 @@ _idxd_prep_batch_cmd(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
 
 	batch->remaining++;
 	desc = &batch->user_desc[batch->index];
-	rc = _vtophys(desc, &desc_addr, sizeof(struct idxd_hw_desc));
-	if (rc) {
-		return NULL;
-	}
-
 	comp = &batch->user_completions[batch->index];
 	_track_comp(chan, true, batch->index, comp, desc, batch);
 	SPDK_DEBUGLOG(idxd, "Prep batch %p index %u\n", batch, batch->index);
