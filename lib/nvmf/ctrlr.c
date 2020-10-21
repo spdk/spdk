@@ -950,8 +950,10 @@ nvmf_prop_set_cc(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
 	}
 
 	if (diff.raw != 0) {
+		/* Print an error message, but don't fail the command in this case.
+		 * If we did want to fail in this case, we'd need to ensure we acted
+		 * on no other bits or the initiator gets confused. */
 		SPDK_ERRLOG("Prop Set CC toggled reserved bits 0x%x!\n", diff.raw);
-		return false;
 	}
 
 	return true;
