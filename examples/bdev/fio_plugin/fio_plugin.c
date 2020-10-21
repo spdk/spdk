@@ -476,6 +476,13 @@ spdk_fio_setup(struct thread_data *td)
 }
 
 static void
+fio_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
+		  void *event_ctx)
+{
+	SPDK_WARNLOG("Unsupported bdev event: type %d\n", type);
+}
+
+static void
 spdk_fio_bdev_open(void *arg)
 {
 	struct thread_data *td = arg;
@@ -500,21 +507,16 @@ spdk_fio_bdev_open(void *arg)
 			return;
 		}
 
-		target->bdev = spdk_bdev_get_by_name(f->file_name);
-		if (!target->bdev) {
-			SPDK_ERRLOG("Unable to find bdev with name %s\n", f->file_name);
-			free(target);
-			fio_thread->failed = true;
-			return;
-		}
-
-		rc = spdk_bdev_open(target->bdev, true, NULL, NULL, &target->desc);
+		rc = spdk_bdev_open_ext(f->file_name, true, fio_bdev_event_cb, NULL,
+					&target->desc);
 		if (rc) {
 			SPDK_ERRLOG("Unable to open bdev %s\n", f->file_name);
 			free(target);
 			fio_thread->failed = true;
 			return;
 		}
+
+		target->bdev = spdk_bdev_desc_get_bdev(target->desc);
 
 		target->ch = spdk_bdev_get_io_channel(target->desc);
 		if (!target->ch) {
