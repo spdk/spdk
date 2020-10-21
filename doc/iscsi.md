@@ -23,24 +23,6 @@ document.
 
 ![iSCSI structure](iscsi.svg)
 
-## Configuring iSCSI Target via config file {#iscsi_config}
-
-A `iscsi_tgt` specific configuration file is used to configure the iSCSI target. A fully documented
-example configuration file is located at `etc/spdk/iscsi.conf.in`.
-
-The configuration file is used to configure the SPDK iSCSI target. This file defines the following:
-TCP ports to use as iSCSI portals; general iSCSI parameters; initiator names and addresses to allow
-access to iSCSI target nodes; number and types of storage backends to export over iSCSI LUNs; iSCSI
-target node mappings between portal groups, initiator groups, and LUNs.
-
-You should make a copy of the example configuration file, modify it to suit your environment, and
-then run the iscsi_tgt application and pass it the configuration file using the -c option. Right now,
-the target requires elevated privileges (root) to run.
-
-~~~
-build/bin/iscsi_tgt -c /path/to/iscsi.conf
-~~~
-
 ### Assigning CPU Cores to the iSCSI Target {#iscsi_config_lcore}
 
 SPDK uses the [DPDK Environment Abstraction Layer](http://dpdk.org/doc/guides/prog_guide/env_abstraction_layer.html)
@@ -57,26 +39,9 @@ command line option is used to configure the SPDK iSCSI target:
 This is a hexadecimal bit mask of the CPU cores where the iSCSI target will start polling threads.
 In this example, CPU cores 24, 25, 26 and 27 would be used.
 
-### Configuring a LUN in the iSCSI Target {#iscsi_lun}
-
-Each LUN in an iSCSI target node is associated with an SPDK block device.  See @ref bdev
-for details on configuring SPDK block devices.  The block device to LUN mappings are specified in the
-configuration file as:
-
-~~~~
-[TargetNodeX]
-  LUN0 Malloc0
-  LUN1 Nvme0n1
-~~~~
-
-This exports a malloc'd target. The disk is a RAM disk that is a chunk of memory allocated by iscsi in
-user space. It will use offload engine to do the copy job instead of memcpy if the system has enough DMA
-channels.
-
 ## Configuring iSCSI Target via RPC method {#iscsi_rpc}
 
-In addition to the configuration file, the iSCSI target may also be configured via JSON-RPC calls. See
-@ref jsonrpc for details.
+The iSCSI target is configured via JSON-RPC calls. See @ref jsonrpc for details.
 
 ### Portal groups
 

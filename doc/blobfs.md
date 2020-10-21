@@ -37,7 +37,7 @@ export USE_RTTI=1 && make db_bench DEBUG_LEVEL=0 SPDK_DIR=path/to/spdk
 Create an NVMe section in the configuration file using SPDK's `gen_nvme.sh` script.
 
 ~~~{.sh}
-scripts/gen_nvme.sh > /usr/local/etc/spdk/rocksdb.conf
+scripts/gen_nvme.sh > /usr/local/etc/spdk/rocksdb.json
 ~~~
 
 Verify the configuration file has specified the correct NVMe SSD.
@@ -54,7 +54,7 @@ HUGEMEM=5120 scripts/setup.sh
 Create an empty SPDK blobfs for testing.
 
 ~~~{.sh}
-test/blobfs/mkfs/mkfs /usr/local/etc/spdk/rocksdb.conf Nvme0n1
+test/blobfs/mkfs/mkfs /usr/local/etc/spdk/rocksdb.json Nvme0n1
 ~~~
 
 At this point, RocksDB is ready for testing with SPDK.  Three `db_bench` parameters are used to configure SPDK:
@@ -74,7 +74,7 @@ BlobFS provides a FUSE plug-in to mount an SPDK BlobFS as a kernel filesystem fo
 The FUSE plug-in requires fuse3 and will be built automatically when fuse3 is detected on the system.
 
 ~~~{.sh}
-test/blobfs/fuse/fuse /usr/local/etc/spdk/rocksdb.conf Nvme0n1 /mnt/fuse
+test/blobfs/fuse/fuse /usr/local/etc/spdk/rocksdb.json Nvme0n1 /mnt/fuse
 ~~~
 
 Note that the FUSE plug-in has some limitations - see the list below.

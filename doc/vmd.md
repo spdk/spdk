@@ -79,12 +79,6 @@ $ ./scripts/rpc.py bdev_nvme_attach_controller -b NVMe1 -t PCIe -a 5d0505:01:00.
 
 When application framework is used, VMD section needs to be added to the configuration file:
 
-Text config:
-```
-[VMD]
-  Enable True
-```
-
 JSON config:
 ```
 {

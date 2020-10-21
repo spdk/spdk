@@ -49,11 +49,8 @@ Param    | Long Param             | Type     | Default                | Descript
 
 ### Configuration file {#cmd_arg_config_file}
 
-Historically, the SPDK applications were configured using a configuration file.
-This is still supported, but is considered deprecated in favor of JSON RPC
-configuration. See @ref jsonrpc for details.
-
-Note that `--config` and `--wait-for-rpc` cannot be used at the same time.
+SPDK applications are configured using a JSON RPC configuration file.
+See @ref jsonrpc for details.
 
 ### Limit coredump {#cmd_arg_limit_coredump}
 

@@ -51,9 +51,6 @@ The fio configuration file must contain one new parameter:
 
     spdk_json_conf=./examples/bdev/fio_plugin/bdev.json
 
-This must point at an SPDK configuration file. There are a number of example configuration
-files in the SPDK repository under etc/spdk.
-
 You can specify which block device to run against by setting the filename parameter
 to the block device name:
 
