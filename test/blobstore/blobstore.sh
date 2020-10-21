@@ -11,9 +11,7 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 
 # Nvme0 target configuration
-echo '{"subsystems": [' > $testdir/blobcli.json
-$rootdir/scripts/gen_nvme.sh --json | jq -r "del(.config[] | select(.params.name!=\"Nvme0\"))" >> $testdir/blobcli.json
-echo ']}' >> $testdir/blobcli.json
+$rootdir/scripts/gen_nvme.sh --json-with-subsystems > $testdir/blobcli.json
 
 # generate random data file for import/export diff
 dd if=/dev/urandom of=$testdir/test.pattern bs=1M count=1

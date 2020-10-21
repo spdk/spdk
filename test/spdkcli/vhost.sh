@@ -33,8 +33,8 @@ dd if=/dev/zero of="$sample_aio2" bs=2048 count=5000
 $spdkcli_job "'/bdevs/aio create sample0 $sample_aio 512' 'sample0' True
 '/bdevs/aio create sample1 $sample_aio2 512' 'sample1' True
 "
-trtype=$($rootdir/scripts/gen_nvme.sh --json | jq -r '.config[].params | select(.name=="Nvme0").trtype')
-traddr=$($rootdir/scripts/gen_nvme.sh --json | jq -r '.config[].params | select(.name=="Nvme0").traddr')
+trtype=$($rootdir/scripts/gen_nvme.sh | jq -r '.config[].params | select(.name=="Nvme0").trtype')
+traddr=$($rootdir/scripts/gen_nvme.sh | jq -r '.config[].params | select(.name=="Nvme0").traddr')
 $spdkcli_job "'/bdevs/nvme create Nvme0 $trtype $traddr' 'Nvme0' True
 '/bdevs/split_disk bdev_split_create Nvme0n1 4' 'Nvme0n1p0' True
 "

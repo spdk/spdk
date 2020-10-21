@@ -336,9 +336,7 @@ function json_config_test_init() {
 
 	# Load nvme configuration. The load_config will issue framework_start_init automatically
 	(
-		echo '{"subsystems": ['
-		$rootdir/scripts/gen_nvme.sh --json | jq -r "del(.config[] | select(.params.name!=\"Nvme0\"))"
-		echo ']}'
+		$rootdir/scripts/gen_nvme.sh --json-with-subsystems
 	) | tgt_rpc load_config
 
 	tgt_check_notification_types

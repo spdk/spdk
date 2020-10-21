@@ -1523,7 +1523,7 @@ main(int argc, char **argv)
 	if (access(cli_context->config_file, F_OK) == -1) {
 		printf("Error: No config file found.\n");
 		printf("To create a config file named 'blobcli.json' for your NVMe device:\n");
-		printf("   <path to spdk>/scripts/gen_nvme.sh --json > blobcli.json\n");
+		printf("   <path to spdk>/scripts/gen_nvme.sh --json-with-subsystems > blobcli.json\n");
 		printf("and then re-run the cli tool.\n");
 		exit(-1);
 	}

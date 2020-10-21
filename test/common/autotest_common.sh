@@ -1264,7 +1264,7 @@ function get_nvme_ctrlr_from_bdf() {
 # uio-pci-generic or vfio-pci
 function get_nvme_bdfs() {
 	xtrace_disable
-	bdfs=$(jq -r .config[].params.traddr <<< $($rootdir/scripts/gen_nvme.sh --json))
+	bdfs=$(jq -r .config[].params.traddr <<< $($rootdir/scripts/gen_nvme.sh))
 	if [[ -z $bdfs ]]; then
 		echo "No devices to test on!"
 		exit 1

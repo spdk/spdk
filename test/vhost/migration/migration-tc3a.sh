@@ -105,7 +105,7 @@ function host1_start_nvmf() {
 	waitforlisten "$nvmf_tgt_pid" "$nvmf_dir/nvmf_rpc.sock"
 	$rpc_nvmf framework_start_init
 	$rpc_nvmf nvmf_create_transport -t RDMA -u 8192
-	$rootdir/scripts/gen_nvme.sh --json | $rpc_nvmf load_subsystem_config
+	$rootdir/scripts/gen_nvme.sh | $rpc_nvmf load_subsystem_config
 
 	$rpc_nvmf nvmf_create_subsystem nqn.2018-02.io.spdk:cnode1 -a -s SPDK01
 	$rpc_nvmf nvmf_subsystem_add_ns nqn.2018-02.io.spdk:cnode1 Nvme0n1

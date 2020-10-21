@@ -41,7 +41,7 @@ trap 'remove_backends; iscsicleanup; killprocess $iscsipid; iscsitestfini; exit 
 waitforlisten $iscsipid
 $rpc_py iscsi_set_options -o 30 -a 128
 $rpc_py framework_start_init
-$rootdir/scripts/gen_nvme.sh --json | $rpc_py load_subsystem_config
+$rootdir/scripts/gen_nvme.sh | $rpc_py load_subsystem_config
 timing_exit start_iscsi_tgt
 
 $rpc_py iscsi_create_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT

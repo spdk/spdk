@@ -17,11 +17,7 @@ function finish_test() {
 	} || :
 }
 
-cat <<- JSON > "$testdir/conf.json"
-	{"subsystems":[
-	$("$rootdir/scripts/gen_nvme.sh" --json)
-	]}
-JSON
+$rootdir/scripts/gen_nvme.sh --json-with-subsystems > $testdir/conf.json
 
 nvmfappstart -m 0x3 -p 0 -s 1024 --json $testdir/conf.json
 

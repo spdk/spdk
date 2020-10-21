@@ -25,7 +25,7 @@ function destroy_vols() {
 }
 
 function create_vols() {
-	$rootdir/scripts/gen_nvme.sh --json | $rpc_py load_subsystem_config
+	$rootdir/scripts/gen_nvme.sh | $rpc_py load_subsystem_config
 	waitforbdev Nvme0n1
 
 	$rpc_py bdev_lvol_create_lvstore Nvme0n1 lvs0

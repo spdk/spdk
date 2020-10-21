@@ -28,7 +28,7 @@ ocf_names[2]=WT_Nvme ocf_modes[2]=wt
 ocf_names[3]=WB_Nvme0 ocf_modes[3]=wb
 ocf_names[4]=WB_Nvme1 ocf_modes[4]=wb
 
-mapfile -t config < <("$rootdir/scripts/gen_nvme.sh" --json)
+mapfile -t config < <("$rootdir/scripts/gen_nvme.sh")
 
 # Drop anything from last closing ] so we can inject our own config pieces ...
 config=("${config[@]::${#config[@]}-2}")

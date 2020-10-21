@@ -11,7 +11,7 @@ rpc_py=$rootdir/scripts/rpc.py
 
 $rootdir/scripts/setup.sh
 
-mapfile -t config < <("$rootdir/scripts/gen_nvme.sh" --json)
+mapfile -t config < <("$rootdir/scripts/gen_nvme.sh")
 # Drop anything from last closing ] so we can inject our own config pieces ...
 config=("${config[@]::${#config[@]}-2}")
 # ... and now convert entire array to a single string item

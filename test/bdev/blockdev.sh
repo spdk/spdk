@@ -49,7 +49,7 @@ function setup_bdev_conf() {
 }
 
 function setup_nvme_conf() {
-	"$rootdir/scripts/gen_nvme.sh" --json | "$rpc_py" load_subsystem_config
+	"$rootdir/scripts/gen_nvme.sh" | "$rpc_py" load_subsystem_config
 }
 
 function setup_gpt_conf() {

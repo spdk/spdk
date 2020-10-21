@@ -23,7 +23,7 @@ $SPDK_BIN_DIR/vhost &
 vhost_pid=$!
 waitforlisten $vhost_pid
 
-$rootdir/scripts/gen_nvme.sh --json | $rootdir/scripts/rpc.py load_subsystem_config
+$rootdir/scripts/gen_nvme.sh | $rootdir/scripts/rpc.py load_subsystem_config
 if [ -z "$(rpc_cmd bdev_get_bdevs | jq '.[] | select(.name=="Nvme0n1")')" ]; then
 	echo "Nvme0n1 bdev not found!" && false
 fi

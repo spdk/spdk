@@ -30,7 +30,7 @@ trap 'at_ftl_exit' SIGINT SIGTERM EXIT
 PCI_WHITELIST="$device" PCI_BLACKLIST="" DRIVER_OVERRIDE="" $rootdir/scripts/setup.sh
 
 # Use first regular NVMe disk (non-OC) as non-volatile cache
-nvme_disks=$($rootdir/scripts/gen_nvme.sh --json | jq -r \
+nvme_disks=$($rootdir/scripts/gen_nvme.sh | jq -r \
 	".config[] | select(.params.traddr != \"$device\").params.traddr")
 
 for disk in $nvme_disks; do
