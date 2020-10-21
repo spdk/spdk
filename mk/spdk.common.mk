@@ -272,7 +272,7 @@ define spdk_build_realname_shared_lib
 	    -Wl,--soname,$(notdir $@) \
 	    -Wl,--whole-archive $(1) -Wl,--no-whole-archive \
 	    -Wl,--version-script=$(2) \
-	    $(3)
+	    $(3) -Wl,--no-as-needed $(4) -Wl,--as-needed
 endef
 
 BUILD_LINKERNAME_LIB=\
