@@ -36,31 +36,36 @@
  * down to a bdev (or bdevs) that its configured to attach to.
  */
 
+#include "spdk/stdinc.h"
+
 #include "vbdev_passthru.h"
+#include "spdk/rpc.h"
 #include "spdk/env.h"
-#include "spdk/conf.h"
 #include "spdk/endian.h"
+#include "spdk/string.h"
 #include "spdk/thread.h"
+#include "spdk/util.h"
+
+#include "spdk/bdev_module.h"
+#include "spdk/log.h"
 
 
-static int vbdev_ext_passthru_init(void);
-static void vbdev_ext_passthru_get_spdk_running_config(FILE *fp);
-static int vbdev_ext_passthru_get_ctx_size(void);
-static void vbdev_ext_passthru_examine(struct spdk_bdev *bdev);
-static void vbdev_ext_passthru_finish(void);
-static int vbdev_ext_passthru_config_json(struct spdk_json_write_ctx *w);
+static int vbdev_passthru_init(void);
+static int vbdev_passthru_get_ctx_size(void);
+static void vbdev_passthru_examine(struct spdk_bdev *bdev);
+static void vbdev_passthru_finish(void);
+static int vbdev_passthru_config_json(struct spdk_json_write_ctx *w);
 
-static struct spdk_bdev_module passthru_if_external = {
+static struct spdk_bdev_module passthru_if = {
 	.name = "passthru_external",
-	.module_init = vbdev_ext_passthru_init,
-	.config_text = vbdev_ext_passthru_get_spdk_running_config,
-	.get_ctx_size = vbdev_ext_passthru_get_ctx_size,
-	.examine_config = vbdev_ext_passthru_examine,
-	.module_fini = vbdev_ext_passthru_finish,
-	.config_json = vbdev_ext_passthru_config_json
+	.module_init = vbdev_passthru_init,
+	.get_ctx_size = vbdev_passthru_get_ctx_size,
+	.examine_config = vbdev_passthru_examine,
+	.module_fini = vbdev_passthru_finish,
+	.config_json = vbdev_passthru_config_json
 };
 
-SPDK_BDEV_MODULE_REGISTER(passthru, &passthru_if_external)
+SPDK_BDEV_MODULE_REGISTER(ext_passthru, &passthru_if)
 
 /* List of pt_bdev names and their base bdevs via configuration file.
  * Used so we can parse the conf once at init and use this list in examine().
@@ -78,6 +83,7 @@ struct vbdev_passthru {
 	struct spdk_bdev_desc		*base_desc; /* its descriptor we get from open */
 	struct spdk_bdev		pt_bdev;    /* the PT virtual bdev */
 	TAILQ_ENTRY(vbdev_passthru)	link;
+	struct spdk_thread		*thread;    /* thread where base device is opened */
 };
 static TAILQ_HEAD(, vbdev_passthru) g_pt_nodes = TAILQ_HEAD_INITIALIZER(g_pt_nodes);
 
@@ -119,6 +125,15 @@ _device_unregister_cb(void *io_device)
 	free(pt_node);
 }
 
+/* Wrapper for the bdev close operation. */
+static void
+_vbdev_passthru_destruct(void *ctx)
+{
+	struct spdk_bdev_desc *desc = ctx;
+
+	spdk_bdev_close(desc);
+}
+
 /* Called after we've unregistered following a hot remove callback.
  * Our finish entry point will be called next.
  */
@@ -136,8 +151,12 @@ vbdev_passthru_destruct(void *ctx)
 	/* Unclaim the underlying bdev. */
 	spdk_bdev_module_release_bdev(pt_node->base_bdev);
 
-	/* Close the underlying bdev. */
-	spdk_bdev_close(pt_node->base_desc);
+	/* Close the underlying bdev on its same opened thread. */
+	if (pt_node->thread && pt_node->thread != spdk_get_thread()) {
+		spdk_thread_send_msg(pt_node->thread, _vbdev_passthru_destruct, pt_node->base_desc);
+	} else {
+		spdk_bdev_close(pt_node->base_desc);
+	}
 
 	/* Unregister the io_device. */
 	spdk_io_device_unregister(pt_node, _device_unregister_cb);
@@ -165,8 +184,31 @@ _pt_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	}
 
 	/* Complete the original IO and then free the one that we created here
-	 * as a result of issuing an IO via submit_reqeust.
+	 * as a result of issuing an IO via submit_request.
 	 */
+	spdk_bdev_io_complete(orig_io, status);
+	spdk_bdev_free_io(bdev_io);
+}
+
+static void
+_pt_complete_zcopy_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_bdev_io *orig_io = cb_arg;
+	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+	struct passthru_bdev_io *io_ctx = (struct passthru_bdev_io *)orig_io->driver_ctx;
+
+	/* We setup this value in the submission routine, just showing here that it is
+	 * passed back to us.
+	 */
+	if (io_ctx->test != 0x5a) {
+		SPDK_ERRLOG("Error, original IO device_ctx is wrong! 0x%x\n",
+			    io_ctx->test);
+	}
+
+	/* Complete the original IO and then free the one that we created here
+	 * as a result of issuing an IO via submit_request.
+	 */
+	spdk_bdev_io_set_buf(orig_io, bdev_io->u.bdev.iovs[0].iov_base, bdev_io->u.bdev.iovs[0].iov_len);
 	spdk_bdev_io_complete(orig_io, status);
 	spdk_bdev_free_io(bdev_io);
 }
@@ -184,13 +226,15 @@ static void
 vbdev_passthru_queue_io(struct spdk_bdev_io *bdev_io)
 {
 	struct passthru_bdev_io *io_ctx = (struct passthru_bdev_io *)bdev_io->driver_ctx;
+	struct pt_io_channel *pt_ch = spdk_io_channel_get_ctx(io_ctx->ch);
 	int rc;
 
 	io_ctx->bdev_io_wait.bdev = bdev_io->bdev;
 	io_ctx->bdev_io_wait.cb_fn = vbdev_passthru_resubmit_io;
 	io_ctx->bdev_io_wait.cb_arg = bdev_io;
 
-	rc = spdk_bdev_queue_io_wait(bdev_io->bdev, io_ctx->ch, &io_ctx->bdev_io_wait);
+	/* Queue the IO using the channel of the base device. */
+	rc = spdk_bdev_queue_io_wait(bdev_io->bdev, pt_ch->base_ch, &io_ctx->bdev_io_wait);
 	if (rc != 0) {
 		SPDK_ERRLOG("Queue io failed in vbdev_passthru_queue_io, rc=%d.\n", rc);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -244,7 +288,7 @@ pt_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, boo
 
 /* Called when someone above submits IO to this pt vbdev. We're simply passing it on here
  * via SPDK IO calls which in turn allocate another bdev IO and call our cpl callback provided
- * below along with the original bdiv_io so that we can complete it once this IO completes.
+ * below along with the original bdev_io so that we can complete it once this IO completes.
  */
 static void
 vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
@@ -302,6 +346,15 @@ vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 		rc = spdk_bdev_reset(pt_node->base_desc, pt_ch->base_ch,
 				     _pt_complete_io, bdev_io);
 		break;
+	case SPDK_BDEV_IO_TYPE_ZCOPY:
+		rc = spdk_bdev_zcopy_start(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.offset_blocks,
+					   bdev_io->u.bdev.num_blocks, bdev_io->u.bdev.zcopy.populate,
+					   _pt_complete_zcopy_io, bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_ABORT:
+		rc = spdk_bdev_abort(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.abort.bio_to_abort,
+				     _pt_complete_io, bdev_io);
+		break;
 	default:
 		SPDK_ERRLOG("passthru: unknown I/O type %d\n", bdev_io->type);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -354,13 +407,13 @@ vbdev_passthru_get_io_channel(void *ctx)
 	return pt_ch;
 }
 
-/* This is the output for get_bdevs() for this vbdev */
+/* This is the output for bdev_get_bdevs() for this vbdev */
 static int
 vbdev_passthru_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct vbdev_passthru *pt_node = (struct vbdev_passthru *)ctx;
 
-	spdk_json_write_name(w, "passthru");
+	spdk_json_write_name(w, "passthru_external");
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "name", spdk_bdev_get_name(&pt_node->pt_bdev));
 	spdk_json_write_named_string(w, "base_bdev_name", spdk_bdev_get_name(pt_node->base_bdev));
@@ -371,13 +424,13 @@ vbdev_passthru_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 
 /* This is used to generate JSON that can configure this module to its current state. */
 static int
-vbdev_ext_passthru_config_json(struct spdk_json_write_ctx *w)
+vbdev_passthru_config_json(struct spdk_json_write_ctx *w)
 {
 	struct vbdev_passthru *pt_node;
 
 	TAILQ_FOREACH(pt_node, &g_pt_nodes, link) {
 		spdk_json_write_object_begin(w);
-		spdk_json_write_named_string(w, "method", "construct_passthru_bdev");
+		spdk_json_write_named_string(w, "method", "construct_ext_passthru_bdev");
 		spdk_json_write_named_object_begin(w, "params");
 		spdk_json_write_named_string(w, "base_bdev_name", spdk_bdev_get_name(pt_node->base_bdev));
 		spdk_json_write_named_string(w, "name", spdk_bdev_get_name(&pt_node->pt_bdev));
@@ -406,7 +459,7 @@ pt_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 
 /* We provide this callback for the SPDK channel code to destroy a channel
  * created with our create callback. We just need to undo anything we did
- * when we created. If this bdev used its own poller, we'd unregsiter it here.
+ * when we created. If this bdev used its own poller, we'd unregister it here.
  */
 static void
 pt_bdev_ch_destroy_cb(void *io_device, void *ctx_buf)
@@ -456,52 +509,16 @@ vbdev_passthru_insert_name(const char *bdev_name, const char *vbdev_name)
 	return 0;
 }
 
-/* On init, just parse config file and build list of pt vbdevs and bdev name pairs. */
+/* On init, just perform bdev module specific initialization. */
 static int
-vbdev_ext_passthru_init(void)
+vbdev_passthru_init(void)
 {
-	struct spdk_conf_section *sp = NULL;
-	const char *conf_bdev_name = NULL;
-	const char *conf_vbdev_name = NULL;
-	struct bdev_names *name;
-	int i, rc;
-
-	sp = spdk_conf_find_section(NULL, "Ext_Pt");
-	if (sp == NULL) {
-		return 0;
-	}
-
-	for (i = 0; ; i++) {
-		if (!spdk_conf_section_get_nval(sp, "PTE", i)) {
-			break;
-		}
-
-		conf_bdev_name = spdk_conf_section_get_nmval(sp, "PTE", i, 0);
-		if (!conf_bdev_name) {
-			SPDK_ERRLOG("Passthru configuration missing bdev name\n");
-			break;
-		}
-
-		conf_vbdev_name = spdk_conf_section_get_nmval(sp, "PTE", i, 1);
-		if (!conf_vbdev_name) {
-			SPDK_ERRLOG("Passthru configuration missing pt_bdev name\n");
-			break;
-		}
-
-		rc = vbdev_passthru_insert_name(conf_bdev_name, conf_vbdev_name);
-		if (rc != 0) {
-			return rc;
-		}
-	}
-	TAILQ_FOREACH(name, &g_bdev_names, link) {
-		SPDK_NOTICELOG("conf parse matched: %s\n", name->bdev_name);
-	}
 	return 0;
 }
 
 /* Called when the entire module is being torn down. */
 static void
-vbdev_ext_passthru_finish(void)
+vbdev_passthru_finish(void)
 {
 	struct bdev_names *name;
 
@@ -518,27 +535,12 @@ vbdev_ext_passthru_finish(void)
  * much context we want per IO.
  */
 static int
-vbdev_ext_passthru_get_ctx_size(void)
+vbdev_passthru_get_ctx_size(void)
 {
 	return sizeof(struct passthru_bdev_io);
 }
 
-/* Called when SPDK wants to save the current config of this vbdev module to
- * a file.
- */
-static void
-vbdev_ext_passthru_get_spdk_running_config(FILE *fp)
-{
-	struct bdev_names *names = NULL;
-
-	fprintf(fp, "\n[Ext_Pt]\n");
-	TAILQ_FOREACH(names, &g_bdev_names, link) {
-		fprintf(fp, "  PTE %s %s\n", names->bdev_name, names->vbdev_name);
-	}
-	fprintf(fp, "\n");
-}
-
-/* Where vbdev_ext_passthru_config_json() is used to generate per module JSON config data, this
+/* Where vbdev_passthru_config_json() is used to generate per module JSON config data, this
  * function is called to output any per bdev specific methods. For the PT module, there are
  * none.
  */
@@ -558,12 +560,10 @@ static const struct spdk_bdev_fn_table vbdev_passthru_fn_table = {
 	.write_config_json	= vbdev_passthru_write_config_json,
 };
 
-/* Called when the underlying base bdev goes away. */
 static void
-vbdev_passthru_base_bdev_hotremove_cb(void *ctx)
+vbdev_passthru_base_bdev_hotremove_cb(struct spdk_bdev *bdev_find)
 {
 	struct vbdev_passthru *pt_node, *tmp;
-	struct spdk_bdev *bdev_find = ctx;
 
 	TAILQ_FOREACH_SAFE(pt_node, &g_pt_nodes, link, tmp) {
 		if (bdev_find == pt_node->base_bdev) {
@@ -572,25 +572,41 @@ vbdev_passthru_base_bdev_hotremove_cb(void *ctx)
 	}
 }
 
+/* Called when the underlying base bdev triggers asynchronous event such as bdev removal. */
+static void
+vbdev_passthru_base_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
+				  void *event_ctx)
+{
+	switch (type) {
+	case SPDK_BDEV_EVENT_REMOVE:
+		vbdev_passthru_base_bdev_hotremove_cb(bdev);
+		break;
+	default:
+		SPDK_NOTICELOG("Unsupported bdev event: type %d\n", type);
+		break;
+	}
+}
+
 /* Create and register the passthru vbdev if we find it in our list of bdev names.
  * This can be called either by the examine path or RPC method.
  */
 static int
-vbdev_passthru_register(struct spdk_bdev *bdev)
+vbdev_passthru_register(const char *bdev_name)
 {
 	struct bdev_names *name;
 	struct vbdev_passthru *pt_node;
+	struct spdk_bdev *bdev;
 	int rc = 0;
 
 	/* Check our list of names from config versus this bdev and if
 	 * there's a match, create the pt_node & bdev accordingly.
 	 */
 	TAILQ_FOREACH(name, &g_bdev_names, link) {
-		if (strcmp(name->bdev_name, bdev->name) != 0) {
+		if (strcmp(name->bdev_name, bdev_name) != 0) {
 			continue;
 		}
 
-		SPDK_NOTICELOG("Match on %s\n", bdev->name);
+		SPDK_NOTICELOG("Match on %s\n", bdev_name);
 		pt_node = calloc(1, sizeof(struct vbdev_passthru));
 		if (!pt_node) {
 			rc = -ENOMEM;
@@ -598,8 +614,6 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 			break;
 		}
 
-		/* The base bdev that we're attaching to. */
-		pt_node->base_bdev = bdev;
 		pt_node->pt_bdev.name = strdup(name->vbdev_name);
 		if (!pt_node->pt_bdev.name) {
 			rc = -ENOMEM;
@@ -608,6 +622,22 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 			break;
 		}
 		pt_node->pt_bdev.product_name = "passthru";
+
+		/* The base bdev that we're attaching to. */
+		rc = spdk_bdev_open_ext(bdev_name, true, vbdev_passthru_base_bdev_event_cb,
+					NULL, &pt_node->base_desc);
+		if (rc) {
+			if (rc != -ENODEV) {
+				SPDK_ERRLOG("could not open bdev %s\n", bdev_name);
+			}
+			free(pt_node->pt_bdev.name);
+			free(pt_node);
+			break;
+		}
+		SPDK_NOTICELOG("base bdev opened\n");
+
+		bdev = spdk_bdev_desc_get_bdev(pt_node->base_desc);
+		pt_node->base_bdev = bdev;
 
 		/* Copy some properties from the underlying base bdev. */
 		pt_node->pt_bdev.write_cache = bdev->write_cache;
@@ -627,7 +657,7 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 		 */
 		pt_node->pt_bdev.ctxt = pt_node;
 		pt_node->pt_bdev.fn_table = &vbdev_passthru_fn_table;
-		pt_node->pt_bdev.module = &passthru_if_external;
+		pt_node->pt_bdev.module = &passthru_if;
 		TAILQ_INSERT_TAIL(&g_pt_nodes, pt_node, link);
 
 		spdk_io_device_register(pt_node, pt_bdev_ch_create_cb, pt_bdev_ch_destroy_cb,
@@ -635,21 +665,12 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 					name->vbdev_name);
 		SPDK_NOTICELOG("io_device created at: 0x%p\n", pt_node);
 
-		rc = spdk_bdev_open(bdev, true, vbdev_passthru_base_bdev_hotremove_cb,
-				    bdev, &pt_node->base_desc);
-		if (rc) {
-			SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(bdev));
-			TAILQ_REMOVE(&g_pt_nodes, pt_node, link);
-			spdk_io_device_unregister(pt_node, NULL);
-			free(pt_node->pt_bdev.name);
-			free(pt_node);
-			break;
-		}
-		SPDK_NOTICELOG("bdev opened\n");
+		/* Save the thread where the base device is opened */
+		pt_node->thread = spdk_get_thread();
 
 		rc = spdk_bdev_module_claim_bdev(bdev, pt_node->base_desc, pt_node->pt_bdev.module);
 		if (rc) {
-			SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(bdev));
+			SPDK_ERRLOG("could not claim bdev %s\n", bdev_name);
 			spdk_bdev_close(pt_node->base_desc);
 			TAILQ_REMOVE(&g_pt_nodes, pt_node, link);
 			spdk_io_device_unregister(pt_node, NULL);
@@ -679,12 +700,11 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 
 /* Create the passthru disk from the given bdev and vbdev name. */
 int
-create_passthru_disk(const char *bdev_name, const char *vbdev_name)
+bdev_passthru_create_disk(const char *bdev_name, const char *vbdev_name)
 {
-	struct spdk_bdev *bdev = NULL;
-	int rc = 0;
+	int rc;
 
-	/* Insert the bdev into our global name list even if it doesn't exist yet,
+	/* Insert the bdev name into our global name list even if it doesn't exist yet,
 	 * it may show up soon...
 	 */
 	rc = vbdev_passthru_insert_name(bdev_name, vbdev_name);
@@ -692,24 +712,24 @@ create_passthru_disk(const char *bdev_name, const char *vbdev_name)
 		return rc;
 	}
 
-	bdev = spdk_bdev_get_by_name(bdev_name);
-	if (!bdev) {
+	rc = vbdev_passthru_register(bdev_name);
+	if (rc == -ENODEV) {
 		/* This is not an error, we tracked the name above and it still
 		 * may show up later.
 		 */
 		SPDK_NOTICELOG("vbdev creation deferred pending base bdev arrival\n");
-		return 0;
+		rc = 0;
 	}
 
-	return vbdev_passthru_register(bdev);
+	return rc;
 }
 
 void
-delete_passthru_disk(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
+bdev_passthru_delete_disk(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	struct bdev_names *name;
 
-	if (!bdev || bdev->module != &passthru_if_external) {
+	if (!bdev || bdev->module != &passthru_if) {
 		cb_fn(cb_arg, -ENODEV);
 		return;
 	}
@@ -740,9 +760,9 @@ delete_passthru_disk(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
  * bdev, here's where we do it.
  */
 static void
-vbdev_ext_passthru_examine(struct spdk_bdev *bdev)
+vbdev_passthru_examine(struct spdk_bdev *bdev)
 {
-	vbdev_passthru_register(bdev);
+	vbdev_passthru_register(bdev->name);
 
-	spdk_bdev_module_examine_done(&passthru_if_external);
+	spdk_bdev_module_examine_done(&passthru_if);
 }

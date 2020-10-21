@@ -12,6 +12,6 @@ repository and should be run as follows:
 sudo ./test_make.sh /path/to/spdk
 ~~~
 
-The application `hello_world` and bdev module `passthru_external` have been copied from their namesakes
+The application `hello_bdev` is a symlink and bdev module `passthru_external` have been copied from their namesakes
 in the top level [SPDK github repository](https://github.com/spdk/spdk) and don't have any special
 functionality.
