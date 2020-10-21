@@ -235,3 +235,51 @@ function nvme_in_userspace() {
 	((${#bdfs[@]})) || return 1
 	printf '%s\n' "${bdfs[@]}"
 }
+
+cmp() {
+	local ver1 ver1_l
+	local ver2 ver2_l
+
+	IFS=".-:" read -ra ver1 <<< "$1"
+	IFS=".-:" read -ra ver2 <<< "$3"
+	local op=$2
+
+	ver1_l=${#ver1[@]}
+	ver2_l=${#ver2[@]}
+
+	local lt=0 gt=0 eq=0 v
+	case "$op" in
+		"<") : $((eq = gt = 1)) ;;
+		">") : $((eq = lt = 1)) ;;
+		"<=") : $((gt = 1)) ;;
+		">=") : $((lt = 1)) ;;
+		"==") : $((lt = gt = 1)) ;;
+	esac
+
+	decimal() (
+		local d=${1,,}
+		if [[ $d =~ ^[0-9]+$ ]]; then
+			echo $((10#$d))
+		elif [[ $d =~ ^0x || $d =~ ^[a-f0-9]+$ ]]; then
+			d=${d/0x/}
+			echo $((0x$d))
+		else
+			echo 0
+		fi
+	)
+
+	for ((v = 0; v < (ver1_l > ver2_l ? ver1_l : ver2_l); v++)); do
+		ver1[v]=$(decimal "${ver1[v]}")
+		ver2[v]=$(decimal "${ver2[v]}")
+		((ver1[v] > ver2[v])) && return "$gt"
+		((ver1[v] < ver2[v])) && return "$lt"
+	done
+	[[ ${ver1[*]} == "${ver2[*]}" ]] && return "$eq"
+}
+
+lt() { cmp "$1" "<" "$2"; }
+gt() { cmp "$1" ">" "$2"; }
+le() { cmp "$1" "<=" "$2"; }
+ge() { cmp "$1" ">=" "$2"; }
+eq() { cmp "$1" "==" "$2"; }
+neq() { ! eq "$1" "$2"; }
