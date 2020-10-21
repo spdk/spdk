@@ -38,6 +38,9 @@
 #include <rdma/rdma_cma.h>
 #include <rdma/rdma_verbs.h>
 
+/* Contains hooks definition */
+#include "spdk/nvme.h"
+
 struct spdk_rdma_qp_init_attr {
 	void		       *qp_context;
 	struct ibv_cq	       *send_cq;
@@ -56,6 +59,23 @@ struct spdk_rdma_qp {
 	struct ibv_qp *qp;
 	struct rdma_cm_id *cm_id;
 	struct spdk_rdma_send_wr_list send_wrs;
+};
+
+struct spdk_rdma_mem_map;
+
+union spdk_rdma_mr {
+	struct ibv_mr	*mr;
+	uint64_t	key;
+};
+
+enum SPDK_RDMA_TRANSLATION_TYPE {
+	SPDK_RDMA_TRANSLATION_MR = 0,
+	SPDK_RDMA_TRANSLATION_KEY
+};
+
+struct spdk_rdma_memory_translation {
+	union spdk_rdma_mr mr_or_key;
+	uint8_t translation_type;
 };
 
 /**
@@ -113,5 +133,67 @@ bool spdk_rdma_qp_queue_send_wrs(struct spdk_rdma_qp *spdk_rdma_qp, struct ibv_s
  * \return 0 on succes, errno on failure
  */
 int spdk_rdma_qp_flush_send_wrs(struct spdk_rdma_qp *spdk_rdma_qp, struct ibv_send_wr **bad_wr);
+
+/**
+ * Create a memory map which is used to register Memory Regions and perform address -> memory
+ * key translations
+ *
+ * \param pd Protection Domain which will be used to create Memory Regions
+ * \param hooks Optional hooks which are used to create Protection Domain or ger RKey
+ * \return Pointer to memory map or NULL on failure
+ */
+struct spdk_rdma_mem_map *spdk_rdma_create_mem_map(struct ibv_pd *pd,
+		struct spdk_nvme_rdma_hooks *hooks);
+
+/**
+ * Free previously allocated memory map
+ *
+ * \param map Pointer to memory map to free
+ */
+void spdk_rdma_free_mem_map(struct spdk_rdma_mem_map **map);
+
+/**
+ * Get a translation for the given address and length.
+ *
+ * Note: the user of this function should use address returned in \b translation structure
+ *
+ * \param map Pointer to translation map
+ * \param address Memory address for translation
+ * \param length Length of the memory address
+ * \param[in,out] translation Pointer to translation result to be filled by this function
+ * \retval -EINVAL if translation is not found
+ * \retval -ERANGE if requested address + length crosses Memory Region boundary
+ * \retval 0 translation succeed
+ */
+int spdk_rdma_get_translation(struct spdk_rdma_mem_map *map, void *address,
+			      size_t length, struct spdk_rdma_memory_translation *translation);
+
+/**
+ * Helper function for retrieving Local Memory Key. Should be applied to a translation
+ * returned by \b spdk_rdma_get_translation
+ *
+ * \param translation Memory translation
+ * \return Local Memory Key
+ */
+static inline uint32_t spdk_rdma_memory_translation_get_lkey(struct spdk_rdma_memory_translation
+		*translation)
+{
+	return translation->translation_type == SPDK_RDMA_TRANSLATION_MR ?
+	       translation->mr_or_key.mr->lkey : (uint32_t)translation->mr_or_key.key;
+}
+
+/**
+ * Helper function for retrieving Remote Memory Key. Should be applied to a translation
+ * returned by \b spdk_rdma_get_translation
+ *
+ * \param translation Memory translation
+ * \return Remote Memory Key
+ */
+static inline uint32_t spdk_rdma_memory_translation_get_rkey(struct spdk_rdma_memory_translation
+		*translation)
+{
+	return translation->translation_type == SPDK_RDMA_TRANSLATION_MR ?
+	       translation->mr_or_key.mr->rkey : (uint32_t)translation->mr_or_key.key;
+}
 
 #endif /* SPDK_RDMA_H */

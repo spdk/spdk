@@ -9,6 +9,9 @@
 	spdk_rdma_qp_disconnect;
 	spdk_rdma_qp_queue_send_wrs;
 	spdk_rdma_qp_flush_send_wrs;
+	spdk_rdma_create_mem_map;
+	spdk_rdma_free_mem_map;
+	spdk_rdma_get_translation;
 
 	local: *;
 };
