@@ -1,0 +1,22 @@
+case "$VERSION_CODENAME" in
+	xenial) # 16.04
+		packages+=(btrfs-tools)
+		packages+=(targetcli)
+		;;
+	*)
+		packages+=(
+			rdma-core
+			libpmempool1
+			clang-tools
+			targetcli-fb
+			open-isns-utils
+		)
+
+		if [[ $VERSION_CODENAME == bionic ]]; then
+			packages+=(btrfs-tools)
+		else
+			# On Ubuntu 20.04 (focal) btrfs-tools are available under different name - btrfs-progs
+			packages+=(btrfs-progs)
+		fi
+		;;
+esac

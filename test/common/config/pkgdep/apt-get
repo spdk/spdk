@@ -34,28 +34,6 @@ pre_install() {
 		install libasan2
 		install libubsan0
 	fi
-	if ! install rdma-core; then
-		echo "Package rdma-core is avaliable at Ubuntu 18 [universe] repositorium" >&2
-	fi
-	if ! install libpmempool1; then
-		echo "Package libpmempool1 is available at Ubuntu 18 [universe] repositorium" >&2
-	fi
-	if ! install clang-tools; then
-		echo "Package clang-tools is available at Ubuntu 18 [universe] repositorium" >&2
-	fi
-	if ! install --no-install-suggests --no-install-recommends open-isns-utils; then
-		echo "Package open-isns-utils is available at Ubuntu 18 [universe] repositorium" >&2
-	fi
-
-	# Package name for Ubuntu 18 is targetcli-fb but for Ubuntu 16 it's targetcli
-	if ! install targetcli-fb; then
-		install targetcli
-	fi
-
-	# On Ubuntu 20.04 (focal) btrfs-tools are available under different name - btrfs-progs
-	if ! install btrfs-tools; then
-		install btrfs-progs
-	fi
 }
 
 packages=(
