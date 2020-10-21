@@ -5,6 +5,7 @@ set -e
 trap 'echo -e "\n\nConfiguration failed\n\n" >&2' ERR
 
 rootdir=$(readlink -f $(dirname $0))
+source "$rootdir/scripts/common.sh"
 
 function usage()
 {
@@ -158,8 +159,8 @@ fi
 
 #check nasm only on x86
 if [[ $arch == x86_64* ]]; then
-	ver=$(nasm -v 2>/dev/null | awk '{print $3}' | sed 's/[^0-9]*//g')
-	if [[ "${ver:0:1}" -le "2" ]] && [[ "${ver:0:3}" -le "214" ]] && [[ "${ver:0:5}" -lt "21400" ]]; then
+	ver=$(nasm -v 2>/dev/null | awk '{print $3}')
+	if lt "$ver" 2.14; then
 		# ISA-L, compression & crypto require NASM version 2.14 or newer.
 		CONFIG[ISAL]=n
 		CONFIG[CRYPTO]=n
