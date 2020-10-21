@@ -45,6 +45,12 @@ Updated intel-ipsec-mb submodule to v0.54
 
 Updated ISA-L submodule to v2.29.0.
 
+### iscsi
+
+The iSCSI target supports iSCSI login redirection feature to achieve fault tolerance
+and load balancing particularly in scale out iSCSI target system, which runs multiple
+SPDK iSCSI targets.
+
 ### log
 
 A log flag structure, `spdk_log_register_flag`, `spdk_log_get_first_flag`,
@@ -86,6 +92,10 @@ A new RPC `bdev_examine_bdev` was added to allow users to examine a bdev explici
 It can be used only if bdev_auto_examine is set to false by the RPC `bdev_set_options`.
 
 Add optional 'no_wr_batching' parameter to 'nvmf_create_transport' RPC method.
+
+New RPCs, `iscsi_target_node_set_redirect` and `iscsi_target_node_request_logout`, have
+been added, and a new optional parameter `private` has been added to the RPC
+`iscsi_create_portal_group` to support iSCSI login redirection feature.
 
 ### Miscellaneous
 
