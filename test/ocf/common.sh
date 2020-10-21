@@ -3,13 +3,6 @@ source $rootdir/test/common/autotest_common.sh
 
 rpc_py=$rootdir/scripts/rpc.py
 
-function nvme_cfg() {
-	if [ -z "$ocf_nvme_cfg" ]; then
-		ocf_nvme_cfg=$($rootdir/scripts/gen_nvme.sh)
-	fi
-	echo "$ocf_nvme_cfg"
-}
-
 function clear_nvme() {
 	mapfile -t bdf < <(get_first_nvme_bdf)
 
