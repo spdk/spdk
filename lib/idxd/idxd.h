@@ -85,7 +85,6 @@ struct idxd_batch {
 	struct idxd_hw_desc		*user_desc;
 	struct idxd_comp		*user_completions;
 	uint32_t			remaining;
-	bool				submitted;
 	uint8_t				index;
 	TAILQ_ENTRY(idxd_batch)		link;
 };

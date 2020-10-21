@@ -983,7 +983,6 @@ spdk_idxd_batch_create(struct spdk_idxd_io_channel *chan)
 	if (!TAILQ_EMPTY(&chan->batch_pool)) {
 		batch = TAILQ_FIRST(&chan->batch_pool);
 		batch->index = batch->remaining = 0;
-		batch->submitted = false;
 		TAILQ_REMOVE(&chan->batch_pool, batch, link);
 		TAILQ_INSERT_TAIL(&chan->batches, batch, link);
 	} else {
@@ -1027,12 +1026,11 @@ spdk_idxd_batch_cancel(struct spdk_idxd_io_channel *chan, struct idxd_batch *bat
 		return -EINVAL;
 	}
 
-	if (batch->submitted == true) {
+	if (batch->remaining > 0) {
 		SPDK_ERRLOG("Cannot cancel batch, already submitted to HW.\n");
 		return -EINVAL;
 	}
 
-	batch->remaining = 0;
 	_free_batch(batch, chan);
 
 	return 0;
@@ -1053,7 +1051,7 @@ spdk_idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *bat
 		return -EINVAL;
 	}
 
-	if (batch->remaining < MIN_USER_DESC_COUNT) {
+	if (batch->index < MIN_USER_DESC_COUNT) {
 		/* DSA needs at least MIN_USER_DESC_COUNT for a batch, add a NOP to make it so. */
 		if (_idxd_batch_prep_nop(chan, batch)) {
 			return -EINVAL;
@@ -1075,9 +1073,8 @@ spdk_idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *bat
 	/* Command specific. */
 	desc->opcode = IDXD_OPCODE_BATCH;
 	desc->desc_list_addr = desc_addr;
-	desc->desc_count = batch->remaining;
-	assert(batch->remaining <= DESC_PER_BATCH);
-	assert(batch->remaining == batch->index);
+	desc->desc_count = batch->remaining = batch->index;
+	assert(batch->index <= DESC_PER_BATCH);
 
 	/* Add the batch elements completion contexts to the outstanding list to be polled. */
 	for (i = 0 ; i < batch->index; i++) {
@@ -1091,7 +1088,6 @@ spdk_idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *bat
 	batch->remaining++;
 
 	/* Submit operation. */
-	batch->submitted = true;
 	movdir64b(chan->portal, desc);
 	SPDK_DEBUGLOG(idxd, "Submitted batch %p\n", batch);
 
@@ -1110,12 +1106,11 @@ _idxd_prep_batch_cmd(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
 		return NULL;
 	}
 
-	if (batch->remaining == DESC_PER_BATCH) {
+	if (batch->index == DESC_PER_BATCH) {
 		SPDK_ERRLOG("Attempt to add to a batch that is already full.\n");
 		return NULL;
 	}
 
-	batch->remaining++;
 	desc = &batch->user_desc[batch->index];
 	comp = &batch->user_completions[batch->index];
 	_track_comp(chan, true, batch->index, comp, desc, batch);
