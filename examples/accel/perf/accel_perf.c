@@ -678,8 +678,8 @@ main(int argc, char **argv)
 	pthread_mutex_init(&g_workers_lock, NULL);
 	spdk_app_opts_init(&opts);
 	opts.reactor_mask = "0x1";
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "o:q:t:yw:P:f:", NULL, parse_args,
-				      usage)) != SPDK_APP_PARSE_ARGS_SUCCESS) {
+	if (spdk_app_parse_args(argc, argv, &opts, "o:q:t:yw:P:f:", NULL, parse_args,
+				usage) != SPDK_APP_PARSE_ARGS_SUCCESS) {
 		rc = -1;
 		goto cleanup;
 	}
