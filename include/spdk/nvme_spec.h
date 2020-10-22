@@ -3094,6 +3094,20 @@ enum spdk_nvme_zns_zra_report_opts {
 	SPDK_NVME_ZRA_LIST_ZSO	= 0x7,
 };
 
+enum spdk_nvme_zns_zone_type {
+	SPDK_NVME_ZONE_TYPE_SEQWR = 0x2,
+};
+
+enum spdk_nvme_zns_zone_state {
+	SPDK_NVME_ZONE_STATE_EMPTY	= 0x1,
+	SPDK_NVME_ZONE_STATE_IOPEN	= 0x2,
+	SPDK_NVME_ZONE_STATE_EOPEN	= 0x3,
+	SPDK_NVME_ZONE_STATE_CLOSED	= 0x4,
+	SPDK_NVME_ZONE_STATE_RONLY	= 0xD,
+	SPDK_NVME_ZONE_STATE_FULL	= 0xE,
+	SPDK_NVME_ZONE_STATE_OFFLINE	= 0xF,
+};
+
 struct spdk_nvme_zns_zone_desc {
 	uint8_t zt;
 	uint8_t zs;
