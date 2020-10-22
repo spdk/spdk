@@ -246,12 +246,9 @@ function install_libiscsi() {
 
 function install_git() {
 	if type -P git; then
-		if [[ $(sort -V) == "$GIT_VERSION"* ]]; then
-			# Our version is on top, meaning there's a newer git version installed
-			# or we already have matching one on board. Either way, we don't need
-			# to do anything, return.
+		if ge "$(git --version | awk '{print $3}')" "$GIT_VERSION"; then
 			return 0
-		fi <<< "$GIT_VERSION"$'\n'"$(git --version)"
+		fi
 	fi >/dev/null
 
 	install zlib-devel curl-devel

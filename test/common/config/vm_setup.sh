@@ -101,6 +101,7 @@ function detect_package_manager() {
 
 vmsetupdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$vmsetupdir/../../../")
+source "$rootdir/scripts/common.sh"
 
 set_os_id_version
 detect_package_manager
