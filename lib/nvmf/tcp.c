@@ -51,6 +51,7 @@
 #define NVMF_TCP_MAX_ACCEPT_SOCK_ONE_TIME 16
 #define SPDK_NVMF_TCP_DEFAULT_MAX_SOCK_PRIORITY 16
 #define SPDK_NVMF_TCP_DEFAULT_SOCK_PRIORITY 0
+#define SPDK_NVMF_TCP_DEFAULT_CONTROL_MSG_NUM 32
 #define SPDK_NVMF_TCP_DEFAULT_SUCCESS_OPTIMIZATION true
 
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp;
@@ -281,6 +282,7 @@ struct spdk_nvmf_tcp_port {
 
 struct tcp_transport_opts {
 	bool		c2h_success;
+	uint16_t	control_msg_num;
 	uint32_t	sock_priority;
 };
 
@@ -297,6 +299,10 @@ static const struct spdk_json_object_decoder tcp_transport_opts_decoder[] = {
 	{
 		"c2h_success", offsetof(struct tcp_transport_opts, c2h_success),
 		spdk_json_decode_bool, true
+	},
+	{
+		"control_msg_num", offsetof(struct tcp_transport_opts, control_msg_num),
+		spdk_json_decode_uint16, true
 	},
 	{
 		"sock_priority", offsetof(struct tcp_transport_opts, sock_priority),
@@ -510,6 +516,7 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 
 	ttransport->tcp_opts.c2h_success = SPDK_NVMF_TCP_DEFAULT_SUCCESS_OPTIMIZATION;
 	ttransport->tcp_opts.sock_priority = SPDK_NVMF_TCP_DEFAULT_SOCK_PRIORITY;
+	ttransport->tcp_opts.control_msg_num = SPDK_NVMF_TCP_DEFAULT_CONTROL_MSG_NUM;
 	if (opts->transport_specific != NULL &&
 	    spdk_json_decode_object_relaxed(opts->transport_specific, tcp_transport_opts_decoder,
 					    SPDK_COUNTOF(tcp_transport_opts_decoder),
@@ -527,7 +534,7 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 		     "  in_capsule_data_size=%d, max_aq_depth=%d\n"
 		     "  num_shared_buffers=%d, c2h_success=%d,\n"
 		     "  dif_insert_or_strip=%d, sock_priority=%d\n"
-		     "  abort_timeout_sec=%d\n",
+		     "  abort_timeout_sec=%d, control_msg_num=%hu\n",
 		     opts->max_queue_depth,
 		     opts->max_io_size,
 		     opts->max_qpairs_per_ctrlr - 1,
@@ -538,7 +545,8 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 		     ttransport->tcp_opts.c2h_success,
 		     opts->dif_insert_or_strip,
 		     ttransport->tcp_opts.sock_priority,
-		     opts->abort_timeout_sec);
+		     opts->abort_timeout_sec,
+		     ttransport->tcp_opts.control_msg_num);
 
 	if (ttransport->tcp_opts.sock_priority > SPDK_NVMF_TCP_DEFAULT_MAX_SOCK_PRIORITY) {
 		SPDK_ERRLOG("Unsupported socket_priority=%d, the current range is: 0 to %d\n"
@@ -546,6 +554,13 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 			    ttransport->tcp_opts.sock_priority, SPDK_NVMF_TCP_DEFAULT_MAX_SOCK_PRIORITY);
 		free(ttransport);
 		return NULL;
+	}
+
+	if (ttransport->tcp_opts.control_msg_num == 0 &&
+	    opts->in_capsule_data_size < SPDK_NVME_TCP_IN_CAPSULE_DATA_MAX_SIZE) {
+		SPDK_WARNLOG("TCP param control_msg_num can't be 0 if ICD is less than %u bytes. Using default value %u\n",
+			     SPDK_NVME_TCP_IN_CAPSULE_DATA_MAX_SIZE, SPDK_NVMF_TCP_DEFAULT_CONTROL_MSG_NUM);
+		ttransport->tcp_opts.control_msg_num = SPDK_NVMF_TCP_DEFAULT_CONTROL_MSG_NUM;
 	}
 
 	/* I/O unit size cannot be larger than max I/O size */
@@ -1059,6 +1074,7 @@ nvmf_tcp_control_msg_list_free(struct spdk_nvmf_tcp_control_msg_list *list)
 static struct spdk_nvmf_transport_poll_group *
 nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport)
 {
+	struct spdk_nvmf_tcp_transport	*ttransport;
 	struct spdk_nvmf_tcp_poll_group *tgroup;
 
 	tgroup = calloc(1, sizeof(*tgroup));
@@ -1074,11 +1090,13 @@ nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport)
 	TAILQ_INIT(&tgroup->qpairs);
 	TAILQ_INIT(&tgroup->await_req);
 
+	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
+
 	if (transport->opts.in_capsule_data_size < SPDK_NVME_TCP_IN_CAPSULE_DATA_MAX_SIZE) {
 		SPDK_DEBUGLOG(nvmf_tcp, "ICD %u is less than min required for admin/fabric commands (%u). "
 			      "Creating control messages list\n", transport->opts.in_capsule_data_size,
 			      SPDK_NVME_TCP_IN_CAPSULE_DATA_MAX_SIZE);
-		tgroup->control_msg_list = nvmf_tcp_control_msg_list_create(32);
+		tgroup->control_msg_list = nvmf_tcp_control_msg_list_create(ttransport->tcp_opts.control_msg_num);
 		if (!tgroup->control_msg_list) {
 			goto cleanup;
 		}

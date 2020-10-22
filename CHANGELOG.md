@@ -157,7 +157,8 @@ New optional parameters, `enable_placement_id` and `enable_quickack` were added 
 A new RPC `bdev_examine_bdev` was added to allow users to examine a bdev explicitly.
 It can be used only if bdev_auto_examine is set to false by the RPC `bdev_set_options`.
 
-Add optional 'no_wr_batching' parameter to 'nvmf_create_transport' RPC method.
+New optional parameters `no_wr_batching` and `control_msg_num` were added to the RPC
+'nvmf_create_transport'.
 
 New RPCs, `iscsi_target_node_set_redirect` and `iscsi_target_node_request_logout`, have
 been added, and a new optional parameter `private` has been added to the RPC
