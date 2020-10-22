@@ -102,6 +102,7 @@ read_complete(void *arg, const struct spdk_nvme_cpl *completion)
 		fprintf(stderr, "I/O error status: %s\n", spdk_nvme_cpl_get_status_string(&completion->status));
 		fprintf(stderr, "Read I/O failed, aborting run\n");
 		sequence->is_completed = 2;
+		exit(1);
 	}
 
 	/*
