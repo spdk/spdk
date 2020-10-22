@@ -2,6 +2,11 @@
 
 ## v20.10: (Upcoming Release)
 
+### accel
+
+New APIs `spdk_accel_batch_cancel` and `spdk_idxd_batch_cancel` were added to allow
+cancelling a batch sequence.
+
 ### bdev
 
 A new `spdk_bdev_part_base_construct_ext` function has been added and the
@@ -20,6 +25,11 @@ function has been deprecated.
 ### dpdk
 
 Updated DPDK submodule to DPDK 20.08.
+
+### env
+
+A new API `spdk_mem_get_fd_and_offset` was added to get file descriptor and offset for
+a given virtual address.
 
 ### event
 
@@ -53,6 +63,13 @@ The iSCSI target supports iSCSI login redirection feature to achieve fault toler
 and load balancing particularly in scale out iSCSI target system, which runs multiple
 SPDK iSCSI targets.
 
+### json
+
+A new API `spdk_json_decode_object_relaxed` was added to allow parsing json values
+even if decoder for a given key is not found.
+
+A new API `spdk_json_free_object` was added to free memory allocated by `spdk_json_decode_object`.
+
 ### log
 
 A log flag structure, `spdk_log_register_flag`, `spdk_log_get_first_flag`,
@@ -63,6 +80,9 @@ and `SPDK_LOGDUMP` macros to display logs for specified log flag.
 The log flags in the event framework `-L` and several SPDK applications has been enabled on
 release builds of SPDK. On debug builds this option will additionally set
 log print level to `SPDK_LOG_DEBUG`.
+
+A new API `spdk_log_enable_timestamps` and new RPC `log_enable_timestamps` was added to
+toggle log timestamps.
 
 ### miscellaneous
 
@@ -82,7 +102,13 @@ by allocating a buffer. The bdevperf `-x` param was renamed to `-Z` and the defa
 value changed to false. For bdevs that support zcopy, use the -Z flag to enable
 using zcopy API.
 
+### net
+
+Net framework intended for use by user-space TCP stacks was removed.
+
 ### nvme
+
+Zoned Namespace Command Set support has been added to NVMe driver, see `nvme_zns.h` for details.
 
 New APIs, `spdk_nvme_detach_async` and `spdk_nvme_detach_poll_async`, have been added to
 detach multiple controllers in parallel to mitigate lengthy shutdown notification of
@@ -108,6 +134,14 @@ Work Requests batching in RDMA transport.
 
 NVMf Target transports can now parse any additional JSON params in the nvmf_create_transport RPC
 through the JSON context provided via spdk_nvmf_target_opts->transport_specific.
+
+A new RPC `nvmf_subsystem_set_options` was added to allow transport specific options within subsystem.
+
+A new API `spdk_nvmf_transport_stop_listen_async` was added to stop accepting new connections
+at the provided address. `nvmf_subsystem_remove_listener` RPC now uses this function.
+
+A new API `spdk_nvmf_subsystem_disconnect_host` was added to disconnect all connections
+originating from the provided hostnqn. `nvmf_subsystem_remove_host` RPC now uses this function.
 
 ### ocf
 
@@ -165,11 +199,17 @@ A new utility named `fd_group` was add. It is now
 implemented by epoll on Linux platform. It can be used by
 spdk_thread and reactor to implement interrupt mode.
 
+Added `spdk_bit_pool` utility, see `bit_pool.h` for details.
+
 ### vhost
 
 SPDK has switched to DPDK's rte_vhost library since 19.07 release, removed the internal
 rte_vhost library which is used for DPDK older than 19.05, removed the experimental vhost
 nvme target which depends on the internal rte_vhost library.
+
+### vpp
+
+Removed socket abstraction for VPP.
 
 ## v20.07: SPDK CSI driver, new accel_fw commands, I/O abort support
 
