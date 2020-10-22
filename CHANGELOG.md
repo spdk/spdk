@@ -2,26 +2,6 @@
 
 ## v20.10: (Upcoming Release)
 
-### vhost
-
-SPDK has switched to DPDK's rte_vhost library since 19.07 release, removed the internal
-rte_vhost library which is used for DPDK older than 19.05, removed the experimental vhost
-nvme target which depends on the internal rte_vhost library.
-
-### thread
-
-`fd_group` is applied to support interrupt mode.
-New APIs were added to support an experimental interrupt mode.  This allows modules or
-libraries to selectively register file descriptors that the spdk_thread can wait on,
-as an alternative to polling. In v20.10, this functionality is enabled in a very small
-subset of SPDK libraries and modules.
-
-### util
-
-A new utility named `fd_group` was add. It is now
-implemented by epoll on Linux platform. It can be used by
-spdk_thread and reactor to implement interrupt mode.
-
 ### bdev
 
 A new `spdk_bdev_part_base_construct_ext` function has been added and the
@@ -37,16 +17,16 @@ Removed `spdk_bdev_config_text` function for bdev modules to report legacy confi
 A new `spdk_bdev_create_bs_dev_ext` function has been added and `spdk_bdev_create_bs_dev_from_desc`
 function has been deprecated.
 
+### dpdk
+
+Updated DPDK submodule to DPDK 20.08.
+
 ### event
 
 Removed `spdk_subsystem_config` callback for submodules as part of legacy config removal.
 
 Removed `spdk_app_get_running_config` function that printed configuration in legacy format,
 and removed `usr1_handler` from `struct spdk_app_opts` callback that was used to call it.
-
-### dpdk
-
-Updated DPDK submodule to DPDK 20.08.
 
 ### fio
 
@@ -84,6 +64,24 @@ The log flags in the event framework `-L` and several SPDK applications has been
 release builds of SPDK. On debug builds this option will additionally set
 log print level to `SPDK_LOG_DEBUG`.
 
+### miscellaneous
+
+The contents of the log_rpc library have been moved to the event library. The log_rpc
+library now no longer exists.
+
+The contents of the app_rpc library have been moved to the event library. The app_rpc
+library now no longer exists.
+
+The contents of the bdev_rpc library have been moved to the bdev library. The app_rpc
+library now no longer exists.
+
+The bdevperf application now disables the zcopy API by default. Prior to this change,
+bdevperf enabled using the zcopy API by default which caused a performance impact of
+up to 25% on bdevs that don't natively support zcopy because the API emulates zero-copy
+by allocating a buffer. The bdevperf `-x` param was renamed to `-Z` and the default
+value changed to false. For bdevs that support zcopy, use the -Z flag to enable
+using zcopy API.
+
 ### nvme
 
 New APIs, `spdk_nvme_detach_async` and `spdk_nvme_detach_poll_async`, have been added to
@@ -101,18 +99,15 @@ has been deprecated.
 The NVMe-oF target now supports Asymmetric Namespace Access (ANA) Reporting to provide
 multipath to NVMe-oF initiator.
 
+Add 'no_wr_batching' parameter to 'spdk_nvmf_transport_opts' struct to disable
+Work Requests batching in RDMA transport.
+
+NVMf Target transports can now parse any additional JSON params in the nvmf_create_transport RPC
+through the JSON context provided via spdk_nvmf_target_opts->transport_specific.
+
 ### ocf
 
 Updated OCF submodule to v20.03.1
-
-### sock
-
-The `enable_placement_id` field was added in the struct spdk_sock_impl_opts to
-make the placement_id feature configurable by users. The default setting is
-not enabled.
-
-The `enable_quick_ack` field was added in the struct spdk_sock_impl_opts to enable
-or disable quick ack for the POSIX sock module. The default setting is not enabled.
 
 ### rpc
 
@@ -134,29 +129,6 @@ a new RPC `nvmf_subsystem_listner_set_ana_state` was added for ANA reporting.
 New RPCs, `nvmf_subsystem_get_listeners` and `nvmf_subsystem_get_qpairs`, were added to
 retrieve configuration of the NVMe-oF subsystem.
 
-### Miscellaneous
-
-The contents of the log_rpc library have been moved to the event library. The log_rpc
-library now no longer exists.
-
-The contents of the app_rpc library have been moved to the event library. The app_rpc
-library now no longer exists.
-
-The contents of the bdev_rpc library have been moved to the bdev library. The app_rpc
-library now no longer exists.
-
-The bdevperf application now disables the zcopy API by default. Prior to this change,
-bdevperf enabled using the zcopy API by default which caused a performance impact of
-up to 25% on bdevs that don't natively support zcopy because the API emulates zero-copy
-by allocating a buffer. The bdevperf `-x` param was renamed to `-Z` and the default
-value changed to false. For bdevs that support zcopy, use the -Z flag to enable
-using zcopy API.
-
-### nvmf
-
-Add 'no_wr_batching' parameter to 'spdk_nvmf_transport_opts' struct to disable
-Work Requests batching in RDMA transport.
-
 ### scsi
 
 Two new APIs have been added `spdk_scsi_dev_construct_ext` and
@@ -166,10 +138,34 @@ receive the notification when the scsi bdev has been resized.
 The `spdk_scsi_dev_construct` and `spdk_scsi_dev_add_lun` eventually may be
 deprecated and removed.
 
-### nvmf
+### sock
 
-NVMf Target transports can now parse any additional JSON params in the nvmf_create_transport RPC
-through the JSON context provided via spdk_nvmf_target_opts->transport_specific.
+The `enable_placement_id` field was added in the struct spdk_sock_impl_opts to
+make the placement_id feature configurable by users. The default setting is
+not enabled.
+
+The `enable_quick_ack` field was added in the struct spdk_sock_impl_opts to enable
+or disable quick ack for the POSIX sock module. The default setting is not enabled.
+
+### thread
+
+`fd_group` is applied to support interrupt mode.
+New APIs were added to support an experimental interrupt mode.  This allows modules or
+libraries to selectively register file descriptors that the spdk_thread can wait on,
+as an alternative to polling. In v20.10, this functionality is enabled in a very small
+subset of SPDK libraries and modules.
+
+### util
+
+A new utility named `fd_group` was add. It is now
+implemented by epoll on Linux platform. It can be used by
+spdk_thread and reactor to implement interrupt mode.
+
+### vhost
+
+SPDK has switched to DPDK's rte_vhost library since 19.07 release, removed the internal
+rte_vhost library which is used for DPDK older than 19.05, removed the experimental vhost
+nvme target which depends on the internal rte_vhost library.
 
 ## v20.07: SPDK CSI driver, new accel_fw commands, I/O abort support
 
