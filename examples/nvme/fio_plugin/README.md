@@ -105,3 +105,14 @@ tag mask are set to 0x1234 and 0xFFFF by default.
 To enable VMD enumeration add enable_vmd flag in fio configuration file:
 
     enable_vmd=1
+
+# ZNS
+
+To use Zoned Namespaces then build the io-engine against, and run using, a fio version >= 3.23 and add:
+
+    zonemode=zbd
+
+To your fio-script, also have a look at script-examples provided with fio:
+
+    fio/examples/zbd-seq-read.fio
+    fio/examples/zbd-rand-write.fio

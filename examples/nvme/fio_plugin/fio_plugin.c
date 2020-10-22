@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/nvme.h"
+#include "spdk/nvme_zns.h"
 #include "spdk/vmd.h"
 #include "spdk/env.h"
 #include "spdk/string.h"
@@ -45,6 +46,12 @@
 #include "config-host.h"
 #include "fio.h"
 #include "optgroup.h"
+
+#ifdef for_each_rw_ddir
+#define FIO_HAS_ZBD (FIO_IOOPS_VERSION >= 26)
+#else
+#define FIO_HAS_ZBD (0)
+#endif
 
 /* FreeBSD is missing CLOCK_MONOTONIC_RAW,
  * so alternative is provided. */
@@ -229,6 +236,25 @@ get_fio_ctrlr(const struct spdk_nvme_transport_id *trid)
 
 	return NULL;
 }
+
+#if FIO_HAS_ZBD
+/**
+ * Returns the fio_qpair matching the given fio_file and has an associated ns
+ */
+static struct spdk_fio_qpair *
+get_fio_qpair(struct spdk_fio_thread *fio_thread, struct fio_file *f)
+{
+	struct spdk_fio_qpair	*fio_qpair;
+
+	TAILQ_FOREACH(fio_qpair, &fio_thread->fio_qpair, link) {
+		if ((fio_qpair->f == f) && fio_qpair->ns) {
+			return fio_qpair;
+		}
+	}
+
+	return NULL;
+}
+#endif
 
 static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
@@ -987,6 +1013,233 @@ static int spdk_fio_invalidate(struct thread_data *td, struct fio_file *f)
 	return 0;
 }
 
+#if FIO_HAS_ZBD
+static int
+spdk_fio_get_zoned_model(struct thread_data *td, struct fio_file *f, enum zbd_zoned_model *model)
+{
+	struct spdk_fio_thread *fio_thread = td->io_ops_data;
+	struct spdk_fio_qpair *fio_qpair = NULL;
+
+	*model = ZBD_IGNORE;
+
+	if (f->filetype != FIO_TYPE_FILE && \
+	    f->filetype != FIO_TYPE_BLOCK && \
+	    f->filetype != FIO_TYPE_CHAR) {
+		log_info("spdk/nvme: ignoring filetype: %d\n", f->filetype);
+		return 0;
+	}
+
+	fio_qpair = get_fio_qpair(fio_thread, f);
+	if (!fio_qpair) {
+		log_err("spdk/nvme: no ns/qpair or file_name: '%s'\n", f->file_name);
+		return -ENODEV;
+	}
+
+	switch (spdk_nvme_ns_get_csi(fio_qpair->ns)) {
+	case SPDK_NVME_CSI_NVM:
+		*model = ZBD_NONE;
+		return 0;
+
+	case SPDK_NVME_CSI_KV:
+		log_err("spdk/nvme: KV namespace is currently not supported\n");
+		return -ENOSYS;
+
+	case SPDK_NVME_CSI_ZNS:
+		if (!spdk_nvme_zns_ns_get_data(fio_qpair->ns)) {
+			log_err("spdk/nvme: file_name: '%s', ZNS is not enabled\n", f->file_name);
+			return -EINVAL;
+		}
+
+		*model = ZBD_HOST_MANAGED;
+		return 0;
+	}
+
+	return -EINVAL;
+}
+
+/**
+ * Callback function to use while processing completions until completion-indicator turns non-zero
+ */
+static void
+pcu_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
+{
+	int *completed = ctx;
+
+	*completed = spdk_nvme_cpl_is_error(cpl) ? -1 : 1;
+}
+
+/**
+ * Process Completions Until the given 'completed' indicator turns non-zero or an error occurs
+ */
+static int32_t
+pcu(struct spdk_nvme_qpair *qpair, int *completed)
+{
+	int32_t ret;
+
+	while (!*completed) {
+		ret = spdk_nvme_qpair_process_completions(qpair, 1);
+		if (ret < 0) {
+			log_err("spdk/nvme: process_compl(): ret: %d\n", ret);
+			return ret;
+		}
+	}
+
+	return 0;
+}
+
+static uint64_t
+spdk_fio_qpair_mdts_nbytes(struct spdk_fio_qpair *fio_qpair)
+{
+	const struct spdk_nvme_ctrlr_data *cdata;
+	union spdk_nvme_cap_register cap;
+
+	cap = spdk_nvme_ctrlr_get_regs_cap(fio_qpair->fio_ctrlr->ctrlr);
+	cdata = spdk_nvme_ctrlr_get_data(fio_qpair->fio_ctrlr->ctrlr);
+
+	return (uint64_t)1 << (12 + cap.bits.mpsmin + cdata->mdts);
+}
+
+static int
+spdk_fio_report_zones(struct thread_data *td, struct fio_file *f, uint64_t offset,
+		      struct zbd_zone *zbdz, unsigned int nr_zones)
+{
+	struct spdk_fio_thread *fio_thread = td->io_ops_data;
+	struct spdk_fio_qpair *fio_qpair = NULL;
+	const struct spdk_nvme_zns_ns_data *zns = NULL;
+	struct spdk_nvme_zns_zone_report *report;
+	uint32_t report_nzones = 0, report_nzones_max, report_nbytes;
+	uint64_t mdts_nbytes, zsze_nbytes, ns_nzones, lba_nbytes;
+	int completed = 0, err;
+
+	fio_qpair = get_fio_qpair(fio_thread, f);
+	if (!fio_qpair) {
+		log_err("spdk/nvme: no ns/qpair or file_name: '%s'\n", f->file_name);
+		return -ENODEV;
+	}
+	zns = spdk_nvme_zns_ns_get_data(fio_qpair->ns);
+	if (!zns) {
+		log_err("spdk/nvme: file_name: '%s', zns is not enabled\n", f->file_name);
+		return -EINVAL;
+	}
+
+	/** Retrieve device parameters */
+	mdts_nbytes = spdk_fio_qpair_mdts_nbytes(fio_qpair);
+	lba_nbytes = spdk_nvme_ns_get_sector_size(fio_qpair->ns);
+	zsze_nbytes = spdk_nvme_zns_ns_get_zone_size(fio_qpair->ns);
+	ns_nzones = spdk_nvme_zns_ns_get_num_zones(fio_qpair->ns);
+
+	/** Allocate report-buffer without exceeding mdts, zbdz-storage, and what is needed */
+	report_nzones_max = (mdts_nbytes - sizeof(*report)) / sizeof(report->descs[0]);
+	report_nzones_max = spdk_min(spdk_min(report_nzones_max, nr_zones), ns_nzones);
+	report_nbytes = sizeof(report->descs[0]) * report_nzones_max + sizeof(*report);
+	report = spdk_dma_zmalloc(report_nbytes, NVME_IO_ALIGN, NULL);
+	if (!report) {
+		log_err("spdk/nvme: failed report_zones(): ENOMEM\n");
+		return -ENOMEM;
+	}
+
+	err = spdk_nvme_zns_report_zones(fio_qpair->ns, fio_qpair->qpair, report, report_nbytes,
+					 offset / lba_nbytes, SPDK_NVME_ZRA_LIST_ALL, false, pcu_cb,
+					 &completed);
+	if (err || pcu(fio_qpair->qpair, &completed) || completed < 0) {
+		log_err("spdk/nvme: report_zones(): err: %d, cpl: %d\n", err, completed);
+		err = err ? err : -EIO;
+		goto exit;
+	}
+	report_nzones = report->nr_zones;
+
+	for (uint64_t idx = 0; idx < report->nr_zones; ++idx) {
+		struct spdk_nvme_zns_zone_desc *zdesc = &report->descs[idx];
+
+		zbdz[idx].start = zdesc->zslba * lba_nbytes;
+		zbdz[idx].len = zsze_nbytes;
+		zbdz[idx].capacity = zdesc->zcap * lba_nbytes;
+		zbdz[idx].wp = zdesc->wp * lba_nbytes;
+
+		switch (zdesc->zt) {
+		case SPDK_NVME_ZONE_TYPE_SEQWR:
+			zbdz[idx].type = ZBD_ZONE_TYPE_SWR;
+			break;
+
+		default:
+			log_err("%s: invalid zone-type: 0x%x\n", f->file_name, zdesc->zt);
+			err = -EIO;
+			goto exit;
+		}
+
+		switch (zdesc->zs) {
+		case SPDK_NVME_ZONE_STATE_EMPTY:
+			zbdz[idx].cond = ZBD_ZONE_COND_EMPTY;
+			break;
+		case SPDK_NVME_ZONE_STATE_IOPEN:
+			zbdz[idx].cond = ZBD_ZONE_COND_IMP_OPEN;
+			break;
+		case SPDK_NVME_ZONE_STATE_EOPEN:
+			zbdz[idx].cond = ZBD_ZONE_COND_EXP_OPEN;
+			break;
+		case SPDK_NVME_ZONE_STATE_CLOSED:
+			zbdz[idx].cond = ZBD_ZONE_COND_CLOSED;
+			break;
+		case SPDK_NVME_ZONE_STATE_RONLY:
+			zbdz[idx].cond = ZBD_ZONE_COND_READONLY;
+			break;
+		case SPDK_NVME_ZONE_STATE_FULL:
+			zbdz[idx].cond = ZBD_ZONE_COND_FULL;
+			break;
+		case SPDK_NVME_ZONE_STATE_OFFLINE:
+			zbdz[idx].cond = ZBD_ZONE_COND_OFFLINE;
+			break;
+
+		default:
+			log_err("%s: invalid zone-state: 0x%x\n", f->file_name, zdesc->zs);
+			err = -EIO;
+			goto exit;
+		}
+	}
+
+exit:
+	spdk_dma_free(report);
+
+	return err ? err : (int)report_nzones;
+}
+
+static int
+spdk_fio_reset_wp(struct thread_data *td, struct fio_file *f, uint64_t offset, uint64_t length)
+{
+	struct spdk_fio_thread *fio_thread = td->io_ops_data;
+	struct spdk_fio_qpair *fio_qpair = NULL;
+	const struct spdk_nvme_zns_ns_data *zns = NULL;
+	uint64_t zsze_nbytes, lba_nbytes;
+	int completed = 0;
+	int err = 0;
+
+	fio_qpair = get_fio_qpair(fio_thread, f);
+	if (!fio_qpair) {
+		log_err("spdk/nvme: no ns/qpair or file_name: '%s'\n", f->file_name);
+		return -ENODEV;
+	}
+	zns = spdk_nvme_zns_ns_get_data(fio_qpair->ns);
+	if (!zns) {
+		log_err("spdk/nvme: file_name: '%s', zns is not enabled\n", f->file_name);
+		return -EINVAL;
+	}
+	zsze_nbytes = spdk_nvme_zns_ns_get_zone_size(fio_qpair->ns);
+	lba_nbytes = spdk_nvme_ns_get_sector_size(fio_qpair->ns);
+
+	for (uint64_t cur = offset; cur < offset + length; cur += zsze_nbytes) {
+		err = spdk_nvme_zns_reset_zone(fio_qpair->ns, fio_qpair->qpair, offset / lba_nbytes,
+					       false, pcu_cb, &completed);
+		if (err || pcu(fio_qpair->qpair, &completed) || completed < 0) {
+			log_err("spdk/nvme: report_zones(): err: %d, cpl: %d\n", err, completed);
+			err = err ? err : -EIO;
+			break;
+		}
+	}
+
+	return err;
+}
+#endif
+
 static void spdk_fio_cleanup(struct thread_data *td)
 {
 	struct spdk_fio_thread	*fio_thread = td->io_ops_data;
@@ -1244,6 +1497,11 @@ struct ioengine_ops ioengine = {
 	.setup			= spdk_fio_setup,
 	.io_u_init		= spdk_fio_io_u_init,
 	.io_u_free		= spdk_fio_io_u_free,
+#if FIO_HAS_ZBD
+	.get_zoned_model	= spdk_fio_get_zoned_model,
+	.report_zones		= spdk_fio_report_zones,
+	.reset_wp		= spdk_fio_reset_wp,
+#endif
 	.flags			= FIO_RAWIO | FIO_NOEXTEND | FIO_NODISKUTIL | FIO_MEMALIGN,
 	.options		= options,
 	.option_struct_size	= sizeof(struct spdk_fio_options),
