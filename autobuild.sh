@@ -108,13 +108,16 @@ function build_native_dpdk() {
 		# Fix for freeing device if not kernel driver configured.
 		# TODO: Remove once this is merged in upstream DPDK
 		if grep "20.08.0" $external_dpdk_base_dir/VERSION; then
-			wget https://github.com/spdk/dpdk/commit/64f1ced13f974e8b3d46b87c361a09eca68126f9.patch -O dpdk.patch
+			wget https://github.com/spdk/dpdk/commit/64f1ced13f974e8b3d46b87c361a09eca68126f9.patch -O dpdk-pci.patch
+			wget https://github.com/spdk/dpdk/commit/c2c273d5c8fbf673623b427f8f4ab5af5ddf0e08.patch -O dpdk-qat.patch
 		else
-			wget https://github.com/karlatec/dpdk/commit/3219c0cfc38803aec10c809dde16e013b370bda9.patch -O dpdk.patch
+			wget https://github.com/karlatec/dpdk/commit/3219c0cfc38803aec10c809dde16e013b370bda9.patch -O dpdk-pci.patch
+			wget https://github.com/karlatec/dpdk/commit/adf8f7638de29bc4bf9ba3faf12bbdae73acda0c.patch -O dpdk-qat.patch
 		fi
 		git config --local user.name "spdk"
 		git config --local user.email "nomail@all.com"
-		git am dpdk.patch
+		git am dpdk-pci.patch
+		git am dpdk-qat.patch
 	fi
 
 	meson build-tmp --prefix="$external_dpdk_dir" --libdir lib \
