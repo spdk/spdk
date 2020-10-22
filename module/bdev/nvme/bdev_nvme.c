@@ -1984,29 +1984,53 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 int
 bdev_nvme_delete(const char *name)
 {
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = NULL;
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 	struct nvme_probe_skip_entry *entry;
 
 	if (name == NULL) {
 		return -EINVAL;
 	}
 
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+
 	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name(name);
 	if (nvme_bdev_ctrlr == NULL) {
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
 		SPDK_ERRLOG("Failed to find NVMe controller\n");
 		return -ENODEV;
+	}
+
+	/* The controller's destruction was already started */
+	if (nvme_bdev_ctrlr->destruct) {
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+		return 0;
 	}
 
 	if (nvme_bdev_ctrlr->connected_trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
 		entry = calloc(1, sizeof(*entry));
 		if (!entry) {
+			pthread_mutex_unlock(&g_bdev_nvme_mutex);
 			return -ENOMEM;
 		}
 		entry->trid = *nvme_bdev_ctrlr->connected_trid;
 		TAILQ_INSERT_TAIL(&g_skipped_nvme_ctrlrs, entry, tailq);
 	}
 
-	remove_cb(NULL, nvme_bdev_ctrlr->ctrlr);
+	nvme_bdev_ctrlr->destruct = true;
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+
+	nvme_ctrlr_depopulate_namespaces(nvme_bdev_ctrlr);
+
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	assert(nvme_bdev_ctrlr->ref > 0);
+	nvme_bdev_ctrlr->ref--;
+	if (nvme_bdev_ctrlr->ref == 0) {
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+		nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
+	} else {
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+	}
+
 	return 0;
 }
 
