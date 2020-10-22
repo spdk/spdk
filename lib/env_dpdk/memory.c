@@ -1222,7 +1222,6 @@ vfio_enabled(void)
 static bool
 has_iommu_groups(void)
 {
-	struct dirent *d;
 	int count = 0;
 	DIR *dir = opendir("/sys/kernel/iommu_groups");
 
@@ -1230,7 +1229,7 @@ has_iommu_groups(void)
 		return false;
 	}
 
-	while (count < 3 && (d = readdir(dir)) != NULL) {
+	while (count < 3 && readdir(dir) != NULL) {
 		count++;
 	}
 
