@@ -285,7 +285,7 @@ test_spdk_nvmf_subsystem_add_ns(void)
 {
 	struct spdk_nvmf_tgt tgt = {};
 	struct spdk_nvmf_subsystem subsystem = {
-		.max_nsid = 0,
+		.max_nsid = 1024,
 		.ns = NULL,
 		.tgt = &tgt
 	};
@@ -293,26 +293,19 @@ test_spdk_nvmf_subsystem_add_ns(void)
 	uint32_t nsid;
 	int rc;
 
+	subsystem.ns = calloc(subsystem.max_nsid, sizeof(struct spdk_nvmf_subsystem_ns *));
+	SPDK_CU_ASSERT_FATAL(subsystem.ns != NULL);
+
 	tgt.max_subsystems = 1024;
 	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
 	SPDK_CU_ASSERT_FATAL(tgt.subsystems != NULL);
-
-	/* Allow NSID to be assigned automatically */
-	spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
-	nsid = spdk_nvmf_subsystem_add_ns_ext(&subsystem, "bdev1", &ns_opts, sizeof(ns_opts), NULL);
-	/* NSID 1 is the first unused ID */
-	CU_ASSERT(nsid == 1);
-	CU_ASSERT(subsystem.max_nsid == 1);
-	SPDK_CU_ASSERT_FATAL(subsystem.ns != NULL);
-	SPDK_CU_ASSERT_FATAL(subsystem.ns[nsid - 1] != NULL);
-	CU_ASSERT(subsystem.ns[nsid - 1]->bdev == &g_bdevs[nsid - 1]);
 
 	/* Request a specific NSID */
 	spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
 	ns_opts.nsid = 5;
 	nsid = spdk_nvmf_subsystem_add_ns_ext(&subsystem, "bdev2", &ns_opts, sizeof(ns_opts), NULL);
 	CU_ASSERT(nsid == 5);
-	CU_ASSERT(subsystem.max_nsid == 5);
+	CU_ASSERT(subsystem.max_nsid == 1024);
 	SPDK_CU_ASSERT_FATAL(subsystem.ns[nsid - 1] != NULL);
 	CU_ASSERT(subsystem.ns[nsid - 1]->bdev == &g_bdevs[1]);
 
@@ -321,17 +314,15 @@ test_spdk_nvmf_subsystem_add_ns(void)
 	ns_opts.nsid = 5;
 	nsid = spdk_nvmf_subsystem_add_ns_ext(&subsystem, "bdev2", &ns_opts, sizeof(ns_opts), NULL);
 	CU_ASSERT(nsid == 0);
-	CU_ASSERT(subsystem.max_nsid == 5);
+	CU_ASSERT(subsystem.max_nsid == 1024);
 
 	/* Request 0xFFFFFFFF (invalid NSID, reserved for broadcast) */
 	spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
 	ns_opts.nsid = 0xFFFFFFFF;
 	nsid = spdk_nvmf_subsystem_add_ns_ext(&subsystem, "bdev2", &ns_opts, sizeof(ns_opts), NULL);
 	CU_ASSERT(nsid == 0);
-	CU_ASSERT(subsystem.max_nsid == 5);
+	CU_ASSERT(subsystem.max_nsid == 1024);
 
-	rc = spdk_nvmf_subsystem_remove_ns(&subsystem, 1);
-	CU_ASSERT(rc == 0);
 	rc = spdk_nvmf_subsystem_remove_ns(&subsystem, 5);
 	CU_ASSERT(rc == 0);
 
@@ -1301,7 +1292,7 @@ test_spdk_nvmf_ns_event(void)
 {
 	struct spdk_nvmf_tgt tgt = {};
 	struct spdk_nvmf_subsystem subsystem = {
-		.max_nsid = 0,
+		.max_nsid = 1024,
 		.ns = NULL,
 		.tgt = &tgt
 	};
@@ -1311,6 +1302,9 @@ test_spdk_nvmf_ns_event(void)
 	struct spdk_nvmf_ns_opts ns_opts;
 	uint32_t nsid;
 	struct spdk_bdev *bdev;
+
+	subsystem.ns = calloc(subsystem.max_nsid, sizeof(struct spdk_nvmf_subsystem_ns *));
+	SPDK_CU_ASSERT_FATAL(subsystem.ns != NULL);
 
 	tgt.max_subsystems = 1024;
 	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));

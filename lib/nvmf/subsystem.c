@@ -49,6 +49,7 @@
 #include "spdk_internal/utf.h"
 
 #define MODEL_NUMBER_DEFAULT "SPDK bdev Controller"
+#define NVMF_SUBSYSTEM_DEFAULT_NAMESPACES 32
 
 /*
  * States for parsing valid domains in NQNs according to RFC 1034
@@ -252,9 +253,13 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 		return NULL;
 	}
 
-	if (type == SPDK_NVMF_SUBTYPE_DISCOVERY && num_ns != 0) {
-		SPDK_ERRLOG("Discovery subsystem cannot have namespaces.\n");
-		return NULL;
+	if (type == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+		if (num_ns != 0) {
+			SPDK_ERRLOG("Discovery subsystem cannot have namespaces.\n");
+			return NULL;
+		}
+	} else if (num_ns == 0) {
+		num_ns = NVMF_SUBSYSTEM_DEFAULT_NAMESPACES;
 	}
 
 	/* Find a free subsystem id (sid) */
@@ -278,7 +283,6 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 	subsystem->id = sid;
 	subsystem->subtype = type;
 	subsystem->max_nsid = num_ns;
-	subsystem->max_allowed_nsid = num_ns;
 	subsystem->next_cntlid = 0;
 	snprintf(subsystem->subnqn, sizeof(subsystem->subnqn), "%s", nqn);
 	pthread_mutex_init(&subsystem->mutex, NULL);
@@ -1381,30 +1385,8 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 	}
 
 	if (opts.nsid > subsystem->max_nsid) {
-		struct spdk_nvmf_ns **new_ns_array;
-
-		/* If MaxNamespaces was specified, we can't extend max_nsid beyond it. */
-		if (subsystem->max_allowed_nsid > 0 && opts.nsid > subsystem->max_allowed_nsid) {
-			SPDK_ERRLOG("Can't extend NSID range above MaxNamespaces\n");
-			return 0;
-		}
-
-		/* If a controller is connected, we can't change NN. */
-		if (!TAILQ_EMPTY(&subsystem->ctrlrs)) {
-			SPDK_ERRLOG("Can't extend NSID range while controllers are connected\n");
-			return 0;
-		}
-
-		new_ns_array = realloc(subsystem->ns, sizeof(struct spdk_nvmf_ns *) * opts.nsid);
-		if (new_ns_array == NULL) {
-			SPDK_ERRLOG("Memory allocation error while resizing namespace array.\n");
-			return 0;
-		}
-
-		memset(new_ns_array + subsystem->max_nsid, 0,
-		       sizeof(struct spdk_nvmf_ns *) * (opts.nsid - subsystem->max_nsid));
-		subsystem->ns = new_ns_array;
-		subsystem->max_nsid = opts.nsid;
+		SPDK_ERRLOG("NSID greater than maximum not allowed\n");
+		return 0;
 	}
 
 	ns = calloc(1, sizeof(*ns));
@@ -1693,7 +1675,7 @@ nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem *subsystem, uint16_t cntlid)
 uint32_t
 spdk_nvmf_subsystem_get_max_namespaces(const struct spdk_nvmf_subsystem *subsystem)
 {
-	return subsystem->max_allowed_nsid;
+	return subsystem->max_nsid;
 }
 
 struct _nvmf_ns_registrant {

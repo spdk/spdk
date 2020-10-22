@@ -345,7 +345,7 @@ int spdk_nvmf_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
  * \param tgt The NVMe-oF target that will own this subsystem.
  * \param nqn The NVMe qualified name of this subsystem.
  * \param type Whether this subsystem is an I/O subsystem or a Discovery subsystem.
- * \param num_ns The number of namespaces this subsystem contains.
+ * \param num_ns The maximum number of namespaces this subsystem may contain.
  *
  * \return a pointer to a NVMe-oF subsystem on success, or NULL on failure.
  */

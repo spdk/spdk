@@ -38,7 +38,7 @@ $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 timing_exit start_nvmf_tgt
 
 $rpc_py bdev_nvme_attach_controller -b Nvme0 -t PCIe -a ${bdf}
-$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
+$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001 -m 1
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Nvme0n1
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
