@@ -1127,13 +1127,10 @@ hotplug_probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 static void
 nvme_abort_cpl(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
-	struct spdk_nvme_ctrlr *ctrlr = ctx;
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = ctx;
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
 		SPDK_WARNLOG("Abort failed. Resetting controller.\n");
-		nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(spdk_nvme_ctrlr_get_transport_id(ctrlr));
-		assert(nvme_bdev_ctrlr != NULL);
 		bdev_nvme_reset(nvme_bdev_ctrlr, NULL, false);
 	}
 }
@@ -1142,17 +1139,17 @@ static void
 timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 	   struct spdk_nvme_qpair *qpair, uint16_t cid)
 {
-	int rc;
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = cb_arg;
 	union spdk_nvme_csts_register csts;
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	int rc;
+
+	assert(nvme_bdev_ctrlr->ctrlr == ctrlr);
 
 	SPDK_WARNLOG("Warning: Detected a timeout. ctrlr=%p qpair=%p cid=%u\n", ctrlr, qpair, cid);
 
 	csts = spdk_nvme_ctrlr_get_regs_csts(ctrlr);
 	if (csts.bits.cfs) {
 		SPDK_ERRLOG("Controller Fatal Status, reset required\n");
-		nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(spdk_nvme_ctrlr_get_transport_id(ctrlr));
-		assert(nvme_bdev_ctrlr != NULL);
 		bdev_nvme_reset(nvme_bdev_ctrlr, NULL, false);
 		return;
 	}
@@ -1161,7 +1158,7 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 	case SPDK_BDEV_NVME_TIMEOUT_ACTION_ABORT:
 		if (qpair) {
 			rc = spdk_nvme_ctrlr_cmd_abort(ctrlr, qpair, cid,
-						       nvme_abort_cpl, ctrlr);
+						       nvme_abort_cpl, nvme_bdev_ctrlr);
 			if (rc == 0) {
 				return;
 			}
@@ -1171,8 +1168,6 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 
 	/* FALLTHROUGH */
 	case SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET:
-		nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(spdk_nvme_ctrlr_get_transport_id(ctrlr));
-		assert(nvme_bdev_ctrlr != NULL);
 		bdev_nvme_reset(nvme_bdev_ctrlr, NULL, false);
 		break;
 	case SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE:
@@ -1443,7 +1438,7 @@ nvme_bdev_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 
 	if (g_opts.timeout_us > 0) {
 		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_opts.timeout_us,
-				timeout_cb, NULL);
+				timeout_cb, nvme_bdev_ctrlr);
 	}
 
 	spdk_nvme_ctrlr_register_aer_callback(ctrlr, aer_cb, nvme_bdev_ctrlr);
