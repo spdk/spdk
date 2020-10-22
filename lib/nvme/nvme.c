@@ -314,6 +314,14 @@ nvme_wait_for_completion_robust_lock_timeout(
 			rc = -1;
 			break;
 		}
+		if (qpair->ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
+			union spdk_nvme_csts_register csts = spdk_nvme_ctrlr_get_regs_csts(qpair->ctrlr);
+			if (csts.raw == SPDK_NVME_INVALID_REGISTER_VALUE) {
+				status->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+				status->cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+				break;
+			}
+		}
 	}
 
 	if (status->done == false) {

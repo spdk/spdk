@@ -191,6 +191,9 @@ extern pid_t g_spdk_nvme_pid;
 #define NVME_FABRIC_CONNECT_COMMAND_TIMEOUT 500000
 #endif
 
+/* This value indicates that a read from a PCIe register is invalid. This can happen when a device is no longer present */
+#define SPDK_NVME_INVALID_REGISTER_VALUE 0xFFFFFFFFu
+
 enum nvme_payload_type {
 	NVME_PAYLOAD_TYPE_INVALID = 0,
 

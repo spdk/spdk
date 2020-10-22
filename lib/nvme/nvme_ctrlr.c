@@ -3445,7 +3445,7 @@ union spdk_nvme_csts_register spdk_nvme_ctrlr_get_regs_csts(struct spdk_nvme_ctr
 	union spdk_nvme_csts_register csts;
 
 	if (nvme_ctrlr_get_csts(ctrlr, &csts)) {
-		csts.raw = 0xFFFFFFFFu;
+		csts.raw = SPDK_NVME_INVALID_REGISTER_VALUE;
 	}
 	return csts;
 }
