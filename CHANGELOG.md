@@ -91,6 +91,10 @@ a few NVMe SSDs.
 New APIs, `spdk_nvme_ns_get_ana_group_id` and `spdk_nvme_ns_get_ana_state`, have been
 added to get ANA group ID and ANA state of the given namespace, respectively.
 
+If no specific command set is requested (by setting the command_set member in the
+`spdk_nvme_ctrlr_opts` structure), SPDK will automatically select the most appropriate
+command set based on what the controller supports.
+
 ### nvmf
 
 A new API `spdk_nvmf_subsystem_add_ns_ext` has been added and the API `spdk_nvmf_subsystem_add_ns`
@@ -235,10 +239,6 @@ IDXD engine support for CRC-32C has been added.
 A new API `spdk_ioat_get_max_descriptors` was added.
 
 ### nvme
-
-If no specific command set is requested (by setting the command_set member in the
-`spdk_nvme_ctrlr_opts` structure), SPDK will automatically select the most appropriate
-command set based on what the controller supports.
 
 An `opts_size`element was added in the  `spdk_nvme_ctrlr_opts` structure
 to solve the ABI compatiblity issue between different SPDK version.
