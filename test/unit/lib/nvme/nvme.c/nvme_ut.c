@@ -91,6 +91,13 @@ nvme_ctrlr_destruct_poll_async(struct spdk_nvme_ctrlr *ctrlr,
 	return 0;
 }
 
+union spdk_nvme_csts_register
+	spdk_nvme_ctrlr_get_regs_csts(struct spdk_nvme_ctrlr *ctrlr)
+{
+	union spdk_nvme_csts_register csts = {};
+	return csts;
+}
+
 void
 spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t opts_size)
 {
@@ -1270,9 +1277,13 @@ static void
 test_nvme_wait_for_completion(void)
 {
 	struct spdk_nvme_qpair qpair;
+	struct spdk_nvme_ctrlr ctrlr;
 	int rc = 0;
 
+	memset(&ctrlr, 0, sizeof(ctrlr));
+	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	memset(&qpair, 0, sizeof(qpair));
+	qpair.ctrlr = &ctrlr;
 
 	/* completion timeout */
 	memset(&g_status, 0, sizeof(g_status));
