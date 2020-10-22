@@ -236,6 +236,8 @@ int spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 int spdk_nvmf_tgt_stop_listen(struct spdk_nvmf_tgt *tgt,
 			      struct spdk_nvme_transport_id *trid);
 
+int nvmf_tgt_accept(void *ctx);
+
 /**
  * Create a poll group.
  *
