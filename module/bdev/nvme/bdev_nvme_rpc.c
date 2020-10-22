@@ -690,7 +690,6 @@ apply_firmware_cleanup(void *cb_arg)
 static void
 apply_firmware_complete_reset(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
-	int					rc;
 	struct spdk_json_write_ctx		*w;
 	struct firmware_update_info *firm_ctx = cb_arg;
 
@@ -703,7 +702,7 @@ apply_firmware_complete_reset(struct spdk_bdev_io *bdev_io, bool success, void *
 		return;
 	}
 
-	if ((rc = spdk_nvme_ctrlr_reset(firm_ctx->ctrlr)) != 0) {
+	if (spdk_nvme_ctrlr_reset(firm_ctx->ctrlr) != 0) {
 		spdk_jsonrpc_send_error_response(firm_ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Controller reset failed.");
 		apply_firmware_cleanup(firm_ctx);
@@ -848,7 +847,7 @@ rpc_bdev_nvme_apply_firmware(struct spdk_jsonrpc_request *request,
 			return;
 		}
 
-		if ((rc = spdk_bdev_open(bdev2, true, NULL, NULL, &desc)) != 0) {
+		if (spdk_bdev_open(bdev2, true, NULL, NULL, &desc) != 0) {
 			snprintf(msg, sizeof(msg), "Device %s is in use.", firm_ctx->req->bdev_name);
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, msg);
 			free(opt);

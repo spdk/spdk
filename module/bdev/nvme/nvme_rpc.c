@@ -372,7 +372,7 @@ rpc_decode_metadata(const struct spdk_json_val *val, void *out)
 
 	rc = spdk_json_decode_string(val, &text);
 	if (rc) {
-		return rc = val->type == SPDK_JSON_VAL_STRING ? -ENOMEM : -EINVAL;
+		return val->type == SPDK_JSON_VAL_STRING ? -ENOMEM : -EINVAL;
 	}
 	text_strlen = strlen(text);
 
