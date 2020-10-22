@@ -487,7 +487,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
 		return 1;
 	}
 
-	if ((rc = app_setup_signal_handlers(opts)) != 0) {
+	if (app_setup_signal_handlers(opts) != 0) {
 		return 1;
 	}
 
