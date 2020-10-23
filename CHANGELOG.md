@@ -8,7 +8,7 @@ A new `spdk_bdev_part_base_construct_ext` function has been added and the
 `spdk_bdev_part_base_construct` has been deprecated.  The
 `spdk_bdev_part_base_construct_ext` function takes bdev name as an argument instead
 of bdev structure to avoid a race condition that can happen when the bdev is being
-removed between a call to get its structure based on a name and actually openning it.
+removed between a call to get its structure based on a name and actually opening it.
 
 Removed `spdk_bdev_config_text` function for bdev modules to report legacy config.
 
@@ -103,7 +103,7 @@ has been deprecated.
 The NVMe-oF target now supports Asymmetric Namespace Access (ANA) Reporting to provide
 multipath to NVMe-oF initiator.
 
-Add 'no_wr_batching' parameter to 'spdk_nvmf_transport_opts' struct to disable
+Add `no_wr_batching` parameter to `spdk_nvmf_transport_opts` struct to disable
 Work Requests batching in RDMA transport.
 
 NVMf Target transports can now parse any additional JSON params in the nvmf_create_transport RPC
@@ -144,11 +144,11 @@ deprecated and removed.
 
 ### sock
 
-The `enable_placement_id` field was added in the struct spdk_sock_impl_opts to
+The `enable_placement_id` field was added in the `struct spdk_sock_impl_opts` to
 make the placement_id feature configurable by users. The default setting is
 not enabled.
 
-The `enable_quick_ack` field was added in the struct spdk_sock_impl_opts to enable
+The `enable_quick_ack` field was added in the `struct spdk_sock_impl_opts` to enable
 or disable quick ack for the POSIX sock module. The default setting is not enabled.
 
 ### thread
