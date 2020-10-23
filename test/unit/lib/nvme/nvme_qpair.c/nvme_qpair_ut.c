@@ -44,6 +44,8 @@ bool trace_flag = false;
 
 #include "nvme/nvme_qpair.c"
 
+SPDK_LOG_REGISTER_COMPONENT(nvme)
+
 struct nvme_driver _g_nvme_driver = {
 	.lock = PTHREAD_MUTEX_INITIALIZER,
 };
