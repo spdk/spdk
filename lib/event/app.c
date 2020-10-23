@@ -401,6 +401,18 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
 		return 1;
 	}
 
+	if (opts->config_file) {
+		SPDK_ERRLOG("opts->config_file is deprecated.  Use opts->json_config_file instead.\n");
+		/* For now we will just treat config_file as json_config_file.  But if both were
+		 * specified we will return an error here.
+		 */
+		if (opts->json_config_file) {
+			SPDK_ERRLOG("Setting both opts->config_file and opts->json_config_file not allowed.\n");
+			return 1;
+		}
+		opts->json_config_file = opts->config_file;
+	}
+
 	if (!start_fn) {
 		SPDK_ERRLOG("start_fn should not be NULL\n");
 		return 1;
@@ -640,8 +652,6 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 	while ((ch = getopt_long(argc, argv, cmdline_short_opts, cmdline_options, &opt_idx)) != -1) {
 		switch (ch) {
 		case CONFIG_FILE_OPT_IDX:
-			opts->config_file = optarg;
-			break;
 		case JSON_CONFIG_OPT_IDX:
 			opts->json_config_file = optarg;
 			break;
@@ -821,16 +831,6 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 				goto out;
 			}
 		}
-	}
-
-	if (opts->config_file) {
-		if (opts->json_config_file) {
-			SPDK_ERRLOG("ERROR: --config and --json options can't be used together.\n");
-			goto out;
-		}
-
-		opts->json_config_file = opts->config_file;
-		opts->config_file = NULL;
 	}
 
 	if (opts->json_config_file && opts->delay_subsystem_init) {
