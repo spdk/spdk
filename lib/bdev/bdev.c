@@ -1898,7 +1898,7 @@ static void
 _bdev_io_split(void *_bdev_io)
 {
 	struct spdk_bdev_io *bdev_io = _bdev_io;
-	uint64_t current_offset, remaining;
+	uint64_t parent_offset, current_offset, remaining;
 	uint32_t blocklen, to_next_boundary, to_next_boundary_bytes, to_last_block_bytes;
 	struct iovec *parent_iov, *iov;
 	uint64_t parent_iov_offset, iov_len;
@@ -1908,8 +1908,9 @@ _bdev_io_split(void *_bdev_io)
 
 	remaining = bdev_io->u.bdev.split_remaining_num_blocks;
 	current_offset = bdev_io->u.bdev.split_current_offset_blocks;
+	parent_offset = bdev_io->u.bdev.offset_blocks;
 	blocklen = bdev_io->bdev->blocklen;
-	parent_iov_offset = (current_offset - bdev_io->u.bdev.offset_blocks) * blocklen;
+	parent_iov_offset = (current_offset - parent_offset) * blocklen;
 	parent_iovcnt = bdev_io->u.bdev.iovcnt;
 
 	for (parent_iovpos = 0; parent_iovpos < parent_iovcnt; parent_iovpos++) {
@@ -1929,9 +1930,8 @@ _bdev_io_split(void *_bdev_io)
 		iovcnt = 0;
 
 		if (bdev_io->u.bdev.md_buf) {
-			assert((parent_iov_offset % blocklen) > 0);
-			md_buf = (char *)bdev_io->u.bdev.md_buf + (parent_iov_offset / blocklen) *
-				 spdk_bdev_get_md_size(bdev_io->bdev);
+			md_buf = (char *)bdev_io->u.bdev.md_buf +
+				 (current_offset - parent_offset) * spdk_bdev_get_md_size(bdev_io->bdev);
 		}
 
 		while (to_next_boundary_bytes > 0 && parent_iovpos < parent_iovcnt &&
