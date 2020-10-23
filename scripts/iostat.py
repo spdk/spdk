@@ -16,6 +16,8 @@ SPDK_BDEV_KB_STAT_HEAD = ['Device', 'tps', 'KB_read/s',
                           'KB_wrtn/s', 'KB_dscd/s', 'KB_read', 'KB_wrtn', 'KB_dscd']
 SPDK_BDEV_MB_STAT_HEAD = ['Device', 'tps', 'MB_read/s',
                           'MB_wrtn/s', 'MB_dscd/s', 'MB_read', 'MB_wrtn', 'MB_dscd']
+SPDK_BDEV_EXT_STAT_HEAD = ['qu-sz', 'aqu-sz', 'wareq-sz', 'rareq-sz', 'w_await(us)', 'r_await(us)', 'util']
+
 
 SPDK_MAX_SECTORS = 0xffffffff
 
@@ -25,6 +27,7 @@ class BdevStat:
     def __init__(self, dictionary):
         if dictionary is None:
             return
+        self.qd_period = 0
         for k, value in dictionary.items():
             if k == 'name':
                 self.bdev_name = value
@@ -46,16 +49,14 @@ class BdevStat:
                 self.wr_ticks = value
             elif k == 'unmap_latency_ticks':
                 self.dc_ticks = value
+            elif k == 'queue_depth_polling_period':
+                self.qd_period = value
             elif k == 'queue_depth':
-                self.ios_pgr = value
+                self.queue_depth = value
             elif k == 'io_time':
-                self.tot_ticks = value
+                self.io_time = value
             elif k == 'weighted_io_time':
-                self.rq_ticks = value
-
-        self.rd_merges = 0
-        self.wr_merges = 0
-        self.dc_merges = 0
+                self.weighted_io_time = value
         self.upt = 0.0
 
     def __getattr__(self, name):
@@ -159,12 +160,13 @@ def get_cpu_stat():
     return cpu_dump_info
 
 
-def read_bdev_stat(last_stat, stat, mb, use_upt):
+def read_bdev_stat(last_stat, stat, mb, use_upt, ext_info):
     if use_upt:
         upt_cur = uptime()
     else:
         upt_cur = stat['ticks']
-        upt_rate = stat['tick_rate']
+
+    upt_rate = stat['tick_rate']
 
     info_stats = []
     unit = 2048 if mb else 2
@@ -215,6 +217,48 @@ def read_bdev_stat(last_stat, stat, mb, use_upt):
                 "{:.2f}".format(wr_sec / unit),
                 "{:.2f}".format(dc_sec / unit),
             ]
+            if ext_info:
+                if _stat.qd_period > 0:
+                    tot_sampling_time = upt * 1000000 / _stat.qd_period
+                    busy_times = (_stat.io_time - _last_stat.io_time) / _stat.qd_period
+
+                    wr_ios = _stat.wr_ios - _last_stat.wr_ios
+                    rd_ios = _stat.rd_ios - _last_stat.rd_ios
+                    if busy_times != 0:
+                        aqu_sz = (_stat.weighted_io_time - _last_stat.weighted_io_time) / _stat.qd_period / busy_times
+                    else:
+                        aqu_sz = 0
+
+                    if wr_ios != 0:
+                        wareq_sz = wr_sec / wr_ios
+                        w_await = (_stat.wr_ticks * 1000000 / upt_rate -
+                                   _last_stat.wr_ticks * 1000000 / upt_rate) / wr_ios
+                    else:
+                        wareq_sz = 0
+                        w_await = 0
+
+                    if rd_ios != 0:
+                        rareq_sz = rd_sec / rd_ios
+                        r_await = (_stat.rd_ticks * 1000000 / upt_rate -
+                                   _last_stat.rd_ticks * 1000000 / upt_rate) / rd_ios
+                    else:
+                        rareq_sz = 0
+                        r_await = 0
+
+                    util = busy_times / tot_sampling_time
+
+                    info_stat += [
+                        "{:.2f}".format(_stat.queue_depth),
+                        "{:.2f}".format(aqu_sz),
+                        "{:.2f}".format(wareq_sz),
+                        "{:.2f}".format(rareq_sz),
+                        "{:.2f}".format(w_await),
+                        "{:.2f}".format(r_await),
+                        "{:.2f}".format(util),
+                    ]
+                else:
+                    info_stat += ["N/A"] * len(SPDK_BDEV_EXT_STAT_HEAD)
+
             info_stats.append(info_stat)
     else:
         for bdev in stat['bdevs']:
@@ -238,10 +282,53 @@ def read_bdev_stat(last_stat, stat, mb, use_upt):
                 "{:.2f}".format(_stat.wr_sectors / unit),
                 "{:.2f}".format(_stat.dc_sectors / unit),
             ]
+
+            # add extended statistics
+            if ext_info:
+                if _stat.qd_period > 0:
+                    tot_sampling_time = upt * 1000000 / _stat.qd_period
+                    busy_times = _stat.io_time / _stat.qd_period
+                    if busy_times != 0:
+                        aqu_sz = _stat.weighted_io_time / _stat.qd_period / busy_times
+                    else:
+                        aqu_sz = 0
+
+                    if _stat.wr_ios != 0:
+                        wareq_sz = _stat.wr_sectors / _stat.wr_ios
+                        w_await = _stat.wr_ticks * 1000000 / upt_rate / _stat.wr_ios
+                    else:
+                        wareq_sz = 0
+                        w_await = 0
+
+                    if _stat.rd_ios != 0:
+                        rareq_sz = _stat.rd_sectors / _stat.rd_ios
+                        r_await = _stat.rd_ticks * 1000000 / upt_rate / _stat.rd_ios
+                    else:
+                        rareq_sz = 0
+                        r_await = 0
+
+                    util = busy_times / tot_sampling_time
+
+                    info_stat += [
+                        "{:.2f}".format(_stat.queue_depth),
+                        "{:.2f}".format(aqu_sz),
+                        "{:.2f}".format(wareq_sz),
+                        "{:.2f}".format(rareq_sz),
+                        "{:.2f}".format(w_await),
+                        "{:.2f}".format(r_await),
+                        "{:.2f}".format(util),
+                    ]
+                else:
+                    info_stat += ["N/A"] * len(SPDK_BDEV_EXT_STAT_HEAD)
+
             info_stats.append(info_stat)
 
-    _stat_format(
-        info_stats, SPDK_BDEV_MB_STAT_HEAD if mb else SPDK_BDEV_KB_STAT_HEAD)
+    head = []
+    head += SPDK_BDEV_MB_STAT_HEAD if mb else SPDK_BDEV_KB_STAT_HEAD
+    if ext_info:
+        head += SPDK_BDEV_EXT_STAT_HEAD
+
+    _stat_format(info_stats, head)
     return bdev_stats
 
 
@@ -258,14 +345,14 @@ def io_stat_display(args, cpu_info, stat):
     if args.bdev_stat and not args.cpu_stat:
         _stat = get_bdev_stat(args.client, args.name)
         bdev_stats = read_bdev_stat(
-            stat, _stat, args.mb_display, args.use_uptime)
+            stat, _stat, args.mb_display, args.use_uptime, args.extended_display)
         return None, bdev_stats
 
     _cpu_info = get_cpu_stat()
     read_cpu_stat(cpu_info, _cpu_info)
 
     _stat = get_bdev_stat(args.client, args.name)
-    bdev_stats = read_bdev_stat(stat, _stat, args.mb_display, args.use_uptime)
+    bdev_stats = read_bdev_stat(stat, _stat, args.mb_display, args.use_uptime, args.extended_display)
     return _cpu_info, bdev_stats
 
 
@@ -342,6 +429,10 @@ if __name__ == "__main__":
 
     parser.add_argument('-v', dest='verbose', action='store_const', const="INFO",
                         help='Set verbose mode to INFO', default="ERROR")
+
+    parser.add_argument('-x', '--extended', dest='extended_display',
+                        action='store_true', help="Display extended statistics.",
+                        required=False, default=False)
 
     args = parser.parse_args()
     if ((args.interval == 0 and args.time_in_second != 0) or
