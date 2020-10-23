@@ -41,12 +41,12 @@
 /**
  * Major version number (year of original release minus 2000).
  */
-#define SPDK_VERSION_MAJOR	20
+#define SPDK_VERSION_MAJOR	21
 
 /**
  * Minor version number (month of original release).
  */
-#define SPDK_VERSION_MINOR	10
+#define SPDK_VERSION_MINOR	1
 
 /**
  * Patch level.
