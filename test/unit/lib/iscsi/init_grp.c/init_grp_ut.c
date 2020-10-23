@@ -42,8 +42,6 @@ SPDK_LOG_REGISTER_COMPONENT(iscsi)
 
 struct spdk_iscsi_globals g_iscsi;
 
-const char *config_file;
-
 static int
 test_setup(void)
 {
@@ -583,15 +581,8 @@ main(int argc, char **argv)
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
-	if (argc < 2) {
-		fprintf(stderr, "usage: %s <config file>\n", argv[0]);
-		exit(1);
-	}
-
 	CU_set_error_action(CUEA_ABORT);
 	CU_initialize_registry();
-
-	config_file = argv[1];
 
 	suite = CU_add_suite("init_grp_suite", test_setup, NULL);
 

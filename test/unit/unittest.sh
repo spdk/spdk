@@ -56,10 +56,10 @@ function unittest_ftl() {
 function unittest_iscsi() {
 	$valgrind $testdir/lib/iscsi/conn.c/conn_ut
 	$valgrind $testdir/lib/iscsi/param.c/param_ut
-	$valgrind $testdir/lib/iscsi/tgt_node.c/tgt_node_ut $testdir/lib/iscsi/tgt_node.c/tgt_node.conf
+	$valgrind $testdir/lib/iscsi/tgt_node.c/tgt_node_ut
 	$valgrind $testdir/lib/iscsi/iscsi.c/iscsi_ut
-	$valgrind $testdir/lib/iscsi/init_grp.c/init_grp_ut $testdir/lib/iscsi/init_grp.c/init_grp.conf
-	$valgrind $testdir/lib/iscsi/portal_grp.c/portal_grp_ut $testdir/lib/iscsi/portal_grp.c/portal_grp.conf
+	$valgrind $testdir/lib/iscsi/init_grp.c/init_grp_ut
+	$valgrind $testdir/lib/iscsi/portal_grp.c/portal_grp_ut
 }
 
 function unittest_json() {
