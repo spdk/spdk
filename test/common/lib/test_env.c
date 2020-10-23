@@ -52,6 +52,11 @@ DEFINE_STUB_V(spdk_pci_driver_register, (const char *name, struct spdk_pci_id *i
 DEFINE_STUB(spdk_pci_nvme_get_driver, struct spdk_pci_driver *, (void), NULL)
 DEFINE_STUB(spdk_pci_ioat_get_driver, struct spdk_pci_driver *, (void), NULL)
 DEFINE_STUB(spdk_pci_virtio_get_driver, struct spdk_pci_driver *, (void), NULL)
+DEFINE_STUB(spdk_env_thread_launch_pinned, int, (uint32_t core, thread_start_fn fn, void *arg), 0);
+DEFINE_STUB_V(spdk_env_thread_wait_all, (void));
+DEFINE_STUB_V(spdk_env_opts_init, (struct spdk_env_opts *opts));
+DEFINE_STUB(spdk_env_init, int, (const struct spdk_env_opts *opts), 0);
+DEFINE_STUB_V(spdk_env_fini, (void));
 
 void
 allocate_cores(uint32_t num_cores)

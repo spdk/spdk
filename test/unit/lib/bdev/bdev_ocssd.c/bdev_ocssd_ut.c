@@ -60,6 +60,9 @@ DEFINE_STUB(spdk_bdev_push_media_events, int, (struct spdk_bdev *bdev,
 DEFINE_STUB_V(spdk_bdev_notify_media_management, (struct spdk_bdev *bdev));
 DEFINE_STUB_V(nvme_ctrlr_depopulate_namespace_done, (struct nvme_bdev_ctrlr *ctrlr));
 DEFINE_STUB_V(spdk_bdev_module_finish_done, (void));
+DEFINE_STUB(spdk_nvme_transport_id_trtype_str, const char *, (enum spdk_nvme_transport_type trtype),
+	    NULL);
+DEFINE_STUB(spdk_nvme_transport_id_adrfam_str, const char *, (enum spdk_nvmf_adrfam adrfam), NULL);
 
 struct nvme_request {
 	spdk_nvme_cmd_cb cb_fn;

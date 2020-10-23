@@ -79,6 +79,12 @@ DEFINE_STUB_V(spdk_unaffinitize_thread, (void));
 DEFINE_STUB(spdk_nvme_ctrlr_get_ns, struct spdk_nvme_ns *, (struct spdk_nvme_ctrlr *ctrlr,
 		uint32_t nsid), NULL);
 
+DEFINE_STUB(nvme_io_msg_ctrlr_register, int,
+	    (struct spdk_nvme_ctrlr *ctrlr, struct nvme_io_msg_producer *io_msg_producer), 0);
+
+DEFINE_STUB_V(nvme_io_msg_ctrlr_unregister,
+	      (struct spdk_nvme_ctrlr *ctrlr, struct nvme_io_msg_producer *io_msg_producer));
+
 static bool
 wait_for_file(char *filename, bool exists)
 {

@@ -43,13 +43,18 @@ DEFINE_STUB_V(spdk_event_call, (struct spdk_event *event));
 DEFINE_STUB(spdk_event_allocate, struct spdk_event *, (uint32_t core, spdk_event_fn fn, void *arg1,
 		void *arg2), NULL);
 DEFINE_STUB_V(spdk_subsystem_init, (spdk_subsystem_init_fn cb_fn, void *cb_arg));
+DEFINE_STUB_V(spdk_subsystem_fini, (spdk_msg_fn cb_fn, void *cb_arg));
 DEFINE_STUB_V(spdk_rpc_register_method, (const char *method, spdk_rpc_method_handler func,
 		uint32_t state_mask));
 DEFINE_STUB_V(spdk_rpc_register_alias_deprecated, (const char *method, const char *alias));
 DEFINE_STUB_V(spdk_rpc_set_state, (uint32_t state));
 DEFINE_STUB(spdk_rpc_get_state, uint32_t, (void), SPDK_RPC_RUNTIME);
+DEFINE_STUB_V(spdk_rpc_initialize, (const char *listen_addr));
+DEFINE_STUB_V(spdk_rpc_finish, (void));
 DEFINE_STUB_V(spdk_app_json_config_load, (const char *json_config_file, const char *rpc_addr,
 		spdk_subsystem_init_fn cb_fn, void *cb_arg, bool stop_on_error));
+DEFINE_STUB_V(spdk_reactors_start, (void));
+DEFINE_STUB_V(spdk_reactors_stop, (void *arg1));
 
 static void
 unittest_usage(void)

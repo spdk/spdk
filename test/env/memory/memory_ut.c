@@ -52,6 +52,11 @@ DEFINE_STUB(rte_mem_event_callback_register, int,
 	    (const char *name, rte_mem_event_callback_t clb, void *arg), 0);
 DEFINE_STUB(rte_mem_virt2iova, rte_iova_t, (const void *virtaddr), 0);
 DEFINE_STUB(rte_eal_iova_mode, enum rte_iova_mode, (void), RTE_IOVA_VA);
+DEFINE_STUB(rte_vfio_is_enabled, int, (const char *modname), 0);
+DEFINE_STUB(rte_vfio_noiommu_is_enabled, int, (void), 0);
+DEFINE_STUB(rte_memseg_get_fd_thread_unsafe, int, (const struct rte_memseg *ms), 0);
+DEFINE_STUB(rte_memseg_get_fd_offset_thread_unsafe, int,
+	    (const struct rte_memseg *ms, size_t *offset), 0);
 
 static int
 test_mem_map_notify(void *cb_ctx, struct spdk_mem_map *map,
