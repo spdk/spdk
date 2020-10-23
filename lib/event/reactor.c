@@ -66,6 +66,7 @@ TAILQ_HEAD(, spdk_scheduler) g_scheduler_list
 	= TAILQ_HEAD_INITIALIZER(g_scheduler_list);
 
 static struct spdk_scheduler *g_scheduler;
+static struct spdk_scheduler *g_new_scheduler;
 static struct spdk_reactor *g_scheduling_reactor;
 static uint32_t g_scheduler_period;
 static struct spdk_scheduler_core_info *g_core_infos = NULL;
@@ -109,15 +110,27 @@ _spdk_scheduler_set(char *name)
 		return -ENOENT;
 	}
 
-	if (g_scheduler != NULL && g_scheduler->deinit != NULL) {
-		g_scheduler->deinit(&g_governor);
+	if (g_reactors == NULL || g_scheduling_reactor == NULL) {
+		g_new_scheduler = scheduler;
+		g_scheduler = scheduler;
+		return 0;
+	}
+
+	if (g_scheduling_reactor->flags.is_scheduling) {
+		g_new_scheduler = scheduler;
+	} else {
+		if (g_scheduler->deinit != NULL) {
+			g_scheduler->deinit(&g_governor);
+		}
+
+		g_new_scheduler = scheduler;
+		g_scheduler = scheduler;
 	}
 
 	if (scheduler->init != NULL) {
 		scheduler->init(&g_governor);
 	}
 
-	g_scheduler = scheduler;
 	return 0;
 }
 
@@ -676,10 +689,18 @@ reactor_run(void *arg)
 
 		if (spdk_unlikely((reactor->tsc_last - last_sched) > g_scheduler_period &&
 				  reactor == g_scheduling_reactor &&
-				  !reactor->flags.is_scheduling &&
-				  g_scheduler->balance)) {
-			last_sched = reactor->tsc_last;
-			_reactors_scheduler_gather_metrics(NULL, NULL);
+				  !reactor->flags.is_scheduling)) {
+			if (spdk_unlikely(g_scheduler != g_new_scheduler)) {
+				if (g_scheduler->deinit != NULL) {
+					g_scheduler->deinit(&g_governor);
+				}
+				g_scheduler = g_new_scheduler;
+			}
+
+			if (spdk_unlikely(g_scheduler->balance != NULL)) {
+				last_sched = reactor->tsc_last;
+				_reactors_scheduler_gather_metrics(NULL, NULL);
+			}
 		}
 
 		if (g_reactor_state != SPDK_REACTOR_STATE_RUNNING) {
