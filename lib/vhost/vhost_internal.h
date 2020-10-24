@@ -124,6 +124,8 @@ struct spdk_vhost_virtqueue {
 	uint32_t vring_idx;
 
 	struct spdk_vhost_session *vsession;
+
+	struct spdk_interrupt *intr;
 } __attribute((aligned(SPDK_CACHE_LINE_SIZE)));
 
 struct spdk_vhost_session {
@@ -141,6 +143,7 @@ struct spdk_vhost_session {
 	bool started;
 	bool needs_restart;
 	bool forced_polling;
+	bool interrupt_mode;
 
 	struct rte_vhost_memory *mem;
 

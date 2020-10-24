@@ -55,6 +55,9 @@ SPDK_LIB_LIST += bdev_malloc bdev_passthru bdev_error bdev_gpt bdev_split bdev_r
 SPDK_LIB_LIST += bdev_lvol lvol blob_bdev blob
 # blobfs libraries
 SPDK_LIB_LIST += blobfs blobfs_bdev
+# vhost blk related libraries.
+SPDK_LIB_LIST += vhost event_vhost
+SPDK_LIB_LIST += scsi event_scsi # vhost-scsi is not supported, just because vhost lib requires scsi related libs
 
 ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
 SPDK_LIB_LIST += env_dpdk_rpc

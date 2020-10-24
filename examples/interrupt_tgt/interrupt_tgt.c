@@ -34,17 +34,22 @@
 #include "spdk/stdinc.h"
 #include "spdk/conf.h"
 #include "spdk/event.h"
+#include "spdk/vhost.h"
 
 static void
 interrupt_tgt_usage(void)
 {
 	printf(" -E                        Set interrupt mode\n");
+	printf(" -S <path>                 directory where to create vhost sockets (default: pwd)\n");
 }
 
 static int
 interrupt_tgt_parse_arg(int ch, char *arg)
 {
 	switch (ch) {
+	case 'S':
+		spdk_vhost_set_socket_path(arg);
+		break;
 	case 'E':
 		spdk_interrupt_mode_enable();
 		break;
@@ -68,7 +73,7 @@ main(int argc, char *argv[])
 	spdk_app_opts_init(&opts);
 	opts.name = "interrupt_tgt";
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "E", NULL,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "S:E", NULL,
 				      interrupt_tgt_parse_arg, interrupt_tgt_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		exit(rc);

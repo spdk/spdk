@@ -199,6 +199,38 @@ vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *virtqueue, uint16_t *reqs,
 	}
 
 	count = spdk_min(count, reqs_len);
+	if (virtqueue->vsession && virtqueue->vsession->interrupt_mode) {
+		/* if completed IO number is larger than SPDK_AIO_QUEUE_DEPTH,
+		 * io_getevent should be called again to ensure all completed IO are processed.
+		 */
+		int rc;
+		uint64_t num_events;
+
+		rc = read(vring->kickfd, &num_events, sizeof(num_events));
+		if (rc < 0) {
+			SPDK_ERRLOG("failed to acknowledge kickfd: %s.\n", spdk_strerror(errno));
+			return -errno;
+		}
+
+		if ((uint16_t)(avail_idx - last_idx) != num_events) {
+			SPDK_DEBUGLOG(vhost_ring,
+				      "virtqueue gets %d reqs, but kickfd shows %lu reqs\n",
+				      avail_idx - last_idx, num_events);
+		}
+
+		if (num_events > count) {
+			SPDK_DEBUGLOG(vhost_ring,
+				      "virtqueue kickfd shows %lu reqs, take %d, send notice for other reqs\n",
+				      num_events, reqs_len);
+			num_events -= count;
+			rc = write(vring->kickfd, &num_events, sizeof(num_events));
+			if (rc < 0) {
+				SPDK_ERRLOG("failed to kick vring: %s.\n", spdk_strerror(errno));
+				return -errno;
+			}
+		}
+	}
+
 	virtqueue->last_avail_idx += count;
 	for (i = 0; i < count; i++) {
 		reqs[i] = vring->avail->ring[(last_idx + i) & size_mask];
@@ -500,6 +532,14 @@ vhost_vq_used_ring_enqueue(struct spdk_vhost_session *vsession,
 	rte_vhost_clr_inflight_desc_split(vsession->vid, vq_idx, virtqueue->last_used_idx, id);
 
 	virtqueue->used_req_cnt++;
+
+	if (vsession->interrupt_mode) {
+		if (virtqueue->vring.desc == NULL || vhost_vq_event_is_suppressed(virtqueue)) {
+			return;
+		}
+
+		vhost_vq_used_signal(vsession, virtqueue);
+	}
 }
 
 void
@@ -1194,6 +1234,10 @@ vhost_start_device_cb(int vid)
 		goto out;
 	}
 
+	if (spdk_interrupt_mode_is_enabled()) {
+		vsession->interrupt_mode = true;
+	}
+
 	vdev = vsession->vdev;
 	if (vsession->started) {
 		/* already started, nothing to do */
@@ -1242,11 +1286,15 @@ vhost_start_device_cb(int vid)
 			q->packed.used_phase = q->last_used_idx >> 15;
 			q->last_used_idx = q->last_used_idx & 0x7FFF;
 
-			/* Disable I/O submission notifications, we'll be polling. */
-			q->vring.device_event->flags = VRING_PACKED_EVENT_FLAG_DISABLE;
+			if (!vsession->interrupt_mode) {
+				/* Disable I/O submission notifications, we'll be polling. */
+				q->vring.device_event->flags = VRING_PACKED_EVENT_FLAG_DISABLE;
+			}
 		} else {
-			/* Disable I/O submission notifications, we'll be polling. */
-			q->vring.used->flags = VRING_USED_F_NO_NOTIFY;
+			if (!vsession->interrupt_mode) {
+				/* Disable I/O submission notifications, we'll be polling. */
+				q->vring.used->flags = VRING_USED_F_NO_NOTIFY;
+			}
 		}
 
 		q->packed.packed_ring = packed_ring;

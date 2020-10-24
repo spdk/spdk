@@ -319,7 +319,7 @@ remove_controller_test(void)
 static void
 vq_avail_ring_get_test(void)
 {
-	struct spdk_vhost_virtqueue vq;
+	struct spdk_vhost_virtqueue vq = {};
 	uint16_t avail_mem[34];
 	uint16_t reqs[32];
 	uint16_t reqs_len, ret, i;

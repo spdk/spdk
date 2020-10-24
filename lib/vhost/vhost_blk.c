@@ -691,6 +691,14 @@ _vdev_vq_worker(struct spdk_vhost_virtqueue *vq)
 }
 
 static int
+vdev_vq_worker(void *arg)
+{
+	struct spdk_vhost_virtqueue *vq = arg;
+
+	return _vdev_vq_worker(vq);
+}
+
+static int
 vdev_worker(void *arg)
 {
 	struct spdk_vhost_blk_session *bvsession = arg;
@@ -789,6 +797,14 @@ _no_bdev_vdev_vq_worker(struct spdk_vhost_virtqueue *vq)
 }
 
 static int
+no_bdev_vdev_vq_worker(void *arg)
+{
+	struct spdk_vhost_virtqueue *vq = arg;
+
+	return _no_bdev_vdev_vq_worker(vq);
+}
+
+static int
 no_bdev_vdev_worker(void *arg)
 {
 	struct spdk_vhost_blk_session *bvsession = arg;
@@ -800,6 +816,55 @@ no_bdev_vdev_worker(void *arg)
 	}
 
 	return SPDK_POLLER_BUSY;
+}
+
+static void
+vhost_blk_session_unregister_interrupts(struct spdk_vhost_blk_session *bvsession)
+{
+	struct spdk_vhost_session *vsession = &bvsession->vsession;
+	struct spdk_vhost_virtqueue *vq;
+	int i;
+
+	SPDK_DEBUGLOG(vhost_blk, "unregister virtqueues interrupt\n");
+	for (i = 0; i < vsession->max_queues; i++) {
+		vq = &vsession->virtqueue[i];
+		if (vq->intr == NULL) {
+			break;
+		}
+
+		SPDK_DEBUGLOG(vhost_blk, "unregister vq[%d]'s kickfd is %d\n",
+			      i, vq->vring.kickfd);
+		spdk_interrupt_unregister(&vq->intr);
+	}
+}
+
+static int
+vhost_blk_session_register_interrupts(struct spdk_vhost_blk_session *bvsession,
+				      spdk_interrupt_fn fn)
+{
+	struct spdk_vhost_session *vsession = &bvsession->vsession;
+	struct spdk_vhost_virtqueue *vq = NULL;
+	int i;
+
+	SPDK_DEBUGLOG(vhost_blk, "Register virtqueues interrupt\n");
+	for (i = 0; i < vsession->max_queues; i++) {
+		vq = &vsession->virtqueue[i];
+		SPDK_DEBUGLOG(vhost_blk, "Register vq[%d]'s kickfd is %d\n",
+			      i, vq->vring.kickfd);
+
+		vq->intr = SPDK_INTERRUPT_REGISTER(vq->vring.kickfd, fn, vq);
+		if (vq->intr == NULL) {
+			SPDK_ERRLOG("Fail to register req notifier handler.\n");
+			goto err;
+		}
+	}
+
+	return 0;
+
+err:
+	vhost_blk_session_unregister_interrupts(bvsession);
+
+	return -1;
 }
 
 static struct spdk_vhost_blk_dev *
@@ -863,11 +928,22 @@ vhost_session_bdev_remove_cb(struct spdk_vhost_dev *vdev,
 			     void *ctx)
 {
 	struct spdk_vhost_blk_session *bvsession;
+	int rc;
 
 	bvsession = (struct spdk_vhost_blk_session *)vsession;
 	if (bvsession->requestq_poller) {
 		spdk_poller_unregister(&bvsession->requestq_poller);
 		bvsession->requestq_poller = SPDK_POLLER_REGISTER(no_bdev_vdev_worker, bvsession, 0);
+	}
+
+	if (vsession->virtqueue[0].intr) {
+		vhost_blk_session_unregister_interrupts(bvsession);
+		rc = vhost_blk_session_register_interrupts(bvsession, no_bdev_vdev_vq_worker);
+		if (rc) {
+			SPDK_ERRLOG("%s: Interrupt register failed\n", vsession->name);
+			return -1;
+		}
+
 	}
 
 	return 0;
@@ -1013,10 +1089,22 @@ vhost_blk_start_cb(struct spdk_vhost_dev *vdev,
 		}
 	}
 
-	bvsession->requestq_poller = SPDK_POLLER_REGISTER(bvdev->bdev ? vdev_worker : no_bdev_vdev_worker,
-				     bvsession, 0);
-	SPDK_INFOLOG(vhost, "%s: started poller on lcore %d\n",
-		     vsession->name, spdk_env_get_current_core());
+	if (spdk_interrupt_mode_is_enabled()) {
+		rc = vhost_blk_session_register_interrupts(bvsession,
+				bvdev->bdev ? vdev_vq_worker : no_bdev_vdev_vq_worker);
+		if (rc) {
+			SPDK_ERRLOG("%s: Interrupt register failed\n", vsession->name);
+			goto out;
+		}
+		SPDK_INFOLOG(vhost, "%s: started interrupt source on lcore %d\n",
+			     vsession->name, spdk_env_get_current_core());
+	} else {
+		bvsession->requestq_poller = SPDK_POLLER_REGISTER(bvdev->bdev ? vdev_worker : no_bdev_vdev_worker,
+					     bvsession, 0);
+		SPDK_INFOLOG(vhost, "%s: started poller on lcore %d\n",
+			     vsession->name, spdk_env_get_current_core());
+	}
+
 out:
 	vhost_session_start_done(vsession, rc);
 	return rc;
@@ -1072,6 +1160,11 @@ vhost_blk_stop_cb(struct spdk_vhost_dev *vdev,
 	struct spdk_vhost_blk_session *bvsession = to_blk_session(vsession);
 
 	spdk_poller_unregister(&bvsession->requestq_poller);
+
+	if (vsession->virtqueue[0].intr) {
+		vhost_blk_session_unregister_interrupts(bvsession);
+	}
+
 	bvsession->stop_poller = SPDK_POLLER_REGISTER(destroy_session_poller_cb,
 				 bvsession, 1000);
 	return 0;
