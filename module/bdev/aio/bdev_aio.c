@@ -382,7 +382,8 @@ bdev_aio_group_interrupt(void *arg)
 
 	if (num_events > SPDK_AIO_QUEUE_DEPTH) {
 		num_events -= SPDK_AIO_QUEUE_DEPTH;
-		if (write(group_ch->efd, &num_events, sizeof(num_events))) {
+		rc = write(group_ch->efd, &num_events, sizeof(num_events));
+		if (rc < 0) {
 			SPDK_ERRLOG("failed to notify aio group: %s.\n", spdk_strerror(errno));
 		}
 	}
