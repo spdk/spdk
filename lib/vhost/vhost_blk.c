@@ -111,6 +111,13 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 		    struct spdk_vhost_blk_session *bvsession,
 		    struct spdk_vhost_virtqueue *vq);
 
+static struct spdk_vhost_blk_session *
+to_blk_session(struct spdk_vhost_session *vsession)
+{
+	assert(vsession->vdev->backend == &vhost_blk_device_backend);
+	return (struct spdk_vhost_blk_session *)vsession;
+}
+
 static void
 blk_task_finish(struct spdk_vhost_blk_task *task)
 {
@@ -664,25 +671,35 @@ process_packed_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_vi
 }
 
 static int
+_vdev_vq_worker(struct spdk_vhost_virtqueue *vq)
+{
+	struct spdk_vhost_session *vsession = vq->vsession;
+	struct spdk_vhost_blk_session *bvsession = to_blk_session(vsession);
+	bool packed_ring;
+
+	packed_ring = vq->packed.packed_ring;
+	if (packed_ring) {
+		process_packed_vq(bvsession, vq);
+	} else {
+		process_vq(bvsession, vq);
+	}
+
+	vhost_session_vq_used_signal(vq);
+
+	return SPDK_POLLER_BUSY;
+
+}
+
+static int
 vdev_worker(void *arg)
 {
 	struct spdk_vhost_blk_session *bvsession = arg;
 	struct spdk_vhost_session *vsession = &bvsession->vsession;
-
 	uint16_t q_idx;
-	bool packed_ring;
 
-	/* In a session, every vq supports the same format */
-	packed_ring = vsession->virtqueue[0].packed.packed_ring;
 	for (q_idx = 0; q_idx < vsession->max_queues; q_idx++) {
-		if (packed_ring) {
-			process_packed_vq(bvsession, &vsession->virtqueue[q_idx]);
-		} else {
-			process_vq(bvsession, &vsession->virtqueue[q_idx]);
-		}
+		_vdev_vq_worker(&vsession->virtqueue[q_idx]);
 	}
-
-	vhost_session_used_signal(vsession);
 
 	return SPDK_POLLER_BUSY;
 }
@@ -748,24 +765,20 @@ no_bdev_process_packed_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_
 }
 
 static int
-no_bdev_vdev_worker(void *arg)
+_no_bdev_vdev_vq_worker(struct spdk_vhost_virtqueue *vq)
 {
-	struct spdk_vhost_blk_session *bvsession = arg;
-	struct spdk_vhost_session *vsession = &bvsession->vsession;
-	uint16_t q_idx;
+	struct spdk_vhost_session *vsession = vq->vsession;
+	struct spdk_vhost_blk_session *bvsession = to_blk_session(vsession);
 	bool packed_ring;
 
-	/* In a session, every vq supports the same format */
-	packed_ring = vsession->virtqueue[0].packed.packed_ring;
-	for (q_idx = 0; q_idx < vsession->max_queues; q_idx++) {
-		if (packed_ring) {
-			no_bdev_process_packed_vq(bvsession, &vsession->virtqueue[q_idx]);
-		} else {
-			no_bdev_process_vq(bvsession, &vsession->virtqueue[q_idx]);
-		}
+	packed_ring = vq->packed.packed_ring;
+	if (packed_ring) {
+		no_bdev_process_packed_vq(bvsession, vq);
+	} else {
+		no_bdev_process_vq(bvsession, vq);
 	}
 
-	vhost_session_used_signal(vsession);
+	vhost_session_vq_used_signal(vq);
 
 	if (vsession->task_cnt == 0 && bvsession->io_channel) {
 		spdk_put_io_channel(bvsession->io_channel);
@@ -775,11 +788,18 @@ no_bdev_vdev_worker(void *arg)
 	return SPDK_POLLER_BUSY;
 }
 
-static struct spdk_vhost_blk_session *
-to_blk_session(struct spdk_vhost_session *vsession)
+static int
+no_bdev_vdev_worker(void *arg)
 {
-	assert(vsession->vdev->backend == &vhost_blk_device_backend);
-	return (struct spdk_vhost_blk_session *)vsession;
+	struct spdk_vhost_blk_session *bvsession = arg;
+	struct spdk_vhost_session *vsession = &bvsession->vsession;
+	uint16_t q_idx;
+
+	for (q_idx = 0; q_idx < vsession->max_queues; q_idx++) {
+		_no_bdev_vdev_vq_worker(&vsession->virtqueue[q_idx]);
+	}
+
+	return SPDK_POLLER_BUSY;
 }
 
 static struct spdk_vhost_blk_dev *
