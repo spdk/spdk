@@ -122,6 +122,8 @@ struct spdk_vhost_virtqueue {
 
 	/* Associated vhost_virtqueue in the virtio device's virtqueue list */
 	uint32_t vring_idx;
+
+	struct spdk_vhost_session *vsession;
 } __attribute((aligned(SPDK_CACHE_LINE_SIZE)));
 
 struct spdk_vhost_session {
@@ -299,6 +301,12 @@ int vhost_vq_used_signal(struct spdk_vhost_session *vsession, struct spdk_vhost_
  * \param vq virtqueue
  */
 void vhost_session_used_signal(struct spdk_vhost_session *vsession);
+
+/**
+ * Send IRQs for the queue that need to be signaled.
+ * \param vq virtqueue
+ */
+void vhost_session_vq_used_signal(struct spdk_vhost_virtqueue *virtqueue);
 
 void vhost_vq_used_ring_enqueue(struct spdk_vhost_session *vsession,
 				struct spdk_vhost_virtqueue *vq,

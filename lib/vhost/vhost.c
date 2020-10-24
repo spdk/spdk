@@ -327,20 +327,15 @@ session_vq_io_stats_update(struct spdk_vhost_session *vsession,
 }
 
 static void
-check_session_io_stats(struct spdk_vhost_session *vsession, uint64_t now)
+check_session_vq_io_stats(struct spdk_vhost_session *vsession,
+			  struct spdk_vhost_virtqueue *virtqueue, uint64_t now)
 {
-	struct spdk_vhost_virtqueue *virtqueue;
-	uint16_t q_idx;
-
 	if (now < vsession->next_stats_check_time) {
 		return;
 	}
 
 	vsession->next_stats_check_time = now + vsession->stats_check_interval;
-	for (q_idx = 0; q_idx < vsession->max_queues; q_idx++) {
-		virtqueue = &vsession->virtqueue[q_idx];
-		session_vq_io_stats_update(vsession, virtqueue, now);
-	}
+	session_vq_io_stats_update(vsession, virtqueue, now);
 }
 
 static inline bool
@@ -360,50 +355,53 @@ vhost_vq_event_is_suppressed(struct spdk_vhost_virtqueue *vq)
 }
 
 void
+vhost_session_vq_used_signal(struct spdk_vhost_virtqueue *virtqueue)
+{
+	struct spdk_vhost_session *vsession = virtqueue->vsession;
+	uint64_t now;
+
+	if (vsession->coalescing_delay_time_base == 0) {
+		if (virtqueue->vring.desc == NULL) {
+			return;
+		}
+
+		if (vhost_vq_event_is_suppressed(virtqueue)) {
+			return;
+		}
+
+		vhost_vq_used_signal(vsession, virtqueue);
+	} else {
+		now = spdk_get_ticks();
+		check_session_vq_io_stats(vsession, virtqueue, now);
+
+		/* No need for event right now */
+		if (now < virtqueue->next_event_time) {
+			return;
+		}
+
+		if (vhost_vq_event_is_suppressed(virtqueue)) {
+			return;
+		}
+
+		if (!vhost_vq_used_signal(vsession, virtqueue)) {
+			return;
+		}
+
+		/* Syscall is quite long so update time */
+		now = spdk_get_ticks();
+		virtqueue->next_event_time = now + virtqueue->irq_delay_time;
+	}
+}
+
+void
 vhost_session_used_signal(struct spdk_vhost_session *vsession)
 {
 	struct spdk_vhost_virtqueue *virtqueue;
-	uint64_t now;
 	uint16_t q_idx;
 
-	if (vsession->coalescing_delay_time_base == 0) {
-		for (q_idx = 0; q_idx < vsession->max_queues; q_idx++) {
-			virtqueue = &vsession->virtqueue[q_idx];
-
-			if (virtqueue->vring.desc == NULL) {
-				continue;
-			}
-
-			if (vhost_vq_event_is_suppressed(virtqueue)) {
-				continue;
-			}
-
-			vhost_vq_used_signal(vsession, virtqueue);
-		}
-	} else {
-		now = spdk_get_ticks();
-		check_session_io_stats(vsession, now);
-
-		for (q_idx = 0; q_idx < vsession->max_queues; q_idx++) {
-			virtqueue = &vsession->virtqueue[q_idx];
-
-			/* No need for event right now */
-			if (now < virtqueue->next_event_time) {
-				continue;
-			}
-
-			if (vhost_vq_event_is_suppressed(virtqueue)) {
-				continue;
-			}
-
-			if (!vhost_vq_used_signal(vsession, virtqueue)) {
-				continue;
-			}
-
-			/* Syscall is quite long so update time */
-			now = spdk_get_ticks();
-			virtqueue->next_event_time = now + virtqueue->irq_delay_time;
-		}
+	for (q_idx = 0; q_idx < vsession->max_queues; q_idx++) {
+		virtqueue = &vsession->virtqueue[q_idx];
+		vhost_session_vq_used_signal(virtqueue);
 	}
 }
 
@@ -1215,6 +1213,7 @@ vhost_start_device_cb(int vid)
 	for (i = 0; i < SPDK_VHOST_MAX_VQUEUES; i++) {
 		struct spdk_vhost_virtqueue *q = &vsession->virtqueue[i];
 
+		q->vsession = vsession;
 		q->vring_idx = -1;
 		if (rte_vhost_get_vhost_vring(vid, i, &q->vring)) {
 			continue;
