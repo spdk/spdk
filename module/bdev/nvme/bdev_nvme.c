@@ -167,7 +167,7 @@ static int bdev_nvme_io_passthru_md(struct nvme_bdev_ns *nvme_ns, struct nvme_io
 static int bdev_nvme_abort(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
 			   struct nvme_bdev_io *bio, struct nvme_bdev_io *bio_to_abort);
 static int bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bio);
-static int bdev_nvme_failover(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
+static int bdev_nvme_failover(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, bool remove);
 
 typedef void (*populate_namespace_fn)(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 				      struct nvme_bdev_ns *nvme_ns, struct nvme_async_probe_ctx *ctx);
@@ -274,7 +274,7 @@ bdev_nvme_poll_adminq(void *arg)
 
 	rc = spdk_nvme_ctrlr_process_admin_completions(nvme_bdev_ctrlr->ctrlr);
 	if (rc < 0) {
-		bdev_nvme_failover(nvme_bdev_ctrlr);
+		bdev_nvme_failover(nvme_bdev_ctrlr, false);
 	}
 
 	return rc == 0 ? SPDK_POLLER_IDLE : SPDK_POLLER_BUSY;
@@ -523,7 +523,7 @@ bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bi
 }
 
 static int
-bdev_nvme_failover(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
+bdev_nvme_failover(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, bool remove)
 {
 	struct nvme_bdev_ctrlr_trid *curr_trid = NULL, *next_trid = NULL;
 	int rc = 0;
@@ -556,11 +556,15 @@ bdev_nvme_failover(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 		nvme_bdev_ctrlr->connected_trid = &next_trid->trid;
 		rc = spdk_nvme_ctrlr_set_trid(nvme_bdev_ctrlr->ctrlr, &next_trid->trid);
 		assert(rc == 0);
-		/** Shuffle the old trid to the end of the list and use the new one.
-		 * Allows for round robin through multiple connections.
-		 */
 		TAILQ_REMOVE(&nvme_bdev_ctrlr->trids, curr_trid, link);
-		TAILQ_INSERT_TAIL(&nvme_bdev_ctrlr->trids, curr_trid, link);
+		if (!remove) {
+			/** Shuffle the old trid to the end of the list and use the new one.
+			 * Allows for round robin through multiple connections.
+			 */
+			TAILQ_INSERT_TAIL(&nvme_bdev_ctrlr->trids, curr_trid, link);
+		} else {
+			free(curr_trid);
+		}
 	}
 
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
@@ -1878,13 +1882,7 @@ bdev_nvme_remove_trid(const char *name, struct spdk_nvme_transport_id *trid)
 		}
 
 		/* case 1B: there is an alternative path. */
-		if (bdev_nvme_failover(nvme_bdev_ctrlr) == -EAGAIN) {
-			return -EAGAIN;
-		}
-		assert(nvme_bdev_ctrlr->connected_trid != &ctrlr_trid->trid);
-		TAILQ_REMOVE(&nvme_bdev_ctrlr->trids, ctrlr_trid, link);
-		free(ctrlr_trid);
-		return 0;
+		return bdev_nvme_failover(nvme_bdev_ctrlr, true);
 	}
 	/* case 2: We are not using the specified path. */
 	TAILQ_FOREACH_SAFE(ctrlr_trid, &nvme_bdev_ctrlr->trids, link, tmp_trid) {
