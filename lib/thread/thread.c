@@ -500,6 +500,7 @@ msg_queue_run_batch(struct spdk_thread *thread, uint32_t max_msgs)
 	unsigned count, i;
 	void *messages[SPDK_MSG_BATCH_SIZE];
 	uint64_t notify = 1;
+	int rc;
 
 #ifdef DEBUG
 	/*
@@ -520,12 +521,18 @@ msg_queue_run_batch(struct spdk_thread *thread, uint32_t max_msgs)
 		 * so msg_acknowledge should be applied ahead. And then check for self's msg_notify.
 		 * This can avoid msg notification missing.
 		 */
-		read(thread->msg_fd, &notify, sizeof(notify));
+		rc = read(thread->msg_fd, &notify, sizeof(notify));
+		if (rc < 0) {
+			SPDK_ERRLOG("failed to acknowledge msg_queue: %s.\n", spdk_strerror(errno));
+		}
 	}
 
 	count = spdk_ring_dequeue(thread->messages, messages, max_msgs);
 	if (thread->interrupt_mode && spdk_ring_count(thread->messages) != 0) {
-		write(thread->msg_fd, &notify, sizeof(notify));
+		rc = write(thread->msg_fd, &notify, sizeof(notify));
+		if (rc < 0) {
+			SPDK_ERRLOG("failed to notify msg_queue: %s.\n", spdk_strerror(errno));
+		}
 	}
 	if (count == 0) {
 		return 0;
@@ -917,7 +924,11 @@ spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx
 	if (thread->interrupt_mode) {
 		uint64_t notify = 1;
 
-		write(thread->msg_fd, &notify, sizeof(notify));
+		rc = write(thread->msg_fd, &notify, sizeof(notify));
+		if (rc < 0) {
+			SPDK_ERRLOG("failed to notify msg_queue: %s.\n", spdk_strerror(errno));
+			return -EIO;
+		}
 	}
 
 	return 0;
@@ -932,8 +943,13 @@ spdk_thread_send_critical_msg(struct spdk_thread *thread, spdk_msg_fn fn)
 					__ATOMIC_SEQ_CST)) {
 		if (thread->interrupt_mode) {
 			uint64_t notify = 1;
+			int rc;
 
-			write(thread->msg_fd, &notify, sizeof(notify));
+			rc = write(thread->msg_fd, &notify, sizeof(notify));
+			if (rc < 0) {
+				SPDK_ERRLOG("failed to notify msg_queue: %s.\n", spdk_strerror(errno));
+				return -EIO;
+			}
 		}
 
 		return 0;
