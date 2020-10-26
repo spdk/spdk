@@ -1031,15 +1031,15 @@ nvme_ctrlr_populate_standard_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nvme_ns->id);
 	if (!ns) {
 		SPDK_DEBUGLOG(bdev_nvme, "Invalid NS %d\n", nvme_ns->id);
-		nvme_ctrlr_populate_namespace_done(ctx, nvme_ns, -EINVAL);
-		return;
+		rc = -EINVAL;
+		goto done;
 	}
 
 	bdev = calloc(1, sizeof(*bdev));
 	if (!bdev) {
 		SPDK_ERRLOG("bdev calloc() failed\n");
-		nvme_ctrlr_populate_namespace_done(ctx, nvme_ns, -ENOMEM);
-		return;
+		rc = -ENOMEM;
+		goto done;
 	}
 
 	nvme_ns->ns = ns;
@@ -1048,8 +1048,8 @@ nvme_ctrlr_populate_standard_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 	bdev->disk.name = spdk_sprintf_alloc("%sn%d", nvme_bdev_ctrlr->name, spdk_nvme_ns_get_id(ns));
 	if (!bdev->disk.name) {
 		free(bdev);
-		nvme_ctrlr_populate_namespace_done(ctx, nvme_ns, -ENOMEM);
-		return;
+		rc = -ENOMEM;
+		goto done;
 	}
 	bdev->disk.product_name = "NVMe disk";
 
@@ -1094,12 +1094,13 @@ nvme_ctrlr_populate_standard_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 	if (rc) {
 		free(bdev->disk.name);
 		free(bdev);
-		nvme_ctrlr_populate_namespace_done(ctx, nvme_ns, rc);
-		return;
+		goto done;
 	}
 
 	nvme_bdev_attach_bdev_to_ns(nvme_ns, bdev);
-	nvme_ctrlr_populate_namespace_done(ctx, nvme_ns, 0);
+
+done:
+	nvme_ctrlr_populate_namespace_done(ctx, nvme_ns, rc);
 }
 
 static bool

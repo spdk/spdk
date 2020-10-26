@@ -1344,9 +1344,12 @@ static void
 bdev_ocssd_geometry_cb(void *_ctx, const struct spdk_nvme_cpl *cpl)
 {
 	struct bdev_ocssd_populate_ns_ctx *ctx = _ctx;
+	struct nvme_async_probe_ctx *nvme_ctx = ctx->nvme_ctx;
 	struct nvme_bdev_ns *nvme_ns = ctx->nvme_ns;
 	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ns);
 	int rc = 0;
+
+	free(ctx);
 
 	if (spdk_unlikely(spdk_nvme_cpl_is_error(cpl))) {
 		SPDK_ERRLOG("Failed to retrieve geometry for namespace %"PRIu32"\n", nvme_ns->id);
@@ -1364,8 +1367,7 @@ bdev_ocssd_geometry_cb(void *_ctx, const struct spdk_nvme_cpl *cpl)
 		ocssd_ns->chunk_notify_pending = true;
 	}
 
-	nvme_ctrlr_populate_namespace_done(ctx->nvme_ctx, nvme_ns, rc);
-	free(ctx);
+	nvme_ctrlr_populate_namespace_done(nvme_ctx, nvme_ns, rc);
 }
 
 void
@@ -1380,21 +1382,21 @@ bdev_ocssd_populate_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 
 	ns = spdk_nvme_ctrlr_get_ns(nvme_bdev_ctrlr->ctrlr, nvme_ns->id);
 	if (ns == NULL) {
-		nvme_ctrlr_populate_namespace_done(nvme_ctx, nvme_ns, -EINVAL);
-		return;
+		rc = -EINVAL;
+		goto error;
 	}
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL) {
-		nvme_ctrlr_populate_namespace_done(nvme_ctx, nvme_ns, -ENOMEM);
-		return;
+		rc = -ENOMEM;
+		goto error;
 	}
 
 	ocssd_ns = calloc(1, sizeof(*ocssd_ns));
 	if (ocssd_ns == NULL) {
-		nvme_ctrlr_populate_namespace_done(nvme_ctx, nvme_ns, -ENOMEM);
 		free(ctx);
-		return;
+		rc = -ENOMEM;
+		goto error;
 	}
 
 	nvme_ns->type_ctx = ocssd_ns;
@@ -1409,10 +1411,15 @@ bdev_ocssd_populate_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 	if (spdk_unlikely(rc != 0)) {
 		SPDK_ERRLOG("Failed to retrieve OC geometry: %s\n", spdk_strerror(-rc));
 		nvme_ns->type_ctx = NULL;
-		nvme_ctrlr_populate_namespace_done(nvme_ctx, nvme_ns, rc);
 		free(ocssd_ns);
 		free(ctx);
+		goto error;
 	}
+
+	return;
+
+error:
+	nvme_ctrlr_populate_namespace_done(nvme_ctx, nvme_ns, rc);
 }
 
 void
