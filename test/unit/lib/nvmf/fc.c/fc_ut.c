@@ -132,6 +132,9 @@ DEFINE_STUB_V(spdk_nvmf_ctrlr_data_init, (struct spdk_nvmf_transport_opts *opts,
 DEFINE_STUB(spdk_nvmf_request_complete, int, (struct spdk_nvmf_request *req),
 	    -ENOSPC);
 
+DEFINE_STUB_V(nvmf_update_discovery_log,
+	      (struct spdk_nvmf_tgt *tgt, const char *hostnqn));
+
 const char *
 spdk_nvme_transport_id_trtype_str(enum spdk_nvme_transport_type trtype)
 {

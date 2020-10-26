@@ -2,6 +2,12 @@
 
 ## v21.01: (Upcoming Release)
 
+### nvmf
+
+The SPDK nvmf target now supports async event notification for discovery log changes.
+This allows the initiator to create persistent connection to discovery controller and
+be notified of any discovery log changes.
+
 ## v20.10:
 
 ### accel

@@ -716,7 +716,9 @@ union spdk_nvme_feat_async_event_configuration {
 		uint32_t fw_activation_notice	: 1;
 		uint32_t telemetry_log_notice	: 1;
 		uint32_t ana_change_notice	: 1;
-		uint32_t reserved		: 20;
+		uint32_t reserved		: 19;
+		/** Discovery log change (refer to the NVMe over Fabrics specification) */
+		uint32_t discovery_log_change_notice	: 1;
 	} bits;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_async_event_configuration) == 4, "Incorrect size");
@@ -1680,7 +1682,11 @@ struct __attribute__((packed)) __attribute__((aligned)) spdk_nvme_ctrlr_data {
 		/** Supports Asymmetric Namespace Access Change Notices. */
 		uint32_t	ana_change_notices : 1;
 
-		uint32_t	reserved3 : 20;
+		uint32_t	reserved3 : 19;
+
+		/** Supports Discovery log change notices (refer to the NVMe over Fabrics specification) */
+		uint32_t	discovery_log_change_notices : 1;
+
 	} oaes;
 
 	/** controller attributes */
@@ -2799,7 +2805,12 @@ enum spdk_nvme_async_event_info_notice {
 	/* Asymmetric Namespace Access Change */
 	SPDK_NVME_ASYNC_EVENT_ANA_CHANGE		= 0x3,
 
-	/* 0x4 - 0xFF Reserved */
+	/* 0x4 - 0xEF Reserved */
+
+	/** Discovery log change event(refer to the NVMe over Fabrics specification) */
+	SPDK_NVME_ASYNC_EVENT_DISCOVERY_LOG_CHANGE	= 0xF0,
+
+	/* 0xF1 - 0xFF Reserved */
 };
 
 /**

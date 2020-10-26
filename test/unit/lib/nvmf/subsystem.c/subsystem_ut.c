@@ -64,6 +64,9 @@ DEFINE_STUB(spdk_nvmf_transport_stop_listen,
 	    (struct spdk_nvmf_transport *transport,
 	     const struct spdk_nvme_transport_id *trid), 0);
 
+DEFINE_STUB_V(nvmf_update_discovery_log,
+	      (struct spdk_nvmf_tgt *tgt, const char *hostnqn));
+
 int
 spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
 			   const struct spdk_nvme_transport_id *trid)

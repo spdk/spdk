@@ -305,6 +305,7 @@ void nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
 void nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 				      struct spdk_nvmf_subsystem *subsystem, spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg);
 
+void nvmf_update_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn);
 void nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, const char *hostnqn,
 				 struct iovec *iov,
 				 uint32_t iovcnt, uint64_t offset, uint32_t length);
@@ -358,6 +359,7 @@ void nvmf_subsystem_set_ana_state(struct spdk_nvmf_subsystem *subsystem,
 
 int nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr);
 int nvmf_ctrlr_async_event_ana_change_notice(struct spdk_nvmf_ctrlr *ctrlr);
+int nvmf_ctrlr_async_event_discovery_log_change_notice(struct spdk_nvmf_ctrlr *ctrlr);
 void nvmf_ctrlr_async_event_reservation_notification(struct spdk_nvmf_ctrlr *ctrlr);
 void nvmf_ns_reservation_request(void *ctx);
 void nvmf_ctrlr_reservation_notice_log(struct spdk_nvmf_ctrlr *ctrlr,

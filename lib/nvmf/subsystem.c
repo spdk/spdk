@@ -303,7 +303,7 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 		 MODEL_NUMBER_DEFAULT);
 
 	tgt->subsystems[sid] = subsystem;
-	tgt->discovery_genctr++;
+	nvmf_update_discovery_log(tgt, NULL);
 
 	return subsystem;
 }
@@ -374,7 +374,7 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 	free(subsystem->ns);
 
 	subsystem->tgt->subsystems[subsystem->id] = NULL;
-	subsystem->tgt->discovery_genctr++;
+	nvmf_update_discovery_log(subsystem->tgt, NULL);
 
 	pthread_mutex_destroy(&subsystem->mutex);
 
@@ -735,7 +735,7 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *
 
 	TAILQ_INSERT_HEAD(&subsystem->hosts, host, link);
 
-	subsystem->tgt->discovery_genctr++;
+	nvmf_update_discovery_log(subsystem->tgt, hostnqn);
 
 	pthread_mutex_unlock(&subsystem->mutex);
 
@@ -839,6 +839,7 @@ spdk_nvmf_subsystem_set_allow_any_host(struct spdk_nvmf_subsystem *subsystem, bo
 {
 	pthread_mutex_lock(&subsystem->mutex);
 	subsystem->flags.allow_any_host = allow_any_host;
+	nvmf_update_discovery_log(subsystem->tgt, NULL);
 	pthread_mutex_unlock(&subsystem->mutex);
 
 	return 0;
@@ -937,7 +938,7 @@ _nvmf_subsystem_add_listener_done(void *ctx, int status)
 	}
 
 	TAILQ_INSERT_HEAD(&listener->subsystem->listeners, listener, link);
-	listener->subsystem->tgt->discovery_genctr++;
+	nvmf_update_discovery_log(listener->subsystem->tgt, NULL);
 	listener->cb_fn(listener->cb_arg, status);
 }
 

@@ -363,14 +363,26 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		 * "The Keep Alive command is reserved for
 		 * Discovery controllers. A transport may specify a
 		 * fixed Discovery controller activity timeout value
-		 * (e.g., 2 minutes).  If no commands are received
+		 * (e.g., 2 minutes). If no commands are received
 		 * by a Discovery controller within that time
 		 * period, the controller may perform the
 		 * actions for Keep Alive Timer expiration".
-		 * kato is in millisecond.
+		 *
+		 * From the 1.1 nvme-of spec:
+		 * "A host requests an explicit persistent connection
+		 * to a Discovery controller and Asynchronous Event Notifications from
+		 * the Discovery controller on that persistent connection by specifying
+		 * a non-zero Keep Alive Timer value in the Connect command."
+		 *
+		 * In case non-zero KATO is used, we enable discovery_log_change_notice
+		 * otherwise we disable it and use default discovery controller KATO.
+		 * KATO is in millisecond.
 		 */
 		if (ctrlr->feat.keep_alive_timer.bits.kato == 0) {
 			ctrlr->feat.keep_alive_timer.bits.kato = NVMF_DISC_KATO_IN_MS;
+			ctrlr->feat.async_event_configuration.bits.discovery_log_change_notice = 0;
+		} else {
+			ctrlr->feat.async_event_configuration.bits.discovery_log_change_notice = 1;
 		}
 	}
 
@@ -2073,10 +2085,16 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 	SPDK_DEBUGLOG(nvmf, "ctrlr data: maxcmd 0x%x\n", cdata->maxcmd);
 	SPDK_DEBUGLOG(nvmf, "sgls data: 0x%x\n", from_le32(&cdata->sgls));
 
-	/*
-	 * NVM subsystem fields (reserved for discovery subsystems)
-	 */
-	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
+
+	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+		/*
+		 * NVM Discovery subsystem fields
+		 */
+		cdata->oaes.discovery_log_change_notices = 1;
+	} else {
+		/*
+		 * NVM subsystem fields (reserved for discovery subsystems)
+		 */
 		spdk_strcpy_pad(cdata->mn, spdk_nvmf_subsystem_get_mn(subsystem), sizeof(cdata->mn), ' ');
 		spdk_strcpy_pad(cdata->sn, spdk_nvmf_subsystem_get_sn(subsystem), sizeof(cdata->sn), ' ');
 		cdata->kas = ctrlr->cdata.kas;
@@ -2458,6 +2476,24 @@ nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 
 	feature = cmd->cdw10_bits.get_features.fid;
 
+	if (ctrlr->subsys->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+		/*
+		 * Features supported by Discovery controller
+		 */
+		switch (feature) {
+		case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
+			return get_features_generic(req, ctrlr->feat.keep_alive_timer.raw);
+		case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
+			return get_features_generic(req, ctrlr->feat.async_event_configuration.raw);
+		default:
+			SPDK_ERRLOG("Get Features command with unsupported feature ID 0x%02x\n", feature);
+			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		}
+	}
+	/*
+	 * Process Get Features command for non-discovery controller
+	 */
 	ana_state = ctrlr->listener->ana_state;
 	switch (ana_state) {
 	case SPDK_NVME_ANA_INACCESSIBLE_STATE:
@@ -2532,6 +2568,24 @@ nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
 
 	feature = cmd->cdw10_bits.set_features.fid;
 
+	if (ctrlr->subsys->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+		/*
+		 * Features supported by Discovery controller
+		 */
+		switch (feature) {
+		case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
+			return nvmf_ctrlr_set_features_keep_alive_timer(req);
+		case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
+			return nvmf_ctrlr_set_features_async_event_configuration(req);
+		default:
+			SPDK_ERRLOG("Set Features command with unsupported feature ID 0x%02x\n", feature);
+			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		}
+	}
+	/*
+	 * Process Set Features command for non-discovery controller
+	 */
 	ana_state = ctrlr->listener->ana_state;
 	switch (ana_state) {
 	case SPDK_NVME_ANA_INACCESSIBLE_STATE:
@@ -2640,11 +2694,14 @@ nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 	}
 
 	if (ctrlr->subsys->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
-		/* Discovery controllers only support Get Log Page, Identify and Keep Alive. */
+		/* Discovery controllers only support these admin OPS. */
 		switch (cmd->opc) {
 		case SPDK_NVME_OPC_IDENTIFY:
 		case SPDK_NVME_OPC_GET_LOG_PAGE:
 		case SPDK_NVME_OPC_KEEP_ALIVE:
+		case SPDK_NVME_OPC_SET_FEATURES:
+		case SPDK_NVME_OPC_GET_FEATURES:
+		case SPDK_NVME_OPC_ASYNC_EVENT_REQUEST:
 			break;
 		default:
 			goto invalid_opcode;
@@ -2806,7 +2863,7 @@ nvmf_ctrlr_async_event_ana_change_notice(struct spdk_nvmf_ctrlr *ctrlr)
 	event.bits.log_page_identifier = SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS;
 
 	/* If there is no outstanding AER request, queue the event.  Then
-	 * if an AER is later submited, this event can be sent as a
+	 * if an AER is later submitted, this event can be sent as a
 	 * response.
 	 */
 	if (ctrlr->nr_aer_reqs == 0) {
@@ -2849,6 +2906,40 @@ nvmf_ctrlr_async_event_reservation_notification(struct spdk_nvmf_ctrlr *ctrlr)
 	}
 
 	nvmf_ctrlr_async_event_notification(ctrlr, &event);
+}
+
+int
+nvmf_ctrlr_async_event_discovery_log_change_notice(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	union spdk_nvme_async_event_completion event = {0};
+
+	/* Users may disable the event notification manually or
+	 * it may not be enabled due to keep alive timeout
+	 * not being set in connect command to discovery controller.
+	 */
+	if (!ctrlr->feat.async_event_configuration.bits.discovery_log_change_notice) {
+		return 0;
+	}
+
+	event.bits.async_event_type = SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE;
+	event.bits.async_event_info = SPDK_NVME_ASYNC_EVENT_DISCOVERY_LOG_CHANGE;
+	event.bits.log_page_identifier = SPDK_NVME_LOG_DISCOVERY;
+
+	/* If there is no outstanding AER request, queue the event.  Then
+	 * if an AER is later submitted, this event can be sent as a
+	 * response.
+	 */
+	if (ctrlr->nr_aer_reqs == 0) {
+		if (ctrlr->notice_event.bits.async_event_type ==
+		    SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) {
+			return 0;
+		}
+
+		ctrlr->notice_event.raw = event.raw;
+		return 0;
+	}
+
+	return nvmf_ctrlr_async_event_notification(ctrlr, &event);
 }
 
 void

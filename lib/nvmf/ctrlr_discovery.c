@@ -47,6 +47,25 @@
 #include "spdk/bdev_module.h"
 #include "spdk/log.h"
 
+void
+nvmf_update_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn)
+{
+	struct spdk_nvmf_subsystem *discovery_subsystem;
+	struct spdk_nvmf_ctrlr *ctrlr;
+
+	tgt->discovery_genctr++;
+	discovery_subsystem = spdk_nvmf_tgt_find_subsystem(tgt, SPDK_NVMF_DISCOVERY_NQN);
+
+	if (discovery_subsystem) {
+		/** There is a change in discovery log for hosts with given hostnqn */
+		TAILQ_FOREACH(ctrlr, &discovery_subsystem->ctrlrs, link) {
+			if (hostnqn == NULL || strcmp(hostnqn, ctrlr->hostnqn) == 0) {
+				nvmf_ctrlr_async_event_discovery_log_change_notice(ctrlr);
+			}
+		}
+	}
+}
+
 static struct spdk_nvmf_discovery_log_page *
 nvmf_generate_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn, size_t *log_page_size)
 {

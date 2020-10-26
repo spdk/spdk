@@ -55,6 +55,10 @@ DEFINE_STUB(spdk_nvmf_transport_stop_listen,
 
 DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
 
+DEFINE_STUB(nvmf_ctrlr_async_event_discovery_log_change_notice,
+	    int,
+	    (struct spdk_nvmf_ctrlr *ctrlr), 0);
+
 const char *
 spdk_bdev_get_name(const struct spdk_bdev *bdev)
 {
