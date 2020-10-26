@@ -1165,13 +1165,14 @@ spdk_fio_report_zones(struct thread_data *td, struct fio_file *f, uint64_t offse
 	}
 
 	err = spdk_nvme_zns_report_zones(fio_qpair->ns, fio_qpair->qpair, report, report_nbytes,
-					 offset / lba_nbytes, SPDK_NVME_ZRA_LIST_ALL, false, pcu_cb,
+					 offset / lba_nbytes, SPDK_NVME_ZRA_LIST_ALL, true, pcu_cb,
 					 &completed);
 	if (err || pcu(fio_qpair->qpair, &completed) || completed < 0) {
 		log_err("spdk/nvme: report_zones(): err: %d, cpl: %d\n", err, completed);
 		err = err ? err : -EIO;
 		goto exit;
 	}
+	assert(report->nr_zones <= report_nzones_max);
 	report_nzones = report->nr_zones;
 
 	for (uint64_t idx = 0; idx < report->nr_zones; ++idx) {
