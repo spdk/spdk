@@ -1019,6 +1019,7 @@ spdk_fio_get_zoned_model(struct thread_data *td, struct fio_file *f, enum zbd_zo
 {
 	struct spdk_fio_thread *fio_thread = td->io_ops_data;
 	struct spdk_fio_qpair *fio_qpair = NULL;
+	const struct spdk_nvme_zns_ns_data *zns_data = NULL;
 
 	*model = ZBD_IGNORE;
 
@@ -1045,12 +1046,37 @@ spdk_fio_get_zoned_model(struct thread_data *td, struct fio_file *f, enum zbd_zo
 		return -ENOSYS;
 
 	case SPDK_NVME_CSI_ZNS:
-		if (!spdk_nvme_zns_ns_get_data(fio_qpair->ns)) {
+		zns_data = spdk_nvme_zns_ns_get_data(fio_qpair->ns);
+		if (!zns_data) {
 			log_err("spdk/nvme: file_name: '%s', ZNS is not enabled\n", f->file_name);
 			return -EINVAL;
 		}
 
 		*model = ZBD_HOST_MANAGED;
+
+		/** Unlimited open resources, skip checking 'max_open_zones' */
+		if (0xFFFFFFFF == zns_data->mor) {
+			return 0;
+		}
+
+		if (!td->o.max_open_zones) {
+			td->o.max_open_zones = spdk_min(ZBD_MAX_OPEN_ZONES, zns_data->mor + 1);
+			log_info("spdk/nvme: parameter 'max_open_zones' was unset; assigned: %d.\n",
+				 td->o.max_open_zones);
+		} else if (td->o.max_open_zones < 0) {
+			log_err("spdk/nvme: invalid parameter 'max_open_zones': %d\n",
+				td->o.max_open_zones);
+			return -EINVAL;
+		} else if (td->o.max_open_zones > ZBD_MAX_OPEN_ZONES) {
+			log_err("spdk/nvme: parameter 'max_open_zones': %d exceeds fio-limit: %d\n",
+				td->o.max_open_zones, ZBD_MAX_OPEN_ZONES);
+			return -EINVAL;
+		} else if ((uint32_t)td->o.max_open_zones > (zns_data->mor + 1)) {
+			log_err("spdk/nvme: parameter 'max_open_zones': %d exceeds dev-limit: %u\n",
+				td->o.max_open_zones, zns_data->mor + 1);
+			return -EINVAL;
+		}
+
 		return 0;
 	}
 
