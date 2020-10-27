@@ -1850,7 +1850,7 @@ nvmf_get_reservation_notification_log_page(struct spdk_nvmf_ctrlr *ctrlr,
 		return;
 	}
 
-	next_pos = copy_len = 0;
+	next_pos = 0;
 	TAILQ_FOREACH_SAFE(log, &ctrlr->log_head, link, log_tmp) {
 		TAILQ_REMOVE(&ctrlr->log_head, log, link);
 		ctrlr->num_avail_log_pages--;
