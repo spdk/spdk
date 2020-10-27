@@ -1236,7 +1236,6 @@ spdk_fio_reset_wp(struct thread_data *td, struct fio_file *f, uint64_t offset, u
 	struct spdk_fio_qpair *fio_qpair = NULL;
 	const struct spdk_nvme_zns_ns_data *zns = NULL;
 	uint64_t zsze_nbytes, lba_nbytes;
-	int completed = 0;
 	int err = 0;
 
 	fio_qpair = get_fio_qpair(fio_thread, f);
@@ -1252,8 +1251,16 @@ spdk_fio_reset_wp(struct thread_data *td, struct fio_file *f, uint64_t offset, u
 	zsze_nbytes = spdk_nvme_zns_ns_get_zone_size(fio_qpair->ns);
 	lba_nbytes = spdk_nvme_ns_get_sector_size(fio_qpair->ns);
 
+	/** check the assumption that offset is valid zone-start lba */
+	if (offset % zsze_nbytes) {
+		log_err("spdk/nvme: offset: %zu is not a valid zslba\n", offset);
+		return -EINVAL;
+	}
+
 	for (uint64_t cur = offset; cur < offset + length; cur += zsze_nbytes) {
-		err = spdk_nvme_zns_reset_zone(fio_qpair->ns, fio_qpair->qpair, offset / lba_nbytes,
+		int completed = 0;
+
+		err = spdk_nvme_zns_reset_zone(fio_qpair->ns, fio_qpair->qpair, cur / lba_nbytes,
 					       false, pcu_cb, &completed);
 		if (err || pcu(fio_qpair->qpair, &completed) || completed < 0) {
 			log_err("spdk/nvme: report_zones(): err: %d, cpl: %d\n", err, completed);
