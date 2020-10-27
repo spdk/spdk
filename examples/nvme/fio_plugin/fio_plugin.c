@@ -1188,7 +1188,7 @@ spdk_fio_report_zones(struct thread_data *td, struct fio_file *f, uint64_t offse
 			break;
 
 		default:
-			log_err("%s: invalid zone-type: 0x%x\n", f->file_name, zdesc->zt);
+			log_err("spdk/nvme: %s: inv. zone-type: 0x%x\n", f->file_name, zdesc->zt);
 			err = -EIO;
 			goto exit;
 		}
@@ -1217,7 +1217,7 @@ spdk_fio_report_zones(struct thread_data *td, struct fio_file *f, uint64_t offse
 			break;
 
 		default:
-			log_err("%s: invalid zone-state: 0x%x\n", f->file_name, zdesc->zs);
+			log_err("spdk/nvme: %s: inv. zone-state: 0x%x\n", f->file_name, zdesc->zs);
 			err = -EIO;
 			goto exit;
 		}
@@ -1263,7 +1263,7 @@ spdk_fio_reset_wp(struct thread_data *td, struct fio_file *f, uint64_t offset, u
 		err = spdk_nvme_zns_reset_zone(fio_qpair->ns, fio_qpair->qpair, cur / lba_nbytes,
 					       false, pcu_cb, &completed);
 		if (err || pcu(fio_qpair->qpair, &completed) || completed < 0) {
-			log_err("spdk/nvme: report_zones(): err: %d, cpl: %d\n", err, completed);
+			log_err("spdk/nvme: zns_reset_zone(): err: %d, cpl: %d\n", err, completed);
 			err = err ? err : -EIO;
 			break;
 		}
