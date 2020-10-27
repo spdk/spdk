@@ -688,11 +688,11 @@ nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid,
 	return 1;
 }
 
-static int
+static void
 nvme_ctrlr_poll_internal(struct spdk_nvme_ctrlr *ctrlr,
 			 struct spdk_nvme_probe_ctx *probe_ctx)
 {
-	int	rc = 0;
+	int rc = 0;
 
 	rc = nvme_ctrlr_process_init(ctrlr);
 
@@ -704,11 +704,11 @@ nvme_ctrlr_poll_internal(struct spdk_nvme_ctrlr *ctrlr,
 		nvme_ctrlr_fail(ctrlr, false);
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		nvme_ctrlr_destruct(ctrlr);
-		return rc;
+		return;
 	}
 
 	if (ctrlr->state != NVME_CTRLR_STATE_READY) {
-		return 0;
+		return;
 	}
 
 	STAILQ_INIT(&ctrlr->io_producers);
@@ -735,10 +735,7 @@ nvme_ctrlr_poll_internal(struct spdk_nvme_ctrlr *ctrlr,
 
 	if (probe_ctx->attach_cb) {
 		probe_ctx->attach_cb(probe_ctx->cb_ctx, &ctrlr->trid, ctrlr, &ctrlr->opts);
-		return 0;
 	}
-
-	return 0;
 }
 
 static int
@@ -1545,7 +1542,6 @@ spdk_nvme_probe_async(const struct spdk_nvme_transport_id *trid,
 int
 spdk_nvme_probe_poll_async(struct spdk_nvme_probe_ctx *probe_ctx)
 {
-	int rc = 0;
 	struct spdk_nvme_ctrlr *ctrlr, *ctrlr_tmp;
 
 	if (!spdk_process_is_primary() && probe_ctx->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
@@ -1554,19 +1550,15 @@ spdk_nvme_probe_poll_async(struct spdk_nvme_probe_ctx *probe_ctx)
 	}
 
 	TAILQ_FOREACH_SAFE(ctrlr, &probe_ctx->init_ctrlrs, tailq, ctrlr_tmp) {
-		rc = nvme_ctrlr_poll_internal(ctrlr, probe_ctx);
-		if (rc != 0) {
-			rc = -EIO;
-			break;
-		}
+		nvme_ctrlr_poll_internal(ctrlr, probe_ctx);
 	}
 
-	if (rc != 0 || TAILQ_EMPTY(&probe_ctx->init_ctrlrs)) {
+	if (TAILQ_EMPTY(&probe_ctx->init_ctrlrs)) {
 		nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 		g_spdk_nvme_driver->initialized = true;
 		nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
 		free(probe_ctx);
-		return rc;
+		return 0;
 	}
 
 	return -EAGAIN;

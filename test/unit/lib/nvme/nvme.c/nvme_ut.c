@@ -382,7 +382,7 @@ test_nvme_init_controllers(void)
 	probe_ctx->attach_cb = attach_cb;
 	probe_ctx->trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	rc = nvme_init_controllers(probe_ctx);
-	CU_ASSERT(rc != 0);
+	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_spdk_nvme_driver->initialized == true);
 	CU_ASSERT(ut_destruct_called == true);
 
