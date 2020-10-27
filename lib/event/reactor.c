@@ -517,6 +517,18 @@ _reactors_scheduler_fini(void *arg1, void *arg2)
 	}
 }
 
+static void
+_reactors_scheduler_cancel(void *arg1, void *arg2)
+{
+	struct spdk_reactor *reactor;
+	uint32_t i;
+
+	SPDK_ENV_FOREACH_CORE(i) {
+		reactor = spdk_reactor_get(i);
+		reactor->flags.is_scheduling = false;
+	}
+}
+
 /* Phase 1 of thread scheduling is to gather metrics on the existing threads */
 static void
 _reactors_scheduler_gather_metrics(void *arg1, void *arg2)
@@ -551,6 +563,14 @@ _reactors_scheduler_gather_metrics(void *arg1, void *arg2)
 
 	if (core_info->threads_count > 0) {
 		core_info->threads = calloc(core_info->threads_count, sizeof(struct spdk_lw_thread *));
+		if (core_info->threads == NULL) {
+			SPDK_ERRLOG("Failed to allocate memory when gathering metrics on %u\n", reactor->lcore);
+
+			/* Cancel this round of schedule work */
+			evt = spdk_event_allocate(g_scheduling_reactor->lcore, _reactors_scheduler_cancel, NULL, NULL);
+			spdk_event_call(evt);
+			return;
+		}
 
 		i = 0;
 		TAILQ_FOREACH(lw_thread, &reactor->threads, link) {
