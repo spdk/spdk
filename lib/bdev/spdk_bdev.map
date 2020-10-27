@@ -9,6 +9,7 @@
 	spdk_bdev_finish;
 	spdk_bdev_subsystem_config_json;
 	spdk_bdev_get_by_name;
+	spdk_bdev_get_module_name;
 	spdk_bdev_first;
 	spdk_bdev_next;
 	spdk_bdev_first_leaf;
@@ -47,6 +48,7 @@
 	spdk_bdev_get_io_time;
 	spdk_bdev_get_weighted_io_time;
 	spdk_bdev_get_io_channel;
+	spdk_bdev_get_module_ctx;
 	spdk_bdev_read;
 	spdk_bdev_read_blocks;
 	spdk_bdev_read_blocks_with_md;

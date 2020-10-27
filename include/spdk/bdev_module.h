@@ -219,6 +219,9 @@ struct spdk_bdev_fn_table {
 	 *  Optional - may be NULL.
 	 */
 	uint64_t (*get_spin_time)(struct spdk_io_channel *ch);
+
+	/** Get bdev module context. */
+	void *(*get_module_ctx)(void *ctx);
 };
 
 /** bdev I/O completion status */

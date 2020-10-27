@@ -250,6 +250,14 @@ void spdk_bdev_finish(spdk_bdev_fini_cb cb_fn, void *cb_arg);
 void spdk_bdev_subsystem_config_json(struct spdk_json_write_ctx *w);
 
 /**
+ * Get block device module name.
+ *
+ * \param bdev Block device to query.
+ * \return Name of bdev module as a null-terminated string.
+ */
+const char *spdk_bdev_get_module_name(const struct spdk_bdev *bdev);
+
+/**
  * Get block device by the block device name.
  *
  * \param bdev_name The name of the block device.
@@ -685,6 +693,16 @@ uint64_t spdk_bdev_get_weighted_io_time(const struct spdk_bdev *bdev);
  * \return A handle to the I/O channel or NULL on failure.
  */
 struct spdk_io_channel *spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc);
+
+/**
+ * Obtain a bdev module context for the block device opened by the specified
+ * descriptor.
+ *
+ * \param desc Block device descriptor.
+ *
+ * \return A bdev module context or NULL on failure.
+ */
+void *spdk_bdev_get_module_ctx(struct spdk_bdev_desc *desc);
 
 /**
  * \defgroup bdev_io_submit_functions bdev I/O Submit Functions

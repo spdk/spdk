@@ -2966,6 +2966,25 @@ spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc)
 	return spdk_get_io_channel(__bdev_to_io_dev(spdk_bdev_desc_get_bdev(desc)));
 }
 
+void *
+spdk_bdev_get_module_ctx(struct spdk_bdev_desc *desc)
+{
+	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
+	void *ctx = NULL;
+
+	if (bdev->fn_table->get_module_ctx) {
+		ctx = bdev->fn_table->get_module_ctx(bdev->ctxt);
+	}
+
+	return ctx;
+}
+
+const char *
+spdk_bdev_get_module_name(const struct spdk_bdev *bdev)
+{
+	return bdev->module->name;
+}
+
 const char *
 spdk_bdev_get_name(const struct spdk_bdev *bdev)
 {

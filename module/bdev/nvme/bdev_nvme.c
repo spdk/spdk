@@ -920,6 +920,14 @@ bdev_nvme_get_io_channel(void *ctx)
 	return spdk_get_io_channel(nvme_bdev->nvme_ns->ctrlr);
 }
 
+static void *
+bdev_nvme_get_module_ctx(void *ctx)
+{
+	struct nvme_bdev *nvme_bdev = ctx;
+
+	return bdev_nvme_get_ctrlr(&nvme_bdev->disk);
+}
+
 static int
 bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
@@ -1066,6 +1074,7 @@ static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 	.dump_info_json		= bdev_nvme_dump_info_json,
 	.write_config_json	= bdev_nvme_write_config_json,
 	.get_spin_time		= bdev_nvme_get_spin_time,
+	.get_module_ctx		= bdev_nvme_get_module_ctx,
 };
 
 static struct nvme_bdev *
