@@ -773,9 +773,16 @@ struct spdk_nvme_probe_ctx *spdk_nvme_probe_async(const struct spdk_nvme_transpo
 		spdk_nvme_remove_cb remove_cb);
 
 /**
- * Start controllers in the context list.
+ * Proceed with attaching contollers associated with the probe context.
  *
- * Users may call the function util it returns True.
+ * The probe context is one returned from a previous call to
+ * spdk_nvme_probe_async().  Users must call this function on the
+ * probe context until it returns 0.
+ *
+ * If any controllers fail to attach, there is no explicit notification.
+ * Users can detect attachment failure by comparing attach_cb invocations
+ * with the number of times where the user returned true for the
+ * probe_cb.
  *
  * \param probe_ctx Context used to track probe actions.
  *
@@ -783,7 +790,6 @@ struct spdk_nvme_probe_ctx *spdk_nvme_probe_async(const struct spdk_nvme_transpo
  * is also freed and no longer valid.
  * \return -EAGAIN if there are still pending probe operations; user must call
  * spdk_nvme_probe_poll_async again to continue progress.
- * \return value other than 0 and -EAGAIN probe error with one controller.
  */
 int spdk_nvme_probe_poll_async(struct spdk_nvme_probe_ctx *probe_ctx);
 
