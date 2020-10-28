@@ -114,6 +114,9 @@ endif
 
 ifeq ($(LINK_HASH),y)
 DPDK_LIB_LIST += rte_hash
+ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_rcu.*))
+DPDK_LIB_LIST += rte_rcu
+endif
 endif
 
 DPDK_SHARED_LIB = $(DPDK_LIB_LIST:%=$(DPDK_ABS_DIR)/lib/lib%.so)

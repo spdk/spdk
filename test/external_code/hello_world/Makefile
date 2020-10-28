@@ -33,7 +33,7 @@
 
 DPDK_LIB = -lrte_eal -lrte_mempool -lrte_ring -lrte_mbuf -lrte_mempool_ring -lrte_pci
 DPDK_LIB += -lrte_bus_pci -lrte_kvargs -lrte_vhost -lrte_net -lrte_hash -lrte_telemetry
-DPDK_LIB += -lrte_cryptodev -lrte_power
+DPDK_LIB += -lrte_cryptodev -lrte_power -lrte_rcu
 
 # Shows how to compile both an external bdev and an external application against the SPDK combined shared object and dpdk shared objects.
 bdev_shared_combo:
