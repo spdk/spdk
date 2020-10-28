@@ -1,6 +1,6 @@
 # Changelog
 
-## v20.10: (Upcoming Release)
+## v20.10: NVMe-oF multipath, NVMe ZNS, iSCSI login redirection
 
 ### accel
 
