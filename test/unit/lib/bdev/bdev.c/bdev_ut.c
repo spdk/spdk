@@ -2262,6 +2262,274 @@ bdev_io_max_size_and_segment_split_test(void)
 }
 
 static void
+bdev_io_mix_split_test(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel *io_ch;
+	struct spdk_bdev_opts bdev_opts = {
+		.bdev_io_pool_size = 512,
+		.bdev_io_cache_size = 64,
+	};
+	struct iovec iov[BDEV_IO_NUM_CHILD_IOV * 2];
+	struct ut_expected_io *expected_io;
+	uint64_t i;
+	int rc;
+
+	rc = spdk_bdev_set_opts(&bdev_opts);
+	CU_ASSERT(rc == 0);
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+
+	bdev = allocate_bdev("bdev0");
+
+	rc = spdk_bdev_open_ext(bdev->name, true, bdev_ut_event_cb, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	io_ch = spdk_bdev_get_io_channel(desc);
+	CU_ASSERT(io_ch != NULL);
+
+	/* First case optimal_io_boundary == max_segment_size * max_num_segments */
+	bdev->split_on_optimal_io_boundary = true;
+	bdev->optimal_io_boundary = 16;
+
+	bdev->max_segment_size = 512;
+	bdev->max_num_segments = 16;
+	g_io_done = false;
+
+	/* IO crossing the IO boundary requires split
+	 * Total 2 child IOs.
+	 */
+
+	/* The 1st child IO split the segment_size to multiple segment entry */
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 14, 2, 2);
+	ut_expected_io_set_iov(expected_io, 0, (void *)0xF000, 512);
+	ut_expected_io_set_iov(expected_io, 1, (void *)(0xF000 + 512), 512);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	/* The 2nd child IO split the segment_size to multiple segment entry */
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 16, 2, 2);
+	ut_expected_io_set_iov(expected_io, 0, (void *)(0xF000 + 2 * 512), 512);
+	ut_expected_io_set_iov(expected_io, 1, (void *)(0xF000 + 3 * 512), 512);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	rc = spdk_bdev_read_blocks(desc, io_ch, (void *)0xF000, 14, 4, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 2);
+	stub_complete_io(2);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+
+	/* Second case optimal_io_boundary > max_segment_size * max_num_segments */
+	bdev->max_segment_size = 15 * 512;
+	bdev->max_num_segments = 1;
+	g_io_done = false;
+
+	/* IO crossing the IO boundary requires split.
+	 * The 1st child IO segment size exceeds the max_segment_size,
+	 * So 1st child IO will be splitted to multiple segment entry.
+	 * Then it split to 2 child IOs because of the max_num_segments.
+	 * Total 3 child IOs.
+	 */
+
+	/* The first 2 IOs are in an IO boundary.
+	 * Because the optimal_io_boundary > max_segment_size * max_num_segments
+	 * So it split to the first 2 IOs.
+	 */
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 0, 15, 1);
+	ut_expected_io_set_iov(expected_io, 0, (void *)0xF000, 512 * 15);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 15, 1, 1);
+	ut_expected_io_set_iov(expected_io, 0, (void *)(0xF000 + 512 * 15), 512);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	/* The 3rd Child IO is because of the io boundary */
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 16, 2, 1);
+	ut_expected_io_set_iov(expected_io, 0, (void *)(0xF000 + 512 * 16), 512 * 2);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	rc = spdk_bdev_read_blocks(desc, io_ch, (void *)0xF000, 0, 18, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 3);
+	stub_complete_io(3);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+
+	/* Third case optimal_io_boundary < max_segment_size * max_num_segments */
+	bdev->max_segment_size = 17 * 512;
+	bdev->max_num_segments = 1;
+	g_io_done = false;
+
+	/* IO crossing the IO boundary requires split.
+	 * Child IO does not split.
+	 * Total 2 child IOs.
+	 */
+
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 0, 16, 1);
+	ut_expected_io_set_iov(expected_io, 0, (void *)0xF000, 512 * 16);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 16, 2, 1);
+	ut_expected_io_set_iov(expected_io, 0, (void *)(0xF000 + 512 * 16), 512 * 2);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	rc = spdk_bdev_read_blocks(desc, io_ch, (void *)0xF000, 0, 18, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 2);
+	stub_complete_io(2);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+
+	/* Now set up a more complex, multi-vector command that needs to be split,
+	 * including splitting iovecs.
+	 * optimal_io_boundary < max_segment_size * max_num_segments
+	 */
+	bdev->max_segment_size = 3 * 512;
+	bdev->max_num_segments = 6;
+	g_io_done = false;
+
+	iov[0].iov_base = (void *)0x10000;
+	iov[0].iov_len = 4 * 512;
+	iov[1].iov_base = (void *)0x20000;
+	iov[1].iov_len = 4 * 512;
+	iov[2].iov_base = (void *)0x30000;
+	iov[2].iov_len = 10 * 512;
+
+	/* IO crossing the IO boundary requires split.
+	 * The 1st child IO segment size exceeds the max_segment_size and after
+	 * splitting segment_size, the num_segments exceeds max_num_segments.
+	 * So 1st child IO will be splitted to 2 child IOs.
+	 * Total 3 child IOs.
+	 */
+
+	/* The first 2 IOs are in an IO boundary.
+	 * After splitting segmemt size the segment num exceeds.
+	 * So it splits to 2 child IOs.
+	 */
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, 0, 14, 6);
+	ut_expected_io_set_iov(expected_io, 0, iov[0].iov_base, 512 * 3);
+	ut_expected_io_set_iov(expected_io, 1, iov[0].iov_base + 512 * 3, 512);
+	ut_expected_io_set_iov(expected_io, 2, iov[1].iov_base, 512 * 3);
+	ut_expected_io_set_iov(expected_io, 3, iov[1].iov_base + 512 * 3, 512);
+	ut_expected_io_set_iov(expected_io, 4, iov[2].iov_base, 512 * 3);
+	ut_expected_io_set_iov(expected_io, 5, iov[2].iov_base + 512 * 3, 512 * 3);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	/* The 2nd child IO has the left segment entry */
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, 14, 2, 1);
+	ut_expected_io_set_iov(expected_io, 0, iov[2].iov_base + 512 * 6, 512 * 2);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, 16, 2, 1);
+	ut_expected_io_set_iov(expected_io, 0, iov[2].iov_base + 512 * 8, 512 * 2);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	rc = spdk_bdev_writev_blocks(desc, io_ch, iov, 3, 0, 18, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 3);
+	stub_complete_io(3);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+
+	/* A very complicated case. Each sg entry exceeds max_segment_size
+	 * and split on io boundary.
+	 * optimal_io_boundary < max_segment_size * max_num_segments
+	 */
+	bdev->max_segment_size = 3 * 512;
+	bdev->max_num_segments = BDEV_IO_NUM_CHILD_IOV;
+	g_io_done = false;
+
+	for (i = 0; i < 20; i++) {
+		iov[i].iov_base = (void *)((i + 1) * 0x10000);
+		iov[i].iov_len = 512 * 4;
+	}
+
+	/* IO crossing the IO boundary requires split.
+	 * 80 block length can split 5 child IOs base on offset and IO boundary.
+	 * Each iov entry needs to be splitted to 2 entries because of max_segment_size
+	 * Total 5 child IOs.
+	 */
+
+	/* 4 iov entries are in an IO boundary and each iov entry splits to 2.
+	 * So each child IO occupies 8 child iov entries.
+	 */
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, 0, 16, 8);
+	for (i = 0; i < 4; i++) {
+		int iovcnt = i * 2;
+		ut_expected_io_set_iov(expected_io, iovcnt, iov[i].iov_base, 512 * 3);
+		ut_expected_io_set_iov(expected_io, iovcnt + 1, iov[i].iov_base + 512 * 3, 512);
+	}
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	/* 2nd child IO and total 16 child iov entries of parent IO */
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, 16, 16, 8);
+	for (i = 4; i < 8; i++) {
+		int iovcnt = (i - 4) * 2;
+		ut_expected_io_set_iov(expected_io, iovcnt, iov[i].iov_base, 512 * 3);
+		ut_expected_io_set_iov(expected_io, iovcnt + 1, iov[i].iov_base + 512 * 3, 512);
+	}
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	/* 3rd child IO and total 24 child iov entries of parent IO */
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, 32, 16, 8);
+	for (i = 8; i < 12; i++) {
+		int iovcnt = (i - 8) * 2;
+		ut_expected_io_set_iov(expected_io, iovcnt, iov[i].iov_base, 512 * 3);
+		ut_expected_io_set_iov(expected_io, iovcnt + 1, iov[i].iov_base + 512 * 3, 512);
+	}
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	/* 4th child IO and total 32 child iov entries of parent IO */
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, 48, 16, 8);
+	for (i = 12; i < 16; i++) {
+		int iovcnt = (i - 12) * 2;
+		ut_expected_io_set_iov(expected_io, iovcnt, iov[i].iov_base, 512 * 3);
+		ut_expected_io_set_iov(expected_io, iovcnt + 1, iov[i].iov_base + 512 * 3, 512);
+	}
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	/* 5th child IO and because of the child iov entry it should be splitted
+	 * in next round.
+	 */
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, 64, 16, 8);
+	for (i = 16; i < 20; i++) {
+		int iovcnt = (i - 16) * 2;
+		ut_expected_io_set_iov(expected_io, iovcnt, iov[i].iov_base, 512 * 3);
+		ut_expected_io_set_iov(expected_io, iovcnt + 1, iov[i].iov_base + 512 * 3, 512);
+	}
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	rc = spdk_bdev_writev_blocks(desc, io_ch, iov, 20, 0, 80, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	/* First split round */
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 4);
+	stub_complete_io(4);
+	CU_ASSERT(g_io_done == false);
+
+	/* Second split round */
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+	stub_complete_io(1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+
+	spdk_put_io_channel(io_ch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	spdk_bdev_finish(bdev_fini_cb, NULL);
+	poll_threads();
+}
+
+static void
 bdev_io_split_with_io_wait(void)
 {
 	struct spdk_bdev *bdev;
@@ -4008,6 +4276,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, bdev_io_spans_split_test);
 	CU_ADD_TEST(suite, bdev_io_boundary_split_test);
 	CU_ADD_TEST(suite, bdev_io_max_size_and_segment_split_test);
+	CU_ADD_TEST(suite, bdev_io_mix_split_test);
 	CU_ADD_TEST(suite, bdev_io_split_with_io_wait);
 	CU_ADD_TEST(suite, bdev_io_alignment_with_boundary);
 	CU_ADD_TEST(suite, bdev_io_alignment);
