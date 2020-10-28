@@ -116,3 +116,33 @@ To your fio-script, also have a look at script-examples provided with fio:
 
     fio/examples/zbd-seq-read.fio
     fio/examples/zbd-rand-write.fio
+
+## Maximum Open Zones
+
+Zoned Namespaces has a resource constraint on the amount of zones which can be in an opened state at
+any point in time. You can control how many zones fio will keep in an open state by using the
+``--max_open_zones`` option.
+
+The SPDK/NVMe fio io-engine will set a default value if you do not provide one.
+
+## Maximum Active Zones
+
+Zoned Namespaces has a resource constraint on the number of zones that can be active at any point in
+time. Unlike ``max_open_zones``, then fio currently do not manage this constraint, and there is thus
+no option to limit it either.
+
+When running with the SPDK/NVMe fio io-engine you can be exposed to error messages, in the form of
+completion errors, with the NVMe status code of 0xbd ("Too Many Active Zones"). To work around this,
+then you can reset all zones before fio start running its jobs by using the engine option:
+
+    --initial_zone_reset=1
+
+## Shared Memory Increase
+
+If your device has a lot of zones, fio can give you errors such as:
+
+    smalloc: OOM. Consider using --alloc-size to increase the shared memory available.
+
+This is because fio needs to allocate memory for the zone-report, that is, retrieve the state of
+zones on the device including auxiliary accounting information. To solve this, then you can follow
+fio's advice and increase ``--alloc-size``.
