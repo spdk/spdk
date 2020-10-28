@@ -38,6 +38,19 @@ Removed `spdk_subsystem_config` callback for submodules as part of legacy config
 Removed `spdk_app_get_running_config` function that printed configuration in legacy format,
 and removed `usr1_handler` from `struct spdk_app_opts` callback that was used to call it.
 
+Added SPDK thread scheduler framework which is used to rebalance load among CPU cores.
+The scheduler implementation is pluggable and two schedulers are added first, `static` scheduler
+and `gscheduler` scheduler.
+
+`static` scheduler is used by default and does not reschedule threads and keeps the initial
+assignments.
+
+CPU frequency governor framework and implementation are also added.
+`dpdk_governor` is the first implementation and is based on rte_power library of DPDK.
+`gscheduler` scheduler utilizes the CPU frequency governor.
+
+Scheduler and governor frameworks are experimental features.
+
 ### fio
 
 Bdev fio_plugin no longer supports legacy configuration files. Options `spdk_conf` and
