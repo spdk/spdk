@@ -92,6 +92,7 @@ struct spdk_fio_options {
 	int	apptag_mask;
 	char	*digest_enable;
 	int	enable_vmd;
+	int	initial_zone_reset;
 };
 
 struct spdk_fio_request {
@@ -587,6 +588,34 @@ static int spdk_fio_setup(struct thread_data *td)
 	pthread_mutex_lock(&g_mutex);
 	g_td_count++;
 	pthread_mutex_unlock(&g_mutex);
+
+	if (fio_options->initial_zone_reset == 1) {
+#if FIO_HAS_ZBD
+		struct spdk_fio_qpair *fio_qpair;
+
+		TAILQ_FOREACH(fio_qpair, &fio_thread->fio_qpair, link) {
+			const struct spdk_nvme_zns_ns_data *zns_data;
+			int completed = 0, err;
+
+			if (!fio_qpair->ns) {
+				continue;
+			}
+			zns_data = spdk_nvme_zns_ns_get_data(fio_qpair->ns);
+			if (!zns_data) {
+				continue;
+			}
+
+			err = spdk_nvme_zns_reset_zone(fio_qpair->ns, fio_qpair->qpair, 0x0, true,
+						       pcu_cb, &completed);
+			if (err || pcu(fio_qpair->qpair, &completed) || completed < 0) {
+				log_err("spdk/nvme: warn: initial_zone_reset: err: %d, cpl: %d\n",
+					err, completed);
+			}
+		}
+#else
+		log_err("spdk/nvme: ZBD/ZNS is not supported\n");
+#endif
+	}
 
 	return rc;
 }
@@ -1507,6 +1536,16 @@ static struct fio_option options[] = {
 		.off1		= offsetof(struct spdk_fio_options, enable_vmd),
 		.def		= "0",
 		.help		= "Enable VMD enumeration (enable_vmd=1 or enable_vmd=0)",
+		.category	= FIO_OPT_C_ENGINE,
+		.group		= FIO_OPT_G_INVALID,
+	},
+	{
+		.name		= "initial_zone_reset",
+		.lname		= "Reset Zones on initialization",
+		.type		= FIO_OPT_INT,
+		.off1		= offsetof(struct spdk_fio_options, initial_zone_reset),
+		.def		= "0",
+		.help		= "Reset Zones on initialization (0=disable, 1=Reset All Zones)",
 		.category	= FIO_OPT_C_ENGINE,
 		.group		= FIO_OPT_G_INVALID,
 	},
