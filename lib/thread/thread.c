@@ -1098,6 +1098,7 @@ poller_register(spdk_poller_fn fn,
 	if (thread->interrupt_mode && period_microseconds != 0) {
 		int rc;
 
+		poller->timerfd = -1;
 		rc = thread_interrupt_register_timerfd(thread->fgrp, period_microseconds, poller);
 		if (rc < 0) {
 			SPDK_ERRLOG("Failed to register timerfd for periodic poller: %s\n", spdk_strerror(-rc));
@@ -1154,10 +1155,10 @@ spdk_poller_unregister(struct spdk_poller **ppoller)
 		return;
 	}
 
-	if (thread->interrupt_mode && poller->timerfd) {
+	if (thread->interrupt_mode && poller->timerfd >= 0) {
 		spdk_fd_group_remove(thread->fgrp, poller->timerfd);
 		close(poller->timerfd);
-		poller->timerfd = 0;
+		poller->timerfd = -1;
 	}
 
 	/* If the poller was paused, put it on the active_pollers list so that
@@ -1825,12 +1826,13 @@ thread_interrupt_destroy(struct spdk_thread *thread)
 
 	SPDK_INFOLOG(thread, "destroy fgrp for thread (%s)\n", thread->name);
 
-	if (thread->msg_fd <= 0) {
+	if (thread->msg_fd < 0) {
 		return;
 	}
 
 	spdk_fd_group_remove(fgrp, thread->msg_fd);
 	close(thread->msg_fd);
+	thread->msg_fd = -1;
 
 	spdk_fd_group_destroy(fgrp);
 	thread->fgrp = NULL;

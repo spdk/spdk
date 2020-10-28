@@ -90,7 +90,7 @@ spdk_fd_group_add(struct spdk_fd_group *fgrp,
 	int rc;
 
 	/* parameter checking */
-	if (fgrp == NULL || efd <= 0 || fn == NULL) {
+	if (fgrp == NULL || efd < 0 || fn == NULL) {
 		return -EINVAL;
 	}
 
@@ -132,7 +132,7 @@ spdk_fd_group_remove(struct spdk_fd_group *fgrp, int efd)
 	struct event_handler *ehdlr;
 	int rc;
 
-	if (fgrp == NULL || efd <= 0) {
+	if (fgrp == NULL || efd < 0) {
 		SPDK_ERRLOG("Invalid to remvoe efd(%d) from fd_group(%p).\n", efd, fgrp);
 		assert(0);
 		return;
@@ -177,7 +177,7 @@ spdk_fd_group_event_modify(struct spdk_fd_group *fgrp,
 	struct epoll_event epevent;
 	struct event_handler *ehdlr;
 
-	if (fgrp == NULL || efd <= 0) {
+	if (fgrp == NULL || efd < 0) {
 		return -EINVAL;
 	}
 
