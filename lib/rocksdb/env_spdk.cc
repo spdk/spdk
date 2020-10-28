@@ -663,8 +663,8 @@ fs_load_cb(__attribute__((unused)) void *ctx,
 }
 
 static void
-base_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
-		   void *event_ctx)
+base_bdev_event_cb(enum spdk_bdev_event_type type, __attribute__((unused)) struct spdk_bdev *bdev,
+		   __attribute__((unused)) void *event_ctx)
 {
 	printf("Unsupported bdev event: type %d\n", type);
 }
