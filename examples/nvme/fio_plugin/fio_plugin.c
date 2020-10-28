@@ -254,6 +254,36 @@ get_fio_qpair(struct spdk_fio_thread *fio_thread, struct fio_file *f)
 
 	return NULL;
 }
+
+/**
+ * Callback function to use while processing completions until completion-indicator turns non-zero
+ */
+static void
+pcu_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
+{
+	int *completed = ctx;
+
+	*completed = spdk_nvme_cpl_is_error(cpl) ? -1 : 1;
+}
+
+/**
+ * Process Completions Until the given 'completed' indicator turns non-zero or an error occurs
+ */
+static int32_t
+pcu(struct spdk_nvme_qpair *qpair, int *completed)
+{
+	int32_t ret;
+
+	while (!*completed) {
+		ret = spdk_nvme_qpair_process_completions(qpair, 1);
+		if (ret < 0) {
+			log_err("spdk/nvme: process_compl(): ret: %d\n", ret);
+			return ret;
+		}
+	}
+
+	return 0;
+}
 #endif
 
 static void
@@ -1081,36 +1111,6 @@ spdk_fio_get_zoned_model(struct thread_data *td, struct fio_file *f, enum zbd_zo
 	}
 
 	return -EINVAL;
-}
-
-/**
- * Callback function to use while processing completions until completion-indicator turns non-zero
- */
-static void
-pcu_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
-{
-	int *completed = ctx;
-
-	*completed = spdk_nvme_cpl_is_error(cpl) ? -1 : 1;
-}
-
-/**
- * Process Completions Until the given 'completed' indicator turns non-zero or an error occurs
- */
-static int32_t
-pcu(struct spdk_nvme_qpair *qpair, int *completed)
-{
-	int32_t ret;
-
-	while (!*completed) {
-		ret = spdk_nvme_qpair_process_completions(qpair, 1);
-		if (ret < 0) {
-			log_err("spdk/nvme: process_compl(): ret: %d\n", ret);
-			return ret;
-		}
-	}
-
-	return 0;
 }
 
 static uint64_t
