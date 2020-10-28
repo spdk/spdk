@@ -62,6 +62,7 @@ function build_native_dpdk() {
 
 	rm -rf "$external_dpdk_base_dir"
 	git clone --branch $SPDK_TEST_NATIVE_DPDK --depth 1 http://dpdk.org/git/dpdk "$external_dpdk_base_dir"
+	git -C "$external_dpdk_base_dir" log --oneline -n 5
 
 	dpdk_cflags="-fPIC -g -Werror -fcommon"
 	dpdk_ldflags=""
