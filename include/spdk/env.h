@@ -759,6 +759,11 @@ struct spdk_pci_driver *spdk_pci_nvme_get_driver(void);
  * device is attached or not. Attached devices have to be manually detached
  * with spdk_pci_device_detach() to be attach-able again.
  *
+ * During enumeration all registered pci devices with exposed access to
+ * userspace are getting probed internally unless not explicitly specified
+ * on denylist. Because of that it becomes not possible to either use such
+ * devices with another application or unbind the driver (e.g. vfio).
+ *
  * \param driver Driver for a specific device type.
  * \param enum_cb Callback to be called for each non-attached PCI device.
  * The return code can be as follows:
