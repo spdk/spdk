@@ -11,6 +11,7 @@ SPDK_DIR=$1
 # Skip all pci devices. These tests don't rely on them.
 sudo PCI_WHITELIST="NONE" HUGEMEM="$HUGEMEM" $SPDK_DIR/scripts/setup.sh
 
+make -C $SPDK_DIR clean
 $SPDK_DIR/configure --with-shared --without-isal --without-ocf --disable-asan
 make -C $SPDK_DIR -j$(nproc)
 
