@@ -96,7 +96,15 @@ files_to_copy="scripts "
 files_to_copy+="include/spdk/pci_ids.h "
 files_to_copy+="build/examples/hotplug "
 files_to_copy+="build/lib "
-files_to_copy+="dpdk/build/lib "
+
+# Select which dpdk libs to copy in case we're not building with
+# spdk/dpdk submodule
+if [[ -n "$SPDK_RUN_EXTERNAL_DPDK" ]]; then
+	files_to_copy+="-C $SPDK_RUN_EXTERNAL_DPDK/../.. dpdk/build/lib"
+else
+	files_to_copy+="dpdk/build/lib "
+fi
+
 (
 	cd "$rootdir"
 	tar -cf - $files_to_copy
