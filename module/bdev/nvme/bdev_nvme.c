@@ -939,6 +939,10 @@ bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_str_trim(buf);
 	spdk_json_write_named_string(w, "firmware_revision", buf);
 
+	if (cdata->subnqn[0] != '\0') {
+		spdk_json_write_named_string(w, "subnqn", cdata->subnqn);
+	}
+
 	spdk_json_write_named_object_begin(w, "oacs");
 
 	spdk_json_write_named_uint32(w, "security", cdata->oacs.security);
