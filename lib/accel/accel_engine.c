@@ -51,7 +51,7 @@
 
 #define ALIGN_4K			0x1000
 #define MAX_TASKS_PER_CHANNEL		0x800
-#define MAX_BATCH_SIZE			0x80
+#define MAX_BATCH_SIZE			0x10
 #define MAX_NUM_BATCHES_PER_CHANNEL	(MAX_TASKS_PER_CHANNEL / MAX_BATCH_SIZE)
 
 /* Largest context size for all accel modules */
