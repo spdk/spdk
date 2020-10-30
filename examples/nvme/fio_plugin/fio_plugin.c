@@ -1142,18 +1142,6 @@ spdk_fio_get_zoned_model(struct thread_data *td, struct fio_file *f, enum zbd_zo
 	return -EINVAL;
 }
 
-static uint64_t
-spdk_fio_qpair_mdts_nbytes(struct spdk_fio_qpair *fio_qpair)
-{
-	const struct spdk_nvme_ctrlr_data *cdata;
-	union spdk_nvme_cap_register cap;
-
-	cap = spdk_nvme_ctrlr_get_regs_cap(fio_qpair->fio_ctrlr->ctrlr);
-	cdata = spdk_nvme_ctrlr_get_data(fio_qpair->fio_ctrlr->ctrlr);
-
-	return (uint64_t)1 << (12 + cap.bits.mpsmin + cdata->mdts);
-}
-
 static int
 spdk_fio_report_zones(struct thread_data *td, struct fio_file *f, uint64_t offset,
 		      struct zbd_zone *zbdz, unsigned int nr_zones)
@@ -1162,8 +1150,8 @@ spdk_fio_report_zones(struct thread_data *td, struct fio_file *f, uint64_t offse
 	struct spdk_fio_qpair *fio_qpair = NULL;
 	const struct spdk_nvme_zns_ns_data *zns = NULL;
 	struct spdk_nvme_zns_zone_report *report;
-	uint32_t report_nzones = 0, report_nzones_max, report_nbytes;
-	uint64_t mdts_nbytes, zsze_nbytes, ns_nzones, lba_nbytes;
+	uint32_t report_nzones = 0, report_nzones_max, report_nbytes, mdts_nbytes;
+	uint64_t zsze_nbytes, ns_nzones, lba_nbytes;
 	int completed = 0, err;
 
 	fio_qpair = get_fio_qpair(fio_thread, f);
@@ -1178,7 +1166,7 @@ spdk_fio_report_zones(struct thread_data *td, struct fio_file *f, uint64_t offse
 	}
 
 	/** Retrieve device parameters */
-	mdts_nbytes = spdk_fio_qpair_mdts_nbytes(fio_qpair);
+	mdts_nbytes = spdk_nvme_ns_get_max_io_xfer_size(fio_qpair->ns);
 	lba_nbytes = spdk_nvme_ns_get_sector_size(fio_qpair->ns);
 	zsze_nbytes = spdk_nvme_zns_ns_get_zone_size(fio_qpair->ns);
 	ns_nzones = spdk_nvme_zns_ns_get_num_zones(fio_qpair->ns);
