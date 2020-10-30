@@ -64,7 +64,7 @@ static const struct spdk_json_object_decoder rpc_nbd_start_disk_decoders[] = {
 };
 
 /* Return 0 to indicate the nbd_device might be available,
- * or non-zero to indicate the nbd_device is invalid or in using.
+ * or non-zero to indicate the nbd_device is invalid or in use.
  */
 static int
 check_available_nbd_disk(char *nbd_device)
@@ -84,11 +84,11 @@ check_available_nbd_disk(char *nbd_device)
 	/* make sure nbd_device is not registered inside SPDK */
 	nbd = nbd_disk_find_by_nbd_path(nbd_device);
 	if (nbd) {
-		/* nbd_device is in using */
+		/* nbd_device is in use */
 		return -EBUSY;
 	}
 
-	/* A valid pid file in /sys/block indicates the device is in using */
+	/* A valid pid file in /sys/block indicates the device is in use */
 	snprintf(nbd_block_path, 256, "/sys/block/nbd%u/pid", nbd_idx);
 
 	rc = open(nbd_block_path, O_RDONLY);
@@ -104,7 +104,7 @@ check_available_nbd_disk(char *nbd_device)
 
 	close(rc);
 
-	/* nbd_device is in using */
+	/* nbd_device is in use */
 	return -EBUSY;
 }
 
@@ -199,7 +199,7 @@ rpc_nbd_start_disk(struct spdk_jsonrpc_request *request,
 		req->nbd_idx_specified = true;
 		rc = check_available_nbd_disk(req->nbd_device);
 		if (rc == -EBUSY) {
-			SPDK_DEBUGLOG(nbd, "NBD device %s is in using.\n", req->nbd_device);
+			SPDK_DEBUGLOG(nbd, "NBD device %s is in use.\n", req->nbd_device);
 			spdk_jsonrpc_send_error_response(request, -EBUSY, spdk_strerror(-rc));
 			goto invalid;
 		}
