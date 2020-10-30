@@ -202,4 +202,4 @@ record the current trace state of several tracepoints.
 		...
 ~~~
 
-All the tracing functions are documented in the [Tracepoint library documentation](https://www.spdk.io/doc/trace_8h.html)
+All the tracing functions are documented in the [Tracepoint library documentation](https://spdk.io/doc/trace_8h.html)
