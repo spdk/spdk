@@ -81,7 +81,7 @@ static struct spdk_sock_impl_opts g_spdk_posix_sock_impl_opts = {
 	.recv_buf_size = MIN_SO_RCVBUF_SIZE,
 	.send_buf_size = MIN_SO_SNDBUF_SIZE,
 	.enable_recv_pipe = true,
-	.enable_zerocopy_send = true,
+	.enable_zerocopy_send = false,
 	.enable_quickack = false,
 	.enable_placement_id = false,
 };

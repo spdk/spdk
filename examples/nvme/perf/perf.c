@@ -1412,8 +1412,8 @@ static void usage(char *program_name)
 	printf("\t");
 	spdk_log_usage(stdout, "-T");
 	printf("\t[-V enable VMD enumeration]\n");
-	printf("\t[-z disable zero copy send for the given sock implementation]\n");
-	printf("\t[-Z enable zero copy send for the given sock implementation. Default for posix impl]\n");
+	printf("\t[-z disable zero copy send for the given sock implementation. Default for posix impl]\n");
+	printf("\t[-Z enable zero copy send for the given sock implementation]\n");
 	printf("\t[-A IO buffer alignment. Must be power of 2 and not less than cache line (%u)]\n",
 	       SPDK_CACHE_LINE_SIZE);
 	printf("\t[-S set the default sock impl, e.g. \"posix\"]\n");
