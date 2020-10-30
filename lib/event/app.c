@@ -477,13 +477,16 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
 	}
 
 	/*
+	 * Disable and ignore trace setup if setting num_entries
+	 * to be 0.
+	 *
 	 * Note the call to app_setup_trace() is located here
 	 * ahead of app_setup_signal_handlers().
 	 * That's because there is not an easy/direct clean
 	 * way of unwinding alloc'd resources that can occur
 	 * in app_setup_signal_handlers().
 	 */
-	if (app_setup_trace(opts) != 0) {
+	if (opts->num_entries != 0 && app_setup_trace(opts) != 0) {
 		return 1;
 	}
 
@@ -577,7 +580,7 @@ usage(void (*app_usage)(void))
 	printf("      --huge-dir <path>    use a specific hugetlbfs mount to reserve memory from\n");
 	printf("      --iova-mode <pa/va>  set IOVA mode ('pa' for IOVA_PA and 'va' for IOVA_VA)\n");
 	printf("      --base-virtaddr <addr>      the base virtual address for DPDK (default: 0x200000000000)\n");
-	printf("      --num-trace-entries <num>   number of trace entries for each core, must be power of 2. (default %d)\n",
+	printf("      --num-trace-entries <num>   number of trace entries for each core, must be power of 2, setting 0 to disable trace (default %d)\n",
 	       SPDK_APP_DEFAULT_NUM_TRACE_ENTRIES);
 	spdk_log_usage(stdout, "-L");
 	spdk_trace_mask_usage(stdout, "-e");
@@ -797,13 +800,13 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			break;
 		case NUM_TRACE_ENTRIES_OPT_IDX:
 			tmp = spdk_strtoll(optarg, 0);
-			if (tmp <= 0) {
+			if (tmp < 0) {
 				SPDK_ERRLOG("Invalid num-trace-entries %s\n", optarg);
 				usage(app_usage);
 				goto out;
 			}
 			opts->num_entries = (uint64_t)tmp;
-			if (opts->num_entries & (opts->num_entries - 1)) {
+			if (opts->num_entries > 0 && opts->num_entries & (opts->num_entries - 1)) {
 				SPDK_ERRLOG("num-trace-entries must be power of 2\n");
 				usage(app_usage);
 				goto out;

@@ -50,12 +50,21 @@ spdk_trace_get_tpoint_mask(uint32_t group_id)
 		return 0ULL;
 	}
 
+	if (g_trace_flags == NULL) {
+		return 0ULL;
+	}
+
 	return g_trace_flags->tpoint_mask[group_id];
 }
 
 void
 spdk_trace_set_tpoints(uint32_t group_id, uint64_t tpoint_mask)
 {
+	if (g_trace_flags == NULL) {
+		SPDK_ERRLOG("trace is not initialized\n");
+		return;
+	}
+
 	if (group_id >= SPDK_TRACE_MAX_GROUP_ID) {
 		SPDK_ERRLOG("invalid group ID %d\n", group_id);
 		return;
@@ -67,6 +76,11 @@ spdk_trace_set_tpoints(uint32_t group_id, uint64_t tpoint_mask)
 void
 spdk_trace_clear_tpoints(uint32_t group_id, uint64_t tpoint_mask)
 {
+	if (g_trace_flags == NULL) {
+		SPDK_ERRLOG("trace is not initialized\n");
+		return;
+	}
+
 	if (group_id >= SPDK_TRACE_MAX_GROUP_ID) {
 		SPDK_ERRLOG("invalid group ID %d\n", group_id);
 		return;
@@ -95,6 +109,11 @@ spdk_trace_set_tpoint_group_mask(uint64_t tpoint_group_mask)
 {
 	int i;
 
+	if (g_trace_flags == NULL) {
+		SPDK_ERRLOG("trace is not initialized\n");
+		return;
+	}
+
 	for (i = 0; i < SPDK_TRACE_MAX_GROUP_ID; i++) {
 		if (tpoint_group_mask & (1ULL << i)) {
 			spdk_trace_set_tpoints(i, -1ULL);
@@ -106,6 +125,11 @@ void
 spdk_trace_clear_tpoint_group_mask(uint64_t tpoint_group_mask)
 {
 	int i;
+
+	if (g_trace_flags == NULL) {
+		SPDK_ERRLOG("trace is not initialized\n");
+		return;
+	}
 
 	for (i = 0; i < SPDK_TRACE_MAX_GROUP_ID; i++) {
 		if (tpoint_group_mask & (1ULL << i)) {
@@ -161,6 +185,10 @@ spdk_trace_enable_tpoint_group(const char *group_name)
 {
 	uint64_t tpoint_group_mask = 0;
 
+	if (g_trace_flags == NULL) {
+		return -1;
+	}
+
 	tpoint_group_mask = trace_create_tpoint_group_mask(group_name);
 	if (tpoint_group_mask == 0) {
 		return -1;
@@ -174,6 +202,10 @@ int
 spdk_trace_disable_tpoint_group(const char *group_name)
 {
 	uint64_t tpoint_group_mask = 0;
+
+	if (g_trace_flags == NULL) {
+		return -1;
+	}
 
 	tpoint_group_mask = trace_create_tpoint_group_mask(group_name);
 	if (tpoint_group_mask == 0) {
@@ -208,6 +240,11 @@ spdk_trace_register_owner(uint8_t type, char id_prefix)
 
 	assert(type != OWNER_NONE);
 
+	if (g_trace_flags == NULL) {
+		SPDK_ERRLOG("trace is not initialized\n");
+		return;
+	}
+
 	/* 'owner' has 256 entries and since 'type' is a uint8_t, it
 	 * can't overrun the array.
 	 */
@@ -224,6 +261,11 @@ spdk_trace_register_object(uint8_t type, char id_prefix)
 	struct spdk_trace_object *object;
 
 	assert(type != OBJECT_NONE);
+
+	if (g_trace_flags == NULL) {
+		SPDK_ERRLOG("trace is not initialized\n");
+		return;
+	}
 
 	/* 'object' has 256 entries and since 'type' is a uint8_t, it
 	 * can't overrun the array.
@@ -244,6 +286,11 @@ spdk_trace_register_description(const char *name, uint16_t tpoint_id, uint8_t ow
 
 	assert(tpoint_id != 0);
 	assert(tpoint_id < SPDK_TRACE_MAX_TPOINT_ID);
+
+	if (g_trace_flags == NULL) {
+		SPDK_ERRLOG("trace is not initialized\n");
+		return;
+	}
 
 	if (strnlen(name, sizeof(tpoint->name)) == sizeof(tpoint->name)) {
 		SPDK_ERRLOG("name (%s) too long\n", name);
