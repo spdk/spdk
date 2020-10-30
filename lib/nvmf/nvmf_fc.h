@@ -587,7 +587,6 @@ enum spdk_fc_event {
 	SPDK_FC_IT_ADD,    /* PRLI */
 	SPDK_FC_IT_DELETE, /* PRLI */
 	SPDK_FC_ABTS_RECV,
-	SPDK_FC_LINK_BREAK,
 	SPDK_FC_HW_PORT_DUMP,
 	SPDK_FC_UNRECOVERABLE_ERR,
 	SPDK_FC_EVENT_MAX,
@@ -616,14 +615,6 @@ struct spdk_nvmf_fc_hw_port_init_args {
 	uint8_t                        port_handle;
 	uint8_t                        nvme_aq_index;  /* io_queue used for nvme admin queue */
 	uint16_t                       fcp_rq_id; /* Base rq ID of SCSI queue */
-};
-
-/**
- * Arguments for HW port link break event.
- */
-struct spdk_nvmf_hw_port_link_break_args {
-	uint8_t port_handle;
-	void   *cb_ctx;
 };
 
 /**
@@ -705,13 +696,6 @@ struct spdk_nvmf_fc_abts_args {
 	uint32_t rpi;
 	uint16_t oxid, rxid;
 	void    *cb_ctx;
-};
-
-/**
- * Arguments for link break event.
- */
-struct spdk_nvmf_fc_link_break_args {
-	uint8_t port_handle;
 };
 
 /**

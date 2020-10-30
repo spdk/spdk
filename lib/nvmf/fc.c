@@ -221,15 +221,6 @@ struct spdk_nvmf_fc_adm_hw_port_reset_ctx {
 	spdk_nvmf_fc_callback reset_cb_func;
 };
 
-/**
- * The callback structure for HW port link break event
- */
-struct spdk_nvmf_fc_adm_port_link_break_cb_data {
-	struct spdk_nvmf_hw_port_link_break_args *args;
-	struct spdk_nvmf_fc_nport_delete_args nport_del_args;
-	spdk_nvmf_fc_callback cb_func;
-};
-
 struct spdk_nvmf_fc_transport {
 	struct spdk_nvmf_transport transport;
 	pthread_mutex_t lock;
@@ -2148,54 +2139,6 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_fc = {
 	.qpair_abort_request = nvmf_fc_qpair_abort_request,
 };
 
-/*
- * Re-initialize the FC-Port after an offline event.
- * Only the queue information needs to be populated. XCHG, lcore and other hwqp information remains
- * unchanged after the first initialization.
- *
- */
-static int
-nvmf_fc_adm_hw_port_reinit_validate(struct spdk_nvmf_fc_port *fc_port,
-				    struct spdk_nvmf_fc_hw_port_init_args *args)
-{
-	uint32_t i;
-
-	/* Verify that the port was previously in offline or quiesced state */
-	if (nvmf_fc_port_is_online(fc_port)) {
-		SPDK_ERRLOG("SPDK FC port %d already initialized and online.\n", args->port_handle);
-		return -EINVAL;
-	}
-
-	/* Reinit information in new LS queue from previous queue */
-	nvmf_fc_hwqp_reinit_poller_queues(&fc_port->ls_queue, args->ls_queue);
-
-	fc_port->fcp_rq_id = args->fcp_rq_id;
-
-	/* Initialize the LS queue */
-	fc_port->ls_queue.queues = args->ls_queue;
-	nvmf_fc_init_poller_queues(fc_port->ls_queue.queues);
-
-	for (i = 0; i < fc_port->num_io_queues; i++) {
-		/* Reinit information in new IO queue from previous queue */
-		nvmf_fc_hwqp_reinit_poller_queues(&fc_port->io_queues[i],
-						  args->io_queues[i]);
-		fc_port->io_queues[i].queues = args->io_queues[i];
-		/* Initialize the IO queues */
-		nvmf_fc_init_poller_queues(fc_port->io_queues[i].queues);
-	}
-
-	fc_port->hw_port_status = SPDK_FC_PORT_OFFLINE;
-
-	/* Validate the port information */
-	DEV_VERIFY(TAILQ_EMPTY(&fc_port->nport_list));
-	DEV_VERIFY(fc_port->num_nports == 0);
-	if (!TAILQ_EMPTY(&fc_port->nport_list) || (fc_port->num_nports != 0)) {
-		return -EINVAL;
-	}
-
-	return 0;
-}
-
 /* Initializes the data for the creation of a FC-Port object in the SPDK
  * library. The spdk_nvmf_fc_port is a well defined structure that is part of
  * the API to the library. The contents added to this well defined structure
@@ -2255,132 +2198,6 @@ nvmf_fc_adm_hw_port_data_init(struct spdk_nvmf_fc_port *fc_port,
 	fc_port->num_nports = 0;
 
 	return 0;
-}
-
-static void
-nvmf_fc_adm_port_hwqp_offline_del_poller(struct spdk_nvmf_fc_port *fc_port)
-{
-	struct spdk_nvmf_fc_hwqp *hwqp    = NULL;
-	int i = 0;
-
-	hwqp = &fc_port->ls_queue;
-	(void)nvmf_fc_hwqp_set_offline(hwqp);
-
-	/*  Remove poller for all the io queues. */
-	for (i = 0; i < (int)fc_port->num_io_queues; i++) {
-		hwqp = &fc_port->io_queues[i];
-		(void)nvmf_fc_hwqp_set_offline(hwqp);
-		nvmf_fc_poll_group_remove_hwqp(hwqp);
-	}
-}
-
-/*
- * Callback function for HW port link break operation.
- *
- * Notice that this callback is being triggered when spdk_fc_nport_delete()
- * completes, if that spdk_fc_nport_delete() called is issued by
- * nvmf_fc_adm_evnt_hw_port_link_break().
- *
- * Since nvmf_fc_adm_evnt_hw_port_link_break() can invoke spdk_fc_nport_delete() multiple
- * times (one per nport in the HW port's nport_list), a single call to
- * nvmf_fc_adm_evnt_hw_port_link_break() can result in multiple calls to this callback function.
- *
- * As a result, this function only invokes a callback to the caller of
- * nvmf_fc_adm_evnt_hw_port_link_break() only when the HW port's nport_list is empty.
- */
-static void
-nvmf_fc_adm_hw_port_link_break_cb(uint8_t port_handle,
-				  enum spdk_fc_event event_type, void *cb_args, int spdk_err)
-{
-	ASSERT_SPDK_FC_MASTER_THREAD();
-	struct spdk_nvmf_fc_adm_port_link_break_cb_data *offline_cb_args = cb_args;
-	struct spdk_nvmf_hw_port_link_break_args *offline_args = NULL;
-	spdk_nvmf_fc_callback cb_func = NULL;
-	int err = 0;
-	struct spdk_nvmf_fc_port *fc_port = NULL;
-	int num_nports = 0;
-	char log_str[256];
-
-	if (0 != spdk_err) {
-		DEV_VERIFY(!"port link break cb: spdk_err not success.");
-		SPDK_ERRLOG("port link break cb: spdk_err:%d.\n", spdk_err);
-		goto out;
-	}
-
-	if (!offline_cb_args) {
-		DEV_VERIFY(!"port link break cb: port_offline_args is NULL.");
-		err = -EINVAL;
-		goto out;
-	}
-
-	offline_args = offline_cb_args->args;
-	if (!offline_args) {
-		DEV_VERIFY(!"port link break cb: offline_args is NULL.");
-		err = -EINVAL;
-		goto out;
-	}
-
-	if (port_handle != offline_args->port_handle) {
-		DEV_VERIFY(!"port link break cb: port_handle mismatch.");
-		err = -EINVAL;
-		goto out;
-	}
-
-	cb_func = offline_cb_args->cb_func;
-	if (!cb_func) {
-		DEV_VERIFY(!"port link break cb: cb_func is NULL.");
-		err = -EINVAL;
-		goto out;
-	}
-
-	fc_port = nvmf_fc_port_lookup(port_handle);
-	if (!fc_port) {
-		DEV_VERIFY(!"port link break cb: fc_port is NULL.");
-		SPDK_ERRLOG("port link break cb: Unable to find port:%d\n",
-			    offline_args->port_handle);
-		err = -EINVAL;
-		goto out;
-	}
-
-	num_nports = fc_port->num_nports;
-	if (!TAILQ_EMPTY(&fc_port->nport_list)) {
-		/*
-		 * Don't call the callback unless all nports have been deleted.
-		 */
-		goto out;
-	}
-
-	if (num_nports != 0) {
-		DEV_VERIFY(!"port link break cb: num_nports in non-zero.");
-		SPDK_ERRLOG("port link break cb: # of ports should be 0. Instead, num_nports:%d\n",
-			    num_nports);
-		err = -EINVAL;
-	}
-
-	/*
-	 * Mark the hwqps as offline and unregister the pollers.
-	 */
-	(void)nvmf_fc_adm_port_hwqp_offline_del_poller(fc_port);
-
-	/*
-	 * Since there are no more nports, execute the callback(s).
-	 */
-	(void)cb_func(port_handle, SPDK_FC_LINK_BREAK,
-		      (void *)offline_args->cb_ctx, spdk_err);
-
-out:
-	free(offline_cb_args);
-
-	snprintf(log_str, sizeof(log_str),
-		 "port link break cb: port:%d evt_type:%d num_nports:%d err:%d spdk_err:%d.\n",
-		 port_handle, event_type, num_nports, err, spdk_err);
-
-	if (err != 0) {
-		SPDK_ERRLOG("%s", log_str);
-	} else {
-		SPDK_DEBUGLOG(nvmf_fc_adm_api, "%s", log_str);
-	}
-	return;
 }
 
 /*
@@ -2778,15 +2595,7 @@ nvmf_fc_adm_evnt_hw_port_init(void *arg)
 	 */
 	fc_port = nvmf_fc_port_lookup(args->port_handle);
 	if (fc_port != NULL) {
-		/* Port already exists, check if it has to be re-initialized */
-		err = nvmf_fc_adm_hw_port_reinit_validate(fc_port, args);
-		if (err) {
-			/*
-			 * In case of an error we do not want to free the fc_port
-			 * so we set that pointer to NULL.
-			 */
-			fc_port = NULL;
-		}
+		SPDK_ERRLOG("Duplicate port found %d.\n", args->port_handle);
 		goto abort_port_init;
 	}
 
@@ -3729,111 +3538,6 @@ out:
 	free(arg);
 }
 
-/*
- * Process a link break event on a HW port.
- */
-static void
-nvmf_fc_adm_evnt_hw_port_link_break(void *arg)
-{
-	ASSERT_SPDK_FC_MASTER_THREAD();
-	struct spdk_nvmf_fc_adm_api_data *api_data = (struct spdk_nvmf_fc_adm_api_data *)arg;
-	struct spdk_nvmf_hw_port_link_break_args *args = (struct spdk_nvmf_hw_port_link_break_args *)
-			api_data->api_args;
-	struct spdk_nvmf_fc_port *fc_port = NULL;
-	int err = 0;
-	struct spdk_nvmf_fc_adm_port_link_break_cb_data *cb_data = NULL;
-	struct spdk_nvmf_fc_nport *nport = NULL;
-	uint32_t nport_deletes_sent = 0;
-	uint32_t nport_deletes_skipped = 0;
-	struct spdk_nvmf_fc_nport_delete_args *nport_del_args = NULL;
-	char log_str[256];
-
-	/*
-	 * Get the fc port using the port handle.
-	 */
-	fc_port = nvmf_fc_port_lookup(args->port_handle);
-	if (!fc_port) {
-		SPDK_ERRLOG("port link break: Unable to find the SPDK FC port %d\n",
-			    args->port_handle);
-		err = -EINVAL;
-		goto out;
-	}
-
-	/*
-	 * Set the port state to offline, if it is not already.
-	 */
-	err = nvmf_fc_port_set_offline(fc_port);
-	if (err != 0) {
-		SPDK_ERRLOG("port link break: HW port %d already offline. rc = %d\n",
-			    fc_port->port_hdl, err);
-		err = 0;
-		goto out;
-	}
-
-	/*
-	 * Delete all the nports, if any.
-	 */
-	if (!TAILQ_EMPTY(&fc_port->nport_list)) {
-		TAILQ_FOREACH(nport, &fc_port->nport_list, link) {
-			/* Skipped the nports that are not in CREATED state */
-			if (nport->nport_state != SPDK_NVMF_FC_OBJECT_CREATED) {
-				nport_deletes_skipped++;
-				continue;
-			}
-
-			/* Allocate memory for callback data. */
-			cb_data = calloc(1, sizeof(struct spdk_nvmf_fc_adm_port_link_break_cb_data));
-			if (NULL == cb_data) {
-				SPDK_ERRLOG("port link break: Failed to allocate memory for cb_data %d.\n",
-					    args->port_handle);
-				err = -ENOMEM;
-				goto out;
-			}
-			cb_data->args = args;
-			cb_data->cb_func = api_data->cb_func;
-			nport_del_args = &cb_data->nport_del_args;
-			nport_del_args->port_handle = args->port_handle;
-			nport_del_args->nport_handle = nport->nport_hdl;
-			nport_del_args->cb_ctx = cb_data;
-
-			nvmf_fc_master_enqueue_event(SPDK_FC_NPORT_DELETE,
-						     (void *)nport_del_args,
-						     nvmf_fc_adm_hw_port_link_break_cb);
-
-			nport_deletes_sent++;
-		}
-	}
-
-	if (nport_deletes_sent == 0 && err == 0) {
-		/*
-		 * Mark the hwqps as offline and unregister the pollers.
-		 */
-		(void)nvmf_fc_adm_port_hwqp_offline_del_poller(fc_port);
-	}
-
-out:
-	snprintf(log_str, sizeof(log_str),
-		 "port link break done: port:%d nport_deletes_sent:%d nport_deletes_skipped:%d rc:%d.\n",
-		 args->port_handle, nport_deletes_sent, nport_deletes_skipped, err);
-
-	if (err != 0) {
-		SPDK_ERRLOG("%s", log_str);
-	} else {
-		SPDK_DEBUGLOG(nvmf_fc_adm_api, "%s", log_str);
-	}
-
-	if ((api_data->cb_func != NULL) && (nport_deletes_sent == 0)) {
-		/*
-		 * No nport_deletes are sent, which would have eventually
-		 * called the port_link_break callback. Therefore, call the
-		 * port_link_break callback here.
-		 */
-		(void)api_data->cb_func(args->port_handle, SPDK_FC_LINK_BREAK, args->cb_ctx, err);
-	}
-
-	free(arg);
-}
-
 static inline void
 nvmf_fc_adm_run_on_master_thread(spdk_msg_fn fn, void *args)
 {
@@ -3910,10 +3614,6 @@ nvmf_fc_master_enqueue_event(enum spdk_fc_event event_type, void *args,
 
 	case SPDK_FC_ABTS_RECV:
 		event_fn = nvmf_fc_adm_evnt_abts_recv;
-		break;
-
-	case SPDK_FC_LINK_BREAK:
-		event_fn = nvmf_fc_adm_evnt_hw_port_link_break;
 		break;
 
 	case SPDK_FC_HW_PORT_RESET:
