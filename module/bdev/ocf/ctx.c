@@ -438,9 +438,10 @@ vbdev_ocf_md_kick(void *ctx)
 	ocf_metadata_updater_t mu = ctx;
 	ocf_cache_t cache = ocf_metadata_updater_get_cache(mu);
 
-	if (ocf_cache_is_running(cache)) {
-		ocf_metadata_updater_run(mu);
-	}
+	ocf_metadata_updater_run(mu);
+
+	/* Decrease cache ref count after metadata has been updated */
+	ocf_mngt_cache_put(cache);
 }
 
 static int
@@ -463,6 +464,11 @@ static void
 vbdev_ocf_volume_updater_kick(ocf_metadata_updater_t mu)
 {
 	struct spdk_thread *md_thread = ocf_metadata_updater_get_priv(mu);
+	ocf_cache_t cache = ocf_metadata_updater_get_cache(mu);
+
+	/* Increase cache ref count prior sending a message to a thread
+	 * for metadata update */
+	ocf_mngt_cache_get(cache);
 
 	/* We need to send message to updater thread because
 	 * kick can happen from any thread */
