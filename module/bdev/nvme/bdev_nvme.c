@@ -166,7 +166,8 @@ static int bdev_nvme_io_passthru_md(struct nvme_bdev_ns *nvme_ns, struct nvme_io
 				    struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes, void *md_buf, size_t md_len);
 static int bdev_nvme_abort(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
 			   struct nvme_bdev_io *bio, struct nvme_bdev_io *bio_to_abort);
-static int bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bio);
+static int bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_io_channel *nvme_ch,
+			   struct nvme_bdev_io *bio);
 static int bdev_nvme_failover(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, bool remove);
 
 typedef void (*populate_namespace_fn)(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
@@ -504,16 +505,16 @@ _bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, void *ctx)
 }
 
 static int
-bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bio)
+bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_io_channel *nvme_ch,
+		struct nvme_bdev_io *bio)
 {
-	struct spdk_io_channel *ch;
-	struct nvme_io_channel *nvme_ch;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 	int rc;
 
 	rc = _bdev_nvme_reset(nvme_bdev_ctrlr, bio);
 	if (rc == -EBUSY) {
 		/* Don't bother resetting if the controller is in the process of being destructed. */
-		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), SPDK_BDEV_IO_STATUS_FAILED);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return 0;
 	} else if (rc == -EAGAIN) {
 		/*
@@ -521,11 +522,7 @@ bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bi
 		 * we don't interfere with the app framework reset strategy. i.e. we are deferring to the
 		 * upper level. If they are in the middle of a reset, we won't try to schedule another one.
 		 */
-		ch = spdk_get_io_channel(nvme_bdev_ctrlr);
-		assert(ch != NULL);
-		nvme_ch = spdk_io_channel_get_ctx(ch);
-		TAILQ_INSERT_TAIL(&nvme_ch->pending_resets, spdk_bdev_io_from_ctx(bio), module_link);
-		spdk_put_io_channel(ch);
+		TAILQ_INSERT_TAIL(&nvme_ch->pending_resets, bdev_io, module_link);
 		return 0;
 	} else {
 		return rc;
@@ -698,7 +695,7 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 				       bdev_io->u.bdev.num_blocks);
 
 	case SPDK_BDEV_IO_TYPE_RESET:
-		return bdev_nvme_reset(nbdev->nvme_ns->ctrlr, nbdev_io);
+		return bdev_nvme_reset(nbdev->nvme_ns->ctrlr, nvme_ch, nbdev_io);
 
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		return bdev_nvme_flush(nbdev->nvme_ns,
