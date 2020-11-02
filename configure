@@ -62,6 +62,8 @@ function usage()
 	echo "                           No path required."
 	echo " virtio                    Build vhost initiator and virtio-pci bdev modules."
 	echo "                           No path required."
+	echo " vfio-user                 Build NVMf custom vfio-user target."
+	echo "                           No path required."
 	echo " pmdk                      Build persistent memory bdev."
 	echo "                           example: /usr/share/pmdk"
 	echo " reduce                    Build vbdev compression module."
@@ -334,6 +336,12 @@ for i in "$@"; do
 		--without-virtio)
 			CONFIG[VIRTIO]=n
 			;;
+		--with-vfio-user)
+			CONFIG[VFIO_USER]=y
+			;;
+		--without-vfio-user)
+			CONFIG[VFIO_USER]=n
+			;;
 		--with-pmdk)
 			CONFIG[PMDK]=y
 			CONFIG[PMDK_DIR]=""
@@ -448,6 +456,53 @@ else
 	BUILD_CMD=($CC -o /dev/null -x c $CPPFLAGS $CFLAGS $LDFLAGS)
 fi
 BUILD_CMD+=(-I/usr/local/include -L/usr/local/lib)
+
+function set_os_id_version() {
+	if [[ -f /etc/os-release ]]; then
+		source /etc/os-release
+	fi
+
+	OSID=$ID
+	OSVERSION=$VERSION_ID
+
+	echo "OS-ID: $OSID | OS-Version: $OSVERSION"
+}
+
+if [[ "${CONFIG[VFIO_USER]}" = "y" ]]; then
+	if [[ $arch != x86_64* ]] || [[ $sys_name == "FreeBSD" ]]; then
+		echo "Non x86_64 and Linux platform, disable CONFIG_VFIO_USER"
+		CONFIG[VFIO_USER]="n"
+		break
+	fi
+
+	set_os_id_version
+
+	# disable tests on ubuntu16 due to lack of macro definition in pci_regs.h
+	if [[ $OSID == "ubuntu" ]] && [[ $OSVERSION == "16.04" ]]; then
+		echo "ubuntu16 OS, disable CONFIG_VFIO_USER"
+		CONFIG[VFIO_USER]="n"
+		break
+	fi
+
+	if ! hash cmake; then
+		echo "cmake not installed, disable CONFIG_VFIO_USER"
+		CONFIG[VFIO_USER]="n"
+		break
+	fi
+
+	if [[ ! -d /usr/include/json-c ]] && [[ ! -d /usr/local/include/json-c ]]; then
+		echo "json-c-devel not installed, disable CONFIG_VFIO_USER"
+		CONFIG[VFIO_USER]="n"
+		break
+	fi
+
+	if [[ ! -e /usr/include/cmocka.h ]] && [[ ! -e /usr/local/include/cmocka.h ]]; then
+		echo "libcmocka-devel not installed, disable CONFIG_VFIO_USER"
+		CONFIG[VFIO_USER]="n"
+		break
+	fi
+
+fi
 
 # IDXD uses Intel specific instructions.
 if [[ "${CONFIG[IDXD]}" = "y" ]]; then
