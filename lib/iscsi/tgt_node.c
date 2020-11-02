@@ -49,6 +49,11 @@
 #define MAX_TMPBUF 4096
 #define MAX_MASKBUF 128
 
+
+#define MAX_TMP_NAME_BUF (11 /* TargetName= */ + MAX_TARGET_NAME + 1 /* null */)
+#define MAX_TMP_ADDR_BUF (14 /* TargetAddress= */ + MAX_PORTAL_ADDR + 1 /* : */ + \
+			  MAX_PORTAL_PORT + 1 /* , */ + 10 /* max length of int in Decimal */ + 1 /* null */)
+
 static bool
 iscsi_ipv6_netmask_allow_addr(const char *netmask, const char *addr)
 {
@@ -295,16 +300,42 @@ iscsi_tgt_node_allow_iscsi_name(struct spdk_iscsi_tgt_node *target, const char *
 	return false;
 }
 
+static bool
+iscsi_copy_str(char *data, int *total, int alloc_len,
+	       int *previous_completed_len, int expected_size, char *src)
+{
+	int len = 0;
+
+	assert(*previous_completed_len >= 0);
+
+	if (alloc_len - *total < 1) {
+		return true;
+	}
+
+	if (*previous_completed_len < expected_size) {
+		len = spdk_min(alloc_len - *total, expected_size - *previous_completed_len);
+		memcpy((char *)data + *total, src + *previous_completed_len, len);
+		*total += len;
+		*previous_completed_len = 0;
+	} else {
+		*previous_completed_len -= expected_size;
+	}
+
+	return false;
+}
+
 static int
 iscsi_send_tgt_portals(struct spdk_iscsi_conn *conn,
 		       struct spdk_iscsi_tgt_node *target,
-		       uint8_t *data, int alloc_len, int total)
+		       uint8_t *data, int alloc_len, int total,
+		       int *previous_completed_len, bool *no_buf_space)
 {
 	char buf[MAX_TMPBUF];
 	struct spdk_iscsi_portal_grp *pg;
 	struct spdk_iscsi_pg_map *pg_map;
 	struct spdk_iscsi_portal *p;
 	char *host;
+	char tmp_buf[MAX_TMP_ADDR_BUF];
 	int len;
 
 	TAILQ_FOREACH(pg_map, &target->pg_map_head, tailq) {
@@ -318,13 +349,6 @@ iscsi_send_tgt_portals(struct spdk_iscsi_conn *conn,
 		}
 
 		TAILQ_FOREACH(p, &pg->head, per_pg_tailq) {
-			if (alloc_len - total < 1) {
-				/* TODO: long text responses support */
-				SPDK_ERRLOG("SPDK doesn't support long text responses now, "
-					    "you can use larger MaxRecvDataSegmentLength"
-					    "value in initiator\n");
-				return alloc_len;
-			}
 			host = p->host;
 			/* wildcard? */
 			if (strcasecmp(host, "[::]") == 0 || strcasecmp(host, "0.0.0.0") == 0) {
@@ -341,9 +365,23 @@ iscsi_send_tgt_portals(struct spdk_iscsi_conn *conn,
 			}
 			SPDK_DEBUGLOG(iscsi, "TargetAddress=%s:%s,%d\n",
 				      host, p->port, pg->tag);
-			len = snprintf((char *)data + total, alloc_len - total,
-				       "TargetAddress=%s:%s,%d", host, p->port, pg->tag);
-			total += len + 1;
+
+			memset(tmp_buf, 0, sizeof(tmp_buf));
+			/* Caculate the whole string size */
+			len = snprintf(NULL, 0, "TargetAddress=%s:%s,%d", host, p->port, pg->tag);
+			assert(len < MAX_TMPBUF);
+
+			/* string contents are not fully copied */
+			if (*previous_completed_len < len) {
+				/* Copy the string into the temporary buffer */
+				snprintf(tmp_buf, len + 1, "TargetAddress=%s:%s,%d", host, p->port, pg->tag);
+			}
+
+			*no_buf_space = iscsi_copy_str(data, &total, alloc_len, previous_completed_len,
+						       len + 1, tmp_buf);
+			if (*no_buf_space) {
+				break;
+			}
 		}
 	}
 
@@ -358,6 +396,9 @@ iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
 	int total;
 	int len;
 	int rc;
+	int previous_completed_size = conn->send_tgt_completed_size;
+	bool no_buf_space = false;
+	char tmp_buf[MAX_TMP_NAME_BUF];
 
 	if (conn == NULL) {
 		return 0;
@@ -384,16 +425,37 @@ iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
 			continue;
 		}
 
-		len = snprintf((char *)data + total, alloc_len - total, "TargetName=%s",
-			       target->name);
-		total += len + 1;
+		memset(tmp_buf, 0, sizeof(tmp_buf));
+		/* Calculate the whole string size */
+		len = snprintf(NULL, 0, "TargetName=%s", target->name);
+		assert(len < MAX_TMPBUF);
 
-		total = iscsi_send_tgt_portals(conn, target, data, alloc_len, total);
-		if (alloc_len - total < 1) {
+		/* String contents are not copyied */
+		if (previous_completed_size < len) {
+			/* Copy the string into the temporary buffer */
+			snprintf(tmp_buf, len + 1, "TargetName=%s", target->name);
+		}
+
+		no_buf_space = iscsi_copy_str(data, &total, alloc_len, &previous_completed_size,
+					      len + 1, tmp_buf);
+		if (no_buf_space) {
+			break;
+		}
+
+		total = iscsi_send_tgt_portals(conn, target, data, alloc_len, total,
+					       &previous_completed_size, &no_buf_space);
+		if (no_buf_space) {
 			break;
 		}
 	}
 	pthread_mutex_unlock(&g_iscsi.mutex);
+
+	/* Only set it when it is not succesufully completed */
+	if (no_buf_space) {
+		conn->send_tgt_completed_size += total;
+	} else {
+		conn->send_tgt_completed_size = 0;
+	}
 
 	return total;
 }

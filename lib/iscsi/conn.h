@@ -158,6 +158,12 @@ struct spdk_iscsi_conn {
 	struct spdk_iscsi_tgt_node	*target;
 	struct spdk_scsi_dev		*dev;
 
+	/* To handle the case that SendTargets response is split into
+	 * multiple PDUs due to very small MaxRecvDataSegmentLength.
+	 */
+	uint32_t			send_tgt_completed_size;
+	struct iscsi_param		*params_text;
+
 	/* for fast access */
 	int header_digest;
 	int data_digest;

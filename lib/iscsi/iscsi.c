@@ -2360,6 +2360,11 @@ iscsi_pdu_payload_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 		return -1;
 	}
 
+	if (pdu->data_segment_len == 0 && params == NULL) {
+		params = conn->params_text;
+		conn->params_text = NULL;
+	}
+
 	data = calloc(1, alloc_len);
 	if (!data) {
 		SPDK_ERRLOG("calloc() failed for data segment\n");
@@ -2406,6 +2411,11 @@ iscsi_pdu_payload_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 							   data_len);
 			}
 		}
+
+		if (conn->send_tgt_completed_size != 0) {
+			F_bit = 0;
+			C_bit = 1;
+		}
 	} else {
 		if (iscsi_param_eq_val(conn->sess->params, "SessionType", "Discovery")) {
 			iscsi_param_free(params);
@@ -2414,7 +2424,11 @@ iscsi_pdu_payload_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 		}
 	}
 
-	iscsi_param_free(params);
+	if (spdk_likely(conn->send_tgt_completed_size == 0)) {
+		iscsi_param_free(params);
+	} else {
+		conn->params_text = params;
+	}
 	SPDK_LOGDUMP(iscsi, "Negotiated Params", data, data_len);
 
 	/* response PDU */
