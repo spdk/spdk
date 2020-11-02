@@ -431,7 +431,7 @@ _bdev_nvme_reset_create_qpair(struct spdk_io_channel_iter *i)
 }
 
 static void
-_bdev_nvme_reset(struct spdk_io_channel_iter *i, int status)
+_bdev_nvme_reset_ctrlr(struct spdk_io_channel_iter *i, int status)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = spdk_io_channel_iter_get_io_device(i);
 	struct nvme_bdev_io *bio = spdk_io_channel_iter_get_ctx(i);
@@ -517,7 +517,7 @@ bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bi
 	spdk_for_each_channel(nvme_bdev_ctrlr,
 			      _bdev_nvme_reset_destroy_qpair,
 			      bio,
-			      _bdev_nvme_reset);
+			      _bdev_nvme_reset_ctrlr);
 
 	return 0;
 }
@@ -572,7 +572,7 @@ bdev_nvme_failover(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, bool remove)
 	spdk_for_each_channel(nvme_bdev_ctrlr,
 			      _bdev_nvme_reset_destroy_qpair,
 			      NULL,
-			      _bdev_nvme_reset);
+			      _bdev_nvme_reset_ctrlr);
 
 	return 0;
 }
