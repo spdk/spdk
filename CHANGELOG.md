@@ -154,6 +154,13 @@ that allowed transport specific options within subsystem.
 
 The `trsvcid` in `nvmf_subsystem_add_listener` RPC is now optional.
 
+Pausing a subsystem now only pauses all admin queues. This allows for the
+management of hosts and listeners, plus the addition of namespaces without a
+full subsystem pause. Additionally, the target now allows for pausing
+individual namespaces within a subsystem. To remove a namespace from a
+subsystem, only the specific namespace must be paused. I/O will continue to
+other namespaces while these operations execute.
+
 ### rpc
 
 An new optional parameter `wait` was added to the RPC `iscsi_create_portal_group`,

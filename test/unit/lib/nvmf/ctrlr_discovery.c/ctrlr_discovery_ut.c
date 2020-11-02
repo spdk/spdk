@@ -225,6 +225,7 @@ nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
 void
 nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
 				struct spdk_nvmf_subsystem *subsystem,
+				uint32_t nsid,
 				spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg)
 {
 }

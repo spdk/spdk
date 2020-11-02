@@ -447,7 +447,12 @@ int spdk_nvmf_subsystem_stop(struct spdk_nvmf_subsystem *subsystem,
 /**
  * Transition an NVMe-oF subsystem from Active to Paused state.
  *
+ * In a paused state, all admin queues are frozen across the whole subsystem. If
+ * a namespace ID is provided, all commands to that namespace are quiesced and incoming
+ * commands for that namespace are queued until the subsystem is resumed.
+ *
  * \param subsystem The NVMe-oF subsystem.
+ * \param nsid The namespace to pause. If 0, pause no namespaces.
  * \param cb_fn A function that will be called once the subsystem has changed state.
  * \param cb_arg Argument passed to cb_fn.
  *
@@ -455,11 +460,14 @@ int spdk_nvmf_subsystem_stop(struct spdk_nvmf_subsystem *subsystem,
  * be called on success.
  */
 int spdk_nvmf_subsystem_pause(struct spdk_nvmf_subsystem *subsystem,
+			      uint32_t nsid,
 			      spdk_nvmf_subsystem_state_change_done cb_fn,
 			      void *cb_arg);
 
 /**
  * Transition an NVMe-oF subsystem from Paused to Active state.
+ *
+ * This resumes the entire subsystem, including any paused namespaces.
  *
  * \param subsystem The NVMe-oF subsystem.
  * \param cb_fn A function that will be called once the subsystem has changed state.
@@ -613,6 +621,7 @@ const char *spdk_nvmf_host_get_nqn(const struct spdk_nvmf_host *host);
  * This does not start the listener. Use spdk_nvmf_tgt_listen() for that.
  *
  * May only be performed on subsystems in the PAUSED or INACTIVE states.
+ * No namespaces are required to be paused.
  *
  * \param subsystem Subsystem to add listener to.
  * \param trid The address to accept connections from.
@@ -632,6 +641,7 @@ void spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
  * spdk_nvmf_tgt_stop_listen().
  *
  * May only be performed on subsystems in the PAUSED or INACTIVE states.
+ * No namespaces are required to be paused.
  *
  * \param subsystem Subsystem to remove listener from.
  * \param trid The address to no longer accept connections from.
@@ -801,6 +811,7 @@ uint32_t spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem,
  * Remove a namespace from a subsytem.
  *
  * May only be performed on subsystems in the PAUSED or INACTIVE states.
+ * Additionally, the namespace must be paused.
  *
  * \param subsystem Subsystem the namespace belong to.
  * \param nsid Namespace ID to be removed.

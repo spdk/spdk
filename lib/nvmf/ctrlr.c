@@ -771,7 +771,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 		goto out;
 	}
 
-	sgroup->io_outstanding++;
+	sgroup->mgmt_io_outstanding++;
 	TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
 
 	status = _nvmf_ctrlr_connect(req);
@@ -1672,7 +1672,7 @@ nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 	/* AER cmd is an exception */
 	sgroup = &req->qpair->group->sgroups[ctrlr->subsys->id];
 	assert(sgroup != NULL);
-	sgroup->io_outstanding--;
+	sgroup->mgmt_io_outstanding--;
 
 	/* Four asynchronous events are supported for now */
 	if (ctrlr->nr_aer_reqs >= NVMF_MAX_ASYNC_EVENTS) {
@@ -3463,7 +3463,10 @@ _nvmf_request_complete(void *ctx)
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_qpair *qpair;
 	struct spdk_nvmf_subsystem_poll_group *sgroup = NULL;
+	struct spdk_nvmf_subsystem_pg_ns_info *ns_info;
 	bool is_aer = false;
+	uint32_t nsid;
+	bool paused;
 
 	rsp->sqid = 0;
 	rsp->status.p = 0;
@@ -3489,15 +3492,40 @@ _nvmf_request_complete(void *ctx)
 
 	/* AER cmd is an exception */
 	if (sgroup && !is_aer) {
-		assert(sgroup->io_outstanding > 0);
-		sgroup->io_outstanding--;
-		if (sgroup->state == SPDK_NVMF_SUBSYSTEM_PAUSING &&
-		    sgroup->io_outstanding == 0) {
-			sgroup->state = SPDK_NVMF_SUBSYSTEM_PAUSED;
-			sgroup->cb_fn(sgroup->cb_arg, 0);
-			sgroup->cb_fn = NULL;
-			sgroup->cb_arg = NULL;
+		if (spdk_unlikely(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC ||
+				  nvmf_qpair_is_admin_queue(qpair))) {
+			assert(sgroup->mgmt_io_outstanding > 0);
+			sgroup->mgmt_io_outstanding--;
+		} else {
+			nsid = req->cmd->nvme_cmd.nsid;
+
+			/* NOTE: This implicitly also checks for 0, since 0 - 1 wraps around to UINT32_MAX. */
+			if (spdk_likely(nsid - 1 < sgroup->num_ns)) {
+				sgroup->ns_info[nsid - 1].io_outstanding--;
+			}
 		}
+
+		if (spdk_unlikely(sgroup->state == SPDK_NVMF_SUBSYSTEM_PAUSING &&
+				  sgroup->mgmt_io_outstanding == 0)) {
+			paused = true;
+			for (nsid = 0; nsid < sgroup->num_ns; nsid++) {
+				ns_info = &sgroup->ns_info[nsid];
+
+				if (ns_info->state == SPDK_NVMF_SUBSYSTEM_PAUSING &&
+				    ns_info->io_outstanding > 0) {
+					paused = false;
+					break;
+				}
+			}
+
+			if (paused) {
+				sgroup->state = SPDK_NVMF_SUBSYSTEM_PAUSED;
+				sgroup->cb_fn(sgroup->cb_arg, 0);
+				sgroup->cb_fn = NULL;
+				sgroup->cb_arg = NULL;
+			}
+		}
+
 	}
 
 	nvmf_qpair_request_cleanup(qpair);
@@ -3532,7 +3560,7 @@ spdk_nvmf_request_exec_fabrics(struct spdk_nvmf_request *req)
 	}
 
 	assert(sgroup != NULL);
-	sgroup->io_outstanding++;
+	sgroup->mgmt_io_outstanding++;
 
 	/* Place the request on the outstanding list so we can keep track of it */
 	TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
@@ -3550,7 +3578,9 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 	struct spdk_nvmf_subsystem_poll_group *sgroup = NULL;
+	struct spdk_nvmf_subsystem_pg_ns_info *ns_info;
 	enum spdk_nvmf_request_exec_status status;
+	uint32_t nsid;
 
 	if (qpair->ctrlr) {
 		sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
@@ -3561,32 +3591,61 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 
 	/* Check if the subsystem is paused (if there is a subsystem) */
 	if (sgroup != NULL) {
-		if (sgroup->state != SPDK_NVMF_SUBSYSTEM_ACTIVE) {
-			/* The subsystem is not currently active. Queue this request. */
-			TAILQ_INSERT_TAIL(&sgroup->queued, req, link);
-			return;
+		if (spdk_unlikely(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC ||
+				  nvmf_qpair_is_admin_queue(qpair))) {
+			if (sgroup->state != SPDK_NVMF_SUBSYSTEM_ACTIVE) {
+				/* The subsystem is not currently active. Queue this request. */
+				TAILQ_INSERT_TAIL(&sgroup->queued, req, link);
+				return;
+			}
+			sgroup->mgmt_io_outstanding++;
+		} else {
+			nsid = req->cmd->nvme_cmd.nsid;
+
+			/* NOTE: This implicitly also checks for 0, since 0 - 1 wraps around to UINT32_MAX. */
+			if (spdk_unlikely(nsid - 1 >= sgroup->num_ns)) {
+				req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+				req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
+				req->rsp->nvme_cpl.status.dnr = 1;
+				TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
+				_nvmf_request_complete(req);
+				return;
+			}
+
+			ns_info = &sgroup->ns_info[nsid - 1];
+			if (ns_info->channel == NULL) {
+				/* This can can happen if host sends I/O to a namespace that is
+				 * in the process of being added, but before the full addition
+				 * process is complete.  Report invalid namespace in that case.
+				 */
+				req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+				req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
+				req->rsp->nvme_cpl.status.dnr = 1;
+				TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
+				ns_info->io_outstanding++;
+				_nvmf_request_complete(req);
+				return;
+			}
+
+			if (ns_info->state != SPDK_NVMF_SUBSYSTEM_ACTIVE) {
+				/* The namespace is not currently active. Queue this request. */
+				TAILQ_INSERT_TAIL(&sgroup->queued, req, link);
+				return;
+			}
+			ns_info->io_outstanding++;
 		}
 	}
 
 	if (qpair->state != SPDK_NVMF_QPAIR_ACTIVE) {
 		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
-		/* Place the request on the outstanding list so we can keep track of it */
 		TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
-		/* Still increment io_outstanding because request_complete decrements it */
-		if (sgroup != NULL) {
-			sgroup->io_outstanding++;
-		}
 		_nvmf_request_complete(req);
 		return;
 	}
 
 	if (SPDK_DEBUGLOG_FLAG_ENABLED("nvmf")) {
 		spdk_nvme_print_command(qpair->qid, &req->cmd->nvme_cmd);
-	}
-
-	if (sgroup) {
-		sgroup->io_outstanding++;
 	}
 
 	/* Place the request on the outstanding list so we can keep track of it */
