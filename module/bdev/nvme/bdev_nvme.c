@@ -477,37 +477,18 @@ _bdev_nvme_reset_destroy_qpair(struct spdk_io_channel_iter *i)
 }
 
 static int
-bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bio)
+_bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, void *ctx)
 {
-	struct spdk_io_channel *ch;
-	struct nvme_io_channel *nvme_ch;
-
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	if (nvme_bdev_ctrlr->destruct) {
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
-		/* Don't bother resetting if the controller is in the process of being destructed. */
-		if (bio) {
-			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), SPDK_BDEV_IO_STATUS_FAILED);
-		}
-		return 0;
+		return -EBUSY;
 	}
 
 	if (nvme_bdev_ctrlr->resetting) {
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
 		SPDK_NOTICELOG("Unable to perform reset, already in progress.\n");
-		/*
-		 * The internal reset calls won't be queued. This is on purpose so that we don't
-		 * interfere with the app framework reset strategy. i.e. we are deferring to the
-		 * upper level. If they are in the middle of a reset, we won't try to schedule another one.
-		 */
-		if (bio) {
-			ch = spdk_get_io_channel(nvme_bdev_ctrlr);
-			assert(ch != NULL);
-			nvme_ch = spdk_io_channel_get_ctx(ch);
-			TAILQ_INSERT_TAIL(&nvme_ch->pending_resets, spdk_bdev_io_from_ctx(bio), module_link);
-			spdk_put_io_channel(ch);
-		}
-		return 0;
+		return -EAGAIN;
 	}
 
 	nvme_bdev_ctrlr->resetting = true;
@@ -516,10 +497,39 @@ bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bi
 	/* First, delete all NVMe I/O queue pairs. */
 	spdk_for_each_channel(nvme_bdev_ctrlr,
 			      _bdev_nvme_reset_destroy_qpair,
-			      bio,
+			      ctx,
 			      _bdev_nvme_reset_ctrlr);
 
 	return 0;
+}
+
+static int
+bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bio)
+{
+	struct spdk_io_channel *ch;
+	struct nvme_io_channel *nvme_ch;
+	int rc;
+
+	rc = _bdev_nvme_reset(nvme_bdev_ctrlr, bio);
+	if (rc == -EBUSY) {
+		/* Don't bother resetting if the controller is in the process of being destructed. */
+		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), SPDK_BDEV_IO_STATUS_FAILED);
+		return 0;
+	} else if (rc == -EAGAIN) {
+		/*
+		 * Reset call is queued only if it is from the app framework. This is on purpose so that
+		 * we don't interfere with the app framework reset strategy. i.e. we are deferring to the
+		 * upper level. If they are in the middle of a reset, we won't try to schedule another one.
+		 */
+		ch = spdk_get_io_channel(nvme_bdev_ctrlr);
+		assert(ch != NULL);
+		nvme_ch = spdk_io_channel_get_ctx(ch);
+		TAILQ_INSERT_TAIL(&nvme_ch->pending_resets, spdk_bdev_io_from_ctx(bio), module_link);
+		spdk_put_io_channel(ch);
+		return 0;
+	} else {
+		return rc;
+	}
 }
 
 static int
@@ -1175,7 +1185,7 @@ nvme_abort_cpl(void *ctx, const struct spdk_nvme_cpl *cpl)
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
 		SPDK_WARNLOG("Abort failed. Resetting controller.\n");
-		bdev_nvme_reset(nvme_bdev_ctrlr, NULL);
+		_bdev_nvme_reset(nvme_bdev_ctrlr, NULL);
 	}
 }
 
@@ -1194,7 +1204,7 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 	csts = spdk_nvme_ctrlr_get_regs_csts(ctrlr);
 	if (csts.bits.cfs) {
 		SPDK_ERRLOG("Controller Fatal Status, reset required\n");
-		bdev_nvme_reset(nvme_bdev_ctrlr, NULL);
+		_bdev_nvme_reset(nvme_bdev_ctrlr, NULL);
 		return;
 	}
 
@@ -1212,7 +1222,7 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 
 	/* FALLTHROUGH */
 	case SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET:
-		bdev_nvme_reset(nvme_bdev_ctrlr, NULL);
+		_bdev_nvme_reset(nvme_bdev_ctrlr, NULL);
 		break;
 	case SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE:
 		SPDK_DEBUGLOG(bdev_nvme, "No action for nvme controller timeout.\n");
