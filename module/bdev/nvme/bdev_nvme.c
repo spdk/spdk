@@ -405,14 +405,14 @@ static void
 _bdev_nvme_reset_create_qpairs_done(struct spdk_io_channel_iter *i, int status)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = spdk_io_channel_iter_get_io_device(i);
-	void *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct nvme_bdev_io *bio = spdk_io_channel_iter_get_ctx(i);
 	int rc = SPDK_BDEV_IO_STATUS_SUCCESS;
 
 	if (status) {
 		rc = SPDK_BDEV_IO_STATUS_FAILED;
 	}
-	if (ctx) {
-		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(ctx), rc);
+	if (bio) {
+		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), rc);
 	}
 	_bdev_nvme_reset_complete(nvme_bdev_ctrlr, status);
 }
@@ -438,20 +438,13 @@ _bdev_nvme_reset(struct spdk_io_channel_iter *i, int status)
 	int rc;
 
 	if (status) {
-		if (bio) {
-			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), SPDK_BDEV_IO_STATUS_FAILED);
-		}
-		_bdev_nvme_reset_complete(nvme_bdev_ctrlr, status);
-		return;
+		rc = status;
+		goto err;
 	}
 
 	rc = spdk_nvme_ctrlr_reset(nvme_bdev_ctrlr->ctrlr);
 	if (rc != 0) {
-		if (bio) {
-			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), SPDK_BDEV_IO_STATUS_FAILED);
-		}
-		_bdev_nvme_reset_complete(nvme_bdev_ctrlr, rc);
-		return;
+		goto err;
 	}
 
 	/* Recreate all of the I/O queue pairs */
@@ -459,6 +452,13 @@ _bdev_nvme_reset(struct spdk_io_channel_iter *i, int status)
 			      _bdev_nvme_reset_create_qpair,
 			      bio,
 			      _bdev_nvme_reset_create_qpairs_done);
+	return;
+
+err:
+	if (bio) {
+		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), SPDK_BDEV_IO_STATUS_FAILED);
+	}
+	_bdev_nvme_reset_complete(nvme_bdev_ctrlr, rc);
 }
 
 static void
