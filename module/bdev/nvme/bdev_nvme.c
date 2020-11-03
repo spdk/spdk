@@ -1064,42 +1064,31 @@ static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 	.get_spin_time		= bdev_nvme_get_spin_time,
 };
 
-static void
-nvme_ctrlr_populate_standard_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
-				       struct nvme_bdev_ns *nvme_ns, struct nvme_async_probe_ctx *ctx)
+static struct nvme_bdev *
+nvme_bdev_create(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_ns *nvme_ns)
 {
-	struct spdk_nvme_ctrlr	*ctrlr = nvme_bdev_ctrlr->ctrlr;
-	struct nvme_bdev	*bdev;
-	struct spdk_nvme_ns	*ns;
-	const struct spdk_uuid	*uuid;
+	struct nvme_bdev		*bdev;
+	struct spdk_nvme_ctrlr		*ctrlr = nvme_bdev_ctrlr->ctrlr;
+	struct spdk_nvme_ns		*ns = nvme_ns->ns;
+	const struct spdk_uuid		*uuid;
 	const struct spdk_nvme_ctrlr_data *cdata;
-	const struct spdk_nvme_ns_data *nsdata;
-	int			rc;
+	const struct spdk_nvme_ns_data	*nsdata;
+	int				rc;
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
-
-	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nvme_ns->id);
-	if (!ns) {
-		SPDK_DEBUGLOG(bdev_nvme, "Invalid NS %d\n", nvme_ns->id);
-		rc = -EINVAL;
-		goto done;
-	}
 
 	bdev = calloc(1, sizeof(*bdev));
 	if (!bdev) {
 		SPDK_ERRLOG("bdev calloc() failed\n");
-		rc = -ENOMEM;
-		goto done;
+		return NULL;
 	}
 
-	nvme_ns->ns = ns;
 	bdev->nvme_ns = nvme_ns;
 
 	bdev->disk.name = spdk_sprintf_alloc("%sn%d", nvme_bdev_ctrlr->name, spdk_nvme_ns_get_id(ns));
 	if (!bdev->disk.name) {
 		free(bdev);
-		rc = -ENOMEM;
-		goto done;
+		return NULL;
 	}
 	bdev->disk.product_name = "NVMe disk";
 
@@ -1142,8 +1131,36 @@ nvme_ctrlr_populate_standard_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 	bdev->disk.module = &nvme_if;
 	rc = spdk_bdev_register(&bdev->disk);
 	if (rc) {
+		SPDK_ERRLOG("spdk_bdev_register() failed\n");
 		free(bdev->disk.name);
 		free(bdev);
+		return NULL;
+	}
+
+	return bdev;
+}
+
+static void
+nvme_ctrlr_populate_standard_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
+				       struct nvme_bdev_ns *nvme_ns, struct nvme_async_probe_ctx *ctx)
+{
+	struct nvme_bdev	*bdev;
+	struct spdk_nvme_ctrlr	*ctrlr = nvme_bdev_ctrlr->ctrlr;
+	struct spdk_nvme_ns	*ns;
+	int			rc = 0;
+
+	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nvme_ns->id);
+	if (!ns) {
+		SPDK_DEBUGLOG(bdev_nvme, "Invalid NS %d\n", nvme_ns->id);
+		rc = -EINVAL;
+		goto done;
+	}
+
+	nvme_ns->ns = ns;
+
+	bdev = nvme_bdev_create(nvme_bdev_ctrlr, nvme_ns);
+	if (!bdev) {
+		rc = -ENOMEM;
 		goto done;
 	}
 
