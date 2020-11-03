@@ -161,7 +161,8 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 		if (FIELD_OK(hostnqn)) {
 			spdk_uuid_fmt_lower(host_id_str, sizeof(host_id_str),
 					    &g_spdk_nvme_driver->default_extended_host_id);
-			snprintf(opts->hostnqn, sizeof(opts->hostnqn), "2014-08.org.nvmexpress:uuid:%s", host_id_str);
+			snprintf(opts->hostnqn, sizeof(opts->hostnqn),
+				 "nqn.2014-08.org.nvmexpress:uuid:%s", host_id_str);
 		}
 
 		if (FIELD_OK(extended_host_id)) {
