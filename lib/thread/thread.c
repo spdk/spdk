@@ -201,7 +201,7 @@ _free_thread(struct spdk_thread *thread)
 
 	TAILQ_FOREACH_SAFE(poller, &thread->active_pollers, tailq, ptmp) {
 		if (poller->state != SPDK_POLLER_STATE_UNREGISTERED) {
-			SPDK_WARNLOG("poller %s still registered at thread exit\n",
+			SPDK_WARNLOG("active_poller %s still registered at thread exit\n",
 				     poller->name);
 		}
 		TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
@@ -210,7 +210,7 @@ _free_thread(struct spdk_thread *thread)
 
 	TAILQ_FOREACH_SAFE(poller, &thread->timed_pollers, tailq, ptmp) {
 		if (poller->state != SPDK_POLLER_STATE_UNREGISTERED) {
-			SPDK_WARNLOG("poller %s still registered at thread exit\n",
+			SPDK_WARNLOG("timed_poller %s still registered at thread exit\n",
 				     poller->name);
 		}
 		TAILQ_REMOVE(&thread->timed_pollers, poller, tailq);
@@ -218,7 +218,7 @@ _free_thread(struct spdk_thread *thread)
 	}
 
 	TAILQ_FOREACH_SAFE(poller, &thread->paused_pollers, tailq, ptmp) {
-		SPDK_WARNLOG("poller %s still registered at thread exit\n", poller->name);
+		SPDK_WARNLOG("paused_poller %s still registered at thread exit\n", poller->name);
 		TAILQ_REMOVE(&thread->paused_pollers, poller, tailq);
 		free(poller);
 	}
