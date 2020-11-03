@@ -19,6 +19,7 @@ set -e
 shopt -s expand_aliases
 
 source "$rootdir/test/common/applications.sh"
+source "$rootdir/scripts/common.sh"
 if [[ -e $rootdir/test/common/build_config.sh ]]; then
 	source "$rootdir/test/common/build_config.sh"
 elif [[ -e $rootdir/mk/config.mk ]]; then
@@ -375,7 +376,7 @@ function get_config_params() {
 	fi
 
 	if [ -f /usr/include/libpmem.h ] && [ $SPDK_TEST_REDUCE -eq 1 ]; then
-		if [ $SPDK_TEST_ISAL -eq 1 ]; then
+		if ge "$(nasm --version | awk '{print $3}')" 2.14 && [[ $SPDK_TEST_ISAL -eq 1 ]]; then
 			config_params+=' --with-reduce'
 		fi
 	fi
