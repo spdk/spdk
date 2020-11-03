@@ -55,6 +55,8 @@ DEFINE_STUB_V(spdk_app_json_config_load, (const char *json_config_file, const ch
 		spdk_subsystem_init_fn cb_fn, void *cb_arg, bool stop_on_error));
 DEFINE_STUB_V(spdk_reactors_start, (void));
 DEFINE_STUB_V(spdk_reactors_stop, (void *arg1));
+DEFINE_STUB(spdk_reactors_init, int, (void), 0);
+DEFINE_STUB_V(spdk_reactors_fini, (void));
 
 static void
 unittest_usage(void)
