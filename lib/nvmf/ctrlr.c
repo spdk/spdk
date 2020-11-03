@@ -3430,6 +3430,15 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 		sgroup = nvmf_subsystem_pg_from_connect_cmd(req);
 	}
 
+	/* Check if the subsystem is paused (if there is a subsystem) */
+	if (sgroup != NULL) {
+		if (sgroup->state != SPDK_NVMF_SUBSYSTEM_ACTIVE) {
+			/* The subsystem is not currently active. Queue this request. */
+			TAILQ_INSERT_TAIL(&sgroup->queued, req, link);
+			return;
+		}
+	}
+
 	if (qpair->state != SPDK_NVMF_QPAIR_ACTIVE) {
 		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
@@ -3441,15 +3450,6 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 		}
 		_nvmf_request_complete(req);
 		return;
-	}
-
-	/* Check if the subsystem is paused (if there is a subsystem) */
-	if (sgroup != NULL) {
-		if (sgroup->state != SPDK_NVMF_SUBSYSTEM_ACTIVE) {
-			/* The subsystem is not currently active. Queue this request. */
-			TAILQ_INSERT_TAIL(&sgroup->queued, req, link);
-			return;
-		}
 	}
 
 	if (SPDK_DEBUGLOG_FLAG_ENABLED("nvmf")) {
