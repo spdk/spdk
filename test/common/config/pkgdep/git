@@ -186,9 +186,14 @@ function install_qemu() {
 	fi
 
 	declare -a opt_params=("--prefix=/usr/local/qemu/$SPDK_QEMU_BRANCH")
+	declare -a extra_cflags=()
+
+	opt_params+=("--disable-docs")
 	if ((gcc_version >= 9)); then
 		# GCC 9 fails to compile Qemu due to some old warnings which were not detected by older versions.
-		opt_params+=("--extra-cflags=-Wno-error=stringop-truncation -Wno-error=deprecated-declarations -Wno-error=incompatible-pointer-types -Wno-error=format-truncation")
+		extra_cflags+=("-Wno-error=stringop-truncation" "-Wno-error=deprecated-declarations")
+		extra_cflags+=("-Wno-error=incompatible-pointer-types" "-Wno-error=format-truncation")
+		extra_cflags+=("-Wno-error=address-of-packed-member")
 		opt_params+=("--disable-glusterfs")
 	fi
 
@@ -199,6 +204,7 @@ function install_qemu() {
 			opt_params+=("--with-git='tsocks git'")
 		fi
 	fi
+	opt_params+=("--extra-cflags=${extra_cflags[*]}")
 
 	sed -i s@git://git.qemu.org/@https://github.com/qemu/@g "$GIT_REPOS/qemu/$SPDK_QEMU_BRANCH/.gitmodules"
 	sed -i s@git://git.qemu.org/@https://github.com/qemu/@g "$GIT_REPOS/qemu/$SPDK_QEMU_BRANCH/.git/config"
