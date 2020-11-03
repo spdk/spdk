@@ -3416,42 +3416,12 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 	return 0;
 }
 
-static void
-_nvmf_request_exec(struct spdk_nvmf_request *req,
-		   struct spdk_nvmf_subsystem_poll_group *sgroup)
-{
-	struct spdk_nvmf_qpair *qpair = req->qpair;
-	enum spdk_nvmf_request_exec_status status;
-
-	if (SPDK_DEBUGLOG_FLAG_ENABLED("nvmf")) {
-		spdk_nvme_print_command(qpair->qid, &req->cmd->nvme_cmd);
-	}
-
-	if (sgroup) {
-		sgroup->io_outstanding++;
-	}
-
-	/* Place the request on the outstanding list so we can keep track of it */
-	TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
-
-	if (spdk_unlikely(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC)) {
-		status = nvmf_ctrlr_process_fabrics_cmd(req);
-	} else if (spdk_unlikely(nvmf_qpair_is_admin_queue(qpair))) {
-		status = nvmf_ctrlr_process_admin_cmd(req);
-	} else {
-		status = nvmf_ctrlr_process_io_cmd(req);
-	}
-
-	if (status == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
-		_nvmf_request_complete(req);
-	}
-}
-
 void
 spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 	struct spdk_nvmf_subsystem_poll_group *sgroup = NULL;
+	enum spdk_nvmf_request_exec_status status;
 
 	if (qpair->ctrlr) {
 		sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
@@ -3482,7 +3452,28 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 		}
 	}
 
-	_nvmf_request_exec(req, sgroup);
+	if (SPDK_DEBUGLOG_FLAG_ENABLED("nvmf")) {
+		spdk_nvme_print_command(qpair->qid, &req->cmd->nvme_cmd);
+	}
+
+	if (sgroup) {
+		sgroup->io_outstanding++;
+	}
+
+	/* Place the request on the outstanding list so we can keep track of it */
+	TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
+
+	if (spdk_unlikely(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC)) {
+		status = nvmf_ctrlr_process_fabrics_cmd(req);
+	} else if (spdk_unlikely(nvmf_qpair_is_admin_queue(qpair))) {
+		status = nvmf_ctrlr_process_admin_cmd(req);
+	} else {
+		status = nvmf_ctrlr_process_io_cmd(req);
+	}
+
+	if (status == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
+		_nvmf_request_complete(req);
+	}
 }
 
 static bool
