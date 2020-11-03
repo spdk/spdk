@@ -236,7 +236,7 @@ function nvme_in_userspace() {
 	printf '%s\n' "${bdfs[@]}"
 }
 
-cmp() {
+cmp_versions() {
 	local ver1 ver1_l
 	local ver2 ver2_l
 
@@ -277,9 +277,9 @@ cmp() {
 	[[ ${ver1[*]} == "${ver2[*]}" ]] && return "$eq"
 }
 
-lt() { cmp "$1" "<" "$2"; }
-gt() { cmp "$1" ">" "$2"; }
-le() { cmp "$1" "<=" "$2"; }
-ge() { cmp "$1" ">=" "$2"; }
-eq() { cmp "$1" "==" "$2"; }
+lt() { cmp_versions "$1" "<" "$2"; }
+gt() { cmp_versions "$1" ">" "$2"; }
+le() { cmp_versions "$1" "<=" "$2"; }
+ge() { cmp_versions "$1" ">=" "$2"; }
+eq() { cmp_versions "$1" "==" "$2"; }
 neq() { ! eq "$1" "$2"; }
