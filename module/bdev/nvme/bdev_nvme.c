@@ -1784,6 +1784,10 @@ bdev_nvme_add_trid(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct spdk_nvme_tra
 	}
 
 	for (i = 1; i <= nvme_bdev_ctrlr->num_ns; i++) {
+		if (!spdk_nvme_ctrlr_is_active_ns(nvme_bdev_ctrlr->ctrlr, i)) {
+			continue;
+		}
+
 		ns = spdk_nvme_ctrlr_get_ns(nvme_bdev_ctrlr->ctrlr, i);
 		new_ns = spdk_nvme_ctrlr_get_ns(new_ctrlr, i);
 		assert(ns != NULL);
