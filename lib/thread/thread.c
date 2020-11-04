@@ -119,6 +119,7 @@ _thread_lib_init(size_t ctx_sz)
 			     SPDK_ENV_SOCKET_ID_ANY);
 
 	if (!g_spdk_msg_mempool) {
+		SPDK_ERRLOG("spdk_msg_mempool creation failed\n");
 		return -1;
 	}
 

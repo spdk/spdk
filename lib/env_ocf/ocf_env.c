@@ -80,6 +80,7 @@ env_allocator_create(uint32_t size, const char *name)
 			     SPDK_ENV_SOCKET_ID_ANY);
 
 	if (!allocator->mempool) {
+		SPDK_ERRLOG("mempool creation failed\n");
 		free(allocator);
 		return NULL;
 	}

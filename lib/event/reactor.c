@@ -162,7 +162,10 @@ reactor_construct(struct spdk_reactor *reactor, uint32_t lcore)
 	reactor->thread_count = 0;
 
 	reactor->events = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536, SPDK_ENV_SOCKET_ID_ANY);
-	assert(reactor->events != NULL);
+	if (reactor->events == NULL) {
+		SPDK_ERRLOG("Failed to allocate events ring\n");
+		assert(false);
+	}
 
 	if (spdk_interrupt_mode_is_enabled()) {
 		reactor_interrupt_init(reactor);
