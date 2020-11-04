@@ -511,10 +511,10 @@ function status_linux() {
 		printf "%-6s %10s %8s / %6s\n" $node $huge_size $free_pages $all_pages
 	fi
 
-	echo -e "\nBDF\t\tVendor\tDevice\tNUMA\tDriver\t\tDevice name\n"
-	echo "NVMe devices"
+	printf '\n%-8s %-15s %-6s %-6s %-7s %-16s %-10s %s\n' \
+		"Type" "BDF" "Vendor" "Device" "NUMA" "Driver" "Device" "Block devices"
 
-	for bdf in "${!nvme_d[@]}"; do
+	for bdf in "${!all_devices_d[@]}"; do
 		driver=${drivers_d["$bdf"]}
 		if [ "$numa_nodes" = "0" ]; then
 			node="-"
@@ -525,70 +525,28 @@ function status_linux() {
 			fi
 		fi
 		if [ "$driver" = "nvme" ] && [ -d /sys/bus/pci/devices/$bdf/nvme ]; then
-			name="\t"$(ls /sys/bus/pci/devices/$bdf/nvme)
+			name=$(ls /sys/bus/pci/devices/$bdf/nvme)
 		else
 			name="-"
 		fi
-		echo -e "$bdf\t${pci_ids_vendor["$bdf"]#0x}\t${pci_ids_device["$bdf"]#0x}\t$node\t${driver:--}\t\t$name"
-	done
 
-	echo ""
-	echo "I/OAT Engine"
-
-	for bdf in "${!ioat_d[@]}"; do
-		driver=${drivers_d["$bdf"]}
-		if [ "$numa_nodes" = "0" ]; then
-			node="-"
+		if [[ -n ${nvme_d["$bdf"]} || -n ${virtio_d["$bdf"]} ]]; then
+			blknames=($(get_block_dev_from_bdf "$bdf"))
 		else
-			node=$(cat /sys/bus/pci/devices/$bdf/numa_node)
-			if ((node == -1)); then
-				node=unknown
-			fi
+			blknames=("-")
 		fi
-		echo -e "$bdf\t${pci_ids_vendor["$bdf"]#0x}\t${pci_ids_device["$bdf"]#0x}\t$node\t${driver:--}"
-	done
 
-	echo ""
-	echo "IDXD Engine"
+		desc=""
+		desc=${desc:-${nvme_d["$bdf"]:+NVMe}}
+		desc=${desc:-${ioat_d["$bdf"]:+I/OAT}}
+		desc=${desc:-${idxd_d["$bdf"]:+IDXD}}
+		desc=${desc:-${virtio_d["$bdf"]:+virtio}}
+		desc=${desc:-${vmd_d["$bdf"]:+VMD}}
 
-	for bdf in "${!idxd_d[@]}"; do
-		driver=${drivers_d["$bdf"]}
-		if [ "$numa_nodes" = "0" ]; then
-			node="-"
-		else
-			node=$(cat /sys/bus/pci/devices/$bdf/numa_node)
-		fi
-		echo -e "$bdf\t${pci_ids_vendor["$bdf"]#0x}\t${pci_ids_device["$bdf"]#0x}\t$node\t${driver:--}"
-	done
-
-	echo ""
-	echo "virtio"
-
-	for bdf in "${!virtio_d[@]}"; do
-		driver=${drivers_d["$bdf"]}
-		if [ "$numa_nodes" = "0" ]; then
-			node="-"
-		else
-			node=$(cat /sys/bus/pci/devices/$bdf/numa_node)
-			if ((node == -1)); then
-				node=unknown
-			fi
-		fi
-		blknames=($(get_mounted_part_dev_from_bdf_block "$bdf"))
-		echo -e "$bdf\t${pci_ids_vendor["$bdf"]#0x}\t${pci_ids_device["$bdf"]#0x}\t$node\t\t${driver:--}\t\t" "${blknames[@]}"
-	done
-
-	echo ""
-	echo "VMD"
-
-	for bdf in "${!vmd_d[@]}"; do
-		driver=${drivers_d["$bdf"]}
-		node=$(cat /sys/bus/pci/devices/$bdf/numa_node)
-		if ((node == -1)); then
-			node=unknown
-		fi
-		echo -e "$bdf\t$node\t\t$driver"
-	done
+		printf '%-8s %-15s %-6s %-6s %-7s %-16s %-10s %s\n' \
+			"$desc" "$bdf" "${pci_ids_vendor["$bdf"]#0x}" "${pci_ids_device["$bdf"]#0x}" \
+			"$node" "${driver:--}" "${name:-}" "${blknames[*]:--}"
+	done | sort -bk2,2
 }
 
 function status_freebsd() {
@@ -607,7 +565,7 @@ function status_freebsd() {
 				"${pci_ids_vendor["$pci"]}" \
 				"${pci_ids_device["$pci"]}" \
 				"$driver"
-		done
+		done | sort -k1,1
 	)
 
 	local contigmem=present
