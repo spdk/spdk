@@ -59,6 +59,8 @@ test_init_reactors(void)
 {
 	uint32_t core;
 
+	MOCK_SET(spdk_env_get_current_core, 0);
+
 	allocate_cores(3);
 
 	CU_ASSERT(spdk_reactors_init() == 0);
@@ -71,6 +73,8 @@ test_init_reactors(void)
 	spdk_reactors_fini();
 
 	free_cores();
+
+	MOCK_CLEAR(spdk_env_get_current_core);
 }
 
 static void
@@ -89,6 +93,8 @@ test_event_call(void)
 	uint8_t test1 = 0, test2 = 0;
 	struct spdk_event *evt;
 	struct spdk_reactor *reactor;
+
+	MOCK_SET(spdk_env_get_current_core, 0);
 
 	allocate_cores(1);
 
@@ -109,6 +115,8 @@ test_event_call(void)
 	spdk_reactors_fini();
 
 	free_cores();
+
+	MOCK_CLEAR(spdk_env_get_current_core);
 }
 
 static void
@@ -118,6 +126,8 @@ test_schedule_thread(void)
 	struct spdk_thread *thread;
 	struct spdk_reactor *reactor;
 	struct spdk_lw_thread *lw_thread;
+
+	MOCK_SET(spdk_env_get_current_core, 0);
 
 	allocate_cores(5);
 
@@ -168,6 +178,8 @@ test_reschedule_thread(void)
 	struct spdk_thread *thread;
 	struct spdk_reactor *reactor;
 	struct spdk_lw_thread *lw_thread;
+
+	MOCK_SET(spdk_env_get_current_core, 0);
 
 	allocate_cores(3);
 
@@ -269,11 +281,11 @@ test_for_each_reactor(void)
 	bool done = false;
 	struct spdk_reactor *reactor;
 
+	MOCK_SET(spdk_env_get_current_core, 0);
+
 	allocate_cores(5);
 
 	CU_ASSERT(spdk_reactors_init() == 0);
-
-	MOCK_SET(spdk_env_get_current_core, 0);
 
 	spdk_for_each_reactor(for_each_reactor_cb, &count, &done, for_each_reactor_done);
 
@@ -350,13 +362,14 @@ test_reactor_stats(void)
 	 * - idle TSC of reactor should be 500 (= 200 + 300).
 	 */
 
+	MOCK_SET(spdk_env_get_current_core, 0);
+
 	allocate_cores(1);
 
 	CU_ASSERT(spdk_reactors_init() == 0);
 
 	spdk_cpuset_set_cpu(&cpuset, 0, true);
 
-	MOCK_SET(spdk_env_get_current_core, 0);
 	MOCK_SET(spdk_get_ticks, 100);
 
 	thread1 = spdk_thread_create(NULL, &cpuset);
@@ -427,6 +440,8 @@ test_reactor_stats(void)
 	spdk_reactors_fini();
 
 	free_cores();
+
+	MOCK_CLEAR(spdk_env_get_current_core);
 }
 
 int

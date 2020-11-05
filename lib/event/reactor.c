@@ -110,22 +110,19 @@ _spdk_scheduler_set(char *name)
 		return -ENOENT;
 	}
 
-	if (g_reactors == NULL || g_scheduling_reactor == NULL) {
-		g_new_scheduler = scheduler;
-		g_scheduler = scheduler;
-		return 0;
-	}
-
 	if (g_scheduling_reactor->flags.is_scheduling) {
-		g_new_scheduler = scheduler;
+		if (g_scheduler != g_new_scheduler) {
+			/* Scheduler already changed, cannot defer multiple deinits */
+			return -EBUSY;
+		}
 	} else {
-		if (g_scheduler->deinit != NULL) {
+		if (g_scheduler != NULL && g_scheduler->deinit != NULL) {
 			g_scheduler->deinit(&g_governor);
 		}
-
-		g_new_scheduler = scheduler;
 		g_scheduler = scheduler;
 	}
+
+	g_new_scheduler = scheduler;
 
 	if (scheduler->init != NULL) {
 		scheduler->init(&g_governor);
@@ -197,15 +194,10 @@ static bool reactor_thread_op_supported(enum spdk_thread_op op);
 int
 spdk_reactors_init(void)
 {
+	struct spdk_reactor *reactor;
 	int rc;
-	uint32_t i, last_core;
+	uint32_t i, last_core, current_core;
 	char mempool_name[32];
-
-	rc = _spdk_scheduler_set("static");
-	if (rc != 0) {
-		SPDK_ERRLOG("Failed setting up scheduler\n");
-		return rc;
-	}
 
 	snprintf(mempool_name, sizeof(mempool_name), "evtpool_%d", getpid());
 	g_spdk_event_mempool = spdk_mempool_create(mempool_name,
@@ -246,6 +238,14 @@ spdk_reactors_init(void)
 	SPDK_ENV_FOREACH_CORE(i) {
 		reactor_construct(&g_reactors[i], i);
 	}
+
+	current_core = spdk_env_get_current_core();
+	reactor = spdk_reactor_get(current_core);
+	assert(reactor != NULL);
+	g_scheduling_reactor = reactor;
+
+	rc = _spdk_scheduler_set("static");
+	assert(rc == 0);
 
 	g_reactor_state = SPDK_REACTOR_STATE_INITIALIZED;
 
@@ -827,7 +827,6 @@ spdk_reactors_start(void)
 	/* Start the main reactor */
 	reactor = spdk_reactor_get(current_core);
 	assert(reactor != NULL);
-	g_scheduling_reactor = reactor;
 	reactor_run(reactor);
 
 	spdk_env_thread_wait_all();
