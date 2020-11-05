@@ -12,22 +12,35 @@ function install_spdk() {
 }
 
 function install_refspdk() {
-	local last_release
+	local release
 	local output_dir
 	local config_params
 	local rootdir
+	local version
+
+	version=$1
 
 	# Create a reference SPDK build for ABI tests
 	git -C "$GIT_REPOS/spdk_repo/spdk" fetch --tags
-	last_release=$(git -C "$GIT_REPOS/spdk_repo/spdk" tag | sort --version-sort | grep -v rc | tail -n1)
-	output_dir="$GIT_REPOS/spdk_$(tr . _ < <(tr -d '[:alpha:]' <<< $last_release))"
+
+	if [[ "$version" == "latest" ]]; then
+		release=$(git -C "$GIT_REPOS/spdk_repo/spdk" tag | sort --version-sort | grep -v rc | tail -n 1)
+		output_dir="$GIT_REPOS/spdk_abi_latest"
+	elif [[ "$version" == "LTS" ]]; then
+		release="LTS"
+		output_dir="$GIT_REPOS/spdk_abi_lts"
+	fi
 
 	if [[ ! -d $output_dir ]]; then
 		cp -R "$GIT_REPOS/spdk_repo/spdk" "$output_dir"
 	fi
 
-	git -C "$output_dir" checkout "$last_release"
+	git -C "$output_dir" checkout "$release"
 	git -C "$output_dir" submodule update --init
+	lts_2001_fallback=false
+	if [[ $(git -C "$output_dir" describe --tags) == v20.01* ]]; then
+		lts_2001_fallback=true
+	fi
 
 	cat > $HOME/autorun-spdk.conf <<- EOF
 		SPDK_BUILD_SHARED_OBJECT=1
@@ -59,11 +72,26 @@ function install_refspdk() {
 		# Prepare separate, fixed, cmdline for the FreeBSD, Issue #1397.
 		if [[ $OSID == freebsd ]]; then
 			config_params="--enable-debug --enable-werror"
-			config_params+=" --with-idxd --with-fio=/usr/src/fio"
-			config_params+=" --disable-unit-tests --without-isal"
+			config_params+=" --without-isal --with-fio=/usr/src/fio"
+
+			# TODO: Remove this if-block after 21.01 LTS is released and 20.01 LTS is deprecated.
+			if ! lts_2001_fallback; then
+				config_params+=" --with-idxd --disable-unit-tests"
+			fi
+
 			MAKE=gmake
 		else
-			config_params="$(get_config_params)"
+			# TODO: "get_config_params" was not available in 20.01 LTS release.
+			# Remove this if-block after 21.01 release.
+			if lts_2001_fallback; then
+				config_params="--enable-debug --enable-werror --with-rdma"
+				config_params+=" --with-fio=/usr/src/fio --with-iscsi-initiator"
+				config_params+=" --with-nvme-cuse --with-pmdk --with-reduce"
+				config_params+=" --with-rbd --with-crypto --with-ocf --enable-ubsan"
+				config_params+=" --enable-asan --with-fuse --with-uring"
+			else
+				config_params="$(get_config_params)"
+			fi
 		fi
 		$output_dir/configure $(echo $config_params | sed 's/--enable-coverage//g')
 		if [[ $OSID != freebsd ]]; then
@@ -386,5 +414,6 @@ done
 if [[ $INSTALL_REFSPDK == true ]]; then
 	# Serialize builds as refspdk depends on spdk
 	[[ $INSTALL_SPDK != true ]] && install_spdk
-	install_refspdk
+	install_refspdk latest
+	install_refspdk LTS
 fi
