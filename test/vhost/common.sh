@@ -1221,7 +1221,7 @@ function at_app_exit() {
 	notice "killing vhost app"
 
 	for vhost_name in "$TARGET_DIR"/*; do
-		vhost_kill $vhost_name
+		vhost_kill "$(basename "$vhost_name")"
 	done
 
 	notice "EXIT DONE"
