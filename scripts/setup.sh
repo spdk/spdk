@@ -51,7 +51,10 @@ function usage() {
 	echo "                  Uses kernel's default for hugepages size."
 	echo "NRHUGE            Number of hugepages to allocate. This variable overwrites HUGEMEM."
 	echo "HUGENODE          Specific NUMA node to allocate hugepages on. Multiple nodes can be"
-	echo "                  separated with comas - NRHUGE will be applied on each node."
+	echo "                  separated with comas. By default, NRHUGE will be applied on each node."
+	echo "                  Hugepages can be defined per node with e.g.:"
+	echo "                  HUGENODE='nodes_hp[0]=2048,nodes_hp[1]=512,2' - this will allocate"
+	echo "                  2048 pages for node0, 512 for node1 and default NRHUGE for node2."
 	echo "HUGEPGSZ          Size of the hugepages to use in kB. If not set, kernel's default"
 	echo "                  setting is used."
 	echo "CLEAR_HUGE        If set to 'yes', the attempt to remove hugepages from all nodes will"
@@ -417,7 +420,8 @@ check_hugepages_alloc() {
 clear_hugepages() { echo 0 > /proc/sys/vm/nr_hugepages; }
 
 configure_linux_hugepages() {
-	local node system_nodes nodes_to_use
+	local node system_nodes
+	local nodes_to_use nodes_hp
 
 	if [[ $CLEAR_HUGE == yes ]]; then
 		clear_hugepages
@@ -436,15 +440,24 @@ configure_linux_hugepages() {
 
 	IFS="," read -ra nodes_to_use <<< "$HUGENODE"
 	if ((${#nodes_to_use[@]} == 0)); then
-		nodes_to_use=(0)
+		nodes_to_use[0]=0
 	fi
 
-	for node in "${nodes_to_use[@]}"; do
+	# Align indexes with node ids
+	for node in "${!nodes_to_use[@]}"; do
+		if [[ ${nodes_to_use[node]} =~ ^nodes_hp\[[0-9]+\]= ]]; then
+			eval "${nodes_to_use[node]}"
+		elif [[ ${nodes_to_use[node]} =~ ^[0-9]+$ ]]; then
+			nodes_hp[nodes_to_use[node]]=$NRHUGE
+		fi
+	done
+
+	for node in "${!nodes_hp[@]}"; do
 		if [[ -z ${nodes[node]} ]]; then
 			echo "Node $node doesn't exist, ignoring" >&2
 			continue
 		fi
-		check_hugepages_alloc "${nodes[node]}" "$node"
+		NRHUGE=${nodes_hp[node]:-$NRHUGE} check_hugepages_alloc "${nodes[node]}" "$node"
 	done
 }
 
