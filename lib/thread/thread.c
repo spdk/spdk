@@ -835,17 +835,18 @@ spdk_thread_get_by_id(uint64_t id)
 {
 	struct spdk_thread *thread;
 
+	if (id == 0 || id >= g_thread_id) {
+		SPDK_ERRLOG("invalid thread id: %" PRIu64 ".\n", id);
+		return NULL;
+	}
 	pthread_mutex_lock(&g_devlist_mutex);
 	TAILQ_FOREACH(thread, &g_threads, tailq) {
 		if (thread->id == id) {
-			pthread_mutex_unlock(&g_devlist_mutex);
-
-			return thread;
+			break;
 		}
 	}
 	pthread_mutex_unlock(&g_devlist_mutex);
-
-	return NULL;
+	return thread;
 }
 
 int
