@@ -44,12 +44,18 @@ function usage() {
 	echo
 	echo "The following environment variables can be specified."
 	echo "HUGEMEM           Size of hugepage memory to allocate (in MB). 2048 by default."
-	echo "                  For NUMA systems, the hugepages will be evenly distributed"
-	echo "                  between CPU nodes"
+	echo "                  For NUMA systems, the hugepages will be distributed on node0 by"
+	echo "                  default."
+	echo "HUGE_EVEN_ALLOC   If set to 'yes', hugepages will be evenly distributed across all"
+	echo "                  system's NUMA nodes (effectively ignoring anything set in HUGENODE)."
+	echo "                  Uses kernel's default for hugepages size."
 	echo "NRHUGE            Number of hugepages to allocate. This variable overwrites HUGEMEM."
-	echo "HUGENODE          Specific NUMA node to allocate hugepages on. To allocate"
-	echo "                  hugepages on multiple nodes run this script multiple times -"
-	echo "                  once for each node."
+	echo "HUGENODE          Specific NUMA node to allocate hugepages on. Multiple nodes can be"
+	echo "                  separated with comas - NRHUGE will be applied on each node."
+	echo "HUGEPGSZ          Size of the hugepages to use in kB. If not set, kernel's default"
+	echo "                  setting is used."
+	echo "CLEAR_HUGE        If set to 'yes', the attempt to remove hugepages from all nodes will"
+	echo "                  be made prior to allocation".
 	echo "PCI_WHITELIST"
 	echo "PCI_BLACKLIST     Whitespace separated list of PCI devices (NVMe, I/OAT, VMD, Virtio)."
 	echo "                  Each device must be specified as a full PCI address."
@@ -391,6 +397,57 @@ function cleanup_linux() {
 	unset dirs_to_clean files_to_clean opened_files
 }
 
+check_hugepages_alloc() {
+	local hp_int=$1
+	local allocated_hugepages
+
+	echo $((NRHUGE < 0 ? 0 : NRHUGE)) > "$hp_int"
+
+	allocated_hugepages=$(< "$hp_int")
+	if ((allocated_hugepages < NRHUGE)); then
+		cat <<- ERROR
+
+			## ERROR: requested $NRHUGE hugepages but $allocated_hugepages could be allocated ${2:+on node$2}.
+			## Memory might be heavily fragmented. Please try flushing the system cache, or reboot the machine.
+		ERROR
+		return 1
+	fi
+}
+
+clear_hugepages() { echo 0 > /proc/sys/vm/nr_hugepages; }
+
+configure_linux_hugepages() {
+	local node system_nodes nodes_to_use
+
+	if [[ $CLEAR_HUGE == yes ]]; then
+		clear_hugepages
+	fi
+
+	if [[ $HUGE_EVEN_ALLOC == yes ]]; then
+		clear_hugepages
+		check_hugepages_alloc /proc/sys/vm/nr_hugepages
+		return 0
+	fi
+
+	for node in /sys/devices/system/node/node*; do
+		[[ -e $node ]] || continue
+		nodes[${node##*node}]=$node/hugepages/hugepages-${HUGEPGSZ}kB/nr_hugepages
+	done
+
+	IFS="," read -ra nodes_to_use <<< "$HUGENODE"
+	if ((${#nodes_to_use[@]} == 0)); then
+		nodes_to_use=(0)
+	fi
+
+	for node in "${nodes_to_use[@]}"; do
+		if [[ -z ${nodes[node]} ]]; then
+			echo "Node $node doesn't exist, ignoring" >&2
+			continue
+		fi
+		check_hugepages_alloc "${nodes[node]}" "$node"
+	done
+}
+
 function configure_linux() {
 	configure_linux_pci
 	hugetlbfs_mounts=$(linux_hugetlbfs_mounts)
@@ -402,20 +459,7 @@ function configure_linux() {
 		mount -t hugetlbfs nodev "$hugetlbfs_mounts"
 	fi
 
-	if [ -z "$HUGENODE" ]; then
-		hugepages_target="/proc/sys/vm/nr_hugepages"
-	else
-		hugepages_target="/sys/devices/system/node/node${HUGENODE}/hugepages/hugepages-${HUGEPGSZ}kB/nr_hugepages"
-	fi
-
-	echo "$NRHUGE" > "$hugepages_target"
-	allocated_hugepages=$(cat $hugepages_target)
-	if [ "$allocated_hugepages" -lt "$NRHUGE" ]; then
-		echo ""
-		echo "## ERROR: requested $NRHUGE hugepages but only $allocated_hugepages could be allocated."
-		echo "## Memory might be heavily fragmented. Please try flushing the system cache, or reboot the machine."
-		exit 1
-	fi
+	configure_linux_hugepages
 
 	if [ "$driver_name" = "vfio-pci" ]; then
 		if [ -n "$TARGET_USER" ]; then
@@ -704,7 +748,12 @@ if [[ $mode == reset && $PCI_BLOCK_SYNC_ON_RESET == yes ]]; then
 fi
 
 if [[ $os == Linux ]]; then
-	HUGEPGSZ=$(($(grep Hugepagesize /proc/meminfo | cut -d : -f 2 | tr -dc '0-9')))
+	if [[ -n $HUGEPGSZ && ! -e /sys/kernel/mm/hugepages/hugepages-${HUGEPGSZ}kB ]]; then
+		echo "${HUGEPGSZ}kB is not supported by the running kernel, ingoring" >&2
+		unset -v HUGEPGSZ
+	fi
+
+	HUGEPGSZ=${HUGEPGSZ:-$(grep Hugepagesize /proc/meminfo | cut -d : -f 2 | tr -dc '0-9')}
 	HUGEPGSZ_MB=$((HUGEPGSZ / 1024))
 	: ${NRHUGE=$(((HUGEMEM + HUGEPGSZ_MB - 1) / HUGEPGSZ_MB))}
 
