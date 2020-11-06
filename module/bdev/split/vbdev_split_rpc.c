@@ -118,7 +118,6 @@ rpc_bdev_split_delete(struct spdk_jsonrpc_request *request,
 		      const struct spdk_json_val *params)
 {
 	struct rpc_delete_split req = {};
-	struct spdk_json_write_ctx *w;
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_delete_split_decoders,
@@ -135,9 +134,7 @@ rpc_bdev_split_delete(struct spdk_jsonrpc_request *request,
 		goto out;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 out:
 	free(req.base_bdev);
 }

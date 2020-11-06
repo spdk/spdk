@@ -66,7 +66,6 @@ rpc_vhost_create_scsi_controller(struct spdk_jsonrpc_request *request,
 				 const struct spdk_json_val *params)
 {
 	struct rpc_vhost_scsi_ctrlr req = {0};
-	struct spdk_json_write_ctx *w;
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_vhost_create_scsi_ctrlr,
@@ -84,9 +83,7 @@ rpc_vhost_create_scsi_controller(struct spdk_jsonrpc_request *request,
 
 	free_rpc_vhost_scsi_ctrlr(&req);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
@@ -184,11 +181,8 @@ static int
 rpc_vhost_scsi_controller_remove_target_finish_cb(struct spdk_vhost_dev *vdev, void *arg)
 {
 	struct spdk_jsonrpc_request *request = arg;
-	struct spdk_json_write_ctx *w;
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	return 0;
 }
 
@@ -266,7 +260,6 @@ rpc_vhost_create_blk_controller(struct spdk_jsonrpc_request *request,
 				const struct spdk_json_val *params)
 {
 	struct rpc_vhost_blk_ctrlr req = {0};
-	struct spdk_json_write_ctx *w;
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_construct_vhost_blk_ctrlr,
@@ -285,9 +278,7 @@ rpc_vhost_create_blk_controller(struct spdk_jsonrpc_request *request,
 
 	free_rpc_vhost_blk_ctrlr(&req);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
@@ -319,7 +310,6 @@ rpc_vhost_delete_controller(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
 	struct rpc_delete_vhost_ctrlr req = {0};
-	struct spdk_json_write_ctx *w;
 	struct spdk_vhost_dev *vdev;
 	int rc;
 
@@ -346,10 +336,7 @@ rpc_vhost_delete_controller(struct spdk_jsonrpc_request *request,
 
 	free_rpc_delete_vhost_ctrlr(&req);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
-
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
@@ -484,7 +471,6 @@ rpc_vhost_controller_set_coalescing(struct spdk_jsonrpc_request *request,
 				    const struct spdk_json_val *params)
 {
 	struct rpc_vhost_ctrlr_coalescing req = {0};
-	struct spdk_json_write_ctx *w;
 	struct spdk_vhost_dev *vdev;
 	int rc;
 
@@ -511,10 +497,7 @@ rpc_vhost_controller_set_coalescing(struct spdk_jsonrpc_request *request,
 
 	free_rpc_set_vhost_controllers_event_coalescing(&req);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
-
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:

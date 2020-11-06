@@ -104,7 +104,6 @@ rpc_log_set_print_level(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_log_level req = {};
 	int level;
-	struct spdk_json_write_ctx *w;
 
 	if (spdk_json_decode_object(params, rpc_log_level_decoders,
 				    SPDK_COUNTOF(rpc_log_level_decoders), &req)) {
@@ -125,9 +124,7 @@ rpc_log_set_print_level(struct spdk_jsonrpc_request *request,
 	spdk_log_set_print_level(level);
 	free_rpc_log_level(&req);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
@@ -174,7 +171,6 @@ rpc_log_set_level(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_log_level req = {};
 	int level;
-	struct spdk_json_write_ctx *w;
 
 	if (spdk_json_decode_object(params, rpc_log_level_decoders,
 				    SPDK_COUNTOF(rpc_log_level_decoders), &req)) {
@@ -196,9 +192,7 @@ rpc_log_set_level(struct spdk_jsonrpc_request *request,
 	spdk_log_set_level(level);
 	free_rpc_log_level(&req);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
@@ -242,7 +236,6 @@ rpc_log_set_flag(struct spdk_jsonrpc_request *request,
 		 const struct spdk_json_val *params)
 {
 	struct rpc_log_flag req = {};
-	struct spdk_json_write_ctx *w;
 
 	if (spdk_json_decode_object(params, rpc_log_flag_decoders,
 				    SPDK_COUNTOF(rpc_log_flag_decoders), &req)) {
@@ -262,9 +255,7 @@ rpc_log_set_flag(struct spdk_jsonrpc_request *request,
 	spdk_log_set_flag(req.flag);
 	free_rpc_log_flag(&req);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
@@ -278,7 +269,6 @@ rpc_log_clear_flag(struct spdk_jsonrpc_request *request,
 		   const struct spdk_json_val *params)
 {
 	struct rpc_log_flag req = {};
-	struct spdk_json_write_ctx *w;
 
 	if (spdk_json_decode_object(params, rpc_log_flag_decoders,
 				    SPDK_COUNTOF(rpc_log_flag_decoders), &req)) {
@@ -298,9 +288,7 @@ rpc_log_clear_flag(struct spdk_jsonrpc_request *request,
 	spdk_log_clear_flag(req.flag);
 	free_rpc_log_flag(&req);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
@@ -350,7 +338,6 @@ rpc_log_enable_timestamps(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
 	struct rpc_log_enable_timestamps req = {};
-	struct spdk_json_write_ctx *w;
 
 	if (spdk_json_decode_object(params, rpc_log_enable_timestamps_decoders,
 				    SPDK_COUNTOF(rpc_log_enable_timestamps_decoders),
@@ -363,9 +350,7 @@ rpc_log_enable_timestamps(struct spdk_jsonrpc_request *request,
 
 	spdk_log_enable_timestamps(req.enabled);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 }
 SPDK_RPC_REGISTER("log_enable_timestamps", rpc_log_enable_timestamps, SPDK_RPC_RUNTIME)
 SPDK_LOG_REGISTER_COMPONENT(log_rpc)

@@ -257,15 +257,12 @@ static void *
 nbd_disconnect_thread(void *arg)
 {
 	struct nbd_disconnect_arg *thd_arg = arg;
-	struct spdk_json_write_ctx *w;
 
 	spdk_unaffinitize_thread();
 
 	nbd_disconnect(thd_arg->nbd);
 
-	w = spdk_jsonrpc_begin_result(thd_arg->request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(thd_arg->request, w);
+	spdk_jsonrpc_send_bool_response(thd_arg->request, true);
 
 	free(thd_arg);
 	pthread_exit(NULL);

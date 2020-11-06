@@ -108,10 +108,8 @@ static void
 _rpc_bdev_aio_delete_cb(void *cb_arg, int bdeverrno)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
-	struct spdk_json_write_ctx *w = spdk_jsonrpc_begin_result(request);
 
-	spdk_json_write_bool(w, bdeverrno == 0);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, bdeverrno == 0);
 }
 
 static void

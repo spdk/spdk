@@ -62,7 +62,6 @@ rpc_net_interface_add_ip_address(struct spdk_jsonrpc_request *request,
 				 const struct spdk_json_val *params)
 {
 	struct rpc_ip_address req = {};
-	struct spdk_json_write_ctx *w;
 	int ret_val = 0;
 
 	if (spdk_json_decode_object(params, rpc_ip_address_decoders,
@@ -92,9 +91,7 @@ rpc_net_interface_add_ip_address(struct spdk_jsonrpc_request *request,
 
 	free_rpc_ip_address(&req);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
@@ -109,7 +106,6 @@ rpc_net_interface_delete_ip_address(struct spdk_jsonrpc_request *request,
 				    const struct spdk_json_val *params)
 {
 	struct rpc_ip_address req = {};
-	struct spdk_json_write_ctx *w;
 	int ret_val = 0;
 
 	if (spdk_json_decode_object(params, rpc_ip_address_decoders,
@@ -139,9 +135,7 @@ rpc_net_interface_delete_ip_address(struct spdk_jsonrpc_request *request,
 
 	free_rpc_ip_address(&req);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:

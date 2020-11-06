@@ -250,7 +250,6 @@ rpc_bdev_raid_create(struct spdk_jsonrpc_request *request,
 		     const struct spdk_json_val *params)
 {
 	struct rpc_bdev_raid_create	req = {};
-	struct spdk_json_write_ctx	*w;
 	struct raid_bdev_config		*raid_cfg;
 	int				rc;
 	size_t				i;
@@ -314,9 +313,7 @@ rpc_bdev_raid_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 
 cleanup:
 	free_rpc_bdev_raid_create(&req);
@@ -373,7 +370,6 @@ bdev_raid_delete_done(void *cb_arg, int rc)
 	struct rpc_bdev_raid_delete_ctx *ctx = cb_arg;
 	struct raid_bdev_config *raid_cfg;
 	struct spdk_jsonrpc_request *request = ctx->request;
-	struct spdk_json_write_ctx *w;
 
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to delete raid bdev %s (%d): %s\n",
@@ -388,9 +384,7 @@ bdev_raid_delete_done(void *cb_arg, int rc)
 
 	raid_bdev_config_cleanup(raid_cfg);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 exit:
 	free_rpc_bdev_raid_delete(&ctx->req);
 	free(ctx);

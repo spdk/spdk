@@ -155,16 +155,13 @@ static void
 rpc_bdev_ocssd_delete_done(int status, void *_ctx)
 {
 	struct rpc_bdev_ocssd_delete_ctx *ctx = _ctx;
-	struct spdk_json_write_ctx *w;
 
 	if (status != 0) {
 		spdk_jsonrpc_send_error_response(ctx->request, status, spdk_strerror(-status));
 		goto out;
 	}
 
-	w = spdk_jsonrpc_begin_result(ctx->request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(ctx->request, w);
+	spdk_jsonrpc_send_bool_response(ctx->request, true);
 out:
 	free_rpc_delete_ocssd_bdev(&ctx->rpc);
 	free(ctx);

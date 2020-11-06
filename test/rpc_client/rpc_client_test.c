@@ -216,17 +216,13 @@ static void
 rpc_test_method_null_params(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
-	struct spdk_json_write_ctx *w;
-
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "rpc_test_method_null_params(): Parameters are not NULL");
 		return;
 	}
-	w = spdk_jsonrpc_begin_result(request);
-	assert(w != NULL);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+
+	spdk_jsonrpc_send_bool_response(request, true);
 }
 SPDK_RPC_REGISTER("test_null_params", rpc_test_method_null_params, SPDK_RPC_RUNTIME)
 
@@ -243,7 +239,6 @@ static void
 rpc_hook_conn_close(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
 	struct spdk_jsonrpc_server_conn *conn = spdk_jsonrpc_get_conn(request);
-	struct spdk_json_write_ctx *w;
 	int rc;
 
 	rc = spdk_jsonrpc_conn_add_close_cb(conn, rpc_test_conn_close_cb, (void *)(intptr_t)(42));
@@ -267,11 +262,7 @@ rpc_hook_conn_close(struct spdk_jsonrpc_request *request, const struct spdk_json
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	assert(w != NULL);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
-
+	spdk_jsonrpc_send_bool_response(request, true);
 }
 SPDK_RPC_REGISTER("hook_conn_close", rpc_hook_conn_close, SPDK_RPC_RUNTIME | SPDK_RPC_STARTUP)
 

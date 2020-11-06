@@ -61,7 +61,6 @@ rpc_blobfs_set_cache_size(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
 	struct rpc_blobfs_set_cache_size req;
-	struct spdk_json_write_ctx *w;
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_blobfs_set_cache_size_decoders,
@@ -83,9 +82,7 @@ rpc_blobfs_set_cache_size(struct spdk_jsonrpc_request *request,
 
 	rc = spdk_fs_set_cache_size(req.size_in_mb);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, rc == 0);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, rc == 0);
 }
 
 SPDK_RPC_REGISTER("blobfs_set_cache_size", rpc_blobfs_set_cache_size,
@@ -112,7 +109,6 @@ static void
 _rpc_blobfs_detect_done(void *cb_arg, int fserrno)
 {
 	struct rpc_blobfs_detect *req = cb_arg;
-	struct spdk_json_write_ctx *w;
 	bool existed = true;
 
 	if (fserrno == -EILSEQ) {
@@ -125,9 +121,7 @@ _rpc_blobfs_detect_done(void *cb_arg, int fserrno)
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(req->request);
-	spdk_json_write_bool(w, existed);
-	spdk_jsonrpc_end_result(req->request, w);
+	spdk_jsonrpc_send_bool_response(req->request, existed);
 
 	free_rpc_blobfs_detect(req);
 }
@@ -212,7 +206,6 @@ static void
 _rpc_blobfs_create_done(void *cb_arg, int fserrno)
 {
 	struct rpc_blobfs_create *req = cb_arg;
-	struct spdk_json_write_ctx *w;
 
 	if (fserrno != 0) {
 		spdk_jsonrpc_send_error_response(req->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -221,9 +214,7 @@ _rpc_blobfs_create_done(void *cb_arg, int fserrno)
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(req->request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(req->request, w);
+	spdk_jsonrpc_send_bool_response(req->request, true);
 
 	free_rpc_blobfs_create(req);
 }
@@ -286,7 +277,6 @@ static void
 _rpc_blobfs_mount_done(void *cb_arg, int fserrno)
 {
 	struct rpc_blobfs_mount *req = cb_arg;
-	struct spdk_json_write_ctx *w;
 
 	if (fserrno == -EILSEQ) {
 		/* There is no blobfs existing on bdev */
@@ -301,9 +291,7 @@ _rpc_blobfs_mount_done(void *cb_arg, int fserrno)
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(req->request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(req->request, w);
+	spdk_jsonrpc_send_bool_response(req->request, true);
 
 	free_rpc_blobfs_mount(req);
 }

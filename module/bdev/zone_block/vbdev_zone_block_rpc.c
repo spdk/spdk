@@ -116,11 +116,8 @@ static void
 _rpc_delete_zone_block_cb(void *cb_ctx, int rc)
 {
 	struct spdk_jsonrpc_request *request = cb_ctx;
-	struct spdk_json_write_ctx *w;
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, rc == 0);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, rc == 0);
 }
 
 static void

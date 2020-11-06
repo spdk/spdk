@@ -328,6 +328,17 @@ spdk_jsonrpc_end_result(struct spdk_jsonrpc_request *request, struct spdk_json_w
 }
 
 void
+spdk_jsonrpc_send_bool_response(struct spdk_jsonrpc_request *request, bool value)
+{
+	struct spdk_json_write_ctx *w;
+
+	w = spdk_jsonrpc_begin_result(request);
+	assert(w != NULL);
+	spdk_json_write_bool(w, value);
+	spdk_jsonrpc_end_result(request, w);
+}
+
+void
 spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_request *request,
 				 int error_code, const char *msg)
 {

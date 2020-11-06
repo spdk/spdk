@@ -866,7 +866,6 @@ static void
 rpc_framework_start_init_cpl(int rc, void *arg1)
 {
 	struct spdk_jsonrpc_request *request = arg1;
-	struct spdk_json_write_ctx *w;
 
 	assert(spdk_get_thread() == g_app_thread);
 
@@ -879,9 +878,7 @@ rpc_framework_start_init_cpl(int rc, void *arg1)
 	spdk_rpc_set_state(SPDK_RPC_RUNTIME);
 	app_start_application();
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 }
 
 static void
@@ -907,13 +904,10 @@ struct subsystem_init_poller_ctx {
 static int
 rpc_subsystem_init_poller_ctx(void *ctx)
 {
-	struct spdk_json_write_ctx *w;
 	struct subsystem_init_poller_ctx *poller_ctx = ctx;
 
 	if (spdk_rpc_get_state() == SPDK_RPC_RUNTIME) {
-		w = spdk_jsonrpc_begin_result(poller_ctx->request);
-		spdk_json_write_bool(w, true);
-		spdk_jsonrpc_end_result(poller_ctx->request, w);
+		spdk_jsonrpc_send_bool_response(poller_ctx->request, true);
 		spdk_poller_unregister(&poller_ctx->init_poller);
 		free(poller_ctx);
 	}
@@ -925,13 +919,10 @@ static void
 rpc_framework_wait_init(struct spdk_jsonrpc_request *request,
 			const struct spdk_json_val *params)
 {
-	struct spdk_json_write_ctx *w;
 	struct subsystem_init_poller_ctx *ctx;
 
 	if (spdk_rpc_get_state() == SPDK_RPC_RUNTIME) {
-		w = spdk_jsonrpc_begin_result(request);
-		spdk_json_write_bool(w, true);
-		spdk_jsonrpc_end_result(request, w);
+		spdk_jsonrpc_send_bool_response(request, true);
 	} else {
 		ctx = malloc(sizeof(struct subsystem_init_poller_ctx));
 		if (ctx == NULL) {

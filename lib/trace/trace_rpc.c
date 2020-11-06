@@ -55,7 +55,6 @@ rpc_trace_enable_tpoint_group(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)
 {
 	struct rpc_tpoint_group req = {};
-	struct spdk_json_write_ctx *w;
 
 	if (spdk_json_decode_object(params, rpc_tpoint_group_decoders,
 				    SPDK_COUNTOF(rpc_tpoint_group_decoders), &req)) {
@@ -74,9 +73,7 @@ rpc_trace_enable_tpoint_group(struct spdk_jsonrpc_request *request,
 
 	free_rpc_tpoint_group(&req);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
@@ -92,7 +89,6 @@ rpc_trace_disable_tpoint_group(struct spdk_jsonrpc_request *request,
 			       const struct spdk_json_val *params)
 {
 	struct rpc_tpoint_group req = {};
-	struct spdk_json_write_ctx *w;
 
 	if (spdk_json_decode_object(params, rpc_tpoint_group_decoders,
 				    SPDK_COUNTOF(rpc_tpoint_group_decoders), &req)) {
@@ -111,9 +107,7 @@ rpc_trace_disable_tpoint_group(struct spdk_jsonrpc_request *request,
 
 	free_rpc_tpoint_group(&req);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:

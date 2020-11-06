@@ -61,7 +61,6 @@ rpc_nvme_cuse_register(struct spdk_jsonrpc_request *request,
 		       const struct spdk_json_val *params)
 {
 	struct rpc_nvme_cuse_register req = {};
-	struct spdk_json_write_ctx *w;
 	struct nvme_bdev_ctrlr *bdev_ctrlr = NULL;
 	int rc;
 
@@ -88,9 +87,7 @@ rpc_nvme_cuse_register(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 
 cleanup:
 	free_rpc_nvme_cuse_register(&req);
@@ -116,7 +113,6 @@ rpc_nvme_cuse_unregister(struct spdk_jsonrpc_request *request,
 			 const struct spdk_json_val *params)
 {
 	struct rpc_nvme_cuse_unregister req = {};
-	struct spdk_json_write_ctx *w;
 	struct nvme_bdev_ctrlr *bdev_ctrlr = NULL;
 	int rc;
 
@@ -142,9 +138,7 @@ rpc_nvme_cuse_unregister(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 
 cleanup:
 	free_rpc_nvme_cuse_unregister(&req);

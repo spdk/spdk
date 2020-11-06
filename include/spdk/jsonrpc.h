@@ -199,6 +199,14 @@ struct spdk_json_write_ctx *spdk_jsonrpc_begin_result(struct spdk_jsonrpc_reques
 void spdk_jsonrpc_end_result(struct spdk_jsonrpc_request *request, struct spdk_json_write_ctx *w);
 
 /**
+ * Complete a JSON-RPC response and write bool result.
+ *
+ * \param request Request to complete the response for.
+ * \param value Write bool result value.
+ */
+void spdk_jsonrpc_send_bool_response(struct spdk_jsonrpc_request *request, bool value);
+
+/**
  * Send an error response to a JSON-RPC request.
  *
  * This is shorthand for spdk_jsonrpc_begin_result() + spdk_jsonrpc_end_result()

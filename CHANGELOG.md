@@ -8,6 +8,11 @@ The SPDK nvmf target now supports async event notification for discovery log cha
 This allows the initiator to create persistent connection to discovery controller and
 be notified of any discovery log changes.
 
+### json
+
+A new API `spdk_jsonrpc_send_bool_response` was added to allow sending response for
+writing json bool results into one function.
+
 ## v20.10:
 
 ### accel

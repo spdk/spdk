@@ -80,7 +80,6 @@ rpc_ioat_scan_accel_engine(struct spdk_jsonrpc_request *request,
 			   const struct spdk_json_val *params)
 {
 	struct rpc_ioat_scan_accel_engine req = {};
-	struct spdk_json_write_ctx *w;
 	int rc;
 
 	if (params != NULL) {
@@ -107,9 +106,7 @@ rpc_ioat_scan_accel_engine(struct spdk_jsonrpc_request *request,
 
 	accel_engine_ioat_enable_probe();
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 }
 SPDK_RPC_REGISTER("ioat_scan_accel_engine", rpc_ioat_scan_accel_engine, SPDK_RPC_STARTUP)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(ioat_scan_accel_engine, ioat_scan_copy_engine)

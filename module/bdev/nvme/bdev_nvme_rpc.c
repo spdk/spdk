@@ -91,7 +91,6 @@ rpc_bdev_nvme_set_options(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
 	struct spdk_bdev_nvme_opts opts;
-	struct spdk_json_write_ctx *w;
 	int rc;
 
 	bdev_nvme_get_opts(&opts);
@@ -110,9 +109,7 @@ rpc_bdev_nvme_set_options(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 
 	return;
 }
@@ -134,10 +131,8 @@ static void
 rpc_bdev_nvme_set_hotplug_done(void *ctx)
 {
 	struct spdk_jsonrpc_request *request = ctx;
-	struct spdk_json_write_ctx *w = spdk_jsonrpc_begin_result(request);
 
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 }
 
 static void
@@ -522,7 +517,6 @@ rpc_bdev_nvme_detach_controller(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_bdev_nvme_detach_controller req = {NULL};
 	struct spdk_nvme_transport_id trid = {};
-	struct spdk_json_write_ctx *w;
 	size_t len, maxlen;
 	int rc = 0;
 	bool all_trid_entries, one_trid_entry;
@@ -599,9 +593,7 @@ rpc_bdev_nvme_detach_controller(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 
 cleanup:
 	free_rpc_bdev_nvme_detach_controller(&req);

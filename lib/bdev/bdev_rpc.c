@@ -59,7 +59,6 @@ rpc_bdev_set_options(struct spdk_jsonrpc_request *request, const struct spdk_jso
 {
 	struct spdk_rpc_set_bdev_opts rpc_opts;
 	struct spdk_bdev_opts bdev_opts;
-	struct spdk_json_write_ctx *w;
 	int rc;
 
 	rpc_opts.bdev_io_pool_size = UINT32_MAX;
@@ -93,9 +92,7 @@ rpc_bdev_set_options(struct spdk_jsonrpc_request *request, const struct spdk_jso
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 }
 SPDK_RPC_REGISTER("bdev_set_options", rpc_bdev_set_options, SPDK_RPC_STARTUP)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_set_options, set_bdev_options)
@@ -119,7 +116,6 @@ rpc_bdev_examine_bdev(struct spdk_jsonrpc_request *request,
 		      const struct spdk_json_val *params)
 {
 	struct rpc_bdev_examine req = {NULL};
-	struct spdk_json_write_ctx *w;
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_examine_bdev_decoders,
@@ -136,9 +132,8 @@ rpc_bdev_examine_bdev(struct spdk_jsonrpc_request *request,
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;
 	}
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+
+	spdk_jsonrpc_send_bool_response(request, true);
 
 cleanup:
 	free_rpc_bdev_examine(&req);
@@ -489,7 +484,6 @@ rpc_bdev_set_qd_sampling_period(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_bdev_set_qd_sampling_period req = {0};
 	struct spdk_bdev *bdev;
-	struct spdk_json_write_ctx *w;
 
 	if (spdk_json_decode_object(params, rpc_bdev_set_qd_sampling_period_decoders,
 				    SPDK_COUNTOF(rpc_bdev_set_qd_sampling_period_decoders),
@@ -507,11 +501,8 @@ rpc_bdev_set_qd_sampling_period(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
 	spdk_bdev_set_qd_sampling_period(bdev, req.period);
-
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 
 cleanup:
 	free_rpc_bdev_set_qd_sampling_period(&req);
@@ -561,7 +552,6 @@ static void
 rpc_bdev_set_qos_limit_complete(void *cb_arg, int status)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
-	struct spdk_json_write_ctx *w;
 
 	if (status != 0) {
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -570,9 +560,7 @@ rpc_bdev_set_qos_limit_complete(void *cb_arg, int status)
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 }
 
 static void
@@ -641,10 +629,8 @@ static void
 bdev_histogram_status_cb(void *cb_arg, int status)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
-	struct spdk_json_write_ctx *w = spdk_jsonrpc_begin_result(request);
 
-	spdk_json_write_bool(w, status == 0);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, status == 0);
 }
 
 static void

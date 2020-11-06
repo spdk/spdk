@@ -60,7 +60,6 @@ rpc_bdev_nvme_opal_init(struct spdk_jsonrpc_request *request,
 			const struct spdk_json_val *params)
 {
 	struct rpc_bdev_nvme_opal_init req = {};
-	struct spdk_json_write_ctx *w;
 	struct nvme_bdev_ctrlr *nvme_ctrlr;
 	int rc;
 
@@ -107,9 +106,7 @@ rpc_bdev_nvme_opal_init(struct spdk_jsonrpc_request *request,
 		goto out;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 
 out:
 	free_rpc_bdev_nvme_opal_init(&req);
@@ -138,7 +135,6 @@ rpc_bdev_nvme_opal_revert(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
 	struct rpc_bdev_nvme_opal_revert req = {};
-	struct spdk_json_write_ctx *w;
 	struct nvme_bdev_ctrlr *nvme_ctrlr;
 	int rc;
 
@@ -167,9 +163,7 @@ rpc_bdev_nvme_opal_revert(struct spdk_jsonrpc_request *request,
 		goto out;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 
 out:
 	free_rpc_bdev_nvme_opal_revert(&req);
@@ -320,7 +314,6 @@ rpc_bdev_opal_delete(struct spdk_jsonrpc_request *request,
 		     const struct spdk_json_val *params)
 {
 	struct rpc_bdev_opal_delete req = {};
-	struct spdk_json_write_ctx *w;
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_bdev_opal_delete_decoders,
@@ -337,9 +330,7 @@ rpc_bdev_opal_delete(struct spdk_jsonrpc_request *request,
 		goto out;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 out:
 	free_rpc_bdev_opal_delete(&req);
 }
@@ -372,7 +363,6 @@ rpc_bdev_opal_set_lock_state(struct spdk_jsonrpc_request *request,
 			     const struct spdk_json_val *params)
 {
 	struct rpc_bdev_opal_set_lock_state req = {};
-	struct spdk_json_write_ctx *w;
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_bdev_opal_set_lock_state_decoders,
@@ -389,9 +379,7 @@ rpc_bdev_opal_set_lock_state(struct spdk_jsonrpc_request *request,
 		goto out;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 
 out:
 	free_rpc_bdev_opal_set_lock_state(&req);
@@ -425,7 +413,6 @@ rpc_bdev_opal_new_user(struct spdk_jsonrpc_request *request,
 		       const struct spdk_json_val *params)
 {
 	struct rpc_bdev_opal_new_user req = {};
-	struct spdk_json_write_ctx *w;
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_bdev_opal_new_user_decoders,
@@ -443,9 +430,7 @@ rpc_bdev_opal_new_user(struct spdk_jsonrpc_request *request,
 		goto out;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 
 out:
 	free_rpc_bdev_opal_new_user(&req);

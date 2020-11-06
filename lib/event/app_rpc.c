@@ -76,7 +76,6 @@ rpc_spdk_kill_instance(struct spdk_jsonrpc_request *request,
 	size_t i, sig_count;
 	int signal;
 	struct rpc_spdk_kill_instance req = {};
-	struct spdk_json_write_ctx *w;
 
 	if (spdk_json_decode_object(params, rpc_spdk_kill_instance_decoders,
 				    SPDK_COUNTOF(rpc_spdk_kill_instance_decoders),
@@ -102,9 +101,7 @@ rpc_spdk_kill_instance(struct spdk_jsonrpc_request *request,
 	free_rpc_spdk_kill_instance(&req);
 	kill(getpid(), signals[i].signal);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
@@ -452,7 +449,6 @@ rpc_framework_set_scheduler(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
 	struct rpc_set_scheduler_ctx req = {NULL};
-	struct spdk_json_write_ctx *w;
 	int ret;
 
 	ret = spdk_json_decode_object(params, rpc_set_scheduler_decoders,
@@ -471,9 +467,7 @@ rpc_framework_set_scheduler(struct spdk_jsonrpc_request *request,
 		goto end;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 
 end:
 	free_rpc_framework_set_scheduler(&req);
@@ -491,12 +485,9 @@ static void
 rpc_thread_set_cpumask_done(void *_ctx)
 {
 	struct rpc_thread_set_cpumask_ctx *ctx = _ctx;
-	struct spdk_json_write_ctx *w;
 
 	if (ctx->status == 0) {
-		w = spdk_jsonrpc_begin_result(ctx->request);
-		spdk_json_write_bool(w, true);
-		spdk_jsonrpc_end_result(ctx->request, w);
+		spdk_jsonrpc_send_bool_response(ctx->request, true);
 	} else {
 		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 spdk_strerror(-ctx->status));

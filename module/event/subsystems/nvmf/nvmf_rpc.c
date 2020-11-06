@@ -44,7 +44,6 @@ static void
 rpc_nvmf_set_max_subsystems(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
-	struct spdk_json_write_ctx *w;
 	uint32_t max_subsystems = 0;
 
 	if (g_spdk_nvmf_tgt_max_subsystems != 0) {
@@ -66,9 +65,7 @@ rpc_nvmf_set_max_subsystems(struct spdk_jsonrpc_request *request,
 
 	g_spdk_nvmf_tgt_max_subsystems = max_subsystems;
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 }
 SPDK_RPC_REGISTER("nvmf_set_max_subsystems", rpc_nvmf_set_max_subsystems,
 		  SPDK_RPC_STARTUP)
@@ -112,7 +109,6 @@ rpc_nvmf_set_config(struct spdk_jsonrpc_request *request,
 		    const struct spdk_json_val *params)
 {
 	struct spdk_nvmf_tgt_conf conf;
-	struct spdk_json_write_ctx *w;
 
 	memcpy(&conf, &g_spdk_nvmf_tgt_conf, sizeof(conf));
 
@@ -128,9 +124,7 @@ rpc_nvmf_set_config(struct spdk_jsonrpc_request *request,
 
 	memcpy(&g_spdk_nvmf_tgt_conf, &conf, sizeof(conf));
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 }
 SPDK_RPC_REGISTER("nvmf_set_config", rpc_nvmf_set_config, SPDK_RPC_STARTUP)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(nvmf_set_config, set_nvmf_target_config)

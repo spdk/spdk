@@ -183,16 +183,13 @@ static const struct spdk_json_object_decoder rpc_bdev_lvol_rename_lvstore_decode
 static void
 rpc_bdev_lvol_rename_lvstore_cb(void *cb_arg, int lvserrno)
 {
-	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = cb_arg;
 
 	if (lvserrno != 0) {
 		goto invalid;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
@@ -251,16 +248,13 @@ static const struct spdk_json_object_decoder rpc_bdev_lvol_delete_lvstore_decode
 static void
 rpc_lvol_store_destroy_cb(void *cb_arg, int lvserrno)
 {
-	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = cb_arg;
 
 	if (lvserrno != 0) {
 		goto invalid;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
@@ -579,16 +573,13 @@ static const struct spdk_json_object_decoder rpc_bdev_lvol_rename_decoders[] = {
 static void
 rpc_bdev_lvol_rename_cb(void *cb_arg, int lvolerrno)
 {
-	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = cb_arg;
 
 	if (lvolerrno != 0) {
 		goto invalid;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
@@ -655,16 +646,13 @@ static const struct spdk_json_object_decoder rpc_bdev_lvol_inflate_decoders[] = 
 static void
 rpc_bdev_lvol_inflate_cb(void *cb_arg, int lvolerrno)
 {
-	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = cb_arg;
 
 	if (lvolerrno != 0) {
 		goto invalid;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
@@ -775,16 +763,13 @@ static const struct spdk_json_object_decoder rpc_bdev_lvol_resize_decoders[] = {
 static void
 rpc_bdev_lvol_resize_cb(void *cb_arg, int lvolerrno)
 {
-	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = cb_arg;
 
 	if (lvolerrno != 0) {
 		goto invalid;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
@@ -850,16 +835,13 @@ static const struct spdk_json_object_decoder rpc_set_ro_lvol_bdev_decoders[] = {
 static void
 rpc_set_ro_lvol_bdev_cb(void *cb_arg, int lvolerrno)
 {
-	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = cb_arg;
 
 	if (lvolerrno != 0) {
 		goto invalid;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
@@ -931,16 +913,13 @@ static const struct spdk_json_object_decoder rpc_bdev_lvol_delete_decoders[] = {
 static void
 rpc_bdev_lvol_delete_cb(void *cb_arg, int lvolerrno)
 {
-	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = cb_arg;
 
 	if (lvolerrno != 0) {
 		goto invalid;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:

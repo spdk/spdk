@@ -138,7 +138,6 @@ rpc_iscsi_create_initiator_group(struct spdk_jsonrpc_request *request,
 				 const struct spdk_json_val *params)
 {
 	struct rpc_initiator_group req = {};
-	struct spdk_json_write_ctx *w;
 
 	if (spdk_json_decode_object(params, rpc_initiator_group_decoders,
 				    SPDK_COUNTOF(rpc_initiator_group_decoders), &req)) {
@@ -162,9 +161,7 @@ rpc_iscsi_create_initiator_group(struct spdk_jsonrpc_request *request,
 
 	free_rpc_initiator_group(&req);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
@@ -186,7 +183,6 @@ rpc_iscsi_initiator_group_add_initiators(struct spdk_jsonrpc_request *request,
 		const struct spdk_json_val *params)
 {
 	struct rpc_initiator_group req = {};
-	struct spdk_json_write_ctx *w;
 
 	if (spdk_json_decode_object(params, rpc_add_or_delete_initiators_decoders,
 				    SPDK_COUNTOF(rpc_add_or_delete_initiators_decoders), &req)) {
@@ -205,9 +201,7 @@ rpc_iscsi_initiator_group_add_initiators(struct spdk_jsonrpc_request *request,
 
 	free_rpc_initiator_group(&req);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
@@ -224,7 +218,6 @@ rpc_iscsi_initiator_group_remove_initiators(struct spdk_jsonrpc_request *request
 		const struct spdk_json_val *params)
 {
 	struct rpc_initiator_group req = {};
-	struct spdk_json_write_ctx *w;
 
 	if (spdk_json_decode_object(params, rpc_add_or_delete_initiators_decoders,
 				    SPDK_COUNTOF(rpc_add_or_delete_initiators_decoders), &req)) {
@@ -243,9 +236,7 @@ rpc_iscsi_initiator_group_remove_initiators(struct spdk_jsonrpc_request *request
 
 	free_rpc_initiator_group(&req);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
@@ -270,7 +261,6 @@ rpc_iscsi_delete_initiator_group(struct spdk_jsonrpc_request *request,
 				 const struct spdk_json_val *params)
 {
 	struct rpc_iscsi_delete_initiator_group req = {};
-	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_init_grp *ig;
 
 	if (spdk_json_decode_object(params, rpc_iscsi_delete_initiator_group_decoders,
@@ -287,9 +277,7 @@ rpc_iscsi_delete_initiator_group(struct spdk_jsonrpc_request *request,
 	iscsi_tgt_node_delete_map(NULL, ig);
 	iscsi_init_grp_destroy(ig);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
@@ -446,7 +434,6 @@ rpc_iscsi_create_target_node(struct spdk_jsonrpc_request *request,
 			     const struct spdk_json_val *params)
 {
 	struct rpc_target_node req = {};
-	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_tgt_node *target;
 	int32_t pg_tags[MAX_TARGET_MAP] = {0}, ig_tags[MAX_TARGET_MAP] = {0};
 	char *bdev_names[RPC_ISCSI_CREATE_TARGET_NODE_MAX_LUN] = {0};
@@ -496,9 +483,7 @@ rpc_iscsi_create_target_node(struct spdk_jsonrpc_request *request,
 
 	free_rpc_target_node(&req);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
@@ -523,7 +508,6 @@ rpc_iscsi_target_node_add_pg_ig_maps(struct spdk_jsonrpc_request *request,
 				     const struct spdk_json_val *params)
 {
 	struct rpc_tgt_node_pg_ig_maps req = {};
-	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_tgt_node *target;
 	int32_t pg_tags[MAX_TARGET_MAP] = {0}, ig_tags[MAX_TARGET_MAP] = {0};
 	size_t i;
@@ -556,9 +540,7 @@ rpc_iscsi_target_node_add_pg_ig_maps(struct spdk_jsonrpc_request *request,
 
 	free(req.name);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
@@ -575,7 +557,6 @@ rpc_iscsi_target_node_remove_pg_ig_maps(struct spdk_jsonrpc_request *request,
 					const struct spdk_json_val *params)
 {
 	struct rpc_tgt_node_pg_ig_maps req = {};
-	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_tgt_node *target;
 	int32_t pg_tags[MAX_TARGET_MAP] = {0}, ig_tags[MAX_TARGET_MAP] = {0};
 	size_t i;
@@ -608,9 +589,7 @@ rpc_iscsi_target_node_remove_pg_ig_maps(struct spdk_jsonrpc_request *request,
 
 	free(req.name);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
@@ -646,14 +625,9 @@ static void
 rpc_iscsi_delete_target_node_done(void *cb_arg, int rc)
 {
 	struct rpc_iscsi_delete_target_node_ctx *ctx = cb_arg;
-	struct spdk_json_write_ctx *w;
 
 	free_rpc_iscsi_delete_target_node(&ctx->req);
-
-	w = spdk_jsonrpc_begin_result(ctx->request);
-	spdk_json_write_bool(w, rc == 0);
-	spdk_jsonrpc_end_result(ctx->request, w);
-
+	spdk_jsonrpc_send_bool_response(ctx->request, rc == 0);
 	free(ctx);
 }
 
@@ -795,7 +769,6 @@ rpc_iscsi_create_portal_group(struct spdk_jsonrpc_request *request,
 	struct rpc_portal_group req = {};
 	struct spdk_iscsi_portal_grp *pg = NULL;
 	struct spdk_iscsi_portal *portal;
-	struct spdk_json_write_ctx *w;
 	size_t i = 0;
 	int rc = -1;
 
@@ -834,9 +807,7 @@ rpc_iscsi_create_portal_group(struct spdk_jsonrpc_request *request,
 
 out:
 	if (rc == 0) {
-		w = spdk_jsonrpc_begin_result(request);
-		spdk_json_write_bool(w, true);
-		spdk_jsonrpc_end_result(request, w);
+		spdk_jsonrpc_send_bool_response(request, true);
 	} else {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 
@@ -862,7 +833,6 @@ rpc_iscsi_delete_portal_group(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)
 {
 	struct rpc_iscsi_delete_portal_group req = {};
-	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_portal_grp *pg;
 
 	if (spdk_json_decode_object(params, rpc_iscsi_delete_portal_group_decoders,
@@ -880,9 +850,7 @@ rpc_iscsi_delete_portal_group(struct spdk_jsonrpc_request *request,
 	iscsi_tgt_node_delete_map(pg, NULL);
 	iscsi_portal_grp_release(pg);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
@@ -912,7 +880,6 @@ rpc_iscsi_portal_group_set_auth(struct spdk_jsonrpc_request *request,
 				const struct spdk_json_val *params)
 {
 	struct rpc_portal_group_auth req = {};
-	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_portal_grp *pg;
 	int rc;
 
@@ -943,10 +910,7 @@ rpc_iscsi_portal_group_set_auth(struct spdk_jsonrpc_request *request,
 
 	pthread_mutex_unlock(&g_iscsi.mutex);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
-
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 exit:
@@ -1042,7 +1006,6 @@ rpc_iscsi_target_node_add_lun(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)
 {
 	struct rpc_target_lun req = {};
-	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_tgt_node *target;
 	int rc;
 
@@ -1068,9 +1031,7 @@ rpc_iscsi_target_node_add_lun(struct spdk_jsonrpc_request *request,
 
 	free_rpc_target_lun(&req);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
@@ -1108,7 +1069,6 @@ rpc_iscsi_target_node_set_auth(struct spdk_jsonrpc_request *request,
 			       const struct spdk_json_val *params)
 {
 	struct rpc_target_auth req = {};
-	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_tgt_node *target;
 	int rc;
 
@@ -1137,9 +1097,7 @@ rpc_iscsi_target_node_set_auth(struct spdk_jsonrpc_request *request,
 
 	free_rpc_target_auth(&req);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 exit:
@@ -1177,7 +1135,6 @@ rpc_iscsi_target_node_set_redirect(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_target_redirect req = {};
 	struct spdk_iscsi_tgt_node *target;
-	struct spdk_json_write_ctx *w;
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_target_redirect_decoders,
@@ -1211,9 +1168,7 @@ rpc_iscsi_target_node_set_redirect(struct spdk_jsonrpc_request *request,
 
 	free_rpc_target_redirect(&req);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 }
 SPDK_RPC_REGISTER("iscsi_target_node_set_redirect", rpc_iscsi_target_node_set_redirect,
 		  SPDK_RPC_RUNTIME)
@@ -1240,7 +1195,6 @@ rpc_iscsi_target_node_request_logout(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_target_logout req = {};
 	struct spdk_iscsi_tgt_node *target;
-	struct spdk_json_write_ctx *w;
 
 	/* If pg_tag is omitted, request all connections to the specified target
 	 * to logout.
@@ -1270,9 +1224,7 @@ rpc_iscsi_target_node_request_logout(struct spdk_jsonrpc_request *request,
 
 	free_rpc_target_logout(&req);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 }
 SPDK_RPC_REGISTER("iscsi_target_node_request_logout", rpc_iscsi_target_node_request_logout,
 		  SPDK_RPC_RUNTIME)
@@ -1316,7 +1268,6 @@ rpc_iscsi_set_discovery_auth(struct spdk_jsonrpc_request *request,
 			     const struct spdk_json_val *params)
 {
 	struct rpc_discovery_auth req = {};
-	struct spdk_json_write_ctx *w;
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_discovery_auth_decoders,
@@ -1335,9 +1286,7 @@ rpc_iscsi_set_discovery_auth(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 }
 SPDK_RPC_REGISTER("iscsi_set_discovery_auth", rpc_iscsi_set_discovery_auth, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_set_discovery_auth, set_iscsi_discovery_auth)
@@ -1423,7 +1372,6 @@ rpc_iscsi_create_auth_group(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_auth_group req = {};
 	struct rpc_auth_secret *_secret;
-	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_auth_group *group = NULL;
 	int rc;
 	size_t i;
@@ -1470,9 +1418,7 @@ rpc_iscsi_create_auth_group(struct spdk_jsonrpc_request *request,
 
 	free_rpc_auth_group(&req);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 }
 SPDK_RPC_REGISTER("iscsi_create_auth_group", rpc_iscsi_create_auth_group, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_create_auth_group, add_iscsi_auth_group)
@@ -1490,7 +1436,6 @@ rpc_iscsi_delete_auth_group(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
 	struct rpc_delete_auth_group req = {};
-	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_auth_group *group;
 
 	if (spdk_json_decode_object(params, rpc_delete_auth_group_decoders,
@@ -1516,9 +1461,7 @@ rpc_iscsi_delete_auth_group(struct spdk_jsonrpc_request *request,
 
 	pthread_mutex_unlock(&g_iscsi.mutex);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 }
 SPDK_RPC_REGISTER("iscsi_delete_auth_group", rpc_iscsi_delete_auth_group, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_delete_auth_group, delete_iscsi_auth_group)
@@ -1553,7 +1496,6 @@ rpc_iscsi_auth_group_add_secret(struct spdk_jsonrpc_request *request,
 				const struct spdk_json_val *params)
 {
 	struct rpc_add_auth_secret req = {};
-	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_auth_group *group;
 	int rc;
 
@@ -1593,9 +1535,7 @@ rpc_iscsi_auth_group_add_secret(struct spdk_jsonrpc_request *request,
 
 	free_rpc_add_auth_secret(&req);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 }
 SPDK_RPC_REGISTER("iscsi_auth_group_add_secret", rpc_iscsi_auth_group_add_secret,
 		  SPDK_RPC_RUNTIME)
@@ -1623,7 +1563,6 @@ rpc_iscsi_auth_group_remove_secret(struct spdk_jsonrpc_request *request,
 				   const struct spdk_json_val *params)
 {
 	struct rpc_remove_auth_secret req = {};
-	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_auth_group *group;
 	int rc;
 
@@ -1663,9 +1602,7 @@ rpc_iscsi_auth_group_remove_secret(struct spdk_jsonrpc_request *request,
 
 	free_rpc_remove_auth_secret(&req);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 }
 SPDK_RPC_REGISTER("iscsi_auth_group_remove_secret",
 		  rpc_iscsi_auth_group_remove_secret, SPDK_RPC_RUNTIME)
@@ -1725,7 +1662,6 @@ rpc_iscsi_set_options(struct spdk_jsonrpc_request *request,
 		      const struct spdk_json_val *params)
 {
 	struct spdk_iscsi_opts *opts;
-	struct spdk_json_write_ctx *w;
 
 	if (g_spdk_iscsi_opts != NULL) {
 		SPDK_ERRLOG("this RPC must not be called more than once.\n");
@@ -1763,9 +1699,7 @@ rpc_iscsi_set_options(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 }
 SPDK_RPC_REGISTER("iscsi_set_options", rpc_iscsi_set_options, SPDK_RPC_STARTUP)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_set_options, set_iscsi_options)

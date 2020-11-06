@@ -126,7 +126,6 @@ rpc_sock_impl_set_options(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
 	struct spdk_rpc_sock_impl_set_opts opts = {};
-	struct spdk_json_write_ctx *w;
 	size_t len;
 	int rc;
 
@@ -166,9 +165,7 @@ rpc_sock_impl_set_options(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	free(opts.impl_name);
 }
 SPDK_RPC_REGISTER("sock_impl_set_options", rpc_sock_impl_set_options, SPDK_RPC_STARTUP)
@@ -178,7 +175,6 @@ rpc_sock_set_default_impl(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
 	char *impl_name = NULL;
-	struct spdk_json_write_ctx *w;
 	int rc;
 
 	/* Reuse get_opts decoder */
@@ -198,9 +194,7 @@ rpc_sock_set_default_impl(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 	free(impl_name);
 }
 SPDK_RPC_REGISTER("sock_set_default_impl", rpc_sock_set_default_impl, SPDK_RPC_STARTUP)

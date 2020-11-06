@@ -52,7 +52,6 @@ rpc_idxd_scan_accel_engine(struct spdk_jsonrpc_request *request,
 			   const struct spdk_json_val *params)
 {
 	struct rpc_idxd_scan_accel_engine req = {};
-	struct spdk_json_write_ctx *w;
 
 	if (params != NULL) {
 		if (spdk_json_decode_object(params, rpc_idxd_scan_accel_engine_decoder,
@@ -68,8 +67,6 @@ rpc_idxd_scan_accel_engine(struct spdk_jsonrpc_request *request,
 	SPDK_NOTICELOG("Enabling IDXD with config #%u\n", req.config_number);
 	accel_engine_idxd_enable_probe(req.config_number);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 }
 SPDK_RPC_REGISTER("idxd_scan_accel_engine", rpc_idxd_scan_accel_engine, SPDK_RPC_STARTUP)

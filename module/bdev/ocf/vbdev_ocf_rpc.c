@@ -125,16 +125,13 @@ static void
 delete_cb(void *cb_arg, int status)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
-	struct spdk_json_write_ctx *w;
 
 	if (status) {
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						     "Could not delete OCF vbdev: %d",
 						     status);
 	} else {
-		w = spdk_jsonrpc_begin_result(request);
-		spdk_json_write_bool(w, true);
-		spdk_jsonrpc_end_result(request, w);
+		spdk_jsonrpc_send_bool_response(request, true);
 	}
 }
 

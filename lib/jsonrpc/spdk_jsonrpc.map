@@ -10,6 +10,7 @@
 	spdk_jsonrpc_conn_del_close_cb;
 	spdk_jsonrpc_begin_result;
 	spdk_jsonrpc_end_result;
+	spdk_jsonrpc_send_bool_response;
 	spdk_jsonrpc_send_error_response;
 	spdk_jsonrpc_send_error_response_fmt;
 	spdk_jsonrpc_begin_request;

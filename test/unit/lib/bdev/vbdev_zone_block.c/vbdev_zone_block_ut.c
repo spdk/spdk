@@ -84,6 +84,8 @@ DEFINE_STUB_V(spdk_rpc_register_method, (const char *method, spdk_rpc_method_han
 		uint32_t state_mask));
 DEFINE_STUB_V(spdk_jsonrpc_end_result, (struct spdk_jsonrpc_request *request,
 					struct spdk_json_write_ctx *w));
+DEFINE_STUB_V(spdk_jsonrpc_send_bool_response, (struct spdk_jsonrpc_request *request,
+		bool value));
 DEFINE_STUB(spdk_bdev_get_io_channel, struct spdk_io_channel *, (struct spdk_bdev_desc *desc),
 	    (void *)0);
 

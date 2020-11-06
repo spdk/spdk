@@ -55,7 +55,6 @@ static void
 rpc_bdev_virtio_detach_controller_cb(void *ctx, int errnum)
 {
 	struct spdk_jsonrpc_request *request = ctx;
-	struct spdk_json_write_ctx *w;
 
 	if (errnum != 0) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -63,9 +62,7 @@ rpc_bdev_virtio_detach_controller_cb(void *ctx, int errnum)
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 }
 
 static void

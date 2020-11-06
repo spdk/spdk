@@ -107,10 +107,8 @@ static void
 _rpc_bdev_pmem_delete_cb(void *cb_arg, int bdeverrno)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
-	struct spdk_json_write_ctx *w = spdk_jsonrpc_begin_result(request);
 
-	spdk_json_write_bool(w, bdeverrno == 0);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, bdeverrno == 0);
 }
 
 static void
@@ -166,7 +164,6 @@ rpc_bdev_pmem_create_pool(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
 	struct rpc_bdev_pmem_create_pool req = {};
-	struct spdk_json_write_ctx *w;
 	uint64_t pool_size;
 	PMEMblkpool *pbp;
 
@@ -205,9 +202,7 @@ rpc_bdev_pmem_create_pool(struct spdk_jsonrpc_request *request,
 
 	pmemblk_close(pbp);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 
 cleanup:
 	free_rpc_bdev_pmem_create_pool(&req);
@@ -303,7 +298,6 @@ rpc_bdev_pmem_delete_pool(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
 	struct rpc_bdev_pmem_delete_pool req = {};
-	struct spdk_json_write_ctx *w;
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_bdev_pmem_delete_pool_decoders,
@@ -326,9 +320,7 @@ rpc_bdev_pmem_delete_pool(struct spdk_jsonrpc_request *request,
 
 	unlink(req.pmem_file);
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_send_bool_response(request, true);
 
 cleanup:
 	free_rpc_bdev_pmem_delete_pool(&req);

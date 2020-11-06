@@ -59,7 +59,6 @@ static void
 spdk_rpc_fuzz_vhost_create_dev(struct spdk_jsonrpc_request *request,
 			       const struct spdk_json_val *params)
 {
-	struct spdk_json_write_ctx *w;
 	struct rpc_fuzz_vhost_dev_create req = {0};
 	int rc;
 
@@ -97,9 +96,7 @@ spdk_rpc_fuzz_vhost_create_dev(struct spdk_jsonrpc_request *request,
 							 "Unexpected error code.\n");
 		}
 	} else {
-		w = spdk_jsonrpc_begin_result(request);
-		spdk_json_write_bool(w, true);
-		spdk_jsonrpc_end_result(request, w);
+		spdk_jsonrpc_send_bool_response(request, true);
 	}
 
 	free(req.socket);

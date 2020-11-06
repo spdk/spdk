@@ -116,6 +116,8 @@ DEFINE_STUB_V(spdk_rpc_register_method, (const char *method, spdk_rpc_method_han
 DEFINE_STUB_V(spdk_rpc_register_alias_deprecated, (const char *method, const char *alias));
 DEFINE_STUB_V(spdk_jsonrpc_end_result, (struct spdk_jsonrpc_request *request,
 					struct spdk_json_write_ctx *w));
+DEFINE_STUB_V(spdk_jsonrpc_send_bool_response, (struct spdk_jsonrpc_request *request,
+		bool value));
 DEFINE_STUB(spdk_json_decode_string, int, (const struct spdk_json_val *val, void *out), 0);
 DEFINE_STUB(spdk_json_decode_uint32, int, (const struct spdk_json_val *val, void *out), 0);
 DEFINE_STUB(spdk_json_decode_array, int, (const struct spdk_json_val *values,
