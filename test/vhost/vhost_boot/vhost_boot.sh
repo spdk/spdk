@@ -74,8 +74,9 @@ if [[ $nvme_bdev_bs != 512 ]]; then
 	false
 fi
 
+lvb_size=20000 # MB
 lvs_u=$($rpc_py bdev_lvol_create_lvstore Nvme0n1 lvs0)
-lvb_u=$($rpc_py bdev_lvol_create -u $lvs_u lvb0 20000)
+lvb_u=$($rpc_py bdev_lvol_create -u $lvs_u lvb0 "$lvb_size")
 timing_exit create_lvol
 
 timing_enter convert_vm_image
@@ -100,8 +101,19 @@ vm_run $vm_no
 vm_wait_for_boot 300 $vm_no
 timing_exit setup_vm
 
+start_part_sector=0 drive_size=0
+while IFS=":" read -r id start end _; do
+	start=${start%s} end=${end%s}
+	[[ -b $id ]] && drive_size=$start
+	[[ $id =~ ^[0-9]+$ ]] && start_part_sector=$((end + 1))
+done < <(vm_exec "$vm_no" "parted /dev/sda -ms unit s print")
+
+# If we didn't get a start sector for the partition then probably something is amiss. Also,
+# check if size of the drive matches size used for creating lvb and if not, fail.
+((start_part_sector > 0)) && (((drive_size * 512) >> 20 == lvb_size))
+
 timing_enter run_vm_cmd
-vm_exec $vm_no "parted -s /dev/sda mkpart primary 10GB 100%; partprobe;  sleep 0.1;"
+vm_exec $vm_no "parted -s /dev/sda mkpart primary ${start_part_sector}s 100%; sleep 1; partprobe"
 vm_exec $vm_no "mkfs.ext4 -F /dev/sda2; mkdir -p /mnt/sda2test; mount /dev/sda2 /mnt/sda2test;"
 vm_exec $vm_no "fio --name=integrity --bsrange=4k-512k --iodepth=128 --numjobs=1 --direct=1 \
  --thread=1 --group_reporting=1 --rw=randrw --rwmixread=70 --filename=/mnt/sda2test/test_file \
