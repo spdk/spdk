@@ -48,6 +48,7 @@
 #include "spdk_internal/vhost_user.h"
 
 #include <linux/virtio_blk.h>
+#include <linux/virtio_ids.h>
 
 #include "bdev_virtio.h"
 
@@ -646,7 +647,7 @@ bdev_virtio_pci_blk_dev_create(const char *name, struct spdk_pci_addr *pci_addr)
 	create_ctx.ret = NULL;
 
 	virtio_pci_dev_attach(bdev_virtio_pci_blk_dev_create_cb, &create_ctx,
-			      PCI_DEVICE_ID_VIRTIO_BLK_MODERN, pci_addr);
+			      VIRTIO_ID_BLOCK, pci_addr);
 
 	if (create_ctx.ret == NULL) {
 		return NULL;

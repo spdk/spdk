@@ -48,6 +48,7 @@
 #include "spdk_internal/vhost_user.h"
 
 #include <linux/virtio_scsi.h>
+#include <linux/virtio_ids.h>
 
 #include "bdev_virtio.h"
 
@@ -1862,7 +1863,7 @@ bdev_virtio_pci_scsi_dev_create(const char *name, struct spdk_pci_addr *pci_addr
 	create_ctx.cb_arg = cb_arg;
 
 	return virtio_pci_dev_attach(bdev_virtio_pci_scsi_dev_create_cb, &create_ctx,
-				     PCI_DEVICE_ID_VIRTIO_SCSI_MODERN, pci_addr);
+				     VIRTIO_ID_SCSI, pci_addr);
 }
 
 int

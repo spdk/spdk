@@ -452,11 +452,11 @@ int virtio_pci_dev_enumerate(virtio_pci_create_cb enum_cb, void *enum_ctx,
  * Returning any other value will cause the PCI context to be freed,
  * making it unusable.
  * \param enum_ctx additional opaque context to be passed into `enum_cb`
- * \param pci_device_id PCI Device ID of devices to iterate through
+ * \param device_id Device ID of devices to iterate through
  * \param pci_addr PCI address of the device to attach
  */
 int virtio_pci_dev_attach(virtio_pci_create_cb create_cb, void *enum_ctx,
-			  uint16_t pci_device_id, struct spdk_pci_addr *pci_addr);
+			  uint16_t device_id, struct spdk_pci_addr *pci_addr);
 
 /**
  * Connect to a vhost-user device and init corresponding virtio_dev struct.

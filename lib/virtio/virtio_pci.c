@@ -538,8 +538,24 @@ virtio_pci_dev_probe_cb(void *probe_ctx, struct spdk_pci_device *pci_dev)
 {
 	struct virtio_pci_probe_ctx *ctx = probe_ctx;
 	uint16_t pci_device_id = spdk_pci_device_get_device_id(pci_dev);
+	uint16_t device_id;
 
-	if (pci_device_id != ctx->device_id) {
+	if (pci_device_id < 0x1000 || pci_device_id > 0x107f) {
+		SPDK_ERRLOG("Probe device is not a virtio device\n");
+		return 1;
+	}
+
+	if (pci_device_id < 0x1040) {
+		/* Transitional devices: use the PCI subsystem device id as
+		 * virtio device id, same as legacy driver always did.
+		 */
+		device_id = spdk_pci_device_get_subdevice_id(pci_dev);
+	} else {
+		/* Modern devices: simply use PCI device id, but start from 0x1040. */
+		device_id = pci_device_id - 0x1040;
+	}
+
+	if (device_id != ctx->device_id) {
 		return 1;
 	}
 
@@ -567,7 +583,7 @@ virtio_pci_dev_enumerate(virtio_pci_create_cb enum_cb, void *enum_ctx,
 
 int
 virtio_pci_dev_attach(virtio_pci_create_cb enum_cb, void *enum_ctx,
-		      uint16_t pci_device_id, struct spdk_pci_addr *pci_address)
+		      uint16_t device_id, struct spdk_pci_addr *pci_address)
 {
 	struct virtio_pci_probe_ctx ctx;
 
@@ -578,7 +594,7 @@ virtio_pci_dev_attach(virtio_pci_create_cb enum_cb, void *enum_ctx,
 
 	ctx.enum_cb = enum_cb;
 	ctx.enum_ctx = enum_ctx;
-	ctx.device_id = pci_device_id;
+	ctx.device_id = device_id;
 
 	return spdk_pci_device_attach(spdk_pci_virtio_get_driver(),
 				      virtio_pci_dev_probe_cb, &ctx, pci_address);
