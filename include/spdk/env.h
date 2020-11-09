@@ -774,6 +774,11 @@ struct spdk_pci_driver *spdk_pci_nvme_get_driver(void);
  * on denylist. Because of that it becomes not possible to either use such
  * devices with another application or unbind the driver (e.g. vfio).
  *
+ * 2s asynchronous delay is introduced to avoid race conditions between
+ * user space software initialization and in-kernel device handling for
+ * newly inserted devices. Subsequent enumerate call after the delay
+ * shall allow for a successful device attachment.
+ *
  * \param driver Driver for a specific device type.
  * \param enum_cb Callback to be called for each non-attached PCI device.
  * \param enum_ctx Additional context passed to the callback function.
