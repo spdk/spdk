@@ -1485,8 +1485,10 @@ filter_columns(uint8_t tab)
 
 	filter_win = newwin(elements + WINDOW_HEADER_LEN, len + WINDOW_BORDER_LEN,
 			    (g_max_row - elements - 1) / 2, (g_max_col - len) / 2);
+	assert(filter_win != NULL);
 	keypad(filter_win, TRUE);
 	filter_panel = new_panel(filter_win);
+	assert(filter_panel != NULL);
 
 	top_panel(filter_panel);
 	update_panels();
@@ -1611,8 +1613,10 @@ change_sorting(uint8_t tab)
 
 	sort_win = newwin(elements + WINDOW_HEADER_LEN, len + WINDOW_BORDER_LEN, (g_max_row - elements) / 2,
 			  (g_max_col - len) / 2);
+	assert(sort_win != NULL);
 	keypad(sort_win, TRUE);
 	sort_panel = new_panel(sort_win);
+	assert(sort_panel != NULL);
 
 	top_panel(sort_panel);
 	update_panels();
@@ -1683,8 +1687,10 @@ change_refresh_rate(void)
 
 	refresh_win = newwin(RR_WIN_HEIGHT, RR_WIN_WIDTH, (g_max_row - RR_WIN_HEIGHT - 1) / 2,
 			     (g_max_col - RR_WIN_WIDTH) / 2);
+	assert(refresh_win != NULL);
 	keypad(refresh_win, TRUE);
 	refresh_panel = new_panel(refresh_win);
+	assert(refresh_panel != NULL);
 
 	top_panel(refresh_panel);
 	update_panels();
@@ -1887,17 +1893,20 @@ draw_interface(void)
 
 	g_menu_win = newwin(MENU_WIN_HEIGHT, g_max_col, g_max_row - MENU_WIN_HEIGHT - 1,
 			    MENU_WIN_LOCATION_COL);
+	assert(g_menu_win != NULL);
 	draw_menu_win();
 
 	for (i = 0; i < NUMBER_OF_TABS; i++) {
 		g_tab_win[i] = newwin(TAB_WIN_HEIGHT, g_max_col / NUMBER_OF_TABS - TABS_SPACING,
 				      TAB_WIN_LOCATION_ROW, g_max_col / NUMBER_OF_TABS * i + 1);
+		assert(g_tab_win[i] != NULL);
 		draw_tab_win(i);
 
 		g_tabs[i] = newwin(g_max_row - MENU_WIN_HEIGHT - TAB_WIN_HEIGHT - 2, g_max_col, TABS_LOCATION_ROW,
 				   TABS_LOCATION_COL);
 		draw_tabs(i, g_current_sort_col[i]);
 		g_panels[i] = new_panel(g_tabs[i]);
+		assert(g_panels[i] != NULL);
 	}
 
 	update_panels();
