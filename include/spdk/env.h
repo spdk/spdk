@@ -697,7 +697,17 @@ struct spdk_pci_device {
 	} internal;
 };
 
-typedef int (*spdk_pci_enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev);
+/**
+ * Callback for device attach handling.
+ *
+ * \param enum_ctx Opaque value.
+ * \param dev PCI device.
+ *
+ * \return -1 if an error occurred,
+ *          0 if device attached successfully,
+ *          1 if device not attached.
+ */
+typedef int (*spdk_pci_enum_cb)(void *enum_ctx, struct spdk_pci_device *dev);
 
 #define SPDK_PCI_DEVICE(vend, dev)          \
 	.class_id = SPDK_PCI_CLASS_ANY_ID,      \
@@ -766,13 +776,9 @@ struct spdk_pci_driver *spdk_pci_nvme_get_driver(void);
  *
  * \param driver Driver for a specific device type.
  * \param enum_cb Callback to be called for each non-attached PCI device.
- * The return code can be as follows:
- *  -1 - device was not attached, the enumeration is stopped
- *   0 - device attached successfully, enumeration continues
- *   1 - device was not attached, enumeration continues
  * \param enum_ctx Additional context passed to the callback function.
  *
- * \return -1 if an internal error occured or the provided callback returned -1,
+ * \return -1 if an internal error occurred or the provided callback returned -1,
  *         0 otherwise
  */
 int spdk_pci_enumerate(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb, void *enum_ctx);
@@ -978,9 +984,6 @@ void spdk_pci_device_detach(struct spdk_pci_device *device);
  * \param driver Driver for a specific device type. The device will only be
  * attached if it's supported by this driver.
  * \param enum_cb Callback to be called for the PCI device once it's found.
- * The return code can be as follows:
- *  -1, 1 - an error occurred, fail the attach request entirely
- *   0 - device attached successfully
  * \param enum_ctx Additional context passed to the callback function.
  * \param pci_address Address of the device to attach.
  *
