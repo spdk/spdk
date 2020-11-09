@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 shopt -s extglob
 
+function get_git_tag() {
+	git -C "${1:-$rootdir}" describe --tags --abbrev=0
+}
+
 if [ "$(uname -s)" = "FreeBSD" ]; then
 	echo "Not testing for shared object dependencies on FreeBSD."
 	exit 0
@@ -18,12 +22,21 @@ source "$rootdir/test/common/autotest_common.sh"
 
 libdir="$rootdir/build/lib"
 libdeps_file="$rootdir/mk/spdk.lib_deps.mk"
-source_abi_dir="$HOME/spdk_abi_latest/build/lib"
 suppression_file="$HOME/abigail_suppressions.ini"
+
+spdk_tag=$(get_git_tag)
+spdk_lts_tag=$(get_git_tag "$HOME/spdk_abi_lts")
+repo="spdk_abi_latest"
+if [[ "$spdk_tag" == "$spdk_lts_tag" ]]; then
+	repo="spdk_abi_lts"
+fi
+source_abi_dir="$HOME/$repo/build/lib"
 
 function confirm_abi_deps() {
 	local processed_so=0
 	local abidiff_output
+
+	echo "* Running ${FUNCNAME[0]} against $repo" >&2
 
 	if ! hash abidiff; then
 		echo "Unable to check ABI compatibility. Please install abidiff."
