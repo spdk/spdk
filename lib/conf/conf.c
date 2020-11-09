@@ -495,6 +495,10 @@ parse_line(struct spdk_conf *cp, char *lp)
 
 		if (sp == NULL) {
 			sp = allocate_cf_section();
+			if (sp == NULL) {
+				SPDK_ERRLOG("cannot allocate cf section\n");
+				return -1;
+			}
 			append_cf_section(cp, sp);
 
 			sp->name = strdup(key);
