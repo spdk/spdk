@@ -68,7 +68,9 @@ function build_native_dpdk() {
 	dpdk_ldflags=""
 
 	# the drivers we use
-	DPDK_DRIVERS=("bus" "bus/pci" "bus/vdev" "mempool/ring")
+	# net/i40e driver is not really needed by us, but it's built as a workaround
+	# for DPDK issue: https://bugs.dpdk.org/show_bug.cgi?id=576
+	DPDK_DRIVERS=("bus" "bus/pci" "bus/vdev" "mempool/ring" "net/i40e" "net/i40e/base")
 	# all possible DPDK drivers
 	DPDK_ALL_DRIVERS=($(find "$external_dpdk_base_dir/drivers" -mindepth 1 -type d | sed -n "s#^$external_dpdk_base_dir/drivers/##p"))
 
