@@ -425,6 +425,7 @@ enum spdk_nvme_ctrlr_flags {
 	SPDK_NVME_CTRLR_WRR_SUPPORTED			= 1 << 2, /**< Weighted Round Robin is supported */
 	SPDK_NVME_CTRLR_COMPARE_AND_WRITE_SUPPORTED	= 1 << 3, /**< Compare and write fused operations supported */
 	SPDK_NVME_CTRLR_SGL_REQUIRES_DWORD_ALIGNMENT	= 1 << 4, /**< Dword alignment is required for SGL */
+	SPDK_NVME_CTRLR_ZONE_APPEND_SUPPORTED		= 1 << 5, /**< Zone Append is supported (within Zoned Namespaces) */
 };
 
 /**

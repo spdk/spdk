@@ -549,6 +549,16 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_IOCS_SPECIFIC,
 
 	/**
+	 * Get Commands Supported and Effects log page for the Zoned Namespace Command Set.
+	 */
+	NVME_CTRLR_STATE_GET_ZNS_CMD_EFFECTS_LOG,
+
+	/**
+	 * Waiting for the Get Log Page command to be completed.
+	 */
+	NVME_CTRLR_STATE_WAIT_FOR_GET_ZNS_CMD_EFFECTS_LOG,
+
+	/**
 	 * Set Number of Queues of the controller.
 	 */
 	NVME_CTRLR_STATE_SET_NUM_QUEUES,
@@ -835,6 +845,9 @@ struct spdk_nvme_ctrlr {
 
 	struct spdk_nvme_ana_page	*ana_log_page;
 	uint32_t			ana_log_page_size;
+
+	/* scratchpad pointer that can be used to send data between two NVME_CTRLR_STATEs */
+	void				*tmp_ptr;
 };
 
 struct spdk_nvme_probe_ctx {

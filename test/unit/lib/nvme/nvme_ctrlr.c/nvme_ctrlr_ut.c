@@ -258,6 +258,16 @@ spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page
 }
 
 int
+spdk_nvme_ctrlr_cmd_get_log_page_ext(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page,
+				     uint32_t nsid, void *payload, uint32_t payload_size,
+				     uint64_t offset, uint32_t cdw10, uint32_t cdw11,
+				     uint32_t cdw14, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	fake_cpl_sc(cb_fn, cb_arg);
+	return 0;
+}
+
+int
 nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
 	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST);

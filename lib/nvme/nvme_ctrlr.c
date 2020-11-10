@@ -1160,6 +1160,10 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "identify controller iocs specific";
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_IOCS_SPECIFIC:
 		return "wait for identify controller iocs specific";
+	case NVME_CTRLR_STATE_GET_ZNS_CMD_EFFECTS_LOG:
+		return "get zns cmd and effects log page";
+	case NVME_CTRLR_STATE_WAIT_FOR_GET_ZNS_CMD_EFFECTS_LOG:
+		return "wait for get zns cmd and effects log page";
 	case NVME_CTRLR_STATE_SET_NUM_QUEUES:
 		return "set number of queues";
 	case NVME_CTRLR_STATE_WAIT_FOR_SET_NUM_QUEUES:
@@ -1593,6 +1597,64 @@ nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static void
+nvme_ctrlr_get_zns_cmd_and_effects_log_done(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_nvme_cmds_and_effect_log_page *log_page;
+	struct spdk_nvme_ctrlr *ctrlr = arg;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		SPDK_ERRLOG("nvme_ctrlr_get_zns_cmd_and_effects_log failed!\n");
+		spdk_free(ctrlr->tmp_ptr);
+		ctrlr->tmp_ptr = NULL;
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+		return;
+	}
+
+	log_page = ctrlr->tmp_ptr;
+
+	if (log_page->io_cmds_supported[SPDK_NVME_OPC_ZONE_APPEND].csupp) {
+		ctrlr->flags |= SPDK_NVME_CTRLR_ZONE_APPEND_SUPPORTED;
+	}
+	spdk_free(ctrlr->tmp_ptr);
+	ctrlr->tmp_ptr = NULL;
+
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_NUM_QUEUES, ctrlr->opts.admin_timeout_ms);
+}
+
+static int
+nvme_ctrlr_get_zns_cmd_and_effects_log(struct spdk_nvme_ctrlr *ctrlr)
+{
+	int rc;
+
+	assert(!ctrlr->tmp_ptr);
+	ctrlr->tmp_ptr = spdk_zmalloc(sizeof(struct spdk_nvme_cmds_and_effect_log_page), 64, NULL,
+				      SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE | SPDK_MALLOC_DMA);
+	if (!ctrlr->tmp_ptr) {
+		rc = -ENOMEM;
+		goto error;
+	}
+
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_GET_ZNS_CMD_EFFECTS_LOG,
+			     ctrlr->opts.admin_timeout_ms);
+
+	rc = spdk_nvme_ctrlr_cmd_get_log_page_ext(ctrlr, SPDK_NVME_LOG_COMMAND_EFFECTS_LOG,
+			0, ctrlr->tmp_ptr, sizeof(struct spdk_nvme_cmds_and_effect_log_page),
+			0, 0, 0, SPDK_NVME_CSI_ZNS << 24,
+			nvme_ctrlr_get_zns_cmd_and_effects_log_done, ctrlr);
+	if (rc != 0) {
+		goto error;
+	}
+
+	return 0;
+
+error:
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+	spdk_free(ctrlr->tmp_ptr);
+	ctrlr->tmp_ptr = NULL;
+	return rc;
+}
+
+static void
 nvme_ctrlr_identify_zns_specific_done(void *arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct spdk_nvme_ctrlr *ctrlr = (struct spdk_nvme_ctrlr *)arg;
@@ -1600,9 +1662,12 @@ nvme_ctrlr_identify_zns_specific_done(void *arg, const struct spdk_nvme_cpl *cpl
 	if (spdk_nvme_cpl_is_error(cpl)) {
 		/* no need to print an error, the controller simply does not support ZNS */
 		nvme_ctrlr_free_zns_specific_data(ctrlr);
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_NUM_QUEUES,
+				     ctrlr->opts.admin_timeout_ms);
+		return;
 	}
 
-	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_NUM_QUEUES,
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_GET_ZNS_CMD_EFFECTS_LOG,
 			     ctrlr->opts.admin_timeout_ms);
 }
 
@@ -3053,6 +3118,10 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		rc = nvme_ctrlr_identify_iocs_specific(ctrlr);
 		break;
 
+	case NVME_CTRLR_STATE_GET_ZNS_CMD_EFFECTS_LOG:
+		rc = nvme_ctrlr_get_zns_cmd_and_effects_log(ctrlr);
+		break;
+
 	case NVME_CTRLR_STATE_SET_NUM_QUEUES:
 		nvme_ctrlr_update_nvmf_ioccsz(ctrlr);
 		rc = nvme_ctrlr_set_num_queues(ctrlr);
@@ -3118,6 +3187,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY:
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_IOCS_SPECIFIC:
+	case NVME_CTRLR_STATE_WAIT_FOR_GET_ZNS_CMD_EFFECTS_LOG:
 	case NVME_CTRLR_STATE_WAIT_FOR_SET_NUM_QUEUES:
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_ACTIVE_NS:
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS:
