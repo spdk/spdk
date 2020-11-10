@@ -36,6 +36,9 @@
 #include "spdk_internal/rdma.h"
 #include "spdk_internal/mock.h"
 
+#define RDMA_UT_LKEY 123
+#define RDMA_UT_RKEY 312
+
 DEFINE_STUB(spdk_rdma_qp_create, struct spdk_rdma_qp *, (struct rdma_cm_id *cm_id,
 		struct spdk_rdma_qp_init_attr *qp_attr), NULL);
 DEFINE_STUB(spdk_rdma_qp_accept, int, (struct spdk_rdma_qp *spdk_rdma_qp,
@@ -47,3 +50,30 @@ DEFINE_STUB(spdk_rdma_qp_queue_send_wrs, bool, (struct spdk_rdma_qp *spdk_rdma_q
 		struct ibv_send_wr *first), true);
 DEFINE_STUB(spdk_rdma_qp_flush_send_wrs, int, (struct spdk_rdma_qp *spdk_rdma_qp,
 		struct ibv_send_wr **bad_wr), 0);
+DEFINE_STUB(spdk_rdma_create_mem_map, struct spdk_rdma_mem_map *, (struct ibv_pd *pd,
+		struct spdk_nvme_rdma_hooks *hooks), NULL);
+DEFINE_STUB_V(spdk_rdma_free_mem_map, (struct spdk_rdma_mem_map **map));
+
+/* used to mock out having to split an SGL over a memory region */
+size_t g_mr_size;
+struct ibv_mr g_rdma_mr = {
+	.addr = (void *)0xC0FFEE,
+	.lkey = RDMA_UT_LKEY,
+	.rkey = RDMA_UT_RKEY
+};
+
+DEFINE_RETURN_MOCK(spdk_rdma_get_translation, int);
+int
+spdk_rdma_get_translation(struct spdk_rdma_mem_map *map, void *address,
+			  size_t length, struct spdk_rdma_memory_translation *translation)
+{
+	translation->mr_or_key.mr = &g_rdma_mr;
+	translation->translation_type = SPDK_RDMA_TRANSLATION_MR;
+	HANDLE_RETURN_MOCK(spdk_rdma_get_translation);
+
+	if (g_mr_size && length > g_mr_size) {
+		return -ERANGE;
+	}
+
+	return 0;
+}
