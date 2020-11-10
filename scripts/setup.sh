@@ -533,7 +533,9 @@ function reset_linux_pci() {
 function reset_linux() {
 	reset_linux_pci
 	for mount in $(linux_hugetlbfs_mounts); do
-		rm -f "$mount"/spdk*map_*
+		for hp in "$mount"/spdk*map_*; do
+			flock -n "$hp" true && rm -f "$hp"
+		done
 	done
 	rm -f /run/.spdk*
 }
