@@ -1431,9 +1431,7 @@ void
 _nvmf_fc_request_free(struct spdk_nvmf_fc_request *fc_req)
 {
 	struct spdk_nvmf_fc_hwqp *hwqp = fc_req->hwqp;
-	struct spdk_nvmf_fc_poll_group *fgroup = hwqp->fgroup;
-	struct spdk_nvmf_transport_poll_group *group = &fgroup->group;
-	struct spdk_nvmf_transport *transport = group->transport;
+	struct spdk_nvmf_transport_poll_group *group;
 
 	if (!fc_req) {
 		return;
@@ -1446,7 +1444,9 @@ _nvmf_fc_request_free(struct spdk_nvmf_fc_request *fc_req)
 
 	/* Release IO buffers */
 	if (fc_req->req.data_from_pool) {
-		spdk_nvmf_request_free_buffers(&fc_req->req, group, transport);
+		group = &hwqp->fgroup->group;
+		spdk_nvmf_request_free_buffers(&fc_req->req, group,
+					       group->transport);
 	}
 	fc_req->req.data = NULL;
 	fc_req->req.iovcnt  = 0;
