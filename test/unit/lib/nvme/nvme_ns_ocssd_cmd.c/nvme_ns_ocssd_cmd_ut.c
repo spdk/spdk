@@ -47,6 +47,47 @@ static struct nvme_driver _g_nvme_driver = {
 
 static struct nvme_request *g_request = NULL;
 
+DEFINE_STUB_V(nvme_io_msg_ctrlr_detach, (struct spdk_nvme_ctrlr *ctrlr));
+
+DEFINE_STUB_V(nvme_ctrlr_destruct_async,
+	      (struct spdk_nvme_ctrlr *ctrlr, struct nvme_ctrlr_detach_ctx *ctx));
+
+DEFINE_STUB(nvme_ctrlr_destruct_poll_async,
+	    int,
+	    (struct spdk_nvme_ctrlr *ctrlr, struct nvme_ctrlr_detach_ctx *ctx),
+	    0);
+
+DEFINE_STUB(spdk_nvme_poll_group_process_completions,
+	    int64_t,
+	    (struct spdk_nvme_poll_group *group, uint32_t completions_per_qpair,
+	     spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb),
+	    0);
+
+DEFINE_STUB(spdk_nvme_qpair_process_completions,
+	    int32_t,
+	    (struct spdk_nvme_qpair *qpair, uint32_t max_completions),
+	    0);
+
+DEFINE_STUB(spdk_nvme_ctrlr_get_regs_csts,
+	    union spdk_nvme_csts_register,
+	    (struct spdk_nvme_ctrlr *ctrlr),
+	    {});
+
+DEFINE_STUB(nvme_uevent_connect, int, (void), 1);
+
+DEFINE_STUB_V(nvme_ctrlr_fail,
+	      (struct spdk_nvme_ctrlr *ctrlr, bool hotremove));
+
+DEFINE_STUB(nvme_transport_ctrlr_destruct,
+	    int,
+	    (struct spdk_nvme_ctrlr *ctrlr),
+	    0);
+
+DEFINE_STUB(nvme_ctrlr_get_current_process,
+	    struct spdk_nvme_ctrlr_process *,
+	    (struct spdk_nvme_ctrlr *ctrlr),
+	    (struct spdk_nvme_ctrlr_process *)(uintptr_t)0x1);
+
 int
 nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {

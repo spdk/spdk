@@ -36,6 +36,8 @@
 
 #include "nvme/nvme_ctrlr_cmd.c"
 
+#include "spdk_internal/mock.h"
+
 #define CTRLR_CDATA_ELPE   5
 
 pid_t g_spdk_nvme_pid;
@@ -67,6 +69,14 @@ uint32_t expected_feature_cdw12 = 1;
 
 typedef void (*verify_request_fn_t)(struct nvme_request *req);
 verify_request_fn_t verify_fn;
+
+DEFINE_STUB(nvme_transport_qpair_iterate_requests, int,
+	    (struct spdk_nvme_qpair *qpair,
+	     int (*iter_fn)(struct nvme_request *req, void *arg),
+	     void *arg), 0);
+
+DEFINE_STUB(nvme_qpair_abort_queued_reqs, uint32_t,
+	    (struct spdk_nvme_qpair *qpair, void *cmd_cb_arg), 0);
 
 static void verify_firmware_log_page(struct nvme_request *req)
 {

@@ -72,6 +72,14 @@ DEFINE_STUB_V(nvme_qpair_abort_reqs, (struct spdk_nvme_qpair *qpair, uint32_t dn
 DEFINE_STUB(spdk_nvme_poll_group_remove, int, (struct spdk_nvme_poll_group *group,
 		struct spdk_nvme_qpair *qpair), 0);
 DEFINE_STUB_V(nvme_io_msg_ctrlr_update, (struct spdk_nvme_ctrlr *ctrlr));
+DEFINE_STUB(nvme_io_msg_process, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
+DEFINE_STUB(nvme_transport_ctrlr_reserve_cmb, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
+DEFINE_STUB(spdk_nvme_ctrlr_cmd_security_receive, int, (struct spdk_nvme_ctrlr *ctrlr,
+		uint8_t secp, uint16_t spsp, uint8_t nssf, void *payload,
+		uint32_t payload_size, spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
+DEFINE_STUB(spdk_nvme_ctrlr_cmd_security_send, int, (struct spdk_nvme_ctrlr *ctrlr,
+		uint8_t secp, uint16_t spsp, uint8_t nssf, void *payload,
+		uint32_t payload_size, spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
 
 struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 		const struct spdk_nvme_ctrlr_opts *opts,
