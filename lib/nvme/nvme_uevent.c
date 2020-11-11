@@ -135,10 +135,17 @@ parse_event(const char *buf, struct spdk_uevent *event)
 			event->action = SPDK_NVME_UEVENT_REMOVE;
 		}
 		tmp = strstr(dev_path, "/uio/");
-
+		if (!tmp) {
+			SPDK_ERRLOG("Invalid format of uevent: %s\n", dev_path);
+			return -1;
+		}
 		memset(tmp, 0, SPDK_UEVENT_MSG_LEN - (tmp - dev_path));
 
 		pci_address = strrchr(dev_path, '/');
+		if (!pci_address) {
+			SPDK_ERRLOG("Not found NVMe BDF in uevent: %s\n", dev_path);
+			return -1;
+		}
 		pci_address++;
 		if (spdk_pci_addr_parse(&pci_addr, pci_address) != 0) {
 			SPDK_ERRLOG("Invalid format for NVMe BDF: %s\n", pci_address);
