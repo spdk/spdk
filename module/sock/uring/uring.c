@@ -1248,7 +1248,7 @@ uring_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 
 	count = 0;
 	to_complete = group->io_inflight;
-	if (to_complete > 0) {
+	if (to_complete > 0 || !TAILQ_EMPTY(&group->pending_recv)) {
 		count = sock_uring_group_reap(group, to_complete, max_events, socks);
 	}
 
