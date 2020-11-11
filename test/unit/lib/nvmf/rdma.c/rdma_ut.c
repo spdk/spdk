@@ -63,6 +63,8 @@ DEFINE_STUB(spdk_mem_map_alloc, struct spdk_mem_map *, (uint64_t default_transla
 		const struct spdk_mem_map_ops *ops, void *cb_ctx), NULL);
 DEFINE_STUB(spdk_nvmf_qpair_disconnect, int, (struct spdk_nvmf_qpair *qpair,
 		nvmf_qpair_disconnect_cb cb_fn, void *ctx), 0);
+DEFINE_STUB(spdk_nvmf_qpair_get_listen_trid, int,
+	    (struct spdk_nvmf_qpair *qpair, struct spdk_nvme_transport_id *trid), 0);
 DEFINE_STUB_V(spdk_mem_map_free, (struct spdk_mem_map **pmap));
 
 struct spdk_trace_histories *g_trace_histories;

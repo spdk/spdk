@@ -67,6 +67,28 @@ DEFINE_STUB(spdk_nvmf_transport_stop_listen,
 DEFINE_STUB_V(nvmf_update_discovery_log,
 	      (struct spdk_nvmf_tgt *tgt, const char *hostnqn));
 
+DEFINE_STUB(spdk_nvmf_qpair_disconnect,
+	    int,
+	    (struct spdk_nvmf_qpair *qpair,
+	     nvmf_qpair_disconnect_cb cb_fn, void *ctx), 0);
+
+DEFINE_STUB(nvmf_transport_find_listener,
+	    struct spdk_nvmf_listener *,
+	    (struct spdk_nvmf_transport *transport,
+	     const struct spdk_nvme_transport_id *trid), NULL);
+
+DEFINE_STUB(spdk_nvmf_request_complete,
+	    int,
+	    (struct spdk_nvmf_request *req), 0);
+
+DEFINE_STUB(nvmf_ctrlr_async_event_ana_change_notice,
+	    int,
+	    (struct spdk_nvmf_ctrlr *ctrlr), 0);
+
+DEFINE_STUB(spdk_nvme_transport_id_trtype_str,
+	    const char *,
+	    (enum spdk_nvme_transport_type trtype), NULL);
+
 int
 spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
 			   const struct spdk_nvme_transport_id *trid)

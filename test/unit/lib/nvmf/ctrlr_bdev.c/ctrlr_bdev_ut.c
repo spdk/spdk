@@ -46,6 +46,27 @@ DEFINE_STUB(spdk_nvmf_request_complete, int, (struct spdk_nvmf_request *req), -1
 
 DEFINE_STUB(spdk_bdev_get_name, const char *, (const struct spdk_bdev *bdev), "test");
 
+DEFINE_STUB(spdk_bdev_get_acwu, uint16_t, (const struct spdk_bdev *bdev), 0);
+
+DEFINE_STUB(spdk_bdev_get_data_block_size, uint32_t,
+	    (const struct spdk_bdev *bdev), 512);
+
+DEFINE_STUB(nvmf_ctrlr_process_admin_cmd, int, (struct spdk_nvmf_request *req), 0);
+
+DEFINE_STUB(spdk_bdev_comparev_blocks, int, (struct spdk_bdev_desc *desc,
+		struct spdk_io_channel *ch, struct iovec *iov, int iovcnt,
+		uint64_t offset_blocks, uint64_t num_blocks,
+		spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+
+DEFINE_STUB(spdk_bdev_nvme_admin_passthru, int,
+	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     const struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes,
+	     spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+
+DEFINE_STUB(spdk_bdev_abort, int,
+	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     void *bio_cb_arg, spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+
 struct spdk_bdev {
 	uint32_t blocklen;
 	uint64_t num_blocks;
