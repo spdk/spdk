@@ -63,6 +63,10 @@ DEFINE_STUB_V(_spdk_trace_record,
 	      (uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
 	       uint32_t size, uint64_t object_id, uint64_t arg1));
 
+DEFINE_STUB(bdev_scsi_get_dif_ctx, bool,
+	    (struct spdk_bdev *bdev, struct spdk_scsi_task *task,
+	     struct spdk_dif_ctx *dif_ctx), false);
+
 static void
 spdk_lun_ut_cpl_task(struct spdk_scsi_task *task)
 {

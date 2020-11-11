@@ -43,6 +43,9 @@
 
 #include "spdk_internal/mock.h"
 
+DEFINE_STUB(spdk_scsi_lun_is_removing, bool,
+	    (const struct spdk_scsi_lun *lun), false);
+
 static char *g_bdev_names[] = {
 	"malloc0",
 	"malloc1",
