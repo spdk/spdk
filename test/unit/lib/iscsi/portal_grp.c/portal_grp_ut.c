@@ -47,6 +47,9 @@
 DEFINE_STUB(iscsi_conn_construct, int,
 	    (struct spdk_iscsi_portal *portal, struct spdk_sock *sock),
 	    0);
+DEFINE_STUB(iscsi_check_chap_params, bool,
+	    (bool disable, bool require, bool mutual, int group),
+	    false);
 
 struct spdk_iscsi_globals g_iscsi;
 

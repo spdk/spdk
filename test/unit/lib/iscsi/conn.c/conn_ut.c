@@ -49,8 +49,22 @@ DEFINE_STUB_V(spdk_trace_register_object, (uint8_t type, char id_prefix));
 DEFINE_STUB_V(spdk_trace_register_description, (const char *name,
 		uint16_t tpoint_id, uint8_t owner_type, uint8_t object_type, uint8_t new_object,
 		uint8_t arg1_type, const char *arg1_name));
-DEFINE_STUB_V(_spdk_trace_record, (uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
-				   uint32_t size, uint64_t object_id, uint64_t arg1));
+DEFINE_STUB_V(_spdk_trace_record,
+	      (uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
+	       uint32_t size, uint64_t object_id, uint64_t arg1));
+DEFINE_STUB(iscsi_get_pdu, struct spdk_iscsi_pdu *,
+	    (struct spdk_iscsi_conn *conn), NULL);
+DEFINE_STUB(iscsi_param_eq_val, int,
+	    (struct iscsi_param *params, const char *key, const char *val), 0);
+DEFINE_STUB(iscsi_pdu_calc_data_digest, uint32_t, (struct spdk_iscsi_pdu *pdu), 0);
+DEFINE_STUB(spdk_json_write_object_begin, int, (struct spdk_json_write_ctx *w), 0);
+DEFINE_STUB(spdk_json_write_named_int32, int, (struct spdk_json_write_ctx *w,
+		const char *name, int32_t val), 0);
+DEFINE_STUB(spdk_json_write_named_string, int, (struct spdk_json_write_ctx *w,
+		const char *name, const char *val), 0);
+DEFINE_STUB(spdk_json_write_object_end, int, (struct spdk_json_write_ctx *w), 0);
+DEFINE_STUB_V(spdk_sock_writev_async,
+	      (struct spdk_sock *sock, struct spdk_sock_request *req));
 
 struct spdk_scsi_lun {
 	uint8_t reserved;
