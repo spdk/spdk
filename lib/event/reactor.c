@@ -515,6 +515,7 @@ _reactors_scheduler_fini(void *arg1, void *arg2)
 
 		SPDK_ENV_FOREACH_CORE(i) {
 			reactor = spdk_reactor_get(i);
+			assert(reactor != NULL);
 			reactor->flags.is_scheduling = false;
 		}
 	}
@@ -528,6 +529,7 @@ _reactors_scheduler_cancel(void *arg1, void *arg2)
 
 	SPDK_ENV_FOREACH_CORE(i) {
 		reactor = spdk_reactor_get(i);
+		assert(reactor != NULL);
 		reactor->flags.is_scheduling = false;
 	}
 }
@@ -544,6 +546,7 @@ _reactors_scheduler_gather_metrics(void *arg1, void *arg2)
 	uint32_t i;
 
 	reactor = spdk_reactor_get(spdk_env_get_current_core());
+	assert(reactor != NULL);
 	reactor->flags.is_scheduling = true;
 	core_info = &g_core_infos[reactor->lcore];
 	core_info->lcore = reactor->lcore;
@@ -845,7 +848,7 @@ spdk_reactors_stop(void *arg1)
 	if (spdk_interrupt_mode_is_enabled()) {
 		SPDK_ENV_FOREACH_CORE(i) {
 			reactor = spdk_reactor_get(i);
-
+			assert(reactor != NULL);
 			rc = write(reactor->events_fd, &notify, sizeof(notify));
 			if (rc < 0) {
 				SPDK_ERRLOG("failed to notify event queue for reactor(%u): %s.\n", i, spdk_strerror(errno));
