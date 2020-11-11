@@ -39,6 +39,17 @@
 #include "ftl/ftl_band.c"
 #include "../common/utils.c"
 
+#if defined(DEBUG)
+DEFINE_STUB(ftl_band_validate_md, bool, (struct ftl_band *band), true);
+#endif
+DEFINE_STUB_V(ftl_apply_limits, (struct spdk_ftl_dev *dev));
+DEFINE_STUB(ftl_io_init_internal, struct ftl_io *,
+	    (const struct ftl_io_init_opts *opts), NULL);
+DEFINE_STUB_V(ftl_io_read, (struct ftl_io *io));
+DEFINE_STUB_V(ftl_io_write, (struct ftl_io *io));
+DEFINE_STUB_V(ftl_reloc_add, (struct ftl_reloc *reloc, struct ftl_band *band, size_t offset,
+			      size_t num_blocks, int prio, bool defrag));
+
 struct base_bdev_geometry g_geo = {
 	.write_unit_size    = 16,
 	.optimal_open_zones = 12,

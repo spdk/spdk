@@ -53,6 +53,92 @@ struct base_bdev_geometry g_geo = {
 static struct spdk_ftl_dev *g_dev;
 static struct ftl_band	*g_band;
 
+#if defined(DEBUG)
+DEFINE_STUB(ftl_band_validate_md, bool, (struct ftl_band *band), true);
+DEFINE_STUB_V(ftl_trace_limits, (struct spdk_ftl_dev *dev, int limit, size_t num_free));
+DEFINE_STUB_V(ftl_trace_completion, (struct spdk_ftl_dev *dev, const struct ftl_io *io,
+				     enum ftl_trace_completion completion));
+DEFINE_STUB_V(ftl_trace_defrag_band, (struct spdk_ftl_dev *dev, const struct ftl_band *band));
+DEFINE_STUB_V(ftl_trace_wbuf_fill, (struct spdk_ftl_dev *dev, const struct ftl_io *io));
+DEFINE_STUB_V(ftl_trace_wbuf_pop, (struct spdk_ftl_dev *dev, const struct ftl_wbuf_entry *entry));
+DEFINE_STUB_V(ftl_trace_write_band, (struct spdk_ftl_dev *dev, const struct ftl_band *band));
+DEFINE_STUB_V(ftl_trace_submission, (struct spdk_ftl_dev *dev, const struct ftl_io *io,
+				     struct ftl_addr addr, size_t addr_cnt));
+#endif
+DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *bdev_io));
+DEFINE_STUB(spdk_bdev_get_block_size, uint32_t, (const struct spdk_bdev *bdev), 512);
+DEFINE_STUB(spdk_bdev_get_name, const char *, (const struct spdk_bdev *bdev), "test");
+DEFINE_STUB(spdk_bdev_get_num_blocks, uint64_t, (const struct spdk_bdev *bdev), 0);
+DEFINE_STUB(spdk_bdev_get_media_events, size_t,
+	    (struct spdk_bdev_desc *bdev_desc, struct spdk_bdev_media_event *events,
+	     size_t max_events), 0);
+DEFINE_STUB(spdk_bdev_get_md_size, uint32_t, (const struct spdk_bdev *bdev), 8);
+DEFINE_STUB(spdk_bdev_io_get_append_location, uint64_t, (struct spdk_bdev_io *bdev_io), 0);
+DEFINE_STUB(spdk_bdev_write_blocks, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		void *buf, uint64_t offset_blocks, uint64_t num_blocks, spdk_bdev_io_completion_cb cb,
+		void *cb_arg), 0);
+DEFINE_STUB(spdk_bdev_write_blocks_with_md, int, (struct spdk_bdev_desc *desc,
+		struct spdk_io_channel *ch, void *buf, void *md, uint64_t offset_blocks,
+		uint64_t num_blocks, spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+DEFINE_STUB(spdk_bdev_read_blocks, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		void *buf, uint64_t offset_blocks, uint64_t num_blocks,
+		spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+DEFINE_STUB(spdk_bdev_write_zeroes_blocks, int,
+	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     uint64_t offset_blocks, uint64_t num_blocks,
+	     spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+DEFINE_STUB(spdk_bdev_writev_blocks, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		struct iovec *iov, int iovcnt, uint64_t offset_blocks, uint64_t num_blocks,
+		spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+DEFINE_STUB(spdk_bdev_zone_appendv, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		struct iovec *iov, int iovcnt, uint64_t zone_id, uint64_t num_blocks,
+		spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+DEFINE_STUB(spdk_bdev_zone_management, int, (struct spdk_bdev_desc *desc,
+		struct spdk_io_channel *ch,
+		uint64_t zone_id, enum spdk_bdev_zone_action action,
+		spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+
+DEFINE_STUB_V(ftl_io_advance, (struct ftl_io *io, size_t num_blocks));
+DEFINE_STUB_V(ftl_io_call_foreach_child,
+	      (struct ftl_io *io, int (*callback)(struct ftl_io *)));
+DEFINE_STUB(ftl_io_channel_get_ctx, struct ftl_io_channel *,
+	    (struct spdk_io_channel *ioch), NULL);
+DEFINE_STUB_V(ftl_io_complete, (struct ftl_io *io));
+DEFINE_STUB(ftl_io_current_lba, uint64_t, (const struct ftl_io *io), 0);
+DEFINE_STUB_V(ftl_io_dec_req, (struct ftl_io *io));
+DEFINE_STUB(ftl_io_erase_init, struct ftl_io *,
+	    (struct ftl_band *band, size_t num_blocks, ftl_io_fn cb), NULL);
+DEFINE_STUB_V(ftl_io_fail, (struct ftl_io *io, int status));
+DEFINE_STUB_V(ftl_io_free, (struct ftl_io *io));
+DEFINE_STUB(ftl_io_get_lba, uint64_t,
+	    (const struct ftl_io *io, size_t offset), 0);
+DEFINE_STUB_V(ftl_io_inc_req, (struct ftl_io *io));
+DEFINE_STUB(ftl_io_init_internal, struct ftl_io *,
+	    (const struct ftl_io_init_opts *opts), NULL);
+DEFINE_STUB_V(ftl_io_reset, (struct ftl_io *io));
+DEFINE_STUB(ftl_io_iovec_addr, void *, (struct ftl_io *io), NULL);
+DEFINE_STUB(ftl_io_iovec_len_left, size_t, (struct ftl_io *io), 0);
+DEFINE_STUB_V(ftl_io_shrink_iovec, (struct ftl_io *io, size_t num_blocks));
+DEFINE_STUB(ftl_io_wbuf_init, struct ftl_io *,
+	    (struct spdk_ftl_dev *dev, struct ftl_addr addr,
+	     struct ftl_band *band, struct ftl_batch *batch, ftl_io_fn cb), NULL);
+DEFINE_STUB(ftl_io_user_init, struct ftl_io *,
+	    (struct spdk_io_channel *ioch, uint64_t lba, size_t num_blocks,
+	     struct iovec *iov, size_t iov_cnt, spdk_ftl_fn cb_fn,
+	     void *cb_arg, int type), NULL);
+
+DEFINE_STUB(ftl_iovec_num_blocks, size_t,
+	    (struct iovec *iov, size_t iov_cnt), 0);
+DEFINE_STUB(ftl_reloc, bool, (struct ftl_reloc *reloc), false);
+DEFINE_STUB_V(ftl_reloc_add, (struct ftl_reloc *reloc, struct ftl_band *band, size_t offset,
+			      size_t num_blocks, int prio, bool defrag));
+DEFINE_STUB(ftl_reloc_is_defrag_active, bool, (const struct ftl_reloc *reloc), false);
+DEFINE_STUB(ftl_reloc_is_halted, bool, (const struct ftl_reloc *reloc), false);
+
+#ifdef SPDK_CONFIG_PMDK
+DEFINE_STUB_V(pmem_persist, (const void *addr, size_t len));
+#endif
+
 static void
 setup_band(void)
 {

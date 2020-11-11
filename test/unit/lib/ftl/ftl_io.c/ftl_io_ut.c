@@ -42,8 +42,12 @@
 #include "ftl/ftl_band.c"
 
 DEFINE_STUB(spdk_bdev_io_get_append_location, uint64_t, (struct spdk_bdev_io *bdev_io), 0);
+DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
 DEFINE_STUB(spdk_bdev_desc_get_bdev, struct spdk_bdev *, (struct spdk_bdev_desc *desc), NULL);
 DEFINE_STUB(spdk_bdev_get_optimal_open_zones, uint32_t, (const struct spdk_bdev *b), 1);
+DEFINE_STUB(spdk_bdev_get_by_name, struct spdk_bdev *, (const char *bdev_name), NULL);
+DEFINE_STUB(spdk_bdev_is_md_separate, bool, (const struct spdk_bdev *bdev), false);
+DEFINE_STUB(spdk_bdev_is_zoned, bool, (const struct spdk_bdev *bdev), false);
 DEFINE_STUB(spdk_bdev_zone_appendv, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		struct iovec *iov, int iovcnt, uint64_t zone_id, uint64_t num_blocks,
 		spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
@@ -52,6 +56,20 @@ DEFINE_STUB(spdk_bdev_zone_management, int, (struct spdk_bdev_desc *desc,
 		struct spdk_io_channel *ch, uint64_t zone_id, enum spdk_bdev_zone_action action,
 		spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
 DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *bdev_io));
+DEFINE_STUB(spdk_bdev_get_buf_align, size_t, (const struct spdk_bdev *bdev), 64);
+DEFINE_STUB(spdk_bdev_get_dif_type, enum spdk_dif_type,
+	    (const struct spdk_bdev *bdev), 0);
+DEFINE_STUB(spdk_bdev_get_name, const char *, (const struct spdk_bdev *bdev), "test");
+DEFINE_STUB(spdk_bdev_get_write_unit_size, uint32_t,
+	    (const struct spdk_bdev *bdev), 0);
+DEFINE_STUB(spdk_bdev_io_type_supported, bool, (struct spdk_bdev *bdev,
+		enum spdk_bdev_io_type io_type), true);
+DEFINE_STUB(spdk_bdev_module_claim_bdev, int,
+	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+	     struct spdk_bdev_module *module), 0);
+DEFINE_STUB(spdk_bdev_open_ext, int,
+	    (const char *bdev_name, bool write, spdk_bdev_event_cb_t event_cb,
+	     void *event_ctx, struct spdk_bdev_desc **desc), 0);
 DEFINE_STUB(spdk_bdev_read_blocks, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		void *buf, uint64_t offset_blocks, uint64_t num_blocks,
 		spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
@@ -67,17 +85,68 @@ DEFINE_STUB(spdk_bdev_writev_blocks, int, (struct spdk_bdev_desc *desc, struct s
 DEFINE_STUB(spdk_bdev_get_num_blocks, uint64_t, (const struct spdk_bdev *bdev), 1024);
 DEFINE_STUB(spdk_bdev_get_md_size, uint32_t, (const struct spdk_bdev *bdev), 0);
 DEFINE_STUB(spdk_bdev_get_block_size, uint32_t, (const struct spdk_bdev *bdev), 4096);
+DEFINE_STUB(spdk_bdev_get_media_events, size_t,
+	    (struct spdk_bdev_desc *bdev_desc, struct spdk_bdev_media_event *events,
+	     size_t max_events), 0);
+DEFINE_STUB_V(spdk_bdev_module_release_bdev, (struct spdk_bdev *bdev));
+DEFINE_STUB(spdk_bdev_write_zeroes_blocks, int,
+	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     uint64_t offset_blocks, uint64_t num_blocks,
+	     spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+DEFINE_STUB(spdk_bdev_get_zone_info, int,
+	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     uint64_t zone_id, size_t num_zones, struct spdk_bdev_zone_info *info,
+	     spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+DEFINE_STUB(spdk_mempool_create_ctor, struct spdk_mempool *,
+	    (const char *name, size_t count, size_t ele_size, size_t cache_size,
+	     int socket_id, spdk_mempool_obj_cb_t *obj_init, void *obj_init_arg), NULL);
+DEFINE_STUB(spdk_mempool_obj_iter, uint32_t,
+	    (struct spdk_mempool *mp, spdk_mempool_obj_cb_t obj_cb, void *obj_cb_arg), 0);
+DEFINE_STUB(ftl_reloc, bool, (struct ftl_reloc *reloc), false);
+DEFINE_STUB_V(ftl_reloc_add, (struct ftl_reloc *reloc, struct ftl_band *band, size_t offset,
+			      size_t num_blocks, int prio, bool defrag));
+DEFINE_STUB_V(ftl_reloc_free, (struct ftl_reloc *reloc));
+DEFINE_STUB_V(ftl_reloc_halt, (struct ftl_reloc *reloc));
+DEFINE_STUB(ftl_reloc_init, struct ftl_reloc *, (struct spdk_ftl_dev *dev), NULL);
+DEFINE_STUB(ftl_reloc_is_defrag_active, bool, (const struct ftl_reloc *reloc), false);
+DEFINE_STUB(ftl_reloc_is_halted, bool, (const struct ftl_reloc *reloc), false);
+DEFINE_STUB_V(ftl_reloc_resume, (struct ftl_reloc *reloc));
+DEFINE_STUB(ftl_restore_device, int,
+	    (struct ftl_restore *restore, ftl_restore_fn cb, void *cb_arg), 0);
+DEFINE_STUB(ftl_restore_md, int,
+	    (struct spdk_ftl_dev *dev, ftl_restore_fn cb, void *cb_arg), 0);
+DEFINE_STUB_V(ftl_restore_nv_cache,
+	      (struct ftl_restore *restore, ftl_restore_fn cb, void *cb_arg));
+
 #if defined(FTL_META_DEBUG)
 DEFINE_STUB(ftl_band_validate_md, bool, (struct ftl_band *band), true);
 #endif
 #if defined(DEBUG)
+DEFINE_STUB_V(ftl_trace_defrag_band, (struct spdk_ftl_dev *dev, const struct ftl_band *band));
 DEFINE_STUB_V(ftl_trace_submission, (struct spdk_ftl_dev *dev, const struct ftl_io *io,
 				     struct ftl_addr addr, size_t addr_cnt));
+DEFINE_STUB_V(ftl_trace_lba_io_init, (struct spdk_ftl_dev *dev, const struct ftl_io *io));
 DEFINE_STUB_V(ftl_trace_limits, (struct spdk_ftl_dev *dev, int limit, size_t num_free));
 DEFINE_STUB(ftl_trace_alloc_id, uint64_t, (struct spdk_ftl_dev *dev), 0);
 DEFINE_STUB_V(ftl_trace_completion, (struct spdk_ftl_dev *dev, const struct ftl_io *io,
 				     enum ftl_trace_completion type));
 DEFINE_STUB_V(ftl_trace_wbuf_fill, (struct spdk_ftl_dev *dev, const struct ftl_io *io));
+DEFINE_STUB_V(ftl_trace_wbuf_pop, (struct spdk_ftl_dev *dev, const struct ftl_wbuf_entry *entry));
+DEFINE_STUB_V(ftl_trace_write_band, (struct spdk_ftl_dev *dev, const struct ftl_band *band));
+#endif
+#if defined(FTL_META_DEBUG)
+DEFINE_STUB_V(ftl_dev_dump_bands, (struct spdk_ftl_dev *dev));
+#endif
+#if defined(FTL_DUMP_STATS)
+DEFINE_STUB_V(ftl_dev_dump_stats, (const struct spdk_ftl_dev *dev));
+#endif
+
+#ifdef SPDK_CONFIG_PMDK
+DEFINE_STUB(pmem_map_file, void *,
+	    (const char *path, size_t len, int flags, mode_t mode,
+	     size_t *mapped_lenp, int *is_pmemp), NULL);
+DEFINE_STUB(pmem_unmap, int, (void *addr, size_t len), 0);
+DEFINE_STUB(pmem_memset_persist, void *, (void *pmemdest, int c, size_t len), NULL);
 #endif
 
 struct spdk_io_channel *
