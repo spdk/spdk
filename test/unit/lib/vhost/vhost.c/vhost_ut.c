@@ -71,6 +71,19 @@ DEFINE_STUB(rte_vhost_driver_disable_features, int, (const char *path, uint64_t 
 DEFINE_STUB(rte_vhost_driver_set_features, int, (const char *path, uint64_t features), 0);
 DEFINE_STUB(rte_vhost_driver_register, int, (const char *path, uint64_t flags), 0);
 
+DEFINE_STUB(rte_vhost_set_last_inflight_io_split, int,
+	    (int vid, uint16_t vring_idx, uint16_t idx), 0);
+DEFINE_STUB(rte_vhost_clr_inflight_desc_split, int,
+	    (int vid, uint16_t vring_idx, uint16_t last_used_idx, uint16_t idx), 0);
+DEFINE_STUB_V(rte_vhost_log_write, (int vid, uint64_t addr, uint64_t len));
+DEFINE_STUB_V(vhost_session_mem_register, (struct rte_vhost_memory *mem));
+DEFINE_STUB_V(vhost_session_mem_unregister, (struct rte_vhost_memory *mem));
+DEFINE_STUB(vhost_get_negotiated_features, int,
+	    (int vid, uint64_t *negotiated_features), 0);
+DEFINE_STUB(rte_vhost_get_vhost_ring_inflight, int,
+	    (int vid, uint16_t vring_idx, struct rte_vhost_ring_inflight *vring), 0);
+DEFINE_STUB(vhost_get_mem_table, int, (int vid, struct rte_vhost_memory **mem), 0);
+
 void *
 spdk_call_unaffinitized(void *cb(void *arg), void *arg)
 {
