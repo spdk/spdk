@@ -462,7 +462,7 @@ struct spdk_nvmf_rdma_device {
 	struct ibv_device_attr			attr;
 	struct ibv_context			*context;
 
-	struct spdk_mem_map			*map;
+	struct spdk_rdma_mem_map		*map;
 	struct ibv_pd				*pd;
 
 	int					num_srq;
@@ -1331,56 +1331,6 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	return 0;
 }
 
-static int
-nvmf_rdma_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
-		     enum spdk_mem_map_notify_action action,
-		     void *vaddr, size_t size)
-{
-	struct ibv_pd *pd = cb_ctx;
-	struct ibv_mr *mr;
-	int rc;
-
-	switch (action) {
-	case SPDK_MEM_MAP_NOTIFY_REGISTER:
-		if (!g_nvmf_hooks.get_rkey) {
-			mr = ibv_reg_mr(pd, vaddr, size,
-					IBV_ACCESS_LOCAL_WRITE |
-					IBV_ACCESS_REMOTE_READ |
-					IBV_ACCESS_REMOTE_WRITE);
-			if (mr == NULL) {
-				SPDK_ERRLOG("ibv_reg_mr() failed\n");
-				return -1;
-			} else {
-				rc = spdk_mem_map_set_translation(map, (uint64_t)vaddr, size, (uint64_t)mr);
-			}
-		} else {
-			rc = spdk_mem_map_set_translation(map, (uint64_t)vaddr, size,
-							  g_nvmf_hooks.get_rkey(pd, vaddr, size));
-		}
-		break;
-	case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
-		if (!g_nvmf_hooks.get_rkey) {
-			mr = (struct ibv_mr *)spdk_mem_map_translate(map, (uint64_t)vaddr, NULL);
-			if (mr) {
-				ibv_dereg_mr(mr);
-			}
-		}
-		rc = spdk_mem_map_clear_translation(map, (uint64_t)vaddr, size);
-		break;
-	default:
-		SPDK_UNREACHABLE();
-	}
-
-	return rc;
-}
-
-static int
-nvmf_rdma_check_contiguous_entries(uint64_t addr_1, uint64_t addr_2)
-{
-	/* Two contiguous mappings will point to the same address which is the start of the RDMA MR. */
-	return addr_1 == addr_2;
-}
-
 static inline void
 nvmf_rdma_setup_wr(struct ibv_send_wr *wr, struct ibv_send_wr *next,
 		   enum spdk_nvme_data_transfer xfer)
@@ -1491,31 +1441,6 @@ nvmf_rdma_replace_buffer(struct spdk_nvmf_rdma_poll_group *rgroup, void **buf)
 }
 
 static bool
-nvmf_rdma_get_lkey(struct spdk_nvmf_rdma_device *device, struct iovec *iov,
-		   uint32_t *_lkey)
-{
-	uint64_t	translation_len;
-	uint32_t	lkey;
-
-	translation_len = iov->iov_len;
-
-	if (!g_nvmf_hooks.get_rkey) {
-		lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
-				(uint64_t)iov->iov_base, &translation_len))->lkey;
-	} else {
-		lkey = spdk_mem_map_translate(device->map,
-					      (uint64_t)iov->iov_base, &translation_len);
-	}
-
-	if (spdk_unlikely(translation_len < iov->iov_len)) {
-		return false;
-	}
-
-	*_lkey = lkey;
-	return true;
-}
-
-static bool
 nvmf_rdma_fill_wr_sge(struct spdk_nvmf_rdma_device *device,
 		      struct iovec *iov, struct ibv_send_wr **_wr,
 		      uint32_t *_remaining_data_block, uint32_t *_offset,
@@ -1524,12 +1449,17 @@ nvmf_rdma_fill_wr_sge(struct spdk_nvmf_rdma_device *device,
 {
 	struct ibv_send_wr *wr = *_wr;
 	struct ibv_sge	*sg_ele = &wr->sg_list[wr->num_sge];
+	struct spdk_rdma_memory_translation mem_translation;
+	int		rc;
 	uint32_t	lkey = 0;
 	uint32_t	remaining, data_block_size, md_size, sge_len;
 
-	if (spdk_unlikely(!nvmf_rdma_get_lkey(device, iov, &lkey))) {
+	rc = spdk_rdma_get_translation(device->map, iov->iov_base, iov->iov_len, &mem_translation);
+	if (spdk_unlikely(rc)) {
 		return false;
 	}
+
+	lkey = spdk_rdma_memory_translation_get_lkey(&mem_translation);
 
 	if (spdk_likely(!dif_ctx)) {
 		sg_ele->lkey = lkey;
@@ -2285,11 +2215,6 @@ nvmf_rdma_opts_init(struct spdk_nvmf_transport_opts *opts)
 	opts->transport_specific =      NULL;
 }
 
-const struct spdk_mem_map_ops g_nvmf_rdma_map_ops = {
-	.notify_cb = nvmf_rdma_mem_notify,
-	.are_contiguous = nvmf_rdma_check_contiguous_entries
-};
-
 static int nvmf_rdma_destroy(struct spdk_nvmf_transport *transport,
 			     spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg);
 
@@ -2513,7 +2438,7 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 
 		assert(device->map == NULL);
 
-		device->map = spdk_mem_map_alloc(0, &g_nvmf_rdma_map_ops, device->pd);
+		device->map = spdk_rdma_create_mem_map(device->pd, &g_nvmf_hooks);
 		if (!device->map) {
 			SPDK_ERRLOG("Unable to allocate memory map for listen address\n");
 			rc = -ENOMEM;
@@ -2604,9 +2529,7 @@ nvmf_rdma_destroy(struct spdk_nvmf_transport *transport,
 
 	TAILQ_FOREACH_SAFE(device, &rtransport->devices, link, device_tmp) {
 		TAILQ_REMOVE(&rtransport->devices, device, link);
-		if (device->map) {
-			spdk_mem_map_free(&device->map);
-		}
+		spdk_rdma_free_mem_map(&device->map);
 		if (device->pd) {
 			if (!g_nvmf_hooks.get_ibv_pd) {
 				ibv_dealloc_pd(device->pd);
