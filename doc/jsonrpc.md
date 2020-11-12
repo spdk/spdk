@@ -4433,6 +4433,7 @@ Name                        | Optional | Type    | Description
 tag                         | Required | number  | Portal group tag
 portals                     | Required | array   | Not empty array of portals
 private                     | Optional | boolean | When true, portals in this group are not returned by a discovery session. Used for login redirection. (default: `false`)
+wait                        | Optional | boolean | When true, do not listen on portals until it is started explicitly. (default: `false`)
 
 Portal object
 

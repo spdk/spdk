@@ -16,6 +16,14 @@ be notified of any discovery log changes.
 A new API `spdk_jsonrpc_send_bool_response` was added to allow sending response for
 writing json bool results into one function.
 
+### rpc
+
+An new optional parameter `wait` was added to the RPC `iscsi_create_portal_group`,
+and an new RPC `iscsi_start_portal_group` was added. They will be used not to start
+listening on portals for a portal group until all associated target nodes are created
+at startup, otherwise some iSCSI initiators may fail to re-login when SPDK iSCSI
+target application restarts.
+
 ## v20.10:
 
 ### accel

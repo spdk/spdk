@@ -424,13 +424,14 @@ def iscsi_target_node_request_logout(client, name, pg_tag):
 
 
 @deprecated_alias('add_portal_group')
-def iscsi_create_portal_group(client, portals, tag, private):
+def iscsi_create_portal_group(client, portals, tag, private, wait):
     """Add a portal group.
 
     Args:
         portals: List of portals, e.g. [{'host': ip, 'port': port}]
         tag: Initiator group tag (unique, integer > 0)
         private: Public (false) or private (true) portal group for login redirection.
+        wait: Do not listen on portals until it is allowed explictly.
 
     Returns:
         True or False
@@ -439,6 +440,8 @@ def iscsi_create_portal_group(client, portals, tag, private):
 
     if private:
         params['private'] = private
+    if wait:
+        params['wait'] = wait
     return client.call('iscsi_create_portal_group', params)
 
 

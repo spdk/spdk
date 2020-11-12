@@ -706,6 +706,7 @@ struct rpc_portal_group {
 	int32_t tag;
 	struct rpc_portal_list portal_list;
 	bool is_private;
+	bool wait;
 };
 
 static void
@@ -760,6 +761,7 @@ static const struct spdk_json_object_decoder rpc_portal_group_decoders[] = {
 	{"tag", offsetof(struct rpc_portal_group, tag), spdk_json_decode_int32},
 	{"portals", offsetof(struct rpc_portal_group, portal_list), decode_rpc_portal_list},
 	{"private", offsetof(struct rpc_portal_group, is_private), spdk_json_decode_bool, true},
+	{"wait", offsetof(struct rpc_portal_group, wait), spdk_json_decode_bool, true},
 };
 
 static void
@@ -794,7 +796,7 @@ rpc_iscsi_create_portal_group(struct spdk_jsonrpc_request *request,
 		iscsi_portal_grp_add_portal(pg, portal);
 	}
 
-	rc = iscsi_portal_grp_open(pg, false);
+	rc = iscsi_portal_grp_open(pg, req.wait);
 	if (rc != 0) {
 		SPDK_ERRLOG("portal_grp_open failed\n");
 		goto out;

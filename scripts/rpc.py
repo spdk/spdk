@@ -1183,7 +1183,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             args.client,
             portals=portals,
             tag=args.tag,
-            private=args.private)
+            private=args.private,
+            wait=args.wait)
 
     p = subparsers.add_parser('iscsi_create_portal_group', aliases=['add_portal_group'],
                               help='Add a portal group')
@@ -1195,6 +1196,9 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     Private portal groups do not have their portals returned by a discovery session. A public
     portal group may optionally specify a redirect portal for non-discovery logins. This redirect
     portal must be from a private portal group.""", action='store_true')
+    p.add_argument('-w', '--wait', help="""Do not listening on portals until it is started explicitly.
+    One major iSCSI initiator may not retry login once it failed. Hence for such initiator, listening
+    on portals should be allowed after all associated target nodes are created.""", action='store_true')
     p.set_defaults(func=iscsi_create_portal_group)
 
     def iscsi_start_portal_group(args):
