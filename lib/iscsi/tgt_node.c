@@ -330,7 +330,7 @@ iscsi_send_tgt_portals(struct spdk_iscsi_conn *conn,
 		       uint8_t *data, int alloc_len, int total,
 		       int *previous_completed_len, bool *no_buf_space)
 {
-	char buf[MAX_TMPBUF];
+	char buf[MAX_TARGET_ADDR + 2];
 	struct spdk_iscsi_portal_grp *pg;
 	struct spdk_iscsi_pg_map *pg_map;
 	struct spdk_iscsi_portal *p;
