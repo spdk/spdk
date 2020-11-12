@@ -881,6 +881,28 @@ rpc_iscsi_delete_portal_group(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("iscsi_delete_portal_group", rpc_iscsi_delete_portal_group, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_delete_portal_group, delete_portal_group)
 
+static int
+_rpc_iscsi_start_portal_group(int pg_tag)
+{
+	struct spdk_iscsi_portal_grp *pg;
+
+	pg = iscsi_portal_grp_find_by_tag(pg_tag);
+	if (!pg) {
+		return -ENODEV;
+	}
+
+	iscsi_portal_grp_resume(pg);
+	return 0;
+}
+
+static void
+rpc_iscsi_start_portal_group(struct spdk_jsonrpc_request *request,
+			     const struct spdk_json_val *params)
+{
+	_rpc_iscsi_change_portal_group(request, params, _rpc_iscsi_start_portal_group);
+}
+SPDK_RPC_REGISTER("iscsi_start_portal_group", rpc_iscsi_start_portal_group, SPDK_RPC_RUNTIME)
+
 struct rpc_portal_group_auth {
 	int32_t tag;
 	bool disable_chap;

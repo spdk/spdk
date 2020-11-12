@@ -1197,6 +1197,15 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     portal must be from a private portal group.""", action='store_true')
     p.set_defaults(func=iscsi_create_portal_group)
 
+    def iscsi_start_portal_group(args):
+        rpc.iscsi.iscsi_start_portal_group(args.client, tag=args.tag)
+
+    p = subparsers.add_parser('iscsi_start_portal_group',
+                              help='Start listening on portals if it is not started yet.')
+    p.add_argument(
+        'tag', help='Portal group tag (unique, integer > 0)', type=int)
+    p.set_defaults(func=iscsi_start_portal_group)
+
     def iscsi_create_initiator_group(args):
         initiators = []
         netmasks = []

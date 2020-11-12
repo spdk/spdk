@@ -442,6 +442,19 @@ def iscsi_create_portal_group(client, portals, tag, private):
     return client.call('iscsi_create_portal_group', params)
 
 
+def iscsi_start_portal_group(client, tag):
+    """Start listening on portals if it is not started yet.
+
+    Args:
+        tag: Portal group tag (unique, integer > 0)
+
+    Returns:
+        True or False
+    """
+    params = {'tag': tag}
+    return client.call('iscsi_start_portal_group', params)
+
+
 @deprecated_alias('add_initiator_group')
 def iscsi_create_initiator_group(client, tag, initiators, netmasks):
     """Add an initiator group.

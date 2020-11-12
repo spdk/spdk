@@ -4472,6 +4472,42 @@ Example response:
 }
 ~~~
 
+## iscsi_start_portal_group method {#rpc_iscsi_start_portal_group}
+
+Start listening on portals if the portal group is not started yet, or do nothing
+if the portal group already started. Return a success response for both cases.
+
+### Parameters
+
+Name                        | Optional | Type    | Description
+--------------------------- | -------- | --------| -----------
+tag                         | Required | number  | Existing portal group tag
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "tag": 1
+  },
+  "jsonrpc": "2.0",
+  "method": "iscsi_start_portal_group",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## iscsi_delete_portal_group method {#rpc_iscsi_delete_portal_group}
 
 Delete an existing portal group.
