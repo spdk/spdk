@@ -212,6 +212,22 @@ iscsi_portal_close(struct spdk_iscsi_portal *p)
 	}
 }
 
+static void
+iscsi_portal_pause(struct spdk_iscsi_portal *p)
+{
+	assert(p->acceptor_poller != NULL);
+
+	spdk_poller_pause(p->acceptor_poller);
+}
+
+static void
+iscsi_portal_resume(struct spdk_iscsi_portal *p)
+{
+	assert(p->acceptor_poller != NULL);
+
+	spdk_poller_resume(p->acceptor_poller);
+}
+
 int
 iscsi_parse_redirect_addr(struct sockaddr_storage *sa,
 			  const char *host, const char *port)
@@ -382,7 +398,7 @@ iscsi_portal_grps_destroy(void)
 }
 
 int
-iscsi_portal_grp_open(struct spdk_iscsi_portal_grp *pg)
+iscsi_portal_grp_open(struct spdk_iscsi_portal_grp *pg, bool pause)
 {
 	struct spdk_iscsi_portal *p;
 	int rc;
@@ -391,6 +407,10 @@ iscsi_portal_grp_open(struct spdk_iscsi_portal_grp *pg)
 		rc = iscsi_portal_open(p);
 		if (rc < 0) {
 			return rc;
+		}
+
+		if (pause) {
+			iscsi_portal_pause(p);
 		}
 	}
 	return 0;
@@ -403,6 +423,16 @@ iscsi_portal_grp_close(struct spdk_iscsi_portal_grp *pg)
 
 	TAILQ_FOREACH(p, &pg->head, per_pg_tailq) {
 		iscsi_portal_close(p);
+	}
+}
+
+void
+iscsi_portal_grp_resume(struct spdk_iscsi_portal_grp *pg)
+{
+	struct spdk_iscsi_portal *p;
+
+	TAILQ_FOREACH(p, &pg->head, per_pg_tailq) {
+		iscsi_portal_resume(p);
 	}
 }
 

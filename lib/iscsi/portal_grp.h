@@ -90,7 +90,8 @@ void iscsi_portal_grps_destroy(void);
 int iscsi_portal_grp_register(struct spdk_iscsi_portal_grp *pg);
 struct spdk_iscsi_portal_grp *iscsi_portal_grp_unregister(int tag);
 struct spdk_iscsi_portal_grp *iscsi_portal_grp_find_by_tag(int tag);
-int iscsi_portal_grp_open(struct spdk_iscsi_portal_grp *pg);
+int iscsi_portal_grp_open(struct spdk_iscsi_portal_grp *pg, bool pause);
+void iscsi_portal_grp_resume(struct spdk_iscsi_portal_grp *pg);
 int iscsi_portal_grp_set_chap_params(struct spdk_iscsi_portal_grp *pg,
 				     bool disable_chap, bool require_chap,
 				     bool mutual_chap, int32_t chap_group);

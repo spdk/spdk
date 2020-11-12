@@ -229,7 +229,7 @@ portal_grp_add_delete_case(void)
 	iscsi_portal_grp_add_portal(pg1, p);
 
 	MOCK_SET(spdk_sock_listen, &sock);
-	rc = iscsi_portal_grp_open(pg1);
+	rc = iscsi_portal_grp_open(pg1, false);
 	CU_ASSERT(rc == 0);
 	MOCK_CLEAR_P(spdk_sock_listen);
 
@@ -275,7 +275,7 @@ portal_grp_add_delete_twice_case(void)
 	iscsi_portal_grp_add_portal(pg1, p);
 
 	MOCK_SET(spdk_sock_listen, &sock);
-	rc = iscsi_portal_grp_open(pg1);
+	rc = iscsi_portal_grp_open(pg1, false);
 	CU_ASSERT(rc == 0);
 
 	rc = iscsi_portal_grp_register(pg1);
@@ -290,7 +290,7 @@ portal_grp_add_delete_twice_case(void)
 
 	iscsi_portal_grp_add_portal(pg2, p);
 
-	rc = iscsi_portal_grp_open(pg2);
+	rc = iscsi_portal_grp_open(pg2, false);
 	CU_ASSERT(rc == 0);
 
 	rc = iscsi_portal_grp_register(pg2);

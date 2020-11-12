@@ -794,7 +794,7 @@ rpc_iscsi_create_portal_group(struct spdk_jsonrpc_request *request,
 		iscsi_portal_grp_add_portal(pg, portal);
 	}
 
-	rc = iscsi_portal_grp_open(pg);
+	rc = iscsi_portal_grp_open(pg, false);
 	if (rc != 0) {
 		SPDK_ERRLOG("portal_grp_open failed\n");
 		goto out;
