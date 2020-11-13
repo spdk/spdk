@@ -756,7 +756,7 @@ nvme_cuse_claim(struct cuse_device *ctrlr_device, uint32_t index)
 	};
 
 	snprintf(ctrlr_device->lock_name, sizeof(ctrlr_device->lock_name),
-		 "/tmp/spdk_nvme_cuse_lock_%" PRIu32, index);
+		 "/var/tmp/spdk_nvme_cuse_lock_%" PRIu32, index);
 
 	dev_fd = open(ctrlr_device->lock_name, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
 	if (dev_fd == -1) {

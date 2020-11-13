@@ -920,7 +920,7 @@ spdk_pci_device_claim(struct spdk_pci_device *dev)
 		.l_len = 0,
 	};
 
-	snprintf(dev_name, sizeof(dev_name), "/tmp/spdk_pci_lock_%04x:%02x:%02x.%x",
+	snprintf(dev_name, sizeof(dev_name), "/var/tmp/spdk_pci_lock_%04x:%02x:%02x.%x",
 		 dev->addr.domain, dev->addr.bus, dev->addr.dev, dev->addr.func);
 
 	dev_fd = open(dev_name, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
@@ -965,7 +965,7 @@ spdk_pci_device_unclaim(struct spdk_pci_device *dev)
 {
 	char dev_name[64];
 
-	snprintf(dev_name, sizeof(dev_name), "/tmp/spdk_pci_lock_%04x:%02x:%02x.%x",
+	snprintf(dev_name, sizeof(dev_name), "/var/tmp/spdk_pci_lock_%04x:%02x:%02x.%x",
 		 dev->addr.domain, dev->addr.bus, dev->addr.dev, dev->addr.func);
 
 	close(dev->internal.claim_fd);
