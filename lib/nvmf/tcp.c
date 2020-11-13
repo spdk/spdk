@@ -2565,7 +2565,8 @@ nvmf_tcp_req_complete(struct spdk_nvmf_request *req)
 }
 
 static void
-nvmf_tcp_close_qpair(struct spdk_nvmf_qpair *qpair)
+nvmf_tcp_close_qpair(struct spdk_nvmf_qpair *qpair,
+		     spdk_nvmf_transport_qpair_fini_cb cb_fn, void *cb_arg)
 {
 	struct spdk_nvmf_tcp_qpair *tqpair;
 
@@ -2574,6 +2575,10 @@ nvmf_tcp_close_qpair(struct spdk_nvmf_qpair *qpair)
 	tqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_tcp_qpair, qpair);
 	tqpair->state = NVME_TCP_QPAIR_STATE_EXITED;
 	nvmf_tcp_qpair_destroy(tqpair);
+
+	if (cb_fn) {
+		cb_fn(cb_arg);
+	}
 }
 
 static int

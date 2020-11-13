@@ -65,7 +65,8 @@ int nvmf_transport_req_free(struct spdk_nvmf_request *req);
 
 int nvmf_transport_req_complete(struct spdk_nvmf_request *req);
 
-void nvmf_transport_qpair_fini(struct spdk_nvmf_qpair *qpair);
+void nvmf_transport_qpair_fini(struct spdk_nvmf_qpair *qpair,
+			       spdk_nvmf_transport_qpair_fini_cb cb_fn, void *cb_arg);
 
 int nvmf_transport_qpair_get_peer_trid(struct spdk_nvmf_qpair *qpair,
 				       struct spdk_nvme_transport_id *trid);

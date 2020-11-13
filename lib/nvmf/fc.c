@@ -2049,12 +2049,13 @@ nvmf_fc_request_free(struct spdk_nvmf_request *req)
 	} else {
 		nvmf_fc_request_abort_complete(fc_req);
 	}
+
 	return 0;
 }
 
-
 static void
-nvmf_fc_close_qpair(struct spdk_nvmf_qpair *qpair)
+nvmf_fc_close_qpair(struct spdk_nvmf_qpair *qpair,
+		    spdk_nvmf_transport_qpair_fini_cb cb_fn, void *cb_arg)
 {
 	struct spdk_nvmf_fc_conn *fc_conn;
 
@@ -2069,6 +2070,10 @@ nvmf_fc_close_qpair(struct spdk_nvmf_qpair *qpair)
 		/* Admin connection */
 		spdk_thread_send_msg(nvmf_fc_get_master_thread(),
 				     nvmf_fc_handle_assoc_deletion, fc_conn);
+	}
+
+	if (cb_fn) {
+		cb_fn(cb_arg);
 	}
 }
 

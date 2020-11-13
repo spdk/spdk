@@ -870,11 +870,22 @@ _nvmf_ctrlr_destruct(void *ctx)
 }
 
 static void
+_nvmf_transport_qpair_fini_complete(void *cb_ctx)
+{
+	struct nvmf_qpair_disconnect_ctx *qpair_ctx = cb_ctx;
+
+	if (qpair_ctx->cb_fn) {
+		spdk_thread_send_msg(qpair_ctx->thread, qpair_ctx->cb_fn, qpair_ctx->ctx);
+	}
+	free(qpair_ctx);
+}
+
+static void
 _nvmf_transport_qpair_fini(void *ctx)
 {
-	struct spdk_nvmf_qpair *qpair = ctx;
+	struct nvmf_qpair_disconnect_ctx *qpair_ctx = ctx;
 
-	nvmf_transport_qpair_fini(qpair);
+	nvmf_transport_qpair_fini(qpair_ctx->qpair, _nvmf_transport_qpair_fini_complete, qpair_ctx);
 }
 
 static void
@@ -891,11 +902,7 @@ _nvmf_ctrlr_free_from_qpair(void *ctx)
 		spdk_thread_send_msg(ctrlr->subsys->thread, _nvmf_ctrlr_destruct, ctrlr);
 	}
 
-	spdk_thread_send_msg(qpair_ctx->thread, _nvmf_transport_qpair_fini, qpair_ctx->qpair);
-	if (qpair_ctx->cb_fn) {
-		spdk_thread_send_msg(qpair_ctx->thread, qpair_ctx->cb_fn, qpair_ctx->ctx);
-	}
-	free(qpair_ctx);
+	spdk_thread_send_msg(qpair_ctx->thread, _nvmf_transport_qpair_fini, qpair_ctx);
 }
 
 void
@@ -950,11 +957,7 @@ _nvmf_qpair_destroy(void *ctx, int status)
 	spdk_nvmf_poll_group_remove(qpair);
 
 	if (!ctrlr || !ctrlr->thread) {
-		nvmf_transport_qpair_fini(qpair);
-		if (qpair_ctx->cb_fn) {
-			spdk_thread_send_msg(qpair_ctx->thread, qpair_ctx->cb_fn, qpair_ctx->ctx);
-		}
-		free(qpair_ctx);
+		nvmf_transport_qpair_fini(qpair, _nvmf_transport_qpair_fini_complete, qpair_ctx);
 		return;
 	}
 
@@ -985,7 +988,7 @@ spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_
 
 	/* If we get a qpair in the uninitialized state, we can just destroy it immediately */
 	if (qpair->state == SPDK_NVMF_QPAIR_UNINITIALIZED) {
-		nvmf_transport_qpair_fini(qpair);
+		nvmf_transport_qpair_fini(qpair, NULL, NULL);
 		if (cb_fn) {
 			cb_fn(ctx);
 		}

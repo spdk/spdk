@@ -3633,7 +3633,8 @@ nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 }
 
 static void
-nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
+nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair,
+		      spdk_nvmf_transport_qpair_fini_cb cb_fn, void *cb_arg)
 {
 	struct spdk_nvmf_rdma_qpair *rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
@@ -3655,6 +3656,10 @@ nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 	}
 
 	nvmf_rdma_destroy_drained_qpair(rqpair);
+
+	if (cb_fn) {
+		cb_fn(cb_arg);
+	}
 }
 
 static struct spdk_nvmf_rdma_qpair *

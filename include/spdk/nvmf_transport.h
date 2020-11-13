@@ -197,6 +197,8 @@ struct spdk_nvmf_transport {
 	TAILQ_ENTRY(spdk_nvmf_transport)	link;
 };
 
+typedef void (*spdk_nvmf_transport_qpair_fini_cb)(void *cb_arg);
+
 struct spdk_nvmf_transport_ops {
 	/**
 	 * Transport name
@@ -325,7 +327,9 @@ struct spdk_nvmf_transport_ops {
 	/*
 	 * Deinitialize a connection.
 	 */
-	void (*qpair_fini)(struct spdk_nvmf_qpair *qpair);
+	void (*qpair_fini)(struct spdk_nvmf_qpair *qpair,
+			   spdk_nvmf_transport_qpair_fini_cb cb_fn,
+			   void *cb_args);
 
 	/*
 	 * Get the peer transport ID for the queue pair.

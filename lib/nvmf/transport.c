@@ -473,9 +473,11 @@ nvmf_transport_req_complete(struct spdk_nvmf_request *req)
 }
 
 void
-nvmf_transport_qpair_fini(struct spdk_nvmf_qpair *qpair)
+nvmf_transport_qpair_fini(struct spdk_nvmf_qpair *qpair,
+			  spdk_nvmf_transport_qpair_fini_cb cb_fn,
+			  void *cb_arg)
 {
-	qpair->transport->ops->qpair_fini(qpair);
+	qpair->transport->ops->qpair_fini(qpair, cb_fn, cb_arg);
 }
 
 int
