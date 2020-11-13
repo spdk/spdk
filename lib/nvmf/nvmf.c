@@ -1233,6 +1233,7 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 		TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
 			if (ctrlr->admin_qpair->group == group) {
 				nvmf_ctrlr_async_event_ns_notice(ctrlr);
+				nvmf_ctrlr_async_event_ana_change_notice(ctrlr);
 			}
 		}
 	}
