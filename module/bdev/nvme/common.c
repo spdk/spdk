@@ -84,7 +84,7 @@ nvme_bdev_next_ctrlr(struct nvme_bdev_ctrlr *prev)
 }
 
 void
-nvme_bdev_dump_trid_json(struct spdk_nvme_transport_id *trid, struct spdk_json_write_ctx *w)
+nvme_bdev_dump_trid_json(const struct spdk_nvme_transport_id *trid, struct spdk_json_write_ctx *w)
 {
 	const char *trtype_str;
 	const char *adrfam_str;

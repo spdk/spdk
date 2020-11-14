@@ -925,25 +925,27 @@ bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	struct nvme_bdev *nvme_bdev = ctx;
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = nvme_bdev->nvme_ns->ctrlr;
 	const struct spdk_nvme_ctrlr_data *cdata;
+	const struct spdk_nvme_transport_id *trid;
 	struct spdk_nvme_ns *ns;
 	union spdk_nvme_vs_register vs;
 	union spdk_nvme_csts_register csts;
 	char buf[128];
 
 	cdata = spdk_nvme_ctrlr_get_data(nvme_bdev_ctrlr->ctrlr);
+	trid = spdk_nvme_ctrlr_get_transport_id(nvme_bdev_ctrlr->ctrlr);
 	vs = spdk_nvme_ctrlr_get_regs_vs(nvme_bdev_ctrlr->ctrlr);
 	csts = spdk_nvme_ctrlr_get_regs_csts(nvme_bdev_ctrlr->ctrlr);
 	ns = nvme_bdev->nvme_ns->ns;
 
 	spdk_json_write_named_object_begin(w, "nvme");
 
-	if (nvme_bdev_ctrlr->connected_trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
-		spdk_json_write_named_string(w, "pci_address", nvme_bdev_ctrlr->connected_trid->traddr);
+	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
+		spdk_json_write_named_string(w, "pci_address", trid->traddr);
 	}
 
 	spdk_json_write_named_object_begin(w, "trid");
 
-	nvme_bdev_dump_trid_json(nvme_bdev_ctrlr->connected_trid, w);
+	nvme_bdev_dump_trid_json(trid, w);
 
 	spdk_json_write_object_end(w);
 
