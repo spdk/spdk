@@ -760,7 +760,8 @@ static bool
 bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
 	struct nvme_bdev *nbdev = ctx;
-	struct nvme_bdev_ns *nvme_ns = nbdev->nvme_ns;
+	struct spdk_nvme_ctrlr *ctrlr = nbdev->nvme_ns->ctrlr->ctrlr;
+	struct spdk_nvme_ns *ns = nbdev->nvme_ns->ns;
 	const struct spdk_nvme_ctrlr_data *cdata;
 
 	switch (io_type) {
@@ -774,23 +775,23 @@ bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 		return true;
 
 	case SPDK_BDEV_IO_TYPE_COMPARE:
-		return spdk_nvme_ns_supports_compare(nvme_ns->ns);
+		return spdk_nvme_ns_supports_compare(ns);
 
 	case SPDK_BDEV_IO_TYPE_NVME_IO_MD:
-		return spdk_nvme_ns_get_md_size(nvme_ns->ns) ? true : false;
+		return spdk_nvme_ns_get_md_size(ns) ? true : false;
 
 	case SPDK_BDEV_IO_TYPE_UNMAP:
-		cdata = spdk_nvme_ctrlr_get_data(nvme_ns->ctrlr->ctrlr);
+		cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 		return cdata->oncs.dsm;
 
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
-		cdata = spdk_nvme_ctrlr_get_data(nvme_ns->ctrlr->ctrlr);
+		cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 		/*
 		 * If an NVMe controller guarantees reading unallocated blocks returns zero,
 		 * we can implement WRITE_ZEROES as an NVMe deallocate command.
 		 */
 		if (cdata->oncs.dsm &&
-		    spdk_nvme_ns_get_dealloc_logical_block_read_value(nvme_ns->ns) ==
+		    spdk_nvme_ns_get_dealloc_logical_block_read_value(ns) ==
 		    SPDK_NVME_DEALLOC_READ_00) {
 			return true;
 		}
@@ -802,7 +803,7 @@ bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 		return false;
 
 	case SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE:
-		if (spdk_nvme_ctrlr_get_flags(nvme_ns->ctrlr->ctrlr) &
+		if (spdk_nvme_ctrlr_get_flags(ctrlr) &
 		    SPDK_NVME_CTRLR_COMPARE_AND_WRITE_SUPPORTED) {
 			return true;
 		}
