@@ -924,18 +924,18 @@ bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct nvme_bdev *nvme_bdev = ctx;
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = nvme_bdev->nvme_ns->ctrlr;
+	struct spdk_nvme_ctrlr *ctrlr = nvme_bdev_ctrlr->ctrlr;
 	const struct spdk_nvme_ctrlr_data *cdata;
 	const struct spdk_nvme_transport_id *trid;
-	struct spdk_nvme_ns *ns;
+	struct spdk_nvme_ns *ns = nvme_bdev->nvme_ns->ns;
 	union spdk_nvme_vs_register vs;
 	union spdk_nvme_csts_register csts;
 	char buf[128];
 
-	cdata = spdk_nvme_ctrlr_get_data(nvme_bdev_ctrlr->ctrlr);
-	trid = spdk_nvme_ctrlr_get_transport_id(nvme_bdev_ctrlr->ctrlr);
-	vs = spdk_nvme_ctrlr_get_regs_vs(nvme_bdev_ctrlr->ctrlr);
-	csts = spdk_nvme_ctrlr_get_regs_csts(nvme_bdev_ctrlr->ctrlr);
-	ns = nvme_bdev->nvme_ns->ns;
+	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
+	trid = spdk_nvme_ctrlr_get_transport_id(ctrlr);
+	vs = spdk_nvme_ctrlr_get_regs_vs(ctrlr);
+	csts = spdk_nvme_ctrlr_get_regs_csts(ctrlr);
 
 	spdk_json_write_named_object_begin(w, "nvme");
 
@@ -953,7 +953,7 @@ bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	size_t cuse_name_size = 128;
 	char cuse_name[cuse_name_size];
 
-	int rc = spdk_nvme_cuse_get_ns_name(nvme_bdev_ctrlr->ctrlr, spdk_nvme_ns_get_id(ns),
+	int rc = spdk_nvme_cuse_get_ns_name(ctrlr, spdk_nvme_ns_get_id(ns),
 					    cuse_name, &cuse_name_size);
 	if (rc == 0) {
 		spdk_json_write_named_string(w, "cuse_device", cuse_name);
