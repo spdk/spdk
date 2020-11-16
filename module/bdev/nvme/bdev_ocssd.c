@@ -1101,19 +1101,20 @@ bdev_ocssd_init_zones(struct bdev_ocssd_create_ctx *create_ctx)
 {
 	struct ocssd_bdev *ocssd_bdev = create_ctx->ocssd_bdev;
 	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_bdev(ocssd_bdev);
-	struct spdk_bdev *bdev = &ocssd_bdev->nvme_bdev.disk;
-	uint64_t offset;
+	uint64_t offset, num_zones;
 
-	ocssd_bdev->zones = calloc(bdev_ocssd_num_zones(ocssd_bdev), sizeof(*ocssd_bdev->zones));
+	num_zones = bdev_ocssd_num_zones(ocssd_bdev);
+
+	ocssd_bdev->zones = calloc(num_zones, sizeof(*ocssd_bdev->zones));
 	if (!ocssd_bdev->zones) {
 		return -ENOMEM;
 	}
 
 	create_ctx->chunk_offset = ocssd_bdev->range.begin * ocssd_ns->geometry.num_chk;
-	create_ctx->end_chunk_offset = create_ctx->chunk_offset + bdev->blockcnt / bdev->zone_size;
+	create_ctx->end_chunk_offset = create_ctx->chunk_offset + num_zones;
 
 	/* Mark all zones as busy and clear it as their info is filled */
-	for (offset = 0; offset < bdev_ocssd_num_zones(ocssd_bdev); ++offset) {
+	for (offset = 0; offset < num_zones; ++offset) {
 		ocssd_bdev->zones[offset].busy = true;
 	}
 
