@@ -35,7 +35,8 @@
 #include "spdk_internal/mock.h"
 #include "spdk_internal/idxd.h"
 #include "common/lib/test_env.c"
-#include "idxd/idxd.c"
+
+#include "idxd/idxd.h"
 
 #define FAKE_REG_SIZE 0x800
 #define NUM_GROUPS 4
@@ -43,6 +44,8 @@
 #define NUM_ENGINES_PER_GROUP 1
 #define TOTAL_WQS (NUM_GROUPS * NUM_WQ_PER_GROUP)
 #define TOTAL_ENGINES (NUM_GROUPS * NUM_ENGINES_PER_GROUP)
+
+DEFINE_STUB(spdk_pci_idxd_get_driver, struct spdk_pci_driver *, (void), NULL);
 
 int
 spdk_pci_enumerate(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb, void *enum_ctx)
@@ -87,6 +90,8 @@ mock_movdir64b(void *dst, const void *src)
 {
 	return;
 }
+
+#include "idxd/idxd.c"
 
 #define WQ_CFG_OFFSET 0x500
 #define TOTAL_WQE_SIZE 0x40
