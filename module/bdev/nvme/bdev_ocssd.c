@@ -235,10 +235,16 @@ bdev_ocssd_destruct(void *ctx)
 	return 0;
 }
 
+static inline uint64_t
+ocssd_range_num_parallel_units(const struct bdev_ocssd_range *range)
+{
+	return range->end - range->begin + 1;
+}
+
 static uint64_t
 bdev_ocssd_num_parallel_units(const struct ocssd_bdev *ocssd_bdev)
 {
-	return ocssd_bdev->range.end - ocssd_bdev->range.begin + 1;
+	return ocssd_range_num_parallel_units(&ocssd_bdev->range);
 }
 
 static void
@@ -261,12 +267,12 @@ bdev_ocssd_translate_lba(struct ocssd_bdev *ocssd_bdev, uint64_t lba, uint64_t *
 	*lbk = lba % geo->clba;
 	addr_shift = geo->clba;
 
-	punit = range->begin + (lba / addr_shift) % bdev_ocssd_num_parallel_units(ocssd_bdev);
+	punit = range->begin + (lba / addr_shift) % ocssd_range_num_parallel_units(range);
 
 	*pu = punit % geo->num_pu;
 	*grp = punit / geo->num_pu;
 
-	addr_shift *= bdev_ocssd_num_parallel_units(ocssd_bdev);
+	addr_shift *= ocssd_range_num_parallel_units(range);
 
 	*chk = (lba / addr_shift) % geo->num_chk;
 }
@@ -288,7 +294,7 @@ bdev_ocssd_from_disk_lba(struct ocssd_bdev *ocssd_bdev, uint64_t lba)
 	punit = grp * geometry->num_pu + pu - range->begin;
 
 	return lbk + punit * geometry->clba + chk * geometry->clba *
-	       bdev_ocssd_num_parallel_units(ocssd_bdev);
+	       ocssd_range_num_parallel_units(range);
 }
 
 static uint64_t
