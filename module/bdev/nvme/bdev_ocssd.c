@@ -112,18 +112,6 @@ bdev_ocssd_get_ns_from_bdev(struct ocssd_bdev *ocssd_bdev)
 	return bdev_ocssd_get_ns_from_nvme(ocssd_bdev->nvme_bdev.nvme_ns);
 }
 
-static uint64_t
-bdev_ocssd_num_parallel_units(const struct ocssd_bdev *ocssd_bdev)
-{
-	return ocssd_bdev->range.end - ocssd_bdev->range.begin + 1;
-}
-
-static uint64_t
-bdev_ocssd_num_zones(const struct ocssd_bdev *ocssd_bdev)
-{
-	return ocssd_bdev->nvme_bdev.disk.blockcnt / ocssd_bdev->nvme_bdev.disk.zone_size;
-}
-
 static int
 bdev_ocssd_library_init(void)
 {
@@ -191,6 +179,12 @@ static struct spdk_bdev_module ocssd_if = {
 
 SPDK_BDEV_MODULE_REGISTER(ocssd, &ocssd_if);
 
+static uint64_t
+bdev_ocssd_num_zones(const struct ocssd_bdev *ocssd_bdev)
+{
+	return ocssd_bdev->nvme_bdev.disk.blockcnt / ocssd_bdev->nvme_bdev.disk.zone_size;
+}
+
 static struct bdev_ocssd_zone *
 bdev_ocssd_get_zone_by_lba(struct ocssd_bdev *ocssd_bdev, uint64_t lba)
 {
@@ -238,6 +232,12 @@ bdev_ocssd_destruct(void *ctx)
 	bdev_ocssd_free_bdev(ocssd_bdev);
 
 	return 0;
+}
+
+static uint64_t
+bdev_ocssd_num_parallel_units(const struct ocssd_bdev *ocssd_bdev)
+{
+	return ocssd_bdev->range.end - ocssd_bdev->range.begin + 1;
 }
 
 static void
