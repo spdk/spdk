@@ -820,41 +820,63 @@ out:
 SPDK_RPC_REGISTER("iscsi_create_portal_group", rpc_iscsi_create_portal_group, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_create_portal_group, add_portal_group)
 
-struct rpc_iscsi_delete_portal_group {
+struct rpc_iscsi_change_portal_group {
 	int32_t tag;
 };
 
-static const struct spdk_json_object_decoder rpc_iscsi_delete_portal_group_decoders[] = {
-	{"tag", offsetof(struct rpc_iscsi_delete_portal_group, tag), spdk_json_decode_int32},
+static const struct spdk_json_object_decoder rpc_iscsi_change_portal_group_decoders[] = {
+	{"tag", offsetof(struct rpc_iscsi_change_portal_group, tag), spdk_json_decode_int32},
 };
 
-static void
-rpc_iscsi_delete_portal_group(struct spdk_jsonrpc_request *request,
-			      const struct spdk_json_val *params)
-{
-	struct rpc_iscsi_delete_portal_group req = {};
-	struct spdk_iscsi_portal_grp *pg;
+typedef int (*iscsi_change_portal_grp_fn)(int pg_tag);
 
-	if (spdk_json_decode_object(params, rpc_iscsi_delete_portal_group_decoders,
-				    SPDK_COUNTOF(rpc_iscsi_delete_portal_group_decoders),
+static void
+_rpc_iscsi_change_portal_group(struct spdk_jsonrpc_request *request,
+			       const struct spdk_json_val *params,
+			       iscsi_change_portal_grp_fn fn)
+{
+	struct rpc_iscsi_change_portal_group req = {};
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_iscsi_change_portal_group_decoders,
+				    SPDK_COUNTOF(rpc_iscsi_change_portal_group_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
-	pg = iscsi_portal_grp_unregister(req.tag);
-	if (!pg) {
+	rc = fn(req.tag);
+	if (rc != 0) {
 		goto invalid;
 	}
-
-	iscsi_tgt_node_delete_map(pg, NULL);
-	iscsi_portal_grp_release(pg);
 
 	spdk_jsonrpc_send_bool_response(request, true);
 	return;
 
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+}
+
+static int
+_rpc_iscsi_delete_portal_group(int pg_tag)
+{
+	struct spdk_iscsi_portal_grp *pg;
+
+	pg = iscsi_portal_grp_unregister(pg_tag);
+	if (!pg) {
+		return -ENODEV;
+	}
+
+	iscsi_tgt_node_delete_map(pg, NULL);
+	iscsi_portal_grp_release(pg);
+	return 0;
+}
+
+static void
+rpc_iscsi_delete_portal_group(struct spdk_jsonrpc_request *request,
+			      const struct spdk_json_val *params)
+{
+	_rpc_iscsi_change_portal_group(request, params, _rpc_iscsi_delete_portal_group);
 }
 SPDK_RPC_REGISTER("iscsi_delete_portal_group", rpc_iscsi_delete_portal_group, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_delete_portal_group, delete_portal_group)
