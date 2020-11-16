@@ -264,8 +264,8 @@ bdev_ocssd_translate_lba(struct ocssd_bdev *ocssd_bdev, uint64_t lba, uint64_t *
 	 *
 	 * which means that neighbouring zones are placed in a different group and parallel unit.
 	 */
-	*lbk = lba % geo->clba;
 	addr_shift = geo->clba;
+	*lbk = lba % addr_shift;
 
 	punit = range->begin + (lba / addr_shift) % ocssd_range_num_parallel_units(range);
 
@@ -322,6 +322,18 @@ bdev_ocssd_to_disk_lba(struct ocssd_bdev *ocssd_bdev, uint64_t lba)
 	       (chk << offsets->chk) |
 	       (pu  << offsets->pu)  |
 	       (grp << offsets->grp);
+}
+
+static uint64_t
+bdev_ocssd_to_chunk_info_offset(struct ocssd_bdev *ocssd_bdev, uint64_t lba)
+{
+	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_bdev(ocssd_bdev);
+	const struct spdk_ocssd_geometry_data *geo = &ocssd_ns->geometry;
+	uint64_t grp, pu, chk, lbk;
+
+	bdev_ocssd_translate_lba(ocssd_bdev, lba, &grp, &pu, &chk, &lbk);
+
+	return grp * geo->num_pu * geo->num_chk + pu * geo->num_chk + chk;
 }
 
 static bool
@@ -659,15 +671,12 @@ _bdev_ocssd_get_zone_info(struct spdk_bdev_io *bdev_io)
 {
 	struct ocssd_bdev *ocssd_bdev = bdev_io->bdev->ctxt;
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
-	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_bdev(ocssd_bdev);
-	const struct spdk_ocssd_geometry_data *geo = &ocssd_ns->geometry;
 	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
-	uint64_t lba, grp, pu, chk, lbk, offset;
+	uint64_t lba, offset;
 
 	lba = bdev_io->u.zone_mgmt.zone_id + ocdev_io->zone_info.chunk_offset *
 	      nvme_bdev->disk.zone_size;
-	bdev_ocssd_translate_lba(ocssd_bdev, lba, &grp, &pu, &chk, &lbk);
-	offset = grp * geo->num_pu * geo->num_chk + pu * geo->num_chk + chk;
+	offset = bdev_ocssd_to_chunk_info_offset(ocssd_bdev, lba);
 
 	return spdk_nvme_ctrlr_cmd_get_log_page(nvme_bdev->nvme_ns->ctrlr->ctrlr,
 						SPDK_OCSSD_LOG_CHUNK_INFO,
