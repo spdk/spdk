@@ -12,6 +12,7 @@ def get_box_type(distro)
     'centos8'    => 'centos/8',
     'ubuntu1604' => 'peru/ubuntu-16.04-server-amd64',
     'ubuntu1804' => 'peru/ubuntu-18.04-server-amd64',
+    'ubuntu2004' => 'peru/ubuntu-20.04-server-amd64',
     'fedora30'   => 'generic/fedora30',
     'fedora31'   => 'generic/fedora31',
     'fedora32'   => 'generic/fedora32',

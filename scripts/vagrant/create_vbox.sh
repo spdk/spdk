@@ -19,7 +19,7 @@ display_help() {
 	echo
 	echo " Usage: ${0##*/} [-b nvme-backing-file] [-n <num-cpus>] [-s <ram-size>] [-x <http-proxy>] [-hvrldcu] <distro>"
 	echo
-	echo "  distro = <centos7 | centos8| ubuntu1604 | ubuntu1804 | fedora30 |"
+	echo "  distro = <centos7 | centos8| ubuntu1604 | ubuntu1804 | ubuntu2004 | fedora30 |"
 	echo "            fedora31 | fedora32 | freebsd11 | freebsd12 | arch | clearlinux>"
 	echo
 	echo "  -s <ram-size> in MB             Default: ${SPDK_VAGRANT_VMRAM}"
@@ -168,6 +168,9 @@ case "${SPDK_VAGRANT_DISTRO}" in
 		export SPDK_VAGRANT_DISTRO
 		;;
 	ubuntu1804)
+		export SPDK_VAGRANT_DISTRO
+		;;
+	ubuntu2004)
 		export SPDK_VAGRANT_DISTRO
 		;;
 	fedora30)
