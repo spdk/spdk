@@ -40,6 +40,13 @@
 
 #define SYSFS_PCI_DRIVERS	"/sys/bus/pci/drivers"
 
+/* Compatibility for versions < 20.11 */
+#ifndef RTE_DEV_ALLOWED
+#define RTE_DEV_ALLOWED RTE_DEV_WHITELISTED
+#define RTE_DEV_BLOCKED RTE_DEV_BLACKLISTED
+#define RTE_BUS_SCAN_ALLOWLIST RTE_BUS_SCAN_WHITELIST
+#endif
+
 #define PCI_CFG_SIZE		256
 #define PCI_EXT_CAP_ID_SN	0x03
 
@@ -340,7 +347,7 @@ _pci_env_init(void)
 {
 	/* We assume devices were present on the bus for more than 2 seconds
 	 * before initializing SPDK and there's no need to wait more. We scan
-	 * the bus, but we don't blacklist any devices.
+	 * the bus, but we don't block any devices.
 	 */
 	scan_pci_bus(false);
 
@@ -459,7 +466,7 @@ pci_device_fini(struct rte_pci_device *_dev)
 		return -1;
 	}
 
-	/* remove our whitelist_at option */
+	/* remove our allowed_at option */
 	if (_dev->device.devargs) {
 		_dev->device.devargs->data = NULL;
 	}
@@ -518,7 +525,7 @@ scan_pci_bus(bool delay_init)
 		if (!da) {
 			char devargs_str[128];
 
-			/* the device was never blacklisted or whitelisted */
+			/* the device was never blocked or allowed */
 			da = calloc(1, sizeof(*da));
 			if (!da) {
 				return -1;
@@ -535,21 +542,21 @@ scan_pci_bus(bool delay_init)
 		}
 
 		if (da->data) {
-			uint64_t whitelist_at = (uint64_t)(uintptr_t)da->data;
+			uint64_t allowed_at = (uint64_t)(uintptr_t)da->data;
 
 			/* this device was seen by spdk before... */
-			if (da->policy == RTE_DEV_BLACKLISTED && whitelist_at <= now) {
-				da->policy = RTE_DEV_WHITELISTED;
+			if (da->policy == RTE_DEV_BLOCKED && allowed_at <= now) {
+				da->policy = RTE_DEV_ALLOWED;
 			}
-		} else if ((driver->driver.bus->bus.conf.scan_mode == RTE_BUS_SCAN_WHITELIST &&
-			    da->policy == RTE_DEV_WHITELISTED) || da->policy != RTE_DEV_BLACKLISTED) {
-			/* override the policy only if not permanently blacklisted */
+		} else if ((driver->driver.bus->bus.conf.scan_mode == RTE_BUS_SCAN_ALLOWLIST &&
+			    da->policy == RTE_DEV_ALLOWED) || da->policy != RTE_DEV_BLOCKED) {
+			/* override the policy only if not permanently blocked */
 
 			if (delay_init) {
-				da->policy = RTE_DEV_BLACKLISTED;
+				da->policy = RTE_DEV_BLOCKED;
 				da->data = (void *)(now + 2 * spdk_get_ticks_hz());
 			} else {
-				da->policy = RTE_DEV_WHITELISTED;
+				da->policy = RTE_DEV_ALLOWED;
 				da->data = (void *)(uintptr_t)now;
 			}
 		}
@@ -619,7 +626,7 @@ spdk_pci_device_attach(struct spdk_pci_driver *driver,
 		return -1;
 	}
 
-	/* explicit attach ignores the whitelist, so if we blacklisted this
+	/* explicit attach ignores the allowlist, so if we blocked this
 	 * device before let's enable it now - just for clarity.
 	 */
 	TAILQ_FOREACH(dev, &g_pci_devices, internal.tailq) {
@@ -633,7 +640,7 @@ spdk_pci_device_attach(struct spdk_pci_driver *driver,
 	da = rte_dev->device.devargs;
 	if (da && da->data) {
 		da->data = (void *)(uintptr_t)spdk_get_ticks();
-		da->policy = RTE_DEV_WHITELISTED;
+		da->policy = RTE_DEV_ALLOWED;
 	}
 
 	return 0;
