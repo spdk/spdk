@@ -278,20 +278,32 @@ bdev_ocssd_translate_lba(struct ocssd_bdev *ocssd_bdev, uint64_t lba, uint64_t *
 }
 
 static uint64_t
+bdev_ocssd_to_parallel_unit(const struct spdk_ocssd_geometry_data *geometry,
+			    const struct bdev_ocssd_lba_offsets *offsets,
+			    uint64_t lba)
+{
+	uint64_t pu, grp;
+
+	pu  = (lba >> offsets->pu)  & ((1 << geometry->lbaf.pu_len)  - 1);
+	grp = (lba >> offsets->grp) & ((1 << geometry->lbaf.grp_len) - 1);
+
+	return grp * geometry->num_pu + pu;
+}
+
+static uint64_t
 bdev_ocssd_from_disk_lba(struct ocssd_bdev *ocssd_bdev, uint64_t lba)
 {
 	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_bdev(ocssd_bdev);
 	const struct spdk_ocssd_geometry_data *geometry = &ocssd_ns->geometry;
 	const struct bdev_ocssd_lba_offsets *offsets = &ocssd_ns->lba_offsets;
 	const struct bdev_ocssd_range *range = &ocssd_bdev->range;
-	uint64_t lbk, chk, pu, grp, punit;
+	uint64_t lbk, chk, punit;
 
 	lbk = (lba >> offsets->lbk) & ((1 << geometry->lbaf.lbk_len) - 1);
 	chk = (lba >> offsets->chk) & ((1 << geometry->lbaf.chk_len) - 1);
-	pu  = (lba >> offsets->pu)  & ((1 << geometry->lbaf.pu_len)  - 1);
-	grp = (lba >> offsets->grp) & ((1 << geometry->lbaf.grp_len) - 1);
 
-	punit = grp * geometry->num_pu + pu - range->begin;
+	punit = bdev_ocssd_to_parallel_unit(geometry, offsets, lba);
+	punit -= range->begin;
 
 	return lbk + punit * geometry->clba + chk * geometry->clba *
 	       ocssd_range_num_parallel_units(range);
@@ -319,11 +331,9 @@ bdev_ocssd_lba_in_range(struct ocssd_bdev *ocssd_bdev, uint64_t lba)
 	const struct spdk_ocssd_geometry_data *geometry = &ocssd_ns->geometry;
 	const struct bdev_ocssd_lba_offsets *offsets = &ocssd_ns->lba_offsets;
 	const struct bdev_ocssd_range *range = &ocssd_bdev->range;
-	uint64_t pu, grp, punit;
+	uint64_t punit;
 
-	pu  = (lba >> offsets->pu)  & ((1 << geometry->lbaf.pu_len)  - 1);
-	grp = (lba >> offsets->grp) & ((1 << geometry->lbaf.grp_len) - 1);
-	punit = grp * geometry->num_pu + pu;
+	punit = bdev_ocssd_to_parallel_unit(geometry, offsets, lba);
 
 	return punit >= range->begin && punit <= range->end;
 }
