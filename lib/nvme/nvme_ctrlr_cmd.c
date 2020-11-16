@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2021 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -93,8 +93,9 @@ spdk_nvme_ctrlr_cmd_io_raw_with_md(struct spdk_nvme_ctrlr *ctrlr,
 
 	/* Caculate metadata length */
 	if (md_buf) {
-		struct spdk_nvme_ns *ns = &ctrlr->ns[cmd->nsid - 1];
+		struct spdk_nvme_ns *ns = spdk_nvme_ctrlr_get_ns(ctrlr, cmd->nsid);
 
+		assert(ns != NULL);
 		assert(ns->sector_size != 0);
 		md_len =  len / ns->sector_size * ns->md_size;
 	}

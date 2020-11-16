@@ -2,8 +2,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2021 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -368,7 +368,17 @@ nvme_ctrlr_submit_admin_request(struct spdk_nvme_ctrlr *ctrlr, struct nvme_reque
 	return 0;
 }
 
-#define DECLARE_AND_CONSTRUCT_CTRLR()	\
+struct spdk_nvme_ns *
+spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
+{
+	if (nsid < 1 || nsid > ctrlr->num_ns) {
+		return NULL;
+	}
+
+	return &ctrlr->ns[nsid - 1];
+}
+
+#define DECLARE_AND_CONSTRUCT_CTRLR()		\
 	struct spdk_nvme_ctrlr	ctrlr = {};	\
 	struct spdk_nvme_qpair	adminq = {};	\
 	struct nvme_request	req;		\
