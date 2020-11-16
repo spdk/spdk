@@ -1408,6 +1408,8 @@ bdev_ocssd_geometry_cb(void *_ctx, const struct spdk_nvme_cpl *cpl)
 	struct nvme_async_probe_ctx *nvme_ctx = ctx->nvme_ctx;
 	struct nvme_bdev_ns *nvme_ns = ctx->nvme_ns;
 	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ns);
+	const struct spdk_ocssd_geometry_data *geometry = &ocssd_ns->geometry;
+	struct bdev_ocssd_lba_offsets *offsets = &ocssd_ns->lba_offsets;
 	int rc = 0;
 
 	free(ctx);
@@ -1418,13 +1420,10 @@ bdev_ocssd_geometry_cb(void *_ctx, const struct spdk_nvme_cpl *cpl)
 		nvme_ns->type_ctx = NULL;
 		rc = -EIO;
 	} else {
-		ocssd_ns->lba_offsets.lbk = 0;
-		ocssd_ns->lba_offsets.chk = ocssd_ns->lba_offsets.lbk +
-					    ocssd_ns->geometry.lbaf.lbk_len;
-		ocssd_ns->lba_offsets.pu  = ocssd_ns->lba_offsets.chk +
-					    ocssd_ns->geometry.lbaf.chk_len;
-		ocssd_ns->lba_offsets.grp = ocssd_ns->lba_offsets.pu +
-					    ocssd_ns->geometry.lbaf.pu_len;
+		offsets->lbk = 0;
+		offsets->chk = offsets->lbk + geometry->lbaf.lbk_len;
+		offsets->pu  = offsets->chk + geometry->lbaf.chk_len;
+		offsets->grp = offsets->pu  + geometry->lbaf.pu_len;
 		ocssd_ns->chunk_notify_pending = true;
 	}
 
