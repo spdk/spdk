@@ -847,16 +847,74 @@ bdev_ocssd_free_namespace(struct nvme_bdev_ns *nvme_ns)
 }
 
 static void
+bdev_ocssd_push_media_events(struct nvme_bdev_ns *nvme_ns,
+			     struct spdk_ocssd_chunk_notification_entry *chunk_entry)
+{
+	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ns);
+	struct spdk_bdev_media_event event;
+	struct nvme_bdev *nvme_bdev;
+	struct ocssd_bdev *ocssd_bdev;
+	size_t num_blocks, lba;
+	int rc;
+
+	if (chunk_entry->mask.lblk) {
+		num_blocks = chunk_entry->nlb;
+	} else if (chunk_entry->mask.chunk) {
+		num_blocks = ocssd_ns->geometry.clba;
+	} else if (chunk_entry->mask.pu) {
+		num_blocks = ocssd_ns->geometry.clba * ocssd_ns->geometry.num_chk;
+	} else {
+		SPDK_WARNLOG("Invalid chunk notification mask\n");
+		return;
+	}
+
+	TAILQ_FOREACH(nvme_bdev, &nvme_ns->bdevs, tailq) {
+		ocssd_bdev = SPDK_CONTAINEROF(nvme_bdev, struct ocssd_bdev, nvme_bdev);
+		if (bdev_ocssd_lba_in_range(ocssd_bdev, chunk_entry->lba)) {
+			return;
+		}
+	}
+
+	if (nvme_bdev == NULL) {
+		SPDK_INFOLOG(bdev_ocssd, "Dropping media management event\n");
+		return;
+	}
+
+	lba = bdev_ocssd_from_disk_lba(ocssd_bdev, chunk_entry->lba);
+	while (num_blocks > 0 && lba < nvme_bdev->disk.blockcnt) {
+		event.offset = lba;
+		event.num_blocks = spdk_min(num_blocks, ocssd_ns->geometry.clba);
+
+		rc = spdk_bdev_push_media_events(&nvme_bdev->disk, &event, 1);
+		if (spdk_unlikely(rc < 0)) {
+			SPDK_DEBUGLOG(bdev_ocssd, "Failed to push media event: %s\n",
+				      spdk_strerror(-rc));
+			break;
+		}
+
+		/* Jump to the next chunk on the same parallel unit */
+		lba += ocssd_ns->geometry.clba * bdev_ocssd_num_parallel_units(ocssd_bdev);
+		num_blocks -= event.num_blocks;
+	}
+}
+
+static void
+bdev_ocssd_notify_media_management(struct nvme_bdev_ns *nvme_ns)
+{
+	struct nvme_bdev *nvme_bdev;
+
+	TAILQ_FOREACH(nvme_bdev, &nvme_ns->bdevs, tailq) {
+		spdk_bdev_notify_media_management(&nvme_bdev->disk);
+	}
+}
+
+static void
 bdev_ocssd_chunk_notification_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
 	struct nvme_bdev_ns *nvme_ns = ctx;
 	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ns);
-	struct spdk_bdev_media_event event;
 	struct spdk_ocssd_chunk_notification_entry *chunk_entry;
-	struct nvme_bdev *nvme_bdev;
-	struct ocssd_bdev *ocssd_bdev;
-	size_t chunk_id, num_blocks, lba;
-	int rc;
+	size_t chunk_id;
 
 	ocssd_ns->num_outstanding--;
 
@@ -881,52 +939,13 @@ bdev_ocssd_chunk_notification_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 		}
 
 		ocssd_ns->chunk_notify_count = chunk_entry->nc;
-		if (chunk_entry->mask.lblk) {
-			num_blocks = chunk_entry->nlb;
-		} else if (chunk_entry->mask.chunk) {
-			num_blocks = ocssd_ns->geometry.clba;
-		} else if (chunk_entry->mask.pu) {
-			num_blocks = ocssd_ns->geometry.clba * ocssd_ns->geometry.num_chk;
-		} else {
-			SPDK_WARNLOG("Invalid chunk notification mask\n");
-			continue;
-		}
 
-		TAILQ_FOREACH(nvme_bdev, &nvme_ns->bdevs, tailq) {
-			ocssd_bdev = SPDK_CONTAINEROF(nvme_bdev, struct ocssd_bdev, nvme_bdev);
-			if (bdev_ocssd_lba_in_range(ocssd_bdev, chunk_entry->lba)) {
-				break;
-			}
-		}
-
-		if (nvme_bdev == NULL) {
-			SPDK_INFOLOG(bdev_ocssd, "Dropping media management event\n");
-			continue;
-		}
-
-		lba = bdev_ocssd_from_disk_lba(ocssd_bdev, chunk_entry->lba);
-		while (num_blocks > 0 && lba < nvme_bdev->disk.blockcnt) {
-			event.offset = lba;
-			event.num_blocks = spdk_min(num_blocks, ocssd_ns->geometry.clba);
-
-			rc = spdk_bdev_push_media_events(&nvme_bdev->disk, &event, 1);
-			if (spdk_unlikely(rc < 0)) {
-				SPDK_DEBUGLOG(bdev_ocssd, "Failed to push media event: %s\n",
-					      spdk_strerror(-rc));
-				break;
-			}
-
-			/* Jump to the next chunk on the same parallel unit */
-			lba += ocssd_ns->geometry.clba * bdev_ocssd_num_parallel_units(ocssd_bdev);
-			num_blocks -= event.num_blocks;
-		}
+		bdev_ocssd_push_media_events(nvme_ns, chunk_entry);
 	}
 
 	/* If at least one notification has been processed send out media event */
 	if (chunk_id > 0) {
-		TAILQ_FOREACH(nvme_bdev, &nvme_ns->bdevs, tailq) {
-			spdk_bdev_notify_media_management(&nvme_bdev->disk);
-		}
+		bdev_ocssd_notify_media_management(nvme_ns);
 	}
 
 	/* If we filled the full array of events, there may be more still pending.  Set the pending
