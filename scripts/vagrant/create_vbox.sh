@@ -19,8 +19,8 @@ display_help() {
 	echo
 	echo " Usage: ${0##*/} [-b nvme-backing-file] [-n <num-cpus>] [-s <ram-size>] [-x <http-proxy>] [-hvrldcu] <distro>"
 	echo
-	echo "  distro = <centos7 | centos8| ubuntu1604 | ubuntu1804 | ubuntu2004 | fedora30 |"
-	echo "            fedora31 | fedora32 | freebsd11 | freebsd12 | arch | clearlinux>"
+	echo "  distro = <centos7 | centos8| ubuntu1604 | ubuntu1804 | ubuntu2004 |"
+	echo "            fedora31 | fedora32 | fedora33 | freebsd11 | freebsd12 | arch | clearlinux>"
 	echo
 	echo "  -s <ram-size> in MB             Default: ${SPDK_VAGRANT_VMRAM}"
 	echo "  -n <num-cpus> 1 to 4            Default: ${SPDK_VAGRANT_VMCPU}"
@@ -49,13 +49,13 @@ display_help() {
 	echo
 	echo " Examples:"
 	echo
-	echo "  $0 -x http://user:password@host:port fedora30"
+	echo "  $0 -x http://user:password@host:port fedora33"
 	echo "  $0 -s 2048 -n 2 ubuntu16"
 	echo "  $0 -rv freebsd"
-	echo "  $0 fedora30"
-	echo "  $0 -b /var/lib/libvirt/images/nvme1.img,nvme,1 fedora30"
-	echo "  $0 -b /var/lib/libvirt/images/ocssd.img,ocssd fedora30"
-	echo "  $0 -b /var/lib/libvirt/images/nvme5.img,nvme,5 -b /var/lib/libvirt/images/ocssd.img,ocssd fedora30"
+	echo "  $0 fedora33"
+	echo "  $0 -b /var/lib/libvirt/images/nvme1.img,nvme,1 fedora33"
+	echo "  $0 -b /var/lib/libvirt/images/ocssd.img,ocssd fedora33"
+	echo "  $0 -b /var/lib/libvirt/images/nvme5.img,nvme,5 -b /var/lib/libvirt/images/ocssd.img,ocssd fedora33"
 	echo
 }
 
@@ -173,13 +173,13 @@ case "${SPDK_VAGRANT_DISTRO}" in
 	ubuntu2004)
 		export SPDK_VAGRANT_DISTRO
 		;;
-	fedora30)
-		export SPDK_VAGRANT_DISTRO
-		;;
 	fedora31)
 		export SPDK_VAGRANT_DISTRO
 		;;
 	fedora32)
+		export SPDK_VAGRANT_DISTRO
+		;;
+	fedora33)
 		export SPDK_VAGRANT_DISTRO
 		;;
 	freebsd11)
