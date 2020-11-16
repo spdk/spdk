@@ -1651,7 +1651,7 @@ blob_persist_clear_extents(spdk_bs_sequence_t *seq, struct spdk_blob_persist_ctx
 	for (i = blob->active.num_extent_pages; i < blob->active.extent_pages_array_size; i++) {
 		/* Nothing to clear if it was not allocated */
 		if (blob->active.extent_pages[i] != 0) {
-			lba = bs_md_page_to_lba(bs, blob->clean.extent_pages[i]);
+			lba = bs_md_page_to_lba(bs, blob->active.extent_pages[i]);
 			bs_batch_write_zeroes_dev(batch, lba, lba_count);
 		}
 	}
@@ -5539,22 +5539,23 @@ bs_snapshot_newblob_sync_cpl(void *cb_arg, int bserrno)
 	if (bserrno != 0) {
 		/* return cluster map back to original */
 		bs_snapshot_swap_cluster_maps(newblob, origblob);
+		blob_set_thin_provision(newblob);
 		bs_clone_snapshot_newblob_cleanup(ctx, bserrno);
 		return;
 	}
-
-	bs_blob_list_remove(origblob);
-	origblob->parent_id = newblob->id;
 
 	/* Create new back_bs_dev for snapshot */
 	origblob->back_bs_dev = bs_create_blob_bs_dev(newblob);
 	if (origblob->back_bs_dev == NULL) {
 		/* return cluster map back to original */
 		bs_snapshot_swap_cluster_maps(newblob, origblob);
+		blob_set_thin_provision(newblob);
 		bs_clone_snapshot_newblob_cleanup(ctx, -EINVAL);
 		return;
 	}
 
+	bs_blob_list_remove(origblob);
+	origblob->parent_id = newblob->id;
 	/* set clone blob as thin provisioned */
 	blob_set_thin_provision(origblob);
 
