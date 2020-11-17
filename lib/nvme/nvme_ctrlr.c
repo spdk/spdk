@@ -1520,7 +1520,7 @@ nvme_ctrlr_identify_done(void *arg, const struct spdk_nvme_cpl *cpl)
 	SPDK_DEBUGLOG(nvme, "transport max_xfer_size %u\n", ctrlr->max_xfer_size);
 	if (ctrlr->cdata.mdts > 0) {
 		ctrlr->max_xfer_size = spdk_min(ctrlr->max_xfer_size,
-						ctrlr->min_page_size * (1 << (ctrlr->cdata.mdts)));
+						ctrlr->min_page_size * (1 << ctrlr->cdata.mdts));
 		SPDK_DEBUGLOG(nvme, "MDTS max_xfer_size %u\n", ctrlr->max_xfer_size);
 	}
 
