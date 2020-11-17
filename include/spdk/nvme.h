@@ -986,6 +986,8 @@ struct spdk_pci_device *spdk_nvme_ctrlr_get_pci_device(struct spdk_nvme_ctrlr *c
 /**
  * Get the maximum data transfer size of a given NVMe controller.
  *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
  * \return Maximum data transfer size of the NVMe controller in bytes.
  *
  * The I/O command helper functions, such as spdk_nvme_ns_cmd_read(), will split
