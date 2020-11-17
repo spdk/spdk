@@ -202,6 +202,14 @@ struct spdk_nvmf_reservation_log {
 };
 
 /*
+ * NVMf async event completion.
+ */
+struct spdk_nvmf_async_event_completion {
+	union spdk_nvme_async_event_completion		event;
+	STAILQ_ENTRY(spdk_nvmf_async_event_completion)	link;
+};
+
+/*
  * This structure represents an NVMe-oF controller,
  * which is like a "session" in networking terms.
  */
@@ -223,8 +231,7 @@ struct spdk_nvmf_ctrlr {
 	const struct spdk_nvmf_subsystem_listener	*listener;
 
 	struct spdk_nvmf_request *aer_req[NVMF_MAX_ASYNC_EVENTS];
-	union spdk_nvme_async_event_completion notice_event;
-	union spdk_nvme_async_event_completion reservation_event;
+	STAILQ_HEAD(, spdk_nvmf_async_event_completion) async_events;
 	uint8_t nr_aer_reqs;
 	struct spdk_uuid  hostid;
 

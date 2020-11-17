@@ -325,6 +325,7 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		return NULL;
 	}
 
+	STAILQ_INIT(&ctrlr->async_events);
 	TAILQ_INIT(&ctrlr->log_head);
 	ctrlr->subsys = subsystem;
 	ctrlr->thread = req->qpair->group->thread;
@@ -451,6 +452,7 @@ _nvmf_ctrlr_destruct(void *ctx)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = ctx;
 	struct spdk_nvmf_reservation_log *log, *log_tmp;
+	struct spdk_nvmf_async_event_completion *event, *event_tmp;
 
 	nvmf_ctrlr_stop_keep_alive_timer(ctrlr);
 	nvmf_ctrlr_stop_association_timer(ctrlr);
@@ -459,6 +461,10 @@ _nvmf_ctrlr_destruct(void *ctx)
 	TAILQ_FOREACH_SAFE(log, &ctrlr->log_head, link, log_tmp) {
 		TAILQ_REMOVE(&ctrlr->log_head, log, link);
 		free(log);
+	}
+	STAILQ_FOREACH_SAFE(event, &ctrlr->async_events, link, event_tmp) {
+		STAILQ_REMOVE(&ctrlr->async_events, event, spdk_nvmf_async_event_completion, link);
+		free(event);
 	}
 	free(ctrlr);
 }
@@ -1638,6 +1644,7 @@ nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
+	struct spdk_nvmf_async_event_completion *pending_event;
 
 	SPDK_DEBUGLOG(nvmf, "Async Event Request\n");
 
@@ -1654,17 +1661,11 @@ nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	if (ctrlr->notice_event.bits.async_event_type ==
-	    SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) {
-		rsp->cdw0 = ctrlr->notice_event.raw;
-		ctrlr->notice_event.raw = 0;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
-
-	if (ctrlr->reservation_event.bits.async_event_type ==
-	    SPDK_NVME_ASYNC_EVENT_TYPE_IO) {
-		rsp->cdw0 = ctrlr->reservation_event.raw;
-		ctrlr->reservation_event.raw = 0;
+	if (!STAILQ_EMPTY(&ctrlr->async_events)) {
+		pending_event = STAILQ_FIRST(&ctrlr->async_events);
+		rsp->cdw0 = pending_event->event.raw;
+		STAILQ_REMOVE(&ctrlr->async_events, pending_event, spdk_nvmf_async_event_completion, link);
+		free(pending_event);
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
@@ -2831,6 +2832,21 @@ nvmf_ctrlr_async_event_notification(struct spdk_nvmf_ctrlr *ctrlr,
 	return 0;
 }
 
+static inline void
+nvmf_ctrlr_queue_pending_async_event(struct spdk_nvmf_ctrlr *ctrlr,
+				     union spdk_nvme_async_event_completion *event)
+{
+	struct spdk_nvmf_async_event_completion *nvmf_event;
+
+	nvmf_event = calloc(1, sizeof(*nvmf_event));
+	if (!nvmf_event) {
+		SPDK_ERRLOG("Alloc nvmf event failed, ignore the event\n");
+		return;
+	}
+	nvmf_event->event.raw = event->raw;
+	STAILQ_INSERT_TAIL(&ctrlr->async_events, nvmf_event, link);
+}
+
 int
 nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr)
 {
@@ -2850,12 +2866,7 @@ nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr)
 	 * response.
 	 */
 	if (ctrlr->nr_aer_reqs == 0) {
-		if (ctrlr->notice_event.bits.async_event_type ==
-		    SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) {
-			return 0;
-		}
-
-		ctrlr->notice_event.raw = event.raw;
+		nvmf_ctrlr_queue_pending_async_event(ctrlr, &event);
 		return 0;
 	}
 
@@ -2881,12 +2892,7 @@ nvmf_ctrlr_async_event_ana_change_notice(struct spdk_nvmf_ctrlr *ctrlr)
 	 * response.
 	 */
 	if (ctrlr->nr_aer_reqs == 0) {
-		if (ctrlr->notice_event.bits.async_event_type ==
-		    SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) {
-			return 0;
-		}
-
-		ctrlr->notice_event.raw = event.raw;
+		nvmf_ctrlr_queue_pending_async_event(ctrlr, &event);
 		return 0;
 	}
 
@@ -2910,12 +2916,7 @@ nvmf_ctrlr_async_event_reservation_notification(struct spdk_nvmf_ctrlr *ctrlr)
 	 * response.
 	 */
 	if (ctrlr->nr_aer_reqs == 0) {
-		if (ctrlr->reservation_event.bits.async_event_type ==
-		    SPDK_NVME_ASYNC_EVENT_TYPE_IO) {
-			return;
-		}
-
-		ctrlr->reservation_event.raw = event.raw;
+		nvmf_ctrlr_queue_pending_async_event(ctrlr, &event);
 		return;
 	}
 
@@ -2944,12 +2945,7 @@ nvmf_ctrlr_async_event_discovery_log_change_notice(struct spdk_nvmf_ctrlr *ctrlr
 	 * response.
 	 */
 	if (ctrlr->nr_aer_reqs == 0) {
-		if (ctrlr->notice_event.bits.async_event_type ==
-		    SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) {
-			return 0;
-		}
-
-		ctrlr->notice_event.raw = event.raw;
+		nvmf_ctrlr_queue_pending_async_event(ctrlr, &event);
 		return 0;
 	}
 

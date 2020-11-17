@@ -1318,6 +1318,23 @@ test_reservation_exclusive_access_regs_only_and_all_regs(void)
 }
 
 static void
+init_pending_async_events(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	STAILQ_INIT(&ctrlr->async_events);
+}
+
+static void
+cleanup_pending_async_events(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	struct spdk_nvmf_async_event_completion *event, *event_tmp;
+
+	STAILQ_FOREACH_SAFE(event, &ctrlr->async_events, link, event_tmp) {
+		STAILQ_REMOVE(&ctrlr->async_events, event, spdk_nvmf_async_event_completion, link);
+		free(event);
+	}
+}
+
+static void
 test_reservation_notification_log_page(void)
 {
 	struct spdk_nvmf_ctrlr ctrlr;
@@ -1332,6 +1349,7 @@ test_reservation_notification_log_page(void)
 	memset(&ctrlr, 0, sizeof(ctrlr));
 	ctrlr.thread = spdk_get_thread();
 	TAILQ_INIT(&ctrlr.log_head);
+	init_pending_async_events(&ctrlr);
 	ns.nsid = 1;
 
 	/* Test Case: Mask all the reservation notifications */
@@ -1378,6 +1396,8 @@ test_reservation_notification_log_page(void)
 	/* Test Case: Get Log Page to clear the log pages */
 	nvmf_get_reservation_notification_log_page(&ctrlr, (void *)logs, 0, sizeof(logs));
 	SPDK_CU_ASSERT_FATAL(ctrlr.num_avail_log_pages == 0);
+
+	cleanup_pending_async_events(&ctrlr);
 }
 
 static void
@@ -1782,6 +1802,79 @@ test_get_ana_log_page(void)
 	CU_ASSERT(memcmp(expected_page, actual_page, UT_ANA_LOG_PAGE_SIZE) == 0);
 }
 
+static void
+test_multi_async_events(void)
+{
+	struct spdk_nvmf_subsystem subsystem = {};
+	struct spdk_nvmf_qpair qpair = {};
+	struct spdk_nvmf_ctrlr ctrlr = {};
+	struct spdk_nvmf_request req[4] = {};
+	struct spdk_nvmf_ns *ns_ptrs[1] = {};
+	struct spdk_nvmf_ns ns = {};
+	union nvmf_h2c_msg cmd[4] = {};
+	union nvmf_c2h_msg rsp[4] = {};
+	union spdk_nvme_async_event_completion event = {};
+	struct spdk_nvmf_poll_group group = {};
+	struct spdk_nvmf_subsystem_poll_group sgroups = {};
+	int i;
+
+	ns_ptrs[0] = &ns;
+	subsystem.ns = ns_ptrs;
+	subsystem.max_nsid = 1;
+	subsystem.subtype = SPDK_NVMF_SUBTYPE_NVME;
+
+	ns.opts.nsid = 1;
+	group.sgroups = &sgroups;
+
+	qpair.ctrlr = &ctrlr;
+	qpair.group = &group;
+	TAILQ_INIT(&qpair.outstanding);
+
+	ctrlr.subsys = &subsystem;
+	ctrlr.vcprop.cc.bits.en = 1;
+	ctrlr.feat.async_event_configuration.bits.ns_attr_notice = 1;
+	ctrlr.feat.async_event_configuration.bits.ana_change_notice = 1;
+	ctrlr.feat.async_event_configuration.bits.discovery_log_change_notice = 1;
+	init_pending_async_events(&ctrlr);
+
+	/* Target queue pending events when there is no outstanding AER request */
+	nvmf_ctrlr_async_event_ns_notice(&ctrlr);
+	nvmf_ctrlr_async_event_ana_change_notice(&ctrlr);
+	nvmf_ctrlr_async_event_discovery_log_change_notice(&ctrlr);
+
+	for (i = 0; i < 4; i++) {
+		cmd[i].nvme_cmd.opc = SPDK_NVME_OPC_ASYNC_EVENT_REQUEST;
+		cmd[i].nvme_cmd.nsid = 1;
+		cmd[i].nvme_cmd.cid = i;
+
+		req[i].qpair = &qpair;
+		req[i].cmd = &cmd[i];
+		req[i].rsp = &rsp[i];
+
+		TAILQ_INSERT_TAIL(&qpair.outstanding, &req[i], link);
+
+		sgroups.io_outstanding = 1;
+		if (i < 3) {
+			CU_ASSERT(nvmf_ctrlr_process_admin_cmd(&req[i]) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+			CU_ASSERT(sgroups.io_outstanding == 0);
+			CU_ASSERT(ctrlr.nr_aer_reqs == 0);
+		} else {
+			CU_ASSERT(nvmf_ctrlr_process_admin_cmd(&req[i]) == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
+			CU_ASSERT(sgroups.io_outstanding == 0);
+			CU_ASSERT(ctrlr.nr_aer_reqs == 1);
+		}
+	}
+
+	event.raw = rsp[0].nvme_cpl.cdw0;
+	CU_ASSERT(event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED);
+	event.raw = rsp[1].nvme_cpl.cdw0;
+	CU_ASSERT(event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_ANA_CHANGE);
+	event.raw = rsp[2].nvme_cpl.cdw0;
+	CU_ASSERT(event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_DISCOVERY_LOG_CHANGE);
+
+	cleanup_pending_async_events(&ctrlr);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1808,6 +1901,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_fused_compare_and_write);
 	CU_ADD_TEST(suite, test_multi_async_event_reqs);
 	CU_ADD_TEST(suite, test_get_ana_log_page);
+	CU_ADD_TEST(suite, test_multi_async_events);
 
 	allocate_threads(1);
 	set_thread(0);
