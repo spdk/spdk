@@ -391,7 +391,7 @@ zone_block_write(struct bdev_zone_block *bdev_node, struct zone_block_io_channel
 		zone = zone_block_get_zone_containing_lba(bdev_node, lba);
 	}
 	if (!zone) {
-		SPDK_ERRLOG("Trying to write to invalid zone (lba 0x%lx)\n", lba);
+		SPDK_ERRLOG("Trying to write to invalid zone (lba 0x%" PRIx64 ")\n", lba);
 		return -EINVAL;
 	}
 
@@ -414,7 +414,8 @@ zone_block_write(struct bdev_zone_block *bdev_node, struct zone_block_io_channel
 		lba = wp;
 	} else {
 		if (lba != wp) {
-			SPDK_ERRLOG("Trying to write to zone with invalid address (lba 0x%lx, wp 0x%lx)\n", lba, wp);
+			SPDK_ERRLOG("Trying to write to zone with invalid address (lba 0x%" PRIx64 ", wp 0x%" PRIx64 ")\n",
+				    lba, wp);
 			rc = -EINVAL;
 			goto write_fail;
 		}
@@ -422,7 +423,8 @@ zone_block_write(struct bdev_zone_block *bdev_node, struct zone_block_io_channel
 
 	num_blocks_left = zone->zone_info.zone_id + zone->zone_info.capacity - wp;
 	if (len > num_blocks_left) {
-		SPDK_ERRLOG("Write exceeds zone capacity (lba 0x%" PRIu64 ", len 0x%lx, wp 0x%lx)\n", lba, len, wp);
+		SPDK_ERRLOG("Write exceeds zone capacity (lba 0x%" PRIx64 ", len 0x%" PRIx64 ", wp 0x%" PRIx64
+			    ")\n", lba, len, wp);
 		rc = -EINVAL;
 		goto write_fail;
 	}
@@ -478,12 +480,12 @@ zone_block_read(struct bdev_zone_block *bdev_node, struct zone_block_io_channel 
 
 	zone = zone_block_get_zone_containing_lba(bdev_node, lba);
 	if (!zone) {
-		SPDK_ERRLOG("Trying to read from invalid zone (lba 0x%lx)\n", lba);
+		SPDK_ERRLOG("Trying to read from invalid zone (lba 0x%" PRIx64 ")\n", lba);
 		return -EINVAL;
 	}
 
 	if ((lba + len) > (zone->zone_info.zone_id + zone->zone_info.capacity)) {
-		SPDK_ERRLOG("Read exceeds zone capacity (lba 0x%lx, len 0x%lx)\n", lba, len);
+		SPDK_ERRLOG("Read exceeds zone capacity (lba 0x%" PRIx64 ", len 0x%" PRIx64 ")\n", lba, len);
 		return -EINVAL;
 	}
 
@@ -795,7 +797,7 @@ zone_block_register(const char *base_bdev_name)
 
 		if (bdev_node->num_zones * name->zone_capacity != base_bdev->blockcnt) {
 			SPDK_DEBUGLOG(vbdev_zone_block,
-				      "Lost %lu blocks due to zone capacity and base bdev size misalignment\n",
+				      "Lost %" PRIu64 " blocks due to zone capacity and base bdev size misalignment\n",
 				      base_bdev->blockcnt - bdev_node->num_zones * name->zone_capacity);
 		}
 

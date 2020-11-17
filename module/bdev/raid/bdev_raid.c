@@ -1199,7 +1199,7 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 	}
 	raid_bdev->state = RAID_BDEV_STATE_ONLINE;
 	SPDK_DEBUGLOG(bdev_raid, "io device register %p\n", raid_bdev);
-	SPDK_DEBUGLOG(bdev_raid, "blockcnt %lu, blocklen %u\n",
+	SPDK_DEBUGLOG(bdev_raid, "blockcnt %" PRIu64 ", blocklen %u\n",
 		      raid_bdev_gen->blockcnt, raid_bdev_gen->blocklen);
 	spdk_io_device_register(raid_bdev, raid_bdev_create_cb, raid_bdev_destroy_cb,
 				sizeof(struct raid_bdev_io_channel),

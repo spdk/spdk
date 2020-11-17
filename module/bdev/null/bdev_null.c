@@ -146,7 +146,7 @@ bdev_null_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_
 			rc = spdk_dif_generate(bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
 					       bdev_io->u.bdev.num_blocks, &dif_ctx);
 			if (0 != rc) {
-				SPDK_ERRLOG("IO DIF generation failed: lba %lu, num_block %lu\n",
+				SPDK_ERRLOG("IO DIF generation failed: lba %" PRIu64 ", num_block %" PRIu64 "\n",
 					    bdev_io->u.bdev.offset_blocks,
 					    bdev_io->u.bdev.num_blocks);
 				spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -160,7 +160,7 @@ bdev_null_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_
 			rc = spdk_dif_verify(bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
 					     bdev_io->u.bdev.num_blocks, &dif_ctx, &err_blk);
 			if (0 != rc) {
-				SPDK_ERRLOG("IO DIF verification failed: lba %lu, num_blocks %lu, "
+				SPDK_ERRLOG("IO DIF verification failed: lba %" PRIu64 ", num_blocks %" PRIu64 ", "
 					    "err_type %u, expected %u, actual %u, err_offset %u\n",
 					    bdev_io->u.bdev.offset_blocks,
 					    bdev_io->u.bdev.num_blocks,

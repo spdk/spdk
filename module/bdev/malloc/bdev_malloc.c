@@ -149,7 +149,7 @@ bdev_malloc_readv(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 		return;
 	}
 
-	SPDK_DEBUGLOG(bdev_malloc, "read %lu bytes from offset %#lx\n",
+	SPDK_DEBUGLOG(bdev_malloc, "read %zu bytes from offset %#" PRIx64 "\n",
 		      len, offset);
 
 	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
@@ -183,7 +183,7 @@ bdev_malloc_writev(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 		return;
 	}
 
-	SPDK_DEBUGLOG(bdev_malloc, "wrote %lu bytes to offset %#lx\n",
+	SPDK_DEBUGLOG(bdev_malloc, "wrote %zu bytes to offset %#" PRIx64 "\n",
 		      len, offset);
 
 	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;

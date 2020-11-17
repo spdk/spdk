@@ -120,7 +120,7 @@ gpt_read_partitions(struct spdk_gpt *gpt)
 
 	partition_entry_size = from_le32(&head->size_of_partition_entry);
 	if (partition_entry_size != sizeof(struct spdk_gpt_partition_entry)) {
-		SPDK_ERRLOG("Partition_entry_size(%x) != expected(%lx)\n",
+		SPDK_ERRLOG("Partition_entry_size(%x) != expected(%zx)\n",
 			    partition_entry_size, sizeof(struct spdk_gpt_partition_entry));
 		return -1;
 	}

@@ -1346,7 +1346,7 @@ nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 			num_sectors = spdk_nvme_ns_get_num_sectors(nvme_ns);
 			bdev = TAILQ_FIRST(&ns->bdevs);
 			if (bdev->disk.blockcnt != num_sectors) {
-				SPDK_NOTICELOG("NSID %u is resized: bdev name %s, old size %lu, new size %lu\n",
+				SPDK_NOTICELOG("NSID %u is resized: bdev name %s, old size %" PRIu64 ", new size %" PRIu64 "\n",
 					       nsid,
 					       bdev->disk.name,
 					       bdev->disk.blockcnt,
@@ -2416,7 +2416,7 @@ bdev_nvme_no_pi_readv(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme
 {
 	int rc;
 
-	SPDK_DEBUGLOG(bdev_nvme, "read %lu blocks with offset %#lx without PI check\n",
+	SPDK_DEBUGLOG(bdev_nvme, "read %" PRIu64 " blocks with offset %#" PRIx64 " without PI check\n",
 		      lba_count, lba);
 
 	bio->iovs = iov;
@@ -2442,7 +2442,7 @@ bdev_nvme_readv(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
 {
 	int rc;
 
-	SPDK_DEBUGLOG(bdev_nvme, "read %lu blocks with offset %#lx\n",
+	SPDK_DEBUGLOG(bdev_nvme, "read %" PRIu64 " blocks with offset %#" PRIx64 "\n",
 		      lba_count, lba);
 
 	bio->iovs = iov;
@@ -2477,7 +2477,7 @@ bdev_nvme_writev(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
 {
 	int rc;
 
-	SPDK_DEBUGLOG(bdev_nvme, "write %lu blocks with offset %#lx\n",
+	SPDK_DEBUGLOG(bdev_nvme, "write %" PRIu64 " blocks with offset %#" PRIx64 "\n",
 		      lba_count, lba);
 
 	bio->iovs = iov;
@@ -2512,7 +2512,7 @@ bdev_nvme_comparev(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch
 {
 	int rc;
 
-	SPDK_DEBUGLOG(bdev_nvme, "compare %lu blocks with offset %#lx\n",
+	SPDK_DEBUGLOG(bdev_nvme, "compare %" PRIu64 " blocks with offset %#" PRIx64 "\n",
 		      lba_count, lba);
 
 	bio->iovs = iov;
@@ -2540,7 +2540,7 @@ bdev_nvme_comparev_and_writev(struct nvme_bdev_ns *nvme_ns, struct nvme_io_chann
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 	int rc;
 
-	SPDK_DEBUGLOG(bdev_nvme, "compare and write %lu blocks with offset %#lx\n",
+	SPDK_DEBUGLOG(bdev_nvme, "compare and write %" PRIu64 " blocks with offset %#" PRIx64 "\n",
 		      lba_count, lba);
 
 	bio->iovs = cmp_iov;

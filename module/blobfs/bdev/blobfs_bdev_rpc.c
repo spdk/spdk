@@ -193,7 +193,7 @@ rpc_decode_cluster_sz(const struct spdk_json_val *val, void *out)
 		return -EINVAL;
 	}
 
-	SPDK_DEBUGLOG(blobfs_bdev_rpc, "cluster_sz of blobfs: %ld\n", *cluster_sz);
+	SPDK_DEBUGLOG(blobfs_bdev_rpc, "cluster_sz of blobfs: %" PRId64 "\n", *cluster_sz);
 	return 0;
 }
 
