@@ -439,10 +439,6 @@ bdev_ocssd_write_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 	struct spdk_bdev_io *bdev_io = ctx;
 	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
 
-	if (bdev_io->type == SPDK_BDEV_IO_TYPE_ZONE_APPEND) {
-		bdev_io->u.bdev.offset_blocks = ocdev_io->io.zone->write_pointer;
-	}
-
 	ocdev_io->io.zone->write_pointer = bdev_io->u.bdev.offset_blocks +
 					   bdev_io->u.bdev.num_blocks;
 	assert(ocdev_io->io.zone->write_pointer <= ocdev_io->io.zone->slba +
@@ -489,6 +485,20 @@ bdev_ocssd_write(struct nvme_io_channel *nvme_ch, struct spdk_bdev_io *bdev_io)
 	return rc;
 }
 
+static void
+bdev_ocssd_append_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_bdev_io *bdev_io = ctx;
+	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
+
+	ocdev_io->io.zone->write_pointer += bdev_io->u.bdev.num_blocks;
+	assert(ocdev_io->io.zone->write_pointer <= ocdev_io->io.zone->slba +
+	       ocdev_io->io.zone->capacity);
+
+	__atomic_store_n(&ocdev_io->io.zone->busy, false, __ATOMIC_SEQ_CST);
+	spdk_bdev_io_complete_nvme_status(bdev_io, 0, cpl->status.sct, cpl->status.sc);
+}
+
 static int
 bdev_ocssd_zone_append(struct nvme_io_channel *nvme_ch, struct spdk_bdev_io *bdev_io)
 {
@@ -523,7 +533,7 @@ bdev_ocssd_zone_append(struct nvme_io_channel *nvme_ch, struct spdk_bdev_io *bde
 
 	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, zone->write_pointer);
 	rc = spdk_nvme_ns_cmd_writev_with_md(nvme_bdev->nvme_ns->ns, nvme_ch->qpair, lba,
-					     bdev_io->u.bdev.num_blocks, bdev_ocssd_write_cb,
+					     bdev_io->u.bdev.num_blocks, bdev_ocssd_append_cb,
 					     bdev_io, 0, bdev_ocssd_reset_sgl,
 					     bdev_ocssd_next_sge, bdev_io->u.bdev.md_buf, 0, 0);
 out:
