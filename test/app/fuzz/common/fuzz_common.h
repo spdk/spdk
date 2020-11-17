@@ -247,7 +247,7 @@ fuzz_parse_args_into_array(const char *file, void **arr, size_t ele_size, const 
 
 			rc = cb_fn((void *)arr_idx_pointer, obj_start, values_in_obj);
 			if (rc == false) {
-				fprintf(stderr, "failed to parse file after %lu elements.\n", arr_elements_used);
+				fprintf(stderr, "failed to parse file after %zu elements.\n", arr_elements_used);
 				goto fail;
 			}
 

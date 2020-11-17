@@ -343,7 +343,7 @@ nvme_fuzz_cpl_cb(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 
 	qp->completed_cmd_counter++;
 	if (spdk_unlikely(cpl->status.sc == SPDK_NVME_SC_SUCCESS)) {
-		fprintf(stderr, "The following %s command (command num %lu) completed successfully\n",
+		fprintf(stderr, "The following %s command (command num %" PRIu64 ") completed successfully\n",
 			qp->is_admin ? "Admin" : "I/O", qp->completed_cmd_counter);
 		qp->successful_completed_cmd_counter++;
 		json_dump_nvme_cmd(&ctx->cmd);
@@ -354,7 +354,7 @@ nvme_fuzz_cpl_cb(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 			__sync_bool_compare_and_swap(&g_successful_io_opcodes[ctx->cmd.opc], false, true);
 		}
 	} else if (g_verbose_mode == true) {
-		fprintf(stderr, "The following %s command (command num %lu) failed as expected.\n",
+		fprintf(stderr, "The following %s command (command num %" PRIu64 ") failed as expected.\n",
 			qp->is_admin ? "Admin" : "I/O", qp->completed_cmd_counter);
 		json_dump_nvme_cmd(&ctx->cmd);
 	}
@@ -512,10 +512,12 @@ free_namespaces(void)
 	struct nvme_fuzz_ns *ns, *tmp;
 
 	TAILQ_FOREACH_SAFE(ns, &g_ns_list, tailq, tmp) {
-		printf("NS: %p I/O qp, Total commands completed: %lu, total successful commands: %lu, random_seed: %u\n",
+		printf("NS: %p I/O qp, Total commands completed: %" PRIu64 ", total successful commands: %" PRIu64
+		       ", random_seed: %u\n",
 		       ns->ns,
 		       ns->io_qp.completed_cmd_counter, ns->io_qp.successful_completed_cmd_counter, ns->io_qp.random_seed);
-		printf("NS: %p admin qp, Total commands completed: %lu, total successful commands: %lu, random_seed: %u\n",
+		printf("NS: %p admin qp, Total commands completed: %" PRIu64 ", total successful commands: %" PRIu64
+		       ", random_seed: %u\n",
 		       ns->ns,
 		       ns->a_qp.completed_cmd_counter, ns->a_qp.successful_completed_cmd_counter, ns->a_qp.random_seed);
 

@@ -1573,7 +1573,7 @@ check_scsi_task(struct spdk_iscsi_pdu *pdu, enum spdk_scsi_data_dir dir)
 	task = pdu->task;
 	CU_ASSERT(task != NULL);
 	CU_ASSERT(task->pdu == pdu);
-	CU_ASSERT(task->scsi.dxfer_dir == dir);
+	CU_ASSERT(task->scsi.dxfer_dir == (uint32_t)dir);
 
 	iscsi_task_put(task);
 	pdu->task = NULL;

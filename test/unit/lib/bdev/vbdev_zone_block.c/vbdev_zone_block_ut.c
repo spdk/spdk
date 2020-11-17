@@ -40,7 +40,7 @@
 #include "bdev/zone_block/vbdev_zone_block.c"
 #include "bdev/zone_block/vbdev_zone_block_rpc.c"
 
-#define BLOCK_CNT (1024ul * 1024ul * 1024ul * 1024ul)
+#define BLOCK_CNT ((uint64_t)1024ul * 1024ul * 1024ul * 1024ul)
 #define BLOCK_SIZE 4096
 
 /* Globals */

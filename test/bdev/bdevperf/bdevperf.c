@@ -504,7 +504,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		if (!job->reset && !job->continue_on_failure) {
 			bdevperf_job_drain(job);
 			g_run_rc = -1;
-			printf("task offset: %lu on job bdev=%s fails\n",
+			printf("task offset: %" PRIu64 " on job bdev=%s fails\n",
 			       task->offset_blocks, job->name);
 		}
 	} else if (job->verify || job->reset) {
@@ -516,7 +516,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 				 task->md_buf, spdk_bdev_io_get_md_buf(bdev_io),
 				 spdk_bdev_get_md_size(job->bdev),
 				 job->io_size_blocks, md_check)) {
-			printf("Buffer mismatch! Target: %s Disk Offset: %lu\n", job->name, task->offset_blocks);
+			printf("Buffer mismatch! Target: %s Disk Offset: %" PRIu64 "\n", job->name, task->offset_blocks);
 			printf("   First dword expected 0x%x got 0x%x\n", *(int *)task->buf, *(int *)iovs[0].iov_base);
 			bdevperf_job_drain(job);
 			g_run_rc = -1;

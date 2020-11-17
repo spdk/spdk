@@ -352,11 +352,11 @@ print_stats(void)
 	}
 
 	printf("========================================================\n");
-	printf("%16lu IO completed successfully\n", total_completed_io);
-	printf("%16lu IO completed with error\n", total_completed_err_io);
+	printf("%16" PRIu64 " IO completed successfully\n", total_completed_io);
+	printf("%16" PRIu64 " IO completed with error\n", total_completed_err_io);
 	printf("--------------------------------------------------------\n");
-	printf("%16lu IO completed total\n", total_completed_io + total_completed_err_io);
-	printf("%16lu IO submitted\n", total_submitted_io);
+	printf("%16" PRIu64 " IO completed total\n", total_completed_io + total_completed_err_io);
+	printf("%16" PRIu64 " IO submitted\n", total_submitted_io);
 
 	if (total_submitted_io != (total_completed_io + total_completed_err_io)) {
 		fprintf(stderr, "Some IO are missing......\n");

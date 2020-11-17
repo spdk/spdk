@@ -233,7 +233,7 @@ cleanup(void)
 	struct fuzz_iscsi_dev_ctx *dev_ctx, *tmp;
 
 	TAILQ_FOREACH_SAFE(dev_ctx, &g_dev_list, link, tmp) {
-		printf("device %p stats: Sent %lu valid opcode PDUs, %lu invalid opcode PDUs.\n",
+		printf("device %p stats: Sent %" PRIu64 " valid opcode PDUs, %" PRIu64 " invalid opcode PDUs.\n",
 		       dev_ctx, dev_ctx->num_valid_pdus,
 		       dev_ctx->num_sent_pdus - dev_ctx->num_valid_pdus);
 		free(dev_ctx);
