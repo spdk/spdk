@@ -667,7 +667,7 @@ print_uint_var_dec(uint8_t *array, unsigned int len)
 		result += (uint64_t)array[i - 1] << (8 * (i - 1));
 		i--;
 	}
-	printf("%lu", result);
+	printf("%" PRIu64, result);
 }
 
 /* Print ASCII string as defined by the NVMe spec */
@@ -714,9 +714,9 @@ print_ocssd_chunk_info(struct spdk_ocssd_chunk_information_entry *chk_info, int 
 		printf("Chunk type (write mode):        %s\n", ct_str);
 		printf("Chunk type (size_deviate):      %s\n", chk_info[i].ct.size_deviate ? "Yes" : "No");
 		printf("Wear-level Index:               %d\n", chk_info[i].wli);
-		printf("Starting LBA:                   %ld\n", chk_info[i].slba);
-		printf("Number of blocks in chunk:      %ld\n", chk_info[i].cnlb);
-		printf("Write Pointer:                  %ld\n", chk_info[i].wp);
+		printf("Starting LBA:                   %" PRIu64 "\n", chk_info[i].slba);
+		printf("Number of blocks in chunk:      %" PRIu64 "\n", chk_info[i].cnlb);
+		printf("Write Pointer:                  %" PRIu64 "\n", chk_info[i].wp);
 	}
 }
 
@@ -1207,7 +1207,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 		size *= (0x1000 << (cmbsz.bits.szu * 4));
 
 		printf("Supported:                             Yes\n");
-		printf("Total Size:                            %lu bytes\n", size);
+		printf("Total Size:                            %" PRIu64 " bytes\n", size);
 		printf("Submission Queues in CMB:              %s\n",
 		       cmbsz.bits.sqs ? "Supported" : "Not Supported");
 		printf("Completion Queues in CMB:              %s\n",
@@ -1775,18 +1775,18 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	if (spdk_nvme_ctrlr_is_log_page_supported(ctrlr, SPDK_NVME_INTEL_LOG_TEMPERATURE)) {
 		printf("Intel Temperature Information\n");
 		printf("==================\n");
-		printf("Current Temperature: %lu\n", intel_temperature_page.current_temperature);
-		printf("Overtemp shutdown Flag for last critical component temperature: %lu\n",
+		printf("Current Temperature: %" PRIu64 "\n", intel_temperature_page.current_temperature);
+		printf("Overtemp shutdown Flag for last critical component temperature: %" PRIu64 "\n",
 		       intel_temperature_page.shutdown_flag_last);
-		printf("Overtemp shutdown Flag for life critical component temperature: %lu\n",
+		printf("Overtemp shutdown Flag for life critical component temperature: %" PRIu64 "\n",
 		       intel_temperature_page.shutdown_flag_life);
-		printf("Highest temperature: %lu\n", intel_temperature_page.highest_temperature);
-		printf("Lowest temperature: %lu\n", intel_temperature_page.lowest_temperature);
-		printf("Specified Maximum Operating Temperature: %lu\n",
+		printf("Highest temperature: %" PRIu64 "\n", intel_temperature_page.highest_temperature);
+		printf("Lowest temperature: %" PRIu64 "\n", intel_temperature_page.lowest_temperature);
+		printf("Specified Maximum Operating Temperature: %" PRIu64 "\n",
 		       intel_temperature_page.specified_max_op_temperature);
-		printf("Specified Minimum Operating Temperature: %lu\n",
+		printf("Specified Minimum Operating Temperature: %" PRIu64 "\n",
 		       intel_temperature_page.specified_min_op_temperature);
-		printf("Estimated offset: %ld\n", intel_temperature_page.estimated_offset);
+		printf("Estimated offset: %" PRId64 "\n", (int64_t)intel_temperature_page.estimated_offset);
 		printf("\n");
 		printf("\n");
 

@@ -909,7 +909,7 @@ opal_dump_info(struct spdk_opal_d0_features_info *feat)
 		printf("Opal Geometry feature:\n");
 		printf("Align = %s", (feat->geo.alignment_granularity ? "Y, " : "N, "));
 		printf("Logical block size = %d, ", from_be32(&feat->geo.logical_block_size));
-		printf("Lowest aligned LBA = %ld\n", from_be64(&feat->geo.lowest_aligned_lba));
+		printf("Lowest aligned LBA = %" PRIu64 "\n", from_be64(&feat->geo.lowest_aligned_lba));
 		printf("\n");
 	}
 
@@ -1104,8 +1104,8 @@ opal_setup_lockingrange(struct dev *iter)
 			info = spdk_opal_get_locking_range_info(iter->opal_dev, locking_range_id);
 
 			printf("\nlocking range ID: %d\n", info->locking_range_id);
-			printf("range start: %ld\n", info->range_start);
-			printf("range length: %ld\n", info->range_length);
+			printf("range start: %" PRIu64 "\n", info->range_start);
+			printf("range length: %" PRIu64 "\n", info->range_length);
 			printf("read lock enabled: %d\n", info->read_lock_enabled);
 			printf("write lock enabled: %d\n", info->write_lock_enabled);
 			printf("read locked: %d\n", info->read_locked);
@@ -1168,8 +1168,8 @@ opal_list_locking_ranges(struct dev *iter)
 				printf("locking range ID: %d\t", info->locking_range_id);
 				if (i == 0) { printf("(Global Range)"); }
 				printf("\n===============================================\n");
-				printf("range start: %ld\t", info->range_start);
-				printf("range length: %ld\n", info->range_length);
+				printf("range start: %" PRIu64 "\t", info->range_start);
+				printf("range length: %" PRIu64 "\n", info->range_length);
 				printf("read lock enabled: %d\t", info->read_lock_enabled);
 				printf("write lock enabled: %d\t", info->write_lock_enabled);
 				printf("read locked: %d\t", info->read_locked);

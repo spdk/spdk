@@ -822,17 +822,17 @@ unregister_workers(void)
 
 		TAILQ_FOREACH_SAFE(ns_ctx, &worker->ns_ctx, link, tmp_ns_ctx) {
 			TAILQ_REMOVE(&worker->ns_ctx, ns_ctx, link);
-			printf("NS: %s I/O completed: %lu, failed: %lu\n",
+			printf("NS: %s I/O completed: %" PRIu64 ", failed: %" PRIu64 "\n",
 			       ns_ctx->entry->name, ns_ctx->io_completed, ns_ctx->io_failed);
 			free(ns_ctx);
 		}
 
 		TAILQ_FOREACH_SAFE(ctrlr_ctx, &worker->ctrlr_ctx, link, tmp_ctrlr_ctx) {
 			TAILQ_REMOVE(&worker->ctrlr_ctx, ctrlr_ctx, link);
-			printf("CTRLR: %s abort submitted %lu, failed to submit %lu\n",
+			printf("CTRLR: %s abort submitted %" PRIu64 ", failed to submit %" PRIu64 "\n",
 			       ctrlr_ctx->entry->name, ctrlr_ctx->abort_submitted,
 			       ctrlr_ctx->abort_submit_failed);
-			printf("\t success %lu, unsuccess %lu, failed %lu\n",
+			printf("\t success %" PRIu64 ", unsuccess %" PRIu64 ", failed %" PRIu64 "\n",
 			       ctrlr_ctx->successful_abort, ctrlr_ctx->unsuccessful_abort,
 			       ctrlr_ctx->abort_failed);
 			free(ctrlr_ctx);
