@@ -848,6 +848,9 @@ struct spdk_nvme_ctrlr {
 
 	/* scratchpad pointer that can be used to send data between two NVME_CTRLR_STATEs */
 	void				*tmp_ptr;
+
+	/* maximum zone append size in bytes */
+	uint32_t			max_zone_append_size;
 };
 
 struct spdk_nvme_probe_ctx {

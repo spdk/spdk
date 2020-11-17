@@ -99,6 +99,15 @@ uint64_t spdk_nvme_zns_ns_get_num_zones(struct spdk_nvme_ns *ns);
 const struct spdk_nvme_zns_ctrlr_data *spdk_nvme_zns_ctrlr_get_data(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
+ * Get the maximum zone append data transfer size of a given NVMe controller.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return Maximum zone append data transfer size of the NVMe controller in bytes.
+ */
+uint32_t spdk_nvme_zns_ctrlr_get_max_zone_append_size(const struct spdk_nvme_ctrlr *ctrlr);
+
+/**
  * Submit a Close Zone operation to the specified NVMe namespace.
  *
  * \param ns Namespace.

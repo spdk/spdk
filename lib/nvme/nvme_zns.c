@@ -60,6 +60,12 @@ spdk_nvme_zns_ctrlr_get_data(struct spdk_nvme_ctrlr *ctrlr)
 	return ctrlr->cdata_zns;
 }
 
+uint32_t
+spdk_nvme_zns_ctrlr_get_max_zone_append_size(const struct spdk_nvme_ctrlr *ctrlr)
+{
+	return ctrlr->max_zone_append_size;
+}
+
 static int
 nvme_zns_zone_mgmt_recv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			void *payload, uint32_t payload_size, uint64_t slba,

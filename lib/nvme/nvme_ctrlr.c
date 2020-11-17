@@ -1667,6 +1667,14 @@ nvme_ctrlr_identify_zns_specific_done(void *arg, const struct spdk_nvme_cpl *cpl
 		return;
 	}
 
+	/* A zero zasl value means use mdts */
+	if (ctrlr->cdata_zns->zasl) {
+		uint32_t max_append = ctrlr->min_page_size * (1 << ctrlr->cdata_zns->zasl);
+		ctrlr->max_zone_append_size = spdk_min(ctrlr->max_xfer_size, max_append);
+	} else {
+		ctrlr->max_zone_append_size = ctrlr->max_xfer_size;
+	}
+
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_GET_ZNS_CMD_EFFECTS_LOG,
 			     ctrlr->opts.admin_timeout_ms);
 }
