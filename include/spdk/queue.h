@@ -46,7 +46,7 @@ extern "C" {
  *  use of features in FreeBSD's queue.h that do not exist on Linux.
  *  Include a header with these additional features on Linux only.
  */
-#ifndef __FreeBSD__
+#ifdef __linux__
 #include "spdk/queue_extras.h"
 #endif
 
