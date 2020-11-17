@@ -222,6 +222,7 @@ static int g_num_namespaces;
 static TAILQ_HEAD(, worker_thread) g_workers = TAILQ_HEAD_INITIALIZER(g_workers);
 static int g_num_workers = 0;
 static uint32_t g_main_core;
+static pthread_barrier_t g_worker_sync_barrier;
 
 static uint64_t g_tsc_rate;
 
@@ -1280,13 +1281,22 @@ work_fn(void *arg)
 	struct ns_worker_ctx *ns_ctx = NULL;
 	uint32_t unfinished_ns_ctx;
 	bool warmup = false;
+	int rc;
 
 	/* Allocate queue pairs for each namespace. */
 	TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
 		if (init_ns_worker_ctx(ns_ctx) != 0) {
 			printf("ERROR: init_ns_worker_ctx() failed\n");
+			/* Wait on barrier to avoid blocking of successful workers */
+			pthread_barrier_wait(&g_worker_sync_barrier);
 			return 1;
 		}
+	}
+
+	rc = pthread_barrier_wait(&g_worker_sync_barrier);
+	if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
+		printf("ERROR: failed to wait on thread sync barrier\n");
+		return 1;
 	}
 
 	tsc_current = spdk_get_ticks();
@@ -2382,6 +2392,12 @@ int main(int argc, char **argv)
 		goto cleanup;
 	}
 
+	rc = pthread_barrier_init(&g_worker_sync_barrier, NULL, g_num_workers);
+	if (rc != 0) {
+		fprintf(stderr, "Unable to initialize thread sync barrier\n");
+		goto cleanup;
+	}
+
 	printf("Initialization complete. Launching workers.\n");
 
 	/* Launch all of the secondary workers */
@@ -2404,6 +2420,7 @@ int main(int argc, char **argv)
 	print_stats();
 
 cleanup:
+	pthread_barrier_destroy(&g_worker_sync_barrier);
 	if (thread_id && pthread_cancel(thread_id) == 0) {
 		pthread_join(thread_id, NULL);
 	}
