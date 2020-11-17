@@ -1199,8 +1199,8 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 			ns_info->channel = ch;
 		} else if (ns_info->num_blocks != spdk_bdev_get_num_blocks(ns->bdev)) {
 			/* Namespace is still there but size has changed */
-			SPDK_DEBUGLOG(nvmf, "Namespace resized: subsystem_id %d,"
-				      " nsid %u, pg %p, old %lu, new %lu\n",
+			SPDK_DEBUGLOG(nvmf, "Namespace resized: subsystem_id %u,"
+				      " nsid %u, pg %p, old %" PRIu64 ", new %" PRIu64 "\n",
 				      subsystem->id,
 				      ns->nsid,
 				      group,

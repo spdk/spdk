@@ -248,7 +248,7 @@ vmd_allocate_base_addr(struct vmd_adapter *vmd, struct vmd_pci_device *dev, uint
 		vmd->current_addr_size -= size + padding;
 	}
 
-	SPDK_DEBUGLOG(vmd, "allocated(size) %lx (%x)\n", base_address, size);
+	SPDK_DEBUGLOG(vmd, "allocated(size) %" PRIx64 " (%x)\n", base_address, size);
 
 	return base_address;
 }

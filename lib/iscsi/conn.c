@@ -1299,7 +1299,7 @@ iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
 	if (conn->nop_outstanding) {
 		if ((tsc - conn->last_nopin) > conn->timeout) {
 			SPDK_ERRLOG("Timed out waiting for NOP-Out response from initiator\n");
-			SPDK_ERRLOG("  tsc=0x%lx, last_nopin=0x%lx\n", tsc, conn->last_nopin);
+			SPDK_ERRLOG("  tsc=0x%" PRIx64 ", last_nopin=0x%" PRIx64 "\n", tsc, conn->last_nopin);
 			SPDK_ERRLOG("  initiator=%s, target=%s\n", conn->initiator_name,
 				    conn->target_short_name);
 			conn->state = ISCSI_CONN_STATE_EXITING;

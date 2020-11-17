@@ -439,14 +439,14 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 		/* If user passes buffers, make sure they're big enough for the requested queue size */
 		if (opts.sq.vaddr) {
 			if (opts.sq.buffer_size < (opts.io_queue_size * sizeof(struct spdk_nvme_cmd))) {
-				SPDK_ERRLOG("sq buffer size %lx is too small for sq size %lx\n",
+				SPDK_ERRLOG("sq buffer size %" PRIx64 " is too small for sq size %zx\n",
 					    opts.sq.buffer_size, (opts.io_queue_size * sizeof(struct spdk_nvme_cmd)));
 				return NULL;
 			}
 		}
 		if (opts.cq.vaddr) {
 			if (opts.cq.buffer_size < (opts.io_queue_size * sizeof(struct spdk_nvme_cpl))) {
-				SPDK_ERRLOG("cq buffer size %lx is too small for cq size %lx\n",
+				SPDK_ERRLOG("cq buffer size %" PRIx64 " is too small for cq size %zx\n",
 					    opts.cq.buffer_size, (opts.io_queue_size * sizeof(struct spdk_nvme_cpl)));
 				return NULL;
 			}
@@ -4151,7 +4151,7 @@ spdk_nvme_map_prps(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs,
 			iovcnt = 2;
 			vva = gpa_to_vva(prv, prp2, len);
 			if (spdk_unlikely(vva == NULL)) {
-				SPDK_ERRLOG("no VVA for %#lx, len%#x\n",
+				SPDK_ERRLOG("no VVA for %#" PRIx64 ", len%#x\n",
 					    prp2, len);
 				return -1;
 			}
@@ -4162,7 +4162,7 @@ spdk_nvme_map_prps(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs,
 			nents = (len + mps - 1) / mps;
 			vva = gpa_to_vva(prv, prp2, nents * sizeof(*prp_list));
 			if (spdk_unlikely(vva == NULL)) {
-				SPDK_ERRLOG("no VVA for %#lx, nents=%#x\n",
+				SPDK_ERRLOG("no VVA for %#" PRIx64 ", nents=%#x\n",
 					    prp2, nents);
 				return -1;
 			}
@@ -4172,7 +4172,7 @@ spdk_nvme_map_prps(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs,
 				residue_len = spdk_min(len, mps);
 				vva = gpa_to_vva(prv, prp_list[i], residue_len);
 				if (spdk_unlikely(vva == NULL)) {
-					SPDK_ERRLOG("no VVA for %#lx, residue_len=%#x\n",
+					SPDK_ERRLOG("no VVA for %#" PRIx64 ", residue_len=%#x\n",
 						    prp_list[i], residue_len);
 					return -1;
 				}

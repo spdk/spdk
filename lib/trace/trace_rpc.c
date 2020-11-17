@@ -139,7 +139,7 @@ rpc_trace_get_tpoint_group_mask(struct spdk_jsonrpc_request *request,
 
 	spdk_json_write_object_begin(w);
 
-	snprintf(mask_str, sizeof(mask_str), "0x%lx", tpoint_group_mask);
+	snprintf(mask_str, sizeof(mask_str), "0x%" PRIx64, tpoint_group_mask);
 	spdk_json_write_named_string(w, "tpoint_group_mask", mask_str);
 
 	register_fn = spdk_trace_get_first_register_fn();

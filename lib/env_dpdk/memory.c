@@ -49,7 +49,7 @@
 #include "spdk/env_dpdk.h"
 #include "spdk/log.h"
 
-#ifdef __FreeBSD__
+#ifndef __linux__
 #define VFIO_ENABLED 0
 #else
 #include <linux/version.h>
@@ -605,13 +605,13 @@ spdk_mem_map_set_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 	struct map_2mb *map_2mb;
 
 	if ((uintptr_t)vaddr & ~MASK_256TB) {
-		DEBUG_PRINT("invalid usermode virtual address %lu\n", vaddr);
+		DEBUG_PRINT("invalid usermode virtual address %" PRIu64 "\n", vaddr);
 		return -EINVAL;
 	}
 
 	/* For now, only 2 MB-aligned registrations are supported */
 	if (((uintptr_t)vaddr & MASK_2MB) || (size & MASK_2MB)) {
-		DEBUG_PRINT("invalid %s parameters, vaddr=%lu len=%ju\n",
+		DEBUG_PRINT("invalid %s parameters, vaddr=%" PRIu64 " len=%" PRIu64 "\n",
 			    __func__, vaddr, size);
 		return -EINVAL;
 	}

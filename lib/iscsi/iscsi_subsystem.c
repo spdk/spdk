@@ -67,7 +67,7 @@ mobj_ctor(struct spdk_mempool *mp, __attribute__((unused)) void *arg,
 
 	m->mp = mp;
 	m->buf = (uint8_t *)m + sizeof(struct spdk_mobj);
-	m->buf = (void *)((unsigned long)((uint8_t *)m->buf + ISCSI_DATA_BUFFER_ALIGNMENT) &
+	m->buf = (void *)((uintptr_t)((uint8_t *)m->buf + ISCSI_DATA_BUFFER_ALIGNMENT) &
 			  ~ISCSI_DATA_BUFFER_MASK);
 }
 

@@ -438,7 +438,7 @@ spdk_ring_dequeue(struct spdk_ring *ring, void **objs, size_t count)
 void
 spdk_env_dpdk_dump_mem_stats(FILE *file)
 {
-	fprintf(file, "DPDK memory size %lu\n", rte_eal_get_physmem_size());
+	fprintf(file, "DPDK memory size %" PRIu64 "\n", rte_eal_get_physmem_size());
 	fprintf(file, "DPDK memory layout\n");
 	rte_dump_physmem_layout(file);
 	fprintf(file, "DPDK memzones.\n");
