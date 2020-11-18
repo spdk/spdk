@@ -192,7 +192,7 @@ been added, and a new optional parameter `private` has been added to the RPC
 `iscsi_create_portal_group` to support iSCSI login redirection feature.
 
 A new optional parameter `ana_reporting` was added to the RPC `nvmf_create_subsystem`, and
-a new RPC `nvmf_subsystem_listner_set_ana_state` was added for ANA reporting.
+a new RPC `nvmf_subsystem_listener_set_ana_state` was added for ANA reporting.
 
 New RPCs, `nvmf_subsystem_get_listeners` and `nvmf_subsystem_get_qpairs`, were added to
 retrieve configuration of the NVMe-oF subsystem.
