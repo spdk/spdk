@@ -420,11 +420,11 @@ struct spdk_nvme_host_id {
  * Used for identifying if the controller supports these flags.
  */
 enum spdk_nvme_ctrlr_flags {
-	SPDK_NVME_CTRLR_SGL_SUPPORTED			= 0x1, /**< SGL is supported */
-	SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED	= 0x2, /**< security send/receive is supported */
-	SPDK_NVME_CTRLR_WRR_SUPPORTED			= 0x4, /**< Weighted Round Robin is supported */
-	SPDK_NVME_CTRLR_COMPARE_AND_WRITE_SUPPORTED	= 0x8, /**< Compare and write fused operations supported */
-	SPDK_NVME_CTRLR_SGL_REQUIRES_DWORD_ALIGNMENT	= 0x10, /**< Dword alignment is required for SGL */
+	SPDK_NVME_CTRLR_SGL_SUPPORTED			= 1 << 0, /**< SGL is supported */
+	SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED	= 1 << 1, /**< security send/receive is supported */
+	SPDK_NVME_CTRLR_WRR_SUPPORTED			= 1 << 2, /**< Weighted Round Robin is supported */
+	SPDK_NVME_CTRLR_COMPARE_AND_WRITE_SUPPORTED	= 1 << 3, /**< Compare and write fused operations supported */
+	SPDK_NVME_CTRLR_SGL_REQUIRES_DWORD_ALIGNMENT	= 1 << 4, /**< Dword alignment is required for SGL */
 };
 
 /**
