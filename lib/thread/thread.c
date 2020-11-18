@@ -523,7 +523,7 @@ msg_queue_run_batch(struct spdk_thread *thread, uint32_t max_msgs)
 		 * This can avoid msg notification missing.
 		 */
 		rc = read(thread->msg_fd, &notify, sizeof(notify));
-		if (rc < 0) {
+		if (rc < 0 && errno != EAGAIN) {
 			SPDK_ERRLOG("failed to acknowledge msg_queue: %s.\n", spdk_strerror(errno));
 		}
 	}
