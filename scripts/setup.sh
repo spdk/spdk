@@ -482,8 +482,8 @@ function reset_linux() {
 }
 
 function status_linux() {
-	echo "Hugepages"
-	printf "%-6s %10s %8s / %6s\n" "node" "hugesize" "free" "total"
+	echo "Hugepages" >&2
+	printf "%-6s %10s %8s / %6s\n" "node" "hugesize" "free" "total" >&2
 
 	numa_nodes=0
 	shopt -s nullglob
@@ -512,7 +512,7 @@ function status_linux() {
 	fi
 
 	printf '\n%-8s %-15s %-6s %-6s %-7s %-16s %-10s %s\n' \
-		"Type" "BDF" "Vendor" "Device" "NUMA" "Driver" "Device" "Block devices"
+		"Type" "BDF" "Vendor" "Device" "NUMA" "Driver" "Device" "Block devices" >&2
 
 	for bdf in "${!all_devices_d[@]}"; do
 		driver=${drivers_d["$bdf"]}
