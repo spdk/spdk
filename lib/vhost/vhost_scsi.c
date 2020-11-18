@@ -807,10 +807,15 @@ vdev_mgmt_worker(void *arg)
 	struct spdk_vhost_session *vsession = &svsession->vsession;
 
 	process_removed_devs(svsession);
-	vhost_vq_used_signal(vsession, &vsession->virtqueue[VIRTIO_SCSI_EVENTQ]);
 
-	process_vq(svsession, &vsession->virtqueue[VIRTIO_SCSI_CONTROLQ]);
-	vhost_vq_used_signal(vsession, &vsession->virtqueue[VIRTIO_SCSI_CONTROLQ]);
+	if (vsession->virtqueue[VIRTIO_SCSI_EVENTQ].vring.desc) {
+		vhost_vq_used_signal(vsession, &vsession->virtqueue[VIRTIO_SCSI_EVENTQ]);
+	}
+
+	if (vsession->virtqueue[VIRTIO_SCSI_CONTROLQ].vring.desc) {
+		process_vq(svsession, &vsession->virtqueue[VIRTIO_SCSI_CONTROLQ]);
+		vhost_vq_used_signal(vsession, &vsession->virtqueue[VIRTIO_SCSI_CONTROLQ]);
+	}
 
 	return SPDK_POLLER_BUSY;
 }
@@ -1408,11 +1413,8 @@ vhost_scsi_start_cb(struct spdk_vhost_dev *vdev,
 		     vsession->name, spdk_env_get_current_core());
 
 	svsession->requestq_poller = SPDK_POLLER_REGISTER(vdev_worker, svsession, 0);
-	if (vsession->virtqueue[VIRTIO_SCSI_CONTROLQ].vring.desc &&
-	    vsession->virtqueue[VIRTIO_SCSI_EVENTQ].vring.desc) {
-		svsession->mgmt_poller = SPDK_POLLER_REGISTER(vdev_mgmt_worker, svsession,
-					 MGMT_POLL_PERIOD_US);
-	}
+	svsession->mgmt_poller = SPDK_POLLER_REGISTER(vdev_mgmt_worker, svsession,
+				 MGMT_POLL_PERIOD_US);
 out:
 	vhost_session_start_done(vsession, rc);
 	return rc;
