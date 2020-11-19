@@ -227,8 +227,11 @@ performance_dump_job(struct bdevperf_aggregate_stats *stats, struct bdevperf_job
 	double io_per_second, mb_per_second, failed_per_second, timeout_per_second;
 
 	printf("\r Thread name: %s\n", spdk_thread_get_name(job->thread));
-	printf("\r Core Mask: 0x%s\n", spdk_cpuset_fmt(spdk_thread_get_cpumask(job->thread)));
-
+	printf("\t Core Mask: 0x%s\n", spdk_cpuset_fmt(spdk_thread_get_cpumask(job->thread)));
+	if (job->verify) {
+		printf("\t Verification LBA range: start 0x%lx length 0x%lx\n",
+		       job->ios_base, job->size_in_ios);
+	}
 	if (stats->ema_period == 0) {
 		io_per_second = get_cma_io_per_second(job, stats->io_time_in_usec);
 	} else {
@@ -238,10 +241,10 @@ performance_dump_job(struct bdevperf_aggregate_stats *stats, struct bdevperf_job
 	failed_per_second = (double)job->io_failed * 1000000 / stats->io_time_in_usec;
 	timeout_per_second = (double)job->io_timeout * 1000000 / stats->io_time_in_usec;
 
-	printf("\r %-20s: %10.2f IOPS %10.2f MiB/s\n",
+	printf("\t %-20s: %10.2f IOPS %10.2f MiB/s\n",
 	       job->name, io_per_second, mb_per_second);
 	if (failed_per_second != 0) {
-		printf("\r %-20s: %10.2f Fail/s %8.2f TO/s\n",
+		printf("\t %-20s: %10.2f Fail/s %8.2f TO/s\n",
 		       "", failed_per_second, timeout_per_second);
 	}
 	stats->total_io_per_second += io_per_second;
@@ -252,9 +255,9 @@ performance_dump_job(struct bdevperf_aggregate_stats *stats, struct bdevperf_job
 
 static void
 generate_data(void *buf, int buf_len, int block_size, void *md_buf, int md_size,
-	      int num_blocks, int seed)
+	      int num_blocks)
 {
-	int offset_blocks = 0, md_offset, data_block_size;
+	int offset_blocks = 0, md_offset, data_block_size, inner_offset;
 
 	if (buf_len < num_blocks * block_size) {
 		return;
@@ -270,9 +273,13 @@ generate_data(void *buf, int buf_len, int block_size, void *md_buf, int md_size,
 	}
 
 	while (offset_blocks < num_blocks) {
-		memset(buf, seed, data_block_size);
-		memset(md_buf, seed, md_size);
-		buf += block_size;
+		inner_offset = 0;
+		while (inner_offset < data_block_size) {
+			*(uint32_t *)buf = offset_blocks;
+			inner_offset += sizeof(uint32_t);
+			buf += sizeof(uint32_t);
+		}
+		memset(md_buf, offset_blocks, md_size);
 		md_buf += md_offset;
 		offset_blocks++;
 	}
@@ -861,7 +868,7 @@ bdevperf_submit_single(struct bdevperf_job *job, struct bdevperf_task *task)
 		generate_data(task->buf, job->buf_size,
 			      spdk_bdev_get_block_size(job->bdev),
 			      task->md_buf, spdk_bdev_get_md_size(job->bdev),
-			      job->io_size_blocks, rand_r(&seed) % 256);
+			      job->io_size_blocks);
 		if (g_zcopy) {
 			bdevperf_prep_zcopy_write_task(task);
 			return;
