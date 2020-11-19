@@ -221,7 +221,11 @@ if grep -q '#define SPDK_CONFIG_VHOST 1' $rootdir/include/spdk/config.h; then
 fi
 
 # local unit test coverage
-if [ "$cov_avail" = "yes" ]; then
+# lcov takes considerable time to process clang coverage.
+# Disabling lcov allow us to do this.
+# More information: https://github.com/spdk/spdk/issues/1693
+CC_TYPE=$(grep CC_TYPE mk/cc.mk)
+if [ "$cov_avail" = "yes" ] && ! [[ "$CC_TYPE" == *"clang"* ]]; then
 	$LCOV -q -d . -c -t "$(hostname)" -o $UT_COVERAGE/ut_cov_test.info
 	$LCOV -q -a $UT_COVERAGE/ut_cov_base.info -a $UT_COVERAGE/ut_cov_test.info -o $UT_COVERAGE/ut_cov_total.info
 	$LCOV -q -a $UT_COVERAGE/ut_cov_total.info -o $UT_COVERAGE/ut_cov_unit.info

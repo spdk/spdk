@@ -324,7 +324,11 @@ trap - SIGINT SIGTERM EXIT
 # catch any stray core files
 process_core
 
-if hash lcov; then
+# lcov takes considerable time to process clang coverage.
+# Disabling lcov allow us to do this.
+# More information: https://github.com/spdk/spdk/issues/1693
+CC_TYPE=$(grep CC_TYPE mk/cc.mk)
+if hash lcov && ! [[ "$CC_TYPE" == *"clang"* ]]; then
 	# generate coverage data and combine with baseline
 	$LCOV -q -c -d $src -t "$(hostname)" -o $out/cov_test.info
 	$LCOV -q -a $out/cov_base.info -a $out/cov_test.info -o $out/cov_total.info
