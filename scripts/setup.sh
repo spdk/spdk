@@ -181,15 +181,17 @@ function get_block_dev_from_bdf() {
 
 function get_mounted_part_dev_from_bdf_block() {
 	local bdf=$1
-	local blocks block mounts
+	local blocks block dev mount
 
+	hash lsblk || return 1
 	blocks=($(get_block_dev_from_bdf "$bdf"))
 
 	for block in "${blocks[@]}"; do
-		mounts=$(lsblk -n -o MOUNTPOINT "/dev/$block")
-		if [[ -n $mounts ]]; then
-			echo "$block"
-		fi
+		while read -r dev mount; do
+			if [[ -e $mount ]]; then
+				echo "$block:$dev"
+			fi
+		done < <(lsblk -l -n -o NAME,MOUNTPOINT "/dev/$block")
 	done
 }
 
@@ -265,9 +267,8 @@ function verify_bdf_mounts() {
 	blknames=($(get_mounted_part_dev_from_bdf_block "$bdf")) || return 1
 
 	if ((${#blknames[@]} > 0)); then
-		for name in "${blknames[@]}"; do
-			pci_dev_echo "$bdf" "Active mountpoints on /dev/$name, so not binding PCI dev"
-		done
+		local IFS=","
+		pci_dev_echo "$bdf" "Active mountpoints on ${blknames[*]}, so not binding PCI dev"
 		return 1
 	fi
 }
