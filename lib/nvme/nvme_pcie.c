@@ -2037,7 +2037,7 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 {
 	int rc;
 	void *virt_addr;
-	uint64_t phys_addr;
+	uint64_t phys_addr, mapping_length;
 	uint32_t remaining_transfer_len, remaining_user_sge_len, length;
 	struct spdk_nvme_sgl_descriptor *sgl;
 	uint32_t nseg = 0;
@@ -2109,12 +2109,13 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 				goto exit;
 			}
 
-			phys_addr = spdk_vtophys(virt_addr, NULL);
+			mapping_length = remaining_user_sge_len;
+			phys_addr = spdk_vtophys(virt_addr, &mapping_length);
 			if (phys_addr == SPDK_VTOPHYS_ERROR) {
 				goto exit;
 			}
 
-			length = spdk_min(remaining_user_sge_len, VALUE_2MB - _2MB_OFFSET(virt_addr));
+			length = spdk_min(remaining_user_sge_len, mapping_length);
 			remaining_user_sge_len -= length;
 			virt_addr += length;
 
