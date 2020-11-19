@@ -175,7 +175,6 @@ function get_block_dev_from_bdf() {
 	for block in /sys/block/*; do
 		if [[ $(readlink -f "$block/device") == *"/$bdf/"* ]]; then
 			echo "${block##*/}"
-			return 0
 		fi
 	done
 }
