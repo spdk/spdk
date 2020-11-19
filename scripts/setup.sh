@@ -182,17 +182,15 @@ function get_block_dev_from_bdf() {
 
 function get_mounted_part_dev_from_bdf_block() {
 	local bdf=$1
-	local blocks block part
+	local blocks block mounts
 
 	blocks=($(get_block_dev_from_bdf "$bdf"))
 
 	for block in "${blocks[@]}"; do
-		for part in "/sys/block/$block/$block"*; do
-			[[ -b /dev/${part##*/} ]] || continue
-			if [[ $(< /proc/self/mountinfo) == *" $(< "$part/dev") "* ]]; then
-				echo "${part##*/}"
-			fi
-		done
+		mounts=$(lsblk -n -o MOUNTPOINT "/dev/$block")
+		if [[ -n $mounts ]]; then
+			echo "$block"
+		fi
 	done
 }
 
@@ -264,7 +262,8 @@ function collect_driver() {
 
 function verify_bdf_mounts() {
 	local bdf=$1
-	local blknames=($(get_mounted_part_dev_from_bdf_block "$bdf"))
+	local blknames
+	blknames=($(get_mounted_part_dev_from_bdf_block "$bdf")) || return 1
 
 	if ((${#blknames[@]} > 0)); then
 		for name in "${blknames[@]}"; do
