@@ -1607,15 +1607,7 @@ end:
 		bdevperf_construct_config_jobs();
 	}
 
-	if (--g_construct_job_count == 0) {
-		if (g_run_rc != 0) {
-			/* Something failed. */
-			bdevperf_test_done(NULL);
-			return;
-		}
-
-		bdevperf_test();
-	}
+	_bdevperf_construct_job_done(NULL);
 }
 
 static int
