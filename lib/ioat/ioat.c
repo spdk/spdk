@@ -606,8 +606,7 @@ spdk_ioat_build_copy(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_cb
 	struct ioat_descriptor	*last_desc;
 	uint64_t	remaining, op_size;
 	uint64_t	vdst, vsrc;
-	uint64_t	vdst_page, vsrc_page;
-	uint64_t	pdst_page, psrc_page;
+	uint64_t	pdst_addr, psrc_addr, dst_len, src_len;
 	uint32_t	orig_head;
 
 	if (!ioat) {
@@ -618,30 +617,25 @@ spdk_ioat_build_copy(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_cb
 
 	vdst = (uint64_t)dst;
 	vsrc = (uint64_t)src;
-	vdst_page = vsrc_page = 0;
-	pdst_page = psrc_page = SPDK_VTOPHYS_ERROR;
 
 	remaining = nbytes;
 	while (remaining) {
-		if (_2MB_PAGE(vsrc) != vsrc_page) {
-			vsrc_page = _2MB_PAGE(vsrc);
-			psrc_page = spdk_vtophys((void *)vsrc_page, NULL);
+		src_len = dst_len = remaining;
+
+		psrc_addr = spdk_vtophys((void *)vsrc, &src_len);
+		if (psrc_addr == SPDK_VTOPHYS_ERROR) {
+			return -EINVAL;
+		}
+		pdst_addr = spdk_vtophys((void *)vdst, &dst_len);
+		if (pdst_addr == SPDK_VTOPHYS_ERROR) {
+			return -EINVAL;
 		}
 
-		if (_2MB_PAGE(vdst) != vdst_page) {
-			vdst_page = _2MB_PAGE(vdst);
-			pdst_page = spdk_vtophys((void *)vdst_page, NULL);
-		}
-		op_size = remaining;
-		op_size = spdk_min(op_size, (VALUE_2MB - _2MB_OFFSET(vsrc)));
-		op_size = spdk_min(op_size, (VALUE_2MB - _2MB_OFFSET(vdst)));
+		op_size = spdk_min(dst_len, src_len);
 		op_size = spdk_min(op_size, ioat->max_xfer_size);
 		remaining -= op_size;
 
-		last_desc = ioat_prep_copy(ioat,
-					   pdst_page + _2MB_OFFSET(vdst),
-					   psrc_page + _2MB_OFFSET(vsrc),
-					   op_size);
+		last_desc = ioat_prep_copy(ioat, pdst_addr, psrc_addr, op_size);
 
 		if (remaining == 0 || last_desc == NULL) {
 			break;
@@ -693,6 +687,7 @@ spdk_ioat_build_fill(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_cb
 	struct ioat_descriptor	*last_desc = NULL;
 	uint64_t	remaining, op_size;
 	uint64_t	vdst;
+	uint64_t	pdst_addr, dst_len;
 	uint32_t	orig_head;
 
 	if (!ioat) {
@@ -710,15 +705,16 @@ spdk_ioat_build_fill(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_cb
 	remaining = nbytes;
 
 	while (remaining) {
-		op_size = remaining;
-		op_size = spdk_min(op_size, (VALUE_2MB - _2MB_OFFSET(vdst)));
-		op_size = spdk_min(op_size, ioat->max_xfer_size);
+		dst_len = remaining;
+		pdst_addr = spdk_vtophys((void *)vdst, &dst_len);
+		if (pdst_addr == SPDK_VTOPHYS_ERROR) {
+			return -EINVAL;
+		}
+
+		op_size = spdk_min(dst_len, ioat->max_xfer_size);
 		remaining -= op_size;
 
-		last_desc = ioat_prep_fill(ioat,
-					   spdk_vtophys((void *)vdst, NULL),
-					   fill_pattern,
-					   op_size);
+		last_desc = ioat_prep_fill(ioat, pdst_addr, fill_pattern, op_size);
 
 		if (remaining == 0 || last_desc == NULL) {
 			break;
