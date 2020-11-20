@@ -4,8 +4,8 @@
 
 ### nvmf
 
-The function `qpair_fini` in the transport interface now accepts a cb_fn and
-cb_arg to call upon completion, and its execution can be asynchronous.
+The functions `destroy` and `qpair_fini` in the transport interface now accept a
+cb_fn and cb_arg to call upon completion, and their execution can be asynchronous.
 
 The SPDK nvmf target now supports async event notification for discovery log changes.
 This allows the initiator to create persistent connection to discovery controller and

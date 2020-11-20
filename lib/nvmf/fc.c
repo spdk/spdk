@@ -1861,7 +1861,8 @@ nvmf_fc_create(struct spdk_nvmf_transport_opts *opts)
 }
 
 static int
-nvmf_fc_destroy(struct spdk_nvmf_transport *transport)
+nvmf_fc_destroy(struct spdk_nvmf_transport *transport,
+		spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg)
 {
 	if (transport) {
 		struct spdk_nvmf_fc_transport *ftransport;
@@ -1884,6 +1885,9 @@ nvmf_fc_destroy(struct spdk_nvmf_transport *transport)
 		nvmf_fc_port_cleanup();
 	}
 
+	if (cb_fn) {
+		cb_fn(cb_arg);
+	}
 	return 0;
 }
 

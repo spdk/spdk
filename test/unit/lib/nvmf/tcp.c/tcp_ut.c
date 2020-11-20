@@ -457,7 +457,7 @@ test_nvmf_tcp_destroy(void)
 	CU_ASSERT_PTR_NOT_NULL(transport);
 	transport->opts = opts;
 	/* destroy transport */
-	CU_ASSERT(nvmf_tcp_destroy(transport) == 0);
+	CU_ASSERT(nvmf_tcp_destroy(transport, NULL, NULL) == 0);
 
 	spdk_thread_exit(thread);
 	while (!spdk_thread_is_exited(thread)) {
@@ -501,7 +501,7 @@ test_nvmf_tcp_poll_group_create(void)
 	}
 	group->transport = transport;
 	nvmf_tcp_poll_group_destroy(group);
-	nvmf_tcp_destroy(transport);
+	nvmf_tcp_destroy(transport, NULL, NULL);
 
 	spdk_thread_exit(thread);
 	while (!spdk_thread_is_exited(thread)) {

@@ -484,7 +484,8 @@ nvmf_tcp_dump_opts(struct spdk_nvmf_transport *transport, struct spdk_json_write
 }
 
 static int
-nvmf_tcp_destroy(struct spdk_nvmf_transport *transport)
+nvmf_tcp_destroy(struct spdk_nvmf_transport *transport,
+		 spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg)
 {
 	struct spdk_nvmf_tcp_transport	*ttransport;
 
@@ -493,6 +494,10 @@ nvmf_tcp_destroy(struct spdk_nvmf_transport *transport)
 
 	pthread_mutex_destroy(&ttransport->lock);
 	free(ttransport);
+
+	if (cb_fn) {
+		cb_fn(cb_arg);
+	}
 	return 0;
 }
 
@@ -579,7 +584,7 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 			    "per-poll group caches for each thread. (%" PRIu32 ")"
 			    "supplied. (%" PRIu32 ") required\n", opts->num_shared_buffers, min_shared_buffers);
 		SPDK_ERRLOG("Please specify a larger number of shared buffers\n");
-		nvmf_tcp_destroy(&ttransport->transport);
+		nvmf_tcp_destroy(&ttransport->transport, NULL, NULL);
 		return NULL;
 	}
 

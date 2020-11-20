@@ -314,12 +314,32 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_target_opts *opts)
 }
 
 static void
+_nvmf_tgt_destroy_next_transport(void *ctx)
+{
+	struct spdk_nvmf_tgt *tgt = ctx;
+	struct spdk_nvmf_transport *transport;
+
+	if (!TAILQ_EMPTY(&tgt->transports)) {
+		transport = TAILQ_FIRST(&tgt->transports);
+		TAILQ_REMOVE(&tgt->transports, transport, link);
+		spdk_nvmf_transport_destroy(transport, _nvmf_tgt_destroy_next_transport, tgt);
+	} else {
+		spdk_nvmf_tgt_destroy_done_fn *destroy_cb_fn = tgt->destroy_cb_fn;
+		void *destroy_cb_arg = tgt->destroy_cb_arg;
+
+		pthread_mutex_destroy(&tgt->mutex);
+		free(tgt);
+
+		if (destroy_cb_fn) {
+			destroy_cb_fn(destroy_cb_arg, 0);
+		}
+	}
+}
+
+static void
 nvmf_tgt_destroy_cb(void *io_device)
 {
 	struct spdk_nvmf_tgt *tgt = io_device;
-	struct spdk_nvmf_transport *transport, *transport_tmp;
-	spdk_nvmf_tgt_destroy_done_fn		*destroy_cb_fn;
-	void					*destroy_cb_arg;
 	uint32_t i;
 
 	if (tgt->subsystems) {
@@ -332,20 +352,7 @@ nvmf_tgt_destroy_cb(void *io_device)
 		free(tgt->subsystems);
 	}
 
-	TAILQ_FOREACH_SAFE(transport, &tgt->transports, link, transport_tmp) {
-		TAILQ_REMOVE(&tgt->transports, transport, link);
-		spdk_nvmf_transport_destroy(transport);
-	}
-
-	destroy_cb_fn = tgt->destroy_cb_fn;
-	destroy_cb_arg = tgt->destroy_cb_arg;
-
-	pthread_mutex_destroy(&tgt->mutex);
-	free(tgt);
-
-	if (destroy_cb_fn) {
-		destroy_cb_fn(destroy_cb_arg, 0);
-	}
+	_nvmf_tgt_destroy_next_transport(tgt);
 }
 
 void

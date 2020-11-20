@@ -926,14 +926,19 @@ spdk_nvmf_transport_opts_init(const char *transport_name,
 struct spdk_nvmf_transport *spdk_nvmf_transport_create(const char *transport_name,
 		struct spdk_nvmf_transport_opts *opts);
 
+typedef void (*spdk_nvmf_transport_destroy_done_cb)(void *cb_arg);
+
 /**
  * Destroy a protocol transport
  *
  * \param transport The transport to destory
+ * \param cb_fn A callback that will be called once the transport is destroyed
+ * \param cb_arg A context argument passed to cb_fn.
  *
  * \return 0 on success, -1 on failure.
  */
-int spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport);
+int spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport,
+				spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg);
 
 /**
  * Get an existing transport from the target

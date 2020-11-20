@@ -2289,7 +2289,8 @@ const struct spdk_mem_map_ops g_nvmf_rdma_map_ops = {
 	.are_contiguous = nvmf_rdma_check_contiguous_entries
 };
 
-static int nvmf_rdma_destroy(struct spdk_nvmf_transport *transport);
+static int nvmf_rdma_destroy(struct spdk_nvmf_transport *transport,
+			     spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg);
 
 static struct spdk_nvmf_transport *
 nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
@@ -2346,7 +2347,7 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 					    SPDK_COUNTOF(rdma_transport_opts_decoder),
 					    &rtransport->rdma_opts)) {
 		SPDK_ERRLOG("spdk_json_decode_object_relaxed failed\n");
-		nvmf_rdma_destroy(&rtransport->transport);
+		nvmf_rdma_destroy(&rtransport->transport, NULL, NULL);
 		return NULL;
 	}
 
@@ -2384,7 +2385,7 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		SPDK_ERRLOG("The number of shared data buffers (%d) is less than"
 			    "the minimum number required to guarantee that forward progress can be made (%d)\n",
 			    opts->num_shared_buffers, (SPDK_NVMF_MAX_SGL_ENTRIES * 2));
-		nvmf_rdma_destroy(&rtransport->transport);
+		nvmf_rdma_destroy(&rtransport->transport, NULL, NULL);
 		return NULL;
 	}
 
@@ -2394,21 +2395,21 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 			    "per-poll group caches for each thread. (%" PRIu32 ")"
 			    "supplied. (%" PRIu32 ") required\n", opts->num_shared_buffers, min_shared_buffers);
 		SPDK_ERRLOG("Please specify a larger number of shared buffers\n");
-		nvmf_rdma_destroy(&rtransport->transport);
+		nvmf_rdma_destroy(&rtransport->transport, NULL, NULL);
 		return NULL;
 	}
 
 	sge_count = opts->max_io_size / opts->io_unit_size;
 	if (sge_count > NVMF_DEFAULT_TX_SGE) {
 		SPDK_ERRLOG("Unsupported IO Unit size specified, %d bytes\n", opts->io_unit_size);
-		nvmf_rdma_destroy(&rtransport->transport);
+		nvmf_rdma_destroy(&rtransport->transport, NULL, NULL);
 		return NULL;
 	}
 
 	rtransport->event_channel = rdma_create_event_channel();
 	if (rtransport->event_channel == NULL) {
 		SPDK_ERRLOG("rdma_create_event_channel() failed, %s\n", spdk_strerror(errno));
-		nvmf_rdma_destroy(&rtransport->transport);
+		nvmf_rdma_destroy(&rtransport->transport, NULL, NULL);
 		return NULL;
 	}
 
@@ -2416,7 +2417,7 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 	if (fcntl(rtransport->event_channel->fd, F_SETFL, flag | O_NONBLOCK) < 0) {
 		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n",
 			    rtransport->event_channel->fd, spdk_strerror(errno));
-		nvmf_rdma_destroy(&rtransport->transport);
+		nvmf_rdma_destroy(&rtransport->transport, NULL, NULL);
 		return NULL;
 	}
 
@@ -2427,14 +2428,14 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 				   SPDK_ENV_SOCKET_ID_ANY);
 	if (!rtransport->data_wr_pool) {
 		SPDK_ERRLOG("Unable to allocate work request pool for poll group\n");
-		nvmf_rdma_destroy(&rtransport->transport);
+		nvmf_rdma_destroy(&rtransport->transport, NULL, NULL);
 		return NULL;
 	}
 
 	contexts = rdma_get_devices(NULL);
 	if (contexts == NULL) {
 		SPDK_ERRLOG("rdma_get_devices() failed: %s (%d)\n", spdk_strerror(errno), errno);
-		nvmf_rdma_destroy(&rtransport->transport);
+		nvmf_rdma_destroy(&rtransport->transport, NULL, NULL);
 		return NULL;
 	}
 
@@ -2529,7 +2530,7 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 	}
 
 	if (rc < 0) {
-		nvmf_rdma_destroy(&rtransport->transport);
+		nvmf_rdma_destroy(&rtransport->transport, NULL, NULL);
 		return NULL;
 	}
 
@@ -2541,7 +2542,7 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 	rtransport->poll_fds = calloc(rtransport->npoll_fds, sizeof(struct pollfd));
 	if (rtransport->poll_fds == NULL) {
 		SPDK_ERRLOG("poll_fds allocation failed\n");
-		nvmf_rdma_destroy(&rtransport->transport);
+		nvmf_rdma_destroy(&rtransport->transport, NULL, NULL);
 		return NULL;
 	}
 
@@ -2570,7 +2571,8 @@ nvmf_rdma_dump_opts(struct spdk_nvmf_transport *transport, struct spdk_json_writ
 }
 
 static int
-nvmf_rdma_destroy(struct spdk_nvmf_transport *transport)
+nvmf_rdma_destroy(struct spdk_nvmf_transport *transport,
+		  spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg)
 {
 	struct spdk_nvmf_rdma_transport	*rtransport;
 	struct spdk_nvmf_rdma_port	*port, *port_tmp;
@@ -2619,6 +2621,9 @@ nvmf_rdma_destroy(struct spdk_nvmf_transport *transport)
 	pthread_mutex_destroy(&rtransport->lock);
 	free(rtransport);
 
+	if (cb_fn) {
+		cb_fn(cb_arg);
+	}
 	return 0;
 }
 

@@ -141,7 +141,7 @@ spdk_nvmf_transport_create(const char *transport_name, struct spdk_nvmf_transpor
 				 transport_name, "data");
 	if (chars_written < 0) {
 		SPDK_ERRLOG("Unable to generate transport data buffer pool name.\n");
-		ops->destroy(transport);
+		ops->destroy(transport, NULL, NULL);
 		return NULL;
 	}
 
@@ -153,7 +153,7 @@ spdk_nvmf_transport_create(const char *transport_name, struct spdk_nvmf_transpor
 
 	if (!transport->data_buf_pool) {
 		SPDK_ERRLOG("Unable to allocate buffer pool for poll group\n");
-		ops->destroy(transport);
+		ops->destroy(transport, NULL, NULL);
 		return NULL;
 	}
 
@@ -173,7 +173,8 @@ spdk_nvmf_transport_get_next(struct spdk_nvmf_transport *transport)
 }
 
 int
-spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport)
+spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport,
+			    spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg)
 {
 	if (transport->data_buf_pool != NULL) {
 		if (spdk_mempool_count(transport->data_buf_pool) !=
@@ -186,7 +187,7 @@ spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport)
 
 	spdk_mempool_free(transport->data_buf_pool);
 
-	return transport->ops->destroy(transport);
+	return transport->ops->destroy(transport, cb_fn, cb_arg);
 }
 
 struct spdk_nvmf_listener *
