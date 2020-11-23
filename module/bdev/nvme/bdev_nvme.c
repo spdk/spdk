@@ -295,8 +295,8 @@ bdev_nvme_destruct(void *ctx)
 }
 
 static int
-bdev_nvme_flush(struct nvme_bdev_ns *nvme_ns, struct nvme_bdev_io *bio,
-		uint64_t offset, uint64_t nbytes)
+bdev_nvme_flush(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
+		struct nvme_bdev_io *bio, uint64_t offset, uint64_t nbytes)
 {
 	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), SPDK_BDEV_IO_STATUS_SUCCESS);
 
@@ -701,6 +701,7 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		return bdev_nvme_flush(nbdev->nvme_ns,
+				       nvme_ch,
 				       nbdev_io,
 				       bdev_io->u.bdev.offset_blocks,
 				       bdev_io->u.bdev.num_blocks);
