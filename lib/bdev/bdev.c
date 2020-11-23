@@ -1192,11 +1192,22 @@ bdev_init_complete(int rc)
 	cb_fn(cb_arg, rc);
 }
 
-static void
-bdev_module_action_complete(void)
+static bool
+bdev_module_all_actions_completed(void)
 {
 	struct spdk_bdev_module *m;
 
+	TAILQ_FOREACH(m, &g_bdev_mgr.bdev_modules, internal.tailq) {
+		if (m->internal.action_in_progress > 0) {
+			return false;
+		}
+	}
+	return true;
+}
+
+static void
+bdev_module_action_complete(void)
+{
 	/*
 	 * Don't finish bdev subsystem initialization if
 	 * module pre-initialization is still in progress, or
@@ -1211,10 +1222,8 @@ bdev_module_action_complete(void)
 	 * exist, return immediately since we cannot finish bdev subsystem
 	 * initialization until all are completed.
 	 */
-	TAILQ_FOREACH(m, &g_bdev_mgr.bdev_modules, internal.tailq) {
-		if (m->internal.action_in_progress > 0) {
-			return;
-		}
+	if (!bdev_module_all_actions_completed()) {
+		return;
 	}
 
 	/*
