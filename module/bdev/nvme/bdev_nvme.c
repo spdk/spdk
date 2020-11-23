@@ -135,33 +135,33 @@ static void nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctr
 static void nvme_ctrlr_populate_namespaces_done(struct nvme_async_probe_ctx *ctx);
 static int bdev_nvme_library_init(void);
 static void bdev_nvme_library_fini(void);
-static int bdev_nvme_readv(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
+static int bdev_nvme_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			   struct nvme_bdev_io *bio,
 			   struct iovec *iov, int iovcnt, void *md, uint64_t lba_count, uint64_t lba,
 			   uint32_t flags);
-static int bdev_nvme_no_pi_readv(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
+static int bdev_nvme_no_pi_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 				 struct nvme_bdev_io *bio,
 				 struct iovec *iov, int iovcnt, void *md, uint64_t lba_count, uint64_t lba);
-static int bdev_nvme_writev(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
+static int bdev_nvme_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			    struct nvme_bdev_io *bio,
 			    struct iovec *iov, int iovcnt, void *md, uint64_t lba_count, uint64_t lba,
 			    uint32_t flags);
-static int bdev_nvme_comparev(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
+static int bdev_nvme_comparev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			      struct nvme_bdev_io *bio,
 			      struct iovec *iov, int iovcnt, void *md, uint64_t lba_count, uint64_t lba,
 			      uint32_t flags);
-static int bdev_nvme_comparev_and_writev(struct nvme_bdev_ns *nvme_ns,
-		struct nvme_io_channel *nvme_ch,
+static int bdev_nvme_comparev_and_writev(struct spdk_nvme_ns *ns,
+		struct spdk_nvme_qpair *qpair,
 		struct nvme_bdev_io *bio, struct iovec *cmp_iov, int cmp_iovcnt, struct iovec *write_iov,
 		int write_iovcnt, void *md, uint64_t lba_count, uint64_t lba,
 		uint32_t flags);
 static int bdev_nvme_admin_passthru(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
 				    struct nvme_bdev_io *bio,
 				    struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes);
-static int bdev_nvme_io_passthru(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
+static int bdev_nvme_io_passthru(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 				 struct nvme_bdev_io *bio,
 				 struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes);
-static int bdev_nvme_io_passthru_md(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
+static int bdev_nvme_io_passthru_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 				    struct nvme_bdev_io *bio,
 				    struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes, void *md_buf, size_t md_len);
 static int bdev_nvme_abort(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
@@ -295,7 +295,7 @@ bdev_nvme_destruct(void *ctx)
 }
 
 static int
-bdev_nvme_flush(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
+bdev_nvme_flush(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 		struct nvme_bdev_io *bio, uint64_t offset, uint64_t nbytes)
 {
 	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), SPDK_BDEV_IO_STATUS_SUCCESS);
@@ -585,7 +585,7 @@ bdev_nvme_failover(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, bool remove)
 }
 
 static int
-bdev_nvme_unmap(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
+bdev_nvme_unmap(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 		struct nvme_bdev_io *bio,
 		uint64_t offset_blocks,
 		uint64_t num_blocks);
@@ -604,8 +604,8 @@ bdev_nvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 		return;
 	}
 
-	ret = bdev_nvme_readv(nbdev->nvme_ns,
-			      nvme_ch,
+	ret = bdev_nvme_readv(nbdev->nvme_ns->ns,
+			      nvme_ch->qpair,
 			      (struct nvme_bdev_io *)bdev_io->driver_ctx,
 			      bdev_io->u.bdev.iovs,
 			      bdev_io->u.bdev.iovcnt,
@@ -648,8 +648,8 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		return bdev_nvme_writev(nbdev->nvme_ns,
-					nvme_ch,
+		return bdev_nvme_writev(nbdev->nvme_ns->ns,
+					nvme_ch->qpair,
 					nbdev_io,
 					bdev_io->u.bdev.iovs,
 					bdev_io->u.bdev.iovcnt,
@@ -659,8 +659,8 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 					bdev->dif_check_flags);
 
 	case SPDK_BDEV_IO_TYPE_COMPARE:
-		return bdev_nvme_comparev(nbdev->nvme_ns,
-					  nvme_ch,
+		return bdev_nvme_comparev(nbdev->nvme_ns->ns,
+					  nvme_ch->qpair,
 					  nbdev_io,
 					  bdev_io->u.bdev.iovs,
 					  bdev_io->u.bdev.iovcnt,
@@ -670,8 +670,8 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 					  bdev->dif_check_flags);
 
 	case SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE:
-		return bdev_nvme_comparev_and_writev(nbdev->nvme_ns,
-						     nvme_ch,
+		return bdev_nvme_comparev_and_writev(nbdev->nvme_ns->ns,
+						     nvme_ch->qpair,
 						     nbdev_io,
 						     bdev_io->u.bdev.iovs,
 						     bdev_io->u.bdev.iovcnt,
@@ -683,15 +683,15 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 						     bdev->dif_check_flags);
 
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
-		return bdev_nvme_unmap(nbdev->nvme_ns,
-				       nvme_ch,
+		return bdev_nvme_unmap(nbdev->nvme_ns->ns,
+				       nvme_ch->qpair,
 				       nbdev_io,
 				       bdev_io->u.bdev.offset_blocks,
 				       bdev_io->u.bdev.num_blocks);
 
 	case SPDK_BDEV_IO_TYPE_UNMAP:
-		return bdev_nvme_unmap(nbdev->nvme_ns,
-				       nvme_ch,
+		return bdev_nvme_unmap(nbdev->nvme_ns->ns,
+				       nvme_ch->qpair,
 				       nbdev_io,
 				       bdev_io->u.bdev.offset_blocks,
 				       bdev_io->u.bdev.num_blocks);
@@ -700,8 +700,8 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 		return bdev_nvme_reset(nbdev->nvme_ns->ctrlr, nvme_ch, nbdev_io);
 
 	case SPDK_BDEV_IO_TYPE_FLUSH:
-		return bdev_nvme_flush(nbdev->nvme_ns,
-				       nvme_ch,
+		return bdev_nvme_flush(nbdev->nvme_ns->ns,
+				       nvme_ch->qpair,
 				       nbdev_io,
 				       bdev_io->u.bdev.offset_blocks,
 				       bdev_io->u.bdev.num_blocks);
@@ -715,16 +715,16 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 						bdev_io->u.nvme_passthru.nbytes);
 
 	case SPDK_BDEV_IO_TYPE_NVME_IO:
-		return bdev_nvme_io_passthru(nbdev->nvme_ns,
-					     nvme_ch,
+		return bdev_nvme_io_passthru(nbdev->nvme_ns->ns,
+					     nvme_ch->qpair,
 					     nbdev_io,
 					     &bdev_io->u.nvme_passthru.cmd,
 					     bdev_io->u.nvme_passthru.buf,
 					     bdev_io->u.nvme_passthru.nbytes);
 
 	case SPDK_BDEV_IO_TYPE_NVME_IO_MD:
-		return bdev_nvme_io_passthru_md(nbdev->nvme_ns,
-						nvme_ch,
+		return bdev_nvme_io_passthru_md(nbdev->nvme_ns->ns,
+						nvme_ch->qpair,
 						nbdev_io,
 						&bdev_io->u.nvme_passthru.cmd,
 						bdev_io->u.nvme_passthru.buf,
@@ -2199,8 +2199,8 @@ bdev_nvme_readv_done(void *ref, const struct spdk_nvme_cpl *cpl)
 		nvme_ch = spdk_io_channel_get_ctx(spdk_bdev_io_get_io_channel(bdev_io));
 
 		/* Read without PI checking to verify PI error. */
-		ret = bdev_nvme_no_pi_readv(nbdev->nvme_ns,
-					    nvme_ch,
+		ret = bdev_nvme_no_pi_readv(nbdev->nvme_ns->ns,
+					    nvme_ch->qpair,
 					    bio,
 					    bdev_io->u.bdev.iovs,
 					    bdev_io->u.bdev.iovcnt,
@@ -2413,7 +2413,7 @@ bdev_nvme_queued_next_fused_sge(void *ref, void **address, uint32_t *length)
 }
 
 static int
-bdev_nvme_no_pi_readv(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
+bdev_nvme_no_pi_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 		      struct nvme_bdev_io *bio, struct iovec *iov, int iovcnt,
 		      void *md, uint64_t lba_count, uint64_t lba)
 {
@@ -2427,7 +2427,7 @@ bdev_nvme_no_pi_readv(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme
 	bio->iovpos = 0;
 	bio->iov_offset = 0;
 
-	rc = spdk_nvme_ns_cmd_readv_with_md(nvme_ns->ns, nvme_ch->qpair, lba, lba_count,
+	rc = spdk_nvme_ns_cmd_readv_with_md(ns, qpair, lba, lba_count,
 					    bdev_nvme_no_pi_readv_done, bio, 0,
 					    bdev_nvme_queued_reset_sgl, bdev_nvme_queued_next_sge,
 					    md, 0, 0);
@@ -2439,7 +2439,7 @@ bdev_nvme_no_pi_readv(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme
 }
 
 static int
-bdev_nvme_readv(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
+bdev_nvme_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 		struct nvme_bdev_io *bio, struct iovec *iov, int iovcnt,
 		void *md, uint64_t lba_count, uint64_t lba, uint32_t flags)
 {
@@ -2454,13 +2454,13 @@ bdev_nvme_readv(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
 	bio->iov_offset = 0;
 
 	if (iovcnt == 1) {
-		rc = spdk_nvme_ns_cmd_read_with_md(nvme_ns->ns, nvme_ch->qpair, iov[0].iov_base, md, lba,
+		rc = spdk_nvme_ns_cmd_read_with_md(ns, qpair, iov[0].iov_base, md, lba,
 						   lba_count,
 						   bdev_nvme_readv_done, bio,
 						   flags,
 						   0, 0);
 	} else {
-		rc = spdk_nvme_ns_cmd_readv_with_md(nvme_ns->ns, nvme_ch->qpair, lba, lba_count,
+		rc = spdk_nvme_ns_cmd_readv_with_md(ns, qpair, lba, lba_count,
 						    bdev_nvme_readv_done, bio, flags,
 						    bdev_nvme_queued_reset_sgl, bdev_nvme_queued_next_sge,
 						    md, 0, 0);
@@ -2473,7 +2473,7 @@ bdev_nvme_readv(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
 }
 
 static int
-bdev_nvme_writev(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
+bdev_nvme_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 		 struct nvme_bdev_io *bio,
 		 struct iovec *iov, int iovcnt, void *md, uint64_t lba_count, uint64_t lba,
 		 uint32_t flags)
@@ -2489,13 +2489,13 @@ bdev_nvme_writev(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
 	bio->iov_offset = 0;
 
 	if (iovcnt == 1) {
-		rc = spdk_nvme_ns_cmd_write_with_md(nvme_ns->ns, nvme_ch->qpair, iov[0].iov_base, md, lba,
+		rc = spdk_nvme_ns_cmd_write_with_md(ns, qpair, iov[0].iov_base, md, lba,
 						    lba_count,
 						    bdev_nvme_readv_done, bio,
 						    flags,
 						    0, 0);
 	} else {
-		rc = spdk_nvme_ns_cmd_writev_with_md(nvme_ns->ns, nvme_ch->qpair, lba, lba_count,
+		rc = spdk_nvme_ns_cmd_writev_with_md(ns, qpair, lba, lba_count,
 						     bdev_nvme_writev_done, bio, flags,
 						     bdev_nvme_queued_reset_sgl, bdev_nvme_queued_next_sge,
 						     md, 0, 0);
@@ -2508,7 +2508,7 @@ bdev_nvme_writev(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
 }
 
 static int
-bdev_nvme_comparev(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
+bdev_nvme_comparev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 		   struct nvme_bdev_io *bio,
 		   struct iovec *iov, int iovcnt, void *md, uint64_t lba_count, uint64_t lba,
 		   uint32_t flags)
@@ -2523,7 +2523,7 @@ bdev_nvme_comparev(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch
 	bio->iovpos = 0;
 	bio->iov_offset = 0;
 
-	rc = spdk_nvme_ns_cmd_comparev_with_md(nvme_ns->ns, nvme_ch->qpair, lba, lba_count,
+	rc = spdk_nvme_ns_cmd_comparev_with_md(ns, qpair, lba, lba_count,
 					       bdev_nvme_comparev_done, bio, flags,
 					       bdev_nvme_queued_reset_sgl, bdev_nvme_queued_next_sge,
 					       md, 0, 0);
@@ -2535,7 +2535,7 @@ bdev_nvme_comparev(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch
 }
 
 static int
-bdev_nvme_comparev_and_writev(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
+bdev_nvme_comparev_and_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			      struct nvme_bdev_io *bio, struct iovec *cmp_iov, int cmp_iovcnt,
 			      struct iovec *write_iov, int write_iovcnt,
 			      void *md, uint64_t lba_count, uint64_t lba, uint32_t flags)
@@ -2563,7 +2563,7 @@ bdev_nvme_comparev_and_writev(struct nvme_bdev_ns *nvme_ns, struct nvme_io_chann
 		flags |= SPDK_NVME_IO_FLAGS_FUSE_FIRST;
 		memset(&bio->cpl, 0, sizeof(bio->cpl));
 
-		rc = spdk_nvme_ns_cmd_comparev_with_md(nvme_ns->ns, nvme_ch->qpair, lba, lba_count,
+		rc = spdk_nvme_ns_cmd_comparev_with_md(ns, qpair, lba, lba_count,
 						       bdev_nvme_comparev_and_writev_done, bio, flags,
 						       bdev_nvme_queued_reset_sgl, bdev_nvme_queued_next_sge, md, 0, 0);
 		if (rc == 0) {
@@ -2579,7 +2579,7 @@ bdev_nvme_comparev_and_writev(struct nvme_bdev_ns *nvme_ns, struct nvme_io_chann
 
 	flags |= SPDK_NVME_IO_FLAGS_FUSE_SECOND;
 
-	rc = spdk_nvme_ns_cmd_writev_with_md(nvme_ns->ns, nvme_ch->qpair, lba, lba_count,
+	rc = spdk_nvme_ns_cmd_writev_with_md(ns, qpair, lba, lba_count,
 					     bdev_nvme_comparev_and_writev_done, bio, flags,
 					     bdev_nvme_queued_reset_fused_sgl, bdev_nvme_queued_next_fused_sge, md, 0, 0);
 	if (rc != 0 && rc != -ENOMEM) {
@@ -2591,7 +2591,7 @@ bdev_nvme_comparev_and_writev(struct nvme_bdev_ns *nvme_ns, struct nvme_io_chann
 }
 
 static int
-bdev_nvme_unmap(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
+bdev_nvme_unmap(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 		struct nvme_bdev_io *bio,
 		uint64_t offset_blocks,
 		uint64_t num_blocks)
@@ -2631,7 +2631,7 @@ bdev_nvme_unmap(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
 	range->length = remaining;
 	range->starting_lba = offset;
 
-	rc = spdk_nvme_ns_cmd_dataset_management(nvme_ns->ns, nvme_ch->qpair,
+	rc = spdk_nvme_ns_cmd_dataset_management(ns, qpair,
 			SPDK_NVME_DSM_ATTR_DEALLOCATE,
 			dsm_ranges, num_ranges,
 			bdev_nvme_queued_done, bio);
@@ -2658,12 +2658,12 @@ bdev_nvme_admin_passthru(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *n
 }
 
 static int
-bdev_nvme_io_passthru(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
+bdev_nvme_io_passthru(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 		      struct nvme_bdev_io *bio,
 		      struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes)
 {
-	uint32_t max_xfer_size = spdk_nvme_ns_get_max_io_xfer_size(nvme_ns->ns);
-	struct spdk_nvme_ctrlr *ctrlr = spdk_nvme_ns_get_ctrlr(nvme_ns->ns);
+	uint32_t max_xfer_size = spdk_nvme_ns_get_max_io_xfer_size(ns);
+	struct spdk_nvme_ctrlr *ctrlr = spdk_nvme_ns_get_ctrlr(ns);
 
 	if (nbytes > max_xfer_size) {
 		SPDK_ERRLOG("nbytes is greater than MDTS %" PRIu32 ".\n", max_xfer_size);
@@ -2674,27 +2674,27 @@ bdev_nvme_io_passthru(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme
 	 * Each NVMe bdev is a specific namespace, and all NVMe I/O commands require a nsid,
 	 * so fill it out automatically.
 	 */
-	cmd->nsid = spdk_nvme_ns_get_id(nvme_ns->ns);
+	cmd->nsid = spdk_nvme_ns_get_id(ns);
 
-	return spdk_nvme_ctrlr_cmd_io_raw(ctrlr, nvme_ch->qpair, cmd, buf,
+	return spdk_nvme_ctrlr_cmd_io_raw(ctrlr, qpair, cmd, buf,
 					  (uint32_t)nbytes, bdev_nvme_queued_done, bio);
 }
 
 static int
-bdev_nvme_io_passthru_md(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme_ch,
+bdev_nvme_io_passthru_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			 struct nvme_bdev_io *bio,
 			 struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes, void *md_buf, size_t md_len)
 {
-	size_t nr_sectors = nbytes / spdk_nvme_ns_get_extended_sector_size(nvme_ns->ns);
-	uint32_t max_xfer_size = spdk_nvme_ns_get_max_io_xfer_size(nvme_ns->ns);
-	struct spdk_nvme_ctrlr *ctrlr = spdk_nvme_ns_get_ctrlr(nvme_ns->ns);
+	size_t nr_sectors = nbytes / spdk_nvme_ns_get_extended_sector_size(ns);
+	uint32_t max_xfer_size = spdk_nvme_ns_get_max_io_xfer_size(ns);
+	struct spdk_nvme_ctrlr *ctrlr = spdk_nvme_ns_get_ctrlr(ns);
 
 	if (nbytes > max_xfer_size) {
 		SPDK_ERRLOG("nbytes is greater than MDTS %" PRIu32 ".\n", max_xfer_size);
 		return -EINVAL;
 	}
 
-	if (md_len != nr_sectors * spdk_nvme_ns_get_md_size(nvme_ns->ns)) {
+	if (md_len != nr_sectors * spdk_nvme_ns_get_md_size(ns)) {
 		SPDK_ERRLOG("invalid meta data buffer size\n");
 		return -EINVAL;
 	}
@@ -2703,9 +2703,9 @@ bdev_nvme_io_passthru_md(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *n
 	 * Each NVMe bdev is a specific namespace, and all NVMe I/O commands require a nsid,
 	 * so fill it out automatically.
 	 */
-	cmd->nsid = spdk_nvme_ns_get_id(nvme_ns->ns);
+	cmd->nsid = spdk_nvme_ns_get_id(ns);
 
-	return spdk_nvme_ctrlr_cmd_io_raw_with_md(ctrlr, nvme_ch->qpair, cmd, buf,
+	return spdk_nvme_ctrlr_cmd_io_raw_with_md(ctrlr, qpair, cmd, buf,
 			(uint32_t)nbytes, md_buf, bdev_nvme_queued_done, bio);
 }
 
