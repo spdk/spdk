@@ -2717,10 +2717,9 @@ nvmf_tcp_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
 	cid = req->cmd->nvme_cmd.cdw10_bits.abort.cid;
 
 	for (i = 0; i < tqpair->resource_count; i++) {
-		tcp_req_to_abort = &tqpair->reqs[i];
-
-		if (tcp_req_to_abort->state != TCP_REQUEST_STATE_FREE &&
-		    tcp_req_to_abort->req.cmd->nvme_cmd.cid == cid) {
+		if (tqpair->reqs[i].state != TCP_REQUEST_STATE_FREE &&
+		    tqpair->reqs[i].req.cmd->nvme_cmd.cid == cid) {
+			tcp_req_to_abort = &tqpair->reqs[i];
 			break;
 		}
 	}

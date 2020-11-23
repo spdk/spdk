@@ -4240,10 +4240,9 @@ nvmf_rdma_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
 	cid = req->cmd->nvme_cmd.cdw10_bits.abort.cid;
 
 	for (i = 0; i < rqpair->max_queue_depth; i++) {
-		rdma_req_to_abort = &rqpair->resources->reqs[i];
-
-		if (rdma_req_to_abort->state != RDMA_REQUEST_STATE_FREE &&
-		    rdma_req_to_abort->req.cmd->nvme_cmd.cid == cid) {
+		if (rqpair->resources->reqs[i].state != RDMA_REQUEST_STATE_FREE &&
+		    rqpair->resources->reqs[i].req.cmd->nvme_cmd.cid == cid) {
+			rdma_req_to_abort = &rqpair->resources->reqs[i];
 			break;
 		}
 	}
