@@ -2659,7 +2659,7 @@ bdev_nvme_io_passthru(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme
 		      struct nvme_bdev_io *bio,
 		      struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes)
 {
-	uint32_t max_xfer_size = spdk_nvme_ctrlr_get_max_xfer_size(nvme_ns->ctrlr->ctrlr);
+	uint32_t max_xfer_size = spdk_nvme_ns_get_max_io_xfer_size(nvme_ns->ns);
 
 	if (nbytes > max_xfer_size) {
 		SPDK_ERRLOG("nbytes is greater than MDTS %" PRIu32 ".\n", max_xfer_size);
@@ -2682,7 +2682,7 @@ bdev_nvme_io_passthru_md(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *n
 			 struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes, void *md_buf, size_t md_len)
 {
 	size_t nr_sectors = nbytes / spdk_nvme_ns_get_extended_sector_size(nvme_ns->ns);
-	uint32_t max_xfer_size = spdk_nvme_ctrlr_get_max_xfer_size(nvme_ns->ctrlr->ctrlr);
+	uint32_t max_xfer_size = spdk_nvme_ns_get_max_io_xfer_size(nvme_ns->ns);
 
 	if (nbytes > max_xfer_size) {
 		SPDK_ERRLOG("nbytes is greater than MDTS %" PRIu32 ".\n", max_xfer_size);
