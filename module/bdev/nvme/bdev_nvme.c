@@ -2660,6 +2660,7 @@ bdev_nvme_io_passthru(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme
 		      struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes)
 {
 	uint32_t max_xfer_size = spdk_nvme_ns_get_max_io_xfer_size(nvme_ns->ns);
+	struct spdk_nvme_ctrlr *ctrlr = spdk_nvme_ns_get_ctrlr(nvme_ns->ns);
 
 	if (nbytes > max_xfer_size) {
 		SPDK_ERRLOG("nbytes is greater than MDTS %" PRIu32 ".\n", max_xfer_size);
@@ -2672,7 +2673,7 @@ bdev_nvme_io_passthru(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *nvme
 	 */
 	cmd->nsid = spdk_nvme_ns_get_id(nvme_ns->ns);
 
-	return spdk_nvme_ctrlr_cmd_io_raw(nvme_ns->ctrlr->ctrlr, nvme_ch->qpair, cmd, buf,
+	return spdk_nvme_ctrlr_cmd_io_raw(ctrlr, nvme_ch->qpair, cmd, buf,
 					  (uint32_t)nbytes, bdev_nvme_queued_done, bio);
 }
 
@@ -2683,6 +2684,7 @@ bdev_nvme_io_passthru_md(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *n
 {
 	size_t nr_sectors = nbytes / spdk_nvme_ns_get_extended_sector_size(nvme_ns->ns);
 	uint32_t max_xfer_size = spdk_nvme_ns_get_max_io_xfer_size(nvme_ns->ns);
+	struct spdk_nvme_ctrlr *ctrlr = spdk_nvme_ns_get_ctrlr(nvme_ns->ns);
 
 	if (nbytes > max_xfer_size) {
 		SPDK_ERRLOG("nbytes is greater than MDTS %" PRIu32 ".\n", max_xfer_size);
@@ -2700,7 +2702,7 @@ bdev_nvme_io_passthru_md(struct nvme_bdev_ns *nvme_ns, struct nvme_io_channel *n
 	 */
 	cmd->nsid = spdk_nvme_ns_get_id(nvme_ns->ns);
 
-	return spdk_nvme_ctrlr_cmd_io_raw_with_md(nvme_ns->ctrlr->ctrlr, nvme_ch->qpair, cmd, buf,
+	return spdk_nvme_ctrlr_cmd_io_raw_with_md(ctrlr, nvme_ch->qpair, cmd, buf,
 			(uint32_t)nbytes, md_buf, bdev_nvme_queued_done, bio);
 }
 
