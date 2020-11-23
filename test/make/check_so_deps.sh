@@ -46,6 +46,9 @@ function confirm_abi_deps() {
 	name = spdk_nvme_ctrlr_opts
 [suppress_type]
 	name = spdk_bs_dev
+[suppress_type]
+	type_kind = enum
+	changed_enumerators = SPDK_BDEV_NUM_IO_TYPES
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do
