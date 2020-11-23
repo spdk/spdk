@@ -175,15 +175,15 @@ function create_bdev_subsystem_config() {
 
 		expected_notifications+=(
 			bdev_register:${lvol_store_base_bdev}
-			bdev_register:${lvol_store_base_bdev}p0
 			bdev_register:${lvol_store_base_bdev}p1
+			bdev_register:${lvol_store_base_bdev}p0
 			bdev_register:Malloc3
 			bdev_register:PTBdevFromMalloc3
 			bdev_register:Null0
-			bdev_register:Malloc0p0
-			bdev_register:Malloc0p1
-			bdev_register:Malloc0p2
 			bdev_register:Malloc0
+			bdev_register:Malloc0p2
+			bdev_register:Malloc0p1
+			bdev_register:Malloc0p0
 			bdev_register:Malloc1
 		)
 

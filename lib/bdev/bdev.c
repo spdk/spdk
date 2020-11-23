@@ -5487,6 +5487,14 @@ bdev_fini(struct spdk_bdev *bdev)
 }
 
 static void
+bdev_start_finished(void *arg)
+{
+	struct spdk_bdev *bdev = arg;
+
+	spdk_notify_send("bdev_register", spdk_bdev_get_name(bdev));
+}
+
+static void
 bdev_start(struct spdk_bdev *bdev)
 {
 	SPDK_DEBUGLOG(bdev, "Inserting bdev %s into list\n", bdev->name);
@@ -5494,6 +5502,8 @@ bdev_start(struct spdk_bdev *bdev)
 
 	/* Examine configuration before initializing I/O */
 	bdev_examine(bdev);
+
+	spdk_bdev_wait_for_examine(bdev_start_finished, bdev);
 }
 
 int
@@ -5505,7 +5515,6 @@ spdk_bdev_register(struct spdk_bdev *bdev)
 		bdev_start(bdev);
 	}
 
-	spdk_notify_send("bdev_register", spdk_bdev_get_name(bdev));
 	return rc;
 }
 
