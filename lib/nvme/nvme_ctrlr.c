@@ -2087,7 +2087,6 @@ static int
 nvme_ctrlr_identify_ns_iocs_specific_async(struct spdk_nvme_ns *ns)
 {
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
-	struct spdk_nvme_zns_ns_data **nsdata_zns;
 	int rc;
 
 	switch (ns->csi) {
@@ -2102,19 +2101,17 @@ nvme_ctrlr_identify_ns_iocs_specific_async(struct spdk_nvme_ns *ns)
 		assert(0);
 	}
 
-	assert(ctrlr->nsdata_zns);
-	nsdata_zns = &ctrlr->nsdata_zns[ns->id - 1];
-	assert(!*nsdata_zns);
-	*nsdata_zns = spdk_zmalloc(sizeof(**nsdata_zns), 64, NULL, SPDK_ENV_SOCKET_ID_ANY,
-				   SPDK_MALLOC_SHARE | SPDK_MALLOC_DMA);
-	if (!*nsdata_zns) {
+	assert(!ns->nsdata_zns);
+	ns->nsdata_zns = spdk_zmalloc(sizeof(*ns->nsdata_zns), 64, NULL, SPDK_ENV_SOCKET_ID_ANY,
+				      SPDK_MALLOC_SHARE);
+	if (!ns->nsdata_zns) {
 		return -ENOMEM;
 	}
 
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS_IOCS_SPECIFIC,
 			     ctrlr->opts.admin_timeout_ms);
 	rc = nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS_IOCS, 0, ns->id, ns->csi,
-				     *nsdata_zns, sizeof(**nsdata_zns),
+				     ns->nsdata_zns, sizeof(*ns->nsdata_zns),
 				     nvme_ctrlr_identify_ns_zns_specific_async_done, ns);
 	if (rc) {
 		nvme_ns_free_zns_specific_data(ns);
@@ -2477,10 +2474,6 @@ nvme_ctrlr_destruct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 		ctrlr->num_ns = 0;
 	}
 
-
-	spdk_free(ctrlr->nsdata_zns);
-	ctrlr->nsdata_zns = NULL;
-
 	spdk_free(ctrlr->active_ns_list);
 	ctrlr->active_ns_list = NULL;
 }
@@ -2541,13 +2534,6 @@ nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 		ctrlr->ns = spdk_zmalloc(nn * sizeof(struct spdk_nvme_ns), 64, NULL,
 					 SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
 		if (ctrlr->ns == NULL) {
-			rc = -ENOMEM;
-			goto fail;
-		}
-
-		ctrlr->nsdata_zns = spdk_zmalloc(nn * sizeof(struct spdk_nvme_zns_ns_data *), 64,
-						 NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
-		if (ctrlr->nsdata_zns == NULL) {
 			rc = -ENOMEM;
 			goto fail;
 		}

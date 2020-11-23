@@ -497,6 +497,9 @@ struct spdk_nvme_ns {
 
 	/* Identify Namespace data. */
 	struct spdk_nvme_ns_data	nsdata;
+
+	/* Zoned Namespace Command Set Specific Identify Namespace data. */
+	struct spdk_nvme_zns_ns_data	*nsdata_zns;
 };
 
 /**
@@ -813,11 +816,6 @@ struct spdk_nvme_ctrlr {
 	 * Keep track of active namespaces
 	 */
 	uint32_t			*active_ns_list;
-
-	/**
-	 * Array of pointers to Zoned Namespace Command Set Specific Identify Namespace data.
-	 */
-	struct spdk_nvme_zns_ns_data	**nsdata_zns;
 
 	struct spdk_bit_array		*free_io_qids;
 	TAILQ_HEAD(, spdk_nvme_qpair)	active_io_qpairs;

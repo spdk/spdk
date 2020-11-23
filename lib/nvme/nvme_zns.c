@@ -2,6 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) 2020, Western Digital Corporation. All rights reserved.
+ *   Copyright (c) 2021 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -36,7 +37,7 @@
 const struct spdk_nvme_zns_ns_data *
 spdk_nvme_zns_ns_get_data(struct spdk_nvme_ns *ns)
 {
-	return ns->ctrlr->nsdata_zns[ns->id - 1];
+	return ns->nsdata_zns;
 }
 
 uint64_t

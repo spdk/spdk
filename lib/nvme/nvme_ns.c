@@ -155,7 +155,6 @@ nvme_ctrlr_identify_ns_iocs_specific(struct spdk_nvme_ns *ns)
 {
 	struct nvme_completion_poll_status *status;
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
-	struct spdk_nvme_zns_ns_data **nsdata_zns;
 	int rc;
 
 	switch (ns->csi) {
@@ -170,12 +169,10 @@ nvme_ctrlr_identify_ns_iocs_specific(struct spdk_nvme_ns *ns)
 		assert(0);
 	}
 
-	assert(ctrlr->nsdata_zns);
-	nsdata_zns = &ctrlr->nsdata_zns[ns->id - 1];
-	assert(!*nsdata_zns);
-	*nsdata_zns = spdk_zmalloc(sizeof(**nsdata_zns), 64, NULL, SPDK_ENV_SOCKET_ID_ANY,
-				   SPDK_MALLOC_SHARE | SPDK_MALLOC_DMA);
-	if (!*nsdata_zns) {
+	assert(!ns->nsdata_zns);
+	ns->nsdata_zns = spdk_zmalloc(sizeof(*ns->nsdata_zns), 64, NULL, SPDK_ENV_SOCKET_ID_ANY,
+				      SPDK_MALLOC_SHARE);
+	if (!ns->nsdata_zns) {
 		return -ENOMEM;
 	}
 
@@ -187,7 +184,7 @@ nvme_ctrlr_identify_ns_iocs_specific(struct spdk_nvme_ns *ns)
 	}
 
 	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_NS_IOCS, 0, ns->id, ns->csi,
-				     *nsdata_zns, sizeof(**nsdata_zns),
+				     ns->nsdata_zns, sizeof(*ns->nsdata_zns),
 				     nvme_completion_poll_cb, status);
 	if (rc != 0) {
 		nvme_ns_free_zns_specific_data(ns);
@@ -463,9 +460,9 @@ nvme_ns_free_zns_specific_data(struct spdk_nvme_ns *ns)
 		return;
 	}
 
-	if (ns->ctrlr->nsdata_zns) {
-		spdk_free(ns->ctrlr->nsdata_zns[ns->id - 1]);
-		ns->ctrlr->nsdata_zns[ns->id - 1] = NULL;
+	if (ns->nsdata_zns) {
+		spdk_free(ns->nsdata_zns);
+		ns->nsdata_zns = NULL;
 	}
 }
 
