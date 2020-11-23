@@ -594,7 +594,8 @@ static void
 bdev_nvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 		     bool success)
 {
-	struct nvme_bdev *nbdev = (struct nvme_bdev *)bdev_io->bdev->ctxt;
+	struct spdk_bdev *bdev = bdev_io->bdev;
+	struct nvme_bdev *nbdev = (struct nvme_bdev *)bdev->ctxt;
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
 	int ret;
 
@@ -611,7 +612,7 @@ bdev_nvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 			      bdev_io->u.bdev.md_buf,
 			      bdev_io->u.bdev.num_blocks,
 			      bdev_io->u.bdev.offset_blocks,
-			      nbdev->disk.dif_check_flags);
+			      bdev->dif_check_flags);
 
 	if (spdk_likely(ret == 0)) {
 		return;
@@ -626,7 +627,8 @@ static int
 _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
-	struct nvme_bdev *nbdev = (struct nvme_bdev *)bdev_io->bdev->ctxt;
+	struct spdk_bdev *bdev = bdev_io->bdev;
+	struct nvme_bdev *nbdev = (struct nvme_bdev *)bdev->ctxt;
 	struct nvme_bdev_io *nbdev_io = (struct nvme_bdev_io *)bdev_io->driver_ctx;
 	struct nvme_bdev_io *nbdev_io_to_abort;
 
@@ -641,7 +643,7 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 			bdev_nvme_get_buf_cb(ch, bdev_io, true);
 		} else {
 			spdk_bdev_io_get_buf(bdev_io, bdev_nvme_get_buf_cb,
-					     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
+					     bdev_io->u.bdev.num_blocks * bdev->blocklen);
 		}
 		return 0;
 
@@ -654,7 +656,7 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 					bdev_io->u.bdev.md_buf,
 					bdev_io->u.bdev.num_blocks,
 					bdev_io->u.bdev.offset_blocks,
-					nbdev->disk.dif_check_flags);
+					bdev->dif_check_flags);
 
 	case SPDK_BDEV_IO_TYPE_COMPARE:
 		return bdev_nvme_comparev(nbdev->nvme_ns,
@@ -665,7 +667,7 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 					  bdev_io->u.bdev.md_buf,
 					  bdev_io->u.bdev.num_blocks,
 					  bdev_io->u.bdev.offset_blocks,
-					  nbdev->disk.dif_check_flags);
+					  bdev->dif_check_flags);
 
 	case SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE:
 		return bdev_nvme_comparev_and_writev(nbdev->nvme_ns,
@@ -678,7 +680,7 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 						     bdev_io->u.bdev.md_buf,
 						     bdev_io->u.bdev.num_blocks,
 						     bdev_io->u.bdev.offset_blocks,
-						     nbdev->disk.dif_check_flags);
+						     bdev->dif_check_flags);
 
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		return bdev_nvme_unmap(nbdev->nvme_ns,
