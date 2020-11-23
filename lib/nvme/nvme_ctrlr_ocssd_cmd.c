@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2021 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -46,8 +46,11 @@ spdk_nvme_ctrlr_is_ocssd_supported(struct spdk_nvme_ctrlr *ctrlr)
 		 * Current QEMU OpenChannel Device needs to check nsdata->vs[0].
 		 * Here check nsdata->vs[0] of the first namespace.
 		 */
-		if (ctrlr->cdata.vid == SPDK_PCI_VID_CNEXLABS) {
-			if (ctrlr->num_ns && ctrlr->nsdata[0].vendor_specific[0] == 0x1) {
+		if (ctrlr->cdata.vid == SPDK_PCI_VID_CNEXLABS && ctrlr->num_ns) {
+			uint32_t nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
+			struct spdk_nvme_ns *ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+
+			if (ns && ns->nsdata.vendor_specific[0] == 0x1) {
 				return true;
 			}
 		}

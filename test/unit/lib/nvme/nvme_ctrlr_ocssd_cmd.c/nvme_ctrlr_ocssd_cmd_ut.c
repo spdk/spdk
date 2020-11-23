@@ -32,8 +32,14 @@
  */
 
 #include "spdk_cunit.h"
+#include "common/lib/test_env.c"
 
 #include "nvme/nvme_ctrlr_ocssd_cmd.c"
+
+DEFINE_STUB(spdk_nvme_ctrlr_get_ns, struct spdk_nvme_ns *,
+	    (struct spdk_nvme_ctrlr *ctrlr, uint32_t ns_id), NULL);
+DEFINE_STUB(spdk_nvme_ctrlr_get_first_active_ns, uint32_t,
+	    (struct spdk_nvme_ctrlr *ctrlr), 0);
 
 #define DECLARE_AND_CONSTRUCT_CTRLR()	\
 	struct spdk_nvme_ctrlr	ctrlr = {};	\

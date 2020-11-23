@@ -94,8 +94,7 @@ test_nvme_ns_construct(void)
 {
 	struct spdk_nvme_ns ns = {};
 	uint32_t id = 1;
-	struct spdk_nvme_ns_data ctrlr_nsdata = {};
-	struct spdk_nvme_ctrlr ctrlr = { .nsdata = &ctrlr_nsdata };
+	struct spdk_nvme_ctrlr ctrlr = { };
 
 	nvme_ns_construct(&ns, id, &ctrlr);
 	CU_ASSERT(ns.id == 1);
@@ -106,8 +105,7 @@ test_nvme_ns_uuid(void)
 {
 	struct spdk_nvme_ns ns = {};
 	uint32_t id = 1;
-	struct spdk_nvme_ns_data nsdata = {};
-	struct spdk_nvme_ctrlr ctrlr = { .nsdata = &nsdata };
+	struct spdk_nvme_ctrlr ctrlr = {};
 	const struct spdk_uuid *uuid;
 	struct spdk_uuid expected_uuid;
 
@@ -170,8 +168,7 @@ test_nvme_ns_csi(void)
 {
 	struct spdk_nvme_ns ns = {};
 	uint32_t id = 1;
-	struct spdk_nvme_ns_data nsdata = {};
-	struct spdk_nvme_ctrlr ctrlr = { .nsdata = &nsdata };
+	struct spdk_nvme_ctrlr ctrlr = {};
 	enum spdk_nvme_csi csi;
 
 	/* Empty list - SPDK_NVME_CSI_NVM should be returned */
@@ -218,8 +215,7 @@ static void
 test_nvme_ns_data(void)
 {
 	struct spdk_nvme_ns ns = {};
-	struct spdk_nvme_ns_data ctrlr_nsdata = {};
-	struct spdk_nvme_ctrlr ctrlr = { .nsdata = &ctrlr_nsdata };
+	struct spdk_nvme_ctrlr ctrlr = { };
 	struct spdk_nvme_ns_data expected_nsdata = {
 		.nsze = 1000,
 		.ncap = 1000,
