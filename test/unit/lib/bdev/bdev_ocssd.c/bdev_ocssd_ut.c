@@ -52,8 +52,6 @@ DEFINE_STUB(spdk_nvme_ns_is_active, bool, (struct spdk_nvme_ns *ns), true);
 DEFINE_STUB_V(spdk_opal_dev_destruct, (struct spdk_opal_dev *dev));
 DEFINE_STUB_V(spdk_bdev_io_complete_nvme_status, (struct spdk_bdev_io *bdev_io, uint32_t cdw0,
 		int sct, int sc));
-DEFINE_STUB(spdk_bdev_io_get_io_channel, struct spdk_io_channel *, (struct spdk_bdev_io *bdev_io),
-	    NULL);
 DEFINE_STUB(spdk_bdev_push_media_events, int, (struct spdk_bdev *bdev,
 		const struct spdk_bdev_media_event *events,
 		size_t num_events), 0);
@@ -391,6 +389,12 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 void
 spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status)
 {
+}
+
+struct spdk_io_channel *
+spdk_bdev_io_get_io_channel(struct spdk_bdev_io *bdev_io)
+{
+	return (struct spdk_io_channel *)bdev_io->internal.ch;
 }
 
 int32_t
@@ -1020,6 +1024,8 @@ test_get_zone_info(void)
 	const char *bdev_name = "nvme0n1";
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_io *bdev_io;
+	struct spdk_io_channel *ch;
+	struct nvme_io_channel *nvme_ch;
 #define MAX_ZONE_INFO_COUNT 64
 	struct spdk_bdev_zone_info zone_info[MAX_ZONE_INFO_COUNT];
 	struct spdk_ocssd_chunk_information_entry *chunk_info;
@@ -1049,9 +1055,17 @@ test_get_zone_info(void)
 	bdev = spdk_bdev_get_by_name(bdev_name);
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
 
+	ch = calloc(1, sizeof(*ch) + sizeof(*nvme_ch));
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+
+	nvme_ch = spdk_io_channel_get_ctx(ch);
+	nvme_ch->ctrlr = nvme_bdev_ctrlr;
+
 	bdev_io = alloc_ocssd_io();
 	bdev_io->internal.cb = get_zone_info_cb;
+	bdev_io->internal.ch = (struct spdk_bdev_channel *)ch;
 	bdev_io->bdev = bdev;
+	bdev_io->type = SPDK_BDEV_IO_TYPE_GET_ZONE_INFO;
 
 	/* Verify empty zone */
 	bdev_io->u.zone_mgmt.zone_id = 0;
@@ -1061,7 +1075,7 @@ test_get_zone_info(void)
 	set_chunk_state(chunk_info, CHUNK_STATE_FREE);
 	chunk_info->wp = 0;
 
-	rc = bdev_ocssd_get_zone_info(bdev_io);
+	rc = _bdev_ocssd_submit_request(ch, bdev_io);
 	CU_ASSERT_EQUAL(rc, 0);
 
 	CU_ASSERT_EQUAL(zone_info[0].state, SPDK_BDEV_ZONE_STATE_EMPTY);
@@ -1079,7 +1093,7 @@ test_get_zone_info(void)
 	chunk_info->cnlb = 511;
 	chunk_info->ct.size_deviate = 1;
 
-	rc = bdev_ocssd_get_zone_info(bdev_io);
+	rc = _bdev_ocssd_submit_request(ch, bdev_io);
 	CU_ASSERT_EQUAL(rc, 0);
 
 	CU_ASSERT_EQUAL(zone_info[0].state, SPDK_BDEV_ZONE_STATE_OPEN);
@@ -1095,7 +1109,7 @@ test_get_zone_info(void)
 	set_chunk_state(chunk_info, CHUNK_STATE_OFFLINE);
 	chunk_info->wp = chunk_info->slba;
 
-	rc = bdev_ocssd_get_zone_info(bdev_io);
+	rc = _bdev_ocssd_submit_request(ch, bdev_io);
 	CU_ASSERT_EQUAL(rc, 0);
 
 	CU_ASSERT_EQUAL(zone_info[0].state, SPDK_BDEV_ZONE_STATE_OFFLINE);
@@ -1120,7 +1134,7 @@ test_get_zone_info(void)
 		chunk_info->ct.size_deviate = 0;
 	}
 
-	rc = bdev_ocssd_get_zone_info(bdev_io);
+	rc = _bdev_ocssd_submit_request(ch, bdev_io);
 	CU_ASSERT_EQUAL(rc, 0);
 
 	for (offset = 0; offset < MAX_ZONE_INFO_COUNT; ++offset) {
@@ -1135,7 +1149,7 @@ test_get_zone_info(void)
 	bdev_io->u.zone_mgmt.num_zones = MAX_ZONE_INFO_COUNT;
 	bdev_io->u.zone_mgmt.buf = &zone_info;
 
-	rc = bdev_ocssd_get_zone_info(bdev_io);
+	rc = _bdev_ocssd_submit_request(ch, bdev_io);
 	CU_ASSERT_EQUAL(rc, -EINVAL);
 
 	/* Verify correct NVMe error forwarding */
@@ -1145,7 +1159,7 @@ test_get_zone_info(void)
 	chunk_info = get_chunk_info(ctrlr, 0);
 	set_chunk_state(chunk_info, CHUNK_STATE_FREE);
 
-	rc = bdev_ocssd_get_zone_info(bdev_io);
+	rc = _bdev_ocssd_submit_request(ch, bdev_io);
 	CU_ASSERT_EQUAL(rc, 0);
 	g_chunk_info_cpl = (struct spdk_nvme_cpl) {
 		.status = {
@@ -1161,6 +1175,7 @@ test_get_zone_info(void)
 	delete_nvme_bdev_controller(nvme_bdev_ctrlr);
 
 	free(bdev_io);
+	free(ch);
 	free_controller(ctrlr);
 }
 
