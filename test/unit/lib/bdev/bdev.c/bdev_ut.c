@@ -455,7 +455,6 @@ get_device_stat_cb(struct spdk_bdev *bdev, struct spdk_bdev_io_stat *stat, void 
 	CU_ASSERT_STRING_EQUAL(bdev_name, "bdev0");
 
 	free(stat);
-	free_bdev(bdev);
 
 	*(bool *)cb_arg = true;
 }
@@ -512,7 +511,7 @@ get_device_stat_test(void)
 	spdk_bdev_get_device_stat(bdev, stat, get_device_stat_cb, &done);
 	while (!done) { poll_threads(); }
 
-
+	free_bdev(bdev);
 }
 
 static void
