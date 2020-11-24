@@ -1148,7 +1148,6 @@ iscsi_conn_login_pdu_success_complete(void *arg)
 {
 	struct spdk_iscsi_conn *conn = arg;
 
-	spdk_poller_unregister(&conn->login_timer);
 
 	if (conn->state >= ISCSI_CONN_STATE_EXITING) {
 		/* Connection is being exited before this callback is executed. */
@@ -2226,6 +2225,7 @@ iscsi_pdu_payload_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *
 		return 0;
 	}
 
+	spdk_poller_unregister(&conn->login_timer);
 	rsp_pdu = conn->login_rsp_pdu;
 
 	reqh = (struct iscsi_bhs_login_req *)&pdu->bhs;

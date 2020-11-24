@@ -178,6 +178,7 @@ login_timeout(void *arg)
 	if (conn->state < ISCSI_CONN_STATE_EXITING) {
 		conn->state = ISCSI_CONN_STATE_EXITING;
 	}
+	spdk_poller_unregister(&conn->login_timer);
 
 	return SPDK_POLLER_BUSY;
 }
