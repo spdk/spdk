@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Minimal install
-zypper install -y gcc gcc-c++ make cunit-devel libaio-devel libopenssl-devel \
+zypper install -y gcc gcc-c++ make cmake cunit-devel libaio-devel libopenssl-devel \
 	libuuid-devel python-base ncurses-devel ninja meson
 # Additional dependencies for DPDK
 zypper install -y libnuma-devel nasm
