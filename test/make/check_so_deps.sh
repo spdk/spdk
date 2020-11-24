@@ -39,14 +39,6 @@ function confirm_abi_deps() {
 [suppress_type]
 	name = spdk_nvme_ctrlr_data
 [suppress_type]
-	name = spdk_nvme_ns_data
-[suppress_type]
-	name = spdk_nvme_log_page
-[suppress_type]
-	name = spdk_nvme_ctrlr_opts
-[suppress_type]
-	name = spdk_bs_dev
-[suppress_type]
 	type_kind = enum
 	changed_enumerators = SPDK_BDEV_NUM_IO_TYPES
 EOF
