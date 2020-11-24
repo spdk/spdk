@@ -353,8 +353,7 @@ bdev_ocssd_lba_in_range(struct ocssd_bdev *ocssd_bdev, uint64_t lba)
 static void
 bdev_ocssd_reset_sgl(void *ref, uint32_t sgl_offset)
 {
-	struct spdk_bdev_io *bdev_io = ref;
-	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
+	struct bdev_ocssd_io *ocdev_io = ref;
 	struct iovec *iov;
 
 	ocdev_io->io.iov_offset = sgl_offset;
@@ -372,8 +371,7 @@ bdev_ocssd_reset_sgl(void *ref, uint32_t sgl_offset)
 static int
 bdev_ocssd_next_sge(void *ref, void **address, uint32_t *length)
 {
-	struct spdk_bdev_io *bdev_io = ref;
-	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
+	struct bdev_ocssd_io *ocdev_io = ref;
 	struct iovec *iov;
 
 	assert(ocdev_io->io.iovpos < ocdev_io->io.iovcnt);
@@ -401,18 +399,17 @@ bdev_ocssd_next_sge(void *ref, void **address, uint32_t *length)
 static void
 bdev_ocssd_read_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
-	struct spdk_bdev_io *bdev_io = ctx;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(ctx);
 
 	spdk_bdev_io_complete_nvme_status(bdev_io, 0, cpl->status.sct, cpl->status.sc);
 }
 
 static int
 bdev_ocssd_read(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvme_ch,
-		struct spdk_bdev_io *bdev_io, struct iovec *iov, int iovcnt,
+		struct bdev_ocssd_io *ocdev_io, struct iovec *iov, int iovcnt,
 		void *md, uint64_t lba_count, uint64_t lba)
 {
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
-	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
 	const size_t zone_size = nvme_bdev->disk.zone_size;
 
 	if ((lba % zone_size) + lba_count > zone_size) {
@@ -429,16 +426,16 @@ bdev_ocssd_read(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvme_ch,
 
 	return spdk_nvme_ns_cmd_readv_with_md(nvme_bdev->nvme_ns->ns, nvme_ch->qpair, lba,
 					      lba_count, bdev_ocssd_read_cb,
-					      bdev_io, 0, bdev_ocssd_reset_sgl,
+					      ocdev_io, 0, bdev_ocssd_reset_sgl,
 					      bdev_ocssd_next_sge, md, 0, 0);
 }
 
 static void
 bdev_ocssd_write_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
-	struct spdk_bdev_io *bdev_io = ctx;
-	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
+	struct bdev_ocssd_io *ocdev_io = ctx;
 	struct bdev_ocssd_zone *zone = ocdev_io->io.zone;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(ctx);
 
 	zone->write_pointer = bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks;
 	assert(zone->write_pointer <= zone->slba + zone->capacity);
@@ -449,11 +446,10 @@ bdev_ocssd_write_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 
 static int
 bdev_ocssd_write(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvme_ch,
-		 struct spdk_bdev_io *bdev_io, struct iovec *iov, int iovcnt,
+		 struct bdev_ocssd_io *ocdev_io, struct iovec *iov, int iovcnt,
 		 void *md, uint64_t lba_count, uint64_t lba)
 {
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
-	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
 	const size_t zone_size = nvme_bdev->disk.zone_size;
 	struct bdev_ocssd_zone *zone;
 	int rc;
@@ -477,7 +473,7 @@ bdev_ocssd_write(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvme_ch,
 	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, lba);
 	rc = spdk_nvme_ns_cmd_writev_with_md(nvme_bdev->nvme_ns->ns, nvme_ch->qpair, lba,
 					     lba_count, bdev_ocssd_write_cb,
-					     bdev_io, 0, bdev_ocssd_reset_sgl,
+					     ocdev_io, 0, bdev_ocssd_reset_sgl,
 					     bdev_ocssd_next_sge, md, 0, 0);
 	if (spdk_unlikely(rc != 0)) {
 		__atomic_store_n(&zone->busy, false, __ATOMIC_SEQ_CST);
@@ -489,9 +485,9 @@ bdev_ocssd_write(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvme_ch,
 static void
 bdev_ocssd_append_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
-	struct spdk_bdev_io *bdev_io = ctx;
-	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
+	struct bdev_ocssd_io *ocdev_io = ctx;
 	struct bdev_ocssd_zone *zone = ocdev_io->io.zone;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(ctx);
 
 	zone->write_pointer += bdev_io->u.bdev.num_blocks;
 	assert(zone->write_pointer <= zone->slba + zone->capacity);
@@ -502,11 +498,10 @@ bdev_ocssd_append_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 
 static int
 bdev_ocssd_zone_append(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvme_ch,
-		       struct spdk_bdev_io *bdev_io, struct iovec *iov, int iovcnt,
+		       struct bdev_ocssd_io *ocdev_io, struct iovec *iov, int iovcnt,
 		       void *md, uint64_t lba_count, uint64_t lba)
 {
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
-	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
 	struct bdev_ocssd_zone *zone;
 	int rc = 0;
 
@@ -535,7 +530,7 @@ bdev_ocssd_zone_append(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nv
 	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, zone->write_pointer);
 	rc = spdk_nvme_ns_cmd_writev_with_md(nvme_bdev->nvme_ns->ns, nvme_ch->qpair, lba,
 					     lba_count, bdev_ocssd_append_cb,
-					     bdev_io, 0, bdev_ocssd_reset_sgl,
+					     ocdev_io, 0, bdev_ocssd_reset_sgl,
 					     bdev_ocssd_next_sge, md, 0, 0);
 out:
 	if (spdk_unlikely(rc != 0)) {
@@ -558,7 +553,7 @@ bdev_ocssd_io_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 
 	rc = bdev_ocssd_read((struct ocssd_bdev *)bdev_io->bdev->ctxt,
 			     nvme_ch,
-			     bdev_io,
+			     (struct bdev_ocssd_io *)bdev_io->driver_ctx,
 			     bdev_io->u.bdev.iovs,
 			     bdev_io->u.bdev.iovcnt,
 			     bdev_io->u.bdev.md_buf,
@@ -576,9 +571,9 @@ bdev_ocssd_io_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 static void
 bdev_ocssd_reset_zone_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
-	struct spdk_bdev_io *bdev_io = ctx;
-	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
+	struct bdev_ocssd_io *ocdev_io = ctx;
 	struct bdev_ocssd_zone *zone = ocdev_io->io.zone;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(ctx);
 
 	zone->write_pointer = zone->slba;
 	__atomic_store_n(&zone->busy, false, __ATOMIC_SEQ_CST);
@@ -587,10 +582,9 @@ bdev_ocssd_reset_zone_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 
 static int
 bdev_ocssd_reset_zone(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvme_ch,
-		      struct spdk_bdev_io *bdev_io, uint64_t slba, size_t num_zones)
+		      struct bdev_ocssd_io *ocdev_io, uint64_t slba, size_t num_zones)
 {
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
-	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
 	uint64_t offset, zone_size = nvme_bdev->disk.zone_size;
 	struct bdev_ocssd_zone *zone;
 	int rc;
@@ -614,7 +608,7 @@ bdev_ocssd_reset_zone(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvm
 
 	rc = spdk_nvme_ocssd_ns_cmd_vector_reset(nvme_bdev->nvme_ns->ns, nvme_ch->qpair,
 			ocdev_io->io.lba, num_zones, NULL,
-			bdev_ocssd_reset_zone_cb, bdev_io);
+			bdev_ocssd_reset_zone_cb, ocdev_io);
 	if (spdk_unlikely(rc != 0)) {
 		__atomic_store_n(&zone->busy, false, __ATOMIC_SEQ_CST);
 	}
@@ -623,7 +617,7 @@ bdev_ocssd_reset_zone(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvm
 }
 
 static int _bdev_ocssd_get_zone_info(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvme_ch,
-				     struct spdk_bdev_io *bdev_io, uint64_t zone_id);
+				     struct bdev_ocssd_io *ocdev_io, uint64_t zone_id);
 
 static void
 bdev_ocssd_fill_zone_info(struct ocssd_bdev *ocssd_bdev, struct spdk_bdev_zone_info *zone_info,
@@ -658,10 +652,10 @@ bdev_ocssd_fill_zone_info(struct ocssd_bdev *ocssd_bdev, struct spdk_bdev_zone_i
 static void
 bdev_ocssd_zone_info_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
-	struct spdk_bdev_io *bdev_io = ctx;
-	struct ocssd_bdev *ocssd_bdev = bdev_io->bdev->ctxt;
-	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
+	struct bdev_ocssd_io *ocdev_io = ctx;
 	struct spdk_ocssd_chunk_information_entry *chunk_info = &ocdev_io->zone_info.chunk_info;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(ctx);
+	struct ocssd_bdev *ocssd_bdev = bdev_io->bdev->ctxt;
 	struct spdk_bdev_zone_info *zone_info;
 	struct nvme_io_channel *nvme_ch;
 	int rc;
@@ -680,7 +674,7 @@ bdev_ocssd_zone_info_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 	} else {
 		nvme_ch = spdk_io_channel_get_ctx(spdk_bdev_io_get_io_channel(bdev_io));
 
-		rc = _bdev_ocssd_get_zone_info(ocssd_bdev, nvme_ch, bdev_io,
+		rc = _bdev_ocssd_get_zone_info(ocssd_bdev, nvme_ch, ocdev_io,
 					       bdev_io->u.zone_mgmt.zone_id);
 		if (spdk_unlikely(rc != 0)) {
 			if (rc == -ENOMEM) {
@@ -694,10 +688,9 @@ bdev_ocssd_zone_info_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 
 static int
 _bdev_ocssd_get_zone_info(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvme_ch,
-			  struct spdk_bdev_io *bdev_io, uint64_t zone_id)
+			  struct bdev_ocssd_io *ocdev_io, uint64_t zone_id)
 {
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
-	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
 	uint64_t lba, offset;
 
 	lba = zone_id + ocdev_io->zone_info.chunk_offset * nvme_bdev->disk.zone_size;
@@ -709,15 +702,14 @@ _bdev_ocssd_get_zone_info(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel 
 						&ocdev_io->zone_info.chunk_info,
 						sizeof(ocdev_io->zone_info.chunk_info),
 						offset * sizeof(ocdev_io->zone_info.chunk_info),
-						bdev_ocssd_zone_info_cb, (void *)bdev_io);
+						bdev_ocssd_zone_info_cb, (void *)ocdev_io);
 }
 
 static int
 bdev_ocssd_get_zone_info(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvme_ch,
-			 struct spdk_bdev_io *bdev_io, uint64_t zone_id, uint32_t num_zones)
+			 struct bdev_ocssd_io *ocdev_io, uint64_t zone_id, uint32_t num_zones)
 {
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
-	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
 
 	if (num_zones < 1) {
 		SPDK_ERRLOG("Invalid number of zones: %"PRIu32"\n", num_zones);
@@ -731,7 +723,7 @@ bdev_ocssd_get_zone_info(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *
 
 	ocdev_io->zone_info.chunk_offset = 0;
 
-	return _bdev_ocssd_get_zone_info(ocssd_bdev, nvme_ch, bdev_io, zone_id);
+	return _bdev_ocssd_get_zone_info(ocssd_bdev, nvme_ch, ocdev_io, zone_id);
 }
 
 static int
@@ -742,7 +734,7 @@ bdev_ocssd_zone_management(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel
 	case SPDK_BDEV_ZONE_RESET:
 		return bdev_ocssd_reset_zone(ocssd_bdev,
 					     nvme_ch,
-					     bdev_io,
+					     (struct bdev_ocssd_io *)bdev_io->driver_ctx,
 					     bdev_io->u.zone_mgmt.zone_id,
 					     bdev_io->u.zone_mgmt.num_zones);
 	default:
@@ -794,6 +786,7 @@ _bdev_ocssd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 {
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
 	struct ocssd_bdev *ocssd_bdev = (struct ocssd_bdev *)bdev_io->bdev->ctxt;
+	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
@@ -804,7 +797,7 @@ _bdev_ocssd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		return bdev_ocssd_write(ocssd_bdev,
 					nvme_ch,
-					bdev_io,
+					ocdev_io,
 					bdev_io->u.bdev.iovs,
 					bdev_io->u.bdev.iovcnt,
 					bdev_io->u.bdev.md_buf,
@@ -817,14 +810,14 @@ _bdev_ocssd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 	case SPDK_BDEV_IO_TYPE_GET_ZONE_INFO:
 		return bdev_ocssd_get_zone_info(ocssd_bdev,
 						nvme_ch,
-						bdev_io,
+						ocdev_io,
 						bdev_io->u.zone_mgmt.zone_id,
 						bdev_io->u.zone_mgmt.num_zones);
 
 	case SPDK_BDEV_IO_TYPE_ZONE_APPEND:
 		return bdev_ocssd_zone_append(ocssd_bdev,
 					      nvme_ch,
-					      bdev_io,
+					      ocdev_io,
 					      bdev_io->u.bdev.iovs,
 					      bdev_io->u.bdev.iovcnt,
 					      bdev_io->u.bdev.md_buf,
