@@ -408,29 +408,29 @@ bdev_ocssd_read_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 
 static int
 bdev_ocssd_read(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvme_ch,
-		struct spdk_bdev_io *bdev_io)
+		struct spdk_bdev_io *bdev_io, struct iovec *iov, int iovcnt,
+		void *md, uint64_t lba_count, uint64_t lba)
 {
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
 	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
 	const size_t zone_size = nvme_bdev->disk.zone_size;
-	uint64_t lba;
 
-	if ((bdev_io->u.bdev.offset_blocks % zone_size) + bdev_io->u.bdev.num_blocks > zone_size) {
+	if ((lba % zone_size) + lba_count > zone_size) {
 		SPDK_ERRLOG("Tried to cross zone boundary during read command\n");
 		return -EINVAL;
 	}
 
-	ocdev_io->io.iovs = bdev_io->u.bdev.iovs;
-	ocdev_io->io.iovcnt = bdev_io->u.bdev.iovcnt;
+	ocdev_io->io.iovs = iov;
+	ocdev_io->io.iovcnt = iovcnt;
 	ocdev_io->io.iovpos = 0;
 	ocdev_io->io.iov_offset = 0;
 
-	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, bdev_io->u.bdev.offset_blocks);
+	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, lba);
 
 	return spdk_nvme_ns_cmd_readv_with_md(nvme_bdev->nvme_ns->ns, nvme_ch->qpair, lba,
-					      bdev_io->u.bdev.num_blocks, bdev_ocssd_read_cb,
+					      lba_count, bdev_ocssd_read_cb,
 					      bdev_io, 0, bdev_ocssd_reset_sgl,
-					      bdev_ocssd_next_sge, bdev_io->u.bdev.md_buf, 0, 0);
+					      bdev_ocssd_next_sge, md, 0, 0);
 }
 
 static void
@@ -449,36 +449,36 @@ bdev_ocssd_write_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 
 static int
 bdev_ocssd_write(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvme_ch,
-		 struct spdk_bdev_io *bdev_io)
+		 struct spdk_bdev_io *bdev_io, struct iovec *iov, int iovcnt,
+		 void *md, uint64_t lba_count, uint64_t lba)
 {
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
 	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
 	const size_t zone_size = nvme_bdev->disk.zone_size;
 	struct bdev_ocssd_zone *zone;
-	uint64_t lba;
 	int rc;
 
-	if ((bdev_io->u.bdev.offset_blocks % zone_size) + bdev_io->u.bdev.num_blocks > zone_size) {
+	if ((lba % zone_size) + lba_count > zone_size) {
 		SPDK_ERRLOG("Tried to cross zone boundary during write command\n");
 		return -EINVAL;
 	}
 
-	zone = bdev_ocssd_get_zone_by_lba(ocssd_bdev, bdev_io->u.bdev.offset_blocks);
+	zone = bdev_ocssd_get_zone_by_lba(ocssd_bdev, lba);
 	if (__atomic_exchange_n(&zone->busy, true, __ATOMIC_SEQ_CST)) {
 		return -EINVAL;
 	}
 
 	ocdev_io->io.zone = zone;
-	ocdev_io->io.iovs = bdev_io->u.bdev.iovs;
-	ocdev_io->io.iovcnt = bdev_io->u.bdev.iovcnt;
+	ocdev_io->io.iovs = iov;
+	ocdev_io->io.iovcnt = iovcnt;
 	ocdev_io->io.iovpos = 0;
 	ocdev_io->io.iov_offset = 0;
 
-	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, bdev_io->u.bdev.offset_blocks);
+	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, lba);
 	rc = spdk_nvme_ns_cmd_writev_with_md(nvme_bdev->nvme_ns->ns, nvme_ch->qpair, lba,
-					     bdev_io->u.bdev.num_blocks, bdev_ocssd_write_cb,
+					     lba_count, bdev_ocssd_write_cb,
 					     bdev_io, 0, bdev_ocssd_reset_sgl,
-					     bdev_ocssd_next_sge, bdev_io->u.bdev.md_buf, 0, 0);
+					     bdev_ocssd_next_sge, md, 0, 0);
 	if (spdk_unlikely(rc != 0)) {
 		__atomic_store_n(&zone->busy, false, __ATOMIC_SEQ_CST);
 	}
@@ -502,17 +502,17 @@ bdev_ocssd_append_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 
 static int
 bdev_ocssd_zone_append(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvme_ch,
-		       struct spdk_bdev_io *bdev_io)
+		       struct spdk_bdev_io *bdev_io, struct iovec *iov, int iovcnt,
+		       void *md, uint64_t lba_count, uint64_t lba)
 {
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
 	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
 	struct bdev_ocssd_zone *zone;
-	uint64_t lba;
 	int rc = 0;
 
-	zone = bdev_ocssd_get_zone_by_slba(ocssd_bdev, bdev_io->u.bdev.offset_blocks);
+	zone = bdev_ocssd_get_zone_by_slba(ocssd_bdev, lba);
 	if (!zone) {
-		SPDK_ERRLOG("Invalid zone SLBA: %"PRIu64"\n", bdev_io->u.bdev.offset_blocks);
+		SPDK_ERRLOG("Invalid zone SLBA: %"PRIu64"\n", lba);
 		return -EINVAL;
 	}
 
@@ -520,23 +520,23 @@ bdev_ocssd_zone_append(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nv
 		return -EAGAIN;
 	}
 
-	if (zone->slba + zone->capacity - zone->write_pointer < bdev_io->u.bdev.num_blocks) {
+	if (zone->slba + zone->capacity - zone->write_pointer < lba_count) {
 		SPDK_ERRLOG("Insufficient number of blocks remaining\n");
 		rc = -ENOSPC;
 		goto out;
 	}
 
 	ocdev_io->io.zone = zone;
-	ocdev_io->io.iovs = bdev_io->u.bdev.iovs;
-	ocdev_io->io.iovcnt = bdev_io->u.bdev.iovcnt;
+	ocdev_io->io.iovs = iov;
+	ocdev_io->io.iovcnt = iovcnt;
 	ocdev_io->io.iovpos = 0;
 	ocdev_io->io.iov_offset = 0;
 
 	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, zone->write_pointer);
 	rc = spdk_nvme_ns_cmd_writev_with_md(nvme_bdev->nvme_ns->ns, nvme_ch->qpair, lba,
-					     bdev_io->u.bdev.num_blocks, bdev_ocssd_append_cb,
+					     lba_count, bdev_ocssd_append_cb,
 					     bdev_io, 0, bdev_ocssd_reset_sgl,
-					     bdev_ocssd_next_sge, bdev_io->u.bdev.md_buf, 0, 0);
+					     bdev_ocssd_next_sge, md, 0, 0);
 out:
 	if (spdk_unlikely(rc != 0)) {
 		__atomic_store_n(&zone->busy, false, __ATOMIC_SEQ_CST);
@@ -556,7 +556,14 @@ bdev_ocssd_io_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 		return;
 	}
 
-	rc = bdev_ocssd_read((struct ocssd_bdev *)bdev_io->bdev->ctxt, nvme_ch, bdev_io);
+	rc = bdev_ocssd_read((struct ocssd_bdev *)bdev_io->bdev->ctxt,
+			     nvme_ch,
+			     bdev_io,
+			     bdev_io->u.bdev.iovs,
+			     bdev_io->u.bdev.iovcnt,
+			     bdev_io->u.bdev.md_buf,
+			     bdev_io->u.bdev.num_blocks,
+			     bdev_io->u.bdev.offset_blocks);
 	if (spdk_likely(rc != 0)) {
 		if (rc == -ENOMEM) {
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
@@ -616,7 +623,7 @@ bdev_ocssd_reset_zone(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvm
 }
 
 static int _bdev_ocssd_get_zone_info(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvme_ch,
-				     struct spdk_bdev_io *bdev_io);
+				     struct spdk_bdev_io *bdev_io, uint64_t zone_id);
 
 static void
 bdev_ocssd_fill_zone_info(struct ocssd_bdev *ocssd_bdev, struct spdk_bdev_zone_info *zone_info,
@@ -673,7 +680,8 @@ bdev_ocssd_zone_info_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 	} else {
 		nvme_ch = spdk_io_channel_get_ctx(spdk_bdev_io_get_io_channel(bdev_io));
 
-		rc = _bdev_ocssd_get_zone_info(ocssd_bdev, nvme_ch, bdev_io);
+		rc = _bdev_ocssd_get_zone_info(ocssd_bdev, nvme_ch, bdev_io,
+					       bdev_io->u.zone_mgmt.zone_id);
 		if (spdk_unlikely(rc != 0)) {
 			if (rc == -ENOMEM) {
 				spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
@@ -686,14 +694,13 @@ bdev_ocssd_zone_info_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 
 static int
 _bdev_ocssd_get_zone_info(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvme_ch,
-			  struct spdk_bdev_io *bdev_io)
+			  struct spdk_bdev_io *bdev_io, uint64_t zone_id)
 {
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
 	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
 	uint64_t lba, offset;
 
-	lba = bdev_io->u.zone_mgmt.zone_id + ocdev_io->zone_info.chunk_offset *
-	      nvme_bdev->disk.zone_size;
+	lba = zone_id + ocdev_io->zone_info.chunk_offset * nvme_bdev->disk.zone_size;
 	offset = bdev_ocssd_to_chunk_info_offset(ocssd_bdev, lba);
 
 	return spdk_nvme_ctrlr_cmd_get_log_page(nvme_ch->ctrlr->ctrlr,
@@ -707,24 +714,24 @@ _bdev_ocssd_get_zone_info(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel 
 
 static int
 bdev_ocssd_get_zone_info(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvme_ch,
-			 struct spdk_bdev_io *bdev_io)
+			 struct spdk_bdev_io *bdev_io, uint64_t zone_id, uint32_t num_zones)
 {
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
 	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
 
-	if (bdev_io->u.zone_mgmt.num_zones < 1) {
-		SPDK_ERRLOG("Invalid number of zones: %"PRIu32"\n", bdev_io->u.zone_mgmt.num_zones);
+	if (num_zones < 1) {
+		SPDK_ERRLOG("Invalid number of zones: %"PRIu32"\n", num_zones);
 		return -EINVAL;
 	}
 
-	if (bdev_io->u.zone_mgmt.zone_id % nvme_bdev->disk.zone_size != 0) {
-		SPDK_ERRLOG("Unaligned zone LBA: %"PRIu64"\n", bdev_io->u.zone_mgmt.zone_id);
+	if (zone_id % nvme_bdev->disk.zone_size != 0) {
+		SPDK_ERRLOG("Unaligned zone LBA: %"PRIu64"\n", zone_id);
 		return -EINVAL;
 	}
 
 	ocdev_io->zone_info.chunk_offset = 0;
 
-	return _bdev_ocssd_get_zone_info(ocssd_bdev, nvme_ch, bdev_io);
+	return _bdev_ocssd_get_zone_info(ocssd_bdev, nvme_ch, bdev_io, zone_id);
 }
 
 static int
@@ -733,7 +740,9 @@ bdev_ocssd_zone_management(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel
 {
 	switch (bdev_io->u.zone_mgmt.zone_action) {
 	case SPDK_BDEV_ZONE_RESET:
-		return bdev_ocssd_reset_zone(ocssd_bdev, nvme_ch, bdev_io,
+		return bdev_ocssd_reset_zone(ocssd_bdev,
+					     nvme_ch,
+					     bdev_io,
 					     bdev_io->u.zone_mgmt.zone_id,
 					     bdev_io->u.zone_mgmt.num_zones);
 	default:
@@ -793,16 +802,34 @@ _bdev_ocssd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		return bdev_ocssd_write(ocssd_bdev, nvme_ch, bdev_io);
+		return bdev_ocssd_write(ocssd_bdev,
+					nvme_ch,
+					bdev_io,
+					bdev_io->u.bdev.iovs,
+					bdev_io->u.bdev.iovcnt,
+					bdev_io->u.bdev.md_buf,
+					bdev_io->u.bdev.num_blocks,
+					bdev_io->u.bdev.offset_blocks);
 
 	case SPDK_BDEV_IO_TYPE_ZONE_MANAGEMENT:
 		return bdev_ocssd_zone_management(ocssd_bdev, nvme_ch, bdev_io);
 
 	case SPDK_BDEV_IO_TYPE_GET_ZONE_INFO:
-		return bdev_ocssd_get_zone_info(ocssd_bdev, nvme_ch, bdev_io);
+		return bdev_ocssd_get_zone_info(ocssd_bdev,
+						nvme_ch,
+						bdev_io,
+						bdev_io->u.zone_mgmt.zone_id,
+						bdev_io->u.zone_mgmt.num_zones);
 
 	case SPDK_BDEV_IO_TYPE_ZONE_APPEND:
-		return bdev_ocssd_zone_append(ocssd_bdev, nvme_ch, bdev_io);
+		return bdev_ocssd_zone_append(ocssd_bdev,
+					      nvme_ch,
+					      bdev_io,
+					      bdev_io->u.bdev.iovs,
+					      bdev_io->u.bdev.iovcnt,
+					      bdev_io->u.bdev.md_buf,
+					      bdev_io->u.bdev.num_blocks,
+					      bdev_io->u.bdev.offset_blocks);
 
 	default:
 		return -EINVAL;
