@@ -720,8 +720,8 @@ fi
 : ${PCI_ALLOWED:=""}
 : ${PCI_BLOCKED:=""}
 
-if [ -n "$NVME_WHITELIST" ]; then
-	PCI_ALLOWED="$PCI_ALLOWED $NVME_WHITELIST"
+if [ -n "$NVME_ALLOWED" ]; then
+	PCI_ALLOWED="$PCI_ALLOWED $NVME_ALLOWED"
 fi
 
 if [ -n "$SKIP_PCI" ]; then
