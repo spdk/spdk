@@ -2298,17 +2298,11 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     # ioat
     def ioat_scan_accel_engine(args):
-        pci_whitelist = []
-        if args.pci_whitelist:
-            for w in args.pci_whitelist.strip().split(" "):
-                pci_whitelist.append(w)
-        rpc.ioat.ioat_scan_accel_engine(args.client, pci_whitelist)
+        rpc.ioat.ioat_scan_accel_engine(args.client)
 
     p = subparsers.add_parser('ioat_scan_accel_engine',
                               aliases=['ioat_scan_copy_engine', 'scan_ioat_copy_engine'],
-                              help='Set scan and enable IOAT accel engine offload.')
-    p.add_argument('-w', '--pci-whitelist', help="""Whitespace-separated list of PCI addresses in
-    domain:bus:device.function format or domain.bus.device.function format""")
+                              help='Enable IOAT accel engine offload.')
     p.set_defaults(func=ioat_scan_accel_engine)
 
     # idxd

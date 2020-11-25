@@ -37,71 +37,14 @@
 #include "spdk/util.h"
 #include "spdk/event.h"
 
-struct rpc_pci_whitelist {
-	size_t num_bdfs;
-	char *bdfs[IOAT_MAX_CHANNELS];
-};
-
-static int
-decode_rpc_pci_whitelist(const struct spdk_json_val *val, void *out)
-{
-	struct rpc_pci_whitelist *pci_whitelist = out;
-
-	return spdk_json_decode_array(val, spdk_json_decode_string, pci_whitelist->bdfs,
-				      IOAT_MAX_CHANNELS, &pci_whitelist->num_bdfs, sizeof(char *));
-}
-
-static void
-free_rpc_pci_whitelist(struct rpc_pci_whitelist *list)
-{
-	size_t i;
-
-	for (i = 0; i < list->num_bdfs; i++) {
-		free(list->bdfs[i]);
-	}
-}
-
-struct rpc_ioat_scan_accel_engine {
-	struct rpc_pci_whitelist pci_whitelist;
-};
-
-static void
-free_rpc_ioat_scan_accel_engine(struct rpc_ioat_scan_accel_engine *p)
-{
-	free_rpc_pci_whitelist(&p->pci_whitelist);
-}
-
-static const struct spdk_json_object_decoder rpc_ioat_scan_accel_engine_decoder[] = {
-	{"pci_whitelist", offsetof(struct rpc_ioat_scan_accel_engine, pci_whitelist), decode_rpc_pci_whitelist},
-};
-
 static void
 rpc_ioat_scan_accel_engine(struct spdk_jsonrpc_request *request,
 			   const struct spdk_json_val *params)
 {
-	struct rpc_ioat_scan_accel_engine req = {};
-	int rc;
-
 	if (params != NULL) {
-		if (spdk_json_decode_object(params, rpc_ioat_scan_accel_engine_decoder,
-					    SPDK_COUNTOF(rpc_ioat_scan_accel_engine_decoder),
-					    &req)) {
-			free_rpc_ioat_scan_accel_engine(&req);
-			SPDK_ERRLOG("spdk_json_decode_object() failed\n");
-			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-							 "Invalid parameters");
-			return;
-		}
-
-		rc = accel_engine_ioat_add_whitelist_devices((const char **)req.pci_whitelist.bdfs,
-				req.pci_whitelist.num_bdfs);
-		free_rpc_ioat_scan_accel_engine(&req);
-		if (rc < 0) {
-			SPDK_ERRLOG("accel_engine_ioat_add_whitelist_devices() failed\n");
-			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-							 "Invalid parameters");
-			return;
-		}
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "ioat_scan_accel_engine requires no parameters");
+		return;
 	}
 
 	accel_engine_ioat_enable_probe();

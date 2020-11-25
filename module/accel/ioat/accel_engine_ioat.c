@@ -46,13 +46,6 @@
 static bool g_ioat_enable = false;
 static bool g_ioat_initialized = false;
 
-struct ioat_probe_ctx {
-	int num_whitelist_devices;
-	struct spdk_pci_addr whitelist[IOAT_MAX_CHANNELS];
-};
-
-static struct ioat_probe_ctx g_probe_ctx;
-
 struct ioat_device {
 	struct spdk_ioat_chan *ioat;
 	bool is_allocated;
@@ -75,21 +68,6 @@ struct ioat_io_channel {
 	struct ioat_device		*ioat_dev;
 	struct spdk_poller		*poller;
 };
-
-static int
-ioat_find_dev_by_whitelist_bdf(const struct spdk_pci_addr *pci_addr,
-			       const struct spdk_pci_addr *whitelist,
-			       int num_whitelist_devices)
-{
-	int i;
-
-	for (i = 0; i < num_whitelist_devices; i++) {
-		if (spdk_pci_addr_compare(pci_addr, &whitelist[i]) == 0) {
-			return 1;
-		}
-	}
-	return 0;
-}
 
 static struct ioat_device *
 ioat_allocate_device(void)
@@ -242,7 +220,6 @@ ioat_get_io_channel(void)
 static bool
 probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev)
 {
-	struct ioat_probe_ctx *ctx = cb_ctx;
 	struct spdk_pci_addr pci_addr = spdk_pci_device_get_addr(pci_dev);
 	struct pci_device *pdev;
 
@@ -261,11 +238,6 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev)
 	}
 	pdev->pci_dev = pci_dev;
 	TAILQ_INSERT_TAIL(&g_pci_devices, pdev, tailq);
-
-	if (ctx->num_whitelist_devices > 0 &&
-	    !ioat_find_dev_by_whitelist_bdf(&pci_addr, ctx->whitelist, ctx->num_whitelist_devices)) {
-		return false;
-	}
 
 	/* Claim the device in case conflict with other process */
 	if (spdk_pci_device_claim(pci_dev) < 0) {
@@ -297,51 +269,13 @@ accel_engine_ioat_enable_probe(void)
 }
 
 static int
-accel_engine_ioat_add_whitelist_device(const char *pci_bdf)
-{
-	if (pci_bdf == NULL) {
-		return -1;
-	}
-
-	if (g_probe_ctx.num_whitelist_devices >= IOAT_MAX_CHANNELS) {
-		SPDK_ERRLOG("Ioat whitelist is full (max size is %d)\n",
-			    IOAT_MAX_CHANNELS);
-		return -1;
-	}
-
-	if (spdk_pci_addr_parse(&g_probe_ctx.whitelist[g_probe_ctx.num_whitelist_devices],
-				pci_bdf) < 0) {
-		SPDK_ERRLOG("Invalid address %s\n", pci_bdf);
-		return -1;
-	}
-
-	g_probe_ctx.num_whitelist_devices++;
-
-	return 0;
-}
-
-int
-accel_engine_ioat_add_whitelist_devices(const char *pci_bdfs[], size_t num_pci_bdfs)
-{
-	size_t i;
-
-	for (i = 0; i < num_pci_bdfs; i++) {
-		if (accel_engine_ioat_add_whitelist_device(pci_bdfs[i]) < 0) {
-			return -1;
-		}
-	}
-
-	return 0;
-}
-
-static int
 accel_engine_ioat_init(void)
 {
 	if (!g_ioat_enable) {
 		return 0;
 	}
 
-	if (spdk_ioat_probe(&g_probe_ctx, probe_cb, attach_cb) != 0) {
+	if (spdk_ioat_probe(NULL, probe_cb, attach_cb) != 0) {
 		SPDK_ERRLOG("spdk_ioat_probe() failed\n");
 		return -1;
 	}

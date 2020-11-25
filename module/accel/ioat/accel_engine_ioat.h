@@ -38,7 +38,6 @@
 
 #define IOAT_MAX_CHANNELS	64
 
-int accel_engine_ioat_add_whitelist_devices(const char *pci_bdfs[], size_t num_pci_bdfs);
 void accel_engine_ioat_enable_probe(void);
 
 #endif /* SPDK_ACCEL_ENGINE_IOAT_H */

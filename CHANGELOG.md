@@ -24,6 +24,12 @@ listening on portals for a portal group until all associated target nodes are cr
 at startup, otherwise some iSCSI initiators may fail to re-login when SPDK iSCSI
 target application restarts.
 
+## ioat
+
+The PCI BDF whitelist option has been removed from the ioat_scan_accel_engine RPC.
+ioat PCI functions can still be allowed or denied using SPDK application command
+line options.
+
 ## v20.10:
 
 ### accel
