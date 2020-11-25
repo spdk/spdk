@@ -307,6 +307,13 @@ function configure_linux_pci() {
 	/sys/module/vfio/parameters/enable_unsafe_noiommu_mode && \
 	"$(cat /sys/module/vfio/parameters/enable_unsafe_noiommu_mode)" == "Y") ]]; then
 		driver_name=vfio-pci
+		# Just in case, attempt to load VFIO_IOMMU_TYPE1 module into the kernel - this
+		# should be done automatically by modprobe since this particular module should
+		# be a part of vfio-pci dependencies, however, on some distros, it seems that
+		# it's not the case. See #1689.
+		if modinfo vfio_iommu_type1 > /dev/null; then
+			modprobe vfio_iommu_type1
+		fi
 	elif modinfo uio_pci_generic > /dev/null 2>&1; then
 		driver_name=uio_pci_generic
 	elif [[ -e $igb_uio_fallback ]]; then
