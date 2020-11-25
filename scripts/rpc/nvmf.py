@@ -237,7 +237,7 @@ def nvmf_create_subsystem(client,
         tgt_name: name of the parent NVMe-oF target (optional).
         serial_number: Serial number of virtual controller.
         model_number: Model number of virtual controller.
-        allow_any_host: Allow any host (True) or enforce allowed host whitelist (False). Default: False.
+        allow_any_host: Allow any host (True) or enforce allowed host list (False). Default: False.
         max_namespaces: Maximum number of namespaces that can be attached to the subsystem (optional). Default: 0 (Unlimited).
         ana_reporting: Enable ANA reporting feature. Default: False.
 
@@ -459,7 +459,7 @@ def nvmf_subsystem_remove_ns(client, nqn, nsid, tgt_name=None):
 
 
 def nvmf_subsystem_add_host(client, nqn, host, tgt_name=None):
-    """Add a host NQN to the whitelist of allowed hosts.
+    """Add a host NQN to the list of allowed hosts.
 
     Args:
         nqn: Subsystem NQN.
@@ -479,7 +479,7 @@ def nvmf_subsystem_add_host(client, nqn, host, tgt_name=None):
 
 
 def nvmf_subsystem_remove_host(client, nqn, host, tgt_name=None):
-    """Remove a host NQN from the whitelist of allowed hosts.
+    """Remove a host NQN from the list of allowed hosts.
 
     Args:
         nqn: Subsystem NQN.
@@ -499,11 +499,11 @@ def nvmf_subsystem_remove_host(client, nqn, host, tgt_name=None):
 
 
 def nvmf_subsystem_allow_any_host(client, nqn, disable, tgt_name=None):
-    """Configure a subsystem to allow any host to connect or to enforce the host NQN whitelist.
+    """Configure a subsystem to allow any host to connect or to enforce the host NQN list.
 
     Args:
         nqn: Subsystem NQN.
-        disable: Allow any host (true) or enforce allowed host whitelist (false).
+        disable: Allow any host (true) or enforce allowed host list (false).
         tgt_name: name of the parent NVMe-oF target (optional).
 
     Returns:

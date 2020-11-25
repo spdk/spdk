@@ -4892,7 +4892,7 @@ tgt_name                | Optional | string      | Parent NVMe-oF target name.
 serial_number           | Optional | string      | Serial number of virtual controller
 model_number            | Optional | string      | Model number of virtual controller
 max_namespaces          | Optional | number      | Maximum number of namespaces that can be attached to the subsystem. Default: 0 (Unlimited)
-allow_any_host          | Optional | boolean     | Allow any host (`true`) or enforce allowed host whitelist (`false`). Default: `false`.
+allow_any_host          | Optional | boolean     | Allow any host (`true`) or enforce allowed host list (`false`). Default: `false`.
 ana_reporting           | Optional | boolean     | Enable ANA reporting feature (default: `false`).
 
 ### Example
@@ -5192,7 +5192,7 @@ Example response:
 
 ## nvmf_subsystem_add_host method {#rpc_nvmf_subsystem_add_host}
 
-Add a host NQN to the whitelist of allowed hosts.
+Add a host NQN to the list of allowed hosts.
 
 ### Parameters
 
@@ -5230,7 +5230,7 @@ Example response:
 
 ## nvmf_subsystem_remove_host method {#rpc_nvmf_subsystem_remove_host}
 
-Remove a host NQN from the whitelist of allowed hosts.
+Remove a host NQN from the list of allowed hosts.
 
 ### Parameters
 
@@ -5268,14 +5268,14 @@ Example response:
 
 ## nvmf_subsystem_allow_any_host method {#rpc_nvmf_subsystem_allow_any_host}
 
-Configure a subsystem to allow any host to connect or to enforce the host NQN whitelist.
+Configure a subsystem to allow any host to connect or to enforce the host NQN list.
 
 ### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 nqn                     | Required | string      | Subsystem NQN
-allow_any_host          | Required | boolean     | Allow any host (`true`) or enforce allowed host whitelist (`false`).
+allow_any_host          | Required | boolean     | Allow any host (`true`) or enforce allowed host list (`false`).
 tgt_name                | Optional | string      | Parent NVMe-oF target name.
 
 ### Example

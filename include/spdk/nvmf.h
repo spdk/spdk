@@ -204,7 +204,7 @@ void spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_
  * Begin accepting new connections at the address provided.
  *
  * The connections will be matched with a subsystem, which may or may not allow
- * the connection based on a subsystem-specific whitelist. See
+ * the connection based on a subsystem-specific list of allowed hosts. See
  * spdk_nvmf_subsystem_add_host() and spdk_nvmf_subsystem_add_listener()
  *
  * \param tgt The target associated with this listen address.
@@ -507,7 +507,7 @@ int spdk_nvmf_subsystem_disconnect_host(struct spdk_nvmf_subsystem *subsystem,
  *
  * \param subsystem Subsystem to modify.
  * \param allow_any_host true to allow any host to connect to this subsystem,
- * or false to enforce the whitelist configured with spdk_nvmf_subsystem_add_host().
+ * or false to enforce the list configured with spdk_nvmf_subsystem_add_host().
  *
  * \return 0 on success, or negated errno value on failure.
  */
@@ -520,7 +520,7 @@ int spdk_nvmf_subsystem_set_allow_any_host(struct spdk_nvmf_subsystem *subsystem
  * \param subsystem Subsystem to query.
  *
  * \return true if any host is allowed to connect to this subsystem, or false if
- * connecting hosts must be in the whitelist configured with spdk_nvmf_subsystem_add_host().
+ * connecting hosts must be in the list configured with spdk_nvmf_subsystem_add_host().
  */
 bool spdk_nvmf_subsystem_get_allow_any_host(const struct spdk_nvmf_subsystem *subsystem);
 
@@ -647,7 +647,7 @@ const struct spdk_nvme_transport_id *spdk_nvmf_subsystem_listener_get_trid(
  *
  * \param subsystem Subsystem to allow dynamic listener assignment.
  * \param allow_any_listener true to allow dynamic listener assignment for
- * this subsystem, or false to enforce the whitelist configured during
+ * this subsystem, or false to enforce the list configured during
  * subsystem setup.
  */
 void spdk_nvmf_subsystem_allow_any_listener(
@@ -660,7 +660,7 @@ void spdk_nvmf_subsystem_allow_any_listener(
  * \param subsystem Subsystem to query.
  *
  * \return true if this subsystem allows dynamic management of listen address list,
- *  or false if only allows addresses in the whitelist configured during subsystem setup.
+ *  or false if only allows addresses in the list configured during subsystem setup.
  */
 bool spdk_nvmf_subsytem_any_listener_allowed(
 	struct spdk_nvmf_subsystem *subsystem);

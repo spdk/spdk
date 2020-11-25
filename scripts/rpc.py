@@ -1892,7 +1892,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument("-d", "--model-number", help="""
     Format:  'mn' etc
     Example: 'SPDK Controller'""", default='SPDK bdev Controller')
-    p.add_argument("-a", "--allow-any-host", action='store_true', help="Allow any host to connect (don't enforce host NQN whitelist)")
+    p.add_argument("-a", "--allow-any-host", action='store_true', help="Allow any host to connect (don't enforce allowed host NQN list)")
     p.add_argument("-m", "--max-namespaces", help="Maximum number of namespaces allowed",
                    type=int, default=0)
     p.add_argument("-r", "--ana-reporting", action='store_true', help="Enable ANA reporting feature")

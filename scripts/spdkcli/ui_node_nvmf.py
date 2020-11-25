@@ -83,8 +83,8 @@ class UINVMfSubsystems(UINode):
             serial_number - Example: 'SPDK00000000000001'.
             max_namespaces - Optional parameter. Maximum number of namespaces allowed to added during
                              active connection
-            allow_any_host - Optional parameter. Allow any host to connect (don't enforce host NQN
-                             whitelist)
+            allow_any_host - Optional parameter. Allow any host to connect (don't enforce allowed host NQN
+                             list)
         """
         allow_any_host = self.ui_eval_param(allow_any_host, "bool", False)
         max_namespaces = self.ui_eval_param(max_namespaces, "number", 0)
@@ -254,7 +254,7 @@ class UINVMfSubsystemHosts(UINode):
             nqn=self.parent.subsystem.nqn, host=host)
 
     def ui_command_create(self, host):
-        """Add a host NQN to the whitelist of allowed hosts.
+        """Add a host NQN to the list of allowed hosts.
 
         Args:
             host: Host NQN to add to the list of allowed host NQNs
