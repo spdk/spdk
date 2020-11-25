@@ -180,8 +180,8 @@ static populate_namespace_fn g_populate_namespace_fn[] = {
 	bdev_ocssd_populate_namespace,
 };
 
-typedef void (*depopulate_namespace_fn)(struct nvme_bdev_ns *ns);
-static void nvme_ctrlr_depopulate_standard_namespace(struct nvme_bdev_ns *ns);
+typedef void (*depopulate_namespace_fn)(struct nvme_bdev_ns *nvme_ns);
+static void nvme_ctrlr_depopulate_standard_namespace(struct nvme_bdev_ns *nvme_ns);
 
 static depopulate_namespace_fn g_depopulate_namespace_fn[] = {
 	NULL,
@@ -189,9 +189,10 @@ static depopulate_namespace_fn g_depopulate_namespace_fn[] = {
 	bdev_ocssd_depopulate_namespace,
 };
 
-typedef void (*config_json_namespace_fn)(struct spdk_json_write_ctx *w, struct nvme_bdev_ns *ns);
+typedef void (*config_json_namespace_fn)(struct spdk_json_write_ctx *w,
+		struct nvme_bdev_ns *nvme_ns);
 static void nvme_ctrlr_config_json_standard_namespace(struct spdk_json_write_ctx *w,
-		struct nvme_bdev_ns *ns);
+		struct nvme_bdev_ns *nvme_ns);
 
 static config_json_namespace_fn g_config_json_namespace_fn[] = {
 	NULL,
@@ -1277,43 +1278,43 @@ nvme_ctrlr_depopulate_namespace_done(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 }
 
 static void
-nvme_ctrlr_depopulate_standard_namespace(struct nvme_bdev_ns *ns)
+nvme_ctrlr_depopulate_standard_namespace(struct nvme_bdev_ns *nvme_ns)
 {
 	struct nvme_bdev *bdev, *tmp;
 
-	TAILQ_FOREACH_SAFE(bdev, &ns->bdevs, tailq, tmp) {
+	TAILQ_FOREACH_SAFE(bdev, &nvme_ns->bdevs, tailq, tmp) {
 		spdk_bdev_unregister(&bdev->disk, NULL, NULL);
 	}
 
-	ns->populated = false;
+	nvme_ns->populated = false;
 
-	nvme_ctrlr_depopulate_namespace_done(ns->ctrlr);
+	nvme_ctrlr_depopulate_namespace_done(nvme_ns->ctrlr);
 }
 
 static void
-nvme_ctrlr_populate_namespace(struct nvme_bdev_ctrlr *ctrlr, struct nvme_bdev_ns *ns,
+nvme_ctrlr_populate_namespace(struct nvme_bdev_ctrlr *ctrlr, struct nvme_bdev_ns *nvme_ns,
 			      struct nvme_async_probe_ctx *ctx)
 {
-	g_populate_namespace_fn[ns->type](ctrlr, ns, ctx);
+	g_populate_namespace_fn[nvme_ns->type](ctrlr, nvme_ns, ctx);
 }
 
 static void
-nvme_ctrlr_depopulate_namespace(struct nvme_bdev_ctrlr *ctrlr, struct nvme_bdev_ns *ns)
+nvme_ctrlr_depopulate_namespace(struct nvme_bdev_ctrlr *ctrlr, struct nvme_bdev_ns *nvme_ns)
 {
-	g_depopulate_namespace_fn[ns->type](ns);
+	g_depopulate_namespace_fn[nvme_ns->type](nvme_ns);
 }
 
 void
 nvme_ctrlr_populate_namespace_done(struct nvme_async_probe_ctx *ctx,
-				   struct nvme_bdev_ns *ns, int rc)
+				   struct nvme_bdev_ns *nvme_ns, int rc)
 {
 	if (rc == 0) {
-		ns->populated = true;
+		nvme_ns->populated = true;
 		pthread_mutex_lock(&g_bdev_nvme_mutex);
-		ns->ctrlr->ref++;
+		nvme_ns->ctrlr->ref++;
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
 	} else {
-		memset(ns, 0, sizeof(*ns));
+		memset(nvme_ns, 0, sizeof(*nvme_ns));
 	}
 
 	if (ctx) {
@@ -1329,8 +1330,8 @@ nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 			       struct nvme_async_probe_ctx *ctx)
 {
 	struct spdk_nvme_ctrlr	*ctrlr = nvme_bdev_ctrlr->ctrlr;
-	struct nvme_bdev_ns	*ns;
-	struct spdk_nvme_ns	*nvme_ns;
+	struct nvme_bdev_ns	*nvme_ns;
+	struct spdk_nvme_ns	*ns;
 	struct nvme_bdev	*bdev;
 	uint32_t		i;
 	int			rc;
@@ -1347,14 +1348,14 @@ nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 	for (i = 0; i < nvme_bdev_ctrlr->num_ns; i++) {
 		uint32_t	nsid = i + 1;
 
-		ns = nvme_bdev_ctrlr->namespaces[i];
+		nvme_ns = nvme_bdev_ctrlr->namespaces[i];
 		ns_is_active = spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid);
 
-		if (ns->populated && ns_is_active && ns->type == NVME_BDEV_NS_STANDARD) {
+		if (nvme_ns->populated && ns_is_active && nvme_ns->type == NVME_BDEV_NS_STANDARD) {
 			/* NS is still there but attributes may have changed */
-			nvme_ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
-			num_sectors = spdk_nvme_ns_get_num_sectors(nvme_ns);
-			bdev = TAILQ_FIRST(&ns->bdevs);
+			ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+			num_sectors = spdk_nvme_ns_get_num_sectors(ns);
+			bdev = TAILQ_FIRST(&nvme_ns->bdevs);
 			if (bdev->disk.blockcnt != num_sectors) {
 				SPDK_NOTICELOG("NSID %u is resized: bdev name %s, old size %" PRIu64 ", new size %" PRIu64 "\n",
 					       nsid,
@@ -1369,25 +1370,25 @@ nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 			}
 		}
 
-		if (!ns->populated && ns_is_active) {
-			ns->id = nsid;
-			ns->ctrlr = nvme_bdev_ctrlr;
+		if (!nvme_ns->populated && ns_is_active) {
+			nvme_ns->id = nsid;
+			nvme_ns->ctrlr = nvme_bdev_ctrlr;
 			if (spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
-				ns->type = NVME_BDEV_NS_OCSSD;
+				nvme_ns->type = NVME_BDEV_NS_OCSSD;
 			} else {
-				ns->type = NVME_BDEV_NS_STANDARD;
+				nvme_ns->type = NVME_BDEV_NS_STANDARD;
 			}
 
-			TAILQ_INIT(&ns->bdevs);
+			TAILQ_INIT(&nvme_ns->bdevs);
 
 			if (ctx) {
 				ctx->populates_in_progress++;
 			}
-			nvme_ctrlr_populate_namespace(nvme_bdev_ctrlr, ns, ctx);
+			nvme_ctrlr_populate_namespace(nvme_bdev_ctrlr, nvme_ns, ctx);
 		}
 
-		if (ns->populated && !ns_is_active) {
-			nvme_ctrlr_depopulate_namespace(nvme_bdev_ctrlr, ns);
+		if (nvme_ns->populated && !ns_is_active) {
+			nvme_ctrlr_depopulate_namespace(nvme_bdev_ctrlr, nvme_ns);
 		}
 	}
 
@@ -1409,15 +1410,15 @@ static void
 nvme_ctrlr_depopulate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
 	uint32_t i;
-	struct nvme_bdev_ns *ns;
+	struct nvme_bdev_ns *nvme_ns;
 
 	for (i = 0; i < nvme_bdev_ctrlr->num_ns; i++) {
 		uint32_t nsid = i + 1;
 
-		ns = nvme_bdev_ctrlr->namespaces[nsid - 1];
-		if (ns->populated) {
-			assert(ns->id == nsid);
-			nvme_ctrlr_depopulate_namespace(nvme_bdev_ctrlr, ns);
+		nvme_ns = nvme_bdev_ctrlr->namespaces[nsid - 1];
+		if (nvme_ns->populated) {
+			assert(nvme_ns->id == nsid);
+			nvme_ctrlr_depopulate_namespace(nvme_bdev_ctrlr, nvme_ns);
 		}
 	}
 }
@@ -1736,7 +1737,7 @@ static void
 nvme_ctrlr_populate_namespaces_done(struct nvme_async_probe_ctx *ctx)
 {
 	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
-	struct nvme_bdev_ns	*ns;
+	struct nvme_bdev_ns	*nvme_ns;
 	struct nvme_bdev	*nvme_bdev, *tmp;
 	uint32_t		i, nsid;
 	size_t			j;
@@ -1751,12 +1752,12 @@ nvme_ctrlr_populate_namespaces_done(struct nvme_async_probe_ctx *ctx)
 	j = 0;
 	for (i = 0; i < nvme_bdev_ctrlr->num_ns; i++) {
 		nsid = i + 1;
-		ns = nvme_bdev_ctrlr->namespaces[nsid - 1];
-		if (!ns->populated) {
+		nvme_ns = nvme_bdev_ctrlr->namespaces[nsid - 1];
+		if (!nvme_ns->populated) {
 			continue;
 		}
-		assert(ns->id == nsid);
-		TAILQ_FOREACH_SAFE(nvme_bdev, &ns->bdevs, tailq, tmp) {
+		assert(nvme_ns->id == nsid);
+		TAILQ_FOREACH_SAFE(nvme_bdev, &nvme_ns->bdevs, tailq, tmp) {
 			if (j < ctx->count) {
 				ctx->names[j] = nvme_bdev->disk.name;
 				j++;
@@ -2769,15 +2770,16 @@ bdev_nvme_abort(struct nvme_io_channel *nvme_ch, struct nvme_bdev_io *bio,
 }
 
 static void
-nvme_ctrlr_config_json_standard_namespace(struct spdk_json_write_ctx *w, struct nvme_bdev_ns *ns)
+nvme_ctrlr_config_json_standard_namespace(struct spdk_json_write_ctx *w,
+		struct nvme_bdev_ns *nvme_ns)
 {
 	/* nop */
 }
 
 static void
-nvme_namespace_config_json(struct spdk_json_write_ctx *w, struct nvme_bdev_ns *ns)
+nvme_namespace_config_json(struct spdk_json_write_ctx *w, struct nvme_bdev_ns *nvme_ns)
 {
-	g_config_json_namespace_fn[ns->type](w, ns);
+	g_config_json_namespace_fn[nvme_ns->type](w, nvme_ns);
 }
 
 static int

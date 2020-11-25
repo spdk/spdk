@@ -130,7 +130,7 @@ bdev_ocssd_config_json(struct spdk_json_write_ctx *w)
 }
 
 void
-bdev_ocssd_namespace_config_json(struct spdk_json_write_ctx *w, struct nvme_bdev_ns *ns)
+bdev_ocssd_namespace_config_json(struct spdk_json_write_ctx *w, struct nvme_bdev_ns *nvme_ns)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 	struct nvme_bdev *nvme_bdev;
@@ -138,7 +138,7 @@ bdev_ocssd_namespace_config_json(struct spdk_json_write_ctx *w, struct nvme_bdev
 	char range_buf[128];
 	int rc;
 
-	TAILQ_FOREACH(nvme_bdev, &ns->bdevs, tailq) {
+	TAILQ_FOREACH(nvme_bdev, &nvme_ns->bdevs, tailq) {
 		nvme_bdev_ctrlr = nvme_bdev->nvme_ns->ctrlr;
 		ocssd_bdev = SPDK_CONTAINEROF(nvme_bdev, struct ocssd_bdev, nvme_bdev);
 
@@ -1511,11 +1511,11 @@ error:
 }
 
 void
-bdev_ocssd_depopulate_namespace(struct nvme_bdev_ns *ns)
+bdev_ocssd_depopulate_namespace(struct nvme_bdev_ns *nvme_ns)
 {
 	struct bdev_ocssd_ns *ocssd_ns;
 
-	ocssd_ns = bdev_ocssd_get_ns_from_nvme(ns);
+	ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ns);
 
 	/* If there are outstanding admin requests, we cannot free the context
 	 * here, as they'd write over deallocated memory.  Clear the populated
@@ -1523,9 +1523,9 @@ bdev_ocssd_depopulate_namespace(struct nvme_bdev_ns *ns)
 	 * being depopulated and finish its deallocation once all requests are
 	 * completed.
 	 */
-	ns->populated = false;
+	nvme_ns->populated = false;
 	if (ocssd_ns->num_outstanding == 0) {
-		bdev_ocssd_free_namespace(ns);
+		bdev_ocssd_free_namespace(nvme_ns);
 	}
 }
 
