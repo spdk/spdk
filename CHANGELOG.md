@@ -2,6 +2,11 @@
 
 ## v21.01: (Upcoming Release)
 
+### env
+
+The pci_whitelist and pci_blacklist members of struct spdk_env_opts have been
+deprecated.  The new members are named pci_allowed and pci_blocked respectively.
+
 ### nvmf
 
 The functions `destroy` and `qpair_fini` in the transport interface now accept a

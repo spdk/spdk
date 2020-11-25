@@ -2334,7 +2334,7 @@ int main(int argc, char **argv)
 	}
 
 	if (g_allowed_pci_addr_num) {
-		opts.pci_whitelist = g_allowed_pci_addr;
+		opts.pci_allowed = g_allowed_pci_addr;
 		opts.num_pci_addr = g_allowed_pci_addr_num;
 	}
 	if (spdk_env_init(&opts) < 0) {

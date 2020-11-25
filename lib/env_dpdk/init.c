@@ -53,11 +53,11 @@
 #define SPDK_ENV_DPDK_DEFAULT_BASE_VIRTADDR	0x200000000000
 
 #if RTE_VERSION < RTE_VERSION_NUM(20, 11, 0, 0)
-#define DPDK_ALLOW_PARAM	"--allow"
-#define DPDK_BLOCK_PARAM	"--block"
-#else
 #define DPDK_ALLOW_PARAM	"--pci-whitelist"
 #define DPDK_BLOCK_PARAM	"--pci-blacklist"
+#else
+#define DPDK_ALLOW_PARAM	"--allow"
+#define DPDK_BLOCK_PARAM	"--block"
 #endif
 
 static char **g_eal_cmdline;
@@ -348,12 +348,12 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 		size_t i;
 		char bdf[32];
 		struct spdk_pci_addr *pci_addr =
-				opts->pci_blacklist ? opts->pci_blacklist : opts->pci_whitelist;
+				opts->pci_blocked ? opts->pci_blocked : opts->pci_allowed;
 
 		for (i = 0; i < opts->num_pci_addr; i++) {
 			spdk_pci_addr_fmt(bdf, 32, &pci_addr[i]);
 			args = push_arg(args, &argcount, _sprintf_alloc("%s=%s",
-					(opts->pci_blacklist ? DPDK_BLOCK_PARAM : DPDK_ALLOW_PARAM),
+					(opts->pci_blocked ? DPDK_BLOCK_PARAM : DPDK_ALLOW_PARAM),
 					bdf));
 			if (args == NULL) {
 				return -1;

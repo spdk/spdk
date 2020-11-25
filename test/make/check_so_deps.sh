@@ -54,6 +54,8 @@ function confirm_abi_deps() {
 [suppress_type]
 	type_kind = enum
 	changed_enumerators = SPDK_BDEV_NUM_IO_TYPES
+[suppress_type]
+	name = spdk_env_opts
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do

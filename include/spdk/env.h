@@ -83,8 +83,14 @@ struct spdk_env_opts {
 	bool			unlink_hugepage;
 	size_t			num_pci_addr;
 	const char		*hugedir;
-	struct spdk_pci_addr	*pci_blacklist;
-	struct spdk_pci_addr	*pci_whitelist;
+	union {
+		struct spdk_pci_addr	*pci_blocked;
+		struct spdk_pci_addr	*pci_blacklist __attribute__((deprecated));
+	};
+	union {
+		struct spdk_pci_addr	*pci_allowed;
+		struct spdk_pci_addr	*pci_whitelist __attribute__((deprecated));
+	};
 	const char		*iova_mode;
 	uint64_t		base_virtaddr;
 
@@ -980,7 +986,7 @@ void spdk_pci_device_unclaim(struct spdk_pci_device *dev);
 void spdk_pci_device_detach(struct spdk_pci_device *device);
 
 /**
- * Attach a PCI device. This will bypass all blacklist rules and explicitly
+ * Attach a PCI device. This will bypass all blocked list rules and explicitly
  * attach a device at the provided address. The return code of the provided
  * callback will decide whether that device is attached or not. Attached
  * devices have to be manually detached with spdk_pci_device_detach() to be

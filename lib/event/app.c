@@ -316,15 +316,15 @@ app_setup_env(struct spdk_app_opts *opts)
 	env_opts.hugedir = opts->hugedir;
 	env_opts.no_pci = opts->no_pci;
 	env_opts.num_pci_addr = opts->num_pci_addr;
-	env_opts.pci_blacklist = opts->pci_blacklist;
-	env_opts.pci_whitelist = opts->pci_whitelist;
+	env_opts.pci_blocked = opts->pci_blacklist;
+	env_opts.pci_allowed = opts->pci_whitelist;
 	env_opts.base_virtaddr = opts->base_virtaddr;
 	env_opts.env_context = opts->env_context;
 	env_opts.iova_mode = opts->iova_mode;
 
 	rc = spdk_env_init(&env_opts);
-	free(env_opts.pci_blacklist);
-	free(env_opts.pci_whitelist);
+	free(env_opts.pci_blocked);
+	free(env_opts.pci_allowed);
 
 	if (rc < 0) {
 		SPDK_ERRLOG("Unable to initialize SPDK env\n");
