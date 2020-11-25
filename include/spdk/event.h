@@ -110,8 +110,14 @@ struct spdk_app_opts {
 	const char		*hugedir;
 	enum spdk_log_level	print_level;
 	size_t			num_pci_addr;
-	struct spdk_pci_addr	*pci_blacklist;
-	struct spdk_pci_addr	*pci_whitelist;
+	union {
+		struct spdk_pci_addr	*pci_blocked;
+		struct spdk_pci_addr	*pci_blacklist __attribute__((deprecated));
+	};
+	union {
+		struct spdk_pci_addr	*pci_allowed;
+		struct spdk_pci_addr	*pci_whitelist __attribute__((deprecated));
+	};
 	const char		*iova_mode;
 
 	/* DEPRECATED. No longer has any effect.

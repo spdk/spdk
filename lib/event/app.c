@@ -316,8 +316,8 @@ app_setup_env(struct spdk_app_opts *opts)
 	env_opts.hugedir = opts->hugedir;
 	env_opts.no_pci = opts->no_pci;
 	env_opts.num_pci_addr = opts->num_pci_addr;
-	env_opts.pci_blocked = opts->pci_blacklist;
-	env_opts.pci_allowed = opts->pci_whitelist;
+	env_opts.pci_blocked = opts->pci_blocked;
+	env_opts.pci_allowed = opts->pci_allowed;
 	env_opts.base_virtaddr = opts->base_virtaddr;
 	env_opts.env_context = opts->env_context;
 	env_opts.iova_mode = opts->iova_mode;
@@ -738,18 +738,18 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			opts->delay_subsystem_init = true;
 			break;
 		case PCI_BLACKLIST_OPT_IDX:
-			if (opts->pci_whitelist) {
-				free(opts->pci_whitelist);
-				opts->pci_whitelist = NULL;
+			if (opts->pci_allowed) {
+				free(opts->pci_allowed);
+				opts->pci_allowed = NULL;
 				SPDK_ERRLOG("-B and -W cannot be used at the same time\n");
 				usage(app_usage);
 				goto out;
 			}
 
-			rc = app_opts_add_pci_addr(opts, &opts->pci_blacklist, optarg);
+			rc = app_opts_add_pci_addr(opts, &opts->pci_blocked, optarg);
 			if (rc != 0) {
-				free(opts->pci_blacklist);
-				opts->pci_blacklist = NULL;
+				free(opts->pci_blocked);
+				opts->pci_blocked = NULL;
 				goto out;
 			}
 			break;
@@ -768,18 +768,18 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			opts->unlink_hugepage = true;
 			break;
 		case PCI_WHITELIST_OPT_IDX:
-			if (opts->pci_blacklist) {
-				free(opts->pci_blacklist);
-				opts->pci_blacklist = NULL;
+			if (opts->pci_blocked) {
+				free(opts->pci_blocked);
+				opts->pci_blocked = NULL;
 				SPDK_ERRLOG("-B and -W cannot be used at the same time\n");
 				usage(app_usage);
 				goto out;
 			}
 
-			rc = app_opts_add_pci_addr(opts, &opts->pci_whitelist, optarg);
+			rc = app_opts_add_pci_addr(opts, &opts->pci_allowed, optarg);
 			if (rc != 0) {
-				free(opts->pci_whitelist);
-				opts->pci_whitelist = NULL;
+				free(opts->pci_allowed);
+				opts->pci_allowed = NULL;
 				goto out;
 			}
 			break;
@@ -844,10 +844,10 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 	retval = SPDK_APP_PARSE_ARGS_SUCCESS;
 out:
 	if (retval != SPDK_APP_PARSE_ARGS_SUCCESS) {
-		free(opts->pci_blacklist);
-		opts->pci_blacklist = NULL;
-		free(opts->pci_whitelist);
-		opts->pci_whitelist = NULL;
+		free(opts->pci_blocked);
+		opts->pci_blocked = NULL;
+		free(opts->pci_allowed);
+		opts->pci_allowed = NULL;
 	}
 	free(cmdline_short_opts);
 	free(cmdline_options);

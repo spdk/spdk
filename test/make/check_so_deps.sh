@@ -56,6 +56,8 @@ function confirm_abi_deps() {
 	changed_enumerators = SPDK_BDEV_NUM_IO_TYPES
 [suppress_type]
 	name = spdk_env_opts
+[suppress_type]
+	name = spdk_app_opts
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do

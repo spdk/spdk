@@ -2,6 +2,11 @@
 
 ## v21.01: (Upcoming Release)
 
+### event
+
+The pci_whitelist and pci_blacklist members of struct spdk_app_opts have been
+deprecated.  The new members are named pci_allowed and pci_blocked respectively.
+
 ### env
 
 The pci_whitelist and pci_blacklist members of struct spdk_env_opts have been

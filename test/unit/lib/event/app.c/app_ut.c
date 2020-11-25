@@ -72,10 +72,10 @@ unittest_parse_args(int ch, char *arg)
 static void
 clean_opts(struct spdk_app_opts *opts)
 {
-	free(opts->pci_whitelist);
-	opts->pci_whitelist = NULL;
-	free(opts->pci_blacklist);
-	opts->pci_blacklist = NULL;
+	free(opts->pci_allowed);
+	opts->pci_allowed = NULL;
+	free(opts->pci_blocked);
+	opts->pci_blocked = NULL;
 	memset(opts, 0, sizeof(struct spdk_app_opts));
 }
 
