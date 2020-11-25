@@ -59,16 +59,16 @@ function usage() {
 	echo "                  setting is used."
 	echo "CLEAR_HUGE        If set to 'yes', the attempt to remove hugepages from all nodes will"
 	echo "                  be made prior to allocation".
-	echo "PCI_WHITELIST"
-	echo "PCI_BLACKLIST     Whitespace separated list of PCI devices (NVMe, I/OAT, VMD, Virtio)."
+	echo "PCI_ALLOWED"
+	echo "PCI_BLOCKED       Whitespace separated list of PCI devices (NVMe, I/OAT, VMD, Virtio)."
 	echo "                  Each device must be specified as a full PCI address."
-	echo "                  E.g. PCI_WHITELIST=\"0000:01:00.0 0000:02:00.0\""
-	echo "                  To blacklist all PCI devices use a non-valid address."
-	echo "                  E.g. PCI_WHITELIST=\"none\""
-	echo "                  If PCI_WHITELIST and PCI_BLACKLIST are empty or unset, all PCI devices"
+	echo "                  E.g. PCI_ALLOWED=\"0000:01:00.0 0000:02:00.0\""
+	echo "                  To block all PCI devices use a non-valid address."
+	echo "                  E.g. PCI_BLOCKED=\"none\""
+	echo "                  If PCI_ALLOWED and PCI_BLOCKED are empty or unset, all PCI devices"
 	echo "                  will be bound."
-	echo "                  Each device in PCI_BLACKLIST will be ignored (driver won't be changed)."
-	echo "                  PCI_BLACKLIST has precedence over PCI_WHITELIST."
+	echo "                  Each device in PCI_BLOCKED will be ignored (driver won't be changed)."
+	echo "                  PCI_BLOCKED has precedence over PCI_ALLOWED."
 	echo "TARGET_USER       User that will own hugepage mountpoint directory and vfio groups."
 	echo "                  By default the current user will be used."
 	echo "DRIVER_OVERRIDE   Disable automatic vfio-pci/uio_pci_generic selection and forcefully"
@@ -235,7 +235,7 @@ function collect_devices() {
 					fi
 				fi
 				if [[ $dev_type == vmd ]]; then
-					if [[ $PCI_WHITELIST != *"$bdf"* ]]; then
+					if [[ $PCI_ALLOWED != *"$bdf"* ]]; then
 						pci_dev_echo "$bdf" "Skipping not allowed VMD controller at $bdf"
 						in_use=1
 					fi
@@ -717,15 +717,15 @@ if [ -z "$mode" ]; then
 fi
 
 : ${HUGEMEM:=2048}
-: ${PCI_WHITELIST:=""}
-: ${PCI_BLACKLIST:=""}
+: ${PCI_ALLOWED:=""}
+: ${PCI_BLOCKED:=""}
 
 if [ -n "$NVME_WHITELIST" ]; then
-	PCI_WHITELIST="$PCI_WHITELIST $NVME_WHITELIST"
+	PCI_ALLOWED="$PCI_ALLOWED $NVME_WHITELIST"
 fi
 
 if [ -n "$SKIP_PCI" ]; then
-	PCI_WHITELIST="none"
+	PCI_ALLOWED="none"
 fi
 
 if [ -z "$TARGET_USER" ]; then

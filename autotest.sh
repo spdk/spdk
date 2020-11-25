@@ -90,7 +90,7 @@ rm -f /var/tmp/spdk*.sock
 
 if [ $(uname -s) = Linux ]; then
 	# OCSSD devices drivers don't support IO issues by kernel so
-	# detect OCSSD devices and blacklist them (unbind from any driver).
+	# detect OCSSD devices and block them (unbind from any driver).
 	# If test scripts want to use this device it needs to do this explicitly.
 	#
 	# If some OCSSD device is bound to other driver than nvme we won't be able to
@@ -100,26 +100,26 @@ if [ $(uname -s) = Linux ]; then
 		# Send Open Channel 2.0 Geometry opcode "0xe2" - not supported by NVMe device.
 		if nvme admin-passthru $dev --namespace-id=1 --data-len=4096 --opcode=0xe2 --read > /dev/null; then
 			bdf="$(basename $(readlink -e /sys/class/nvme/${dev#/dev/}/device))"
-			echo "INFO: blacklisting OCSSD device: $dev ($bdf)"
-			PCI_BLACKLIST+=" $bdf"
+			echo "INFO: blocking OCSSD device: $dev ($bdf)"
+			PCI_BLOCKED+=" $bdf"
 			OCSSD_PCI_DEVICES+=" $bdf"
 		fi
 	done < <(find /dev -maxdepth 1 -regex '/dev/nvme[0-9]+' -print0)
 
 	export OCSSD_PCI_DEVICES
 
-	# Now, bind blacklisted devices to pci-stub module. This will prevent
+	# Now, bind blocked devices to pci-stub module. This will prevent
 	# automatic grabbing these devices when we add device/vendor ID to
 	# proper driver.
-	if [[ -n "$PCI_BLACKLIST" ]]; then
+	if [[ -n "$PCI_BLOCKED" ]]; then
 		# shellcheck disable=SC2097,SC2098
-		PCI_WHITELIST="$PCI_BLACKLIST" \
-			PCI_BLACKLIST="" \
+		PCI_ALLOWED="$PCI_BLOCKED" \
+			PCI_BLOCKED="" \
 			DRIVER_OVERRIDE="pci-stub" \
 			./scripts/setup.sh
 
-		# Export our blacklist so it will take effect during next setup.sh
-		export PCI_BLACKLIST
+		# Export our blocked list so it will take effect during next setup.sh
+		export PCI_BLOCKED
 	fi
 fi
 

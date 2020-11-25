@@ -1,25 +1,25 @@
 # Common shell utility functions
 
-# Check if PCI device is on PCI_WHITELIST and not on PCI_BLACKLIST
+# Check if PCI device is in PCI_ALLOWED and not in PCI_BLOCKED
 # Env:
-# if PCI_WHITELIST is empty assume device is whitelistened
-# if PCI_BLACKLIST is empty assume device is NOT blacklistened
+# if PCI_ALLOWED is empty assume device is allowed
+# if PCI_BLOCKED is empty assume device is NOT blocked
 # Params:
 # $1 - PCI BDF
 function pci_can_use() {
 	local i
 
 	# The '\ ' part is important
-	if [[ " $PCI_BLACKLIST " =~ \ $1\  ]]; then
+	if [[ " $PCI_BLOCKED " =~ \ $1\  ]]; then
 		return 1
 	fi
 
-	if [[ -z "$PCI_WHITELIST" ]]; then
-		#no whitelist specified, bind all devices
+	if [[ -z "$PCI_ALLOWED" ]]; then
+		#no allow list specified, bind all devices
 		return 0
 	fi
 
-	for i in $PCI_WHITELIST; do
+	for i in $PCI_ALLOWED; do
 		if [ "$i" == "$1" ]; then
 			return 0
 		fi
@@ -135,7 +135,7 @@ iter_all_pci_sysfs() {
 	fi
 }
 
-# This function will ignore PCI PCI_WHITELIST and PCI_BLACKLIST
+# This function will ignore PCI PCI_ALLOWED and PCI_BLOCKED
 function iter_all_pci_class_code() {
 	local class
 	local subclass
@@ -167,7 +167,7 @@ function iter_all_pci_class_code() {
 	fi
 }
 
-# This function will ignore PCI PCI_WHITELIST and PCI_BLACKLIST
+# This function will ignore PCI PCI_ALLOWED and PCI_BLOCKED
 function iter_all_pci_dev_id() {
 	local ven_id
 	local dev_id
@@ -199,7 +199,7 @@ function iter_pci_dev_id() {
 	done
 }
 
-# This function will filter out PCI devices using PCI_WHITELIST and PCI_BLACKLIST
+# This function will filter out PCI devices using PCI_ALLOWED and PCI_BLOCKED
 # See function pci_can_use()
 function iter_pci_class_code() {
 	local bdf=""
@@ -213,7 +213,7 @@ function iter_pci_class_code() {
 
 function nvme_in_userspace() {
 	# Check used drivers. If it's not vfio-pci or uio-pci-generic
-	# then most likely PCI_WHITELIST option was used for setup.sh
+	# then most likely PCI_ALLOWED option was used for setup.sh
 	# and we do not want to use that disk.
 
 	local bdf bdfs

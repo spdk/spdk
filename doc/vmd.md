@@ -47,11 +47,11 @@ $ 5d:05.5 RAID bus controller: Intel Corporation Device 201d (rev 04)
 $ d7:05.5 RAID bus controller: Intel Corporation Device 201d (rev 04)
 ```
 
-Run setup.sh script with VMD devices set in PCI_WHITELIST.
+Run setup.sh script with VMD devices set in PCI_ALLOWED.
 
 Example:
 ```
-$ PCI_WHITELIST="0000:5d:05.5 0000:d7:05.5" scripts/setup.sh
+$ PCI_ALLOWED="0000:5d:05.5 0000:d7:05.5" scripts/setup.sh
 ```
 
 Check for available devices behind the VMD with spdk_lspci.

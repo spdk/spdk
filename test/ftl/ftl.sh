@@ -9,7 +9,7 @@ rpc_py=$rootdir/scripts/rpc.py
 
 function at_ftl_exit() {
 	# restore original driver
-	PCI_WHITELIST="$device" PCI_BLACKLIST="" DRIVER_OVERRIDE="$ocssd_original_dirver" $rootdir/scripts/setup.sh
+	PCI_ALLOWED="$device" PCI_BLOCKED="" DRIVER_OVERRIDE="$ocssd_original_dirver" $rootdir/scripts/setup.sh
 }
 
 read -r device _ <<< "$OCSSD_PCI_DEVICES"
@@ -26,8 +26,8 @@ ocssd_original_dirver="$(basename $(readlink /sys/bus/pci/devices/$device/driver
 
 trap 'at_ftl_exit' SIGINT SIGTERM EXIT
 
-# OCSSD is blacklisted so bind it to vfio/uio driver before testing
-PCI_WHITELIST="$device" PCI_BLACKLIST="" DRIVER_OVERRIDE="" $rootdir/scripts/setup.sh
+# OCSSD is blocked so bind it to vfio/uio driver before testing
+PCI_ALLOWED="$device" PCI_BLOCKED="" DRIVER_OVERRIDE="" $rootdir/scripts/setup.sh
 
 # Use first regular NVMe disk (non-OC) as non-volatile cache
 nvme_disks=$($rootdir/scripts/gen_nvme.sh | jq -r \

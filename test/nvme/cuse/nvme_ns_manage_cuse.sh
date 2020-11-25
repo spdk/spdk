@@ -88,7 +88,7 @@ $NVME_CMD delete-ns ${nvme_dev} -n 0xffffffff || true
 reset_nvme_if_aer_unsupported ${nvme_dev}
 sleep 1
 
-PCI_WHITELIST="${bdf}" $rootdir/scripts/setup.sh
+PCI_ALLOWED="${bdf}" $rootdir/scripts/setup.sh
 
 $SPDK_BIN_DIR/spdk_tgt -m 0x3 &
 spdk_tgt_pid=$!

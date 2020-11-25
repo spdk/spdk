@@ -9,7 +9,7 @@ set -e
 SPDK_DIR=$1
 
 # Skip all pci devices. These tests don't rely on them.
-sudo PCI_WHITELIST="NONE" HUGEMEM="$HUGEMEM" $SPDK_DIR/scripts/setup.sh
+sudo PCI_ALLOWED="NONE" HUGEMEM="$HUGEMEM" $SPDK_DIR/scripts/setup.sh
 
 make -C $SPDK_DIR clean
 $SPDK_DIR/configure --with-shared --without-isal --without-ocf --disable-asan
@@ -61,4 +61,4 @@ run_test "external_run_tc6" $test_root/hello_world/hello_bdev --json $test_root/
 make -C $test_root clean
 make -C $SPDK_DIR -j$(nproc) clean
 
-sudo PCI_WHITELIST="NONE" HUGEMEM="$HUGEMEM" $SPDK_DIR/scripts/setup.sh reset
+sudo PCI_ALLOWED="NONE" HUGEMEM="$HUGEMEM" $SPDK_DIR/scripts/setup.sh reset

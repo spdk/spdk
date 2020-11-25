@@ -55,7 +55,7 @@ for bdf in $(iter_pci_dev_id 8086 $vmd_id); do
 		VMD_WHITELIST+=("$bdf")
 	fi
 done
-PCI_WHITELIST="${VMD_WHITELIST[*]}" $rootdir/scripts/setup.sh
+PCI_ALLOWED="${VMD_WHITELIST[*]}" $rootdir/scripts/setup.sh
 
 pci_devs=$($SPDK_BIN_DIR/spdk_lspci | grep "NVMe disk behind VMD" | awk '{print $1}')
 

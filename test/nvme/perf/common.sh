@@ -123,7 +123,7 @@ function get_numa_node() {
 		for bdf in $disks; do
 			local driver
 			driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent | awk -F"=" '{print $2}')
-			# Use this check to ommit blacklisted devices ( not binded to driver with setup.sh script )
+			# Use this check to omit blocked devices ( not bound to driver with setup.sh script )
 			if [ "$driver" = "vfio-pci" ] || [ "$driver" = "uio_pci_generic" ]; then
 				cat /sys/bus/pci/devices/$bdf/numa_node
 			fi
