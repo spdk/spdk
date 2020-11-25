@@ -577,10 +577,10 @@ usage(void (*app_usage)(void))
 	printf(" -v, --version             print SPDK version\n");
 	printf(" -W, --pci-whitelist <bdf>\n");
 	printf("                           pci addr to whitelist (-B and -W cannot be used at the same time)\n");
-	printf("      --huge-dir <path>    use a specific hugetlbfs mount to reserve memory from\n");
-	printf("      --iova-mode <pa/va>  set IOVA mode ('pa' for IOVA_PA and 'va' for IOVA_VA)\n");
-	printf("      --base-virtaddr <addr>      the base virtual address for DPDK (default: 0x200000000000)\n");
-	printf("      --num-trace-entries <num>   number of trace entries for each core, must be power of 2, setting 0 to disable trace (default %d)\n",
+	printf("     --huge-dir <path>     use a specific hugetlbfs mount to reserve memory from\n");
+	printf("     --iova-mode <pa/va>   set IOVA mode ('pa' for IOVA_PA and 'va' for IOVA_VA)\n");
+	printf("     --base-virtaddr <addr>      the base virtual address for DPDK (default: 0x200000000000)\n");
+	printf("     --num-trace-entries <num>   number of trace entries for each core, must be power of 2, setting 0 to disable trace (default %d)\n",
 	       SPDK_APP_DEFAULT_NUM_TRACE_ENTRIES);
 	spdk_log_usage(stdout, "-L");
 	spdk_trace_mask_usage(stdout, "-e");
