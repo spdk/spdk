@@ -34,6 +34,9 @@ class Server:
     def log_print(self, msg):
         print("[%s] %s" % (self.name, msg), flush=True)
 
+    def get_uncommented_lines(self, lines):
+        return [l for l in lines if l and not l.startswith('#')]
+
 
 class Target(Server):
     def __init__(self, name, username, password, mode, nic_ips, transport="rdma",
@@ -62,6 +65,7 @@ class Target(Server):
 
         self.script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
         self.spdk_dir = os.path.abspath(os.path.join(self.script_dir, "../../../"))
+        self.sys_config()
 
     def zip_spdk_sources(self, spdk_dir, dest_file):
         self.log_print("Zipping SPDK source directory")
@@ -279,6 +283,20 @@ class Target(Server):
         rpc.env.env_dpdk_get_mem_stats
         os.rename("/tmp/spdk_mem_dump.txt", "%s/spdk_mem_dump.txt" % (results_dir))
 
+    def sys_config(self):
+        self.log_print("====Kernel release:====")
+        self.log_print(os.uname().release)
+        self.log_print("====Kernel command line:====")
+        with open('/proc/cmdline') as f:
+            cmdline = f.readlines()
+            self.log_print('\n'.join(self.get_uncommented_lines(cmdline)))
+        self.log_print("====sysctl conf:====")
+        with open('/etc/sysctl.conf') as f:
+            sysctl = f.readlines()
+            self.log_print('\n'.join(self.get_uncommented_lines(sysctl)))
+        self.log_print("====Cpu power info:====")
+        subprocess.run("cpupower frequency-info", shell=True, check=True)
+
 
 class Initiator(Server):
     def __init__(self, name, username, password, mode, nic_ips, ip, transport="rdma", cpu_frequency=None,
@@ -302,6 +320,7 @@ class Initiator(Server):
         self.remote_call("sudo rm -rf %s/nvmf_perf" % self.spdk_dir)
         self.remote_call("mkdir -p %s" % self.spdk_dir)
         self.set_cpu_frequency()
+        self.sys_config()
 
     def __del__(self):
         self.ssh_connection.close()
@@ -480,6 +499,18 @@ runtime={run_time}
             self.log_print(output)
             self.log_print(error)
         self.log_print("FIO run finished. Results in: %s" % output_filename)
+
+    def sys_config(self):
+        self.log_print("====Kernel release:====")
+        self.log_print(self.remote_call('uname -r')[0])
+        self.log_print("====Kernel command line:====")
+        cmdline, error = self.remote_call('cat /proc/cmdline')
+        self.log_print('\n'.join(self.get_uncommented_lines(cmdline.splitlines())))
+        self.log_print("====sysctl conf:====")
+        sysctl, error = self.remote_call('cat /etc/sysctl.conf')
+        self.log_print('\n'.join(self.get_uncommented_lines(sysctl.splitlines())))
+        self.log_print("====Cpu power info:====")
+        self.remote_call("cpupower frequency-info")
 
 
 class KernelTarget(Target):
