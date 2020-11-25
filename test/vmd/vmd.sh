@@ -6,7 +6,7 @@ source $rootdir/scripts/common.sh
 source $rootdir/test/common/autotest_common.sh
 
 rpc_py=$rootdir/scripts/rpc.py
-VMD_WHITELIST=()
+VMD_ALLOWED=()
 
 function vmd_identify() {
 	for bdf in $pci_devs; do
@@ -52,10 +52,10 @@ vmd_id=$(grep "PCI_DEVICE_ID_INTEL_VMD" $rootdir/include/spdk/pci_ids.h | awk -F
 
 for bdf in $(iter_pci_dev_id 8086 $vmd_id); do
 	if pci_can_use $bdf; then
-		VMD_WHITELIST+=("$bdf")
+		VMD_ALLOWED+=("$bdf")
 	fi
 done
-PCI_ALLOWED="${VMD_WHITELIST[*]}" $rootdir/scripts/setup.sh
+PCI_ALLOWED="${VMD_ALLOWED[*]}" $rootdir/scripts/setup.sh
 
 pci_devs=$($SPDK_BIN_DIR/spdk_lspci | grep "NVMe disk behind VMD" | awk '{print $1}')
 
