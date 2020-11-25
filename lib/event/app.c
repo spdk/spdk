@@ -107,14 +107,17 @@ static const struct option g_cmdline_options[] = {
 	{"no-pci",			no_argument,		NULL, NO_PCI_OPT_IDX},
 #define VERSION_OPT_IDX		'v'
 	{"version",			no_argument,		NULL, VERSION_OPT_IDX},
-#define PCI_BLACKLIST_OPT_IDX	'B'
-	{"pci-blacklist",		required_argument,	NULL, PCI_BLACKLIST_OPT_IDX},
+#define PCI_BLOCKED_OPT_IDX	'B'
+	{"pci-blocked",			required_argument,	NULL, PCI_BLOCKED_OPT_IDX},
+	{"pci-blacklist",		required_argument,	NULL, PCI_BLOCKED_OPT_IDX}, /* deprecated */
 #define LOGFLAG_OPT_IDX		'L'
 	{"logflag",			required_argument,	NULL, LOGFLAG_OPT_IDX},
 #define HUGE_UNLINK_OPT_IDX	'R'
 	{"huge-unlink",			no_argument,		NULL, HUGE_UNLINK_OPT_IDX},
+#define PCI_ALLOWED_OPT_IDX	'A'
+	{"pci-allowed",			required_argument,	NULL, PCI_ALLOWED_OPT_IDX},
 #define PCI_WHITELIST_OPT_IDX	'W'
-	{"pci-whitelist",		required_argument,	NULL, PCI_WHITELIST_OPT_IDX},
+	{"pci-whitelist",		required_argument,	NULL, PCI_WHITELIST_OPT_IDX}, /* deprecated */
 #define SILENCE_NOTICELOG_OPT_IDX 257
 	{"silence-noticelog",		no_argument,		NULL, SILENCE_NOTICELOG_OPT_IDX},
 #define WAIT_FOR_RPC_OPT_IDX	258
@@ -571,12 +574,12 @@ usage(void (*app_usage)(void))
 	printf(" -u, --no-pci              disable PCI access\n");
 	printf("     --wait-for-rpc        wait for RPCs to initialize subsystems\n");
 	printf("     --max-delay <num>     maximum reactor delay (in microseconds)\n");
-	printf(" -B, --pci-blacklist <bdf>\n");
-	printf("                           pci addr to blacklist (can be used more than once)\n");
+	printf(" -B, --pci-blocked <bdf>\n");
+	printf("                           pci addr to block (can be used more than once)\n");
 	printf(" -R, --huge-unlink         unlink huge files after initialization\n");
 	printf(" -v, --version             print SPDK version\n");
-	printf(" -W, --pci-whitelist <bdf>\n");
-	printf("                           pci addr to whitelist (-B and -W cannot be used at the same time)\n");
+	printf(" -A, --pci-allowed <bdf>\n");
+	printf("                           pci addr to allow (-B and -A cannot be used at the same time)\n");
 	printf("     --huge-dir <path>     use a specific hugetlbfs mount to reserve memory from\n");
 	printf("     --iova-mode <pa/va>   set IOVA mode ('pa' for IOVA_PA and 'va' for IOVA_VA)\n");
 	printf("     --base-virtaddr <addr>      the base virtual address for DPDK (default: 0x200000000000)\n");
@@ -737,11 +740,11 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		case WAIT_FOR_RPC_OPT_IDX:
 			opts->delay_subsystem_init = true;
 			break;
-		case PCI_BLACKLIST_OPT_IDX:
+		case PCI_BLOCKED_OPT_IDX:
 			if (opts->pci_allowed) {
 				free(opts->pci_allowed);
 				opts->pci_allowed = NULL;
-				SPDK_ERRLOG("-B and -W cannot be used at the same time\n");
+				SPDK_ERRLOG("-B and -A cannot be used at the same time\n");
 				usage(app_usage);
 				goto out;
 			}
@@ -768,6 +771,9 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			opts->unlink_hugepage = true;
 			break;
 		case PCI_WHITELIST_OPT_IDX:
+			SPDK_WARNLOG("-W/--pci-whitelist is deprecated.  Use -A/--pci-allowed.\n");
+		/* fallthrough */
+		case PCI_ALLOWED_OPT_IDX:
 			if (opts->pci_blocked) {
 				free(opts->pci_blocked);
 				opts->pci_blocked = NULL;

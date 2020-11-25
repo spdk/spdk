@@ -41,8 +41,8 @@ Param    | Long Param             | Type     | Default                | Descript
 |        | --silence-noticelog    | flag     |                        | disable notice level logging to `stderr`
 -u       | --no-pci               | flag     |                        | @ref cmd_arg_disable_pci_access.
 |        | --wait-for-rpc         | flag     |                        | @ref cmd_arg_deferred_initialization
--B       | --pci-blacklist        | B:D:F    |                        | @ref cmd_arg_pci_blacklist_whitelist.
--W       | --pci-whitelist        | B:D:F    |                        | @ref cmd_arg_pci_blacklist_whitelist.
+-B       | --pci-blocked          | B:D:F    |                        | @ref cmd_arg_pci_blocked_allowed.
+-A       | --pci-allowed          | B:D:F    |                        | @ref cmd_arg_pci_blocked_allowed.
 -R       | --huge-unlink          | flag     |                        | @ref cmd_arg_huge_unlink
 |        | --huge-dir             | string   | the first discovered   | allocate hugepages from a specific mount
 -L       | --logflag              | string   |                        | @ref cmd_arg_log_flags
@@ -121,12 +121,12 @@ If SPDK is run with PCI access disabled it won't detect any PCI devices. This
 includes primarily NVMe and IOAT devices. Also, the VFIO and UIO kernel modules
 are not required in this mode.
 
-### PCI address blacklist and whitelist {#cmd_arg_pci_blacklist_whitelist}
+### PCI address blocked and allowed lists {#cmd_arg_pci_blocked_allowed}
 
-If blacklist is used, then all devices with the provided PCI address will be
-ignored. If a whitelist is used, only whitelisted devices will be probed.
-`-B` or `-W` can be used more than once, but cannot be mixed together. That is,
-`-B` and `-W` cannot be used at the same time.
+If blocked list is used, then all devices with the provided PCI address will be
+ignored. If an allowed list is used, only allowed devices will be probed.
+`-B` or `-A` can be used more than once, but cannot be mixed together. That is,
+`-B` and `-A` cannot be used at the same time.
 
 ### Unlink hugepage files after initialization {#cmd_arg_huge_unlink}
 

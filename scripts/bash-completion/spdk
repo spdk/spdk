@@ -115,7 +115,7 @@ _spdk_opt_to_complete() {
 	local opt=$1
 
 	case "$opt" in
-		--pci-blacklist | -B | --pci-whitelist | -W)
+		--pci-blocked | -B | --pci-allowed | -A)
 			local pcis
 			if [[ -e /sys/bus/pci/devices ]]; then
 				pcis=(/sys/bus/pci/devices/*)

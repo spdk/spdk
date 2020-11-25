@@ -7,6 +7,12 @@
 The pci_whitelist and pci_blacklist members of struct spdk_app_opts have been
 deprecated.  The new members are named pci_allowed and pci_blocked respectively.
 
+The --pci-blacklist command line option has been deprecated, replaced with
+--pci-blocked.
+
+The --pci-whitelist/-W command line options have been deprecated, replaced with
+--pci-allowed/-A.
+
 ### env
 
 The pci_whitelist and pci_blacklist members of struct spdk_env_opts have been
