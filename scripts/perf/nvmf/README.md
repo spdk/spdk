@@ -166,3 +166,14 @@ example:
 ```
 "bandwidth_settings": [true, 30]
 ```
+
+# Enable zcopy on target side:
+To enable zcopy in perf test you need to add Target setting in config.json file:
+
+```
+"zcopy_settings": bool
+```
+example:
+```
+"zcopy_settings": true
+```

@@ -41,7 +41,7 @@ class Server:
 class Target(Server):
     def __init__(self, name, username, password, mode, nic_ips, transport="rdma",
                  null_block_devices=0, sar_settings=None, pcm_settings=None,
-                 bandwidth_settings=None, dpdk_settings=None):
+                 bandwidth_settings=None, dpdk_settings=None, zcopy_settings=None):
 
         super(Target, self).__init__(name, username, password, mode, nic_ips, transport)
         self.null_block = null_block_devices
@@ -50,6 +50,7 @@ class Target(Server):
         self.enable_pcm = False
         self.enable_bandwidth = False
         self.enable_dpdk_memory = False
+        self.enable_zcopy = False
 
         if sar_settings:
             self.enable_sar, self.sar_delay, self.sar_interval, self.sar_count = sar_settings
@@ -62,6 +63,9 @@ class Target(Server):
 
         if dpdk_settings:
             self.enable_dpdk_memory, self.dpdk_wait_time = dpdk_settings
+
+        if zcopy_settings:
+            self.enable_zcopy = zcopy_settings
 
         self.script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
         self.spdk_dir = os.path.abspath(os.path.join(self.script_dir, "../../../"))
@@ -296,6 +300,8 @@ class Target(Server):
             self.log_print('\n'.join(self.get_uncommented_lines(sysctl)))
         self.log_print("====Cpu power info:====")
         subprocess.run("cpupower frequency-info", shell=True, check=True)
+        self.log_print("====zcopy settings:====")
+        self.log_print("zcopy enabled: %s" % (self.enable_zcopy))
 
 
 class Initiator(Server):
@@ -603,12 +609,12 @@ class SPDKTarget(Target):
 
     def __init__(self, name, username, password, mode, nic_ips, transport="rdma",
                  null_block_devices=0, null_block_dif_type=0, sar_settings=None, pcm_settings=None,
-                 bandwidth_settings=None, dpdk_settings=None, num_shared_buffers=4096,
-                 num_cores=1, dif_insert_strip=False, **kwargs):
+                 bandwidth_settings=None, dpdk_settings=None, zcopy_settings=None,
+                 num_shared_buffers=4096, num_cores=1, dif_insert_strip=False, **kwargs):
 
         super(SPDKTarget, self).__init__(name, username, password, mode, nic_ips, transport,
                                          null_block_devices, sar_settings, pcm_settings, bandwidth_settings,
-                                         dpdk_settings)
+                                         dpdk_settings, zcopy_settings)
         self.num_cores = num_cores
         self.num_shared_buffers = num_shared_buffers
         self.null_block_dif_type = null_block_dif_type
@@ -704,7 +710,7 @@ class SPDKTarget(Target):
         else:
             self.subsys_no = get_nvme_devices_count()
         self.log_print("Starting SPDK NVMeOF Target process")
-        nvmf_app_path = os.path.join(self.spdk_dir, "build/bin/nvmf_tgt")
+        nvmf_app_path = os.path.join(self.spdk_dir, "build/bin/nvmf_tgt --wait-for-rpc")
         command = " ".join([nvmf_app_path, "-m", self.num_cores])
         proc = subprocess.Popen(command, shell=True)
         self.pid = os.path.join(self.spdk_dir, "nvmf.pid")
@@ -720,6 +726,13 @@ class SPDKTarget(Target):
             time.sleep(1)
         self.client = rpc.client.JSONRPCClient("/var/tmp/spdk.sock")
 
+        if self.enable_zcopy:
+            rpc.sock.sock_impl_set_options(self.client, impl_name="posix",
+                                           enable_zerocopy_send=True)
+            self.log_print("Target socket options:")
+            rpc.client.print_dict(rpc.sock.sock_impl_get_options(self.client, impl_name="posix"))
+
+        rpc.framework_start_init(self.client)
         self.spdk_tgt_configure()
 
     def __del__(self):
