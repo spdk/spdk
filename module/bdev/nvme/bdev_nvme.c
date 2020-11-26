@@ -1595,6 +1595,23 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 }
 
 static void
+_nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
+{
+	nvme_ctrlr_depopulate_namespaces(nvme_bdev_ctrlr);
+
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	assert(nvme_bdev_ctrlr->ref > 0);
+	nvme_bdev_ctrlr->ref--;
+	if (nvme_bdev_ctrlr->ref == 0) {
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+
+		nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
+	} else {
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+	}
+}
+
+static void
 remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
@@ -1610,17 +1627,7 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 			nvme_bdev_ctrlr->destruct = true;
 			pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
-			nvme_ctrlr_depopulate_namespaces(nvme_bdev_ctrlr);
-
-			pthread_mutex_lock(&g_bdev_nvme_mutex);
-			assert(nvme_bdev_ctrlr->ref > 0);
-			nvme_bdev_ctrlr->ref--;
-			if (nvme_bdev_ctrlr->ref == 0) {
-				pthread_mutex_unlock(&g_bdev_nvme_mutex);
-				nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
-			} else {
-				pthread_mutex_unlock(&g_bdev_nvme_mutex);
-			}
+			_nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
 			return;
 		}
 	}
@@ -2057,17 +2064,7 @@ bdev_nvme_delete(const char *name)
 	nvme_bdev_ctrlr->destruct = true;
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
-	nvme_ctrlr_depopulate_namespaces(nvme_bdev_ctrlr);
-
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
-	assert(nvme_bdev_ctrlr->ref > 0);
-	nvme_bdev_ctrlr->ref--;
-	if (nvme_bdev_ctrlr->ref == 0) {
-		pthread_mutex_unlock(&g_bdev_nvme_mutex);
-		nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
-	} else {
-		pthread_mutex_unlock(&g_bdev_nvme_mutex);
-	}
+	_nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
 
 	return 0;
 }
@@ -2110,17 +2107,9 @@ bdev_nvme_library_fini(void)
 
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
-		nvme_ctrlr_depopulate_namespaces(nvme_bdev_ctrlr);
+		_nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
 
 		pthread_mutex_lock(&g_bdev_nvme_mutex);
-
-		assert(nvme_bdev_ctrlr->ref > 0);
-		nvme_bdev_ctrlr->ref--;
-		if (nvme_bdev_ctrlr->ref == 0) {
-			pthread_mutex_unlock(&g_bdev_nvme_mutex);
-			nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
-			pthread_mutex_lock(&g_bdev_nvme_mutex);
-		}
 	}
 
 	g_bdev_nvme_module_finish = true;
