@@ -158,44 +158,15 @@ shift "$((OPTIND - 1))" # Discard the options and sentinel --
 SPDK_VAGRANT_DISTRO="$*"
 
 case "${SPDK_VAGRANT_DISTRO}" in
-	centos7)
-		export SPDK_VAGRANT_DISTRO
-		;;
-	centos8)
-		export SPDK_VAGRANT_DISTRO
-		;;
-	ubuntu1604)
-		export SPDK_VAGRANT_DISTRO
-		;;
-	ubuntu1804)
-		export SPDK_VAGRANT_DISTRO
-		;;
-	ubuntu2004)
-		export SPDK_VAGRANT_DISTRO
-		;;
-	fedora31)
-		export SPDK_VAGRANT_DISTRO
-		;;
-	fedora32)
-		export SPDK_VAGRANT_DISTRO
-		;;
-	fedora33)
-		export SPDK_VAGRANT_DISTRO
-		;;
-	freebsd11)
-		export SPDK_VAGRANT_DISTRO
-		;;
-	freebsd12)
-		export SPDK_VAGRANT_DISTRO
-		;;
-	arch)
-		export SPDK_VAGRANT_DISTRO
-		;;
-	clearlinux)
+	centos[78]) ;&
+	ubuntu1[68]04 | ubuntu2004) ;&
+	fedora3[1-3]) ;&
+	freebsd1[12]) ;&
+	arch | clearlinux)
 		export SPDK_VAGRANT_DISTRO
 		;;
 	*)
-		echo "  Invalid argument \"${SPDK_VAGRANT_DISTRO}\""
+		echo "  Invalid argument \"${SPDK_VAGRANT_DISTRO}\"" >&2
 		echo "  Try: \"$0 -h\"" >&2
 		exit 1
 		;;
