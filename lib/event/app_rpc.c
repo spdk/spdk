@@ -432,6 +432,7 @@ SPDK_RPC_REGISTER("framework_get_reactors", rpc_framework_get_reactors, SPDK_RPC
 
 struct rpc_set_scheduler_ctx {
 	char *name;
+	uint64_t period;
 };
 
 static void
@@ -442,6 +443,7 @@ free_rpc_framework_set_scheduler(struct rpc_set_scheduler_ctx *r)
 
 static const struct spdk_json_object_decoder rpc_set_scheduler_decoders[] = {
 	{"name", offsetof(struct rpc_set_scheduler_ctx, name), spdk_json_decode_string},
+	{"period", offsetof(struct rpc_set_scheduler_ctx, period), spdk_json_decode_uint64, true}
 };
 
 static void
@@ -458,6 +460,10 @@ rpc_framework_set_scheduler(struct spdk_jsonrpc_request *request,
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
 		goto end;
+	}
+
+	if (req.period != 0) {
+		_spdk_scheduler_period_set(req.period);
 	}
 
 	ret = _spdk_scheduler_set(req.name);

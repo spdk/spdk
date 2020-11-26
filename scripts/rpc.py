@@ -159,11 +159,13 @@ if __name__ == "__main__":
 
     def framework_set_scheduler(args):
         rpc.app.framework_set_scheduler(args.client,
-                                        name=args.name)
+                                        name=args.name,
+                                        period=args.period)
 
     p = subparsers.add_parser(
-        'framework_set_scheduler', help='Select thread scheduler that will be activated (experimental)')
+        'framework_set_scheduler', help='Select thread scheduler that will be activated and its period (experimental)')
     p.add_argument('name', help="Name of a scheduler")
+    p.add_argument('-p', '--period', help="Scheduler period in microseconds", type=int)
     p.set_defaults(func=framework_set_scheduler)
 
     # bdev
