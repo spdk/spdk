@@ -34,6 +34,10 @@ The SPDK nvmf target now supports async event notification for discovery log cha
 This allows the initiator to create persistent connection to discovery controller and
 be notified of any discovery log changes.
 
+An `opts_size`element was added in the `spdk_nvmf_transport_opts` structure
+to solve the ABI compatiblity issue between different SPDK version. And also add
+`opts_size` parameter in spdk_nvmf_transport_opts_init function.
+
 ### json
 
 A new API `spdk_jsonrpc_send_bool_response` was added to allow sending response for

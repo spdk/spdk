@@ -1961,7 +1961,7 @@ rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 	/* Initialize all the transport options (based on transport type) and decode the
 	 * parameters again to update any options passed in rpc create transport call.
 	 */
-	if (!spdk_nvmf_transport_opts_init(ctx->trtype, &ctx->opts)) {
+	if (!spdk_nvmf_transport_opts_init(ctx->trtype, &ctx->opts, sizeof(ctx->opts))) {
 		/* This can happen if user specifies PCIE transport type which isn't valid for
 		 * NVMe-oF.
 		 */

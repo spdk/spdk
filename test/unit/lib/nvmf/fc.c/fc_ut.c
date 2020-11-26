@@ -293,6 +293,7 @@ create_transport_test(void)
 	ops->opts_init(&opts);
 
 	g_lld_init_called = false;
+	opts.opts_size = sizeof(opts);
 	g_nvmf_tprt = spdk_nvmf_transport_create("FC", &opts);
 	SPDK_CU_ASSERT_FATAL(g_nvmf_tprt != NULL);
 

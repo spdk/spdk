@@ -88,6 +88,14 @@ struct spdk_nvmf_transport_opts {
 	uint32_t	association_timeout;
 
 	const struct spdk_json_val *transport_specific;
+
+	/**
+	 * The size of spdk_nvmf_transport_opts according to the caller of this library is used for ABI
+	 * compatibility. The library uses this field to know how many fields in this
+	 * structure are valid. And the library will populate any remaining fields with default values.
+	 * After that, new added fields should be put after opts_size.
+	 */
+	size_t opts_size;
 };
 
 struct spdk_nvmf_poll_group_stat {
@@ -907,19 +915,21 @@ uint32_t spdk_nvmf_subsystem_get_max_nsid(struct spdk_nvmf_subsystem *subsystem)
  *
  * \param transport_name The transport type to create
  * \param opts The transport options (e.g. max_io_size)
+ * \param opts_size Must be set to sizeof(struct spdk_nvmf_transport_opts).
  *
  * \return bool. true if successful, false if transport type
  *	   not found.
  */
 bool
 spdk_nvmf_transport_opts_init(const char *transport_name,
-			      struct spdk_nvmf_transport_opts *opts);
+			      struct spdk_nvmf_transport_opts *opts, size_t opts_size);
 
 /**
  * Create a protocol transport
  *
  * \param transport_name The transport type to create
- * \param opts The transport options (e.g. max_io_size)
+ * \param opts The transport options (e.g. max_io_size). It should not be NULL, and opts_size
+ *        pointed in this structure should not be zero value.
  *
  * \return new transport or NULL if create fails
  */
