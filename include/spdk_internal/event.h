@@ -66,7 +66,8 @@ struct spdk_lw_thread {
 	uint32_t                        lcore;
 	uint32_t                        new_lcore;
 	bool				resched;
-	struct spdk_thread_stats        current_stats;
+	struct spdk_thread_stats	current_stats;
+	struct spdk_thread_stats	snapshot_stats;
 };
 
 struct spdk_reactor {

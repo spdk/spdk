@@ -581,6 +581,7 @@ _reactors_scheduler_gather_metrics(void *arg1, void *arg2)
 		i = 0;
 		TAILQ_FOREACH(lw_thread, &reactor->threads, link) {
 			core_info->threads[i] = lw_thread;
+			_spdk_lw_thread_get_current_stats(lw_thread, &lw_thread->snapshot_stats);
 			i++;
 		}
 	}
