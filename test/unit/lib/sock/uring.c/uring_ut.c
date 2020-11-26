@@ -203,7 +203,7 @@ flush_server(void)
 	 * that is fully completed. */
 	spdk_sock_request_queue(sock, req1);
 	cb_arg1 = false;
-	rc = sock_prep_reqs(sock, usock.write_task.iovs, 0, NULL);
+	rc = spdk_sock_prep_reqs(sock, usock.write_task.iovs, 0, NULL);
 	CU_ASSERT(rc == 2);
 	sock_complete_reqs(sock, 128);
 	CU_ASSERT(cb_arg1 == true);
@@ -214,7 +214,7 @@ flush_server(void)
 	spdk_sock_request_queue(sock, req2);
 	cb_arg1 = false;
 	cb_arg2 = false;
-	rc = sock_prep_reqs(sock, usock.write_task.iovs, 0, NULL);
+	rc = spdk_sock_prep_reqs(sock, usock.write_task.iovs, 0, NULL);
 	CU_ASSERT(rc == 4);
 	sock_complete_reqs(sock, 192);
 	CU_ASSERT(cb_arg1 == true);
@@ -225,7 +225,7 @@ flush_server(void)
 	/* One request that is partially sent. */
 	spdk_sock_request_queue(sock, req1);
 	cb_arg1 = false;
-	rc = sock_prep_reqs(sock, usock.write_task.iovs, 0, NULL);
+	rc = spdk_sock_prep_reqs(sock, usock.write_task.iovs, 0, NULL);
 	CU_ASSERT(rc == 2);
 	sock_complete_reqs(sock, 92);
 	CU_ASSERT(rc == 2);

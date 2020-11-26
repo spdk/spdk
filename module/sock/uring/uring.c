@@ -38,7 +38,6 @@
 #include <liburing.h>
 
 #include "spdk/barrier.h"
-#include "spdk/likely.h"
 #include "spdk/log.h"
 #include "spdk/pipe.h"
 #include "spdk/sock.h"
@@ -51,7 +50,6 @@
 #define MAX_TMPBUF 1024
 #define PORTNUMLEN 32
 #define SPDK_SOCK_GROUP_QUEUE_DEPTH 4096
-#define IOV_BATCH_SIZE 64
 
 enum spdk_sock_task_type {
 	SPDK_SOCK_TASK_POLLIN = 0,
@@ -721,60 +719,6 @@ uring_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 }
 
 static int
-sock_prep_reqs(struct spdk_sock *_sock, struct iovec *iovs, int index,
-	       struct spdk_sock_request **last_req)
-{
-	int iovcnt, i;
-	struct spdk_sock_request *req;
-	unsigned int offset;
-
-	/* Gather an iov */
-	iovcnt = index;
-	if (spdk_unlikely(iovcnt >= IOV_BATCH_SIZE)) {
-		goto end;
-	}
-
-	if (last_req != NULL && *last_req != NULL) {
-		req = TAILQ_NEXT(*last_req, internal.link);
-	} else {
-		req = TAILQ_FIRST(&_sock->queued_reqs);
-	}
-
-	while (req) {
-		offset = req->internal.offset;
-
-		for (i = 0; i < req->iovcnt; i++) {
-			/* Consume any offset first */
-			if (offset >= SPDK_SOCK_REQUEST_IOV(req, i)->iov_len) {
-				offset -= SPDK_SOCK_REQUEST_IOV(req, i)->iov_len;
-				continue;
-			}
-
-			iovs[iovcnt].iov_base = SPDK_SOCK_REQUEST_IOV(req, i)->iov_base + offset;
-			iovs[iovcnt].iov_len = SPDK_SOCK_REQUEST_IOV(req, i)->iov_len - offset;
-			iovcnt++;
-
-			offset = 0;
-
-			if (iovcnt >= IOV_BATCH_SIZE) {
-				break;
-			}
-		}
-		if (iovcnt >= IOV_BATCH_SIZE) {
-			break;
-		}
-
-		if (last_req != NULL) {
-			*last_req = req;
-		}
-		req = TAILQ_NEXT(req, internal.link);
-	}
-
-end:
-	return iovcnt;
-}
-
-static int
 sock_complete_reqs(struct spdk_sock *_sock, ssize_t rc)
 {
 	struct spdk_sock_request *req;
@@ -838,7 +782,7 @@ _sock_flush(struct spdk_sock *_sock)
 		return;
 	}
 
-	iovcnt = sock_prep_reqs(&sock->base, task->iovs, task->iov_cnt, &task->last_req);
+	iovcnt = spdk_sock_prep_reqs(&sock->base, task->iovs, task->iov_cnt, &task->last_req);
 	if (!iovcnt) {
 		return;
 	}
@@ -1010,7 +954,7 @@ _sock_flush_client(struct spdk_sock *_sock)
 	}
 
 	/* Gather an iov */
-	iovcnt = sock_prep_reqs(_sock, iovs, 0, NULL);
+	iovcnt = spdk_sock_prep_reqs(_sock, iovs, 0, NULL);
 	if (iovcnt == 0) {
 		return 0;
 	}

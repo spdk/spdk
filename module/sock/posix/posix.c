@@ -44,12 +44,10 @@
 #include "spdk/pipe.h"
 #include "spdk/sock.h"
 #include "spdk/util.h"
-#include "spdk/likely.h"
 #include "spdk_internal/sock.h"
 
 #define MAX_TMPBUF 1024
 #define PORTNUMLEN 32
-#define IOV_BATCH_SIZE 64
 
 #if defined(SO_ZEROCOPY) && defined(MSG_ZEROCOPY)
 #define SPDK_ZEROCOPY
@@ -750,36 +748,7 @@ _sock_flush(struct spdk_sock *sock)
 		return 0;
 	}
 
-	/* Gather an iov */
-	iovcnt = 0;
-	req = TAILQ_FIRST(&sock->queued_reqs);
-	while (req) {
-		offset = req->internal.offset;
-
-		for (i = 0; i < req->iovcnt; i++) {
-			/* Consume any offset first */
-			if (offset >= SPDK_SOCK_REQUEST_IOV(req, i)->iov_len) {
-				offset -= SPDK_SOCK_REQUEST_IOV(req, i)->iov_len;
-				continue;
-			}
-
-			iovs[iovcnt].iov_base = SPDK_SOCK_REQUEST_IOV(req, i)->iov_base + offset;
-			iovs[iovcnt].iov_len = SPDK_SOCK_REQUEST_IOV(req, i)->iov_len - offset;
-			iovcnt++;
-
-			offset = 0;
-
-			if (iovcnt >= IOV_BATCH_SIZE) {
-				break;
-			}
-		}
-
-		if (iovcnt >= IOV_BATCH_SIZE) {
-			break;
-		}
-
-		req = TAILQ_NEXT(req, internal.link);
-	}
+	iovcnt = spdk_sock_prep_reqs(sock, iovs, 0, NULL);
 
 	if (iovcnt == 0) {
 		return 0;
