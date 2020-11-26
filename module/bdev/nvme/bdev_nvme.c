@@ -1595,8 +1595,10 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 }
 
 static void
-_nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
+_nvme_bdev_ctrlr_destruct(void *ctx)
 {
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = ctx;
+
 	nvme_ctrlr_depopulate_namespaces(nvme_bdev_ctrlr);
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
@@ -2105,11 +2107,8 @@ bdev_nvme_library_fini(void)
 		}
 		nvme_bdev_ctrlr->destruct = true;
 
-		pthread_mutex_unlock(&g_bdev_nvme_mutex);
-
-		_nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
-
-		pthread_mutex_lock(&g_bdev_nvme_mutex);
+		spdk_thread_send_msg(nvme_bdev_ctrlr->thread, _nvme_bdev_ctrlr_destruct,
+				     nvme_bdev_ctrlr);
 	}
 
 	g_bdev_nvme_module_finish = true;
