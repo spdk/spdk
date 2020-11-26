@@ -1277,7 +1277,7 @@ nvmf_fc_request_execute(struct spdk_nvmf_fc_request *fc_req)
 
 static int
 nvmf_fc_hwqp_handle_request(struct spdk_nvmf_fc_hwqp *hwqp, struct spdk_nvmf_fc_frame_hdr *frame,
-			    uint32_t buf_idx, struct spdk_nvmf_fc_buffer_desc *buffer, uint32_t plen)
+			    struct spdk_nvmf_fc_buffer_desc *buffer, uint32_t plen)
 {
 	uint16_t cmnd_len;
 	uint64_t rqst_conn_id;
@@ -1342,12 +1342,12 @@ nvmf_fc_hwqp_handle_request(struct spdk_nvmf_fc_hwqp *hwqp, struct spdk_nvmf_fc_
 
 	fc_req->req.length = from_be32(&cmd_iu->data_len);
 	fc_req->req.qpair = &fc_conn->qpair;
-	fc_req->req.cmd = (union nvmf_h2c_msg *)&cmd_iu->cmd;
+	memcpy(&fc_req->cmd, &cmd_iu->cmd, sizeof(union nvmf_h2c_msg));
+	fc_req->req.cmd = (union nvmf_h2c_msg *)&fc_req->cmd;
 	fc_req->req.rsp = (union nvmf_c2h_msg *)&fc_req->ersp.rsp;
 	fc_req->oxid = frame->ox_id;
 	fc_req->oxid = from_be16(&fc_req->oxid);
 	fc_req->rpi = fc_conn->rpi;
-	fc_req->buf_index = buf_idx;
 	fc_req->poller_lcore = hwqp->lcore_id;
 	fc_req->poller_thread = hwqp->thread;
 	fc_req->hwqp = hwqp;
@@ -1395,9 +1395,6 @@ _nvmf_fc_request_free(struct spdk_nvmf_fc_request *fc_req)
 	}
 	fc_req->req.data = NULL;
 	fc_req->req.iovcnt  = 0;
-
-	/* Release Q buffer */
-	nvmf_fc_rqpair_buffer_release(hwqp, fc_req->buf_index);
 
 	/* Free Fc request */
 	nvmf_fc_hwqp_free_fc_request(hwqp, fc_req);
@@ -1520,7 +1517,10 @@ nvmf_fc_hwqp_process_frame(struct spdk_nvmf_fc_hwqp *hwqp,
 		   (frame->type == FCNVME_TYPE_FC_EXCHANGE)) {
 
 		SPDK_DEBUGLOG(nvmf_fc, "Process IO NVME frame\n");
-		rc = nvmf_fc_hwqp_handle_request(hwqp, frame, buff_idx, buffer, plen);
+		rc = nvmf_fc_hwqp_handle_request(hwqp, frame, buffer, plen);
+		if (!rc) {
+			nvmf_fc_rqpair_buffer_release(hwqp, buff_idx);
+		}
 	} else {
 
 		SPDK_ERRLOG("Unknown frame received. Dropping\n");

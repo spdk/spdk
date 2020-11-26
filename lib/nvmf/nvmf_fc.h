@@ -328,10 +328,10 @@ struct spdk_nvmf_fc_port {
  */
 struct spdk_nvmf_fc_request {
 	struct spdk_nvmf_request req;
+	union nvmf_h2c_msg cmd;
 	struct spdk_nvmf_fc_ersp_iu ersp;
 	uint32_t poller_lcore; /* for tracing purposes only */
 	struct spdk_thread *poller_thread;
-	uint16_t buf_index;
 	struct spdk_nvmf_fc_xchg *xchg;
 	uint16_t oxid;
 	uint16_t rpi;
