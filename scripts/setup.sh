@@ -287,11 +287,12 @@ function configure_linux_pci() {
 	driver_name=""
 	igb_uio_fallback=""
 
-	# igb_uio is a common driver to override with and it depends on uio.
-	modprobe uio
 	if [[ -r "$rootdir/dpdk/build-tmp/kernel/linux/igb_uio/igb_uio.ko" ]]; then
-		igb_uio_fallback=$rootdir/dpdk/build-tmp/kernel/linux/igb_uio/igb_uio.ko
-		insmod "$igb_uio_fallback" || true
+		# igb_uio is a common driver to override with and it depends on uio.
+		modprobe uio || true
+		if ! check_for_driver igb_uio || insmod "$rootdir/dpdk/build-tmp/kernel/linux/igb_uio/igb_uio.ko"; then
+			igb_uio_fallback="$rootdir/dpdk/build-tmp/kernel/linux/igb_uio/igb_uio.ko"
+		fi
 	fi
 
 	if [[ -n "${DRIVER_OVERRIDE}" ]]; then
@@ -317,6 +318,7 @@ function configure_linux_pci() {
 	elif modinfo uio_pci_generic > /dev/null 2>&1; then
 		driver_name=uio_pci_generic
 	elif [[ -e $igb_uio_fallback ]]; then
+		driver_path="$igb_uio_fallback"
 		driver_name="igb_uio"
 		echo "WARNING: uio_pci_generic not detected - using $driver_name"
 	else
