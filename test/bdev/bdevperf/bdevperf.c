@@ -2006,31 +2006,21 @@ verify_test_params(struct spdk_app_opts *opts)
 	}
 
 	if (!g_bdevperf_conf_file && g_queue_depth <= 0) {
-		spdk_app_usage();
-		bdevperf_usage();
-		return 1;
+		goto out;
 	}
 	if (!g_bdevperf_conf_file && g_io_size <= 0) {
-		spdk_app_usage();
-		bdevperf_usage();
-		return 1;
+		goto out;
 	}
 	if (!g_bdevperf_conf_file && !g_workload_type) {
-		spdk_app_usage();
-		bdevperf_usage();
-		return 1;
+		goto out;
 	}
 	if (g_time_in_sec <= 0) {
-		spdk_app_usage();
-		bdevperf_usage();
-		return 1;
+		goto out;
 	}
 	g_time_in_usec = g_time_in_sec * 1000000LL;
 
 	if (g_timeout_in_sec < 0) {
-		spdk_app_usage();
-		bdevperf_usage();
-		return 1;
+		goto out;
 	}
 
 	if (g_show_performance_ema_period > 0 &&
@@ -2091,6 +2081,10 @@ verify_test_params(struct spdk_app_opts *opts)
 	}
 
 	return 0;
+out:
+	spdk_app_usage();
+	bdevperf_usage();
+	return 1;
 }
 
 int
