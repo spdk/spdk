@@ -2,7 +2,7 @@
 
 # Install main dependencies
 pacman -Sy --needed --noconfirm gcc make cmake cunit libaio openssl \
-	libutil-linux libiscsi python ncurses ninja meson
+	libutil-linux libiscsi python ncurses json-c cmocka ninja meson
 # Additional dependencies for SPDK CLI
 pacman -Sy --needed --noconfirm python-pexpect python-pip libffi
 pip install configshell_fb
