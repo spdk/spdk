@@ -317,6 +317,7 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 {
 	struct spdk_nvmf_ctrlr	*ctrlr;
 	struct spdk_nvmf_transport *transport;
+	struct spdk_nvme_transport_id listen_trid = {};
 
 	ctrlr = calloc(1, sizeof(*ctrlr));
 	if (ctrlr == NULL) {
@@ -425,8 +426,13 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	ctrlr->dif_insert_or_strip = transport->opts.dif_insert_or_strip;
 
 	if (ctrlr->subsys->subtype == SPDK_NVMF_SUBTYPE_NVME) {
-		ctrlr->listener = nvmf_subsystem_find_listener(ctrlr->subsys,
-				  req->qpair->trid);
+		if (spdk_nvmf_qpair_get_listen_trid(req->qpair, &listen_trid) != 0) {
+			SPDK_ERRLOG("Could not get listener transport ID\n");
+			free(ctrlr);
+			return NULL;
+		}
+
+		ctrlr->listener = nvmf_subsystem_find_listener(ctrlr->subsys, &listen_trid);
 		if (!ctrlr->listener) {
 			SPDK_ERRLOG("Listener was not found\n");
 			free(ctrlr);
@@ -527,6 +533,7 @@ _nvmf_ctrlr_add_io_qpair(void *ctx)
 	struct spdk_nvmf_qpair *admin_qpair;
 	struct spdk_nvmf_tgt *tgt = qpair->transport->tgt;
 	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvme_transport_id listen_trid = {};
 	const struct spdk_nvmf_subsystem_listener *listener;
 
 	SPDK_DEBUGLOG(nvmf, "Connect I/O Queue for controller id 0x%x\n", data->cntlid);
@@ -553,7 +560,14 @@ _nvmf_ctrlr_add_io_qpair(void *ctx)
 
 	/* If ANA reporting is enabled, check if I/O connect is on the same listener. */
 	if (subsystem->flags.ana_reporting) {
-		listener = nvmf_subsystem_find_listener(subsystem, qpair->trid);
+		if (spdk_nvmf_qpair_get_listen_trid(req->qpair, &listen_trid) != 0) {
+			SPDK_ERRLOG("Could not get listener transport ID\n");
+			SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
+			spdk_nvmf_request_complete(req);
+			return;
+		}
+
+		listener = nvmf_subsystem_find_listener(subsystem, &listen_trid);
 		if (listener != ctrlr->listener) {
 			SPDK_ERRLOG("I/O connect is on a listener different from admin connect\n");
 			SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
