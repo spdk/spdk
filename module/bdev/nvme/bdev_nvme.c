@@ -1782,47 +1782,6 @@ nvme_ctrlr_populate_namespaces_done(struct nvme_async_probe_ctx *ctx)
 	populate_namespaces_cb(ctx, j, 0);
 }
 
-static void
-connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
-		  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
-{
-	struct spdk_nvme_ctrlr_opts *user_opts = cb_ctx;
-	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
-	struct nvme_async_probe_ctx *ctx;
-	int rc;
-
-	ctx = SPDK_CONTAINEROF(user_opts, struct nvme_async_probe_ctx, opts);
-
-	spdk_poller_unregister(&ctx->poller);
-
-	rc = nvme_bdev_ctrlr_create(ctrlr, ctx->base_name, &ctx->trid, ctx->prchk_flags);
-	if (rc) {
-		SPDK_ERRLOG("Failed to create new device\n");
-		populate_namespaces_cb(ctx, 0, rc);
-		return;
-	}
-
-	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(&ctx->trid);
-	assert(nvme_bdev_ctrlr != NULL);
-
-	nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr, ctx);
-}
-
-static int
-bdev_nvme_async_poll(void *arg)
-{
-	struct nvme_async_probe_ctx	*ctx = arg;
-	int				rc;
-
-	rc = spdk_nvme_probe_poll_async(ctx->probe_ctx);
-	if (spdk_unlikely(rc != -EAGAIN && rc != 0)) {
-		spdk_poller_unregister(&ctx->poller);
-		free(ctx);
-	}
-
-	return SPDK_POLLER_BUSY;
-}
-
 static int
 bdev_nvme_add_trid(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct spdk_nvme_transport_id *trid)
 {
@@ -1903,45 +1862,45 @@ out:
 	return rc;
 }
 
-int
-bdev_nvme_remove_trid(const char *name, struct spdk_nvme_transport_id *trid)
+static void
+connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
+		  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	struct nvme_bdev_ctrlr		*nvme_bdev_ctrlr;
-	struct nvme_bdev_ctrlr_trid	*ctrlr_trid, *tmp_trid;
+	struct spdk_nvme_ctrlr_opts *user_opts = cb_ctx;
+	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
+	struct nvme_async_probe_ctx *ctx;
+	int rc;
 
-	if (name == NULL) {
-		return -EINVAL;
+	ctx = SPDK_CONTAINEROF(user_opts, struct nvme_async_probe_ctx, opts);
+
+	spdk_poller_unregister(&ctx->poller);
+
+	rc = nvme_bdev_ctrlr_create(ctrlr, ctx->base_name, &ctx->trid, ctx->prchk_flags);
+	if (rc) {
+		SPDK_ERRLOG("Failed to create new device\n");
+		populate_namespaces_cb(ctx, 0, rc);
+		return;
 	}
 
-	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name(name);
-	if (nvme_bdev_ctrlr == NULL) {
-		SPDK_ERRLOG("Failed to find NVMe controller\n");
-		return -ENODEV;
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(&ctx->trid);
+	assert(nvme_bdev_ctrlr != NULL);
+
+	nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr, ctx);
+}
+
+static int
+bdev_nvme_async_poll(void *arg)
+{
+	struct nvme_async_probe_ctx	*ctx = arg;
+	int				rc;
+
+	rc = spdk_nvme_probe_poll_async(ctx->probe_ctx);
+	if (spdk_unlikely(rc != -EAGAIN && rc != 0)) {
+		spdk_poller_unregister(&ctx->poller);
+		free(ctx);
 	}
 
-	/* case 1: we are currently using the path to be removed. */
-	if (!spdk_nvme_transport_id_compare(trid, nvme_bdev_ctrlr->connected_trid)) {
-		ctrlr_trid = TAILQ_FIRST(&nvme_bdev_ctrlr->trids);
-		assert(nvme_bdev_ctrlr->connected_trid == &ctrlr_trid->trid);
-		/* case 1A: the current path is the only path. */
-		if (!TAILQ_NEXT(ctrlr_trid, link)) {
-			return bdev_nvme_delete(name);
-		}
-
-		/* case 1B: there is an alternative path. */
-		return bdev_nvme_failover(nvme_bdev_ctrlr, true);
-	}
-	/* case 2: We are not using the specified path. */
-	TAILQ_FOREACH_SAFE(ctrlr_trid, &nvme_bdev_ctrlr->trids, link, tmp_trid) {
-		if (!spdk_nvme_transport_id_compare(&ctrlr_trid->trid, trid)) {
-			TAILQ_REMOVE(&nvme_bdev_ctrlr->trids, ctrlr_trid, link);
-			free(ctrlr_trid);
-			return 0;
-		}
-	}
-
-	/* case 2A: The address isn't even in the registered list. */
-	return -ENXIO;
+	return SPDK_POLLER_BUSY;
 }
 
 int
@@ -2026,6 +1985,47 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	ctx->poller = SPDK_POLLER_REGISTER(bdev_nvme_async_poll, ctx, 1000);
 
 	return 0;
+}
+
+int
+bdev_nvme_remove_trid(const char *name, struct spdk_nvme_transport_id *trid)
+{
+	struct nvme_bdev_ctrlr		*nvme_bdev_ctrlr;
+	struct nvme_bdev_ctrlr_trid	*ctrlr_trid, *tmp_trid;
+
+	if (name == NULL) {
+		return -EINVAL;
+	}
+
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name(name);
+	if (nvme_bdev_ctrlr == NULL) {
+		SPDK_ERRLOG("Failed to find NVMe controller\n");
+		return -ENODEV;
+	}
+
+	/* case 1: we are currently using the path to be removed. */
+	if (!spdk_nvme_transport_id_compare(trid, nvme_bdev_ctrlr->connected_trid)) {
+		ctrlr_trid = TAILQ_FIRST(&nvme_bdev_ctrlr->trids);
+		assert(nvme_bdev_ctrlr->connected_trid == &ctrlr_trid->trid);
+		/* case 1A: the current path is the only path. */
+		if (!TAILQ_NEXT(ctrlr_trid, link)) {
+			return bdev_nvme_delete(name);
+		}
+
+		/* case 1B: there is an alternative path. */
+		return bdev_nvme_failover(nvme_bdev_ctrlr, true);
+	}
+	/* case 2: We are not using the specified path. */
+	TAILQ_FOREACH_SAFE(ctrlr_trid, &nvme_bdev_ctrlr->trids, link, tmp_trid) {
+		if (!spdk_nvme_transport_id_compare(&ctrlr_trid->trid, trid)) {
+			TAILQ_REMOVE(&nvme_bdev_ctrlr->trids, ctrlr_trid, link);
+			free(ctrlr_trid);
+			return 0;
+		}
+	}
+
+	/* case 2A: The address isn't even in the registered list. */
+	return -ENXIO;
 }
 
 int
