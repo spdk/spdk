@@ -330,52 +330,80 @@ nvmf_fc_handle_assoc_deletion(void *arg)
 				   fc_conn->fc_assoc->assoc_id, false, true, NULL, NULL);
 }
 
-static int
-nvmf_fc_create_req_mempool(struct spdk_nvmf_fc_hwqp *hwqp)
+void
+nvmf_fc_free_conn_reqpool(struct spdk_nvmf_fc_conn *fc_conn)
 {
-	uint32_t i;
-	struct spdk_nvmf_fc_request *fc_req;
+	free(fc_conn->pool_memory);
+	fc_conn->pool_memory = NULL;
+}
 
-	TAILQ_INIT(&hwqp->free_reqs);
-	TAILQ_INIT(&hwqp->in_use_reqs);
+int
+nvmf_fc_create_conn_reqpool(struct spdk_nvmf_fc_conn *fc_conn)
+{
+	uint32_t i, qd;
+	struct spdk_nvmf_fc_pooled_request *req;
 
-	hwqp->fc_reqs_buf = calloc(hwqp->rq_size, sizeof(struct spdk_nvmf_fc_request));
-	if (hwqp->fc_reqs_buf == NULL) {
-		SPDK_ERRLOG("create fc request pool failed\n");
-		return -ENOMEM;
+	/*
+	 * Create number of fc-requests to be more than the actual SQ size.
+	 * This is to handle race conditions where the target driver may send
+	 * back a RSP and before the target driver gets to process the CQE
+	 * for the RSP, the initiator may have sent a new command.
+	 * Depending on the load on the HWQP, there is a slim possibility
+	 * that the target reaps the RQE corresponding to the new
+	 * command before processing the CQE corresponding to the RSP.
+	 */
+	qd = fc_conn->max_queue_depth * 2;
+
+	STAILQ_INIT(&fc_conn->pool_queue);
+	fc_conn->pool_memory = calloc((fc_conn->max_queue_depth * 2),
+				      sizeof(struct spdk_nvmf_fc_request));
+	if (!fc_conn->pool_memory) {
+		SPDK_ERRLOG("create fc req ring objects failed\n");
+		goto error;
 	}
+	fc_conn->pool_size = qd;
+	fc_conn->pool_free_elems = qd;
 
-	for (i = 0; i < hwqp->rq_size; i++) {
-		fc_req = hwqp->fc_reqs_buf + i;
+	/* Initialise value in ring objects and link the objects */
+	for (i = 0; i < qd; i++) {
+		req = (struct spdk_nvmf_fc_pooled_request *)((char *)fc_conn->pool_memory +
+				i * sizeof(struct spdk_nvmf_fc_request));
 
-		nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_INIT);
-		TAILQ_INSERT_TAIL(&hwqp->free_reqs, fc_req, link);
+		STAILQ_INSERT_TAIL(&fc_conn->pool_queue, req, pool_link);
 	}
-
 	return 0;
+error:
+	nvmf_fc_free_conn_reqpool(fc_conn);
+	return -1;
 }
 
 static inline struct spdk_nvmf_fc_request *
-nvmf_fc_hwqp_alloc_fc_request(struct spdk_nvmf_fc_hwqp *hwqp)
+nvmf_fc_conn_alloc_fc_request(struct spdk_nvmf_fc_conn *fc_conn)
 {
 	struct spdk_nvmf_fc_request *fc_req;
+	struct spdk_nvmf_fc_pooled_request *pooled_req;
+	struct spdk_nvmf_fc_hwqp *hwqp = fc_conn->hwqp;
 
-	if (TAILQ_EMPTY(&hwqp->free_reqs)) {
+	pooled_req = STAILQ_FIRST(&fc_conn->pool_queue);
+	if (!pooled_req) {
 		SPDK_ERRLOG("Alloc request buffer failed\n");
 		return NULL;
 	}
+	STAILQ_REMOVE_HEAD(&fc_conn->pool_queue, pool_link);
+	fc_conn->pool_free_elems -= 1;
 
-	fc_req = TAILQ_FIRST(&hwqp->free_reqs);
-	TAILQ_REMOVE(&hwqp->free_reqs, fc_req, link);
-
+	fc_req = (struct spdk_nvmf_fc_request *)pooled_req;
 	memset(fc_req, 0, sizeof(struct spdk_nvmf_fc_request));
+	nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_INIT);
+
 	TAILQ_INSERT_TAIL(&hwqp->in_use_reqs, fc_req, link);
+	TAILQ_INSERT_TAIL(&fc_conn->in_use_reqs, fc_req, conn_link);
 	TAILQ_INIT(&fc_req->abort_cbs);
 	return fc_req;
 }
 
 static inline void
-nvmf_fc_hwqp_free_fc_request(struct spdk_nvmf_fc_hwqp *hwqp, struct spdk_nvmf_fc_request *fc_req)
+nvmf_fc_conn_free_fc_request(struct spdk_nvmf_fc_conn *fc_conn, struct spdk_nvmf_fc_request *fc_req)
 {
 	if (fc_req->state != SPDK_NVMF_FC_REQ_SUCCESS) {
 		/* Log an error for debug purpose. */
@@ -385,8 +413,11 @@ nvmf_fc_hwqp_free_fc_request(struct spdk_nvmf_fc_hwqp *hwqp, struct spdk_nvmf_fc
 	/* set the magic to mark req as no longer valid. */
 	fc_req->magic = 0xDEADBEEF;
 
-	TAILQ_REMOVE(&hwqp->in_use_reqs, fc_req, link);
-	TAILQ_INSERT_HEAD(&hwqp->free_reqs, fc_req, link);
+	TAILQ_REMOVE(&fc_conn->hwqp->in_use_reqs, fc_req, link);
+	TAILQ_REMOVE(&fc_conn->in_use_reqs, fc_req, conn_link);
+
+	STAILQ_INSERT_HEAD(&fc_conn->pool_queue, (struct spdk_nvmf_fc_pooled_request *)fc_req, pool_link);
+	fc_conn->pool_free_elems += 1;
 }
 
 struct spdk_nvmf_fc_conn *
@@ -418,10 +449,7 @@ nvmf_fc_init_hwqp(struct spdk_nvmf_fc_port *fc_port, struct spdk_nvmf_fc_hwqp *h
 	/* clear counters */
 	memset(&hwqp->counters, 0, sizeof(struct spdk_nvmf_fc_errors));
 
-	if (&fc_port->ls_queue != hwqp) {
-		nvmf_fc_create_req_mempool(hwqp);
-	}
-
+	TAILQ_INIT(&hwqp->in_use_reqs);
 	TAILQ_INIT(&hwqp->connection_list);
 	TAILQ_INIT(&hwqp->sync_cbs);
 	TAILQ_INIT(&hwqp->ls_pending_queue);
@@ -843,17 +871,9 @@ static void
 nvmf_fc_port_cleanup(void)
 {
 	struct spdk_nvmf_fc_port *fc_port, *tmp;
-	struct spdk_nvmf_fc_hwqp *hwqp;
-	uint32_t i;
 
 	TAILQ_FOREACH_SAFE(fc_port, &g_spdk_nvmf_fc_port_list, link, tmp) {
 		TAILQ_REMOVE(&g_spdk_nvmf_fc_port_list,  fc_port, link);
-		for (i = 0; i < fc_port->num_io_queues; i++) {
-			hwqp = &fc_port->io_queues[i];
-			if (hwqp->fc_reqs_buf) {
-				free(hwqp->fc_reqs_buf);
-			}
-		}
 		free(fc_port);
 	}
 }
@@ -1111,21 +1131,26 @@ nvmf_fc_request_abort_complete(void *arg1)
 	struct spdk_nvmf_fc_request *fc_req =
 		(struct spdk_nvmf_fc_request *)arg1;
 	struct spdk_nvmf_fc_caller_ctx *ctx = NULL, *tmp = NULL;
+	TAILQ_HEAD(, spdk_nvmf_fc_caller_ctx) abort_cbs;
 
-	/* Request abort completed. Notify all the callbacks */
-	TAILQ_FOREACH_SAFE(ctx, &fc_req->abort_cbs, link, tmp) {
-		/* Notify */
-		ctx->cb(fc_req->hwqp, 0, ctx->cb_args);
-		/* Remove */
-		TAILQ_REMOVE(&fc_req->abort_cbs, ctx, link);
-		/* free */
-		free(ctx);
-	}
+	/* Make a copy of the cb list from fc_req */
+	TAILQ_INIT(&abort_cbs);
+	TAILQ_SWAP(&abort_cbs, &fc_req->abort_cbs, spdk_nvmf_fc_caller_ctx, link);
 
 	SPDK_NOTICELOG("FC Request(%p) in state :%s aborted\n", fc_req,
 		       fc_req_state_strs[fc_req->state]);
 
 	_nvmf_fc_request_free(fc_req);
+
+	/* Request abort completed. Notify all the callbacks */
+	TAILQ_FOREACH_SAFE(ctx, &abort_cbs, link, tmp) {
+		/* Notify */
+		ctx->cb(fc_req->hwqp, 0, ctx->cb_args);
+		/* Remove */
+		TAILQ_REMOVE(&abort_cbs, ctx, link);
+		/* free */
+		free(ctx);
+	}
 }
 
 void
@@ -1353,7 +1378,7 @@ nvmf_fc_hwqp_handle_request(struct spdk_nvmf_fc_hwqp *hwqp, struct spdk_nvmf_fc_
 	}
 
 	/* allocate a request buffer */
-	fc_req = nvmf_fc_hwqp_alloc_fc_request(hwqp);
+	fc_req = nvmf_fc_conn_alloc_fc_request(fc_conn);
 	if (fc_req == NULL) {
 		return -ENOMEM;
 	}
@@ -1413,7 +1438,7 @@ _nvmf_fc_request_free(struct spdk_nvmf_fc_request *fc_req)
 	fc_req->req.iovcnt  = 0;
 
 	/* Free Fc request */
-	nvmf_fc_hwqp_free_fc_request(hwqp, fc_req);
+	nvmf_fc_conn_free_fc_request(fc_req->fc_conn, fc_req);
 }
 
 void
@@ -2153,7 +2178,6 @@ nvmf_fc_adm_hw_port_data_init(struct spdk_nvmf_fc_port *fc_port,
 		struct spdk_nvmf_fc_hwqp *hwqp = &fc_port->io_queues[i];
 		hwqp->hwqp_id = i;
 		hwqp->queues = args->io_queues[i];
-		hwqp->rq_size = args->io_queue_size;
 		nvmf_fc_init_hwqp(fc_port, hwqp);
 	}
 

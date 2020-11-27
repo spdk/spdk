@@ -187,16 +187,6 @@ nvmf_fc_ls_format_rjt(void *buf, uint16_t buflen, uint8_t ls_cmd,
 static inline void
 nvmf_fc_ls_free_association(struct spdk_nvmf_fc_association *assoc)
 {
-	struct spdk_nvmf_fc_conn *fc_conn;
-
-	/* return the q slots of the conns for the association */
-	TAILQ_FOREACH(fc_conn, &assoc->avail_fc_conns, assoc_avail_link) {
-		if (fc_conn->conn_id != NVMF_FC_INVALID_CONN_ID) {
-			nvmf_fc_release_conn(fc_conn->hwqp, fc_conn->conn_id,
-					     fc_conn->max_queue_depth);
-		}
-	}
-
 	/* free assocation's send disconnect buffer */
 	if (assoc->snd_disconn_bufs) {
 		nvmf_fc_free_srsr_bufs(assoc->snd_disconn_bufs);
@@ -229,10 +219,6 @@ nvmf_fc_ls_alloc_connections(struct spdk_nvmf_fc_association *assoc,
 
 	for (i = 0; i < nvmf_transport->opts.max_qpairs_per_ctrlr; i++) {
 		fc_conn = assoc->conns_buf + (i * sizeof(struct spdk_nvmf_fc_conn));
-		fc_conn->conn_id	 = NVMF_FC_INVALID_CONN_ID;
-		fc_conn->qpair.state	 = SPDK_NVMF_QPAIR_UNINITIALIZED;
-		fc_conn->qpair.transport = nvmf_transport;
-
 		TAILQ_INSERT_TAIL(&assoc->avail_fc_conns, fc_conn, assoc_avail_link);
 	}
 
@@ -285,6 +271,7 @@ nvmf_fc_ls_new_association(uint32_t s_id,
 	assoc->tgtport = tgtport;
 	assoc->rport = rport;
 	assoc->subsystem = subsys;
+	assoc->nvmf_transport = nvmf_transport;
 	assoc->assoc_state = SPDK_NVMF_FC_OBJECT_CREATED;
 	memcpy(assoc->host_id, a_cmd->hostid, FCNVME_ASSOC_HOSTID_LEN);
 	memcpy(assoc->host_nqn, a_cmd->hostnqn, SPDK_NVME_NQN_FIELD_SIZE);
@@ -337,7 +324,11 @@ nvmf_fc_ls_new_connection(struct spdk_nvmf_fc_association *assoc, uint16_t qid,
 
 	/* Remove from avail list and add to in use. */
 	TAILQ_REMOVE(&assoc->avail_fc_conns, fc_conn, assoc_avail_link);
+	memset(fc_conn, 0, sizeof(struct spdk_nvmf_fc_conn));
+
+	/* Add conn to association's connection list */
 	TAILQ_INSERT_TAIL(&assoc->fc_conns, fc_conn, assoc_link);
+	assoc->conn_count++;
 
 	if (qid == 0) {
 		/* AdminQ connection. */
@@ -346,13 +337,18 @@ nvmf_fc_ls_new_connection(struct spdk_nvmf_fc_association *assoc, uint16_t qid,
 
 	fc_conn->qpair.qid = qid;
 	fc_conn->qpair.sq_head_max = sq_size;
+	fc_conn->qpair.state = SPDK_NVMF_QPAIR_UNINITIALIZED;
+	fc_conn->qpair.transport = assoc->nvmf_transport;
 	TAILQ_INIT(&fc_conn->qpair.outstanding);
+
+	fc_conn->conn_id = NVMF_FC_INVALID_CONN_ID;
 	fc_conn->esrp_ratio = esrp_ratio;
 	fc_conn->fc_assoc = assoc;
 	fc_conn->s_id = assoc->s_id;
 	fc_conn->d_id = assoc->tgtport->d_id;
 	fc_conn->rpi = rpi;
 	fc_conn->max_queue_depth = sq_size + 1;
+	TAILQ_INIT(&fc_conn->in_use_reqs);
 
 	/* save target port trid in connection (for subsystem
 	 * listener validation in fabric connect command)
@@ -367,6 +363,7 @@ nvmf_fc_ls_new_connection(struct spdk_nvmf_fc_association *assoc, uint16_t qid,
 static inline void
 nvmf_fc_ls_free_connection(struct spdk_nvmf_fc_conn *fc_conn)
 {
+	nvmf_fc_free_conn_reqpool(fc_conn);
 	TAILQ_INSERT_TAIL(&fc_conn->fc_assoc->avail_fc_conns, fc_conn, assoc_avail_link);
 }
 
@@ -548,6 +545,7 @@ nvmf_fc_ls_add_conn_failure(
 			   FCNVME_RJT_RC_INSUFF_RES,
 			   FCNVME_RJT_EXP_NONE, 0);
 
+	TAILQ_REMOVE(&assoc->fc_conns, fc_conn, assoc_link);
 	nvmf_fc_ls_free_connection(fc_conn);
 	if (aq_conn) {
 		nvmf_fc_del_assoc_from_tgt_port(assoc);
@@ -572,16 +570,19 @@ nvmf_fc_ls_add_conn_to_poller(
 		      "assoc_id 0x%lx conn_id 0x%lx\n", assoc->assoc_id,
 		      fc_conn->conn_id);
 
+	/* Create fc_req pool for this connection */
+	if (nvmf_fc_create_conn_reqpool(fc_conn)) {
+		SPDK_ERRLOG("allocate fc_req pool failed\n");
+		goto error;
+	}
+
 	opd = calloc(1, sizeof(struct nvmf_fc_ls_op_ctx));
 	if (!opd) {
 		SPDK_ERRLOG("allocate api data for add conn op failed\n");
-		nvmf_fc_ls_add_conn_failure(assoc, ls_rqst, fc_conn, aq_conn);
-		return;
+		goto error;
 	}
 
-	/* insert conn in association's connection list */
 	api_data = &opd->u.add_conn;
-	assoc->conn_count++;
 
 	api_data->args.fc_conn = fc_conn;
 	api_data->args.cb_info.cb_thread = spdk_get_thread();
@@ -597,6 +598,10 @@ nvmf_fc_ls_add_conn_to_poller(
 	/* Let the nvmf_tgt decide which pollgroup to use. */
 	fc_conn->create_opd = opd;
 	spdk_nvmf_tgt_new_qpair(ls_rqst->nvmf_tgt, &fc_conn->qpair);
+	return;
+error:
+	nvmf_fc_free_conn_reqpool(fc_conn);
+	nvmf_fc_ls_add_conn_failure(assoc, ls_rqst, fc_conn, aq_conn);
 }
 
 /* Delete association functions */

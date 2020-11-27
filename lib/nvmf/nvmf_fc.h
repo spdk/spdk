@@ -240,6 +240,23 @@ struct spdk_nvmf_fc_conn {
 	/* for hwqp's connection list */
 	TAILQ_ENTRY(spdk_nvmf_fc_conn) link;
 
+	/* for hwqp's rport connection list link  */
+	TAILQ_ENTRY(spdk_nvmf_fc_conn) rport_link;
+
+	/* Per connection fc_req pool */
+	STAILQ_HEAD(, spdk_nvmf_fc_pooled_request) pool_queue;
+
+	/* Memory for the fc_req pool objects */
+	struct spdk_nvmf_fc_pooled_request *pool_memory;
+
+	/* Pool size */
+	uint32_t pool_size;
+
+	/* Current free elem in pool */
+	uint32_t pool_free_elems;
+
+	TAILQ_HEAD(, spdk_nvmf_fc_request) in_use_reqs;
+
 	/* New QP create context. */
 	struct nvmf_fc_ls_op_ctx *create_opd;
 };
@@ -277,7 +294,6 @@ struct spdk_nvmf_fc_hwqp {
 	uint32_t lcore_id;   /* core hwqp is running on (for tracing purposes only) */
 	struct spdk_thread *thread;  /* thread hwqp is running on */
 	uint32_t hwqp_id;    /* A unique id (per physical port) for a hwqp */
-	uint32_t rq_size;    /* receive queue size */
 	spdk_nvmf_fc_lld_hwqp_t queues;    /* vendor HW queue set */
 	struct spdk_nvmf_fc_port *fc_port; /* HW port structure for these queues */
 	struct spdk_nvmf_fc_poll_group *fgroup;
@@ -286,8 +302,6 @@ struct spdk_nvmf_fc_hwqp {
 	TAILQ_HEAD(, spdk_nvmf_fc_conn) connection_list;
 	uint32_t num_conns; /* number of connections to queue */
 
-	struct spdk_nvmf_fc_request *fc_reqs_buf;
-	TAILQ_HEAD(, spdk_nvmf_fc_request) free_reqs;
 	TAILQ_HEAD(, spdk_nvmf_fc_request) in_use_reqs;
 
 	struct spdk_nvmf_fc_errors counters;
@@ -346,13 +360,16 @@ struct spdk_nvmf_fc_request {
 	uint32_t s_id;
 	uint32_t d_id;
 	TAILQ_ENTRY(spdk_nvmf_fc_request) link;
-	STAILQ_ENTRY(spdk_nvmf_fc_request) pending_link;
+	TAILQ_ENTRY(spdk_nvmf_fc_request) conn_link;
 	TAILQ_HEAD(, spdk_nvmf_fc_caller_ctx) abort_cbs;
 };
 
 SPDK_STATIC_ASSERT(!offsetof(struct spdk_nvmf_fc_request, req),
 		   "FC request and NVMF request address don't match.");
 
+struct spdk_nvmf_fc_pooled_request {
+	STAILQ_ENTRY(spdk_nvmf_fc_pooled_request) pool_link;
+};
 
 /*
  * NVMF FC Association
@@ -363,6 +380,7 @@ struct spdk_nvmf_fc_association {
 	struct spdk_nvmf_fc_nport *tgtport;
 	struct spdk_nvmf_fc_remote_port_info *rport;
 	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvmf_transport *nvmf_transport;
 	enum spdk_nvmf_fc_object_state assoc_state;
 
 	char host_id[FCNVME_ASSOC_HOSTID_LEN];
@@ -977,5 +995,9 @@ bool nvmf_fc_send_ersp_required(struct spdk_nvmf_fc_request *fc_req,
 				uint32_t rsp_cnt, uint32_t xfer_len);
 
 int nvmf_fc_handle_rsp(struct spdk_nvmf_fc_request *req);
+
+int nvmf_fc_create_conn_reqpool(struct spdk_nvmf_fc_conn *fc_conn);
+
+void nvmf_fc_free_conn_reqpool(struct spdk_nvmf_fc_conn *fc_conn);
 
 #endif

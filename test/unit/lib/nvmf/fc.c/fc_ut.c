@@ -225,8 +225,6 @@ DEFINE_STUB(nvmf_fc_assign_conn_to_hwqp, bool, (struct spdk_nvmf_fc_hwqp *hwqp,
 DEFINE_STUB(nvmf_fc_get_hwqp_from_conn_id, struct spdk_nvmf_fc_hwqp *,
 	    (struct spdk_nvmf_fc_hwqp *queues,
 	     uint32_t num_queues, uint64_t conn_id), NULL);
-DEFINE_STUB_V(nvmf_fc_release_conn, (struct spdk_nvmf_fc_hwqp *hwqp, uint64_t conn_id,
-				     uint32_t sq_size));
 DEFINE_STUB_V(nvmf_fc_dump_all_queues, (struct spdk_nvmf_fc_hwqp *ls_queue,
 					struct spdk_nvmf_fc_hwqp *io_queues,
 					uint32_t num_io_queues,
