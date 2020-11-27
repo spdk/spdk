@@ -60,8 +60,6 @@ src=$(readlink -f $(dirname $0))
 out=$output_dir
 cd $src
 
-./scripts/setup.sh status
-
 freebsd_update_contigmem_mod
 
 # lcov takes considerable time to process clang coverage.
@@ -127,7 +125,10 @@ if [ $(uname -s) = Linux ]; then
 		# Export our blocked list so it will take effect during next setup.sh
 		export PCI_BLOCKED
 	fi
+	run_test "setup.sh" "$rootdir/test/setup/test-setup.sh"
 fi
+
+./scripts/setup.sh status
 
 if [[ $(uname -s) == Linux ]]; then
 	# Revert NVMe namespaces to default state
