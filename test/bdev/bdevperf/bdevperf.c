@@ -430,6 +430,21 @@ bdevperf_job_end(void *ctx)
 }
 
 static void
+bdevperf_end_task(struct bdevperf_task *task)
+{
+	struct bdevperf_job     *job = task->job;
+
+	TAILQ_INSERT_TAIL(&job->task_list, task, link);
+	if (job->is_draining) {
+		if (job->current_queue_depth == 0) {
+			spdk_put_io_channel(job->ch);
+			spdk_bdev_close(job->bdev_desc);
+			spdk_thread_send_msg(g_master_thread, bdevperf_job_end, NULL);
+		}
+	}
+}
+
+static void
 bdevperf_queue_io_wait_with_cb(struct bdevperf_task *task, spdk_bdev_io_wait_cb cb_fn)
 {
 	struct bdevperf_job	*job = task->job;
@@ -474,17 +489,7 @@ bdevperf_abort_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 	}
 
 	spdk_bdev_free_io(bdev_io);
-
-	/* Return task to free list because abort is submitted on demand. */
-	TAILQ_INSERT_TAIL(&job->task_list, task, link);
-
-	if (job->is_draining) {
-		if (job->current_queue_depth == 0) {
-			spdk_put_io_channel(job->ch);
-			spdk_bdev_close(job->bdev_desc);
-			spdk_thread_send_msg(g_master_thread, bdevperf_job_end, NULL);
-		}
-	}
+	bdevperf_end_task(task);
 }
 
 static void
@@ -550,12 +555,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	if (!job->is_draining) {
 		bdevperf_submit_single(job, task);
 	} else {
-		TAILQ_INSERT_TAIL(&job->task_list, task, link);
-		if (job->current_queue_depth == 0) {
-			spdk_put_io_channel(job->ch);
-			spdk_bdev_close(job->bdev_desc);
-			spdk_thread_send_msg(g_master_thread, bdevperf_job_end, NULL);
-		}
+		bdevperf_end_task(task);
 	}
 }
 
