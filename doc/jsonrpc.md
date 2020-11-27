@@ -2171,6 +2171,7 @@ Name                       | Optional | Type        | Description
 -------------------------- | -------- | ----------- | -----------
 action_on_timeout          | Optional | string      | Action to take on command time out: none, reset or abort
 timeout_us                 | Optional | number      | Timeout for each command, in microseconds. If 0, don't track timeouts
+keep_alive_timeout_ms      | Optional | number      | Keep alive timeout period in milliseconds, default is 10s
 retry_count                | Optional | number      | The number of attempts per I/O before an I/O fails
 arbitration_burst          | Optional | number      | The value is expressed as a power of two, a value of 111b indicates no limit
 low_priority_weight        | Optional | number      | The maximum number of commands that the controller may launch at one time from a low priority queue
@@ -2196,6 +2197,7 @@ request:
     "high_priority_weight": 8,
     "nvme_adminq_poll_period_us": 2000,
     "timeout_us": 10000000,
+    "keep_alive_timeout_ms": 600000,
     "action_on_timeout": "reset",
     "io_queue_requests" : 2048,
     "delay_cmd_submit": true

@@ -51,6 +51,7 @@
 #include "spdk/log.h"
 
 #define SPDK_BDEV_NVME_DEFAULT_DELAY_CMD_SUBMIT true
+#define SPDK_BDEV_NVME_DEFAULT_KEEP_ALIVE_TIMEOUT_IN_MS	(10000)
 
 static int bdev_nvme_config_json(struct spdk_json_write_ctx *w);
 
@@ -109,6 +110,7 @@ static TAILQ_HEAD(, nvme_probe_skip_entry) g_skipped_nvme_ctrlrs = TAILQ_HEAD_IN
 static struct spdk_bdev_nvme_opts g_opts = {
 	.action_on_timeout = SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE,
 	.timeout_us = 0,
+	.keep_alive_timeout_ms = SPDK_BDEV_NVME_DEFAULT_KEEP_ALIVE_TIMEOUT_IN_MS,
 	.retry_count = 4,
 	.arbitration_burst = 0,
 	.low_priority_weight = 0,
@@ -1957,6 +1959,7 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 
 	spdk_nvme_ctrlr_get_default_ctrlr_opts(&ctx->opts, sizeof(ctx->opts));
 	ctx->opts.transport_retry_count = g_opts.retry_count;
+	ctx->opts.keep_alive_timeout_ms = g_opts.keep_alive_timeout_ms;
 
 	if (hostnqn) {
 		snprintf(ctx->opts.hostnqn, sizeof(ctx->opts.hostnqn), "%s", hostnqn);

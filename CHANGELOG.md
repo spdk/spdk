@@ -32,6 +32,8 @@ be notified of any discovery log changes.
 
 A new API `spdk_jsonrpc_send_bool_response` was added to allow sending response for
 writing json bool results into one function.
+Update API `bdev_nvme_set_options` and add a keep_alive_timeout_ms parameter. Now you
+can specify the keep_alive_timeout before creating NVMe bdev.
 
 ### rpc
 

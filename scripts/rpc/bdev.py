@@ -381,8 +381,8 @@ def bdev_uring_delete(client, name):
 
 
 @deprecated_alias('set_bdev_nvme_options')
-def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, retry_count=None,
-                          arbitration_burst=None, low_priority_weight=None,
+def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, keep_alive_timeout_ms=None,
+                          retry_count=None, arbitration_burst=None, low_priority_weight=None,
                           medium_priority_weight=None, high_priority_weight=None,
                           nvme_adminq_poll_period_us=None, nvme_ioq_poll_period_us=None, io_queue_requests=None,
                           delay_cmd_submit=None):
@@ -391,6 +391,7 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, retry
     Args:
         action_on_timeout:  action to take on command time out. Valid values are: none, reset, abort (optional)
         timeout_us: Timeout for each command, in microseconds. If 0, don't track timeouts (optional)
+        keep_alive_timeout_ms: Keep alive timeout period in millisecond, default is 10s (optional)
         retry_count: The number of attempts per I/O when an I/O fails (optional)
         arbitration_burst: The value is expressed as a power of two (optional)
         low_prioity_weight: The number of commands that may be executed from the low priority queue at one time (optional)
@@ -408,6 +409,9 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, retry
 
     if timeout_us is not None:
         params['timeout_us'] = timeout_us
+
+    if keep_alive_timeout_ms is not None:
+        params['keep_alive_timeout_ms'] = keep_alive_timeout_ms
 
     if retry_count is not None:
         params['retry_count'] = retry_count
