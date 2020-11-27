@@ -204,23 +204,16 @@ nvmf_fc_create_conn_reqpool(struct spdk_nvmf_fc_conn *fc_conn)
  * LLD functions
  */
 
-static inline uint64_t
-nvmf_fc_gen_conn_id(uint32_t qnum, struct spdk_nvmf_fc_hwqp *hwqp)
-{
-	static uint16_t conn_cnt = 0;
-	return ((uint64_t) qnum | (conn_cnt++ << 8));
-}
-
 bool
 nvmf_fc_assign_conn_to_hwqp(struct spdk_nvmf_fc_hwqp *hwqp,
 			    uint64_t *conn_id, uint32_t sq_size)
 {
+	static uint16_t conn_cnt = 0;
+
 	SPDK_DEBUGLOG(nvmf_fc_ls, "Assign connection to HWQP\n");
 
-	hwqp->num_conns++;
-
 	/* create connection ID */
-	*conn_id = nvmf_fc_gen_conn_id(hwqp->hwqp_id, hwqp);
+	*conn_id = ((uint64_t)hwqp->hwqp_id | (conn_cnt++ << 8));
 
 	SPDK_DEBUGLOG(nvmf_fc_ls,
 		      "New connection assigned to HWQP%d, conn_id 0x%lx\n",

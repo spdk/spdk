@@ -257,8 +257,13 @@ struct spdk_nvmf_fc_conn {
 
 	TAILQ_HEAD(, spdk_nvmf_fc_request) in_use_reqs;
 
+	enum spdk_nvmf_fc_object_state conn_state;
+
 	/* New QP create context. */
 	struct nvmf_fc_ls_op_ctx *create_opd;
+
+	/* Delete conn callback list */
+	void *ls_del_op_ctx;
 };
 
 /*
