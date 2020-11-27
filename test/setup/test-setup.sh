@@ -6,3 +6,4 @@ source "$testdir/common.sh"
 [[ $(uname -s) == Linux ]] || exit 0
 
 run_test "acl" "$testdir/acl.sh"
+run_test "hugepages" "$testdir/hugepages.sh"
