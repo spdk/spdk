@@ -61,6 +61,10 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma;
 #define DEFAULT_NVMF_RDMA_CQ_SIZE	4096
 #define MAX_WR_PER_QP(queue_depth)	(queue_depth * 3 + 2)
 
+/* rxe driver vendor_id has been changed from 0 to 0XFFFFFF in 0184afd15a141d7ce24c32c0d86a1e3ba6bc0eb3 */
+#define NVMF_RXE_VENDOR_ID_OLD 0
+#define NVMF_RXE_VENDOR_ID_NEW 0XFFFFFF
+
 static int g_spdk_nvmf_ibv_query_mask =
 	IBV_QP_STATE |
 	IBV_QP_PKEY_INDEX |
@@ -2292,6 +2296,13 @@ const struct spdk_mem_map_ops g_nvmf_rdma_map_ops = {
 static int nvmf_rdma_destroy(struct spdk_nvmf_transport *transport,
 			     spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg);
 
+static inline bool
+nvmf_rdma_is_rxe_device(struct spdk_nvmf_rdma_device *device)
+{
+	return device->attr.vendor_id == NVMF_RXE_VENDOR_ID_OLD ||
+	       device->attr.vendor_id == NVMF_RXE_VENDOR_ID_NEW;
+}
+
 static struct spdk_nvmf_transport *
 nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 {
@@ -2474,7 +2485,7 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		 *
 		 * TODO: enable this for versions of the kernel rxe driver that support it.
 		 */
-		if (device->attr.vendor_id == 0) {
+		if (nvmf_rdma_is_rxe_device(device)) {
 			device->attr.device_cap_flags &= ~(IBV_DEVICE_MEM_MGT_EXTENSIONS);
 		}
 #endif
@@ -2847,8 +2858,8 @@ nvmf_rdma_destroy_drained_qpair(struct spdk_nvmf_rdma_qpair *rqpair)
 	/* Judge whether the device is emulated by Software RoCE.
 	 * And it will not send last_wqe event
 	 */
-	if (rqpair->srq != NULL && rqpair->device->attr.vendor_id != 0 &&
-	    rqpair->last_wqe_reached == false) {
+	if (rqpair->srq != NULL && rqpair->last_wqe_reached == false &&
+	    !nvmf_rdma_is_rxe_device(rqpair->device)) {
 		return;
 	}
 
