@@ -7,3 +7,4 @@ source "$testdir/common.sh"
 
 run_test "acl" "$testdir/acl.sh"
 run_test "hugepages" "$testdir/hugepages.sh"
+run_test "driver" "$testdir/driver.sh"
