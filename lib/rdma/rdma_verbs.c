@@ -116,6 +116,12 @@ spdk_rdma_qp_disconnect(struct spdk_rdma_qp *spdk_rdma_qp)
 	if (spdk_rdma_qp->cm_id) {
 		rc = rdma_disconnect(spdk_rdma_qp->cm_id);
 		if (rc) {
+			if (errno == EINVAL && spdk_rdma_qp->qp->context->device->transport_type == IBV_TRANSPORT_IWARP) {
+				/* rdma_disconnect may return an error and set errno to EINVAL in case of iWARP.
+				 * This behaviour is expected since iWARP handles disconnect event other than IB and
+				 * qpair is already in error state when we call rdma_disconnect */
+				return 0;
+			}
 			SPDK_ERRLOG("rdma_disconnect failed, errno %s (%d)\n", spdk_strerror(errno), errno);
 		}
 	}
