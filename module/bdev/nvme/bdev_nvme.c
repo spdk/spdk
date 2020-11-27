@@ -1783,15 +1783,13 @@ nvme_ctrlr_populate_namespaces_done(struct nvme_async_probe_ctx *ctx)
 }
 
 static int
-bdev_nvme_add_trid(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct spdk_nvme_transport_id *trid)
+bdev_nvme_add_trid(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct spdk_nvme_ctrlr *new_ctrlr,
+		   struct spdk_nvme_transport_id *trid)
 {
-	struct spdk_nvme_ctrlr		*new_ctrlr;
-	struct spdk_nvme_ctrlr_opts	opts;
 	uint32_t			i;
 	struct spdk_nvme_ns		*ns, *new_ns;
 	const struct spdk_nvme_ns_data	*ns_data, *new_ns_data;
 	struct nvme_bdev_ctrlr_trid	*new_trid;
-	int				rc = 0;
 
 	assert(nvme_bdev_ctrlr != NULL);
 
@@ -1817,18 +1815,8 @@ bdev_nvme_add_trid(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct spdk_nvme_tra
 		}
 	}
 
-	spdk_nvme_ctrlr_get_default_ctrlr_opts(&opts, sizeof(opts));
-	opts.transport_retry_count = g_opts.retry_count;
-
-	new_ctrlr = spdk_nvme_connect(trid, &opts, sizeof(opts));
-
-	if (new_ctrlr == NULL) {
-		return -ENODEV;
-	}
-
 	if (spdk_nvme_ctrlr_get_num_ns(new_ctrlr) != nvme_bdev_ctrlr->num_ns) {
-		rc = -EINVAL;
-		goto out;
+		return -EINVAL;
 	}
 
 	for (i = 1; i <= nvme_bdev_ctrlr->num_ns; i++) {
@@ -1844,22 +1832,18 @@ bdev_nvme_add_trid(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct spdk_nvme_tra
 		ns_data = spdk_nvme_ns_get_data(ns);
 		new_ns_data = spdk_nvme_ns_get_data(new_ns);
 		if (memcmp(ns_data->nguid, new_ns_data->nguid, sizeof(ns_data->nguid))) {
-			rc = -EINVAL;
-			goto out;
+			return -EINVAL;
 		}
 	}
 
 	new_trid = calloc(1, sizeof(*new_trid));
 	if (new_trid == NULL) {
-		rc = -ENOMEM;
-		goto out;
+		return -ENOMEM;
 	}
 	new_trid->trid = *trid;
 	TAILQ_INSERT_TAIL(&nvme_bdev_ctrlr->trids, new_trid, link);
 
-out:
-	spdk_nvme_detach(new_ctrlr);
-	return rc;
+	return 0;
 }
 
 static void
@@ -1874,6 +1858,20 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	ctx = SPDK_CONTAINEROF(user_opts, struct nvme_async_probe_ctx, opts);
 
 	spdk_poller_unregister(&ctx->poller);
+
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name(ctx->base_name);
+	if (nvme_bdev_ctrlr) {
+		/* This is the case that a secondary path is added to an existing
+		 * nvme_bdev_ctrlr for failover. After checking if it can access the same
+		 * namespaces as the primary path, it is disconnected until failover occurs.
+		 */
+		rc = bdev_nvme_add_trid(nvme_bdev_ctrlr, ctrlr, &ctx->trid);
+
+		spdk_nvme_detach(ctrlr);
+
+		populate_namespaces_cb(ctx, 0, rc);
+		return;
+	}
 
 	rc = nvme_bdev_ctrlr_create(ctrlr, ctx->base_name, &ctx->trid, ctx->prchk_flags);
 	if (rc) {
@@ -1916,8 +1914,6 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 {
 	struct nvme_probe_skip_entry	*entry, *tmp;
 	struct nvme_async_probe_ctx	*ctx;
-	struct nvme_bdev_ctrlr		*existing_ctrlr;
-	int				rc;
 
 	/* TODO expand this check to include both the host and target TRIDs.
 	 * Only if both are the same should we fail.
@@ -1938,18 +1934,6 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	ctx->cb_ctx = cb_ctx;
 	ctx->prchk_flags = prchk_flags;
 	ctx->trid = *trid;
-
-	existing_ctrlr = nvme_bdev_ctrlr_get_by_name(base_name);
-	if (existing_ctrlr) {
-		rc = bdev_nvme_add_trid(existing_ctrlr, trid);
-		if (rc) {
-			free(ctx);
-			return rc;
-		}
-
-		nvme_ctrlr_populate_namespaces_done(ctx);
-		return 0;
-	}
 
 	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
 		TAILQ_FOREACH_SAFE(entry, &g_skipped_nvme_ctrlrs, tailq, tmp) {
