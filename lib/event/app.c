@@ -49,7 +49,7 @@
 #define SPDK_APP_DEFAULT_NUM_TRACE_ENTRIES	SPDK_DEFAULT_NUM_TRACE_ENTRIES
 
 #define SPDK_APP_DPDK_DEFAULT_MEM_SIZE		-1
-#define SPDK_APP_DPDK_DEFAULT_MASTER_CORE	-1
+#define SPDK_APP_DPDK_DEFAULT_MAIN_CORE		-1
 #define SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL	-1
 #define SPDK_APP_DPDK_DEFAULT_CORE_MASK		"0x1"
 #define SPDK_APP_DPDK_DEFAULT_BASE_VIRTADDR	0x200000000000
@@ -97,8 +97,9 @@ static const struct option g_cmdline_options[] = {
 	{"cpumask",			required_argument,	NULL, CPUMASK_OPT_IDX},
 #define MEM_CHANNELS_OPT_IDX	'n'
 	{"mem-channels",		required_argument,	NULL, MEM_CHANNELS_OPT_IDX},
-#define MASTER_CORE_OPT_IDX	'p'
-	{"master-core",			required_argument,	NULL, MASTER_CORE_OPT_IDX},
+#define MAIN_CORE_OPT_IDX	'p'
+	{"main-core",			required_argument,	NULL, MAIN_CORE_OPT_IDX},
+	{"master-core",			required_argument,	NULL, MAIN_CORE_OPT_IDX}, /* deprecated */
 #define RPC_SOCKET_OPT_IDX	'r'
 	{"rpc-socket",			required_argument,	NULL, RPC_SOCKET_OPT_IDX},
 #define MEM_SIZE_OPT_IDX	's'
@@ -196,7 +197,7 @@ spdk_app_opts_init(struct spdk_app_opts *opts)
 	opts->enable_coredump = true;
 	opts->shm_id = -1;
 	opts->mem_size = SPDK_APP_DPDK_DEFAULT_MEM_SIZE;
-	opts->master_core = SPDK_APP_DPDK_DEFAULT_MASTER_CORE;
+	opts->main_core = SPDK_APP_DPDK_DEFAULT_MAIN_CORE;
 	opts->mem_channel = SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL;
 	opts->reactor_mask = SPDK_APP_DPDK_DEFAULT_CORE_MASK;
 	opts->base_virtaddr = SPDK_APP_DPDK_DEFAULT_BASE_VIRTADDR;
@@ -312,7 +313,7 @@ app_setup_env(struct spdk_app_opts *opts)
 	env_opts.core_mask = opts->reactor_mask;
 	env_opts.shm_id = opts->shm_id;
 	env_opts.mem_channel = opts->mem_channel;
-	env_opts.main_core = opts->master_core;
+	env_opts.main_core = opts->main_core;
 	env_opts.mem_size = opts->mem_size;
 	env_opts.hugepage_single_segments = opts->hugepage_single_segments;
 	env_opts.unlink_hugepage = opts->unlink_hugepage;
@@ -559,7 +560,7 @@ usage(void (*app_usage)(void))
 	printf(" -i, --shm-id <id>         shared memory ID (optional)\n");
 	printf(" -m, --cpumask <mask>      core mask for DPDK\n");
 	printf(" -n, --mem-channels <num>  channel number of memory channels used for DPDK\n");
-	printf(" -p, --master-core <id>    master (primary) core for DPDK\n");
+	printf(" -p, --main-core <id>      main (primary) core for DPDK\n");
 	printf(" -r, --rpc-socket <path>   RPC listen address (default %s)\n", SPDK_DEFAULT_RPC_ADDR);
 	printf(" -s, --mem-size <size>     memory size in MB for DPDK (default: ");
 #ifndef __linux__
@@ -694,10 +695,10 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 				goto out;
 			}
 			break;
-		case MASTER_CORE_OPT_IDX:
-			opts->master_core = spdk_strtol(optarg, 0);
-			if (opts->master_core < 0) {
-				SPDK_ERRLOG("Invalid master core %s\n", optarg);
+		case MAIN_CORE_OPT_IDX:
+			opts->main_core = spdk_strtol(optarg, 0);
+			if (opts->main_core < 0) {
+				SPDK_ERRLOG("Invalid main core %s\n", optarg);
 				goto out;
 			}
 			break;

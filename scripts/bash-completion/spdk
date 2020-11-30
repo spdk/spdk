@@ -124,7 +124,7 @@ _spdk_opt_to_complete() {
 			COMPREPLY=($(compgen -W '${pcis[*]}' -- "$cur"))
 			compopt -o filenames
 			;;
-		--master-core | -p) # FIXME: Is this meant to be an actual core id or thread id? Assume the latter
+		--main-core | -p) # FIXME: Is this meant to be an actual core id or thread id? Assume the latter
 			local cpus
 			if [[ -e /sys/devices/system/cpu ]]; then
 				cpus=(/sys/devices/system/cpu/cpu+([0-9]))

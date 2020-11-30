@@ -73,7 +73,7 @@ usage(char *executable_name)
 	printf(" -i shared memory ID [required]\n");
 	printf(" -m mask    core mask for DPDK\n");
 	printf(" -n channel number of memory channels used for DPDK\n");
-	printf(" -p core    master (primary) core for DPDK\n");
+	printf(" -p core    main (primary) core for DPDK\n");
 	printf(" -s size    memory size in MB for DPDK\n");
 	printf(" -H         show this usage\n");
 }
@@ -175,7 +175,7 @@ main(int argc, char **argv)
 				opts.mem_channel = val;
 				break;
 			case 'p':
-				opts.master_core = val;
+				opts.main_core = val;
 				break;
 			case 's':
 				opts.mem_size = val;

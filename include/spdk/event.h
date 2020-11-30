@@ -102,7 +102,10 @@ struct spdk_app_opts {
 
 	bool			enable_coredump;
 	int			mem_channel;
-	int			master_core;
+	union {
+		int			main_core;
+		int			master_core __attribute__((deprecated));
+	};
 	int			mem_size;
 	bool			no_pci;
 	bool			hugepage_single_segments;

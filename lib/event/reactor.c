@@ -824,7 +824,7 @@ spdk_reactors_start(void)
 		spdk_cpuset_set_cpu(&g_reactor_core_mask, i, true);
 	}
 
-	/* Start the master reactor */
+	/* Start the main reactor */
 	reactor = spdk_reactor_get(current_core);
 	assert(reactor != NULL);
 	g_scheduling_reactor = reactor;
