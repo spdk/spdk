@@ -91,6 +91,10 @@
 #define THREAD_WIN_HEIGHT 9
 #define THREAD_WIN_HOR_POS 75
 #define THREAD_WIN_FIRST_COL 2
+#define POLLER_WIN_HEIGHT 7
+#define POLLER_WIN_WIDTH 60
+#define POLLER_WIN_FIRST_COL 2
+#define POLLER_WIN_HOR_POS 59
 
 enum tabs {
 	THREADS_TAB,
@@ -262,6 +266,7 @@ struct rpc_cores_stats {
 struct rpc_threads_stats g_threads_stats;
 struct rpc_pollers_stats g_pollers_stats;
 struct rpc_cores_stats g_cores_stats;
+struct rpc_poller_info g_pollers_history[RPC_MAX_POLLERS];
 struct rpc_thread_info g_thread_history[RPC_MAX_THREADS];
 
 static void
@@ -1941,6 +1946,60 @@ show_thread(uint8_t current_page)
 }
 
 static void
+show_poller(uint8_t current_page)
+{
+	PANEL *poller_panel;
+	WINDOW *poller_win;
+	uint64_t poller_counter = 0, count = 0;
+	uint64_t poller_number = current_page * g_max_data_rows + g_selected_row;
+	struct rpc_poller_info *pollers[RPC_MAX_POLLERS];
+	bool stop_loop = false;
+	int c;
+
+	get_data();
+
+	prepare_poller_data(current_page, pollers, &count, current_page);
+
+	poller_win = newwin(POLLER_WIN_HEIGHT, POLLER_WIN_WIDTH,
+			    (g_max_row - poller_counter) / 2, (g_max_col - POLLER_WIN_HOR_POS) / 2);
+
+	keypad(poller_win, TRUE);
+	poller_panel = new_panel(poller_win);
+
+	top_panel(poller_panel);
+	update_panels();
+	doupdate();
+
+	box(poller_win, 0, 0);
+
+	print_in_middle(poller_win, 1, 0, POLLER_WIN_WIDTH, pollers[poller_number]->name, COLOR_PAIR(3));
+	mvwhline(poller_win, 2, 1, ACS_HLINE, POLLER_WIN_WIDTH - 2);
+	mvwaddch(poller_win, 2, POLLER_WIN_WIDTH, ACS_RTEE);
+	mvwprintw(poller_win, 3, 1, "Type     Thread                  Run count       Period");
+	mvwhline(poller_win, 4, 1, ACS_HLINE, POLLER_WIN_WIDTH - 2);
+
+	refresh();
+	wrefresh(poller_win);
+
+	while (!stop_loop) {
+		c = wgetch(poller_win);
+		switch (c) {
+		case 10: /* ENTER */
+		case 27: /* ESC */
+			stop_loop = true;
+			break;
+		default:
+			break;
+		}
+	}
+
+	del_panel(poller_panel);
+	delwin(poller_win);
+
+	free_data();
+}
+
+static void
 show_stats(void)
 {
 	const int CURRENT_PAGE_STR_LEN = 50;
@@ -2036,6 +2095,8 @@ show_stats(void)
 		case 10: /* Enter */
 			if (active_tab == THREADS_TAB) {
 				show_thread(current_page);
+			} else if (active_tab == POLLERS_TAB) {
+				show_poller(current_page);
 			}
 			break;
 		default:
