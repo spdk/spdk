@@ -1528,8 +1528,6 @@ nvmf_rdma_fill_wr_sge(struct spdk_nvmf_rdma_device *device,
 	uint32_t	remaining, data_block_size, md_size, sge_len;
 
 	if (spdk_unlikely(!nvmf_rdma_get_lkey(device, iov, &lkey))) {
-		/* This is a very rare case that can occur when using DPDK version < 19.05 */
-		SPDK_ERRLOG("Data buffer split over multiple RDMA Memory Regions. Removing it from circulation.\n");
 		return false;
 	}
 
