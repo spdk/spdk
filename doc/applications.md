@@ -35,7 +35,7 @@ Param    | Long Param             | Type     | Default                | Descript
 -i       | --shm-id               | integer  |                        | @ref cmd_arg_multi_process
 -m       | --cpumask              | CPU mask | 0x1                    | application @ref cpu_mask
 -n       | --mem-channels         | integer  | all channels           | number of memory channels used for DPDK
--p       | --master-core          | integer  | first core in CPU mask | master (primary) core for DPDK
+-p       | --main-core            | integer  | first core in CPU mask | main (primary) core for DPDK
 -r       | --rpc-socket           | string   | /var/tmp/spdk.sock     | RPC listen address
 -s       | --mem-size             | integer  | all hugepage memory    | @ref cmd_arg_memory_size
 |        | --silence-noticelog    | flag     |                        | disable notice level logging to `stderr`

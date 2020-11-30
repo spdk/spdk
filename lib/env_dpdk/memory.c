@@ -764,7 +764,7 @@ mem_map_init(bool legacy_mem)
 
 	/*
 	 * Walk all DPDK memory segments and register them
-	 * with the master memory map
+	 * with the main memory map
 	 */
 	rte_mem_event_callback_register("spdk", memory_hotplug_cb, NULL);
 	rte_memseg_contig_walk(memory_iter_cb, NULL);

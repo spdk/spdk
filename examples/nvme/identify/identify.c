@@ -99,7 +99,7 @@ static int g_dpdk_mem = 0;
 
 static bool g_dpdk_mem_single_seg = false;
 
-static int g_master_core = 0;
+static int g_main_core = 0;
 
 static char g_core_mask[16] = "0x1";
 
@@ -1953,12 +1953,12 @@ parse_args(int argc, char **argv)
 			}
 			break;
 		case 'p':
-			g_master_core = spdk_strtol(optarg, 10);
-			if (g_master_core < 0) {
+			g_main_core = spdk_strtol(optarg, 10);
+			if (g_main_core < 0) {
 				fprintf(stderr, "Invalid core number\n");
-				return g_master_core;
+				return g_main_core;
 			}
-			snprintf(g_core_mask, sizeof(g_core_mask), "0x%llx", 1ULL << g_master_core);
+			snprintf(g_core_mask, sizeof(g_core_mask), "0x%llx", 1ULL << g_main_core);
 			break;
 		case 'r':
 			if (spdk_nvme_transport_id_parse(&g_trid, optarg) != 0) {
@@ -2027,7 +2027,7 @@ int main(int argc, char **argv)
 	opts.shm_id = g_shm_id;
 	opts.mem_size = g_dpdk_mem;
 	opts.mem_channel = 1;
-	opts.master_core = g_master_core;
+	opts.main_core = g_main_core;
 	opts.core_mask = g_core_mask;
 	opts.hugepage_single_segments = g_dpdk_mem_single_seg;
 	if (g_trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {

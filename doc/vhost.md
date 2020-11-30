@@ -222,7 +222,7 @@ host:~# HUGEMEM=2048 ./scripts/setup.sh
 ~~~{.sh}
 host:~# ./build/bin/vhost -S /var/tmp -s 1024 -m 0x3 &
 Starting DPDK 17.11.0 initialization...
-[ DPDK EAL parameters: vhost -c 3 -m 1024 --master-lcore=1 --file-prefix=spdk_pid156014 ]
+[ DPDK EAL parameters: vhost -c 3 -m 1024 --main-lcore=1 --file-prefix=spdk_pid156014 ]
 EAL: Detected 48 lcore(s)
 EAL: Probing VFIO support...
 EAL: VFIO support initialized

@@ -312,7 +312,7 @@ app_setup_env(struct spdk_app_opts *opts)
 	env_opts.core_mask = opts->reactor_mask;
 	env_opts.shm_id = opts->shm_id;
 	env_opts.mem_channel = opts->mem_channel;
-	env_opts.master_core = opts->master_core;
+	env_opts.main_core = opts->master_core;
 	env_opts.mem_size = opts->mem_size;
 	env_opts.hugepage_single_segments = opts->hugepage_single_segments;
 	env_opts.unlink_hugepage = opts->unlink_hugepage;

@@ -47,7 +47,7 @@
 #define SPDK_ENV_DPDK_DEFAULT_NAME		"spdk"
 #define SPDK_ENV_DPDK_DEFAULT_SHM_ID		-1
 #define SPDK_ENV_DPDK_DEFAULT_MEM_SIZE		-1
-#define SPDK_ENV_DPDK_DEFAULT_MASTER_CORE	-1
+#define SPDK_ENV_DPDK_DEFAULT_MAIN_CORE		-1
 #define SPDK_ENV_DPDK_DEFAULT_MEM_CHANNEL	-1
 #define SPDK_ENV_DPDK_DEFAULT_CORE_MASK		"0x1"
 #define SPDK_ENV_DPDK_DEFAULT_BASE_VIRTADDR	0x200000000000
@@ -55,9 +55,11 @@
 #if RTE_VERSION < RTE_VERSION_NUM(20, 11, 0, 0)
 #define DPDK_ALLOW_PARAM	"--pci-whitelist"
 #define DPDK_BLOCK_PARAM	"--pci-blacklist"
+#define DPDK_MAIN_CORE_PARAM	"--master-lcore"
 #else
 #define DPDK_ALLOW_PARAM	"--allow"
 #define DPDK_BLOCK_PARAM	"--block"
+#define DPDK_MAIN_CORE_PARAM	"--main-lcore"
 #endif
 
 static char **g_eal_cmdline;
@@ -127,7 +129,7 @@ spdk_env_opts_init(struct spdk_env_opts *opts)
 	opts->core_mask = SPDK_ENV_DPDK_DEFAULT_CORE_MASK;
 	opts->shm_id = SPDK_ENV_DPDK_DEFAULT_SHM_ID;
 	opts->mem_size = SPDK_ENV_DPDK_DEFAULT_MEM_SIZE;
-	opts->master_core = SPDK_ENV_DPDK_DEFAULT_MASTER_CORE;
+	opts->main_core = SPDK_ENV_DPDK_DEFAULT_MAIN_CORE;
 	opts->mem_channel = SPDK_ENV_DPDK_DEFAULT_MEM_CHANNEL;
 	opts->base_virtaddr = SPDK_ENV_DPDK_DEFAULT_BASE_VIRTADDR;
 }
@@ -303,10 +305,10 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 		}
 	}
 
-	/* set the master core */
-	if (opts->master_core > 0) {
-		args = push_arg(args, &argcount, _sprintf_alloc("--master-lcore=%d",
-				opts->master_core));
+	/* set the main core */
+	if (opts->main_core > 0) {
+		args = push_arg(args, &argcount, _sprintf_alloc("%s=%d",
+				DPDK_MAIN_CORE_PARAM, opts->main_core));
 		if (args == NULL) {
 			return -1;
 		}
