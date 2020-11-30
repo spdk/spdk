@@ -280,10 +280,8 @@ create_vbdev_dev(uint8_t index, uint16_t num_lcores)
 
 	struct rte_cryptodev_qp_conf qp_conf = {
 		.nb_descriptors = CRYPTO_QP_DESCRIPTORS,
-#if RTE_VERSION >= RTE_VERSION_NUM(19, 02, 0, 0)
 		.mp_session = g_session_mp,
 		.mp_session_private = g_session_mp_priv,
-#endif
 	};
 
 	/* Pre-setup all potential qpairs now and assign them in the channel
@@ -292,13 +290,7 @@ create_vbdev_dev(uint8_t index, uint16_t num_lcores)
 	 * even on other queue pairs.
 	 */
 	for (j = 0; j < device->cdev_info.max_nb_queue_pairs; j++) {
-#if RTE_VERSION >= RTE_VERSION_NUM(19, 02, 0, 0)
 		rc = rte_cryptodev_queue_pair_setup(cdev_id, j, &qp_conf, SOCKET_ID_ANY);
-#else
-		rc = rte_cryptodev_queue_pair_setup(cdev_id, j, &qp_conf, SOCKET_ID_ANY,
-						    g_session_mp);
-#endif
-
 		if (rc < 0) {
 			SPDK_ERRLOG("Failed to setup queue pair %u on "
 				    "cryptodev %u\n", j, cdev_id);
@@ -409,7 +401,6 @@ vbdev_crypto_init_crypto_drivers(void)
 		}
 	}
 
-#if RTE_VERSION >= RTE_VERSION_NUM(19, 02, 0, 0)
 	g_session_mp_priv = rte_mempool_create("session_mp_priv", NUM_SESSIONS, max_sess_size,
 					       SESS_MEMPOOL_CACHE_SIZE, 0, NULL, NULL, NULL,
 					       NULL, SOCKET_ID_ANY, 0);
@@ -422,11 +413,6 @@ vbdev_crypto_init_crypto_drivers(void)
 			       "session_mp",
 			       NUM_SESSIONS, 0, SESS_MEMPOOL_CACHE_SIZE, 0,
 			       SOCKET_ID_ANY);
-#else
-	g_session_mp = rte_mempool_create("session_mp", NUM_SESSIONS, max_sess_size,
-					  SESS_MEMPOOL_CACHE_SIZE,
-					  0, NULL, NULL, NULL, NULL, SOCKET_ID_ANY, 0);
-#endif
 	if (g_session_mp == NULL) {
 		SPDK_ERRLOG("Cannot create session pool max size 0x%x\n", max_sess_size);
 		goto error_create_session_mp;
