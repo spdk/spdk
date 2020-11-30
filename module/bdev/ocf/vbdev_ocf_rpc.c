@@ -39,7 +39,7 @@
 
 /* Structure to hold the parameters for this RPC method. */
 struct rpc_bdev_ocf_create {
-	char *name;			/* master vbdev */
+	char *name;			/* main vbdev */
 	char *mode;			/* OCF mode (choose one) */
 	uint64_t cache_line_size;	/* OCF cache line size */
 	char *cache_bdev_name;		/* sub bdev */
@@ -107,7 +107,7 @@ SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_ocf_create, construct_ocf_bdev)
 
 /* Structure to hold the parameters for this RPC method. */
 struct rpc_bdev_ocf_delete {
-	char *name;             /* master vbdev name */
+	char *name;             /* main vbdev name */
 };
 
 static void
@@ -175,7 +175,7 @@ SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_ocf_delete, delete_ocf_bdev)
 
 /* Structure to hold the parameters for this RPC method. */
 struct rpc_bdev_ocf_get_stats {
-	char *name;             /* master vbdev name */
+	char *name;             /* main vbdev name */
 };
 
 static void
