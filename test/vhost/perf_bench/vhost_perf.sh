@@ -198,8 +198,8 @@ if [[ -n $custom_cpu_cfg ]]; then
 	source $custom_cpu_cfg
 	vhost_reactor_mask="vhost_${vhost_num}_reactor_mask"
 	vhost_reactor_mask="${!vhost_reactor_mask}"
-	vhost_master_core="vhost_${vhost_num}_master_core"
-	vhost_master_core="${!vhost_master_core}"
+	vhost_main_core="vhost_${vhost_num}_main_core"
+	vhost_main_core="${!vhost_main_core}"
 fi
 
 if [[ -z $fio_jobs ]]; then
@@ -301,7 +301,7 @@ if [[ "$ctrl_type" == "kernel_vhost" ]]; then
 	targetcli ls
 else
 	notice "Configuring SPDK vhost..."
-	vhost_run "${vhost_num}" "--no-gen-nvme" "-p ${vhost_master_core}" "-m ${vhost_reactor_mask}"
+	vhost_run "${vhost_num}" "--no-gen-nvme" "-p ${vhost_main_core}" "-m ${vhost_reactor_mask}"
 	notice "..."
 
 	if [[ $use_split == true ]]; then
