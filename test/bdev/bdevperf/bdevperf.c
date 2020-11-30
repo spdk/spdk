@@ -81,7 +81,7 @@ static int g_run_rc = 0;
 static bool g_shutdown = false;
 static uint64_t g_shutdown_tsc;
 static bool g_zcopy = false;
-static struct spdk_thread *g_master_thread;
+static struct spdk_thread *g_main_thread;
 static int g_time_in_sec = 0;
 static bool g_mix_specified = false;
 static const char *g_job_bdev_name;
@@ -422,7 +422,7 @@ bdevperf_test_done(void *ctx)
 static void
 bdevperf_job_end(void *ctx)
 {
-	assert(g_master_thread == spdk_get_thread());
+	assert(g_main_thread == spdk_get_thread());
 
 	if (--g_bdevperf.running_jobs == 0) {
 		bdevperf_test_done(NULL);
@@ -439,7 +439,7 @@ bdevperf_end_task(struct bdevperf_task *task)
 		if (job->current_queue_depth == 0) {
 			spdk_put_io_channel(job->ch);
 			spdk_bdev_close(job->bdev_desc);
-			spdk_thread_send_msg(g_master_thread, bdevperf_job_end, NULL);
+			spdk_thread_send_msg(g_main_thread, bdevperf_job_end, NULL);
 		}
 	}
 }
@@ -1015,7 +1015,7 @@ _performance_dump(void *ctx)
 	 * That's true right now, but if that ever changed this would need a lock. */
 	stats->current_job = TAILQ_NEXT(stats->current_job, link);
 	if (stats->current_job == NULL) {
-		spdk_thread_send_msg(g_master_thread, _performance_dump_done, stats);
+		spdk_thread_send_msg(g_main_thread, _performance_dump_done, stats);
 	} else {
 		spdk_thread_send_msg(stats->current_job->thread, _performance_dump, stats);
 	}
@@ -1048,7 +1048,7 @@ performance_statistics_thread(void *arg)
 	 */
 	stats->current_job = TAILQ_FIRST(&g_bdevperf.jobs);
 	if (stats->current_job == NULL) {
-		spdk_thread_send_msg(g_master_thread, _performance_dump_done, stats);
+		spdk_thread_send_msg(g_main_thread, _performance_dump_done, stats);
 	} else {
 		spdk_thread_send_msg(stats->current_job->thread, _performance_dump, stats);
 	}
@@ -1114,8 +1114,8 @@ construct_job_thread(struct spdk_cpuset *cpumask, const char *tag)
 	char thread_name[32];
 	struct spdk_cpuset tmp;
 
-	/* This function runs on the master thread. */
-	assert(g_master_thread == spdk_get_thread());
+	/* This function runs on the main thread. */
+	assert(g_main_thread == spdk_get_thread());
 
 	/* Handle default mask */
 	if (spdk_cpuset_count(cpumask) == 0) {
@@ -1176,7 +1176,7 @@ _bdevperf_construct_job(void *ctx)
 	}
 
 end:
-	spdk_thread_send_msg(g_master_thread, _bdevperf_construct_job_done, NULL);
+	spdk_thread_send_msg(g_main_thread, _bdevperf_construct_job_done, NULL);
 }
 
 static void
@@ -1829,7 +1829,7 @@ bdevperf_run(void *arg1)
 {
 	uint32_t i;
 
-	g_master_thread = spdk_get_thread();
+	g_main_thread = spdk_get_thread();
 
 	spdk_cpuset_zero(&g_all_cpuset);
 	SPDK_ENV_FOREACH_CORE(i) {
