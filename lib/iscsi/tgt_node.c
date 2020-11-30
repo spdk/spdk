@@ -396,13 +396,14 @@ iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
 	int total;
 	int len;
 	int rc;
-	int previous_completed_size = conn->send_tgt_completed_size;
+	int previous_completed_size = 0;
 	bool no_buf_space = false;
 	char tmp_buf[MAX_TMP_NAME_BUF];
 
 	if (conn == NULL) {
 		return 0;
 	}
+	previous_completed_size = conn->send_tgt_completed_size;
 
 	total = data_len;
 	if (alloc_len < 1) {
