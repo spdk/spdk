@@ -124,8 +124,7 @@ DPDK_STATIC_LIB = $(DPDK_LIB_LIST:%=$(DPDK_ABS_DIR)/lib/lib%.a)
 DPDK_SHARED_LIB_LINKER_ARGS = $(call add_no_as_needed,$(DPDK_SHARED_LIB))
 DPDK_STATIC_LIB_LINKER_ARGS = $(call add_whole_archive,$(DPDK_STATIC_LIB))
 
-# SPDK memory registration requires experimental (deprecated) rte_memory API for DPDK 18.05
-ENV_CFLAGS = $(DPDK_INC) -Wno-deprecated-declarations
+ENV_CFLAGS = $(DPDK_INC) -DALLOW_EXPERIMENTAL_API
 ENV_CXXFLAGS = $(ENV_CFLAGS)
 
 DPDK_PRIVATE_LINKER_ARGS =
