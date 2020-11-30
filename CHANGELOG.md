@@ -34,6 +34,10 @@ An `opts_size` element was added in the `spdk_blob_open_opts` structure to solve
 ABI compatiblity issue between different SPDK version. And also add `opts_size`
 parameter in `spdk_blob_open_opts_init` function.
 
+### dpdk
+
+Updated DPDK submodule to DPDK 20.11.
+
 ### nvme
 
 Added a new function `spdk_nvme_ctrlr_reset_subsystem` to perform a NVMe
