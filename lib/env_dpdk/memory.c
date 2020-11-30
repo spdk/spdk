@@ -710,25 +710,16 @@ memory_hotplug_cb(enum rte_mem_event event_type,
 	if (event_type == RTE_MEM_EVENT_ALLOC) {
 		spdk_mem_register((void *)addr, len);
 
-#if RTE_VERSION >= RTE_VERSION_NUM(19, 02, 0, 0)
 		if (!spdk_env_dpdk_external_init()) {
 			return;
 		}
-#endif
 
-		/* Prior to DPDK 19.02, we have to worry about DPDK
-		 * freeing memory in different units than it was allocated.
-		 * That doesn't work with things like RDMA MRs.  So for
-		 * those versions of DPDK, mark each segment so that DPDK
-		 * won't later free it.  That ensures we don't have to deal
-		 * with that scenario.
+		/* When the user initialized DPDK separately, we can't
+		 * be sure that --match-allocations RTE flag was specified.
+		 * Without this flag, DPDK can free memory in different units
+		 * than it was allocated. It doesn't work with things like RDMA MRs.
 		 *
-		 * DPDK 19.02 added the --match-allocations RTE flag to
-		 * avoid this condition.
-		 *
-		 * Note: if the user initialized DPDK separately, we can't
-		 * be sure that --match-allocations was specified, so need
-		 * to still mark the segments so they aren't freed.
+		 * For such cases, we mark segments so they aren't freed.
 		 */
 		while (len > 0) {
 			struct rte_memseg *seg;
@@ -921,11 +912,7 @@ vtophys_get_paddr_memseg(uint64_t vaddr)
 
 	seg = rte_mem_virt2memseg((void *)(uintptr_t)vaddr, NULL);
 	if (seg != NULL) {
-#if RTE_VERSION >= RTE_VERSION_NUM(19, 11, 0, 0)
 		paddr = seg->iova;
-#else
-		paddr = seg->phys_addr;
-#endif
 		if (paddr == RTE_BAD_IOVA) {
 			return SPDK_VTOPHYS_ERROR;
 		}
@@ -1022,11 +1009,7 @@ vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 #if VFIO_ENABLED
 			enum rte_iova_mode iova_mode;
 
-#if RTE_VERSION >= RTE_VERSION_NUM(19, 11, 0, 0)
 			iova_mode = rte_eal_iova_mode();
-#else
-			iova_mode = rte_eal_get_configuration()->iova_mode;
-#endif
 
 			if (spdk_iommu_is_enabled() && iova_mode == RTE_IOVA_VA) {
 				/* We'll use the virtual address as the iova to match DPDK. */
@@ -1134,11 +1117,7 @@ vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 				uint8_t *va = vaddr;
 				enum rte_iova_mode iova_mode;
 
-#if RTE_VERSION >= RTE_VERSION_NUM(19, 11, 0, 0)
 				iova_mode = rte_eal_iova_mode();
-#else
-				iova_mode = rte_eal_get_configuration()->iova_mode;
-#endif
 				/*
 				 * In virtual address mode, the region is contiguous and can be done in
 				 * one unmap.

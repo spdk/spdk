@@ -453,14 +453,12 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 	 * physically or IOVA contiguous memory regions, then when we go to allocate a buffer pool, it can split
 	 * the memory for a buffer over two allocations meaning the buffer will be split over a memory region.
 	 */
-#if RTE_VERSION >= RTE_VERSION_NUM(19, 02, 0, 0)
 	if (!opts->env_context || strstr(opts->env_context, "--legacy-mem") == NULL) {
 		args = push_arg(args, &argcount, _sprintf_alloc("%s", "--match-allocations"));
 		if (args == NULL) {
 			return -1;
 		}
 	}
-#endif
 
 	if (opts->shm_id < 0) {
 		args = push_arg(args, &argcount, _sprintf_alloc("--file-prefix=spdk_pid%d",
