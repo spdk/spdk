@@ -91,6 +91,10 @@
 #define THREAD_WIN_HEIGHT 9
 #define THREAD_WIN_HOR_POS 75
 #define THREAD_WIN_FIRST_COL 2
+#define CORE_WIN_FIRST_COL 7
+#define CORE_WIN_WIDTH 60
+#define CORE_WIN_HEIGHT 6
+#define CORE_WIN_HOR_POS 60
 #define POLLER_WIN_HEIGHT 6
 #define POLLER_WIN_WIDTH 60
 #define POLLER_WIN_FIRST_COL 14
@@ -1953,6 +1957,61 @@ show_thread(uint8_t current_page)
 }
 
 static void
+show_core(uint8_t current_page)
+{
+	PANEL *core_panel;
+	WINDOW *core_win;
+	uint64_t core_number = current_page * g_max_data_rows + g_selected_row;
+	uint64_t threads_count;
+	int c;
+	char core_win_title[25];
+	bool stop_loop = false;
+
+	get_data();
+
+	threads_count = g_cores_stats.cores.core->threads.threads_count;
+	core_win = newwin(threads_count + CORE_WIN_HEIGHT, CORE_WIN_WIDTH,
+			  (g_max_row - threads_count) / 2, (g_max_col - CORE_WIN_HOR_POS) / 2);
+
+	keypad(core_win, TRUE);
+	core_panel = new_panel(core_win);
+
+	top_panel(core_panel);
+	update_panels();
+	doupdate();
+
+	box(core_win, 0, 0);
+	snprintf(core_win_title, sizeof(core_win_title), "Core %" PRIu64 " details", core_number);
+	print_in_middle(core_win, 1, 0, CORE_WIN_WIDTH, core_win_title, COLOR_PAIR(3));
+
+	mvwaddch(core_win, -1, 0, ACS_LTEE);
+	mvwhline(core_win, 2, 1, ACS_HLINE, CORE_WIN_WIDTH - 2);
+	mvwaddch(core_win, 2, CORE_WIN_WIDTH, ACS_RTEE);
+	mvwprintw(core_win, 3, 1, "Thread count      Poller count     Idle time     Busy time");
+	mvwhline(core_win, 4, 1, ACS_HLINE, CORE_WIN_WIDTH - 2);
+
+	refresh();
+	wrefresh(core_win);
+
+	while (!stop_loop) {
+		c = wgetch(core_win);
+		switch (c) {
+		case 10: /* ENTER */
+		case 27: /* ESC */
+			stop_loop = true;
+			break;
+		default:
+			break;
+		}
+	}
+
+	del_panel(core_panel);
+	delwin(core_win);
+
+	free_data();
+}
+
+static void
 show_poller(uint8_t current_page)
 {
 	PANEL *poller_panel;
@@ -2115,6 +2174,8 @@ show_stats(void)
 		case 10: /* Enter */
 			if (active_tab == THREADS_TAB) {
 				show_thread(current_page);
+			} else if (active_tab == CORES_TAB) {
+				show_core(current_page);
 			} else if (active_tab == POLLERS_TAB) {
 				show_poller(current_page);
 			}
