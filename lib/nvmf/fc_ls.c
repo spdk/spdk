@@ -1350,7 +1350,7 @@ nvmf_fc_poller_api_perform_cb(struct spdk_nvmf_fc_poller_api_cb_info *cb_info,
 {
 	if (cb_info->cb_func && cb_info->cb_thread) {
 		cb_info->ret = ret;
-		/* callback to master thread */
+		/* callback to main thread */
 		spdk_thread_send_msg(cb_info->cb_thread, nvmf_fc_poller_api_cb_event,
 				     (void *) cb_info);
 	}

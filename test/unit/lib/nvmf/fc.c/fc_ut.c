@@ -351,7 +351,7 @@ create_fc_port_test(void)
 	init_args.io_queues = (void *)lld_q;
 
 	set_thread(0);
-	err = nvmf_fc_master_enqueue_event(SPDK_FC_HW_PORT_INIT, (void *)&init_args, port_init_cb);
+	err = nvmf_fc_main_enqueue_event(SPDK_FC_HW_PORT_INIT, (void *)&init_args, port_init_cb);
 	CU_ASSERT(err == 0);
 	poll_thread(0);
 
@@ -373,7 +373,7 @@ online_fc_port_test(void)
 
 	set_thread(0);
 	args.port_handle = g_fc_port_handle;
-	err = nvmf_fc_master_enqueue_event(SPDK_FC_HW_PORT_ONLINE, (void *)&args, port_init_cb);
+	err = nvmf_fc_main_enqueue_event(SPDK_FC_HW_PORT_ONLINE, (void *)&args, port_init_cb);
 	CU_ASSERT(err == 0);
 	poll_threads();
 	set_thread(0);

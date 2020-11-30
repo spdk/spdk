@@ -53,9 +53,9 @@
 #define DEV_VERIFY assert
 #endif
 
-#ifndef ASSERT_SPDK_FC_MASTER_THREAD
-#define ASSERT_SPDK_FC_MASTER_THREAD() \
-        DEV_VERIFY(spdk_get_thread() == nvmf_fc_get_master_thread());
+#ifndef ASSERT_SPDK_FC_MAIN_THREAD
+#define ASSERT_SPDK_FC_MAIN_THREAD() \
+        DEV_VERIFY(spdk_get_thread() == nvmf_fc_get_main_thread());
 #endif
 
 /*
@@ -231,16 +231,16 @@ static struct spdk_nvmf_fc_transport *g_nvmf_ftransport;
 static TAILQ_HEAD(, spdk_nvmf_fc_port) g_spdk_nvmf_fc_port_list =
 	TAILQ_HEAD_INITIALIZER(g_spdk_nvmf_fc_port_list);
 
-static struct spdk_thread *g_nvmf_fc_master_thread = NULL;
+static struct spdk_thread *g_nvmf_fc_main_thread = NULL;
 
 static uint32_t g_nvmf_fgroup_count = 0;
 static TAILQ_HEAD(, spdk_nvmf_fc_poll_group) g_nvmf_fgroups =
 	TAILQ_HEAD_INITIALIZER(g_nvmf_fgroups);
 
 struct spdk_thread *
-nvmf_fc_get_master_thread(void)
+nvmf_fc_get_main_thread(void)
 {
-	return g_nvmf_fc_master_thread;
+	return g_nvmf_fc_main_thread;
 }
 
 static inline void
@@ -522,7 +522,7 @@ nvmf_fc_poll_group_remove_hwqp(struct spdk_nvmf_fc_hwqp *hwqp)
 }
 
 /*
- * Note: This needs to be used only on master poller.
+ * Note: This needs to be used only on main poller.
  */
 static uint64_t
 nvmf_fc_get_abts_unique_id(void)
@@ -1838,7 +1838,7 @@ nvmf_fc_create(struct spdk_nvmf_transport_opts *opts)
 		return NULL;
 	}
 
-	g_nvmf_fc_master_thread = spdk_get_thread();
+	g_nvmf_fc_main_thread = spdk_get_thread();
 	g_nvmf_fgroup_count = 0;
 	g_nvmf_ftransport = calloc(1, sizeof(*g_nvmf_ftransport));
 
@@ -2067,12 +2067,12 @@ nvmf_fc_close_qpair(struct spdk_nvmf_qpair *qpair,
 
 	if (fc_conn->conn_id == NVMF_FC_INVALID_CONN_ID) {
 		/* QP creation failure in FC tranport. Cleanup. */
-		spdk_thread_send_msg(nvmf_fc_get_master_thread(),
+		spdk_thread_send_msg(nvmf_fc_get_main_thread(),
 				     nvmf_fc_handle_connection_failure, fc_conn);
 	} else if (fc_conn->fc_assoc->assoc_id == fc_conn->conn_id &&
 		   fc_conn->fc_assoc->assoc_state != SPDK_NVMF_FC_OBJECT_TO_BE_DELETED) {
 		/* Admin connection */
-		spdk_thread_send_msg(nvmf_fc_get_master_thread(),
+		spdk_thread_send_msg(nvmf_fc_get_main_thread(),
 				     nvmf_fc_handle_assoc_deletion, fc_conn);
 	}
 
@@ -2176,7 +2176,7 @@ nvmf_fc_adm_hw_port_data_init(struct spdk_nvmf_fc_port *fc_port,
 	 * Initialize the LS queue wherever needed.
 	 */
 	fc_port->ls_queue.queues = args->ls_queue;
-	fc_port->ls_queue.thread = nvmf_fc_get_master_thread();
+	fc_port->ls_queue.thread = nvmf_fc_get_main_thread();
 	fc_port->ls_queue.hwqp_id = SPDK_MAX_NUM_OF_FC_PORTS * fc_port->num_io_queues;
 
 	/*
@@ -2230,7 +2230,7 @@ nvmf_fc_adm_hw_port_offline_nport_delete(struct spdk_nvmf_fc_port *fc_port)
 static void
 nvmf_fc_adm_i_t_delete_cb(void *args, uint32_t err)
 {
-	ASSERT_SPDK_FC_MASTER_THREAD();
+	ASSERT_SPDK_FC_MAIN_THREAD();
 	struct spdk_nvmf_fc_adm_i_t_del_cb_data *cb_data = args;
 	struct spdk_nvmf_fc_nport *nport = cb_data->nport;
 	struct spdk_nvmf_fc_remote_port_info *rport = cb_data->rport;
@@ -2273,7 +2273,7 @@ out:
 static void
 nvmf_fc_adm_i_t_delete_assoc_cb(void *args, uint32_t err)
 {
-	ASSERT_SPDK_FC_MASTER_THREAD();
+	ASSERT_SPDK_FC_MAIN_THREAD();
 	struct spdk_nvmf_fc_adm_i_t_del_assoc_cb_data *cb_data = args;
 	struct spdk_nvmf_fc_nport *nport = cb_data->nport;
 	struct spdk_nvmf_fc_remote_port_info *rport = cb_data->rport;
@@ -2421,7 +2421,7 @@ out:
 static void
 nvmf_fc_adm_queue_quiesce_cb(void *cb_data, enum spdk_nvmf_fc_poller_api_ret ret)
 {
-	ASSERT_SPDK_FC_MASTER_THREAD();
+	ASSERT_SPDK_FC_MAIN_THREAD();
 	struct spdk_nvmf_fc_poller_api_quiesce_queue_args *quiesce_api_data = NULL;
 	struct spdk_nvmf_fc_adm_hw_port_quiesce_ctx *port_quiesce_ctx = NULL;
 	struct spdk_nvmf_fc_hwqp *hwqp = NULL;
@@ -2586,7 +2586,7 @@ out:
 static void
 nvmf_fc_adm_evnt_hw_port_init(void *arg)
 {
-	ASSERT_SPDK_FC_MASTER_THREAD();
+	ASSERT_SPDK_FC_MAIN_THREAD();
 	struct spdk_nvmf_fc_port *fc_port = NULL;
 	struct spdk_nvmf_fc_adm_api_data *api_data = (struct spdk_nvmf_fc_adm_api_data *)arg;
 	struct spdk_nvmf_fc_hw_port_init_args *args = (struct spdk_nvmf_fc_hw_port_init_args *)
@@ -2659,7 +2659,7 @@ abort_port_init:
 static void
 nvmf_fc_adm_evnt_hw_port_online(void *arg)
 {
-	ASSERT_SPDK_FC_MASTER_THREAD();
+	ASSERT_SPDK_FC_MAIN_THREAD();
 	struct spdk_nvmf_fc_port *fc_port = NULL;
 	struct spdk_nvmf_fc_hwqp *hwqp = NULL;
 	struct spdk_nvmf_fc_adm_api_data *api_data = (struct spdk_nvmf_fc_adm_api_data *)arg;
@@ -2711,7 +2711,7 @@ out:
 static void
 nvmf_fc_adm_evnt_hw_port_offline(void *arg)
 {
-	ASSERT_SPDK_FC_MASTER_THREAD();
+	ASSERT_SPDK_FC_MAIN_THREAD();
 	struct spdk_nvmf_fc_port *fc_port = NULL;
 	struct spdk_nvmf_fc_hwqp *hwqp = NULL;
 	struct spdk_nvmf_fc_adm_api_data *api_data = (struct spdk_nvmf_fc_adm_api_data *)arg;
@@ -2769,7 +2769,7 @@ struct nvmf_fc_add_rem_listener_ctx {
 static void
 nvmf_fc_adm_subsystem_resume_cb(struct spdk_nvmf_subsystem *subsystem, void *cb_arg, int status)
 {
-	ASSERT_SPDK_FC_MASTER_THREAD();
+	ASSERT_SPDK_FC_MAIN_THREAD();
 	struct nvmf_fc_add_rem_listener_ctx *ctx = (struct nvmf_fc_add_rem_listener_ctx *)cb_arg;
 	free(ctx);
 }
@@ -2777,7 +2777,7 @@ nvmf_fc_adm_subsystem_resume_cb(struct spdk_nvmf_subsystem *subsystem, void *cb_
 static void
 nvmf_fc_adm_listen_done(void *cb_arg, int status)
 {
-	ASSERT_SPDK_FC_MASTER_THREAD();
+	ASSERT_SPDK_FC_MAIN_THREAD();
 	struct nvmf_fc_add_rem_listener_ctx *ctx = cb_arg;
 
 	if (spdk_nvmf_subsystem_resume(ctx->subsystem, nvmf_fc_adm_subsystem_resume_cb, ctx)) {
@@ -2789,7 +2789,7 @@ nvmf_fc_adm_listen_done(void *cb_arg, int status)
 static void
 nvmf_fc_adm_subsystem_paused_cb(struct spdk_nvmf_subsystem *subsystem, void *cb_arg, int status)
 {
-	ASSERT_SPDK_FC_MASTER_THREAD();
+	ASSERT_SPDK_FC_MAIN_THREAD();
 	struct nvmf_fc_add_rem_listener_ctx *ctx = (struct nvmf_fc_add_rem_listener_ctx *)cb_arg;
 
 	if (ctx->add_listener) {
@@ -2850,7 +2850,7 @@ nvmf_fc_adm_add_rem_nport_listener(struct spdk_nvmf_fc_nport *nport, bool add)
 static void
 nvmf_fc_adm_evnt_nport_create(void *arg)
 {
-	ASSERT_SPDK_FC_MASTER_THREAD();
+	ASSERT_SPDK_FC_MAIN_THREAD();
 	struct spdk_nvmf_fc_adm_api_data *api_data = (struct spdk_nvmf_fc_adm_api_data *)arg;
 	struct spdk_nvmf_fc_nport_create_args *args = (struct spdk_nvmf_fc_nport_create_args *)
 			api_data->api_args;
@@ -2928,7 +2928,7 @@ static void
 nvmf_fc_adm_delete_nport_cb(uint8_t port_handle, enum spdk_fc_event event_type,
 			    void *cb_args, int spdk_err)
 {
-	ASSERT_SPDK_FC_MASTER_THREAD();
+	ASSERT_SPDK_FC_MAIN_THREAD();
 	struct spdk_nvmf_fc_adm_nport_del_cb_data *cb_data = cb_args;
 	struct spdk_nvmf_fc_nport *nport = cb_data->nport;
 	spdk_nvmf_fc_callback cb_func = cb_data->fc_cb_func;
@@ -2995,7 +2995,7 @@ out:
 static void
 nvmf_fc_adm_evnt_nport_delete(void *arg)
 {
-	ASSERT_SPDK_FC_MASTER_THREAD();
+	ASSERT_SPDK_FC_MAIN_THREAD();
 	struct spdk_nvmf_fc_adm_api_data *api_data = (struct spdk_nvmf_fc_adm_api_data *)arg;
 	struct spdk_nvmf_fc_nport_delete_args *args = (struct spdk_nvmf_fc_nport_delete_args *)
 			api_data->api_args;
@@ -3096,8 +3096,8 @@ nvmf_fc_adm_evnt_nport_delete(void *arg)
 		it_del_args->rpi = rport_iter->rpi;
 		it_del_args->s_id = rport_iter->s_id;
 
-		nvmf_fc_master_enqueue_event(SPDK_FC_IT_DELETE, (void *)it_del_args,
-					     nvmf_fc_adm_delete_nport_cb);
+		nvmf_fc_main_enqueue_event(SPDK_FC_IT_DELETE, (void *)it_del_args,
+					   nvmf_fc_adm_delete_nport_cb);
 	}
 
 out:
@@ -3130,7 +3130,7 @@ out:
 static void
 nvmf_fc_adm_evnt_i_t_add(void *arg)
 {
-	ASSERT_SPDK_FC_MASTER_THREAD();
+	ASSERT_SPDK_FC_MAIN_THREAD();
 	struct spdk_nvmf_fc_adm_api_data *api_data = (struct spdk_nvmf_fc_adm_api_data *)arg;
 	struct spdk_nvmf_fc_hw_i_t_add_args *args = (struct spdk_nvmf_fc_hw_i_t_add_args *)
 			api_data->api_args;
@@ -3219,7 +3219,7 @@ out:
 static void
 nvmf_fc_adm_evnt_i_t_delete(void *arg)
 {
-	ASSERT_SPDK_FC_MASTER_THREAD();
+	ASSERT_SPDK_FC_MAIN_THREAD();
 	struct spdk_nvmf_fc_adm_api_data *api_data = (struct spdk_nvmf_fc_adm_api_data *)arg;
 	struct spdk_nvmf_fc_hw_i_t_delete_args *args = (struct spdk_nvmf_fc_hw_i_t_delete_args *)
 			api_data->api_args;
@@ -3349,7 +3349,7 @@ out:
 static void
 nvmf_fc_adm_evnt_abts_recv(void *arg)
 {
-	ASSERT_SPDK_FC_MASTER_THREAD();
+	ASSERT_SPDK_FC_MAIN_THREAD();
 	struct spdk_nvmf_fc_adm_api_data *api_data = (struct spdk_nvmf_fc_adm_api_data *)arg;
 	struct spdk_nvmf_fc_abts_args *args = (struct spdk_nvmf_fc_abts_args *)api_data->api_args;
 	struct spdk_nvmf_fc_nport *nport = NULL;
@@ -3406,7 +3406,7 @@ out:
 static void
 nvmf_fc_adm_hw_port_quiesce_reset_cb(void *ctx, int err)
 {
-	ASSERT_SPDK_FC_MASTER_THREAD();
+	ASSERT_SPDK_FC_MAIN_THREAD();
 	struct spdk_nvmf_fc_adm_hw_port_reset_ctx *reset_ctx =
 		(struct spdk_nvmf_fc_adm_hw_port_reset_ctx *)ctx;
 	struct spdk_nvmf_fc_hw_port_reset_args *args = reset_ctx->reset_args;
@@ -3486,7 +3486,7 @@ out:
 static void
 nvmf_fc_adm_evnt_hw_port_reset(void *arg)
 {
-	ASSERT_SPDK_FC_MASTER_THREAD();
+	ASSERT_SPDK_FC_MAIN_THREAD();
 	struct spdk_nvmf_fc_adm_api_data *api_data = (struct spdk_nvmf_fc_adm_api_data *)arg;
 	struct spdk_nvmf_fc_hw_port_reset_args *args = (struct spdk_nvmf_fc_hw_port_reset_args *)
 			api_data->api_args;
@@ -3548,20 +3548,20 @@ out:
 }
 
 static inline void
-nvmf_fc_adm_run_on_master_thread(spdk_msg_fn fn, void *args)
+nvmf_fc_adm_run_on_main_thread(spdk_msg_fn fn, void *args)
 {
-	if (nvmf_fc_get_master_thread()) {
-		spdk_thread_send_msg(nvmf_fc_get_master_thread(), fn, args);
+	if (nvmf_fc_get_main_thread()) {
+		spdk_thread_send_msg(nvmf_fc_get_main_thread(), fn, args);
 	}
 }
 
 /*
- * Queue up an event in the SPDK masters event queue.
- * Used by the FC driver to notify the SPDK master of FC related events.
+ * Queue up an event in the SPDK main threads event queue.
+ * Used by the FC driver to notify the SPDK main thread of FC related events.
  */
 int
-nvmf_fc_master_enqueue_event(enum spdk_fc_event event_type, void *args,
-			     spdk_nvmf_fc_callback cb_func)
+nvmf_fc_main_enqueue_event(enum spdk_fc_event event_type, void *args,
+			   spdk_nvmf_fc_callback cb_func)
 {
 	int err = 0;
 	struct spdk_nvmf_fc_adm_api_data *api_data = NULL;
@@ -3640,7 +3640,7 @@ done:
 
 	if (err == 0) {
 		assert(event_fn != NULL);
-		nvmf_fc_adm_run_on_master_thread(event_fn, (void *)api_data);
+		nvmf_fc_adm_run_on_main_thread(event_fn, (void *)api_data);
 		SPDK_DEBUGLOG(nvmf_fc_adm_api, "Enqueue event %d done successfully\n", event_type);
 	} else {
 		SPDK_ERRLOG("Enqueue event %d failed, err = %d\n", event_type, err);

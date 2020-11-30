@@ -268,7 +268,7 @@ struct spdk_nvmf_fc_poll_group {
 };
 
 /*
- *  HWQP poller structure passed from Master thread
+ *  HWQP poller structure passed from main thread
  */
 struct spdk_nvmf_fc_hwqp {
 	enum spdk_fc_hwqp_state state;  /* queue state (for poller) */
@@ -574,7 +574,7 @@ struct spdk_nvmf_fc_poller_api_queue_sync_args {
 };
 
 /**
- * Following defines and structures are used to pass messages between master thread
+ * Following defines and structures are used to pass messages between main thread
  * and FCT driver.
  */
 enum spdk_fc_event {
@@ -669,7 +669,7 @@ struct spdk_nvmf_fc_hw_i_t_add_args {
 	uint32_t                     rpi;
 	uint32_t                     s_id;
 	uint32_t                     initiator_prli_info;
-	uint32_t                     target_prli_info; /* populated by the SPDK master */
+	uint32_t                     target_prli_info; /* populated by the SPDK main */
 	struct spdk_nvmf_fc_wwn  fc_nodename;
 	struct spdk_nvmf_fc_wwn  fc_portname;
 	void                        *cb_ctx;
@@ -723,7 +723,7 @@ typedef void (*spdk_nvmf_fc_callback)(uint8_t port_handle,
 				      void *arg, int err);
 
 /**
- * Enqueue an FCT event to master thread
+ * Enqueue an FCT event to main thread
  *
  * \param event_type Type of the event.
  * \param args Pointer to the argument structure.
@@ -732,9 +732,9 @@ typedef void (*spdk_nvmf_fc_callback)(uint8_t port_handle,
  * \return 0 on success, non-zero on failure.
  */
 int
-nvmf_fc_master_enqueue_event(enum spdk_fc_event event_type,
-			     void *args,
-			     spdk_nvmf_fc_callback cb_func);
+nvmf_fc_main_enqueue_event(enum spdk_fc_event event_type,
+			   void *args,
+			   spdk_nvmf_fc_callback cb_func);
 
 /*
  * dump info
@@ -900,7 +900,7 @@ int nvmf_fc_delete_association(struct spdk_nvmf_fc_nport *tgtport,
 bool nvmf_ctrlr_is_on_nport(uint8_t port_hdl, uint16_t nport_hdl,
 			    struct spdk_nvmf_ctrlr *ctrlr);
 
-void nvmf_fc_assign_queue_to_master_thread(struct spdk_nvmf_fc_hwqp *hwqp);
+void nvmf_fc_assign_queue_to_main_thread(struct spdk_nvmf_fc_hwqp *hwqp);
 
 void nvmf_fc_poll_group_add_hwqp(struct spdk_nvmf_fc_hwqp *hwqp);
 
@@ -920,7 +920,7 @@ void nvmf_fc_request_abort(struct spdk_nvmf_fc_request *fc_req, bool send_abts,
 
 struct spdk_nvmf_tgt *nvmf_fc_get_tgt(void);
 
-struct spdk_thread *nvmf_fc_get_master_thread(void);
+struct spdk_thread *nvmf_fc_get_main_thread(void);
 
 /*
  * These functions are called by low level FC driver
