@@ -91,9 +91,9 @@
 #define THREAD_WIN_HEIGHT 9
 #define THREAD_WIN_HOR_POS 75
 #define THREAD_WIN_FIRST_COL 2
-#define CORE_WIN_FIRST_COL 7
-#define CORE_WIN_WIDTH 60
-#define CORE_WIN_HEIGHT 6
+#define CORE_WIN_FIRST_COL 16
+#define CORE_WIN_WIDTH 46
+#define CORE_WIN_HEIGHT 9
 #define CORE_WIN_HOR_POS 60
 #define POLLER_WIN_HEIGHT 6
 #define POLLER_WIN_WIDTH 60
@@ -1277,6 +1277,15 @@ get_core_last_stats(uint32_t core, uint64_t *idle, uint64_t *busy)
 	*busy = g_cores_history[core].last_busy;
 }
 
+static void
+store_core_stats(uint32_t core, uint64_t threads, uint64_t pollers, uint64_t idle, uint64_t busy)
+{
+	g_cores_history[core].threads_count = threads;
+	g_cores_history[core].pollers_count = pollers;
+	g_cores_history[core].idle = idle;
+	g_cores_history[core].busy = busy;
+}
+
 static uint8_t
 refresh_cores_tab(uint8_t current_page)
 {
@@ -1368,6 +1377,8 @@ refresh_cores_tab(uint8_t current_page)
 		}
 
 		store_core_last_stats(cores[core_num].core, cores[core_num].idle, cores[core_num].busy);
+		store_core_stats(cores[core_num].core, cores[core_num].threads_count, cores[core_num].pollers_count,
+				 cores[core_num].idle - cores[core_num].last_idle, cores[core_num].busy - cores[core_num].last_busy);
 
 		if (item_index == g_selected_row) {
 			wattroff(g_tabs[CORES_TAB], COLOR_PAIR(2));
@@ -1962,12 +1973,18 @@ show_core(uint8_t current_page)
 	PANEL *core_panel;
 	WINDOW *core_win;
 	uint64_t core_number = current_page * g_max_data_rows + g_selected_row;
-	uint64_t threads_count;
+	struct rpc_core_info *core_info[g_cores_stats.cores.cores_count];
+	uint64_t threads_count, i, j;
 	int c;
 	char core_win_title[25];
 	bool stop_loop = false;
+	char idle_time[MAX_TIME_STR_LEN], busy_time[MAX_TIME_STR_LEN];
 
 	get_data();
+
+	for (i = 0; i < g_cores_stats.cores.cores_count; i++) {
+		core_info[i] = &g_cores_stats.cores.core[i];
+	}
 
 	threads_count = g_cores_stats.cores.core->threads.threads_count;
 	core_win = newwin(threads_count + CORE_WIN_HEIGHT, CORE_WIN_WIDTH,
@@ -1987,8 +2004,26 @@ show_core(uint8_t current_page)
 	mvwaddch(core_win, -1, 0, ACS_LTEE);
 	mvwhline(core_win, 2, 1, ACS_HLINE, CORE_WIN_WIDTH - 2);
 	mvwaddch(core_win, 2, CORE_WIN_WIDTH, ACS_RTEE);
-	mvwprintw(core_win, 3, 1, "Thread count      Poller count     Idle time     Busy time");
+	print_left(core_win, 3, 1, CORE_WIN_WIDTH, "Thread count:          Idle time:", COLOR_PAIR(5));
+
+	mvwprintw(core_win, 3, CORE_WIN_FIRST_COL, "%" PRIu64,
+		  g_cores_history[core_number].threads_count);
+	get_time_str(g_cores_history[core_number].idle, idle_time);
+	mvwprintw(core_win, 3, CORE_WIN_FIRST_COL + 20, idle_time);
+
+	print_left(core_win, 5, 1, CORE_WIN_WIDTH, "Poller count:          Busy time:", COLOR_PAIR(5));
+	mvwprintw(core_win, 5, CORE_WIN_FIRST_COL, "%" PRIu64,
+		  g_cores_history[core_number].pollers_count);
+	get_time_str(g_cores_history[core_number].busy, busy_time);
+	mvwprintw(core_win, 5, CORE_WIN_FIRST_COL + 20, busy_time);
+
 	mvwhline(core_win, 4, 1, ACS_HLINE, CORE_WIN_WIDTH - 2);
+	mvwhline(core_win, 6, 1, ACS_HLINE, CORE_WIN_WIDTH - 2);
+	print_left(core_win, 7, 1, CORE_WIN_WIDTH, "Threads on this core", COLOR_PAIR(5));
+
+	for (j = 0; j < core_info[core_number]->threads.threads_count; j++) {
+		mvwprintw(core_win, j + 8, 1, core_info[core_number]->threads.thread[j].name);
+	}
 
 	refresh();
 	wrefresh(core_win);
