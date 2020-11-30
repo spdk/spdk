@@ -19,6 +19,10 @@ The pci_whitelist, pci_blacklist and master_core members of struct spdk_env_opts
 have been deprecated.  The new members are named pci_allowed, pci_blocked and
 main_core respectively.
 
+An `opts_size`element was added in the `spdk_app_opts` structure
+to solve the ABI compatiblity issue between different SPDK version. An `opts_size`
+parameter is added into `spdk_app_opts_init` function.
+
 ### nvmf
 
 Broadcom FC LLD driver and SPDK NVMe-oF FC transport consolidated one LLD API,

@@ -1104,7 +1104,7 @@ main(int argc, char **argv)
 	struct spdk_app_opts opts = {};
 	int rc = 1;
 
-	spdk_app_opts_init(&opts);
+	spdk_app_opts_init(&opts, sizeof(opts));
 	opts.name = "spdk_dd";
 	opts.reactor_mask = "0x1";
 	opts.shutdown_cb = dd_finish;

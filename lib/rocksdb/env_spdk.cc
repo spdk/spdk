@@ -736,7 +736,7 @@ SpdkEnv::SpdkEnv(Env *base_env, const std::string &dir, const std::string &conf,
 {
 	struct spdk_app_opts *opts = new struct spdk_app_opts;
 
-	spdk_app_opts_init(opts);
+	spdk_app_opts_init(opts, sizeof(*opts));
 	opts->name = "rocksdb";
 	opts->json_config_file = mConfig.c_str();
 	opts->shutdown_cb = rocksdb_shutdown;

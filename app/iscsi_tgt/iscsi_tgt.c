@@ -75,7 +75,7 @@ main(int argc, char **argv)
 	int rc;
 	struct spdk_app_opts opts = {};
 
-	spdk_app_opts_init(&opts);
+	spdk_app_opts_init(&opts, sizeof(opts));
 	opts.name = "iscsi";
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, "b", NULL,
 				      iscsi_parse_arg, iscsi_usage)) !=

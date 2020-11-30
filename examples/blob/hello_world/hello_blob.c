@@ -451,7 +451,7 @@ main(int argc, char **argv)
 	SPDK_NOTICELOG("entry\n");
 
 	/* Set default values in opts structure. */
-	spdk_app_opts_init(&opts);
+	spdk_app_opts_init(&opts, sizeof(opts));
 
 	/*
 	 * Setup a few specifics before we init, for most SPDK cmd line

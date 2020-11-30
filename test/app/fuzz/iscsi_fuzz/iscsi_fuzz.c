@@ -1074,7 +1074,7 @@ main(int argc, char **argv)
 
 	TAILQ_INIT(&g_get_pdu_list);
 
-	spdk_app_opts_init(&opts);
+	spdk_app_opts_init(&opts, sizeof(opts));
 	opts.name = "iscsi_fuzz";
 
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, "T:S:t:", NULL, iscsi_fuzz_parse,

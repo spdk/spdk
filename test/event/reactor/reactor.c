@@ -115,7 +115,7 @@ main(int argc, char **argv)
 	int op;
 	int rc = 0;
 
-	spdk_app_opts_init(&opts);
+	spdk_app_opts_init(&opts, sizeof(opts));
 	opts.name = "reactor";
 
 	g_time_in_sec = 0;

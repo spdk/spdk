@@ -1542,7 +1542,7 @@ main(int argc, char **argv)
 	}
 
 	/* Set default values in opts struct along with name and conf file. */
-	spdk_app_opts_init(&opts);
+	spdk_app_opts_init(&opts, sizeof(opts));
 	opts.name = "blobcli";
 	opts.json_config_file = cli_context->config_file;
 

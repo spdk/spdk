@@ -149,14 +149,23 @@ struct spdk_app_opts {
 	logfunc         *log;
 
 	uint64_t		base_virtaddr;
+
+	/**
+	 * The size of spdk_app_opts according to the caller of this library is used for ABI
+	 * compatibility. The library uses this field to know how many fields in this
+	 * structure are valid. And the library will populate any remaining fields with default values.
+	 * After that, new added fields should be put after opts_size.
+	 */
+	size_t opts_size;
 };
 
 /**
  * Initialize the default value of opts
  *
  * \param opts Data structure where SPDK will initialize the default options.
+ * \param opts_size Must be set to sizeof(struct spdk_app_opts).
  */
-void spdk_app_opts_init(struct spdk_app_opts *opts);
+void spdk_app_opts_init(struct spdk_app_opts *opts, size_t opts_size);
 
 /**
  * Start the framework.
@@ -179,14 +188,15 @@ void spdk_app_opts_init(struct spdk_app_opts *opts);
  * condition occurs during the intialization code within spdk_app_start(),
  * this function will immediately return before invoking start_fn.
  *
- * \param opts Initialization options used for this application.
+ * \param opts_user Initialization options used for this application. It should not be
+ *             NULL. And the opts_size value inside the opts structure should not be zero.
  * \param start_fn Entry point that will execute on an internally created thread
  *                 once the framework has been started.
  * \param ctx Argument passed to function start_fn.
  *
  * \return 0 on success or non-zero on failure.
  */
-int spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
+int spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 		   void *ctx);
 
 /**

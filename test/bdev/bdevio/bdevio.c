@@ -1425,7 +1425,7 @@ main(int argc, char **argv)
 	int			rc;
 	struct spdk_app_opts	opts = {};
 
-	spdk_app_opts_init(&opts);
+	spdk_app_opts_init(&opts, sizeof(opts));
 	opts.name = "bdevio";
 	opts.reactor_mask = "0x7";
 	opts.shutdown_cb = spdk_bdevio_shutdown_cb;

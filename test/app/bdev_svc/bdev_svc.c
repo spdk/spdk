@@ -84,7 +84,7 @@ main(int argc, char **argv)
 	const char *reactor_mask = "0x1";
 
 	/* default value in opts structure */
-	spdk_app_opts_init(&opts);
+	spdk_app_opts_init(&opts, sizeof(opts));
 
 	opts.name = "bdev_svc";
 	opts.reactor_mask = reactor_mask;

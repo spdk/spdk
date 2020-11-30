@@ -150,7 +150,7 @@ main(int argc, char **argv)
 	long int val;
 
 	/* default value in opts structure */
-	spdk_app_opts_init(&opts);
+	spdk_app_opts_init(&opts, sizeof(opts));
 
 	opts.name = "stub";
 	opts.rpc_addr = NULL;

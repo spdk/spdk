@@ -63,7 +63,7 @@ main(int argc, char **argv)
 	struct spdk_app_opts opts = {};
 
 	/* default value in opts */
-	spdk_app_opts_init(&opts);
+	spdk_app_opts_init(&opts, sizeof(opts));
 	opts.name = "nvmf";
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, "", NULL,
 				      nvmf_parse_arg, nvmf_usage)) !=

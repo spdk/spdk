@@ -36,6 +36,7 @@
 
 #include "spdk_internal/event.h"
 
+#include "spdk/assert.h"
 #include "spdk/env.h"
 #include "spdk/log.h"
 #include "spdk/thread.h"
@@ -186,25 +187,38 @@ app_opts_validate(const char *app_opts)
 }
 
 void
-spdk_app_opts_init(struct spdk_app_opts *opts)
+spdk_app_opts_init(struct spdk_app_opts *opts, size_t opts_size)
 {
 	if (!opts) {
+		SPDK_ERRLOG("opts should not be NULL\n");
 		return;
 	}
 
-	memset(opts, 0, sizeof(*opts));
+	if (!opts_size) {
+		SPDK_ERRLOG("opts_size should not be zero value\n");
+		return;
+	}
 
-	opts->enable_coredump = true;
-	opts->shm_id = -1;
-	opts->mem_size = SPDK_APP_DPDK_DEFAULT_MEM_SIZE;
-	opts->main_core = SPDK_APP_DPDK_DEFAULT_MAIN_CORE;
-	opts->mem_channel = SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL;
-	opts->reactor_mask = SPDK_APP_DPDK_DEFAULT_CORE_MASK;
-	opts->base_virtaddr = SPDK_APP_DPDK_DEFAULT_BASE_VIRTADDR;
-	opts->print_level = SPDK_APP_DEFAULT_LOG_PRINT_LEVEL;
-	opts->rpc_addr = SPDK_DEFAULT_RPC_ADDR;
-	opts->num_entries = SPDK_APP_DEFAULT_NUM_TRACE_ENTRIES;
-	opts->delay_subsystem_init = false;
+	memset(opts, 0, opts_size);
+	opts->opts_size = opts_size;
+
+#define SET_FIELD(field, value) \
+	if (offsetof(struct spdk_app_opts, field) + sizeof(opts->field) <= opts_size) { \
+		opts->field = value; \
+	} \
+
+	SET_FIELD(enable_coredump, true);
+	SET_FIELD(shm_id, -1);
+	SET_FIELD(mem_size, SPDK_APP_DPDK_DEFAULT_MEM_SIZE);
+	SET_FIELD(main_core, SPDK_APP_DPDK_DEFAULT_MAIN_CORE);
+	SET_FIELD(mem_channel, SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL);
+	SET_FIELD(reactor_mask, SPDK_APP_DPDK_DEFAULT_CORE_MASK);
+	SET_FIELD(base_virtaddr, SPDK_APP_DPDK_DEFAULT_BASE_VIRTADDR);
+	SET_FIELD(print_level, SPDK_APP_DEFAULT_LOG_PRINT_LEVEL);
+	SET_FIELD(rpc_addr, SPDK_DEFAULT_RPC_ADDR);
+	SET_FIELD(num_entries, SPDK_APP_DEFAULT_NUM_TRACE_ENTRIES);
+	SET_FIELD(delay_subsystem_init, false);
+#undef SET_FIELD
 }
 
 static int
@@ -391,19 +405,76 @@ bootstrap_fn(void *arg1)
 	}
 }
 
+static void
+app_copy_opts(struct spdk_app_opts *opts, struct spdk_app_opts *opts_user, size_t opts_size)
+{
+	spdk_app_opts_init(opts, sizeof(*opts));
+	opts->opts_size = opts_size;
+
+#define SET_FIELD(field) \
+        if (offsetof(struct spdk_app_opts, field) + sizeof(opts->field) <= (opts->opts_size)) { \
+		opts->field = opts_user->field; \
+	} \
+
+	SET_FIELD(name);
+	SET_FIELD(config_file);
+	SET_FIELD(json_config_file);
+	SET_FIELD(json_config_ignore_errors);
+	SET_FIELD(rpc_addr);
+	SET_FIELD(reactor_mask);
+	SET_FIELD(tpoint_group_mask);
+	SET_FIELD(shm_id);
+	SET_FIELD(shutdown_cb);
+	SET_FIELD(enable_coredump);
+	SET_FIELD(mem_channel);
+	SET_FIELD(main_core);
+	SET_FIELD(mem_size);
+	SET_FIELD(no_pci);
+	SET_FIELD(hugepage_single_segments);
+	SET_FIELD(unlink_hugepage);
+	SET_FIELD(hugedir);
+	SET_FIELD(print_level);
+	SET_FIELD(num_pci_addr);
+	SET_FIELD(pci_blocked);
+	SET_FIELD(pci_allowed);
+	SET_FIELD(iova_mode);
+	SET_FIELD(max_delay_us);
+	SET_FIELD(delay_subsystem_init);
+	SET_FIELD(num_entries);
+	SET_FIELD(env_context);
+	SET_FIELD(log);
+	SET_FIELD(base_virtaddr);
+
+	/* You should not remove this statement, but need to update the assert statement
+	 * if you add a new field, and also add a corresponding SET_FIELD statement */
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 200, "Incorrect size");
+
+#undef SET_FIELD
+#undef FIELD_CHECK
+}
+
 int
-spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
+spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 	       void *arg1)
 {
 	int			rc;
 	char			*tty;
 	struct spdk_cpuset	tmp_cpumask = {};
 	static bool		g_env_was_setup = false;
+	struct spdk_app_opts opts_local = {};
+	struct spdk_app_opts *opts = &opts_local;
 
-	if (!opts) {
-		SPDK_ERRLOG("opts should not be NULL\n");
+	if (!opts_user) {
+		SPDK_ERRLOG("opts_user should not be NULL\n");
 		return 1;
 	}
+
+	if (!opts_user->opts_size) {
+		SPDK_ERRLOG("The opts_size in opts_user structure should not be zero value\n");
+		return 1;
+	}
+
+	app_copy_opts(opts, opts_user, opts_user->opts_size);
 
 	if (opts->config_file) {
 		SPDK_ERRLOG("opts->config_file is deprecated.  Use opts->json_config_file instead.\n");

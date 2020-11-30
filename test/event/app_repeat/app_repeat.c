@@ -83,7 +83,7 @@ main(int argc, char **argv)
 	int rc;
 	int i;
 
-	spdk_app_opts_init(&g_opts);
+	spdk_app_opts_init(&g_opts, sizeof(g_opts));
 	g_opts.name = "app_repeat";
 	g_opts.shutdown_cb = _app_repeat_shutdown_cb;
 	if ((rc = spdk_app_parse_args(argc, argv, &g_opts, g_app_repeat_get_opts_string,

@@ -88,7 +88,7 @@ main(int argc, char *argv[])
 	struct spdk_app_opts opts = {};
 	int rc;
 
-	spdk_app_opts_init(&opts);
+	spdk_app_opts_init(&opts, sizeof(opts));
 	opts.name = "vhost";
 
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, "f:S:", NULL,

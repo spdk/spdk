@@ -410,7 +410,7 @@ main(int argc, char **argv)
 	struct hello_context_t hello_context = {};
 
 	/* Set default values in opts structure. */
-	spdk_app_opts_init(&opts);
+	spdk_app_opts_init(&opts, sizeof(opts));
 	opts.name = "hello_sock";
 	opts.shutdown_cb = hello_sock_shutdown_cb;
 
