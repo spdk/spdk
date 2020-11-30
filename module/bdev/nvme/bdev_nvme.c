@@ -1782,13 +1782,24 @@ nvme_ctrlr_populate_namespaces_done(struct nvme_async_probe_ctx *ctx)
 	populate_namespaces_cb(ctx, j, 0);
 }
 
+static bool
+bdev_nvme_compare_ns(struct spdk_nvme_ns *ns1, struct spdk_nvme_ns *ns2)
+{
+	const struct spdk_nvme_ns_data *nsdata1, *nsdata2;
+
+	nsdata1 = spdk_nvme_ns_get_data(ns1);
+	nsdata2 = spdk_nvme_ns_get_data(ns2);
+
+	return memcmp(nsdata1->nguid, nsdata2->nguid, sizeof(nsdata1->nguid));
+}
+
 static int
 bdev_nvme_add_trid(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct spdk_nvme_ctrlr *new_ctrlr,
 		   struct spdk_nvme_transport_id *trid)
 {
-	uint32_t			i;
-	struct spdk_nvme_ns		*ns, *new_ns;
-	const struct spdk_nvme_ns_data	*ns_data, *new_ns_data;
+	uint32_t			i, nsid;
+	struct nvme_bdev_ns		*nvme_ns;
+	struct spdk_nvme_ns		*new_ns;
 	struct nvme_bdev_ctrlr_trid	*new_trid;
 
 	assert(nvme_bdev_ctrlr != NULL);
@@ -1819,19 +1830,18 @@ bdev_nvme_add_trid(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct spdk_nvme_ctr
 		return -EINVAL;
 	}
 
-	for (i = 1; i <= nvme_bdev_ctrlr->num_ns; i++) {
-		if (!spdk_nvme_ctrlr_is_active_ns(nvme_bdev_ctrlr->ctrlr, i)) {
+	for (i = 0; i < nvme_bdev_ctrlr->num_ns; i++) {
+		nsid = i + 1;
+
+		nvme_ns = nvme_bdev_ctrlr->namespaces[i];
+		if (!nvme_ns->populated) {
 			continue;
 		}
 
-		ns = spdk_nvme_ctrlr_get_ns(nvme_bdev_ctrlr->ctrlr, i);
-		new_ns = spdk_nvme_ctrlr_get_ns(new_ctrlr, i);
-		assert(ns != NULL);
+		new_ns = spdk_nvme_ctrlr_get_ns(new_ctrlr, nsid);
 		assert(new_ns != NULL);
 
-		ns_data = spdk_nvme_ns_get_data(ns);
-		new_ns_data = spdk_nvme_ns_get_data(new_ns);
-		if (memcmp(ns_data->nguid, new_ns_data->nguid, sizeof(ns_data->nguid))) {
+		if (bdev_nvme_compare_ns(nvme_ns->ns, new_ns) != 0) {
 			return -EINVAL;
 		}
 	}
