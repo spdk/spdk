@@ -90,7 +90,7 @@ TAILQ_HEAD(, nvmf_reactor) g_reactors = TAILQ_HEAD_INITIALIZER(g_reactors);
 TAILQ_HEAD(, nvmf_target_poll_group) g_poll_groups = TAILQ_HEAD_INITIALIZER(g_poll_groups);
 static uint32_t g_num_poll_groups = 0;
 
-static struct nvmf_reactor *g_master_reactor = NULL;
+static struct nvmf_reactor *g_main_reactor = NULL;
 static struct nvmf_reactor *g_next_reactor = NULL;
 static struct spdk_thread *g_init_thread = NULL;
 static struct spdk_thread *g_fini_thread = NULL;
@@ -332,7 +332,7 @@ nvmf_init_threads(void)
 	char thread_name[32];
 	struct nvmf_reactor *nvmf_reactor;
 	struct spdk_cpuset cpumask;
-	uint32_t master_core = spdk_env_get_current_core();
+	uint32_t main_core = spdk_env_get_current_core();
 
 	/* Whenever SPDK creates a new lightweight thread it will call
 	 * nvmf_schedule_spdk_thread asking for the application to begin
@@ -371,9 +371,9 @@ nvmf_init_threads(void)
 
 		TAILQ_INSERT_TAIL(&g_reactors, nvmf_reactor, link);
 
-		if (i == master_core) {
-			g_master_reactor = nvmf_reactor;
-			g_next_reactor = g_master_reactor;
+		if (i == main_core) {
+			g_main_reactor = nvmf_reactor;
+			g_next_reactor = g_main_reactor;
 		} else {
 			rc = spdk_env_thread_launch_pinned(i,
 							   nvmf_reactor_run,
@@ -387,8 +387,8 @@ nvmf_init_threads(void)
 
 	/* Spawn a lightweight thread only on the current core to manage this application. */
 	spdk_cpuset_zero(&cpumask);
-	spdk_cpuset_set_cpu(&cpumask, master_core, true);
-	snprintf(thread_name, sizeof(thread_name), "nvmf_master_thread");
+	spdk_cpuset_set_cpu(&cpumask, main_core, true);
+	snprintf(thread_name, sizeof(thread_name), "nvmf_main_thread");
 	g_init_thread = spdk_thread_create(thread_name, &cpumask);
 	if (!g_init_thread) {
 		fprintf(stderr, "failed to create spdk thread\n");
@@ -887,7 +887,7 @@ int main(int argc, char **argv)
 	rc = nvmf_init_threads();
 	assert(rc == 0);
 
-	/* Send a message to the thread assigned to the master reactor
+	/* Send a message to the thread assigned to the main reactor
 	 * that continues initialization. This is how we bootstrap the
 	 * program so that all code from here on is running on an SPDK thread.
 	 */
@@ -898,7 +898,7 @@ int main(int argc, char **argv)
 
 	spdk_thread_send_msg(g_init_thread, nvmf_target_app_start, NULL);
 
-	nvmf_reactor_run(g_master_reactor);
+	nvmf_reactor_run(g_main_reactor);
 
 	spdk_env_thread_wait_all();
 	nvmf_destroy_threads();

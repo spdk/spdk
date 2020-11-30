@@ -106,7 +106,7 @@ static TAILQ_HEAD(, ns_entry) g_namespaces = TAILQ_HEAD_INITIALIZER(g_namespaces
 static int g_num_namespaces;
 static TAILQ_HEAD(, worker_thread) g_workers = TAILQ_HEAD_INITIALIZER(g_workers);
 static int g_num_workers = 0;
-static uint32_t g_master_core;
+static uint32_t g_main_core;
 
 static int g_abort_interval = 1;
 
@@ -479,7 +479,7 @@ work_fn(void *arg)
 			spdk_nvme_qpair_process_completions(ns_ctx->qpair, 0);
 		}
 
-		if (worker->lcore == g_master_core) {
+		if (worker->lcore == g_main_core) {
 			TAILQ_FOREACH(ctrlr_ctx, &worker->ctrlr_ctx, link) {
 				/* Hold mutex to guard ctrlr_ctx->current_queue_depth. */
 				pthread_mutex_lock(&ctrlr_ctx->mutex);
@@ -511,7 +511,7 @@ work_fn(void *arg)
 		}
 	} while (unfinished_ctx > 0);
 
-	if (worker->lcore == g_master_core) {
+	if (worker->lcore == g_main_core) {
 		do {
 			unfinished_ctx = 0;
 
@@ -918,14 +918,14 @@ unregister_controllers(void)
 }
 
 static int
-associate_master_worker_with_ctrlr(void)
+associate_main_worker_with_ctrlr(void)
 {
 	struct ctrlr_entry	*entry;
 	struct worker_thread	*worker;
 	struct ctrlr_worker_ctx	*ctrlr_ctx;
 
 	TAILQ_FOREACH(worker, &g_workers, link) {
-		if (worker->lcore == g_master_core) {
+		if (worker->lcore == g_main_core) {
 			break;
 		}
 	}
@@ -957,7 +957,7 @@ get_ctrlr_worker_ctx(struct spdk_nvme_ctrlr *ctrlr)
 	struct ctrlr_worker_ctx *ctrlr_ctx;
 
 	TAILQ_FOREACH(worker, &g_workers, link) {
-		if (worker->lcore == g_master_core) {
+		if (worker->lcore == g_main_core) {
 			break;
 		}
 	}
@@ -1022,7 +1022,7 @@ associate_workers_with_ns(void)
 int main(int argc, char **argv)
 {
 	int rc;
-	struct worker_thread *worker, *master_worker;
+	struct worker_thread *worker, *main_worker;
 	struct spdk_env_opts opts;
 
 	rc = parse_args(argc, argv);
@@ -1070,7 +1070,7 @@ int main(int argc, char **argv)
 		goto cleanup;
 	}
 
-	if (associate_master_worker_with_ctrlr() != 0) {
+	if (associate_main_worker_with_ctrlr() != 0) {
 		rc = -1;
 		goto cleanup;
 	}
@@ -1082,20 +1082,20 @@ int main(int argc, char **argv)
 
 	printf("Initialization complete. Launching workers.\n");
 
-	/* Launch all of the slave workers */
-	g_master_core = spdk_env_get_current_core();
-	master_worker = NULL;
+	/* Launch all of the secondary workers */
+	g_main_core = spdk_env_get_current_core();
+	main_worker = NULL;
 	TAILQ_FOREACH(worker, &g_workers, link) {
-		if (worker->lcore != g_master_core) {
+		if (worker->lcore != g_main_core) {
 			spdk_env_thread_launch_pinned(worker->lcore, work_fn, worker);
 		} else {
-			assert(master_worker == NULL);
-			master_worker = worker;
+			assert(main_worker == NULL);
+			main_worker = worker;
 		}
 	}
 
-	assert(master_worker != NULL);
-	rc = work_fn(master_worker);
+	assert(main_worker != NULL);
+	rc = work_fn(main_worker);
 
 	spdk_env_thread_wait_all();
 

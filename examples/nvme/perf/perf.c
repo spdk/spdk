@@ -221,7 +221,7 @@ static TAILQ_HEAD(, ns_entry) g_namespaces = TAILQ_HEAD_INITIALIZER(g_namespaces
 static int g_num_namespaces;
 static TAILQ_HEAD(, worker_thread) g_workers = TAILQ_HEAD_INITIALIZER(g_workers);
 static int g_num_workers = 0;
-static uint32_t g_master_core;
+static uint32_t g_main_core;
 
 static uint64_t g_tsc_rate;
 
@@ -1316,7 +1316,7 @@ work_fn(void *arg)
 
 		tsc_current = spdk_get_ticks();
 
-		if (worker->lcore == g_master_core && tsc_current > tsc_next_print) {
+		if (worker->lcore == g_main_core && tsc_current > tsc_next_print) {
 			tsc_next_print += g_tsc_rate;
 			print_periodic_performance(warmup);
 		}
@@ -1331,7 +1331,7 @@ work_fn(void *arg)
 					ns_ctx->stats.min_tsc = UINT64_MAX;
 				}
 
-				if (worker->lcore == g_master_core && isatty(STDOUT_FILENO)) {
+				if (worker->lcore == g_main_core && isatty(STDOUT_FILENO)) {
 					/* warmup stage prints a longer string to stdout, need to erase it */
 					printf("%c[2K", 27);
 				}
@@ -2309,7 +2309,7 @@ nvme_poll_ctrlrs(void *arg)
 int main(int argc, char **argv)
 {
 	int rc;
-	struct worker_thread *worker, *master_worker;
+	struct worker_thread *worker, *main_worker;
 	struct spdk_env_opts opts;
 	pthread_t thread_id = 0;
 
@@ -2384,20 +2384,20 @@ int main(int argc, char **argv)
 
 	printf("Initialization complete. Launching workers.\n");
 
-	/* Launch all of the slave workers */
-	g_master_core = spdk_env_get_current_core();
-	master_worker = NULL;
+	/* Launch all of the secondary workers */
+	g_main_core = spdk_env_get_current_core();
+	main_worker = NULL;
 	TAILQ_FOREACH(worker, &g_workers, link) {
-		if (worker->lcore != g_master_core) {
+		if (worker->lcore != g_main_core) {
 			spdk_env_thread_launch_pinned(worker->lcore, work_fn, worker);
 		} else {
-			assert(master_worker == NULL);
-			master_worker = worker;
+			assert(main_worker == NULL);
+			main_worker = worker;
 		}
 	}
 
-	assert(master_worker != NULL);
-	rc = work_fn(master_worker);
+	assert(main_worker != NULL);
+	rc = work_fn(main_worker);
 
 	spdk_env_thread_wait_all();
 

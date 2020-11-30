@@ -1066,8 +1066,8 @@ nvme_poll_ctrlrs(void *arg)
 int main(int argc, char **argv)
 {
 	int rc;
-	struct worker_thread *worker, *master_worker;
-	unsigned master_core;
+	struct worker_thread *worker, *main_worker;
+	unsigned main_core;
 	struct spdk_env_opts opts;
 	pthread_t thread_id = 0;
 
@@ -1125,20 +1125,20 @@ int main(int argc, char **argv)
 
 	printf("Initialization complete. Launching workers.\n");
 
-	/* Launch all of the slave workers */
-	master_core = spdk_env_get_current_core();
-	master_worker = NULL;
+	/* Launch all of the secondary workers */
+	main_core = spdk_env_get_current_core();
+	main_worker = NULL;
 	TAILQ_FOREACH(worker, &g_workers, link) {
-		if (worker->lcore != master_core) {
+		if (worker->lcore != main_core) {
 			spdk_env_thread_launch_pinned(worker->lcore, work_fn, worker);
 		} else {
-			assert(master_worker == NULL);
-			master_worker = worker;
+			assert(main_worker == NULL);
+			main_worker = worker;
 		}
 	}
 
-	assert(master_worker != NULL);
-	rc = work_fn(master_worker);
+	assert(main_worker != NULL);
+	rc = work_fn(main_worker);
 
 	spdk_env_thread_wait_all();
 

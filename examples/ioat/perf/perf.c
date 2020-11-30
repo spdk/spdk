@@ -520,8 +520,8 @@ int
 main(int argc, char **argv)
 {
 	int rc;
-	struct worker_thread *worker, *master_worker;
-	unsigned master_core;
+	struct worker_thread *worker, *main_worker;
+	unsigned main_core;
 
 	if (parse_args(argc, argv) != 0) {
 		return 1;
@@ -562,22 +562,22 @@ main(int argc, char **argv)
 		goto cleanup;
 	}
 
-	/* Launch all of the slave workers */
-	master_core = spdk_env_get_current_core();
-	master_worker = NULL;
+	/* Launch all of the secondary workers */
+	main_core = spdk_env_get_current_core();
+	main_worker = NULL;
 	worker = g_workers;
 	while (worker != NULL) {
-		if (worker->core != master_core) {
+		if (worker->core != main_core) {
 			spdk_env_thread_launch_pinned(worker->core, work_fn, worker);
 		} else {
-			assert(master_worker == NULL);
-			master_worker = worker;
+			assert(main_worker == NULL);
+			main_worker = worker;
 		}
 		worker = worker->next;
 	}
 
-	assert(master_worker != NULL);
-	rc = work_fn(master_worker);
+	assert(main_worker != NULL);
+	rc = work_fn(main_worker);
 	if (rc != 0) {
 		goto cleanup;
 	}
