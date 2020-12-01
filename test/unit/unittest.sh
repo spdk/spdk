@@ -135,7 +135,11 @@ if [ -z ${valgrind+x} ]; then
 fi
 
 # setup local unit test coverage if cov is available
-if hash lcov && grep -q '#define SPDK_CONFIG_COVERAGE 1' $rootdir/include/spdk/config.h; then
+# lcov takes considerable time to process clang coverage.
+# Disabling lcov allow us to do this.
+# More information: https://github.com/spdk/spdk/issues/1693
+CC_TYPE=$(grep CC_TYPE $rootdir/mk/cc.mk)
+if hash lcov && grep -q '#define SPDK_CONFIG_COVERAGE 1' $rootdir/include/spdk/config.h && ! [[ "$CC_TYPE" == *"clang"* ]]; then
 	cov_avail="yes"
 else
 	cov_avail="no"
@@ -220,11 +224,6 @@ if grep -q '#define SPDK_CONFIG_VHOST 1' $rootdir/include/spdk/config.h; then
 	run_test "unittest_vhost" $valgrind $testdir/lib/vhost/vhost.c/vhost_ut
 fi
 
-# local unit test coverage
-# lcov takes considerable time to process clang coverage.
-# Disabling lcov allow us to do this.
-# More information: https://github.com/spdk/spdk/issues/1693
-CC_TYPE=$(grep CC_TYPE mk/cc.mk)
 if [ "$cov_avail" = "yes" ] && ! [[ "$CC_TYPE" == *"clang"* ]]; then
 	$LCOV -q -d . -c -t "$(hostname)" -o $UT_COVERAGE/ut_cov_test.info
 	$LCOV -q -a $UT_COVERAGE/ut_cov_base.info -a $UT_COVERAGE/ut_cov_test.info -o $UT_COVERAGE/ut_cov_total.info

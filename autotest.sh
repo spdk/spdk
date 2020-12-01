@@ -62,7 +62,11 @@ cd $src
 
 freebsd_update_contigmem_mod
 
-if hash lcov; then
+# lcov takes considerable time to process clang coverage.
+# Disabling lcov allow us to do this.
+# More information: https://github.com/spdk/spdk/issues/1693
+CC_TYPE=$(grep CC_TYPE mk/cc.mk)
+if hash lcov && ! [[ "$CC_TYPE" == *"clang"* ]]; then
 	# setup output dir for unittest.sh
 	export UT_COVERAGE=$out/ut_coverage
 	export LCOV_OPTS="
@@ -324,10 +328,6 @@ trap - SIGINT SIGTERM EXIT
 # catch any stray core files
 process_core
 
-# lcov takes considerable time to process clang coverage.
-# Disabling lcov allow us to do this.
-# More information: https://github.com/spdk/spdk/issues/1693
-CC_TYPE=$(grep CC_TYPE mk/cc.mk)
 if hash lcov && ! [[ "$CC_TYPE" == *"clang"* ]]; then
 	# generate coverage data and combine with baseline
 	$LCOV -q -c -d $src -t "$(hostname)" -o $out/cov_test.info
