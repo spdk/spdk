@@ -600,24 +600,36 @@ function gdb_attach() {
 }
 
 function process_core() {
-	ret=0
-	while IFS= read -r -d '' core; do
-		exe=$(eu-readelf -n "$core" | grep psargs | sed "s/.*psargs: \([^ \'\" ]*\).*/\1/")
-		if [[ ! -f "$exe" ]]; then
-			exe=$(eu-readelf -n "$core" | grep -oP -m1 "$exe.+")
-		fi
-		echo "exe for $core is $exe"
-		if [[ -n "$exe" ]]; then
-			if hash gdb &> /dev/null; then
-				gdb -batch -ex "thread apply all bt full" $exe $core
-			fi
-			cp $exe $output_dir
-		fi
-		mv $core $output_dir
-		chmod a+r $output_dir/$core
-		ret=1
-	done < <(find . -type f \( -name 'core.[0-9]*' -o -name 'core' -o -name '*.core' \) -print0)
-	return $ret
+	# Note that this always was racy as we can't really sync with the kernel
+	# to see if there's any core queued up for writing. We could check if
+	# collector is running and wait for it explicitly, but it doesn't seem
+	# to be worth the effort. So assume that if we are being called via
+	# trap, as in, when some error has occurred, wait up to 5s for any
+	# potential cores. If we are called just for cleanup at the very end,
+	# don't wait since all the tests ended successfully, hence having any
+	# critical cores lying around is unlikely.
+	local es=$?
+	((es != 0)) && sleep 5s
+
+	local coredumps core
+
+	shopt -s nullglob
+	coredumps=("$output_dir/coredumps/"*.bt.txt)
+	shopt -u nullglob
+
+	((${#coredumps[@]} > 0)) || return 0
+	chmod -R a+r "$output_dir/coredumps"
+
+	for core in "${coredumps[@]}"; do
+		cat <<- BT
+			##### CORE BT ${core##*/} #####
+
+			$(<"$core")
+
+			--
+		BT
+	done
+	return 1
 }
 
 function process_shm() {
