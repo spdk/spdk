@@ -1347,10 +1347,12 @@ function opal_revert_cleanup() {
 	spdk_tgt_pid=$!
 	waitforlisten $spdk_tgt_pid
 
+	bdf_id=0
 	for bdf in "${bdfs[@]}"; do
-		$rootdir/scripts/rpc.py bdev_nvme_attach_controller -b "nvme0" -t "pcie" -a ${bdf}
+		$rootdir/scripts/rpc.py bdev_nvme_attach_controller -b "nvme"${bdf_id} -t "pcie" -a ${bdf}
 		# Ignore if this fails.
-		$rootdir/scripts/rpc.py bdev_nvme_opal_revert -b nvme0 -p test || true
+		$rootdir/scripts/rpc.py bdev_nvme_opal_revert -b "nvme"${bdf_id} -p test || true
+		((++bdf_id))
 	done
 
 	killprocess $spdk_tgt_pid
