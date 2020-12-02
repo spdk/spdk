@@ -354,7 +354,7 @@ export GIT_REPO_SPDK
 export GIT_REPO_DPDK
 : ${GIT_REPO_ROCKSDB=https://review.spdk.io/spdk/rocksdb}
 export GIT_REPO_ROCKSDB
-: ${GIT_REPO_FIO=http://git.kernel.dk/fio.git}
+: ${GIT_REPO_FIO=https://github.com/axboe/fio.git}
 export GIT_REPO_FIO
 : ${GIT_REPO_FLAMEGRAPH=https://github.com/brendangregg/FlameGraph.git}
 export GIT_REPO_FLAMEGRAPH
