@@ -2,7 +2,7 @@
 shopt -s nullglob
 
 rootdir=$(readlink -f $(dirname $0))/..
-igb_driverdir=$rootdir/dpdk/build/build/kernel/igb_uio/
+igb_driverdir=$rootdir/dpdk/build-tmp/kernel/linux/igb_uio/
 allowed_drivers=("igb_uio" "uio_pci_generic")
 
 reload_intel_qat() {
