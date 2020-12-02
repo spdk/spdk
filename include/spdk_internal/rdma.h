@@ -41,6 +41,18 @@
 /* Contains hooks definition */
 #include "spdk/nvme.h"
 
+struct spdk_rdma_wr_stats {
+	/* Total number of submitted requests */
+	uint64_t num_submitted_wrs;
+	/* Total number of doorbell updates */
+	uint64_t doorbell_updates;
+};
+
+struct spdk_rdma_qp_stats {
+	struct spdk_rdma_wr_stats send;
+	struct spdk_rdma_wr_stats recv;
+};
+
 struct spdk_rdma_qp_init_attr {
 	void		       *qp_context;
 	struct ibv_cq	       *send_cq;
@@ -48,6 +60,7 @@ struct spdk_rdma_qp_init_attr {
 	struct ibv_srq	       *srq;
 	struct ibv_qp_cap	cap;
 	struct ibv_pd	       *pd;
+	struct spdk_rdma_qp_stats *stats;
 };
 
 struct spdk_rdma_send_wr_list {
@@ -65,6 +78,8 @@ struct spdk_rdma_qp {
 	struct rdma_cm_id *cm_id;
 	struct spdk_rdma_send_wr_list send_wrs;
 	struct spdk_rdma_recv_wr_list recv_wrs;
+	struct spdk_rdma_qp_stats *stats;
+	bool shared_stats;
 };
 
 struct spdk_rdma_mem_map;
@@ -85,12 +100,15 @@ struct spdk_rdma_memory_translation {
 };
 struct spdk_rdma_srq_init_attr {
 	struct ibv_pd *pd;
+	struct spdk_rdma_wr_stats *stats;
 	struct ibv_srq_init_attr srq_init_attr;
 };
 
 struct spdk_rdma_srq {
 	struct ibv_srq *srq;
 	struct spdk_rdma_recv_wr_list recv_wrs;
+	struct spdk_rdma_wr_stats *stats;
+	bool shared_stats;
 };
 
 /**

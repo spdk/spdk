@@ -2,7 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
- *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2020, 2021 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -120,6 +120,18 @@ spdk_rdma_qp_create(struct rdma_cm_id *cm_id, struct spdk_rdma_qp_init_attr *qp_
 		return NULL;
 	}
 
+	if (qp_attr->stats) {
+		mlx5_qp->common.stats = qp_attr->stats;
+		mlx5_qp->common.shared_stats = true;
+	} else {
+		mlx5_qp->common.stats = calloc(1, sizeof(*mlx5_qp->common.stats));
+		if (!mlx5_qp->common.stats) {
+			SPDK_ERRLOG("qp statistics memory allocation failed\n");
+			free(mlx5_qp);
+			return NULL;
+		}
+	}
+
 	qp = mlx5dv_create_qp(cm_id->verbs, &dv_qp_attr, NULL);
 
 	if (!qp) {
@@ -199,6 +211,10 @@ spdk_rdma_qp_destroy(struct spdk_rdma_qp *spdk_rdma_qp)
 
 	if (spdk_rdma_qp->send_wrs.first != NULL) {
 		SPDK_WARNLOG("Destroying qpair with queued Work Requests\n");
+	}
+
+	if (!mlx5_qp->common.shared_stats) {
+		free(mlx5_qp->common.stats);
 	}
 
 	if (mlx5_qp->common.qp) {
@@ -283,6 +299,7 @@ spdk_rdma_qp_queue_send_wrs(struct spdk_rdma_qp *spdk_rdma_qp, struct ibv_send_w
 		ibv_wr_set_sge_list(mlx5_qp->qpex, tmp->num_sge, tmp->sg_list);
 
 		spdk_rdma_qp->send_wrs.last = tmp;
+		spdk_rdma_qp->stats->send.num_submitted_wrs++;
 	}
 
 	return is_first;
@@ -303,7 +320,7 @@ spdk_rdma_qp_flush_send_wrs(struct spdk_rdma_qp *spdk_rdma_qp, struct ibv_send_w
 		return 0;
 	}
 
-	rc =  ibv_wr_complete(mlx5_qp->qpex);
+	rc = ibv_wr_complete(mlx5_qp->qpex);
 
 	if (spdk_unlikely(rc)) {
 		/* If ibv_wr_complete reports an error that means that no WRs are posted to NIC */
@@ -311,6 +328,7 @@ spdk_rdma_qp_flush_send_wrs(struct spdk_rdma_qp *spdk_rdma_qp, struct ibv_send_w
 	}
 
 	spdk_rdma_qp->send_wrs.first = NULL;
+	spdk_rdma_qp->stats->send.doorbell_updates++;
 
 	return rc;
 }
