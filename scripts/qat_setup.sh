@@ -41,9 +41,17 @@ fi
 
 # configure virtual functions for the QAT cards.
 for qat_bdf in "${qat_pci_bdfs[@]}"; do
+	if [[ ! -e /sys/bus/pci/drivers/c6xx/$qat_bdf/sriov_numvfs ]]; then
+		echo "($qat_bdf) sriov_numvfs interface missing, is SR-IOV enabled?"
+		continue
+	fi
 	echo "$num_vfs" > /sys/bus/pci/drivers/c6xx/$qat_bdf/sriov_numvfs
-	num_vfs=$(cat /sys/bus/pci/drivers/c6xx/$qat_bdf/sriov_numvfs)
-	echo "$qat_bdf set to $num_vfs VFs"
+	num_vfs_set=$(cat /sys/bus/pci/drivers/c6xx/$qat_bdf/sriov_numvfs)
+	if ((num_vfs != num_vfs_set)); then
+		echo "Number of VFs set to $num_vfs_set, expected $num_vfs"
+	else
+		echo "$qat_bdf set to $num_vfs VFs"
+	fi
 done
 
 # Confirm we have all of the virtual functions we asked for.
