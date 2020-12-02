@@ -2,7 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
- *   Copyright (c) 2018-2019 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2018-2021 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -133,6 +133,10 @@ struct spdk_nvmf_rdma_device_stat {
 	uint64_t pending_free_request;
 	uint64_t pending_rdma_read;
 	uint64_t pending_rdma_write;
+	uint64_t total_send_wrs;
+	uint64_t send_doorbell_updates;
+	uint64_t total_recv_wrs;
+	uint64_t recv_doorbell_updates;
 };
 
 struct spdk_nvmf_transport_poll_group_stat {
