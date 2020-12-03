@@ -304,6 +304,8 @@ At the NVMe driver level, we provide the following support for Hotplug:
 
 This feature is considered as experimental.
 
+## Design
+
 ![NVMe character devices processing diagram](nvme_cuse.svg)
 
 For each controller as well as namespace, character devices are created in the
@@ -322,26 +324,62 @@ nvme_io_msg_process().
 Ioctls that request information attained when attaching NVMe controller receive an
 immediate response, without passing them through the ring.
 
-This interface reserves one qpair for sending down the I/O for each controller.
+This interface reserves one additional qpair for sending down the I/O for each controller.
 
-## Enabling cuse support for NVMe
+## Usage
 
-Cuse support is disabled by default. To enable support for NVMe devices SPDK
-must be compiled with "./configure --with-nvme-cuse".
+### Enabling cuse support for NVMe
 
-## Limitations
+Cuse support is disabled by default. To enable support for NVMe-CUSE devices first
+install required dependencies
+~~~{.sh}
+sudo scripts/pkgdep.sh --fuse
+~~~
+Then compile SPDK with "./configure --with-nvme-cuse".
 
-NVMe namespaces are created as character devices and their use may be limited for
-tools expecting block devices.
+### Creating NVMe-CUSE device
 
-Sysfs is not updated by SPDK.
+First make sure to prepare the environment (see @ref getting_started).
+This includes loading CUSE kernel module.
+Any NVMe controller attached to a running SPDK application can be
+exposed via NVMe-CUSE interface. When closing SPDK application,
+the NVMe-CUSE devices are unregistered.
 
-SPDK NVMe CUSE creates nodes in "/dev/spdk/" directory to explicitly differentiate
-from other devices. Tools that only search in the "/dev" directory might not work
-with SPDK NVMe CUSE.
+~~~{.sh}
+$ sudo scripts/setup.sh
+$ sudo modprobe cuse
+$ sudo build/bin/spdk_tgt
+# Continue in another session
+$ sudo scripts/rpc.py bdev_nvme_attach_controller -b Nvme0 -t PCIe -a 0000:82:00.0
+Nvme0n1
+$ sudo scripts/rpc.py bdev_nvme_get_controllers
+[
+  {
+    "name": "Nvme0",
+    "trid": {
+      "trtype": "PCIe",
+      "traddr": "0000:82:00.0"
+    }
+  }
+]
+$ sudo scripts/rpc.py bdev_nvme_cuse_register -n Nvme0
+$ ls /dev/spdk/
+nvme0  nvme0n1
+~~~
 
-SCSI to NVMe Translation Layer is not implemented. Tools that are using this layer to
-identify, manage or operate device might not work properly or their use may be limited.
+### Example of using nvme-cli
+
+Most nvme-cli commands can point to specific controller or namespace by providing a path to it.
+This can be leveraged to issue commands to the SPDK NVMe-CUSE devices.
+
+~~~{.sh}
+sudo nvme id-ctrl /dev/spdk/nvme0
+sudo nvme smart-log /dev/spdk/nvme0
+sudo nvme id-ns /dev/spdk/nvme0n1
+~~~
+
+Note: `nvme list` command does not display SPDK NVMe-CUSE devices,
+see nvme-cli [PR #773](https://github.com/linux-nvme/nvme-cli/pull/773).
 
 ### Examples of using smartctl
 
@@ -356,3 +394,17 @@ the NVMe device.
     smartctl -d nvme -H /dev/spdk/nvme1
     ...
 ~~~
+
+## Limitations
+
+NVMe namespaces are created as character devices and their use may be limited for
+tools expecting block devices.
+
+Sysfs is not updated by SPDK.
+
+SPDK NVMe CUSE creates nodes in "/dev/spdk/" directory to explicitly differentiate
+from other devices. Tools that only search in the "/dev" directory might not work
+with SPDK NVMe CUSE.
+
+SCSI to NVMe Translation Layer is not implemented. Tools that are using this layer to
+identify, manage or operate device might not work properly or their use may be limited.
