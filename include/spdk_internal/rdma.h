@@ -64,6 +64,7 @@ struct spdk_rdma_qp {
 	struct ibv_qp *qp;
 	struct rdma_cm_id *cm_id;
 	struct spdk_rdma_send_wr_list send_wrs;
+	struct spdk_rdma_recv_wr_list recv_wrs;
 };
 
 struct spdk_rdma_mem_map;
@@ -188,6 +189,24 @@ bool spdk_rdma_qp_queue_send_wrs(struct spdk_rdma_qp *spdk_rdma_qp, struct ibv_s
  * \return 0 on succes, errno on failure
  */
 int spdk_rdma_qp_flush_send_wrs(struct spdk_rdma_qp *spdk_rdma_qp, struct ibv_send_wr **bad_wr);
+
+/**
+ * Append the given recv wr structure to the qpair's outstanding recv list.
+ * This function accepts either a single Work Request or the first WR in a linked list.
+ *
+ * \param spdk_rdma_qp Pointer to SPDK RDMA qpair
+ * \param first Pointer to the first Work Request
+ * \return true if there were no outstanding WRs before, false otherwise
+ */
+bool spdk_rdma_qp_queue_recv_wrs(struct spdk_rdma_qp *spdk_rdma_qp, struct ibv_recv_wr *first);
+
+/**
+ * Submit all queued recv Work Request
+ * \param spdk_rdma_qp Pointer to SPDK RDMA qpair
+ * \param bad_wr Stores a pointer to the first failed WR if this function return nonzero value
+ * \return 0 on succes, errno on failure
+ */
+int spdk_rdma_qp_flush_recv_wrs(struct spdk_rdma_qp *spdk_rdma_qp, struct ibv_recv_wr **bad_wr);
 
 /**
  * Create a memory map which is used to register Memory Regions and perform address -> memory
