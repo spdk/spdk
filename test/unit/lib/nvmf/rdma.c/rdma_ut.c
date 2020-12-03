@@ -2,7 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
- *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2019, 2021 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -543,7 +543,6 @@ qpair_reset(struct spdk_nvmf_rdma_qpair *rqpair,
 	rqpair->max_send_depth = 16;
 	rqpair->max_read_depth = 16;
 	rqpair->qpair.transport = transport;
-	resources->recvs_to_post.first = resources->recvs_to_post.last = NULL;
 }
 
 static void
@@ -601,8 +600,6 @@ test_spdk_nvmf_rdma_request_process(void)
 	CU_ASSERT(progress == true);
 	CU_ASSERT(rdma_req->state == RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST);
 	CU_ASSERT(rdma_req->recv == NULL);
-	CU_ASSERT(resources.recvs_to_post.first == &rdma_recv->wr);
-	CU_ASSERT(resources.recvs_to_post.last == &rdma_recv->wr);
 	/* COMPLETED -> FREE */
 	rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
 	progress = nvmf_rdma_request_process(&rtransport, rdma_req);
@@ -635,8 +632,6 @@ test_spdk_nvmf_rdma_request_process(void)
 	CU_ASSERT(progress == true);
 	CU_ASSERT(rdma_req->state == RDMA_REQUEST_STATE_COMPLETING);
 	CU_ASSERT(rdma_req->recv == NULL);
-	CU_ASSERT(resources.recvs_to_post.first == &rdma_recv->wr);
-	CU_ASSERT(resources.recvs_to_post.last == &rdma_recv->wr);
 	/* COMPLETED -> FREE */
 	rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
 	progress = nvmf_rdma_request_process(&rtransport, rdma_req);

@@ -2,7 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
- *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2020, 2021 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -56,6 +56,10 @@ DEFINE_STUB(spdk_rdma_srq_destroy, int, (struct spdk_rdma_srq *rdma_srq), 0);
 DEFINE_STUB(spdk_rdma_srq_queue_recv_wrs, bool, (struct spdk_rdma_srq *rdma_srq,
 		struct ibv_recv_wr *first), true);
 DEFINE_STUB(spdk_rdma_srq_flush_recv_wrs, int, (struct spdk_rdma_srq *rdma_srq,
+		struct ibv_recv_wr **bad_wr), 0);
+DEFINE_STUB(spdk_rdma_qp_queue_recv_wrs, bool, (struct spdk_rdma_qp *spdk_rdma_qp,
+		struct ibv_recv_wr *first), true);
+DEFINE_STUB(spdk_rdma_qp_flush_recv_wrs, int, (struct spdk_rdma_qp *spdk_rdma_qp,
 		struct ibv_recv_wr **bad_wr), 0);
 DEFINE_STUB(spdk_rdma_create_mem_map, struct spdk_rdma_mem_map *, (struct ibv_pd *pd,
 		struct spdk_nvme_rdma_hooks *hooks), NULL);
