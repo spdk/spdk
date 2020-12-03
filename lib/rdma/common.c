@@ -2,7 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
- *   Copyright (c) Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2020, 2021 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -31,8 +31,11 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <rdma/rdma_cma.h>
+
 #include "spdk/log.h"
 #include "spdk/env.h"
+#include "spdk/string.h"
 #include "spdk/likely.h"
 
 #include "spdk_internal/rdma.h"
@@ -216,4 +219,89 @@ spdk_rdma_get_translation(struct spdk_rdma_mem_map *map, void *address,
 	assert(real_length >= length);
 
 	return 0;
+}
+
+struct spdk_rdma_srq *
+spdk_rdma_srq_create(struct spdk_rdma_srq_init_attr *init_attr)
+{
+	assert(init_attr);
+	assert(init_attr->pd);
+
+	struct spdk_rdma_srq *rdma_srq = calloc(1, sizeof(*rdma_srq));
+
+	if (!rdma_srq) {
+		SPDK_ERRLOG("Can't allocate memory for SRQ handle\n");
+		return NULL;
+	}
+
+	rdma_srq->srq = ibv_create_srq(init_attr->pd, &init_attr->srq_init_attr);
+	if (!rdma_srq->srq) {
+		SPDK_ERRLOG("Unable to create SRQ, errno %d (%s)\n", errno, spdk_strerror(errno));
+		free(rdma_srq);
+		return NULL;
+	}
+
+	return rdma_srq;
+}
+
+int
+spdk_rdma_srq_destroy(struct spdk_rdma_srq *rdma_srq)
+{
+	int rc;
+
+	if (!rdma_srq) {
+		return 0;
+	}
+
+	assert(rdma_srq->srq);
+
+	if (rdma_srq->recv_wrs.first != NULL) {
+		SPDK_WARNLOG("Destroying RDMA SRQ with queued recv WRs\n");
+	}
+
+	rc = ibv_destroy_srq(rdma_srq->srq);
+	if (rc) {
+		SPDK_ERRLOG("SRQ destroy failed with %d\n", rc);
+	}
+
+	free(rdma_srq);
+
+	return rc;
+}
+
+bool
+spdk_rdma_srq_queue_recv_wrs(struct spdk_rdma_srq *rdma_srq, struct ibv_recv_wr *first)
+{
+	struct ibv_recv_wr *last;
+
+	last = first;
+	while (last->next != NULL) {
+		last = last->next;
+	}
+
+	if (rdma_srq->recv_wrs.first == NULL) {
+		rdma_srq->recv_wrs.first = first;
+		rdma_srq->recv_wrs.last = last;
+		return true;
+	} else {
+		rdma_srq->recv_wrs.last->next = first;
+		rdma_srq->recv_wrs.last = last;
+		return false;
+	}
+}
+
+int
+spdk_rdma_srq_flush_recv_wrs(struct spdk_rdma_srq *rdma_srq, struct ibv_recv_wr **bad_wr)
+{
+	int rc;
+
+	if (spdk_unlikely(rdma_srq->recv_wrs.first == NULL)) {
+		return 0;
+	}
+
+	rc = ibv_post_srq_recv(rdma_srq->srq, rdma_srq->recv_wrs.first, bad_wr);
+
+	rdma_srq->recv_wrs.first = NULL;
+
+	return rc;
 }

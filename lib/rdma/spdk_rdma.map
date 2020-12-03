@@ -2,6 +2,10 @@
 	global:
 
 	# Public functions
+	spdk_rdma_srq_create;
+	spdk_rdma_srq_destroy;
+	spdk_rdma_srq_queue_recv_wrs;
+	spdk_rdma_srq_flush_recv_wrs;
 	spdk_rdma_qp_create;
 	spdk_rdma_qp_accept;
 	spdk_rdma_qp_complete_connect;

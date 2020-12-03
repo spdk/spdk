@@ -55,6 +55,11 @@ struct spdk_rdma_send_wr_list {
 	struct ibv_send_wr	*last;
 };
 
+struct spdk_rdma_recv_wr_list {
+	struct ibv_recv_wr	*first;
+	struct ibv_recv_wr	*last;
+};
+
 struct spdk_rdma_qp {
 	struct ibv_qp *qp;
 	struct rdma_cm_id *cm_id;
@@ -77,6 +82,50 @@ struct spdk_rdma_memory_translation {
 	union spdk_rdma_mr mr_or_key;
 	uint8_t translation_type;
 };
+struct spdk_rdma_srq_init_attr {
+	struct ibv_pd *pd;
+	struct ibv_srq_init_attr srq_init_attr;
+};
+
+struct spdk_rdma_srq {
+	struct ibv_srq *srq;
+	struct spdk_rdma_recv_wr_list recv_wrs;
+};
+
+/**
+ * Create RDMA SRQ
+ *
+ * \param init_attr Pointer to SRQ init attr
+ * \return pointer to srq on success or NULL on failure. errno is updated in failure case.
+ */
+struct spdk_rdma_srq *spdk_rdma_srq_create(struct spdk_rdma_srq_init_attr *init_attr);
+
+/**
+ * Destroy RDMA SRQ
+ *
+ * \param rdma_srq Pointer to SRQ
+ * \return 0 on succes, errno on failure
+ */
+int spdk_rdma_srq_destroy(struct spdk_rdma_srq *rdma_srq);
+
+/**
+ * Append the given recv wr structure to the SRQ's outstanding recv list.
+ * This function accepts either a single Work Request or the first WR in a linked list.
+ *
+ * \param rdma_srq Pointer to SRQ
+ * \param first pointer to the first Work Request
+ * \return true if there were no outstanding WRs before, false otherwise
+ */
+bool spdk_rdma_srq_queue_recv_wrs(struct spdk_rdma_srq *rdma_srq, struct ibv_recv_wr *first);
+
+/**
+ * Submit all queued receive Work Request
+ *
+ * \param rdma_srq Pointer to SRQ
+ * \param bad_wr Stores a pointer to the first failed WR if this function return nonzero value
+ * \return 0 on succes, errno on failure
+ */
+int spdk_rdma_srq_flush_recv_wrs(struct spdk_rdma_srq *rdma_srq, struct ibv_recv_wr **bad_wr);
 
 /**
  * Create RDMA provider specific qpair
