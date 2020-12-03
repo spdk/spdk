@@ -148,11 +148,16 @@ struct nvme_rdma_destroyed_qpair {
 	STAILQ_ENTRY(nvme_rdma_destroyed_qpair)	link;
 };
 
+struct nvme_rdma_poller_stats {
+	struct spdk_rdma_qp_stats rdma_stats;
+};
+
 struct nvme_rdma_poller {
 	struct ibv_context		*device;
 	struct ibv_cq			*cq;
 	int				required_num_wc;
 	int				current_num_wc;
+	struct nvme_rdma_poller_stats	stats;
 	STAILQ_ENTRY(nvme_rdma_poller)	link;
 };
 
@@ -220,6 +225,7 @@ struct nvme_rdma_qpair {
 
 	/* Placed at the end of the struct since it is not used frequently */
 	struct rdma_cm_event			*evt;
+	struct nvme_rdma_poller			*poller;
 
 	/* Used by poll group to keep the qpair around until it is ready to remove it. */
 	bool					defer_deletion_to_pg;
@@ -601,6 +607,7 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 	}
 
 	attr.pd =		rctrlr->pd;
+	attr.stats =		rqpair->poller ? &rqpair->poller->stats.rdma_stats : NULL;
 	attr.send_cq		= rqpair->cq;
 	attr.recv_cq		= rqpair->cq;
 	attr.cap.max_send_wr	= rqpair->num_entries; /* SEND operations */
@@ -2420,6 +2427,7 @@ nvme_rdma_poll_group_connect_qpair(struct spdk_nvme_qpair *qpair)
 				return -EPROTO;
 			}
 			rqpair->cq = poller->cq;
+			rqpair->poller = poller;
 			break;
 		}
 	}
