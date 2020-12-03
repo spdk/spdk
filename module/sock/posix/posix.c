@@ -842,9 +842,17 @@ _sock_flush(struct spdk_sock *sock)
 }
 
 static int
-posix_sock_flush(struct spdk_sock *_sock)
+posix_sock_flush(struct spdk_sock *sock)
 {
-	return _sock_flush(_sock);
+#ifdef SPDK_ZEROCOPY
+	struct spdk_posix_sock *psock = __posix_sock(sock);
+
+	if (psock->zcopy && !TAILQ_EMPTY(&sock->pending_reqs)) {
+		_sock_check_zcopy(sock);
+	}
+#endif
+
+	return _sock_flush(sock);
 }
 
 static ssize_t
