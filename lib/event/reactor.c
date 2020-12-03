@@ -244,6 +244,9 @@ spdk_reactors_init(void)
 	assert(reactor != NULL);
 	g_scheduling_reactor = reactor;
 
+	/* set default scheduling period to one second */
+	g_scheduler_period = spdk_get_ticks_hz();
+
 	rc = _spdk_scheduler_set("static");
 	assert(rc == 0);
 
