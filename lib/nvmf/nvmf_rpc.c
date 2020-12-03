@@ -2052,6 +2052,7 @@ write_nvmf_transport_stats(struct spdk_json_write_ctx *w,
 			spdk_json_write_object_begin(w);
 			spdk_json_write_named_string(w, "name", stat->rdma.devices[i].name);
 			spdk_json_write_named_uint64(w, "polls", stat->rdma.devices[i].polls);
+			spdk_json_write_named_uint64(w, "idle_polls", stat->rdma.devices[i].idle_polls);
 			spdk_json_write_named_uint64(w, "completions", stat->rdma.devices[i].completions);
 			spdk_json_write_named_uint64(w, "requests",
 						     stat->rdma.devices[i].requests);

@@ -395,6 +395,7 @@ struct spdk_nvmf_rdma_qpair {
 struct spdk_nvmf_rdma_poller_stat {
 	uint64_t				completions;
 	uint64_t				polls;
+	uint64_t				idle_polls;
 	uint64_t				requests;
 	uint64_t				request_latency;
 	uint64_t				pending_free_request;
@@ -3789,6 +3790,8 @@ nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 		SPDK_ERRLOG("Error polling CQ! (%d): %s\n",
 			    errno, spdk_strerror(errno));
 		return -1;
+	} else if (reaped == 0) {
+		rpoller->stat.idle_polls++;
 	}
 
 	rpoller->stat.polls++;
@@ -4194,6 +4197,7 @@ nvmf_rdma_poll_group_get_stat(struct spdk_nvmf_tgt *tgt,
 				device_stat = &(*stat)->rdma.devices[num_devices++];
 				device_stat->name = ibv_get_device_name(rpoller->device->context->device);
 				device_stat->polls = rpoller->stat.polls;
+				device_stat->idle_polls = rpoller->stat.idle_polls;
 				device_stat->completions = rpoller->stat.completions;
 				device_stat->requests = rpoller->stat.requests;
 				device_stat->request_latency = rpoller->stat.request_latency;
