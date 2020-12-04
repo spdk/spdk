@@ -1,8 +1,54 @@
 #!/usr/bin/env bash
+shopt -s nullglob
 
 rootdir=$(readlink -f $(dirname $0))/..
 igb_driverdir=$rootdir/dpdk/build/build/kernel/igb_uio/
 allowed_drivers=("igb_uio" "uio_pci_generic")
+
+reload_intel_qat() {
+	# We need to make sure the out-of-tree intel_qat driver, provided via vm_setup.sh, is in
+	# use. Otherwise, some dependency modules loaded by qat_service may fail causing some
+	# disturbance later on during the tests - in particular, it's been seen that the adf_ctl
+	# was returning inconsistent data (wrong pci addresses), confusing the service into
+	# believing SR-IOV is not enabled.
+
+	# If this file doesn't exist, then either intel_qat is a kernel built-in or is not loaded.
+	# Nothing to do in such cases, qat_service will load the module for us.
+	[[ -e /sys/module/intel_qat/taint ]] || return 0
+
+	local t v
+	t=$(< /sys/module/intel_qat/taint)
+	v=$(< /sys/module/intel_qat/version)
+
+	# OE - out-of-tree, unsigned. By the very default, drivers built via vm_setup.sh are not
+	# signed.
+	[[ -z $t || $t != *"OE"* ]] || return 0
+
+	# Check the version of loaded module against the version of the same module as seen
+	# from .dep. perspective. if these are the same the most likely something is broken
+	# with the dependencies. We report a failure in such a case since reloading the module
+	# won't do any good anyway.
+
+	if [[ $(modinfo -F version intel_qat) == "$v" ]]; then
+		cat <<- WARN
+			Upstream intel_qat driver detected. Same version of the driver is seen
+			in modules dependencies: $v. This may mean QAT build didn't update
+			dependencies properly. QAT setup may fail, please, rebuild the QAT
+			driver.
+		WARN
+		return 0
+	fi
+
+	# Ok, intel_qat is an upstream module, replace it with the out-of-tree one.
+	echo "Reloading intel_qat module"
+
+	local h=(/sys/module/intel_qat/holders/*)
+	h=("${h[@]##*/}")
+
+	modprobe -r "${h[@]}" intel_qat
+	# qat_service does that too, but be vigilant
+	modprobe -a intel_qat "${h[@]}"
+}
 
 # This script requires an igb_uio kernel module binary located at $igb_driverdir/igb_uio.ko
 # Please also note that this script is not intended to be comprehensive or production quality.
@@ -33,6 +79,8 @@ if $bad_driver; then
 	echo "${allowed_drivers[@]}"
 	exit 1
 fi
+
+reload_intel_qat
 
 # try starting the qat service. If this doesn't work, just treat it as a warning for now.
 if ! service qat_service start; then
