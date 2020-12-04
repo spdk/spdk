@@ -389,17 +389,6 @@ nvmf_fc_hwqp_free_fc_request(struct spdk_nvmf_fc_hwqp *hwqp, struct spdk_nvmf_fc
 	TAILQ_INSERT_HEAD(&hwqp->free_reqs, fc_req, link);
 }
 
-static inline bool
-nvmf_fc_req_in_get_buff(struct spdk_nvmf_fc_request *fc_req)
-{
-	switch (fc_req->state) {
-	case SPDK_NVMF_FC_REQ_WRITE_BUFFS:
-		return true;
-	default:
-		return false;
-	}
-}
-
 void
 nvmf_fc_init_poller_queues(struct spdk_nvmf_fc_hwqp *hwqp)
 {
@@ -1104,32 +1093,6 @@ nvmf_ctrlr_is_on_nport(uint8_t port_hdl, uint16_t nport_hdl,
 	return false;
 }
 
-static inline bool
-nvmf_fc_req_in_bdev(struct spdk_nvmf_fc_request *fc_req)
-{
-	switch (fc_req->state) {
-	case SPDK_NVMF_FC_REQ_READ_BDEV:
-	case SPDK_NVMF_FC_REQ_WRITE_BDEV:
-	case SPDK_NVMF_FC_REQ_NONE_BDEV:
-		return true;
-	default:
-		return false;
-	}
-}
-
-static inline bool
-nvmf_fc_req_in_pending(struct spdk_nvmf_fc_request *fc_req)
-{
-	struct spdk_nvmf_request *tmp = NULL;
-
-	STAILQ_FOREACH(tmp, &fc_req->hwqp->fgroup->group.pending_buf_queue, buf_link) {
-		if (tmp == &fc_req->req) {
-			return true;
-		}
-	}
-	return false;
-}
-
 static void
 nvmf_fc_req_bdev_abort(void *arg1)
 {
@@ -1231,27 +1194,35 @@ nvmf_fc_request_abort(struct spdk_nvmf_fc_request *fc_req, bool send_abts,
 		fc_req->xchg->aborted	= true;
 	}
 
-	if (fc_req->state == SPDK_NVMF_FC_REQ_BDEV_ABORTED) {
+	switch (fc_req->state) {
+	case SPDK_NVMF_FC_REQ_BDEV_ABORTED:
 		/* Aborted by backend */
 		goto complete;
-	} else if (nvmf_fc_req_in_bdev(fc_req)) {
+
+	case SPDK_NVMF_FC_REQ_READ_BDEV:
+	case SPDK_NVMF_FC_REQ_WRITE_BDEV:
+	case SPDK_NVMF_FC_REQ_NONE_BDEV:
 		/* Notify bdev */
 		spdk_thread_send_msg(fc_req->hwqp->thread,
 				     nvmf_fc_req_bdev_abort, (void *)fc_req);
-	} else if (nvmf_fc_req_in_xfer(fc_req)) {
+		break;
+
+	case SPDK_NVMF_FC_REQ_READ_XFER:
+	case SPDK_NVMF_FC_REQ_READ_RSP:
+	case SPDK_NVMF_FC_REQ_WRITE_XFER:
+	case SPDK_NVMF_FC_REQ_WRITE_RSP:
+	case SPDK_NVMF_FC_REQ_NONE_RSP:
 		/* Notify HBA to abort this exchange  */
 		nvmf_fc_issue_abort(fc_req->hwqp, fc_req->xchg, NULL, NULL);
-	} else if (nvmf_fc_req_in_get_buff(fc_req)) {
-		/* Will be completed by request_complete callback. */
-		SPDK_DEBUGLOG(nvmf_fc, "Abort req when getting buffers.\n");
-	} else if (nvmf_fc_req_in_pending(fc_req)) {
+		break;
+
+	case SPDK_NVMF_FC_REQ_PENDING:
 		/* Remove from pending */
 		STAILQ_REMOVE(&fc_req->hwqp->fgroup->group.pending_buf_queue, &fc_req->req,
 			      spdk_nvmf_request, buf_link);
 		goto complete;
-	} else {
-		/* Should never happen */
-		SPDK_ERRLOG("Request in invalid state\n");
+	default:
+		SPDK_ERRLOG("Request in invalid state.\n");
 		goto complete;
 	}
 
