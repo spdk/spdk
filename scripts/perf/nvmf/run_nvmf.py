@@ -41,7 +41,8 @@ class Server:
 class Target(Server):
     def __init__(self, name, username, password, mode, nic_ips, transport="rdma",
                  null_block_devices=0, sar_settings=None, pcm_settings=None,
-                 bandwidth_settings=None, dpdk_settings=None, zcopy_settings=None):
+                 bandwidth_settings=None, dpdk_settings=None, zcopy_settings=None,
+                 scheduler_settings="static"):
 
         super(Target, self).__init__(name, username, password, mode, nic_ips, transport)
         self.null_block = null_block_devices
@@ -51,6 +52,7 @@ class Target(Server):
         self.enable_bandwidth = False
         self.enable_dpdk_memory = False
         self.enable_zcopy = False
+        self.scheduler_name = scheduler_settings
 
         if sar_settings:
             self.enable_sar, self.sar_delay, self.sar_interval, self.sar_count = sar_settings
@@ -302,6 +304,8 @@ class Target(Server):
         subprocess.run("cpupower frequency-info", shell=True, check=True)
         self.log_print("====zcopy settings:====")
         self.log_print("zcopy enabled: %s" % (self.enable_zcopy))
+        self.log_print("====Scheduler settings:====")
+        self.log_print("SPDK scheduler: %s" % (self.scheduler_name))
 
 
 class Initiator(Server):
@@ -610,11 +614,12 @@ class SPDKTarget(Target):
     def __init__(self, name, username, password, mode, nic_ips, transport="rdma",
                  null_block_devices=0, null_block_dif_type=0, sar_settings=None, pcm_settings=None,
                  bandwidth_settings=None, dpdk_settings=None, zcopy_settings=None,
-                 num_shared_buffers=4096, num_cores=1, dif_insert_strip=False, **kwargs):
+                 scheduler_settings="static", num_shared_buffers=4096, num_cores=1,
+                 dif_insert_strip=False, **kwargs):
 
         super(SPDKTarget, self).__init__(name, username, password, mode, nic_ips, transport,
                                          null_block_devices, sar_settings, pcm_settings, bandwidth_settings,
-                                         dpdk_settings, zcopy_settings)
+                                         dpdk_settings, zcopy_settings, scheduler_settings)
         self.num_cores = num_cores
         self.num_shared_buffers = num_shared_buffers
         self.null_block_dif_type = null_block_dif_type
@@ -731,6 +736,8 @@ class SPDKTarget(Target):
                                            enable_zerocopy_send=True)
             self.log_print("Target socket options:")
             rpc.client.print_dict(rpc.sock.sock_impl_get_options(self.client, impl_name="posix"))
+
+        rpc.app.framework_set_scheduler(self.client, name=self.scheduler_name)
 
         rpc.framework_start_init(self.client)
         self.spdk_tgt_configure()

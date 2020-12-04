@@ -177,3 +177,13 @@ example:
 ```
 "zcopy_settings": true
 ```
+# Scheduler settings in NVMe-oF performance scripts
+To enable dynamic scheduler in perf test you need to add Target setting in config.json file:
+
+```
+"scheduler_settings": [scheduler_name]
+```
+example:
+```
+"scheduler_settings": [static]
+```
