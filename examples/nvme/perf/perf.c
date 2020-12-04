@@ -1587,28 +1587,28 @@ static void usage(char *program_name)
 	printf(" [Kernel device(s)]...");
 #endif
 	printf("\n");
-	printf("\t[-b allowed local PCIe device address]\n");
+	printf("\t[-b, --allowed-pci-addr <addr> allowed local PCIe device address]\n");
 	printf("\t Example: -b 0000:d8:00.0 -b 0000:d9:00.0\n");
-	printf("\t[-q io depth]\n");
-	printf("\t[-o io size in bytes]\n");
-	printf("\t[-O io unit size in bytes (4-byte aligned) for SPDK driver. default: same as io size]\n");
-	printf("\t[-P number of io queues per namespace. default: 1]\n");
-	printf("\t[-U number of unused io queues per controller. default: 0]\n");
-	printf("\t[-w io pattern type, must be one of\n");
+	printf("\t[-q, --io-depth <val> io depth]\n");
+	printf("\t[-o, --io-size <val> io size in bytes]\n");
+	printf("\t[-O, --io-unit-size io unit size in bytes (4-byte aligned) for SPDK driver. default: same as io size]\n");
+	printf("\t[-P, --num-qpairs <val> number of io queues per namespace. default: 1]\n");
+	printf("\t[-U, --num-unused-qpairs <val> number of unused io queues per controller. default: 0]\n");
+	printf("\t[-w, --io-pattern <pattern> io pattern type, must be one of\n");
 	printf("\t\t(read, write, randread, randwrite, rw, randrw)]\n");
-	printf("\t[-M rwmixread (100 for reads, 0 for writes)]\n");
-	printf("\t[-L enable latency tracking via sw, default: disabled]\n");
+	printf("\t[-M, --rwmixread <0-100> rwmixread (100 for reads, 0 for writes)]\n");
+	printf("\t[-L, --enable-sw-latency-tracking enable latency tracking via sw, default: disabled]\n");
 	printf("\t\t-L for latency summary, -LL for detailed histogram\n");
-	printf("\t[-l enable latency tracking via ssd (if supported), default: disabled]\n");
-	printf("\t[-t time in seconds]\n");
-	printf("\t[-a warmup time in seconds]\n");
-	printf("\t[-c core mask for I/O submission/completion.]\n");
+	printf("\t[-l, --enable-ssd-latency-tracking enable latency tracking via ssd (if supported), default: disabled]\n");
+	printf("\t[-t, --time <sec> time in seconds]\n");
+	printf("\t[-a, --warmup-time <sec> warmup time in seconds]\n");
+	printf("\t[-c, --core-mask <mask> core mask for I/O submission/completion.]\n");
 	printf("\t\t(default: 1)\n");
-	printf("\t[-D disable submission queue in controller memory buffer, default: enabled]\n");
-	printf("\t[-H enable header digest for TCP transport, default: disabled]\n");
-	printf("\t[-I enable data digest for TCP transport, default: disabled]\n");
-	printf("\t[-N no shutdown notification process for controllers, default: disabled]\n");
-	printf("\t[-r Transport ID for local PCIe NVMe or NVMeoF]\n");
+	printf("\t[-D, --disable-sq-cmb disable submission queue in controller memory buffer, default: enabled]\n");
+	printf("\t[-H, --enable-tcp-hdgst enable header digest for TCP transport, default: disabled]\n");
+	printf("\t[-I, --enable-tcp-ddgst enable data digest for TCP transport, default: disabled]\n");
+	printf("\t[-N, --no-shst-notification no shutdown notification process for controllers, default: disabled]\n");
+	printf("\t[-r, --transport <fmt> Transport ID for local PCIe NVMe or NVMeoF]\n");
 	printf("\t Format: 'key:value [key:value] ...'\n");
 	printf("\t Keys:\n");
 	printf("\t  trtype      Transport type (e.g. PCIe, RDMA)\n");
@@ -1621,35 +1621,35 @@ static void usage(char *program_name)
 	printf("\t Example: -r 'trtype:PCIe traddr:0000:04:00.0' for PCIe or\n");
 	printf("\t          -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420' for NVMeoF\n");
 	printf("\t Note: can be specified multiple times to test multiple disks/targets.\n");
-	printf("\t[-e metadata configuration]\n");
+	printf("\t[-e, --metadata <fmt> metadata configuration]\n");
 	printf("\t Keys:\n");
 	printf("\t  PRACT      Protection Information Action bit (PRACT=1 or PRACT=0)\n");
 	printf("\t  PRCHK      Control of Protection Information Checking (PRCHK=GUARD|REFTAG|APPTAG)\n");
 	printf("\t Example: -e 'PRACT=0,PRCHK=GUARD|REFTAG|APPTAG'\n");
 	printf("\t          -e 'PRACT=1,PRCHK=GUARD'\n");
-	printf("\t[-k keep alive timeout period in millisecond]\n");
-	printf("\t[-s DPDK huge memory size in MB.]\n");
-	printf("\t[-g use single file descriptor for DPDK memory segments]\n");
-	printf("\t[-C max completions per poll]\n");
+	printf("\t[-k, --keepalive <ms> keep alive timeout period in millisecond]\n");
+	printf("\t[-s, --hugemem-size <MB> DPDK huge memory size in MB.]\n");
+	printf("\t[-g, --mem-single-seg use single file descriptor for DPDK memory segments]\n");
+	printf("\t[-C, --max-completion-per-poll <val> max completions per poll]\n");
 	printf("\t\t(default: 0 - unlimited)\n");
-	printf("\t[-i shared memory group ID]\n");
-	printf("\t[-Q log I/O errors every N times (default: 1)\n");
+	printf("\t[-i, --shmem-grp-id <id> shared memory group ID]\n");
+	printf("\t[-Q, --skip-errors log I/O errors every N times (default: 1)\n");
 	printf("\t");
 	spdk_log_usage(stdout, "-T");
-	printf("\t[-V enable VMD enumeration]\n");
-	printf("\t[-z disable zero copy send for the given sock implementation. Default for posix impl]\n");
-	printf("\t[-Z enable zero copy send for the given sock implementation]\n");
-	printf("\t[-A IO buffer alignment. Must be power of 2 and not less than cache line (%u)]\n",
+	printf("\t[-V, --enable-vmd enable VMD enumeration]\n");
+	printf("\t[-z, --disable-zcopy <impl> disable zero copy send for the given sock implementation. Default for posix impl]\n");
+	printf("\t[-Z, --enable-zcopy <impl> enable zero copy send for the given sock implementation]\n");
+	printf("\t[-A, --buffer-alignment IO buffer alignment. Must be power of 2 and not less than cache line (%u)]\n",
 	       SPDK_CACHE_LINE_SIZE);
-	printf("\t[-S set the default sock impl, e.g. \"posix\"]\n");
-	printf("\t[-m display real-time overall cpu usage on used cores]\n");
+	printf("\t[-S, --default-sock-impl <impl> set the default sock impl, e.g. \"posix\"]\n");
+	printf("\t[-m, --cpu-usage display real-time overall cpu usage on used cores]\n");
 #ifdef SPDK_CONFIG_URING
-	printf("\t[-R enable using liburing to drive kernel devices (Default: libaio)]\n");
+	printf("\t[-R, --enable-uring enable using liburing to drive kernel devices (Default: libaio)]\n");
 #endif
 #ifdef DEBUG
-	printf("\t[-G enable debug logging]\n");
+	printf("\t[-G, --enable-debug enable debug logging]\n");
 #else
-	printf("\t[-G enable debug logging (flag disabled, must reconfigure with --enable-debug)\n");
+	printf("\t[-G, --enable-debug enable debug logging (flag disabled, must reconfigure with --enable-debug)\n");
 #endif
 }
 
@@ -2067,77 +2067,151 @@ parse_metadata(const char *metacfg_str)
 	return 0;
 }
 
+#define PERF_GETOPT_SHORT "a:b:c:e:gi:lmo:q:r:k:s:t:w:z:A:C:DGHILM:NO:P:Q:RS:T:U:VZ:"
+
+static const struct option g_perf_cmdline_opts[] = {
+#define PERF_WARMUP_TIME	'a'
+	{"warmup-time",			required_argument,	NULL, PERF_WARMUP_TIME},
+#define PERF_ALLOWED_PCI_ADDR	'b'
+	{"allowed-pci-addr",			required_argument,	NULL, PERF_ALLOWED_PCI_ADDR},
+#define PERF_CORE_MASK	'c'
+	{"core-mask",			required_argument,	NULL, PERF_CORE_MASK},
+#define PERF_METADATA	'e'
+	{"metadata",			required_argument,	NULL, PERF_METADATA},
+#define PERF_MEM_SINGL_SEG	'g'
+	{"mem-single-seg", no_argument, NULL, PERF_MEM_SINGL_SEG},
+#define PERF_SHMEM_GROUP_ID	'i'
+	{"shmem-grp-id",			required_argument,	NULL, PERF_SHMEM_GROUP_ID},
+#define PERF_ENABLE_SSD_LATENCY_TRACING	'l'
+	{"enable-ssd-latency-tracking", no_argument, NULL, PERF_ENABLE_SSD_LATENCY_TRACING},
+#define PERF_CPU_USAGE	'm'
+	{"cpu-usage", no_argument, NULL, PERF_CPU_USAGE},
+#define PERF_IO_SIZE	'o'
+	{"io-size",			required_argument,	NULL, PERF_IO_SIZE},
+#define PERF_IO_DEPTH	'q'
+	{"io-depth",			required_argument,	NULL, PERF_IO_DEPTH},
+#define PERF_TRANSPORT	'r'
+	{"transport",			required_argument,	NULL, PERF_TRANSPORT},
+#define PERF_KEEPALIVE	'k'
+	{"keepalive",			required_argument,	NULL, PERF_KEEPALIVE},
+#define PERF_HUGEMEM_SIZE	's'
+	{"hugemem-size",			required_argument,	NULL, PERF_HUGEMEM_SIZE},
+#define PERF_TIME	't'
+	{"time",			required_argument,	NULL, PERF_TIME},
+#define PERF_IO_PATTERN	'w'
+	{"io-pattern",			required_argument,	NULL, PERF_IO_PATTERN},
+#define PERF_DISABLE_ZCOPY	'z'
+	{"disable-zcopy",			required_argument,	NULL, PERF_DISABLE_ZCOPY},
+#define PERF_BUFFER_ALIGNMENT	'A'
+	{"buffer-alignment",			required_argument,	NULL, PERF_BUFFER_ALIGNMENT},
+#define PERF_MAX_COMPLETIONS_PER_POLL	'C'
+	{"max-completion-per-poll",			required_argument,	NULL, PERF_MAX_COMPLETIONS_PER_POLL},
+#define PERF_DISABLE_SQ_CMB	'D'
+	{"disable-sq-cmb",			no_argument,	NULL, PERF_DISABLE_SQ_CMB},
+#define PERF_ENABLE_DEBUG	'G'
+	{"enable-debug",			no_argument,	NULL, PERF_ENABLE_DEBUG},
+#define PERF_ENABLE_TCP_HDGST	'H'
+	{"enable-tcp-hdgst",			no_argument,	NULL, PERF_ENABLE_TCP_HDGST},
+#define PERF_ENABLE_TCP_DDGST	'I'
+	{"enable-tcp-ddgst",			no_argument,	NULL, PERF_ENABLE_TCP_DDGST},
+#define PERF_ENABLE_SW_LATENCY_TRACING	'L'
+	{"enable-sw-latency-tracking", no_argument, NULL, PERF_ENABLE_SW_LATENCY_TRACING},
+#define PERF_RW_MIXREAD	'M'
+	{"rwmixread", required_argument, NULL, PERF_RW_MIXREAD},
+#define PERF_NO_SHST_NOTIFICATION	'N'
+	{"no-shst-notification", no_argument, NULL, PERF_NO_SHST_NOTIFICATION},
+#define PERF_IO_UNIT_SIZE	'O'
+	{"io-unit-size",			required_argument,	NULL, PERF_IO_UNIT_SIZE},
+#define PERF_IO_QUEUES_PER_NS	'P'
+	{"num-qpairs", required_argument, NULL, PERF_IO_QUEUES_PER_NS},
+#define PERF_SKIP_ERRRORS	'Q'
+	{"skip-errors",			required_argument,	NULL, PERF_SKIP_ERRRORS},
+#define PERF_ENABLE_URING	'R'
+	{"enable-uring", no_argument, NULL, PERF_ENABLE_URING},
+#define PERF_DEFAULT_SOCK_IMPL	'S'
+	{"default-sock-impl", required_argument, NULL, PERF_DEFAULT_SOCK_IMPL},
+#define PERF_LOG_FLAG	'T'
+	{"logflag", required_argument, NULL, PERF_LOG_FLAG},
+#define PERF_NUM_UNUSED_IO_QPAIRS	'U'
+	{"num-unused-qpairs", required_argument, NULL, PERF_NUM_UNUSED_IO_QPAIRS},
+#define PERF_ENABLE_VMD	'V'
+	{"enable-vmd", no_argument, NULL, PERF_ENABLE_VMD},
+#define PERF_ENABLE_ZCOPY	'Z'
+	{"enable-zcopy",			required_argument,	NULL, PERF_ENABLE_ZCOPY},
+	/* Should be the last element */
+	{0, 0, 0, 0}
+};
+
 static int
 parse_args(int argc, char **argv)
 {
-	int op;
+	int op, long_idx;
 	long int val;
 	int rc;
 
-	while ((op = getopt(argc, argv,
-			    "a:b:c:e:gi:lmo:q:r:k:s:t:w:z:A:C:DGHILM:NO:P:Q:RS:T:U:VZ:")) != -1) {
+	while ((op = getopt_long(argc, argv, PERF_GETOPT_SHORT, g_perf_cmdline_opts, &long_idx)) != -1) {
 		switch (op) {
-		case 'a':
-		case 'A':
-		case 'i':
-		case 'C':
-		case 'P':
-		case 'o':
-		case 'O':
-		case 'q':
-		case 'k':
-		case 's':
-		case 't':
-		case 'M':
-		case 'Q':
-		case 'U':
+		case PERF_WARMUP_TIME:
+		case PERF_BUFFER_ALIGNMENT:
+		case PERF_SHMEM_GROUP_ID:
+		case PERF_MAX_COMPLETIONS_PER_POLL:
+		case PERF_IO_QUEUES_PER_NS:
+		case PERF_IO_SIZE:
+		case PERF_IO_UNIT_SIZE:
+		case PERF_IO_DEPTH:
+		case PERF_KEEPALIVE:
+		case PERF_HUGEMEM_SIZE:
+		case PERF_TIME:
+		case PERF_RW_MIXREAD:
+		case PERF_NUM_UNUSED_IO_QPAIRS:
+		case PERF_SKIP_ERRRORS:
 			val = spdk_strtol(optarg, 10);
 			if (val < 0) {
 				fprintf(stderr, "Converting a string to integer failed\n");
 				return val;
 			}
 			switch (op) {
-			case 'a':
+			case PERF_WARMUP_TIME:
 				g_warmup_time_in_sec = val;
 				break;
-			case 'i':
+			case PERF_SHMEM_GROUP_ID:
 				g_shm_id = val;
 				break;
-			case 'C':
+			case PERF_MAX_COMPLETIONS_PER_POLL:
 				g_max_completions = val;
 				break;
-			case 'P':
+			case PERF_IO_QUEUES_PER_NS:
 				g_nr_io_queues_per_ns = val;
 				break;
-			case 'o':
+			case PERF_IO_SIZE:
 				g_io_size_bytes = val;
 				break;
-			case 'O':
+			case PERF_IO_UNIT_SIZE:
 				g_io_unit_size = val;
 				break;
-			case 'q':
+			case PERF_IO_DEPTH:
 				g_queue_depth = val;
 				break;
-			case 'k':
+			case PERF_KEEPALIVE:
 				g_keep_alive_timeout_in_ms = val;
 				break;
-			case 's':
+			case PERF_HUGEMEM_SIZE:
 				g_dpdk_mem = val;
 				break;
-			case 't':
+			case PERF_TIME:
 				g_time_in_sec = val;
 				break;
-			case 'M':
+			case PERF_RW_MIXREAD:
 				g_rw_percentage = val;
 				g_mix_specified = true;
 				break;
-			case 'Q':
+			case PERF_SKIP_ERRRORS:
 				g_quiet_count = val;
 				break;
-			case 'U':
+			case PERF_NUM_UNUSED_IO_QPAIRS:
 				g_nr_unused_io_queues = val;
 				break;
-			case 'A':
+			case PERF_BUFFER_ALIGNMENT:
 				g_io_align = val;
 				if (!spdk_u32_is_pow2(g_io_align) || g_io_align < SPDK_CACHE_LINE_SIZE) {
 					fprintf(stderr, "Wrong alignment %u. Must be power of 2 and not less than cache lize (%u)\n",
@@ -2149,43 +2223,43 @@ parse_args(int argc, char **argv)
 				break;
 			}
 			break;
-		case 'b':
+		case PERF_ALLOWED_PCI_ADDR:
 			if (add_allowed_pci_device(optarg)) {
 				usage(argv[0]);
 				return 1;
 			}
 			break;
-		case 'c':
+		case PERF_CORE_MASK:
 			g_core_mask = optarg;
 			break;
-		case 'e':
+		case PERF_METADATA:
 			if (parse_metadata(optarg)) {
 				usage(argv[0]);
 				return 1;
 			}
 			break;
-		case 'g':
+		case PERF_MEM_SINGL_SEG:
 			g_dpdk_mem_single_seg = true;
 			break;
-		case 'l':
+		case PERF_ENABLE_SSD_LATENCY_TRACING:
 			g_latency_ssd_tracking_enable = true;
 			break;
-		case 'm':
+		case PERF_CPU_USAGE:
 			g_monitor_perf_cores = true;
 			break;
-		case 'r':
+		case PERF_TRANSPORT:
 			if (add_trid(optarg)) {
 				usage(argv[0]);
 				return 1;
 			}
 			break;
-		case 'w':
+		case PERF_IO_PATTERN:
 			g_workload_type = optarg;
 			break;
-		case 'D':
+		case PERF_DISABLE_SQ_CMB:
 			g_disable_sq_cmb = 1;
 			break;
-		case 'G':
+		case PERF_ENABLE_DEBUG:
 #ifndef DEBUG
 			fprintf(stderr, "%s must be configured with --enable-debug for -G flag\n",
 				argv[0]);
@@ -2196,19 +2270,19 @@ parse_args(int argc, char **argv)
 			spdk_log_set_print_level(SPDK_LOG_DEBUG);
 			break;
 #endif
-		case 'H':
+		case PERF_ENABLE_TCP_HDGST:
 			g_header_digest = 1;
 			break;
-		case 'I':
+		case PERF_ENABLE_TCP_DDGST:
 			g_data_digest = 1;
 			break;
-		case 'L':
+		case PERF_ENABLE_SW_LATENCY_TRACING:
 			g_latency_sw_tracking_level++;
 			break;
-		case 'N':
+		case PERF_NO_SHST_NOTIFICATION:
 			g_no_shn_notification = true;
 			break;
-		case 'R':
+		case PERF_ENABLE_URING:
 #ifndef SPDK_CONFIG_URING
 			fprintf(stderr, "%s must be rebuilt with CONFIG_URING=y for -R flag.\n",
 				argv[0]);
@@ -2217,7 +2291,7 @@ parse_args(int argc, char **argv)
 #endif
 			g_use_uring = true;
 			break;
-		case 'T':
+		case PERF_LOG_FLAG:
 			rc = spdk_log_set_flag(optarg);
 			if (rc < 0) {
 				fprintf(stderr, "unknown flag\n");
@@ -2228,16 +2302,16 @@ parse_args(int argc, char **argv)
 			spdk_log_set_print_level(SPDK_LOG_DEBUG);
 #endif
 			break;
-		case 'V':
+		case PERF_ENABLE_VMD:
 			g_vmd = true;
 			break;
-		case 'z':
+		case PERF_DISABLE_ZCOPY:
 			perf_set_sock_zcopy(optarg, false);
 			break;
-		case 'Z':
+		case PERF_ENABLE_ZCOPY:
 			perf_set_sock_zcopy(optarg, true);
 			break;
-		case 'S':
+		case PERF_DEFAULT_SOCK_IMPL:
 			rc = spdk_sock_set_default_impl(optarg);
 			if (rc) {
 				fprintf(stderr, "Failed to set sock impl %s, err %d (%s)\n", optarg, errno, strerror(errno));
@@ -2256,12 +2330,12 @@ parse_args(int argc, char **argv)
 	}
 
 	if (!g_queue_depth) {
-		fprintf(stderr, "missing -q (queue size) operand\n");
+		fprintf(stderr, "missing -q (--io-depth) operand\n");
 		usage(argv[0]);
 		return 1;
 	}
 	if (!g_io_size_bytes) {
-		fprintf(stderr, "missing -o (block size) operand\n");
+		fprintf(stderr, "missing -o (--io-size) operand\n");
 		usage(argv[0]);
 		return 1;
 	}
@@ -2270,17 +2344,17 @@ parse_args(int argc, char **argv)
 		return 1;
 	}
 	if (!g_workload_type) {
-		fprintf(stderr, "missing -w (io pattern type) operand\n");
+		fprintf(stderr, "missing -w (--io-pattern) operand\n");
 		usage(argv[0]);
 		return 1;
 	}
 	if (!g_time_in_sec) {
-		fprintf(stderr, "missing -t (test time in seconds) operand\n");
+		fprintf(stderr, "missing -t (--time) operand\n");
 		usage(argv[0]);
 		return 1;
 	}
 	if (!g_quiet_count) {
-		fprintf(stderr, "-Q value must be greater than 0\n");
+		fprintf(stderr, "-Q (--skip-errors) value must be greater than 0\n");
 		usage(argv[0]);
 		return 1;
 	}
@@ -2293,19 +2367,19 @@ parse_args(int argc, char **argv)
 	if (strcmp(g_workload_type, "read") == 0 || strcmp(g_workload_type, "write") == 0) {
 		g_rw_percentage = strcmp(g_workload_type, "read") == 0 ? 100 : 0;
 		if (g_mix_specified) {
-			fprintf(stderr, "Ignoring -M option... Please use -M option"
+			fprintf(stderr, "Ignoring -M (--rwmixread) option... Please use -M option"
 				" only when using rw or randrw.\n");
 		}
 	} else if (strcmp(g_workload_type, "rw") == 0) {
 		if (g_rw_percentage < 0 || g_rw_percentage > 100) {
 			fprintf(stderr,
-				"-M must be specified to value from 0 to 100 "
+				"-M (--rwmixread) must be specified to value from 0 to 100 "
 				"for rw or randrw.\n");
 			return 1;
 		}
 	} else {
 		fprintf(stderr,
-			"io pattern type must be one of\n"
+			"-o (--io-pattern) io pattern type must be one of\n"
 			"(read, write, randread, randwrite, rw, randrw)\n");
 		return 1;
 	}
