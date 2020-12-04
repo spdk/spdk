@@ -389,12 +389,6 @@ nvmf_fc_hwqp_free_fc_request(struct spdk_nvmf_fc_hwqp *hwqp, struct spdk_nvmf_fc
 	TAILQ_INSERT_HEAD(&hwqp->free_reqs, fc_req, link);
 }
 
-void
-nvmf_fc_init_poller_queues(struct spdk_nvmf_fc_hwqp *hwqp)
-{
-	nvmf_fc_init_rqpair_buffers(hwqp);
-}
-
 struct spdk_nvmf_fc_conn *
 nvmf_fc_hwqp_find_fc_conn(struct spdk_nvmf_fc_hwqp *hwqp, uint64_t conn_id)
 {
@@ -410,28 +404,6 @@ nvmf_fc_hwqp_find_fc_conn(struct spdk_nvmf_fc_hwqp *hwqp, uint64_t conn_id)
 }
 
 void
-nvmf_fc_hwqp_reinit_poller_queues(struct spdk_nvmf_fc_hwqp *hwqp, void *queues_curr)
-{
-	struct spdk_nvmf_fc_abts_ctx *ctx;
-	struct spdk_nvmf_fc_poller_api_queue_sync_args *args = NULL, *tmp = NULL;
-
-	/* Clean up any pending sync callbacks */
-	TAILQ_FOREACH_SAFE(args, &hwqp->sync_cbs, link, tmp) {
-		TAILQ_REMOVE(&hwqp->sync_cbs, args, link);
-		ctx = args->cb_info.cb_data;
-		if (ctx) {
-			if (++ctx->hwqps_responded == ctx->num_hwqps) {
-				free(ctx->sync_poller_args);
-				free(ctx->abts_poller_args);
-				free(ctx);
-			}
-		}
-	}
-
-	nvmf_fc_reinit_q(hwqp->queues, queues_curr);
-}
-
-void
 nvmf_fc_init_hwqp(struct spdk_nvmf_fc_port *fc_port, struct spdk_nvmf_fc_hwqp *hwqp)
 {
 	hwqp->fc_port = fc_port;
@@ -439,15 +411,16 @@ nvmf_fc_init_hwqp(struct spdk_nvmf_fc_port *fc_port, struct spdk_nvmf_fc_hwqp *h
 	/* clear counters */
 	memset(&hwqp->counters, 0, sizeof(struct spdk_nvmf_fc_errors));
 
-	nvmf_fc_init_poller_queues(hwqp);
 	if (&fc_port->ls_queue != hwqp) {
 		nvmf_fc_create_req_mempool(hwqp);
 	}
 
-	nvmf_fc_init_q(hwqp);
 	TAILQ_INIT(&hwqp->connection_list);
 	TAILQ_INIT(&hwqp->sync_cbs);
 	TAILQ_INIT(&hwqp->ls_pending_queue);
+
+	/* Init low level driver queues */
+	nvmf_fc_init_q(hwqp);
 }
 
 static struct spdk_nvmf_fc_poll_group *

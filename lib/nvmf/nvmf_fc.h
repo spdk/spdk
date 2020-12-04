@@ -848,12 +848,8 @@ void nvmf_fc_ls_add_conn_failure(
 
 void nvmf_fc_init_hwqp(struct spdk_nvmf_fc_port *fc_port, struct spdk_nvmf_fc_hwqp *hwqp);
 
-void nvmf_fc_init_poller_queues(struct spdk_nvmf_fc_hwqp *hwqp);
-
 struct spdk_nvmf_fc_conn *nvmf_fc_hwqp_find_fc_conn(struct spdk_nvmf_fc_hwqp *hwqp,
 		uint64_t conn_id);
-
-void nvmf_fc_hwqp_reinit_poller_queues(struct spdk_nvmf_fc_hwqp *hwqp, void *queues_curr);
 
 struct spdk_nvmf_fc_port *nvmf_fc_port_lookup(uint8_t port_hdl);
 

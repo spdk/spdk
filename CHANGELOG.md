@@ -2,6 +2,12 @@
 
 ## v21.01: (Upcoming Release)
 
+### nvmf
+
+Broadcom FC LLD driver and SPDK NVMe-oF FC transport consolidated one LLD API,
+`nvmf_fc_init_poller_queues` into another LLD API `nvmf_fc_init_q`.
+Hence updating Broadcom FC LLD driver to the latest is required.
+
 ### event
 
 The pci_whitelist and pci_blacklist members of struct spdk_app_opts have been
