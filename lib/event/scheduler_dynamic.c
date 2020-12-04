@@ -127,9 +127,14 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 	g_last_main_core_busy = cores_info[g_main_lcore].core_busy_tsc;
 	g_last_main_core_idle = cores_info[g_main_lcore].core_idle_tsc;
 
+	SPDK_ENV_FOREACH_CORE(i) {
+		cores_info[i].pending_threads_count = cores_info[i].threads_count;
+	}
+
 	/* Distribute active threads across all cores and move idle threads to main core */
 	SPDK_ENV_FOREACH_CORE(i) {
 		core = &cores_info[i];
+
 		for (j = 0; j < core->threads_count; j++) {
 			lw_thread = core->threads[j];
 			lw_thread->new_lcore = lw_thread->lcore;
@@ -168,6 +173,8 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 
 					if (spdk_cpuset_get_cpu(cpumask, target_lcore)) {
 						lw_thread->new_lcore = target_lcore;
+						cores_info[target_lcore].pending_threads_count++;
+						core->pending_threads_count--;
 
 						if (target_lcore != g_main_lcore) {
 							busy_threads_present = true;
@@ -181,6 +188,8 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 			} else if (i != g_main_lcore && load < SCHEDULER_LOAD_LIMIT) {
 				/* This thread is idle but not on the main core, so we need to move it to the main core */
 				lw_thread->new_lcore = g_main_lcore;
+				cores_info[g_main_lcore].pending_threads_count++;
+				core->pending_threads_count--;
 
 				main_core_busy += spdk_min(UINT64_MAX - main_core_busy, thread_busy);
 				main_core_idle -= spdk_min(main_core_idle, thread_busy);
