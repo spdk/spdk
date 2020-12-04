@@ -315,6 +315,7 @@ struct spdk_scheduler_core_info {
 	uint32_t lcore;
 	uint32_t threads_count;
 	uint32_t pending_threads_count;
+	bool interrupt_mode;
 	struct spdk_lw_thread **threads;
 };
 
