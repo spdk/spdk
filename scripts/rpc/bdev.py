@@ -1203,3 +1203,8 @@ def bdev_nvme_apply_firmware(client, bdev_name, filename):
         'bdev_name': bdev_name,
     }
     return client.call('bdev_nvme_apply_firmware', params)
+
+
+def bdev_nvme_get_transport_statistics(client):
+    """Get bdev_nvme poll group transport statistics"""
+    return client.call('bdev_nvme_get_transport_statistics')

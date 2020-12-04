@@ -110,6 +110,11 @@ CPU cache locality, enabled by setting enable_placement_id=2.
 A new API `spdk_io_channel_get_io_device` was added to get the io_device for the specified
 I/O channel.
 
+### rpc
+
+New RPC `bdev_nvme_get_transport_statistics` was added, it allows to get transport statistics
+of nvme poll groups.
+
 ## v21.01:
 
 ### idxd

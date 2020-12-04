@@ -904,6 +904,13 @@ if __name__ == "__main__":
     p.add_argument('bdev_name', help='name of the NVMe device')
     p.set_defaults(func=bdev_nvme_apply_firmware)
 
+    def bdev_nvme_get_transport_statistics(args):
+        print_dict(rpc.bdev.bdev_nvme_get_transport_statistics(args.client))
+
+    p = subparsers.add_parser('bdev_nvme_get_transport_statistics',
+                              help='Get bdev_nvme poll group transport statistics')
+    p.set_defaults(func=bdev_nvme_get_transport_statistics)
+
     # iSCSI
     def iscsi_set_options(args):
         rpc.iscsi.iscsi_set_options(

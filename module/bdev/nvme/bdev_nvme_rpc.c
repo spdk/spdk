@@ -2,7 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
- *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2019-2021 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -941,3 +941,126 @@ err:
 }
 SPDK_RPC_REGISTER("bdev_nvme_apply_firmware", rpc_bdev_nvme_apply_firmware, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_nvme_apply_firmware, apply_nvme_firmware)
+
+struct rpc_bdev_nvme_transport_stat_ctx {
+	struct spdk_jsonrpc_request *request;
+	struct spdk_json_write_ctx *w;
+};
+
+static void
+rpc_bdev_nvme_rdma_stats(struct spdk_json_write_ctx *w,
+			 struct spdk_nvme_transport_poll_group_stat *stat)
+{
+	struct spdk_nvme_rdma_device_stat *device_stats;
+	uint32_t i;
+
+	spdk_json_write_named_array_begin(w, "devices");
+
+	for (i = 0; i < stat->rdma.num_devices; i++) {
+		device_stats = &stat->rdma.device_stats[i];
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "dev_name", device_stats->name);
+		spdk_json_write_named_uint64(w, "polls", device_stats->polls);
+		spdk_json_write_named_uint64(w, "idle_polls", device_stats->idle_polls);
+		spdk_json_write_named_uint64(w, "completions", device_stats->completions);
+		spdk_json_write_named_uint64(w, "queued_requests", device_stats->queued_requests);
+		spdk_json_write_named_uint64(w, "total_send_wrs", device_stats->total_send_wrs);
+		spdk_json_write_named_uint64(w, "send_doorbell_updates", device_stats->send_doorbell_updates);
+		spdk_json_write_named_uint64(w, "total_recv_wrs", device_stats->total_recv_wrs);
+		spdk_json_write_named_uint64(w, "recv_doorbell_updates", device_stats->recv_doorbell_updates);
+		spdk_json_write_object_end(w);
+	}
+	spdk_json_write_array_end(w);
+}
+
+static void
+rpc_bdev_nvme_stats_per_channel(struct spdk_io_channel_iter *i)
+{
+	struct rpc_bdev_nvme_transport_stat_ctx *ctx;
+	struct spdk_io_channel *ch;
+	struct nvme_bdev_poll_group *bdev_group;
+	struct spdk_nvme_poll_group *group;
+	struct spdk_nvme_poll_group_stat *stat;
+	struct spdk_nvme_transport_poll_group_stat *tr_stat;
+	uint32_t j;
+	int rc;
+
+	ctx = spdk_io_channel_iter_get_ctx(i);
+	ch = spdk_io_channel_iter_get_channel(i);
+	bdev_group = spdk_io_channel_get_ctx(ch);
+	group = bdev_group->group;
+
+	rc = spdk_nvme_poll_group_get_stats(group, &stat);
+	if (rc) {
+		spdk_for_each_channel_continue(i, rc);
+		return;
+	}
+
+	spdk_json_write_object_begin(ctx->w);
+	spdk_json_write_named_string(ctx->w, "thread", spdk_thread_get_name(spdk_get_thread()));
+	spdk_json_write_named_array_begin(ctx->w, "transports");
+
+	for (j = 0; j < stat->num_transports; j++) {
+		tr_stat = stat->transport_stat[j];
+		spdk_json_write_object_begin(ctx->w);
+		spdk_json_write_named_string(ctx->w, "trname", spdk_nvme_transport_id_trtype_str(tr_stat->trtype));
+
+		switch (stat->transport_stat[j]->trtype) {
+		case SPDK_NVME_TRANSPORT_RDMA:
+			rpc_bdev_nvme_rdma_stats(ctx->w, tr_stat);
+			break;
+		default:
+			SPDK_WARNLOG("Can't handle trtype %d %s\n", tr_stat->trtype,
+				     spdk_nvme_transport_id_trtype_str(tr_stat->trtype));
+		}
+		spdk_json_write_object_end(ctx->w);
+	}
+	/* transports array */
+	spdk_json_write_array_end(ctx->w);
+	spdk_json_write_object_end(ctx->w);
+
+	spdk_nvme_poll_group_free_stats(group, stat);
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static void
+rpc_bdev_nvme_stats_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct rpc_bdev_nvme_transport_stat_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+
+	spdk_json_write_array_end(ctx->w);
+	spdk_json_write_object_end(ctx->w);
+	spdk_jsonrpc_end_result(ctx->request, ctx->w);
+	free(ctx);
+}
+
+static void
+rpc_bdev_nvme_get_transport_statistics(struct spdk_jsonrpc_request *request,
+				       const struct spdk_json_val *params)
+{
+	struct rpc_bdev_nvme_transport_stat_ctx *ctx;
+
+	if (params) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "'bdev_nvme_get_transport_statistics' requires no arguments");
+		return;
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Memory allocation error");
+		return;
+	}
+	ctx->request = request;
+	ctx->w = spdk_jsonrpc_begin_result(ctx->request);
+	spdk_json_write_object_begin(ctx->w);
+	spdk_json_write_named_array_begin(ctx->w, "poll_groups");
+
+	spdk_for_each_channel(&g_nvme_bdev_ctrlrs,
+			      rpc_bdev_nvme_stats_per_channel,
+			      ctx,
+			      rpc_bdev_nvme_stats_done);
+}
+SPDK_RPC_REGISTER("bdev_nvme_get_transport_statistics", rpc_bdev_nvme_get_transport_statistics,
+		  SPDK_RPC_RUNTIME)

@@ -458,6 +458,7 @@ Example response:
     "bdev_passthru_create",
     "bdev_passthru_delete"
     "bdev_nvme_apply_firmware",
+    "bdev_nvme_get_transport_statistics",
     "bdev_nvme_detach_controller",
     "bdev_nvme_attach_controller",
     "bdev_null_create",
@@ -2971,6 +2972,107 @@ Example request:
     "filename": "firmware_file",
     "bdev_name": "NVMe0n1"
   }
+}
+~~~
+
+## bdev_nvme_get_transport_statistics {#rpc_bdev_nvme_get_transport_statistics}
+
+Get bdev_nvme poll group transport statistics.
+
+### Parameters
+
+This RPC method accepts no parameters
+
+### Response
+
+The response is an array of objects containing information about transport statistics per NVME poll group.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "bdev_nvme_get_transport_statistics",
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+	"result": {
+	  "poll_groups": [
+		{
+		  "thread": "nvmf_tgt_poll_group_0",
+		  "transports": [
+			{
+			  "trname": "RDMA",
+			  "devices": [
+				{
+				  "dev_name": "mlx5_1",
+				  "polls": 137492169,
+				  "idle_polls": 137492169,
+				  "completions": 0,
+				  "queued_requests": 0,
+				  "total_send_wrs": 0,
+				  "send_sq_doorbell_updates": 0,
+				  "total_recv_wrs": 0,
+				  "recv_sq_doorbell_updates": 0
+				},
+				{
+				  "dev_name": "mlx5_0",
+				  "polls": 137985185,
+				  "idle_polls": 137492169,
+				  "completions": 1474593,
+				  "queued_requests": 0,
+				  "total_send_wrs": 1474593,
+				  "send_sq_doorbell_updates": 426147,
+				  "total_recv_wrs": 1474721,
+				  "recv_sq_doorbell_updates": 348445
+				}
+			  ]
+			}
+		  ]
+		},
+		{
+		  "thread": "nvmf_tgt_poll_group_1",
+		  "transports": [
+			{
+			  "trname": "RDMA",
+			  "devices": [
+				{
+				  "dev_name": "mlx5_1",
+				  "polls": 140245630,
+				  "idle_polls": 140245630,
+				  "completions": 0,
+				  "queued_requests": 0,
+				  "total_send_wrs": 0,
+				  "send_sq_doorbell_updates": 0,
+				  "total_recv_wrs": 0,
+				  "recv_sq_doorbell_updates": 0
+				},
+				{
+				  "dev_name": "mlx5_0",
+				  "polls": 140751844,
+				  "idle_polls": 140245630,
+				  "completions": 1489298,
+				  "queued_requests": 0,
+				  "total_send_wrs": 1489298,
+				  "send_sq_doorbell_updates": 433510,
+				  "total_recv_wrs": 1489426,
+				  "recv_sq_doorbell_updates": 357956
+				}
+			  ]
+			}
+		  ]
+		}
+	  ]
+	}
 }
 ~~~
 
