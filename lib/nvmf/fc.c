@@ -403,6 +403,13 @@ nvmf_fc_hwqp_find_fc_conn(struct spdk_nvmf_fc_hwqp *hwqp, uint64_t conn_id)
 	return NULL;
 }
 
+static inline void
+nvmf_fc_request_remove_from_pending(struct spdk_nvmf_fc_request *fc_req)
+{
+	STAILQ_REMOVE(&fc_req->hwqp->fgroup->group.pending_buf_queue, &fc_req->req,
+		      spdk_nvmf_request, buf_link);
+}
+
 void
 nvmf_fc_init_hwqp(struct spdk_nvmf_fc_port *fc_port, struct spdk_nvmf_fc_hwqp *hwqp)
 {
@@ -1191,8 +1198,7 @@ nvmf_fc_request_abort(struct spdk_nvmf_fc_request *fc_req, bool send_abts,
 
 	case SPDK_NVMF_FC_REQ_PENDING:
 		/* Remove from pending */
-		STAILQ_REMOVE(&fc_req->hwqp->fgroup->group.pending_buf_queue, &fc_req->req,
-			      spdk_nvmf_request, buf_link);
+		nvmf_fc_request_remove_from_pending(fc_req);
 		goto complete;
 	default:
 		SPDK_ERRLOG("Request in invalid state.\n");
@@ -1229,15 +1235,18 @@ nvmf_fc_request_execute(struct spdk_nvmf_fc_request *fc_req)
 		fc_req->xchg = nvmf_fc_get_xri(fc_req->hwqp);
 		if (!fc_req->xchg) {
 			fc_req->hwqp->counters.no_xchg++;
-			printf("NO XCHGs!\n");
-			goto pending;
+			return -EAGAIN;
 		}
 	}
 
 	if (fc_req->req.length) {
 		if (nvmf_fc_request_alloc_buffers(fc_req) < 0) {
 			fc_req->hwqp->counters.buf_alloc_err++;
-			goto pending;
+			if (fc_req->xchg) {
+				nvmf_fc_put_xchg(fc_req->hwqp, fc_req->xchg);
+				fc_req->xchg = NULL;
+			}
+			return -EAGAIN;
 		}
 		fc_req->req.data = fc_req->req.iov[0].iov_base;
 	}
@@ -1264,16 +1273,6 @@ nvmf_fc_request_execute(struct spdk_nvmf_fc_request *fc_req)
 	}
 
 	return 0;
-
-pending:
-	if (fc_req->xchg) {
-		nvmf_fc_put_xchg(fc_req->hwqp, fc_req->xchg);
-		fc_req->xchg = NULL;
-	}
-
-	nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_PENDING);
-
-	return -EAGAIN;
 }
 
 static int
@@ -1360,8 +1359,10 @@ nvmf_fc_hwqp_handle_request(struct spdk_nvmf_fc_hwqp *hwqp, struct spdk_nvmf_fc_
 	fc_req->d_id = from_be32(&fc_req->d_id) >> 8;
 
 	nvmf_fc_record_req_trace_point(fc_req, SPDK_NVMF_FC_REQ_INIT);
-	if (nvmf_fc_request_execute(fc_req)) {
+
+	if (!STAILQ_EMPTY(&hwqp->fgroup->group.pending_buf_queue) || nvmf_fc_request_execute(fc_req)) {
 		STAILQ_INSERT_TAIL(&hwqp->fgroup->group.pending_buf_queue, &fc_req->req, buf_link);
+		nvmf_fc_request_set_state(fc_req, SPDK_NVMF_FC_REQ_PENDING);
 	}
 
 	return 0;
@@ -1548,7 +1549,7 @@ nvmf_fc_hwqp_process_pending_reqs(struct spdk_nvmf_fc_hwqp *hwqp)
 		fc_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_fc_request, req);
 		if (!nvmf_fc_request_execute(fc_req)) {
 			/* Succesfuly posted, Delete from pending. */
-			STAILQ_REMOVE_HEAD(&hwqp->fgroup->group.pending_buf_queue, buf_link);
+			nvmf_fc_request_remove_from_pending(fc_req);
 		}
 
 		if (budget) {
