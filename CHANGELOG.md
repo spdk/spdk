@@ -69,6 +69,9 @@ independent SPDK processes are running on one node.  The filter function can
 then be implemented in these processes to decide which SSDs to probe based on
 the new SSD's PCI address.
 
+New functions `spdk_nvme_poll_group_get_stats` and `spdk_nvme_poll_group_free_stats`
+added. These functions allow to get transport statistics per NVME poll group.
+
 ### nvmf
 
 Removed the `spdk_nvmf_tgt_listen` and `spdk_nvmf_subsystem_add_ns` API.

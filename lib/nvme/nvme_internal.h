@@ -1339,6 +1339,8 @@ int nvme_transport_poll_group_get_stats(struct spdk_nvme_transport_poll_group *t
 					struct spdk_nvme_transport_poll_group_stat **stats);
 void nvme_transport_poll_group_free_stats(struct spdk_nvme_transport_poll_group *tgroup,
 		struct spdk_nvme_transport_poll_group_stat *stats);
+enum spdk_nvme_transport_type nvme_transport_get_trtype(const struct spdk_nvme_transport
+		*transport);
 /*
  * Below ref related functions must be called with the global
  *  driver lock held for the multi-process condition.

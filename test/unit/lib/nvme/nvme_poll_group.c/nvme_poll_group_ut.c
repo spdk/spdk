@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2021 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -36,6 +37,8 @@
 #include "nvme/nvme_poll_group.c"
 #include "common/lib/test_env.c"
 
+SPDK_LOG_REGISTER_COMPONENT(nvme)
+
 struct spdk_nvme_transport {
 	const char				name[32];
 	TAILQ_ENTRY(spdk_nvme_transport)	link;
@@ -68,6 +71,18 @@ DEFINE_STUB(nvme_transport_qpair_get_optimal_poll_group,
 	    (const struct spdk_nvme_transport *transport,
 	     struct spdk_nvme_qpair *qpair),
 	    NULL);
+DEFINE_STUB(nvme_transport_poll_group_get_stats,
+	    int,
+	    (struct spdk_nvme_transport_poll_group *tgroup,
+	     struct spdk_nvme_transport_poll_group_stat **stats),
+	    0);
+DEFINE_STUB_V(nvme_transport_poll_group_free_stats,
+	      (struct spdk_nvme_transport_poll_group *tgroup,
+	       struct spdk_nvme_transport_poll_group_stat *stats));
+DEFINE_STUB(nvme_transport_get_trtype,
+	    enum spdk_nvme_transport_type,
+	    (const struct spdk_nvme_transport *transport),
+	    SPDK_NVME_TRANSPORT_PCIE);
 
 static void
 unit_test_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_ctx)

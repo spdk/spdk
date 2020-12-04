@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2021 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -191,4 +192,82 @@ spdk_nvme_poll_group_destroy(struct spdk_nvme_poll_group *group)
 	free(group);
 
 	return 0;
+}
+
+int
+spdk_nvme_poll_group_get_stats(struct spdk_nvme_poll_group *group,
+			       struct spdk_nvme_poll_group_stat **stats)
+{
+	struct spdk_nvme_transport_poll_group *tgroup;
+	struct spdk_nvme_poll_group_stat *result;
+	uint32_t transports_count = 0;
+	/* Not all transports used by this poll group may support statistics reporting */
+	uint32_t reported_stats_count = 0;
+	int rc;
+
+	assert(group);
+	assert(stats);
+
+	result = calloc(1, sizeof(*result));
+	if (!result) {
+		SPDK_ERRLOG("Failed to allocate memory for poll group statistics\n");
+		return -ENOMEM;
+	}
+
+	STAILQ_FOREACH(tgroup, &group->tgroups, link) {
+		transports_count++;
+	}
+
+	result->transport_stat = calloc(transports_count, sizeof(*result->transport_stat));
+	if (!result->transport_stat) {
+		SPDK_ERRLOG("Failed to allocate memory for poll group statistics\n");
+		free(result);
+		return -ENOMEM;
+	}
+
+	STAILQ_FOREACH(tgroup, &group->tgroups, link) {
+		rc = nvme_transport_poll_group_get_stats(tgroup, &result->transport_stat[reported_stats_count]);
+		if (rc == 0) {
+			reported_stats_count++;
+		}
+	}
+
+	if (reported_stats_count == 0) {
+		free(result->transport_stat);
+		free(result);
+		SPDK_DEBUGLOG(nvme, "No transport statistics available\n");
+		return -ENOTSUP;
+	}
+
+	result->num_transports = reported_stats_count;
+	*stats = result;
+
+	return 0;
+}
+
+void
+spdk_nvme_poll_group_free_stats(struct spdk_nvme_poll_group *group,
+				struct spdk_nvme_poll_group_stat *stat)
+{
+	struct spdk_nvme_transport_poll_group *tgroup;
+	uint32_t i;
+	uint32_t freed_stats __attribute__((unused)) = 0;
+
+	assert(group);
+	assert(stat);
+
+	for (i = 0; i < stat->num_transports; i++) {
+		STAILQ_FOREACH(tgroup, &group->tgroups, link) {
+			if (nvme_transport_get_trtype(tgroup->transport) == stat->transport_stat[i]->trtype) {
+				nvme_transport_poll_group_free_stats(tgroup, stat->transport_stat[i]);
+				freed_stats++;
+				break;
+			}
+		}
+	}
+
+	assert(freed_stats == stat->num_transports);
+
+	free(stat->transport_stat);
+	free(stat);
 }

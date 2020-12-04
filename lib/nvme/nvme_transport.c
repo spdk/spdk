@@ -619,3 +619,8 @@ nvme_transport_poll_group_free_stats(struct spdk_nvme_transport_poll_group *tgro
 		tgroup->transport->ops.poll_group_free_stats(tgroup, stats);
 	}
 }
+
+enum spdk_nvme_transport_type nvme_transport_get_trtype(const struct spdk_nvme_transport *transport)
+{
+	return transport->ops.type;
+}

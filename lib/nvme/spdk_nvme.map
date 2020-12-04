@@ -168,6 +168,9 @@
 
 	spdk_nvme_map_prps;
 
+	spdk_nvme_poll_group_get_stats;
+	spdk_nvme_poll_group_free_stats;
+
 	# public functions from nvme_zns.h
 	spdk_nvme_zns_ns_get_data;
 	spdk_nvme_zns_ns_get_zone_size_sectors;
