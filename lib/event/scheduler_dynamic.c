@@ -109,6 +109,7 @@ static void
 balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 	struct spdk_governor *governor)
 {
+	struct spdk_reactor *reactor;
 	struct spdk_lw_thread *lw_thread;
 	struct spdk_thread *thread;
 	struct spdk_scheduler_core_info *core;
@@ -199,6 +200,19 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 					busy_threads_present = true;
 				}
 			}
+		}
+	}
+
+	/* Switch unused cores to interrupt mode and switch cores to polled mode
+	 * if they will be used after rebalancing */
+	SPDK_ENV_FOREACH_CORE(i) {
+		reactor = spdk_reactor_get(i);
+		core = &cores_info[i];
+		/* We can switch mode only if reactor already does not have any threads */
+		if (core->pending_threads_count == 0 && TAILQ_EMPTY(&reactor->threads)) {
+			core->interrupt_mode = true;
+		} else if (core->pending_threads_count != 0) {
+			core->interrupt_mode = false;
 		}
 	}
 
