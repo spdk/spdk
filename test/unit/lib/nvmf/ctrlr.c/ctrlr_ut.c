@@ -1334,6 +1334,18 @@ cleanup_pending_async_events(struct spdk_nvmf_ctrlr *ctrlr)
 	}
 }
 
+static int
+num_pending_async_events(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	int num = 0;
+	struct spdk_nvmf_async_event_completion *event;
+
+	STAILQ_FOREACH(event, &ctrlr->async_events, link) {
+		num++;
+	}
+	return num;
+}
+
 static void
 test_reservation_notification_log_page(void)
 {
@@ -1394,7 +1406,7 @@ test_reservation_notification_log_page(void)
 	SPDK_CU_ASSERT_FATAL(ctrlr.num_avail_log_pages == 3);
 
 	/* Test Case: Get Log Page to clear the log pages */
-	nvmf_get_reservation_notification_log_page(&ctrlr, (void *)logs, 0, sizeof(logs));
+	nvmf_get_reservation_notification_log_page(&ctrlr, (void *)logs, 0, sizeof(logs), 0);
 	SPDK_CU_ASSERT_FATAL(ctrlr.num_avail_log_pages == 0);
 
 	cleanup_pending_async_events(&ctrlr);
@@ -1794,7 +1806,7 @@ test_get_ana_log_page(void)
 	offset = 0;
 	while (offset < UT_ANA_LOG_PAGE_SIZE) {
 		length = spdk_min(16, UT_ANA_LOG_PAGE_SIZE - offset);
-		nvmf_get_ana_log_page(&ctrlr, &actual_page[offset], offset, length);
+		nvmf_get_ana_log_page(&ctrlr, &actual_page[offset], offset, length, 0);
 		offset += length;
 	}
 
@@ -1875,6 +1887,98 @@ test_multi_async_events(void)
 	cleanup_pending_async_events(&ctrlr);
 }
 
+static void
+test_rae(void)
+{
+	struct spdk_nvmf_subsystem subsystem = {};
+	struct spdk_nvmf_qpair qpair = {};
+	struct spdk_nvmf_ctrlr ctrlr = {};
+	struct spdk_nvmf_request req[3] = {};
+	struct spdk_nvmf_ns *ns_ptrs[1] = {};
+	struct spdk_nvmf_ns ns = {};
+	union nvmf_h2c_msg cmd[3] = {};
+	union nvmf_c2h_msg rsp[3] = {};
+	union spdk_nvme_async_event_completion event = {};
+	struct spdk_nvmf_poll_group group = {};
+	struct spdk_nvmf_subsystem_poll_group sgroups = {};
+	int i;
+	char data[4096];
+
+	ns_ptrs[0] = &ns;
+	subsystem.ns = ns_ptrs;
+	subsystem.max_nsid = 1;
+	subsystem.subtype = SPDK_NVMF_SUBTYPE_NVME;
+
+	ns.opts.nsid = 1;
+	group.sgroups = &sgroups;
+
+	qpair.ctrlr = &ctrlr;
+	qpair.group = &group;
+	TAILQ_INIT(&qpair.outstanding);
+
+	ctrlr.subsys = &subsystem;
+	ctrlr.vcprop.cc.bits.en = 1;
+	ctrlr.feat.async_event_configuration.bits.ns_attr_notice = 1;
+	init_pending_async_events(&ctrlr);
+
+	/* Target queue pending events when there is no outstanding AER request */
+	nvmf_ctrlr_async_event_ns_notice(&ctrlr);
+	nvmf_ctrlr_async_event_ns_notice(&ctrlr);
+	nvmf_ctrlr_async_event_ns_notice(&ctrlr);
+	/* only one event will be queued before RAE is clear */
+	CU_ASSERT(num_pending_async_events(&ctrlr) == 1);
+
+	req[0].qpair = &qpair;
+	req[0].cmd = &cmd[0];
+	req[0].rsp = &rsp[0];
+	cmd[0].nvme_cmd.opc = SPDK_NVME_OPC_ASYNC_EVENT_REQUEST;
+	cmd[0].nvme_cmd.nsid = 1;
+	cmd[0].nvme_cmd.cid = 0;
+
+	for (i = 1; i < 3; i++) {
+		req[i].qpair = &qpair;
+		req[i].cmd = &cmd[i];
+		req[i].rsp = &rsp[i];
+		req[i].data = &data;
+		req[i].length = sizeof(data);
+
+		cmd[i].nvme_cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
+		cmd[i].nvme_cmd.cdw10_bits.get_log_page.lid =
+			SPDK_NVME_LOG_CHANGED_NS_LIST;
+		cmd[i].nvme_cmd.cdw10_bits.get_log_page.numdl =
+			(req[i].length / 4 - 1);
+		cmd[i].nvme_cmd.cid = i;
+	}
+	cmd[1].nvme_cmd.cdw10_bits.get_log_page.rae = 1;
+	cmd[2].nvme_cmd.cdw10_bits.get_log_page.rae = 0;
+
+	/* consume the pending event */
+	TAILQ_INSERT_TAIL(&qpair.outstanding, &req[0], link);
+	CU_ASSERT(nvmf_ctrlr_process_admin_cmd(&req[0]) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	event.raw = rsp[0].nvme_cpl.cdw0;
+	CU_ASSERT(event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED);
+	CU_ASSERT(num_pending_async_events(&ctrlr) == 0);
+
+	/* get log with RAE set */
+	CU_ASSERT(nvmf_ctrlr_get_log_page(&req[1]) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp[1].nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp[1].nvme_cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+
+	/* will not generate new event until RAE is clear */
+	nvmf_ctrlr_async_event_ns_notice(&ctrlr);
+	CU_ASSERT(num_pending_async_events(&ctrlr) == 0);
+
+	/* get log with RAE clear */
+	CU_ASSERT(nvmf_ctrlr_get_log_page(&req[2]) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp[2].nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp[2].nvme_cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+
+	nvmf_ctrlr_async_event_ns_notice(&ctrlr);
+	CU_ASSERT(num_pending_async_events(&ctrlr) == 1);
+
+	cleanup_pending_async_events(&ctrlr);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1902,6 +2006,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_multi_async_event_reqs);
 	CU_ADD_TEST(suite, test_get_ana_log_page);
 	CU_ADD_TEST(suite, test_multi_async_events);
+	CU_ADD_TEST(suite, test_rae);
 
 	allocate_threads(1);
 	set_thread(0);

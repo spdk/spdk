@@ -232,6 +232,7 @@ struct spdk_nvmf_ctrlr {
 
 	struct spdk_nvmf_request *aer_req[NVMF_MAX_ASYNC_EVENTS];
 	STAILQ_HEAD(, spdk_nvmf_async_event_completion) async_events;
+	uint64_t notice_aen_mask;
 	uint8_t nr_aer_reqs;
 	struct spdk_uuid  hostid;
 

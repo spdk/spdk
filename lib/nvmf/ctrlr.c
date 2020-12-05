@@ -1692,11 +1692,46 @@ nvmf_get_firmware_slot_log_page(void *buffer, uint64_t offset, uint32_t length)
 	}
 }
 
+/*
+ * Asynchronous Event Mask Bit
+ */
+enum spdk_nvme_async_event_mask_bit {
+	/* Mask Namespace Change Notificaton */
+	SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGE_MASK_BIT		= 0,
+	/* Mask Asymmetric Namespace Access Change Notification */
+	SPDK_NVME_ASYNC_EVENT_ANA_CHANGE_MASK_BIT		= 1,
+	/* Mask Discovery Log Change Notification */
+	SPDK_NVME_ASYNC_EVENT_DISCOVERY_LOG_CHANGE_MASK_BIT	= 2,
+	/* Mask Reservation Log Page Available Notification */
+	SPDK_NVME_ASYNC_EVENT_RESERVATION_LOG_AVAIL_MASK_BIT	= 3,
+
+	/* 4 - 63 Reserved */
+};
+
+static inline void
+nvmf_ctrlr_unmask_aen(struct spdk_nvmf_ctrlr *ctrlr,
+		      enum spdk_nvme_async_event_mask_bit mask)
+{
+	ctrlr->notice_aen_mask &= ~(1 << mask);
+}
+
+static inline bool
+nvmf_ctrlr_mask_aen(struct spdk_nvmf_ctrlr *ctrlr,
+		    enum spdk_nvme_async_event_mask_bit mask)
+{
+	if (ctrlr->notice_aen_mask & (1 << mask)) {
+		return false;
+	} else {
+		ctrlr->notice_aen_mask |= (1 << mask);
+		return true;
+	}
+}
+
 #define SPDK_NVMF_ANA_DESC_SIZE	(sizeof(struct spdk_nvme_ana_group_descriptor) +	\
 				 sizeof(uint32_t))
 static void
 nvmf_get_ana_log_page(struct spdk_nvmf_ctrlr *ctrlr, void *data,
-		      uint64_t offset, uint32_t length)
+		      uint64_t offset, uint32_t length, uint32_t rae)
 {
 	char *buf = data;
 	struct spdk_nvme_ana_page ana_hdr;
@@ -1760,8 +1795,13 @@ nvmf_get_ana_log_page(struct spdk_nvmf_ctrlr *ctrlr, void *data,
 		offset = 0;
 
 		if (length == 0) {
-			return;
+			goto done;
 		}
+	}
+
+done:
+	if (!rae) {
+		nvmf_ctrlr_unmask_aen(ctrlr, SPDK_NVME_ASYNC_EVENT_ANA_CHANGE_MASK_BIT);
 	}
 }
 
@@ -1795,7 +1835,7 @@ nvmf_ctrlr_ns_changed(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid)
 
 static void
 nvmf_get_changed_ns_list_log_page(struct spdk_nvmf_ctrlr *ctrlr,
-				  void *buffer, uint64_t offset, uint32_t length)
+				  void *buffer, uint64_t offset, uint32_t length, uint32_t rae)
 {
 	size_t copy_length;
 
@@ -1809,6 +1849,10 @@ nvmf_get_changed_ns_list_log_page(struct spdk_nvmf_ctrlr *ctrlr,
 	/* Clear log page each time it is read */
 	ctrlr->changed_ns_list_count = 0;
 	memset(&ctrlr->changed_ns_list, 0, sizeof(ctrlr->changed_ns_list));
+
+	if (!rae) {
+		nvmf_ctrlr_unmask_aen(ctrlr, SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGE_MASK_BIT);
+	}
 }
 
 /* The structure can be modified if we provide support for other commands in future */
@@ -1867,7 +1911,7 @@ nvmf_get_cmds_and_effects_log_page(void *buffer,
 
 static void
 nvmf_get_reservation_notification_log_page(struct spdk_nvmf_ctrlr *ctrlr,
-		void *data, uint64_t offset, uint32_t length)
+		void *data, uint64_t offset, uint32_t length, uint32_t rae)
 {
 	uint32_t unit_log_len, avail_log_len, next_pos, copy_len;
 	struct spdk_nvmf_reservation_log *log, *log_tmp;
@@ -1904,6 +1948,10 @@ nvmf_get_reservation_notification_log_page(struct spdk_nvmf_ctrlr *ctrlr,
 			break;
 		}
 	}
+
+	if (!rae) {
+		nvmf_ctrlr_unmask_aen(ctrlr, SPDK_NVME_ASYNC_EVENT_RESERVATION_LOG_AVAIL_MASK_BIT);
+	}
 	return;
 }
 
@@ -1915,7 +1963,7 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 	uint64_t offset, len;
-	uint32_t numdl, numdu;
+	uint32_t rae, numdl, numdu;
 	uint8_t lid;
 
 	if (req->data == NULL) {
@@ -1933,6 +1981,7 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
+	rae = cmd->cdw10_bits.get_log_page.rae;
 	numdl = cmd->cdw10_bits.get_log_page.numdl;
 	numdu = cmd->cdw11_bits.get_log_page.numdu;
 	len = ((numdu << 16) + numdl + (uint64_t)1) * 4;
@@ -1945,14 +1994,17 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 	}
 
 	lid = cmd->cdw10_bits.get_log_page.lid;
-	SPDK_DEBUGLOG(nvmf, "Get log page: LID=0x%02X offset=0x%" PRIx64 " len=0x%" PRIx64 "\n",
-		      lid, offset, len);
+	SPDK_DEBUGLOG(nvmf, "Get log page: LID=0x%02X offset=0x%" PRIx64 " len=0x%" PRIx64 " rae=%u\n",
+		      lid, offset, len, rae);
 
 	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
 		switch (lid) {
 		case SPDK_NVME_LOG_DISCOVERY:
 			nvmf_get_discovery_log_page(subsystem->tgt, ctrlr->hostnqn, req->iov, req->iovcnt, offset,
 						    len);
+			if (!rae) {
+				nvmf_ctrlr_unmask_aen(ctrlr, SPDK_NVME_ASYNC_EVENT_DISCOVERY_LOG_CHANGE_MASK_BIT);
+			}
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		default:
 			goto invalid_log_page;
@@ -1968,7 +2020,7 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		case SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS:
 			if (subsystem->flags.ana_reporting) {
-				nvmf_get_ana_log_page(ctrlr, req->data, offset, len);
+				nvmf_get_ana_log_page(ctrlr, req->data, offset, len, rae);
 				return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 			} else {
 				goto invalid_log_page;
@@ -1977,10 +2029,10 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 			nvmf_get_cmds_and_effects_log_page(req->data, offset, len);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		case SPDK_NVME_LOG_CHANGED_NS_LIST:
-			nvmf_get_changed_ns_list_log_page(ctrlr, req->data, offset, len);
+			nvmf_get_changed_ns_list_log_page(ctrlr, req->data, offset, len, rae);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		case SPDK_NVME_LOG_RESERVATION_NOTIFICATION:
-			nvmf_get_reservation_notification_log_page(ctrlr, req->data, offset, len);
+			nvmf_get_reservation_notification_log_page(ctrlr, req->data, offset, len, rae);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		default:
 			goto invalid_log_page;
@@ -2857,6 +2909,10 @@ nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr)
 		return 0;
 	}
 
+	if (!nvmf_ctrlr_mask_aen(ctrlr, SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGE_MASK_BIT)) {
+		return 0;
+	}
+
 	event.bits.async_event_type = SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE;
 	event.bits.async_event_info = SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED;
 	event.bits.log_page_identifier = SPDK_NVME_LOG_CHANGED_NS_LIST;
@@ -2880,6 +2936,10 @@ nvmf_ctrlr_async_event_ana_change_notice(struct spdk_nvmf_ctrlr *ctrlr)
 
 	/* Users may disable the event notification */
 	if (!ctrlr->feat.async_event_configuration.bits.ana_change_notice) {
+		return 0;
+	}
+
+	if (!nvmf_ctrlr_mask_aen(ctrlr, SPDK_NVME_ASYNC_EVENT_ANA_CHANGE_MASK_BIT)) {
 		return 0;
 	}
 
@@ -2907,6 +2967,11 @@ nvmf_ctrlr_async_event_reservation_notification(struct spdk_nvmf_ctrlr *ctrlr)
 	if (!ctrlr->num_avail_log_pages) {
 		return;
 	}
+
+	if (!nvmf_ctrlr_mask_aen(ctrlr, SPDK_NVME_ASYNC_EVENT_RESERVATION_LOG_AVAIL_MASK_BIT)) {
+		return;
+	}
+
 	event.bits.async_event_type = SPDK_NVME_ASYNC_EVENT_TYPE_IO;
 	event.bits.async_event_info = SPDK_NVME_ASYNC_EVENT_RESERVATION_LOG_AVAIL;
 	event.bits.log_page_identifier = SPDK_NVME_LOG_RESERVATION_NOTIFICATION;
@@ -2933,6 +2998,10 @@ nvmf_ctrlr_async_event_discovery_log_change_notice(struct spdk_nvmf_ctrlr *ctrlr
 	 * not being set in connect command to discovery controller.
 	 */
 	if (!ctrlr->feat.async_event_configuration.bits.discovery_log_change_notice) {
+		return 0;
+	}
+
+	if (!nvmf_ctrlr_mask_aen(ctrlr, SPDK_NVME_ASYNC_EVENT_DISCOVERY_LOG_CHANGE_MASK_BIT)) {
 		return 0;
 	}
 
