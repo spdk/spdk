@@ -212,7 +212,9 @@ struct spdk_nvmf_tcp_qpair {
 	struct nvme_tcp_pdu			pdu_in_progress;
 
 	/* Queues to track the requests in all states */
-	TAILQ_HEAD(, spdk_nvmf_tcp_req)		state_queue[TCP_REQUEST_NUM_STATES];
+	TAILQ_HEAD(, spdk_nvmf_tcp_req)		tcp_req_working_queue;
+	TAILQ_HEAD(, spdk_nvmf_tcp_req)		tcp_req_free_queue;
+
 	/* Number of requests in each state */
 	uint32_t				state_cntr[TCP_REQUEST_NUM_STATES];
 
@@ -320,11 +322,8 @@ nvmf_tcp_req_set_state(struct spdk_nvmf_tcp_req *tcp_req,
 	qpair = tcp_req->req.qpair;
 	tqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_tcp_qpair, qpair);
 
-	TAILQ_REMOVE(&tqpair->state_queue[tcp_req->state], tcp_req, state_link);
 	assert(tqpair->state_cntr[tcp_req->state] > 0);
 	tqpair->state_cntr[tcp_req->state]--;
-
-	TAILQ_INSERT_TAIL(&tqpair->state_queue[state], tcp_req, state_link);
 	tqpair->state_cntr[state]++;
 
 	tcp_req->state = state;
@@ -353,7 +352,7 @@ nvmf_tcp_req_get(struct spdk_nvmf_tcp_qpair *tqpair)
 {
 	struct spdk_nvmf_tcp_req *tcp_req;
 
-	tcp_req = TAILQ_FIRST(&tqpair->state_queue[TCP_REQUEST_STATE_FREE]);
+	tcp_req = TAILQ_FIRST(&tqpair->tcp_req_free_queue);
 	if (!tcp_req) {
 		return NULL;
 	}
@@ -363,8 +362,18 @@ nvmf_tcp_req_get(struct spdk_nvmf_tcp_qpair *tqpair)
 	tcp_req->has_incapsule_data = false;
 	tcp_req->req.dif.dif_insert_or_strip = false;
 
+	TAILQ_REMOVE(&tqpair->tcp_req_free_queue, tcp_req, state_link);
+	TAILQ_INSERT_TAIL(&tqpair->tcp_req_working_queue, tcp_req, state_link);
 	nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_NEW);
 	return tcp_req;
+}
+
+static inline void
+nvmf_tcp_req_put(struct spdk_nvmf_tcp_qpair *tqpair, struct spdk_nvmf_tcp_req *tcp_req)
+{
+	TAILQ_REMOVE(&tqpair->tcp_req_working_queue, tcp_req, state_link);
+	TAILQ_INSERT_TAIL(&tqpair->tcp_req_free_queue, tcp_req, state_link);
+	nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_FREE);
 }
 
 static void
@@ -398,8 +407,11 @@ nvmf_tcp_drain_state_queue(struct spdk_nvmf_tcp_qpair *tqpair,
 {
 	struct spdk_nvmf_tcp_req *tcp_req, *req_tmp;
 
-	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->state_queue[state], state_link, req_tmp) {
-		nvmf_tcp_request_free(tcp_req);
+	assert(state != TCP_REQUEST_STATE_FREE);
+	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->tcp_req_working_queue, state_link, req_tmp) {
+		if (state == tcp_req->state) {
+			nvmf_tcp_request_free(tcp_req);
+		}
 	}
 }
 
@@ -412,10 +424,11 @@ nvmf_tcp_cleanup_all_states(struct spdk_nvmf_tcp_qpair *tqpair)
 	nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_NEW);
 
 	/* Wipe the requests waiting for buffer from the global list */
-	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->state_queue[TCP_REQUEST_STATE_NEED_BUFFER], state_link,
-			   req_tmp) {
-		STAILQ_REMOVE(&tqpair->group->group.pending_buf_queue, &tcp_req->req,
-			      spdk_nvmf_request, buf_link);
+	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->tcp_req_working_queue, state_link, req_tmp) {
+		if (tcp_req->state == TCP_REQUEST_STATE_NEED_BUFFER) {
+			STAILQ_REMOVE(&tqpair->group->group.pending_buf_queue, &tcp_req->req,
+				      spdk_nvmf_request, buf_link);
+		}
 	}
 
 	nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_NEED_BUFFER);
@@ -433,9 +446,11 @@ nvmf_tcp_dump_qpair_req_contents(struct spdk_nvmf_tcp_qpair *tqpair)
 	SPDK_ERRLOG("Dumping contents of queue pair (QID %d)\n", tqpair->qpair.qid);
 	for (i = 1; i < TCP_REQUEST_NUM_STATES; i++) {
 		SPDK_ERRLOG("\tNum of requests in state[%d] = %u\n", i, tqpair->state_cntr[i]);
-		TAILQ_FOREACH(tcp_req, &tqpair->state_queue[i], state_link) {
-			SPDK_ERRLOG("\t\tRequest Data From Pool: %d\n", tcp_req->req.data_from_pool);
-			SPDK_ERRLOG("\t\tRequest opcode: %d\n", tcp_req->req.cmd->nvmf_cmd.opcode);
+		TAILQ_FOREACH(tcp_req, &tqpair->tcp_req_working_queue, state_link) {
+			if ((int)tcp_req->state == i) {
+				SPDK_ERRLOG("\t\tRequest Data From Pool: %d\n", tcp_req->req.data_from_pool);
+				SPDK_ERRLOG("\t\tRequest opcode: %d\n", tcp_req->req.cmd->nvmf_cmd.opcode);
+			}
 		}
 	}
 }
@@ -892,7 +907,7 @@ nvmf_tcp_qpair_init_mem_resource(struct spdk_nvmf_tcp_qpair *tqpair)
 
 		/* Initialize request state to FREE */
 		tcp_req->state = TCP_REQUEST_STATE_FREE;
-		TAILQ_INSERT_TAIL(&tqpair->state_queue[tcp_req->state], tcp_req, state_link);
+		TAILQ_INSERT_TAIL(&tqpair->tcp_req_free_queue, tcp_req, state_link);
 		tqpair->state_cntr[TCP_REQUEST_STATE_FREE]++;
 	}
 
@@ -909,16 +924,14 @@ static int
 nvmf_tcp_qpair_init(struct spdk_nvmf_qpair *qpair)
 {
 	struct spdk_nvmf_tcp_qpair *tqpair;
-	int i;
 
 	tqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_tcp_qpair, qpair);
 
 	SPDK_DEBUGLOG(nvmf_tcp, "New TCP Connection: %p\n", qpair);
 
 	/* Initialise request state queues of the qpair */
-	for (i = TCP_REQUEST_STATE_FREE; i < TCP_REQUEST_NUM_STATES; i++) {
-		TAILQ_INIT(&tqpair->state_queue[i]);
-	}
+	TAILQ_INIT(&tqpair->tcp_req_free_queue);
+	TAILQ_INIT(&tqpair->tcp_req_working_queue);
 
 	tqpair->host_hdgst_enable = true;
 	tqpair->host_ddgst_enable = true;
@@ -1290,7 +1303,11 @@ nvmf_tcp_find_req_in_state(struct spdk_nvmf_tcp_qpair *tqpair,
 {
 	struct spdk_nvmf_tcp_req *tcp_req = NULL;
 
-	TAILQ_FOREACH(tcp_req, &tqpair->state_queue[state], state_link) {
+	TAILQ_FOREACH(tcp_req, &tqpair->tcp_req_working_queue, state_link) {
+		if (tcp_req->state != state) {
+			continue;
+		}
+
 		if (tcp_req->req.cmd->nvme_cmd.cid != cid) {
 			continue;
 		}
@@ -2427,7 +2444,7 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 
 			nvmf_tcp_req_pdu_fini(tcp_req);
 
-			nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_FREE);
+			nvmf_tcp_req_put(tqpair, tcp_req);
 			break;
 		case TCP_REQUEST_NUM_STATES:
 		default:

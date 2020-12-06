@@ -577,7 +577,7 @@ test_nvmf_tcp_h2c_data_hdr_handle(void)
 	struct spdk_nvmf_tcp_req tcp_req = {};
 	struct spdk_nvme_tcp_h2c_data_hdr *h2c_data;
 
-	TAILQ_INIT(&tqpair.state_queue[TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER]);
+	TAILQ_INIT(&tqpair.tcp_req_working_queue);
 
 	/* Set qpair state to make unrelated operations NOP */
 	tqpair.state = NVME_TCP_QPAIR_STATE_RUNNING;
@@ -589,12 +589,13 @@ test_nvmf_tcp_h2c_data_hdr_handle(void)
 	tcp_req.req.iov[1].iov_len = 99;
 	tcp_req.req.iovcnt = 2;
 	tcp_req.req.length = 200;
+	tcp_req.state = TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER;
 
 	tcp_req.req.cmd = (union nvmf_h2c_msg *)&tcp_req.cmd;
 	tcp_req.req.cmd->nvme_cmd.cid = 1;
 	tcp_req.ttag = 2;
 
-	TAILQ_INSERT_TAIL(&tqpair.state_queue[TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER],
+	TAILQ_INSERT_TAIL(&tqpair.tcp_req_working_queue,
 			  &tcp_req, state_link);
 
 	h2c_data = &pdu.hdr.h2c_data;
@@ -611,9 +612,9 @@ test_nvmf_tcp_h2c_data_hdr_handle(void)
 	CU_ASSERT((uint64_t)pdu.data_iov[1].iov_base == 0xFEEDBEEF);
 	CU_ASSERT(pdu.data_iov[1].iov_len == 99);
 
-	CU_ASSERT(TAILQ_FIRST(&tqpair.state_queue[TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER]) ==
+	CU_ASSERT(TAILQ_FIRST(&tqpair.tcp_req_working_queue) ==
 		  &tcp_req);
-	TAILQ_REMOVE(&tqpair.state_queue[TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER],
+	TAILQ_REMOVE(&tqpair.tcp_req_working_queue,
 		     &tcp_req, state_link);
 }
 
@@ -638,7 +639,6 @@ test_nvmf_tcp_incapsule_data_handle(void)
 	struct spdk_nvmf_transport_poll_group *group;
 	struct spdk_nvmf_tcp_poll_group tcp_group = {};
 	struct spdk_sock_group grp = {};
-	int i = 0;
 
 	ttransport.transport.opts.max_io_size = UT_MAX_IO_SIZE;
 	ttransport.transport.opts.io_unit_size = UT_IO_UNIT_SIZE;
@@ -650,12 +650,10 @@ test_nvmf_tcp_incapsule_data_handle(void)
 	STAILQ_INIT(&group->pending_buf_queue);
 	tqpair.group = &tcp_group;
 
-	/* init tqpair, add pdu to pdu_in_progress and wait for the buff */
-	for (i = TCP_REQUEST_STATE_FREE; i < TCP_REQUEST_NUM_STATES; i++) {
-		TAILQ_INIT(&tqpair.state_queue[i]);
-	}
+	TAILQ_INIT(&tqpair.tcp_req_free_queue);
+	TAILQ_INIT(&tqpair.tcp_req_working_queue);
 
-	TAILQ_INSERT_TAIL(&tqpair.state_queue[TCP_REQUEST_STATE_FREE], &tcp_req2, state_link);
+	TAILQ_INSERT_TAIL(&tqpair.tcp_req_free_queue, &tcp_req2, state_link);
 	tqpair.state_cntr[TCP_REQUEST_STATE_FREE]++;
 	tqpair.qpair.transport = &ttransport.transport;
 	tqpair.state = NVME_TCP_QPAIR_STATE_RUNNING;
@@ -673,7 +671,7 @@ test_nvmf_tcp_incapsule_data_handle(void)
 	tcp_req1.req.rsp = &rsp0;
 	tcp_req1.state = TCP_REQUEST_STATE_NEW;
 
-	TAILQ_INSERT_TAIL(&tqpair.state_queue[TCP_REQUEST_STATE_NEW], &tcp_req1, state_link);
+	TAILQ_INSERT_TAIL(&tqpair.tcp_req_working_queue, &tcp_req1, state_link);
 	tqpair.state_cntr[TCP_REQUEST_STATE_NEW]++;
 
 	/* init pdu, make pdu need sgl buff */
