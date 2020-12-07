@@ -86,6 +86,19 @@ class Target(Server):
                     if k.startswith(key_prefix):
                         return k, k.split("_")[1]
 
+            def get_clat_percentiles(clat_dict_leaf):
+                if "percentile" in clat_dict_leaf:
+                    p99_lat = float(clat_dict_leaf["percentile"]["99.000000"])
+                    p99_9_lat = float(clat_dict_leaf["percentile"]["99.900000"])
+                    p99_99_lat = float(clat_dict_leaf["percentile"]["99.990000"])
+                    p99_999_lat = float(clat_dict_leaf["percentile"]["99.999000"])
+
+                    return [p99_lat, p99_9_lat, p99_99_lat, p99_999_lat]
+                else:
+                    # Latest fio versions do not provide "percentile" results if no
+                    # measurements were done, so just return zeroes
+                    return [0, 0, 0, 0]
+
             read_iops = float(data["jobs"][job_pos]["read"]["iops"])
             read_bw = float(data["jobs"][job_pos]["read"]["bw"])
             lat_key, lat_unit = get_lat_unit("lat", data["jobs"][job_pos]["read"])
@@ -93,10 +106,8 @@ class Target(Server):
             read_min_lat = float(data["jobs"][job_pos]["read"][lat_key]["min"])
             read_max_lat = float(data["jobs"][job_pos]["read"][lat_key]["max"])
             clat_key, clat_unit = get_lat_unit("clat", data["jobs"][job_pos]["read"])
-            read_p99_lat = float(data["jobs"][job_pos]["read"][clat_key]["percentile"]["99.000000"])
-            read_p99_9_lat = float(data["jobs"][job_pos]["read"][clat_key]["percentile"]["99.900000"])
-            read_p99_99_lat = float(data["jobs"][job_pos]["read"][clat_key]["percentile"]["99.990000"])
-            read_p99_999_lat = float(data["jobs"][job_pos]["read"][clat_key]["percentile"]["99.999000"])
+            read_p99_lat, read_p99_9_lat, read_p99_99_lat, read_p99_999_lat = get_clat_percentiles(
+                data["jobs"][job_pos]["read"][clat_key])
 
             if "ns" in lat_unit:
                 read_avg_lat, read_min_lat, read_max_lat = [x / 1000 for x in [read_avg_lat, read_min_lat, read_max_lat]]
@@ -113,10 +124,8 @@ class Target(Server):
             write_min_lat = float(data["jobs"][job_pos]["write"][lat_key]["min"])
             write_max_lat = float(data["jobs"][job_pos]["write"][lat_key]["max"])
             clat_key, clat_unit = get_lat_unit("clat", data["jobs"][job_pos]["write"])
-            write_p99_lat = float(data["jobs"][job_pos]["write"][clat_key]["percentile"]["99.000000"])
-            write_p99_9_lat = float(data["jobs"][job_pos]["write"][clat_key]["percentile"]["99.900000"])
-            write_p99_99_lat = float(data["jobs"][job_pos]["write"][clat_key]["percentile"]["99.990000"])
-            write_p99_999_lat = float(data["jobs"][job_pos]["write"][clat_key]["percentile"]["99.999000"])
+            write_p99_lat, write_p99_9_lat, write_p99_99_lat, write_p99_999_lat = get_clat_percentiles(
+                data["jobs"][job_pos]["write"][clat_key])
 
             if "ns" in lat_unit:
                 write_avg_lat, write_min_lat, write_max_lat = [x / 1000 for x in [write_avg_lat, write_min_lat, write_max_lat]]
