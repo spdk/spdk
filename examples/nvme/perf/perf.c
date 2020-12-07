@@ -4,7 +4,7 @@
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
  *
- *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2019-2020 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -266,6 +266,7 @@ static uint32_t g_allowed_pci_addr_num;
 struct trid_entry {
 	struct spdk_nvme_transport_id	trid;
 	uint16_t			nsid;
+	char				hostnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 	TAILQ_ENTRY(trid_entry)		tailq;
 };
 
@@ -1411,6 +1412,7 @@ static void usage(char *program_name)
 	printf("\t  traddr      Transport address (e.g. 0000:04:00.0 for PCIe or 192.168.100.8 for RDMA)\n");
 	printf("\t  trsvcid     Transport service identifier (e.g. 4420)\n");
 	printf("\t  subnqn      Subsystem NQN (default: %s)\n", SPDK_NVMF_DISCOVERY_NQN);
+	printf("\t  hostnqn     Host NQN\n");
 	printf("\t Example: -r 'trtype:PCIe traddr:0000:04:00.0' for PCIe or\n");
 	printf("\t          -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420' for NVMeoF\n");
 	printf("\t[-e metadata configuration]\n");
@@ -1677,6 +1679,7 @@ add_trid(const char *trid_str)
 	struct trid_entry *trid_entry;
 	struct spdk_nvme_transport_id *trid;
 	char *ns;
+	char *hostnqn;
 
 	trid_entry = calloc(1, sizeof(*trid_entry));
 	if (trid_entry == NULL) {
@@ -1722,6 +1725,23 @@ add_trid(const char *trid_str)
 		}
 
 		trid_entry->nsid = (uint16_t)nsid;
+	}
+
+	hostnqn = strcasestr(trid_str, "hostnqn:");
+	if (hostnqn) {
+		size_t len;
+
+		hostnqn += strlen("hostnqn:");
+
+		len = strcspn(hostnqn, " \t\n");
+		if (len > (sizeof(trid_entry->hostnqn) - 1)) {
+			fprintf(stderr, "Host NQN is too long\n");
+			free(trid_entry);
+			return 1;
+		}
+
+		memcpy(trid_entry->hostnqn, hostnqn, len);
+		trid_entry->hostnqn[len] = '\0';
 	}
 
 	TAILQ_INSERT_TAIL(&g_trid_list, trid_entry, tailq);
@@ -2128,6 +2148,8 @@ static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
+	struct trid_entry *trid_entry = cb_ctx;
+
 	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
 		if (g_disable_sq_cmb) {
 			opts->use_cmb_sqs = false;
@@ -2147,6 +2169,7 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	opts->header_digest = g_header_digest;
 	opts->data_digest = g_data_digest;
 	opts->keep_alive_timeout_ms = g_keep_alive_timeout_in_ms;
+	memcpy(opts->hostnqn, trid_entry->hostnqn, sizeof(opts->hostnqn));
 
 	return true;
 }
