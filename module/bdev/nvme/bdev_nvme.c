@@ -2769,13 +2769,10 @@ nvme_namespace_config_json(struct spdk_json_write_ctx *w, struct nvme_bdev_ns *n
 	g_config_json_namespace_fn[nvme_ns->type](w, nvme_ns);
 }
 
-static int
-bdev_nvme_config_json(struct spdk_json_write_ctx *w)
+static void
+bdev_nvme_opts_config_json(struct spdk_json_write_ctx *w)
 {
-	struct nvme_bdev_ctrlr		*nvme_bdev_ctrlr;
-	struct spdk_nvme_transport_id	*trid;
-	const char			*action;
-	uint32_t			nsid;
+	const char	*action;
 
 	if (g_opts.action_on_timeout == SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET) {
 		action = "reset";
@@ -2805,26 +2802,59 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
+}
+
+static void
+nvme_bdev_ctrlr_config_json(struct spdk_json_write_ctx *w,
+			    struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
+{
+	struct spdk_nvme_transport_id	*trid;
+
+	trid = nvme_bdev_ctrlr->connected_trid;
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "method", "bdev_nvme_attach_controller");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_string(w, "name", nvme_bdev_ctrlr->name);
+	nvme_bdev_dump_trid_json(trid, w);
+	spdk_json_write_named_bool(w, "prchk_reftag",
+				   (nvme_bdev_ctrlr->prchk_flags & SPDK_NVME_IO_FLAGS_PRCHK_REFTAG) != 0);
+	spdk_json_write_named_bool(w, "prchk_guard",
+				   (nvme_bdev_ctrlr->prchk_flags & SPDK_NVME_IO_FLAGS_PRCHK_GUARD) != 0);
+
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
+static void
+bdev_nvme_hotplug_config_json(struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "method", "bdev_nvme_set_hotplug");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_uint64(w, "period_us", g_nvme_hotplug_poll_period_us);
+	spdk_json_write_named_bool(w, "enable", g_nvme_hotplug_enabled);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
+static int
+bdev_nvme_config_json(struct spdk_json_write_ctx *w)
+{
+	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
+	uint32_t		nsid;
+
+	bdev_nvme_opts_config_json(w);
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
+
 	TAILQ_FOREACH(nvme_bdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
-		trid = nvme_bdev_ctrlr->connected_trid;
-
-		spdk_json_write_object_begin(w);
-
-		spdk_json_write_named_string(w, "method", "bdev_nvme_attach_controller");
-
-		spdk_json_write_named_object_begin(w, "params");
-		spdk_json_write_named_string(w, "name", nvme_bdev_ctrlr->name);
-		nvme_bdev_dump_trid_json(trid, w);
-		spdk_json_write_named_bool(w, "prchk_reftag",
-					   (nvme_bdev_ctrlr->prchk_flags & SPDK_NVME_IO_FLAGS_PRCHK_REFTAG) != 0);
-		spdk_json_write_named_bool(w, "prchk_guard",
-					   (nvme_bdev_ctrlr->prchk_flags & SPDK_NVME_IO_FLAGS_PRCHK_GUARD) != 0);
-
-		spdk_json_write_object_end(w);
-
-		spdk_json_write_object_end(w);
+		nvme_bdev_ctrlr_config_json(w, nvme_bdev_ctrlr);
 
 		for (nsid = 0; nsid < nvme_bdev_ctrlr->num_ns; ++nsid) {
 			if (!nvme_bdev_ctrlr->namespaces[nsid]->populated) {
@@ -2838,15 +2868,7 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 	/* Dump as last parameter to give all NVMe bdevs chance to be constructed
 	 * before enabling hotplug poller.
 	 */
-	spdk_json_write_object_begin(w);
-	spdk_json_write_named_string(w, "method", "bdev_nvme_set_hotplug");
-
-	spdk_json_write_named_object_begin(w, "params");
-	spdk_json_write_named_uint64(w, "period_us", g_nvme_hotplug_poll_period_us);
-	spdk_json_write_named_bool(w, "enable", g_nvme_hotplug_enabled);
-	spdk_json_write_object_end(w);
-
-	spdk_json_write_object_end(w);
+	bdev_nvme_hotplug_config_json(w);
 
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 	return 0;
