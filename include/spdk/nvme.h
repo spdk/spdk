@@ -868,6 +868,22 @@ int spdk_nvme_detach_poll_async(struct spdk_nvme_detach_ctx *detach_ctx);
 int spdk_nvme_ctrlr_set_trid(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_transport_id *trid);
 
 /**
+ * Set the remove callback and context to be invoked if the controller is removed.
+ *
+ * This will override any remove_cb and/or ctx specified when the controller was
+ * probed.
+ *
+ * This function may only be called from the primary process.  This function has
+ * no effect if called from a secondary process.
+ *
+ * \param ctrlr Opaque handle to an NVMe controller.
+ * \param remove_cb remove callback
+ * \param remove_ctx remove callback context
+ */
+void spdk_nvme_ctrlr_set_remove_cb(struct spdk_nvme_ctrlr *ctrlr,
+				   spdk_nvme_remove_cb remove_cb, void *remove_ctx);
+
+/**
  * Perform a full hardware reset of the NVMe controller.
  *
  * This function should be called from a single thread while no other threads

@@ -170,6 +170,7 @@ static int bdev_nvme_abort(struct nvme_io_channel *nvme_ch,
 			   struct nvme_bdev_io *bio, struct nvme_bdev_io *bio_to_abort);
 static int bdev_nvme_reset(struct nvme_io_channel *nvme_ch, struct nvme_bdev_io *bio);
 static int bdev_nvme_failover(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, bool remove);
+static void remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr);
 
 typedef void (*populate_namespace_fn)(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 				      struct nvme_bdev_ns *nvme_ns, struct nvme_async_probe_ctx *ctx);
@@ -1534,6 +1535,7 @@ nvme_bdev_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	spdk_nvme_ctrlr_register_aer_callback(ctrlr, aer_cb, nvme_bdev_ctrlr);
+	spdk_nvme_ctrlr_set_remove_cb(ctrlr, remove_cb, nvme_bdev_ctrlr);
 
 	if (spdk_nvme_ctrlr_get_flags(nvme_bdev_ctrlr->ctrlr) &
 	    SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
@@ -1625,24 +1627,18 @@ _nvme_bdev_ctrlr_destruct(void *ctx)
 static void
 remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = cb_ctx;
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
-	TAILQ_FOREACH(nvme_bdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
-		if (nvme_bdev_ctrlr->ctrlr == ctrlr) {
-			/* The controller's destruction was already started */
-			if (nvme_bdev_ctrlr->destruct) {
-				pthread_mutex_unlock(&g_bdev_nvme_mutex);
-				return;
-			}
-			nvme_bdev_ctrlr->destruct = true;
-			pthread_mutex_unlock(&g_bdev_nvme_mutex);
-
-			_nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
-			return;
-		}
+	assert(nvme_bdev_ctrlr->ctrlr == ctrlr);
+	/* The controller's destruction was already started */
+	if (nvme_bdev_ctrlr->destruct) {
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+		return;
 	}
+	nvme_bdev_ctrlr->destruct = true;
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+	_nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
 }
 
 static int
@@ -1656,8 +1652,7 @@ bdev_nvme_hotplug(void *arg)
 		spdk_nvme_trid_populate_transport(&trid_pcie, SPDK_NVME_TRANSPORT_PCIE);
 
 		g_hotplug_probe_ctx = spdk_nvme_probe_async(&trid_pcie, NULL,
-				      hotplug_probe_cb,
-				      attach_cb, remove_cb);
+				      hotplug_probe_cb, attach_cb, NULL);
 		if (!g_hotplug_probe_ctx) {
 			return SPDK_POLLER_BUSY;
 		}

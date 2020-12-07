@@ -306,7 +306,7 @@ _nvme_pcie_hotplug_monitor(struct spdk_nvme_probe_ctx *probe_ctx)
 				/* get the user app to clean up and stop I/O */
 				if (ctrlr->remove_cb) {
 					nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
-					ctrlr->remove_cb(probe_ctx->cb_ctx, ctrlr);
+					ctrlr->remove_cb(ctrlr->cb_ctx, ctrlr);
 					nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 				}
 			}
@@ -335,7 +335,7 @@ _nvme_pcie_hotplug_monitor(struct spdk_nvme_probe_ctx *probe_ctx)
 			nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 			if (ctrlr->remove_cb) {
 				nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
-				ctrlr->remove_cb(probe_ctx->cb_ctx, ctrlr);
+				ctrlr->remove_cb(ctrlr->cb_ctx, ctrlr);
 				nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 			}
 		}
