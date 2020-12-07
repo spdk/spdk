@@ -1045,6 +1045,23 @@ nvme_dump_rdma_statistics(struct spdk_nvme_transport_poll_group_stat *stat)
 }
 
 static void
+nvme_dump_pcie_statistics(struct spdk_nvme_transport_poll_group_stat *stat)
+{
+	struct spdk_nvme_pcie_stat *pcie_stat;
+
+	pcie_stat = &stat->pcie;
+
+	printf("PCIE transport:\n");
+	printf("\tpolls: %"PRIu64"\n", pcie_stat->polls);
+	printf("\tidle_polls: %"PRIu64"\n", pcie_stat->idle_polls);
+	printf("\tcompletions: %"PRIu64"\n", pcie_stat->completions);
+	printf("\tcq_doorbell_updates: %"PRIu64"\n", pcie_stat->cq_doorbell_updates);
+	printf("\tsubmitted_requests: %"PRIu64"\n", pcie_stat->submitted_requests);
+	printf("\tsq_doobell_updates: %"PRIu64"\n", pcie_stat->sq_doobell_updates);
+	printf("\tqueued_requests: %"PRIu64"\n", pcie_stat->queued_requests);
+}
+
+static void
 nvme_dump_transport_stats(uint32_t lcore, struct ns_worker_ctx *ns_ctx)
 {
 	struct spdk_nvme_poll_group *group;
@@ -1070,6 +1087,9 @@ nvme_dump_transport_stats(uint32_t lcore, struct ns_worker_ctx *ns_ctx)
 		switch (stat->transport_stat[i]->trtype) {
 		case SPDK_NVME_TRANSPORT_RDMA:
 			nvme_dump_rdma_statistics(stat->transport_stat[i]);
+			break;
+		case SPDK_NVME_TRANSPORT_PCIE:
+			nvme_dump_pcie_statistics(stat->transport_stat[i]);
 			break;
 		default:
 			fprintf(stderr, "Unknown transport statistics %d %s\n", stat->transport_stat[i]->trtype,

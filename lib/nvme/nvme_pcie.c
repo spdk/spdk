@@ -3,7 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2017, IBM Corporation. All rights reserved.
- *   Copyright (c) 2019, 2020 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2019-2021 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -1218,11 +1218,13 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 	tr = TAILQ_FIRST(&pqpair->free_tr);
 
 	if (tr == NULL) {
+		pqpair->stat->queued_requests++;
 		/* Inform the upper layer to try again later. */
 		rc = -EAGAIN;
 		goto exit;
 	}
 
+	pqpair->stat->submitted_requests++;
 	TAILQ_REMOVE(&pqpair->free_tr, tr, tq_list); /* remove tr from free_tr */
 	TAILQ_INSERT_TAIL(&pqpair->outstanding_tr, tr, tq_list);
 	tr->req = req;
@@ -1274,6 +1276,39 @@ void
 spdk_nvme_pcie_set_hotplug_filter(spdk_nvme_pcie_hotplug_filter_cb filter_cb)
 {
 	g_hotplug_filter_cb = filter_cb;
+}
+
+static int
+nvme_pcie_poll_group_get_stats(struct spdk_nvme_transport_poll_group *tgroup,
+			       struct spdk_nvme_transport_poll_group_stat **_stats)
+{
+	struct nvme_pcie_poll_group *group;
+	struct spdk_nvme_transport_poll_group_stat *stats;
+
+	if (tgroup == NULL || _stats == NULL) {
+		SPDK_ERRLOG("Invalid stats or group pointer\n");
+		return -EINVAL;
+	}
+
+	group = SPDK_CONTAINEROF(tgroup, struct nvme_pcie_poll_group, group);
+	stats = calloc(1, sizeof(*stats));
+	if (!stats) {
+		SPDK_ERRLOG("Can't allocate memory for RDMA stats\n");
+		return -ENOMEM;
+	}
+	stats->trtype = SPDK_NVME_TRANSPORT_PCIE;
+	memcpy(&stats->pcie, &group->stats, sizeof(group->stats));
+
+	*_stats = stats;
+
+	return 0;
+}
+
+static void
+nvme_pcie_poll_group_free_stats(struct spdk_nvme_transport_poll_group *tgroup,
+				struct spdk_nvme_transport_poll_group_stat *stats)
+{
+	free(stats);
 }
 
 static struct spdk_pci_id nvme_pci_driver_id[] = {
@@ -1329,6 +1364,8 @@ const struct spdk_nvme_transport_ops pcie_ops = {
 	.poll_group_remove = nvme_pcie_poll_group_remove,
 	.poll_group_process_completions = nvme_pcie_poll_group_process_completions,
 	.poll_group_destroy = nvme_pcie_poll_group_destroy,
+	.poll_group_get_stats = nvme_pcie_poll_group_get_stats,
+	.poll_group_free_stats = nvme_pcie_poll_group_free_stats
 };
 
 SPDK_NVME_TRANSPORT_REGISTER(pcie, &pcie_ops);

@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2021 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -78,6 +79,9 @@ DEFINE_STUB(spdk_pci_get_event, int, (int fd, struct spdk_pci_event *uevent), 0)
 DEFINE_STUB(spdk_pci_register_error_handler, int, (spdk_pci_error_handler sighandler, void *ctx),
 	    0);
 DEFINE_STUB_V(spdk_pci_unregister_error_handler, (spdk_pci_error_handler sighandler));
+
+DEFINE_STUB(nvme_transport_get_name, const char *, (const struct spdk_nvme_transport *transport),
+	    NULL);
 
 SPDK_LOG_REGISTER_COMPONENT(nvme)
 

@@ -2,6 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2021 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -271,6 +272,13 @@ nvme_pcie_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t nu
 		return rc;
 	}
 
+	pqpair->stat = spdk_zmalloc(sizeof(*pqpair->stat), 64, NULL, SPDK_ENV_SOCKET_ID_ANY,
+				    SPDK_MALLOC_SHARE);
+	if (!pqpair->stat) {
+		SPDK_ERRLOG("Failed to allocate admin qpair statistics\n");
+		return -ENOMEM;
+	}
+
 	return nvme_pcie_qpair_construct(ctrlr->adminq, NULL);
 }
 
@@ -442,6 +450,24 @@ _nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 	if (!status) {
 		SPDK_ERRLOG("Failed to allocate status tracker\n");
 		return -ENOMEM;
+	}
+
+	/* Statistics may already be allocated in the case of controller reset */
+	if (!pqpair->stat) {
+		if (qpair->poll_group) {
+			struct nvme_pcie_poll_group *group = SPDK_CONTAINEROF(qpair->poll_group,
+							     struct nvme_pcie_poll_group, group);
+
+			pqpair->stat = &group->stats;
+			pqpair->shared_stats = true;
+		} else {
+			pqpair->stat = calloc(1, sizeof(*pqpair->stat));
+			if (!pqpair->stat) {
+				SPDK_ERRLOG("Failed to allocate qpair statistics\n");
+				free(status);
+				return -ENOMEM;
+			}
+		}
 	}
 
 	rc = nvme_pcie_ctrlr_cmd_create_io_cq(ctrlr, qpair, nvme_completion_poll_cb, status);
@@ -781,6 +807,8 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		max_completions = pqpair->max_completions_cap;
 	}
 
+	pqpair->stat->polls++;
+
 	while (1) {
 		cpl = &pqpair->cpl[pqpair->cq_head];
 
@@ -838,7 +866,10 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	}
 
 	if (num_completions > 0) {
+		pqpair->stat->completions += num_completions;
 		nvme_pcie_qpair_ring_cq_doorbell(qpair);
+	} else {
+		pqpair->stat->idle_polls++;
 	}
 
 	if (pqpair->flags.delay_cmd_submit) {
@@ -890,6 +921,17 @@ nvme_pcie_qpair_destroy(struct spdk_nvme_qpair *qpair)
 	}
 
 	nvme_qpair_deinit(qpair);
+
+	if (!pqpair->shared_stats) {
+		if (qpair->id) {
+			free(pqpair->stat);
+		} else {
+			/* statistics of admin qpair are allocates from huge pages because
+			 * admin qpair is shared for multi-process */
+			spdk_free(pqpair->stat);
+		}
+
+	}
 
 	spdk_free(pqpair);
 

@@ -2,6 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2021 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -120,6 +121,7 @@ SPDK_STATIC_ASSERT((offsetof(struct nvme_tracker, meta_sgl) & 7) == 0, "SGL must
 
 struct nvme_pcie_poll_group {
 	struct spdk_nvme_transport_poll_group group;
+	struct spdk_nvme_pcie_stat stats;
 };
 
 /* PCIe transport extensions for spdk_nvme_qpair */
@@ -141,6 +143,8 @@ struct nvme_pcie_qpair {
 
 	/* Array of trackers indexed by command ID. */
 	struct nvme_tracker *tr;
+
+	struct spdk_nvme_pcie_stat *stat;
 
 	uint16_t num_entries;
 
@@ -185,6 +189,7 @@ struct nvme_pcie_qpair {
 	 */
 
 	bool sq_in_cmb;
+	bool shared_stats;
 
 	uint64_t cmd_bus_addr;
 	uint64_t cpl_bus_addr;
@@ -260,6 +265,7 @@ nvme_pcie_qpair_ring_sq_doorbell(struct spdk_nvme_qpair *qpair)
 
 	if (spdk_likely(need_mmio)) {
 		spdk_wmb();
+		pqpair->stat->sq_doobell_updates++;
 		g_thread_mmio_ctrlr = pctrlr;
 		spdk_mmio_write_4(pqpair->sq_tdbl, pqpair->sq_tail);
 		g_thread_mmio_ctrlr = NULL;
@@ -281,6 +287,7 @@ nvme_pcie_qpair_ring_cq_doorbell(struct spdk_nvme_qpair *qpair)
 	}
 
 	if (spdk_likely(need_mmio)) {
+		pqpair->stat->cq_doorbell_updates++;
 		g_thread_mmio_ctrlr = pctrlr;
 		spdk_mmio_write_4(pqpair->cq_hdbl, pqpair->cq_head);
 		g_thread_mmio_ctrlr = NULL;
