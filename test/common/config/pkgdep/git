@@ -108,6 +108,19 @@ function install_qat() {
 	local kernel_maj kernel_min kernel_rel kernel_loc
 	local kernel_ver
 
+	in_syms() {
+		local syms
+		if [[ -e /proc/kallsyms ]]; then
+			syms=/proc/kallsyms
+		elif [[ -e /boot/System.map-$(< /proc/sys/kernel/osrelease) ]]; then
+			syms=/boot/System.map-$(< /proc/sys/kernel/osrelease)
+		else
+			return 0
+		fi
+
+		grep -q "$1" "$syms"
+	}
+
 	IFS=".-" read -r kernel_{maj,min,rel,loc} < /proc/sys/kernel/osrelease
 	kernel_ver=$((kernel_maj << 16 | kernel_min << 8 | kernel_rel))
 
@@ -129,7 +142,7 @@ function install_qat() {
 	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-timespec.patch"
 
 	# Patch name of the pci_aer function which was renamed in kernels >= 5.7.1. See .patch for details
-	if ((kernel_ver >= 0x050701)); then
+	if ((kernel_ver >= 0x050701)) || ! in_syms pci_cleanup_aer_uncorrect_error_status; then
 		# Patch only the driver version that was tested
 		[[ ${DRIVER_LOCATION_QAT##*/} == qat1.7.l.4.9.0-00008.tar.gz ]] && patch --dir="$GIT_REPOS/QAT" -p1
 	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-pci_aer.patch"
