@@ -29,6 +29,7 @@ NUMJOBS=1
 REPEAT_NO=3
 GTOD_REDUCE=false
 SAMPLING_INT=0
+LATENCY_LOG=false
 IO_BATCH_SUBMIT=0
 IO_BATCH_COMPLETE=0
 FIO_BIN=$CONFIG_FIO_SOURCE_DIR/fio
@@ -70,6 +71,7 @@ function usage() {
 	echo "                             Test result will be an average of repeated test runs."
 	echo "    --gtod-reduce            Enable fio gtod_reduce option. [default=$GTOD_REDUCE]"
 	echo "    --sampling-int=INT       Value for fio log_avg_msec parameters [default=$SAMPLING_INT]"
+	echo "    --latency-log            Write latency log file using write_lat_log fio option [default=$LATENCY_LOG]"
 	echo "    --io-batch-submit=INT    Value for iodepth_batch_submit fio option [default=$IO_BATCH_SUBMIT]"
 	echo "    --io-batch-complete=INT  Value for iodepth_batch_complete fio option [default=$IO_BATCH_COMPLETE]"
 	echo "    --fio-bin=PATH           Path to fio binary. [default=$FIO_BIN]"
@@ -150,6 +152,7 @@ while getopts 'h-:' optchar; do
 				cpu-frequency=*) CPUFREQ="${OPTARG#*=}" ;;
 				perftop) PERFTOP=true ;;
 				dpdk-mem-stats) DPDKMEM=true ;;
+				latency-log) LATENCY_LOG=true ;;
 				*)
 					usage $0 echo "Invalid argument '$OPTARG'"
 					exit 1
@@ -298,12 +301,14 @@ for ((j = 0; j < REPEAT_NO; j++)); do
 	else
 		create_fio_config $DISKNO $PLUGIN "$DISK_NAMES" "$DISKS_NUMA" "$CORES"
 
+		if $LATENCY_LOG; then
+			write_log_opt="--write_lat_log=$result_dir/perf_lat_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}_${k}disks_${j}"
+		fi
+
 		if [[ "$PLUGIN" =~ "spdk-plugin" ]]; then
-			run_spdk_nvme_fio $PLUGIN "--output=$TMP_RESULT_FILE" \
-				"--write_lat_log=$result_dir/perf_lat_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}_${k}disks_${j}"
+			run_spdk_nvme_fio $PLUGIN "--output=$TMP_RESULT_FILE" $write_log_opt
 		else
-			run_nvme_fio $fio_ioengine_opt "--output=$TMP_RESULT_FILE" \
-				"--write_lat_log=$result_dir/perf_lat_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}_${k}disks_${j}"
+			run_nvme_fio $fio_ioengine_opt "--output=$TMP_RESULT_FILE" $write_log_opt
 		fi
 
 		#Store values for every number of used disks
