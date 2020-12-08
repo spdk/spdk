@@ -227,6 +227,15 @@ function create_fio_config() {
 		echo "gtod_reduce=1" >> $testdir/config.fio
 	fi
 
+	if [[ $PLUGIN =~ "uring" ]]; then
+		cat <<- EOF >> $testdir/config.fio
+			fixedbufs=1
+			hipri=1
+			registerfiles=1
+			sqthread_poll=1
+		EOF
+	fi
+
 	if [[ "$IO_BATCH_SUBMIT" -gt 0 ]]; then
 		echo "iodepth_batch_submit=$IO_BATCH_SUBMIT" >> $testdir/config.fio
 	fi
