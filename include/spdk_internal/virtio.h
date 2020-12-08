@@ -483,4 +483,16 @@ int virtio_user_dev_init(struct virtio_dev *vdev, const char *name, const char *
 int virtio_pci_dev_init(struct virtio_dev *vdev, const char *name,
 			struct virtio_pci_ctx *pci_ctx);
 
+/**
+ * Process the uevent which is accepted from the kernel and the
+ * uevent descript the physical device hot add or remove action.
+ *
+ * \param fd the file descriptor of the kobject netlink socket
+ * \param device_id virtio device ID used to represent virtio-blk or other device.
+ * \return the name of the virtio device on success, NULL means it
+ * is not a suitable uevent.
+ */
+const char *
+virtio_pci_dev_event_process(int fd, uint16_t device_id);
+
 #endif /* SPDK_VIRTIO_H */

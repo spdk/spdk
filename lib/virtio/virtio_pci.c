@@ -39,6 +39,7 @@
 #include "spdk/env.h"
 
 #include "spdk_internal/virtio.h"
+#include <linux/virtio_ids.h>
 
 struct virtio_hw {
 	uint8_t	    use_msix;
@@ -60,7 +61,10 @@ struct virtio_hw {
 	/** Device-specific PCI config space */
 	void *dev_cfg;
 
+	struct virtio_dev *vdev;
 	bool is_remapped;
+	bool is_removing;
+	TAILQ_ENTRY(virtio_hw) tailq;
 };
 
 struct virtio_pci_probe_ctx {
@@ -69,6 +73,8 @@ struct virtio_pci_probe_ctx {
 	uint16_t device_id;
 };
 
+static TAILQ_HEAD(, virtio_hw) g_virtio_hws = TAILQ_HEAD_INITIALIZER(g_virtio_hws);
+static pthread_mutex_t g_hw_mutex = PTHREAD_MUTEX_INITIALIZER;
 __thread struct virtio_hw *g_thread_virtio_hw = NULL;
 static uint16_t g_signal_lock;
 static bool g_sigset = false;
@@ -132,6 +138,87 @@ fail:
 		munmap(g_thread_virtio_hw->pci_bar[i].vaddr, g_thread_virtio_hw->pci_bar[i].len);
 	}
 	__atomic_store_n(&g_signal_lock, 0, __ATOMIC_RELEASE);
+}
+
+static struct virtio_hw *
+virtio_pci_dev_get_by_addr(struct spdk_pci_addr *traddr)
+{
+	struct virtio_hw *hw;
+	struct spdk_pci_addr addr;
+
+	pthread_mutex_lock(&g_hw_mutex);
+	TAILQ_FOREACH(hw, &g_virtio_hws, tailq) {
+		addr = spdk_pci_device_get_addr(hw->pci_dev);
+		if (!spdk_pci_addr_compare(&addr, traddr)) {
+			pthread_mutex_unlock(&g_hw_mutex);
+			return hw;
+		}
+	}
+	pthread_mutex_unlock(&g_hw_mutex);
+
+	return NULL;
+}
+
+static const char *
+virtio_pci_dev_check(struct virtio_hw *hw, uint16_t device_id_match)
+{
+	uint16_t pci_device_id, device_id;
+
+	pci_device_id = spdk_pci_device_get_device_id(hw->pci_dev);
+	if (pci_device_id < 0x1040) {
+		/* Transitional devices: use the PCI subsystem device id as
+		 * virtio device id, same as legacy driver always did.
+		 */
+		device_id = spdk_pci_device_get_subdevice_id(hw->pci_dev);
+	} else {
+		/* Modern devices: simply use PCI device id, but start from 0x1040. */
+		device_id = pci_device_id - 0x1040;
+	}
+
+	if (device_id == device_id_match) {
+		hw->is_removing = true;
+		return hw->vdev->name;
+	}
+
+	return NULL;
+}
+
+const char *
+virtio_pci_dev_event_process(int fd, uint16_t device_id)
+{
+	struct spdk_pci_event event;
+	struct virtio_hw *hw, *tmp;
+	const char *vdev_name;
+
+	/* UIO remove handler */
+	if (spdk_pci_get_event(fd, &event) > 0) {
+		if (event.action == SPDK_UEVENT_REMOVE) {
+			hw = virtio_pci_dev_get_by_addr(&event.traddr);
+			if (hw == NULL || hw->is_removing) {
+				return NULL;
+			}
+
+			vdev_name = virtio_pci_dev_check(hw, device_id);
+			if (vdev_name != NULL) {
+				return vdev_name;
+			}
+		}
+	}
+
+	/* VFIO remove handler */
+	pthread_mutex_lock(&g_hw_mutex);
+	TAILQ_FOREACH_SAFE(hw, &g_virtio_hws, tailq, tmp) {
+		if (spdk_pci_device_is_removed(hw->pci_dev) && !hw->is_removing) {
+			vdev_name = virtio_pci_dev_check(hw, device_id);
+			if (vdev_name != NULL) {
+				pthread_mutex_unlock(&g_hw_mutex);
+				return vdev_name;
+			}
+		}
+	}
+	pthread_mutex_unlock(&g_hw_mutex);
+
+	return NULL;
 }
 
 static inline int
@@ -293,6 +380,9 @@ modern_destruct_dev(struct virtio_dev *vdev)
 	struct spdk_pci_device *pci_dev;
 
 	if (hw != NULL) {
+		pthread_mutex_lock(&g_hw_mutex);
+		TAILQ_REMOVE(&g_virtio_hws, hw, tailq);
+		pthread_mutex_unlock(&g_hw_mutex);
 		pci_dev = hw->pci_dev;
 		free_virtio_hw(hw);
 		if (pci_dev) {
@@ -612,6 +702,7 @@ virtio_pci_dev_probe(struct spdk_pci_device *pci_dev, struct virtio_pci_probe_ct
 	rc = ctx->enum_cb((struct virtio_pci_ctx *)hw, ctx->enum_ctx);
 	if (rc != 0) {
 		free_virtio_hw(hw);
+		return rc;
 	}
 
 	if (g_sigset != true) {
@@ -620,7 +711,11 @@ virtio_pci_dev_probe(struct spdk_pci_device *pci_dev, struct virtio_pci_probe_ct
 		g_sigset = true;
 	}
 
-	return rc;
+	pthread_mutex_lock(&g_hw_mutex);
+	TAILQ_INSERT_TAIL(&g_virtio_hws, hw, tailq);
+	pthread_mutex_unlock(&g_hw_mutex);
+
+	return 0;
 }
 
 static int
@@ -695,6 +790,7 @@ virtio_pci_dev_init(struct virtio_dev *vdev, const char *name,
 		    struct virtio_pci_ctx *pci_ctx)
 {
 	int rc;
+	struct virtio_hw *hw = (struct virtio_hw *)pci_ctx;
 
 	rc = virtio_dev_construct(vdev, name, &modern_ops, pci_ctx);
 	if (rc != 0) {
@@ -703,6 +799,7 @@ virtio_pci_dev_init(struct virtio_dev *vdev, const char *name,
 
 	vdev->is_hw = 1;
 	vdev->modern = 1;
+	hw->vdev = vdev;
 
 	return 0;
 }

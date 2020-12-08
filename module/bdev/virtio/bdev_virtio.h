@@ -161,4 +161,16 @@ struct spdk_bdev *bdev_virtio_user_blk_dev_create(const char *name, const char *
 struct spdk_bdev *bdev_virtio_pci_blk_dev_create(const char *name,
 		struct spdk_pci_addr *pci_addr);
 
+/**
+ * Enable/Disable the virtio blk hotplug monitor or
+ * change the monitor period time
+ *
+ * \param enabled True means to enable the hotplug monitor and the monitor
+ * period time is period_us. False means to disable the hotplug monitor
+ * \param period_us The period time of the hotplug monitor in us
+ * \return 0 for success otherwise failure
+ */
+int
+bdev_virtio_pci_blk_set_hotplug(bool enabled, uint64_t period_us);
+
 #endif /* SPDK_BDEV_VIRTIO_H */

@@ -90,6 +90,14 @@ struct bdev_virtio_blk_io_channel {
 	 1ULL << VIRTIO_RING_F_EVENT_IDX	|	\
 	 1ULL << VHOST_USER_F_PROTOCOL_FEATURES)
 
+/* 10 sec for max poll period */
+#define VIRTIO_BLK_HOTPLUG_POLL_PERIOD_MAX		10000000ULL
+/* Default poll period is 100ms */
+#define VIRTIO_BLK_HOTPLUG_POLL_PERIOD_DEFAULT		100000ULL
+
+static struct spdk_poller *g_blk_hotplug_poller = NULL;
+static int g_blk_hotplug_fd = -1;
+
 static int bdev_virtio_initialize(void);
 static int bdev_virtio_blk_get_ctx_size(void);
 
@@ -689,6 +697,56 @@ bdev_virtio_pci_blk_dev_create(const char *name, struct spdk_pci_addr *pci_addr)
 	}
 
 	return &create_ctx.ret->bdev;
+}
+
+static int
+bdev_virtio_pci_blk_monitor(void *arg)
+{
+	const char *vdev_name;
+	struct bdev_virtio_pci_dev_create_ctx create_ctx;
+
+	while ((vdev_name = virtio_pci_dev_event_process(g_blk_hotplug_fd, VIRTIO_ID_BLOCK)) != NULL) {
+		bdev_virtio_blk_dev_remove(vdev_name, NULL, NULL);
+	}
+
+	/* Enumerate virtio pci_blk device */
+	memset(&create_ctx, 0, sizeof(create_ctx));
+	virtio_pci_dev_enumerate(bdev_virtio_pci_blk_dev_create_cb, &create_ctx,
+				 VIRTIO_ID_BLOCK);
+
+	return SPDK_POLLER_BUSY;
+}
+
+int
+bdev_virtio_pci_blk_set_hotplug(bool enabled, uint64_t period_us)
+{
+	if (enabled == true && !spdk_process_is_primary()) {
+		return -EPERM;
+	}
+
+	if (g_blk_hotplug_poller) {
+		close(g_blk_hotplug_fd);
+		spdk_poller_unregister(&g_blk_hotplug_poller);
+	}
+
+	if (!enabled) {
+		return 0;
+	}
+
+	g_blk_hotplug_fd = spdk_pci_event_listen();
+	if (g_blk_hotplug_fd < 0) {
+		return g_blk_hotplug_fd;
+	}
+
+	period_us = period_us ? period_us : VIRTIO_BLK_HOTPLUG_POLL_PERIOD_DEFAULT;
+	period_us = spdk_min(period_us, VIRTIO_BLK_HOTPLUG_POLL_PERIOD_MAX);
+	g_blk_hotplug_poller = spdk_poller_register(bdev_virtio_pci_blk_monitor, NULL, period_us);
+	if (!g_blk_hotplug_poller) {
+		close(g_blk_hotplug_fd);
+		return -1;
+	}
+
+	return 0;
 }
 
 static int
