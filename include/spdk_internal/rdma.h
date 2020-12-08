@@ -80,7 +80,8 @@ struct spdk_rdma_memory_translation {
 
 /**
  * Create RDMA provider specific qpair
- * \param cm_id Pointer to RDMACM cm_id
+ *
+ * \param cm_id Pointer to RDMA_CM cm_id
  * \param qp_attr Pointer to qpair init attributes
  * \return Pointer to a newly created qpair on success or NULL on failure
  */
@@ -89,7 +90,8 @@ struct spdk_rdma_qp *spdk_rdma_qp_create(struct rdma_cm_id *cm_id,
 
 /**
  * Accept a connection request. Called by the passive side (NVMEoF target)
- * \param spdk_rdma_qp Pointer to a qpair
+ *
+ * \param spdk_rdma_qp Pointer to SPDK RDMA qpair
  * \param conn_param Optional information needed to establish the connection
  * \return 0 on success, errno on failure
  */
@@ -98,21 +100,24 @@ int spdk_rdma_qp_accept(struct spdk_rdma_qp *spdk_rdma_qp, struct rdma_conn_para
 /**
  * Complete the connection process, must be called by the active
  * side (NVMEoF initiator) upon receipt RDMA_CM_EVENT_CONNECT_RESPONSE
- * \param spdk_rdma_qp Pointer to a qpair
+ *
+ * \param spdk_rdma_qp Pointer to SPDK RDMA qpair
  * \return 0 on success, errno on failure
  */
 int spdk_rdma_qp_complete_connect(struct spdk_rdma_qp *spdk_rdma_qp);
 
 /**
  * Destroy RDMA provider specific qpair
- * \param spdk_rdma_qp Pointer to qpair to be destroyed
+ *
+ * \param spdk_rdma_qp Pointer to SPDK RDMA qpair to be destroyed
  */
 void spdk_rdma_qp_destroy(struct spdk_rdma_qp *spdk_rdma_qp);
 
 /**
- * Disconnect a connection and transition assoiciated qpair to error state.
+ * Disconnect a connection and transition associated qpair to error state.
  * Generates RDMA_CM_EVENT_DISCONNECTED on both connection sides
- * \param spdk_rdma_qp Pointer to qpair to be destroyed
+ *
+ * \param spdk_rdma_qp Pointer to qpair to be disconnected
  */
 int spdk_rdma_qp_disconnect(struct spdk_rdma_qp *spdk_rdma_qp);
 
@@ -127,7 +132,8 @@ int spdk_rdma_qp_disconnect(struct spdk_rdma_qp *spdk_rdma_qp);
 bool spdk_rdma_qp_queue_send_wrs(struct spdk_rdma_qp *spdk_rdma_qp, struct ibv_send_wr *first);
 
 /**
- * Submit all queued Work Request
+ * Submit all queued send Work Request
+ *
  * \param spdk_rdma_qp Pointer to SPDK RDMA qpair
  * \param bad_wr Stores a pointer to the first failed WR if this function return nonzero value
  * \return 0 on succes, errno on failure
