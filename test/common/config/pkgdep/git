@@ -27,7 +27,7 @@ function install_refspdk() {
 		release=$(git -C "$GIT_REPOS/spdk_repo/spdk" tag | sort --version-sort | grep -v rc | tail -n 1)
 		output_dir="$GIT_REPOS/spdk_abi_latest"
 	elif [[ "$version" == "LTS" ]]; then
-		release="LTS"
+		release=$(git -C "$GIT_REPOS/spdk_repo/spdk" describe LTS)
 		output_dir="$GIT_REPOS/spdk_abi_lts"
 	fi
 
@@ -38,7 +38,7 @@ function install_refspdk() {
 	git -C "$output_dir" checkout "$release"
 	git -C "$output_dir" submodule update --init
 	lts_2001_fallback=false
-	if [[ $(git -C "$output_dir" describe --tags) == v20.01* ]]; then
+	if [[ "$release" == v20.01* ]]; then
 		lts_2001_fallback=true
 	fi
 
