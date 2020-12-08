@@ -901,6 +901,25 @@ void spdk_nvme_ctrlr_set_remove_cb(struct spdk_nvme_ctrlr *ctrlr,
 int spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
+ * Perform a NVMe subsystem reset.
+ *
+ * This function should be called from a single thread while no other threads
+ * are actively using the NVMe device.
+ * A subsystem reset is typically seen by the OS as a hot remove, followed by a
+ * hot add event.
+ *
+ * Any pointers returned from spdk_nvme_ctrlr_get_ns(), spdk_nvme_ns_get_data(),
+ * spdk_nvme_zns_ns_get_data(), and spdk_nvme_zns_ctrlr_get_data()
+ * may be invalidated by calling this function. The number of namespaces as returned
+ * by spdk_nvme_ctrlr_get_num_ns() may also change.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return 0 on success, -1 on failure, -ENOTSUP if subsystem reset is not supported.
+ */
+int spdk_nvme_ctrlr_reset_subsystem(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
  * Fail the given NVMe controller.
  *
  * This function gives the application the opportunity to fail a controller

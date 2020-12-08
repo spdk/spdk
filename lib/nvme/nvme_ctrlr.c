@@ -91,6 +91,13 @@ nvme_ctrlr_get_cmbsz(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cmbsz_regist
 					      &cmbsz->raw);
 }
 
+static int
+nvme_ctrlr_set_nssr(struct spdk_nvme_ctrlr *ctrlr, uint32_t nssr_value)
+{
+	return nvme_transport_ctrlr_set_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, nssr),
+					      nssr_value);
+}
+
 bool
 nvme_ctrlr_multi_iocs_enabled(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -1428,6 +1435,32 @@ out:
 		nvme_io_msg_ctrlr_update(ctrlr);
 	}
 
+	return rc;
+}
+
+int
+spdk_nvme_ctrlr_reset_subsystem(struct spdk_nvme_ctrlr *ctrlr)
+{
+	union spdk_nvme_cap_register cap;
+	int rc = 0;
+
+	cap = spdk_nvme_ctrlr_get_regs_cap(ctrlr);
+	if (cap.bits.nssrs == 0) {
+		SPDK_WARNLOG("subsystem reset is not supported\n");
+		return -ENOTSUP;
+	}
+
+	SPDK_NOTICELOG("resetting subsystem\n");
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	ctrlr->is_resetting = true;
+	rc = nvme_ctrlr_set_nssr(ctrlr, SPDK_NVME_NSSR_VALUE);
+	ctrlr->is_resetting = false;
+
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+	/*
+	 * No more cleanup at this point like in the ctrlr reset. A subsystem reset will cause
+	 * a hot remove for PCIe transport. The hot remove handling does all the necessary ctrlr cleanup.
+	 */
 	return rc;
 }
 

@@ -24,6 +24,10 @@ An `opts_size` element was added in the `spdk_blob_open_opts` structure to solve
 ABI compatiblity issue between different SPDK version. And also add `opts_size`
 parameter in `spdk_blob_open_opts_init` function.
 
+### nvme
+
+Added a new function `spdk_nvme_ctrlr_reset_subsystem` to perform a NVMe
+subsystem reset. Note: The NVMf target does not support the subsystem reset yet.
 
 ### event
 
