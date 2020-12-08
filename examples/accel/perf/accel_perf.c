@@ -60,7 +60,19 @@ static struct worker_thread *g_workers = NULL;
 static int g_num_workers = 0;
 static pthread_mutex_t g_workers_lock = PTHREAD_MUTEX_INITIALIZER;
 uint64_t g_capabilites;
-struct ap_task;
+
+struct worker_thread;
+static void accel_done(void *ref, int status);
+
+struct ap_task {
+	void			*src;
+	void			*dst;
+	void			*dst2;
+	struct worker_thread	*worker;
+	int			status;
+	int			expected_status; /* used for the compare operation */
+	TAILQ_ENTRY(ap_task)	link;
+};
 
 struct worker_thread {
 	struct spdk_io_channel		*ch;
@@ -75,16 +87,6 @@ struct worker_thread {
 	bool				is_draining;
 	struct spdk_poller		*is_draining_poller;
 	struct spdk_poller		*stop_poller;
-};
-
-struct ap_task {
-	void			*src;
-	void			*dst;
-	void			*dst2;
-	struct worker_thread	*worker;
-	int			status;
-	int			expected_status; /* used for compare */
-	TAILQ_ENTRY(ap_task)	link;
 };
 
 static void
