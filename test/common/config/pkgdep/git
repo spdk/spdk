@@ -75,7 +75,7 @@ function install_refspdk() {
 			config_params+=" --without-isal --with-fio=/usr/src/fio"
 
 			# TODO: Remove this if-block after 21.01 LTS is released and 20.01 LTS is deprecated.
-			if ! lts_2001_fallback; then
+			if ! "$lts_2001_fallback"; then
 				config_params+=" --with-idxd --disable-unit-tests"
 			fi
 
@@ -83,7 +83,7 @@ function install_refspdk() {
 		else
 			# TODO: "get_config_params" was not available in 20.01 LTS release.
 			# Remove this if-block after 21.01 release.
-			if lts_2001_fallback; then
+			if "$lts_2001_fallback"; then
 				config_params="--enable-debug --enable-werror --with-rdma"
 				config_params+=" --with-fio=/usr/src/fio --with-iscsi-initiator"
 				config_params+=" --with-nvme-cuse --with-pmdk --with-reduce"
