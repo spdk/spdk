@@ -31,6 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "spdk/accel_engine.h"
 #include "spdk/stdinc.h"
 #include "spdk/crc32.h"
 #include "spdk/endian.h"
@@ -250,6 +251,8 @@ struct spdk_nvmf_tcp_qpair {
 	 *  not close the connection.
 	 */
 	struct spdk_poller			*timeout_poller;
+
+	struct spdk_io_channel			*accel_channel;
 
 	TAILQ_ENTRY(spdk_nvmf_tcp_qpair)	link;
 };
@@ -477,6 +480,9 @@ nvmf_tcp_qpair_destroy(struct spdk_nvmf_tcp_qpair *tqpair)
 		nvmf_tcp_dump_qpair_req_contents(tqpair);
 	}
 
+	if (tqpair->accel_channel) {
+		spdk_put_io_channel(tqpair->accel_channel);
+	}
 	spdk_dma_free(tqpair->pdus);
 	free(tqpair->reqs);
 	spdk_free(tqpair->bufs);
@@ -800,34 +806,18 @@ _pdu_write_done(void *_pdu, int err)
 }
 
 static void
-nvmf_tcp_qpair_write_pdu(struct spdk_nvmf_tcp_qpair *tqpair,
-			 struct nvme_tcp_pdu *pdu,
-			 nvme_tcp_qpair_xfer_complete_cb cb_fn,
-			 void *cb_arg)
+_tcp_write_pdu(struct nvme_tcp_pdu *pdu)
 {
-	int hlen;
-	uint32_t crc32c;
 	uint32_t mapped_length = 0;
 	ssize_t rc;
-
-	assert(&tqpair->pdu_in_progress != pdu);
-
-	hlen = pdu->hdr.common.hlen;
-
-	/* Header Digest */
-	if (g_nvme_tcp_hdgst[pdu->hdr.common.pdu_type] && tqpair->host_hdgst_enable) {
-		crc32c = nvme_tcp_pdu_calc_header_digest(pdu);
-		MAKE_DIGEST_WORD((uint8_t *)pdu->hdr.raw + hlen, crc32c);
-	}
+	struct spdk_nvmf_tcp_qpair *tqpair = pdu->qpair;
+	uint32_t crc32c;
 
 	/* Data Digest */
 	if (pdu->data_len > 0 && g_nvme_tcp_ddgst[pdu->hdr.common.pdu_type] && tqpair->host_ddgst_enable) {
 		crc32c = nvme_tcp_pdu_calc_data_digest(pdu);
 		MAKE_DIGEST_WORD(pdu->data_digest, crc32c);
 	}
-
-	pdu->cb_fn = cb_fn;
-	pdu->cb_arg = cb_arg;
 
 	pdu->sock_req.iovcnt = nvme_tcp_build_iovs(pdu->iov, SPDK_COUNTOF(pdu->iov), pdu,
 			       tqpair->host_hdgst_enable, tqpair->host_ddgst_enable,
@@ -846,6 +836,48 @@ nvmf_tcp_qpair_write_pdu(struct spdk_nvmf_tcp_qpair *tqpair,
 	} else {
 		spdk_sock_writev_async(tqpair->sock, &pdu->sock_req);
 	}
+}
+
+static void
+header_crc32_accel_done(void *cb_arg, int status)
+{
+	struct nvme_tcp_pdu *pdu = cb_arg;
+
+	pdu->header_digest_crc32 = pdu->header_digest_crc32 ^ SPDK_CRC32C_XOR;
+	MAKE_DIGEST_WORD((uint8_t *)pdu->hdr.raw + pdu->hdr.common.hlen, pdu->header_digest_crc32);
+	if (spdk_unlikely(status)) {
+		SPDK_ERRLOG("Failed to finish the crc32 work\n");
+		_pdu_write_done(pdu, status);
+		return;
+	}
+
+	_tcp_write_pdu(pdu);
+}
+
+static void
+nvmf_tcp_qpair_write_pdu(struct spdk_nvmf_tcp_qpair *tqpair,
+			 struct nvme_tcp_pdu *pdu,
+			 nvme_tcp_qpair_xfer_complete_cb cb_fn,
+			 void *cb_arg)
+{
+	int hlen;
+
+	assert(&tqpair->pdu_in_progress != pdu);
+
+	hlen = pdu->hdr.common.hlen;
+	pdu->cb_fn = cb_fn;
+	pdu->cb_arg = cb_arg;
+	pdu->qpair = tqpair;
+
+	/* Header Digest */
+	if (g_nvme_tcp_hdgst[pdu->hdr.common.pdu_type] && tqpair->host_hdgst_enable) {
+		spdk_accel_submit_crc32c(tqpair->accel_channel, &pdu->header_digest_crc32,
+					 &pdu->hdr.raw, 0,
+					 hlen, header_crc32_accel_done, pdu);
+		return;
+	}
+
+	_tcp_write_pdu(pdu);
 }
 
 static int
@@ -1647,6 +1679,17 @@ nvmf_tcp_icreq_handle(struct spdk_nvmf_tcp_transport *ttransport,
 			     tqpair,
 			     tqpair->recv_buf_size);
 		/* Not fatal. */
+	}
+
+	if (tqpair->host_hdgst_enable) {
+		tqpair->accel_channel = spdk_accel_engine_get_io_channel();
+		if (spdk_unlikely(!tqpair->accel_channel)) {
+			fes = SPDK_NVME_TCP_TERM_REQ_FES_HDGST_ERROR;
+			error_offset = offsetof(struct spdk_nvme_tcp_ic_req, dgst);
+			SPDK_ERRLOG("Unabled to get accel_channel for tqpair=%p, failed to enable header digest\n",
+				    tqpair);
+			goto end;
+		}
 	}
 
 	tqpair->cpda = spdk_min(ic_req->hpda, SPDK_NVME_TCP_CPDA_MAX);

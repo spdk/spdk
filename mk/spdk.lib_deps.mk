@@ -79,7 +79,7 @@ DEPDIRS-event := log util thread $(JSON_LIBS) trace
 
 DEPDIRS-ftl := log util thread trace bdev
 DEPDIRS-nbd := log util thread $(JSON_LIBS) bdev
-DEPDIRS-nvmf := log sock util nvme thread $(JSON_LIBS) trace bdev
+DEPDIRS-nvmf := accel log sock util nvme thread $(JSON_LIBS) trace bdev
 ifeq ($(CONFIG_RDMA),y)
 DEPDIRS-nvmf += rdma
 endif
