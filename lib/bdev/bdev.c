@@ -462,6 +462,47 @@ spdk_bdev_set_opts(struct spdk_bdev_opts *opts)
 	return 0;
 }
 
+struct spdk_bdev_wait_for_examine_ctx {
+	struct spdk_poller              *poller;
+	spdk_bdev_wait_for_examine_cb	cb_fn;
+	void				*cb_arg;
+};
+
+static bool
+bdev_module_all_actions_completed(void);
+
+static int
+bdev_wait_for_examine_cb(void *arg)
+{
+	struct spdk_bdev_wait_for_examine_ctx *ctx = arg;
+
+	if (!bdev_module_all_actions_completed()) {
+		return SPDK_POLLER_IDLE;
+	}
+
+	spdk_poller_unregister(&ctx->poller);
+	ctx->cb_fn(ctx->cb_arg);
+	free(ctx);
+
+	return SPDK_POLLER_BUSY;
+}
+
+int
+spdk_bdev_wait_for_examine(spdk_bdev_wait_for_examine_cb cb_fn, void *cb_arg)
+{
+	struct spdk_bdev_wait_for_examine_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		return -ENOMEM;
+	}
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+	ctx->poller = SPDK_POLLER_REGISTER(bdev_wait_for_examine_cb, ctx, 0);
+
+	return 0;
+}
+
 struct spdk_bdev_examine_item {
 	char *name;
 	TAILQ_ENTRY(spdk_bdev_examine_item) link;

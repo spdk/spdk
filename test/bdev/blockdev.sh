@@ -346,6 +346,8 @@ case "$test_type" in
 		;;
 esac
 
+"$rpc_py" bdev_wait_for_examine
+
 # Generate json config and use it throughout all the tests
 cat <<- CONF > "$conf_file"
 	        {"subsystems":[

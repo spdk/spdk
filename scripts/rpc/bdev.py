@@ -41,6 +41,12 @@ def bdev_examine(client, name):
     return client.call('bdev_examine', params)
 
 
+def bdev_wait_for_examine(client):
+    """Report when all bdevs have been examined
+    """
+    return client.call('bdev_wait_for_examine')
+
+
 @deprecated_alias('construct_compress_bdev')
 def bdev_compress_create(client, base_bdev_name, pm_path, lb_size):
     """Construct a compress virtual block device.

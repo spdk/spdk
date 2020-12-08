@@ -110,6 +110,33 @@ rpc_bdev_set_options(struct spdk_jsonrpc_request *request, const struct spdk_jso
 SPDK_RPC_REGISTER("bdev_set_options", rpc_bdev_set_options, SPDK_RPC_STARTUP)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_set_options, set_bdev_options)
 
+static void
+rpc_bdev_wait_for_examine_cpl(void *arg)
+{
+	struct spdk_jsonrpc_request *request = arg;
+
+	spdk_jsonrpc_send_bool_response(request, true);
+}
+
+static void
+rpc_bdev_wait_for_examine(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
+{
+	int rc;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "bdev_wait_for_examine requires no parameters");
+		return;
+	}
+
+	rc = spdk_bdev_wait_for_examine(rpc_bdev_wait_for_examine_cpl, request);
+	if (rc != 0) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+	}
+}
+SPDK_RPC_REGISTER("bdev_wait_for_examine", rpc_bdev_wait_for_examine, SPDK_RPC_RUNTIME)
+
 struct rpc_bdev_examine {
 	char *name;
 };

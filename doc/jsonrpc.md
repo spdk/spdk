@@ -1320,6 +1320,40 @@ Example response:
 }
 ~~~
 
+## bdev_wait_for_examine {#rpc_bdev_wait_for_examine}
+
+Report when all bdevs have been examined by every bdev module.
+
+### Parameters
+
+None
+
+### Response
+
+The response is sent when all bdev modules had a chance to examine every bdev.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_wait_for_examine",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## bdev_get_iostat {#rpc_bdev_get_iostat}
 
 Get I/O statistics of block devices (bdevs).

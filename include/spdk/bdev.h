@@ -209,6 +209,20 @@ void spdk_bdev_get_opts(struct spdk_bdev_opts *opts, size_t opts_size);
 
 int spdk_bdev_set_opts(struct spdk_bdev_opts *opts);
 
+typedef void (*spdk_bdev_wait_for_examine_cb)(void *arg);
+
+/**
+ * Report when all bdevs finished the examine process.
+ * The registered cb_fn will be called just once.
+ * This function needs to be called again to receive
+ * further reports on examine process.
+ *
+ * \param cb_fn Callback function.
+ * \param cb_arg Callback argument.
+ * \return 0 if function was registered, suitable errno value otherwise
+ */
+int spdk_bdev_wait_for_examine(spdk_bdev_wait_for_examine_cb cb_fn, void *cb_arg);
+
 /**
  * Examine a block device explicitly
  *

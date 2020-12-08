@@ -10,6 +10,9 @@ parameter in spdk_bdev_get_opts function. Two fields `small_buf_pool_size` and
 `large_buf_pool_size` were added into spdk_bdev_opts, which were used to determine
 the small and large buffer pool size of the whole bdev module.
 
+A new API `spdk_bdev_wait_for_examine` was added to allow for checking state of
+examine process. Along with corresponding `bdev_wait_for_examine` RPC.
+
 ### blob
 
 An `opts_size` element was added in the `spdk_bs_opts` structure to solve the

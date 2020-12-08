@@ -198,6 +198,13 @@ if __name__ == "__main__":
     p.add_argument('-b', '--name', help='Name or alias of the bdev')
     p.set_defaults(func=bdev_examine)
 
+    def bdev_wait_for_examine(args):
+        rpc.bdev.bdev_wait_for_examine(args.client)
+
+    p = subparsers.add_parser('bdev_wait_for_examine',
+                              help="""Report when all bdevs have been examined""")
+    p.set_defaults(func=bdev_wait_for_examine)
+
     def bdev_compress_create(args):
         print_json(rpc.bdev.bdev_compress_create(args.client,
                                                  base_bdev_name=args.base_bdev_name,
