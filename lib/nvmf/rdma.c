@@ -2833,6 +2833,14 @@ nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport,
 	}
 }
 
+static inline bool
+nvmf_rdma_can_ignore_last_wqe_reached(struct spdk_nvmf_rdma_device *device)
+{
+	/* iWARP transport and SoftRoCE driver don't support LAST_WQE_REACHED ibv async event */
+	return nvmf_rdma_is_rxe_device(device) ||
+	       device->context->device->transport_type == IBV_TRANSPORT_IWARP;
+}
+
 static void
 nvmf_rdma_destroy_drained_qpair(struct spdk_nvmf_rdma_qpair *rqpair)
 {
@@ -2855,11 +2863,8 @@ nvmf_rdma_destroy_drained_qpair(struct spdk_nvmf_rdma_qpair *rqpair)
 		return;
 	}
 
-	/* Judge whether the device is emulated by Software RoCE.
-	 * And it will not send last_wqe event
-	 */
 	if (rqpair->srq != NULL && rqpair->last_wqe_reached == false &&
-	    !nvmf_rdma_is_rxe_device(rqpair->device)) {
+	    !nvmf_rdma_can_ignore_last_wqe_reached(rqpair->device)) {
 		return;
 	}
 
