@@ -11,7 +11,9 @@ parameter in spdk_bdev_get_opts function. Two fields `small_buf_pool_size` and
 the small and large buffer pool size of the whole bdev module.
 
 A new API `spdk_bdev_wait_for_examine` was added to allow for checking state of
-examine process. Along with corresponding `bdev_wait_for_examine` RPC.
+examine process. Along with corresponding `bdev_wait_for_examine` RPC, which
+is now always called during `spdk_bdev_subsystem_config_json` making sure
+every bdev is ready to be used.
 
 ### blob
 

@@ -1152,6 +1152,11 @@ spdk_bdev_subsystem_config_json(struct spdk_json_write_ctx *w)
 
 	pthread_mutex_unlock(&g_bdev_mgr.mutex);
 
+	/* This has to be last RPC in array to make sure all bdevs finished examine */
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "method", "bdev_wait_for_examine");
+	spdk_json_write_object_end(w);
+
 	spdk_json_write_array_end(w);
 }
 
