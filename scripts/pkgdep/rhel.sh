@@ -25,6 +25,8 @@ disclaimer() {
 	esac
 }
 
+is_repo() { yum repolist --all | grep -q "^$1"; }
+
 disclaimer
 
 # First, add extra EPEL, ELRepo, Ceph repos to have a chance of covering most of the packages
@@ -47,7 +49,10 @@ if [[ $ID == centos || $ID == rhel ]]; then
 		repos+=("https://www.elrepo.org/elrepo-release-8.el8.elrepo.noarch.rpm")
 		[[ $ID == centos ]] && repos+=("centos-release-ceph-nautilus.noarch")
 		# Add PowerTools needed for install CUnit-devel in Centos8
-		[[ $ID == centos ]] && enable+=("PowerTools")
+		if [[ $ID == centos ]]; then
+			is_repo "PowerTools" && enable+=("PowerTools")
+			is_repo "powertools" && enable+=("powertools")
+		fi
 	fi
 	if ((${#repos[@]} > 0)); then
 		yum install -y "${repos[@]}" yum-utils
