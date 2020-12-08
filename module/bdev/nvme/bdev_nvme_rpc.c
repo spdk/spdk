@@ -218,34 +218,46 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_attach_controller_dec
 struct rpc_bdev_nvme_attach_controller_ctx {
 	struct rpc_bdev_nvme_attach_controller req;
 	uint32_t count;
+	size_t bdev_count;
 	const char *names[NVME_MAX_BDEVS_PER_RPC];
 	struct spdk_jsonrpc_request *request;
 };
 
 static void
-rpc_bdev_nvme_attach_controller_done(void *cb_ctx, size_t bdev_count, int rc)
+rpc_bdev_nvme_attach_controller_examined(void *cb_ctx)
 {
 	struct rpc_bdev_nvme_attach_controller_ctx *ctx = cb_ctx;
 	struct spdk_jsonrpc_request *request = ctx->request;
 	struct spdk_json_write_ctx *w;
 	size_t i;
 
-	if (rc < 0) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-		goto exit;
-	}
-
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_array_begin(w);
-	for (i = 0; i < bdev_count; i++) {
+	for (i = 0; i < ctx->bdev_count; i++) {
 		spdk_json_write_string(w, ctx->names[i]);
 	}
 	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(request, w);
 
-exit:
 	free_rpc_bdev_nvme_attach_controller(&ctx->req);
 	free(ctx);
+}
+
+static void
+rpc_bdev_nvme_attach_controller_done(void *cb_ctx, size_t bdev_count, int rc)
+{
+	struct rpc_bdev_nvme_attach_controller_ctx *ctx = cb_ctx;
+	struct spdk_jsonrpc_request *request = ctx->request;
+
+	if (rc < 0) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		free_rpc_bdev_nvme_attach_controller(&ctx->req);
+		free(ctx);
+		return;
+	}
+
+	ctx->bdev_count = bdev_count;
+	spdk_bdev_wait_for_examine(rpc_bdev_nvme_attach_controller_examined, ctx);
 }
 
 static void
