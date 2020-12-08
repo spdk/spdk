@@ -307,6 +307,41 @@ _submit_single(struct worker_thread *worker, struct ap_task *task)
 	}
 }
 
+static int
+_batch_prep_cmd(struct worker_thread *worker, struct ap_task *task, struct spdk_accel_batch *batch)
+{
+	int rc = 0;
+
+	switch (g_workload_selection) {
+	case ACCEL_COPY:
+		rc = spdk_accel_batch_prep_copy(worker->ch, batch, task->dst,
+						task->src, g_xfer_size_bytes, accel_done, task);
+		break;
+	case ACCEL_DUALCAST:
+		rc = spdk_accel_batch_prep_dualcast(worker->ch, batch, task->dst, task->dst2,
+						    task->src, g_xfer_size_bytes, accel_done, task);
+		break;
+	case ACCEL_COMPARE:
+		rc = spdk_accel_batch_prep_compare(worker->ch, batch, task->dst, task->src,
+						   g_xfer_size_bytes, accel_done, task);
+		break;
+	case ACCEL_FILL:
+		rc = spdk_accel_batch_prep_fill(worker->ch, batch, task->dst,
+						*(uint8_t *)task->src,
+						g_xfer_size_bytes, accel_done, task);
+		break;
+	case ACCEL_CRC32C:
+		rc = spdk_accel_batch_prep_crc32c(worker->ch, batch, (uint32_t *)task->dst,
+						  task->src, g_crc32c_seed, g_xfer_size_bytes, accel_done, task);
+		break;
+	default:
+		assert(false);
+		break;
+	}
+
+	return rc;
+}
+
 static void
 _free_task(struct ap_task *task)
 {
@@ -315,6 +350,16 @@ _free_task(struct ap_task *task)
 	if (g_workload_selection == ACCEL_DUALCAST) {
 		spdk_dma_free(task->dst2);
 	}
+}
+
+static void
+batch_done(void *cb_arg, int status)
+{
+	struct ap_task *task = (struct ap_task *)cb_arg;
+	struct worker_thread *worker = task->worker;
+
+	worker->current_queue_depth--;
+	TAILQ_INSERT_TAIL(&worker->tasks_pool, task, link);
 }
 
 static void
@@ -382,15 +427,6 @@ _accel_done(void *arg1)
 		_submit_single(worker, task);
 		worker->current_queue_depth++;
 	}
-}
-
-static void
-batch_done(void *cb_arg, int status)
-{
-	struct ap_task *task = (struct ap_task *)cb_arg;
-	struct worker_thread *worker = task->worker;
-
-	worker->current_queue_depth--;
 }
 
 static int
@@ -473,41 +509,6 @@ _worker_stop(void *arg)
 static void
 _init_thread_done(void *ctx)
 {
-}
-
-static int
-_batch_prep_cmd(struct worker_thread *worker, struct ap_task *task, struct spdk_accel_batch *batch)
-{
-	int rc = 0;
-
-	switch (g_workload_selection) {
-	case ACCEL_COPY:
-		rc = spdk_accel_batch_prep_copy(worker->ch, batch, task->dst,
-						task->src, g_xfer_size_bytes, accel_done, task);
-		break;
-	case ACCEL_DUALCAST:
-		rc = spdk_accel_batch_prep_dualcast(worker->ch, batch, task->dst, task->dst2,
-						    task->src, g_xfer_size_bytes, accel_done, task);
-		break;
-	case ACCEL_COMPARE:
-		rc = spdk_accel_batch_prep_compare(worker->ch, batch, task->dst, task->src,
-						   g_xfer_size_bytes, accel_done, task);
-		break;
-	case ACCEL_FILL:
-		rc = spdk_accel_batch_prep_fill(worker->ch, batch, task->dst,
-						*(uint8_t *)task->src,
-						g_xfer_size_bytes, accel_done, task);
-		break;
-	case ACCEL_CRC32C:
-		rc = spdk_accel_batch_prep_crc32c(worker->ch, batch, (uint32_t *)task->dst,
-						  task->src, g_crc32c_seed, g_xfer_size_bytes, accel_done, task);
-		break;
-	default:
-		assert(false);
-		break;
-	}
-
-	return rc;
 }
 
 static void
