@@ -192,6 +192,55 @@ unregister_worker(void *arg1)
 	pthread_mutex_unlock(&g_workers_lock);
 }
 
+static int
+_get_task_data_bufs(struct ap_task *task)
+{
+	uint32_t align = 0;
+
+	/* For dualcast, the DSA HW requires 4K alignment on destination addresses but
+	 * we do this for all engines to keep it simple.
+	 */
+	if (g_workload_selection == ACCEL_DUALCAST) {
+		align = ALIGN_4K;
+	}
+
+	task->src = spdk_dma_zmalloc(g_xfer_size_bytes, 0, NULL);
+	if (task->src == NULL) {
+		fprintf(stderr, "Unable to alloc src buffer\n");
+		return -ENOMEM;
+	}
+	memset(task->src, DATA_PATTERN, g_xfer_size_bytes);
+
+	task->dst = spdk_dma_zmalloc(g_xfer_size_bytes, align, NULL);
+	if (task->dst == NULL) {
+		fprintf(stderr, "Unable to alloc dst buffer\n");
+		return -ENOMEM;
+	}
+
+	/* For compare we want the buffers to match, otherwise not. */
+	if (g_workload_selection == ACCEL_COMPARE) {
+		memset(task->dst, DATA_PATTERN, g_xfer_size_bytes);
+	} else {
+		memset(task->dst, ~DATA_PATTERN, g_xfer_size_bytes);
+	}
+
+	/* For fill, set the entire src buffer so we can check if verify is enabled. */
+	if (g_workload_selection == ACCEL_FILL) {
+		memset(task->src, g_fill_pattern, g_xfer_size_bytes);
+	}
+
+	if (g_workload_selection == ACCEL_DUALCAST) {
+		task->dst2 = spdk_dma_zmalloc(g_xfer_size_bytes, align, NULL);
+		if (task->dst2 == NULL) {
+			fprintf(stderr, "Unable to alloc dst buffer\n");
+			return -ENOMEM;
+		}
+		memset(task->dst2, ~DATA_PATTERN, g_xfer_size_bytes);
+	}
+
+	return 0;
+}
+
 static void accel_done(void *ref, int status);
 
 static void
@@ -406,55 +455,6 @@ _worker_stop(void *arg)
 static void
 _init_thread_done(void *ctx)
 {
-}
-
-static int
-_get_task_data_bufs(struct ap_task *task)
-{
-	uint32_t align = 0;
-
-	/* For dualcast, the DSA HW requires 4K alignment on destination addresses but
-	 * we do this for all engines to keep it simple.
-	 */
-	if (g_workload_selection == ACCEL_DUALCAST) {
-		align = ALIGN_4K;
-	}
-
-	task->src = spdk_dma_zmalloc(g_xfer_size_bytes, 0, NULL);
-	if (task->src == NULL) {
-		fprintf(stderr, "Unable to alloc src buffer\n");
-		return -ENOMEM;
-	}
-	memset(task->src, DATA_PATTERN, g_xfer_size_bytes);
-
-	task->dst = spdk_dma_zmalloc(g_xfer_size_bytes, align, NULL);
-	if (task->dst == NULL) {
-		fprintf(stderr, "Unable to alloc dst buffer\n");
-		return -ENOMEM;
-	}
-
-	/* For compare we want the buffers to match, otherwise not. */
-	if (g_workload_selection == ACCEL_COMPARE) {
-		memset(task->dst, DATA_PATTERN, g_xfer_size_bytes);
-	} else {
-		memset(task->dst, ~DATA_PATTERN, g_xfer_size_bytes);
-	}
-
-	/* For fill, set the entire src buffer so we can check if verify is enabled. */
-	if (g_workload_selection == ACCEL_FILL) {
-		memset(task->src, g_fill_pattern, g_xfer_size_bytes);
-	}
-
-	if (g_workload_selection == ACCEL_DUALCAST) {
-		task->dst2 = spdk_dma_zmalloc(g_xfer_size_bytes, align, NULL);
-		if (task->dst2 == NULL) {
-			fprintf(stderr, "Unable to alloc dst buffer\n");
-			return -ENOMEM;
-		}
-		memset(task->dst2, ~DATA_PATTERN, g_xfer_size_bytes);
-	}
-
-	return 0;
 }
 
 static int
