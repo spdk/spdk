@@ -43,11 +43,17 @@ struct rpc_construct_aio {
 	uint32_t block_size;
 };
 
+struct rpc_construct_aio_ctx {
+	struct rpc_construct_aio req;
+	struct spdk_jsonrpc_request *request;
+};
+
 static void
-free_rpc_construct_aio(struct rpc_construct_aio *req)
+free_rpc_construct_aio(struct rpc_construct_aio_ctx *ctx)
 {
-	free(req->name);
-	free(req->filename);
+	free(ctx->req.name);
+	free(ctx->req.filename);
+	free(ctx);
 }
 
 static const struct spdk_json_object_decoder rpc_construct_aio_decoders[] = {
@@ -57,35 +63,50 @@ static const struct spdk_json_object_decoder rpc_construct_aio_decoders[] = {
 };
 
 static void
+rpc_bdev_aio_create_cb(void *cb_arg)
+{
+	struct rpc_construct_aio_ctx *ctx = cb_arg;
+	struct spdk_jsonrpc_request *request = ctx->request;
+	struct spdk_json_write_ctx *w;
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_string(w, ctx->req.name);
+	spdk_jsonrpc_end_result(request, w);
+	free_rpc_construct_aio(ctx);
+}
+
+static void
 rpc_bdev_aio_create(struct spdk_jsonrpc_request *request,
 		    const struct spdk_json_val *params)
 {
-	struct rpc_construct_aio req = {};
-	struct spdk_json_write_ctx *w;
-	int rc = 0;
+	struct rpc_construct_aio_ctx *ctx;
+	int rc;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
+		return;
+	}
 
 	if (spdk_json_decode_object(params, rpc_construct_aio_decoders,
 				    SPDK_COUNTOF(rpc_construct_aio_decoders),
-				    &req)) {
+				    &ctx->req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
-		goto cleanup;
+		free_rpc_construct_aio(ctx);
+		return;
 	}
 
-	rc = create_aio_bdev(req.name, req.filename, req.block_size);
+	ctx->request = request;
+	rc = create_aio_bdev(ctx->req.name, ctx->req.filename, ctx->req.block_size);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
-		goto cleanup;
+		free_rpc_construct_aio(ctx);
+		return;
 	}
 
-
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_string(w, req.name);
-	spdk_jsonrpc_end_result(request, w);
-
-cleanup:
-	free_rpc_construct_aio(&req);
+	spdk_bdev_wait_for_examine(rpc_bdev_aio_create_cb, ctx);
 }
 SPDK_RPC_REGISTER("bdev_aio_create", rpc_bdev_aio_create, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_aio_create, construct_aio_bdev)
