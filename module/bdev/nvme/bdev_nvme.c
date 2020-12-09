@@ -2790,6 +2790,7 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "action_on_timeout", action);
 	spdk_json_write_named_uint64(w, "timeout_us", g_opts.timeout_us);
+	spdk_json_write_named_uint32(w, "keep_alive_timeout_ms", g_opts.keep_alive_timeout_ms);
 	spdk_json_write_named_uint32(w, "retry_count", g_opts.retry_count);
 	spdk_json_write_named_uint32(w, "arbitration_burst", g_opts.arbitration_burst);
 	spdk_json_write_named_uint32(w, "low_priority_weight", g_opts.low_priority_weight);
