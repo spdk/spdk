@@ -16,7 +16,7 @@ truncate -s 64M $testdir/aio.bdev
 $rootdir/test/app/bdev_svc/bdev_svc --wait-for-rpc &
 bdev_svc_pid=$!
 
-trap 'killprocess $bdev_svc_pid; exit 1' SIGINT SIGTERM EXIT
+trap 'rm -f $testdir/bdevperf.json; rm -f $testdir/aio.bdev; killprocess $bdev_svc_pid; exit 1' SIGINT SIGTERM EXIT
 
 waitforlisten $bdev_svc_pid
 # Minimal number of bdev io pool (128) and cache (1)
