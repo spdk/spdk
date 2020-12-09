@@ -1231,11 +1231,18 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 
 	SPDK_WARNLOG("Warning: Detected a timeout. ctrlr=%p qpair=%p cid=%u\n", ctrlr, qpair, cid);
 
-	csts = spdk_nvme_ctrlr_get_regs_csts(ctrlr);
-	if (csts.bits.cfs) {
-		SPDK_ERRLOG("Controller Fatal Status, reset required\n");
-		_bdev_nvme_reset(nvme_bdev_ctrlr, NULL);
-		return;
+	/* Only try to read CSTS if it's a PCIe controller or we have a timeout on an I/O
+	 * queue.  (Note: qpair == NULL when there's an admin cmd timeout.)  Otherwise we
+	 * would submit another fabrics cmd on the admin queue to read CSTS and check for its
+	 * completion recursively.
+	 */
+	if (nvme_bdev_ctrlr->connected_trid->trtype == SPDK_NVME_TRANSPORT_PCIE || qpair != NULL) {
+		csts = spdk_nvme_ctrlr_get_regs_csts(ctrlr);
+		if (csts.bits.cfs) {
+			SPDK_ERRLOG("Controller Fatal Status, reset required\n");
+			_bdev_nvme_reset(nvme_bdev_ctrlr, NULL);
+			return;
+		}
 	}
 
 	switch (g_opts.action_on_timeout) {
