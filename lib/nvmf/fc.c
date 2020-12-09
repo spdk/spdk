@@ -1516,7 +1516,12 @@ nvmf_fc_hwqp_process_frame(struct spdk_nvmf_fc_hwqp *hwqp,
 		ls_rqst->rport = rport;
 		ls_rqst->nvmf_tgt = g_nvmf_ftransport->transport.tgt;
 
-		ls_rqst->xchg = nvmf_fc_get_xri(hwqp);
+		if (TAILQ_EMPTY(&hwqp->ls_pending_queue)) {
+			ls_rqst->xchg = nvmf_fc_get_xri(hwqp);
+		} else {
+			ls_rqst->xchg = NULL;
+		}
+
 		if (ls_rqst->xchg) {
 			/* Handover the request to LS module */
 			nvmf_fc_handle_ls_rqst(ls_rqst);
