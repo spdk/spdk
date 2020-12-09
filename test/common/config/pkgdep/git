@@ -21,7 +21,7 @@ function install_refspdk() {
 	version=$1
 
 	# Create a reference SPDK build for ABI tests
-	git -C "$GIT_REPOS/spdk_repo/spdk" fetch --tags
+	git -C "$GIT_REPOS/spdk_repo/spdk" fetch --tags --force
 
 	if [[ "$version" == "latest" ]]; then
 		release=$(git -C "$GIT_REPOS/spdk_repo/spdk" tag | sort --version-sort | grep -v rc | tail -n 1)
@@ -30,6 +30,8 @@ function install_refspdk() {
 		release=$(git -C "$GIT_REPOS/spdk_repo/spdk" describe LTS)
 		output_dir="$GIT_REPOS/spdk_abi_lts"
 	fi
+
+	rm -rf "$output_dir"
 
 	if [[ ! -d $output_dir ]]; then
 		cp -R "$GIT_REPOS/spdk_repo/spdk" "$output_dir"
