@@ -859,7 +859,7 @@ refresh_threads_tab(uint8_t current_page)
 {
 	struct col_desc *col_desc = g_col_desc[THREADS_TAB];
 	uint64_t i, threads_count;
-	uint16_t j;
+	uint16_t j, k;
 	uint16_t col;
 	uint8_t max_pages, item_index;
 	static uint8_t last_page = 0;
@@ -898,6 +898,11 @@ refresh_threads_tab(uint8_t current_page)
 	max_pages = (threads_count + g_max_data_rows - 1) / g_max_data_rows;
 
 	qsort(thread_info, threads_count, sizeof(thread_info[0]), sort_threads);
+
+	for (k = 0; k < threads_count; k++) {
+		g_thread_history[thread_info[k]->id].busy = thread_info[k]->busy - thread_info[k]->last_busy;
+		g_thread_history[thread_info[k]->id].idle = thread_info[k]->idle - thread_info[k]->last_idle;
+	}
 
 	for (i = current_page * g_max_data_rows;
 	     i < spdk_min(threads_count, (uint64_t)((current_page + 1) * g_max_data_rows));
@@ -952,7 +957,6 @@ refresh_threads_tab(uint8_t current_page)
 			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index, col,
 				      col_desc[5].max_data_string, ALIGN_RIGHT, idle_time);
 			col += col_desc[5].max_data_string;
-			thread_info[i]->last_idle = thread_info[i]->idle;
 		}
 
 		g_thread_history[thread_info[i]->id].busy = thread_info[i]->busy - thread_info[i]->last_busy;
@@ -964,12 +968,16 @@ refresh_threads_tab(uint8_t current_page)
 			}
 			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index, col,
 				      col_desc[6].max_data_string, ALIGN_RIGHT, busy_time);
-			thread_info[i]->last_busy = thread_info[i]->busy;
 		}
 
 		if (item_index == g_selected_row) {
 			wattroff(g_tabs[THREADS_TAB], COLOR_PAIR(2));
 		}
+	}
+
+	for (k = 0; k < threads_count; k++) {
+		thread_info[k]->last_idle = thread_info[k]->idle;
+		thread_info[k]->last_busy = thread_info[k]->busy;
 	}
 
 	g_max_selected_row = i - current_page * g_max_data_rows - 1;
@@ -2030,6 +2038,19 @@ show_thread(uint8_t current_page)
 }
 
 static void
+show_single_thread(uint64_t thread_id)
+{
+	uint64_t i;
+
+	for (i = 0; i < g_threads_stats.threads.threads_count; i++) {
+		if (g_threads_stats.threads.thread_info[i].id == thread_id) {
+			display_thread(&g_threads_stats.threads.thread_info[i]);
+			break;
+		}
+	}
+}
+
+static void
 show_core(uint8_t current_page)
 {
 	PANEL *core_panel;
@@ -2037,6 +2058,7 @@ show_core(uint8_t current_page)
 	uint64_t core_number = current_page * g_max_data_rows + g_selected_row;
 	struct rpc_core_info *core_info[g_cores_stats.cores.cores_count];
 	uint64_t threads_count, i, j;
+	uint16_t current_threads_row;
 	int c;
 	char core_win_title[25];
 	bool stop_loop = false;
@@ -2097,12 +2119,37 @@ show_core(uint8_t current_page)
 	refresh();
 	wrefresh(core_win);
 
+	current_threads_row = 0;
+
 	while (!stop_loop) {
+		for (j = 0; j < core_info[core_number]->threads.threads_count; j++) {
+			if (j != current_threads_row) {
+				mvwprintw(core_win, j + 8, 1, core_info[core_number]->threads.thread[j].name);
+			} else {
+				print_left(core_win, j + 8, 1, CORE_WIN_WIDTH - 2,
+					   core_info[core_number]->threads.thread[j].name, COLOR_PAIR(2));
+			}
+		}
+
+		wrefresh(core_win);
+
 		c = wgetch(core_win);
 		switch (c) {
 		case 10: /* ENTER */
+			show_single_thread(core_info[core_number]->threads.thread[current_threads_row].id);
+			break;
 		case 27: /* ESC */
 			stop_loop = true;
+			break;
+		case KEY_UP:
+			if (current_threads_row != 0) {
+				current_threads_row--;
+			}
+			break;
+		case KEY_DOWN:
+			if (current_threads_row != core_info[core_number]->threads.threads_count - 1) {
+				current_threads_row++;
+			}
 			break;
 		default:
 			break;
