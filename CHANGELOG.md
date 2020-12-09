@@ -3,6 +3,10 @@
 ## v21.04: (Upcoming Release)
 
 
+### virtio
+
+Add the bdev_virtio_blk_set_hotplug rpc for the virtio blk pci device.
+
 ### ocf
 
 Updated OCF submodule to v20.12.2

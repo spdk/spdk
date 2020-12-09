@@ -157,3 +157,18 @@ def bdev_virtio_detach_controller(client, name):
 def bdev_virtio_scsi_get_devices(client):
     """Get list of virtio scsi devices."""
     return client.call('bdev_virtio_scsi_get_devices')
+
+
+def bdev_virtio_blk_set_hotplug(client, enable, period_us=None):
+    """Set options for the bdev virtio blk. This is startup command.
+
+    Args:
+       enable: True to enable hotplug, False to disable.
+       period_us: how often the hotplug is processed for insert and remove events. Set 0 to reset to default. (optional)
+    """
+    params = {'enable': enable}
+
+    if period_us:
+        params['period_us'] = period_us
+
+    return client.call('bdev_virtio_blk_set_hotplug', params)

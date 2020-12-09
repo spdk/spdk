@@ -37,11 +37,48 @@
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 #include "spdk/log.h"
+#include "spdk/thread.h"
 
 #include "bdev_virtio.h"
 
 #define SPDK_VIRTIO_USER_DEFAULT_VQ_COUNT		1
 #define SPDK_VIRTIO_USER_DEFAULT_QUEUE_SIZE		512
+
+struct rpc_bdev_virtio_blk_hotplug {
+	bool enabled;
+	uint64_t period_us;
+};
+
+static const struct spdk_json_object_decoder rpc_bdev_virtio_blk_hotplug_decoders[] = {
+	{"enable", offsetof(struct rpc_bdev_virtio_blk_hotplug, enabled), spdk_json_decode_bool, false},
+	{"period_us", offsetof(struct rpc_bdev_virtio_blk_hotplug, period_us), spdk_json_decode_uint64, true},
+};
+
+static void
+rpc_bdev_virtio_blk_set_hotplug(struct spdk_jsonrpc_request *request,
+				const struct spdk_json_val *params)
+{
+	struct rpc_bdev_virtio_blk_hotplug req = {false, 0};
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_bdev_virtio_blk_hotplug_decoders,
+				    SPDK_COUNTOF(rpc_bdev_virtio_blk_hotplug_decoders), &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	rc = bdev_virtio_pci_blk_set_hotplug(req.enabled, req.period_us);
+	if (rc) {
+		goto invalid;
+	}
+
+	spdk_jsonrpc_send_bool_response(request, true);
+	return;
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
+}
+SPDK_RPC_REGISTER("bdev_virtio_blk_set_hotplug", rpc_bdev_virtio_blk_set_hotplug, SPDK_RPC_RUNTIME)
 
 struct rpc_remove_virtio_dev {
 	char *name;

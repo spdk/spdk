@@ -448,6 +448,7 @@ Example response:
     "bdev_virtio_attach_controller",
     "bdev_virtio_scsi_get_devices",
     "bdev_virtio_detach_controller",
+    "bdev_virtio_blk_set_hotplug",
     "bdev_aio_delete",
     "bdev_aio_create",
     "bdev_split_delete",
@@ -4151,6 +4152,50 @@ Example request:
   "id": 1
 }
 
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## bdev_virtio_blk_set_hotplug {#rpc_bdev_virtio_blk_set_hotplug}
+
+Enable/Disable the virtio blk hotplug monitor or change the monitor period time
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+enable                  | Required | bool        | Enable or disable the virtio blk hotplug monitor
+period-us               | Optional | number      | The period time of the monitor
+
+When the enable is true then the period-us is optional. If user don't set the period time then use the default
+value. When the enable is false then the period-us is not required.
+
+### Result
+
+True the rpc is successful otherwise false
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "enable": "true",
+    "period-us": "1000000"
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_virtio_blk_set_hotplug",
+  "id": 1
+}
 ~~~
 
 Example response:

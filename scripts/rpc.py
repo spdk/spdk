@@ -2317,6 +2317,16 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('name', help='Virtio device name. E.g. VirtioUser0')
     p.set_defaults(func=bdev_virtio_detach_controller)
 
+    def bdev_virtio_blk_set_hotplug(args):
+        rpc.vhost.bdev_virtio_blk_set_hotplug(args.client, enable=args.enable, period_us=args.period_us)
+
+    p = subparsers.add_parser('bdev_virtio_blk_set_hotplug', help='Set hotplug options for bdev virtio_blk type.')
+    p.add_argument('-d', '--disable', dest='enable', default=False, action='store_false', help="Disable hotplug (default)")
+    p.add_argument('-e', '--enable', dest='enable', action='store_true', help="Enable hotplug")
+    p.add_argument('-r', '--period-us',
+                   help='How often the hotplug is processed for insert and remove events', type=int)
+    p.set_defaults(func=bdev_virtio_blk_set_hotplug)
+
     # OCSSD
     def bdev_ocssd_create(args):
         nsid = int(args.nsid) if args.nsid is not None else None
