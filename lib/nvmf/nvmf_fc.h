@@ -207,6 +207,8 @@ struct spdk_nvmf_fc_conn {
 	struct spdk_nvmf_qpair qpair;
 	struct spdk_nvme_transport_id trid;
 
+	uint32_t s_id;
+	uint32_t d_id;
 	uint64_t conn_id;
 	struct spdk_nvmf_fc_hwqp *hwqp;
 	uint16_t esrp_ratio;

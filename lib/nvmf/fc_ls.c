@@ -349,6 +349,8 @@ nvmf_fc_ls_new_connection(struct spdk_nvmf_fc_association *assoc, uint16_t qid,
 	TAILQ_INIT(&fc_conn->qpair.outstanding);
 	fc_conn->esrp_ratio = esrp_ratio;
 	fc_conn->fc_assoc = assoc;
+	fc_conn->s_id = assoc->s_id;
+	fc_conn->d_id = assoc->tgtport->d_id;
 	fc_conn->rpi = rpi;
 	fc_conn->max_queue_depth = sq_size + 1;
 

@@ -1285,6 +1285,12 @@ nvmf_fc_hwqp_handle_request(struct spdk_nvmf_fc_hwqp *hwqp, struct spdk_nvmf_fc_
 	struct spdk_nvmf_fc_cmnd_iu *cmd_iu = NULL;
 	struct spdk_nvmf_fc_conn *fc_conn = NULL;
 	enum spdk_nvme_data_transfer xfer;
+	uint32_t s_id, d_id;
+
+	s_id = (uint32_t)frame->s_id;
+	d_id = (uint32_t)frame->d_id;
+	s_id = from_be32(&s_id) >> 8;
+	d_id = from_be32(&d_id) >> 8;
 
 	cmd_iu = buffer->virt;
 	cmnd_len = cmd_iu->cmnd_iu_len;
@@ -1316,6 +1322,19 @@ nvmf_fc_hwqp_handle_request(struct spdk_nvmf_fc_hwqp *hwqp, struct spdk_nvmf_fc_
 		return -ENODEV;
 	}
 
+	/* Validate s_id and d_id */
+	if (s_id != fc_conn->s_id) {
+		hwqp->counters.rport_invalid++;
+		SPDK_ERRLOG("Frame s_id invalid for connection %ld\n", rqst_conn_id);
+		return -ENODEV;
+	}
+
+	if (d_id != fc_conn->d_id) {
+		hwqp->counters.nport_invalid++;
+		SPDK_ERRLOG("Frame d_id invalid for connection %ld\n", rqst_conn_id);
+		return -ENODEV;
+	}
+
 	/* If association/connection is being deleted - return */
 	if (fc_conn->fc_assoc->assoc_state !=  SPDK_NVMF_FC_OBJECT_CREATED) {
 		SPDK_ERRLOG("Association state not valid\n");
@@ -1336,7 +1355,6 @@ nvmf_fc_hwqp_handle_request(struct spdk_nvmf_fc_hwqp *hwqp, struct spdk_nvmf_fc_
 	/* allocate a request buffer */
 	fc_req = nvmf_fc_hwqp_alloc_fc_request(hwqp);
 	if (fc_req == NULL) {
-		/* Should not happen. Since fc_reqs == RQ buffers */
 		return -ENOMEM;
 	}
 
@@ -1353,10 +1371,8 @@ nvmf_fc_hwqp_handle_request(struct spdk_nvmf_fc_hwqp *hwqp, struct spdk_nvmf_fc_
 	fc_req->hwqp = hwqp;
 	fc_req->fc_conn = fc_conn;
 	fc_req->req.xfer = xfer;
-	fc_req->s_id = (uint32_t)frame->s_id;
-	fc_req->d_id = (uint32_t)frame->d_id;
-	fc_req->s_id = from_be32(&fc_req->s_id) >> 8;
-	fc_req->d_id = from_be32(&fc_req->d_id) >> 8;
+	fc_req->s_id = s_id;
+	fc_req->d_id = d_id;
 
 	nvmf_fc_record_req_trace_point(fc_req, SPDK_NVMF_FC_REQ_INIT);
 
@@ -1440,37 +1456,11 @@ nvmf_fc_hwqp_process_frame(struct spdk_nvmf_fc_hwqp *hwqp,
 	s_id = from_be32(&s_id) >> 8;
 	d_id = from_be32(&d_id) >> 8;
 
-	/* Note: In tracelog below, we directly do endian conversion on rx_id and.
-	 * ox_id Since these are fields, we can't pass address to from_be16().
-	 * Since ox_id and rx_id are only needed for tracelog, assigning to local
-	 * vars. and doing conversion is a waste of time in non-debug builds. */
 	SPDK_DEBUGLOG(nvmf_fc,
 		      "Process NVME frame s_id:0x%x d_id:0x%x oxid:0x%x rxid:0x%x.\n",
 		      s_id, d_id,
 		      ((frame->ox_id << 8) & 0xff00) | ((frame->ox_id >> 8) & 0xff),
 		      ((frame->rx_id << 8) & 0xff00) | ((frame->rx_id >> 8) & 0xff));
-
-	rc = nvmf_fc_hwqp_find_nport_and_rport(hwqp, d_id, &nport, s_id, &rport);
-	if (rc) {
-		if (nport == NULL) {
-			SPDK_ERRLOG("Nport not found. Dropping\n");
-			/* increment invalid nport counter */
-			hwqp->counters.nport_invalid++;
-		} else if (rport == NULL) {
-			SPDK_ERRLOG("Rport not found. Dropping\n");
-			/* increment invalid rport counter */
-			hwqp->counters.rport_invalid++;
-		}
-		return rc;
-	}
-
-	if (nport->nport_state != SPDK_NVMF_FC_OBJECT_CREATED ||
-	    rport->rport_state != SPDK_NVMF_FC_OBJECT_CREATED) {
-		SPDK_ERRLOG("%s state not created. Dropping\n",
-			    nport->nport_state != SPDK_NVMF_FC_OBJECT_CREATED ?
-			    "Nport" : "Rport");
-		return -EACCES;
-	}
 
 	if ((frame->r_ctl == FCNVME_R_CTL_LS_REQUEST) &&
 	    (frame->type == FCNVME_TYPE_NVMF_DATA)) {
@@ -1478,6 +1468,28 @@ nvmf_fc_hwqp_process_frame(struct spdk_nvmf_fc_hwqp *hwqp,
 		struct spdk_nvmf_fc_ls_rqst *ls_rqst;
 
 		SPDK_DEBUGLOG(nvmf_fc, "Process LS NVME frame\n");
+
+		rc = nvmf_fc_hwqp_find_nport_and_rport(hwqp, d_id, &nport, s_id, &rport);
+		if (rc) {
+			if (nport == NULL) {
+				SPDK_ERRLOG("Nport not found. Dropping\n");
+				/* increment invalid nport counter */
+				hwqp->counters.nport_invalid++;
+			} else if (rport == NULL) {
+				SPDK_ERRLOG("Rport not found. Dropping\n");
+				/* increment invalid rport counter */
+				hwqp->counters.rport_invalid++;
+			}
+			return rc;
+		}
+
+		if (nport->nport_state != SPDK_NVMF_FC_OBJECT_CREATED ||
+		    rport->rport_state != SPDK_NVMF_FC_OBJECT_CREATED) {
+			SPDK_ERRLOG("%s state not created. Dropping\n",
+				    nport->nport_state != SPDK_NVMF_FC_OBJECT_CREATED ?
+				    "Nport" : "Rport");
+			return -EACCES;
+		}
 
 		/* Use the RQ buffer for holding LS request. */
 		ls_rqst = (struct spdk_nvmf_fc_ls_rqst *)&req_buf->ls_rqst;
