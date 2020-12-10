@@ -315,9 +315,9 @@ bdev_ocssd_from_disk_lba(struct ocssd_bdev *ocssd_bdev, uint64_t lba)
 }
 
 static uint64_t
-bdev_ocssd_to_disk_lba(struct ocssd_bdev *ocssd_bdev, uint64_t lba)
+bdev_ocssd_to_disk_lba(struct ocssd_bdev *ocssd_bdev,
+		       struct bdev_ocssd_ns *ocssd_ns, uint64_t lba)
 {
-	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_bdev(ocssd_bdev);
 	const struct bdev_ocssd_lba_offsets *offsets = &ocssd_ns->lba_offsets;
 	uint64_t lbk, chk, pu, grp;
 
@@ -416,6 +416,8 @@ bdev_ocssd_read(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvme_ch,
 		void *md, uint64_t lba_count, uint64_t lba)
 {
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
+	struct nvme_bdev_ns *nvme_ns = nvme_bdev->nvme_ns;
+	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ns);
 	const size_t zone_size = nvme_bdev->disk.zone_size;
 
 	if ((lba % zone_size) + lba_count > zone_size) {
@@ -428,9 +430,9 @@ bdev_ocssd_read(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvme_ch,
 	ocdev_io->io.iovpos = 0;
 	ocdev_io->io.iov_offset = 0;
 
-	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, lba);
+	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, ocssd_ns, lba);
 
-	return spdk_nvme_ns_cmd_readv_with_md(nvme_bdev->nvme_ns->ns, nvme_ch->qpair, lba,
+	return spdk_nvme_ns_cmd_readv_with_md(nvme_ns->ns, nvme_ch->qpair, lba,
 					      lba_count, bdev_ocssd_read_cb,
 					      ocdev_io, 0, bdev_ocssd_reset_sgl,
 					      bdev_ocssd_next_sge, md, 0, 0);
@@ -456,6 +458,8 @@ bdev_ocssd_write(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvme_ch,
 		 void *md, uint64_t lba_count, uint64_t lba)
 {
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
+	struct nvme_bdev_ns *nvme_ns = nvme_bdev->nvme_ns;
+	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ns);
 	const size_t zone_size = nvme_bdev->disk.zone_size;
 	struct bdev_ocssd_zone *zone;
 	int rc;
@@ -476,8 +480,9 @@ bdev_ocssd_write(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvme_ch,
 	ocdev_io->io.iovpos = 0;
 	ocdev_io->io.iov_offset = 0;
 
-	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, lba);
-	rc = spdk_nvme_ns_cmd_writev_with_md(nvme_bdev->nvme_ns->ns, nvme_ch->qpair, lba,
+	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, ocssd_ns, lba);
+
+	rc = spdk_nvme_ns_cmd_writev_with_md(nvme_ns->ns, nvme_ch->qpair, lba,
 					     lba_count, bdev_ocssd_write_cb,
 					     ocdev_io, 0, bdev_ocssd_reset_sgl,
 					     bdev_ocssd_next_sge, md, 0, 0);
@@ -508,6 +513,8 @@ bdev_ocssd_zone_append(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nv
 		       void *md, uint64_t lba_count, uint64_t lba)
 {
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
+	struct nvme_bdev_ns *nvme_ns = nvme_bdev->nvme_ns;
+	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ns);
 	struct bdev_ocssd_zone *zone;
 	int rc = 0;
 
@@ -533,8 +540,9 @@ bdev_ocssd_zone_append(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nv
 	ocdev_io->io.iovpos = 0;
 	ocdev_io->io.iov_offset = 0;
 
-	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, zone->write_pointer);
-	rc = spdk_nvme_ns_cmd_writev_with_md(nvme_bdev->nvme_ns->ns, nvme_ch->qpair, lba,
+	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, ocssd_ns, zone->write_pointer);
+
+	rc = spdk_nvme_ns_cmd_writev_with_md(nvme_ns->ns, nvme_ch->qpair, lba,
 					     lba_count, bdev_ocssd_append_cb,
 					     ocdev_io, 0, bdev_ocssd_reset_sgl,
 					     bdev_ocssd_next_sge, md, 0, 0);
@@ -591,6 +599,8 @@ bdev_ocssd_reset_zone(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvm
 		      struct bdev_ocssd_io *ocdev_io, uint64_t slba, size_t num_zones)
 {
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
+	struct nvme_bdev_ns *nvme_ns = nvme_bdev->nvme_ns;
+	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ns);
 	uint64_t offset, zone_size = nvme_bdev->disk.zone_size;
 	struct bdev_ocssd_zone *zone;
 	int rc;
@@ -607,12 +617,12 @@ bdev_ocssd_reset_zone(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvm
 
 	for (offset = 0; offset < num_zones; ++offset) {
 		ocdev_io->io.lba[offset] = bdev_ocssd_to_disk_lba(ocssd_bdev,
-					   slba + offset * zone_size);
+					   ocssd_ns, slba + offset * zone_size);
 	}
 
 	ocdev_io->io.zone = zone;
 
-	rc = spdk_nvme_ocssd_ns_cmd_vector_reset(nvme_bdev->nvme_ns->ns, nvme_ch->qpair,
+	rc = spdk_nvme_ocssd_ns_cmd_vector_reset(nvme_ns->ns, nvme_ch->qpair,
 			ocdev_io->io.lba, num_zones, NULL,
 			bdev_ocssd_reset_zone_cb, ocdev_io);
 	if (spdk_unlikely(rc != 0)) {
