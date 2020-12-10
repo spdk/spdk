@@ -255,12 +255,10 @@ bdev_ocssd_num_parallel_units(const struct ocssd_bdev *ocssd_bdev)
 }
 
 static void
-bdev_ocssd_translate_lba(struct ocssd_bdev *ocssd_bdev, uint64_t lba, uint64_t *grp,
-			 uint64_t *pu, uint64_t *chk, uint64_t *lbk)
+bdev_ocssd_translate_lba(const struct bdev_ocssd_range *range,
+			 const struct spdk_ocssd_geometry_data *geo, uint64_t lba,
+			 uint64_t *grp, uint64_t *pu, uint64_t *chk, uint64_t *lbk)
 {
-	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_bdev(ocssd_bdev);
-	const struct spdk_ocssd_geometry_data *geo = &ocssd_ns->geometry;
-	const struct bdev_ocssd_range *range = &ocssd_bdev->range;
 	uint64_t addr_shift, punit;
 
 	/* To achieve best performance, we need to make sure that adjacent zones can be accessed
@@ -323,7 +321,8 @@ bdev_ocssd_to_disk_lba(struct ocssd_bdev *ocssd_bdev, uint64_t lba)
 	const struct bdev_ocssd_lba_offsets *offsets = &ocssd_ns->lba_offsets;
 	uint64_t lbk, chk, pu, grp;
 
-	bdev_ocssd_translate_lba(ocssd_bdev, lba, &grp, &pu, &chk, &lbk);
+	bdev_ocssd_translate_lba(&ocssd_bdev->range, &ocssd_ns->geometry, lba,
+				 &grp, &pu, &chk, &lbk);
 
 	return (lbk << offsets->lbk) |
 	       (chk << offsets->chk) |
@@ -338,7 +337,7 @@ bdev_ocssd_to_chunk_info_offset(struct ocssd_bdev *ocssd_bdev, uint64_t lba)
 	const struct spdk_ocssd_geometry_data *geo = &ocssd_ns->geometry;
 	uint64_t grp, pu, chk, lbk;
 
-	bdev_ocssd_translate_lba(ocssd_bdev, lba, &grp, &pu, &chk, &lbk);
+	bdev_ocssd_translate_lba(&ocssd_bdev->range, geo, lba, &grp, &pu, &chk, &lbk);
 
 	return grp * geo->num_pu * geo->num_chk + pu * geo->num_chk + chk;
 }
