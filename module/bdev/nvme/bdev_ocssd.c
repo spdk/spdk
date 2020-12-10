@@ -343,9 +343,9 @@ bdev_ocssd_to_chunk_info_offset(struct ocssd_bdev *ocssd_bdev,
 }
 
 static bool
-bdev_ocssd_lba_in_range(struct ocssd_bdev *ocssd_bdev, uint64_t lba)
+bdev_ocssd_lba_in_range(struct ocssd_bdev *ocssd_bdev,
+			struct bdev_ocssd_ns *ocssd_ns, uint64_t lba)
 {
-	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_bdev(ocssd_bdev);
 	const struct spdk_ocssd_geometry_data *geometry = &ocssd_ns->geometry;
 	const struct bdev_ocssd_lba_offsets *offsets = &ocssd_ns->lba_offsets;
 	const struct bdev_ocssd_range *range = &ocssd_bdev->range;
@@ -932,7 +932,7 @@ bdev_ocssd_push_media_events(struct nvme_bdev_ns *nvme_ns,
 
 	TAILQ_FOREACH(nvme_bdev, &nvme_ns->bdevs, tailq) {
 		ocssd_bdev = SPDK_CONTAINEROF(nvme_bdev, struct ocssd_bdev, nvme_bdev);
-		if (bdev_ocssd_lba_in_range(ocssd_bdev, chunk_entry->lba)) {
+		if (bdev_ocssd_lba_in_range(ocssd_bdev, ocssd_ns, chunk_entry->lba)) {
 			return;
 		}
 	}
