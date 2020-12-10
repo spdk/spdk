@@ -636,11 +636,11 @@ static int _bdev_ocssd_get_zone_info(struct ocssd_bdev *ocssd_bdev, struct nvme_
 				     struct bdev_ocssd_io *ocdev_io, uint64_t zone_id);
 
 static void
-bdev_ocssd_fill_zone_info(struct ocssd_bdev *ocssd_bdev, struct spdk_bdev_zone_info *zone_info,
+bdev_ocssd_fill_zone_info(struct ocssd_bdev *ocssd_bdev, struct bdev_ocssd_ns *ocssd_ns,
+			  struct spdk_bdev_zone_info *zone_info,
 			  const struct spdk_ocssd_chunk_information_entry *chunk_info)
 {
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
-	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_bdev(ocssd_bdev);
 
 	zone_info->zone_id = bdev_ocssd_from_disk_lba(ocssd_bdev, ocssd_ns, chunk_info->slba);
 	zone_info->write_pointer = zone_info->zone_id;
@@ -673,6 +673,7 @@ bdev_ocssd_zone_info_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 	struct spdk_ocssd_chunk_information_entry *chunk_info = &ocdev_io->zone_info.chunk_info;
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(ctx);
 	struct ocssd_bdev *ocssd_bdev = bdev_io->bdev->ctxt;
+	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_bdev(ocssd_bdev);
 	struct spdk_bdev_zone_info *zone_info;
 	struct nvme_io_channel *nvme_ch;
 	int rc;
@@ -684,7 +685,7 @@ bdev_ocssd_zone_info_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 
 	zone_info = ((struct spdk_bdev_zone_info *)bdev_io->u.zone_mgmt.buf) +
 		    ocdev_io->zone_info.chunk_offset;
-	bdev_ocssd_fill_zone_info(ocssd_bdev, zone_info, chunk_info);
+	bdev_ocssd_fill_zone_info(ocssd_bdev, ocssd_ns, zone_info, chunk_info);
 
 	if (++ocdev_io->zone_info.chunk_offset == bdev_io->u.zone_mgmt.num_zones) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
@@ -1132,6 +1133,7 @@ bdev_occsd_init_zone_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 	struct bdev_ocssd_create_ctx *create_ctx = ctx;
 	struct bdev_ocssd_zone *ocssd_zone;
 	struct ocssd_bdev *ocssd_bdev = create_ctx->ocssd_bdev;
+	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_bdev(ocssd_bdev);
 	struct spdk_bdev_zone_info zone_info = {};
 	uint64_t offset;
 	int rc = 0;
@@ -1143,7 +1145,8 @@ bdev_occsd_init_zone_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 	}
 
 	for (offset = 0; offset < create_ctx->num_chunks; ++offset) {
-		bdev_ocssd_fill_zone_info(ocssd_bdev, &zone_info, &create_ctx->chunk_info[offset]);
+		bdev_ocssd_fill_zone_info(ocssd_bdev, ocssd_ns, &zone_info,
+					  &create_ctx->chunk_info[offset]);
 
 		ocssd_zone = bdev_ocssd_get_zone_by_slba(ocssd_bdev, zone_info.zone_id);
 		if (!ocssd_zone) {
