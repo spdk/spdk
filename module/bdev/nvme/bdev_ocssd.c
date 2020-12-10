@@ -331,9 +331,9 @@ bdev_ocssd_to_disk_lba(struct ocssd_bdev *ocssd_bdev,
 }
 
 static uint64_t
-bdev_ocssd_to_chunk_info_offset(struct ocssd_bdev *ocssd_bdev, uint64_t lba)
+bdev_ocssd_to_chunk_info_offset(struct ocssd_bdev *ocssd_bdev,
+				struct bdev_ocssd_ns *ocssd_ns, uint64_t lba)
 {
-	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_bdev(ocssd_bdev);
 	const struct spdk_ocssd_geometry_data *geo = &ocssd_ns->geometry;
 	uint64_t grp, pu, chk, lbk;
 
@@ -708,14 +708,16 @@ _bdev_ocssd_get_zone_info(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel 
 			  struct bdev_ocssd_io *ocdev_io, uint64_t zone_id)
 {
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
+	struct nvme_bdev_ns *nvme_ns = nvme_bdev->nvme_ns;
+	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ns);
 	uint64_t lba, offset;
 
 	lba = zone_id + ocdev_io->zone_info.chunk_offset * nvme_bdev->disk.zone_size;
-	offset = bdev_ocssd_to_chunk_info_offset(ocssd_bdev, lba);
+	offset = bdev_ocssd_to_chunk_info_offset(ocssd_bdev, ocssd_ns, lba);
 
 	return spdk_nvme_ctrlr_cmd_get_log_page(nvme_ch->ctrlr->ctrlr,
 						SPDK_OCSSD_LOG_CHUNK_INFO,
-						spdk_nvme_ns_get_id(nvme_bdev->nvme_ns->ns),
+						spdk_nvme_ns_get_id(nvme_ns->ns),
 						&ocdev_io->zone_info.chunk_info,
 						sizeof(ocdev_io->zone_info.chunk_info),
 						offset * sizeof(ocdev_io->zone_info.chunk_info),
