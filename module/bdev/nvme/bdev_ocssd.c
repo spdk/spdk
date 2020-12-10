@@ -296,9 +296,9 @@ bdev_ocssd_to_parallel_unit(const struct spdk_ocssd_geometry_data *geometry,
 }
 
 static uint64_t
-bdev_ocssd_from_disk_lba(struct ocssd_bdev *ocssd_bdev, uint64_t lba)
+bdev_ocssd_from_disk_lba(struct ocssd_bdev *ocssd_bdev,
+			 struct bdev_ocssd_ns *ocssd_ns, uint64_t lba)
 {
-	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_bdev(ocssd_bdev);
 	const struct spdk_ocssd_geometry_data *geometry = &ocssd_ns->geometry;
 	const struct bdev_ocssd_lba_offsets *offsets = &ocssd_ns->lba_offsets;
 	const struct bdev_ocssd_range *range = &ocssd_bdev->range;
@@ -640,8 +640,9 @@ bdev_ocssd_fill_zone_info(struct ocssd_bdev *ocssd_bdev, struct spdk_bdev_zone_i
 			  const struct spdk_ocssd_chunk_information_entry *chunk_info)
 {
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
+	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_bdev(ocssd_bdev);
 
-	zone_info->zone_id = bdev_ocssd_from_disk_lba(ocssd_bdev, chunk_info->slba);
+	zone_info->zone_id = bdev_ocssd_from_disk_lba(ocssd_bdev, ocssd_ns, chunk_info->slba);
 	zone_info->write_pointer = zone_info->zone_id;
 
 	if (chunk_info->cs.free) {
@@ -939,7 +940,7 @@ bdev_ocssd_push_media_events(struct nvme_bdev_ns *nvme_ns,
 		return;
 	}
 
-	lba = bdev_ocssd_from_disk_lba(ocssd_bdev, chunk_entry->lba);
+	lba = bdev_ocssd_from_disk_lba(ocssd_bdev, ocssd_ns, chunk_entry->lba);
 	while (num_blocks > 0 && lba < nvme_bdev->disk.blockcnt) {
 		event.offset = lba;
 		event.num_blocks = spdk_min(num_blocks, ocssd_ns->geometry.clba);
