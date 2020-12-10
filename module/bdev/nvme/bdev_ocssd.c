@@ -1084,6 +1084,7 @@ static struct spdk_bdev_fn_table ocssdlib_fn_table = {
 
 struct bdev_ocssd_create_ctx {
 	struct ocssd_bdev				*ocssd_bdev;
+	struct nvme_bdev_ns				*nvme_ns;
 	bdev_ocssd_create_cb				cb_fn;
 	void						*cb_arg;
 	const struct bdev_ocssd_range			*range;
@@ -1113,13 +1114,12 @@ static void
 bdev_ocssd_register_bdev(void *ctx)
 {
 	struct bdev_ocssd_create_ctx *create_ctx = ctx;
-	struct ocssd_bdev *ocssd_bdev = create_ctx->ocssd_bdev;
-	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
+	struct nvme_bdev *nvme_bdev = &create_ctx->ocssd_bdev->nvme_bdev;
 	int rc;
 
 	rc = spdk_bdev_register(&nvme_bdev->disk);
 	if (spdk_likely(rc == 0)) {
-		nvme_bdev_attach_bdev_to_ns(nvme_bdev->nvme_ns, nvme_bdev);
+		nvme_bdev_attach_bdev_to_ns(create_ctx->nvme_ns, nvme_bdev);
 	} else {
 		SPDK_ERRLOG("Failed to register bdev %s\n", nvme_bdev->disk.name);
 	}
@@ -1133,7 +1133,7 @@ bdev_occsd_init_zone_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 	struct bdev_ocssd_create_ctx *create_ctx = ctx;
 	struct bdev_ocssd_zone *ocssd_zone;
 	struct ocssd_bdev *ocssd_bdev = create_ctx->ocssd_bdev;
-	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_bdev(ocssd_bdev);
+	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_nvme(create_ctx->nvme_ns);
 	struct spdk_bdev_zone_info zone_info = {};
 	uint64_t offset;
 	int rc = 0;
@@ -1188,16 +1188,13 @@ bdev_occsd_init_zone_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 static int
 bdev_ocssd_init_zone(struct bdev_ocssd_create_ctx *create_ctx)
 {
-	struct ocssd_bdev *ocssd_bdev = create_ctx->ocssd_bdev;
-	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
-
 	create_ctx->num_chunks = spdk_min(create_ctx->end_chunk_offset - create_ctx->chunk_offset,
 					  OCSSD_BDEV_CHUNK_INFO_COUNT);
 	assert(create_ctx->num_chunks > 0);
 
-	return spdk_nvme_ctrlr_cmd_get_log_page(nvme_bdev->nvme_ns->ctrlr->ctrlr,
+	return spdk_nvme_ctrlr_cmd_get_log_page(create_ctx->nvme_ns->ctrlr->ctrlr,
 						SPDK_OCSSD_LOG_CHUNK_INFO,
-						spdk_nvme_ns_get_id(nvme_bdev->nvme_ns->ns),
+						spdk_nvme_ns_get_id(create_ctx->nvme_ns->ns),
 						&create_ctx->chunk_info,
 						sizeof(create_ctx->chunk_info[0]) *
 						create_ctx->num_chunks,
@@ -1210,7 +1207,7 @@ static int
 bdev_ocssd_init_zones(struct bdev_ocssd_create_ctx *create_ctx)
 {
 	struct ocssd_bdev *ocssd_bdev = create_ctx->ocssd_bdev;
-	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_bdev(ocssd_bdev);
+	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_nvme(create_ctx->nvme_ns);
 	uint64_t offset, num_zones;
 
 	num_zones = bdev_ocssd_num_zones(ocssd_bdev);
@@ -1339,6 +1336,7 @@ bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, uint32_t n
 	}
 
 	create_ctx->ocssd_bdev = ocssd_bdev;
+	create_ctx->nvme_ns = nvme_ns;
 	create_ctx->cb_fn = cb_fn;
 	create_ctx->cb_arg = cb_arg;
 	create_ctx->range = range;
