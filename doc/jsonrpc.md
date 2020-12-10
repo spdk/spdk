@@ -1,4 +1,4 @@
-# JSON-RPC Methods {#jsonrpc}
+# JSON-RPC {#jsonrpc}
 
 # Overview {#jsonrpc_overview}
 
@@ -54,7 +54,74 @@ This type of error is most common one. It mean that there is an error while proc
 - Parameter domain check failed.
 - Request is valid but some other error occurred during processing request. If possible message explains the error reason nature.
 
-## Adding external RPC methods
+## rpc.py {#rpc_py}
+
+SPDK provides a set of Python scripts which can invoke the JSON-RPC methods described in this document.  'rpc.py' in the scripts
+directory is the main script that users will invoke to execute a JSON-RPC method. The scripts/rpc directory contains modules
+that 'rpc.py' imports for definitions of each SPDK library's or module's methods.
+
+Example:
+
+~~~
+scripts/rpc.py bdev_nvme_attach_controller -b nvme0 -a 00:02.0 -t pcie
+~~~
+
+A brief description of each of the RPC methods and optional 'rpc.py' arguments can be viewed with:
+
+~~~
+scripts/rpc.py --help
+~~~
+
+A detailed description of each RPC method and its parameters is also available.  For example:
+
+~~~
+scripts/rpc.py bdev_nvme_attach_controller --help
+~~~
+
+### Generate JSON-RPC methods for current configuration
+
+An initial configuration can be specified for an SPDK application via the '-c' command line parameter.
+The configuration file is a JSON file containing all of the JSON-RPC method invocations necessary
+for the desired configuration. Writing these files by hand is extremely tedious however, so 'rpc.py'
+provides a mechanism to generate a JSON-RPC file based on the current configuration.
+
+~~~
+scripts/rpc.py save_config > config.json
+~~~
+
+'config.json' can then be passed to a new SPDK application using the '-c' command line parameter
+to reproduce the same configuration.
+
+### JSON-RPC batching
+
+'rpc.py' also supports batching of multiple JSON-RPC methods with one invocation.  So instead of
+calling 'rpc.py' once for each JSON-RPC method, such as:
+
+~~~
+scripts/rpc.py bdev_malloc_create -b malloc0 64 512
+scripts/rpc.py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a
+scripts/rpc.py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 malloc0
+scripts/rpc.py nvmf_create_transport -t tcp
+scripts/rpc.py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t tcp -a 127.0.0.1 -s 4420
+~~~
+
+you can put the following into a text file:
+
+~~~
+bdev_malloc_create -b malloc0 64 512
+nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a
+nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 malloc0
+nvmf_create_transport -t tcp
+nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t tcp -a 127.0.0.1 -s 4420
+~~~
+
+and then just do:
+
+~~~
+scripts/rpc.py < rpc.txt
+~~~
+
+### Adding external RPC methods
 
 SPDK includes both in-tree modules as well as the ability to use external modules.  The in-tree modules include some python
 scripts to ease the process of sending RPCs to in-tree modules.  External modules can utilize this same framework to add new RPC
