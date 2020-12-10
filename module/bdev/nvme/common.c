@@ -181,6 +181,8 @@ nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 void
 nvme_bdev_attach_bdev_to_ns(struct nvme_bdev_ns *nvme_ns, struct nvme_bdev *nvme_disk)
 {
+	assert(nvme_disk->nvme_ns == nvme_ns);
+
 	nvme_ns->ctrlr->ref++;
 
 	TAILQ_INSERT_TAIL(&nvme_ns->bdevs, nvme_disk, tailq);

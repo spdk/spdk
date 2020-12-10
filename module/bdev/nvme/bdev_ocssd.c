@@ -1229,10 +1229,9 @@ bdev_ocssd_init_zones(struct bdev_ocssd_create_ctx *create_ctx)
 }
 
 static bool
-bdev_ocssd_verify_range(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, uint32_t nsid,
+bdev_ocssd_verify_range(struct nvme_bdev_ns *nvme_ns,
 			const struct bdev_ocssd_range *range)
 {
-	struct nvme_bdev_ns *nvme_ns = nvme_bdev_ctrlr->namespaces[nsid - 1];
 	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ns);
 	const struct spdk_ocssd_geometry_data *geometry = &ocssd_ns->geometry;
 	struct ocssd_bdev *ocssd_bdev;
@@ -1246,11 +1245,6 @@ bdev_ocssd_verify_range(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, uint32_t nsid,
 
 	TAILQ_FOREACH(nvme_bdev, &nvme_ns->bdevs, tailq) {
 		ocssd_bdev = SPDK_CONTAINEROF(nvme_bdev, struct ocssd_bdev, nvme_bdev);
-
-		/* Only verify bdevs created on the same namespace */
-		if (spdk_nvme_ns_get_id(nvme_bdev->nvme_ns->ns) != nsid) {
-			continue;
-		}
 
 		/* Empty range means whole namespace should be used */
 		if (range == NULL) {
@@ -1323,7 +1317,7 @@ bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, uint32_t n
 		goto error;
 	}
 
-	if (!bdev_ocssd_verify_range(nvme_bdev_ctrlr, nsid, range)) {
+	if (!bdev_ocssd_verify_range(nvme_ns, range)) {
 		SPDK_ERRLOG("Invalid parallel unit range\n");
 		rc = -EINVAL;
 		goto error;
