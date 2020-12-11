@@ -37,7 +37,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 APP = iscsi_top
 
-SPDK_LIB_LIST = jsonrpc json rpc log util
+SPDK_LIB_LIST = rpc
 
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 

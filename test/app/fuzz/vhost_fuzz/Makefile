@@ -38,5 +38,5 @@ CFLAGS += -I$(SPDK_ROOT_DIR)/test/app/fuzz/common
 
 C_SRCS := vhost_fuzz_rpc.c vhost_fuzz.c
 
-SPDK_LIB_LIST += event conf json jsonrpc rpc util log sock trace thread virtio
+SPDK_LIB_LIST += event conf rpc sock virtio
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk

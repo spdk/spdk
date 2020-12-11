@@ -45,7 +45,6 @@ ISCSI_OBJS = md5 param conn tgt_node init_grp portal_grp
 LIBS += $(SCSI_OBJS:%=$(SPDK_ROOT_DIR)/lib/scsi/%.o)
 LIBS += $(ISCSI_OBJS:%=$(SPDK_ROOT_DIR)/lib/iscsi/%.o)
 
-SPDK_LIB_LIST += $(SOCK_MODULES_LIST)
-SPDK_LIB_LIST += conf event json jsonrpc log scsi bdev notify rpc sock thread trace util
+SPDK_LIB_LIST += $(SOCK_MODULES_LIST) event scsi
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk

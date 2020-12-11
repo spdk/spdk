@@ -39,6 +39,6 @@ APP = rpc_client_test
 
 C_SRCS := rpc_client_test.c
 
-SPDK_LIB_LIST = jsonrpc json rpc log util
+SPDK_LIB_LIST = rpc
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk

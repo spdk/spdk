@@ -43,17 +43,14 @@ CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 
 C_SRCS := iscsi_tgt.c
 
-SPDK_LIB_LIST = $(ALL_MODULES_LIST)
-SPDK_LIB_LIST += $(EVENT_BDEV_SUBSYSTEM) event_iscsi event_net event_scsi event
-SPDK_LIB_LIST += jsonrpc json rpc bdev iscsi scsi accel trace conf
-SPDK_LIB_LIST += thread util log net sock notify
+SPDK_LIB_LIST = $(ALL_MODULES_LIST) event_iscsi event_net
 
 ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
 SPDK_LIB_LIST += env_dpdk_rpc
 endif
 
 ifeq ($(OS),Linux)
-SPDK_LIB_LIST += event_nbd nbd
+SPDK_LIB_LIST += event_nbd
 endif
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk

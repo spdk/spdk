@@ -39,17 +39,14 @@ APP = nvmf_tgt
 
 C_SRCS := nvmf_main.c
 
-SPDK_LIB_LIST = $(ALL_MODULES_LIST)
-SPDK_LIB_LIST += $(EVENT_BDEV_SUBSYSTEM) event_nvmf event_net
-SPDK_LIB_LIST += nvmf event log trace conf thread util bdev accel rpc jsonrpc json net sock
-SPDK_LIB_LIST += notify
+SPDK_LIB_LIST = $(ALL_MODULES_LIST) event_nvmf
 
 ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
 SPDK_LIB_LIST += env_dpdk_rpc
 endif
 
 ifeq ($(OS),Linux)
-SPDK_LIB_LIST += event_nbd nbd
+SPDK_LIB_LIST += event_nbd
 endif
 
 ifeq ($(CONFIG_FC),y)

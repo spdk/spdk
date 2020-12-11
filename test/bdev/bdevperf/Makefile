@@ -39,13 +39,10 @@ APP = bdevperf
 
 C_SRCS := bdevperf.c
 
-SPDK_LIB_LIST = $(ALL_MODULES_LIST)
-SPDK_LIB_LIST += $(EVENT_BDEV_SUBSYSTEM)
-SPDK_LIB_LIST += bdev accel event trace log conf thread util sock notify
-SPDK_LIB_LIST += rpc jsonrpc json
+SPDK_LIB_LIST = $(ALL_MODULES_LIST) event_bdev conf
 
 ifeq ($(OS),Linux)
-SPDK_LIB_LIST += event_nbd nbd
+SPDK_LIB_LIST += event_nbd
 endif
 
 ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))

@@ -40,15 +40,13 @@ APP = interrupt_tgt
 C_SRCS := interrupt_tgt.c
 
 # Basic libaries to support spdk application
-SPDK_LIB_LIST += event thread
-SPDK_LIB_LIST += jsonrpc json rpc trace conf util log
+SPDK_LIB_LIST += event
 # Basic bdev libraries
-SPDK_LIB_LIST += bdev notify accel vmd sock
-SPDK_LIB_LIST += $(EVENT_BDEV_SUBSYSTEM) # event_bdev depends on some other event modules, but they dont support edriven yet
+SPDK_LIB_LIST += event_bdev
 # Aio bdev library
 SPDK_LIB_LIST += bdev_aio
 # NBD libraries
-SPDK_LIB_LIST += nbd event_nbd
+SPDK_LIB_LIST += event_nbd
 # some bdev modules don't have pollers, so they can be directly runnning in edriven mode
 SPDK_LIB_LIST += bdev_malloc bdev_passthru bdev_error bdev_gpt bdev_split bdev_raid
 # logical volume and blobstore can directly run in edriven mode
@@ -56,8 +54,8 @@ SPDK_LIB_LIST += bdev_lvol lvol blob_bdev blob
 # blobfs libraries
 SPDK_LIB_LIST += blobfs blobfs_bdev
 # vhost blk related libraries.
-SPDK_LIB_LIST += vhost event_vhost
-SPDK_LIB_LIST += scsi event_scsi # vhost-scsi is not supported, just because vhost lib requires scsi related libs
+SPDK_LIB_LIST += event_vhost
+SPDK_LIB_LIST += event_scsi # vhost-scsi is not supported, just because vhost lib requires scsi related libs
 
 ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
 SPDK_LIB_LIST += env_dpdk_rpc

@@ -41,9 +41,7 @@ C_SRCS := app_repeat.c
 # Some of the modules and libaries are not repeatable yet, only organize
 # the repeatable ones.
 SPDK_LIB_LIST = event_bdev event_accel event_vmd event_sock
-SPDK_LIB_LIST += event log trace conf thread util bdev accel rpc jsonrpc json sock vmd
-SPDK_LIB_LIST += notify
-SPDK_LIB_LIST += event_nbd nbd
+SPDK_LIB_LIST += event_nbd
 
 BLOCKDEV_LIST = bdev_malloc bdev_null
 BLOCKDEV_LIST += bdev_aio

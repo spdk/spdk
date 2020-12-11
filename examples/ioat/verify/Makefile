@@ -38,6 +38,6 @@ APP = verify
 
 C_SRCS := verify.c
 
-SPDK_LIB_LIST = ioat thread util log
+SPDK_LIB_LIST = ioat util
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk

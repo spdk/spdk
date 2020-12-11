@@ -40,8 +40,6 @@ FIO_PLUGIN := spdk_bdev
 
 C_SRCS = fio_plugin.c
 
-SPDK_LIB_LIST = $(ALL_MODULES_LIST)
-SPDK_LIB_LIST += thread util bdev conf accel rpc jsonrpc json log sock trace notify
-SPDK_LIB_LIST += event $(EVENT_BDEV_SUBSYSTEM)
+SPDK_LIB_LIST = $(ALL_MODULES_LIST) event_bdev
 
 include $(SPDK_ROOT_DIR)/mk/spdk.fio.mk
