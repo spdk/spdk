@@ -3409,6 +3409,8 @@ _nvmf_request_complete(void *ctx)
 		    sgroup->io_outstanding == 0) {
 			sgroup->state = SPDK_NVMF_SUBSYSTEM_PAUSED;
 			sgroup->cb_fn(sgroup->cb_arg, 0);
+			sgroup->cb_fn = NULL;
+			sgroup->cb_arg = NULL;
 		}
 	}
 

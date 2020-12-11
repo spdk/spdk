@@ -1424,7 +1424,9 @@ nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
 	sgroup->state = SPDK_NVMF_SUBSYSTEM_PAUSING;
 
 	if (sgroup->io_outstanding > 0) {
+		assert(sgroup->cb_fn == NULL);
 		sgroup->cb_fn = cb_fn;
+		assert(sgroup->cb_arg == NULL);
 		sgroup->cb_arg = cb_arg;
 		return;
 	}
