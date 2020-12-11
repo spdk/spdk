@@ -3692,7 +3692,12 @@ bs_load_used_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	assert(ctx->mask->length <= (ctx->super->used_page_mask_len * SPDK_BS_PAGE_SIZE *
 				     8));
 	/* The length of the mask must be exactly equal to the size (in pages) of the metadata region */
-	assert(ctx->mask->length == ctx->super->md_len);
+	if (ctx->mask->length != ctx->super->md_len) {
+		SPDK_ERRLOG("mismatched md_len in used_pages mask: "
+			    "mask->length=%" PRIu32 " super->md_len=%" PRIu32 "\n",
+			    ctx->mask->length, ctx->super->md_len);
+		assert(false);
+	}
 
 	rc = spdk_bit_array_resize(&ctx->bs->used_md_pages, ctx->mask->length);
 	if (rc < 0) {
