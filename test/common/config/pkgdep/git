@@ -261,12 +261,6 @@ function install_qemu() {
 }
 
 function install_nvmecli() {
-	SPDK_NVME_CLI_BRANCH=spdk-1.6
-	if [[ ! -d $GIT_REPOS/nvme-cli ]]; then
-		git clone "${GIT_REPO_SPDK_NVME_CLI}" -b "$SPDK_NVME_CLI_BRANCH" "$GIT_REPOS/nvme-cli"
-	else
-		echo "nvme-cli already checked out. Skipping"
-	fi
 	if [ ! -d "/usr/local/src/nvme-cli" ]; then
 		# Changes required for SPDK are already merged on top of
 		# nvme-cli, however not released yet.
@@ -377,8 +371,6 @@ export GIT_REPO_FLAMEGRAPH
 export GIT_REPO_QEMU
 : ${GIT_REPO_LIBISCSI=https://github.com/sahlberg/libiscsi}
 export GIT_REPO_LIBISCSI
-: ${GIT_REPO_SPDK_NVME_CLI=https://github.com/spdk/nvme-cli}
-export GIT_REPO_SPDK_NVME_CLI
 : ${GIT_REPO_INTEL_IPSEC_MB=https://github.com/spdk/intel-ipsec-mb.git}
 export GIT_REPO_INTEL_IPSEC_MB
 : ${DRIVER_LOCATION_QAT=https://01.org/sites/default/files/downloads//qat1.7.l.4.9.0-00008.tar.gz}

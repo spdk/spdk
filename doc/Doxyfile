@@ -827,7 +827,6 @@ INPUT                  += \
                          memory.md \
                          notify.md \
                          nvme.md \
-                         nvme-cli.md \
                          nvme_spec.md \
                          nvmf.md \
                          nvmf_tgt_pg.md \
