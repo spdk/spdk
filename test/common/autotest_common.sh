@@ -846,41 +846,6 @@ function rbd_cleanup() {
 	fi
 }
 
-function nvme_cli_build() {
-	if [[ -z "${DEPENDENCY_DIR}" ]]; then
-		echo DEPENDENCY_DIR not defined!
-		exit 1
-	fi
-
-	spdk_nvme_cli="${DEPENDENCY_DIR}/nvme-cli"
-
-	if [[ ! -d $spdk_nvme_cli ]]; then
-		echo "nvme-cli repository not found at $spdk_nvme_cli; skipping tests."
-		exit 1
-	fi
-
-	if ! grep -q "DEF_VER=v1.6" $spdk_nvme_cli/NVME-VERSION-GEN; then
-		echo "SPDK supports only \"spdk/nvme-cli\" project on \"spdk-1.6\" branch."
-		exit 1
-	fi
-
-	# Build against the version of SPDK under test
-	pushd $spdk_nvme_cli
-
-	# Remove and recreate git index in case it became corrupted
-	if ! git clean -dfx; then
-		rm -f .git/index
-		git clean -dfx
-		git reset --hard
-	fi
-
-	rm -f "$spdk_nvme_cli/spdk"
-	ln -sf "$rootdir" "$spdk_nvme_cli/spdk"
-
-	make -j$(nproc) LDFLAGS="$(make -s -C $spdk_nvme_cli/spdk ldflags)"
-	popd
-}
-
 function _start_stub() {
 	# Disable ASLR for multi-process testing.  SPDK does support using DPDK multi-process,
 	# but ASLR can still be unreliable in some cases.
