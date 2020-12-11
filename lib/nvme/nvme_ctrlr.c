@@ -113,49 +113,22 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 #define FIELD_OK(field) \
 	offsetof(struct spdk_nvme_ctrlr_opts, field) + sizeof(opts->field) <= opts_size
 
-	if (FIELD_OK(num_io_queues)) {
-		opts->num_io_queues = DEFAULT_MAX_IO_QUEUES;
-	}
+#define SET_FIELD(field, value) \
+	if (offsetof(struct spdk_nvme_ctrlr_opts, field) + sizeof(opts->field) <= opts_size) { \
+		opts->field = value; \
+	} \
 
-	if (FIELD_OK(use_cmb_sqs)) {
-		opts->use_cmb_sqs = true;
-	}
-
-	if (FIELD_OK(no_shn_notification)) {
-		opts->no_shn_notification = false;
-	}
-
-	if (FIELD_OK(arb_mechanism)) {
-		opts->arb_mechanism = SPDK_NVME_CC_AMS_RR;
-	}
-
-	if (FIELD_OK(arbitration_burst)) {
-		opts->arbitration_burst = 0;
-	}
-
-	if (FIELD_OK(low_priority_weight)) {
-		opts->low_priority_weight = 0;
-	}
-
-	if (FIELD_OK(medium_priority_weight)) {
-		opts->medium_priority_weight = 0;
-	}
-
-	if (FIELD_OK(high_priority_weight)) {
-		opts->high_priority_weight = 0;
-	}
-
-	if (FIELD_OK(keep_alive_timeout_ms)) {
-		opts->keep_alive_timeout_ms = MIN_KEEP_ALIVE_TIMEOUT_IN_MS;
-	}
-
-	if (FIELD_OK(transport_retry_count)) {
-		opts->transport_retry_count = SPDK_NVME_DEFAULT_RETRY_COUNT;
-	}
-
-	if (FIELD_OK(io_queue_size)) {
-		opts->io_queue_size = DEFAULT_IO_QUEUE_SIZE;
-	}
+	SET_FIELD(num_io_queues, DEFAULT_MAX_IO_QUEUES);
+	SET_FIELD(use_cmb_sqs, true);
+	SET_FIELD(no_shn_notification, false);
+	SET_FIELD(arb_mechanism, SPDK_NVME_CC_AMS_RR);
+	SET_FIELD(arbitration_burst, 0);
+	SET_FIELD(low_priority_weight, 0);
+	SET_FIELD(medium_priority_weight, 0);
+	SET_FIELD(high_priority_weight, 0);
+	SET_FIELD(keep_alive_timeout_ms, MIN_KEEP_ALIVE_TIMEOUT_IN_MS);
+	SET_FIELD(transport_retry_count, SPDK_NVME_DEFAULT_RETRY_COUNT);
+	SET_FIELD(io_queue_size, DEFAULT_IO_QUEUE_SIZE);
 
 	if (nvme_driver_init() == 0) {
 		if (FIELD_OK(hostnqn)) {
@@ -172,9 +145,7 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 
 	}
 
-	if (FIELD_OK(io_queue_requests)) {
-		opts->io_queue_requests = DEFAULT_IO_QUEUE_REQUESTS;
-	}
+	SET_FIELD(io_queue_requests, DEFAULT_IO_QUEUE_REQUESTS);
 
 	if (FIELD_OK(src_addr)) {
 		memset(opts->src_addr, 0, sizeof(opts->src_addr));
@@ -188,39 +159,17 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 		memset(opts->host_id, 0, sizeof(opts->host_id));
 	}
 
-	if (FIELD_OK(command_set)) {
-		opts->command_set = CHAR_BIT;
-	}
-
-	if (FIELD_OK(admin_timeout_ms)) {
-		opts->admin_timeout_ms = NVME_MAX_ADMIN_TIMEOUT_IN_SECS * 1000;
-	}
-
-	if (FIELD_OK(header_digest)) {
-		opts->header_digest = false;
-	}
-
-	if (FIELD_OK(data_digest)) {
-		opts->data_digest = false;
-	}
-
-	if (FIELD_OK(disable_error_logging)) {
-		opts->disable_error_logging = false;
-	}
-
-	if (FIELD_OK(transport_ack_timeout)) {
-		opts->transport_ack_timeout = SPDK_NVME_DEFAULT_TRANSPORT_ACK_TIMEOUT;
-	}
-
-	if (FIELD_OK(admin_queue_size)) {
-		opts->admin_queue_size = DEFAULT_ADMIN_QUEUE_SIZE;
-	}
-
-	if (FIELD_OK(fabrics_connect_timeout_us)) {
-		opts->fabrics_connect_timeout_us = NVME_FABRIC_CONNECT_COMMAND_TIMEOUT;
-	}
+	SET_FIELD(command_set, CHAR_BIT);
+	SET_FIELD(admin_timeout_ms, NVME_MAX_ADMIN_TIMEOUT_IN_SECS * 1000);
+	SET_FIELD(header_digest, false);
+	SET_FIELD(data_digest, false);
+	SET_FIELD(disable_error_logging, false);
+	SET_FIELD(transport_ack_timeout, SPDK_NVME_DEFAULT_TRANSPORT_ACK_TIMEOUT);
+	SET_FIELD(admin_queue_size, DEFAULT_ADMIN_QUEUE_SIZE);
+	SET_FIELD(fabrics_connect_timeout_us, NVME_FABRIC_CONNECT_COMMAND_TIMEOUT);
 
 #undef FIELD_OK
+#undef SET_FIELD
 }
 
 /**

@@ -926,104 +926,52 @@ nvme_ctrlr_opts_init(struct spdk_nvme_ctrlr_opts *opts,
 	spdk_nvme_ctrlr_get_default_ctrlr_opts(opts, opts_size_user);
 
 #define FIELD_OK(field) \
-        offsetof(struct spdk_nvme_ctrlr_opts, field) + sizeof(opts->field) <= (opts->opts_size)
+	offsetof(struct spdk_nvme_ctrlr_opts, field) + sizeof(opts->field) <= (opts->opts_size)
 
-	if (FIELD_OK(num_io_queues)) {
-		opts->num_io_queues = opts_user->num_io_queues;
-	}
-
-	if (FIELD_OK(use_cmb_sqs)) {
-		opts->use_cmb_sqs = opts_user->use_cmb_sqs;
+#define SET_FIELD(field) \
+	if (FIELD_OK(field)) { \
+			opts->field = opts_user->field; \
 	}
 
-	if (FIELD_OK(no_shn_notification)) {
-		opts->no_shn_notification = opts_user->no_shn_notification;
+#define SET_FIELD_ARRAY(field) \
+	if (FIELD_OK(field)) { \
+		memcpy(opts->field, opts_user->field, sizeof(opts_user->field)); \
 	}
 
-	if (FIELD_OK(arb_mechanism)) {
-		opts->arb_mechanism = opts_user->arb_mechanism;
-	}
+	SET_FIELD(num_io_queues);
+	SET_FIELD(use_cmb_sqs);
+	SET_FIELD(no_shn_notification);
+	SET_FIELD(arb_mechanism);
+	SET_FIELD(arbitration_burst);
+	SET_FIELD(low_priority_weight);
+	SET_FIELD(medium_priority_weight);
+	SET_FIELD(high_priority_weight);
+	SET_FIELD(keep_alive_timeout_ms);
+	SET_FIELD(transport_retry_count);
+	SET_FIELD(io_queue_size);
+	SET_FIELD_ARRAY(hostnqn);
+	SET_FIELD(io_queue_requests);
+	SET_FIELD_ARRAY(src_addr);
+	SET_FIELD_ARRAY(src_svcid);
+	SET_FIELD_ARRAY(host_id);
+	SET_FIELD_ARRAY(extended_host_id);
+	SET_FIELD(command_set);
+	SET_FIELD(admin_timeout_ms);
+	SET_FIELD(header_digest);
+	SET_FIELD(data_digest);
+	SET_FIELD(disable_error_logging);
+	SET_FIELD(transport_ack_timeout);
+	SET_FIELD(admin_queue_size);
+	SET_FIELD(fabrics_connect_timeout_us);
 
-	if (FIELD_OK(arbitration_burst)) {
-		opts->arbitration_burst = opts_user->arbitration_burst;
-	}
+	/* Do not remove this statement. When you add a new field, please do update this
+	 * assert with the correct size. And do not forget to add a new SET_FIELD statement
+	 * related with your new added field. */
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ctrlr_opts) == 608, "Incorrect size");
 
-	if (FIELD_OK(low_priority_weight)) {
-		opts->low_priority_weight = opts_user->low_priority_weight;
-	}
-
-	if (FIELD_OK(medium_priority_weight)) {
-		opts->medium_priority_weight = opts_user->medium_priority_weight;
-	}
-
-	if (FIELD_OK(high_priority_weight)) {
-		opts->high_priority_weight = opts_user->high_priority_weight;
-	}
-
-	if (FIELD_OK(keep_alive_timeout_ms)) {
-		opts->keep_alive_timeout_ms =  opts_user->keep_alive_timeout_ms;
-	}
-
-	if (FIELD_OK(transport_retry_count)) {
-		opts->transport_retry_count = opts_user->transport_retry_count;
-	}
-
-	if (FIELD_OK(io_queue_size)) {
-		opts->io_queue_size =  opts_user->io_queue_size;
-	}
-
-	if (FIELD_OK(hostnqn)) {
-		memcpy(opts->hostnqn, opts_user->hostnqn, sizeof(opts_user->hostnqn));
-	}
-
-	if (FIELD_OK(io_queue_requests)) {
-		opts->io_queue_requests =  opts_user->io_queue_requests;
-	}
-
-	if (FIELD_OK(src_addr)) {
-		memcpy(opts->src_addr, opts_user->src_addr, sizeof(opts_user->src_addr));
-	}
-
-	if (FIELD_OK(src_svcid)) {
-		memcpy(opts->src_svcid, opts_user->src_svcid, sizeof(opts_user->src_svcid));
-	}
-
-	if (FIELD_OK(host_id)) {
-		memcpy(opts->host_id, opts_user->host_id, sizeof(opts_user->host_id));
-	}
-	if (FIELD_OK(extended_host_id)) {
-		memcpy(opts->extended_host_id, opts_user->extended_host_id,
-		       sizeof(opts_user->extended_host_id));
-	}
-
-	if (FIELD_OK(command_set)) {
-		opts->command_set = opts_user->command_set;
-	}
-
-	if (FIELD_OK(admin_timeout_ms)) {
-		opts->admin_timeout_ms = opts_user->admin_timeout_ms;
-	}
-
-	if (FIELD_OK(header_digest)) {
-		opts->header_digest = opts_user->header_digest;
-	}
-
-	if (FIELD_OK(data_digest)) {
-		opts->data_digest = opts_user->data_digest;
-	}
-
-	if (FIELD_OK(disable_error_logging)) {
-		opts->disable_error_logging = opts_user->disable_error_logging;
-	}
-
-	if (FIELD_OK(transport_ack_timeout)) {
-		opts->transport_ack_timeout = opts_user->transport_ack_timeout;
-	}
-
-	if (FIELD_OK(admin_queue_size)) {
-		opts->admin_queue_size = opts_user->admin_queue_size;
-	}
 #undef FIELD_OK
+#undef SET_FIELD
+#undef SET_FIELD_ARRAY
 }
 
 struct spdk_nvme_ctrlr *
