@@ -675,6 +675,11 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 				     io_u->offset, io_u->xfer_buflen,
 				     spdk_fio_completion_cb, fio_req);
 		break;
+	case DDIR_SYNC:
+		rc = spdk_bdev_flush(target->desc, target->ch,
+				     io_u->offset, io_u->xfer_buflen,
+				     spdk_fio_completion_cb, fio_req);
+		break;
 	default:
 		assert(false);
 		break;
