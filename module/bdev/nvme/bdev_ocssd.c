@@ -186,6 +186,12 @@ static struct spdk_bdev_module ocssd_if = {
 
 SPDK_BDEV_MODULE_REGISTER(ocssd, &ocssd_if);
 
+static inline uint64_t
+bdev_ocssd_get_zone_size(const struct ocssd_bdev *ocssd_bdev)
+{
+	return ocssd_bdev->nvme_bdev.disk.zone_size;
+}
+
 static uint64_t
 bdev_ocssd_num_zones(const struct ocssd_bdev *ocssd_bdev)
 {
@@ -415,10 +421,9 @@ bdev_ocssd_read(struct ocssd_bdev *ocssd_bdev, struct spdk_nvme_qpair *qpair,
 		struct bdev_ocssd_io *ocdev_io, struct iovec *iov, int iovcnt,
 		void *md, uint64_t lba_count, uint64_t lba)
 {
-	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
-	struct nvme_bdev_ns *nvme_ns = nvme_bdev->nvme_ns;
+	struct nvme_bdev_ns *nvme_ns = ocssd_bdev->nvme_bdev.nvme_ns;
 	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ns);
-	const size_t zone_size = nvme_bdev->disk.zone_size;
+	const size_t zone_size = bdev_ocssd_get_zone_size(ocssd_bdev);
 
 	if ((lba % zone_size) + lba_count > zone_size) {
 		SPDK_ERRLOG("Tried to cross zone boundary during read command\n");
@@ -457,10 +462,9 @@ bdev_ocssd_write(struct ocssd_bdev *ocssd_bdev, struct spdk_nvme_qpair *qpair,
 		 struct bdev_ocssd_io *ocdev_io, struct iovec *iov, int iovcnt,
 		 void *md, uint64_t lba_count, uint64_t lba)
 {
-	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
-	struct nvme_bdev_ns *nvme_ns = nvme_bdev->nvme_ns;
+	struct nvme_bdev_ns *nvme_ns = ocssd_bdev->nvme_bdev.nvme_ns;
 	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ns);
-	const size_t zone_size = nvme_bdev->disk.zone_size;
+	const size_t zone_size = bdev_ocssd_get_zone_size(ocssd_bdev);
 	struct bdev_ocssd_zone *zone;
 	int rc;
 
@@ -598,10 +602,9 @@ static int
 bdev_ocssd_reset_zone(struct ocssd_bdev *ocssd_bdev, struct spdk_nvme_qpair *qpair,
 		      struct bdev_ocssd_io *ocdev_io, uint64_t slba, size_t num_zones)
 {
-	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
-	struct nvme_bdev_ns *nvme_ns = nvme_bdev->nvme_ns;
+	struct nvme_bdev_ns *nvme_ns = ocssd_bdev->nvme_bdev.nvme_ns;
 	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ns);
-	uint64_t offset, zone_size = nvme_bdev->disk.zone_size;
+	uint64_t offset, zone_size = bdev_ocssd_get_zone_size(ocssd_bdev);
 	struct bdev_ocssd_zone *zone;
 	int rc;
 
@@ -640,7 +643,7 @@ bdev_ocssd_fill_zone_info(struct ocssd_bdev *ocssd_bdev, struct bdev_ocssd_ns *o
 			  struct spdk_bdev_zone_info *zone_info,
 			  const struct spdk_ocssd_chunk_information_entry *chunk_info)
 {
-	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
+	uint64_t zone_size = bdev_ocssd_get_zone_size(ocssd_bdev);
 
 	zone_info->zone_id = bdev_ocssd_from_disk_lba(ocssd_bdev, ocssd_ns, chunk_info->slba);
 	zone_info->write_pointer = zone_info->zone_id;
@@ -651,7 +654,7 @@ bdev_ocssd_fill_zone_info(struct ocssd_bdev *ocssd_bdev, struct bdev_ocssd_ns *o
 		zone_info->state = SPDK_BDEV_ZONE_STATE_FULL;
 	} else if (chunk_info->cs.open) {
 		zone_info->state = SPDK_BDEV_ZONE_STATE_OPEN;
-		zone_info->write_pointer += chunk_info->wp % nvme_bdev->disk.zone_size;
+		zone_info->write_pointer += chunk_info->wp % zone_size;
 	} else if (chunk_info->cs.offline) {
 		zone_info->state = SPDK_BDEV_ZONE_STATE_OFFLINE;
 	} else {
@@ -662,7 +665,7 @@ bdev_ocssd_fill_zone_info(struct ocssd_bdev *ocssd_bdev, struct bdev_ocssd_ns *o
 	if (chunk_info->ct.size_deviate) {
 		zone_info->capacity = chunk_info->cnlb;
 	} else {
-		zone_info->capacity = nvme_bdev->disk.zone_size;
+		zone_info->capacity = zone_size;
 	}
 }
 
@@ -708,12 +711,11 @@ static int
 _bdev_ocssd_get_zone_info(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvme_ch,
 			  struct bdev_ocssd_io *ocdev_io, uint64_t zone_id)
 {
-	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
-	struct nvme_bdev_ns *nvme_ns = nvme_bdev->nvme_ns;
+	struct nvme_bdev_ns *nvme_ns = ocssd_bdev->nvme_bdev.nvme_ns;
 	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ns);
-	uint64_t lba, offset;
+	uint64_t lba, offset, zone_size = bdev_ocssd_get_zone_size(ocssd_bdev);
 
-	lba = zone_id + ocdev_io->zone_info.chunk_offset * nvme_bdev->disk.zone_size;
+	lba = zone_id + ocdev_io->zone_info.chunk_offset * zone_size;
 	offset = bdev_ocssd_to_chunk_info_offset(ocssd_bdev, ocssd_ns, lba);
 
 	return spdk_nvme_ctrlr_cmd_get_log_page(nvme_ch->ctrlr->ctrlr,
@@ -729,14 +731,14 @@ static int
 bdev_ocssd_get_zone_info(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvme_ch,
 			 struct bdev_ocssd_io *ocdev_io, uint64_t zone_id, uint32_t num_zones)
 {
-	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
+	uint64_t zone_size = bdev_ocssd_get_zone_size(ocssd_bdev);
 
 	if (num_zones < 1) {
 		SPDK_ERRLOG("Invalid number of zones: %"PRIu32"\n", num_zones);
 		return -EINVAL;
 	}
 
-	if (zone_id % nvme_bdev->disk.zone_size != 0) {
+	if (zone_id % zone_size != 0) {
 		SPDK_ERRLOG("Unaligned zone LBA: %"PRIu64"\n", zone_id);
 		return -EINVAL;
 	}
