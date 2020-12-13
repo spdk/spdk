@@ -400,6 +400,14 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 			fio_qpair->extended_lba ? "extended lba" : "separate metadata");
 	}
 
+	if (spdk_nvme_ns_supports_extended_lba(ns) &&
+	    (spdk_nvme_ns_get_extended_sector_size(ns) != td->o.bs[DDIR_READ] ||
+	     spdk_nvme_ns_get_extended_sector_size(ns) != td->o.bs[DDIR_WRITE])) {
+		SPDK_ERRLOG("--bs has to be equal to LBA data size + Metadata size\n");
+		g_error = true;
+		return;
+	}
+
 	f->real_file_size = spdk_nvme_ns_get_size(fio_qpair->ns);
 	if (f->real_file_size <= 0) {
 		g_error = true;
