@@ -1145,7 +1145,6 @@ init_vbdev_config(struct vbdev_ocf *vbdev)
 	cfg->cache.backfill.max_queue_size = 65536;
 	cfg->cache.backfill.queue_unblock_size = 60000;
 
-	cfg->device.force = true;
 	cfg->device.perform_test = false;
 	cfg->device.discard_on_start = false;
 
@@ -1159,6 +1158,10 @@ init_vbdev_config(struct vbdev_ocf *vbdev)
 		 * otherwise OCF will interpret this core as new
 		 * instead of the inactive one */
 		vbdev->cfg.core.try_add = true;
+	} else {
+		/* When cache is initialized as new, set force flag to true,
+		 * to ignore warnings about existing metadata */
+		cfg->device.force = true;
 	}
 
 	/* Serialize bdev names in OCF UUID to interpret on future loads
