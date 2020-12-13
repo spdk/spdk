@@ -411,7 +411,7 @@ bdev_ocssd_read_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 }
 
 static int
-bdev_ocssd_read(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvme_ch,
+bdev_ocssd_read(struct ocssd_bdev *ocssd_bdev, struct spdk_nvme_qpair *qpair,
 		struct bdev_ocssd_io *ocdev_io, struct iovec *iov, int iovcnt,
 		void *md, uint64_t lba_count, uint64_t lba)
 {
@@ -432,7 +432,7 @@ bdev_ocssd_read(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvme_ch,
 
 	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, ocssd_ns, lba);
 
-	return spdk_nvme_ns_cmd_readv_with_md(nvme_ns->ns, nvme_ch->qpair, lba,
+	return spdk_nvme_ns_cmd_readv_with_md(nvme_ns->ns, qpair, lba,
 					      lba_count, bdev_ocssd_read_cb,
 					      ocdev_io, 0, bdev_ocssd_reset_sgl,
 					      bdev_ocssd_next_sge, md, 0, 0);
@@ -453,7 +453,7 @@ bdev_ocssd_write_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 }
 
 static int
-bdev_ocssd_write(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvme_ch,
+bdev_ocssd_write(struct ocssd_bdev *ocssd_bdev, struct spdk_nvme_qpair *qpair,
 		 struct bdev_ocssd_io *ocdev_io, struct iovec *iov, int iovcnt,
 		 void *md, uint64_t lba_count, uint64_t lba)
 {
@@ -482,7 +482,7 @@ bdev_ocssd_write(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvme_ch,
 
 	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, ocssd_ns, lba);
 
-	rc = spdk_nvme_ns_cmd_writev_with_md(nvme_ns->ns, nvme_ch->qpair, lba,
+	rc = spdk_nvme_ns_cmd_writev_with_md(nvme_ns->ns, qpair, lba,
 					     lba_count, bdev_ocssd_write_cb,
 					     ocdev_io, 0, bdev_ocssd_reset_sgl,
 					     bdev_ocssd_next_sge, md, 0, 0);
@@ -508,7 +508,7 @@ bdev_ocssd_append_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 }
 
 static int
-bdev_ocssd_zone_append(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvme_ch,
+bdev_ocssd_zone_append(struct ocssd_bdev *ocssd_bdev, struct spdk_nvme_qpair *qpair,
 		       struct bdev_ocssd_io *ocdev_io, struct iovec *iov, int iovcnt,
 		       void *md, uint64_t lba_count, uint64_t lba)
 {
@@ -542,7 +542,7 @@ bdev_ocssd_zone_append(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nv
 
 	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, ocssd_ns, zone->write_pointer);
 
-	rc = spdk_nvme_ns_cmd_writev_with_md(nvme_ns->ns, nvme_ch->qpair, lba,
+	rc = spdk_nvme_ns_cmd_writev_with_md(nvme_ns->ns, qpair, lba,
 					     lba_count, bdev_ocssd_append_cb,
 					     ocdev_io, 0, bdev_ocssd_reset_sgl,
 					     bdev_ocssd_next_sge, md, 0, 0);
@@ -566,7 +566,7 @@ bdev_ocssd_io_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 	}
 
 	rc = bdev_ocssd_read((struct ocssd_bdev *)bdev_io->bdev->ctxt,
-			     nvme_ch,
+			     nvme_ch->qpair,
 			     (struct bdev_ocssd_io *)bdev_io->driver_ctx,
 			     bdev_io->u.bdev.iovs,
 			     bdev_io->u.bdev.iovcnt,
@@ -595,7 +595,7 @@ bdev_ocssd_reset_zone_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 }
 
 static int
-bdev_ocssd_reset_zone(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvme_ch,
+bdev_ocssd_reset_zone(struct ocssd_bdev *ocssd_bdev, struct spdk_nvme_qpair *qpair,
 		      struct bdev_ocssd_io *ocdev_io, uint64_t slba, size_t num_zones)
 {
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
@@ -622,7 +622,7 @@ bdev_ocssd_reset_zone(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvm
 
 	ocdev_io->io.zone = zone;
 
-	rc = spdk_nvme_ocssd_ns_cmd_vector_reset(nvme_ns->ns, nvme_ch->qpair,
+	rc = spdk_nvme_ocssd_ns_cmd_vector_reset(nvme_ns->ns, qpair,
 			ocdev_io->io.lba, num_zones, NULL,
 			bdev_ocssd_reset_zone_cb, ocdev_io);
 	if (spdk_unlikely(rc != 0)) {
@@ -747,13 +747,13 @@ bdev_ocssd_get_zone_info(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *
 }
 
 static int
-bdev_ocssd_zone_management(struct ocssd_bdev *ocssd_bdev, struct nvme_io_channel *nvme_ch,
+bdev_ocssd_zone_management(struct ocssd_bdev *ocssd_bdev, struct spdk_nvme_qpair *qpair,
 			   struct spdk_bdev_io *bdev_io)
 {
 	switch (bdev_io->u.zone_mgmt.zone_action) {
 	case SPDK_BDEV_ZONE_RESET:
 		return bdev_ocssd_reset_zone(ocssd_bdev,
-					     nvme_ch,
+					     qpair,
 					     (struct bdev_ocssd_io *)bdev_io->driver_ctx,
 					     bdev_io->u.zone_mgmt.zone_id,
 					     bdev_io->u.zone_mgmt.num_zones);
@@ -812,7 +812,7 @@ _bdev_ocssd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 	case SPDK_BDEV_IO_TYPE_READ:
 		if (bdev_io->u.bdev.iovs && bdev_io->u.bdev.iovs[0].iov_base) {
 			return bdev_ocssd_read(ocssd_bdev,
-					       nvme_ch,
+					       nvme_ch->qpair,
 					       ocdev_io,
 					       bdev_io->u.bdev.iovs,
 					       bdev_io->u.bdev.iovcnt,
@@ -827,7 +827,7 @@ _bdev_ocssd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		return bdev_ocssd_write(ocssd_bdev,
-					nvme_ch,
+					nvme_ch->qpair,
 					ocdev_io,
 					bdev_io->u.bdev.iovs,
 					bdev_io->u.bdev.iovcnt,
@@ -836,7 +836,7 @@ _bdev_ocssd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 					bdev_io->u.bdev.offset_blocks);
 
 	case SPDK_BDEV_IO_TYPE_ZONE_MANAGEMENT:
-		return bdev_ocssd_zone_management(ocssd_bdev, nvme_ch, bdev_io);
+		return bdev_ocssd_zone_management(ocssd_bdev, nvme_ch->qpair, bdev_io);
 
 	case SPDK_BDEV_IO_TYPE_GET_ZONE_INFO:
 		return bdev_ocssd_get_zone_info(ocssd_bdev,
@@ -847,7 +847,7 @@ _bdev_ocssd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 
 	case SPDK_BDEV_IO_TYPE_ZONE_APPEND:
 		return bdev_ocssd_zone_append(ocssd_bdev,
-					      nvme_ch,
+					      nvme_ch->qpair,
 					      ocdev_io,
 					      bdev_io->u.bdev.iovs,
 					      bdev_io->u.bdev.iovcnt,
