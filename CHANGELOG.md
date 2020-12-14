@@ -2,12 +2,6 @@
 
 ## v21.01: (Upcoming Release)
 
-### nvmf
-
-Broadcom FC LLD driver and SPDK NVMe-oF FC transport consolidated one LLD API,
-`nvmf_fc_init_poller_queues` into another LLD API `nvmf_fc_init_q`.
-Hence updating Broadcom FC LLD driver to the latest is required.
-
 ### event
 
 The pci_whitelist and pci_blacklist members of struct spdk_app_opts have been
@@ -26,6 +20,10 @@ have been deprecated.  The new members are named pci_allowed, pci_blocked and
 main_core respectively.
 
 ### nvmf
+
+Broadcom FC LLD driver and SPDK NVMe-oF FC transport consolidated one LLD API,
+`nvmf_fc_init_poller_queues` into another LLD API `nvmf_fc_init_q`.
+Hence updating Broadcom FC LLD driver to the latest is required.
 
 The functions `destroy` and `qpair_fini` in the transport interface now accept a
 cb_fn and cb_arg to call upon completion, and their execution can be asynchronous.
