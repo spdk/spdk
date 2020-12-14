@@ -464,6 +464,12 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 			return -1;
 		}
 
+		if (desc->flags & VIRTIO_BLK_WRITE_ZEROES_FLAG_UNMAP) {
+			SPDK_ERRLOG("UNMAP flag is only used for WRITE ZEROES command\n");
+			invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
+			return -1;
+		}
+
 		rc = spdk_bdev_unmap(bvdev->bdev_desc, bvsession->io_channel,
 				     desc->sector * 512, desc->num_sectors * 512,
 				     blk_request_complete_cb, task);
@@ -485,11 +491,13 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 			return -1;
 		}
 
-		/* Zeroed and Unmap the range, SPDK doen't support it. */
+		/* Unmap this range, SPDK doesn't support it, kernel will enable this flag by default
+		 * without checking unmap feature is negociated or not, the flag isn't mandatory, so
+		 * just print a warning.
+		 */
 		if (desc->flags & VIRTIO_BLK_WRITE_ZEROES_FLAG_UNMAP) {
-			SPDK_NOTICELOG("Can't support Write Zeroes with Unmap flag\n");
-			invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
-			return -1;
+			SPDK_WARNLOG("Ignore the unmap flag for WRITE ZEROES from %"PRIx64", len %"PRIx64"\n",
+				     (uint64_t)desc->sector * 512, (uint64_t)desc->num_sectors * 512);
 		}
 
 		rc = spdk_bdev_write_zeroes(bvdev->bdev_desc, bvsession->io_channel,
