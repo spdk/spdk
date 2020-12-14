@@ -300,8 +300,15 @@ nvme_tcp_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 {
 	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
 	struct nvme_tcp_pdu *pdu;
+	int rc;
 
-	spdk_sock_close(&tqpair->sock);
+	rc = spdk_sock_close(&tqpair->sock);
+
+	if (tqpair->sock != NULL) {
+		SPDK_ERRLOG("tqpair=%p, errno=%d, rc=%d\n", tqpair, errno, rc);
+		/* Set it to NULL manually */
+		tqpair->sock = NULL;
+	}
 
 	/* clear the send_queue */
 	while (!TAILQ_EMPTY(&tqpair->send_queue)) {
@@ -1676,7 +1683,7 @@ nvme_tcp_qpair_icreq_send(struct nvme_tcp_qpair *tqpair)
 }
 
 static int
-nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+nvme_tcp_qpair_connect_sock(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
 	struct sockaddr_storage dst_addr;
 	struct sockaddr_storage src_addr;
@@ -1740,6 +1747,24 @@ nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpa
 		return rc;
 	}
 
+	return 0;
+}
+
+static int
+nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+{
+	int rc = 0;
+	struct nvme_tcp_qpair *tqpair;
+
+	tqpair = nvme_tcp_qpair(qpair);
+
+	if (!tqpair->sock) {
+		rc = nvme_tcp_qpair_connect_sock(ctrlr, qpair);
+		if (rc < 0) {
+			return rc;
+		}
+	}
+
 	if (qpair->poll_group) {
 		rc = nvme_poll_group_connect_qpair(qpair);
 		if (rc) {
@@ -1794,6 +1819,14 @@ nvme_tcp_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	rc = nvme_tcp_alloc_reqs(tqpair);
+	if (rc) {
+		nvme_tcp_ctrlr_delete_io_qpair(ctrlr, qpair);
+		return NULL;
+	}
+
+	/* spdk_nvme_qpair_get_optimal_poll_group needs socket information.
+	 * So create the socket first when creating a qpair. */
+	rc = nvme_tcp_qpair_connect_sock(ctrlr, qpair);
 	if (rc) {
 		nvme_tcp_ctrlr_delete_io_qpair(ctrlr, qpair);
 		return NULL;
