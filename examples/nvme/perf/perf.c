@@ -2442,8 +2442,9 @@ int main(int argc, char **argv)
 
 	print_stats();
 
-cleanup:
 	pthread_barrier_destroy(&g_worker_sync_barrier);
+
+cleanup:
 	if (thread_id && pthread_cancel(thread_id) == 0) {
 		pthread_join(thread_id, NULL);
 	}
