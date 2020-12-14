@@ -215,12 +215,6 @@ struct spdk_nvmf_transport_ops {
 	void (*opts_init)(struct spdk_nvmf_transport_opts *opts);
 
 	/**
-	 * Parse a subsystem opts
-	 */
-	int (*subsystem_opts_parse)(struct spdk_nvmf_transport *transport,
-				    const struct spdk_nvmf_subsystem *subsystem, const struct spdk_json_val *opts);
-
-	/**
 	 * Create a transport for the given transport opts
 	 */
 	struct spdk_nvmf_transport *(*create)(struct spdk_nvmf_transport_opts *opts);

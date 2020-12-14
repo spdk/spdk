@@ -270,26 +270,6 @@ def nvmf_create_subsystem(client,
     return client.call('nvmf_create_subsystem', params)
 
 
-def nvmf_subsystem_set_options(client, nqn, trtype, tgt_name=None):
-    """Set a transport specific options for an NVMe-oF subsystem.
-
-    Args:
-        nqn: Subsystem NQN.
-        trtype: NVMe-oF transport type: e.g., rdma, tcp, pcie.
-        tgt_name: The name of the parent NVMe-oF target (optional).
-
-    Returns:
-        True or False
-    """
-    params = {'nqn': nqn,
-              'trtype': trtype}
-
-    if tgt_name:
-        params['tgt_name'] = tgt_name
-
-    return client.call('nvmf_subsystem_set_options', params)
-
-
 def nvmf_subsystem_add_listener(client, nqn, trtype, traddr, trsvcid, adrfam, tgt_name=None):
     """Add a new listen address to an NVMe-oF subsystem.
 
