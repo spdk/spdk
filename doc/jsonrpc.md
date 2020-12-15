@@ -7731,7 +7731,7 @@ Example response:
   "result": {
     "recv_buf_size": 2097152,
     "send_buf_size": 2097152,
-    "enable_recv_pipe": true
+    "enable_recv_pipe": true,
     "enable_zerocopy_send": true
   }
 }
@@ -7751,7 +7751,7 @@ send_buf_size           | Optional | number      | Size of socket send buffer in
 enable_recv_pipe        | Optional | boolean     | Enable or disable receive pipe
 enable_zerocopy_send    | Optional | boolean     | Enable or disable zero copy on send
 enable_quick_ack        | Optional | boolean     | Enable or disable quick ACK
-enable_placement_id     | Optional | boolean     | Enable or disable placement_id
+enable_placement_id     | Optional | number      | Enable or disable placement_id. 0:disable,1:incoming_napi,2:incoming_cpu
 
 ### Response
 
@@ -7773,7 +7773,7 @@ Example request:
     "enable_recv_pipe": false,
     "enable_zerocopy_send": true,
     "enable_quick_ack": false,
-    "enable_placement_id": false
+    "enable_placement_id": 0
   }
 }
 ~~~

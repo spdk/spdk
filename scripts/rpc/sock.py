@@ -28,7 +28,7 @@ def sock_impl_set_options(client,
         enable_recv_pipe: enable or disable receive pipe (optional)
         enable_zerocopy_send: enable or disable zerocopy on send (optional)
         enable_quickack: enable or disable quickack (optional)
-        enable_placement_id: enable or disable placement_id (optional)
+        enable_placement_id: option for placement_id. 0:disable,1:incoming_napi,2:incoming_cpu (optional)
     """
     params = {}
 

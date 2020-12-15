@@ -36,6 +36,7 @@
 #include "spdk/sock.h"
 #include "spdk_internal/sock.h"
 #include "spdk/log.h"
+#include "spdk/env.h"
 
 #define SPDK_SOCK_DEFAULT_PRIORITY 0
 #define SPDK_SOCK_DEFAULT_ZCOPY true
@@ -59,7 +60,7 @@ static pthread_mutex_t g_map_table_mutex = PTHREAD_MUTEX_INITIALIZER;
  * If the group is already in the map, take a reference.
  */
 static int
-sock_map_insert(int placement_id, struct spdk_sock_group *group)
+sock_map_insert(int placement_id, struct spdk_sock_group *group, bool init)
 {
 	struct spdk_sock_placement_id_entry *entry;
 
@@ -84,7 +85,9 @@ sock_map_insert(int placement_id, struct spdk_sock_group *group)
 
 	entry->placement_id = placement_id;
 	entry->group = group;
-	entry->ref++;
+	if (!init) {
+		entry->ref++;
+	}
 
 	STAILQ_INSERT_TAIL(&g_placement_id_map, entry, link);
 	pthread_mutex_unlock(&g_map_table_mutex);
@@ -154,11 +157,11 @@ static int
 sock_get_placement_id(struct spdk_sock *sock)
 {
 	int rc;
-	int placement_id;
+	int placement_id = -1;
 
-	if (!sock->placement_id) {
+	if (sock->placement_id == -1) {
 		rc = sock->net_impl->get_placement_id(sock, &placement_id);
-		if (!rc && (placement_id != 0)) {
+		if (!rc && (placement_id != -1)) {
 			sock->placement_id = placement_id;
 		}
 	}
@@ -169,10 +172,10 @@ sock_get_placement_id(struct spdk_sock *sock)
 int
 spdk_sock_get_optimal_sock_group(struct spdk_sock *sock, struct spdk_sock_group **group)
 {
-	int placement_id;
+	int placement_id = -1;
 
 	placement_id = sock_get_placement_id(sock);
-	if (placement_id != 0) {
+	if (placement_id != -1) {
 		sock_map_lookup(placement_id, group);
 		return 0;
 	} else {
@@ -336,6 +339,7 @@ spdk_sock_accept(struct spdk_sock *sock)
 		new_sock->opts = sock->opts;
 		memcpy(&new_sock->opts, &sock->opts, sizeof(new_sock->opts));
 		new_sock->net_impl = sock->net_impl;
+		new_sock->placement_id = -1;
 		TAILQ_INIT(&new_sock->queued_reqs);
 		TAILQ_INIT(&new_sock->pending_reqs);
 	}
@@ -480,6 +484,9 @@ spdk_sock_group_create(void *ctx)
 	struct spdk_net_impl *impl = NULL;
 	struct spdk_sock_group *group;
 	struct spdk_sock_group_impl *group_impl;
+	struct spdk_sock_impl_opts sock_opts = {};
+	size_t sock_len;
+	bool enable_incoming_cpu = 0;
 
 	group = calloc(1, sizeof(*group));
 	if (group == NULL) {
@@ -494,10 +501,22 @@ spdk_sock_group_create(void *ctx)
 			STAILQ_INSERT_TAIL(&group->group_impls, group_impl, link);
 			TAILQ_INIT(&group_impl->socks);
 			group_impl->net_impl = impl;
+
+			sock_len = sizeof(sock_opts);
+			spdk_sock_impl_get_opts(impl->name, &sock_opts, &sock_len);
+			if (sock_opts.enable_placement_id == 2) {
+				enable_incoming_cpu = 1;
+			}
 		}
 	}
 
 	group->ctx = ctx;
+
+	/* if any net_impl is configured to use SO_INCOMING_CPU, initialize the sock map */
+	if (enable_incoming_cpu) {
+		sock_map_insert(spdk_env_get_current_core(), group, 1);
+	}
+
 	return group;
 }
 
@@ -534,7 +553,7 @@ spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 
 	placement_id = sock_get_placement_id(sock);
 	if (placement_id != 0) {
-		rc = sock_map_insert(placement_id, group);
+		rc = sock_map_insert(placement_id, group, 0);
 		if (rc < 0) {
 			return -1;
 		}
@@ -794,7 +813,7 @@ spdk_sock_write_config_json(struct spdk_json_write_ctx *w)
 			spdk_json_write_named_bool(w, "enable_recv_pipe", opts.enable_recv_pipe);
 			spdk_json_write_named_bool(w, "enable_zerocopy_send", opts.enable_zerocopy_send);
 			spdk_json_write_named_bool(w, "enable_quickack", opts.enable_quickack);
-			spdk_json_write_named_bool(w, "enable_placement_id", opts.enable_placement_id);
+			spdk_json_write_named_uint32(w, "enable_placement_id", opts.enable_placement_id);
 			spdk_json_write_object_end(w);
 			spdk_json_write_object_end(w);
 		} else {

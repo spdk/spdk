@@ -86,7 +86,7 @@ static struct spdk_sock_impl_opts g_spdk_posix_sock_impl_opts = {
 	.enable_recv_pipe = true,
 	.enable_zerocopy_send = true,
 	.enable_quickack = false,
-	.enable_placement_id = false,
+	.enable_placement_id = 0,
 };
 
 static int
@@ -1092,16 +1092,34 @@ posix_sock_get_placement_id(struct spdk_sock *_sock, int *placement_id)
 		return rc;
 	}
 
+	if (g_spdk_posix_sock_impl_opts.enable_placement_id != 0) {
+		switch (g_spdk_posix_sock_impl_opts.enable_placement_id) {
+		case 1: {
 #if defined(SO_INCOMING_NAPI_ID)
-	struct spdk_posix_sock *sock = __posix_sock(_sock);
-	socklen_t salen = sizeof(int);
+			struct spdk_posix_sock *sock = __posix_sock(_sock);
+			socklen_t len = sizeof(int);
 
-	rc = getsockopt(sock->fd, SOL_SOCKET, SO_INCOMING_NAPI_ID, placement_id, &salen);
+			rc = getsockopt(sock->fd, SOL_SOCKET, SO_INCOMING_NAPI_ID, placement_id, &len);
+#endif
+			break;
+		}
+		case 2: {
+#if defined(SO_INCOMING_CPU)
+			struct spdk_posix_sock *sock = __posix_sock(_sock);
+			socklen_t len = sizeof(int);
+
+			rc = getsockopt(sock->fd, SOL_SOCKET, SO_INCOMING_CPU, placement_id, &len);
+#endif
+			break;
+		}
+		default:
+			break;
+		}
+	}
+
 	if (rc != 0) {
 		SPDK_ERRLOG("getsockopt() failed (errno=%d)\n", errno);
 	}
-
-#endif
 	return rc;
 }
 

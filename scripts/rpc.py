@@ -2587,6 +2587,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-i', '--impl', help='Socket implementation name, e.g. posix', required=True)
     p.add_argument('-r', '--recv-buf-size', help='Size of receive buffer on socket in bytes', type=int)
     p.add_argument('-s', '--send-buf-size', help='Size of send buffer on socket in bytes', type=int)
+    p.add_argument('-p', '--enable-placement-id', help='Option for placement-id. 0:disable,1:incoming_napi,2:incoming_cpu', type=int)
     p.add_argument('--enable-recv-pipe', help='Enable receive pipe',
                    action='store_true', dest='enable_recv_pipe')
     p.add_argument('--disable-recv-pipe', help='Disable receive pipe',
@@ -2599,10 +2600,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    action='store_true', dest='enable_quickack')
     p.add_argument('--disable-quickack', help='Disable quick ACK',
                    action='store_false', dest='enable_quickack')
-    p.add_argument('--enable-placement_id', help='Enable placement_id',
-                   action='store_true', dest='enable_placement_id')
-    p.add_argument('--disable-placement_id', help='Disable placement_id',
-                   action='store_false', dest='enable_placement_id')
     p.set_defaults(func=sock_impl_set_options, enable_recv_pipe=None, enable_zerocopy_send=None,
                    enable_quickack=None, enable_placement_id=None)
 

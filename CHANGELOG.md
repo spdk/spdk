@@ -41,6 +41,13 @@ independent SPDK processes are running on one node.  The filter function can
 then be implemented in these processes to decide which SSDs to probe based on
 the new SSD's PCI address.
 
+### sock
+
+The type of enable_placement_id in struct spdk_sock_impl_opts is changed from
+bool to int. We can use RPC to configure different value of enable_placement_id.
+Then we can leverage SO_INCOMING_CPU to get placement_id, which aims to utilize
+CPU cache locality, enabled by setting enable_placement_id=2.
+
 ## v21.01:
 
 ### idxd
