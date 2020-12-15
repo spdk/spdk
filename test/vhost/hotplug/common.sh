@@ -208,17 +208,10 @@ function check_disks() {
 function get_traddr() {
 	local nvme_name=$1
 	local nvme
+
 	nvme="$($rootdir/scripts/gen_nvme.sh)"
-	while read -r line; do
-		if [[ $line == *"TransportID"* ]] && [[ $line == *$nvme_name* ]]; then
-			local word_array=($line)
-			for word in "${word_array[@]}"; do
-				if [[ $word == *"traddr"* ]]; then
-					traddr=$(echo $word | sed 's/traddr://' | sed 's/"//')
-				fi
-			done
-		fi
-	done <<< "$nvme"
+	traddr=$(jq -r ".config[] | select(.params.name == \"$nvme_name\") | .params.trtype" <<< "$nvme")
+	[[ -n $traddr ]] || return 1
 }
 
 function delete_nvme() {
