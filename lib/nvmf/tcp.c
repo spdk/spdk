@@ -221,8 +221,6 @@ struct spdk_nvmf_tcp_qpair {
 	bool					host_hdgst_enable;
 	bool					host_ddgst_enable;
 
-	TAILQ_HEAD(, nvme_tcp_pdu)		send_queue;
-
 	/* This is a spare PDU used for sending special management
 	 * operations. Primarily, this is used for the initial
 	 * connection response and c2h termination request. */
@@ -408,8 +406,6 @@ static void
 nvmf_tcp_cleanup_all_states(struct spdk_nvmf_tcp_qpair *tqpair)
 {
 	struct spdk_nvmf_tcp_req *tcp_req, *req_tmp;
-
-	assert(TAILQ_EMPTY(&tqpair->send_queue));
 
 	nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST);
 	nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_NEW);
@@ -773,8 +769,6 @@ _pdu_write_done(void *_pdu, int err)
 	struct nvme_tcp_pdu			*pdu = _pdu;
 	struct spdk_nvmf_tcp_qpair		*tqpair = pdu->qpair;
 
-	TAILQ_REMOVE(&tqpair->send_queue, pdu, tailq);
-
 	if (err != 0) {
 		nvmf_tcp_qpair_disconnect(tqpair);
 		return;
@@ -819,7 +813,6 @@ nvmf_tcp_qpair_write_pdu(struct spdk_nvmf_tcp_qpair *tqpair,
 			       &mapped_length);
 	pdu->sock_req.cb_fn = _pdu_write_done;
 	pdu->sock_req.cb_arg = pdu;
-	TAILQ_INSERT_TAIL(&tqpair->send_queue, pdu, tailq);
 	if (pdu->hdr.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_IC_RESP ||
 	    pdu->hdr.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_C2H_TERM_REQ) {
 		rc = spdk_sock_writev(tqpair->sock, pdu->iov, pdu->sock_req.iovcnt);
@@ -915,8 +908,6 @@ nvmf_tcp_qpair_init(struct spdk_nvmf_qpair *qpair)
 	tqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_tcp_qpair, qpair);
 
 	SPDK_DEBUGLOG(nvmf_tcp, "New TCP Connection: %p\n", qpair);
-
-	TAILQ_INIT(&tqpair->send_queue);
 
 	/* Initialise request state queues of the qpair */
 	for (i = TCP_REQUEST_STATE_FREE; i < TCP_REQUEST_NUM_STATES; i++) {

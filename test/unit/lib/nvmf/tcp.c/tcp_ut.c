@@ -527,7 +527,6 @@ test_nvmf_tcp_send_c2h_data(void)
 	tcp_req.req.length = 300;
 
 	tqpair.qpair.transport = &ttransport.transport;
-	TAILQ_INIT(&tqpair.send_queue);
 
 	/* Set qpair state to make unrelated operations NOP */
 	tqpair.state = NVME_TCP_QPAIR_STATE_RUNNING;
@@ -545,9 +544,6 @@ test_nvmf_tcp_send_c2h_data(void)
 	tcp_req.req.length = 300;
 
 	nvmf_tcp_send_c2h_data(&tqpair, &tcp_req);
-
-	CU_ASSERT(TAILQ_FIRST(&tqpair.send_queue) == &pdu);
-	TAILQ_REMOVE(&tqpair.send_queue, &pdu, tailq);
 
 	c2h_data = &pdu.hdr.c2h_data;
 	CU_ASSERT(c2h_data->datao == 0);
@@ -658,8 +654,6 @@ test_nvmf_tcp_incapsule_data_handle(void)
 	for (i = TCP_REQUEST_STATE_FREE; i < TCP_REQUEST_NUM_STATES; i++) {
 		TAILQ_INIT(&tqpair.state_queue[i]);
 	}
-
-	TAILQ_INIT(&tqpair.send_queue);
 
 	TAILQ_INSERT_TAIL(&tqpair.state_queue[TCP_REQUEST_STATE_FREE], &tcp_req2, state_link);
 	tqpair.state_cntr[TCP_REQUEST_STATE_FREE]++;
