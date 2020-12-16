@@ -2936,7 +2936,10 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	union spdk_nvme_cc_register cc;
 	union spdk_nvme_csts_register csts;
 	uint32_t ready_timeout_in_ms;
+	uint64_t ticks;
 	int rc = 0;
+
+	ticks = spdk_get_ticks();
 
 	/*
 	 * May need to avoid accessing any register on the target controller
@@ -2944,7 +2947,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	 * Check sleep_timeout_tsc > 0 for unit test.
 	 */
 	if ((ctrlr->sleep_timeout_tsc > 0) &&
-	    (spdk_get_ticks() <= ctrlr->sleep_timeout_tsc)) {
+	    (ticks <= ctrlr->sleep_timeout_tsc)) {
 		return 0;
 	}
 	ctrlr->sleep_timeout_tsc = 0;
@@ -2980,7 +2983,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 			 * - directly after a VFIO reset.
 			 */
 			SPDK_DEBUGLOG(nvme, "Adding 2 second delay before initializing the controller\n");
-			ctrlr->sleep_timeout_tsc = spdk_get_ticks() + (2000 * spdk_get_ticks_hz() / 1000);
+			ctrlr->sleep_timeout_tsc = ticks + (2000 * spdk_get_ticks_hz() / 1000);
 		}
 		break;
 
@@ -3015,7 +3018,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 			 */
 			if (ctrlr->quirks & NVME_QUIRK_DELAY_BEFORE_CHK_RDY) {
 				SPDK_DEBUGLOG(nvme, "Applying quirk: delay 2.5 seconds before reading registers\n");
-				ctrlr->sleep_timeout_tsc = spdk_get_ticks() + (2500 * spdk_get_ticks_hz() / 1000);
+				ctrlr->sleep_timeout_tsc = ticks + (2500 * spdk_get_ticks_hz() / 1000);
 			}
 			return 0;
 		} else {
@@ -3177,8 +3180,14 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 init_timeout:
+	/* Note: we use the ticks captured when we entered this function.
+	 * This covers environments where the SPDK process gets swapped out after
+	 * we tried to advance the state but before we check the timeout here.
+	 * It is not normal for this to happen, but harmless to handle it in this
+	 * way.
+	 */
 	if (ctrlr->state_timeout_tsc != NVME_TIMEOUT_INFINITE &&
-	    spdk_get_ticks() > ctrlr->state_timeout_tsc) {
+	    ticks > ctrlr->state_timeout_tsc) {
 		SPDK_ERRLOG("Initialization timed out in state %d\n", ctrlr->state);
 		return -1;
 	}
