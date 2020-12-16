@@ -115,6 +115,7 @@ static bool g_warn;
 static uint32_t g_keep_alive_timeout_in_ms = 0;
 static uint8_t g_transport_retry_count = 4;
 static uint8_t g_transport_ack_timeout = 0; /* disabled */
+static bool g_dpdk_mem_single_seg = false;
 
 static const char *g_core_mask;
 
@@ -684,7 +685,7 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:m:o:q:r:k:s:t:w:A:GM:R:T:")) != -1) {
+	while ((op = getopt(argc, argv, "c:gm:o:q:r:k:s:t:w:A:GM:R:T:")) != -1) {
 		switch (op) {
 		case 'm':
 		case 'o':
@@ -733,6 +734,9 @@ parse_args(int argc, char **argv)
 			break;
 		case 'c':
 			g_core_mask = optarg;
+			break;
+		case 'g':
+			g_dpdk_mem_single_seg = true;
 			break;
 		case 'r':
 			if (add_trid(optarg)) {
@@ -1085,6 +1089,7 @@ int main(int argc, char **argv)
 	if (g_dpdk_mem) {
 		opts.mem_size = g_dpdk_mem;
 	}
+	opts.hugepage_single_segments = g_dpdk_mem_single_seg;
 	if (spdk_env_init(&opts) < 0) {
 		fprintf(stderr, "Unable to initialize SPDK env\n");
 		rc = 1;
