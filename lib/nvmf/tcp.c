@@ -966,7 +966,6 @@ nvmf_tcp_handle_connect(struct spdk_nvmf_transport *transport,
 	tqpair->state_cntr[TCP_REQUEST_STATE_FREE] = 0;
 	tqpair->port = port;
 	tqpair->qpair.transport = transport;
-	tqpair->qpair.trid = port->trid;
 
 	rc = spdk_sock_getaddr(tqpair->sock, tqpair->target_addr,
 			       sizeof(tqpair->target_addr), &tqpair->target_port,

@@ -119,7 +119,6 @@ struct spdk_nvmf_qpair {
 	struct spdk_nvmf_transport		*transport;
 	struct spdk_nvmf_ctrlr			*ctrlr;
 	struct spdk_nvmf_poll_group		*group;
-	const struct spdk_nvme_transport_id	*trid;
 
 	uint16_t				qid;
 	uint16_t				sq_head;
