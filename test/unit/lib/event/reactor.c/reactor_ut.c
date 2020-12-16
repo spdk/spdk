@@ -560,6 +560,9 @@ test_scheduler(void)
 		spdk_poller_unregister(&busy);
 	}
 
+	reactor->busy_tsc = 0;
+	reactor->idle_tsc = UINT32_MAX;
+
 	/* Run scheduler again, this time all threads are busy */
 	_reactors_scheduler_gather_metrics(NULL, NULL);
 

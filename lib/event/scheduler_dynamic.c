@@ -161,6 +161,11 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 					target_lcore = g_next_lcore;
 					g_next_lcore = spdk_env_get_next_core(g_next_lcore);
 
+					/* Do not use main core if it is too busy for new thread */
+					if (target_lcore == g_main_lcore && thread_busy > main_core_idle) {
+						continue;
+					}
+
 					if (spdk_cpuset_get_cpu(cpumask, target_lcore)) {
 						lw_thread->new_lcore = target_lcore;
 
