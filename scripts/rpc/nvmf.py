@@ -277,7 +277,7 @@ def nvmf_subsystem_add_listener(client, nqn, trtype, traddr, trsvcid, adrfam, tg
         nqn: Subsystem NQN.
         trtype: Transport type ("RDMA").
         traddr: Transport address.
-        trsvcid: Transport service ID.
+        trsvcid: Transport service ID (required for RDMA or TCP).
         tgt_name: name of the parent NVMe-oF target (optional).
         adrfam: Address family ("IPv4", "IPv6", "IB", or "FC").
 
@@ -285,8 +285,10 @@ def nvmf_subsystem_add_listener(client, nqn, trtype, traddr, trsvcid, adrfam, tg
         True or False
     """
     listen_address = {'trtype': trtype,
-                      'traddr': traddr,
-                      'trsvcid': trsvcid}
+                      'traddr': traddr}
+
+    if trsvcid:
+        listen_address['trsvcid'] = trsvcid
 
     if adrfam:
         listen_address['adrfam'] = adrfam

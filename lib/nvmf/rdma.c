@@ -2654,6 +2654,11 @@ nvmf_rdma_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_t
 	int				family;
 	int				rc;
 
+	if (!strlen(trid->trsvcid)) {
+		SPDK_ERRLOG("Service id is required\n");
+		return -EINVAL;
+	}
+
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
 	assert(rtransport->event_channel != NULL);
 

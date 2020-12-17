@@ -554,7 +554,7 @@ static const struct spdk_json_object_decoder rpc_listen_address_decoders[] = {
 	{"trtype", offsetof(struct rpc_listen_address, transport), spdk_json_decode_string, true},
 	{"adrfam", offsetof(struct rpc_listen_address, adrfam), spdk_json_decode_string, true},
 	{"traddr", offsetof(struct rpc_listen_address, traddr), spdk_json_decode_string},
-	{"trsvcid", offsetof(struct rpc_listen_address, trsvcid), spdk_json_decode_string},
+	{"trsvcid", offsetof(struct rpc_listen_address, trsvcid), spdk_json_decode_string, true},
 };
 
 static int
@@ -787,13 +787,16 @@ rpc_listen_address_to_trid(const struct rpc_listen_address *address,
 	}
 	memcpy(trid->traddr, address->traddr, len + 1);
 
-	len = strlen(address->trsvcid);
-	if (len > sizeof(trid->trsvcid) - 1) {
-		SPDK_ERRLOG("Transport service id longer than %zu characters: %s\n",
-			    sizeof(trid->trsvcid) - 1, address->trsvcid);
-		return -EINVAL;
+	trid->trsvcid[0] = '\0';
+	if (address->trsvcid) {
+		len = strlen(address->trsvcid);
+		if (len > sizeof(trid->trsvcid) - 1) {
+			SPDK_ERRLOG("Transport service id longer than %zu characters: %s\n",
+				    sizeof(trid->trsvcid) - 1, address->trsvcid);
+			return -EINVAL;
+		}
+		memcpy(trid->trsvcid, address->trsvcid, len + 1);
 	}
-	memcpy(trid->trsvcid, address->trsvcid, len + 1);
 
 	return 0;
 }

@@ -5131,7 +5131,7 @@ Name                    | Optional | Type        | Description
 trtype                  | Required | string      | Transport type ("RDMA")
 adrfam                  | Required | string      | Address family ("IPv4", "IPv6", "IB", or "FC")
 traddr                  | Required | string      | Transport address
-trsvcid                 | Required | string      | Transport service ID
+trsvcid                 | Optional | string      | Transport service ID (required for RDMA or TCP)
 
 ### Example
 
