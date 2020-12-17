@@ -148,22 +148,10 @@ nvme_bdev_unregister_cb(void *io_device)
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 }
 
-int
-nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
+void
+nvme_bdev_ctrlr_do_destruct(void *ctx)
 {
-	assert(nvme_bdev_ctrlr->destruct);
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
-
-	spdk_poller_unregister(&nvme_bdev_ctrlr->destruct_poller);
-
-	if (nvme_bdev_ctrlr->resetting) {
-		nvme_bdev_ctrlr->destruct_poller =
-			SPDK_POLLER_REGISTER((spdk_poller_fn)nvme_bdev_ctrlr_destruct,
-					     nvme_bdev_ctrlr, 1000);
-		pthread_mutex_unlock(&g_bdev_nvme_mutex);
-		return SPDK_POLLER_BUSY;
-	}
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = ctx;
 
 	if (nvme_bdev_ctrlr->opal_dev) {
 		spdk_opal_dev_destruct(nvme_bdev_ctrlr->opal_dev);
@@ -175,7 +163,21 @@ nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 	}
 
 	spdk_io_device_unregister(nvme_bdev_ctrlr, nvme_bdev_unregister_cb);
-	return SPDK_POLLER_BUSY;
+}
+
+void
+nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
+{
+	assert(nvme_bdev_ctrlr->destruct);
+
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	if (nvme_bdev_ctrlr->resetting) {
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+		return;
+	}
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+
+	nvme_bdev_ctrlr_do_destruct(nvme_bdev_ctrlr);
 }
 
 void

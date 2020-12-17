@@ -101,7 +101,6 @@ struct nvme_bdev_ctrlr {
 	struct spdk_opal_dev			*opal_dev;
 
 	struct spdk_poller			*adminq_timer_poller;
-	struct spdk_poller			*destruct_poller;
 	struct spdk_thread			*thread;
 
 	struct ocssd_bdev_ctrlr			*ocssd_ctrlr;
@@ -165,7 +164,8 @@ struct nvme_bdev_ctrlr *nvme_bdev_next_ctrlr(struct nvme_bdev_ctrlr *prev);
 void nvme_bdev_dump_trid_json(const struct spdk_nvme_transport_id *trid,
 			      struct spdk_json_write_ctx *w);
 
-int nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
+void nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
+void nvme_bdev_ctrlr_do_destruct(void *ctx);
 void nvme_bdev_attach_bdev_to_ns(struct nvme_bdev_ns *nvme_ns, struct nvme_bdev *nvme_disk);
 void nvme_bdev_detach_bdev_from_ns(struct nvme_bdev *nvme_disk);
 

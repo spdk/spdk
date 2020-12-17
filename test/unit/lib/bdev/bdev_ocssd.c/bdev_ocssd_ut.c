@@ -545,6 +545,7 @@ delete_nvme_bdev_controller(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 	CU_ASSERT(nvme_bdev_ctrlr->ref == 1);
 	nvme_bdev_ctrlr->ref--;
 	nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
+	spdk_delay_us(1000);
 
 	while (spdk_thread_poll(g_thread, 0, 0) > 0) {}
 
