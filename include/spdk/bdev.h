@@ -187,9 +187,22 @@ struct spdk_bdev_opts {
 	uint32_t bdev_io_pool_size;
 	uint32_t bdev_io_cache_size;
 	bool bdev_auto_examine;
+	/**
+	 * The size of spdk_bdev_opts according to the caller of this library is used for ABI
+	 * compatibility.  The library uses this field to know how many fields in this
+	 * structure are valid. And the library will populate any remaining fields with default values.
+	 * New added fields should be put at the end of the struct.
+	 */
+	size_t opts_size;
 };
 
-void spdk_bdev_get_opts(struct spdk_bdev_opts *opts);
+/**
+ * Get the options for the bdev module.
+ *
+ * \param opts Output parameter for options.
+ * \param opts_size sizeof(*opts)
+ */
+void spdk_bdev_get_opts(struct spdk_bdev_opts *opts, size_t opts_size);
 
 int spdk_bdev_set_opts(struct spdk_bdev_opts *opts);
 

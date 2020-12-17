@@ -75,7 +75,7 @@ rpc_bdev_set_options(struct spdk_jsonrpc_request *request, const struct spdk_jso
 		}
 	}
 
-	spdk_bdev_get_opts(&bdev_opts);
+	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
 	if (rpc_opts.bdev_io_pool_size != UINT32_MAX) {
 		bdev_opts.bdev_io_pool_size = rpc_opts.bdev_io_pool_size;
 	}

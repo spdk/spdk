@@ -371,15 +371,50 @@ static bool bdev_abort_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_io *bi
 static bool bdev_abort_buf_io(bdev_io_stailq_t *queue, struct spdk_bdev_io *bio_to_abort);
 
 void
-spdk_bdev_get_opts(struct spdk_bdev_opts *opts)
+spdk_bdev_get_opts(struct spdk_bdev_opts *opts, size_t opts_size)
 {
-	*opts = g_bdev_opts;
+	if (!opts) {
+		SPDK_ERRLOG("opts should not be NULL\n");
+		return;
+	}
+
+	if (!opts_size) {
+		SPDK_ERRLOG("opts_size should not be zero value\n");
+		return;
+	}
+
+	opts->opts_size = opts_size;
+
+#define SET_FIELD(field) \
+	if (offsetof(struct spdk_bdev_opts, field) + sizeof(opts->field) <= opts_size) { \
+		opts->field = g_bdev_opts.field; \
+	} \
+
+	SET_FIELD(bdev_io_pool_size);
+	SET_FIELD(bdev_io_cache_size);
+	SET_FIELD(bdev_auto_examine);
+
+	/* Do not remove this statement, you should always update this statement when you adding a new field,
+	 * and do not forget to add the SET_FIELD statement for your added field. */
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_opts) == 24, "Incorrect size");
+
+#undef SET_FIELD
 }
 
 int
 spdk_bdev_set_opts(struct spdk_bdev_opts *opts)
 {
 	uint32_t min_pool_size;
+
+	if (!opts) {
+		SPDK_ERRLOG("opts cannot be NULL\n");
+		return -1;
+	}
+
+	if (!opts->opts_size) {
+		SPDK_ERRLOG("opts_size inside opts cannot be zero value\n");
+		return -1;
+	}
 
 	/*
 	 * Add 1 to the thread count to account for the extra mgmt_ch that gets created during subsystem
@@ -395,7 +430,19 @@ spdk_bdev_set_opts(struct spdk_bdev_opts *opts)
 		return -1;
 	}
 
-	g_bdev_opts = *opts;
+#define SET_FIELD(field) \
+        if (offsetof(struct spdk_bdev_opts, field) + sizeof(opts->field) <= opts->opts_size) { \
+                g_bdev_opts.field = opts->field; \
+        } \
+
+	SET_FIELD(bdev_io_pool_size);
+	SET_FIELD(bdev_io_cache_size);
+	SET_FIELD(bdev_auto_examine);
+
+	g_bdev_opts.opts_size = opts->opts_size;
+
+#undef SET_FIELD
+
 	return 0;
 }
 
