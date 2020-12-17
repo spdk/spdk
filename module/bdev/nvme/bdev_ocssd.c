@@ -924,7 +924,7 @@ bdev_ocssd_free_namespace(struct nvme_bdev_ns *nvme_ns)
 	free(nvme_ns->type_ctx);
 	nvme_ns->type_ctx = NULL;
 
-	nvme_ctrlr_depopulate_namespace_done(nvme_ns->ctrlr);
+	nvme_ctrlr_depopulate_namespace_done(nvme_ns);
 }
 
 static void
