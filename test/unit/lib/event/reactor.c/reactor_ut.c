@@ -609,6 +609,236 @@ test_scheduler(void)
 	free_cores();
 }
 
+uint8_t g_curr_freq;
+
+static int
+core_freq_up(uint32_t lcore)
+{
+	if (g_curr_freq != UINT8_MAX) {
+		g_curr_freq++;
+	}
+
+	return 0;
+}
+
+static int
+core_freq_down(uint32_t lcore)
+{
+	if (g_curr_freq != 0) {
+		g_curr_freq--;
+	}
+
+	return 0;
+}
+
+static int
+core_freq_max(uint32_t lcore)
+{
+	g_curr_freq = UINT8_MAX;
+
+	return 0;
+}
+
+static struct spdk_governor governor = {
+	.name = "dpdk_governor",
+	.get_core_freqs = NULL,
+	.get_core_curr_freq = NULL,
+	.set_core_freq = NULL,
+	.core_freq_up = core_freq_up,
+	.core_freq_down = core_freq_down,
+	.set_core_freq_max = core_freq_max,
+	.set_core_freq_min = NULL,
+	.get_core_turbo_status = NULL,
+	.enable_core_turbo = NULL,
+	.disable_core_turbo = NULL,
+	.get_core_capabilities = NULL,
+	.init_core = NULL,
+	.deinit_core = NULL,
+	.init = NULL,
+	.deinit = NULL,
+};
+
+static void
+test_governor(void)
+{
+	struct spdk_cpuset cpuset = {};
+	struct spdk_thread *thread[2];
+	struct spdk_lw_thread *lw_thread;
+	struct spdk_reactor *reactor;
+	struct spdk_poller *busy, *idle;
+	uint8_t last_freq = 100;
+	int i;
+
+	MOCK_SET(spdk_env_get_current_core, 0);
+
+	g_curr_freq = last_freq;
+	_spdk_governor_list_add(&governor);
+
+	allocate_cores(2);
+
+	CU_ASSERT(spdk_reactors_init() == 0);
+
+	_spdk_scheduler_set("dynamic");
+
+	for (i = 0; i < 2; i++) {
+		spdk_cpuset_set_cpu(&g_reactor_core_mask, i, true);
+	}
+
+	/* Create threads. */
+	for (i = 0; i < 2; i++) {
+		spdk_cpuset_set_cpu(&cpuset, i, true);
+		thread[i] = spdk_thread_create(NULL, &cpuset);
+		CU_ASSERT(thread[i] != NULL);
+	}
+
+	for (i = 0; i < 2; i++) {
+		reactor = spdk_reactor_get(i);
+		CU_ASSERT(reactor != NULL);
+		MOCK_SET(spdk_env_get_current_core, i);
+		CU_ASSERT(event_queue_run_batch(reactor) == 1);
+		CU_ASSERT(!TAILQ_EMPTY(&reactor->threads));
+	}
+
+	reactor = spdk_reactor_get(0);
+	CU_ASSERT(reactor != NULL);
+	MOCK_SET(spdk_env_get_current_core, 0);
+
+	g_reactor_state = SPDK_REACTOR_STATE_RUNNING;
+
+	/* TEST 1 */
+	/* Init thread stats (low load) */
+	MOCK_SET(spdk_get_ticks, 100);
+	reactor->tsc_last = 100;
+
+	for (i = 0; i < 2; i++) {
+		spdk_set_thread(thread[i]);
+		idle = spdk_poller_register(poller_run_idle, (void *)200, 0);
+		reactor = spdk_reactor_get(i);
+		CU_ASSERT(reactor != NULL);
+		MOCK_SET(spdk_env_get_current_core, i);
+		_reactor_run(reactor);
+		spdk_poller_unregister(&idle);
+
+		/* Update last stats so that we don't have to call scheduler twice */
+		lw_thread = spdk_thread_get_ctx(thread[i]);
+		lw_thread->last_stats.idle_tsc = 1;
+	}
+
+	reactor = spdk_reactor_get(0);
+	CU_ASSERT(reactor != NULL);
+	MOCK_SET(spdk_env_get_current_core, 0);
+
+	_reactors_scheduler_gather_metrics(NULL, NULL);
+
+	/* Gather metrics for cores */
+	reactor = spdk_reactor_get(1);
+	CU_ASSERT(reactor != NULL);
+	MOCK_SET(spdk_env_get_current_core, 1);
+	CU_ASSERT(event_queue_run_batch(reactor) == 1);
+	reactor = spdk_reactor_get(0);
+	CU_ASSERT(reactor != NULL);
+	MOCK_SET(spdk_env_get_current_core, 0);
+	CU_ASSERT(event_queue_run_batch(reactor) == 1);
+
+	/* Threads were idle, so all of them should be placed on core 0 */
+	for (i = 0; i < 2; i++) {
+		reactor = spdk_reactor_get(i);
+		CU_ASSERT(reactor != NULL);
+		_reactor_run(reactor);
+	}
+
+	/* 1 thread should be scheduled to core 0 */
+	reactor = spdk_reactor_get(0);
+	CU_ASSERT(reactor != NULL);
+	MOCK_SET(spdk_env_get_current_core, 0);
+	CU_ASSERT(event_queue_run_batch(reactor) == 1);
+
+	/* Main core should be busy less than 50% time now - frequency should be lowered */
+	CU_ASSERT(g_curr_freq == last_freq - 1);
+
+	last_freq = g_curr_freq;
+
+	/* TEST 2 */
+	/* Make first threads busy - both threads will be still on core 0, but frequency will have to be raised */
+	spdk_set_thread(thread[0]);
+	busy = spdk_poller_register(poller_run_busy, (void *)1000, 0);
+	_reactor_run(reactor);
+	spdk_poller_unregister(&busy);
+
+	spdk_set_thread(thread[1]);
+	idle = spdk_poller_register(poller_run_idle, (void *)100, 0);
+	_reactor_run(reactor);
+	spdk_poller_unregister(&idle);
+
+	/* Run scheduler again */
+	_reactors_scheduler_gather_metrics(NULL, NULL);
+
+	/* Gather metrics */
+	reactor = spdk_reactor_get(1);
+	CU_ASSERT(reactor != NULL);
+	MOCK_SET(spdk_env_get_current_core, 1);
+	CU_ASSERT(event_queue_run_batch(reactor) == 1);
+	reactor = spdk_reactor_get(0);
+	CU_ASSERT(reactor != NULL);
+	MOCK_SET(spdk_env_get_current_core, 0);
+	CU_ASSERT(event_queue_run_batch(reactor) == 1);
+
+	/* Main core should be busy more than 50% time now - frequency should be raised */
+	CU_ASSERT(g_curr_freq == last_freq + 1);
+
+	/* TEST 3 */
+	/* Make second thread very busy so that it will be moved to second core */
+	spdk_set_thread(thread[1]);
+	busy = spdk_poller_register(poller_run_busy, (void *)1000, 0);
+	_reactor_run(reactor);
+	spdk_poller_unregister(&busy);
+
+	/* Update first thread stats */
+	spdk_set_thread(thread[0]);
+	idle = spdk_poller_register(poller_run_idle, (void *)100, 0);
+	_reactor_run(reactor);
+	spdk_poller_unregister(&idle);
+
+	/* Run scheduler again */
+	_reactors_scheduler_gather_metrics(NULL, NULL);
+
+	/* Gather metrics */
+	reactor = spdk_reactor_get(1);
+	CU_ASSERT(reactor != NULL);
+	MOCK_SET(spdk_env_get_current_core, 1);
+	CU_ASSERT(event_queue_run_batch(reactor) == 1);
+	reactor = spdk_reactor_get(0);
+	CU_ASSERT(reactor != NULL);
+	MOCK_SET(spdk_env_get_current_core, 0);
+	CU_ASSERT(event_queue_run_batch(reactor) == 1);
+
+	for (i = 0; i < 2; i++) {
+		reactor = spdk_reactor_get(i);
+		CU_ASSERT(reactor != NULL);
+		_reactor_run(reactor);
+	}
+
+	/* Main core frequency should be set to max when we have busy threads on other cores */
+	CU_ASSERT(g_curr_freq == UINT8_MAX);
+
+	g_reactor_state = SPDK_REACTOR_STATE_INITIALIZED;
+
+	/* Destroy threads */
+	for (i = 0; i < 2; i++) {
+		reactor = spdk_reactor_get(i);
+		CU_ASSERT(reactor != NULL);
+		reactor_run(reactor);
+	}
+
+	spdk_set_thread(NULL);
+
+	MOCK_CLEAR(spdk_env_get_current_core);
+
+	spdk_reactors_fini();
+
+	free_cores();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -628,6 +858,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_for_each_reactor);
 	CU_ADD_TEST(suite, test_reactor_stats);
 	CU_ADD_TEST(suite, test_scheduler);
+	CU_ADD_TEST(suite, test_governor);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
