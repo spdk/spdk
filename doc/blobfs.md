@@ -37,7 +37,7 @@ export USE_RTTI=1 && make db_bench DEBUG_LEVEL=0 SPDK_DIR=path/to/spdk
 Create an NVMe section in the configuration file using SPDK's `gen_nvme.sh` script.
 
 ~~~{.sh}
-scripts/gen_nvme.sh > /usr/local/etc/spdk/rocksdb.json
+scripts/gen_nvme.sh --json-with-subsystems > /usr/local/etc/spdk/rocksdb.json
 ~~~
 
 Verify the configuration file has specified the correct NVMe SSD.
