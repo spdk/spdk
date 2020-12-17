@@ -261,6 +261,7 @@ rpc_get_poller(struct spdk_poller *poller, struct spdk_json_write_ctx *w)
 
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "name", spdk_poller_get_name(poller));
+	spdk_json_write_named_uint64(w, "id", spdk_poller_get_id(poller));
 	spdk_json_write_named_string(w, "state", spdk_poller_get_state_str(poller));
 	spdk_json_write_named_uint64(w, "run_count", stats.run_count);
 	spdk_json_write_named_uint64(w, "busy_count", stats.busy_count);

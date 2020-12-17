@@ -91,6 +91,7 @@ struct spdk_poller {
 	uint64_t			next_run_tick;
 	uint64_t			run_count;
 	uint64_t			busy_count;
+	uint64_t			id;
 	spdk_poller_fn			fn;
 	void				*arg;
 	struct spdk_thread		*thread;
@@ -142,6 +143,7 @@ struct spdk_thread {
 	size_t				msg_cache_count;
 	spdk_msg_fn			critical_msg;
 	uint64_t			id;
+	uint64_t			next_poller_id;
 	enum spdk_thread_state		state;
 	int				pending_unregister_count;
 
@@ -437,6 +439,11 @@ spdk_thread_create(const char *name, struct spdk_cpuset *cpumask)
 	thread->msg_cache_count = 0;
 
 	thread->tsc_last = spdk_get_ticks();
+
+	/* Monotonic increasing ID is set to each created poller beginning at 1. Once the
+	 * ID exceeds UINT64_MAX a warning message is logged
+	 */
+	thread->next_poller_id = 1;
 
 	thread->messages = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536, SPDK_ENV_SOCKET_ID_ANY);
 	if (!thread->messages) {
@@ -1518,6 +1525,11 @@ poller_register(spdk_poller_fn fn,
 	poller->arg = arg;
 	poller->thread = thread;
 	poller->interruptfd = -1;
+	if (thread->next_poller_id == 0) {
+		SPDK_WARNLOG("Poller ID rolled over. Poller ID is duplicated.\n");
+		thread->next_poller_id = 1;
+	}
+	poller->id = thread->next_poller_id++;
 
 	poller->period_ticks = convert_us_to_ticks(period_microseconds);
 
@@ -1710,6 +1722,12 @@ const char *
 spdk_poller_get_name(struct spdk_poller *poller)
 {
 	return poller->name;
+}
+
+uint64_t
+spdk_poller_get_id(struct spdk_poller *poller)
+{
+	return poller->id;
 }
 
 const char *

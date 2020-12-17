@@ -1310,6 +1310,7 @@ Example response:
         "timed_pollers": [
           {
             "name": "spdk_rpc_subsystem_poll",
+            "id": 1,
             "state": "waiting",
             "run_count": 12345,
             "busy_count": 10000,

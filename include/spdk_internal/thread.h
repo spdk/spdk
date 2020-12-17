@@ -48,6 +48,7 @@ struct io_device;
 struct spdk_thread;
 
 const char *spdk_poller_get_name(struct spdk_poller *poller);
+uint64_t spdk_poller_get_id(struct spdk_poller *poller);
 const char *spdk_poller_get_state_str(struct spdk_poller *poller);
 uint64_t spdk_poller_get_period_ticks(struct spdk_poller *poller);
 void spdk_poller_get_stats(struct spdk_poller *poller, struct spdk_poller_stats *stats);

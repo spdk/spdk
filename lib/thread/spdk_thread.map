@@ -58,6 +58,7 @@
 
 	# internal functions in spdk_internal/thread.h
 	spdk_poller_get_name;
+	spdk_poller_get_id;
 	spdk_poller_get_state_str;
 	spdk_poller_get_period_ticks;
 	spdk_poller_get_stats;
