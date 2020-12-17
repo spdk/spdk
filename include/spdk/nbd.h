@@ -45,6 +45,7 @@ extern "C" {
 struct spdk_bdev;
 struct spdk_nbd_disk;
 struct spdk_json_write_ctx;
+typedef void (*spdk_nbd_fini_cb)(void *arg);
 
 /**
  * Initialize the network block device layer.
@@ -55,8 +56,11 @@ int spdk_nbd_init(void);
 
 /**
  * Stop and close all the running network block devices.
+ *
+ * \param cb_fn Callback to be always called.
+ * \param cb_arg Passed to cb_fn.
  */
-void spdk_nbd_fini(void);
+void spdk_nbd_fini(spdk_nbd_fini_cb cb_fn, void *cb_arg);
 
 /**
  * Called when an NBD device has been started.
@@ -80,8 +84,10 @@ void spdk_nbd_start(const char *bdev_name, const char *nbd_path,
  * Stop the running network block device safely.
  *
  * \param nbd A pointer to the network block device to stop.
+ *
+ * \return 0 on success.
  */
-void spdk_nbd_stop(struct spdk_nbd_disk *nbd);
+int spdk_nbd_stop(struct spdk_nbd_disk *nbd);
 
 /**
  * Get the local filesystem path used for the network block device.

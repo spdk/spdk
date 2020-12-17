@@ -120,6 +120,8 @@ struct spdk_nbd_disk_globals {
 };
 
 static struct spdk_nbd_disk_globals g_spdk_nbd;
+static spdk_nbd_fini_cb g_fini_cb_fn;
+static void *g_fini_cb_arg;
 
 static int
 nbd_submit_bdev_io(struct spdk_nbd_disk *nbd, struct nbd_io *io);
@@ -132,10 +134,11 @@ spdk_nbd_init(void)
 	return 0;
 }
 
-void
-spdk_nbd_fini(void)
+static void
+_nbd_fini(void *arg1)
 {
 	struct spdk_nbd_disk *nbd_idx, *nbd_tmp;
+	int rc = 0;
 
 	/*
 	 * Stop running spdk_nbd_disk.
@@ -144,8 +147,26 @@ spdk_nbd_fini(void)
 	 * remove nbd from TAILQ.
 	 */
 	TAILQ_FOREACH_SAFE(nbd_idx, &g_spdk_nbd.disk_head, tailq, nbd_tmp) {
-		spdk_nbd_stop(nbd_idx);
+		rc = spdk_nbd_stop(nbd_idx);
+		if (rc) {
+			break;
+		}
 	}
+
+	if (!rc) {
+		g_fini_cb_fn(g_fini_cb_arg);
+	} else {
+		spdk_thread_send_msg(spdk_get_thread(), _nbd_fini, NULL);
+	}
+}
+
+void
+spdk_nbd_fini(spdk_nbd_fini_cb cb_fn, void *cb_arg)
+{
+	g_fini_cb_fn = cb_fn;
+	g_fini_cb_arg = cb_arg;
+
+	_nbd_fini(NULL);
 }
 
 static int
@@ -388,11 +409,13 @@ _nbd_stop(struct spdk_nbd_disk *nbd)
 	free(nbd);
 }
 
-void
+int
 spdk_nbd_stop(struct spdk_nbd_disk *nbd)
 {
+	int rc = 0;
+
 	if (nbd == NULL) {
-		return;
+		return rc;
 	}
 
 	nbd->state = NBD_DISK_STATE_HARDDISC;
@@ -400,9 +423,13 @@ spdk_nbd_stop(struct spdk_nbd_disk *nbd)
 	/*
 	 * Stop action should be called only after all nbd_io are executed.
 	 */
-	if (!nbd_cleanup_io(nbd)) {
+
+	rc = nbd_cleanup_io(nbd);
+	if (!rc) {
 		_nbd_stop(nbd);
 	}
+
+	return rc;
 }
 
 static int64_t

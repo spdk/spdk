@@ -29,6 +29,11 @@ An `opts_size`element was added in the `spdk_app_opts` structure
 to solve the ABI compatiblity issue between different SPDK version. An `opts_size`
 parameter is added into `spdk_app_opts_init` function.
 
+### nbd
+
+Change the return type of function `spdk_nbd_stop` from void to int. And update the
+`spdk_nbd_fini` with two parameters to make its behavior from sync to async.
+
 ### nvmf
 
 Broadcom FC LLD driver and SPDK NVMe-oF FC transport consolidated one LLD API,

@@ -48,10 +48,15 @@ nbd_subsystem_init(void)
 }
 
 static void
+nbd_subsystem_fini_done(void *arg)
+{
+	spdk_subsystem_fini_next();
+}
+
+static void
 nbd_subsystem_fini(void)
 {
-	spdk_nbd_fini();
-	spdk_subsystem_fini_next();
+	spdk_nbd_fini(nbd_subsystem_fini_done, NULL);
 }
 
 static void
