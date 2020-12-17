@@ -77,7 +77,7 @@ DEFINE_STUB(spdk_nvme_ctrlr_get_regs_csts,
 	    (struct spdk_nvme_ctrlr *ctrlr),
 	    {});
 
-DEFINE_STUB(nvme_uevent_connect, int, (void), 1);
+DEFINE_STUB(spdk_pci_event_listen, int, (void), 1);
 
 DEFINE_STUB(nvme_transport_ctrlr_destruct,
 	    int,

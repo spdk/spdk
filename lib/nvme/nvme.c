@@ -33,9 +33,9 @@
 
 #include "spdk/nvmf_spec.h"
 #include "spdk/string.h"
+#include "spdk/env.h"
 #include "nvme_internal.h"
 #include "nvme_io_msg.h"
-#include "nvme_uevent.h"
 
 #define SPDK_NVME_DRIVER_NAME "spdk_nvme_driver"
 
@@ -620,7 +620,7 @@ nvme_driver_init(void)
 	nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 
 	g_spdk_nvme_driver->initialized = false;
-	g_spdk_nvme_driver->hotplug_fd = nvme_uevent_connect();
+	g_spdk_nvme_driver->hotplug_fd = spdk_pci_event_listen();
 	if (g_spdk_nvme_driver->hotplug_fd < 0) {
 		SPDK_DEBUGLOG(nvme, "Failed to open uevent netlink socket\n");
 	}

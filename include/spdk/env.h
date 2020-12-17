@@ -1333,6 +1333,56 @@ int spdk_mem_reserve(void *vaddr, size_t len);
  */
 int spdk_mem_get_fd_and_offset(void *vaddr, uint64_t *offset);
 
+enum spdk_pci_event_type {
+	SPDK_UEVENT_ADD = 0,
+	SPDK_UEVENT_REMOVE = 1,
+};
+
+struct spdk_pci_event {
+	enum spdk_pci_event_type action;
+	struct spdk_pci_addr traddr;
+};
+
+typedef void (*spdk_pci_error_handler)(siginfo_t *info, void *ctx);
+
+/**
+ * Begin listening for PCI bus events. This is used to detect hot-insert and
+ * hot-remove events. Once the system is listening, events may be retrieved
+ * by calling spdk_pci_get_event() periodically.
+ *
+ * \return negative errno on failure, otherwise,  return a file descriptor
+ * that may be later passed to spdk_pci_get_event().
+ */
+int spdk_pci_event_listen(void);
+
+/**
+ * Get the next PCI bus event.
+ *
+ * \param fd A file descriptor returned by spdk_pci_event_listen()
+ * \param event An event on the PCI bus
+ *
+ * \return Negative errno on failure. 0 for no event. A positive number
+ * when an event has been returned
+ */
+int spdk_pci_get_event(int fd, struct spdk_pci_event *event);
+
+/**
+ * Register a signal handler to handle bus errors on the PCI bus
+ *
+ * \param sighandler Signal bus handler of the PCI bus
+ * \param ctx The arg pass to the registered signal bus handler.
+ *
+ * \return negative errno on failure, otherwise it means successful
+ */
+int spdk_pci_register_error_handler(spdk_pci_error_handler sighandler, void *ctx);
+
+/**
+ * Register a signal handler to handle bus errors on the PCI bus
+ *
+ * \param sighandler Signal bus handler of the PCI bus
+ */
+void spdk_pci_unregister_error_handler(spdk_pci_error_handler sighandler);
+
 #ifdef __cplusplus
 }
 #endif
