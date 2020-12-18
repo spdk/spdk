@@ -1930,7 +1930,7 @@ bdevperf_parse_arg(int ch, char *arg)
 		g_wait_for_tests = true;
 	} else if (ch == 'Z') {
 		g_zcopy = true;
-	} else if (ch == 'A') {
+	} else if (ch == 'X') {
 		g_abort = true;
 	} else if (ch == 'C') {
 		g_multithread_mode = true;
@@ -1997,7 +1997,7 @@ bdevperf_usage(void)
 	printf(" -f                        continue processing I/O even after failures\n");
 	printf(" -Z                        enable using zcopy bdev API for read or write I/O\n");
 	printf(" -z                        start bdevperf, but wait for RPC to start tests\n");
-	printf(" -A                        abort the timeout I/O\n");
+	printf(" -X                        abort timed out I/O\n");
 	printf(" -C                        enable every core to send I/Os to each bdev\n");
 	printf(" -j                        use job config file\n");
 }
@@ -2105,7 +2105,7 @@ main(int argc, char **argv)
 	opts.rpc_addr = NULL;
 	opts.shutdown_cb = spdk_bdevperf_shutdown_cb;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "Zzfq:o:t:w:k:ACM:P:S:T:j:", NULL,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "Zzfq:o:t:w:k:CM:P:S:T:Xj:", NULL,
 				      bdevperf_parse_arg, bdevperf_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;
