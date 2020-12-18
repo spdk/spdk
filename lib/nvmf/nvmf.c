@@ -603,19 +603,12 @@ spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 		     struct spdk_nvme_transport_id *trid)
 {
 	struct spdk_nvmf_transport *transport;
-	const char *trtype;
 	int rc;
 
 	transport = spdk_nvmf_tgt_get_transport(tgt, trid->trstring);
 	if (!transport) {
-		trtype = spdk_nvme_transport_id_trtype_str(trid->trtype);
-		if (trtype != NULL) {
-			SPDK_ERRLOG("Unable to listen on transport %s. The transport must be created first.\n", trtype);
-		} else {
-			SPDK_ERRLOG("The specified trtype %d is unknown. Please make sure that it is properly registered.\n",
-				    trid->trtype);
-		}
-
+		SPDK_ERRLOG("Unable to find %s transport. The transport must be created first also make sure it is properly registered.\n",
+			    trid->trstring);
 		return -EINVAL;
 	}
 
@@ -632,19 +625,12 @@ spdk_nvmf_tgt_stop_listen(struct spdk_nvmf_tgt *tgt,
 			  struct spdk_nvme_transport_id *trid)
 {
 	struct spdk_nvmf_transport *transport;
-	const char *trtype;
 	int rc;
 
 	transport = spdk_nvmf_tgt_get_transport(tgt, trid->trstring);
 	if (!transport) {
-		trtype = spdk_nvme_transport_id_trtype_str(trid->trtype);
-		if (trtype != NULL) {
-			SPDK_ERRLOG("Unable to stop listen on transport %s. The transport must be created first.\n",
-				    trtype);
-		} else {
-			SPDK_ERRLOG("The specified trtype %d is unknown. Please make sure that it is properly registered.\n",
-				    trid->trtype);
-		}
+		SPDK_ERRLOG("Unable to find %s transport. The transport must be created first also make sure it is properly registered.\n",
+			    trid->trstring);
 		return -EINVAL;
 	}
 

@@ -972,8 +972,9 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 	}
 
 	transport = spdk_nvmf_tgt_get_transport(subsystem->tgt, trid->trstring);
-	if (transport == NULL) {
-		SPDK_ERRLOG("Unknown transport type %d\n", trid->trtype);
+	if (!transport) {
+		SPDK_ERRLOG("Unable to find %s transport. The transport must be created first also make sure it is properly registered.\n",
+			    trid->trstring);
 		cb_fn(cb_arg, -EINVAL);
 		return;
 	}

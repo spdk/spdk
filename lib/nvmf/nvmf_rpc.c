@@ -1007,6 +1007,8 @@ rpc_nvmf_subsystem_remove_listener(struct spdk_jsonrpc_request *request,
 
 	ctx->transport = spdk_nvmf_tgt_get_transport(tgt, ctx->trid.trstring);
 	if (!ctx->transport) {
+		SPDK_ERRLOG("Unable to find %s transport. The transport must be created first also make sure it is properly registered.\n",
+			    ctx->trid.trstring);
 		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
 		nvmf_rpc_listener_ctx_free(ctx);
