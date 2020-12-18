@@ -93,7 +93,7 @@ struct spdk_nvmf_transport_opts {
 	 * The size of spdk_nvmf_transport_opts according to the caller of this library is used for ABI
 	 * compatibility. The library uses this field to know how many fields in this
 	 * structure are valid. And the library will populate any remaining fields with default values.
-	 * After that, new added fields should be put after opts_size.
+	 * New added fields should be put at the end of the struct.
 	 */
 	size_t opts_size;
 };
