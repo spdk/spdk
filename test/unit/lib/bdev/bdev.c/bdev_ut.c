@@ -1733,6 +1733,7 @@ bdev_io_max_size_and_segment_split_test(void)
 	uint64_t i;
 	int rc;
 
+	bdev_opts.opts_size = sizeof(bdev_opts);
 	rc = spdk_bdev_set_opts(&bdev_opts);
 	CU_ASSERT(rc == 0);
 	spdk_bdev_initialize(bdev_init_cb, NULL);
@@ -2279,6 +2280,7 @@ bdev_io_mix_split_test(void)
 	uint64_t i;
 	int rc;
 
+	bdev_opts.opts_size = sizeof(bdev_opts);
 	rc = spdk_bdev_set_opts(&bdev_opts);
 	CU_ASSERT(rc == 0);
 	spdk_bdev_initialize(bdev_init_cb, NULL);
