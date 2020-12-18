@@ -1923,22 +1923,23 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		rc = bdev_nvme_add_trid(nvme_bdev_ctrlr, ctrlr, &ctx->trid);
 
 		spdk_nvme_detach(ctrlr);
-
-		populate_namespaces_cb(ctx, 0, rc);
-		return;
+		goto exit;
 	}
 
 	rc = nvme_bdev_ctrlr_create(ctrlr, ctx->base_name, &ctx->trid, ctx->prchk_flags);
 	if (rc) {
 		SPDK_ERRLOG("Failed to create new device\n");
-		populate_namespaces_cb(ctx, 0, rc);
-		return;
+		goto exit;
 	}
 
 	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(&ctx->trid);
 	assert(nvme_bdev_ctrlr != NULL);
 
 	nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr, ctx);
+	return;
+
+exit:
+	populate_namespaces_cb(ctx, 0, rc);
 }
 
 static int
