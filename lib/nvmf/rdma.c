@@ -2804,7 +2804,7 @@ nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport,
 		}
 	}
 
-	/* The second highest priority is I/O waiting on memory buffers. */
+	/* Then we handle request waiting on memory buffers. */
 	STAILQ_FOREACH_SAFE(req, &rqpair->poller->group->group.pending_buf_queue, buf_link, tmp) {
 		rdma_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_rdma_request, req);
 		if (nvmf_rdma_request_process(rtransport, rdma_req) == false && drain == false) {
