@@ -158,6 +158,7 @@ rpc_start_nbd_done(void *cb_arg, struct spdk_nbd_disk *nbd, int rc)
 
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		free_rpc_nbd_start_disk(req);
 		return;
 	}
 
