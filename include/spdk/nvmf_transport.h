@@ -241,8 +241,8 @@ struct spdk_nvmf_transport_ops {
 	  * Instruct the transport to accept new connections at the address
 	  * provided. This may be called multiple times.
 	  */
-	int (*listen)(struct spdk_nvmf_transport *transport,
-		      const struct spdk_nvme_transport_id *trid);
+	int (*listen)(struct spdk_nvmf_transport *transport, const struct spdk_nvme_transport_id *trid,
+		      struct spdk_nvmf_listen_opts *opts);
 
 	/**
 	  * Stop accepting new connections at the given address.

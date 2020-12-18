@@ -255,7 +255,7 @@ nvmf_transport_find_listener(struct spdk_nvmf_transport *transport,
 
 int
 spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
-			   const struct spdk_nvme_transport_id *trid)
+			   const struct spdk_nvme_transport_id *trid, struct spdk_nvmf_listen_opts *opts)
 {
 	struct spdk_nvmf_listener *listener;
 	int rc;
@@ -270,8 +270,7 @@ spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
 		listener->ref = 1;
 		listener->trid = *trid;
 		TAILQ_INSERT_TAIL(&transport->listeners, listener, link);
-
-		rc = transport->ops->listen(transport, &listener->trid);
+		rc = transport->ops->listen(transport, &listener->trid, opts);
 		if (rc != 0) {
 			TAILQ_REMOVE(&transport->listeners, listener, link);
 			free(listener);

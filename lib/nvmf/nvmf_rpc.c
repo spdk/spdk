@@ -685,6 +685,7 @@ struct nvmf_rpc_listener_ctx {
 	struct spdk_nvme_transport_id	trid;
 	enum nvmf_rpc_listen_op		op;
 	bool				response_sent;
+	struct spdk_nvmf_listen_opts	opts;
 };
 
 static const struct spdk_json_object_decoder nvmf_rpc_listener_decoder[] = {
@@ -799,7 +800,7 @@ nvmf_rpc_listen_paused(struct spdk_nvmf_subsystem *subsystem,
 
 	if (ctx->op == NVMF_RPC_LISTEN_ADD) {
 		if (!nvmf_subsystem_find_listener(subsystem, &ctx->trid)) {
-			rc = spdk_nvmf_tgt_listen(ctx->tgt, &ctx->trid);
+			rc = spdk_nvmf_tgt_listen_ext(ctx->tgt, &ctx->trid, &ctx->opts);
 			if (rc == 0) {
 				spdk_nvmf_subsystem_add_listener(ctx->subsystem, &ctx->trid, nvmf_rpc_subsystem_listen, ctx);
 				return;
@@ -900,10 +901,10 @@ rpc_nvmf_subsystem_add_listener(struct spdk_jsonrpc_request *request,
 
 	ctx->request = request;
 
-	if (spdk_json_decode_object(params, nvmf_rpc_listener_decoder,
-				    SPDK_COUNTOF(nvmf_rpc_listener_decoder),
-				    ctx)) {
-		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+	if (spdk_json_decode_object_relaxed(params, nvmf_rpc_listener_decoder,
+					    SPDK_COUNTOF(nvmf_rpc_listener_decoder),
+					    ctx)) {
+		SPDK_ERRLOG("spdk_json_decode_object_relaxed failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 		nvmf_rpc_listener_ctx_free(ctx);
 		return;
@@ -937,6 +938,8 @@ rpc_nvmf_subsystem_add_listener(struct spdk_jsonrpc_request *request,
 	}
 
 	ctx->op = NVMF_RPC_LISTEN_ADD;
+	ctx->opts.transport_specific = params;
+	ctx->opts.opts_size = sizeof(ctx->opts);
 
 	rc = spdk_nvmf_subsystem_pause(subsystem, nvmf_rpc_listen_paused, ctx);
 	if (rc != 0) {

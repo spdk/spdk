@@ -657,8 +657,8 @@ nvmf_tcp_find_port(struct spdk_nvmf_tcp_transport *ttransport,
 }
 
 static int
-nvmf_tcp_listen(struct spdk_nvmf_transport *transport,
-		const struct spdk_nvme_transport_id *trid)
+nvmf_tcp_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_transport_id *trid,
+		struct spdk_nvmf_listen_opts *listen_opts)
 {
 	struct spdk_nvmf_tcp_transport *ttransport;
 	struct spdk_nvmf_tcp_port *port;

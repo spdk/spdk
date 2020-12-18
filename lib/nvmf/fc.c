@@ -1879,8 +1879,8 @@ nvmf_fc_destroy(struct spdk_nvmf_transport *transport,
 }
 
 static int
-nvmf_fc_listen(struct spdk_nvmf_transport *transport,
-	       const struct spdk_nvme_transport_id *trid)
+nvmf_fc_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_transport_id *trid,
+	       struct spdk_nvmf_listen_opts *listen_opts)
 {
 	return 0;
 }

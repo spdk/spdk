@@ -2643,8 +2643,8 @@ nvmf_rdma_trid_from_cm_id(struct rdma_cm_id *id,
 			  bool peer);
 
 static int
-nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
-		 const struct spdk_nvme_transport_id *trid)
+nvmf_rdma_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_transport_id *trid,
+		 struct spdk_nvmf_listen_opts *listen_opts)
 {
 	struct spdk_nvmf_rdma_transport	*rtransport;
 	struct spdk_nvmf_rdma_device	*device;
@@ -2962,7 +2962,7 @@ nvmf_rdma_handle_cm_event_addr_change(struct spdk_nvmf_transport *transport,
 		nvmf_rdma_disconnect_qpairs_on_port(rtransport, port);
 
 		nvmf_rdma_stop_listen(transport, trid);
-		nvmf_rdma_listen(transport, trid);
+		nvmf_rdma_listen(transport, trid, NULL);
 	}
 
 	return event_acked;

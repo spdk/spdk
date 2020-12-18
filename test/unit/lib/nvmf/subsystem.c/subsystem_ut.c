@@ -90,7 +90,7 @@ DEFINE_STUB(spdk_nvme_transport_id_trtype_str,
 
 int
 spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
-			   const struct spdk_nvme_transport_id *trid)
+			   const struct spdk_nvme_transport_id *trid, struct spdk_nvmf_listen_opts *opts)
 {
 	return 0;
 }

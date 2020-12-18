@@ -98,6 +98,18 @@ struct spdk_nvmf_transport_opts {
 	size_t opts_size;
 };
 
+struct spdk_nvmf_listen_opts {
+	/**
+	 * The size of spdk_nvmf_listen_opts according to the caller of this library is used for ABI
+	 * compatibility. The library uses this field to know how many fields in this
+	 * structure are valid. And the library will populate any remaining fields with default values.
+	 * New added fields should be put at the end of the struct.
+	 */
+	size_t opts_size;
+
+	const struct spdk_json_val *transport_specific;
+};
+
 struct spdk_nvmf_poll_group_stat {
 	uint32_t admin_qpairs;
 	uint32_t io_qpairs;
@@ -209,7 +221,7 @@ struct spdk_nvmf_tgt *spdk_nvmf_get_next_tgt(struct spdk_nvmf_tgt *prev);
 void spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_tgt *tgt);
 
 /**
- * Begin accepting new connections at the address provided.
+ * Begin accepting new connections at the address provided (deprecated, please use spdk_nvmf_tgt_listen_ext).
  *
  * The connections will be matched with a subsystem, which may or may not allow
  * the connection based on a subsystem-specific list of allowed hosts. See
@@ -222,6 +234,22 @@ void spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_
  */
 int spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 			 struct spdk_nvme_transport_id *trid);
+
+/**
+ * Begin accepting new connections at the address provided.
+ *
+ * The connections will be matched with a subsystem, which may or may not allow
+ * the connection based on a subsystem-specific list of allowed hosts. See
+ * spdk_nvmf_subsystem_add_host() and spdk_nvmf_subsystem_add_listener()
+ *
+ * \param tgt The target associated with this listen address.
+ * \param trid The address to listen at.
+ * \param opts Listener options.
+ *
+ * \return 0 on success or a negated errno on failure.
+ */
+int spdk_nvmf_tgt_listen_ext(struct spdk_nvmf_tgt *tgt, const struct spdk_nvme_transport_id *trid,
+			     struct spdk_nvmf_listen_opts *opts);
 
 /**
  * Stop accepting new connections at the provided address.
@@ -1034,14 +1062,15 @@ void spdk_nvmf_tgt_add_transport(struct spdk_nvmf_tgt *tgt,
 /**
  * Add listener to transport and begin accepting new connections.
  *
- * \param transport The transport to add listener to
- * \param trid Address to listen at
+ * \param transport The transport to add listener to.
+ * \param trid The address to listen at.
+ * \param opts Listener options.
  *
  * \return int. 0 if it completed successfully, or negative errno if it failed.
  */
 int
 spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
-			   const struct spdk_nvme_transport_id *trid);
+			   const struct spdk_nvme_transport_id *trid, struct spdk_nvmf_listen_opts *opts);
 
 /**
  * Remove listener from transport and stop accepting new connections.

@@ -598,12 +598,45 @@ spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_
 	}
 }
 
+static void
+nvmf_listen_opts_copy(struct spdk_nvmf_listen_opts *opts,
+		      const struct spdk_nvmf_listen_opts *opts_src, size_t opts_size)
+{
+	assert(opts);
+	assert(opts_src);
+
+	opts->opts_size = opts_size;
+
+#define SET_FIELD(field) \
+    if (offsetof(struct spdk_nvmf_listen_opts, field) + sizeof(opts->field) <= opts_size) { \
+                 opts->field = opts_src->field; \
+    } \
+
+	SET_FIELD(transport_specific);
+#undef SET_FIELD
+
+	/* Do not remove this statement, you should always update this statement when you adding a new field,
+	 * and do not forget to add the SET_FIELD statement for your added field. */
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_listen_opts) == 16, "Incorrect size");
+}
+
 int
-spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
-		     struct spdk_nvme_transport_id *trid)
+spdk_nvmf_tgt_listen_ext(struct spdk_nvmf_tgt *tgt, const struct spdk_nvme_transport_id *trid,
+			 struct spdk_nvmf_listen_opts *opts)
 {
 	struct spdk_nvmf_transport *transport;
 	int rc;
+	struct spdk_nvmf_listen_opts opts_local = {};
+
+	if (!opts) {
+		SPDK_ERRLOG("opts should not be NULL\n");
+		return -EINVAL;
+	}
+
+	if (!opts->opts_size) {
+		SPDK_ERRLOG("The opts_size in opts structure should not be zero\n");
+		return -EINVAL;
+	}
 
 	transport = spdk_nvmf_tgt_get_transport(tgt, trid->trstring);
 	if (!transport) {
@@ -612,12 +645,21 @@ spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 		return -EINVAL;
 	}
 
-	rc = spdk_nvmf_transport_listen(transport, trid);
+	nvmf_listen_opts_copy(&opts_local, opts, opts->opts_size);
+	rc = spdk_nvmf_transport_listen(transport, trid, &opts_local);
 	if (rc < 0) {
 		SPDK_ERRLOG("Unable to listen on address '%s'\n", trid->traddr);
 	}
 
 	return rc;
+}
+
+int
+spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt, struct spdk_nvme_transport_id *trid)
+{
+	struct spdk_nvmf_listen_opts opts = {.opts_size = sizeof(opts)};
+
+	return spdk_nvmf_tgt_listen_ext(tgt, trid, &opts);
 }
 
 int
