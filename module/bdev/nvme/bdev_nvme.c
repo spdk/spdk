@@ -130,6 +130,7 @@ static uint64_t g_nvme_hotplug_poll_period_us = NVME_HOTPLUG_POLL_PERIOD_DEFAULT
 static bool g_nvme_hotplug_enabled = false;
 static struct spdk_thread *g_bdev_nvme_init_thread;
 static struct spdk_poller *g_hotplug_poller;
+static struct spdk_poller *g_hotplug_probe_poller;
 static struct spdk_nvme_probe_ctx *g_hotplug_probe_ctx;
 
 static void nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
@@ -1667,25 +1668,34 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static int
+bdev_nvme_hotplug_probe(void *arg)
+{
+	if (spdk_nvme_probe_poll_async(g_hotplug_probe_ctx) != -EAGAIN) {
+		g_hotplug_probe_ctx = NULL;
+		spdk_poller_unregister(&g_hotplug_probe_poller);
+	}
+
+	return SPDK_POLLER_BUSY;
+}
+
+static int
 bdev_nvme_hotplug(void *arg)
 {
 	struct spdk_nvme_transport_id trid_pcie;
-	int done;
 
-	if (!g_hotplug_probe_ctx) {
-		memset(&trid_pcie, 0, sizeof(trid_pcie));
-		spdk_nvme_trid_populate_transport(&trid_pcie, SPDK_NVME_TRANSPORT_PCIE);
-
-		g_hotplug_probe_ctx = spdk_nvme_probe_async(&trid_pcie, NULL,
-				      hotplug_probe_cb, attach_cb, NULL);
-		if (!g_hotplug_probe_ctx) {
-			return SPDK_POLLER_BUSY;
-		}
+	if (g_hotplug_probe_ctx) {
+		return SPDK_POLLER_BUSY;
 	}
 
-	done = spdk_nvme_probe_poll_async(g_hotplug_probe_ctx);
-	if (done != -EAGAIN) {
-		g_hotplug_probe_ctx = NULL;
+	memset(&trid_pcie, 0, sizeof(trid_pcie));
+	spdk_nvme_trid_populate_transport(&trid_pcie, SPDK_NVME_TRANSPORT_PCIE);
+
+	g_hotplug_probe_ctx = spdk_nvme_probe_async(&trid_pcie, NULL,
+			      hotplug_probe_cb, attach_cb, NULL);
+
+	if (g_hotplug_probe_ctx) {
+		assert(g_hotplug_probe_poller == NULL);
+		g_hotplug_probe_poller = SPDK_POLLER_REGISTER(bdev_nvme_hotplug_probe, NULL, 1000);
 	}
 
 	return SPDK_POLLER_BUSY;
