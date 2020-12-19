@@ -61,6 +61,7 @@ struct nvme_bdev_ns {
 	 *  or when a namespace becomes inactive.
 	 */
 	bool			populated;
+	int			ref;
 	struct spdk_nvme_ns	*ns;
 	struct nvme_bdev_ctrlr	*ctrlr;
 	TAILQ_HEAD(, nvme_bdev)	bdevs;

@@ -1218,6 +1218,7 @@ nvme_ctrlr_populate_standard_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 	}
 
 	nvme_ns->ns = ns;
+	nvme_ns->ref = 1;
 
 	rc = nvme_bdev_create(nvme_bdev_ctrlr, nvme_ns);
 done:
@@ -1311,9 +1312,16 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 void
 nvme_ctrlr_depopulate_namespace_done(struct nvme_bdev_ns *nvme_ns)
 {
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = nvme_ns->ctrlr;
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	assert(nvme_ns->ref > 0);
+	nvme_ns->ref--;
+	if (nvme_ns->ref > 0) {
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+		return;
+	}
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
-	nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
+	nvme_bdev_ctrlr_destruct(nvme_ns->ctrlr);
 }
 
 static void

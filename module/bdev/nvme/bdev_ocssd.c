@@ -1521,6 +1521,7 @@ bdev_ocssd_populate_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 
 	nvme_ns->type_ctx = ocssd_ns;
 	nvme_ns->ns = ns;
+	nvme_ns->ref = 1;
 	ctx->nvme_ctx = nvme_ctx;
 	ctx->nvme_ns = nvme_ns;
 
