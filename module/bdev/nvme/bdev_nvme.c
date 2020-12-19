@@ -1148,7 +1148,8 @@ nvme_bdev_create(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_ns *n
 		}
 	}
 
-	if (!bdev_nvme_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE)) {
+	if (!(spdk_nvme_ctrlr_get_flags(ctrlr) &
+	      SPDK_NVME_CTRLR_COMPARE_AND_WRITE_SUPPORTED)) {
 		bdev->disk.acwu = 0;
 	} else if (nsdata->nsfeat.ns_atomic_write_unit) {
 		bdev->disk.acwu = nsdata->nacwu;
