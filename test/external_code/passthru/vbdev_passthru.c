@@ -700,7 +700,7 @@ vbdev_passthru_register(const char *bdev_name)
 
 /* Create the passthru disk from the given bdev and vbdev name. */
 int
-bdev_passthru_create_disk(const char *bdev_name, const char *vbdev_name)
+bdev_passthru_external_create_disk(const char *bdev_name, const char *vbdev_name)
 {
 	int rc;
 
@@ -725,7 +725,8 @@ bdev_passthru_create_disk(const char *bdev_name, const char *vbdev_name)
 }
 
 void
-bdev_passthru_delete_disk(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
+bdev_passthru_external_delete_disk(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn,
+				   void *cb_arg)
 {
 	struct bdev_names *name;
 

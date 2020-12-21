@@ -77,7 +77,7 @@ rpc_bdev_passthru_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	rc = bdev_passthru_create_disk(req.base_bdev_name, req.name);
+	rc = bdev_passthru_external_create_disk(req.base_bdev_name, req.name);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;
@@ -135,7 +135,7 @@ rpc_bdev_passthru_delete(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	bdev_passthru_delete_disk(bdev, rpc_bdev_passthru_delete_cb, request);
+	bdev_passthru_external_delete_disk(bdev, rpc_bdev_passthru_delete_cb, request);
 
 cleanup:
 	free_rpc_bdev_passthru_delete(&req);
