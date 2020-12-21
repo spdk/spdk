@@ -1160,7 +1160,7 @@ nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
 	return 0;
 }
 
-static struct nvme_bdev *
+static int
 nvme_bdev_create(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_ns *nvme_ns)
 {
 	struct nvme_bdev *bdev;
@@ -1169,7 +1169,7 @@ nvme_bdev_create(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_ns *n
 	bdev = calloc(1, sizeof(*bdev));
 	if (!bdev) {
 		SPDK_ERRLOG("bdev calloc() failed\n");
-		return NULL;
+		return -ENOMEM;
 	}
 
 	bdev->nvme_ns = nvme_ns;
@@ -1179,17 +1179,17 @@ nvme_bdev_create(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_ns *n
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to create NVMe disk\n");
 		free(bdev);
-		return NULL;
+		return rc;
 	}
 
-	return bdev;
+	nvme_bdev_attach_bdev_to_ns(nvme_ns, bdev);
+	return 0;
 }
 
 static void
 nvme_ctrlr_populate_standard_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 				       struct nvme_bdev_ns *nvme_ns, struct nvme_async_probe_ctx *ctx)
 {
-	struct nvme_bdev	*bdev;
 	struct spdk_nvme_ctrlr	*ctrlr = nvme_bdev_ctrlr->ctrlr;
 	struct spdk_nvme_ns	*ns;
 	int			rc = 0;
@@ -1203,14 +1203,7 @@ nvme_ctrlr_populate_standard_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 
 	nvme_ns->ns = ns;
 
-	bdev = nvme_bdev_create(nvme_bdev_ctrlr, nvme_ns);
-	if (!bdev) {
-		rc = -ENOMEM;
-		goto done;
-	}
-
-	nvme_bdev_attach_bdev_to_ns(nvme_ns, bdev);
-
+	rc = nvme_bdev_create(nvme_bdev_ctrlr, nvme_ns);
 done:
 	nvme_ctrlr_populate_namespace_done(ctx, nvme_ns, rc);
 }
