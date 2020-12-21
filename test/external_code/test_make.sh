@@ -8,8 +8,12 @@ source "$rootdir/test/common/autotest_common.sh"
 set -e
 SPDK_DIR=$1
 
+if [ -z "$EXTERNAL_MAKE_HUGEMEM" ]; then
+	EXTERNAL_MAKE_HUGEMEM=$HUGEMEM
+fi
+
 # Skip all pci devices. These tests don't rely on them.
-sudo PCI_ALLOWED="NONE" HUGEMEM="$HUGEMEM" $SPDK_DIR/scripts/setup.sh
+sudo PCI_ALLOWED="NONE" HUGEMEM="$EXTERNAL_MAKE_HUGEMEM" $SPDK_DIR/scripts/setup.sh
 
 make -C $SPDK_DIR clean
 $SPDK_DIR/configure --with-shared --without-isal --without-ocf --disable-asan
