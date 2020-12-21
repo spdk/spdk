@@ -36,6 +36,7 @@
 #include "spdk_internal/accel_engine.h"
 
 #include "spdk/env.h"
+#include "spdk/likely.h"
 #include "spdk/log.h"
 #include "spdk/thread.h"
 #include "spdk/json.h"
@@ -72,6 +73,7 @@ static void _sw_accel_copy(void *dst, void *src, uint64_t nbytes);
 static int _sw_accel_compare(void *src1, void *src2, uint64_t nbytes);
 static void _sw_accel_fill(void *dst, uint8_t fill, uint64_t nbytes);
 static void _sw_accel_crc32c(uint32_t *dst, void *src, uint32_t seed, uint64_t nbytes);
+static void _sw_accel_crc32cv(uint32_t *dst, struct iovec *iov, uint32_t iovcnt, uint32_t seed);
 
 /* Registration of hw modules (currently supports only 1 at a time) */
 void
@@ -111,13 +113,19 @@ void
 spdk_accel_task_complete(struct spdk_accel_task *accel_task, int status)
 {
 	struct accel_io_channel *accel_ch = accel_task->accel_ch;
-	struct spdk_accel_batch *batch;
+	struct spdk_accel_batch *batch = accel_task->batch;
+	spdk_accel_completion_cb	cb_fn = accel_task->cb_fn;
+	void				*cb_arg = accel_task->cb_arg;
 
-	accel_task->cb_fn(accel_task->cb_arg, status);
+	/* We should put the accel_task into the list firstly in order to avoid
+	 * the accel task list is exhausted when there is recursive call to
+	 * allocate accel_task in user's call back function (cb_fn)
+	 */
+	TAILQ_INSERT_TAIL(&accel_ch->task_pool, accel_task, link);
 
+	cb_fn(cb_arg, status);
 	/* If this task is part of a batch, check for completion of the batch. */
-	if (accel_task->batch) {
-		batch = accel_task->batch;
+	if (batch) {
 		assert(batch->count > 0);
 		batch->count--;
 		if (batch->count == 0) {
@@ -129,8 +137,6 @@ spdk_accel_task_complete(struct spdk_accel_task *accel_task, int status)
 			TAILQ_INSERT_TAIL(&accel_ch->batch_pool, batch, link);
 		}
 	}
-
-	TAILQ_INSERT_TAIL(&accel_ch->task_pool, accel_task, link);
 }
 
 /* Accel framework public API for discovering current engine capabilities. */
@@ -308,6 +314,7 @@ spdk_accel_submit_crc32c(struct spdk_io_channel *ch, uint32_t *dst, void *src, u
 
 	accel_task->dst = (void *)dst;
 	accel_task->src = src;
+	accel_task->v.iovcnt = 0;
 	accel_task->seed = seed;
 	accel_task->nbytes = nbytes;
 	accel_task->op_code = ACCEL_OPCODE_CRC32C;
@@ -321,19 +328,77 @@ spdk_accel_submit_crc32c(struct spdk_io_channel *ch, uint32_t *dst, void *src, u
 	}
 }
 
+static void
+crc32cv_done(void *cb_arg, int status)
+{
+	struct spdk_accel_task *accel_task = cb_arg;
+	struct spdk_io_channel *ch = spdk_io_channel_from_ctx(accel_task->accel_ch);
+
+	assert(accel_task->chained.cb_fn != NULL);
+	assert(accel_task->chained.cb_arg != NULL);
+
+	if (spdk_likely(!status)) {
+		status = spdk_accel_submit_crc32cv(ch, accel_task->dst, ++accel_task->v.iovs,
+						   accel_task->v.iovcnt - 1, ~(*((uint32_t *)accel_task->dst)),
+						   accel_task->chained.cb_fn, accel_task->chained.cb_arg);
+		if (spdk_likely(!status)) {
+			return;
+		}
+	}
+
+	accel_task->chained.cb_fn(accel_task->chained.cb_arg, status);
+}
+
 /* Accel framework public API for chained CRC-32C function */
 int
 spdk_accel_submit_crc32cv(struct spdk_io_channel *ch, uint32_t *dst, struct iovec *iov,
 			  uint32_t iov_cnt, uint32_t seed, spdk_accel_completion_cb cb_fn, void *cb_arg)
 {
+	struct accel_io_channel *accel_ch;
+	struct spdk_accel_task *accel_task;
+
 	if (iov == NULL) {
 		SPDK_ERRLOG("iov should not be NULL");
 		return -EINVAL;
 	}
 
-	assert(iov_cnt == 1);
+	if (!iov_cnt) {
+		SPDK_ERRLOG("iovcnt should not be zero value\n");
+		return -EINVAL;
+	}
 
-	return spdk_accel_submit_crc32c(ch, dst, iov[0].iov_base, seed, iov[0].iov_len, cb_fn, cb_arg);
+	if (iov_cnt == 1) {
+		return spdk_accel_submit_crc32c(ch, dst, iov[0].iov_base, seed, iov[0].iov_len, cb_fn, cb_arg);
+	}
+
+	accel_ch = spdk_io_channel_get_ctx(ch);
+	accel_task = _get_task(accel_ch, NULL, cb_fn, cb_arg);
+	if (accel_task == NULL) {
+		SPDK_ERRLOG("no memory\n");
+		assert(0);
+		return -ENOMEM;
+	}
+
+	accel_task->v.iovs = iov;
+	accel_task->v.iovcnt = iov_cnt;
+	accel_task->dst = (void *)dst;
+	accel_task->op_code = ACCEL_OPCODE_CRC32C;
+
+	if (_is_supported(accel_ch->engine, ACCEL_CRC32C)) {
+		accel_task->cb_fn = crc32cv_done;
+		accel_task->cb_arg = accel_task;
+		accel_task->chained.cb_fn = cb_fn;
+		accel_task->chained.cb_arg = cb_arg;
+
+		accel_task->src = iov[0].iov_base;
+		accel_task->nbytes = iov[0].iov_len;
+
+		return accel_ch->engine->submit_tasks(accel_ch->engine_ch, accel_task);
+	} else {
+		_sw_accel_crc32cv(dst, iov, iov_cnt, seed);
+		spdk_accel_task_complete(accel_task, 0);
+		return 0;
+	}
 }
 
 /* Accel framework public API for getting max operations for a batch. */
@@ -474,6 +539,7 @@ spdk_accel_batch_prep_crc32c(struct spdk_io_channel *ch, struct spdk_accel_batch
 
 	accel_task->dst = dst;
 	accel_task->src = src;
+	accel_task->v.iovcnt = 0;
 	accel_task->seed = seed;
 	accel_task->nbytes = nbytes;
 	accel_task->op_code = ACCEL_OPCODE_CRC32C;
@@ -487,21 +553,81 @@ spdk_accel_batch_prep_crc32c(struct spdk_io_channel *ch, struct spdk_accel_batch
 	return 0;
 }
 
+static void
+batched_crc32cv_done(void *cb_arg, int status)
+{
+	struct spdk_accel_task *accel_task = cb_arg;
+	struct spdk_io_channel *ch = spdk_io_channel_from_ctx(accel_task->accel_ch);
+	struct spdk_accel_batch *batch;
+
+	batch = accel_task->batch;
+	assert(batch != NULL);
+	assert(accel_task->chained.cb_fn != NULL);
+	assert(accel_task->chained.cb_arg != NULL);
+
+	if (spdk_likely(!status)) {
+		status = spdk_accel_batch_prep_crc32cv(ch, batch, accel_task->dst,
+						       ++accel_task->v.iovs, accel_task->v.iovcnt - 1,  ~(*((uint32_t *)accel_task->dst)),
+						       accel_task->chained.cb_fn, accel_task->chained.cb_arg);
+		if (spdk_likely(!status)) {
+			return;
+		}
+	}
+
+	accel_task->chained.cb_fn(accel_task->chained.cb_arg, status);
+}
+
 int
 spdk_accel_batch_prep_crc32cv(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
 			      uint32_t *dst, struct iovec *iovs, uint32_t iov_cnt, uint32_t seed,
 			      spdk_accel_completion_cb cb_fn, void *cb_arg)
 {
+	struct accel_io_channel *accel_ch;
+	struct spdk_accel_task *accel_task;
+
 	if (iovs == NULL) {
 		SPDK_ERRLOG("iovs should not be NULL\n");
 		return -EINVAL;
 	}
 
-	assert(iov_cnt == 1);
+	if (iov_cnt == 0) {
+		SPDK_ERRLOG("iovcnt should not be zero value\n");
+		return -EINVAL;
+	}
 
-	return spdk_accel_batch_prep_crc32c(ch, batch, dst, iovs[0].iov_base, seed, iovs[0].iov_len, cb_fn,
-					    cb_arg);
+	if (iov_cnt == 1) {
+		return spdk_accel_batch_prep_crc32c(ch, batch, dst, iovs[0].iov_base, seed, iovs[0].iov_len, cb_fn,
+						    cb_arg);
+	}
 
+	accel_ch = spdk_io_channel_get_ctx(ch);
+	accel_task = _get_task(accel_ch, batch, cb_fn, cb_arg);
+	if (accel_task == NULL) {
+		return -ENOMEM;
+	}
+
+	accel_task->v.iovs = iovs;
+	accel_task->v.iovcnt = iov_cnt;
+	accel_task->dst = dst;
+	accel_task->seed = seed;
+	accel_task->op_code = ACCEL_OPCODE_CRC32C;
+
+	if (_is_supported(accel_ch->engine, ACCEL_CRC32C)) {
+		accel_task->cb_arg = accel_task;
+		accel_task->cb_fn = batched_crc32cv_done;
+		accel_task->cb_arg = accel_task;
+		accel_task->chained.cb_fn = cb_fn;
+		accel_task->chained.cb_arg = cb_arg;
+
+		accel_task->src = iovs[0].iov_base;
+		accel_task->nbytes = iovs[0].iov_len;
+
+		TAILQ_INSERT_TAIL(&batch->hw_tasks, accel_task, link);
+	} else {
+		TAILQ_INSERT_TAIL(&batch->sw_tasks, accel_task, link);
+	}
+
+	return 0;
 }
 
 /* Accel framework public API for batch_create function. */
@@ -583,8 +709,12 @@ spdk_accel_batch_submit(struct spdk_io_channel *ch, struct spdk_accel_batch *bat
 			batch->status |= rc;
 			break;
 		case ACCEL_OPCODE_CRC32C:
-			_sw_accel_crc32c(accel_task->dst, accel_task->src, accel_task->seed,
-					 accel_task->nbytes);
+			if (accel_task->v.iovcnt == 0) {
+				_sw_accel_crc32c(accel_task->dst, accel_task->src, accel_task->seed,
+						 accel_task->nbytes);
+			} else {
+				_sw_accel_crc32cv(accel_task->dst, accel_task->v.iovs, accel_task->v.iovcnt, accel_task->seed);
+			}
 			spdk_accel_task_complete(accel_task, 0);
 			break;
 		case ACCEL_OPCODE_DUALCAST:
@@ -834,6 +964,20 @@ static void
 _sw_accel_crc32c(uint32_t *dst, void *src, uint32_t seed, uint64_t nbytes)
 {
 	*dst = spdk_crc32c_update(src, nbytes, ~seed);
+}
+
+static void
+_sw_accel_crc32cv(uint32_t *dst, struct iovec *iov, uint32_t iovcnt, uint32_t seed)
+{
+	uint32_t i, crc32c = ~seed;
+
+	for (i = 0; i < iovcnt; i++) {
+		assert(iov[i].iov_base != NULL);
+		assert(iov[i].iov_len != 0);
+		crc32c = spdk_crc32c_update(iov[i].iov_base, iov[i].iov_len, crc32c);
+	}
+
+	*dst = crc32c;
 }
 
 static struct spdk_io_channel *sw_accel_get_io_channel(void);
