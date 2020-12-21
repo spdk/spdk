@@ -110,6 +110,14 @@ struct spdk_nvmf_listen_opts {
 	const struct spdk_json_val *transport_specific;
 };
 
+/**
+ * Initialize listen options
+ *
+ * \param opts Listener options.
+ * \param opts_size Must be set to sizeof(struct spdk_nvmf_listen_opts).
+ */
+void spdk_nvmf_listen_opts_init(struct spdk_nvmf_listen_opts *opts, size_t opts_size);
+
 struct spdk_nvmf_poll_group_stat {
 	uint32_t admin_qpairs;
 	uint32_t io_qpairs;

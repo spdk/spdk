@@ -9,6 +9,7 @@
 	spdk_nvmf_get_first_tgt;
 	spdk_nvmf_get_next_tgt;
 	spdk_nvmf_tgt_write_config_json;
+	spdk_nvmf_listen_opts_init;
 	spdk_nvmf_tgt_listen;
 	spdk_nvmf_tgt_listen_ext;
 	spdk_nvmf_tgt_stop_listen;

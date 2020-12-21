@@ -938,8 +938,8 @@ rpc_nvmf_subsystem_add_listener(struct spdk_jsonrpc_request *request,
 	}
 
 	ctx->op = NVMF_RPC_LISTEN_ADD;
+	spdk_nvmf_listen_opts_init(&ctx->opts, sizeof(ctx->opts));
 	ctx->opts.transport_specific = params;
-	ctx->opts.opts_size = sizeof(ctx->opts);
 
 	rc = spdk_nvmf_subsystem_pause(subsystem, nvmf_rpc_listen_paused, ctx);
 	if (rc != 0) {

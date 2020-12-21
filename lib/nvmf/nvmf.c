@@ -620,6 +620,16 @@ nvmf_listen_opts_copy(struct spdk_nvmf_listen_opts *opts,
 	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_listen_opts) == 16, "Incorrect size");
 }
 
+void
+spdk_nvmf_listen_opts_init(struct spdk_nvmf_listen_opts *opts, size_t opts_size)
+{
+	struct spdk_nvmf_listen_opts opts_local = {};
+
+	/* local version of opts should have defaults set here */
+
+	nvmf_listen_opts_copy(opts, &opts_local, opts_size);
+}
+
 int
 spdk_nvmf_tgt_listen_ext(struct spdk_nvmf_tgt *tgt, const struct spdk_nvme_transport_id *trid,
 			 struct spdk_nvmf_listen_opts *opts)
@@ -657,7 +667,9 @@ spdk_nvmf_tgt_listen_ext(struct spdk_nvmf_tgt *tgt, const struct spdk_nvme_trans
 int
 spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt, struct spdk_nvme_transport_id *trid)
 {
-	struct spdk_nvmf_listen_opts opts = {.opts_size = sizeof(opts)};
+	struct spdk_nvmf_listen_opts opts;
+
+	spdk_nvmf_listen_opts_init(&opts, sizeof(opts));
 
 	return spdk_nvmf_tgt_listen_ext(tgt, trid, &opts);
 }
