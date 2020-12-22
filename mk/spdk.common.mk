@@ -133,6 +133,8 @@ ifneq ($(LD_TYPE),)
 LDFLAGS += -fuse-ld=$(LD_TYPE)
 endif
 
+SYS_LIBS =
+
 ifeq ($(OS),FreeBSD)
 SYS_LIBS += -L/usr/local/lib
 COMMON_CFLAGS += -I/usr/local/include
