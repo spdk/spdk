@@ -134,6 +134,8 @@ static struct spdk_bdev_opts	g_bdev_opts = {
 	.bdev_io_pool_size = SPDK_BDEV_IO_POOL_SIZE,
 	.bdev_io_cache_size = SPDK_BDEV_IO_CACHE_SIZE,
 	.bdev_auto_examine = SPDK_BDEV_AUTO_EXAMINE,
+	.small_buf_pool_size = BUF_SMALL_POOL_SIZE,
+	.large_buf_pool_size = BUF_LARGE_POOL_SIZE,
 };
 
 static spdk_bdev_init_cb	g_init_cb_fn = NULL;
@@ -393,10 +395,12 @@ spdk_bdev_get_opts(struct spdk_bdev_opts *opts, size_t opts_size)
 	SET_FIELD(bdev_io_pool_size);
 	SET_FIELD(bdev_io_cache_size);
 	SET_FIELD(bdev_auto_examine);
+	SET_FIELD(small_buf_pool_size);
+	SET_FIELD(large_buf_pool_size);
 
 	/* Do not remove this statement, you should always update this statement when you adding a new field,
 	 * and do not forget to add the SET_FIELD statement for your added field. */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_opts) == 24, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_opts) == 32, "Incorrect size");
 
 #undef SET_FIELD
 }
@@ -430,6 +434,16 @@ spdk_bdev_set_opts(struct spdk_bdev_opts *opts)
 		return -1;
 	}
 
+	if (opts->small_buf_pool_size < BUF_SMALL_POOL_SIZE) {
+		SPDK_ERRLOG("small_buf_pool_size must be at least %" PRIu32 "\n", BUF_SMALL_POOL_SIZE);
+		return -1;
+	}
+
+	if (opts->large_buf_pool_size < BUF_LARGE_POOL_SIZE) {
+		SPDK_ERRLOG("large_buf_pool_size must be at least %" PRIu32 "\n", BUF_LARGE_POOL_SIZE);
+		return -1;
+	}
+
 #define SET_FIELD(field) \
         if (offsetof(struct spdk_bdev_opts, field) + sizeof(opts->field) <= opts->opts_size) { \
                 g_bdev_opts.field = opts->field; \
@@ -438,6 +452,8 @@ spdk_bdev_set_opts(struct spdk_bdev_opts *opts)
 	SET_FIELD(bdev_io_pool_size);
 	SET_FIELD(bdev_io_cache_size);
 	SET_FIELD(bdev_auto_examine);
+	SET_FIELD(small_buf_pool_size);
+	SET_FIELD(large_buf_pool_size);
 
 	g_bdev_opts.opts_size = opts->opts_size;
 
@@ -1305,7 +1321,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 	snprintf(mempool_name, sizeof(mempool_name), "buf_small_pool_%d", getpid());
 
 	g_bdev_mgr.buf_small_pool = spdk_mempool_create(mempool_name,
-				    BUF_SMALL_POOL_SIZE,
+				    g_bdev_opts.small_buf_pool_size,
 				    SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_SMALL_BUF_MAX_SIZE) +
 				    SPDK_BDEV_POOL_ALIGNMENT,
 				    cache_size,
@@ -1320,7 +1336,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 	snprintf(mempool_name, sizeof(mempool_name), "buf_large_pool_%d", getpid());
 
 	g_bdev_mgr.buf_large_pool = spdk_mempool_create(mempool_name,
-				    BUF_LARGE_POOL_SIZE,
+				    g_bdev_opts.large_buf_pool_size,
 				    SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_LARGE_BUF_MAX_SIZE) +
 				    SPDK_BDEV_POOL_ALIGNMENT,
 				    cache_size,
@@ -1374,10 +1390,10 @@ bdev_mgr_unregister_cb(void *io_device)
 	}
 
 	if (g_bdev_mgr.buf_small_pool) {
-		if (spdk_mempool_count(g_bdev_mgr.buf_small_pool) != BUF_SMALL_POOL_SIZE) {
+		if (spdk_mempool_count(g_bdev_mgr.buf_small_pool) != g_bdev_opts.small_buf_pool_size) {
 			SPDK_ERRLOG("Small buffer pool count is %zu but should be %u\n",
 				    spdk_mempool_count(g_bdev_mgr.buf_small_pool),
-				    BUF_SMALL_POOL_SIZE);
+				    g_bdev_opts.small_buf_pool_size);
 			assert(false);
 		}
 
@@ -1385,10 +1401,10 @@ bdev_mgr_unregister_cb(void *io_device)
 	}
 
 	if (g_bdev_mgr.buf_large_pool) {
-		if (spdk_mempool_count(g_bdev_mgr.buf_large_pool) != BUF_LARGE_POOL_SIZE) {
+		if (spdk_mempool_count(g_bdev_mgr.buf_large_pool) != g_bdev_opts.large_buf_pool_size) {
 			SPDK_ERRLOG("Large buffer pool count is %zu but should be %u\n",
 				    spdk_mempool_count(g_bdev_mgr.buf_large_pool),
-				    BUF_LARGE_POOL_SIZE);
+				    g_bdev_opts.large_buf_pool_size);
 			assert(false);
 		}
 

@@ -6,7 +6,9 @@
 
 An `opts_size`element was added in the `spdk_bdev_opts` structure to solve the
 ABI compatiblity issue between different SPDK version. And also add `opts_size`
-parameter in spdk_bdev_get_opts function.
+parameter in spdk_bdev_get_opts function. Two fields `small_buf_pool_size` and
+`large_buf_pool_size` were added into spdk_bdev_opts, which were used to determine
+the small and large buffer pool size of the whole bdev module.
 
 ### event
 
@@ -65,6 +67,9 @@ and an new RPC `iscsi_start_portal_group` was added. They will be used not to st
 listening on portals for a portal group until all associated target nodes are created
 at startup, otherwise some iSCSI initiators may fail to re-login when SPDK iSCSI
 target application restarts.
+
+Two optional parameter `--small-buf-pool-size` and `--large-buf-pool-size` were added
+into `bdev_set_options` function.
 
 ## ioat
 

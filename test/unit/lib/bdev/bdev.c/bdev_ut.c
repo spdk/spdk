@@ -898,13 +898,13 @@ bdev_io_types_test(void)
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc = NULL;
 	struct spdk_io_channel *io_ch;
-	struct spdk_bdev_opts bdev_opts = {
-		.bdev_io_pool_size = 4,
-		.bdev_io_cache_size = 2,
-	};
+	struct spdk_bdev_opts bdev_opts = {};
 	int rc;
 
-	bdev_opts.opts_size = sizeof(bdev_opts);
+	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
+	bdev_opts.bdev_io_pool_size = 4;
+	bdev_opts.bdev_io_cache_size = 2;
+
 	rc = spdk_bdev_set_opts(&bdev_opts);
 	CU_ASSERT(rc == 0);
 	spdk_bdev_initialize(bdev_init_cb, NULL);
@@ -941,15 +941,15 @@ bdev_io_wait_test(void)
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc = NULL;
 	struct spdk_io_channel *io_ch;
-	struct spdk_bdev_opts bdev_opts = {
-		.bdev_io_pool_size = 4,
-		.bdev_io_cache_size = 2,
-	};
+	struct spdk_bdev_opts bdev_opts = {};
 	struct bdev_ut_io_wait_entry io_wait_entry;
 	struct bdev_ut_io_wait_entry io_wait_entry2;
 	int rc;
 
-	bdev_opts.opts_size = sizeof(bdev_opts);
+	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
+	bdev_opts.bdev_io_pool_size = 4;
+	bdev_opts.bdev_io_cache_size = 2;
+
 	rc = spdk_bdev_set_opts(&bdev_opts);
 	CU_ASSERT(rc == 0);
 	spdk_bdev_initialize(bdev_init_cb, NULL);
@@ -1083,17 +1083,17 @@ bdev_io_boundary_split_test(void)
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc = NULL;
 	struct spdk_io_channel *io_ch;
-	struct spdk_bdev_opts bdev_opts = {
-		.bdev_io_pool_size = 512,
-		.bdev_io_cache_size = 64,
-	};
+	struct spdk_bdev_opts bdev_opts = {};
 	struct iovec iov[BDEV_IO_NUM_CHILD_IOV * 2];
 	struct ut_expected_io *expected_io;
 	void *md_buf = (void *)0xFF000000;
 	uint64_t i;
 	int rc;
 
-	bdev_opts.opts_size = sizeof(bdev_opts);
+	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
+	bdev_opts.bdev_io_pool_size = 512;
+	bdev_opts.bdev_io_cache_size = 64;
+
 	rc = spdk_bdev_set_opts(&bdev_opts);
 	CU_ASSERT(rc == 0);
 	spdk_bdev_initialize(bdev_init_cb, NULL);
@@ -1724,14 +1724,15 @@ bdev_io_max_size_and_segment_split_test(void)
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc = NULL;
 	struct spdk_io_channel *io_ch;
-	struct spdk_bdev_opts bdev_opts = {
-		.bdev_io_pool_size = 512,
-		.bdev_io_cache_size = 64,
-	};
+	struct spdk_bdev_opts bdev_opts = {};
 	struct iovec iov[BDEV_IO_NUM_CHILD_IOV * 2];
 	struct ut_expected_io *expected_io;
 	uint64_t i;
 	int rc;
+
+	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
+	bdev_opts.bdev_io_pool_size = 512;
+	bdev_opts.bdev_io_cache_size = 64;
 
 	bdev_opts.opts_size = sizeof(bdev_opts);
 	rc = spdk_bdev_set_opts(&bdev_opts);
@@ -2271,16 +2272,16 @@ bdev_io_mix_split_test(void)
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc = NULL;
 	struct spdk_io_channel *io_ch;
-	struct spdk_bdev_opts bdev_opts = {
-		.bdev_io_pool_size = 512,
-		.bdev_io_cache_size = 64,
-	};
+	struct spdk_bdev_opts bdev_opts = {};
 	struct iovec iov[BDEV_IO_NUM_CHILD_IOV * 2];
 	struct ut_expected_io *expected_io;
 	uint64_t i;
 	int rc;
 
-	bdev_opts.opts_size = sizeof(bdev_opts);
+	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
+	bdev_opts.bdev_io_pool_size = 512;
+	bdev_opts.bdev_io_cache_size = 64;
+
 	rc = spdk_bdev_set_opts(&bdev_opts);
 	CU_ASSERT(rc == 0);
 	spdk_bdev_initialize(bdev_init_cb, NULL);
@@ -2542,15 +2543,15 @@ bdev_io_split_with_io_wait(void)
 	struct spdk_io_channel *io_ch;
 	struct spdk_bdev_channel *channel;
 	struct spdk_bdev_mgmt_channel *mgmt_ch;
-	struct spdk_bdev_opts bdev_opts = {
-		.bdev_io_pool_size = 2,
-		.bdev_io_cache_size = 1,
-	};
+	struct spdk_bdev_opts bdev_opts = {};
 	struct iovec iov[3];
 	struct ut_expected_io *expected_io;
 	int rc;
 
-	bdev_opts.opts_size = sizeof(bdev_opts);
+	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
+	bdev_opts.bdev_io_pool_size = 2;
+	bdev_opts.bdev_io_cache_size = 1;
+
 	rc = spdk_bdev_set_opts(&bdev_opts);
 	CU_ASSERT(rc == 0);
 	spdk_bdev_initialize(bdev_init_cb, NULL);
@@ -2677,17 +2678,17 @@ bdev_io_alignment(void)
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc = NULL;
 	struct spdk_io_channel *io_ch;
-	struct spdk_bdev_opts bdev_opts = {
-		.bdev_io_pool_size = 20,
-		.bdev_io_cache_size = 2,
-	};
+	struct spdk_bdev_opts bdev_opts = {};
 	int rc;
 	void *buf = NULL;
 	struct iovec iovs[2];
 	int iovcnt;
 	uint64_t alignment;
 
-	bdev_opts.opts_size = sizeof(bdev_opts);
+	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
+	bdev_opts.bdev_io_pool_size = 20;
+	bdev_opts.bdev_io_cache_size = 2;
+
 	rc = spdk_bdev_set_opts(&bdev_opts);
 	CU_ASSERT(rc == 0);
 	spdk_bdev_initialize(bdev_init_cb, NULL);
@@ -2898,15 +2899,16 @@ bdev_io_alignment_with_boundary(void)
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc = NULL;
 	struct spdk_io_channel *io_ch;
-	struct spdk_bdev_opts bdev_opts = {
-		.bdev_io_pool_size = 20,
-		.bdev_io_cache_size = 2,
-	};
+	struct spdk_bdev_opts bdev_opts = {};
 	int rc;
 	void *buf = NULL;
 	struct iovec iovs[2];
 	int iovcnt;
 	uint64_t alignment;
+
+	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
+	bdev_opts.bdev_io_pool_size = 20;
+	bdev_opts.bdev_io_cache_size = 2;
 
 	bdev_opts.opts_size = sizeof(bdev_opts);
 	rc = spdk_bdev_set_opts(&bdev_opts);
@@ -4081,15 +4083,15 @@ bdev_io_abort(void)
 	struct spdk_io_channel *io_ch;
 	struct spdk_bdev_channel *channel;
 	struct spdk_bdev_mgmt_channel *mgmt_ch;
-	struct spdk_bdev_opts bdev_opts = {
-		.bdev_io_pool_size = 7,
-		.bdev_io_cache_size = 2,
-	};
+	struct spdk_bdev_opts bdev_opts = {};
 	struct iovec iov[BDEV_IO_NUM_CHILD_IOV * 2];
 	uint64_t io_ctx1 = 0, io_ctx2 = 0, i;
 	int rc;
 
-	bdev_opts.opts_size = sizeof(bdev_opts);
+	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
+	bdev_opts.bdev_io_pool_size = 7;
+	bdev_opts.bdev_io_cache_size = 2;
+
 	rc = spdk_bdev_set_opts(&bdev_opts);
 	CU_ASSERT(rc == 0);
 	spdk_bdev_initialize(bdev_init_cb, NULL);
@@ -4263,6 +4265,43 @@ bdev_io_abort(void)
 	poll_threads();
 }
 
+static void
+bdev_set_options_test(void)
+{
+	struct spdk_bdev_opts bdev_opts = {};
+	int rc;
+
+	/* Case1: Do not set opts_size */
+	rc = spdk_bdev_set_opts(&bdev_opts);
+	CU_ASSERT(rc == -1);
+
+	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
+	bdev_opts.bdev_io_pool_size = 4;
+	bdev_opts.bdev_io_cache_size = 2;
+	bdev_opts.small_buf_pool_size = 4;
+
+	/* Case 2: Do not set valid small_buf_pool_size and large_buf_pool_size */
+	rc = spdk_bdev_set_opts(&bdev_opts);
+	CU_ASSERT(rc == -1);
+
+	/* Case 3: Do not set valid large_buf_pool_size */
+	bdev_opts.small_buf_pool_size = BUF_SMALL_POOL_SIZE;
+	bdev_opts.large_buf_pool_size = BUF_LARGE_POOL_SIZE - 1;
+	rc = spdk_bdev_set_opts(&bdev_opts);
+	CU_ASSERT(rc == -1);
+
+	/* Case4: set valid large buf_pool_size */
+	bdev_opts.large_buf_pool_size = BUF_LARGE_POOL_SIZE;
+	rc = spdk_bdev_set_opts(&bdev_opts);
+	CU_ASSERT(rc == 0);
+
+	/* Case5: Set different valid value for small and large buf pool */
+	bdev_opts.large_buf_pool_size = BUF_SMALL_POOL_SIZE + 3;
+	bdev_opts.large_buf_pool_size = BUF_LARGE_POOL_SIZE + 3;
+	rc = spdk_bdev_set_opts(&bdev_opts);
+	CU_ASSERT(rc == 0);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -4302,6 +4341,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, lock_lba_range_with_io_outstanding);
 	CU_ADD_TEST(suite, lock_lba_range_overlapped);
 	CU_ADD_TEST(suite, bdev_io_abort);
+	CU_ADD_TEST(suite, bdev_set_options_test);
 
 	allocate_cores(1);
 	allocate_threads(1);

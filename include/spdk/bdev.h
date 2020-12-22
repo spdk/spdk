@@ -194,6 +194,9 @@ struct spdk_bdev_opts {
 	 * New added fields should be put at the end of the struct.
 	 */
 	size_t opts_size;
+
+	uint32_t small_buf_pool_size;
+	uint32_t large_buf_pool_size;
 };
 
 /**
