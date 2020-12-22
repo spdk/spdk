@@ -306,18 +306,6 @@ bdev_nvme_flush(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	return 0;
 }
 
-static void
-bdev_nvme_destroy_qpair(struct nvme_io_channel *nvme_ch)
-{
-	assert(nvme_ch->group != NULL);
-
-	if (nvme_ch->qpair != NULL) {
-		spdk_nvme_poll_group_remove(nvme_ch->group->group, nvme_ch->qpair);
-	}
-
-	spdk_nvme_ctrlr_free_io_qpair(nvme_ch->qpair);
-}
-
 static int
 bdev_nvme_create_qpair(struct nvme_io_channel *nvme_ch)
 {
@@ -341,20 +329,18 @@ bdev_nvme_create_qpair(struct nvme_io_channel *nvme_ch)
 	rc = spdk_nvme_poll_group_add(nvme_ch->group->group, nvme_ch->qpair);
 	if (rc != 0) {
 		SPDK_ERRLOG("Unable to begin polling on NVMe Channel.\n");
-		goto err_pg;
+		goto err;
 	}
 
 	rc = spdk_nvme_ctrlr_connect_io_qpair(ctrlr, nvme_ch->qpair);
 	if (rc != 0) {
 		SPDK_ERRLOG("Unable to connect I/O qpair.\n");
-		goto err_connect;
+		goto err;
 	}
 
 	return 0;
 
-err_connect:
-	spdk_nvme_poll_group_remove(nvme_ch->group->group, nvme_ch->qpair);
-err_pg:
+err:
 	spdk_nvme_ctrlr_free_io_qpair(nvme_ch->qpair);
 
 	return rc;
@@ -886,7 +872,7 @@ bdev_nvme_destroy_cb(void *io_device, void *ctx_buf)
 		bdev_ocssd_destroy_io_channel(nvme_ch);
 	}
 
-	bdev_nvme_destroy_qpair(nvme_ch);
+	spdk_nvme_ctrlr_free_io_qpair(nvme_ch->qpair);
 
 	spdk_put_io_channel(spdk_io_channel_from_ctx(nvme_ch->group));
 }
