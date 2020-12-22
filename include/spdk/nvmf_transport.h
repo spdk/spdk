@@ -245,10 +245,9 @@ struct spdk_nvmf_transport_ops {
 			    const struct spdk_nvme_transport_id *trid);
 
 	/**
-	 * A listener has been associated with a subsystem with the given NQN.
-	 * This is only a notification. Most transports will not need to take any
-	 * action here, as the enforcement of the association is done in the generic
-	 * code.
+	 * It is a notification that a listener is being associated with the subsystem.
+	 * Most transports will not need to take any action here, as the enforcement
+	 * of the association is done in the generic code.
 	 *
 	 * Returns a negated errno code to block the association. 0 to allow.
 	 */
