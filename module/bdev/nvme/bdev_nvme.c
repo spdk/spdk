@@ -546,6 +546,11 @@ bdev_nvme_failover(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, bool remove)
 
 	nvme_bdev_ctrlr->resetting = true;
 	if (next_trid) {
+		assert(curr_trid->trid.trtype != SPDK_NVME_TRANSPORT_PCIE);
+
+		SPDK_NOTICELOG("Start failover from %s:%s to %s:%s\n", curr_trid->trid.traddr,
+			       curr_trid->trid.trsvcid,	next_trid->trid.traddr, next_trid->trid.trsvcid);
+
 		nvme_bdev_ctrlr->failover_in_progress = true;
 		spdk_nvme_ctrlr_fail(nvme_bdev_ctrlr->ctrlr);
 		nvme_bdev_ctrlr->connected_trid = &next_trid->trid;
