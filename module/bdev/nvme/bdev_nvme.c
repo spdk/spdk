@@ -1803,6 +1803,7 @@ bdev_nvme_add_trid(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct spdk_nvme_ctr
 	struct nvme_bdev_ns		*nvme_ns;
 	struct spdk_nvme_ns		*new_ns;
 	struct nvme_bdev_ctrlr_trid	*new_trid;
+	int				rc = 0;
 
 	assert(nvme_bdev_ctrlr != NULL);
 
@@ -1811,25 +1812,31 @@ bdev_nvme_add_trid(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct spdk_nvme_ctr
 		return -ENOTSUP;
 	}
 
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+
 	/* Currently we only support failover to the same transport type. */
 	if (nvme_bdev_ctrlr->connected_trid->trtype != trid->trtype) {
-		return -EINVAL;
+		rc = -EINVAL;
+		goto exit;
 	}
 
 	/* Currently we only support failover to the same NQN. */
 	if (strncmp(trid->subnqn, nvme_bdev_ctrlr->connected_trid->subnqn, SPDK_NVMF_NQN_MAX_LEN)) {
-		return -EINVAL;
+		rc = -EINVAL;
+		goto exit;
 	}
 
 	/* Skip all the other checks if we've already registered this path. */
 	TAILQ_FOREACH(new_trid, &nvme_bdev_ctrlr->trids, link) {
 		if (!spdk_nvme_transport_id_compare(&new_trid->trid, trid)) {
-			return -EEXIST;
+			rc = -EEXIST;
+			goto exit;
 		}
 	}
 
 	if (spdk_nvme_ctrlr_get_num_ns(new_ctrlr) != nvme_bdev_ctrlr->num_ns) {
-		return -EINVAL;
+		rc = -EINVAL;
+		goto exit;
 	}
 
 	for (i = 0; i < nvme_bdev_ctrlr->num_ns; i++) {
@@ -1844,18 +1851,22 @@ bdev_nvme_add_trid(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct spdk_nvme_ctr
 		assert(new_ns != NULL);
 
 		if (bdev_nvme_compare_ns(nvme_ns->ns, new_ns) != 0) {
-			return -EINVAL;
+			rc = -EINVAL;
+			goto exit;
 		}
 	}
 
 	new_trid = calloc(1, sizeof(*new_trid));
 	if (new_trid == NULL) {
-		return -ENOMEM;
+		rc = -ENOMEM;
+		goto exit;
 	}
 	new_trid->trid = *trid;
 	TAILQ_INSERT_TAIL(&nvme_bdev_ctrlr->trids, new_trid, link);
 
-	return 0;
+exit:
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+	return rc;
 }
 
 static void
