@@ -72,6 +72,7 @@ struct ocssd_bdev_ctrlr;
 struct nvme_bdev_ctrlr_trid {
 	struct spdk_nvme_transport_id		trid;
 	TAILQ_ENTRY(nvme_bdev_ctrlr_trid)	link;
+	bool					is_failed;
 };
 
 struct nvme_bdev_ctrlr {

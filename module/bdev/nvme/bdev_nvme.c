@@ -374,6 +374,7 @@ _bdev_nvme_reset_complete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, int rc)
 	/* we are using the for_each_channel cb_arg like a return code here. */
 	/* If it's zero, we succeeded, otherwise, the reset failed. */
 	void *cb_arg = NULL;
+	struct nvme_bdev_ctrlr_trid *curr_trid;
 
 	if (rc) {
 		cb_arg = (void *)0x1;
@@ -385,6 +386,13 @@ _bdev_nvme_reset_complete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, int rc)
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	nvme_bdev_ctrlr->resetting = false;
 	nvme_bdev_ctrlr->failover_in_progress = false;
+
+	curr_trid = TAILQ_FIRST(&nvme_bdev_ctrlr->trids);
+	assert(curr_trid != NULL);
+	assert(&curr_trid->trid == nvme_bdev_ctrlr->connected_trid);
+
+	curr_trid->is_failed = cb_arg != NULL ? true : false;
+
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 	/* Make sure we clear any pending resets before returning. */
 	spdk_for_each_channel(nvme_bdev_ctrlr,
@@ -545,6 +553,8 @@ bdev_nvme_failover(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, bool remove)
 	}
 
 	nvme_bdev_ctrlr->resetting = true;
+	curr_trid->is_failed = true;
+
 	if (next_trid) {
 		assert(curr_trid->trid.trtype != SPDK_NVME_TRANSPORT_PCIE);
 
@@ -1802,7 +1812,7 @@ bdev_nvme_add_trid(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct spdk_nvme_ctr
 	uint32_t			i, nsid;
 	struct nvme_bdev_ns		*nvme_ns;
 	struct spdk_nvme_ns		*new_ns;
-	struct nvme_bdev_ctrlr_trid	*new_trid;
+	struct nvme_bdev_ctrlr_trid	*new_trid, *tmp_trid;
 	int				rc = 0;
 
 	assert(nvme_bdev_ctrlr != NULL);
@@ -1862,6 +1872,15 @@ bdev_nvme_add_trid(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct spdk_nvme_ctr
 		goto exit;
 	}
 	new_trid->trid = *trid;
+	new_trid->is_failed = false;
+
+	TAILQ_FOREACH(tmp_trid, &nvme_bdev_ctrlr->trids, link) {
+		if (tmp_trid->is_failed) {
+			TAILQ_INSERT_BEFORE(tmp_trid, new_trid, link);
+			goto exit;
+		}
+	}
+
 	TAILQ_INSERT_TAIL(&nvme_bdev_ctrlr->trids, new_trid, link);
 
 exit:
