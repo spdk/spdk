@@ -1146,11 +1146,13 @@ nvmf_subsystem_ns_changed(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
 	}
 }
 
+static uint32_t
+nvmf_ns_reservation_clear_all_registrants(struct spdk_nvmf_ns *ns);
+
 int
 spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
 {
 	struct spdk_nvmf_ns *ns;
-	struct spdk_nvmf_registrant *reg, *reg_tmp;
 
 	if (!(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
 	      subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED)) {
@@ -1169,15 +1171,10 @@ spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t ns
 
 	subsystem->ns[nsid - 1] = NULL;
 
-	TAILQ_FOREACH_SAFE(reg, &ns->registrants, link, reg_tmp) {
-		TAILQ_REMOVE(&ns->registrants, reg, link);
-		free(reg);
-	}
+	free(ns->ptpl_file);
+	nvmf_ns_reservation_clear_all_registrants(ns);
 	spdk_bdev_module_release_bdev(ns->bdev);
 	spdk_bdev_close(ns->desc);
-	if (ns->ptpl_file) {
-		free(ns->ptpl_file);
-	}
 	free(ns);
 
 	nvmf_subsystem_ns_changed(subsystem, nsid);
