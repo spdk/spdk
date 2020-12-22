@@ -233,12 +233,17 @@ SPDK_BDEV_MODULE_REGISTER(nvme, &nvme_if)
 static void
 bdev_nvme_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_ctx)
 {
-	SPDK_DEBUGLOG(bdev_nvme, "qpar %p is disconnected, attempting reconnect.\n", qpair);
+	int rc;
+
+	SPDK_DEBUGLOG(bdev_nvme, "qpair %p is disconnected, attempting reconnect.\n", qpair);
 	/*
 	 * Currently, just try to reconnect indefinitely. If we are doing a reset, the reset will
 	 * reconnect a qpair and we will stop getting a callback for this one.
 	 */
-	spdk_nvme_ctrlr_reconnect_io_qpair(qpair);
+	rc = spdk_nvme_ctrlr_reconnect_io_qpair(qpair);
+	if (rc != 0) {
+		SPDK_WARNLOG("Failed to reconnect to qpair %p, errno %d\n", qpair, -rc);
+	}
 }
 
 static int
