@@ -53,6 +53,14 @@ DEFINE_STUB(spdk_nvmf_transport_stop_listen,
 	    (struct spdk_nvmf_transport *transport,
 	     const struct spdk_nvme_transport_id *trid), 0);
 
+DEFINE_STUB(spdk_nvmf_transport_get_first,
+	    struct spdk_nvmf_transport *,
+	    (struct spdk_nvmf_tgt *tgt), NULL);
+
+DEFINE_STUB(spdk_nvmf_transport_get_next,
+	    struct spdk_nvmf_transport *,
+	    (struct spdk_nvmf_transport *transport), NULL);
+
 DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
 
 DEFINE_STUB(nvmf_ctrlr_async_event_discovery_log_change_notice,

@@ -76,6 +76,14 @@ DEFINE_STUB(nvmf_transport_find_listener,
 	    (struct spdk_nvmf_transport *transport,
 	     const struct spdk_nvme_transport_id *trid), NULL);
 
+DEFINE_STUB(spdk_nvmf_transport_get_first,
+	    struct spdk_nvmf_transport *,
+	    (struct spdk_nvmf_tgt *tgt), NULL);
+
+DEFINE_STUB(spdk_nvmf_transport_get_next,
+	    struct spdk_nvmf_transport *,
+	    (struct spdk_nvmf_transport *transport), NULL);
+
 DEFINE_STUB(spdk_nvmf_request_complete,
 	    int,
 	    (struct spdk_nvmf_request *req), 0);

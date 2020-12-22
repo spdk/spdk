@@ -1152,6 +1152,7 @@ nvmf_ns_reservation_clear_all_registrants(struct spdk_nvmf_ns *ns);
 int
 spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
 {
+	struct spdk_nvmf_transport *transport;
 	struct spdk_nvmf_ns *ns;
 
 	if (!(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
@@ -1176,6 +1177,13 @@ spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t ns
 	spdk_bdev_module_release_bdev(ns->bdev);
 	spdk_bdev_close(ns->desc);
 	free(ns);
+
+	for (transport = spdk_nvmf_transport_get_first(subsystem->tgt); transport;
+	     transport = spdk_nvmf_transport_get_next(transport)) {
+		if (transport->ops->subsystem_remove_ns) {
+			transport->ops->subsystem_remove_ns(transport, subsystem, nsid);
+		}
+	}
 
 	nvmf_subsystem_ns_changed(subsystem, nsid);
 
@@ -1343,6 +1351,7 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 			       const struct spdk_nvmf_ns_opts *user_opts, size_t opts_size,
 			       const char *ptpl_file)
 {
+	struct spdk_nvmf_transport *transport;
 	struct spdk_nvmf_ns_opts opts;
 	struct spdk_nvmf_ns *ns;
 	struct spdk_nvmf_reservation_info info = {0};
@@ -1441,6 +1450,23 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 			}
 		}
 		ns->ptpl_file = strdup(ptpl_file);
+	}
+
+	for (transport = spdk_nvmf_transport_get_first(subsystem->tgt); transport;
+	     transport = spdk_nvmf_transport_get_next(transport)) {
+		if (transport->ops->subsystem_add_ns) {
+			rc = transport->ops->subsystem_add_ns(transport, subsystem, ns);
+			if (rc) {
+				SPDK_ERRLOG("Namespace attachment is not allowed by %s transport\n", transport->ops->name);
+				free(ns->ptpl_file);
+				nvmf_ns_reservation_clear_all_registrants(ns);
+				subsystem->ns[opts.nsid - 1] = NULL;
+				spdk_bdev_module_release_bdev(ns->bdev);
+				spdk_bdev_close(ns->desc);
+				free(ns);
+				return 0;
+			}
+		}
 	}
 
 	SPDK_DEBUGLOG(nvmf, "Subsystem %s: bdev %s assigned nsid %" PRIu32 "\n",

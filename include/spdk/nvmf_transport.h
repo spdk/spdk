@@ -256,6 +256,22 @@ struct spdk_nvmf_transport_ops {
 				const struct spdk_nvme_transport_id *trid);
 
 	/**
+	 * It is a notification that a namespace is being added to the subsystem.
+	 * Most transports will not need to take any action here.
+	 *
+	 * Returns a negated errno code to block the attachment. 0 to allow.
+	 */
+	int (*subsystem_add_ns)(struct spdk_nvmf_transport *transport,
+				const struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ns *ns);
+
+	/**
+	 * It is a notification that a namespace has been removed from the subsystem.
+	 * Most transports will not need to take any action here.
+	 */
+	void (*subsystem_remove_ns)(struct spdk_nvmf_transport *transport,
+				    const struct spdk_nvmf_subsystem *subsystem, uint32_t nsid);
+
+	/**
 	 * Check for new connections on the transport.
 	 */
 	uint32_t (*accept)(struct spdk_nvmf_transport *transport);
