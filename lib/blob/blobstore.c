@@ -3131,16 +3131,45 @@ bs_free(struct spdk_blob_store *bs)
 }
 
 void
-spdk_bs_opts_init(struct spdk_bs_opts *opts)
+spdk_bs_opts_init(struct spdk_bs_opts *opts, size_t opts_size)
 {
-	opts->cluster_sz = SPDK_BLOB_OPTS_CLUSTER_SZ;
-	opts->num_md_pages = SPDK_BLOB_OPTS_NUM_MD_PAGES;
-	opts->max_md_ops = SPDK_BLOB_OPTS_MAX_MD_OPS;
-	opts->max_channel_ops = SPDK_BLOB_OPTS_DEFAULT_CHANNEL_OPS;
-	opts->clear_method = BS_CLEAR_WITH_UNMAP;
-	memset(&opts->bstype, 0, sizeof(opts->bstype));
-	opts->iter_cb_fn = NULL;
-	opts->iter_cb_arg = NULL;
+
+	if (!opts) {
+		SPDK_ERRLOG("opts should not be NULL\n");
+		return;
+	}
+
+	if (!opts_size) {
+		SPDK_ERRLOG("opts_size should not be zero value\n");
+		return;
+	}
+
+	memset(opts, 0, opts_size);
+	opts->opts_size = opts_size;
+
+#define FIELD_OK(field) \
+	offsetof(struct spdk_bs_opts, field) + sizeof(opts->field) <= opts_size
+
+#define SET_FIELD(field, value) \
+	if (FIELD_OK(field)) { \
+		opts->field = value; \
+	} \
+
+	SET_FIELD(cluster_sz, SPDK_BLOB_OPTS_CLUSTER_SZ);
+	SET_FIELD(num_md_pages, SPDK_BLOB_OPTS_NUM_MD_PAGES);
+	SET_FIELD(max_md_ops, SPDK_BLOB_OPTS_NUM_MD_PAGES);
+	SET_FIELD(max_channel_ops, SPDK_BLOB_OPTS_DEFAULT_CHANNEL_OPS);
+	SET_FIELD(clear_method,  BS_CLEAR_WITH_UNMAP);
+
+	if (FIELD_OK(bstype)) {
+		memset(&opts->bstype, 0, sizeof(opts->bstype));
+	}
+
+	SET_FIELD(iter_cb_fn, NULL);
+	SET_FIELD(iter_cb_arg, NULL);
+
+#undef FIELD_OK
+#undef SET_FIELD
 }
 
 static int
@@ -4271,6 +4300,47 @@ bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	}
 }
 
+static int
+bs_opts_copy(struct spdk_bs_opts *src, struct spdk_bs_opts *dst)
+{
+
+	if (!src->opts_size) {
+		SPDK_ERRLOG("opts_size should not be zero value\n");
+		return -1;
+	}
+
+#define FIELD_OK(field) \
+        offsetof(struct spdk_bs_opts, field) + sizeof(src->field) <= src->opts_size
+
+#define SET_FIELD(field) \
+        if (FIELD_OK(field)) { \
+                dst->field = src->field; \
+        } \
+
+	SET_FIELD(cluster_sz);
+	SET_FIELD(num_md_pages);
+	SET_FIELD(max_md_ops);
+	SET_FIELD(max_channel_ops);
+	SET_FIELD(clear_method);
+
+	if (FIELD_OK(bstype)) {
+		memcpy(&dst->bstype, &src->bstype, sizeof(dst->bstype));
+	}
+	SET_FIELD(iter_cb_fn);
+	SET_FIELD(iter_cb_arg);
+
+	dst->opts_size = src->opts_size;
+
+	/* You should not remove this statement, but need to update the assert statement
+	 * if you add a new field, and also add a corresponding SET_FIELD statement */
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_bs_opts) == 64, "Incorrect size");
+
+#undef FIELD_OK
+#undef SET_FIELD
+
+	return 0;
+}
+
 void
 spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	     spdk_bs_op_with_handle_complete cb_fn, void *cb_arg)
@@ -4290,10 +4360,11 @@ spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 		return;
 	}
 
+	spdk_bs_opts_init(&opts, sizeof(opts));
 	if (o) {
-		opts = *o;
-	} else {
-		spdk_bs_opts_init(&opts);
+		if (bs_opts_copy(o, &opts)) {
+			return;
+		}
 	}
 
 	if (opts.max_md_ops == 0 || opts.max_channel_ops == 0) {
@@ -4549,7 +4620,7 @@ spdk_bs_dump(struct spdk_bs_dev *dev, FILE *fp, spdk_bs_dump_print_xattr print_x
 
 	SPDK_DEBUGLOG(blob, "Dumping blobstore from dev %p\n", dev);
 
-	spdk_bs_opts_init(&opts);
+	spdk_bs_opts_init(&opts, sizeof(opts));
 
 	err = bs_alloc(dev, &opts, &bs, &ctx);
 	if (err) {
@@ -4634,10 +4705,11 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 		return;
 	}
 
+	spdk_bs_opts_init(&opts, sizeof(opts));
 	if (o) {
-		opts = *o;
-	} else {
-		spdk_bs_opts_init(&opts);
+		if (bs_opts_copy(o, &opts)) {
+			return;
+		}
 	}
 
 	if (bs_opts_verify(&opts) != 0) {

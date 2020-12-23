@@ -225,14 +225,23 @@ struct spdk_bs_opts {
 
 	/** Argument passed to iter_cb_fn for each blob. */
 	void *iter_cb_arg;
+
+	/**
+	 * The size of spdk_bs_opts according to the caller of this library is used for ABI
+	 * compatibility. The library uses this field to know how many fields in this
+	 * structure are valid. And the library will populate any remaining fields with default values.
+	 * After that, new added fields should be put in the end of the struct.
+	 */
+	size_t opts_size;
 };
 
 /**
  * Initialize a spdk_bs_opts structure to the default blobstore option values.
  *
  * \param opts The spdk_bs_opts structure to be initialized.
+ * \param opts_size The opts_size must be the size of spdk_bs_opts structure.
  */
-void spdk_bs_opts_init(struct spdk_bs_opts *opts);
+void spdk_bs_opts_init(struct spdk_bs_opts *opts, size_t opts_size);
 
 /**
  * Load a blobstore from the given device.

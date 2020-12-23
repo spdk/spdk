@@ -623,7 +623,7 @@ spdk_fs_init(struct spdk_bs_dev *dev, struct spdk_blobfs_opts *opt,
 	args->arg = cb_arg;
 	args->fs = fs;
 
-	spdk_bs_opts_init(&opts);
+	spdk_bs_opts_init(&opts, sizeof(opts));
 	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), SPDK_BLOBFS_SIGNATURE);
 	if (opt) {
 		opts.cluster_sz = opt->cluster_sz;
@@ -865,7 +865,7 @@ spdk_fs_load(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 	args->arg = cb_arg;
 	args->fs = fs;
 	TAILQ_INIT(&args->op.fs_load.deleted_files);
-	spdk_bs_opts_init(&bs_opts);
+	spdk_bs_opts_init(&bs_opts, sizeof(bs_opts));
 	bs_opts.iter_cb_fn = iter_cb;
 	bs_opts.iter_cb_arg = req;
 	spdk_bs_load(dev, &bs_opts, load_cb, req);

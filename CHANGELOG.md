@@ -4,11 +4,17 @@
 
 ### bdev
 
-An `opts_size`element was added in the `spdk_bdev_opts` structure to solve the
+An `opts_size` element was added in the `spdk_bdev_opts` structure to solve the
 ABI compatiblity issue between different SPDK version. And also add `opts_size`
 parameter in spdk_bdev_get_opts function. Two fields `small_buf_pool_size` and
 `large_buf_pool_size` were added into spdk_bdev_opts, which were used to determine
 the small and large buffer pool size of the whole bdev module.
+
+### blob
+
+An `opts_size` element was added in the `spdk_bs_opts` structure to solve the
+ABI compatiblity issue between different SPDK version. And also add `opts_size`
+parameter in `spdk_bs_opts_init` function.
 
 ### event
 

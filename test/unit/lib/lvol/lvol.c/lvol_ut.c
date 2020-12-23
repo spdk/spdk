@@ -332,8 +332,9 @@ spdk_blob_get_id(struct spdk_blob *blob)
 }
 
 void
-spdk_bs_opts_init(struct spdk_bs_opts *opts)
+spdk_bs_opts_init(struct spdk_bs_opts *opts, size_t opts_size)
 {
+	opts->opts_size = opts_size;
 	opts->cluster_sz = SPDK_BLOB_OPTS_CLUSTER_SZ;
 	opts->num_md_pages = SPDK_BLOB_OPTS_NUM_MD_PAGES;
 	opts->max_md_ops = SPDK_BLOB_OPTS_MAX_MD_OPS;
@@ -1053,7 +1054,7 @@ lvs_load(void)
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 
 	init_dev(&dev);
-	spdk_bs_opts_init(&bs_opts);
+	spdk_bs_opts_init(&bs_opts, sizeof(bs_opts));
 	snprintf(bs_opts.bstype.bstype, sizeof(bs_opts.bstype.bstype), "LVOLSTORE");
 	spdk_bs_init(&dev.bs_dev, &bs_opts, null_cb, NULL);
 	SPDK_CU_ASSERT_FATAL(dev.bs != NULL);
@@ -1143,7 +1144,7 @@ lvols_load(void)
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 
 	init_dev(&dev);
-	spdk_bs_opts_init(&bs_opts);
+	spdk_bs_opts_init(&bs_opts, sizeof(bs_opts));
 	snprintf(bs_opts.bstype.bstype, sizeof(bs_opts.bstype.bstype), "LVOLSTORE");
 	spdk_bs_init(&dev.bs_dev, &bs_opts, null_cb, NULL);
 	super_blob = calloc(1, sizeof(*super_blob));
@@ -1250,7 +1251,7 @@ lvol_open(void)
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 
 	init_dev(&dev);
-	spdk_bs_opts_init(&bs_opts);
+	spdk_bs_opts_init(&bs_opts, sizeof(bs_opts));
 	snprintf(bs_opts.bstype.bstype, sizeof(bs_opts.bstype.bstype), "LVOLSTORE");
 	spdk_bs_init(&dev.bs_dev, &bs_opts, null_cb, NULL);
 	super_blob = calloc(1, sizeof(*super_blob));

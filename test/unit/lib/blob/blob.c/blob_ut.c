@@ -607,7 +607,7 @@ blob_thin_provision(void)
 	spdk_blob_id blobid;
 
 	dev = init_dev();
-	spdk_bs_opts_init(&bs_opts);
+	spdk_bs_opts_init(&bs_opts, sizeof(bs_opts));
 	snprintf(bs_opts.bstype.bstype, sizeof(bs_opts.bstype.bstype), "TESTTYPE");
 
 	/* Initialize a new blob store */
@@ -1166,7 +1166,7 @@ blob_read_only(void)
 	int rc;
 
 	dev = init_dev();
-	spdk_bs_opts_init(&opts);
+	spdk_bs_opts_init(&opts, sizeof(opts));
 	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
 
 	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
@@ -2161,7 +2161,7 @@ bs_load(void)
 	struct spdk_blob_opts blob_opts;
 
 	dev = init_dev();
-	spdk_bs_opts_init(&opts);
+	spdk_bs_opts_init(&opts, sizeof(opts));
 	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
 
 	/* Initialize a new blob store */
@@ -2227,7 +2227,7 @@ bs_load(void)
 
 	/* Load should when max_md_ops is set to zero */
 	dev = init_dev();
-	spdk_bs_opts_init(&opts);
+	spdk_bs_opts_init(&opts, sizeof(opts));
 	opts.max_md_ops = 0;
 	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 	poll_threads();
@@ -2235,7 +2235,7 @@ bs_load(void)
 
 	/* Load should when max_channel_ops is set to zero */
 	dev = init_dev();
-	spdk_bs_opts_init(&opts);
+	spdk_bs_opts_init(&opts, sizeof(opts));
 	opts.max_channel_ops = 0;
 	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 	poll_threads();
@@ -2243,7 +2243,7 @@ bs_load(void)
 
 	/* Load an existing blob store */
 	dev = init_dev();
-	spdk_bs_opts_init(&opts);
+	spdk_bs_opts_init(&opts, sizeof(opts));
 	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
 	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 	poll_threads();
@@ -2293,7 +2293,7 @@ bs_load(void)
 	dev = init_dev();
 	dev->blockcnt /= 2;
 
-	spdk_bs_opts_init(&opts);
+	spdk_bs_opts_init(&opts, sizeof(opts));
 	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
 	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 	poll_threads();
@@ -2304,7 +2304,7 @@ bs_load(void)
 	dev = init_dev();
 	dev->blockcnt *= 4;
 
-	spdk_bs_opts_init(&opts);
+	spdk_bs_opts_init(&opts, sizeof(opts));
 	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
 	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 	poll_threads();
@@ -2323,7 +2323,7 @@ bs_load(void)
 	super_block->size = 0;
 	super_block->crc = blob_md_page_calc_crc(super_block);
 
-	spdk_bs_opts_init(&opts);
+	spdk_bs_opts_init(&opts, sizeof(opts));
 	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
 	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 	poll_threads();
@@ -2457,7 +2457,7 @@ bs_load_custom_cluster_size(void)
 	uint64_t total_clusters;
 
 	dev = init_dev();
-	spdk_bs_opts_init(&opts);
+	spdk_bs_opts_init(&opts, sizeof(opts));
 	opts.cluster_sz = custom_cluster_size;
 	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
 
@@ -2483,7 +2483,7 @@ bs_load_custom_cluster_size(void)
 
 	/* Load an existing blob store */
 	dev = init_dev();
-	spdk_bs_opts_init(&opts);
+	spdk_bs_opts_init(&opts, sizeof(opts));
 	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
 	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 	poll_threads();
@@ -2513,7 +2513,7 @@ bs_type(void)
 	struct spdk_bs_opts opts;
 
 	dev = init_dev();
-	spdk_bs_opts_init(&opts);
+	spdk_bs_opts_init(&opts, sizeof(opts));
 	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
 
 	/* Initialize a new blob store */
@@ -2598,7 +2598,7 @@ bs_super_block(void)
 	struct spdk_bs_super_block_ver1 super_block_v1;
 
 	dev = init_dev();
-	spdk_bs_opts_init(&opts);
+	spdk_bs_opts_init(&opts, sizeof(opts));
 	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
 
 	/* Initialize a new blob store */
@@ -2697,7 +2697,7 @@ bs_cluster_sz(void)
 
 	/* Set cluster size to zero */
 	dev = init_dev();
-	spdk_bs_opts_init(&opts);
+	spdk_bs_opts_init(&opts, sizeof(opts));
 	opts.cluster_sz = 0;
 
 	/* Initialize a new blob store */
@@ -2711,7 +2711,7 @@ bs_cluster_sz(void)
 	 * to work it is required to be at least twice the blobstore page size.
 	 */
 	dev = init_dev();
-	spdk_bs_opts_init(&opts);
+	spdk_bs_opts_init(&opts, sizeof(opts));
 	opts.cluster_sz = SPDK_BS_PAGE_SIZE;
 
 	/* Initialize a new blob store */
@@ -2725,7 +2725,7 @@ bs_cluster_sz(void)
 	 * to work it is required to be at least twice the blobstore page size.
 	 */
 	dev = init_dev();
-	spdk_bs_opts_init(&opts);
+	spdk_bs_opts_init(&opts, sizeof(opts));
 	opts.cluster_sz = SPDK_BS_PAGE_SIZE - 1;
 
 	/* Initialize a new blob store */
@@ -2736,7 +2736,7 @@ bs_cluster_sz(void)
 
 	/* Set cluster size to twice the default */
 	dev = init_dev();
-	spdk_bs_opts_init(&opts);
+	spdk_bs_opts_init(&opts, sizeof(opts));
 	opts.cluster_sz *= 2;
 	cluster_sz = opts.cluster_sz;
 
@@ -2824,7 +2824,7 @@ bs_resize_md(void)
 
 
 	dev = init_dev();
-	spdk_bs_opts_init(&opts);
+	spdk_bs_opts_init(&opts, sizeof(opts));
 	opts.cluster_sz = CLUSTER_PAGE_COUNT * 4096;
 	cluster_sz = opts.cluster_sz;
 
@@ -2921,7 +2921,7 @@ blob_serialize_test(void)
 	dev = init_dev();
 
 	/* Initialize a new blobstore with very small clusters */
-	spdk_bs_opts_init(&opts);
+	spdk_bs_opts_init(&opts, sizeof(opts));
 	opts.cluster_sz = dev->blocklen * 8;
 	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
 	poll_threads();
@@ -4069,7 +4069,7 @@ bs_load_iter_test(void)
 	struct spdk_bs_opts opts;
 
 	dev = init_dev();
-	spdk_bs_opts_init(&opts);
+	spdk_bs_opts_init(&opts, sizeof(opts));
 	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
 
 	/* Initialize a new blob store */
@@ -4103,7 +4103,7 @@ bs_load_iter_test(void)
 	CU_ASSERT(g_bserrno == 0);
 
 	dev = init_dev();
-	spdk_bs_opts_init(&opts);
+	spdk_bs_opts_init(&opts, sizeof(opts));
 	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
 	opts.iter_cb_fn = test_iter;
 	opts.iter_cb_arg = &iter_ctx;
@@ -4119,7 +4119,7 @@ bs_load_iter_test(void)
 	bs_free(bs);
 
 	dev = init_dev();
-	spdk_bs_opts_init(&opts);
+	spdk_bs_opts_init(&opts, sizeof(opts));
 	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
 	opts.iter_cb_fn = test_iter;
 	iter_ctx.current_iter = 0;
@@ -4673,7 +4673,7 @@ blob_relations(void)
 	spdk_blob_id ids[10] = {};
 
 	dev = init_dev();
-	spdk_bs_opts_init(&bs_opts);
+	spdk_bs_opts_init(&bs_opts, sizeof(opts));
 	snprintf(bs_opts.bstype.bstype, sizeof(bs_opts.bstype.bstype), "TESTTYPE");
 
 	spdk_bs_init(dev, &bs_opts, bs_op_with_handle_complete, NULL);
@@ -4999,7 +4999,7 @@ blob_relations2(void)
 	spdk_blob_id ids[10] = {};
 
 	dev = init_dev();
-	spdk_bs_opts_init(&bs_opts);
+	spdk_bs_opts_init(&bs_opts, sizeof(bs_opts));
 	snprintf(bs_opts.bstype.bstype, sizeof(bs_opts.bstype.bstype), "TESTTYPE");
 
 	spdk_bs_init(dev, &bs_opts, bs_op_with_handle_complete, NULL);
@@ -6194,7 +6194,7 @@ blob_io_unit(void)
 
 	/* Create dev with 512 bytes io unit size */
 
-	spdk_bs_opts_init(&bsopts);
+	spdk_bs_opts_init(&bsopts, sizeof(bsopts));
 	bsopts.cluster_sz = SPDK_BS_PAGE_SIZE * 4;	/* 8 * 4 = 32 io_unit */
 	snprintf(bsopts.bstype.bstype, sizeof(bsopts.bstype.bstype), "TESTTYPE");
 
@@ -6331,7 +6331,7 @@ blob_io_unit_compatiblity(void)
 
 	/* Create dev with 512 bytes io unit size */
 
-	spdk_bs_opts_init(&bsopts);
+	spdk_bs_opts_init(&bsopts, sizeof(bsopts));
 	bsopts.cluster_sz = SPDK_BS_PAGE_SIZE * 4;	/* 8 * 4 = 32 io_unit */
 	snprintf(bsopts.bstype.bstype, sizeof(bsopts.bstype.bstype), "TESTTYPE");
 

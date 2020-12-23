@@ -385,7 +385,7 @@ lvs_load_cb(void *cb_arg, struct spdk_blob_store *bs, int lvolerrno)
 static void
 lvs_bs_opts_init(struct spdk_bs_opts *opts)
 {
-	spdk_bs_opts_init(opts);
+	spdk_bs_opts_init(opts, sizeof(*opts));
 	opts->max_channel_ops = SPDK_LVOL_BLOB_OPTS_CHANNEL_OPS;
 }
 
