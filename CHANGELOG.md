@@ -40,6 +40,8 @@ Updated DPDK submodule to DPDK 20.11.
 
 ### nvme
 
+Directives support was added to the NVMe driver.
+
 Added a new function `spdk_nvme_ctrlr_reset_subsystem` to perform a NVMe
 subsystem reset. Note: The NVMf target does not support the subsystem reset yet.
 Add a new function 'spdk_nvme_bytes_to_numd' to transfer bytes to number of

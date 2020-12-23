@@ -1011,6 +1011,15 @@ union spdk_nvme_cmd_cdw11 {
 	} create_io_cq;
 
 	struct {
+		/* Directive Operation */
+		uint32_t doper    : 8;
+		/* Directive Type */
+		uint32_t dtype    : 8;
+		/* Directive Specific */
+		uint32_t dspec    : 16;
+	} directive;
+
+	struct {
 		/* Number of Dwords */
 		uint32_t numdu    : 16;
 		/* Log Specific Identifier */
@@ -1257,6 +1266,7 @@ enum spdk_nvme_command_specific_status_code {
 	SPDK_NVME_SC_IOCS_COMBINATION_REJECTED		= 0x2b,
 	SPDK_NVME_SC_INVALID_IOCS			= 0x2c,
 
+	SPDK_NVME_SC_STREAM_RESOURCE_ALLOCATION_FAILED  = 0x7f,
 	SPDK_NVME_SC_CONFLICTING_ATTRIBUTES		= 0x80,
 	SPDK_NVME_SC_INVALID_PROTECTION_INFO		= 0x81,
 	SPDK_NVME_SC_ATTEMPTED_WRITE_TO_RO_RANGE	= 0x82,
@@ -3181,6 +3191,90 @@ struct spdk_nvme_zns_zone_report {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_zns_zone_report) == 64, "Incorrect size");
 
+/* Directives field */
+enum spdk_nvme_directive_type {
+	SPDK_NVME_DIRECTIVE_TYPE_IDENTIFY = 0x0,
+	SPDK_NVME_DIRECTIVE_TYPE_STREAMS = 0x1,
+};
+
+enum spdk_nvme_identify_directive_send_operation {
+	SPDK_NVME_IDENTIFY_DIRECTIVE_SEND_ENABLED = 0x1,
+};
+
+enum spdk_nvme_identify_directive_receive_operation {
+	SPDK_NVME_IDENTIFY_DIRECTIVE_RECEIVE_RETURN_PARAM = 0x1,
+};
+
+struct spdk_nvme_ns_identify_directive_param {
+	struct {
+		/* set to 1b to indicate that the Identify Directive is supported */
+		uint8_t identify	: 1;
+		/* set to 1b if the Streams Directive is supported */
+		uint8_t streams		: 1;
+		uint8_t reserved1	: 6;
+		uint8_t reserved2[31];
+	} directives_supported;
+	struct {
+		/* set to 1b to indicate that the Identify Directive is enabled */
+		uint8_t identify	: 1;
+		/* set to 1b if the Streams Directive is enabled */
+		uint8_t streams		: 1;
+		uint8_t reserved1	: 6;
+		uint8_t reserved2[31];
+	} directives_enabled;
+
+	uint32_t reserved[1008];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ns_identify_directive_param) == 4096, "Incorrect size");
+
+enum spdk_nvme_streams_directive_receive_operation {
+	SPDK_NVME_STREAMS_DIRECTIVE_RECEIVE_RETURN_PARAM = 0x1,
+	SPDK_NVME_STREAMS_DIRECTIVE_RECEIVE_GET_STATUS = 0x2,
+	SPDK_NVME_STREAMS_DIRECTIVE_RECEIVE_ALLOCATE_RESOURCE = 0x3,
+};
+
+enum spdk_nvme_streams_directive_send_operation {
+	SPDK_NVME_STREAMS_DIRECTIVE_SEND_RELEASE_ID = 0x1,
+	SPDK_NVME_STREAMS_DIRECTIVE_SEND_RELEASE_RESOURCE = 0x2,
+};
+
+struct spdk_nvme_ns_streams_data {
+	/* MAX Streams Limit */
+	uint16_t msl;
+	/* NVM Subsystem Streams Available */
+	uint16_t nssa;
+	/* NVM Subsystem Streams Open */
+	uint16_t nsso;
+	/* NVM Subsystem Stream Capability */
+	struct {
+		/* Stream ID may be shared by multiple host IDs if set to 1. */
+		uint8_t ssid		: 1;
+		uint8_t reserved	: 7;
+	} nssc;
+	uint8_t reserved1[9];
+	/* Namespace Specific Fields
+	 * Stream Write Size */
+	uint32_t sws;
+	/* Stream Granularity Size */
+	uint16_t sgs;
+	/* Namespace and Host Identifier Specific Fields
+	 * Namespace Streams Allocated */
+	uint16_t nsa;
+	/* Namespace Streams Open */
+	uint16_t nso;
+	uint8_t reserved2[6];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ns_streams_data) == 32, "Incorrect size");
+
+struct spdk_nvme_ns_streams_status {
+	/* Open Stream Count, this field specifies the number of streams that are currently open */
+	uint16_t open_streams_count;
+
+	/* Stream Identifier, this field specifies the open stream identifier */
+	uint16_t stream_id[65535];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ns_streams_status) == 131072, "Incorrect size");
+
 #define spdk_nvme_cpl_is_error(cpl)			\
 	((cpl)->status.sc != SPDK_NVME_SC_SUCCESS ||	\
 	 (cpl)->status.sct != SPDK_NVME_SCT_GENERIC)
@@ -3200,6 +3294,8 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_zns_zone_report) == 64, "Incorrect si
 #define SPDK_NVME_IO_FLAGS_FUSE_FIRST (SPDK_NVME_CMD_FUSE_FIRST << 0)
 #define SPDK_NVME_IO_FLAGS_FUSE_SECOND (SPDK_NVME_CMD_FUSE_SECOND << 0)
 #define SPDK_NVME_IO_FLAGS_FUSE_MASK (SPDK_NVME_CMD_FUSE_MASK << 0)
+/** Enable Directive type as streams */
+#define SPDK_NVME_IO_FLAGS_STREAMS_DIRECTIVE (1U << 20)
 /** Enable protection information checking of the Logical Block Reference Tag field */
 #define SPDK_NVME_IO_FLAGS_PRCHK_REFTAG (1U << 26)
 /** Enable protection information checking of the Application Tag field */
