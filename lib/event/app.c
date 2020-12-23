@@ -450,7 +450,6 @@ app_copy_opts(struct spdk_app_opts *opts, struct spdk_app_opts *opts_user, size_
 	SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 200, "Incorrect size");
 
 #undef SET_FIELD
-#undef FIELD_CHECK
 }
 
 int
