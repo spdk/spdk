@@ -225,7 +225,7 @@ with SPDK API.
 ### Error Handling
 
 Asynchronous Blobstore callbacks all include an error number that should be checked; non-zero values
-indicate and error. Synchronous calls will typically return an error value if applicable.
+indicate an error. Synchronous calls will typically return an error value if applicable.
 
 ### Asynchronous API
 
