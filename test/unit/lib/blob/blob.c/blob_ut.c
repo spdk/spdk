@@ -131,7 +131,7 @@ _get_snapshots_count(struct spdk_blob_store *bs)
 static void
 ut_spdk_blob_opts_init(struct spdk_blob_opts *opts)
 {
-	spdk_blob_opts_init(opts);
+	spdk_blob_opts_init(opts, sizeof(*opts));
 	opts->use_extent_table = g_use_extent_table;
 }
 

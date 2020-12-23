@@ -399,8 +399,9 @@ spdk_bs_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 DEFINE_STUB(spdk_bs_free_cluster_count, uint64_t, (struct spdk_blob_store *bs), BS_FREE_CLUSTERS);
 
 void
-spdk_blob_opts_init(struct spdk_blob_opts *opts)
+spdk_blob_opts_init(struct spdk_blob_opts *opts, size_t opts_size)
 {
+	opts->opts_size = opts_size;
 	opts->num_clusters = 0;
 	opts->thin_provision = false;
 	opts->xattrs.count = 0;

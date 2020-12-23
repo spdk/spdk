@@ -203,13 +203,41 @@ blob_xattrs_init(struct spdk_blob_xattr_opts *xattrs)
 }
 
 void
-spdk_blob_opts_init(struct spdk_blob_opts *opts)
+spdk_blob_opts_init(struct spdk_blob_opts *opts, size_t opts_size)
 {
-	opts->num_clusters = 0;
-	opts->thin_provision = false;
-	opts->clear_method = BLOB_CLEAR_WITH_DEFAULT;
-	blob_xattrs_init(&opts->xattrs);
-	opts->use_extent_table = true;
+	if (!opts) {
+		SPDK_ERRLOG("opts should not be NULL\n");
+		return;
+	}
+
+	if (!opts_size) {
+		SPDK_ERRLOG("opts_size should not be zero value\n");
+		return;
+	}
+
+	memset(opts, 0, opts_size);
+	opts->opts_size = opts_size;
+
+#define FIELD_OK(field) \
+        offsetof(struct spdk_blob_opts, field) + sizeof(opts->field) <= opts_size
+
+#define SET_FIELD(field, value) \
+        if (FIELD_OK(field)) { \
+                opts->field = value; \
+        } \
+
+	SET_FIELD(num_clusters, 0);
+	SET_FIELD(thin_provision, false);
+	SET_FIELD(clear_method, BLOB_CLEAR_WITH_DEFAULT);
+
+	if (FIELD_OK(xattrs)) {
+		blob_xattrs_init(&opts->xattrs);
+	}
+
+	SET_FIELD(use_extent_table, true);
+
+#undef FIELD_OK
+#undef SET_FIELD
 }
 
 void
@@ -4300,7 +4328,7 @@ bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	}
 }
 
-static int
+static inline int
 bs_opts_copy(struct spdk_bs_opts *src, struct spdk_bs_opts *dst)
 {
 
@@ -5309,6 +5337,37 @@ blob_set_xattrs(struct spdk_blob *blob, const struct spdk_blob_xattr_opts *xattr
 }
 
 static void
+blob_opts_copy(const struct spdk_blob_opts *src, struct spdk_blob_opts *dst)
+{
+#define FIELD_OK(field) \
+        offsetof(struct spdk_blob_opts, field) + sizeof(src->field) <= src->opts_size
+
+#define SET_FIELD(field) \
+        if (FIELD_OK(field)) { \
+                dst->field = src->field; \
+        } \
+
+	SET_FIELD(num_clusters);
+	SET_FIELD(thin_provision);
+	SET_FIELD(clear_method);
+
+	if (FIELD_OK(xattrs)) {
+		memcpy(&dst->xattrs, &src->xattrs, sizeof(src->xattrs));
+	}
+
+	SET_FIELD(use_extent_table);
+
+	dst->opts_size = src->opts_size;
+
+	/* You should not remove this statement, but need to update the assert statement
+	 * if you add a new field, and also add a corresponding SET_FIELD statement */
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_blob_opts) == 64, "Incorrect size");
+
+#undef FIELD_OK
+#undef SET_FIELD
+}
+
+static void
 bs_create_blob(struct spdk_blob_store *bs,
 	       const struct spdk_blob_opts *opts,
 	       const struct spdk_blob_xattr_opts *internal_xattrs,
@@ -5317,7 +5376,7 @@ bs_create_blob(struct spdk_blob_store *bs,
 	struct spdk_blob	*blob;
 	uint32_t		page_idx;
 	struct spdk_bs_cpl	cpl;
-	struct spdk_blob_opts	opts_default;
+	struct spdk_blob_opts	opts_local;
 	struct spdk_blob_xattr_opts internal_xattrs_default;
 	spdk_bs_sequence_t	*seq;
 	spdk_blob_id		id;
@@ -5345,12 +5404,12 @@ bs_create_blob(struct spdk_blob_store *bs,
 		return;
 	}
 
-	if (!opts) {
-		spdk_blob_opts_init(&opts_default);
-		opts = &opts_default;
+	spdk_blob_opts_init(&opts_local, sizeof(opts_local));
+	if (opts) {
+		blob_opts_copy(opts, &opts_local);
 	}
 
-	blob->use_extent_table = opts->use_extent_table;
+	blob->use_extent_table = opts_local.use_extent_table;
 	if (blob->use_extent_table) {
 		blob->invalid_flags |= SPDK_BLOB_EXTENT_TABLE;
 	}
@@ -5360,7 +5419,7 @@ bs_create_blob(struct spdk_blob_store *bs,
 		internal_xattrs = &internal_xattrs_default;
 	}
 
-	rc = blob_set_xattrs(blob, &opts->xattrs, false);
+	rc = blob_set_xattrs(blob, &opts_local.xattrs, false);
 	if (rc < 0) {
 		blob_free(blob);
 		spdk_bit_array_clear(bs->used_blobids, page_idx);
@@ -5378,13 +5437,13 @@ bs_create_blob(struct spdk_blob_store *bs,
 		return;
 	}
 
-	if (opts->thin_provision) {
+	if (opts_local.thin_provision) {
 		blob_set_thin_provision(blob);
 	}
 
-	blob_set_clear_method(blob, opts->clear_method);
+	blob_set_clear_method(blob, opts_local.clear_method);
 
-	rc = blob_resize(blob, opts->num_clusters);
+	rc = blob_resize(blob, opts_local.num_clusters);
 	if (rc < 0) {
 		blob_free(blob);
 		spdk_bit_array_clear(bs->used_blobids, page_idx);
@@ -5769,7 +5828,7 @@ bs_snapshot_origblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno
 
 	_blob->locked_operation_in_progress = true;
 
-	spdk_blob_opts_init(&opts);
+	spdk_blob_opts_init(&opts, sizeof(opts));
 	blob_xattrs_init(&internal_xattrs);
 
 	/* Change the size of new blob to the same as in original blob,
@@ -5880,7 +5939,7 @@ bs_clone_origblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
 
 	_blob->locked_operation_in_progress = true;
 
-	spdk_blob_opts_init(&opts);
+	spdk_blob_opts_init(&opts, sizeof(opts));
 	blob_xattrs_init(&internal_xattrs);
 
 	opts.thin_provision = true;

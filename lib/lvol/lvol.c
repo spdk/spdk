@@ -1063,7 +1063,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	spdk_uuid_fmt_lower(lvol->uuid_str, sizeof(lvol->uuid_str), &lvol->uuid);
 	req->lvol = lvol;
 
-	spdk_blob_opts_init(&opts);
+	spdk_blob_opts_init(&opts, sizeof(opts));
 	opts.thin_provision = thin_provision;
 	opts.num_clusters = num_clusters;
 	opts.clear_method = lvol->clear_method;

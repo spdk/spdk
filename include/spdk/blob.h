@@ -426,14 +426,23 @@ struct spdk_blob_opts {
 
 	/** Enable separate extent pages in metadata */
 	bool use_extent_table;
+
+	/**
+	 * The size of spdk_blob_opts according to the caller of this library is used for ABI
+	 * compatibility. The library uses this field to know how many fields in this
+	 * structure are valid. And the library will populate any remaining fields with default values.
+	 * New added fields should be put at the end of the struct.
+	 */
+	size_t opts_size;
 };
 
 /**
  * Initialize a spdk_blob_opts structure to the default blob option values.
  *
  * \param opts spdk_blob_opts structure to initialize.
+ * \param opts_size It must be the size of spdk_blob_opts structure.
  */
-void spdk_blob_opts_init(struct spdk_blob_opts *opts);
+void spdk_blob_opts_init(struct spdk_blob_opts *opts, size_t opts_size);
 
 /**
  * Create a new blob with options on the given blobstore. The new blob id will
