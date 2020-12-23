@@ -106,6 +106,9 @@ static char *fc_req_state_strs[] = {
 #define TRACE_FC_REQ_BDEV_ABORTED               SPDK_TPOINT_ID(TRACE_GROUP_NVMF_FC, 0x0E)
 #define TRACE_FC_REQ_PENDING                    SPDK_TPOINT_ID(TRACE_GROUP_NVMF_FC, 0x0F)
 
+#define HWQP_CONN_TABLE_SIZE			8192
+#define HWQP_RPI_TABLE_SIZE			4096
+
 SPDK_TRACE_REGISTER_FN(nvmf_fc_trace, "nvmf_fc", TRACE_GROUP_NVMF_FC)
 {
 	spdk_trace_register_object(OBJECT_NVMF_FC_IO, 'r');
@@ -306,6 +309,18 @@ nvmf_fc_record_req_trace_point(struct spdk_nvmf_fc_request *fc_req,
 	}
 }
 
+static struct rte_hash *
+nvmf_fc_create_hash_table(const char *name, size_t num_entries, size_t key_len)
+{
+	struct rte_hash_parameters hash_params = { 0 };
+
+	hash_params.entries = num_entries;
+	hash_params.key_len = key_len;
+	hash_params.name = name;
+
+	return rte_hash_create(&hash_params);
+}
+
 static void
 nvmf_fc_handle_connection_failure(void *arg)
 {
@@ -420,20 +435,6 @@ nvmf_fc_conn_free_fc_request(struct spdk_nvmf_fc_conn *fc_conn, struct spdk_nvmf
 	fc_conn->pool_free_elems += 1;
 }
 
-struct spdk_nvmf_fc_conn *
-nvmf_fc_hwqp_find_fc_conn(struct spdk_nvmf_fc_hwqp *hwqp, uint64_t conn_id)
-{
-	struct spdk_nvmf_fc_conn *fc_conn;
-
-	TAILQ_FOREACH(fc_conn, &hwqp->connection_list, link) {
-		if (fc_conn->conn_id == conn_id) {
-			return fc_conn;
-		}
-	}
-
-	return NULL;
-}
-
 static inline void
 nvmf_fc_request_remove_from_pending(struct spdk_nvmf_fc_request *fc_req)
 {
@@ -441,21 +442,39 @@ nvmf_fc_request_remove_from_pending(struct spdk_nvmf_fc_request *fc_req)
 		      spdk_nvmf_request, buf_link);
 }
 
-void
+int
 nvmf_fc_init_hwqp(struct spdk_nvmf_fc_port *fc_port, struct spdk_nvmf_fc_hwqp *hwqp)
 {
+	char name[64];
+
 	hwqp->fc_port = fc_port;
 
 	/* clear counters */
 	memset(&hwqp->counters, 0, sizeof(struct spdk_nvmf_fc_errors));
 
 	TAILQ_INIT(&hwqp->in_use_reqs);
-	TAILQ_INIT(&hwqp->connection_list);
 	TAILQ_INIT(&hwqp->sync_cbs);
 	TAILQ_INIT(&hwqp->ls_pending_queue);
 
+	snprintf(name, sizeof(name), "nvmf_fc_conn_hash:%d-%d", fc_port->port_hdl, hwqp->hwqp_id);
+	hwqp->connection_list_hash = nvmf_fc_create_hash_table(name, HWQP_CONN_TABLE_SIZE,
+				     sizeof(uint64_t));
+	if (!hwqp->connection_list_hash) {
+		SPDK_ERRLOG("Failed to create connection hash table.\n");
+		return -ENOMEM;
+	}
+
+	snprintf(name, sizeof(name), "nvmf_fc_rpi_hash:%d-%d", fc_port->port_hdl, hwqp->hwqp_id);
+	hwqp->rport_list_hash = nvmf_fc_create_hash_table(name, HWQP_RPI_TABLE_SIZE, sizeof(uint16_t));
+	if (!hwqp->rport_list_hash) {
+		SPDK_ERRLOG("Failed to create rpi hash table.\n");
+		rte_hash_free(hwqp->connection_list_hash);
+		return -ENOMEM;
+	}
+
 	/* Init low level driver queues */
 	nvmf_fc_init_q(hwqp);
+	return 0;
 }
 
 static struct spdk_nvmf_fc_poll_group *
@@ -1339,9 +1358,8 @@ nvmf_fc_hwqp_handle_request(struct spdk_nvmf_fc_hwqp *hwqp, struct spdk_nvmf_fc_
 
 	rqst_conn_id = from_be64(&cmd_iu->conn_id);
 
-	/* Check if conn id is valid */
-	fc_conn = nvmf_fc_hwqp_find_fc_conn(hwqp, rqst_conn_id);
-	if (!fc_conn) {
+	if (rte_hash_lookup_data(hwqp->connection_list_hash,
+				 (void *)&rqst_conn_id, (void **)&fc_conn) < 0) {
 		SPDK_ERRLOG("IU CMD conn(%ld) invalid\n", rqst_conn_id);
 		hwqp->counters.invalid_conn_err++;
 		return -ENODEV;
@@ -2144,6 +2162,7 @@ static int
 nvmf_fc_adm_hw_port_data_init(struct spdk_nvmf_fc_port *fc_port,
 			      struct spdk_nvmf_fc_hw_port_init_args *args)
 {
+	int rc = 0;
 	/* Used a high number for the LS HWQP so that it does not clash with the
 	 * IO HWQP's and immediately shows a LS queue during tracing.
 	 */
@@ -2169,7 +2188,10 @@ nvmf_fc_adm_hw_port_data_init(struct spdk_nvmf_fc_port *fc_port,
 	/*
 	 * Initialize the LS queue.
 	 */
-	nvmf_fc_init_hwqp(fc_port, &fc_port->ls_queue);
+	rc = nvmf_fc_init_hwqp(fc_port, &fc_port->ls_queue);
+	if (rc) {
+		return rc;
+	}
 
 	/*
 	 * Initialize the IO queues.
@@ -2178,7 +2200,16 @@ nvmf_fc_adm_hw_port_data_init(struct spdk_nvmf_fc_port *fc_port,
 		struct spdk_nvmf_fc_hwqp *hwqp = &fc_port->io_queues[i];
 		hwqp->hwqp_id = i;
 		hwqp->queues = args->io_queues[i];
-		nvmf_fc_init_hwqp(fc_port, hwqp);
+		rc = nvmf_fc_init_hwqp(fc_port, hwqp);
+		if (rc) {
+			for (; i > 0; --i) {
+				rte_hash_free(fc_port->io_queues[i - 1].connection_list_hash);
+				rte_hash_free(fc_port->io_queues[i - 1].rport_list_hash);
+			}
+			rte_hash_free(fc_port->ls_queue.connection_list_hash);
+			rte_hash_free(fc_port->ls_queue.rport_list_hash);
+			return rc;
+		}
 	}
 
 	/*

@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../../)
 include $(SPDK_ROOT_DIR)/mk/config.mk
 
-CFLAGS += -I$(SPDK_ROOT_DIR)/test/common/lib -I$(SPDK_ROOT_DIR)/lib/nvmf
+CFLAGS += -I$(SPDK_ROOT_DIR)/test/common/lib -I$(SPDK_ROOT_DIR)/lib/nvmf $(ENV_CFLAGS)
 
 ifneq ($(strip $(CONFIG_FC_PATH)),)
 CFLAGS += -I$(CONFIG_FC_PATH)

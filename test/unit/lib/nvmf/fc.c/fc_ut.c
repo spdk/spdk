@@ -135,6 +135,14 @@ DEFINE_STUB(spdk_nvmf_request_complete, int, (struct spdk_nvmf_request *req),
 DEFINE_STUB_V(nvmf_update_discovery_log,
 	      (struct spdk_nvmf_tgt *tgt, const char *hostnqn));
 
+DEFINE_STUB(rte_hash_create, struct rte_hash *, (const struct rte_hash_parameters *params),
+	    (void *)1);
+DEFINE_STUB(rte_hash_del_key, int32_t, (const struct rte_hash *h, const void *key), 0);
+DEFINE_STUB(rte_hash_lookup_data, int, (const struct rte_hash *h, const void *key, void **data),
+	    -ENOENT);
+DEFINE_STUB(rte_hash_add_key_data, int, (const struct rte_hash *h, const void *key, void *data), 0);
+DEFINE_STUB_V(rte_hash_free, (struct rte_hash *h));
+
 const char *
 spdk_nvme_transport_id_trtype_str(enum spdk_nvme_transport_type trtype)
 {

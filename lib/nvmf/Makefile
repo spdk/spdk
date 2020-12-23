@@ -64,7 +64,7 @@ endif
 
 ifeq ($(CONFIG_FC),y)
 C_SRCS += fc.c fc_ls.c
-CFLAGS += -I$(CURDIR)
+CFLAGS += -I$(CURDIR) $(ENV_CFLAGS)
 ifneq ($(strip $(CONFIG_FC_PATH)),)
 CFLAGS += -I$(CONFIG_FC_PATH)
 endif

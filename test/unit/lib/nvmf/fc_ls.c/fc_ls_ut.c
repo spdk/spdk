@@ -61,6 +61,13 @@ DEFINE_STUB(spdk_nvmf_subsystem_host_allowed, bool,
 	    (struct spdk_nvmf_subsystem *subsystem, const char *hostnqn), true);
 DEFINE_STUB_V(spdk_nvme_trid_populate_transport, (struct spdk_nvme_transport_id *trid,
 		enum spdk_nvme_transport_type trtype));
+DEFINE_STUB(rte_hash_del_key, int32_t, (const struct rte_hash *h, const void *key), 0);
+DEFINE_STUB(rte_hash_lookup_data, int, (const struct rte_hash *h, const void *key, void **data),
+	    -ENOENT);
+DEFINE_STUB(rte_hash_add_key_data, int, (const struct rte_hash *h, const void *key, void *data), 0);
+DEFINE_STUB(rte_hash_create, struct rte_hash *, (const struct rte_hash_parameters *params),
+	    (void *)1);
+DEFINE_STUB_V(rte_hash_free, (struct rte_hash *h));
 
 static const char *fc_ut_subsystem_nqn =
 	"nqn.2017-11.io.spdk:sn.390c0dc7c87011e786b300a0989adc53:subsystem.good";
@@ -173,20 +180,6 @@ spdk_nvmf_tgt_new_qpair(struct spdk_nvmf_tgt *tgt, struct spdk_nvmf_qpair *qpair
 err:
 	nvmf_fc_ls_add_conn_failure(api_data->assoc, api_data->ls_rqst,
 				    api_data->args.fc_conn, api_data->aq_conn);
-}
-
-struct spdk_nvmf_fc_conn *
-nvmf_fc_hwqp_find_fc_conn(struct spdk_nvmf_fc_hwqp *hwqp, uint64_t conn_id)
-{
-	struct spdk_nvmf_fc_conn *fc_conn;
-
-	TAILQ_FOREACH(fc_conn, &hwqp->connection_list, link) {
-		if (fc_conn->conn_id == conn_id) {
-			return fc_conn;
-		}
-	}
-
-	return NULL;
 }
 
 void
@@ -663,7 +656,6 @@ ls_tests_init(void)
 		hwqp->thread = NULL;
 		hwqp->fc_port = &g_fc_port;
 		hwqp->num_conns = 0;
-		TAILQ_INIT(&hwqp->connection_list);
 		TAILQ_INIT(&hwqp->in_use_reqs);
 
 		bzero(&g_poll_group[i], sizeof(struct spdk_nvmf_poll_group));

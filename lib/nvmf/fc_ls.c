@@ -1300,29 +1300,122 @@ nvmf_fc_poller_api_perform_cb(struct spdk_nvmf_fc_poller_api_cb_info *cb_info,
 	}
 }
 
+static int
+nvmf_fc_poller_add_conn_lookup_data(struct spdk_nvmf_fc_hwqp *hwqp,
+				    struct spdk_nvmf_fc_conn *fc_conn)
+{
+	int rc = -1;
+	struct spdk_nvmf_fc_hwqp_rport *rport = NULL;
+
+	/* Add connection based lookup entry. */
+	rc = rte_hash_add_key_data(hwqp->connection_list_hash,
+				   (void *)&fc_conn->conn_id, (void *)fc_conn);
+
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to add connection hash entry\n");
+		return rc;
+	}
+
+	/* RPI based lookup */
+	if (rte_hash_lookup_data(hwqp->rport_list_hash, (void *)&fc_conn->rpi, (void **)&rport) < 0) {
+		rport = calloc(1, sizeof(struct spdk_nvmf_fc_hwqp_rport));
+		if (!rport) {
+			SPDK_ERRLOG("Failed to allocate rport entry\n");
+			rc = -ENOMEM;
+			goto del_conn_hash;
+		}
+
+		/* Add rport table entry */
+		rc = rte_hash_add_key_data(hwqp->rport_list_hash,
+					   (void *)&fc_conn->rpi, (void *)rport);
+		if (rc < 0) {
+			SPDK_ERRLOG("Failed to add rport hash entry\n");
+			goto del_rport;
+		}
+		TAILQ_INIT(&rport->conn_list);
+	}
+
+	/* Add to rport conn list */
+	TAILQ_INSERT_TAIL(&rport->conn_list, fc_conn, rport_link);
+	return 0;
+
+del_rport:
+	free(rport);
+del_conn_hash:
+	rte_hash_del_key(hwqp->connection_list_hash, (void *)&fc_conn->conn_id);
+	return rc;
+}
+
+static void
+nvmf_fc_poller_del_conn_lookup_data(struct spdk_nvmf_fc_hwqp *hwqp,
+				    struct spdk_nvmf_fc_conn *fc_conn)
+{
+	struct spdk_nvmf_fc_hwqp_rport *rport = NULL;
+
+	if (rte_hash_del_key(hwqp->connection_list_hash, (void *)&fc_conn->conn_id) < 0) {
+		SPDK_ERRLOG("Failed to del connection(%lx) hash entry\n",
+			    fc_conn->conn_id);
+	}
+
+	if (rte_hash_lookup_data(hwqp->rport_list_hash, (void *)&fc_conn->rpi, (void **)&rport) >= 0) {
+		TAILQ_REMOVE(&rport->conn_list, fc_conn, rport_link);
+
+		/* If last conn del rpi hash */
+		if (TAILQ_EMPTY(&rport->conn_list)) {
+			if (rte_hash_del_key(hwqp->rport_list_hash, (void *)&fc_conn->rpi) < 0) {
+				SPDK_ERRLOG("Failed to del rpi(%lx) hash entry\n",
+					    fc_conn->conn_id);
+			}
+			free(rport);
+		}
+	} else {
+		SPDK_ERRLOG("RPI(%d) hash entry not found\n", fc_conn->rpi);
+	}
+}
+
+static struct spdk_nvmf_fc_request *
+nvmf_fc_poller_rpi_find_req(struct spdk_nvmf_fc_hwqp *hwqp, uint16_t rpi, uint16_t oxid)
+{
+	struct spdk_nvmf_fc_request *fc_req = NULL;
+	struct spdk_nvmf_fc_conn *fc_conn;
+	struct spdk_nvmf_fc_hwqp_rport *rport = NULL;
+
+	if (rte_hash_lookup_data(hwqp->rport_list_hash, (void *)&rpi, (void **)&rport) >= 0) {
+		TAILQ_FOREACH(fc_conn, &rport->conn_list, rport_link) {
+			TAILQ_FOREACH(fc_req, &fc_conn->in_use_reqs, conn_link) {
+				if (fc_req->oxid == oxid) {
+					return fc_req;
+				}
+			}
+		}
+	}
+	return NULL;
+}
+
 static void
 nvmf_fc_poller_api_add_connection(void *arg)
 {
 	enum spdk_nvmf_fc_poller_api_ret ret = SPDK_NVMF_FC_POLLER_API_SUCCESS;
 	struct spdk_nvmf_fc_poller_api_add_connection_args *conn_args =
 		(struct spdk_nvmf_fc_poller_api_add_connection_args *)arg;
-	struct spdk_nvmf_fc_conn *fc_conn;
+	struct spdk_nvmf_fc_conn *fc_conn = conn_args->fc_conn, *tmp;
 
 	SPDK_DEBUGLOG(nvmf_fc_poller_api, "Poller add connection, conn_id 0x%lx\n",
-		      conn_args->fc_conn->conn_id);
+		      fc_conn->conn_id);
 
 	/* make sure connection is not already in poller's list */
-	fc_conn = nvmf_fc_hwqp_find_fc_conn(conn_args->fc_conn->hwqp,
-					    conn_args->fc_conn->conn_id);
-	if (fc_conn) {
+	if (rte_hash_lookup_data(fc_conn->hwqp->connection_list_hash,
+				 (void *)&fc_conn->conn_id, (void **)&tmp) >= 0) {
 		SPDK_ERRLOG("duplicate connection found");
 		ret = SPDK_NVMF_FC_POLLER_API_DUP_CONN_ID;
 	} else {
-		SPDK_DEBUGLOG(nvmf_fc_poller_api,
-			      "conn_id=%lx", fc_conn->conn_id);
-		TAILQ_INSERT_TAIL(&conn_args->fc_conn->hwqp->connection_list,
-				  conn_args->fc_conn, link);
-		conn_args->fc_conn->hwqp->num_conns++;
+		if (nvmf_fc_poller_add_conn_lookup_data(fc_conn->hwqp, fc_conn)) {
+			SPDK_ERRLOG("Failed to add connection 0x%lx\n", fc_conn->conn_id);
+			ret = SPDK_NVMF_FC_POLLER_API_ERROR;
+		} else {
+			SPDK_DEBUGLOG(nvmf_fc_poller_api, "conn_id=%lx", fc_conn->conn_id);
+			fc_conn->hwqp->num_conns++;
+		}
 	}
 
 	/* perform callback */
@@ -1386,17 +1479,19 @@ nvmf_fc_poller_conn_abort_done(void *hwqp, int32_t status, void *cb_args)
 	}
 
 	if (!conn_args->fc_request_cnt) {
-		if (!TAILQ_EMPTY(&conn_args->hwqp->connection_list)) {
-			/* All the requests for this connection are aborted. */
-			TAILQ_REMOVE(&conn_args->hwqp->connection_list,	conn_args->fc_conn, link);
-			conn_args->fc_conn->hwqp->num_conns--;
+		struct spdk_nvmf_fc_conn *fc_conn = conn_args->fc_conn, *tmp;
 
-			SPDK_DEBUGLOG(nvmf_fc_poller_api, "Connection deleted, conn_id 0x%lx\n",
-				      conn_args->fc_conn->conn_id);
+		if (rte_hash_lookup_data(conn_args->hwqp->connection_list_hash,
+					 (void *)&fc_conn->conn_id, (void *)&tmp) >= 0) {
+			/* All the requests for this connection are aborted. */
+			nvmf_fc_poller_del_conn_lookup_data(conn_args->hwqp, fc_conn);
+			fc_conn->hwqp->num_conns--;
+
+			SPDK_DEBUGLOG(nvmf_fc_poller_api, "Connection deleted, conn_id 0x%lx\n", fc_conn->conn_id);
 
 			if (!conn_args->backend_initiated) {
 				/* disconnect qpair from nvmf controller */
-				spdk_nvmf_qpair_disconnect(&conn_args->fc_conn->qpair,
+				spdk_nvmf_qpair_disconnect(&fc_conn->qpair,
 							   nvmf_fc_disconnect_qpair_cb, &conn_args->cb_info);
 			}
 		} else {
@@ -1417,7 +1512,7 @@ nvmf_fc_poller_api_del_connection(void *arg)
 {
 	struct spdk_nvmf_fc_poller_api_del_connection_args *conn_args =
 		(struct spdk_nvmf_fc_poller_api_del_connection_args *)arg;
-	struct spdk_nvmf_fc_conn *fc_conn = conn_args->fc_conn;
+	struct spdk_nvmf_fc_conn *fc_conn = NULL;
 	struct spdk_nvmf_fc_request *fc_req = NULL, *tmp;
 	struct spdk_nvmf_fc_hwqp *hwqp = conn_args->hwqp;
 
@@ -1425,7 +1520,8 @@ nvmf_fc_poller_api_del_connection(void *arg)
 		      fc_conn->conn_id);
 
 	/* Make sure connection is valid */
-	if (!nvmf_fc_hwqp_find_fc_conn(hwqp, fc_conn->conn_id)) {
+	if (rte_hash_lookup_data(hwqp->connection_list_hash,
+				 (void *)&conn_args->fc_conn->conn_id, (void **)&fc_conn) < 0) {
 		/* perform callback */
 		nvmf_fc_poller_api_perform_cb(&conn_args->cb_info, SPDK_NVMF_FC_POLLER_API_NO_CONN_ID);
 		return;
@@ -1433,24 +1529,22 @@ nvmf_fc_poller_api_del_connection(void *arg)
 
 	conn_args->fc_request_cnt = 0;
 
-	TAILQ_FOREACH_SAFE(fc_req, &hwqp->in_use_reqs, link, tmp) {
-		if (fc_req->fc_conn->conn_id == fc_conn->conn_id) {
-			if (nvmf_qpair_is_admin_queue(&fc_conn->qpair) &&
-			    (fc_req->req.cmd->nvme_cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST)) {
-				/* AER will be cleaned by spdk_nvmf_qpair_disconnect. */
-				continue;
-			}
-
-			conn_args->fc_request_cnt += 1;
-			nvmf_fc_request_abort(fc_req, conn_args->send_abts,
-					      nvmf_fc_poller_conn_abort_done,
-					      conn_args);
+	TAILQ_FOREACH_SAFE(fc_req, &fc_conn->in_use_reqs, conn_link, tmp) {
+		if (nvmf_qpair_is_admin_queue(&fc_conn->qpair) &&
+		    (fc_req->req.cmd->nvme_cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST)) {
+			/* AER will be cleaned by spdk_nvmf_qpair_disconnect. */
+			continue;
 		}
+
+		conn_args->fc_request_cnt += 1;
+		nvmf_fc_request_abort(fc_req, conn_args->send_abts,
+				      nvmf_fc_poller_conn_abort_done,
+				      conn_args);
 	}
 
 	if (!conn_args->fc_request_cnt) {
 		SPDK_DEBUGLOG(nvmf_fc_poller_api, "Connection deleted.\n");
-		TAILQ_REMOVE(&hwqp->connection_list, fc_conn, link);
+		nvmf_fc_poller_del_conn_lookup_data(conn_args->hwqp, conn_args->fc_conn);
 		hwqp->num_conns--;
 
 		if (!conn_args->backend_initiated) {
@@ -1478,16 +1572,12 @@ static void
 nvmf_fc_poller_api_abts_received(void *arg)
 {
 	struct spdk_nvmf_fc_poller_api_abts_recvd_args *args = arg;
-	struct spdk_nvmf_fc_request *fc_req = NULL;
-	struct spdk_nvmf_fc_hwqp *hwqp = args->hwqp;
+	struct spdk_nvmf_fc_request *fc_req;
 
-	TAILQ_FOREACH(fc_req, &hwqp->in_use_reqs, link) {
-		if ((fc_req->rpi == args->ctx->rpi) &&
-		    (fc_req->oxid == args->ctx->oxid)) {
-			nvmf_fc_request_abort(fc_req, false,
-					      nvmf_fc_poller_abts_done, args);
-			return;
-		}
+	fc_req = nvmf_fc_poller_rpi_find_req(args->hwqp, args->ctx->rpi, args->ctx->oxid);
+	if (fc_req) {
+		nvmf_fc_request_abort(fc_req, false, nvmf_fc_poller_abts_done, args);
+		return;
 	}
 
 	nvmf_fc_poller_api_perform_cb(&args->cb_info,

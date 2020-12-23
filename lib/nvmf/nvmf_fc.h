@@ -41,6 +41,7 @@
 #include "spdk/nvmf_fc_spec.h"
 #include "spdk/thread.h"
 #include "nvmf_internal.h"
+#include <rte_hash.h>
 
 #define SPDK_NVMF_FC_TR_ADDR_LEN 64
 #define NVMF_FC_INVALID_CONN_ID UINT64_MAX
@@ -237,9 +238,6 @@ struct spdk_nvmf_fc_conn {
 	/* for assocations's available connection list */
 	TAILQ_ENTRY(spdk_nvmf_fc_conn) assoc_avail_link;
 
-	/* for hwqp's connection list */
-	TAILQ_ENTRY(spdk_nvmf_fc_conn) link;
-
 	/* for hwqp's rport connection list link  */
 	TAILQ_ENTRY(spdk_nvmf_fc_conn) rport_link;
 
@@ -304,8 +302,9 @@ struct spdk_nvmf_fc_hwqp {
 	struct spdk_nvmf_fc_poll_group *fgroup;
 
 	/* qpair (fc_connection) list */
-	TAILQ_HEAD(, spdk_nvmf_fc_conn) connection_list;
 	uint32_t num_conns; /* number of connections to queue */
+	struct rte_hash *connection_list_hash;
+	struct rte_hash *rport_list_hash;
 
 	TAILQ_HEAD(, spdk_nvmf_fc_request) in_use_reqs;
 
@@ -508,6 +507,11 @@ struct spdk_nvmf_fc_poller_api_queue_sync_done_args {
 	struct spdk_nvmf_fc_hwqp *hwqp;
 	struct spdk_nvmf_fc_poller_api_cb_info cb_info;
 	uint64_t tag;
+};
+
+struct spdk_nvmf_fc_hwqp_rport {
+	uint16_t rpi;
+	TAILQ_HEAD(, spdk_nvmf_fc_conn) conn_list;
 };
 
 /*
@@ -871,7 +875,7 @@ void nvmf_fc_ls_add_conn_failure(
 	struct spdk_nvmf_fc_conn *fc_conn,
 	bool aq_conn);
 
-void nvmf_fc_init_hwqp(struct spdk_nvmf_fc_port *fc_port, struct spdk_nvmf_fc_hwqp *hwqp);
+int nvmf_fc_init_hwqp(struct spdk_nvmf_fc_port *fc_port, struct spdk_nvmf_fc_hwqp *hwqp);
 
 struct spdk_nvmf_fc_conn *nvmf_fc_hwqp_find_fc_conn(struct spdk_nvmf_fc_hwqp *hwqp,
 		uint64_t conn_id);
