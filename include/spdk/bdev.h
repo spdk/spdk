@@ -1679,6 +1679,14 @@ void spdk_bdev_io_get_scsi_status(const struct spdk_bdev_io *bdev_io,
 				  int *sc, int *sk, int *asc, int *ascq);
 
 /**
+ * Get the status of bdev_io as aio errno.
+ *
+ * \param bdev_io I/O to get the status from.
+ * \param aio_result Negative errno returned from AIO.
+ */
+void spdk_bdev_io_get_aio_status(const struct spdk_bdev_io *bdev_io, int *aio_result);
+
+/**
  * Get the iovec describing the data buffer of a bdev_io.
  *
  * \param bdev_io I/O to describe with iovec.

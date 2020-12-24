@@ -226,6 +226,7 @@ struct spdk_bdev_fn_table {
 
 /** bdev I/O completion status */
 enum spdk_bdev_io_status {
+	SPDK_BDEV_IO_STATUS_AIO_ERROR = -8,
 	SPDK_BDEV_IO_STATUS_ABORTED = -7,
 	SPDK_BDEV_IO_STATUS_FIRST_FUSED_FAILED = -6,
 	SPDK_BDEV_IO_STATUS_MISCOMPARE = -5,
@@ -643,6 +644,8 @@ struct spdk_bdev_io {
 				/** SCSI additional sense code qualifier */
 				uint8_t ascq;
 			} scsi;
+			/** Only valid when status is SPDK_BDEV_IO_STATUS_AIO_ERROR */
+			int aio_result;
 		} error;
 
 		/**
@@ -933,6 +936,14 @@ void spdk_bdev_io_complete_nvme_status(struct spdk_bdev_io *bdev_io, uint32_t cd
  */
 void spdk_bdev_io_complete_scsi_status(struct spdk_bdev_io *bdev_io, enum spdk_scsi_status sc,
 				       enum spdk_scsi_sense sk, uint8_t asc, uint8_t ascq);
+
+/**
+ * Complete a bdev_io with AIO errno.
+ *
+ * \param bdev_io I/O to complete.
+ * \param aio_result Negative errno returned from AIO.
+ */
+void spdk_bdev_io_complete_aio_status(struct spdk_bdev_io *bdev_io, int aio_result);
 
 /**
  * Get a thread that given bdev_io was submitted on.

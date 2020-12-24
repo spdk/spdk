@@ -87,6 +87,7 @@
 	spdk_bdev_io_get_nvme_status;
 	spdk_bdev_io_get_nvme_fused_status;
 	spdk_bdev_io_get_scsi_status;
+	spdk_bdev_io_get_aio_status;
 	spdk_bdev_io_get_iovec;
 	spdk_bdev_io_get_md_buf;
 	spdk_bdev_io_get_cb_arg;
@@ -116,6 +117,7 @@
 	spdk_bdev_io_complete;
 	spdk_bdev_io_complete_nvme_status;
 	spdk_bdev_io_complete_scsi_status;
+	spdk_bdev_io_complete_aio_status;
 	spdk_bdev_io_get_thread;
 	spdk_bdev_io_get_io_channel;
 	spdk_bdev_notify_blockcnt_change;

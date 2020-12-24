@@ -5279,6 +5279,34 @@ spdk_bdev_io_get_scsi_status(const struct spdk_bdev_io *bdev_io,
 }
 
 void
+spdk_bdev_io_complete_aio_status(struct spdk_bdev_io *bdev_io, int aio_result)
+{
+	if (aio_result == 0) {
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	} else {
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_AIO_ERROR;
+	}
+
+	bdev_io->internal.error.aio_result = aio_result;
+
+	spdk_bdev_io_complete(bdev_io, bdev_io->internal.status);
+}
+
+void
+spdk_bdev_io_get_aio_status(const struct spdk_bdev_io *bdev_io, int *aio_result)
+{
+	assert(aio_result != NULL);
+
+	if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_AIO_ERROR) {
+		*aio_result = bdev_io->internal.error.aio_result;
+	} else if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS) {
+		*aio_result = 0;
+	} else {
+		*aio_result = -EIO;
+	}
+}
+
+void
 spdk_bdev_io_complete_nvme_status(struct spdk_bdev_io *bdev_io, uint32_t cdw0, int sct, int sc)
 {
 	if (sct == SPDK_NVME_SCT_GENERIC && sc == SPDK_NVME_SC_SUCCESS) {

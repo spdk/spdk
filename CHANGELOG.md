@@ -15,6 +15,11 @@ examine process. Along with corresponding `bdev_wait_for_examine` RPC, which
 is now always called during `spdk_bdev_subsystem_config_json` making sure
 every bdev is ready to be used.
 
+A new API `spdk_bdev_io_get_aio_status` was added for getting the status of
+bdev_io as Linux AIO errno. Also `spdk_bdev_io_complete_aio_status` function
+and `SPDK_BDEV_IO_STATUS_AIO_ERROR` were added for bdev module to complete
+a bdev_io with Linux AIO errno.
+
 ### blob
 
 An `opts_size` element was added in the `spdk_bs_opts` structure to solve the

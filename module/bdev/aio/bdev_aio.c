@@ -191,7 +191,7 @@ bdev_aio_readv(struct file_disk *fdisk, struct spdk_io_channel *ch,
 		if (rc == -EAGAIN) {
 			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_NOMEM);
 		} else {
-			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_FAILED);
+			spdk_bdev_io_complete_aio_status(spdk_bdev_io_from_ctx(aio_task), rc);
 			SPDK_ERRLOG("%s: io_submit returned %d\n", __func__, rc);
 		}
 		return -1;
@@ -225,7 +225,7 @@ bdev_aio_writev(struct file_disk *fdisk, struct spdk_io_channel *ch,
 		if (rc == -EAGAIN) {
 			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_NOMEM);
 		} else {
-			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_FAILED);
+			spdk_bdev_io_complete_aio_status(spdk_bdev_io_from_ctx(aio_task), rc);
 			SPDK_ERRLOG("%s: io_submit returned %d\n", __func__, rc);
 		}
 		return -1;
@@ -239,8 +239,11 @@ bdev_aio_flush(struct file_disk *fdisk, struct bdev_aio_task *aio_task)
 {
 	int rc = fsync(fdisk->fd);
 
-	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task),
-			      rc == 0 ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED);
+	if (rc == 0) {
+		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
+	} else {
+		spdk_bdev_io_complete_aio_status(spdk_bdev_io_from_ctx(aio_task), -errno);
+	}
 }
 
 static int
@@ -326,9 +329,9 @@ static int
 bdev_aio_io_channel_poll(struct bdev_aio_io_channel *io_ch)
 {
 	int nr, i = 0;
-	enum spdk_bdev_io_status status;
 	struct bdev_aio_task *aio_task;
 	struct io_event events[SPDK_AIO_QUEUE_DEPTH];
+	uint64_t io_result;
 
 	nr = bdev_user_io_getevents(io_ch->io_ctx, SPDK_AIO_QUEUE_DEPTH, events);
 
@@ -336,16 +339,23 @@ bdev_aio_io_channel_poll(struct bdev_aio_io_channel *io_ch)
 		return 0;
 	}
 
+#define MAX_AIO_ERRNO 256
 	for (i = 0; i < nr; i++) {
 		aio_task = events[i].data;
-		if (events[i].res != aio_task->len) {
-			status = SPDK_BDEV_IO_STATUS_FAILED;
-		} else {
-			status = SPDK_BDEV_IO_STATUS_SUCCESS;
-		}
-
 		aio_task->ch->io_inflight--;
-		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), status);
+		io_result = events[i].res;
+		if (io_result == aio_task->len) {
+			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
+		} else if (io_result < MAX_AIO_ERRNO) {
+			/* Linux AIO will return its errno to io_event.res */
+			int aio_errno = io_result;
+
+			spdk_bdev_io_complete_aio_status(spdk_bdev_io_from_ctx(aio_task), -aio_errno);
+		} else {
+			SPDK_ERRLOG("failed to complete aio: requested len is %lu, but completed len is %lu.\n",
+				    aio_task->len, io_result);
+			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_FAILED);
+		}
 	}
 
 	return nr;
