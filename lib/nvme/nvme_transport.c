@@ -554,10 +554,9 @@ nvme_transport_poll_group_disconnect_qpair(struct spdk_nvme_qpair *qpair)
 			/* EINPROGRESS indicates that a call has already been made to this function.
 			 * It just keeps us from segfaulting on a double removal/insert.
 			 */
-		} else if (rc == -EINPROGRESS) {
-			rc = 0;
 		}
-		return rc;
+
+		return rc == -EINPROGRESS ? 0 : rc;
 	}
 
 	return -EINVAL;
