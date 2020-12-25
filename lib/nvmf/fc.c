@@ -321,30 +321,6 @@ nvmf_fc_create_hash_table(const char *name, size_t num_entries, size_t key_len)
 	return rte_hash_create(&hash_params);
 }
 
-static void
-nvmf_fc_handle_connection_failure(void *arg)
-{
-	struct spdk_nvmf_fc_conn *fc_conn = arg;
-	struct spdk_nvmf_fc_ls_add_conn_api_data *api_data = NULL;
-
-	if (!fc_conn->create_opd) {
-		return;
-	}
-	api_data = &fc_conn->create_opd->u.add_conn;
-
-	nvmf_fc_ls_add_conn_failure(api_data->assoc, api_data->ls_rqst,
-				    api_data->args.fc_conn, api_data->aq_conn);
-}
-
-static void
-nvmf_fc_handle_assoc_deletion(void *arg)
-{
-	struct spdk_nvmf_fc_conn *fc_conn = arg;
-
-	nvmf_fc_delete_association(fc_conn->fc_assoc->tgtport,
-				   fc_conn->fc_assoc->assoc_id, false, true, NULL, NULL);
-}
-
 void
 nvmf_fc_free_conn_reqpool(struct spdk_nvmf_fc_conn *fc_conn)
 {
@@ -2063,27 +2039,68 @@ nvmf_fc_request_free(struct spdk_nvmf_request *req)
 }
 
 static void
+nvmf_fc_connection_delete_done_cb(void *arg)
+{
+	struct spdk_nvmf_fc_qpair_remove_ctx *fc_ctx = arg;
+
+	if (fc_ctx->cb_fn) {
+		spdk_thread_send_msg(fc_ctx->qpair_thread, fc_ctx->cb_fn, fc_ctx->cb_ctx);
+	}
+	free(fc_ctx);
+}
+
+static void
+_nvmf_fc_close_qpair(void *arg)
+{
+	struct spdk_nvmf_fc_qpair_remove_ctx *fc_ctx = arg;
+	struct spdk_nvmf_qpair *qpair = fc_ctx->qpair;
+	struct spdk_nvmf_fc_conn *fc_conn;
+	int rc;
+
+	fc_conn = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_fc_conn, qpair);
+	if (fc_conn->conn_id == NVMF_FC_INVALID_CONN_ID) {
+		struct spdk_nvmf_fc_ls_add_conn_api_data *api_data = NULL;
+
+		if (fc_conn->create_opd) {
+			api_data = &fc_conn->create_opd->u.add_conn;
+
+			nvmf_fc_ls_add_conn_failure(api_data->assoc, api_data->ls_rqst,
+						    api_data->args.fc_conn, api_data->aq_conn);
+		}
+	} else if (fc_conn->conn_state == SPDK_NVMF_FC_OBJECT_CREATED) {
+		rc = nvmf_fc_delete_connection(fc_conn, false, true,
+					       nvmf_fc_connection_delete_done_cb, fc_ctx);
+		if (!rc) {
+			/* Wait for transport to complete its work. */
+			return;
+		}
+
+		SPDK_ERRLOG("%s: Delete FC connection failed.\n", __func__);
+	}
+
+	nvmf_fc_connection_delete_done_cb(fc_ctx);
+}
+
+static void
 nvmf_fc_close_qpair(struct spdk_nvmf_qpair *qpair,
 		    spdk_nvmf_transport_qpair_fini_cb cb_fn, void *cb_arg)
 {
-	struct spdk_nvmf_fc_conn *fc_conn;
+	struct spdk_nvmf_fc_qpair_remove_ctx *fc_ctx;
 
-	fc_conn = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_fc_conn, qpair);
-
-	if (fc_conn->conn_id == NVMF_FC_INVALID_CONN_ID) {
-		/* QP creation failure in FC tranport. Cleanup. */
-		spdk_thread_send_msg(nvmf_fc_get_main_thread(),
-				     nvmf_fc_handle_connection_failure, fc_conn);
-	} else if (fc_conn->fc_assoc->assoc_id == fc_conn->conn_id &&
-		   fc_conn->fc_assoc->assoc_state != SPDK_NVMF_FC_OBJECT_TO_BE_DELETED) {
-		/* Admin connection */
-		spdk_thread_send_msg(nvmf_fc_get_main_thread(),
-				     nvmf_fc_handle_assoc_deletion, fc_conn);
+	fc_ctx = calloc(1, sizeof(struct spdk_nvmf_fc_qpair_remove_ctx));
+	if (!fc_ctx) {
+		SPDK_ERRLOG("Unable to allocate close_qpair ctx.");
+		if (cb_fn) {
+			cb_fn(cb_arg);
+		}
+		return;
 	}
+	fc_ctx->qpair = qpair;
+	fc_ctx->cb_fn = cb_fn;
+	fc_ctx->cb_ctx = cb_arg;
+	fc_ctx->qpair_thread = spdk_get_thread();
 
-	if (cb_fn) {
-		cb_fn(cb_arg);
-	}
+	spdk_thread_send_msg(nvmf_fc_get_main_thread(), _nvmf_fc_close_qpair, fc_ctx);
 }
 
 static int

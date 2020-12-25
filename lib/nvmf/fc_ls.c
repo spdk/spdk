@@ -419,6 +419,9 @@ nvmf_fc_do_del_conn_cbs(struct nvmf_fc_ls_op_ctx *opd,
 				SPDK_ERRLOG("Send LS response for delete connection failed\n");
 			}
 		}
+		if (dp->del_conn_cb) {
+			dp->del_conn_cb(dp->del_conn_cb_data);
+		}
 		free(opd);
 		opd = nxt;
 	}
@@ -444,7 +447,8 @@ nvmf_fc_ls_poller_delete_conn_cb(void *cb_data, enum spdk_nvmf_fc_poller_api_ret
 
 static int
 nvmf_fc_ls_poller_delete_conn(struct spdk_nvmf_fc_conn *fc_conn, bool send_abts,
-			      struct spdk_nvmf_fc_ls_rqst *ls_rqst, bool backend_initiated)
+			      struct spdk_nvmf_fc_ls_rqst *ls_rqst, bool backend_initiated,
+			      spdk_nvmf_fc_del_conn_cb cb_fn, void *cb_data)
 {
 	struct spdk_nvmf_fc_association *assoc = fc_conn->fc_assoc;
 	struct spdk_nvmf_fc_ls_del_conn_api_data *api_data;
@@ -464,6 +468,8 @@ nvmf_fc_ls_poller_delete_conn(struct spdk_nvmf_fc_conn *fc_conn, bool send_abts,
 	api_data = &opd->u.del_conn;
 	api_data->assoc = assoc;
 	api_data->ls_rqst = ls_rqst;
+	api_data->del_conn_cb = cb_fn;
+	api_data->del_conn_cb_data = cb_data;
 	api_data->aq_conn = (assoc->aq_conn == fc_conn ? true : false);
 	api_data->args.fc_conn = fc_conn;
 	api_data->args.send_abts = send_abts;
@@ -527,7 +533,7 @@ nvmf_fc_ls_add_conn_cb(void *cb_data, enum spdk_nvmf_fc_poller_api_ret ret)
 	if (nvmf_fc_xmt_ls_rsp(tgtport, ls_rqst) != 0) {
 		SPDK_ERRLOG("Send LS response for %s failed - cleaning up\n",
 			    dp->aq_conn ? "association" : "connection");
-		nvmf_fc_ls_poller_delete_conn(fc_conn, false, NULL, false);
+		nvmf_fc_ls_poller_delete_conn(fc_conn, false, NULL, false, NULL, NULL);
 	} else {
 		SPDK_DEBUGLOG(nvmf_fc_ls,
 			      "LS response (conn_id 0x%lx) sent\n", fc_conn->conn_id);
@@ -767,7 +773,7 @@ _nvmf_fc_delete_association(struct spdk_nvmf_fc_nport *tgtport,
 
 	/* delete all of the association's connections */
 	TAILQ_FOREACH(fc_conn, &assoc->fc_conns, assoc_link) {
-		rc = nvmf_fc_ls_poller_delete_conn(fc_conn, send_abts, NULL, backend_initiated);
+		rc = nvmf_fc_ls_poller_delete_conn(fc_conn, send_abts, NULL, backend_initiated, NULL, NULL);
 		if (rc) {
 			SPDK_ERRLOG("Delete connection failed for assoc_id 0x%lx conn_id 0x%lx\n",
 				    assoc->assoc_id, fc_conn->conn_id);
@@ -1277,6 +1283,16 @@ nvmf_fc_delete_association(struct spdk_nvmf_fc_nport *tgtport,
 	return _nvmf_fc_delete_association(tgtport, assoc_id, send_abts, backend_initiated,
 					   del_assoc_cb, cb_data, false);
 }
+
+int
+nvmf_fc_delete_connection(struct spdk_nvmf_fc_conn *fc_conn, bool send_abts,
+			  bool backend_initiated, spdk_nvmf_fc_del_conn_cb cb_fn,
+			  void *cb_data)
+{
+	return nvmf_fc_ls_poller_delete_conn(fc_conn, send_abts, NULL,
+					     backend_initiated, cb_fn, cb_data);
+}
+
 
 static void
 nvmf_fc_poller_api_cb_event(void *arg)

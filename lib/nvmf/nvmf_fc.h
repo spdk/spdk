@@ -176,6 +176,13 @@ struct spdk_nvmf_fc_srsr_bufs {
 	uint16_t rpi;
 };
 
+struct spdk_nvmf_fc_qpair_remove_ctx {
+	struct spdk_nvmf_qpair *qpair;
+	spdk_nvmf_transport_qpair_fini_cb cb_fn;
+	void *cb_ctx;
+	struct spdk_thread *qpair_thread;
+};
+
 /*
  * Struct representing a nport
  */
@@ -552,6 +559,7 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_fc_rq_buf_ls_request) ==
 
 /* Poller API structures (arguments and callback data */
 typedef void (*spdk_nvmf_fc_del_assoc_cb)(void *arg, uint32_t err);
+typedef void (*spdk_nvmf_fc_del_conn_cb)(void *arg);
 
 struct spdk_nvmf_fc_ls_add_conn_api_data {
 	struct spdk_nvmf_fc_poller_api_add_connection_args args;
@@ -566,6 +574,8 @@ struct spdk_nvmf_fc_ls_del_conn_api_data {
 	struct spdk_nvmf_fc_ls_rqst *ls_rqst;
 	struct spdk_nvmf_fc_association *assoc;
 	bool aq_conn; /* true if deleting AQ connection */
+	spdk_nvmf_fc_del_conn_cb del_conn_cb;
+	void *del_conn_cb_data;
 };
 
 /* used by LS disconnect association cmd handling */
@@ -921,6 +931,10 @@ int nvmf_fc_delete_association(struct spdk_nvmf_fc_nport *tgtport,
 			       uint64_t assoc_id, bool send_abts, bool backend_initiated,
 			       spdk_nvmf_fc_del_assoc_cb del_assoc_cb,
 			       void *cb_data);
+
+int nvmf_fc_delete_connection(struct spdk_nvmf_fc_conn *fc_conn, bool send_abts,
+			      bool backend_initiated, spdk_nvmf_fc_del_conn_cb cb_fn,
+			      void *cb_data);
 
 bool nvmf_ctrlr_is_on_nport(uint8_t port_hdl, uint16_t nport_hdl,
 			    struct spdk_nvmf_ctrlr *ctrlr);
