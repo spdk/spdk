@@ -1094,18 +1094,77 @@ static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 	.get_module_ctx		= bdev_nvme_get_module_ctx,
 };
 
-static struct nvme_bdev *
-nvme_bdev_create(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_ns *nvme_ns)
+static int
+nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
+		 struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns,
+		 uint32_t prchk_flags, void *ctx)
 {
-	struct nvme_bdev		*bdev;
-	struct spdk_nvme_ctrlr		*ctrlr = nvme_bdev_ctrlr->ctrlr;
-	struct spdk_nvme_ns		*ns = nvme_ns->ns;
 	const struct spdk_uuid		*uuid;
 	const struct spdk_nvme_ctrlr_data *cdata;
 	const struct spdk_nvme_ns_data	*nsdata;
 	int				rc;
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
+
+	disk->name = spdk_sprintf_alloc("%sn%d", base_name, spdk_nvme_ns_get_id(ns));
+	if (!disk->name) {
+		return -ENOMEM;
+	}
+	disk->product_name = "NVMe disk";
+
+	disk->write_cache = 0;
+	if (cdata->vwc.present) {
+		/* Enable if the Volatile Write Cache exists */
+		disk->write_cache = 1;
+	}
+	disk->blocklen = spdk_nvme_ns_get_extended_sector_size(ns);
+	disk->blockcnt = spdk_nvme_ns_get_num_sectors(ns);
+	disk->optimal_io_boundary = spdk_nvme_ns_get_optimal_io_boundary(ns);
+
+	uuid = spdk_nvme_ns_get_uuid(ns);
+	if (uuid != NULL) {
+		disk->uuid = *uuid;
+	}
+
+	nsdata = spdk_nvme_ns_get_data(ns);
+
+	disk->md_len = spdk_nvme_ns_get_md_size(ns);
+	if (disk->md_len != 0) {
+		disk->md_interleave = nsdata->flbas.extended;
+		disk->dif_type = (enum spdk_dif_type)spdk_nvme_ns_get_pi_type(ns);
+		if (disk->dif_type != SPDK_DIF_DISABLE) {
+			disk->dif_is_head_of_md = nsdata->dps.md_start;
+			disk->dif_check_flags = prchk_flags;
+		}
+	}
+
+	if (!(spdk_nvme_ctrlr_get_flags(ctrlr) &
+	      SPDK_NVME_CTRLR_COMPARE_AND_WRITE_SUPPORTED)) {
+		disk->acwu = 0;
+	} else if (nsdata->nsfeat.ns_atomic_write_unit) {
+		disk->acwu = nsdata->nacwu;
+	} else {
+		disk->acwu = cdata->acwu;
+	}
+
+	disk->ctxt = ctx;
+	disk->fn_table = &nvmelib_fn_table;
+	disk->module = &nvme_if;
+	rc = spdk_bdev_register(disk);
+	if (rc) {
+		SPDK_ERRLOG("spdk_bdev_register() failed\n");
+		free(disk->name);
+		return rc;
+	}
+
+	return 0;
+}
+
+static struct nvme_bdev *
+nvme_bdev_create(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_ns *nvme_ns)
+{
+	struct nvme_bdev *bdev;
+	int rc;
 
 	bdev = calloc(1, sizeof(*bdev));
 	if (!bdev) {
@@ -1115,55 +1174,10 @@ nvme_bdev_create(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_ns *n
 
 	bdev->nvme_ns = nvme_ns;
 
-	bdev->disk.name = spdk_sprintf_alloc("%sn%d", nvme_bdev_ctrlr->name, spdk_nvme_ns_get_id(ns));
-	if (!bdev->disk.name) {
-		free(bdev);
-		return NULL;
-	}
-	bdev->disk.product_name = "NVMe disk";
-
-	bdev->disk.write_cache = 0;
-	if (cdata->vwc.present) {
-		/* Enable if the Volatile Write Cache exists */
-		bdev->disk.write_cache = 1;
-	}
-	bdev->disk.blocklen = spdk_nvme_ns_get_extended_sector_size(ns);
-	bdev->disk.blockcnt = spdk_nvme_ns_get_num_sectors(ns);
-	bdev->disk.optimal_io_boundary = spdk_nvme_ns_get_optimal_io_boundary(ns);
-
-	uuid = spdk_nvme_ns_get_uuid(ns);
-	if (uuid != NULL) {
-		bdev->disk.uuid = *uuid;
-	}
-
-	nsdata = spdk_nvme_ns_get_data(ns);
-
-	bdev->disk.md_len = spdk_nvme_ns_get_md_size(ns);
-	if (bdev->disk.md_len != 0) {
-		bdev->disk.md_interleave = nsdata->flbas.extended;
-		bdev->disk.dif_type = (enum spdk_dif_type)spdk_nvme_ns_get_pi_type(ns);
-		if (bdev->disk.dif_type != SPDK_DIF_DISABLE) {
-			bdev->disk.dif_is_head_of_md = nsdata->dps.md_start;
-			bdev->disk.dif_check_flags = nvme_bdev_ctrlr->prchk_flags;
-		}
-	}
-
-	if (!(spdk_nvme_ctrlr_get_flags(ctrlr) &
-	      SPDK_NVME_CTRLR_COMPARE_AND_WRITE_SUPPORTED)) {
-		bdev->disk.acwu = 0;
-	} else if (nsdata->nsfeat.ns_atomic_write_unit) {
-		bdev->disk.acwu = nsdata->nacwu;
-	} else {
-		bdev->disk.acwu = cdata->acwu;
-	}
-
-	bdev->disk.ctxt = bdev;
-	bdev->disk.fn_table = &nvmelib_fn_table;
-	bdev->disk.module = &nvme_if;
-	rc = spdk_bdev_register(&bdev->disk);
-	if (rc) {
-		SPDK_ERRLOG("spdk_bdev_register() failed\n");
-		free(bdev->disk.name);
+	rc = nvme_disk_create(&bdev->disk, nvme_bdev_ctrlr->name, nvme_bdev_ctrlr->ctrlr,
+			      nvme_ns->ns, nvme_bdev_ctrlr->prchk_flags, bdev);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to create NVMe disk\n");
 		free(bdev);
 		return NULL;
 	}
