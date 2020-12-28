@@ -20,6 +20,11 @@ An `opts_size` element was added in the `spdk_blob_opts` structure to solve the
 ABI compatiblity issue between different SPDK version. And also add `opts_size`
 parameter in `spdk_blob_opts_init` function.
 
+An `opts_size` element was added in the `spdk_blob_open_opts` structure to solve the
+ABI compatiblity issue between different SPDK version. And also add `opts_size`
+parameter in `spdk_blob_open_opts_init` function.
+
+
 ### event
 
 The pci_whitelist and pci_blacklist members of struct spdk_app_opts have been

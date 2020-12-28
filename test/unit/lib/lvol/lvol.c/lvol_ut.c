@@ -411,8 +411,9 @@ spdk_blob_opts_init(struct spdk_blob_opts *opts, size_t opts_size)
 }
 
 void
-spdk_blob_open_opts_init(struct spdk_blob_open_opts *opts)
+spdk_blob_open_opts_init(struct spdk_blob_open_opts *opts, size_t opts_size)
 {
+	opts->opts_size = opts_size;
 	opts->clear_method = BLOB_CLEAR_WITH_DEFAULT;
 }
 

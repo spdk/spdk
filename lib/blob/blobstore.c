@@ -241,9 +241,33 @@ spdk_blob_opts_init(struct spdk_blob_opts *opts, size_t opts_size)
 }
 
 void
-spdk_blob_open_opts_init(struct spdk_blob_open_opts *opts)
+spdk_blob_open_opts_init(struct spdk_blob_open_opts *opts, size_t opts_size)
 {
-	opts->clear_method = BLOB_CLEAR_WITH_DEFAULT;
+	if (!opts) {
+		SPDK_ERRLOG("opts should not be NULL\n");
+		return;
+	}
+
+	if (!opts_size) {
+		SPDK_ERRLOG("opts_size should not be zero value\n");
+		return;
+	}
+
+	memset(opts, 0, opts_size);
+	opts->opts_size = opts_size;
+
+#define FIELD_OK(field) \
+        offsetof(struct spdk_blob_open_opts, field) + sizeof(opts->field) <= opts_size
+
+#define SET_FIELD(field, value) \
+        if (FIELD_OK(field)) { \
+                opts->field = value; \
+        } \
+
+	SET_FIELD(clear_method, BLOB_CLEAR_WITH_DEFAULT);
+
+#undef FIELD_OK
+#undef SET_FILED
 }
 
 static struct spdk_blob *
@@ -6821,6 +6845,29 @@ bs_open_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	bs_sequence_finish(seq, bserrno);
 }
 
+static inline void
+blob_open_opts_copy(const struct spdk_blob_open_opts *src, struct spdk_blob_open_opts *dst)
+{
+#define FIELD_OK(field) \
+        offsetof(struct spdk_blob_opts, field) + sizeof(src->field) <= src->opts_size
+
+#define SET_FIELD(field) \
+        if (FIELD_OK(field)) { \
+                dst->field = src->field; \
+        } \
+
+	SET_FIELD(clear_method);
+
+	dst->opts_size = src->opts_size;
+
+	/* You should not remove this statement, but need to update the assert statement
+	 * if you add a new field, and also add a corresponding SET_FIELD statement */
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_blob_open_opts) == 16, "Incorrect size");
+
+#undef FIELD_OK
+#undef SET_FIELD
+}
+
 static void
 bs_open_blob(struct spdk_blob_store *bs,
 	     spdk_blob_id blobid,
@@ -6830,7 +6877,7 @@ bs_open_blob(struct spdk_blob_store *bs,
 {
 	struct spdk_blob		*blob;
 	struct spdk_bs_cpl		cpl;
-	struct spdk_blob_open_opts	opts_default;
+	struct spdk_blob_open_opts	opts_local;
 	spdk_bs_sequence_t		*seq;
 	uint32_t			page_num;
 
@@ -6857,12 +6904,12 @@ bs_open_blob(struct spdk_blob_store *bs,
 		return;
 	}
 
-	if (!opts) {
-		spdk_blob_open_opts_init(&opts_default);
-		opts = &opts_default;
+	spdk_blob_open_opts_init(&opts_local, sizeof(opts_local));
+	if (opts) {
+		blob_open_opts_copy(opts, &opts_local);
 	}
 
-	blob->clear_method = opts->clear_method;
+	blob->clear_method = opts_local.clear_method;
 
 	cpl.type = SPDK_BS_CPL_TYPE_BLOB_HANDLE;
 	cpl.u.blob_handle.cb_fn = cb_fn;
