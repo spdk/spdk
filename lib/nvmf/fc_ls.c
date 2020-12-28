@@ -1505,10 +1505,12 @@ nvmf_fc_poller_conn_abort_done(void *hwqp, int32_t status, void *cb_args)
 
 			SPDK_DEBUGLOG(nvmf_fc_poller_api, "Connection deleted, conn_id 0x%lx\n", fc_conn->conn_id);
 
-			if (!conn_args->backend_initiated) {
+			if (!conn_args->backend_initiated && (fc_conn->qpair.state != SPDK_NVMF_QPAIR_DEACTIVATING)) {
 				/* disconnect qpair from nvmf controller */
 				spdk_nvmf_qpair_disconnect(&fc_conn->qpair,
 							   nvmf_fc_disconnect_qpair_cb, &conn_args->cb_info);
+			} else {
+				nvmf_fc_poller_api_perform_cb(&conn_args->cb_info, SPDK_NVMF_FC_POLLER_API_SUCCESS);
 			}
 		} else {
 			/*
@@ -1563,10 +1565,12 @@ nvmf_fc_poller_api_del_connection(void *arg)
 		nvmf_fc_poller_del_conn_lookup_data(conn_args->hwqp, conn_args->fc_conn);
 		hwqp->num_conns--;
 
-		if (!conn_args->backend_initiated) {
+		if (!conn_args->backend_initiated && (fc_conn->qpair.state != SPDK_NVMF_QPAIR_DEACTIVATING)) {
 			/* disconnect qpair from nvmf controller */
 			spdk_nvmf_qpair_disconnect(&fc_conn->qpair, nvmf_fc_disconnect_qpair_cb,
 						   &conn_args->cb_info);
+		} else {
+			nvmf_fc_poller_api_perform_cb(&conn_args->cb_info, SPDK_NVMF_FC_POLLER_API_SUCCESS);
 		}
 	}
 }
