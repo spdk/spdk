@@ -1355,12 +1355,21 @@ nvmf_fc_hwqp_handle_request(struct spdk_nvmf_fc_hwqp *hwqp, struct spdk_nvmf_fc_
 	}
 
 	/* If association/connection is being deleted - return */
-	if (fc_conn->fc_assoc->assoc_state !=  SPDK_NVMF_FC_OBJECT_CREATED) {
-		SPDK_ERRLOG("Association state not valid\n");
+	if (fc_conn->fc_assoc->assoc_state != SPDK_NVMF_FC_OBJECT_CREATED) {
+		SPDK_ERRLOG("Association %ld state = %d not valid\n",
+			    fc_conn->fc_assoc->assoc_id, fc_conn->fc_assoc->assoc_state);
 		return -EACCES;
 	}
 
-	if (fc_conn->qpair.state == SPDK_NVMF_QPAIR_ERROR) {
+	if (fc_conn->conn_state != SPDK_NVMF_FC_OBJECT_CREATED) {
+		SPDK_ERRLOG("Connection %ld state = %d not valid\n",
+			    rqst_conn_id, fc_conn->conn_state);
+		return -EACCES;
+	}
+
+	if (fc_conn->qpair.state != SPDK_NVMF_QPAIR_ACTIVE) {
+		SPDK_ERRLOG("Connection %ld qpair state = %d not valid\n",
+			    rqst_conn_id, fc_conn->qpair.state);
 		return -EACCES;
 	}
 
