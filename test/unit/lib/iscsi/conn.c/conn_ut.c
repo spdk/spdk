@@ -308,6 +308,11 @@ read_task_split_in_order_case(void)
 {
 	struct spdk_iscsi_task primary = {};
 	struct spdk_iscsi_task *task, *tmp;
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_sess sess = {};
+
+	conn.sess = &sess;
+	conn.sess->DataSequenceInOrder = true;
 
 	primary.scsi.transfer_len = SPDK_BDEV_LARGE_BUF_MAX_SIZE * 8;
 	TAILQ_INIT(&primary.subtask_list);
@@ -320,7 +325,7 @@ read_task_split_in_order_case(void)
 
 	TAILQ_FOREACH(task, &g_ut_read_tasks, link) {
 		CU_ASSERT(&primary == iscsi_task_get_primary(task));
-		process_read_task_completion(NULL, task, &primary);
+		process_read_task_completion(&conn, task, &primary);
 	}
 
 	CU_ASSERT(primary.bytes_completed == primary.scsi.transfer_len);
@@ -339,6 +344,11 @@ read_task_split_reverse_order_case(void)
 {
 	struct spdk_iscsi_task primary = {};
 	struct spdk_iscsi_task *task, *tmp;
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_sess sess = {};
+
+	conn.sess = &sess;
+	conn.sess->DataSequenceInOrder = true;
 
 	primary.scsi.transfer_len = SPDK_BDEV_LARGE_BUF_MAX_SIZE * 8;
 	TAILQ_INIT(&primary.subtask_list);
@@ -351,7 +361,7 @@ read_task_split_reverse_order_case(void)
 
 	TAILQ_FOREACH_REVERSE(task, &g_ut_read_tasks, read_tasks_head, link) {
 		CU_ASSERT(&primary == iscsi_task_get_primary(task));
-		process_read_task_completion(NULL, task, &primary);
+		process_read_task_completion(&conn, task, &primary);
 	}
 
 	CU_ASSERT(primary.bytes_completed == primary.scsi.transfer_len);
@@ -369,6 +379,12 @@ propagate_scsi_error_status_for_split_read_tasks(void)
 {
 	struct spdk_iscsi_task primary = {};
 	struct spdk_iscsi_task task1 = {}, task2 = {}, task3 = {}, task4 = {}, task5 = {}, task6 = {};
+
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_sess sess = {};
+
+	conn.sess = &sess;
+	conn.sess->DataSequenceInOrder = true;
 
 	primary.scsi.transfer_len = 512 * 6;
 	primary.rsp_scsi_status = SPDK_SCSI_STATUS_GOOD;
@@ -415,12 +431,12 @@ propagate_scsi_error_status_for_split_read_tasks(void)
 	 * status is propagated to remaining tasks correctly when these tasks complete
 	 * by the following order, task4, task3, task2, task1, primary, task5, and task6.
 	 */
-	process_read_task_completion(NULL, &task4, &primary);
-	process_read_task_completion(NULL, &task3, &primary);
-	process_read_task_completion(NULL, &task2, &primary);
-	process_read_task_completion(NULL, &task1, &primary);
-	process_read_task_completion(NULL, &task5, &primary);
-	process_read_task_completion(NULL, &task6, &primary);
+	process_read_task_completion(&conn, &task4, &primary);
+	process_read_task_completion(&conn, &task3, &primary);
+	process_read_task_completion(&conn, &task2, &primary);
+	process_read_task_completion(&conn, &task1, &primary);
+	process_read_task_completion(&conn, &task5, &primary);
+	process_read_task_completion(&conn, &task6, &primary);
 
 	CU_ASSERT(primary.rsp_scsi_status == SPDK_SCSI_STATUS_CHECK_CONDITION);
 	CU_ASSERT(task1.scsi.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
@@ -725,6 +741,11 @@ abort_queued_datain_task_test(void)
 	struct iscsi_bhs_scsi_req *scsi_req;
 	int rc;
 
+	struct spdk_iscsi_sess sess = {};
+
+	conn.sess = &sess;
+	conn.sess->DataSequenceInOrder = true;
+
 	TAILQ_INIT(&conn.queued_datain_tasks);
 	task.scsi.ref = 1;
 	task.scsi.dxfer_dir = SPDK_SCSI_DIR_FROM_DEV;
@@ -808,9 +829,13 @@ abort_queued_datain_tasks_test(void)
 	uint32_t alloc_cmd_sn;
 	struct iscsi_bhs_scsi_req *scsi_req;
 	int rc;
+	struct spdk_iscsi_sess sess = {};
 
 	TAILQ_INIT(&conn.queued_datain_tasks);
 	conn.data_in_cnt = 0;
+
+	conn.sess = &sess;
+	conn.sess->DataSequenceInOrder = true;
 
 	g_new_task = &subtask;
 

@@ -1096,8 +1096,8 @@ iscsi_task_copy_from_rsp_scsi_status(struct spdk_scsi_task *task,
 }
 
 static void
-process_completed_read_subtask_list(struct spdk_iscsi_conn *conn,
-				    struct spdk_iscsi_task *primary)
+process_completed_read_subtask_list_in_order(struct spdk_iscsi_conn *conn,
+		struct spdk_iscsi_task *primary)
 {
 	struct spdk_iscsi_task *subtask, *tmp;
 
@@ -1105,7 +1105,7 @@ process_completed_read_subtask_list(struct spdk_iscsi_conn *conn,
 		if (subtask->scsi.offset == primary->bytes_completed) {
 			TAILQ_REMOVE(&primary->subtask_list, subtask, subtask_link);
 			primary->bytes_completed += subtask->scsi.length;
-			if (primary->bytes_completed  == primary->scsi.transfer_len) {
+			if (primary->bytes_completed == primary->scsi.transfer_len) {
 				iscsi_task_put(primary);
 			}
 			iscsi_task_response(conn, subtask);
@@ -1148,7 +1148,15 @@ process_read_task_completion(struct spdk_iscsi_conn *conn,
 		assert(primary->bytes_completed == task->scsi.transfer_len);
 		iscsi_task_response(conn, task);
 		iscsi_task_put(task);
+	} else if (!conn->sess->DataSequenceInOrder) {
+		primary->bytes_completed += task->scsi.length;
+		if (primary->bytes_completed == primary->scsi.transfer_len) {
+			iscsi_task_put(primary);
+		}
+		iscsi_task_response(conn, task);
+		iscsi_task_put(task);
 	} else {
+
 		if (task->scsi.offset != primary->bytes_completed) {
 			TAILQ_FOREACH(tmp, &primary->subtask_list, subtask_link) {
 				if (task->scsi.offset < tmp->scsi.offset) {
@@ -1160,7 +1168,7 @@ process_read_task_completion(struct spdk_iscsi_conn *conn,
 			TAILQ_INSERT_TAIL(&primary->subtask_list, task, subtask_link);
 		} else {
 			TAILQ_INSERT_HEAD(&primary->subtask_list, task, subtask_link);
-			process_completed_read_subtask_list(conn, primary);
+			process_completed_read_subtask_list_in_order(conn, primary);
 		}
 	}
 }
