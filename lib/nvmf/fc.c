@@ -1094,6 +1094,39 @@ nvmf_ctrlr_is_on_nport(uint8_t port_hdl, uint16_t nport_hdl,
 }
 
 static void
+nvmf_fc_release_ls_rqst(struct spdk_nvmf_fc_hwqp *hwqp,
+			struct spdk_nvmf_fc_ls_rqst *ls_rqst)
+{
+	assert(ls_rqst);
+
+	TAILQ_REMOVE(&hwqp->ls_pending_queue, ls_rqst, ls_pending_link);
+
+	/* Return buffer to chip */
+	nvmf_fc_rqpair_buffer_release(hwqp, ls_rqst->rqstbuf.buf_index);
+}
+
+static int
+nvmf_fc_delete_ls_pending(struct spdk_nvmf_fc_hwqp *hwqp,
+			  struct spdk_nvmf_fc_nport *nport,
+			  struct spdk_nvmf_fc_remote_port_info *rport)
+{
+	struct spdk_nvmf_fc_ls_rqst *ls_rqst = NULL, *tmp;
+	int num_deleted = 0;
+
+	assert(hwqp);
+	assert(nport);
+	assert(rport);
+
+	TAILQ_FOREACH_SAFE(ls_rqst, &hwqp->ls_pending_queue, ls_pending_link, tmp) {
+		if ((ls_rqst->d_id == nport->d_id) && (ls_rqst->s_id == rport->s_id)) {
+			num_deleted++;
+			nvmf_fc_release_ls_rqst(hwqp, ls_rqst);
+		}
+	}
+	return num_deleted;
+}
+
+static void
 nvmf_fc_req_bdev_abort(void *arg1)
 {
 	struct spdk_nvmf_fc_request *fc_req = arg1;
@@ -1630,9 +1663,7 @@ nvmf_fc_hwqp_process_pending_ls_rqsts(struct spdk_nvmf_fc_hwqp *hwqp)
 				/* increment invalid rport counter */
 				hwqp->counters.rport_invalid++;
 			}
-			TAILQ_REMOVE(&hwqp->ls_pending_queue, ls_rqst, ls_pending_link);
-			/* Return buffer to chip */
-			nvmf_fc_rqpair_buffer_release(hwqp, ls_rqst->rqstbuf.buf_index);
+			nvmf_fc_release_ls_rqst(hwqp, ls_rqst);
 			continue;
 		}
 		if (nport->nport_state != SPDK_NVMF_FC_OBJECT_CREATED ||
@@ -1640,9 +1671,7 @@ nvmf_fc_hwqp_process_pending_ls_rqsts(struct spdk_nvmf_fc_hwqp *hwqp)
 			SPDK_ERRLOG("%s state not created. Dropping\n",
 				    nport->nport_state != SPDK_NVMF_FC_OBJECT_CREATED ?
 				    "Nport" : "Rport");
-			TAILQ_REMOVE(&hwqp->ls_pending_queue, ls_rqst, ls_pending_link);
-			/* Return buffer to chip */
-			nvmf_fc_rqpair_buffer_release(hwqp, ls_rqst->rqstbuf.buf_index);
+			nvmf_fc_release_ls_rqst(hwqp, ls_rqst);
 			continue;
 		}
 
@@ -3316,6 +3345,14 @@ nvmf_fc_adm_evnt_i_t_delete(void *arg)
 		rc = -ENODEV;
 		goto out;
 	}
+
+	/*
+	 * We have the rport slated for deletion. At this point clean up
+	 * any LS requests that are sitting in the pending list. Do this
+	 * first, then, set the states of the rport so that new LS requests
+	 * are not accepted. Then start the cleanup.
+	 */
+	nvmf_fc_delete_ls_pending(&(nport->fc_port->ls_queue), nport, rport);
 
 	/*
 	 * We have found exactly one rport. Allocate memory for callback data.
