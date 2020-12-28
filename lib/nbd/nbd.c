@@ -123,6 +123,8 @@ static struct spdk_nbd_disk_globals g_spdk_nbd;
 static spdk_nbd_fini_cb g_fini_cb_fn;
 static void *g_fini_cb_arg;
 
+static void _nbd_fini(void *arg1);
+
 static int
 nbd_submit_bdev_io(struct spdk_nbd_disk *nbd, struct nbd_io *io);
 
@@ -135,28 +137,37 @@ spdk_nbd_init(void)
 }
 
 static void
+_nbd_stop_async(void *arg)
+{
+	struct spdk_nbd_disk *nbd = arg;
+	int rc;
+
+	rc = spdk_nbd_stop(nbd);
+	if (rc) {
+		/* spdk_nbd_stop failed because some IO are still executing. Send a message
+		* to this thread to try again later. */
+		spdk_thread_send_msg(spdk_get_thread(),
+				     _nbd_stop_async, nbd);
+	} else {
+		_nbd_fini(NULL);
+	}
+}
+
+static void
 _nbd_fini(void *arg1)
 {
-	struct spdk_nbd_disk *nbd_idx, *nbd_tmp;
-	int rc = 0;
+	struct spdk_nbd_disk *nbd_first;
 
-	/*
-	 * Stop running spdk_nbd_disk.
-	 * Here, nbd removing are unnecessary, but _SAFE variant
-	 * is needed, since internal nbd_disk_unregister will
-	 * remove nbd from TAILQ.
-	 */
-	TAILQ_FOREACH_SAFE(nbd_idx, &g_spdk_nbd.disk_head, tailq, nbd_tmp) {
-		rc = spdk_nbd_stop(nbd_idx);
-		if (rc) {
-			break;
-		}
-	}
-
-	if (!rc) {
-		g_fini_cb_fn(g_fini_cb_arg);
+	nbd_first = TAILQ_FIRST(&g_spdk_nbd.disk_head);
+	if (nbd_first) {
+		/* Stop running spdk_nbd_disk */
+		spdk_thread_send_msg(spdk_io_channel_get_thread(nbd_first->ch),
+				     _nbd_stop_async, nbd_first);
 	} else {
-		spdk_thread_send_msg(spdk_get_thread(), _nbd_fini, NULL);
+		/* We can directly call final function here, because
+		 spdk_subsystem_fini_next handles the case: current thread does not equal
+		 to g_final_thread */
+		g_fini_cb_fn(g_fini_cb_arg);
 	}
 }
 
