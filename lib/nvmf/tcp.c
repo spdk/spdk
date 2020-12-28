@@ -368,9 +368,10 @@ nvmf_tcp_req_get(struct spdk_nvmf_tcp_qpair *tqpair)
 }
 
 static void
-nvmf_tcp_request_free(struct spdk_nvmf_tcp_req *tcp_req)
+nvmf_tcp_request_free(void *cb_arg)
 {
 	struct spdk_nvmf_tcp_transport *ttransport;
+	struct spdk_nvmf_tcp_req *tcp_req = cb_arg;
 
 	assert(tcp_req != NULL);
 
@@ -1374,13 +1375,6 @@ err:
 }
 
 static void
-nvmf_tcp_pdu_cmd_complete(void *cb_arg)
-{
-	struct spdk_nvmf_tcp_req *tcp_req = cb_arg;
-	nvmf_tcp_request_free(tcp_req);
-}
-
-static void
 nvmf_tcp_send_capsule_resp_pdu(struct spdk_nvmf_tcp_req *tcp_req,
 			       struct spdk_nvmf_tcp_qpair *tqpair)
 {
@@ -1401,7 +1395,7 @@ nvmf_tcp_send_capsule_resp_pdu(struct spdk_nvmf_tcp_req *tcp_req,
 		capsule_resp->common.plen += SPDK_NVME_TCP_DIGEST_LEN;
 	}
 
-	nvmf_tcp_qpair_write_pdu(tqpair, rsp_pdu, nvmf_tcp_pdu_cmd_complete, tcp_req);
+	nvmf_tcp_qpair_write_pdu(tqpair, rsp_pdu, nvmf_tcp_request_free, tcp_req);
 }
 
 static void
