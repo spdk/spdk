@@ -847,6 +847,11 @@ void
 nvmf_fc_port_add(struct spdk_nvmf_fc_port *fc_port)
 {
 	TAILQ_INSERT_TAIL(&g_spdk_nvmf_fc_port_list, fc_port, link);
+
+	/*
+	 * Let LLD add the port to its list.
+	 */
+	nvmf_fc_lld_port_add(fc_port);
 }
 
 struct spdk_nvmf_fc_port *
@@ -2195,6 +2200,7 @@ nvmf_fc_adm_hw_port_data_init(struct spdk_nvmf_fc_port *fc_port,
 	uint32_t i;
 
 	fc_port->port_hdl       = args->port_handle;
+	fc_port->lld_fc_port	= args->lld_fc_port;
 	fc_port->hw_port_status = SPDK_FC_PORT_OFFLINE;
 	fc_port->fcp_rq_id      = args->fcp_rq_id;
 	fc_port->num_io_queues  = args->io_queue_cnt;

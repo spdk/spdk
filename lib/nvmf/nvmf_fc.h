@@ -56,6 +56,11 @@
 typedef void *spdk_nvmf_fc_lld_hwqp_t;
 
 /*
+ * FC LLD port.
+ */
+typedef void *spdk_nvmf_fc_lld_fc_port_t;
+
+/*
  * FC HW port states.
  */
 enum spdk_fc_port_state {
@@ -333,6 +338,7 @@ struct spdk_nvmf_fc_hwqp {
  */
 struct spdk_nvmf_fc_port {
 	uint8_t port_hdl;
+	spdk_nvmf_fc_lld_fc_port_t lld_fc_port;
 	enum spdk_fc_port_state hw_port_status;
 	uint16_t fcp_rq_id;
 	struct spdk_nvmf_fc_hwqp ls_queue;
@@ -644,6 +650,7 @@ struct spdk_nvmf_fc_dump_assoc_id_args {
  * Arguments for HW port init event.
  */
 struct spdk_nvmf_fc_hw_port_init_args {
+	spdk_nvmf_fc_lld_fc_port_t     lld_fc_port;
 	uint32_t                       ls_queue_size;
 	spdk_nvmf_fc_lld_hwqp_t        ls_queue;
 	uint32_t                       io_queue_size;
