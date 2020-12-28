@@ -37,12 +37,19 @@ function install_refspdk() {
 		cp -R "$GIT_REPOS/spdk_repo/spdk" "$output_dir"
 	fi
 
-	git -C "$output_dir" checkout "$release"
-	git -C "$output_dir" submodule update --init
 	lts_2001_fallback=false
 	if [[ "$release" == v20.01* ]]; then
+		# We switch to a .x branch in order to slurp all the backports which fix spdk_abi_lts
+		# build for this particular release. Fetch the branch explicitly as in case of our CI,
+		# jenkins will set remote.*.fetch to a particular ref the build run against, so plain
+		# git fetch won't include any branches from the repo. FIXME: This could be removed
+		# after new LTS is in place.
+		release=${release%%-*}.x
+		git -C "$output_dir" fetch origin "+refs/heads/$release:refs/heads/$release"
 		lts_2001_fallback=true
 	fi
+	git -C "$output_dir" checkout "$release"
+	git -C "$output_dir" submodule update --init
 
 	cat > $HOME/autorun-spdk.conf <<- EOF
 		SPDK_BUILD_SHARED_OBJECT=1
