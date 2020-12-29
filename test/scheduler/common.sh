@@ -325,6 +325,16 @@ set_cpufreq() {
 	esac
 }
 
+set_cpufreq_governor() {
+	local cpu=$1
+	local governor=$2
+	local cpufreq=$sysfs_cpu/cpu$cpu/cpufreq
+
+	if [[ $(< "$cpufreq/scaling_governor") != "$governor" ]]; then
+		echo "$governor" > "$cpufreq/scaling_governor"
+	fi
+}
+
 exec_under_dynamic_scheduler() {
 	"$@" --wait-for-rpc &
 	spdk_pid=$!

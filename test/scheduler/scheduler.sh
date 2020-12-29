@@ -10,3 +10,4 @@ source "$testdir/isolate_cores.sh"
 
 run_test "idle" "$testdir/idle.sh"
 run_test "load_balancing" "$testdir/load_balancing.sh"
+run_test "dpdk_governor" "$testdir/governor.sh"
