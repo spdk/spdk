@@ -320,6 +320,10 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 			run_test "blockdev_crypto_qat" ./test/bdev/blockdev.sh "crypto_qat"
 		fi
 	fi
+
+	if [[ $SPDK_TEST_SCHEDULER -eq 1 ]]; then
+		run_test "scheduler" ./test/scheduler/scheduler.sh
+	fi
 fi
 
 timing_enter cleanup

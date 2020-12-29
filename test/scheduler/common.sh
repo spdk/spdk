@@ -324,3 +324,33 @@ set_cpufreq() {
 			;;
 	esac
 }
+
+exec_under_dynamic_scheduler() {
+	"$@" --wait-for-rpc &
+	spdk_pid=$!
+	# Give some time for the app to init itself
+	waitforlisten "$spdk_pid"
+	"$rootdir/scripts/rpc.py" framework_set_scheduler dynamic
+	"$rootdir/scripts/rpc.py" framework_start_init
+}
+
+get_thread_stats() {
+	xtrace_disable
+	_get_thread_stats busy idle
+	xtrace_restore
+}
+
+_get_thread_stats() {
+	local list_busy=$1
+	local list_idle=$2
+	local thread threads stats
+
+	stats=$(rpc_cmd thread_get_stats | jq -r '.threads[]')
+	threads=($(jq -r '.id' <<< "$stats"))
+
+	for thread in "${threads[@]}"; do
+		eval "${list_busy}[$thread]=\$(jq -r \"select(.id == $thread) | .busy\" <<< \$stats)"
+		eval "${list_idle}[$thread]=\$(jq -r \"select(.id == $thread) | .idle\" <<< \$stats)"
+		thread_map[thread]=$(jq -r "select(.id == $thread) | .name" <<< "$stats")
+	done
+}
