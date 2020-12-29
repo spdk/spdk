@@ -527,6 +527,7 @@ app_json_config_read(const char *config_file, struct load_json_config_ctx *ctx)
 
 	json = read_file(config_file, &json_size);
 	if (!json) {
+		SPDK_ERRLOG("Read JSON configuration file %s failed\n", config_file);
 		return -errno;
 	}
 
