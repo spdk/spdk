@@ -10,6 +10,7 @@ ISCSI_APP=("$_app_dir/iscsi_tgt")
 NVMF_APP=("$_app_dir/nvmf_tgt")
 VHOST_APP=("$_app_dir/vhost")
 DD_APP=("$_app_dir/spdk_dd")
+SPDK_APP=("$_app_dir/spdk_tgt")
 
 # Check if apps should execute under debug flags
 if [[ -e $_root/include/spdk/config.h ]]; then
@@ -20,5 +21,6 @@ if [[ -e $_root/include/spdk/config.h ]]; then
 		NVMF_APP+=("--logflag=all")
 		VHOST_APP+=("--logflag=all")
 		DD_APP+=("--logflag=all")
+		SPDK_APP+=("--logflag=all")
 	fi
 fi
