@@ -33,6 +33,7 @@ LATENCY_LOG=false
 IO_BATCH_SUBMIT=0
 IO_BATCH_COMPLETE=0
 FIO_BIN=$CONFIG_FIO_SOURCE_DIR/fio
+FIO_FNAME_STRATEGY="group"
 TMP_RESULT_FILE=$testdir/result.json
 PLUGIN="nvme"
 DISKCFG=""
@@ -76,6 +77,8 @@ function usage() {
 	echo "    --io-batch-complete=INT  Value for iodepth_batch_complete fio option [default=$IO_BATCH_COMPLETE]"
 	echo "    --fio-bin=PATH           Path to fio binary. [default=$FIO_BIN]"
 	echo "                             Applicable only for fio-based tests."
+	echo "    --fio-fname-strategy=STR Use 'group' to group filenames under job section with common CPU or"
+	echo "                             use 'split' to create a separate fio job section for each filename [default=$FIO_FNAME_STRATEGY]"
 	echo
 	echo "Test setup parameters:"
 	echo "    --driver=STR            Selects tool used for testing. Choices available:"
@@ -130,6 +133,12 @@ while getopts 'h-:' optchar; do
 				io-batch-submit=*) IO_BATCH_SUBMIT="${OPTARG#*=}" ;;
 				io-batch-complete=*) IO_BATCH_COMPLETE="${OPTARG#*=}" ;;
 				fio-bin=*) FIO_BIN="${OPTARG#*=}" ;;
+				fio-fname-strategy=*)
+					FIO_FNAME_STRATEGY="${OPTARG#*=}"
+					if [[ "$FIO_FNAME_STRATEGY" == "split" ]]; then
+						NOIOSCALING=true
+					fi
+					;;
 				driver=*) PLUGIN="${OPTARG#*=}" ;;
 				disk-config=*)
 					DISKCFG="${OPTARG#*=}"

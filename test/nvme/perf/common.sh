@@ -260,19 +260,28 @@ function create_fio_config() {
 		# SPDK fio plugin supports submitting/completing I/Os to multiple SSDs from a single thread.
 		# Therefore, the per thread queue depth is set to the desired IODEPTH/device X the number of devices per thread.
 		QD=$IODEPTH
-		if [[ "$NOIOSCALING" = false ]]; then
+		if [[ "$NOIOSCALING" == false ]]; then
 			QD=$((IODEPTH * total_disks_per_core))
 		fi
 
-		fio_job_section+=("")
-		fio_job_section+=("[filename${i}]")
-		fio_job_section+=("iodepth=$QD")
-		fio_job_section+=("cpus_allowed=${cores[$i]} #CPU NUMA Node ${cores_numa[$i]}")
+		if [[ "$FIO_FNAME_STRATEGY" == "group" ]]; then
+			fio_job_section+=("")
+			fio_job_section+=("[filename${i}]")
+			fio_job_section+=("iodepth=$QD")
+			fio_job_section+=("cpus_allowed=${cores[$i]} #CPU NUMA Node ${cores_numa[$i]}")
+		fi
 
 		while [[ "$m" -lt "$total_disks_per_core" ]]; do
 			# Try to add disks to job section if it's NUMA node matches NUMA
 			# for currently selected CPU
 			if [[ "${disks_numa[$n]}" == "$core_numa" ]]; then
+				if [[ "$FIO_FNAME_STRATEGY" == "split" ]]; then
+					fio_job_section+=("")
+					fio_job_section+=("[filename${m}-${cores[$i]}]")
+					fio_job_section+=("iodepth=$QD")
+					fio_job_section+=("cpus_allowed=${cores[$i]} #CPU NUMA Node ${cores_numa[$i]}")
+				fi
+
 				if [[ "$plugin" == "spdk-plugin-nvme" ]]; then
 					fio_job_section+=("filename=trtype=PCIe traddr=${disks[$n]//:/.} ns=1 #NVMe NUMA Node ${disks_numa[$n]}")
 				elif [[ "$plugin" == "spdk-plugin-bdev" ]]; then
