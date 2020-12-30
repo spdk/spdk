@@ -39,23 +39,12 @@ APP = interrupt_tgt
 
 C_SRCS := interrupt_tgt.c
 
-# Basic libaries to support spdk application
-SPDK_LIB_LIST += event
-# Basic bdev libraries
-SPDK_LIB_LIST += event_bdev
-# Aio bdev library
-SPDK_LIB_LIST += bdev_aio
-# NBD libraries
+SPDK_LIB_LIST = $(INTR_BLOCKDEV_MODULES_LIST) event_bdev conf
+
 SPDK_LIB_LIST += event_nbd
-# some bdev modules don't have pollers, so they can be directly runnning in edriven mode
-SPDK_LIB_LIST += bdev_malloc bdev_passthru bdev_error bdev_gpt bdev_split bdev_raid
-# logical volume and blobstore can directly run in edriven mode
-SPDK_LIB_LIST += bdev_lvol lvol blob_bdev blob
-# blobfs libraries
-SPDK_LIB_LIST += blobfs blobfs_bdev
-# vhost blk related libraries.
+ifeq ($(CONFIG_VHOST),y)
 SPDK_LIB_LIST += event_vhost
-SPDK_LIB_LIST += event_scsi # vhost-scsi is not supported, just because vhost lib requires scsi related libs
+endif
 
 ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
 SPDK_LIB_LIST += env_dpdk_rpc
