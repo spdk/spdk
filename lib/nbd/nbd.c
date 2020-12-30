@@ -415,38 +415,25 @@ spdk_nbd_stop(struct spdk_nbd_disk *nbd)
 }
 
 static int64_t
-read_from_socket(int fd, void *buf, size_t length)
+nbd_socket_rw(int fd, void *buf, size_t length, bool read_op)
 {
-	ssize_t bytes_read;
+	ssize_t rc;
 
-	bytes_read = read(fd, buf, length);
-	if (bytes_read == 0) {
-		return -EIO;
-	} else if (bytes_read == -1) {
-		if (errno != EAGAIN) {
-			return -errno;
-		}
-		return 0;
+	if (read_op) {
+		rc = read(fd, buf, length);
 	} else {
-		return bytes_read;
+		rc = write(fd, buf, length);
 	}
-}
 
-static int64_t
-write_to_socket(int fd, void *buf, size_t length)
-{
-	ssize_t bytes_written;
-
-	bytes_written = write(fd, buf, length);
-	if (bytes_written == 0) {
+	if (rc == 0) {
 		return -EIO;
-	} else if (bytes_written == -1) {
-		if (errno != EAGAIN) {
+	} else if (rc == -1) {
+		if (errno != EAGAIN && errno != EWOULDBLOCK) {
 			return -errno;
 		}
 		return 0;
 	} else {
-		return bytes_written;
+		return rc;
 	}
 }
 
@@ -608,8 +595,8 @@ nbd_io_recv_internal(struct spdk_nbd_disk *nbd)
 	io = nbd->io_in_recv;
 
 	if (io->state == NBD_IO_RECV_REQ) {
-		ret = read_from_socket(nbd->spdk_sp_fd, (char *)&io->req + io->offset,
-				       sizeof(io->req) - io->offset);
+		ret = nbd_socket_rw(nbd->spdk_sp_fd, (char *)&io->req + io->offset,
+				    sizeof(io->req) - io->offset, true);
 		if (ret < 0) {
 			nbd_put_io(nbd, io);
 			nbd->io_in_recv = NULL;
@@ -665,7 +652,7 @@ nbd_io_recv_internal(struct spdk_nbd_disk *nbd)
 	}
 
 	if (io->state == NBD_IO_RECV_PAYLOAD) {
-		ret = read_from_socket(nbd->spdk_sp_fd, io->payload + io->offset, io->payload_size - io->offset);
+		ret = nbd_socket_rw(nbd->spdk_sp_fd, io->payload + io->offset, io->payload_size - io->offset, true);
 		if (ret < 0) {
 			nbd_put_io(nbd, io);
 			nbd->io_in_recv = NULL;
@@ -733,8 +720,8 @@ nbd_io_xmit_internal(struct spdk_nbd_disk *nbd)
 	/* resp error and handler are already set in io_done */
 
 	if (io->state == NBD_IO_XMIT_RESP) {
-		ret = write_to_socket(nbd->spdk_sp_fd, (char *)&io->resp + io->offset,
-				      sizeof(io->resp) - io->offset);
+		ret = nbd_socket_rw(nbd->spdk_sp_fd, (char *)&io->resp + io->offset,
+				    sizeof(io->resp) - io->offset, false);
 		if (ret <= 0) {
 			goto reinsert;
 		}
@@ -757,7 +744,8 @@ nbd_io_xmit_internal(struct spdk_nbd_disk *nbd)
 	}
 
 	if (io->state == NBD_IO_XMIT_PAYLOAD) {
-		ret = write_to_socket(nbd->spdk_sp_fd, io->payload + io->offset, io->payload_size - io->offset);
+		ret = nbd_socket_rw(nbd->spdk_sp_fd, io->payload + io->offset, io->payload_size - io->offset,
+				    false);
 		if (ret <= 0) {
 			goto reinsert;
 		}
