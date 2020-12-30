@@ -968,10 +968,21 @@ nbd_enable_kernel(void *arg)
 {
 	struct spdk_nbd_start_ctx *ctx = arg;
 	int rc;
+	int flag;
 
 	/* Declare device setup by this process */
 	rc = ioctl(ctx->nbd->dev_fd, NBD_SET_SOCK, ctx->nbd->kernel_sp_fd);
-	if (rc == -1) {
+
+	if (!rc) {
+		flag = fcntl(ctx->nbd->kernel_sp_fd, F_GETFL);
+		rc = fcntl(ctx->nbd->kernel_sp_fd, F_SETFL, flag | O_NONBLOCK);
+		if (rc < 0) {
+			SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n",
+				    ctx->nbd->kernel_sp_fd, spdk_strerror(errno));
+		}
+	}
+
+	if (rc) {
 		if (errno == EBUSY && ctx->polling_count-- > 0) {
 			if (ctx->poller == NULL) {
 				ctx->poller = SPDK_POLLER_REGISTER(nbd_enable_kernel, ctx,
