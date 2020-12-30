@@ -54,6 +54,10 @@ Added `spdk_thread_set_interrupt_mode` function in order to set present spdk_the
 interrupt mode or back to poll mode. It is valid only when thread interrupt facility is
 enabled by spdk_interrupt_mode_enable().
 
+Added `spdk_poller_register_interrupt` function to mark that the poller is capable of
+entering interrupt mode. Callback function will be called when the poller must transition
+into or out of interrupt mode.
+
 ### iscsi
 
 A security vulnerability has been identified and fixed in the SPDK iSCSI target.

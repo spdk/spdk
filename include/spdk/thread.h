@@ -149,6 +149,30 @@ typedef struct spdk_poller *(*spdk_start_poller)(void *thread_ctx,
 typedef void (*spdk_stop_poller)(struct spdk_poller *poller, void *thread_ctx);
 
 /**
+ * Callback function to set poller into interrupt mode or back to poll mode.
+ *
+ * \param poller Poller to set interrupt or poll mode.
+ * \param cb_arg Argument passed to the callback function.
+ * \param interrupt_mode Set interrupt mode for true, or poll mode for false
+ */
+typedef void (*spdk_poller_set_interrupt_mode_cb)(struct spdk_poller *poller, void *cb_arg,
+		bool interrupt_mode);
+
+/**
+ * Mark that the poller is capable of entering interrupt mode.
+ *
+ * When registering the poller set interrupt callback, the callback will get
+ * executed immediately if its spdk_thread is in the interrupt mode.
+ *
+ * \param poller The poller to register callback function.
+ * \param cb_fn Callback function called when the poller must transition into or out of interrupt mode
+ * \param cb_arg Argument passed to the callback function.
+ */
+void spdk_poller_register_interrupt(struct spdk_poller *poller,
+				    spdk_poller_set_interrupt_mode_cb cb_fn,
+				    void *cb_arg);
+
+/**
  * I/O channel creation callback.
  *
  * \param io_device I/O device associated with this channel.

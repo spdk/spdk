@@ -75,6 +75,8 @@ struct spdk_poller {
 	void				*arg;
 	struct spdk_thread		*thread;
 	int				timerfd;
+	spdk_poller_set_interrupt_mode_cb set_intr_cb_fn;
+	void				*set_intr_cb_arg;
 
 	char				name[SPDK_MAX_POLLER_NAME_LEN + 1];
 };

@@ -1010,12 +1010,6 @@ period_poller_interrupt_init(struct spdk_poller *poller)
 	struct spdk_fd_group *fgrp = poller->thread->fgrp;
 	int timerfd;
 	int rc;
-	uint64_t now_tick = spdk_get_ticks();
-	uint64_t ticks = spdk_get_ticks_hz();
-	int ret;
-	struct itimerspec new_tv;
-
-	assert(poller->period_ticks != 0);
 
 	SPDK_DEBUGLOG(thread, "timerfd init for period poller %s\n", poller->name);
 	timerfd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
@@ -1031,30 +1025,62 @@ period_poller_interrupt_init(struct spdk_poller *poller)
 	}
 
 	poller->timerfd = timerfd;
-
-	/* Set repeated timer expirations */
-	new_tv.it_interval.tv_sec = poller->period_ticks / ticks;
-	new_tv.it_interval.tv_nsec = poller->period_ticks % ticks * SPDK_SEC_TO_NSEC / ticks;
-
-	/* Update next expiration */
-	if (poller->next_run_tick == 0) {
-		poller->next_run_tick = now_tick + poller->period_ticks;
-	} else if (poller->next_run_tick < now_tick) {
-		poller->next_run_tick = now_tick;
-	}
-
-	new_tv.it_value.tv_sec = (poller->next_run_tick - now_tick) / ticks;
-	new_tv.it_value.tv_nsec = (poller->next_run_tick - now_tick) % ticks * SPDK_SEC_TO_NSEC / ticks;
-
-	ret = timerfd_settime(timerfd, 0, &new_tv, NULL);
-	if (ret < 0) {
-		rc = -errno;
-		SPDK_ERRLOG("Failed to arm timerfd: error(%d)\n", errno);
-		period_poller_interrupt_fini(poller);
-		return rc;
-	}
-
 	return 0;
+}
+
+static void
+period_poller_set_interrupt_mode(struct spdk_poller *poller, void *cb_arg, bool interrupt_mode)
+{
+	int timerfd = poller->timerfd;
+	uint64_t now_tick = spdk_get_ticks();
+	uint64_t ticks = spdk_get_ticks_hz();
+	int ret;
+	struct itimerspec new_tv = {};
+	struct itimerspec old_tv = {};
+
+	assert(poller->period_ticks != 0);
+	assert(timerfd >= 0);
+
+	SPDK_DEBUGLOG(thread, "timerfd set poller %s into %s mode\n", poller->name,
+		      interrupt_mode ? "interrupt" : "poll");
+
+	if (interrupt_mode) {
+		/* Set repeated timer expiration */
+		new_tv.it_interval.tv_sec = poller->period_ticks / ticks;
+		new_tv.it_interval.tv_nsec = poller->period_ticks % ticks * SPDK_SEC_TO_NSEC / ticks;
+
+		/* Update next timer expiration */
+		if (poller->next_run_tick == 0) {
+			poller->next_run_tick = now_tick + poller->period_ticks;
+		} else if (poller->next_run_tick < now_tick) {
+			poller->next_run_tick = now_tick;
+		}
+
+		new_tv.it_value.tv_sec = (poller->next_run_tick - now_tick) / ticks;
+		new_tv.it_value.tv_nsec = (poller->next_run_tick - now_tick) % ticks * SPDK_SEC_TO_NSEC / ticks;
+
+		ret = timerfd_settime(timerfd, 0, &new_tv, NULL);
+		if (ret < 0) {
+			SPDK_ERRLOG("Failed to arm timerfd: error(%d)\n", errno);
+			assert(false);
+		}
+	} else {
+		/* Disarm the timer */
+		ret = timerfd_settime(timerfd, 0, &new_tv, &old_tv);
+		if (ret < 0) {
+			/* timerfd_settime's failure indicates that the timerfd is in error */
+			SPDK_ERRLOG("Failed to disarm timerfd: error(%d)\n", errno);
+			assert(false);
+		}
+
+		/* In order to reuse poller_insert_timer, fix now_tick, so next_run_tick would be
+		 * now_tick + ticks * old_tv.it_value.tv_sec + (ticks * old_tv.it_value.tv_nsec) / SPDK_SEC_TO_NSEC
+		 */
+		now_tick = now_tick - poller->period_ticks + ticks * old_tv.it_value.tv_sec + \
+			   (ticks * old_tv.it_value.tv_nsec) / SPDK_SEC_TO_NSEC;
+		TAILQ_REMOVE(&poller->thread->timed_pollers, poller, tailq);
+		poller_insert_timer(poller->thread, poller, now_tick);
+	}
 }
 
 static void
@@ -1076,10 +1102,37 @@ period_poller_interrupt_init(struct spdk_poller *poller)
 }
 
 static void
+period_poller_set_interrupt_mode(struct spdk_poller *poller, void *cb_arg, bool interrupt_mode)
+{
+}
+
+static void
 period_poller_interrupt_fini(struct spdk_poller *poller)
 {
 }
 #endif
+
+void
+spdk_poller_register_interrupt(struct spdk_poller *poller,
+			       spdk_poller_set_interrupt_mode_cb cb_fn,
+			       void *cb_arg)
+{
+	assert(poller != NULL);
+	assert(cb_fn != NULL);
+	assert(spdk_get_thread() == poller->thread);
+
+	if (!spdk_interrupt_mode_is_enabled()) {
+		return;
+	}
+
+	poller->set_intr_cb_fn = cb_fn;
+	poller->set_intr_cb_arg = cb_arg;
+
+	/* Set poller into interrupt mode if thread is in interrupt. */
+	if (poller->thread->in_interrupt) {
+		poller->set_intr_cb_fn(poller, poller->set_intr_cb_arg, true);
+	}
+}
 
 static struct spdk_poller *
 poller_register(spdk_poller_fn fn,
@@ -1139,6 +1192,8 @@ poller_register(spdk_poller_fn fn,
 			free(poller);
 			return NULL;
 		}
+
+		spdk_poller_register_interrupt(poller, period_poller_set_interrupt_mode, NULL);
 	}
 
 	thread_insert_poller(thread, poller);
@@ -1365,10 +1420,27 @@ spdk_for_each_thread(spdk_msg_fn fn, void *ctx, spdk_msg_fn cpl)
 	assert(rc == 0);
 }
 
+static inline void
+poller_set_interrupt_mode(struct spdk_poller *poller, bool interrupt_mode)
+{
+	if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
+		return;
+	}
+
+	if (!poller->set_intr_cb_fn) {
+		SPDK_ERRLOG("Poller(%s) doesn't support set interrupt mode.\n", poller->name);
+		assert(false);
+		return;
+	}
+
+	poller->set_intr_cb_fn(poller, poller->set_intr_cb_arg, interrupt_mode);
+}
+
 void
 spdk_thread_set_interrupt_mode(bool enable_interrupt)
 {
 	struct spdk_thread *thread = _get_thread();
+	struct spdk_poller *poller, *tmp;
 
 	assert(thread);
 	assert(spdk_interrupt_mode_is_enabled());
@@ -1377,12 +1449,17 @@ spdk_thread_set_interrupt_mode(bool enable_interrupt)
 		return;
 	}
 
-	/* Currently, only spdk_thread without pollers can set interrupt mode.
-	 * TODO: remove it after adding interrupt mode switch into poller.
-	 */
-	assert(TAILQ_EMPTY(&thread->timed_pollers));
-	assert(TAILQ_EMPTY(&thread->active_pollers));
-	assert(TAILQ_EMPTY(&thread->paused_pollers));
+	/* Set pollers to expected mode */
+	TAILQ_FOREACH_SAFE(poller, &thread->timed_pollers, tailq, tmp) {
+		poller_set_interrupt_mode(poller, enable_interrupt);
+	}
+	TAILQ_FOREACH_SAFE(poller, &thread->active_pollers, tailq, tmp) {
+		poller_set_interrupt_mode(poller, enable_interrupt);
+	}
+	/* All paused pollers will go to work in interrupt mode */
+	TAILQ_FOREACH_SAFE(poller, &thread->paused_pollers, tailq, tmp) {
+		poller_set_interrupt_mode(poller, enable_interrupt);
+	}
 
 	thread->in_interrupt = enable_interrupt;
 	return;

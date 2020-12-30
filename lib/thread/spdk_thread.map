@@ -35,6 +35,7 @@
 	spdk_poller_unregister;
 	spdk_poller_pause;
 	spdk_poller_resume;
+	spdk_poller_register_interrupt;
 	spdk_io_device_register;
 	spdk_io_device_unregister;
 	spdk_get_io_channel;
