@@ -2564,7 +2564,7 @@ iscsi_pdu_hdr_op_logout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu
 		/* ignore error */
 	}
 
-	if (conn->id == cid) {
+	if (conn->cid == cid) {
 		/* connection or session closed successfully */
 		response = 0;
 		iscsi_conn_logout(conn);

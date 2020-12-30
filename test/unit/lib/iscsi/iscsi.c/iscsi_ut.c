@@ -1537,7 +1537,7 @@ pdu_hdr_op_logout_test(void)
 	sess.ExpCmdSN = 5679;
 	sess.connections = 1;
 	conn.sess = &sess;
-	conn.id = 1;
+	conn.cid = 1;
 
 	rc = iscsi_pdu_hdr_op_logout(&conn, &pdu);
 	CU_ASSERT(rc == 0);
