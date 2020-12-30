@@ -448,6 +448,17 @@ nvme_transport_poll_group_create(const struct spdk_nvme_transport *transport)
 	return group;
 }
 
+struct spdk_nvme_transport_poll_group *
+nvme_transport_qpair_get_optimal_poll_group(const struct spdk_nvme_transport *transport,
+		struct spdk_nvme_qpair *qpair)
+{
+	if (transport->ops.qpair_get_optimal_poll_group) {
+		return transport->ops.qpair_get_optimal_poll_group(qpair);
+	} else {
+		return NULL;
+	}
+}
+
 int
 nvme_transport_poll_group_add(struct spdk_nvme_transport_poll_group *tgroup,
 			      struct spdk_nvme_qpair *qpair)

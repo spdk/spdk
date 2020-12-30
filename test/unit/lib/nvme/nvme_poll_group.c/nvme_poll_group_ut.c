@@ -63,6 +63,12 @@ int g_destroy_return_value = 0;
 TAILQ_HEAD(nvme_transport_list, spdk_nvme_transport) g_spdk_nvme_transports =
 	TAILQ_HEAD_INITIALIZER(g_spdk_nvme_transports);
 
+DEFINE_STUB(nvme_transport_qpair_get_optimal_poll_group,
+	    struct spdk_nvme_transport_poll_group *,
+	    (const struct spdk_nvme_transport *transport,
+	     struct spdk_nvme_qpair *qpair),
+	    NULL);
+
 static void
 unit_test_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_ctx)
 {

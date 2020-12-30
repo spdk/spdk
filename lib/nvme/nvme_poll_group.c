@@ -50,6 +50,20 @@ spdk_nvme_poll_group_create(void *ctx)
 	return group;
 }
 
+struct spdk_nvme_poll_group *
+spdk_nvme_qpair_get_optimal_poll_group(struct spdk_nvme_qpair *qpair)
+{
+	struct spdk_nvme_transport_poll_group *tgroup;
+
+	tgroup = nvme_transport_qpair_get_optimal_poll_group(qpair->transport, qpair);
+
+	if (tgroup == NULL) {
+		return NULL;
+	}
+
+	return tgroup->group;
+}
+
 int
 spdk_nvme_poll_group_add(struct spdk_nvme_poll_group *group, struct spdk_nvme_qpair *qpair)
 {
