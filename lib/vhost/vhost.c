@@ -183,8 +183,25 @@ vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *virtqueue, uint16_t *reqs,
 	uint16_t size_mask = vring->size - 1;
 	uint16_t last_idx = virtqueue->last_avail_idx, avail_idx = avail->idx;
 	uint16_t count, i;
+	int rc;
+	uint64_t num_events;
 
 	spdk_smp_rmb();
+
+	if (virtqueue->vsession && spdk_unlikely(virtqueue->vsession->interrupt_mode)) {
+		/* Acknowledge vring's kickfd */
+		rc = read(vring->kickfd, &num_events, sizeof(num_events));
+		if (rc < 0) {
+			SPDK_ERRLOG("failed to acknowledge kickfd: %s.\n", spdk_strerror(errno));
+			return -errno;
+		}
+
+		if ((uint16_t)(avail_idx - last_idx) != num_events) {
+			SPDK_DEBUGLOG(vhost_ring,
+				      "virtqueue gets %d reqs, but kickfd shows %lu reqs\n",
+				      avail_idx - last_idx, num_events);
+		}
+	}
 
 	count = avail_idx - last_idx;
 	if (spdk_likely(count == 0)) {
@@ -199,25 +216,7 @@ vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *virtqueue, uint16_t *reqs,
 	}
 
 	count = spdk_min(count, reqs_len);
-	if (virtqueue->vsession && virtqueue->vsession->interrupt_mode) {
-		/* if completed IO number is larger than SPDK_AIO_QUEUE_DEPTH,
-		 * io_getevent should be called again to ensure all completed IO are processed.
-		 */
-		int rc;
-		uint64_t num_events;
-
-		rc = read(vring->kickfd, &num_events, sizeof(num_events));
-		if (rc < 0) {
-			SPDK_ERRLOG("failed to acknowledge kickfd: %s.\n", spdk_strerror(errno));
-			return -errno;
-		}
-
-		if ((uint16_t)(avail_idx - last_idx) != num_events) {
-			SPDK_DEBUGLOG(vhost_ring,
-				      "virtqueue gets %d reqs, but kickfd shows %lu reqs\n",
-				      avail_idx - last_idx, num_events);
-		}
-
+	if (virtqueue->vsession && spdk_unlikely(virtqueue->vsession->interrupt_mode)) {
 		if (num_events > count) {
 			SPDK_DEBUGLOG(vhost_ring,
 				      "virtqueue kickfd shows %lu reqs, take %d, send notice for other reqs\n",
