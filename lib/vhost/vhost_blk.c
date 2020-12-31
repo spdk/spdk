@@ -1064,6 +1064,14 @@ err:
 	return -1;
 }
 
+static void
+vhost_blk_poller_set_interrupt_mode(struct spdk_poller *poller, void *cb_arg, bool interrupt_mode)
+{
+	struct spdk_vhost_blk_session *bvsession = cb_arg;
+
+	vhost_session_set_interrupt_mode(&bvsession->vsession, interrupt_mode);
+}
+
 static struct spdk_vhost_blk_dev *
 to_blk_dev(struct spdk_vhost_dev *vdev)
 {
@@ -1127,20 +1135,21 @@ vhost_session_bdev_remove_cb(struct spdk_vhost_dev *vdev,
 	struct spdk_vhost_blk_session *bvsession;
 	int rc;
 
-	bvsession = (struct spdk_vhost_blk_session *)vsession;
+	bvsession = to_blk_session(vsession);
 	if (bvsession->requestq_poller) {
 		spdk_poller_unregister(&bvsession->requestq_poller);
-		bvsession->requestq_poller = SPDK_POLLER_REGISTER(no_bdev_vdev_worker, bvsession, 0);
-	}
-
-	if (vsession->virtqueue[0].intr) {
-		vhost_blk_session_unregister_interrupts(bvsession);
-		rc = vhost_blk_session_register_interrupts(bvsession, no_bdev_vdev_vq_worker);
-		if (rc) {
-			SPDK_ERRLOG("%s: Interrupt register failed\n", vsession->name);
-			return -1;
+		if (vsession->virtqueue[0].intr) {
+			vhost_blk_session_unregister_interrupts(bvsession);
+			rc = vhost_blk_session_register_interrupts(bvsession, no_bdev_vdev_vq_worker);
+			if (rc) {
+				SPDK_ERRLOG("%s: Interrupt register failed\n", vsession->name);
+				return rc;
+			}
 		}
 
+		bvsession->requestq_poller = SPDK_POLLER_REGISTER(no_bdev_vdev_worker, bvsession, 0);
+		spdk_poller_register_interrupt(bvsession->requestq_poller, vhost_blk_poller_set_interrupt_mode,
+					       bvsession);
 	}
 
 	return 0;
@@ -1293,14 +1302,15 @@ vhost_blk_start_cb(struct spdk_vhost_dev *vdev,
 			SPDK_ERRLOG("%s: Interrupt register failed\n", vsession->name);
 			goto out;
 		}
-		SPDK_INFOLOG(vhost, "%s: started interrupt source on lcore %d\n",
-			     vsession->name, spdk_env_get_current_core());
-	} else {
-		bvsession->requestq_poller = SPDK_POLLER_REGISTER(bvdev->bdev ? vdev_worker : no_bdev_vdev_worker,
-					     bvsession, 0);
-		SPDK_INFOLOG(vhost, "%s: started poller on lcore %d\n",
-			     vsession->name, spdk_env_get_current_core());
 	}
+
+	bvsession->requestq_poller = SPDK_POLLER_REGISTER(bvdev->bdev ? vdev_worker : no_bdev_vdev_worker,
+				     bvsession, 0);
+	SPDK_INFOLOG(vhost, "%s: started poller on lcore %d\n",
+		     vsession->name, spdk_env_get_current_core());
+
+	spdk_poller_register_interrupt(bvsession->requestq_poller, vhost_blk_poller_set_interrupt_mode,
+				       bvsession);
 
 out:
 	vhost_session_start_done(vsession, rc);

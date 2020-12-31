@@ -417,6 +417,11 @@ int vhost_stop_device_cb(int vid);
 int vhost_destroy_connection_cb(int vid);
 
 /*
+ * Set vhost session to run in interrupt or poll mode
+ */
+void vhost_session_set_interrupt_mode(struct spdk_vhost_session *vsession, bool interrupt_mode);
+
+/*
  * Memory registration functions used in start/stop device callbacks
  */
 void vhost_session_mem_register(struct rte_vhost_memory *mem);

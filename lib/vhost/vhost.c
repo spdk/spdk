@@ -1289,10 +1289,6 @@ vhost_start_device_cb(int vid)
 		goto out;
 	}
 
-	if (spdk_interrupt_mode_is_enabled()) {
-		vsession->interrupt_mode = true;
-	}
-
 	vdev = vsession->vdev;
 	if (vsession->started) {
 		/* already started, nothing to do */
@@ -1407,6 +1403,54 @@ vhost_start_device_cb(int vid)
 out:
 	pthread_mutex_unlock(&g_vhost_mutex);
 	return rc;
+}
+
+void
+vhost_session_set_interrupt_mode(struct spdk_vhost_session *vsession, bool interrupt_mode)
+{
+	uint16_t i;
+	bool packed_ring;
+	int rc = 0;
+
+	packed_ring = ((vsession->negotiated_features & (1ULL << VIRTIO_F_RING_PACKED)) != 0);
+
+	for (i = 0; i < vsession->max_queues; i++) {
+		struct spdk_vhost_virtqueue *q = &vsession->virtqueue[i];
+		uint64_t num_events = 1;
+
+		/* vring.desc and vring.desc_packed are in a union struct
+		 * so q->vring.desc can replace q->vring.desc_packed.
+		 */
+		if (q->vring.desc == NULL || q->vring.size == 0) {
+			continue;
+		}
+
+		if (interrupt_mode) {
+			/* Enable I/O submission notifications, we'll be interrupting. */
+			if (packed_ring) {
+				* (volatile uint16_t *) &q->vring.device_event->flags = VRING_PACKED_EVENT_FLAG_ENABLE;
+			} else {
+				* (volatile uint16_t *) &q->vring.used->flags = 0;
+			}
+
+			/* In case of race condition, always kick vring when switch to intr */
+			rc = write(q->vring.kickfd, &num_events, sizeof(num_events));
+			if (rc < 0) {
+				SPDK_ERRLOG("failed to kick vring: %s.\n", spdk_strerror(errno));
+			}
+
+			vsession->interrupt_mode = true;
+		} else {
+			/* Disable I/O submission notifications, we'll be polling. */
+			if (packed_ring) {
+				* (volatile uint16_t *) &q->vring.device_event->flags = VRING_PACKED_EVENT_FLAG_DISABLE;
+			} else {
+				* (volatile uint16_t *) &q->vring.used->flags = VRING_USED_F_NO_NOTIFY;
+			}
+
+			vsession->interrupt_mode = false;
+		}
+	}
 }
 
 int
