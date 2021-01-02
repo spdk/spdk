@@ -105,6 +105,7 @@ struct spdk_nbd_disk {
 	int			spdk_sp_fd;
 	struct spdk_poller	*nbd_poller;
 	struct spdk_interrupt	*intr;
+	bool			interrupt_mode;
 	uint32_t		buf_align;
 
 	struct spdk_poller	*retry_poller;
@@ -507,7 +508,7 @@ nbd_io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	/* When there begins to have executed_io, enable socket writable notice in order to
 	 * get it processed in nbd_io_xmit
 	 */
-	if (nbd->intr && TAILQ_EMPTY(&nbd->executed_io_list)) {
+	if (nbd->interrupt_mode && TAILQ_EMPTY(&nbd->executed_io_list)) {
 		spdk_interrupt_set_event_types(nbd->intr, SPDK_INTERRUPT_EVENT_IN | SPDK_INTERRUPT_EVENT_OUT);
 	}
 
@@ -587,7 +588,7 @@ nbd_submit_bdev_io(struct spdk_nbd_disk *nbd, struct nbd_io *io)
 		rc = spdk_bdev_abort(desc, ch, io, nbd_io_done, io);
 
 		/* when there begins to have executed_io to send, enable socket writable notice */
-		if (nbd->intr && TAILQ_EMPTY(&nbd->executed_io_list)) {
+		if (nbd->interrupt_mode && TAILQ_EMPTY(&nbd->executed_io_list)) {
 			spdk_interrupt_set_event_types(nbd->intr, SPDK_INTERRUPT_EVENT_IN | SPDK_INTERRUPT_EVENT_OUT);
 		}
 
@@ -842,7 +843,7 @@ nbd_io_xmit(struct spdk_nbd_disk *nbd)
 	}
 
 	/* When there begins to have no executed_io, disable socket writable notice */
-	if (nbd->intr) {
+	if (nbd->interrupt_mode) {
 		spdk_interrupt_set_event_types(nbd->intr, SPDK_INTERRUPT_EVENT_IN);
 	}
 
@@ -944,6 +945,14 @@ struct spdk_nbd_start_ctx {
 };
 
 static void
+nbd_poller_set_interrupt_mode(struct spdk_poller *poller, void *cb_arg, bool interrupt_mode)
+{
+	struct spdk_nbd_disk *nbd = cb_arg;
+
+	nbd->interrupt_mode = interrupt_mode;
+}
+
+static void
 nbd_start_complete(struct spdk_nbd_start_ctx *ctx)
 {
 	int		rc;
@@ -1017,9 +1026,10 @@ nbd_start_complete(struct spdk_nbd_start_ctx *ctx)
 
 	if (spdk_interrupt_mode_is_enabled()) {
 		ctx->nbd->intr = SPDK_INTERRUPT_REGISTER(ctx->nbd->spdk_sp_fd, nbd_poll, ctx->nbd);
-	} else {
-		ctx->nbd->nbd_poller = SPDK_POLLER_REGISTER(nbd_poll, ctx->nbd, 0);
 	}
+
+	ctx->nbd->nbd_poller = SPDK_POLLER_REGISTER(nbd_poll, ctx->nbd, 0);
+	spdk_poller_register_interrupt(ctx->nbd->nbd_poller, nbd_poller_set_interrupt_mode, ctx->nbd);
 
 	if (ctx->cb_fn) {
 		ctx->cb_fn(ctx->cb_arg, ctx->nbd, 0);
