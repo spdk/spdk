@@ -59,6 +59,9 @@ struct bdev_aio_io_channel {
 };
 
 struct bdev_aio_group_channel {
+	/* eventfd for io completion notification in interrupt mode.
+	 * Negative value like '-1' indicates it is invalid or unused.
+	 */
 	int					efd;
 	struct spdk_interrupt			*intr;
 	struct spdk_poller			*poller;
@@ -173,7 +176,7 @@ bdev_aio_readv(struct file_disk *fdisk, struct spdk_io_channel *ch,
 	int rc;
 
 	io_prep_preadv(iocb, fdisk->fd, iov, iovcnt, offset);
-	if (aio_ch->group_ch->efd) {
+	if (aio_ch->group_ch->efd >= 0) {
 		io_set_eventfd(iocb, aio_ch->group_ch->efd);
 	}
 	iocb->data = aio_task;
@@ -207,7 +210,7 @@ bdev_aio_writev(struct file_disk *fdisk, struct spdk_io_channel *ch,
 	int rc;
 
 	io_prep_pwritev(iocb, fdisk->fd, iov, iovcnt, offset);
-	if (aio_ch->group_ch->efd) {
+	if (aio_ch->group_ch->efd >= 0) {
 		io_set_eventfd(iocb, aio_ch->group_ch->efd);
 	}
 	iocb->data = aio_task;
@@ -369,7 +372,7 @@ bdev_aio_group_interrupt(void *arg)
 	int rc;
 	uint64_t num_events;
 
-	assert(group_ch->efd);
+	assert(group_ch->efd >= 0);
 
 	/* if completed IO number is larger than SPDK_AIO_QUEUE_DEPTH,
 	 * io_getevent should be called again to ensure all completed IO are processed.
@@ -642,7 +645,7 @@ bdev_aio_unregister_interrupt(struct bdev_aio_group_channel *ch)
 {
 	spdk_interrupt_unregister(&ch->intr);
 	close(ch->efd);
-	ch->efd = 0;
+	ch->efd = -1;
 }
 
 static int
@@ -651,6 +654,8 @@ bdev_aio_group_create_cb(void *io_device, void *ctx_buf)
 	struct bdev_aio_group_channel *ch = ctx_buf;
 
 	TAILQ_INIT(&ch->io_ch_head);
+	/* Initialize ch->efd to be invalid and unused. */
+	ch->efd = -1;
 
 	if (spdk_interrupt_mode_is_enabled()) {
 		return bdev_aio_register_interrupt(ch);
