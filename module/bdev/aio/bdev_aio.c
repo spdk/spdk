@@ -658,20 +658,31 @@ bdev_aio_unregister_interrupt(struct bdev_aio_group_channel *ch)
 	ch->efd = -1;
 }
 
+static void
+bdev_aio_poller_set_interrupt_mode(struct spdk_poller *poller, void *cb_arg, bool interrupt_mode)
+{
+	return;
+}
+
 static int
 bdev_aio_group_create_cb(void *io_device, void *ctx_buf)
 {
 	struct bdev_aio_group_channel *ch = ctx_buf;
+	int rc;
 
 	TAILQ_INIT(&ch->io_ch_head);
 	/* Initialize ch->efd to be invalid and unused. */
 	ch->efd = -1;
-
 	if (spdk_interrupt_mode_is_enabled()) {
-		return bdev_aio_register_interrupt(ch);
+		rc = bdev_aio_register_interrupt(ch);
+		if (rc < 0) {
+			SPDK_ERRLOG("Failed to prepare intr resource to bdev_aio\n");
+			return rc;
+		}
 	}
 
 	ch->poller = SPDK_POLLER_REGISTER(bdev_aio_group_poll, ch, 0);
+	spdk_poller_register_interrupt(ch->poller, bdev_aio_poller_set_interrupt_mode, NULL);
 
 	return 0;
 }
@@ -685,12 +696,10 @@ bdev_aio_group_destroy_cb(void *io_device, void *ctx_buf)
 		SPDK_ERRLOG("Group channel of bdev aio has uncleared io channel\n");
 	}
 
-	if (ch->intr) {
-		bdev_aio_unregister_interrupt(ch);
-		return;
-	}
-
 	spdk_poller_unregister(&ch->poller);
+	if (spdk_interrupt_mode_is_enabled()) {
+		bdev_aio_unregister_interrupt(ch);
+	}
 }
 
 int
