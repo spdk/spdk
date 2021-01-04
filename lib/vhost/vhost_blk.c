@@ -84,6 +84,9 @@ struct spdk_vhost_blk_task {
 	uint32_t used_len;
 	uint16_t iovcnt;
 	struct iovec iovs[SPDK_VHOST_IOVS_MAX];
+
+	/** Size of whole payload in bytes */
+	uint32_t payload_size;
 };
 
 struct spdk_vhost_blk_dev {
@@ -109,8 +112,7 @@ static const struct spdk_vhost_dev_backend vhost_blk_device_backend;
 
 static int
 process_blk_request(struct spdk_vhost_blk_task *task,
-		    struct spdk_vhost_blk_session *bvsession,
-		    struct spdk_vhost_virtqueue *vq);
+		    struct spdk_vhost_blk_session *bvsession);
 
 static struct spdk_vhost_blk_session *
 to_blk_session(struct spdk_vhost_session *vsession)
@@ -134,6 +136,7 @@ blk_task_init(struct spdk_vhost_blk_task *task)
 	task->iovcnt = SPDK_COUNTOF(task->iovs);
 	task->status = NULL;
 	task->used_len = 0;
+	task->payload_size = 0;
 }
 
 static void
@@ -334,9 +337,7 @@ blk_request_resubmit(void *arg)
 	struct spdk_vhost_blk_task *task = (struct spdk_vhost_blk_task *)arg;
 	int rc = 0;
 
-	blk_task_init(task);
-
-	rc = process_blk_request(task, task->bvsession, task->vq);
+	rc = process_blk_request(task, task->bvsession);
 	if (rc == 0) {
 		SPDK_DEBUGLOG(vhost_blk, "====== Task %p resubmitted ======\n", task);
 	} else {
@@ -364,32 +365,16 @@ blk_request_queue_io(struct spdk_vhost_blk_task *task)
 
 static int
 process_blk_request(struct spdk_vhost_blk_task *task,
-		    struct spdk_vhost_blk_session *bvsession,
-		    struct spdk_vhost_virtqueue *vq)
+		    struct spdk_vhost_blk_session *bvsession)
 {
 	struct spdk_vhost_blk_dev *bvdev = bvsession->bvdev;
 	const struct virtio_blk_outhdr *req;
 	struct virtio_blk_discard_write_zeroes *desc;
 	struct iovec *iov;
 	uint32_t type;
-	uint32_t payload_len;
 	uint64_t flush_bytes;
+	uint32_t payload_len;
 	int rc;
-
-	if (vq->packed.packed_ring) {
-		rc = blk_iovs_packed_queue_setup(bvsession, vq, task->req_idx, task->iovs, &task->iovcnt,
-						 &payload_len);
-	} else {
-		rc = blk_iovs_split_queue_setup(bvsession, vq, task->req_idx, task->iovs, &task->iovcnt,
-						&payload_len);
-	}
-
-	if (rc) {
-		SPDK_DEBUGLOG(vhost_blk, "Invalid request (req_idx = %"PRIu16").\n", task->req_idx);
-		/* Only READ and WRITE are supported for now. */
-		invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
-		return -1;
-	}
 
 	iov = &task->iovs[0];
 	if (spdk_unlikely(iov->iov_len != sizeof(*req))) {
@@ -411,6 +396,7 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 		return -1;
 	}
 
+	payload_len = task->payload_size;
 	task->status = iov->iov_base;
 	payload_len -= sizeof(*req) + sizeof(*task->status);
 	task->iovcnt -= 2;
@@ -557,6 +543,7 @@ process_blk_task(struct spdk_vhost_virtqueue *vq, uint16_t req_idx)
 {
 	struct spdk_vhost_blk_task *task;
 	uint16_t task_idx = req_idx, num_descs;
+	int rc;
 
 	if (vq->packed.packed_ring) {
 		/* Packed ring used the buffer_id as the task_idx to get task struct.
@@ -598,7 +585,22 @@ process_blk_task(struct spdk_vhost_virtqueue *vq, uint16_t req_idx)
 
 	blk_task_init(task);
 
-	if (process_blk_request(task, task->bvsession, vq) == 0) {
+	if (vq->packed.packed_ring) {
+		rc = blk_iovs_packed_queue_setup(task->bvsession, vq, task->req_idx, task->iovs, &task->iovcnt,
+						 &task->payload_size);
+	} else {
+		rc = blk_iovs_split_queue_setup(task->bvsession, vq, task->req_idx, task->iovs, &task->iovcnt,
+						&task->payload_size);
+	}
+
+	if (rc) {
+		SPDK_DEBUGLOG(vhost_blk, "Invalid request (req_idx = %"PRIu16").\n", task->req_idx);
+		/* Only READ and WRITE are supported for now. */
+		invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
+		return;
+	}
+
+	if (process_blk_request(task, task->bvsession) == 0) {
 		SPDK_DEBUGLOG(vhost_blk, "====== Task %p req_idx %d submitted ======\n", task,
 			      task_idx);
 	} else {
