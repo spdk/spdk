@@ -59,6 +59,8 @@ struct virtio_hw {
 
 	/** Device-specific PCI config space */
 	void *dev_cfg;
+
+	bool is_remapped;
 };
 
 struct virtio_pci_probe_ctx {
@@ -66,6 +68,10 @@ struct virtio_pci_probe_ctx {
 	void *enum_ctx;
 	uint16_t device_id;
 };
+
+__thread struct virtio_hw *g_thread_virtio_hw = NULL;
+static uint16_t g_signal_lock;
+static bool g_sigset = false;
 
 /*
  * Following macros are derived from linux/pci_regs.h, however,
@@ -75,6 +81,58 @@ struct virtio_pci_probe_ctx {
 #define PCI_CAPABILITY_LIST	0x34
 #define PCI_CAP_ID_VNDR		0x09
 #define PCI_CAP_ID_MSIX		0x11
+
+static void
+virtio_pci_dev_sigbus_handler(siginfo_t *info, void *ctx)
+{
+	void *map_address = NULL;;
+	uint16_t flag = 0;
+	int i;
+
+	if (!__atomic_compare_exchange_n(&g_signal_lock, &flag, 1, false, __ATOMIC_ACQUIRE,
+					 __ATOMIC_RELAXED)) {
+		SPDK_DEBUGLOG(virtio_pci, "request g_signal_lock failed\n");
+		return;
+	}
+
+	if (g_thread_virtio_hw == NULL || g_thread_virtio_hw->is_remapped) {
+		__atomic_store_n(&g_signal_lock, 0, __ATOMIC_RELEASE);
+		return;
+	}
+
+	/* We remap each bar to the same VA to avoid subsequent sigbus error.
+	 * Because it is mapped to the same VA, such as hw->common_cfg and so on
+	 * do not need to be modified.
+	 */
+	for (i = 0; i < 6; ++i) {
+		if (g_thread_virtio_hw->pci_bar[i].vaddr == NULL) {
+			continue;
+		}
+
+		map_address = mmap(g_thread_virtio_hw->pci_bar[i].vaddr,
+				   g_thread_virtio_hw->pci_bar[i].len,
+				   PROT_READ | PROT_WRITE,
+				   MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
+		if (map_address == MAP_FAILED) {
+			SPDK_ERRLOG("mmap failed\n");
+			goto fail;
+		}
+		memset(map_address, 0xFF, g_thread_virtio_hw->pci_bar[i].len);
+	}
+
+	g_thread_virtio_hw->is_remapped = true;
+	__atomic_store_n(&g_signal_lock, 0, __ATOMIC_RELEASE);
+	return;
+fail:
+	for (--i; i >= 0; i--) {
+		if (g_thread_virtio_hw->pci_bar[i].vaddr == NULL) {
+			continue;
+		}
+
+		munmap(g_thread_virtio_hw->pci_bar[i].vaddr, g_thread_virtio_hw->pci_bar[i].len);
+	}
+	__atomic_store_n(&g_signal_lock, 0, __ATOMIC_RELEASE);
+}
 
 static inline int
 check_vq_phys_addr_ok(struct virtqueue *vq)
@@ -155,6 +213,7 @@ modern_read_dev_config(struct virtio_dev *dev, size_t offset,
 	uint8_t *p;
 	uint8_t old_gen, new_gen;
 
+	g_thread_virtio_hw = hw;
 	do {
 		old_gen = spdk_mmio_read_1(&hw->common_cfg->config_generation);
 
@@ -165,6 +224,7 @@ modern_read_dev_config(struct virtio_dev *dev, size_t offset,
 
 		new_gen = spdk_mmio_read_1(&hw->common_cfg->config_generation);
 	} while (old_gen != new_gen);
+	g_thread_virtio_hw = NULL;
 
 	return 0;
 }
@@ -177,9 +237,11 @@ modern_write_dev_config(struct virtio_dev *dev, size_t offset,
 	int i;
 	const uint8_t *p = src;
 
+	g_thread_virtio_hw = hw;
 	for (i = 0;  i < length; i++) {
 		spdk_mmio_write_1(((uint8_t *)hw->dev_cfg) + offset + i, *p++);
 	}
+	g_thread_virtio_hw = NULL;
 
 	return 0;
 }
@@ -190,11 +252,13 @@ modern_get_features(struct virtio_dev *dev)
 	struct virtio_hw *hw = dev->ctx;
 	uint32_t features_lo, features_hi;
 
+	g_thread_virtio_hw = hw;
 	spdk_mmio_write_4(&hw->common_cfg->device_feature_select, 0);
 	features_lo = spdk_mmio_read_4(&hw->common_cfg->device_feature);
 
 	spdk_mmio_write_4(&hw->common_cfg->device_feature_select, 1);
 	features_hi = spdk_mmio_read_4(&hw->common_cfg->device_feature);
+	g_thread_virtio_hw = NULL;
 
 	return ((uint64_t)features_hi << 32) | features_lo;
 }
@@ -209,11 +273,13 @@ modern_set_features(struct virtio_dev *dev, uint64_t features)
 		return -EINVAL;
 	}
 
+	g_thread_virtio_hw = hw;
 	spdk_mmio_write_4(&hw->common_cfg->guest_feature_select, 0);
 	spdk_mmio_write_4(&hw->common_cfg->guest_feature, features & ((1ULL << 32) - 1));
 
 	spdk_mmio_write_4(&hw->common_cfg->guest_feature_select, 1);
 	spdk_mmio_write_4(&hw->common_cfg->guest_feature, features >> 32);
+	g_thread_virtio_hw = NULL;
 
 	dev->negotiated_features = features;
 
@@ -239,8 +305,13 @@ static uint8_t
 modern_get_status(struct virtio_dev *dev)
 {
 	struct virtio_hw *hw = dev->ctx;
+	uint8_t ret;
 
-	return spdk_mmio_read_1(&hw->common_cfg->device_status);
+	g_thread_virtio_hw = hw;
+	ret = spdk_mmio_read_1(&hw->common_cfg->device_status);
+	g_thread_virtio_hw = NULL;
+
+	return ret;
 }
 
 static void
@@ -248,16 +319,23 @@ modern_set_status(struct virtio_dev *dev, uint8_t status)
 {
 	struct virtio_hw *hw = dev->ctx;
 
+	g_thread_virtio_hw = hw;
 	spdk_mmio_write_1(&hw->common_cfg->device_status, status);
+	g_thread_virtio_hw = NULL;
 }
 
 static uint16_t
 modern_get_queue_size(struct virtio_dev *dev, uint16_t queue_id)
 {
 	struct virtio_hw *hw = dev->ctx;
+	uint16_t ret;
 
+	g_thread_virtio_hw = hw;
 	spdk_mmio_write_2(&hw->common_cfg->queue_select, queue_id);
-	return spdk_mmio_read_2(&hw->common_cfg->queue_size);
+	ret = spdk_mmio_read_2(&hw->common_cfg->queue_size);
+	g_thread_virtio_hw = NULL;
+
+	return ret;
 }
 
 static int
@@ -302,6 +380,7 @@ modern_setup_queue(struct virtio_dev *dev, struct virtqueue *vq)
 	used_addr = (avail_addr + offsetof(struct vring_avail, ring[vq->vq_nentries])
 		     + VIRTIO_PCI_VRING_ALIGN - 1) & ~(VIRTIO_PCI_VRING_ALIGN - 1);
 
+	g_thread_virtio_hw = hw;
 	spdk_mmio_write_2(&hw->common_cfg->queue_select, vq->vq_queue_index);
 
 	io_write64_twopart(desc_addr, &hw->common_cfg->queue_desc_lo,
@@ -316,6 +395,7 @@ modern_setup_queue(struct virtio_dev *dev, struct virtqueue *vq)
 				   notify_off * hw->notify_off_multiplier);
 
 	spdk_mmio_write_2(&hw->common_cfg->queue_enable, 1);
+	g_thread_virtio_hw = NULL;
 
 	SPDK_DEBUGLOG(virtio_pci, "queue %"PRIu16" addresses:\n", vq->vq_queue_index);
 	SPDK_DEBUGLOG(virtio_pci, "\t desc_addr: %" PRIx64 "\n", desc_addr);
@@ -332,6 +412,7 @@ modern_del_queue(struct virtio_dev *dev, struct virtqueue *vq)
 {
 	struct virtio_hw *hw = dev->ctx;
 
+	g_thread_virtio_hw = hw;
 	spdk_mmio_write_2(&hw->common_cfg->queue_select, vq->vq_queue_index);
 
 	io_write64_twopart(0, &hw->common_cfg->queue_desc_lo,
@@ -342,6 +423,7 @@ modern_del_queue(struct virtio_dev *dev, struct virtqueue *vq)
 			   &hw->common_cfg->queue_used_hi);
 
 	spdk_mmio_write_2(&hw->common_cfg->queue_enable, 0);
+	g_thread_virtio_hw = NULL;
 
 	spdk_free(vq->vq_ring_virt_mem);
 }
@@ -349,7 +431,9 @@ modern_del_queue(struct virtio_dev *dev, struct virtqueue *vq)
 static void
 modern_notify_queue(struct virtio_dev *dev, struct virtqueue *vq)
 {
+	g_thread_virtio_hw = dev->ctx;
 	spdk_mmio_write_2(vq->notify_addr, vq->vq_queue_index);
+	g_thread_virtio_hw = NULL;
 }
 
 static const struct virtio_dev_ops modern_ops = {
@@ -528,6 +612,12 @@ virtio_pci_dev_probe(struct spdk_pci_device *pci_dev, struct virtio_pci_probe_ct
 	rc = ctx->enum_cb((struct virtio_pci_ctx *)hw, ctx->enum_ctx);
 	if (rc != 0) {
 		free_virtio_hw(hw);
+	}
+
+	if (g_sigset != true) {
+		spdk_pci_register_error_handler(virtio_pci_dev_sigbus_handler,
+						NULL);
+		g_sigset = true;
 	}
 
 	return rc;
