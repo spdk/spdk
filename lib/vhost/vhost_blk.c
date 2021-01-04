@@ -542,25 +542,64 @@ static void
 process_blk_task(struct spdk_vhost_virtqueue *vq, uint16_t req_idx)
 {
 	struct spdk_vhost_blk_task *task;
+	int rc;
+
+	assert(vq->packed.packed_ring == false);
+
+	task = &((struct spdk_vhost_blk_task *)vq->tasks)[req_idx];
+	if (spdk_unlikely(task->used)) {
+		SPDK_ERRLOG("%s: request with idx '%"PRIu16"' is already pending.\n",
+			    task->bvsession->vsession.name, req_idx);
+		task->used_len = 0;
+		blk_task_enqueue(task);
+		return;
+	}
+
+	task->bvsession->vsession.task_cnt++;
+
+	blk_task_init(task);
+
+	rc = blk_iovs_split_queue_setup(task->bvsession, vq, task->req_idx, task->iovs, &task->iovcnt,
+					&task->payload_size);
+
+	if (rc) {
+		SPDK_DEBUGLOG(vhost_blk, "Invalid request (req_idx = %"PRIu16").\n", task->req_idx);
+		/* Only READ and WRITE are supported for now. */
+		invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
+		return;
+	}
+
+	if (process_blk_request(task, task->bvsession) == 0) {
+		SPDK_DEBUGLOG(vhost_blk, "====== Task %p req_idx %d submitted ======\n", task,
+			      req_idx);
+	} else {
+		SPDK_ERRLOG("====== Task %p req_idx %d failed ======\n", task, req_idx);
+	}
+}
+
+static void
+process_packed_blk_task(struct spdk_vhost_virtqueue *vq, uint16_t req_idx)
+{
+	struct spdk_vhost_blk_task *task;
 	uint16_t task_idx = req_idx, num_descs;
 	int rc;
 
-	if (vq->packed.packed_ring) {
-		/* Packed ring used the buffer_id as the task_idx to get task struct.
-		 * In kernel driver, it uses the vq->free_head to set the buffer_id so the value
-		 * must be in the range of 0 ~ vring.size. The free_head value must be unique
-		 * in the outstanding requests.
-		 * We can't use the req_idx as the task_idx because the desc can be reused in
-		 * the next phase even when it's not completed in the previous phase. For example,
-		 * At phase 0, last_used_idx was 2 and desc0 was not completed.Then after moving
-		 * phase 1, last_avail_idx is updated to 1. In this case, req_idx can not be used
-		 * as task_idx because we will know task[0]->used is true at phase 1.
-		 * The split queue is quite different, the desc would insert into the free list when
-		 * device completes the request, the driver gets the desc from the free list which
-		 * ensures the req_idx is unique in the outstanding requests.
-		 */
-		task_idx = vhost_vring_packed_desc_get_buffer_id(vq, req_idx, &num_descs);
-	}
+	assert(vq->packed.packed_ring);
+
+	/* Packed ring used the buffer_id as the task_idx to get task struct.
+	 * In kernel driver, it uses the vq->free_head to set the buffer_id so the value
+	 * must be in the range of 0 ~ vring.size. The free_head value must be unique
+	 * in the outstanding requests.
+	 * We can't use the req_idx as the task_idx because the desc can be reused in
+	 * the next phase even when it's not completed in the previous phase. For example,
+	 * At phase 0, last_used_idx was 2 and desc0 was not completed.Then after moving
+	 * phase 1, last_avail_idx is updated to 1. In this case, req_idx can not be used
+	 * as task_idx because we will know task[0]->used is true at phase 1.
+	 * The split queue is quite different, the desc would insert into the free list when
+	 * device completes the request, the driver gets the desc from the free list which
+	 * ensures the req_idx is unique in the outstanding requests.
+	 */
+	task_idx = vhost_vring_packed_desc_get_buffer_id(vq, req_idx, &num_descs);
 
 	task = &((struct spdk_vhost_blk_task *)vq->tasks)[task_idx];
 	if (spdk_unlikely(task->used)) {
@@ -571,28 +610,20 @@ process_blk_task(struct spdk_vhost_virtqueue *vq, uint16_t req_idx)
 		return;
 	}
 
-	if (vq->packed.packed_ring) {
-		task->req_idx = req_idx;
-		task->num_descs = num_descs;
-		task->buffer_id = task_idx;
+	task->req_idx = req_idx;
+	task->num_descs = num_descs;
+	task->buffer_id = task_idx;
 
-		rte_vhost_set_inflight_desc_packed(task->bvsession->vsession.vid, vq->vring_idx,
-						   req_idx, (req_idx + num_descs - 1) % vq->vring.size,
-						   &task->inflight_head);
-	}
+	rte_vhost_set_inflight_desc_packed(task->bvsession->vsession.vid, vq->vring_idx,
+					   req_idx, (req_idx + num_descs - 1) % vq->vring.size,
+					   &task->inflight_head);
 
 	task->bvsession->vsession.task_cnt++;
 
 	blk_task_init(task);
 
-	if (vq->packed.packed_ring) {
-		rc = blk_iovs_packed_queue_setup(task->bvsession, vq, task->req_idx, task->iovs, &task->iovcnt,
-						 &task->payload_size);
-	} else {
-		rc = blk_iovs_split_queue_setup(task->bvsession, vq, task->req_idx, task->iovs, &task->iovcnt,
-						&task->payload_size);
-	}
-
+	rc = blk_iovs_packed_queue_setup(task->bvsession, vq, task->req_idx, task->iovs, &task->iovcnt,
+					 &task->payload_size);
 	if (rc) {
 		SPDK_DEBUGLOG(vhost_blk, "Invalid request (req_idx = %"PRIu16").\n", task->req_idx);
 		/* Only READ and WRITE are supported for now. */
@@ -682,7 +713,7 @@ process_packed_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_vi
 		SPDK_DEBUGLOG(vhost_blk, "====== Starting processing request idx %"PRIu16"======\n",
 			      vq->last_avail_idx);
 
-		process_blk_task(vq, vq->last_avail_idx);
+		process_packed_blk_task(vq, vq->last_avail_idx);
 	}
 }
 
