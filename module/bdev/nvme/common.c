@@ -185,6 +185,21 @@ nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 }
 
 void
+nvme_bdev_ns_detach(struct nvme_bdev_ns *nvme_ns)
+{
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	assert(nvme_ns->ref > 0);
+	nvme_ns->ref--;
+	if (nvme_ns->ref > 0) {
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+		return;
+	}
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+
+	nvme_bdev_ctrlr_destruct(nvme_ns->ctrlr);
+}
+
+void
 nvme_bdev_attach_bdev_to_ns(struct nvme_bdev_ns *nvme_ns, struct nvme_bdev *nvme_disk)
 {
 	assert(nvme_disk->nvme_ns == nvme_ns);
@@ -201,14 +216,7 @@ nvme_bdev_detach_bdev_from_ns(struct nvme_bdev *nvme_disk)
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_REMOVE(&nvme_disk->nvme_ns->bdevs, nvme_disk, tailq);
-
-	assert(nvme_ns->ref > 0);
-	nvme_ns->ref--;
-	if (nvme_ns->ref > 0) {
-		pthread_mutex_unlock(&g_bdev_nvme_mutex);
-		return;
-	}
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
-	nvme_bdev_ctrlr_destruct(nvme_ns->ctrlr);
+	nvme_bdev_ns_detach(nvme_ns);
 }

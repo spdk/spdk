@@ -197,13 +197,7 @@ nvme_ctrlr_populate_namespace_done(struct nvme_async_probe_ctx *ctx,
 void
 nvme_ctrlr_depopulate_namespace_done(struct nvme_bdev_ns *ns)
 {
-	CU_ASSERT(ns->ref > 0);
-	ns->ref--;
-	if (ns->ref > 0) {
-		return;
-	}
-
-	nvme_bdev_ctrlr_destruct(ns->ctrlr);
+	nvme_bdev_ns_detach(ns);
 }
 
 static struct nvme_bdev_ctrlr *
