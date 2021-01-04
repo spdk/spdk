@@ -42,6 +42,9 @@ run_test "event_perf" $testdir/event_perf/event_perf -m 0xF -t 1
 run_test "event_reactor" $testdir/reactor/reactor -t 1
 run_test "event_reactor_perf" $testdir/reactor_perf/reactor_perf -t 1
 
-if [ $(uname -s) = Linux ] && modprobe -n nbd; then
-	run_test "app_repeat" app_repeat_test
+if [ $(uname -s) = Linux ]; then
+	run_test "event_scheduler" $testdir/scheduler/scheduler.sh
+	if modprobe -n nbd; then
+		run_test "app_repeat" app_repeat_test
+	fi
 fi
