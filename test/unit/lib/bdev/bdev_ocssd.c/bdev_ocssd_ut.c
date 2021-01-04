@@ -199,12 +199,7 @@ nvme_ctrlr_depopulate_namespace_done(struct nvme_bdev_ns *ns)
 {
 	struct nvme_bdev_ctrlr *ctrlr = ns->ctrlr;
 
-	CU_ASSERT(ctrlr->ref > 0);
-	ctrlr->ref--;
-
-	if (ctrlr->ref == 0 && ctrlr->destruct) {
-		nvme_bdev_ctrlr_destruct(ctrlr);
-	}
+	nvme_bdev_ctrlr_destruct(ctrlr);
 }
 
 static struct nvme_bdev_ctrlr *
@@ -542,8 +537,6 @@ delete_nvme_bdev_controller(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 		bdev_ocssd_depopulate_namespace(nvme_bdev_ctrlr->namespaces[nsid]);
 	}
 
-	CU_ASSERT(nvme_bdev_ctrlr->ref == 1);
-	nvme_bdev_ctrlr->ref--;
 	nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
 	spdk_delay_us(1000);
 
