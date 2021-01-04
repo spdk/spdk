@@ -2987,11 +2987,8 @@ iscsi_send_datain(struct spdk_iscsi_conn *conn,
 	}
 	DataSN++;
 
-	if (task->parent) {
-		offset += primary->scsi.data_transferred;
-	}
+	offset += task->scsi.offset;
 	to_be32(&rsph->buffer_offset, (uint32_t)offset);
-	task->scsi.offset = offset;
 
 	if (F_bit && S_bit) {
 		to_be32(&rsph->res_cnt, residual_len);
