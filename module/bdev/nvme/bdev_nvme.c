@@ -293,8 +293,13 @@ static int
 bdev_nvme_destruct(void *ctx)
 {
 	struct nvme_bdev *nvme_disk = ctx;
+	struct nvme_bdev_ns *nvme_ns = nvme_disk->nvme_ns;
 
-	nvme_bdev_detach_bdev_from_ns(nvme_disk);
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	TAILQ_REMOVE(&nvme_ns->bdevs, nvme_disk, tailq);
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+
+	nvme_bdev_ns_detach(nvme_ns);
 
 	free(nvme_disk->disk.name);
 	free(nvme_disk);
@@ -1198,7 +1203,9 @@ nvme_bdev_create(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_ns *n
 		return rc;
 	}
 
-	nvme_bdev_attach_bdev_to_ns(nvme_ns, bdev);
+	nvme_ns->ref++;
+	TAILQ_INSERT_TAIL(&nvme_ns->bdevs, bdev, tailq);
+
 	return 0;
 }
 

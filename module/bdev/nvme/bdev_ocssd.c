@@ -235,8 +235,14 @@ bdev_ocssd_destruct(void *ctx)
 {
 	struct ocssd_bdev *ocssd_bdev = ctx;
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
+	struct nvme_bdev_ns *nvme_ns = nvme_bdev->nvme_ns;
 
-	nvme_bdev_detach_bdev_from_ns(nvme_bdev);
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	TAILQ_REMOVE(&nvme_ns->bdevs, nvme_bdev, tailq);
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+
+	nvme_bdev_ns_detach(nvme_ns);
+
 	bdev_ocssd_free_bdev(ocssd_bdev);
 
 	return 0;
@@ -1133,11 +1139,13 @@ bdev_ocssd_register_bdev(void *ctx)
 {
 	struct bdev_ocssd_create_ctx *create_ctx = ctx;
 	struct nvme_bdev *nvme_bdev = &create_ctx->ocssd_bdev->nvme_bdev;
+	struct nvme_bdev_ns *nvme_ns = create_ctx->nvme_ns;
 	int rc;
 
 	rc = spdk_bdev_register(&nvme_bdev->disk);
 	if (spdk_likely(rc == 0)) {
-		nvme_bdev_attach_bdev_to_ns(create_ctx->nvme_ns, nvme_bdev);
+		nvme_ns->ref++;
+		TAILQ_INSERT_TAIL(&nvme_ns->bdevs, nvme_bdev, tailq);
 	} else {
 		SPDK_ERRLOG("Failed to register bdev %s\n", nvme_bdev->disk.name);
 	}

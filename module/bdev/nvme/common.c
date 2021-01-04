@@ -198,25 +198,3 @@ nvme_bdev_ns_detach(struct nvme_bdev_ns *nvme_ns)
 
 	nvme_bdev_ctrlr_destruct(nvme_ns->ctrlr);
 }
-
-void
-nvme_bdev_attach_bdev_to_ns(struct nvme_bdev_ns *nvme_ns, struct nvme_bdev *nvme_disk)
-{
-	assert(nvme_disk->nvme_ns == nvme_ns);
-
-	nvme_ns->ref++;
-
-	TAILQ_INSERT_TAIL(&nvme_ns->bdevs, nvme_disk, tailq);
-}
-
-void
-nvme_bdev_detach_bdev_from_ns(struct nvme_bdev *nvme_disk)
-{
-	struct nvme_bdev_ns *nvme_ns = nvme_disk->nvme_ns;
-
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
-	TAILQ_REMOVE(&nvme_disk->nvme_ns->bdevs, nvme_disk, tailq);
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
-
-	nvme_bdev_ns_detach(nvme_ns);
-}
