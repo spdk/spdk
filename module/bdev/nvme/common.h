@@ -116,6 +116,7 @@ struct nvme_bdev_ctrlr {
 struct nvme_bdev {
 	struct spdk_bdev	disk;
 	struct nvme_bdev_ns	*nvme_ns;
+	bool			opal;
 	TAILQ_ENTRY(nvme_bdev)	tailq;
 };
 

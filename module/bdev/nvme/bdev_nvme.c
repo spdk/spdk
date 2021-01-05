@@ -1073,7 +1073,7 @@ bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	if (cdata->oacs.security) {
 		spdk_json_write_named_object_begin(w, "security");
 
-		spdk_json_write_named_bool(w, "opal", nvme_bdev_ctrlr->opal_dev ? true : false);
+		spdk_json_write_named_bool(w, "opal", nvme_bdev->opal);
 
 		spdk_json_write_object_end(w);
 	}
@@ -1202,6 +1202,7 @@ nvme_bdev_create(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_ns *n
 	}
 
 	bdev->nvme_ns = nvme_ns;
+	bdev->opal = nvme_bdev_ctrlr->opal_dev != NULL;
 
 	rc = nvme_disk_create(&bdev->disk, nvme_bdev_ctrlr->name, nvme_bdev_ctrlr->ctrlr,
 			      nvme_ns->ns, nvme_bdev_ctrlr->prchk_flags, bdev);
