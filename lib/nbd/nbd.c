@@ -439,7 +439,7 @@ nbd_socket_rw(int fd, void *buf, size_t length, bool read_op)
 	if (rc == 0) {
 		return -EIO;
 	} else if (rc == -1) {
-		if (errno != EAGAIN && errno != EWOULDBLOCK) {
+		if (errno != EAGAIN) {
 			return -errno;
 		}
 		return 0;
