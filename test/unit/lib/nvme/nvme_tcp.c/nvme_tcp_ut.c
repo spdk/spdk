@@ -441,6 +441,71 @@ test_nvme_tcp_build_iovs_with_md(void)
 		  512 * 8 + SPDK_NVME_TCP_DIGEST_LEN);
 }
 
+/* Just define, nothing to do */
+static void
+ut_nvme_complete_request(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	return;
+}
+
+static void
+test_nvme_tcp_req_complete_safe(void)
+{
+	bool rc;
+	struct nvme_tcp_req tcp_req = {0};
+	struct nvme_request	req = {0};
+	struct spdk_nvme_qpair	qpair = {0};
+	struct nvme_tcp_qpair	tqpair = {0};
+
+	tcp_req.req = &req;
+	tcp_req.req->qpair = &qpair;
+	tcp_req.req->cb_fn = ut_nvme_complete_request;
+	tcp_req.tqpair = &tqpair;
+	tcp_req.state = NVME_TCP_REQ_ACTIVE;
+	TAILQ_INIT(&tcp_req.tqpair->outstanding_reqs);
+
+	/* Test case 1: send operation and transfer completed. Expect: PASS */
+	tcp_req.state = NVME_TCP_REQ_ACTIVE;
+	tcp_req.ordering.bits.send_ack = 1;
+	tcp_req.ordering.bits.data_recv = 1;
+	TAILQ_INSERT_TAIL(&tcp_req.tqpair->outstanding_reqs, &tcp_req, link);
+
+	rc = nvme_tcp_req_complete_safe(&tcp_req);
+	CU_ASSERT(rc == true);
+
+	/* Test case 2: send operation not completed. Expect: FAIL */
+	tcp_req.ordering.raw = 0;
+	tcp_req.state = NVME_TCP_REQ_ACTIVE;
+	TAILQ_INSERT_TAIL(&tcp_req.tqpair->outstanding_reqs, &tcp_req, link);
+
+	rc = nvme_tcp_req_complete_safe(&tcp_req);
+	SPDK_CU_ASSERT_FATAL(rc != true);
+	TAILQ_REMOVE(&tcp_req.tqpair->outstanding_reqs, &tcp_req, link);
+
+	/* Test case 3: in completion context. Expect: PASS */
+	tqpair.qpair.in_completion_context = 1;
+	tqpair.async_complete = 0;
+	tcp_req.ordering.bits.send_ack = 1;
+	tcp_req.ordering.bits.data_recv = 1;
+	tcp_req.state = NVME_TCP_REQ_ACTIVE;
+	TAILQ_INSERT_TAIL(&tcp_req.tqpair->outstanding_reqs, &tcp_req, link);
+
+	rc = nvme_tcp_req_complete_safe(&tcp_req);
+	CU_ASSERT(rc == true);
+	CU_ASSERT(tcp_req.tqpair->async_complete == 0);
+
+	/* Test case 4: in async complete. Expect: PASS */
+	tqpair.qpair.in_completion_context = 0;
+	tcp_req.ordering.bits.send_ack = 1;
+	tcp_req.ordering.bits.data_recv = 1;
+	tcp_req.state = NVME_TCP_REQ_ACTIVE;
+	TAILQ_INSERT_TAIL(&tcp_req.tqpair->outstanding_reqs, &tcp_req, link);
+
+	rc = nvme_tcp_req_complete_safe(&tcp_req);
+	CU_ASSERT(rc == true);
+	CU_ASSERT(tcp_req.tqpair->async_complete);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -455,6 +520,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_tcp_build_sgl_request);
 	CU_ADD_TEST(suite, test_nvme_tcp_pdu_set_data_buf_with_md);
 	CU_ADD_TEST(suite, test_nvme_tcp_build_iovs_with_md);
+	CU_ADD_TEST(suite, test_nvme_tcp_req_complete_safe);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
