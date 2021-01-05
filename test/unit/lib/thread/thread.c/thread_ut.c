@@ -1237,6 +1237,98 @@ nested_channel(void)
 	CU_ASSERT(TAILQ_EMPTY(&g_threads));
 }
 
+static int
+create_cb2(void *io_device, void *ctx_buf)
+{
+	uint64_t *devcnt = (uint64_t *)io_device;
+
+	*devcnt += 1;
+
+	return 0;
+}
+
+static void
+destroy_cb2(void *io_device, void *ctx_buf)
+{
+	uint64_t *devcnt = (uint64_t *)io_device;
+
+	CU_ASSERT(*devcnt > 0);
+	*devcnt -= 1;
+}
+
+static void
+unregister_cb2(void *io_device)
+{
+	uint64_t *devcnt = (uint64_t *)io_device;
+
+	CU_ASSERT(*devcnt == 0);
+}
+
+static void
+device_unregister_and_thread_exit_race(void)
+{
+	uint64_t device = 0;
+	struct spdk_io_channel *ch1, *ch2;
+	struct spdk_thread *thread1, *thread2;
+
+	/* Create two threads and each thread gets a channel from the same device. */
+	allocate_threads(2);
+	set_thread(0);
+
+	thread1 = spdk_get_thread();
+	SPDK_CU_ASSERT_FATAL(thread1 != NULL);
+
+	spdk_io_device_register(&device, create_cb2, destroy_cb2, sizeof(uint64_t), NULL);
+
+	ch1 = spdk_get_io_channel(&device);
+	SPDK_CU_ASSERT_FATAL(ch1 != NULL);
+
+	set_thread(1);
+
+	thread2 = spdk_get_thread();
+	SPDK_CU_ASSERT_FATAL(thread2 != NULL);
+
+	ch2 = spdk_get_io_channel(&device);
+	SPDK_CU_ASSERT_FATAL(ch2 != NULL);
+
+	set_thread(0);
+
+	/* Move thread 0 to the exiting state, but it should keep exiting until two channels
+	 * and a device are released.
+	 */
+	spdk_thread_exit(thread1);
+	poll_thread(0);
+
+	spdk_put_io_channel(ch1);
+
+	spdk_io_device_unregister(&device, unregister_cb2);
+	poll_thread(0);
+
+	CU_ASSERT(spdk_thread_is_exited(thread1) == false);
+
+	set_thread(1);
+
+	/* Move thread 1 to the exiting state, but it should keep exiting until its channel
+	 * is released.
+	 */
+	spdk_thread_exit(thread2);
+	poll_thread(1);
+
+	CU_ASSERT(spdk_thread_is_exited(thread2) == false);
+
+	spdk_put_io_channel(ch2);
+	poll_thread(1);
+
+	CU_ASSERT(spdk_thread_is_exited(thread1) == false);
+	CU_ASSERT(spdk_thread_is_exited(thread2) == true);
+
+	poll_thread(0);
+
+	CU_ASSERT(spdk_thread_is_exited(thread1) == true);
+
+	free_threads();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1261,6 +1353,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, thread_exit_test);
 	CU_ADD_TEST(suite, thread_update_stats_test);
 	CU_ADD_TEST(suite, nested_channel);
+	CU_ADD_TEST(suite, device_unregister_and_thread_exit_race);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

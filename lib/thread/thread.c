@@ -393,6 +393,13 @@ thread_exit(struct spdk_thread *thread, uint64_t now)
 		return;
 	}
 
+	if (thread->pending_unregister_count > 0) {
+		SPDK_INFOLOG(thread,
+			     "thread %s is still unregistering io_devices\n",
+			     thread->name);
+		return;
+	}
+
 exited:
 	thread->state = SPDK_THREAD_STATE_EXITED;
 }
@@ -1394,9 +1401,16 @@ static void
 _finish_unregister(void *arg)
 {
 	struct io_device *dev = arg;
+	struct spdk_thread *thread;
+
+	thread = spdk_get_thread();
+	assert(thread == dev->unregister_thread);
 
 	SPDK_DEBUGLOG(thread, "Finishing unregistration of io_device %s (%p) on thread %s\n",
-		      dev->name, dev->io_device, dev->unregister_thread->name);
+		      dev->name, dev->io_device, thread->name);
+
+	assert(thread->pending_unregister_count > 0);
+	thread->pending_unregister_count--;
 
 	dev->unregister_cb(dev->io_device);
 	free(dev);
@@ -1462,6 +1476,10 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 
 	SPDK_DEBUGLOG(thread, "Unregistering io_device %s (%p) from thread %s\n",
 		      dev->name, dev->io_device, thread->name);
+
+	if (unregister_cb) {
+		thread->pending_unregister_count++;
+	}
 
 	if (refcnt > 0) {
 		/* defer deletion */

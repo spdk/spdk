@@ -119,6 +119,7 @@ struct spdk_thread {
 	spdk_msg_fn			critical_msg;
 	uint64_t			id;
 	enum spdk_thread_state		state;
+	int				pending_unregister_count;
 
 	TAILQ_HEAD(, spdk_io_channel)	io_channels;
 	TAILQ_ENTRY(spdk_thread)	tailq;

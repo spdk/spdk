@@ -58,6 +58,8 @@ function confirm_abi_deps() {
 	name = spdk_env_opts
 [suppress_type]
 	name = spdk_app_opts
+[suppress_type]
+	name = spdk_thread
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do
