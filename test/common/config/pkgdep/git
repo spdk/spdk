@@ -51,6 +51,21 @@ function install_refspdk() {
 	git -C "$output_dir" checkout "$release"
 	git -C "$output_dir" submodule update --init
 
+	if [[ "$release" == v20.01* ]]; then
+		makefiles=(
+			"$output_dir/dpdk/drivers/crypto/aesni_gcm/Makefile"
+			"$output_dir/dpdk/drivers/crypto/aesni_mb/Makefile"
+			"$output_dir/dpdk/drivers/crypto/kasumi/Makefile"
+			"$output_dir/dpdk/drivers/crypto/snow3g/Makefile"
+		)
+		# Attempt to replicate dpdk's 2a860943b8 commit which fixes builds under make 4.3
+		# FIXME: Remove this when LTS changes!
+		for makefile in "${makefiles[@]}"; do
+			# This sed call is meant to be compatible with its FreeBSD implementation
+			echo "$(sed -e 's/\\#/\$H/g' -e '/IMB_HDR =/i\
+				H := \\#' "$makefile")" > "$makefile"
+		done
+	fi
 	cat > $HOME/autorun-spdk.conf <<- EOF
 		SPDK_BUILD_SHARED_OBJECT=1
 		SPDK_TEST_AUTOBUILD=1
