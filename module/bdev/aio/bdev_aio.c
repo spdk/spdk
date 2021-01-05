@@ -45,11 +45,14 @@
 #include "spdk/json.h"
 #include "spdk/util.h"
 #include "spdk/string.h"
-
 #include "spdk/log.h"
 
 #include <sys/eventfd.h>
 #include <libaio.h>
+#include <linux/fs.h>
+
+#include "bdev_aio_task.h"
+#include "bdev_aio_sync.h"
 
 struct bdev_aio_io_channel {
 	uint64_t				io_inflight;
@@ -65,19 +68,13 @@ struct bdev_aio_group_channel {
 	TAILQ_HEAD(, bdev_aio_io_channel)	io_ch_head;
 };
 
-struct bdev_aio_task {
-	struct iocb			iocb;
-	uint64_t			len;
-	struct bdev_aio_io_channel	*ch;
-	TAILQ_ENTRY(bdev_aio_task)	link;
-};
-
 struct file_disk {
 	struct bdev_aio_task	*reset_task;
 	struct spdk_poller	*reset_retry_timer;
 	struct spdk_bdev	disk;
 	char			*filename;
 	int			fd;
+	bool			ifblk;
 	TAILQ_ENTRY(file_disk)  link;
 	bool			block_size_override;
 };
@@ -123,6 +120,8 @@ SPDK_BDEV_MODULE_REGISTER(aio, &aio_if)
 static int
 bdev_aio_open(struct file_disk *disk)
 {
+	struct stat st;
+	int rc;
 	int fd;
 
 	fd = open(disk->filename, O_RDWR | O_DIRECT);
@@ -130,15 +129,25 @@ bdev_aio_open(struct file_disk *disk)
 		/* Try without O_DIRECT for non-disk files */
 		fd = open(disk->filename, O_RDWR);
 		if (fd < 0) {
+			rc = errno;
 			SPDK_ERRLOG("open() failed (file:%s), errno %d: %s\n",
-				    disk->filename, errno, spdk_strerror(errno));
+				    disk->filename, rc, spdk_strerror(rc));
 			disk->fd = -1;
-			return -1;
+			return -rc;
 		}
 	}
 
-	disk->fd = fd;
+	if (fstat(fd, &st) < 0) {
+		rc = errno;
+		SPDK_ERRLOG("fstat() failed (file:%s), errno %d: %s\n",
+			    disk->filename, rc, spdk_strerror(rc));
+		close(fd);
+		disk->fd = -1;
+		return -rc;
+	}
 
+	disk->ifblk = S_ISBLK(st.st_mode);
+	disk->fd = fd;
 	return 0;
 }
 
@@ -232,12 +241,32 @@ bdev_aio_writev(struct file_disk *fdisk, struct spdk_io_channel *ch,
 }
 
 static void
-bdev_aio_flush(struct file_disk *fdisk, struct bdev_aio_task *aio_task)
+bdev_aio_flush(void *arg)
 {
-	int rc = fsync(fdisk->fd);
+	struct aio_request_ctx *ctx = arg;
 
-	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task),
-			      rc == 0 ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED);
+	SPDK_NOTICELOG("[flush]\n");
+
+	ctx->status = fsync(ctx->fdisk->fd);
+	ctx->errnum = (ctx->status < 0) ? errno : 0;
+}
+
+static void
+bdev_aio_unmap(void *arg)
+{
+	struct aio_request_ctx *ctx = arg;
+	uint32_t block_size;
+	uint64_t range[2];
+
+	block_size = ctx->fdisk->disk.blocklen;
+
+	range[0] = ctx->range[0] * block_size;
+	range[1] = ctx->range[1] * block_size;
+
+	SPDK_NOTICELOG("[unmap] range=%lu,%lu\n", range[0], range[1]);
+
+	ctx->status = ctx->fdisk->ifblk ? ioctl(ctx->fdisk->fd, BLKDISCARD, &range) : fallocate(ctx->fdisk->fd, FALLOC_FL_PUNCH_HOLE|FALLOC_FL_KEEP_SIZE, range[0], range[1]);
+	ctx->errnum = (ctx->status < 0) ? errno : 0;
 }
 
 static int
@@ -490,15 +519,45 @@ static int _bdev_aio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev
 		spdk_bdev_io_get_buf(bdev_io, bdev_aio_get_buf_cb,
 				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		return 0;
+
 	case SPDK_BDEV_IO_TYPE_FLUSH:
-		bdev_aio_flush((struct file_disk *)bdev_io->bdev->ctxt,
-			       (struct bdev_aio_task *)bdev_io->driver_ctx);
+		{
+			struct aio_request_ctx *ctx = create_aio_request_ctx(bdev_io);
+
+			if (ctx == NULL || aio_remote_request(bdev_aio_flush, ctx) < 0)
+			{
+				spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
+			}
+		}
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_RESET:
 		bdev_aio_reset((struct file_disk *)bdev_io->bdev->ctxt,
 			       (struct bdev_aio_task *)bdev_io->driver_ctx);
 		return 0;
+
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+		{
+			struct aio_request_ctx *ctx = create_aio_request_ctx(bdev_io);
+
+			if (ctx == NULL)
+			{
+				spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
+			}
+			else
+			{
+				ctx->range[0] = bdev_io->u.bdev.offset_blocks;
+				ctx->range[1] = bdev_io->u.bdev.num_blocks;
+
+				if (aio_remote_request(bdev_aio_unmap, ctx) < 0)
+				{
+					spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
+				}
+			}
+		}
+		return 0;
+
 	default:
 		return -1;
 	}
@@ -517,8 +576,10 @@ bdev_aio_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
-	case SPDK_BDEV_IO_TYPE_FLUSH:
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 	case SPDK_BDEV_IO_TYPE_RESET:
+	case SPDK_BDEV_IO_TYPE_FLUSH:
+	case SPDK_BDEV_IO_TYPE_UNMAP:
 		return true;
 
 	default:
@@ -698,9 +759,9 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size)
 		goto error_return;
 	}
 
-	if (bdev_aio_open(fdisk)) {
-		SPDK_ERRLOG("Unable to open file %s. fd: %d errno: %d\n", filename, fdisk->fd, errno);
-		rc = -errno;
+	rc = bdev_aio_open(fdisk);
+	if (rc < 0) {
+		SPDK_ERRLOG("Unable to open file %s. fd: %d errno: %d\n", filename, fdisk->fd, -rc);
 		goto error_return;
 	}
 
@@ -830,13 +891,14 @@ bdev_aio_initialize(void)
 {
 	spdk_io_device_register(&aio_if, bdev_aio_group_create_cb, bdev_aio_group_destroy_cb,
 				sizeof(struct bdev_aio_group_channel), "aio_module");
-
+	aio_sync_init();
 	return 0;
 }
 
 static void
 bdev_aio_fini(void)
 {
+	aio_sync_fini();
 	spdk_io_device_unregister(&aio_if, NULL);
 }
 

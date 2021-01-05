@@ -37,7 +37,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 SO_VER := 2
 SO_MINOR := 0
 
-C_SRCS = bdev_aio.c bdev_aio_rpc.c
+C_SRCS = bdev_aio.c bdev_aio_rpc.c bdev_aio_sync.c
 LIBNAME = bdev_aio
 LOCAL_SYS_LIBS = -laio
 
