@@ -184,22 +184,16 @@ vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *virtqueue, uint16_t *reqs,
 	uint16_t last_idx = virtqueue->last_avail_idx, avail_idx = avail->idx;
 	uint16_t count, i;
 	int rc;
-	uint64_t num_events;
+	uint64_t u64_value;
 
 	spdk_smp_rmb();
 
 	if (virtqueue->vsession && spdk_unlikely(virtqueue->vsession->interrupt_mode)) {
-		/* Acknowledge vring's kickfd */
-		rc = read(vring->kickfd, &num_events, sizeof(num_events));
+		/* Read to clear vring's kickfd */
+		rc = read(vring->kickfd, &u64_value, sizeof(u64_value));
 		if (rc < 0) {
 			SPDK_ERRLOG("failed to acknowledge kickfd: %s.\n", spdk_strerror(errno));
 			return -errno;
-		}
-
-		if ((uint16_t)(avail_idx - last_idx) != num_events) {
-			SPDK_DEBUGLOG(vhost_ring,
-				      "virtqueue gets %d reqs, but kickfd shows %lu reqs\n",
-				      avail_idx - last_idx, num_events);
 		}
 	}
 
@@ -216,13 +210,17 @@ vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *virtqueue, uint16_t *reqs,
 	}
 
 	count = spdk_min(count, reqs_len);
+
+	virtqueue->last_avail_idx += count;
+	/* Check whether there are unprocessed reqs in vq, then kick vq manually */
 	if (virtqueue->vsession && spdk_unlikely(virtqueue->vsession->interrupt_mode)) {
-		if (num_events > count) {
-			SPDK_DEBUGLOG(vhost_ring,
-				      "virtqueue kickfd shows %lu reqs, take %d, send notice for other reqs\n",
-				      num_events, reqs_len);
-			num_events -= count;
-			rc = write(vring->kickfd, &num_events, sizeof(num_events));
+		/* If avail_idx is larger than virtqueue's last_avail_idx, then there is unprocessed reqs.
+		 * avail_idx should get updated here from memory, in case of race condition with guest.
+		 */
+		avail_idx = * (volatile uint16_t *) &avail->idx;
+		if (avail_idx > virtqueue->last_avail_idx) {
+			/* Write to notify vring's kickfd */
+			rc = write(vring->kickfd, &u64_value, sizeof(u64_value));
 			if (rc < 0) {
 				SPDK_ERRLOG("failed to kick vring: %s.\n", spdk_strerror(errno));
 				return -errno;
@@ -230,7 +228,6 @@ vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *virtqueue, uint16_t *reqs,
 		}
 	}
 
-	virtqueue->last_avail_idx += count;
 	for (i = 0; i < count; i++) {
 		reqs[i] = vring->avail->ring[(last_idx + i) & size_mask];
 	}
