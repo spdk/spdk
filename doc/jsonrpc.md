@@ -2268,6 +2268,43 @@ Example response:
 }
 ~~~
 
+## bdev_null_resize {#rpc_bdev_null_resize}
+
+Resize @ref bdev_config_null.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+new_size                | Required | number      | Bdev new capacity in MB
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "name": "Null0",
+    "new_size": 4096
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_null_resize",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## bdev_aio_create {#rpc_bdev_aio_create}
 
 Construct @ref bdev_config_aio.

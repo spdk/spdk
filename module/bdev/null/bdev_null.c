@@ -420,6 +420,34 @@ bdev_null_initialize(void)
 	return 0;
 }
 
+int
+bdev_null_resize(struct spdk_bdev *bdev, const uint64_t new_size_in_mb)
+{
+	uint64_t current_size_in_mb;
+	uint64_t new_size_in_byte;
+	int rc;
+
+	if (bdev->module != &null_if) {
+		return -EINVAL;
+	}
+
+	current_size_in_mb = bdev->blocklen * bdev->blockcnt / (1024 * 1024);
+	if (new_size_in_mb < current_size_in_mb) {
+		SPDK_ERRLOG("The new bdev size must not be smaller than current bdev size.\n");
+		return -EINVAL;
+	}
+
+	new_size_in_byte = new_size_in_mb * 1024 * 1024;
+
+	rc = spdk_bdev_notify_blockcnt_change(bdev, new_size_in_byte / bdev->blocklen);
+	if (rc != 0) {
+		SPDK_ERRLOG("failed to notify block cnt change.\n");
+		return rc;
+	}
+
+	return 0;
+}
+
 static void
 _bdev_null_finish_cb(void *arg)
 {

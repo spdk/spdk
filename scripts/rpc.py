@@ -382,6 +382,17 @@ if __name__ == "__main__":
     p.add_argument('name', help='null bdev name')
     p.set_defaults(func=bdev_null_delete)
 
+    def bdev_null_resize(args):
+        print_json(rpc.bdev.bdev_null_resize(args.client,
+                                             name=args.name,
+                                             new_size=int(args.new_size)))
+
+    p = subparsers.add_parser('bdev_null_resize',
+                              help='Resize a null bdev')
+    p.add_argument('name', help='null bdev name')
+    p.add_argument('new_size', help='new bdev size for resize operation. The unit is MiB')
+    p.set_defaults(func=bdev_null_resize)
+
     def bdev_aio_create(args):
         print_json(rpc.bdev.bdev_aio_create(args.client,
                                             filename=args.filename,

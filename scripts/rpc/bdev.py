@@ -277,6 +277,20 @@ def bdev_null_delete(client, name):
     return client.call('bdev_null_delete', params)
 
 
+def bdev_null_resize(client, name, new_size):
+    """Resize null bdev in the system.
+
+    Args:
+        name: name of null bdev to resize
+        new_size: new bdev size of resize operation. The unit is MiB
+    """
+    params = {
+            'name': name,
+            'new_size': new_size,
+            }
+    return client.call('bdev_null_resize', params)
+
+
 @deprecated_alias('get_raid_bdevs')
 def bdev_raid_get_bdevs(client, category):
     """Get list of raid bdevs based on category

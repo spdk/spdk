@@ -206,3 +206,53 @@ cleanup:
 }
 SPDK_RPC_REGISTER("bdev_null_delete", rpc_bdev_null_delete, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_null_delete, delete_null_bdev)
+
+struct rpc_bdev_null_resize {
+	char *name;
+	uint64_t new_size;
+};
+
+static const struct spdk_json_object_decoder rpc_bdev_null_resize_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_null_resize, name), spdk_json_decode_string},
+	{"new_size", offsetof(struct rpc_bdev_null_resize, new_size), spdk_json_decode_uint64}
+};
+
+static void
+free_rpc_bdev_null_resize(struct rpc_bdev_null_resize *req)
+{
+	free(req->name);
+}
+
+static void
+spdk_rpc_bdev_null_resize(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
+{
+	struct rpc_bdev_null_resize req = {};
+	struct spdk_bdev *bdev;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_bdev_null_resize_decoders,
+				    SPDK_COUNTOF(rpc_bdev_null_resize_decoders),
+				    &req)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
+	}
+
+	bdev = spdk_bdev_get_by_name(req.name);
+	if (bdev == NULL) {
+		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
+		goto cleanup;
+	}
+
+	rc = bdev_null_resize(bdev, req.new_size);
+	if (rc) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		goto cleanup;
+	}
+
+	spdk_jsonrpc_send_bool_response(request, true);
+cleanup:
+	free_rpc_bdev_null_resize(&req);
+}
+SPDK_RPC_REGISTER("bdev_null_resize", spdk_rpc_bdev_null_resize, SPDK_RPC_RUNTIME)
