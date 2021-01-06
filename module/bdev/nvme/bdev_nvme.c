@@ -1345,9 +1345,10 @@ nvme_ctrlr_depopulate_namespace_done(struct nvme_bdev_ns *nvme_ns)
 static void
 nvme_ctrlr_depopulate_standard_namespace(struct nvme_bdev_ns *nvme_ns)
 {
-	struct nvme_bdev *bdev, *tmp;
+	struct nvme_bdev *bdev;
 
-	TAILQ_FOREACH_SAFE(bdev, &nvme_ns->bdevs, tailq, tmp) {
+	bdev = TAILQ_FIRST(&nvme_ns->bdevs);
+	if (bdev != NULL) {
 		spdk_bdev_unregister(&bdev->disk, NULL, NULL);
 	}
 
@@ -1421,6 +1422,7 @@ nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 			ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
 			num_sectors = spdk_nvme_ns_get_num_sectors(ns);
 			bdev = TAILQ_FIRST(&nvme_ns->bdevs);
+			assert(bdev != NULL);
 			if (bdev->disk.blockcnt != num_sectors) {
 				SPDK_NOTICELOG("NSID %u is resized: bdev name %s, old size %" PRIu64 ", new size %" PRIu64 "\n",
 					       nsid,
@@ -1812,7 +1814,7 @@ nvme_ctrlr_populate_namespaces_done(struct nvme_async_probe_ctx *ctx)
 {
 	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
 	struct nvme_bdev_ns	*nvme_ns;
-	struct nvme_bdev	*nvme_bdev, *tmp;
+	struct nvme_bdev	*nvme_bdev;
 	uint32_t		i, nsid;
 	size_t			j;
 
@@ -1831,16 +1833,19 @@ nvme_ctrlr_populate_namespaces_done(struct nvme_async_probe_ctx *ctx)
 			continue;
 		}
 		assert(nvme_ns->id == nsid);
-		TAILQ_FOREACH_SAFE(nvme_bdev, &nvme_ns->bdevs, tailq, tmp) {
-			if (j < ctx->count) {
-				ctx->names[j] = nvme_bdev->disk.name;
-				j++;
-			} else {
-				SPDK_ERRLOG("Maximum number of namespaces supported per NVMe controller is %du. Unable to return all names of created bdevs\n",
-					    ctx->count);
-				populate_namespaces_cb(ctx, 0, -ERANGE);
-				return;
-			}
+		nvme_bdev = TAILQ_FIRST(&nvme_ns->bdevs);
+		if (nvme_bdev == NULL) {
+			assert(nvme_ns->type == NVME_BDEV_NS_OCSSD);
+			continue;
+		}
+		if (j < ctx->count) {
+			ctx->names[j] = nvme_bdev->disk.name;
+			j++;
+		} else {
+			SPDK_ERRLOG("Maximum number of namespaces supported per NVMe controller is %du. Unable to return all names of created bdevs\n",
+				    ctx->count);
+			populate_namespaces_cb(ctx, 0, -ERANGE);
+			return;
 		}
 	}
 

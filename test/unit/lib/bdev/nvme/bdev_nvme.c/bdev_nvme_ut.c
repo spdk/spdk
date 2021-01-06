@@ -209,6 +209,7 @@ static TAILQ_HEAD(, spdk_nvme_ctrlr) g_ut_attached_ctrlrs = TAILQ_HEAD_INITIALIZ
 			g_ut_attached_ctrlrs);
 static int g_ut_attach_ctrlr_status;
 static size_t g_ut_attach_bdev_count;
+static int g_ut_register_bdev_status;
 
 static void
 ut_init_trid(struct spdk_nvme_transport_id *trid)
@@ -744,7 +745,7 @@ spdk_nvme_poll_group_remove(struct spdk_nvme_poll_group *group,
 int
 spdk_bdev_register(struct spdk_bdev *bdev)
 {
-	return 0;
+	return g_ut_register_bdev_status;
 }
 
 void
@@ -1332,6 +1333,41 @@ test_attach_ctrlr(void)
 	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == NULL);
 
 	ut_detach_ctrlr(ctrlr);
+
+	/* Ctrlr has one namespace but one nvme_bdev_ctrlr with no namespace is
+	 * created because creating one nvme_bdev failed.
+	 */
+	ctrlr = ut_attach_ctrlr(&trid, 1);
+	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
+
+	ctrlr->ns[0].is_active = true;
+	g_ut_register_bdev_status = -EINVAL;
+	g_ut_attach_bdev_count = 0;
+
+	rc = bdev_nvme_create(&trid, &hostid, "nvme0", attached_names, 32, NULL, 0,
+			      attach_ctrlr_done, NULL, NULL);
+	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(1000);
+	poll_threads();
+
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
+	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr != NULL);
+	CU_ASSERT(nvme_bdev_ctrlr->ctrlr == ctrlr);
+	CU_ASSERT(nvme_bdev_ctrlr->num_ns == 1);
+
+	CU_ASSERT(attached_names[0] == NULL);
+
+	rc = bdev_nvme_delete("nvme0");
+	CU_ASSERT(rc == 0);
+
+	poll_threads();
+
+	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == NULL);
+
+	ut_detach_ctrlr(ctrlr);
+
+	g_ut_register_bdev_status = 0;
 }
 
 static void
