@@ -39,6 +39,7 @@
 
 #include <rte_crypto.h>
 #include <rte_cryptodev.h>
+#include <rte_cryptodev_pmd.h>
 
 #define MAX_TEST_BLOCKS 8192
 struct rte_crypto_op *g_test_crypto_ops[MAX_TEST_BLOCKS];
@@ -164,6 +165,9 @@ DEFINE_STUB_V(spdk_bdev_module_examine_done, (struct spdk_bdev_module *module));
 DEFINE_STUB(spdk_bdev_register, int, (struct spdk_bdev *vbdev), 0);
 
 /* DPDK stubs */
+#define DPDK_DYNFIELD_OFFSET offsetof(struct rte_mbuf, dynfield1[1])
+DEFINE_STUB(rte_mbuf_dynfield_register, int, (const struct rte_mbuf_dynfield *params),
+	    DPDK_DYNFIELD_OFFSET);
 DEFINE_STUB(rte_cryptodev_count, uint8_t, (void), 0);
 DEFINE_STUB_V(rte_mempool_free, (struct rte_mempool *mp));
 DEFINE_STUB(rte_mempool_create, struct rte_mempool *, (const char *name, unsigned n,
@@ -342,6 +346,8 @@ test_setup(void)
 		memset(g_test_crypto_ops[i], 0, sizeof(struct rte_crypto_op) +
 		       sizeof(struct rte_crypto_sym_op) + QUEUED_OP_LENGTH);
 	}
+	g_mbuf_offset = DPDK_DYNFIELD_OFFSET;
+
 	return 0;
 }
 
@@ -439,7 +445,8 @@ test_simple_write(void)
 	CU_ASSERT(g_test_crypto_ops[0]->sym->m_src->next == NULL);
 	CU_ASSERT(g_test_crypto_ops[0]->sym->cipher.data.length == 512);
 	CU_ASSERT(g_test_crypto_ops[0]->sym->cipher.data.offset == 0);
-	CU_ASSERT(g_test_crypto_ops[0]->sym->m_src->userdata == g_bdev_io);
+	CU_ASSERT(*RTE_MBUF_DYNFIELD(g_test_crypto_ops[0]->sym->m_src, g_mbuf_offset,
+				     uint64_t *) == (uint64_t)g_bdev_io);
 	CU_ASSERT(g_test_crypto_ops[0]->sym->m_dst->buf_addr != NULL);
 	CU_ASSERT(g_test_crypto_ops[0]->sym->m_dst->data_len == 512);
 
@@ -468,7 +475,8 @@ test_simple_read(void)
 	CU_ASSERT(g_test_crypto_ops[0]->sym->m_src->next == NULL);
 	CU_ASSERT(g_test_crypto_ops[0]->sym->cipher.data.length == 512);
 	CU_ASSERT(g_test_crypto_ops[0]->sym->cipher.data.offset == 0);
-	CU_ASSERT(g_test_crypto_ops[0]->sym->m_src->userdata == g_bdev_io);
+	CU_ASSERT(*RTE_MBUF_DYNFIELD(g_test_crypto_ops[0]->sym->m_src, g_mbuf_offset,
+				     uint64_t *) == (uint64_t)g_bdev_io);
 	CU_ASSERT(g_test_crypto_ops[0]->sym->m_dst == NULL);
 
 	spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[0]->sym->m_src);
@@ -502,7 +510,8 @@ test_large_rw(void)
 		CU_ASSERT(g_test_crypto_ops[i]->sym->m_src->next == NULL);
 		CU_ASSERT(g_test_crypto_ops[i]->sym->cipher.data.length == block_len);
 		CU_ASSERT(g_test_crypto_ops[i]->sym->cipher.data.offset == 0);
-		CU_ASSERT(g_test_crypto_ops[i]->sym->m_src->userdata == g_bdev_io);
+		CU_ASSERT(*RTE_MBUF_DYNFIELD(g_test_crypto_ops[i]->sym->m_src, g_mbuf_offset,
+					     uint64_t *) == (uint64_t)g_bdev_io);
 		CU_ASSERT(g_test_crypto_ops[i]->sym->m_dst == NULL);
 		spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[i]->sym->m_src);
 	}
@@ -527,7 +536,8 @@ test_large_rw(void)
 		CU_ASSERT(g_test_crypto_ops[i]->sym->m_src->next == NULL);
 		CU_ASSERT(g_test_crypto_ops[i]->sym->cipher.data.length == block_len);
 		CU_ASSERT(g_test_crypto_ops[i]->sym->cipher.data.offset == 0);
-		CU_ASSERT(g_test_crypto_ops[i]->sym->m_src->userdata == g_bdev_io);
+		CU_ASSERT(*RTE_MBUF_DYNFIELD(g_test_crypto_ops[i]->sym->m_src, g_mbuf_offset,
+					     uint64_t *) == (uint64_t)g_bdev_io);
 		CU_ASSERT(g_io_ctx->aux_buf_iov.iov_len == io_len);
 		CU_ASSERT(g_io_ctx->aux_buf_iov.iov_base != NULL);
 		CU_ASSERT(g_io_ctx->aux_offset_blocks == 0);
@@ -571,7 +581,7 @@ test_dev_full(void)
 	CU_ASSERT(sym_op->m_src->next == NULL);
 	CU_ASSERT(sym_op->cipher.data.length == 512);
 	CU_ASSERT(sym_op->cipher.data.offset == 0);
-	CU_ASSERT(sym_op->m_src->userdata == g_bdev_io);
+	CU_ASSERT(*RTE_MBUF_DYNFIELD(sym_op->m_src, g_mbuf_offset, uint64_t *) == (uint64_t)g_bdev_io);
 	CU_ASSERT(sym_op->m_dst == NULL);
 
 	/* make sure one got queued and confirm its values */
@@ -586,7 +596,7 @@ test_dev_full(void)
 	CU_ASSERT(sym_op->m_src->next == NULL);
 	CU_ASSERT(sym_op->cipher.data.length == 512);
 	CU_ASSERT(sym_op->cipher.data.offset == 0);
-	CU_ASSERT(sym_op->m_src->userdata == g_bdev_io);
+	CU_ASSERT(*RTE_MBUF_DYNFIELD(sym_op->m_src, g_mbuf_offset, uint64_t *) == (uint64_t)g_bdev_io);
 	CU_ASSERT(sym_op->m_dst == NULL);
 	CU_ASSERT(TAILQ_EMPTY(&g_crypto_ch->queued_cry_ops) == true);
 	spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[0]->sym->m_src);
@@ -632,7 +642,8 @@ test_crazy_rw(void)
 		CU_ASSERT(g_test_crypto_ops[i]->sym->m_src->next == NULL);
 		CU_ASSERT(g_test_crypto_ops[i]->sym->cipher.data.length == block_len);
 		CU_ASSERT(g_test_crypto_ops[i]->sym->cipher.data.offset == 0);
-		CU_ASSERT(g_test_crypto_ops[i]->sym->m_src->userdata == g_bdev_io);
+		CU_ASSERT(*RTE_MBUF_DYNFIELD(g_test_crypto_ops[i]->sym->m_src, g_mbuf_offset,
+					     uint64_t *) == (uint64_t)g_bdev_io);
 		CU_ASSERT(g_test_crypto_ops[i]->sym->m_src == g_test_crypto_ops[i]->sym->m_src);
 		CU_ASSERT(g_test_crypto_ops[i]->sym->m_dst == NULL);
 		spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[i]->sym->m_src);
@@ -666,7 +677,8 @@ test_crazy_rw(void)
 		CU_ASSERT(g_test_crypto_ops[i]->sym->m_src->next == NULL);
 		CU_ASSERT(g_test_crypto_ops[i]->sym->cipher.data.length == block_len);
 		CU_ASSERT(g_test_crypto_ops[i]->sym->cipher.data.offset == 0);
-		CU_ASSERT(g_test_crypto_ops[i]->sym->m_src->userdata == g_bdev_io);
+		CU_ASSERT(*RTE_MBUF_DYNFIELD(g_test_crypto_ops[i]->sym->m_src, g_mbuf_offset,
+					     uint64_t *) == (uint64_t)g_bdev_io);
 		CU_ASSERT(g_test_crypto_ops[i]->sym->m_src == g_test_crypto_ops[i]->sym->m_src);
 		CU_ASSERT(g_test_crypto_ops[i]->sym->m_dst == g_test_crypto_ops[i]->sym->m_dst);
 		spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[i]->sym->m_src);
@@ -838,6 +850,7 @@ test_initdrivers(void)
 	MOCK_CLEARED_ASSERT(spdk_mempool_create);
 	MOCK_SET(rte_cryptodev_info_get, MOCK_INFO_GET_1QP_AESNI);
 	rc = vbdev_crypto_init_crypto_drivers();
+	CU_ASSERT(g_mbuf_offset == DPDK_DYNFIELD_OFFSET);
 	init_cleanup();
 	CU_ASSERT(rc == 0);
 
@@ -916,7 +929,8 @@ test_poller(void)
 	g_dequeue_mock = g_enqueue_mock = 1;
 	spdk_mempool_get_bulk(g_mbuf_mp, (void **)&src_mbufs[0], 1);
 	g_test_crypto_ops[0]->sym->m_src = src_mbufs[0];
-	g_test_crypto_ops[0]->sym->m_src->userdata = g_bdev_io;
+	*RTE_MBUF_DYNFIELD(g_test_crypto_ops[0]->sym->m_src, g_mbuf_offset,
+			   uint64_t *) = (uintptr_t)g_bdev_io;
 	g_test_crypto_ops[0]->sym->m_dst = NULL;
 	g_io_ctx->cryop_cnt_remaining = 1;
 	g_bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
@@ -946,11 +960,13 @@ test_poller(void)
 	g_io_ctx->cryop_cnt_remaining = 2;
 	spdk_mempool_get_bulk(g_mbuf_mp, (void **)&src_mbufs[0], 2);
 	g_test_crypto_ops[0]->sym->m_src = src_mbufs[0];
-	g_test_crypto_ops[0]->sym->m_src->userdata = g_bdev_io;
+	*RTE_MBUF_DYNFIELD(g_test_crypto_ops[0]->sym->m_src, g_mbuf_offset,
+			   uint64_t *) = (uint64_t)g_bdev_io;
 	g_test_crypto_ops[0]->sym->m_dst = NULL;
 	g_test_crypto_ops[0]->status =  RTE_CRYPTO_OP_STATUS_SUCCESS;
 	g_test_crypto_ops[1]->sym->m_src = src_mbufs[1];
-	g_test_crypto_ops[1]->sym->m_src->userdata = g_bdev_io;
+	*RTE_MBUF_DYNFIELD(g_test_crypto_ops[1]->sym->m_src, g_mbuf_offset,
+			   uint64_t *) = (uint64_t)g_bdev_io;
 	g_test_crypto_ops[1]->sym->m_dst = NULL;
 	g_test_crypto_ops[1]->status = RTE_CRYPTO_OP_STATUS_NOT_PROCESSED;
 	g_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;

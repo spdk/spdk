@@ -40,11 +40,20 @@
 #include "spdk/log.h"
 
 #include <rte_config.h>
-#include <rte_version.h>
 #include <rte_bus_vdev.h>
 #include <rte_crypto.h>
 #include <rte_cryptodev.h>
 #include <rte_cryptodev_pmd.h>
+#include <rte_mbuf_dyn.h>
+
+/* Used to store IO context in mbuf */
+static const struct rte_mbuf_dynfield rte_mbuf_dynfield_io_context = {
+	.name = "context_bdev_io",
+	.size = sizeof(uint64_t),
+	.align = __alignof__(uint64_t),
+	.flags = 0,
+};
+static int g_mbuf_offset;
 
 /* To add support for new device types, follow the examples of the following...
  * Note that the string names are defined by the DPDK PMD in question so be
@@ -387,6 +396,12 @@ vbdev_crypto_init_crypto_drivers(void)
 		return 0;
 	}
 
+	g_mbuf_offset = rte_mbuf_dynfield_register(&rte_mbuf_dynfield_io_context);
+	if (g_mbuf_offset < 0) {
+		SPDK_ERRLOG("error registering dynamic field with DPDK\n");
+		return -EINVAL;
+	}
+
 	/*
 	 * Create global mempools, shared by all devices regardless of type.
 	 */
@@ -572,7 +587,8 @@ crypto_dev_poller(void *args)
 		 * partiular bdev_io so need to look at each and determine if it's
 		 * the last one for it's bdev_io or not.
 		 */
-		bdev_io = (struct spdk_bdev_io *)dequeued_ops[i]->sym->m_src->userdata;
+		bdev_io = (struct spdk_bdev_io *)*RTE_MBUF_DYNFIELD(dequeued_ops[i]->sym->m_src, g_mbuf_offset,
+				uint64_t *);
 		assert(bdev_io != NULL);
 		io_ctx = (struct crypto_bdev_io *)bdev_io->driver_ctx;
 
@@ -591,7 +607,7 @@ crypto_dev_poller(void *args)
 		/* Return the associated src and dst mbufs by collecting them into
 		 * an array that we can use the bulk API to free after the loop.
 		 */
-		dequeued_ops[i]->sym->m_src->userdata = NULL;
+		*RTE_MBUF_DYNFIELD(dequeued_ops[i]->sym->m_src, g_mbuf_offset, uint64_t *) = 0;
 		mbufs_to_free[num_mbufs++] = (void *)dequeued_ops[i]->sym->m_src;
 		if (dequeued_ops[i]->sym->m_dst) {
 			mbufs_to_free[num_mbufs++] = (void *)dequeued_ops[i]->sym->m_dst;
@@ -762,7 +778,7 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 		src_mbufs[crypto_index]->buf_iova = spdk_vtophys((void *)current_iov, &updated_length);
 		src_mbufs[crypto_index]->next = NULL;
 		/* Store context in every mbuf as we don't know anything about completion order */
-		src_mbufs[crypto_index]->userdata = bdev_io;
+		*RTE_MBUF_DYNFIELD(src_mbufs[crypto_index], g_mbuf_offset, uint64_t *) = (uint64_t)bdev_io;
 
 		/* Set the IV - we use the LBA of the crypto_op */
 		iv_ptr = rte_crypto_op_ctod_offset(crypto_ops[crypto_index], uint8_t *,

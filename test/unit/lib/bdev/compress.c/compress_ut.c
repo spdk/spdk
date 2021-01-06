@@ -301,6 +301,9 @@ DEFINE_STUB_V(spdk_reduce_vol_destroy, (struct spdk_reduce_backing_dev *backing_
 					spdk_reduce_vol_op_complete cb_fn, void *cb_arg));
 
 /* DPDK stubs */
+#define DPDK_DYNFIELD_OFFSET offsetof(struct rte_mbuf, dynfield1[1])
+DEFINE_STUB(rte_mbuf_dynfield_register, int, (const struct rte_mbuf_dynfield *params),
+	    DPDK_DYNFIELD_OFFSET);
 DEFINE_STUB(rte_socket_id, unsigned, (void), 0);
 DEFINE_STUB(rte_vdev_init, int, (const char *name, const char *args), 0);
 DEFINE_STUB_V(rte_comp_op_free, (struct rte_comp_op *op));
@@ -503,8 +506,8 @@ rte_compressdev_enqueue_burst(uint8_t dev_id, uint16_t qp_id, struct rte_comp_op
 		CU_ASSERT(op_mbuf[UT_MBUFS_PER_OP_BOUND_TEST - 1] == NULL);
 		CU_ASSERT(exp_mbuf[UT_MBUFS_PER_OP_BOUND_TEST - 1] == NULL);
 	}
-
-	CU_ASSERT(op->m_src->userdata == ut_expected_op.m_src->userdata);
+	CU_ASSERT(*RTE_MBUF_DYNFIELD(op->m_src, g_mbuf_offset, uint64_t *) ==
+		  *RTE_MBUF_DYNFIELD(ut_expected_op.m_src, g_mbuf_offset, uint64_t *));
 	CU_ASSERT(op->src.offset == ut_expected_op.src.offset);
 	CU_ASSERT(op->src.length == ut_expected_op.src.length);
 
@@ -604,6 +607,7 @@ test_setup(void)
 		g_expected_dst_mbufs[i].next = &g_expected_dst_mbufs[i + 1];
 	}
 	g_expected_dst_mbufs[UT_MBUFS_PER_OP - 1].next = NULL;
+	g_mbuf_offset = DPDK_DYNFIELD_OFFSET;
 
 	return 0;
 }
@@ -722,7 +726,7 @@ test_compress_operation(void)
 	ut_expected_op.m_src = exp_src_mbuf[0];
 
 	for (i = 0; i < UT_MBUFS_PER_OP; i++) {
-		exp_src_mbuf[i]->userdata = &cb_arg;
+		*RTE_MBUF_DYNFIELD(exp_src_mbuf[i], g_mbuf_offset, uint64_t *) = (uint64_t)&cb_arg;
 		exp_src_mbuf[i]->buf_addr = src_iovs[i].iov_base;
 		exp_src_mbuf[i]->buf_iova = spdk_vtophys(src_iovs[i].iov_base, &src_iovs[i].iov_len);
 		exp_src_mbuf[i]->buf_len = src_iovs[i].iov_len;
@@ -781,7 +785,7 @@ test_compress_operation_cross_boundary(void)
 	ut_expected_op.m_src = exp_src_mbuf[0];
 
 	for (i = 0; i < UT_MBUFS_PER_OP; i++) {
-		exp_src_mbuf[i]->userdata = &cb_arg;
+		*RTE_MBUF_DYNFIELD(exp_src_mbuf[i], g_mbuf_offset, uint64_t *) = (uint64_t)&cb_arg;
 		exp_src_mbuf[i]->buf_addr = src_iovs[i].iov_base;
 		exp_src_mbuf[i]->buf_iova = spdk_vtophys(src_iovs[i].iov_base, &src_iovs[i].iov_len);
 		exp_src_mbuf[i]->buf_len = src_iovs[i].iov_len;
@@ -804,7 +808,7 @@ test_compress_operation_cross_boundary(void)
 	g_small_size_counter = 0;
 	g_small_size_modify = 1;
 	g_small_size = 0x800;
-	exp_src_mbuf[3]->userdata = &cb_arg;
+	*RTE_MBUF_DYNFIELD(exp_src_mbuf[3], g_mbuf_offset, uint64_t *) = (uint64_t)&cb_arg;
 
 	/* first only has shorter length */
 	exp_src_mbuf[0]->pkt_len = exp_src_mbuf[0]->buf_len = 0x800;
@@ -922,7 +926,7 @@ test_poller(void)
 	 */
 	ut_rte_compressdev_dequeue_burst = 1;
 	/* setup what we want dequeue to return for the op */
-	g_comp_op[0].m_src->userdata = (void *)cb_args;
+	*RTE_MBUF_DYNFIELD(g_comp_op[0].m_src, g_mbuf_offset, uint64_t *) = (uint64_t)cb_args;
 	g_comp_op[0].produced = 1;
 	g_comp_op[0].status = 1;
 	/* value asserted in the reduce callback */
@@ -936,10 +940,10 @@ test_poller(void)
 	 */
 	ut_rte_compressdev_dequeue_burst = 2;
 	/* setup what we want dequeue to return for the op */
-	g_comp_op[0].m_src->userdata = (void *)cb_args;
+	*RTE_MBUF_DYNFIELD(g_comp_op[0].m_src, g_mbuf_offset, uint64_t *) = (uint64_t)cb_args;
 	g_comp_op[0].produced = 16;
 	g_comp_op[0].status = 0;
-	g_comp_op[1].m_src->userdata = (void *)cb_args;
+	*RTE_MBUF_DYNFIELD(g_comp_op[1].m_src, g_mbuf_offset, uint64_t *) = (uint64_t)cb_args;
 	g_comp_op[1].produced = 32;
 	g_comp_op[1].status = 0;
 	/* value asserted in the reduce callback */
@@ -955,7 +959,7 @@ test_poller(void)
 	 */
 	ut_rte_compressdev_dequeue_burst = 1;
 	/* setup what we want dequeue to return for the op */
-	g_comp_op[0].m_src->userdata = (void *)cb_args;
+	*RTE_MBUF_DYNFIELD(g_comp_op[0].m_src, g_mbuf_offset, uint64_t *) = (uint64_t)cb_args;
 	g_comp_op[0].produced = 16;
 	g_comp_op[0].status = 0;
 	/* value asserted in the reduce callback */
@@ -1111,6 +1115,7 @@ test_initdrivers(void)
 	ut_rte_compressdev_private_xform_create = 0;
 	rc = vbdev_init_compress_drivers();
 	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_mbuf_offset == DPDK_DYNFIELD_OFFSET);
 	spdk_mempool_free((struct spdk_mempool *)g_mbuf_mp);
 }
 

@@ -49,6 +49,16 @@
 #include <rte_bus_vdev.h>
 #include <rte_compressdev.h>
 #include <rte_comp.h>
+#include <rte_mbuf_dyn.h>
+
+/* Used to store IO context in mbuf */
+static const struct rte_mbuf_dynfield rte_mbuf_dynfield_io_context = {
+	.name = "context_reduce",
+	.size = sizeof(uint64_t),
+	.align = __alignof__(uint64_t),
+	.flags = 0,
+};
+static int g_mbuf_offset;
 
 #define NUM_MAX_XFORMS 2
 #define NUM_MAX_INFLIGHT_OPS 128
@@ -357,6 +367,12 @@ vbdev_init_compress_drivers(void)
 		return -EINVAL;
 	}
 
+	g_mbuf_offset = rte_mbuf_dynfield_register(&rte_mbuf_dynfield_io_context);
+	if (g_mbuf_offset < 0) {
+		SPDK_ERRLOG("error registering dynamic field with DPDK\n");
+		return -EINVAL;
+	}
+
 	g_mbuf_mp = rte_pktmbuf_pool_create("comp_mbuf_mp", NUM_MBUFS, POOL_CACHE_SIZE,
 					    sizeof(struct rte_mbuf), 0, rte_socket_id());
 	if (g_mbuf_mp == NULL) {
@@ -457,7 +473,7 @@ _setup_compress_mbuf(struct rte_mbuf **mbufs, int *mbuf_total, uint64_t *total_l
 			*total_length += iovs[iov_index].iov_len;
 		}
 		assert(mbufs[mbuf_index] != NULL);
-		mbufs[mbuf_index]->userdata = reduce_cb_arg;
+		*RTE_MBUF_DYNFIELD(mbufs[mbuf_index], g_mbuf_offset, uint64_t *) = (uint64_t)reduce_cb_arg;
 		updated_length = iovs[iov_index].iov_len;
 		phys_addr = spdk_vtophys((void *)current_base, &updated_length);
 
@@ -484,7 +500,7 @@ _setup_compress_mbuf(struct rte_mbuf **mbufs, int *mbuf_total, uint64_t *total_l
 			}
 			(*mbuf_total)++;
 			mbuf_index++;
-			mbufs[mbuf_index]->userdata = reduce_cb_arg;
+			*RTE_MBUF_DYNFIELD(mbufs[mbuf_index], g_mbuf_offset, uint64_t *) = (uint64_t)reduce_cb_arg;
 			current_base += updated_length;
 			phys_addr = spdk_vtophys((void *)current_base, &remainder);
 			/* assert we don't cross another */
@@ -656,8 +672,8 @@ comp_dev_poller(void *args)
 	num_deq = rte_compressdev_dequeue_burst(cdev_id, comp_bdev->device_qp->qp, deq_ops,
 						NUM_MAX_INFLIGHT_OPS);
 	for (i = 0; i < num_deq; i++) {
-		reduce_args = (struct spdk_reduce_vol_cb_args *)deq_ops[i]->m_src->userdata;
-
+		reduce_args = (struct spdk_reduce_vol_cb_args *)*RTE_MBUF_DYNFIELD(deq_ops[i]->m_src, g_mbuf_offset,
+				uint64_t *);
 		if (deq_ops[i]->status == RTE_COMP_OP_STATUS_SUCCESS) {
 
 			/* tell reduce this is done and what the bytecount was */
