@@ -355,6 +355,7 @@ nvmf_fc_ls_new_connection(struct spdk_nvmf_fc_association *assoc, uint16_t qid,
 	fc_conn->max_queue_depth = sq_size + 1;
 	fc_conn->conn_state = SPDK_NVMF_FC_OBJECT_CREATED;
 	TAILQ_INIT(&fc_conn->in_use_reqs);
+	TAILQ_INIT(&fc_conn->fused_waiting_queue);
 
 	/* save target port trid in connection (for subsystem
 	 * listener validation in fabric connect command)

@@ -104,6 +104,7 @@ enum spdk_nvmf_fc_request_state {
 	SPDK_NVMF_FC_REQ_ABORTED,
 	SPDK_NVMF_FC_REQ_BDEV_ABORTED,
 	SPDK_NVMF_FC_REQ_PENDING,
+	SPDK_NVMF_FC_REQ_FUSED_WAITING,
 	SPDK_NVMF_FC_REQ_MAX_STATE,
 };
 
@@ -239,6 +240,8 @@ struct spdk_nvmf_fc_conn {
 
 	/* number of read/write requests that are outstanding */
 	uint16_t cur_fc_rw_depth;
+
+	TAILQ_HEAD(, spdk_nvmf_fc_request) fused_waiting_queue;
 
 	struct spdk_nvmf_fc_association *fc_assoc;
 
@@ -376,8 +379,10 @@ struct spdk_nvmf_fc_request {
 	uint32_t magic;
 	uint32_t s_id;
 	uint32_t d_id;
+	uint32_t csn;
 	TAILQ_ENTRY(spdk_nvmf_fc_request) link;
 	TAILQ_ENTRY(spdk_nvmf_fc_request) conn_link;
+	TAILQ_ENTRY(spdk_nvmf_fc_request) fused_link;
 	TAILQ_HEAD(, spdk_nvmf_fc_caller_ctx) abort_cbs;
 };
 

@@ -84,7 +84,8 @@ static char *fc_req_state_strs[] = {
 	"SPDK_NVMF_FC_REQ_FAILED",
 	"SPDK_NVMF_FC_REQ_ABORTED",
 	"SPDK_NVMF_FC_REQ_BDEV_ABORTED",
-	"SPDK_NVMF_FC_REQ_PENDING"
+	"SPDK_NVMF_FC_REQ_PENDING",
+	"SPDK_NVMF_FC_REQ_FUSED_WAITING"
 };
 
 #define OBJECT_NVMF_FC_IO				0xA0
@@ -105,6 +106,7 @@ static char *fc_req_state_strs[] = {
 #define TRACE_FC_REQ_ABORTED                    SPDK_TPOINT_ID(TRACE_GROUP_NVMF_FC, 0x0D)
 #define TRACE_FC_REQ_BDEV_ABORTED               SPDK_TPOINT_ID(TRACE_GROUP_NVMF_FC, 0x0E)
 #define TRACE_FC_REQ_PENDING                    SPDK_TPOINT_ID(TRACE_GROUP_NVMF_FC, 0x0F)
+#define TRACE_FC_REQ_FUSED_WAITING		SPDK_TPOINT_ID(TRACE_GROUP_NVMF_FC, 0x10)
 
 #define HWQP_CONN_TABLE_SIZE			8192
 #define HWQP_RPI_TABLE_SIZE			4096
@@ -156,6 +158,9 @@ SPDK_TRACE_REGISTER_FN(nvmf_fc_trace, "nvmf_fc", TRACE_GROUP_NVMF_FC)
 					OWNER_NONE, OBJECT_NONE, 0, 1, "");
 	spdk_trace_register_description("FC_REQ_PENDING",
 					TRACE_FC_REQ_PENDING,
+					OWNER_NONE, OBJECT_NONE, 0, 1, "");
+	spdk_trace_register_description("FC_REQ_FUSED_WAITING",
+					TRACE_FC_REQ_FUSED_WAITING,
 					OWNER_NONE, OBJECT_NONE, 0, 1, "");
 }
 
@@ -298,6 +303,9 @@ nvmf_fc_record_req_trace_point(struct spdk_nvmf_fc_request *fc_req,
 		break;
 	case SPDK_NVMF_FC_REQ_PENDING:
 		tpoint_id = TRACE_FC_REQ_PENDING;
+		break;
+	case SPDK_NVMF_FC_REQ_FUSED_WAITING:
+		tpoint_id = TRACE_FC_REQ_FUSED_WAITING;
 		break;
 	default:
 		assert(0);
@@ -1351,6 +1359,9 @@ nvmf_fc_request_abort(struct spdk_nvmf_fc_request *fc_req, bool send_abts,
 		/* Remove from pending */
 		nvmf_fc_request_remove_from_pending(fc_req);
 		goto complete;
+	case SPDK_NVMF_FC_REQ_FUSED_WAITING:
+		TAILQ_REMOVE(&fc_req->fc_conn->fused_waiting_queue, fc_req, fused_link);
+		goto complete;
 	default:
 		SPDK_ERRLOG("Request in invalid state.\n");
 		goto complete;
@@ -1532,6 +1543,7 @@ nvmf_fc_hwqp_handle_request(struct spdk_nvmf_fc_hwqp *hwqp, struct spdk_nvmf_fc_
 	fc_req->req.xfer = xfer;
 	fc_req->s_id = s_id;
 	fc_req->d_id = d_id;
+	fc_req->csn  = from_be32(&cmd_iu->cmnd_seq_num);
 
 	nvmf_fc_record_req_trace_point(fc_req, SPDK_NVMF_FC_REQ_INIT);
 
