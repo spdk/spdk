@@ -143,6 +143,9 @@ struct nvme_async_probe_ctx {
 	spdk_bdev_create_nvme_fn cb_fn;
 	void *cb_ctx;
 	uint32_t populates_in_progress;
+	bool ctrlr_attached;
+	bool probe_done;
+	bool namespaces_populated;
 };
 
 struct ocssd_io_channel;

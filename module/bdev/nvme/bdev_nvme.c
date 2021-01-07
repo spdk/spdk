@@ -1797,7 +1797,14 @@ populate_namespaces_cb(struct nvme_async_probe_ctx *ctx, size_t count, int rc)
 		ctx->cb_fn(ctx->cb_ctx, count, rc);
 	}
 
-	free(ctx);
+	ctx->namespaces_populated = true;
+	if (ctx->probe_done) {
+		/* The probe was already completed, so we need to free the context
+		 * here.  This can happen for cases like OCSSD, where we need to
+		 * send additional commands to the SSD after attach.
+		 */
+		free(ctx);
+	}
 }
 
 static void
@@ -1944,8 +1951,7 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	int rc;
 
 	ctx = SPDK_CONTAINEROF(user_opts, struct nvme_async_probe_ctx, opts);
-
-	spdk_poller_unregister(&ctx->poller);
+	ctx->ctrlr_attached = true;
 
 	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name(ctx->base_name);
 	if (nvme_bdev_ctrlr) {
@@ -1982,9 +1988,23 @@ bdev_nvme_async_poll(void *arg)
 	int				rc;
 
 	rc = spdk_nvme_probe_poll_async(ctx->probe_ctx);
-	if (spdk_unlikely(rc != -EAGAIN && rc != 0)) {
+	if (spdk_unlikely(rc != -EAGAIN)) {
+		ctx->probe_done = true;
 		spdk_poller_unregister(&ctx->poller);
-		free(ctx);
+		if (!ctx->ctrlr_attached) {
+			/* The probe is done, but no controller was attached.
+			 * That means we had a failure, so report -EIO back to
+			 * the caller (usually the RPC). populate_namespaces_cb()
+			 * will take care of freeing the nvme_async_probe_ctx.
+			 */
+			populate_namespaces_cb(ctx, 0, -EIO);
+		} else if (ctx->namespaces_populated) {
+			/* The namespaces for the attached controller were all
+			 * populated and the response was already sent to the
+			 * caller (usually the RPC).  So free the context here.
+			 */
+			free(ctx);
+		}
 	}
 
 	return SPDK_POLLER_BUSY;
