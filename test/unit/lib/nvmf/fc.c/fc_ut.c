@@ -451,7 +451,7 @@ remove_hwqps_from_poll_groups_test(void)
 	SPDK_CU_ASSERT_FATAL(fc_port != NULL);
 
 	for (i = 0; i < fc_port->num_io_queues; i++) {
-		nvmf_fc_poll_group_remove_hwqp(&fc_port->io_queues[i]);
+		nvmf_fc_poll_group_remove_hwqp(&fc_port->io_queues[i], NULL, NULL);
 		poll_threads();
 		CU_ASSERT(fc_port->io_queues[i].fgroup == 0);
 	}

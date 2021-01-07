@@ -68,6 +68,7 @@ DEFINE_STUB(rte_hash_add_key_data, int, (const struct rte_hash *h, const void *k
 DEFINE_STUB(rte_hash_create, struct rte_hash *, (const struct rte_hash_parameters *params),
 	    (void *)1);
 DEFINE_STUB_V(rte_hash_free, (struct rte_hash *h));
+DEFINE_STUB(nvmf_fc_poll_group_valid, bool, (struct spdk_nvmf_fc_poll_group *fgroup), true);
 
 static const char *fc_ut_subsystem_nqn =
 	"nqn.2017-11.io.spdk:sn.390c0dc7c87011e786b300a0989adc53:subsystem.good";

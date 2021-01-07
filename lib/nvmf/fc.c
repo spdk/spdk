@@ -454,12 +454,13 @@ nvmf_fc_init_hwqp(struct spdk_nvmf_fc_port *fc_port, struct spdk_nvmf_fc_hwqp *h
 }
 
 static struct spdk_nvmf_fc_poll_group *
-nvmf_fc_get_idlest_poll_group(void)
+nvmf_fc_assign_idlest_poll_group(struct spdk_nvmf_fc_hwqp *hwqp)
 {
 	uint32_t max_count = UINT32_MAX;
 	struct spdk_nvmf_fc_poll_group *fgroup;
 	struct spdk_nvmf_fc_poll_group *ret_fgroup = NULL;
 
+	pthread_mutex_lock(&g_nvmf_ftransport->lock);
 	/* find poll group with least number of hwqp's assigned to it */
 	TAILQ_FOREACH(fgroup, &g_nvmf_fgroups, link) {
 		if (fgroup->hwqp_count < max_count) {
@@ -468,14 +469,37 @@ nvmf_fc_get_idlest_poll_group(void)
 		}
 	}
 
+	if (ret_fgroup) {
+		ret_fgroup->hwqp_count++;
+		hwqp->thread = ret_fgroup->group.group->thread;
+		hwqp->fgroup = ret_fgroup;
+	}
+
+	pthread_mutex_unlock(&g_nvmf_ftransport->lock);
+
 	return ret_fgroup;
+}
+
+bool
+nvmf_fc_poll_group_valid(struct spdk_nvmf_fc_poll_group *fgroup)
+{
+	struct spdk_nvmf_fc_poll_group *tmp;
+	bool rc = false;
+
+	pthread_mutex_lock(&g_nvmf_ftransport->lock);
+	TAILQ_FOREACH(tmp, &g_nvmf_fgroups, link) {
+		if (tmp == fgroup) {
+			rc = true;
+			break;
+		}
+	}
+	pthread_mutex_unlock(&g_nvmf_ftransport->lock);
+	return rc;
 }
 
 void
 nvmf_fc_poll_group_add_hwqp(struct spdk_nvmf_fc_hwqp *hwqp)
 {
-	struct spdk_nvmf_fc_poll_group *fgroup = NULL;
-
 	assert(hwqp);
 	if (hwqp == NULL) {
 		SPDK_ERRLOG("Error: hwqp is NULL\n");
@@ -484,21 +508,41 @@ nvmf_fc_poll_group_add_hwqp(struct spdk_nvmf_fc_hwqp *hwqp)
 
 	assert(g_nvmf_fgroup_count);
 
-	fgroup = nvmf_fc_get_idlest_poll_group();
-	if (!fgroup) {
+	if (!nvmf_fc_assign_idlest_poll_group(hwqp)) {
 		SPDK_ERRLOG("Could not assign poll group for hwqp (%d)\n", hwqp->hwqp_id);
 		return;
 	}
 
-	hwqp->thread = fgroup->group.group->thread;
-	hwqp->fgroup = fgroup;
-	fgroup->hwqp_count++;
 	nvmf_fc_poller_api_func(hwqp, SPDK_NVMF_FC_POLLER_API_ADD_HWQP, NULL);
 }
 
-void
-nvmf_fc_poll_group_remove_hwqp(struct spdk_nvmf_fc_hwqp *hwqp)
+static void
+nvmf_fc_poll_group_remove_hwqp_cb(void *cb_data, enum spdk_nvmf_fc_poller_api_ret ret)
 {
+	struct spdk_nvmf_fc_poller_api_remove_hwqp_args *args = cb_data;
+
+	if (ret == SPDK_NVMF_FC_POLLER_API_SUCCESS) {
+		SPDK_DEBUGLOG(nvmf_fc_adm_api,
+			      "Remove hwqp%d from fgroup success\n", args->hwqp->hwqp_id);
+	} else {
+		SPDK_ERRLOG("Remove hwqp%d from fgroup failed.\n", args->hwqp->hwqp_id);
+	}
+
+	if (args->cb_fn) {
+		args->cb_fn(args->cb_ctx, 0);
+	}
+
+	free(args);
+}
+
+void
+nvmf_fc_poll_group_remove_hwqp(struct spdk_nvmf_fc_hwqp *hwqp,
+			       spdk_nvmf_fc_remove_hwqp_cb cb_fn, void *cb_ctx)
+{
+	struct spdk_nvmf_fc_poller_api_remove_hwqp_args *args;
+	struct spdk_nvmf_fc_poll_group *tmp;
+	int rc = 0;
+
 	assert(hwqp);
 
 	SPDK_DEBUGLOG(nvmf_fc,
@@ -508,8 +552,46 @@ nvmf_fc_poll_group_remove_hwqp(struct spdk_nvmf_fc_hwqp *hwqp)
 	if (!hwqp->fgroup) {
 		SPDK_ERRLOG("HWQP (%d) not assigned to poll group\n", hwqp->hwqp_id);
 	} else {
-		hwqp->fgroup->hwqp_count--;
-		nvmf_fc_poller_api_func(hwqp, SPDK_NVMF_FC_POLLER_API_REMOVE_HWQP, NULL);
+		pthread_mutex_lock(&g_nvmf_ftransport->lock);
+		TAILQ_FOREACH(tmp, &g_nvmf_fgroups, link) {
+			if (tmp == hwqp->fgroup) {
+				hwqp->fgroup->hwqp_count--;
+				break;
+			}
+		}
+		pthread_mutex_unlock(&g_nvmf_ftransport->lock);
+
+		if (tmp != hwqp->fgroup) {
+			/* Pollgroup was already removed. Dont bother. */
+			goto done;
+		}
+
+		args = calloc(1, sizeof(struct spdk_nvmf_fc_poller_api_remove_hwqp_args));
+		if (args == NULL) {
+			rc = -ENOMEM;
+			SPDK_ERRLOG("Failed to allocate memory for poller remove hwqp:%d\n", hwqp->hwqp_id);
+			goto done;
+		}
+
+		args->hwqp   = hwqp;
+		args->cb_fn  = cb_fn;
+		args->cb_ctx = cb_ctx;
+		args->cb_info.cb_func = nvmf_fc_poll_group_remove_hwqp_cb;
+		args->cb_info.cb_data = args;
+		args->cb_info.cb_thread = spdk_get_thread();
+
+		rc = nvmf_fc_poller_api_func(hwqp, SPDK_NVMF_FC_POLLER_API_REMOVE_HWQP, args);
+		if (rc) {
+			rc = -EINVAL;
+			SPDK_ERRLOG("Remove hwqp%d from fgroup failed.\n", hwqp->hwqp_id);
+			free(args);
+			goto done;
+		}
+		return;
+	}
+done:
+	if (cb_fn) {
+		cb_fn(cb_ctx, rc);
 	}
 }
 
@@ -2783,6 +2865,38 @@ out:
 		      err);
 }
 
+static void
+nvmf_fc_adm_hw_port_offline_cb(void *ctx, int status)
+{
+	int err = 0;
+	struct spdk_nvmf_fc_port *fc_port = NULL;
+	struct spdk_nvmf_fc_remove_hwqp_cb_args *remove_hwqp_args = ctx;
+	struct spdk_nvmf_fc_hw_port_offline_args *args = remove_hwqp_args->cb_args;
+
+	if (--remove_hwqp_args->pending_remove_hwqp) {
+		return;
+	}
+
+	fc_port = nvmf_fc_port_lookup(args->port_handle);
+	if (!fc_port) {
+		err = -EINVAL;
+		SPDK_ERRLOG("fc_port not found.\n");
+		goto out;
+	}
+
+	/*
+	 * Delete all the nports. Ideally, the nports should have been purged
+	 * before the offline event, in which case, only a validation is required.
+	 */
+	nvmf_fc_adm_hw_port_offline_nport_delete(fc_port);
+out:
+	if (remove_hwqp_args->cb_fn) {
+		remove_hwqp_args->cb_fn(args->port_handle, SPDK_FC_HW_PORT_OFFLINE, args->cb_ctx, err);
+	}
+
+	free(remove_hwqp_args);
+}
+
 /*
  * Offline a HW port.
  */
@@ -2795,6 +2909,7 @@ nvmf_fc_adm_evnt_hw_port_offline(void *arg)
 	struct spdk_nvmf_fc_adm_api_data *api_data = (struct spdk_nvmf_fc_adm_api_data *)arg;
 	struct spdk_nvmf_fc_hw_port_offline_args *args = (struct spdk_nvmf_fc_hw_port_offline_args *)
 			api_data->api_args;
+	struct spdk_nvmf_fc_remove_hwqp_cb_args *remove_hwqp_args;
 	int i = 0;
 	int err = 0;
 
@@ -2808,6 +2923,16 @@ nvmf_fc_adm_evnt_hw_port_offline(void *arg)
 			goto out;
 		}
 
+		remove_hwqp_args = calloc(1, sizeof(struct spdk_nvmf_fc_remove_hwqp_cb_args));
+		if (!remove_hwqp_args) {
+			SPDK_ERRLOG("Failed to alloc memory for remove_hwqp_args\n");
+			err = -ENOMEM;
+			goto out;
+		}
+		remove_hwqp_args->cb_fn = api_data->cb_func;
+		remove_hwqp_args->cb_args = api_data->api_args;
+		remove_hwqp_args->pending_remove_hwqp = fc_port->num_io_queues;
+
 		hwqp = &fc_port->ls_queue;
 		(void)nvmf_fc_hwqp_set_offline(hwqp);
 
@@ -2815,14 +2940,14 @@ nvmf_fc_adm_evnt_hw_port_offline(void *arg)
 		for (i = 0; i < (int)fc_port->num_io_queues; i++) {
 			hwqp = &fc_port->io_queues[i];
 			(void)nvmf_fc_hwqp_set_offline(hwqp);
-			nvmf_fc_poll_group_remove_hwqp(hwqp);
+			nvmf_fc_poll_group_remove_hwqp(hwqp, nvmf_fc_adm_hw_port_offline_cb,
+						       remove_hwqp_args);
 		}
 
-		/*
-		 * Delete all the nports. Ideally, the nports should have been purged
-		 * before the offline event, in which case, only a validation is required.
-		 */
-		nvmf_fc_adm_hw_port_offline_nport_delete(fc_port);
+		free(arg);
+
+		/* Wait untill all the hwqps are removed from poll groups. */
+		return;
 	} else {
 		SPDK_ERRLOG("Unable to find the SPDK FC port %d\n", args->port_handle);
 		err = -EINVAL;

@@ -522,6 +522,15 @@ struct spdk_nvmf_fc_poller_api_queue_sync_done_args {
 	uint64_t tag;
 };
 
+typedef void (*spdk_nvmf_fc_remove_hwqp_cb)(void *ctx, int err);
+
+struct spdk_nvmf_fc_poller_api_remove_hwqp_args {
+	struct spdk_nvmf_fc_hwqp *hwqp;
+	spdk_nvmf_fc_remove_hwqp_cb cb_fn;
+	void *cb_ctx;
+	struct spdk_nvmf_fc_poller_api_cb_info cb_info;
+};
+
 struct spdk_nvmf_fc_hwqp_rport {
 	uint16_t rpi;
 	TAILQ_HEAD(, spdk_nvmf_fc_conn) conn_list;
@@ -768,6 +777,12 @@ typedef void (*spdk_nvmf_fc_callback)(uint8_t port_handle,
 				      enum spdk_fc_event event_type,
 				      void *arg, int err);
 
+struct spdk_nvmf_fc_remove_hwqp_cb_args {
+	uint16_t pending_remove_hwqp;
+	spdk_nvmf_fc_callback cb_fn;
+	void *cb_args;
+};
+
 /**
  * Enqueue an FCT event to main thread
  *
@@ -948,9 +963,12 @@ bool nvmf_ctrlr_is_on_nport(uint8_t port_hdl, uint16_t nport_hdl,
 
 void nvmf_fc_assign_queue_to_main_thread(struct spdk_nvmf_fc_hwqp *hwqp);
 
+bool nvmf_fc_poll_group_valid(struct spdk_nvmf_fc_poll_group *fgroup);
+
 void nvmf_fc_poll_group_add_hwqp(struct spdk_nvmf_fc_hwqp *hwqp);
 
-void nvmf_fc_poll_group_remove_hwqp(struct spdk_nvmf_fc_hwqp *hwqp);
+void nvmf_fc_poll_group_remove_hwqp(struct spdk_nvmf_fc_hwqp *hwqp,
+				    spdk_nvmf_fc_remove_hwqp_cb cb_fn, void *cb_ctx);
 
 int nvmf_fc_hwqp_set_online(struct spdk_nvmf_fc_hwqp *hwqp);
 

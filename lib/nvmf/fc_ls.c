@@ -42,6 +42,7 @@
 #include "spdk/log.h"
 #include "nvmf_internal.h"
 #include "transport.h"
+#include "spdk/nvmf_transport.h"
 
 #include "nvmf_fc.h"
 #include "fc_lld.h"
@@ -1649,21 +1650,31 @@ static void
 nvmf_fc_poller_api_add_hwqp(void *arg)
 {
 	struct spdk_nvmf_fc_hwqp *hwqp = (struct spdk_nvmf_fc_hwqp *)arg;
+	struct spdk_nvmf_fc_poll_group *fgroup = hwqp->fgroup;
 
-	hwqp->lcore_id = spdk_env_get_current_core(); /* for tracing purposes only */
-	TAILQ_INSERT_TAIL(&hwqp->fgroup->hwqp_list, hwqp, link);
+	assert(fgroup);
+
+	if (nvmf_fc_poll_group_valid(fgroup)) {
+		TAILQ_INSERT_TAIL(&fgroup->hwqp_list, hwqp, link);
+		hwqp->lcore_id	= spdk_env_get_current_core();
+	}
 	/* note: no callback from this api */
 }
 
 static void
 nvmf_fc_poller_api_remove_hwqp(void *arg)
 {
-	struct spdk_nvmf_fc_hwqp *hwqp = (struct spdk_nvmf_fc_hwqp *)arg;
+	struct spdk_nvmf_fc_poller_api_remove_hwqp_args *args = arg;
+	struct spdk_nvmf_fc_hwqp *hwqp = args->hwqp;
 	struct spdk_nvmf_fc_poll_group *fgroup = hwqp->fgroup;
 
-	TAILQ_REMOVE(&fgroup->hwqp_list, hwqp, link);
+	if (nvmf_fc_poll_group_valid(fgroup)) {
+		TAILQ_REMOVE(&fgroup->hwqp_list, hwqp, link);
+	}
 	hwqp->fgroup = NULL;
-	/* note: no callback from this api */
+	hwqp->thread = NULL;
+
+	nvmf_fc_poller_api_perform_cb(&args->cb_info, SPDK_NVMF_FC_POLLER_API_SUCCESS);
 }
 
 enum spdk_nvmf_fc_poller_api_ret
@@ -1718,7 +1729,7 @@ nvmf_fc_poller_api_func(struct spdk_nvmf_fc_hwqp *hwqp, enum spdk_nvmf_fc_poller
 		break;
 
 	case SPDK_NVMF_FC_POLLER_API_REMOVE_HWQP:
-		spdk_thread_send_msg(hwqp->thread, nvmf_fc_poller_api_remove_hwqp, (void *) hwqp);
+		spdk_thread_send_msg(hwqp->thread, nvmf_fc_poller_api_remove_hwqp, api_args);
 		break;
 
 	case SPDK_NVMF_FC_POLLER_API_ADAPTER_EVENT:
