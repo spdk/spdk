@@ -304,6 +304,10 @@ struct nvme_rdma_qpair *nvme_rdma_poll_group_get_qpair_by_id(struct nvme_rdma_po
 static inline void *
 nvme_rdma_calloc(size_t nmemb, size_t size)
 {
+	if (!nmemb || !size) {
+		return NULL;
+	}
+
 	if (!g_nvme_hooks.get_rkey) {
 		return calloc(nmemb, size);
 	} else {
