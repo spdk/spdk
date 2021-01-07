@@ -633,6 +633,7 @@ struct spdk_nvmf_fc_poller_api_queue_sync_args {
  */
 enum spdk_fc_event {
 	SPDK_FC_HW_PORT_INIT,
+	SPDK_FC_HW_PORT_FREE,
 	SPDK_FC_HW_PORT_ONLINE,
 	SPDK_FC_HW_PORT_OFFLINE,
 	SPDK_FC_HW_PORT_RESET,
@@ -768,6 +769,11 @@ struct spdk_nvmf_fc_hw_port_reset_args {
  * Arguments for unrecoverable error event
  */
 struct spdk_nvmf_fc_unrecoverable_error_event_args {
+};
+
+struct spdk_nvmf_fc_hw_port_free_args {
+	uint8_t port_handle;
+	void    *cb_ctx;
 };
 
 /**

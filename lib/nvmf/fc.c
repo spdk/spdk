@@ -936,6 +936,17 @@ nvmf_fc_port_add(struct spdk_nvmf_fc_port *fc_port)
 	nvmf_fc_lld_port_add(fc_port);
 }
 
+static void
+nvmf_fc_port_remove(struct spdk_nvmf_fc_port *fc_port)
+{
+	TAILQ_REMOVE(&g_spdk_nvmf_fc_port_list, fc_port, link);
+
+	/*
+	 * Let LLD remove the port from its list.
+	 */
+	nvmf_fc_lld_port_remove(fc_port);
+}
+
 struct spdk_nvmf_fc_port *
 nvmf_fc_port_lookup(uint8_t port_hdl)
 {
@@ -2813,6 +2824,75 @@ abort_port_init:
 		      args->port_handle, err);
 }
 
+static void
+nvmf_fc_adm_hwqp_clean_sync_cb(struct spdk_nvmf_fc_hwqp *hwqp)
+{
+	struct spdk_nvmf_fc_abts_ctx *ctx;
+	struct spdk_nvmf_fc_poller_api_queue_sync_args *args = NULL, *tmp = NULL;
+
+	TAILQ_FOREACH_SAFE(args, &hwqp->sync_cbs, link, tmp) {
+		TAILQ_REMOVE(&hwqp->sync_cbs, args, link);
+		ctx = args->cb_info.cb_data;
+		if (ctx) {
+			if (++ctx->hwqps_responded == ctx->num_hwqps) {
+				free(ctx->sync_poller_args);
+				free(ctx->abts_poller_args);
+				spdk_free(ctx);
+			}
+		}
+	}
+}
+
+static void
+nvmf_fc_adm_evnt_hw_port_free(void *arg)
+{
+	ASSERT_SPDK_FC_MAIN_THREAD();
+	int err = 0, i;
+	struct spdk_nvmf_fc_port *fc_port = NULL;
+	struct spdk_nvmf_fc_hwqp *hwqp = NULL;
+	struct spdk_nvmf_fc_adm_api_data *api_data = (struct spdk_nvmf_fc_adm_api_data *)arg;
+	struct spdk_nvmf_fc_hw_port_free_args *args = (struct spdk_nvmf_fc_hw_port_free_args *)
+			api_data->api_args;
+
+	fc_port = nvmf_fc_port_lookup(args->port_handle);
+	if (!fc_port) {
+		SPDK_ERRLOG("Unable to find the SPDK FC port %d\n", args->port_handle);
+		err = -EINVAL;
+		goto out;
+	}
+
+	if (!TAILQ_EMPTY(&fc_port->nport_list)) {
+		SPDK_ERRLOG("Hw port %d: nports not cleared up yet.\n", args->port_handle);
+		err = -EIO;
+		goto out;
+	}
+
+	/* Clean up and free fc_port */
+	hwqp = &fc_port->ls_queue;
+	nvmf_fc_adm_hwqp_clean_sync_cb(hwqp);
+	rte_hash_free(hwqp->connection_list_hash);
+	rte_hash_free(hwqp->rport_list_hash);
+
+	for (i = 0; i < (int)fc_port->num_io_queues; i++) {
+		hwqp = &fc_port->io_queues[i];
+
+		nvmf_fc_adm_hwqp_clean_sync_cb(&fc_port->io_queues[i]);
+		rte_hash_free(hwqp->connection_list_hash);
+		rte_hash_free(hwqp->rport_list_hash);
+	}
+
+	nvmf_fc_port_remove(fc_port);
+	free(fc_port);
+out:
+	SPDK_DEBUGLOG(nvmf_fc_adm_api, "HW port %d free done, rc = %d.\n",
+		      args->port_handle, err);
+	if (api_data->cb_func != NULL) {
+		(void)api_data->cb_func(args->port_handle, SPDK_FC_HW_PORT_FREE, args->cb_ctx, err);
+	}
+
+	free(arg);
+}
+
 /*
  * Online a HW port.
  */
@@ -3806,6 +3886,10 @@ nvmf_fc_main_enqueue_event(enum spdk_fc_event event_type, void *args,
 	switch (event_type) {
 	case SPDK_FC_HW_PORT_INIT:
 		event_fn = nvmf_fc_adm_evnt_hw_port_init;
+		break;
+
+	case SPDK_FC_HW_PORT_FREE:
+		event_fn = nvmf_fc_adm_evnt_hw_port_free;
 		break;
 
 	case SPDK_FC_HW_PORT_ONLINE:
