@@ -2367,6 +2367,7 @@ nvmf_fc_adm_hw_port_data_init(struct spdk_nvmf_fc_port *fc_port,
 	fc_port->ls_queue.queues = args->ls_queue;
 	fc_port->ls_queue.thread = nvmf_fc_get_main_thread();
 	fc_port->ls_queue.hwqp_id = SPDK_MAX_NUM_OF_FC_PORTS * fc_port->num_io_queues;
+	fc_port->ls_queue.is_ls_queue = true;
 
 	/*
 	 * Initialize the LS queue.
@@ -2383,6 +2384,7 @@ nvmf_fc_adm_hw_port_data_init(struct spdk_nvmf_fc_port *fc_port,
 		struct spdk_nvmf_fc_hwqp *hwqp = &fc_port->io_queues[i];
 		hwqp->hwqp_id = i;
 		hwqp->queues = args->io_queues[i];
+		hwqp->is_ls_queue = false;
 		rc = nvmf_fc_init_hwqp(fc_port, hwqp);
 		if (rc) {
 			for (; i > 0; --i) {

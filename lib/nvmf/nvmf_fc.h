@@ -309,6 +309,7 @@ struct spdk_nvmf_fc_poll_group {
  */
 struct spdk_nvmf_fc_hwqp {
 	enum spdk_fc_hwqp_state state;  /* queue state (for poller) */
+	bool is_ls_queue;
 	uint32_t lcore_id;   /* core hwqp is running on (for tracing purposes only) */
 	struct spdk_thread *thread;  /* thread hwqp is running on */
 	uint32_t hwqp_id;    /* A unique id (per physical port) for a hwqp */
