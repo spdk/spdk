@@ -55,6 +55,13 @@
 
 /* END_SEQ | LAST_SEQ | Exchange Responder | SEQ init */
 #define FCNVME_F_CTL_RSP                       0x990000
+#define FCNVME_F_CTL_PRIORITY_ENABLE           0x020000
+
+#define FCNVME_D_FCTL_DEVICE_HDR_16_MASK       0x1
+#define FCNVME_D_FCTL_NETWORK_HDR_MASK         0x20
+#define FCNVME_D_FCTL_NETWORK_HDR_SIZE         16
+#define FCNVME_D_FCTL_ESP_HDR_MASK             0x40
+#define FCNVME_D_FCTL_ESP_HDR_SIZE             8
 
 #define FCNVME_TYPE_BLS                        0x0
 #define FCNVME_TYPE_FC_EXCHANGE                0x08
@@ -194,6 +201,16 @@ struct spdk_nvmf_fc_xfer_rdy_iu {
 	uint32_t rsvd;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_fc_xfer_rdy_iu) == 12, "size_mismatch");
+
+/*
+ * FC VM header
+ */
+struct spdk_nvmf_fc_vm_header {
+	FCNVME_BE32 dst_vmid;
+	FCNVME_BE32 src_vmid;
+	FCNVME_BE32 rsvd0;
+	FCNVME_BE32 rsvd1;
+};
 
 /*
  * FC NVME Frame Header

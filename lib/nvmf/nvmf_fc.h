@@ -380,6 +380,8 @@ struct spdk_nvmf_fc_request {
 	uint32_t s_id;
 	uint32_t d_id;
 	uint32_t csn;
+	uint32_t app_id;
+	uint8_t csctl;
 	TAILQ_ENTRY(spdk_nvmf_fc_request) link;
 	TAILQ_ENTRY(spdk_nvmf_fc_request) conn_link;
 	TAILQ_ENTRY(spdk_nvmf_fc_request) fused_link;
@@ -1018,8 +1020,14 @@ nvmf_fc_advance_conn_sqhead(struct spdk_nvmf_qpair *qpair)
 }
 
 static inline bool
-nvmf_fc_use_send_frame(struct spdk_nvmf_request *req)
+nvmf_fc_use_send_frame(struct spdk_nvmf_fc_request *fc_req)
 {
+	struct spdk_nvmf_request *req = &fc_req->req;
+
+	if (fc_req->app_id) {
+		return false;
+	}
+
 	/* For now use for only keepalives. */
 	if (req->qpair->qid == 0 &&
 	    (req->cmd->nvme_cmd.opc == SPDK_NVME_OPC_KEEP_ALIVE)) {

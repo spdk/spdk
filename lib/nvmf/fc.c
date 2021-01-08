@@ -1393,7 +1393,7 @@ static int
 nvmf_fc_request_execute(struct spdk_nvmf_fc_request *fc_req)
 {
 	/* Allocate an XCHG if we dont use send frame for this command. */
-	if (!nvmf_fc_use_send_frame(&fc_req->req)) {
+	if (!nvmf_fc_use_send_frame(fc_req)) {
 		fc_req->xchg = nvmf_fc_get_xri(fc_req->hwqp);
 		if (!fc_req->xchg) {
 			fc_req->hwqp->counters.no_xchg++;
@@ -1435,6 +1435,37 @@ nvmf_fc_request_execute(struct spdk_nvmf_fc_request *fc_req)
 	}
 
 	return 0;
+}
+
+static void
+nvmf_fc_set_vmid_priority(struct spdk_nvmf_fc_request *fc_req,
+			  struct spdk_nvmf_fc_frame_hdr *fchdr)
+{
+	uint8_t df_ctl = fchdr->df_ctl;
+	uint32_t f_ctl = fchdr->f_ctl;
+
+	/* VMID */
+	if (df_ctl & FCNVME_D_FCTL_DEVICE_HDR_16_MASK) {
+		struct spdk_nvmf_fc_vm_header *vhdr;
+		uint32_t vmhdr_offset = 0;
+
+		if (df_ctl & FCNVME_D_FCTL_ESP_HDR_MASK) {
+			vmhdr_offset += FCNVME_D_FCTL_ESP_HDR_SIZE;
+		}
+
+		if (df_ctl & FCNVME_D_FCTL_NETWORK_HDR_MASK) {
+			vmhdr_offset += FCNVME_D_FCTL_NETWORK_HDR_SIZE;
+		}
+
+		vhdr = (struct spdk_nvmf_fc_vm_header *)((char *)fchdr +
+				sizeof(struct spdk_nvmf_fc_frame_hdr) + vmhdr_offset);
+		fc_req->app_id = from_be32(&vhdr->src_vmid);
+	}
+
+	/* Priority */
+	if ((from_be32(&f_ctl) >> 8) & FCNVME_F_CTL_PRIORITY_ENABLE) {
+		fc_req->csctl = fchdr->cs_ctl;
+	}
 }
 
 static int
@@ -1544,6 +1575,7 @@ nvmf_fc_hwqp_handle_request(struct spdk_nvmf_fc_hwqp *hwqp, struct spdk_nvmf_fc_
 	fc_req->s_id = s_id;
 	fc_req->d_id = d_id;
 	fc_req->csn  = from_be32(&cmd_iu->cmnd_seq_num);
+	nvmf_fc_set_vmid_priority(fc_req, frame);
 
 	nvmf_fc_record_req_trace_point(fc_req, SPDK_NVMF_FC_REQ_INIT);
 
