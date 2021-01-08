@@ -784,7 +784,7 @@ nvmf_fc_handle_abts_frame(struct spdk_nvmf_fc_nport *nport, uint16_t rpi,
 
 	TAILQ_FOREACH(assoc, &nport->fc_associations, link) {
 		TAILQ_FOREACH(conn, &assoc->fc_conns, assoc_link) {
-			if (conn->rpi != rpi) {
+			if ((conn->rpi != rpi) || !conn->hwqp) {
 				continue;
 			}
 
