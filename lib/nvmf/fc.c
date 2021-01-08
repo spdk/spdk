@@ -1264,6 +1264,7 @@ nvmf_fc_request_abort_complete(void *arg1)
 {
 	struct spdk_nvmf_fc_request *fc_req =
 		(struct spdk_nvmf_fc_request *)arg1;
+	struct spdk_nvmf_fc_hwqp *hwqp = fc_req->hwqp;
 	struct spdk_nvmf_fc_caller_ctx *ctx = NULL, *tmp = NULL;
 	TAILQ_HEAD(, spdk_nvmf_fc_caller_ctx) abort_cbs;
 
@@ -1279,7 +1280,7 @@ nvmf_fc_request_abort_complete(void *arg1)
 	/* Request abort completed. Notify all the callbacks */
 	TAILQ_FOREACH_SAFE(ctx, &abort_cbs, link, tmp) {
 		/* Notify */
-		ctx->cb(fc_req->hwqp, 0, ctx->cb_args);
+		ctx->cb(hwqp, 0, ctx->cb_args);
 		/* Remove */
 		TAILQ_REMOVE(&abort_cbs, ctx, link);
 		/* free */
