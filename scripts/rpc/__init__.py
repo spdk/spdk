@@ -140,7 +140,7 @@ def load_config(client, fd, include_aliases=False):
                 if 'method' not in elem or elem['method'] not in allowed_methods:
                     continue
 
-                client.call(elem['method'], elem['params'])
+                client.call(**elem)
                 config.remove(elem)
                 allowed_found = True
 
@@ -194,7 +194,7 @@ def load_subsystem_config(client, fd):
         if 'method' not in elem or elem['method'] not in allowed_methods:
             continue
 
-        client.call(elem['method'], elem['params'])
+        client.call(**elem)
         config.remove(elem)
 
     if config:
