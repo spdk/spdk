@@ -3852,7 +3852,7 @@ nvmf_fc_adm_evnt_hw_port_reset(void *arg)
 		goto fail;
 	}
 
-	ctx->reset_args = arg;
+	ctx->reset_args = args;
 	ctx->reset_cb_func = api_data->cb_func;
 
 	/*
