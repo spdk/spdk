@@ -53,6 +53,9 @@ Change the return type of function `spdk_nbd_stop` from void to int. And update 
 
 ### nvmf
 
+nvmf_fc_lld_fini() now takes callback and hence updating FC Broadcom LLD driver
+to the latest is required.
+
 FC transport supported primary tagging and VMID.
 
 Broadcom FC LLD driver and SPDK NVMe-oF FC transport consolidated one LLD API,

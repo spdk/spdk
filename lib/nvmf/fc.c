@@ -968,17 +968,6 @@ nvmf_fc_port_lookup(uint8_t port_hdl)
 	return NULL;
 }
 
-static void
-nvmf_fc_port_cleanup(void)
-{
-	struct spdk_nvmf_fc_port *fc_port, *tmp;
-
-	TAILQ_FOREACH_SAFE(fc_port, &g_spdk_nvmf_fc_port_list, link, tmp) {
-		TAILQ_REMOVE(&g_spdk_nvmf_fc_port_list,  fc_port, link);
-		free(fc_port);
-	}
-}
-
 uint32_t
 nvmf_fc_get_prli_service_params(void)
 {
@@ -2042,14 +2031,9 @@ nvmf_fc_destroy(struct spdk_nvmf_transport *transport,
 		g_nvmf_fgroup_count = 0;
 
 		/* low level FC driver clean up */
-		nvmf_fc_lld_fini();
-
-		nvmf_fc_port_cleanup();
+		nvmf_fc_lld_fini(cb_fn, cb_arg);
 	}
 
-	if (cb_fn) {
-		cb_fn(cb_arg);
-	}
 	return 0;
 }
 

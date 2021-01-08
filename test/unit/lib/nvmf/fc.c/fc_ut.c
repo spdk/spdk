@@ -195,7 +195,7 @@ nvmf_fc_lld_init(void)
 static bool g_lld_fini_called = false;
 
 void
-nvmf_fc_lld_fini(void)
+nvmf_fc_lld_fini(spdk_nvmf_transport_destroy_done_cb cb_fn, void *ctx)
 {
 	g_lld_fini_called = true;
 }
