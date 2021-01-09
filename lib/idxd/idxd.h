@@ -186,6 +186,9 @@ struct spdk_idxd_device {
 	void				*portals;
 	int				socket_id;
 	int				wq_id;
+	uint32_t			num_channels;
+	bool				needs_rebalance;
+	pthread_mutex_t			num_channels_lock;
 
 	struct idxd_registers		registers;
 	uint32_t			ims_offset;

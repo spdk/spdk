@@ -2,6 +2,7 @@
 	global:
 
 	# public functions
+	spdk_idxd_device_needs_rebalance;
 	spdk_idxd_configure_chan;
 	spdk_idxd_reconfigure_chan;
 	spdk_idxd_probe;

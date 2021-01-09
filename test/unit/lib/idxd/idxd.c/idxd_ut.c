@@ -254,6 +254,7 @@ static int
 test_spdk_idxd_reconfigure_chan(void)
 {
 	struct spdk_idxd_io_channel chan = {};
+	struct spdk_idxd_device idxd = {};
 	int rc;
 	uint32_t test_ring_size = 8;
 	uint32_t num_channels = 2;
@@ -263,8 +264,10 @@ test_spdk_idxd_reconfigure_chan(void)
 	chan.completions = spdk_zmalloc(test_ring_size * sizeof(struct idxd_hw_desc), 0, NULL,
 					SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	SPDK_CU_ASSERT_FATAL(chan.completions != NULL);
+	chan.idxd = &idxd;
+	chan.idxd->num_channels = num_channels;
 
-	rc = spdk_idxd_reconfigure_chan(&chan, num_channels);
+	rc = spdk_idxd_reconfigure_chan(&chan);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(chan.max_ring_slots == test_ring_size / num_channels);
 

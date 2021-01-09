@@ -64,7 +64,7 @@ struct idxd_batch;
 /**
  * Signature for configuring a channel
  *
- * \param chan IDXD channel to be configured.
+ * \param chan IDXD channel to be configured
  * \return 0 on success, negative errno on failure.
  */
 int spdk_idxd_configure_chan(struct spdk_idxd_io_channel *chan);
@@ -73,10 +73,9 @@ int spdk_idxd_configure_chan(struct spdk_idxd_io_channel *chan);
  * Reconfigures this channel based on how many current channels there are.
  *
  * \param chan IDXD channel to be set.
- * \param num_channels total number of channels in use.
  * \return 0 on success, negative errno on failure.
  */
-int spdk_idxd_reconfigure_chan(struct spdk_idxd_io_channel *chan, uint32_t num_channels);
+int spdk_idxd_reconfigure_chan(struct spdk_idxd_io_channel *chan);
 
 /**
  * Signature for callback function invoked when a request is completed.
@@ -408,8 +407,17 @@ struct spdk_idxd_io_channel *spdk_idxd_get_channel(struct spdk_idxd_device *idxd
  * Free an IDXD channel.
  *
  * \param chan IDXD channel to free.
+ * \return true if the underlying device needs a rebalance
  */
-void spdk_idxd_put_channel(struct spdk_idxd_io_channel *chan);
+bool spdk_idxd_put_channel(struct spdk_idxd_io_channel *chan);
+
+/**
+ * Determine if the idxd device needs rebalancing.
+ *
+ * \param idxd IDXD device.
+ * \return true if rebalance is needed, false if not.
+ */
+bool spdk_idxd_device_needs_rebalance(struct spdk_idxd_device *idxd);
 
 #ifdef __cplusplus
 }

@@ -10,6 +10,21 @@ suitable polling group.
 
 ## v21.01:
 
+### idxd
+
+A new API `spdk_idxd_get_rebalance` was added so that users of the library
+can know whether they need to rebalance the flow control for the channel
+that was just added/removed.  This is based on how the low level library
+shares devices amongst channels.
+
+The API `spdk_idxd_reconfigure_chan` had the `num_channels` removed as this
+is now tracked in the library.  The app makes use the new API above to
+determine whether to rebalance or not. This applies to `spdk_idxd_configure_chan`
+as well.
+
+The API `spdk_idxd_put_channel` now returns the rebalance state for the
+underlying device.
+
 ### bdev
 
 An `opts_size` element was added in the `spdk_bdev_opts` structure to solve the

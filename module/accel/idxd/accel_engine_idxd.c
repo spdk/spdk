@@ -66,7 +66,6 @@ static TAILQ_HEAD(, pci_device) g_pci_devices = TAILQ_HEAD_INITIALIZER(g_pci_dev
 
 struct idxd_device {
 	struct				spdk_idxd_device *idxd;
-	int				num_channels;
 	TAILQ_ENTRY(idxd_device)	tailq;
 };
 static TAILQ_HEAD(, idxd_device) g_idxd_devices = TAILQ_HEAD_INITIALIZER(g_idxd_devices);
@@ -74,14 +73,11 @@ static struct idxd_device *g_next_dev = NULL;
 
 struct idxd_io_channel {
 	struct spdk_idxd_io_channel	*chan;
-	struct spdk_idxd_device		*idxd;
 	struct idxd_device		*dev;
 	enum channel_state		state;
 	struct spdk_poller		*poller;
 	TAILQ_HEAD(, spdk_accel_task)	queued_tasks;
 };
-
-pthread_mutex_t g_configuration_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static struct spdk_io_channel *idxd_get_io_channel(void);
 
@@ -336,18 +332,23 @@ _config_max_desc(struct spdk_io_channel_iter *i)
 {
 	struct idxd_io_channel *chan;
 	struct spdk_io_channel *ch;
+	struct spdk_idxd_device *idxd;
 	int rc;
 
 	ch = spdk_io_channel_iter_get_channel(i);
 	chan = spdk_io_channel_get_ctx(ch);
+	idxd = spdk_io_channel_iter_get_ctx(i);
 
-	pthread_mutex_lock(&g_configuration_lock);
-	rc = spdk_idxd_reconfigure_chan(chan->chan, chan->dev->num_channels);
-	pthread_mutex_unlock(&g_configuration_lock);
-	if (rc == 0) {
-		chan->state = IDXD_CHANNEL_ACTIVE;
-	} else {
-		chan->state = IDXD_CHANNEL_ERROR;
+	/* reconfigure channel only if this channel is on the same idxd
+	 * device that initiated the rebalance.
+	 */
+	if (chan->dev->idxd == idxd) {
+		rc = spdk_idxd_reconfigure_chan(chan->chan);
+		if (rc == 0) {
+			chan->state = IDXD_CHANNEL_ACTIVE;
+		} else {
+			chan->state = IDXD_CHANNEL_ERROR;
+		}
 	}
 
 	spdk_for_each_channel_continue(i, 0);
@@ -359,12 +360,18 @@ _pause_chan(struct spdk_io_channel_iter *i)
 {
 	struct idxd_io_channel *chan;
 	struct spdk_io_channel *ch;
+	struct spdk_idxd_device *idxd;
 
 	ch = spdk_io_channel_iter_get_channel(i);
 	chan = spdk_io_channel_get_ctx(ch);
+	idxd = spdk_io_channel_iter_get_ctx(i);
 
-	/* start queueing up new requests. */
-	chan->state = IDXD_CHANNEL_PAUSED;
+	/* start queueing up new requests if this channel is on the same idxd
+	 * device that initiated the rebalance.
+	 */
+	if (chan->dev->idxd == idxd) {
+		chan->state = IDXD_CHANNEL_PAUSED;
+	}
 
 	spdk_for_each_channel_continue(i, 0);
 }
@@ -372,7 +379,11 @@ _pause_chan(struct spdk_io_channel_iter *i)
 static void
 _pause_chan_done(struct spdk_io_channel_iter *i, int status)
 {
-	spdk_for_each_channel(&idxd_accel_engine, _config_max_desc, NULL, NULL);
+	struct spdk_idxd_device *idxd;
+
+	idxd = spdk_io_channel_iter_get_ctx(i);
+
+	spdk_for_each_channel(&idxd_accel_engine, _config_max_desc, idxd, NULL);
 }
 
 static int
@@ -401,28 +412,30 @@ idxd_create_cb(void *io_device, void *ctx_buf)
 	 * Configure the channel but leave paused until all others
 	 * are paused and re-configured based on the new number of
 	 * channels. This enables dynamic load balancing for HW
-	 * flow control.
+	 * flow control. The idxd device will tell us if rebalance is
+	 * needed based on how many channels are using it.
 	 */
-	pthread_mutex_lock(&g_configuration_lock);
 	rc = spdk_idxd_configure_chan(chan->chan);
 	if (rc) {
 		SPDK_ERRLOG("Failed to configure new channel rc = %d\n", rc);
 		chan->state = IDXD_CHANNEL_ERROR;
 		spdk_poller_unregister(&chan->poller);
-		pthread_mutex_unlock(&g_configuration_lock);
 		return rc;
 	}
 
+	if (spdk_idxd_device_needs_rebalance(chan->dev->idxd) == false) {
+		chan->state = IDXD_CHANNEL_ACTIVE;
+		return 0;
+	}
+
 	chan->state = IDXD_CHANNEL_PAUSED;
-	chan->dev->num_channels++;
-	pthread_mutex_unlock(&g_configuration_lock);
 
 	/*
 	 * Pause all channels so that we can set proper flow control
 	 * per channel. When all are paused, we'll update the max
 	 * number of descriptors allowed per channel.
 	 */
-	spdk_for_each_channel(&idxd_accel_engine, _pause_chan, NULL,
+	spdk_for_each_channel(&idxd_accel_engine, _pause_chan, chan->dev->idxd,
 			      _pause_chan_done);
 
 	return 0;
@@ -431,27 +444,31 @@ idxd_create_cb(void *io_device, void *ctx_buf)
 static void
 _pause_chan_destroy_done(struct spdk_io_channel_iter *i, int status)
 {
-	/* Rebalance the rings with the smaller number of remaining channels. */
-	spdk_for_each_channel(&idxd_accel_engine, _config_max_desc, NULL, NULL);
+	struct spdk_idxd_device *idxd;
+
+	idxd = spdk_io_channel_iter_get_ctx(i);
+
+	/* Rebalance the rings with the smaller number of remaining channels, but
+	 * pass the idxd device along so its only done on shared channels.
+	 */
+	spdk_for_each_channel(&idxd_accel_engine, _config_max_desc, idxd, NULL);
 }
 
 static void
 idxd_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct idxd_io_channel *chan = ctx_buf;
-
-	pthread_mutex_lock(&g_configuration_lock);
-	assert(chan->dev->num_channels > 0);
-	chan->dev->num_channels--;
-	spdk_idxd_reconfigure_chan(chan->chan, 0);
-	pthread_mutex_unlock(&g_configuration_lock);
+	bool rebalance;
 
 	spdk_poller_unregister(&chan->poller);
-	spdk_idxd_put_channel(chan->chan);
+	rebalance = spdk_idxd_put_channel(chan->chan);
 
-	/* Pause each channel then rebalance the max number of ring slots. */
-	spdk_for_each_channel(&idxd_accel_engine, _pause_chan, NULL,
-			      _pause_chan_destroy_done);
+	/* Only rebalance if there are still other channels on this device */
+	if (rebalance == true) {
+		/* Pause each channel then rebalance the max number of ring slots. */
+		spdk_for_each_channel(&idxd_accel_engine, _pause_chan, chan->dev->idxd,
+				      _pause_chan_destroy_done);
+	}
 }
 
 static struct spdk_io_channel *
