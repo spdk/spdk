@@ -39,11 +39,6 @@
 #include "idxd/idxd.h"
 
 #define FAKE_REG_SIZE 0x800
-#define NUM_GROUPS 4
-#define NUM_WQ_PER_GROUP 1
-#define NUM_ENGINES_PER_GROUP 1
-#define TOTAL_WQS (NUM_GROUPS * NUM_WQ_PER_GROUP)
-#define TOTAL_ENGINES (NUM_GROUPS * NUM_ENGINES_PER_GROUP)
 
 DEFINE_STUB(spdk_pci_idxd_get_driver, struct spdk_pci_driver *, (void), NULL);
 
@@ -100,16 +95,15 @@ test_idxd_wq_config(void)
 {
 	struct spdk_idxd_device idxd = {};
 	union idxd_wqcfg wqcfg = {};
-	uint32_t expected[8] = {0x10, 0, 0x11, 0x9e, 0, 0, 0x40000000, 0};
+	uint32_t expected[8] = {0x40, 0, 0x11, 0x9e, 0, 0, 0x40000000, 0};
 	uint32_t wq_size;
 	int rc, i, j;
 
 	idxd.reg_base = calloc(1, FAKE_REG_SIZE);
 	SPDK_CU_ASSERT_FATAL(idxd.reg_base != NULL);
 
-	g_dev_cfg = &g_dev_cfg0;
 	idxd.registers.wqcap.total_wq_size = TOTAL_WQE_SIZE;
-	idxd.registers.wqcap.num_wqs = TOTAL_WQS;
+	idxd.registers.wqcap.num_wqs = g_dev_cfg->total_wqs;
 	idxd.registers.gencap.max_batch_shift = LOG2_WQ_MAX_BATCH;
 	idxd.registers.gencap.max_xfer_shift = LOG2_WQ_MAX_XFER;
 	idxd.wqcfg_offset = WQ_CFG_OFFSET;
@@ -144,23 +138,25 @@ test_idxd_wq_config(void)
 
 #define GRP_CFG_OFFSET 0x400
 #define MAX_TOKENS 0x40
+#define MAX_ARRAY_SIZE 0x20
+
 static int
 test_idxd_group_config(void)
 {
 	struct spdk_idxd_device idxd = {};
-	uint64_t wqs[NUM_GROUPS] = {};
-	uint64_t engines[NUM_GROUPS] = {};
-	union idxd_group_flags flags[NUM_GROUPS] = {};
+	uint64_t wqs[MAX_ARRAY_SIZE] = {};
+	uint64_t engines[MAX_ARRAY_SIZE] = {};
+	union idxd_group_flags flags[MAX_ARRAY_SIZE] = {};
 	int rc, i;
 	uint64_t base_offset;
 
 	idxd.reg_base = calloc(1, FAKE_REG_SIZE);
 	SPDK_CU_ASSERT_FATAL(idxd.reg_base != NULL);
 
-	g_dev_cfg = &g_dev_cfg0;
-	idxd.registers.groupcap.num_groups = NUM_GROUPS;
-	idxd.registers.enginecap.num_engines = TOTAL_ENGINES;
-	idxd.registers.wqcap.num_wqs = TOTAL_WQS;
+	SPDK_CU_ASSERT_FATAL(g_dev_cfg->num_groups <= MAX_ARRAY_SIZE);
+	idxd.registers.groupcap.num_groups = g_dev_cfg->num_groups;
+	idxd.registers.enginecap.num_engines = g_dev_cfg->total_engines;
+	idxd.registers.wqcap.num_wqs = g_dev_cfg->total_wqs;
 	idxd.registers.groupcap.total_tokens = MAX_TOKENS;
 	idxd.grpcfg_offset = GRP_CFG_OFFSET;
 
@@ -175,11 +171,8 @@ test_idxd_group_config(void)
 	}
 	/* wqe and engine arrays are indexed by group id and are bitmaps of assigned elements. */
 	CU_ASSERT(wqs[0] == 0x1);
-	CU_ASSERT(engines[0] == 0x1);
-	CU_ASSERT(wqs[1] == 0x2);
-	CU_ASSERT(engines[1] == 0x2);
-	CU_ASSERT(flags[0].tokens_allowed == MAX_TOKENS / NUM_GROUPS);
-	CU_ASSERT(flags[1].tokens_allowed == MAX_TOKENS / NUM_GROUPS);
+	CU_ASSERT(engines[0] == 0xf);
+	CU_ASSERT(flags[0].tokens_allowed == MAX_TOKENS / g_dev_cfg->num_groups);
 
 	/* groups allocated by code under test. */
 	free(idxd.groups);
@@ -280,6 +273,13 @@ test_spdk_idxd_reconfigure_chan(void)
 	return 0;
 }
 
+static int
+test_setup(void)
+{
+	g_dev_cfg = &g_dev_cfg0;
+	return 0;
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -288,7 +288,7 @@ int main(int argc, char **argv)
 	CU_set_error_action(CUEA_ABORT);
 	CU_initialize_registry();
 
-	suite = CU_add_suite("idxd", NULL, NULL);
+	suite = CU_add_suite("idxd", test_setup, NULL);
 
 	CU_ADD_TEST(suite, test_spdk_idxd_reconfigure_chan);
 	CU_ADD_TEST(suite, test_spdk_idxd_set_config);

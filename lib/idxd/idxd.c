@@ -60,10 +60,10 @@ struct device_config *g_dev_cfg = NULL;
  */
 struct device_config g_dev_cfg0 = {
 	.config_num = 0,
-	.num_groups = 4,
+	.num_groups = 1,
 	.num_wqs_per_group = 1,
-	.num_engines_per_group = 1,
-	.total_wqs = 4,
+	.num_engines_per_group = 4,
+	.total_wqs = 1,
 	.total_engines = 4,
 };
 
