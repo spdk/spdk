@@ -957,6 +957,10 @@ _reactor_schedule_thread(struct spdk_thread *thread)
 	struct spdk_event *evt = NULL;
 	struct spdk_cpuset *cpumask;
 	uint32_t i;
+	struct spdk_reactor *local_reactor = NULL;
+	uint32_t current_lcore = spdk_env_get_current_core();
+	struct spdk_cpuset polling_cpumask;
+	struct spdk_cpuset valid_cpumask;
 
 	cpumask = spdk_thread_get_cpumask(thread);
 
@@ -966,6 +970,46 @@ _reactor_schedule_thread(struct spdk_thread *thread)
 	last_stats = lw_thread->last_stats;
 	memset(lw_thread, 0, sizeof(*lw_thread));
 	lw_thread->last_stats = last_stats;
+
+	if (current_lcore != SPDK_ENV_LCORE_ID_ANY) {
+		local_reactor = spdk_reactor_get(current_lcore);
+		assert(local_reactor);
+	}
+
+	/* When interrupt ability of spdk_thread is not enabled and the current
+	 * reactor runs on DPDK thread, skip reactors which are in interrupt mode.
+	 */
+	if (!spdk_interrupt_mode_is_enabled() && local_reactor != NULL) {
+		/* Get the cpumask of all reactors in polling */
+		spdk_cpuset_zero(&polling_cpumask);
+		SPDK_ENV_FOREACH_CORE(i) {
+			spdk_cpuset_set_cpu(&polling_cpumask, i, true);
+		}
+		spdk_cpuset_xor(&polling_cpumask, &local_reactor->notify_cpuset);
+
+		if (core == SPDK_ENV_LCORE_ID_ANY) {
+			/* Get the cpumask of all valid reactors which are suggested and also in polling */
+			spdk_cpuset_copy(&valid_cpumask, &polling_cpumask);
+			spdk_cpuset_and(&valid_cpumask, spdk_thread_get_cpumask(thread));
+
+			/* If there are any valid reactors, spdk_thread should be scheduled
+			 * into one of the valid reactors.
+			 * If there is no valid reactors, spdk_thread should be scheduled
+			 * into one of the polling reactors.
+			 */
+			if (spdk_cpuset_count(&valid_cpumask) != 0) {
+				cpumask = &valid_cpumask;
+			} else {
+				cpumask = &polling_cpumask;
+			}
+		} else if (!spdk_cpuset_get_cpu(&polling_cpumask, core)) {
+			/* If specified reactor is not in polling, spdk_thread should be scheduled
+			 * into one of the polling reactors.
+			 */
+			core = SPDK_ENV_LCORE_ID_ANY;
+			cpumask = &polling_cpumask;
+		}
+	}
 
 	pthread_mutex_lock(&g_scheduler_mtx);
 	if (core == SPDK_ENV_LCORE_ID_ANY) {

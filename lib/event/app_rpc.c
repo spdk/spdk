@@ -600,6 +600,28 @@ rpc_thread_set_cpumask(struct spdk_jsonrpc_request *request,
 		goto err;
 	}
 
+	/* There may be any reactors running in interrupt mode. But currently,
+	 * when interrupt ability of the spdk_thread is not enabled,
+	 * spdk_thread can't get executed on reactor which runs in interrupt.
+	 * Exclude the situation that reactors specified by the cpumask are
+	 * all in interrupt mode.
+	 */
+	if (!spdk_interrupt_mode_is_enabled()) {
+		struct spdk_reactor *local_reactor = spdk_reactor_get(spdk_env_get_current_core());
+		struct spdk_cpuset tmp_cpuset;
+
+		/* Masking off reactors which are in interrupt mode */
+		spdk_cpuset_copy(&tmp_cpuset, &local_reactor->notify_cpuset);
+		spdk_cpuset_negate(&tmp_cpuset);
+		spdk_cpuset_and(&tmp_cpuset, &ctx->cpumask);
+		if (spdk_cpuset_count(&tmp_cpuset) == 0) {
+			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							     "cpumask %s are all in interrupt mode, and can't be scheduled yet\n",
+							     req.cpumask);
+			goto err;
+		}
+	}
+
 	ctx->request = request;
 	ctx->orig_thread = spdk_get_thread();
 
