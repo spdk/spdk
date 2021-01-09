@@ -909,6 +909,32 @@ spdk_nvme_ns_cmd_writev_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair 
 	return ut_submit_nvme_request(ns, qpair, SPDK_NVME_OPC_WRITE, cb_fn, cb_arg);
 }
 
+static bool g_ut_readv_ext_called;
+int
+spdk_nvme_ns_cmd_readv_ext(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			   uint64_t lba, uint32_t lba_count,
+			   spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+			   spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
+			   spdk_nvme_req_next_sge_cb next_sge_fn,
+			   struct spdk_nvme_ns_cmd_ext_io_opts *opts)
+{
+	g_ut_readv_ext_called = true;
+	return ut_submit_nvme_request(ns, qpair, SPDK_NVME_OPC_READ, cb_fn, cb_arg);
+}
+
+static bool g_ut_writev_ext_called;
+int
+spdk_nvme_ns_cmd_writev_ext(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			    uint64_t lba, uint32_t lba_count,
+			    spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+			    spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
+			    spdk_nvme_req_next_sge_cb next_sge_fn,
+			    struct spdk_nvme_ns_cmd_ext_io_opts *opts)
+{
+	g_ut_writev_ext_called = true;
+	return ut_submit_nvme_request(ns, qpair, SPDK_NVME_OPC_WRITE, cb_fn, cb_arg);
+}
+
 int
 spdk_nvme_ns_cmd_comparev_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 				  uint64_t lba, uint32_t lba_count,
@@ -1990,6 +2016,7 @@ test_submit_nvme_cmd(void)
 	struct nvme_bdev *bdev;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_io_channel *ch;
+	struct spdk_bdev_ext_io_opts ext_io_opts = {};
 	int rc;
 
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
@@ -2037,6 +2064,19 @@ test_submit_nvme_cmd(void)
 	ut_test_submit_nop(ch, bdev_io, SPDK_BDEV_IO_TYPE_FLUSH);
 
 	ut_test_submit_fused_nvme_cmd(ch, bdev_io);
+
+	/* Verify that ext NVME API is called if bdev_io ext_opts is set */
+	bdev_io->internal.ext_opts = &ext_io_opts;
+	g_ut_readv_ext_called = false;
+	ut_test_submit_nvme_cmd(ch, bdev_io, SPDK_BDEV_IO_TYPE_READ);
+	CU_ASSERT(g_ut_readv_ext_called == true);
+	g_ut_readv_ext_called = false;
+
+	g_ut_writev_ext_called = false;
+	ut_test_submit_nvme_cmd(ch, bdev_io, SPDK_BDEV_IO_TYPE_WRITE);
+	CU_ASSERT(g_ut_writev_ext_called == true);
+	g_ut_writev_ext_called = false;
+	bdev_io->internal.ext_opts = NULL;
 
 	ut_test_submit_admin_cmd(ch, bdev_io, ctrlr);
 

@@ -84,6 +84,8 @@ struct nvme_bdev_io {
 
 	/** Saved status for admin passthru completion event, PI error verification, or intermediate compare-and-write status */
 	struct spdk_nvme_cpl cpl;
+	/** Extended IO opts passed by the user to bdev layer and mapped to NVME format */
+	struct spdk_nvme_ns_cmd_ext_io_opts ext_opts;
 
 	/** Originating thread */
 	struct spdk_thread *orig_thread;
@@ -3291,6 +3293,7 @@ bdev_nvme_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 		void *md, uint64_t lba_count, uint64_t lba, uint32_t flags)
 {
 	int rc;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 
 	SPDK_DEBUGLOG(bdev_nvme, "read %" PRIu64 " blocks with offset %#" PRIx64 "\n",
 		      lba_count, lba);
@@ -3300,7 +3303,18 @@ bdev_nvme_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	bio->iovpos = 0;
 	bio->iov_offset = 0;
 
-	if (iovcnt == 1) {
+	if (bdev_io->internal.ext_opts) {
+		bio->ext_opts.size = sizeof(struct spdk_nvme_ns_cmd_ext_io_opts);
+		bio->ext_opts.memory_domain = bdev_io->internal.ext_opts->memory_domain;
+		bio->ext_opts.memory_domain_ctx = bdev_io->internal.ext_opts->memory_domain_ctx;
+		bio->ext_opts.io_flags = flags;
+		bio->ext_opts.metadata = md;
+
+		rc = spdk_nvme_ns_cmd_readv_ext(ns, qpair, lba, lba_count,
+						bdev_nvme_readv_done, bio,
+						bdev_nvme_queued_reset_sgl, bdev_nvme_queued_next_sge,
+						&bio->ext_opts);
+	} else if (iovcnt == 1) {
 		rc = spdk_nvme_ns_cmd_read_with_md(ns, qpair, iov[0].iov_base, md, lba,
 						   lba_count,
 						   bdev_nvme_readv_done, bio,
@@ -3326,6 +3340,7 @@ bdev_nvme_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 		 uint32_t flags)
 {
 	int rc;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 
 	SPDK_DEBUGLOG(bdev_nvme, "write %" PRIu64 " blocks with offset %#" PRIx64 "\n",
 		      lba_count, lba);
@@ -3335,7 +3350,18 @@ bdev_nvme_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	bio->iovpos = 0;
 	bio->iov_offset = 0;
 
-	if (iovcnt == 1) {
+	if (bdev_io->internal.ext_opts) {
+		bio->ext_opts.size = sizeof(struct spdk_nvme_ns_cmd_ext_io_opts);
+		bio->ext_opts.memory_domain = bdev_io->internal.ext_opts->memory_domain;
+		bio->ext_opts.memory_domain_ctx = bdev_io->internal.ext_opts->memory_domain_ctx;
+		bio->ext_opts.io_flags = flags;
+		bio->ext_opts.metadata = md;
+
+		rc = spdk_nvme_ns_cmd_writev_ext(ns, qpair, lba, lba_count,
+						 bdev_nvme_readv_done, bio,
+						 bdev_nvme_queued_reset_sgl, bdev_nvme_queued_next_sge,
+						 &bio->ext_opts);
+	} else if (iovcnt == 1) {
 		rc = spdk_nvme_ns_cmd_write_with_md(ns, qpair, iov[0].iov_base, md, lba,
 						    lba_count,
 						    bdev_nvme_writev_done, bio,
