@@ -19,6 +19,11 @@ log level.
 
 New API `spdk_nvme_ctrlr_get_memory_domain` has been added, it allows to get SPDK memory domain used by nvme controller.
 
+New API functions `spdk_nvme_ns_cmd_readv_ext` and `spdk_nvme_ns_cmd_writev_ext`
+have been added. These functions accept `spdk_nvme_ns_cmd_ext_io_opts` structure with extended IO request
+options, e.g. DMA memory domain which describes data that may belong to another memory domain and
+can't be accessed directly.
+
 ## v21.07:
 
 ### accel_fw

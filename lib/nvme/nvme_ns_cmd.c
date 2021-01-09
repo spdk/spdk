@@ -4,6 +4,7 @@
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
  *   Copyright (c) 2021 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -741,6 +742,49 @@ spdk_nvme_ns_cmd_readv_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *
 }
 
 int
+spdk_nvme_ns_cmd_readv_ext(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			   uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn,
+			   void *cb_arg, spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
+			   spdk_nvme_req_next_sge_cb next_sge_fn,
+			   struct spdk_nvme_ns_cmd_ext_io_opts *opts)
+{
+	struct nvme_request *req;
+	struct nvme_payload payload;
+	int rc = 0;
+
+	if (reset_sgl_fn == NULL || next_sge_fn == NULL) {
+		return -EINVAL;
+	}
+
+	payload = NVME_PAYLOAD_SGL(reset_sgl_fn, next_sge_fn, cb_arg, NULL);
+
+	if (opts) {
+		if (spdk_unlikely(!_is_io_flags_valid(opts->io_flags))) {
+			return -EINVAL;
+		}
+
+		payload.opts = opts;
+		payload.md = opts->metadata;
+		req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_READ,
+				      opts->io_flags, opts->apptag_mask, opts->apptag, true, &rc);
+
+	} else {
+		req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_READ,
+				      0, 0, 0, true, &rc);
+	}
+
+	if (req != NULL) {
+		return nvme_qpair_submit_request(qpair, req);
+	} else {
+		return nvme_ns_map_failure_rc(lba_count,
+					      ns->sectors_per_max_io,
+					      ns->sectors_per_stripe,
+					      qpair->ctrlr->opts.io_queue_requests,
+					      rc);
+	}
+}
+
+int
 spdk_nvme_ns_cmd_write(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 		       void *buffer, uint64_t lba,
 		       uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
@@ -981,6 +1025,49 @@ spdk_nvme_ns_cmd_writev_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair 
 
 	req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_WRITE,
 			      io_flags, apptag_mask, apptag, true, &rc);
+	if (req != NULL) {
+		return nvme_qpair_submit_request(qpair, req);
+	} else {
+		return nvme_ns_map_failure_rc(lba_count,
+					      ns->sectors_per_max_io,
+					      ns->sectors_per_stripe,
+					      qpair->ctrlr->opts.io_queue_requests,
+					      rc);
+	}
+}
+
+int
+spdk_nvme_ns_cmd_writev_ext(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, uint64_t lba,
+			    uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+			    spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
+			    spdk_nvme_req_next_sge_cb next_sge_fn,
+			    struct spdk_nvme_ns_cmd_ext_io_opts *opts)
+{
+	struct nvme_request *req;
+	struct nvme_payload payload;
+	int rc = 0;
+
+	if (reset_sgl_fn == NULL || next_sge_fn == NULL) {
+		return -EINVAL;
+	}
+
+	payload = NVME_PAYLOAD_SGL(reset_sgl_fn, next_sge_fn, cb_arg, NULL);
+
+	if (opts) {
+		if (spdk_unlikely(!_is_io_flags_valid(opts->io_flags))) {
+			return -EINVAL;
+		}
+
+		payload.opts = opts;
+		payload.md = opts->metadata;
+		req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_WRITE,
+				      opts->io_flags, opts->apptag_mask, opts->apptag, true, &rc);
+
+	} else {
+		req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_WRITE,
+				      0, 0, 0, true, &rc);
+	}
+
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
 	} else {

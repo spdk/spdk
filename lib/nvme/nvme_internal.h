@@ -227,6 +227,10 @@ struct nvme_payload {
 	spdk_nvme_req_next_sge_cb next_sge_fn;
 
 	/**
+	 * Exended IO options passed by the user
+	 */
+	struct spdk_nvme_ns_cmd_ext_io_opts *opts;
+	/**
 	 * If reset_sgl_fn == NULL, this is a contig payload, and contig_or_cb_arg contains the
 	 * virtual memory address of a single virtually contiguous buffer.
 	 *

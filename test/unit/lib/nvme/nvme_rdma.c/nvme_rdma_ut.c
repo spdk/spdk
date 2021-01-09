@@ -62,6 +62,15 @@ DEFINE_STUB_V(rdma_destroy_event_channel, (struct rdma_event_channel *channel));
 DEFINE_STUB(ibv_dereg_mr, int, (struct ibv_mr *mr), 0);
 DEFINE_STUB(ibv_resize_cq, int, (struct ibv_cq *cq, int cqe), 0);
 
+DEFINE_STUB(spdk_memory_domain_get_context, struct spdk_memory_domain_ctx *,
+	    (struct spdk_memory_domain *device), NULL);
+DEFINE_STUB(spdk_memory_domain_get_dma_device_type, enum spdk_dma_device_type,
+	    (struct spdk_memory_domain *device), SPDK_DMA_DEVICE_TYPE_RDMA);
+DEFINE_STUB_V(spdk_memory_domain_destroy, (struct spdk_memory_domain *device));
+DEFINE_STUB(spdk_memory_domain_fetch_data, int, (struct spdk_memory_domain *src_domain,
+		void *src_domain_ctx, struct iovec *src_iov, uint32_t src_iov_cnt, struct iovec *dst_iov,
+		uint32_t dst_iov_cnt, spdk_memory_domain_fetch_data_cpl_cb cpl_cb, void *cpl_cb_arg), 0);
+
 DEFINE_RETURN_MOCK(spdk_memory_domain_create, int);
 int
 spdk_memory_domain_create(struct spdk_memory_domain **domain, enum spdk_dma_device_type type,
@@ -76,18 +85,21 @@ spdk_memory_domain_create(struct spdk_memory_domain **domain, enum spdk_dma_devi
 	return 0;
 }
 
-DEFINE_STUB(spdk_memory_domain_get_context, struct spdk_memory_domain_ctx *,
-	    (struct spdk_memory_domain *device), NULL);
-DEFINE_STUB(spdk_memory_domain_get_dma_device_type, enum spdk_dma_device_type,
-	    (struct spdk_memory_domain *device), SPDK_DMA_DEVICE_TYPE_RDMA);
-DEFINE_STUB_V(spdk_memory_domain_destroy, (struct spdk_memory_domain *device));
-DEFINE_STUB(spdk_memory_domain_fetch_data, int, (struct spdk_memory_domain *src_domain,
-		void *src_domain_ctx, struct iovec *src_iov, uint32_t src_iov_cnt, struct iovec *dst_iov,
-		uint32_t dst_iov_cnt, spdk_memory_domain_fetch_data_cpl_cb cpl_cb, void *cpl_cb_arg), 0);
-DEFINE_STUB(spdk_memory_domain_translate_data, int, (struct spdk_memory_domain *src_domain,
-		void *src_domain_ctx, struct spdk_memory_domain *dst_domain,
-		struct spdk_memory_domain_translation_ctx *dst_domain_ctx, void *addr, size_t len,
-		struct spdk_memory_domain_translation_result *result), 0);
+static struct spdk_memory_domain_translation_result g_memory_translation_translation = {.size = sizeof(struct spdk_memory_domain_translation_result) };
+
+DEFINE_RETURN_MOCK(spdk_memory_domain_translate_data, int);
+int
+spdk_memory_domain_translate_data(struct spdk_memory_domain *src_domain, void *src_domain_ctx,
+				  struct spdk_memory_domain *dst_domain, struct spdk_memory_domain_translation_ctx *dst_domain_ctx,
+				  void *addr, size_t len, struct spdk_memory_domain_translation_result *result)
+{
+
+	HANDLE_RETURN_MOCK(spdk_memory_domain_translate_data);
+
+	memcpy(result, &g_memory_translation_translation, sizeof(g_memory_translation_translation));
+
+	return 0;
+}
 
 /* ibv_reg_mr can be a macro, need to undefine it */
 #ifdef ibv_reg_mr
@@ -109,6 +121,7 @@ ibv_reg_mr(struct ibv_pd *pd, void *addr, size_t length, int access)
 struct nvme_rdma_ut_bdev_io {
 	struct iovec iovs[NVME_RDMA_MAX_SGL_DESCRIPTORS];
 	int iovpos;
+	int iovcnt;
 };
 
 DEFINE_RETURN_MOCK(rdma_get_devices, struct ibv_context **);
@@ -172,6 +185,10 @@ static int nvme_rdma_ut_next_sge(void *cb_arg, void **address, uint32_t *length)
 
 	SPDK_CU_ASSERT_FATAL(bio->iovpos < NVME_RDMA_MAX_SGL_DESCRIPTORS);
 
+	if (bio->iovpos == bio->iovcnt) {
+		return -1;
+	}
+
 	iov = &bio->iovs[bio->iovpos];
 
 	*address = iov->iov_base;
@@ -189,7 +206,7 @@ test_nvme_rdma_build_sgl_request(void)
 	struct spdk_nvmf_cmd cmd = {{0}};
 	struct spdk_nvme_rdma_req rdma_req = {0};
 	struct nvme_request req = {{0}};
-	struct nvme_rdma_ut_bdev_io bio;
+	struct nvme_rdma_ut_bdev_io bio = { .iovcnt = NVME_RDMA_MAX_SGL_DESCRIPTORS };
 	uint64_t i;
 	int rc;
 
@@ -211,7 +228,7 @@ test_nvme_rdma_build_sgl_request(void)
 	req.qpair = &rqpair.qpair;
 
 	for (i = 0; i < NVME_RDMA_MAX_SGL_DESCRIPTORS; i++) {
-		bio.iovs[i].iov_base = (void *)i;
+		bio.iovs[i].iov_base = (void *)i + 1;
 		bio.iovs[i].iov_len = 0;
 	}
 
@@ -264,12 +281,14 @@ test_nvme_rdma_build_sgl_request(void)
 
 	/* Test case 4: Multiple SGL, SGL size smaller than I/O size. Expected: FAIL */
 	bio.iovpos = 0;
+	bio.iovcnt = 4;
 	req.payload_offset = 0;
 	req.payload_size = 0x6000;
 	g_mr_size = 0x0;
 	rc = nvme_rdma_build_sgl_request(&rqpair, &rdma_req);
 	SPDK_CU_ASSERT_FATAL(rc != 0);
-	CU_ASSERT(bio.iovpos == NVME_RDMA_MAX_SGL_DESCRIPTORS);
+	CU_ASSERT(bio.iovpos == bio.iovcnt);
+	bio.iovcnt = NVME_RDMA_MAX_SGL_DESCRIPTORS;
 
 	/* Test case 5: SGL length exceeds 3 bytes. Expected: FAIL */
 	req.payload_size = 0x1000 + (1 << 24);
@@ -298,7 +317,7 @@ test_nvme_rdma_build_sgl_inline_request(void)
 	struct spdk_nvmf_cmd cmd = {{0}};
 	struct spdk_nvme_rdma_req rdma_req = {0};
 	struct nvme_request req = {{0}};
-	struct nvme_rdma_ut_bdev_io bio;
+	struct nvme_rdma_ut_bdev_io bio = { .iovcnt = NVME_RDMA_MAX_SGL_DESCRIPTORS };
 	int rc;
 
 	ctrlr.max_sges = NVME_RDMA_MAX_SGL_DESCRIPTORS;
@@ -796,7 +815,7 @@ test_nvme_rdma_req_init(void)
 	struct spdk_nvmf_cmd cmd = {};
 	struct spdk_nvme_rdma_req rdma_req = {};
 	struct nvme_request req = {};
-	struct nvme_rdma_ut_bdev_io bio = {};
+	struct nvme_rdma_ut_bdev_io bio = { .iovcnt = NVME_RDMA_MAX_SGL_DESCRIPTORS };
 	int rc = 1;
 
 	ctrlr.max_sges = NVME_RDMA_MAX_SGL_DESCRIPTORS;
@@ -1215,6 +1234,58 @@ test_rdma_ctrlr_get_memory_domain(void)
 	CU_ASSERT(nvme_rdma_ctrlr_get_memory_domain(&rctrlr.ctrlr) == domain);
 }
 
+static void
+test_rdma_get_memory_translation(void)
+{
+	struct ibv_qp qp = { .pd = (struct ibv_pd *)0xfeedbeef };
+	struct spdk_rdma_qp rdma_qp = { .qp = &qp };
+	struct nvme_rdma_qpair rqpair = { .rdma_qp = &rdma_qp };
+	struct spdk_nvme_ns_cmd_ext_io_opts io_opts = {
+		.memory_domain = (struct spdk_memory_domain *)0xdeaddead
+	};
+	struct nvme_request req = { .payload = { .opts = &io_opts } };
+	struct nvme_rdma_memory_translation_ctx ctx = {
+		.addr = (void *)0xBAADF00D,
+		.length = 0x100
+	};
+	int rc;
+
+	rqpair.memory_domain = nvme_rdma_get_memory_domain(rqpair.rdma_qp->qp->pd);
+	SPDK_CU_ASSERT_FATAL(rqpair.memory_domain != NULL);
+
+	/* case 1, using extended IO opts with DMA device.
+	 * Test 1 - spdk_dma_translate_data error, expect fail */
+	MOCK_SET(spdk_memory_domain_translate_data, -1);
+	rc = nvme_rdma_get_memory_translation(&req, &rqpair, &ctx);
+	CU_ASSERT(rc != 0);
+	MOCK_CLEAR(spdk_memory_domain_translate_data);
+
+	/* Test 2 - expect pass */
+	g_memory_translation_translation.rdma.lkey = 123;
+	g_memory_translation_translation.rdma.rkey = 321;
+	rc = nvme_rdma_get_memory_translation(&req, &rqpair, &ctx);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ctx.lkey == g_memory_translation_translation.rdma.lkey);
+	CU_ASSERT(ctx.rkey == g_memory_translation_translation.rdma.rkey);
+
+	/* case 2, using rdma translation
+	 * Test 1 - spdk_rdma_get_translation error, expect fail */
+	req.payload.opts = NULL;
+	MOCK_SET(spdk_rdma_get_translation, -1);
+	rc = nvme_rdma_get_memory_translation(&req, &rqpair, &ctx);
+	CU_ASSERT(rc != 0);
+	MOCK_CLEAR(spdk_rdma_get_translation);
+
+	/* Test 2 - expect pass */
+	rc = nvme_rdma_get_memory_translation(&req, &rqpair, &ctx);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ctx.lkey == RDMA_UT_LKEY);
+	CU_ASSERT(ctx.rkey == RDMA_UT_RKEY);
+
+	/* Cleanup */
+	nvme_rdma_put_memory_domain(rqpair.memory_domain);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1245,6 +1316,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_rdma_qpair_submit_request);
 	CU_ADD_TEST(suite, test_nvme_rdma_memory_domain);
 	CU_ADD_TEST(suite, test_rdma_ctrlr_get_memory_domain);
+	CU_ADD_TEST(suite, test_rdma_get_memory_translation);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

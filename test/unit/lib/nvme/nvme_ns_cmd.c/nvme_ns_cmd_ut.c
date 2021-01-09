@@ -2089,6 +2089,146 @@ test_spdk_nvme_ns_cmd_readv_with_md(void)
 	cleanup_after_test(&qpair);
 }
 
+static void
+test_spdk_nvme_ns_cmd_writev_ext(void)
+{
+	struct spdk_nvme_ns		ns;
+	struct spdk_nvme_ctrlr		ctrlr;
+	struct spdk_nvme_qpair		qpair;
+	struct spdk_nvme_ns_cmd_ext_io_opts ext_opts = {
+		.size = sizeof(struct spdk_nvme_ns_cmd_ext_io_opts),
+		.memory_domain = (struct spdk_memory_domain *)0xfeedbeef,
+		.memory_domain_ctx = (void *)0xf00df00d,
+		.metadata = (void *)0xdeadbeef,
+		.apptag_mask = 0xf,
+		.apptag = 0xff
+	};
+	int				rc = 0;
+	uint32_t			lba_count = 256;
+	uint32_t			sector_size = 512;
+	uint32_t			md_size = 128;
+	uint64_t			sge_length = lba_count * sector_size;
+
+	prepare_for_test(&ns, &ctrlr, &qpair, sector_size,
+			 md_size, 128 * 1024, 0, false);
+
+	/* Invalid io_flags. Expect fail */
+	ext_opts.io_flags = 0xFFFF000F;
+	rc = spdk_nvme_ns_cmd_writev_ext(&ns, &qpair, 0x1000, lba_count,
+					 NULL, &sge_length, nvme_request_reset_sgl,
+					 nvme_request_next_sge, &ext_opts);
+	CU_ASSERT(rc != 0);
+	ext_opts.io_flags = SPDK_NVME_IO_FLAGS_PRCHK_REFTAG;
+
+	/* Empty reset_sgl cb. Expect fail */
+	rc = spdk_nvme_ns_cmd_writev_ext(&ns, &qpair, 0x1000, lba_count,
+					 NULL, &sge_length, NULL,
+					 nvme_request_next_sge, &ext_opts);
+	CU_ASSERT(rc != 0);
+
+	/* Empty next_sgl cb. Expect fail */
+	rc = spdk_nvme_ns_cmd_writev_ext(&ns, &qpair, 0x1000, lba_count,
+					 NULL, &sge_length, nvme_request_reset_sgl,
+					 NULL, &ext_opts);
+	CU_ASSERT(rc != 0);
+
+	/* Expect pass */
+	rc = spdk_nvme_ns_cmd_writev_ext(&ns, &qpair, 0x1000, lba_count,
+					 NULL, &sge_length, nvme_request_reset_sgl,
+					 nvme_request_next_sge, &ext_opts);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_request != NULL);
+	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_WRITE);
+	CU_ASSERT(nvme_payload_type(&g_request->payload) == NVME_PAYLOAD_TYPE_SGL);
+	CU_ASSERT(g_request->payload.reset_sgl_fn == nvme_request_reset_sgl);
+	CU_ASSERT(g_request->payload.next_sge_fn == nvme_request_next_sge);
+	CU_ASSERT(g_request->payload.contig_or_cb_arg == &sge_length);
+	CU_ASSERT(g_request->payload.md == (void *)0xDEADBEEF);
+	CU_ASSERT(g_request->payload.opts == &ext_opts);
+	CU_ASSERT(g_request->cmd.nsid == ns.id);
+	CU_ASSERT((g_request->cmd.cdw12 & SPDK_NVME_IO_FLAGS_CDW12_MASK) == ext_opts.io_flags);
+	CU_ASSERT(g_request->cmd.cdw15 >> 16 == ext_opts.apptag_mask);
+	CU_ASSERT((g_request->cmd.cdw15 & 0xff) == ext_opts.apptag);
+
+	CU_ASSERT(g_request->payload_size == 256 * 512);
+	CU_ASSERT(g_request->qpair == &qpair);
+	CU_ASSERT(g_request->md_offset == 0);
+	CU_ASSERT(g_request->payload_offset == 0);
+
+	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
+}
+
+static void
+test_spdk_nvme_ns_cmd_readv_ext(void)
+{
+	struct spdk_nvme_ns		ns;
+	struct spdk_nvme_ctrlr		ctrlr;
+	struct spdk_nvme_qpair		qpair;
+	struct spdk_nvme_ns_cmd_ext_io_opts ext_opts = {
+		.size = sizeof(struct spdk_nvme_ns_cmd_ext_io_opts),
+		.memory_domain = (struct spdk_memory_domain *)0xfeedbeef,
+		.memory_domain_ctx = (void *)0xf00df00d,
+		.metadata = (void *)0xdeadbeef,
+		.apptag_mask = 0xf,
+		.apptag = 0xff
+	};
+	int				rc = 0;
+	uint32_t			lba_count = 256;
+	uint32_t			sector_size = 512;
+	uint32_t			md_size = 128;
+	uint64_t			sge_length = lba_count * sector_size;
+
+	prepare_for_test(&ns, &ctrlr, &qpair, sector_size,
+			 md_size, 128 * 1024, 0, false);
+
+	/* Invalid io_flags. Expect fail */
+	ext_opts.io_flags = 0xFFFF000F;
+	rc = spdk_nvme_ns_cmd_readv_ext(&ns, &qpair, 0x1000, lba_count,
+					NULL, &sge_length, nvme_request_reset_sgl,
+					nvme_request_next_sge, &ext_opts);
+	CU_ASSERT(rc != 0);
+	ext_opts.io_flags = SPDK_NVME_IO_FLAGS_PRCHK_REFTAG;
+
+	/* Empty reset_sgl cb. Expect fail */
+	rc = spdk_nvme_ns_cmd_readv_ext(&ns, &qpair, 0x1000, lba_count,
+					NULL, &sge_length, NULL,
+					nvme_request_next_sge, &ext_opts);
+	CU_ASSERT(rc != 0);
+
+	/* Empty next_sgl cb. Expect fail */
+	rc = spdk_nvme_ns_cmd_readv_ext(&ns, &qpair, 0x1000, lba_count,
+					NULL, &sge_length, nvme_request_reset_sgl,
+					NULL, &ext_opts);
+	CU_ASSERT(rc != 0);
+
+	/* Expect pass */
+	rc = spdk_nvme_ns_cmd_readv_ext(&ns, &qpair, 0x1000, lba_count,
+					NULL, &sge_length, nvme_request_reset_sgl,
+					nvme_request_next_sge, &ext_opts);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_request != NULL);
+	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_READ);
+	CU_ASSERT(nvme_payload_type(&g_request->payload) == NVME_PAYLOAD_TYPE_SGL);
+	CU_ASSERT(g_request->payload.reset_sgl_fn == nvme_request_reset_sgl);
+	CU_ASSERT(g_request->payload.next_sge_fn == nvme_request_next_sge);
+	CU_ASSERT(g_request->payload.contig_or_cb_arg == &sge_length);
+	CU_ASSERT(g_request->payload.md == (void *)0xDEADBEEF);
+	CU_ASSERT(g_request->payload.opts == &ext_opts);
+	CU_ASSERT(g_request->cmd.nsid == ns.id);
+	CU_ASSERT((g_request->cmd.cdw12 & SPDK_NVME_IO_FLAGS_CDW12_MASK) == ext_opts.io_flags);
+	CU_ASSERT(g_request->cmd.cdw15 >> 16 == ext_opts.apptag_mask);
+	CU_ASSERT((g_request->cmd.cdw15 & 0xff) == ext_opts.apptag);
+
+	CU_ASSERT(g_request->payload_size == 256 * 512);
+	CU_ASSERT(g_request->qpair == &qpair);
+	CU_ASSERT(g_request->md_offset == 0);
+	CU_ASSERT(g_request->payload_offset == 0);
+
+	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -2126,6 +2266,8 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_ns_cmd_comparev_with_md);
 	CU_ADD_TEST(suite, test_nvme_ns_cmd_setup_request);
 	CU_ADD_TEST(suite, test_spdk_nvme_ns_cmd_readv_with_md);
+	CU_ADD_TEST(suite, test_spdk_nvme_ns_cmd_writev_ext);
+	CU_ADD_TEST(suite, test_spdk_nvme_ns_cmd_readv_ext);
 
 	g_spdk_nvme_driver = &_g_nvme_driver;
 

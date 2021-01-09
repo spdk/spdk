@@ -278,6 +278,13 @@ struct spdk_nvme_rdma_rsp {
 	struct nvme_rdma_wr	rdma_wr;
 };
 
+struct nvme_rdma_memory_translation_ctx {
+	void *addr;
+	size_t length;
+	uint32_t lkey;
+	uint32_t rkey;
+};
+
 static const char *rdma_cm_event_str[] = {
 	"RDMA_CM_EVENT_ADDR_RESOLVED",
 	"RDMA_CM_EVENT_ADDR_ERROR",
@@ -1340,6 +1347,55 @@ nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qp
 	return rc;
 }
 
+static inline int
+nvme_rdma_get_memory_translation(struct nvme_request *req, struct nvme_rdma_qpair *rqpair,
+				 struct nvme_rdma_memory_translation_ctx *_ctx)
+{
+	struct spdk_memory_domain_translation_ctx ctx;
+	struct spdk_memory_domain_translation_result dma_translation;
+	struct spdk_rdma_memory_translation rdma_translation;
+	int rc;
+
+	assert(req);
+	assert(rqpair);
+	assert(_ctx);
+
+	if (req->payload.opts && req->payload.opts->memory_domain) {
+		ctx.size = sizeof(struct spdk_memory_domain_translation_ctx);
+		ctx.rdma.ibv_qp = rqpair->rdma_qp->qp;
+		dma_translation.size = sizeof(struct spdk_memory_domain_translation_result);
+
+		rc = spdk_memory_domain_translate_data(req->payload.opts->memory_domain,
+						       req->payload.opts->memory_domain_ctx,
+						       rqpair->memory_domain->domain, &ctx, _ctx->addr,
+						       _ctx->length, &dma_translation);
+		if (spdk_unlikely(rc)) {
+			SPDK_ERRLOG("DMA memory translation failed, rc %d\n", rc);
+			return rc;
+		}
+
+		_ctx->lkey = dma_translation.rdma.lkey;
+		_ctx->rkey = dma_translation.rdma.rkey;
+		_ctx->addr = dma_translation.addr;
+		_ctx->length = dma_translation.len;
+	} else {
+		rc = spdk_rdma_get_translation(rqpair->mr_map, _ctx->addr, _ctx->length, &rdma_translation);
+		if (spdk_unlikely(rc)) {
+			SPDK_ERRLOG("RDMA memory translation failed, rc %d\n", rc);
+			return rc;
+		}
+		if (rdma_translation.translation_type == SPDK_RDMA_TRANSLATION_MR) {
+			_ctx->lkey = rdma_translation.mr_or_key.mr->lkey;
+			_ctx->rkey = rdma_translation.mr_or_key.mr->rkey;
+		} else {
+			_ctx->lkey = _ctx->rkey = (uint32_t)rdma_translation.mr_or_key.key;
+		}
+	}
+
+	return 0;
+}
+
+
 /*
  * Build SGL describing empty payload.
  */
@@ -1376,21 +1432,21 @@ nvme_rdma_build_contig_inline_request(struct nvme_rdma_qpair *rqpair,
 				      struct spdk_nvme_rdma_req *rdma_req)
 {
 	struct nvme_request *req = rdma_req->req;
-	struct spdk_rdma_memory_translation mem_translation;
-	void *payload;
+	struct nvme_rdma_memory_translation_ctx ctx = {
+		.addr = req->payload.contig_or_cb_arg + req->payload_offset,
+		.length = req->payload_size
+	};
 	int rc;
 
-	payload = req->payload.contig_or_cb_arg + req->payload_offset;
-	assert(req->payload_size != 0);
+	assert(ctx.length != 0);
 	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG);
 
-	rc = spdk_rdma_get_translation(rqpair->mr_map, payload, req->payload_size, &mem_translation);
+	rc = nvme_rdma_get_memory_translation(req, rqpair, &ctx);
 	if (spdk_unlikely(rc)) {
-		SPDK_ERRLOG("Memory translation failed, rc %d\n", rc);
 		return -1;
 	}
 
-	rdma_req->send_sgl[1].lkey = spdk_rdma_memory_translation_get_lkey(&mem_translation);
+	rdma_req->send_sgl[1].lkey = ctx.lkey;
 
 	/* The first element of this SGL is pointing at an
 	 * spdk_nvmf_cmd object. For this particular command,
@@ -1398,8 +1454,8 @@ nvme_rdma_build_contig_inline_request(struct nvme_rdma_qpair *rqpair,
 	 * the NVMe command. */
 	rdma_req->send_sgl[0].length = sizeof(struct spdk_nvme_cmd);
 
-	rdma_req->send_sgl[1].addr = (uint64_t)payload;
-	rdma_req->send_sgl[1].length = (uint32_t)req->payload_size;
+	rdma_req->send_sgl[1].addr = (uint64_t)ctx.addr;
+	rdma_req->send_sgl[1].length = (uint32_t)ctx.length;
 
 	/* The RDMA SGL contains two elements. The first describes
 	 * the NVMe command and the second describes the data
@@ -1409,7 +1465,7 @@ nvme_rdma_build_contig_inline_request(struct nvme_rdma_qpair *rqpair,
 	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
 	req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
 	req->cmd.dptr.sgl1.unkeyed.subtype = SPDK_NVME_SGL_SUBTYPE_OFFSET;
-	req->cmd.dptr.sgl1.unkeyed.length = (uint32_t)req->payload_size;
+	req->cmd.dptr.sgl1.unkeyed.length = (uint32_t)ctx.length;
 	/* Inline only supported for icdoff == 0 currently.  This function will
 	 * not get called for controllers with other values. */
 	req->cmd.dptr.sgl1.address = (uint64_t)0;
@@ -1425,8 +1481,10 @@ nvme_rdma_build_contig_request(struct nvme_rdma_qpair *rqpair,
 			       struct spdk_nvme_rdma_req *rdma_req)
 {
 	struct nvme_request *req = rdma_req->req;
-	void *payload = req->payload.contig_or_cb_arg + req->payload_offset;
-	struct spdk_rdma_memory_translation mem_translation;
+	struct nvme_rdma_memory_translation_ctx ctx = {
+		.addr = req->payload.contig_or_cb_arg + req->payload_offset,
+		.length = req->payload_size
+	};
 	int rc;
 
 	assert(req->payload_size != 0);
@@ -1438,13 +1496,12 @@ nvme_rdma_build_contig_request(struct nvme_rdma_qpair *rqpair,
 		return -1;
 	}
 
-	rc = spdk_rdma_get_translation(rqpair->mr_map, payload, req->payload_size, &mem_translation);
+	rc = nvme_rdma_get_memory_translation(req, rqpair, &ctx);
 	if (spdk_unlikely(rc)) {
-		SPDK_ERRLOG("Memory translation failed, rc %d\n", rc);
 		return -1;
 	}
 
-	req->cmd.dptr.sgl1.keyed.key = spdk_rdma_memory_translation_get_rkey(&mem_translation);
+	req->cmd.dptr.sgl1.keyed.key = ctx.rkey;
 
 	/* The first element of this SGL is pointing at an
 	 * spdk_nvmf_cmd object. For this particular command,
@@ -1458,8 +1515,8 @@ nvme_rdma_build_contig_request(struct nvme_rdma_qpair *rqpair,
 	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
 	req->cmd.dptr.sgl1.keyed.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
 	req->cmd.dptr.sgl1.keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
-	req->cmd.dptr.sgl1.keyed.length = req->payload_size;
-	req->cmd.dptr.sgl1.address = (uint64_t)payload;
+	req->cmd.dptr.sgl1.keyed.length = (uint32_t)ctx.length;
+	req->cmd.dptr.sgl1.address = (uint64_t)ctx.addr;
 
 	return 0;
 }
@@ -1473,8 +1530,7 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair,
 {
 	struct nvme_request *req = rdma_req->req;
 	struct spdk_nvmf_cmd *cmd = &rqpair->cmds[rdma_req->id];
-	struct spdk_rdma_memory_translation mem_translation;
-	void *virt_addr;
+	struct nvme_rdma_memory_translation_ctx ctx;
 	uint32_t remaining_size;
 	uint32_t sge_length;
 	int rc, max_num_sgl, num_sgl_desc;
@@ -1490,7 +1546,7 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair,
 	remaining_size = req->payload_size;
 	num_sgl_desc = 0;
 	do {
-		rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg, &virt_addr, &sge_length);
+		rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg, &ctx.addr, &sge_length);
 		if (rc) {
 			return -1;
 		}
@@ -1502,19 +1558,19 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair,
 				    sge_length, NVME_RDMA_MAX_KEYED_SGL_LENGTH);
 			return -1;
 		}
-		rc = spdk_rdma_get_translation(rqpair->mr_map, virt_addr, sge_length, &mem_translation);
+		ctx.length = sge_length;
+		rc = nvme_rdma_get_memory_translation(req, rqpair, &ctx);
 		if (spdk_unlikely(rc)) {
-			SPDK_ERRLOG("Memory translation failed, rc %d\n", rc);
 			return -1;
 		}
 
-		cmd->sgl[num_sgl_desc].keyed.key = spdk_rdma_memory_translation_get_rkey(&mem_translation);
+		cmd->sgl[num_sgl_desc].keyed.key = ctx.rkey;
 		cmd->sgl[num_sgl_desc].keyed.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
 		cmd->sgl[num_sgl_desc].keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
-		cmd->sgl[num_sgl_desc].keyed.length = sge_length;
-		cmd->sgl[num_sgl_desc].address = (uint64_t)virt_addr;
+		cmd->sgl[num_sgl_desc].keyed.length = (uint32_t)ctx.length;
+		cmd->sgl[num_sgl_desc].address = (uint64_t)ctx.addr;
 
-		remaining_size -= sge_length;
+		remaining_size -= ctx.length;
 		num_sgl_desc++;
 	} while (remaining_size > 0 && num_sgl_desc < max_num_sgl);
 
@@ -1577,9 +1633,8 @@ nvme_rdma_build_sgl_inline_request(struct nvme_rdma_qpair *rqpair,
 				   struct spdk_nvme_rdma_req *rdma_req)
 {
 	struct nvme_request *req = rdma_req->req;
-	struct spdk_rdma_memory_translation mem_translation;
+	struct nvme_rdma_memory_translation_ctx ctx;
 	uint32_t length;
-	void *virt_addr;
 	int rc;
 
 	assert(req->payload_size != 0);
@@ -1588,7 +1643,7 @@ nvme_rdma_build_sgl_inline_request(struct nvme_rdma_qpair *rqpair,
 	assert(req->payload.next_sge_fn != NULL);
 	req->payload.reset_sgl_fn(req->payload.contig_or_cb_arg, req->payload_offset);
 
-	rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg, &virt_addr, &length);
+	rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg, &ctx.addr, &length);
 	if (rc) {
 		return -1;
 	}
@@ -1602,15 +1657,15 @@ nvme_rdma_build_sgl_inline_request(struct nvme_rdma_qpair *rqpair,
 		length = req->payload_size;
 	}
 
-	rc = spdk_rdma_get_translation(rqpair->mr_map, virt_addr, length, &mem_translation);
+	ctx.length = length;
+	rc = nvme_rdma_get_memory_translation(req, rqpair, &ctx);
 	if (spdk_unlikely(rc)) {
-		SPDK_ERRLOG("Memory translation failed, rc %d\n", rc);
 		return -1;
 	}
 
-	rdma_req->send_sgl[1].addr = (uint64_t)virt_addr;
-	rdma_req->send_sgl[1].length = length;
-	rdma_req->send_sgl[1].lkey = spdk_rdma_memory_translation_get_lkey(&mem_translation);
+	rdma_req->send_sgl[1].addr = (uint64_t)ctx.addr;
+	rdma_req->send_sgl[1].length = (uint32_t)ctx.length;
+	rdma_req->send_sgl[1].lkey = ctx.lkey;
 
 	rdma_req->send_wr.num_sge = 2;
 
@@ -1623,7 +1678,7 @@ nvme_rdma_build_sgl_inline_request(struct nvme_rdma_qpair *rqpair,
 	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
 	req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
 	req->cmd.dptr.sgl1.unkeyed.subtype = SPDK_NVME_SGL_SUBTYPE_OFFSET;
-	req->cmd.dptr.sgl1.unkeyed.length = (uint32_t)req->payload_size;
+	req->cmd.dptr.sgl1.unkeyed.length = (uint32_t)ctx.length;
 	/* Inline only supported for icdoff == 0 currently.  This function will
 	 * not get called for controllers with other values. */
 	req->cmd.dptr.sgl1.address = (uint64_t)0;
