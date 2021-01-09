@@ -624,6 +624,12 @@ spdk_app_stop(int rc)
 	spdk_thread_send_msg(g_app_thread, app_stop, (void *)(intptr_t)rc);
 }
 
+struct spdk_thread *
+_spdk_get_app_thread(void)
+{
+	return g_app_thread;
+}
+
 static void
 usage(void (*app_usage)(void))
 {

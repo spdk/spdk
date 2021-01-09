@@ -24,6 +24,7 @@
 	spdk_reactors_stop;
 	spdk_reactor_get;
 	spdk_for_each_reactor;
+	spdk_reactor_set_interrupt_mode;
 	spdk_subsystem_find;
 	spdk_subsystem_get_first;
 	spdk_subsystem_get_next;

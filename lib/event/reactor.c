@@ -332,6 +332,125 @@ spdk_reactors_fini(void)
 	g_core_infos = NULL;
 }
 
+static void _reactor_set_interrupt_mode(void *arg1, void *arg2);
+
+static void
+_reactor_set_notify_cpuset(void *arg1, void *arg2)
+{
+	struct spdk_reactor *target = arg1;
+	struct spdk_reactor *reactor = spdk_reactor_get(spdk_env_get_current_core());
+
+	spdk_cpuset_set_cpu(&reactor->notify_cpuset, target->lcore, target->new_in_interrupt);
+}
+
+static void
+_reactor_set_notify_cpuset_cpl(void *arg1, void *arg2)
+{
+	struct spdk_reactor *target = arg1;
+
+	if (target->new_in_interrupt == false) {
+		target->set_interrupt_mode_in_progress = false;
+		spdk_thread_send_msg(_spdk_get_app_thread(), target->set_interrupt_mode_cb_fn,
+				     target->set_interrupt_mode_cb_arg);
+	} else {
+		struct spdk_event *ev;
+
+		ev = spdk_event_allocate(target->lcore, _reactor_set_interrupt_mode, target, NULL);
+		assert(ev);
+		spdk_event_call(ev);
+	}
+}
+
+static void
+_reactor_set_interrupt_mode(void *arg1, void *arg2)
+{
+	struct spdk_reactor *target = arg1;
+	struct spdk_reactor *reactor = spdk_reactor_get(spdk_env_get_current_core());
+
+	assert(target != NULL);
+	assert(target == reactor);
+	assert(target->in_interrupt != target->new_in_interrupt);
+	assert(TAILQ_EMPTY(&target->threads));
+	SPDK_DEBUGLOG(reactor, "Do reactor set on core %u from %s to state %s\n",
+		      target->lcore, !target->in_interrupt ? "intr" : "poll", target->new_in_interrupt ? "intr" : "poll");
+
+	target->in_interrupt = target->new_in_interrupt;
+
+	if (target->new_in_interrupt == false) {
+		spdk_for_each_reactor(_reactor_set_notify_cpuset, target, NULL, _reactor_set_notify_cpuset_cpl);
+	} else {
+		uint64_t notify = 1;
+		int rc = 0;
+
+		/* Always trigger spdk_event and resched event in case of race condition */
+		rc = write(target->events_fd, &notify, sizeof(notify));
+		if (rc < 0) {
+			SPDK_ERRLOG("failed to notify event queue: %s.\n", spdk_strerror(errno));
+		}
+		rc = write(target->resched_fd, &notify, sizeof(notify));
+		if (rc < 0) {
+			SPDK_ERRLOG("failed to notify reschedule: %s.\n", spdk_strerror(errno));
+		}
+
+		target->set_interrupt_mode_in_progress = false;
+		spdk_thread_send_msg(_spdk_get_app_thread(), target->set_interrupt_mode_cb_fn,
+				     target->set_interrupt_mode_cb_arg);
+	}
+}
+
+int
+spdk_reactor_set_interrupt_mode(uint32_t lcore, bool new_in_interrupt,
+				spdk_reactor_set_interrupt_mode_cb cb_fn, void *cb_arg)
+{
+	struct spdk_reactor *target;
+
+	target = spdk_reactor_get(lcore);
+	if (target == NULL) {
+		return -EINVAL;
+	}
+
+	if (spdk_get_thread() != _spdk_get_app_thread()) {
+		SPDK_ERRLOG("It is only permitted within spdk application thread.\n");
+		return -EPERM;
+	}
+
+	if (target->in_interrupt == new_in_interrupt) {
+		return 0;
+	}
+
+	if (target->set_interrupt_mode_in_progress) {
+		SPDK_NOTICELOG("Reactor(%u) is already in progress to set interrupt mode\n", lcore);
+		return -EBUSY;
+	}
+	target->set_interrupt_mode_in_progress = true;
+
+	target->new_in_interrupt = new_in_interrupt;
+	target->set_interrupt_mode_cb_fn = cb_fn;
+	target->set_interrupt_mode_cb_arg = cb_arg;
+
+	SPDK_DEBUGLOG(reactor, "Starting reactor event from %d to %d\n",
+		      spdk_env_get_current_core(), lcore);
+
+	if (new_in_interrupt == false) {
+		/* For potential race cases, when setting the reactor to poll mode,
+		 * first change the mode of the reactor and then clear the corresponding
+		 * bit of the notify_cpuset of each reactor.
+		 */
+		struct spdk_event *ev;
+
+		ev = spdk_event_allocate(lcore, _reactor_set_interrupt_mode, target, NULL);
+		assert(ev);
+		spdk_event_call(ev);
+	} else {
+		/* For race caces, when setting the reactor to interrupt mode, first set the
+		 * corresponding bit of the notify_cpuset of each reactor and then change the mode.
+		 */
+		spdk_for_each_reactor(_reactor_set_notify_cpuset, target, NULL, _reactor_set_notify_cpuset_cpl);
+	}
+
+	return 0;
+}
+
 struct spdk_event *
 spdk_event_allocate(uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2)
 {

@@ -40,6 +40,8 @@
 #include "event/scheduler_static.c"
 #include "event/scheduler_dynamic.c"
 
+DEFINE_STUB(_spdk_get_app_thread, struct spdk_thread *, (void), NULL);
+
 static void
 test_create_reactor(void)
 {
