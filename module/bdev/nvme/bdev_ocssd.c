@@ -125,12 +125,15 @@ bdev_ocssd_config_json(struct spdk_json_write_ctx *w)
 static void
 ocssd_bdev_config_json(struct spdk_json_write_ctx *w, struct nvme_bdev *nvme_bdev)
 {
+	struct nvme_bdev_ns *nvme_ns;
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 	struct ocssd_bdev *ocssd_bdev;
 	char range_buf[128];
 	int rc;
 
-	nvme_bdev_ctrlr = nvme_bdev->nvme_ns->ctrlr;
+	nvme_ns = nvme_bdev_to_bdev_ns(nvme_bdev);
+	assert(nvme_ns != NULL);
+	nvme_bdev_ctrlr = nvme_ns->ctrlr;
 	ocssd_bdev = SPDK_CONTAINEROF(nvme_bdev, struct ocssd_bdev, nvme_bdev);
 
 	rc = snprintf(range_buf, sizeof(range_buf), "%"PRIu64"-%"PRIu64,
@@ -146,7 +149,7 @@ ocssd_bdev_config_json(struct spdk_json_write_ctx *w, struct nvme_bdev *nvme_bde
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "ctrlr_name", nvme_bdev_ctrlr->name);
 	spdk_json_write_named_string(w, "bdev_name", nvme_bdev->disk.name);
-	spdk_json_write_named_uint32(w, "nsid", nvme_bdev->nvme_ns->id);
+	spdk_json_write_named_uint32(w, "nsid", nvme_ns->id);
 	spdk_json_write_named_string(w, "range", range_buf);
 	spdk_json_write_object_end(w);
 
