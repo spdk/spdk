@@ -1073,6 +1073,7 @@ test_get_zone_info(void)
 
 	nvme_ch = spdk_io_channel_get_ctx(ch);
 	nvme_ch->ctrlr = nvme_bdev_ctrlr;
+	nvme_ch->qpair = (struct spdk_nvme_qpair *)0x1;
 
 	bdev_io = alloc_ocssd_io();
 	bdev_io->internal.cb = get_zone_info_cb;
