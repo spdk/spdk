@@ -34,7 +34,6 @@
 #include "spdk/stdinc.h"
 #include "spdk/bdev_module.h"
 #include "spdk/bdev_zone.h"
-#include "spdk/likely.h"
 #include "spdk/log.h"
 #include "spdk/string.h"
 #include "spdk/util.h"

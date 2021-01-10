@@ -34,6 +34,7 @@
 #ifndef SPDK_COMMON_BDEV_NVME_H
 #define SPDK_COMMON_BDEV_NVME_H
 
+#include "spdk/likely.h"
 #include "spdk/nvme.h"
 #include "spdk/bdev_module.h"
 #include "spdk/opal.h"
@@ -168,5 +169,19 @@ void nvme_bdev_dump_trid_json(const struct spdk_nvme_transport_id *trid,
 void nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
 void nvme_bdev_ctrlr_do_destruct(void *ctx);
 void nvme_bdev_ns_detach(struct nvme_bdev_ns *nvme_ns);
+
+static inline bool
+bdev_nvme_find_io_path(struct nvme_bdev *nbdev, struct nvme_io_channel *nvme_ch,
+		       struct nvme_bdev_ns **_nvme_ns, struct spdk_nvme_qpair **_qpair)
+{
+	if (spdk_unlikely(nvme_ch->qpair == NULL)) {
+		/* The device is currently resetting. */
+		return false;
+	}
+
+	*_nvme_ns = nbdev->nvme_ns;
+	*_qpair = nvme_ch->qpair;
+	return true;
+}
 
 #endif /* SPDK_COMMON_BDEV_NVME_H */
