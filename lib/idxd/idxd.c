@@ -37,6 +37,7 @@
 #include "spdk/env.h"
 #include "spdk/util.h"
 #include "spdk/memory.h"
+#include "spdk/likely.h"
 
 #include "spdk/log.h"
 #include "spdk_internal/idxd.h"
@@ -1385,6 +1386,9 @@ _dump_error_reg(struct spdk_idxd_io_channel *chan)
  * needs to look at each array bit to know whether it should even check that completion record. That may be
  * faster though, need to experiment.
  */
+#define IDXD_COMPLETION(x) ((x) > (0) ? (1) : (0))
+#define IDXD_FAILURE(x) ((x) > (1) ? (1) : (0))
+#define IDXD_SW_ERROR(x) ((x) &= (0x1) ? (1) : (0))
 void
 spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 {
@@ -1393,13 +1397,16 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 	int status = 0;
 
 	TAILQ_FOREACH_SAFE(comp_ctx, &chan->comp_ctx_oustanding, link, tmp) {
-		if (comp_ctx->hw.status == 1) {
+		if (IDXD_COMPLETION(comp_ctx->hw.status)) {
 
 			TAILQ_REMOVE(&chan->comp_ctx_oustanding, comp_ctx, link);
-			sw_error_0 = _idxd_read_8(chan->idxd, IDXD_SWERR_OFFSET);
-			if (sw_error_0 & 0x1) {
-				_dump_error_reg(chan);
-				status = -EINVAL;
+
+			if (spdk_unlikely(IDXD_FAILURE(comp_ctx->hw.status))) {
+				sw_error_0 = _idxd_read_8(chan->idxd, IDXD_SWERR_OFFSET);
+				if (IDXD_SW_ERROR(sw_error_0)) {
+					_dump_error_reg(chan);
+					status = -EINVAL;
+				}
 			}
 
 			switch (comp_ctx->desc->opcode) {
