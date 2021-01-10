@@ -806,9 +806,15 @@ static bool
 bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
 	struct nvme_bdev *nbdev = ctx;
-	struct spdk_nvme_ctrlr *ctrlr = nbdev->nvme_ns->ctrlr->ctrlr;
-	struct spdk_nvme_ns *ns = nbdev->nvme_ns->ns;
+	struct nvme_bdev_ns *nvme_ns;
+	struct spdk_nvme_ns *ns;
+	struct spdk_nvme_ctrlr *ctrlr;
 	const struct spdk_nvme_ctrlr_data *cdata;
+
+	nvme_ns = nvme_bdev_to_bdev_ns(nbdev);
+	assert(nvme_ns != NULL);
+	ns = nvme_ns->ns;
+	ctrlr = spdk_nvme_ns_get_ctrlr(ns);
 
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_READ:
@@ -978,14 +984,19 @@ static int
 bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct nvme_bdev *nvme_bdev = ctx;
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = nvme_bdev->nvme_ns->ctrlr;
-	struct spdk_nvme_ctrlr *ctrlr = nvme_bdev_ctrlr->ctrlr;
+	struct nvme_bdev_ns *nvme_ns;
+	struct spdk_nvme_ns *ns;
+	struct spdk_nvme_ctrlr *ctrlr;
 	const struct spdk_nvme_ctrlr_data *cdata;
 	const struct spdk_nvme_transport_id *trid;
-	struct spdk_nvme_ns *ns = nvme_bdev->nvme_ns->ns;
 	union spdk_nvme_vs_register vs;
 	union spdk_nvme_csts_register csts;
 	char buf[128];
+
+	nvme_ns = nvme_bdev_to_bdev_ns(nvme_bdev);
+	assert(nvme_ns != NULL);
+	ns = nvme_ns->ns;
+	ctrlr = spdk_nvme_ns_get_ctrlr(ns);
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 	trid = spdk_nvme_ctrlr_get_transport_id(ctrlr);
