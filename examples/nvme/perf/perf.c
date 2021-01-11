@@ -4,7 +4,7 @@
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
  *
- *   Copyright (c) 2019-2020 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2019-2021 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -2464,6 +2464,35 @@ nvme_poll_ctrlrs(void *arg)
 	return NULL;
 }
 
+static void
+sig_handler(int signo)
+{
+	g_exit = true;
+}
+
+static int
+setup_sig_handlers(void)
+{
+	struct sigaction sigact = {};
+	int rc;
+
+	sigemptyset(&sigact.sa_mask);
+	sigact.sa_handler = sig_handler;
+	rc = sigaction(SIGINT, &sigact, NULL);
+	if (rc < 0) {
+		fprintf(stderr, "sigaction(SIGINT) failed, errno %d (%s)\n", errno, strerror(errno));
+		return -1;
+	}
+
+	rc = sigaction(SIGTERM, &sigact, NULL);
+	if (rc < 0) {
+		fprintf(stderr, "sigaction(SIGTERM) failed, errno %d (%s)\n", errno, strerror(errno));
+		return -1;
+	}
+
+	return 0;
+}
+
 int main(int argc, char **argv)
 {
 	int rc;
@@ -2497,6 +2526,12 @@ int main(int argc, char **argv)
 	}
 	if (spdk_env_init(&opts) < 0) {
 		fprintf(stderr, "Unable to initialize SPDK env\n");
+		rc = -1;
+		goto cleanup;
+	}
+
+	rc = setup_sig_handlers();
+	if (rc != 0) {
 		rc = -1;
 		goto cleanup;
 	}
