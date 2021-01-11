@@ -243,7 +243,7 @@ _free_thread(struct spdk_thread *thread)
 
 	assert(thread->msg_cache_count == 0);
 
-	if (thread->interrupt_mode) {
+	if (spdk_interrupt_mode_is_enabled()) {
 		thread_interrupt_destroy(thread);
 	}
 
@@ -319,7 +319,7 @@ spdk_thread_create(const char *name, struct spdk_cpuset *cpumask)
 		      thread->id, thread->name);
 
 	if (spdk_interrupt_mode_is_enabled()) {
-		thread->interrupt_mode = true;
+		thread->in_interrupt = true;
 		rc = thread_interrupt_create(thread);
 		if (rc != 0) {
 			_free_thread(thread);
@@ -524,7 +524,9 @@ msg_queue_run_batch(struct spdk_thread *thread, uint32_t max_msgs)
 	} else {
 		max_msgs = SPDK_MSG_BATCH_SIZE;
 	}
-	if (thread->interrupt_mode) {
+	if (spdk_unlikely(thread->in_interrupt)) {
+		assert(spdk_interrupt_mode_is_enabled());
+
 		/* There may be race between msg_acknowledge and another producer's msg_notify,
 		 * so msg_acknowledge should be applied ahead. And then check for self's msg_notify.
 		 * This can avoid msg notification missing.
@@ -536,7 +538,8 @@ msg_queue_run_batch(struct spdk_thread *thread, uint32_t max_msgs)
 	}
 
 	count = spdk_ring_dequeue(thread->messages, messages, max_msgs);
-	if (thread->interrupt_mode && spdk_ring_count(thread->messages) != 0) {
+	if (spdk_unlikely(thread->in_interrupt) &&
+	    spdk_ring_count(thread->messages) != 0) {
 		rc = write(thread->msg_fd, &notify, sizeof(notify));
 		if (rc < 0) {
 			SPDK_ERRLOG("failed to notify msg_queue: %s.\n", spdk_strerror(errno));
@@ -737,7 +740,7 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 		now = spdk_get_ticks();
 	}
 
-	if (!thread->interrupt_mode) {
+	if (spdk_likely(!thread->in_interrupt)) {
 		rc = thread_poll(thread, max_msgs, now);
 	} else {
 		/* Non-block wait on thread's fd_group */
@@ -893,7 +896,12 @@ thread_send_msg_notification(const struct spdk_thread *target_thread)
 	uint64_t notify = 1;
 	int rc;
 
-	if (target_thread->interrupt_mode) {
+	/* Not necessary to do notification if interrupt facility is not enabled */
+	if (spdk_likely(!spdk_interrupt_mode_is_enabled())) {
+		return 0;
+	}
+
+	if (spdk_unlikely(target_thread->in_interrupt)) {
 		rc = write(target_thread->msg_fd, &notify, sizeof(notify));
 		if (rc < 0) {
 			SPDK_ERRLOG("failed to notify msg_queue: %s.\n", spdk_strerror(errno));
@@ -1099,7 +1107,7 @@ poller_register(spdk_poller_fn fn,
 		poller->period_ticks = 0;
 	}
 
-	if (thread->interrupt_mode && period_microseconds != 0) {
+	if (spdk_interrupt_mode_is_enabled() && period_microseconds != 0) {
 		int rc;
 
 		poller->timerfd = -1;
@@ -1159,7 +1167,7 @@ spdk_poller_unregister(struct spdk_poller **ppoller)
 		return;
 	}
 
-	if (thread->interrupt_mode && poller->timerfd >= 0) {
+	if (spdk_interrupt_mode_is_enabled() && poller->timerfd >= 0) {
 		spdk_fd_group_remove(thread->fgrp, poller->timerfd);
 		close(poller->timerfd);
 		poller->timerfd = -1;

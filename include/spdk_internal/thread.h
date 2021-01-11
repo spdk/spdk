@@ -128,7 +128,8 @@ struct spdk_thread {
 	struct spdk_cpuset		cpumask;
 	uint64_t			exit_timeout_tsc;
 
-	bool				interrupt_mode;
+	/* Indicates whether this spdk_thread currently runs in interrupt. */
+	bool				in_interrupt;
 	struct spdk_fd_group		*fgrp;
 
 	/* User context allocated at the end */
