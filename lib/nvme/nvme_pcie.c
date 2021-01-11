@@ -1663,6 +1663,14 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 		sgl_supported = (ctrlr->flags & SPDK_NVME_CTRLR_SGL_SUPPORTED) != 0 &&
 				!nvme_qpair_is_admin_queue(qpair);
 
+		if (sgl_supported) {
+			/* Don't use SGL for DSM command */
+			if (spdk_unlikely((ctrlr->quirks & NVME_QUIRK_NO_SGL_FOR_DSM) &&
+					  (req->cmd.opc == SPDK_NVME_OPC_DATASET_MANAGEMENT))) {
+				sgl_supported = false;
+			}
+		}
+
 		if (sgl_supported && !(ctrlr->flags & SPDK_NVME_CTRLR_SGL_REQUIRES_DWORD_ALIGNMENT)) {
 			dword_aligned = false;
 		}
