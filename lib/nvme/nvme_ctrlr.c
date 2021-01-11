@@ -1469,7 +1469,7 @@ spdk_nvme_ctrlr_set_remove_cb(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
-	ctrlr->remove_cb = remove_ctx;
+	ctrlr->remove_cb = remove_cb;
 	ctrlr->cb_ctx = remove_ctx;
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 }
