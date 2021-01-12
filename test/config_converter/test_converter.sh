@@ -19,6 +19,9 @@ function on_error_exit() {
 
 trap 'on_error_exit' ERR
 
+empty_json=$(echo "" | $SPDK_BUILD_DIR/scripts/config_converter.py | jq -c)
+[[ ${empty_json} == '{"subsystems":[]}' ]]
+
 $SPDK_BUILD_DIR/scripts/config_converter.py < $CONVERTER_DIR/config.ini > $CONVERTER_DIR/config_converter.json
 $SPDK_BUILD_DIR/scripts/config_converter.py < $CONVERTER_DIR/config_virtio.ini > $CONVERTER_DIR/config_virtio_converter.json
 diff -I "cpumask" -I "max_queue_depth" -I "queue_depth" <(jq -S . $CONVERTER_DIR/config_converter.json) <(jq -S . $CONVERTER_DIR/spdk_config.json)

@@ -54,26 +54,34 @@ no_yes_map = {"no": False, "No": False, "Yes": True, "yes": True}
 
 
 def generate_new_json_config():
-    json_subsystem = [
-        {"subsystem": "bdev", "config": []},
-        {"subsystem": "nvmf", "config": []},
-        {"subsystem": "vhost", "config": []},
-        {"subsystem": "iscsi", "config": []}
-    ]
+    json_subsystems = []
+
+    bdev_subsystem = {"subsystem": "bdev", "config": []}
     for method in subsystem['bdev']:
         for item in subsystem['bdev'][method]:
-            json_subsystem[0]['config'].append(item)
+            bdev_subsystem['config'].append(item)
+    if bdev_subsystem['config']:
+        json_subsystems.append(bdev_subsystem)
+    nvmf_subsystem = {"subsystem": "nvmf", "config": []}
     for method in subsystem['nvmf']:
         for item in subsystem['nvmf'][method]:
-            json_subsystem[1]['config'].append(item)
+            nvmf_subsystem['config'].append(item)
+    if nvmf_subsystem['config']:
+        json_subsystems.append(nvmf_subsystem)
+    vhost_subsystem = {"subsystem": "vhost", "config": []}
     for method in subsystem['vhost']:
         for item in subsystem['vhost'][method]:
-            json_subsystem[2]['config'].append(item)
+            vhost_subsystem['config'].append(item)
+    if vhost_subsystem['config']:
+        json_subsystems.append(vhost_subsystem)
+    iscsi_subsystem = {"subsystem": "iscsi", "config": []}
     for method in subsystem['iscsi']:
         for item in subsystem['iscsi'][method]:
-            json_subsystem[3]['config'].append(item)
+            iscsi_subsystem['config'].append(item)
+    if iscsi_subsystem['config']:
+        json_subsystems.append(iscsi_subsystem)
 
-    return {"subsystems": json_subsystem}
+    return {"subsystems": json_subsystems}
 
 
 section_to_subsystem = {
@@ -613,10 +621,6 @@ if __name__ == "__main__":
     except Exception as e:
         print("Exception while parsing config: %s" % e)
         exit(1)
-    # Add missing sections to generate default configuration
-    for section in ['Nvme', 'Nvmf', 'Bdev', 'iSCSI']:
-        if section not in config.sections():
-            config.add_section(section)
 
     for section in config.sections():
         match = re.match(r'(Bdev|Nvme|Malloc|VirtioUser\d+|Split|Pmem|AIO|'
