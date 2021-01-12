@@ -2001,7 +2001,7 @@ parse_args(int argc, char **argv)
 			break;
 		case 'H':
 			usage(argv[0]);
-			break;
+			exit(EXIT_SUCCESS);
 		case 'V':
 			g_vmd = true;
 			break;
