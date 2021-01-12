@@ -181,6 +181,10 @@ spdk_reactor_get(uint32_t lcore)
 		return NULL;
 	}
 
+	if (lcore >= g_reactor_count) {
+		return NULL;
+	}
+
 	reactor = &g_reactors[lcore];
 
 	if (reactor->flags.is_valid == false) {
