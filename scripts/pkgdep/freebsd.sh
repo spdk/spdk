@@ -7,7 +7,7 @@ pkg install -y gmake cunit openssl git bash misc/e2fsprogs-libuuid python \
 pkg install -y autoconf automake libtool help2man
 if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	# Tools for developers
-	pkg install -y devel/astyle bash py27-pycodestyle \
+	pkg install -y devel/astyle bash py37-pycodestyle \
 		misc/e2fsprogs-libuuid sysutils/sg3_utils nasm
 fi
 if [[ $INSTALL_DOCS == "true" ]]; then
