@@ -1,18 +1,6 @@
 {
   "subsystems": [
     {
-      "subsystem": "accel",
-      "config": null
-    },
-    {
-      "subsystem": "interface",
-      "config": null
-    },
-    {
-      "subsystem": "net_framework",
-      "config": null
-    },
-    {
       "subsystem": "bdev",
       "config": [
         {
@@ -75,10 +63,6 @@
       ]
     },
     {
-      "subsystem": "scsi",
-      "config": null
-    },
-    {
       "subsystem": "nvmf",
       "config": [
         {
@@ -94,10 +78,6 @@
           "method": "nvmf_set_max_subsystems"
         }
       ]
-    },
-    {
-      "subsystem": "nbd",
-      "config": []
     },
     {
       "subsystem": "vhost",

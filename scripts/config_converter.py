@@ -35,13 +35,8 @@ nvmf_dict["subsystems"] = []
 
 # dictionary with new config that will be written to new json config file
 subsystem = {
-    "accel": None,
-    "interface": None,
-    "net_framework": None,
     "bdev": bdev_dict,
-    "scsi": [],
     "nvmf": nvmf_dict,
-    "nbd": [],
     "vhost": vhost_dict,
     "iscsi": iscsi_dict
 }
@@ -60,32 +55,23 @@ no_yes_map = {"no": False, "No": False, "Yes": True, "yes": True}
 
 def generate_new_json_config():
     json_subsystem = [
-        {'subsystem': "accel", 'config': None},
-        {"subsystem": "interface", "config": None},
-        {"subsystem": "net_framework", "config": None},
         {"subsystem": "bdev", "config": []},
-        {"subsystem": "scsi", "config": None},
         {"subsystem": "nvmf", "config": []},
-        {"subsystem": "nbd", "config": []},
         {"subsystem": "vhost", "config": []},
         {"subsystem": "iscsi", "config": []}
     ]
     for method in subsystem['bdev']:
         for item in subsystem['bdev'][method]:
-            json_subsystem[3]['config'].append(item)
-    for item in subsystem['scsi']:
-        if json_subsystem[4]['config'] is None:
-            json_subsystem[4]['config'] = []
-        json_subsystem[4]['config'].append(item)
+            json_subsystem[0]['config'].append(item)
     for method in subsystem['nvmf']:
         for item in subsystem['nvmf'][method]:
-            json_subsystem[5]['config'].append(item)
+            json_subsystem[1]['config'].append(item)
     for method in subsystem['vhost']:
         for item in subsystem['vhost'][method]:
-            json_subsystem[7]['config'].append(item)
+            json_subsystem[2]['config'].append(item)
     for method in subsystem['iscsi']:
         for item in subsystem['iscsi'][method]:
-            json_subsystem[8]['config'].append(item)
+            json_subsystem[3]['config'].append(item)
 
     return {"subsystems": json_subsystem}
 
