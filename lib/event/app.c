@@ -59,6 +59,7 @@
 struct spdk_app {
 	const char			*json_config_file;
 	bool				json_config_ignore_errors;
+	bool				stopped;
 	const char			*rpc_addr;
 	int				shm_id;
 	spdk_app_shutdown_cb		shutdown_cb;
@@ -522,6 +523,7 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 	g_spdk_app.shm_id = opts->shm_id;
 	g_spdk_app.shutdown_cb = opts->shutdown_cb;
 	g_spdk_app.rc = 0;
+	g_spdk_app.stopped = false;
 
 	spdk_log_set_level(SPDK_APP_DEFAULT_LOG_LEVEL);
 
@@ -594,8 +596,18 @@ spdk_app_fini(void)
 static void
 app_stop(void *arg1)
 {
+	if (g_spdk_app.rc == 0) {
+		g_spdk_app.rc = (int)(intptr_t)arg1;
+	}
+
+	if (g_spdk_app.stopped) {
+		SPDK_NOTICELOG("spdk_app_stop called twice\n");
+		return;
+	}
+
 	spdk_rpc_finish();
 	spdk_subsystem_fini(spdk_reactors_stop, NULL);
+	g_spdk_app.stopped = true;
 }
 
 void
@@ -604,12 +616,12 @@ spdk_app_stop(int rc)
 	if (rc) {
 		SPDK_WARNLOG("spdk_app_stop'd on non-zero\n");
 	}
-	g_spdk_app.rc = rc;
+
 	/*
 	 * We want to run spdk_subsystem_fini() from the same thread where spdk_subsystem_init()
 	 * was called.
 	 */
-	spdk_thread_send_msg(g_app_thread, app_stop, NULL);
+	spdk_thread_send_msg(g_app_thread, app_stop, (void *)(intptr_t)rc);
 }
 
 static void
