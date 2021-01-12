@@ -321,10 +321,9 @@ int _spdk_scheduler_set(char *name);
 /**
  * Change current scheduling period.
  *
- * \param period New period (ticks).
- *               Use spdk_get_ticks_hz() to translate seconds to ticks.
+ * \param period New period (microseconds).
  */
-void _spdk_scheduler_period_set(uint32_t period);
+void _spdk_scheduler_period_set(uint64_t period);
 
 /*
  * Macro used to register new reactor balancer.

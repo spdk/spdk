@@ -68,7 +68,7 @@ TAILQ_HEAD(, spdk_scheduler) g_scheduler_list
 static struct spdk_scheduler *g_scheduler;
 static struct spdk_scheduler *g_new_scheduler;
 static struct spdk_reactor *g_scheduling_reactor;
-static uint32_t g_scheduler_period;
+static uint64_t g_scheduler_period;
 static struct spdk_scheduler_core_info *g_core_infos = NULL;
 
 TAILQ_HEAD(, spdk_governor) g_governor_list
@@ -132,9 +132,10 @@ _spdk_scheduler_set(char *name)
 }
 
 void
-_spdk_scheduler_period_set(uint32_t period)
+_spdk_scheduler_period_set(uint64_t period)
 {
-	g_scheduler_period = period;
+	/* Convert microseconds to ticks */
+	g_scheduler_period = period * spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
 }
 
 void
