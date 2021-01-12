@@ -97,7 +97,10 @@ struct spdk_reactor {
 	uint64_t					busy_tsc;
 	uint64_t					idle_tsc;
 
-	bool						interrupt_mode;
+	/* Each bit of cpuset indicates whether a reactor probably requires event notification */
+	struct spdk_cpuset				notify_cpuset;
+	/* Indicate whether this reactor currently runs in interrupt */
+	bool						in_interrupt;
 	struct spdk_fd_group				*fgrp;
 	int						resched_fd;
 } __attribute__((aligned(SPDK_CACHE_LINE_SIZE)));

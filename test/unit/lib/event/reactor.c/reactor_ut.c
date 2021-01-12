@@ -53,6 +53,7 @@ test_create_reactor(void)
 	CU_ASSERT(spdk_reactor_get(0) == &reactor);
 
 	spdk_ring_free(reactor.events);
+	reactor_interrupt_fini(&reactor);
 	g_reactors = NULL;
 }
 
@@ -105,6 +106,8 @@ test_event_call(void)
 	evt = spdk_event_allocate(0, ut_event_fn, &test1, &test2);
 	CU_ASSERT(evt != NULL);
 
+	MOCK_SET(spdk_env_get_current_core, 0);
+
 	spdk_event_call(evt);
 
 	reactor = spdk_reactor_get(0);
@@ -113,6 +116,8 @@ test_event_call(void)
 	CU_ASSERT(event_queue_run_batch(reactor) == 1);
 	CU_ASSERT(test1 == 1);
 	CU_ASSERT(test2 == 0xFF);
+
+	MOCK_CLEAR(spdk_env_get_current_core);
 
 	spdk_reactors_fini();
 
@@ -138,6 +143,8 @@ test_schedule_thread(void)
 	spdk_cpuset_set_cpu(&cpuset, 3, true);
 	g_next_core = 4;
 
+	MOCK_SET(spdk_env_get_current_core, 3);
+
 	/* _reactor_schedule_thread() will be called in spdk_thread_create()
 	 * at its end because it is passed to SPDK thread library by
 	 * spdk_thread_lib_init().
@@ -147,8 +154,6 @@ test_schedule_thread(void)
 
 	reactor = spdk_reactor_get(3);
 	CU_ASSERT(reactor != NULL);
-
-	MOCK_SET(spdk_env_get_current_core, 3);
 
 	CU_ASSERT(event_queue_run_batch(reactor) == 1);
 
@@ -192,6 +197,7 @@ test_reschedule_thread(void)
 	spdk_cpuset_set_cpu(&g_reactor_core_mask, 2, true);
 	g_next_core = 0;
 
+	MOCK_SET(spdk_env_get_current_core, 1);
 	/* Create and schedule the thread to core 1. */
 	spdk_cpuset_set_cpu(&cpuset, 1, true);
 
@@ -201,7 +207,6 @@ test_reschedule_thread(void)
 
 	reactor = spdk_reactor_get(1);
 	CU_ASSERT(reactor != NULL);
-	MOCK_SET(spdk_env_get_current_core, 1);
 
 	CU_ASSERT(event_queue_run_batch(reactor) == 1);
 	CU_ASSERT(TAILQ_FIRST(&reactor->threads) == lw_thread);
@@ -302,12 +307,15 @@ test_for_each_reactor(void)
 	for (i = 0; i < 5; i++) {
 		reactor = spdk_reactor_get(i);
 		CU_ASSERT(reactor != NULL);
+		MOCK_SET(spdk_env_get_current_core, i);
 
 		event_queue_run_batch(reactor);
 		CU_ASSERT(count == (i + 1));
 		CU_ASSERT(done == false);
+		MOCK_CLEAR(spdk_env_get_current_core);
 	}
 
+	MOCK_SET(spdk_env_get_current_core, 0);
 	/* After each reactor is called, the completion calls it one more time. */
 	reactor = spdk_reactor_get(0);
 	CU_ASSERT(reactor != NULL);
@@ -315,6 +323,7 @@ test_for_each_reactor(void)
 	event_queue_run_batch(reactor);
 	CU_ASSERT(count == 6);
 	CU_ASSERT(done == true);
+	MOCK_CLEAR(spdk_env_get_current_core);
 
 	spdk_reactors_fini();
 
