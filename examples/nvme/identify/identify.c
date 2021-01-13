@@ -87,9 +87,7 @@ static struct spdk_ocssd_geometry_data geometry_data;
 
 static struct spdk_ocssd_chunk_information_entry g_ocssd_chunk_info_page[NUM_CHUNK_INFO_ENTRIES ];
 
-static struct spdk_nvme_zns_zone_report *g_zone_report;
-static size_t g_zone_report_size;
-static uint64_t g_nr_zones_requested;
+static bool g_zone_report_full = false;
 
 static bool g_hex_dump = false;
 
@@ -196,15 +194,6 @@ get_zns_zone_report_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 		printf("get zns zone report failed\n");
 	}
 
-	/*
-	 * Since we requested a partial report, verify that the firmware returned the
-	 * correct number of zones.
-	 */
-	if (g_zone_report->nr_zones != g_nr_zones_requested) {
-		printf("Invalid number of zones returned: %"PRIu64" (expected: %"PRIu64")\n",
-		       g_zone_report->nr_zones, g_nr_zones_requested);
-		exit(1);
-	}
 	outstanding_commands--;
 }
 
@@ -592,39 +581,6 @@ get_ocssd_geometry(struct spdk_nvme_ns *ns, struct spdk_ocssd_geometry_data *geo
 }
 
 static void
-get_zns_zone_report(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair)
-{
-	g_nr_zones_requested = spdk_nvme_zns_ns_get_num_zones(ns);
-	/*
-	 * Rather than getting the whole zone report, which could contain thousands of zones,
-	 * get maximum MAX_ZONE_DESC_ENTRIES, so that we don't flood stdout.
-	 */
-	g_nr_zones_requested = spdk_min(g_nr_zones_requested, MAX_ZONE_DESC_ENTRIES);
-	outstanding_commands = 0;
-
-	g_zone_report_size = sizeof(struct spdk_nvme_zns_zone_report) +
-			     g_nr_zones_requested * sizeof(struct spdk_nvme_zns_zone_desc);
-	g_zone_report = calloc(1, g_zone_report_size);
-	if (g_zone_report == NULL) {
-		printf("Zone report allocation failed!\n");
-		exit(1);
-	}
-
-	if (spdk_nvme_zns_report_zones(ns, qpair, g_zone_report, g_zone_report_size,
-				       0, SPDK_NVME_ZRA_LIST_ALL, true,
-				       get_zns_zone_report_completion, NULL)) {
-		printf("spdk_nvme_zns_report_zones() failed\n");
-		exit(1);
-	} else {
-		outstanding_commands++;
-	}
-
-	while (outstanding_commands) {
-		spdk_nvme_qpair_process_completions(qpair, 0);
-	}
-}
-
-static void
 print_hex_be(const void *v, size_t size)
 {
 	const uint8_t *buf = v;
@@ -760,20 +716,73 @@ print_ocssd_geometry(struct spdk_ocssd_geometry_data *geometry_data)
 }
 
 static void
-print_zns_zone_report(void)
+print_zns_zone(struct spdk_nvme_zns_zone_desc *desc)
 {
-	uint64_t i;
+	printf("ZSLBA: 0x%016"PRIx64" ZCAP: 0x%016"PRIx64" WP: 0x%016"PRIx64" ZS: %x ZT: %x ZA: %x\n",
+	       desc->zslba, desc->zcap, desc->wp, desc->zs, desc->zt, desc->za.raw);
+}
 
-	printf("NVMe ZNS Zone Report Glance\n");
-	printf("===========================\n");
+static void
+get_and_print_zns_zone_report(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair)
+{
+	struct spdk_nvme_zns_zone_report *report_buf;
+	size_t report_bufsize;
+	uint64_t zone_size_lba = spdk_nvme_zns_ns_get_zone_size(ns) / spdk_nvme_ns_get_sector_size(ns);
+	uint64_t total_zones = spdk_nvme_zns_ns_get_num_zones(ns);
+	uint64_t max_zones_per_buf, zones_to_print, i;
+	uint64_t handled_zones = 0;
+	uint64_t slba = 0;
 
-	for (i = 0; i < g_zone_report->nr_zones; i++) {
-		struct spdk_nvme_zns_zone_desc *desc = &g_zone_report->descs[i];
-		printf("Zone: %"PRIu64" ZSLBA: 0x%016"PRIx64" ZCAP: 0x%016"PRIx64" WP: 0x%016"PRIx64" ZS: %x ZT: %x ZA: %x\n",
-		       i, desc->zslba, desc->zcap, desc->wp, desc->zs, desc->zt, desc->za.raw);
+	outstanding_commands = 0;
+
+	report_bufsize = spdk_nvme_ns_get_max_io_xfer_size(ns);
+	max_zones_per_buf = (report_bufsize - sizeof(*report_buf)) / sizeof(report_buf->descs[0]);
+	report_buf = malloc(report_bufsize);
+	if (!report_buf) {
+		printf("Zone report allocation failed!\n");
+		exit(1);
 	}
-	free(g_zone_report);
-	g_zone_report = NULL;
+
+	if (g_zone_report_full) {
+		zones_to_print = total_zones;
+		printf("NVMe ZNS Zone Report\n");
+		printf("====================\n");
+	} else {
+		zones_to_print = spdk_min(total_zones, MAX_ZONE_DESC_ENTRIES);
+		printf("NVMe ZNS Zone Report Glance\n");
+		printf("===========================\n");
+	}
+
+	while (handled_zones < zones_to_print) {
+		memset(report_buf, 0, report_bufsize);
+
+		if (spdk_nvme_zns_report_zones(ns, qpair, report_buf, report_bufsize,
+					       slba, SPDK_NVME_ZRA_LIST_ALL, true,
+					       get_zns_zone_report_completion, NULL)) {
+			printf("spdk_nvme_zns_report_zones() failed\n");
+			exit(1);
+		} else {
+			outstanding_commands++;
+		}
+
+		while (outstanding_commands) {
+			spdk_nvme_qpair_process_completions(qpair, 0);
+		}
+
+		assert(report_buf->nr_zones <= max_zones_per_buf);
+
+		if (!report_buf->nr_zones) {
+			break;
+		}
+
+		for (i = 0; i < report_buf->nr_zones && handled_zones < zones_to_print; i++) {
+			print_zns_zone(&report_buf->descs[i]);
+			slba += zone_size_lba;
+			handled_zones++;
+		}
+	}
+
+	free(report_buf);
 }
 
 static void
@@ -952,8 +961,7 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 			exit(1);
 		}
 		print_zns_ns_data(nsdata_zns);
-		get_zns_zone_report(ns, qpair);
-		print_zns_zone_report();
+		get_and_print_zns_zone_report(ns, qpair);
 		spdk_nvme_ctrlr_free_io_qpair(qpair);
 	}
 }
@@ -1922,6 +1930,7 @@ usage(const char *program_name)
 	printf(" -d         DPDK huge memory size in MB\n");
 	printf(" -g         use single file descriptor for DPDK memory segments\n");
 	printf(" -x         print hex dump of raw data\n");
+	printf(" -z         For NVMe Zoned Namespaces, dump the full zone report\n");
 	printf(" -v         verbose (enable warnings)\n");
 	printf(" -V         enumerate VMD\n");
 	printf(" -H         show this usage\n");
@@ -1936,7 +1945,7 @@ parse_args(int argc, char **argv)
 	spdk_nvme_trid_populate_transport(&g_trid, SPDK_NVME_TRANSPORT_PCIE);
 	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
-	while ((op = getopt(argc, argv, "d:gi:p:r:xHL:V")) != -1) {
+	while ((op = getopt(argc, argv, "d:gi:p:r:xzHL:V")) != -1) {
 		switch (op) {
 		case 'd':
 			g_dpdk_mem = spdk_strtol(optarg, 10);
@@ -1987,6 +1996,9 @@ parse_args(int argc, char **argv)
 			break;
 		case 'x':
 			g_hex_dump = true;
+			break;
+		case 'z':
+			g_zone_report_full = true;
 			break;
 		case 'L':
 			rc = spdk_log_set_flag(optarg);
