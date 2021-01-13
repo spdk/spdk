@@ -329,9 +329,9 @@ void _spdk_scheduler_period_set(uint64_t period);
  * Macro used to register new reactor balancer.
  */
 #define SPDK_SCHEDULER_REGISTER(scheduler) \
-static void __attribute__((constructor)) _spdk_scheduler_register_##name(void) \
+static void __attribute__((constructor)) _spdk_scheduler_register_ ## scheduler (void) \
 { \
-	_spdk_scheduler_list_add(scheduler); \
+	_spdk_scheduler_list_add(&scheduler); \
 } \
 
 /**

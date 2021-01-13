@@ -164,4 +164,4 @@ static struct spdk_scheduler gscheduler = {
 	.balance = balance,
 };
 
-SPDK_SCHEDULER_REGISTER(&gscheduler);
+SPDK_SCHEDULER_REGISTER(gscheduler);

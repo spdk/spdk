@@ -45,4 +45,4 @@ static struct spdk_scheduler scheduler = {
 	.deinit = NULL,
 	.balance = NULL,
 };
-SPDK_SCHEDULER_REGISTER(&scheduler);
+SPDK_SCHEDULER_REGISTER(scheduler);
