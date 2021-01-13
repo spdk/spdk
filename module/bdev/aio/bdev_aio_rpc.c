@@ -135,10 +135,6 @@ rpc_bdev_aio_delete(struct spdk_jsonrpc_request *request,
 
 	bdev_aio_delete(bdev, _rpc_bdev_aio_delete_cb, request);
 
-	free_rpc_delete_aio(&req);
-
-	return;
-
 cleanup:
 	free_rpc_delete_aio(&req);
 }
