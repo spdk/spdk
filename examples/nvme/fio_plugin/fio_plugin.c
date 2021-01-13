@@ -401,8 +401,8 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	}
 
 	if (spdk_nvme_ns_supports_extended_lba(ns) &&
-	    (spdk_nvme_ns_get_extended_sector_size(ns) != td->o.bs[DDIR_READ] ||
-	     spdk_nvme_ns_get_extended_sector_size(ns) != td->o.bs[DDIR_WRITE])) {
+	    (td->o.bs[DDIR_READ] % spdk_nvme_ns_get_extended_sector_size(ns) != 0 ||
+	     td->o.bs[DDIR_WRITE] % spdk_nvme_ns_get_extended_sector_size(ns) != 0)) {
 		SPDK_ERRLOG("--bs has to be equal to LBA data size + Metadata size\n");
 		g_error = true;
 		return;
