@@ -350,10 +350,10 @@ reservation_ns_release(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qp
 }
 
 static int
-reserve_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
-		   const struct spdk_pci_addr *pci_addr)
+reserve_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_pci_addr *pci_addr)
 {
 	const struct spdk_nvme_ctrlr_data	*cdata;
+	struct spdk_nvme_qpair			*qpair;
 	int ret;
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
@@ -370,14 +370,20 @@ reserve_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
 		return 0;
 	}
 
+	qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, NULL, 0);
+	if (!qpair) {
+		fprintf(stderr, "spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
+		return -EIO;
+	}
+
 	ret = set_host_identifier(ctrlr);
 	if (ret) {
-		return ret;
+		goto out;
 	}
 
 	ret = get_host_identifier(ctrlr);
 	if (ret) {
-		return ret;
+		goto out;
 	}
 
 	/* tested 1 namespace */
@@ -387,6 +393,8 @@ reserve_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
 	ret += reservation_ns_register(ctrlr, qpair, 1, 0);
 	ret += reservation_ns_report(ctrlr, qpair, 1);
 
+out:
+	spdk_nvme_ctrlr_free_io_qpair(qpair);
 	return ret;
 }
 
@@ -431,16 +439,7 @@ int main(int argc, char **argv)
 	}
 
 	foreach_dev(iter) {
-		struct spdk_nvme_qpair *qpair;
-
-		qpair = spdk_nvme_ctrlr_alloc_io_qpair(iter->ctrlr, NULL, 0);
-		if (!qpair) {
-			fprintf(stderr, "spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
-			ret = 1;
-		} else {
-			ret = reserve_controller(iter->ctrlr, qpair, &iter->pci_addr);
-		}
-
+		ret = reserve_controller(iter->ctrlr, &iter->pci_addr);
 		if (ret) {
 			break;
 		}
