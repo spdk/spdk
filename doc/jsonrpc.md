@@ -727,6 +727,48 @@ Example response:
 }
 ~~~
 
+### framework_get_scheduler {#rpc_framework_get_scheduler}
+
+Retrieve currently set scheduler name and period, along with current governor name.
+
+### Parameters
+
+This method has no parameters.
+
+### Response
+
+Name                    | Description
+------------------------| -----------
+scheduler_name          | Current scheduler name
+scheduler_period        | Currently set scheduler period in microseconds
+governor_name           | Governor name
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "framework_set_scheduler",
+  "id": 1,
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "scheduler name": "static",
+    "scheduler period": 2800000000,
+    "governor name": "default"
+  }
+}
+~~~
+
 ## thread_get_stats {#rpc_thread_get_stats}
 
 Retrieve current statistics of all the threads.

@@ -132,6 +132,19 @@ _spdk_scheduler_set(char *name)
 	return 0;
 }
 
+struct spdk_scheduler *
+_spdk_scheduler_get(void)
+{
+	return g_scheduler;
+}
+
+uint64_t
+_spdk_scheduler_period_get(void)
+{
+	/* Convert from ticks to microseconds */
+	return (g_scheduler_period * SPDK_SEC_TO_USEC / spdk_get_ticks_hz());
+}
+
 void
 _spdk_scheduler_period_set(uint64_t period)
 {
@@ -1248,6 +1261,12 @@ _spdk_governor_set(char *name)
 	}
 
 	return 0;
+}
+
+struct spdk_governor *
+_spdk_governor_get(void)
+{
+	return &g_governor;
 }
 
 void

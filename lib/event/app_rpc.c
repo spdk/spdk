@@ -480,6 +480,31 @@ end:
 }
 SPDK_RPC_REGISTER("framework_set_scheduler", rpc_framework_set_scheduler, SPDK_RPC_STARTUP)
 
+static void
+rpc_framework_get_scheduler(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+	struct spdk_scheduler *scheduler = _spdk_scheduler_get();
+	uint64_t scheduler_period = _spdk_scheduler_period_get();
+	struct spdk_governor *governor = _spdk_governor_get();
+
+	if (params) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "'rpc_get_scheduler' requires no arguments");
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "scheduler name", scheduler->name);
+	spdk_json_write_named_uint64(w, "scheduler period", scheduler_period);
+	spdk_json_write_named_string(w, "governor name", governor->name);
+	spdk_json_write_object_end(w);
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("framework_get_scheduler", rpc_framework_get_scheduler, SPDK_RPC_RUNTIME)
+
 struct rpc_thread_set_cpumask_ctx {
 	struct spdk_jsonrpc_request *request;
 	struct spdk_cpuset cpumask;

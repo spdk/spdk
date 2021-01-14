@@ -254,6 +254,12 @@ void _spdk_governor_list_add(struct spdk_governor *governor);
 int _spdk_governor_set(char *name);
 
 /**
+ * Get currently set governor.
+ *
+ */
+struct spdk_governor *_spdk_governor_get(void);
+
+/**
  * Macro used to register new cores governor.
  */
 #define SPDK_GOVERNOR_REGISTER(governor) \
@@ -321,11 +327,22 @@ void _spdk_scheduler_list_add(struct spdk_scheduler *scheduler);
 int _spdk_scheduler_set(char *name);
 
 /**
+ * Get currently set scheduler.
+ *
+ */
+struct spdk_scheduler *_spdk_scheduler_get(void);
+
+/**
  * Change current scheduling period.
  *
  * \param period New period (microseconds).
  */
 void _spdk_scheduler_period_set(uint64_t period);
+
+/**
+ * Get period of currently set scheduler.
+ */
+uint64_t _spdk_scheduler_period_get(void);
 
 /*
  * Macro used to register new reactor balancer.

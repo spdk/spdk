@@ -168,6 +168,13 @@ if __name__ == "__main__":
     p.add_argument('-p', '--period', help="Scheduler period in microseconds", type=int)
     p.set_defaults(func=framework_set_scheduler)
 
+    def framework_get_scheduler(args):
+        print_dict(rpc.app.framework_get_scheduler(args.client))
+
+    p = subparsers.add_parser(
+        'framework_get_scheduler', help='Display currently set scheduler and its properties.')
+    p.set_defaults(func=framework_get_scheduler)
+
     # bdev
     def bdev_set_options(args):
         rpc.bdev.bdev_set_options(args.client,
