@@ -121,7 +121,7 @@ struct nvme_tcp_pdu {
 	uint32_t					data_iovcnt;
 	uint32_t					data_len;
 
-	uint32_t					readv_offset;
+	uint32_t					rw_offset;
 	TAILQ_ENTRY(nvme_tcp_pdu)			tailq;
 	uint32_t					remaining;
 	uint32_t					padding_len;
@@ -440,7 +440,7 @@ nvme_tcp_build_payload_iovs(struct iovec *iov, int iovcnt, struct nvme_tcp_pdu *
 	}
 
 	sgl = &pdu->sgl;
-	_nvme_tcp_sgl_init(sgl, iov, iovcnt, pdu->readv_offset);
+	_nvme_tcp_sgl_init(sgl, iov, iovcnt, pdu->rw_offset);
 
 	if (spdk_likely(!pdu->dif_ctx)) {
 		if (!_nvme_tcp_sgl_append_multi(sgl, pdu->data_iov, pdu->data_iovcnt)) {

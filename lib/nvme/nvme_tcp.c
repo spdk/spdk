@@ -1496,13 +1496,13 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 				break;
 			}
 
-			pdu->readv_offset += rc;
-			if (pdu->readv_offset < data_len) {
+			pdu->rw_offset += rc;
+			if (pdu->rw_offset < data_len) {
 				rc =  NVME_TCP_PDU_IN_PROGRESS;
 				goto out;
 			}
 
-			assert(pdu->readv_offset == data_len);
+			assert(pdu->rw_offset == data_len);
 			/* All of this PDU has now been read from the socket. */
 			nvme_tcp_pdu_payload_handle(tqpair, reaped);
 			break;

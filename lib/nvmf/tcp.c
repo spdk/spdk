@@ -1975,16 +1975,16 @@ nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 			if (rc < 0) {
 				return NVME_TCP_PDU_FATAL;
 			}
-			pdu->readv_offset += rc;
+			pdu->rw_offset += rc;
 
 			if (spdk_unlikely(pdu->dif_ctx != NULL)) {
-				rc = nvmf_tcp_pdu_payload_insert_dif(pdu, pdu->readv_offset - rc, rc);
+				rc = nvmf_tcp_pdu_payload_insert_dif(pdu, pdu->rw_offset - rc, rc);
 				if (rc != 0) {
 					return NVME_TCP_PDU_FATAL;
 				}
 			}
 
-			if (pdu->readv_offset < data_len) {
+			if (pdu->rw_offset < data_len) {
 				return NVME_TCP_PDU_IN_PROGRESS;
 			}
 
