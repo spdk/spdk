@@ -88,6 +88,11 @@ else
 DPDK_CFLAGS += -Wno-error
 endif
 
+ifeq ($(CONFIG_CET),y)
+DPDK_CFLAGS += -fcf-protection
+DPDK_LDFLAGS += -fcf-protection
+endif
+
 ifdef EXTRA_DPDK_CFLAGS
 $(warning EXTRA_DPDK_CFLAGS defined, possibly to work around an unsupported compiler version)
 $(shell sleep 1)

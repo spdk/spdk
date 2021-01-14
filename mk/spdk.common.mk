@@ -107,6 +107,11 @@ COMMON_CFLAGS += -fprofile-use=$(SPDK_ROOT_DIR)/build/pgo
 LDFLAGS += -fprofile-use=$(SPDK_ROOT_DIR)/build/pgo
 endif
 
+ifeq ($(CONFIG_CET),y)
+COMMON_CFLAGS += -fcf-protection
+LDFLAGS += -fcf-protection
+endif
+
 COMMON_CFLAGS += -Wformat -Wformat-security
 
 COMMON_CFLAGS += -D_GNU_SOURCE

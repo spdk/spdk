@@ -32,6 +32,7 @@ function usage()
 	echo " --enable-lto              Enable link-time optimization"
 	echo " --enable-pgo-capture      Enable generation of profile guided optimization data"
 	echo " --enable-pgo-use          Use previously captured profile guided optimization data"
+	echo " --enable-cet              Enable Intel Control-flow Enforcement Technology (CET)"
 	echo " --disable-tests           Disable building of functional tests"
 	echo " --disable-unit-tests      Disable building of unit tests"
 	echo " --disable-examples        Disable building of examples"
@@ -266,6 +267,12 @@ for i in "$@"; do
 			;;
 		--disable-werror)
 			CONFIG[WERROR]=n
+			;;
+		--enable-cet)
+			CONFIG[CET]=y
+			;;
+		--disable-cet)
+			CONFIG[CET]=n
 			;;
 		--with-dpdk=*)
 			check_dir "$i"
@@ -806,6 +813,14 @@ if [[ "${CONFIG[FUSE]}" = "y" ]]; then
 	if [[ ! -d /usr/include/fuse3 ]] && [[ ! -d /usr/local/include/fuse3 ]]; then
 		echo "--with-fuse requires libfuse3."
 		echo "Please install then re-run this script."
+		exit 1
+	fi
+fi
+
+if [ "${CONFIG[CET]}" = "y" ]; then
+	if ! echo -e 'int main(void) { return 0; }\n' | ${BUILD_CMD[@]} -fcf-protection - 2>/dev/null; then
+		echo --enable-cet requires compiler/linker that supports CET.
+		echo Please install then re-run this script.
 		exit 1
 	fi
 fi
