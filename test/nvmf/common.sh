@@ -77,7 +77,7 @@ function detect_pci_nics() {
 		return 0
 	fi
 
-	detect_nics_and_probe_drivers "Mellanox" "ConnectX-4" "mlx4_core" "mlx4_ib" "mlx4_en"
+	detect_nics_and_probe_drivers "Mellanox" "ConnectX-4" "mlx5_core" "mlx5_ib"
 	detect_nics_and_probe_drivers "Mellanox" "ConnectX-5" "mlx5_core" "mlx5_ib"
 	detect_nics_and_probe_drivers "Intel" "X722" "i40e" "i40iw"
 	detect_nics_and_probe_drivers "Chelsio" "Unified Wire" "cxgb4" "iw_cxgb4"
