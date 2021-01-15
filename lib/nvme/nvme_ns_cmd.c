@@ -463,7 +463,7 @@ spdk_nvme_ns_cmd_compare(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg,
 			      SPDK_NVME_OPC_COMPARE,
 			      io_flags, 0,
-			      0, true);
+			      0, false);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
 	} else if (nvme_ns_check_request_length(lba_count,
@@ -496,7 +496,7 @@ spdk_nvme_ns_cmd_compare_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair
 	req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg,
 			      SPDK_NVME_OPC_COMPARE,
 			      io_flags,
-			      apptag_mask, apptag, true);
+			      apptag_mask, apptag, false);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
 	} else if (nvme_ns_check_request_length(lba_count,
@@ -596,7 +596,7 @@ spdk_nvme_ns_cmd_read(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, vo
 
 	req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_READ,
 			      io_flags, 0,
-			      0, true);
+			      0, false);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
 	} else if (nvme_ns_check_request_length(lba_count,
@@ -627,7 +627,7 @@ spdk_nvme_ns_cmd_read_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 
 	req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_READ,
 			      io_flags,
-			      apptag_mask, apptag, true);
+			      apptag_mask, apptag, false);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
 	} else if (nvme_ns_check_request_length(lba_count,
@@ -725,7 +725,7 @@ spdk_nvme_ns_cmd_write(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	payload = NVME_PAYLOAD_CONTIG(buffer, NULL);
 
 	req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_WRITE,
-			      io_flags, 0, 0, true);
+			      io_flags, 0, 0, false);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
 	} else if (nvme_ns_check_request_length(lba_count,
@@ -754,7 +754,7 @@ spdk_nvme_ns_cmd_write_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *
 	payload = NVME_PAYLOAD_CONTIG(buffer, metadata);
 
 	req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_WRITE,
-			      io_flags, apptag_mask, apptag, true);
+			      io_flags, apptag_mask, apptag, false);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
 	} else if (nvme_ns_check_request_length(lba_count,
