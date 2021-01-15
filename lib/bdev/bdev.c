@@ -3450,6 +3450,10 @@ spdk_bdev_notify_blockcnt_change(struct spdk_bdev *bdev, uint64_t size)
 	struct spdk_bdev_desc *desc;
 	int ret;
 
+	if (size == bdev->blockcnt) {
+		return 0;
+	}
+
 	pthread_mutex_lock(&bdev->internal.mutex);
 
 	/* bdev has open descriptors */
