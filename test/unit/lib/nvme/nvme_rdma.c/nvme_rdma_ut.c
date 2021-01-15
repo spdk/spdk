@@ -362,6 +362,63 @@ test_nvme_rdma_build_contig_inline_request(void)
 	CU_ASSERT(rdma_req.send_sgl[1].lkey == RDMA_UT_LKEY);
 }
 
+static void
+test_nvme_rdma_alloc_reqs(void)
+{
+	struct nvme_rdma_qpair rqpair = {0};
+	int rc;
+
+	memset(&g_nvme_hooks, 0, sizeof(g_nvme_hooks));
+
+	/* Test case 1: zero entry. Expect: FAIL */
+	rqpair.num_entries = 0;
+
+	rc = nvme_rdma_alloc_reqs(&rqpair);
+	CU_ASSERT(rqpair.rdma_reqs == NULL);
+	SPDK_CU_ASSERT_FATAL(rc == -ENOMEM);
+
+	/* Test case 2: single entry. Expect: PASS */
+	memset(&rqpair, 0, sizeof(rqpair));
+	rqpair.num_entries = 1;
+
+	rc = nvme_rdma_alloc_reqs(&rqpair);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(rqpair.rdma_reqs[0].send_sgl[0].addr
+		  == (uint64_t)&rqpair.cmds[0]);
+	CU_ASSERT(rqpair.rdma_reqs[0].send_wr.wr_id
+		  == (uint64_t)&rqpair.rdma_reqs[0].rdma_wr);
+	CU_ASSERT(rqpair.rdma_reqs[0].send_wr.next == NULL);
+	CU_ASSERT(rqpair.rdma_reqs[0].send_wr.opcode == IBV_WR_SEND);
+	CU_ASSERT(rqpair.rdma_reqs[0].send_wr.send_flags == IBV_SEND_SIGNALED);
+	CU_ASSERT(rqpair.rdma_reqs[0].send_wr.sg_list
+		  == rqpair.rdma_reqs[0].send_sgl);
+	CU_ASSERT(rqpair.rdma_reqs[0].send_wr.imm_data == 0);
+	spdk_free(rqpair.rdma_reqs);
+	spdk_free(rqpair.cmds);
+
+	/* Test case 3: multiple entries. Expect: PASS */
+	memset(&rqpair, 0, sizeof(rqpair));
+	rqpair.num_entries = 5;
+
+	rc = nvme_rdma_alloc_reqs(&rqpair);
+	CU_ASSERT(rc == 0);
+	for (int i = 0; i < 5; i++) {
+		CU_ASSERT(rqpair.rdma_reqs[i].send_sgl[0].addr
+			  == (uint64_t)&rqpair.cmds[i]);
+		CU_ASSERT(rqpair.rdma_reqs[i].send_wr.wr_id
+			  == (uint64_t)&rqpair.rdma_reqs[i].rdma_wr);
+		CU_ASSERT(rqpair.rdma_reqs[i].send_wr.next == NULL);
+		CU_ASSERT(rqpair.rdma_reqs[i].send_wr.opcode == IBV_WR_SEND);
+		CU_ASSERT(rqpair.rdma_reqs[i].send_wr.send_flags
+			  == IBV_SEND_SIGNALED);
+		CU_ASSERT(rqpair.rdma_reqs[i].send_wr.sg_list
+			  == rqpair.rdma_reqs[i].send_sgl);
+		CU_ASSERT(rqpair.rdma_reqs[i].send_wr.imm_data == 0);
+	}
+	spdk_free(rqpair.rdma_reqs);
+	spdk_free(rqpair.cmds);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -375,6 +432,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_rdma_build_sgl_inline_request);
 	CU_ADD_TEST(suite, test_nvme_rdma_build_contig_request);
 	CU_ADD_TEST(suite, test_nvme_rdma_build_contig_inline_request);
+	CU_ADD_TEST(suite, test_nvme_rdma_alloc_reqs);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
