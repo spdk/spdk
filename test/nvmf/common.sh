@@ -71,20 +71,57 @@ function detect_nics_and_probe_drivers() {
 	fi
 }
 
+function pci_nics_switch() {
+	local driver=$1
+
+	local -a driver_args=()
+	driver_args+=("Mellanox ConnectX-4 mlx5_core mlx5_ib")
+	driver_args+=("Mellanox ConnectX-5 mlx5_core mlx5_ib")
+	driver_args+=("Intel X722 i40e i40iw")
+	driver_args+=("Chelsio \"Unified Wire\" cxgb4 iw_cxgb4")
+
+	case $driver in
+		mlx5_ib)
+			detect_nics_and_probe_drivers ${driver_args[0]}
+			detect_nics_and_probe_drivers ${driver_args[1]}
+			;;
+		i40iw)
+			detect_nics_and_probe_drivers ${driver_args[2]}
+			;;
+		iw_cxgb4)
+			detect_nics_and_probe_drivers ${driver_args[3]}
+			;;
+		*)
+			for d in "${driver_args[@]}"; do
+				detect_nics_and_probe_drivers $d
+			done
+			;;
+	esac
+}
+
 function detect_pci_nics() {
 
 	if ! hash lspci; then
 		return 0
 	fi
 
-	detect_nics_and_probe_drivers "Mellanox" "ConnectX-4" "mlx5_core" "mlx5_ib"
-	detect_nics_and_probe_drivers "Mellanox" "ConnectX-5" "mlx5_core" "mlx5_ib"
-	detect_nics_and_probe_drivers "Intel" "X722" "i40e" "i40iw"
-	detect_nics_and_probe_drivers "Chelsio" "Unified Wire" "cxgb4" "iw_cxgb4"
+	local rdma_drivers="mlx5_ib|irdma|i40iw|iw_cxgb4"
+	local found_drivers
 
-	if [ "$have_pci_nics" -eq "0" ]; then
-		return 0
-	fi
+	# Try to find RDMA drivers which are already loded and try to
+	# use only it's associated NICs, without probing all drivers.
+	found_drivers=$(lsmod | grep -Eo $rdma_drivers | sort -u)
+	for d in $found_drivers; do
+		pci_nics_switch $d
+	done
+
+	# In case lsmod reported driver, but lspci does not report
+	# physical NICs - fall back to old approach any try to
+	# probe all compatible NICs.
+	((have_pci_nics == 0)) && pci_nics_switch "default"
+
+	# Use softroce if everything else failed.
+	((have_pci_nics == 0)) && return 0
 
 	# Provide time for drivers to properly load.
 	sleep 5
