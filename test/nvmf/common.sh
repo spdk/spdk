@@ -77,6 +77,7 @@ function pci_nics_switch() {
 	local -a driver_args=()
 	driver_args+=("Mellanox ConnectX-4 mlx5_core mlx5_ib")
 	driver_args+=("Mellanox ConnectX-5 mlx5_core mlx5_ib")
+	driver_args+=("Intel E810 ice irdma")
 	driver_args+=("Intel X722 i40e i40iw")
 	driver_args+=("Chelsio \"Unified Wire\" cxgb4 iw_cxgb4")
 
@@ -85,11 +86,14 @@ function pci_nics_switch() {
 			detect_nics_and_probe_drivers ${driver_args[0]}
 			detect_nics_and_probe_drivers ${driver_args[1]}
 			;;
-		i40iw)
+		irdma)
 			detect_nics_and_probe_drivers ${driver_args[2]}
 			;;
-		iw_cxgb4)
+		i40iw)
 			detect_nics_and_probe_drivers ${driver_args[3]}
+			;;
+		iw_cxgb4)
+			detect_nics_and_probe_drivers ${driver_args[4]}
 			;;
 		*)
 			for d in "${driver_args[@]}"; do
