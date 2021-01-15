@@ -331,7 +331,7 @@ vhost_register_unix_socket(const char *path, const char *ctrl_name,
 		}
 	}
 
-	if (rte_vhost_driver_register(path, 0) != 0) {
+	if (rte_vhost_driver_register(path, RTE_VHOST_USER_ASYNC_COPY) != 0) {
 		SPDK_ERRLOG("Could not register controller %s with vhost library\n", ctrl_name);
 		SPDK_ERRLOG("Check if domain socket %s already exists\n", path);
 		return -EIO;
