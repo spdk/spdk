@@ -162,7 +162,6 @@ void spdk_rdma_free_mem_map(struct spdk_rdma_mem_map **map);
  * \param length Length of the memory address
  * \param[in,out] translation Pointer to translation result to be filled by this function
  * \retval -EINVAL if translation is not found
- * \retval -ERANGE if requested address + length crosses Memory Region boundary
  * \retval 0 translation succeed
  */
 int spdk_rdma_get_translation(struct spdk_rdma_mem_map *map, void *address,

@@ -213,10 +213,7 @@ spdk_rdma_get_translation(struct spdk_rdma_mem_map *map, void *address,
 		}
 	}
 
-	if (spdk_unlikely(real_length < length)) {
-		SPDK_ERRLOG("Data buffer %p length %zu split over multiple RDMA Memory Regions\n", address, length);
-		return -ERANGE;
-	}
+	assert(real_length >= length);
 
 	return 0;
 }
