@@ -85,7 +85,7 @@ nvme_zns_zone_mgmt_recv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	cmd->nsid = ns->id;
 
 	*(uint64_t *)&cmd->cdw10 = slba;
-	cmd->cdw12 = payload_size / sizeof(uint32_t) - 1u;
+	cmd->cdw12 = spdk_nvme_bytes_to_numd(payload_size);
 	cmd->cdw13 = zone_recv_action | zra_spec_field << 8 | zra_spec_feats << 16;
 
 	return nvme_qpair_submit_request(qpair, req);

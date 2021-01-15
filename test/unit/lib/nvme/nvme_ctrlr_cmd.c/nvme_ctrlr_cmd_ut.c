@@ -313,7 +313,7 @@ static void verify_fw_commit(struct nvme_request *req)
 static void verify_fw_image_download(struct nvme_request *req)
 {
 	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_FIRMWARE_IMAGE_DOWNLOAD);
-	CU_ASSERT(req->cmd.cdw10 == (fw_img_size >> 2) - 1);
+	CU_ASSERT(req->cmd.cdw10 == spdk_nvme_bytes_to_numd(fw_img_size));
 	CU_ASSERT(req->cmd.cdw11 == fw_img_offset >> 2);
 }
 

@@ -38,7 +38,8 @@ parameter in `spdk_blob_open_opts_init` function.
 
 Added a new function `spdk_nvme_ctrlr_reset_subsystem` to perform a NVMe
 subsystem reset. Note: The NVMf target does not support the subsystem reset yet.
-
+Add a new function 'spdk_nvme_bytes_to_numd' to transfer bytes to number of
+dwords.
 ### event
 
 The pci_whitelist and pci_blacklist members of struct spdk_app_opts have been

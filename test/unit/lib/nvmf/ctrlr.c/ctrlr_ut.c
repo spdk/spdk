@@ -277,7 +277,7 @@ test_get_log_page(void)
 	memset(&rsp, 0, sizeof(rsp));
 	cmd.nvme_cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
 	cmd.nvme_cmd.cdw10_bits.get_log_page.lid = SPDK_NVME_LOG_ERROR;
-	cmd.nvme_cmd.cdw10_bits.get_log_page.numdl = (req.length / 4 - 1);
+	cmd.nvme_cmd.cdw10_bits.get_log_page.numdl = spdk_nvme_bytes_to_numd(req.length);
 	CU_ASSERT(nvmf_ctrlr_get_log_page(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(req.rsp->nvme_cpl.status.sc == SPDK_NVME_SC_SUCCESS);
@@ -296,7 +296,7 @@ test_get_log_page(void)
 	memset(&rsp, 0, sizeof(rsp));
 	cmd.nvme_cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
 	cmd.nvme_cmd.cdw10_bits.get_log_page.lid = SPDK_NVME_LOG_ERROR;
-	cmd.nvme_cmd.cdw10_bits.get_log_page.numdl = (req.length / 4 - 1);
+	cmd.nvme_cmd.cdw10_bits.get_log_page.numdl = spdk_nvme_bytes_to_numd(req.length);
 	cmd.nvme_cmd.cdw12 = 2;
 	CU_ASSERT(nvmf_ctrlr_get_log_page(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
@@ -308,7 +308,7 @@ test_get_log_page(void)
 	req.data = NULL;
 	cmd.nvme_cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
 	cmd.nvme_cmd.cdw10_bits.get_log_page.lid = SPDK_NVME_LOG_ERROR;
-	cmd.nvme_cmd.cdw10_bits.get_log_page.numdl = (req.length / 4 - 1);
+	cmd.nvme_cmd.cdw10_bits.get_log_page.numdl = spdk_nvme_bytes_to_numd(req.length);
 	CU_ASSERT(nvmf_ctrlr_get_log_page(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(req.rsp->nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
@@ -1946,7 +1946,7 @@ test_rae(void)
 		cmd[i].nvme_cmd.cdw10_bits.get_log_page.lid =
 			SPDK_NVME_LOG_CHANGED_NS_LIST;
 		cmd[i].nvme_cmd.cdw10_bits.get_log_page.numdl =
-			(req[i].length / 4 - 1);
+			spdk_nvme_bytes_to_numd(req[i].length);
 		cmd[i].nvme_cmd.cid = i;
 	}
 	cmd[1].nvme_cmd.cdw10_bits.get_log_page.rae = 1;

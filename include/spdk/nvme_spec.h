@@ -1398,6 +1398,12 @@ static inline enum spdk_nvme_data_transfer spdk_nvme_opc_get_data_transfer(uint8
 	return (enum spdk_nvme_data_transfer)(opc & 3);
 }
 
+static inline uint32_t
+spdk_nvme_bytes_to_numd(uint32_t len)
+{
+	return (len >> 2) - 1;
+}
+
 enum spdk_nvme_feat {
 	/* 0x00 - reserved */
 

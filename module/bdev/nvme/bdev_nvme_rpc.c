@@ -753,7 +753,7 @@ apply_firmware_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 		firm_ctx->transfer = spdk_min(firm_ctx->size_remaining, 4096);
 		cmd.opc = SPDK_NVME_OPC_FIRMWARE_IMAGE_DOWNLOAD;
 
-		cmd.cdw10 = (firm_ctx->transfer >> 2) - 1;
+		cmd.cdw10 = spdk_nvme_bytes_to_numd(firm_ctx->transfer);
 		cmd.cdw11 = firm_ctx->offset >> 2;
 		rc = spdk_bdev_nvme_admin_passthru(firm_ctx->desc, firm_ctx->ch, &cmd, firm_ctx->p,
 						   firm_ctx->transfer, apply_firmware_complete, firm_ctx);
@@ -913,7 +913,7 @@ rpc_bdev_nvme_apply_firmware(struct spdk_jsonrpc_request *request,
 	memset(cmd, 0, sizeof(struct spdk_nvme_cmd));
 	cmd->opc = SPDK_NVME_OPC_FIRMWARE_IMAGE_DOWNLOAD;
 
-	cmd->cdw10 = (firm_ctx->transfer >> 2) - 1;
+	cmd->cdw10 = spdk_nvme_bytes_to_numd(firm_ctx->transfer);
 	cmd->cdw11 = firm_ctx->offset >> 2;
 
 	rc = spdk_bdev_nvme_admin_passthru(firm_ctx->desc, firm_ctx->ch, cmd, firm_ctx->p,

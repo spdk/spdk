@@ -516,7 +516,7 @@ spdk_nvme_ctrlr_cmd_get_log_page_ext(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_
 		return -EINVAL;
 	}
 
-	numd = payload_size / sizeof(uint32_t) - 1u;
+	numd = spdk_nvme_bytes_to_numd(payload_size);
 	numdl = numd & 0xFFFFu;
 	numdu = (numd >> 16) & 0xFFFFu;
 
@@ -867,7 +867,7 @@ nvme_ctrlr_cmd_fw_image_download(struct spdk_nvme_ctrlr *ctrlr,
 
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_FIRMWARE_IMAGE_DOWNLOAD;
-	cmd->cdw10 = (size >> 2) - 1;
+	cmd->cdw10 = spdk_nvme_bytes_to_numd(size);
 	cmd->cdw11 = offset >> 2;
 
 	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
