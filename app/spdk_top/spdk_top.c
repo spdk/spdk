@@ -268,9 +268,16 @@ struct rpc_core_info {
 	struct rpc_core_threads threads;
 };
 
+struct rpc_scheduler {
+	char *scheduler_name;
+	uint64_t scheduler_period;
+	char *governor_name;
+};
+
 struct rpc_thread_info g_threads_info[RPC_MAX_THREADS];
 struct rpc_poller_info g_pollers_info[RPC_MAX_POLLERS];
 struct rpc_core_info g_cores_info[RPC_MAX_CORES];
+struct rpc_scheduler g_scheduler_info;
 
 static void
 init_str_len(void)
@@ -552,6 +559,18 @@ rpc_decode_cores_array(struct spdk_json_val *val, struct rpc_core_info *out,
 end:
 	return rc;
 }
+
+static void
+free_rpc_scheduler(struct rpc_scheduler *req)
+{
+	free(req->scheduler_name);
+	free(req->governor_name);
+}
+
+static const struct spdk_json_object_decoder rpc_scheduler_decoders[] = {
+	{"scheduler_name", offsetof(struct rpc_scheduler, scheduler_name), spdk_json_decode_string},
+	{"scheduler_period", offsetof(struct rpc_scheduler, scheduler_period), spdk_json_decode_uint64},
+};
 
 static int
 rpc_send_req(char *rpc_name, struct spdk_jsonrpc_client_response **resp)
@@ -1075,6 +1094,35 @@ get_cores_data(void)
 
 end:
 	pthread_mutex_unlock(&g_thread_lock);
+	spdk_jsonrpc_client_free_response(json_resp);
+	return rc;
+}
+
+static int
+get_scheduler_data(void)
+{
+	struct spdk_jsonrpc_client_response *json_resp = NULL;
+	struct rpc_scheduler scheduler_info;
+	int rc = 0;
+
+	rc = rpc_send_req("framework_get_scheduler", &json_resp);
+	if (rc) {
+		return rc;
+	}
+
+	memset(&scheduler_info, 0, sizeof(scheduler_info));
+	if (spdk_json_decode_object(json_resp->result, rpc_scheduler_decoders,
+				    SPDK_COUNTOF(rpc_scheduler_decoders), &scheduler_info)) {
+		rc = -EINVAL;
+	} else {
+		pthread_mutex_lock(&g_thread_lock);
+
+		free_rpc_scheduler(&g_scheduler_info);
+
+		memcpy(&g_scheduler_info, &scheduler_info, sizeof(struct rpc_scheduler));
+		pthread_mutex_unlock(&g_thread_lock);
+	}
+
 	spdk_jsonrpc_client_free_response(json_resp);
 	return rc;
 }
@@ -2632,6 +2680,10 @@ data_thread_routine(void *arg)
 		if (rc) {
 			print_bottom_message("ERROR occurred while getting pollers data");
 		}
+		rc = get_scheduler_data();
+		if (rc) {
+			print_bottom_message("ERROR occurred while getting scheduler data");
+		}
 
 		usleep(g_sleep_time * SPDK_SEC_TO_USEC);
 	}
@@ -2881,6 +2933,7 @@ show_stats(pthread_t *data_thread)
 		free_rpc_threads_stats(&g_threads_info[i]);
 	}
 	free_rpc_core_info(g_cores_info, g_last_cores_count);
+	free_rpc_scheduler(&g_scheduler_info);
 }
 
 static void
