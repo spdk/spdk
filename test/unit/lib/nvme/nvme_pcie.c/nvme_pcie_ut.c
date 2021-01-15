@@ -38,6 +38,7 @@
 #define UNIT_TEST_NO_VTOPHYS
 
 #include "nvme/nvme_pcie.c"
+#include "nvme/nvme_pcie_common.c"
 #include "common/lib/nvme/common_stubs.h"
 
 pid_t g_spdk_nvme_pid;
