@@ -736,7 +736,6 @@ get_and_print_zns_zone_report(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 	outstanding_commands = 0;
 
 	report_bufsize = spdk_nvme_ns_get_max_io_xfer_size(ns);
-	max_zones_per_buf = (report_bufsize - sizeof(*report_buf)) / sizeof(report_buf->descs[0]);
 	report_buf = malloc(report_bufsize);
 	if (!report_buf) {
 		printf("Zone report allocation failed!\n");
@@ -759,7 +758,7 @@ get_and_print_zns_zone_report(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 		if (spdk_nvme_zns_report_zones(ns, qpair, report_buf, report_bufsize,
 					       slba, SPDK_NVME_ZRA_LIST_ALL, true,
 					       get_zns_zone_report_completion, NULL)) {
-			printf("spdk_nvme_zns_report_zones() failed\n");
+			fprintf(stderr, "spdk_nvme_zns_report_zones() failed\n");
 			exit(1);
 		} else {
 			outstanding_commands++;
@@ -769,7 +768,11 @@ get_and_print_zns_zone_report(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 			spdk_nvme_qpair_process_completions(qpair, 0);
 		}
 
-		assert(report_buf->nr_zones <= max_zones_per_buf);
+		max_zones_per_buf = (report_bufsize - sizeof(*report_buf)) / sizeof(report_buf->descs[0]);
+		if (report_buf->nr_zones > max_zones_per_buf) {
+			fprintf(stderr, "nr_zones too big\n");
+			exit(1);
+		}
 
 		if (!report_buf->nr_zones) {
 			break;
