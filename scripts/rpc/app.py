@@ -37,7 +37,7 @@ def framework_get_reactors(client):
     return client.call('framework_get_reactors')
 
 
-def framework_set_scheduler(client, name, period):
+def framework_set_scheduler(client, name, period=None):
     """Select threads scheduler that will be activated and its period.
 
     Args:
