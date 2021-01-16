@@ -1178,7 +1178,9 @@ _idxd_batch_prep_nop(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch
 	/* Command specific. */
 	desc->opcode = IDXD_OPCODE_NOOP;
 	/* TODO: temp workaround for simulator.  Remove when fixed or w/silicon. */
-	desc->xfer_size = 1;
+	if (chan->idxd->registers.gencap.raw == 0x1833f011f) {
+		desc->xfer_size = 1;
+	}
 
 	return 0;
 }
