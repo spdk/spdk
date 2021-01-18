@@ -146,11 +146,11 @@ Before using PCM Tools in nvmf perf scripts it needs to be installed on Target m
 PCM source and instructions are available on https://github.com/opcm/pcm.
 To enable PCM in perf test you need to add Target setting in config.json file:
 ```
-"pcm_settings": ["pcm_directory", "measure_cpu", "measure_memory", delay_time, measure_interval, sample_count]
+"pcm_settings": ["pcm_directory", "measure_cpu", "measure_memory", "measure_power", delay_time, measure_interval, sample_count]
 ```
 example:
 ```
-"pcm_settings": ["/tmp/pcm", true, true, 10, 1, 30]
+"pcm_settings": ["/tmp/pcm", true, true, true, 10, 1, 30]
 ```
 Example above will run PCM measure for cpu and memory, with start delay 10s, sample every 1 second,
 and 30 samples for cpu measure. PCM memory do not support sample count.

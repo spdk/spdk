@@ -47,6 +47,7 @@ class Target(Server):
         super(Target, self).__init__(name, username, password, mode, nic_ips, transport)
         self.null_block = null_block_devices
         self.enable_sar = False
+        self.enable_pcm_power = False
         self.enable_pcm_memory = False
         self.enable_pcm = False
         self.enable_bandwidth = False
@@ -58,7 +59,8 @@ class Target(Server):
             self.enable_sar, self.sar_delay, self.sar_interval, self.sar_count = sar_settings
 
         if pcm_settings:
-            self.pcm_dir, self.enable_pcm, self.enable_pcm_memory, self.pcm_delay, self.pcm_interval, self.pcm_count = pcm_settings
+            self.pcm_dir, self.enable_pcm, self.enable_pcm_memory, self.enable_pcm_power,\
+                self.pcm_delay, self.pcm_interval, self.pcm_count = pcm_settings
 
         if bandwidth_settings:
             self.enable_bandwidth, self.bandwidth_count = bandwidth_settings
@@ -277,6 +279,13 @@ class Target(Server):
         skt = df.loc[:, df.columns.get_level_values(1).isin({'UPI0', 'UPI1', 'UPI2'})]
         skt_pcm_file_name = "_".join(["skt", pcm_file_name])
         skt.to_csv(os.path.join(results_dir, skt_pcm_file_name), index=False)
+
+    def measure_pcm_power(self, results_dir, pcm_power_file_name):
+        time.sleep(self.pcm_delay)
+        out = subprocess.check_output("%s/pcm-power.x %s -i=%s" % (self.pcm_dir, self.pcm_interval, self.pcm_count),
+                                      shell=True).decode(encoding="utf-8")
+        with open(os.path.join(results_dir, pcm_power_file_name), "w") as fh:
+            fh.write(out)
 
     def measure_bandwidth(self, results_dir, bandwidth_file_name):
         bwm = subprocess.run("bwm-ng -o csv -F %s/%s -a 1 -t 1000 -c %s" % (results_dir, bandwidth_file_name,
@@ -980,6 +989,12 @@ if __name__ == "__main__":
             pcm_file_name = "_".join(["pcm_memory", str(block_size), str(rw), str(io_depth)])
             pcm_file_name = ".".join([pcm_file_name, "csv"])
             t = threading.Thread(target=target_obj.measure_pcm_memory, args=(target_results_dir, pcm_file_name,))
+            threads.append(t)
+
+        if target_obj.enable_pcm_power:
+            pcm_file_name = "_".join(["pcm_power", str(block_size), str(rw), str(io_depth)])
+            pcm_file_name = ".".join([pcm_file_name, "csv"])
+            t = threading.Thread(target=target_obj.measure_pcm_power, args=(target_results_dir, pcm_file_name,))
             threads.append(t)
 
         if target_obj.enable_bandwidth:
