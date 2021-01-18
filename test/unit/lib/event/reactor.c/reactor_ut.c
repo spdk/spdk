@@ -45,6 +45,7 @@ test_create_reactor(void)
 	struct spdk_reactor reactor = {};
 
 	g_reactors = &reactor;
+	g_reactor_count = 1;
 
 	reactor_construct(&reactor, 0);
 

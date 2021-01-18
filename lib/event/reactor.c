@@ -55,6 +55,7 @@
 #define SPDK_EVENT_BATCH_SIZE		8
 
 static struct spdk_reactor *g_reactors;
+static uint32_t g_reactor_count;
 static struct spdk_cpuset g_reactor_core_mask;
 static enum spdk_reactor_state	g_reactor_state = SPDK_REACTOR_STATE_UNINITIALIZED;
 
@@ -197,7 +198,7 @@ spdk_reactors_init(void)
 {
 	struct spdk_reactor *reactor;
 	int rc;
-	uint32_t i, last_core, current_core;
+	uint32_t i, current_core;
 	char mempool_name[32];
 
 	snprintf(mempool_name, sizeof(mempool_name), "evtpool_%d", getpid());
@@ -213,17 +214,17 @@ spdk_reactors_init(void)
 	}
 
 	/* struct spdk_reactor must be aligned on 64 byte boundary */
-	last_core = spdk_env_get_last_core();
+	g_reactor_count = spdk_env_get_last_core() + 1;
 	rc = posix_memalign((void **)&g_reactors, 64,
-			    (last_core + 1) * sizeof(struct spdk_reactor));
+			    g_reactor_count * sizeof(struct spdk_reactor));
 	if (rc != 0) {
 		SPDK_ERRLOG("Could not allocate array size=%u for g_reactors\n",
-			    last_core + 1);
+			    g_reactor_count);
 		spdk_mempool_free(g_spdk_event_mempool);
 		return -1;
 	}
 
-	g_core_infos = calloc(last_core + 1, sizeof(*g_core_infos));
+	g_core_infos = calloc(g_reactor_count, sizeof(*g_core_infos));
 	if (g_core_infos == NULL) {
 		SPDK_ERRLOG("Could not allocate memory for g_core_infos\n");
 		spdk_mempool_free(g_spdk_event_mempool);
@@ -231,7 +232,7 @@ spdk_reactors_init(void)
 		return -ENOMEM;
 	}
 
-	memset(g_reactors, 0, (last_core + 1) * sizeof(struct spdk_reactor));
+	memset(g_reactors, 0, (g_reactor_count) * sizeof(struct spdk_reactor));
 
 	spdk_thread_lib_init_ext(reactor_thread_op, reactor_thread_op_supported,
 				 sizeof(struct spdk_lw_thread));
@@ -507,12 +508,10 @@ static void
 _reactors_scheduler_fini(void *arg1, void *arg2)
 {
 	struct spdk_reactor *reactor;
-	uint32_t last_core;
 	uint32_t i;
 
 	if (g_reactor_state == SPDK_REACTOR_STATE_RUNNING) {
-		last_core = spdk_env_get_last_core();
-		g_scheduler->balance(g_core_infos, last_core + 1, &g_governor);
+		g_scheduler->balance(g_core_infos, g_reactor_count, &g_governor);
 
 		/* Reschedule based on the balancing output */
 		_threads_reschedule(g_core_infos);
@@ -921,7 +920,7 @@ _reactor_schedule_thread(struct spdk_thread *thread)
 	pthread_mutex_lock(&g_scheduler_mtx);
 	if (core == SPDK_ENV_LCORE_ID_ANY) {
 		for (i = 0; i < spdk_env_get_core_count(); i++) {
-			if (g_next_core > spdk_env_get_last_core()) {
+			if (g_next_core >= g_reactor_count) {
 				g_next_core = spdk_env_get_first_core();
 			}
 			core = g_next_core;
@@ -1025,7 +1024,7 @@ on_reactor(void *arg1, void *arg2)
 
 	cr->cur_core = spdk_env_get_next_core(cr->cur_core);
 
-	if (cr->cur_core > spdk_env_get_last_core()) {
+	if (cr->cur_core >= g_reactor_count) {
 		SPDK_DEBUGLOG(reactor, "Completed reactor iteration\n");
 
 		evt = spdk_event_allocate(cr->orig_core, cr->cpl, cr->arg1, cr->arg2);
