@@ -31,7 +31,7 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../../..)
 
 TEST_FILE = bdev_ocssd_ut.c
 
