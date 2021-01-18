@@ -70,6 +70,7 @@ static struct spdk_scheduler *g_scheduler;
 static struct spdk_scheduler *g_new_scheduler;
 static struct spdk_reactor *g_scheduling_reactor;
 static uint64_t g_scheduler_period;
+static uint32_t g_scheduler_core_number;
 static struct spdk_scheduler_core_info *g_core_infos = NULL;
 
 TAILQ_HEAD(, spdk_governor) g_governor_list
@@ -670,22 +671,54 @@ _threads_reschedule(struct spdk_scheduler_core_info *cores_info)
 }
 
 static void
-_reactors_scheduler_fini(void *arg1, void *arg2)
+_reactors_scheduler_fini(void)
 {
 	struct spdk_reactor *reactor;
 	uint32_t i;
 
+	/* Reschedule based on the balancing output */
+	_threads_reschedule(g_core_infos);
+
+	SPDK_ENV_FOREACH_CORE(i) {
+		reactor = spdk_reactor_get(i);
+		assert(reactor != NULL);
+		reactor->flags.is_scheduling = false;
+	}
+}
+
+static void
+_reactors_scheduler_update_core_mode(void *ctx)
+{
+	struct spdk_reactor *reactor;
+	int rc = 0;
+
+	g_scheduler_core_number = spdk_env_get_next_core(g_scheduler_core_number);
+	if (g_scheduler_core_number == SPDK_ENV_LCORE_ID_ANY) {
+		_reactors_scheduler_fini();
+		return;
+	}
+
+	reactor = spdk_reactor_get(g_scheduler_core_number);
+	if (reactor->in_interrupt != g_core_infos[g_scheduler_core_number].interrupt_mode) {
+		/* Switch next found reactor to new state */
+		rc = spdk_reactor_set_interrupt_mode(g_scheduler_core_number,
+						     g_core_infos[g_scheduler_core_number].interrupt_mode, _reactors_scheduler_update_core_mode, NULL);
+		if (rc == 0) {
+			return;
+		}
+	}
+
+	_reactors_scheduler_update_core_mode(NULL);
+}
+
+static void
+_reactors_scheduler_balance(void *arg1, void *arg2)
+{
 	if (g_reactor_state == SPDK_REACTOR_STATE_RUNNING) {
 		g_scheduler->balance(g_core_infos, g_reactor_count, &g_governor);
 
-		/* Reschedule based on the balancing output */
-		_threads_reschedule(g_core_infos);
-
-		SPDK_ENV_FOREACH_CORE(i) {
-			reactor = spdk_reactor_get(i);
-			assert(reactor != NULL);
-			reactor->flags.is_scheduling = false;
-		}
+		g_scheduler_core_number = spdk_env_get_first_core();
+		_reactors_scheduler_update_core_mode(NULL);
 	}
 }
 
@@ -763,7 +796,7 @@ _reactors_scheduler_gather_metrics(void *arg1, void *arg2)
 	/* If we've looped back around to the scheduler thread, move to the next phase */
 	if (next_core == g_scheduling_reactor->lcore) {
 		/* Phase 2 of scheduling is rebalancing - deciding which threads to move where */
-		evt = spdk_event_allocate(next_core, _reactors_scheduler_fini, NULL, NULL);
+		evt = spdk_event_allocate(next_core, _reactors_scheduler_balance, NULL, NULL);
 		spdk_event_call(evt);
 		return;
 	}
