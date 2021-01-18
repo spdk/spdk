@@ -59,7 +59,7 @@ struct spdk_fio_options {
 	char *conf;
 	char *json_conf;
 	unsigned mem_mb;
-	bool mem_single_seg;
+	int mem_single_seg;
 };
 
 struct spdk_fio_request {
@@ -789,6 +789,7 @@ static struct fio_option options[] = {
 		.type		= FIO_OPT_BOOL,
 		.off1		= offsetof(struct spdk_fio_options, mem_single_seg),
 		.help		= "If set to 1, SPDK will use just a single hugetlbfs file",
+		.def            = "0",
 		.category	= FIO_OPT_C_ENGINE,
 		.group		= FIO_OPT_G_INVALID,
 	},
