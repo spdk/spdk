@@ -316,6 +316,27 @@ int spdk_accel_batch_prep_crc32c(struct spdk_io_channel *ch, struct spdk_accel_b
 				 spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
+ * Synchronous call to prepare a chained crc32c request into a previously initialized batch
+ *  created with spdk_accel_batch_create(). The callback will be called when the crc32c
+ *  completes after the batch has been submitted by an asynchronous call to
+ *  spdk_accel_batch_submit().
+ *
+ * \param ch I/O channel associated with this call.
+ * \param batch Handle provided when the batch was started with spdk_accel_batch_create().
+ * \param dst Destination to write the CRC-32C to.
+ * \param iovs The io vector array which stores the src data and len.
+ * \param iovcnt The size of the iov.
+ * \param seed Four byte seed value.
+ * \param cb_fn Called when this operation completes.
+ * \param cb_arg Callback argument.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_accel_batch_prep_crc32cv(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
+				  uint32_t *dst, struct iovec *iovs, uint32_t iovcnt, uint32_t seed,
+				  spdk_accel_completion_cb cb_fn, void *cb_arg);
+
+/**
  * Submit a CRC-32C calculation request.
  *
  * This operation will calculate the 4 byte CRC32-C for the given data.
@@ -332,6 +353,24 @@ int spdk_accel_batch_prep_crc32c(struct spdk_io_channel *ch, struct spdk_accel_b
  */
 int spdk_accel_submit_crc32c(struct spdk_io_channel *ch, uint32_t *dst, void *src, uint32_t seed,
 			     uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg);
+
+/**
+ * Submit a chained CRC-32C calculation request.
+ *
+ * This operation will calculate the 4 byte CRC32-C for the given data.
+ *
+ * \param ch I/O channel associated with this call.
+ * \param dst Destination to write the CRC-32C to.
+ * \param iovs The io vector array which stores the src data and len.
+ * \param iovcnt The size of the iov.
+ * \param seed Four byte seed value.
+ * \param cb_fn Called when this CRC-32C operation completes.
+ * \param cb_arg Callback argument.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_accel_submit_crc32cv(struct spdk_io_channel *ch, uint32_t *dst, struct iovec *iovs,
+			      uint32_t iovcnt, uint32_t seed, spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 struct spdk_json_write_ctx;
 

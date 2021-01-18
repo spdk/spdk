@@ -321,6 +321,21 @@ spdk_accel_submit_crc32c(struct spdk_io_channel *ch, uint32_t *dst, void *src, u
 	}
 }
 
+/* Accel framework public API for chained CRC-32C function */
+int
+spdk_accel_submit_crc32cv(struct spdk_io_channel *ch, uint32_t *dst, struct iovec *iov,
+			  uint32_t iov_cnt, uint32_t seed, spdk_accel_completion_cb cb_fn, void *cb_arg)
+{
+	if (iov == NULL) {
+		SPDK_ERRLOG("iov should not be NULL");
+		return -EINVAL;
+	}
+
+	assert(iov_cnt == 1);
+
+	return spdk_accel_submit_crc32c(ch, dst, iov[0].iov_base, seed, iov[0].iov_len, cb_fn, cb_arg);
+}
+
 /* Accel framework public API for getting max operations for a batch. */
 uint32_t
 spdk_accel_batch_get_max(struct spdk_io_channel *ch)
@@ -470,6 +485,23 @@ spdk_accel_batch_prep_crc32c(struct spdk_io_channel *ch, struct spdk_accel_batch
 	}
 
 	return 0;
+}
+
+int
+spdk_accel_batch_prep_crc32cv(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
+			      uint32_t *dst, struct iovec *iovs, uint32_t iov_cnt, uint32_t seed,
+			      spdk_accel_completion_cb cb_fn, void *cb_arg)
+{
+	if (iovs == NULL) {
+		SPDK_ERRLOG("iovs should not be NULL\n");
+		return -EINVAL;
+	}
+
+	assert(iov_cnt == 1);
+
+	return spdk_accel_batch_prep_crc32c(ch, batch, dst, iovs[0].iov_base, seed, iovs[0].iov_len, cb_fn,
+					    cb_arg);
+
 }
 
 /* Accel framework public API for batch_create function. */

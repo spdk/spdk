@@ -74,6 +74,7 @@ struct display_info {
 
 struct ap_task {
 	void			*src;
+	struct iovec		iov;
 	void			*dst;
 	void			*dst2;
 	struct worker_thread	*worker;
@@ -243,6 +244,8 @@ _get_task_data_bufs(struct ap_task *task)
 		return -ENOMEM;
 	}
 	memset(task->src, DATA_PATTERN, g_xfer_size_bytes);
+	task->iov.iov_base = task->src;
+	task->iov.iov_len = g_xfer_size_bytes;
 
 	task->dst = spdk_dma_zmalloc(g_xfer_size_bytes, align, NULL);
 	if (task->dst == NULL) {
@@ -312,9 +315,9 @@ _submit_single(struct worker_thread *worker, struct ap_task *task)
 					    g_xfer_size_bytes, accel_done, task);
 		break;
 	case ACCEL_CRC32C:
-		rc = spdk_accel_submit_crc32c(worker->ch, (uint32_t *)task->dst,
-					      task->src, g_crc32c_seed,
-					      g_xfer_size_bytes, accel_done, task);
+		rc = spdk_accel_submit_crc32cv(worker->ch, (uint32_t *)task->dst,
+					       &task->iov, 1, g_crc32c_seed,
+					       accel_done, task);
 		break;
 	case ACCEL_COMPARE:
 		random_num = rand() % 100;
@@ -372,8 +375,8 @@ _batch_prep_cmd(struct worker_thread *worker, struct ap_task *task,
 						g_xfer_size_bytes, accel_done, task);
 		break;
 	case ACCEL_CRC32C:
-		rc = spdk_accel_batch_prep_crc32c(worker->ch, batch, (uint32_t *)task->dst,
-						  task->src, g_crc32c_seed, g_xfer_size_bytes, accel_done, task);
+		rc = spdk_accel_batch_prep_crc32cv(worker->ch, batch, (uint32_t *)task->dst,
+						   &task->iov, 1, g_crc32c_seed, accel_done, task);
 		break;
 	default:
 		assert(false);

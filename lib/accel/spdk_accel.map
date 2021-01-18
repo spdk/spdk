@@ -14,6 +14,7 @@
 	spdk_accel_batch_prep_compare;
 	spdk_accel_batch_prep_fill;
 	spdk_accel_batch_prep_crc32c;
+	spdk_accel_batch_prep_crc32cv;
 	spdk_accel_batch_submit;
 	spdk_accel_batch_cancel;
 	spdk_accel_submit_copy;
@@ -21,6 +22,7 @@
 	spdk_accel_submit_compare;
 	spdk_accel_submit_fill;
 	spdk_accel_submit_crc32c;
+	spdk_accel_submit_crc32cv;
 	spdk_accel_write_config_json;
 
 	# functions needed by modules

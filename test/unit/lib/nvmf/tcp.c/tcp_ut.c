@@ -227,10 +227,10 @@ DEFINE_STUB(spdk_accel_engine_get_io_channel,
 	    (void),
 	    NULL);
 
-DEFINE_STUB(spdk_accel_submit_crc32c,
+DEFINE_STUB(spdk_accel_submit_crc32cv,
 	    int,
-	    (struct spdk_io_channel *ch, uint32_t *dst, void *src, uint32_t seed,
-	     uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg),
+	    (struct spdk_io_channel *ch, uint32_t *dst, struct iovec *iovs,
+	     uint32_t iovcnt, uint32_t seed, spdk_accel_completion_cb cb_fn, void *cb_arg),
 	    0);
 
 DEFINE_STUB(spdk_nvmf_bdev_ctrlr_nvme_passthru_admin,

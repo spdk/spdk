@@ -12,6 +12,12 @@ Only one OCSSD bdev can be created for one OCSSD namespace.
 Added spdk_pci_device_allow API to allow applications to add PCI addresses to
 the allowed list after the application has started.
 
+### accel
+
+Two new accelerated crc32 functions 'spdk_accel_submit_crc32cv' and
+'spdk_accel_batch_prep_crc32cv' are added in order to provide the
+chained accelerated CRC32 computation support.
+
 ### nvme
 
 Added `spdk_nvme_qpair_get_optimal_poll_group` function and `qpair_get_optimal_poll_group`

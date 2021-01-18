@@ -873,11 +873,13 @@ nvmf_tcp_qpair_write_pdu(struct spdk_nvmf_tcp_qpair *tqpair,
 	pdu->cb_arg = cb_arg;
 	pdu->qpair = tqpair;
 
+	pdu->iov[0].iov_base = &pdu->hdr.raw;
+	pdu->iov[0].iov_len = hlen;
+
 	/* Header Digest */
 	if (g_nvme_tcp_hdgst[pdu->hdr.common.pdu_type] && tqpair->host_hdgst_enable) {
-		spdk_accel_submit_crc32c(tqpair->accel_channel, &pdu->header_digest_crc32,
-					 &pdu->hdr.raw, 0,
-					 hlen, header_crc32_accel_done, pdu);
+		spdk_accel_submit_crc32cv(tqpair->accel_channel, &pdu->header_digest_crc32,
+					  pdu->iov, 1, 0, header_crc32_accel_done, pdu);
 		return;
 	}
 
