@@ -498,6 +498,7 @@ nvme_pcie_ctrlr_allocate_bars(struct nvme_pcie_ctrlr *pctrlr)
 
 	pctrlr->regs = (volatile struct spdk_nvme_registers *)addr;
 	pctrlr->regs_size = size;
+	pctrlr->doorbell_base = (volatile uint32_t *)&pctrlr->regs->doorbell[0].sq_tdbl;
 	nvme_pcie_ctrlr_map_cmb(pctrlr);
 
 	return 0;

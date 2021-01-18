@@ -108,7 +108,6 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
 	struct nvme_tracker	*tr;
 	uint16_t		i;
-	volatile uint32_t	*doorbell_base;
 	uint16_t		num_trackers;
 	size_t			page_align = sysconf(_SC_PAGESIZE);
 	size_t			queue_align, queue_len;
@@ -204,9 +203,8 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 		}
 	}
 
-	doorbell_base = &pctrlr->regs->doorbell[0].sq_tdbl;
-	pqpair->sq_tdbl = doorbell_base + (2 * qpair->id + 0) * pctrlr->doorbell_stride_u32;
-	pqpair->cq_hdbl = doorbell_base + (2 * qpair->id + 1) * pctrlr->doorbell_stride_u32;
+	pqpair->sq_tdbl = pctrlr->doorbell_base + (2 * qpair->id + 0) * pctrlr->doorbell_stride_u32;
+	pqpair->cq_hdbl = pctrlr->doorbell_base + (2 * qpair->id + 1) * pctrlr->doorbell_stride_u32;
 
 	/*
 	 * Reserve space for all of the trackers in a single allocation.

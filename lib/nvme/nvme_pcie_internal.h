@@ -83,6 +83,8 @@ struct nvme_pcie_ctrlr {
 
 	/* Flag to indicate the MMIO register has been remapped */
 	bool is_remapped;
+
+	volatile uint32_t *doorbell_base;
 };
 
 struct nvme_tracker {
