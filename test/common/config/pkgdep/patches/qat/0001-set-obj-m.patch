@@ -1,0 +1,21 @@
+Due to git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/commit?id=6212804f2d78e86f15dba5b46a4065cbf1403cde
+built-in objects are not being built for the external modules anymore. To mitigate, don't set obj-m to an empty
+list to force the build.
+
+---
+diff --git a/quickassist/build_system/build_files/OS/linux_2.6_kernel_space_rules.mk b/quickassist/build_system/build_files/OS/linux_2.6_kernel_space_rules.mk
+index 71bbeb7..324fa96 100644
+--- a/quickassist/build_system/build_files/OS/linux_2.6_kernel_space_rules.mk
++++ b/quickassist/build_system/build_files/OS/linux_2.6_kernel_space_rules.mk
+@@ -72,7 +72,7 @@ endif
+ 
+ $(LIB_STATIC): dirs
+ 	@echo 'Creating static library ${LIB_STATIC}'; \
+-	$(MAKE) -C $(KERNEL_SOURCE_ROOT)/ M=$(PWD) obj-m=""; \
++	$(MAKE) -C $(KERNEL_SOURCE_ROOT)/ M=$(PWD); \
+ 	echo 'Copying outputs';\
+ 	test -f lib.a  &&  (ar -t lib.a | xargs ar -rcsD $(LIB_STATIC)); \
+ 	test -f $(LIB_STATIC)  &&  mv -f $(LIB_STATIC) $($(PROG_ACY)_FINAL_OUTPUT_DIR)/$(LIB_STATIC); \
+-- 
+2.26.2
+
