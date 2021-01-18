@@ -236,6 +236,8 @@ struct spdk_nvmf_fc_transport {
 
 static struct spdk_nvmf_fc_transport *g_nvmf_ftransport;
 
+static spdk_nvmf_transport_destroy_done_cb g_transport_destroy_done_cb = NULL;
+
 static TAILQ_HEAD(, spdk_nvmf_fc_port) g_spdk_nvmf_fc_port_list =
 	TAILQ_HEAD_INITIALIZER(g_spdk_nvmf_fc_port_list);
 
@@ -2011,17 +2013,22 @@ nvmf_fc_create(struct spdk_nvmf_transport_opts *opts)
 	return &g_nvmf_ftransport->transport;
 }
 
+static void
+nvmf_fc_destroy_done_cb(void *cb_arg)
+{
+	free(g_nvmf_ftransport);
+	if (g_transport_destroy_done_cb) {
+		g_transport_destroy_done_cb(cb_arg);
+		g_transport_destroy_done_cb = NULL;
+	}
+}
+
 static int
 nvmf_fc_destroy(struct spdk_nvmf_transport *transport,
 		spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg)
 {
 	if (transport) {
-		struct spdk_nvmf_fc_transport *ftransport;
 		struct spdk_nvmf_fc_poll_group *fgroup, *pg_tmp;
-
-		ftransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_fc_transport, transport);
-
-		free(ftransport);
 
 		/* clean up any FC poll groups still around */
 		TAILQ_FOREACH_SAFE(fgroup, &g_nvmf_fgroups, link, pg_tmp) {
@@ -2029,9 +2036,10 @@ nvmf_fc_destroy(struct spdk_nvmf_transport *transport,
 			free(fgroup);
 		}
 		g_nvmf_fgroup_count = 0;
+		g_transport_destroy_done_cb = cb_fn;
 
 		/* low level FC driver clean up */
-		nvmf_fc_lld_fini(cb_fn, cb_arg);
+		nvmf_fc_lld_fini(nvmf_fc_destroy_done_cb, cb_arg);
 	}
 
 	return 0;
