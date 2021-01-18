@@ -68,6 +68,7 @@ struct spdk_lw_thread {
 	bool				resched;
 	struct spdk_thread_stats	current_stats;
 	struct spdk_thread_stats	snapshot_stats;
+	struct spdk_thread_stats	last_stats;
 };
 
 struct spdk_reactor {

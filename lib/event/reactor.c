@@ -910,6 +910,7 @@ _reactor_schedule_thread(struct spdk_thread *thread)
 {
 	uint32_t core;
 	struct spdk_lw_thread *lw_thread;
+	struct spdk_thread_stats last_stats;
 	struct spdk_event *evt = NULL;
 	struct spdk_cpuset *cpumask;
 	uint32_t i;
@@ -919,7 +920,9 @@ _reactor_schedule_thread(struct spdk_thread *thread)
 	lw_thread = spdk_thread_get_ctx(thread);
 	assert(lw_thread != NULL);
 	core = lw_thread->lcore;
+	last_stats = lw_thread->last_stats;
 	memset(lw_thread, 0, sizeof(*lw_thread));
+	lw_thread->last_stats = last_stats;
 
 	pthread_mutex_lock(&g_scheduler_mtx);
 	if (core == SPDK_ENV_LCORE_ID_ANY) {
