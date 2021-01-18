@@ -395,7 +395,7 @@ export GIT_REPO_QEMU
 export GIT_REPO_LIBISCSI
 : ${GIT_REPO_INTEL_IPSEC_MB=https://github.com/spdk/intel-ipsec-mb.git}
 export GIT_REPO_INTEL_IPSEC_MB
-: ${DRIVER_LOCATION_QAT=https://01.org/sites/default/files/downloads//qat1.7.l.4.9.0-00008.tar.gz}
+: ${DRIVER_LOCATION_QAT=https://01.org/sites/default/files/downloads//qat1.7.l.4.12.0-00011.tar.gz}
 export DRIVER_LOCATION_QAT
 : ${GIT_REPO_GIT=https://github.com/git/git/archive/v${GIT_VERSION}.tar.gz}
 export GIT_REPO_GIT
