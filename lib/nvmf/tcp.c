@@ -316,6 +316,9 @@ static bool nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 				 struct spdk_nvmf_tcp_req *tcp_req);
 static void nvmf_tcp_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group);
 
+static void _nvmf_tcp_send_c2h_data(struct spdk_nvmf_tcp_qpair *tqpair,
+				    struct spdk_nvmf_tcp_req *tcp_req);
+
 static void
 nvmf_tcp_req_set_state(struct spdk_nvmf_tcp_req *tcp_req,
 		       enum spdk_nvmf_tcp_req_state state)
@@ -1468,6 +1471,14 @@ nvmf_tcp_pdu_c2h_data_complete(void *cb_arg)
 				tcp_req->req.qpair->transport, struct spdk_nvmf_tcp_transport, transport);
 
 	assert(tqpair != NULL);
+
+	if (spdk_unlikely(tcp_req->pdu->rw_offset < tcp_req->req.length)) {
+		SPDK_DEBUGLOG(nvmf_tcp, "sending another C2H part, offset %u length %u\n", tcp_req->pdu->rw_offset,
+			      tcp_req->req.length);
+		_nvmf_tcp_send_c2h_data(tqpair, tcp_req);
+		return;
+	}
+
 	if (ttransport->tcp_opts.c2h_success) {
 		nvmf_tcp_request_free(tcp_req);
 	} else {
@@ -2170,8 +2181,8 @@ nvmf_tcp_dif_error_to_compl_status(uint8_t err_type) {
 }
 
 static void
-nvmf_tcp_send_c2h_data(struct spdk_nvmf_tcp_qpair *tqpair,
-		       struct spdk_nvmf_tcp_req *tcp_req)
+_nvmf_tcp_send_c2h_data(struct spdk_nvmf_tcp_qpair *tqpair,
+			struct spdk_nvmf_tcp_req *tcp_req)
 {
 	struct spdk_nvmf_tcp_transport *ttransport = SPDK_CONTAINEROF(
 				tqpair->qpair.transport, struct spdk_nvmf_tcp_transport, transport);
@@ -2182,8 +2193,9 @@ nvmf_tcp_send_c2h_data(struct spdk_nvmf_tcp_qpair *tqpair,
 
 	SPDK_DEBUGLOG(nvmf_tcp, "enter\n");
 
-	rsp_pdu = nvmf_tcp_req_pdu_init(tcp_req);
+	rsp_pdu = tcp_req->pdu;
 	assert(rsp_pdu != NULL);
+	assert(tcp_req->pdu_in_use);
 
 	c2h_data = &rsp_pdu->hdr.c2h_data;
 	c2h_data->common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_C2H_DATA;
@@ -2196,8 +2208,8 @@ nvmf_tcp_send_c2h_data(struct spdk_nvmf_tcp_qpair *tqpair,
 
 	/* set the psh */
 	c2h_data->cccid = tcp_req->req.cmd->nvme_cmd.cid;
-	c2h_data->datal = tcp_req->req.length;
-	c2h_data->datao = 0;
+	c2h_data->datal = tcp_req->req.length - tcp_req->pdu->rw_offset;
+	c2h_data->datao = tcp_req->pdu->rw_offset;
 
 	/* set the padding */
 	rsp_pdu->padding_len = 0;
@@ -2226,9 +2238,49 @@ nvmf_tcp_send_c2h_data(struct spdk_nvmf_tcp_qpair *tqpair,
 	nvme_tcp_pdu_set_data_buf(rsp_pdu, tcp_req->req.iov, tcp_req->req.iovcnt,
 				  c2h_data->datao, c2h_data->datal);
 
+
+	c2h_data->common.flags |= SPDK_NVME_TCP_C2H_DATA_FLAGS_LAST_PDU;
+	if (ttransport->tcp_opts.c2h_success) {
+		c2h_data->common.flags |= SPDK_NVME_TCP_C2H_DATA_FLAGS_SUCCESS;
+	}
+
 	if (spdk_unlikely(tcp_req->req.dif.dif_insert_or_strip)) {
 		struct spdk_nvme_cpl *rsp = &tcp_req->req.rsp->nvme_cpl;
 		struct spdk_dif_error err_blk = {};
+		uint32_t mapped_length = 0;
+		uint32_t available_iovs = SPDK_COUNTOF(rsp_pdu->iov);
+		uint32_t ddgst_len = 0;
+
+		if (tqpair->host_ddgst_enable) {
+			/* Data digest consumes additional iov entry */
+			available_iovs--;
+			/* plen needs to be updated since nvme_tcp_build_iovs compares expected and actual plen */
+			ddgst_len = SPDK_NVME_TCP_DIGEST_LEN;
+			c2h_data->common.plen -= ddgst_len;
+		}
+		/* Temp call to estimate if data can be described by limited number of iovs.
+		 * iov vector will be rebuilt in nvmf_tcp_qpair_write_pdu */
+		nvme_tcp_build_iovs(rsp_pdu->iov, available_iovs, rsp_pdu, tqpair->host_hdgst_enable,
+				    false, &mapped_length);
+
+		if (mapped_length != c2h_data->common.plen) {
+			c2h_data->datal = mapped_length - (c2h_data->common.plen - c2h_data->datal);
+			SPDK_DEBUGLOG(nvmf_tcp,
+				      "Part C2H, data_len %u (of %u), PDU len %u, updated PDU len %u, offset %u\n",
+				      c2h_data->datal, tcp_req->req.length, c2h_data->common.plen, mapped_length, rsp_pdu->rw_offset);
+			c2h_data->common.plen = mapped_length;
+
+			/* Rebuild pdu->data_iov since data length is changed */
+			nvme_tcp_pdu_set_data_buf(rsp_pdu, tcp_req->req.iov, tcp_req->req.iovcnt, c2h_data->datao,
+						  c2h_data->datal);
+
+			c2h_data->common.flags &= ~(SPDK_NVME_TCP_C2H_DATA_FLAGS_LAST_PDU |
+						    SPDK_NVME_TCP_C2H_DATA_FLAGS_SUCCESS);
+		}
+
+		c2h_data->common.plen += ddgst_len;
+
+		assert(rsp_pdu->rw_offset <= tcp_req->req.length);
 
 		rc = spdk_dif_verify_stream(rsp_pdu->data_iov, rsp_pdu->data_iovcnt,
 					    0, rsp_pdu->data_len, rsp_pdu->dif_ctx, &err_blk);
@@ -2243,12 +2295,16 @@ nvmf_tcp_send_c2h_data(struct spdk_nvmf_tcp_qpair *tqpair,
 		}
 	}
 
-	c2h_data->common.flags |= SPDK_NVME_TCP_C2H_DATA_FLAGS_LAST_PDU;
-	if (ttransport->tcp_opts.c2h_success) {
-		c2h_data->common.flags |= SPDK_NVME_TCP_C2H_DATA_FLAGS_SUCCESS;
-	}
-
+	rsp_pdu->rw_offset += c2h_data->datal;
 	nvmf_tcp_qpair_write_pdu(tqpair, rsp_pdu, nvmf_tcp_pdu_c2h_data_complete, tcp_req);
+}
+
+static void
+nvmf_tcp_send_c2h_data(struct spdk_nvmf_tcp_qpair *tqpair,
+		       struct spdk_nvmf_tcp_req *tcp_req)
+{
+	nvmf_tcp_req_pdu_init(tcp_req);
+	_nvmf_tcp_send_c2h_data(tqpair, tcp_req);
 }
 
 static int
