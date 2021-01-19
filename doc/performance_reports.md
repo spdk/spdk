@@ -2,6 +2,7 @@
 
 ## Release 20.10
 
+- [SPDK 20.10 NVMe Bdev Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_nvme_bdev_perf_report_2010.pdf)
 - [SPDK 20.10 NVMe-oF TCP Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_tcp_perf_report_2010.pdf)
 - [SPDK 20.10 NVMe-oF RDMA Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_rdma_perf_report_2010.pdf)
 - [SPDK 20.10 Vhost Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_vhost_perf_report_2010.pdf)
