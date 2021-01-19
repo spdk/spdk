@@ -394,6 +394,9 @@ for vm_num in $used_vms; do
 		vm_check_scsi_location $vm_num
 	fi
 
+	block=$(printf '%s' $SCSI_DISK)
+	vm_exec "$vm_num" "echo none > /sys/class/block/$block/queue/scheduler"
+
 	if [[ -n "$vm_throttle" ]]; then
 		# Check whether cgroups or cgroupsv2 is used on guest system
 		# Simple, naive & quick approach as it should do the trick for simple
@@ -402,7 +405,6 @@ for vm_num in $used_vms; do
 		if vm_exec "$vm_num" "grep '^cgroup ' /proc/mounts"; then
 			c_gr_ver=1
 		fi
-		block=$(printf '%s' $SCSI_DISK)
 		major_minor=$(vm_exec "$vm_num" "cat /sys/block/$block/dev")
 
 		if [[ $c_gr_ver == 1 ]]; then
