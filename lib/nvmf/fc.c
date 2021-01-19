@@ -1881,7 +1881,7 @@ nvmf_fc_send_ersp_required(struct spdk_nvmf_fc_request *fc_req,
 
 	if (!(rsp_cnt % fc_conn->esrp_ratio) ||
 	    (cmd->opc == SPDK_NVME_OPC_FABRIC) ||
-	    (status & 0xFFFE) || rsp->cdw0 || rsp->rsvd1 ||
+	    (status & 0xFFFE) || rsp->cdw0 || rsp->cdw1 ||
 	    (req->length != xfer_len)) {
 		return true;
 	}

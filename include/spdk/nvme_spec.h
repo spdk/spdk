@@ -1124,7 +1124,7 @@ struct spdk_nvme_cpl {
 	uint32_t		cdw0;	/* command-specific */
 
 	/* dword 1 */
-	uint32_t		rsvd1;
+	uint32_t		cdw1;	/* command-specific */
 
 	/* dword 2 */
 	uint16_t		sqhd;	/* submission queue head pointer */
