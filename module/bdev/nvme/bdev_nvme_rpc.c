@@ -242,7 +242,6 @@ rpc_bdev_nvme_attach_controller_done(void *cb_ctx, size_t bdev_count, int rc)
 
 exit:
 	free_rpc_bdev_nvme_attach_controller(&ctx->req);
-	free(ctx);
 }
 
 static void
