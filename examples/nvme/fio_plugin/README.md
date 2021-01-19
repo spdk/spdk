@@ -56,8 +56,10 @@ and instead only use '.'. This is a limitation in fio - it splits filenames on
 ':'. Also, the NVMe namespaces start at 1, not 0, and the namespace must be
 specified at the end of the string.
 
-Currently the SPDK fio plugin is limited to the thread usage model, so fio jobs must also specify thread=1
-when using the SPDK fio plugin.
+fio by default forks a separate process for every job. It also supports just spawning a separate
+thread in the same process for every job. The SPDK fio plugin is limited to this latter thread
+usage model, so fio jobs must also specify thread=1 when using the SPDK fio plugin. The SPDK fio
+plugin supports multiple threads - in this case, the "1" just means "use thread mode".
 
 fio also currently has a race condition on shutdown if dynamically loading the ioengine by specifying the
 engine's full path via the ioengine parameter - LD_PRELOAD is recommended to avoid this race condition.
