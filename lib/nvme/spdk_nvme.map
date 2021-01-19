@@ -168,6 +168,8 @@
 	spdk_nvme_zns_ns_get_num_zones;
 	spdk_nvme_zns_ctrlr_get_data;
 	spdk_nvme_zns_ctrlr_get_max_zone_append_size;
+	spdk_nvme_zns_zone_append;
+	spdk_nvme_zns_zone_append_with_md;
 	spdk_nvme_zns_close_zone;
 	spdk_nvme_zns_finish_zone;
 	spdk_nvme_zns_open_zone;

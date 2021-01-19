@@ -66,6 +66,26 @@ spdk_nvme_zns_ctrlr_get_max_zone_append_size(const struct spdk_nvme_ctrlr *ctrlr
 	return ctrlr->max_zone_append_size;
 }
 
+int
+spdk_nvme_zns_zone_append(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			  void *buffer, uint64_t zslba,
+			  uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+			  uint32_t io_flags)
+{
+	return nvme_ns_cmd_zone_append_with_md(ns, qpair, buffer, NULL, zslba, lba_count,
+					       cb_fn, cb_arg, io_flags, 0, 0);
+}
+
+int
+spdk_nvme_zns_zone_append_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+				  void *buffer, void *metadata, uint64_t zslba,
+				  uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+				  uint32_t io_flags, uint16_t apptag_mask, uint16_t apptag)
+{
+	return nvme_ns_cmd_zone_append_with_md(ns, qpair, buffer, metadata, zslba, lba_count,
+					       cb_fn, cb_arg, io_flags, apptag_mask, apptag);
+}
+
 static int
 nvme_zns_zone_mgmt_recv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			void *payload, uint32_t payload_size, uint64_t slba,

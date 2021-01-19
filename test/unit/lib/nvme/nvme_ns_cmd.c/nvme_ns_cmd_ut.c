@@ -1472,6 +1472,125 @@ test_nvme_ns_cmd_write_with_md(void)
 }
 
 static void
+test_nvme_ns_cmd_zone_append_with_md(void)
+{
+	struct spdk_nvme_ns             ns;
+	struct spdk_nvme_ctrlr          ctrlr;
+	struct spdk_nvme_qpair          qpair;
+	int                             rc = 0;
+	char				*buffer = NULL;
+	char				*metadata = NULL;
+	uint32_t			block_size, md_size;
+
+	block_size = 512;
+	md_size = 128;
+
+	buffer = malloc((block_size + md_size) * 384);
+	SPDK_CU_ASSERT_FATAL(buffer != NULL);
+	metadata = malloc(md_size * 384);
+	SPDK_CU_ASSERT_FATAL(metadata != NULL);
+
+	/*
+	 * 512 byte data + 128 byte metadata
+	 * Separate metadata buffer
+	 * Max data transfer size 256 KB
+	 * Max zone append size 128 KB
+	 *
+	 * 256 blocks * 512 bytes per block = 128 KB I/O
+	 * 128 KB I/O <= max zone append size. Test should pass.
+	 */
+	prepare_for_test(&ns, &ctrlr, &qpair, 512, 128, 256 * 1024, 0, false);
+	ctrlr.max_zone_append_size = 128 * 1024;
+	ctrlr.flags |= SPDK_NVME_CTRLR_ZONE_APPEND_SUPPORTED;
+	ns.csi = SPDK_NVME_CSI_ZNS;
+
+	rc = nvme_ns_cmd_zone_append_with_md(&ns, &qpair, buffer, metadata, 0x0, 256,
+					     NULL, NULL, 0, 0, 0);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_request != NULL);
+	SPDK_CU_ASSERT_FATAL(g_request->num_children == 0);
+
+	CU_ASSERT(g_request->payload.md == metadata);
+	CU_ASSERT(g_request->md_size == 256 * 128);
+	CU_ASSERT(g_request->payload_size == 256 * 512);
+
+	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
+
+	/*
+	 * 512 byte data + 128 byte metadata
+	 * Separate metadata buffer
+	 * Max data transfer size 256 KB
+	 * Max zone append size 128 KB
+	 *
+	 * 512 blocks * 512 bytes per block = 256 KB I/O
+	 * 256 KB I/O > max zone append size. Test should fail.
+	 */
+	prepare_for_test(&ns, &ctrlr, &qpair, 512, 128, 256 * 1024, 0, false);
+	ctrlr.max_zone_append_size = 128 * 1024;
+	ctrlr.flags |= SPDK_NVME_CTRLR_ZONE_APPEND_SUPPORTED;
+	ns.csi = SPDK_NVME_CSI_ZNS;
+
+	rc = nvme_ns_cmd_zone_append_with_md(&ns, &qpair, buffer, metadata, 0x0, 512,
+					     NULL, NULL, 0, 0, 0);
+	SPDK_CU_ASSERT_FATAL(rc == -EINVAL);
+	SPDK_CU_ASSERT_FATAL(g_request == NULL);
+
+	cleanup_after_test(&qpair);
+
+	/*
+	 * 512 byte data + 128 byte metadata
+	 * Extended LBA
+	 * Max data transfer size 256 KB
+	 * Max zone append size 128 KB
+	 *
+	 * 128 blocks * (512 + 128) bytes per block = 80 KB I/O
+	 * 80 KB I/O <= max zone append size. Test should pass.
+	 */
+	prepare_for_test(&ns, &ctrlr, &qpair, 512, 128, 256 * 1024, 0, true);
+	ctrlr.max_zone_append_size = 128 * 1024;
+	ctrlr.flags |= SPDK_NVME_CTRLR_ZONE_APPEND_SUPPORTED;
+	ns.csi = SPDK_NVME_CSI_ZNS;
+
+	rc = nvme_ns_cmd_zone_append_with_md(&ns, &qpair, buffer, NULL, 0x0, 128,
+					     NULL, NULL, 0, 0, 0);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_request != NULL);
+	SPDK_CU_ASSERT_FATAL(g_request->num_children == 0);
+
+	CU_ASSERT(g_request->payload.md == NULL);
+	CU_ASSERT(g_request->payload_offset == 0);
+	CU_ASSERT(g_request->payload_size == 128 * (512 + 128));
+
+	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
+
+	/*
+	 * 512 byte data + 128 byte metadata
+	 * Extended LBA
+	 * Max data transfer size 256 KB
+	 * Max zone append size 128 KB
+	 *
+	 * 256 blocks * (512 + 128) bytes per block = 160 KB I/O
+	 * 160 KB I/O > max zone append size. Test should fail.
+	 */
+	prepare_for_test(&ns, &ctrlr, &qpair, 512, 128, 256 * 1024, 0, true);
+	ctrlr.max_zone_append_size = 128 * 1024;
+	ctrlr.flags |= SPDK_NVME_CTRLR_ZONE_APPEND_SUPPORTED;
+	ns.csi = SPDK_NVME_CSI_ZNS;
+
+	rc = nvme_ns_cmd_zone_append_with_md(&ns, &qpair, buffer, NULL, 0x0, 256,
+					     NULL, NULL, 0, 0, 0);
+	SPDK_CU_ASSERT_FATAL(rc == -EINVAL);
+	SPDK_CU_ASSERT_FATAL(g_request == NULL);
+
+	cleanup_after_test(&qpair);
+
+	free(buffer);
+	free(metadata);
+}
+
+static void
 test_nvme_ns_cmd_read_with_md(void)
 {
 	struct spdk_nvme_ns             ns;
@@ -1762,6 +1881,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_ns_cmd_read_with_md);
 	CU_ADD_TEST(suite, test_nvme_ns_cmd_writev);
 	CU_ADD_TEST(suite, test_nvme_ns_cmd_write_with_md);
+	CU_ADD_TEST(suite, test_nvme_ns_cmd_zone_append_with_md);
 	CU_ADD_TEST(suite, test_nvme_ns_cmd_comparev);
 	CU_ADD_TEST(suite, test_nvme_ns_cmd_compare_and_write);
 	CU_ADD_TEST(suite, test_nvme_ns_cmd_compare_with_md);

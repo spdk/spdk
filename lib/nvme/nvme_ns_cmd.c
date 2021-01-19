@@ -405,6 +405,13 @@ _nvme_ns_cmd_rw(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	req->payload_offset = payload_offset;
 	req->md_offset = md_offset;
 
+	/* Zone append commands cannot be split. */
+	if (opc == SPDK_NVME_OPC_ZONE_APPEND) {
+		assert(ns->csi == SPDK_NVME_CSI_ZNS);
+		_nvme_ns_cmd_setup_request(ns, req, opc, lba, lba_count, io_flags, apptag_mask, apptag);
+		return req;
+	}
+
 	/*
 	 * Intel DC P3*00 NVMe controllers benefit from driver-assisted striping.
 	 * If this controller defines a stripe boundary and this I/O spans a stripe
@@ -720,6 +727,62 @@ spdk_nvme_ns_cmd_write(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 
 	req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_WRITE,
 			      io_flags, 0, 0, false);
+	if (req != NULL) {
+		return nvme_qpair_submit_request(qpair, req);
+	} else if (nvme_ns_check_request_length(lba_count,
+						ns->sectors_per_max_io,
+						ns->sectors_per_stripe,
+						qpair->ctrlr->opts.io_queue_requests)) {
+		return -EINVAL;
+	} else {
+		return -ENOMEM;
+	}
+}
+
+static int
+nvme_ns_cmd_check_zone_append(struct spdk_nvme_ns *ns, uint32_t lba_count, uint32_t io_flags)
+{
+	uint32_t sector_size;
+
+	/* Not all NVMe Zoned Namespaces support the zone append command. */
+	if (!(ns->ctrlr->flags & SPDK_NVME_CTRLR_ZONE_APPEND_SUPPORTED)) {
+		return -EINVAL;
+	}
+
+	sector_size =  _nvme_get_host_buffer_sector_size(ns, io_flags);
+
+	/* Fail a too large zone append command early. */
+	if (lba_count * sector_size > ns->ctrlr->max_zone_append_size) {
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+int
+nvme_ns_cmd_zone_append_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+				void *buffer, void *metadata, uint64_t zslba,
+				uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+				uint32_t io_flags, uint16_t apptag_mask, uint16_t apptag)
+{
+	struct nvme_request *req;
+	struct nvme_payload payload;
+	int ret;
+
+	if (!_is_io_flags_valid(io_flags)) {
+		return -EINVAL;
+	}
+
+	ret = nvme_ns_cmd_check_zone_append(ns, lba_count, io_flags);
+	if (ret) {
+		return ret;
+	}
+
+	payload = NVME_PAYLOAD_CONTIG(buffer, metadata);
+
+	req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, zslba, lba_count, cb_fn, cb_arg,
+			      SPDK_NVME_OPC_ZONE_APPEND,
+			      io_flags, apptag_mask, apptag, false);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
 	} else if (nvme_ns_check_request_length(lba_count,
