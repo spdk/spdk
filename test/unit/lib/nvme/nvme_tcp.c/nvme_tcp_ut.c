@@ -452,13 +452,12 @@ static void
 test_nvme_tcp_req_complete_safe(void)
 {
 	bool rc;
-	struct nvme_tcp_req tcp_req = {0};
-	struct nvme_request	req = {0};
-	struct spdk_nvme_qpair	qpair = {0};
-	struct nvme_tcp_qpair	tqpair = {0};
+	struct nvme_tcp_req	tcp_req = {0};
+	struct nvme_request	req = {{0}};
+	struct nvme_tcp_qpair	tqpair = {{0}};
 
 	tcp_req.req = &req;
-	tcp_req.req->qpair = &qpair;
+	tcp_req.req->qpair = &tqpair.qpair;
 	tcp_req.req->cb_fn = ut_nvme_complete_request;
 	tcp_req.tqpair = &tqpair;
 	tcp_req.state = NVME_TCP_REQ_ACTIVE;
