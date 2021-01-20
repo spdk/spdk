@@ -582,6 +582,9 @@ spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_
 		spdk_json_write_named_uint32(w, "max_io_size", transport->opts.max_io_size);
 		spdk_json_write_named_uint32(w, "io_unit_size", transport->opts.io_unit_size);
 		spdk_json_write_named_uint32(w, "max_aq_depth", transport->opts.max_aq_depth);
+		spdk_json_write_named_uint32(w, "num_shared_buffers", transport->opts.num_shared_buffers);
+		spdk_json_write_named_uint32(w, "buf_cache_size", transport->opts.buf_cache_size);
+		spdk_json_write_named_bool(w, "dif_insert_or_strip", transport->opts.dif_insert_or_strip);
 		if (transport->ops->dump_opts) {
 			transport->ops->dump_opts(transport, w);
 		}
