@@ -47,8 +47,13 @@ are added for Directive Send and Directive Receive command, respectively.
 
 Added a new function `spdk_nvme_ctrlr_reset_subsystem` to perform a NVMe
 subsystem reset. Note: The NVMf target does not support the subsystem reset yet.
+
 Add a new function 'spdk_nvme_bytes_to_numd' to transfer bytes to number of
 dwords.
+
+Added a new custom transport `SPDK_NVME_TRANSPORT_VFIOUSER` to enable NVMe
+driver running with NVMe over vfio-user target.
+
 ### event
 
 The pci_whitelist and pci_blacklist members of struct spdk_app_opts have been
