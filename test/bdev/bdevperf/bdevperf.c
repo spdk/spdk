@@ -229,7 +229,7 @@ performance_dump_job(struct bdevperf_aggregate_stats *stats, struct bdevperf_job
 	printf("\r Thread name: %s\n", spdk_thread_get_name(job->thread));
 	printf("\t Core Mask: 0x%s\n", spdk_cpuset_fmt(spdk_thread_get_cpumask(job->thread)));
 	if (job->verify) {
-		printf("\t Verification LBA range: start 0x%lx length 0x%lx\n",
+		printf("\t Verification LBA range: start 0x%" PRIx64 " length 0x%" PRIx64 "\n",
 		       job->ios_base, job->size_in_ios);
 	}
 	if (stats->ema_period == 0) {
