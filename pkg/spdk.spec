@@ -30,7 +30,7 @@ BuildRequires: doxygen mscgen graphviz
 %endif
 
 # Install dependencies
-Requires: dpdk >= 17.11, numactl-libs, openssl-libs
+Requires: dpdk >= 19.11, numactl-libs, openssl-libs
 Requires: libiscsi, libaio, libuuid
 # NVMe over Fabrics
 Requires: librdmacm, librdmacm
