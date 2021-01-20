@@ -382,6 +382,14 @@ function install_vagrant() {
 	done
 }
 
+function install_igb_uio() {
+	git clone "${GIT_REPO_DPDK_KMODS}" "$GIT_REPOS/dpdk-kmods"
+	(cd "$GIT_REPOS/dpdk-kmods/linux/igb_uio" && make -j ${jobs})
+	sudo mkdir -p "/lib/modules/$(uname -r)/extra/dpdk"
+	sudo cp "$GIT_REPOS/dpdk-kmods/linux/igb_uio/igb_uio.ko" "/lib/modules/$(uname -r)/extra/dpdk"
+	sudo depmod
+}
+
 GIT_VERSION=2.25.1
 : ${GIT_REPO_SPDK=https://github.com/spdk/spdk.git}
 export GIT_REPO_SPDK
@@ -403,6 +411,8 @@ export GIT_REPO_INTEL_IPSEC_MB
 export DRIVER_LOCATION_QAT
 : ${GIT_REPO_GIT=https://github.com/git/git/archive/v${GIT_VERSION}.tar.gz}
 export GIT_REPO_GIT
+: ${GIT_REPO_DPDK_KMODS=http://dpdk.org/git/dpdk-kmods}
+export GIT_REPO_DPDK_KMODS
 GIT_REPOS=${GIT_REPOS:-$HOME}
 
 gcc_version=$(gcc -dumpversion) gcc_version=${gcc_version%%.*}
@@ -427,6 +437,7 @@ else
 		install_rocksdb
 		install_flamegraph
 		install_qemu
+		install_igb_uio
 	)
 	install_extra_pkgs
 fi
