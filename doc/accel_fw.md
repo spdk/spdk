@@ -66,14 +66,14 @@ To use the IOAT engine, use the RPC [`ioat_scan_accel_engine`](https://spdk.io/d
 To use the DSA engine, use the RPC [`idxd_scan_accel_engine`](https://spdk.io/doc/jsonrpc.html) with an optional parameter of `-c` and provide a configuration number of either 0 or 1. These pre-defined configurations determine how the DSA engine will be setup in terms
 of work queues and engines.  The DSA engine is very flexible allowing for various configurations of these elements to either account for different quality of service requirements or to isolate hardware paths where the back end media is of varying latency (i.e. persistent memory vs DRAM).  The pre-defined configurations are as follows:
 
-0: Four separate work queues each backed with one DSA engine.  This is a generic
-configuration that provides 4 portals to submit operations to each with a
-single engine behind it providing some level of isolation as operations are
-submitted round-robin.
+0: A single work queue backed with four DSA engines.  This is a generic configuration
+that enables the hardware to best determine which engine to use as it pulls in new
+operations.
 
-1: Two separate work queues each backed with two DSA engines.  This is another
-generic configuration that provides 2 portals to submit operations to and
-lets the DSA hardware decide which engine to select based on loading.
+1: Two separate work queues each backed with two DSA engines. This is another
+generic configuration that is documented in the specification and allows the
+application to partition submissions across two work queues. This would be useful
+when different priorities might be desired per group.
 
 There are several other configurations that are possible that include quality
 of service parameters on the work queues that are not currently utilized by
