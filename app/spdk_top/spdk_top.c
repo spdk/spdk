@@ -1077,39 +1077,57 @@ copy_pollers(struct rpc_pollers *pollers, uint64_t pollers_count, enum spdk_poll
 }
 
 static uint8_t
-refresh_pollers_tab(uint8_t current_page)
+prepare_poller_data(uint8_t current_page, struct rpc_poller_info **pollers,
+		    uint64_t *count, uint8_t last_page)
 {
-	struct col_desc *col_desc = g_col_desc[POLLERS_TAB];
 	struct rpc_poller_thread_info *thread;
-	uint64_t *last_run_counter;
-	uint64_t i, count = 0;
-	uint16_t col, j;
-	uint8_t max_pages, item_index;
-	/* Init g_last_page with value != 0 to force store_last_run_counter() call in copy_pollers()
-	 * so that initial values for run_counter are stored in g_run_counter_history */
-	static uint8_t g_last_page = 0xF;
-	enum sort_type sorting;
-	char run_count[MAX_TIME_STR_LEN], period_ticks[MAX_PERIOD_STR_LEN];
-	struct rpc_poller_info *pollers[RPC_MAX_POLLERS];
+	uint64_t i;
 	bool reset_last_counter = false;
+	enum sort_type sorting;
 
 	for (i = 0; i < g_pollers_stats.pollers_threads.threads_count; i++) {
 		thread = &g_pollers_stats.pollers_threads.threads[i];
-		if (g_last_page != current_page) {
+		if (last_page != current_page) {
 			reset_last_counter = true;
 		}
 
 		copy_pollers(&thread->active_pollers, thread->active_pollers.pollers_count, SPDK_ACTIVE_POLLER,
-			     thread, &count, reset_last_counter, pollers);
+			     thread, count, reset_last_counter, pollers);
 		copy_pollers(&thread->timed_pollers, thread->timed_pollers.pollers_count, SPDK_TIMED_POLLER, thread,
-			     &count, reset_last_counter, pollers);
+			     count, reset_last_counter, pollers);
 		copy_pollers(&thread->paused_pollers, thread->paused_pollers.pollers_count, SPDK_PAUSED_POLLER,
-			     thread, &count, reset_last_counter, pollers);
+			     thread, count, reset_last_counter, pollers);
 	}
 
-	if (g_last_page != current_page) {
-		g_last_page = current_page;
+	if (last_page != current_page) {
+		last_page = current_page;
 	}
+
+	/* Timed pollers can switch their possition on a list because of how they work.
+	 * Let's sort them by name first so that they won't switch on data refresh */
+	sorting = BY_NAME;
+	qsort_r(pollers, *count, sizeof(pollers[0]), sort_pollers, (void *)&sorting);
+	sorting = USE_GLOBAL;
+	qsort_r(pollers, *count, sizeof(pollers[0]), sort_pollers, (void *)&sorting);
+
+	return last_page;
+}
+
+static uint8_t
+refresh_pollers_tab(uint8_t current_page)
+{
+	struct col_desc *col_desc = g_col_desc[POLLERS_TAB];
+	uint64_t *last_run_counter;
+	uint64_t i, count = 0;
+	uint16_t col, j;
+	uint8_t max_pages, item_index;
+	static uint8_t g_last_page = 0xF;
+	/* Init g_last_page with value != 0 to force store_last_run_counter() call in copy_pollers()
+	 * so that initial values for run_counter are stored in g_run_counter_history */
+	char run_count[MAX_TIME_STR_LEN], period_ticks[MAX_PERIOD_STR_LEN];
+	struct rpc_poller_info *pollers[RPC_MAX_POLLERS];
+
+	g_last_page = prepare_poller_data(current_page, pollers, &count, g_last_page);
 
 	max_pages = (count + g_max_data_rows - 1) / g_max_data_rows;
 
@@ -1129,13 +1147,6 @@ refresh_pollers_tab(uint8_t current_page)
 		refresh_pollers_tab(current_page);
 		return max_pages;
 	}
-
-	/* Timed pollers can switch their possition on a list because of how they work.
-	 * Let's sort them by name first so that they won't switch on data refresh */
-	sorting = BY_NAME;
-	qsort_r(pollers, count, sizeof(pollers[0]), sort_pollers, (void *)&sorting);
-	sorting = USE_GLOBAL;
-	qsort_r(pollers, count, sizeof(pollers[0]), sort_pollers, (void *)&sorting);
 
 	/* Display info */
 	for (i = current_page * g_max_data_rows;
