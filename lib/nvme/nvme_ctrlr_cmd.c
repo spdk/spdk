@@ -965,3 +965,59 @@ nvme_ctrlr_cmd_sanitize(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 
 	return rc;
 }
+
+static int
+nvme_ctrlr_cmd_directive(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
+			 uint32_t doper, uint32_t dtype, uint32_t dspec,
+			 void *payload, uint32_t payload_size, uint32_t cdw12,
+			 uint32_t cdw13, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+			 uint16_t opc_type, bool host_to_ctrlr)
+{
+	struct nvme_request *req = NULL;
+	struct spdk_nvme_cmd *cmd = NULL;
+	int rc;
+
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	req = nvme_allocate_request_user_copy(ctrlr->adminq, payload, payload_size,
+					      cb_fn, cb_arg, host_to_ctrlr);
+	if (req == NULL) {
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+		return -ENOMEM;
+	}
+	cmd = &req->cmd;
+	cmd->opc = opc_type;
+	cmd->nsid = nsid;
+
+	cmd->cdw10 = (payload_size >> 2) - 1;
+	cmd->cdw11_bits.directive.doper = doper;
+	cmd->cdw11_bits.directive.dtype = dtype;
+	cmd->cdw11_bits.directive.dspec = dspec;
+	cmd->cdw12 = cdw12;
+	cmd->cdw13 = cdw13;
+	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	return rc;
+}
+
+int
+spdk_nvme_ctrlr_cmd_directive_send(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
+				   uint32_t doper, uint32_t dtype, uint32_t dspec,
+				   void *payload, uint32_t payload_size, uint32_t cdw12,
+				   uint32_t cdw13, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	return nvme_ctrlr_cmd_directive(ctrlr, nsid, doper, dtype, dspec,
+					payload, payload_size, cdw12, cdw13, cb_fn, cb_arg,
+					SPDK_NVME_OPC_DIRECTIVE_SEND, true);
+}
+
+int
+spdk_nvme_ctrlr_cmd_directive_receive(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
+				      uint32_t doper, uint32_t dtype, uint32_t dspec,
+				      void *payload, uint32_t payload_size, uint32_t cdw12,
+				      uint32_t cdw13, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	return nvme_ctrlr_cmd_directive(ctrlr, nsid, doper, dtype, dspec,
+					payload, payload_size, cdw12, cdw13, cb_fn, cb_arg,
+					SPDK_NVME_OPC_DIRECTIVE_RECEIVE, false);
+}

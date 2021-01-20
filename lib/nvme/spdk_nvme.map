@@ -74,6 +74,8 @@
 	spdk_nvme_ctrlr_cmd_security_send;
 	spdk_nvme_ctrlr_security_receive;
 	spdk_nvme_ctrlr_security_send;
+	spdk_nvme_ctrlr_cmd_directive_receive;
+	spdk_nvme_ctrlr_cmd_directive_send;
 	spdk_nvme_ctrlr_get_flags;
 	spdk_nvme_ctrlr_attach_ns;
 	spdk_nvme_ctrlr_detach_ns;

@@ -440,6 +440,24 @@ nvme_ctrlr_cmd_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, struct spdk_
 }
 
 int
+spdk_nvme_ctrlr_cmd_directive_send(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
+				   uint32_t doper, uint32_t dtype, uint32_t dspec,
+				   void *payload, uint32_t payload_size, uint32_t cdw12,
+				   uint32_t cdw13, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	return 0;
+}
+
+int
+spdk_nvme_ctrlr_cmd_directive_receive(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
+				      uint32_t doper, uint32_t dtype, uint32_t dspec,
+				      void *payload, uint32_t payload_size, uint32_t cdw12,
+				      uint32_t cdw13, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	return 0;
+}
+
+int
 nvme_ctrlr_cmd_fw_commit(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_fw_commit *fw_commit,
 			 spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {

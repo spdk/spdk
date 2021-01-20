@@ -61,6 +61,7 @@ uint64_t PRP_ENTRY_2 = 4096;
 uint32_t format_nvme_nsid = 1;
 uint32_t sanitize_nvme_nsid = 1;
 uint32_t expected_host_id_size = 0xFF;
+uint32_t directive_nsid = 1;
 
 uint32_t expected_feature_ns = 2;
 uint32_t expected_feature_cdw10 = SPDK_NVME_FEAT_LBA_RANGE_TYPE;
@@ -323,6 +324,18 @@ static void verify_nvme_sanitize(struct nvme_request *req)
 	CU_ASSERT(req->cmd.cdw10 == 0x309);
 	CU_ASSERT(req->cmd.cdw11 == 0);
 	CU_ASSERT(req->cmd.nsid == sanitize_nvme_nsid);
+}
+
+static void verify_directive_receive(struct nvme_request *req)
+{
+	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_DIRECTIVE_RECEIVE);
+	CU_ASSERT(req->cmd.nsid == directive_nsid);
+}
+
+static void verify_directive_send(struct nvme_request *req)
+{
+	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_DIRECTIVE_SEND);
+	CU_ASSERT(req->cmd.nsid == directive_nsid);
 }
 
 struct nvme_request *
@@ -723,6 +736,33 @@ test_sanitize(void)
 
 }
 
+static void
+test_directive_receive(void)
+{
+	DECLARE_AND_CONSTRUCT_CTRLR();
+	verify_fn = verify_directive_receive;
+
+	spdk_nvme_ctrlr_cmd_directive_receive(&ctrlr, directive_nsid, 0, 0, 0, NULL, 0,
+					      0, 0, NULL, NULL);
+}
+
+static void
+test_directive_send(void)
+{
+	DECLARE_AND_CONSTRUCT_CTRLR();
+	verify_fn = verify_directive_send;
+
+	spdk_nvme_ctrlr_cmd_directive_send(&ctrlr, directive_nsid, 0, 0, 0, NULL, 0,
+					   0, 0, NULL, NULL);
+}
+
+static void
+test_directive(void)
+{
+	test_directive_receive();
+	test_directive_send();
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -752,6 +792,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_fw_commit);
 	CU_ADD_TEST(suite, test_fw_image_download);
 	CU_ADD_TEST(suite, test_sanitize);
+	CU_ADD_TEST(suite, test_directive);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
