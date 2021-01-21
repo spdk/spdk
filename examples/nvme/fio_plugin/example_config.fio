@@ -9,7 +9,6 @@ ramp_time=0
 runtime=2
 iodepth=128
 rw=randrw
-bs=4k
 
 [test]
 numjobs=1

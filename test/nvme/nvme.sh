@@ -30,7 +30,12 @@ function nvme_fio_test() {
 		if $SPDK_EXAMPLE_DIR/identify -r "trtype:PCIe traddr:${bdf}" | grep -E "^Number of Namespaces" - | grep -q "0" -; then
 			continue
 		fi
-		fio_nvme $PLUGIN_DIR/example_config.fio --filename="trtype=PCIe traddr=${bdf//:/.}"
+		if $SPDK_EXAMPLE_DIR/identify -r "trtype:PCIe traddr:${bdf}" | grep -q "Extended Data LBA"; then
+			bs=4160
+		else
+			bs=4096
+		fi
+		fio_nvme $PLUGIN_DIR/example_config.fio --filename="trtype=PCIe traddr=${bdf//:/.}" --bs="$bs"
 		ran_fio=true
 	done
 	$ran_fio || (echo "No valid NVMe drive found. Failing test." && false)
