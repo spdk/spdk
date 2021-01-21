@@ -144,7 +144,7 @@ for vf in "${qat_vf_bdfs[@]}"; do
 			echo "Your kernel's uio_pci_generic module does not support binding to virtual functions."
 			echo "It likely is missing Linux git commit ID acec09e67 which is needed to bind"
 			echo "uio_pci_generic to virtual functions which have no legacy interrupt vector."
-			echo "Please rebuild spdk with --with-igb-uio-driver and re-run this script specifying the igb_uio driver."
+			echo "Please build DPDK kernel module for igb_uio and re-run this script specifying the igb_uio driver."
 		fi
 		exit 1
 	fi

@@ -18,10 +18,8 @@ x86_64 system, or add `iommu.passthrough=1` on arm64 systems.
 
 There are also some instances where a user may not want to use `uio_pci_generic` or the kernel
 version they are using has a bug where `uio_pci_generic` [fails to bind to NVMe drives](https://github.com/spdk/spdk/issues/399).
-In these cases, users building with the DPDK submodule can build the `igb_uio` kernel module by
-supplying `--with-igb-uio-driver` to `./configure`. Upon a successful make, the file will be
-located at `dpdk/build/build/kmod/igb_uio.ko`. To ensure that the driver is properly bound, users
-should specify `DRIVER_OVERRIDE=/path/to/igb_uio.ko`.
+In these cases, users can build the `igb_uio` kernel module which can be found in dpdk-kmods repository.
+To ensure that the driver is properly bound, users should specify `DRIVER_OVERRIDE=/path/to/igb_uio.ko`.
 
 # Running SPDK as non-priviledged user {#system_configuration_nonroot}
 

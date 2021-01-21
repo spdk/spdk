@@ -49,10 +49,6 @@ function usage()
 	echo "                           example: /usr/share/dpdk/x86_64-default-linuxapp-gcc"
 	echo " env                       Use an alternate environment implementation instead of DPDK."
 	echo "                           Implies --without-dpdk."
-	echo " igb-uio-driver            Build DPDK's igb-uio driver."
-	echo "                           Required on some systems to use qat devices. This flag is"
-	echo "                           effective only with the default dpdk submodule."
-	echo "                           No path required"
 	echo " idxd                      Build the IDXD library and accel framework plug-in module."
 	echo "                           Disabled while experimental. Only built for x86 when enabled."
 	echo " crypto                    Build vbdev crypto module."
@@ -386,12 +382,6 @@ for i in "$@"; do
 		--without-vtune)
 			CONFIG[VTUNE_DIR]=
 			CONFIG[VTUNE]=n
-			;;
-		--with-igb-uio-driver)
-			CONFIG[IGB_UIO_DRIVER]=y
-			;;
-		--without-igb-uio-driver)
-			CONFIG[IGB_UIO_DRIVER]=n
 			;;
 		--with-ocf)
 			CONFIG[OCF]=y

@@ -429,9 +429,6 @@ function get_config_params() {
 		config_params+=" --with-dpdk=$SPDK_RUN_EXTERNAL_DPDK"
 	fi
 
-	if [[ $SPDK_TEST_USE_IGB_UIO -eq 1 ]]; then
-		config_params+=" --with-igb-uio-driver"
-	fi
 	echo "$config_params"
 	xtrace_restore
 }
@@ -1174,7 +1171,7 @@ function autotest_cleanup() {
 	$rootdir/scripts/setup.sh reset
 	$rootdir/scripts/setup.sh cleanup
 	if [ $(uname -s) = "Linux" ]; then
-		if grep -q '#define SPDK_CONFIG_IGB_UIO_DRIVER 1' $rootdir/include/spdk/config.h; then
+		if [[ $SPDK_TEST_USE_IGB_UIO -eq 1 ]]; then
 			[[ -e /sys/module/igb_uio ]] && rmmod igb_uio
 		else
 			modprobe -r uio_pci_generic

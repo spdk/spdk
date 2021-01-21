@@ -320,8 +320,7 @@ function configure_linux_pci() {
 		driver_name="igb_uio"
 		echo "WARNING: uio_pci_generic not detected - using $driver_name"
 	else
-		echo "No valid drivers found [vfio-pci, uio_pci_generic, igb_uio]. Please either enable the vfio-pci or uio_pci_generic"
-		echo "kernel modules, or have SPDK build the igb_uio driver by running ./configure --with-igb-uio-driver and recompiling."
+		echo "No valid drivers found [vfio-pci, uio_pci_generic, igb_uio]. Please enable one of the kernel modules."
 		return 1
 	fi
 

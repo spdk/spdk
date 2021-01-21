@@ -143,9 +143,6 @@ CONFIG_SHARED=n
 CONFIG_VTUNE=n
 CONFIG_VTUNE_DIR=
 
-# Build the dpdk igb_uio driver
-CONFIG_IGB_UIO_DRIVER=n
-
 # Build Intel IPSEC_MB library
 CONFIG_IPSEC_MB=n
 

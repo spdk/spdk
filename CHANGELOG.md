@@ -38,6 +38,10 @@ parameter in `spdk_blob_open_opts_init` function.
 
 Updated DPDK submodule to DPDK 20.11.
 
+Removed `--with-igb-uio-driver` configure option. Since DPDK 20.11 igb_uio driver
+was moved to separate dpdk-kmods repository. If required, users need to refer to
+dpdk-kmods repository to build the driver.
+
 ### nvme
 
 Directives support was added to the NVMe driver.

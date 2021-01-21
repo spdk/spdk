@@ -40,9 +40,6 @@ DPDK_OPTS = -Denable_docs=false
 DPDK_CFLAGS =
 
 DPDK_KMODS = false
-ifeq ($(CONFIG_IGB_UIO_DRIVER),y)
-DPDK_KMODS = true
-endif
 ifeq ($(OS),FreeBSD)
 DPDK_KMODS = true
 endif
