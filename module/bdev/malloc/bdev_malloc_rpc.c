@@ -160,10 +160,6 @@ rpc_bdev_malloc_delete(struct spdk_jsonrpc_request *request,
 
 	delete_malloc_disk(bdev, rpc_bdev_malloc_delete_cb, request);
 
-	free_rpc_delete_malloc(&req);
-
-	return;
-
 cleanup:
 	free_rpc_delete_malloc(&req);
 }
