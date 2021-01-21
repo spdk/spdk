@@ -20,8 +20,8 @@ registers involved that are called doorbells.
 
 An I/O is submitted to an NVMe device by constructing a 64 byte command, placing
 it into the submission queue at the current location of the submission queue
-head index, and then writing the new index of the submission queue head to the
-submission queue head doorbell register. It's actually valid to copy a whole set
+tail index, and then writing the new index of the submission queue tail to the
+submission queue tail doorbell register. It's actually valid to copy a whole set
 of commands into open slots in the ring and then write the doorbell just one
 time to submit the whole batch.
 
