@@ -697,6 +697,7 @@ This feature is considered as experimental.
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Name of a scheduler
+period                  | Optional | number      | Scheduler period
 
 ### Response
 
@@ -712,7 +713,8 @@ Example request:
   "method": "framework_set_scheduler",
   "id": 1,
   "params": {
-    "name": "static"
+    "name": "static",
+    "period": "1000000"
   }
 }
 ~~~
