@@ -374,6 +374,15 @@ function check_python_style() {
 	return $rc
 }
 
+function get_bash_files() {
+	local sh shebang
+
+	mapfile -t sh < <(git ls-files '*.sh')
+	mapfile -t shebang < <(git grep -l '^#!.*bash')
+
+	printf '%s\n' "${sh[@]}" "${shebang[@]}" | sort -u
+}
+
 function check_bash_style() {
 	local rc=0
 
@@ -392,8 +401,7 @@ function check_bash_style() {
 		silly_plural[1]="s"
 
 		commits=() sh_files=() sh_files_repo=() sh_files_staged=()
-
-		mapfile -t sh_files_repo < <(git ls-files '*.sh')
+		mapfile -t sh_files_repo < <(get_bash_files)
 		# Fetch .sh files only from the commits that are targeted for merge
 		while read -r _ commit; do
 			commits+=("$commit")
@@ -504,7 +512,7 @@ SC2119,SC2120,SC2148,SC2153,SC2154,SC2164,SC2174,SC2001,SC2206,SC2207,SC2223"
 		SHCK_APPLY=false
 		SHCH_ARGS=" -x -e $SHCK_EXCLUDE -f $SHCK_FORMAT"
 
-		git ls-files '*.sh' | xargs -P$(nproc) -n1 shellcheck $SHCH_ARGS &> shellcheck.log
+		get_bash_files | xargs -P$(nproc) -n1 shellcheck $SHCH_ARGS &> shellcheck.log
 		if [[ -s shellcheck.log ]]; then
 			echo " Bash formatting errors detected!"
 
