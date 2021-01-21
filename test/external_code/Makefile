@@ -44,6 +44,10 @@ endif
 ifneq ($(DPDK_LIB_DIR),)
 COMMON_CFLAGS+=-L$(DPDK_LIB_DIR)
 endif
+
+ifneq ($(VFIO_LIB_DIR),)
+COMMON_CFLAGS+=-L$(VFIO_LIB_DIR)
+endif
 export
 .PHONY: all
 
