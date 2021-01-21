@@ -1070,7 +1070,6 @@ nvme_tcp_icresp_handle(struct nvme_tcp_qpair *tqpair,
 	return;
 end:
 	nvme_tcp_qpair_send_h2c_term_req(tqpair, pdu, fes, error_offset);
-	return;
 }
 
 static void
@@ -1109,7 +1108,6 @@ nvme_tcp_capsule_resp_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_
 
 end:
 	nvme_tcp_qpair_send_h2c_term_req(tqpair, pdu, fes, error_offset);
-	return;
 }
 
 static void
@@ -1134,7 +1132,6 @@ nvme_tcp_c2h_term_req_hdr_handle(struct nvme_tcp_qpair *tqpair,
 	return;
 end:
 	nvme_tcp_qpair_send_h2c_term_req(tqpair, pdu, fes, error_offset);
-	return;
 }
 
 static void
@@ -1193,7 +1190,6 @@ nvme_tcp_c2h_data_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu 
 
 end:
 	nvme_tcp_qpair_send_h2c_term_req(tqpair, pdu, fes, error_offset);
-	return;
 }
 
 static void
@@ -1361,7 +1357,6 @@ nvme_tcp_r2t_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu *pdu)
 
 end:
 	nvme_tcp_qpair_send_h2c_term_req(tqpair, pdu, fes, error_offset);
-	return;
 
 }
 
