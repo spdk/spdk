@@ -133,8 +133,8 @@ done
 # Detect the compiler toolchain
 $rootdir/scripts/detect_cc.sh --cc="$CC" --cxx="$CXX" --lto="${CONFIG[LTO]}" --ld="$LD" --cross-prefix="${CONFIG[CROSS_PREFIX]}" > $rootdir/mk/cc.mk
 
-CC=$(cat $rootdir/mk/cc.mk | grep "DEFAULT_CC=" | sed s/DEFAULT_CC=//)
-CC_TYPE=$(cat $rootdir/mk/cc.mk | grep "CC_TYPE=" | cut -d "=" -f 2)
+CC=$(grep "DEFAULT_CC=" "$rootdir/mk/cc.mk" | sed s/DEFAULT_CC=//)
+CC_TYPE=$(grep "CC_TYPE=" "$rootdir/mk/cc.mk" | cut -d "=" -f 2)
 
 arch=$($CC -dumpmachine)
 sys_name=$(uname -s)
@@ -448,9 +448,9 @@ for i in "$@"; do
 done
 
 if [[ $arch == x86_64* ]]; then
-	BUILD_CMD=($CC -o /dev/null -x c $CPPFLAGS $CFLAGS $LDFLAGS -march=native)
+	BUILD_CMD=("$CC" -o /dev/null -x c $CPPFLAGS $CFLAGS $LDFLAGS "-march=native")
 else
-	BUILD_CMD=($CC -o /dev/null -x c $CPPFLAGS $CFLAGS $LDFLAGS)
+	BUILD_CMD=("$CC" -o /dev/null -x c $CPPFLAGS $CFLAGS $LDFLAGS)
 fi
 BUILD_CMD+=(-I/usr/local/include -L/usr/local/lib)
 
@@ -540,7 +540,7 @@ if [ "${CONFIG[VTUNE]}" = "y" ]; then
 	fi
 fi
 
-if [ "${CONFIG[ASAN]}" = "y" -a "${CONFIG[TSAN]}" = "y" ]; then
+if [[ "${CONFIG[ASAN]}" = "y" && "${CONFIG[TSAN]}" = "y" ]]; then
 	echo "ERROR: ASAN and TSAN cannot be enabled at the same time."
 	exit 1
 fi
@@ -572,15 +572,15 @@ if [ "${CONFIG[RDMA]}" = "y" ]; then
 
 	if ! echo -e '#include <infiniband/verbs.h>\n#include <rdma/rdma_verbs.h>\n' \
 		'int main(void) { return 0; }\n' \
-		| ${BUILD_CMD[@]} -libverbs -lrdmacm - 2> /dev/null; then
-		echo --with-rdma requires libverbs and librdmacm.
-		echo Please install then re-run this script.
+		| "${BUILD_CMD[@]}" -libverbs -lrdmacm - 2> /dev/null; then
+		echo "--with-rdma requires libverbs and librdmacm."
+		echo "Please install then re-run this script."
 		exit 1
 	fi
 
 	if echo -e '#include <infiniband/verbs.h>\n' \
 		'int main(void) { return !!IBV_WR_SEND_WITH_INV; }\n' \
-		| ${BUILD_CMD[@]} -c - 2> /dev/null; then
+		| "${BUILD_CMD[@]}" -c - 2> /dev/null; then
 		CONFIG[RDMA_SEND_WITH_INVAL]="y"
 	else
 		CONFIG[RDMA_SEND_WITH_INVAL]="n"
@@ -602,7 +602,7 @@ than or equal to 4.14 will see significantly reduced performance.
 
 	if echo -e '#include <rdma/rdma_cma.h>\n' \
 		'int main(void) { return !!RDMA_OPTION_ID_ACK_TIMEOUT; }\n' \
-		| ${BUILD_CMD[@]} -c - 2> /dev/null; then
+		| "${BUILD_CMD[@]}" -c - 2> /dev/null; then
 		CONFIG[RDMA_SET_ACK_TIMEOUT]="y"
 	else
 		CONFIG[RDMA_SET_ACK_TIMEOUT]="n"
@@ -615,13 +615,13 @@ than or equal to 4.14 will see significantly reduced performance.
 			'#include <rdma/rdma_cma.h>\n' \
 			'int main(void) { return rdma_establish(NULL) || ' \
 			'!!IBV_QP_INIT_ATTR_SEND_OPS_FLAGS || !!MLX5_OPCODE_RDMA_WRITE; }\n' \
-			| ${BUILD_CMD[@]} -lmlx5 -I${rootdir}/include -c - 2> /dev/null; then
+			| "${BUILD_CMD[@]}" -lmlx5 -I${rootdir}/include -c - 2> /dev/null; then
 			echo "mlx5_dv provider is not supported"
 			exit 1
 		fi
 	fi
 
-	echo "Using "${CONFIG[RDMA_PROV]}" RDMA provider"
+	echo "Using '${CONFIG[RDMA_PROV]}' RDMA provider"
 fi
 
 if [[ "${CONFIG[FC]}" = "y" ]]; then
@@ -663,27 +663,27 @@ fi
 
 if [[ "${CONFIG[PMDK]}" = "y" ]]; then
 	if ! echo -e '#include <libpmemblk.h>\nint main(void) { return 0; }\n' \
-		| ${BUILD_CMD[@]} -lpmemblk - 2> /dev/null; then
-		echo --with-pmdk requires libpmemblk.
-		echo Please install then re-run this script.
+		| "${BUILD_CMD[@]}" -lpmemblk - 2> /dev/null; then
+		echo "--with-pmdk requires libpmemblk."
+		echo "Please install then re-run this script."
 		exit 1
 	fi
 fi
 
 if [[ "${CONFIG[REDUCE]}" = "y" ]]; then
 	if ! echo -e '#include <libpmem.h>\nint main(void) { return 0; }\n' \
-		| ${BUILD_CMD[@]} -lpmem - 2> /dev/null; then
-		echo --with-reduce requires libpmem.
-		echo Please install then re-run this script.
+		| "${BUILD_CMD[@]}" -lpmem - 2> /dev/null; then
+		echo "--with-reduce requires libpmem."
+		echo "Please install then re-run this script."
 		exit 1
 	fi
 fi
 
 if [[ "${CONFIG[NVME_CUSE]}" = "y" ]]; then
 	if ! echo -e '#define FUSE_USE_VERSION 31\n#include <fuse3/cuse_lowlevel.h>\n#include <fuse3/fuse_lowlevel.h>\n#include <fuse3/fuse_opt.h>\nint main(void) { return 0; }\n' \
-		| ${BUILD_CMD[@]} -lfuse3 -D_FILE_OFFSET_BITS=64 - 2> /dev/null; then
-		echo --with-cuse requires libfuse3.
-		echo Please install then re-run this script.
+		| "${BUILD_CMD[@]}" -lfuse3 -D_FILE_OFFSET_BITS=64 - 2> /dev/null; then
+		echo "--with-cuse requires libfuse3."
+		echo "Please install then re-run this script."
 		exit 1
 	fi
 fi
@@ -691,9 +691,9 @@ fi
 if [[ "${CONFIG[RBD]}" = "y" ]]; then
 	if ! echo -e '#include <rbd/librbd.h>\n#include <rados/librados.h>\n' \
 		'int main(void) { return 0; }\n' \
-		| ${BUILD_CMD[@]} -lrados -lrbd - 2> /dev/null; then
-		echo --with-rbd requires librados and librbd.
-		echo Please install then re-run this script.
+		| "${BUILD_CMD[@]}" -lrados -lrbd - 2> /dev/null; then
+		echo "--with-rbd requires librados and librbd."
+		echo "Please install then re-run this script."
 		exit 1
 	fi
 fi
@@ -705,39 +705,39 @@ if [[ "${CONFIG[ISCSI_INITIATOR]}" = "y" ]]; then
 		'#error\n' \
 		'#endif\n' \
 		'int main(void) { return 0; }\n' \
-		| ${BUILD_CMD[@]} -L/usr/lib64/iscsi -liscsi - 2> /dev/null; then
-		echo --with-iscsi-initiator requires libiscsi with
-		echo 'LIBISCSI_API_VERSION >= 20150621.'
-		echo Please install then re-run this script.
+		| "${BUILD_CMD[@]}" -L/usr/lib64/iscsi -liscsi - 2> /dev/null; then
+		echo "--with-iscsi-initiator requires libiscsi with"
+		echo "LIBISCSI_API_VERSION >= 20150621."
+		echo "Please install then re-run this script."
 		exit 1
 	fi
 fi
 
 if [[ "${CONFIG[ASAN]}" = "y" ]]; then
 	if ! echo -e 'int main(void) { return 0; }\n' \
-		| ${BUILD_CMD[@]} -fsanitize=address - 2> /dev/null; then
-		echo --enable-asan requires libasan.
-		echo Please install then re-run this script.
+		| "${BUILD_CMD[@]}" -fsanitize=address - 2> /dev/null; then
+		echo "--enable-asan requires libasan."
+		echo "Please install then re-run this script."
 		exit 1
 	fi
 fi
 
 if [[ "${CONFIG[UBSAN]}" = "y" ]]; then
 	if ! echo -e 'int main(void) { return 0; }\n' \
-		| ${BUILD_CMD[@]} -fsanitize=undefined - 2> /dev/null; then
-		echo --enable-ubsan requires libubsan.
-		echo Please install then re-run this script.
-		echo If installed, please check that the GCC version is at least 6.4 \
-			and synchronize CC accordingly.
+		| "${BUILD_CMD[@]}" -fsanitize=undefined - 2> /dev/null; then
+		echo "--enable-ubsan requires libubsan."
+		echo "Please install then re-run this script."
+		echo "If installed, please check that the GCC version is at least 6.4"
+		echo "and synchronize CC accordingly."
 		exit 1
 	fi
 fi
 
 if [[ "${CONFIG[TSAN]}" = "y" ]]; then
 	if ! echo -e 'int main(void) { return 0; }\n' \
-		| ${BUILD_CMD[@]} -fsanitize=thread - 2> /dev/null; then
-		echo --enable-tsan requires libtsan.
-		echo Please install then re-run this script.
+		| "${BUILD_CMD[@]}" -fsanitize=thread - 2> /dev/null; then
+		echo "--enable-tsan requires libtsan."
+		echo "Please install then re-run this script."
 		exit 1
 	fi
 fi
@@ -780,28 +780,28 @@ if [[ "${CONFIG[FUSE]}" = "y" ]]; then
 fi
 
 if [ "${CONFIG[CET]}" = "y" ]; then
-	if ! echo -e 'int main(void) { return 0; }\n' | ${BUILD_CMD[@]} -fcf-protection - 2> /dev/null; then
-		echo --enable-cet requires compiler/linker that supports CET.
-		echo Please install then re-run this script.
+	if ! echo -e 'int main(void) { return 0; }\n' | "${BUILD_CMD[@]}" -fcf-protection - 2> /dev/null; then
+		echo "--enable-cet requires compiler/linker that supports CET."
+		echo "Please install then re-run this script."
 		exit 1
 	fi
 fi
 
 # We are now ready to generate final configuration. But first do sanity
 # check to see if all keys in CONFIG array have its reflection in CONFIG file.
-if [ $(egrep -c "^\s*CONFIG_[[:alnum:]_]+=" $rootdir/CONFIG) -ne ${#CONFIG[@]} ]; then
+if (($(grep -cE "^\s*CONFIG_[[:alnum:]_]+=" "$rootdir/CONFIG") != ${#CONFIG[@]})); then
 	echo ""
 	echo "BUG: Some configuration options are not present in CONFIG file. Please update this file."
 	echo "Missing options in CONFIG (+) file and in current config (-): "
 	diff -u --label "CONFIG file" --label "CONFIG[@]" \
 		<(sed -r -e '/^\s*$/d; /^\s*#.*/d; s/(CONFIG_[[:alnum:]_]+)=.*/\1/g' CONFIG | sort) \
-		<(printf "CONFIG_%s\n" ${!CONFIG[@]} | sort)
+		<(printf "CONFIG_%s\n" "${!CONFIG[@]}" | sort)
 	exit 1
 fi
 
 echo -n "Creating mk/config.mk..."
 cp -f $rootdir/CONFIG $rootdir/mk/config.mk
-for key in ${!CONFIG[@]}; do
+for key in "${!CONFIG[@]}"; do
 	sed -i.bak -r "s#^\s*CONFIG_${key}=.*#CONFIG_${key}\?=${CONFIG[$key]}#g" $rootdir/mk/config.mk
 done
 # On FreeBSD sed -i 'SUFFIX' - SUFFIX is mandatory. So no way but to delete the backed file.
