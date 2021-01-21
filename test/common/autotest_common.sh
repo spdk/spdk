@@ -204,7 +204,7 @@ if [ "$(uname -s)" = "Linux" ]; then
 	# Override the default HUGEMEM in scripts/setup.sh to allocate 8GB in hugepages.
 	export HUGEMEM=8192
 	if [[ $SPDK_TEST_USE_IGB_UIO -eq 1 ]]; then
-		export DRIVER_OVERRIDE=$rootdir/dpdk/build-tmp/kernel/linux/igb_uio/igb_uio.ko
+		export DRIVER_OVERRIDE=igb_uio
 		# Building kernel modules requires root privileges
 		MAKE="sudo $MAKE"
 	fi
