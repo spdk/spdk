@@ -78,6 +78,10 @@ An `opts_size`element was added in the `spdk_app_opts` structure
 to solve the ABI compatiblity issue between different SPDK version. An `opts_size`
 parameter is added into `spdk_app_opts_init` function.
 
+### isa-l
+
+Updated ISA-L submodule to v2.30.0.
+
 ### nbd
 
 Change the return type of function `spdk_nbd_stop` from void to int. And update the
