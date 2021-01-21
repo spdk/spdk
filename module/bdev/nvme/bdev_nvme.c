@@ -2019,7 +2019,8 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		 const char *hostnqn,
 		 uint32_t prchk_flags,
 		 spdk_bdev_create_nvme_fn cb_fn,
-		 void *cb_ctx)
+		 void *cb_ctx,
+		 struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct nvme_probe_skip_entry	*entry, *tmp;
 	struct nvme_async_probe_ctx	*ctx;
@@ -2054,7 +2055,12 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		}
 	}
 
-	spdk_nvme_ctrlr_get_default_ctrlr_opts(&ctx->opts, sizeof(ctx->opts));
+	if (opts) {
+		memcpy(&ctx->opts, opts, sizeof(*opts));
+	} else {
+		spdk_nvme_ctrlr_get_default_ctrlr_opts(&ctx->opts, sizeof(ctx->opts));
+	}
+
 	ctx->opts.transport_retry_count = g_opts.retry_count;
 	ctx->opts.keep_alive_timeout_ms = g_opts.keep_alive_timeout_ms;
 

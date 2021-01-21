@@ -510,7 +510,9 @@ if __name__ == "__main__":
                                                          hostaddr=args.hostaddr,
                                                          hostsvcid=args.hostsvcid,
                                                          prchk_reftag=args.prchk_reftag,
-                                                         prchk_guard=args.prchk_guard))
+                                                         prchk_guard=args.prchk_guard,
+                                                         hdgst=args.hdgst,
+                                                         ddgst=args.ddgst))
 
     p = subparsers.add_parser('bdev_nvme_attach_controller', aliases=['construct_nvme_bdev'],
                               help='Add bdevs with nvme backend')
@@ -535,6 +537,10 @@ if __name__ == "__main__":
                    help='Enable checking of PI reference tag for I/O processing.', action='store_true')
     p.add_argument('-g', '--prchk-guard',
                    help='Enable checking of PI guard for I/O processing.', action='store_true')
+    p.add_argument('-e', '--hdgst',
+                   help='Enable TCP header digest.', action='store_true')
+    p.add_argument('-d', '--ddgst',
+                   help='Enable TCP data digest.', action='store_true')
     p.set_defaults(func=bdev_nvme_attach_controller)
 
     def bdev_nvme_get_controllers(args):

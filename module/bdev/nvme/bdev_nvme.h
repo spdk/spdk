@@ -77,7 +77,8 @@ int bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		     const char *hostnqn,
 		     uint32_t prchk_flags,
 		     spdk_bdev_create_nvme_fn cb_fn,
-		     void *cb_ctx);
+		     void *cb_ctx,
+		     struct spdk_nvme_ctrlr_opts *opts);
 struct spdk_nvme_ctrlr *bdev_nvme_get_ctrlr(struct spdk_bdev *bdev);
 
 /**

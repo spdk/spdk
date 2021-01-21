@@ -488,7 +488,8 @@ def bdev_nvme_set_hotplug(client, enable, period_us=None):
 @deprecated_alias('construct_nvme_bdev')
 def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvcid=None,
                                 priority=None, subnqn=None, hostnqn=None, hostaddr=None,
-                                hostsvcid=None, prchk_reftag=None, prchk_guard=None):
+                                hostsvcid=None, prchk_reftag=None, prchk_guard=None,
+                                hdgst=None, ddgst=None):
     """Construct block device for each NVMe namespace in the attached controller.
 
     Args:
@@ -504,6 +505,8 @@ def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvc
         hostsvcid: host transport service ID (port number for IP-based transports, NULL for PCIe or FC; optional)
         prchk_reftag: Enable checking of PI reference tag for I/O processing (optional)
         prchk_guard: Enable checking of PI guard for I/O processing (optional)
+        hdgst: Enable TCP header digest (optional)
+        ddgst: Enable TCP data digest (optional)
 
     Returns:
         Names of created block devices.
@@ -538,6 +541,12 @@ def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvc
 
     if prchk_guard:
         params['prchk_guard'] = prchk_guard
+
+    if hdgst:
+        params['hdgst'] = hdgst
+
+    if ddgst:
+        params['ddgst'] = ddgst
 
     return client.call('bdev_nvme_attach_controller', params)
 
