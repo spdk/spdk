@@ -406,7 +406,9 @@ function gen_nvmf_target_json() {
 					    "adrfam": "ipv4",
 					    "trsvcid": "$NVMF_PORT",
 					    "subnqn": "nqn.2016-06.io.spdk:cnode$subsystem",
-					    "hostnqn": "nqn.2016-06.io.spdk:host$subsystem"
+					    "hostnqn": "nqn.2016-06.io.spdk:host$subsystem",
+					    "hdgst": ${hdgst:-false},
+					    "ddgst": ${ddgst:-false}
 					  },
 					  "method": "bdev_nvme_attach_controller"
 					}

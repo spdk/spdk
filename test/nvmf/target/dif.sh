@@ -115,6 +115,19 @@ fio_dif_rand_params() {
 	destroy_subsystems 0 1
 }
 
+fio_dif_digest() {
+	local NULL_DIF
+	local bs numjobs runtime iodepth files
+	local hdgst ddgst
+
+	NULL_DIF=3 bs=128k,128k,128k numjobs=3 iodepth=3 runtime=10
+	hdgst=true ddgst=true
+
+	create_subsystems 0
+	fio <(create_json_sub_conf 0)
+	destroy_subsystems 0
+}
+
 nvmftestinit
 NVMF_TRANSPORT_OPTS+=" --dif-insert-or-strip"
 nvmfappstart
@@ -124,6 +137,7 @@ create_transport
 run_test "fio_dif_1_default" fio_dif_1
 run_test "fio_dif_1_multi_subsystems" fio_dif_1_multi_subsystems
 run_test "fio_dif_rand_params" fio_dif_rand_params
+run_test "fio_dif_digest" fio_dif_digest
 
 trap - SIGINT SIGTERM EXIT
 nvmftestfini
