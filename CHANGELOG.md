@@ -5,7 +5,7 @@
 ### bdev
 
 An `opts_size` element was added in the `spdk_bdev_opts` structure to solve the
-ABI compatiblity issue between different SPDK version. And also add `opts_size`
+ABI compatibility issue between different SPDK version. And also add `opts_size`
 parameter in spdk_bdev_get_opts function. Two fields `small_buf_pool_size` and
 `large_buf_pool_size` were added into spdk_bdev_opts, which were used to determine
 the small and large buffer pool size of the whole bdev module.
@@ -23,15 +23,15 @@ a bdev_io with Linux AIO errno.
 ### blob
 
 An `opts_size` element was added in the `spdk_bs_opts` structure to solve the
-ABI compatiblity issue between different SPDK version. And also add `opts_size`
+ABI compatibility issue between different SPDK version. And also add `opts_size`
 parameter in `spdk_bs_opts_init` function.
 
 An `opts_size` element was added in the `spdk_blob_opts` structure to solve the
-ABI compatiblity issue between different SPDK version. And also add `opts_size`
+ABI compatibility issue between different SPDK version. And also add `opts_size`
 parameter in `spdk_blob_opts_init` function.
 
 An `opts_size` element was added in the `spdk_blob_open_opts` structure to solve the
-ABI compatiblity issue between different SPDK version. And also add `opts_size`
+ABI compatibility issue between different SPDK version. And also add `opts_size`
 parameter in `spdk_blob_open_opts_init` function.
 
 ### build
@@ -49,29 +49,29 @@ dpdk-kmods repository to build the driver.
 
 ### env
 
-The pci_whitelist, pci_blacklist and master_core members of struct spdk_env_opts
-have been deprecated.  The new members are named pci_allowed, pci_blocked and
-main_core respectively.
+The `pci_whitelist`, `pci_blacklist` and `master_core` members of struct `spdk_env_opts`
+have been deprecated.  The new members are named `pci_allowed`, `pci_blocked` and
+`main_core` respectively.
 
-An `opts_size`element was added in the `spdk_app_opts` structure
-to solve the ABI compatiblity issue between different SPDK version. An `opts_size`
+An `opts_size` element was added in the `spdk_app_opts` structure
+to solve the ABI compatibility issue between different SPDK version. An `opts_size`
 parameter is added into `spdk_app_opts_init` function.
 
 ### event
 
-The pci_whitelist and pci_blacklist members of struct spdk_app_opts have been
-deprecated.  The new members are named pci_allowed and pci_blocked respectively.
+The `pci_whitelist` and `pci_blacklist` members of struct `spdk_app_opts` have been
+deprecated.  The new members are named `pci_allowed` and `pci_blocked` respectively.
 
-The --pci-blacklist command line option has been deprecated, replaced with
---pci-blocked.
+The `--pci-blacklist` command line option has been deprecated, replaced with
+`--pci-blocked`.
 
-The --pci-whitelist/-W command line options have been deprecated, replaced with
---pci-allowed/-A.
+The `--pci-whitelist/-W` command line options have been deprecated, replaced with
+`--pci-allowed/-A`.
 
 ## ioat
 
-The PCI BDF whitelist option has been removed from the ioat_scan_accel_engine RPC.
-ioat PCI functions can still be allowed or denied using SPDK application command
+The PCI BDF whitelist option has been removed from the `ioat_scan_accel_engine` RPC.
+IOAT PCI functions can still be allowed or denied using SPDK application command
 line options.
 
 ### isa-l
@@ -82,8 +82,8 @@ Updated ISA-L submodule to v2.30.0.
 
 A new API `spdk_jsonrpc_send_bool_response` was added to allow sending response for
 writing json bool results into one function.
-Update API `bdev_nvme_set_options` and add a keep_alive_timeout_ms parameter. Now you
-can specify the keep_alive_timeout before creating NVMe bdev.
+Update API `bdev_nvme_set_options` and add a `keep_alive_timeout_ms` parameter. Now you
+can specify the `keep_alive_timeout` before creating NVMe bdev.
 
 ### nbd
 
@@ -94,13 +94,13 @@ Change the return type of function `spdk_nbd_stop` from void to int. And update 
 
 Directives support was added to the NVMe driver.
 
-Two async APIs 'spdk_nvme_ctrlr_cmd_directive_receive' and 'spdk_nvme_ctrlr_cmd_directive_send'
+Two async APIs `spdk_nvme_ctrlr_cmd_directive_receive` and `spdk_nvme_ctrlr_cmd_directive_send`
 are added for Directive Send and Directive Receive command, respectively.
 
 Added a new function `spdk_nvme_ctrlr_reset_subsystem` to perform a NVMe
-subsystem reset. Note: The NVMf target does not support the subsystem reset yet.
+subsystem reset. Note: The NVMe-oF target does not support the subsystem reset yet.
 
-Add a new function 'spdk_nvme_bytes_to_numd' to transfer bytes to number of
+Add a new function `spdk_nvme_bytes_to_numd` to transfer bytes to number of
 dwords.
 
 Added a new custom transport `SPDK_NVME_TRANSPORT_VFIOUSER` to enable NVMe
@@ -111,7 +111,7 @@ to NVMe over vfio-user target via vfio-user transport.
 
 ### nvmf
 
-nvmf_fc_lld_fini() now takes callback and hence updating FC Broadcom LLD driver
+`nvmf_fc_lld_fini` now takes callback and hence updating FC Broadcom LLD driver
 to the latest is required.
 
 FC transport supported primary tagging and VMID.
@@ -121,17 +121,17 @@ Broadcom FC LLD driver and SPDK NVMe-oF FC transport consolidated one LLD API,
 Hence updating Broadcom FC LLD driver to the latest is required.
 
 The functions `destroy` and `qpair_fini` in the transport interface now accept a
-cb_fn and cb_arg to call upon completion, and their execution can be asynchronous.
+`cb_fn` and `cb_arg` to call upon completion, and their execution can be asynchronous.
 
-The SPDK nvmf target now supports async event notification for discovery log changes.
+The SPDK NVMe-oF target now supports async event notification for discovery log changes.
 This allows the initiator to create persistent connection to discovery controller and
 be notified of any discovery log changes.
 
-An `opts_size`element was added in the `spdk_nvmf_transport_opts` structure
+An `opts_size` element was added in the `spdk_nvmf_transport_opts` structure
 to solve the ABI compatiblity issue between different SPDK version. And also add
-`opts_size` parameter in spdk_nvmf_transport_opts_init function.
+`opts_size` parameter in `spdk_nvmf_transport_opts_init` function.
 
-Added a new custom vfio-user transport implementation in NVMf which can provide
+Added a new custom vfio-user transport implementation in NVMe-oF which can provide
 emulated NVMe devices to QEMU and SPDK NVMe driver.
 
 ### rpc
