@@ -355,15 +355,12 @@ nvme_vfio_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static int
-nvme_vfio_qpair_destroy(struct spdk_nvme_qpair *qpair);
-
-static int
 nvme_vfio_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_vfio_ctrlr *vctrlr = nvme_vfio_ctrlr(ctrlr);
 
 	if (ctrlr->adminq) {
-		nvme_vfio_qpair_destroy(ctrlr->adminq);
+		nvme_pcie_qpair_destroy(ctrlr->adminq);
 	}
 
 	nvme_ctrlr_destruct_finish(ctrlr);
@@ -387,294 +384,6 @@ static uint16_t
 nvme_vfio_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
 {
 	return NVME_MAX_SGES;
-}
-
-static struct spdk_nvme_qpair *
-nvme_vfio_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
-				const struct spdk_nvme_io_qpair_opts *opts)
-{
-	struct nvme_pcie_qpair *vqpair;
-	struct spdk_nvme_qpair *qpair;
-	int rc;
-
-	assert(ctrlr != NULL);
-
-	vqpair = spdk_zmalloc(sizeof(*vqpair), 64, NULL,
-			      SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
-	if (vqpair == NULL) {
-		return NULL;
-	}
-
-	vqpair->num_entries = opts->io_queue_size;
-	vqpair->flags.delay_cmd_submit = opts->delay_cmd_submit;
-
-	qpair = &vqpair->qpair;
-
-	rc = nvme_qpair_init(qpair, qid, ctrlr, opts->qprio, opts->io_queue_requests);
-	if (rc != 0) {
-		nvme_vfio_qpair_destroy(qpair);
-		return NULL;
-	}
-
-	rc = nvme_pcie_qpair_construct(qpair, opts);
-
-	if (rc != 0) {
-		nvme_vfio_qpair_destroy(qpair);
-		return NULL;
-	}
-
-	return qpair;
-}
-
-static void
-nvme_vfio_qpair_abort_trackers(struct spdk_nvme_qpair *qpair, uint32_t dnr);
-
-static int
-nvme_vfio_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
-{
-	struct nvme_completion_poll_status *status;
-	int rc;
-
-	assert(ctrlr != NULL);
-
-	if (ctrlr->is_removed) {
-		goto free;
-	}
-
-	status = calloc(1, sizeof(*status));
-	if (!status) {
-		SPDK_ERRLOG("Failed to allocate status tracker\n");
-		return -ENOMEM;
-	}
-
-	/* Delete the I/O submission queue */
-	rc = nvme_pcie_ctrlr_cmd_delete_io_sq(ctrlr, qpair, nvme_completion_poll_cb, status);
-	if (rc != 0) {
-		SPDK_ERRLOG("Failed to send request to delete_io_sq with rc=%d\n", rc);
-		free(status);
-		return rc;
-	}
-	if (nvme_wait_for_completion(ctrlr->adminq, status)) {
-		if (!status->timed_out) {
-			free(status);
-		}
-		return -1;
-	}
-
-	memset(status, 0, sizeof(*status));
-	/* Delete the completion queue */
-	rc = nvme_pcie_ctrlr_cmd_delete_io_cq(ctrlr, qpair, nvme_completion_poll_cb, status);
-	if (rc != 0) {
-		SPDK_ERRLOG("Failed to send request to delete_io_cq with rc=%d\n", rc);
-		free(status);
-		return rc;
-	}
-	if (nvme_wait_for_completion(ctrlr->adminq, status)) {
-		if (!status->timed_out) {
-			free(status);
-		}
-		return -1;
-	}
-	free(status);
-
-free:
-	if (qpair->no_deletion_notification_needed == 0) {
-		/* Abort the rest of the I/O */
-		nvme_vfio_qpair_abort_trackers(qpair, 1);
-	}
-
-	nvme_vfio_qpair_destroy(qpair);
-	return 0;
-}
-
-static inline void
-nvme_vfio_qpair_ring_sq_doorbell(struct spdk_nvme_qpair *qpair)
-{
-	struct nvme_pcie_qpair	*vqpair = nvme_pcie_qpair(qpair);
-
-	if (qpair->first_fused_submitted) {
-		/* This is first cmd of two fused commands - don't ring doorbell */
-		qpair->first_fused_submitted = 0;
-		return;
-	}
-
-	spdk_wmb();
-	spdk_mmio_write_4(vqpair->sq_tdbl, vqpair->sq_tail);
-}
-
-static inline void
-nvme_vfio_qpair_ring_cq_doorbell(struct spdk_nvme_qpair *qpair)
-{
-	struct nvme_pcie_qpair	*vqpair = nvme_pcie_qpair(qpair);
-
-	spdk_mmio_write_4(vqpair->cq_hdbl, vqpair->cq_head);
-}
-
-static void
-nvme_vfio_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracker *tr)
-{
-	struct nvme_request	*req;
-	struct nvme_pcie_qpair	*vqpair = nvme_pcie_qpair(qpair);
-
-	req = tr->req;
-	assert(req != NULL);
-
-	if (req->cmd.fuse == SPDK_NVME_IO_FLAGS_FUSE_FIRST) {
-		/* This is first cmd of two fused commands - don't ring doorbell */
-		qpair->first_fused_submitted = 1;
-	}
-
-	vqpair->cmd[vqpair->sq_tail] = req->cmd;
-
-	if (spdk_unlikely(++vqpair->sq_tail == vqpair->num_entries)) {
-		vqpair->sq_tail = 0;
-	}
-
-	if (spdk_unlikely(vqpair->sq_tail == vqpair->sq_head)) {
-		SPDK_ERRLOG("sq_tail is passing sq_head!\n");
-	}
-
-	nvme_vfio_qpair_ring_sq_doorbell(qpair);
-}
-
-static void
-nvme_vfio_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracker *tr,
-				 struct spdk_nvme_cpl *cpl, bool print_on_error)
-{
-	struct nvme_pcie_qpair		*vqpair = nvme_pcie_qpair(qpair);
-	struct nvme_request		*req;
-	bool				retry, error;
-	bool				req_from_current_proc = true;
-
-	req = tr->req;
-
-	assert(req != NULL);
-
-	error = spdk_nvme_cpl_is_error(cpl);
-	retry = error && nvme_completion_is_retry(cpl) &&
-		req->retries < vqpair->retry_count;
-
-	if (error && print_on_error && !qpair->ctrlr->opts.disable_error_logging) {
-		spdk_nvme_qpair_print_command(qpair, &req->cmd);
-		spdk_nvme_qpair_print_completion(qpair, cpl);
-	}
-
-	assert(cpl->cid == req->cmd.cid);
-
-	if (retry) {
-		req->retries++;
-		nvme_vfio_qpair_submit_tracker(qpair, tr);
-	} else {
-		/* Only check admin requests from different processes. */
-		if (nvme_qpair_is_admin_queue(qpair) && req->pid != getpid()) {
-			req_from_current_proc = false;
-			nvme_pcie_qpair_insert_pending_admin_request(qpair, req, cpl);
-		} else {
-			nvme_complete_request(tr->cb_fn, tr->cb_arg, qpair, req, cpl);
-		}
-
-		if (req_from_current_proc == true) {
-			nvme_qpair_free_request(qpair, req);
-		}
-
-		tr->req = NULL;
-
-		TAILQ_REMOVE(&vqpair->outstanding_tr, tr, tq_list);
-		TAILQ_INSERT_HEAD(&vqpair->free_tr, tr, tq_list);
-	}
-}
-
-static void
-nvme_vfio_qpair_manual_complete_tracker(struct spdk_nvme_qpair *qpair,
-					struct nvme_tracker *tr, uint32_t sct, uint32_t sc, uint32_t dnr,
-					bool print_on_error)
-{
-	struct spdk_nvme_cpl	cpl;
-
-	memset(&cpl, 0, sizeof(cpl));
-	cpl.sqid = qpair->id;
-	cpl.cid = tr->cid;
-	cpl.status.sct = sct;
-	cpl.status.sc = sc;
-	cpl.status.dnr = dnr;
-	nvme_vfio_qpair_complete_tracker(qpair, tr, &cpl, print_on_error);
-}
-
-static void
-nvme_vfio_qpair_abort_trackers(struct spdk_nvme_qpair *qpair, uint32_t dnr)
-{
-	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
-	struct nvme_tracker *tr, *temp, *last;
-
-	last = TAILQ_LAST(&pqpair->outstanding_tr, nvme_outstanding_tr_head);
-
-	/* Abort previously submitted (outstanding) trs */
-	TAILQ_FOREACH_SAFE(tr, &pqpair->outstanding_tr, tq_list, temp) {
-		if (!qpair->ctrlr->opts.disable_error_logging) {
-			SPDK_ERRLOG("aborting outstanding command\n");
-		}
-		nvme_vfio_qpair_manual_complete_tracker(qpair, tr, SPDK_NVME_SCT_GENERIC,
-							SPDK_NVME_SC_ABORTED_BY_REQUEST, dnr, true);
-
-		if (tr == last) {
-			break;
-		}
-	}
-}
-
-static void
-nvme_vfio_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
-{
-	nvme_vfio_qpair_abort_trackers(qpair, dnr);
-}
-
-static void
-nvme_vfio_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
-{
-	struct nvme_pcie_qpair	*vqpair = nvme_pcie_qpair(qpair);
-	struct nvme_tracker	*tr;
-
-	tr = TAILQ_FIRST(&vqpair->outstanding_tr);
-	while (tr != NULL) {
-		assert(tr->req != NULL);
-		if (tr->req->cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
-			nvme_vfio_qpair_manual_complete_tracker(qpair, tr,
-								SPDK_NVME_SCT_GENERIC, SPDK_NVME_SC_ABORTED_SQ_DELETION, 0,
-								false);
-			tr = TAILQ_FIRST(&vqpair->outstanding_tr);
-		} else {
-			tr = TAILQ_NEXT(tr, tq_list);
-		}
-	}
-}
-
-static void
-nvme_vfio_admin_qpair_destroy(struct spdk_nvme_qpair *qpair)
-{
-	nvme_vfio_admin_qpair_abort_aers(qpair);
-}
-
-static int
-nvme_vfio_qpair_destroy(struct spdk_nvme_qpair *qpair)
-{
-	struct nvme_pcie_qpair *vqpair = nvme_pcie_qpair(qpair);
-
-	if (nvme_qpair_is_admin_queue(qpair)) {
-		nvme_vfio_admin_qpair_destroy(qpair);
-	}
-
-	spdk_free(vqpair->cmd);
-	spdk_free(vqpair->cpl);
-
-	if (vqpair->tr) {
-		spdk_free(vqpair->tr);
-	}
-
-	nvme_qpair_deinit(qpair);
-
-	spdk_free(vqpair);
-
-	return 0;
 }
 
 static inline int
@@ -755,7 +464,7 @@ nvme_vfio_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_
 	rc = nvme_vfio_prp_list_append(tr, &prp_index, req->payload.contig_or_cb_arg + req->payload_offset,
 				       req->payload_size, qpair->ctrlr->page_size);
 	if (rc) {
-		nvme_vfio_qpair_manual_complete_tracker(qpair, tr, SPDK_NVME_SCT_GENERIC,
+		nvme_pcie_qpair_manual_complete_tracker(qpair, tr, SPDK_NVME_SCT_GENERIC,
 							SPDK_NVME_SC_INVALID_FIELD,
 							1 /* do not retry */, true);
 	}
@@ -797,7 +506,7 @@ nvme_vfio_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 		}
 	}
 
-	nvme_vfio_qpair_submit_tracker(qpair, tr);
+	nvme_pcie_qpair_submit_tracker(qpair, tr);
 
 exit:
 	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair))) {
@@ -805,97 +514,6 @@ exit:
 	}
 
 	return rc;
-}
-
-static int32_t
-nvme_vfio_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
-{
-	struct nvme_pcie_qpair	*vqpair = nvme_pcie_qpair(qpair);
-	struct nvme_tracker	*tr;
-	struct spdk_nvme_cpl	*cpl, *next_cpl;
-	uint32_t		 num_completions = 0;
-	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
-	uint16_t		 next_cq_head;
-	uint8_t			 next_phase;
-	bool			 next_is_valid = false;
-
-	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair))) {
-		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
-	}
-
-	if (max_completions == 0 || max_completions > vqpair->max_completions_cap) {
-		/*
-		 * max_completions == 0 means unlimited, but complete at most
-		 * max_completions_cap batch of I/O at a time so that the completion
-		 * queue doorbells don't wrap around.
-		 */
-		max_completions = vqpair->max_completions_cap;
-	}
-
-	while (1) {
-		cpl = &vqpair->cpl[vqpair->cq_head];
-
-		if (!next_is_valid && cpl->status.p != vqpair->flags.phase) {
-			break;
-		}
-
-		if (spdk_likely(vqpair->cq_head + 1 != vqpair->num_entries)) {
-			next_cq_head = vqpair->cq_head + 1;
-			next_phase = vqpair->flags.phase;
-		} else {
-			next_cq_head = 0;
-			next_phase = !vqpair->flags.phase;
-		}
-		next_cpl = &vqpair->cpl[next_cq_head];
-		next_is_valid = (next_cpl->status.p == next_phase);
-		if (next_is_valid) {
-			__builtin_prefetch(&vqpair->tr[next_cpl->cid]);
-		}
-
-		if (spdk_unlikely(++vqpair->cq_head == vqpair->num_entries)) {
-			vqpair->cq_head = 0;
-			vqpair->flags.phase = !vqpair->flags.phase;
-		}
-
-		tr = &vqpair->tr[cpl->cid];
-		/* Prefetch the req's STAILQ_ENTRY since we'll need to access it
-		 * as part of putting the req back on the qpair's free list.
-		 */
-		__builtin_prefetch(&tr->req->stailq);
-		vqpair->sq_head = cpl->sqhd;
-
-		if (tr->req) {
-			nvme_vfio_qpair_complete_tracker(qpair, tr, cpl, true);
-		} else {
-			SPDK_ERRLOG("cpl does not map to outstanding cmd\n");
-			spdk_nvme_qpair_print_completion(qpair, cpl);
-			assert(0);
-		}
-
-		if (++num_completions == max_completions) {
-			break;
-		}
-	}
-
-	if (num_completions > 0) {
-		nvme_vfio_qpair_ring_cq_doorbell(qpair);
-	}
-
-	if (vqpair->flags.delay_cmd_submit) {
-		if (vqpair->last_sq_tail != vqpair->sq_tail) {
-			nvme_vfio_qpair_ring_sq_doorbell(qpair);
-			vqpair->last_sq_tail = vqpair->sq_tail;
-		}
-	}
-
-	/* Before returning, complete any pending admin request. */
-	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair))) {
-		nvme_pcie_qpair_complete_pending_admin_request(qpair);
-
-		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
-	}
-
-	return num_completions;
 }
 
 const struct spdk_nvme_transport_ops vfio_ops = {
@@ -914,16 +532,16 @@ const struct spdk_nvme_transport_ops vfio_ops = {
 	.ctrlr_get_max_xfer_size = nvme_vfio_ctrlr_get_max_xfer_size,
 	.ctrlr_get_max_sges = nvme_vfio_ctrlr_get_max_sges,
 
-	.ctrlr_create_io_qpair = nvme_vfio_ctrlr_create_io_qpair,
-	.ctrlr_delete_io_qpair = nvme_vfio_ctrlr_delete_io_qpair,
+	.ctrlr_create_io_qpair = nvme_pcie_ctrlr_create_io_qpair,
+	.ctrlr_delete_io_qpair = nvme_pcie_ctrlr_delete_io_qpair,
 	.ctrlr_connect_qpair = nvme_pcie_ctrlr_connect_qpair,
 	.ctrlr_disconnect_qpair = nvme_pcie_ctrlr_disconnect_qpair,
-	.admin_qpair_abort_aers = nvme_vfio_admin_qpair_abort_aers,
+	.admin_qpair_abort_aers = nvme_pcie_admin_qpair_abort_aers,
 
 	.qpair_reset = nvme_pcie_qpair_reset,
-	.qpair_abort_reqs = nvme_vfio_qpair_abort_reqs,
+	.qpair_abort_reqs = nvme_pcie_qpair_abort_reqs,
 	.qpair_submit_request = nvme_vfio_qpair_submit_request,
-	.qpair_process_completions = nvme_vfio_qpair_process_completions,
+	.qpair_process_completions = nvme_pcie_qpair_process_completions,
 
 	.poll_group_create = nvme_pcie_poll_group_create,
 	.poll_group_connect_qpair = nvme_pcie_poll_group_connect_qpair,
