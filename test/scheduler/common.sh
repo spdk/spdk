@@ -4,6 +4,11 @@ declare -r sysfs_system=/sys/devices/system
 declare -r sysfs_cpu=$sysfs_system/cpu
 declare -r sysfs_node=$sysfs_system/node
 
+export PYTHONPATH=$rootdir/test/event/scheduler
+
+declare -r scheduler=$rootdir/test/event/scheduler/scheduler
+declare -r plugin=scheduler_plugin
+
 fold_list_onto_array() {
 	local array=$1
 	local elem
@@ -363,4 +368,30 @@ _get_thread_stats() {
 		eval "${list_idle}[$thread]=\$(jq -r \"select(.id == $thread) | .idle\" <<< \$stats)"
 		thread_map[thread]=$(jq -r "select(.id == $thread) | .name" <<< "$stats")
 	done
+}
+
+get_cpu_stat() {
+	local cpu_idx=$1
+	local stat=$2 stats
+
+	while read -r cpu stats; do
+		[[ $cpu == "cpu$cpu_idx" ]] && stats=($stats)
+	done < /proc/stat
+
+	case "$stat" in
+		idle) echo "${stats[3]}" ;;
+		*) ;;
+	esac
+}
+
+create_thread() {
+	"$rootdir/scripts/rpc.py" --plugin "$plugin" scheduler_thread_create "$@"
+}
+
+destroy_thread() {
+	"$rootdir/scripts/rpc.py" --plugin "$plugin" scheduler_thread_delete "$@"
+}
+
+active_thread() {
+	"$rootdir/scripts/rpc.py" --plugin "$plugin" scheduler_thread_set_active "$@"
 }

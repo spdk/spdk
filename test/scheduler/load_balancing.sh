@@ -8,26 +8,9 @@ source "$testdir/common.sh"
 
 trap 'killprocess "$spdk_pid"' EXIT
 
-export PYTHONPATH=$rootdir/test/event/scheduler
-
-declare -r scheduler=$rootdir/test/event/scheduler/scheduler
-declare -r plugin=scheduler_plugin
-
 fold_list_onto_array cpus $(parse_cpu_list <(echo "$spdk_cpus_csv"))
 # Normalize the indexes
 cpus=("${cpus[@]}")
-
-create_thread() {
-	"$rootdir/scripts/rpc.py" --plugin "$plugin" scheduler_thread_create "$@"
-}
-
-destroy_thread() {
-	"$rootdir/scripts/rpc.py" --plugin "$plugin" scheduler_thread_delete "$@"
-}
-
-active_thread() {
-	"$rootdir/scripts/rpc.py" --plugin "$plugin" scheduler_thread_set_active "$@"
-}
 
 busy() {
 	local selected_cpus cpu
