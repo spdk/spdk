@@ -236,6 +236,7 @@ struct spdk_nvmf_ctrlr {
 	uint8_t nr_aer_reqs;
 	struct spdk_uuid  hostid;
 
+	uint32_t association_timeout; /* in milliseconds */
 	uint16_t changed_ns_list_count;
 	struct spdk_nvme_ns_list changed_ns_list;
 	uint64_t log_page_count;

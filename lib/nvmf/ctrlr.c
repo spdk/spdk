@@ -263,6 +263,7 @@ _nvmf_ctrlr_add_admin_qpair(void *ctx)
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
 
 	ctrlr->admin_qpair = qpair;
+	ctrlr->association_timeout = qpair->transport->opts.association_timeout;
 	nvmf_ctrlr_start_keep_alive_timer(ctrlr);
 	ctrlr_add_qpair_and_update_rsp(qpair, ctrlr, rsp);
 	_nvmf_request_complete(req);
@@ -851,7 +852,7 @@ nvmf_ctrlr_cc_shn_done(struct spdk_io_channel_iter *i, int status)
 		nvmf_ctrlr_stop_association_timer(ctrlr);
 	}
 	ctrlr->association_timer = SPDK_POLLER_REGISTER(nvmf_ctrlr_association_remove, ctrlr,
-				   ctrlr->admin_qpair->transport->opts.association_timeout * 1000);
+				   ctrlr->association_timeout * 1000);
 }
 
 static void
@@ -875,7 +876,7 @@ nvmf_ctrlr_cc_reset_done(struct spdk_io_channel_iter *i, int status)
 		nvmf_ctrlr_stop_association_timer(ctrlr);
 	}
 	ctrlr->association_timer = SPDK_POLLER_REGISTER(nvmf_ctrlr_association_remove, ctrlr,
-				   ctrlr->admin_qpair->transport->opts.association_timeout * 1000);
+				   ctrlr->association_timeout * 1000);
 }
 
 const struct spdk_nvmf_registers *
