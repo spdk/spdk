@@ -248,24 +248,36 @@ test_sprintf_append_realloc(void)
 	free(str3);
 	free(str4);
 }
+
+static void
+generate_string(char *str, size_t len, int64_t limit, int adjust)
+{
+	/* There isn't a portable way of handling the arithmetic, so */
+	/* perform the calculation in two parts to avoid overflow */
+	int64_t hi = (limit / 10) + (adjust / 10);
+	int64_t lo = (limit % 10) + (adjust % 10);
+
+	/* limit is large and adjust is small, so hi part will be */
+	/* non-zero even if there is a carry, but check it */
+	CU_ASSERT(hi < -1 || hi > 1);
+
+	/* Correct a difference in sign */
+	if ((hi < 0) != (lo < 0) && lo != 0) {
+		lo += (hi < 0) ? -10 : 10;
+		hi += (hi < 0) ? 1 : -1;
+	}
+
+	snprintf(str, len, "%" PRId64 "%01" PRId64, hi + (lo / 10),
+		 (lo < 0) ? (-lo % 10) : (lo % 10));
+}
+
 static void
 test_strtol(void)
 {
 	long int val;
+	char str[256];
 
 	const char *val1 = "no_digits";
-	/* LLONG_MIN - 1 */
-	const char *val2 = "-9223372036854775809";
-	/* LONG_MIN */
-	const char *val3 = "-9223372036854775808";
-	/* LONG_MIN + 1 */
-	const char *val4 = "-9223372036854775807";
-	/* LONG_MAX - 1 */
-	const char *val5 = "9223372036854775806";
-	/* LONG_MAX */
-	const char *val6 = "9223372036854775807";
-	/* LONG_MAX + 1 */
-	const char *val7 = "9223372036854775808";
 	/* digits + chars */
 	const char *val8 = "10_is_ten";
 	/* chars + digits */
@@ -278,22 +290,34 @@ test_strtol(void)
 	val = spdk_strtol(val1, 10);
 	CU_ASSERT(val == -EINVAL);
 
-	val = spdk_strtol(val2, 10);
+	/* LONG_MIN - 1 */
+	generate_string(str, sizeof(str), LONG_MIN, -1);
+	val = spdk_strtol(str, 10);
 	CU_ASSERT(val == -ERANGE);
 
-	val = spdk_strtol(val3, 10);
+	/* LONG_MIN */
+	generate_string(str, sizeof(str), LONG_MIN, 0);
+	val = spdk_strtol(str, 10);
 	CU_ASSERT(val == -ERANGE);
 
-	val = spdk_strtol(val4, 10);
+	/* LONG_MIN + 1 */
+	generate_string(str, sizeof(str), LONG_MIN, +1);
+	val = spdk_strtol(str, 10);
 	CU_ASSERT(val == -ERANGE);
 
-	val = spdk_strtol(val5, 10);
+	/* LONG_MAX - 1 */
+	generate_string(str, sizeof(str), LONG_MAX, -1);
+	val = spdk_strtol(str, 10);
 	CU_ASSERT(val == LONG_MAX - 1);
 
-	val = spdk_strtol(val6, 10);
+	/* LONG_MAX */
+	generate_string(str, sizeof(str), LONG_MAX, 0);
+	val = spdk_strtol(str, 10);
 	CU_ASSERT(val == LONG_MAX);
 
-	val = spdk_strtol(val7, 10);
+	/* LONG_MAX + 1 */
+	generate_string(str, sizeof(str), LONG_MAX, +1);
+	val = spdk_strtol(str, 10);
 	CU_ASSERT(val == -ERANGE);
 
 	val = spdk_strtol(val8, 10);
@@ -317,20 +341,9 @@ static void
 test_strtoll(void)
 {
 	long long int val;
+	char str[256];
 
 	const char *val1 = "no_digits";
-	/* LLONG_MIN - 1 */
-	const char *val2 = "-9223372036854775809";
-	/* LLONG_MIN */
-	const char *val3 = "-9223372036854775808";
-	/* LLONG_MIN + 1 */
-	const char *val4 = "-9223372036854775807";
-	/* LLONG_MAX - 1 */
-	const char *val5 = "9223372036854775806";
-	/* LLONG_MAX */
-	const char *val6 = "9223372036854775807";
-	/* LLONG_MAX + 1 */
-	const char *val7 = "9223372036854775808";
 	/* digits + chars */
 	const char *val8 = "10_is_ten";
 	/* chars + digits */
@@ -343,22 +356,34 @@ test_strtoll(void)
 	val = spdk_strtoll(val1, 10);
 	CU_ASSERT(val == -EINVAL);
 
-	val = spdk_strtoll(val2, 10);
+	/* LLONG_MIN - 1 */
+	generate_string(str, sizeof(str), LLONG_MIN, -1);
+	val = spdk_strtoll(str, 10);
 	CU_ASSERT(val == -ERANGE);
 
-	val = spdk_strtoll(val3, 10);
+	/* LLONG_MIN */
+	generate_string(str, sizeof(str), LLONG_MIN, 0);
+	val = spdk_strtoll(str, 10);
 	CU_ASSERT(val == -ERANGE);
 
-	val = spdk_strtoll(val4, 10);
+	/* LLONG_MIN + 1 */
+	generate_string(str, sizeof(str), LLONG_MIN, +1);
+	val = spdk_strtoll(str, 10);
 	CU_ASSERT(val == -ERANGE);
 
-	val = spdk_strtoll(val5, 10);
+	/* LLONG_MAX - 1 */
+	generate_string(str, sizeof(str), LLONG_MAX, -1);
+	val = spdk_strtoll(str, 10);
 	CU_ASSERT(val == LLONG_MAX - 1);
 
-	val = spdk_strtoll(val6, 10);
+	/* LLONG_MAX */
+	generate_string(str, sizeof(str), LLONG_MAX, 0);
+	val = spdk_strtoll(str, 10);
 	CU_ASSERT(val == LLONG_MAX);
 
-	val = spdk_strtoll(val7, 10);
+	/* LLONG_MAX + 1 */
+	generate_string(str, sizeof(str), LLONG_MAX, +1);
+	val = spdk_strtoll(str, 10);
 	CU_ASSERT(val == -ERANGE);
 
 	val = spdk_strtoll(val8, 10);
