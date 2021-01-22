@@ -20,6 +20,13 @@ bdev_io as Linux AIO errno. Also `spdk_bdev_io_complete_aio_status` function
 and `SPDK_BDEV_IO_STATUS_AIO_ERROR` were added for bdev module to complete
 a bdev_io with Linux AIO errno.
 
+A new API `spdk_bdev_get_module_name` was added for getting block device module name.
+Also `spdk_bdev_get_module_ctx` was added to obtain a bdev module context for
+the block device opened by the specified descriptor.
+
+Added `max_segment_size` and `max_num_segments` to `spdk_bdev` structure for
+bdev modules to specify splitting requirements.
+
 ### blob
 
 An `opts_size` element was added in the `spdk_bs_opts` structure to solve the
@@ -109,6 +116,12 @@ driver running with NVMe over vfio-user target.
 Added the vfio-user custom transport implementation in NVMe driver which can connect
 to NVMe over vfio-user target via vfio-user transport.
 
+Added a new function `spdk_nvme_ctrlr_set_remove_cb` to remove or override
+`remove_cb` and `remove_ctx` specified when the controller was probed.
+
+Added support for ZNS zone append command with new API `spdk_nvme_zns_zone_append` and
+`spdk_nvme_zns_zone_append_with_md`.
+
 ### nvmf
 
 `nvmf_fc_lld_fini` now takes callback and hence updating FC Broadcom LLD driver
@@ -134,6 +147,13 @@ to solve the ABI compatiblity issue between different SPDK version. And also add
 Added a new custom vfio-user transport implementation in NVMe-oF which can provide
 emulated NVMe devices to QEMU and SPDK NVMe driver.
 
+Added new API `spdk_nvmf_tgt_listen_ext` that uses `spdk_nvmf_listen_opts` to allow
+passing generic options to specific transport. This functionality replaces one provided
+with `nvmf_subsystem_set_options`. Also removed `nvmf_subsystem_set_options` RPC
+that allowed transport specific options within subsystem.
+
+The `trsvcid` in `nvmf_subsystem_add_listener` RPC is now optional.
+
 ### rpc
 
 An new optional parameter `wait` was added to the RPC `iscsi_create_portal_group`,
@@ -144,6 +164,11 @@ target application restarts.
 
 Two optional parameter `--small-buf-pool-size` and `--large-buf-pool-size` were added
 into `bdev_set_options` function.
+
+### vhost
+
+Added optional `packed_ring_recovery` parameter to `vhost_create_blk_controller` RPC
+enabling packed ring live recovery.
 
 ## v20.10:
 
