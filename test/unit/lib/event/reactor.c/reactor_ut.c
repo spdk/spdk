@@ -38,6 +38,7 @@
 #include "event/reactor.c"
 #include "spdk_internal/thread.h"
 #include "event/scheduler_static.c"
+#include "event/scheduler_dynamic.c"
 
 static void
 test_create_reactor(void)
@@ -445,6 +446,169 @@ test_reactor_stats(void)
 	MOCK_CLEAR(spdk_env_get_current_core);
 }
 
+static void
+test_scheduler(void)
+{
+	struct spdk_cpuset cpuset = {};
+	struct spdk_thread *thread[3];
+	struct spdk_lw_thread *lw_thread;
+	struct spdk_reactor *reactor;
+	struct spdk_poller *busy, *idle;
+	int i;
+
+	MOCK_SET(spdk_env_get_current_core, 0);
+
+	allocate_cores(3);
+
+	CU_ASSERT(spdk_reactors_init() == 0);
+
+	_spdk_scheduler_set("dynamic");
+
+	for (i = 0; i < 3; i++) {
+		spdk_cpuset_set_cpu(&g_reactor_core_mask, i, true);
+	}
+	g_next_core = 0;
+
+	/* Create threads. */
+	for (i = 0; i < 3; i++) {
+		spdk_cpuset_set_cpu(&cpuset, i, true);
+		thread[i] = spdk_thread_create(NULL, &cpuset);
+		CU_ASSERT(thread[i] != NULL);
+	}
+
+	for (i = 0; i < 3; i++) {
+		reactor = spdk_reactor_get(i);
+		CU_ASSERT(reactor != NULL);
+		MOCK_SET(spdk_env_get_current_core, i);
+		CU_ASSERT(event_queue_run_batch(reactor) == 1);
+		CU_ASSERT(!TAILQ_EMPTY(&reactor->threads));
+	}
+
+	g_reactor_state = SPDK_REACTOR_STATE_RUNNING;
+
+	MOCK_SET(spdk_env_get_current_core, 0);
+
+	/* Init threads stats (low load) */
+	for (i = 0; i < 3; i++) {
+		spdk_set_thread(thread[i]);
+		busy = spdk_poller_register(poller_run_busy, (void *)10, 0);
+		idle = spdk_poller_register(poller_run_idle, (void *)90, 0);
+		reactor = spdk_reactor_get(i);
+		CU_ASSERT(reactor != NULL);
+		reactor->tsc_last = 100;
+		_reactor_run(reactor);
+		spdk_poller_unregister(&busy);
+		spdk_poller_unregister(&idle);
+
+		/* Update last stats so that we don't have to call scheduler twice */
+		lw_thread = spdk_thread_get_ctx(thread[i]);
+		lw_thread->last_stats.busy_tsc = UINT32_MAX;
+		lw_thread->last_stats.idle_tsc = UINT32_MAX;
+	}
+
+	reactor = spdk_reactor_get(0);
+	CU_ASSERT(reactor != NULL);
+
+	_reactors_scheduler_gather_metrics(NULL, NULL);
+
+	/* Gather metrics for all cores */
+	reactor = spdk_reactor_get(1);
+	CU_ASSERT(reactor != NULL);
+	MOCK_SET(spdk_env_get_current_core, 1);
+	CU_ASSERT(event_queue_run_batch(reactor) == 1);
+	reactor = spdk_reactor_get(2);
+	CU_ASSERT(reactor != NULL);
+	MOCK_SET(spdk_env_get_current_core, 2);
+	CU_ASSERT(event_queue_run_batch(reactor) == 1);
+	reactor = spdk_reactor_get(0);
+	CU_ASSERT(reactor != NULL);
+	MOCK_SET(spdk_env_get_current_core, 0);
+	CU_ASSERT(event_queue_run_batch(reactor) == 1);
+
+	/* Threads were idle, so all of them should be placed on core 0 */
+	for (i = 0; i < 3; i++) {
+		reactor = spdk_reactor_get(i);
+		CU_ASSERT(reactor != NULL);
+		_reactor_run(reactor);
+	}
+
+	/* 2 threads should be scheduled to core 0 */
+	reactor = spdk_reactor_get(0);
+	CU_ASSERT(reactor != NULL);
+	MOCK_SET(spdk_env_get_current_core, 0);
+	CU_ASSERT(event_queue_run_batch(reactor) == 2);
+
+	reactor = spdk_reactor_get(0);
+	CU_ASSERT(reactor != NULL);
+	CU_ASSERT(!TAILQ_EMPTY(&reactor->threads));
+	reactor = spdk_reactor_get(1);
+	CU_ASSERT(reactor != NULL);
+	CU_ASSERT(TAILQ_EMPTY(&reactor->threads));
+	reactor = spdk_reactor_get(2);
+	CU_ASSERT(reactor != NULL);
+	CU_ASSERT(TAILQ_EMPTY(&reactor->threads));
+
+	/* Make threads busy */
+	reactor = spdk_reactor_get(0);
+	CU_ASSERT(reactor != NULL);
+	reactor->tsc_last = 100;
+
+	for (i = 0; i < 3; i++) {
+		spdk_set_thread(thread[i]);
+		busy = spdk_poller_register(poller_run_busy, (void *)100, 0);
+		_reactor_run(reactor);
+		spdk_poller_unregister(&busy);
+	}
+
+	/* Run scheduler again, this time all threads are busy */
+	_reactors_scheduler_gather_metrics(NULL, NULL);
+
+	/* Gather metrics for all cores */
+	reactor = spdk_reactor_get(1);
+	CU_ASSERT(reactor != NULL);
+	MOCK_SET(spdk_env_get_current_core, 1);
+	CU_ASSERT(event_queue_run_batch(reactor) == 1);
+	reactor = spdk_reactor_get(2);
+	CU_ASSERT(reactor != NULL);
+	MOCK_SET(spdk_env_get_current_core, 2);
+	CU_ASSERT(event_queue_run_batch(reactor) == 1);
+	reactor = spdk_reactor_get(0);
+	CU_ASSERT(reactor != NULL);
+	MOCK_SET(spdk_env_get_current_core, 0);
+	CU_ASSERT(event_queue_run_batch(reactor) == 1);
+
+	/* Threads were busy, so they should be distributed evenly across cores */
+	for (i = 0; i < 3; i++) {
+		MOCK_SET(spdk_env_get_current_core, i);
+		reactor = spdk_reactor_get(i);
+		CU_ASSERT(reactor != NULL);
+		_reactor_run(reactor);
+	}
+
+	for (i = 0; i < 3; i++) {
+		reactor = spdk_reactor_get(i);
+		CU_ASSERT(reactor != NULL);
+		CU_ASSERT(!TAILQ_EMPTY(&reactor->threads));
+	}
+
+	g_reactor_state = SPDK_REACTOR_STATE_INITIALIZED;
+
+	/* Destroy threads */
+	for (i = 0; i < 3; i++) {
+		reactor = spdk_reactor_get(i);
+		CU_ASSERT(reactor != NULL);
+		reactor_run(reactor);
+	}
+
+	spdk_set_thread(NULL);
+
+	MOCK_CLEAR(spdk_env_get_current_core);
+
+	spdk_reactors_fini();
+
+	free_cores();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -463,6 +627,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_reschedule_thread);
 	CU_ADD_TEST(suite, test_for_each_reactor);
 	CU_ADD_TEST(suite, test_reactor_stats);
+	CU_ADD_TEST(suite, test_scheduler);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
