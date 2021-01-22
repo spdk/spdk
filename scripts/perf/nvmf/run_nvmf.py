@@ -268,7 +268,7 @@ class Target(Server):
         pcm_memory = subprocess.Popen("%s/pcm-memory.x %s -csv=%s/%s" % (self.pcm_dir, self.pcm_interval,
                                       results_dir, pcm_file_name), shell=True)
         time.sleep(self.pcm_count)
-        pcm_memory.kill()
+        pcm_memory.terminate()
 
     def measure_pcm(self, results_dir, pcm_file_name):
         time.sleep(self.pcm_delay)
