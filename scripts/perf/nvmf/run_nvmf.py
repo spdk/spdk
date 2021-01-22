@@ -957,6 +957,11 @@ if __name__ == "__main__":
 
     target_obj.tgt_start()
 
+    try:
+        os.mkdir(target_results_dir)
+    except FileExistsError:
+        pass
+
     # Poor mans threading
     # Run FIO tests
     for block_size, io_depth, rw in fio_workloads:
