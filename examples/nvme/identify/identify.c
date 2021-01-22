@@ -1999,6 +1999,7 @@ parse_args(int argc, char **argv)
 				return 1;
 			}
 
+			assert(optarg != NULL);
 			hostnqn = strcasestr(optarg, "hostnqn:");
 			if (hostnqn) {
 				size_t len;
