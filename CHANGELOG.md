@@ -34,6 +34,11 @@ An `opts_size` element was added in the `spdk_blob_open_opts` structure to solve
 ABI compatiblity issue between different SPDK version. And also add `opts_size`
 parameter in `spdk_blob_open_opts_init` function.
 
+### build
+
+SPDK now generates pkg-config files to simplify the process of determining which
+libraries must be linked into an SPDK application.
+
 ### dpdk
 
 Updated DPDK submodule to DPDK 20.11.
@@ -41,6 +46,49 @@ Updated DPDK submodule to DPDK 20.11.
 Removed `--with-igb-uio-driver` configure option. Since DPDK 20.11 igb_uio driver
 was moved to separate dpdk-kmods repository. If required, users need to refer to
 dpdk-kmods repository to build the driver.
+
+### env
+
+The pci_whitelist, pci_blacklist and master_core members of struct spdk_env_opts
+have been deprecated.  The new members are named pci_allowed, pci_blocked and
+main_core respectively.
+
+An `opts_size`element was added in the `spdk_app_opts` structure
+to solve the ABI compatiblity issue between different SPDK version. An `opts_size`
+parameter is added into `spdk_app_opts_init` function.
+
+### event
+
+The pci_whitelist and pci_blacklist members of struct spdk_app_opts have been
+deprecated.  The new members are named pci_allowed and pci_blocked respectively.
+
+The --pci-blacklist command line option has been deprecated, replaced with
+--pci-blocked.
+
+The --pci-whitelist/-W command line options have been deprecated, replaced with
+--pci-allowed/-A.
+
+## ioat
+
+The PCI BDF whitelist option has been removed from the ioat_scan_accel_engine RPC.
+ioat PCI functions can still be allowed or denied using SPDK application command
+line options.
+
+### isa-l
+
+Updated ISA-L submodule to v2.30.0.
+
+### json
+
+A new API `spdk_jsonrpc_send_bool_response` was added to allow sending response for
+writing json bool results into one function.
+Update API `bdev_nvme_set_options` and add a keep_alive_timeout_ms parameter. Now you
+can specify the keep_alive_timeout before creating NVMe bdev.
+
+### nbd
+
+Change the return type of function `spdk_nbd_stop` from void to int. And update the
+`spdk_nbd_fini` with two parameters to make its behavior from sync to async.
 
 ### nvme
 
@@ -60,41 +108,6 @@ driver running with NVMe over vfio-user target.
 
 Added the vfio-user custom transport implementation in NVMe driver which can connect
 to NVMe over vfio-user target via vfio-user transport.
-
-### event
-
-The pci_whitelist and pci_blacklist members of struct spdk_app_opts have been
-deprecated.  The new members are named pci_allowed and pci_blocked respectively.
-
-The --pci-blacklist command line option has been deprecated, replaced with
---pci-blocked.
-
-The --pci-whitelist/-W command line options have been deprecated, replaced with
---pci-allowed/-A.
-
-### env
-
-The pci_whitelist, pci_blacklist and master_core members of struct spdk_env_opts
-have been deprecated.  The new members are named pci_allowed, pci_blocked and
-main_core respectively.
-
-An `opts_size`element was added in the `spdk_app_opts` structure
-to solve the ABI compatiblity issue between different SPDK version. An `opts_size`
-parameter is added into `spdk_app_opts_init` function.
-
-### isa-l
-
-Updated ISA-L submodule to v2.30.0.
-
-### nbd
-
-Change the return type of function `spdk_nbd_stop` from void to int. And update the
-`spdk_nbd_fini` with two parameters to make its behavior from sync to async.
-
-### build
-
-SPDK now generates pkg-config files to simplify the process of determining which
-libraries must be linked into an SPDK application.
 
 ### nvmf
 
@@ -121,13 +134,6 @@ to solve the ABI compatiblity issue between different SPDK version. And also add
 Added a new custom vfio-user transport implementation in NVMf which can provide
 emulated NVMe devices to QEMU and SPDK NVMe driver.
 
-### json
-
-A new API `spdk_jsonrpc_send_bool_response` was added to allow sending response for
-writing json bool results into one function.
-Update API `bdev_nvme_set_options` and add a keep_alive_timeout_ms parameter. Now you
-can specify the keep_alive_timeout before creating NVMe bdev.
-
 ### rpc
 
 An new optional parameter `wait` was added to the RPC `iscsi_create_portal_group`,
@@ -138,12 +144,6 @@ target application restarts.
 
 Two optional parameter `--small-buf-pool-size` and `--large-buf-pool-size` were added
 into `bdev_set_options` function.
-
-## ioat
-
-The PCI BDF whitelist option has been removed from the ioat_scan_accel_engine RPC.
-ioat PCI functions can still be allowed or denied using SPDK application command
-line options.
 
 ## v20.10:
 
