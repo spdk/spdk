@@ -251,7 +251,8 @@ class Target(Server):
     def measure_sar(self, results_dir, sar_file_name):
         self.log_print("Waiting %d delay before measuring SAR stats" % self.sar_delay)
         time.sleep(self.sar_delay)
-        out = subprocess.check_output("sar -P ALL %s %s" % (self.sar_interval, self.sar_count), shell=True).decode(encoding="utf-8")
+        cmd = ["sar", "-P", "ALL", "%s" % self.sar_interval, "%s" % self.sar_count]
+        out = subprocess.check_output(cmd).decode(encoding="utf-8")
         with open(os.path.join(results_dir, sar_file_name), "w") as fh:
             for line in out.split("\n"):
                 if "Average" in line and "CPU" in line:
@@ -263,15 +264,15 @@ class Target(Server):
 
     def measure_pcm_memory(self, results_dir, pcm_file_name):
         time.sleep(self.pcm_delay)
-        pcm_memory = subprocess.Popen("%s/pcm-memory.x %s -csv=%s/%s" % (self.pcm_dir, self.pcm_interval,
-                                      results_dir, pcm_file_name), shell=True)
+        cmd = ["%s/pcm-memory.x" % self.pcm_dir, "%s" % self.pcm_interval, "-csv=%s/%s" % (results_dir, pcm_file_name)]
+        pcm_memory = subprocess.Popen(cmd)
         time.sleep(self.pcm_count)
         pcm_memory.terminate()
 
     def measure_pcm(self, results_dir, pcm_file_name):
         time.sleep(self.pcm_delay)
-        subprocess.run("%s/pcm.x %s -i=%s -csv=%s/%s" % (self.pcm_dir, self.pcm_interval, self.pcm_count,
-                       results_dir, pcm_file_name), shell=True, check=True)
+        cmd = ["%s/pcm.x" % self.pcm_dir, "%s" % self.pcm_interval, "-i=%s" % self.pcm_count, "-csv=%s/%s" % (results_dir, pcm_file_name)]
+        subprocess.run(cmd)
         df = pd.read_csv(os.path.join(results_dir, pcm_file_name), header=[0, 1])
         df = df.rename(columns=lambda x: re.sub(r'Unnamed:[\w\s]*$', '', x))
         skt = df.loc[:, df.columns.get_level_values(1).isin({'UPI0', 'UPI1', 'UPI2'})]
@@ -280,14 +281,14 @@ class Target(Server):
 
     def measure_pcm_power(self, results_dir, pcm_power_file_name):
         time.sleep(self.pcm_delay)
-        out = subprocess.check_output("%s/pcm-power.x %s -i=%s" % (self.pcm_dir, self.pcm_interval, self.pcm_count),
-                                      shell=True).decode(encoding="utf-8")
+        cmd = ["%s/pcm-power.x" % self.pcm_dir, "%s" % self.pcm_interval, "-i=%s" % self.pcm_count]
+        out = subprocess.check_output(cmd).decode(encoding="utf-8")
         with open(os.path.join(results_dir, pcm_power_file_name), "w") as fh:
             fh.write(out)
 
     def measure_bandwidth(self, results_dir, bandwidth_file_name):
-        bwm = subprocess.run("bwm-ng -o csv -F %s/%s -a 1 -t 1000 -c %s" % (results_dir, bandwidth_file_name,
-                             self.bandwidth_count), shell=True, check=True)
+        cmd = ["bwm-ng", "-o csv", "-F %s/%s" % (results_dir, bandwidth_file_name), "-a 1", "-t 1000", "-c %s" % self.bandwidth_count]
+        bwm = subprocess.run(cmd)
 
     def measure_dpdk_memory(self, results_dir):
         self.log_print("INFO: waiting to generate DPDK memory usage")
@@ -308,7 +309,7 @@ class Target(Server):
             sysctl = f.readlines()
             self.log_print('\n'.join(self.get_uncommented_lines(sysctl)))
         self.log_print("====Cpu power info:====")
-        subprocess.run("cpupower frequency-info", shell=True, check=True)
+        subprocess.run(["cpupower", "frequency-info"])
         self.log_print("====zcopy settings:====")
         self.log_print("zcopy enabled: %s" % (self.enable_zcopy))
         self.log_print("====Scheduler settings:====")
@@ -722,9 +723,8 @@ class SPDKTarget(Target):
         else:
             self.subsys_no = get_nvme_devices_count()
         self.log_print("Starting SPDK NVMeOF Target process")
-        nvmf_app_path = os.path.join(self.spdk_dir, "build/bin/nvmf_tgt --wait-for-rpc")
-        command = " ".join([nvmf_app_path, "-m", self.num_cores])
-        proc = subprocess.Popen(command, shell=True)
+        nvmf_app_path = os.path.join(self.spdk_dir, "build/bin/nvmf_tgt")
+        proc = subprocess.Popen([nvmf_app_path, "--wait-for-rpc", "-m", self.num_cores])
         self.pid = os.path.join(self.spdk_dir, "nvmf.pid")
 
         with open(self.pid, "w") as fh:
