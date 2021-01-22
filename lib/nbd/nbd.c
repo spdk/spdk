@@ -541,8 +541,8 @@ nbd_submit_bdev_io(struct spdk_nbd_disk *nbd, struct nbd_io *io)
 		break;
 #endif
 	case NBD_CMD_DISC:
-		nbd_put_io(nbd, io);
 		nbd->state = NBD_DISK_STATE_SOFTDISC;
+		rc = spdk_bdev_abort(desc, ch, io, nbd_io_done, io);
 
 		/* when there begins to have executed_io to send, enable socket writable notice */
 		if (nbd->intr && TAILQ_EMPTY(&nbd->executed_io_list)) {
