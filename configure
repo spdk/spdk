@@ -149,7 +149,7 @@ if [[ "${CONFIG[ISAL]}" = "y" ]]; then
 	fi
 fi
 
-if [[ $sys_name == "FreeBSD" ]]; then
+if [[ $sys_name != "Linux" ]]; then
 	# Vhost, rte_vhost library and virtio are only supported on Linux.
 	CONFIG[VHOST]="n"
 	CONFIG[VIRTIO]="n"
@@ -553,7 +553,7 @@ if [[ $sys_name == "FreeBSD" ]]; then
 	fi
 fi
 
-if [[ $sys_name == "FreeBSD" ]]; then
+if [[ $sys_name != "Linux" ]]; then
 	if [[ "${CONFIG[VHOST]}" == "y" ]]; then
 		echo "Vhost is only supported on Linux."
 		exit 1
