@@ -330,6 +330,7 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	TAILQ_INIT(&ctrlr->log_head);
 	ctrlr->subsys = subsystem;
 	ctrlr->thread = req->qpair->group->thread;
+	ctrlr->disconnect_in_progress = false;
 
 	transport = req->qpair->transport;
 	ctrlr->qpair_mask = spdk_bit_array_create(transport->opts.max_qpairs_per_ctrlr);
@@ -454,6 +455,12 @@ _nvmf_ctrlr_destruct(void *ctx)
 	struct spdk_nvmf_ctrlr *ctrlr = ctx;
 	struct spdk_nvmf_reservation_log *log, *log_tmp;
 	struct spdk_nvmf_async_event_completion *event, *event_tmp;
+
+	if (ctrlr->disconnect_in_progress) {
+		SPDK_ERRLOG("freeing ctrlr with disconnect in progress\n");
+		spdk_thread_send_msg(ctrlr->thread, _nvmf_ctrlr_destruct, ctrlr);
+		return;
+	}
 
 	nvmf_ctrlr_stop_keep_alive_timer(ctrlr);
 	nvmf_ctrlr_stop_association_timer(ctrlr);
@@ -853,6 +860,7 @@ nvmf_ctrlr_cc_shn_done(struct spdk_io_channel_iter *i, int status)
 	}
 	ctrlr->association_timer = SPDK_POLLER_REGISTER(nvmf_ctrlr_association_remove, ctrlr,
 				   ctrlr->association_timeout * 1000);
+	ctrlr->disconnect_in_progress = false;
 }
 
 static void
@@ -877,6 +885,7 @@ nvmf_ctrlr_cc_reset_done(struct spdk_io_channel_iter *i, int status)
 	}
 	ctrlr->association_timer = SPDK_POLLER_REGISTER(nvmf_ctrlr_association_remove, ctrlr,
 				   ctrlr->association_timeout * 1000);
+	ctrlr->disconnect_in_progress = false;
 }
 
 const struct spdk_nvmf_registers *
@@ -929,6 +938,7 @@ nvmf_prop_set_cc(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
 		} else {
 			SPDK_DEBUGLOG(nvmf, "Property Set CC Disable!\n");
 			ctrlr->vcprop.cc.bits.en = 0;
+			ctrlr->disconnect_in_progress = true;
 			spdk_for_each_channel(ctrlr->subsys->tgt,
 					      nvmf_ctrlr_disconnect_io_qpairs_on_pg,
 					      ctrlr,
@@ -943,6 +953,7 @@ nvmf_prop_set_cc(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
 			SPDK_DEBUGLOG(nvmf, "Property Set CC Shutdown %u%ub!\n",
 				      cc.bits.shn >> 1, cc.bits.shn & 1);
 			ctrlr->vcprop.cc.bits.shn = cc.bits.shn;
+			ctrlr->disconnect_in_progress = true;
 			spdk_for_each_channel(ctrlr->subsys->tgt,
 					      nvmf_ctrlr_disconnect_io_qpairs_on_pg,
 					      ctrlr,
