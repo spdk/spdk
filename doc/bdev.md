@@ -312,10 +312,8 @@ To remove `Cache1`:
 
 During removal OCF-cache will be stopped and all cached data will be written to the core device.
 
-Note that OCF has a per-device RAM requirement
-of about 56000 + _cache device size_ * 58 / _cache line size_ (in bytes).
-To get more information on OCF
-please visit [OCF documentation](https://open-cas.github.io/).
+Note that OCF has a per-device RAM requirement. More details can be found in the
+[OCF documentation](https://open-cas.github.io/guide_system_requirements.html).
 
 # Malloc bdev {#bdev_config_malloc}
 
