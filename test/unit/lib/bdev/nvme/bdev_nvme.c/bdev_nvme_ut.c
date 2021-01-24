@@ -73,11 +73,6 @@ DEFINE_STUB(spdk_nvme_ctrlr_process_admin_completions, int32_t,
 
 DEFINE_STUB(spdk_nvme_ctrlr_get_flags, uint64_t, (struct spdk_nvme_ctrlr *ctrlr), 0);
 
-DEFINE_STUB(spdk_nvme_ctrlr_connect_io_qpair, int, (struct spdk_nvme_ctrlr *ctrlr,
-		struct spdk_nvme_qpair *qpair), 0);
-
-DEFINE_STUB(spdk_nvme_ctrlr_reconnect_io_qpair, int, (struct spdk_nvme_qpair *qpair), 0);
-
 DEFINE_STUB_V(spdk_nvme_ctrlr_get_default_io_qpair_opts, (struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_io_qpair_opts *opts, size_t opts_size));
 
@@ -134,9 +129,6 @@ DEFINE_STUB(spdk_nvme_ns_get_optimal_io_boundary, uint32_t, (struct spdk_nvme_ns
 DEFINE_STUB(spdk_nvme_ns_get_uuid, const struct spdk_uuid *,
 	    (const struct spdk_nvme_ns *ns), NULL);
 
-DEFINE_STUB(spdk_nvme_poll_group_create, struct spdk_nvme_poll_group *,
-	    (void *ctx), (void *)0x1);
-
 DEFINE_STUB(spdk_nvme_ns_cmd_read_with_md, int, (struct spdk_nvme_ns *ns,
 		struct spdk_nvme_qpair *qpair, void *buffer, void *metadata,
 		uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
@@ -172,18 +164,6 @@ DEFINE_STUB(spdk_nvme_ns_cmd_dataset_management, int, (struct spdk_nvme_ns *ns,
 
 DEFINE_STUB(spdk_nvme_cuse_get_ns_name, int, (struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 		char *name, size_t *size), 0);
-
-DEFINE_STUB(spdk_nvme_poll_group_add, int, (struct spdk_nvme_poll_group *group,
-		struct spdk_nvme_qpair *qpair), 0);
-
-DEFINE_STUB(spdk_nvme_poll_group_remove, int, (struct spdk_nvme_poll_group *group,
-		struct spdk_nvme_qpair *qpair), 0);
-
-DEFINE_STUB(spdk_nvme_poll_group_process_completions, int64_t,
-	    (struct spdk_nvme_poll_group *group, uint32_t completions_per_qpair,
-	     spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb), 0);
-
-DEFINE_STUB(spdk_nvme_poll_group_destroy, int, (struct spdk_nvme_poll_group *group), 0);
 
 DEFINE_STUB_V(spdk_bdev_module_finish_done, (void));
 
@@ -240,8 +220,16 @@ struct spdk_nvme_ctrlr {
 	struct spdk_nvme_ctrlr_opts	opts;
 };
 
+struct spdk_nvme_poll_group {
+	void				*ctx;
+	TAILQ_HEAD(, spdk_nvme_qpair)	qpairs;
+};
+
 struct spdk_nvme_qpair {
 	struct spdk_nvme_ctrlr		*ctrlr;
+	bool				is_connected;
+	TAILQ_ENTRY(spdk_nvme_qpair)	poll_group_tailq;
+	struct spdk_nvme_poll_group	*poll_group;
 	TAILQ_ENTRY(spdk_nvme_qpair)	tailq;
 };
 
@@ -492,9 +480,49 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 }
 
 int
+spdk_nvme_ctrlr_connect_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
+				 struct spdk_nvme_qpair *qpair)
+{
+	if (qpair->is_connected) {
+		return -EISCONN;
+	}
+
+	qpair->is_connected = true;
+
+	return 0;
+}
+
+int
+spdk_nvme_ctrlr_reconnect_io_qpair(struct spdk_nvme_qpair *qpair)
+{
+	struct spdk_nvme_ctrlr *ctrlr;
+
+	ctrlr = qpair->ctrlr;
+
+	if (ctrlr->is_failed) {
+		return -ENXIO;
+	}
+	qpair->is_connected = true;
+
+	return 0;
+}
+
+void
+spdk_nvme_ctrlr_disconnect_io_qpair(struct spdk_nvme_qpair *qpair)
+{
+	qpair->is_connected = false;
+}
+
+int
 spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 {
 	SPDK_CU_ASSERT_FATAL(qpair->ctrlr != NULL);
+
+	qpair->is_connected = false;
+
+	if (qpair->poll_group != NULL) {
+		spdk_nvme_poll_group_remove(qpair->poll_group, qpair);
+	}
 
 	TAILQ_REMOVE(&qpair->ctrlr->active_io_qpairs, qpair, tailq);
 
@@ -539,6 +567,77 @@ const struct spdk_nvme_ns_data *
 spdk_nvme_ns_get_data(struct spdk_nvme_ns *ns)
 {
 	return _nvme_ns_get_data(ns);
+}
+
+struct spdk_nvme_poll_group *
+spdk_nvme_poll_group_create(void *ctx)
+{
+	struct spdk_nvme_poll_group *group;
+
+	group = calloc(1, sizeof(*group));
+	if (group == NULL) {
+		return NULL;
+	}
+
+	group->ctx = ctx;
+	TAILQ_INIT(&group->qpairs);
+
+	return group;
+}
+
+int
+spdk_nvme_poll_group_destroy(struct spdk_nvme_poll_group *group)
+{
+	if (!TAILQ_EMPTY(&group->qpairs)) {
+		return -EBUSY;
+	}
+
+	free(group);
+
+	return 0;
+}
+
+int64_t
+spdk_nvme_poll_group_process_completions(struct spdk_nvme_poll_group *group,
+		uint32_t completions_per_qpair,
+		spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb)
+{
+	struct spdk_nvme_qpair *qpair, *tmp_qpair;
+
+	if (disconnected_qpair_cb == NULL) {
+		return -EINVAL;
+	}
+
+	TAILQ_FOREACH_SAFE(qpair, &group->qpairs, poll_group_tailq, tmp_qpair) {
+		if (!qpair->is_connected) {
+			disconnected_qpair_cb(qpair, group->ctx);
+		}
+	}
+
+	return 0;
+}
+
+int
+spdk_nvme_poll_group_add(struct spdk_nvme_poll_group *group,
+			 struct spdk_nvme_qpair *qpair)
+{
+	CU_ASSERT(!qpair->is_connected);
+
+	qpair->poll_group = group;
+	TAILQ_INSERT_TAIL(&group->qpairs, qpair, poll_group_tailq);
+
+	return 0;
+}
+
+int
+spdk_nvme_poll_group_remove(struct spdk_nvme_poll_group *group,
+			    struct spdk_nvme_qpair *qpair)
+{
+	CU_ASSERT(!qpair->is_connected);
+
+	TAILQ_REMOVE(&group->qpairs, qpair, poll_group_tailq);
+
+	return 0;
 }
 
 int
@@ -1093,6 +1192,63 @@ test_attach_ctrlr(void)
 	ut_detach_ctrlr(ctrlr);
 }
 
+static void
+test_reconnect_qpair(void)
+{
+	struct spdk_nvme_transport_id trid = {};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	struct spdk_io_channel *ch;
+	struct nvme_io_channel *nvme_ch;
+	int rc;
+
+	set_thread(0);
+
+	ut_init_trid(&trid);
+	TAILQ_INIT(&ctrlr.active_io_qpairs);
+
+	rc = nvme_bdev_ctrlr_create(&ctrlr, "nvme0", &trid, 0);
+	CU_ASSERT(rc == 0);
+
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
+	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr != NULL);
+
+	ch = spdk_get_io_channel(nvme_bdev_ctrlr);
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+
+	nvme_ch = spdk_io_channel_get_ctx(ch);
+	CU_ASSERT(nvme_ch->qpair != NULL);
+	CU_ASSERT(nvme_ch->group != NULL);
+	CU_ASSERT(nvme_ch->group->group != NULL);
+	CU_ASSERT(nvme_ch->group->poller != NULL);
+
+	/* Test if the disconnected qpair is reconnected. */
+	nvme_ch->qpair->is_connected = false;
+
+	poll_threads();
+
+	CU_ASSERT(nvme_ch->qpair->is_connected == true);
+
+	/* If the ctrlr is failed, reconnecting qpair should fail too. */
+	nvme_ch->qpair->is_connected = false;
+	ctrlr.is_failed = true;
+
+	poll_threads();
+
+	CU_ASSERT(nvme_ch->qpair->is_connected == false);
+
+	spdk_put_io_channel(ch);
+
+	poll_threads();
+
+	rc = bdev_nvme_delete("nvme0");
+	CU_ASSERT(rc == 0);
+
+	poll_threads();
+
+	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == NULL);
+}
+
 int
 main(int argc, const char **argv)
 {
@@ -1110,6 +1266,7 @@ main(int argc, const char **argv)
 	CU_ADD_TEST(suite, test_failover_ctrlr);
 	CU_ADD_TEST(suite, test_pending_reset);
 	CU_ADD_TEST(suite, test_attach_ctrlr);
+	CU_ADD_TEST(suite, test_reconnect_qpair);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 
