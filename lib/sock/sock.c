@@ -93,7 +93,10 @@ sock_map_insert(int placement_id, struct spdk_sock_group *group)
 }
 
 /* Release a reference to the group for a given placement_id.
- * If the reference count is 0, remove the group.
+ * We use lazy free method. If a placement_id with a sock is associated with the group,
+ * it will possibly be associated again by another sock with the same placement_id. And
+ * there will no memory leak, because if a polling group is destroyed, the
+ * sock_remove_sock_group_from_map_table will be called to guarantee the mapping correctness.
  */
 static void
 sock_map_release(int placement_id)
