@@ -1316,9 +1316,13 @@ io_complete(void *ctx, const struct spdk_nvme_cpl *cpl)
 	struct perf_task *task = ctx;
 
 	if (spdk_unlikely(spdk_nvme_cpl_is_error(cpl))) {
-		fprintf(stderr, "%s completed with error (sct=%d, sc=%d)\n",
-			task->is_read ? "Read" : "Write",
-			cpl->status.sct, cpl->status.sc);
+		if (task->is_read) {
+			fprintf(stderr, "Read completed with error (sct=%d, sc=%d)\n",
+				cpl->status.sct, cpl->status.sc);
+		} else {
+			fprintf(stderr, "Write completed with error (sct=%d, sc=%d)\n",
+				cpl->status.sct, cpl->status.sc);
+		}
 	}
 
 	task_complete(task);
