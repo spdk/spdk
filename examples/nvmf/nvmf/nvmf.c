@@ -183,6 +183,8 @@ parse_args(int argc, char **argv, struct spdk_env_opts *opts)
 			opts->no_pci = true;
 			break;
 		case 'h':
+			usage(argv[0]);
+			exit(EXIT_SUCCESS);
 		default:
 			usage(argv[0]);
 			return 1;
