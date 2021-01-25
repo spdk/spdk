@@ -48,6 +48,21 @@ uint64_t g_last_main_core_busy, g_last_main_core_idle;
 #define SCHEDULER_THREAD_BUSY 100
 #define SCHEDULER_LOAD_LIMIT 50
 
+static uint32_t
+_get_next_target_core(void)
+{
+	uint32_t target_lcore;
+
+	if (g_next_lcore == SPDK_ENV_LCORE_ID_ANY) {
+		g_next_lcore = spdk_env_get_first_core();
+	}
+
+	target_lcore = g_next_lcore;
+	g_next_lcore = spdk_env_get_next_core(g_next_lcore);
+
+	return target_lcore;
+}
+
 static uint8_t
 _get_thread_load(struct spdk_lw_thread *lw_thread)
 {
@@ -160,12 +175,7 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 			if (i == g_main_lcore && load >= SCHEDULER_LOAD_LIMIT) {
 				/* This thread is active and on the main core, we need to pick a core to move it to */
 				for (k = 0; k < spdk_env_get_core_count(); k++) {
-					if (g_next_lcore == SPDK_ENV_LCORE_ID_ANY) {
-						g_next_lcore = spdk_env_get_first_core();
-					}
-
-					target_lcore = g_next_lcore;
-					g_next_lcore = spdk_env_get_next_core(g_next_lcore);
+					target_lcore = _get_next_target_core();
 
 					/* Do not use main core if it is too busy for new thread */
 					if (target_lcore == g_main_lcore && thread_busy > main_core_idle) {
