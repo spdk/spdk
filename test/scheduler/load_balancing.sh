@@ -124,6 +124,10 @@ balanced() {
 		else
 			active_thread "$thread0" 0
 		fi
+
+		# Give scheduler some time to spin the cpu down|up
+		sleep 0.5s
+
 		reactor_framework=$(rpc_cmd framework_get_reactors | jq -r '.reactors[]')
 		printf '* Sample %u\n' "$samples"
 		# Include main cpu to check if thread is put back on it
