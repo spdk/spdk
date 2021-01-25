@@ -380,6 +380,7 @@ test_connect(void)
 
 	memset(&admin_qpair, 0, sizeof(admin_qpair));
 	admin_qpair.group = &group;
+	admin_qpair.state = SPDK_NVMF_QPAIR_ACTIVE;
 
 	memset(&tgt, 0, sizeof(tgt));
 	memset(&transport, 0, sizeof(transport));
@@ -764,6 +765,21 @@ test_connect(void)
 	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER);
 	CU_ASSERT(qpair.ctrlr == NULL);
 	CU_ASSERT(sgroups[subsystem.id].io_outstanding == 0);
+
+	/* I/O connect when admin qpair is being destroyed */
+	admin_qpair.group = NULL;
+	admin_qpair.state = SPDK_NVMF_QPAIR_DEACTIVATING;
+	memset(&rsp, 0, sizeof(rsp));
+	sgroups[subsystem.id].io_outstanding++;
+	TAILQ_INSERT_TAIL(&qpair.outstanding, &req, link);
+	rc = nvmf_ctrlr_cmd_connect(&req);
+	poll_threads();
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVMF_FABRIC_SC_INVALID_PARAM);
+	CU_ASSERT(qpair.ctrlr == NULL);
+	CU_ASSERT(sgroups[subsystem.id].io_outstanding == 0);
+	admin_qpair.group = &group;
+	admin_qpair.state = SPDK_NVMF_QPAIR_ACTIVE;
 
 	/* Clean up globals */
 	MOCK_CLEAR(spdk_nvmf_tgt_find_subsystem);

@@ -182,8 +182,8 @@ nvmf_ctrlr_keep_alive_poll(void *ctx)
 	keep_alive_timeout_tick = ctrlr->last_keep_alive_tick +
 				  ctrlr->feat.keep_alive_timer.bits.kato * spdk_get_ticks_hz() / UINT64_C(1000);
 	if (now > keep_alive_timeout_tick) {
-		SPDK_NOTICELOG("Disconnecting host from subsystem %s due to keep alive timeout.\n",
-			       ctrlr->subsys->subnqn);
+		SPDK_NOTICELOG("Disconnecting host %s from subsystem %s due to keep alive timeout.\n",
+			       ctrlr->hostnqn, ctrlr->subsys->subnqn);
 		/* set the Controller Fatal Status bit to '1' */
 		if (ctrlr->vcprop.csts.bits.cfs == 0) {
 			ctrlr->vcprop.csts.bits.cfs = 1;
@@ -591,6 +591,15 @@ _nvmf_ctrlr_add_io_qpair(void *ctx)
 	}
 
 	admin_qpair = ctrlr->admin_qpair;
+	if (admin_qpair->state != SPDK_NVMF_QPAIR_ACTIVE || admin_qpair->group == NULL) {
+		/* There is a chance that admin qpair is being destroyed at this moment due to e.g.
+		 * expired keep alive timer. Part of the qpair destruction process is change of qpair's
+		 * state to DEACTIVATING and removing it from poll group */
+		SPDK_ERRLOG("Inactive admin qpair (state %d, group %p)\n", admin_qpair->state, admin_qpair->group);
+		SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
+		spdk_nvmf_request_complete(req);
+		return;
+	}
 	qpair->ctrlr = ctrlr;
 	spdk_thread_send_msg(admin_qpair->group->thread, nvmf_ctrlr_add_io_qpair, req);
 }
