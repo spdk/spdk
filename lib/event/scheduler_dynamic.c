@@ -205,8 +205,26 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 				main_core_busy += spdk_min(UINT64_MAX - main_core_busy, thread_busy);
 				main_core_idle -= spdk_min(main_core_idle, thread_busy);
 			} else {
-				/* This thread should remain on the same core */
+				/* Move busy thread only if cpumask does not match current core (except main core) */
 				if (i != g_main_lcore) {
+					if (!spdk_cpuset_get_cpu(cpumask, i)) {
+						for (k = 0; k < spdk_env_get_core_count(); k++) {
+							target_lcore = _get_next_target_core();
+
+							if (spdk_cpuset_get_cpu(cpumask, target_lcore)) {
+								lw_thread->new_lcore = target_lcore;
+								cores_info[target_lcore].pending_threads_count++;
+								core->pending_threads_count--;
+
+								if (target_lcore == g_main_lcore) {
+									main_core_busy += spdk_min(UINT64_MAX - main_core_busy, thread_busy);
+									main_core_idle -= spdk_min(main_core_idle, thread_busy);
+								}
+								break;
+							}
+						}
+					}
+
 					busy_threads_present = true;
 				}
 			}
