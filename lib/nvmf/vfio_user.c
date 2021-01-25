@@ -210,7 +210,7 @@ post_completion(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 		uint16_t sct);
 
 static void
-map_dma(vfu_ctx_t *vfu_ctx, uint64_t iova, uint64_t len);
+map_dma(vfu_ctx_t *vfu_ctx, uint64_t iova, uint64_t len, uint32_t prot);
 
 static int
 unmap_dma(vfu_ctx_t *vfu_ctx, uint64_t iova, uint64_t len);
@@ -1348,33 +1348,24 @@ static int
 vfio_user_dev_info_fill(struct nvmf_vfio_user_endpoint *endpoint)
 {
 	int ret;
-	size_t offset;
+	ssize_t cap_offset;
 	vfu_ctx_t *vfu_ctx = endpoint->vfu_ctx;
 
-	static vfu_cap_t pm = {
-		.pm = {
-			.hdr.id = PCI_CAP_ID_PM,
-			.pmcs.nsfrst = 0x1
-		}
-	};
-	static vfu_cap_t px = {
-		.px = {
-			.hdr.id = PCI_CAP_ID_EXP,
-			.pxcaps.ver = 0x2,
-			.pxdcap = {.per = 0x1, .flrc = 0x1},
-			.pxdcap2.ctds = 0x1
-		}
-	};
-	static vfu_cap_t msix = {
-		.msix = {
-			.hdr.id = PCI_CAP_ID_MSIX,
-			.mxc.ts = NVME_IRQ_MSIX_NUM - 1,
-			.mtab = {.tbir = 0x4, .to = 0x0},
-			.mpba = {.pbir = 0x5, .pbao = 0x0}
-		}
+	struct pmcap pmcap = { .hdr.id = PCI_CAP_ID_PM, .pmcs.nsfrst = 0x1 };
+	struct pxcap pxcap = {
+		.hdr.id = PCI_CAP_ID_EXP,
+		.pxcaps.ver = 0x2,
+		.pxdcap = {.per = 0x1, .flrc = 0x1},
+		.pxdcap2.ctds = 0x1
 	};
 
-	static vfu_cap_t *caps[] = {&pm, &msix, &px};
+	struct msixcap msixcap = {
+		.hdr.id = PCI_CAP_ID_MSIX,
+		.mxc.ts = NVME_IRQ_MSIX_NUM - 1,
+		.mtab = {.tbir = 0x4, .to = 0x0},
+		.mpba = {.pbir = 0x5, .pbao = 0x0}
+	};
+
 	static struct iovec sparse_mmap[] = {
 		{
 			.iov_base = (void *)NVMF_VFIO_USER_DOORBELLS_OFFSET,
@@ -1395,9 +1386,21 @@ vfio_user_dev_info_fill(struct nvmf_vfio_user_endpoint *endpoint)
 	 */
 	vfu_pci_set_class(vfu_ctx, 0x01, 0x08, 0x02);
 
-	ret = vfu_pci_setup_caps(vfu_ctx, caps, 3);
-	if (ret < 0) {
-		SPDK_ERRLOG("vfu_ctx %p failed to setup cap list\n", vfu_ctx);
+	cap_offset = vfu_pci_add_capability(vfu_ctx, 0, 0, &pmcap);
+	if (cap_offset < 0) {
+		SPDK_ERRLOG("vfu_ctx %p failed add pmcap\n", vfu_ctx);
+		return ret;
+	}
+
+	cap_offset = vfu_pci_add_capability(vfu_ctx, 0, 0, &pxcap);
+	if (cap_offset < 0) {
+		SPDK_ERRLOG("vfu_ctx %p failed add pxcap\n", vfu_ctx);
+		return ret;
+	}
+
+	cap_offset = vfu_pci_add_capability(vfu_ctx, 0, 0, &msixcap);
+	if (cap_offset < 0) {
+		SPDK_ERRLOG("vfu_ctx %p failed add msixcap\n", vfu_ctx);
 		return ret;
 	}
 
@@ -1458,9 +1461,8 @@ vfio_user_dev_info_fill(struct nvmf_vfio_user_endpoint *endpoint)
 	assert(endpoint->pci_config_space != NULL);
 	init_pci_config_space(endpoint->pci_config_space);
 
-	offset = vfu_pci_find_capability(endpoint->vfu_ctx, 0, PCI_CAP_ID_MSIX);
-	assert(offset != 0);
-	endpoint->msix = (struct msixcap *)((uint8_t *)endpoint->pci_config_space + offset);
+	assert(cap_offset != 0);
+	endpoint->msix = (struct msixcap *)((uint8_t *)endpoint->pci_config_space + cap_offset);
 
 	return 0;
 }
@@ -1487,7 +1489,7 @@ destroy_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
 }
 
 static void
-map_dma(vfu_ctx_t *vfu_ctx, uint64_t iova, uint64_t len)
+map_dma(vfu_ctx_t *vfu_ctx, uint64_t iova, uint64_t len, uint32_t prot)
 {
 	struct nvmf_vfio_user_endpoint *endpoint = vfu_get_private(vfu_ctx);
 	struct nvmf_vfio_user_ctrlr *ctrlr;
