@@ -366,10 +366,9 @@ static void
 _reactor_set_interrupt_mode(void *arg1, void *arg2)
 {
 	struct spdk_reactor *target = arg1;
-	struct spdk_reactor *reactor = spdk_reactor_get(spdk_env_get_current_core());
 
+	assert(target == spdk_reactor_get(spdk_env_get_current_core()));
 	assert(target != NULL);
-	assert(target == reactor);
 	assert(target->in_interrupt != target->new_in_interrupt);
 	assert(TAILQ_EMPTY(&target->threads));
 	SPDK_DEBUGLOG(reactor, "Do reactor set on core %u from %s to state %s\n",
