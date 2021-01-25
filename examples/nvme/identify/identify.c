@@ -50,6 +50,8 @@
 #define MAX_DISCOVERY_LOG_ENTRIES	((uint64_t)1000)
 
 #define NUM_CHUNK_INFO_ENTRIES		8
+#define MAX_OCSSD_PU			128
+#define MAX_ZONE_DESC_ENTRIES		8
 
 static int outstanding_commands;
 
@@ -84,7 +86,7 @@ static uint64_t g_discovery_page_numrec;
 
 static struct spdk_ocssd_geometry_data geometry_data;
 
-static struct spdk_ocssd_chunk_information_entry g_ocssd_chunk_info_page[NUM_CHUNK_INFO_ENTRIES ];
+static struct spdk_ocssd_chunk_information_entry *g_ocssd_chunk_info_page;
 
 static int64_t g_zone_report_limit = 8;
 
@@ -106,6 +108,8 @@ static char g_hostnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 static int g_controllers_found = 0;
 
 static bool g_vmd = false;
+
+static bool g_ocssd_verbose = false;
 
 static void
 hex_dump(const void *data, size_t size)
@@ -541,15 +545,34 @@ get_ocssd_chunk_info_log_page(struct spdk_nvme_ns *ns)
 {
 	struct spdk_nvme_ctrlr *ctrlr = spdk_nvme_ns_get_ctrlr(ns);
 	int nsid = spdk_nvme_ns_get_id(ns);
+	uint32_t num_entry = geometry_data.num_grp * geometry_data.num_pu * geometry_data.num_chk;
+	uint32_t xfer_size = spdk_nvme_ns_get_max_io_xfer_size(ns);
+	uint32_t buf_size = 0;
+	uint64_t buf_offset = 0;
 	outstanding_commands = 0;
 
-	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_OCSSD_LOG_CHUNK_INFO,
-					     nsid, &g_ocssd_chunk_info_page, sizeof(g_ocssd_chunk_info_page), 0,
-					     get_log_page_completion, NULL) == 0) {
-		outstanding_commands++;
-	} else {
-		printf("get_ocssd_chunk_info_log_page() failed\n");
-		return -1;
+	assert(num_entry != 0);
+	if (!g_ocssd_verbose) {
+		num_entry = spdk_min(num_entry, NUM_CHUNK_INFO_ENTRIES);
+	}
+
+	g_ocssd_chunk_info_page = calloc(num_entry, sizeof(struct spdk_ocssd_chunk_information_entry));
+	assert(g_ocssd_chunk_info_page != NULL);
+
+	buf_size = num_entry * sizeof(struct spdk_ocssd_chunk_information_entry);
+	while (buf_size > 0) {
+		xfer_size = spdk_min(buf_size, xfer_size);
+		if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_OCSSD_LOG_CHUNK_INFO,
+						     nsid, (void *) g_ocssd_chunk_info_page + buf_offset,
+						     xfer_size, buf_offset, get_log_page_completion, NULL) == 0) {
+			outstanding_commands++;
+		} else {
+			printf("get_ocssd_chunk_info_log_page() failed\n");
+			return -1;
+		}
+
+		buf_size -= xfer_size;
+		buf_offset += xfer_size;
 	}
 
 	while (outstanding_commands) {
@@ -683,6 +706,45 @@ print_ocssd_chunk_info(struct spdk_ocssd_chunk_information_entry *chk_info, int 
 		printf("Starting LBA:                   %" PRIu64 "\n", chk_info[i].slba);
 		printf("Number of blocks in chunk:      %" PRIu64 "\n", chk_info[i].cnlb);
 		printf("Write Pointer:                  %" PRIu64 "\n", chk_info[i].wp);
+	}
+}
+
+static void
+print_ocssd_chunk_info_verbose(struct spdk_ocssd_chunk_information_entry *chk_info)
+{
+	uint32_t pu, chk, i;
+	uint32_t cnt_free, cnt_closed, cnt_open, cnt_offline;
+	uint32_t max_pu = spdk_min(MAX_OCSSD_PU, (geometry_data.num_grp * geometry_data.num_pu));
+	char cs_str[MAX_OCSSD_PU + 1], cs;
+
+	assert(chk_info != NULL);
+	printf("OCSSD Chunk Info Verbose\n");
+	printf("======================\n");
+
+	printf("%4s %-*s %3s %3s %3s %3s\n", "band", max_pu, "chunk state", "fr", "cl", "op", "of");
+	for (chk = 0; chk < geometry_data.num_chk; chk++) {
+		cnt_free = cnt_closed = cnt_open = cnt_offline = 0;
+		for (pu = 0; pu < max_pu; pu++) {
+			i = (pu * geometry_data.num_chk) + chk;
+			if (chk_info[i].cs.free) {
+				cnt_free++;
+				cs = 'f';
+			} else if (chk_info[i].cs.closed) {
+				cnt_closed++;
+				cs = 'c';
+			} else if (chk_info[i].cs.open) {
+				cnt_open++;
+				cs = 'o';
+			} else if (chk_info[i].cs.offline) {
+				cnt_offline++;
+				cs = 'l';
+			} else {
+				cs = '.';
+			}
+			cs_str[pu] = cs;
+		}
+		cs_str[pu] = 0;
+		printf("%4d %s %3d %3d %3d %3d\n", chk, cs_str, cnt_free, cnt_closed, cnt_open, cnt_offline);
 	}
 }
 
@@ -960,7 +1022,11 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		get_ocssd_geometry(ns, &geometry_data);
 		print_ocssd_geometry(&geometry_data);
 		get_ocssd_chunk_info_log_page(ns);
-		print_ocssd_chunk_info(g_ocssd_chunk_info_page, NUM_CHUNK_INFO_ENTRIES);
+		if (g_ocssd_verbose) {
+			print_ocssd_chunk_info_verbose(g_ocssd_chunk_info_page);
+		} else {
+			print_ocssd_chunk_info(g_ocssd_chunk_info_page, NUM_CHUNK_INFO_ENTRIES);
+		}
 	} else if (spdk_nvme_ns_get_csi(ns) == SPDK_NVME_CSI_ZNS) {
 		struct spdk_nvme_qpair *qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, NULL, 0);
 		if (qpair == NULL) {
@@ -1970,7 +2036,7 @@ parse_args(int argc, char **argv)
 	spdk_nvme_trid_populate_transport(&g_trid, SPDK_NVME_TRANSPORT_PCIE);
 	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
-	while ((op = getopt(argc, argv, "d:gi:p:r:xz::HL:V")) != -1) {
+	while ((op = getopt(argc, argv, "d:gi:op:r:xz::HL:V")) != -1) {
 		switch (op) {
 		case 'd':
 			g_dpdk_mem = spdk_strtol(optarg, 10);
@@ -1988,6 +2054,9 @@ parse_args(int argc, char **argv)
 				fprintf(stderr, "Invalid shared memory ID\n");
 				return g_shm_id;
 			}
+			break;
+		case 'o':
+			g_ocssd_verbose = true;
 			break;
 		case 'p':
 			g_main_core = spdk_strtol(optarg, 10);
