@@ -1472,6 +1472,7 @@ refresh_tab(enum tabs tab, uint8_t current_page)
 	for (i = 0; i < NUMBER_OF_TABS; i++) {
 		wrefresh(g_tab_win[i]);
 	}
+	draw_menu_win();
 
 	return max_pages;
 }
