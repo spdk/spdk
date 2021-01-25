@@ -37,7 +37,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 DIRS-y += accel bdev blob ioat nvme sock vmd nvmf
 
 ifeq ($(OS),Linux)
-DIRS-y += interrupt_tgt
+DIRS-$(CONFIG_VHOST) += interrupt_tgt
 endif
 
 .PHONY: all clean $(DIRS-y)
