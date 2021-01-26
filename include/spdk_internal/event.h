@@ -125,6 +125,8 @@ void spdk_reactors_stop(void *arg1);
 
 struct spdk_reactor *spdk_reactor_get(uint32_t lcore);
 
+struct spdk_reactor *_spdk_get_scheduling_reactor(void);
+
 /**
  * Allocate and pass an event to each reactor, serially.
  *
@@ -377,6 +379,11 @@ struct spdk_scheduler *_spdk_scheduler_get(void);
  * \param period New period (microseconds).
  */
 void _spdk_scheduler_period_set(uint64_t period);
+
+/**
+ * Disable the scheduler.
+ */
+void _spdk_scheduler_disable(void);
 
 /**
  * Get period of currently set scheduler.

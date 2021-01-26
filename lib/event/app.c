@@ -594,6 +594,17 @@ spdk_app_fini(void)
 }
 
 static void
+_start_subsystem_fini(void *arg1)
+{
+	if (_spdk_get_scheduling_reactor()->flags.is_scheduling) {
+		spdk_thread_send_msg(g_app_thread, _start_subsystem_fini, NULL);
+		return;
+	}
+
+	spdk_subsystem_fini(spdk_reactors_stop, NULL);
+}
+
+static void
 app_stop(void *arg1)
 {
 	if (g_spdk_app.rc == 0) {
@@ -606,8 +617,9 @@ app_stop(void *arg1)
 	}
 
 	spdk_rpc_finish();
-	spdk_subsystem_fini(spdk_reactors_stop, NULL);
 	g_spdk_app.stopped = true;
+	_spdk_scheduler_disable();
+	_start_subsystem_fini(NULL);
 }
 
 void

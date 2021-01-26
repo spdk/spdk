@@ -154,6 +154,12 @@ _spdk_scheduler_period_set(uint64_t period)
 }
 
 void
+_spdk_scheduler_disable(void)
+{
+	g_scheduler_period = 0;
+}
+
+void
 _spdk_scheduler_list_add(struct spdk_scheduler *scheduler)
 {
 	if (_scheduler_find(scheduler->name)) {
@@ -225,6 +231,12 @@ spdk_reactor_get(uint32_t lcore)
 	}
 
 	return reactor;
+}
+
+struct spdk_reactor *
+_spdk_get_scheduling_reactor(void)
+{
+	return g_scheduling_reactor;
 }
 
 static int reactor_thread_op(struct spdk_thread *thread, enum spdk_thread_op op);
@@ -918,7 +930,8 @@ reactor_run(void *arg)
 			_reactor_run(reactor);
 		}
 
-		if (spdk_unlikely((reactor->tsc_last - last_sched) > g_scheduler_period &&
+		if (spdk_unlikely(g_scheduler_period > 0 &&
+				  (reactor->tsc_last - last_sched) > g_scheduler_period &&
 				  reactor == g_scheduling_reactor &&
 				  !reactor->flags.is_scheduling)) {
 			if (spdk_unlikely(g_scheduler != g_new_scheduler)) {

@@ -57,6 +57,8 @@ DEFINE_STUB_V(spdk_reactors_start, (void));
 DEFINE_STUB_V(spdk_reactors_stop, (void *arg1));
 DEFINE_STUB(spdk_reactors_init, int, (void), 0);
 DEFINE_STUB_V(spdk_reactors_fini, (void));
+DEFINE_STUB_V(_spdk_scheduler_disable, (void));
+DEFINE_STUB(_spdk_get_scheduling_reactor, struct spdk_reactor *, (void), NULL);
 
 static void
 unittest_usage(void)
