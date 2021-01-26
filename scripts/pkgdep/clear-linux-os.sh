@@ -11,6 +11,7 @@ swupd bundle-add -y nasm sysadmin-basic
 # Additional dependencies for SPDK CLI
 pip3 install pexpect
 pip3 install configshell_fb
+pip3 install pyelftools
 if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	swupd bundle-add -y git os-testsuite-0day
 fi
