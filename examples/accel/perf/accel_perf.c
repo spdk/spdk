@@ -570,8 +570,9 @@ _accel_done(void *arg1)
 		}
 	} else if (g_ops_per_batch > 0) {
 		_drain_batch(worker);
+	} else {
+		TAILQ_INSERT_TAIL(&worker->tasks_pool, task, link);
 	}
-
 }
 
 static int
