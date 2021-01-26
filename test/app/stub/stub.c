@@ -158,9 +158,9 @@ main(int argc, char **argv)
 	while ((ch = getopt(argc, argv, "i:m:n:p:s:H")) != -1) {
 		if (ch == 'm') {
 			opts.reactor_mask = optarg;
-		} else if (ch == '?') {
+		} else if (ch == '?' || ch == 'H') {
 			usage(argv[0]);
-			exit(1);
+			exit(EXIT_SUCCESS);
 		} else {
 			val = spdk_strtol(optarg, 10);
 			if (val < 0) {
@@ -180,10 +180,9 @@ main(int argc, char **argv)
 			case 's':
 				opts.mem_size = val;
 				break;
-			case 'H':
 			default:
 				usage(argv[0]);
-				exit(EXIT_SUCCESS);
+				exit(EXIT_FAILURE);
 			}
 		}
 	}
