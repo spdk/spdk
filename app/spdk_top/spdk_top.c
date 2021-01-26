@@ -100,6 +100,8 @@
 #define POLLER_WIN_WIDTH 64
 #define POLLER_WIN_FIRST_COL 14
 #define FIRST_DATA_ROW 7
+#define HELP_WIN_WIDTH 88
+#define HELP_WIN_HEIGHT 22
 
 enum tabs {
 	THREADS_TAB,
@@ -2437,6 +2439,92 @@ data_thread_routine(void *arg)
 }
 
 static void
+help_window_display(void)
+{
+	PANEL *help_panel;
+	WINDOW *help_win;
+	bool stop_loop = false;
+	int c;
+	uint64_t row = 1, col = 2, desc_second_row_col = 26, header_footer_col = 0;
+
+	help_win = newwin(HELP_WIN_HEIGHT, HELP_WIN_WIDTH,
+			  get_position_for_window(HELP_WIN_HEIGHT, g_max_row),
+			  get_position_for_window(HELP_WIN_WIDTH, g_max_col));
+	help_panel = new_panel(help_win);
+	top_panel(help_panel);
+	update_panels();
+	doupdate();
+
+	box(help_win, 0, 0);
+
+	/* Header */
+	print_in_middle(help_win, row, header_footer_col, HELP_WIN_WIDTH, "HELP", COLOR_PAIR(3));
+	mvwhline(help_win, 2, 1, ACS_HLINE, HELP_WIN_WIDTH - 2);
+	mvwaddch(help_win, 2, HELP_WIN_WIDTH, ACS_RTEE);
+	row = 3;
+
+	/* Content */
+	print_left(help_win, row, col, HELP_WIN_WIDTH, "MENU options", COLOR_PAIR(5));
+	print_left(help_win, ++row, ++col, HELP_WIN_WIDTH, "[q] Quit		- quit this application",
+		   COLOR_PAIR(10));
+	print_left(help_win, ++row, col,  HELP_WIN_WIDTH,
+		   "[Tab] Next tab	- switch to next tab", COLOR_PAIR(10));
+	print_left(help_win, ++row, col,  HELP_WIN_WIDTH,
+		   "[1-3] Select tab	- switch to THREADS, POLLERS or CORES tab", COLOR_PAIR(10));
+	print_left(help_win, ++row, col,  HELP_WIN_WIDTH,
+		   "[PgUp] Previous page	- scroll up to previous page", COLOR_PAIR(10));
+	print_left(help_win, ++row, col,  HELP_WIN_WIDTH,
+		   "[PgDown] Next page	- scroll down to next page", COLOR_PAIR(10));
+	print_left(help_win, ++row, col,  HELP_WIN_WIDTH,
+		   "[Up] Arrow key	- go to previous data row", COLOR_PAIR(10));
+	print_left(help_win, ++row, col,  HELP_WIN_WIDTH,
+		   "[Down] Arrow key	- go to next data row", COLOR_PAIR(10));
+	print_left(help_win, ++row, col,  HELP_WIN_WIDTH,
+		   "[c] Columns		- choose data columns to display", COLOR_PAIR(10));
+	print_left(help_win, ++row, col,  HELP_WIN_WIDTH,
+		   "[s] Sorting		- change sorting by column", COLOR_PAIR(10));
+	print_left(help_win, ++row, col,  HELP_WIN_WIDTH,
+		   "[r] Refresh rate	- set refresh rate <0, 255> in seconds", COLOR_PAIR(10));
+	print_left(help_win, ++row, desc_second_row_col,  HELP_WIN_WIDTH, "that value in seconds",
+		   COLOR_PAIR(10));
+	print_left(help_win, ++row, col,  HELP_WIN_WIDTH,
+		   "[Enter] Item details	- show current data row details (Enter to open, Esc to close)",
+		   COLOR_PAIR(10));
+	print_left(help_win, ++row, col,  HELP_WIN_WIDTH,
+		   "[t] Total/Interval	- switch to display data measured from the start of SPDK", COLOR_PAIR(10));
+	print_left(help_win, ++row, desc_second_row_col,  HELP_WIN_WIDTH,
+		   "application or last refresh", COLOR_PAIR(10));
+	print_left(help_win, ++row, col,  HELP_WIN_WIDTH, "[h] Help		- show this help window",
+		   COLOR_PAIR(10));
+
+	/* Footer */
+	mvwhline(help_win, HELP_WIN_HEIGHT - 3, 1, ACS_HLINE, HELP_WIN_WIDTH - 2);
+	mvwaddch(help_win, HELP_WIN_HEIGHT - 3, HELP_WIN_WIDTH, ACS_RTEE);
+
+	print_in_middle(help_win, HELP_WIN_HEIGHT - 2, header_footer_col, HELP_WIN_WIDTH,
+			"[Esc] Close this window", COLOR_PAIR(10));
+
+	refresh();
+	wrefresh(help_win);
+
+	while (!stop_loop) {
+		c = wgetch(help_win);
+
+		switch (c) {
+		case 27: /* ESC */
+			stop_loop = true;
+			break;
+		default:
+			break;
+		}
+	}
+
+	del_panel(help_panel);
+	delwin(help_win);
+
+}
+
+static void
 show_stats(pthread_t *data_thread)
 {
 	const int CURRENT_PAGE_STR_LEN = 50;
@@ -2562,6 +2650,9 @@ show_stats(pthread_t *data_thread)
 				show_poller(current_page);
 			}
 			break;
+		case 'h':
+			help_window_display();
+			break;
 		default:
 			force_refresh = false;
 			break;
@@ -2638,6 +2729,7 @@ setup_ncurses(void)
 	init_pair(7, COLOR_BLUE, COLOR_BLACK);
 	init_pair(8, COLOR_RED, COLOR_WHITE);
 	init_pair(9, COLOR_BLUE, COLOR_WHITE);
+	init_pair(10, COLOR_WHITE, COLOR_BLACK);
 
 	if (has_colors() == FALSE) {
 		endwin();
