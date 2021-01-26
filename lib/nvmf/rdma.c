@@ -2,7 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
- *   Copyright (c) 2019, 2020 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2019-2021 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -944,6 +944,11 @@ nvmf_rdma_resize_cq(struct spdk_nvmf_rdma_qpair *rqpair, struct spdk_nvmf_rdma_d
 	}
 
 	if (rpoller->num_cqe != num_cqe) {
+		if (device->context->device->transport_type == IBV_TRANSPORT_IWARP) {
+			SPDK_ERRLOG("iWARP doesn't support CQ resize. Current capacity %u, required %u\n"
+				    "Using CQ of insufficient size may lead to CQ overrun\n", rpoller->num_cqe, num_cqe);
+			return -1;
+		}
 		if (required_num_wr > device->attr.max_cqe) {
 			SPDK_ERRLOG("RDMA CQE requirement (%d) exceeds device max_cqe limitation (%d)\n",
 				    required_num_wr, device->attr.max_cqe);
