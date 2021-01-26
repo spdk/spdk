@@ -416,8 +416,12 @@ _nvme_ns_cmd_rw(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	/* Zone append commands cannot be split. */
 	if (opc == SPDK_NVME_OPC_ZONE_APPEND) {
 		assert(ns->csi == SPDK_NVME_CSI_ZNS);
-		_nvme_ns_cmd_setup_request(ns, req, opc, lba, lba_count, io_flags, apptag_mask, apptag);
-		return req;
+		/*
+		 * As long as we disable driver-assisted striping for Zone append commands,
+		 * _nvme_ns_cmd_rw() should never cause a proper request to be split.
+		 * If a request is split, after all, error handling is done in caller functions.
+		 */
+		sectors_per_stripe = 0;
 	}
 
 	/*
@@ -799,6 +803,65 @@ nvme_ns_cmd_zone_append_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair 
 		 * nvme_ns_cmd_check_zone_append(), since zasl <= mdts.
 		 */
 		assert(req->num_children == 0);
+		if (req->num_children) {
+			nvme_request_free_children(req);
+			nvme_free_request(req);
+			return -EINVAL;
+		}
+		return nvme_qpair_submit_request(qpair, req);
+	} else if (nvme_ns_check_request_length(lba_count,
+						ns->sectors_per_max_io,
+						ns->sectors_per_stripe,
+						qpair->ctrlr->opts.io_queue_requests)) {
+		return -EINVAL;
+	} else {
+		return -ENOMEM;
+	}
+}
+
+int
+nvme_ns_cmd_zone_appendv_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+				 uint64_t zslba, uint32_t lba_count,
+				 spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t io_flags,
+				 spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
+				 spdk_nvme_req_next_sge_cb next_sge_fn, void *metadata,
+				 uint16_t apptag_mask, uint16_t apptag)
+{
+	struct nvme_request *req;
+	struct nvme_payload payload;
+	int ret;
+
+	if (!_is_io_flags_valid(io_flags)) {
+		return -EINVAL;
+	}
+
+	if (reset_sgl_fn == NULL || next_sge_fn == NULL) {
+		return -EINVAL;
+	}
+
+	ret = nvme_ns_cmd_check_zone_append(ns, lba_count, io_flags);
+	if (ret) {
+		return ret;
+	}
+
+	payload = NVME_PAYLOAD_SGL(reset_sgl_fn, next_sge_fn, cb_arg, metadata);
+
+	req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, zslba, lba_count, cb_fn, cb_arg,
+			      SPDK_NVME_OPC_ZONE_APPEND,
+			      io_flags, apptag_mask, apptag, true);
+	if (req != NULL) {
+		/*
+		 * Zone append commands cannot be split (num_children has to be 0).
+		 * For NVME_PAYLOAD_TYPE_SGL, _nvme_ns_cmd_rw() can cause a split.
+		 * However, _nvme_ns_cmd_split_request_sgl() and _nvme_ns_cmd_split_request_prp()
+		 * do not always cause a request to be split. These functions verify payload size,
+		 * verify num sge < max_sge, and verify SGE alignment rules (in case of PRPs).
+		 * If any of the verifications fail, they will split the request.
+		 * In our case, a split is very unlikely, since we already verified the size using
+		 * nvme_ns_cmd_check_zone_append(), however, we still need to call these functions
+		 * in order to perform the verification part. If they do cause a split, we return
+		 * an error here. For proper requests, these functions will never cause a split.
+		 */
 		if (req->num_children) {
 			nvme_request_free_children(req);
 			nvme_free_request(req);

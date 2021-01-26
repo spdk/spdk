@@ -92,6 +92,31 @@ spdk_nvme_zns_zone_append_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpai
 					       cb_fn, cb_arg, io_flags, apptag_mask, apptag);
 }
 
+int
+spdk_nvme_zns_zone_appendv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			   uint64_t zslba, uint32_t lba_count,
+			   spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t io_flags,
+			   spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
+			   spdk_nvme_req_next_sge_cb next_sge_fn)
+{
+	return nvme_ns_cmd_zone_appendv_with_md(ns, qpair, zslba, lba_count, cb_fn, cb_arg,
+						io_flags, reset_sgl_fn, next_sge_fn,
+						NULL, 0, 0);
+}
+
+int
+spdk_nvme_zns_zone_appendv_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+				   uint64_t zslba, uint32_t lba_count,
+				   spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t io_flags,
+				   spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
+				   spdk_nvme_req_next_sge_cb next_sge_fn, void *metadata,
+				   uint16_t apptag_mask, uint16_t apptag)
+{
+	return nvme_ns_cmd_zone_appendv_with_md(ns, qpair, zslba, lba_count, cb_fn, cb_arg,
+						io_flags, reset_sgl_fn, next_sge_fn,
+						metadata, apptag_mask, apptag);
+}
+
 static int
 nvme_zns_zone_mgmt_recv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			void *payload, uint32_t payload_size, uint64_t slba,

@@ -178,6 +178,69 @@ int spdk_nvme_zns_zone_append_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_
 				      uint32_t io_flags, uint16_t apptag_mask, uint16_t apptag);
 
 /**
+ * Submit a zone append I/O to the specified NVMe namespace.
+ *
+ * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
+ * The user must ensure that only one thread submits I/O on a given qpair at any
+ * given time.
+ *
+ * \param ns NVMe namespace to submit the zone append I/O.
+ * \param qpair I/O queue pair to submit the request.
+ * \param zslba Zone Start LBA of the zone that we are appending to.
+ * \param lba_count Length (in sectors) for the zone append operation.
+ * \param cb_fn Callback function to invoke when the I/O is completed.
+ * \param cb_arg Argument to pass to the callback function.
+ * \param io_flags Set flags, defined in nvme_spec.h, for this I/O.
+ * \param reset_sgl_fn Callback function to reset scattered payload.
+ * \param next_sge_fn Callback function to iterate each scattered payload memory
+ * segment.
+ *
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -EINVAL: The request is malformed.
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
+ */
+int spdk_nvme_zns_zone_appendv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			       uint64_t zslba, uint32_t lba_count,
+			       spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t io_flags,
+			       spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
+			       spdk_nvme_req_next_sge_cb next_sge_fn);
+
+/**
+ * Submit a zone append I/O to the specified NVMe namespace.
+ *
+ * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
+ * The user must ensure that only one thread submits I/O on a given qpair at any
+ * given time.
+ *
+ * \param ns NVMe namespace to submit the zone append I/O.
+ * \param qpair I/O queue pair to submit the request.
+ * \param zslba Zone Start LBA of the zone that we are appending to.
+ * \param lba_count Length (in sectors) for the zone append operation.
+ * \param cb_fn Callback function to invoke when the I/O is completed.
+ * \param cb_arg Argument to pass to the callback function.
+ * \param io_flags Set flags, defined in nvme_spec.h, for this I/O.
+ * \param reset_sgl_fn Callback function to reset scattered payload.
+ * \param next_sge_fn Callback function to iterate each scattered payload memory
+ * segment.
+ * \param metadata Virtual address pointer to the metadata payload, the length
+ * of metadata is specified by spdk_nvme_ns_get_md_size().
+ * \param apptag_mask Application tag mask.
+ * \param apptag Application tag to use end-to-end protection information.
+ *
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -EINVAL: The request is malformed.
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
+ */
+int spdk_nvme_zns_zone_appendv_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+				       uint64_t zslba, uint32_t lba_count,
+				       spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t io_flags,
+				       spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
+				       spdk_nvme_req_next_sge_cb next_sge_fn, void *metadata,
+				       uint16_t apptag_mask, uint16_t apptag);
+
+/**
  * Submit a Close Zone operation to the specified NVMe namespace.
  *
  * \param ns Namespace.

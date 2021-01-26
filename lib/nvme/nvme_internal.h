@@ -1050,6 +1050,12 @@ int	nvme_ns_cmd_zone_append_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qp
 					void *buffer, void *metadata, uint64_t zslba,
 					uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
 					uint32_t io_flags, uint16_t apptag_mask, uint16_t apptag);
+int nvme_ns_cmd_zone_appendv_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+				     uint64_t zslba, uint32_t lba_count,
+				     spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t io_flags,
+				     spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
+				     spdk_nvme_req_next_sge_cb next_sge_fn, void *metadata,
+				     uint16_t apptag_mask, uint16_t apptag);
 
 int	nvme_fabric_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value);
 int	nvme_fabric_ctrlr_set_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value);
