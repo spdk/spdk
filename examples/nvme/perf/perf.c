@@ -1346,6 +1346,11 @@ io_complete(void *ctx, const struct spdk_nvme_cpl *cpl)
 			RATELIMIT_LOG("Write completed with error (sct=%d, sc=%d)\n",
 				      cpl->status.sct, cpl->status.sc);
 		}
+		if (cpl->status.sct == SPDK_NVME_SCT_GENERIC &&
+		    cpl->status.sc == SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT) {
+			/* The namespace was hotplugged.  Stop trying to send I/O to it. */
+			task->ns_ctx->is_draining = true;
+		}
 	}
 
 	task_complete(task);
