@@ -41,10 +41,15 @@ CFLAGS += $(ENV_CFLAGS)
 
 LIBNAME = event
 C_SRCS = app.c reactor.c rpc.c subsystem.c json_config.c log_rpc.c \
-	 app_rpc.c subsystem_rpc.c scheduler_static.c scheduler_dynamic.c
+	 app_rpc.c subsystem_rpc.c scheduler_static.c
 
+# Do not compile schedulers and governors based on DPDK env
+# if non-DPDK env is used.
+ENV_NAME := $(notdir $(CONFIG_ENV))
+ifeq ($(ENV_NAME),env_dpdk)
 ifeq ($(OS),Linux)
-C_SRCS += gscheduler.c dpdk_governor.c
+C_SRCS += gscheduler.c dpdk_governor.c scheduler_dynamic.c
+endif
 endif
 
 SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_event.map)
