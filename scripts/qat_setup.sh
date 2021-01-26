@@ -2,7 +2,6 @@
 shopt -s nullglob
 
 rootdir=$(readlink -f $(dirname $0))/..
-igb_driverdir=$rootdir/dpdk/build-tmp/kernel/linux/igb_uio/
 allowed_drivers=("igb_uio" "uio_pci_generic")
 
 reload_intel_qat() {
@@ -50,8 +49,7 @@ reload_intel_qat() {
 	modprobe -a intel_qat "${h[@]}"
 }
 
-# This script requires an igb_uio kernel module binary located at $igb_driverdir/igb_uio.ko
-# Please also note that this script is not intended to be comprehensive or production quality.
+# Please note that this script is not intended to be comprehensive or production quality.
 # It supports configuring a single card (the Intel QAT 8970) for use with the SPDK
 
 bad_driver=true
@@ -123,11 +121,9 @@ modprobe uio
 
 # Insert the dpdk uio kernel module.
 if [ $driver_to_bind == "igb_uio" ]; then
-	if ! lsmod | grep -q igb_uio; then
-		if ! insmod $igb_driverdir/igb_uio.ko; then
-			echo "Unable to insert the igb_uio kernel module. Aborting."
-			exit 1
-		fi
+	if ! modprobe igb_uio; then
+		echo "Unable to insert the igb_uio kernel module. Aborting."
+		exit 1
 	fi
 elif [ "$driver_to_bind" == "uio_pci_generic" ]; then
 	modprobe uio_pci_generic
