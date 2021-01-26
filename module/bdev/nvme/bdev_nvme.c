@@ -2581,7 +2581,7 @@ bdev_nvme_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	if (iovcnt == 1) {
 		rc = spdk_nvme_ns_cmd_write_with_md(ns, qpair, iov[0].iov_base, md, lba,
 						    lba_count,
-						    bdev_nvme_readv_done, bio,
+						    bdev_nvme_writev_done, bio,
 						    flags,
 						    0, 0);
 	} else {
