@@ -187,6 +187,7 @@ spdk_nbd_fini(spdk_nbd_fini_cb cb_fn, void *cb_arg)
 static int
 nbd_disk_register(struct spdk_nbd_disk *nbd)
 {
+	/* Make sure nbd_path is not used in this SPDK app */
 	if (nbd_disk_find_by_nbd_path(nbd->nbd_path)) {
 		SPDK_NOTICELOG("%s is already exported\n", nbd->nbd_path);
 		return -EBUSY;
@@ -917,14 +918,6 @@ nbd_start_complete(struct spdk_nbd_start_ctx *ctx)
 	pthread_t	tid;
 	int		flag;
 
-	/* Add nbd_disk to the end of disk list */
-	rc = nbd_disk_register(ctx->nbd);
-	if (rc != 0) {
-		SPDK_ERRLOG("Failed to register %s, it should not happen.\n", ctx->nbd->nbd_path);
-		assert(false);
-		goto err;
-	}
-
 	rc = ioctl(ctx->nbd->dev_fd, NBD_SET_BLKSIZE, spdk_bdev_get_block_size(ctx->nbd->bdev));
 	if (rc == -1) {
 		SPDK_ERRLOG("ioctl(NBD_SET_BLKSIZE) failed: %s\n", spdk_strerror(errno));
@@ -1117,10 +1110,9 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path,
 	TAILQ_INIT(&nbd->received_io_list);
 	TAILQ_INIT(&nbd->executed_io_list);
 
-	/* Make sure nbd_path is not used in this SPDK app */
-	if (nbd_disk_find_by_nbd_path(nbd->nbd_path)) {
-		SPDK_NOTICELOG("%s is already exported\n", nbd->nbd_path);
-		rc = -EBUSY;
+	/* Add nbd_disk to the end of disk list */
+	nbd_disk_register(ctx->nbd);
+	if (rc != 0) {
 		goto err;
 	}
 
