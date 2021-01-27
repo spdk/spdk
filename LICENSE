@@ -1,3 +1,16 @@
+The SPDK repo contains multiple git submodules each with its own
+license info. Unless otherwise noted all other code in this repo
+is BSD as stated below.
+
+Submodule license info:
+dpdk: see dpdk/license
+intel-ipsec-mb: see intel-ipsec-mb/LICENSE
+isa-l: see isa-l/LICENSE
+libvfio-user: see libvfio-user/LICENSE
+ocf: see ocf/LICENSE
+
+The rest of the SPDK repo:
+
 BSD LICENSE
 
 Copyright (c) Intel Corporation.
