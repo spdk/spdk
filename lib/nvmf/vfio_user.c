@@ -1737,7 +1737,7 @@ nvmf_vfio_user_accept(struct spdk_nvmf_transport *transport)
 		}
 
 		err = vfu_attach_ctx(endpoint->vfu_ctx);
-		if (err == -1) {
+		if (err != 0) {
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
 				continue;
 			}
@@ -2217,7 +2217,7 @@ nvmf_vfio_user_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 			err = nvmf_vfio_user_ctrlr_poll(ctrlr);
 			if (spdk_unlikely(err) != 0) {
 				/* initiator shutdown or reset, waiting for another re-connect */
-				if (err == -ENOTCONN) {
+				if (errno == ENOTCONN) {
 					TAILQ_REMOVE(&vu_group->qps, vu_qpair, link);
 					ctrlr->ready = false;
 					continue;
