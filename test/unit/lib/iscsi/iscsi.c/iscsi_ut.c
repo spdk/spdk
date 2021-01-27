@@ -54,7 +54,9 @@
 #define UT_INITIATOR_NAME2	"iqn.2017-11.spdk.io:i0002"
 #define UT_ISCSI_TSIH		256
 
-struct spdk_iscsi_tgt_node	g_tgt;
+struct spdk_iscsi_tgt_node	g_tgt = {
+	.mutex = PTHREAD_MUTEX_INITIALIZER
+};
 
 struct spdk_iscsi_tgt_node *
 iscsi_find_tgt_node(const char *target_name)
