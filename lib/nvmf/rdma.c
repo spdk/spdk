@@ -4106,19 +4106,24 @@ nvmf_rdma_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_transport *transport;
 	uint16_t cid;
-	uint32_t i;
-	struct spdk_nvmf_rdma_request *rdma_req_to_abort = NULL;
+	uint32_t i, max_req_count;
+	struct spdk_nvmf_rdma_request *rdma_req_to_abort = NULL, *rdma_req;
 
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 	rtransport = SPDK_CONTAINEROF(qpair->transport, struct spdk_nvmf_rdma_transport, transport);
 	transport = &rtransport->transport;
 
 	cid = req->cmd->nvme_cmd.cdw10_bits.abort.cid;
+	max_req_count = rqpair->srq == NULL ? rqpair->max_queue_depth : rqpair->poller->max_srq_depth;
 
-	for (i = 0; i < rqpair->max_queue_depth; i++) {
-		if (rqpair->resources->reqs[i].state != RDMA_REQUEST_STATE_FREE &&
-		    rqpair->resources->reqs[i].req.cmd->nvme_cmd.cid == cid) {
-			rdma_req_to_abort = &rqpair->resources->reqs[i];
+	for (i = 0; i < max_req_count; i++) {
+		rdma_req = &rqpair->resources->reqs[i];
+		/* When SRQ == NULL, rqpair has its own requests and req.qpair pointer always points to the qpair
+		 * When SRQ != NULL all rqpairs share common requests and qpair pointer is assigned when we start to
+		 * process a request. So in both cases all requests which are not in FREE state have valid qpair ptr */
+		if (rdma_req->state != RDMA_REQUEST_STATE_FREE && rdma_req->req.cmd->nvme_cmd.cid == cid &&
+		    rdma_req->req.qpair == qpair) {
+			rdma_req_to_abort = rdma_req;
 			break;
 		}
 	}
