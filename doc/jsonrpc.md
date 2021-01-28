@@ -78,7 +78,7 @@ A detailed description of each RPC method and its parameters is also available. 
 scripts/rpc.py bdev_nvme_attach_controller --help
 ~~~
 
-### Generate JSON-RPC methods for current configuration
+### Generate JSON-RPC methods for current configuration {#jsonrpc_generate}
 
 An initial configuration can be specified for an SPDK application via the '-c' command line parameter.
 The configuration file is a JSON file containing all of the JSON-RPC method invocations necessary
@@ -204,6 +204,18 @@ Finally, call the rpc.py script with '--plugin' parameter to provide above pytho
 
 ~~~
 ./scripts/rpc.py --plugin rpc_plugin bdev_example_create 10 4096
+~~~
+
+### Converting from legacy configuration {#jsonrpc_convert}
+
+Starting with SPDK 20.10, legacy configuration file support has been removed.
+Users with extensive configuration files already running in SPDK application,
+can [generate JSON-RPC for current configuration](@ref jsonrpc_generate).
+
+If binary for deploying the application is unavailable, the legacy configuration
+file can be converted to JSON-RPC using python tool:
+~~~
+./scripts/config_converter.py < config.ini > config.json
 ~~~
 
 # App Framework {#jsonrpc_components_app}

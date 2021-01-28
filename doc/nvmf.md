@@ -116,10 +116,6 @@ An NVMe over Fabrics target can be configured using JSON RPCs.
 The basic RPCs needed to configure the NVMe-oF subsystem are detailed below. More information about
 working with NVMe over Fabrics specific RPCs can be found on the @ref jsonrpc_components_nvmf_tgt RPC page.
 
-Using .ini style configuration files for configuration of the NVMe-oF target is deprecated and should
-be replaced with JSON based RPCs. .ini style configuration files can be converted to json format by way
-of the new script `scripts/config_converter.py`.
-
 ## FC transport support {#nvmf_fc_transport}
 
 To build nvmf_tgt with the FC transport, there is an additional FC LLD (Low Level Driver) code dependency.
