@@ -77,6 +77,10 @@ The `--pci-blacklist` command line option has been deprecated, replaced with
 The `--pci-whitelist/-W` command line options have been deprecated, replaced with
 `--pci-allowed/-A`.
 
+Added new experimental `dynamic` scheduler that rebalances idle threads, adjusts CPU frequency
+using dpdk_governor and turns idle reactor cores to interrupt mode. Please see
+[scheduler documentation](https://www.spdk.io/doc/scheduler.html) for details.
+
 ## ioat
 
 The PCI BDF whitelist option has been removed from the `ioat_scan_accel_engine` RPC.

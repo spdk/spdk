@@ -835,6 +835,7 @@ INPUT                  += \
                          peer_2_peer.md \
                          pkgconfig.md \
                          porting.md \
+                         scheduler.md \
                          shfmt.md \
                          spdkcli.md \
                          spdk_top.md \
