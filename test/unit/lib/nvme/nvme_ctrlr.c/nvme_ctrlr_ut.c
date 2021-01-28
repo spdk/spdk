@@ -2,7 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
- *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2020, 2021 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -387,6 +387,9 @@ nvme_ctrlr_cmd_set_async_event_config(struct spdk_nvme_ctrlr *ctrlr,
 	return 0;
 }
 
+static uint32_t *g_active_ns_list = NULL;
+static uint32_t g_active_ns_list_length = 0;
+
 int
 nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr, uint8_t cns, uint16_t cntid, uint32_t nsid,
 			uint8_t csi, void *payload, size_t payload_size,
@@ -397,14 +400,29 @@ nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr, uint8_t cns, uint16_t cnt
 		uint32_t i = 0;
 		struct spdk_nvme_ns_list *ns_list = (struct spdk_nvme_ns_list *)payload;
 
-		for (i = 1; i <= ctrlr->num_ns; i++) {
-			if (i <= nsid) {
-				continue;
-			}
+		memset(payload, 0, payload_size);
+		if (g_active_ns_list == NULL) {
+			for (i = 1; i <= ctrlr->num_ns; i++) {
+				if (i <= nsid) {
+					continue;
+				}
 
-			ns_list->ns_list[count++] = i;
-			if (count == SPDK_COUNTOF(ns_list->ns_list)) {
-				break;
+				ns_list->ns_list[count++] = i;
+				if (count == SPDK_COUNTOF(ns_list->ns_list)) {
+					break;
+				}
+			}
+		} else {
+			for (i = 0; i < g_active_ns_list_length; i++) {
+				uint32_t cur_nsid = g_active_ns_list[i];
+				if (cur_nsid <= nsid) {
+					continue;
+				}
+
+				ns_list->ns_list[count++] = cur_nsid;
+				if (count == SPDK_COUNTOF(ns_list->ns_list)) {
+					break;
+				}
 			}
 		}
 
@@ -1882,17 +1900,17 @@ test_nvme_ctrlr_test_active_ns(void)
 		ctrlr.vs.bits.mjr = 1;
 		ctrlr.vs.bits.mnr = minor;
 		ctrlr.vs.bits.ter = 0;
-		ctrlr.num_ns = 1531;
+		ctrlr.num_ns = ctrlr.cdata.nn = 1531;
 		nvme_ctrlr_identify_active_ns(&ctrlr);
 
 		for (nsid = 1; nsid <= ctrlr.num_ns; nsid++) {
 			CU_ASSERT(spdk_nvme_ctrlr_is_active_ns(&ctrlr, nsid) == true);
 		}
-		ctrlr.num_ns = 1559;
-		for (; nsid <= ctrlr.num_ns; nsid++) {
+
+		for (; nsid <= 1559; nsid++) {
 			CU_ASSERT(spdk_nvme_ctrlr_is_active_ns(&ctrlr, nsid) == false);
 		}
-		ctrlr.num_ns = 1531;
+
 		for (nsid = 0; nsid < ctrlr.num_ns; nsid++) {
 			ctrlr.active_ns_list[nsid] = 0;
 		}
@@ -1940,7 +1958,7 @@ test_nvme_ctrlr_test_active_ns_error_case(void)
 	ctrlr.vs.bits.mjr = 1;
 	ctrlr.vs.bits.mnr = 2;
 	ctrlr.vs.bits.ter = 0;
-	ctrlr.num_ns = 2;
+	ctrlr.cdata.nn = 2;
 
 	set_status_code = SPDK_NVME_SC_INVALID_FIELD;
 	rc = nvme_ctrlr_identify_active_ns(&ctrlr);
@@ -2474,6 +2492,103 @@ test_nvme_ctrlr_set_state(void)
 	MOCK_CLEAR(spdk_get_ticks);
 }
 
+static void
+test_nvme_ctrlr_active_ns_list_v0(void)
+{
+	DECLARE_AND_CONSTRUCT_CTRLR();
+
+	ctrlr.vs.bits.mjr = 1;
+	ctrlr.vs.bits.mnr = 0;
+	ctrlr.vs.bits.ter = 0;
+	ctrlr.cdata.nn = 1024;
+
+	ctrlr.state = NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS;
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_process_init(&ctrlr) == 0); /* -> IDENTIFY_NS */
+	SPDK_CU_ASSERT_FATAL(ctrlr.state == NVME_CTRLR_STATE_IDENTIFY_NS);
+	CU_ASSERT(spdk_nvme_ctrlr_is_active_ns(&ctrlr, 1));
+	CU_ASSERT(spdk_nvme_ctrlr_is_active_ns(&ctrlr, 1024));
+	CU_ASSERT(!spdk_nvme_ctrlr_is_active_ns(&ctrlr, 1025));
+	CU_ASSERT(spdk_nvme_ctrlr_get_first_active_ns(&ctrlr) == 1);
+	CU_ASSERT(spdk_nvme_ctrlr_get_next_active_ns(&ctrlr, 1023) == 1024);
+	CU_ASSERT(spdk_nvme_ctrlr_get_next_active_ns(&ctrlr, 1024) == 0);
+	CU_ASSERT(spdk_nvme_ctrlr_get_next_active_ns(&ctrlr, 1025) == 0);
+
+	nvme_ctrlr_destruct(&ctrlr);
+}
+
+static void
+test_nvme_ctrlr_active_ns_list_v2(void)
+{
+	uint32_t i;
+	uint32_t active_ns_list[1024];
+	DECLARE_AND_CONSTRUCT_CTRLR();
+
+	ctrlr.vs.bits.mjr = 1;
+	ctrlr.vs.bits.mnr = 2;
+	ctrlr.vs.bits.ter = 0;
+	ctrlr.cdata.nn = 4096;
+
+	g_active_ns_list = active_ns_list;
+	g_active_ns_list_length = SPDK_COUNTOF(active_ns_list);
+
+	/* No active namespaces */
+	memset(active_ns_list, 0, sizeof(active_ns_list));
+	ctrlr.state = NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS;
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_process_init(&ctrlr) == 0); /* -> IDENTIFY_NS */
+	SPDK_CU_ASSERT_FATAL(ctrlr.state == NVME_CTRLR_STATE_IDENTIFY_NS);
+	CU_ASSERT(!spdk_nvme_ctrlr_is_active_ns(&ctrlr, 1));
+	CU_ASSERT(!spdk_nvme_ctrlr_is_active_ns(&ctrlr, 1024));
+	CU_ASSERT(!spdk_nvme_ctrlr_is_active_ns(&ctrlr, 1025));
+	CU_ASSERT(spdk_nvme_ctrlr_get_first_active_ns(&ctrlr) == 0);
+	CU_ASSERT(spdk_nvme_ctrlr_get_next_active_ns(&ctrlr, 1024) == 0);
+
+	nvme_ctrlr_destruct(&ctrlr);
+
+	/* 1024 active namespaces - one full page */
+	memset(active_ns_list, 0, sizeof(active_ns_list));
+	for (i = 0; i < 1024; ++i) {
+		active_ns_list[i] = i + 1;
+	}
+
+	ctrlr.state = NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS;
+	g_active_ns_list = active_ns_list;
+	g_active_ns_list_length = SPDK_COUNTOF(active_ns_list);
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_process_init(&ctrlr) == 0); /* -> IDENTIFY_NS */
+	SPDK_CU_ASSERT_FATAL(ctrlr.state == NVME_CTRLR_STATE_IDENTIFY_NS);
+	CU_ASSERT(spdk_nvme_ctrlr_is_active_ns(&ctrlr, 1));
+	CU_ASSERT(spdk_nvme_ctrlr_is_active_ns(&ctrlr, 1024));
+	CU_ASSERT(!spdk_nvme_ctrlr_is_active_ns(&ctrlr, 1025));
+	CU_ASSERT(spdk_nvme_ctrlr_get_first_active_ns(&ctrlr) == 1);
+	CU_ASSERT(spdk_nvme_ctrlr_get_next_active_ns(&ctrlr, 1023) == 1024);
+	CU_ASSERT(spdk_nvme_ctrlr_get_next_active_ns(&ctrlr, 1024) == 0);
+	CU_ASSERT(spdk_nvme_ctrlr_get_next_active_ns(&ctrlr, 1025) == 0);
+
+	nvme_ctrlr_destruct(&ctrlr);
+
+	/* 1023 active namespaces - full page minus one	 */
+	memset(active_ns_list, 0, sizeof(active_ns_list));
+	for (i = 0; i < 1023; ++i) {
+		active_ns_list[i] = i + 1;
+	}
+
+	ctrlr.state = NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS;
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_process_init(&ctrlr) == 0); /* -> IDENTIFY_NS */
+	SPDK_CU_ASSERT_FATAL(ctrlr.state == NVME_CTRLR_STATE_IDENTIFY_NS);
+	CU_ASSERT(spdk_nvme_ctrlr_is_active_ns(&ctrlr, 1));
+	CU_ASSERT(spdk_nvme_ctrlr_is_active_ns(&ctrlr, 1023));
+	CU_ASSERT(!spdk_nvme_ctrlr_is_active_ns(&ctrlr, 1024));
+	CU_ASSERT(!spdk_nvme_ctrlr_is_active_ns(&ctrlr, 1025));
+	CU_ASSERT(spdk_nvme_ctrlr_get_first_active_ns(&ctrlr) == 1);
+	CU_ASSERT(spdk_nvme_ctrlr_get_next_active_ns(&ctrlr, 1023) == 0);
+	CU_ASSERT(spdk_nvme_ctrlr_get_next_active_ns(&ctrlr, 1024) == 0);
+	CU_ASSERT(spdk_nvme_ctrlr_get_next_active_ns(&ctrlr, 1025) == 0);
+
+	nvme_ctrlr_destruct(&ctrlr);
+
+	g_active_ns_list = NULL;
+	g_active_ns_list_length = 0;
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -2518,6 +2633,8 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_cmd_map_sgls);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_set_arbitration_feature);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_set_state);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_active_ns_list_v0);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_active_ns_list_v2);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
