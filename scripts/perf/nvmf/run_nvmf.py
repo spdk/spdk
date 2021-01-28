@@ -647,11 +647,11 @@ class SPDKTarget(Target):
         rpc.client.print_dict(rpc.nvmf.nvmf_get_transports(self.client))
 
         if self.null_block:
-            nvme_section = self.spdk_tgt_add_nullblock(self.null_block)
-            subsystems_section = self.spdk_tgt_add_subsystem_conf(self.nic_ips, self.null_block)
+            self.spdk_tgt_add_nullblock(self.null_block)
+            self.spdk_tgt_add_subsystem_conf(self.nic_ips, self.null_block)
         else:
-            nvme_section = self.spdk_tgt_add_nvme_conf()
-            subsystems_section = self.spdk_tgt_add_subsystem_conf(self.nic_ips)
+            self.spdk_tgt_add_nvme_conf()
+            self.spdk_tgt_add_subsystem_conf(self.nic_ips)
         self.log_print("Done configuring SPDK NVMeOF Target")
 
     def spdk_tgt_add_nullblock(self, null_block_count):
