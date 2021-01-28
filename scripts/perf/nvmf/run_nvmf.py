@@ -29,6 +29,7 @@ class Server:
         self.nic_ips = nic_ips
         self.remote_nic_ips = remote_nic_ips
         self.transport = transport.lower()
+        self._nics_json_obj = {}
 
         if not re.match("^[A-Za-z0-9]*$", name):
             self.log_print("Please use a name which contains only letters or numbers")
@@ -39,6 +40,15 @@ class Server:
 
     def get_uncommented_lines(self, lines):
         return [line for line in lines if line and not line.startswith('#')]
+
+    def get_nic_name_by_ip(self, ip):
+        if not self._nics_json_obj:
+            nics_json_obj = self.exec_cmd(["ip", "-j", "address", "show"])
+            self._nics_json_obj = list(filter(lambda x: x["addr_info"], json.loads(nics_json_obj)))
+        for nic in self._nics_json_obj:
+            for addr in nic["addr_info"]:
+                if ip in addr["local"]:
+                    return nic["ifname"]
 
 
 class Target(Server):
@@ -55,6 +65,7 @@ class Target(Server):
         self.enable_dpdk_memory = False
         self.enable_zcopy = False
         self.scheduler_name = scheduler_settings
+        self._nics_json_obj = json.loads(check_output(["ip", "-j", "address", "show"]))
 
         if sar_settings:
             self.enable_sar, self.sar_delay, self.sar_interval, self.sar_count = sar_settings
@@ -340,6 +351,7 @@ class Initiator(Server):
         self.ssh_connection.connect(self.ip, username=self.username, password=self.password)
         self.remote_call("sudo rm -rf %s/nvmf_perf" % self.spdk_dir)
         self.remote_call("mkdir -p %s" % self.spdk_dir)
+        self._nics_json_obj = json.loads(self.remote_call("ip -j address show")[0])
         self.set_cpu_frequency()
         self.sys_config()
 
