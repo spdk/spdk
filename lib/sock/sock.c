@@ -832,6 +832,8 @@ spdk_sock_write_config_json(struct spdk_json_write_ctx *w)
 			spdk_json_write_named_uint32(w, "send_buf_size", opts.send_buf_size);
 			spdk_json_write_named_bool(w, "enable_recv_pipe", opts.enable_recv_pipe);
 			spdk_json_write_named_bool(w, "enable_zerocopy_send", opts.enable_zerocopy_send);
+			spdk_json_write_named_bool(w, "enable_quickack", opts.enable_quickack);
+			spdk_json_write_named_bool(w, "enable_placement_id", opts.enable_placement_id);
 			spdk_json_write_object_end(w);
 			spdk_json_write_object_end(w);
 		} else {
