@@ -305,6 +305,7 @@ test_nvme_pcie_hotplug_monitor(void)
 	driver.initialized = true;
 	driver.hotplug_fd = 123;
 	CU_ASSERT(pthread_mutexattr_init(&attr) == 0);
+	CU_ASSERT(pthread_mutex_init(&pctrlr.ctrlr.ctrlr_lock, &attr) == 0);
 	CU_ASSERT(pthread_mutex_init(&driver.lock, &attr) == 0);
 	TAILQ_INIT(&driver.shared_attached_ctrlrs);
 	g_spdk_nvme_driver = &driver;
@@ -387,6 +388,7 @@ test_nvme_pcie_hotplug_monitor(void)
 	CU_ASSERT(pctrlr.ctrlr.is_failed == true);
 
 	pthread_mutex_destroy(&driver.lock);
+	pthread_mutex_destroy(&pctrlr.ctrlr.ctrlr_lock);
 	pthread_mutexattr_destroy(&attr);
 	g_spdk_nvme_driver = NULL;
 }
