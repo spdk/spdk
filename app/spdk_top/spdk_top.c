@@ -860,7 +860,7 @@ draw_menu_win(void)
 	wbkgd(g_menu_win, COLOR_PAIR(2));
 	box(g_menu_win, 0, 0);
 	print_max_len(g_menu_win, 1, 1, 0, ALIGN_LEFT,
-		      "  [q] Quit  |  [1-3] TAB selection  |  [PgUp] Previous page  |  [PgDown] Next page  |  [c] Columns  |  [s] Sorting  |  [r] Refresh rate  |  [Enter] Item details  |  [t] Total/Interval");
+		      "  [q] Quit  |  [1-3][Tab] Switch tab  |  [PgUp] Previous page  |  [PgDown] Next page  |  [Enter] Item details  |  [h] Help");
 }
 
 static void
