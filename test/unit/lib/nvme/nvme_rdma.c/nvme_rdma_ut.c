@@ -419,6 +419,32 @@ test_nvme_rdma_alloc_reqs(void)
 	spdk_free(rqpair.cmds);
 }
 
+static void
+test_nvme_rdma_alloc_rsps(void)
+{
+	struct nvme_rdma_qpair rqpair = {0};
+	int rc;
+
+	memset(&g_nvme_hooks, 0, sizeof(g_nvme_hooks));
+
+	/* Test case 1 calloc false */
+	rqpair.num_entries = 0;
+	rc = nvme_rdma_alloc_rsps(&rqpair);
+	CU_ASSERT(rqpair.rsp_sgls == NULL);
+	SPDK_CU_ASSERT_FATAL(rc == -ENOMEM);
+
+	/* Test case 2 calloc success */
+	memset(&rqpair, 0, sizeof(rqpair));
+	rqpair.num_entries = 1;
+
+	rc = nvme_rdma_alloc_rsps(&rqpair);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(rqpair.rsp_sgls != NULL);
+	CU_ASSERT(rqpair.rsp_recv_wrs != NULL);
+	CU_ASSERT(rqpair.rsps != NULL);
+	nvme_rdma_free_rsps(&rqpair);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -433,6 +459,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_rdma_build_contig_request);
 	CU_ADD_TEST(suite, test_nvme_rdma_build_contig_inline_request);
 	CU_ADD_TEST(suite, test_nvme_rdma_alloc_reqs);
+	CU_ADD_TEST(suite, test_nvme_rdma_alloc_rsps);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
