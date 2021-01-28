@@ -772,7 +772,7 @@ class KernelInitiator(Initiator):
                                               cpu_frequency=cpu_frequency, fio_bin=fio_bin)
 
         self.extra_params = ""
-        if kwargs["extra_params"]:
+        if "extra_params" in kwargs.keys():
             self.extra_params = kwargs["extra_params"]
 
     def __del__(self):
