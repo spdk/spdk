@@ -370,7 +370,7 @@ _batch_prep_cmd(struct worker_thread *worker, struct ap_task *task,
 }
 
 static void
-_free_task(struct ap_task *task)
+_free_task_buffers(struct ap_task *task)
 {
 	spdk_dma_free(task->src);
 	spdk_dma_free(task->dst);
@@ -616,19 +616,27 @@ dump_result(void)
 	return total_failed ? 1 : 0;
 }
 
+static inline void
+_free_task_buffers_in_pool(struct worker_thread *worker)
+{
+	struct ap_task *task;
+
+	assert(worker);
+	while ((task = TAILQ_FIRST(&worker->tasks_pool))) {
+		TAILQ_REMOVE(&worker->tasks_pool, task, link);
+		_free_task_buffers(task);
+	}
+}
+
 static int
 _check_draining(void *arg)
 {
 	struct worker_thread *worker = arg;
-	struct ap_task *task;
 
 	assert(worker);
 
 	if (worker->current_queue_depth == 0) {
-		while ((task = TAILQ_FIRST(&worker->tasks_pool))) {
-			TAILQ_REMOVE(&worker->tasks_pool, task, link);
-			_free_task(task);
-		}
+		_free_task_buffers_in_pool(worker);
 		spdk_poller_unregister(&worker->is_draining_poller);
 		unregister_worker(worker);
 	}
@@ -812,10 +820,8 @@ error:
 			TAILQ_REMOVE(&worker->in_use_batches, worker_batch, link);
 		}
 	}
-	while ((task = TAILQ_FIRST(&worker->tasks_pool))) {
-		TAILQ_REMOVE(&worker->tasks_pool, task, link);
-		_free_task(task);
-	}
+
+	_free_task_buffers_in_pool(worker);
 	free(worker->batch_base);
 	free(worker->task_base);
 	free(worker);
