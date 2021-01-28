@@ -237,6 +237,26 @@ function confirm_deps() {
 	fi
 }
 
+function confirm_makefile_deps() {
+	echo "---------------------------------------------------------------------"
+	# Exclude libspdk_env_dpdk.so from the library list. We don't link against this one so that
+	# users can define their own environment abstraction. However we do want to still check it
+	# for dependencies to avoid printing out a bunch of confusing symbols under the missing
+	# symbols section.
+	SPDK_LIBS=("$libdir/"libspdk_!(env_dpdk).so)
+
+	declare -A IGNORED_LIBS=()
+	if grep -q 'CONFIG_RDMA?=n' $rootdir/mk/config.mk; then
+		IGNORED_LIBS["rdma"]=1
+	fi
+
+	(
+		import_libs_deps_mk
+		for lib in "${SPDK_LIBS[@]}"; do confirm_deps "$lib" & done
+		wait
+	)
+}
+
 source ~/autorun-spdk.conf
 config_params=$(get_config_params)
 if [ "$SPDK_TEST_OCF" -eq 1 ]; then
@@ -257,23 +277,7 @@ rm -f $fail_file
 
 run_test "confirm_abi_deps" confirm_abi_deps
 
-echo "---------------------------------------------------------------------"
-# Exclude libspdk_env_dpdk.so from the library list. We don't link against this one so that
-# users can define their own environment abstraction. However we do want to still check it
-# for dependencies to avoid printing out a bunch of confusing symbols under the missing
-# symbols section.
-SPDK_LIBS=("$libdir/"libspdk_!(env_dpdk).so)
-
-declare -A IGNORED_LIBS=()
-if grep -q 'CONFIG_RDMA?=n' $rootdir/mk/config.mk; then
-	IGNORED_LIBS["rdma"]=1
-fi
-
-(
-	import_libs_deps_mk
-	for lib in "${SPDK_LIBS[@]}"; do confirm_deps "$lib" & done
-	wait
-)
+run_test "confirm_makefile_deps" confirm_makefile_deps
 
 $MAKE $MAKEFLAGS clean
 
