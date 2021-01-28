@@ -373,7 +373,11 @@ nvme_ctrlr_submit_admin_request(struct spdk_nvme_ctrlr *ctrlr, struct nvme_reque
 						\
 	STAILQ_INIT(&adminq.free_req);		\
 	STAILQ_INSERT_HEAD(&adminq.free_req, &req, stailq);	\
-	ctrlr.adminq = &adminq;
+	ctrlr.adminq = &adminq;	\
+	CU_ASSERT(pthread_mutex_init(&ctrlr.ctrlr_lock, NULL) == 0);
+
+#define DECONSTRUCT_CTRLR() \
+	CU_ASSERT(pthread_mutex_destroy(&ctrlr.ctrlr_lock) == 0);
 
 static void
 test_firmware_get_log_page(void)
@@ -386,6 +390,8 @@ test_firmware_get_log_page(void)
 	spdk_nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_LOG_FIRMWARE_SLOT, SPDK_NVME_GLOBAL_NS_TAG,
 					 &payload,
 					 sizeof(payload), 0, NULL, NULL);
+
+	DECONSTRUCT_CTRLR();
 }
 
 static void
@@ -399,6 +405,8 @@ test_health_get_log_page(void)
 	spdk_nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_LOG_HEALTH_INFORMATION, health_log_nsid,
 					 &payload,
 					 sizeof(payload), 0, NULL, NULL);
+
+	DECONSTRUCT_CTRLR();
 }
 
 static void
@@ -415,6 +423,8 @@ test_error_get_log_page(void)
 	error_num_entries = 1;
 	spdk_nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_LOG_ERROR, SPDK_NVME_GLOBAL_NS_TAG, &payload,
 					 sizeof(payload), 0, NULL, NULL);
+
+	DECONSTRUCT_CTRLR();
 }
 
 static void test_intel_smart_get_log_page(void)
@@ -426,6 +436,8 @@ static void test_intel_smart_get_log_page(void)
 
 	spdk_nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_INTEL_LOG_SMART, health_log_nsid, &payload,
 					 sizeof(payload), 0, NULL, NULL);
+
+	DECONSTRUCT_CTRLR();
 }
 
 static void test_intel_temperature_get_log_page(void)
@@ -437,6 +449,8 @@ static void test_intel_temperature_get_log_page(void)
 
 	spdk_nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_INTEL_LOG_TEMPERATURE, SPDK_NVME_GLOBAL_NS_TAG,
 					 &payload, sizeof(payload), 0, NULL, NULL);
+
+	DECONSTRUCT_CTRLR();
 }
 
 static void test_intel_read_latency_get_log_page(void)
@@ -449,6 +463,8 @@ static void test_intel_read_latency_get_log_page(void)
 	spdk_nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_INTEL_LOG_READ_CMD_LATENCY,
 					 SPDK_NVME_GLOBAL_NS_TAG,
 					 &payload, sizeof(payload), 0, NULL, NULL);
+
+	DECONSTRUCT_CTRLR();
 }
 
 static void test_intel_write_latency_get_log_page(void)
@@ -461,6 +477,8 @@ static void test_intel_write_latency_get_log_page(void)
 	spdk_nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_INTEL_LOG_WRITE_CMD_LATENCY,
 					 SPDK_NVME_GLOBAL_NS_TAG,
 					 &payload, sizeof(payload), 0, NULL, NULL);
+
+	DECONSTRUCT_CTRLR();
 }
 
 static void test_intel_get_log_page_directory(void)
@@ -473,6 +491,8 @@ static void test_intel_get_log_page_directory(void)
 	spdk_nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_INTEL_LOG_PAGE_DIRECTORY,
 					 SPDK_NVME_GLOBAL_NS_TAG,
 					 &payload, sizeof(payload), 0, NULL, NULL);
+
+	DECONSTRUCT_CTRLR();
 }
 
 static void test_intel_marketing_description_get_log_page(void)
@@ -485,6 +505,8 @@ static void test_intel_marketing_description_get_log_page(void)
 	spdk_nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_INTEL_MARKETING_DESCRIPTION,
 					 SPDK_NVME_GLOBAL_NS_TAG,
 					 &payload, sizeof(payload), 0, NULL, NULL);
+
+	DECONSTRUCT_CTRLR();
 }
 
 static void test_generic_get_log_pages(void)
@@ -512,6 +534,8 @@ test_set_feature_cmd(void)
 	verify_fn = verify_set_feature_cmd;
 
 	spdk_nvme_ctrlr_cmd_set_feature(&ctrlr, feature, feature_cdw11, feature_cdw12, NULL, 0, NULL, NULL);
+
+	DECONSTRUCT_CTRLR();
 }
 
 static void
@@ -524,6 +548,8 @@ test_get_feature_ns_cmd(void)
 	spdk_nvme_ctrlr_cmd_get_feature_ns(&ctrlr, expected_feature_cdw10,
 					   expected_feature_cdw11, NULL, 0,
 					   NULL, NULL, expected_feature_ns);
+
+	DECONSTRUCT_CTRLR();
 }
 
 static void
@@ -536,6 +562,8 @@ test_set_feature_ns_cmd(void)
 	spdk_nvme_ctrlr_cmd_set_feature_ns(&ctrlr, expected_feature_cdw10,
 					   expected_feature_cdw11, expected_feature_cdw12,
 					   NULL, 0, NULL, NULL, expected_feature_ns);
+
+	DECONSTRUCT_CTRLR();
 }
 
 static void
@@ -546,6 +574,8 @@ test_get_feature_cmd(void)
 	verify_fn = verify_get_feature_cmd;
 
 	spdk_nvme_ctrlr_cmd_get_feature(&ctrlr, get_feature, get_feature_cdw11, NULL, 0, NULL, NULL);
+
+	DECONSTRUCT_CTRLR();
 }
 
 static void
@@ -560,6 +590,8 @@ test_abort_cmd(void)
 
 	qpair.id = abort_sqid;
 	spdk_nvme_ctrlr_cmd_abort(&ctrlr, &qpair, abort_cid, NULL, NULL);
+
+	DECONSTRUCT_CTRLR();
 }
 
 static void
@@ -572,6 +604,8 @@ test_io_cmd_raw_no_payload_build(void)
 	verify_fn = verify_io_cmd_raw_no_payload_build;
 
 	spdk_nvme_ctrlr_io_cmd_raw_no_payload_build(&ctrlr, &qpair, &cmd, NULL, NULL);
+
+	DECONSTRUCT_CTRLR();
 }
 
 static void
@@ -584,6 +618,8 @@ test_io_raw_cmd(void)
 	verify_fn = verify_io_raw_cmd;
 
 	spdk_nvme_ctrlr_cmd_io_raw(&ctrlr, &qpair, &cmd, NULL, 1, NULL, NULL);
+
+	DECONSTRUCT_CTRLR();
 }
 
 static void
@@ -596,6 +632,8 @@ test_io_raw_cmd_with_md(void)
 	verify_fn = verify_io_raw_cmd_with_md;
 
 	spdk_nvme_ctrlr_cmd_io_raw_with_md(&ctrlr, &qpair, &cmd, NULL, 1, NULL, NULL, NULL);
+
+	DECONSTRUCT_CTRLR();
 }
 
 static int
@@ -609,6 +647,7 @@ test_set_host_id_by_case(uint32_t host_id_size)
 
 	rc = nvme_ctrlr_cmd_set_host_id(&ctrlr, NULL, expected_host_id_size, NULL, NULL);
 
+	DECONSTRUCT_CTRLR();
 	return rc;
 }
 
@@ -641,6 +680,8 @@ test_namespace_attach(void)
 	verify_fn = verify_namespace_attach;
 
 	nvme_ctrlr_cmd_attach_ns(&ctrlr, namespace_management_nsid, &payload, NULL, NULL);
+
+	DECONSTRUCT_CTRLR();
 }
 
 static void
@@ -652,6 +693,8 @@ test_namespace_detach(void)
 	verify_fn = verify_namespace_detach;
 
 	nvme_ctrlr_cmd_detach_ns(&ctrlr, namespace_management_nsid, &payload, NULL, NULL);
+
+	DECONSTRUCT_CTRLR();
 }
 
 static void
@@ -662,6 +705,8 @@ test_namespace_create(void)
 
 	verify_fn = verify_namespace_create;
 	nvme_ctrlr_cmd_create_ns(&ctrlr, &payload, NULL, NULL);
+
+	DECONSTRUCT_CTRLR();
 }
 
 static void
@@ -671,6 +716,8 @@ test_namespace_delete(void)
 
 	verify_fn = verify_namespace_delete;
 	nvme_ctrlr_cmd_delete_ns(&ctrlr, namespace_management_nsid, NULL, NULL);
+
+	DECONSTRUCT_CTRLR();
 }
 
 static void
@@ -681,6 +728,8 @@ test_doorbell_buffer_config(void)
 	verify_fn = verify_doorbell_buffer_config;
 
 	nvme_ctrlr_cmd_doorbell_buffer_config(&ctrlr, PRP_ENTRY_1, PRP_ENTRY_2, NULL, NULL);
+
+	DECONSTRUCT_CTRLR();
 }
 
 static void
@@ -692,6 +741,8 @@ test_format_nvme(void)
 	verify_fn = verify_format_nvme;
 
 	nvme_ctrlr_cmd_format(&ctrlr, format_nvme_nsid, &format, NULL, NULL);
+
+	DECONSTRUCT_CTRLR();
 }
 
 static void
@@ -706,6 +757,8 @@ test_fw_commit(void)
 	verify_fn = verify_fw_commit;
 
 	nvme_ctrlr_cmd_fw_commit(&ctrlr, &fw_commit, NULL, NULL);
+
+	DECONSTRUCT_CTRLR();
 }
 
 static void
@@ -717,6 +770,8 @@ test_fw_image_download(void)
 
 	nvme_ctrlr_cmd_fw_image_download(&ctrlr, fw_img_size, fw_img_offset, NULL,
 					 NULL, NULL);
+
+	DECONSTRUCT_CTRLR();
 }
 
 static void
@@ -734,6 +789,7 @@ test_sanitize(void)
 
 	nvme_ctrlr_cmd_sanitize(&ctrlr, sanitize_nvme_nsid, &sanitize, 0, NULL, NULL);
 
+	DECONSTRUCT_CTRLR();
 }
 
 static void
@@ -744,6 +800,8 @@ test_directive_receive(void)
 
 	spdk_nvme_ctrlr_cmd_directive_receive(&ctrlr, directive_nsid, 0, 0, 0, NULL, 0,
 					      0, 0, NULL, NULL);
+
+	DECONSTRUCT_CTRLR();
 }
 
 static void
@@ -754,6 +812,8 @@ test_directive_send(void)
 
 	spdk_nvme_ctrlr_cmd_directive_send(&ctrlr, directive_nsid, 0, 0, 0, NULL, 0,
 					   0, 0, NULL, NULL);
+
+	DECONSTRUCT_CTRLR();
 }
 
 static void
