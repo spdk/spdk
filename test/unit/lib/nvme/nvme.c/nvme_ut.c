@@ -372,6 +372,7 @@ test_nvme_init_controllers(void)
 	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
 	ctrlr->trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	CU_ASSERT(pthread_mutexattr_init(&attr) == 0);
+	CU_ASSERT(pthread_mutex_init(&ctrlr->ctrlr_lock, &attr) == 0);
 	CU_ASSERT(pthread_mutex_init(&test_driver.lock, &attr) == 0);
 	TAILQ_INIT(&test_driver.shared_attached_ctrlrs);
 
@@ -410,9 +411,15 @@ test_nvme_init_controllers(void)
 	TAILQ_REMOVE(&g_spdk_nvme_driver->shared_attached_ctrlrs, ctrlr, tailq);
 
 	/*
+	 * Reset to initial state
+	 */
+	CU_ASSERT(pthread_mutex_destroy(&ctrlr->ctrlr_lock) == 0);
+	memset(ctrlr, 0, sizeof(struct spdk_nvme_ctrlr));
+	CU_ASSERT(pthread_mutex_init(&ctrlr->ctrlr_lock, &attr) == 0);
+
+	/*
 	 * Non-PCIe controllers should be added to the per-process list, not the shared list.
 	 */
-	memset(ctrlr, 0, sizeof(struct spdk_nvme_ctrlr));
 	ctrlr->trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
 	probe_ctx = test_nvme_init_get_probe_ctx();
 	TAILQ_INSERT_TAIL(&probe_ctx->init_ctrlrs, ctrlr, tailq);
@@ -424,6 +431,7 @@ test_nvme_init_controllers(void)
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_nvme_driver->shared_attached_ctrlrs));
 	CU_ASSERT(TAILQ_FIRST(&g_nvme_attached_ctrlrs) == ctrlr);
 	TAILQ_REMOVE(&g_nvme_attached_ctrlrs, ctrlr, tailq);
+	CU_ASSERT(pthread_mutex_destroy(&ctrlr->ctrlr_lock) == 0);
 	free(ctrlr);
 	CU_ASSERT(TAILQ_EMPTY(&g_nvme_attached_ctrlrs));
 
