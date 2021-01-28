@@ -21,12 +21,13 @@ from common import *
 
 
 class Server:
-    def __init__(self, name, username, password, mode, nic_ips, transport):
+    def __init__(self, name, username, password, mode, nic_ips, transport, remote_nic_ips=None):
         self.name = name
         self.mode = mode
         self.username = username
         self.password = password
         self.nic_ips = nic_ips
+        self.remote_nic_ips = remote_nic_ips
         self.transport = transport.lower()
 
         if not re.match("^[A-Za-z0-9]*$", name):
@@ -319,11 +320,11 @@ class Target(Server):
 
 
 class Initiator(Server):
-    def __init__(self, name, username, password, mode, nic_ips, ip, transport="rdma", cpu_frequency=None,
+    def __init__(self, name, username, password, mode, nic_ips, ip, remote_nic_ips, transport="rdma", cpu_frequency=None,
                  nvmecli_bin="nvme", workspace="/tmp/spdk", cpus_allowed=None,
                  cpus_allowed_policy="shared", fio_bin="/usr/src/fio/fio"):
 
-        super(Initiator, self).__init__(name, username, password, mode, nic_ips, transport)
+        super(Initiator, self).__init__(name, username, password, mode, nic_ips, transport, remote_nic_ips)
 
         self.ip = ip
         self.spdk_dir = workspace
@@ -428,7 +429,7 @@ ramp_time={ramp_time}
 runtime={run_time}
 """
         if "spdk" in self.mode:
-            subsystems = self.discover_subsystems(self.nic_ips, subsys_no)
+            subsystems = self.discover_subsystems(self.remote_nic_ips, subsys_no)
             bdev_conf = self.gen_spdk_bdev_conf(subsystems)
             self.remote_call("echo '%s' > %s/bdev.conf" % (bdev_conf, self.spdk_dir))
             ioengine = "%s/build/fio/spdk_bdev" % self.spdk_dir
@@ -763,11 +764,11 @@ class SPDKTarget(Target):
 
 
 class KernelInitiator(Initiator):
-    def __init__(self, name, username, password, mode, nic_ips, ip, transport,
+    def __init__(self, name, username, password, mode, nic_ips, remote_nic_ips, ip, transport,
                  cpus_allowed=None, cpus_allowed_policy="shared",
                  cpu_frequency=None, fio_bin="/usr/src/fio/fio", **kwargs):
 
-        super(KernelInitiator, self).__init__(name, username, password, mode, nic_ips, ip, transport,
+        super(KernelInitiator, self).__init__(name, username, password, mode, nic_ips, ip, remote_nic_ips, transport,
                                               cpus_allowed=cpus_allowed, cpus_allowed_policy=cpus_allowed_policy,
                                               cpu_frequency=cpu_frequency, fio_bin=fio_bin)
 
@@ -824,10 +825,10 @@ class KernelInitiator(Initiator):
 
 
 class SPDKInitiator(Initiator):
-    def __init__(self, name, username, password, mode, nic_ips, ip, transport="rdma",
+    def __init__(self, name, username, password, mode, nic_ips, remote_nic_ips, ip, transport="rdma",
                  num_cores=1, cpus_allowed=None, cpus_allowed_policy="shared",
                  cpu_frequency=None, fio_bin="/usr/src/fio/fio", **kwargs):
-        super(SPDKInitiator, self).__init__(name, username, password, mode, nic_ips, ip, transport,
+        super(SPDKInitiator, self).__init__(name, username, password, mode, nic_ips, ip, remote_nic_ips, transport,
                                             cpus_allowed=cpus_allowed, cpus_allowed_policy=cpus_allowed_policy,
                                             cpu_frequency=cpu_frequency, fio_bin=fio_bin)
 
@@ -969,7 +970,7 @@ if __name__ == "__main__":
         configs = []
         for i in initiators:
             if i.mode == "kernel":
-                i.kernel_init_connect(i.nic_ips, target_obj.subsys_no)
+                i.kernel_init_connect(i.remote_nic_ips, target_obj.subsys_no)
 
             cfg = i.gen_fio_config(rw, fio_rw_mix_read, block_size, io_depth, target_obj.subsys_no,
                                    fio_num_jobs, fio_ramp_time, fio_run_time)

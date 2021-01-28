@@ -73,6 +73,10 @@ Management IP address used for SSH communication with initiator server.
 
 ### nic_ips
 
+List of IP addresses local to initiator.
+
+### remote_nic_ips
+
 List of target IP addresses to which the initiator should try to connect.
 
 ### mode
