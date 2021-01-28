@@ -81,6 +81,8 @@ export SPDK_TEST_NVME_CLI
 export SPDK_TEST_NVME_CUSE
 : ${SPDK_TEST_NVMF=0}
 export SPDK_TEST_NVMF
+: ${SPDK_TEST_VFIOUSER=0}
+export SPDK_TEST_VFIOUSER
 : ${SPDK_TEST_NVMF_TRANSPORT="rdma"}
 export SPDK_TEST_NVMF_TRANSPORT
 : ${SPDK_TEST_RBD=0}
@@ -420,6 +422,10 @@ function get_config_params() {
 
 	if [ $SPDK_TEST_RAID5 -eq 1 ]; then
 		config_params+=' --with-raid5'
+	fi
+
+	if [ $SPDK_TEST_VFIOUSER -eq 1 ]; then
+		config_params+=' --with-vfio-user'
 	fi
 
 	# Check whether liburing library header exists
