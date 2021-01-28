@@ -42,7 +42,11 @@
 						\
 	STAILQ_INIT(&adminq.free_req);		\
 	STAILQ_INSERT_HEAD(&adminq.free_req, &req, stailq);	\
-	ctrlr.adminq = &adminq;
+	ctrlr.adminq = &adminq;	\
+	CU_ASSERT(pthread_mutex_init(&ctrlr.ctrlr_lock, NULL) == 0);
+
+#define DECONSTRUCT_CTRLR() \
+	CU_ASSERT(pthread_mutex_destroy(&ctrlr.ctrlr_lock) == 0);
 
 pid_t g_spdk_nvme_pid;
 struct nvme_request g_req;
@@ -84,6 +88,8 @@ test_geometry_cmd(void)
 
 	spdk_nvme_ocssd_ctrlr_cmd_geometry(&ctrlr, expected_geometry_ns, &geo,
 					   sizeof(geo), NULL, NULL);
+
+	DECONSTRUCT_CTRLR();
 }
 
 int main(int argc, char **argv)
