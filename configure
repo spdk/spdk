@@ -454,36 +454,22 @@ else
 fi
 BUILD_CMD+=(-I/usr/local/include -L/usr/local/lib)
 
-function set_os_id_version() {
-	if [[ -f /etc/os-release ]]; then
-		source /etc/os-release
-	fi
-
-	OSID=$ID
-	OSVERSION=$VERSION_ID
-
-	echo "OS-ID: $OSID | OS-Version: $OSVERSION"
-}
-
 if [[ "${CONFIG[VFIO_USER]}" = "y" ]]; then
-	set_os_id_version
 
-	if [[ $arch != x86_64* ]] || [[ $sys_name == "FreeBSD" ]]; then
-		echo "Non x86_64 and Linux platform, disable CONFIG_VFIO_USER"
-		CONFIG[VFIO_USER]="n"
-	# disable tests on ubuntu16 due to lack of macro definition in pci_regs.h
-	elif [[ $OSID == "ubuntu" ]] && [[ $OSVERSION == "16.04" ]]; then
-		echo "ubuntu16 OS, disable CONFIG_VFIO_USER"
-		CONFIG[VFIO_USER]="n"
-	elif ! hash cmake; then
-		echo "cmake not installed, disable CONFIG_VFIO_USER"
-		CONFIG[VFIO_USER]="n"
-	elif [[ ! -d /usr/include/json-c ]] && [[ ! -d /usr/local/include/json-c ]]; then
-		echo "json-c-devel not installed, disable CONFIG_VFIO_USER"
-		CONFIG[VFIO_USER]="n"
-	elif [[ ! -e /usr/include/cmocka.h ]] && [[ ! -e /usr/local/include/cmocka.h ]]; then
-		echo "libcmocka-devel not installed, disable CONFIG_VFIO_USER"
-		CONFIG[VFIO_USER]="n"
+	if ! hash cmake; then
+		echo "ERROR: --with-vfio-user requires cmake"
+		echo "Please install then re-run this script"
+		exit 1
+	fi
+	if [[ ! -d /usr/include/json-c ]] && [[ ! -d /usr/local/include/json-c ]]; then
+		echo "ERROR: --with-vfio-user requires json-c-devel"
+		echo "Please install then re-run this script"
+		exit 1
+	fi
+	if [[ ! -e /usr/include/cmocka.h ]] && [[ ! -e /usr/local/include/cmocka.h ]]; then
+		echo "ERROR: --with-vfio-user requires libcmocka-devel"
+		echo "Please install then re-run this script"
+		exit 1
 	fi
 fi
 
