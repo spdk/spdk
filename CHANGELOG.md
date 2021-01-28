@@ -1,6 +1,6 @@
 # Changelog
 
-## v21.01: (Upcoming Release)
+## v21.01: Dynamic scheduler, vfio-user, ZNS Zone Append
 
 ### bdev
 
