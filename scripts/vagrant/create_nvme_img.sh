@@ -83,3 +83,6 @@ esac
 
 chmod 777 "$nvme_disk"
 chown $qemu_user_group "$nvme_disk"
+if [ "$type" == "ocssd" ]; then
+	chown $qemu_user_group "${nvme_disk}_ocssd_md"
+fi
