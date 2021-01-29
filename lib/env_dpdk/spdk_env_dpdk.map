@@ -79,6 +79,7 @@
 	spdk_pci_device_unclaim;
 	spdk_pci_device_detach;
 	spdk_pci_device_attach;
+	spdk_pci_device_allow;
 	spdk_pci_device_cfg_read;
 	spdk_pci_device_cfg_write;
 	spdk_pci_device_cfg_read8;

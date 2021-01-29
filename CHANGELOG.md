@@ -2,6 +2,11 @@
 
 ## v21.04: (Upcoming Release)
 
+### env
+
+Added spdk_pci_device_allow API to allow applications to add PCI addresses to
+the allowed list after the application has started.
+
 ### nvme
 
 Added `spdk_nvme_qpair_get_optimal_poll_group` function and `qpair_get_optimal_poll_group`

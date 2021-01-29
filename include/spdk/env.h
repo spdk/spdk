@@ -1009,6 +1009,22 @@ int spdk_pci_device_attach(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum
 			   void *enum_ctx, struct spdk_pci_addr *pci_address);
 
 /**
+ * Allow the specified PCI device to be probed by the calling process.
+ *
+ * When using spdk_pci_enumerate(), only devices with allowed PCI addresses will
+ * be probed.  By default, this is all PCI addresses, but the pci_allowed
+ * and pci_blocked environment options can override this behavior.
+ * This API enables the caller to allow a new PCI address that may have previously
+ * been blocked.
+ *
+ * \param pci_addr PCI address to allow
+ * \return 0 if successful
+ * \return -ENOMEM if environment-specific data structures cannot be allocated
+ * \return -EINVAL if specified PCI address is not valid
+ */
+int spdk_pci_device_allow(struct spdk_pci_addr *pci_addr);
+
+/**
  * Read \c len bytes from the PCI configuration space.
  *
  * \param dev PCI device.

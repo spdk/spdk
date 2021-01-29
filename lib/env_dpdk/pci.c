@@ -1072,3 +1072,37 @@ spdk_pci_device_get_type(const struct spdk_pci_device *dev)
 {
 	return dev->type;
 }
+
+int
+spdk_pci_device_allow(struct spdk_pci_addr *pci_addr)
+{
+	struct rte_devargs *da;
+	char devargs_str[128];
+
+	da = calloc(1, sizeof(*da));
+	if (da == NULL) {
+		SPDK_ERRLOG("could not allocate rte_devargs\n");
+		return -ENOMEM;
+	}
+
+	snprintf(devargs_str, sizeof(devargs_str), "pci:%04x:%02x:%02x:%x",
+		 pci_addr->domain, pci_addr->bus, pci_addr->dev, pci_addr->func);
+	if (rte_devargs_parse(da, devargs_str) != 0) {
+		SPDK_ERRLOG("rte_devargs_parse() failed on '%s'\n", devargs_str);
+		free(da);
+		return -EINVAL;
+	}
+	da->policy = RTE_DEV_ALLOWED;
+	/* Note: if a devargs already exists for this device address, it just gets
+	 * overridden.  So we do not need to check if the devargs already exists.
+	 * DPDK will take care of memory management for the devargs structure after
+	 * it has been inserted, so there's nothing SPDK needs to track.
+	 */
+	if (rte_devargs_insert(&da) != 0) {
+		SPDK_ERRLOG("rte_devargs_insert() failed on '%s'\n", devargs_str);
+		free(da);
+		return -EINVAL;
+	}
+
+	return 0;
+}
