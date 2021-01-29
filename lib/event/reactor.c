@@ -1010,8 +1010,10 @@ void
 spdk_reactors_start(void)
 {
 	struct spdk_reactor *reactor;
+	struct spdk_cpuset tmp_cpumask = {};
 	uint32_t i, current_core;
 	int rc;
+	char thread_name[32];
 
 	g_rusage_period = (CONTEXT_SWITCH_MONITOR_PERIOD * spdk_get_ticks_hz()) / SPDK_SEC_TO_USEC;
 	g_reactor_state = SPDK_REACTOR_STATE_RUNNING;
@@ -1030,6 +1032,14 @@ spdk_reactors_start(void)
 				assert(false);
 				return;
 			}
+
+			/* For now, for each reactor spawn one thread. */
+			snprintf(thread_name, sizeof(thread_name), "reactor_%u", reactor->lcore);
+
+			spdk_cpuset_zero(&tmp_cpumask);
+			spdk_cpuset_set_cpu(&tmp_cpumask, i, true);
+
+			spdk_thread_create(thread_name, &tmp_cpumask);
 		}
 		spdk_cpuset_set_cpu(&g_reactor_core_mask, i, true);
 	}
