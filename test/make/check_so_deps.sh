@@ -49,17 +49,6 @@ function confirm_abi_deps() {
 	fi
 
 	cat << EOF > ${suppression_file}
-[suppress_type]
-	name = spdk_nvme_ctrlr_data
-[suppress_type]
-	type_kind = enum
-	changed_enumerators = SPDK_BDEV_NUM_IO_TYPES
-[suppress_type]
-	name = spdk_env_opts
-[suppress_type]
-	name = spdk_app_opts
-[suppress_type]
-	name = spdk_thread
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do
@@ -143,6 +132,8 @@ EOF
 			fi
 
 			if [[ $so_name_changed == yes ]]; then
+				# After 21.01 LTS all SO major versions were intentionally increased. Disable this check until SPDK 21.04 release.
+				found_abi_change=true
 				if ! $found_abi_change; then
 					echo "SO name for $so_file changed without a change to abi. please revert that change."
 					touch $fail_file
