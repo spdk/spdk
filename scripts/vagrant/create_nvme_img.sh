@@ -41,37 +41,45 @@ while getopts "s:n:t:h-:" opt; do
 	esac
 done
 
-if [ ! "${SYSTEM}" = "FreeBSD" ]; then
-	WHICH_OS=$(lsb_release -i | awk '{print $3}')
-	case $type in
-		"nvme")
-			qemu-img create -f raw $nvme_disk $size
-			;;
-		"ocssd")
-			if [ $size == "1024M" ]; then
-				size="9G"
-			fi
-			fallocate -l $size $nvme_disk
-			touch ${nvme_disk}_ocssd_md
-			;;
-		*)
-			echo "We support only nvme and ocssd disks types"
-			exit 1
-			;;
-	esac
-	#Change SE Policy on Fedora
-	if [ $WHICH_OS == "Fedora" ]; then
-		sudo chcon -t svirt_image_t $nvme_disk
-	fi
+if [ "${SYSTEM}" != "Linux" ]; then
+	echo "This script supports only Linux OS" >&2
+	exit 2
+fi
 
-	chmod 777 $nvme_disk
-	if [ $WHICH_OS == "Fedora" ]; then
-		chown qemu:qemu $nvme_disk
-	elif [ $WHICH_OS == "Ubuntu" ]; then
-		chown libvirt-qemu:kvm $nvme_disk
-	else
+WHICH_OS=$(lsb_release -i | awk '{print $3}')
+case $type in
+	"nvme")
+		qemu-img create -f raw "$nvme_disk" $size
+		;;
+	"ocssd")
+		if [ $size == "1024M" ]; then
+			size="9G"
+		fi
+		fallocate -l $size "$nvme_disk"
+		touch "${nvme_disk}_ocssd_md"
+		;;
+	*)
+		echo "We support only nvme and ocssd disks types"
+		exit 1
+		;;
+esac
+
+case $WHICH_OS in
+	"Fedora")
+		qemu_user_group="qemu:qemu"
+
+		# Change SE Policy
+		sudo chcon -t svirt_image_t "$nvme_disk"
+		;;
+	"Ubuntu")
+		qemu_user_group="libvirt-qemu:kvm"
+		;;
+	*)
 		# That's just a wild guess for now
 		# TODO: needs improvement for other distros
-		chown libvirt-qemu:kvm $nvme_disk
-	fi
-fi
+		qemu_user_group="libvirt-qemu:kvm"
+		;;
+esac
+
+chmod 777 "$nvme_disk"
+chown $qemu_user_group "$nvme_disk"
