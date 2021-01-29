@@ -927,26 +927,6 @@ vhost_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 }
 
 static void
-vhost_setup_core_mask(void *ctx)
-{
-	struct spdk_thread *thread = spdk_get_thread();
-	spdk_cpuset_or(&g_vhost_core_mask, spdk_thread_get_cpumask(thread));
-}
-
-static void
-vhost_setup_core_mask_done(void *ctx)
-{
-	spdk_vhost_init_cb init_cb = ctx;
-
-	if (spdk_cpuset_count(&g_vhost_core_mask) == 0) {
-		init_cb(-ECHILD);
-		return;
-	}
-
-	init_cb(0);
-}
-
-static void
 vhost_dev_thread_exit(void *arg1)
 {
 	spdk_thread_exit(spdk_get_thread());
@@ -1573,7 +1553,8 @@ void
 spdk_vhost_init(spdk_vhost_init_cb init_cb)
 {
 	size_t len;
-	int ret;
+	uint32_t i;
+	int ret = 0;
 
 	g_vhost_init_thread = spdk_get_thread();
 	assert(g_vhost_init_thread != NULL);
@@ -1600,12 +1581,9 @@ spdk_vhost_init(spdk_vhost_init_cb init_cb)
 	}
 
 	spdk_cpuset_zero(&g_vhost_core_mask);
-
-	/* iterate threads instead of using SPDK_ENV_FOREACH_CORE to ensure that threads are really
-	 * created.
-	 */
-	spdk_for_each_thread(vhost_setup_core_mask, init_cb, vhost_setup_core_mask_done);
-	return;
+	SPDK_ENV_FOREACH_CORE(i) {
+		spdk_cpuset_set_cpu(&g_vhost_core_mask, i, true);
+	}
 out:
 	init_cb(ret);
 }
