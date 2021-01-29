@@ -55,6 +55,7 @@ static int nvme_pcie_ctrlr_attach(struct spdk_nvme_probe_ctx *probe_ctx,
 
 static uint16_t g_signal_lock;
 static bool g_sigset = false;
+static spdk_nvme_pcie_hotplug_filter_cb g_hotplug_filter_cb;
 
 static void
 nvme_sigbus_fault_sighandler(int signum, siginfo_t *info, void *ctx)
@@ -115,7 +116,10 @@ _nvme_pcie_hotplug_monitor(struct spdk_nvme_probe_ctx *probe_ctx)
 				SPDK_DEBUGLOG(nvme, "add nvme address: %s\n",
 					      event.traddr);
 				if (spdk_process_is_primary()) {
-					if (!spdk_pci_addr_parse(&pci_addr, event.traddr)) {
+					if (spdk_pci_addr_parse(&pci_addr, event.traddr) != 0) {
+						continue;
+					}
+					if (g_hotplug_filter_cb == NULL || g_hotplug_filter_cb(&pci_addr)) {
 						nvme_pcie_ctrlr_attach(probe_ctx, &pci_addr);
 					}
 				}
@@ -598,6 +602,7 @@ nvme_pcie_ctrlr_attach(struct spdk_nvme_probe_ctx *probe_ctx, struct spdk_pci_ad
 	enum_ctx.has_pci_addr = true;
 	enum_ctx.pci_addr = *pci_addr;
 
+	spdk_pci_device_allow(pci_addr);
 	return spdk_pci_enumerate(spdk_pci_nvme_get_driver(), pcie_nvme_enum_cb, &enum_ctx);
 }
 
@@ -1286,6 +1291,12 @@ exit:
 	}
 
 	return rc;
+}
+
+void
+spdk_nvme_pcie_set_hotplug_filter(spdk_nvme_pcie_hotplug_filter_cb filter_cb)
+{
+	g_hotplug_filter_cb = filter_cb;
 }
 
 static struct spdk_pci_id nvme_pci_driver_id[] = {

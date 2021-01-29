@@ -27,6 +27,8 @@
 	spdk_nvme_detach_async;
 	spdk_nvme_detach_poll_async;
 
+	spdk_nvme_pcie_set_hotplug_filter;
+
 	spdk_nvme_ctrlr_is_discovery;
 	spdk_nvme_ctrlr_get_default_ctrlr_opts;
 	spdk_nvme_ctrlr_set_trid;

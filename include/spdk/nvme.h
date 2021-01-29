@@ -657,6 +657,24 @@ typedef void (*spdk_nvme_attach_cb)(void *cb_ctx, const struct spdk_nvme_transpo
  */
 typedef void (*spdk_nvme_remove_cb)(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr);
 
+typedef bool (*spdk_nvme_pcie_hotplug_filter_cb)(const struct spdk_pci_addr *addr);
+
+/**
+ * Register the associated function to allow filtering of hot-inserted PCIe SSDs.
+ *
+ * If an application is using spdk_nvme_probe() to detect hot-inserted SSDs,
+ * this function may be used to register a function to filter those SSDs.
+ * If the filter function returns true, the nvme library will notify the SPDK
+ * env layer to allow probing of the device.
+ *
+ * Registering a filter function is optional.  If none is registered, the nvme
+ * library will allow probing of all hot-inserted SSDs.
+ *
+ * \param filter_cb Filter function callback routine
+ */
+void
+spdk_nvme_pcie_set_hotplug_filter(spdk_nvme_pcie_hotplug_filter_cb filter_cb);
+
 /**
  * Enumerate the bus indicated by the transport ID and attach the userspace NVMe
  * driver to each device found if desired.
