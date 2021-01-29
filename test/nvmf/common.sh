@@ -9,10 +9,20 @@ NVMF_SERIAL=SPDK00000000000001
 
 function build_nvmf_app_args() {
 	if [ $SPDK_RUN_NON_ROOT -eq 1 ]; then
-		NVMF_APP=(sudo -u "$USER" "${NVMF_APP[@]}")
-		NVMF_APP+=(-i "$NVMF_APP_SHM_ID" -e 0xFFFF)
-	else
-		NVMF_APP+=(-i "$NVMF_APP_SHM_ID" -e 0xFFFF)
+		# We assume that test script is started from sudo
+		NVMF_APP=(sudo -E -u $SUDO_USER "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" "${NVMF_APP[@]}")
+	fi
+	NVMF_APP+=(-i "$NVMF_APP_SHM_ID" -e 0xFFFF)
+
+	if [ -n "$SPDK_HUGE_DIR" ]; then
+		NVMF_APP+=(--huge-dir "$SPDK_HUGE_DIR")
+	elif [ $SPDK_RUN_NON_ROOT -eq 1 ]; then
+		echo "In non-root test mode you have to set SPDK_HUGE_DIR variable." >&2
+		echo "For example:" >&2
+		echo "sudo mkdir /mnt/spdk_hugetlbfs" >&2
+		echo "sudo chown ${SUDO_USER}: /mnt/spdk_hugetlbfs" >&2
+		echo "export SPDK_HUGE_DIR=/mnt/spdk_hugetlbfs" >&2
+		return 1
 	fi
 }
 

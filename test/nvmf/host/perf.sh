@@ -13,6 +13,14 @@ rpc_py="$rootdir/scripts/rpc.py"
 nvmftestinit
 nvmfappstart -m 0xF
 
+function perf_app() {
+	if [ $SPDK_RUN_NON_ROOT -eq 1 ]; then
+		sudo -E -u $SUDO_USER "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" $SPDK_EXAMPLE_DIR/perf "$@"
+	else
+		$SPDK_EXAMPLE_DIR/perf "$@"
+	fi
+}
+
 $rootdir/scripts/gen_nvme.sh | $rpc_py load_subsystem_config
 
 local_nvme_trid="trtype:PCIe traddr:"$($rpc_py framework_get_config bdev | jq -r '.[].params | select(.name=="Nvme0").traddr')
@@ -31,12 +39,7 @@ $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPOR
 
 # Test multi-process access to local NVMe device
 if [ -n "$local_nvme_trid" ]; then
-	if [ $SPDK_RUN_NON_ROOT -eq 1 ]; then
-		perf_app="sudo -u $USER $SPDK_EXAMPLE_DIR/perf"
-	else
-		perf_app="$SPDK_EXAMPLE_DIR/perf"
-	fi
-	$perf_app -i $NVMF_APP_SHM_ID -q 32 -o 4096 -w randrw -M 50 -t 1 -r "$local_nvme_trid"
+	perf_app -i $NVMF_APP_SHM_ID -q 32 -o 4096 -w randrw -M 50 -t 1 -r "$local_nvme_trid"
 fi
 
 $SPDK_EXAMPLE_DIR/perf -q 1 -o 4096 -w randrw -M 50 -t 1 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
