@@ -2005,7 +2005,6 @@ display_thread(struct rpc_thread_info *thread_info)
 		c = wgetch(thread_win);
 
 		switch (c) {
-		case 10: /* ENTER */
 		case 27: /* ESC */
 			stop_loop = true;
 			break;
@@ -2230,7 +2229,6 @@ show_poller(uint8_t current_page)
 	while (!stop_loop) {
 		c = wgetch(poller_win);
 		switch (c) {
-		case 10: /* ENTER */
 		case 27: /* ESC */
 			stop_loop = true;
 			break;
