@@ -687,7 +687,6 @@ test_lba_translation(void)
 	const char *bdev_name = "nvme0n1";
 	struct spdk_ocssd_geometry_data geometry = {};
 	struct bdev_ocssd_ns *ocssd_ns;
-	struct ocssd_bdev *ocssd_bdev;
 	struct spdk_bdev *bdev;
 	uint64_t lba;
 	int rc;
@@ -717,33 +716,32 @@ test_lba_translation(void)
 
 	bdev = spdk_bdev_get_by_name(bdev_name);
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
-	ocssd_bdev = SPDK_CONTAINEROF(bdev, struct ocssd_bdev, nvme_bdev.disk);
 
-	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, ocssd_ns, 0);
+	lba = bdev_ocssd_to_disk_lba(ocssd_ns, 0);
 	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, 0, 0, 0, 0));
-	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_bdev, ocssd_ns, lba), 0);
+	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_ns, lba), 0);
 
-	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, ocssd_ns, bdev->zone_size - 1);
+	lba = bdev_ocssd_to_disk_lba(ocssd_ns, bdev->zone_size - 1);
 	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, bdev->zone_size - 1, 0, 0, 0));
-	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_bdev, ocssd_ns, lba), bdev->zone_size - 1);
+	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_ns, lba), bdev->zone_size - 1);
 
-	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, ocssd_ns, bdev->zone_size);
+	lba = bdev_ocssd_to_disk_lba(ocssd_ns, bdev->zone_size);
 	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, 0, 0, 1, 0));
-	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_bdev, ocssd_ns, lba), bdev->zone_size);
+	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_ns, lba), bdev->zone_size);
 
-	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, ocssd_ns, bdev->zone_size * geometry.num_pu);
+	lba = bdev_ocssd_to_disk_lba(ocssd_ns, bdev->zone_size * geometry.num_pu);
 	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, 0, 0, 0, 1));
-	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_bdev, ocssd_ns, lba),
+	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_ns, lba),
 			bdev->zone_size * geometry.num_pu);
 
-	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, ocssd_ns, bdev->zone_size * geometry.num_pu + 68);
+	lba = bdev_ocssd_to_disk_lba(ocssd_ns, bdev->zone_size * geometry.num_pu + 68);
 	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, 68, 0, 0, 1));
-	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_bdev, ocssd_ns, lba),
+	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_ns, lba),
 			bdev->zone_size * geometry.num_pu + 68);
 
-	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, ocssd_ns, bdev->zone_size + 68);
+	lba = bdev_ocssd_to_disk_lba(ocssd_ns, bdev->zone_size + 68);
 	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, 68, 0, 1, 0));
-	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_bdev, ocssd_ns, lba), bdev->zone_size + 68);
+	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_ns, lba), bdev->zone_size + 68);
 
 	delete_nvme_bdev_controller(nvme_bdev_ctrlr);
 	free_controller(ctrlr);
@@ -773,35 +771,34 @@ test_lba_translation(void)
 
 	bdev = spdk_bdev_get_by_name(bdev_name);
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
-	ocssd_bdev = SPDK_CONTAINEROF(bdev, struct ocssd_bdev, nvme_bdev.disk);
 
-	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, ocssd_ns, 0);
+	lba = bdev_ocssd_to_disk_lba(ocssd_ns, 0);
 	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, 0, 0, 0, 0));
-	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_bdev, ocssd_ns, lba), 0);
+	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_ns, lba), 0);
 
-	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, ocssd_ns, bdev->zone_size - 1);
+	lba = bdev_ocssd_to_disk_lba(ocssd_ns, bdev->zone_size - 1);
 	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, bdev->zone_size - 1, 0, 0, 0));
-	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_bdev, ocssd_ns, lba), bdev->zone_size - 1);
+	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_ns, lba), bdev->zone_size - 1);
 
-	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, ocssd_ns, bdev->zone_size);
+	lba = bdev_ocssd_to_disk_lba(ocssd_ns, bdev->zone_size);
 	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, 0, 0, 1, 0));
-	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_bdev, ocssd_ns, lba), bdev->zone_size);
+	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_ns, lba), bdev->zone_size);
 
-	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, ocssd_ns, bdev->zone_size * (geometry.num_pu - 1));
+	lba = bdev_ocssd_to_disk_lba(ocssd_ns, bdev->zone_size * (geometry.num_pu - 1));
 	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, 0, 0, geometry.num_pu - 1, 0));
-	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_bdev, ocssd_ns, lba),
+	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_ns, lba),
 			bdev->zone_size * (geometry.num_pu - 1));
 
-	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, ocssd_ns,
+	lba = bdev_ocssd_to_disk_lba(ocssd_ns,
 				     bdev->zone_size * geometry.num_pu * geometry.num_grp);
 	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, 0, 1, 0, 0));
-	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_bdev, ocssd_ns, lba),
+	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_ns, lba),
 			bdev->zone_size * geometry.num_pu * geometry.num_grp);
 
-	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, ocssd_ns,
+	lba = bdev_ocssd_to_disk_lba(ocssd_ns,
 				     bdev->zone_size * geometry.num_pu * geometry.num_grp + 68);
 	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, 68, 1, 0, 0));
-	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_bdev, ocssd_ns, lba),
+	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_ns, lba),
 			bdev->zone_size * geometry.num_pu * geometry.num_grp + 68);
 
 	delete_nvme_bdev_controller(nvme_bdev_ctrlr);

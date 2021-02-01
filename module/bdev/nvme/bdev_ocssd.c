@@ -280,27 +280,23 @@ bdev_ocssd_to_parallel_unit(const struct spdk_ocssd_geometry_data *geometry,
 }
 
 static uint64_t
-bdev_ocssd_from_disk_lba(struct ocssd_bdev *ocssd_bdev,
-			 struct bdev_ocssd_ns *ocssd_ns, uint64_t lba)
+bdev_ocssd_from_disk_lba(struct bdev_ocssd_ns *ocssd_ns, uint64_t lba)
 {
 	const struct spdk_ocssd_geometry_data *geometry = &ocssd_ns->geometry;
 	const struct bdev_ocssd_lba_offsets *offsets = &ocssd_ns->lba_offsets;
-	const struct bdev_ocssd_range *range = &ocssd_bdev->range;
 	uint64_t lbk, chk, punit;
 
 	lbk = (lba >> offsets->lbk) & ((1 << geometry->lbaf.lbk_len) - 1);
 	chk = (lba >> offsets->chk) & ((1 << geometry->lbaf.chk_len) - 1);
 
 	punit = bdev_ocssd_to_parallel_unit(geometry, offsets, lba);
-	punit -= range->begin;
 
 	return lbk + punit * geometry->clba + chk * geometry->clba *
 	       (geometry->num_grp * geometry->num_pu);
 }
 
 static uint64_t
-bdev_ocssd_to_disk_lba(struct ocssd_bdev *ocssd_bdev,
-		       struct bdev_ocssd_ns *ocssd_ns, uint64_t lba)
+bdev_ocssd_to_disk_lba(struct bdev_ocssd_ns *ocssd_ns, uint64_t lba)
 {
 	const struct bdev_ocssd_lba_offsets *offsets = &ocssd_ns->lba_offsets;
 	uint64_t lbk, chk, pu, grp;
@@ -314,8 +310,7 @@ bdev_ocssd_to_disk_lba(struct ocssd_bdev *ocssd_bdev,
 }
 
 static uint64_t
-bdev_ocssd_to_chunk_info_offset(struct ocssd_bdev *ocssd_bdev,
-				struct bdev_ocssd_ns *ocssd_ns, uint64_t lba)
+bdev_ocssd_to_chunk_info_offset(struct bdev_ocssd_ns *ocssd_ns, uint64_t lba)
 {
 	const struct spdk_ocssd_geometry_data *geo = &ocssd_ns->geometry;
 	uint64_t grp, pu, chk, lbk;
@@ -412,7 +407,7 @@ bdev_ocssd_read(struct ocssd_bdev *ocssd_bdev, struct nvme_bdev_ns *nvme_ns,
 	ocdev_io->io.iovpos = 0;
 	ocdev_io->io.iov_offset = 0;
 
-	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, ocssd_ns, lba);
+	lba = bdev_ocssd_to_disk_lba(ocssd_ns, lba);
 
 	return spdk_nvme_ns_cmd_readv_with_md(nvme_ns->ns, qpair, lba,
 					      lba_count, bdev_ocssd_read_cb,
@@ -461,7 +456,7 @@ bdev_ocssd_write(struct ocssd_bdev *ocssd_bdev, struct nvme_bdev_ns *nvme_ns,
 	ocdev_io->io.iovpos = 0;
 	ocdev_io->io.iov_offset = 0;
 
-	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, ocssd_ns, lba);
+	lba = bdev_ocssd_to_disk_lba(ocssd_ns, lba);
 
 	rc = spdk_nvme_ns_cmd_writev_with_md(nvme_ns->ns, qpair, lba,
 					     lba_count, bdev_ocssd_write_cb,
@@ -520,7 +515,7 @@ bdev_ocssd_zone_append(struct ocssd_bdev *ocssd_bdev, struct nvme_bdev_ns *nvme_
 	ocdev_io->io.iovpos = 0;
 	ocdev_io->io.iov_offset = 0;
 
-	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, ocssd_ns, zone->write_pointer);
+	lba = bdev_ocssd_to_disk_lba(ocssd_ns, zone->write_pointer);
 
 	rc = spdk_nvme_ns_cmd_writev_with_md(nvme_ns->ns, qpair, lba,
 					     lba_count, bdev_ocssd_append_cb,
@@ -605,8 +600,8 @@ bdev_ocssd_reset_zone(struct ocssd_bdev *ocssd_bdev, struct nvme_bdev_ns *nvme_n
 	}
 
 	for (offset = 0; offset < num_zones; ++offset) {
-		ocdev_io->io.lba[offset] = bdev_ocssd_to_disk_lba(ocssd_bdev,
-					   ocssd_ns, slba + offset * zone_size);
+		ocdev_io->io.lba[offset] = bdev_ocssd_to_disk_lba(ocssd_ns,
+					   slba + offset * zone_size);
 	}
 
 	ocdev_io->io.zone = zone;
@@ -632,7 +627,7 @@ bdev_ocssd_fill_zone_info(struct ocssd_bdev *ocssd_bdev, struct bdev_ocssd_ns *o
 {
 	uint64_t zone_size = bdev_ocssd_get_zone_size(ocssd_bdev);
 
-	zone_info->zone_id = bdev_ocssd_from_disk_lba(ocssd_bdev, ocssd_ns, chunk_info->slba);
+	zone_info->zone_id = bdev_ocssd_from_disk_lba(ocssd_ns, chunk_info->slba);
 	zone_info->write_pointer = zone_info->zone_id;
 
 	if (chunk_info->cs.free) {
@@ -700,7 +695,7 @@ _bdev_ocssd_get_zone_info(struct ocssd_bdev *ocssd_bdev, struct nvme_bdev_ns *nv
 	uint64_t lba, offset, zone_size = bdev_ocssd_get_zone_size(ocssd_bdev);
 
 	lba = zone_id + ocdev_io->zone_info.chunk_offset * zone_size;
-	offset = bdev_ocssd_to_chunk_info_offset(ocssd_bdev, ocssd_ns, lba);
+	offset = bdev_ocssd_to_chunk_info_offset(ocssd_ns, lba);
 
 	return spdk_nvme_ctrlr_cmd_get_log_page(nvme_ns->ctrlr->ctrlr,
 						SPDK_OCSSD_LOG_CHUNK_INFO,
@@ -952,7 +947,7 @@ bdev_ocssd_push_media_events(struct nvme_bdev_ns *nvme_ns,
 		return;
 	}
 
-	lba = bdev_ocssd_from_disk_lba(ocssd_bdev, ocssd_ns, chunk_entry->lba);
+	lba = bdev_ocssd_from_disk_lba(ocssd_ns, chunk_entry->lba);
 	while (num_blocks > 0 && lba < nvme_bdev->disk.blockcnt) {
 		event.offset = lba;
 		event.num_blocks = spdk_min(num_blocks, geometry->clba);
