@@ -267,28 +267,52 @@ create_controller_test(void)
 	int ret;
 	char long_name[PATH_MAX];
 
-	spdk_cpuset_set_cpu(&g_vhost_core_mask, 0, true);
+	spdk_cpuset_parse(&g_vhost_core_mask, "0xf");
+
+	/* Create device with cpumask implcitly matching whole application */
+	ret = alloc_vdev(&vdev, "vdev_name_0", NULL);
+	SPDK_CU_ASSERT_FATAL(ret == 0 && vdev);
+	SPDK_CU_ASSERT_FATAL(!strcmp(spdk_cpuset_fmt(spdk_thread_get_cpumask(vdev->thread)), "f"));
+	cleanup_vdev(vdev);
+
+	/* Create device with cpumask matching whole application */
+	ret = alloc_vdev(&vdev, "vdev_name_0", "0xf");
+	SPDK_CU_ASSERT_FATAL(ret == 0 && vdev);
+	SPDK_CU_ASSERT_FATAL(!strcmp(spdk_cpuset_fmt(spdk_thread_get_cpumask(vdev->thread)), "f"));
+	cleanup_vdev(vdev);
+
+	/* Create device with single core in cpumask */
+	ret = alloc_vdev(&vdev, "vdev_name_0", "0x2");
+	SPDK_CU_ASSERT_FATAL(ret == 0 && vdev);
+	SPDK_CU_ASSERT_FATAL(!strcmp(spdk_cpuset_fmt(spdk_thread_get_cpumask(vdev->thread)), "2"));
+	cleanup_vdev(vdev);
+
+	/* Create device with cpumask spanning two cores */
+	ret = alloc_vdev(&vdev, "vdev_name_0", "0x3");
+	SPDK_CU_ASSERT_FATAL(ret == 0 && vdev);
+	SPDK_CU_ASSERT_FATAL(!strcmp(spdk_cpuset_fmt(spdk_thread_get_cpumask(vdev->thread)), "3"));
+	cleanup_vdev(vdev);
+
+	/* Create device with incorrect cpumask outside of application cpumask */
+	ret = alloc_vdev(&vdev, "vdev_name_0", "0xf0");
+	SPDK_CU_ASSERT_FATAL(ret != 0);
 
 	/* Create device with no name */
-	ret = alloc_vdev(&vdev, NULL, "0x1");
-	CU_ASSERT(ret != 0);
-
-	/* Create device with incorrect cpumask */
-	ret = alloc_vdev(&vdev, "vdev_name_0", "0x2");
+	ret = alloc_vdev(&vdev, NULL, NULL);
 	CU_ASSERT(ret != 0);
 
 	/* Create device with too long name and path */
 	memset(long_name, 'x', sizeof(long_name));
 	long_name[PATH_MAX - 1] = 0;
 	snprintf(dev_dirname, sizeof(dev_dirname), "some_path/");
-	ret = alloc_vdev(&vdev, long_name, "0x1");
+	ret = alloc_vdev(&vdev, long_name, NULL);
 	CU_ASSERT(ret != 0);
 	dev_dirname[0] = 0;
 
 	/* Create device when device name is already taken */
-	ret = alloc_vdev(&vdev, "vdev_name_0", "0x1");
+	ret = alloc_vdev(&vdev, "vdev_name_0", NULL);
 	SPDK_CU_ASSERT_FATAL(ret == 0 && vdev);
-	ret = alloc_vdev(&vdev2, "vdev_name_0", "0x1");
+	ret = alloc_vdev(&vdev2, "vdev_name_0", NULL);
 	CU_ASSERT(ret != 0);
 	cleanup_vdev(vdev);
 }
