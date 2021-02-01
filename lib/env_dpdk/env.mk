@@ -51,7 +51,7 @@ DPDK_INC := -I$(DPDK_INC_DIR)
 DPDK_LIB_LIST = rte_eal rte_mempool rte_ring rte_mbuf rte_pci rte_bus_pci rte_mempool_ring
 
 ifeq ($(OS),Linux)
-DPDK_LIB_LIST += rte_power
+DPDK_LIB_LIST += rte_power rte_ethdev
 endif
 
 # DPDK 20.05 eal dependency
