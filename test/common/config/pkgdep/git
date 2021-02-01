@@ -390,7 +390,79 @@ function install_igb_uio() {
 	sudo depmod
 }
 
+function install_irdma() {
+	local RDMA_CORE_VERSION=27.0
+	local RDMA_CORE=https://github.com/linux-rdma/rdma-core/releases/download/v$RDMA_CORE_VERSION/rdma-core-$RDMA_CORE_VERSION.tar.gz
+
+	if [[ $ID != fedora ]]; then
+		echo "Installation of the irdma can be attempted only on Fedora"
+		return 0
+	fi
+
+	# Install extra dependencies needed by the rdma-core-27.0
+	install ninja-build pandoc perl-generators valgrind-devel python-docutils libnl3 libnl3-devel
+
+	rm -rf "$GIT_REPOS/irdma-$IRDMA_VERSION"
+	rm -rf "$GIT_REPOS/rdma-core-$RDMA_CORE_VERSION"
+
+	curl -L -o- "$IRDMA_DRIVER" | tar -C "$GIT_REPOS" -xzf -
+	[[ -e $GIT_REPOS/irdma-$IRDMA_VERSION/build.sh ]]
+
+	(
+		cd "$GIT_REPOS/irdma-$IRDMA_VERSION"
+		"$GIT_REPOS/irdma-$IRDMA_VERSION/build.sh"
+	)
+
+	# Fetch and build the rdma-core irdma depends on
+	curl -L -o- "$RDMA_CORE" | tar -C "$GIT_REPOS" -xzf -
+	[[ -e $GIT_REPOS/irdma-$IRDMA_VERSION/libirdma-$RDMA_CORE_VERSION.patch ]]
+
+	patch --dir="$GIT_REPOS/rdma-core-$RDMA_CORE_VERSION" -p2 \
+		< "$GIT_REPOS/irdma-$IRDMA_VERSION/libirdma-$RDMA_CORE_VERSION.patch"
+
+	# Note that paths and the name of the package are hardcoded into .spec, hence they need to stay like this.
+	[[ -e $GIT_REPOS/rdma-core-$RDMA_CORE_VERSION/redhat/rdma-core.spec ]]
+	mkdir -p "$HOME/rpmbuild/"{SOURCES,SPECS}
+	cp "$GIT_REPOS/rdma-core-$RDMA_CORE_VERSION/redhat/rdma-core.spec" "$HOME/rpmbuild/SPECS"
+
+	# Re-package the source
+	tar -czf "$HOME/rpmbuild/SOURCES/rdma-core-$RDMA_CORE_VERSION.tgz" -C "$GIT_REPOS" "rdma-core-$RDMA_CORE_VERSION"
+
+	# Build the rpms
+	(
+		cd "$HOME/rpmbuild/SPECS"
+		# Make sure stock ninja-build is used
+		PATH="/usr/bin:$PATH" rpmbuild -ba rdma-core.spec
+	)
+
+	# Now, don't install the packages since this will, most likely, conflict with packages already installed
+	# in the system. Instead, simply inform user what the next step is and note what potential issues it may
+	# have with the installation.
+
+	shopt -s nullglob
+	local rpms=("$HOME/rpmbuild/RPMS/x86_64/"*.rpm)
+	shopt -u nullglob
+	((${#rpms[@]} > 0))
+
+	cat <<-EOF
+
+		INFO: rdma-core-$RDMA_CORE_VERSION was successfully built, following packages are
+		available for installation:
+
+		$(printf '  - %s\n' "${rpms[@]##*/}")
+
+		Note that installing the above packages may raise conflicts with their
+		potentially newer versions already installed on the system. Dependent
+		packages may be uninstalled during the process as well. Please, run the
+		following command to finish the installation:
+
+		  $package_manager install [--allowerasing] $HOME/rpmbuild/RPMS/x86_64/*.rpm
+
+	EOF
+}
+
 GIT_VERSION=2.25.1
+IRDMA_VERSION=1.2.21
 : ${GIT_REPO_SPDK=https://github.com/spdk/spdk.git}
 export GIT_REPO_SPDK
 : ${GIT_REPO_DPDK=https://github.com/spdk/dpdk.git}
@@ -413,6 +485,8 @@ export DRIVER_LOCATION_QAT
 export GIT_REPO_GIT
 : ${GIT_REPO_DPDK_KMODS=http://dpdk.org/git/dpdk-kmods}
 export GIT_REPO_DPDK_KMODS
+: ${IRDMA_DRIVER=https://downloadmirror.intel.com/29751/eng/irdma-$IRDMA_VERSION.tgz}
+export IRDMA_DRIVER
 GIT_REPOS=${GIT_REPOS:-$HOME}
 
 gcc_version=$(gcc -dumpversion) gcc_version=${gcc_version%%.*}
@@ -431,6 +505,7 @@ if [[ $OSID == freebsd ]]; then
 else
 	jobs=$(($(nproc) * 2))
 	sources+=(
+		install_irdma
 		install_libiscsi
 		install_nvmecli
 		install_qat
