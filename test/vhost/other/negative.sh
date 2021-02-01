@@ -93,6 +93,11 @@ if $rpc_py vhost_create_scsi_controller vhost.invalid.cpumask --cpumask 0xf0; th
 	error "Creating scsi controller with incorrect cpumask succeeded, but it shouldn't"
 fi
 
+notice "Trying to create scsi controller with incorrect cpumask partially outside of application cpumask"
+if $rpc_py vhost_create_scsi_controller vhost.invalid.cpumask --cpumask 0xff; then
+	error "Creating scsi controller with incorrect cpumask succeeded, but it shouldn't"
+fi
+
 notice "Trying to remove device from nonexistent scsi controller"
 if $rpc_py vhost_scsi_controller_remove_target vhost.nonexistent.name 0; then
 	error "Removing device from nonexistent scsi controller succeeded, but it shouldn't"
@@ -169,6 +174,11 @@ $rpc_py vhost_scsi_controller_add_target naa.0 0 Malloc0
 # BLK
 notice "Trying to create block controller with incorrect cpumask outside of application cpumask"
 if $rpc_py vhost_create_blk_controller vhost.invalid.cpumask Malloc0 --cpumask 0xf0; then
+	error "Creating block controller with incorrect cpumask succeeded, but it shouldn't"
+fi
+
+notice "Trying to create block controller with incorrect cpumask partially outside of application cpumask"
+if $rpc_py vhost_create_blk_controller vhost.invalid.cpumask Malloc0 --cpumask 0xff; then
 	error "Creating block controller with incorrect cpumask succeeded, but it shouldn't"
 fi
 

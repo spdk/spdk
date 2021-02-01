@@ -888,6 +888,7 @@ static int
 vhost_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 {
 	int rc;
+	struct spdk_cpuset negative_vhost_mask;
 
 	if (cpumask == NULL) {
 		return -1;
@@ -901,6 +902,16 @@ vhost_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 	rc = spdk_cpuset_parse(cpumask, mask);
 	if (rc < 0) {
 		SPDK_ERRLOG("invalid cpumask %s\n", mask);
+		return -1;
+	}
+
+	spdk_cpuset_copy(&negative_vhost_mask, &g_vhost_core_mask);
+	spdk_cpuset_negate(&negative_vhost_mask);
+	spdk_cpuset_and(&negative_vhost_mask, cpumask);
+
+	if (spdk_cpuset_count(&negative_vhost_mask) != 0) {
+		SPDK_ERRLOG("one of selected cpu is outside of core mask(=%s)\n",
+			    spdk_cpuset_fmt(&g_vhost_core_mask));
 		return -1;
 	}
 
