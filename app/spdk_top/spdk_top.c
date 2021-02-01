@@ -2285,6 +2285,7 @@ show_stats(void)
 	uint8_t active_tab = THREADS_TAB;
 	uint8_t current_page = 0;
 	uint8_t max_pages = 1;
+	uint16_t required_size = WINDOW_HEADER + 1;
 	char current_page_str[CURRENT_PAGE_STR_LEN];
 	bool force_refresh = true;
 
@@ -2298,9 +2299,9 @@ show_stats(void)
 		getmaxyx(stdscr, max_row, max_col);
 
 		if (max_row != g_max_row || max_col != g_max_col) {
-			g_max_row = max_row;
+			g_max_row = spdk_max(max_row, required_size);
 			g_max_col = max_col;
-			g_data_win_size = g_max_row - MENU_WIN_HEIGHT - TAB_WIN_HEIGHT - TABS_DATA_START_ROW;
+			g_data_win_size = g_max_row - required_size + 1;
 			g_max_data_rows = g_max_row - WINDOW_HEADER;
 			resize_interface(active_tab);
 		}
@@ -2413,9 +2414,11 @@ static void
 draw_interface(void)
 {
 	int i;
+	uint16_t required_size =  WINDOW_HEADER + 1;
 
 	getmaxyx(stdscr, g_max_row, g_max_col);
-	g_data_win_size = g_max_row - MENU_WIN_HEIGHT - TAB_WIN_HEIGHT - TABS_DATA_START_ROW;
+	g_max_row = spdk_max(g_max_row, required_size);
+	g_data_win_size = g_max_row - required_size;
 	g_max_data_rows = g_max_row - WINDOW_HEADER;
 
 	g_menu_win = newwin(MENU_WIN_HEIGHT, g_max_col, g_max_row - MENU_WIN_HEIGHT - 1,
