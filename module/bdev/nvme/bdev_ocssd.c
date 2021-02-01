@@ -238,24 +238,12 @@ bdev_ocssd_destruct(void *ctx)
 	return 0;
 }
 
-static inline uint64_t
-ocssd_range_num_parallel_units(const struct bdev_ocssd_range *range)
-{
-	return range->end - range->begin + 1;
-}
-
-static uint64_t
-bdev_ocssd_num_parallel_units(const struct ocssd_bdev *ocssd_bdev)
-{
-	return ocssd_range_num_parallel_units(&ocssd_bdev->range);
-}
-
 static void
 bdev_ocssd_translate_lba(const struct bdev_ocssd_range *range,
 			 const struct spdk_ocssd_geometry_data *geo, uint64_t lba,
 			 uint64_t *grp, uint64_t *pu, uint64_t *chk, uint64_t *lbk)
 {
-	uint64_t addr_shift, punit;
+	uint64_t addr_shift, num_punits, punit;
 
 	/* To achieve best performance, we need to make sure that adjacent zones can be accessed
 	 * in parallel.  We accomplish this by having the following addressing scheme:
@@ -266,14 +254,15 @@ bdev_ocssd_translate_lba(const struct bdev_ocssd_range *range,
 	 * which means that neighbouring zones are placed in a different group and parallel unit.
 	 */
 	addr_shift = geo->clba;
+	num_punits = geo->num_grp * geo->num_pu;
 	*lbk = lba % addr_shift;
 
-	punit = range->begin + (lba / addr_shift) % ocssd_range_num_parallel_units(range);
+	punit = (lba / addr_shift) % num_punits;
 
 	*pu = punit % geo->num_pu;
 	*grp = punit / geo->num_pu;
 
-	addr_shift *= ocssd_range_num_parallel_units(range);
+	addr_shift *= num_punits;
 
 	*chk = (lba / addr_shift) % geo->num_chk;
 }
@@ -307,7 +296,7 @@ bdev_ocssd_from_disk_lba(struct ocssd_bdev *ocssd_bdev,
 	punit -= range->begin;
 
 	return lbk + punit * geometry->clba + chk * geometry->clba *
-	       ocssd_range_num_parallel_units(range);
+	       (geometry->num_grp * geometry->num_pu);
 }
 
 static uint64_t
@@ -935,6 +924,7 @@ bdev_ocssd_push_media_events(struct nvme_bdev_ns *nvme_ns,
 			     struct spdk_ocssd_chunk_notification_entry *chunk_entry)
 {
 	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ns);
+	const struct spdk_ocssd_geometry_data *geometry = &ocssd_ns->geometry;
 	struct spdk_bdev_media_event event;
 	struct nvme_bdev *nvme_bdev;
 	struct ocssd_bdev *ocssd_bdev;
@@ -944,9 +934,9 @@ bdev_ocssd_push_media_events(struct nvme_bdev_ns *nvme_ns,
 	if (chunk_entry->mask.lblk) {
 		num_blocks = chunk_entry->nlb;
 	} else if (chunk_entry->mask.chunk) {
-		num_blocks = ocssd_ns->geometry.clba;
+		num_blocks = geometry->clba;
 	} else if (chunk_entry->mask.pu) {
-		num_blocks = ocssd_ns->geometry.clba * ocssd_ns->geometry.num_chk;
+		num_blocks = geometry->clba * geometry->num_chk;
 	} else {
 		SPDK_WARNLOG("Invalid chunk notification mask\n");
 		return;
@@ -967,7 +957,7 @@ bdev_ocssd_push_media_events(struct nvme_bdev_ns *nvme_ns,
 	lba = bdev_ocssd_from_disk_lba(ocssd_bdev, ocssd_ns, chunk_entry->lba);
 	while (num_blocks > 0 && lba < nvme_bdev->disk.blockcnt) {
 		event.offset = lba;
-		event.num_blocks = spdk_min(num_blocks, ocssd_ns->geometry.clba);
+		event.num_blocks = spdk_min(num_blocks, geometry->clba);
 
 		rc = spdk_bdev_push_media_events(&nvme_bdev->disk, &event, 1);
 		if (spdk_unlikely(rc < 0)) {
@@ -977,7 +967,7 @@ bdev_ocssd_push_media_events(struct nvme_bdev_ns *nvme_ns,
 		}
 
 		/* Jump to the next chunk on the same parallel unit */
-		lba += ocssd_ns->geometry.clba * bdev_ocssd_num_parallel_units(ocssd_bdev);
+		lba += geometry->clba * geometry->num_grp * geometry->num_pu;
 		num_blocks -= event.num_blocks;
 	}
 }
@@ -1343,11 +1333,11 @@ bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, uint32_t n
 	nvme_bdev->disk.module = &ocssd_if;
 	nvme_bdev->disk.blocklen = spdk_nvme_ns_get_extended_sector_size(ns);
 	nvme_bdev->disk.zoned = true;
-	nvme_bdev->disk.blockcnt = bdev_ocssd_num_parallel_units(ocssd_bdev) *
+	nvme_bdev->disk.blockcnt = geometry->num_grp * geometry->num_pu *
 				   geometry->num_chk * geometry->clba;
 	nvme_bdev->disk.zone_size = geometry->clba;
 	nvme_bdev->disk.max_open_zones = geometry->maxoc;
-	nvme_bdev->disk.optimal_open_zones = bdev_ocssd_num_parallel_units(ocssd_bdev);
+	nvme_bdev->disk.optimal_open_zones = geometry->num_grp * geometry->num_pu;
 	nvme_bdev->disk.write_unit_size = geometry->ws_opt;
 	nvme_bdev->disk.media_events = true;
 
