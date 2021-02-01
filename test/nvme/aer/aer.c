@@ -345,6 +345,8 @@ parse_args(int argc, char **argv)
 			g_enable_temp_test = 1;
 			break;
 		case 'H':
+			usage(argv[0]);
+			exit(EXIT_SUCCESS);
 		default:
 			usage(argv[0]);
 			return 1;
