@@ -91,16 +91,13 @@
 #define FROM_HEX 16
 #define THREAD_WIN_WIDTH 69
 #define THREAD_WIN_HEIGHT 9
-#define THREAD_WIN_HOR_POS 75
 #define THREAD_WIN_FIRST_COL 2
 #define CORE_WIN_FIRST_COL 16
 #define CORE_WIN_WIDTH 48
 #define CORE_WIN_HEIGHT 9
-#define CORE_WIN_HOR_POS 60
 #define POLLER_WIN_HEIGHT 8
 #define POLLER_WIN_WIDTH 64
 #define POLLER_WIN_FIRST_COL 14
-#define POLLER_WIN_HOR_POS 59
 
 enum tabs {
 	THREADS_TAB,
@@ -1897,6 +1894,17 @@ free_resources(void)
 	}
 }
 
+static uint64_t
+get_position_for_window(uint64_t window_size, uint64_t max_size)
+{
+	/* This function calculates position for pop-up detail window.
+	 * Since horizontal and vertical positions are calculated the same way
+	 * there is no need for separate functions. */
+	window_size = spdk_min(window_size, max_size);
+
+	return (max_size - window_size) / 2;
+}
+
 static void
 display_thread(struct rpc_thread_info *thread_info)
 {
@@ -1915,7 +1923,8 @@ display_thread(struct rpc_thread_info *thread_info)
 			thread_info->paused_pollers_count;
 
 	thread_win = newwin(pollers_count + THREAD_WIN_HEIGHT, THREAD_WIN_WIDTH,
-			    (g_max_row - pollers_count) / 2, (g_max_col - THREAD_WIN_HOR_POS) / 2);
+			    get_position_for_window(THREAD_WIN_HEIGHT + pollers_count, g_max_row),
+			    get_position_for_window(THREAD_WIN_WIDTH, g_max_col));
 	keypad(thread_win, TRUE);
 	thread_panel = new_panel(thread_win);
 
@@ -2072,7 +2081,8 @@ show_core(uint8_t current_page)
 
 	threads_count = g_cores_stats.cores.core->threads.threads_count;
 	core_win = newwin(threads_count + CORE_WIN_HEIGHT, CORE_WIN_WIDTH,
-			  (g_max_row - threads_count) / 2, (g_max_col - CORE_WIN_HOR_POS) / 2);
+			  get_position_for_window(CORE_WIN_HEIGHT + threads_count, g_max_row),
+			  get_position_for_window(CORE_WIN_WIDTH, g_max_col));
 
 	keypad(core_win, TRUE);
 	core_panel = new_panel(core_win);
@@ -2179,7 +2189,8 @@ show_poller(uint8_t current_page)
 	prepare_poller_data(current_page, pollers, &count, current_page);
 
 	poller_win = newwin(POLLER_WIN_HEIGHT, POLLER_WIN_WIDTH,
-			    (g_max_row) / 2, (g_max_col - POLLER_WIN_HOR_POS) / 2);
+			    get_position_for_window(POLLER_WIN_HEIGHT, g_max_row),
+			    get_position_for_window(POLLER_WIN_WIDTH, g_max_col));
 
 	keypad(poller_win, TRUE);
 	poller_panel = new_panel(poller_win);
