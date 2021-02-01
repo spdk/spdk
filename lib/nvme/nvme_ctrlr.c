@@ -1161,12 +1161,12 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "set number of queues";
 	case NVME_CTRLR_STATE_WAIT_FOR_SET_NUM_QUEUES:
 		return "wait for set number of queues";
-	case NVME_CTRLR_STATE_CONSTRUCT_NS:
-		return "construct namespaces";
 	case NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS:
 		return "identify active ns";
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_ACTIVE_NS:
 		return "wait for identify active ns";
+	case NVME_CTRLR_STATE_CONSTRUCT_NS:
+		return "construct namespaces";
 	case NVME_CTRLR_STATE_IDENTIFY_NS:
 		return "identify ns";
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS:
@@ -1953,7 +1953,7 @@ _nvme_active_ns_ctx_deleter(struct nvme_active_ns_ctx *ctx)
 	assert(ctx->state == NVME_ACTIVE_NS_STATE_DONE);
 	nvme_ctrlr_identify_active_ns_swap(ctrlr, &ctx->new_ns_list);
 	nvme_active_ns_ctx_destroy(ctx);
-	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_NS, ctrlr->opts.admin_timeout_ms);
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CONSTRUCT_NS, ctrlr->opts.admin_timeout_ms);
 }
 
 static void
@@ -2332,7 +2332,7 @@ nvme_ctrlr_set_num_queues_done(void *arg, const struct spdk_nvme_cpl *cpl)
 		spdk_nvme_ctrlr_free_qid(ctrlr, i);
 	}
 
-	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CONSTRUCT_NS,
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS,
 			     ctrlr->opts.admin_timeout_ms);
 }
 
@@ -2524,10 +2524,6 @@ nvme_ctrlr_destruct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 		ctrlr->ns = NULL;
 		ctrlr->num_ns = 0;
 	}
-
-	spdk_free(ctrlr->active_ns_list);
-	ctrlr->active_ns_list = NULL;
-	ctrlr->max_active_ns_idx = 0;
 }
 
 static void
@@ -3240,16 +3236,16 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		rc = nvme_ctrlr_set_num_queues(ctrlr);
 		break;
 
+	case NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS:
+		_nvme_ctrlr_identify_active_ns(ctrlr);
+		break;
+
 	case NVME_CTRLR_STATE_CONSTRUCT_NS:
 		rc = nvme_ctrlr_construct_namespaces(ctrlr);
 		if (!rc) {
-			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS,
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_NS,
 					     ctrlr->opts.admin_timeout_ms);
 		}
-		break;
-
-	case NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS:
-		_nvme_ctrlr_identify_active_ns(ctrlr);
 		break;
 
 	case NVME_CTRLR_STATE_IDENTIFY_NS:
@@ -3485,6 +3481,9 @@ nvme_ctrlr_destruct_poll_async(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	nvme_ctrlr_destruct_namespaces(ctrlr);
+	spdk_free(ctrlr->active_ns_list);
+	ctrlr->active_ns_list = NULL;
+	ctrlr->max_active_ns_idx = 0;
 
 	spdk_bit_array_free(&ctrlr->free_io_qids);
 
