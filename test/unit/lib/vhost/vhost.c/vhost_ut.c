@@ -297,6 +297,10 @@ create_controller_test(void)
 	ret = alloc_vdev(&vdev, "vdev_name_0", "0xf0");
 	SPDK_CU_ASSERT_FATAL(ret != 0);
 
+	/* Create device with incorrect cpumask partially outside of application cpumask */
+	ret = alloc_vdev(&vdev, "vdev_name_0", "0xff");
+	SPDK_CU_ASSERT_FATAL(ret != 0);
+
 	/* Create device with no name */
 	ret = alloc_vdev(&vdev, NULL, NULL);
 	CU_ASSERT(ret != 0);
