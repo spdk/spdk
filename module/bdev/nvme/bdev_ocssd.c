@@ -82,7 +82,6 @@ struct ocssd_io_channel {
 struct ocssd_bdev {
 	struct nvme_bdev	nvme_bdev;
 	struct bdev_ocssd_zone	*zones;
-	struct bdev_ocssd_range	range;
 };
 
 struct bdev_ocssd_ns {
@@ -1061,7 +1060,6 @@ struct bdev_ocssd_create_ctx {
 	struct nvme_bdev_ns				*nvme_ns;
 	bdev_ocssd_create_cb				cb_fn;
 	void						*cb_arg;
-	const struct bdev_ocssd_range			*range;
 	uint64_t					chunk_offset;
 	uint64_t					end_chunk_offset;
 	uint64_t					num_chunks;
@@ -1183,7 +1181,6 @@ static int
 bdev_ocssd_init_zones(struct bdev_ocssd_create_ctx *create_ctx)
 {
 	struct ocssd_bdev *ocssd_bdev = create_ctx->ocssd_bdev;
-	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_nvme(create_ctx->nvme_ns);
 	uint64_t offset, num_zones;
 
 	num_zones = bdev_ocssd_num_zones(ocssd_bdev);
@@ -1193,8 +1190,8 @@ bdev_ocssd_init_zones(struct bdev_ocssd_create_ctx *create_ctx)
 		return -ENOMEM;
 	}
 
-	create_ctx->chunk_offset = ocssd_bdev->range.begin * ocssd_ns->geometry.num_chk;
-	create_ctx->end_chunk_offset = create_ctx->chunk_offset + num_zones;
+	create_ctx->chunk_offset = 0;
+	create_ctx->end_chunk_offset = num_zones;
 
 	/* Mark all zones as busy and clear it as their info is filled */
 	for (offset = 0; offset < num_zones; ++offset) {
@@ -1275,14 +1272,10 @@ bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, uint32_t n
 	create_ctx->nvme_ns = nvme_ns;
 	create_ctx->cb_fn = cb_fn;
 	create_ctx->cb_arg = cb_arg;
-	create_ctx->range = NULL;
 
 	nvme_bdev = &ocssd_bdev->nvme_bdev;
 	nvme_bdev->nvme_ns = nvme_ns;
 	geometry = &ocssd_ns->geometry;
-
-	ocssd_bdev->range.begin = 0;
-	ocssd_bdev->range.end = geometry->num_grp * geometry->num_pu - 1;
 
 	nvme_bdev->disk.name = strdup(bdev_name);
 	if (!nvme_bdev->disk.name) {

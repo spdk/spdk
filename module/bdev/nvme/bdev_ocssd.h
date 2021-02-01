@@ -37,11 +37,6 @@
 #include "spdk/stdinc.h"
 #include "common.h"
 
-struct bdev_ocssd_range {
-	uint64_t begin;
-	uint64_t end;
-};
-
 typedef void (*bdev_ocssd_create_cb)(const char *bdev_name, int status, void *ctx);
 typedef void (*bdev_ocssd_delete_cb)(int status, void *ctx);
 
