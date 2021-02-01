@@ -2167,7 +2167,7 @@ show_poller(uint8_t current_page)
 {
 	PANEL *poller_panel;
 	WINDOW *poller_win;
-	uint64_t poller_counter = 0, count = 0;
+	uint64_t count = 0;
 	uint64_t poller_number = current_page * g_max_data_rows + g_selected_row;
 	struct rpc_poller_info *pollers[RPC_MAX_POLLERS];
 	bool stop_loop = false;
@@ -2179,7 +2179,7 @@ show_poller(uint8_t current_page)
 	prepare_poller_data(current_page, pollers, &count, current_page);
 
 	poller_win = newwin(POLLER_WIN_HEIGHT, POLLER_WIN_WIDTH,
-			    (g_max_row - poller_counter) / 2, (g_max_col - POLLER_WIN_HOR_POS) / 2);
+			    (g_max_row) / 2, (g_max_col - POLLER_WIN_HOR_POS) / 2);
 
 	keypad(poller_win, TRUE);
 	poller_panel = new_panel(poller_win);
