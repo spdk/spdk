@@ -113,8 +113,6 @@ DEFINE_STUB(spdk_nvme_ns_get_max_io_xfer_size, uint32_t, (struct spdk_nvme_ns *n
 
 DEFINE_STUB(spdk_nvme_ns_get_extended_sector_size, uint32_t, (struct spdk_nvme_ns *ns), 0);
 
-DEFINE_STUB(spdk_nvme_ns_get_num_sectors, uint64_t, (struct spdk_nvme_ns *ns), 0);
-
 DEFINE_STUB(spdk_nvme_ns_get_pi_type, enum spdk_nvme_pi_type, (struct spdk_nvme_ns *ns), 0);
 
 DEFINE_STUB(spdk_nvme_ns_supports_compare, bool, (struct spdk_nvme_ns *ns), false);
@@ -175,8 +173,6 @@ DEFINE_STUB_V(spdk_bdev_io_complete_nvme_status, (struct spdk_bdev_io *bdev_io,
 
 DEFINE_STUB(spdk_bdev_io_get_io_channel, struct spdk_io_channel *,
 	    (struct spdk_bdev_io *bdev_io), (void *)0x1);
-
-DEFINE_STUB(spdk_bdev_notify_blockcnt_change, int, (struct spdk_bdev *bdev, uint64_t size), 0);
 
 DEFINE_STUB_V(spdk_bdev_module_list_add, (struct spdk_bdev_module *bdev_module));
 
@@ -569,6 +565,12 @@ spdk_nvme_ns_get_data(struct spdk_nvme_ns *ns)
 	return _nvme_ns_get_data(ns);
 }
 
+uint64_t
+spdk_nvme_ns_get_num_sectors(struct spdk_nvme_ns *ns)
+{
+	return _nvme_ns_get_data(ns)->nsze;
+}
+
 struct spdk_nvme_poll_group *
 spdk_nvme_poll_group_create(void *ctx)
 {
@@ -655,6 +657,14 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	if (rc <= 0 && cb_fn != NULL) {
 		cb_fn(cb_arg, rc);
 	}
+}
+
+int
+spdk_bdev_notify_blockcnt_change(struct spdk_bdev *bdev, uint64_t size)
+{
+	bdev->blockcnt = size;
+
+	return 0;
 }
 
 void
@@ -1249,6 +1259,87 @@ test_reconnect_qpair(void)
 	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == NULL);
 }
 
+static void
+test_aer_cb(void)
+{
+	struct spdk_nvme_transport_id trid = {};
+	struct spdk_nvme_host_id hostid = {};
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	struct nvme_bdev *bdev;
+	const char *attached_names[32] = {};
+	union spdk_nvme_async_event_completion event = {};
+	struct spdk_nvme_cpl cpl = {};
+	int rc;
+
+	set_thread(0);
+
+	ut_init_trid(&trid);
+
+	/* Attach a ctrlr, whose max number of namespaces is 4, and 2nd, 3rd, and 4th
+	 * namespaces are populated.
+	 */
+	ctrlr = ut_attach_ctrlr(&trid, 4);
+	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
+
+	ctrlr->ns[1].is_active = true;
+	ctrlr->ns[2].is_active = true;
+	ctrlr->ns[3].is_active = true;
+
+	ctrlr->nsdata[3].nsze = 1024;
+
+	g_ut_attach_ctrlr_status = 0;
+	g_ut_attach_bdev_count = 3;
+
+	rc = bdev_nvme_create(&trid, &hostid, "nvme0", attached_names, 32, NULL, 0,
+			      attach_ctrlr_done, NULL, NULL);
+	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(1000);
+	poll_threads();
+
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
+	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr != NULL);
+
+	CU_ASSERT(nvme_bdev_ctrlr->num_ns == 4);
+	CU_ASSERT(nvme_bdev_ctrlr->namespaces[0]->populated == false);
+	CU_ASSERT(nvme_bdev_ctrlr->namespaces[1]->populated == true);
+	CU_ASSERT(nvme_bdev_ctrlr->namespaces[2]->populated == true);
+	CU_ASSERT(nvme_bdev_ctrlr->namespaces[3]->populated == true);
+
+	bdev = TAILQ_FIRST(&nvme_bdev_ctrlr->namespaces[3]->bdevs);
+	SPDK_CU_ASSERT_FATAL(bdev != NULL);
+	CU_ASSERT(bdev->disk.blockcnt == 1024);
+
+	/* Dynamically populate 1st namespace and depopulate 3rd namespace, and
+	 * change the size of the 4th namespace.
+	 */
+	ctrlr->ns[0].is_active = true;
+	ctrlr->ns[2].is_active = false;
+	ctrlr->nsdata[3].nsze = 2048;
+
+	event.bits.async_event_type = SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE;
+	event.bits.async_event_info = SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED;
+	cpl.cdw0 = event.raw;
+
+	aer_cb(nvme_bdev_ctrlr, &cpl);
+
+	CU_ASSERT(nvme_bdev_ctrlr->namespaces[0]->populated == true);
+	CU_ASSERT(nvme_bdev_ctrlr->namespaces[1]->populated == true);
+	CU_ASSERT(nvme_bdev_ctrlr->namespaces[2]->populated == false);
+	CU_ASSERT(nvme_bdev_ctrlr->namespaces[3]->populated == true);
+	CU_ASSERT(bdev->disk.blockcnt == 2048);
+
+	rc = bdev_nvme_delete("nvme0");
+	CU_ASSERT(rc == 0);
+
+	poll_threads();
+
+	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == NULL);
+
+	ut_detach_ctrlr(ctrlr);
+}
+
 int
 main(int argc, const char **argv)
 {
@@ -1267,6 +1358,7 @@ main(int argc, const char **argv)
 	CU_ADD_TEST(suite, test_pending_reset);
 	CU_ADD_TEST(suite, test_attach_ctrlr);
 	CU_ADD_TEST(suite, test_reconnect_qpair);
+	CU_ADD_TEST(suite, test_aer_cb);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 
