@@ -21,14 +21,13 @@ from common import *
 
 
 class Server:
-    def __init__(self, name, username, password, mode, nic_ips, transport, remote_nic_ips=None):
+    def __init__(self, name, general_config, server_config):
         self.name = name
-        self.mode = mode
-        self.username = username
-        self.password = password
-        self.nic_ips = nic_ips
-        self.remote_nic_ips = remote_nic_ips
-        self.transport = transport.lower()
+        self.username = general_config["username"]
+        self.password = general_config["password"]
+        self.transport = general_config["transport"].lower()
+        self.nic_ips = server_config["nic_ips"]
+        self.mode = server_config["mode"]
         self._nics_json_obj = {}
 
         if not re.match("^[A-Za-z0-9]*$", name):
@@ -52,36 +51,43 @@ class Server:
 
 
 class Target(Server):
-    def __init__(self, name, username, password, mode, nic_ips, transport="rdma",
-                 null_block_devices=0, sar_settings=None, pcm_settings=None,
-                 bandwidth_settings=None, dpdk_settings=None, zcopy_settings=None,
-                 scheduler_settings="static"):
+    def __init__(self, name, general_config, target_config):
+        super(Target, self).__init__(name, general_config, target_config)
 
-        super(Target, self).__init__(name, username, password, mode, nic_ips, transport)
-        self.null_block = null_block_devices
+        # Defaults
         self.enable_sar = False
+        self.sar_delay = 0
+        self.sar_interval = 0
+        self.sar_count = 0
         self.enable_pcm = False
-        self.enable_bandwidth = False
+        self.pcm_dir = ""
+        self.pcm_delay = 0
+        self.pcm_interval = 0
+        self.pcm_count = 0
+        self.enable_bandwidth = 0
+        self.bandwidth_count = 0
         self.enable_dpdk_memory = False
+        self.dpdk_wait_time = 0
         self.enable_zcopy = False
-        self.scheduler_name = scheduler_settings
+        self.scheduler_name = "static"
+        self.null_block = 0
         self._nics_json_obj = json.loads(check_output(["ip", "-j", "address", "show"]))
 
-        if sar_settings:
-            self.enable_sar, self.sar_delay, self.sar_interval, self.sar_count = sar_settings
-
-        if pcm_settings:
-            self.pcm_dir, self.pcm_delay, self.pcm_interval, self.pcm_count = pcm_settings
+        if "null_block_devices" in target_config:
+            self.null_block = target_config["null_block_devices"]
+        if "sar_settings" in target_config:
+            self.enable_sar, self.sar_delay, self.sar_interval, self.sar_count = target_config["sar_settings"]
+        if "pcm_settings" in target_config:
             self.enable_pcm = True
-
-        if bandwidth_settings:
-            self.enable_bandwidth, self.bandwidth_count = bandwidth_settings
-
-        if dpdk_settings:
-            self.enable_dpdk_memory, self.dpdk_wait_time = dpdk_settings
-
-        if zcopy_settings:
-            self.enable_zcopy = zcopy_settings
+            self.pcm_dir, self.pcm_delay, self.pcm_interval, self.pcm_count = target_config["pcm_settings"]
+        if "enable_bandwidth" in target_config:
+            self.enable_bandwidth, self.bandwidth_count = target_config["enable_bandwidth"]
+        if "enable_dpdk_memory" in target_config:
+            self.enable_dpdk_memory, self.dpdk_wait_time = target_config["enable_dpdk_memory"]
+        if "scheduler_settings" in target_config:
+            self.scheduler_name = target_config["scheduler_settings"]
+        if "zcopy_settings" in target_config:
+            self.enable_zcopy = target_config["zcopy_settings"]
 
         self.script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
         self.spdk_dir = os.path.abspath(os.path.join(self.script_dir, "../../../"))
@@ -331,21 +337,36 @@ class Target(Server):
 
 
 class Initiator(Server):
-    def __init__(self, name, username, password, mode, nic_ips, ip, remote_nic_ips, transport="rdma", cpu_frequency=None,
-                 nvmecli_bin="nvme", workspace="/tmp/spdk", cpus_allowed=None,
-                 cpus_allowed_policy="shared", fio_bin="/usr/src/fio/fio"):
+    def __init__(self, name, general_config, initiator_config):
+        super(Initiator, self).__init__(name, general_config, initiator_config)
 
-        super(Initiator, self).__init__(name, username, password, mode, nic_ips, transport, remote_nic_ips)
+        # Required fields
+        self.ip = initiator_config["ip"]
+        self.remote_nic_ips = initiator_config["remote_nic_ips"]
 
-        self.ip = ip
-        self.spdk_dir = workspace
+        # Defaults
+        self.cpus_allowed = None
+        self.cpus_allowed_policy = "shared"
+        self.spdk_dir = "/tmp/spdk"
+        self.fio_bin = "/usr/src/fio/fio"
+        self.nvmecli_bin = "nvme"
+        self.cpu_frequency = None
+
+        if "spdk_dir" in initiator_config:
+            self.spdk_dir = initiator_config["spdk_dir"]
+        if "fio_bin" in initiator_config:
+            self.fio_bin = initiator_config["fio_bin"]
+        if "nvmecli_bin" in initiator_config:
+            self.nvmecli_bin = initiator_config["nvmecli_bin"]
+        if "cpus_allowed" in initiator_config:
+            self.cpus_allowed = initiator_config["cpus_allowed"]
+        if "cpus_allowed_policy" in initiator_config:
+            self.cpus_allowed_policy = initiator_config["cpus_allowed_policy"]
+        if "cpu_frequency" in initiator_config:
+            self.cpu_frequency = initiator_config["cpu_frequency"]
         if os.getenv('SPDK_WORKSPACE'):
             self.spdk_dir = os.getenv('SPDK_WORKSPACE')
-        self.fio_bin = fio_bin
-        self.cpus_allowed = cpus_allowed
-        self.cpus_allowed_policy = cpus_allowed_policy
-        self.cpu_frequency = cpu_frequency
-        self.nvmecli_bin = nvmecli_bin
+
         self.ssh_connection = paramiko.SSHClient()
         self.ssh_connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.ssh_connection.connect(self.ip, username=self.username, password=self.password)
@@ -547,14 +568,13 @@ runtime={run_time}
 
 
 class KernelTarget(Target):
-    def __init__(self, name, username, password, mode, nic_ips, transport="rdma",
-                 null_block_devices=0, sar_settings=None, pcm_settings=None,
-                 bandwidth_settings=None, dpdk_settings=None, nvmet_bin="nvmetcli", **kwargs):
+    def __init__(self, name, general_config, target_config):
+        super(KernelTarget, self).__init__(name, general_config, target_config)
+        # Defaults
+        self.nvmet_bin = "nvmetcli"
 
-        super(KernelTarget, self).__init__(name, username, password, mode, nic_ips, transport,
-                                           null_block_devices, sar_settings, pcm_settings, bandwidth_settings,
-                                           dpdk_settings)
-        self.nvmet_bin = nvmet_bin
+        if "nvmet_bin" in target_config:
+            self.nvmet_bin = target_config["nvmet_bin"]
 
     def __del__(self):
         nvmet_command(self.nvmet_bin, "clear")
@@ -633,20 +653,23 @@ class KernelTarget(Target):
 
 
 class SPDKTarget(Target):
+    def __init__(self, name, general_config, target_config):
+        super(SPDKTarget, self).__init__(name, general_config, target_config)
 
-    def __init__(self, name, username, password, mode, nic_ips, transport="rdma",
-                 null_block_devices=0, null_block_dif_type=0, sar_settings=None, pcm_settings=None,
-                 bandwidth_settings=None, dpdk_settings=None, zcopy_settings=None,
-                 scheduler_settings="static", num_shared_buffers=4096, num_cores=1,
-                 dif_insert_strip=False, **kwargs):
+        # Required fields
+        self.num_cores = target_config["num_cores"]
 
-        super(SPDKTarget, self).__init__(name, username, password, mode, nic_ips, transport,
-                                         null_block_devices, sar_settings, pcm_settings, bandwidth_settings,
-                                         dpdk_settings, zcopy_settings, scheduler_settings)
-        self.num_cores = num_cores
-        self.num_shared_buffers = num_shared_buffers
-        self.null_block_dif_type = null_block_dif_type
-        self.dif_insert_strip = dif_insert_strip
+        # Defaults
+        self.dif_insert_strip = False
+        self.null_block_dif_type = 0
+        self.num_shared_buffers = 4096
+
+        if "num_shared_buffers" in target_config:
+            self.num_shared_buffers = target_config["num_shared_buffers"]
+        if "null_block_dif_type" in target_config:
+            self.null_block_dif_type = target_config["null_block_dif_type"]
+        if "dif_insert_strip" in target_config:
+            self.dif_insert_strip = target_config["dif_insert_strip"]
 
     def spdk_tgt_configure(self):
         self.log_print("Configuring SPDK NVMeOF target via RPC")
@@ -776,17 +799,14 @@ class SPDKTarget(Target):
 
 
 class KernelInitiator(Initiator):
-    def __init__(self, name, username, password, mode, nic_ips, remote_nic_ips, ip, transport,
-                 cpus_allowed=None, cpus_allowed_policy="shared",
-                 cpu_frequency=None, fio_bin="/usr/src/fio/fio", **kwargs):
+    def __init__(self, name, general_config, initiator_config):
+        super(KernelInitiator, self).__init__(name, general_config, initiator_config)
 
-        super(KernelInitiator, self).__init__(name, username, password, mode, nic_ips, ip, remote_nic_ips, transport,
-                                              cpus_allowed=cpus_allowed, cpus_allowed_policy=cpus_allowed_policy,
-                                              cpu_frequency=cpu_frequency, fio_bin=fio_bin)
-
+        # Defaults
         self.extra_params = ""
-        if "extra_params" in kwargs.keys():
-            self.extra_params = kwargs["extra_params"]
+
+        if "extra_params" in initiator_config:
+            self.extra_params = initiator_config["extra_params"]
 
     def __del__(self):
         self.ssh_connection.close()
@@ -837,14 +857,11 @@ class KernelInitiator(Initiator):
 
 
 class SPDKInitiator(Initiator):
-    def __init__(self, name, username, password, mode, nic_ips, remote_nic_ips, ip, transport="rdma",
-                 num_cores=1, cpus_allowed=None, cpus_allowed_policy="shared",
-                 cpu_frequency=None, fio_bin="/usr/src/fio/fio", **kwargs):
-        super(SPDKInitiator, self).__init__(name, username, password, mode, nic_ips, ip, remote_nic_ips, transport,
-                                            cpus_allowed=cpus_allowed, cpus_allowed_policy=cpus_allowed_policy,
-                                            cpu_frequency=cpu_frequency, fio_bin=fio_bin)
+    def __init__(self, name, general_config, initiator_config):
+        super(SPDKInitiator, self).__init__(name, general_config, initiator_config)
 
-        self.num_cores = num_cores
+        # Required fields
+        self.num_cores = initiator_config["num_cores"]
 
     def install_spdk(self, local_spdk_zip):
         self.put_file(local_spdk_zip, "/tmp/spdk_drop.zip")
@@ -931,17 +948,22 @@ if __name__ == "__main__":
     initiators = []
     fio_cases = []
 
+    general_config = data["general"]
+    target_config = data["target"]
+    initiator_configs = [data[x] for x in data.keys() if "initiator" in x]
+
     for k, v in data.items():
         if "target" in k:
             if data[k]["mode"] == "spdk":
-                target_obj = SPDKTarget(name=k, **data["general"], **v)
+                target_obj = SPDKTarget(k, data["general"], v)
             elif data[k]["mode"] == "kernel":
-                target_obj = KernelTarget(name=k, **data["general"], **v)
+                target_obj = KernelTarget(k, data["general"], v)
+                pass
         elif "initiator" in k:
             if data[k]["mode"] == "spdk":
-                init_obj = SPDKInitiator(name=k, **data["general"], **v)
+                init_obj = SPDKInitiator(k, data["general"], v)
             elif data[k]["mode"] == "kernel":
-                init_obj = KernelInitiator(name=k, **data["general"], **v)
+                init_obj = KernelInitiator(k, data["general"], v)
             initiators.append(init_obj)
         elif "fio" in k:
             fio_workloads = itertools.product(data[k]["bs"],
