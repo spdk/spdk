@@ -50,6 +50,7 @@
 #define GET_IO_LOOP_COUNT		16
 #define NBD_BUSY_WAITING_MS		1000
 #define NBD_BUSY_POLLING_INTERVAL_US	20000
+#define NBD_IO_TIMEOUT_S		60
 
 enum nbd_io_state_t {
 	/* Receiving or ready to receive nbd request header */
@@ -921,6 +922,17 @@ nbd_start_complete(struct spdk_nbd_start_ctx *ctx)
 		rc = -errno;
 		goto err;
 	}
+
+#ifdef NBD_SET_TIMEOUT
+	rc = ioctl(ctx->nbd->dev_fd, NBD_SET_TIMEOUT, NBD_IO_TIMEOUT_S);
+	if (rc == -1) {
+		SPDK_ERRLOG("ioctl(NBD_SET_TIMEOUT) failed: %s\n", spdk_strerror(errno));
+		rc = -errno;
+		goto err;
+	}
+#else
+	SPDK_NOTICELOG("ioctl(NBD_SET_TIMEOUT) is not supported.\n");
+#endif
 
 #ifdef NBD_FLAG_SEND_TRIM
 	rc = ioctl(ctx->nbd->dev_fd, NBD_SET_FLAGS, NBD_FLAG_SEND_TRIM);
