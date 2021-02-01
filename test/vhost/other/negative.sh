@@ -63,7 +63,7 @@ notice "==============="
 notice ""
 notice "running SPDK"
 notice ""
-vhost_run 0
+vhost_run 0 "-m 0xf"
 notice ""
 rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 $rpc_py bdev_malloc_create -b Malloc0 128 4096
@@ -88,8 +88,8 @@ if $rpc_py vhost_delete_controller unk0 > /dev/null; then
 fi
 
 # SCSI
-notice "Trying to create scsi controller with incorrect cpumask"
-if $rpc_py vhost_create_scsi_controller vhost.invalid.cpumask --cpumask 0x2; then
+notice "Trying to create scsi controller with incorrect cpumask outside of application cpumask"
+if $rpc_py vhost_create_scsi_controller vhost.invalid.cpumask --cpumask 0xf0; then
 	error "Creating scsi controller with incorrect cpumask succeeded, but it shouldn't"
 fi
 
@@ -167,8 +167,8 @@ notice "Re-adding device 0 to naa.0"
 $rpc_py vhost_scsi_controller_add_target naa.0 0 Malloc0
 
 # BLK
-notice "Trying to create block controller with incorrect cpumask"
-if $rpc_py vhost_create_blk_controller vhost.invalid.cpumask Malloc0 --cpumask 0x2; then
+notice "Trying to create block controller with incorrect cpumask outside of application cpumask"
+if $rpc_py vhost_create_blk_controller vhost.invalid.cpumask Malloc0 --cpumask 0xf0; then
 	error "Creating block controller with incorrect cpumask succeeded, but it shouldn't"
 fi
 
