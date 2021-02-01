@@ -41,6 +41,7 @@
 	spdk_nvme_ctrlr_get_regs_cap;
 	spdk_nvme_ctrlr_get_regs_vs;
 	spdk_nvme_ctrlr_get_regs_cmbsz;
+	spdk_nvme_ctrlr_get_regs_pmrcap;
 	spdk_nvme_ctrlr_get_num_ns;
 	spdk_nvme_ctrlr_get_pci_device;
 	spdk_nvme_ctrlr_get_max_xfer_size;

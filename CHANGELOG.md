@@ -137,6 +137,8 @@ Change the return type of function `spdk_nbd_stop` from void to int. And update 
 
 ### nvme
 
+Added a new function `spdk_nvme_ctrlr_get_regs_pmrcap` to get the PMR capabilities.
+
 Directives support was added to the NVMe driver.
 
 Two async APIs `spdk_nvme_ctrlr_cmd_directive_receive` and `spdk_nvme_ctrlr_cmd_directive_send`

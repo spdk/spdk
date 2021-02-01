@@ -1074,6 +1074,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	union spdk_nvme_cap_register		cap;
 	union spdk_nvme_vs_register		vs;
 	union spdk_nvme_cmbsz_register		cmbsz;
+	union spdk_nvme_pmrcap_register		pmrcap;
 	uint8_t					str[512];
 	uint32_t				i, j;
 	struct spdk_nvme_error_information_entry *error_entry;
@@ -1086,6 +1087,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	cap = spdk_nvme_ctrlr_get_regs_cap(ctrlr);
 	vs = spdk_nvme_ctrlr_get_regs_vs(ctrlr);
 	cmbsz = spdk_nvme_ctrlr_get_regs_cmbsz(ctrlr);
+	pmrcap = spdk_nvme_ctrlr_get_regs_pmrcap(ctrlr);
 
 	if (!spdk_nvme_ctrlr_is_discovery(ctrlr)) {
 		/*
@@ -1198,6 +1200,9 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	       (uint64_t)1 << (12 + cap.bits.mpsmin));
 	printf("Memory Page Size Maximum:              %" PRIu64 " bytes\n",
 	       (uint64_t)1 << (12 + cap.bits.mpsmax));
+	printf("Persistent Memory Region:              %s\n",
+	       cap.bits.pmrs ? "Supported" : "Not Supported");
+
 	printf("Optional Asynchronous Events Supported\n");
 	printf("  Namespace Attribute Notices:         %s\n",
 	       cdata->oaes.ns_attribute_notices ? "Supported" : "Not Supported");
@@ -1228,6 +1233,19 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 		       cmbsz.bits.rds ? "Supported" : "Not Supported");
 		printf("Write data and metadata in CMB:        %s\n",
 		       cmbsz.bits.wds ? "Supported" : "Not Supported");
+	} else {
+		printf("Supported:                             No\n");
+	}
+	printf("\n");
+
+	printf("Persistent Memory Region Support\n");
+	printf("================================\n");
+	if (cap.bits.pmrs != 0) {
+		printf("Supported:                             Yes\n");
+		printf("Read data and metadata in PMR          %s\n",
+		       pmrcap.bits.rds ? "Supported" : "Not Supported");
+		printf("Write data and metadata in PMR:        %s\n",
+		       pmrcap.bits.wds ? "Supported" : "Not Supported");
 	} else {
 		printf("Supported:                             No\n");
 	}

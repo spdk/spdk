@@ -109,7 +109,10 @@ union spdk_nvme_cap_register {
 		/** memory page size maximum */
 		uint32_t mpsmax		: 4;
 
-		uint32_t reserved3	: 8;
+		/** persistent memory region supported */
+		uint32_t pmrs		: 1;
+
+		uint32_t reserved3	: 7;
 	} bits;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cap_register) == 8, "Incorrect size");
@@ -299,6 +302,139 @@ union spdk_nvme_cmbsts_register {
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cmbsts_register) == 4, "Incorrect size");
 
+union spdk_nvme_pmrcap_register {
+	uint32_t	raw;
+	struct {
+		uint32_t reserved1	: 3;
+
+		/** read data support */
+		uint32_t rds		: 1;
+
+		/** write data support */
+		uint32_t wds		: 1;
+
+		/** base indicator register */
+		uint32_t bir		: 3;
+
+		/**
+		 * persistent memory region time units
+		 * 00b: 500 milliseconds
+		 * 01b: minutes
+		 */
+		uint32_t pmrtu		: 2;
+
+		/** persistent memory region write barrier mechanisms */
+		uint32_t pmrwbm		: 4;
+
+		uint32_t reserved2	: 2;
+
+		/** persistent memory region timeout */
+		uint32_t pmrto		: 8;
+
+		/** controller memory space supported */
+		uint32_t cmss		: 1;
+
+		uint32_t reserved3	: 7;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_pmrcap_register) == 4, "Incorrect size");
+
+union spdk_nvme_pmrctl_register {
+	uint32_t	raw;
+	struct {
+		/** enable */
+		uint32_t en		: 1;
+
+		uint32_t reserved	: 31;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_pmrctl_register) == 4, "Incorrect size");
+
+union spdk_nvme_pmrsts_register {
+	uint32_t	raw;
+	struct {
+		/** err */
+		uint32_t err		: 8;
+
+		/** not ready */
+		uint32_t nrdy		: 1;
+
+		/**
+		 * health status
+		 * 000b: Normal Operation
+		 * 001b: Restore Error
+		 * 010b: Read Only
+		 * 011b: Unreliable
+		 */
+		uint32_t hsts		: 3;
+
+		/** controller base address invalid */
+		uint32_t cbai		: 1;
+
+		uint32_t reserved	: 19;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_pmrsts_register) == 4, "Incorrect size");
+
+union spdk_nvme_pmrebs_register {
+	uint32_t	raw;
+	struct {
+		/**
+		 * pmr elasicity buffer size units
+		 * 0h: Bytes
+		 * 1h: 1 KiB
+		 * 2h: 1 MiB
+		 * 3h: 1 GiB
+		 */
+		uint32_t pmrszu		: 4;
+
+		/** read bypass behavior */
+		uint32_t rbb		: 1;
+
+		uint32_t reserved	: 3;
+
+		/** pmr elasticity buffer size base */
+		uint32_t pmrwbz		: 24;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_pmrebs_register) == 4, "Incorrect size");
+
+union spdk_nvme_pmrswtp_register {
+	uint32_t	raw;
+	struct {
+		/**
+		 * pmr sustained write throughput units
+		 * 0h: Bytes per second
+		 * 1h: 1 KiB / s
+		 * 2h: 1 MiB / s
+		 * 3h: 1 GiB / s
+		 */
+		uint32_t pmrswtu	: 4;
+
+		uint32_t reserved	: 4;
+
+		/** pmr sustained write throughput */
+		uint32_t pmrswtv	: 24;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_pmrswtp_register) == 4, "Incorrect size");
+
+union spdk_nvme_pmrmscl_register {
+	uint32_t	raw;
+	struct {
+		uint32_t reserved1	: 1;
+
+		/** controller memory space enable */
+		uint32_t cmse		: 1;
+
+		uint32_t reserved2	: 10;
+
+		/** controller base address */
+		uint32_t cba		: 20;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_pmrmscl_register) == 4, "Incorrect size");
+
 /** Boot partition information */
 union spdk_nvme_bpinfo_register	{
 	uint32_t	raw;
@@ -387,7 +523,29 @@ struct spdk_nvme_registers {
 	/** controller memory buffer status */
 	union spdk_nvme_cmbsts_register	cmbsts;
 
-	uint32_t			reserved3[0x3e9];
+	uint32_t			reserved2[0x369];
+
+	/** persistent memory region capabilities */
+	union spdk_nvme_pmrcap_register	pmrcap;
+
+	/** persistent memory region control */
+	union spdk_nvme_pmrctl_register	pmrctl;
+
+	/** persistent memory region status */
+	union spdk_nvme_pmrsts_register	pmrsts;
+
+	/** persistent memory region elasticity buffer size */
+	union spdk_nvme_pmrebs_register	pmrebs;
+
+	/** persistent memory region sustained write throughput */
+	union spdk_nvme_pmrswtp_register	pmrswtp;
+
+	/** persistent memory region memory space control lower */
+	union spdk_nvme_pmrmscl_register	pmrmscl;
+
+	uint32_t			pmrmscu; /* persistent memory region memory space control upper */
+
+	uint32_t			reserved3[0x79];
 
 	struct {
 		uint32_t	sq_tdbl;	/* submission queue tail doorbell */
@@ -422,6 +580,20 @@ SPDK_STATIC_ASSERT(0x48 == offsetof(struct spdk_nvme_registers, bpmbl),
 SPDK_STATIC_ASSERT(0x50 == offsetof(struct spdk_nvme_registers, cmbmsc),
 		   "Incorrect register offset");
 SPDK_STATIC_ASSERT(0x58 == offsetof(struct spdk_nvme_registers, cmbsts),
+		   "Incorrect register offset");
+SPDK_STATIC_ASSERT(0xE00 == offsetof(struct spdk_nvme_registers, pmrcap),
+		   "Incorrect register offset");
+SPDK_STATIC_ASSERT(0xE04 == offsetof(struct spdk_nvme_registers, pmrctl),
+		   "Incorrect register offset");
+SPDK_STATIC_ASSERT(0xE08 == offsetof(struct spdk_nvme_registers, pmrsts),
+		   "Incorrect register offset");
+SPDK_STATIC_ASSERT(0xE0C == offsetof(struct spdk_nvme_registers, pmrebs),
+		   "Incorrect register offset");
+SPDK_STATIC_ASSERT(0xE10 == offsetof(struct spdk_nvme_registers, pmrswtp),
+		   "Incorrect register offset");
+SPDK_STATIC_ASSERT(0xE14 == offsetof(struct spdk_nvme_registers, pmrmscl),
+		   "Incorrect register offset");
+SPDK_STATIC_ASSERT(0xE18 == offsetof(struct spdk_nvme_registers, pmrmscu),
 		   "Incorrect register offset");
 
 enum spdk_nvme_sgl_descriptor_type {
