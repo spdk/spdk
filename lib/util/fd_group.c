@@ -85,8 +85,8 @@ int
 spdk_fd_group_add(struct spdk_fd_group *fgrp,
 		  int efd, spdk_fd_fn fn, void *arg)
 {
-	struct event_handler *ehdlr;
-	struct epoll_event epevent;
+	struct event_handler *ehdlr = NULL;
+	struct epoll_event epevent = {0};
 	int rc;
 
 	/* parameter checking */
