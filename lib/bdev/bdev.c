@@ -1475,7 +1475,6 @@ bdev_mgr_unregister_cb(void *io_device)
 	g_fini_cb_arg = NULL;
 	g_bdev_mgr.init_complete = false;
 	g_bdev_mgr.module_init_complete = false;
-	pthread_mutex_destroy(&g_bdev_mgr.mutex);
 }
 
 static void
@@ -5498,6 +5497,9 @@ bdev_destroy_cb(void *io_device)
 	cb_fn = bdev->internal.unregister_cb;
 	cb_arg = bdev->internal.unregister_ctx;
 
+	pthread_mutex_destroy(&bdev->internal.mutex);
+	free(bdev->internal.qos);
+
 	rc = bdev->fn_table->destruct(bdev->ctxt);
 	if (rc < 0) {
 		SPDK_ERRLOG("destruct failed\n");
@@ -5505,17 +5507,6 @@ bdev_destroy_cb(void *io_device)
 	if (rc <= 0 && cb_fn != NULL) {
 		cb_fn(cb_arg, rc);
 	}
-}
-
-
-static void
-bdev_fini(struct spdk_bdev *bdev)
-{
-	pthread_mutex_destroy(&bdev->internal.mutex);
-
-	free(bdev->internal.qos);
-
-	spdk_io_device_unregister(__bdev_to_io_dev(bdev), bdev_destroy_cb);
 }
 
 static void
@@ -5645,9 +5636,7 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	}
 
 	pthread_mutex_lock(&g_bdev_mgr.mutex);
-	pthread_mutex_lock(&bdev->internal.mutex);
 	if (bdev->internal.status == SPDK_BDEV_STATUS_REMOVING) {
-		pthread_mutex_unlock(&bdev->internal.mutex);
 		pthread_mutex_unlock(&g_bdev_mgr.mutex);
 		if (cb_fn) {
 			cb_fn(cb_arg, -EBUSY);
@@ -5655,6 +5644,7 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 		return;
 	}
 
+	pthread_mutex_lock(&bdev->internal.mutex);
 	bdev->internal.status = SPDK_BDEV_STATUS_REMOVING;
 	bdev->internal.unregister_cb = cb_fn;
 	bdev->internal.unregister_ctx = cb_arg;
@@ -5665,7 +5655,7 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	pthread_mutex_unlock(&g_bdev_mgr.mutex);
 
 	if (rc == 0) {
-		bdev_fini(bdev);
+		spdk_io_device_unregister(__bdev_to_io_dev(bdev), bdev_destroy_cb);
 	}
 }
 
@@ -5897,7 +5887,7 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 		pthread_mutex_unlock(&bdev->internal.mutex);
 
 		if (rc == 0) {
-			bdev_fini(bdev);
+			spdk_io_device_unregister(__bdev_to_io_dev(bdev), bdev_destroy_cb);
 		}
 	} else {
 		pthread_mutex_unlock(&bdev->internal.mutex);
