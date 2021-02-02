@@ -28,6 +28,7 @@ class Server:
         self.transport = general_config["transport"].lower()
         self.nic_ips = server_config["nic_ips"]
         self.mode = server_config["mode"]
+        self.local_nic_info = []
         self._nics_json_obj = {}
 
         if not re.match("^[A-Za-z0-9]*$", name):
@@ -48,6 +49,24 @@ class Server:
             for addr in nic["addr_info"]:
                 if ip in addr["local"]:
                     return nic["ifname"]
+
+    def set_local_nic_info_helper(self):
+        pass
+
+    def set_local_nic_info(self, pci_info):
+        def extract_network_elements(json_obj):
+            nic_list = []
+            if isinstance(json_obj, list):
+                for x in json_obj:
+                    nic_list.extend(extract_network_elements(x))
+            elif isinstance(json_obj, dict):
+                if "children" in json_obj:
+                    nic_list.extend(extract_network_elements(json_obj["children"]))
+                if "class" in json_obj.keys() and "network" in json_obj["class"]:
+                    nic_list.append(json_obj)
+            return nic_list
+
+        self.local_nic_info = extract_network_elements(pci_info)
 
 
 class Target(Server):
@@ -91,7 +110,11 @@ class Target(Server):
 
         self.script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
         self.spdk_dir = os.path.abspath(os.path.join(self.script_dir, "../../../"))
+        self.set_local_nic_info(self.set_local_nic_info_helper())
         self.sys_config()
+
+    def set_local_nic_info_helper(self):
+        return json.loads(check_output(["lshw", "-json"]))
 
     def zip_spdk_sources(self, spdk_dir, dest_file):
         self.log_print("Zipping SPDK source directory")
@@ -373,8 +396,12 @@ class Initiator(Server):
         self.remote_call("sudo rm -rf %s/nvmf_perf" % self.spdk_dir)
         self.remote_call("mkdir -p %s" % self.spdk_dir)
         self._nics_json_obj = json.loads(self.remote_call("ip -j address show")[0])
+        self.set_local_nic_info(self.set_local_nic_info_helper())
         self.set_cpu_frequency()
         self.sys_config()
+
+    def set_local_nic_info_helper(self):
+        return json.loads(self.remote_call("lshw -json")[0])
 
     def __del__(self):
         self.ssh_connection.close()
