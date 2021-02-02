@@ -156,6 +156,8 @@ uint16_t g_data_win_size, g_max_data_rows;
 uint32_t g_last_threads_count, g_last_pollers_count, g_last_cores_count;
 uint8_t g_current_sort_col[NUMBER_OF_TABS] = {0, 0, 0};
 bool g_interval_data = true;
+bool g_quit_app = false;
+pthread_mutex_t g_thread_lock;
 static struct col_desc g_col_desc[NUMBER_OF_TABS][TABS_COL_COUNT] = {
 	{	{.name = "Thread name", .max_data_string = MAX_THREAD_NAME_LEN},
 		{.name = "Core", .max_data_string = MAX_CORE_STR_LEN},
@@ -1962,6 +1964,7 @@ display_thread(struct rpc_thread_info *thread_info)
 	bool stop_loop = false;
 	char idle_time[MAX_TIME_STR_LEN], busy_time[MAX_TIME_STR_LEN], run_count[MAX_POLLER_COUNT_STR_LEN];
 
+	pthread_mutex_lock(&g_thread_lock);
 	pollers_count = thread_info->active_pollers_count +
 			thread_info->timed_pollers_count +
 			thread_info->paused_pollers_count;
@@ -2054,6 +2057,7 @@ display_thread(struct rpc_thread_info *thread_info)
 	refresh();
 	wrefresh(thread_win);
 
+	pthread_mutex_unlock(&g_thread_lock);
 	while (!stop_loop) {
 		c = wgetch(thread_win);
 
@@ -2076,8 +2080,10 @@ show_thread(uint8_t current_page)
 	struct rpc_thread_info thread_info;
 	uint64_t thread_number = current_page * g_max_data_rows + g_selected_row;
 
+	pthread_mutex_lock(&g_thread_lock);
 	assert(thread_number < g_threads_stats.threads.threads_count);
 	thread_info = g_threads_stats.threads.thread_info[thread_number];
+	pthread_mutex_unlock(&g_thread_lock);
 
 	display_thread(&thread_info);
 }
@@ -2086,13 +2092,18 @@ static void
 show_single_thread(uint64_t thread_id)
 {
 	uint64_t i;
+	struct rpc_thread_info thread_info;
 
+	pthread_mutex_lock(&g_thread_lock);
 	for (i = 0; i < g_threads_stats.threads.threads_count; i++) {
 		if (g_threads_stats.threads.thread_info[i].id == thread_id) {
-			display_thread(&g_threads_stats.threads.thread_info[i]);
-			break;
+			thread_info = g_threads_stats.threads.thread_info[i];
+			pthread_mutex_unlock(&g_thread_lock);
+			display_thread(&thread_info);
+			return;
 		}
 	}
+	pthread_mutex_unlock(&g_thread_lock);
 }
 
 static void
@@ -2103,18 +2114,21 @@ show_core(uint8_t current_page)
 	uint64_t core_number = current_page * g_max_data_rows + g_selected_row;
 	struct rpc_core_info *core_info[g_cores_stats.cores.cores_count];
 	uint64_t threads_count, i, j;
+	uint64_t thread_id;
 	uint16_t current_threads_row;
 	int c;
 	char core_win_title[25];
 	bool stop_loop = false;
 	char idle_time[MAX_TIME_STR_LEN], busy_time[MAX_TIME_STR_LEN];
 
+	pthread_mutex_lock(&g_thread_lock);
 	assert(core_number < g_cores_stats.cores.cores_count);
 	for (i = 0; i < g_cores_stats.cores.cores_count; i++) {
 		core_info[i] = &g_cores_stats.cores.core[i];
 	}
 
 	threads_count = g_cores_stats.cores.core->threads.threads_count;
+
 	core_win = newwin(threads_count + CORE_WIN_HEIGHT, CORE_WIN_WIDTH,
 			  get_position_for_window(CORE_WIN_HEIGHT + threads_count, g_max_row),
 			  get_position_for_window(CORE_WIN_WIDTH, g_max_col));
@@ -2171,6 +2185,7 @@ show_core(uint8_t current_page)
 	for (j = 0; j < core_info[core_number]->threads.threads_count; j++) {
 		mvwprintw(core_win, j + 10, 1, core_info[core_number]->threads.thread[j].name);
 	}
+	pthread_mutex_unlock(&g_thread_lock);
 
 	refresh();
 	wrefresh(core_win);
@@ -2178,6 +2193,7 @@ show_core(uint8_t current_page)
 	current_threads_row = 0;
 
 	while (!stop_loop) {
+		pthread_mutex_lock(&g_thread_lock);
 		for (j = 0; j < core_info[core_number]->threads.threads_count; j++) {
 			if (j != current_threads_row) {
 				mvwprintw(core_win, j + 10, 1, core_info[core_number]->threads.thread[j].name);
@@ -2186,13 +2202,17 @@ show_core(uint8_t current_page)
 					   core_info[core_number]->threads.thread[j].name, COLOR_PAIR(2));
 			}
 		}
+		pthread_mutex_unlock(&g_thread_lock);
 
 		wrefresh(core_win);
 
 		c = wgetch(core_win);
 		switch (c) {
 		case 10: /* ENTER */
-			show_single_thread(core_info[core_number]->threads.thread[current_threads_row].id);
+			pthread_mutex_lock(&g_thread_lock);
+			thread_id = core_info[core_number]->threads.thread[current_threads_row].id;
+			pthread_mutex_unlock(&g_thread_lock);
+			show_single_thread(thread_id);
 			break;
 		case 27: /* ESC */
 			stop_loop = true;
@@ -2203,9 +2223,11 @@ show_core(uint8_t current_page)
 			}
 			break;
 		case KEY_DOWN:
+			pthread_mutex_lock(&g_thread_lock);
 			if (current_threads_row != core_info[core_number]->threads.threads_count - 1) {
 				current_threads_row++;
 			}
+			pthread_mutex_unlock(&g_thread_lock);
 			break;
 		default:
 			break;
@@ -2229,6 +2251,7 @@ show_poller(uint8_t current_page)
 	char poller_period[MAX_TIME_STR_LEN];
 	int c;
 
+	pthread_mutex_lock(&g_thread_lock);
 	prepare_poller_data(current_page, pollers, &count, current_page);
 	assert(poller_number < count);
 
@@ -2285,6 +2308,7 @@ show_poller(uint8_t current_page)
 	refresh();
 	wrefresh(poller_win);
 
+	pthread_mutex_unlock(&g_thread_lock);
 	while (!stop_loop) {
 		c = wgetch(poller_win);
 		switch (c) {
@@ -2300,14 +2324,38 @@ show_poller(uint8_t current_page)
 	delwin(poller_win);
 }
 
+static void *
+data_thread_routine(void *arg)
+{
+	int rc;
+	const char *get_data_error = "ERROR occurred while getting data";
+
+	while (1) {
+		pthread_mutex_lock(&g_thread_lock);
+		if (g_quit_app) {
+			pthread_mutex_unlock(&g_thread_lock);
+			break;
+		}
+
+		rc = get_data();
+		if (rc) {
+			mvprintw(g_max_row - 1, g_max_col - strlen(get_data_error) - 2, get_data_error);
+		}
+
+		pthread_mutex_unlock(&g_thread_lock);
+		usleep(g_sleep_time);
+	}
+
+	return NULL;
+}
+
 static void
-show_stats(void)
+show_stats(pthread_t *data_thread)
 {
 	const int CURRENT_PAGE_STR_LEN = 50;
-	const char *refresh_error = "ERROR occurred while getting data";
 	long int time_last, time_dif;
 	struct timespec time_now;
-	int c, rc;
+	int c;
 	int max_row, max_col;
 	uint8_t active_tab = THREADS_TAB;
 	uint8_t current_page = 0;
@@ -2318,8 +2366,6 @@ show_stats(void)
 
 	clock_gettime(CLOCK_REALTIME, &time_now);
 	time_last = time_now.tv_sec;
-
-	memset(&g_threads_stats, 0, sizeof(g_threads_stats));
 
 	switch_tab(THREADS_TAB);
 
@@ -2343,12 +2389,9 @@ show_stats(void)
 
 		if (time_dif >= g_sleep_time || force_refresh) {
 			time_last = time_now.tv_sec;
-			rc = get_data();
-			if (rc) {
-				mvprintw(g_max_row - 1, g_max_col - strlen(refresh_error) - 2, refresh_error);
-			}
-
+			pthread_mutex_lock(&g_thread_lock);
 			max_pages = refresh_tab(active_tab, current_page);
+			pthread_mutex_unlock(&g_thread_lock);
 
 			snprintf(current_page_str, CURRENT_PAGE_STR_LEN - 1, "Page: %d/%d", current_page + 1, max_pages);
 			mvprintw(g_max_row - 1, 1, current_page_str);
@@ -2358,7 +2401,9 @@ show_stats(void)
 
 		c = getch();
 		if (c == 'q') {
-			free_resources();
+			pthread_mutex_lock(&g_thread_lock);
+			g_quit_app = true;
+			pthread_mutex_unlock(&g_thread_lock);
 			break;
 		}
 
@@ -2435,6 +2480,10 @@ show_stats(void)
 			break;
 		}
 	}
+
+	pthread_join(*data_thread, NULL);
+
+	free_resources();
 	free_data();
 }
 
@@ -2471,7 +2520,8 @@ draw_interface(void)
 	doupdate();
 }
 
-static void finish(int sig)
+static void
+finish(int sig)
 {
 	/* End ncurses mode */
 	endwin();
@@ -2521,7 +2571,7 @@ usage(const char *program_name)
 }
 
 static int
-wait_init(void)
+wait_init(pthread_t *data_thread)
 {
 	struct spdk_jsonrpc_client_response *json_resp = NULL;
 	char *uninit_log = "Waiting for SPDK target application to initialize...",
@@ -2544,6 +2594,29 @@ wait_init(void)
 	}
 
 	spdk_jsonrpc_client_free_response(json_resp);
+
+	rc = pthread_mutex_init(&g_thread_lock, NULL);
+	if (rc) {
+		fprintf(stderr, "mutex lock failed to initialize: %d\n", errno);
+		return -1;
+	}
+
+	memset(&g_threads_stats, 0, sizeof(g_threads_stats));
+
+	/* This is to get first batch of data for display functions.
+	 * Since data thread makes RPC calls that take more time than
+	 * startup of display functions on main thread, without this
+	 * call both threads would be subject to a race condition. */
+	rc = get_data();
+	if (rc) {
+		return -1;
+	}
+
+	rc = pthread_create(data_thread, NULL, &data_thread_routine, NULL);
+	if (rc) {
+		fprintf(stderr, "data thread creation failed: %d\n", errno);
+		return -1;
+	}
 	return 0;
 }
 
@@ -2551,6 +2624,7 @@ int main(int argc, char **argv)
 {
 	int op, rc;
 	char *socket = SPDK_DEFAULT_RPC_ADDR;
+	pthread_t data_thread;
 
 	while ((op = getopt(argc, argv, "r:h")) != -1) {
 		switch (op) {
@@ -2574,9 +2648,9 @@ int main(int argc, char **argv)
 	setup_ncurses();
 	draw_interface();
 
-	rc = wait_init();
+	rc = wait_init(&data_thread);
 	if (!rc) {
-		show_stats();
+		show_stats(&data_thread);
 	}
 
 	finish(0);
