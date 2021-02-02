@@ -1164,7 +1164,6 @@ nvmf_vfio_user_prop_req_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 		}
 	}
 
-	qpair->ctrlr->ready = true;
 	return 0;
 }
 
@@ -1276,9 +1275,6 @@ access_bar0_fn(vfu_ctx_t *vfu_ctx, char *buf, size_t count, loff_t pos,
 	}
 	req->req.length = count;
 	req->req.data = buf;
-
-	/* Mark the controller as busy to limit the queue depth for fabric get/set to 1 */
-	ctrlr->ready = false;
 
 	spdk_nvmf_request_exec_fabrics(&req->req);
 
@@ -2266,15 +2262,14 @@ nvmf_vfio_user_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 
 	TAILQ_FOREACH_SAFE(vu_qpair, &vu_group->qps, link, tmp) {
 		ctrlr = vu_qpair->ctrlr;
-		if (!ctrlr->ready) {
-			continue;
-		}
+		assert(ctrlr != NULL);
 
-		if (nvmf_qpair_is_admin_queue(&vu_qpair->qpair)) {
+		if (spdk_unlikely(nvmf_qpair_is_admin_queue(&vu_qpair->qpair))) {
 			int err;
 
 			err = nvmf_vfio_user_ctrlr_poll(ctrlr);
 			if (spdk_unlikely(err) != 0) {
+				/* initiator shutdown or reset, waiting for another re-connect */
 				if (err == -ENOTCONN) {
 					TAILQ_REMOVE(&vu_group->qps, vu_qpair, link);
 					ctrlr->ready = false;
@@ -2286,7 +2281,7 @@ nvmf_vfio_user_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 			}
 		}
 
-		if (vu_qpair->state != VFIO_USER_QPAIR_ACTIVE || !vu_qpair->sq.size) {
+		if (spdk_unlikely(vu_qpair->state != VFIO_USER_QPAIR_ACTIVE || !vu_qpair->sq.size)) {
 			continue;
 		}
 
