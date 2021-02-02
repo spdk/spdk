@@ -749,6 +749,8 @@ io_valid_test(void)
 	memset(&bdev, 0, sizeof(bdev));
 
 	bdev.blocklen = 512;
+	CU_ASSERT(pthread_mutex_init(&bdev.internal.mutex, NULL) == 0);
+
 	spdk_bdev_notify_blockcnt_change(&bdev, 100);
 
 	/* All parameters valid */
@@ -765,6 +767,8 @@ io_valid_test(void)
 
 	/* Offset near end of uint64_t range (2^64 - 1) */
 	CU_ASSERT(bdev_io_valid_blocks(&bdev, 18446744073709551615ULL, 1) == false);
+
+	CU_ASSERT(pthread_mutex_destroy(&bdev.internal.mutex) == 0);
 }
 
 static void
