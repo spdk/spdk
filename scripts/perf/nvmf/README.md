@@ -61,6 +61,11 @@ Number of shared buffers to use when creating transport layer.
 
 Boolean. If set to true - enable "dif_insert_or_strip" option for TCP transport layer.
 
+### adq_enable
+
+Configure and use ADQ on selected system. Only available when using Intel E810 NICs.
+Set to "true" to enable.
+
 ## Initiator
 
 Describes initiator arguments. There can be more than one initiator section in the configuration file.
@@ -106,6 +111,11 @@ by default. Not used if "mode" is set to "spdk".
 
 Path to the fio binary that will be used to compile SPDK and run the test.
 If not specified, then the script will use /usr/src/fio/fio as the default.
+
+### adq_enable
+
+Configure and use ADQ on selected system. Only available when using Intel E810 NICs.
+Set to "true" to enable.
 
 ### extra_params
 

@@ -31,6 +31,12 @@ class Server:
         self.local_nic_info = []
         self._nics_json_obj = {}
 
+        self.enable_adq = False
+        self.adq_priority = None
+        if "adq_enable" in server_config and server_config["adq_enable"]:
+            self.enable_adq = server_config["adq_enable"]
+            self.adq_priority = 1
+
         if not re.match("^[A-Za-z0-9]*$", name):
             self.log_print("Please use a name which contains only letters or numbers")
             sys.exit(1)
@@ -705,7 +711,8 @@ class SPDKTarget(Target):
         # Create RDMA transport layer
         rpc.nvmf.nvmf_create_transport(self.client, trtype=self.transport,
                                        num_shared_buffers=self.num_shared_buffers,
-                                       dif_insert_or_strip=self.dif_insert_strip)
+                                       dif_insert_or_strip=self.dif_insert_strip,
+                                       sock_priority=self.adq_priority)
         self.log_print("SPDK NVMeOF transport layer:")
         rpc.client.print_dict(rpc.nvmf.nvmf_get_transports(self.client))
 
@@ -808,6 +815,12 @@ class SPDKTarget(Target):
                                            enable_zerocopy_send=True)
             self.log_print("Target socket options:")
             rpc.client.print_dict(rpc.sock.sock_impl_get_options(self.client, impl_name="posix"))
+
+        if self.enable_adq:
+            rpc.sock.sock_impl_set_options(self.client, impl_name="posix", enable_placement_id=1)
+            rpc.bdev.bdev_nvme_set_options(self.client, timeout_us=0, action_on_timeout=None,
+                                           nvme_adminq_poll_period_us=100000, retry_count=4)
+            rpc.nvmf.nvmf_set_config(self.client, acceptor_poll_rate=10000)
 
         rpc.app.framework_set_scheduler(self.client, name=self.scheduler_name)
 
@@ -926,6 +939,10 @@ class SPDKInitiator(Initiator):
                     "adrfam": "IPv4"
                 }
             }
+
+            if self.enable_adq:
+                nvme_ctrl["params"].update({"priority": "1"})
+
             bdev_cfg_section["subsystems"][0]["config"].append(nvme_ctrl)
 
         return json.dumps(bdev_cfg_section, indent=2)
