@@ -461,8 +461,19 @@ function install_irdma() {
 	EOF
 }
 
+function install_ice() {
+	rm -rf "$GIT_REPOS/ice-$ICE_VERSION"
+
+	curl -L -o- "$ICE_DRIVER" | tar -C "$GIT_REPOS" -xzf -
+	(
+		cd "$GIT_REPOS/ice-$ICE_VERSION/src"
+		make -j"$(nproc)" install
+	)
+}
+
 GIT_VERSION=2.25.1
 IRDMA_VERSION=1.2.21
+ICE_VERSION=1.2.1
 : ${GIT_REPO_SPDK=https://github.com/spdk/spdk.git}
 export GIT_REPO_SPDK
 : ${GIT_REPO_DPDK=https://github.com/spdk/dpdk.git}
@@ -487,6 +498,8 @@ export GIT_REPO_GIT
 export GIT_REPO_DPDK_KMODS
 : ${IRDMA_DRIVER=https://downloadmirror.intel.com/29751/eng/irdma-$IRDMA_VERSION.tgz}
 export IRDMA_DRIVER
+: ${ICE_DRIVER=https://downloadmirror.intel.com/29746/eng/ice-$ICE_VERSION.tar.gz}
+export ICE_DRIVER
 GIT_REPOS=${GIT_REPOS:-$HOME}
 
 gcc_version=$(gcc -dumpversion) gcc_version=${gcc_version%%.*}
@@ -513,6 +526,7 @@ else
 		install_flamegraph
 		install_qemu
 		install_igb_uio
+		install_ice
 	)
 	install_extra_pkgs
 fi
