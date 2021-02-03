@@ -784,6 +784,18 @@ nvme_ns_cmd_zone_append_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair 
 			      SPDK_NVME_OPC_ZONE_APPEND,
 			      io_flags, apptag_mask, apptag, false);
 	if (req != NULL) {
+		/*
+		 * Zone append commands cannot be split (num_children has to be 0).
+		 * For NVME_PAYLOAD_TYPE_CONTIG, _nvme_ns_cmd_rw() should never cause a split
+		 * to happen, since a too large request would have already been failed by
+		 * nvme_ns_cmd_check_zone_append(), since zasl <= mdts.
+		 */
+		assert(req->num_children == 0);
+		if (req->num_children) {
+			nvme_request_free_children(req);
+			nvme_free_request(req);
+			return -EINVAL;
+		}
 		return nvme_qpair_submit_request(qpair, req);
 	} else if (nvme_ns_check_request_length(lba_count,
 						ns->sectors_per_max_io,
