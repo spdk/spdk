@@ -114,11 +114,11 @@ uint32_t spdk_nvme_zns_ctrlr_get_max_zone_append_size(const struct spdk_nvme_ctr
  * The user must ensure that only one thread submits I/O on a given qpair at any
  * given time.
  *
- * \param ns NVMe namespace to submit the write I/O.
+ * \param ns NVMe namespace to submit the zone append I/O.
  * \param qpair I/O queue pair to submit the request.
  * \param buffer Virtual address pointer to the data payload buffer.
  * \param zslba Zone Start LBA of the zone that we are appending to.
- * \param lba_count Length (in sectors) for the write operation.
+ * \param lba_count Length (in sectors) for the zone append operation.
  * \param cb_fn Callback function to invoke when the I/O is completed.
  * \param cb_arg Argument to pass to the callback function.
  * \param io_flags Set flags, defined by the SPDK_NVME_IO_FLAGS_* entries in
@@ -141,13 +141,13 @@ int spdk_nvme_zns_zone_append(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
  * The user must ensure that only one thread submits I/O on a given qpair at any
  * given time.
  *
- * \param ns NVMe namespace to submit the write I/O.
+ * \param ns NVMe namespace to submit the zone append I/O.
  * \param qpair I/O queue pair to submit the request.
  * \param buffer Virtual address pointer to the data payload buffer.
  * \param metadata Virtual address pointer to the metadata payload, the length
  * of metadata is specified by spdk_nvme_ns_get_md_size().
  * \param zslba Zone Start LBA of the zone that we are appending to.
- * \param lba_count Length (in sectors) for the write operation.
+ * \param lba_count Length (in sectors) for the zone append operation.
  * \param cb_fn Callback function to invoke when the I/O is completed.
  * \param cb_arg Argument to pass to the callback function.
  * \param io_flags Set flags, defined by the SPDK_NVME_IO_FLAGS_* entries in
