@@ -64,6 +64,7 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 	}
 
 	ns->sectors_per_max_io = spdk_nvme_ns_get_max_io_xfer_size(ns) / ns->extended_lba_size;
+	ns->sectors_per_max_io_no_md = spdk_nvme_ns_get_max_io_xfer_size(ns) / ns->sector_size;
 
 	if (nsdata->noiob) {
 		ns->sectors_per_stripe = nsdata->noiob;
@@ -556,6 +557,7 @@ void nvme_ns_destruct(struct spdk_nvme_ns *ns)
 	ns->md_size = 0;
 	ns->pi_type = 0;
 	ns->sectors_per_max_io = 0;
+	ns->sectors_per_max_io_no_md = 0;
 	ns->sectors_per_stripe = 0;
 	ns->flags = 0;
 	ns->csi = SPDK_NVME_CSI_NVM;

@@ -62,19 +62,27 @@ nvme_ns_check_request_length(uint32_t lba_count, uint32_t sectors_per_max_io,
 	return child_per_io >= qdepth;
 }
 
+static inline bool
+_nvme_md_excluded_from_xfer(struct spdk_nvme_ns *ns, uint32_t io_flags)
+{
+	return (io_flags & SPDK_NVME_IO_FLAGS_PRACT) &&
+	       (ns->flags & SPDK_NVME_NS_EXTENDED_LBA_SUPPORTED) &&
+	       (ns->flags & SPDK_NVME_NS_DPS_PI_SUPPORTED) &&
+	       (ns->md_size == 8);
+}
+
 static inline uint32_t
 _nvme_get_host_buffer_sector_size(struct spdk_nvme_ns *ns, uint32_t io_flags)
 {
-	uint32_t sector_size = ns->extended_lba_size;
+	return _nvme_md_excluded_from_xfer(ns, io_flags) ?
+	       ns->sector_size : ns->extended_lba_size;
+}
 
-	if ((io_flags & SPDK_NVME_IO_FLAGS_PRACT) &&
-	    (ns->flags & SPDK_NVME_NS_EXTENDED_LBA_SUPPORTED) &&
-	    (ns->flags & SPDK_NVME_NS_DPS_PI_SUPPORTED) &&
-	    (ns->md_size == 8)) {
-		sector_size -= 8;
-	}
-
-	return sector_size;
+static inline uint32_t
+_nvme_get_sectors_per_max_io(struct spdk_nvme_ns *ns, uint32_t io_flags)
+{
+	return _nvme_md_excluded_from_xfer(ns, io_flags) ?
+	       ns->sectors_per_max_io_no_md : ns->sectors_per_max_io;
 }
 
 static struct nvme_request *
@@ -393,7 +401,7 @@ _nvme_ns_cmd_rw(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 {
 	struct nvme_request	*req;
 	uint32_t		sector_size = _nvme_get_host_buffer_sector_size(ns, io_flags);
-	uint32_t		sectors_per_max_io = ns->sectors_per_max_io;
+	uint32_t		sectors_per_max_io = _nvme_get_sectors_per_max_io(ns, io_flags);
 	uint32_t		sectors_per_stripe = ns->sectors_per_stripe;
 
 	req = nvme_allocate_request(qpair, payload, lba_count * sector_size, lba_count * ns->md_size,

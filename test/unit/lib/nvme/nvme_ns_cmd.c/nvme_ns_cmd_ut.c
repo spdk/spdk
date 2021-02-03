@@ -240,6 +240,7 @@ prepare_for_test(struct spdk_nvme_ns *ns, struct spdk_nvme_ctrlr *ctrlr,
 	}
 	ns->md_size = md_size;
 	ns->sectors_per_max_io = spdk_nvme_ns_get_max_io_xfer_size(ns) / ns->extended_lba_size;
+	ns->sectors_per_max_io_no_md = spdk_nvme_ns_get_max_io_xfer_size(ns) / ns->sector_size;
 	ns->sectors_per_stripe = stripe_size / ns->extended_lba_size;
 
 	memset(qpair, 0, sizeof(*qpair));
@@ -909,11 +910,7 @@ test_nvme_ns_cmd_comparev_with_md(void)
 	 * Protection information enabled + PRACT
 	 *
 	 * Special case for 8-byte metadata + PI + PRACT: no metadata transferred
-	 * In theory, 256 blocks * 512 bytes per block = one I/O (128 KB)
-	 * However, the splitting code does not account for PRACT when calculating
-	 * max sectors per transfer, so we actually get two I/Os:
-	 *   child 0: 252 blocks
-	 *   child 1: 4 blocks
+	 * 256 blocks * 512 bytes per block = single 128 KB I/O (no splitting required)
 	 */
 	prepare_for_test(&ns, &ctrlr, &qpair, 512, 8, 128 * 1024, 0, true);
 	ns.flags |= SPDK_NVME_NS_DPS_PI_SUPPORTED;
@@ -923,18 +920,11 @@ test_nvme_ns_cmd_comparev_with_md(void)
 
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
-	SPDK_CU_ASSERT_FATAL(g_request->num_children == 2);
-	child0 = TAILQ_FIRST(&g_request->children);
+	SPDK_CU_ASSERT_FATAL(g_request->num_children == 0);
 
-	SPDK_CU_ASSERT_FATAL(child0 != NULL);
-	CU_ASSERT(child0->payload_offset == 0);
-	CU_ASSERT(child0->payload_size == 252 * 512); /* NOTE: does not include metadata! */
-	child1 = TAILQ_NEXT(child0, child_tailq);
-
-	SPDK_CU_ASSERT_FATAL(child1 != NULL);
-	CU_ASSERT(child1->payload.md == NULL);
-	CU_ASSERT(child1->payload_offset == 252 * 512);
-	CU_ASSERT(child1->payload_size == 4 * 512);
+	CU_ASSERT(g_request->payload.md == NULL);
+	CU_ASSERT(g_request->payload_offset == 0);
+	CU_ASSERT(g_request->payload_size == 256 * 512); /* NOTE: does not include metadata! */
 
 	nvme_request_free_children(g_request);
 	nvme_free_request(g_request);
@@ -1373,11 +1363,7 @@ test_nvme_ns_cmd_write_with_md(void)
 	 * Protection information enabled + PRACT
 	 *
 	 * Special case for 8-byte metadata + PI + PRACT: no metadata transferred
-	 * In theory, 256 blocks * 512 bytes per block = one I/O (128 KB)
-	 * However, the splitting code does not account for PRACT when calculating
-	 * max sectors per transfer, so we actually get two I/Os:
-	 *   child 0: 252 blocks
-	 *   child 1: 4 blocks
+	 * 256 blocks * 512 bytes per block = single 128 KB I/O (no splitting required)
 	 */
 	prepare_for_test(&ns, &ctrlr, &qpair, 512, 8, 128 * 1024, 0, true);
 	ns.flags |= SPDK_NVME_NS_DPS_PI_SUPPORTED;
@@ -1387,18 +1373,11 @@ test_nvme_ns_cmd_write_with_md(void)
 
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
-	SPDK_CU_ASSERT_FATAL(g_request->num_children == 2);
-	child0 = TAILQ_FIRST(&g_request->children);
+	SPDK_CU_ASSERT_FATAL(g_request->num_children == 0);
 
-	SPDK_CU_ASSERT_FATAL(child0 != NULL);
-	CU_ASSERT(child0->payload_offset == 0);
-	CU_ASSERT(child0->payload_size == 252 * 512); /* NOTE: does not include metadata! */
-	child1 = TAILQ_NEXT(child0, child_tailq);
-
-	SPDK_CU_ASSERT_FATAL(child1 != NULL);
-	CU_ASSERT(child1->payload.md == NULL);
-	CU_ASSERT(child1->payload_offset == 252 * 512);
-	CU_ASSERT(child1->payload_size == 4 * 512);
+	CU_ASSERT(g_request->payload.md == NULL);
+	CU_ASSERT(g_request->payload_offset == 0);
+	CU_ASSERT(g_request->payload_size == 256 * 512); /* NOTE: does not include metadata! */
 
 	nvme_request_free_children(g_request);
 	nvme_free_request(g_request);
@@ -1758,11 +1737,7 @@ test_nvme_ns_cmd_compare_with_md(void)
 	 * Protection information enabled + PRACT
 	 *
 	 * Special case for 8-byte metadata + PI + PRACT: no metadata transferred
-	 * In theory, 256 blocks * 512 bytes per block = one I/O (128 KB)
-	 * However, the splitting code does not account for PRACT when calculating
-	 * max sectors per transfer, so we actually get two I/Os:
-	 *   child 0: 252 blocks
-	 *   child 1: 4 blocks
+	 * 256 blocks * 512 bytes per block = single 128 KB I/O (no splitting required)
 	 */
 	prepare_for_test(&ns, &ctrlr, &qpair, 512, 8, 128 * 1024, 0, true);
 	ns.flags |= SPDK_NVME_NS_DPS_PI_SUPPORTED;
@@ -1772,18 +1747,11 @@ test_nvme_ns_cmd_compare_with_md(void)
 
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
-	SPDK_CU_ASSERT_FATAL(g_request->num_children == 2);
-	child0 = TAILQ_FIRST(&g_request->children);
+	SPDK_CU_ASSERT_FATAL(g_request->num_children == 0);
 
-	SPDK_CU_ASSERT_FATAL(child0 != NULL);
-	CU_ASSERT(child0->payload_offset == 0);
-	CU_ASSERT(child0->payload_size == 252 * 512); /* NOTE: does not include metadata! */
-	child1 = TAILQ_NEXT(child0, child_tailq);
-
-	SPDK_CU_ASSERT_FATAL(child1 != NULL);
-	CU_ASSERT(child1->payload.md == NULL);
-	CU_ASSERT(child1->payload_offset == 252 * 512);
-	CU_ASSERT(child1->payload_size == 4 * 512);
+	CU_ASSERT(g_request->payload.md == NULL);
+	CU_ASSERT(g_request->payload_offset == 0);
+	CU_ASSERT(g_request->payload_size == 256 * 512); /* NOTE: does not include metadata! */
 
 	nvme_request_free_children(g_request);
 	nvme_free_request(g_request);
