@@ -79,6 +79,7 @@ class Server:
 
     def configure_adq(self):
         self.adq_load_modules()
+        self.adq_configure_nic()
 
     def adq_load_modules(self):
         self.log_print("Modprobing ADQ-related Linux modules...")
@@ -90,6 +91,35 @@ class Server:
             except CalledProcessError as e:
                 self.log_print("ERROR: failed to load module %s" % module)
                 self.log_print("%s resulted in error: %s" % (e.cmd, e.output))
+
+    def adq_configure_nic(self):
+        self.log_print("Configuring NIC port settings for ADQ testing...")
+
+        # Reload the driver first, to make sure any previous settings are re-set.
+        try:
+            self.exec_cmd(["sudo", "rmmod", "ice"])
+            self.exec_cmd(["sudo", "modprobe", "ice"])
+        except CalledProcessError as e:
+            self.log_print("ERROR: failed to reload ice module!")
+            self.log_print("%s resulted in error: %s" % (e.cmd, e.output))
+
+        nic_names = [self.get_nic_name_by_ip(n) for n in self.nic_ips]
+        for nic in nic_names:
+            self.log_print(nic)
+            try:
+                self.exec_cmd(["sudo", "ethtool", "-K", nic,
+                               "hw-tc-offload", "on"])  # Enable hardware TC offload
+                self.exec_cmd(["sudo", "ethtool", "--set-priv-flags", nic,
+                               "channel-inline-flow-director", "on"])  # Enable Intel Flow Director
+                self.exec_cmd(["sudo", "ethtool", "--set-priv-flags", nic, "fw-lldp-agent", "off"])  # Disable LLDP
+                self.exec_cmd(["sudo", "ethtool", "--set-priv-flags", nic,
+                               "channel-pkt-inspect-optimize", "off"])  # Disable channel packet inspection optimization
+            except CalledProcessError as e:
+                self.log_print("ERROR: failed to configure NIC port using ethtool!")
+                self.log_print("%s resulted in error: %s" % (e.cmd, e.output))
+                self.log_print("Please update your NIC driver and firmware versions and try again.")
+            self.log_print(self.exec_cmd(["sudo", "ethtool", "-k", nic]))
+            self.log_print(self.exec_cmd(["sudo", "ethtool", "--show-priv-flags", nic]))
 
 
 class Target(Server):
