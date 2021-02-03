@@ -27,7 +27,7 @@ function install_refspdk() {
 		release=$(git -C "$GIT_REPOS/spdk_repo/spdk" tag | sort --version-sort | grep -v rc | tail -n 1)
 		output_dir="$GIT_REPOS/spdk_abi_latest"
 	elif [[ "$version" == "LTS" ]]; then
-		release=$(git -C "$GIT_REPOS/spdk_repo/spdk" describe LTS)
+		release=$(git -C "$GIT_REPOS/spdk_repo/spdk" describe --tags --exclude=LTS LTS)
 		output_dir="$GIT_REPOS/spdk_abi_lts"
 	fi
 
