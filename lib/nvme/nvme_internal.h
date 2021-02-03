@@ -481,6 +481,7 @@ struct spdk_nvme_ns {
 	uint32_t			md_size;
 	uint32_t			pi_type;
 	uint32_t			sectors_per_max_io;
+	uint32_t			sectors_per_max_io_no_md;
 	uint32_t			sectors_per_stripe;
 	uint32_t			id;
 	uint16_t			flags;
