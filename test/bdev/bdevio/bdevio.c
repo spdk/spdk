@@ -1259,48 +1259,32 @@ static void
 test_main(void *arg1)
 {
 	struct spdk_cpuset tmpmask = {};
-	const struct spdk_cpuset *appmask;
-	uint32_t cpu, init_cpu;
+	uint32_t i;
 
 	pthread_mutex_init(&g_test_mutex, NULL);
 	pthread_cond_init(&g_test_cond, NULL);
 
-	appmask = spdk_app_get_core_mask();
-
-	if (spdk_cpuset_count(appmask) < 3) {
+	/* This test runs specifically on at least three cores.
+	 * g_thread_init is the app_thread on main core from event framework.
+	 * Next two are only for the tests and should always be on separate CPU cores. */
+	if (spdk_env_get_core_count() < 3) {
 		spdk_app_stop(-1);
 		return;
 	}
 
-	init_cpu = spdk_env_get_current_core();
-	g_thread_init = spdk_get_thread();
-
-	for (cpu = 0; cpu < SPDK_ENV_LCORE_ID_ANY; cpu++) {
-		if (cpu != init_cpu && spdk_cpuset_get_cpu(appmask, cpu)) {
-			spdk_cpuset_zero(&tmpmask);
-			spdk_cpuset_set_cpu(&tmpmask, cpu, true);
+	SPDK_ENV_FOREACH_CORE(i) {
+		if (i == spdk_env_get_current_core()) {
+			g_thread_init = spdk_get_thread();
+			continue;
+		}
+		spdk_cpuset_zero(&tmpmask);
+		spdk_cpuset_set_cpu(&tmpmask, i, true);
+		if (g_thread_ut == NULL) {
 			g_thread_ut = spdk_thread_create("ut_thread", &tmpmask);
-			break;
-		}
-	}
-
-	if (cpu == SPDK_ENV_LCORE_ID_ANY) {
-		spdk_app_stop(-1);
-		return;
-	}
-
-	for (cpu++; cpu < SPDK_ENV_LCORE_ID_ANY; cpu++) {
-		if (cpu != init_cpu && spdk_cpuset_get_cpu(appmask, cpu)) {
-			spdk_cpuset_zero(&tmpmask);
-			spdk_cpuset_set_cpu(&tmpmask, cpu, true);
+		} else if (g_thread_io == NULL) {
 			g_thread_io = spdk_thread_create("io_thread", &tmpmask);
-			break;
 		}
-	}
 
-	if (cpu == SPDK_ENV_LCORE_ID_ANY) {
-		spdk_app_stop(-1);
-		return;
 	}
 
 	if (g_wait_for_tests) {
