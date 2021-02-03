@@ -77,6 +77,20 @@ class Server:
     def exec_cmd(self, cmd, stderr_redirect=False):
         return ""
 
+    def configure_adq(self):
+        self.adq_load_modules()
+
+    def adq_load_modules(self):
+        self.log_print("Modprobing ADQ-related Linux modules...")
+        adq_module_deps = ["sch_mqprio", "act_mirred", "cls_flower"]
+        for module in adq_module_deps:
+            try:
+                self.exec_cmd(["sudo", "modprobe", module])
+                self.log_print("%s loaded!" % module)
+            except CalledProcessError as e:
+                self.log_print("ERROR: failed to load module %s" % module)
+                self.log_print("%s resulted in error: %s" % (e.cmd, e.output))
+
 
 class Target(Server):
     def __init__(self, name, general_config, target_config):
@@ -120,6 +134,8 @@ class Target(Server):
         self.script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
         self.spdk_dir = os.path.abspath(os.path.join(self.script_dir, "../../../"))
         self.set_local_nic_info(self.set_local_nic_info_helper())
+        if self.enable_adq:
+            self.configure_adq()
         self.sys_config()
 
     def set_local_nic_info_helper(self):
@@ -412,6 +428,8 @@ class Initiator(Server):
         self._nics_json_obj = json.loads(self.exec_cmd(["ip", "-j", "address", "show"]))
         self.set_local_nic_info(self.set_local_nic_info_helper())
         self.set_cpu_frequency()
+        if self.enable_adq:
+            self.configure_adq()
         self.sys_config()
 
     def set_local_nic_info_helper(self):
