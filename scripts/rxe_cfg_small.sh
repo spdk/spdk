@@ -8,6 +8,7 @@ declare -r rdma_rxe_add=$rdma_rxe/parameters/add
 declare -r rdma_rxe_rm=$rdma_rxe/parameters/remove
 
 declare -r infiniband=/sys/class/infiniband
+declare -r infiniband_verbs=/sys/class/infiniband_verbs
 declare -r net=/sys/class/net
 
 declare -A net_devices
@@ -45,11 +46,16 @@ get_ipv4() {
 get_rxe_mtu() {
 	local rxe=$1
 	local mtu
+	local uverb
 
-	[[ -c /dev/infiniband/uverbs${rxe/rxe/} ]] || return 0
-
-	[[ $(ibv_devinfo -d "$rxe") =~ active_mtu:(.*\ \(.*\)) ]]
-	echo "${BASH_REMATCH[1]:-(?)}"
+	for uverb in "$infiniband_verbs/uverbs"*; do
+		if [[ $(< "$uverb/ibdev") == "$rxe" ]] \
+			&& [[ -c /dev/infiniband/${uverb##*/} ]]; then
+			[[ $(ibv_devinfo -d "$rxe") =~ active_mtu:(.*\ \(.*\)) ]]
+			echo "${BASH_REMATCH[1]:-(?)}"
+			return 0
+		fi
+	done
 }
 
 start() {
@@ -196,7 +202,7 @@ print_status() {
 add_rxe() {
 	local dev net_devs
 
-	[[ -e $rdma_rxe/parameters ]] || return 1
+	[[ -e $rdma_rxe_add ]] || return 0
 
 	if [[ -z $1 || $1 == all ]]; then
 		net_devs=("${!net_devices[@]}")
@@ -222,6 +228,8 @@ add_rxe() {
 remove_rxe() {
 	local rxes rxe
 
+	[[ -e $rdma_rxe_rm ]] || return 0
+
 	rxes=("${!rxe_to_net[@]}")
 	if [[ -z $1 || $1 == all ]]; then
 		rxes=("${!rxe_to_net[@]}")
@@ -234,7 +242,7 @@ remove_rxe() {
 
 	for rxe in "${rxes[@]}"; do
 		echo "$rxe" > "$rdma_rxe_rm"
-	done
+	done 2> /dev/null
 }
 
 link_up() {
@@ -249,8 +257,8 @@ collect_devices() {
 	for net_dev in "$net/"!(bonding_masters); do
 		(($(< "$net_dev/type") != 1)) && continue
 		net_devices["${net_dev##*/}"]=$net_dev
-		for rxe_dev in "$infiniband/rxe"+([0-9]); do
-			if [[ $(< "$rxe_dev/parent") == "${net_dev##*/}" ]]; then
+		for rxe_dev in "$infiniband/"*; do
+			if [[ -e $rxe_dev/device/net/${net_dev##*/} ]]; then
 				net_to_rxe["${net_dev##*/}"]=${rxe_dev##*/}
 				rxe_to_net["${rxe_dev##*/}"]=${net_dev##*/}
 				continue 2
