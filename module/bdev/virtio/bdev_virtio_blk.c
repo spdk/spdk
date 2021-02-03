@@ -80,7 +80,9 @@ struct bdev_virtio_blk_io_channel {
 
 /* Features desired/implemented by this driver. */
 #define VIRTIO_BLK_DEV_SUPPORTED_FEATURES		\
-	(1ULL << VIRTIO_BLK_F_BLK_SIZE		|	\
+	(1ULL << VIRTIO_BLK_F_SIZE_MAX		|	\
+	 1ULL << VIRTIO_BLK_F_SEG_MAX		|	\
+	 1ULL << VIRTIO_BLK_F_BLK_SIZE		|	\
 	 1ULL << VIRTIO_BLK_F_TOPOLOGY		|	\
 	 1ULL << VIRTIO_BLK_F_MQ		|	\
 	 1ULL << VIRTIO_BLK_F_RO		|	\
