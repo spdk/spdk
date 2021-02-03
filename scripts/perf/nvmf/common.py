@@ -2,7 +2,7 @@ import os
 import re
 import json
 from itertools import product, chain
-from subprocess import check_output, Popen
+from subprocess import check_output, CalledProcessError, Popen
 
 
 def get_used_numa_nodes():

@@ -74,6 +74,9 @@ class Server:
 
         self.local_nic_info = extract_network_elements(pci_info)
 
+    def exec_cmd(self, cmd, stderr_redirect=False):
+        return ""
+
 
 class Target(Server):
     def __init__(self, name, general_config, target_config):
@@ -96,7 +99,7 @@ class Target(Server):
         self.enable_zcopy = False
         self.scheduler_name = "static"
         self.null_block = 0
-        self._nics_json_obj = json.loads(check_output(["ip", "-j", "address", "show"]))
+        self._nics_json_obj = json.loads(self.exec_cmd(["ip", "-j", "address", "show"]))
 
         if "null_block_devices" in target_config:
             self.null_block = target_config["null_block_devices"]
@@ -120,7 +123,14 @@ class Target(Server):
         self.sys_config()
 
     def set_local_nic_info_helper(self):
-        return json.loads(check_output(["lshw", "-json"]))
+        return json.loads(self.exec_cmd(["lshw", "-json"]))
+
+    def exec_cmd(self, cmd, stderr_redirect=False):
+        stderr_opt = None
+        if stderr_redirect:
+            stderr_opt = subprocess.STDOUT
+        out = check_output(cmd, stderr=stderr_opt).decode(encoding="utf-8")
+        return out
 
     def zip_spdk_sources(self, spdk_dir, dest_file):
         self.log_print("Zipping SPDK source directory")
@@ -300,8 +310,7 @@ class Target(Server):
     def measure_sar(self, results_dir, sar_file_name):
         self.log_print("Waiting %d delay before measuring SAR stats" % self.sar_delay)
         time.sleep(self.sar_delay)
-        cmd = ["sar", "-P", "ALL", "%s" % self.sar_interval, "%s" % self.sar_count]
-        out = subprocess.check_output(cmd).decode(encoding="utf-8")
+        out = self.exec_cmd(["sar", "-P", "ALL", "%s" % self.sar_interval, "%s" % self.sar_count])
         with open(os.path.join(results_dir, sar_file_name), "w") as fh:
             for line in out.split("\n"):
                 if "Average" in line and "CPU" in line:
@@ -330,14 +339,13 @@ class Target(Server):
 
     def measure_pcm_power(self, results_dir, pcm_power_file_name):
         time.sleep(self.pcm_delay)
-        cmd = ["%s/pcm-power.x" % self.pcm_dir, "%s" % self.pcm_interval, "-i=%s" % self.pcm_count]
-        out = subprocess.check_output(cmd).decode(encoding="utf-8")
+        out = self.exec_cmd(["%s/pcm-power.x" % self.pcm_dir, "%s" % self.pcm_interval, "-i=%s" % self.pcm_count])
         with open(os.path.join(results_dir, pcm_power_file_name), "w") as fh:
             fh.write(out)
 
     def measure_bandwidth(self, results_dir, bandwidth_file_name):
-        cmd = ["bwm-ng", "-o csv", "-F %s/%s" % (results_dir, bandwidth_file_name), "-a 1", "-t 1000", "-c %s" % self.bandwidth_count]
-        bwm = subprocess.run(cmd)
+        self.exec_cmd(["bwm-ng", "-o csv", "-F %s/%s" % (results_dir, bandwidth_file_name),
+                       "-a 1", "-t 1000", "-c %s" % self.bandwidth_count])
 
     def measure_dpdk_memory(self, results_dir):
         self.log_print("INFO: waiting to generate DPDK memory usage")
@@ -358,7 +366,7 @@ class Target(Server):
             sysctl = f.readlines()
             self.log_print('\n'.join(self.get_uncommented_lines(sysctl)))
         self.log_print("====Cpu power info:====")
-        subprocess.run(["cpupower", "frequency-info"])
+        self.log_print(self.exec_cmd(["cpupower", "frequency-info"]))
         self.log_print("====zcopy settings:====")
         self.log_print("zcopy enabled: %s" % (self.enable_zcopy))
         self.log_print("====Scheduler settings:====")
@@ -399,18 +407,31 @@ class Initiator(Server):
         self.ssh_connection = paramiko.SSHClient()
         self.ssh_connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.ssh_connection.connect(self.ip, username=self.username, password=self.password)
-        self.remote_call("sudo rm -rf %s/nvmf_perf" % self.spdk_dir)
-        self.remote_call("mkdir -p %s" % self.spdk_dir)
-        self._nics_json_obj = json.loads(self.remote_call("ip -j address show")[0])
+        self.exec_cmd(["sudo", "rm", "-rf", "%s/nvmf_perf" % self.spdk_dir])
+        self.exec_cmd(["mkdir", "-p", "%s" % self.spdk_dir])
+        self._nics_json_obj = json.loads(self.exec_cmd(["ip", "-j", "address", "show"]))
         self.set_local_nic_info(self.set_local_nic_info_helper())
         self.set_cpu_frequency()
         self.sys_config()
 
     def set_local_nic_info_helper(self):
-        return json.loads(self.remote_call("lshw -json")[0])
+        return json.loads(self.exec_cmd(["lshw", "-json"]))
 
     def __del__(self):
         self.ssh_connection.close()
+
+    def exec_cmd(self, cmd, stderr_redirect=False):
+        # Redirect stderr to stdout thanks using get_pty option if needed
+        cmd = " ".join(cmd)
+        _, stdout, _ = self.ssh_connection.exec_command(cmd, get_pty=stderr_redirect)
+        out = stdout.read().decode(encoding="utf-8")
+
+        # Check the return code
+        rc = stdout.channel.recv_exit_status()
+        if rc:
+            raise CalledProcessError(int(rc), cmd, out)
+
+        return out
 
     def put_file(self, local, remote_dest):
         ftp = self.ssh_connection.open_sftp()
@@ -422,12 +443,6 @@ class Initiator(Server):
         ftp.get(remote, local_dest)
         ftp.close()
 
-    def remote_call(self, cmd):
-        stdin, stdout, stderr = self.ssh_connection.exec_command(cmd)
-        out = stdout.read().decode(encoding="utf-8")
-        err = stderr.read().decode(encoding="utf-8")
-        return out, err
-
     def copy_result_files(self, dest_dir):
         self.log_print("Copying results")
 
@@ -435,8 +450,7 @@ class Initiator(Server):
             os.mkdir(dest_dir)
 
         # Get list of result files from initiator and copy them back to target
-        stdout, stderr = self.remote_call("ls %s/nvmf_perf" % self.spdk_dir)
-        file_list = stdout.strip().split("\n")
+        file_list = self.exec_cmd(["ls", "%s/nvmf_perf" % self.spdk_dir]).strip().split("\n")
 
         for file in file_list:
             self.get_file(os.path.join(self.spdk_dir, "nvmf_perf", file),
@@ -450,14 +464,19 @@ class Initiator(Server):
             self.log_print("Trying to discover: %s:%s" % (ip, 4420 + subsys_no))
             nvme_discover_cmd = ["sudo",
                                  "%s" % self.nvmecli_bin,
-                                 "discover", "-t %s" % self.transport,
-                                 "-s %s" % (4420 + subsys_no),
-                                 "-a %s" % ip]
-            nvme_discover_cmd = " ".join(nvme_discover_cmd)
+                                 "discover", "-t", "%s" % self.transport,
+                                 "-s", "%s" % (4420 + subsys_no),
+                                 "-a", "%s" % ip]
 
-            stdout, stderr = self.remote_call(nvme_discover_cmd)
-            if stdout:
-                nvme_discover_output = nvme_discover_output + stdout
+            try:
+                stdout = self.exec_cmd(nvme_discover_cmd)
+                if stdout:
+                    nvme_discover_output = nvme_discover_output + stdout
+            except CalledProcessError:
+                # Do nothing. In case of discovering remote subsystems of kernel target
+                # we expect "nvme discover" to fail a bunch of times because we basically
+                # scan ports.
+                pass
 
         subsystems = re.findall(r'trsvcid:\s(\d+)\s+'  # get svcid number
                                 r'subnqn:\s+([a-zA-Z0-9\.\-\:]+)\s+'  # get NQN id
@@ -497,13 +516,14 @@ runtime={run_time}
         if "spdk" in self.mode:
             subsystems = self.discover_subsystems(self.remote_nic_ips, subsys_no)
             bdev_conf = self.gen_spdk_bdev_conf(subsystems)
-            self.remote_call("echo '%s' > %s/bdev.conf" % (bdev_conf, self.spdk_dir))
+            self.exec_cmd(["echo", "'%s'" % bdev_conf, ">", "%s/bdev.conf" % self.spdk_dir])
             ioengine = "%s/build/fio/spdk_bdev" % self.spdk_dir
             spdk_conf = "spdk_json_conf=%s/bdev.conf" % self.spdk_dir
         else:
             ioengine = "libaio"
             spdk_conf = ""
-            out, err = self.remote_call("sudo nvme list | grep -E 'SPDK|Linux' | awk '{print $1}'")
+            out = self.exec_cmd(["sudo", "nvme", "list", "|", "grep", "-E", "'SPDK|Linux'",
+                                 "|", "awk", "'{print $1}'"])
             subsystems = [x for x in out.split("\n") if "nvme" in x]
 
         if self.cpus_allowed is not None:
@@ -545,8 +565,8 @@ runtime={run_time}
             fio_config_filename += "_%sCPU" % self.num_cores
         fio_config_filename += ".fio"
 
-        self.remote_call("mkdir -p %s/nvmf_perf" % self.spdk_dir)
-        self.remote_call("echo '%s' > %s/nvmf_perf/%s" % (fio_config, self.spdk_dir, fio_config_filename))
+        self.exec_cmd(["mkdir", "-p", "%s/nvmf_perf" % self.spdk_dir])
+        self.exec_cmd(["echo", "'%s'" % fio_config, ">", "%s/nvmf_perf/%s" % (self.spdk_dir, fio_config_filename)])
         self.log_print("Created FIO Config:")
         self.log_print(fio_config)
 
@@ -555,12 +575,9 @@ runtime={run_time}
     def set_cpu_frequency(self):
         if self.cpu_frequency is not None:
             try:
-                self.remote_call('sudo cpupower frequency-set -g userspace')
-                self.remote_call('sudo cpupower frequency-set -f %s' % self.cpu_frequency)
-                cmd = "sudo cpupower frequency-info"
-                output, error = self.remote_call(cmd)
-                self.log_print(output)
-                self.log_print(error)
+                self.exec_cmd(["sudo", "cpupower", "frequency-set", "-g", "userspace"], True)
+                self.exec_cmd(["sudo", "cpupower", "frequency-set", "-f", "%s" % self.cpu_frequency], True)
+                self.log_print(self.exec_cmd(["sudo", "cpupower", "frequency-info"]))
             except Exception:
                 self.log_print("ERROR: cpu_frequency will not work when intel_pstate is enabled!")
                 sys.exit()
@@ -575,29 +592,29 @@ runtime={run_time}
         if run_num:
             for i in range(1, run_num + 1):
                 output_filename = job_name + "_run_" + str(i) + "_" + self.name + ".json"
-                cmd = "sudo %s %s --output-format=json --output=%s" % (self.fio_bin, fio_config_file, output_filename)
-                output, error = self.remote_call(cmd)
+                output = self.exec_cmd(["sudo", self.fio_bin,
+                                        fio_config_file, "--output-format=json",
+                                        "--output=%s" % output_filename], True)
                 self.log_print(output)
-                self.log_print(error)
         else:
             output_filename = job_name + "_" + self.name + ".json"
-            cmd = "sudo %s %s --output-format=json --output=%s" % (self.fio_bin, fio_config_file, output_filename)
-            output, error = self.remote_call(cmd)
+            output = self.exec_cmd(["sudo", self.fio_bin,
+                                    fio_config_file, "--output-format=json",
+                                    "--output" % output_filename], True)
             self.log_print(output)
-            self.log_print(error)
         self.log_print("FIO run finished. Results in: %s" % output_filename)
 
     def sys_config(self):
         self.log_print("====Kernel release:====")
-        self.log_print(self.remote_call('uname -r')[0])
+        self.log_print(self.exec_cmd(["uname", "-r"]))
         self.log_print("====Kernel command line:====")
-        cmdline, error = self.remote_call('cat /proc/cmdline')
+        cmdline = self.exec_cmd(["cat", "/proc/cmdline"])
         self.log_print('\n'.join(self.get_uncommented_lines(cmdline.splitlines())))
         self.log_print("====sysctl conf:====")
-        sysctl, error = self.remote_call('cat /etc/sysctl.conf')
+        sysctl = self.exec_cmd(["cat", "/etc/sysctl.conf"])
         self.log_print('\n'.join(self.get_uncommented_lines(sysctl.splitlines())))
         self.log_print("====Cpu power info:====")
-        self.remote_call("cpupower frequency-info")
+        self.log_print(self.exec_cmd(["cpupower", "frequency-info"]))
 
 
 class KernelTarget(Target):
@@ -856,20 +873,19 @@ class KernelInitiator(Initiator):
         self.log_print("Below connection attempts may result in error messages, this is expected!")
         for subsystem in subsystems:
             self.log_print("Trying to connect %s %s %s" % subsystem)
-            self.remote_call("sudo %s connect -t %s -s %s -n %s -a %s %s" % (self.nvmecli_bin,
-                                                                             self.transport,
-                                                                             *subsystem,
-                                                                             self.extra_params))
+            self.exec_cmd(["sudo", self.nvmecli_bin, "connect", "-t", self.transport,
+                           "-s", subsystem[0], "-n", subsystem[1], "-a", subsystem[2], self.extra_params])
             time.sleep(2)
 
     def kernel_init_disconnect(self, address_list, subsys_no):
         subsystems = self.discover_subsystems(address_list, subsys_no)
         for subsystem in subsystems:
-            self.remote_call("sudo %s disconnect -n %s" % (self.nvmecli_bin, subsystem[1]))
+            self.exec_cmd(["sudo", self.nvmecli_bin, "disconnect", "-n", subsystem[1]])
             time.sleep(1)
 
     def gen_fio_filename_conf(self, threads, io_depth, num_jobs=1):
-        out, err = self.remote_call("sudo nvme list | grep -E 'SPDK|Linux' | awk '{print $1}'")
+        out = self.exec_cmd(["sudo", "nvme", "list", "|", "grep", "-E", "'SPDK|Linux'",
+                             "|", "awk", "'{print $1}'"])
         nvme_list = [x for x in out.split("\n") if "nvme" in x]
 
         filename_section = ""
@@ -906,15 +922,18 @@ class SPDKInitiator(Initiator):
     def install_spdk(self, local_spdk_zip):
         self.put_file(local_spdk_zip, "/tmp/spdk_drop.zip")
         self.log_print("Copied sources zip from target")
-        self.remote_call("unzip -qo /tmp/spdk_drop.zip -d %s" % self.spdk_dir)
+        self.exec_cmd(["unzip", "-qo", "/tmp/spdk_drop.zip", "-d", self.spdk_dir])
 
         self.log_print("Sources unpacked")
         self.log_print("Using fio binary %s" % self.fio_bin)
-        self.remote_call("cd %s; git submodule update --init; make clean; ./configure --with-rdma --with-fio=%s;"
-                         "make -j$(($(nproc)*2))" % (self.spdk_dir, os.path.dirname(self.fio_bin)))
+        self.exec_cmd(["git", "-C", self.spdk_dir, "submodule", "update", "--init"])
+        self.exec_cmd(["git", "-C", self.spdk_dir, "clean", "-ffdx"])
+        self.exec_cmd(["cd", self.spdk_dir, "&&", "./configure", "--with-rdma", "--with-fio=%s" % os.path.dirname(self.fio_bin)])
+        self.exec_cmd(["make", "-C", self.spdk_dir, "clean"])
+        self.exec_cmd(["make", "-C", self.spdk_dir, "-j$(($(nproc)*2))"])
 
         self.log_print("SPDK built")
-        self.remote_call("sudo %s/scripts/setup.sh" % self.spdk_dir)
+        self.exec_cmd(["sudo", "%s/scripts/setup.sh" % self.spdk_dir])
 
     def gen_spdk_bdev_conf(self, remote_subsystem_list):
         bdev_cfg_section = {
@@ -1091,7 +1110,7 @@ if __name__ == "__main__":
 
         for i in initiators:
             if i.mode == "kernel":
-                i.kernel_init_disconnect(i.nic_ips, target_obj.subsys_no)
+                i.kernel_init_disconnect(i.remote_nic_ips, target_obj.subsys_no)
             i.copy_result_files(target_results_dir)
 
     target_obj.parse_results(target_results_dir)
