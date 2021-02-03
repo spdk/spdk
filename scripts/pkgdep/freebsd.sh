@@ -8,7 +8,8 @@ pkg install -y autoconf automake libtool help2man
 if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	# Tools for developers
 	pkg install -y devel/astyle bash py37-pycodestyle \
-		misc/e2fsprogs-libuuid sysutils/sg3_utils nasm
+		misc/e2fsprogs-libuuid sysutils/sg3_utils nasm \
+		bash-completion
 fi
 if [[ $INSTALL_DOCS == "true" ]]; then
 	# Additional dependencies for building docs

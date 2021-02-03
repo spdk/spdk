@@ -11,7 +11,7 @@ zypper install -y autoconf automake libtool help2man
 if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	# Tools for developers
 	zypper install -y git-core lcov python-pycodestyle sg3_utils \
-		pciutils ShellCheck
+		pciutils ShellCheck bash-completion
 fi
 if [[ $INSTALL_PMEM == "true" ]]; then
 	# Additional dependencies for building pmem based backends

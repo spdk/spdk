@@ -29,7 +29,7 @@ apt-get install -y libnuma-dev
 apt-get install -y autoconf automake libtool help2man
 if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	# Tools for developers
-	apt-get install -y git astyle pep8 lcov clang sg3-utils pciutils shellcheck abigail-tools
+	apt-get install -y git astyle pep8 lcov clang sg3-utils pciutils shellcheck abigail-tools bash-completion
 	# Additional python style checker not available on ubuntu 16.04 or earlier.
 	apt-get install -y pycodestyle || true
 	# Additional dependecies for nvmf performance test script
