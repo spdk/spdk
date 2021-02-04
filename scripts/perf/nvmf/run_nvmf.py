@@ -33,12 +33,17 @@ class Server:
         self._nics_json_obj = {}
         self.svc_restore_dict = {}
         self.sysctl_restore_dict = {}
+        self.tuned_restore_dict = {}
+        self.tuned_profile = ""
 
         self.enable_adq = False
         self.adq_priority = None
         if "adq_enable" in server_config and server_config["adq_enable"]:
             self.enable_adq = server_config["adq_enable"]
             self.adq_priority = 1
+
+        if "tuned_profile" in server_config:
+            self.tuned_profile = server_config["tuned_profile"]
 
         if not re.match("^[A-Za-z0-9]*$", name):
             self.log_print("Please use a name which contains only letters or numbers")
@@ -83,6 +88,7 @@ class Server:
     def configure_system(self):
         self.configure_services()
         self.configure_sysctl()
+        self.configure_tuned()
 
     def configure_adq(self):
         self.adq_load_modules()
@@ -182,6 +188,34 @@ class Server:
             self.sysctl_restore_dict.update({opt: self.exec_cmd(["sysctl", "-n", opt]).strip()})
             self.log_print(self.exec_cmd(["sudo", "sysctl", "-w", "%s=%s" % (opt, value)]).strip())
 
+    def configure_tuned(self):
+        if not self.tuned_profile:
+            self.log_print("WARNING: Tuned profile not set in configration file. Skipping configuration.")
+            return
+
+        self.log_print("Configuring tuned-adm profile to %s." % self.tuned_profile)
+        service = "tuned"
+        tuned_config = configparser.ConfigParser(strict=False)
+
+        out = self.exec_cmd(["sudo", "systemctl", "show", "--no-page", service])
+        out = "\n".join(["[%s]" % service, out])
+        tuned_config.read_string(out)
+        tuned_state = tuned_config[service]["ActiveState"]
+        self.svc_restore_dict.update({service: tuned_state})
+
+        if tuned_state != "inactive":
+            profile = self.exec_cmd(["cat", "/etc/tuned/active_profile"]).strip()
+            profile_mode = self.exec_cmd(["cat", "/etc/tuned/profile_mode"]).strip()
+
+            self.tuned_restore_dict = {
+                "profile": profile,
+                "mode": profile_mode
+            }
+
+        self.exec_cmd(["sudo", "systemctl", "start", service])
+        self.exec_cmd(["sudo", "tuned-adm", "profile", self.tuned_profile])
+        self.log_print("Tuned profile set to %s." % self.exec_cmd(["cat", "/etc/tuned/active_profile"]))
+
     def restore_services(self):
         self.log_print("Restoring services...")
         for service, state in self.svc_restore_dict.items():
@@ -192,6 +226,19 @@ class Server:
         self.log_print("Restoring sysctl settings...")
         for opt, value in self.sysctl_restore_dict.items():
             self.log_print(self.exec_cmd(["sudo", "sysctl", "-w", "%s=%s" % (opt, value)]).strip())
+
+    def restore_tuned(self):
+        self.log_print("Restoring tuned-adm settings...")
+
+        if not self.tuned_restore_dict:
+            return
+
+        if self.tuned_restore_dict["mode"] == "auto":
+            self.exec_cmd(["sudo", "tuned-adm", "auto_profile"])
+            self.log_print("Reverted tuned-adm to auto_profile.")
+        else:
+            self.exec_cmd(["sudo", "tuned-adm", "profile", self.tuned_restore_dict["profile"]])
+            self.log_print("Reverted tuned-adm to %s profile." % self.tuned_restore_dict["profile"])
 
 
 class Target(Server):
@@ -1242,9 +1289,11 @@ if __name__ == "__main__":
                 i.kernel_init_disconnect(i.remote_nic_ips, target_obj.subsys_no)
             i.copy_result_files(target_results_dir)
 
+    target_obj.restore_tuned()
     target_obj.restore_services()
     target_obj.restore_sysctl()
     for i in initiators:
+        i.restore_tuned()
         i.restore_services()
         i.restore_sysctl()
     target_obj.parse_results(target_results_dir)
