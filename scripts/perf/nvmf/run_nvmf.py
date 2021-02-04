@@ -32,6 +32,7 @@ class Server:
         self.local_nic_info = []
         self._nics_json_obj = {}
         self.svc_restore_dict = {}
+        self.sysctl_restore_dict = {}
 
         self.enable_adq = False
         self.adq_priority = None
@@ -81,6 +82,7 @@ class Server:
 
     def configure_system(self):
         self.configure_services()
+        self.configure_sysctl()
 
     def configure_adq(self):
         self.adq_load_modules()
@@ -154,11 +156,42 @@ class Server:
                 self.log_print("Disabling %s. It will be restored after the test has finished." % service)
                 self.exec_cmd(["sudo", "systemctl", "stop", service])
 
+    def configure_sysctl(self):
+        self.log_print("Tuning sysctl settings...")
+
+        busy_read = 50000
+        if self.enable_adq and self.mode == "spdk":
+            busy_read = 1
+
+        sysctl_opts = {
+            "net.core.busy_poll": 0,
+            "net.core.busy_read": busy_read,
+            "net.core.somaxconn": 4096,
+            "net.core.netdev_max_backlog": 8192,
+            "net.ipv4.tcp_max_syn_backlog": 16384,
+            "net.core.rmem_max": 268435456,
+            "net.core.wmem_max": 268435456,
+            "net.ipv4.tcp_mem": "268435456 268435456 268435456",
+            "net.ipv4.tcp_rmem": "8192 1048576 33554432",
+            "net.ipv4.tcp_wmem": "8192 1048576 33554432",
+            "net.ipv4.route.flush": 1,
+            "vm.overcommit_memory": 1,
+        }
+
+        for opt, value in sysctl_opts.items():
+            self.sysctl_restore_dict.update({opt: self.exec_cmd(["sysctl", "-n", opt]).strip()})
+            self.log_print(self.exec_cmd(["sudo", "sysctl", "-w", "%s=%s" % (opt, value)]).strip())
+
     def restore_services(self):
         self.log_print("Restoring services...")
         for service, state in self.svc_restore_dict.items():
             cmd = "stop" if state == "inactive" else "start"
             self.exec_cmd(["sudo", "systemctl", cmd, service])
+
+    def restore_sysctl(self):
+        self.log_print("Restoring sysctl settings...")
+        for opt, value in self.sysctl_restore_dict.items():
+            self.log_print(self.exec_cmd(["sudo", "sysctl", "-w", "%s=%s" % (opt, value)]).strip())
 
 
 class Target(Server):
@@ -510,8 +543,15 @@ class Initiator(Server):
         self.ssh_connection.close()
 
     def exec_cmd(self, cmd, stderr_redirect=False):
-        # Redirect stderr to stdout thanks using get_pty option if needed
+        # In case one of the command elements contains whitespace and is not
+        # already quoted, # (e.g. when calling sysctl) quote it again to prevent expansion
+        # when sending to remote system.
+        for i, c in enumerate(cmd):
+            if (" " in c or "\t" in c) and not (c.startswith("'") and c.endswith("'")):
+                cmd[i] = '"%s"' % c
         cmd = " ".join(cmd)
+
+        # Redirect stderr to stdout thanks using get_pty option if needed
         _, stdout, _ = self.ssh_connection.exec_command(cmd, get_pty=stderr_redirect)
         out = stdout.read().decode(encoding="utf-8")
 
@@ -1203,6 +1243,8 @@ if __name__ == "__main__":
             i.copy_result_files(target_results_dir)
 
     target_obj.restore_services()
+    target_obj.restore_sysctl()
     for i in initiators:
         i.restore_services()
+        i.restore_sysctl()
     target_obj.parse_results(target_results_dir)
