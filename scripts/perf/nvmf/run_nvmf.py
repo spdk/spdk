@@ -8,6 +8,7 @@ import zipfile
 import threading
 import subprocess
 import itertools
+import configparser
 import time
 import uuid
 from collections import OrderedDict
@@ -30,6 +31,7 @@ class Server:
         self.mode = server_config["mode"]
         self.local_nic_info = []
         self._nics_json_obj = {}
+        self.svc_restore_dict = {}
 
         self.enable_adq = False
         self.adq_priority = None
@@ -77,6 +79,9 @@ class Server:
     def exec_cmd(self, cmd, stderr_redirect=False):
         return ""
 
+    def configure_system(self):
+        self.configure_services()
+
     def configure_adq(self):
         self.adq_load_modules()
         self.adq_configure_nic()
@@ -121,6 +126,40 @@ class Server:
             self.log_print(self.exec_cmd(["sudo", "ethtool", "-k", nic]))
             self.log_print(self.exec_cmd(["sudo", "ethtool", "--show-priv-flags", nic]))
 
+    def configure_services(self):
+        self.log_print("Configuring active services...")
+        svc_config = configparser.ConfigParser(strict=False)
+
+        # Below list is valid only for RHEL / Fedora systems and might not
+        # contain valid names for other distributions.
+        svc_target_state = {
+            "firewalld": "inactive",
+            "irqbalance": "inactive",
+            "lldpad.service": "inactive",
+            "lldpad.socket": "inactive"
+        }
+
+        for service in svc_target_state:
+            out = self.exec_cmd(["sudo", "systemctl", "show", "--no-page", service])
+            out = "\n".join(["[%s]" % service, out])
+            svc_config.read_string(out)
+
+            if "LoadError" in svc_config[service] and "not found" in svc_config[service]["LoadError"]:
+                continue
+
+            service_state = svc_config[service]["ActiveState"]
+            self.log_print("Current state of %s service is %s" % (service, service_state))
+            self.svc_restore_dict.update({service: service_state})
+            if service_state != "inactive":
+                self.log_print("Disabling %s. It will be restored after the test has finished." % service)
+                self.exec_cmd(["sudo", "systemctl", "stop", service])
+
+    def restore_services(self):
+        self.log_print("Restoring services...")
+        for service, state in self.svc_restore_dict.items():
+            cmd = "stop" if state == "inactive" else "start"
+            self.exec_cmd(["sudo", "systemctl", cmd, service])
+
 
 class Target(Server):
     def __init__(self, name, general_config, target_config):
@@ -164,6 +203,7 @@ class Target(Server):
         self.script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
         self.spdk_dir = os.path.abspath(os.path.join(self.script_dir, "../../../"))
         self.set_local_nic_info(self.set_local_nic_info_helper())
+        self.configure_system()
         if self.enable_adq:
             self.configure_adq()
         self.sys_config()
@@ -458,6 +498,7 @@ class Initiator(Server):
         self._nics_json_obj = json.loads(self.exec_cmd(["ip", "-j", "address", "show"]))
         self.set_local_nic_info(self.set_local_nic_info_helper())
         self.set_cpu_frequency()
+        self.configure_system()
         if self.enable_adq:
             self.configure_adq()
         self.sys_config()
@@ -1161,4 +1202,7 @@ if __name__ == "__main__":
                 i.kernel_init_disconnect(i.remote_nic_ips, target_obj.subsys_no)
             i.copy_result_files(target_results_dir)
 
+    target_obj.restore_services()
+    for i in initiators:
+        i.restore_services()
     target_obj.parse_results(target_results_dir)
