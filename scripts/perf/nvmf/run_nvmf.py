@@ -34,6 +34,7 @@ class Server:
         self.svc_restore_dict = {}
         self.sysctl_restore_dict = {}
         self.tuned_restore_dict = {}
+        self.governor_restore = ""
         self.tuned_profile = ""
 
         self.enable_adq = False
@@ -89,6 +90,7 @@ class Server:
         self.configure_services()
         self.configure_sysctl()
         self.configure_tuned()
+        self.configure_cpu_governor()
 
     def configure_adq(self):
         self.adq_load_modules()
@@ -216,6 +218,13 @@ class Server:
         self.exec_cmd(["sudo", "tuned-adm", "profile", self.tuned_profile])
         self.log_print("Tuned profile set to %s." % self.exec_cmd(["cat", "/etc/tuned/active_profile"]))
 
+    def configure_cpu_governor(self):
+        self.log_print("Setting CPU governor to performance...")
+
+        # This assumes that there is the same CPU scaling governor on each CPU
+        self.governor_restore = self.exec_cmd(["cat", "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"]).strip()
+        self.exec_cmd(["sudo", "cpupower", "frequency-set", "-g", "performance"])
+
     def restore_services(self):
         self.log_print("Restoring services...")
         for service, state in self.svc_restore_dict.items():
@@ -239,6 +248,12 @@ class Server:
         else:
             self.exec_cmd(["sudo", "tuned-adm", "profile", self.tuned_restore_dict["profile"]])
             self.log_print("Reverted tuned-adm to %s profile." % self.tuned_restore_dict["profile"])
+
+    def restore_governor(self):
+        self.log_print("Restoring CPU governor setting...")
+        if self.governor_restore:
+            self.exec_cmd(["sudo", "cpupower", "frequency-set", "-g", self.governor_restore])
+            self.log_print("Reverted CPU governor to %s." % self.governor_restore)
 
 
 class Target(Server):
@@ -1289,10 +1304,12 @@ if __name__ == "__main__":
                 i.kernel_init_disconnect(i.remote_nic_ips, target_obj.subsys_no)
             i.copy_result_files(target_results_dir)
 
+    target_obj.restore_governor()
     target_obj.restore_tuned()
     target_obj.restore_services()
     target_obj.restore_sysctl()
     for i in initiators:
+        i.restore_governor()
         i.restore_tuned()
         i.restore_services()
         i.restore_sysctl()
