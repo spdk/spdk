@@ -1238,7 +1238,11 @@ vtophys_iommu_device_event(const char *device_name,
 		RTE_DEV_FOREACH(dev, "bus=pci", &dev_iter) {
 			if (strcmp(dev->name, device_name) == 0) {
 				struct rte_pci_device *pci_dev = RTE_DEV_TO_PCI(dev);
+#if RTE_VERSION < RTE_VERSION_NUM(20, 11, 0, 0)
+				if (pci_dev->kdrv == RTE_KDRV_VFIO) {
+#else
 				if (pci_dev->kdrv == RTE_PCI_KDRV_VFIO) {
+#endif
 					/* This is a new PCI device using vfio */
 					g_vfio.device_ref++;
 				}
@@ -1267,7 +1271,11 @@ vtophys_iommu_device_event(const char *device_name,
 		RTE_DEV_FOREACH(dev, "bus=pci", &dev_iter) {
 			if (strcmp(dev->name, device_name) == 0) {
 				struct rte_pci_device *pci_dev = RTE_DEV_TO_PCI(dev);
+#if RTE_VERSION < RTE_VERSION_NUM(20, 11, 0, 0)
+				if (pci_dev->kdrv == RTE_KDRV_VFIO) {
+#else
 				if (pci_dev->kdrv == RTE_PCI_KDRV_VFIO) {
+#endif
 					/* This is a PCI device using vfio */
 					g_vfio.device_ref--;
 				}
@@ -1362,7 +1370,11 @@ vtophys_iommu_init(void)
 	RTE_DEV_FOREACH(dev, "bus=pci", &dev_iter) {
 		struct rte_pci_device *pci_dev = RTE_DEV_TO_PCI(dev);
 
+#if RTE_VERSION < RTE_VERSION_NUM(20, 11, 0, 0)
+		if (pci_dev->kdrv == RTE_KDRV_VFIO) {
+#else
 		if (pci_dev->kdrv == RTE_PCI_KDRV_VFIO) {
+#endif
 			/* This is a PCI device using vfio */
 			g_vfio.device_ref++;
 		}
