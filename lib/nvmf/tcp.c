@@ -1824,7 +1824,7 @@ nvmf_tcp_pdu_ch_handle(struct spdk_nvmf_tcp_qpair *tqpair)
 		case SPDK_NVME_TCP_PDU_TYPE_CAPSULE_CMD:
 			expected_hlen = sizeof(struct spdk_nvme_tcp_cmd);
 			pdo = pdu->hdr.common.pdo;
-			if ((tqpair->cpda != 0) && (pdo != ((tqpair->cpda + 1) << 2))) {
+			if ((tqpair->cpda != 0) && (pdo % ((tqpair->cpda + 1) << 2) != 0)) {
 				pdo_error = true;
 				break;
 			}
@@ -1836,7 +1836,7 @@ nvmf_tcp_pdu_ch_handle(struct spdk_nvmf_tcp_qpair *tqpair)
 		case SPDK_NVME_TCP_PDU_TYPE_H2C_DATA:
 			expected_hlen = sizeof(struct spdk_nvme_tcp_h2c_data_hdr);
 			pdo = pdu->hdr.common.pdo;
-			if ((tqpair->cpda != 0) && (pdo != ((tqpair->cpda + 1) << 2))) {
+			if ((tqpair->cpda != 0) && (pdo % ((tqpair->cpda + 1) << 2) != 0)) {
 				pdo_error = true;
 				break;
 			}
@@ -2216,9 +2216,10 @@ _nvmf_tcp_send_c2h_data(struct spdk_nvmf_tcp_qpair *tqpair,
 	pdo = plen;
 	if (tqpair->cpda) {
 		alignment = (tqpair->cpda + 1) << 2;
-		if (alignment > plen) {
-			rsp_pdu->padding_len = alignment - plen;
-			pdo = plen = alignment;
+		if (plen % alignment != 0) {
+			pdo = (plen + alignment) / alignment * alignment;
+			rsp_pdu->padding_len = pdo - plen;
+			plen = pdo;
 		}
 	}
 
