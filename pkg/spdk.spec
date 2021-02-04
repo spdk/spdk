@@ -22,7 +22,7 @@ License: BSD
 ExclusiveArch: x86_64
 
 BuildRequires: gcc gcc-c++ make
-BuildRequires: dpdk-devel, numactl-devel
+BuildRequires: dpdk-devel, numactl-devel, ncurses-devel
 BuildRequires: libiscsi-devel, libaio-devel, openssl-devel, libuuid-devel
 BuildRequires: libibverbs-devel, librdmacm-devel
 %if %{with doc}
