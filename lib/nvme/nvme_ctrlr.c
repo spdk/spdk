@@ -418,8 +418,12 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	rc = spdk_nvme_ctrlr_connect_io_qpair(ctrlr, qpair);
 	if (rc != 0) {
 		SPDK_ERRLOG("nvme_transport_ctrlr_connect_io_qpair() failed\n");
+		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+		nvme_ctrlr_proc_remove_io_qpair(qpair);
 		TAILQ_REMOVE(&ctrlr->active_io_qpairs, qpair, tailq);
+		spdk_bit_array_set(ctrlr->free_io_qids, qpair->id);
 		nvme_transport_ctrlr_delete_io_qpair(ctrlr, qpair);
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return NULL;
 	}
 

@@ -2183,6 +2183,27 @@ test_nvme_ctrlr_init_set_keep_alive_timeout(void)
 	nvme_ctrlr_destruct(&ctrlr);
 }
 
+static void
+test_alloc_io_qpair_fail(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_qpair *q0;
+
+	setup_qpairs(&ctrlr, 1);
+
+	/* Modify the connect_qpair return code to inject a failure */
+	g_connect_qpair_return_code = 1;
+
+	/* Attempt to allocate a qpair, this should fail */
+	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(q0 == NULL);
+
+	/* Verify that the qpair is removed from the lists */
+	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&ctrlr.active_io_qpairs));
+
+	cleanup_qpairs(&ctrlr);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -2221,6 +2242,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_ctrlr_init_set_nvmf_ioccsz);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_init_set_num_queues);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_init_set_keep_alive_timeout);
+	CU_ADD_TEST(suite, test_alloc_io_qpair_fail);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
