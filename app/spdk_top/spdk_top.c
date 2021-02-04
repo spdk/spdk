@@ -2027,6 +2027,7 @@ show_thread(uint8_t current_page)
 
 	get_data();
 
+	assert(thread_number < g_threads_stats.threads.threads_count);
 	for (i = 0; i < g_threads_stats.threads.threads_count; i++) {
 		thread_info[i] = &g_threads_stats.threads.thread_info[i];
 	}
@@ -2067,6 +2068,7 @@ show_core(uint8_t current_page)
 
 	get_data();
 
+	assert(core_number < g_cores_stats.cores.cores_count);
 	for (i = 0; i < g_cores_stats.cores.cores_count; i++) {
 		core_info[i] = &g_cores_stats.cores.core[i];
 	}
@@ -2178,6 +2180,7 @@ show_poller(uint8_t current_page)
 	get_data();
 
 	prepare_poller_data(current_page, pollers, &count, current_page);
+	assert(poller_number < count);
 
 	poller_win = newwin(POLLER_WIN_HEIGHT, POLLER_WIN_WIDTH,
 			    (g_max_row - poller_counter) / 2, (g_max_col - POLLER_WIN_HOR_POS) / 2);
@@ -2300,6 +2303,7 @@ show_stats(void)
 			} else {
 				active_tab = THREADS_TAB;
 			}
+			g_selected_row = 0;
 			current_page = 0;
 			switch_tab(active_tab);
 			break;
