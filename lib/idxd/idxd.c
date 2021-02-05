@@ -1391,17 +1391,19 @@ _dump_error_reg(struct spdk_idxd_io_channel *chan)
 #define IDXD_COMPLETION(x) ((x) > (0) ? (1) : (0))
 #define IDXD_FAILURE(x) ((x) > (1) ? (1) : (0))
 #define IDXD_SW_ERROR(x) ((x) &= (0x1) ? (1) : (0))
-void
+int
 spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 {
 	struct idxd_comp *comp_ctx, *tmp;
 	uint64_t sw_error_0;
 	int status = 0;
+	int rc = 0;
 
 	TAILQ_FOREACH_SAFE(comp_ctx, &chan->comp_ctx_oustanding, link, tmp) {
 		if (IDXD_COMPLETION(comp_ctx->hw.status)) {
 
 			TAILQ_REMOVE(&chan->comp_ctx_oustanding, comp_ctx, link);
+			rc++;
 
 			if (spdk_unlikely(IDXD_FAILURE(comp_ctx->hw.status))) {
 				sw_error_0 = _idxd_read_8(chan->idxd, IDXD_SWERR_OFFSET);
@@ -1445,6 +1447,7 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 			}
 		}
 	}
+	return rc;
 }
 
 SPDK_LOG_REGISTER_COMPONENT(idxd)

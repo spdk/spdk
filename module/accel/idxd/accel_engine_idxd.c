@@ -194,24 +194,23 @@ idxd_poll(void *arg)
 {
 	struct idxd_io_channel *chan = arg;
 	struct spdk_accel_task *task = NULL;
+	int count;
 
-	spdk_idxd_process_events(chan->chan);
+	count = spdk_idxd_process_events(chan->chan);
 
 	/* Check if there are any pending ops to process if the channel is active */
-	if (chan->state != IDXD_CHANNEL_ACTIVE) {
-		return -1;
+	if (chan->state == IDXD_CHANNEL_ACTIVE) {
+		/* Submit queued tasks */
+		if (!TAILQ_EMPTY(&chan->queued_tasks)) {
+			task = TAILQ_FIRST(&chan->queued_tasks);
+
+			TAILQ_INIT(&chan->queued_tasks);
+
+			idxd_submit_tasks(task->accel_ch->engine_ch, task);
+		}
 	}
 
-	/* Submit queued tasks */
-	if (!TAILQ_EMPTY(&chan->queued_tasks)) {
-		task = TAILQ_FIRST(&chan->queued_tasks);
-
-		TAILQ_INIT(&chan->queued_tasks);
-
-		idxd_submit_tasks(task->accel_ch->engine_ch, task);
-	}
-
-	return -1;
+	return count > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
 static size_t
@@ -323,7 +322,7 @@ idxd_create_cb(void *io_device, void *ctx_buf)
 	}
 
 	chan->dev = dev;
-	chan->poller = spdk_poller_register(idxd_poll, chan, 0);
+	chan->poller = SPDK_POLLER_REGISTER(idxd_poll, chan, 0);
 	TAILQ_INIT(&chan->queued_tasks);
 
 	/*

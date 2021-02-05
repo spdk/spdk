@@ -391,8 +391,9 @@ int spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan, uint32_t *dst, vo
  * Check for completed requests on an IDXD channel.
  *
  * \param chan IDXD channel to check for completions.
+ * \return number of operations completed.
  */
-void spdk_idxd_process_events(struct spdk_idxd_io_channel *chan);
+int spdk_idxd_process_events(struct spdk_idxd_io_channel *chan);
 
 /**
  * Returns an IDXD channel for a given IDXD device.
