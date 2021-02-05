@@ -49,7 +49,7 @@
 #include "spdk/queue.h"
 
 #define GET_IO_LOOP_COUNT		16
-#define NBD_BUSY_WAITING_MS		1000
+#define NBD_START_BUSY_WAITING_MS	1000
 #define NBD_BUSY_POLLING_INTERVAL_US	20000
 #define NBD_IO_TIMEOUT_S		60
 
@@ -105,6 +105,9 @@ struct spdk_nbd_disk {
 	struct spdk_poller	*nbd_poller;
 	struct spdk_interrupt	*intr;
 	uint32_t		buf_align;
+
+	struct spdk_poller	*retry_poller;
+	int			retry_count;
 
 	struct nbd_io		*io_in_recv;
 	TAILQ_HEAD(, nbd_io)	received_io_list;
@@ -907,8 +910,6 @@ struct spdk_nbd_start_ctx {
 	struct spdk_nbd_disk	*nbd;
 	spdk_nbd_start_cb	cb_fn;
 	void			*cb_arg;
-	struct spdk_poller	*poller;
-	int			polling_count;
 };
 
 static void
@@ -1022,18 +1023,24 @@ nbd_enable_kernel(void *arg)
 	}
 
 	if (rc) {
-		if (errno == EBUSY && ctx->polling_count-- > 0) {
-			if (ctx->poller == NULL) {
-				ctx->poller = SPDK_POLLER_REGISTER(nbd_enable_kernel, ctx,
-								   NBD_BUSY_POLLING_INTERVAL_US);
+		if (errno == EBUSY) {
+			if (ctx->nbd->retry_poller == NULL) {
+				ctx->nbd->retry_count = NBD_START_BUSY_WAITING_MS * 1000ULL / NBD_BUSY_POLLING_INTERVAL_US;
+				ctx->nbd->retry_poller = SPDK_POLLER_REGISTER(nbd_enable_kernel, ctx,
+							 NBD_BUSY_POLLING_INTERVAL_US);
+				return SPDK_POLLER_BUSY;
+			} else if (ctx->nbd->retry_count-- > 0) {
+				/* Repeatedly unregiter and register retry poller to avoid scan-build error */
+				spdk_poller_unregister(&ctx->nbd->retry_poller);
+				ctx->nbd->retry_poller = SPDK_POLLER_REGISTER(nbd_enable_kernel, ctx,
+							 NBD_BUSY_POLLING_INTERVAL_US);
+				return SPDK_POLLER_BUSY;
 			}
-			/* If the kernel is busy, check back later */
-			return SPDK_POLLER_BUSY;
 		}
 
 		SPDK_ERRLOG("ioctl(NBD_SET_SOCK) failed: %s\n", spdk_strerror(errno));
-		if (ctx->poller) {
-			spdk_poller_unregister(&ctx->poller);
+		if (ctx->nbd->retry_poller) {
+			spdk_poller_unregister(&ctx->nbd->retry_poller);
 		}
 
 		spdk_nbd_stop(ctx->nbd);
@@ -1046,8 +1053,8 @@ nbd_enable_kernel(void *arg)
 		return SPDK_POLLER_BUSY;
 	}
 
-	if (ctx->poller) {
-		spdk_poller_unregister(&ctx->poller);
+	if (ctx->nbd->retry_poller) {
+		spdk_poller_unregister(&ctx->nbd->retry_poller);
 	}
 
 	nbd_start_complete(ctx);
@@ -1084,7 +1091,6 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path,
 	ctx->nbd = nbd;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
-	ctx->polling_count = NBD_BUSY_WAITING_MS * 1000ULL / NBD_BUSY_POLLING_INTERVAL_US;
 
 	rc = spdk_bdev_open_ext(bdev_name, true, nbd_bdev_event_cb, nbd, &nbd->bdev_desc);
 	if (rc != 0) {
