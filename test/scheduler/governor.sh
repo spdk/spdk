@@ -86,7 +86,8 @@ verify_dpdk_governor() {
 		elif ((main_core_setspeed < old_main_core_setspeed)); then
 			dir=0
 		elif ((main_core_setspeed == old_main_core_setspeed)); then
-			# Frequency didn't change, skip
+			# Frequency didn't change, skip and wait for a bit
+			sleep 0.5s
 			continue
 		fi
 
