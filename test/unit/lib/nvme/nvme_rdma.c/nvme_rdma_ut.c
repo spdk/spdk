@@ -365,7 +365,7 @@ test_nvme_rdma_build_contig_inline_request(void)
 static void
 test_nvme_rdma_alloc_reqs(void)
 {
-	struct nvme_rdma_qpair rqpair = {0};
+	struct nvme_rdma_qpair rqpair = {};
 	int rc;
 
 	memset(&g_nvme_hooks, 0, sizeof(g_nvme_hooks));
