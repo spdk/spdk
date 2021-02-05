@@ -369,14 +369,6 @@ nbd_cleanup_io(struct spdk_nbd_disk *nbd)
 static void
 _nbd_stop(struct spdk_nbd_disk *nbd)
 {
-	if (nbd->ch) {
-		spdk_put_io_channel(nbd->ch);
-	}
-
-	if (nbd->bdev_desc) {
-		spdk_bdev_close(nbd->bdev_desc);
-	}
-
 	if (nbd->nbd_poller) {
 		spdk_poller_unregister(&nbd->nbd_poller);
 	}
@@ -404,6 +396,14 @@ _nbd_stop(struct spdk_nbd_disk *nbd)
 
 	if (nbd->nbd_path) {
 		free(nbd->nbd_path);
+	}
+
+	if (nbd->ch) {
+		spdk_put_io_channel(nbd->ch);
+	}
+
+	if (nbd->bdev_desc) {
+		spdk_bdev_close(nbd->bdev_desc);
 	}
 
 	nbd_disk_unregister(nbd);
