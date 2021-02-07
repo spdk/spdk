@@ -209,12 +209,6 @@ post_completion(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 		struct nvme_q *cq, uint32_t cdw0, uint16_t sc,
 		uint16_t sct);
 
-static void
-map_dma(vfu_ctx_t *vfu_ctx, uint64_t iova, uint64_t len, uint32_t prot);
-
-static int
-unmap_dma(vfu_ctx_t *vfu_ctx, uint64_t iova, uint64_t len);
-
 static char *
 endpoint_id(struct nvmf_vfio_user_endpoint *endpoint)
 {
@@ -1107,6 +1101,97 @@ unmap_admin_queue(struct nvmf_vfio_user_ctrlr *ctrlr)
 	unmap_qp(ctrlr->qp[0]);
 }
 
+static void
+memory_region_add_cb(vfu_ctx_t *vfu_ctx, uint64_t iova, uint64_t len, uint32_t prot)
+{
+	struct nvmf_vfio_user_endpoint *endpoint = vfu_get_private(vfu_ctx);
+	struct nvmf_vfio_user_ctrlr *ctrlr;
+	struct nvmf_vfio_user_qpair *qpair;
+	int i, ret;
+
+	assert(endpoint != NULL);
+
+	if (endpoint->ctrlr == NULL) {
+		return;
+	}
+
+	ctrlr = endpoint->ctrlr;
+
+	SPDK_DEBUGLOG(nvmf_vfio, "%s: map IOVA %#lx-%#lx\n",
+		      ctrlr_id(ctrlr), iova, len);
+
+	for (i = 0; i < NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR; i++) {
+		qpair = ctrlr->qp[i];
+		if (qpair == NULL) {
+			continue;
+		}
+
+		if (qpair->state != VFIO_USER_QPAIR_INACTIVE) {
+			continue;
+		}
+
+		if (nvmf_qpair_is_admin_queue(&qpair->qpair)) {
+			ret = map_admin_queue(ctrlr);
+			if (ret) {
+				continue;
+			}
+			qpair->state = VFIO_USER_QPAIR_ACTIVE;
+		} else {
+			struct nvme_q *sq = &qpair->sq;
+			struct nvme_q *cq = &qpair->cq;
+
+			sq->addr = map_one(ctrlr->endpoint->vfu_ctx, sq->prp1, sq->size * 64, &sq->sg, &sq->iov);
+			if (!sq->addr) {
+				SPDK_NOTICELOG("Failed to map SQID %d %#lx-%#lx, will try again in next poll\n",
+					       i, sq->prp1, sq->prp1 + sq->size * 64);
+				continue;
+			}
+			cq->addr = map_one(ctrlr->endpoint->vfu_ctx, cq->prp1, cq->size * 16, &cq->sg, &cq->iov);
+			if (!cq->addr) {
+				SPDK_NOTICELOG("Failed to map CQID %d %#lx-%#lx, will try again in next poll\n",
+					       i, cq->prp1, cq->prp1 + cq->size * 16);
+				continue;
+			}
+
+			qpair->state = VFIO_USER_QPAIR_ACTIVE;
+		}
+	}
+}
+
+static int
+memory_region_remove_cb(vfu_ctx_t *vfu_ctx, uint64_t iova, uint64_t len)
+{
+
+	struct nvmf_vfio_user_endpoint *endpoint = vfu_get_private(vfu_ctx);
+	struct nvmf_vfio_user_ctrlr *ctrlr;
+	int i;
+
+	assert(endpoint != NULL);
+
+	if (endpoint->ctrlr == NULL) {
+		return 0;
+	}
+
+	ctrlr = endpoint->ctrlr;
+
+	SPDK_DEBUGLOG(nvmf_vfio, "%s: unmap IOVA %#lx\n",
+		      ctrlr_id(ctrlr), iova);
+
+	for (i = 0; i < NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR; i++) {
+		if (ctrlr->qp[i] == NULL) {
+			continue;
+		}
+		if (ctrlr->qp[i]->cq.sg.dma_addr == iova ||
+		    ctrlr->qp[i]->sq.sg.dma_addr == iova) {
+			unmap_qp(ctrlr->qp[i]);
+			ctrlr->qp[i]->state = VFIO_USER_QPAIR_INACTIVE;
+		}
+	}
+
+	return 0;
+}
+
+
 static int
 nvmf_vfio_user_prop_req_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 {
@@ -1411,7 +1496,7 @@ vfio_user_dev_info_fill(struct nvmf_vfio_user_endpoint *endpoint)
 		return ret;
 	}
 
-	ret = vfu_setup_device_dma_cb(vfu_ctx, map_dma, unmap_dma);
+	ret = vfu_setup_device_dma_cb(vfu_ctx, memory_region_add_cb, memory_region_remove_cb);
 	if (ret < 0) {
 		SPDK_ERRLOG("vfu_ctx %p failed to setup dma callback\n", vfu_ctx);
 		return ret;
@@ -1463,96 +1548,6 @@ destroy_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
 	}
 
 	free(ctrlr);
-	return 0;
-}
-
-static void
-map_dma(vfu_ctx_t *vfu_ctx, uint64_t iova, uint64_t len, uint32_t prot)
-{
-	struct nvmf_vfio_user_endpoint *endpoint = vfu_get_private(vfu_ctx);
-	struct nvmf_vfio_user_ctrlr *ctrlr;
-	struct nvmf_vfio_user_qpair *qpair;
-	int i, ret;
-
-	assert(endpoint != NULL);
-
-	if (endpoint->ctrlr == NULL) {
-		return;
-	}
-
-	ctrlr = endpoint->ctrlr;
-
-	SPDK_DEBUGLOG(nvmf_vfio, "%s: map IOVA %#lx-%#lx\n",
-		      ctrlr_id(ctrlr), iova, len);
-
-	for (i = 0; i < NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR; i++) {
-		qpair = ctrlr->qp[i];
-		if (qpair == NULL) {
-			continue;
-		}
-
-		if (qpair->state != VFIO_USER_QPAIR_INACTIVE) {
-			continue;
-		}
-
-		if (nvmf_qpair_is_admin_queue(&qpair->qpair)) {
-			ret = map_admin_queue(ctrlr);
-			if (ret) {
-				continue;
-			}
-			qpair->state = VFIO_USER_QPAIR_ACTIVE;
-		} else {
-			struct nvme_q *sq = &qpair->sq;
-			struct nvme_q *cq = &qpair->cq;
-
-			sq->addr = map_one(ctrlr->endpoint->vfu_ctx, sq->prp1, sq->size * 64, &sq->sg, &sq->iov);
-			if (!sq->addr) {
-				SPDK_NOTICELOG("Failed to map SQID %d %#lx-%#lx, will try again in next poll\n",
-					       i, sq->prp1, sq->prp1 + sq->size * 64);
-				continue;
-			}
-			cq->addr = map_one(ctrlr->endpoint->vfu_ctx, cq->prp1, cq->size * 16, &cq->sg, &cq->iov);
-			if (!cq->addr) {
-				SPDK_NOTICELOG("Failed to map CQID %d %#lx-%#lx, will try again in next poll\n",
-					       i, cq->prp1, cq->prp1 + cq->size * 16);
-				continue;
-			}
-
-			qpair->state = VFIO_USER_QPAIR_ACTIVE;
-		}
-	}
-}
-
-static int
-unmap_dma(vfu_ctx_t *vfu_ctx, uint64_t iova, uint64_t len)
-{
-
-	struct nvmf_vfio_user_endpoint *endpoint = vfu_get_private(vfu_ctx);
-	struct nvmf_vfio_user_ctrlr *ctrlr;
-	int i;
-
-	assert(endpoint != NULL);
-
-	if (endpoint->ctrlr == NULL) {
-		return 0;
-	}
-
-	ctrlr = endpoint->ctrlr;
-
-	SPDK_DEBUGLOG(nvmf_vfio, "%s: unmap IOVA %#lx\n",
-		      ctrlr_id(ctrlr), iova);
-
-	for (i = 0; i < NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR; i++) {
-		if (ctrlr->qp[i] == NULL) {
-			continue;
-		}
-		if (ctrlr->qp[i]->cq.sg.dma_addr == iova ||
-		    ctrlr->qp[i]->sq.sg.dma_addr == iova) {
-			unmap_qp(ctrlr->qp[i]);
-			ctrlr->qp[i]->state = VFIO_USER_QPAIR_INACTIVE;
-		}
-	}
-
 	return 0;
 }
 
