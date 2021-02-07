@@ -417,13 +417,15 @@ insert_queue(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvme_q *q,
 static int
 asq_map(struct nvmf_vfio_user_ctrlr *ctrlr)
 {
-	struct nvme_q q;
-	const struct spdk_nvmf_registers *regs = spdk_nvmf_ctrlr_get_regs(ctrlr->qp[0]->qpair.ctrlr);
+	struct nvme_q q = {};
+	const struct spdk_nvmf_registers *regs;
 
 	assert(ctrlr != NULL);
+	assert(ctrlr->qp[0] != NULL);
 	assert(ctrlr->qp[0]->sq.addr == NULL);
 	/* XXX ctrlr->asq == 0 is a valid memory address */
 
+	regs = spdk_nvmf_ctrlr_get_regs(ctrlr->qp[0]->qpair.ctrlr);
 	q.size = regs->aqa.bits.asqs + 1;
 	q.head = ctrlr->doorbells[0] = 0;
 	q.cqid = 0;
@@ -490,30 +492,28 @@ cq_tail_advance(struct nvme_q *q)
 static int
 acq_map(struct nvmf_vfio_user_ctrlr *ctrlr)
 {
-	struct nvme_q *q;
+	struct nvme_q q = {};
 	const struct spdk_nvmf_registers *regs;
 
 	assert(ctrlr != NULL);
 	assert(ctrlr->qp[0] != NULL);
 	assert(ctrlr->qp[0]->cq.addr == NULL);
 
-	q = &ctrlr->qp[0]->cq;
 	regs = spdk_nvmf_ctrlr_get_regs(ctrlr->qp[0]->qpair.ctrlr);
 	assert(regs != NULL);
-	assert(regs->acq != 0);
 
-	q->size = regs->aqa.bits.acqs + 1;
-	q->tail = 0;
-	q->addr = map_one(ctrlr->endpoint->vfu_ctx, regs->acq,
-			  q->size * sizeof(struct spdk_nvme_cpl), &q->sg, &q->iov);
-	if (q->addr == NULL) {
+	q.size = regs->aqa.bits.acqs + 1;
+	q.tail = 0;
+	q.addr = map_one(ctrlr->endpoint->vfu_ctx, regs->acq,
+			 q.size * sizeof(struct spdk_nvme_cpl), &q.sg, &q.iov);
+	if (q.addr == NULL) {
 		SPDK_ERRLOG("Map ACQ failed, ACQ %"PRIx64", errno %d\n", regs->acq, errno);
 		return -1;
 	}
-	memset(q->addr, 0, q->size * sizeof(struct spdk_nvme_cpl));
-	q->is_cq = true;
-	q->ien = true;
-	insert_queue(ctrlr, q, true, 0);
+	memset(q.addr, 0, q.size * sizeof(struct spdk_nvme_cpl));
+	q.is_cq = true;
+	q.ien = true;
+	insert_queue(ctrlr, &q, true, 0);
 	return 0;
 }
 
