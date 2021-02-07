@@ -889,6 +889,7 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 			sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			goto out;
 		}
+	} else {
 		/*
 		 * After we've returned from the nvmf_vfio_user_poll_group_poll thread, once
 		 * nvmf_vfio_user_accept executes it will pick up this QP and will eventually
@@ -897,6 +898,7 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		 * completion callback.
 		 */
 		TAILQ_INSERT_TAIL(&ctrlr->transport->new_qps, ctrlr->qp[cmd->cdw10_bits.create_io_q.qid], link);
+
 	}
 	insert_queue(ctrlr, &io_q, is_cq, cmd->cdw10_bits.create_io_q.qid);
 
