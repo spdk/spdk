@@ -779,36 +779,6 @@ out:
 	return err;
 }
 
-static int
-add_qp(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_transport *transport,
-       const uint16_t qsize, const uint16_t qid)
-{
-	int err;
-	struct nvmf_vfio_user_transport *vu_transport;
-
-	SPDK_DEBUGLOG(nvmf_vfio, "%s: request add QP%d\n",
-		      ctrlr_id(ctrlr), qid);
-
-	err = init_qp(ctrlr, transport, qsize, qid);
-	if (err != 0) {
-		return err;
-	}
-
-	vu_transport = SPDK_CONTAINEROF(transport, struct nvmf_vfio_user_transport,
-					transport);
-
-	/*
-	 * After we've returned from the nvmf_vfio_user_poll_group_poll thread, once
-	 * nvmf_vfio_user_accept executes it will pick up this QP and will eventually
-	 * call nvmf_vfio_user_poll_group_add. The rest of the opertion needed to
-	 * complete the addition of the queue will be continued at the
-	 * completion callback.
-	 */
-	TAILQ_INSERT_TAIL(&vu_transport->new_qps, ctrlr->qp[qid], link);
-
-	return 0;
-}
-
 /*
  * Creates a completion or sumbission I/O queue. Returns 0 on success, -errno
  * on error.
@@ -913,14 +883,21 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		      (unsigned long long)io_q.addr);
 
 	if (is_cq) {
-		err = add_qp(ctrlr, ctrlr->qp[0]->qpair.transport, io_q.size,
-			     cmd->cdw10_bits.create_io_q.qid);
+		err = init_qp(ctrlr, ctrlr->qp[0]->qpair.transport, io_q.size,
+			      cmd->cdw10_bits.create_io_q.qid);
 		if (err != 0) {
 			sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			goto out;
 		}
+		/*
+		 * After we've returned from the nvmf_vfio_user_poll_group_poll thread, once
+		 * nvmf_vfio_user_accept executes it will pick up this QP and will eventually
+		 * call nvmf_vfio_user_poll_group_add. The rest of the opertion needed to
+		 * complete the addition of the queue will be continued at the
+		 * completion callback.
+		 */
+		TAILQ_INSERT_TAIL(&ctrlr->transport->new_qps, ctrlr->qp[cmd->cdw10_bits.create_io_q.qid], link);
 	}
-
 	insert_queue(ctrlr, &io_q, is_cq, cmd->cdw10_bits.create_io_q.qid);
 
 out:
