@@ -577,8 +577,7 @@ handle_identify_ctrlr_rsp(struct spdk_nvme_ctrlr_data *data)
  * @ctrlr: the vfio-user controller
  * @cmd: the NVMe command for which the completion is posted
  * @cq: the completion queue
- * @cdw0: cdw0 as reported by NVMf (only for SPDK_NVME_OPC_SET_FEATURES and
- *        SPDK_NVME_OPC_ABORT)
+ * @cdw0: cdw0 as reported by NVMf (only for SPDK_NVME_OPC_GET/SET_FEATURES)
  * @sc: the NVMe CQE status code
  * @sct: the NVMe CQE status code type
  */
@@ -618,7 +617,6 @@ post_completion(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 
 	if (qid == 0) {
 		switch (cmd->opc) {
-		case SPDK_NVME_OPC_ABORT:
 		case SPDK_NVME_OPC_SET_FEATURES:
 		case SPDK_NVME_OPC_GET_FEATURES:
 			cpl->cdw0 = cdw0;
@@ -982,20 +980,6 @@ out:
 	return post_completion(ctrlr, cmd, &ctrlr->qp[0]->cq, 0, sc, sct);
 }
 
-/* TODO need to honor the Abort Command Limit field */
-static int
-handle_abort_cmd(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd)
-{
-	assert(ctrlr != NULL);
-
-	SPDK_DEBUGLOG(nvmf_vfio, "%s: abort CID %u in SQID %u\n", ctrlr_id(ctrlr),
-		      cmd->cdw10_bits.abort.cid, cmd->cdw10_bits.abort.sqid);
-
-	/* abort command not yet implemented */
-	return post_completion(ctrlr, cmd, &ctrlr->qp[0]->cq, 1,
-			       SPDK_NVME_SC_SUCCESS, SPDK_NVME_SCT_GENERIC);
-}
-
 /*
  * Returns 0 on success and -errno on error.
  *
@@ -1015,8 +999,6 @@ consume_admin_cmd(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd)
 	case SPDK_NVME_OPC_CREATE_IO_SQ:
 		return handle_create_io_q(ctrlr, cmd,
 					  cmd->opc == SPDK_NVME_OPC_CREATE_IO_CQ);
-	case SPDK_NVME_OPC_ABORT:
-		return handle_abort_cmd(ctrlr, cmd);
 	case SPDK_NVME_OPC_DELETE_IO_SQ:
 	case SPDK_NVME_OPC_DELETE_IO_CQ:
 		return handle_del_io_q(ctrlr, cmd,
