@@ -41,6 +41,7 @@
 #include "spdk/bdev.h"
 #include "spdk/endian.h"
 #include "spdk/env.h"
+#include "spdk/likely.h"
 #include "spdk/log.h"
 #include "spdk/util.h"
 #include "spdk/thread.h"
@@ -128,6 +129,8 @@ static void _nbd_fini(void *arg1);
 
 static int
 nbd_submit_bdev_io(struct spdk_nbd_disk *nbd, struct nbd_io *io);
+static int
+nbd_io_recv_internal(struct spdk_nbd_disk *nbd);
 
 int
 spdk_nbd_init(void)
@@ -341,6 +344,11 @@ nbd_io_xmit_check(struct spdk_nbd_disk *nbd)
 static int
 nbd_cleanup_io(struct spdk_nbd_disk *nbd)
 {
+	int rc;
+
+	/* Try to read the remaining nbd commands in the socket */
+	while ((rc = nbd_io_recv_internal(nbd)) > 0);
+
 	/* free io_in_recv */
 	if (nbd->io_in_recv != NULL) {
 		nbd_put_io(nbd, nbd->io_in_recv);
@@ -657,8 +665,12 @@ nbd_io_recv_internal(struct spdk_nbd_disk *nbd)
 				io->state = NBD_IO_RECV_PAYLOAD;
 			} else {
 				io->state = NBD_IO_XMIT_RESP;
+				if (spdk_likely(nbd->state == NBD_DISK_STATE_RUNNING)) {
+					TAILQ_INSERT_TAIL(&nbd->received_io_list, io, tailq);
+				} else {
+					nbd_io_done(NULL, false, io);
+				}
 				nbd->io_in_recv = NULL;
-				TAILQ_INSERT_TAIL(&nbd->received_io_list, io, tailq);
 			}
 		}
 	}
@@ -678,8 +690,12 @@ nbd_io_recv_internal(struct spdk_nbd_disk *nbd)
 		if (io->offset == io->payload_size) {
 			io->offset = 0;
 			io->state = NBD_IO_XMIT_RESP;
+			if (spdk_likely(nbd->state == NBD_DISK_STATE_RUNNING)) {
+				TAILQ_INSERT_TAIL(&nbd->received_io_list, io, tailq);
+			} else {
+				nbd_io_done(NULL, false, io);
+			}
 			nbd->io_in_recv = NULL;
-			TAILQ_INSERT_TAIL(&nbd->received_io_list, io, tailq);
 		}
 
 	}
