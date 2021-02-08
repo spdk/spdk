@@ -1999,7 +1999,7 @@ bdevperf_usage(void)
 	printf(" -z                        start bdevperf, but wait for RPC to start tests\n");
 	printf(" -X                        abort timed out I/O\n");
 	printf(" -C                        enable every core to send I/Os to each bdev\n");
-	printf(" -j                        use job config file\n");
+	printf(" -j <filename>             use job config file\n");
 }
 
 static int
