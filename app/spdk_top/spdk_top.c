@@ -2468,10 +2468,9 @@ int main(int argc, char **argv)
 		case 'r':
 			socket = optarg;
 			break;
-		case 'H':
 		default:
 			usage(argv[0]);
-			return 1;
+			return op == 'h' ? 0 : 1;
 		}
 	}
 
