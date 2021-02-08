@@ -47,6 +47,7 @@
 static uint64_t	g_tsc_rate;
 static uint64_t g_tsc_us_rate;
 static uint64_t g_tsc_end;
+static int g_rc;
 static int g_xfer_size_bytes = 4096;
 static int g_queue_depth = 32;
 static int g_ops_per_batch = 0;
@@ -218,7 +219,7 @@ unregister_worker(void *arg1)
 	assert(g_num_workers >= 1);
 	if (--g_num_workers == 0) {
 		pthread_mutex_unlock(&g_workers_lock);
-		dump_result();
+		g_rc = dump_result();
 		spdk_app_stop(0);
 	}
 	pthread_mutex_unlock(&g_workers_lock);
@@ -904,14 +905,13 @@ main(int argc, char **argv)
 {
 	struct spdk_app_opts opts = {};
 	struct worker_thread *worker, *tmp;
-	int rc = 0;
 
 	pthread_mutex_init(&g_workers_lock, NULL);
 	spdk_app_opts_init(&opts, sizeof(opts));
 	opts.reactor_mask = "0x1";
 	if (spdk_app_parse_args(argc, argv, &opts, "o:q:t:yw:P:f:b:T:", NULL, parse_args,
 				usage) != SPDK_APP_PARSE_ARGS_SUCCESS) {
-		rc = -1;
+		g_rc = -1;
 		goto cleanup;
 	}
 
@@ -921,20 +921,20 @@ main(int argc, char **argv)
 	    (g_workload_selection != ACCEL_COMPARE) &&
 	    (g_workload_selection != ACCEL_DUALCAST)) {
 		usage();
-		rc = -1;
+		g_rc = -1;
 		goto cleanup;
 	}
 
 	if (g_ops_per_batch > 0 && (g_queue_depth % g_ops_per_batch > 0)) {
 		fprintf(stdout, "batch size must be a multiple of queue depth\n");
 		usage();
-		rc = -1;
+		g_rc = -1;
 		goto cleanup;
 	}
 
 	dump_user_config(&opts);
-	rc = spdk_app_start(&opts, accel_perf_start, NULL);
-	if (rc) {
+	g_rc = spdk_app_start(&opts, accel_perf_start, NULL);
+	if (g_rc) {
 		SPDK_ERRLOG("ERROR starting application\n");
 	}
 
@@ -948,5 +948,5 @@ main(int argc, char **argv)
 	}
 cleanup:
 	spdk_app_fini();
-	return rc;
+	return g_rc;
 }
