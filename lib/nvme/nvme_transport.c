@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2021 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -598,4 +599,23 @@ nvme_transport_poll_group_connect_qpair(struct spdk_nvme_qpair *qpair)
 
 
 	return -EINVAL;
+}
+
+int
+nvme_transport_poll_group_get_stats(struct spdk_nvme_transport_poll_group *tgroup,
+				    struct spdk_nvme_transport_poll_group_stat **stats)
+{
+	if (tgroup->transport->ops.poll_group_get_stats) {
+		return tgroup->transport->ops.poll_group_get_stats(tgroup, stats);
+	}
+	return -ENOTSUP;
+}
+
+void
+nvme_transport_poll_group_free_stats(struct spdk_nvme_transport_poll_group *tgroup,
+				     struct spdk_nvme_transport_poll_group_stat *stats)
+{
+	if (tgroup->transport->ops.poll_group_free_stats) {
+		tgroup->transport->ops.poll_group_free_stats(tgroup, stats);
+	}
 }
