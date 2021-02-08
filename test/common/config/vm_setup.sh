@@ -165,6 +165,7 @@ if $INSTALL; then
 fi
 
 source "$vmsetupdir/pkgdep/git"
+install_sources
 
 # create autorun-spdk.conf in home folder. This is sourced by the autotest_common.sh file.
 # By setting any one of the values below to 0, you can skip that specific test. If you are

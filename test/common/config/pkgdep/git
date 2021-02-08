@@ -471,6 +471,56 @@ function install_ice() {
 	)
 }
 
+function install_sources() {
+	if [[ $ID == centos ]] && (( VERSION_ID == 7 )); then
+		# install proper version of the git first
+		install_git
+	fi
+
+	IFS="," read -ra conf_env <<< "$CONF"
+	for conf in "${conf_env[@]}"; do
+		export "INSTALL_${conf^^}=true"
+	done
+
+	if [[ $OSID == freebsd ]]; then
+		jobs=$(($(sysctl -n hw.ncpu) * 2))
+	else
+		jobs=$(($(nproc) * 2))
+		sources+=(
+			install_irdma
+			install_libiscsi
+			install_nvmecli
+			install_qat
+			install_rocksdb
+			install_flamegraph
+			install_qemu
+			install_igb_uio
+			install_ice
+		)
+		install_extra_pkgs
+	fi
+	sources+=(install_fio)
+	sources+=(install_vagrant)
+	sources+=(install_spdk)
+
+	sudo mkdir -p /usr/{,local}/src
+	sudo mkdir -p "$GIT_REPOS"
+
+	for source in "${sources[@]}"; do
+		source_conf=${source^^}
+		if [[ ${!source_conf} == true ]]; then
+			"$source"
+		fi
+	done
+
+	if [[ $INSTALL_REFSPDK == true ]]; then
+		# Serialize builds as refspdk depends on spdk
+		[[ $INSTALL_SPDK != true ]] && install_spdk
+		install_refspdk latest
+		install_refspdk LTS
+	fi
+}
+
 GIT_VERSION=2.25.1
 IRDMA_VERSION=1.2.21
 ICE_VERSION=1.2.1
@@ -503,50 +553,3 @@ export ICE_DRIVER
 GIT_REPOS=${GIT_REPOS:-$HOME}
 
 gcc_version=$(gcc -dumpversion) gcc_version=${gcc_version%%.*}
-if [[ $ID == centos ]] && (( VERSION_ID == 7 )); then
-	# install proper version of the git first
-	install_git
-fi
-
-IFS="," read -ra conf_env <<< "$CONF"
-for conf in "${conf_env[@]}"; do
-	export "INSTALL_${conf^^}=true"
-done
-
-if [[ $OSID == freebsd ]]; then
-	jobs=$(($(sysctl -n hw.ncpu) * 2))
-else
-	jobs=$(($(nproc) * 2))
-	sources+=(
-		install_irdma
-		install_libiscsi
-		install_nvmecli
-		install_qat
-		install_rocksdb
-		install_flamegraph
-		install_qemu
-		install_igb_uio
-		install_ice
-	)
-	install_extra_pkgs
-fi
-sources+=(install_fio)
-sources+=(install_vagrant)
-sources+=(install_spdk)
-
-sudo mkdir -p /usr/{,local}/src
-sudo mkdir -p "$GIT_REPOS"
-
-for source in "${sources[@]}"; do
-	source_conf=${source^^}
-	if [[ ${!source_conf} == true ]]; then
-		"$source"
-	fi
-done
-
-if [[ $INSTALL_REFSPDK == true ]]; then
-	# Serialize builds as refspdk depends on spdk
-	[[ $INSTALL_SPDK != true ]] && install_spdk
-	install_refspdk latest
-	install_refspdk LTS
-fi
