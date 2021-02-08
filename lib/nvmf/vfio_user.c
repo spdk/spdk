@@ -557,14 +557,6 @@ static int
 handle_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 	       struct spdk_nvmf_request *req);
 
-static void
-handle_identify_ctrlr_rsp(struct spdk_nvme_ctrlr_data *data)
-{
-	assert(data != NULL);
-
-	data->sgls.supported = SPDK_NVME_SGLS_NOT_SUPPORTED;
-}
-
 /*
  * Posts a CQE in the completion queue.
  *
@@ -985,22 +977,9 @@ static int
 handle_cmd_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 {
 	struct nvmf_vfio_user_qpair *qpair = cb_arg;
-	struct spdk_nvme_cmd *cmd = &req->req.cmd->nvme_cmd;
 
 	assert(qpair != NULL);
 	assert(req != NULL);
-
-	if (nvmf_qpair_is_admin_queue(&qpair->qpair)) {
-		switch (cmd->opc) {
-		case SPDK_NVME_OPC_IDENTIFY:
-			if ((cmd->cdw10 & 0xFF) == SPDK_NVME_IDENTIFY_CTRLR) {
-				handle_identify_ctrlr_rsp(req->req.data);
-			}
-			break;
-		default:
-			break;
-		}
-	}
 
 	vfu_unmap_sg(qpair->ctrlr->endpoint->vfu_ctx, req->sg, req->iov, req->iovcnt);
 
@@ -1696,6 +1675,14 @@ nvmf_vfio_user_stop_listen(struct spdk_nvmf_transport *transport,
 	SPDK_DEBUGLOG(nvmf_vfio, "%s: not found\n", trid->traddr);
 }
 
+static void
+nvmf_vfio_user_cdata_init(struct spdk_nvmf_transport *transport,
+			  struct spdk_nvmf_subsystem *subsystem,
+			  struct spdk_nvmf_ctrlr_data *cdata)
+{
+	cdata->sgls.supported = SPDK_NVME_SGLS_NOT_SUPPORTED;
+}
+
 static int
 nvmf_vfio_user_listen_associate(struct spdk_nvmf_transport *transport,
 				const struct spdk_nvmf_subsystem *subsystem,
@@ -2305,6 +2292,7 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_vfio_user = {
 	.listen = nvmf_vfio_user_listen,
 	.stop_listen = nvmf_vfio_user_stop_listen,
 	.accept = nvmf_vfio_user_accept,
+	.cdata_init = nvmf_vfio_user_cdata_init,
 	.listen_associate = nvmf_vfio_user_listen_associate,
 
 	.listener_discover = nvmf_vfio_user_discover,
