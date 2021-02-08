@@ -1118,7 +1118,6 @@ typedef struct spdk_thread *spdk_thread_t;
 static spdk_thread_t
 construct_job_thread(struct spdk_cpuset *cpumask, const char *tag)
 {
-	char thread_name[32];
 	struct spdk_cpuset tmp;
 
 	/* This function runs on the main thread. */
@@ -1136,11 +1135,7 @@ construct_job_thread(struct spdk_cpuset *cpumask, const char *tag)
 		fprintf(stderr, "cpumask for '%s' is too big\n", tag);
 	}
 
-	snprintf(thread_name, sizeof(thread_name), "%s_%s",
-		 tag,
-		 spdk_cpuset_fmt(cpumask));
-
-	return spdk_thread_create(thread_name, cpumask);
+	return spdk_thread_create(tag, cpumask);
 }
 
 static uint32_t
