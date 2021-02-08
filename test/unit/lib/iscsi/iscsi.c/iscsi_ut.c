@@ -1995,6 +1995,43 @@ pdu_hdr_op_data_test(void)
 	g_task_pool_is_empty = false;
 }
 
+/* Test an ISCSI_OP_TEXT PDU with CONTINUE bit set but
+ * no data.
+ */
+static void
+empty_text_with_cbit_test(void)
+{
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_scsi_dev dev = {};
+	struct spdk_iscsi_pdu *req_pdu;
+	int rc;
+
+	req_pdu = iscsi_get_pdu(&conn);
+
+	sess.ExpCmdSN = 0;
+	sess.MaxCmdSN = 64;
+	sess.session_type = SESSION_TYPE_NORMAL;
+	sess.MaxBurstLength = 1024;
+
+	conn.full_feature = 1;
+	conn.sess = &sess;
+	conn.dev = &dev;
+	conn.state = ISCSI_CONN_STATE_RUNNING;
+
+	memset(&req_pdu->bhs, 0, sizeof(req_pdu->bhs));
+	req_pdu->bhs.opcode = ISCSI_OP_TEXT;
+	req_pdu->bhs.flags = ISCSI_TEXT_CONTINUE;
+
+	rc = iscsi_pdu_hdr_handle(&conn, req_pdu);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(!req_pdu->is_rejected);
+	rc = iscsi_pdu_payload_handle(&conn, req_pdu);
+	CU_ASSERT(rc == 0);
+
+	iscsi_put_pdu(req_pdu);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2026,6 +2063,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, pdu_hdr_op_task_mgmt_test);
 	CU_ADD_TEST(suite, pdu_hdr_op_nopout_test);
 	CU_ADD_TEST(suite, pdu_hdr_op_data_test);
+	CU_ADD_TEST(suite, empty_text_with_cbit_test);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
