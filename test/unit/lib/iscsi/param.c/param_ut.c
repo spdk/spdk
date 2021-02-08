@@ -264,6 +264,14 @@ parse_valid_test(void)
 	EXPECT_VAL("F", "IIII");
 	CU_ASSERT_PTR_NULL(partial_parameter);
 
+	/* partial parameter: NULL data */
+	/* It is technically allowed to have a TEXT PDU with no data, yet
+	 * CONTINUE bit is enabled - make sure we handle that case correctly.
+	 */
+	rc = iscsi_parse_params(&params, NULL, 0, true, &partial_parameter);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT_PTR_NULL(partial_parameter);
+
 	/* Second partial parameter is the only parameter */
 	PARSE("OOOO", true, &partial_parameter);
 	CU_ASSERT_STRING_EQUAL(partial_parameter, "OOOO");

@@ -315,6 +315,16 @@ iscsi_parse_params(struct iscsi_param **params, const uint8_t *data,
 	char *p;
 	int i;
 
+	/* Spec does not disallow TEXT PDUs with zero length, just return
+	 * immediately in that case, since there is no param data to parse
+	 * and any existing partial parameter would remain as-is.
+	 */
+	if (len == 0) {
+		return 0;
+	}
+
+	assert(data != NULL);
+
 	/* strip the partial text parameters if previous PDU have C enabled */
 	if (partial_parameter && *partial_parameter) {
 		for (i = 0; i < len && data[i] != '\0'; i++) {
