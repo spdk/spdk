@@ -2454,7 +2454,7 @@ usage(const char *program_name)
 	printf("%s [options]", program_name);
 	printf("\n");
 	printf("options:\n");
-	printf(" -r <path>  RPC listen address (default: /var/tmp/spdk.sock\n");
+	printf(" -r <path>  RPC connect address (default: /var/tmp/spdk.sock)\n");
 	printf(" -h         show this usage\n");
 }
 
