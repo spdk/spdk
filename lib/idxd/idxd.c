@@ -62,8 +62,6 @@ struct device_config *g_dev_cfg = NULL;
 struct device_config g_dev_cfg0 = {
 	.config_num = 0,
 	.num_groups = 1,
-	.num_wqs_per_group = 1,
-	.num_engines_per_group = 4,
 	.total_wqs = 1,
 	.total_engines = 4,
 };
@@ -71,8 +69,6 @@ struct device_config g_dev_cfg0 = {
 struct device_config g_dev_cfg1 = {
 	.config_num = 1,
 	.num_groups = 2,
-	.num_wqs_per_group = 2,
-	.num_engines_per_group = 2,
 	.total_wqs = 4,
 	.total_engines = 4,
 };
@@ -439,6 +435,7 @@ idxd_group_config(struct spdk_idxd_device *idxd)
 {
 	int i;
 	uint64_t base_offset;
+	struct idxd_grpcfg *grpcfg;
 
 	assert(g_dev_cfg->num_groups <= idxd->registers.groupcap.num_groups);
 	idxd->groups = calloc(idxd->registers.groupcap.num_groups, sizeof(struct idxd_group));
@@ -473,16 +470,22 @@ idxd_group_config(struct spdk_idxd_device *idxd)
 	 */
 	for (i = 0 ; i < idxd->registers.groupcap.num_groups; i++) {
 
+		grpcfg = &idxd->groups[i].grpcfg;
+		if (i < g_dev_cfg->num_groups) {
+			SPDK_DEBUGLOG(idxd, "Group #%u: wqueue_cfg 0x%lx, engine_cfg 0x%lx, flags 0x%x\n", i,
+				      grpcfg->wqs[0], grpcfg->engines, grpcfg->flags.raw);
+		}
+
 		base_offset = idxd->grpcfg_offset + i * 64;
 
 		/* GRPWQCFG, work queues config */
-		_idxd_write_8(idxd, base_offset, idxd->groups[i].grpcfg.wqs[0]);
+		_idxd_write_8(idxd, base_offset, grpcfg->wqs[0]);
 
 		/* GRPENGCFG, engine config */
-		_idxd_write_8(idxd, base_offset + CFG_ENGINE_OFFSET, idxd->groups[i].grpcfg.engines);
+		_idxd_write_8(idxd, base_offset + CFG_ENGINE_OFFSET, grpcfg->engines);
 
 		/* GRPFLAGS, flags config */
-		_idxd_write_8(idxd, base_offset + CFG_FLAG_OFFSET, idxd->groups[i].grpcfg.flags.raw);
+		_idxd_write_8(idxd, base_offset + CFG_FLAG_OFFSET, grpcfg->flags.raw);
 	}
 
 	return 0;

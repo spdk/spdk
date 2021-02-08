@@ -91,8 +91,6 @@ struct idxd_batch {
 
 struct device_config {
 	uint8_t		config_num;
-	uint8_t		num_wqs_per_group;
-	uint8_t		num_engines_per_group;
 	uint8_t		num_groups;
 	uint16_t	total_wqs;
 	uint16_t	total_engines;
