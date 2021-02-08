@@ -93,6 +93,7 @@ struct spdk_fio_options {
 	char	*digest_enable;
 	int	enable_vmd;
 	int	initial_zone_reset;
+	int	zone_append;
 };
 
 struct spdk_fio_request {
@@ -130,6 +131,7 @@ struct spdk_fio_qpair {
 	struct spdk_nvme_qpair		*qpair;
 	struct spdk_nvme_ns		*ns;
 	uint32_t			io_flags;
+	bool				zone_append_enabled;
 	bool				nvme_pi_enabled;
 	/* True for DIF and false for DIX, and this is valid only if nvme_pi_enabled is true. */
 	bool				extended_lba;
@@ -406,6 +408,18 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		SPDK_ERRLOG("--bs has to be equal to LBA data size + Metadata size\n");
 		g_error = true;
 		return;
+	}
+
+	if (fio_options->zone_append) {
+		if (spdk_nvme_ns_get_csi(ns) == SPDK_NVME_CSI_ZNS &&
+		    spdk_nvme_ctrlr_get_flags(ctrlr) & SPDK_NVME_CTRLR_ZONE_APPEND_SUPPORTED) {
+			fprintf(stdout, "Using zone append instead of write\n");
+			fio_qpair->zone_append_enabled = true;
+		} else {
+			SPDK_ERRLOG("zone_append=1 requested, but namespace lacks support\n");
+			g_error = true;
+			return;
+		}
 	}
 
 	f->real_file_size = spdk_nvme_ns_get_size(fio_qpair->ns);
@@ -686,6 +700,12 @@ static void spdk_fio_io_u_free(struct thread_data *td, struct io_u *io_u)
 		free(fio_req);
 		io_u->engine_data = NULL;
 	}
+}
+
+static inline uint64_t
+fio_offset_to_zslba(unsigned long long offset, struct spdk_nvme_ns *ns)
+{
+	return (offset / spdk_nvme_zns_ns_get_zone_size(ns)) * spdk_nvme_zns_ns_get_zone_size_sectors(ns);
 }
 
 static int
@@ -982,15 +1002,31 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 		break;
 	case DDIR_WRITE:
 		if (!g_spdk_enable_sgl) {
-			rc = spdk_nvme_ns_cmd_write_with_md(ns, fio_qpair->qpair, io_u->buf, md_buf, lba,
-							    lba_count,
-							    spdk_fio_completion_cb, fio_req,
-							    fio_qpair->io_flags, dif_ctx->apptag_mask, dif_ctx->app_tag);
+			if (!fio_qpair->zone_append_enabled) {
+				rc = spdk_nvme_ns_cmd_write_with_md(ns, fio_qpair->qpair, io_u->buf, md_buf, lba,
+								    lba_count,
+								    spdk_fio_completion_cb, fio_req,
+								    fio_qpair->io_flags, dif_ctx->apptag_mask, dif_ctx->app_tag);
+			} else {
+				uint64_t zslba = fio_offset_to_zslba(io_u->offset, fio_qpair->ns);
+				rc = spdk_nvme_zns_zone_append_with_md(ns, fio_qpair->qpair, io_u->buf, md_buf, zslba,
+								       lba_count,
+								       spdk_fio_completion_cb, fio_req,
+								       fio_qpair->io_flags, dif_ctx->apptag_mask, dif_ctx->app_tag);
+			}
 		} else {
-			rc = spdk_nvme_ns_cmd_writev_with_md(ns, fio_qpair->qpair, lba,
-							     lba_count, spdk_fio_completion_cb, fio_req, fio_qpair->io_flags,
-							     spdk_nvme_io_reset_sgl, spdk_nvme_io_next_sge, md_buf,
-							     dif_ctx->apptag_mask, dif_ctx->app_tag);
+			if (!fio_qpair->zone_append_enabled) {
+				rc = spdk_nvme_ns_cmd_writev_with_md(ns, fio_qpair->qpair, lba,
+								     lba_count, spdk_fio_completion_cb, fio_req, fio_qpair->io_flags,
+								     spdk_nvme_io_reset_sgl, spdk_nvme_io_next_sge, md_buf,
+								     dif_ctx->apptag_mask, dif_ctx->app_tag);
+			} else {
+				uint64_t zslba = fio_offset_to_zslba(io_u->offset, fio_qpair->ns);
+				rc = spdk_nvme_zns_zone_appendv_with_md(ns, fio_qpair->qpair, zslba,
+									lba_count, spdk_fio_completion_cb, fio_req, fio_qpair->io_flags,
+									spdk_nvme_io_reset_sgl, spdk_nvme_io_next_sge, md_buf,
+									dif_ctx->apptag_mask, dif_ctx->app_tag);
+			}
 		}
 		break;
 	default:
@@ -1542,6 +1578,16 @@ static struct fio_option options[] = {
 		.off1		= offsetof(struct spdk_fio_options, initial_zone_reset),
 		.def		= "0",
 		.help		= "Reset Zones on initialization (0=disable, 1=Reset All Zones)",
+		.category	= FIO_OPT_C_ENGINE,
+		.group		= FIO_OPT_G_INVALID,
+	},
+	{
+		.name		= "zone_append",
+		.lname		= "Use zone append instead of write",
+		.type		= FIO_OPT_INT,
+		.off1		= offsetof(struct spdk_fio_options, zone_append),
+		.def		= "0",
+		.help		= "Use zone append instead of write (zone_append=1 or zone_append=0)",
 		.category	= FIO_OPT_C_ENGINE,
 		.group		= FIO_OPT_G_INVALID,
 	},

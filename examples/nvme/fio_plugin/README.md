@@ -139,6 +139,17 @@ then you can reset all zones before fio start running its jobs by using the engi
 
     --initial_zone_reset=1
 
+## Zone Append
+
+When running FIO against a Zoned Namespace you need to specify --iodepth=1 to avoid
+"Zone Invalid Write: The write to a zone was not at the write pointer." I/O errors.
+However, if your controller supports Zone Append, you can use the engine option:
+
+    --zone_append=1
+
+To send zone append commands instead of write commands to the controller.
+When using zone append, you will be able to specify a --iodepth greater than 1.
+
 ## Shared Memory Increase
 
 If your device has a lot of zones, fio can give you errors such as:
