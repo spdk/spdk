@@ -380,12 +380,7 @@ spdk_sock_close(struct spdk_sock **_sock)
 ssize_t
 spdk_sock_recv(struct spdk_sock *sock, void *buf, size_t len)
 {
-	if (sock == NULL) {
-		errno = EBADF;
-		return -1;
-	}
-
-	if (sock->flags.closed) {
+	if (sock == NULL || sock->flags.closed) {
 		errno = EBADF;
 		return -1;
 	}
@@ -396,12 +391,7 @@ spdk_sock_recv(struct spdk_sock *sock, void *buf, size_t len)
 ssize_t
 spdk_sock_readv(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 {
-	if (sock == NULL) {
-		errno = EBADF;
-		return -1;
-	}
-
-	if (sock->flags.closed) {
+	if (sock == NULL || sock->flags.closed) {
 		errno = EBADF;
 		return -1;
 	}
@@ -412,12 +402,7 @@ spdk_sock_readv(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 ssize_t
 spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 {
-	if (sock == NULL) {
-		errno = EBADF;
-		return -1;
-	}
-
-	if (sock->flags.closed) {
+	if (sock == NULL || sock->flags.closed) {
 		errno = EBADF;
 		return -1;
 	}
@@ -430,12 +415,7 @@ spdk_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *req)
 {
 	assert(req->cb_fn != NULL);
 
-	if (sock == NULL) {
-		req->cb_fn(req->cb_arg, -EBADF);
-		return;
-	}
-
-	if (sock->flags.closed) {
+	if (sock == NULL || sock->flags.closed) {
 		req->cb_fn(req->cb_arg, -EBADF);
 		return;
 	}
@@ -446,11 +426,7 @@ spdk_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *req)
 int
 spdk_sock_flush(struct spdk_sock *sock)
 {
-	if (sock == NULL) {
-		return -EBADF;
-	}
-
-	if (sock->flags.closed) {
+	if (sock == NULL || sock->flags.closed) {
 		return -EBADF;
 	}
 
