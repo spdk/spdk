@@ -4574,7 +4574,7 @@ iscsi_pdu_payload_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 				    data_len, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
 			return -1;
 		}
-		pdu->mobj = spdk_mempool_get(pool);
+		pdu->mobj = iscsi_datapool_get(pool);
 		if (pdu->mobj == NULL) {
 			return 1;
 		}

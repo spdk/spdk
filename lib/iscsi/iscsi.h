@@ -36,7 +36,7 @@
 #define SPDK_ISCSI_H
 
 #include "spdk/stdinc.h"
-
+#include "spdk/env.h"
 #include "spdk/bdev.h"
 #include "spdk/iscsi_spec.h"
 #include "spdk/thread.h"
@@ -453,6 +453,20 @@ struct spdk_iscsi_pdu *iscsi_get_pdu(struct spdk_iscsi_conn *conn);
 void iscsi_op_abort_task_set(struct spdk_iscsi_task *task,
 			     uint8_t function);
 void iscsi_queue_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task);
+
+static inline struct spdk_mobj *
+iscsi_datapool_get(struct spdk_mempool *pool)
+{
+	return spdk_mempool_get(pool);
+}
+
+static inline void
+iscsi_datapool_put(struct spdk_mobj *mobj)
+{
+	assert(mobj != NULL);
+
+	spdk_mempool_put(mobj->mp, (void *)mobj);
+}
 
 static inline uint32_t
 iscsi_get_max_immediate_data_size(void)

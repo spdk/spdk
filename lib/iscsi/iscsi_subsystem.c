@@ -32,10 +32,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/stdinc.h"
-#include "spdk/env.h"
 #include "spdk/string.h"
-#include "spdk/sock.h"
 #include "spdk/likely.h"
 
 #include "iscsi/iscsi.h"
@@ -233,8 +230,9 @@ void iscsi_put_pdu(struct spdk_iscsi_pdu *pdu)
 	pdu->ref--;
 
 	if (pdu->ref == 0) {
+
 		if (pdu->mobj) {
-			spdk_mempool_put(pdu->mobj->mp, (void *)pdu->mobj);
+			iscsi_datapool_put(pdu->mobj);
 		}
 
 		if (pdu->data && !pdu->data_from_mempool) {
