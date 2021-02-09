@@ -448,15 +448,26 @@ nvme_fabric_qpair_connect(struct spdk_nvme_qpair *qpair, uint32_t num_entries)
 					nvmf_data, sizeof(*nvmf_data),
 					nvme_completion_poll_cb, status);
 	if (rc < 0) {
-		SPDK_ERRLOG("Connect command failed\n");
+		SPDK_ERRLOG("Failed to allocate/submit FABRIC_CONNECT command, rc %d\n", rc);
 		spdk_free(nvmf_data);
 		free(status);
 		return rc;
 	}
 
 	/* If we time out, the qpair will abort the request upon destruction. */
-	if (nvme_wait_for_completion_timeout(qpair, status, ctrlr->opts.fabrics_connect_timeout_us)) {
-		SPDK_ERRLOG("Connect command failed\n");
+	rc = nvme_wait_for_completion_timeout(qpair, status, ctrlr->opts.fabrics_connect_timeout_us);
+	if (rc) {
+		SPDK_ERRLOG("Connect command failed, rc %d, trtype:%s adrfam:%s traddr:%s trsvcid:%s subnqn:%s\n",
+			    rc,
+			    spdk_nvme_transport_id_trtype_str(ctrlr->trid.trtype),
+			    spdk_nvme_transport_id_adrfam_str(ctrlr->trid.adrfam),
+			    ctrlr->trid.traddr,
+			    ctrlr->trid.trsvcid,
+			    ctrlr->trid.subnqn);
+		if (spdk_nvme_cpl_is_error(&status->cpl)) {
+			SPDK_ERRLOG("Connect command completed with error: sct %d, sc %d\n", status->cpl.status.sct,
+				    status->cpl.status.sc);
+		}
 		spdk_free(nvmf_data);
 		if (!status->timed_out) {
 			free(status);
