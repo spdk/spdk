@@ -1123,32 +1123,39 @@ process_read_task_completion(struct spdk_iscsi_conn *conn,
 {
 	struct spdk_iscsi_task *tmp;
 
-	/* If the status of the completed subtask is the first failure,
-	 * copy it to out-of-order subtasks and remember it as the status
-	 * of the command,
-	 *
-	 * Even if the status of the completed task is success,
-	 * there are any failed subtask ever, copy the first failed status
-	 * to it.
-	 */
 	if (task->scsi.status != SPDK_SCSI_STATUS_GOOD) {
-		if (primary->rsp_scsi_status == SPDK_SCSI_STATUS_GOOD) {
+		if (primary->scsi.status == SPDK_SCSI_STATUS_GOOD) {
+			/* If the status of the completed subtask, task, is the
+			 * first failure, copy it to out-of-order subtasks, and
+			 * remember it as the status of the SCSI Read Command.
+			 */
 			TAILQ_FOREACH(tmp, &primary->subtask_list, subtask_link) {
 				spdk_scsi_task_copy_status(&tmp->scsi, &task->scsi);
 			}
-			iscsi_task_copy_to_rsp_scsi_status(primary, &task->scsi);
+			spdk_scsi_task_copy_status(&primary->scsi, &task->scsi);
 		}
-	} else if (primary->rsp_scsi_status != SPDK_SCSI_STATUS_GOOD) {
-		iscsi_task_copy_from_rsp_scsi_status(&task->scsi, primary);
+	} else if (primary->scsi.status != SPDK_SCSI_STATUS_GOOD) {
+		/* Even if the status of the completed subtask is success,
+		 * if there are any failed subtask ever, copy the first failed
+		 * status to it.
+		 */
+		spdk_scsi_task_copy_status(&task->scsi, &primary->scsi);
 	}
 
 	if (task == primary) {
+		/* If read I/O size is not larger than SPDK_BDEV_LARGE_BUF_MAX_SIZE,
+		 * the primary task which processes the SCSI Read Command PDU is
+		 * submitted directly. Hence send SCSI Response PDU for the primary
+		 * task simply.
+		 */
 		primary->bytes_completed = task->scsi.length;
-		/* For non split read I/O */
 		assert(primary->bytes_completed == task->scsi.transfer_len);
 		iscsi_task_response(conn, task);
 		iscsi_task_put(task);
 	} else if (!conn->sess->DataSequenceInOrder) {
+		/* If DataSequenceInOrder is No, send SCSI Response PDU for the completed
+		 * subtask without any deferral.
+		 */
 		primary->bytes_completed += task->scsi.length;
 		if (primary->bytes_completed == primary->scsi.transfer_len) {
 			iscsi_task_put(primary);
@@ -1156,7 +1163,9 @@ process_read_task_completion(struct spdk_iscsi_conn *conn,
 		iscsi_task_response(conn, task);
 		iscsi_task_put(task);
 	} else {
-
+		/* If DataSequenceInOrder is Yes, if the completed subtask is out-of-order,
+		 * it is deferred until all preceding subtasks send SCSI Response PDU.
+		 */
 		if (task->scsi.offset != primary->bytes_completed) {
 			TAILQ_FOREACH(tmp, &primary->subtask_list, subtask_link) {
 				if (task->scsi.offset < tmp->scsi.offset) {
