@@ -294,6 +294,7 @@ class Target(Server):
         self.scheduler_name = "static"
         self.null_block = 0
         self._nics_json_obj = json.loads(self.exec_cmd(["ip", "-j", "address", "show"]))
+        self.subsystem_info_list = []
 
         if "null_block_devices" in target_config:
             self.null_block = target_config["null_block_devices"]
@@ -594,6 +595,7 @@ class Initiator(Server):
         self.fio_bin = "/usr/src/fio/fio"
         self.nvmecli_bin = "nvme"
         self.cpu_frequency = None
+        self.subsystem_info_list = []
 
         if "spdk_dir" in initiator_config:
             self.spdk_dir = initiator_config["spdk_dir"]
@@ -707,8 +709,7 @@ class Initiator(Server):
         self.log_print("Found matching subsystems on target side:")
         for s in subsystems:
             self.log_print(s)
-
-        return subsystems
+        self.subsystem_info_list = subsystems
 
     def gen_fio_filename_conf(self, *args, **kwargs):
         # Logic implemented in SPDKInitiator and KernelInitiator classes
@@ -733,8 +734,7 @@ ramp_time={ramp_time}
 runtime={run_time}
 """
         if "spdk" in self.mode:
-            subsystems = self.discover_subsystems(self.remote_nic_ips, subsys_no)
-            bdev_conf = self.gen_spdk_bdev_conf(subsystems)
+            bdev_conf = self.gen_spdk_bdev_conf(self.subsystem_info_list)
             self.exec_cmd(["echo", "'%s'" % bdev_conf, ">", "%s/bdev.conf" % self.spdk_dir])
             ioengine = "%s/build/fio/spdk_bdev" % self.spdk_dir
             spdk_conf = "spdk_json_conf=%s/bdev.conf" % self.spdk_dir
@@ -765,7 +765,7 @@ runtime={run_time}
             threads = range(0, len(subsystems))
 
         if "spdk" in self.mode:
-            filename_section = self.gen_fio_filename_conf(subsystems, threads, io_depth, num_jobs)
+            filename_section = self.gen_fio_filename_conf(self.subsystem_info_list, threads, io_depth, num_jobs)
         else:
             filename_section = self.gen_fio_filename_conf(threads, io_depth, num_jobs)
 
@@ -864,6 +864,7 @@ class KernelTarget(Target):
         port_no = 0
         for ip, chunk in zip(address_list, disk_chunks):
             for disk in chunk:
+                nqn = "nqn.2018-09.io.spdk:cnode%s" % subsys_no
                 nvmet_cfg["subsystems"].append({
                     "allowed_hosts": [],
                     "attr": {
@@ -881,7 +882,7 @@ class KernelTarget(Target):
                             "nsid": subsys_no
                         }
                     ],
-                    "nqn": "nqn.2018-09.io.spdk:cnode%s" % subsys_no
+                    "nqn": nqn
                 })
 
                 nvmet_cfg["ports"].append({
@@ -893,10 +894,11 @@ class KernelTarget(Target):
                     },
                     "portid": subsys_no,
                     "referrals": [],
-                    "subsystems": ["nqn.2018-09.io.spdk:cnode%s" % subsys_no]
+                    "subsystems": [nqn]
                 })
                 subsys_no += 1
                 port_no += 1
+                self.subsystem_info_list.append([port_no, nqn, ip])
 
         with open("kernel.conf", "w") as fh:
             fh.write(json.dumps(nvmet_cfg, indent=2))
@@ -995,6 +997,7 @@ class SPDKTarget(Target):
 
     def spdk_tgt_add_subsystem_conf(self, ips=None, req_num_disks=None):
         self.log_print("Adding subsystems to config")
+        port = "4420"
         if not req_num_disks:
             req_num_disks = get_nvme_devices_count()
 
@@ -1019,9 +1022,10 @@ class SPDKTarget(Target):
                 rpc.nvmf.nvmf_subsystem_add_listener(self.client, nqn,
                                                      trtype=self.transport,
                                                      traddr=ip,
-                                                     trsvcid="4420",
+                                                     trsvcid=port,
                                                      adrfam="ipv4")
 
+                self.subsystem_info_list.append([port, nqn, ip])
         self.log_print("SPDK NVMeOF subsystem configuration:")
         rpc.client.print_dict(rpc.nvmf.nvmf_get_subsystems(self.client))
 
@@ -1088,17 +1092,15 @@ class KernelInitiator(Initiator):
         self.ssh_connection.close()
 
     def kernel_init_connect(self, address_list, subsys_no):
-        subsystems = self.discover_subsystems(address_list, subsys_no)
         self.log_print("Below connection attempts may result in error messages, this is expected!")
-        for subsystem in subsystems:
+        for subsystem in self.subsystem_info_list:
             self.log_print("Trying to connect %s %s %s" % subsystem)
             self.exec_cmd(["sudo", self.nvmecli_bin, "connect", "-t", self.transport,
                            "-s", subsystem[0], "-n", subsystem[1], "-a", subsystem[2], self.extra_params])
             time.sleep(2)
 
     def kernel_init_disconnect(self, address_list, subsys_no):
-        subsystems = self.discover_subsystems(address_list, subsys_no)
-        for subsystem in subsystems:
+        for subsystem in self.subsystem_info_list:
             self.exec_cmd(["sudo", self.nvmecli_bin, "disconnect", "-n", subsystem[1]])
             time.sleep(1)
 
@@ -1278,6 +1280,9 @@ if __name__ == "__main__":
         os.mkdir(target_results_dir)
     except FileExistsError:
         pass
+
+    for i in initiators:
+        i.discover_subsystems(i.remote_nic_ips, target_obj.subsys_no)
 
     # Poor mans threading
     # Run FIO tests
