@@ -93,6 +93,86 @@ test_is_supported(void)
 	CU_ASSERT(_is_supported(&engine, ACCEL_DIF) == false);
 }
 
+#define DUMMY_ARG 0xDEADBEEF
+static bool g_dummy_cb_called = false;
+static void
+dummy_cb_fn(void *cb_arg, int status)
+{
+	CU_ASSERT(*(uint32_t *)cb_arg == DUMMY_ARG);
+	CU_ASSERT(status == 0);
+	g_dummy_cb_called = true;
+}
+
+static bool g_dummy_batch_cb_called = false;
+static void
+dummy_batch_cb_fn(void *cb_arg, int status)
+{
+	CU_ASSERT(*(uint32_t *)cb_arg == DUMMY_ARG);
+	CU_ASSERT(status == 0);
+	g_dummy_batch_cb_called = true;
+}
+
+static void
+test_spdk_accel_task_complete(void)
+{
+	struct accel_io_channel accel_ch = {};
+	struct spdk_accel_task accel_task = {};
+	struct spdk_accel_task *expected_accel_task = NULL;
+	struct spdk_accel_batch	batch = {};
+	struct spdk_accel_batch	*expected_batch = NULL;
+	uint32_t cb_arg = DUMMY_ARG;
+	int status = 0;
+
+	accel_task.accel_ch = &accel_ch;
+	accel_task.cb_fn = dummy_cb_fn;
+	accel_task.cb_arg = &cb_arg;
+	TAILQ_INIT(&accel_ch.task_pool);
+
+	/* W/o batch, confirm cb is called and task added to list. */
+	spdk_accel_task_complete(&accel_task, status);
+	CU_ASSERT(g_dummy_cb_called == true);
+	expected_accel_task = TAILQ_FIRST(&accel_ch.task_pool);
+	TAILQ_REMOVE(&accel_ch.task_pool, expected_accel_task, link);
+	CU_ASSERT(expected_accel_task == &accel_task);
+
+	TAILQ_INIT(&accel_ch.task_pool);
+	TAILQ_INIT(&accel_ch.batches);
+	TAILQ_INIT(&accel_ch.batch_pool);
+	batch.count = 2;
+	batch.cb_fn = dummy_batch_cb_fn;
+	batch.cb_arg = &cb_arg;
+	accel_task.batch = &batch;
+
+	/* W/batch, confirm task cb is called and task added to list.
+	 * but batch not completed yet. */
+	spdk_accel_task_complete(&accel_task, status);
+	CU_ASSERT(batch.count == 1);
+	CU_ASSERT(false == g_dummy_batch_cb_called);
+
+	expected_accel_task = TAILQ_FIRST(&accel_ch.task_pool);
+	TAILQ_REMOVE(&accel_ch.task_pool, expected_accel_task, link);
+	CU_ASSERT(expected_accel_task == &accel_task);
+	CU_ASSERT(true == TAILQ_EMPTY(&accel_ch.batch_pool));
+	CU_ASSERT(true == TAILQ_EMPTY(&accel_ch.batches));
+
+	TAILQ_INIT(&accel_ch.task_pool);
+	TAILQ_INSERT_TAIL(&accel_ch.batches, &batch, link);
+
+	/* Call it again and the batch should complete and lists updated accordingly. */
+	spdk_accel_task_complete(&accel_task, status);
+	CU_ASSERT(batch.count == 0);
+	CU_ASSERT(true == g_dummy_batch_cb_called);
+	CU_ASSERT(true == TAILQ_EMPTY(&accel_ch.batches));
+
+	expected_accel_task = TAILQ_FIRST(&accel_ch.task_pool);
+	TAILQ_REMOVE(&accel_ch.task_pool, expected_accel_task, link);
+	CU_ASSERT(expected_accel_task == &accel_task);
+
+	expected_batch = TAILQ_FIRST(&accel_ch.batch_pool);
+	TAILQ_REMOVE(&accel_ch.batch_pool, expected_batch, link);
+	CU_ASSERT(expected_batch == &batch);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -107,6 +187,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_accel_sw_register);
 	CU_ADD_TEST(suite, test_accel_sw_unregister);
 	CU_ADD_TEST(suite, test_is_supported);
+	CU_ADD_TEST(suite, test_spdk_accel_task_complete);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
