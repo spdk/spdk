@@ -55,6 +55,30 @@ test_spdk_accel_hw_engine_register(void)
 	CU_ASSERT(g_hw_accel_engine == &accel_engine);
 }
 
+static int
+test_accel_sw_register(void)
+{
+	struct spdk_accel_engine accel_engine;
+
+	/* Run once with no engine assigned, assign it. */
+	g_sw_accel_engine = NULL;
+	accel_sw_register(&accel_engine);
+	CU_ASSERT(g_sw_accel_engine == &accel_engine);
+
+	return 0;
+}
+
+static void
+test_accel_sw_unregister(void)
+{
+	struct spdk_accel_engine accel_engine;
+
+	/* Run once engine assigned, make sure it gets unassigned. */
+	g_sw_accel_engine = &accel_engine;
+	accel_sw_unregister();
+	CU_ASSERT(g_sw_accel_engine == NULL);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -66,6 +90,8 @@ int main(int argc, char **argv)
 	suite = CU_add_suite("accel", NULL, NULL);
 
 	CU_ADD_TEST(suite, test_spdk_accel_hw_engine_register);
+	CU_ADD_TEST(suite, test_accel_sw_register);
+	CU_ADD_TEST(suite, test_accel_sw_unregister);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
