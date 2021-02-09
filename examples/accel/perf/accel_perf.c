@@ -50,6 +50,7 @@ static uint64_t g_tsc_end;
 static int g_xfer_size_bytes = 4096;
 static int g_queue_depth = 32;
 static int g_ops_per_batch = 0;
+static int g_threads_per_core = 1;
 static int g_time_in_sec = 5;
 static uint32_t g_crc32c_seed = 0;
 static int g_fail_percent_goal = 0;
@@ -64,6 +65,11 @@ uint64_t g_capabilites;
 
 struct worker_thread;
 static void accel_done(void *ref, int status);
+
+struct display_info {
+	int core;
+	int thread;
+};
 
 struct ap_task {
 	void			*src;
@@ -98,6 +104,7 @@ struct worker_thread {
 	struct spdk_poller		*stop_poller;
 	void				*task_base;
 	struct accel_batch		*batch_base;
+	struct display_info		display;
 	TAILQ_HEAD(, accel_batch)	in_prep_batches;
 	TAILQ_HEAD(, accel_batch)	in_use_batches;
 	TAILQ_HEAD(, accel_batch)	to_submit_batches;
@@ -119,6 +126,7 @@ dump_user_config(struct spdk_app_opts *opts)
 	}
 	printf("Transfer size:  %u bytes\n", g_xfer_size_bytes);
 	printf("Queue depth:    %u\n", g_queue_depth);
+	printf("# threads/core: %u\n", g_threads_per_core);
 	printf("Run time:       %u seconds\n", g_time_in_sec);
 	if (g_ops_per_batch > 0) {
 		printf("Batching:       %u operations\n", g_ops_per_batch);
@@ -134,7 +142,7 @@ usage(void)
 	printf("accel_perf options:\n");
 	printf("\t[-h help message]\n");
 	printf("\t[-q queue depth per core]\n");
-	printf("\t[-n number of channels]\n");
+	printf("\t[-T number of threads per core\n");
 	printf("\t[-o transfer size in bytes]\n");
 	printf("\t[-t time in seconds]\n");
 	printf("\t[-w workload type must be one of these: copy, fill, crc32c, compare, dualcast\n");
@@ -154,6 +162,9 @@ parse_args(int argc, char *argv)
 		break;
 	case 'f':
 		g_fill_pattern = (uint8_t)spdk_strtol(optarg, 10);
+		break;
+	case 'T':
+		g_threads_per_core = spdk_strtol(optarg, 10);
 		break;
 	case 'o':
 		g_xfer_size_bytes = spdk_strtol(optarg, 10);
@@ -586,8 +597,8 @@ dump_result(void)
 	uint64_t total_xfer_per_sec, total_bw_in_MiBps;
 	struct worker_thread *worker = g_workers;
 
-	printf("\nCore           Transfers     Bandwidth     Failed     Miscompares\n");
-	printf("-----------------------------------------------------------------\n");
+	printf("\nCore,Thread   Transfers     Bandwidth     Failed     Miscompares\n");
+	printf("------------------------------------------------------------------------\n");
 	while (worker != NULL) {
 
 		uint64_t xfer_per_sec = worker->xfer_completed / g_time_in_sec;
@@ -599,8 +610,8 @@ dump_result(void)
 		total_miscompared += worker->injected_miscompares;
 
 		if (xfer_per_sec) {
-			printf("%10d%12" PRIu64 "/s%8" PRIu64 " MiB/s%11" PRIu64 " %11" PRIu64 "\n",
-			       worker->core, xfer_per_sec,
+			printf("%u,%u%17" PRIu64 "/s%9" PRIu64 " MiB/s%7" PRIu64 " %11" PRIu64 "\n",
+			       worker->display.core, worker->display.thread, xfer_per_sec,
 			       bw_in_MiBps, worker->xfer_failed, worker->injected_miscompares);
 		}
 
@@ -611,8 +622,8 @@ dump_result(void)
 	total_bw_in_MiBps = (total_completed * g_xfer_size_bytes) /
 			    (g_time_in_sec * 1024 * 1024);
 
-	printf("==================================================================\n");
-	printf("Total:%16" PRIu64 "/s%8" PRIu64 " MiB/s%11" PRIu64 " %11" PRIu64"\n\n",
+	printf("=========================================================================\n");
+	printf("Total:%15" PRIu64 "/s%9" PRIu64 " MiB/s%6" PRIu64 " %11" PRIu64"\n\n",
 	       total_xfer_per_sec, total_bw_in_MiBps, total_failed, total_miscompared);
 
 	return total_failed ? 1 : 0;
@@ -673,13 +684,18 @@ _init_thread(void *arg1)
 	int num_tasks = g_queue_depth;
 	struct accel_batch *tmp;
 	struct accel_batch *worker_batch = NULL;
+	struct display_info *display = arg1;
 
 	worker = calloc(1, sizeof(*worker));
 	if (worker == NULL) {
 		fprintf(stderr, "Unable to allocate worker\n");
+		free(display);
 		return;
 	}
 
+	worker->display.core = display->core;
+	worker->display.thread = display->thread;
+	free(display);
 	worker->core = spdk_env_get_current_core();
 	worker->thread = spdk_get_thread();
 	pthread_mutex_lock(&g_workers_lock);
@@ -843,7 +859,9 @@ accel_perf_start(void *arg1)
 	struct spdk_cpuset tmp_cpumask = {};
 	char thread_name[32];
 	uint32_t i;
+	int j;
 	struct spdk_thread *thread;
+	struct display_info *display;
 
 	accel_ch = spdk_accel_engine_get_io_channel();
 	g_capabilites = spdk_accel_get_capabilities(accel_ch);
@@ -863,11 +881,21 @@ accel_perf_start(void *arg1)
 
 	/* Create worker threads for each core that was specified. */
 	SPDK_ENV_FOREACH_CORE(i) {
-		snprintf(thread_name, sizeof(thread_name), "ap_worker");
-		spdk_cpuset_zero(&tmp_cpumask);
-		spdk_cpuset_set_cpu(&tmp_cpumask, i, true);
-		thread = spdk_thread_create(thread_name, &tmp_cpumask);
-		spdk_thread_send_msg(thread, _init_thread, NULL);
+		for (j = 0; j < g_threads_per_core; j++) {
+			snprintf(thread_name, sizeof(thread_name), "ap_worker_%u_%u", i, j);
+			spdk_cpuset_zero(&tmp_cpumask);
+			spdk_cpuset_set_cpu(&tmp_cpumask, i, true);
+			thread = spdk_thread_create(thread_name, &tmp_cpumask);
+			display = calloc(1, sizeof(*display));
+			if (display == NULL) {
+				fprintf(stderr, "Unable to allocate memory\n");
+				spdk_app_stop(-1);
+				return;
+			}
+			display->core = i;
+			display->thread = j;
+			spdk_thread_send_msg(thread, _init_thread, display);
+		}
 	}
 }
 
@@ -881,7 +909,7 @@ main(int argc, char **argv)
 	pthread_mutex_init(&g_workers_lock, NULL);
 	spdk_app_opts_init(&opts, sizeof(opts));
 	opts.reactor_mask = "0x1";
-	if (spdk_app_parse_args(argc, argv, &opts, "o:q:t:yw:P:f:b:", NULL, parse_args,
+	if (spdk_app_parse_args(argc, argv, &opts, "o:q:t:yw:P:f:b:T:", NULL, parse_args,
 				usage) != SPDK_APP_PARSE_ARGS_SUCCESS) {
 		rc = -1;
 		goto cleanup;
