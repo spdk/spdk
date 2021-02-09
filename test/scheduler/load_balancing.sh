@@ -85,10 +85,11 @@ busy() {
 }
 
 balanced() {
-	xtrace_disable
 
 	local thread cpu
 	local extra_threads
+	local sched_period=1 # default, 1s
+	local active_cpu
 
 	# Exclude main cpu
 	fold_list_onto_array selected_cpus "${cpus[@]:1}"
@@ -99,53 +100,42 @@ balanced() {
 		extra_threads+=("$(create_thread -n "thread_cpu_$cpu" -m "$(mask_cpus "$cpu")" -a 100)")
 	done
 
-	while ((samples++ < 5)); do
-		# Change active state of the thread0 to make sure scheduler rebalances it across
-		# avaialable cpus.
-		if ((samples % 2)); then
-			active_thread "$thread0" 100
-		else
-			active_thread "$thread0" 0
-		fi
+	# thread0 is idle, wait for scheduler to run (2x scheduling period) and check if it is on main core
+	sleep $((2 * sched_period))
+	reactor_framework=$(rpc_cmd framework_get_reactors | jq -r '.reactors[]')
+	[[ -n $(jq -r "select(.lcore == $spdk_main_core) | .lw_threads[] | select(.id == $thread0)") ]] <<< "$reactor_framework"
 
-		# Give scheduler some time to spin the cpu down|up
-		sleep 0.5s
+	# thread0 is active, wait for scheduler to run (2x) and check if it is not on main core
+	active_thread "$thread0" 100
+	sleep $((2 * sched_period))
+	reactor_framework=$(rpc_cmd framework_get_reactors | jq -r '.reactors[]')
 
-		reactor_framework=$(rpc_cmd framework_get_reactors | jq -r '.reactors[]')
-		printf '* Sample %u\n' "$samples"
-		# Include main cpu to check if thread is put back on it
-		for cpu in "$spdk_main_core" "${selected_cpus[@]}"; do
-			threads=($(jq -r "select(.lcore == $cpu) | .lw_threads[].id" <<< "$reactor_framework"))
-
-			if ((${#threads[@]} == 0)); then
-				printf '  No threads found on cpu%u\n' "$cpu"
-				continue
-			fi
-
-			get_thread_stats
-
-			for thread in "${threads[@]}"; do
-				load=$((busy[thread] * 100 / (busy[thread] + idle[thread])))
-				printf '  Thread %u (%s) on cpu%u; load: %u%%\n' \
-					"$thread" "${thread_map[thread]}" "$cpu" "$load"
-				eval "${thread_map[thread]}_cpus[$cpu]=$cpu"
-			done
-		done
+	[[ -z $(jq -r "select(.lcore == $spdk_main_core) | .lw_threads[] | select(.id == $thread0)") ]] <<< "$reactor_framework"
+	# Get the cpu thread was scheduled onto
+	for cpu in "${selected_cpus[@]}"; do
+		[[ -n $(jq -r "select(.lcore == $cpu) | .lw_threads[] | select(.id == $thread0)") ]] <<< "$reactor_framework" && active_cpu=$cpu
 	done
+	[[ -n ${selected_cpus[active_cpu]} ]]
+
+	# thread0 is idle, wait for scheduler to run (2x) and check if it is on main core
+	active_thread "$thread0" 0
+	sleep $((2 * sched_period))
+	reactor_framework=$(rpc_cmd framework_get_reactors | jq -r '.reactors[]')
+
+	[[ -n $(jq -r "select(.lcore == $spdk_main_core) | .lw_threads[] | select(.id == $thread0)") ]] <<< "$reactor_framework"
+
+	# thread0 is active, wait for scheduler to run (2x) and check if it is not on main core, nor the core from 2)
+	active_thread "$thread0" 100
+	sleep $((2 * sched_period))
+	reactor_framework=$(rpc_cmd framework_get_reactors | jq -r '.reactors[]')
+
+	[[ -z $(jq -r "select(.lcore == $spdk_main_core) | .lw_threads[] | select(.id == $thread0)") ]] <<< "$reactor_framewrk"
+	[[ -z $(jq -r "select(.lcore == $active_cpu) | .lw_threads[] | select(.id == $thread0)") ]] <<< "$reactor_framewrk"
 
 	destroy_thread "$thread0"
 	for thread in "${extra_threads[@]}"; do
 		destroy_thread "$thread"
 	done
-
-	# main cpu + at least 2 designated cpus
-	((${#thread0_cpus[@]} > 2))
-	# main cpu must be present
-	[[ -n ${thread0_cpus[spdk_main_core]} ]]
-	printf 'Thread %u (%s) rebalanced across cpus: %s\n' \
-		"$thread0" "${thread_map[thread0]}" "${thread0_cpus[*]}"
-
-	xtrace_restore
 }
 
 exec_under_dynamic_scheduler "$scheduler" -m "$spdk_cpusmask" --main-core "$spdk_main_core"
