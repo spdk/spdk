@@ -712,13 +712,14 @@ union spdk_nvme_feat_async_event_configuration {
 	uint32_t raw;
 	struct {
 		union spdk_nvme_critical_warning_state crit_warn;
-		uint32_t ns_attr_notice		: 1;
-		uint32_t fw_activation_notice	: 1;
-		uint32_t telemetry_log_notice	: 1;
-		uint32_t ana_change_notice	: 1;
-		uint32_t reserved		: 19;
+		uint8_t ns_attr_notice		: 1;
+		uint8_t fw_activation_notice	: 1;
+		uint8_t telemetry_log_notice	: 1;
+		uint8_t ana_change_notice	: 1;
+		uint8_t reserved1		: 4;
+		uint16_t reserved2		: 15;
 		/** Discovery log change (refer to the NVMe over Fabrics specification) */
-		uint32_t discovery_log_change_notice	: 1;
+		uint16_t discovery_log_change_notice	: 1;
 	} bits;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_async_event_configuration) == 4, "Incorrect size");
