@@ -79,6 +79,20 @@ test_accel_sw_unregister(void)
 	CU_ASSERT(g_sw_accel_engine == NULL);
 }
 
+static void
+test_is_supported(void)
+{
+	struct spdk_accel_engine engine;
+
+	engine.capabilities = ACCEL_COPY | ACCEL_DUALCAST | ACCEL_CRC32C;
+	CU_ASSERT(_is_supported(&engine, ACCEL_COPY) == true);
+	CU_ASSERT(_is_supported(&engine, ACCEL_FILL) == false);
+	CU_ASSERT(_is_supported(&engine, ACCEL_DUALCAST) == true);
+	CU_ASSERT(_is_supported(&engine, ACCEL_COMPARE) == false);
+	CU_ASSERT(_is_supported(&engine, ACCEL_CRC32C) == true);
+	CU_ASSERT(_is_supported(&engine, ACCEL_DIF) == false);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -92,6 +106,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_spdk_accel_hw_engine_register);
 	CU_ADD_TEST(suite, test_accel_sw_register);
 	CU_ADD_TEST(suite, test_accel_sw_unregister);
+	CU_ADD_TEST(suite, test_is_supported);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
