@@ -32,6 +32,7 @@ BuildRequires: doxygen mscgen graphviz
 # Install dependencies
 Requires: dpdk >= 19.11, numactl-libs, openssl-libs
 Requires: libiscsi, libaio, libuuid
+Requires: python3-configshell, python3-pexpect
 # NVMe over Fabrics
 Requires: librdmacm, librdmacm
 Requires(post): /sbin/ldconfig
