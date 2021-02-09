@@ -724,7 +724,7 @@ _sock_check_zcopy(struct spdk_sock *sock)
 
 			/* If we reaped buffer reclaim notification and sock is not in pending_recv list yet,
 			 * add it now. It allows to call socket callback and process completions */
-			if (found && !psock->pending_recv) {
+			if (found && !psock->pending_recv && group) {
 				psock->pending_recv = true;
 				TAILQ_INSERT_TAIL(&group->pending_recv, psock, link);
 			}
