@@ -517,11 +517,11 @@ test_nvme_tcp_req_complete_safe(void)
 static void
 test_nvme_tcp_req_init(void)
 {
-	struct nvme_tcp_qpair tqpair = {0};
-	struct nvme_request req = {0};
+	struct nvme_tcp_qpair tqpair = {};
+	struct nvme_request req = {};
 	struct nvme_tcp_req tcp_req = {0};
 	struct spdk_nvme_ctrlr ctrlr = {0};
-	struct nvme_tcp_ut_bdev_io bio = {0};
+	struct nvme_tcp_ut_bdev_io bio = {};
 	int rc;
 
 	tqpair.qpair.ctrlr = &ctrlr;
@@ -583,8 +583,8 @@ static void
 test_nvme_tcp_req_get(void)
 {
 	struct nvme_tcp_req tcp_req = {0};
-	struct nvme_tcp_qpair tqpair = {0};
-	struct nvme_tcp_pdu send_pdu = {0};
+	struct nvme_tcp_qpair tqpair = {};
+	struct nvme_tcp_pdu send_pdu = {};
 
 	tcp_req.send_pdu = &send_pdu;
 	tcp_req.state = NVME_TCP_REQ_FREE;
