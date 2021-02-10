@@ -196,6 +196,24 @@ test_spdk_accel_get_capabilities(void)
 	free(ch);
 }
 
+static void
+test_is_batch_valid(void)
+{
+	struct spdk_accel_batch batch = {};
+	struct accel_io_channel accel_ch = {};
+	bool rc;
+
+	/* This batch doesn't go with this channel. */
+	batch.accel_ch = (struct accel_io_channel *)0xDEADBEEF;
+	rc = _is_batch_valid(&batch, &accel_ch);
+	CU_ASSERT(rc == false);
+
+	/* This one does. */
+	batch.accel_ch = &accel_ch;
+	rc = _is_batch_valid(&batch, &accel_ch);
+	CU_ASSERT(rc == true);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -212,6 +230,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_is_supported);
 	CU_ADD_TEST(suite, test_spdk_accel_task_complete);
 	CU_ADD_TEST(suite, test_spdk_accel_get_capabilities);
+	CU_ADD_TEST(suite, test_is_batch_valid);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
