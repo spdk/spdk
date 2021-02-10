@@ -214,6 +214,45 @@ test_is_batch_valid(void)
 	CU_ASSERT(rc == true);
 }
 
+static void
+test_get_task(void)
+{
+	struct spdk_accel_batch batch = {};
+	struct accel_io_channel accel_ch = {};
+	struct spdk_accel_task *task;
+	struct spdk_accel_task _task;
+	void *cb_arg = NULL;
+
+	/* NULL batch should return NULL task. */
+	task = _get_task(&accel_ch, NULL, dummy_cb_fn, cb_arg);
+	CU_ASSERT(task == NULL);
+
+	/* valid batch with bogus accel_ch should return NULL task. */
+	task = _get_task(&accel_ch, &batch, dummy_cb_fn, cb_arg);
+	CU_ASSERT(task == NULL);
+
+	TAILQ_INIT(&accel_ch.task_pool);
+	batch.accel_ch = &accel_ch;
+
+	/* no tasks left, return NULL. */
+	task = _get_task(&accel_ch, &batch, dummy_cb_fn, cb_arg);
+	CU_ASSERT(task == NULL);
+
+	_task.cb_fn = dummy_cb_fn;
+	_task.cb_arg = cb_arg;
+	_task.accel_ch = &accel_ch;
+	_task.batch = &batch;
+	TAILQ_INSERT_TAIL(&accel_ch.task_pool, &_task, link);
+
+	/* Get a valid task. */
+	task = _get_task(&accel_ch, &batch, dummy_cb_fn, cb_arg);
+	CU_ASSERT(task == &_task);
+	CU_ASSERT(_task.cb_fn == dummy_cb_fn);
+	CU_ASSERT(_task.cb_arg == cb_arg);
+	CU_ASSERT(_task.accel_ch == &accel_ch);
+	CU_ASSERT(_task.batch->count == 1);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -231,6 +270,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_spdk_accel_task_complete);
 	CU_ADD_TEST(suite, test_spdk_accel_get_capabilities);
 	CU_ADD_TEST(suite, test_is_batch_valid);
+	CU_ADD_TEST(suite, test_get_task);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
