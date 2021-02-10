@@ -38,13 +38,7 @@ if [[ $(uname -s) != Linux ]]; then
 fi
 
 : ${FIO_BIN="$DEFAULT_FIO_BIN"}
-
-if [[ ! -r "${VM_IMAGE}" ]]; then
-	echo ""
-	echo "ERROR: VM image '${VM_IMAGE}' does not exist."
-	echo ""
-	exit 1
-fi
+vhosttestinit
 
 DISKS_NUMBER=$(lspci -mm -n | grep 0108 | tr -d '"' | awk -F " " '{print "0000:"$1}' | wc -l)
 

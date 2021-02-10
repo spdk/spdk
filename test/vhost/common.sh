@@ -8,7 +8,7 @@ VM_DIR=$VHOST_DIR/vms
 TARGET_DIR=$VHOST_DIR/vhost
 VM_PASSWORD="root"
 
-VM_IMAGE=$HOME/spdk_test_image.qcow2
+VM_IMAGE=${VM_IMAGE:-"$HOME/spdk_test_image.qcow2"}
 
 if ! hash $QEMU_IMG_BIN $QEMU_BIN; then
 	error 'QEMU is not installed on this system. Unable to run vhost tests.'
@@ -27,22 +27,17 @@ source $rootdir/test/vhost/common/autotest.config
 function vhosttestinit() {
 	if [ "$TEST_MODE" == "iso" ]; then
 		$rootdir/scripts/setup.sh
+	fi
 
-		# Look for the VM image
-		if [[ ! -f $VM_IMAGE ]]; then
-			echo "VM image not found at $VM_IMAGE"
-			echo "Download to $HOME? [yn]"
-			read -r download
-			if [ "$download" = "y" ]; then
-				curl https://ci.spdk.io/download/test_resources/vhost_vm_image.tar.gz | tar xz -C $HOME
-			fi
-		fi
+	if [[ -e $VM_IMAGE.gz ]]; then
+		gzip -dc "$VM_IMAGE.gz" > "$VM_IMAGE"
 	fi
 
 	# Look for the VM image
-	if [[ "$1" != "--no_vm" ]] && [[ ! -f $VM_IMAGE ]]; then
-		error "VM image not found at $VM_IMAGE"
-		exit 1
+	if [[ ! -f $VM_IMAGE ]]; then
+		[[ $1 != "--no_vm" ]] || return 0
+		echo "$VM_IMAGE is missing" >&2
+		return 1
 	fi
 }
 
