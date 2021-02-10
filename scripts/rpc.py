@@ -1861,6 +1861,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                        max_aq_depth=args.max_aq_depth,
                                        num_shared_buffers=args.num_shared_buffers,
                                        buf_cache_size=args.buf_cache_size,
+                                       num_cqe=args.num_cqe,
                                        max_srq_depth=args.max_srq_depth,
                                        no_srq=args.no_srq,
                                        c2h_success=args.c2h_success,
@@ -1884,6 +1885,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-a', '--max-aq-depth', help='Max number of admin cmds per AQ', type=int)
     p.add_argument('-n', '--num-shared-buffers', help='The number of pooled data buffers available to the transport', type=int)
     p.add_argument('-b', '--buf-cache-size', help='The number of shared buffers to reserve for each poll group', type=int)
+    p.add_argument('-d', '--num_cqe', help="""The number of CQ entires. Only used when no_srq=true.
+    Relevant only for RDMA transport""", type=int)
     p.add_argument('-s', '--max-srq-depth', help='Max number of outstanding I/O per SRQ. Relevant only for RDMA transport', type=int)
     p.add_argument('-r', '--no-srq', action='store_true', help='Disable per-thread shared receive queue. Relevant only for RDMA transport')
     p.add_argument('-o', '--c2h-success', action='store_false', help='Disable C2H success optimization. Relevant only for TCP transport')

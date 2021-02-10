@@ -103,6 +103,7 @@ def nvmf_create_transport(client,
                           max_aq_depth=None,
                           num_shared_buffers=None,
                           buf_cache_size=None,
+                          num_cqe=None,
                           max_srq_depth=None,
                           no_srq=False,
                           c2h_success=True,
@@ -125,6 +126,7 @@ def nvmf_create_transport(client,
         max_aq_depth: Max size admin quque per controller (optional)
         num_shared_buffers: The number of pooled data buffers available to the transport (optional)
         buf_cache_size: The number of shared buffers to reserve for each poll group (optional)
+        num_cqe: The number of CQ entries to configure CQ size. Only used when no_srq=true - RDMA specific (optional)
         max_srq_depth: Max number of outstanding I/O per shared receive queue - RDMA specific (optional)
         no_srq: Boolean flag to disable SRQ even for devices that support it - RDMA specific (optional)
         c2h_success: Boolean flag to disable the C2H success optimization - TCP specific (optional)
@@ -160,6 +162,8 @@ def nvmf_create_transport(client,
         params['num_shared_buffers'] = num_shared_buffers
     if buf_cache_size is not None:
         params['buf_cache_size'] = buf_cache_size
+    if num_cqe:
+        params['num_cqe'] = num_cqe
     if max_srq_depth:
         params['max_srq_depth'] = max_srq_depth
     if no_srq:

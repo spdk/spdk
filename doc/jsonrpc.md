@@ -5066,6 +5066,7 @@ io_unit_size                | Optional | number  | I/O unit size (bytes)
 max_aq_depth                | Optional | number  | Max number of admin cmds per AQ
 num_shared_buffers          | Optional | number  | The number of pooled data buffers available to the transport
 buf_cache_size              | Optional | number  | The number of shared buffers to reserve for each poll group
+num_cqe                     | Optional | number  | The number of CQ entires. Only used when no_srq=true (RDMA only)
 max_srq_depth               | Optional | number  | The number of elements in a per-thread shared receive queue (RDMA only)
 no_srq                      | Optional | boolean | Disable shared receive queue even for devices that support it. (RDMA only)
 c2h_success                 | Optional | boolean | Disable C2H success optimization (TCP only)
