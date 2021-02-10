@@ -48,9 +48,18 @@ include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
 
 LIBDPDK_PKGCONFIG = $(call pkgconfig_filename,spdk_dpdklibs)
 
-$(LIBDPDK_PKGCONFIG): $(PKGCONFIG)
+$(LIBDPDK_PKGCONFIG): $(PKGCONFIG) $(PKGCONFIG_INST)
 	$(Q)$(SPDK_ROOT_DIR)/scripts/pc_libs.sh \
 		"-L$(DPDK_ABS_DIR)/lib $(DPDK_LIB_LIST:%=-l%)" "" DPDK spdk_dpdklibs > $@
 	$(Q)sed -i.bak '5s,.*,Requires: $(DEPDIRS-$(LIBNAME):%=spdk_%) spdk_dpdklibs,' $(PKGCONFIG) ; rm $(PKGCONFIG).bak
+	$(Q)sed -i.bak '5s,.*,Requires: $(DEPDIRS-$(LIBNAME):%=spdk_%) spdk_dpdklibs,' $(PKGCONFIG_INST) ; rm $(PKGCONFIG_INST).bak
 
-all : $(LIBDPDK_PKGCONFIG)
+_install_dpdklibs: $(LIBDPDK_PKGCONFIG)
+	@$(call pkgconfig_install,$(LIBDPDK_PKGCONFIG))
+
+_uninstall_dpdklibs: $(LIBDPDK_PKGCONFIG)
+	@$(call pkgconfig_uninstall,$(LIBDPDK_PKGCONFIG))
+
+all: $(LIBDPDK_PKGCONFIG)
+install: _install_dpdklibs
+uninstall: _uninstall_dpdklibs

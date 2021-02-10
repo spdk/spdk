@@ -77,6 +77,12 @@ $(SYSLIBS_PKGCONFIG):
 
 all: $(DIRS-y) $(MODULES_PKGCONFIG)
 
+install: all
+	@$(foreach mod, $(MODULES_PKGCONFIG), $(call pkgconfig_install,$(mod)))
+
+uninstall: $(DIRS-y)
+	@$(foreach mod, $(MODULES_PKGCONFIG), $(call pkgconfig_uninstall,$(mod)))
+
 clean: $(DIRS-y)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk

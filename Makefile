@@ -128,7 +128,7 @@ mk/cc.mk:
 	false
 
 build_dir: mk/cc.mk
-	$(Q)mkdir -p build/lib/pkgconfig
+	$(Q)mkdir -p build/lib/pkgconfig/tmp
 	$(Q)mkdir -p build/bin
 	$(Q)mkdir -p build/fio
 	$(Q)mkdir -p build/examples

@@ -54,12 +54,15 @@ SHARED_LINKED_LIB := $(LIB:.a=.so)
 SHARED_REALNAME_LIB := $(SHARED_LINKED_LIB:.so=.so.$(SO_SUFFIX))
 
 PKGCONFIG = $(call pkgconfig_filename,spdk_$(LIBNAME))
+PKGCONFIG_INST = $(call pkgconfig_filename,tmp/spdk_$(LIBNAME))
 
 ifeq ($(CONFIG_SHARED),y)
-DEP := $(SHARED_LINKED_LIB) $(PKGCONFIG)
+DEP := $(SHARED_LINKED_LIB)
 else
-DEP := $(LIB) $(PKGCONFIG)
+DEP := $(LIB)
 endif
+
+DEP += $(PKGCONFIG) ${PKGCONFIG_INST}
 
 ifeq ($(OS),FreeBSD)
 LOCAL_SYS_LIBS += -L/usr/local/lib
@@ -104,22 +107,31 @@ $(SHARED_REALNAME_LIB): $(LIB)
 	$(Q)echo "  SO $(notdir $@)"; \
 	$(call spdk_build_realname_shared_lib,$^,$(SPDK_MAP_FILE),$(LOCAL_SYS_LIBS),$(SPDK_DEP_LIBS))
 
-$(PKGCONFIG): $(LIB)
-	$(Q)$(SPDK_ROOT_DIR)/scripts/pc.sh $(SPDK_ROOT_DIR) $(LIBNAME) $(SO_SUFFIX) \
+define pkgconfig_create
+	$(Q)$(SPDK_ROOT_DIR)/scripts/pc.sh $(1) $(LIBNAME) $(SO_SUFFIX) \
 		"$(DEPDIRS-$(LIBNAME):%=spdk_%) $(MODULES-$(LIBNAME))" \
 		"" > $@
+endef
+
+$(PKGCONFIG): $(LIB)
+	$(call pkgconfig_create,$(SPDK_ROOT_DIR)/build)
+
+$(PKGCONFIG_INST): $(LIB)
+	$(call pkgconfig_create,$(CONFIG_PREFIX))
 
 $(LIB): $(OBJS)
 	$(LIB_C)
 
 install: all
 	$(INSTALL_LIB)
+	@$(call pkgconfig_install,$(PKGCONFIG_INST))
 ifeq ($(CONFIG_SHARED),y)
 	$(INSTALL_SHARED_LIB)
 endif
 
 uninstall: $(DIRS-y)
 	$(UNINSTALL_LIB)
+	@$(call pkgconfig_uninstall,$(PKGCONFIG_INST))
 ifeq ($(CONFIG_SHARED),y)
 	$(UNINSTALL_SHARED_LIB)
 endif
