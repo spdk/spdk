@@ -922,8 +922,10 @@ posix_sock_read(struct spdk_posix_sock *sock)
 			 * for correctness let's handle it. */
 			if (!sock->pending_recv && sock->base.group_impl) {
 				group = __posix_group_impl(sock->base.group_impl);
-				TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
-				sock->pending_recv = true;
+				if (!sock->pending_recv) {
+					TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
+					sock->pending_recv = true;
+				}
 			}
 		}
 	}
