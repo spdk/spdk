@@ -492,6 +492,7 @@ nvmf_ctrlr_add_io_qpair(void *ctx)
 	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
+	struct spdk_nvmf_qpair *admin_qpair = ctrlr->admin_qpair;
 
 	/* Unit test will check qpair->ctrlr after calling spdk_nvmf_ctrlr_connect.
 	  * For error case, the value should be NULL. So set it to NULL at first.
@@ -527,6 +528,15 @@ nvmf_ctrlr_add_io_qpair(void *ctx)
 	if (1u << ctrlr->vcprop.cc.bits.iocqes != sizeof(struct spdk_nvme_cpl)) {
 		SPDK_ERRLOG("Got I/O connect with invalid IOCQES %u\n",
 			    ctrlr->vcprop.cc.bits.iocqes);
+		SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
+		goto end;
+	}
+
+	if (admin_qpair->state != SPDK_NVMF_QPAIR_ACTIVE || admin_qpair->group == NULL) {
+		/* There is a chance that admin qpair is being destroyed at this moment due to e.g.
+		 * expired keep alive timer. Part of the qpair destruction process is change of qpair's
+		 * state to DEACTIVATING and removing it from poll group */
+		SPDK_ERRLOG("Inactive admin qpair (state %d, group %p)\n", admin_qpair->state, admin_qpair->group);
 		SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
 		goto end;
 	}
