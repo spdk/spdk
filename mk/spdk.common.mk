@@ -3,7 +3,7 @@
 #
 #  Copyright (c) Intel Corporation.
 #  Copyright (c) 2017, IBM Corporation.
-#  Copyright (c) 2019, Mellanox Corporation.
+#  Copyright (c) 2019, 2021 Mellanox Corporation.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -75,7 +75,7 @@ TARGET_MACHINE := $(firstword $(TARGET_TRIPLET_WORDS))
 
 COMMON_CFLAGS = -g $(C_OPT) -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wmissing-declarations -fno-strict-aliasing -I$(SPDK_ROOT_DIR)/include
 
-ifneq ($(filter powerpc%,$(TARGET_MACHINE)),)
+ifneq ($(filter powerpc% ppc%,$(TARGET_MACHINE)),)
 COMMON_CFLAGS += -mcpu=$(TARGET_ARCHITECTURE)
 else ifeq ($(TARGET_MACHINE),aarch64)
 ifeq ($(TARGET_ARCHITECTURE),native)
