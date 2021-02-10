@@ -36,13 +36,7 @@ if [[ $(uname -s) != Linux ]]; then
 fi
 
 : ${FIO_BIN="$DEFAULT_FIO_BIN"}
-
-if [[ ! -r "${VM_IMAGE}" ]]; then
-	echo ""
-	echo "ERROR: VM image '${VM_IMAGE}' does not exist."
-	echo ""
-	exit 1
-fi
+vhosttestinit
 
 WORKDIR=$(readlink -f $(dirname $0))
 
