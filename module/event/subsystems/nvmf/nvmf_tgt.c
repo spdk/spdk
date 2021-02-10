@@ -38,6 +38,7 @@
 #include "spdk/log.h"
 #include "spdk/nvme.h"
 #include "spdk/nvmf_cmd.h"
+#include "spdk_internal/usdt.h"
 
 enum nvmf_tgt_state {
 	NVMF_TGT_INIT_NONE = 0,
@@ -378,6 +379,7 @@ nvmf_tgt_advance_state(void)
 	int ret;
 
 	do {
+		SPDK_DTRACE_PROBE1(nvmf_tgt_state, g_tgt_state);
 		prev_state = g_tgt_state;
 
 		switch (g_tgt_state) {

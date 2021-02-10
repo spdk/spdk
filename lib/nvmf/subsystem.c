@@ -48,6 +48,7 @@
 #include "spdk/bdev_module.h"
 #include "spdk/log.h"
 #include "spdk_internal/utf.h"
+#include "spdk_internal/usdt.h"
 
 #define MODEL_NUMBER_DEFAULT "SPDK bdev Controller"
 #define NVMF_SUBSYSTEM_DEFAULT_NAMESPACES 32
@@ -508,6 +509,9 @@ subsystem_state_change_done(struct spdk_io_channel_iter *i, int status)
 	struct subsystem_state_change_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
 	enum spdk_nvmf_subsystem_state intermediate_state;
 
+	SPDK_DTRACE_PROBE4(nvmf_subsystem_change_state_done, ctx->subsystem->subnqn,
+			   ctx->requested_state, ctx->original_state, status);
+
 	if (status == 0) {
 		status = nvmf_subsystem_set_state(ctx->subsystem, ctx->requested_state);
 		if (status) {
@@ -543,6 +547,12 @@ static void
 subsystem_state_change_continue(void *ctx, int status)
 {
 	struct spdk_io_channel_iter *i = ctx;
+	struct subsystem_state_change_ctx *_ctx __attribute__((unused));
+
+	_ctx = spdk_io_channel_iter_get_ctx(i);
+	SPDK_DTRACE_PROBE3(nvmf_pg_change_state_done, _ctx->subsystem->subnqn,
+			   _ctx->requested_state, spdk_thread_get_id(spdk_get_thread()));
+
 	spdk_for_each_channel_continue(i, status);
 }
 
@@ -557,6 +567,8 @@ subsystem_state_change_on_pg(struct spdk_io_channel_iter *i)
 	ch = spdk_io_channel_iter_get_channel(i);
 	group = spdk_io_channel_get_ctx(ch);
 
+	SPDK_DTRACE_PROBE3(nvmf_pg_change_state, ctx->subsystem->subnqn,
+			   ctx->requested_state, spdk_thread_get_id(spdk_get_thread()));
 	switch (ctx->requested_state) {
 	case SPDK_NVMF_SUBSYSTEM_INACTIVE:
 		nvmf_poll_group_remove_subsystem(group, ctx->subsystem, subsystem_state_change_continue, i);
@@ -593,6 +605,8 @@ nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 		return -EBUSY;
 	}
 
+	SPDK_DTRACE_PROBE3(nvmf_subsystem_change_state, subsystem->subnqn,
+			   requested_state, subsystem->state);
 	/* If we are already in the requested state, just call the callback immediately. */
 	if (subsystem->state == requested_state) {
 		subsystem->changing_state = false;

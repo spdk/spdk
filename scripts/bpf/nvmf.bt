@@ -1,0 +1,29 @@
+usdt:__EXE__:nvmf_tgt_state {
+	printf("%d.%06d: nvmf_tgt reached state %s\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       @target[arg0]);
+}
+
+usdt:__EXE__:nvmf_subsystem_change_state {
+	printf("%d.%06d: %s change state from %s to %s start\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       str(arg0), @subsystem[arg2], @subsystem[arg1]);
+}
+
+usdt:__EXE__:nvmf_subsystem_change_state_done {
+	printf("%d.%06d: %s change state from %s to %s %s\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       str(arg0), @subsystem[arg2], @subsystem[arg1], arg3 ? "failed" : "done");
+}
+
+usdt:__EXE__:nvmf_pg_change_state {
+	printf("%d.%06d: %s on thread %d state to %s start\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       str(arg0), arg2, @subsystem[arg1]);
+}
+
+usdt:__EXE__:nvmf_pg_change_state_done {
+	printf("%d.%06d: %s on thread %d state to %s done\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       str(arg0), arg2, @subsystem[arg1]);
+}
