@@ -168,6 +168,13 @@ spdk_nvmf_transport_create(const char *transport_name, struct spdk_nvmf_transpor
 	}
 	nvmf_transport_opts_copy(&opts_local, opts, opts->opts_size);
 
+	if (opts_local.max_io_size != 0 && (!spdk_u32_is_pow2(opts_local.max_io_size) ||
+					    opts_local.max_io_size < 8192)) {
+		SPDK_ERRLOG("max_io_size %u must be a power of 2 and be greater than or equal 8KB\n",
+			    opts_local.max_io_size);
+		return NULL;
+	}
+
 	if (opts_local.max_aq_depth < SPDK_NVMF_MIN_ADMIN_MAX_SQ_SIZE) {
 		SPDK_ERRLOG("max_aq_depth %u is less than minimum defined by NVMf spec, use min value\n",
 			    opts_local.max_aq_depth);

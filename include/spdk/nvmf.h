@@ -76,6 +76,7 @@ struct spdk_nvmf_transport_opts {
 	uint16_t	max_queue_depth;
 	uint16_t	max_qpairs_per_ctrlr;
 	uint32_t	in_capsule_data_size;
+	/* used to calculate mdts */
 	uint32_t	max_io_size;
 	uint32_t	io_unit_size;
 	uint32_t	max_aq_depth;
