@@ -4,7 +4,8 @@ set -e
 
 rootdir=$(readlink -f $(dirname $0))
 
-conf=~/autorun-spdk.conf
+default_conf=~/autorun-spdk.conf
+conf=${1:-${default_conf}}
 
 # If the configuration of tests is not provided, no tests will be carried out.
 if [[ ! -f $conf ]]; then
