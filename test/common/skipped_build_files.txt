@@ -32,3 +32,5 @@ test/unit/lib/sock/uring.c/uring_ut
 test/external_code/hello_world/hello_bdev
 test/external_code/passthru/vbdev_passthru
 test/external_code/passthru/vbdev_passthru_rpc
+test/external_code/nvme/nvme
+test/external_code/nvme/identify
