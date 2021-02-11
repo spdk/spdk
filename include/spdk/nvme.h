@@ -2491,16 +2491,16 @@ enum spdk_nvme_csi spdk_nvme_ns_get_csi(const struct spdk_nvme_ns *ns);
  * \brief Namespace command support flags.
  */
 enum spdk_nvme_ns_flags {
-	SPDK_NVME_NS_DEALLOCATE_SUPPORTED	= 0x1, /**< The deallocate command is supported */
-	SPDK_NVME_NS_FLUSH_SUPPORTED		= 0x2, /**< The flush command is supported */
-	SPDK_NVME_NS_RESERVATION_SUPPORTED	= 0x4, /**< The reservation command is supported */
-	SPDK_NVME_NS_WRITE_ZEROES_SUPPORTED	= 0x8, /**< The write zeroes command is supported */
-	SPDK_NVME_NS_DPS_PI_SUPPORTED		= 0x10, /**< The end-to-end data protection is supported */
-	SPDK_NVME_NS_EXTENDED_LBA_SUPPORTED	= 0x20, /**< The extended lba format is supported,
+	SPDK_NVME_NS_DEALLOCATE_SUPPORTED	= 1 << 0, /**< The deallocate command is supported */
+	SPDK_NVME_NS_FLUSH_SUPPORTED		= 1 << 1, /**< The flush command is supported */
+	SPDK_NVME_NS_RESERVATION_SUPPORTED	= 1 << 2, /**< The reservation command is supported */
+	SPDK_NVME_NS_WRITE_ZEROES_SUPPORTED	= 1 << 3, /**< The write zeroes command is supported */
+	SPDK_NVME_NS_DPS_PI_SUPPORTED		= 1 << 4, /**< The end-to-end data protection is supported */
+	SPDK_NVME_NS_EXTENDED_LBA_SUPPORTED	= 1 << 5, /**< The extended lba format is supported,
 							      metadata is transferred as a contiguous
 							      part of the logical block that it is associated with */
-	SPDK_NVME_NS_WRITE_UNCORRECTABLE_SUPPORTED	= 0x40, /**< The write uncorrectable command is supported */
-	SPDK_NVME_NS_COMPARE_SUPPORTED		= 0x80, /**< The compare command is supported */
+	SPDK_NVME_NS_WRITE_UNCORRECTABLE_SUPPORTED	= 1 << 6, /**< The write uncorrectable command is supported */
+	SPDK_NVME_NS_COMPARE_SUPPORTED		= 1 << 7, /**< The compare command is supported */
 };
 
 /**
