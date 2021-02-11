@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2021 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -47,11 +47,34 @@ DEFINE_STUB(nvme_wait_for_completion_robust_lock, int,
 	     pthread_mutex_t *robust_mutex), 0);
 DEFINE_STUB(nvme_ctrlr_multi_iocs_enabled, bool, (struct spdk_nvme_ctrlr *ctrlr), true);
 
+static struct spdk_nvme_cpl fake_cpl = {};
+static enum spdk_nvme_generic_command_status_code set_status_code = SPDK_NVME_SC_SUCCESS;
+
+static void
+fake_cpl_sc(spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	fake_cpl.status.sc = set_status_code;
+	cb_fn(cb_arg, &fake_cpl);
+}
+
+static struct spdk_nvme_ns_data *fake_nsdata;
+
 int
 nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr, uint8_t cns, uint16_t cntid, uint32_t nsid,
 			uint8_t csi, void *payload, size_t payload_size,
 			spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
+	if (cns == SPDK_NVME_IDENTIFY_NS) {
+		assert(payload_size == sizeof(struct spdk_nvme_ns_data));
+		if (fake_nsdata) {
+			memcpy(payload, fake_nsdata, sizeof(*fake_nsdata));
+		} else {
+			memset(payload, 0, payload_size);
+		}
+		fake_cpl_sc(cb_fn, cb_arg);
+		return 0;
+	}
+
 	return -1;
 }
 
@@ -71,7 +94,8 @@ test_nvme_ns_construct(void)
 {
 	struct spdk_nvme_ns ns = {};
 	uint32_t id = 1;
-	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_ns_data ctrlr_nsdata = {};
+	struct spdk_nvme_ctrlr ctrlr = { .nsdata = &ctrlr_nsdata };
 
 	nvme_ns_construct(&ns, id, &ctrlr);
 	CU_ASSERT(ns.id == 1);
@@ -190,6 +214,39 @@ test_nvme_ns_csi(void)
 	nvme_ns_destruct(&ns);
 }
 
+static void
+test_nvme_ns_data(void)
+{
+	struct spdk_nvme_ns ns = {};
+	struct spdk_nvme_ns_data ctrlr_nsdata = {};
+	struct spdk_nvme_ctrlr ctrlr = { .nsdata = &ctrlr_nsdata };
+	struct spdk_nvme_ns_data expected_nsdata = {
+		.nsze = 1000,
+		.ncap = 1000,
+	};
+	const struct spdk_nvme_ns_data *nsdata;
+
+	fake_nsdata = &expected_nsdata;
+	SPDK_CU_ASSERT_FATAL(nvme_ns_construct(&ns, 1, &ctrlr) == 0);
+	fake_nsdata = NULL;
+	CU_ASSERT(spdk_nvme_ns_is_active(&ns));
+	CU_ASSERT(spdk_nvme_ns_get_id(&ns) == 1);
+	CU_ASSERT(spdk_nvme_ns_get_num_sectors(&ns) == 1000);
+
+	nsdata = spdk_nvme_ns_get_data(&ns);
+	CU_ASSERT(nsdata != NULL);
+	CU_ASSERT(nsdata->ncap == 1000);
+
+	nvme_ns_destruct(&ns);
+
+	/* Cached NS data is still accessible after destruction. But is cleared. */
+	CU_ASSERT(!spdk_nvme_ns_is_active(&ns));
+	CU_ASSERT(spdk_nvme_ns_get_id(&ns) == 1);
+	CU_ASSERT(spdk_nvme_ns_get_num_sectors(&ns) == 0);
+	CU_ASSERT(nsdata->ncap == 0);
+	CU_ASSERT(nsdata == spdk_nvme_ns_get_data(&ns));
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -203,6 +260,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_ns_construct);
 	CU_ADD_TEST(suite, test_nvme_ns_uuid);
 	CU_ADD_TEST(suite, test_nvme_ns_csi);
+	CU_ADD_TEST(suite, test_nvme_ns_data);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
