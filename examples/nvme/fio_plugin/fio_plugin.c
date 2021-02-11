@@ -94,6 +94,7 @@ struct spdk_fio_options {
 	int	enable_vmd;
 	int	initial_zone_reset;
 	int	zone_append;
+	int	print_qid_mappings;
 };
 
 struct spdk_fio_request {
@@ -385,6 +386,11 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		g_error = true;
 		free(fio_qpair);
 		return;
+	}
+
+	if (fio_options->print_qid_mappings == 1) {
+		log_info("job %s: %s qid %d\n", td->o.name, f->file_name,
+			 spdk_nvme_qpair_get_id(fio_qpair->qpair));
 	}
 
 	fio_qpair->ns = ns;
@@ -1588,6 +1594,16 @@ static struct fio_option options[] = {
 		.off1		= offsetof(struct spdk_fio_options, zone_append),
 		.def		= "0",
 		.help		= "Use zone append instead of write (zone_append=1 or zone_append=0)",
+		.category	= FIO_OPT_C_ENGINE,
+		.group		= FIO_OPT_G_INVALID,
+	},
+	{
+		.name		= "print_qid_mappings",
+		.lname		= "Print job-to-qid mappings",
+		.type		= FIO_OPT_INT,
+		.off1		= offsetof(struct spdk_fio_options, print_qid_mappings),
+		.def		= "0",
+		.help		= "Print job-to-qid mappings (0=disable, 1=enable)",
 		.category	= FIO_OPT_C_ENGINE,
 		.group		= FIO_OPT_G_INVALID,
 	},
