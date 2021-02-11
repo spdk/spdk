@@ -37,7 +37,7 @@ class Server:
         print("[%s] %s" % (self.name, msg), flush=True)
 
     def get_uncommented_lines(self, lines):
-        return [l for l in lines if l and not l.startswith('#')]
+        return [line for line in lines if line and not line.startswith('#')]
 
 
 class Target(Server):
