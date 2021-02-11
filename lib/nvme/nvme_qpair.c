@@ -1072,3 +1072,9 @@ spdk_nvme_qpair_remove_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 
 	return;
 }
+
+uint16_t
+spdk_nvme_qpair_get_id(struct spdk_nvme_qpair *qpair)
+{
+	return qpair->id;
+}

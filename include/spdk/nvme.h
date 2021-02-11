@@ -3245,6 +3245,14 @@ void spdk_nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair,
 				      struct spdk_nvme_cpl *cpl);
 
 /**
+ * \brief Gets the NVMe qpair ID for the specified qpair.
+ *
+ * \param qpair Pointer to the NVMe queue pair.
+ * \returns ID for the specified qpair.
+ */
+uint16_t spdk_nvme_qpair_get_id(struct spdk_nvme_qpair *qpair);
+
+/**
  * \brief Prints (SPDK_NOTICELOG) the contents of an NVMe submission queue entry (command).
  *
  * \param qid Queue identifier.
