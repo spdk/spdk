@@ -48,7 +48,7 @@ DPDK_INC_DIR := $(DPDK_ABS_DIR)/include/dpdk
 endif
 DPDK_INC := -I$(DPDK_INC_DIR)
 
-DPDK_LIB_LIST = rte_eal rte_mempool rte_ring rte_mbuf rte_pci rte_bus_pci rte_mempool_ring
+DPDK_LIB_LIST = rte_eal rte_mempool rte_ring rte_mbuf rte_bus_pci rte_pci rte_mempool_ring
 
 ifeq ($(OS),Linux)
 DPDK_LIB_LIST += rte_power rte_ethdev rte_net
