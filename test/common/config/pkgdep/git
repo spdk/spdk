@@ -95,7 +95,7 @@ function install_refspdk() {
 
 		# Prepare separate, fixed, cmdline for the FreeBSD, Issue #1397.
 		if [[ $OSID == freebsd ]]; then
-			config_params="--enable-debug --enable-werror"
+			config_params="--enable-debug"
 			config_params+=" --without-isal --with-fio=/usr/src/fio"
 
 			# TODO: Remove this if-block after 21.01 LTS is released and 20.01 LTS is deprecated.
