@@ -51,7 +51,7 @@ DPDK_INC := -I$(DPDK_INC_DIR)
 DPDK_LIB_LIST = rte_eal rte_mempool rte_ring rte_mbuf rte_pci rte_bus_pci rte_mempool_ring
 
 ifeq ($(OS),Linux)
-DPDK_LIB_LIST += rte_power rte_ethdev
+DPDK_LIB_LIST += rte_power rte_ethdev rte_net
 endif
 
 # DPDK 20.05 eal dependency
@@ -101,7 +101,7 @@ endif
 LINK_HASH=n
 
 ifeq ($(CONFIG_VHOST),y)
-DPDK_LIB_LIST += rte_vhost rte_net
+DPDK_LIB_LIST += rte_vhost
 LINK_HASH=y
 ifneq ($(DPDK_FRAMEWORK),y)
 DPDK_LIB_LIST += rte_cryptodev
