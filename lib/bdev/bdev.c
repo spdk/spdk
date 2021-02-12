@@ -6161,8 +6161,11 @@ static void
 bdev_register_finished(void *arg)
 {
 	struct spdk_bdev *bdev = arg;
+	const char *bdev_name = spdk_bdev_get_name(bdev);
 
-	spdk_notify_send("bdev_register", spdk_bdev_get_name(bdev));
+	if (bdev_name) {
+		spdk_notify_send("bdev_register", bdev_name);
+	}
 }
 
 int
