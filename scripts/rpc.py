@@ -2305,16 +2305,13 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         print_json(rpc.bdev.bdev_ocssd_create(args.client,
                                               ctrlr_name=args.ctrlr_name,
                                               bdev_name=args.name,
-                                              nsid=nsid,
-                                              range=args.range))
+                                              nsid=nsid))
 
     p = subparsers.add_parser('bdev_ocssd_create',
                               help='Creates zoned bdev on specified Open Channel controller')
     p.add_argument('-c', '--ctrlr_name', help='Name of the OC NVMe controller', required=True)
     p.add_argument('-b', '--name', help='Name of the bdev to create', required=True)
     p.add_argument('-n', '--nsid', help='Namespace ID', required=False)
-    p.add_argument('-r', '--range', help='Parallel unit range (in the form of BEGIN-END (inclusive))',
-                   required=False)
     p.set_defaults(func=bdev_ocssd_create)
 
     def bdev_ocssd_delete(args):

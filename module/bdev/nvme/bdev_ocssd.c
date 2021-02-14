@@ -127,21 +127,10 @@ ocssd_bdev_config_json(struct spdk_json_write_ctx *w, struct nvme_bdev *nvme_bde
 {
 	struct nvme_bdev_ns *nvme_ns;
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
-	struct ocssd_bdev *ocssd_bdev;
-	char range_buf[128];
-	int rc;
 
 	nvme_ns = nvme_bdev_to_bdev_ns(nvme_bdev);
 	assert(nvme_ns != NULL);
 	nvme_bdev_ctrlr = nvme_ns->ctrlr;
-	ocssd_bdev = SPDK_CONTAINEROF(nvme_bdev, struct ocssd_bdev, nvme_bdev);
-
-	rc = snprintf(range_buf, sizeof(range_buf), "%"PRIu64"-%"PRIu64,
-		      ocssd_bdev->range.begin, ocssd_bdev->range.end);
-	if (rc < 0 || rc >= (int)sizeof(range_buf)) {
-		SPDK_ERRLOG("Failed to convert parallel unit range\n");
-		return;
-	}
 
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "method", "bdev_ocssd_create");
@@ -150,7 +139,6 @@ ocssd_bdev_config_json(struct spdk_json_write_ctx *w, struct nvme_bdev *nvme_bde
 	spdk_json_write_named_string(w, "ctrlr_name", nvme_bdev_ctrlr->name);
 	spdk_json_write_named_string(w, "bdev_name", nvme_bdev->disk.name);
 	spdk_json_write_named_uint32(w, "nsid", nvme_ns->id);
-	spdk_json_write_named_string(w, "range", range_buf);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
@@ -1263,43 +1251,9 @@ bdev_ocssd_init_zones(struct bdev_ocssd_create_ctx *create_ctx)
 	return bdev_ocssd_init_zone(create_ctx);
 }
 
-static bool
-bdev_ocssd_verify_range(struct nvme_bdev_ns *nvme_ns,
-			const struct bdev_ocssd_range *range)
-{
-	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ns);
-	const struct spdk_ocssd_geometry_data *geometry = &ocssd_ns->geometry;
-	struct ocssd_bdev *ocssd_bdev;
-	struct nvme_bdev *nvme_bdev;
-	size_t num_punits = geometry->num_pu * geometry->num_grp;
-
-	/* First verify the range is within the geometry */
-	if (range != NULL && (range->begin > range->end || range->end >= num_punits)) {
-		return false;
-	}
-
-	TAILQ_FOREACH(nvme_bdev, &nvme_ns->bdevs, tailq) {
-		ocssd_bdev = SPDK_CONTAINEROF(nvme_bdev, struct ocssd_bdev, nvme_bdev);
-
-		/* Empty range means whole namespace should be used */
-		if (range == NULL) {
-			return false;
-		}
-
-		/* Make sure the range doesn't overlap with any other range */
-		if (range->begin <= ocssd_bdev->range.end &&
-		    range->end >= ocssd_bdev->range.begin) {
-			return false;
-		}
-	}
-
-	return true;
-}
-
 void
 bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, uint32_t nsid,
-		       const struct bdev_ocssd_range *range, bdev_ocssd_create_cb cb_fn,
-		       void *cb_arg)
+		       bdev_ocssd_create_cb cb_fn, void *cb_arg)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 	struct bdev_ocssd_create_ctx *create_ctx = NULL;
@@ -1352,12 +1306,6 @@ bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, uint32_t n
 		goto error;
 	}
 
-	if (!bdev_ocssd_verify_range(nvme_ns, range)) {
-		SPDK_ERRLOG("Invalid parallel unit range\n");
-		rc = -EINVAL;
-		goto error;
-	}
-
 	ocssd_bdev = calloc(1, sizeof(*ocssd_bdev));
 	if (!ocssd_bdev) {
 		rc = -ENOMEM;
@@ -1374,18 +1322,14 @@ bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, uint32_t n
 	create_ctx->nvme_ns = nvme_ns;
 	create_ctx->cb_fn = cb_fn;
 	create_ctx->cb_arg = cb_arg;
-	create_ctx->range = range;
+	create_ctx->range = NULL;
 
 	nvme_bdev = &ocssd_bdev->nvme_bdev;
 	nvme_bdev->nvme_ns = nvme_ns;
 	geometry = &ocssd_ns->geometry;
 
-	if (range != NULL) {
-		ocssd_bdev->range = *range;
-	} else {
-		ocssd_bdev->range.begin = 0;
-		ocssd_bdev->range.end = geometry->num_grp * geometry->num_pu - 1;
-	}
+	ocssd_bdev->range.begin = 0;
+	ocssd_bdev->range.end = geometry->num_grp * geometry->num_pu - 1;
 
 	nvme_bdev->disk.name = strdup(bdev_name);
 	if (!nvme_bdev->disk.name) {

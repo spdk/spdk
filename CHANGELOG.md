@@ -2,6 +2,11 @@
 
 ## v21.04: (Upcoming Release)
 
+### bdev
+
+For `bdev_ocssd_create` RPC, the optional parameter `range` was removed.
+Only one OCSSD bdev can be created for one OCSSD namespace.
+
 ### env
 
 Added spdk_pci_device_allow API to allow applications to add PCI addresses to

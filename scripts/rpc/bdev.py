@@ -1032,16 +1032,12 @@ def bdev_ocssd_create(client, ctrlr_name, bdev_name, nsid=None, range=None):
         ctrlr_name: name of the OC NVMe controller
         bdev_name: name of the bdev to create
         nsid: namespace ID
-        range: parallel unit range
     """
     params = {'ctrlr_name': ctrlr_name,
               'bdev_name': bdev_name}
 
     if nsid is not None:
         params['nsid'] = nsid
-
-    if range is not None:
-        params['range'] = range
 
     return client.call('bdev_ocssd_create', params)
 

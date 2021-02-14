@@ -46,7 +46,6 @@ typedef void (*bdev_ocssd_create_cb)(const char *bdev_name, int status, void *ct
 typedef void (*bdev_ocssd_delete_cb)(int status, void *ctx);
 
 void bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, uint32_t nsid,
-			    const struct bdev_ocssd_range *range,
 			    bdev_ocssd_create_cb cb_fn, void *cb_arg);
 void bdev_ocssd_delete_bdev(const char *bdev_name, bdev_ocssd_delete_cb cb_fn, void *cb_arg);
 
