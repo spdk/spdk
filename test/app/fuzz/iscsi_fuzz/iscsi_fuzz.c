@@ -488,7 +488,9 @@ iscsi_fuzz_read_pdu(struct spdk_iscsi_conn *conn)
 
 			/* copy the actual data into local buffer */
 			if (pdu->data_valid_bytes < data_len) {
-				rc = iscsi_conn_read_data_segment(conn, pdu, data_len);
+				rc = iscsi_conn_read_data_segment(conn, pdu,
+								  pdu->data_valid_bytes,
+								  data_len - pdu->data_valid_bytes);
 				if (rc < 0) {
 					conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
 					break;

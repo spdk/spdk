@@ -348,27 +348,23 @@ iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu)
 static int
 iscsi_conn_read_data_segment(struct spdk_iscsi_conn *conn,
 			     struct spdk_iscsi_pdu *pdu,
-			     uint32_t segment_len)
+			     uint32_t data_offset, uint32_t data_len)
 {
 	struct iovec buf_iov, iovs[32];
 	int rc, _rc;
 
 	if (spdk_likely(!pdu->dif_insert_or_strip)) {
-		return iscsi_conn_read_data(conn,
-					    segment_len - pdu->data_valid_bytes,
-					    pdu->data + pdu->data_valid_bytes);
+		return iscsi_conn_read_data(conn, data_len, pdu->data + data_offset);
 	} else {
 		buf_iov.iov_base = pdu->data;
 		buf_iov.iov_len = pdu->data_buf_len;
 		rc = spdk_dif_set_md_interleave_iovs(iovs, 32, &buf_iov, 1,
-						     pdu->data_valid_bytes,
-						     segment_len - pdu->data_valid_bytes, NULL,
+						     data_offset, data_len, NULL,
 						     &pdu->dif_ctx);
 		if (rc > 0) {
 			rc = iscsi_conn_readv_data(conn, iovs, rc);
 			if (rc > 0) {
-				_rc = spdk_dif_generate_stream(&buf_iov, 1,
-							       pdu->data_valid_bytes, rc,
+				_rc = spdk_dif_generate_stream(&buf_iov, 1, data_offset, rc,
 							       &pdu->dif_ctx);
 				if (_rc != 0) {
 					SPDK_ERRLOG("DIF generate failed\n");
@@ -4590,7 +4586,10 @@ iscsi_pdu_payload_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	/* copy the actual data into local buffer */
 	if ((pdu->data_valid_bytes < data_len)) {
-		rc = iscsi_conn_read_data_segment(conn, pdu, data_len);
+		rc = iscsi_conn_read_data_segment(conn,
+						  pdu,
+						  pdu->data_valid_bytes,
+						  data_len - pdu->data_valid_bytes);
 		if (rc < 0) {
 			return rc;
 		}
