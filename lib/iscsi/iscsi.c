@@ -4247,6 +4247,15 @@ iscsi_pdu_hdr_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		pdu->dif_insert_or_strip = true;
 	}
 
+	if (!F_bit && !pdu->dif_insert_or_strip) {
+		/* More Data-OUT PDUs will follow in this sequence. Increase the buffer size
+		 * up to SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH to merge them into a single
+		 * subtask.
+		 */
+		pdu->data_buf_len = spdk_min(task->desired_data_transfer_length,
+					     SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
+	}
+
 	return 0;
 }
 
@@ -4545,10 +4554,10 @@ iscsi_pdu_payload_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	data_len = pdu->data_segment_len;
 
 	if (pdu->data == NULL) {
-		if (data_len <= iscsi_get_max_immediate_data_size()) {
+		if (pdu->data_buf_len <= iscsi_get_max_immediate_data_size()) {
 			pool = g_iscsi.pdu_immediate_data_pool;
 			pdu->data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(iscsi_get_max_immediate_data_size());
-		} else if (data_len <= SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
+		} else if (pdu->data_buf_len <= SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
 			pool = g_iscsi.pdu_data_out_pool;
 			pdu->data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
 		} else {
@@ -4663,6 +4672,7 @@ iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 			}
 
 			pdu->data_segment_len = ISCSI_ALIGN(DGET24(pdu->bhs.data_segment_len));
+			pdu->data_buf_len = pdu->data_segment_len;
 
 			/* AHS */
 			ahs_len = pdu->bhs.total_ahs_len * 4;

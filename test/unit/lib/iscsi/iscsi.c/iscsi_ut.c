@@ -1967,6 +1967,7 @@ pdu_hdr_op_data_test(void)
 	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(!pdu.is_rejected);
+	CU_ASSERT(pdu.data_buf_len == SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
 	pdu.task = NULL;
 
 	/* Case 11 - SCSI Data-Out PDU is correct and processed. Its F bit is 1 and hence
