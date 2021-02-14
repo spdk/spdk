@@ -324,7 +324,7 @@ iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu)
 	if (spdk_likely(!pdu->dif_insert_or_strip)) {
 		crc32c = spdk_crc32c_update(pdu->data, data_len, crc32c);
 	} else {
-		iov.iov_base = pdu->data_buf;
+		iov.iov_base = pdu->data;
 		iov.iov_len = pdu->data_buf_len;
 		num_blocks = pdu->data_buf_len / pdu->dif_ctx.block_size;
 
@@ -356,9 +356,9 @@ iscsi_conn_read_data_segment(struct spdk_iscsi_conn *conn,
 	if (spdk_likely(!pdu->dif_insert_or_strip)) {
 		return iscsi_conn_read_data(conn,
 					    segment_len - pdu->data_valid_bytes,
-					    pdu->data_buf + pdu->data_valid_bytes);
+					    pdu->data + pdu->data_valid_bytes);
 	} else {
-		buf_iov.iov_base = pdu->data_buf;
+		buf_iov.iov_base = pdu->data;
 		buf_iov.iov_len = pdu->data_buf_len;
 		rc = spdk_dif_set_md_interleave_iovs(iovs, 32, &buf_iov, 1,
 						     pdu->data_valid_bytes,
@@ -4568,7 +4568,7 @@ iscsi_pdu_payload_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	data_len = pdu->data_segment_len;
 
-	if (pdu->data_buf == NULL) {
+	if (pdu->data == NULL) {
 		if (data_len <= iscsi_get_max_immediate_data_size()) {
 			pool = g_iscsi.pdu_immediate_data_pool;
 			pdu->data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(iscsi_get_max_immediate_data_size());
@@ -4584,7 +4584,6 @@ iscsi_pdu_payload_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		if (pdu->mobj == NULL) {
 			return 1;
 		}
-		pdu->data_buf = pdu->mobj->buf;
 		pdu->data = pdu->mobj->buf;
 		pdu->data_from_mempool = true;
 	}

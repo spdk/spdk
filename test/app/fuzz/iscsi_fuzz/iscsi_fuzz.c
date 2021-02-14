@@ -479,12 +479,11 @@ iscsi_fuzz_read_pdu(struct spdk_iscsi_conn *conn)
 			break;
 		case ISCSI_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD:
 			data_len = pdu->data_segment_len;
-			if (data_len != 0 && pdu->data_buf == NULL) {
-				pdu->data_buf = calloc(1, data_len);
-				if (pdu->data_buf == NULL) {
+			if (data_len != 0 && pdu->data == NULL) {
+				pdu->data = calloc(1, data_len);
+				if (pdu->data == NULL) {
 					return 0;
 				}
-				pdu->data = pdu->data_buf;
 			}
 
 			/* copy the actual data into local buffer */
