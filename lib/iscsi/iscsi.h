@@ -155,6 +155,9 @@ struct spdk_mobj {
  */
 #define SPDK_ISCSI_MAX_SGL_DESCRIPTORS	(5)
 
+#define SPDK_CRC32C_INITIAL	0xffffffffUL
+#define SPDK_CRC32C_XOR		0xffffffffUL
+
 typedef void (*iscsi_conn_xfer_complete_cb)(void *cb_arg);
 
 struct spdk_iscsi_pdu {
@@ -176,6 +179,7 @@ struct spdk_iscsi_pdu {
 	uint32_t cmd_sn;
 	uint32_t writev_offset;
 	uint32_t data_buf_len;
+	uint32_t crc32c;
 	bool dif_insert_or_strip;
 	struct spdk_dif_ctx dif_ctx;
 	struct spdk_iscsi_conn *conn;

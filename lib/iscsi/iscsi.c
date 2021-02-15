@@ -59,9 +59,6 @@
 
 #define MAX_TMPBUF 1024
 
-#define SPDK_CRC32C_INITIAL    0xffffffffUL
-#define SPDK_CRC32C_XOR        0xffffffffUL
-
 #ifdef __FreeBSD__
 #define HAVE_SRANDOMDEV 1
 #define HAVE_ARC4RANDOM 1
@@ -311,27 +308,31 @@ iscsi_pdu_calc_header_digest(struct spdk_iscsi_pdu *pdu)
 	return crc32c;
 }
 
-uint32_t
-iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu)
+static void
+_iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu)
 {
-	uint32_t data_len = DGET24(pdu->bhs.data_segment_len);
-	uint32_t crc32c;
-	uint32_t mod;
 	struct iovec iov;
 	uint32_t num_blocks;
 
-	crc32c = SPDK_CRC32C_INITIAL;
 	if (spdk_likely(!pdu->dif_insert_or_strip)) {
-		crc32c = spdk_crc32c_update(pdu->data, data_len, crc32c);
+		pdu->crc32c = spdk_crc32c_update(pdu->data, pdu->data_valid_bytes,
+						 pdu->crc32c);
 	} else {
 		iov.iov_base = pdu->data;
 		iov.iov_len = pdu->data_buf_len;
 		num_blocks = pdu->data_buf_len / pdu->dif_ctx.block_size;
 
-		spdk_dif_update_crc32c(&iov, 1, num_blocks, &crc32c, &pdu->dif_ctx);
+		spdk_dif_update_crc32c(&iov, 1, num_blocks, &pdu->crc32c, &pdu->dif_ctx);
 	}
+}
 
-	mod = data_len % ISCSI_ALIGNMENT;
+static uint32_t
+_iscsi_pdu_finalize_data_digest(struct spdk_iscsi_pdu *pdu)
+{
+	uint32_t crc32c = pdu->crc32c;
+	uint32_t mod;
+
+	mod = pdu->data_valid_bytes % ISCSI_ALIGNMENT;
 	if (mod != 0) {
 		uint32_t pad_length = ISCSI_ALIGNMENT - mod;
 		uint8_t pad[3] = {0, 0, 0};
@@ -343,6 +344,13 @@ iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu)
 
 	crc32c = crc32c ^ SPDK_CRC32C_XOR;
 	return crc32c;
+}
+
+uint32_t
+iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu)
+{
+	_iscsi_pdu_calc_data_digest(pdu);
+	return _iscsi_pdu_finalize_data_digest(pdu);
 }
 
 static int
@@ -2919,6 +2927,7 @@ iscsi_send_datain(struct spdk_iscsi_conn *conn,
 	rsph = (struct iscsi_bhs_data_in *)&rsp_pdu->bhs;
 	rsp_pdu->data = task->scsi.iovs[0].iov_base + offset;
 	rsp_pdu->data_buf_len = task->scsi.iovs[0].iov_len - offset;
+	rsp_pdu->data_valid_bytes = len;
 	rsp_pdu->data_from_mempool = true;
 
 	task_tag = task->tag;

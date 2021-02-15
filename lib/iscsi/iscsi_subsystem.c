@@ -260,6 +260,7 @@ struct spdk_iscsi_pdu *iscsi_get_pdu(struct spdk_iscsi_conn *conn)
 	memset(pdu, 0, offsetof(struct spdk_iscsi_pdu, ahs));
 	pdu->ref = 1;
 	pdu->conn = conn;
+	pdu->crc32c = SPDK_CRC32C_INITIAL;
 
 	return pdu;
 }
