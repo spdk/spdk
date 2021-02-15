@@ -61,6 +61,18 @@ extern "C" {
 const struct spdk_nvme_zns_ns_data *spdk_nvme_zns_ns_get_data(struct spdk_nvme_ns *ns);
 
 /**
+ * Get the zone size, in number of sectors, of the given namespace.
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
+ * \param ns Namespace to query.
+ *
+ * \return the zone size of the given namespace in number of sectors.
+ */
+uint64_t spdk_nvme_zns_ns_get_zone_size_sectors(struct spdk_nvme_ns *ns);
+
+/**
  * Get the zone size, in bytes, of the given namespace.
  *
  * This function is thread safe and can be called at any point while the controller
