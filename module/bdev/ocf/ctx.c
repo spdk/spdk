@@ -37,7 +37,6 @@
 #include "spdk/log.h"
 
 #include "ctx.h"
-#include "ocf_env.h"
 #include "data.h"
 
 ocf_ctx_t vbdev_ocf_ctx;

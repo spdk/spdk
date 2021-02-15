@@ -34,6 +34,7 @@
 #ifndef VBDEV_OCF_DATA_H
 #define VBDEV_OCF_DATA_H
 
+#include "ocf_env.h"
 #include "spdk/bdev_module.h"
 
 struct bdev_ocf_data {

@@ -35,6 +35,7 @@
 #define VBDEV_OCF_CTX_H
 
 #include <ocf/ocf.h>
+#include "ocf_env.h"
 #include "spdk/thread.h"
 
 extern ocf_ctx_t vbdev_ocf_ctx;
