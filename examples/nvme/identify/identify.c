@@ -736,7 +736,7 @@ get_and_print_zns_zone_report(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 {
 	struct spdk_nvme_zns_zone_report *report_buf;
 	size_t report_bufsize;
-	uint64_t zone_size_lba = spdk_nvme_zns_ns_get_zone_size(ns) / spdk_nvme_ns_get_sector_size(ns);
+	uint64_t zone_size_lba = spdk_nvme_zns_ns_get_zone_size_sectors(ns);
 	uint64_t total_zones = spdk_nvme_zns_ns_get_num_zones(ns);
 	uint64_t max_zones_per_buf, zones_to_print, i;
 	uint64_t handled_zones = 0;

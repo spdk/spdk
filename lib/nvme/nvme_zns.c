@@ -57,7 +57,7 @@ spdk_nvme_zns_ns_get_zone_size(struct spdk_nvme_ns *ns)
 uint64_t
 spdk_nvme_zns_ns_get_num_zones(struct spdk_nvme_ns *ns)
 {
-	return spdk_nvme_ns_get_size(ns) / spdk_nvme_zns_ns_get_zone_size(ns);
+	return spdk_nvme_ns_get_num_sectors(ns) / spdk_nvme_zns_ns_get_zone_size_sectors(ns);
 }
 
 const struct spdk_nvme_zns_ctrlr_data *
