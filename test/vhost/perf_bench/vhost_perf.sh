@@ -364,18 +364,20 @@ vm_run $used_vms
 vm_wait_for_boot 300 $used_vms
 
 if [[ -n "$kernel_cpus" ]]; then
-	mkdir -p /sys/fs/cgroup/cpuset/spdk
+	echo "+cpuset" > /sys/fs/cgroup/cgroup.subtree_control
+	mkdir -p /sys/fs/cgroup/spdk
 	kernel_mask=$vhost_0_reactor_mask
 	kernel_mask=${kernel_mask#"["}
 	kernel_mask=${kernel_mask%"]"}
 
-	echo "$kernel_mask" >> /sys/fs/cgroup/cpuset/spdk/cpuset.cpus
-	echo "0-1" >> /sys/fs/cgroup/cpuset/spdk/cpuset.mems
+	echo "threaded" > /sys/fs/cgroup/spdk/cgroup.type
+	echo "$kernel_mask" > /sys/fs/cgroup/spdk/cpuset.cpus
+	echo "0-1" > /sys/fs/cgroup/spdk/cpuset.mems
 
 	kernel_vhost_pids=$(pgrep "vhost" -U root)
 	for kpid in $kernel_vhost_pids; do
 		echo "Limiting kernel vhost pid ${kpid}"
-		echo "${kpid}" >> /sys/fs/cgroup/cpuset/spdk/tasks
+		echo "${kpid}" > /sys/fs/cgroup/spdk/cgroup.threads
 	done
 fi
 
@@ -477,8 +479,4 @@ else
 		cleanup_lvol_cfg
 	fi
 	vhost_kill "${vhost_num}"
-fi
-
-if [[ -n "$kernel_cpus" ]]; then
-	rmdir /sys/fs/cgroup/cpuset/spdk
 fi
