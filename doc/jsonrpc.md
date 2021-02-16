@@ -1901,14 +1901,14 @@ Example response:
 
 Construct new OCF bdev.
 Command accepts cache mode that is going to be used.
-Currently, we support Write-Through, Pass-Through and Write-Back OCF cache modes.
+You can find more details about supported cache modes in the [OCF documentation](https://open-cas.github.io/cache_configuration.html#cache-mode)
 
 ### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Bdev name to use
-mode                    | Required | string      | OCF cache mode ('wb' or 'wt' or 'pt')
+mode                    | Required | string      | OCF cache mode: wb, wt, pt, wa, wi, wo
 cache_bdev_name         | Required | string      | Name of underlying cache bdev
 core_bdev_name          | Required | string      | Name of underlying core bdev
 
