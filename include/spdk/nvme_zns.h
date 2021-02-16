@@ -114,6 +114,23 @@ uint64_t spdk_nvme_zns_ns_get_num_zones(struct spdk_nvme_ns *ns);
 uint32_t spdk_nvme_zns_ns_get_max_open_zones(struct spdk_nvme_ns *ns);
 
 /**
+ * Get the maximum number of active zones for the given namespace.
+ *
+ * An active zone is a zone in any of the zone states:
+ * EXPLICIT OPEN, IMPLICIT OPEN or CLOSED.
+ *
+ * If this value is 0, there is no limit.
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
+ * \param ns Namespace to query.
+ *
+ * \return the maximum number of active zones.
+ */
+uint32_t spdk_nvme_zns_ns_get_max_active_zones(struct spdk_nvme_ns *ns);
+
+/**
  * Get the Zoned Namespace Command Set Specific Identify Controller data
  * as defined by the NVMe Zoned Namespace Command Set Specification.
  *
