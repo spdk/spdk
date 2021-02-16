@@ -132,17 +132,6 @@ struct run_counter_history {
 	TAILQ_ENTRY(run_counter_history) link;
 };
 
-struct core_info {
-	uint32_t core;
-	uint64_t threads_count;
-	uint64_t pollers_count;
-	uint64_t idle;
-	uint64_t last_idle;
-	uint64_t busy;
-	uint64_t last_busy;
-	uint32_t core_freq;
-};
-
 uint8_t g_sleep_time = 1;
 uint16_t g_selected_row;
 uint16_t g_max_selected_row;
@@ -151,7 +140,6 @@ const char *g_tab_title[NUMBER_OF_TABS] = {"[1] THREADS", "[2] POLLERS", "[3] CO
 struct spdk_jsonrpc_client *g_rpc_client;
 static TAILQ_HEAD(, run_counter_history) g_run_counter_history = TAILQ_HEAD_INITIALIZER(
 			g_run_counter_history);
-struct core_info g_cores_history[RPC_MAX_CORES];
 WINDOW *g_menu_win, *g_tab_win[NUMBER_OF_TABS], *g_tabs[NUMBER_OF_TABS];
 PANEL *g_panels[NUMBER_OF_TABS];
 uint16_t g_max_row, g_max_col;
@@ -223,14 +211,18 @@ struct rpc_core_thread_info {
 
 struct rpc_core_threads {
 	uint64_t threads_count;
-	struct rpc_core_thread_info thread[RPC_MAX_THREADS];
+	struct rpc_core_thread_info *thread;
 };
 
 struct rpc_core_info {
 	uint32_t lcore;
+	uint64_t threads_count;
+	uint64_t pollers_count;
 	uint64_t busy;
 	uint64_t idle;
 	uint32_t core_freq;
+	uint64_t last_idle;
+	uint64_t last_busy;
 	struct rpc_core_threads threads;
 };
 
@@ -330,13 +322,13 @@ free_rpc_cores_stats(struct rpc_cores_stats *req)
 
 	for (i = 0; i < req->cores.cores_count; i++) {
 		core = &req->cores.core[i];
-
 		for (j = 0; j < core->threads.threads_count; j++) {
 			thread = &core->threads.thread[j];
 
 			free(thread->name);
 			free(thread->cpumask);
 		}
+		free(core->threads.thread);
 	}
 }
 
@@ -466,12 +458,24 @@ rpc_decode_core_threads_object(const struct spdk_json_val *val, void *out)
 				       SPDK_COUNTOF(rpc_core_thread_info_decoders), info);
 }
 
+#define RPC_THREAD_ENTRY_SIZE (SPDK_COUNTOF(rpc_core_thread_info_decoders) * 2)
+
 static int
 rpc_decode_cores_lw_threads(const struct spdk_json_val *val, void *out)
 {
 	struct rpc_core_threads *threads = out;
+	/* The number of thread entries received from RPC can be calculated using
+	 * above define value (each JSON line = key + value, hence '* 2' ) and JSON
+	 * 'val' value (-2 is to subtract VAL_OBJECT_BEGIN/END). */
+	size_t threads_count = (spdk_json_val_len(val) - 2) / RPC_THREAD_ENTRY_SIZE;
 
-	return spdk_json_decode_array(val, rpc_decode_core_threads_object, threads->thread, RPC_MAX_THREADS,
+	threads->thread = calloc(threads_count, sizeof(struct rpc_core_thread_info));
+	if (!out) {
+		fprintf(stderr, "Unable to allocate memory for a thread array.\n");
+		return -1;
+	}
+
+	return spdk_json_decode_array(val, rpc_decode_core_threads_object, threads->thread, threads_count,
 				      &threads->threads_count, sizeof(struct rpc_core_thread_info));
 }
 
@@ -498,7 +502,7 @@ rpc_decode_cores_array(const struct spdk_json_val *val, void *out)
 	struct rpc_cores *cores = out;
 
 	return spdk_json_decode_array(val, rpc_decode_core_object, cores->core,
-				      RPC_MAX_THREADS, &cores->cores_count, sizeof(struct rpc_core_info));
+				      RPC_MAX_CORES, &cores->cores_count, sizeof(struct rpc_core_info));
 }
 
 static const struct spdk_json_object_decoder rpc_cores_stats_decoders[] = {
@@ -740,11 +744,53 @@ get_pollers_data(void)
 }
 
 static int
+sort_cores(const void *p1, const void *p2)
+{
+	const struct rpc_core_info core_info1 = *(struct rpc_core_info *)p1;
+	const struct rpc_core_info core_info2 = *(struct rpc_core_info *)p2;
+	uint64_t count1, count2;
+
+	switch (g_current_sort_col[CORES_TAB]) {
+	case 0: /* Sort by core */
+		count1 = core_info2.lcore;
+		count2 = core_info1.lcore;
+		break;
+	case 1: /* Sort by threads number */
+		count1 = core_info1.threads_count;
+		count2 = core_info2.threads_count;
+		break;
+	case 2: /* Sort by pollers number */
+		count1 = core_info1.pollers_count;
+		count2 = core_info2.pollers_count;
+		break;
+	case 3: /* Sort by idle time */
+		count1 = core_info1.last_idle - core_info1.idle;
+		count2 = core_info1.last_idle - core_info2.idle;
+		break;
+	case 4: /* Sort by busy time */
+		count1 = core_info1.last_busy - core_info1.busy;
+		count2 = core_info1.last_busy - core_info2.busy;
+		break;
+	default:
+		return 0;
+	}
+
+	if (count2 > count1) {
+		return 1;
+	} else if (count2 < count1) {
+		return -1;
+	} else {
+		return 0;
+	}
+}
+
+static int
 get_cores_data(void)
 {
 	struct spdk_jsonrpc_client_response *json_resp = NULL;
 	struct rpc_core_info *core_info;
 	uint64_t i, j, k;
+	struct rpc_cores_stats cores_stats;
 	int rc = 0;
 
 	rc = rpc_send_req("framework_get_reactors", &json_resp);
@@ -752,30 +798,48 @@ get_cores_data(void)
 		return rc;
 	}
 
+	/* Decode json */
+	memset(&cores_stats, 0, sizeof(cores_stats));
+	if (spdk_json_decode_object(json_resp->result, rpc_cores_stats_decoders,
+				    SPDK_COUNTOF(rpc_cores_stats_decoders), &cores_stats)) {
+		rc = -EINVAL;
+		free_rpc_cores_stats(&cores_stats);
+		goto end;
+	}
+
 	pthread_mutex_lock(&g_thread_lock);
+
+	for (i = 0; i < cores_stats.cores.cores_count; i++) {
+		cores_stats.cores.core[i].last_busy = g_cores_stats.cores.core[i].busy;
+		cores_stats.cores.core[i].last_idle = g_cores_stats.cores.core[i].idle;
+	}
 
 	/* Free old cores values before allocating memory for new ones */
 	free_rpc_cores_stats(&g_cores_stats);
 
-	/* Decode json */
-	memset(&g_cores_stats, 0, sizeof(g_cores_stats));
-	if (spdk_json_decode_object(json_resp->result, rpc_cores_stats_decoders,
-				    SPDK_COUNTOF(rpc_cores_stats_decoders), &g_cores_stats)) {
-		rc = -EINVAL;
-		goto end;
-	}
+	memcpy(&g_cores_stats, &cores_stats, sizeof(struct rpc_cores_stats));
 
 	for (i = 0; i < g_cores_stats.cores.cores_count; i++) {
 		core_info = &g_cores_stats.cores.core[i];
+
+		core_info->threads_count = cores_stats.cores.core[i].threads_count;
+		core_info->threads.thread = cores_stats.cores.core[i].threads.thread;
 
 		for (j = 0; j < core_info->threads.threads_count; j++) {
 			for (k = 0; k < g_last_threads_count; k++) {
 				if (core_info->threads.thread[j].id == g_threads_info[k].id) {
 					g_threads_info[k].core_num = core_info->lcore;
+					core_info->threads_count++;
+					core_info->pollers_count += g_threads_info[k].active_pollers_count +
+								    g_threads_info[k].timed_pollers_count +
+								    g_threads_info[k].paused_pollers_count;
 				}
 			}
 		}
 	}
+
+	qsort(&g_cores_stats.cores.core, g_cores_stats.cores.cores_count,
+	      sizeof(g_cores_stats.cores.core[0]), sort_cores);
 
 end:
 	pthread_mutex_unlock(&g_thread_lock);
@@ -1321,70 +1385,6 @@ refresh_pollers_tab(uint8_t current_page)
 	return max_pages;
 }
 
-static int
-sort_cores(const void *p1, const void *p2)
-{
-	const struct core_info core_info1 = *(struct core_info *)p1;
-	const struct core_info core_info2 = *(struct core_info *)p2;
-	uint64_t count1, count2;
-
-	switch (g_current_sort_col[CORES_TAB]) {
-	case 0: /* Sort by core */
-		count1 = core_info2.core;
-		count2 = core_info1.core;
-		break;
-	case 1: /* Sort by threads number */
-		count1 = core_info1.threads_count;
-		count2 = core_info2.threads_count;
-		break;
-	case 2: /* Sort by pollers number */
-		count1 = core_info1.pollers_count;
-		count2 = core_info2.pollers_count;
-		break;
-	case 3: /* Sort by idle time */
-		count2 = g_cores_history[core_info1.core].last_idle - core_info1.idle;
-		count1 = g_cores_history[core_info2.core].last_idle - core_info2.idle;
-		break;
-	case 4: /* Sort by busy time */
-		count2 = g_cores_history[core_info1.core].last_busy - core_info1.busy;
-		count1 = g_cores_history[core_info2.core].last_busy - core_info2.busy;
-		break;
-	default:
-		return 0;
-	}
-
-	if (count2 > count1) {
-		return 1;
-	} else if (count2 < count1) {
-		return -1;
-	} else {
-		return 0;
-	}
-}
-
-static void
-store_core_last_stats(uint32_t core, uint64_t idle, uint64_t busy)
-{
-	g_cores_history[core].last_idle = idle;
-	g_cores_history[core].last_busy = busy;
-}
-
-static void
-get_core_last_stats(uint32_t core, uint64_t *idle, uint64_t *busy)
-{
-	*idle = g_cores_history[core].last_idle;
-	*busy = g_cores_history[core].last_busy;
-}
-
-static void
-store_core_stats(uint32_t core, uint64_t threads, uint64_t pollers, uint64_t idle, uint64_t busy)
-{
-	g_cores_history[core].threads_count = threads;
-	g_cores_history[core].pollers_count = pollers;
-	g_cores_history[core].idle = idle;
-	g_cores_history[core].busy = busy;
-}
-
 static uint8_t
 refresh_cores_tab(uint8_t current_page)
 {
@@ -1392,24 +1392,22 @@ refresh_cores_tab(uint8_t current_page)
 	uint64_t i;
 	uint16_t offset, count = 0;
 	uint8_t max_pages, item_index;
-	static uint8_t last_page = 0;
 	char core[MAX_CORE_STR_LEN], threads_number[MAX_THREAD_COUNT_STR_LEN],
 	     pollers_number[MAX_POLLER_COUNT_STR_LEN], idle_time[MAX_TIME_STR_LEN],
 	     busy_time[MAX_TIME_STR_LEN], core_freq[MAX_CORE_FREQ_STR_LEN];
-	struct core_info cores[RPC_MAX_CORES];
+	struct rpc_core_info cores[RPC_MAX_CORES];
 
 	memset(&cores, 0, sizeof(cores));
 
 	count = g_cores_stats.cores.cores_count;
 
 	for (i = 0; i < count; i++) {
-		cores[i].core = g_cores_stats.cores.core[i].lcore;
+		cores[i].lcore = g_cores_stats.cores.core[i].lcore;
 		cores[i].busy = g_cores_stats.cores.core[i].busy;
 		cores[i].idle = g_cores_stats.cores.core[i].idle;
+		cores[i].last_busy = g_cores_stats.cores.core[i].last_busy;
+		cores[i].last_idle = g_cores_stats.cores.core[i].last_idle;
 		cores[i].core_freq = g_cores_stats.cores.core[i].core_freq;
-		if (last_page != current_page) {
-			store_core_last_stats(cores[i].core, cores[i].idle, cores[i].busy);
-		}
 	}
 
 	for (i = 0; i < g_last_threads_count; i++) {
@@ -1417,7 +1415,7 @@ refresh_cores_tab(uint8_t current_page)
 			/* Do not display threads which changed cores when issuing
 			 * RPCs to get_core_data and get_thread_data and threads
 			 * not currently assigned to this core. */
-			if ((int)cores[j].core == g_threads_info[i].core_num) {
+			if ((int)cores[j].lcore == g_threads_info[i].core_num) {
 				cores[j].threads_count++;
 				cores[j].pollers_count += g_threads_info[i].active_pollers_count +
 							  g_threads_info[i].timed_pollers_count +
@@ -1426,13 +1424,7 @@ refresh_cores_tab(uint8_t current_page)
 		}
 	}
 
-	if (last_page != current_page) {
-		last_page = current_page;
-	}
-
 	max_pages = (count + g_max_row - WINDOW_HEADER - 1) / (g_max_row - WINDOW_HEADER);
-
-	qsort(&cores, count, sizeof(cores[0]), sort_cores);
 
 	for (i = current_page * g_max_data_rows;
 	     i < spdk_min(count, (uint64_t)((current_page + 1) * g_max_data_rows));
@@ -1441,14 +1433,13 @@ refresh_cores_tab(uint8_t current_page)
 
 		snprintf(threads_number, MAX_THREAD_COUNT_STR_LEN, "%ld", cores[i].threads_count);
 		snprintf(pollers_number, MAX_POLLER_COUNT_STR_LEN, "%ld", cores[i].pollers_count);
-		get_core_last_stats(cores[i].core, &cores[i].last_idle, &cores[i].last_busy);
 
 		offset = 1;
 
 		draw_row_background(item_index, CORES_TAB);
 
 		if (!col_desc[0].disabled) {
-			snprintf(core, MAX_CORE_STR_LEN, "%d", cores[i].core);
+			snprintf(core, MAX_CORE_STR_LEN, "%d", cores[i].lcore);
 			print_max_len(g_tabs[CORES_TAB], TABS_DATA_START_ROW + item_index, offset,
 				      col_desc[0].max_data_string, ALIGN_RIGHT, core);
 			offset += col_desc[0].max_data_string + 2;
@@ -1498,10 +1489,6 @@ refresh_cores_tab(uint8_t current_page)
 			print_max_len(g_tabs[CORES_TAB], TABS_DATA_START_ROW + item_index, offset,
 				      col_desc[5].max_data_string, ALIGN_RIGHT, core_freq);
 		}
-
-		store_core_last_stats(cores[i].core, cores[i].idle, cores[i].busy);
-		store_core_stats(cores[i].core, cores[i].threads_count, cores[i].pollers_count,
-				 cores[i].idle - cores[i].last_idle, cores[i].busy - cores[i].last_busy);
 
 		if (item_index == g_selected_row) {
 			wattroff(g_tabs[CORES_TAB], COLOR_PAIR(2));
@@ -2180,11 +2167,11 @@ show_core(uint8_t current_page)
 	print_left(core_win, 5, 1, CORE_WIN_WIDTH, "Thread count:          Idle time:", COLOR_PAIR(5));
 
 	mvwprintw(core_win, 5, CORE_WIN_FIRST_COL, "%" PRIu64,
-		  g_cores_history[core_info[core_number]->lcore].threads_count);
+		  core_info[core_number]->threads_count);
 
 	if (g_interval_data == true) {
-		get_time_str(g_cores_history[core_info[core_number]->lcore].idle, idle_time);
-		get_time_str(g_cores_history[core_info[core_number]->lcore].busy, busy_time);
+		get_time_str(core_info[core_number]->idle - core_info[core_number]->last_idle, idle_time);
+		get_time_str(core_info[core_number]->busy - core_info[core_number]->last_busy, busy_time);
 	} else {
 		get_time_str(core_info[core_number]->idle, idle_time);
 		get_time_str(core_info[core_number]->busy, busy_time);
@@ -2194,7 +2181,7 @@ show_core(uint8_t current_page)
 
 	print_left(core_win, 7, 1, CORE_WIN_WIDTH, "Poller count:          Busy time:", COLOR_PAIR(5));
 	mvwprintw(core_win, 7, CORE_WIN_FIRST_COL, "%" PRIu64,
-		  g_cores_history[core_info[core_number]->lcore].pollers_count);
+		  core_info[core_number]->pollers_count);
 
 	mvwprintw(core_win, 7, CORE_WIN_FIRST_COL + 20, busy_time);
 
@@ -2736,6 +2723,7 @@ wait_init(pthread_t *data_thread)
 	}
 
 	memset(&g_threads_info, 0, sizeof(struct rpc_thread_info) * RPC_MAX_THREADS);
+	memset(&g_cores_stats, 0, sizeof(g_cores_stats));
 
 	/* This is to get first batch of data for display functions.
 	 * Since data thread makes RPC calls that take more time than
