@@ -4273,6 +4273,7 @@ iscsi_pdu_payload_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 {
 	struct spdk_iscsi_task *task, *subtask;
 	struct iscsi_bhs_data_out *reqh;
+	struct spdk_mobj *mobj;
 	uint32_t transfer_tag;
 	uint32_t buffer_offset;
 
@@ -4292,19 +4293,22 @@ iscsi_pdu_payload_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 		return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
 	}
 
+	mobj = pdu->mobj;
+	assert(mobj != NULL);
+
 	subtask = iscsi_task_get(conn, task, iscsi_task_cpl);
 	if (subtask == NULL) {
 		SPDK_ERRLOG("Unable to acquire subtask\n");
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
 	subtask->scsi.offset = buffer_offset;
-	subtask->scsi.length = pdu->data_segment_len;
+	subtask->scsi.length = mobj->data_len;
 	iscsi_task_associate_pdu(subtask, pdu);
 
 	if (spdk_likely(!pdu->dif_insert_or_strip)) {
-		spdk_scsi_task_set_data(&subtask->scsi, pdu->data, pdu->data_segment_len);
+		spdk_scsi_task_set_data(&subtask->scsi, mobj->buf, mobj->data_len);
 	} else {
-		spdk_scsi_task_set_data(&subtask->scsi, pdu->data, pdu->data_buf_len);
+		spdk_scsi_task_set_data(&subtask->scsi, mobj->buf, pdu->data_buf_len);
 	}
 
 	iscsi_queue_task(conn, subtask);
@@ -4592,6 +4596,7 @@ iscsi_pdu_payload_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 			return rc;
 		}
 
+		pdu->mobj->data_len += rc;
 		pdu->data_valid_bytes += rc;
 		if (pdu->data_valid_bytes < data_len) {
 			return 1;

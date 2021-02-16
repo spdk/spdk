@@ -147,6 +147,7 @@
 struct spdk_mobj {
 	struct spdk_mempool *mp;
 	void *buf;
+	uint32_t data_len;
 };
 
 /*
@@ -465,6 +466,7 @@ iscsi_datapool_put(struct spdk_mobj *mobj)
 {
 	assert(mobj != NULL);
 
+	mobj->data_len = 0;
 	spdk_mempool_put(mobj->mp, (void *)mobj);
 }
 
