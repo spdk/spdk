@@ -2348,7 +2348,8 @@ data_thread_routine(void *arg)
 		}
 
 		pthread_mutex_unlock(&g_thread_lock);
-		usleep(g_sleep_time);
+
+		usleep(g_sleep_time * SPDK_SEC_TO_USEC);
 	}
 
 	return NULL;
