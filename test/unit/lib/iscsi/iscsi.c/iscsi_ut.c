@@ -1858,7 +1858,7 @@ check_iscsi_r2t(struct spdk_iscsi_task *task, uint32_t len)
 	rsph = (struct iscsi_bhs_r2t *)&rsp_pdu->bhs;
 	CU_ASSERT(rsph->opcode == ISCSI_OP_R2T);
 	CU_ASSERT(from_be64(&rsph->lun) == spdk_scsi_lun_id_int_to_fmt(task->lun_id));
-	CU_ASSERT(from_be32(&rsph->buffer_offset) == task->next_r2t_offset);
+	CU_ASSERT(from_be32(&rsph->buffer_offset) + len == task->next_r2t_offset);
 	CU_ASSERT(from_be32(&rsph->desired_xfer_len) == len);
 
 	TAILQ_REMOVE(&g_write_pdu_list, rsp_pdu, tailq);
@@ -1955,10 +1955,10 @@ pdu_hdr_op_data_test(void)
 
 	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(pdu.task == NULL);
+	check_iscsi_reject(&pdu, ISCSI_REASON_PROTOCOL_ERROR);
 
-	/* Case 10 - SCSI Data-Out PDU is correct and processed. Created task is held
-	 * to the PDU, but its F bit is 0 and hence R2T is not sent.
+	/* Case 10 - SCSI Data-Out PDU is correct and processed. Its F bit is 0 and hence
+	 * R2T is not sent.
 	 */
 	dev.lun[0] = &lun;
 	to_be32(&data_reqh->data_sn, primary.r2t_datasn);
@@ -1966,12 +1966,11 @@ pdu_hdr_op_data_test(void)
 
 	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(pdu.task != NULL);
-	iscsi_task_put(pdu.task);
+	CU_ASSERT(!pdu.is_rejected);
 	pdu.task = NULL;
 
-	/* Case 11 - SCSI Data-Out PDU is correct and processed. Created task is held
-	 * to the PDU, and Its F bit is 1 and hence R2T is sent.
+	/* Case 11 - SCSI Data-Out PDU is correct and processed. Its F bit is 1 and hence
+	 * R2T is sent.
 	 */
 	data_reqh->flags |= ISCSI_FLAG_FINAL;
 	to_be32(&data_reqh->data_sn, primary.r2t_datasn);
@@ -1980,19 +1979,8 @@ pdu_hdr_op_data_test(void)
 
 	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(pdu.task != NULL);
-	check_iscsi_r2t(pdu.task, pdu.data_segment_len * 4);
-	iscsi_task_put(pdu.task);
-
-	/* Case 12 - Task pool is empty. */
-	to_be32(&data_reqh->data_sn, primary.r2t_datasn);
-	to_be32(&data_reqh->buffer_offset, primary.next_expected_r2t_offset);
-	g_task_pool_is_empty = true;
-
-	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
-	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
-
-	g_task_pool_is_empty = false;
+	CU_ASSERT(!pdu.is_rejected);
+	check_iscsi_r2t(&primary, pdu.data_segment_len * 4);
 }
 
 /* Test an ISCSI_OP_TEXT PDU with CONTINUE bit set but
