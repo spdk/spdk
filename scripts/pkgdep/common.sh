@@ -17,6 +17,7 @@ install_liburing() {
 		# FIXME: Switch to liburing-2.0 when it's finally released
 		git -C "$liburing_dir" checkout 5d027b315d78415a31dcc9111f6bd8924ba5b4e6
 		(cd "$liburing_dir" && ./configure --libdir=/usr/lib64 && make install)
+		ldconfig
 	fi
 }
 
