@@ -60,6 +60,14 @@ spdk_nvme_zns_ns_get_num_zones(struct spdk_nvme_ns *ns)
 	return spdk_nvme_ns_get_num_sectors(ns) / spdk_nvme_zns_ns_get_zone_size_sectors(ns);
 }
 
+uint32_t
+spdk_nvme_zns_ns_get_max_open_zones(struct spdk_nvme_ns *ns)
+{
+	const struct spdk_nvme_zns_ns_data *nsdata_zns = spdk_nvme_zns_ns_get_data(ns);
+
+	return nsdata_zns->mor + 1;
+}
+
 const struct spdk_nvme_zns_ctrlr_data *
 spdk_nvme_zns_ctrlr_get_data(struct spdk_nvme_ctrlr *ctrlr)
 {
