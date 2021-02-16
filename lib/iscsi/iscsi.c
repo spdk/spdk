@@ -3252,7 +3252,7 @@ iscsi_pdu_payload_op_scsi_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_t
 		return 0;
 	} else {
 		TAILQ_INIT(&task->subtask_list);
-		task->current_datain_offset = 0;
+		task->current_data_offset = 0;
 		TAILQ_INSERT_TAIL(&conn->queued_datain_tasks, task, link);
 
 		return iscsi_conn_handle_queued_datain_tasks(conn);

@@ -56,9 +56,9 @@ struct spdk_iscsi_task {
 	uint32_t data_out_cnt;
 
 	/*
-	 * Tracks the current offset of large read io.
+	 * Tracks the current offset of large read or write io.
 	 */
-	uint32_t current_datain_offset;
+	uint32_t current_data_offset;
 
 	/*
 	 * next_expected_r2t_offset is used when we receive

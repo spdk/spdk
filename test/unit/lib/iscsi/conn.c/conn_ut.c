@@ -283,21 +283,21 @@ ut_conn_create_read_tasks(struct spdk_iscsi_task *primary)
 	uint32_t remaining_size = 0;
 
 	while (1) {
-		if (primary->current_datain_offset < primary->scsi.transfer_len) {
-			remaining_size = primary->scsi.transfer_len - primary->current_datain_offset;
+		if (primary->current_data_offset < primary->scsi.transfer_len) {
+			remaining_size = primary->scsi.transfer_len - primary->current_data_offset;
 
 			subtask = ut_conn_task_get(primary);
 
-			subtask->scsi.offset = primary->current_datain_offset;
+			subtask->scsi.offset = primary->current_data_offset;
 			subtask->scsi.length = spdk_min(SPDK_BDEV_LARGE_BUF_MAX_SIZE, remaining_size);
 			subtask->scsi.status = SPDK_SCSI_STATUS_GOOD;
 
-			primary->current_datain_offset += subtask->scsi.length;
+			primary->current_data_offset += subtask->scsi.length;
 
 			TAILQ_INSERT_TAIL(&g_ut_read_tasks, subtask, link);
 		}
 
-		if (primary->current_datain_offset == primary->scsi.transfer_len) {
+		if (primary->current_data_offset == primary->scsi.transfer_len) {
 			break;
 		}
 	}
@@ -316,7 +316,7 @@ read_task_split_in_order_case(void)
 
 	primary.scsi.transfer_len = SPDK_BDEV_LARGE_BUF_MAX_SIZE * 8;
 	TAILQ_INIT(&primary.subtask_list);
-	primary.current_datain_offset = 0;
+	primary.current_data_offset = 0;
 	primary.bytes_completed = 0;
 	primary.scsi.ref = 1;
 
@@ -352,7 +352,7 @@ read_task_split_reverse_order_case(void)
 
 	primary.scsi.transfer_len = SPDK_BDEV_LARGE_BUF_MAX_SIZE * 8;
 	TAILQ_INIT(&primary.subtask_list);
-	primary.current_datain_offset = 0;
+	primary.current_data_offset = 0;
 	primary.bytes_completed = 0;
 	primary.scsi.ref = 1;
 
@@ -756,7 +756,7 @@ abort_queued_datain_task_test(void)
 	rc = _iscsi_conn_abort_queued_datain_task(&conn, &task);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(TAILQ_EMPTY(&conn.queued_datain_tasks));
-	CU_ASSERT(task.current_datain_offset == SPDK_BDEV_LARGE_BUF_MAX_SIZE * 3);
+	CU_ASSERT(task.current_data_offset == SPDK_BDEV_LARGE_BUF_MAX_SIZE * 3);
 	CU_ASSERT(task.scsi.ref == 0);
 	CU_ASSERT(subtask.scsi.offset == 0);
 	CU_ASSERT(subtask.scsi.length == SPDK_BDEV_LARGE_BUF_MAX_SIZE * 3);
@@ -765,7 +765,7 @@ abort_queued_datain_task_test(void)
 	/* Case2: Queue one task, and this task is partially executed */
 	task.scsi.ref = 1;
 	task.scsi.transfer_len = SPDK_BDEV_LARGE_BUF_MAX_SIZE * 3;
-	task.current_datain_offset = SPDK_BDEV_LARGE_BUF_MAX_SIZE;
+	task.current_data_offset = SPDK_BDEV_LARGE_BUF_MAX_SIZE;
 	TAILQ_INSERT_TAIL(&conn.queued_datain_tasks, &task, link);
 
 	/* No slots for sub read tasks */
@@ -778,7 +778,7 @@ abort_queued_datain_task_test(void)
 	conn.data_in_cnt = 0;
 	rc = _iscsi_conn_abort_queued_datain_task(&conn, &task);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(task.current_datain_offset == SPDK_BDEV_LARGE_BUF_MAX_SIZE * 3);
+	CU_ASSERT(task.current_data_offset == SPDK_BDEV_LARGE_BUF_MAX_SIZE * 3);
 	CU_ASSERT(task.scsi.ref == 2);
 	CU_ASSERT(TAILQ_FIRST(&task.subtask_list) == &subtask);
 	CU_ASSERT(subtask.scsi.offset == SPDK_BDEV_LARGE_BUF_MAX_SIZE);
@@ -830,7 +830,7 @@ abort_queued_datain_tasks_test(void)
 	scsi_req = (struct iscsi_bhs_scsi_req *)&pdu1.bhs;
 	scsi_req->read_bit = 1;
 	task1.scsi.ref = 1;
-	task1.current_datain_offset = 0;
+	task1.current_data_offset = 0;
 	task1.scsi.transfer_len = 512;
 	task1.scsi.lun = &lun1;
 	iscsi_task_set_pdu(&task1, &pdu1);
@@ -841,7 +841,7 @@ abort_queued_datain_tasks_test(void)
 	scsi_req = (struct iscsi_bhs_scsi_req *)&pdu2.bhs;
 	scsi_req->read_bit = 1;
 	task2.scsi.ref = 1;
-	task2.current_datain_offset = 0;
+	task2.current_data_offset = 0;
 	task2.scsi.transfer_len = 512;
 	task2.scsi.lun = &lun2;
 	iscsi_task_set_pdu(&task2, &pdu2);
@@ -855,7 +855,7 @@ abort_queued_datain_tasks_test(void)
 	scsi_req = (struct iscsi_bhs_scsi_req *)&pdu3.bhs;
 	scsi_req->read_bit = 1;
 	task3.scsi.ref = 1;
-	task3.current_datain_offset = 0;
+	task3.current_data_offset = 0;
 	task3.scsi.transfer_len = 512;
 	task3.scsi.lun = &lun1;
 	iscsi_task_set_pdu(&task3, &pdu3);
@@ -866,7 +866,7 @@ abort_queued_datain_tasks_test(void)
 	scsi_req = (struct iscsi_bhs_scsi_req *)&pdu4.bhs;
 	scsi_req->read_bit = 1;
 	task4.scsi.ref = 1;
-	task4.current_datain_offset = 0;
+	task4.current_data_offset = 0;
 	task4.scsi.transfer_len = 512;
 	task4.scsi.lun = &lun2;
 	iscsi_task_set_pdu(&task4, &pdu4);
@@ -877,7 +877,7 @@ abort_queued_datain_tasks_test(void)
 	scsi_req = (struct iscsi_bhs_scsi_req *)&pdu5.bhs;
 	scsi_req->read_bit = 1;
 	task5.scsi.ref = 1;
-	task5.current_datain_offset = 0;
+	task5.current_data_offset = 0;
 	task5.scsi.transfer_len = 512;
 	task5.scsi.lun = &lun1;
 	iscsi_task_set_pdu(&task5, &pdu5);
@@ -891,7 +891,7 @@ abort_queued_datain_tasks_test(void)
 	scsi_req = (struct iscsi_bhs_scsi_req *)&pdu6.bhs;
 	scsi_req->read_bit = 1;
 	task6.scsi.ref = 1;
-	task6.current_datain_offset = 0;
+	task6.current_data_offset = 0;
 	task6.scsi.transfer_len = 512;
 	task6.scsi.lun = &lun2;
 	iscsi_task_set_pdu(&task6, &pdu6);
