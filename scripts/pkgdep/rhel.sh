@@ -120,7 +120,7 @@ if [[ $INSTALL_PMEM == "true" ]]; then
 fi
 if [[ $INSTALL_FUSE == "true" ]]; then
 	# Additional dependencies for FUSE and NVMe-CUSE
-	yum install -y kernel-modules-extra fuse3-devel
+	yum install -y fuse3-devel
 fi
 if [[ $INSTALL_RDMA == "true" ]]; then
 	# Additional dependencies for RDMA transport in NVMe over Fabrics
