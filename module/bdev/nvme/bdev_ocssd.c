@@ -967,7 +967,7 @@ bdev_ocssd_push_media_events(struct nvme_bdev_ns *nvme_ns,
 	TAILQ_FOREACH(nvme_bdev, &nvme_ns->bdevs, tailq) {
 		ocssd_bdev = SPDK_CONTAINEROF(nvme_bdev, struct ocssd_bdev, nvme_bdev);
 		if (bdev_ocssd_lba_in_range(ocssd_bdev, ocssd_ns, chunk_entry->lba)) {
-			return;
+			break;
 		}
 	}
 
