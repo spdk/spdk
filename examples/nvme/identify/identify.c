@@ -228,7 +228,10 @@ get_features(struct spdk_nvme_ctrlr *ctrlr)
 		SPDK_OCSSD_FEAT_MEDIA_FEEDBACK,
 	};
 
-	/* Submit several GET FEATURES commands and wait for them to complete */
+	/* Submit only one GET FEATURES at a time. There is a known issue #1799
+	 * with Google Cloud Platform NVMe SSDs that do not handle overlapped
+	 * GET FEATURES commands correctly.
+	 */
 	outstanding_commands = 0;
 	for (i = 0; i < SPDK_COUNTOF(features_to_get); i++) {
 		if (!spdk_nvme_ctrlr_is_ocssd_supported(ctrlr) &&
@@ -240,11 +243,12 @@ get_features(struct spdk_nvme_ctrlr *ctrlr)
 		} else {
 			printf("get_feature(0x%02X) failed to submit command\n", features_to_get[i]);
 		}
+
+		while (outstanding_commands) {
+			spdk_nvme_ctrlr_process_admin_completions(ctrlr);
+		}
 	}
 
-	while (outstanding_commands) {
-		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
-	}
 }
 
 static int
