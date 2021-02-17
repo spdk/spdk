@@ -476,6 +476,7 @@ bdev_ocssd_append_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 	struct bdev_ocssd_zone *zone = ocdev_io->io.zone;
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(ctx);
 
+	bdev_io->u.bdev.offset_blocks = zone->write_pointer;
 	zone->write_pointer += bdev_io->u.bdev.num_blocks;
 	assert(zone->write_pointer <= zone->slba + zone->capacity);
 
