@@ -356,7 +356,7 @@ vbdev_opal_create(const char *nvme_ctrlr_name, uint32_t nsid, uint8_t locking_ra
 	opal_bdev->nvme_ctrlr = nvme_ctrlr;
 	opal_bdev->opal_dev = nvme_ctrlr->opal_dev;
 
-	nvme_bdev = TAILQ_FIRST(&nvme_ctrlr->namespaces[nsid - 1]->bdevs);
+	nvme_bdev = nvme_ctrlr->namespaces[nsid - 1]->bdev;
 	assert(nvme_bdev != NULL);
 	base_bdev_name = nvme_bdev->disk.name;
 

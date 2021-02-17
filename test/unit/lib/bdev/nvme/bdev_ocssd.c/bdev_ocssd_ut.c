@@ -235,7 +235,6 @@ create_nvme_bdev_controller(const struct spdk_nvme_transport_id *trid, const cha
 		nvme_bdev_ctrlr->namespaces[nsid]->id = nsid + 1;
 		nvme_bdev_ctrlr->namespaces[nsid]->ctrlr = nvme_bdev_ctrlr;
 		nvme_bdev_ctrlr->namespaces[nsid]->type = NVME_BDEV_NS_OCSSD;
-		TAILQ_INIT(&nvme_bdev_ctrlr->namespaces[nsid]->bdevs);
 
 		bdev_ocssd_populate_namespace(nvme_bdev_ctrlr, nvme_bdev_ctrlr->namespaces[nsid], NULL);
 	}
