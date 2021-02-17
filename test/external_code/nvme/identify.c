@@ -34,14 +34,37 @@
 #include "spdk/stdinc.h"
 #include "nvme.h"
 
+static void
+attach_cb(void *cb_ctx, const struct spdk_pci_addr *addr,
+	  struct nvme_ctrlr *ctrlr)
+{
+	char fmtaddr[32] = {};
+
+	(void)cb_ctx;
+
+	spdk_pci_addr_fmt(fmtaddr, sizeof(fmtaddr), addr);
+	printf("Found NVMe controller at: %s\n", fmtaddr);
+
+	nvme_detach(ctrlr);
+}
+
 int
 main(int argc, const char **argv)
 {
+	struct spdk_env_opts opts;
 	int rc;
 
 	(void)argc;
 
-	rc = nvme_probe(NULL, NULL);
+	spdk_env_opts_init(&opts);
+	opts.name = "identify";
+
+	if (spdk_env_init(&opts) != 0) {
+		fprintf(stderr, "%s: unable to initialize SPDK env\n", argv[0]);
+		return 1;
+	}
+
+	rc = nvme_probe(attach_cb, NULL);
 	if (rc != 0) {
 		fprintf(stderr, "%s: nvme probe failed\n", argv[0]);
 		return 1;

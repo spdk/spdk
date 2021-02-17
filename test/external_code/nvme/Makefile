@@ -33,7 +33,7 @@
 
 PKG_CONFIG_PATH = $(SPDK_LIB_DIR)/pkgconfig
 
-DEPLIBS := $(shell PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" pkg-config --libs spdk_log)
+DEPLIBS := $(shell PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" pkg-config --libs spdk_env_dpdk)
 
 shared:
 	$(CC) $(COMMON_CFLAGS) -c -fPIC nvme.c -o nvme.o
