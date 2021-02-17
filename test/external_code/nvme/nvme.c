@@ -31,14 +31,17 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "spdk/nvme_spec.h"
 #include "spdk/log.h"
 #include "spdk/stdinc.h"
 #include "nvme.h"
 
 struct nvme_ctrlr {
 	/* Underlying PCI device */
-	struct spdk_pci_device	*pci_device;
-	TAILQ_ENTRY(nvme_ctrlr)	tailq;
+	struct spdk_pci_device			*pci_device;
+	/* Pointer to the MMIO register space */
+	volatile struct spdk_nvme_registers	*regs;
+	TAILQ_ENTRY(nvme_ctrlr)			tailq;
 };
 
 static struct spdk_pci_id nvme_pci_driver_id[] = {
@@ -77,6 +80,8 @@ pcie_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	struct nvme_ctrlr *ctrlr;
 	TAILQ_HEAD(, nvme_ctrlr) *ctrlrs = ctx;
 	char addr[32] = {};
+	uint64_t phys_addr, size;
+	void *reg_addr;
 
 	spdk_pci_addr_fmt(addr, sizeof(addr), &pci_dev->addr);
 
@@ -92,7 +97,15 @@ pcie_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		return -1;
 	}
 
+	if (spdk_pci_device_map_bar(pci_dev, 0, &reg_addr, &phys_addr, &size)) {
+		SPDK_ERRLOG("Failed to allocate BAR0 for NVMe controller: %s\n", addr);
+		spdk_pci_device_unclaim(pci_dev);
+		free(ctrlr);
+		return -1;
+	}
+
 	ctrlr->pci_device = pci_dev;
+	ctrlr->regs = (volatile struct spdk_nvme_registers *)reg_addr;
 	TAILQ_INSERT_TAIL(ctrlrs, ctrlr, tailq);
 
 	return 0;
@@ -101,6 +114,7 @@ pcie_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 static void
 free_ctrlr(struct nvme_ctrlr *ctrlr)
 {
+	spdk_pci_device_unmap_bar(ctrlr->pci_device, 0, (void *)ctrlr->regs);
 	spdk_pci_device_unclaim(ctrlr->pci_device);
 	spdk_pci_device_detach(ctrlr->pci_device);
 	free(ctrlr);
