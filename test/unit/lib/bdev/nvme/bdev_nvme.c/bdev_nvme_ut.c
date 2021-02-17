@@ -1475,7 +1475,7 @@ test_aer_cb(void)
 	CU_ASSERT(nvme_bdev_ctrlr->namespaces[2]->populated == true);
 	CU_ASSERT(nvme_bdev_ctrlr->namespaces[3]->populated == true);
 
-	bdev = nvme_bdev_ctrlr->namespaces[3]->bdev;
+	bdev = nvme_bdev_ns_to_bdev(nvme_bdev_ctrlr->namespaces[3]);
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
 	CU_ASSERT(bdev->disk.blockcnt == 1024);
 
@@ -1607,7 +1607,7 @@ test_submit_nvme_cmd(void)
 	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr != NULL);
 
-	bdev = nvme_bdev_ctrlr->namespaces[0]->bdev;
+	bdev = nvme_bdev_ns_to_bdev(nvme_bdev_ctrlr->namespaces[0]);
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
 
 	ch = spdk_get_io_channel(nvme_bdev_ctrlr);

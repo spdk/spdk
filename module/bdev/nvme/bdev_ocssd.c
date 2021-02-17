@@ -124,14 +124,17 @@ bdev_ocssd_config_json(struct spdk_json_write_ctx *w)
 void
 bdev_ocssd_namespace_config_json(struct spdk_json_write_ctx *w, struct nvme_bdev_ns *nvme_ns)
 {
-	assert(nvme_ns->bdev != NULL);
+	struct nvme_bdev *nvme_bdev;
+
+	nvme_bdev = nvme_bdev_ns_to_bdev(nvme_ns);
+	assert(nvme_bdev != NULL);
 
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "method", "bdev_ocssd_create");
 
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "ctrlr_name", nvme_ns->ctrlr->name);
-	spdk_json_write_named_string(w, "bdev_name", nvme_ns->bdev->disk.name);
+	spdk_json_write_named_string(w, "bdev_name", nvme_bdev->disk.name);
 	spdk_json_write_named_uint32(w, "nsid", nvme_ns->id);
 	spdk_json_write_object_end(w);
 
@@ -871,7 +874,7 @@ bdev_ocssd_free_namespace(struct nvme_bdev_ns *nvme_ns)
 {
 	struct nvme_bdev *bdev;
 
-	bdev = nvme_ns->bdev;
+	bdev = nvme_bdev_ns_to_bdev(nvme_ns);
 	if (bdev != NULL) {
 		spdk_bdev_unregister(&bdev->disk, NULL, NULL);
 	}
@@ -904,7 +907,7 @@ bdev_ocssd_push_media_events(struct nvme_bdev_ns *nvme_ns,
 		return;
 	}
 
-	nvme_bdev = nvme_ns->bdev;
+	nvme_bdev = nvme_bdev_ns_to_bdev(nvme_ns);
 	if (nvme_bdev == NULL) {
 		SPDK_INFOLOG(bdev_ocssd, "Dropping media management event\n");
 		return;
@@ -933,7 +936,7 @@ bdev_ocssd_notify_media_management(struct nvme_bdev_ns *nvme_ns)
 {
 	struct nvme_bdev *nvme_bdev;
 
-	nvme_bdev = nvme_ns->bdev;
+	nvme_bdev = nvme_bdev_ns_to_bdev(nvme_ns);
 	if (nvme_bdev != NULL) {
 		spdk_bdev_notify_media_management(&nvme_bdev->disk);
 	}
