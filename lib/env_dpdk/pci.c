@@ -979,9 +979,7 @@ spdk_pci_device_unclaim(struct spdk_pci_device *dev)
 	dev->internal.claim_fd = -1;
 	unlink(dev_name);
 }
-#endif /* __linux__ */
-
-#ifdef __FreeBSD__
+#else /* !__linux__ */
 int
 spdk_pci_device_claim(struct spdk_pci_device *dev)
 {
@@ -994,7 +992,7 @@ spdk_pci_device_unclaim(struct spdk_pci_device *dev)
 {
 	/* TODO */
 }
-#endif /* __FreeBSD__ */
+#endif /* __linux__ */
 
 int
 spdk_pci_addr_parse(struct spdk_pci_addr *addr, const char *bdf)
