@@ -51,6 +51,6 @@ LIBDPDK_PKGCONFIG = $(call pkgconfig_filename,spdk_dpdklibs)
 $(LIBDPDK_PKGCONFIG): $(PKGCONFIG)
 	$(Q)$(SPDK_ROOT_DIR)/scripts/pc_libs.sh \
 		"-L$(DPDK_ABS_DIR)/lib $(DPDK_LIB_LIST:%=-l%)" "" DPDK spdk_dpdklibs > $@
-	$(Q)echo Requires: spdk_dpdklibs >> $(PKGCONFIG)
+	$(Q)sed -i.bak '5s,.*,Requires: $(DEPDIRS-$(LIBNAME):%=spdk_%) spdk_dpdklibs,' $(PKGCONFIG) ; rm $(PKGCONFIG).bak
 
 all : $(LIBDPDK_PKGCONFIG)
