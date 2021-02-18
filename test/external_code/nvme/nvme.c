@@ -42,6 +42,10 @@ struct nvme_ctrlr {
 	struct spdk_pci_device			*pci_device;
 	/* Pointer to the MMIO register space */
 	volatile struct spdk_nvme_registers	*regs;
+	/* Stride in uint32_t units between doorbells */
+	uint32_t				doorbell_stride_u32;
+	/* Controller's memory page size */
+	uint32_t				page_size;
 	TAILQ_ENTRY(nvme_ctrlr)			tailq;
 };
 
@@ -109,9 +113,7 @@ set_pcie_reg_8(struct nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value)
 	spdk_mmio_write_8(get_pcie_reg_addr(ctrlr, offset), value);
 }
 
-void nvme_ctrlr_get_cap(struct nvme_ctrlr *ctrlr, union spdk_nvme_cap_register *cap);
-
-void
+static void
 nvme_ctrlr_get_cap(struct nvme_ctrlr *ctrlr, union spdk_nvme_cap_register *cap)
 {
 	get_pcie_reg_8(ctrlr, offsetof(struct spdk_nvme_registers, cap), &cap->raw);
@@ -171,6 +173,7 @@ pcie_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 {
 	struct nvme_ctrlr *ctrlr;
 	TAILQ_HEAD(, nvme_ctrlr) *ctrlrs = ctx;
+	union spdk_nvme_cap_register cap;
 	char addr[32] = {};
 	uint64_t phys_addr, size;
 	uint16_t cmd_reg;
@@ -204,6 +207,10 @@ pcie_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	spdk_pci_device_cfg_read16(pci_dev, &cmd_reg, 4);
 	cmd_reg |= 0x404;
 	spdk_pci_device_cfg_write16(pci_dev, cmd_reg, 4);
+
+	nvme_ctrlr_get_cap(ctrlr, &cap);
+	ctrlr->page_size = 1 << (12 + cap.bits.mpsmin);
+	ctrlr->doorbell_stride_u32 = 1 << cap.bits.dstrd;
 
 	TAILQ_INSERT_TAIL(ctrlrs, ctrlr, tailq);
 
