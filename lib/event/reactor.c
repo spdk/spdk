@@ -648,7 +648,7 @@ _set_thread_name(const char *thread_name)
 #elif defined(__FreeBSD__)
 	pthread_set_name_np(pthread_self(), thread_name);
 #else
-#error missing platform support for thread name
+	pthread_setname_np(pthread_self(), thread_name);
 #endif
 }
 
