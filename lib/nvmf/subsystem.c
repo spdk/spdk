@@ -1298,7 +1298,10 @@ nvmf_ns_resize(void *event_ctx)
 	ns_ctx->nsid = ns->opts.nsid;
 	ns_ctx->cb_fn = _nvmf_ns_resize;
 
-	rc = spdk_nvmf_subsystem_pause(ns->subsystem, ns_ctx->nsid, _nvmf_ns_resize, ns_ctx);
+	/* Specify 0 for the nsid here, because we do not need to pause the namespace.
+	 * Namespaces can only be resized bigger, so there is no need to quiesce I/O.
+	 */
+	rc = spdk_nvmf_subsystem_pause(ns->subsystem, 0, _nvmf_ns_resize, ns_ctx);
 	if (rc) {
 		if (rc == -EBUSY) {
 			/* Try again, this is not a permanent situation. */
