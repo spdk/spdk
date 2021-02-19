@@ -4,10 +4,6 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 
-export SPDK_LIB_DIR="$rootdir/build/lib"
-export DPDK_LIB_DIR="$rootdir/dpdk/build/lib"
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SPDK_LIB_DIR:$DPDK_LIB_DIR
-
 function insert_device() {
 	ssh root@$ip 'Beetle --SetGpio "$gpio" HIGH'
 	waitforblk $name

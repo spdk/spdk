@@ -9,9 +9,6 @@ if [[ ! -f $1 ]]; then
 	exit 1
 fi
 
-# always test with SPDK shared objects.
-export SPDK_LIB_DIR="$rootdir/build/lib"
-
 # Autotest.sh, as part of autorun.sh, runs in a different
 # shell process than autobuild.sh. Use helper file to pass
 # over env variable containing libraries paths.
