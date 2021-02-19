@@ -253,13 +253,13 @@ _nvme_ns_cmd_split_request_prp(struct spdk_nvme_ns *ns,
 			req_current_length += sge_length;
 			if (req_current_length < req->payload_size) {
 				next_sge_fn(sgl_cb_arg, (void **)&address, &sge_length);
+				/*
+				 * If the next SGE is not page aligned, we will need to create a
+				 *  child request for what we have so far, and then start a new
+				 *  child request for the next SGE.
+				 */
+				start_valid = _is_page_aligned(address, page_size);
 			}
-			/*
-			 * If the next SGE is not page aligned, we will need to create a child
-			 *  request for what we have so far, and then start a new child request for
-			 *  the next SGE.
-			 */
-			start_valid = _is_page_aligned(address, page_size);
 		}
 
 		if (start_valid && end_valid && !last_sge) {
