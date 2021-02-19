@@ -82,12 +82,6 @@ struct spdk_sock_group_impl {
 	struct spdk_net_impl			*net_impl;
 	TAILQ_HEAD(, spdk_sock)			socks;
 	STAILQ_ENTRY(spdk_sock_group_impl)	link;
-	/* List of removed sockets. refreshed each time we poll the sock group. */
-	int					num_removed_socks;
-	/* Unfortunately, we can't just keep a tailq of the sockets in case they are freed
-	 * or added to another poll group later.
-	 */
-	uintptr_t				removed_socks[MAX_EVENTS_PER_POLL];
 };
 
 struct spdk_net_impl {

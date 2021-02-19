@@ -919,6 +919,14 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 			break;
 		}
 
+		/* If the socket's cb_fn is NULL, just remove it from
+		 * the list and do not add it to socks array */
+		if (spdk_unlikely(sock->base.cb_fn == NULL)) {
+			sock->pending_recv = false;
+			TAILQ_REMOVE(&group->pending_recv, sock, link);
+			continue;
+		}
+
 		socks[count++] = &sock->base;
 	}
 

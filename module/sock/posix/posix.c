@@ -1292,6 +1292,14 @@ posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 			break;
 		}
 
+		/* If the socket's cb_fn is NULL, just remove it from the
+		 * list and do not add it to socks array */
+		if (spdk_unlikely(psock->base.cb_fn == NULL)) {
+			psock->pending_recv = false;
+			TAILQ_REMOVE(&group->pending_recv, psock, link);
+			continue;
+		}
+
 		socks[num_events++] = &psock->base;
 	}
 
