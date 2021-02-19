@@ -251,6 +251,7 @@ static int g_queue_depth;
 static int g_nr_io_queues_per_ns = 1;
 static int g_nr_unused_io_queues;
 static int g_time_in_sec;
+static uint64_t g_elapsed_time_in_usec;
 static int g_warmup_time_in_sec;
 static uint32_t g_max_completions;
 static int g_dpdk_mem;
@@ -1460,7 +1461,7 @@ print_periodic_performance(bool warmup)
 static int
 work_fn(void *arg)
 {
-	uint64_t tsc_end, tsc_current, tsc_next_print;
+	uint64_t tsc_start, tsc_end, tsc_current, tsc_next_print;
 	struct worker_thread *worker = (struct worker_thread *) arg;
 	struct ns_worker_ctx *ns_ctx = NULL;
 	uint32_t unfinished_ns_ctx;
@@ -1485,7 +1486,8 @@ work_fn(void *arg)
 		return 1;
 	}
 
-	tsc_current = spdk_get_ticks();
+	tsc_start = spdk_get_ticks();
+	tsc_current = tsc_start;
 	tsc_next_print = tsc_current + g_tsc_rate;
 
 	if (g_warmup_time_in_sec) {
@@ -1545,6 +1547,14 @@ work_fn(void *arg)
 				break;
 			}
 		}
+	}
+
+	/* Capture the actual elapsed time when we break out of the main loop. This will account
+	 * for cases where we exit prematurely due to a signal. We only need to capture it on
+	 * one core, so use the main core.
+	 */
+	if (worker->lcore == g_main_core) {
+		g_elapsed_time_in_usec = (tsc_current - tsc_start) * SPDK_SEC_TO_USEC / g_tsc_rate;
 	}
 
 	/* drain the io of each ns_ctx in round robin to make the fairness */
@@ -1713,7 +1723,7 @@ print_performance(void)
 	TAILQ_FOREACH(worker, &g_workers, link) {
 		TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
 			if (ns_ctx->stats.io_completed != 0) {
-				io_per_second = (double)ns_ctx->stats.io_completed / g_time_in_sec;
+				io_per_second = (double)ns_ctx->stats.io_completed * 1000 * 1000 / g_elapsed_time_in_usec;
 				mb_per_second = io_per_second * g_io_size_bytes / (1024 * 1024);
 				average_latency = ((double)ns_ctx->stats.total_tsc / ns_ctx->stats.io_completed) * 1000 * 1000 /
 						  g_tsc_rate;
