@@ -957,7 +957,6 @@ nbd_start_complete(struct spdk_nbd_start_ctx *ctx)
 {
 	int		rc;
 	pthread_t	tid;
-	int		flag;
 	unsigned long	nbd_flags = 0;
 
 	rc = ioctl(ctx->nbd->dev_fd, NBD_SET_BLKSIZE, spdk_bdev_get_block_size(ctx->nbd->bdev));
@@ -1016,14 +1015,6 @@ nbd_start_complete(struct spdk_nbd_start_ctx *ctx)
 		goto err;
 	}
 
-	flag = fcntl(ctx->nbd->spdk_sp_fd, F_GETFL);
-	if (fcntl(ctx->nbd->spdk_sp_fd, F_SETFL, flag | O_NONBLOCK) < 0) {
-		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n",
-			    ctx->nbd->spdk_sp_fd, spdk_strerror(errno));
-		rc = -errno;
-		goto err;
-	}
-
 	if (spdk_interrupt_mode_is_enabled()) {
 		ctx->nbd->intr = SPDK_INTERRUPT_REGISTER(ctx->nbd->spdk_sp_fd, nbd_poll, ctx->nbd);
 	}
@@ -1051,19 +1042,9 @@ nbd_enable_kernel(void *arg)
 {
 	struct spdk_nbd_start_ctx *ctx = arg;
 	int rc;
-	int flag;
 
 	/* Declare device setup by this process */
 	rc = ioctl(ctx->nbd->dev_fd, NBD_SET_SOCK, ctx->nbd->kernel_sp_fd);
-
-	if (!rc) {
-		flag = fcntl(ctx->nbd->kernel_sp_fd, F_GETFL);
-		rc = fcntl(ctx->nbd->kernel_sp_fd, F_SETFL, flag | O_NONBLOCK);
-		if (rc < 0) {
-			SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n",
-				    ctx->nbd->kernel_sp_fd, spdk_strerror(errno));
-		}
-	}
 
 	if (rc) {
 		if (errno == EBUSY) {
@@ -1147,7 +1128,7 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path,
 	nbd->ch = spdk_bdev_get_io_channel(nbd->bdev_desc);
 	nbd->buf_align = spdk_max(spdk_bdev_get_buf_align(bdev), 64);
 
-	rc = socketpair(AF_UNIX, SOCK_STREAM, 0, sp);
+	rc = socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, sp);
 	if (rc != 0) {
 		SPDK_ERRLOG("socketpair failed\n");
 		rc = -errno;
