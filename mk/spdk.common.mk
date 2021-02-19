@@ -171,8 +171,12 @@ SYS_LIBS += -L$(ISAL_DIR)/.libs -lisal
 COMMON_CFLAGS += -I$(ISAL_DIR)/..
 endif
 
-VFIO_USER_DIR=$(SPDK_ROOT_DIR)/libvfio-user
 ifeq ($(CONFIG_VFIO_USER), y)
+ifneq ($(CONFIG_VFIO_USER_DIR),)
+VFIO_USER_DIR=$(CONFIG_VFIO_USER_DIR)
+else
+VFIO_USER_DIR=$(SPDK_ROOT_DIR)/libvfio-user
+endif
 ifeq ($(CONFIG_DEBUG), y)
 VFIO_USER_BUILD_TYPE=dbg
 else

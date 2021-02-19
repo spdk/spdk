@@ -59,7 +59,7 @@ function usage() {
 	echo " virtio                    Build vhost initiator and virtio-pci bdev modules."
 	echo "                           No path required."
 	echo " vfio-user                 Build custom vfio-user transport for NVMf target and NVMe initiator."
-	echo "                           No path required."
+	echo "                           example: /usr/src/libvfio-user"
 	echo " pmdk                      Build persistent memory bdev."
 	echo "                           example: /usr/share/pmdk"
 	echo " reduce                    Build vbdev compression module."
@@ -340,6 +340,12 @@ for i in "$@"; do
 			;;
 		--with-vfio-user)
 			CONFIG[VFIO_USER]=y
+			CONFIG[VFIO_USER_DIR]=""
+			;;
+		--with-vfio-user=*)
+			CONFIG[VFIO_USER]=y
+			check_dir "$i"
+			CONFIG[VFIO_USER_DIR]=$(readlink -f ${i#*=})
 			;;
 		--without-vfio-user)
 			CONFIG[VFIO_USER]=n

@@ -122,6 +122,7 @@ CONFIG_VIRTIO=y
 
 # Build custom vfio-user transport for NVMf target and NVMe initiator.
 CONFIG_VFIO_USER=n
+CONFIG_VFIO_USER_DIR=
 
 # Build with PMDK backends
 CONFIG_PMDK=n
