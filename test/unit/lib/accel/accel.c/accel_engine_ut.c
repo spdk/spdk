@@ -45,6 +45,8 @@ DEFINE_STUB(spdk_json_write_array_end, int, (struct spdk_json_write_ctx *w), 0);
 struct spdk_accel_engine g_accel_engine = {};
 struct spdk_io_channel *g_ch = NULL;
 struct accel_io_channel *g_accel_ch = NULL;
+struct sw_accel_io_channel *g_sw_ch = NULL;
+struct spdk_io_channel *g_engine_ch = NULL;
 
 static int
 test_setup(void)
@@ -56,7 +58,15 @@ test_setup(void)
 		return -1;
 	}
 	g_accel_ch = (struct accel_io_channel *)((char *)g_ch + sizeof(struct spdk_io_channel));
-
+	g_engine_ch = calloc(1, sizeof(struct spdk_io_channel) + sizeof(struct sw_accel_io_channel));
+	if (g_engine_ch == NULL) {
+		CU_ASSERT(false);
+		return -1;
+	}
+	g_accel_ch->engine_ch = g_engine_ch;
+	g_sw_ch = (struct sw_accel_io_channel *)((char *)g_accel_ch->engine_ch + sizeof(
+				struct spdk_io_channel));
+	TAILQ_INIT(&g_sw_ch->tasks_to_complete);
 	return 0;
 }
 
@@ -64,6 +74,7 @@ static int
 test_cleanup(void)
 {
 	free(g_ch);
+	free(g_engine_ch);
 
 	return 0;
 }
@@ -261,6 +272,82 @@ test_get_task(void)
 	CU_ASSERT(_task.batch->count == 1);
 }
 
+static bool g_dummy_submit_called = false;
+static int
+dummy_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *first_task)
+{
+	g_dummy_submit_called = true;
+	return 0;
+}
+
+static bool g_dummy_submit_cb_called = false;
+static void
+dummy_submit_cb_fn(void *cb_arg, int status)
+{
+	g_dummy_submit_cb_called = true;
+	CU_ASSERT(status == 0);
+}
+
+#define TEST_SUBMIT_SIZE 64
+static void
+test_spdk_accel_submit_copy(void)
+{
+	const uint64_t nbytes = TEST_SUBMIT_SIZE;
+	uint8_t dst[TEST_SUBMIT_SIZE];
+	uint8_t src[TEST_SUBMIT_SIZE];
+	void *cb_arg = NULL;
+	int rc;
+	struct spdk_accel_task task;
+	struct spdk_accel_task *expected_accel_task = NULL;
+
+	TAILQ_INIT(&g_accel_ch->task_pool);
+
+	/* Fail with no tasks on _get_task() */
+	rc = spdk_accel_submit_copy(g_ch, src, dst, nbytes, dummy_submit_cb_fn, cb_arg);
+	CU_ASSERT(rc == -ENOMEM);
+
+	task.cb_fn = dummy_submit_cb_fn;
+	task.cb_arg = cb_arg;
+	task.accel_ch = g_accel_ch;
+	task.batch = NULL;
+	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
+
+	g_accel_ch->engine = &g_accel_engine;
+	g_accel_ch->engine->capabilities = ACCEL_COPY;
+	g_accel_ch->engine->submit_tasks = dummy_submit_tasks;
+
+	/* HW accel submission OK. */
+	rc = spdk_accel_submit_copy(g_ch, dst, src, nbytes, dummy_submit_cb_fn, cb_arg);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(task.dst == dst);
+	CU_ASSERT(task.src == src);
+	CU_ASSERT(task.op_code == ACCEL_OPCODE_MEMMOVE);
+	CU_ASSERT(task.nbytes == nbytes);
+	CU_ASSERT(g_dummy_submit_called == true);
+
+	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
+	/* reset values before next case */
+	g_dummy_submit_called = false;
+	g_accel_ch->engine->capabilities = 0;
+	task.dst = 0;
+	task.src = 0;
+	task.op_code = 0xff;
+	task.nbytes = 0;
+
+	/* SW engine does copy. */
+	rc = spdk_accel_submit_copy(g_ch, dst, src, nbytes, dummy_submit_cb_fn, cb_arg);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(task.dst == dst);
+	CU_ASSERT(task.src == src);
+	CU_ASSERT(task.op_code == ACCEL_OPCODE_MEMMOVE);
+	CU_ASSERT(task.nbytes == nbytes);
+	CU_ASSERT(g_dummy_submit_cb_called == false);
+	CU_ASSERT(memcmp(dst, src, TEST_SUBMIT_SIZE) == 0);
+	expected_accel_task = TAILQ_FIRST(&g_sw_ch->tasks_to_complete);
+	TAILQ_REMOVE(&g_sw_ch->tasks_to_complete, expected_accel_task, link);
+	CU_ASSERT(expected_accel_task == &task);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -279,6 +366,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_spdk_accel_get_capabilities);
 	CU_ADD_TEST(suite, test_is_batch_valid);
 	CU_ADD_TEST(suite, test_get_task);
+	CU_ADD_TEST(suite, test_spdk_accel_submit_copy);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
