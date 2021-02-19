@@ -167,11 +167,15 @@ endif
 
 ifeq ($(CONFIG_SHARED),y)
 ENV_DPDK_FILE = $(call spdk_lib_list_to_shared_libs,env_dpdk)
+else
+ENV_DPDK_FILE = $(call spdk_lib_list_to_static_libs,env_dpdk)
+endif
+
+ifneq (,$(DPDK_SHARED_LIB))
 ENV_LIBS = $(ENV_DPDK_FILE) $(DPDK_SHARED_LIB)
 DPDK_LINKER_ARGS = -Wl,-rpath-link $(DPDK_LIB_DIR) $(DPDK_SHARED_LIB_LINKER_ARGS)
 ENV_LINKER_ARGS = $(ENV_DPDK_FILE) $(DPDK_LINKER_ARGS)
 else
-ENV_DPDK_FILE = $(call spdk_lib_list_to_static_libs,env_dpdk)
 ENV_LIBS = $(ENV_DPDK_FILE) $(DPDK_STATIC_LIB)
 DPDK_LINKER_ARGS = -Wl,-rpath-link $(DPDK_LIB_DIR) $(DPDK_STATIC_LIB_LINKER_ARGS)
 ENV_LINKER_ARGS = $(ENV_DPDK_FILE) $(DPDK_LINKER_ARGS)
