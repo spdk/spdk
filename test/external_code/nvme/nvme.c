@@ -178,50 +178,37 @@ nvme_ctrlr_get_cap(struct nvme_ctrlr *ctrlr, union spdk_nvme_cap_register *cap)
 	get_pcie_reg_8(ctrlr, offsetof(struct spdk_nvme_registers, cap), &cap->raw);
 }
 
-void
-nvme_ctrlr_get_cc(struct nvme_ctrlr *ctrlr, union spdk_nvme_cc_register *cc);
-
-void
+static void
 nvme_ctrlr_get_cc(struct nvme_ctrlr *ctrlr, union spdk_nvme_cc_register *cc)
 {
 	get_pcie_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, cc), &cc->raw);
 }
 
-void nvme_ctrlr_get_csts(struct nvme_ctrlr *ctrlr, union spdk_nvme_csts_register *csts);
-
-void
+static void
 nvme_ctrlr_get_csts(struct nvme_ctrlr *ctrlr, union spdk_nvme_csts_register *csts)
 {
 	get_pcie_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, csts), &csts->raw);
 }
 
-void nvme_ctrlr_set_cc(struct nvme_ctrlr *ctrlr, const union spdk_nvme_cc_register *cc);
-
-void
+static void
 nvme_ctrlr_set_cc(struct nvme_ctrlr *ctrlr, const union spdk_nvme_cc_register *cc)
 {
 	set_pcie_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, cc.raw), cc->raw);
 }
 
-void nvme_ctrlr_set_asq(struct nvme_ctrlr *ctrlr, uint64_t value);
-
-void
+static void
 nvme_ctrlr_set_asq(struct nvme_ctrlr *ctrlr, uint64_t value)
 {
 	set_pcie_reg_8(ctrlr, offsetof(struct spdk_nvme_registers, asq), value);
 }
 
-void nvme_ctrlr_set_acq(struct nvme_ctrlr *ctrlr, uint64_t value);
-
-void
+static void
 nvme_ctrlr_set_acq(struct nvme_ctrlr *ctrlr, uint64_t value)
 {
 	set_pcie_reg_8(ctrlr, offsetof(struct spdk_nvme_registers, acq), value);
 }
 
-void nvme_ctrlr_set_aqa(struct nvme_ctrlr *ctrlr, const union spdk_nvme_aqa_register *aqa);
-
-void
+static void
 nvme_ctrlr_set_aqa(struct nvme_ctrlr *ctrlr, const union spdk_nvme_aqa_register *aqa)
 {
 	set_pcie_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, aqa.raw), aqa->raw);
@@ -362,8 +349,64 @@ pcie_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 static int
 process_ctrlr_init(struct nvme_ctrlr *ctrlr)
 {
-	/* Immediately mark the controller as ready for now */
-	ctrlr->state = NVME_CTRLR_STATE_READY;
+	union spdk_nvme_cc_register cc;
+	union spdk_nvme_csts_register csts;
+	union spdk_nvme_aqa_register aqa;
+
+	if (ctrlr->state == NVME_CTRLR_STATE_READY) {
+		return 0;
+	}
+
+	nvme_ctrlr_get_cc(ctrlr, &cc);
+	nvme_ctrlr_get_csts(ctrlr, &csts);
+
+	switch (ctrlr->state) {
+	case NVME_CTRLR_STATE_INIT:
+		if (cc.bits.en) {
+			if (csts.bits.rdy == 0) {
+				ctrlr->state = NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1;
+				break;
+			}
+
+			cc.bits.en = 0;
+			nvme_ctrlr_set_cc(ctrlr, &cc);
+		}
+		ctrlr->state = NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0;
+		break;
+	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1:
+		if (csts.bits.rdy) {
+			cc.bits.en = 0;
+			nvme_ctrlr_set_cc(ctrlr, &cc);
+			ctrlr->state = NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0;
+		}
+		break;
+	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0:
+		if (csts.bits.rdy == 0) {
+			ctrlr->state = NVME_CTRLR_STATE_ENABLE;
+		}
+		break;
+	case NVME_CTRLR_STATE_ENABLE:
+		nvme_ctrlr_set_asq(ctrlr, ctrlr->admin_qpair->sq_paddr);
+		nvme_ctrlr_set_acq(ctrlr, ctrlr->admin_qpair->cq_paddr);
+
+		aqa.raw = 0;
+		aqa.bits.asqs = ctrlr->admin_qpair->num_entries - 1;
+		aqa.bits.acqs = ctrlr->admin_qpair->num_entries - 1;
+		nvme_ctrlr_set_aqa(ctrlr, &aqa);
+
+		cc.bits.en = 1;
+		nvme_ctrlr_set_cc(ctrlr, &cc);
+		ctrlr->state = NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1;
+		break;
+	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1:
+		if (csts.bits.rdy) {
+			ctrlr->state = NVME_CTRLR_STATE_READY;
+		}
+		break;
+	default:
+		assert(0 && "should never get here");
+		return -1;
+	}
 
 	return 0;
 }
