@@ -41,7 +41,7 @@ spdk_jsonrpc_server_listen(int domain, int protocol,
 			   spdk_jsonrpc_handle_request_fn handle_request)
 {
 	struct spdk_jsonrpc_server *server;
-	int rc, val, flag, i;
+	int rc, val, i;
 
 	server = calloc(1, sizeof(struct spdk_jsonrpc_server));
 	if (server == NULL) {
@@ -57,7 +57,7 @@ spdk_jsonrpc_server_listen(int domain, int protocol,
 
 	server->handle_request = handle_request;
 
-	server->sockfd = socket(domain, SOCK_STREAM, protocol);
+	server->sockfd = socket(domain, SOCK_STREAM | SOCK_NONBLOCK, protocol);
 	if (server->sockfd < 0) {
 		SPDK_ERRLOG("socket() failed\n");
 		free(server);
@@ -66,15 +66,6 @@ spdk_jsonrpc_server_listen(int domain, int protocol,
 
 	val = 1;
 	setsockopt(server->sockfd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
-
-	flag = fcntl(server->sockfd, F_GETFL);
-	if (fcntl(server->sockfd, F_SETFL, flag | O_NONBLOCK) < 0) {
-		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n",
-			    server->sockfd, spdk_strerror(errno));
-		close(server->sockfd);
-		free(server);
-		return NULL;
-	}
 
 	rc = bind(server->sockfd, listen_addr, addrlen);
 	if (rc != 0) {

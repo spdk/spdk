@@ -227,21 +227,13 @@ static int
 jsonrpc_client_connect(struct spdk_jsonrpc_client *client, int domain, int protocol,
 		       struct sockaddr *server_addr, socklen_t addrlen)
 {
-	int rc, flags;
+	int rc;
 
-	client->sockfd = socket(domain, SOCK_STREAM, protocol);
+	client->sockfd = socket(domain, SOCK_STREAM | SOCK_NONBLOCK, protocol);
 	if (client->sockfd < 0) {
 		rc = errno;
 		SPDK_ERRLOG("socket() failed\n");
 		return -rc;
-	}
-
-	flags = fcntl(client->sockfd, F_GETFL);
-	if (flags < 0 || fcntl(client->sockfd, F_SETFL, flags | O_NONBLOCK) < 0) {
-		rc = errno;
-		SPDK_ERRLOG("fcntl(): can't set nonblocking mode for socket (%d): %s\n",
-			    errno, spdk_strerror(errno));
-		goto err;
 	}
 
 	rc = connect(client->sockfd, server_addr, addrlen);
