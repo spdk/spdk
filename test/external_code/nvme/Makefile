@@ -33,7 +33,8 @@
 
 PKG_CONFIG_PATH = $(SPDK_LIB_DIR)/pkgconfig
 
-DEPLIBS := $(shell PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" pkg-config --libs spdk_env_dpdk)
+DEPLIBS := $(shell PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" pkg-config --libs spdk_env_dpdk spdk_util)
+SYS_LIB := $(shell PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" pkg-config --libs --static spdk_syslibs)
 
 shared:
 	$(CC) $(COMMON_CFLAGS) -c -fPIC nvme.c -o nvme.o
@@ -43,4 +44,4 @@ shared:
 
 static:
 	$(CC) $(COMMON_CFLAGS) nvme.c identify.c -o identify -Wl,--whole-archive \
-		$(DEPLIBS) -Wl,--no-whole-archive
+		$(DEPLIBS) -Wl,--no-whole-archive $(SYS_LIB)
