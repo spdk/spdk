@@ -2232,6 +2232,47 @@ Example response:
 }
 ~~~
 
+## bdev_ocf_set_cache_mode {#rpc_bdev_ocf_set_cache_mode}
+
+Set new cache mode on OCF bdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+mode                    | Required | string      | OCF cache mode: wb, wt, pt, wa, wi, wo
+
+### Response
+
+New cache mode name.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "name": "ocf0",
+    "mode": "pt",
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_ocf_set_cache_mode",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "pt"
+}
+~~~
+
 ## bdev_malloc_create {#rpc_bdev_malloc_create}
 
 Construct @ref bdev_config_malloc

@@ -325,6 +325,16 @@ if __name__ == "__main__":
     p.add_argument('name', nargs='?', default=None, help='name of OCF vbdev or name of cache device or name of core device (optional)')
     p.set_defaults(func=bdev_ocf_get_bdevs)
 
+    def bdev_ocf_set_cache_mode(args):
+        print_json(rpc.bdev.bdev_ocf_set_cache_mode(args.client,
+                                                    name=args.name,
+                                                    mode=args.mode))
+    p = subparsers.add_parser('bdev_ocf_set_cache_mode',
+                              help='Set cache mode of OCF block device')
+    p.add_argument('name', help='Name of OCF bdev')
+    p.add_argument('mode', help='OCF cache mode', choices=['wb', 'wt', 'pt', 'wa', 'wi', 'wo'])
+    p.set_defaults(func=bdev_ocf_set_cache_mode)
+
     def bdev_malloc_create(args):
         num_blocks = (args.total_size * 1024 * 1024) // args.block_size
         print_json(rpc.bdev.bdev_malloc_create(args.client,

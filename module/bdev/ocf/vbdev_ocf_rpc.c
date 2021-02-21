@@ -33,6 +33,7 @@
 
 #include "vbdev_ocf.h"
 #include "stats.h"
+#include "utils.h"
 #include "spdk/log.h"
 #include "spdk/rpc.h"
 #include "spdk/string.h"
@@ -359,3 +360,71 @@ end:
 }
 SPDK_RPC_REGISTER("bdev_ocf_get_bdevs", rpc_bdev_ocf_get_bdevs, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_ocf_get_bdevs, get_ocf_bdevs)
+
+/* Structure to hold the parameters for this RPC method. */
+struct rpc_bdev_ocf_set_cache_mode {
+	char *name;			/* main vbdev name */
+	char *mode;			/* OCF cache mode to switch to */
+};
+
+static void
+free_rpc_bdev_ocf_set_cache_mode(struct rpc_bdev_ocf_set_cache_mode *r)
+{
+	free(r->name);
+	free(r->mode);
+}
+
+/* Structure to decode the input parameters for this RPC method. */
+static const struct spdk_json_object_decoder rpc_bdev_ocf_set_cache_mode_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_ocf_set_cache_mode, name), spdk_json_decode_string},
+	{"mode", offsetof(struct rpc_bdev_ocf_set_cache_mode, mode), spdk_json_decode_string},
+};
+
+static void
+cache_mode_cb(int status, struct vbdev_ocf *vbdev, void *cb_arg)
+{
+	struct spdk_jsonrpc_request *request = cb_arg;
+	struct spdk_json_write_ctx *w;
+
+	if (status) {
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "Could not change OCF vbdev cache mode: %d",
+						     status);
+	} else {
+		w = spdk_jsonrpc_begin_result(request);
+		spdk_json_write_string(w, ocf_get_cache_modename(
+					       ocf_cache_get_mode(vbdev->ocf_cache)));
+		spdk_jsonrpc_end_result(request, w);
+	}
+}
+
+static void
+rpc_bdev_ocf_set_cache_mode(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
+{
+	struct rpc_bdev_ocf_set_cache_mode req = {NULL};
+	struct vbdev_ocf *vbdev;
+	int status;
+
+	status = spdk_json_decode_object(params, rpc_bdev_ocf_set_cache_mode_decoders,
+					 SPDK_COUNTOF(rpc_bdev_ocf_set_cache_mode_decoders),
+					 &req);
+	if (status) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		goto end;
+	}
+
+	vbdev = vbdev_ocf_get_by_name(req.name);
+	if (vbdev == NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 spdk_strerror(ENODEV));
+		goto end;
+	}
+
+	vbdev_ocf_set_cache_mode(vbdev, req.mode, cache_mode_cb, request);
+
+end:
+	free_rpc_bdev_ocf_set_cache_mode(&req);
+}
+SPDK_RPC_REGISTER("bdev_ocf_set_cache_mode", rpc_bdev_ocf_set_cache_mode, SPDK_RPC_RUNTIME)

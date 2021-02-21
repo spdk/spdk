@@ -203,6 +203,13 @@ int vbdev_ocf_delete(struct vbdev_ocf *vbdev, void (*cb)(void *, int), void *cb_
 
 int vbdev_ocf_delete_clean(struct vbdev_ocf *vbdev, void (*cb)(void *, int), void *cb_arg);
 
+/* Set new cache mode on OCF cache */
+void vbdev_ocf_set_cache_mode(
+	struct vbdev_ocf *vbdev,
+	const char *cache_mode_name,
+	void (*cb)(int, struct vbdev_ocf *, void *),
+	void *cb_arg);
+
 typedef void (*vbdev_ocf_foreach_fn)(struct vbdev_ocf *, void *);
 
 /* Execute fn for each OCF device that is online or waits for base devices */

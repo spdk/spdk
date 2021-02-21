@@ -1479,6 +1479,31 @@ vbdev_ocf_construct(const char *vbdev_name,
 	}
 }
 
+/* Set new cache mode on OCF cache */
+void
+vbdev_ocf_set_cache_mode(struct vbdev_ocf *vbdev,
+			 const char *cache_mode_name,
+			 void (*cb)(int, struct vbdev_ocf *, void *),
+			 void *cb_arg)
+{
+	ocf_cache_t cache;
+	ocf_cache_mode_t cache_mode;
+	int rc;
+
+	cache = vbdev->ocf_cache;
+	cache_mode = ocf_get_cache_mode(cache_mode_name);
+
+	rc = ocf_mngt_cache_trylock(cache);
+	if (rc) {
+		cb(rc, vbdev, cb_arg);
+		return;
+	}
+
+	rc = ocf_mngt_cache_set_mode(cache, cache_mode);
+	ocf_mngt_cache_unlock(cache);
+	cb(rc, vbdev, cb_arg);
+}
+
 /* This called if new device is created in SPDK application
  * If that device named as one of base bdevs of OCF vbdev,
  * claim and open them */

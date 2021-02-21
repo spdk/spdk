@@ -204,6 +204,24 @@ def bdev_ocf_get_bdevs(client, name=None):
     return client.call('bdev_ocf_get_bdevs', params)
 
 
+def bdev_ocf_set_cache_mode(client, name, mode):
+    """Set cache mode of OCF block device
+
+    Args:
+        name: name of OCF bdev
+        mode: OCF cache mode: {'wb', 'wt', 'pt', 'wa', 'wi', 'wo'}
+
+    Returns:
+        New cache mode name
+    """
+    params = {
+        'name': name,
+        'mode': mode,
+    }
+
+    return client.call('bdev_ocf_set_cache_mode', params)
+
+
 @deprecated_alias('construct_malloc_bdev')
 def bdev_malloc_create(client, num_blocks, block_size, name=None, uuid=None):
     """Construct a malloc block device.
