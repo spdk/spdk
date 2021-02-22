@@ -52,6 +52,10 @@ iscsi_task_free(struct spdk_scsi_task *scsi_task)
 		task->parent = NULL;
 	}
 
+	if (iscsi_task_get_mobj(task)) {
+		iscsi_datapool_put(iscsi_task_get_mobj(task));
+	}
+
 	iscsi_task_disassociate_pdu(task);
 	assert(task->conn->pending_task_cnt > 0);
 	task->conn->pending_task_cnt--;

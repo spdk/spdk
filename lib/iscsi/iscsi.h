@@ -163,7 +163,16 @@ typedef void (*iscsi_conn_xfer_complete_cb)(void *cb_arg);
 
 struct spdk_iscsi_pdu {
 	struct iscsi_bhs bhs;
-	struct spdk_mobj *mobj;
+
+	/* Merge multiple Data-OUT PDUs in a sequence into a subtask up to
+	 * SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH or the final PDU comes.
+	 *
+	 * Both the size of a data buffer and MaxRecvDataSegmentLength are
+	 * SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH at most. Hence the data segment of
+	 * a Data-OUT PDU can be split into two data buffers at most.
+	 */
+	struct spdk_mobj *mobj[2];
+
 	bool is_rejected;
 	uint8_t *data;
 	uint8_t header_digest[ISCSI_DIGEST_LEN];
@@ -180,6 +189,7 @@ struct spdk_iscsi_pdu {
 	uint32_t cmd_sn;
 	uint32_t writev_offset;
 	uint32_t data_buf_len;
+	uint32_t data_offset;
 	uint32_t crc32c;
 	bool dif_insert_or_strip;
 	struct spdk_dif_ctx dif_ctx;

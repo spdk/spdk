@@ -315,7 +315,8 @@ _iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu)
 	uint32_t num_blocks;
 
 	if (spdk_likely(!pdu->dif_insert_or_strip)) {
-		pdu->crc32c = spdk_crc32c_update(pdu->data, pdu->data_valid_bytes,
+		pdu->crc32c = spdk_crc32c_update(pdu->data,
+						 pdu->data_valid_bytes - pdu->data_offset,
 						 pdu->crc32c);
 	} else {
 		iov.iov_base = pdu->data;
@@ -4156,6 +4157,7 @@ iscsi_pdu_hdr_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	struct spdk_iscsi_task	*task;
 	struct iscsi_bhs_data_out *reqh;
 	struct spdk_scsi_lun	*lun_dev;
+	struct spdk_mobj	*mobj;
 	uint32_t transfer_tag;
 	uint32_t task_tag;
 	uint32_t transfer_len;
@@ -4258,13 +4260,24 @@ iscsi_pdu_hdr_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		pdu->dif_insert_or_strip = true;
 	}
 
-	if (!F_bit && !pdu->dif_insert_or_strip) {
-		/* More Data-OUT PDUs will follow in this sequence. Increase the buffer size
-		 * up to SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH to merge them into a single
-		 * subtask.
-		 */
-		pdu->data_buf_len = spdk_min(task->desired_data_transfer_length,
-					     SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
+	mobj = iscsi_task_get_mobj(task);
+	if (mobj == NULL) {
+		if (!F_bit && !pdu->dif_insert_or_strip) {
+			/* More Data-OUT PDUs will follow in this sequence. Increase the buffer
+			 * size up to SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH to merge them
+			 * into a single subtask.
+			 */
+			pdu->data_buf_len = spdk_min(task->desired_data_transfer_length,
+						     SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
+		}
+	} else {
+		/* Set up the data buffer from the one saved by the primary task. */
+		pdu->mobj[0] = mobj;
+		pdu->data = (void *)((uint64_t)mobj->buf + mobj->data_len);
+		pdu->data_from_mempool = true;
+		pdu->data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
+
+		iscsi_task_set_mobj(task, NULL);
 	}
 
 	return 0;
@@ -4304,8 +4317,11 @@ iscsi_pdu_payload_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 	struct iscsi_bhs_data_out *reqh;
 	struct spdk_mobj *mobj;
 	uint32_t transfer_tag;
+	int F_bit;
+	int rc;
 
 	reqh = (struct iscsi_bhs_data_out *)&pdu->bhs;
+	F_bit = !!(reqh->flags & ISCSI_FLAG_FINAL);
 	transfer_tag = from_be32(&reqh->ttt);
 
 	task = get_transfer_task(conn, transfer_tag);
@@ -4320,10 +4336,42 @@ iscsi_pdu_payload_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 		return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
 	}
 
-	mobj = pdu->mobj;
+	/* If current PDU is final in a sequence, submit all received data,
+	 * otherwise, continue aggregation until the first data buffer is full.
+	 * We do not use SGL and instead create a subtask per data buffer. Hence further
+	 * aggregation does not improve any performance.
+	 */
+	mobj = pdu->mobj[0];
 	assert(mobj != NULL);
 
-	return iscsi_submit_write_subtask(conn, task, pdu, mobj);
+	if (F_bit || mobj->data_len >= SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH ||
+	    pdu->dif_insert_or_strip) {
+		rc = iscsi_submit_write_subtask(conn, task, pdu, mobj);
+		if (rc != 0) {
+			return rc;
+		}
+	} else {
+		assert(pdu->mobj[1] == NULL);
+		iscsi_task_set_mobj(task, mobj);
+		pdu->mobj[0] = NULL;
+		return 0;
+	}
+
+	mobj = pdu->mobj[1];
+	if (mobj == NULL) {
+		return 0;
+	}
+
+	assert(pdu->dif_insert_or_strip == false);
+	assert(mobj->data_len < SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
+
+	if (F_bit) {
+		return iscsi_submit_write_subtask(conn, task, pdu, mobj);
+	} else {
+		iscsi_task_set_mobj(task, mobj);
+		pdu->mobj[1] = NULL;
+		return 0;
+	}
 }
 
 static void
@@ -4571,13 +4619,16 @@ static int
 iscsi_pdu_payload_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	struct spdk_mempool *pool;
+	struct spdk_mobj *mobj;
 	uint32_t data_len;
+	uint32_t read_len;
 	uint32_t crc32c;
 	int rc;
 
 	data_len = pdu->data_segment_len;
 
-	if (pdu->data == NULL) {
+	mobj = pdu->mobj[0];
+	if (mobj == NULL) {
 		if (pdu->data_buf_len <= iscsi_get_max_immediate_data_size()) {
 			pool = g_iscsi.pdu_immediate_data_pool;
 			pdu->data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(iscsi_get_max_immediate_data_size());
@@ -4589,25 +4640,47 @@ iscsi_pdu_payload_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 				    data_len, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
 			return -1;
 		}
-		pdu->mobj = iscsi_datapool_get(pool);
-		if (pdu->mobj == NULL) {
+		mobj = iscsi_datapool_get(pool);
+		if (mobj == NULL) {
 			return 1;
 		}
-		pdu->data = pdu->mobj->buf;
+		pdu->mobj[0] = mobj;
+		pdu->data = mobj->buf;
 		pdu->data_from_mempool = true;
+	} else if (mobj->data_len == SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
+		/* The first data buffer ran out. Allocate the second data buffer and
+		 * continue reading the data segment.
+		 */
+		assert(pdu->mobj[1] == NULL);
+		assert(pdu->data_from_mempool == true);
+		assert(!pdu->dif_insert_or_strip);
+
+		if (conn->data_digest) {
+			_iscsi_pdu_calc_data_digest(pdu);
+		}
+		mobj = iscsi_datapool_get(g_iscsi.pdu_data_out_pool);
+		if (mobj == NULL) {
+			return 1;
+		}
+		pdu->mobj[1] = mobj;
+		pdu->data = mobj->buf;
+		pdu->data_offset = pdu->data_valid_bytes;
+		pdu->data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
 	}
 
 	/* copy the actual data into local buffer */
-	if ((pdu->data_valid_bytes < data_len)) {
+	read_len = spdk_min(data_len - pdu->data_valid_bytes,
+			    SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH - mobj->data_len);
+	if (read_len > 0) {
 		rc = iscsi_conn_read_data_segment(conn,
 						  pdu,
-						  pdu->data_valid_bytes,
-						  data_len - pdu->data_valid_bytes);
+						  pdu->data_valid_bytes - pdu->data_offset,
+						  read_len);
 		if (rc < 0) {
 			return rc;
 		}
 
-		pdu->mobj->data_len += rc;
+		mobj->data_len += rc;
 		pdu->data_valid_bytes += rc;
 		if (pdu->data_valid_bytes < data_len) {
 			return 1;
@@ -4636,7 +4709,8 @@ iscsi_pdu_payload_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	/* check data digest */
 	if (conn->data_digest) {
-		crc32c = iscsi_pdu_calc_data_digest(pdu);
+		_iscsi_pdu_calc_data_digest(pdu);
+		crc32c = _iscsi_pdu_finalize_data_digest(pdu);
 		rc = MATCH_DIGEST_WORD(pdu->data_digest, crc32c);
 		if (rc == 0) {
 			SPDK_ERRLOG("data digest error (%s)\n", conn->initiator_name);

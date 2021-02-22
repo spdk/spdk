@@ -46,6 +46,7 @@ struct spdk_iscsi_task {
 
 	struct spdk_iscsi_conn *conn;
 	struct spdk_iscsi_pdu *pdu;
+	struct spdk_mobj *mobj;
 	uint32_t outstanding_r2t;
 
 	uint32_t desired_data_transfer_length;
@@ -179,6 +180,18 @@ iscsi_task_get_primary(struct spdk_iscsi_task *task)
 	} else {
 		return task;
 	}
+}
+
+static inline void
+iscsi_task_set_mobj(struct spdk_iscsi_task *task, struct spdk_mobj *mobj)
+{
+	task->mobj = mobj;
+}
+
+static inline struct spdk_mobj *
+iscsi_task_get_mobj(struct spdk_iscsi_task *task)
+{
+	return task->mobj;
 }
 
 #endif /* SPDK_ISCSI_TASK_H */

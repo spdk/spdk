@@ -230,9 +230,11 @@ void iscsi_put_pdu(struct spdk_iscsi_pdu *pdu)
 	pdu->ref--;
 
 	if (pdu->ref == 0) {
-
-		if (pdu->mobj) {
-			iscsi_datapool_put(pdu->mobj);
+		if (pdu->mobj[0]) {
+			iscsi_datapool_put(pdu->mobj[0]);
+		}
+		if (pdu->mobj[1]) {
+			iscsi_datapool_put(pdu->mobj[1]);
 		}
 
 		if (pdu->data && !pdu->data_from_mempool) {
