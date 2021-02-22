@@ -2764,6 +2764,7 @@ add_transfer_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 	conn->pending_r2t++;
 
 	task->next_expected_r2t_offset = data_len;
+	task->current_data_offset = data_len;
 	task->current_r2t_length = 0;
 	task->R2TSN = 0;
 	/* According to RFC3720 10.8.5, 0xffffffff is
@@ -2853,6 +2854,7 @@ void iscsi_clear_all_transfer_task(struct spdk_iscsi_conn *conn,
 			task->outstanding_r2t = 0;
 			task->next_r2t_offset = 0;
 			task->next_expected_r2t_offset = 0;
+			task->current_data_offset = 0;
 			assert(conn->data_out_cnt >= task->data_out_cnt);
 			conn->data_out_cnt -= task->data_out_cnt;
 			assert(conn->pending_r2t > 0);
@@ -4275,11 +4277,9 @@ iscsi_pdu_payload_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 	struct iscsi_bhs_data_out *reqh;
 	struct spdk_mobj *mobj;
 	uint32_t transfer_tag;
-	uint32_t buffer_offset;
 
 	reqh = (struct iscsi_bhs_data_out *)&pdu->bhs;
 	transfer_tag = from_be32(&reqh->ttt);
-	buffer_offset = from_be32(&reqh->buffer_offset);
 
 	task = get_transfer_task(conn, transfer_tag);
 	if (spdk_unlikely(task == NULL)) {
@@ -4301,9 +4301,11 @@ iscsi_pdu_payload_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 		SPDK_ERRLOG("Unable to acquire subtask\n");
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
-	subtask->scsi.offset = buffer_offset;
+	subtask->scsi.offset = task->current_data_offset;
 	subtask->scsi.length = mobj->data_len;
 	iscsi_task_associate_pdu(subtask, pdu);
+
+	task->current_data_offset += mobj->data_len;
 
 	if (spdk_likely(!pdu->dif_insert_or_strip)) {
 		spdk_scsi_task_set_data(&subtask->scsi, mobj->buf, mobj->data_len);
