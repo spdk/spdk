@@ -113,6 +113,45 @@ class Server:
                 self.log_print("ERROR: failed to load module %s" % module)
                 self.log_print("%s resulted in error: %s" % (e.cmd, e.output))
 
+    def adq_configure_tc(self):
+        self.log_print("Configuring ADQ Traffic classess and filters...")
+        num_queues_tc0 = 2  # 2 is minimum number of queues for TC0
+        num_queues_tc1 = self.num_cores
+        port_param = "dst_port" if isinstance(self, Target) else "src_port"
+        ports = set([p[0] for p in self.subsystem_info_list])
+        xps_script_path = os.path.join(self.spdk_dir, "scripts", "perf", "nvmf", "set_xps_rxqs")
+
+        for nic_ip in self.nic_ips:
+            nic_name = self.get_nic_name_by_ip(nic_ip)
+            tc_qdisc_map_cmd = ["sudo", "tc", "qdisc", "add", "dev", nic_name,
+                                "root", "mqprio", "num_tc", "2", "map", "0", "1",
+                                "queues", "%s@0" % num_queues_tc0,
+                                "%s@%s" % (num_queues_tc1, num_queues_tc0),
+                                "hw", "1", "mode", "channel"]
+            self.log_print(" ".join(tc_qdisc_map_cmd))
+            self.exec_cmd(tc_qdisc_map_cmd)
+
+            tc_qdisc_ingress_cmd = ["sudo", "tc", "qdisc", "add", "dev", nic_name, "ingress"]
+            self.log_print(" ".join(tc_qdisc_ingress_cmd))
+            self.exec_cmd(tc_qdisc_ingress_cmd)
+
+            for port in ports:
+                tc_filter_cmd = ["sudo", "tc", "filter", "add", "dev", nic_name,
+                                 "protocol", "ip", "ingress", "prio", "1", "flower",
+                                 "dst_ip", "%s/32" % nic_ip, "ip_proto", "tcp", port_param, port,
+                                 "skip_sw", "hw_tc", "1"]
+                self.log_print(" ".join(tc_filter_cmd))
+                self.exec_cmd(tc_filter_cmd)
+
+            # Ethtool coalese settings must be applied after configuring traffic classes
+            self.exec_cmd(["sudo", "ethtool", "--coalesce", nic_name, "adaptive-rx", "off", "rx-usecs", "0"])
+            self.exec_cmd(["sudo", "ethtool", "--coalesce", nic_name, "adaptive-tx", "off", "tx-usecs", "500"])
+
+            self.log_print("Running set_xps_rxqs script for %s NIC..." % nic_name)
+            xps_cmd = ["sudo", xps_script_path, nic_name]
+            self.log_print(xps_cmd)
+            self.exec_cmd(xps_cmd)
+
     def adq_configure_nic(self):
         self.log_print("Configuring NIC port settings for ADQ testing...")
 
@@ -922,6 +961,10 @@ class KernelTarget(Target):
 
         nvmet_command(self.nvmet_bin, "clear")
         nvmet_command(self.nvmet_bin, "restore kernel.conf")
+
+        if self.enable_adq:
+            self.adq_configure_tc()
+
         self.log_print("Done configuring kernel NVMeOF Target")
 
 
@@ -978,6 +1021,9 @@ class SPDKTarget(Target):
         else:
             self.spdk_tgt_add_nvme_conf()
             self.spdk_tgt_add_subsystem_conf(self.nic_ips)
+
+        if self.enable_adq:
+            self.adq_configure_tc()
         self.log_print("Done configuring SPDK NVMeOF Target")
 
     def spdk_tgt_add_nullblock(self, null_block_count):
@@ -1301,6 +1347,8 @@ if __name__ == "__main__":
 
     for i in initiators:
         i.discover_subsystems(i.remote_nic_ips, target_obj.subsys_no)
+        if i.enable_adq:
+            i.adq_configure_tc()
 
     # Poor mans threading
     # Run FIO tests
