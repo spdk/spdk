@@ -1339,12 +1339,12 @@ vfio_user_log(vfu_ctx_t *vfu_ctx, int level, char const *msg)
 {
 	struct nvmf_vfio_user_endpoint *endpoint = vfu_get_private(vfu_ctx);
 
-	if (level >= SPDK_LOG_DEBUG) {
-		SPDK_DEBUGLOG(nvmf_vfio, "%s: %s", endpoint_id(endpoint), msg);
-	} else if (level >= SPDK_LOG_NOTICE) {
-		SPDK_NOTICELOG("%s: %s", endpoint_id(endpoint), msg);
+	if (level >= LOG_DEBUG) {
+		SPDK_DEBUGLOG(nvmf_vfio, "%s: %s\n", endpoint_id(endpoint), msg);
+	} else if (level >= LOG_NOTICE) {
+		SPDK_NOTICELOG("%s: %s\n", endpoint_id(endpoint), msg);
 	} else {
-		SPDK_ERRLOG("%s: %s", endpoint_id(endpoint), msg);
+		SPDK_ERRLOG("%s: %s\n", endpoint_id(endpoint), msg);
 	}
 }
 
@@ -1620,7 +1620,7 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 		goto out;
 	}
 	vfu_setup_log(endpoint->vfu_ctx, vfio_user_log,
-		      SPDK_DEBUGLOG_FLAG_ENABLED("nvmf_vfio") ? SPDK_LOG_DEBUG : SPDK_LOG_ERROR);
+		      SPDK_DEBUGLOG_FLAG_ENABLED("nvmf_vfio") ? LOG_DEBUG : LOG_ERR);
 
 	err = vfio_user_dev_info_fill(endpoint);
 	if (err < 0) {
