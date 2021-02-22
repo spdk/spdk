@@ -4153,7 +4153,6 @@ iscsi_pdu_hdr_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	uint32_t len;
 	int F_bit;
 	int rc;
-	int reject_reason = ISCSI_REASON_INVALID_PDU_FIELD;
 
 	if (conn->sess->session_type == SESSION_TYPE_DISCOVERY) {
 		SPDK_ERRLOG("ISCSI_OP_SCSI_DATAOUT not allowed in discovery session\n");
@@ -4168,14 +4167,13 @@ iscsi_pdu_hdr_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	buffer_offset = from_be32(&reqh->buffer_offset);
 
 	if (pdu->data_segment_len > SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
-		reject_reason = ISCSI_REASON_PROTOCOL_ERROR;
-		goto reject_return;
+		return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
 	}
 
 	task = get_transfer_task(conn, transfer_tag);
 	if (task == NULL) {
 		SPDK_ERRLOG("Not found task for transfer_tag=%x\n", transfer_tag);
-		goto reject_return;
+		return iscsi_reject(conn, pdu, ISCSI_REASON_INVALID_PDU_FIELD);
 	}
 
 	lun_dev = spdk_scsi_dev_get_lun(conn->dev, task->lun_id);
@@ -4188,17 +4186,18 @@ iscsi_pdu_hdr_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	if (task->tag != task_tag) {
 		SPDK_ERRLOG("The r2t task tag is %u, and the dataout task tag is %u\n",
 			    task->tag, task_tag);
-		goto reject_return;
+		return iscsi_reject(conn, pdu, ISCSI_REASON_INVALID_PDU_FIELD);
 	}
 
 	if (DataSN != task->r2t_datasn) {
 		SPDK_ERRLOG("DataSN(%u) exp=%d error\n", DataSN, task->r2t_datasn);
 		if (conn->sess->ErrorRecoveryLevel >= 1) {
-			goto send_r2t_recovery_return;
-		} else {
-			reject_reason = ISCSI_REASON_PROTOCOL_ERROR;
-			goto reject_return;
+			rc = iscsi_send_r2t_recovery(conn, task, task->acked_r2tsn, true);
+			if (rc == 0) {
+				return 0;
+			}
 		}
+		return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
 	}
 
 	if (buffer_offset != task->next_expected_r2t_offset) {
@@ -4264,15 +4263,6 @@ iscsi_pdu_hdr_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	pdu->task = subtask;
 	return 0;
-
-send_r2t_recovery_return:
-	rc = iscsi_send_r2t_recovery(conn, task, task->acked_r2tsn, true);
-	if (rc == 0) {
-		return 0;
-	}
-
-reject_return:
-	return iscsi_reject(conn, pdu, reject_reason);
 }
 
 static int
