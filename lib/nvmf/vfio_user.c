@@ -1341,8 +1341,12 @@ vfio_user_log(vfu_ctx_t *vfu_ctx, int level, char const *msg)
 
 	if (level >= LOG_DEBUG) {
 		SPDK_DEBUGLOG(nvmf_vfio, "%s: %s\n", endpoint_id(endpoint), msg);
+	} else if (level >= LOG_INFO) {
+		SPDK_INFOLOG(nvmf_vfio, "%s: %s\n", endpoint_id(endpoint), msg);
 	} else if (level >= LOG_NOTICE) {
 		SPDK_NOTICELOG("%s: %s\n", endpoint_id(endpoint), msg);
+	} else if (level >= LOG_WARNING) {
+		SPDK_WARNLOG("%s: %s\n", endpoint_id(endpoint), msg);
 	} else {
 		SPDK_ERRLOG("%s: %s\n", endpoint_id(endpoint), msg);
 	}
