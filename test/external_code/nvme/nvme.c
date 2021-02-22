@@ -33,15 +33,22 @@
 
 #include "spdk/mmio.h"
 #include "spdk/nvme_spec.h"
+#include "spdk/likely.h"
 #include "spdk/log.h"
 #include "spdk/stdinc.h"
 #include "nvme.h"
+
+typedef void (*nvme_cmd_cb)(void *ctx, const struct spdk_nvme_cpl *cpl);
 
 struct nvme_request {
 	/* Command identifier and position within qpair's requests array */
 	uint16_t			cid;
 	/* NVMe command */
 	struct spdk_nvme_cmd		cmd;
+	/* Completion callback */
+	nvme_cmd_cb			cb_fn;
+	/* Completion callback's argument */
+	void				*cb_arg;
 	TAILQ_ENTRY(nvme_request)	tailq;
 };
 
@@ -354,6 +361,74 @@ pcie_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	}
 
 	TAILQ_INSERT_TAIL(ctrlrs, ctrlr, tailq);
+
+	return 0;
+}
+
+static struct nvme_request *
+allocate_request(struct nvme_qpair *qpair)
+{
+	struct nvme_request *request;
+
+	if ((qpair->sq_tail + 1) % qpair->num_entries == qpair->sq_head) {
+		return NULL;
+	}
+
+	request = TAILQ_FIRST(&qpair->free_requests);
+	assert(request != NULL);
+	TAILQ_REMOVE(&qpair->free_requests, request, tailq);
+	memset(&request->cmd, 0, sizeof(request->cmd));
+
+	return request;
+}
+
+static void
+submit_request(struct nvme_qpair *qpair, struct nvme_request *request)
+{
+	qpair->cmd[qpair->sq_tail] = request->cmd;
+
+	if (spdk_unlikely(++qpair->sq_tail == qpair->num_entries)) {
+		qpair->sq_tail = 0;
+	}
+
+	spdk_wmb();
+	spdk_mmio_write_4(qpair->sq_tdbl, qpair->sq_tail);
+}
+
+int identify_ctrlr(struct nvme_ctrlr *ctrlr);
+
+int
+identify_ctrlr(struct nvme_ctrlr *ctrlr)
+{
+	struct nvme_request *request;
+	struct spdk_nvme_cmd *cmd;
+	uint64_t prp1;
+
+	/* We're only filling a single PRP entry, so the address needs to be page aligned */
+	assert(((uintptr_t)ctrlr->cdata & (ctrlr->page_size - 1)) == 0);
+	prp1 = spdk_vtophys(ctrlr->cdata, NULL);
+	if (prp1 == SPDK_VTOPHYS_ERROR) {
+		return -EFAULT;
+	}
+
+	request = allocate_request(ctrlr->admin_qpair);
+	if (!request) {
+		return -EAGAIN;
+	}
+
+	request->cb_fn = NULL;
+	request->cb_arg = NULL;
+
+	cmd = &request->cmd;
+	cmd->cid = request->cid;
+	cmd->opc = SPDK_NVME_OPC_IDENTIFY;
+	cmd->dptr.prp.prp1 = prp1;
+	cmd->cdw10_bits.identify.cns = SPDK_NVME_IDENTIFY_CTRLR;
+	cmd->cdw10_bits.identify.cntid = 0;
+	cmd->cdw11_bits.identify.csi = 0;
+	cmd->nsid = 0;
+
+	submit_request(ctrlr->admin_qpair, request);
 
 	return 0;
 }
