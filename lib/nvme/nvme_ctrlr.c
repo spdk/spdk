@@ -2010,7 +2010,7 @@ nvme_ctrlr_identify_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
 	if (ns == NULL) {
 		/* No active NS, move on to the next state */
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CONFIGURE_AER,
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_ID_DESCS,
 				     ctrlr->opts.admin_timeout_ms);
 		return 0;
 	}
@@ -2042,6 +2042,7 @@ nvme_ctrlr_identify_namespaces_iocs_specific_next(struct spdk_nvme_ctrlr *ctrlr,
 
 	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
 	if (ns == NULL) {
+		/* No first/next active NS, move on to the next state */
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CONFIGURE_AER,
 				     ctrlr->opts.admin_timeout_ms);
 		return 0;
@@ -2126,6 +2127,7 @@ static int
 nvme_ctrlr_identify_namespaces_iocs_specific(struct spdk_nvme_ctrlr *ctrlr)
 {
 	if (!nvme_ctrlr_multi_iocs_enabled(ctrlr)) {
+		/* Multi IOCS not supported/enabled, move on to the next state */
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CONFIGURE_AER,
 				     ctrlr->opts.admin_timeout_ms);
 		return 0;
@@ -2143,7 +2145,19 @@ nvme_ctrlr_identify_id_desc_async_done(void *arg, const struct spdk_nvme_cpl *cp
 	int rc;
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CONFIGURE_AER,
+		/*
+		 * Many controllers claim to be compatible with NVMe 1.3, however,
+		 * they do not implement NS ID Desc List. Therefore, instead of setting
+		 * the state to NVME_CTRLR_STATE_ERROR, silently ignore the completion
+		 * error and move on to the next state.
+		 *
+		 * The proper way is to create a new quirk for controllers that violate
+		 * the NVMe 1.3 spec by not supporting NS ID Desc List.
+		 * (Re-using the NVME_QUIRK_IDENTIFY_CNS quirk is not possible, since
+		 * it is too generic and was added in order to handle controllers that
+		 * violate the NVMe 1.1 spec by not supporting ACTIVE LIST).
+		 */
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_NS_IOCS_SPECIFIC,
 				     ctrlr->opts.admin_timeout_ms);
 		return;
 	}
@@ -2190,7 +2204,8 @@ nvme_ctrlr_identify_id_desc_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 	     !(ctrlr->cap.bits.css & SPDK_NVME_CAP_CSS_IOCS)) ||
 	    (ctrlr->quirks & NVME_QUIRK_IDENTIFY_CNS)) {
 		SPDK_DEBUGLOG(nvme, "Version < 1.3; not attempting to retrieve NS ID Descriptor List\n");
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CONFIGURE_AER,
+		/* NS ID Desc List not supported, move on to the next state */
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_NS_IOCS_SPECIFIC,
 				     ctrlr->opts.admin_timeout_ms);
 		return 0;
 	}
@@ -2199,7 +2214,7 @@ nvme_ctrlr_identify_id_desc_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
 	if (ns == NULL) {
 		/* No active NS, move on to the next state */
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CONFIGURE_AER,
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_NS_IOCS_SPECIFIC,
 				     ctrlr->opts.admin_timeout_ms);
 		return 0;
 	}
