@@ -56,7 +56,7 @@ SPDK_LIB_LIST += thread util log
 
 LIBS += -lcunit $(SPDK_STATIC_LIB_LINKER_ARGS)
 
-APP = $(TEST_FILE:.c=)
+APP = $(TEST_FILE:.c=)$(EXEEXT)
 
 ifneq ($(UNIT_TEST_LINK_ENV),1)
 ENV_LINKER_ARGS =

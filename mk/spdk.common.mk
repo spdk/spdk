@@ -47,6 +47,7 @@ endif
 S ?= $(notdir $(CURDIR))
 
 DESTDIR?=
+EXEEXT?=
 
 ifneq ($(prefix),)
 CONFIG_PREFIX=$(prefix)
@@ -354,7 +355,7 @@ LIB_C=\
 
 # Clean up generated files listed as arguments plus a default list
 CLEAN_C=\
-	$(Q)rm -f *.a *.o *.d *.d.tmp *.gcno *.gcda
+	$(Q)rm -f *.a *.lib *.o *.obj *.d *.d.tmp *.pdb *.gcno *.gcda
 
 # Install a library
 INSTALL_LIB=\
