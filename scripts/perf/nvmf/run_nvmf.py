@@ -928,7 +928,8 @@ class SPDKTarget(Target):
         super(SPDKTarget, self).__init__(name, general_config, target_config)
 
         # Required fields
-        self.num_cores = target_config["num_cores"]
+        self.core_mask = target_config["core_mask"]
+        self.num_cores = self.get_num_cores(self.core_mask)
 
         # Defaults
         self.dif_insert_strip = False
@@ -941,6 +942,21 @@ class SPDKTarget(Target):
             self.null_block_dif_type = target_config["null_block_dif_type"]
         if "dif_insert_strip" in target_config:
             self.dif_insert_strip = target_config["dif_insert_strip"]
+
+    def get_num_cores(self, core_mask):
+        if "0x" in core_mask:
+            return bin(int(core_mask, 16)).count("1")
+        else:
+            num_cores = 0
+            core_mask = core_mask.replace("[", "")
+            core_mask = core_mask.replace("]", "")
+            for i in core_mask.split(","):
+                if "-" in i:
+                    x, y = i.split("-")
+                    num_cores += len(range(int(x), int(y))) + 1
+                else:
+                    num_cores += 1
+            return num_cores
 
     def spdk_tgt_configure(self):
         self.log_print("Configuring SPDK NVMeOF target via RPC")
@@ -1036,7 +1052,7 @@ class SPDKTarget(Target):
             self.subsys_no = get_nvme_devices_count()
         self.log_print("Starting SPDK NVMeOF Target process")
         nvmf_app_path = os.path.join(self.spdk_dir, "build/bin/nvmf_tgt")
-        proc = subprocess.Popen([nvmf_app_path, "--wait-for-rpc", "-m", str(self.num_cores)])
+        proc = subprocess.Popen([nvmf_app_path, "--wait-for-rpc", "-m", self.core_mask])
         self.pid = os.path.join(self.spdk_dir, "nvmf.pid")
 
         with open(self.pid, "w") as fh:

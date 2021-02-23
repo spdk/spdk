@@ -43,7 +43,7 @@ If set to 1, can be used for latency measurements as described in Test Case 3 of
 Integer. Enable data protection on created null block device. Defaults to 0 if option
 not present in JSON configuration file. See doc/jsonrpc.md "bdev_null_create" for details.
 
-### num_cores
+### core_mask
 
 List of CPU cores to assign for running SPDK NVMe-OF Target process. Can specify exact core numbers or ranges, eg:
 [0, 1, 10-15].
