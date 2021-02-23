@@ -29,6 +29,11 @@ class Server:
         self.transport = general_config["transport"].lower()
         self.nic_ips = server_config["nic_ips"]
         self.mode = server_config["mode"]
+
+        self.irq_scripts_dir = "/usr/src/local/mlnx-tools/ofed_scripts"
+        if "irq_scripts_dir" in server_config and server_config["irq_scripts_dir"]:
+            self.irq_scripts_dir = server_config["irq_scripts_dir"]
+
         self.local_nic_info = []
         self._nics_json_obj = {}
         self.svc_restore_dict = {}
@@ -83,7 +88,7 @@ class Server:
 
         self.local_nic_info = extract_network_elements(pci_info)
 
-    def exec_cmd(self, cmd, stderr_redirect=False):
+    def exec_cmd(self, cmd, stderr_redirect=False, change_dir=None):
         return ""
 
     def configure_system(self):
@@ -91,6 +96,7 @@ class Server:
         self.configure_sysctl()
         self.configure_tuned()
         self.configure_cpu_governor()
+        self.configure_irq_affinity()
 
     def configure_adq(self):
         self.adq_load_modules()
@@ -225,6 +231,16 @@ class Server:
         self.governor_restore = self.exec_cmd(["cat", "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"]).strip()
         self.exec_cmd(["sudo", "cpupower", "frequency-set", "-g", "performance"])
 
+    def configure_irq_affinity(self):
+        self.log_print("Setting NIC irq affinity for NICs...")
+
+        irq_script_path = os.path.join(self.irq_scripts_dir, "set_irq_affinity.sh")
+        nic_names = [self.get_nic_name_by_ip(n) for n in self.nic_ips]
+        for nic in nic_names:
+            irq_cmd = ["sudo", irq_script_path, nic]
+            self.log_print(irq_cmd)
+            self.exec_cmd(irq_cmd, change_dir=self.irq_scripts_dir)
+
     def restore_services(self):
         self.log_print("Restoring services...")
         for service, state in self.svc_restore_dict.items():
@@ -306,11 +322,20 @@ class Target(Server):
     def set_local_nic_info_helper(self):
         return json.loads(self.exec_cmd(["lshw", "-json"]))
 
-    def exec_cmd(self, cmd, stderr_redirect=False):
+    def exec_cmd(self, cmd, stderr_redirect=False, change_dir=None):
         stderr_opt = None
         if stderr_redirect:
             stderr_opt = subprocess.STDOUT
+        if change_dir:
+            old_cwd = os.getcwd()
+            os.chdir(change_dir)
+            self.log_print("Changing directory to %s" % change_dir)
+
         out = check_output(cmd, stderr=stderr_opt).decode(encoding="utf-8")
+
+        if change_dir:
+            os.chdir(old_cwd)
+            self.log_print("Changing directory to %s" % old_cwd)
         return out
 
     def zip_spdk_sources(self, spdk_dir, dest_file):
@@ -604,7 +629,10 @@ class Initiator(Server):
     def __del__(self):
         self.ssh_connection.close()
 
-    def exec_cmd(self, cmd, stderr_redirect=False):
+    def exec_cmd(self, cmd, stderr_redirect=False, change_dir=None):
+        if change_dir:
+            cmd = ["cd", change_dir, ";", *cmd]
+
         # In case one of the command elements contains whitespace and is not
         # already quoted, # (e.g. when calling sysctl) quote it again to prevent expansion
         # when sending to remote system.
