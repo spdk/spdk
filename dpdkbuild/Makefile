@@ -121,7 +121,7 @@ DPDK_ALL_DRIVER_DIRS = $(shell find $(SPDK_ROOT_DIR)/dpdk/drivers -mindepth 1 -t
 DPDK_ALL_DRIVERS = $(DPDK_ALL_DRIVER_DIRS:$(SPDK_ROOT_DIR)/dpdk/drivers/%=%)
 DPDK_DISABLED_DRVERS = $(filter-out $(DPDK_DRIVERS),$(DPDK_ALL_DRIVERS))
 
-ifeq ($(OS),Linux)
+ifneq ($(OS),FreeBSD)
 SED_INPLACE_FLAG = "-i"
 MESON_PREFIX = $(SPDK_ROOT_DIR)/dpdk/build
 else
