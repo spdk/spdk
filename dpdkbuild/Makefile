@@ -45,6 +45,10 @@ DPDK_KMODS = true
 endif
 DPDK_OPTS += -Denable_kmods=$(DPDK_KMODS)
 
+ifeq ($(CONFIG_DEBUG),y)
+DPDK_OPTS += --buildtype=debug
+endif
+
 # the drivers we use
 DPDK_DRIVERS = bus bus/pci bus/vdev mempool/ring
 
@@ -78,10 +82,6 @@ endif
 endif
 
 DPDK_CFLAGS += -fPIC
-
-ifeq ($(CONFIG_DEBUG),y)
-DPDK_CFLAGS += -O0 -g
-endif
 
 ifeq ($(CONFIG_WERROR),y)
 DPDK_CFLAGS += -Werror
