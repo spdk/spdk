@@ -917,6 +917,7 @@ nbd_start_complete(struct spdk_nbd_start_ctx *ctx)
 	int		rc;
 	pthread_t	tid;
 	int		flag;
+	unsigned long	nbd_flags = 0;
 
 	rc = ioctl(ctx->nbd->dev_fd, NBD_SET_BLKSIZE, spdk_bdev_get_block_size(ctx->nbd->bdev));
 	if (rc == -1) {
@@ -943,14 +944,20 @@ nbd_start_complete(struct spdk_nbd_start_ctx *ctx)
 	SPDK_NOTICELOG("ioctl(NBD_SET_TIMEOUT) is not supported.\n");
 #endif
 
-#ifdef NBD_FLAG_SEND_TRIM
-	rc = ioctl(ctx->nbd->dev_fd, NBD_SET_FLAGS, NBD_FLAG_SEND_TRIM);
-	if (rc == -1) {
-		SPDK_ERRLOG("ioctl(NBD_SET_FLAGS) failed: %s\n", spdk_strerror(errno));
-		rc = -errno;
-		goto err;
-	}
+#ifdef NBD_FLAG_SEND_FLUSH
+	nbd_flags |= NBD_FLAG_SEND_FLUSH;
 #endif
+#ifdef NBD_FLAG_SEND_TRIM
+	nbd_flags |= NBD_FLAG_SEND_TRIM;
+#endif
+	if (nbd_flags) {
+		rc = ioctl(ctx->nbd->dev_fd, NBD_SET_FLAGS, nbd_flags);
+		if (rc == -1) {
+			SPDK_ERRLOG("ioctl(NBD_SET_FLAGS, 0x%lx) failed: %s\n", nbd_flags, spdk_strerror(errno));
+			rc = -errno;
+			goto err;
+		}
+	}
 
 	rc = pthread_create(&tid, NULL, nbd_start_kernel, (void *)(intptr_t)ctx->nbd->dev_fd);
 	if (rc != 0) {
