@@ -757,11 +757,13 @@ runtime={run_time}
                     cpus_num += len(range(a, b))
                 else:
                     cpus_num += 1
-            threads = range(0, cpus_num)
+            self.num_cores = cpus_num
+            threads = range(0, self.num_cores)
         elif hasattr(self, 'num_cores'):
             self.log_print("Limiting FIO workload execution to %s cores" % self.num_cores)
             threads = range(0, int(self.num_cores))
         else:
+            self.num_cores = len(subsystems)
             threads = range(0, len(subsystems))
 
         if "spdk" in self.mode:
