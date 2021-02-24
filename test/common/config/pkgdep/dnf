@@ -58,6 +58,7 @@ packages=(
 	smartmontools
 	wget
 	xfsprogs
+	rpmdevtools
 )
 
 pre_install() { :; }

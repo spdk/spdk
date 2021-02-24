@@ -56,6 +56,7 @@ packages=(
 	wget
 	btrfs-progs
 	xfsprogs
+	rpmdevtools
 )
 
 pre_install() { :; }
