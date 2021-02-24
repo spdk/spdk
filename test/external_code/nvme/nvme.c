@@ -55,6 +55,22 @@ static struct spdk_pci_id nvme_pci_driver_id[] = {
 SPDK_PCI_DRIVER_REGISTER(nvme_external, nvme_pci_driver_id, SPDK_PCI_DRIVER_NEED_MAPPING);
 static TAILQ_HEAD(, nvme_ctrlr) g_nvme_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_ctrlrs);
 
+static struct nvme_ctrlr *
+find_ctrlr_by_addr(struct spdk_pci_addr *addr)
+{
+	struct spdk_pci_addr ctrlr_addr;
+	struct nvme_ctrlr *ctrlr;
+
+	TAILQ_FOREACH(ctrlr, &g_nvme_ctrlrs, tailq) {
+		ctrlr_addr = spdk_pci_device_get_addr(ctrlr->pci_device);
+		if (spdk_pci_addr_compare(addr, &ctrlr_addr) == 0) {
+			return ctrlr;
+		}
+	}
+
+	return NULL;
+}
+
 static int
 pcie_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 {
@@ -90,15 +106,21 @@ free_ctrlr(struct nvme_ctrlr *ctrlr)
 	free(ctrlr);
 }
 
-int
-nvme_probe(nvme_attach_cb attach_cb, void *cb_ctx)
+static int
+probe_internal(struct spdk_pci_addr *addr, nvme_attach_cb attach_cb, void *cb_ctx)
 {
 	struct nvme_ctrlr *ctrlr, *tmp;
 	TAILQ_HEAD(, nvme_ctrlr) ctrlrs = TAILQ_HEAD_INITIALIZER(ctrlrs);
 	int rc;
 
-	rc = spdk_pci_enumerate(spdk_pci_get_driver("nvme_external"),
-				pcie_enum_cb, &ctrlrs);
+	if (addr == NULL) {
+		rc = spdk_pci_enumerate(spdk_pci_get_driver("nvme_external"),
+					pcie_enum_cb, &ctrlrs);
+	} else {
+		rc = spdk_pci_device_attach(spdk_pci_get_driver("nvme_external"),
+					    pcie_enum_cb, &ctrlrs, addr);
+	}
+
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to enumerate PCI devices\n");
 		while (!TAILQ_EMPTY(&ctrlrs)) {
@@ -114,10 +136,31 @@ nvme_probe(nvme_attach_cb attach_cb, void *cb_ctx)
 		TAILQ_REMOVE(&ctrlrs, ctrlr, tailq);
 		TAILQ_INSERT_TAIL(&g_nvme_ctrlrs, ctrlr, tailq);
 
-		attach_cb(cb_ctx, &ctrlr->pci_device->addr, ctrlr);
+		if (attach_cb != NULL) {
+			attach_cb(cb_ctx, &ctrlr->pci_device->addr, ctrlr);
+		}
 	}
 
 	return 0;
+}
+
+int
+nvme_probe(nvme_attach_cb attach_cb, void *cb_ctx)
+{
+	return probe_internal(NULL, attach_cb, cb_ctx);
+}
+
+struct nvme_ctrlr *
+nvme_connect(struct spdk_pci_addr *addr)
+{
+	int rc;
+
+	rc = probe_internal(addr, NULL, NULL);
+	if (rc != 0) {
+		return NULL;
+	}
+
+	return find_ctrlr_by_addr(addr);
 }
 
 void

@@ -64,6 +64,18 @@ typedef void (*nvme_attach_cb)(void *cb_ctx, const struct spdk_pci_addr *addr,
 int nvme_probe(nvme_attach_cb attach_cb, void *ctx);
 
 /**
+ * Connect the NVMe driver to the device located at the given transport ID.
+ *
+ * This function is not thread safe and should only be called from one thread at
+ * a time while no other threads are actively using this NVMe device.
+ *
+ * \param addr The PCI address of the NVMe controller to connect.
+ *
+ * \return pointer to the connected NVMe controller or NULL if there is any failure.
+ */
+struct nvme_ctrlr *nvme_connect(struct spdk_pci_addr *addr);
+
+/**
  * Detach specified device returned by nvme_probe()'s attach_cb. After returning
  * the nvme_ctrlr handle is no longer valid.
  *
