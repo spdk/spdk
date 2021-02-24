@@ -1529,11 +1529,13 @@ nvme_bdev_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 
 	TAILQ_INIT(&nvme_bdev_ctrlr->trids);
 	nvme_bdev_ctrlr->num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
-	nvme_bdev_ctrlr->namespaces = calloc(nvme_bdev_ctrlr->num_ns, sizeof(struct nvme_bdev_ns *));
-	if (!nvme_bdev_ctrlr->namespaces) {
-		SPDK_ERRLOG("Failed to allocate block namespaces pointer\n");
-		rc = -ENOMEM;
-		goto err_alloc_namespaces;
+	if (nvme_bdev_ctrlr->num_ns != 0) {
+		nvme_bdev_ctrlr->namespaces = calloc(nvme_bdev_ctrlr->num_ns, sizeof(struct nvme_bdev_ns *));
+		if (!nvme_bdev_ctrlr->namespaces) {
+			SPDK_ERRLOG("Failed to allocate block namespaces pointer\n");
+			rc = -ENOMEM;
+			goto err_alloc_namespaces;
+		}
 	}
 
 	trid_entry = calloc(1, sizeof(*trid_entry));
