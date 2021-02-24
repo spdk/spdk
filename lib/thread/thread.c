@@ -2019,6 +2019,14 @@ static bool g_interrupt_mode = false;
 int
 spdk_interrupt_mode_enable(void)
 {
+	/* It must be called once prior to initializing the threading library.
+	 * g_spdk_msg_mempool will be valid if thread library is initialized.
+	 */
+	if (g_spdk_msg_mempool) {
+		SPDK_ERRLOG("Failed due to threading library is already initailzied.\n");
+		return -1;
+	}
+
 #ifdef __linux__
 	SPDK_NOTICELOG("Set SPDK running in interrupt mode.\n");
 	g_interrupt_mode = true;
