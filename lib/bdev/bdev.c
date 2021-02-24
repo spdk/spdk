@@ -6418,7 +6418,8 @@ bdev_open(struct spdk_bdev *bdev, bool write, struct spdk_bdev_desc *desc)
 		return -ENODEV;
 	}
 
-	if (write && bdev->internal.claim_module) {
+	if (write && bdev->internal.claim_module &&
+	    strcmp(bdev->internal.claim_module->name, "NVMe-oF Target")) {
 		SPDK_ERRLOG("Could not open %s - %s module already claimed it\n",
 			    bdev->name, bdev->internal.claim_module->name);
 		pthread_mutex_unlock(&bdev->internal.mutex);
