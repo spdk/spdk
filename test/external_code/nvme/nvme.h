@@ -35,6 +35,7 @@
 #define EXTERNAL_NVME_H
 
 #include "spdk/env.h"
+#include "spdk/nvme_spec.h"
 
 struct nvme_ctrlr;
 
@@ -85,5 +86,17 @@ struct nvme_ctrlr *nvme_connect(struct spdk_pci_addr *addr);
  * \param ctrlr Opaque handle to NVMe controller.
  */
 void nvme_detach(struct nvme_ctrlr *ctrlr);
+
+/**
+ * Get the identify controller data as defined by the NVMe specification.
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return pointer to the identify controller data.
+ */
+const struct spdk_nvme_ctrlr_data *nvme_ctrlr_get_data(struct nvme_ctrlr *ctrlr);
 
 #endif /* EXTERNAL_NVME_H */
