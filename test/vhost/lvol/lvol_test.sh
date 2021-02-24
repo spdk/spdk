@@ -9,7 +9,6 @@ source $rootdir/scripts/common.sh
 rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
 vm_count=1
-max_disks=""
 ctrl_type="spdk_vhost_scsi"
 use_fs=false
 nested_lvol=false
@@ -28,8 +27,6 @@ function usage() {
 	echo "    --vm-count=INT        Virtual machines to use in test;"
 	echo "                          Each VM will get one lvol bdev on each NVMe."
 	echo "                          Default: 1"
-	echo "    --max-disks=INT       Maximum number of NVMe drives to use in test."
-	echo "                          Default: will use all available NVMes."
 	echo "    --ctrl-type=TYPE      Controller type to use for test:"
 	echo "                          spdk_vhost_scsi - use spdk vhost scsi"
 	echo "                          spdk_vhost_blk - use spdk vhost block"
@@ -67,10 +64,8 @@ function clean_lvol_cfg() {
 	done
 
 	notice "Removing lvol stores"
-	for lvol_store in "${lvol_stores[@]}"; do
-		$rpc_py bdev_lvol_delete_lvstore -u $lvol_store
-		notice "lvol store $lvol_store removed"
-	done
+	$rpc_py bdev_lvol_delete_lvstore -u "$ls_guid"
+	notice "lvol store $ls_guid removed"
 }
 
 while getopts 'xh-:' optchar; do
@@ -80,7 +75,6 @@ while getopts 'xh-:' optchar; do
 				help) usage $0 ;;
 				fio-bin=*) fio_bin="--fio-bin=${OPTARG#*=}" ;;
 				vm-count=*) vm_count="${OPTARG#*=}" ;;
-				max-disks=*) max_disks="${OPTARG#*=}" ;;
 				ctrl-type=*) ctrl_type="${OPTARG#*=}" ;;
 				nested-lvol) nested_lvol=true ;;
 				distribute-cores) distribute_cores=true ;;
@@ -99,17 +93,6 @@ done
 
 vhosttestinit
 
-notice "Get NVMe disks:"
-nvmes=($(get_nvme_bdfs))
-
-if [[ -z $max_disks ]]; then
-	max_disks=${#nvmes[@]}
-fi
-
-if ((${#nvmes[@]} < max_disks)); then
-	fail "Number of NVMe drives (${#nvmes[@]}) is lower than number of requested disks for test ($max_disks)"
-fi
-
 if $distribute_cores; then
 	# FIXME: this need to be handled entirely in common.sh
 	source $testdir/autotest.config
@@ -125,48 +108,42 @@ notice "..."
 
 trap 'clean_lvol_cfg; error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
 
-lvol_stores=()
 lvol_bdevs=()
 nest_lvol_stores=()
 nest_lvol_bdevs=()
 used_vms=""
 
-# On each NVMe create one lvol store
-for ((i = 0; i < max_disks; i++)); do
+id=0
+# Create base lvol store on NVMe
+notice "Creating lvol store on device Nvme${id}n1"
+ls_guid=$($rpc_py bdev_lvol_create_lvstore Nvme0n1 lvs_$id -c 4194304)
+if $nested_lvol; then
+	free_mb=$(get_lvs_free_mb "$ls_guid")
+	size=$((free_mb / (vm_count + 1)))
 
-	# Create base lvol store on NVMe
-	notice "Creating lvol store on device Nvme${i}n1"
-	ls_guid=$($rpc_py bdev_lvol_create_lvstore Nvme${i}n1 lvs_$i -c 4194304)
-	lvol_stores+=("$ls_guid")
+	notice "Creating lvol bdev on lvol store: $ls_guid"
+	lb_name=$($rpc_py bdev_lvol_create -u $ls_guid lbd_nest $size $thin)
 
-	if $nested_lvol; then
-		free_mb=$(get_lvs_free_mb "$ls_guid")
-		size=$((free_mb / (vm_count + 1)))
+	notice "Creating nested lvol store on lvol bdev: $lb_name"
+	nest_ls_guid=$($rpc_py bdev_lvol_create_lvstore $lb_name lvs_n_$id -c 4194304)
+	nest_lvol_stores+=("$nest_ls_guid")
 
-		notice "Creating lvol bdev on lvol store: $ls_guid"
-		lb_name=$($rpc_py bdev_lvol_create -u $ls_guid lbd_nest $size $thin)
-
-		notice "Creating nested lvol store on lvol bdev: $lb_name"
-		nest_ls_guid=$($rpc_py bdev_lvol_create_lvstore $lb_name lvs_n_$i -c 4194304)
-		nest_lvol_stores+=("$nest_ls_guid")
-
-		for ((j = 0; j < vm_count; j++)); do
-			notice "Creating nested lvol bdev for VM $i on lvol store $nest_ls_guid"
-			free_mb=$(get_lvs_free_mb "$nest_ls_guid")
-			nest_size=$((free_mb / (vm_count - j)))
-			lb_name=$($rpc_py bdev_lvol_create -u $nest_ls_guid lbd_vm_$j $nest_size $thin)
-			nest_lvol_bdevs+=("$lb_name")
-		done
-	fi
-
-	# Create base lvol bdevs
 	for ((j = 0; j < vm_count; j++)); do
-		notice "Creating lvol bdev for VM $i on lvol store $ls_guid"
-		free_mb=$(get_lvs_free_mb "$ls_guid")
-		size=$((free_mb / (vm_count - j)))
-		lb_name=$($rpc_py bdev_lvol_create -u $ls_guid lbd_vm_$j $size $thin)
-		lvol_bdevs+=("$lb_name")
+		notice "Creating nested lvol bdev for VM $id on lvol store $nest_ls_guid"
+		free_mb=$(get_lvs_free_mb "$nest_ls_guid")
+		nest_size=$((free_mb / (vm_count - j)))
+		lb_name=$($rpc_py bdev_lvol_create -u $nest_ls_guid lbd_vm_$j $nest_size $thin)
+		nest_lvol_bdevs+=("$lb_name")
 	done
+fi
+
+# Create base lvol bdevs
+for ((j = 0; j < vm_count; j++)); do
+	notice "Creating lvol bdev for VM $id on lvol store $ls_guid"
+	free_mb=$(get_lvs_free_mb "$ls_guid")
+	size=$((free_mb / (vm_count - j)))
+	lb_name=$($rpc_py bdev_lvol_create -u $ls_guid lbd_vm_$j $size $thin)
+	lvol_bdevs+=("$lb_name")
 done
 
 bdev_info=$($rpc_py bdev_get_bdevs)

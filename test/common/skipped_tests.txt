@@ -50,8 +50,7 @@ iscsi_tgt_fuzz
 nvmf_fuzz
 nvmf_multiconnection
 nvmf_initiator_timeout
-vhost_blk_2core_2ctrl
-vhost_blk_1core_2ctrl
+vhost_blk_cores_2ctrl
 vhost_blk_fs_integrity
 vhost_blk_integrity
 vhost_blk_nightly
@@ -63,6 +62,4 @@ vhost_readonly
 vhost_scsi_fs_integrity
 vhost_scsi_integrity
 vhost_scsi_nightly
-vhost_scsi_2core_2ctrl
-vhost_scsi_1core_2ctrl
-vhost_scsi_1core_1ctrl
+vhost_scsi_cores_2ctrl

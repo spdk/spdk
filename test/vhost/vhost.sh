@@ -23,8 +23,6 @@ if [[ ! -r "${VM_IMAGE}" ]]; then
 	exit 1
 fi
 
-DISKS_NUMBER=$(lspci -mm -n | grep 0108 | tr -d '"' | awk -F " " '{print "0000:"$1}' | wc -l)
-
 WORKDIR=$(readlink -f $(dirname $0))
 
 run_test "vhost_negative" $WORKDIR/other/negative.sh
@@ -50,31 +48,13 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	echo 'Running filesystem integrity suite with BLK...'
 	run_test "vhost_blk_fs_integrity" $WORKDIR/integrity/integrity_start.sh --ctrl-type=spdk_vhost_blk --fs="xfs ntfs btrfs ext4"
 
-	if [[ $DISKS_NUMBER -ge 2 ]]; then
-		echo 'Running lvol integrity nightly suite with two cores and two controllers'
-		run_test "vhost_scsi_2core_2ctrl" $WORKDIR/lvol/lvol_test.sh --fio-bin=$FIO_BIN \
-			--ctrl-type=spdk_vhost_scsi --max-disks=2 --distribute-cores --vm-count=2
+	echo 'Running lvol integrity nightly suite with multiple cores and two vhost controllers (vhost_scsi)'
+	run_test "vhost_scsi_cores_2ctrl" $WORKDIR/lvol/lvol_test.sh --fio-bin=$FIO_BIN \
+		--ctrl-type=spdk_vhost_scsi --distribute-cores --vm-count=2
 
-		echo 'Running lvol integrity nightly suite with one core and two controllers'
-		run_test "vhost_scsi_1core_2ctrl" $WORKDIR/lvol/lvol_test.sh --fio-bin=$FIO_BIN \
-			--ctrl-type=spdk_vhost_scsi --max-disks=2 --vm-count=2
-	fi
-	echo 'Running lvol integrity nightly suite with one core and one controller'
-	run_test "vhost_scsi_1core_1ctrl" $WORKDIR/lvol/lvol_test.sh --fio-bin=$FIO_BIN \
-		--ctrl-type=spdk_vhost_scsi --max-disks=1
-
-	if [[ $DISKS_NUMBER -ge 2 ]]; then
-		echo 'Running lvol integrity nightly suite with two cores and two controllers'
-		run_test "vhost_blk_2core_2ctrl" $WORKDIR/lvol/lvol_test.sh --fio-bin=$FIO_BIN \
-			--ctrl-type=spdk_vhost_blk --max-disks=2 --distribute-cores --vm-count=2
-
-		echo 'Running lvol integrity nightly suite with one core and two controllers'
-		run_test "vhost_blk_1core_2ctrl" $WORKDIR/lvol/lvol_test.sh --fio-bin=$FIO_BIN \
-			--ctrl-type=spdk_vhost_blk --max-disks=2 --vm-count=2
-	fi
-	echo 'Running lvol integrity nightly suite with one core and one controller'
-	run_test "vhost_lvol_integrity_1core_1ctrl" $WORKDIR/lvol/lvol_test.sh --fio-bin=$FIO_BIN \
-		--ctrl-type=spdk_vhost_blk --max-disks=1
+	echo 'Running lvol integrity nightly suite with multiple cores and two vhost controllers (vhost_blk)'
+	run_test "vhost_blk_cores_2ctrl" $WORKDIR/lvol/lvol_test.sh --fio-bin=$FIO_BIN \
+		--ctrl-type=spdk_vhost_blk --distribute-cores --vm-count=2
 
 	echo 'Running readonly tests suite...'
 	run_test "vhost_readonly" $WORKDIR/readonly/readonly.sh --vm_image=$VM_IMAGE --disk=Nvme0n1 -x
