@@ -44,8 +44,6 @@ function usage() {
 	echo "                          on different CPU cores instead of single core."
 	echo "                          Default: False"
 	echo "-x                        set -x for script debug"
-	echo "    --multi-os            Run tests on different os types in VMs"
-	echo "                          Default: False"
 	exit 0
 }
 
@@ -87,7 +85,6 @@ while getopts 'xh-:' optchar; do
 				nested-lvol) nested_lvol=true ;;
 				distribute-cores) distribute_cores=true ;;
 				thin-provisioning) thin=" -t " ;;
-				multi-os) multi_os=true ;;
 				*) usage $0 "Invalid argument '$OPTARG'" ;;
 			esac
 			;;
@@ -187,11 +184,7 @@ for ((i = 0; i < vm_count; i++)); do
 	bdevs=($bdevs)
 
 	setup_cmd="vm_setup --disk-type=$ctrl_type --force=$i"
-	if [[ $i%2 -ne 0 ]] && [[ $multi_os ]]; then
-		setup_cmd+=" --os=/home/sys_sgsw/spdk_vhost_CentOS_vm_image.qcow2"
-	else
-		setup_cmd+=" --os=$VM_IMAGE"
-	fi
+	setup_cmd+=" --os=$VM_IMAGE"
 
 	# Create single SCSI controller or multiple BLK controllers for this VM
 	if $distribute_cores; then

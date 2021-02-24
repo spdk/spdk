@@ -5,9 +5,7 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/vhost/common.sh
 
-CENTOS_VM_IMAGE="/home/sys_sgsw/spdk_vhost_CentOS_vm_image.qcow2"
 DEFAULT_FIO_BIN="/home/sys_sgsw/fio_ubuntu"
-CENTOS_FIO_BIN="/home/sys_sgsw/fio_ubuntu_bak"
 
 case $1 in
 	-h | --help)

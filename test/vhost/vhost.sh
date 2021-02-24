@@ -12,9 +12,7 @@ if [[ $(uname -s) != Linux ]]; then
 	exit 0
 fi
 
-CENTOS_VM_IMAGE="/home/sys_sgsw/spdk_vhost_CentOS_vm_image.qcow2"
 DEFAULT_FIO_BIN="/home/sys_sgsw/fio_ubuntu"
-CENTOS_FIO_BIN="/home/sys_sgsw/fio_ubuntu_bak"
 
 : ${FIO_BIN="$DEFAULT_FIO_BIN"}
 
@@ -61,11 +59,6 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 		run_test "vhost_scsi_1core_2ctrl" $WORKDIR/lvol/lvol_test.sh --fio-bin=$FIO_BIN \
 			--ctrl-type=spdk_vhost_scsi --max-disks=2 --vm-count=2
 	fi
-	if [[ -e $CENTOS_VM_IMAGE ]]; then
-		echo 'Running lvol integrity nightly suite with different os types'
-		run_test "vhost_scsi_nightly" $WORKDIR/lvol/lvol_test.sh --fio-bin=$CENTOS_FIO_BIN \
-			--ctrl-type=spdk_vhost_scsi --vm-count=2 --multi-os
-	fi
 	echo 'Running lvol integrity nightly suite with one core and one controller'
 	run_test "vhost_scsi_1core_1ctrl" $WORKDIR/lvol/lvol_test.sh --fio-bin=$FIO_BIN \
 		--ctrl-type=spdk_vhost_scsi --max-disks=1
@@ -78,11 +71,6 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 		echo 'Running lvol integrity nightly suite with one core and two controllers'
 		run_test "vhost_blk_1core_2ctrl" $WORKDIR/lvol/lvol_test.sh --fio-bin=$FIO_BIN \
 			--ctrl-type=spdk_vhost_blk --max-disks=2 --vm-count=2
-	fi
-	if [[ -e $CENTOS_VM_IMAGE ]]; then
-		echo 'Running lvol integrity nightly suite with different os types'
-		run_test "vhost_blk_nightly" $WORKDIR/lvol/lvol_test.sh --fio-bin=$CENTOS_FIO_BIN \
-			--ctrl-type=spdk_vhost_blk --vm-count=2 --multi-os
 	fi
 	echo 'Running lvol integrity nightly suite with one core and one controller'
 	run_test "vhost_lvol_integrity_1core_1ctrl" $WORKDIR/lvol/lvol_test.sh --fio-bin=$FIO_BIN \
