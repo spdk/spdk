@@ -35,16 +35,21 @@
 #include "nvme.h"
 
 static void
-attach_cb(void *cb_ctx, const struct spdk_pci_addr *addr,
-	  struct nvme_ctrlr *ctrlr)
+print_controller(const struct spdk_pci_addr *addr)
 {
 	char fmtaddr[32] = {};
 
-	(void)cb_ctx;
-
 	spdk_pci_addr_fmt(fmtaddr, sizeof(fmtaddr), addr);
 	printf("Found NVMe controller at: %s\n", fmtaddr);
+}
 
+static void
+attach_cb(void *cb_ctx, const struct spdk_pci_addr *addr,
+	  struct nvme_ctrlr *ctrlr)
+{
+	(void)cb_ctx;
+
+	print_controller(addr);
 	nvme_detach(ctrlr);
 }
 
@@ -52,9 +57,9 @@ int
 main(int argc, const char **argv)
 {
 	struct spdk_env_opts opts;
+	struct spdk_pci_addr addr;
+	struct nvme_ctrlr *ctrlr;
 	int rc;
-
-	(void)argc;
 
 	spdk_env_opts_init(&opts);
 	opts.name = "identify";
@@ -64,9 +69,30 @@ main(int argc, const char **argv)
 		return 1;
 	}
 
-	rc = nvme_probe(attach_cb, NULL);
-	if (rc != 0) {
-		fprintf(stderr, "%s: nvme probe failed\n", argv[0]);
+	if (argc == 2) {
+		rc = spdk_pci_addr_parse(&addr, argv[1]);
+		if (rc != 0) {
+			fprintf(stderr, "%s: failed to parse the address\n", argv[0]);
+			return 1;
+		}
+
+		ctrlr = nvme_connect(&addr);
+		if (!ctrlr) {
+			fprintf(stderr, "%s: failed to connect to controller at %s\n",
+				argv[0], argv[1]);
+			return 1;
+		}
+
+		print_controller(&addr);
+		nvme_detach(ctrlr);
+	} else if (argc == 1) {
+		rc = nvme_probe(attach_cb, NULL);
+		if (rc != 0) {
+			fprintf(stderr, "%s: nvme probe failed\n", argv[0]);
+			return 1;
+		}
+	} else {
+		fprintf(stderr, "Usage: %s [PCI_BDF_ADDRESS]\n", argv[0]);
 		return 1;
 	}
 
