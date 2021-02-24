@@ -13,6 +13,37 @@ source "$1"
 rootdir=$(readlink -f $(dirname $0))
 source "$rootdir/test/common/autotest_common.sh"
 
+function build_rpms() (
+	local version rpms
+
+	# Make sure linker will not attempt to look under DPDK's repo dir to get the libs
+	unset -v LD_LIBRARY_PATH
+
+	install_uninstall_rpms() {
+		rpms=("$HOME/rpmbuild/RPMS/x86_64/"spdk{,-devel,{,-dpdk}-libs}-$version-1.x86_64.rpm)
+
+		sudo rpm -i "${rpms[@]}"
+		rpms=("${rpms[@]##*/}") rpms=("${rpms[@]%.rpm}")
+		# Check if we can find one of the apps in the PATH now and verify if it doesn't miss
+		# any libs.
+		LIST_LIBS=yes "$rootdir/rpmbuild/rpm-deps.sh" "${SPDK_APP[@]##*/}"
+		sudo rpm -e "${rpms[@]}"
+	}
+
+	build_rpm() {
+		MAKEFLAGS="$MAKEFLAGS" SPDK_VERSION="$version" DEPS=no "$rootdir/rpmbuild/rpm.sh" "$@"
+		install_uninstall_rpms
+	}
+
+	version="test_shared"
+	run_test "build_shared_rpm" build_rpm --with-shared
+
+	if [[ -n $SPDK_TEST_NATIVE_DPDK ]]; then
+		version="test_shared_native_dpdk"
+		run_test "build_shared_native_dpdk_rpm" build_rpm --with-shared --with-dpdk="$SPDK_RUN_EXTERNAL_DPDK"
+	fi
+)
+
 out=$PWD
 
 MAKEFLAGS=${MAKEFLAGS:--j16}
@@ -27,6 +58,10 @@ if [ $(git status --porcelain --ignore-submodules | wc -l) -ne 0 ]; then
 	exit 1
 fi
 timing_exit porcelain_check
+
+if [[ $SPDK_TEST_RELEASE_BUILD -eq 1 ]]; then
+	run_test "build_rpms" build_rpms
+fi
 
 if [[ $RUN_NIGHTLY -eq 0 ]]; then
 	timing_finish
