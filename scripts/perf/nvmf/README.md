@@ -123,9 +123,6 @@ Optional, common:
   interfaces. Default: disabled.
 - tuned_profile - tunedadm profile to apply on the system before starting
   the test.
-- adq_enable - bool; only for TCP transport.
-  Configure system modules, NIC settings and create priority traffic classes
-  for ADQ testing. You need and ADQ-capable NIC like the Intel E810.
 - irq_scripts_dir - path to scripts directory of Mellanox mlnx-tools package;
   Used to run set_irq_affinity.sh script.
   Default: /usr/src/local/mlnx-tools/ofed_scripts
@@ -150,6 +147,9 @@ Optional, SPDK Target only:
 - enable_dpdk_memory - [bool, int]. Wait for a given number of seconds and
   call env_dpdk_get_mem_stats RPC call to dump DPDK memory stats. Typically
   wait time should be at least ramp_time of fio described in another section.
+- adq_enable - bool; only for TCP transport.
+  Configure system modules, NIC settings and create priority traffic classes
+  for ADQ testing. You need and ADQ-capable NIC like the Intel E810.
 
 ### Initiator system settings section
 
@@ -209,12 +209,15 @@ Optional, common:
   cpupower governor be set to `userspace`.
 - tuned_profile - tunedadm profile to apply on the system before starting
   the test.
-- adq_enable - bool; only for TCP transport. Configure system modules, NIC
-  settings and create priority traffic classes for ADQ testing.
-  You need an ADQ-capable NIC like Intel E810.
 - irq_scripts_dir - path to scripts directory of Mellanox mlnx-tools package;
   Used to run set_irq_affinity.sh script.
   Default: /usr/src/local/mlnx-tools/ofed_scripts
+
+Optional, SPDK Initiator only:
+
+- adq_enable - bool; only for TCP transport. Configure system modules, NIC
+  settings and create priority traffic classes for ADQ testing.
+  You need an ADQ-capable NIC like Intel E810.
 
 ### Fio settings section
 

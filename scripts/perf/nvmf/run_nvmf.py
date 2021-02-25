@@ -99,6 +99,9 @@ class Server:
         self.configure_irq_affinity()
 
     def configure_adq(self):
+        if self.mode == "kernel":
+            self.log_print("WARNING: ADQ setup not yet supported for Kernel mode. Skipping configuration.")
+            return
         self.adq_load_modules()
         self.adq_configure_nic()
 
@@ -115,6 +118,11 @@ class Server:
 
     def adq_configure_tc(self):
         self.log_print("Configuring ADQ Traffic classess and filters...")
+
+        if self.mode == "kernel":
+            self.log_print("WARNING: ADQ setup not yet supported for Kernel mode. Skipping configuration.")
+            return
+
         num_queues_tc0 = 2  # 2 is minimum number of queues for TC0
         num_queues_tc1 = self.num_cores
         port_param = "dst_port" if isinstance(self, Target) else "src_port"
