@@ -2124,6 +2124,221 @@ pdu_payload_read_test(void)
 	free(mobj2.buf);
 }
 
+static void
+check_pdu_hdr_handle(struct spdk_iscsi_pdu *pdu, struct spdk_mobj *mobj, uint32_t offset,
+		     struct spdk_iscsi_task *primary)
+{
+	CU_ASSERT(pdu->mobj[0] == mobj);
+	CU_ASSERT(pdu->data == NULL || pdu->data == (void *)((uint64_t)mobj->buf + offset));
+	CU_ASSERT(primary->mobj == NULL);
+}
+
+static void
+check_pdu_payload_handle(struct spdk_iscsi_pdu *pdu, struct spdk_iscsi_task *primary,
+			 struct spdk_mobj *pdu_mobj0, struct spdk_mobj *pdu_mobj1,
+			 struct spdk_mobj *primary_mobj, uint32_t primary_offset)
+{
+	CU_ASSERT(pdu->mobj[0] == pdu_mobj0);
+	CU_ASSERT(pdu->mobj[1] == pdu_mobj1);
+	CU_ASSERT(primary->mobj == primary_mobj);
+	CU_ASSERT(primary->current_data_offset == primary_offset);
+}
+
+static void
+check_write_subtask_submit(struct spdk_scsi_lun *lun, struct spdk_mobj *mobj,
+			   struct spdk_iscsi_pdu *pdu,
+			   int index, uint32_t offset, uint32_t length)
+{
+	struct spdk_scsi_task *scsi_task;
+	struct spdk_iscsi_task *subtask;
+	uint32_t *data;
+	uint32_t i;
+
+	scsi_task = TAILQ_FIRST(&lun->tasks);
+	SPDK_CU_ASSERT_FATAL(scsi_task != NULL);
+	TAILQ_REMOVE(&lun->tasks, scsi_task, scsi_link);
+
+	subtask = iscsi_task_from_scsi_task(scsi_task);
+
+	CU_ASSERT(iscsi_task_get_pdu(subtask) == pdu);
+	CU_ASSERT(pdu->mobj[index] == mobj);
+	CU_ASSERT(subtask->scsi.offset == offset);
+	CU_ASSERT(subtask->scsi.length == length);
+	CU_ASSERT(subtask->scsi.iovs[0].iov_base == mobj->buf);
+	CU_ASSERT(subtask->scsi.iovs[0].iov_len == length);
+
+	data = (uint32_t *)mobj->buf;
+	for (i = 0; i < length; i += 4) {
+		CU_ASSERT(data[i / 4] == offset + i);
+	}
+
+	free(subtask);
+}
+
+static void
+data_out_pdu_sequence_test(void)
+{
+	struct spdk_scsi_lun lun = { .tasks = TAILQ_HEAD_INITIALIZER(lun.tasks), };
+	struct spdk_scsi_dev dev = { .lun[0] = &lun,    };
+	struct spdk_iscsi_sess sess = {
+		.session_type = SESSION_TYPE_NORMAL,
+		.MaxBurstLength = SPDK_ISCSI_MAX_BURST_LENGTH,
+	};
+	struct spdk_iscsi_conn conn = {
+		.full_feature = true,
+		.state = ISCSI_CONN_STATE_RUNNING,
+		.sess = &sess,
+		.dev = &dev,
+		.active_r2t_tasks = TAILQ_HEAD_INITIALIZER(conn.active_r2t_tasks),
+	};
+	struct spdk_iscsi_task primary = {};
+	struct spdk_iscsi_pdu pdu = {};
+	struct spdk_mobj mobj1 = {}, mobj2 = {}, mobj3 = {};
+	struct iscsi_bhs_data_out *data_reqh;
+	int rc;
+
+	mobj1.buf = calloc(1, SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH));
+	SPDK_CU_ASSERT_FATAL(mobj1.buf != NULL);
+
+	mobj2.buf = calloc(1, SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH));
+	SPDK_CU_ASSERT_FATAL(mobj2.buf != NULL);
+
+	mobj3.buf = calloc(1, SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH));
+	SPDK_CU_ASSERT_FATAL(mobj3.buf != NULL);
+
+	/* Test scenario is as follows.
+	 *
+	 * Some iSCSI initiator sends a Data-OUT PDU sequence such that the size of
+	 * the data segment of any Data-OUT PDU is not block size multiples.
+	 * Test if such complex Data-OUT PDU sequence is processed correctly.
+	 *
+	 * Desired Data Transfer Length is 5 * SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH / 2.
+	 * Number of Data-OUT PDUs is 4. Length of the data segment of the first two PDUs are
+	 * SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH / 2 - 4. Length of the data segment of the
+	 * third PDU is SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH. Length of the data segment
+	 * of the final PDU is SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH / 2 + 8.
+	 *
+	 * Three data buffers should be used and three subtasks should be created and submitted.
+	 *
+	 * The test scenario assume that a iscsi_conn_read_data() call could read
+	 * the required length of the data and all read lengths are 4 bytes multiples.
+	 * The latter is to verify data is copied to the correct offset by using data patterns.
+	 */
+
+	primary.scsi.transfer_len = 5 * SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH / 2;
+	primary.desired_data_transfer_length = primary.scsi.transfer_len;
+	TAILQ_INSERT_TAIL(&conn.active_r2t_tasks, &primary, link);
+	conn.pending_r2t = 1;
+	g_conn_read_len = 0;
+
+	/* The 1st Data-OUT PDU */
+	data_reqh = (struct iscsi_bhs_data_out *)&pdu.bhs;
+	pdu.bhs.opcode = ISCSI_OP_SCSI_DATAOUT;
+	pdu.data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH / 2 - 4;
+
+	rc = iscsi_pdu_hdr_handle(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_hdr_handle(&pdu, NULL, 0, &primary);
+
+	MOCK_SET(spdk_mempool_get, &mobj1);
+
+	rc = iscsi_pdu_payload_read(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_payload_read(&pdu, &mobj1, rc, 0, 0);
+
+	rc = iscsi_pdu_payload_handle(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_payload_handle(&pdu, &primary, NULL, NULL, &mobj1, 0);
+
+	/* The 2nd Data-OUT PDU */
+	memset(&pdu, 0, sizeof(pdu));
+	pdu.bhs.opcode = ISCSI_OP_SCSI_DATAOUT;
+	pdu.data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH / 2 - 4;
+	to_be32(&data_reqh->data_sn, 1);
+	to_be32(&data_reqh->buffer_offset, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH / 2 - 4);
+
+	rc = iscsi_pdu_hdr_handle(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_hdr_handle(&pdu, &mobj1, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH / 2 - 4, &primary);
+
+	rc = iscsi_pdu_payload_read(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_payload_read(&pdu, &mobj1, rc, 0, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH / 2 - 4);
+
+	rc = iscsi_pdu_payload_handle(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_payload_handle(&pdu, &primary, NULL, NULL, &mobj1, 0);
+
+	/* The 3rd Data-OUT PDU */
+	memset(&pdu, 0, sizeof(pdu));
+	pdu.bhs.opcode = ISCSI_OP_SCSI_DATAOUT;
+	pdu.data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	to_be32(&data_reqh->data_sn, 2);
+	to_be32(&data_reqh->buffer_offset, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH - 8);
+
+	rc = iscsi_pdu_hdr_handle(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_hdr_handle(&pdu, &mobj1, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH - 8, &primary);
+
+	rc = iscsi_pdu_payload_read(&conn, &pdu);
+	CU_ASSERT(rc > 0);
+	check_pdu_payload_read(&pdu, &mobj1, rc, 0, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH - 8);
+
+	MOCK_SET(spdk_mempool_get, &mobj2);
+
+	rc = iscsi_pdu_payload_read(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_payload_read(&pdu, &mobj2, rc, 1, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
+
+	rc = iscsi_pdu_payload_handle(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_payload_handle(&pdu, &primary, &mobj1, NULL, &mobj2,
+				 SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
+
+	check_write_subtask_submit(&lun, &mobj1, &pdu, 0, 0, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
+
+	/* The 4th and final Data-OUT PDU */
+	memset(&pdu, 0, sizeof(pdu));
+	pdu.bhs.opcode = ISCSI_OP_SCSI_DATAOUT;
+	pdu.data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH / 2 + 8;
+	data_reqh->flags |= ISCSI_FLAG_FINAL;
+	to_be32(&data_reqh->data_sn, 3);
+	to_be32(&data_reqh->buffer_offset, 2 * SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH - 8);
+
+	rc = iscsi_pdu_hdr_handle(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_hdr_handle(&pdu, &mobj2, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH - 8, &primary);
+
+	rc = iscsi_pdu_payload_read(&conn, &pdu);
+	CU_ASSERT(rc > 0);
+	check_pdu_payload_read(&pdu, &mobj2, rc, 0, 2 * SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH - 8);
+
+	MOCK_SET(spdk_mempool_get, &mobj3);
+
+	rc = iscsi_pdu_payload_read(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_payload_read(&pdu, &mobj3, rc, 1, 2 * SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
+
+	rc = iscsi_pdu_payload_handle(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_payload_handle(&pdu, &primary, &mobj2, &mobj3, NULL,
+				 5 * SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH / 2);
+
+	check_write_subtask_submit(&lun, &mobj2, &pdu, 0, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH,
+				   SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
+
+	check_write_subtask_submit(&lun, &mobj3, &pdu, 1, 2 * SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH,
+				   SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH / 2);
+
+	CU_ASSERT(TAILQ_EMPTY(&lun.tasks));
+
+	MOCK_CLEAR(spdk_mempool_get);
+
+	free(mobj1.buf);
+	free(mobj2.buf);
+	free(mobj3.buf);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2157,6 +2372,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, pdu_hdr_op_data_test);
 	CU_ADD_TEST(suite, empty_text_with_cbit_test);
 	CU_ADD_TEST(suite, pdu_payload_read_test);
+	CU_ADD_TEST(suite, data_out_pdu_sequence_test);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
