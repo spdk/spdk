@@ -50,6 +50,10 @@ run_test "external_make_hello_no_bdev_shared_iso" make -C $test_root hello_world
 run_test "external_run_hello_no_bdev_shared_iso" $test_root/hello_world/hello_bdev \
 	--json $test_root/hello_world/bdev.json -b Malloc0
 
+# Make the basic NVMe driver linked against individual shared SPDK libraries.
+run_test "external_make_nvme_shared" make -C $test_root nvme_shared
+run_test "external_run_nvme_shared" $test_root/nvme/identify.sh
+
 make -C $test_root clean
 
 make -C $SPDK_DIR clean
@@ -67,6 +71,10 @@ make -C $test_root clean
 run_test "external_make_hello_no_bdev_static" make -C $test_root hello_world_no_bdev_static
 run_test "external_run_hello_no_bdev_static" $test_root/hello_world/hello_bdev \
 	--json $test_root/hello_world/bdev.json -b Malloc0
+
+# Make the basic NVMe driver statically linked against individual SPDK archives.
+run_test "external_make_nvme_static" make -C $test_root nvme_static
+run_test "external_run_nvme_static" $test_root/nvme/identify.sh
 
 make -C $test_root clean
 make -C $SPDK_DIR -j$(nproc) clean
