@@ -69,9 +69,16 @@ endif
 ifneq ($(filter freebsd%,$(TARGET_TRIPLET_WORDS)),)
 OS = FreeBSD
 endif
+ifneq ($(filter mingw% windows%,$(TARGET_TRIPLET_WORDS)),)
+OS = Windows
+endif
 
 TARGET_ARCHITECTURE ?= $(CONFIG_ARCH)
 TARGET_MACHINE := $(firstword $(TARGET_TRIPLET_WORDS))
+
+ifeq ($(OS),Windows)
+EXEEXT = .exe
+endif
 
 COMMON_CFLAGS = -g $(C_OPT) -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wmissing-declarations -fno-strict-aliasing -I$(SPDK_ROOT_DIR)/include
 
@@ -127,11 +134,15 @@ COMMON_CFLAGS += -fno-common
 
 # Enable full RELRO - no lazy relocation (resolve everything at load time).
 # This allows the GOT to be made read-only early in the loading process.
+ifneq ($(OS),Windows)
 LDFLAGS += -Wl,-z,relro,-z,now
+endif
 
 # Make the stack non-executable.
 # This is the default in most environments, but it doesn't hurt to set it explicitly.
+ifneq ($(OS),Windows)
 LDFLAGS += -Wl,-z,noexecstack
+endif
 
 # Specify the linker to use
 ifneq ($(LD_TYPE),)
@@ -253,8 +264,10 @@ ifneq (, $(SPDK_GIT_COMMIT))
 COMMON_CFLAGS += -DSPDK_GIT_COMMIT=$(SPDK_GIT_COMMIT)
 endif
 
+ifneq ($(OS),Windows)
 COMMON_CFLAGS += -pthread
 LDFLAGS += -pthread
+endif
 
 CFLAGS   += $(COMMON_CFLAGS) -Wno-pointer-sign -Wstrict-prototypes -Wold-style-definition -std=gnu99
 CXXFLAGS += $(COMMON_CFLAGS)
@@ -265,6 +278,11 @@ SYS_LIBS += -lcrypto
 
 ifneq ($(CONFIG_NVME_CUSE)$(CONFIG_FUSE),nn)
 SYS_LIBS += -lfuse3
+endif
+
+ifeq ($(OS).$(CC_TYPE),Windows.gcc)
+# Include libssp.a for stack-protector and _FORTIFY_SOURCE
+SYS_LIBS += -l:libssp.a
 endif
 
 MAKEFLAGS += --no-print-directory
