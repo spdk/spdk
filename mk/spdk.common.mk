@@ -129,6 +129,11 @@ COMMON_CFLAGS += -fPIC
 # Enable stack buffer overflow checking
 COMMON_CFLAGS += -fstack-protector
 
+ifeq ($(OS).$(CC_TYPE),Windows.gcc)
+# Workaround for gcc bug 86832 - invalid TLS usage
+COMMON_CFLAGS += -mstack-protector-guard=global
+endif
+
 # Prevent accidental multiple definitions of global variables
 COMMON_CFLAGS += -fno-common
 
