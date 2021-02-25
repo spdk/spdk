@@ -1095,6 +1095,15 @@ union spdk_nvme_cmbsz_register spdk_nvme_ctrlr_get_regs_cmbsz(struct spdk_nvme_c
 union spdk_nvme_pmrcap_register spdk_nvme_ctrlr_get_regs_pmrcap(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
+ * Get the NVMe controller PMR size.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return the NVMe controller PMR size or 0 if PMR is not supported.
+ */
+uint64_t spdk_nvme_ctrlr_get_pmrsz(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
  * Get the number of namespaces for the given NVMe controller.
  *
  * This function is thread safe and can be called at any point while the
@@ -2226,6 +2235,56 @@ void *spdk_nvme_ctrlr_map_cmb(struct spdk_nvme_ctrlr *ctrlr, size_t *size);
  * \param ctrlr Controller from which to unmap the memory buffer.
  */
 void spdk_nvme_ctrlr_unmap_cmb(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
+ * Enable the Persistent Memory Region
+ *
+ * \param ctrlr Controller that contains the Persistent Memory Region
+ *
+ * \return 0 on success. Negated errno on the following error conditions:
+ * -ENOTSUP: PMR is not supported by the Controller.
+ * -EIO: Registers access failure.
+ * -EINVAL: PMR Time Units Invalid or PMR is already enabled.
+ * -ETIMEDOUT: Timed out to Enable PMR.
+ * -ENOSYS: Transport does not support Enable PMR function.
+ */
+int spdk_nvme_ctrlr_enable_pmr(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
+ * Disable the Persistent Memory Region
+ *
+ * \param ctrlr Controller that contains the Persistent Memory Region
+ *
+ * \return 0 on success. Negated errno on the following error conditions:
+ * -ENOTSUP: PMR is not supported by the Controller.
+ * -EIO: Registers access failure.
+ * -EINVAL: PMR Time Units Invalid or PMR is already disabled.
+ * -ETIMEDOUT: Timed out to Disable PMR.
+ * -ENOSYS: Transport does not support Disable PMR function.
+ */
+int spdk_nvme_ctrlr_disable_pmr(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
+ * Map the Persistent Memory Region so that it's data is
+ * visible from the CPU.
+ *
+ * \param ctrlr Controller that contains the Persistent Memory Region
+ * \param size Size of the region that was mapped.
+ *
+ * \return Pointer to Persistent Memory Region, or NULL on failure.
+ */
+void *spdk_nvme_ctrlr_map_pmr(struct spdk_nvme_ctrlr *ctrlr, size_t *size);
+
+/**
+ * Free the Persistent Memory Region.
+ *
+ * \param ctrlr Controller from which to unmap the Persistent Memory Region.
+ *
+ * \return 0 on success, negative errno on failure.
+ * -ENXIO: Either PMR is not supported by the Controller or the PMR is already unmapped.
+ * -ENOSYS: Transport does not support Unmap PMR function.
+ */
+int spdk_nvme_ctrlr_unmap_pmr(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
  * Get the transport ID for a given NVMe controller.

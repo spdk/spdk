@@ -63,6 +63,9 @@ chained accelerated CRC32 computation support.
 
 ### nvme
 
+Added new functions `spdk_nvme_ctrlr_get_pmrsz`, `spdk_nvme_ctrlr_enable_pmr`,
+`spdk_nvme_ctrlr_disable_pmr`, `spdk_nvme_ctrlr_map_pmr` and `spdk_nvme_ctrlr_unmap_pmr`.
+
 Added NVMe transport operations to enable, disable, map and unmap the PMR.
 
 Added `spdk_nvme_qpair_get_optimal_poll_group` function and `qpair_get_optimal_poll_group`

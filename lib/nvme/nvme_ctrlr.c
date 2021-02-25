@@ -3614,6 +3614,12 @@ union spdk_nvme_pmrcap_register spdk_nvme_ctrlr_get_regs_pmrcap(struct spdk_nvme
 	return pmrcap;
 }
 
+uint64_t
+spdk_nvme_ctrlr_get_pmrsz(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return ctrlr->pmr_size;
+}
+
 uint32_t
 spdk_nvme_ctrlr_get_num_ns(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -4091,6 +4097,54 @@ spdk_nvme_ctrlr_unmap_cmb(struct spdk_nvme_ctrlr *ctrlr)
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	nvme_transport_ctrlr_unmap_cmb(ctrlr);
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+}
+
+int
+spdk_nvme_ctrlr_enable_pmr(struct spdk_nvme_ctrlr *ctrlr)
+{
+	int rc;
+
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	rc = nvme_transport_ctrlr_enable_pmr(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	return rc;
+}
+
+int
+spdk_nvme_ctrlr_disable_pmr(struct spdk_nvme_ctrlr *ctrlr)
+{
+	int rc;
+
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	rc = nvme_transport_ctrlr_disable_pmr(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	return rc;
+}
+
+void *
+spdk_nvme_ctrlr_map_pmr(struct spdk_nvme_ctrlr *ctrlr, size_t *size)
+{
+	void *buf;
+
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	buf = nvme_transport_ctrlr_map_pmr(ctrlr, size);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	return buf;
+}
+
+int
+spdk_nvme_ctrlr_unmap_pmr(struct spdk_nvme_ctrlr *ctrlr)
+{
+	int rc;
+
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	rc = nvme_transport_ctrlr_unmap_pmr(ctrlr);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	return rc;
 }
 
 bool

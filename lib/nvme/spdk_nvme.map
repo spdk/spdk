@@ -42,6 +42,7 @@
 	spdk_nvme_ctrlr_get_regs_vs;
 	spdk_nvme_ctrlr_get_regs_cmbsz;
 	spdk_nvme_ctrlr_get_regs_pmrcap;
+	spdk_nvme_ctrlr_get_pmrsz;
 	spdk_nvme_ctrlr_get_num_ns;
 	spdk_nvme_ctrlr_get_pci_device;
 	spdk_nvme_ctrlr_get_max_xfer_size;
@@ -90,6 +91,10 @@
 	spdk_nvme_ctrlr_reserve_cmb;
 	spdk_nvme_ctrlr_map_cmb;
 	spdk_nvme_ctrlr_unmap_cmb;
+	spdk_nvme_ctrlr_enable_pmr;
+	spdk_nvme_ctrlr_disable_pmr;
+	spdk_nvme_ctrlr_map_pmr;
+	spdk_nvme_ctrlr_unmap_pmr;
 	spdk_nvme_ctrlr_get_transport_id;
 	spdk_nvme_ctrlr_alloc_qid;
 	spdk_nvme_ctrlr_free_qid;
