@@ -63,6 +63,8 @@ chained accelerated CRC32 computation support.
 
 ### nvme
 
+Added NVMe transport operations to enable, disable, map and unmap the PMR.
+
 Added `spdk_nvme_qpair_get_optimal_poll_group` function and `qpair_get_optimal_poll_group`
 function pointer in spdk_nvmf_transport_ops structure in order to add the qpair to the most
 suitable polling group.

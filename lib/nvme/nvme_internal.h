@@ -865,6 +865,9 @@ struct spdk_nvme_ctrlr {
 	uint32_t			max_zone_append_size;
 
 	STAILQ_HEAD(, spdk_nvme_ctrlr_aer_completion_list)      async_events;
+
+	/* PMR size in bytes */
+	uint64_t			pmr_size;
 };
 
 struct spdk_nvme_probe_ctx {
@@ -1315,6 +1318,10 @@ struct spdk_nvme_qpair *nvme_transport_ctrlr_create_io_qpair(struct spdk_nvme_ct
 int nvme_transport_ctrlr_reserve_cmb(struct spdk_nvme_ctrlr *ctrlr);
 void *nvme_transport_ctrlr_map_cmb(struct spdk_nvme_ctrlr *ctrlr, size_t *size);
 int nvme_transport_ctrlr_unmap_cmb(struct spdk_nvme_ctrlr *ctrlr);
+int nvme_transport_ctrlr_enable_pmr(struct spdk_nvme_ctrlr *ctrlr);
+int nvme_transport_ctrlr_disable_pmr(struct spdk_nvme_ctrlr *ctrlr);
+void *nvme_transport_ctrlr_map_pmr(struct spdk_nvme_ctrlr *ctrlr, size_t *size);
+int nvme_transport_ctrlr_unmap_pmr(struct spdk_nvme_ctrlr *ctrlr);
 int nvme_transport_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_qpair *qpair);
 int nvme_transport_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr,

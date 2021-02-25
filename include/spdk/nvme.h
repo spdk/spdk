@@ -3537,6 +3537,14 @@ struct spdk_nvme_transport_ops {
 
 	int (*ctrlr_unmap_cmb)(struct spdk_nvme_ctrlr *ctrlr);
 
+	int (*ctrlr_enable_pmr)(struct spdk_nvme_ctrlr *ctrlr);
+
+	int (*ctrlr_disable_pmr)(struct spdk_nvme_ctrlr *ctrlr);
+
+	void *(*ctrlr_map_pmr)(struct spdk_nvme_ctrlr *ctrlr, size_t *size);
+
+	int (*ctrlr_unmap_pmr)(struct spdk_nvme_ctrlr *ctrlr);
+
 	struct spdk_nvme_qpair *(*ctrlr_create_io_qpair)(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 			const struct spdk_nvme_io_qpair_opts *opts);
 

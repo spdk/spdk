@@ -76,6 +76,20 @@ struct nvme_pcie_ctrlr {
 		size_t mem_register_size;
 	} cmb;
 
+	struct {
+		/* BAR mapping address which contains persistent memory region */
+		void *bar_va;
+
+		/* BAR physical address which contains persistent memory region */
+		uint64_t bar_pa;
+
+		/* Persistent memory region size in Bytes */
+		uint64_t size;
+
+		void *mem_register_addr;
+		size_t mem_register_size;
+	} pmr;
+
 	/** stride in uint32_t units between doorbell registers (1 = 4 bytes, 2 = 8 bytes, ...) */
 	uint32_t doorbell_stride_u32;
 

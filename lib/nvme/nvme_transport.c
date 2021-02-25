@@ -260,6 +260,58 @@ nvme_transport_ctrlr_unmap_cmb(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
+int
+nvme_transport_ctrlr_enable_pmr(struct spdk_nvme_ctrlr *ctrlr)
+{
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+
+	assert(transport != NULL);
+	if (transport->ops.ctrlr_enable_pmr != NULL) {
+		return transport->ops.ctrlr_enable_pmr(ctrlr);
+	}
+
+	return -ENOSYS;
+}
+
+int
+nvme_transport_ctrlr_disable_pmr(struct spdk_nvme_ctrlr *ctrlr)
+{
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+
+	assert(transport != NULL);
+	if (transport->ops.ctrlr_disable_pmr != NULL) {
+		return transport->ops.ctrlr_disable_pmr(ctrlr);
+	}
+
+	return -ENOSYS;
+}
+
+void *
+nvme_transport_ctrlr_map_pmr(struct spdk_nvme_ctrlr *ctrlr, size_t *size)
+{
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+
+	assert(transport != NULL);
+	if (transport->ops.ctrlr_map_pmr != NULL) {
+		return transport->ops.ctrlr_map_pmr(ctrlr, size);
+	}
+
+	return NULL;
+}
+
+int
+nvme_transport_ctrlr_unmap_pmr(struct spdk_nvme_ctrlr *ctrlr)
+{
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+
+	assert(transport != NULL);
+	if (transport->ops.ctrlr_unmap_pmr != NULL) {
+		return transport->ops.ctrlr_unmap_pmr(ctrlr);
+	}
+
+	return -ENOSYS;
+}
+
 struct spdk_nvme_qpair *
 nvme_transport_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 				     const struct spdk_nvme_io_qpair_opts *opts)
