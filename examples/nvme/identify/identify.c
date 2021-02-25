@@ -1178,12 +1178,14 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	struct spdk_pci_device			*pci_dev;
 	struct spdk_pci_id			pci_id;
 	uint32_t				nsid;
+	uint64_t				pmrsz;
 	struct spdk_nvme_ana_group_descriptor	*desc;
 
 	cap = spdk_nvme_ctrlr_get_regs_cap(ctrlr);
 	vs = spdk_nvme_ctrlr_get_regs_vs(ctrlr);
 	cmbsz = spdk_nvme_ctrlr_get_regs_cmbsz(ctrlr);
 	pmrcap = spdk_nvme_ctrlr_get_regs_pmrcap(ctrlr);
+	pmrsz = spdk_nvme_ctrlr_get_pmrsz(ctrlr);
 
 	if (!spdk_nvme_ctrlr_is_discovery(ctrlr)) {
 		/*
@@ -1338,6 +1340,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	printf("================================\n");
 	if (cap.bits.pmrs != 0) {
 		printf("Supported:                             Yes\n");
+		printf("Total Size:                            %" PRIu64 " bytes\n", pmrsz);
 		printf("Read data and metadata in PMR          %s\n",
 		       pmrcap.bits.rds ? "Supported" : "Not Supported");
 		printf("Write data and metadata in PMR:        %s\n",
