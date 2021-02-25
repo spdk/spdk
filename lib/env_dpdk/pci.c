@@ -246,8 +246,17 @@ pci_device_rte_dev_event(const char *device_name,
 
 		if (dev != NULL && can_detach) {
 			/* if device is not attached we can remove it right away.
-			* Otherwise it will be removed at detach. */
-			remove_rte_dev(dev->dev_handle);
+			 * Otherwise it will be removed at detach.
+			 *
+			 * Because the user's callback is invoked in eal interrupt
+			 * callback, the interrupt callback need to be finished before
+			 * it can be unregistered when detaching device. So finish
+			 * callback soon and use a deferred removal to detach device
+			 * is need. It is a workaround, once the device detaching be
+			 * moved into the eal in the future, the deferred removal could
+			 * be deleted.
+			 */
+			rte_eal_alarm_set(1, detach_rte_cb, dev->dev_handle);
 		}
 		break;
 	}
