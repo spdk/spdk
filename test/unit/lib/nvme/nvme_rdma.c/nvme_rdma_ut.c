@@ -483,6 +483,32 @@ test_nvme_rdma_ctrlr_create_qpair(void)
 	SPDK_CU_ASSERT_FATAL(qpair == NULL);
 }
 
+DEFINE_STUB(ibv_create_cq, struct ibv_cq *, (struct ibv_context *context, int cqe, void *cq_context,
+		struct ibv_comp_channel *channel, int comp_vector), (struct ibv_cq *)0xFEEDBEEF);
+DEFINE_STUB(ibv_destroy_cq, int, (struct ibv_cq *cq), 0);
+
+static void
+test_nvme_rdma_poller_create(void)
+{
+	struct nvme_rdma_poll_group	group = {};
+	struct ibv_context *contexts = (struct ibv_context *)0xDEADBEEF;
+
+	/* Case: calloc and ibv not need to fail test */
+	STAILQ_INIT(&group.pollers);
+	group.num_pollers = 1;
+	int rc = nvme_rdma_poller_create(&group, contexts);
+
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(group.num_pollers = 2);
+	CU_ASSERT(&group.pollers != NULL);
+	CU_ASSERT(group.pollers.stqh_first->device == contexts);
+	CU_ASSERT(group.pollers.stqh_first->cq == (struct ibv_cq *)0xFEEDBEEF);
+	CU_ASSERT(group.pollers.stqh_first->current_num_wc == DEFAULT_NVME_RDMA_CQ_SIZE);
+	CU_ASSERT(group.pollers.stqh_first->required_num_wc == 0);
+
+	nvme_rdma_poll_group_free_pollers(&group);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -499,6 +525,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_rdma_alloc_reqs);
 	CU_ADD_TEST(suite, test_nvme_rdma_alloc_rsps);
 	CU_ADD_TEST(suite, test_nvme_rdma_ctrlr_create_qpair);
+	CU_ADD_TEST(suite, test_nvme_rdma_poller_create);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
