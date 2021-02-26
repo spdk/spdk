@@ -76,7 +76,6 @@ vhosttestinit
 
 spdk_mask=$vhost_0_reactor_mask
 if $distribute_cores; then
-	# FIXME: this need to be handled entirely in common.sh
 	source $testdir/autotest.config
 	# Adjust the mask so vhost runs on separate cpus than qemu instances.
 	# We know that .config sets qemus to run on single cpu so simply take

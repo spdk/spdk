@@ -5,8 +5,6 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/vhost/common.sh
 
-DEFAULT_FIO_BIN="$DEPENDENCY_DIR/fio"
-
 case $1 in
 	-h | --help)
 		echo "usage: $(basename $0) TEST_TYPE"
@@ -35,10 +33,7 @@ if [[ $(uname -s) != Linux ]]; then
 	exit 0
 fi
 
-: ${FIO_BIN="$DEFAULT_FIO_BIN"}
 vhosttestinit
-
-WORKDIR=$(readlink -f $(dirname $0))
 
 case $1 in
 	-hp | --hotplug)

@@ -12,12 +12,7 @@ if [[ $(uname -s) != Linux ]]; then
 	exit 0
 fi
 
-DEFAULT_FIO_BIN="$DEPENDENCY_DIR/fio"
-
-: ${FIO_BIN="$DEFAULT_FIO_BIN"}
 vhosttestinit
-
-WORKDIR=$(readlink -f $(dirname $0))
 
 run_test "vhost_negative" $WORKDIR/other/negative.sh
 
