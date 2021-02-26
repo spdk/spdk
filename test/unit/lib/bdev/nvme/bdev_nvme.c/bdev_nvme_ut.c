@@ -73,8 +73,13 @@ DEFINE_STUB(spdk_nvme_ctrlr_process_admin_completions, int32_t,
 
 DEFINE_STUB(spdk_nvme_ctrlr_get_flags, uint64_t, (struct spdk_nvme_ctrlr *ctrlr), 0);
 
-DEFINE_STUB_V(spdk_nvme_ctrlr_get_default_io_qpair_opts, (struct spdk_nvme_ctrlr *ctrlr,
-		struct spdk_nvme_io_qpair_opts *opts, size_t opts_size));
+void
+spdk_nvme_ctrlr_get_default_io_qpair_opts(struct spdk_nvme_ctrlr *ctrlr,
+		struct spdk_nvme_io_qpair_opts *opts, size_t opts_size)
+{
+	/* Avoid warning that opts is used uninitialised */
+	memset(opts, 0, opts_size);
+}
 
 DEFINE_STUB(spdk_nvme_ctrlr_get_max_xfer_size, uint32_t,
 	    (const struct spdk_nvme_ctrlr *ctrlr), 0);
