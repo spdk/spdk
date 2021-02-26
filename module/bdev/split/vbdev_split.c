@@ -317,6 +317,7 @@ vbdev_split_create(struct spdk_vbdev_split_config *cfg)
 err:
 	split_base_tailq = spdk_bdev_part_base_get_tailq(cfg->split_base);
 	spdk_bdev_part_base_hotremove(cfg->split_base, split_base_tailq);
+	spdk_bdev_part_base_free(cfg->split_base);
 	return rc;
 }
 
