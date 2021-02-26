@@ -376,18 +376,33 @@ _reactor_set_notify_cpuset_cpl(void *arg1, void *arg2)
 }
 
 static void
+_reactor_set_thread_interrupt_mode(void *ctx)
+{
+	struct spdk_reactor *reactor = ctx;
+
+	spdk_thread_set_interrupt_mode(reactor->in_interrupt);
+}
+
+static void
 _reactor_set_interrupt_mode(void *arg1, void *arg2)
 {
 	struct spdk_reactor *target = arg1;
+	struct spdk_thread *thread;
+	struct spdk_lw_thread *lw_thread, *tmp;
 
 	assert(target == spdk_reactor_get(spdk_env_get_current_core()));
 	assert(target != NULL);
 	assert(target->in_interrupt != target->new_in_interrupt);
-	assert(TAILQ_EMPTY(&target->threads));
 	SPDK_DEBUGLOG(reactor, "Do reactor set on core %u from %s to state %s\n",
 		      target->lcore, !target->in_interrupt ? "intr" : "poll", target->new_in_interrupt ? "intr" : "poll");
 
 	target->in_interrupt = target->new_in_interrupt;
+
+	/* Align spdk_thread with reactor to interrupt mode or poll mode */
+	TAILQ_FOREACH_SAFE(lw_thread, &target->threads, link, tmp) {
+		thread = spdk_thread_get_from_ctx(lw_thread);
+		spdk_thread_send_msg(thread, _reactor_set_thread_interrupt_mode, target);
+	}
 
 	if (target->new_in_interrupt == false) {
 		spdk_for_each_reactor(_reactor_set_notify_cpuset, target, NULL, _reactor_set_notify_cpuset_cpl);
@@ -1127,6 +1142,9 @@ _schedule_thread(void *arg1, void *arg2)
 		if (rc < 0) {
 			SPDK_ERRLOG("Failed to schedule spdk_thread: %s.\n", spdk_strerror(-rc));
 		}
+
+		/* Align spdk_thread with reactor to interrupt mode or poll mode */
+		spdk_thread_send_msg(thread, _reactor_set_thread_interrupt_mode, reactor);
 	}
 }
 
