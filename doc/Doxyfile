@@ -813,6 +813,7 @@ INPUT                  += \
                          compression.md \
                          concurrency.md \
                          containers.md \
+                         ../deprecation.md \
                          event.md \
                          ftl.md \
                          gdb_macros.md \

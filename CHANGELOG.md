@@ -121,7 +121,7 @@ Added new APIs:
 - `spdk_nvmf_poll_group_dump_stat` (function in `nvmf.h`).
 - `poll_group_dump_stat` (transport op in `nvmf_transport.h`).
 
-The following APIs have been deprecated and will be removed in a future release:
+The following APIs have been deprecated and will be removed in SPDK 21.07:
 
 - `spdk_nvmf_poll_group_get_stat` (function in `nvmf.h`),
 - `spdk_nvmf_transport_poll_group_get_stat` (function in `nvmf.h`),
@@ -164,8 +164,8 @@ of nvme poll groups.
 ### rpm
 
 Added support for new RPM spec, rpmbuild/spdk.spec, which can be used for packaging the
-SPDK. The pkg/spdk.spec is considered to be deprecated and scheduled for removal. See
-[RPM documentation](https://spdk.io/doc/rpm.html) for more details.
+SPDK. The pkg/spdk.spec is considered to be deprecated and scheduled for removal in SPDK 21.07.
+See [RPM documentation](https://spdk.io/doc/rpm.html) for more details.
 
 ### sock
 
