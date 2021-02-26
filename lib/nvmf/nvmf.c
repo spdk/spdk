@@ -2,7 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
- *   Copyright (c) 2018-2019 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2018-2019, 2021 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -1361,31 +1361,36 @@ fini:
 }
 
 static void
-_nvmf_subsystem_disconnect_next_qpair(void *ctx)
+nvmf_poll_group_remove_subsystem_msg(void *ctx)
 {
-	struct spdk_nvmf_qpair *qpair;
-	struct nvmf_qpair_disconnect_many_ctx *qpair_ctx = ctx;
+	struct spdk_nvmf_qpair *qpair, *qpair_tmp;
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvmf_poll_group *group;
+	struct nvmf_qpair_disconnect_many_ctx *qpair_ctx = ctx;
 	int rc = 0;
+	bool have_qpairs = false;
 
 	group = qpair_ctx->group;
 	subsystem = qpair_ctx->subsystem;
 
-	TAILQ_FOREACH(qpair, &group->qpairs, link) {
+	TAILQ_FOREACH_SAFE(qpair, &group->qpairs, link, qpair_tmp) {
 		if ((qpair->ctrlr != NULL) && (qpair->ctrlr->subsys == subsystem)) {
-			break;
+			/* Use another variable to check if there were any qpairs disconnected in this call since
+			 * we can loop over all qpairs and iterator will be NULL in the end */
+			have_qpairs = true;
+			rc = spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+			if (rc) {
+				break;
+			}
 		}
 	}
 
-	if (qpair) {
-		rc = spdk_nvmf_qpair_disconnect(qpair, _nvmf_subsystem_disconnect_next_qpair, qpair_ctx);
+	if (!have_qpairs || rc) {
+		_nvmf_poll_group_remove_subsystem_cb(ctx, rc);
+		return;
 	}
 
-	if (!qpair || rc != 0) {
-		_nvmf_poll_group_remove_subsystem_cb(ctx, rc);
-	}
-	return;
+	spdk_thread_send_msg(spdk_get_thread(), nvmf_poll_group_remove_subsystem_msg, ctx);
 }
 
 void
@@ -1393,17 +1398,17 @@ nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
 				 struct spdk_nvmf_subsystem *subsystem,
 				 spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg)
 {
-	struct spdk_nvmf_qpair *qpair;
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
 	struct nvmf_qpair_disconnect_many_ctx *ctx;
-	int rc = 0;
 	uint32_t i;
 
 	ctx = calloc(1, sizeof(struct nvmf_qpair_disconnect_many_ctx));
-
 	if (!ctx) {
 		SPDK_ERRLOG("Unable to allocate memory for context to remove poll subsystem\n");
-		goto fini;
+		if (cb_fn) {
+			cb_fn(cb_arg, -1);
+		}
+		return;
 	}
 
 	ctx->group = group;
@@ -1418,29 +1423,7 @@ nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
 		sgroup->ns_info[i].state = SPDK_NVMF_SUBSYSTEM_INACTIVE;
 	}
 
-	TAILQ_FOREACH(qpair, &group->qpairs, link) {
-		if ((qpair->ctrlr != NULL) && (qpair->ctrlr->subsys == subsystem)) {
-			break;
-		}
-	}
-
-	if (qpair) {
-		rc = spdk_nvmf_qpair_disconnect(qpair, _nvmf_subsystem_disconnect_next_qpair, ctx);
-	} else {
-		/* call the callback immediately. It will handle any channel iteration */
-		_nvmf_poll_group_remove_subsystem_cb(ctx, 0);
-	}
-
-	if (rc != 0 && rc != -EINPROGRESS) {
-		free(ctx);
-		goto fini;
-	}
-
-	return;
-fini:
-	if (cb_fn) {
-		cb_fn(cb_arg, rc);
-	}
+	nvmf_poll_group_remove_subsystem_msg(ctx);
 }
 
 void
