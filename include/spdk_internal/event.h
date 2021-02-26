@@ -236,7 +236,7 @@ struct spdk_governor {
 	/* freqs - the buffer array to save the frequencies; num - the number of frequencies to get; return - the number of available frequencies */
 	uint32_t (*get_core_freqs)(uint32_t lcore_id, uint32_t *freqs, uint32_t num);
 
-	/* return - current frequency */
+	/* return - current frequency on success, 0 on failure */
 	uint32_t (*get_core_curr_freq)(uint32_t lcore_id);
 
 	/**
