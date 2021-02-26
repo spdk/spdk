@@ -11,7 +11,6 @@ rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 vm_count=1
 ctrl_type="spdk_vhost_scsi"
 use_fs=false
-nested_lvol=false
 distribute_cores=false
 
 function usage() {
@@ -30,11 +29,6 @@ function usage() {
 	echo "    --ctrl-type=TYPE      Controller type to use for test:"
 	echo "                          spdk_vhost_scsi - use spdk vhost scsi"
 	echo "                          spdk_vhost_blk - use spdk vhost block"
-	echo "    --nested-lvol         If enabled will create additional lvol bdev"
-	echo "                          on each NVMe for use as base device for next"
-	echo "                          lvol store and lvol bdevs."
-	echo "                          (NVMe->lvol_store->lvol_bdev->lvol_store->lvol_bdev)"
-	echo "                          Default: False"
 	echo "    --thin-provisioning   Create lvol bdevs thin provisioned instead of"
 	echo "                          allocating space up front"
 	echo "    --distribute-cores    Use custom config file and run vhost controllers"
@@ -45,18 +39,6 @@ function usage() {
 }
 
 function clean_lvol_cfg() {
-	notice "Removing nested lvol bdevs"
-	for lvol_bdev in "${nest_lvol_bdevs[@]}"; do
-		$rpc_py bdev_lvol_delete $lvol_bdev
-		notice "nested lvol bdev $lvol_bdev removed"
-	done
-
-	notice "Removing nested lvol stores"
-	for lvol_store in "${nest_lvol_stores[@]}"; do
-		$rpc_py bdev_lvol_delete_lvstore -u $lvol_store
-		notice "nested lvol store $lvol_store removed"
-	done
-
 	notice "Removing lvol bdevs"
 	for lvol_bdev in "${lvol_bdevs[@]}"; do
 		$rpc_py bdev_lvol_delete $lvol_bdev
@@ -76,7 +58,6 @@ while getopts 'xh-:' optchar; do
 				fio-bin=*) fio_bin="--fio-bin=${OPTARG#*=}" ;;
 				vm-count=*) vm_count="${OPTARG#*=}" ;;
 				ctrl-type=*) ctrl_type="${OPTARG#*=}" ;;
-				nested-lvol) nested_lvol=true ;;
 				distribute-cores) distribute_cores=true ;;
 				thin-provisioning) thin=" -t " ;;
 				*) usage $0 "Invalid argument '$OPTARG'" ;;
@@ -109,34 +90,12 @@ notice "..."
 trap 'clean_lvol_cfg; error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
 
 lvol_bdevs=()
-nest_lvol_stores=()
-nest_lvol_bdevs=()
 used_vms=""
 
 id=0
 # Create base lvol store on NVMe
 notice "Creating lvol store on device Nvme${id}n1"
 ls_guid=$($rpc_py bdev_lvol_create_lvstore Nvme0n1 lvs_$id -c 4194304)
-if $nested_lvol; then
-	free_mb=$(get_lvs_free_mb "$ls_guid")
-	size=$((free_mb / (vm_count + 1)))
-
-	notice "Creating lvol bdev on lvol store: $ls_guid"
-	lb_name=$($rpc_py bdev_lvol_create -u $ls_guid lbd_nest $size $thin)
-
-	notice "Creating nested lvol store on lvol bdev: $lb_name"
-	nest_ls_guid=$($rpc_py bdev_lvol_create_lvstore $lb_name lvs_n_$id -c 4194304)
-	nest_lvol_stores+=("$nest_ls_guid")
-
-	for ((j = 0; j < vm_count; j++)); do
-		notice "Creating nested lvol bdev for VM $id on lvol store $nest_ls_guid"
-		free_mb=$(get_lvs_free_mb "$nest_ls_guid")
-		nest_size=$((free_mb / (vm_count - j)))
-		lb_name=$($rpc_py bdev_lvol_create -u $nest_ls_guid lbd_vm_$j $nest_size $thin)
-		nest_lvol_bdevs+=("$lb_name")
-	done
-fi
-
 # Create base lvol bdevs
 for ((j = 0; j < vm_count; j++)); do
 	notice "Creating lvol bdev for VM $id on lvol store $ls_guid"
