@@ -29,6 +29,7 @@
 	spdk_thread_send_msg;
 	spdk_thread_send_critical_msg;
 	spdk_for_each_thread;
+	spdk_thread_set_interrupt_mode;
 	spdk_poller_register;
 	spdk_poller_register_named;
 	spdk_poller_unregister;

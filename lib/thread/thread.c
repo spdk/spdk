@@ -720,6 +720,7 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 {
 	struct spdk_thread *orig_thread;
 	int rc;
+	uint64_t notify = 1;
 
 	orig_thread = _get_thread();
 	tls_thread = thread;
@@ -730,9 +731,25 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 
 	if (spdk_likely(!thread->in_interrupt)) {
 		rc = thread_poll(thread, max_msgs, now);
+		if (spdk_unlikely(thread->in_interrupt)) {
+			/* The thread transitioned to interrupt mode during the above poll.
+			 * Poll it one more time in case that during the transition time
+			 * there is msg received without notification.
+			 */
+			rc = thread_poll(thread, max_msgs, now);
+		}
 	} else {
 		/* Non-block wait on thread's fd_group */
 		rc = spdk_fd_group_wait(thread->fgrp, 0);
+		if (spdk_unlikely(!thread->in_interrupt)) {
+			/* The thread transitioned to poll mode in a msg during the above processing.
+			 * Clear msg_fd since thread messages will be polled directly in poll mode.
+			 */
+			rc = read(thread->msg_fd, &notify, sizeof(notify));
+			if (rc < 0 && errno != EAGAIN) {
+				SPDK_ERRLOG("failed to acknowledge msg queue: %s.\n", spdk_strerror(errno));
+			}
+		}
 	}
 
 
@@ -889,6 +906,10 @@ thread_send_msg_notification(const struct spdk_thread *target_thread)
 		return 0;
 	}
 
+	/* When each spdk_thread can switch between poll and interrupt mode dynamically,
+	 * after sending thread msg, it is necessary to check whether target thread runs in
+	 * interrupt mode and then decide whether do event notification.
+	 */
 	if (spdk_unlikely(target_thread->in_interrupt)) {
 		rc = write(target_thread->msg_fd, &notify, sizeof(notify));
 		if (rc < 0) {
@@ -1332,6 +1353,29 @@ spdk_for_each_thread(spdk_msg_fn fn, void *ctx, spdk_msg_fn cpl)
 
 	rc = spdk_thread_send_msg(ct->cur_thread, _on_thread, ct);
 	assert(rc == 0);
+}
+
+void
+spdk_thread_set_interrupt_mode(bool enable_interrupt)
+{
+	struct spdk_thread *thread = _get_thread();
+
+	assert(thread);
+	assert(spdk_interrupt_mode_is_enabled());
+
+	if (thread->in_interrupt == enable_interrupt) {
+		return;
+	}
+
+	/* Currently, only spdk_thread without pollers can set interrupt mode.
+	 * TODO: remove it after adding interrupt mode switch into poller.
+	 */
+	assert(TAILQ_EMPTY(&thread->timed_pollers));
+	assert(TAILQ_EMPTY(&thread->active_pollers));
+	assert(TAILQ_EMPTY(&thread->paused_pollers));
+
+	thread->in_interrupt = enable_interrupt;
+	return;
 }
 
 void

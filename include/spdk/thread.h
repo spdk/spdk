@@ -514,6 +514,16 @@ int spdk_thread_send_critical_msg(struct spdk_thread *thread, spdk_msg_fn fn);
 void spdk_for_each_thread(spdk_msg_fn fn, void *ctx, spdk_msg_fn cpl);
 
 /**
+ * Set current spdk_thread into interrupt mode or back to poll mode.
+ *
+ * Only valid when thread interrupt facility is enabled by
+ * spdk_interrupt_mode_enable().
+ *
+ * \param enable_interrupt Set interrupt mode for true, or poll mode for false
+ */
+void spdk_thread_set_interrupt_mode(bool enable_interrupt);
+
+/**
  * Register a poller on the current thread.
  *
  * The poller can be unregistered by calling spdk_poller_unregister().

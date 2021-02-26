@@ -48,6 +48,12 @@ Removed the `pci_whitelist`, `pci_blacklist` and `master_core` members of struct
 Removed the `config_file`, `max_delay_us`, `pci_whitelist`
 and `pci_blacklist` members of struct `spdk_app_opts`.
 
+### thread
+
+Added `spdk_thread_set_interrupt_mode` function in order to set present spdk_thead into
+interrupt mode or back to poll mode. It is valid only when thread interrupt facility is
+enabled by spdk_interrupt_mode_enable().
+
 ### iscsi
 
 A security vulnerability has been identified and fixed in the SPDK iSCSI target.
