@@ -14,6 +14,11 @@ the allowed list after the application has started.
 
 Removed the `pci_whitelist`, `pci_blacklist` and `master_core` members of struct `spdk_env_opts`.
 
+### event
+
+Removed the `config_file`, `max_delay_us`, `pci_whitelist`
+and `pci_blacklist` members of struct `spdk_app_opts`.
+
 ### accel
 
 Two new accelerated crc32 functions 'spdk_accel_submit_crc32cv' and

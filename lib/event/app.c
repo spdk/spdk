@@ -418,7 +418,6 @@ app_copy_opts(struct spdk_app_opts *opts, struct spdk_app_opts *opts_user, size_
 	} \
 
 	SET_FIELD(name);
-	SET_FIELD(config_file);
 	SET_FIELD(json_config_file);
 	SET_FIELD(json_config_ignore_errors);
 	SET_FIELD(rpc_addr);
@@ -439,7 +438,6 @@ app_copy_opts(struct spdk_app_opts *opts, struct spdk_app_opts *opts_user, size_
 	SET_FIELD(pci_blocked);
 	SET_FIELD(pci_allowed);
 	SET_FIELD(iova_mode);
-	SET_FIELD(max_delay_us);
 	SET_FIELD(delay_subsystem_init);
 	SET_FIELD(num_entries);
 	SET_FIELD(env_context);
@@ -448,7 +446,7 @@ app_copy_opts(struct spdk_app_opts *opts, struct spdk_app_opts *opts_user, size_
 
 	/* You should not remove this statement, but need to update the assert statement
 	 * if you add a new field, and also add a corresponding SET_FIELD statement */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 200, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 184, "Incorrect size");
 
 #undef SET_FIELD
 }
@@ -475,18 +473,6 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 	}
 
 	app_copy_opts(opts, opts_user, opts_user->opts_size);
-
-	if (opts->config_file) {
-		SPDK_ERRLOG("opts->config_file is deprecated.  Use opts->json_config_file instead.\n");
-		/* For now we will just treat config_file as json_config_file.  But if both were
-		 * specified we will return an error here.
-		 */
-		if (opts->json_config_file) {
-			SPDK_ERRLOG("Setting both opts->config_file and opts->json_config_file not allowed.\n");
-			return 1;
-		}
-		opts->json_config_file = opts->config_file;
-	}
 
 	if (!start_fn) {
 		SPDK_ERRLOG("start_fn should not be NULL\n");
@@ -706,11 +692,6 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 	long int tmp;
 
 	memcpy(&g_default_opts, opts, sizeof(g_default_opts));
-
-	if (opts->config_file && access(opts->config_file, R_OK) != 0) {
-		SPDK_WARNLOG("Can't read JSON configuration file '%s'\n", opts->config_file);
-		opts->config_file = NULL;
-	}
 
 	if (opts->json_config_file && access(opts->json_config_file, R_OK) != 0) {
 		SPDK_WARNLOG("Can't read JSON configuration file '%s'\n", opts->json_config_file);
