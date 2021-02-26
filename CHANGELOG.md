@@ -12,6 +12,8 @@ Only one OCSSD bdev can be created for one OCSSD namespace.
 Added spdk_pci_device_allow API to allow applications to add PCI addresses to
 the allowed list after the application has started.
 
+Removed the `pci_whitelist`, `pci_blacklist` and `master_core` members of struct `spdk_env_opts`.
+
 ### accel
 
 Two new accelerated crc32 functions 'spdk_accel_submit_crc32cv' and

@@ -76,24 +76,15 @@ struct spdk_env_opts {
 	const char		*core_mask;
 	int			shm_id;
 	int			mem_channel;
-	union {
-		int			main_core;
-		int			master_core __attribute__((deprecated));
-	};
+	int			main_core;
 	int			mem_size;
 	bool			no_pci;
 	bool			hugepage_single_segments;
 	bool			unlink_hugepage;
 	size_t			num_pci_addr;
 	const char		*hugedir;
-	union {
-		struct spdk_pci_addr	*pci_blocked;
-		struct spdk_pci_addr	*pci_blacklist __attribute__((deprecated));
-	};
-	union {
-		struct spdk_pci_addr	*pci_allowed;
-		struct spdk_pci_addr	*pci_whitelist __attribute__((deprecated));
-	};
+	struct spdk_pci_addr	*pci_blocked;
+	struct spdk_pci_addr	*pci_allowed;
 	const char		*iova_mode;
 	uint64_t		base_virtaddr;
 
