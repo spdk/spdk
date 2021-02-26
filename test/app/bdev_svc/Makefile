@@ -39,10 +39,10 @@ APP = bdev_svc
 
 C_SRCS := bdev_svc.c
 
-SPDK_LIB_LIST = $(ALL_MODULES_LIST) event_bdev
+SPDK_LIB_LIST = $(ALL_MODULES_LIST) event event_bdev
 
 ifeq ($(OS),Linux)
-SPDK_LIB_LIST += event_nbd
+SPDK_LIB_LIST += event event_nbd
 endif
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk

@@ -36,7 +36,7 @@
 #include "spdk_cunit.h"
 
 #include "unit/lib/json_mock.c"
-#include "event/subsystem.c"
+#include "init/subsystem.c"
 #include "common/lib/test_env.c"
 
 static struct spdk_subsystem g_ut_subsystems[8];

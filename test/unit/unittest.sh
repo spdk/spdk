@@ -40,7 +40,6 @@ function unittest_blob() {
 }
 
 function unittest_event() {
-	$valgrind $testdir/lib/event/subsystem.c/subsystem_ut
 	$valgrind $testdir/lib/event/app.c/app_ut
 	$valgrind $testdir/lib/event/reactor.c/reactor_ut
 }
@@ -126,6 +125,10 @@ function unittest_util() {
 	$valgrind $testdir/lib/util/iov.c/iov_ut
 	$valgrind $testdir/lib/util/math.c/math_ut
 	$valgrind $testdir/lib/util/pipe.c/pipe_ut
+}
+
+function unittest_init() {
+	$valgrind $testdir/lib/init/subsystem.c/subsystem_ut
 }
 
 # if ASAN is enabled, use it.  If not use valgrind if installed but allow
@@ -234,6 +237,8 @@ run_test "unittest_util" unittest_util
 if grep -q '#define SPDK_CONFIG_VHOST 1' $rootdir/include/spdk/config.h; then
 	run_test "unittest_vhost" $valgrind $testdir/lib/vhost/vhost.c/vhost_ut
 fi
+
+run_test "unittest_init" unittest_init
 
 if [ "$cov_avail" = "yes" ] && ! [[ "$CC_TYPE" == *"clang"* ]]; then
 	$LCOV -q -d . -c -t "$(hostname)" -o $UT_COVERAGE/ut_cov_test.info

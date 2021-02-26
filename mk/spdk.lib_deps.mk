@@ -83,7 +83,8 @@ DEPDIRS-trace := log util $(JSON_LIBS)
 
 DEPDIRS-bdev := log util thread $(JSON_LIBS) notify trace
 DEPDIRS-blobfs := log thread blob trace
-DEPDIRS-event := log util thread $(JSON_LIBS) trace
+DEPDIRS-event := log util thread $(JSON_LIBS) trace init
+DEPDIRS-init := jsonrpc json log rpc thread
 
 DEPDIRS-ftl := log util thread trace bdev
 DEPDIRS-nbd := log util thread $(JSON_LIBS) bdev
@@ -159,16 +160,16 @@ endif
 # These depdirs include subsystem interdependencies which
 # are not related to symbols, but are defined directly in
 # the SPDK event subsystem code.
-DEPDIRS-event_accel := event accel
-DEPDIRS-event_net := event net
-DEPDIRS-event_vmd := event vmd $(JSON_LIBS) log thread
+DEPDIRS-event_accel := init accel
+DEPDIRS-event_net := init net
+DEPDIRS-event_vmd := init vmd $(JSON_LIBS) log thread
 
-DEPDIRS-event_bdev := event bdev event_accel event_vmd event_sock
+DEPDIRS-event_bdev := init bdev event_accel event_vmd event_sock
 
-DEPDIRS-event_nbd := event nbd event_bdev
-DEPDIRS-event_nvmf := event nvmf event_bdev event_sock thread log bdev $(JSON_LIBS)
-DEPDIRS-event_scsi := event scsi event_bdev
+DEPDIRS-event_nbd := init nbd event_bdev
+DEPDIRS-event_nvmf := init nvmf event_bdev event_sock thread log bdev $(JSON_LIBS)
+DEPDIRS-event_scsi := init scsi event_bdev
 
-DEPDIRS-event_iscsi := event iscsi event_scsi event_sock
-DEPDIRS-event_vhost := event vhost event_scsi
-DEPDIRS-event_sock := event sock
+DEPDIRS-event_iscsi := init iscsi event_scsi event_sock
+DEPDIRS-event_vhost := init vhost event_scsi
+DEPDIRS-event_sock := init sock

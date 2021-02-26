@@ -35,7 +35,7 @@
 
 #include "spdk/net.h"
 
-#include "spdk_internal/event.h"
+#include "spdk_internal/init.h"
 
 static void
 interface_subsystem_init(void)

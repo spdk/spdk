@@ -42,6 +42,7 @@
 #include "spdk/rpc.h"
 
 #include "spdk_internal/event.h"
+#include "spdk_internal/init.h"
 
 #define SPDK_DEBUG_APP_CFG(...) SPDK_DEBUGLOG(app_config, __VA_ARGS__)
 
@@ -85,7 +86,7 @@ typedef void (*client_resp_handler)(struct load_json_config_ctx *,
 struct load_json_config_ctx {
 	/* Thread used during configuration. */
 	struct spdk_thread *thread;
-	spdk_subsystem_init_fn cb_fn;
+	spdk_app_init_fn cb_fn;
 	void *cb_arg;
 	bool stop_on_error;
 
@@ -567,7 +568,7 @@ err:
 
 void
 spdk_app_json_config_load(const char *json_config_file, const char *rpc_addr,
-			  spdk_subsystem_init_fn cb_fn, void *cb_arg,
+			  spdk_app_init_fn cb_fn, void *cb_arg,
 			  bool stop_on_error)
 {
 	struct load_json_config_ctx *ctx = calloc(1, sizeof(*ctx));

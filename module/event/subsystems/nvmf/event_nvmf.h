@@ -39,7 +39,7 @@
 #include "spdk/nvmf.h"
 #include "spdk/queue.h"
 
-#include "spdk_internal/event.h"
+#include "spdk_internal/init.h"
 #include "spdk/log.h"
 
 #define ACCEPT_TIMEOUT_US	10000 /* 10ms */

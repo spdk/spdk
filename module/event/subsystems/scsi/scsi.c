@@ -35,7 +35,7 @@
 
 #include "spdk/scsi.h"
 
-#include "spdk_internal/event.h"
+#include "spdk_internal/init.h"
 
 static void
 scsi_subsystem_init(void)

@@ -31,16 +31,14 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-APP = bdevio
+DIRS-y = subsystem.c
 
-C_SRCS := bdevio.c
+.PHONY: all clean $(DIRS-y)
 
-SPDK_LIB_LIST = $(ALL_MODULES_LIST) event event_bdev
+all: $(DIRS-y)
+clean: $(DIRS-y)
 
-LIBS += -lcunit
-
-include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk

@@ -38,6 +38,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 APP := nvmf
 
 C_SRCS := nvmf.c
-SPDK_LIB_LIST = $(ALL_MODULES_LIST) event_bdev nvmf
+SPDK_LIB_LIST = $(ALL_MODULES_LIST) event event_bdev nvmf
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk

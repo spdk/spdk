@@ -42,6 +42,7 @@
 #include "spdk/likely.h"
 
 #include "spdk_internal/event.h"
+#include "spdk_internal/init.h"
 
 #define NVMF_DEFAULT_SUBSYSTEMS		32
 #define ACCEPT_TIMEOUT_US		10000 /* 10ms */

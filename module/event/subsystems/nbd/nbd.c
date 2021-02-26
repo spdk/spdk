@@ -35,7 +35,7 @@
 
 #include "spdk/nbd.h"
 
-#include "spdk_internal/event.h"
+#include "spdk_internal/init.h"
 
 static void
 nbd_subsystem_init(void)

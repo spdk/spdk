@@ -35,6 +35,7 @@
 #include "spdk/version.h"
 
 #include "spdk_internal/event.h"
+#include "spdk_internal/init.h"
 
 #include "spdk/assert.h"
 #include "spdk/env.h"

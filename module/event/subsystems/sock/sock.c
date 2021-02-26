@@ -32,7 +32,7 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/sock.h"
-#include "spdk_internal/event.h"
+#include "spdk_internal/init.h"
 
 static void
 sock_subsystem_init(void)

@@ -47,6 +47,6 @@ BLOCKDEV_LIST = bdev_malloc bdev_null
 BLOCKDEV_LIST += bdev_aio
 SYS_LIBS += -laio
 
-SPDK_LIB_LIST += $(BLOCKDEV_LIST)
+SPDK_LIB_LIST += $(BLOCKDEV_LIST) event
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk

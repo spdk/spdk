@@ -37,7 +37,7 @@
 #include "spdk/env.h"
 #include "spdk/thread.h"
 
-#include "spdk_internal/event.h"
+#include "spdk_internal/init.h"
 #include "spdk/env.h"
 
 static void

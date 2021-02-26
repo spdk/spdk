@@ -31,16 +31,15 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-APP = bdevio
+SO_VER := 1
+SO_MINOR := 0
 
-C_SRCS := bdevio.c
+C_SRCS = subsystem.c subsystem_rpc.c
+LIBNAME = init
 
-SPDK_LIB_LIST = $(ALL_MODULES_LIST) event event_bdev
+SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_init.map)
 
-LIBS += -lcunit
-
-include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

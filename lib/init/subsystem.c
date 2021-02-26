@@ -36,8 +36,10 @@
 #include "spdk/log.h"
 #include "spdk/thread.h"
 
-#include "spdk_internal/event.h"
+#include "spdk_internal/init.h"
 #include "spdk/env.h"
+
+#include "spdk/json.h"
 
 TAILQ_HEAD(spdk_subsystem_list, spdk_subsystem);
 struct spdk_subsystem_list g_subsystems = TAILQ_HEAD_INITIALIZER(g_subsystems);

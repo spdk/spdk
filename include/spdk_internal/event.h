@@ -164,55 +164,11 @@ int spdk_reactor_set_interrupt_mode(uint32_t lcore, bool new_in_interrupt,
  */
 struct spdk_thread *_spdk_get_app_thread(void);
 
-struct spdk_subsystem {
-	const char *name;
-	/* User must call spdk_subsystem_init_next() when they are done with their initialization. */
-	void (*init)(void);
-	void (*fini)(void);
+typedef void (*spdk_app_init_fn)(int rc, void *ctx);
 
-	/**
-	 * Write JSON configuration handler.
-	 *
-	 * \param w JSON write context
-	 */
-	void (*write_config_json)(struct spdk_json_write_ctx *w);
-	TAILQ_ENTRY(spdk_subsystem) tailq;
-};
-
-struct spdk_subsystem *spdk_subsystem_find(const char *name);
-struct spdk_subsystem *spdk_subsystem_get_first(void);
-struct spdk_subsystem *spdk_subsystem_get_next(struct spdk_subsystem *cur_subsystem);
-
-struct spdk_subsystem_depend {
-	const char *name;
-	const char *depends_on;
-	TAILQ_ENTRY(spdk_subsystem_depend) tailq;
-};
-
-struct spdk_subsystem_depend *spdk_subsystem_get_first_depend(void);
-struct spdk_subsystem_depend *spdk_subsystem_get_next_depend(struct spdk_subsystem_depend
-		*cur_depend);
-
-void spdk_add_subsystem(struct spdk_subsystem *subsystem);
-void spdk_add_subsystem_depend(struct spdk_subsystem_depend *depend);
-
-typedef void (*spdk_subsystem_init_fn)(int rc, void *ctx);
-void spdk_subsystem_init(spdk_subsystem_init_fn cb_fn, void *cb_arg);
-void spdk_subsystem_fini(spdk_msg_fn cb_fn, void *cb_arg);
-void spdk_subsystem_init_next(int rc);
-void spdk_subsystem_fini_next(void);
 void spdk_app_json_config_load(const char *json_config_file, const char *rpc_addr,
-			       spdk_subsystem_init_fn cb_fn, void *cb_arg,
+			       spdk_app_init_fn cb_fn, void *cb_arg,
 			       bool stop_on_error);
-
-/**
- * Save pointed \c subsystem configuration to the JSON write context \c w. In case of
- * error \c null is written to the JSON context.
- *
- * \param w JSON write context
- * \param subsystem the subsystem to query
- */
-void spdk_subsystem_config_json(struct spdk_json_write_ctx *w, struct spdk_subsystem *subsystem);
 
 int spdk_rpc_initialize(const char *listen_addr);
 void spdk_rpc_finish(void);

@@ -43,6 +43,7 @@
 #include "spdk/queue.h"
 #include "spdk/util.h"
 
+#include "spdk_internal/init.h"
 #include "spdk_internal/event.h"
 
 #include "config-host.h"

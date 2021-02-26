@@ -34,14 +34,14 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-SO_VER := 8
+SO_VER := 9
 SO_MINOR := 0
 
 CFLAGS += $(ENV_CFLAGS)
 
 LIBNAME = event
-C_SRCS = app.c reactor.c rpc.c subsystem.c json_config.c log_rpc.c \
-	 app_rpc.c subsystem_rpc.c scheduler_static.c
+C_SRCS = app.c reactor.c rpc.c json_config.c log_rpc.c \
+	 app_rpc.c scheduler_static.c
 
 # Do not compile schedulers and governors based on DPDK env
 # if non-DPDK env is used.

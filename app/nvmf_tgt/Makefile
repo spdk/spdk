@@ -39,7 +39,7 @@ APP = nvmf_tgt
 
 C_SRCS := nvmf_main.c
 
-SPDK_LIB_LIST = $(ALL_MODULES_LIST) event_nvmf
+SPDK_LIB_LIST = $(ALL_MODULES_LIST) event event_nvmf
 
 ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
 SPDK_LIB_LIST += env_dpdk_rpc

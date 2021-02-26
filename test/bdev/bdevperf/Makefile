@@ -39,7 +39,7 @@ APP = bdevperf
 
 C_SRCS := bdevperf.c
 
-SPDK_LIB_LIST = $(ALL_MODULES_LIST) event_bdev conf
+SPDK_LIB_LIST = $(ALL_MODULES_LIST) event event_bdev conf
 
 ifeq ($(OS),Linux)
 SPDK_LIB_LIST += event_nbd

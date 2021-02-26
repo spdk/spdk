@@ -35,7 +35,7 @@
 
 #include "spdk/accel_engine.h"
 
-#include "spdk_internal/event.h"
+#include "spdk_internal/init.h"
 #include "spdk/env.h"
 
 static void

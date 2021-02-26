@@ -34,8 +34,8 @@
 PKG_CONFIG_PATH = $(SPDK_LIB_DIR)/pkgconfig
 
 DPDK_LIB := $(shell PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" pkg-config --libs spdk_env_dpdk)
-SPDK_BDEV_LIB := $(shell PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" pkg-config --libs spdk_event_bdev)
-SPDK_DPDK_LIB := $(shell PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" pkg-config --libs spdk_event_bdev spdk_env_dpdk)
+SPDK_EVENT_LIB := $(shell PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" pkg-config --libs spdk_event spdk_event_bdev)
+SPDK_DPDK_LIB := $(shell PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" pkg-config --libs spdk_event spdk_event_bdev spdk_env_dpdk)
 SYS_LIB := $(shell PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" pkg-config --libs --static spdk_syslibs)
 
 # Shows how to compile both an external bdev and an external application against the SPDK combined shared object and dpdk shared objects.
@@ -46,7 +46,7 @@ bdev_shared_combo:
 # Shows how to compile both an external bdev and an external application against the SPDK individual shared objects and dpdk shared objects.
 bdev_shared_iso:
 	$(CC) $(COMMON_CFLAGS) -L../passthru -Wl,--no-as-needed -o hello_bdev ./hello_bdev.c \
-	-lpassthru_external $(SPDK_BDEV_LIB) \
+	-lpassthru_external $(SPDK_EVENT_LIB) \
 	$(DPDK_LIB)
 
 # Shows how to compile an external application against the SPDK combined shared object and dpdk shared objects.
@@ -56,7 +56,7 @@ alone_shared_combo:
 # Shows how to compile an external application against the SPDK individual shared objects and dpdk shared objects.
 alone_shared_iso:
 	$(CC) $(COMMON_CFLAGS) -Wl,-rpath=$(SPDK_LIB_DIR),--no-as-needed -o hello_bdev ./hello_bdev.c \
-	$(SPDK_BDEV_LIB) $(DPDK_LIB)
+	$(SPDK_EVENT_LIB) $(DPDK_LIB)
 
 # Shows how to compile an external application against the SPDK archives.
 alone_static:

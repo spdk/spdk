@@ -40,6 +40,6 @@ FIO_PLUGIN := spdk_bdev
 
 C_SRCS = fio_plugin.c
 
-SPDK_LIB_LIST = $(ALL_MODULES_LIST) event_bdev
+SPDK_LIB_LIST = $(ALL_MODULES_LIST) event event_bdev
 
 include $(SPDK_ROOT_DIR)/mk/spdk.fio.mk

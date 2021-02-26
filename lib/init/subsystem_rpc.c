@@ -31,11 +31,12 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk_internal/event.h"
 #include "spdk/rpc.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
 #include "spdk/env.h"
+
+#include "spdk_internal/init.h"
 
 static void
 rpc_framework_get_subsystems(struct spdk_jsonrpc_request *request,

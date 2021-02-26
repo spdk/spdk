@@ -35,7 +35,7 @@
 
 #include "iscsi/iscsi.h"
 
-#include "spdk_internal/event.h"
+#include "spdk_internal/init.h"
 
 static void
 iscsi_subsystem_init_complete(void *cb_arg, int rc)
