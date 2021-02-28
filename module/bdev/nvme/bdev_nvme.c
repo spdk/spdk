@@ -2288,6 +2288,8 @@ bdev_nvme_readv_done(void *ref, const struct spdk_nvme_cpl *cpl)
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 	struct nvme_bdev *nbdev = (struct nvme_bdev *)bdev_io->bdev->ctxt;
 	struct nvme_io_channel *nvme_ch;
+	struct nvme_bdev_ns *nvme_ns;
+	struct spdk_nvme_qpair *qpair;
 	int ret;
 
 	if (spdk_unlikely(spdk_nvme_cpl_is_pi_error(cpl))) {
@@ -2299,17 +2301,19 @@ bdev_nvme_readv_done(void *ref, const struct spdk_nvme_cpl *cpl)
 
 		nvme_ch = spdk_io_channel_get_ctx(spdk_bdev_io_get_io_channel(bdev_io));
 
-		/* Read without PI checking to verify PI error. */
-		ret = bdev_nvme_no_pi_readv(nbdev->nvme_ns->ns,
-					    nvme_ch->qpair,
-					    bio,
-					    bdev_io->u.bdev.iovs,
-					    bdev_io->u.bdev.iovcnt,
-					    bdev_io->u.bdev.md_buf,
-					    bdev_io->u.bdev.num_blocks,
-					    bdev_io->u.bdev.offset_blocks);
-		if (ret == 0) {
-			return;
+		if (spdk_likely(bdev_nvme_find_io_path(nbdev, nvme_ch, &nvme_ns, &qpair))) {
+			/* Read without PI checking to verify PI error. */
+			ret = bdev_nvme_no_pi_readv(nvme_ns->ns,
+						    qpair,
+						    bio,
+						    bdev_io->u.bdev.iovs,
+						    bdev_io->u.bdev.iovcnt,
+						    bdev_io->u.bdev.md_buf,
+						    bdev_io->u.bdev.num_blocks,
+						    bdev_io->u.bdev.offset_blocks);
+			if (ret == 0) {
+				return;
+			}
 		}
 	}
 
