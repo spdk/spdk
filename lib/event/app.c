@@ -35,10 +35,10 @@
 #include "spdk/version.h"
 
 #include "spdk_internal/event.h"
-#include "spdk_internal/init.h"
 
 #include "spdk/assert.h"
 #include "spdk/env.h"
+#include "spdk/init.h"
 #include "spdk/log.h"
 #include "spdk/thread.h"
 #include "spdk/trace.h"

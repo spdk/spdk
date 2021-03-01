@@ -33,6 +33,7 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/init.h"
 #include "spdk/util.h"
 #include "spdk/file.h"
 #include "spdk/log.h"
@@ -42,7 +43,6 @@
 #include "spdk/rpc.h"
 
 #include "spdk_internal/event.h"
-#include "spdk_internal/init.h"
 
 #define SPDK_DEBUG_APP_CFG(...) SPDK_DEBUGLOG(app_config, __VA_ARGS__)
 

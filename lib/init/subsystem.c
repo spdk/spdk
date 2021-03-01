@@ -33,7 +33,9 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/init.h"
 #include "spdk/log.h"
+#include "spdk/queue.h"
 #include "spdk/thread.h"
 
 #include "spdk_internal/init.h"

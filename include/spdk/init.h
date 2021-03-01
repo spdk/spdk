@@ -30,61 +30,47 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPDK_INIT_INTERNAL_H
-#define SPDK_INIT_INTERNAL_H
+/**
+ * \file
+ * SPDK Initialization Helper
+ */
+
+#ifndef SPDK_INIT_H
+#define SPDK_INIT_H
 
 #include "spdk/stdinc.h"
 #include "spdk/queue.h"
 
-struct spdk_json_write_ctx;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-struct spdk_subsystem {
-	const char *name;
-	/* User must call spdk_subsystem_init_next() when they are done with their initialization. */
-	void (*init)(void);
-	void (*fini)(void);
-
-	/**
-	 * Write JSON configuration handler.
-	 *
-	 * \param w JSON write context
-	 */
-	void (*write_config_json)(struct spdk_json_write_ctx *w);
-	TAILQ_ENTRY(spdk_subsystem) tailq;
-};
-
-struct spdk_subsystem_depend {
-	const char *name;
-	const char *depends_on;
-	TAILQ_ENTRY(spdk_subsystem_depend) tailq;
-};
-
-void spdk_add_subsystem(struct spdk_subsystem *subsystem);
-void spdk_add_subsystem_depend(struct spdk_subsystem_depend *depend);
-
-void spdk_subsystem_init_next(int rc);
-void spdk_subsystem_fini_next(void);
+typedef void (*spdk_subsystem_init_fn)(int rc, void *ctx);
 
 /**
- * \brief Register a new subsystem
+ * Begin the initialization process for all SPDK subsystems. SPDK is divided into subsystems at a macro-level
+ * and each subsystem automatically registers itself with this library at start up using a C
+ * constructor. Further, each subsystem can declare other subsystems that it depends on.
+ * Calling this function will correctly initialize all subsystems that are present, in the
+ * required order.
+ *
+ * \param cb_fn Function called when the process is complete.
+ * \param cb_arg User context passed to cb_fn.
  */
-#define SPDK_SUBSYSTEM_REGISTER(_name) \
-	__attribute__((constructor)) static void _name ## _register(void)	\
-	{									\
-		spdk_add_subsystem(&_name);					\
-	}
+void spdk_subsystem_init(spdk_subsystem_init_fn cb_fn, void *cb_arg);
+
+typedef void (*spdk_subsystem_fini_fn)(void *ctx);
 
 /**
- * \brief Declare that a subsystem depends on another subsystem.
+ * Tear down all of the subsystems in the correct order.
+ *
+ * \param cb_fn Function called when the process is complete.
+ * \param cb_arg User context passed to cb_fn
  */
-#define SPDK_SUBSYSTEM_DEPEND(_name, _depends_on)						\
-	static struct spdk_subsystem_depend __subsystem_ ## _name ## _depend_on ## _depends_on = { \
-	.name = #_name,										\
-	.depends_on = #_depends_on,								\
-	};											\
-	__attribute__((constructor)) static void _name ## _depend_on ## _depends_on(void)	\
-	{											\
-		spdk_add_subsystem_depend(&__subsystem_ ## _name ## _depend_on ## _depends_on); \
-	}
+void spdk_subsystem_fini(spdk_subsystem_fini_fn cb_fn, void *cb_arg);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
