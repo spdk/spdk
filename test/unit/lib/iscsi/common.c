@@ -27,6 +27,7 @@ TAILQ_HEAD(, spdk_iscsi_pdu) g_write_pdu_list = TAILQ_HEAD_INITIALIZER(g_write_p
 
 static bool g_task_pool_is_empty = false;
 static bool g_pdu_pool_is_empty = false;
+static uint32_t g_conn_read_len;
 
 struct spdk_iscsi_task *
 iscsi_task_get(struct spdk_iscsi_conn *conn,
@@ -182,11 +183,35 @@ iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
 
 DEFINE_STUB_V(iscsi_task_mgmt_cpl, (struct spdk_scsi_task *scsi_task));
 
-DEFINE_STUB(iscsi_conn_read_data, int,
-	    (struct spdk_iscsi_conn *conn, int bytes, void *buf), 0);
+int
+iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int bytes, void *buf)
+{
+	uint32_t *data = buf;
+	int i;
 
-DEFINE_STUB(iscsi_conn_readv_data, int,
-	    (struct spdk_iscsi_conn *conn, struct iovec *iov, int iovcnt), 0);
+	/* Limit the length to 4 bytes multiples. */
+	SPDK_CU_ASSERT_FATAL((bytes % 4) == 0);
+
+	for (i = 0; i < bytes; i += 4) {
+		data[i / 4] = g_conn_read_len + i;
+	}
+
+	g_conn_read_len += bytes;
+
+	return bytes;
+}
+
+int
+iscsi_conn_readv_data(struct spdk_iscsi_conn *conn, struct iovec *iov, int iovcnt)
+{
+	int i, len = 0;
+
+	for (i = 0; i < iovcnt; i++) {
+		len += iov[i].iov_len;
+	}
+
+	return len;
+}
 
 void
 iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,

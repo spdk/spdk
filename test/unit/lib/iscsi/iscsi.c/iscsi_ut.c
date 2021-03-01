@@ -2021,6 +2021,109 @@ empty_text_with_cbit_test(void)
 	iscsi_put_pdu(req_pdu);
 }
 
+static void
+check_pdu_payload_read(struct spdk_iscsi_pdu *pdu, struct spdk_mobj *mobj,
+		       int rc, int index, uint32_t read_offset)
+{
+	uint64_t buf_offset;
+	uint32_t *data;
+	uint32_t i;
+
+	data = (uint32_t *)pdu->data;
+	buf_offset = (uint64_t)pdu->data - (uint64_t)mobj->buf;
+
+	CU_ASSERT(pdu->mobj[index] == mobj);
+	CU_ASSERT(pdu->data_from_mempool == true);
+	CU_ASSERT(buf_offset == 0 || pdu->data_offset == 0);
+	CU_ASSERT(mobj->data_len + pdu->data_offset == buf_offset + pdu->data_valid_bytes);
+	CU_ASSERT(rc > 0 || pdu->data_valid_bytes == pdu->data_segment_len);
+
+	for (i = 0; i < pdu->data_valid_bytes - pdu->data_offset; i += 4) {
+		CU_ASSERT(data[i / 4] == (uint32_t)(read_offset + i));
+	}
+}
+
+static void
+pdu_payload_read_test(void)
+{
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_pdu pdu = {};
+	struct spdk_mobj mobj1 = {}, mobj2 = {};
+	int rc;
+
+	g_iscsi.FirstBurstLength = SPDK_ISCSI_FIRST_BURST_LENGTH;
+
+	mobj1.buf = calloc(1, SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH));
+	SPDK_CU_ASSERT_FATAL(mobj1.buf != NULL);
+
+	mobj2.buf = calloc(1, SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH));
+	SPDK_CU_ASSERT_FATAL(mobj2.buf != NULL);
+
+	MOCK_SET(spdk_mempool_get, &mobj1);
+
+	/* The following tests assume that a iscsi_conn_read_data() call could read
+	 * the required length of the data and all read lengths are 4 bytes multiples.
+	 * The latter is to verify data is copied to the correct offset by using data patterns.
+	 */
+
+	/* Case 1: data segment size is equal with max immediate data size. */
+	pdu.data_segment_len = iscsi_get_max_immediate_data_size();
+	pdu.data_buf_len = pdu.data_segment_len;
+	g_conn_read_len = 0;
+
+	rc = iscsi_pdu_payload_read(&conn, &pdu);
+	check_pdu_payload_read(&pdu, &mobj1, rc, 0, 0);
+
+	memset(&pdu, 0, sizeof(pdu));
+	mobj1.data_len = 0;
+
+	/* Case 2: data segment size is equal with SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH. */
+	pdu.data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	pdu.data_buf_len = pdu.data_segment_len;
+	g_conn_read_len = 0;
+
+	rc = iscsi_pdu_payload_read(&conn, &pdu);
+	check_pdu_payload_read(&pdu, &mobj1, rc, 0, 0);
+
+	memset(&pdu, 0, sizeof(pdu));
+	mobj1.data_len = 0;
+
+	/* Case 3: data segment size is larger than SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH.
+	 * This should result in error.
+	 */
+	pdu.data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH + 1;
+	pdu.data_buf_len = pdu.data_segment_len;
+	g_conn_read_len = 0;
+
+	rc = iscsi_pdu_payload_read(&conn, &pdu);
+	CU_ASSERT(rc < 0);
+
+	/* Case 4: read starts from the middle of the 1st data buffer, the 1st data buffer
+	 * ran out, allocate the 2nd data buffer, and read the remaining data to the 2nd
+	 * data buffer.
+	 */
+	mobj1.data_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH / 2;
+	pdu.data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	pdu.data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
+	pdu.mobj[0] = &mobj1;
+	pdu.data = (void *)((uint64_t)mobj1.buf + SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH / 2);
+	pdu.data_from_mempool = true;
+	g_conn_read_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH / 2;
+
+	rc = iscsi_pdu_payload_read(&conn, &pdu);
+	check_pdu_payload_read(&pdu, &mobj1, rc, 0, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH / 2);
+
+	MOCK_SET(spdk_mempool_get, &mobj2);
+
+	rc = iscsi_pdu_payload_read(&conn, &pdu);
+	check_pdu_payload_read(&pdu, &mobj2, rc, 1, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
+
+	MOCK_CLEAR(spdk_mempool_get);
+
+	free(mobj1.buf);
+	free(mobj2.buf);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2053,6 +2156,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, pdu_hdr_op_nopout_test);
 	CU_ADD_TEST(suite, pdu_hdr_op_data_test);
 	CU_ADD_TEST(suite, empty_text_with_cbit_test);
+	CU_ADD_TEST(suite, pdu_payload_read_test);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
