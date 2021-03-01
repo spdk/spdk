@@ -134,7 +134,8 @@ static struct spdk_nvme_probe_ctx *g_hotplug_probe_ctx;
 
 static void nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 		struct nvme_async_probe_ctx *ctx);
-static void nvme_ctrlr_populate_namespaces_done(struct nvme_async_probe_ctx *ctx);
+static void nvme_ctrlr_populate_namespaces_done(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
+		struct nvme_async_probe_ctx *ctx);
 static int bdev_nvme_library_init(void);
 static void bdev_nvme_library_fini(void);
 static int bdev_nvme_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
@@ -1372,10 +1373,14 @@ void
 nvme_ctrlr_populate_namespace_done(struct nvme_async_probe_ctx *ctx,
 				   struct nvme_bdev_ns *nvme_ns, int rc)
 {
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = nvme_ns->ctrlr;
+
+	assert(nvme_bdev_ctrlr != NULL);
+
 	if (rc == 0) {
 		nvme_ns->populated = true;
 		pthread_mutex_lock(&g_bdev_nvme_mutex);
-		nvme_ns->ctrlr->ref++;
+		nvme_bdev_ctrlr->ref++;
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
 	} else {
 		memset(nvme_ns, 0, sizeof(*nvme_ns));
@@ -1384,7 +1389,7 @@ nvme_ctrlr_populate_namespace_done(struct nvme_async_probe_ctx *ctx,
 	if (ctx) {
 		ctx->populates_in_progress--;
 		if (ctx->populates_in_progress == 0) {
-			nvme_ctrlr_populate_namespaces_done(ctx);
+			nvme_ctrlr_populate_namespaces_done(nvme_bdev_ctrlr, ctx);
 		}
 	}
 }
@@ -1465,7 +1470,7 @@ nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 		 */
 		ctx->populates_in_progress--;
 		if (ctx->populates_in_progress == 0) {
-			nvme_ctrlr_populate_namespaces_done(ctx);
+			nvme_ctrlr_populate_namespaces_done(nvme_bdev_ctrlr, ctx);
 		}
 	}
 
@@ -1810,15 +1815,14 @@ populate_namespaces_cb(struct nvme_async_probe_ctx *ctx, size_t count, int rc)
 }
 
 static void
-nvme_ctrlr_populate_namespaces_done(struct nvme_async_probe_ctx *ctx)
+nvme_ctrlr_populate_namespaces_done(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
+				    struct nvme_async_probe_ctx *ctx)
 {
-	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
 	struct nvme_bdev_ns	*nvme_ns;
 	struct nvme_bdev	*nvme_bdev;
 	uint32_t		i, nsid;
 	size_t			j;
 
-	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name(ctx->base_name);
 	assert(nvme_bdev_ctrlr != NULL);
 
 	/*
