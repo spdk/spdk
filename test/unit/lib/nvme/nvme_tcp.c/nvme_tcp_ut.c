@@ -795,6 +795,84 @@ test_nvme_tcp_qpair_write_pdu(void)
 	CU_ASSERT(pdu.sock_req.cb_arg == (void *)&pdu);
 }
 
+static void
+test_nvme_tcp_qpair_set_recv_state(void)
+{
+	struct nvme_tcp_qpair tqpair = {};
+	enum nvme_tcp_pdu_recv_state state;
+
+	/* case1: The recv state of tqpair is same with the state to be set */
+	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_ERROR;
+	state = NVME_TCP_PDU_RECV_STATE_ERROR;
+	nvme_tcp_qpair_set_recv_state(&tqpair, state);
+	CU_ASSERT(tqpair.recv_state == state);
+
+	/* case2: The recv state of tqpair is different with the state to be set */
+	/* state is NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY or NVME_TCP_PDU_RECV_STATE_ERROR, tqpair->recv_pdu will be cleared */
+	tqpair.recv_pdu.cb_arg = (void *)0xDEADBEEF;
+	state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY;
+	nvme_tcp_qpair_set_recv_state(&tqpair, state);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
+	CU_ASSERT(tqpair.recv_pdu.cb_arg == (void *)0x0);
+
+	tqpair.recv_pdu.cb_arg = (void *)0xDEADBEEF;
+	state = NVME_TCP_PDU_RECV_STATE_ERROR;
+	nvme_tcp_qpair_set_recv_state(&tqpair, state);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+	CU_ASSERT(tqpair.recv_pdu.cb_arg == (void *)0x0);
+
+	/* state is NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH or NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH or NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD or default */
+	state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH;
+	nvme_tcp_qpair_set_recv_state(&tqpair, state);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH);
+
+	state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH;
+	nvme_tcp_qpair_set_recv_state(&tqpair, state);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH);
+
+	state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD;
+	nvme_tcp_qpair_set_recv_state(&tqpair, state);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD);
+
+	state = 0xff;
+	nvme_tcp_qpair_set_recv_state(&tqpair, state);
+	CU_ASSERT(tqpair.recv_state == 0xff);
+}
+
+static void
+test_nvme_tcp_alloc_reqs(void)
+{
+	struct nvme_tcp_qpair tqpair = {};
+	int rc = 0;
+
+	/* case1: single entry. Expect: PASS */
+	tqpair.num_entries = 1;
+	rc = nvme_tcp_alloc_reqs(&tqpair);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(tqpair.tcp_reqs[0].cid == 0);
+	CU_ASSERT(tqpair.tcp_reqs[0].tqpair == &tqpair);
+	CU_ASSERT(tqpair.tcp_reqs[0].send_pdu == &tqpair.send_pdus[0]);
+	CU_ASSERT(tqpair.send_pdu == &tqpair.send_pdus[tqpair.num_entries]);
+	free(tqpair.tcp_reqs);
+	spdk_free(tqpair.send_pdus);
+
+	/* case2: multiple entries. Expect: PASS */
+	tqpair.num_entries = 5;
+	rc = nvme_tcp_alloc_reqs(&tqpair);
+	CU_ASSERT(rc == 0);
+	for (int i = 0; i < tqpair.num_entries; i++) {
+		CU_ASSERT(tqpair.tcp_reqs[i].cid == i);
+		CU_ASSERT(tqpair.tcp_reqs[i].tqpair == &tqpair);
+		CU_ASSERT(tqpair.tcp_reqs[i].send_pdu == &tqpair.send_pdus[i]);
+	}
+	CU_ASSERT(tqpair.send_pdu == &tqpair.send_pdus[tqpair.num_entries]);
+
+	/* case3: Test nvme_tcp_free_reqs test. Expect: PASS */
+	nvme_tcp_free_reqs(&tqpair);
+	CU_ASSERT(tqpair.tcp_reqs == NULL);
+	CU_ASSERT(tqpair.send_pdus == NULL);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -814,6 +892,8 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_tcp_req_init);
 	CU_ADD_TEST(suite, test_nvme_tcp_qpair_capsule_cmd_send);
 	CU_ADD_TEST(suite, test_nvme_tcp_qpair_write_pdu);
+	CU_ADD_TEST(suite, test_nvme_tcp_qpair_set_recv_state);
+	CU_ADD_TEST(suite, test_nvme_tcp_alloc_reqs);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
