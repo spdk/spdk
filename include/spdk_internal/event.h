@@ -373,28 +373,6 @@ void _spdk_lw_thread_set_core(struct spdk_lw_thread *thread, uint32_t lcore);
 void _spdk_lw_thread_get_current_stats(struct spdk_lw_thread *thread,
 				       struct spdk_thread_stats *stats);
 
-/**
- * \brief Register a new subsystem
- */
-#define SPDK_SUBSYSTEM_REGISTER(_name) \
-	__attribute__((constructor)) static void _name ## _register(void)	\
-	{									\
-		spdk_add_subsystem(&_name);					\
-	}
-
-/**
- * \brief Declare that a subsystem depends on another subsystem.
- */
-#define SPDK_SUBSYSTEM_DEPEND(_name, _depends_on)						\
-	static struct spdk_subsystem_depend __subsystem_ ## _name ## _depend_on ## _depends_on = { \
-	.name = #_name,										\
-	.depends_on = #_depends_on,								\
-	};											\
-	__attribute__((constructor)) static void _name ## _depend_on ## _depends_on(void)	\
-	{											\
-		spdk_add_subsystem_depend(&__subsystem_ ## _name ## _depend_on ## _depends_on); \
-	}
-
 #ifdef __cplusplus
 }
 #endif

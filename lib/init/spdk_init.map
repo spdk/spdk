@@ -2,18 +2,12 @@
 	global:
 
 	# Public functions
-	spdk_subsystem_find;
-	spdk_subsystem_get_first;
-	spdk_subsystem_get_next;
-	spdk_subsystem_get_first_depend;
-	spdk_subsystem_get_next_depend;
 	spdk_add_subsystem;
 	spdk_add_subsystem_depend;
 	spdk_subsystem_init;
 	spdk_subsystem_fini;
 	spdk_subsystem_init_next;
 	spdk_subsystem_fini_next;
-	spdk_subsystem_config_json;
 
 	local: *;
 };

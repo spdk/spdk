@@ -41,10 +41,6 @@
 #include "spdk/stdinc.h"
 #include "spdk/queue.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 struct spdk_json_write_ctx;
 
 struct spdk_subsystem {
@@ -62,19 +58,11 @@ struct spdk_subsystem {
 	TAILQ_ENTRY(spdk_subsystem) tailq;
 };
 
-struct spdk_subsystem *spdk_subsystem_find(const char *name);
-struct spdk_subsystem *spdk_subsystem_get_first(void);
-struct spdk_subsystem *spdk_subsystem_get_next(struct spdk_subsystem *cur_subsystem);
-
 struct spdk_subsystem_depend {
 	const char *name;
 	const char *depends_on;
 	TAILQ_ENTRY(spdk_subsystem_depend) tailq;
 };
-
-struct spdk_subsystem_depend *spdk_subsystem_get_first_depend(void);
-struct spdk_subsystem_depend *spdk_subsystem_get_next_depend(struct spdk_subsystem_depend
-		*cur_depend);
 
 void spdk_add_subsystem(struct spdk_subsystem *subsystem);
 void spdk_add_subsystem_depend(struct spdk_subsystem_depend *depend);
@@ -86,15 +74,6 @@ typedef void (*spdk_subsystem_fini_fn)(void *ctx);
 void spdk_subsystem_fini(spdk_subsystem_fini_fn cb_fn, void *cb_arg);
 void spdk_subsystem_init_next(int rc);
 void spdk_subsystem_fini_next(void);
-
-/**
- * Save pointed \c subsystem configuration to the JSON write context \c w. In case of
- * error \c null is written to the JSON context.
- *
- * \param w JSON write context
- * \param subsystem the subsystem to query
- */
-void spdk_subsystem_config_json(struct spdk_json_write_ctx *w, struct spdk_subsystem *subsystem);
 
 /**
  * \brief Register a new subsystem
@@ -117,9 +96,5 @@ void spdk_subsystem_config_json(struct spdk_json_write_ctx *w, struct spdk_subsy
 	{											\
 		spdk_add_subsystem_depend(&__subsystem_ ## _name ## _depend_on ## _depends_on); \
 	}
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

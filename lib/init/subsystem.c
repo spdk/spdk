@@ -41,6 +41,8 @@
 
 #include "spdk/json.h"
 
+#include "subsystem.h"
+
 TAILQ_HEAD(spdk_subsystem_list, spdk_subsystem);
 struct spdk_subsystem_list g_subsystems = TAILQ_HEAD_INITIALIZER(g_subsystems);
 
@@ -82,32 +84,32 @@ _subsystem_find(struct spdk_subsystem_list *list, const char *name)
 }
 
 struct spdk_subsystem *
-spdk_subsystem_find(const char *name)
+subsystem_find(const char *name)
 {
 	return _subsystem_find(&g_subsystems, name);
 }
 
 struct spdk_subsystem *
-spdk_subsystem_get_first(void)
+subsystem_get_first(void)
 {
 	return TAILQ_FIRST(&g_subsystems);
 }
 
 struct spdk_subsystem *
-spdk_subsystem_get_next(struct spdk_subsystem *cur_subsystem)
+subsystem_get_next(struct spdk_subsystem *cur_subsystem)
 {
 	return TAILQ_NEXT(cur_subsystem, tailq);
 }
 
 
 struct spdk_subsystem_depend *
-spdk_subsystem_get_first_depend(void)
+subsystem_get_first_depend(void)
 {
 	return TAILQ_FIRST(&g_subsystems_deps);
 }
 
 struct spdk_subsystem_depend *
-spdk_subsystem_get_next_depend(struct spdk_subsystem_depend *cur_depend)
+subsystem_get_next_depend(struct spdk_subsystem_depend *cur_depend)
 {
 	return TAILQ_NEXT(cur_depend, tailq);
 }
@@ -196,12 +198,12 @@ spdk_subsystem_init(spdk_subsystem_init_fn cb_fn, void *cb_arg)
 
 	/* Verify that all dependency name and depends_on subsystems are registered */
 	TAILQ_FOREACH(dep, &g_subsystems_deps, tailq) {
-		if (!spdk_subsystem_find(dep->name)) {
+		if (!subsystem_find(dep->name)) {
 			SPDK_ERRLOG("subsystem %s is missing\n", dep->name);
 			g_subsystem_start_fn(-1, g_subsystem_start_arg);
 			return;
 		}
-		if (!spdk_subsystem_find(dep->depends_on)) {
+		if (!subsystem_find(dep->depends_on)) {
 			SPDK_ERRLOG("subsystem %s dependency %s is missing\n",
 				    dep->name, dep->depends_on);
 			g_subsystem_start_fn(-1, g_subsystem_start_arg);
@@ -268,7 +270,7 @@ spdk_subsystem_fini(spdk_msg_fn cb_fn, void *cb_arg)
 }
 
 void
-spdk_subsystem_config_json(struct spdk_json_write_ctx *w, struct spdk_subsystem *subsystem)
+subsystem_config_json(struct spdk_json_write_ctx *w, struct spdk_subsystem *subsystem)
 {
 	if (subsystem && subsystem->write_config_json) {
 		subsystem->write_config_json(w);

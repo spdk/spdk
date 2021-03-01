@@ -38,6 +38,8 @@
 
 #include "spdk_internal/init.h"
 
+#include "subsystem.h"
+
 static void
 rpc_framework_get_subsystems(struct spdk_jsonrpc_request *request,
 			     const struct spdk_json_val *params)
@@ -54,22 +56,22 @@ rpc_framework_get_subsystems(struct spdk_jsonrpc_request *request,
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_array_begin(w);
-	subsystem = spdk_subsystem_get_first();
+	subsystem = subsystem_get_first();
 	while (subsystem != NULL) {
 		spdk_json_write_object_begin(w);
 
 		spdk_json_write_named_string(w, "subsystem", subsystem->name);
 		spdk_json_write_named_array_begin(w, "depends_on");
-		deps = spdk_subsystem_get_first_depend();
+		deps = subsystem_get_first_depend();
 		while (deps != NULL) {
 			if (strcmp(subsystem->name, deps->name) == 0) {
 				spdk_json_write_string(w, deps->depends_on);
 			}
-			deps = spdk_subsystem_get_next_depend(deps);
+			deps = subsystem_get_next_depend(deps);
 		}
 		spdk_json_write_array_end(w);
 		spdk_json_write_object_end(w);
-		subsystem = spdk_subsystem_get_next(subsystem);
+		subsystem = subsystem_get_next(subsystem);
 	}
 	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(request, w);
@@ -100,7 +102,7 @@ rpc_framework_get_config(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	subsystem = spdk_subsystem_find(req.name);
+	subsystem = subsystem_find(req.name);
 	if (!subsystem) {
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						     "Subsystem '%s' not found", req.name);
@@ -111,7 +113,7 @@ rpc_framework_get_config(struct spdk_jsonrpc_request *request,
 	free(req.name);
 
 	w = spdk_jsonrpc_begin_result(request);
-	spdk_subsystem_config_json(w, subsystem);
+	subsystem_config_json(w, subsystem);
 	spdk_jsonrpc_end_result(request, w);
 }
 
