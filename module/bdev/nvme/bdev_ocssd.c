@@ -724,6 +724,7 @@ bdev_ocssd_poll_pending(void *ctx)
 	struct nvme_io_channel *nvme_ch = ctx;
 	struct ocssd_io_channel *ocssd_ch;
 	struct spdk_bdev_io *bdev_io;
+	struct spdk_io_channel *ch;
 	TAILQ_HEAD(, spdk_bdev_io) pending_requests;
 	int num_requests = 0;
 
@@ -734,7 +735,8 @@ bdev_ocssd_poll_pending(void *ctx)
 
 	while ((bdev_io = TAILQ_FIRST(&pending_requests))) {
 		TAILQ_REMOVE(&pending_requests, bdev_io, module_link);
-		bdev_ocssd_submit_request(spdk_io_channel_from_ctx(nvme_ch), bdev_io);
+		ch = spdk_bdev_io_get_io_channel(bdev_io);
+		bdev_ocssd_submit_request(ch, bdev_io);
 		num_requests++;
 	}
 
