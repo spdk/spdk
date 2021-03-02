@@ -68,7 +68,7 @@ system. This is used for access control.
 
 A user of the NVMe-oF target library begins by creating a target using
 spdk_nvmf_tgt_create(), setting up a set of addresses on which to accept
-connections by calling spdk_nvmf_tgt_listen(), then creating a subsystem
+connections by calling spdk_nvmf_tgt_listen_ext(), then creating a subsystem
 using spdk_nvmf_subsystem_create().
 
 Subsystems begin in an inactive state and must be activated by calling
@@ -78,7 +78,7 @@ calling spdk_nvmf_subsystem_pause() and resumed by calling
 spdk_nvmf_subsystem_resume().
 
 Namespaces may be added to the subsystem by calling
-spdk_nvmf_subsystem_add_ns() when the subsystem is inactive or paused.
+spdk_nvmf_subsystem_add_ns_ext() when the subsystem is inactive or paused.
 Namespaces are bdevs. See @ref bdev for more information about the SPDK bdev
 layer. A bdev may be obtained by calling spdk_bdev_get_by_name().
 

@@ -668,16 +668,6 @@ spdk_nvmf_tgt_listen_ext(struct spdk_nvmf_tgt *tgt, const struct spdk_nvme_trans
 }
 
 int
-spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt, struct spdk_nvme_transport_id *trid)
-{
-	struct spdk_nvmf_listen_opts opts;
-
-	spdk_nvmf_listen_opts_init(&opts, sizeof(opts));
-
-	return spdk_nvmf_tgt_listen_ext(tgt, trid, &opts);
-}
-
-int
 spdk_nvmf_tgt_stop_listen(struct spdk_nvmf_tgt *tgt,
 			  struct spdk_nvme_transport_id *trid)
 {

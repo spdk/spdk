@@ -234,21 +234,6 @@ struct spdk_nvmf_tgt *spdk_nvmf_get_next_tgt(struct spdk_nvmf_tgt *prev);
 void spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_tgt *tgt);
 
 /**
- * Begin accepting new connections at the address provided (deprecated, please use spdk_nvmf_tgt_listen_ext).
- *
- * The connections will be matched with a subsystem, which may or may not allow
- * the connection based on a subsystem-specific list of allowed hosts. See
- * spdk_nvmf_subsystem_add_host() and spdk_nvmf_subsystem_add_listener()
- *
- * \param tgt The target associated with this listen address.
- * \param trid The address to listen at.
- *
- * \return 0 on success or a negated errno on failure.
- */
-int spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
-			 struct spdk_nvme_transport_id *trid);
-
-/**
  * Begin accepting new connections at the address provided.
  *
  * The connections will be matched with a subsystem, which may or may not allow
@@ -267,7 +252,7 @@ int spdk_nvmf_tgt_listen_ext(struct spdk_nvmf_tgt *tgt, const struct spdk_nvme_t
 /**
  * Stop accepting new connections at the provided address.
  *
- * This is a counterpart to spdk_nvmf_tgt_listen().
+ * This is a counterpart to spdk_nvmf_tgt_listen_ext().
  *
  * \param tgt The target associated with the listen address.
  * \param trid The address to stop listening at.
@@ -623,7 +608,7 @@ const char *spdk_nvmf_host_get_nqn(const struct spdk_nvmf_host *host);
 /**
  * Accept new connections on the address provided.
  *
- * This does not start the listener. Use spdk_nvmf_tgt_listen() for that.
+ * This does not start the listener. Use spdk_nvmf_tgt_listen_ext() for that.
  *
  * May only be performed on subsystems in the PAUSED or INACTIVE states.
  * No namespaces are required to be paused.
@@ -776,23 +761,6 @@ struct spdk_nvmf_ns_opts {
  * \param opts_size sizeof(struct spdk_nvmf_ns_opts)
  */
 void spdk_nvmf_ns_opts_get_defaults(struct spdk_nvmf_ns_opts *opts, size_t opts_size);
-
-/**
- * Add a namespace to a subsytem (deprecated, please use spdk_nvmf_subsystem_add_ns_ext).
- *
- * May only be performed on subsystems in the PAUSED or INACTIVE states.
- *
- * \param subsystem Subsystem to add namespace to.
- * \param bdev Block device to add as a namespace.
- * \param opts Namespace options, or NULL to use defaults.
- * \param opts_size sizeof(*opts)
- * \param ptpl_file Persist through power loss file path.
- *
- * \return newly added NSID on success, or 0 on failure.
- */
-uint32_t spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev,
-				    const struct spdk_nvmf_ns_opts *opts, size_t opts_size,
-				    const char *ptpl_file);
 
 /**
  * Add a namespace to a subsystems in the PAUSED or INACTIVE states.
@@ -1111,7 +1079,7 @@ spdk_nvmf_transport_stop_listen(struct spdk_nvmf_transport *transport,
 /**
  * Stop accepting new connections at the provided address.
  *
- * This is a counterpart to spdk_nvmf_tgt_listen(). It differs
+ * This is a counterpart to spdk_nvmf_tgt_listen_ext(). It differs
  * from spdk_nvmf_transport_stop_listen() in that it also destroys all
  * qpairs that are connected to the specified listener. Because
  * this function disconnects the qpairs, it has to be asynchronous.

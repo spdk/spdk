@@ -10,7 +10,6 @@
 	spdk_nvmf_get_next_tgt;
 	spdk_nvmf_tgt_write_config_json;
 	spdk_nvmf_listen_opts_init;
-	spdk_nvmf_tgt_listen;
 	spdk_nvmf_tgt_listen_ext;
 	spdk_nvmf_tgt_stop_listen;
 	spdk_nvmf_poll_group_create;
@@ -49,7 +48,6 @@
 	spdk_nvmf_subsystem_allow_any_listener;
 	spdk_nvmf_subsytem_any_listener_allowed;
 	spdk_nvmf_ns_opts_get_defaults;
-	spdk_nvmf_subsystem_add_ns;
 	spdk_nvmf_subsystem_add_ns_ext;
 	spdk_nvmf_subsystem_remove_ns;
 	spdk_nvmf_subsystem_get_first_ns;

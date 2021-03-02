@@ -54,6 +54,10 @@ independent SPDK processes are running on one node.  The filter function can
 then be implemented in these processes to decide which SSDs to probe based on
 the new SSD's PCI address.
 
+### nvmf
+
+Removed the `spdk_nvmf_tgt_listen` and `spdk_nvmf_subsystem_add_ns` API.
+
 ### opal
 
 Removed the `spdk_opal_supported` API.

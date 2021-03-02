@@ -1486,15 +1486,6 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 	return opts.nsid;
 }
 
-uint32_t
-spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev,
-			   const struct spdk_nvmf_ns_opts *user_opts, size_t opts_size,
-			   const char *ptpl_file)
-{
-	return spdk_nvmf_subsystem_add_ns_ext(subsystem, spdk_bdev_get_name(bdev),
-					      user_opts, opts_size, ptpl_file);
-}
-
 static uint32_t
 nvmf_subsystem_get_next_allocated_nsid(struct spdk_nvmf_subsystem *subsystem,
 				       uint32_t prev_nsid)
