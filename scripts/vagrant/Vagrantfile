@@ -17,7 +17,6 @@ def get_box_type(distro)
     'fedora32'   => 'generic/fedora32',
     'fedora33'   => 'generic/fedora33',
     'arch'       => 'generic/arch',
-    'freebsd11'  => 'generic/freebsd11',
     'freebsd12'  => 'generic/freebsd12',
   }
   abort("Invalid argument! #{distro}") unless distro_to_type.key?(distro)
