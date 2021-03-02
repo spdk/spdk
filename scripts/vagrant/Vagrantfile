@@ -19,7 +19,6 @@ def get_box_type(distro)
     'arch'       => 'generic/arch',
     'freebsd11'  => 'generic/freebsd11',
     'freebsd12'  => 'generic/freebsd12',
-    'clearlinux' => 'AntonioMeireles/ClearLinux'
   }
   abort("Invalid argument! #{distro}") unless distro_to_type.key?(distro)
 
@@ -97,9 +96,6 @@ end
 
 def make_spdk_local_copy_of_nfs(config,distro)
   user_group = 'vagrant:vagrant'
-  if distro.include? 'clearlinux'
-    user_group = 'clear:clear'
-  end
 
   spdk_path = '/home/vagrant/spdk_repo/spdk'
   spdk_tmp_path = '/tmp/spdk'
@@ -112,17 +108,6 @@ def make_spdk_local_copy_of_nfs(config,distro)
   SCRIPT
 
   config.vm.provision "shell", inline: $spdk_repo_cmd
-end
-
-def clear_cflags(config)
-  $clearcflags_cmd = <<-SCRIPT
-  echo "export CFLAGS=" >> /etc/profile.d/clearcflags.sh
-  echo "export CFFLAGS=" >> /etc/profile.d/clearcflags.sh
-  echo "export CXXFLAGS=" >> /etc/profile.d/clearcflags.sh
-  echo "export FFLAGS=" >> /etc/profile.d/clearcflags.sh
-  echo "export THEANO_FLAGS=" >> /etc/profile.d/clearcflags.sh
-  SCRIPT
-  config.vm.provision "shell", inline: $clearcflags_cmd, run: "always"
 end
 
 def get_nvme_disk(disk, index)
@@ -285,7 +270,7 @@ provider = (ENV['SPDK_VAGRANT_PROVIDER'] || "virtualbox")
 # Get all variables for creating vm
 vmcpu = (ENV['SPDK_VAGRANT_VMCPU'] || 2)
 vmram = (ENV['SPDK_VAGRANT_VMRAM'] || 4096)
-nfs_sync_backend_distros = ['freebsd', 'clearlinux']
+nfs_sync_backend_distros = ['freebsd']
 openstack_network = (ENV['SPDK_OPENSTACK_NETWORK'] || false)
 
 # generic/freebsd boxes do not work properly with vagrant-proxyconf and
@@ -337,10 +322,7 @@ Vagrant.configure(2) do |config|
   # use http proxy if avaiable
   setup_proxy(config, distro)
 
-  # Clear CFLAGS in clear linux
-  clear_cflags(config) if distro == 'clearlinux'
-
-  # freebsd and clearlinux boxes in order to have spdk sources synced from
+  # freebsd boxes in order to have spdk sources synced from
   # host properly will use NFS with "ro" option enabled to prevent changes
   # on host filesystem.
   # To make sources usable in the guest VM we need to unmount them and use
