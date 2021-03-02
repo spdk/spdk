@@ -214,7 +214,7 @@ void spdk_app_json_config_load(const char *json_config_file, const char *rpc_add
  */
 void spdk_subsystem_config_json(struct spdk_json_write_ctx *w, struct spdk_subsystem *subsystem);
 
-void spdk_rpc_initialize(const char *listen_addr);
+int spdk_rpc_initialize(const char *listen_addr);
 void spdk_rpc_finish(void);
 
 struct spdk_governor_capabilities {

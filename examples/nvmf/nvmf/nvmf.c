@@ -711,7 +711,13 @@ static void
 nvmf_subsystem_init_done(int rc, void *cb_arg)
 {
 	fprintf(stdout, "bdev subsystem init successfully\n");
-	spdk_rpc_initialize(g_rpc_addr);
+
+	rc = spdk_rpc_initialize(g_rpc_addr);
+	if (rc) {
+		spdk_app_stop(rc);
+		return;
+	}
+
 	spdk_rpc_set_state(SPDK_RPC_RUNTIME);
 
 	g_target_state = NVMF_INIT_TARGET;
