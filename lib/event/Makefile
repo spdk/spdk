@@ -40,7 +40,7 @@ SO_MINOR := 0
 CFLAGS += $(ENV_CFLAGS)
 
 LIBNAME = event
-C_SRCS = app.c reactor.c rpc.c json_config.c log_rpc.c \
+C_SRCS = app.c reactor.c json_config.c log_rpc.c \
 	 app_rpc.c scheduler_static.c
 
 # Do not compile schedulers and governors based on DPDK env

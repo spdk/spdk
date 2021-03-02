@@ -9,5 +9,8 @@
 	spdk_subsystem_init_next;
 	spdk_subsystem_fini_next;
 
+	spdk_rpc_initialize;
+	spdk_rpc_finish;
+
 	local: *;
 };

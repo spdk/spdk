@@ -170,9 +170,6 @@ void spdk_app_json_config_load(const char *json_config_file, const char *rpc_add
 			       spdk_app_init_fn cb_fn, void *cb_arg,
 			       bool stop_on_error);
 
-int spdk_rpc_initialize(const char *listen_addr);
-void spdk_rpc_finish(void);
-
 struct spdk_governor_capabilities {
 	bool freq_change;
 	bool freq_getset;

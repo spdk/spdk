@@ -26,8 +26,6 @@
 	spdk_for_each_reactor;
 	spdk_reactor_set_interrupt_mode;
 	spdk_app_json_config_load;
-	spdk_rpc_initialize;
-	spdk_rpc_finish;
 
 	local: *;
 };

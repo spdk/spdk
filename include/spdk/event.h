@@ -44,6 +44,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/cpuset.h"
+#include "spdk/init.h"
 #include "spdk/queue.h"
 #include "spdk/log.h"
 #include "spdk/thread.h"
@@ -81,8 +82,6 @@ typedef void (*spdk_app_shutdown_cb)(void);
  * \param signal Signal number.
  */
 typedef void (*spdk_sighandler_t)(int signal);
-
-#define SPDK_DEFAULT_RPC_ADDR "/var/tmp/spdk.sock"
 
 /**
  * \brief Event framework initialization options

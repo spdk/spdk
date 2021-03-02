@@ -45,6 +45,23 @@
 extern "C" {
 #endif
 
+#define SPDK_DEFAULT_RPC_ADDR "/var/tmp/spdk.sock"
+
+/**
+ * Create the SPDK JSON-RPC server and listen at the provided address. The RPC server is optional and is
+ * independent of subsystem initialization. The RPC server can be started and stopped at any time.
+ *
+ * \param listen_addr Path to a unix domain socket to listen on
+ *
+ * \return Negated errno on failure. 0 on success.
+ */
+int spdk_rpc_initialize(const char *listen_addr);
+
+/**
+ * Shut down the SPDK JSON-RPC target
+ */
+void spdk_rpc_finish(void);
+
 typedef void (*spdk_subsystem_init_fn)(int rc, void *ctx);
 
 /**

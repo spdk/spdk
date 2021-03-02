@@ -34,11 +34,10 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/env.h"
+#include "spdk/init.h"
 #include "spdk/thread.h"
 #include "spdk/log.h"
 #include "spdk/rpc.h"
-
-#include "spdk_internal/event.h"
 
 #define RPC_SELECT_INTERVAL	4000 /* 4ms */
 
