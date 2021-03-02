@@ -548,7 +548,7 @@ export GIT_REPO_GIT
 export GIT_REPO_DPDK_KMODS
 : ${IRDMA_DRIVER=https://downloadmirror.intel.com/29751/eng/irdma-$IRDMA_VERSION.tgz}
 export IRDMA_DRIVER
-: ${ICE_DRIVER=https://downloadmirror.intel.com/29746/eng/ice-$ICE_VERSION.tar.gz}
+: ${ICE_DRIVER=https://downloadmirror.intel.com/30234/eng/ice-$ICE_VERSION.tar.gz}
 export ICE_DRIVER
 GIT_REPOS=${GIT_REPOS:-$HOME}
 
