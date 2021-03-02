@@ -1519,7 +1519,8 @@ static int
 nvme_bdev_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 		       const char *name,
 		       const struct spdk_nvme_transport_id *trid,
-		       uint32_t prchk_flags)
+		       uint32_t prchk_flags,
+		       struct nvme_bdev_ctrlr **_nvme_bdev_ctrlr)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 	struct nvme_bdev_ctrlr_trid *trid_entry;
@@ -1608,6 +1609,10 @@ nvme_bdev_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	TAILQ_INSERT_HEAD(&nvme_bdev_ctrlr->trids, trid_entry, link);
+
+	if (_nvme_bdev_ctrlr != NULL) {
+		*_nvme_bdev_ctrlr = nvme_bdev_ctrlr;
+	}
 	return 0;
 
 err_init_ocssd:
@@ -1634,6 +1639,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	char *name = NULL;
 	uint32_t prchk_flags = 0;
 	size_t i;
+	int rc;
 
 	if (ctx) {
 		for (i = 0; i < ctx->count; i++) {
@@ -1653,11 +1659,9 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	SPDK_DEBUGLOG(bdev_nvme, "Attached to %s (%s)\n", trid->traddr, name);
 
-	nvme_bdev_ctrlr_create(ctrlr, name, trid, prchk_flags);
-
-	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(trid);
-	if (!nvme_bdev_ctrlr) {
-		SPDK_ERRLOG("Failed to find new NVMe controller\n");
+	rc = nvme_bdev_ctrlr_create(ctrlr, name, trid, prchk_flags, &nvme_bdev_ctrlr);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to create new NVMe controller\n");
 		free(name);
 		return;
 	}
@@ -1974,14 +1978,12 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		goto exit;
 	}
 
-	rc = nvme_bdev_ctrlr_create(ctrlr, ctx->base_name, &ctx->trid, ctx->prchk_flags);
+	rc = nvme_bdev_ctrlr_create(ctrlr, ctx->base_name, &ctx->trid, ctx->prchk_flags,
+				    &nvme_bdev_ctrlr);
 	if (rc) {
 		SPDK_ERRLOG("Failed to create new device\n");
 		goto exit;
 	}
-
-	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(&ctx->trid);
-	assert(nvme_bdev_ctrlr != NULL);
 
 	nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr, ctx);
 	return;
