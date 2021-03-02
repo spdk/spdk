@@ -164,12 +164,6 @@ int spdk_reactor_set_interrupt_mode(uint32_t lcore, bool new_in_interrupt,
  */
 struct spdk_thread *_spdk_get_app_thread(void);
 
-typedef void (*spdk_app_init_fn)(int rc, void *ctx);
-
-void spdk_app_json_config_load(const char *json_config_file, const char *rpc_addr,
-			       spdk_app_init_fn cb_fn, void *cb_arg,
-			       bool stop_on_error);
-
 struct spdk_governor_capabilities {
 	bool freq_change;
 	bool freq_getset;

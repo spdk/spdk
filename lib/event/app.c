@@ -403,8 +403,9 @@ bootstrap_fn(void *arg1)
 
 	if (g_spdk_app.json_config_file) {
 		g_delay_subsystem_init = false;
-		spdk_app_json_config_load(g_spdk_app.json_config_file, g_spdk_app.rpc_addr, app_start_rpc,
-					  NULL, !g_spdk_app.json_config_ignore_errors);
+		spdk_subsystem_init_from_json_config(g_spdk_app.json_config_file, g_spdk_app.rpc_addr,
+						     app_start_rpc,
+						     NULL, !g_spdk_app.json_config_ignore_errors);
 	} else {
 		if (!g_delay_subsystem_init) {
 			spdk_subsystem_init(app_start_rpc, NULL);

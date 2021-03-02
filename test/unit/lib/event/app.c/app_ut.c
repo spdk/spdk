@@ -51,7 +51,8 @@ DEFINE_STUB_V(spdk_rpc_set_state, (uint32_t state));
 DEFINE_STUB(spdk_rpc_get_state, uint32_t, (void), SPDK_RPC_RUNTIME);
 DEFINE_STUB(spdk_rpc_initialize, int, (const char *listen_addr), 0);
 DEFINE_STUB_V(spdk_rpc_finish, (void));
-DEFINE_STUB_V(spdk_app_json_config_load, (const char *json_config_file, const char *rpc_addr,
+DEFINE_STUB_V(spdk_subsystem_init_from_json_config, (const char *json_config_file,
+		const char *rpc_addr,
 		spdk_subsystem_init_fn cb_fn, void *cb_arg, bool stop_on_error));
 DEFINE_STUB_V(spdk_reactors_start, (void));
 DEFINE_STUB_V(spdk_reactors_stop, (void *arg1));

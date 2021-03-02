@@ -84,7 +84,7 @@ DEPDIRS-trace := log util $(JSON_LIBS)
 DEPDIRS-bdev := log util thread $(JSON_LIBS) notify trace
 DEPDIRS-blobfs := log thread blob trace
 DEPDIRS-event := log util thread $(JSON_LIBS) trace init
-DEPDIRS-init := jsonrpc json log rpc thread
+DEPDIRS-init := jsonrpc json log rpc thread util
 
 DEPDIRS-ftl := log util thread trace bdev
 DEPDIRS-nbd := log util thread $(JSON_LIBS) bdev

@@ -37,7 +37,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 SO_VER := 1
 SO_MINOR := 0
 
-C_SRCS = subsystem.c subsystem_rpc.c rpc.c
+C_SRCS = json_config.c subsystem.c subsystem_rpc.c rpc.c
 LIBNAME = init
 
 SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_init.map)
