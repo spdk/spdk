@@ -349,49 +349,6 @@ blob_bdev_init(struct blob_bdev *b, struct spdk_bdev_desc *desc)
 	b->bs_dev.get_base_bdev = bdev_blob_get_base_bdev;
 }
 
-struct spdk_bs_dev *
-spdk_bdev_create_bs_dev(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb, void *remove_ctx)
-{
-	struct blob_bdev *b;
-	struct spdk_bdev_desc *desc;
-	int rc;
-
-	b = calloc(1, sizeof(*b));
-
-	if (b == NULL) {
-		SPDK_ERRLOG("could not allocate blob_bdev\n");
-		return NULL;
-	}
-
-	rc = spdk_bdev_open(bdev, true, remove_cb, remove_ctx, &desc);
-	if (rc != 0) {
-		free(b);
-		return NULL;
-	}
-
-	blob_bdev_init(b, desc);
-
-	return &b->bs_dev;
-}
-
-struct spdk_bs_dev *
-spdk_bdev_create_bs_dev_from_desc(struct spdk_bdev_desc *desc)
-{
-	struct blob_bdev *b;
-
-	b = calloc(1, sizeof(*b));
-
-	if (b == NULL) {
-		SPDK_ERRLOG("could not allocate blob_bdev\n");
-		return NULL;
-	}
-
-	blob_bdev_init(b, desc);
-
-	return &b->bs_dev;
-}
-
-
 int
 spdk_bdev_create_bs_dev_ext(const char *bdev_name, spdk_bdev_event_cb_t event_cb,
 			    void *event_ctx, struct spdk_bs_dev **_bs_dev)

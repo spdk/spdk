@@ -50,27 +50,6 @@ struct spdk_bdev;
 struct spdk_bdev_module;
 
 /**
- * Create a blobstore block device from a bdev (deprecated, please use spdk_bdev_create_bs_dev_ext).
- *
- * \param bdev Bdev to use.
- * \param remove_cb Called when the block device is removed.
- * \param remove_ctx Argument passed to function remove_cb.
- *
- * \return a pointer to the blobstore block device on success or NULL otherwise.
- */
-struct spdk_bs_dev *spdk_bdev_create_bs_dev(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb,
-		void *remove_ctx);
-
-/**
- * Create a blobstore block device from the descriptor of a bdev (deprecated, please use spdk_bdev_create_bs_dev_ext).
- *
- * \param desc Descriptor of a bdev. spdk_bdev_open_ext() is recommended to get the desc.
- *
- * \return a pointer to the blobstore block device on success or NULL otherwise.
- */
-struct spdk_bs_dev *spdk_bdev_create_bs_dev_from_desc(struct spdk_bdev_desc *desc);
-
-/**
  * Create a blobstore block device from a bdev.
  *
  * \param bdev_name Name of the bdev to use.
