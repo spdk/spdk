@@ -210,6 +210,10 @@ if grep -q '#define SPDK_CONFIG_RDMA 1' $rootdir/include/spdk/config.h; then
 	run_test "unittest_nvme_rdma" $valgrind $testdir/lib/nvme/nvme_rdma.c/nvme_rdma_ut
 fi
 
+if grep -q '#define SPDK_CONFIG_NVME_CUSE 1' $rootdir/include/spdk/config.h; then
+	run_test "unittest_nvme_cuse" $valgrind $testdir/lib/nvme/nvme_cuse.c/nvme_cuse_ut
+fi
+
 run_test "unittest_nvmf" unittest_nvmf
 if grep -q '#define SPDK_CONFIG_FC 1' $rootdir/include/spdk/config.h; then
 	run_test "unittest_nvmf_fc" $valgrind $testdir/lib/nvmf/fc.c/fc_ut
