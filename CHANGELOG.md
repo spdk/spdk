@@ -2,6 +2,10 @@
 
 ## v21.07: (Upcoming Release)
 
+### dpdk
+
+Updated DPDK submodule to DPDK 21.02.
+
 ### idxd
 
 Remove the probe_cb parameter in spdk_idxd_probe function. And remove the definition
