@@ -171,17 +171,6 @@ def setup_ssh(config)
   end
 end
 
-def setup_vagrant_cachier(config, plugins_sync_backend)
-  if Vagrant.has_plugin?("vagrant-cachier")
-    config.cache.scope = :box
-    config.cache.synced_folder_opts = plugins_sync_backend
-  else
-    puts 'vagrant-cachier caches apt/yum etc to speed subsequent vagrant up'
-    puts 'to enable install vagrant-cachier plugin: '
-    puts 'vagrant plugin install vagrant-cachier'
-  end
-end
-
 def deploy_test_vm(config)
   return unless ENV['DEPLOY_TEST_VM'] == "1"
   return unless ENV['SPDK_DIR']
@@ -313,10 +302,6 @@ Vagrant.configure(2) do |config|
 
   # rsync artifacts from build
   copy_spdk_artifacts(config, plugins_sync_backend)
-
-  # vagrant-cachier caches apt/yum etc to speed subsequent
-  # vagrant up
-  setup_vagrant_cachier(config, plugins_sync_backend)
 
   # use http proxy if avaiable
   setup_proxy(config, distro)
