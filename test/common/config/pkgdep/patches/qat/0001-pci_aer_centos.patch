@@ -1,0 +1,26 @@
+Latest kernels available for centos8 (4.18) include backport patches which
+dropped use of pci_cleanup_aer_uncorrect_error_status(). Make sure this
+call won't be referenced for kernels older than 5.7. To make it work, this
+patch is going to be applied only when pci_cleanup_aer_uncorrect_error_status()
+is not detected in older kernels (like the centos8's builds).
+---
+ quickassist/qat/compat/qat_compat.h | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/quickassist/qat/compat/qat_compat.h b/quickassist/qat/compat/qat_compat.h
+index 06d640d..cee298c 100644
+--- a/quickassist/qat/compat/qat_compat.h
++++ b/quickassist/qat/compat/qat_compat.h
+@@ -478,12 +478,6 @@ static inline void pci_ignore_hotplug(struct pci_dev *dev)
+ #define QAT_KPT_CAP_DISCOVERY
+ #endif
+ 
+-#if ((SLE_VERSION_CODE && (SLE_VERSION(15, 2, 0) > SLE_VERSION_CODE)) || \
+-	(!SLE_VERSION_CODE && KERNEL_VERSION(5, 7, 0) > LINUX_VERSION_CODE))
+-#define pci_aer_clear_nonfatal_status(pdev) \
+-			pci_cleanup_aer_uncorrect_error_status(pdev)
+-#endif /* SUSE15 SP2 */
+-
+ #if (KERNEL_VERSION(3, 17, 0) > LINUX_VERSION_CODE)
+ #ifndef ktime_get_real_ts64
+ #define ktime_get_real_ts64 getnstimeofday

@@ -168,8 +168,17 @@ function install_qat() {
 	# Patch name of the pci_aer function which was renamed in kernels >= 5.7.1. See .patch for details
 	if ((kernel_ver >= 0x050701)) || ! in_syms pci_cleanup_aer_uncorrect_error_status; then
 		# Patch only the driver version that was tested
-		[[ ${DRIVER_LOCATION_QAT##*/} == qat1.7.l.4.9.0-00008.tar.gz ]] && patch --dir="$GIT_REPOS/QAT" -p1
-	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-pci_aer.patch"
+		if [[ ${DRIVER_LOCATION_QAT##*/} == qat1.7.l.4.9.0-00008.tar.gz ]]; then
+			patch --dir="$GIT_REPOS/QAT" -p1
+		fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-pci_aer.patch"
+		if ((kernel_ver < 0x050701)); then
+			# Older kernel build without pci_cleanup_aer_uncorrect_error_status()? This might be
+			# centos8's build.
+			if [[ ${DRIVER_LOCATION_QAT##*/} == qat1.7.l.4.12.0-00011.tar.gz ]]; then
+				patch --dir="$GIT_REPOS/QAT" -p1
+			fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-pci_aer_centos.patch"
+		fi
+	fi
 
 	# Patch use of cryptohash.h which was removed in favor of crypto/sha.h in kernels >= 5.8. See .patch for details
 	if ((kernel_ver >= 0x050800)); then
