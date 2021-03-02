@@ -2801,6 +2801,33 @@ Example response:
 }
 ~~~
 
+## bdev_nvme_apply_firmware {#rpc_bdev_nvme_apply_firmware}
+
+Download and commit firmware to NVMe device.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+filename                | Required | string      | filename of the firmware to download
+bdev_name               | Required | string      | Name of the NVMe block device
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_nvme_apply_firmware",
+  "id": 1,
+  "params": {
+    "filename": "firmware_file",
+    "bdev_name": "NVMe0n1"
+  }
+}
+~~~
+
 ## bdev_rbd_create {#rpc_bdev_rbd_create}
 
 Create @ref bdev_config_rbd bdev
