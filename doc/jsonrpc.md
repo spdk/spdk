@@ -1600,6 +1600,43 @@ Example response:
 }
 ~~~
 
+## bdev_set_qd_sampling_period {#rpc_bdev_set_qd_sampling_period}
+
+Enable queue depth tracking on a specified bdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Block device name
+period                  | Required | int         | period (in microseconds).If set to 0, polling will be disabled.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_set_qd_sampling_period",
+  "id": 1,
+  "params": {
+    "name": "Malloc0",
+    "period": 20
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## bdev_compress_create {#rpc_bdev_compress_create}
 
 Create a new compress bdev on a given base bdev.
