@@ -774,6 +774,11 @@ apply_firmware_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 }
 
 static void
+apply_firmware_open_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
+{
+}
+
+static void
 rpc_bdev_nvme_apply_firmware(struct spdk_jsonrpc_request *request,
 			     const struct spdk_json_val *params)
 {
@@ -834,7 +839,7 @@ rpc_bdev_nvme_apply_firmware(struct spdk_jsonrpc_request *request,
 			goto err;
 		}
 
-		if (spdk_bdev_open(bdev2, true, NULL, NULL, &desc) != 0) {
+		if (spdk_bdev_open_ext(spdk_bdev_get_name(bdev2), true, apply_firmware_open_cb, NULL, &desc) != 0) {
 			snprintf(msg, sizeof(msg), "Device %s is in use.", firm_ctx->req->bdev_name);
 			free(opt);
 			goto err;

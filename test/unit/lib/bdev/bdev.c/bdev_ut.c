@@ -689,7 +689,6 @@ num_blocks_test(void)
 {
 	struct spdk_bdev bdev;
 	struct spdk_bdev_desc *desc = NULL;
-	struct spdk_bdev_desc *desc_ext = NULL;
 	int rc;
 
 	memset(&bdev, 0, sizeof(bdev));
@@ -704,21 +703,15 @@ num_blocks_test(void)
 	/* Shrinking block number */
 	CU_ASSERT(spdk_bdev_notify_blockcnt_change(&bdev, 30) == 0);
 
-	/* In case bdev opened */
-	rc = spdk_bdev_open(&bdev, false, NULL, NULL, &desc);
+	rc = spdk_bdev_open_ext("num_blocks", false, bdev_open_cb1, &desc, &desc);
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	CU_ASSERT(&bdev == spdk_bdev_desc_get_bdev(desc));
 
 	/* Growing block number */
 	CU_ASSERT(spdk_bdev_notify_blockcnt_change(&bdev, 80) == 0);
 	/* Shrinking block number */
 	CU_ASSERT(spdk_bdev_notify_blockcnt_change(&bdev, 20) != 0);
-
-	/* In case bdev opened with ext API */
-	rc = spdk_bdev_open_ext("num_blocks", false, bdev_open_cb1, &desc_ext, &desc_ext);
-	CU_ASSERT(rc == 0);
-	SPDK_CU_ASSERT_FATAL(desc_ext != NULL);
-	CU_ASSERT(&bdev == spdk_bdev_desc_get_bdev(desc_ext));
 
 	g_event_type1 = 0xFF;
 	/* Growing block number */
@@ -732,7 +725,6 @@ num_blocks_test(void)
 	CU_ASSERT(spdk_bdev_notify_blockcnt_change(&bdev, 100) == 0);
 
 	spdk_bdev_close(desc);
-	spdk_bdev_close(desc_ext);
 	spdk_bdev_unregister(&bdev, NULL, NULL);
 
 	poll_threads();

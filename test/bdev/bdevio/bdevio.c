@@ -109,6 +109,12 @@ __get_io_channel(void *arg)
 	wake_ut_thread();
 }
 
+static void
+bdevio_construct_target_open_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
+				void *event_ctx)
+{
+}
+
 static int
 bdevio_construct_target(struct spdk_bdev *bdev)
 {
@@ -122,7 +128,8 @@ bdevio_construct_target(struct spdk_bdev *bdev)
 		return -ENOMEM;
 	}
 
-	rc = spdk_bdev_open(bdev, true, NULL, NULL, &target->bdev_desc);
+	rc = spdk_bdev_open_ext(spdk_bdev_get_name(bdev), true, bdevio_construct_target_open_cb, NULL,
+				&target->bdev_desc);
 	if (rc != 0) {
 		free(target);
 		SPDK_ERRLOG("Could not open leaf bdev %s, error=%d\n", spdk_bdev_get_name(bdev), rc);

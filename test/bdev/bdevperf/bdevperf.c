@@ -1086,11 +1086,13 @@ bdevperf_test(void)
 }
 
 static void
-bdevperf_bdev_removed(void *arg)
+bdevperf_bdev_removed(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
 {
-	struct bdevperf_job *job = arg;
+	struct bdevperf_job *job = event_ctx;
 
-	bdevperf_job_drain(job);
+	if (SPDK_BDEV_EVENT_REMOVE == type) {
+		bdevperf_job_drain(job);
+	}
 }
 
 static uint32_t g_construct_job_count = 0;
@@ -1162,7 +1164,8 @@ _bdevperf_construct_job(void *ctx)
 	struct bdevperf_job *job = ctx;
 	int rc;
 
-	rc = spdk_bdev_open(job->bdev, true, bdevperf_bdev_removed, job, &job->bdev_desc);
+	rc = spdk_bdev_open_ext(spdk_bdev_get_name(job->bdev), true, bdevperf_bdev_removed, job,
+				&job->bdev_desc);
 	if (rc != 0) {
 		SPDK_ERRLOG("Could not open leaf bdev %s, error=%d\n", spdk_bdev_get_name(job->bdev), rc);
 		g_run_rc = -EINVAL;
