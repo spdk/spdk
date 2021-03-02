@@ -3445,6 +3445,48 @@ Example response:
 }
 ~~~
 
+## bdev_error_inject_error {#rpc_bdev_error_inject_error}
+
+Inject an error via an error bdev. Create an error bdev on base bdev first. Default 'num'
+value is 1 and if 'num' is set to zero, the specified injection is disabled.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Name of the error injection bdev
+io_type                 | Required | string      | io type 'clear' 'read' 'write' 'unmap' 'flush' 'all'
+error_type              | Required | string      | error type 'failure' 'pending'
+num                     | Optional | int         | the number of commands you want to fail.(default:1)
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_error_inject_error",
+  "id": 1,
+  "params": {
+    "name": "EE_Malloc0",
+    "io_type": "write",
+    "error_type": "pending",
+    "num": 1
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## bdev_iscsi_create {#rpc_bdev_iscsi_create}
 
 Connect to iSCSI target and create bdev backed by this connection.
