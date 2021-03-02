@@ -306,6 +306,8 @@ iscsi_parse_param(struct iscsi_param **params, const uint8_t *data, uint32_t dat
  *
  * \param data "KEY=VAL<NUL>KEY=VAL<NUL>..."
  * \param len length of data in bytes
+ *
+ * Data must point to a valid pointer if len > 0.
  */
 int
 iscsi_parse_params(struct iscsi_param **params, const uint8_t *data,
