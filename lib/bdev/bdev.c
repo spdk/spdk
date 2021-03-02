@@ -304,11 +304,7 @@ struct spdk_bdev_desc {
 	struct spdk_bdev		*bdev;
 	struct spdk_thread		*thread;
 	struct {
-		bool open_with_ext;
-		union {
-			spdk_bdev_remove_cb_t remove_fn;
-			spdk_bdev_event_cb_t event_fn;
-		};
+		spdk_bdev_event_cb_t event_fn;
 		void *ctx;
 	}				callback;
 	bool				closed;
@@ -3463,7 +3459,7 @@ spdk_bdev_notify_blockcnt_change(struct spdk_bdev *bdev, uint64_t size)
 		bdev->blockcnt = size;
 		TAILQ_FOREACH(desc, &bdev->internal.open_descs, link) {
 			pthread_mutex_lock(&desc->mutex);
-			if (desc->callback.open_with_ext && !desc->closed) {
+			if (!desc->closed) {
 				desc->refs++;
 				spdk_thread_send_msg(desc->thread, _resize_notify, desc);
 			}
@@ -5566,11 +5562,7 @@ _remove_notify(void *arg)
 
 	if (!desc->closed) {
 		pthread_mutex_unlock(&desc->mutex);
-		if (desc->callback.open_with_ext) {
-			desc->callback.event_fn(SPDK_BDEV_EVENT_REMOVE, desc->bdev, desc->callback.ctx);
-		} else {
-			desc->callback.remove_fn(desc->callback.ctx);
-		}
+		desc->callback.event_fn(SPDK_BDEV_EVENT_REMOVE, desc->bdev, desc->callback.ctx);
 		return;
 	} else if (0 == desc->refs) {
 		/* This descriptor was closed after this remove_notify message was sent.
@@ -5659,12 +5651,6 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	}
 }
 
-static void
-bdev_dummy_event_cb(void *remove_ctx)
-{
-	SPDK_DEBUGLOG(bdev, "Bdev remove event received with no remove callback specified");
-}
-
 static int
 bdev_start_qos(struct spdk_bdev *bdev)
 {
@@ -5733,46 +5719,6 @@ bdev_open(struct spdk_bdev *bdev, bool write, struct spdk_bdev_desc *desc)
 }
 
 int
-spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
-	       void *remove_ctx, struct spdk_bdev_desc **_desc)
-{
-	struct spdk_bdev_desc *desc;
-	int rc;
-
-	desc = calloc(1, sizeof(*desc));
-	if (desc == NULL) {
-		SPDK_ERRLOG("Failed to allocate memory for bdev descriptor\n");
-		return -ENOMEM;
-	}
-
-	if (remove_cb == NULL) {
-		remove_cb = bdev_dummy_event_cb;
-	}
-
-	TAILQ_INIT(&desc->pending_media_events);
-	TAILQ_INIT(&desc->free_media_events);
-
-	desc->callback.open_with_ext = false;
-	desc->callback.remove_fn = remove_cb;
-	desc->callback.ctx = remove_ctx;
-	pthread_mutex_init(&desc->mutex, NULL);
-
-	pthread_mutex_lock(&g_bdev_mgr.mutex);
-
-	rc = bdev_open(bdev, write, desc);
-	if (rc != 0) {
-		bdev_desc_free(desc);
-		desc = NULL;
-	}
-
-	*_desc = desc;
-
-	pthread_mutex_unlock(&g_bdev_mgr.mutex);
-
-	return rc;
-}
-
-int
 spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event_cb,
 		   void *event_ctx, struct spdk_bdev_desc **_desc)
 {
@@ -5806,7 +5752,6 @@ spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event
 	TAILQ_INIT(&desc->pending_media_events);
 	TAILQ_INIT(&desc->free_media_events);
 
-	desc->callback.open_with_ext = true;
 	desc->callback.event_fn = event_cb;
 	desc->callback.ctx = event_ctx;
 	pthread_mutex_init(&desc->mutex, NULL);

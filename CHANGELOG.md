@@ -7,6 +7,8 @@
 For `bdev_ocssd_create` RPC, the optional parameter `range` was removed.
 Only one OCSSD bdev can be created for one OCSSD namespace.
 
+Removed the `spdk_bdev_open` from bdev library API.
+
 ### blobstore
 
 Removed the `spdk_bdev_create_bs_dev_from_desc` and `spdk_bdev_create_bs_dev` API.

@@ -333,30 +333,13 @@ struct spdk_bdev *spdk_bdev_first_leaf(void);
 struct spdk_bdev *spdk_bdev_next_leaf(struct spdk_bdev *prev);
 
 /**
- * Open a block device for I/O operations (deprecated, please use spdk_bdev_open_ext).
- *
- * \param bdev Block device to open.
- * \param write true is read/write access requested, false if read-only
- * \param remove_cb notification callback to be called when the bdev gets
- * hotremoved. This will always be called on the same thread that
- * spdk_bdev_open() was called on. It can be NULL, in which case the upper
- * layer won't be notified about the bdev hotremoval. The descriptor will
- * have to be manually closed to make the bdev unregister proceed.
- * \param remove_ctx param for remove_cb.
- * \param desc output parameter for the descriptor when operation is successful
- * \return 0 if operation is successful, suitable errno value otherwise
- */
-int spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
-		   void *remove_ctx, struct spdk_bdev_desc **desc);
-
-/**
  * Open a block device for I/O operations.
  *
  * \param bdev_name Block device name to open.
  * \param write true is read/write access requested, false if read-only
  * \param event_cb notification callback to be called when the bdev triggers
  * asynchronous event such as bdev removal. This will always be called on the
- * same thread that spdk_bdev_open() was called on. In case of removal event
+ * same thread that spdk_bdev_open_ext() was called on. In case of removal event
  * the descriptor will have to be manually closed to make the bdev unregister
  * proceed.
  * \param event_ctx param for event_cb.
@@ -369,7 +352,7 @@ int spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t e
 /**
  * Close a previously opened block device.
  *
- * Must be called on the same thread that the spdk_bdev_open()
+ * Must be called on the same thread that the spdk_bdev_open_ext()
  * was performed on.
  *
  * \param desc Block device descriptor to close.
