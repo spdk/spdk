@@ -491,27 +491,6 @@ spdk_bdev_part_base_construct_ext(const char *bdev_name,
 	return 0;
 }
 
-struct spdk_bdev_part_base *
-	spdk_bdev_part_base_construct(struct spdk_bdev *bdev,
-			      spdk_bdev_remove_cb_t remove_cb, struct spdk_bdev_module *module,
-			      struct spdk_bdev_fn_table *fn_table, struct bdev_part_tailq *tailq,
-			      spdk_bdev_part_base_free_fn free_fn, void *ctx,
-			      uint32_t channel_size, spdk_io_channel_create_cb ch_create_cb,
-			      spdk_io_channel_destroy_cb ch_destroy_cb)
-{
-	struct spdk_bdev_part_base *base = NULL;
-	int rc;
-
-	rc = spdk_bdev_part_base_construct_ext(spdk_bdev_get_name(bdev), remove_cb, module,
-					       fn_table, tailq, free_fn, ctx,
-					       channel_size, ch_create_cb, ch_destroy_cb, &base);
-	if (rc == 0) {
-		return base;
-	} else {
-		return NULL;
-	}
-}
-
 int
 spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base *base,
 			 char *name, uint64_t offset_blocks, uint64_t num_blocks,

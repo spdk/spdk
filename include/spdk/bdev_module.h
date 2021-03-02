@@ -86,13 +86,6 @@ struct spdk_bdev_module {
 	void (*module_fini)(void);
 
 	/**
-	 * Function called to return a text string representing the
-	 * module's configuration options for inclusion in a configuration file.
-	 * (Deprecated and shall not be called by bdev layer)
-	 */
-	void (*config_text)(FILE *fp);
-
-	/**
 	 * Function called to return a text string representing the module-level
 	 * JSON RPCs required to regenerate the current configuration.  This will
 	 * include module-level configuration options, or methods to construct
@@ -735,25 +728,6 @@ void spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn,
 void spdk_bdev_destruct_done(struct spdk_bdev *bdev, int bdeverrno);
 
 /**
- * Register a virtual bdev.
- *
- * This function is deprecated.  Users should call spdk_bdev_register instead.
- * The bdev layer currently makes no use of the base_bdevs array, so switching
- * to spdk_bdev_register results in no loss of functionality.
- *
- * \param vbdev Virtual bdev to register.
- * \param base_bdevs Array of bdevs upon which this vbdev is based.
- * \param base_bdev_count Number of bdevs in base_bdevs.
- *
- * \return 0 on success
- * \return -EINVAL if the bdev name is NULL.
- * \return -EEXIST if the bdev already exists.
- * \return -ENOMEM if allocation of the base_bdevs array or the base bdevs vbdevs array fails.
- */
-int spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs,
-			int base_bdev_count);
-
-/**
  * Indicate to the bdev layer that the module is done examining a bdev.
  *
  * To be called synchronously or asynchronously in response to the
@@ -1111,35 +1085,6 @@ int spdk_bdev_part_free(struct spdk_bdev_part *part);
  */
 void spdk_bdev_part_base_hotremove(struct spdk_bdev_part_base *part_base,
 				   struct bdev_part_tailq *tailq);
-
-/**
- * Construct a new spdk_bdev_part_base on top of the provided bdev
- * (deprecated. please use spdk_bdev_part_base_construct_ext).
- *
- * \param bdev The spdk_bdev upon which this base will be built.
- * \param remove_cb Function to be called upon hotremove of the bdev.
- * \param module The module to which this bdev base belongs.
- * \param fn_table Function table for communicating with the bdev backend.
- * \param tailq The head of the list of all spdk_bdev_part structures registered to this base's module.
- * \param free_fn User provided function to free base related context upon bdev removal or shutdown.
- * \param ctx Module specific context for this bdev part base.
- * \param channel_size Channel size in bytes.
- * \param ch_create_cb Called after a new channel is allocated.
- * \param ch_destroy_cb Called upon channel deletion.
- *
- * \return The part object on top of the bdev if operation is successful, or
- * NULL otherwise.
- */
-struct spdk_bdev_part_base *spdk_bdev_part_base_construct(struct spdk_bdev *bdev,
-		spdk_bdev_remove_cb_t remove_cb,
-		struct spdk_bdev_module *module,
-		struct spdk_bdev_fn_table *fn_table,
-		struct bdev_part_tailq *tailq,
-		spdk_bdev_part_base_free_fn free_fn,
-		void *ctx,
-		uint32_t channel_size,
-		spdk_io_channel_create_cb ch_create_cb,
-		spdk_io_channel_destroy_cb ch_destroy_cb);
 
 /**
  * Construct a new spdk_bdev_part_base on top of the provided bdev.

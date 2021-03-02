@@ -99,7 +99,6 @@
 	spdk_bdev_register;
 	spdk_bdev_unregister;
 	spdk_bdev_destruct_done;
-	spdk_vbdev_register;
 	spdk_bdev_module_examine_done;
 	spdk_bdev_module_init_done;
 	spdk_bdev_module_finish_done;
@@ -132,7 +131,6 @@
 	spdk_bdev_part_base_free;
 	spdk_bdev_part_free;
 	spdk_bdev_part_base_hotremove;
-	spdk_bdev_part_base_construct;
 	spdk_bdev_part_base_construct_ext;
 	spdk_bdev_part_construct;
 	spdk_bdev_part_submit_request;
