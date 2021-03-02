@@ -2539,12 +2539,6 @@ spdk_opal_get_d0_features_info(struct spdk_opal_dev *dev)
 	return &dev->feat_info;
 }
 
-bool
-spdk_opal_supported(struct spdk_opal_dev *dev)
-{
-	return false;
-}
-
 struct spdk_opal_locking_range_info *
 spdk_opal_get_locking_range_info(struct spdk_opal_dev *dev, enum spdk_opal_locking_range id)
 {

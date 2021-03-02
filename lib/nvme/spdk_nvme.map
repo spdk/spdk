@@ -202,7 +202,6 @@
 	spdk_opal_dev_construct;
 	spdk_opal_dev_destruct;
 	spdk_opal_get_d0_features_info;
-	spdk_opal_supported;
 	spdk_opal_cmd_take_ownership;
 	spdk_opal_cmd_revert_tper;
 	spdk_opal_cmd_activate_locking_sp;
