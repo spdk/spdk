@@ -122,6 +122,7 @@ gpt_base_bdev_init(struct spdk_bdev *bdev)
 {
 	struct gpt_base *gpt_base;
 	struct spdk_gpt *gpt;
+	int rc;
 
 	gpt_base = calloc(1, sizeof(*gpt_base));
 	if (!gpt_base) {
@@ -130,12 +131,12 @@ gpt_base_bdev_init(struct spdk_bdev *bdev)
 	}
 
 	TAILQ_INIT(&gpt_base->parts);
-	gpt_base->part_base = spdk_bdev_part_base_construct(bdev,
-			      gpt_base_bdev_hotremove_cb,
-			      &gpt_if, &vbdev_gpt_fn_table,
-			      &gpt_base->parts, gpt_base_free, gpt_base,
-			      sizeof(struct gpt_channel), NULL, NULL);
-	if (!gpt_base->part_base) {
+	rc = spdk_bdev_part_base_construct_ext(spdk_bdev_get_name(bdev),
+					       gpt_base_bdev_hotremove_cb,
+					       &gpt_if, &vbdev_gpt_fn_table,
+					       &gpt_base->parts, gpt_base_free, gpt_base,
+					       sizeof(struct gpt_channel), NULL, NULL, &gpt_base->part_base);
+	if (rc != 0) {
 		free(gpt_base);
 		SPDK_ERRLOG("cannot construct gpt_base");
 		return NULL;
