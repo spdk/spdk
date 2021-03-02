@@ -31,6 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "spdk/mmio.h"
 #include "spdk/nvme_spec.h"
 #include "spdk/log.h"
 #include "spdk/stdinc.h"
@@ -72,6 +73,97 @@ find_ctrlr_by_addr(struct spdk_pci_addr *addr)
 	}
 
 	return NULL;
+}
+
+static volatile void *
+get_pcie_reg_addr(struct nvme_ctrlr *ctrlr, uint32_t offset)
+{
+	return (volatile void *)((uintptr_t)ctrlr->regs + offset);
+}
+
+static void
+get_pcie_reg_4(struct nvme_ctrlr *ctrlr, uint32_t offset, uint32_t *value)
+{
+	assert(offset <= sizeof(struct spdk_nvme_registers) - 4);
+	*value = spdk_mmio_read_4(get_pcie_reg_addr(ctrlr, offset));
+}
+
+static void
+get_pcie_reg_8(struct nvme_ctrlr *ctrlr, uint32_t offset, uint64_t *value)
+{
+	assert(offset <= sizeof(struct spdk_nvme_registers) - 8);
+	*value = spdk_mmio_read_8(get_pcie_reg_addr(ctrlr, offset));
+}
+
+static void
+set_pcie_reg_4(struct nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value)
+{
+	assert(offset <= sizeof(struct spdk_nvme_registers) - 4);
+	spdk_mmio_write_4(get_pcie_reg_addr(ctrlr, offset), value);
+}
+
+static void
+set_pcie_reg_8(struct nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value)
+{
+	assert(offset <= sizeof(struct spdk_nvme_registers) - 8);
+	spdk_mmio_write_8(get_pcie_reg_addr(ctrlr, offset), value);
+}
+
+void nvme_ctrlr_get_cap(struct nvme_ctrlr *ctrlr, union spdk_nvme_cap_register *cap);
+
+void
+nvme_ctrlr_get_cap(struct nvme_ctrlr *ctrlr, union spdk_nvme_cap_register *cap)
+{
+	get_pcie_reg_8(ctrlr, offsetof(struct spdk_nvme_registers, cap), &cap->raw);
+}
+
+void
+nvme_ctrlr_get_cc(struct nvme_ctrlr *ctrlr, union spdk_nvme_cc_register *cc);
+
+void
+nvme_ctrlr_get_cc(struct nvme_ctrlr *ctrlr, union spdk_nvme_cc_register *cc)
+{
+	get_pcie_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, cc), &cc->raw);
+}
+
+void nvme_ctrlr_get_csts(struct nvme_ctrlr *ctrlr, union spdk_nvme_csts_register *csts);
+
+void
+nvme_ctrlr_get_csts(struct nvme_ctrlr *ctrlr, union spdk_nvme_csts_register *csts)
+{
+	get_pcie_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, csts), &csts->raw);
+}
+
+void nvme_ctrlr_set_cc(struct nvme_ctrlr *ctrlr, const union spdk_nvme_cc_register *cc);
+
+void
+nvme_ctrlr_set_cc(struct nvme_ctrlr *ctrlr, const union spdk_nvme_cc_register *cc)
+{
+	set_pcie_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, cc.raw), cc->raw);
+}
+
+void nvme_ctrlr_set_asq(struct nvme_ctrlr *ctrlr, uint64_t value);
+
+void
+nvme_ctrlr_set_asq(struct nvme_ctrlr *ctrlr, uint64_t value)
+{
+	set_pcie_reg_8(ctrlr, offsetof(struct spdk_nvme_registers, asq), value);
+}
+
+void nvme_ctrlr_set_acq(struct nvme_ctrlr *ctrlr, uint64_t value);
+
+void
+nvme_ctrlr_set_acq(struct nvme_ctrlr *ctrlr, uint64_t value)
+{
+	set_pcie_reg_8(ctrlr, offsetof(struct spdk_nvme_registers, acq), value);
+}
+
+void nvme_ctrlr_set_aqa(struct nvme_ctrlr *ctrlr, const union spdk_nvme_aqa_register *aqa);
+
+void
+nvme_ctrlr_set_aqa(struct nvme_ctrlr *ctrlr, const union spdk_nvme_aqa_register *aqa)
+{
+	set_pcie_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, aqa.raw), aqa->raw);
 }
 
 static int
