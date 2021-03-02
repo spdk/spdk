@@ -39,6 +39,8 @@ Added `spdk_nvme_qpair_get_optimal_poll_group` function and `qpair_get_optimal_p
 function pointer in spdk_nvmf_transport_ops structure in order to add the qpair to the most
 suitable polling group.
 
+Add OPTPERF and namespace optimal performance fields to nvme_spec.h.
+
 Added spdk_nvme_set_hotplug_filter API to allow applications to choose which
 hot-inserted SSDs should be probed. This is useful for use cases where multiple
 independent SPDK processes are running on one node.  The filter function can

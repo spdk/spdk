@@ -2295,7 +2295,10 @@ struct spdk_nvme_ns_data {
 		/** Non-zero NGUID and EUI64 for namespace are never reused */
 		uint8_t		guid_never_reused : 1;
 
-		uint8_t		reserved1 : 4;
+		/** Optimal Performance field */
+		uint8_t		optperf : 1;
+
+		uint8_t		reserved1 : 3;
 	} nsfeat;
 
 	/** number of lba formats */
@@ -2444,7 +2447,22 @@ struct spdk_nvme_ns_data {
 	/** NVM capacity */
 	uint64_t		nvmcap[2];
 
-	uint8_t			reserved64[28];
+	/** Namespace Preferred Write Granularity */
+	uint16_t		npwg;
+
+	/** Namespace Preferred Write Alignment */
+	uint16_t                npwa;
+
+	/** Namespace Preferred Deallocate Granularity */
+	uint16_t                npdg;
+
+	/** Namespace Preferred Deallocate Alignment */
+	uint16_t                npda;
+
+	/** Namespace Optimal Write Size */
+	uint16_t                nows;
+
+	uint8_t			reserved64[18];
 
 	/** ANA group identifier */
 	uint32_t		anagrpid;
