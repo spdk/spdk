@@ -361,13 +361,11 @@ map_one(vfu_ctx_t *ctx, uint64_t addr, uint64_t len, dma_sg_t *sg, struct iovec 
 
 	ret = vfu_addr_to_sg(ctx, addr, len, sg, 1, PROT_READ | PROT_WRITE);
 	if (ret != 1) {
-		errno = ret;
 		return NULL;
 	}
 
 	ret = vfu_map_sg(ctx, sg, iov, 1);
 	if (ret != 0) {
-		errno = ret;
 		return NULL;
 	}
 
@@ -432,11 +430,11 @@ asq_map(struct nvmf_vfio_user_ctrlr *ctrlr)
 	q.addr = map_one(ctrlr->endpoint->vfu_ctx, regs->asq,
 			 q.size * sizeof(struct spdk_nvme_cmd), &q.sg, &q.iov);
 	if (q.addr == NULL) {
-		SPDK_ERRLOG("Map ASQ failed, ASQ %"PRIx64", errno %d\n", regs->asq, errno);
 		return -1;
 	}
 	memset(q.addr, 0, q.size * sizeof(struct spdk_nvme_cmd));
 	insert_queue(ctrlr, &q, false, 0);
+
 	return 0;
 }
 
@@ -507,13 +505,13 @@ acq_map(struct nvmf_vfio_user_ctrlr *ctrlr)
 	q.addr = map_one(ctrlr->endpoint->vfu_ctx, regs->acq,
 			 q.size * sizeof(struct spdk_nvme_cpl), &q.sg, &q.iov);
 	if (q.addr == NULL) {
-		SPDK_ERRLOG("Map ACQ failed, ACQ %"PRIx64", errno %d\n", regs->acq, errno);
 		return -1;
 	}
 	memset(q.addr, 0, q.size * sizeof(struct spdk_nvme_cpl));
 	q.is_cq = true;
 	q.ien = true;
 	insert_queue(ctrlr, &q, true, 0);
+
 	return 0;
 }
 
@@ -1040,14 +1038,14 @@ map_admin_queue(struct nvmf_vfio_user_ctrlr *ctrlr)
 
 	err = acq_map(ctrlr);
 	if (err != 0) {
-		SPDK_ERRLOG("%s: failed to map CQ0: %d\n", ctrlr_id(ctrlr), err);
 		return err;
 	}
+
 	err = asq_map(ctrlr);
 	if (err != 0) {
-		SPDK_ERRLOG("%s: failed to map SQ0: %d\n", ctrlr_id(ctrlr), err);
 		return err;
 	}
+
 	return 0;
 }
 
@@ -1091,6 +1089,7 @@ memory_region_add_cb(vfu_ctx_t *vfu_ctx, uint64_t iova, uint64_t len, uint32_t p
 		if (nvmf_qpair_is_admin_queue(&qpair->qpair)) {
 			ret = map_admin_queue(ctrlr);
 			if (ret) {
+				SPDK_DEBUGLOG(nvmf_vfio, "Memory isn't ready to remap Admin queue\n");
 				continue;
 			}
 			qpair->state = VFIO_USER_QPAIR_ACTIVE;
@@ -1100,14 +1099,14 @@ memory_region_add_cb(vfu_ctx_t *vfu_ctx, uint64_t iova, uint64_t len, uint32_t p
 
 			sq->addr = map_one(ctrlr->endpoint->vfu_ctx, sq->prp1, sq->size * 64, &sq->sg, &sq->iov);
 			if (!sq->addr) {
-				SPDK_NOTICELOG("Failed to map SQID %d %#lx-%#lx, will try again in next poll\n",
-					       i, sq->prp1, sq->prp1 + sq->size * 64);
+				SPDK_DEBUGLOG(nvmf_vfio, "Memory isn't ready to remap SQID %d %#lx-%#lx\n",
+					      i, sq->prp1, sq->prp1 + sq->size * 64);
 				continue;
 			}
 			cq->addr = map_one(ctrlr->endpoint->vfu_ctx, cq->prp1, cq->size * 16, &cq->sg, &cq->iov);
 			if (!cq->addr) {
-				SPDK_NOTICELOG("Failed to map CQID %d %#lx-%#lx, will try again in next poll\n",
-					       i, cq->prp1, cq->prp1 + cq->size * 16);
+				SPDK_DEBUGLOG(nvmf_vfio, "Memory isn't ready to remap CQID %d %#lx-%#lx\n",
+					      i, cq->prp1, cq->prp1 + cq->size * 16);
 				continue;
 			}
 
@@ -1154,6 +1153,7 @@ static int
 nvmf_vfio_user_prop_req_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 {
 	struct nvmf_vfio_user_qpair *qpair = cb_arg;
+	int ret;
 
 	assert(qpair != NULL);
 	assert(req != NULL);
@@ -1178,7 +1178,11 @@ nvmf_vfio_user_prop_req_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 				SPDK_DEBUGLOG(nvmf_vfio,
 					      "%s: MAP Admin queue\n",
 					      ctrlr_id(qpair->ctrlr));
-				map_admin_queue(qpair->ctrlr);
+				ret = map_admin_queue(qpair->ctrlr);
+				if (ret) {
+					SPDK_ERRLOG("%s: failed to map Admin queue\n", ctrlr_id(qpair->ctrlr));
+					return ret;
+				}
 			} else if ((cc->bits.en == 0 && cc->bits.shn == 0) ||
 				   (cc->bits.en == 1 && cc->bits.shn != 0)) {
 				SPDK_DEBUGLOG(nvmf_vfio,
@@ -1613,7 +1617,6 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 	endpoint->fd = fd;
 
 	snprintf(uuid, PATH_MAX, "%s/cntrl", endpoint_id(endpoint));
-	SPDK_DEBUGLOG(nvmf_vfio, "%s: doorbells %p\n", uuid, endpoint->doorbells);
 
 	endpoint->vfu_ctx = vfu_create_ctx(VFU_TRANS_SOCK, uuid, LIBVFIO_USER_FLAG_ATTACH_NB,
 					   endpoint, VFU_DEV_TYPE_PCI);
@@ -1632,6 +1635,7 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 	}
 
 	TAILQ_INSERT_TAIL(&vu_transport->endpoints, endpoint, link);
+	SPDK_NOTICELOG("%s: doorbells %p\n", uuid, endpoint->doorbells);
 
 out:
 	if (err != 0) {
