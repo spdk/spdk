@@ -44,6 +44,13 @@ static uint32_t g_next_lcore = SPDK_ENV_LCORE_ID_ANY;
 static uint32_t g_main_lcore;
 static bool g_core_mngmnt_available;
 
+struct core_stats {
+	uint64_t busy;
+	uint64_t idle;
+};
+
+static struct core_stats *g_cores;
+
 #define SCHEDULER_THREAD_BUSY 100
 #define SCHEDULER_LOAD_LIMIT 50
 
@@ -88,6 +95,12 @@ init(struct spdk_governor *governor)
 	rc = _spdk_governor_set("dpdk_governor");
 	g_core_mngmnt_available = !rc;
 
+	g_cores = calloc(spdk_env_get_last_core() + 1, sizeof(struct core_stats));
+	if (g_cores == NULL) {
+		SPDK_ERRLOG("Failed to allocate memory for dynamic scheduler core stats.\n");
+		return -ENOMEM;
+	}
+
 	return 0;
 }
 
@@ -96,6 +109,9 @@ deinit(struct spdk_governor *governor)
 {
 	uint32_t i;
 	int rc = 0;
+
+	free(g_cores);
+	g_cores = NULL;
 
 	if (!g_core_mngmnt_available) {
 		return 0;
@@ -126,8 +142,7 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 	struct spdk_thread *thread;
 	struct spdk_scheduler_core_info *core;
 	struct spdk_cpuset *cpumask;
-	uint64_t main_core_busy;
-	uint64_t main_core_idle;
+	struct core_stats *main_core;
 	uint64_t thread_busy;
 	uint32_t target_lcore;
 	uint32_t i, j, k;
@@ -135,12 +150,12 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 	uint8_t load;
 	bool busy_threads_present = false;
 
-	main_core_busy = cores_info[g_main_lcore].current_busy_tsc;
-	main_core_idle = cores_info[g_main_lcore].current_idle_tsc;
-
 	SPDK_ENV_FOREACH_CORE(i) {
 		cores_info[i].pending_threads_count = cores_info[i].threads_count;
+		g_cores[i].busy = cores_info[i].current_busy_tsc;
+		g_cores[i].idle = cores_info[i].current_idle_tsc;
 	}
+	main_core = &g_cores[g_main_lcore];
 
 	/* Distribute active threads across all cores and move idle threads to main core */
 	SPDK_ENV_FOREACH_CORE(i) {
@@ -161,7 +176,7 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 					target_lcore = _get_next_target_core();
 
 					/* Do not use main core if it is too busy for new thread */
-					if (target_lcore == g_main_lcore && thread_busy > main_core_idle) {
+					if (target_lcore == g_main_lcore && thread_busy > main_core->idle) {
 						continue;
 					}
 
@@ -172,8 +187,8 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 
 						if (target_lcore != g_main_lcore) {
 							busy_threads_present = true;
-							main_core_idle += spdk_min(UINT64_MAX - main_core_idle, thread_busy);
-							main_core_busy -= spdk_min(main_core_busy, thread_busy);
+							main_core->idle += spdk_min(UINT64_MAX - main_core->idle, thread_busy);
+							main_core->busy -= spdk_min(main_core->busy, thread_busy);
 						}
 
 						break;
@@ -185,8 +200,8 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 				cores_info[g_main_lcore].pending_threads_count++;
 				core->pending_threads_count--;
 
-				main_core_busy += spdk_min(UINT64_MAX - main_core_busy, thread_busy);
-				main_core_idle -= spdk_min(main_core_idle, thread_busy);
+				main_core->busy += spdk_min(UINT64_MAX - main_core->busy, thread_busy);
+				main_core->idle -= spdk_min(main_core->idle, thread_busy);
 			} else {
 				/* Move busy thread only if cpumask does not match current core (except main core) */
 				if (i != g_main_lcore) {
@@ -200,8 +215,8 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 								core->pending_threads_count--;
 
 								if (target_lcore == g_main_lcore) {
-									main_core_busy += spdk_min(UINT64_MAX - main_core_busy, thread_busy);
-									main_core_idle -= spdk_min(main_core_idle, thread_busy);
+									main_core->busy += spdk_min(UINT64_MAX - main_core->busy, thread_busy);
+									main_core->idle -= spdk_min(main_core->idle, thread_busy);
 								}
 								break;
 							}
@@ -237,7 +252,7 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 		if (rc < 0) {
 			SPDK_ERRLOG("setting default frequency for core %u failed\n", g_main_lcore);
 		}
-	} else if (main_core_busy > main_core_idle) {
+	} else if (main_core->busy > main_core->idle) {
 		rc = governor->core_freq_up(g_main_lcore);
 		if (rc < 0) {
 			SPDK_ERRLOG("increasing frequency for core %u failed\n", g_main_lcore);
