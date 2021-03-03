@@ -1680,21 +1680,44 @@ _nvme_bdev_ctrlr_destruct(void *ctx)
 	nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
 }
 
+static int
+_bdev_nvme_delete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, bool hotplug)
+{
+	struct nvme_probe_skip_entry *entry;
+
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+
+	/* The controller's destruction was already started */
+	if (nvme_bdev_ctrlr->destruct) {
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+		return 0;
+	}
+
+	if (!hotplug &&
+	    nvme_bdev_ctrlr->connected_trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
+		entry = calloc(1, sizeof(*entry));
+		if (!entry) {
+			pthread_mutex_unlock(&g_bdev_nvme_mutex);
+			return -ENOMEM;
+		}
+		entry->trid = *nvme_bdev_ctrlr->connected_trid;
+		TAILQ_INSERT_TAIL(&g_skipped_nvme_ctrlrs, entry, tailq);
+	}
+
+	nvme_bdev_ctrlr->destruct = true;
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+
+	_nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
+
+	return 0;
+}
+
 static void
 remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = cb_ctx;
 
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
-	assert(nvme_bdev_ctrlr->ctrlr == ctrlr);
-	/* The controller's destruction was already started */
-	if (nvme_bdev_ctrlr->destruct) {
-		pthread_mutex_unlock(&g_bdev_nvme_mutex);
-		return;
-	}
-	nvme_bdev_ctrlr->destruct = true;
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
-	_nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
+	_bdev_nvme_delete(nvme_bdev_ctrlr, true);
 }
 
 static int
@@ -2143,7 +2166,6 @@ int
 bdev_nvme_delete(const char *name)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
-	struct nvme_probe_skip_entry *entry;
 
 	if (name == NULL) {
 		return -EINVAL;
@@ -2158,28 +2180,9 @@ bdev_nvme_delete(const char *name)
 		return -ENODEV;
 	}
 
-	/* The controller's destruction was already started */
-	if (nvme_bdev_ctrlr->destruct) {
-		pthread_mutex_unlock(&g_bdev_nvme_mutex);
-		return 0;
-	}
-
-	if (nvme_bdev_ctrlr->connected_trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
-		entry = calloc(1, sizeof(*entry));
-		if (!entry) {
-			pthread_mutex_unlock(&g_bdev_nvme_mutex);
-			return -ENOMEM;
-		}
-		entry->trid = *nvme_bdev_ctrlr->connected_trid;
-		TAILQ_INSERT_TAIL(&g_skipped_nvme_ctrlrs, entry, tailq);
-	}
-
-	nvme_bdev_ctrlr->destruct = true;
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
-	_nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
-
-	return 0;
+	return _bdev_nvme_delete(nvme_bdev_ctrlr, false);
 }
 
 static int
