@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2018-2019, 2021 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -357,12 +358,24 @@ nvmf_tgt_destroy_cb(void *io_device)
 {
 	struct spdk_nvmf_tgt *tgt = io_device;
 	uint32_t i;
+	int rc;
 
 	if (tgt->subsystems) {
 		for (i = 0; i < tgt->max_subsystems; i++) {
 			if (tgt->subsystems[i]) {
 				nvmf_subsystem_remove_all_listeners(tgt->subsystems[i], true);
-				spdk_nvmf_subsystem_destroy(tgt->subsystems[i]);
+
+				rc = spdk_nvmf_subsystem_destroy(tgt->subsystems[i], nvmf_tgt_destroy_cb, tgt);
+				if (rc) {
+					if (rc == -EINPROGRESS) {
+						/* If rc is -EINPROGRESS, nvmf_tgt_destroy_cb will be called again when subsystem #i
+						 * is destroyed, nvmf_tgt_destroy_cb will continue to destroy other subsystems if any */
+						return;
+					} else {
+						SPDK_ERRLOG("Failed to destroy subsystem, id %u, rc %d\n", tgt->subsystems[i]->id, rc);
+						assert(0);
+					}
+				}
 			}
 		}
 		free(tgt->subsystems);
@@ -940,6 +953,7 @@ _nvmf_ctrlr_free_from_qpair(void *ctx)
 	spdk_bit_array_clear(ctrlr->qpair_mask, qpair_ctx->qid);
 	count = spdk_bit_array_count_set(ctrlr->qpair_mask);
 	if (count == 0) {
+		assert(!ctrlr->in_destruct);
 		ctrlr->in_destruct = true;
 		spdk_thread_send_msg(ctrlr->subsys->thread, _nvmf_ctrlr_destruct, ctrlr);
 	}

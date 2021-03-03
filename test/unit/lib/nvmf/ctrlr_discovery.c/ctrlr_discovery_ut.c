@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -257,6 +258,7 @@ test_discovery_log(void)
 	struct spdk_nvmf_discovery_log_page *disc_log;
 	struct spdk_nvmf_discovery_log_page_entry *entry;
 	struct spdk_nvme_transport_id trid = {};
+	int rc;
 
 	iov.iov_base = buffer;
 	iov.iov_len = 8192;
@@ -320,7 +322,8 @@ test_discovery_log(void)
 				    sizeof(*entry));
 	CU_ASSERT(entry->trtype == 42);
 	subsystem->state = SPDK_NVMF_SUBSYSTEM_INACTIVE;
-	spdk_nvmf_subsystem_destroy(subsystem);
+	rc = spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
+	CU_ASSERT(rc == 0);
 	free(tgt.subsystems);
 }
 

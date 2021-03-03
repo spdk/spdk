@@ -15,6 +15,8 @@ An new parameter `anagrpid` was added to the RPC `nvmf_subsystem_add_ns`.
 
 An new parameter `anagrpid` was added to the RPC `nvmf_subsystem_listener_set_ana_state`.
 
+`spdk_nvmf_subsystem_destroy` is now can be asynchronous, it accepts a callback and callback argument.
+
 ### bdev
 
 New API `spdk_bdev_get_memory_domains` has been added, it allows to get SPDK memory domains used by bdev.

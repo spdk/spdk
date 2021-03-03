@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2018-2021 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -399,7 +400,7 @@ rpc_nvmf_subsystem_started(struct spdk_nvmf_subsystem *subsystem,
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						     "Subsystem %s start failed",
 						     subsystem->subnqn);
-		spdk_nvmf_subsystem_destroy(subsystem);
+		spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
 	}
 }
 
@@ -480,6 +481,10 @@ rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 	rc = spdk_nvmf_subsystem_start(subsystem,
 				       rpc_nvmf_subsystem_started,
 				       request);
+	if (rc) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Failed to start subsystem");
+	}
 
 cleanup:
 	free(req->nqn);
@@ -489,7 +494,7 @@ cleanup:
 	free(req);
 
 	if (rc && subsystem) {
-		spdk_nvmf_subsystem_destroy(subsystem);
+		spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
 	}
 }
 SPDK_RPC_REGISTER("nvmf_create_subsystem", rpc_nvmf_create_subsystem, SPDK_RPC_RUNTIME)
@@ -507,15 +512,33 @@ free_rpc_delete_subsystem(struct rpc_delete_subsystem *r)
 	free(r->tgt_name);
 }
 
+static void rpc_nvmf_subsystem_destroy_complete_cb(void *cb_arg)
+{
+	struct spdk_jsonrpc_request *request = cb_arg;
+
+	spdk_jsonrpc_send_bool_response(request, true);
+}
+
 static void
 rpc_nvmf_subsystem_stopped(struct spdk_nvmf_subsystem *subsystem,
 			   void *cb_arg, int status)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
+	int rc;
 
 	nvmf_subsystem_remove_all_listeners(subsystem, true);
-	spdk_nvmf_subsystem_destroy(subsystem);
-
+	rc = spdk_nvmf_subsystem_destroy(subsystem, rpc_nvmf_subsystem_destroy_complete_cb, request);
+	if (rc) {
+		if (rc == -EINPROGRESS) {
+			/* response will be sent in completion callback */
+			return;
+		} else {
+			SPDK_ERRLOG("Subsystem destruction failed, rc %d\n", rc);
+			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							     "Subsystem destruction failed, rc %d", rc);
+			return;
+		}
+	}
 	spdk_jsonrpc_send_bool_response(request, true);
 }
 

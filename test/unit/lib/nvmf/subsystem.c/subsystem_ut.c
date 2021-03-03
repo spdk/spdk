@@ -353,6 +353,7 @@ nvmf_test_create_subsystem(void)
 	struct spdk_nvmf_tgt tgt = {};
 	char nqn[256];
 	struct spdk_nvmf_subsystem *subsystem;
+	int rc;
 
 	tgt.max_subsystems = 1024;
 	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
@@ -362,22 +363,24 @@ nvmf_test_create_subsystem(void)
 	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
-	spdk_nvmf_subsystem_destroy(subsystem);
+	rc = spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
+	CU_ASSERT(rc == 0);
 
 	/* valid name with complex reverse domain */
 	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.spdk-full--rev-domain.name:subsystem1");
 	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
-	spdk_nvmf_subsystem_destroy(subsystem);
+	rc = spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
+	CU_ASSERT(rc == 0);
 
 	/* Valid name discovery controller */
 	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.spdk:subsystem1");
 	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
-	spdk_nvmf_subsystem_destroy(subsystem);
-
+	rc = spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
+	CU_ASSERT(rc == 0);
 
 	/* Invalid name, no user supplied string */
 	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.spdk:");
@@ -389,7 +392,8 @@ nvmf_test_create_subsystem(void)
 	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
-	spdk_nvmf_subsystem_destroy(subsystem);
+	rc = spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
+	CU_ASSERT(rc == 0);
 
 	/* Invalid name, domain label > 63 characters */
 	snprintf(nqn, sizeof(nqn),
@@ -425,7 +429,8 @@ nvmf_test_create_subsystem(void)
 	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
-	spdk_nvmf_subsystem_destroy(subsystem);
+	rc = spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
+	CU_ASSERT(rc == 0);
 
 	/* Invalid name, too long */
 	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.spdk:");
@@ -440,7 +445,8 @@ nvmf_test_create_subsystem(void)
 	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
-	spdk_nvmf_subsystem_destroy(subsystem);
+	rc = spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
+	CU_ASSERT(rc == 0);
 
 	/* Invalid name user string contains an invalid utf-8 character */
 	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.spdk:\xFFsubsystem1");
@@ -452,7 +458,8 @@ nvmf_test_create_subsystem(void)
 	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
-	spdk_nvmf_subsystem_destroy(subsystem);
+	rc = spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
+	CU_ASSERT(rc == 0);
 
 	/* Invalid uuid (too long) */
 	snprintf(nqn, sizeof(nqn),
@@ -1443,6 +1450,11 @@ test_nvmf_ns_reservation_add_remove_registrant(void)
 }
 
 static void
+test_nvmf_subsystem_destroy_cb(void *cb_arg)
+{
+}
+
+static void
 test_nvmf_subsystem_add_ctrlr(void)
 {
 	int rc;
@@ -1467,7 +1479,8 @@ test_nvmf_subsystem_add_ctrlr(void)
 
 	nvmf_subsystem_remove_ctrlr(subsystem, &ctrlr);
 	CU_ASSERT(TAILQ_EMPTY(&subsystem->ctrlrs));
-	spdk_nvmf_subsystem_destroy(subsystem);
+	rc = spdk_nvmf_subsystem_destroy(subsystem, test_nvmf_subsystem_destroy_cb, NULL);
+	CU_ASSERT(rc == 0);
 	free(tgt.subsystems);
 }
 
@@ -1504,7 +1517,7 @@ test_spdk_nvmf_subsystem_add_host(void)
 	rc = spdk_nvmf_subsystem_remove_host(subsystem, hostnqn);
 	CU_ASSERT(rc == -ENOENT);
 
-	spdk_nvmf_subsystem_destroy(subsystem);
+	spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
 	free(tgt.subsystems);
 }
 

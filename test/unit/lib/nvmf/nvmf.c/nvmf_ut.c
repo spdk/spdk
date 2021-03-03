@@ -57,7 +57,8 @@ DEFINE_STUB(nvmf_transport_poll_group_poll, int, (struct spdk_nvmf_transport_pol
 DEFINE_STUB(nvmf_transport_accept, uint32_t, (struct spdk_nvmf_transport *transport), 0);
 DEFINE_STUB_V(nvmf_subsystem_remove_all_listeners, (struct spdk_nvmf_subsystem *subsystem,
 		bool stop));
-DEFINE_STUB_V(spdk_nvmf_subsystem_destroy, (struct spdk_nvmf_subsystem *subsystem));
+DEFINE_STUB(spdk_nvmf_subsystem_destroy, int, (struct spdk_nvmf_subsystem *subsystem,
+		nvmf_subsystem_destroy_cb cpl_cb, void *cpl_cb_arg), 0);
 DEFINE_STUB(spdk_nvmf_subsystem_get_first_listener, struct spdk_nvmf_subsystem_listener *,
 	    (struct spdk_nvmf_subsystem *subsystem), NULL);
 DEFINE_STUB(spdk_nvmf_subsystem_get_next_listener, struct spdk_nvmf_subsystem_listener *,

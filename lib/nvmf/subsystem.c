@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -67,6 +68,8 @@ enum spdk_nvmf_nqn_domain_states {
 	/* A domain label must end with either a letter or digit */
 	SPDK_NVMF_DOMAIN_ACCEPT_ANY = 2
 };
+
+static int _nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem);
 
 /* Returns true if is a valid ASCII string as defined by the NVMe spec */
 static bool
@@ -352,33 +355,32 @@ _nvmf_subsystem_remove_listener(struct spdk_nvmf_subsystem *subsystem,
 	free(listener);
 }
 
-void
-spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
+static void
+_nvmf_subsystem_destroy_msg(void *cb_arg)
 {
-	struct spdk_nvmf_host		*host, *host_tmp;
-	struct spdk_nvmf_ctrlr		*ctrlr, *ctrlr_tmp;
+	struct spdk_nvmf_subsystem *subsystem = cb_arg;
+
+	_nvmf_subsystem_destroy(subsystem);
+}
+
+static int
+_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
+{
 	struct spdk_nvmf_ns		*ns;
+	nvmf_subsystem_destroy_cb	async_destroy_cb = NULL;
+	void				*async_destroy_cb_arg = NULL;
+	int				rc;
 
-	if (!subsystem) {
-		return;
-	}
-
-	assert(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE);
-
-	SPDK_DEBUGLOG(nvmf, "subsystem is %p\n", subsystem);
-
-	nvmf_subsystem_remove_all_listeners(subsystem, false);
-
-	pthread_mutex_lock(&subsystem->mutex);
-
-	TAILQ_FOREACH_SAFE(host, &subsystem->hosts, link, host_tmp) {
-		nvmf_subsystem_remove_host(subsystem, host);
-	}
-
-	pthread_mutex_unlock(&subsystem->mutex);
-
-	TAILQ_FOREACH_SAFE(ctrlr, &subsystem->ctrlrs, link, ctrlr_tmp) {
-		nvmf_ctrlr_destruct(ctrlr);
+	if (!TAILQ_EMPTY(&subsystem->ctrlrs)) {
+		SPDK_DEBUGLOG(nvmf, "subsystem %p %s has active controllers\n", subsystem, subsystem->subnqn);
+		subsystem->async_destroy = true;
+		rc = spdk_thread_send_msg(subsystem->thread, _nvmf_subsystem_destroy_msg, subsystem);
+		if (rc) {
+			SPDK_ERRLOG("Failed to send thread msg, rc %d\n", rc);
+			assert(0);
+			return rc;
+		}
+		return -EINPROGRESS;
 	}
 
 	ns = spdk_nvmf_subsystem_get_first_ns(subsystem);
@@ -397,9 +399,62 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 
 	pthread_mutex_destroy(&subsystem->mutex);
 
+	if (subsystem->async_destroy) {
+		async_destroy_cb = subsystem->async_destroy_cb;
+		async_destroy_cb_arg = subsystem->async_destroy_cb_arg;
+	}
+
 	free(subsystem);
+
+	if (async_destroy_cb) {
+		async_destroy_cb(async_destroy_cb_arg);
+	}
+
+	return 0;
 }
 
+int
+spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem, nvmf_subsystem_destroy_cb cpl_cb,
+			    void *cpl_cb_arg)
+{
+	struct spdk_nvmf_host *host, *host_tmp;
+
+	if (!subsystem) {
+		return -EINVAL;
+	}
+
+	assert(spdk_get_thread() == subsystem->thread);
+
+	if (subsystem->state != SPDK_NVMF_SUBSYSTEM_INACTIVE) {
+		SPDK_ERRLOG("Subsystem can only be destroyed in inactive state\n");
+		assert(0);
+		return -EAGAIN;
+	}
+	if (subsystem->destroying) {
+		SPDK_ERRLOG("Subsystem destruction is already started\n");
+		assert(0);
+		return -EALREADY;
+	}
+
+	subsystem->destroying = true;
+
+	SPDK_DEBUGLOG(nvmf, "subsystem is %p %s\n", subsystem, subsystem->subnqn);
+
+	nvmf_subsystem_remove_all_listeners(subsystem, false);
+
+	pthread_mutex_lock(&subsystem->mutex);
+
+	TAILQ_FOREACH_SAFE(host, &subsystem->hosts, link, host_tmp) {
+		nvmf_subsystem_remove_host(subsystem, host);
+	}
+
+	pthread_mutex_unlock(&subsystem->mutex);
+
+	subsystem->async_destroy_cb = cpl_cb;
+	subsystem->async_destroy_cb_arg = cpl_cb_arg;
+
+	return _nvmf_subsystem_destroy(subsystem);
+}
 
 /* we have to use the typedef in the function declaration to appease astyle. */
 typedef enum spdk_nvmf_subsystem_state spdk_nvmf_subsystem_state_t;
@@ -1844,7 +1899,9 @@ void
 nvmf_subsystem_remove_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 			    struct spdk_nvmf_ctrlr *ctrlr)
 {
+	assert(spdk_get_thread() == subsystem->thread);
 	assert(subsystem == ctrlr->subsys);
+	SPDK_DEBUGLOG(nvmf, "remove ctrlr %p from subsys %p %s\n", ctrlr, subsystem, subsystem->subnqn);
 	TAILQ_REMOVE(&subsystem->ctrlrs, ctrlr, link);
 }
 

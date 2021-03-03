@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -2279,6 +2280,7 @@ test_nvmf_ctrlr_create_destruct(void)
 	CU_ASSERT(ctrlr->vcprop.csts.bits.rdy == 0);
 	CU_ASSERT(ctrlr->dif_insert_or_strip == true);
 
+	ctrlr->in_destruct = true;
 	nvmf_ctrlr_destruct(ctrlr);
 	poll_threads();
 	CU_ASSERT(TAILQ_EMPTY(&subsystem.ctrlrs));

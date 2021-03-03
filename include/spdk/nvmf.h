@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2018-2021 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -357,13 +358,27 @@ struct spdk_nvmf_subsystem *spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt
 		enum spdk_nvmf_subtype type,
 		uint32_t num_ns);
 
+typedef void (*nvmf_subsystem_destroy_cb)(void *cb_arg);
+
 /**
  * Destroy an NVMe-oF subsystem. A subsystem may only be destroyed when in
- * the Inactive state. See spdk_nvmf_subsystem_stop().
+ * the Inactive state. See spdk_nvmf_subsystem_stop(). A subsystem may be
+ * destroyed asynchronously, in that case \b cpl_cb will be called
  *
  * \param subsystem The NVMe-oF subsystem to destroy.
+ * \param cpl_cb Optional callback to be called if the subsystem is destroyed asynchronously, only called if
+ * return value is -EINPROGRESS
+ * \param cpl_cb_arg Optional user context to be passed to \b cpl_cb
+ *
+ * \retval 0 if sybsystem is destroyed, \b cpl_cb is not called is that case
+ * \retval -EINVAl if \b subsystem is a NULL pointer
+ * \retval -EAGAIN if \b subsystem is not in INACTIVE state
+ * \retval -EALREADY if subsystem destruction is already started
+ * \retval -EINPROGRESS if subsystem is destroyed asyncronously, cpl_cb will be called in that case
  */
-void spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem);
+int
+spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem, nvmf_subsystem_destroy_cb cpl_cb,
+			    void *cpl_cb_arg);
 
 /**
  * Function to be called once the subsystem has changed state.

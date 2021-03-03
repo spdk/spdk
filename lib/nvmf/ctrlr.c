@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2019, 2020 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -175,6 +176,11 @@ nvmf_ctrlr_keep_alive_poll(void *ctx)
 	uint64_t keep_alive_timeout_tick;
 	uint64_t now = spdk_get_ticks();
 	struct spdk_nvmf_ctrlr *ctrlr = ctx;
+
+	if (ctrlr->in_destruct) {
+		nvmf_ctrlr_stop_keep_alive_timer(ctrlr);
+		return SPDK_POLLER_IDLE;
+	}
 
 	SPDK_DEBUGLOG(nvmf, "Polling ctrlr keep alive timeout\n");
 
@@ -464,6 +470,9 @@ _nvmf_ctrlr_destruct(void *ctx)
 	struct spdk_nvmf_ctrlr *ctrlr = ctx;
 	struct spdk_nvmf_reservation_log *log, *log_tmp;
 	struct spdk_nvmf_async_event_completion *event, *event_tmp;
+
+	assert(spdk_get_thread() == ctrlr->thread);
+	assert(ctrlr->in_destruct);
 
 	if (ctrlr->disconnect_in_progress) {
 		SPDK_ERRLOG("freeing ctrlr with disconnect in progress\n");
@@ -904,6 +913,11 @@ nvmf_ctrlr_association_remove(void *ctx)
 	struct spdk_nvmf_ctrlr *ctrlr = ctx;
 	int rc;
 
+	nvmf_ctrlr_stop_association_timer(ctrlr);
+
+	if (ctrlr->in_destruct) {
+		return SPDK_POLLER_IDLE;
+	}
 	SPDK_DEBUGLOG(nvmf, "Disconnecting host from subsystem %s due to association timeout.\n",
 		      ctrlr->subsys->subnqn);
 
@@ -913,7 +927,6 @@ nvmf_ctrlr_association_remove(void *ctx)
 		assert(false);
 	}
 
-	nvmf_ctrlr_stop_association_timer(ctrlr);
 	return SPDK_POLLER_BUSY;
 }
 

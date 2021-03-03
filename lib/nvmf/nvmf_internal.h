@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -292,6 +293,9 @@ struct spdk_nvmf_subsystem {
 	/* boolean for state change synchronization */
 	bool						changing_state;
 
+	bool						destroying;
+	bool						async_destroy;
+
 	struct spdk_nvmf_tgt				*tgt;
 
 	/* Array of pointers to namespaces of size max_nsid indexed by nsid - 1 */
@@ -313,6 +317,9 @@ struct spdk_nvmf_subsystem {
 	TAILQ_HEAD(, spdk_nvmf_subsystem_listener)	listeners;
 
 	TAILQ_ENTRY(spdk_nvmf_subsystem)		entries;
+
+	nvmf_subsystem_destroy_cb			async_destroy_cb;
+	void						*async_destroy_cb_arg;
 
 	char						sn[SPDK_NVME_CTRLR_SN_LEN + 1];
 	char						mn[SPDK_NVME_CTRLR_MN_LEN + 1];
