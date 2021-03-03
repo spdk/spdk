@@ -173,6 +173,11 @@ use `enable-zerocopy-send-server` or `enable-zerocopy-send-client` instead.
 Parameter `disable-zerocopy-send` of RPC `sock_impl_set_options` is deprecated and will be removed in SPDK 21.07,
 use `disable-zerocopy-send-server` or `disable-zerocopy-send-client` instead.
 
+Added cmd_parser.py used to parse the args from argparse. There are
+two benefit to use command parser:
+- Simplify the definition of rpc method. It will reduce the rpc method code.
+- Make the rpc call more versatile. User can add private args into rpc method.
+
 ### rpm
 
 Added support for new RPM spec, rpmbuild/spdk.spec, which can be used for packaging the

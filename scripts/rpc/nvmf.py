@@ -1,4 +1,5 @@
 from .helpers import deprecated_alias
+from .cmd_parser import *
 
 
 @deprecated_alias('set_nvmf_target_max_subsystems')
@@ -91,28 +92,7 @@ def nvmf_get_targets(client):
     return client.call("nvmf_get_targets")
 
 
-def nvmf_create_transport(client,
-                          trtype,
-                          tgt_name=None,
-                          max_queue_depth=None,
-                          max_qpairs_per_ctrlr=None,
-                          max_io_qpairs_per_ctrlr=None,
-                          in_capsule_data_size=None,
-                          max_io_size=None,
-                          io_unit_size=None,
-                          max_aq_depth=None,
-                          num_shared_buffers=None,
-                          buf_cache_size=None,
-                          num_cqe=None,
-                          max_srq_depth=None,
-                          no_srq=False,
-                          c2h_success=True,
-                          dif_insert_or_strip=None,
-                          sock_priority=None,
-                          acceptor_backlog=None,
-                          abort_timeout_sec=None,
-                          no_wr_batching=None,
-                          control_msg_num=None):
+def nvmf_create_transport(client, **params):
     """NVMf Transport Create options.
 
     Args:
@@ -138,50 +118,14 @@ def nvmf_create_transport(client,
     Returns:
         True or False
     """
-    params = {}
 
-    params['trtype'] = trtype
-    if tgt_name:
-        params['tgt_name'] = tgt_name
-    if max_queue_depth:
-        params['max_queue_depth'] = max_queue_depth
-    if max_qpairs_per_ctrlr:
+    strip_globals(params)
+    apply_defaults(params, no_srq=False, c2h_success=True)
+    remove_null(params)
+
+    if 'max_qpairs_per_ctrlr' in params:
         print("WARNING: max_qpairs_per_ctrlr is deprecated, please use max_io_qpairs_per_ctrlr.")
-        params['max_qpairs_per_ctrlr'] = max_qpairs_per_ctrlr
-    if max_io_qpairs_per_ctrlr:
-        params['max_io_qpairs_per_ctrlr'] = max_io_qpairs_per_ctrlr
-    if in_capsule_data_size is not None:
-        params['in_capsule_data_size'] = in_capsule_data_size
-    if max_io_size:
-        params['max_io_size'] = max_io_size
-    if io_unit_size:
-        params['io_unit_size'] = io_unit_size
-    if max_aq_depth:
-        params['max_aq_depth'] = max_aq_depth
-    if num_shared_buffers:
-        params['num_shared_buffers'] = num_shared_buffers
-    if buf_cache_size is not None:
-        params['buf_cache_size'] = buf_cache_size
-    if num_cqe:
-        params['num_cqe'] = num_cqe
-    if max_srq_depth:
-        params['max_srq_depth'] = max_srq_depth
-    if no_srq:
-        params['no_srq'] = no_srq
-    if c2h_success is not None:
-        params['c2h_success'] = c2h_success
-    if dif_insert_or_strip:
-        params['dif_insert_or_strip'] = dif_insert_or_strip
-    if sock_priority is not None:
-        params['sock_priority'] = sock_priority
-    if acceptor_backlog is not None:
-        params['acceptor_backlog'] = acceptor_backlog
-    if abort_timeout_sec:
-        params['abort_timeout_sec'] = abort_timeout_sec
-    if no_wr_batching is not None:
-        params['no_wr_batching'] = no_wr_batching
-    if control_msg_num is not None:
-        params['control_msg_num'] = control_msg_num
+
     return client.call('nvmf_create_transport', params)
 
 
@@ -274,7 +218,8 @@ def nvmf_create_subsystem(client,
     return client.call('nvmf_create_subsystem', params)
 
 
-def nvmf_subsystem_add_listener(client, nqn, trtype, traddr, trsvcid, adrfam, tgt_name=None):
+def nvmf_subsystem_add_listener(client, **params):
+
     """Add a new listen address to an NVMe-oF subsystem.
 
     Args:
@@ -288,20 +233,11 @@ def nvmf_subsystem_add_listener(client, nqn, trtype, traddr, trsvcid, adrfam, tg
     Returns:
         True or False
     """
-    listen_address = {'trtype': trtype,
-                      'traddr': traddr}
 
-    if trsvcid:
-        listen_address['trsvcid'] = trsvcid
-
-    if adrfam:
-        listen_address['adrfam'] = adrfam
-
-    params = {'nqn': nqn,
-              'listen_address': listen_address}
-
-    if tgt_name:
-        params['tgt_name'] = tgt_name
+    strip_globals(params)
+    apply_defaults(params, tgt_name=None)
+    group_as(params, 'listen_address', ['trtype', 'traddr', 'trsvcid', 'adrfam'])
+    remove_null(params)
 
     return client.call('nvmf_subsystem_add_listener', params)
 

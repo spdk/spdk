@@ -1864,28 +1864,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=nvmf_set_config)
 
     def nvmf_create_transport(args):
-        rpc.nvmf.nvmf_create_transport(args.client,
-                                       trtype=args.trtype,
-                                       tgt_name=args.tgt_name,
-                                       max_queue_depth=args.max_queue_depth,
-                                       max_qpairs_per_ctrlr=args.max_qpairs_per_ctrlr,
-                                       max_io_qpairs_per_ctrlr=args.max_io_qpairs_per_ctrlr,
-                                       in_capsule_data_size=args.in_capsule_data_size,
-                                       max_io_size=args.max_io_size,
-                                       io_unit_size=args.io_unit_size,
-                                       max_aq_depth=args.max_aq_depth,
-                                       num_shared_buffers=args.num_shared_buffers,
-                                       buf_cache_size=args.buf_cache_size,
-                                       num_cqe=args.num_cqe,
-                                       max_srq_depth=args.max_srq_depth,
-                                       no_srq=args.no_srq,
-                                       c2h_success=args.c2h_success,
-                                       dif_insert_or_strip=args.dif_insert_or_strip,
-                                       sock_priority=args.sock_priority,
-                                       acceptor_backlog=args.acceptor_backlog,
-                                       abort_timeout_sec=args.abort_timeout_sec,
-                                       no_wr_batching=args.no_wr_batching,
-                                       control_msg_num=args.control_msg_num)
+        rpc.nvmf.nvmf_create_transport(**vars(args))
 
     p = subparsers.add_parser('nvmf_create_transport', help='Create NVMf transport')
     p.add_argument('-t', '--trtype', help='Transport type (ex. RDMA)', type=str, required=True)
@@ -1969,13 +1948,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=nvmf_delete_subsystem)
 
     def nvmf_subsystem_add_listener(args):
-        rpc.nvmf.nvmf_subsystem_add_listener(args.client,
-                                             nqn=args.nqn,
-                                             trtype=args.trtype,
-                                             traddr=args.traddr,
-                                             tgt_name=args.tgt_name,
-                                             adrfam=args.adrfam,
-                                             trsvcid=args.trsvcid)
+        rpc.nvmf.nvmf_subsystem_add_listener(**vars(args))
 
     p = subparsers.add_parser('nvmf_subsystem_add_listener', help='Add a listener to an NVMe-oF subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
