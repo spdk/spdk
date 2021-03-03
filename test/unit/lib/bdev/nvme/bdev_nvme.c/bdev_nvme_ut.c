@@ -132,8 +132,63 @@ DEFINE_STUB(spdk_nvme_ns_get_optimal_io_boundary, uint32_t, (struct spdk_nvme_ns
 DEFINE_STUB(spdk_nvme_ns_get_uuid, const struct spdk_uuid *,
 	    (const struct spdk_nvme_ns *ns), NULL);
 
+DEFINE_STUB(spdk_nvme_ns_get_csi, enum spdk_nvme_csi,
+	    (const struct spdk_nvme_ns *ns), 0);
+
 DEFINE_STUB(spdk_nvme_cuse_get_ns_name, int, (struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 		char *name, size_t *size), 0);
+
+DEFINE_STUB(spdk_nvme_zns_ns_get_zone_size_sectors, uint64_t,
+	    (struct spdk_nvme_ns *ns), 0);
+
+DEFINE_STUB(spdk_nvme_zns_ctrlr_get_max_zone_append_size, uint32_t,
+	    (const struct spdk_nvme_ctrlr *ctrlr), 0);
+
+DEFINE_STUB(spdk_nvme_zns_ns_get_max_open_zones, uint32_t,
+	    (struct spdk_nvme_ns *ns), 0);
+
+DEFINE_STUB(spdk_nvme_zns_ns_get_max_active_zones, uint32_t,
+	    (struct spdk_nvme_ns *ns), 0);
+
+DEFINE_STUB(spdk_nvme_zns_ns_get_num_zones, uint64_t,
+	    (struct spdk_nvme_ns *ns), 0);
+
+DEFINE_STUB(spdk_nvme_zns_zone_append_with_md, int,
+	    (struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, void *buffer, void *metadata,
+	     uint64_t zslba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+	     uint32_t io_flags, uint16_t apptag_mask, uint16_t apptag), 0);
+
+DEFINE_STUB(spdk_nvme_zns_zone_appendv_with_md, int,
+	    (struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, uint64_t zslba,
+	     uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t io_flags,
+	     spdk_nvme_req_reset_sgl_cb reset_sgl_fn, spdk_nvme_req_next_sge_cb next_sge_fn,
+	     void *metadata, uint16_t apptag_mask, uint16_t apptag), 0);
+
+DEFINE_STUB(spdk_nvme_zns_report_zones, int,
+	    (struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+	     void *payload, uint32_t payload_size, uint64_t slba,
+	     enum spdk_nvme_zns_zra_report_opts report_opts, bool partial_report,
+	     spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
+
+DEFINE_STUB(spdk_nvme_zns_close_zone, int,
+	    (struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, uint64_t slba,
+	     bool select_all, spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
+
+DEFINE_STUB(spdk_nvme_zns_finish_zone, int,
+	    (struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, uint64_t slba,
+	     bool select_all, spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
+
+DEFINE_STUB(spdk_nvme_zns_open_zone, int,
+	    (struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, uint64_t slba,
+	     bool select_all, spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
+
+DEFINE_STUB(spdk_nvme_zns_reset_zone, int,
+	    (struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, uint64_t slba,
+	     bool select_all, spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
+
+DEFINE_STUB(spdk_nvme_zns_offline_zone, int,
+	    (struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, uint64_t slba,
+	     bool select_all, spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
 
 DEFINE_STUB_V(spdk_bdev_module_finish_done, (void));
 

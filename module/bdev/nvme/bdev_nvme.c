@@ -43,6 +43,7 @@
 #include "spdk/json.h"
 #include "spdk/nvme.h"
 #include "spdk/nvme_ocssd.h"
+#include "spdk/nvme_zns.h"
 #include "spdk/thread.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
@@ -88,6 +89,12 @@ struct nvme_bdev_io {
 
 	/** Keeps track if first of fused commands was submitted */
 	bool first_fused_submitted;
+
+	/** Temporary pointer to zone report buffer */
+	struct spdk_nvme_zns_zone_report *zone_report_buf;
+
+	/** Keep track of how many zones that have been copied to the spdk_bdev_zone_info struct */
+	uint64_t handled_zones;
 };
 
 struct nvme_probe_ctx {
@@ -150,6 +157,10 @@ static int bdev_nvme_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpa
 			    struct nvme_bdev_io *bio,
 			    struct iovec *iov, int iovcnt, void *md, uint64_t lba_count, uint64_t lba,
 			    uint32_t flags);
+static int bdev_nvme_zone_appendv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+				  struct nvme_bdev_io *bio,
+				  struct iovec *iov, int iovcnt, void *md, uint64_t lba_count,
+				  uint64_t zslba, uint32_t flags);
 static int bdev_nvme_comparev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			      struct nvme_bdev_io *bio,
 			      struct iovec *iov, int iovcnt, void *md, uint64_t lba_count, uint64_t lba,
@@ -159,6 +170,12 @@ static int bdev_nvme_comparev_and_writev(struct spdk_nvme_ns *ns,
 		struct nvme_bdev_io *bio, struct iovec *cmp_iov, int cmp_iovcnt, struct iovec *write_iov,
 		int write_iovcnt, void *md, uint64_t lba_count, uint64_t lba,
 		uint32_t flags);
+static int bdev_nvme_get_zone_info(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+				   struct nvme_bdev_io *bio, uint64_t zone_id, uint32_t num_zones,
+				   struct spdk_bdev_zone_info *info);
+static int bdev_nvme_zone_management(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+				     struct nvme_bdev_io *bio, uint64_t zone_id,
+				     enum spdk_bdev_zone_action action);
 static int bdev_nvme_admin_passthru(struct nvme_io_channel *nvme_ch,
 				    struct nvme_bdev_io *bio,
 				    struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes);
@@ -793,6 +810,32 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 				       bdev_io->u.bdev.offset_blocks,
 				       bdev_io->u.bdev.num_blocks);
 
+	case SPDK_BDEV_IO_TYPE_ZONE_APPEND:
+		return bdev_nvme_zone_appendv(nvme_ns->ns,
+					      qpair,
+					      nbdev_io,
+					      bdev_io->u.bdev.iovs,
+					      bdev_io->u.bdev.iovcnt,
+					      bdev_io->u.bdev.md_buf,
+					      bdev_io->u.bdev.num_blocks,
+					      bdev_io->u.bdev.offset_blocks,
+					      bdev->dif_check_flags);
+
+	case SPDK_BDEV_IO_TYPE_GET_ZONE_INFO:
+		return bdev_nvme_get_zone_info(nvme_ns->ns,
+					       qpair,
+					       nbdev_io,
+					       bdev_io->u.zone_mgmt.zone_id,
+					       bdev_io->u.zone_mgmt.num_zones,
+					       bdev_io->u.zone_mgmt.buf);
+
+	case SPDK_BDEV_IO_TYPE_ZONE_MANAGEMENT:
+		return bdev_nvme_zone_management(nvme_ns->ns,
+						 qpair,
+						 nbdev_io,
+						 bdev_io->u.zone_mgmt.zone_id,
+						 bdev_io->u.zone_mgmt.zone_action);
+
 	case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
 		return bdev_nvme_admin_passthru(nvme_ch,
 						nbdev_io,
@@ -902,6 +945,14 @@ bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 			return true;
 		}
 		return false;
+
+	case SPDK_BDEV_IO_TYPE_GET_ZONE_INFO:
+	case SPDK_BDEV_IO_TYPE_ZONE_MANAGEMENT:
+		return spdk_nvme_ns_get_csi(ns) == SPDK_NVME_CSI_ZNS;
+
+	case SPDK_BDEV_IO_TYPE_ZONE_APPEND:
+		return spdk_nvme_ns_get_csi(ns) == SPDK_NVME_CSI_ZNS &&
+		       spdk_nvme_ctrlr_get_flags(ctrlr) & SPDK_NVME_CTRLR_ZONE_APPEND_SUPPORTED;
 
 	default:
 		return false;
@@ -1224,14 +1275,33 @@ nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
 	const struct spdk_nvme_ctrlr_data *cdata;
 	const struct spdk_nvme_ns_data	*nsdata;
 	int				rc;
+	enum spdk_nvme_csi		csi;
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
+	csi = spdk_nvme_ns_get_csi(ns);
+
+	switch (csi) {
+	case SPDK_NVME_CSI_NVM:
+		disk->product_name = "NVMe disk";
+		break;
+	case SPDK_NVME_CSI_ZNS:
+		disk->product_name = "NVMe ZNS disk";
+		disk->zoned = true;
+		disk->zone_size = spdk_nvme_zns_ns_get_zone_size_sectors(ns);
+		disk->max_zone_append_size = spdk_nvme_zns_ctrlr_get_max_zone_append_size(ctrlr) /
+					     spdk_nvme_ns_get_extended_sector_size(ns);
+		disk->max_open_zones = spdk_nvme_zns_ns_get_max_open_zones(ns);
+		disk->max_active_zones = spdk_nvme_zns_ns_get_max_active_zones(ns);
+		break;
+	default:
+		SPDK_ERRLOG("unsupported CSI: %u\n", csi);
+		return -ENOTSUP;
+	}
 
 	disk->name = spdk_sprintf_alloc("%sn%d", base_name, spdk_nvme_ns_get_id(ns));
 	if (!disk->name) {
 		return -ENOMEM;
 	}
-	disk->product_name = "NVMe disk";
 
 	disk->write_cache = 0;
 	if (cdata->vwc.present) {
@@ -2425,6 +2495,26 @@ bdev_nvme_writev_done(void *ref, const struct spdk_nvme_cpl *cpl)
 }
 
 static void
+bdev_nvme_zone_appendv_done(void *ref, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx((struct nvme_bdev_io *)ref);
+
+	/* spdk_bdev_io_get_append_location() requires that the ALBA is stored in offset_blocks.
+	 * Additionally, offset_blocks has to be set before calling bdev_nvme_verify_pi_error().
+	 */
+	bdev_io->u.bdev.offset_blocks = *(uint64_t *)&cpl->cdw0;
+
+	if (spdk_nvme_cpl_is_pi_error(cpl)) {
+		SPDK_ERRLOG("zone append completed with PI error (sct=%d, sc=%d)\n",
+			    cpl->status.sct, cpl->status.sc);
+		/* Run PI verification for zone append data buffer if PI error is detected. */
+		bdev_nvme_verify_pi_error(bdev_io);
+	}
+
+	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
+}
+
+static void
 bdev_nvme_comparev_done(void *ref, const struct spdk_nvme_cpl *cpl)
 {
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx((struct nvme_bdev_io *)ref);
@@ -2469,6 +2559,134 @@ bdev_nvme_comparev_and_writev_done(void *ref, const struct spdk_nvme_cpl *cpl)
 
 static void
 bdev_nvme_queued_done(void *ref, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx((struct nvme_bdev_io *)ref);
+
+	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
+}
+
+static int
+fill_zone_from_report(struct spdk_bdev_zone_info *info, struct spdk_nvme_zns_zone_desc *desc)
+{
+	switch (desc->zs) {
+	case SPDK_NVME_ZONE_STATE_EMPTY:
+		info->state = SPDK_BDEV_ZONE_STATE_EMPTY;
+		break;
+	case SPDK_NVME_ZONE_STATE_IOPEN:
+		info->state = SPDK_BDEV_ZONE_STATE_IMP_OPEN;
+		break;
+	case SPDK_NVME_ZONE_STATE_EOPEN:
+		info->state = SPDK_BDEV_ZONE_STATE_EXP_OPEN;
+		break;
+	case SPDK_NVME_ZONE_STATE_CLOSED:
+		info->state = SPDK_BDEV_ZONE_STATE_CLOSED;
+		break;
+	case SPDK_NVME_ZONE_STATE_RONLY:
+		info->state = SPDK_BDEV_ZONE_STATE_READ_ONLY;
+		break;
+	case SPDK_NVME_ZONE_STATE_FULL:
+		info->state = SPDK_BDEV_ZONE_STATE_FULL;
+		break;
+	case SPDK_NVME_ZONE_STATE_OFFLINE:
+		info->state = SPDK_BDEV_ZONE_STATE_OFFLINE;
+		break;
+	default:
+		SPDK_ERRLOG("Invalid zone state: %#x in zone report\n", desc->zs);
+		return -EIO;
+	}
+
+	info->zone_id = desc->zslba;
+	info->write_pointer = desc->wp;
+	info->capacity = desc->zcap;
+
+	return 0;
+}
+
+static void
+bdev_nvme_get_zone_info_done(void *ref, const struct spdk_nvme_cpl *cpl)
+{
+	struct nvme_bdev_io *bio = ref;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
+	struct nvme_bdev *nbdev = (struct nvme_bdev *)bdev_io->bdev->ctxt;
+	struct spdk_io_channel *ch = spdk_bdev_io_get_io_channel(bdev_io);
+	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
+	uint64_t zone_id = bdev_io->u.zone_mgmt.zone_id;
+	uint32_t zones_to_copy = bdev_io->u.zone_mgmt.num_zones;
+	struct spdk_bdev_zone_info *info = bdev_io->u.zone_mgmt.buf;
+	enum spdk_bdev_io_status status;
+	uint64_t max_zones_per_buf, i;
+	uint32_t zone_report_bufsize;
+	struct nvme_bdev_ns *nvme_ns;
+	struct spdk_nvme_qpair *qpair;
+	int ret;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		goto out_complete_io_nvme_cpl;
+	}
+
+	if (!bdev_nvme_find_io_path(nbdev, nvme_ch, &nvme_ns, &qpair)) {
+		status = SPDK_BDEV_IO_STATUS_FAILED;
+		goto out_complete_io_status;
+	}
+
+	zone_report_bufsize = spdk_nvme_ns_get_max_io_xfer_size(nvme_ns->ns);
+	max_zones_per_buf = (zone_report_bufsize - sizeof(*bio->zone_report_buf)) /
+			    sizeof(bio->zone_report_buf->descs[0]);
+
+	if (bio->zone_report_buf->nr_zones > max_zones_per_buf) {
+		status = SPDK_BDEV_IO_STATUS_FAILED;
+		goto out_complete_io_status;
+	}
+
+	if (!bio->zone_report_buf->nr_zones) {
+		status = SPDK_BDEV_IO_STATUS_FAILED;
+		goto out_complete_io_status;
+	}
+
+	for (i = 0; i < bio->zone_report_buf->nr_zones && bio->handled_zones < zones_to_copy; i++) {
+		ret = fill_zone_from_report(&info[bio->handled_zones],
+					    &bio->zone_report_buf->descs[i]);
+		if (ret) {
+			status = SPDK_BDEV_IO_STATUS_FAILED;
+			goto out_complete_io_status;
+		}
+		bio->handled_zones++;
+	}
+
+	if (bio->handled_zones < zones_to_copy) {
+		uint64_t zone_size_lba = spdk_nvme_zns_ns_get_zone_size_sectors(nvme_ns->ns);
+		uint64_t slba = zone_id + (zone_size_lba * bio->handled_zones);
+
+		memset(bio->zone_report_buf, 0, zone_report_bufsize);
+		ret = spdk_nvme_zns_report_zones(nvme_ns->ns, qpair,
+						 bio->zone_report_buf, zone_report_bufsize,
+						 slba, SPDK_NVME_ZRA_LIST_ALL, true,
+						 bdev_nvme_get_zone_info_done, bio);
+		if (!ret) {
+			return;
+		} else if (ret == -ENOMEM) {
+			status = SPDK_BDEV_IO_STATUS_NOMEM;
+			goto out_complete_io_status;
+		} else {
+			status = SPDK_BDEV_IO_STATUS_FAILED;
+			goto out_complete_io_status;
+		}
+	}
+
+out_complete_io_nvme_cpl:
+	free(bio->zone_report_buf);
+	bio->zone_report_buf = NULL;
+	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
+	return;
+
+out_complete_io_status:
+	free(bio->zone_report_buf);
+	bio->zone_report_buf = NULL;
+	spdk_bdev_io_complete(bdev_io, status);
+}
+
+static void
+bdev_nvme_zone_management_done(void *ref, const struct spdk_nvme_cpl *cpl)
 {
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx((struct nvme_bdev_io *)ref);
 
@@ -2702,6 +2920,41 @@ bdev_nvme_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 }
 
 static int
+bdev_nvme_zone_appendv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+		       struct nvme_bdev_io *bio,
+		       struct iovec *iov, int iovcnt, void *md, uint64_t lba_count, uint64_t zslba,
+		       uint32_t flags)
+{
+	int rc;
+
+	SPDK_DEBUGLOG(bdev_nvme, "zone append %" PRIu64 " blocks to zone start lba %#" PRIx64 "\n",
+		      lba_count, zslba);
+
+	bio->iovs = iov;
+	bio->iovcnt = iovcnt;
+	bio->iovpos = 0;
+	bio->iov_offset = 0;
+
+	if (iovcnt == 1) {
+		rc = spdk_nvme_zns_zone_append_with_md(ns, qpair, iov[0].iov_base, md, zslba,
+						       lba_count,
+						       bdev_nvme_zone_appendv_done, bio,
+						       flags,
+						       0, 0);
+	} else {
+		rc = spdk_nvme_zns_zone_appendv_with_md(ns, qpair, zslba, lba_count,
+							bdev_nvme_zone_appendv_done, bio, flags,
+							bdev_nvme_queued_reset_sgl, bdev_nvme_queued_next_sge,
+							md, 0, 0);
+	}
+
+	if (rc != 0 && rc != -ENOMEM) {
+		SPDK_ERRLOG("zone append failed: rc = %d\n", rc);
+	}
+	return rc;
+}
+
+static int
 bdev_nvme_comparev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 		   struct nvme_bdev_io *bio,
 		   struct iovec *iov, int iovcnt, void *md, uint64_t lba_count, uint64_t lba,
@@ -2831,6 +3084,62 @@ bdev_nvme_unmap(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			bdev_nvme_queued_done, bio);
 
 	return rc;
+}
+
+static int
+bdev_nvme_get_zone_info(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			struct nvme_bdev_io *bio, uint64_t zone_id, uint32_t num_zones,
+			struct spdk_bdev_zone_info *info)
+{
+	uint32_t zone_report_bufsize = spdk_nvme_ns_get_max_io_xfer_size(ns);
+	uint64_t zone_size = spdk_nvme_zns_ns_get_zone_size_sectors(ns);
+	uint64_t total_zones = spdk_nvme_zns_ns_get_num_zones(ns);
+
+	if (zone_id % zone_size != 0) {
+		return -EINVAL;
+	}
+
+	if (num_zones > total_zones || !num_zones) {
+		return -EINVAL;
+	}
+
+	assert(!bio->zone_report_buf);
+	bio->zone_report_buf = calloc(1, zone_report_bufsize);
+	if (!bio->zone_report_buf) {
+		return -ENOMEM;
+	}
+
+	bio->handled_zones = 0;
+
+	return spdk_nvme_zns_report_zones(ns, qpair, bio->zone_report_buf, zone_report_bufsize,
+					  zone_id, SPDK_NVME_ZRA_LIST_ALL, true,
+					  bdev_nvme_get_zone_info_done, bio);
+}
+
+static int
+bdev_nvme_zone_management(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			  struct nvme_bdev_io *bio, uint64_t zone_id,
+			  enum spdk_bdev_zone_action action)
+{
+	switch (action) {
+	case SPDK_BDEV_ZONE_CLOSE:
+		return spdk_nvme_zns_close_zone(ns, qpair, zone_id, false,
+						bdev_nvme_zone_management_done, bio);
+	case SPDK_BDEV_ZONE_FINISH:
+		return spdk_nvme_zns_finish_zone(ns, qpair, zone_id, false,
+						 bdev_nvme_zone_management_done, bio);
+	case SPDK_BDEV_ZONE_OPEN:
+		return spdk_nvme_zns_open_zone(ns, qpair, zone_id, false,
+					       bdev_nvme_zone_management_done, bio);
+	case SPDK_BDEV_ZONE_RESET:
+		return spdk_nvme_zns_reset_zone(ns, qpair, zone_id, false,
+						bdev_nvme_zone_management_done, bio);
+	case SPDK_BDEV_ZONE_OFFLINE:
+		return spdk_nvme_zns_offline_zone(ns, qpair, zone_id, false,
+						  bdev_nvme_zone_management_done, bio);
+	default:
+		return -EINVAL;
+	}
 }
 
 static int
