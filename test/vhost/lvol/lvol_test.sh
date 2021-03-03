@@ -95,7 +95,7 @@ trap 'error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
 vm_kill_all
 
 notice "running SPDK vhost"
-vhost_run 0 --cpumask $spdk_mask
+vhost_run -n "0" -a "--cpumask $spdk_mask"
 notice "..."
 
 trap 'clean_lvol_cfg; error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR

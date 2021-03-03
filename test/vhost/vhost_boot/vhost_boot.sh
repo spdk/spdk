@@ -61,7 +61,7 @@ vhosttestinit
 
 trap 'err_clean "${FUNCNAME}" "${LINENO}"' ERR
 timing_enter start_vhost
-vhost_run 0
+vhost_run -n 0
 timing_exit start_vhost
 
 timing_enter create_lvol

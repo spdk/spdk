@@ -91,7 +91,7 @@ if [[ $test_type =~ "spdk_vhost" ]]; then
 	notice ""
 	notice "running SPDK"
 	notice ""
-	vhost_run 0
+	vhost_run -n 0
 	rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 	$rpc_py bdev_split_create Nvme0n1 4
 	$rpc_py bdev_malloc_create -b Malloc0 128 4096

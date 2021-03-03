@@ -104,19 +104,28 @@ function get_vhost_dir() {
 }
 
 function vhost_run() {
-	local vhost_name="$1"
+	local OPTIND
+	local vhost_name
 	local run_gen_nvme=true
+
+	while getopts "n:a:g" optchar; do
+		case "$optchar" in
+			n) vhost_name="$OPTARG" ;;
+			a) vhost_args="$OPTARG" ;;
+			g)
+				run_gen_nvme=false
+				notice "Skipping gen_nvme.sh NVMe bdev configuration"
+				;;
+			*)
+				error "Unknown param $optchar"
+				return 1
+				;;
+		esac
+	done
 
 	if [[ -z "$vhost_name" ]]; then
 		error "vhost name must be provided to vhost_run"
 		return 1
-	fi
-	shift
-
-	if [[ "$1" == "--no-gen-nvme" ]]; then
-		notice "Skipping gen_nvmf.sh NVMe bdev configuration"
-		run_gen_nvme=false
-		shift
 	fi
 
 	local vhost_dir
@@ -135,7 +144,7 @@ function vhost_run() {
 		return 1
 	fi
 
-	local cmd="$vhost_app -r $vhost_dir/rpc.sock $*"
+	local cmd="$vhost_app -r $vhost_dir/rpc.sock $vhost_args"
 
 	notice "Loging to:   $vhost_log_file"
 	notice "Socket:      $vhost_socket"

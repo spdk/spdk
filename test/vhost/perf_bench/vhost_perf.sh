@@ -301,7 +301,7 @@ if [[ "$ctrl_type" == "kernel_vhost" ]]; then
 	targetcli ls
 else
 	notice "Configuring SPDK vhost..."
-	vhost_run "${vhost_num}" "--no-gen-nvme" "-p ${vhost_main_core}" "-m ${vhost_reactor_mask}"
+	vhost_run -n "${vhost_num}" -g -a "-p ${vhost_main_core} -m ${vhost_reactor_mask}"
 	notice "..."
 
 	if [[ $use_split == true ]]; then

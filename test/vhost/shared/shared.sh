@@ -17,7 +17,7 @@ vhosttestinit "--no_vm"
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR SIGTERM SIGABRT
 
-vhost_run 0
+vhost_run -n 0
 
 $rpc_py bdev_malloc_create -b Malloc 124 4096
 $rpc_py vhost_create_blk_controller Malloc.0 Malloc

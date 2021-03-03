@@ -52,7 +52,7 @@ mkdir -p $testdir/results
 dd if=/dev/zero of=$aio_file bs=1M count=512
 
 timing_enter vhost_run
-vhost_run 0
+vhost_run -n 0
 $rpc_py bdev_nvme_set_hotplug -e
 $rpc_py bdev_malloc_create 256 4096 -b Malloc0
 $rpc_py bdev_aio_create $aio_file Aio0 512

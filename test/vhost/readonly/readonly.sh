@@ -122,7 +122,7 @@ function blk_ro_tc1() {
 	vm_shutdown_all
 }
 
-vhost_run 0
+vhost_run -n 0
 if [[ -z $x ]]; then
 	set +x
 fi

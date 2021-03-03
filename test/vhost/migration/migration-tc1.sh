@@ -55,7 +55,7 @@ function migration_tc1() {
 	log_file="/root/$(basename ${job_file%%.*}).log"
 
 	# Run vhost
-	vhost_run 0
+	vhost_run -n 0
 	migration_tc1_configure_vhost
 
 	notice "Setting up VMs"

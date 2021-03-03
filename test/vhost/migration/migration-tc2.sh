@@ -99,8 +99,8 @@ function migration_tc2_configure_vhost() {
 	$rootdir/scripts/gen_nvme.sh | $rpc_nvmf load_subsystem_config
 	timing_exit start_nvmf_tgt
 
-	vhost_run 0 "-m 0x1 -s 512 -u"
-	vhost_run 1 "-m 0x2 -s 512 -u"
+	vhost_run -n 0 -a "-m 0x1 -s 512 -u"
+	vhost_run -n 1 -a "-m 0x2 -s 512 -u"
 
 	local rdma_ip_list
 	local nvmf_target_ip
