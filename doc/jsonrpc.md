@@ -873,6 +873,134 @@ Example response:
 }
 ~~~
 
+## trace_enable_tpoint_group {#rpc_trace_enable_tpoint_group}
+
+Enable trace on a specific tpoint group. For example "bdev" for bdev trace group,
+"all" for all trace groups.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | bdev, nvmf_rdma, nvmf_tcp, blobfs, scsi, iscsi_conn, ftl, all
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "trace_enable_tpoint_group",
+  "id": 1,
+  "params": {
+    "name": "bdev"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## trace_disable_tpoint_group {#rpc_trace_disable_tpoint_group}
+
+Disable trace on a specific tpoint group. For example "bdev" for bdev trace group,
+"all" for all trace groups.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | bdev, nvmf_rdma, nvmf_tcp, blobfs, all
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "trace_disable_tpoint_group",
+  "id": 1,
+  "params": {
+    "name": "bdev"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## trace_get_tpoint_group_mask {#rpc_trace_get_tpoint_group_mask}
+
+Display mask info for every group.
+
+### Parameters
+
+No parameters required
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "trace_get_tpoint_group_mask",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "tpoint_group_mask": "0x0",
+  "iscsi_conn": {
+    "enabled": false,
+    "mask": "0x2"
+  },
+  "scsi": {
+    "enabled": false,
+    "mask": "0x4"
+  },
+  "bdev": {
+    "enabled": false,
+    "mask": "0x8"
+  },
+  "nvmf_tcp": {
+    "enabled": false,
+    "mask": "0x20"
+  },
+  "ftl": {
+    "enabled": false,
+    "mask": "0x40"
+  },
+  "blobfs": {
+    "enabled": false,
+    "mask": "0x80"
+    }
+  }
+}
+~~~
+
 ## log_set_print_level {#rpc_log_set_print_level}
 
 Set the current level at which output will additionally be
