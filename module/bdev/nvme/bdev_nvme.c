@@ -402,7 +402,7 @@ _bdev_nvme_reset_complete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, int rc)
 		SPDK_NOTICELOG("Resetting controller successful.\n");
 	}
 
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	pthread_mutex_lock(&nvme_bdev_ctrlr->mutex);
 	nvme_bdev_ctrlr->resetting = false;
 	nvme_bdev_ctrlr->failover_in_progress = false;
 
@@ -417,7 +417,8 @@ _bdev_nvme_reset_complete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, int rc)
 		do_destruct = true;
 	}
 
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+	pthread_mutex_unlock(&nvme_bdev_ctrlr->mutex);
+
 	/* Make sure we clear any pending resets before returning. */
 	spdk_for_each_channel(nvme_bdev_ctrlr,
 			      _bdev_nvme_complete_pending_resets,
@@ -502,21 +503,22 @@ _bdev_nvme_reset_destroy_qpair(struct spdk_io_channel_iter *i)
 static int
 _bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, void *ctx)
 {
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	pthread_mutex_lock(&nvme_bdev_ctrlr->mutex);
 	if (nvme_bdev_ctrlr->destruct) {
-		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+		pthread_mutex_unlock(&nvme_bdev_ctrlr->mutex);
 		return -EBUSY;
 	}
 
 	if (nvme_bdev_ctrlr->resetting) {
-		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+		pthread_mutex_unlock(&nvme_bdev_ctrlr->mutex);
 		SPDK_NOTICELOG("Unable to perform reset, already in progress.\n");
 		return -EAGAIN;
 	}
 
 	nvme_bdev_ctrlr->resetting = true;
 
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+	pthread_mutex_unlock(&nvme_bdev_ctrlr->mutex);
+
 	/* First, delete all NVMe I/O queue pairs. */
 	spdk_for_each_channel(nvme_bdev_ctrlr,
 			      _bdev_nvme_reset_destroy_qpair,
@@ -556,9 +558,9 @@ bdev_nvme_failover(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, bool remove)
 	struct nvme_bdev_ctrlr_trid *curr_trid = NULL, *next_trid = NULL;
 	int rc = 0;
 
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	pthread_mutex_lock(&nvme_bdev_ctrlr->mutex);
 	if (nvme_bdev_ctrlr->destruct) {
-		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+		pthread_mutex_unlock(&nvme_bdev_ctrlr->mutex);
 		/* Don't bother resetting if the controller is in the process of being destructed. */
 		return 0;
 	}
@@ -572,7 +574,7 @@ bdev_nvme_failover(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, bool remove)
 		if (next_trid && !nvme_bdev_ctrlr->failover_in_progress) {
 			rc = -EAGAIN;
 		}
-		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+		pthread_mutex_unlock(&nvme_bdev_ctrlr->mutex);
 		SPDK_NOTICELOG("Unable to perform reset, already in progress.\n");
 		return rc;
 	}
@@ -602,7 +604,8 @@ bdev_nvme_failover(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, bool remove)
 		}
 	}
 
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+	pthread_mutex_unlock(&nvme_bdev_ctrlr->mutex);
+
 	/* First, delete all NVMe I/O queue pairs. */
 	spdk_for_each_channel(nvme_bdev_ctrlr,
 			      _bdev_nvme_reset_destroy_qpair,
@@ -1379,9 +1382,9 @@ nvme_ctrlr_populate_namespace_done(struct nvme_async_probe_ctx *ctx,
 
 	if (rc == 0) {
 		nvme_ns->populated = true;
-		pthread_mutex_lock(&g_bdev_nvme_mutex);
+		pthread_mutex_lock(&nvme_bdev_ctrlr->mutex);
 		nvme_bdev_ctrlr->ref++;
-		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+		pthread_mutex_unlock(&nvme_bdev_ctrlr->mutex);
 	} else {
 		memset(nvme_ns, 0, sizeof(*nvme_ns));
 	}
@@ -1533,6 +1536,11 @@ nvme_bdev_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 		return -ENOMEM;
 	}
 
+	rc = pthread_mutex_init(&nvme_bdev_ctrlr->mutex, NULL);
+	if (rc != 0) {
+		goto err_init_mutex;
+	}
+
 	TAILQ_INIT(&nvme_bdev_ctrlr->trids);
 	nvme_bdev_ctrlr->num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
 	if (nvme_bdev_ctrlr->num_ns != 0) {
@@ -1626,6 +1634,8 @@ err_alloc_namespace:
 err_alloc_trid:
 	free(nvme_bdev_ctrlr->namespaces);
 err_alloc_namespaces:
+	pthread_mutex_destroy(&nvme_bdev_ctrlr->mutex);
+err_init_mutex:
 	free(nvme_bdev_ctrlr);
 	return rc;
 }
@@ -1685,11 +1695,11 @@ _bdev_nvme_delete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, bool hotplug)
 {
 	struct nvme_probe_skip_entry *entry;
 
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	pthread_mutex_lock(&nvme_bdev_ctrlr->mutex);
 
 	/* The controller's destruction was already started */
 	if (nvme_bdev_ctrlr->destruct) {
-		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+		pthread_mutex_unlock(&nvme_bdev_ctrlr->mutex);
 		return 0;
 	}
 
@@ -1697,7 +1707,7 @@ _bdev_nvme_delete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, bool hotplug)
 	    nvme_bdev_ctrlr->connected_trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
 		entry = calloc(1, sizeof(*entry));
 		if (!entry) {
-			pthread_mutex_unlock(&g_bdev_nvme_mutex);
+			pthread_mutex_unlock(&nvme_bdev_ctrlr->mutex);
 			return -ENOMEM;
 		}
 		entry->trid = *nvme_bdev_ctrlr->connected_trid;
@@ -1705,7 +1715,7 @@ _bdev_nvme_delete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, bool hotplug)
 	}
 
 	nvme_bdev_ctrlr->destruct = true;
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+	pthread_mutex_unlock(&nvme_bdev_ctrlr->mutex);
 
 	_nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
 
@@ -1911,7 +1921,7 @@ bdev_nvme_add_trid(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct spdk_nvme_ctr
 		return -ENOTSUP;
 	}
 
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	pthread_mutex_lock(&nvme_bdev_ctrlr->mutex);
 
 	/* Currently we only support failover to the same transport type. */
 	if (nvme_bdev_ctrlr->connected_trid->trtype != trid->trtype) {
@@ -1973,7 +1983,7 @@ bdev_nvme_add_trid(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct spdk_nvme_ctr
 	TAILQ_INSERT_TAIL(&nvme_bdev_ctrlr->trids, new_trid, link);
 
 exit:
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+	pthread_mutex_unlock(&nvme_bdev_ctrlr->mutex);
 	return rc;
 }
 
@@ -2195,13 +2205,16 @@ bdev_nvme_library_fini(void)
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_FOREACH_SAFE(nvme_bdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq, tmp) {
+		pthread_mutex_lock(&nvme_bdev_ctrlr->mutex);
 		if (nvme_bdev_ctrlr->destruct) {
 			/* This controller's destruction was already started
 			 * before the application started shutting down
 			 */
+			pthread_mutex_unlock(&nvme_bdev_ctrlr->mutex);
 			continue;
 		}
 		nvme_bdev_ctrlr->destruct = true;
+		pthread_mutex_unlock(&nvme_bdev_ctrlr->mutex);
 
 		spdk_thread_send_msg(nvme_bdev_ctrlr->thread, _nvme_bdev_ctrlr_destruct,
 				     nvme_bdev_ctrlr);

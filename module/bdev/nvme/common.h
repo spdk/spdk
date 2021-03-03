@@ -111,6 +111,8 @@ struct nvme_bdev_ctrlr {
 	TAILQ_ENTRY(nvme_bdev_ctrlr)		tailq;
 
 	TAILQ_HEAD(, nvme_bdev_ctrlr_trid)	trids;
+
+	pthread_mutex_t				mutex;
 };
 
 struct nvme_bdev {

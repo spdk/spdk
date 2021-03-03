@@ -207,6 +207,7 @@ create_nvme_bdev_controller(const struct spdk_nvme_transport_id *trid, const cha
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 	struct nvme_bdev_ctrlr_trid *trid_entry;
 	uint32_t nsid;
+	int rc;
 
 	ctrlr = find_controller(trid);
 
@@ -215,6 +216,9 @@ create_nvme_bdev_controller(const struct spdk_nvme_transport_id *trid, const cha
 
 	nvme_bdev_ctrlr = calloc(1, sizeof(*nvme_bdev_ctrlr));
 	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr != NULL);
+
+	rc = pthread_mutex_init(&nvme_bdev_ctrlr->mutex, NULL);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
 
 	nvme_bdev_ctrlr->namespaces = calloc(ctrlr->ns_count, sizeof(struct nvme_bdev_ns *));
 	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr->namespaces != NULL);
