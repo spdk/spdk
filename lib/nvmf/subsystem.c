@@ -1306,9 +1306,10 @@ nvmf_ns_resize(void *event_ctx)
 		if (rc == -EBUSY) {
 			/* Try again, this is not a permanent situation. */
 			spdk_thread_send_msg(spdk_get_thread(), nvmf_ns_change_msg, ns_ctx);
+		} else {
+			SPDK_ERRLOG("Unable to pause subsystem to process namespace resize!\n");
+			free(ns_ctx);
 		}
-		SPDK_ERRLOG("Unable to pause subsystem to process namespace resize!\n");
-		free(ns_ctx);
 	}
 }
 
