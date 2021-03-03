@@ -601,9 +601,10 @@ class Target(Server):
         with open(os.path.join(results_dir, pcm_power_file_name), "w") as fh:
             fh.write(out)
 
-    def measure_bandwidth(self, results_dir, bandwidth_file_name):
-        self.exec_cmd(["bwm-ng", "-o csv", "-F %s/%s" % (results_dir, bandwidth_file_name),
-                       "-a 1", "-t 1000", "-c %s" % self.bandwidth_count])
+    def measure_network_bandwidth(self, results_dir, bandwidth_file_name):
+        self.log_print("INFO: starting network bandwidth measure")
+        self.exec_cmd(["bwm-ng", "-o", "csv", "-F", "%s/%s" % (results_dir, bandwidth_file_name),
+                       "-a", "1", "-t", "1000", "-c", str(self.bandwidth_count)])
 
     def measure_dpdk_memory(self, results_dir):
         self.log_print("INFO: waiting to generate DPDK memory usage")
@@ -1394,7 +1395,7 @@ if __name__ == "__main__":
         if target_obj.enable_bandwidth:
             bandwidth_file_name = "_".join(["bandwidth", str(block_size), str(rw), str(io_depth)])
             bandwidth_file_name = ".".join([bandwidth_file_name, "csv"])
-            t = threading.Thread(target=target_obj.measure_bandwidth, args=(target_results_dir, bandwidth_file_name,))
+            t = threading.Thread(target=target_obj.measure_network_bandwidth, args=(target_results_dir, bandwidth_file_name,))
             threads.append(t)
 
         if target_obj.enable_dpdk_memory:
