@@ -234,6 +234,15 @@ ut_init_trid2(struct spdk_nvme_transport_id *trid)
 	snprintf(trid->trsvcid, SPDK_NVMF_TRSVCID_MAX_LEN, "%s", "4420");
 }
 
+static void
+ut_init_trid3(struct spdk_nvme_transport_id *trid)
+{
+	trid->trtype = SPDK_NVME_TRANSPORT_TCP;
+	snprintf(trid->subnqn, SPDK_NVMF_NQN_MAX_LEN, "%s", "nqn.2016-06.io.spdk:cnode1");
+	snprintf(trid->traddr, SPDK_NVMF_TRADDR_MAX_LEN, "%s", "192.168.100.10");
+	snprintf(trid->trsvcid, SPDK_NVMF_TRSVCID_MAX_LEN, "%s", "4420");
+}
+
 static struct spdk_nvme_ctrlr *
 ut_attach_ctrlr(const struct spdk_nvme_transport_id *trid, uint32_t num_ns)
 {
@@ -1645,6 +1654,71 @@ test_submit_nvme_cmd(void)
 	ut_detach_ctrlr(ctrlr);
 }
 
+static void
+test_remove_trid(void)
+{
+	struct spdk_nvme_transport_id trid1 = {}, trid2 = {}, trid3 = {};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = NULL;
+	struct nvme_bdev_ctrlr_trid *ctrid;
+	int rc;
+
+	ut_init_trid(&trid1);
+	ut_init_trid2(&trid2);
+	ut_init_trid3(&trid3);
+
+	set_thread(0);
+
+	rc = nvme_bdev_ctrlr_create(&ctrlr, "nvme0", &trid1, 0, &nvme_bdev_ctrlr);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr != NULL);
+
+	rc = bdev_nvme_add_trid(nvme_bdev_ctrlr, &ctrlr, &trid2);
+	CU_ASSERT(rc == 0);
+
+	/* trid3 is not in the registered list. */
+	rc = bdev_nvme_remove_trid("nvme0", &trid3);
+	CU_ASSERT(rc == -ENXIO);
+
+	/* trid2 is not used, and simply removed. */
+	rc = bdev_nvme_remove_trid("nvme0", &trid2);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == nvme_bdev_ctrlr);
+	TAILQ_FOREACH(ctrid, &nvme_bdev_ctrlr->trids, link) {
+		CU_ASSERT(spdk_nvme_transport_id_compare(&ctrid->trid, &trid2) != 0);
+	}
+
+	rc = bdev_nvme_add_trid(nvme_bdev_ctrlr, &ctrlr, &trid3);
+	CU_ASSERT(rc == 0);
+
+	/* trid1 is currently used and trid3 is an alternative path.
+	 * If we remove trid1, path is changed to trid3.
+	 */
+	rc = bdev_nvme_remove_trid("nvme0", &trid1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == nvme_bdev_ctrlr);
+	CU_ASSERT(nvme_bdev_ctrlr->resetting == true);
+	TAILQ_FOREACH(ctrid, &nvme_bdev_ctrlr->trids, link) {
+		CU_ASSERT(spdk_nvme_transport_id_compare(&ctrid->trid, &trid1) != 0);
+	}
+	CU_ASSERT(spdk_nvme_transport_id_compare(nvme_bdev_ctrlr->connected_trid, &trid3) == 0);
+
+	poll_threads();
+
+	CU_ASSERT(nvme_bdev_ctrlr->resetting == false);
+
+	/* trid3 is the current and only path. If we remove trid3, the corresponding
+	 * nvme_bdev_ctrlr is removed.
+	 */
+	rc = bdev_nvme_remove_trid("nvme0", &trid3);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == nvme_bdev_ctrlr);
+
+	poll_threads();
+
+	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == NULL);
+}
+
 int
 main(int argc, const char **argv)
 {
@@ -1665,6 +1739,7 @@ main(int argc, const char **argv)
 	CU_ADD_TEST(suite, test_reconnect_qpair);
 	CU_ADD_TEST(suite, test_aer_cb);
 	CU_ADD_TEST(suite, test_submit_nvme_cmd);
+	CU_ADD_TEST(suite, test_remove_trid);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 
