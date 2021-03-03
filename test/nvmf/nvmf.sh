@@ -41,6 +41,7 @@ run_test "nvmf_invalid" test/nvmf/target/invalid.sh "${TEST_ARGS[@]}"
 run_test "nvmf_abort" test/nvmf/target/abort.sh "${TEST_ARGS[@]}"
 run_test "nvmf_ns_hotplug_stress" test/nvmf/target/ns_hotplug_stress.sh "${TEST_ARGS[@]}"
 run_test "nvmf_connect_stress" test/nvmf/target/connect_stress.sh "${TEST_ARGS[@]}"
+run_test "nvmf_delete_subsystem" test/nvmf/target/delete_subsystem.sh "${TEST_ARGS[@]}"
 
 if [ $SPDK_TEST_VFIOUSER -eq 1 ]; then
 	run_test "nvmf_vfio_user" test/nvmf/target/nvmf_vfio_user.sh "${TEST_ARGS[@]}"
