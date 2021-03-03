@@ -247,6 +247,18 @@ LDFLAGS += --coverage
 endif
 endif
 
+ifeq ($(OS),Windows)
+WPDK_DIR = $(abspath $(CONFIG_WPDK_DIR))
+COMMON_CFLAGS += -I$(WPDK_DIR)/include/wpdk -I$(WPDK_DIR)/include
+LDFLAGS += -L$(WPDK_DIR)/lib
+ifeq ($(CONFIG_SHARED),y)
+SYS_LIBS += -lwpdk
+else
+SYS_LIBS += $(WPDK_DIR)/lib/libwpdk.a
+endif
+SYS_LIBS += -ldbghelp -lkernel32 -lsetupapi -lws2_32 -lrpcrt4 -liphlpapi
+endif
+
 include $(CONFIG_ENV)/env.mk
 
 ifeq ($(CONFIG_ASAN),y)

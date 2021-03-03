@@ -96,6 +96,8 @@ function usage() {
 	echo "                           No path required."
 	echo " raid5                     Build with bdev_raid module RAID5 support."
 	echo "                           No path required."
+	echo " wpdk                      Build using WPDK to provide support for Windows (experimental)."
+	echo "                           The argument must be a directory containing lib and include."
 	echo ""
 	echo "Environment variables:"
 	echo ""
@@ -138,6 +140,10 @@ CC_TYPE=$(grep "CC_TYPE=" "$rootdir/mk/cc.mk" | cut -d "=" -f 2)
 
 arch=$($CC -dumpmachine)
 sys_name=$(uname -s)
+
+if [[ $arch == *mingw* ]] || [[ $arch == *windows* ]]; then
+	sys_name=Windows
+fi
 
 # Sanitize default configuration. All parameters set by user explicit should fail
 # Force no ISA-L if non-x86 or non-aarch64 architecture
@@ -275,6 +281,10 @@ for i in "$@"; do
 			;;
 		--without-dpdk)
 			CONFIG[DPDK_DIR]=
+			;;
+		--with-wpdk=*)
+			check_dir "$i"
+			CONFIG[WPDK_DIR]=$(readlink -f ${i#*=})
 			;;
 		--with-env=*)
 			CONFIG[ENV]="${i#*=}"
@@ -539,6 +549,23 @@ else
 	CONFIG[VIRTIO]="n"
 fi
 
+if [[ $sys_name == "Windows" ]]; then
+	if [ -z "${CONFIG[WPDK_DIR]}" ]; then
+		if [ ! -f "$rootdir"/wpdk/Makefile ]; then
+			echo "WPDK not found; please specify --with-wpdk=<path>. See https://wpdk.github.io."
+			exit 1
+		else
+			CONFIG[WPDK_DIR]="${rootdir}/wpdk/build"
+			echo "Using default WPDK in ${CONFIG[WPDK_DIR]}"
+		fi
+	fi
+else
+	if [ -n "${CONFIG[WPDK_DIR]}" ]; then
+		echo "ERROR: --with-wpdk is only supported for Windows"
+		exit 1
+	fi
+fi
+
 if [ "${CONFIG[VTUNE]}" = "y" ]; then
 	if [ -z "${CONFIG[VTUNE_DIR]}" ]; then
 		echo "When VTune is enabled, you must specify the VTune directory using --with-vtune=path"
@@ -660,9 +687,14 @@ if [[ "${CONFIG[ISAL]}" = "y" ]]; then
 
 	cd $rootdir/isa-l
 	ISAL_LOG=$rootdir/isa-l/spdk-isal.log
+	if [[ -n "${CONFIG[CROSS_PREFIX]}" ]]; then
+		ISAL_OPTS=("--host=${CONFIG[CROSS_PREFIX]}")
+	else
+		ISAL_OPTS=()
+	fi
 	echo -n "Configuring ISA-L (logfile: $ISAL_LOG)..."
 	./autogen.sh &> $ISAL_LOG
-	./configure CFLAGS="-fPIC -g -O2" --enable-shared=no >> $ISAL_LOG 2>&1
+	./configure CFLAGS="-fPIC -g -O2" "${ISAL_OPTS[@]}" --enable-shared=no >> $ISAL_LOG 2>&1
 	echo "done."
 	cd $rootdir
 fi

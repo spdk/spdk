@@ -63,6 +63,13 @@ endif
 endif
 endif
 
+ifeq ($(OS),Windows)
+ifeq ($(CURDIR)/wpdk/build,$(CONFIG_WPDK_DIR))
+WPDK = wpdk
+DIRS-y += wpdk
+endif
+endif
+
 ifeq ($(CONFIG_SHARED),y)
 LIB = shared_lib
 else
@@ -101,10 +108,11 @@ uninstall: $(DIRS-y)
 	$(Q)echo "Uninstalled spdk"
 
 ifneq ($(SKIP_DPDK_BUILD),1)
-dpdkbuild: $(DPDK_DEPS)
+dpdkdeps $(DPDK_DEPS): $(WPDK)
+dpdkbuild: $(WPDK) $(DPDK_DEPS)
 endif
 
-lib: $(DPDKBUILD) $(VFIOUSERBUILD)
+lib: $(WPDK) $(DPDKBUILD) $(VFIOUSERBUILD)
 module: lib
 shared_lib: module
 app: $(LIB)
