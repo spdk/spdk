@@ -1,6 +1,35 @@
 # Changelog
 
-## v21.01.1: (Upcoming Release)
+## v21.01.1:
+
+### dpdk
+
+Added `rte_ethdev` and `rte_net` dependencies for all builds with DPDK.
+
+Fixed compatibility issues with DPDK 19.11.
+
+### iscsi
+
+A security vulnerability has been identified and fixed in the SPDK iSCSI target.
+A TEXT PDU with no data, but CONTINUE flag set, would result in a NULL pointer dereference
+and crash the SPDK iSCSI target process. All users of the SPDK iSCSI target
+are recommended to update. All SPDK versions <= v21.01 are affected.
+
+### nbd
+
+Fixed kernel hang when bdev is removed by always setting NBD_SET_TIMEOUT.
+
+### nvme
+
+Fixed segfault when removing qpair when transport connection fails (issue #1777).
+
+### ocssd
+
+Fixed the bug that no media event is pushed to the target bdev.
+
+### sock
+
+Added `enable_quickack` and `enable_placement_id` when saving JSON configuration.
 
 ## v21.01: Dynamic scheduler, vfio-user, ZNS Zone Append
 
