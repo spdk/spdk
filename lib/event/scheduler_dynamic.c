@@ -86,6 +86,30 @@ _get_thread_load(struct spdk_lw_thread *lw_thread)
 	return busy  * 100 / (busy + idle);
 }
 
+static void
+_move_thread(struct spdk_lw_thread *lw_thread, uint32_t dst_core)
+{
+	struct core_stats *dst = &g_cores[dst_core];
+	struct core_stats *src = &g_cores[lw_thread->lcore];
+	uint64_t busy_tsc = lw_thread->current_stats.busy_tsc;
+
+	if (src == dst) {
+		/* Don't modify stats if thread is already on that core. */
+		return;
+	}
+
+	dst->busy += spdk_min(UINT64_MAX - dst->busy, busy_tsc);
+	dst->idle -= spdk_min(dst->idle, busy_tsc);
+	dst->thread_count++;
+
+	src->busy -= spdk_min(src->busy, busy_tsc);
+	src->idle += spdk_min(UINT64_MAX - src->busy, busy_tsc);
+	assert(src->thread_count > 0);
+	src->thread_count--;
+
+	lw_thread->lcore = dst_core;
+}
+
 static int
 init(struct spdk_governor *governor)
 {
@@ -182,28 +206,13 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 					}
 
 					if (spdk_cpuset_get_cpu(cpumask, target_lcore)) {
-						lw_thread->lcore = target_lcore;
-						g_cores[target_lcore].thread_count++;
-						assert(g_cores[i].thread_count > 0);
-						g_cores[i].thread_count--;
-
-						if (target_lcore != g_main_lcore) {
-							main_core->idle += spdk_min(UINT64_MAX - main_core->idle, thread_busy);
-							main_core->busy -= spdk_min(main_core->busy, thread_busy);
-						}
-
+						_move_thread(lw_thread, target_lcore);
 						break;
 					}
 				}
 			} else if (i != g_main_lcore && load < SCHEDULER_LOAD_LIMIT) {
 				/* This thread is idle but not on the main core, so we need to move it to the main core */
-				lw_thread->lcore = g_main_lcore;
-				assert(g_cores[i].thread_count > 0);
-				g_cores[i].thread_count--;
-
-				main_core->thread_count++;
-				main_core->busy += spdk_min(UINT64_MAX - main_core->busy, thread_busy);
-				main_core->idle -= spdk_min(main_core->idle, thread_busy);
+				_move_thread(lw_thread, g_main_lcore);
 			} else {
 				/* Move busy thread only if cpumask does not match current core (except main core) */
 				if (i != g_main_lcore) {
@@ -212,15 +221,7 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 							target_lcore = _get_next_target_core();
 
 							if (spdk_cpuset_get_cpu(cpumask, target_lcore)) {
-								lw_thread->lcore = target_lcore;
-								g_cores[target_lcore].thread_count++;
-								assert(g_cores[i].thread_count > 0);
-								g_cores[i].thread_count--;
-
-								if (target_lcore == g_main_lcore) {
-									main_core->busy += spdk_min(UINT64_MAX - main_core->busy, thread_busy);
-									main_core->idle -= spdk_min(main_core->idle, thread_busy);
-								}
+								_move_thread(lw_thread, target_lcore);
 								break;
 							}
 						}
