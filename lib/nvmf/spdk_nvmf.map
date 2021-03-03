@@ -79,6 +79,7 @@
 	spdk_nvmf_transport_stop_listen_async;
 	spdk_nvmf_transport_poll_group_get_stat;
 	spdk_nvmf_transport_poll_group_free_stat;
+	spdk_nvmf_poll_group_dump_stat;
 	spdk_nvmf_rdma_init_hooks;
 	spdk_nvmf_subsystem_set_ana_reporting;
 

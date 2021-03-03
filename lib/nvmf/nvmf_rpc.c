@@ -2036,86 +2036,18 @@ rpc_nvmf_get_stats_done(struct spdk_io_channel_iter *i, int status)
 }
 
 static void
-write_nvmf_transport_stats(struct spdk_json_write_ctx *w,
-			   struct spdk_nvmf_transport_poll_group_stat *stat)
-{
-	uint64_t i;
-
-	spdk_json_write_object_begin(w);
-	spdk_json_write_named_string(w, "trtype",
-				     spdk_nvme_transport_id_trtype_str(stat->trtype));
-	switch (stat->trtype) {
-	case SPDK_NVME_TRANSPORT_RDMA:
-		spdk_json_write_named_uint64(w, "pending_data_buffer", stat->rdma.pending_data_buffer);
-		spdk_json_write_named_array_begin(w, "devices");
-		for (i = 0; i < stat->rdma.num_devices; ++i) {
-			spdk_json_write_object_begin(w);
-			spdk_json_write_named_string(w, "name", stat->rdma.devices[i].name);
-			spdk_json_write_named_uint64(w, "polls", stat->rdma.devices[i].polls);
-			spdk_json_write_named_uint64(w, "idle_polls", stat->rdma.devices[i].idle_polls);
-			spdk_json_write_named_uint64(w, "completions", stat->rdma.devices[i].completions);
-			spdk_json_write_named_uint64(w, "requests",
-						     stat->rdma.devices[i].requests);
-			spdk_json_write_named_uint64(w, "request_latency",
-						     stat->rdma.devices[i].request_latency);
-			spdk_json_write_named_uint64(w, "pending_free_request",
-						     stat->rdma.devices[i].pending_free_request);
-			spdk_json_write_named_uint64(w, "pending_rdma_read",
-						     stat->rdma.devices[i].pending_rdma_read);
-			spdk_json_write_named_uint64(w, "pending_rdma_write",
-						     stat->rdma.devices[i].pending_rdma_write);
-			spdk_json_write_named_uint64(w, "total_send_wrs",
-						     stat->rdma.devices[i].total_send_wrs);
-			spdk_json_write_named_uint64(w, "send_doorbell_updates",
-						     stat->rdma.devices[i].send_doorbell_updates);
-			spdk_json_write_named_uint64(w, "total_recv_wrs",
-						     stat->rdma.devices[i].total_recv_wrs);
-			spdk_json_write_named_uint64(w, "recv_doorbell_updates",
-						     stat->rdma.devices[i].recv_doorbell_updates);
-			spdk_json_write_object_end(w);
-		}
-		spdk_json_write_array_end(w);
-		break;
-	default:
-		break;
-	}
-	spdk_json_write_object_end(w);
-}
-
-static void
 _rpc_nvmf_get_stats(struct spdk_io_channel_iter *i)
 {
 	struct rpc_nvmf_get_stats_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
-	struct spdk_nvmf_transport *transport;
-	struct spdk_nvmf_poll_group_stat stat;
-	struct spdk_nvmf_transport_poll_group_stat *trstat;
-	int rc;
+	struct spdk_io_channel *ch;
+	struct spdk_nvmf_poll_group *group;
 
-	if (0 == spdk_nvmf_poll_group_get_stat(ctx->tgt, &stat)) {
-		spdk_json_write_object_begin(ctx->w);
-		spdk_json_write_named_string(ctx->w, "name", spdk_thread_get_name(spdk_get_thread()));
-		spdk_json_write_named_uint32(ctx->w, "admin_qpairs", stat.admin_qpairs);
-		spdk_json_write_named_uint32(ctx->w, "io_qpairs", stat.io_qpairs);
-		spdk_json_write_named_uint64(ctx->w, "pending_bdev_io", stat.pending_bdev_io);
+	ch = spdk_get_io_channel(ctx->tgt);
+	group = spdk_io_channel_get_ctx(ch);
 
-		spdk_json_write_named_array_begin(ctx->w, "transports");
-		transport = spdk_nvmf_transport_get_first(ctx->tgt);
-		while (transport) {
-			rc = spdk_nvmf_transport_poll_group_get_stat(ctx->tgt, transport, &trstat);
-			if (0 == rc) {
-				write_nvmf_transport_stats(ctx->w, trstat);
-				spdk_nvmf_transport_poll_group_free_stat(transport, trstat);
-			} else if (-ENOTSUP != rc) {
-				SPDK_ERRLOG("Failed to get poll group statistics for transport %s, errno %d\n",
-					    spdk_nvme_transport_id_trtype_str(spdk_nvmf_get_transport_type(transport)),
-					    rc);
-			}
-			transport = spdk_nvmf_transport_get_next(transport);
-		}
-		spdk_json_write_array_end(ctx->w);
-		spdk_json_write_object_end(ctx->w);
-	}
+	spdk_nvmf_poll_group_dump_stat(group, ctx->w);
 
+	spdk_put_io_channel(ch);
 	spdk_for_each_channel_continue(i, 0);
 }
 

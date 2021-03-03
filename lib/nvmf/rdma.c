@@ -4150,6 +4150,7 @@ nvmf_rdma_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
 	_nvmf_rdma_qpair_abort_request(req);
 }
 
+/* Deprecated, please use the flow with nvmf_rdma_poll_group_dump_stat. */
 static int
 nvmf_rdma_poll_group_get_stat(struct spdk_nvmf_tgt *tgt,
 			      struct spdk_nvmf_transport_poll_group_stat **stat)
@@ -4161,6 +4162,8 @@ nvmf_rdma_poll_group_get_stat(struct spdk_nvmf_tgt *tgt,
 	struct spdk_nvmf_rdma_poller *rpoller;
 	struct spdk_nvmf_rdma_device_stat *device_stat;
 	uint64_t num_devices = 0;
+
+	SPDK_ERRLOG("nvmf_rdma_poll_group_get_stat is deprecated and will be removed\n");
 
 	if (tgt == NULL || stat == NULL) {
 		return -EINVAL;
@@ -4215,13 +4218,65 @@ nvmf_rdma_poll_group_get_stat(struct spdk_nvmf_tgt *tgt,
 	return -ENOENT;
 }
 
+/* Deprecated, please use the flow with nvmf_rdma_poll_group_dump_stat. */
 static void
 nvmf_rdma_poll_group_free_stat(struct spdk_nvmf_transport_poll_group_stat *stat)
 {
+	SPDK_ERRLOG("nvmf_rdma_poll_group_free_stat is deprecated and will be removed\n");
+
 	if (stat) {
 		free(stat->rdma.devices);
 	}
 	free(stat);
+}
+
+static void
+nvmf_rdma_poll_group_dump_stat(struct spdk_nvmf_transport_poll_group *group,
+			       struct spdk_json_write_ctx *w)
+{
+	struct spdk_nvmf_rdma_poll_group *rgroup;
+	struct spdk_nvmf_rdma_poller *rpoller;
+
+	assert(w != NULL);
+
+	rgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_rdma_poll_group, group);
+
+	spdk_json_write_named_uint64(w, "pending_data_buffer", rgroup->stat.pending_data_buffer);
+
+	spdk_json_write_named_array_begin(w, "devices");
+
+	TAILQ_FOREACH(rpoller, &rgroup->pollers, link) {
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "name",
+					     ibv_get_device_name(rpoller->device->context->device));
+		spdk_json_write_named_uint64(w, "polls",
+					     rpoller->stat.polls);
+		spdk_json_write_named_uint64(w, "idle_polls",
+					     rpoller->stat.idle_polls);
+		spdk_json_write_named_uint64(w, "completions",
+					     rpoller->stat.completions);
+		spdk_json_write_named_uint64(w, "requests",
+					     rpoller->stat.requests);
+		spdk_json_write_named_uint64(w, "request_latency",
+					     rpoller->stat.request_latency);
+		spdk_json_write_named_uint64(w, "pending_free_request",
+					     rpoller->stat.pending_free_request);
+		spdk_json_write_named_uint64(w, "pending_rdma_read",
+					     rpoller->stat.pending_rdma_read);
+		spdk_json_write_named_uint64(w, "pending_rdma_write",
+					     rpoller->stat.pending_rdma_write);
+		spdk_json_write_named_uint64(w, "total_send_wrs",
+					     rpoller->stat.qp_stats.send.num_submitted_wrs);
+		spdk_json_write_named_uint64(w, "send_doorbell_updates",
+					     rpoller->stat.qp_stats.send.doorbell_updates);
+		spdk_json_write_named_uint64(w, "total_recv_wrs",
+					     rpoller->stat.qp_stats.recv.num_submitted_wrs);
+		spdk_json_write_named_uint64(w, "recv_doorbell_updates",
+					     rpoller->stat.qp_stats.recv.doorbell_updates);
+		spdk_json_write_object_end(w);
+	}
+
+	spdk_json_write_array_end(w);
 }
 
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
@@ -4257,6 +4312,7 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 
 	.poll_group_get_stat = nvmf_rdma_poll_group_get_stat,
 	.poll_group_free_stat = nvmf_rdma_poll_group_free_stat,
+	.poll_group_dump_stat = nvmf_rdma_poll_group_dump_stat,
 };
 
 SPDK_NVMF_TRANSPORT_REGISTER(rdma, &spdk_nvmf_transport_rdma);

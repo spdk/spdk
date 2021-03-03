@@ -1564,6 +1564,8 @@ spdk_nvmf_poll_group_get_stat(struct spdk_nvmf_tgt *tgt,
 	struct spdk_io_channel *ch;
 	struct spdk_nvmf_poll_group *group;
 
+	SPDK_ERRLOG("spdk_nvmf_poll_group_get_stat is deprecated and will be removed\n");
+
 	if (tgt == NULL || stat == NULL) {
 		return -EINVAL;
 	}
@@ -1573,4 +1575,37 @@ spdk_nvmf_poll_group_get_stat(struct spdk_nvmf_tgt *tgt,
 	*stat = group->stat;
 	spdk_put_io_channel(ch);
 	return 0;
+}
+
+void
+spdk_nvmf_poll_group_dump_stat(struct spdk_nvmf_poll_group *group, struct spdk_json_write_ctx *w)
+{
+	struct spdk_nvmf_transport_poll_group *tgroup;
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "name", spdk_thread_get_name(spdk_get_thread()));
+	spdk_json_write_named_uint32(w, "admin_qpairs", group->stat.admin_qpairs);
+	spdk_json_write_named_uint32(w, "io_qpairs", group->stat.io_qpairs);
+	spdk_json_write_named_uint64(w, "pending_bdev_io", group->stat.pending_bdev_io);
+
+	spdk_json_write_named_array_begin(w, "transports");
+
+	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
+		spdk_json_write_object_begin(w);
+		/*
+		 * The trtype field intentionally contains a transport name as this is more informative.
+		 * The field has not been renamed for backward compatibility.
+		 */
+		spdk_json_write_named_string(w, "trtype", spdk_nvmf_get_transport_name(tgroup->transport));
+
+		if (tgroup->transport->ops->poll_group_dump_stat) {
+			tgroup->transport->ops->poll_group_dump_stat(tgroup, w);
+		}
+
+		spdk_json_write_object_end(w);
+	}
+
+	spdk_json_write_array_end(w);
+	spdk_json_write_object_end(w);
 }

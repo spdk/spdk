@@ -592,6 +592,8 @@ spdk_nvmf_transport_poll_group_get_stat(struct spdk_nvmf_tgt *tgt,
 					struct spdk_nvmf_transport *transport,
 					struct spdk_nvmf_transport_poll_group_stat **stat)
 {
+	SPDK_ERRLOG("spdk_nvmf_transport_poll_group_get_stat is deprecated and will be removed\n");
+
 	if (transport->ops->poll_group_get_stat) {
 		return transport->ops->poll_group_get_stat(tgt, stat);
 	} else {
@@ -603,6 +605,8 @@ void
 spdk_nvmf_transport_poll_group_free_stat(struct spdk_nvmf_transport *transport,
 		struct spdk_nvmf_transport_poll_group_stat *stat)
 {
+	SPDK_ERRLOG("spdk_nvmf_transport_poll_group_free_stat is deprecated and will be removed\n");
+
 	if (transport->ops->poll_group_free_stat) {
 		transport->ops->poll_group_free_stat(stat);
 	}

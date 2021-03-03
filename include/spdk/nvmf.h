@@ -124,6 +124,10 @@ struct spdk_nvmf_poll_group_stat {
 	uint64_t pending_bdev_io;
 };
 
+/* Deprecated.
+ * Please use the flow with spdk_nvmf_poll_group_dump_stat,
+ * which hides statistics structures within the transport.
+ */
 struct spdk_nvmf_rdma_device_stat {
 	const char *name;
 	uint64_t polls;
@@ -140,6 +144,10 @@ struct spdk_nvmf_rdma_device_stat {
 	uint64_t recv_doorbell_updates;
 };
 
+/* Deprecated.
+ * Please use the flow with spdk_nvmf_poll_group_dump_stat,
+ * which hides statistics structures within the transport.
+ */
 struct spdk_nvmf_transport_poll_group_stat {
 	spdk_nvme_transport_type_t trtype;
 	union {
@@ -305,7 +313,7 @@ int spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 			     struct spdk_nvmf_qpair *qpair);
 
 /**
- * Get current poll group statistics.
+ * Get current poll group statistics. (deprecated)
  *
  * \param tgt The NVMf target.
  * \param stat Pointer to allocated statistics structure to fill with values.
@@ -1096,8 +1104,11 @@ int spdk_nvmf_transport_stop_listen_async(struct spdk_nvmf_transport *transport,
 		spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn,
 		void *cb_arg);
 
+
 /**
- * \brief Get current transport poll group statistics.
+ * \brief Get current transport poll group statistics. (deprecated)
+ *
+ * Please use the flow with spdk_nvmf_poll_group_dump_stat.
  *
  * This function allocates memory for statistics and returns it
  * in \p stat parameter. Caller must free this memory with
@@ -1120,7 +1131,9 @@ spdk_nvmf_transport_poll_group_get_stat(struct spdk_nvmf_tgt *tgt,
 					struct spdk_nvmf_transport_poll_group_stat **stat);
 
 /**
- * Free statistics memory previously allocated with spdk_nvmf_transport_poll_group_get_stat().
+ * Free statistics memory previously allocated with spdk_nvmf_transport_poll_group_get_stat(). (deprecated)
+ *
+ * Please use the flow with spdk_nvmf_poll_group_dump_stat.
  *
  * \param transport The NVMf transport.
  * \param stat Pointer to transport poll group statistics structure.
@@ -1128,6 +1141,15 @@ spdk_nvmf_transport_poll_group_get_stat(struct spdk_nvmf_tgt *tgt,
 void
 spdk_nvmf_transport_poll_group_free_stat(struct spdk_nvmf_transport *transport,
 		struct spdk_nvmf_transport_poll_group_stat *stat);
+
+/**
+ * Dump poll group statistics into JSON.
+ *
+ * \param group The group which statistics should be dumped.
+ * \param w The JSON write context to which statistics should be dumped.
+ */
+void spdk_nvmf_poll_group_dump_stat(struct spdk_nvmf_poll_group *group,
+				    struct spdk_json_write_ctx *w);
 
 /**
  * \brief Set the global hooks for the RDMA transport, if necessary.
