@@ -2122,7 +2122,7 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 }
 
 int
-bdev_nvme_remove_trid(const char *name, struct spdk_nvme_transport_id *trid)
+bdev_nvme_delete(const char *name, const struct spdk_nvme_transport_id *trid)
 {
 	struct nvme_bdev_ctrlr		*nvme_bdev_ctrlr;
 	struct nvme_bdev_ctrlr_trid	*ctrlr_trid, *tmp_trid;
@@ -2137,19 +2137,24 @@ bdev_nvme_remove_trid(const char *name, struct spdk_nvme_transport_id *trid)
 		return -ENODEV;
 	}
 
-	/* case 1: we are currently using the path to be removed. */
+	/* case 1: remove the controller itself. */
+	if (trid == NULL) {
+		return _bdev_nvme_delete(nvme_bdev_ctrlr, false);
+	}
+
+	/* case 2: we are currently using the path to be removed. */
 	if (!spdk_nvme_transport_id_compare(trid, nvme_bdev_ctrlr->connected_trid)) {
 		ctrlr_trid = TAILQ_FIRST(&nvme_bdev_ctrlr->trids);
 		assert(nvme_bdev_ctrlr->connected_trid == &ctrlr_trid->trid);
-		/* case 1A: the current path is the only path. */
+		/* case 2A: the current path is the only path. */
 		if (!TAILQ_NEXT(ctrlr_trid, link)) {
-			return bdev_nvme_delete(name);
+			return _bdev_nvme_delete(nvme_bdev_ctrlr, false);
 		}
 
 		/* case 1B: there is an alternative path. */
 		return bdev_nvme_failover(nvme_bdev_ctrlr, true);
 	}
-	/* case 2: We are not using the specified path. */
+	/* case 3: We are not using the specified path. */
 	TAILQ_FOREACH_SAFE(ctrlr_trid, &nvme_bdev_ctrlr->trids, link, tmp_trid) {
 		if (!spdk_nvme_transport_id_compare(&ctrlr_trid->trid, trid)) {
 			TAILQ_REMOVE(&nvme_bdev_ctrlr->trids, ctrlr_trid, link);
@@ -2158,31 +2163,8 @@ bdev_nvme_remove_trid(const char *name, struct spdk_nvme_transport_id *trid)
 		}
 	}
 
-	/* case 2A: The address isn't even in the registered list. */
+	/* case 3A: The address isn't even in the registered list. */
 	return -ENXIO;
-}
-
-int
-bdev_nvme_delete(const char *name)
-{
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
-
-	if (name == NULL) {
-		return -EINVAL;
-	}
-
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
-
-	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name(name);
-	if (nvme_bdev_ctrlr == NULL) {
-		pthread_mutex_unlock(&g_bdev_nvme_mutex);
-		SPDK_ERRLOG("Failed to find NVMe controller\n");
-		return -ENODEV;
-	}
-
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
-
-	return _bdev_nvme_delete(nvme_bdev_ctrlr, false);
 }
 
 static int

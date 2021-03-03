@@ -589,9 +589,9 @@ rpc_bdev_nvme_detach_controller(struct spdk_jsonrpc_request *request,
 			goto cleanup;
 		}
 		memcpy(trid.subnqn, req.subnqn, len + 1);
-		rc = bdev_nvme_remove_trid(req.name, &trid);
+		rc = bdev_nvme_delete(req.name, &trid);
 	} else {
-		rc = bdev_nvme_delete(req.name);
+		rc = bdev_nvme_delete(req.name, NULL);
 	}
 
 	if (rc != 0) {
