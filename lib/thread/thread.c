@@ -1002,8 +1002,6 @@ interrupt_timerfd_process(void *arg)
 	return poller->fn(poller->arg);
 }
 
-static void period_poller_interrupt_fini(struct spdk_poller *poller);
-
 static int
 period_poller_interrupt_init(struct spdk_poller *poller)
 {
@@ -1084,13 +1082,55 @@ period_poller_set_interrupt_mode(struct spdk_poller *poller, void *cb_arg, bool 
 }
 
 static void
-period_poller_interrupt_fini(struct spdk_poller *poller)
+poller_interrupt_fini(struct spdk_poller *poller)
 {
-	SPDK_DEBUGLOG(thread, "timerfd fini for poller %s\n", poller->name);
+	SPDK_DEBUGLOG(thread, "interrupt fini for poller %s\n", poller->name);
 	assert(poller->interruptfd >= 0);
 	spdk_fd_group_remove(poller->thread->fgrp, poller->interruptfd);
 	close(poller->interruptfd);
 	poller->interruptfd = -1;
+}
+
+static int
+busy_poller_interrupt_init(struct spdk_poller *poller)
+{
+	int busy_efd;
+	int rc;
+
+	SPDK_DEBUGLOG(thread, "busy_efd init for busy poller %s\n", poller->name);
+	busy_efd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+	if (busy_efd < 0) {
+		SPDK_ERRLOG("Failed to create eventfd for Poller(%s).\n", poller->name);
+		return -errno;
+	}
+
+	rc = spdk_fd_group_add(poller->thread->fgrp, busy_efd, poller->fn, poller->arg);
+	if (rc < 0) {
+		close(busy_efd);
+		return rc;
+	}
+
+	poller->interruptfd = busy_efd;
+	return 0;
+}
+
+static void
+busy_poller_set_interrupt_mode(struct spdk_poller *poller, void *cb_arg, bool interrupt_mode)
+{
+	int busy_efd = poller->interruptfd;
+	uint64_t notify = 1;
+
+	assert(busy_efd >= 0);
+
+	if (interrupt_mode) {
+		/* Write without read on eventfd will get it repeatedly triggered. */
+		if (write(busy_efd, &notify, sizeof(notify)) < 0) {
+			SPDK_ERRLOG("Failed to set busy wait for Poller(%s).\n", poller->name);
+		}
+	} else {
+		/* Read on eventfd will clear its level triggering. */
+		read(busy_efd, &notify, sizeof(notify));
+	}
 }
 
 #else
@@ -1107,9 +1147,21 @@ period_poller_set_interrupt_mode(struct spdk_poller *poller, void *cb_arg, bool 
 }
 
 static void
-period_poller_interrupt_fini(struct spdk_poller *poller)
+poller_interrupt_fini(struct spdk_poller *poller)
 {
 }
+
+static int
+busy_poller_interrupt_init(struct spdk_poller *poller)
+{
+	return -ENOTSUP;
+}
+
+static void
+busy_poller_set_interrupt_mode(struct spdk_poller *poller, void *cb_arg, bool interrupt_mode)
+{
+}
+
 #endif
 
 void
@@ -1123,6 +1175,16 @@ spdk_poller_register_interrupt(struct spdk_poller *poller,
 
 	if (!spdk_interrupt_mode_is_enabled()) {
 		return;
+	}
+
+	/* when a poller is created we don't know if the user is ever going to
+	 * enable interrupts on it by calling this function, so the poller
+	 * registration function has to immediately create a interruptfd.
+	 * When this function does get called by user, we have to then destroy
+	 * that interruptfd.
+	 */
+	if (poller->set_intr_cb_fn && poller->interruptfd >= 0) {
+		poller_interrupt_fini(poller);
 	}
 
 	poller->set_intr_cb_fn = cb_fn;
@@ -1183,17 +1245,31 @@ poller_register(spdk_poller_fn fn,
 		poller->period_ticks = 0;
 	}
 
-	if (period_microseconds && spdk_interrupt_mode_is_enabled()) {
+	if (spdk_interrupt_mode_is_enabled()) {
 		int rc;
 
-		rc = period_poller_interrupt_init(poller);
-		if (rc < 0) {
-			SPDK_ERRLOG("Failed to register timerfd for periodic poller: %s\n", spdk_strerror(-rc));
-			free(poller);
-			return NULL;
-		}
+		if (period_microseconds) {
+			rc = period_poller_interrupt_init(poller);
+			if (rc < 0) {
+				SPDK_ERRLOG("Failed to register interruptfd for periodic poller: %s\n", spdk_strerror(-rc));
+				free(poller);
+				return NULL;
+			}
 
-		spdk_poller_register_interrupt(poller, period_poller_set_interrupt_mode, NULL);
+			spdk_poller_register_interrupt(poller, period_poller_set_interrupt_mode, NULL);
+		} else {
+			/* If the poller doesn't have a period, create interruptfd that's always
+			 * busy automatically when runnning in interrupt mode.
+			 */
+			rc = busy_poller_interrupt_init(poller);
+			if (rc > 0) {
+				SPDK_ERRLOG("Failed to register interruptfd for busy poller: %s\n", spdk_strerror(-rc));
+				free(poller);
+				return NULL;
+			}
+
+			spdk_poller_register_interrupt(poller, busy_poller_set_interrupt_mode, NULL);
+		}
 	}
 
 	thread_insert_poller(thread, poller);
@@ -1244,7 +1320,7 @@ spdk_poller_unregister(struct spdk_poller **ppoller)
 	}
 
 	if (spdk_interrupt_mode_is_enabled() && poller->interruptfd >= 0) {
-		period_poller_interrupt_fini(poller);
+		poller_interrupt_fini(poller);
 	}
 
 	/* If the poller was paused, put it on the active_pollers list so that
