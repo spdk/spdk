@@ -394,7 +394,7 @@ endef
 INSTALL_SHARED_LIB=\
 	$(Q)echo "  INSTALL $(DESTDIR)$(libdir)/$(notdir $(SHARED_LINKED_LIB))"; \
 	install -d -m 755 "$(DESTDIR)$(libdir)"; \
-	if file --mime-type $(SHARED_REALNAME_LIB) | grep -q 'application/x-sharedlib'; then \
+	if file $(SHARED_REALNAME_LIB) | grep -q 'LSB shared object'; then \
 		perm_mode=755; \
 	else \
 		perm_mode=644; \
