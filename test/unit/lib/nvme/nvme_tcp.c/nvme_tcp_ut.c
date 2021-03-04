@@ -873,6 +873,23 @@ test_nvme_tcp_alloc_reqs(void)
 	CU_ASSERT(tqpair.send_pdus == NULL);
 }
 
+static void
+test_nvme_tcp_parse_addr(void)
+{
+	struct sockaddr_storage dst_addr;
+	int rc = 0;
+
+	memset(&dst_addr, 0, sizeof(dst_addr));
+	/* case1: getaddrinfo failed */
+	rc = nvme_tcp_parse_addr(&dst_addr, AF_INET, NULL, NULL);
+	CU_ASSERT(rc != 0);
+
+	/* case2: res->ai_addrlen < sizeof(*sa). Expect: Pass. */
+	rc = nvme_tcp_parse_addr(&dst_addr, AF_INET, "12.34.56.78", "23");
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(dst_addr.ss_family == AF_INET);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -894,6 +911,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_tcp_qpair_write_pdu);
 	CU_ADD_TEST(suite, test_nvme_tcp_qpair_set_recv_state);
 	CU_ADD_TEST(suite, test_nvme_tcp_alloc_reqs);
+	CU_ADD_TEST(suite, test_nvme_tcp_parse_addr);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
