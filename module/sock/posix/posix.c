@@ -944,6 +944,10 @@ posix_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 		/* If the user is receiving a sufficiently large amount of data,
 		 * receive directly to their buffers. */
 		if (len >= MIN_SOCK_PIPE_SIZE) {
+			if (group && sock->pending_recv) {
+				sock->pending_recv = false;
+				TAILQ_REMOVE(&group->pending_recv, sock, link);
+			}
 			return readv(sock->fd, iov, iovcnt);
 		}
 
