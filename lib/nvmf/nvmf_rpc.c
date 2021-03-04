@@ -725,15 +725,16 @@ nvmf_rpc_listen_paused(struct spdk_nvmf_subsystem *subsystem,
 			ctx->response_sent = true;
 		}
 	} else if (ctx->op == NVMF_RPC_LISTEN_REMOVE) {
-		if (spdk_nvmf_subsystem_remove_listener(subsystem, &ctx->trid)) {
-			SPDK_ERRLOG("Unable to remove listener.\n");
-			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-							 "Invalid parameters");
-			ctx->response_sent = true;
+		rc = spdk_nvmf_subsystem_remove_listener(subsystem, &ctx->trid);
+		if (rc == 0) {
+			spdk_nvmf_transport_stop_listen_async(ctx->transport, &ctx->trid, nvmf_rpc_stop_listen_async_done,
+							      ctx);
+			return;
 		}
-		spdk_nvmf_transport_stop_listen_async(ctx->transport, &ctx->trid, nvmf_rpc_stop_listen_async_done,
-						      ctx);
-		return;
+		SPDK_ERRLOG("Unable to remove listener, rc %d\n", rc);
+		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		ctx->response_sent = true;
 	} else if (ctx->op == NVMF_RPC_LISTEN_SET_ANA_STATE) {
 		nvmf_subsystem_set_ana_state(subsystem, &ctx->trid, ctx->ana_state,
 					     nvmf_rpc_set_ana_state_done, ctx);
