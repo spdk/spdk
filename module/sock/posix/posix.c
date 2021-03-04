@@ -885,7 +885,9 @@ posix_sock_recv_from_pipe(struct spdk_posix_sock *sock, struct iovec *diov, int 
 
 	spdk_pipe_reader_advance(sock->recv_pipe, bytes);
 
-	/* If we drained the pipe, take it off the level-triggered list */
+	/* If we drained the pipe, take it off the pending_recv list. The socket may still have data buffered
+	 * in the kernel to receive, but this will be handled on the next poll call when we get the same EPOLLIN
+	 * event again. */
 	if (sock->base.group_impl && spdk_pipe_reader_bytes_available(sock->recv_pipe) == 0) {
 		group = __posix_group_impl(sock->base.group_impl);
 		TAILQ_REMOVE(&group->pending_recv, sock, link);
@@ -908,7 +910,17 @@ posix_sock_read(struct spdk_posix_sock *sock)
 		bytes = readv(sock->fd, iov, 2);
 		if (bytes > 0) {
 			spdk_pipe_writer_advance(sock->recv_pipe, bytes);
-			if (sock->base.group_impl) {
+
+			/* For normal operation, this function is called in response to an EPOLLIN
+			 * event, which already placed the socket onto the pending_recv list.
+			 * But between polls the user may repeatedly call posix_sock_read
+			 * and if they clear the pipe on one of those earlier calls, the
+			 * socket will be removed from the pending_recv list. In that case,
+			 * if we now found more data, put it back on.
+			 * This essentially never happens in practice because the application
+			 * will stop trying to receive and wait for the next EPOLLIN event, but
+			 * for correctness let's handle it. */
+			if (!sock->pending_recv && sock->base.group_impl) {
 				group = __posix_group_impl(sock->base.group_impl);
 				TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
 				sock->pending_recv = true;
