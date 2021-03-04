@@ -54,6 +54,8 @@ DEFINE_STUB_V(nvme_qpair_resubmit_requests, (struct spdk_nvme_qpair *qpair, uint
 DEFINE_STUB(spdk_nvme_poll_group_process_completions, int64_t, (struct spdk_nvme_poll_group *group,
 		uint32_t completions_per_qpair, spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb), 0)
 
+DEFINE_STUB(rdma_ack_cm_event, int, (struct rdma_cm_event *event), 0);
+
 struct nvme_rdma_ut_bdev_io {
 	struct iovec iovs[NVME_RDMA_MAX_SGL_DESCRIPTORS];
 	int iovpos;
@@ -509,6 +511,94 @@ test_nvme_rdma_poller_create(void)
 	nvme_rdma_poll_group_free_pollers(&group);
 }
 
+static void
+test_nvme_rdma_qpair_process_cm_event(void)
+{
+	struct nvme_rdma_qpair rqpair = {};
+	struct rdma_cm_event	 event = {};
+	struct spdk_nvmf_rdma_accept_private_data	accept_data = {};
+	int rc = 0;
+
+	/* case1: event == RDMA_CM_EVENT_ADDR_RESOLVED */
+	rqpair.evt = &event;
+	event.event = RDMA_CM_EVENT_ADDR_RESOLVED;
+	rc = nvme_rdma_qpair_process_cm_event(&rqpair);
+	CU_ASSERT(rc == 0);
+
+	/* case2: event == RDMA_CM_EVENT_CONNECT_REQUEST */
+	rqpair.evt = &event;
+	event.event = RDMA_CM_EVENT_CONNECT_REQUEST;
+	rc = nvme_rdma_qpair_process_cm_event(&rqpair);
+	CU_ASSERT(rc == 0);
+
+	/* case3: event == RDMA_CM_EVENT_CONNECT_ERROR */
+	rqpair.evt = &event;
+	event.event = RDMA_CM_EVENT_CONNECT_ERROR;
+	rc = nvme_rdma_qpair_process_cm_event(&rqpair);
+	CU_ASSERT(rc == 0);
+
+	/* case4: event == RDMA_CM_EVENT_UNREACHABLE */
+	rqpair.evt = &event;
+	event.event = RDMA_CM_EVENT_UNREACHABLE;
+	rc = nvme_rdma_qpair_process_cm_event(&rqpair);
+	CU_ASSERT(rc == 0);
+
+	/* case5: event == RDMA_CM_EVENT_CONNECT_RESPONSE */
+	rqpair.evt = &event;
+	event.event = RDMA_CM_EVENT_CONNECT_RESPONSE;
+	event.param.conn.private_data = NULL;
+	rc = nvme_rdma_qpair_process_cm_event(&rqpair);
+	CU_ASSERT(rc == -1);
+
+	rqpair.evt = &event;
+	event.event = RDMA_CM_EVENT_CONNECT_RESPONSE;
+	event.param.conn.private_data = &accept_data;
+	accept_data.crqsize = 512;
+	rqpair.num_entries = 1024;
+	rc = nvme_rdma_qpair_process_cm_event(&rqpair);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(rqpair.num_entries == 512);
+
+	/* case6: event == RDMA_CM_EVENT_DISCONNECTED */
+	rqpair.evt = &event;
+	event.event = RDMA_CM_EVENT_DISCONNECTED;
+	rc = nvme_rdma_qpair_process_cm_event(&rqpair);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(rqpair.qpair.transport_failure_reason == SPDK_NVME_QPAIR_FAILURE_REMOTE);
+
+	/* case7: event == RDMA_CM_EVENT_DEVICE_REMOVAL */
+	rqpair.evt = &event;
+	event.event = RDMA_CM_EVENT_DEVICE_REMOVAL;
+	rc = nvme_rdma_qpair_process_cm_event(&rqpair);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(rqpair.qpair.transport_failure_reason == SPDK_NVME_QPAIR_FAILURE_LOCAL);
+
+	/* case8: event == RDMA_CM_EVENT_MULTICAST_JOIN */
+	rqpair.evt = &event;
+	event.event = RDMA_CM_EVENT_MULTICAST_JOIN;
+	rc = nvme_rdma_qpair_process_cm_event(&rqpair);
+	CU_ASSERT(rc == 0);
+
+	/* case9: event == RDMA_CM_EVENT_ADDR_CHANGE */
+	rqpair.evt = &event;
+	event.event = RDMA_CM_EVENT_ADDR_CHANGE;
+	rc = nvme_rdma_qpair_process_cm_event(&rqpair);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(rqpair.qpair.transport_failure_reason == SPDK_NVME_QPAIR_FAILURE_LOCAL);
+
+	/* case10: event == RDMA_CM_EVENT_TIMEWAIT_EXIT */
+	rqpair.evt = &event;
+	event.event = RDMA_CM_EVENT_TIMEWAIT_EXIT;
+	rc = nvme_rdma_qpair_process_cm_event(&rqpair);
+	CU_ASSERT(rc == 0);
+
+	/* case11: default event == 0xFF */
+	rqpair.evt = &event;
+	event.event = 0xFF;
+	rc = nvme_rdma_qpair_process_cm_event(&rqpair);
+	CU_ASSERT(rc == 0);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -526,6 +616,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_rdma_alloc_rsps);
 	CU_ADD_TEST(suite, test_nvme_rdma_ctrlr_create_qpair);
 	CU_ADD_TEST(suite, test_nvme_rdma_poller_create);
+	CU_ADD_TEST(suite, test_nvme_rdma_qpair_process_cm_event);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
