@@ -95,7 +95,7 @@
 #define THREAD_WIN_FIRST_COL 2
 #define CORE_WIN_FIRST_COL 16
 #define CORE_WIN_WIDTH 48
-#define CORE_WIN_HEIGHT 9
+#define CORE_WIN_HEIGHT 11
 #define POLLER_WIN_HEIGHT 8
 #define POLLER_WIN_WIDTH 64
 #define POLLER_WIN_FIRST_COL 14
@@ -476,7 +476,7 @@ static const struct spdk_json_object_decoder rpc_core_info_decoders[] = {
 	{"lcore", offsetof(struct rpc_core_info, lcore), spdk_json_decode_uint32},
 	{"busy", offsetof(struct rpc_core_info, busy), spdk_json_decode_uint64},
 	{"idle", offsetof(struct rpc_core_info, idle), spdk_json_decode_uint64},
-	{"core_freq", offsetof(struct rpc_core_info, core_freq), spdk_json_decode_uint32},
+	{"core_freq", offsetof(struct rpc_core_info, core_freq), spdk_json_decode_uint32, true},
 	{"lw_threads", offsetof(struct rpc_core_info, threads), rpc_decode_cores_lw_threads},
 };
 
@@ -2150,9 +2150,20 @@ show_core(uint8_t current_page)
 	mvwaddch(core_win, -1, 0, ACS_LTEE);
 	mvwhline(core_win, 2, 1, ACS_HLINE, CORE_WIN_WIDTH - 2);
 	mvwaddch(core_win, 2, CORE_WIN_WIDTH, ACS_RTEE);
-	print_left(core_win, 3, 1, CORE_WIN_WIDTH, "Thread count:          Idle time:", COLOR_PAIR(5));
+	print_in_middle(core_win, 3, 0, CORE_WIN_WIDTH - (CORE_WIN_WIDTH / 3), "Frequency:", COLOR_PAIR(5));
+	if (core_info[core_number]->core_freq) {
+		mvwprintw(core_win, 3, CORE_WIN_FIRST_COL + 15, "%" PRIu32,
+			  core_info[core_number]->core_freq);
+	} else {
+		mvwprintw(core_win, 3, CORE_WIN_FIRST_COL + 15, "%s", "N/A");
+	}
 
-	mvwprintw(core_win, 3, CORE_WIN_FIRST_COL, "%" PRIu64,
+	mvwaddch(core_win, -1, 0, ACS_LTEE);
+	mvwhline(core_win, 4, 1, ACS_HLINE, CORE_WIN_WIDTH - 2);
+	mvwaddch(core_win, 4, CORE_WIN_WIDTH, ACS_RTEE);
+	print_left(core_win, 5, 1, CORE_WIN_WIDTH, "Thread count:          Idle time:", COLOR_PAIR(5));
+
+	mvwprintw(core_win, 5, CORE_WIN_FIRST_COL, "%" PRIu64,
 		  g_cores_history[core_number].threads_count);
 
 	if (g_interval_data == true) {
@@ -2162,20 +2173,20 @@ show_core(uint8_t current_page)
 		get_time_str(core_info[core_number]->idle, idle_time);
 		get_time_str(core_info[core_number]->busy, busy_time);
 	}
-	mvwprintw(core_win, 3, CORE_WIN_FIRST_COL + 20, idle_time);
+	mvwprintw(core_win, 5, CORE_WIN_FIRST_COL + 20, idle_time);
 
-	print_left(core_win, 5, 1, CORE_WIN_WIDTH, "Poller count:          Busy time:", COLOR_PAIR(5));
-	mvwprintw(core_win, 5, CORE_WIN_FIRST_COL, "%" PRIu64,
+	print_left(core_win, 7, 1, CORE_WIN_WIDTH, "Poller count:          Busy time:", COLOR_PAIR(5));
+	mvwprintw(core_win, 7, CORE_WIN_FIRST_COL, "%" PRIu64,
 		  g_cores_history[core_number].pollers_count);
 
-	mvwprintw(core_win, 5, CORE_WIN_FIRST_COL + 20, busy_time);
+	mvwprintw(core_win, 7, CORE_WIN_FIRST_COL + 20, busy_time);
 
-	mvwhline(core_win, 4, 1, ACS_HLINE, CORE_WIN_WIDTH - 2);
 	mvwhline(core_win, 6, 1, ACS_HLINE, CORE_WIN_WIDTH - 2);
-	print_left(core_win, 7, 1, CORE_WIN_WIDTH, "Threads on this core", COLOR_PAIR(5));
+	mvwhline(core_win, 8, 1, ACS_HLINE, CORE_WIN_WIDTH - 2);
+	print_left(core_win, 9, 1, CORE_WIN_WIDTH, "Threads on this core", COLOR_PAIR(5));
 
 	for (j = 0; j < core_info[core_number]->threads.threads_count; j++) {
-		mvwprintw(core_win, j + 8, 1, core_info[core_number]->threads.thread[j].name);
+		mvwprintw(core_win, j + 10, 1, core_info[core_number]->threads.thread[j].name);
 	}
 
 	refresh();
@@ -2186,9 +2197,9 @@ show_core(uint8_t current_page)
 	while (!stop_loop) {
 		for (j = 0; j < core_info[core_number]->threads.threads_count; j++) {
 			if (j != current_threads_row) {
-				mvwprintw(core_win, j + 8, 1, core_info[core_number]->threads.thread[j].name);
+				mvwprintw(core_win, j + 10, 1, core_info[core_number]->threads.thread[j].name);
 			} else {
-				print_left(core_win, j + 8, 1, CORE_WIN_WIDTH - 2,
+				print_left(core_win, j + 10, 1, CORE_WIN_WIDTH - 2,
 					   core_info[core_number]->threads.thread[j].name, COLOR_PAIR(2));
 			}
 		}
