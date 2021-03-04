@@ -158,7 +158,8 @@ spdk_scsi_task_gather_data(struct spdk_scsi_task *task, int *len)
 	uint8_t *buf, *pos;
 
 	for (i = 0; i < task->iovcnt; i++) {
-		assert(iovs[i].iov_base != NULL);
+		/* It is OK for iov_base to be NULL if iov_len is 0. */
+		assert(iovs[i].iov_base != NULL || iovs[i].iov_len == 0);
 		buf_len += iovs[i].iov_len;
 	}
 
