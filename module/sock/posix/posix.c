@@ -1215,12 +1215,9 @@ posix_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group, struct sp
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
 	int rc;
 
-	if (sock->recv_pipe != NULL) {
-		if (spdk_pipe_reader_bytes_available(sock->recv_pipe) > 0) {
-			TAILQ_REMOVE(&group->pending_recv, sock, link);
-			sock->pending_recv = false;
-		}
-		assert(sock->pending_recv == false);
+	if (sock->pending_recv) {
+		TAILQ_REMOVE(&group->pending_recv, sock, link);
+		sock->pending_recv = false;
 	}
 
 #if defined(SPDK_EPOLL)
@@ -1343,18 +1340,14 @@ posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 	}
 
 	/* Cycle the pending_recv list so that each time we poll things aren't
-	 * in the same order. */
+	 * in the same order.
+	 * TODO: This could be done with a single operation because psock points
+	 * to the last node that needs to get cycled already. */
 	for (i = 0; i < num_events; i++) {
 		psock = __posix_sock(socks[i]);
 
 		TAILQ_REMOVE(&group->pending_recv, psock, link);
-
-		if (psock->recv_pipe == NULL || spdk_pipe_reader_bytes_available(psock->recv_pipe) == 0) {
-			psock->pending_recv = false;
-		} else {
-			TAILQ_INSERT_TAIL(&group->pending_recv, psock, link);
-		}
-
+		TAILQ_INSERT_TAIL(&group->pending_recv, psock, link);
 	}
 
 	return num_events;
