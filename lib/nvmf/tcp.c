@@ -1509,8 +1509,6 @@ nvmf_tcp_pdu_c2h_data_complete(void *cb_arg)
 	struct spdk_nvmf_tcp_req *tcp_req = cb_arg;
 	struct spdk_nvmf_tcp_qpair *tqpair = SPDK_CONTAINEROF(tcp_req->req.qpair,
 					     struct spdk_nvmf_tcp_qpair, qpair);
-	struct spdk_nvmf_tcp_transport *ttransport = SPDK_CONTAINEROF(
-				tcp_req->req.qpair->transport, struct spdk_nvmf_tcp_transport, transport);
 
 	assert(tqpair != NULL);
 
@@ -1521,7 +1519,7 @@ nvmf_tcp_pdu_c2h_data_complete(void *cb_arg)
 		return;
 	}
 
-	if (ttransport->tcp_opts.c2h_success) {
+	if (tcp_req->pdu->hdr.c2h_data.common.flags & SPDK_NVME_TCP_C2H_DATA_FLAGS_SUCCESS) {
 		nvmf_tcp_request_free(tcp_req);
 	} else {
 		nvmf_tcp_req_pdu_fini(tcp_req);
@@ -2272,7 +2270,9 @@ _nvmf_tcp_send_c2h_data(struct spdk_nvmf_tcp_qpair *tqpair,
 
 
 	c2h_data->common.flags |= SPDK_NVME_TCP_C2H_DATA_FLAGS_LAST_PDU;
-	if (ttransport->tcp_opts.c2h_success) {
+	/* Need to send the capsule response if response is not all 0 */
+	if (ttransport->tcp_opts.c2h_success &&
+	    tcp_req->rsp.cdw0 == 0 && tcp_req->rsp.cdw1 == 0) {
 		c2h_data->common.flags |= SPDK_NVME_TCP_C2H_DATA_FLAGS_SUCCESS;
 	}
 

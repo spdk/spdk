@@ -552,6 +552,7 @@ test_nvmf_tcp_send_c2h_data(void)
 	struct nvme_tcp_pdu pdu = {};
 	struct spdk_nvme_tcp_c2h_data_hdr *c2h_data;
 
+	ttransport.tcp_opts.c2h_success = true;
 	thread = spdk_thread_create(NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
 	spdk_set_thread(thread);
@@ -583,6 +584,7 @@ test_nvmf_tcp_send_c2h_data(void)
 	CU_ASSERT(c2h_data->datal = 300);
 	CU_ASSERT(c2h_data->common.plen == sizeof(*c2h_data) + 300);
 	CU_ASSERT(c2h_data->common.flags & SPDK_NVME_TCP_C2H_DATA_FLAGS_LAST_PDU);
+	CU_ASSERT(c2h_data->common.flags & SPDK_NVME_TCP_C2H_DATA_FLAGS_SUCCESS);
 
 	CU_ASSERT(pdu.data_iovcnt == 3);
 	CU_ASSERT((uint64_t)pdu.data_iov[0].iov_base == 0xDEADBEEF);
@@ -591,6 +593,28 @@ test_nvmf_tcp_send_c2h_data(void)
 	CU_ASSERT(pdu.data_iov[1].iov_len == 100);
 	CU_ASSERT((uint64_t)pdu.data_iov[2].iov_base == 0xC0FFEE);
 	CU_ASSERT(pdu.data_iov[2].iov_len == 99);
+
+	tcp_req.pdu_in_use = false;
+	tcp_req.rsp.cdw0 = 1;
+	nvmf_tcp_send_c2h_data(&tqpair, &tcp_req);
+
+	CU_ASSERT(c2h_data->common.flags & SPDK_NVME_TCP_C2H_DATA_FLAGS_LAST_PDU);
+	CU_ASSERT((c2h_data->common.flags & SPDK_NVME_TCP_C2H_DATA_FLAGS_SUCCESS) == 0);
+
+	ttransport.tcp_opts.c2h_success = false;
+	tcp_req.pdu_in_use = false;
+	tcp_req.rsp.cdw0 = 0;
+	nvmf_tcp_send_c2h_data(&tqpair, &tcp_req);
+
+	CU_ASSERT(c2h_data->common.flags & SPDK_NVME_TCP_C2H_DATA_FLAGS_LAST_PDU);
+	CU_ASSERT((c2h_data->common.flags & SPDK_NVME_TCP_C2H_DATA_FLAGS_SUCCESS) == 0);
+
+	tcp_req.pdu_in_use = false;
+	tcp_req.rsp.cdw0 = 1;
+	nvmf_tcp_send_c2h_data(&tqpair, &tcp_req);
+
+	CU_ASSERT(c2h_data->common.flags & SPDK_NVME_TCP_C2H_DATA_FLAGS_LAST_PDU);
+	CU_ASSERT((c2h_data->common.flags & SPDK_NVME_TCP_C2H_DATA_FLAGS_SUCCESS) == 0);
 
 	spdk_thread_exit(thread);
 	while (!spdk_thread_is_exited(thread)) {
