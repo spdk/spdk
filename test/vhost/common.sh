@@ -107,11 +107,13 @@ function vhost_run() {
 	local OPTIND
 	local vhost_name
 	local run_gen_nvme=true
+	local vhost_bin="vhost"
 
-	while getopts "n:a:g" optchar; do
+	while getopts "n:a:b:g" optchar; do
 		case "$optchar" in
 			n) vhost_name="$OPTARG" ;;
 			a) vhost_args="$OPTARG" ;;
+			b) vhost_bin="$OPTARG" ;;
 			g)
 				run_gen_nvme=false
 				notice "Skipping gen_nvme.sh NVMe bdev configuration"
@@ -130,7 +132,7 @@ function vhost_run() {
 
 	local vhost_dir
 	vhost_dir="$(get_vhost_dir $vhost_name)"
-	local vhost_app="$SPDK_BIN_DIR/vhost"
+	local vhost_app="$SPDK_BIN_DIR/$vhost_bin"
 	local vhost_log_file="$vhost_dir/vhost.log"
 	local vhost_pid_file="$vhost_dir/vhost.pid"
 	local vhost_socket="$vhost_dir/usvhost"
@@ -752,8 +754,16 @@ function vm_setup() {
 				notice "Using kernel vhost disk wwn=$disk"
 				cmd+=(-device "vhost-scsi-pci,wwpn=$disk,num_queues=$queue_number")
 				;;
+			vfio_user)
+				notice "using socket $VM_DIR/$vm_num/domain/muser$disk/$disk/cntrl"
+				cmd+=(-device "vfio-user-pci,socket=$VM_DIR/$vm_num/muser/domain/muser$disk/$disk/cntrl")
+				if [[ "$disk" == "$boot_from" ]]; then
+					cmd[-1]+=",bootindex=0"
+					boot_disk_present=true
+				fi
+				;;
 			*)
-				error "unknown mode '$disk_type', use: virtio, spdk_vhost_scsi, spdk_vhost_blk or kernel_vhost"
+				error "unknown mode '$disk_type', use: virtio, spdk_vhost_scsi, spdk_vhost_blk, kernel_vhost or vfio_user"
 				return 1
 				;;
 		esac
@@ -1010,6 +1020,14 @@ function vm_check_blk_location() {
 
 	if [[ -z "$SCSI_DISK" ]]; then
 		error "no blk test disk found!"
+		return 1
+	fi
+}
+
+function vm_check_nvme_location() {
+	SCSI_DISK="$(vm_exec $1 grep -l SPDK /sys/class/nvme/*/model | awk -F/ '{print $5"n1"}')"
+	if [[ -z "$SCSI_DISK" ]]; then
+		error "no vfio-user nvme test disk found!"
 		return 1
 	fi
 }
