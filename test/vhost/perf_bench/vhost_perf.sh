@@ -67,6 +67,7 @@ function usage() {
 	echo "                            spdk_vhost_scsi - use spdk vhost scsi"
 	echo "                            spdk_vhost_blk - use spdk vhost block"
 	echo "                            kernel_vhost - use kernel vhost scsi"
+	echo "                            vfio_user - use vfio-user transport layer"
 	echo "                            Default: spdk_vhost_scsi"
 	echo "    --packed-ring           Use packed ring support. Requires Qemu 4.2.0 or greater. Default: disabled."
 	echo "    --use-split             Use split vbdevs instead of Logical Volumes"
@@ -125,6 +126,8 @@ function create_vm() {
 	if [[ "$ctrl_type" == "kernel_vhost" ]]; then
 		x=$(printf %03d $vm_num)
 		setup_cmd+=" --disks=${wwpn_prefix}${x}"
+	elif [[ "$ctrl_type" == "vfio_user" ]]; then
+		setup_cmd+=" --disks=$vm_num"
 	else
 		setup_cmd+=" --disks=0"
 	fi
@@ -155,6 +158,14 @@ function create_spdk_controller() {
 
 		$rpc_py vhost_create_blk_controller naa.0.$vm_num $bdev $p_opt
 		notice "Created vhost blk controller naa.0.$vm_num $bdev"
+	elif [[ "$ctrl_type" == "vfio_user" ]]; then
+		vm_muser_dir="$VM_DIR/$vm_num/muser"
+		rm -rf $vm_muser_dir
+		mkdir -p $vm_muser_dir/domain/muser$vm_num/$vm_num
+
+		$rpc_py nvmf_create_subsystem ${nqn_prefix}${vm_num} -s SPDK00$vm_num -a
+		$rpc_py nvmf_subsystem_add_ns ${nqn_prefix}${vm_num} $bdev
+		$rpc_py nvmf_subsystem_add_listener ${nqn_prefix}${vm_num} -t VFIOUSER -a $vm_muser_dir/domain/muser$vm_num/$vm_num -s 0
 	fi
 }
 
@@ -208,6 +219,10 @@ fi
 
 if [[ -z $fio_jobs ]]; then
 	error "No FIO job specified!"
+fi
+
+if [[ $ctrl_type == "vfio_user" ]]; then
+	vhost_bin_opt="-b nvmf_tgt"
 fi
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' INT ERR
@@ -314,7 +329,7 @@ if [[ "$ctrl_type" == "kernel_vhost" ]]; then
 	targetcli ls
 else
 	notice "Configuring SPDK vhost..."
-	vhost_run -n "${vhost_num}" -g -a "-p ${vhost_main_core} -m ${vhost_reactor_mask}"
+	vhost_run -n "${vhost_num}" -g ${vhost_bin_opt} -a "-p ${vhost_main_core} -m ${vhost_reactor_mask}"
 	notice "..."
 	if [[ ${#bpf_traces[@]} -gt 0 ]]; then
 		notice "Enabling BPF traces: ${bpf_traces[*]}"
@@ -332,6 +347,12 @@ else
 
 		# Wait a bit for trace capture to start
 		sleep 3
+	fi
+
+	if [[ "$ctrl_type" == "vfio_user" ]]; then
+		rm -rf /dev/shm/muser
+		$rpc_py nvmf_create_transport --trtype VFIOUSER
+		nqn_prefix="nqn.2021-02.io.spdk:cnode"
 	fi
 
 	if [[ $use_split == true ]]; then
@@ -385,7 +406,11 @@ else
 		$rpc_py bdev_lvol_get_lvstores
 	fi
 	$rpc_py bdev_get_bdevs
-	$rpc_py vhost_get_controllers
+	if [[ "$ctrl_type" =~ "vhost" ]]; then
+		$rpc_py vhost_get_controllers
+	elif [[ "$ctrl_type" =~ "vfio" ]]; then
+		$rpc_py nvmf_get_subsystems
+	fi
 fi
 
 # Start VMs
@@ -424,6 +449,8 @@ for vm_num in $used_vms; do
 		vm_check_blk_location $vm_num
 	elif [[ "$ctrl_type" == "kernel_vhost" ]]; then
 		vm_check_scsi_location $vm_num
+	elif [[ "$ctrl_type" == "vfio_user" ]]; then
+		vm_check_nvme_location $vm_num
 	fi
 
 	block=$(printf '%s' $SCSI_DISK)
