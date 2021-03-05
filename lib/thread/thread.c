@@ -626,6 +626,7 @@ thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 	if (spdk_unlikely(critical_msg != NULL)) {
 		critical_msg(NULL);
 		thread->critical_msg = NULL;
+		rc = 1;
 	}
 
 	msg_count = msg_queue_run_batch(thread, max_msgs);
@@ -1869,6 +1870,7 @@ thread_interrupt_msg_process(void *arg)
 	if (spdk_unlikely(critical_msg != NULL)) {
 		critical_msg(NULL);
 		thread->critical_msg = NULL;
+		rc = 1;
 	}
 
 	msg_count = msg_queue_run_batch(thread, 0);
