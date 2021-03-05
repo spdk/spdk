@@ -871,8 +871,6 @@ reactor_interrupt_run(struct spdk_reactor *reactor)
 	int block_timeout = -1; /* _EPOLL_WAIT_FOREVER */
 
 	spdk_fd_group_wait(reactor->fgrp, block_timeout);
-
-	/* TODO: g_framework_context_switch_monitor_enabled */
 }
 
 static void
@@ -898,13 +896,6 @@ _reactor_run(struct spdk_reactor *reactor)
 		reactor->tsc_last = now;
 
 		reactor_post_process_lw_thread(reactor, lw_thread);
-	}
-
-	if (g_framework_context_switch_monitor_enabled) {
-		if ((reactor->last_rusage + g_rusage_period) < reactor->tsc_last) {
-			get_rusage(reactor);
-			reactor->last_rusage = reactor->tsc_last;
-		}
 	}
 }
 
@@ -933,6 +924,13 @@ reactor_run(void *arg)
 			reactor_interrupt_run(reactor);
 		} else {
 			_reactor_run(reactor);
+		}
+
+		if (g_framework_context_switch_monitor_enabled) {
+			if ((reactor->last_rusage + g_rusage_period) < reactor->tsc_last) {
+				get_rusage(reactor);
+				reactor->last_rusage = reactor->tsc_last;
+			}
 		}
 
 		if (spdk_unlikely(g_scheduler_period > 0 &&
