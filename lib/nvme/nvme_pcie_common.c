@@ -936,6 +936,7 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 int
 nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
+	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
 	struct nvme_completion_poll_status *status;
 	int rc;
 
@@ -986,6 +987,12 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	}
 	free(status);
 
+	if (pqpair->flags.has_shadow_doorbell) {
+		*pqpair->shadow_doorbell.sq_tdbl = 0;
+		*pqpair->shadow_doorbell.cq_hdbl = 0;
+		*pqpair->shadow_doorbell.sq_eventidx = 0;
+		*pqpair->shadow_doorbell.cq_eventidx = 0;
+	}
 free:
 	if (qpair->no_deletion_notification_needed == 0) {
 		/* Abort the rest of the I/O */
