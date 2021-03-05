@@ -68,6 +68,8 @@ struct nvme_tcp_poll_group {
 	struct spdk_sock_group *sock_group;
 	uint32_t completions_per_qpair;
 	int64_t num_completions;
+
+	TAILQ_HEAD(, nvme_tcp_qpair) needs_poll;
 };
 
 /* NVMe TCP qpair extensions for spdk_nvme_qpair */
@@ -105,6 +107,9 @@ struct nvme_tcp_qpair {
 	uint8_t					cpda;
 
 	enum nvme_tcp_qpair_state		state;
+
+	TAILQ_ENTRY(nvme_tcp_qpair)		link;
+	bool					needs_poll;
 };
 
 enum nvme_tcp_req_state {
@@ -301,6 +306,13 @@ nvme_tcp_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
 	struct nvme_tcp_pdu *pdu;
 	int rc;
+	struct nvme_tcp_poll_group *group;
+
+	if (tqpair->needs_poll) {
+		group = nvme_tcp_poll_group(qpair->poll_group);
+		TAILQ_REMOVE(&group->needs_poll, tqpair, link);
+		tqpair->needs_poll = false;
+	}
 
 	rc = spdk_sock_close(&tqpair->sock);
 
@@ -365,6 +377,18 @@ _pdu_write_done(void *cb_arg, int err)
 {
 	struct nvme_tcp_pdu *pdu = cb_arg;
 	struct nvme_tcp_qpair *tqpair = pdu->qpair;
+	struct nvme_tcp_poll_group *pgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
+
+	/* If there are queued requests, we assume they are queued because they are waiting
+	 * for resources to be released. Those resources are almost certainly released in
+	 * response to a PDU completing here. However, to attempt to make forward progress
+	 * the qpair needs to be polled and we can't rely on another network event to make
+	 * that happen. Add it to a list of qpairs to poll regardless of network activity
+	 * here. */
+	if (pgroup && !STAILQ_EMPTY(&tqpair->qpair.queued_req) && !tqpair->needs_poll) {
+		TAILQ_INSERT_TAIL(&pgroup->needs_poll, tqpair, link);
+		tqpair->needs_poll = true;
+	}
 
 	TAILQ_REMOVE(&tqpair->send_queue, pdu, tailq);
 
@@ -1690,6 +1714,12 @@ nvme_tcp_qpair_sock_cb(void *ctx, struct spdk_sock_group *group, struct spdk_soc
 	struct spdk_nvme_qpair *qpair = ctx;
 	struct nvme_tcp_poll_group *pgroup = nvme_tcp_poll_group(qpair->poll_group);
 	int32_t num_completions;
+	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
+
+	if (tqpair->needs_poll) {
+		TAILQ_REMOVE(&pgroup->needs_poll, tqpair, link);
+		tqpair->needs_poll = false;
+	}
 
 	num_completions = spdk_nvme_qpair_process_completions(qpair, pgroup->completions_per_qpair);
 
@@ -2046,6 +2076,8 @@ nvme_tcp_poll_group_create(void)
 		return NULL;
 	}
 
+	TAILQ_INIT(&group->needs_poll);
+
 	group->sock_group = spdk_sock_group_create(group);
 	if (group->sock_group == NULL) {
 		free(group);
@@ -2089,6 +2121,11 @@ nvme_tcp_poll_group_disconnect_qpair(struct spdk_nvme_qpair *qpair)
 	struct nvme_tcp_poll_group *group = nvme_tcp_poll_group(qpair->poll_group);
 	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
 
+	if (tqpair->needs_poll) {
+		TAILQ_REMOVE(&group->needs_poll, tqpair, link);
+		tqpair->needs_poll = false;
+	}
+
 	if (tqpair->sock && group->sock_group) {
 		if (spdk_sock_group_remove_sock(group->sock_group, tqpair->sock)) {
 			return -EPROTO;
@@ -2131,6 +2168,7 @@ nvme_tcp_poll_group_process_completions(struct spdk_nvme_transport_poll_group *t
 {
 	struct nvme_tcp_poll_group *group = nvme_tcp_poll_group(tgroup);
 	struct spdk_nvme_qpair *qpair, *tmp_qpair;
+	struct nvme_tcp_qpair *tqpair, *tmp_tqpair;
 
 	group->completions_per_qpair = completions_per_qpair;
 	group->num_completions = 0;
@@ -2139,6 +2177,12 @@ nvme_tcp_poll_group_process_completions(struct spdk_nvme_transport_poll_group *t
 
 	STAILQ_FOREACH_SAFE(qpair, &tgroup->disconnected_qpairs, poll_group_stailq, tmp_qpair) {
 		disconnected_qpair_cb(qpair, tgroup->group->ctx);
+	}
+
+	/* If any qpairs were marked as needing to be polled due to an asynchronous write completion
+	 * and they weren't polled as a consequence of calling spdk_sock_group_poll above, poll them now. */
+	TAILQ_FOREACH_SAFE(tqpair, &group->needs_poll, link, tmp_tqpair) {
+		nvme_tcp_qpair_sock_cb(&tqpair->qpair, group->sock_group, tqpair->sock);
 	}
 
 	return group->num_completions;

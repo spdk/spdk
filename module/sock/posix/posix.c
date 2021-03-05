@@ -663,7 +663,6 @@ static int
 _sock_check_zcopy(struct spdk_sock *sock)
 {
 	struct spdk_posix_sock *psock = __posix_sock(sock);
-	struct spdk_posix_sock_group_impl *group = __posix_group_impl(sock->group_impl);
 	struct msghdr msgh = {};
 	uint8_t buf[sizeof(struct cmsghdr) + sizeof(struct sock_extended_err)];
 	ssize_t rc;
@@ -725,13 +724,6 @@ _sock_check_zcopy(struct spdk_sock *sock)
 				} else if (found) {
 					break;
 				}
-			}
-
-			/* If we reaped buffer reclaim notification and sock is not in pending_events list yet,
-			 * add it now. It allows to call socket callback and process completions */
-			if (found && !psock->pending_events && group) {
-				psock->pending_events = true;
-				TAILQ_INSERT_TAIL(&group->pending_events, psock, link);
 			}
 		}
 	}
