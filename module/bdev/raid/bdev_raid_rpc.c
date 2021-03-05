@@ -158,8 +158,7 @@ struct rpc_bdev_raid_create {
 	/* Raid bdev name */
 	char                                 *name;
 
-	/* RAID strip size KB, 'strip_size' is deprecated. */
-	uint32_t                             strip_size;
+	/* RAID strip size in KB */
 	uint32_t                             strip_size_kb;
 
 	/* RAID raid level */
@@ -226,10 +225,8 @@ decode_base_bdevs(const struct spdk_json_val *val, void *out)
 /*
  * Decoder object for RPC bdev_raid_create
  */
-/* Note: strip_size is deprecated, one of the two options must be specified but not both. */
 static const struct spdk_json_object_decoder rpc_bdev_raid_create_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_raid_create, name), spdk_json_decode_string},
-	{"strip_size", offsetof(struct rpc_bdev_raid_create, strip_size), spdk_json_decode_uint32, true},
 	{"strip_size_kb", offsetof(struct rpc_bdev_raid_create, strip_size_kb), spdk_json_decode_uint32, true},
 	{"raid_level", offsetof(struct rpc_bdev_raid_create, level), decode_raid_level},
 	{"base_bdevs", offsetof(struct rpc_bdev_raid_create, base_bdevs), decode_base_bdevs},
@@ -262,16 +259,9 @@ rpc_bdev_raid_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	if (req.strip_size == 0 && req.strip_size_kb == 0) {
+	if (req.strip_size_kb == 0) {
 		spdk_jsonrpc_send_error_response(request, EINVAL, "strip size not specified");
 		goto cleanup;
-	} else if (req.strip_size > 0 && req.strip_size_kb > 0) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "please use only one strip size option");
-		goto cleanup;
-	} else if (req.strip_size > 0 && req.strip_size_kb == 0) {
-		SPDK_ERRLOG("the rpc param strip_size is deprecated.\n");
-		req.strip_size_kb = req.strip_size;
 	}
 
 	rc = raid_bdev_config_add(req.name, req.strip_size_kb, req.base_bdevs.num_base_bdevs,

@@ -1663,14 +1663,12 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
         rpc.bdev.bdev_raid_create(args.client,
                                   name=args.name,
-                                  strip_size=args.strip_size,
                                   strip_size_kb=args.strip_size_kb,
                                   raid_level=args.raid_level,
                                   base_bdevs=base_bdevs)
     p = subparsers.add_parser('bdev_raid_create', aliases=['construct_raid_bdev'],
                               help='Create new raid bdev')
     p.add_argument('-n', '--name', help='raid bdev name', required=True)
-    p.add_argument('-s', '--strip-size', help='strip size in KB (deprecated)', type=int)
     p.add_argument('-z', '--strip-size_kb', help='strip size in KB', type=int)
     p.add_argument('-r', '--raid-level', help='raid level, only raid level 0 is supported', required=True)
     p.add_argument('-b', '--base-bdevs', help='base bdevs name, whitespace separated list in quotes', required=True)

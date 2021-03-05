@@ -192,7 +192,7 @@ struct raid_bdev_config {
 
 	char				*name;
 
-	/* strip size of this raid bdev  in kilo bytes */
+	/* strip size of this raid bdev in KB */
 	uint32_t			strip_size;
 
 	/* number of base bdevs */

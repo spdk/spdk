@@ -13,6 +13,10 @@ Added an accelerated table pointer in spdk_nvme_poll_group
 which can be used provide the accelerated functions by users with
 hardware engine, such as crc32c accelerated function.
 
+### raid
+
+For `bdev_raid_create` RPC, the deprecated parameter `strip_size` was removed.
+
 ### bdev
 
 For `bdev_ocssd_create` RPC, the optional parameter `range` was removed.
