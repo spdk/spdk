@@ -872,7 +872,7 @@ reactor_interrupt_run(struct spdk_reactor *reactor)
 
 	spdk_fd_group_wait(reactor->fgrp, block_timeout);
 
-	/* TODO: add tsc records and g_framework_context_switch_monitor_enabled */
+	/* TODO: g_framework_context_switch_monitor_enabled */
 }
 
 static void
@@ -1076,8 +1076,27 @@ static int
 thread_process_interrupts(void *arg)
 {
 	struct spdk_thread *thread = arg;
+	struct spdk_reactor *reactor = spdk_reactor_get(spdk_env_get_current_core());
+	uint64_t now;
+	int rc;
 
-	return spdk_thread_poll(thread, 0, 0);
+	/* Update idle_tsc between the end of last intr_fn and the start of this intr_fn. */
+	now = spdk_get_ticks();
+	reactor->idle_tsc += now - reactor->tsc_last;
+	reactor->tsc_last = now;
+
+	rc = spdk_thread_poll(thread, 0, now);
+
+	/* Update tsc between the start and the end of this intr_fn. */
+	now = spdk_thread_get_last_tsc(thread);
+	if (rc == 0) {
+		reactor->idle_tsc += now - reactor->tsc_last;
+	} else if (rc > 0) {
+		reactor->busy_tsc += now - reactor->tsc_last;
+	}
+	reactor->tsc_last = now;
+
+	return rc;
 }
 
 static void
