@@ -7268,6 +7268,86 @@ Example response:
 }
 ~~~
 
+# SPLIT
+
+## bdev_split_create {#rpc_bdev_split_create}
+
+This is used to split an underlying block device and create several smaller equal-sized vbdevs.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+base_bdev               | Required | string      | base bdev name
+split_count             | Required | number      | number of splits
+split_size_mb           | Optional | number      | size in MB to restrict the size
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_split_create",
+  "id": 1,
+  "params": {
+    "base_bdev": "Malloc0",
+    "split_count": 4
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    "Malloc0p0",
+    "Malloc0p1",
+    "Malloc0p2",
+    "Malloc0p3"
+  ]
+}
+~~~
+
+## bdev_split_delete {#rpc_bdev_split_delete}
+
+This is used to remove the split vbdevs.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+base_bdev               | Required | string      | base bdev name
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_split_delete",
+  "id": 1,
+  "params": {
+    "base_bdev": "Malloc0"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 # OPAL
 
 ## bdev_nvme_opal_init {#rpc_bdev_nvme_opal_init}
