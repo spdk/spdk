@@ -74,9 +74,20 @@ done
 
 vhosttestinit
 
+spdk_mask=$vhost_0_reactor_mask
 if $distribute_cores; then
 	# FIXME: this need to be handled entirely in common.sh
 	source $testdir/autotest.config
+	# Adjust the mask so vhost runs on separate cpus than qemu instances.
+	# We know that .config sets qemus to run on single cpu so simply take
+	# the next cpu and add some extra.
+	# FIXME: Rewrite this so the config is more aware of what cpu topology
+	# is actually available on the host system.
+	spdk_mask=$((1 << vm_count))
+	((spdk_mask |= 1 << (vm_count + 1)))
+	((spdk_mask |= 1 << (vm_count + 2)))
+	((spdk_mask |= 1 << (vm_count + 3)))
+	spdk_mask=$(printf '0x%x' "$spdk_mask")
 fi
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
@@ -84,7 +95,7 @@ trap 'error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
 vm_kill_all
 
 notice "running SPDK vhost"
-vhost_run 0
+vhost_run 0 --cpumask $spdk_mask
 notice "..."
 
 trap 'clean_lvol_cfg; error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
@@ -123,10 +134,7 @@ for ((i = 0; i < vm_count; i++)); do
 	setup_cmd+=" --os=$VM_IMAGE"
 
 	# Create single SCSI controller or multiple BLK controllers for this VM
-	if $distribute_cores; then
-		mask="VM_${i}_qemu_mask"
-		mask_arg="--cpumask ${!mask}"
-	fi
+	mask_arg="--cpumask $spdk_mask"
 
 	if [[ "$ctrl_type" == "spdk_vhost_scsi" ]]; then
 		$rpc_py vhost_create_scsi_controller naa.0.$i $mask_arg
