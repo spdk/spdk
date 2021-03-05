@@ -110,6 +110,36 @@ _move_thread(struct spdk_lw_thread *lw_thread, uint32_t dst_core)
 	lw_thread->lcore = dst_core;
 }
 
+static uint32_t
+_find_optimal_core(struct spdk_lw_thread *lw_thread)
+{
+	uint32_t i;
+	uint32_t target_lcore;
+	struct spdk_thread *thread = spdk_thread_get_from_ctx(lw_thread);
+	struct spdk_cpuset *cpumask = spdk_thread_get_cpumask(thread);
+	uint64_t thread_busy = lw_thread->current_stats.busy_tsc;
+
+	/* Find a core that can fit the thread. */
+	for (i = 0; i < spdk_env_get_core_count(); i++) {
+		target_lcore = _get_next_target_core();
+
+		/* Ignore cores outside cpumask. */
+		if (!spdk_cpuset_get_cpu(cpumask, target_lcore)) {
+			continue;
+		}
+
+		/* Do not use main core if it is too busy for new thread. */
+		if (target_lcore == g_main_lcore && thread_busy > g_cores[g_main_lcore].idle) {
+			continue;
+		}
+
+		return target_lcore;
+	}
+
+	/* If no better core is found, remain on the same one. */
+	return lw_thread->lcore;
+}
+
 static int
 init(struct spdk_governor *governor)
 {
@@ -168,9 +198,8 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 	struct spdk_scheduler_core_info *core;
 	struct spdk_cpuset *cpumask;
 	struct core_stats *main_core;
-	uint64_t thread_busy;
 	uint32_t target_lcore;
-	uint32_t i, j, k;
+	uint32_t i, j;
 	int rc;
 	uint8_t load;
 	bool busy_threads_present = false;
@@ -190,43 +219,19 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 			lw_thread = core->threads[j];
 			thread = spdk_thread_get_from_ctx(lw_thread);
 			cpumask = spdk_thread_get_cpumask(thread);
-
-			thread_busy = lw_thread->current_stats.busy_tsc;
-
 			load = _get_thread_load(lw_thread);
 
 			if (i == g_main_lcore && load >= SCHEDULER_LOAD_LIMIT) {
 				/* This thread is active and on the main core, we need to pick a core to move it to */
-				for (k = 0; k < spdk_env_get_core_count(); k++) {
-					target_lcore = _get_next_target_core();
-
-					/* Do not use main core if it is too busy for new thread */
-					if (target_lcore == g_main_lcore && thread_busy > main_core->idle) {
-						continue;
-					}
-
-					if (spdk_cpuset_get_cpu(cpumask, target_lcore)) {
-						_move_thread(lw_thread, target_lcore);
-						break;
-					}
-				}
+				target_lcore = _find_optimal_core(lw_thread);
+				_move_thread(lw_thread, target_lcore);
 			} else if (i != g_main_lcore && load < SCHEDULER_LOAD_LIMIT) {
 				/* This thread is idle but not on the main core, so we need to move it to the main core */
 				_move_thread(lw_thread, g_main_lcore);
-			} else {
+			} else if (i != g_main_lcore && !spdk_cpuset_get_cpu(cpumask, i)) {
 				/* Move busy thread only if cpumask does not match current core (except main core) */
-				if (i != g_main_lcore) {
-					if (!spdk_cpuset_get_cpu(cpumask, i)) {
-						for (k = 0; k < spdk_env_get_core_count(); k++) {
-							target_lcore = _get_next_target_core();
-
-							if (spdk_cpuset_get_cpu(cpumask, target_lcore)) {
-								_move_thread(lw_thread, target_lcore);
-								break;
-							}
-						}
-					}
-				}
+				target_lcore = _find_optimal_core(lw_thread);
+				_move_thread(lw_thread, target_lcore);
 			}
 		}
 	}
