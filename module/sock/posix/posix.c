@@ -1254,6 +1254,51 @@ posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 	struct timespec ts = {0};
 #endif
 
+#ifdef SPDK_ZEROCOPY
+	/* When all of the following conditions are met
+	 * - non-blocking socket
+	 * - zero copy is enabled
+	 * - interrupts suppressed (i.e. busy polling)
+	 * - the NIC tx queue is full at the time sendmsg() is called
+	 * - epoll_wait determines there is an EPOLLIN event for the socket
+	 * then we can get into a situation where data we've sent is queued
+	 * up in the kernel network stack, but interrupts have been suppressed
+	 * because other traffic is flowing so the kernel misses the signal
+	 * to flush the software tx queue. If there wasn't incoming data
+	 * pending on the socket, then epoll_wait would have been sufficient
+	 * to kick off the send operation, but since there is a pending event
+	 * epoll_wait does not trigger the necessary operation.
+	 *
+	 * We deal with this by checking for all of the above conditions and
+	 * additionally looking for EPOLLIN events that were not consumed from
+	 * the last poll loop. We take this to mean that the upper layer is
+	 * unable to consume them because it is blocked waiting for resources
+	 * to free up, and those resources are most likely freed in response
+	 * to a pending asynchronous write completing.
+	 *
+	 * Additionally, sockets that have the same placement_id actually share
+	 * an underlying hardware queue. That means polling one of them is
+	 * equivalent to polling all of them. As a quick mechanism to avoid
+	 * making extra poll() calls, stash the last placement_id during the loop
+	 * and only poll if it's not the same. The overwhelmingly common case
+	 * is that all sockets in this list have the same placement_id because
+	 * SPDK is intentionally grouping sockets by that value, so even
+	 * though this won't stop all extra calls to poll(), it's very fast
+	 * and will catch all of them in practice.
+	 */
+	int last_placement_id = -1;
+
+	TAILQ_FOREACH(psock, &group->pending_events, link) {
+		if (psock->zcopy && psock->placement_id >= 0 &&
+		    psock->placement_id != last_placement_id) {
+			struct pollfd pfd = {psock->fd, POLLIN | POLLERR, 0};
+
+			poll(&pfd, 1, 0);
+			last_placement_id = psock->placement_id;
+		}
+	}
+#endif
+
 	/* This must be a TAILQ_FOREACH_SAFE because while flushing,
 	 * a completion callback could remove the sock from the
 	 * group. */
