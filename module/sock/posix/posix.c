@@ -75,10 +75,12 @@ struct spdk_posix_sock {
 	TAILQ_ENTRY(spdk_posix_sock)	link;
 };
 
+TAILQ_HEAD(spdk_pending_recv_list, spdk_posix_sock);
+
 struct spdk_posix_sock_group_impl {
 	struct spdk_sock_group_impl	base;
 	int				fd;
-	TAILQ_HEAD(, spdk_posix_sock)	pending_recv;
+	struct spdk_pending_recv_list	pending_recv;
 };
 
 static struct spdk_sock_impl_opts g_spdk_posix_sock_impl_opts = {
@@ -1242,6 +1244,8 @@ posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 		}
 	}
 
+	assert(max_events > 0);
+
 #if defined(SPDK_EPOLL)
 	num_events = epoll_wait(group->fd, events, max_events, 0);
 #elif defined(SPDK_KEVENT)
@@ -1314,14 +1318,35 @@ posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 	}
 
 	/* Cycle the pending_recv list so that each time we poll things aren't
-	 * in the same order.
-	 * TODO: This could be done with a single operation because psock points
-	 * to the last node that needs to get cycled already. */
-	for (i = 0; i < num_events; i++) {
-		psock = __posix_sock(socks[i]);
+	 * in the same order. Say we have 6 sockets in the list, named as follows:
+	 * A B C D E F
+	 * And all 6 sockets had epoll events, but max_events is only 3. That means
+	 * psock currently points at D. We want to rearrange the list to the following:
+	 * D E F A B C
+	 *
+	 * The variables below are named according to this example to make it easier to
+	 * follow the swaps.
+	 */
+	if (psock != NULL) {
+		struct spdk_posix_sock *pa, *pc, *pd, *pf;
 
-		TAILQ_REMOVE(&group->pending_recv, psock, link);
-		TAILQ_INSERT_TAIL(&group->pending_recv, psock, link);
+		/* Capture pointers to the elements we need */
+		pd = psock;
+		pc = TAILQ_PREV(pd, spdk_pending_recv_list, link);
+		pa = TAILQ_FIRST(&group->pending_recv);
+		pf = TAILQ_LAST(&group->pending_recv, spdk_pending_recv_list);
+
+		/* Break the link between C and D */
+		pc->link.tqe_next = NULL;
+		pd->link.tqe_prev = NULL;
+
+		/* Connect F to A */
+		pf->link.tqe_next = pa;
+		pa->link.tqe_prev = &pf->link.tqe_next;
+
+		/* Fix up the list first/last pointers */
+		group->pending_recv.tqh_first = pd;
+		group->pending_recv.tqh_last = &pc->link.tqe_next;
 	}
 
 	return num_events;
