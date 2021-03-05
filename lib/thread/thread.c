@@ -1861,14 +1861,10 @@ static int
 thread_interrupt_msg_process(void *arg)
 {
 	struct spdk_thread *thread = arg;
-	struct spdk_thread *orig_thread;
 	uint32_t msg_count;
 	spdk_msg_fn critical_msg;
 	int rc = 0;
 	uint64_t now = spdk_get_ticks();
-
-	orig_thread = _get_thread();
-	tls_thread = thread;
 
 	critical_msg = thread->critical_msg;
 	if (spdk_unlikely(critical_msg != NULL)) {
@@ -1882,8 +1878,6 @@ thread_interrupt_msg_process(void *arg)
 	}
 
 	thread_update_stats(thread, spdk_get_ticks(), now, rc);
-
-	tls_thread = orig_thread;
 
 	return rc;
 }
