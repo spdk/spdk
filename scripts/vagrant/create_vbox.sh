@@ -172,10 +172,6 @@ case "${SPDK_VAGRANT_DISTRO}" in
 		;;
 esac
 
-if ! echo "$SPDK_VAGRANT_DISTRO" | grep -q fedora && [ $DEPLOY_TEST_VM -eq 1 ]; then
-	echo "Warning: Test machine deployment is only available on fedora distros. Disabling it for this build"
-	DEPLOY_TEST_VM=0
-fi
 if [ -z "$NVME_FILE" ]; then
 	TMP="/var/lib/libvirt/images/nvme_disk.img"
 	NVME_DISKS_TYPE="nvme"

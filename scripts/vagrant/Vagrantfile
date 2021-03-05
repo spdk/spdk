@@ -171,10 +171,23 @@ def setup_ssh(config)
   end
 end
 
-def deploy_test_vm(config)
+def deploy_test_vm(config, distro, plugins_sync_backend)
   return unless ENV['DEPLOY_TEST_VM'] == "1"
   return unless ENV['COPY_SPDK_DIR'] == "1"
   return unless ENV['SPDK_DIR']
+
+  # use http proxy if avaiable
+  setup_proxy(config, distro)
+
+  # Copy the tsocks configuration file for use when installing some spdk test pool dependencies
+  copy_tsocks(config)
+
+  # freebsd boxes in order to have spdk sources synced from
+  # host properly will use NFS with "ro" option enabled to prevent changes
+  # on host filesystem.
+  # To make sources usable in the guest VM we need to unmount them and use
+  # local copy.
+  make_spdk_local_copy_of_nfs(config,distro) if plugins_sync_backend[:type] == :nfs
 
   config.vm.provision "shell" do |setup|
     setup.inline = "/home/vagrant/spdk_repo/spdk/test/common/config/vm_setup.sh"
@@ -259,7 +272,6 @@ provider = (ENV['SPDK_VAGRANT_PROVIDER'] || "virtualbox")
 # Get all variables for creating vm
 vmcpu = (ENV['SPDK_VAGRANT_VMCPU'] || 2)
 vmram = (ENV['SPDK_VAGRANT_VMRAM'] || 4096)
-nfs_sync_backend_distros = ['freebsd']
 openstack_network = (ENV['SPDK_OPENSTACK_NETWORK'] || false)
 
 # generic/freebsd boxes do not work properly with vagrant-proxyconf and
@@ -267,7 +279,7 @@ openstack_network = (ENV['SPDK_OPENSTACK_NETWORK'] || false)
 # pre-installed, so use it.
 # generic/fedora boxes on the other hand have problems running NFS
 # service so use sshfs+rsync combo instead.
-if (nfs_sync_backend_distros.any? { |d| distro.include?(d) })
+if (get_box_type(distro).include?("generic/freebsd"))
   files_sync_backend = {type: :nfs, nfs_udp: false,  mount_options: ['ro']}
   plugins_sync_backend = {type: :nfs, nfs_udp: false}
 else
@@ -291,9 +303,6 @@ Vagrant.configure(2) do |config|
   # Copy in the .gitconfig if it exists
   copy_gitconfig(config)
 
-  # Copy the tsocks configuration file for use when installing some spdk test pool dependencies
-  copy_tsocks(config)
-
   # Copy in the user's tools if they exists
   copy_vagrant_tools(config,files_sync_backend)
 
@@ -303,16 +312,6 @@ Vagrant.configure(2) do |config|
 
   # rsync artifacts from build
   copy_spdk_artifacts(config, plugins_sync_backend)
-
-  # use http proxy if avaiable
-  setup_proxy(config, distro)
-
-  # freebsd boxes in order to have spdk sources synced from
-  # host properly will use NFS with "ro" option enabled to prevent changes
-  # on host filesystem.
-  # To make sources usable in the guest VM we need to unmount them and use
-  # local copy.
-  make_spdk_local_copy_of_nfs(config,distro) if plugins_sync_backend[:type] == :nfs
 
   # Setup SSH
   setup_ssh(config)
@@ -326,5 +325,5 @@ Vagrant.configure(2) do |config|
   setup_libvirt(config,vmcpu,vmram,distro)
 
   # provision the vm with all of the necessary spdk dependencies for running the autorun.sh tests
-  deploy_test_vm(config)
+  deploy_test_vm(config, distro, plugins_sync_backend)
 end
