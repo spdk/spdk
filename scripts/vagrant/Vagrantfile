@@ -173,10 +173,11 @@ end
 
 def deploy_test_vm(config)
   return unless ENV['DEPLOY_TEST_VM'] == "1"
+  return unless ENV['COPY_SPDK_DIR'] == "1"
   return unless ENV['SPDK_DIR']
 
   config.vm.provision "shell" do |setup|
-    setup.path = ENV['SPDK_DIR'] + '/test/common/config/vm_setup.sh'
+    setup.inline = "/home/vagrant/spdk_repo/spdk/test/common/config/vm_setup.sh"
     setup.privileged = false
     setup.args = ["-u", "-i"]
   end
