@@ -1056,6 +1056,10 @@ test_race_between_reset_and_destruct_ctrlr(void)
 	CU_ASSERT(nvme_bdev_ctrlr->destruct == true);
 	CU_ASSERT(nvme_bdev_ctrlr->resetting == false);
 
+	/* New reset request is rejected. */
+	rc = _bdev_nvme_reset(nvme_bdev_ctrlr, NULL);
+	CU_ASSERT(rc == -EBUSY);
+
 	/* Additional polling called spdk_io_device_unregister() to ctrlr,
 	 * However there are two channels and destruct is not completed yet.
 	 */

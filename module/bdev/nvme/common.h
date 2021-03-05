@@ -90,6 +90,7 @@ struct nvme_bdev_ctrlr {
 	bool					resetting;
 	bool					failover_in_progress;
 	bool					destruct;
+	bool					destruct_after_reset;
 	/**
 	 * PI check flags. This flags is set to NVMe controllers created only
 	 * through bdev_nvme_attach_controller RPC or .INI config file. Hot added

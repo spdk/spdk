@@ -358,12 +358,20 @@ err:
 }
 
 static void
-_bdev_nvme_reset_destruct_ctrlr(struct spdk_io_channel_iter *i, int status)
+_bdev_nvme_check_pending_destruct(struct spdk_io_channel_iter *i, int status)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = spdk_io_channel_iter_get_io_device(i);
 
-	spdk_thread_send_msg(nvme_bdev_ctrlr->thread, nvme_bdev_ctrlr_do_destruct,
-			     nvme_bdev_ctrlr);
+	pthread_mutex_lock(&nvme_bdev_ctrlr->mutex);
+	if (nvme_bdev_ctrlr->destruct_after_reset) {
+		assert(nvme_bdev_ctrlr->ref == 0 && nvme_bdev_ctrlr->destruct);
+		pthread_mutex_unlock(&nvme_bdev_ctrlr->mutex);
+
+		spdk_thread_send_msg(nvme_bdev_ctrlr->thread, nvme_bdev_ctrlr_do_destruct,
+				     nvme_bdev_ctrlr);
+	} else {
+		pthread_mutex_unlock(&nvme_bdev_ctrlr->mutex);
+	}
 }
 
 static void
@@ -395,7 +403,6 @@ _bdev_nvme_reset_complete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, int rc)
 	/* If it's zero, we succeeded, otherwise, the reset failed. */
 	void *cb_arg = NULL;
 	struct nvme_bdev_ctrlr_trid *curr_trid;
-	bool do_destruct = false;
 
 	if (rc) {
 		cb_arg = (void *)0x1;
@@ -416,7 +423,7 @@ _bdev_nvme_reset_complete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, int rc)
 
 	if (nvme_bdev_ctrlr->ref == 0 && nvme_bdev_ctrlr->destruct) {
 		/* Destruct ctrlr after clearing pending resets. */
-		do_destruct = true;
+		nvme_bdev_ctrlr->destruct_after_reset = true;
 	}
 
 	pthread_mutex_unlock(&nvme_bdev_ctrlr->mutex);
@@ -425,7 +432,7 @@ _bdev_nvme_reset_complete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, int rc)
 	spdk_for_each_channel(nvme_bdev_ctrlr,
 			      _bdev_nvme_complete_pending_resets,
 			      cb_arg,
-			      do_destruct ? _bdev_nvme_reset_destruct_ctrlr : NULL);
+			      _bdev_nvme_check_pending_destruct);
 }
 
 static void
