@@ -73,6 +73,7 @@ class JSONRPCClient(object):
                 raise socket.error("Unix socket '%s' does not exist" % addr)
         except socket.error as ex:
             raise JSONRPCException("Error while connecting to %s\n"
+                                   "Is SPDK application running?\n"
                                    "Error details: %s" % (addr, ex))
 
     def get_logger(self):

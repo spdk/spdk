@@ -2691,9 +2691,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         print_json = null_print
         print_array = null_print
     else:
-        args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout,
-                                               log_level=getattr(logging, args.verbose.upper()),
-                                               conn_retries=args.conn_retries)
+        try:
+            args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout,
+                                                   log_level=getattr(logging, args.verbose.upper()),
+                                                   conn_retries=args.conn_retries)
+        except JSONRPCException as ex:
+            print(ex.message)
+            exit(1)
+
     if hasattr(args, 'func'):
         try:
             call_rpc_func(args)
