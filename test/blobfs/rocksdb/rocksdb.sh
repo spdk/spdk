@@ -70,7 +70,7 @@ if ((GCC_VERSION >= 9)); then
 	EXTRA_CXXFLAGS+="-Wno-deprecated-copy -Wno-pessimizing-move -Wno-error=stringop-truncation"
 fi
 
-$MAKE db_bench $MAKEFLAGS $MAKECONFIG DEBUG_LEVEL=0 SPDK_DIR=$rootdir EXTRA_CXXFLAGS="$EXTRA_CXXFLAGS"
+$MAKE db_bench $MAKEFLAGS $MAKECONFIG DEBUG_LEVEL=0 SPDK_DIR=../spdk EXTRA_CXXFLAGS="$EXTRA_CXXFLAGS"
 popd
 
 timing_exit db_bench_build
