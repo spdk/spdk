@@ -70,6 +70,95 @@ test_nvme_get_transport(void)
 	SPDK_CU_ASSERT_FATAL(nvme_transport == NULL);
 }
 
+static int
+ut_poll_group_connect_qpair(struct spdk_nvme_qpair *qpair)
+{
+	return 0;
+}
+
+static void
+test_nvme_transport_poll_group_connect_qpair(void)
+{
+	int rc;
+	struct spdk_nvme_qpair qpair = {};
+	struct spdk_nvme_transport_poll_group	tgroup = {};
+	struct spdk_nvme_transport transport = {};
+
+	qpair.poll_group = &tgroup;
+	tgroup.transport = &transport;
+	transport.ops.poll_group_connect_qpair = ut_poll_group_connect_qpair;
+	STAILQ_INIT(&tgroup.connected_qpairs);
+	STAILQ_INIT(&tgroup.disconnected_qpairs);
+
+	/* Connected qpairs */
+	qpair.poll_group_tailq_head = &tgroup.connected_qpairs;
+
+	rc = nvme_transport_poll_group_connect_qpair(&qpair);
+	CU_ASSERT(rc == 0);
+
+	/* Disconnected qpairs */
+
+	qpair.poll_group_tailq_head = &tgroup.disconnected_qpairs;
+	STAILQ_INSERT_TAIL(&tgroup.disconnected_qpairs, &qpair, poll_group_stailq);
+
+	rc = nvme_transport_poll_group_connect_qpair(&qpair);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(STAILQ_EMPTY(&tgroup.disconnected_qpairs));
+	CU_ASSERT(!STAILQ_EMPTY(&tgroup.connected_qpairs));
+	STAILQ_REMOVE(&tgroup.connected_qpairs, &qpair, spdk_nvme_qpair, poll_group_stailq);
+	CU_ASSERT(STAILQ_EMPTY(&tgroup.connected_qpairs));
+
+	/* None qpairs */
+	qpair.poll_group_tailq_head = NULL;
+
+	rc = nvme_transport_poll_group_connect_qpair(&qpair);
+	SPDK_CU_ASSERT_FATAL(rc == -EINVAL);
+}
+
+static int
+ut_poll_group_disconnect_qpair(struct spdk_nvme_qpair *qpair)
+{
+	return 0;
+}
+
+static void
+test_nvme_transport_poll_group_disconnect_qpair(void)
+{
+	int rc;
+	struct spdk_nvme_qpair qpair = {};
+	struct spdk_nvme_transport_poll_group	tgroup = {};
+	struct spdk_nvme_transport transport = {};
+
+	qpair.poll_group = &tgroup;
+	tgroup.transport = &transport;
+	transport.ops.poll_group_disconnect_qpair = ut_poll_group_disconnect_qpair;
+	STAILQ_INIT(&tgroup.connected_qpairs);
+	STAILQ_INIT(&tgroup.disconnected_qpairs);
+
+	/* Disconnected qpairs */
+	qpair.poll_group_tailq_head = &tgroup.disconnected_qpairs;
+
+	rc = nvme_transport_poll_group_disconnect_qpair(&qpair);
+	CU_ASSERT(rc == 0);
+
+	/* Connected qpairs */
+	qpair.poll_group_tailq_head = &tgroup.connected_qpairs;
+	STAILQ_INSERT_TAIL(&tgroup.connected_qpairs, &qpair, poll_group_stailq);
+
+	rc = nvme_transport_poll_group_disconnect_qpair(&qpair);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(STAILQ_EMPTY(&tgroup.connected_qpairs));
+	CU_ASSERT(!STAILQ_EMPTY(&tgroup.disconnected_qpairs));
+	STAILQ_REMOVE(&tgroup.disconnected_qpairs, &qpair, spdk_nvme_qpair, poll_group_stailq);
+	CU_ASSERT(STAILQ_EMPTY(&tgroup.disconnected_qpairs));
+
+	/* None qpairs */
+	qpair.poll_group_tailq_head = NULL;
+
+	rc = nvme_transport_poll_group_disconnect_qpair(&qpair);
+	SPDK_CU_ASSERT_FATAL(rc == -EINVAL);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -80,6 +169,8 @@ int main(int argc, char **argv)
 
 	suite = CU_add_suite("nvme_transport", NULL, NULL);
 	CU_ADD_TEST(suite, test_nvme_get_transport);
+	CU_ADD_TEST(suite, test_nvme_transport_poll_group_connect_qpair);
+	CU_ADD_TEST(suite, test_nvme_transport_poll_group_disconnect_qpair);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
