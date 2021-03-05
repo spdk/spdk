@@ -1864,7 +1864,6 @@ thread_interrupt_msg_process(void *arg)
 	uint32_t msg_count;
 	spdk_msg_fn critical_msg;
 	int rc = 0;
-	uint64_t now = spdk_get_ticks();
 
 	critical_msg = thread->critical_msg;
 	if (spdk_unlikely(critical_msg != NULL)) {
@@ -1876,8 +1875,6 @@ thread_interrupt_msg_process(void *arg)
 	if (msg_count) {
 		rc = 1;
 	}
-
-	thread_update_stats(thread, spdk_get_ticks(), now, rc);
 
 	return rc;
 }
