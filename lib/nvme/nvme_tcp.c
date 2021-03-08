@@ -377,6 +377,80 @@ _pdu_write_done(void *cb_arg, int err)
 	pdu->cb_fn(pdu->cb_arg);
 }
 
+static void
+_tcp_write_pdu(struct nvme_tcp_pdu *pdu)
+{
+	uint32_t mapped_length = 0;
+	struct nvme_tcp_qpair *tqpair = pdu->qpair;
+
+	pdu->sock_req.iovcnt = nvme_tcp_build_iovs(pdu->iov, NVME_TCP_MAX_SGL_DESCRIPTORS, pdu,
+			       (bool)tqpair->flags.host_hdgst_enable, (bool)tqpair->flags.host_ddgst_enable,
+			       &mapped_length);
+	pdu->sock_req.cb_fn = _pdu_write_done;
+	pdu->sock_req.cb_arg = pdu;
+	TAILQ_INSERT_TAIL(&tqpair->send_queue, pdu, tailq);
+	spdk_sock_writev_async(tqpair->sock, &pdu->sock_req);
+}
+
+static void
+data_crc32_accel_done(void *cb_arg, int status)
+{
+	struct nvme_tcp_pdu *pdu = cb_arg;
+
+	if (spdk_unlikely(status)) {
+		SPDK_ERRLOG("Failed to compute the data digest for pdu =%p\n", pdu);
+		_pdu_write_done(pdu, status);
+		return;
+	}
+
+	pdu->data_digest_crc32 ^= SPDK_CRC32C_XOR;
+	MAKE_DIGEST_WORD(pdu->data_digest, pdu->data_digest_crc32);
+
+	_tcp_write_pdu(pdu);
+}
+
+static void
+pdu_data_crc32_compute(struct nvme_tcp_pdu *pdu)
+{
+	struct nvme_tcp_qpair *tqpair = pdu->qpair;
+	uint32_t crc32c;
+	struct nvme_tcp_poll_group *tgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
+
+	/* Data Digest */
+	if (pdu->data_len > 0 && g_nvme_tcp_ddgst[pdu->hdr.common.pdu_type] &&
+	    tqpair->flags.host_ddgst_enable) {
+		/* Only suport this limitated case for the first step */
+		if (tgroup != NULL && tgroup->group.group->accel_fn_table.submit_accel_crc32c &&
+		    spdk_likely(!pdu->dif_ctx && (pdu->data_len % SPDK_NVME_TCP_DIGEST_ALIGNMENT == 0))) {
+			tgroup->group.group->accel_fn_table.submit_accel_crc32c(tgroup->group.group->ctx,
+					&pdu->data_digest_crc32, pdu->data_iov,
+					pdu->data_iovcnt, 0, data_crc32_accel_done, pdu);
+			return;
+		}
+
+		crc32c = nvme_tcp_pdu_calc_data_digest(pdu);
+		MAKE_DIGEST_WORD(pdu->data_digest, crc32c);
+	}
+
+	_tcp_write_pdu(pdu);
+}
+
+static void
+header_crc32_accel_done(void *cb_arg, int status)
+{
+	struct nvme_tcp_pdu *pdu = cb_arg;
+
+	pdu->header_digest_crc32 ^= SPDK_CRC32C_XOR;
+	MAKE_DIGEST_WORD((uint8_t *)pdu->hdr.raw + pdu->hdr.common.hlen, pdu->header_digest_crc32);
+	if (spdk_unlikely(status)) {
+		SPDK_ERRLOG("Failed to compute header digest on pdu=%p\n", pdu);
+		_pdu_write_done(pdu, status);
+		return;
+	}
+
+	pdu_data_crc32_compute(pdu);
+}
+
 static int
 nvme_tcp_qpair_write_pdu(struct nvme_tcp_qpair *tqpair,
 			 struct nvme_tcp_pdu *pdu,
@@ -385,34 +459,30 @@ nvme_tcp_qpair_write_pdu(struct nvme_tcp_qpair *tqpair,
 {
 	int hlen;
 	uint32_t crc32c;
-	uint32_t mapped_length = 0;
+	struct nvme_tcp_poll_group *tgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
 
 	hlen = pdu->hdr.common.hlen;
 
-	/* Header Digest */
-	if (g_nvme_tcp_hdgst[pdu->hdr.common.pdu_type] && tqpair->flags.host_hdgst_enable) {
-		crc32c = nvme_tcp_pdu_calc_header_digest(pdu);
-		MAKE_DIGEST_WORD((uint8_t *)pdu->hdr.raw + hlen, crc32c);
-	}
-
-	/* Data Digest */
-	if (pdu->data_len > 0 && g_nvme_tcp_ddgst[pdu->hdr.common.pdu_type] &&
-	    tqpair->flags.host_ddgst_enable) {
-		crc32c = nvme_tcp_pdu_calc_data_digest(pdu);
-		MAKE_DIGEST_WORD(pdu->data_digest, crc32c);
-	}
-
 	pdu->cb_fn = cb_fn;
 	pdu->cb_arg = cb_arg;
-
-	pdu->sock_req.iovcnt = nvme_tcp_build_iovs(pdu->iov, NVME_TCP_MAX_SGL_DESCRIPTORS, pdu,
-			       (bool)tqpair->flags.host_hdgst_enable, (bool)tqpair->flags.host_ddgst_enable,
-			       &mapped_length);
 	pdu->qpair = tqpair;
-	pdu->sock_req.cb_fn = _pdu_write_done;
-	pdu->sock_req.cb_arg = pdu;
-	TAILQ_INSERT_TAIL(&tqpair->send_queue, pdu, tailq);
-	spdk_sock_writev_async(tqpair->sock, &pdu->sock_req);
+
+	/* Header Digest */
+	if (g_nvme_tcp_hdgst[pdu->hdr.common.pdu_type] && tqpair->flags.host_hdgst_enable) {
+		if (tgroup != NULL && tgroup->group.group->accel_fn_table.submit_accel_crc32c) {
+			pdu->iov[0].iov_base = &pdu->hdr.raw;
+			pdu->iov[0].iov_len = hlen;
+			tgroup->group.group->accel_fn_table.submit_accel_crc32c(tgroup->group.group->ctx,
+					&pdu->header_digest_crc32,
+					pdu->iov, 1, 0, header_crc32_accel_done, pdu);
+			return 0;
+		} else {
+			crc32c = nvme_tcp_pdu_calc_header_digest(pdu);
+			MAKE_DIGEST_WORD((uint8_t *)pdu->hdr.raw + hlen, crc32c);
+		}
+	}
+
+	pdu_data_crc32_compute(pdu);
 
 	return 0;
 }
