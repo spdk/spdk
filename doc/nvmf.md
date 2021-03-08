@@ -110,12 +110,6 @@ system until the SPDK application is terminated.
 
 The transport is built into the nvmf_tgt by default, and it does not need any special libraries.
 
-## Configuring the SPDK NVMe over Fabrics Target {#nvmf_config}
-
-An NVMe over Fabrics target can be configured using JSON RPCs.
-The basic RPCs needed to configure the NVMe-oF subsystem are detailed below. More information about
-working with NVMe over Fabrics specific RPCs can be found on the @ref jsonrpc_components_nvmf_tgt RPC page.
-
 ## FC transport support {#nvmf_fc_transport}
 
 To build nvmf_tgt with the FC transport, there is an additional FC LLD (Low Level Driver) code dependency.
@@ -142,6 +136,12 @@ cd ../spdk
 ./configure --with-fc=../fc/build
 make
 ~~~
+
+## Configuring the SPDK NVMe over Fabrics Target {#nvmf_config}
+
+An NVMe over Fabrics target can be configured using JSON RPCs.
+The basic RPCs needed to configure the NVMe-oF subsystem are detailed below. More information about
+working with NVMe over Fabrics specific RPCs can be found on the @ref jsonrpc_components_nvmf_tgt RPC page.
 
 ### Using RPCs {#nvmf_config_rpc}
 
