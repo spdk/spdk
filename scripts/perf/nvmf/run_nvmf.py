@@ -362,6 +362,10 @@ class Target(Server):
         self.script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
         self.spdk_dir = os.path.abspath(os.path.join(self.script_dir, "../../../"))
         self.set_local_nic_info(self.set_local_nic_info_helper())
+
+        if "skip_spdk_install" not in general_config or general_config["skip_spdk_install"] is False:
+            self.zip_spdk_sources(self.spdk_dir, "/tmp/spdk.zip")
+
         self.configure_system()
         if self.enable_adq:
             self.configure_adq()
@@ -665,6 +669,9 @@ class Initiator(Server):
         self.exec_cmd(["sudo", "rm", "-rf", "%s/nvmf_perf" % self.spdk_dir])
         self.exec_cmd(["mkdir", "-p", "%s" % self.spdk_dir])
         self._nics_json_obj = json.loads(self.exec_cmd(["ip", "-j", "address", "show"]))
+
+        if "skip_spdk_install" not in general_config or general_config["skip_spdk_install"] is False:
+            self.copy_spdk("/tmp/spdk.zip")
         self.set_local_nic_info(self.set_local_nic_info_helper())
         self.set_cpu_frequency()
         self.configure_system()
@@ -710,6 +717,13 @@ class Initiator(Server):
         ftp = self.ssh_connection.open_sftp()
         ftp.get(remote, local_dest)
         ftp.close()
+
+    def copy_spdk(self, local_spdk_zip):
+        self.log_print("Copying SPDK sources to initiator %s" % self.name)
+        self.put_file(local_spdk_zip, "/tmp/spdk_drop.zip")
+        self.log_print("Copied sources zip from target")
+        self.exec_cmd(["unzip", "-qo", "/tmp/spdk_drop.zip", "-d", self.spdk_dir])
+        self.log_print("Sources unpacked")
 
     def copy_result_files(self, dest_dir):
         self.log_print("Copying results")
@@ -1209,15 +1223,13 @@ class SPDKInitiator(Initiator):
     def __init__(self, name, general_config, initiator_config):
         super(SPDKInitiator, self).__init__(name, general_config, initiator_config)
 
+        if "skip_spdk_install" not in general_config or general_config["skip_spdk_install"] is False:
+            self.install_spdk(self.spdk_dir)
+
         # Required fields
         self.num_cores = initiator_config["num_cores"]
 
     def install_spdk(self, local_spdk_zip):
-        self.put_file(local_spdk_zip, "/tmp/spdk_drop.zip")
-        self.log_print("Copied sources zip from target")
-        self.exec_cmd(["unzip", "-qo", "/tmp/spdk_drop.zip", "-d", self.spdk_dir])
-
-        self.log_print("Sources unpacked")
         self.log_print("Using fio binary %s" % self.fio_bin)
         self.exec_cmd(["git", "-C", self.spdk_dir, "submodule", "update", "--init"])
         self.exec_cmd(["git", "-C", self.spdk_dir, "clean", "-ffdx"])
@@ -1333,18 +1345,6 @@ if __name__ == "__main__":
             fio_num_jobs = data[k]["num_jobs"] if "num_jobs" in data[k].keys() else None
         else:
             continue
-
-    # Copy and install SPDK on remote initiators
-    if "skip_spdk_install" not in data["general"]:
-        target_obj.zip_spdk_sources(target_obj.spdk_dir, spdk_zip_path)
-        threads = []
-        for i in initiators:
-            if i.mode == "spdk":
-                t = threading.Thread(target=i.install_spdk, args=(spdk_zip_path,))
-                threads.append(t)
-                t.start()
-        for t in threads:
-            t.join()
 
     target_obj.tgt_start()
 
