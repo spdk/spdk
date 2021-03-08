@@ -42,6 +42,13 @@ Removed the `pci_whitelist`, `pci_blacklist` and `master_core` members of struct
 Removed the `config_file`, `max_delay_us`, `pci_whitelist`
 and `pci_blacklist` members of struct `spdk_app_opts`.
 
+### iscsi
+
+A security vulnerability has been identified and fixed in the SPDK iSCSI target.
+A TEXT PDU with no data, but CONTINUE flag set, would result in a NULL pointer dereference
+and crash the SPDK iSCSI target process. All users of the SPDK iSCSI target
+are recommended to update. All SPDK versions <= v21.01 are affected.
+
 ### accel
 
 Two new accelerated crc32 functions 'spdk_accel_submit_crc32cv' and
