@@ -14,24 +14,24 @@ make
 ~~~
 
 Clone the RocksDB repository from the SPDK GitHub fork into a separate directory.
-Make sure you check out the `spdk-v5.14.3` branch.
+Make sure you check out the `6.15.fb` branch.
 
 ~~~{.sh}
 cd ..
-git clone -b spdk-v5.14.3 https://github.com/spdk/rocksdb.git
+git clone -b 6.15.fb https://github.com/spdk/rocksdb.git
 ~~~
 
 Build RocksDB.  Only the `db_bench` benchmarking tool is integrated with BlobFS.
 
 ~~~{.sh}
 cd rocksdb
-make db_bench SPDK_DIR=path/to/spdk
+make db_bench SPDK_DIR=relative_path/to/spdk
 ~~~
 
 Or you can also add `DEBUG_LEVEL=0` for a release build (need to turn on `USE_RTTI`).
 
 ~~~{.sh}
-export USE_RTTI=1 && make db_bench DEBUG_LEVEL=0 SPDK_DIR=path/to/spdk
+export USE_RTTI=1 && make db_bench DEBUG_LEVEL=0 SPDK_DIR=relative_path/to/spdk
 ~~~
 
 Create an NVMe section in the configuration file using SPDK's `gen_nvme.sh` script.

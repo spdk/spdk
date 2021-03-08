@@ -192,10 +192,10 @@ function install_rocksdb() {
 	# Rocksdb is installed for use with the blobfs tests.
 	if [ ! -d /usr/src/rocksdb ]; then
 		git clone "${GIT_REPO_ROCKSDB}" "$GIT_REPOS/rocksdb"
-		git -C "$GIT_REPOS/rocksdb" checkout spdk-v5.6.1
+		git -C "$GIT_REPOS/rocksdb" checkout 6.15.fb
 		sudo mv "$GIT_REPOS/rocksdb" /usr/src/
 	else
-		sudo git -C /usr/src/rocksdb checkout spdk-v5.6.1
+		sudo git -C /usr/src/rocksdb checkout 6.15.fb
 		echo "rocksdb already in /usr/src. Not checking out again"
 	fi
 }
