@@ -85,7 +85,7 @@ yum install -y gcc gcc-c++ make cmake CUnit-devel libaio-devel openssl-devel \
 if echo "$ID $VERSION_ID" | grep -E -q 'centos 8|rhel 8'; then
 	yum install -y python36
 	#Create hard link to use in SPDK as python
-	if [[ ! -e /usr/bin/python && -e /etc/alternative/python3 ]]; then
+	if [[ ! -e /usr/bin/python && -e /etc/alternatives/python3 ]]; then
 		ln -s /etc/alternatives/python3 /usr/bin/python
 	fi
 else
