@@ -259,6 +259,36 @@ struct spdk_nvme_ctrlr_opts {
 };
 
 /**
+ * NVMe acceleration operation callback.
+ *
+ * \param cb_arg The user provided arg which is passed to the corresponding accelerated function call
+ * defined in struct spdk_nvme_accel_fn_table.
+ * \param status 0 if it completed successfully, or negative errno if it failed.
+ */
+typedef void (*spdk_nvme_accel_completion_cb)(void *cb_arg, int status);
+
+/**
+ * Function table for the NVMe acccelerator device.
+ *
+ * This table provides a set of APIs to allow user to leverage
+ * accelerator functions.
+ */
+struct spdk_nvme_accel_fn_table {
+	/**
+	 * The size of spdk_nvme_accel_fun_table according to the caller of
+	 * this library is used for ABI compatibility.  The library uses this
+	 * field to know how many fields in this structure are valid.
+	 * And the library will populate any remaining fields with default values.
+	 * Newly added fields should be put at the end of the struct.
+	 */
+	size_t table_size;
+
+	/** The accelerated crc32c function. */
+	void (*submit_accel_crc32c)(void *ctx, uint32_t *dst, struct iovec *iov,
+				    uint32_t iov_cnt, uint32_t seed, spdk_nvme_accel_completion_cb cb_fn, void *cb_arg);
+};
+
+/**
  * Indicate whether a ctrlr handle is associated with a Discovery controller.
  *
  * \param ctrlr Opaque handle to NVMe controller.
@@ -2209,10 +2239,13 @@ typedef void (*spdk_nvme_disconnected_qpair_cb)(struct spdk_nvme_qpair *qpair,
  * Create a new poll group.
  *
  * \param ctx A user supplied context that can be retrieved later with spdk_nvme_poll_group_get_ctx
+ * \param table The call back table defined by users which contains the accelerated functions
+ * which can be used to accelerate some operations such as crc32c.
  *
  * \return Pointer to the new poll group, or NULL on error.
  */
-struct spdk_nvme_poll_group *spdk_nvme_poll_group_create(void *ctx);
+struct spdk_nvme_poll_group *spdk_nvme_poll_group_create(void *ctx,
+		struct spdk_nvme_accel_fn_table *table);
 
 /**
  * Get a optimal poll group.

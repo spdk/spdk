@@ -205,7 +205,7 @@ test_spdk_nvme_poll_group_create(void)
 	struct spdk_nvme_poll_group *group;
 
 	/* basic case - create a poll group with no internal transport poll groups. */
-	group = spdk_nvme_poll_group_create(NULL);
+	group = spdk_nvme_poll_group_create(NULL, NULL);
 
 	SPDK_CU_ASSERT_FATAL(group != NULL);
 	CU_ASSERT(STAILQ_EMPTY(&group->tgroups));
@@ -216,13 +216,13 @@ test_spdk_nvme_poll_group_create(void)
 	TAILQ_INSERT_TAIL(&g_spdk_nvme_transports, &t3, link);
 
 	/* advanced case - create a poll group with three internal poll groups. */
-	group = spdk_nvme_poll_group_create(NULL);
+	group = spdk_nvme_poll_group_create(NULL, NULL);
 	CU_ASSERT(STAILQ_EMPTY(&group->tgroups));
 	SPDK_CU_ASSERT_FATAL(spdk_nvme_poll_group_destroy(group) == 0);
 
 	/* Failing case - failed to allocate a poll group. */
 	MOCK_SET(calloc, NULL);
-	group = spdk_nvme_poll_group_create(NULL);
+	group = spdk_nvme_poll_group_create(NULL, NULL);
 	CU_ASSERT(group == NULL);
 	MOCK_CLEAR(calloc);
 
@@ -251,7 +251,7 @@ test_spdk_nvme_poll_group_add_remove(void)
 	TAILQ_INSERT_TAIL(&g_spdk_nvme_transports, &t2, link);
 	TAILQ_INSERT_TAIL(&g_spdk_nvme_transports, &t3, link);
 
-	group = spdk_nvme_poll_group_create(NULL);
+	group = spdk_nvme_poll_group_create(NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(group != NULL);
 	CU_ASSERT(STAILQ_EMPTY(&group->tgroups));
 
@@ -379,7 +379,7 @@ test_spdk_nvme_poll_group_process_completions(void)
 	struct spdk_nvme_transport_poll_group *tgroup, *tmp_tgroup;
 	struct spdk_nvme_qpair qpair1_1 = {0};
 
-	group = spdk_nvme_poll_group_create(NULL);
+	group = spdk_nvme_poll_group_create(NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(group != NULL);
 
 	/* If we don't have any transport poll groups, we shouldn't get any completions. */
@@ -393,7 +393,7 @@ test_spdk_nvme_poll_group_process_completions(void)
 	TAILQ_INSERT_TAIL(&g_spdk_nvme_transports, &t3, link);
 
 	/* try it with three transport poll groups. */
-	group = spdk_nvme_poll_group_create(NULL);
+	group = spdk_nvme_poll_group_create(NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(group != NULL);
 	qpair1_1.state = NVME_QPAIR_DISCONNECTED;
 	qpair1_1.transport = &t1;
@@ -424,14 +424,14 @@ test_spdk_nvme_poll_group_destroy(void)
 	int num_tgroups = 0;
 
 	/* Simple destruction of empty poll group. */
-	group = spdk_nvme_poll_group_create(NULL);
+	group = spdk_nvme_poll_group_create(NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(group != NULL);
 	SPDK_CU_ASSERT_FATAL(spdk_nvme_poll_group_destroy(group) == 0);
 
 	TAILQ_INSERT_TAIL(&g_spdk_nvme_transports, &t1, link);
 	TAILQ_INSERT_TAIL(&g_spdk_nvme_transports, &t2, link);
 	TAILQ_INSERT_TAIL(&g_spdk_nvme_transports, &t3, link);
-	group = spdk_nvme_poll_group_create(NULL);
+	group = spdk_nvme_poll_group_create(NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(group != NULL);
 
 	qpair1_1.transport = &t1;

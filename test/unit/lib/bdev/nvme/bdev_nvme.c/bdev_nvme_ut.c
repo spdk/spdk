@@ -35,7 +35,7 @@
 #include "spdk_cunit.h"
 #include "spdk/thread.h"
 #include "spdk/bdev_module.h"
-#include "spdk/util.h"
+#include "spdk/bdev_module.h"
 
 #include "common/lib/ut_multithread.c"
 
@@ -189,6 +189,7 @@ struct spdk_nvme_ctrlr {
 
 struct spdk_nvme_poll_group {
 	void				*ctx;
+	struct spdk_nvme_accel_fn_table	accel_fn_table;
 	TAILQ_HEAD(, spdk_nvme_qpair)	qpairs;
 };
 
@@ -701,7 +702,7 @@ spdk_nvme_ns_cmd_dataset_management(struct spdk_nvme_ns *ns, struct spdk_nvme_qp
 }
 
 struct spdk_nvme_poll_group *
-spdk_nvme_poll_group_create(void *ctx)
+spdk_nvme_poll_group_create(void *ctx, struct spdk_nvme_accel_fn_table *table)
 {
 	struct spdk_nvme_poll_group *group;
 
@@ -711,6 +712,9 @@ spdk_nvme_poll_group_create(void *ctx)
 	}
 
 	group->ctx = ctx;
+	if (table != NULL) {
+		group->accel_fn_table = *table;
+	}
 	TAILQ_INIT(&group->qpairs);
 
 	return group;

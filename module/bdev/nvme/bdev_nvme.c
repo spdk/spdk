@@ -941,7 +941,7 @@ bdev_nvme_poll_group_create_cb(void *io_device, void *ctx_buf)
 {
 	struct nvme_bdev_poll_group *group = ctx_buf;
 
-	group->group = spdk_nvme_poll_group_create(group);
+	group->group = spdk_nvme_poll_group_create(group, NULL);
 	if (group->group == NULL) {
 		return -1;
 	}

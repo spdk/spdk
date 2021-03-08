@@ -2,6 +2,13 @@
 
 ## v21.04: (Upcoming Release)
 
+
+### nvme
+
+Added an accelerated table pointer in spdk_nvme_poll_group
+which can be used provide the accelerated functions by users with
+hardware engine, such as crc32c accelerated function.
+
 ### bdev
 
 For `bdev_ocssd_create` RPC, the optional parameter `range` was removed.

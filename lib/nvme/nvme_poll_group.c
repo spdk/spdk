@@ -35,13 +35,29 @@
 #include "nvme_internal.h"
 
 struct spdk_nvme_poll_group *
-spdk_nvme_poll_group_create(void *ctx)
+spdk_nvme_poll_group_create(void *ctx, struct spdk_nvme_accel_fn_table *table)
 {
 	struct spdk_nvme_poll_group *group;
 
 	group = calloc(1, sizeof(*group));
 	if (group == NULL) {
 		return NULL;
+	}
+
+	group->accel_fn_table.table_size = sizeof(struct spdk_nvme_accel_fn_table);
+	if (table && table->table_size != 0) {
+		group->accel_fn_table.table_size = table->table_size;
+#define SET_FIELD(field) \
+	if (offsetof(struct spdk_nvme_accel_fn_table, field) + sizeof(table->field) <= table->table_size) { \
+		group->accel_fn_table.field = table->field; \
+	} \
+
+		SET_FIELD(submit_accel_crc32c);
+		/* Do not remove this statement, you should always update this statement when you adding a new field,
+		 * and do not forget to add the SET_FIELD statement for your added field. */
+		SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_accel_fn_table) == 16, "Incorrect size");
+
+#undef SET_FIELD
 	}
 
 	group->ctx = ctx;

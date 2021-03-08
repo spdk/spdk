@@ -961,7 +961,7 @@ nvme_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 	opts.delay_cmd_submit = true;
 	opts.create_only = true;
 
-	ns_ctx->u.nvme.group = spdk_nvme_poll_group_create(NULL);
+	ns_ctx->u.nvme.group = spdk_nvme_poll_group_create(NULL, NULL);
 	if (ns_ctx->u.nvme.group == NULL) {
 		goto poll_group_failed;
 	}
