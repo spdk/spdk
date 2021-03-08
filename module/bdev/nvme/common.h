@@ -124,6 +124,7 @@ struct nvme_bdev {
 
 struct nvme_bdev_poll_group {
 	struct spdk_nvme_poll_group		*group;
+	struct spdk_io_channel			*accel_channel;
 	struct spdk_poller			*poller;
 	bool					collect_spin_stat;
 	uint64_t				spin_ticks;

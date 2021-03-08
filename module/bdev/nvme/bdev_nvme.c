@@ -36,6 +36,7 @@
 #include "bdev_nvme.h"
 #include "bdev_ocssd.h"
 
+#include "spdk/accel_engine.h"
 #include "spdk/config.h"
 #include "spdk/endian.h"
 #include "spdk/bdev.h"
@@ -973,19 +974,54 @@ bdev_nvme_destroy_cb(void *io_device, void *ctx_buf)
 	spdk_put_io_channel(spdk_io_channel_from_ctx(nvme_ch->group));
 }
 
+static void
+bdev_nvme_poll_group_submit_accel_crc32c(void *ctx, uint32_t *dst, struct iovec *iov,
+		uint32_t iov_cnt, uint32_t seed,
+		spdk_nvme_accel_completion_cb cb_fn, void *cb_arg)
+{
+	struct nvme_bdev_poll_group *group = ctx;
+	int rc;
+
+	assert(group->accel_channel != NULL);
+	assert(cb_fn != NULL);
+
+	rc = spdk_accel_submit_crc32cv(group->accel_channel, dst, iov, iov_cnt, seed, cb_fn, cb_arg);
+	if (rc) {
+		/* For the two cases, spdk_accel_submit_crc32cv does not call the user's cb_fn */
+		if (rc == -ENOMEM || rc == -EINVAL) {
+			cb_fn(cb_arg, rc);
+		}
+		SPDK_ERRLOG("Cannot complete the accelerated crc32c operation with iov=%p\n", iov);
+	}
+}
+
+static struct spdk_nvme_accel_fn_table g_bdev_nvme_accel_fn_table = {
+	.table_size		= sizeof(struct spdk_nvme_accel_fn_table),
+	.submit_accel_crc32c	= bdev_nvme_poll_group_submit_accel_crc32c,
+};
+
 static int
 bdev_nvme_poll_group_create_cb(void *io_device, void *ctx_buf)
 {
 	struct nvme_bdev_poll_group *group = ctx_buf;
 
-	group->group = spdk_nvme_poll_group_create(group, NULL);
+	group->group = spdk_nvme_poll_group_create(group, &g_bdev_nvme_accel_fn_table);
 	if (group->group == NULL) {
+		return -1;
+	}
+
+	group->accel_channel = spdk_accel_engine_get_io_channel();
+	if (!group->accel_channel) {
+		spdk_nvme_poll_group_destroy(group->group);
+		SPDK_ERRLOG("Cannot get the accel_channel for bdev nvme polling group=%p\n",
+			    group);
 		return -1;
 	}
 
 	group->poller = SPDK_POLLER_REGISTER(bdev_nvme_poll, group, g_opts.nvme_ioq_poll_period_us);
 
 	if (group->poller == NULL) {
+		spdk_put_io_channel(group->accel_channel);
 		spdk_nvme_poll_group_destroy(group->group);
 		return -1;
 	}
@@ -997,6 +1033,10 @@ static void
 bdev_nvme_poll_group_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct nvme_bdev_poll_group *group = ctx_buf;
+
+	if (group->accel_channel) {
+		spdk_put_io_channel(group->accel_channel);
+	}
 
 	spdk_poller_unregister(&group->poller);
 	if (spdk_nvme_poll_group_destroy(group->group)) {

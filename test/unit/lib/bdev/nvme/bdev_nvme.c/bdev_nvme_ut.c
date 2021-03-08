@@ -44,6 +44,8 @@
 
 #include "unit/lib/json_mock.c"
 
+static void *g_accel_p = (void *)0xdeadbeaf;
+
 DEFINE_STUB(spdk_nvme_probe_async, struct spdk_nvme_probe_ctx *,
 	    (const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 	     spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
@@ -69,6 +71,15 @@ DEFINE_STUB_V(spdk_nvme_ctrlr_set_remove_cb, (struct spdk_nvme_ctrlr *ctrlr,
 		spdk_nvme_remove_cb remove_cb, void *remove_ctx));
 
 DEFINE_STUB(spdk_nvme_ctrlr_get_flags, uint64_t, (struct spdk_nvme_ctrlr *ctrlr), 0);
+
+DEFINE_STUB(accel_engine_create_cb, int, (void *io_device, void *ctx_buf), 0);
+DEFINE_STUB_V(accel_engine_destroy_cb, (void *io_device, void *ctx_buf));
+
+struct spdk_io_channel *
+spdk_accel_engine_get_io_channel(void)
+{
+	return spdk_get_io_channel(g_accel_p);
+}
 
 void
 spdk_nvme_ctrlr_get_default_io_qpair_opts(struct spdk_nvme_ctrlr *ctrlr,
@@ -149,6 +160,11 @@ DEFINE_STUB(bdev_ocssd_init_ctrlr, int, (struct nvme_bdev_ctrlr *nvme_bdev_ctrlr
 DEFINE_STUB_V(bdev_ocssd_fini_ctrlr, (struct nvme_bdev_ctrlr *nvme_bdev_ctrlr));
 
 DEFINE_STUB_V(bdev_ocssd_handle_chunk_notification, (struct nvme_bdev_ctrlr *nvme_bdev_ctrlr));
+
+DEFINE_STUB(spdk_accel_submit_crc32cv, int, (struct spdk_io_channel *ch, uint32_t *dst,
+		struct iovec *iov,
+		uint32_t iov_cnt, uint32_t seed, spdk_accel_completion_cb cb_fn, void *cb_arg), 0);
+
 
 struct ut_nvme_req {
 	uint16_t			opc;
@@ -2107,6 +2123,19 @@ test_bdev_unregister(void)
 	ut_detach_ctrlr(ctrlr);
 }
 
+static void
+init_accel(void)
+{
+	spdk_io_device_register(g_accel_p, accel_engine_create_cb, accel_engine_destroy_cb,
+				sizeof(int), "accel_p");
+}
+
+static void
+fini_accel(void)
+{
+	spdk_io_device_unregister(g_accel_p, NULL);
+}
+
 int
 main(int argc, const char **argv)
 {
@@ -2137,11 +2166,13 @@ main(int argc, const char **argv)
 	allocate_threads(3);
 	set_thread(0);
 	bdev_nvme_library_init();
+	init_accel();
 
 	CU_basic_run_tests();
 
 	set_thread(0);
 	bdev_nvme_library_fini();
+	fini_accel();
 	free_threads();
 
 	num_failures = CU_get_number_of_failures();
