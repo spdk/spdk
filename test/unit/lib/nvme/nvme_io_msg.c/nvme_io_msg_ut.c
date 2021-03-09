@@ -39,11 +39,17 @@
 
 SPDK_LOG_REGISTER_COMPONENT(nvme)
 
-DEFINE_STUB(spdk_nvme_ctrlr_alloc_io_qpair, struct spdk_nvme_qpair *,
-	    (struct spdk_nvme_ctrlr *ctrlr,
-	     const struct spdk_nvme_io_qpair_opts *opts,
-	     size_t opts_size), NULL);
 DEFINE_STUB(spdk_nvme_ctrlr_free_io_qpair, int, (struct spdk_nvme_qpair *qpair), 0);
+
+DEFINE_RETURN_MOCK(spdk_nvme_ctrlr_alloc_io_qpair, struct spdk_nvme_qpair *);
+struct spdk_nvme_qpair *
+spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
+			       const struct spdk_nvme_io_qpair_opts *user_opts,
+			       size_t opts_size)
+{
+	HANDLE_RETURN_MOCK(spdk_nvme_ctrlr_alloc_io_qpair);
+	return NULL;
+}
 
 static void
 ut_io_msg_fn(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, void *arg)
@@ -116,6 +122,80 @@ test_nvme_io_msg_send(void)
 	free(request);
 }
 
+static void
+ut_stop(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return;
+}
+
+static void
+ut_update(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return;
+}
+
+static struct nvme_io_msg_producer ut_nvme_io_msg_producer[2] = {
+	{
+		.name = "ut_test1",
+		.stop = ut_stop,
+		.update = ut_update,
+	}, {
+		.name = "ut_test2",
+		.stop = ut_stop,
+		.update = ut_update,
+	}
+};
+
+static void
+test_nvme_io_msg_ctrlr_register_unregister(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	int rc;
+
+	STAILQ_INIT(&ctrlr.io_producers);
+	MOCK_SET(spdk_nvme_ctrlr_alloc_io_qpair, (void *)0xDEADBEEF);
+
+	rc = nvme_io_msg_ctrlr_register(&ctrlr, &ut_nvme_io_msg_producer[0]);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ctrlr.external_io_msgs != NULL);
+	CU_ASSERT(!STAILQ_EMPTY(&ctrlr.io_producers));
+	CU_ASSERT(ctrlr.external_io_msgs_qpair == (void *)0xDEADBEEF);
+
+	nvme_io_msg_ctrlr_unregister(&ctrlr, &ut_nvme_io_msg_producer[0]);
+	CU_ASSERT(ctrlr.external_io_msgs == NULL);
+	CU_ASSERT(ctrlr.external_io_msgs_qpair == NULL);
+	CU_ASSERT(STAILQ_EMPTY(&ctrlr.io_producers));
+
+	/* Multiple producer */
+	rc = nvme_io_msg_ctrlr_register(&ctrlr, &ut_nvme_io_msg_producer[0]);
+	CU_ASSERT(rc == 0);
+
+	rc = nvme_io_msg_ctrlr_register(&ctrlr, &ut_nvme_io_msg_producer[1]);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ctrlr.external_io_msgs != NULL);
+	CU_ASSERT(ctrlr.external_io_msgs_qpair == (void *)0xDEADBEEF);
+	nvme_io_msg_ctrlr_unregister(&ctrlr, &ut_nvme_io_msg_producer[0]);
+	CU_ASSERT(!STAILQ_EMPTY(&ctrlr.io_producers));
+	nvme_io_msg_ctrlr_unregister(&ctrlr, &ut_nvme_io_msg_producer[1]);
+	CU_ASSERT(STAILQ_EMPTY(&ctrlr.io_producers));
+	CU_ASSERT(ctrlr.external_io_msgs == NULL);
+	CU_ASSERT(ctrlr.external_io_msgs_qpair == NULL);
+
+	/* The same producer exist */
+	rc = nvme_io_msg_ctrlr_register(&ctrlr, &ut_nvme_io_msg_producer[0]);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ctrlr.external_io_msgs != NULL);
+	CU_ASSERT(ctrlr.external_io_msgs_qpair == (void *)0xDEADBEEF);
+
+	rc = nvme_io_msg_ctrlr_register(&ctrlr, &ut_nvme_io_msg_producer[0]);
+	CU_ASSERT(rc == -EEXIST);
+	nvme_io_msg_ctrlr_unregister(&ctrlr, &ut_nvme_io_msg_producer[0]);
+	CU_ASSERT(STAILQ_EMPTY(&ctrlr.io_producers));
+	CU_ASSERT(ctrlr.external_io_msgs == NULL);
+	CU_ASSERT(ctrlr.external_io_msgs_qpair == NULL);
+	MOCK_CLEAR(spdk_nvme_ctrlr_alloc_io_qpair);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -127,6 +207,7 @@ int main(int argc, char **argv)
 	suite = CU_add_suite("nvme_io_msg", NULL, NULL);
 	CU_ADD_TEST(suite, test_nvme_io_msg_send);
 	CU_ADD_TEST(suite, test_nvme_io_msg_process);
+	CU_ADD_TEST(suite, test_nvme_io_msg_ctrlr_register_unregister);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
