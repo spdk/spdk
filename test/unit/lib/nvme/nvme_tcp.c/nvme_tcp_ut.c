@@ -890,6 +890,36 @@ test_nvme_tcp_parse_addr(void)
 	CU_ASSERT(dst_addr.ss_family == AF_INET);
 }
 
+static void
+test_nvme_tcp_qpair_send_h2c_term_req(void)
+{
+	struct nvme_tcp_qpair tqpair = {};
+	struct nvme_tcp_pdu pdu = {};
+	struct nvme_tcp_pdu send_pdu = {};
+	enum spdk_nvme_tcp_term_req_fes fes = SPDK_NVME_TCP_TERM_REQ_FES_INVALID_HEADER_FIELD;
+	uint32_t error_offset = 1;
+
+	tqpair.send_pdu = &send_pdu;
+	TAILQ_INIT(&tqpair.send_queue);
+	/* case1: hlen < SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE, Except: copy_len == hlen */
+	pdu.hdr.common.hlen = 64;
+	nvme_tcp_qpair_send_h2c_term_req(&tqpair, &pdu, fes, error_offset);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.hlen == sizeof(struct spdk_nvme_tcp_term_req_hdr));
+	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.plen == tqpair.send_pdu->hdr.term_req.common.hlen +
+		  pdu.hdr.common.hlen);
+	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_H2C_TERM_REQ);
+
+	/* case2: hlen > SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE, Except: copy_len == SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE */
+	pdu.hdr.common.hlen = 255;
+	nvme_tcp_qpair_send_h2c_term_req(&tqpair, &pdu, fes, error_offset);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.hlen == sizeof(struct spdk_nvme_tcp_term_req_hdr));
+	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.plen == (unsigned)
+		  tqpair.send_pdu->hdr.term_req.common.hlen + SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE);
+	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_H2C_TERM_REQ);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -912,6 +942,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_tcp_qpair_set_recv_state);
 	CU_ADD_TEST(suite, test_nvme_tcp_alloc_reqs);
 	CU_ADD_TEST(suite, test_nvme_tcp_parse_addr);
+	CU_ADD_TEST(suite, test_nvme_tcp_qpair_send_h2c_term_req);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
