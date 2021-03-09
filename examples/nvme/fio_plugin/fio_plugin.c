@@ -290,6 +290,29 @@ pcu(struct spdk_nvme_qpair *qpair, int *completed)
 }
 #endif
 
+static inline uint32_t
+_nvme_get_host_buffer_sector_size(struct spdk_nvme_ns *ns, uint32_t io_flags)
+{
+	bool md_excluded_from_xfer = false;
+	uint32_t md_size;
+	uint32_t ns_flags;
+
+	ns_flags = spdk_nvme_ns_get_flags(ns);
+	md_size = spdk_nvme_ns_get_md_size(ns);
+
+	/* For extended LBA format, if the metadata size is 8 bytes and PRACT is
+	 * enabled(controller inserts/strips PI), we should reduce metadata size
+	 * from block size.
+	 */
+	md_excluded_from_xfer = ((io_flags & SPDK_NVME_IO_FLAGS_PRACT) &&
+				 (ns_flags & SPDK_NVME_NS_EXTENDED_LBA_SUPPORTED) &&
+				 (ns_flags & SPDK_NVME_NS_DPS_PI_SUPPORTED) &&
+				 (md_size == 8));
+
+	return md_excluded_from_xfer ? spdk_nvme_ns_get_sector_size(ns) :
+	       spdk_nvme_ns_get_extended_sector_size(ns);
+}
+
 static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
@@ -305,6 +328,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	uint32_t		ns_id;
 	char			*p;
 	long int		tmp;
+	uint32_t		block_size;
 	struct spdk_fio_options *fio_options = td->eo;
 
 	p = strstr(f->file_name, "ns=");
@@ -408,10 +432,13 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 			fio_qpair->extended_lba ? "extended lba" : "separate metadata");
 	}
 
-	if (spdk_nvme_ns_supports_extended_lba(ns) &&
-	    (td->o.bs[DDIR_READ] % spdk_nvme_ns_get_extended_sector_size(ns) != 0 ||
-	     td->o.bs[DDIR_WRITE] % spdk_nvme_ns_get_extended_sector_size(ns) != 0)) {
-		SPDK_ERRLOG("--bs has to be equal to LBA data size + Metadata size\n");
+	block_size = _nvme_get_host_buffer_sector_size(ns, fio_qpair->io_flags);
+	if (td->o.bs[DDIR_READ] % block_size != 0 || td->o.bs[DDIR_WRITE] % block_size != 0) {
+		if (spdk_nvme_ns_supports_extended_lba(ns)) {
+			SPDK_ERRLOG("--bs has to be a multiple of (LBA data size + Metadata size)\n");
+		} else {
+			SPDK_ERRLOG("--bs has to be a multiple of LBA data size\n");
+		}
 		g_error = true;
 		return;
 	}
@@ -967,16 +994,7 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 	}
 	fio_req->fio_qpair = fio_qpair;
 
-	block_size = spdk_nvme_ns_get_extended_sector_size(ns);
-	if ((fio_qpair->io_flags & g_spdk_pract_flag) && (spdk_nvme_ns_get_md_size(ns) == 8)) {
-		/* If metadata size = 8 bytes, PI is stripped (read) or inserted (write), and
-		 *  so reduce metadata size from block size.  (If metadata size > 8 bytes, PI
-		 *  is passed (read) or replaced (write).  So block size is not necessary to
-		 *  change.)
-		 */
-		block_size = spdk_nvme_ns_get_sector_size(ns);
-	}
-
+	block_size = _nvme_get_host_buffer_sector_size(ns, fio_qpair->io_flags);
 	lba = io_u->offset / block_size;
 	lba_count = io_u->xfer_buflen / block_size;
 
