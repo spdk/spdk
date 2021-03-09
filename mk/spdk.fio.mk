@@ -39,6 +39,11 @@ FIO_PLUGIN := $(SPDK_ROOT_DIR)/build/fio/$(notdir $(FIO_PLUGIN))
 LIBS += $(SPDK_LIB_LINKER_ARGS)
 
 CFLAGS += -I$(CONFIG_FIO_SOURCE_DIR)
+# Compiling against fio 3.19 on latest FreeBSD generates warnings so we
+# cannot use -Werror
+ifeq ($(OS),FreeBSD)
+CFLAGS += -Wno-error
+endif
 LDFLAGS += -shared -rdynamic -Wl,-z,nodelete
 
 CLEAN_FILES = $(FIO_PLUGIN)
