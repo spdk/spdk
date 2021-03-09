@@ -115,8 +115,8 @@ verify_dpdk_governor() {
 			# to start going down. This is deemed as not necessary for the moment since the core objective of
 			# the test is to determine if DPDK's governor did its job, within its current scope, not how it
 			# impacts the system overall.
-			printf 'MAIN DPDK cpu%u current frequency at %u KHz (%u KHz), set frequency %u KHz %s %u KHz\n' \
-				"$spdk_main_core" "$main_core_set_cur_freq" "$main_core_max_freq" \
+			printf 'MAIN DPDK cpu%u current frequency at %u KHz (%u-%u KHz), set frequency %u KHz %s %u KHz\n' \
+				"$spdk_main_core" "$main_core_set_cur_freq" "$main_core_min_freq" "$main_core_max_freq" \
 				"$main_core_setspeed" "${dir_map[dir]}" "$old_main_core_setspeed"
 		else
 			printf 'Waiting for samples...\n'
