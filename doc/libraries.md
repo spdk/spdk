@@ -191,3 +191,23 @@ shim/implementation library system.
 	# two libraries
 	gcc -o my_app ./my_app.c -lspdk -lcustom_env_shim -lcustom_env_implementation
 ~~~
+
+# SPDK Static Objects {#static_objects}
+
+SPDK static objects are compiled by default even when no parameters are supplied to the build system.
+Unlike SPDK shared objects, the filename does not contain any versioning semantics. Linking against
+static objects is similar to shared objects but will always require the use of `-Wl,--whole-archive`
+as argument. This is due to the use of constructor functions in SPDK such as those to register
+NVMe transports.
+
+Due to the lack of versioning semantics, it is not recommended to install static libraries system wide.
+Instead the path to these static libraries should be added as argument at compile time using
+`-L/path/to/static/libs`. The use of static objects instead of shared objects can also be forced
+through `-Wl,-Bsatic`, otherwise some compilers might prefer to use the shared objects if both
+are available.
+
+~~~{.sh}
+	gcc -o my_app ./my_app.c -L/path/to/static/libs -Wl,--whole-archive -Wl,-Bstatic -lpassthru_external
+	-lspdk_event_bdev -lspdk_bdev -lspdk_bdev_malloc -lspdk_log -lspdk_thread -lspdk_util -lspdk_event
+	-lspdk_env_dpdk -Wl,--no-whole-archive -Wl,-Bdynamic -pthread -ldpdk
+~~~

@@ -28,9 +28,10 @@ PKG_CONFIG_PATH=/path/to/spdk/build/lib/pkgconfig pkg-config --libs spdk_syslibs
 
 Note that SPDK libraries use constructor functions liberally, so you must surround
 the library list with extra linker options to ensure these functions are not dropped
-from the resulting application binary.  Here is an example Makefile snippet that
-shows how to use pkg-config to link an application that uses the SPDK nvme shared
-library:
+from the resulting application binary. With shared libraries this is achieved through
+the `-Wl,--no-as-needed` parameters while with static libraries `-Wl,--whole-archive`
+is used. Here is an example Makefile snippet that shows how to use pkg-config to link
+an application that uses the SPDK nvme shared library:
 
 ~~~
 PKG_CONFIG_PATH = $(SPDK_DIR)/build/lib/pkgconfig
