@@ -396,30 +396,12 @@ function check_bash_style() {
 	done
 
 	if [ -n "$shfmt" ]; then
-		shfmt_cmdline=() silly_plural=()
+		shfmt_cmdline=() sh_files=()
 
-		silly_plural[1]="s"
-
-		commits=() sh_files=() sh_files_repo=() sh_files_staged=()
-		mapfile -t sh_files_repo < <(get_bash_files)
-		# Fetch .sh files only from the commits that are targeted for merge
-		while read -r _ commit; do
-			commits+=("$commit")
-		done < <(git cherry -v origin/master)
-
-		mapfile -t sh_files < <(git diff --name-only HEAD origin/master "${sh_files_repo[@]}")
-		# In case of a call from a pre-commit git hook
-		mapfile -t sh_files_staged < <(
-			IFS="|"
-			git diff --cached --name-only "${sh_files_repo[@]}" | grep -v "${sh_files[*]}"
-		)
+		mapfile -t sh_files < <(get_bash_files)
 
 		if ((${#sh_files[@]})); then
 			printf 'Checking .sh formatting style...'
-
-			if ((${#sh_files_staged[@]})); then
-				sh_files+=("${sh_files_staged[@]}")
-			fi
 
 			shfmt_cmdline+=(-i 0)     # indent_style = tab|indent_size = 0
 			shfmt_cmdline+=(-bn)      # binary_next_line = true
