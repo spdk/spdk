@@ -73,6 +73,7 @@ struct spdk_nvme_qpair {
 
 struct spdk_nvme_ns {
 	uint32_t nsid;
+	struct spdk_nvme_ctrlr *ctrlr;
 };
 
 struct spdk_nvme_ctrlr {
@@ -156,6 +157,7 @@ create_controller(const struct spdk_nvme_transport_id *trid, uint32_t ns_count,
 
 	for (nsid = 0; nsid < ns_count; ++nsid) {
 		ctrlr->ns[nsid].nsid = nsid + 1;
+		ctrlr->ns[nsid].ctrlr = ctrlr;
 	}
 
 	ctrlr->geometry = *geo;
@@ -280,6 +282,12 @@ uint32_t
 spdk_nvme_ns_get_id(struct spdk_nvme_ns *ns)
 {
 	return ns->nsid;
+}
+
+struct spdk_nvme_ctrlr *
+spdk_nvme_ns_get_ctrlr(struct spdk_nvme_ns *ns)
+{
+	return ns->ctrlr;
 }
 
 struct spdk_nvme_ns *
