@@ -168,6 +168,7 @@ function make_fail_cleanup() {
 
 function scanbuild_make() {
 	pass=true
+	"$rootdir/configure" $config_params --without-shared
 	$scanbuild $MAKE $MAKEFLAGS > $out/build_output.txt && rm -rf $out/scan-build-tmp || make_fail_cleanup
 	xtrace_disable
 
@@ -265,12 +266,9 @@ function build_doc() {
 function autobuild_test_suite() {
 	run_test "autobuild_check_format" ./scripts/check_format.sh
 	run_test "autobuild_external_code" sudo -E --preserve-env=PATH LD_LIBRARY_PATH=$LD_LIBRARY_PATH $rootdir/test/external_code/test_make.sh $rootdir
-	if [ "$SPDK_TEST_OCF" -eq 1 ]; then
-		run_test "autobuild_ocf_precompile" ocf_precompile
-	fi
 	run_test "autobuild_check_so_deps" $rootdir/test/make/check_so_deps.sh $1
 	./configure $config_params --without-shared
-	run_test "scanbuild_make" scanbuild_make
+	$MAKE $MAKEFLAGS
 	run_test "autobuild_generated_files_check" porcelain_check
 	run_test "autobuild_header_dependency_check" header_dependency_check
 	run_test "autobuild_make_install" $MAKE $MAKEFLAGS install DESTDIR="$SPDK_WORKSPACE" prefix=/usr
@@ -306,14 +304,17 @@ $MAKE cc_version
 $MAKE cxx_version
 echo "** END ** Info for Hostname: $HOSTNAME"
 
+if [[ $SPDK_TEST_OCF -eq 1 ]]; then
+	run_test "autobuild_ocf_precompile" ocf_precompile
+fi
+
 if [[ $SPDK_TEST_AUTOBUILD -eq 1 ]]; then
 	run_test "autobuild" autobuild_test_suite $1
 elif [[ $SPDK_TEST_UNITTEST -eq 1 ]]; then
 	run_test "unittest_build" unittest_build
+elif [[ $SPDK_TEST_SCANBUILD -eq 1 ]]; then
+	run_test "scanbuild_make" scanbuild_make
 else
-	if [ "$SPDK_TEST_OCF" -eq 1 ]; then
-		run_test "autobuild_ocf_precompile" ocf_precompile
-	fi
 	# if we aren't testing the unittests, build with shared objects.
 	./configure $config_params --with-shared
 	run_test "make" $MAKE $MAKEFLAGS
