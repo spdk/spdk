@@ -236,7 +236,7 @@ bdev_rbd_finish_aiocb(rbd_completion_t cb, void *arg)
 	/* Doing nothing here */
 }
 
-static int
+static void
 bdev_rbd_start_aio(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 		   struct iovec *iov, int iovcnt, uint64_t offset, size_t len)
 {
@@ -249,7 +249,7 @@ bdev_rbd_start_aio(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 	ret = rbd_aio_create_completion(bdev_io, bdev_rbd_finish_aiocb,
 					&comp);
 	if (ret < 0) {
-		return -1;
+		goto err;
 	}
 
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
@@ -272,10 +272,13 @@ bdev_rbd_start_aio(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 
 	if (ret < 0) {
 		rbd_aio_release(comp);
-		return -1;
+		goto err;
 	}
 
-	return 0;
+	return;
+
+err:
+	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 }
 
 static int bdev_rbd_library_init(void);
@@ -313,7 +316,7 @@ bdev_rbd_reset_timer(void *arg)
 	return SPDK_POLLER_BUSY;
 }
 
-static int
+static void
 bdev_rbd_reset(struct bdev_rbd *disk, struct spdk_bdev_io *bdev_io)
 {
 	/*
@@ -323,8 +326,6 @@ bdev_rbd_reset(struct bdev_rbd *disk, struct spdk_bdev_io *bdev_io)
 	assert(disk->reset_bdev_io == NULL);
 	disk->reset_bdev_io = bdev_io;
 	disk->reset_timer = SPDK_POLLER_REGISTER(bdev_rbd_reset_timer, disk, 1 * 1000 * 1000);
-
-	return 0;
 }
 
 static int
@@ -342,56 +343,47 @@ static void
 bdev_rbd_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 		    bool success)
 {
-	int ret;
-
 	if (!success) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
 
-	ret = bdev_rbd_start_aio(ch,
-				 bdev_io,
-				 bdev_io->u.bdev.iovs,
-				 bdev_io->u.bdev.iovcnt,
-				 bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen,
-				 bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
-
-	if (ret != 0) {
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-	}
+	bdev_rbd_start_aio(ch,
+			   bdev_io,
+			   bdev_io->u.bdev.iovs,
+			   bdev_io->u.bdev.iovcnt,
+			   bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen,
+			   bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 }
 
-static int _bdev_rbd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+static void
+bdev_rbd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 		spdk_bdev_io_get_buf(bdev_io, bdev_rbd_get_buf_cb,
 				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
-		return 0;
+		break;
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
 	case SPDK_BDEV_IO_TYPE_FLUSH:
-		return bdev_rbd_start_aio(ch,
-					  bdev_io,
-					  bdev_io->u.bdev.iovs,
-					  bdev_io->u.bdev.iovcnt,
-					  bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen,
-					  bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
+		bdev_rbd_start_aio(ch,
+				   bdev_io,
+				   bdev_io->u.bdev.iovs,
+				   bdev_io->u.bdev.iovcnt,
+				   bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen,
+				   bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
+		break;
 
 	case SPDK_BDEV_IO_TYPE_RESET:
-		return bdev_rbd_reset((struct bdev_rbd *)bdev_io->bdev->ctxt,
-				      bdev_io);
+		bdev_rbd_reset((struct bdev_rbd *)bdev_io->bdev->ctxt,
+			       bdev_io);
+		break;
 
 	default:
-		return -1;
-	}
-	return 0;
-}
-
-static void bdev_rbd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
-{
-	if (_bdev_rbd_submit_request(ch, bdev_io) < 0) {
+		SPDK_ERRLOG("Unsupported IO type =%d\n", bdev_io->type);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		break;
 	}
 }
 
