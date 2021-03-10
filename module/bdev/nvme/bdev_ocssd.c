@@ -630,8 +630,10 @@ bdev_ocssd_zone_info_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 	struct spdk_ocssd_chunk_information_entry *chunk_info = &ocdev_io->zone_info.chunk_info;
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(ctx);
 	struct ocssd_bdev *ocssd_bdev = bdev_io->bdev->ctxt;
-	struct nvme_bdev_ns *nvme_ns = ocssd_bdev->nvme_bdev.nvme_ns;
-	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ns);
+	struct nvme_io_channel *nvme_ch;
+	struct nvme_bdev_ns *nvme_ns;
+	struct spdk_nvme_qpair *qpair;
+	struct bdev_ocssd_ns *ocssd_ns;
 	struct spdk_bdev_zone_info *zone_info;
 	int rc;
 
@@ -639,6 +641,15 @@ bdev_ocssd_zone_info_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 		spdk_bdev_io_complete_nvme_status(bdev_io, 0, cpl->status.sct, cpl->status.sc);
 		return;
 	}
+
+	nvme_ch = spdk_io_channel_get_ctx(spdk_bdev_io_get_io_channel(bdev_io));
+
+	if (spdk_unlikely(!bdev_nvme_find_io_path(&ocssd_bdev->nvme_bdev, nvme_ch, &nvme_ns, &qpair))) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
+
+	ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ns);
 
 	zone_info = ((struct spdk_bdev_zone_info *)bdev_io->u.zone_mgmt.buf) +
 		    ocdev_io->zone_info.chunk_offset;
