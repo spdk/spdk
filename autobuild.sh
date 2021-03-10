@@ -278,6 +278,11 @@ function autobuild_test_suite() {
 	run_test "autobuild_build_doc" build_doc
 }
 
+function unittest_build() {
+	"$rootdir/configure" $config_params --without-shared
+	$MAKE $MAKEFLAGS
+}
+
 if [ $SPDK_RUN_VALGRIND -eq 1 ]; then
 	run_test "valgrind" echo "using valgrind"
 fi
@@ -301,8 +306,10 @@ $MAKE cc_version
 $MAKE cxx_version
 echo "** END ** Info for Hostname: $HOSTNAME"
 
-if [ "$SPDK_TEST_AUTOBUILD" -eq 1 ]; then
+if [[ $SPDK_TEST_AUTOBUILD -eq 1 ]]; then
 	run_test "autobuild" autobuild_test_suite $1
+elif [[ $SPDK_TEST_UNITTEST -eq 1 ]]; then
+	run_test "unittest_build" unittest_build
 else
 	if [ "$SPDK_TEST_OCF" -eq 1 ]; then
 		run_test "autobuild_ocf_precompile" ocf_precompile
