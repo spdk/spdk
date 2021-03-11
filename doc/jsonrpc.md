@@ -8144,6 +8144,39 @@ Example response:
 }
 ~~~
 
+## enable_vmd {#rpc_enable_vmd}
+
+Enable VMD enumeration.
+
+### Parameters
+
+This method has no parameters.
+
+### Response
+
+Completion status of enumeration is returned as a boolean.
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "enable_vmd",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## spdk_get_version {#rpc_spdk_get_version}
 
 Get the version info of the running SPDK application.
