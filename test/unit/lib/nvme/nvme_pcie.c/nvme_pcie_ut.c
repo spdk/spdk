@@ -477,6 +477,44 @@ test_build_contig_hw_sgl_request(void)
 	memset(&tr, 0, sizeof(tr));
 }
 
+static void
+test_nvme_pcie_qpair_build_metadata(void)
+{
+	struct spdk_nvme_qpair qpair = {};
+	struct nvme_tracker tr = {};
+	struct nvme_request req = {};
+	struct spdk_nvme_ctrlr	ctrlr = {};
+	int rc;
+
+	tr.req = &req;
+	qpair.ctrlr = &ctrlr;
+
+	req.payload.md = (void *)0xDEADBEE0;
+	req.md_offset = 0;
+	req.md_size = 4096;
+	req.cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
+	tr.prp_sgl_bus_addr = 0xDBADBEEF;
+	MOCK_SET(spdk_vtophys, 0xDCADBEE0);
+
+	rc = nvme_pcie_qpair_build_metadata(&qpair, &tr, true, true);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(req.cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_SGL);
+	CU_ASSERT(tr.meta_sgl.address == 0xDCADBEE0);
+	CU_ASSERT(tr.meta_sgl.unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(tr.meta_sgl.unkeyed.length == 4096);
+	CU_ASSERT(tr.meta_sgl.unkeyed.subtype == 0);
+	CU_ASSERT(req.cmd.mptr == (0xDBADBEEF - sizeof(struct spdk_nvme_sgl_descriptor)));
+	MOCK_CLEAR(spdk_vtophys);
+
+	/* Build non sgl metadata */
+	MOCK_SET(spdk_vtophys, 0xDDADBEE0);
+
+	rc = nvme_pcie_qpair_build_metadata(&qpair, &tr, false, true);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(req.cmd.mptr == 0xDDADBEE0);
+	MOCK_CLEAR(spdk_vtophys);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -490,6 +528,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_pcie_hotplug_monitor);
 	CU_ADD_TEST(suite, test_shadow_doorbell_update);
 	CU_ADD_TEST(suite, test_build_contig_hw_sgl_request);
+	CU_ADD_TEST(suite, test_nvme_pcie_qpair_build_metadata);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
