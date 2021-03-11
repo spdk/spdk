@@ -58,11 +58,14 @@ enum spdk_bdev_zone_action {
 
 enum spdk_bdev_zone_state {
 	SPDK_BDEV_ZONE_STATE_EMPTY	= 0x0,
-	SPDK_BDEV_ZONE_STATE_OPEN	= 0x1,
+	SPDK_BDEV_ZONE_STATE_IMP_OPEN	= 0x1,
+	/* OPEN is an alias for IMP_OPEN. OPEN is kept for backwards compatibility. */
+	SPDK_BDEV_ZONE_STATE_OPEN	= SPDK_BDEV_ZONE_STATE_IMP_OPEN,
 	SPDK_BDEV_ZONE_STATE_FULL	= 0x2,
 	SPDK_BDEV_ZONE_STATE_CLOSED	= 0x3,
 	SPDK_BDEV_ZONE_STATE_READ_ONLY	= 0x4,
 	SPDK_BDEV_ZONE_STATE_OFFLINE	= 0x5,
+	SPDK_BDEV_ZONE_STATE_EXP_OPEN	= 0x6,
 };
 
 struct spdk_bdev_zone_info {
@@ -82,6 +85,9 @@ uint64_t spdk_bdev_get_zone_size(const struct spdk_bdev *bdev);
 
 /**
  * Get device maximum number of open zones.
+ *
+ * An open zone is defined as a zone being in zone state
+ * SPDK_BDEV_ZONE_STATE_IMP_OPEN or SPDK_BDEV_ZONE_STATE_EXP_OPEN.
  *
  * If this value is 0, there is no limit.
  *
