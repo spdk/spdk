@@ -153,6 +153,8 @@ struct nvmf_vfio_user_ctrlr {
 
 	/* True when the admin queue is connected */
 	bool					ready;
+	/* Number of connected queue pairs */
+	uint32_t				num_connected_qps;
 
 	uint16_t				cntlid;
 
@@ -177,6 +179,7 @@ struct nvmf_vfio_user_endpoint {
 	const struct spdk_nvmf_subsystem	*subsystem;
 
 	struct nvmf_vfio_user_ctrlr		*ctrlr;
+	pthread_mutex_t				lock;
 
 	TAILQ_ENTRY(nvmf_vfio_user_endpoint)	link;
 };
@@ -279,6 +282,7 @@ nvmf_vfio_user_destroy_endpoint(struct nvmf_vfio_user_endpoint *endpoint)
 
 	vfu_destroy_ctx(endpoint->vfu_ctx);
 
+	pthread_mutex_destroy(&endpoint->lock);
 	free(endpoint);
 }
 
@@ -681,15 +685,19 @@ unmap_q(vfu_ctx_t *vfu_ctx, struct nvme_q *q)
 static void
 unmap_qp(struct nvmf_vfio_user_qpair *qp)
 {
+	struct nvmf_vfio_user_ctrlr *ctrlr;
+
 	if (qp->ctrlr == NULL) {
 		return;
 	}
+	ctrlr = qp->ctrlr;
 
 	SPDK_DEBUGLOG(nvmf_vfio, "%s: destroy I/O QP%d\n",
-		      ctrlr_id(qp->ctrlr), qp->qpair.qid);
+		      ctrlr_id(ctrlr), qp->qpair.qid);
 
-	unmap_q(qp->ctrlr->endpoint->vfu_ctx, &qp->sq);
-	unmap_q(qp->ctrlr->endpoint->vfu_ctx, &qp->cq);
+	unmap_q(ctrlr->endpoint->vfu_ctx, &qp->sq);
+	unmap_q(ctrlr->endpoint->vfu_ctx, &qp->cq);
+
 }
 
 /*
@@ -1505,6 +1513,8 @@ destroy_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
 		return 0;
 	}
 
+	SPDK_NOTICELOG("destroy %s\n", ctrlr_id(ctrlr));
+
 	for (i = 0; i < NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR; i++) {
 		destroy_qp(ctrlr, i);
 	}
@@ -1514,6 +1524,7 @@ destroy_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
 	}
 
 	free(ctrlr);
+
 	return 0;
 }
 
@@ -1634,6 +1645,7 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 		goto out;
 	}
 
+	pthread_mutex_init(&endpoint->lock, NULL);
 	TAILQ_INSERT_TAIL(&vu_transport->endpoints, endpoint, link);
 	SPDK_NOTICELOG("%s: doorbells %p\n", uuid, endpoint->doorbells);
 
@@ -1807,12 +1819,15 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 	struct nvmf_vfio_user_poll_group *vu_group;
 	struct nvmf_vfio_user_qpair *qpair = cb_arg;
 	struct nvmf_vfio_user_ctrlr *ctrlr;
+	struct nvmf_vfio_user_endpoint *endpoint;
 
 	assert(qpair != NULL);
 	assert(req != NULL);
 
 	ctrlr = qpair->ctrlr;
+	endpoint = ctrlr->endpoint;
 	assert(ctrlr != NULL);
+	assert(endpoint != NULL);
 
 	if (spdk_nvme_cpl_is_error(&req->req.rsp->nvme_cpl)) {
 		SPDK_ERRLOG("SC %u, SCT %u\n", req->req.rsp->nvme_cpl.status.sc, req->req.rsp->nvme_cpl.status.sct);
@@ -1825,10 +1840,13 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 	TAILQ_INSERT_TAIL(&vu_group->qps, qpair, link);
 	qpair->state = VFIO_USER_QPAIR_ACTIVE;
 
+	pthread_mutex_lock(&endpoint->lock);
 	if (nvmf_qpair_is_admin_queue(&qpair->qpair)) {
 		ctrlr->cntlid = qpair->qpair.ctrlr->cntlid;
 		ctrlr->ready = true;
 	}
+	ctrlr->num_connected_qps++;
+	pthread_mutex_unlock(&endpoint->lock);
 
 	free(req->req.data);
 	req->req.data = NULL;
@@ -1901,9 +1919,13 @@ nvmf_vfio_user_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
 				 struct spdk_nvmf_qpair *qpair)
 {
 	struct nvmf_vfio_user_qpair *vu_qpair;
+	struct nvmf_vfio_user_ctrlr *vu_ctrlr;
+	struct nvmf_vfio_user_endpoint *endpoint;
 	struct nvmf_vfio_user_poll_group *vu_group;
 
 	vu_qpair = SPDK_CONTAINEROF(qpair, struct nvmf_vfio_user_qpair, qpair);
+	vu_ctrlr = vu_qpair->ctrlr;
+	endpoint = vu_ctrlr->endpoint;
 
 	SPDK_DEBUGLOG(nvmf_vfio,
 		      "%s: remove NVMf QP%d=%p from NVMf poll_group=%p\n",
@@ -1911,8 +1933,12 @@ nvmf_vfio_user_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
 
 
 	vu_group = SPDK_CONTAINEROF(group, struct nvmf_vfio_user_poll_group, group);
-
 	TAILQ_REMOVE(&vu_group->qps, vu_qpair, link);
+
+	pthread_mutex_lock(&endpoint->lock);
+	assert(vu_ctrlr->num_connected_qps);
+	vu_ctrlr->num_connected_qps--;
+	pthread_mutex_unlock(&endpoint->lock);
 
 	return 0;
 }
@@ -2152,6 +2178,51 @@ handle_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 	return 0;
 }
 
+static void
+vfio_user_qpair_disconnect_cb(void *ctx)
+{
+	struct nvmf_vfio_user_endpoint *endpoint = ctx;
+	struct nvmf_vfio_user_ctrlr *ctrlr;
+
+	pthread_mutex_lock(&endpoint->lock);
+	ctrlr = endpoint->ctrlr;
+	if (!ctrlr) {
+		pthread_mutex_unlock(&endpoint->lock);
+		return;
+	}
+
+	if (!ctrlr->num_connected_qps) {
+		destroy_ctrlr(ctrlr);
+		pthread_mutex_unlock(&endpoint->lock);
+		return;
+	}
+	pthread_mutex_unlock(&endpoint->lock);
+}
+
+static int
+vfio_user_stop_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
+{
+	uint32_t i;
+	struct nvmf_vfio_user_qpair *qpair;
+	struct nvmf_vfio_user_endpoint *endpoint;
+
+	SPDK_DEBUGLOG(nvmf_vfio, "%s stop processing\n", ctrlr_id(ctrlr));
+
+	ctrlr->ready = false;
+	endpoint = ctrlr->endpoint;
+	assert(endpoint != NULL);
+
+	for (i = 0; i < NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR; i++) {
+		qpair = ctrlr->qp[i];
+		if (qpair == NULL) {
+			continue;
+		}
+		spdk_nvmf_qpair_disconnect(&qpair->qpair, vfio_user_qpair_disconnect_cb, endpoint);
+	}
+
+	return 0;
+}
+
 static int
 nvmf_vfio_user_ctrlr_poll(struct nvmf_vfio_user_ctrlr *ctrlr)
 {
@@ -2215,8 +2286,7 @@ nvmf_vfio_user_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 			if (spdk_unlikely(err) != 0) {
 				/* initiator shutdown or reset, waiting for another re-connect */
 				if (errno == ENOTCONN) {
-					TAILQ_REMOVE(&vu_group->qps, vu_qpair, link);
-					ctrlr->ready = false;
+					vfio_user_stop_ctrlr(ctrlr);
 					continue;
 				}
 
