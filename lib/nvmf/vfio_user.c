@@ -1811,10 +1811,6 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 	assert(qpair != NULL);
 	assert(req != NULL);
 
-	vu_group = SPDK_CONTAINEROF(qpair->group, struct nvmf_vfio_user_poll_group, group);
-	TAILQ_INSERT_TAIL(&vu_group->qps, qpair, link);
-	qpair->state = VFIO_USER_QPAIR_ACTIVE;
-
 	ctrlr = qpair->ctrlr;
 	assert(ctrlr != NULL);
 
@@ -1824,6 +1820,10 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 		destroy_ctrlr(ctrlr);
 		return -1;
 	}
+
+	vu_group = SPDK_CONTAINEROF(qpair->group, struct nvmf_vfio_user_poll_group, group);
+	TAILQ_INSERT_TAIL(&vu_group->qps, qpair, link);
+	qpair->state = VFIO_USER_QPAIR_ACTIVE;
 
 	if (nvmf_qpair_is_admin_queue(&qpair->qpair)) {
 		ctrlr->cntlid = qpair->qpair.ctrlr->cntlid;
