@@ -71,7 +71,7 @@ spdk_malloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint3
 	buf = rte_malloc_socket(NULL, size, align, socket_id);
 	if (buf && phys_addr) {
 #ifdef DEBUG
-		SPDK_ERRLOG("phys_addr param in spdk_*malloc() is deprecated\n");
+		SPDK_ERRLOG("phys_addr param in spdk_malloc() is deprecated\n");
 #endif
 		*phys_addr = virt_to_phys(buf);
 	}
@@ -81,9 +81,19 @@ spdk_malloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint3
 void *
 spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint32_t flags)
 {
-	void *buf = spdk_malloc(size, align, phys_addr, socket_id, flags);
-	if (buf) {
-		memset(buf, 0, size);
+	void *buf;
+
+	if (flags == 0) {
+		return NULL;
+	}
+
+	align = spdk_max(align, RTE_CACHE_LINE_SIZE);
+	buf = rte_zmalloc_socket(NULL, size, align, socket_id);
+	if (buf && phys_addr) {
+#ifdef DEBUG
+		SPDK_ERRLOG("phys_addr param in spdk_zmalloc() is deprecated\n");
+#endif
+		*phys_addr = virt_to_phys(buf);
 	}
 	return buf;
 }
