@@ -366,7 +366,9 @@ function get_config_params() {
 		fi
 	fi
 
-	if [ $SPDK_TEST_UNITTEST -eq 0 ]; then
+	if [[ $SPDK_TEST_UNITTEST -eq 0 && \
+		$SPDK_TEST_SCANBUILD -eq 0 && \
+		$SPDK_TEST_AUTOBUILD -eq 0 ]]; then
 		config_params+=' --disable-unit-tests'
 	fi
 
