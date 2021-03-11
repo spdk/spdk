@@ -249,21 +249,18 @@ function install_flamegraph() {
 	fi
 }
 
-function install_qemu() {
-	# Two versions of QEMU are used in the tests.
-	# Stock QEMU is used for vhost. A special fork
-	# is used to test OCSSDs. Install both.
+function _install_qemu() {
+	local repo=$1
+	local branch=$2
 
-	# Forked QEMU
-	SPDK_QEMU_BRANCH=spdk-5.0.0
 	mkdir -p "$GIT_REPOS/qemu"
-	if [[ ! -d $GIT_REPOS/qemu/$SPDK_QEMU_BRANCH ]]; then
-		git clone "${GIT_REPO_QEMU}" -b "$SPDK_QEMU_BRANCH" "$GIT_REPOS/qemu/$SPDK_QEMU_BRANCH"
+	if [[ ! -d $GIT_REPOS/qemu/$branch ]]; then
+		git clone "$repo" -b "$branch" "$GIT_REPOS/qemu/$branch"
 	else
 		echo "qemu already checked out. Skipping"
 	fi
 
-	declare -a opt_params=("--prefix=/usr/local/qemu/$SPDK_QEMU_BRANCH")
+	declare -a opt_params=("--prefix=/usr/local/qemu/$branch")
 	declare -a extra_cflags=()
 
 	opt_params+=("--disable-docs")
@@ -284,15 +281,29 @@ function install_qemu() {
 	fi
 	opt_params+=("--extra-cflags=${extra_cflags[*]}")
 
-	sed -i s@git://git.qemu.org/@https://github.com/qemu/@g "$GIT_REPOS/qemu/$SPDK_QEMU_BRANCH/.gitmodules"
-	sed -i s@git://git.qemu.org/@https://github.com/qemu/@g "$GIT_REPOS/qemu/$SPDK_QEMU_BRANCH/.git/config"
-	sed -i s@git://git.qemu-project.org/@https://github.com/qemu/@g "$GIT_REPOS/qemu/$SPDK_QEMU_BRANCH/.gitmodules"
-	sed -i s@git://git.qemu-project.org/@https://github.com/qemu/@g "$GIT_REPOS/qemu/$SPDK_QEMU_BRANCH/.git/config"
+	sed -i s@git://git.qemu.org/@https://github.com/qemu/@g "$GIT_REPOS/qemu/$branch/.gitmodules"
+	sed -i s@git://git.qemu.org/@https://github.com/qemu/@g "$GIT_REPOS/qemu/$branch/.git/config"
+	sed -i s@git://git.qemu-project.org/@https://github.com/qemu/@g "$GIT_REPOS/qemu/$branch/.gitmodules"
+	sed -i s@git://git.qemu-project.org/@https://github.com/qemu/@g "$GIT_REPOS/qemu/$branch/.git/config"
 	# The qemu configure script places several output files in the CWD.
-	(cd "$GIT_REPOS/qemu/$SPDK_QEMU_BRANCH" && ./configure "${opt_params[@]}" --target-list="x86_64-softmmu" --enable-kvm --enable-linux-aio --enable-numa)
+	(cd "$GIT_REPOS/qemu/$branch" && ./configure "${opt_params[@]}" --target-list="x86_64-softmmu" --enable-kvm --enable-linux-aio --enable-numa)
 
-	make -C "$GIT_REPOS/qemu/$SPDK_QEMU_BRANCH" -j${jobs}
-	sudo make -C "$GIT_REPOS/qemu/$SPDK_QEMU_BRANCH" install
+	make -C "$GIT_REPOS/qemu/$branch" -j${jobs}
+	sudo make -C "$GIT_REPOS/qemu/$branch" install
+}
+
+function install_qemu() {
+	# Three versions of QEMU are used in the tests.
+	# Stock QEMU is used for vhost.
+	# A special fork is used to test OCSSDs.
+	# Third is for libvfio-user tests.
+	# Install all.
+
+	# Forked QEMUs
+	SPDK_QEMU_BRANCH=spdk-5.0.0
+	VFIO_QEMU_BRANCH=vfio-user-v0.6
+	_install_qemu $GIT_REPO_QEMU $SPDK_QEMU_BRANCH
+	_install_qemu $GIT_REPO_QEMU_VFIO $VFIO_QEMU_BRANCH
 }
 
 function install_nvmecli() {
@@ -545,6 +556,8 @@ export GIT_REPO_FIO
 export GIT_REPO_FLAMEGRAPH
 : ${GIT_REPO_QEMU=https://github.com/spdk/qemu}
 export GIT_REPO_QEMU
+: ${GIT_REPO_QEMU_VFIO=https://github.com/tmakatos/qemu}
+export GIT_REPO_QEMU_VFIO
 : ${GIT_REPO_LIBISCSI=https://github.com/sahlberg/libiscsi}
 export GIT_REPO_LIBISCSI
 : ${GIT_REPO_INTEL_IPSEC_MB=https://github.com/spdk/intel-ipsec-mb.git}
