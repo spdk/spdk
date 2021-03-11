@@ -245,7 +245,6 @@ function confirm_makefile_deps() {
 	)
 }
 
-source ~/autorun-spdk.conf
 config_params=$(get_config_params)
 if [ "$SPDK_TEST_OCF" -eq 1 ]; then
 	config_params="$config_params --with-ocf=$rootdir/build/ocf.a"
