@@ -1231,6 +1231,43 @@ Example response:
   }
 }
 ~~~
+
+## env_dpdk_get_mem_stats {#rpc_env_dpdk_get_mem_stats}
+
+Write the dpdk memory stats to a file.
+
+### Parameters
+
+This method has no parameters.
+
+### Response
+
+The response is a pathname to a text file containing the memory stats.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "env_dpdk_get_mem_stats",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "filename": "/tmp/spdk_mem_dump.txt"
+  }
+}
+~~~
+
 # Block Device Abstraction Layer {#jsonrpc_components_bdev}
 
 ## bdev_set_options {#rpc_bdev_set_options}
