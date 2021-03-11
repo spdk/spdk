@@ -158,8 +158,6 @@ EOF
 			if ((abidiff_output == 1)); then
 				"${cmd_args[@]}" --impacted-interfaces
 			fi
-
-			continue
 		fi
 		processed_so=$((processed_so + 1))
 	done
