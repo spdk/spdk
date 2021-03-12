@@ -4120,6 +4120,42 @@ Example response:
   }
 }
 ~~~
+
+## scsi_get_devices {#rpc_scsi_get_devices}
+
+Display SCSI devices
+
+### Parameters
+
+This method has no parameters.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "scsi_get_devices",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "id": 0,
+      "device_name": "iqn.2016-06.io.spdk:Target3"
+    }
+  ]
+}
+~~~
+
 ## iscsi_set_discovery_auth method {#rpc_iscsi_set_discovery_auth}
 
 Set CHAP authentication for sessions dynamically.
