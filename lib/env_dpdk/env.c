@@ -20,57 +20,26 @@
 
 static __thread bool g_is_thread_unaffinitized;
 
-static uint64_t
-virt_to_phys(void *vaddr)
-{
-	uint64_t ret;
-
-	ret = rte_malloc_virt2iova(vaddr);
-	if (ret != RTE_BAD_IOVA) {
-		return ret;
-	}
-
-	return spdk_vtophys(vaddr, NULL);
-}
-
 void *
-spdk_malloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint32_t flags)
+spdk_malloc(size_t size, size_t align, uint64_t *unused, int socket_id, uint32_t flags)
 {
-	void *buf;
-
-	if (flags == 0) {
+	if (flags == 0 || unused != NULL) {
 		return NULL;
 	}
 
 	align = spdk_max(align, RTE_CACHE_LINE_SIZE);
-	buf = rte_malloc_socket(NULL, size, align, socket_id);
-	if (buf && phys_addr) {
-#ifdef DEBUG
-		SPDK_ERRLOG("phys_addr param in spdk_malloc() is deprecated\n");
-#endif
-		*phys_addr = virt_to_phys(buf);
-	}
-	return buf;
+	return rte_malloc_socket(NULL, size, align, socket_id);
 }
 
 void *
-spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint32_t flags)
+spdk_zmalloc(size_t size, size_t align, uint64_t *unused, int socket_id, uint32_t flags)
 {
-	void *buf;
-
-	if (flags == 0) {
+	if (flags == 0 || unused != NULL) {
 		return NULL;
 	}
 
 	align = spdk_max(align, RTE_CACHE_LINE_SIZE);
-	buf = rte_zmalloc_socket(NULL, size, align, socket_id);
-	if (buf && phys_addr) {
-#ifdef DEBUG
-		SPDK_ERRLOG("phys_addr param in spdk_zmalloc() is deprecated\n");
-#endif
-		*phys_addr = virt_to_phys(buf);
-	}
-	return buf;
+	return rte_zmalloc_socket(NULL, size, align, socket_id);
 }
 
 void *
@@ -87,40 +56,37 @@ spdk_free(void *buf)
 }
 
 void *
-spdk_dma_malloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id)
+spdk_dma_malloc_socket(size_t size, size_t align, uint64_t *unused, int socket_id)
 {
-	return spdk_malloc(size, align, phys_addr, socket_id, (SPDK_MALLOC_DMA | SPDK_MALLOC_SHARE));
+	return spdk_malloc(size, align, unused, socket_id, (SPDK_MALLOC_DMA | SPDK_MALLOC_SHARE));
 }
 
 void *
-spdk_dma_zmalloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id)
+spdk_dma_zmalloc_socket(size_t size, size_t align, uint64_t *unused, int socket_id)
 {
-	return spdk_zmalloc(size, align, phys_addr, socket_id, (SPDK_MALLOC_DMA | SPDK_MALLOC_SHARE));
+	return spdk_zmalloc(size, align, unused, socket_id, (SPDK_MALLOC_DMA | SPDK_MALLOC_SHARE));
 }
 
 void *
-spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
+spdk_dma_malloc(size_t size, size_t align, uint64_t *unused)
 {
-	return spdk_dma_malloc_socket(size, align, phys_addr, SPDK_ENV_SOCKET_ID_ANY);
+	return spdk_dma_malloc_socket(size, align, unused, SPDK_ENV_SOCKET_ID_ANY);
 }
 
 void *
-spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
+spdk_dma_zmalloc(size_t size, size_t align, uint64_t *unused)
 {
-	return spdk_dma_zmalloc_socket(size, align, phys_addr, SPDK_ENV_SOCKET_ID_ANY);
+	return spdk_dma_zmalloc_socket(size, align, unused, SPDK_ENV_SOCKET_ID_ANY);
 }
 
 void *
-spdk_dma_realloc(void *buf, size_t size, size_t align, uint64_t *phys_addr)
+spdk_dma_realloc(void *buf, size_t size, size_t align, uint64_t *unused)
 {
-	void *new_buf;
-
-	align = spdk_max(align, RTE_CACHE_LINE_SIZE);
-	new_buf = rte_realloc(buf, size, align);
-	if (new_buf && phys_addr) {
-		*phys_addr = virt_to_phys(new_buf);
+	if (unused != NULL) {
+		return NULL;
 	}
-	return new_buf;
+	align = spdk_max(align, RTE_CACHE_LINE_SIZE);
+	return rte_realloc(buf, size, align);
 }
 
 void

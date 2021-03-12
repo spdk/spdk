@@ -6,6 +6,12 @@
 
 Updated DPDK submodule to DPDK 23.03.
 
+### env
+
+The `phys_addr` parameter in spdk_*_malloc() functions is now invalid. Passing non-NULL value
+will return NULL from the functions. The parameter was deprecated in SPDK 19.04.
+For retrieving physical addresses, spdk_vtophys() should be used instead.
+
 ## v23.05
 
 ### accel
