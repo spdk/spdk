@@ -850,6 +850,8 @@ spdk_bdev_io_complete_nvme_status(struct spdk_bdev_io *bdev_io, uint32_t cdw0, i
 {
 	if (sct == SPDK_NVME_SCT_GENERIC && sc == SPDK_NVME_SC_SUCCESS) {
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	} else if (sct == SPDK_NVME_SCT_GENERIC && sc == SPDK_NVME_SC_ABORTED_BY_REQUEST) {
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_ABORTED;
 	} else {
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_NVME_ERROR;
 	}
@@ -1942,7 +1944,7 @@ test_abort(void)
 	CU_ASSERT(abort_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(ctrlr->adminq.num_outstanding_reqs == 0);
 	CU_ASSERT(write_io->internal.in_submit_request == false);
-	CU_ASSERT(write_io->internal.status == SPDK_BDEV_IO_STATUS_NVME_ERROR);
+	CU_ASSERT(write_io->internal.status == SPDK_BDEV_IO_STATUS_ABORTED);
 	CU_ASSERT(nvme_ch->qpair->num_outstanding_reqs == 0);
 
 	/* Aborting the admin request should succeed. */
@@ -1964,7 +1966,7 @@ test_abort(void)
 	CU_ASSERT(abort_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(ctrlr->adminq.num_outstanding_reqs == 0);
 	CU_ASSERT(admin_io->internal.in_submit_request == false);
-	CU_ASSERT(admin_io->internal.status == SPDK_BDEV_IO_STATUS_NVME_ERROR);
+	CU_ASSERT(admin_io->internal.status == SPDK_BDEV_IO_STATUS_ABORTED);
 	CU_ASSERT(ctrlr->adminq.num_outstanding_reqs == 0);
 
 	spdk_put_io_channel(ch);
