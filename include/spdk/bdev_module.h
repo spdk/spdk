@@ -367,6 +367,11 @@ struct spdk_bdev {
 	uint32_t max_open_zones;
 
 	/**
+	 * Maximum number of active zones.
+	 */
+	uint32_t max_active_zones;
+
+	/**
 	 * Optimal number of open zones.
 	 */
 	uint32_t optimal_open_zones;

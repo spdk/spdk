@@ -267,6 +267,18 @@ test_get_max_open_zones(void)
 }
 
 static void
+test_get_max_active_zones(void)
+{
+	struct spdk_bdev bdev = {};
+	uint32_t get_max_active_zones;
+
+	bdev.max_active_zones = 9216;
+
+	get_max_active_zones = spdk_bdev_get_max_active_zones(&bdev);
+	CU_ASSERT(get_max_active_zones == 9216);
+}
+
+static void
 test_get_optimal_open_zones(void)
 {
 	struct spdk_bdev bdev = {};
@@ -295,6 +307,7 @@ test_zone_get_operation(void)
 {
 	test_get_zone_size();
 	test_get_max_open_zones();
+	test_get_max_active_zones();
 	test_get_optimal_open_zones();
 }
 

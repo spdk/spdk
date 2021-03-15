@@ -51,6 +51,12 @@ spdk_bdev_get_max_open_zones(const struct spdk_bdev *bdev)
 }
 
 uint32_t
+spdk_bdev_get_max_active_zones(const struct spdk_bdev *bdev)
+{
+	return bdev->max_active_zones;
+}
+
+uint32_t
 spdk_bdev_get_optimal_open_zones(const struct spdk_bdev *bdev)
 {
 	return bdev->optimal_open_zones;

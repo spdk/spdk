@@ -97,6 +97,20 @@ uint64_t spdk_bdev_get_zone_size(const struct spdk_bdev *bdev);
 uint32_t spdk_bdev_get_max_open_zones(const struct spdk_bdev *bdev);
 
 /**
+ * Get device maximum number of active zones.
+ *
+ * An active zone is defined as a zone being in zone state
+ * SPDK_BDEV_ZONE_STATE_IMP_OPEN, SPDK_BDEV_ZONE_STATE_EXP_OPEN or
+ * SPDK_BDEV_ZONE_STATE_CLOSED.
+ *
+ * If this value is 0, there is no limit.
+ *
+ * \param bdev Block device to query.
+ * \return Maximum number of active zones for this zoned device.
+ */
+uint32_t spdk_bdev_get_max_active_zones(const struct spdk_bdev *bdev);
+
+/**
  * Get device optimal number of open zones.
  *
  * \param bdev Block device to query.

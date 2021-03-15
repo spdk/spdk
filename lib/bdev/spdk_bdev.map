@@ -144,6 +144,7 @@
 	# Public functions in bdev_zone.h
 	spdk_bdev_get_zone_size;
 	spdk_bdev_get_max_open_zones;
+	spdk_bdev_get_max_active_zones;
 	spdk_bdev_get_optimal_open_zones;
 	spdk_bdev_get_zone_info;
 	spdk_bdev_zone_management;
