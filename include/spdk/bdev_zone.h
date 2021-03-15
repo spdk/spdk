@@ -53,7 +53,8 @@ enum spdk_bdev_zone_action {
 	SPDK_BDEV_ZONE_CLOSE,
 	SPDK_BDEV_ZONE_FINISH,
 	SPDK_BDEV_ZONE_OPEN,
-	SPDK_BDEV_ZONE_RESET
+	SPDK_BDEV_ZONE_RESET,
+	SPDK_BDEV_ZONE_OFFLINE,
 };
 
 enum spdk_bdev_zone_state {
@@ -149,7 +150,7 @@ int spdk_bdev_get_zone_info(struct spdk_bdev_desc *desc, struct spdk_io_channel 
  * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param zone_id First logical block of a zone.
- * \param action Action to perform on a zone (open, close, reset, finish).
+ * \param action Action to perform on a zone (open, close, reset, finish, offline).
  * \param cb Called when the request is complete.
  * \param cb_arg Argument passed to cb.
  *
