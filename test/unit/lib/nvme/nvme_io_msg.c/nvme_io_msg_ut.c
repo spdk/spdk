@@ -66,6 +66,7 @@ test_nvme_io_msg_process(void)
 	ctrlr.external_io_msgs = &external_io_msgs;
 	ctrlr.external_io_msgs_qpair = (struct spdk_nvme_qpair *)0xDBADBEEF;
 	TAILQ_INIT(&external_io_msgs.elements);
+	pthread_mutex_init(&ctrlr.external_io_msgs_lock, NULL);
 	pthread_mutex_init(&ctrlr.external_io_msgs->lock, NULL);
 
 	/* Send IO processing size requests */
