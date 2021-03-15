@@ -358,7 +358,6 @@ int
 spdk_sock_close(struct spdk_sock **_sock)
 {
 	struct spdk_sock *sock = *_sock;
-	int rc;
 
 	if (sock == NULL) {
 		errno = EBADF;
@@ -371,6 +370,9 @@ spdk_sock_close(struct spdk_sock **_sock)
 		return -1;
 	}
 
+	/* Beyond this point the socket is considered closed. */
+	*_sock = NULL;
+
 	sock->flags.closed = true;
 
 	if (sock->cb_cnt > 0) {
@@ -380,12 +382,7 @@ spdk_sock_close(struct spdk_sock **_sock)
 
 	spdk_sock_abort_requests(sock);
 
-	rc = sock->net_impl->close(sock);
-	if (rc == 0) {
-		*_sock = NULL;
-	}
-
-	return rc;
+	return sock->net_impl->close(sock);
 }
 
 ssize_t
