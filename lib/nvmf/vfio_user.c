@@ -671,18 +671,6 @@ lookup_io_q(struct nvmf_vfio_user_ctrlr *ctrlr, const uint16_t qid, const bool i
 }
 
 static void
-unmap_q(vfu_ctx_t *vfu_ctx, struct nvme_q *q)
-{
-	if (q == NULL) {
-		return;
-	}
-	if (q->addr != NULL) {
-		vfu_unmap_sg(vfu_ctx, &q->sg, &q->iov, 1);
-		q->addr = NULL;
-	}
-}
-
-static void
 unmap_qp(struct nvmf_vfio_user_qpair *qp)
 {
 	struct nvmf_vfio_user_ctrlr *ctrlr;
@@ -695,9 +683,15 @@ unmap_qp(struct nvmf_vfio_user_qpair *qp)
 	SPDK_DEBUGLOG(nvmf_vfio, "%s: destroy I/O QP%d\n",
 		      ctrlr_id(ctrlr), qp->qpair.qid);
 
-	unmap_q(ctrlr->endpoint->vfu_ctx, &qp->sq);
-	unmap_q(ctrlr->endpoint->vfu_ctx, &qp->cq);
+	if (qp->sq.addr != NULL) {
+		vfu_unmap_sg(ctrlr->endpoint->vfu_ctx, &qp->sq.sg, &qp->sq.iov, 1);
+		qp->sq.addr = NULL;
+	}
 
+	if (qp->cq.addr != NULL) {
+		vfu_unmap_sg(ctrlr->endpoint->vfu_ctx, &qp->cq.sg, &qp->cq.iov, 1);
+		qp->cq.addr = NULL;
+	}
 }
 
 /*
@@ -1153,7 +1147,6 @@ memory_region_remove_cb(vfu_ctx_t *vfu_ctx, uint64_t iova, uint64_t len)
 
 	return 0;
 }
-
 
 static int
 nvmf_vfio_user_prop_req_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
