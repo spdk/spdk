@@ -131,7 +131,7 @@ static uint32_t dp_guard_check_extended_lba_test(struct spdk_nvme_ns *ns, struct
 		uint32_t *io_flags)
 {
 	struct spdk_nvme_protection_info *pi;
-	uint32_t md_size, sector_size;
+	uint32_t md_size, sector_size, chksum_size;
 
 	req->lba_count = 2;
 
@@ -142,6 +142,7 @@ static uint32_t dp_guard_check_extended_lba_test(struct spdk_nvme_ns *ns, struct
 
 	sector_size = spdk_nvme_ns_get_sector_size(ns);
 	md_size = spdk_nvme_ns_get_md_size(ns);
+	chksum_size = sector_size + md_size - 8;
 	req->contig = spdk_zmalloc((sector_size + md_size) * req->lba_count, 0x1000, NULL,
 				   SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	assert(req->contig);
@@ -152,12 +153,12 @@ static uint32_t dp_guard_check_extended_lba_test(struct spdk_nvme_ns *ns, struct
 	req->buf_size = (sector_size + md_size) * req->lba_count;
 	req->metadata = NULL;
 	ns_data_buffer_reset(ns, req, DATA_PATTERN);
-	pi = (struct spdk_nvme_protection_info *)(req->contig + sector_size + md_size - 8);
+	pi = (struct spdk_nvme_protection_info *)(req->contig + chksum_size);
 	/* big-endian for guard */
-	to_be16(&pi->guard, spdk_crc16_t10dif(0, req->contig, sector_size));
+	to_be16(&pi->guard, spdk_crc16_t10dif(0, req->contig, chksum_size));
 
 	pi = (struct spdk_nvme_protection_info *)(req->contig + (sector_size + md_size) * 2 - 8);
-	to_be16(&pi->guard, spdk_crc16_t10dif(0, req->contig + sector_size + md_size, sector_size));
+	to_be16(&pi->guard, spdk_crc16_t10dif(0, req->contig + sector_size + md_size, chksum_size));
 
 	*io_flags = SPDK_NVME_IO_FLAGS_PRCHK_GUARD;
 
@@ -175,12 +176,14 @@ static uint32_t dp_with_pract_test(struct spdk_nvme_ns *ns, struct io_request *r
 	uint32_t md_size, sector_size, data_len;
 
 	req->lba_count = 8;
+	req->use_extended_lba = spdk_nvme_ns_supports_extended_lba(ns) ? true : false;
 
 	sector_size = spdk_nvme_ns_get_sector_size(ns);
 	md_size = spdk_nvme_ns_get_md_size(ns);
 	if (md_size == 8) {
 		/* No additional metadata buffer provided */
 		data_len = sector_size * req->lba_count;
+		req->use_extended_lba = false;
 	} else {
 		data_len = (sector_size + md_size) * req->lba_count;
 	}
@@ -207,7 +210,6 @@ static uint32_t dp_with_pract_test(struct spdk_nvme_ns *ns, struct io_request *r
 	}
 
 	req->lba = 0;
-	req->use_extended_lba = false;
 
 	return req->lba_count;
 }
