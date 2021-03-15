@@ -58,6 +58,10 @@ fake_cpl_sc(spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 }
 
 static struct spdk_nvme_ns_data *fake_nsdata;
+static struct spdk_nvme_zns_ns_data nsdata_zns = {
+	.mar = 1024,
+	.mor = 1024,
+};
 
 int
 nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr, uint8_t cns, uint16_t cntid, uint32_t nsid,
@@ -73,8 +77,11 @@ nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr, uint8_t cns, uint16_t cnt
 		}
 		fake_cpl_sc(cb_fn, cb_arg);
 		return 0;
+	} else if (cns == SPDK_NVME_IDENTIFY_NS_IOCS) {
+		assert(payload_size == sizeof(struct spdk_nvme_zns_ns_data));
+		memcpy(payload, &nsdata_zns, sizeof(struct spdk_nvme_zns_ns_data));
+		return 0;
 	}
-
 	return -1;
 }
 
@@ -407,6 +414,45 @@ spdk_nvme_ns_supports(void)
 	CU_ASSERT(spdk_nvme_ns_supports_compare(&ns) == true);
 }
 
+static void
+test_nvme_ns_has_supported_iocs_specific_data(void)
+{
+	struct spdk_nvme_ns ns = {};
+
+	/* case 1: ns.csi == SPDK_NVME_CSI_NVM. Expect: false */
+	ns.csi = SPDK_NVME_CSI_NVM;
+	CU_ASSERT(nvme_ns_has_supported_iocs_specific_data(&ns) == false);
+	/* case 2: ns.csi == SPDK_NVME_CSI_ZNS. Expect: true */
+	ns.csi = SPDK_NVME_CSI_ZNS;
+	CU_ASSERT(nvme_ns_has_supported_iocs_specific_data(&ns) == true);
+	/* case 3: defult ns.csi == SPDK_NVME_CSI_KV. Expect: false */
+	ns.csi = SPDK_NVME_CSI_KV;
+	CU_ASSERT(nvme_ns_has_supported_iocs_specific_data(&ns) == false);
+}
+
+static void
+test_nvme_ctrlr_identify_ns_iocs_specific(void)
+{
+	struct spdk_nvme_ns ns = {};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	int rc = 0;
+
+	ns.ctrlr = &ctrlr;
+
+	ns.csi = SPDK_NVME_CSI_ZNS;
+	ns.id = 1;
+
+	/* case 1: Test nvme_ctrlr_identify_ns_iocs_specific. Expect: PASS. */
+	rc = nvme_ctrlr_identify_ns_iocs_specific(&ns);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ns.nsdata_zns->mar == 1024);
+	CU_ASSERT(ns.nsdata_zns->mor == 1024);
+
+	/* case 2: Test nvme_ns_free_zns_specific_data. Expect: PASS. */
+	nvme_ns_free_zns_specific_data(&ns);
+	CU_ASSERT(ns.nsdata_zns == NULL);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -425,6 +471,8 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_spdk_nvme_ns_get_values);
 	CU_ADD_TEST(suite, test_spdk_nvme_ns_is_active);
 	CU_ADD_TEST(suite, spdk_nvme_ns_supports);
+	CU_ADD_TEST(suite, test_nvme_ns_has_supported_iocs_specific_data);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_identify_ns_iocs_specific);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
