@@ -362,6 +362,11 @@ struct spdk_bdev {
 	uint64_t zone_size;
 
 	/**
+	 * Maximum zone append data transfer size (in blocks).
+	 */
+	uint32_t max_zone_append_size;
+
+	/**
 	 * Maximum number of open zones.
 	 */
 	uint32_t max_open_zones;

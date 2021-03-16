@@ -1305,6 +1305,9 @@ bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, uint32_t n
 	nvme_bdev->disk.blockcnt = geometry->num_grp * geometry->num_pu *
 				   geometry->num_chk * geometry->clba;
 	nvme_bdev->disk.zone_size = geometry->clba;
+	/* Since zone appends are emulated using writes, use max io xfer size (but in blocks) */
+	nvme_bdev->disk.max_zone_append_size = spdk_nvme_ns_get_max_io_xfer_size(ns) /
+					       spdk_nvme_ns_get_extended_sector_size(ns);
 	nvme_bdev->disk.max_open_zones = geometry->maxoc;
 	nvme_bdev->disk.optimal_open_zones = geometry->num_grp * geometry->num_pu;
 	nvme_bdev->disk.write_unit_size = geometry->ws_opt;

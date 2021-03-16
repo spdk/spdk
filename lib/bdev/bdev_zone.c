@@ -45,6 +45,12 @@ spdk_bdev_get_zone_size(const struct spdk_bdev *bdev)
 }
 
 uint32_t
+spdk_bdev_get_max_zone_append_size(const struct spdk_bdev *bdev)
+{
+	return bdev->max_zone_append_size;
+}
+
+uint32_t
 spdk_bdev_get_max_open_zones(const struct spdk_bdev *bdev)
 {
 	return bdev->max_open_zones;

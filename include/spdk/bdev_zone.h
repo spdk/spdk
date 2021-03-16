@@ -85,6 +85,16 @@ struct spdk_bdev_zone_info {
 uint64_t spdk_bdev_get_zone_size(const struct spdk_bdev *bdev);
 
 /**
+ * Get device maximum zone append data transfer size in logical blocks.
+ *
+ * If this value is 0, there is no limit.
+ *
+ * \param bdev Block device to query.
+ * \return Maximum zone append data transfer size for this zoned device in logical blocks.
+ */
+uint32_t spdk_bdev_get_max_zone_append_size(const struct spdk_bdev *bdev);
+
+/**
  * Get device maximum number of open zones.
  *
  * An open zone is defined as a zone being in zone state
