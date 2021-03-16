@@ -555,7 +555,7 @@ export DRIVER_LOCATION_QAT
 export GIT_REPO_GIT
 : ${GIT_REPO_DPDK_KMODS=http://dpdk.org/git/dpdk-kmods}
 export GIT_REPO_DPDK_KMODS
-: ${IRDMA_DRIVER=https://downloadmirror.intel.com/29751/eng/irdma-$IRDMA_VERSION.tgz}
+: ${IRDMA_DRIVER=https://downloadmirror.intel.com/30238/eng/irdma-$IRDMA_VERSION.tgz}
 export IRDMA_DRIVER
 : ${ICE_DRIVER=https://downloadmirror.intel.com/30234/eng/ice-$ICE_VERSION.tar.gz}
 export ICE_DRIVER
