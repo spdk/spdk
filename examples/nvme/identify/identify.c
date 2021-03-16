@@ -896,6 +896,24 @@ print_zns_ns_data(const struct spdk_nvme_zns_ns_data *nsdata_zns)
 	printf("\n");
 }
 
+static const char *
+csi_name(enum spdk_nvme_csi csi)
+{
+	switch (csi) {
+	case SPDK_NVME_CSI_NVM:
+		return "NVM";
+	case SPDK_NVME_CSI_KV:
+		return "KV";
+	case SPDK_NVME_CSI_ZNS:
+		return "ZNS";
+	default:
+		if (csi >= 0x30 && csi <= 0x3f) {
+			return "Vendor specific";
+		}
+		return "Unknown";
+	}
+}
+
 static void
 print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 {
@@ -923,6 +941,8 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	/* This function is only called for active namespaces. */
 	assert(spdk_nvme_ns_is_active(ns));
 
+	printf("Command Set Identifier:                %s (%02Xh)\n",
+	       csi_name(spdk_nvme_ns_get_csi(ns)), spdk_nvme_ns_get_csi(ns));
 	printf("Deallocate:                            %s\n",
 	       (flags & SPDK_NVME_NS_DEALLOCATE_SUPPORTED) ? "Supported" : "Not Supported");
 	printf("Deallocated/Unwritten Error:           %s\n",
