@@ -613,6 +613,102 @@ test_nvme_qpair_resubmit_request_with_transport_failed(void)
 	cleanup_submit_request_test(&qpair);
 }
 
+static void
+ut_spdk_nvme_cmd_cb(void *cb_arg, const struct spdk_nvme_cpl *cpl)
+{
+	CU_ASSERT(cb_arg == (void *)0xDEADBEEF);
+	CU_ASSERT(cpl->sqid == 1);
+	CU_ASSERT(cpl->status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(cpl->status.sc == SPDK_NVME_SC_SUCCESS);
+	CU_ASSERT(cpl->status.dnr == 1);
+}
+
+static void
+test_nvme_qpair_manual_complete_request(void)
+{
+	struct spdk_nvme_qpair qpair = {};
+	struct nvme_request req = {};
+	struct spdk_nvme_ctrlr ctrlr = {};
+
+	qpair.ctrlr = &ctrlr;
+	qpair.id = 1;
+	req.cb_fn = ut_spdk_nvme_cmd_cb;
+	req.cb_arg = (void *) 0xDEADBEEF;
+	req.qpair = &qpair;
+	req.num_children = 0;
+	qpair.ctrlr->opts.disable_error_logging = false;
+	STAILQ_INIT(&qpair.free_req);
+	SPDK_CU_ASSERT_FATAL(STAILQ_EMPTY(&qpair.free_req));
+
+	nvme_qpair_manual_complete_request(&qpair, &req, SPDK_NVME_SCT_GENERIC,
+					   SPDK_NVME_SC_SUCCESS, 1, true);
+	CU_ASSERT(!STAILQ_EMPTY(&qpair.free_req));
+}
+
+static void
+ut_spdk_nvme_cmd_cb_empty(void *cb_arg, const struct spdk_nvme_cpl *cpl)
+{
+
+}
+
+static void
+test_nvme_qpair_init_deinit(void)
+{
+	struct spdk_nvme_qpair qpair = {};
+	struct nvme_request *reqs[3] = {};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct nvme_error_cmd *cmd = NULL;
+	struct nvme_request *var_req = NULL;
+	int rc, i = 0;
+
+	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+
+	rc = nvme_qpair_init(&qpair, 1, &ctrlr, SPDK_NVME_QPRIO_HIGH, 3);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(qpair.id == 1);
+	CU_ASSERT(qpair.qprio == SPDK_NVME_QPRIO_HIGH);
+	CU_ASSERT(qpair.in_completion_context == 0);
+	CU_ASSERT(qpair.delete_after_completion_context == 0);
+	CU_ASSERT(qpair.no_deletion_notification_needed == 0);
+	CU_ASSERT(qpair.ctrlr == &ctrlr);
+	CU_ASSERT(qpair.trtype == SPDK_NVME_TRANSPORT_PCIE);
+	CU_ASSERT(qpair.req_buf != NULL);
+
+	SPDK_CU_ASSERT_FATAL(!STAILQ_EMPTY(&qpair.free_req));
+	STAILQ_FOREACH(var_req, &qpair.free_req, stailq) {
+		/* Check requests address alignment */
+		CU_ASSERT((uint64_t)var_req % 64 == 0);
+		CU_ASSERT(var_req->qpair == &qpair);
+		reqs[i++] = var_req;
+	}
+	CU_ASSERT(i == 3);
+
+	/* Allocate cmd memory for deinit using */
+	cmd = spdk_zmalloc(sizeof(*cmd), 64, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
+	SPDK_CU_ASSERT_FATAL(cmd != NULL);
+	TAILQ_INSERT_TAIL(&qpair.err_cmd_head, cmd, link);
+	for (int i = 0; i < 3; i++) {
+		reqs[i]->cb_fn = ut_spdk_nvme_cmd_cb_empty;
+		reqs[i]->cb_arg = (void *) 0xDEADBEEF;
+		reqs[i]->num_children = 0;
+	}
+
+	/* Emulate requests into various type queues */
+	STAILQ_REMOVE(&qpair.free_req, reqs[0], nvme_request, stailq);
+	STAILQ_INSERT_TAIL(&qpair.queued_req, reqs[0], stailq);
+	STAILQ_REMOVE(&qpair.free_req, reqs[1], nvme_request, stailq);
+	STAILQ_INSERT_TAIL(&qpair.aborting_queued_req, reqs[1], stailq);
+	STAILQ_REMOVE(&qpair.free_req, reqs[2], nvme_request, stailq);
+	STAILQ_INSERT_TAIL(&qpair.err_req_head, reqs[2], stailq);
+	CU_ASSERT(STAILQ_EMPTY(&qpair.free_req));
+
+	nvme_qpair_deinit(&qpair);
+	CU_ASSERT(STAILQ_EMPTY(&qpair.queued_req));
+	CU_ASSERT(STAILQ_EMPTY(&qpair.aborting_queued_req));
+	CU_ASSERT(STAILQ_EMPTY(&qpair.err_req_head));
+	CU_ASSERT(TAILQ_EMPTY(&qpair.err_cmd_head));
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -634,6 +730,8 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_qpair_add_cmd_error_injection);
 	CU_ADD_TEST(suite, test_nvme_qpair_submit_request);
 	CU_ADD_TEST(suite, test_nvme_qpair_resubmit_request_with_transport_failed);
+	CU_ADD_TEST(suite, test_nvme_qpair_manual_complete_request);
+	CU_ADD_TEST(suite, test_nvme_qpair_init_deinit);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
