@@ -1598,6 +1598,7 @@ filter_columns(uint8_t tab)
 	ITEM *cur;
 	void (*p)(enum tabs tab);
 	uint8_t current_index, len = 0;
+	bool disabled[TABS_COL_COUNT];
 
 	for (i = 0; col_desc[i].name != NULL; ++i) {
 		len = spdk_max(col_desc[i].name_len, len);
@@ -1628,6 +1629,10 @@ filter_columns(uint8_t tab)
 		goto fail;
 	}
 
+	for (int i = 0; i < TABS_COL_COUNT; i++) {
+		disabled[i] = col_desc[i].disabled;
+	}
+
 	while (!stop_loop) {
 		c = wgetch(filter_win);
 
@@ -1640,6 +1645,17 @@ filter_columns(uint8_t tab)
 			break;
 		case 27: /* ESC */
 		case 'q':
+			for (int i = 0; i < TABS_COL_COUNT; i++) {
+				cur = current_item(my_menu);
+				col_desc[i].disabled = disabled[i];
+
+				my_items = refresh_filtering_menu(&my_menu, filter_win, tab, my_items, elements,
+								  item_index(cur) + 1);
+				if (my_items == NULL || my_menu == NULL) {
+					goto fail;
+				}
+			}
+
 			stop_loop = true;
 			break;
 		case ' ': /* Space */
