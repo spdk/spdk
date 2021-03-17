@@ -34,7 +34,6 @@
 #include "event_nvmf.h"
 
 #include "spdk/bdev.h"
-#include "spdk/event.h"
 #include "spdk/thread.h"
 #include "spdk/log.h"
 #include "spdk/nvme.h"
@@ -173,7 +172,8 @@ nvmf_tgt_create_poll_group(void *ctx)
 	pg = calloc(1, sizeof(*pg));
 	if (!pg) {
 		SPDK_ERRLOG("Not enough memory to allocate poll groups\n");
-		spdk_app_stop(-ENOMEM);
+		g_tgt_state = NVMF_TGT_ERROR;
+		nvmf_tgt_advance_state();
 		return;
 	}
 
