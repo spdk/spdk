@@ -14,7 +14,6 @@ rpc_py="$rootdir/scripts/rpc.py"
 export TEST_TRANSPORT=VFIOUSER
 
 rm -rf /var/run/muser
-rm -rf /dev/shm/muser
 
 # Start the target
 "${NVMF_APP[@]}" -m 0x1 &
@@ -29,20 +28,14 @@ sleep 1
 $rpc_py nvmf_create_transport -t VFIOUSER
 
 mkdir -p /var/run/muser
-mkdir -p /var/run/muser/iommu_group
 
 for i in $(seq 1 $NUM_DEVICES); do
 	mkdir -p /var/run/muser/domain/muser$i/$i
-	mkdir -p /dev/shm/muser/muser$i
 
 	$rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc$i
 	$rpc_py nvmf_create_subsystem nqn.2019-07.io.spdk:cnode$i -a -s SPDK$i
 	$rpc_py nvmf_subsystem_add_ns nqn.2019-07.io.spdk:cnode$i Malloc$i
 	$rpc_py nvmf_subsystem_add_listener nqn.2019-07.io.spdk:cnode$i -t VFIOUSER -a "/var/run/muser/domain/muser$i/$i" -s 0
-
-	ln -s /var/run/muser/domain/muser$i/$i /var/run/muser/domain/muser$i/$i/iommu_group
-	ln -s /var/run/muser/domain/muser$i/$i /var/run/muser/iommu_group/$i
-	ln -s /var/run/muser/domain/muser$i/$i/bar0 /dev/shm/muser/muser$i/bar0
 done
 
 for i in $(seq 1 $NUM_DEVICES); do
@@ -59,6 +52,5 @@ done
 killprocess $nvmfpid
 
 rm -rf /var/run/muser
-rm -rf /dev/shm/muser
 
 trap - SIGINT SIGTERM EXIT
