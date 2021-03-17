@@ -1309,6 +1309,7 @@ test_attach_ctrlr(void)
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 	const char *attached_names[32] = {};
+	struct nvme_bdev *nbdev;
 	int rc;
 
 	set_thread(0);
@@ -1383,6 +1384,10 @@ test_attach_ctrlr(void)
 
 	CU_ASSERT(attached_names[0] != NULL && strcmp(attached_names[0], "nvme0n1") == 0);
 	attached_names[0] = NULL;
+
+	nbdev = nvme_bdev_ns_to_bdev(nvme_bdev_ctrlr->namespaces[0]);
+	SPDK_CU_ASSERT_FATAL(nbdev != NULL);
+	CU_ASSERT(bdev_nvme_get_ctrlr(&nbdev->disk) == ctrlr);
 
 	rc = bdev_nvme_delete("nvme0", NULL);
 	CU_ASSERT(rc == 0);
