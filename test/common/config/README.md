@@ -17,7 +17,7 @@ to emulate an RDMA enabled NIC. NVMe controllers can also be virtualized in emul
 
 ## VM Specs
 
-When creating the user during the fedora installation, it is best to use the name sys_sgsw. Efforts are being made
+When creating the user during the fedora installation, it is best to use the name sys_sgci. Efforts are being made
 to remove all references to this user, or files specific to this user from the codebase, but there are still some
 trailing references to it.
 
@@ -33,7 +33,7 @@ configuration file. For a full list of the variable declarations available for a
 
 1. Download a fresh Fedora 26 image.
 2. Perform the installation of Fedora 26 server.
-3. Create an admin user sys_sgsw (enabling passwordless sudo for this account will make life easier during the tests).
+3. Create an admin user sys_sgci (enabling passwordless sudo for this account will make life easier during the tests).
 4. Run the vm_setup.sh script which will install all proper dependencies.
 5. Modify the autorun-spdk.conf file in the home directory.
 6. Reboot the VM.
