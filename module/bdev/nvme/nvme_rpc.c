@@ -190,7 +190,7 @@ nvme_rpc_io_cmd_bdev_nvme(struct rpc_bdev_nvme_send_cmd_ctx *ctx, struct spdk_nv
 	struct spdk_nvme_qpair *io_qpair;
 	int ret;
 
-	ctx->ctrlr_io_ch = spdk_get_io_channel(_nvme_ctrlr->ctrlr);
+	ctx->ctrlr_io_ch = spdk_get_io_channel(_nvme_ctrlr);
 	io_qpair = bdev_nvme_get_io_qpair(ctx->ctrlr_io_ch);
 
 	ret = spdk_nvme_ctrlr_cmd_io_raw_with_md(_nvme_ctrlr->ctrlr, io_qpair,

@@ -209,7 +209,9 @@ bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch)
 {
 	struct nvme_io_channel *nvme_ch;
 
-	nvme_ch =  spdk_io_channel_get_ctx(ctrlr_io_ch);
+	assert(ctrlr_io_ch != NULL);
+
+	nvme_ch = spdk_io_channel_get_ctx(ctrlr_io_ch);
 
 	return nvme_ch->qpair;
 }

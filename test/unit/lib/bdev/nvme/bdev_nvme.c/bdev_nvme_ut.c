@@ -1989,6 +1989,44 @@ test_abort(void)
 	ut_detach_ctrlr(ctrlr);
 }
 
+static void
+test_get_io_qpair(void)
+{
+	struct spdk_nvme_transport_id trid = {};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = NULL;
+	struct spdk_io_channel *ch;
+	struct nvme_io_channel *nvme_ch;
+	struct spdk_nvme_qpair *qpair;
+	int rc;
+
+	ut_init_trid(&trid);
+	TAILQ_INIT(&ctrlr.active_io_qpairs);
+
+	set_thread(0);
+
+	rc = nvme_bdev_ctrlr_create(&ctrlr, "nvme0", &trid, 0, &nvme_bdev_ctrlr);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr != NULL);
+
+	ch = spdk_get_io_channel(nvme_bdev_ctrlr);
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+	nvme_ch = spdk_io_channel_get_ctx(ch);
+	CU_ASSERT(nvme_ch->qpair != NULL);
+
+	qpair = bdev_nvme_get_io_qpair(ch);
+	CU_ASSERT(qpair == nvme_ch->qpair);
+
+	spdk_put_io_channel(ch);
+
+	rc = bdev_nvme_delete("nvme0", NULL);
+	CU_ASSERT(rc == 0);
+
+	poll_threads();
+
+	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == NULL);
+}
+
 int
 main(int argc, const char **argv)
 {
@@ -2011,6 +2049,7 @@ main(int argc, const char **argv)
 	CU_ADD_TEST(suite, test_submit_nvme_cmd);
 	CU_ADD_TEST(suite, test_remove_trid);
 	CU_ADD_TEST(suite, test_abort);
+	CU_ADD_TEST(suite, test_get_io_qpair);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 
