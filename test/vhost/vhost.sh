@@ -12,7 +12,7 @@ if [[ $(uname -s) != Linux ]]; then
 	exit 0
 fi
 
-DEFAULT_FIO_BIN="/home/sys_sgsw/fio_ubuntu"
+DEFAULT_FIO_BIN="$DEPENDENCY_DIR/fio"
 
 : ${FIO_BIN="$DEFAULT_FIO_BIN"}
 vhosttestinit

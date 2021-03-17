@@ -5,7 +5,7 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/vhost/common.sh
 
-DEFAULT_FIO_BIN="/home/sys_sgsw/fio_ubuntu"
+DEFAULT_FIO_BIN="$DEPENDENCY_DIR/fio"
 
 case $1 in
 	-h | --help)
