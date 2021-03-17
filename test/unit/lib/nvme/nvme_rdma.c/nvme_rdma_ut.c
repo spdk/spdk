@@ -711,6 +711,155 @@ test_nvme_rdma_ctrlr_construct(void)
 	CU_ASSERT(rc == 0);
 }
 
+static void
+test_nvme_rdma_req_put_and_get(void)
+{
+	struct nvme_rdma_qpair rqpair = {};
+	struct spdk_nvme_rdma_req rdma_req = {};
+	struct spdk_nvme_rdma_req *rdma_req_get;
+
+	/* case 1: nvme_rdma_req_put */
+	TAILQ_INIT(&rqpair.free_reqs);
+	rdma_req.completion_flags = 1;
+	rdma_req.req = (struct nvme_request *)0xDEADBEFF;
+	rdma_req.id = 10086;
+	nvme_rdma_req_put(&rqpair, &rdma_req);
+
+	CU_ASSERT(rqpair.free_reqs.tqh_first == &rdma_req);
+	CU_ASSERT(rqpair.free_reqs.tqh_first->completion_flags == 0);
+	CU_ASSERT(rqpair.free_reqs.tqh_first->req == NULL);
+	CU_ASSERT(rqpair.free_reqs.tqh_first->id == 10086);
+	CU_ASSERT(rdma_req.completion_flags == 0);
+	CU_ASSERT(rdma_req.req == NULL);
+
+	/* case 2: nvme_rdma_req_get */
+	TAILQ_INIT(&rqpair.outstanding_reqs);
+	rdma_req_get = nvme_rdma_req_get(&rqpair);
+	CU_ASSERT(rdma_req_get == &rdma_req);
+	CU_ASSERT(rdma_req_get->id == 10086);
+	CU_ASSERT(rqpair.free_reqs.tqh_first == NULL);
+	CU_ASSERT(rqpair.outstanding_reqs.tqh_first == rdma_req_get);
+}
+
+static void
+test_nvme_rdma_req_init(void)
+{
+	struct nvme_rdma_qpair rqpair = {};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvmf_cmd cmd = {};
+	struct spdk_nvme_rdma_req rdma_req = {};
+	struct nvme_request req = {};
+	struct nvme_rdma_ut_bdev_io bio = {};
+	int rc = 1;
+
+	ctrlr.max_sges = NVME_RDMA_MAX_SGL_DESCRIPTORS;
+	ctrlr.cdata.nvmf_specific.msdbd = 16;
+
+	rqpair.mr_map = (struct spdk_rdma_mem_map *)0xdeadbeef;
+	rqpair.rdma_qp = (struct spdk_rdma_qp *)0xdeadbeef;
+	rqpair.qpair.ctrlr = &ctrlr;
+	rqpair.cmds = &cmd;
+	cmd.sgl[0].address = 0x1111;
+	rdma_req.id = 0;
+	req.cmd.opc = SPDK_NVME_DATA_HOST_TO_CONTROLLER;
+
+	req.payload.contig_or_cb_arg = (void *)0xdeadbeef;
+	/* case 1: req->payload_size == 0, expect: pass. */
+	req.payload_size = 0;
+	rqpair.qpair.ctrlr->ioccsz_bytes = 1024;
+	rqpair.qpair.ctrlr->icdoff = 0;
+	rc = nvme_rdma_req_init(&rqpair, &req, &rdma_req);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(req.cmd.psdt == SPDK_NVME_PSDT_SGL_MPTR_CONTIG);
+	CU_ASSERT(rdma_req.send_sgl[0].length == sizeof(struct spdk_nvme_cmd));
+	CU_ASSERT(rdma_req.send_wr.num_sge == 1);
+	CU_ASSERT(req.cmd.dptr.sgl1.keyed.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK);
+	CU_ASSERT(req.cmd.dptr.sgl1.keyed.subtype == SPDK_NVME_SGL_SUBTYPE_ADDRESS);
+	CU_ASSERT(req.cmd.dptr.sgl1.keyed.length == 0);
+	CU_ASSERT(req.cmd.dptr.sgl1.keyed.key == 0);
+	CU_ASSERT(req.cmd.dptr.sgl1.address == 0);
+
+	/* case 2: payload_type == NVME_PAYLOAD_TYPE_CONTIG, expect: pass. */
+	/* icd_supported is true */
+	rdma_req.req = NULL;
+	rqpair.qpair.ctrlr->icdoff = 0;
+	req.payload_offset = 0;
+	req.payload_size = 1024;
+	req.payload.reset_sgl_fn = NULL;
+	rc = nvme_rdma_req_init(&rqpair, &req, &rdma_req);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == req.payload_size);
+	CU_ASSERT(req.cmd.dptr.sgl1.address == 0);
+	CU_ASSERT(rdma_req.send_sgl[0].length == sizeof(struct spdk_nvme_cmd));
+	CU_ASSERT(rdma_req.send_sgl[1].length == req.payload_size);
+	CU_ASSERT(rdma_req.send_sgl[1].addr == (uint64_t)req.payload.contig_or_cb_arg);
+	CU_ASSERT(rdma_req.send_sgl[1].lkey == RDMA_UT_LKEY);
+
+	/* icd_supported is false */
+	rdma_req.req = NULL;
+	rqpair.qpair.ctrlr->icdoff = 1;
+	req.payload_offset = 0;
+	req.payload_size = 1024;
+	req.payload.reset_sgl_fn = NULL;
+	rc = nvme_rdma_req_init(&rqpair, &req, &rdma_req);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(req.cmd.dptr.sgl1.keyed.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK);
+	CU_ASSERT(req.cmd.dptr.sgl1.keyed.subtype == SPDK_NVME_SGL_SUBTYPE_ADDRESS);
+	CU_ASSERT(req.cmd.dptr.sgl1.keyed.length == req.payload_size);
+	CU_ASSERT(req.cmd.dptr.sgl1.keyed.key == RDMA_UT_RKEY);
+	CU_ASSERT(req.cmd.dptr.sgl1.address == (uint64_t)req.payload.contig_or_cb_arg);
+	CU_ASSERT(rdma_req.send_sgl[0].length == sizeof(struct spdk_nvme_cmd));
+
+	/* case 3: payload_type == NVME_PAYLOAD_TYPE_SGL, expect: pass. */
+	/* icd_supported is true */
+	rdma_req.req = NULL;
+	rqpair.qpair.ctrlr->icdoff = 0;
+	req.payload.reset_sgl_fn = nvme_rdma_ut_reset_sgl;
+	req.payload.next_sge_fn = nvme_rdma_ut_next_sge;
+	req.payload.contig_or_cb_arg = &bio;
+	req.qpair = &rqpair.qpair;
+	bio.iovpos = 0;
+	req.payload_offset = 0;
+	req.payload_size = 1024;
+	bio.iovs[0].iov_base = (void *)0xdeadbeef;
+	bio.iovs[0].iov_len = 1024;
+	rc = nvme_rdma_req_init(&rqpair, &req, &rdma_req);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(bio.iovpos == 1);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == req.payload_size);
+	CU_ASSERT(req.cmd.dptr.sgl1.address == 0);
+	CU_ASSERT(rdma_req.send_sgl[0].length == sizeof(struct spdk_nvme_cmd));
+	CU_ASSERT(rdma_req.send_sgl[1].length == req.payload_size);
+	CU_ASSERT(rdma_req.send_sgl[1].addr == (uint64_t)bio.iovs[0].iov_base);
+	CU_ASSERT(rdma_req.send_sgl[1].lkey == RDMA_UT_LKEY);
+
+	/* icd_supported is false */
+	rdma_req.req = NULL;
+	rqpair.qpair.ctrlr->icdoff = 1;
+	req.payload.reset_sgl_fn = nvme_rdma_ut_reset_sgl;
+	req.payload.next_sge_fn = nvme_rdma_ut_next_sge;
+	req.payload.contig_or_cb_arg = &bio;
+	req.qpair = &rqpair.qpair;
+	bio.iovpos = 0;
+	req.payload_offset = 0;
+	req.payload_size = 1024;
+	bio.iovs[0].iov_base = (void *)0xdeadbeef;
+	bio.iovs[0].iov_len = 1024;
+	rc = nvme_rdma_req_init(&rqpair, &req, &rdma_req);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(bio.iovpos == 1);
+	CU_ASSERT(req.cmd.dptr.sgl1.keyed.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK);
+	CU_ASSERT(req.cmd.dptr.sgl1.keyed.subtype == SPDK_NVME_SGL_SUBTYPE_ADDRESS);
+	CU_ASSERT(req.cmd.dptr.sgl1.keyed.length == req.payload_size);
+	CU_ASSERT(req.cmd.dptr.sgl1.keyed.key == RDMA_UT_RKEY);
+	CU_ASSERT(req.cmd.dptr.sgl1.address == (uint64_t)bio.iovs[0].iov_base);
+	CU_ASSERT(rdma_req.send_sgl[0].length == sizeof(struct spdk_nvme_cmd));
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -731,6 +880,8 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_rdma_qpair_process_cm_event);
 	CU_ADD_TEST(suite, test_nvme_rdma_mr_get_lkey);
 	CU_ADD_TEST(suite, test_nvme_rdma_ctrlr_construct);
+	CU_ADD_TEST(suite, test_nvme_rdma_req_put_and_get);
+	CU_ADD_TEST(suite, test_nvme_rdma_req_init);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
