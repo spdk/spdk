@@ -2036,6 +2036,73 @@ test_get_io_qpair(void)
 	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == NULL);
 }
 
+/* Test a scenario that the bdev subsystem starts shutdown when there still exists
+ * any NVMe bdev. In this scenario, spdk_bdev_unregister() is called first. Add a
+ * test case to avoid regression for this scenario. spdk_bdev_unregister() calls
+ * bdev_nvme_destruct() in the end, and so call bdev_nvme_destruct() directly.
+ */
+static void
+test_bdev_unregister(void)
+{
+	struct spdk_nvme_transport_id trid = {};
+	struct spdk_nvme_host_id hostid = {};
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	struct nvme_bdev_ns *nvme_ns1, *nvme_ns2;
+	const char *attached_names[32] = {};
+	struct nvme_bdev *bdev1, *bdev2;
+	int rc;
+
+	ut_init_trid(&trid);
+
+	ctrlr = ut_attach_ctrlr(&trid, 2);
+	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
+
+	ctrlr->ns[0].is_active = true;
+	ctrlr->ns[1].is_active = true;
+	g_ut_attach_ctrlr_status = 0;
+	g_ut_attach_bdev_count = 2;
+
+	rc = bdev_nvme_create(&trid, &hostid, "nvme0", attached_names, 32, NULL, 0,
+			      attach_ctrlr_done, NULL, NULL);
+	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(1000);
+	poll_threads();
+
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
+	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr != NULL);
+
+	nvme_ns1 = nvme_bdev_ctrlr->namespaces[0];
+	SPDK_CU_ASSERT_FATAL(nvme_ns1 != NULL);
+
+	bdev1 = nvme_bdev_ns_to_bdev(nvme_ns1);
+	SPDK_CU_ASSERT_FATAL(bdev1 != NULL);
+
+	nvme_ns2 = nvme_bdev_ctrlr->namespaces[1];
+	SPDK_CU_ASSERT_FATAL(nvme_ns2 != NULL);
+
+	bdev2 = nvme_bdev_ns_to_bdev(nvme_ns2);
+	SPDK_CU_ASSERT_FATAL(bdev2 != NULL);
+
+	bdev_nvme_destruct(&bdev1->disk);
+	bdev_nvme_destruct(&bdev2->disk);
+
+	poll_threads();
+
+	CU_ASSERT(nvme_bdev_ns_to_bdev(nvme_ns1) == NULL);
+	CU_ASSERT(nvme_bdev_ns_to_bdev(nvme_ns2) == NULL);
+
+	nvme_bdev_ctrlr->destruct = true;
+	_nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
+
+	poll_threads();
+
+	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == NULL);
+
+	ut_detach_ctrlr(ctrlr);
+}
+
 int
 main(int argc, const char **argv)
 {
@@ -2059,6 +2126,7 @@ main(int argc, const char **argv)
 	CU_ADD_TEST(suite, test_remove_trid);
 	CU_ADD_TEST(suite, test_abort);
 	CU_ADD_TEST(suite, test_get_io_qpair);
+	CU_ADD_TEST(suite, test_bdev_unregister);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 
