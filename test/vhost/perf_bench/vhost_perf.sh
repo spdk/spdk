@@ -53,7 +53,7 @@ function usage() {
 	echo "    --vm-memory=INT         Amount of RAM memory (in MB) to pass to a single VM."
 	echo "                            Default: 2048 MB"
 	echo "    --vm-image=PATH         OS image to use for running the VMs."
-	echo "                            Default: \$HOME/spdk_test_image.qcow2"
+	echo "                            Default: \$DEPENDENCY_DIR/spdk_test_image.qcow2"
 	echo "    --vm-sar-enable         Measure CPU utilization in guest VMs using sar."
 	echo "    --host-sar-enable       Measure CPU utilization on host using sar."
 	echo "    --sar-delay=INT         Wait for X seconds before starting SAR measurement. Default: 0."

@@ -81,5 +81,5 @@ To create the VM image manually use following steps:
    ~~~
    ./spdk/test/common/config/vm_setup.sh -t 'fio'
    ~~~
-6. Place the guest VM in the host at the following location: `/home/sys_sgci/spdk_test_image.qcow2`.
+6. Place the guest VM in the host at the following location: `$DEPENDENCY_DIR/spdk_test_image.qcow2`.
 7. On the host, edit the `~/autorun-spdk.conf` file to include the following line: SPDK_TEST_VHOST=1.

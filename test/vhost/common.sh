@@ -8,7 +8,7 @@ VM_DIR=$VHOST_DIR/vms
 TARGET_DIR=$VHOST_DIR/vhost
 VM_PASSWORD="root"
 
-VM_IMAGE=${VM_IMAGE:-"$HOME/spdk_test_image.qcow2"}
+VM_IMAGE=${VM_IMAGE:-"$DEPENDENCY_DIR/spdk_test_image.qcow2"}
 
 if ! hash $QEMU_IMG_BIN $QEMU_BIN; then
 	error 'QEMU is not installed on this system. Unable to run vhost tests.'
