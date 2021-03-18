@@ -71,7 +71,7 @@ function detect_nics_and_probe_drivers() {
 	fi
 }
 
-function pci_nics_switch() {
+function pci_rdma_switch() {
 	local driver=$1
 
 	local -a driver_args=()
@@ -103,26 +103,60 @@ function pci_nics_switch() {
 	esac
 }
 
+function pci_tcp_switch() {
+	local driver=$1
+
+	local -a driver_args=()
+	driver_args+=("Intel E810 ice")
+
+	case $driver in
+		ice)
+			detect_nics_and_probe_drivers ${driver_args[0]}
+			;;
+		*)
+			for d in "${driver_args[@]}"; do
+				detect_nics_and_probe_drivers $d
+			done
+			;;
+	esac
+}
+
 function detect_pci_nics() {
 
 	if ! hash lspci; then
 		return 0
 	fi
 
-	local rdma_drivers="mlx5_ib|irdma|i40iw|iw_cxgb4"
+	local nic_drivers
 	local found_drivers
 
-	# Try to find RDMA drivers which are already loded and try to
-	# use only it's associated NICs, without probing all drivers.
-	found_drivers=$(lsmod | grep -Eo $rdma_drivers | sort -u)
-	for d in $found_drivers; do
-		pci_nics_switch $d
-	done
+	if [[ -z "$TEST_TRANSPORT" ]]; then
+		TEST_TRANSPORT=$SPDK_TEST_NVMF_TRANSPORT
+	fi
 
-	# In case lsmod reported driver, but lspci does not report
-	# physical NICs - fall back to old approach any try to
-	# probe all compatible NICs.
-	((have_pci_nics == 0)) && pci_nics_switch "default"
+	if [[ "$TEST_TRANSPORT" == "rdma" ]]; then
+		nic_drivers="mlx5_ib|irdma|i40iw|iw_cxgb4"
+
+		# Try to find RDMA drivers which are already loded and try to
+		# use only it's associated NICs, without probing all drivers.
+		found_drivers=$(lsmod | grep -Eo $nic_drivers | sort -u)
+		for d in $found_drivers; do
+			pci_rdma_switch $d
+		done
+
+		# In case lsmod reported driver, but lspci does not report
+		# physical NICs - fall back to old approach any try to
+		# probe all compatible NICs.
+		((have_pci_nics == 0)) && pci_rdma_switch "default"
+
+	elif [[ "$TEST_TRANSPORT" == "tcp" ]]; then
+		nic_drivers="ice"
+		found_drivers=$(lsmod | grep -Eo $nic_drivers | sort -u)
+		for d in $found_drivers; do
+			pci_tcp_switch $d
+		done
+		((have_pci_nics == 0)) && pci_tcp_switch "default"
+	fi
 
 	# Use softroce if everything else failed.
 	((have_pci_nics == 0)) && return 0
@@ -131,7 +165,7 @@ function detect_pci_nics() {
 	sleep 5
 }
 
-function detect_rdma_nics() {
+function detect_transport_nics() {
 	detect_pci_nics
 	if [ "$have_pci_nics" -eq "0" ]; then
 		detect_soft_roce_nics
@@ -160,6 +194,16 @@ function get_available_rdma_ips() {
 
 function get_rdma_if_list() {
 	rxe_cfg rxe-net
+}
+
+function get_tcp_if_list_by_driver() {
+	local driver
+	driver=${1:-ice}
+
+	shopt -s nullglob
+	tcp_if_list=(/sys/bus/pci/drivers/$driver/0000*/net/*)
+	shopt -u nullglob
+	printf '%s\n' "${tcp_if_list[@]##*/}"
 }
 
 function get_ip_address() {
@@ -278,6 +322,67 @@ function nvmf_veth_fini() {
 	ip netns del $NVMF_TARGET_NAMESPACE
 }
 
+function nvmf_tcp_init() {
+	NVMF_INITIATOR_IP=10.0.0.1
+	NVMF_FIRST_TARGET_IP=10.0.0.2
+	TCP_INTERFACE_LIST=($(get_tcp_if_list_by_driver))
+	if ((${#TCP_INTERFACE_LIST[@]} == 0)); then
+		nvmf_veth_init
+		return 0
+	fi
+
+	# We need two net devs at minimum
+	((${#TCP_INTERFACE_LIST[@]} > 1))
+
+	NVMF_TARGET_INTERFACE=${TCP_INTERFACE_LIST[0]}
+	NVMF_INITIATOR_INTERFACE=${TCP_INTERFACE_LIST[1]}
+
+	# Skip case nvmf_multipath in nvmf_tcp_init(), it will be covered by nvmf_veth_init().
+	NVMF_SECOND_TARGET_IP=""
+
+	NVMF_TARGET_NAMESPACE=$NVMF_TARGET_INTERFACE"_ns"
+	NVMF_TARGET_NS_CMD=(ip netns exec "$NVMF_TARGET_NAMESPACE")
+	ip netns del $NVMF_TARGET_NAMESPACE || true
+	ip -4 addr flush $NVMF_TARGET_INTERFACE || true
+	ip -4 addr flush $NVMF_INITIATOR_INTERFACE || true
+
+	trap 'nvmf_tcp_fini; exit 1' SIGINT SIGTERM
+
+	# Create network namespace
+	ip netns add $NVMF_TARGET_NAMESPACE
+
+	# Associate phy interface pairs with network namespace
+	ip link set $NVMF_TARGET_INTERFACE netns $NVMF_TARGET_NAMESPACE
+
+	# Allocate IP addresses
+	ip addr add $NVMF_INITIATOR_IP/24 dev $NVMF_INITIATOR_INTERFACE
+	"${NVMF_TARGET_NS_CMD[@]}" ip addr add $NVMF_FIRST_TARGET_IP/24 dev $NVMF_TARGET_INTERFACE
+
+	# Link up phy interfaces
+	ip link set $NVMF_INITIATOR_INTERFACE up
+
+	"${NVMF_TARGET_NS_CMD[@]}" ip link set $NVMF_TARGET_INTERFACE up
+	"${NVMF_TARGET_NS_CMD[@]}" ip link set lo up
+
+	# Accept connections from phy interface
+	iptables -I INPUT 1 -i $NVMF_INITIATOR_INTERFACE -p tcp --dport $NVMF_PORT -j ACCEPT
+
+	# Verify connectivity
+	ping -c 1 $NVMF_FIRST_TARGET_IP
+	"${NVMF_TARGET_NS_CMD[@]}" ping -c 1 $NVMF_INITIATOR_IP
+
+	NVMF_APP=("${NVMF_TARGET_NS_CMD[@]}" "${NVMF_APP[@]}")
+}
+
+function nvmf_tcp_fini() {
+	if [[ "$NVMF_TARGET_NAMESPACE" == "nvmf_tgt_ns" ]]; then
+		nvmf_veth_fini
+		return 0
+	fi
+	ip netns del $NVMF_TARGET_NAMESPACE
+	ip -4 addr flush $NVMF_INITIATOR_INTERFACE
+}
+
 function nvmftestinit() {
 	if [ -z $TEST_TRANSPORT ]; then
 		echo "transport not specified - use --transport= to specify"
@@ -285,22 +390,25 @@ function nvmftestinit() {
 	fi
 	if [ "$TEST_MODE" == "iso" ]; then
 		$rootdir/scripts/setup.sh
-		if [ "$TEST_TRANSPORT" == "rdma" ]; then
+		if [[ "$TEST_TRANSPORT" == "rdma" ]]; then
 			rdma_device_init
+		fi
+		if [[ "$TEST_TRANSPORT" == "tcp" ]]; then
+			tcp_device_init
 		fi
 	fi
 
 	NVMF_TRANSPORT_OPTS="-t $TEST_TRANSPORT"
-	if [ "$TEST_TRANSPORT" == "rdma" ]; then
+	if [[ "$TEST_TRANSPORT" == "rdma" ]]; then
 		RDMA_IP_LIST=$(get_available_rdma_ips)
 		NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
 		NVMF_SECOND_TARGET_IP=$(echo "$RDMA_IP_LIST" | tail -n +2 | head -n 1)
 		if [ -z $NVMF_FIRST_TARGET_IP ]; then
-			echo "no NIC for nvmf test"
+			echo "no RDMA NIC for nvmf test"
 			exit 0
 		fi
-	elif [ "$TEST_TRANSPORT" == "tcp" ]; then
-		nvmf_veth_init
+	elif [[ "$TEST_TRANSPORT" == "tcp" ]]; then
+		nvmf_tcp_init
 		NVMF_TRANSPORT_OPTS="$NVMF_TRANSPORT_OPTS -o"
 	fi
 
@@ -328,18 +436,23 @@ function nvmftestfini() {
 	fi
 	if [ "$TEST_MODE" == "iso" ]; then
 		$rootdir/scripts/setup.sh reset
-		if [ "$TEST_TRANSPORT" == "rdma" ]; then
+		if [[ "$TEST_TRANSPORT" == "rdma" ]]; then
 			rdma_device_init
-		elif [ "$TEST_TRANSPORT" == "tcp" ]; then
-			nvmf_veth_fini
 		fi
+	fi
+	if [[ "$TEST_TRANSPORT" == "tcp" ]]; then
+		nvmf_tcp_fini
 	fi
 }
 
 function rdma_device_init() {
 	load_ib_rdma_modules
-	detect_rdma_nics
+	detect_transport_nics
 	allocate_nic_ips
+}
+
+function tcp_device_init() {
+	detect_transport_nics
 }
 
 function revert_soft_roce() {
