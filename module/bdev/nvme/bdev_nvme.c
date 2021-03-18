@@ -531,7 +531,7 @@ _bdev_nvme_reset_start(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 }
 
 static int
-_bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, void *ctx)
+_bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
 	int rc;
 
@@ -540,7 +540,7 @@ _bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, void *ctx)
 		/* First, delete all NVMe I/O queue pairs. */
 		spdk_for_each_channel(nvme_bdev_ctrlr,
 				      _bdev_nvme_reset_destroy_qpair,
-				      ctx,
+				      NULL,
 				      _bdev_nvme_reset_ctrlr);
 	}
 
@@ -553,11 +553,16 @@ bdev_nvme_reset(struct nvme_io_channel *nvme_ch, struct nvme_bdev_io *bio)
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 	int rc;
 
-	rc = _bdev_nvme_reset(nvme_ch->ctrlr, bio);
-	if (rc == -EBUSY) {
+	rc = _bdev_nvme_reset_start(nvme_ch->ctrlr);
+	if (rc == 0) {
+		/* First, delete all NVMe I/O queue pairs. */
+		spdk_for_each_channel(nvme_ch->ctrlr,
+				      _bdev_nvme_reset_destroy_qpair,
+				      bio,
+				      _bdev_nvme_reset_ctrlr);
+	} else if (rc == -EBUSY) {
 		/* Don't bother resetting if the controller is in the process of being destructed. */
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-		return 0;
 	} else if (rc == -EAGAIN) {
 		/*
 		 * Reset call is queued only if it is from the app framework. This is on purpose so that
@@ -565,10 +570,11 @@ bdev_nvme_reset(struct nvme_io_channel *nvme_ch, struct nvme_bdev_io *bio)
 		 * upper level. If they are in the middle of a reset, we won't try to schedule another one.
 		 */
 		TAILQ_INSERT_TAIL(&nvme_ch->pending_resets, bdev_io, module_link);
-		return 0;
 	} else {
 		return rc;
 	}
+
+	return 0;
 }
 
 static int
@@ -1316,7 +1322,7 @@ nvme_abort_cpl(void *ctx, const struct spdk_nvme_cpl *cpl)
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
 		SPDK_WARNLOG("Abort failed. Resetting controller.\n");
-		_bdev_nvme_reset(nvme_bdev_ctrlr, NULL);
+		_bdev_nvme_reset(nvme_bdev_ctrlr);
 	}
 }
 
@@ -1341,7 +1347,7 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 		csts = spdk_nvme_ctrlr_get_regs_csts(ctrlr);
 		if (csts.bits.cfs) {
 			SPDK_ERRLOG("Controller Fatal Status, reset required\n");
-			_bdev_nvme_reset(nvme_bdev_ctrlr, NULL);
+			_bdev_nvme_reset(nvme_bdev_ctrlr);
 			return;
 		}
 	}
@@ -1360,7 +1366,7 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 
 	/* FALLTHROUGH */
 	case SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET:
-		_bdev_nvme_reset(nvme_bdev_ctrlr, NULL);
+		_bdev_nvme_reset(nvme_bdev_ctrlr);
 		break;
 	case SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE:
 		SPDK_DEBUGLOG(bdev_nvme, "No action for nvme controller timeout.\n");
