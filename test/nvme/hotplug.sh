@@ -54,7 +54,7 @@ function devices_delete() {
 }
 
 password=$1
-base_img=$HOME/spdk_test_image.qcow2
+base_img=$DEPENDENCY_DIR/spdk_test_image.qcow2
 qemu_pidfile=$HOME/qemupid
 
 if [ ! -e "$base_img" ]; then
