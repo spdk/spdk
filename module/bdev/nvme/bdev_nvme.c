@@ -381,7 +381,7 @@ err:
 static void
 _bdev_nvme_check_pending_destruct(struct spdk_io_channel_iter *i, int status)
 {
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = spdk_io_channel_iter_get_io_device(i);
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = spdk_io_channel_iter_get_ctx(i);
 
 	pthread_mutex_lock(&nvme_bdev_ctrlr->mutex);
 	if (nvme_bdev_ctrlr->destruct_after_reset) {
@@ -462,14 +462,14 @@ _bdev_nvme_reset_complete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, int rc)
 	spdk_for_each_channel(nvme_bdev_ctrlr,
 			      rc == 0 ? bdev_nvme_complete_pending_resets :
 			      bdev_nvme_abort_pending_resets,
-			      NULL,
+			      nvme_bdev_ctrlr,
 			      _bdev_nvme_check_pending_destruct);
 }
 
 static void
 _bdev_nvme_reset_create_qpairs_done(struct spdk_io_channel_iter *i, int status)
 {
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = spdk_io_channel_iter_get_io_device(i);
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = spdk_io_channel_iter_get_ctx(i);
 	struct nvme_bdev_io *bio = nvme_bdev_ctrlr->reset_bio;
 	int rc = SPDK_BDEV_IO_STATUS_SUCCESS;
 
@@ -498,7 +498,7 @@ _bdev_nvme_reset_create_qpair(struct spdk_io_channel_iter *i)
 static void
 _bdev_nvme_reset_ctrlr(struct spdk_io_channel_iter *i, int status)
 {
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = spdk_io_channel_iter_get_io_device(i);
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = spdk_io_channel_iter_get_ctx(i);
 	struct nvme_bdev_io *bio = nvme_bdev_ctrlr->reset_bio;
 	int rc;
 
@@ -515,7 +515,7 @@ _bdev_nvme_reset_ctrlr(struct spdk_io_channel_iter *i, int status)
 	/* Recreate all of the I/O queue pairs */
 	spdk_for_each_channel(nvme_bdev_ctrlr,
 			      _bdev_nvme_reset_create_qpair,
-			      NULL,
+			      nvme_bdev_ctrlr,
 			      _bdev_nvme_reset_create_qpairs_done);
 	return;
 
@@ -573,7 +573,7 @@ _bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 		/* First, delete all NVMe I/O queue pairs. */
 		spdk_for_each_channel(nvme_bdev_ctrlr,
 				      _bdev_nvme_reset_destroy_qpair,
-				      NULL,
+				      nvme_bdev_ctrlr,
 				      _bdev_nvme_reset_ctrlr);
 	}
 
@@ -594,7 +594,7 @@ bdev_nvme_reset(struct nvme_io_channel *nvme_ch, struct nvme_bdev_io *bio)
 		/* First, delete all NVMe I/O queue pairs. */
 		spdk_for_each_channel(nvme_ch->ctrlr,
 				      _bdev_nvme_reset_destroy_qpair,
-				      NULL,
+				      nvme_ch->ctrlr,
 				      _bdev_nvme_reset_ctrlr);
 	} else if (rc == -EBUSY) {
 		/* Don't bother resetting if the controller is in the process of being destructed. */
@@ -681,7 +681,7 @@ bdev_nvme_failover(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, bool remove)
 		/* First, delete all NVMe I/O queue pairs. */
 		spdk_for_each_channel(nvme_bdev_ctrlr,
 				      _bdev_nvme_reset_destroy_qpair,
-				      NULL,
+				      nvme_bdev_ctrlr,
 				      _bdev_nvme_reset_ctrlr);
 	} else if (rc != -EBUSY) {
 		return rc;
