@@ -396,23 +396,36 @@ _bdev_nvme_check_pending_destruct(struct spdk_io_channel_iter *i, int status)
 }
 
 static void
-_bdev_nvme_complete_pending_resets(struct spdk_io_channel_iter *i)
+_bdev_nvme_complete_pending_resets(struct nvme_io_channel *nvme_ch,
+				   enum spdk_bdev_io_status status)
 {
-	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
-	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(_ch);
 	struct spdk_bdev_io *bdev_io;
-	enum spdk_bdev_io_status status = SPDK_BDEV_IO_STATUS_SUCCESS;
-
-	/* A NULL ctx means success. */
-	if (spdk_io_channel_iter_get_ctx(i) != NULL) {
-		status = SPDK_BDEV_IO_STATUS_FAILED;
-	}
 
 	while (!TAILQ_EMPTY(&nvme_ch->pending_resets)) {
 		bdev_io = TAILQ_FIRST(&nvme_ch->pending_resets);
 		TAILQ_REMOVE(&nvme_ch->pending_resets, bdev_io, module_link);
 		spdk_bdev_io_complete(bdev_io, status);
 	}
+}
+
+static void
+bdev_nvme_complete_pending_resets(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
+	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(_ch);
+
+	_bdev_nvme_complete_pending_resets(nvme_ch, SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static void
+bdev_nvme_abort_pending_resets(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
+	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(_ch);
+
+	_bdev_nvme_complete_pending_resets(nvme_ch, SPDK_BDEV_IO_STATUS_FAILED);
 
 	spdk_for_each_channel_continue(i, 0);
 }
@@ -420,13 +433,9 @@ _bdev_nvme_complete_pending_resets(struct spdk_io_channel_iter *i)
 static void
 _bdev_nvme_reset_complete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, int rc)
 {
-	/* we are using the for_each_channel cb_arg like a return code here. */
-	/* If it's zero, we succeeded, otherwise, the reset failed. */
-	void *cb_arg = NULL;
 	struct nvme_bdev_ctrlr_trid *curr_trid;
 
 	if (rc) {
-		cb_arg = (void *)0x1;
 		SPDK_ERRLOG("Resetting controller failed.\n");
 	} else {
 		SPDK_NOTICELOG("Resetting controller successful.\n");
@@ -440,7 +449,7 @@ _bdev_nvme_reset_complete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, int rc)
 	assert(curr_trid != NULL);
 	assert(&curr_trid->trid == nvme_bdev_ctrlr->connected_trid);
 
-	curr_trid->is_failed = cb_arg != NULL ? true : false;
+	curr_trid->is_failed = rc != 0 ? true : false;
 
 	if (nvme_bdev_ctrlr->ref == 0 && nvme_bdev_ctrlr->destruct) {
 		/* Destruct ctrlr after clearing pending resets. */
@@ -451,8 +460,9 @@ _bdev_nvme_reset_complete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, int rc)
 
 	/* Make sure we clear any pending resets before returning. */
 	spdk_for_each_channel(nvme_bdev_ctrlr,
-			      _bdev_nvme_complete_pending_resets,
-			      cb_arg,
+			      rc == 0 ? bdev_nvme_complete_pending_resets :
+			      bdev_nvme_abort_pending_resets,
+			      NULL,
 			      _bdev_nvme_check_pending_destruct);
 }
 
@@ -460,7 +470,7 @@ static void
 _bdev_nvme_reset_create_qpairs_done(struct spdk_io_channel_iter *i, int status)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = spdk_io_channel_iter_get_io_device(i);
-	struct nvme_bdev_io *bio = spdk_io_channel_iter_get_ctx(i);
+	struct nvme_bdev_io *bio = nvme_bdev_ctrlr->reset_bio;
 	int rc = SPDK_BDEV_IO_STATUS_SUCCESS;
 
 	if (status) {
@@ -468,6 +478,7 @@ _bdev_nvme_reset_create_qpairs_done(struct spdk_io_channel_iter *i, int status)
 	}
 	if (bio) {
 		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), rc);
+		nvme_bdev_ctrlr->reset_bio = NULL;
 	}
 	_bdev_nvme_reset_complete(nvme_bdev_ctrlr, status);
 }
@@ -488,7 +499,7 @@ static void
 _bdev_nvme_reset_ctrlr(struct spdk_io_channel_iter *i, int status)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = spdk_io_channel_iter_get_io_device(i);
-	struct nvme_bdev_io *bio = spdk_io_channel_iter_get_ctx(i);
+	struct nvme_bdev_io *bio = nvme_bdev_ctrlr->reset_bio;
 	int rc;
 
 	if (status) {
@@ -504,13 +515,14 @@ _bdev_nvme_reset_ctrlr(struct spdk_io_channel_iter *i, int status)
 	/* Recreate all of the I/O queue pairs */
 	spdk_for_each_channel(nvme_bdev_ctrlr,
 			      _bdev_nvme_reset_create_qpair,
-			      bio,
+			      NULL,
 			      _bdev_nvme_reset_create_qpairs_done);
 	return;
 
 err:
 	if (bio) {
 		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), SPDK_BDEV_IO_STATUS_FAILED);
+		nvme_bdev_ctrlr->reset_bio = NULL;
 	}
 	_bdev_nvme_reset_complete(nvme_bdev_ctrlr, rc);
 }
@@ -576,10 +588,13 @@ bdev_nvme_reset(struct nvme_io_channel *nvme_ch, struct nvme_bdev_io *bio)
 
 	rc = _bdev_nvme_reset_start(nvme_ch->ctrlr);
 	if (rc == 0) {
+		assert(nvme_ch->ctrlr->reset_bio == NULL);
+		nvme_ch->ctrlr->reset_bio = bio;
+
 		/* First, delete all NVMe I/O queue pairs. */
 		spdk_for_each_channel(nvme_ch->ctrlr,
 				      _bdev_nvme_reset_destroy_qpair,
-				      bio,
+				      NULL,
 				      _bdev_nvme_reset_ctrlr);
 	} else if (rc == -EBUSY) {
 		/* Don't bother resetting if the controller is in the process of being destructed. */
