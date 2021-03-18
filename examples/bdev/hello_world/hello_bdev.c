@@ -38,6 +38,7 @@
 #include "spdk/event.h"
 #include "spdk/log.h"
 #include "spdk/string.h"
+#include "spdk/bdev_zone.h"
 
 static char *g_bdev_name = "Malloc0";
 
@@ -190,6 +191,50 @@ hello_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
 	SPDK_NOTICELOG("Unsupported bdev event: type %d\n", type);
 }
 
+static void
+reset_zone_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct hello_context_t *hello_context = cb_arg;
+
+	/* Complete the I/O */
+	spdk_bdev_free_io(bdev_io);
+
+	if (!success) {
+		SPDK_ERRLOG("bdev io reset zone error: %d\n", EIO);
+		spdk_put_io_channel(hello_context->bdev_io_channel);
+		spdk_bdev_close(hello_context->bdev_desc);
+		spdk_app_stop(-1);
+		return;
+	}
+
+	hello_write(hello_context);
+}
+
+static void
+hello_reset_zone(void *arg)
+{
+	struct hello_context_t *hello_context = arg;
+	int rc = 0;
+
+	rc = spdk_bdev_zone_management(hello_context->bdev_desc, hello_context->bdev_io_channel,
+				       0, SPDK_BDEV_ZONE_RESET, reset_zone_complete, hello_context);
+
+	if (rc == -ENOMEM) {
+		SPDK_NOTICELOG("Queueing io\n");
+		/* In case we cannot perform I/O now, queue I/O */
+		hello_context->bdev_io_wait.bdev = hello_context->bdev;
+		hello_context->bdev_io_wait.cb_fn = hello_reset_zone;
+		hello_context->bdev_io_wait.cb_arg = hello_context;
+		spdk_bdev_queue_io_wait(hello_context->bdev, hello_context->bdev_io_channel,
+					&hello_context->bdev_io_wait);
+	} else if (rc) {
+		SPDK_ERRLOG("%s error while resetting zone: %d\n", spdk_strerror(-rc), rc);
+		spdk_put_io_channel(hello_context->bdev_io_channel);
+		spdk_bdev_close(hello_context->bdev_desc);
+		spdk_app_stop(-1);
+	}
+}
+
 /*
  * Our initial event that kicks off everything from main().
  */
@@ -248,6 +293,12 @@ hello_start(void *arg1)
 		return;
 	}
 	snprintf(hello_context->buff, blk_size, "%s", "Hello World!\n");
+
+	if (spdk_bdev_is_zoned(hello_context->bdev)) {
+		hello_reset_zone(hello_context);
+		/* If bdev is zoned, the callback, reset_zone_complete, will call hello_write() */
+		return;
+	}
 
 	hello_write(hello_context);
 }
