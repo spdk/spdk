@@ -31,8 +31,8 @@ configuration file. For a full list of the variable declarations available for a
 
 ## Steps for Configuring the VM
 
-1. Download a fresh Fedora 26 image.
-2. Perform the installation of Fedora 26 server.
+1. Download a fresh Fedora 33 image.
+2. Perform the installation of Fedora 33 server.
 3. Create an admin user sys_sgci (enabling passwordless sudo for this account will make life easier during the tests).
 4. Run the vm_setup.sh script which will install all proper dependencies.
 5. Modify the autorun-spdk.conf file in the home directory.
