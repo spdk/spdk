@@ -269,6 +269,8 @@ spdk_sock_connect_ext(const char *ip, int port, char *_impl_name, struct spdk_so
 			/* Copy the contents, both the two structures are the same ABI version */
 			memcpy(&sock->opts, &opts_local, sizeof(sock->opts));
 			sock->net_impl = impl;
+			/* Set the placement_id to -1 explicitly */
+			sock->placement_id = -1;
 			TAILQ_INIT(&sock->queued_reqs);
 			TAILQ_INIT(&sock->pending_reqs);
 			return sock;
@@ -339,6 +341,7 @@ spdk_sock_accept(struct spdk_sock *sock)
 		new_sock->opts = sock->opts;
 		memcpy(&new_sock->opts, &sock->opts, sizeof(new_sock->opts));
 		new_sock->net_impl = sock->net_impl;
+		/* Set the placement_id to -1 explicitly */
 		new_sock->placement_id = -1;
 		TAILQ_INIT(&new_sock->queued_reqs);
 		TAILQ_INIT(&new_sock->pending_reqs);
@@ -552,7 +555,7 @@ spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 	}
 
 	placement_id = sock_get_placement_id(sock);
-	if (placement_id != 0) {
+	if (placement_id != -1) {
 		rc = sock_map_insert(placement_id, group, 0);
 		if (rc < 0) {
 			return -1;
@@ -601,7 +604,7 @@ spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *soc
 	assert(group_impl == sock->group_impl);
 
 	placement_id = sock_get_placement_id(sock);
-	if (placement_id != 0) {
+	if (placement_id != -1) {
 		sock_map_release(placement_id);
 	}
 
