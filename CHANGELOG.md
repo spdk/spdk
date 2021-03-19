@@ -3,6 +3,10 @@
 ## v21.04: (Upcoming Release)
 
 
+### ocf
+
+Updated OCF submodule to v20.12.2
+
 ### nvme
 
 Added an accelerated table pointer in spdk_nvme_poll_group
