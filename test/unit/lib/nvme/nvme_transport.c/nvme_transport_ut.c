@@ -159,6 +159,62 @@ test_nvme_transport_poll_group_disconnect_qpair(void)
 	SPDK_CU_ASSERT_FATAL(rc == -EINVAL);
 }
 
+static int
+ut_poll_group_add_remove(struct spdk_nvme_transport_poll_group *tgroup,
+			 struct spdk_nvme_qpair *qpair)
+{
+	return 0;
+}
+
+static void
+test_nvme_transport_poll_group_add_remove(void)
+{
+	int rc;
+	struct spdk_nvme_transport_poll_group tgroup = {};
+	struct spdk_nvme_qpair qpair = {};
+	const struct spdk_nvme_transport transport = {
+		.ops.poll_group_add = ut_poll_group_add_remove,
+		.ops.poll_group_remove = ut_poll_group_add_remove
+	};
+
+	tgroup.transport = &transport;
+	qpair.poll_group = &tgroup;
+	qpair.state = NVME_QPAIR_DISCONNECTED;
+	STAILQ_INIT(&tgroup.connected_qpairs);
+	STAILQ_INIT(&tgroup.disconnected_qpairs);
+
+	/* Add qpair */
+	rc = nvme_transport_poll_group_add(&tgroup, &qpair);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(qpair.poll_group_tailq_head == &tgroup.disconnected_qpairs);
+	CU_ASSERT(STAILQ_FIRST(&tgroup.disconnected_qpairs) == &qpair);
+
+	/*  Remove disconnected_qpairs */
+	SPDK_CU_ASSERT_FATAL(!STAILQ_EMPTY(&tgroup.disconnected_qpairs));
+
+	rc = nvme_transport_poll_group_remove(&tgroup, &qpair);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(STAILQ_EMPTY(&tgroup.disconnected_qpairs));
+	CU_ASSERT(qpair.poll_group == NULL);
+	CU_ASSERT(qpair.poll_group_tailq_head == NULL);
+
+	/* Remove connected_qpairs */
+	qpair.poll_group_tailq_head = &tgroup.connected_qpairs;
+	STAILQ_INSERT_TAIL(&tgroup.connected_qpairs, &qpair, poll_group_stailq);
+
+	rc = nvme_transport_poll_group_remove(&tgroup, &qpair);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(qpair.poll_group == NULL);
+	CU_ASSERT(qpair.poll_group_tailq_head == NULL);
+
+	/* Invalid qpair */
+	qpair.poll_group_tailq_head = NULL;
+
+	rc = nvme_transport_poll_group_remove(&tgroup, &qpair);
+	CU_ASSERT(rc == -ENOENT);
+}
+
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -171,6 +227,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_get_transport);
 	CU_ADD_TEST(suite, test_nvme_transport_poll_group_connect_qpair);
 	CU_ADD_TEST(suite, test_nvme_transport_poll_group_disconnect_qpair);
+	CU_ADD_TEST(suite, test_nvme_transport_poll_group_add_remove);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
