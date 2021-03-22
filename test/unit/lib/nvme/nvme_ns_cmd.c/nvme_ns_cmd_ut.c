@@ -241,6 +241,9 @@ prepare_for_test(struct spdk_nvme_ns *ns, struct spdk_nvme_ctrlr *ctrlr,
 	ns->md_size = md_size;
 	ns->sectors_per_max_io = spdk_nvme_ns_get_max_io_xfer_size(ns) / ns->extended_lba_size;
 	ns->sectors_per_max_io_no_md = spdk_nvme_ns_get_max_io_xfer_size(ns) / ns->sector_size;
+	if (ctrlr->quirks & NVME_QUIRK_MDTS_EXCLUDE_MD) {
+		ns->sectors_per_max_io = ns->sectors_per_max_io_no_md;
+	}
 	ns->sectors_per_stripe = stripe_size / ns->extended_lba_size;
 
 	memset(qpair, 0, sizeof(*qpair));
@@ -1318,6 +1321,31 @@ test_nvme_ns_cmd_write_with_md(void)
 	nvme_request_free_children(g_request);
 	nvme_free_request(g_request);
 	cleanup_after_test(&qpair);
+
+	/*
+	 * 512 byte data + 128 byte metadata
+	 * Extended LBA
+	 * Max data transfer size 128 KB
+	 * No stripe size
+	 * Enable NVME_QUIRK_MDTS_EXCLUDE_MD quirk
+	 *
+	 * 256 blocks * 512 bytes per block = single 128 KB I/O (no splitting required)
+	 */
+	ctrlr.quirks = NVME_QUIRK_MDTS_EXCLUDE_MD;
+	prepare_for_test(&ns, &ctrlr, &qpair, 512, 128, 128 * 1024, 0, true);
+
+	rc = spdk_nvme_ns_cmd_write_with_md(&ns, &qpair, buffer, NULL, 0x1000, 256, NULL, NULL, 0, 0,
+					    0);
+
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_request != NULL);
+	SPDK_CU_ASSERT_FATAL(g_request->num_children == 0);
+	CU_ASSERT(g_request->md_size == 256 * 128);
+	CU_ASSERT(g_request->payload_size == 256 * (512 + 128));
+
+	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
+	ctrlr.quirks = 0;
 
 	/*
 	 * 512 byte data + 8 byte metadata

@@ -65,6 +65,9 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 
 	ns->sectors_per_max_io = spdk_nvme_ns_get_max_io_xfer_size(ns) / ns->extended_lba_size;
 	ns->sectors_per_max_io_no_md = spdk_nvme_ns_get_max_io_xfer_size(ns) / ns->sector_size;
+	if (ns->ctrlr->quirks & NVME_QUIRK_MDTS_EXCLUDE_MD) {
+		ns->sectors_per_max_io = ns->sectors_per_max_io_no_md;
+	}
 
 	if (nsdata->noiob) {
 		ns->sectors_per_stripe = nsdata->noiob;

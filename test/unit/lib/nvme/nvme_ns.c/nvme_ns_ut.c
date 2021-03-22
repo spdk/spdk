@@ -257,27 +257,27 @@ test_nvme_ns_set_identify_data(void)
 	ns.ctrlr->cdata.vwc.present = 1;
 	ns.ctrlr->cdata.oncs.write_zeroes = 1;
 	ns.ctrlr->cdata.oncs.write_unc = 1;
-	ns.ctrlr->min_page_size = 1024;
-	ns.ctrlr->max_xfer_size = 65536;
+	ns.ctrlr->min_page_size = 4096;
+	ns.ctrlr->max_xfer_size = 131072;
 
 	ns.nsdata.flbas.extended = 1;
 	ns.nsdata.nsrescap.raw = 1;
 	ns.nsdata.dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_TYPE1;
 	ns.nsdata.flbas.format = 0;
 	ns.nsdata.lbaf[0].lbads = 9;
-	ns.nsdata.lbaf[0].ms = 512;
+	ns.nsdata.lbaf[0].ms = 8;
 
-	/* case1:  nsdata->noiob > 0 */
+	/* case 1:  nsdata->noiob > 0 */
 	ns.nsdata.noiob = 1;
 	nvme_ns_set_identify_data(&ns);
 	CU_ASSERT(spdk_nvme_ns_get_optimal_io_boundary(&ns) == 1)
 
 	CU_ASSERT(spdk_nvme_ns_get_sector_size(&ns) == 512);
-	CU_ASSERT(spdk_nvme_ns_get_extended_sector_size(&ns) == 1024);
-	CU_ASSERT(spdk_nvme_ns_get_md_size(&ns) == 512);
-	CU_ASSERT(spdk_nvme_ns_get_max_io_xfer_size(&ns) == 65536);
-	CU_ASSERT(ns.sectors_per_max_io == 64);
-	CU_ASSERT(ns.sectors_per_max_io_no_md == 128);
+	CU_ASSERT(spdk_nvme_ns_get_extended_sector_size(&ns) == 520);
+	CU_ASSERT(spdk_nvme_ns_get_md_size(&ns) == 8);
+	CU_ASSERT(spdk_nvme_ns_get_max_io_xfer_size(&ns) == 131072);
+	CU_ASSERT(ns.sectors_per_max_io == 252);
+	CU_ASSERT(ns.sectors_per_max_io_no_md == 256);
 	CU_ASSERT(spdk_nvme_ns_get_pi_type(&ns) == SPDK_NVME_FMT_NVM_PROTECTION_TYPE1);
 
 	CU_ASSERT(spdk_nvme_ns_get_flags(&ns) & SPDK_NVME_NS_EXTENDED_LBA_SUPPORTED);
@@ -288,6 +288,12 @@ test_nvme_ns_set_identify_data(void)
 	CU_ASSERT(spdk_nvme_ns_get_flags(&ns) & SPDK_NVME_NS_WRITE_UNCORRECTABLE_SUPPORTED);
 	CU_ASSERT(spdk_nvme_ns_get_flags(&ns) & SPDK_NVME_NS_RESERVATION_SUPPORTED);
 	CU_ASSERT(spdk_nvme_ns_get_flags(&ns) & SPDK_NVME_NS_DPS_PI_SUPPORTED);
+
+	/* case 2: quirks for NVME_QUIRK_MDTS_EXCLUDE_MD */
+	ns.ctrlr->quirks = NVME_QUIRK_MDTS_EXCLUDE_MD;
+	nvme_ns_set_identify_data(&ns);
+	CU_ASSERT(ns.sectors_per_max_io == 256);
+	CU_ASSERT(ns.sectors_per_max_io_no_md == 256);
 }
 
 static void

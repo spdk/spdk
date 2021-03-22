@@ -156,6 +156,11 @@ extern pid_t g_spdk_nvme_pid;
  */
 #define NVME_QUIRK_NO_SGL_FOR_DSM 0x4000
 
+/**
+ * Maximum Data Transfer Size(MDTS) excludes interleaved metadata.
+ */
+#define NVME_QUIRK_MDTS_EXCLUDE_MD 0x8000
+
 #define NVME_MAX_ASYNC_EVENTS	(8)
 
 #define NVME_MAX_ADMIN_TIMEOUT_IN_SECS	(30)
