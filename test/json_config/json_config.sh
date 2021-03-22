@@ -300,8 +300,12 @@ function create_iscsi_subsystem_config() {
 function create_nvmf_subsystem_config() {
 	timing_enter "${FUNCNAME[0]}"
 
-	RDMA_IP_LIST=$(get_available_rdma_ips)
-	NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
+	NVMF_FIRST_TARGET_IP="127.0.0.1"
+	if [[ $SPDK_TEST_NVMF_TRANSPORT == "rdma" ]]; then
+		rdma_device_init
+		NVMF_FIRST_TARGET_IP=$(get_available_rdma_ips | head -n 1)
+	fi
+
 	if [[ -z $NVMF_FIRST_TARGET_IP ]]; then
 		echo "Error: no NIC for nvmf test"
 		return 1
@@ -310,11 +314,11 @@ function create_nvmf_subsystem_config() {
 	tgt_rpc bdev_malloc_create 8 512 --name MallocForNvmf0
 	tgt_rpc bdev_malloc_create 4 1024 --name MallocForNvmf1
 
-	tgt_rpc nvmf_create_transport -t RDMA -u 8192 -c 0
+	tgt_rpc nvmf_create_transport -t $SPDK_TEST_NVMF_TRANSPORT -u 8192 -c 0
 	tgt_rpc nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
 	tgt_rpc nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 MallocForNvmf0
 	tgt_rpc nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 MallocForNvmf1
-	tgt_rpc nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t RDMA -a $NVMF_FIRST_TARGET_IP -s "$NVMF_PORT"
+	tgt_rpc nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $SPDK_TEST_NVMF_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s "$NVMF_PORT"
 
 	timing_exit "${FUNCNAME[0]}"
 }

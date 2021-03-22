@@ -151,10 +151,6 @@ timing_enter afterboot
 ./scripts/setup.sh
 timing_exit afterboot
 
-timing_enter nvmf_setup
-rdma_device_init
-timing_exit nvmf_setup
-
 if [[ $SPDK_TEST_CRYPTO -eq 1 || $SPDK_TEST_REDUCE -eq 1 ]]; then
 	# Make sure that memory is distributed across all NUMA nodes - by default, all goes to
 	# node0, but if QAT devices are attached to a different node, all of their VFs will end
@@ -248,11 +244,14 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		# The NVMe-oF run test cases are split out like this so that the parser that compiles the
 		# list of all tests can properly differentiate them. Please do not merge them into one line.
 		if [ "$SPDK_TEST_NVMF_TRANSPORT" = "rdma" ]; then
+			timing_enter rdma_setup
+			rdma_device_init
+			timing_exit rdma_setup
 			run_test "nvmf_rdma" ./test/nvmf/nvmf.sh --transport=$SPDK_TEST_NVMF_TRANSPORT
-			run_test "spdkcli_nvmf_rdma" ./test/spdkcli/nvmf.sh
+			run_test "spdkcli_nvmf_rdma" ./test/spdkcli/nvmf.sh --transport=$SPDK_TEST_NVMF_TRANSPORT
 		elif [ "$SPDK_TEST_NVMF_TRANSPORT" = "tcp" ]; then
 			run_test "nvmf_tcp" ./test/nvmf/nvmf.sh --transport=$SPDK_TEST_NVMF_TRANSPORT
-			run_test "spdkcli_nvmf_tcp" ./test/spdkcli/nvmf.sh
+			run_test "spdkcli_nvmf_tcp" ./test/spdkcli/nvmf.sh --transport=$SPDK_TEST_NVMF_TRANSPORT
 			run_test "nvmf_identify_passthru" test/nvmf/target/identify_passthru.sh --transport=$SPDK_TEST_NVMF_TRANSPORT
 			run_test "nvmf_dif" test/nvmf/target/dif.sh
 		elif [ "$SPDK_TEST_NVMF_TRANSPORT" = "fc" ]; then
