@@ -17,13 +17,10 @@ Run the spdk_top application
 Menu at the bottom of SPDK top window shows many options for changing displayed data. Each menu item has a key associated with it in square brackets.
 
 * Quit - quits the SPDK top application.
-* TAB selection - allows to select THREADS/POLLERS/CORES tabs.
+* Switch tab - allows to select THREADS/POLLERS/CORES tabs.
 * Previous page/Next page - scrolls up/down to the next set of rows displayed. Indicator in the bottom-left corner shows current page and number of all available pages.
-* Columns - enables/disables chosen columns in a column pop-up window.
-* Sorting - allows to sort displayed data by column in a sorting pop-up.
-* Refresh rate - takes user input from 0 to 255 and changes refresh rate to that value in seconds.
 * Item details - displays details pop-up window for highlighted data row. Selection is changed by pressing UP and DOWN arrow keys.
-* Total/Interval - changes displayed values in all tabs to either Total time (measured since start of SPDK application) or Interval time (measured since last refresh).
+* Help - displays help pop-up window.
 
 # Threads Tab
 The threads tab displays a line item for each spdk thread. The information displayed shows:
@@ -63,3 +60,6 @@ The cores tab provides insights into how the application is using the CPU cores 
 
 \n
 Pressing ENTER key makes a pop-up window appear, showing above information, along with a list of threads running on selected core. Cores details window allows to select a thread and display thread details pop-up on top of it. To close both pop-ups use ESC key.
+
+# Help Window
+Help window pop-up can be invoked by pressing H key inside any tab. It contains explanations for each key used inside the spdk_top application.
