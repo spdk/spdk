@@ -243,23 +243,38 @@ link_up() {
 	echo $(($(< "$net/$1/flags") | 0x1)) > "$net/$1/flags"
 }
 
-collect_devices() {
-	local net_dev rxe_dev
+collect_net_devices() {
+	local net_dev
 
 	for net_dev in "$net/"!(bonding_masters); do
 		(($(< "$net_dev/type") != 1)) && continue
 		net_devices["${net_dev##*/}"]=$net_dev
-		for rxe_dev in "$infiniband/rxe"+([0-9]); do
-			if [[ $(< "$rxe_dev/parent") == "${net_dev##*/}" ]]; then
-				net_to_rxe["${net_dev##*/}"]=${rxe_dev##*/}
-				rxe_to_net["${rxe_dev##*/}"]=${net_dev##*/}
-				continue 2
-			fi
-		done
 	done
 }
 
-collect_devices
+collect_rxe_devices() {
+	local rxe_dev net_dev
+
+	for rxe_dev in "$infiniband/"*; do
+		if [[ -e $rxe_dev/parent ]]; then
+			# Soft
+			net_dev=$(< "$rxe_dev/parent")
+		elif [[ -e $rxe_dev/device/net ]]; then
+			# HW
+			net_dev=$(readlink -f "$rxe_dev/device/net/"*)
+			net_dev=${net_dev##*/}
+		else
+			continue
+		fi 2> /dev/null
+
+		[[ -n ${net_devices["$net_dev"]} ]] || continue
+		net_to_rxe["$net_dev"]=${rxe_dev##*/}
+		rxe_to_net["${rxe_dev##*/}"]=$net_dev
+	done
+}
+
+collect_net_devices
+collect_rxe_devices
 
 case "${1:-status}" in
 	start)
