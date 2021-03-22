@@ -43,6 +43,8 @@ CFLAGS += -I$(CONFIG_FIO_SOURCE_DIR)
 # cannot use -Werror
 ifeq ($(OS),FreeBSD)
 CFLAGS += -Wno-error
+else ifeq ($(CC_TYPE),clang)
+CFLAGS += -Wno-error
 endif
 LDFLAGS += -shared -rdynamic -Wl,-z,nodelete
 
