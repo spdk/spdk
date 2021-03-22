@@ -178,6 +178,10 @@ print_status() {
 	local field field_ref fieldidx
 	local pad
 
+	if [[ -n $NO_HEADER ]]; then
+		unset -v "lines[0]"
+	fi
+
 	for field_ref in "${lines[@]}"; do
 		printf '  '
 		fieldidx=0
