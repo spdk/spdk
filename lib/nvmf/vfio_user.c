@@ -522,14 +522,16 @@ acq_map(struct nvmf_vfio_user_ctrlr *ctrlr)
 static void *
 _map_one(void *prv, uint64_t addr, uint64_t len)
 {
+	struct spdk_nvmf_request *req = (struct spdk_nvmf_request *)prv;
+	struct spdk_nvmf_qpair *qpair;
 	struct nvmf_vfio_user_req *vu_req;
 	struct nvmf_vfio_user_qpair *vu_qpair;
 	void *ret;
 
-	assert(prv != NULL);
-
-	vu_req = SPDK_CONTAINEROF(prv, struct nvmf_vfio_user_req, cmd);
-	vu_qpair = SPDK_CONTAINEROF(vu_req->req.qpair, struct nvmf_vfio_user_qpair, qpair);
+	assert(req != NULL);
+	qpair = req->qpair;
+	vu_req = SPDK_CONTAINEROF(req, struct nvmf_vfio_user_req, req);
+	vu_qpair = SPDK_CONTAINEROF(qpair, struct nvmf_vfio_user_qpair, qpair);
 
 	assert(vu_req->iovcnt < NVMF_VFIO_USER_MAX_IOVECS);
 	ret = map_one(vu_qpair->ctrlr->endpoint->vfu_ctx, addr, len,
@@ -542,13 +544,13 @@ _map_one(void *prv, uint64_t addr, uint64_t len)
 }
 
 static int
-vfio_user_map_prps(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
+vfio_user_map_prps(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_request *req,
 		   struct iovec *iov, uint32_t length)
 {
 	/* Map PRP list to from Guest physical memory to
 	 * virtual memory address.
 	 */
-	return spdk_nvme_map_prps(cmd, cmd, iov, length,
+	return spdk_nvme_map_prps(req, &req->cmd->nvme_cmd, iov, length,
 				  4096, _map_one);
 }
 
@@ -2072,7 +2074,7 @@ map_admin_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_request *
 		return 0;
 	}
 
-	iovcnt = vfio_user_map_prps(ctrlr, cmd, req->iov, len);
+	iovcnt = vfio_user_map_prps(ctrlr, req, req->iov, len);
 	if (iovcnt < 0) {
 		SPDK_ERRLOG("%s: map Admin Opc %x failed\n",
 			    ctrlr_id(ctrlr), cmd->opc);
@@ -2115,8 +2117,7 @@ map_io_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_request *req
 	}
 
 	req->length = err;
-	err = vfio_user_map_prps(ctrlr, &req->cmd->nvme_cmd, req->iov,
-				 req->length);
+	err = vfio_user_map_prps(ctrlr, req, req->iov, req->length);
 	if (err < 0) {
 		SPDK_ERRLOG("%s: failed to map PRP: %d\n", ctrlr_id(ctrlr), err);
 		return -EFAULT;
