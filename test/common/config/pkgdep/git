@@ -545,7 +545,7 @@ function install_sources() {
 
 GIT_VERSION=2.25.1
 IRDMA_VERSION=1.2.21
-ICE_VERSION=1.2.1
+ICE_VERSION=1.4.11
 : ${GIT_REPO_SPDK=https://github.com/spdk/spdk.git}
 export GIT_REPO_SPDK
 : ${GIT_REPO_DPDK=https://github.com/spdk/dpdk.git}
@@ -572,7 +572,7 @@ export GIT_REPO_GIT
 export GIT_REPO_DPDK_KMODS
 : ${IRDMA_DRIVER=https://downloadmirror.intel.com/30238/eng/irdma-$IRDMA_VERSION.tgz}
 export IRDMA_DRIVER
-: ${ICE_DRIVER=https://downloadmirror.intel.com/30234/eng/ice-$ICE_VERSION.tar.gz}
+: ${ICE_DRIVER="https://sourceforge.net/projects/e1000/files/ice stable/$ICE_VERSION/ice-$ICE_VERSION.tar.gz"}
 export ICE_DRIVER
 GIT_REPOS=${GIT_REPOS:-$HOME}
 
