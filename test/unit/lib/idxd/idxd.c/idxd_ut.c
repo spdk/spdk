@@ -44,6 +44,9 @@
 #define NUM_ENGINES_PER_GROUP 1
 #define TOTAL_WQS (NUM_GROUPS * NUM_WQ_PER_GROUP)
 #define TOTAL_ENGINES (NUM_GROUPS * NUM_ENGINES_PER_GROUP)
+#define GRP_CFG_OFFSET 0x400
+#define MAX_TOKENS 0x40
+#define MAX_ARRAY_SIZE 0x20
 
 DEFINE_STUB(spdk_pci_idxd_get_driver, struct spdk_pci_driver *, (void), NULL);
 
@@ -108,6 +111,10 @@ test_idxd_wq_config(void)
 	SPDK_CU_ASSERT_FATAL(idxd.reg_base != NULL);
 
 	g_dev_cfg = &g_dev_cfg0;
+	SPDK_CU_ASSERT_FATAL(g_dev_cfg->num_groups <= MAX_ARRAY_SIZE);
+	idxd.groups = calloc(g_dev_cfg->num_groups, sizeof(struct idxd_group));
+	SPDK_CU_ASSERT_FATAL(idxd.groups != NULL);
+
 	idxd.registers.wqcap.total_wq_size = TOTAL_WQE_SIZE;
 	idxd.registers.wqcap.num_wqs = TOTAL_WQS;
 	idxd.registers.gencap.max_batch_shift = LOG2_WQ_MAX_BATCH;
@@ -138,12 +145,11 @@ test_idxd_wq_config(void)
 
 	free(idxd.queues);
 	free(idxd.reg_base);
+	free(idxd.groups);
 
 	return 0;
 }
 
-#define GRP_CFG_OFFSET 0x400
-#define MAX_TOKENS 0x40
 static int
 test_idxd_group_config(void)
 {
