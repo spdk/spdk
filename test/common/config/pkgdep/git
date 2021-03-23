@@ -295,17 +295,23 @@ function _install_qemu() {
 }
 
 function install_qemu() {
-	# Three versions of QEMU are used in the tests.
-	# Stock QEMU is used for vhost.
-	# A special fork is used to test OCSSDs.
-	# Third is for libvfio-user tests.
-	# Install all.
+	# Four versions of QEMU are used in the tests, three are installed
+	# directly from the source. Each QEMU is dedicated for different
+	# use-cases:
+	#  - Packed QEMU: version provided by given distro. Used to boot VMs
+	#    from within vhost tests.
+	#  - SPDK QEMU: A special fork to test OCSSDs. Most jobs on CI use
+	#    this version for booting the VMs.
+	#  - vfio-user QEMU: A special fork to test libvfio-user components.
+	#  - Vanilla QEMU: Used for the upstream PMR support.
 
 	# Forked QEMUs
 	SPDK_QEMU_BRANCH=spdk-5.0.0
 	VFIO_QEMU_BRANCH=vfio-user-v0.6
-	_install_qemu $GIT_REPO_QEMU $SPDK_QEMU_BRANCH
+	VANILLA_QEMU_BRANCH=v5.1.0
+	_install_qemu $GIT_REPO_QEMU_SPDK $SPDK_QEMU_BRANCH
 	_install_qemu $GIT_REPO_QEMU_VFIO $VFIO_QEMU_BRANCH
+	_install_qemu "$GIT_REPO_QEMU" "$VANILLA_QEMU_BRANCH"
 }
 
 function install_nvmecli() {
@@ -556,8 +562,10 @@ export GIT_REPO_ROCKSDB
 export GIT_REPO_FIO
 : ${GIT_REPO_FLAMEGRAPH=https://github.com/brendangregg/FlameGraph.git}
 export GIT_REPO_FLAMEGRAPH
-: ${GIT_REPO_QEMU=https://github.com/spdk/qemu}
+: ${GIT_REPO_QEMU=https://github.com/qemu/qemu}
 export GIT_REPO_QEMU
+: ${GIT_REPO_QEMU_SPDK=https://github.com/spdk/qemu}
+export GIT_REPO_QEMU_SPDK
 : ${GIT_REPO_QEMU_VFIO=https://github.com/tmakatos/qemu}
 export GIT_REPO_QEMU_VFIO
 : ${GIT_REPO_LIBISCSI=https://github.com/sahlberg/libiscsi}
