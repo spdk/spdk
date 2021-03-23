@@ -3864,6 +3864,139 @@ blob_thin_prov_rw(void)
 }
 
 static void
+blob_thin_prov_write_count_io(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_blob *blob;
+	struct spdk_io_channel *ch;
+	struct spdk_bs_dev *dev;
+	struct spdk_bs_opts bs_opts;
+	struct spdk_blob_opts opts;
+	uint64_t free_clusters;
+	uint64_t page_size;
+	uint8_t payload_write[4096];
+	uint64_t write_bytes;
+	uint64_t read_bytes;
+	const uint32_t CLUSTER_SZ = 16384;
+	uint32_t pages_per_cluster;
+	uint32_t pages_per_extent_page;
+	uint32_t i;
+
+	/* Use a very small cluster size for this test.  This ensures we need multiple
+	 * extent pages to hold all of the clusters even for relatively small blobs like
+	 * we are restricted to for the unit tests (i.e. we don't want to allocate multi-GB
+	 * buffers).
+	 */
+	dev = init_dev();
+	spdk_bs_opts_init(&bs_opts, sizeof(bs_opts));
+	bs_opts.cluster_sz = CLUSTER_SZ;
+
+	spdk_bs_init(dev, &bs_opts, bs_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	free_clusters = spdk_bs_free_cluster_count(bs);
+	page_size = spdk_bs_get_page_size(bs);
+	pages_per_cluster = CLUSTER_SZ / page_size;
+	pages_per_extent_page = SPDK_EXTENTS_PER_EP * pages_per_cluster;
+
+	ch = spdk_bs_alloc_io_channel(bs);
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+
+	ut_spdk_blob_opts_init(&opts);
+	opts.thin_provision = true;
+
+	blob = ut_blob_create_and_open(bs, &opts);
+	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
+
+	/* Resize the blob so that it will require 8 extent pages to hold all of
+	 * the clusters.
+	 */
+	g_bserrno = -1;
+	spdk_blob_resize(blob, SPDK_EXTENTS_PER_EP * 8, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	g_bserrno = -1;
+	spdk_blob_sync_md(blob, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
+	CU_ASSERT(blob->active.num_clusters == SPDK_EXTENTS_PER_EP * 8);
+
+	memset(payload_write, 0, sizeof(payload_write));
+	for (i = 0; i < 8; i++) {
+		write_bytes = g_dev_write_bytes;
+		read_bytes = g_dev_read_bytes;
+
+		g_bserrno = -1;
+		spdk_blob_io_write(blob, ch, payload_write, pages_per_extent_page * i, 1, blob_op_complete, NULL);
+		poll_threads();
+		CU_ASSERT(g_bserrno == 0);
+		CU_ASSERT(free_clusters - (2 * i + 1) == spdk_bs_free_cluster_count(bs));
+
+		CU_ASSERT(g_dev_read_bytes == read_bytes);
+		if (!g_use_extent_table) {
+			/* For legacy metadata, we should have written two pages - one for the
+			 * write I/O itself, another for the blob's primary metadata.
+			 */
+			CU_ASSERT((g_dev_write_bytes - write_bytes) / page_size == 2);
+		} else {
+			/* For extent table metadata, we should have written three pages - one
+			 * for the write I/O, one for the extent page, one for the blob's primary
+			 * metadata.
+			 */
+			CU_ASSERT((g_dev_write_bytes - write_bytes) / page_size == 3);
+		}
+
+		/* The write should have synced the metadata already.  Do another sync here
+		 * just to confirm.
+		 */
+		write_bytes = g_dev_write_bytes;
+		read_bytes = g_dev_read_bytes;
+
+		g_bserrno = -1;
+		spdk_blob_sync_md(blob, blob_op_complete, NULL);
+		poll_threads();
+		CU_ASSERT(g_bserrno == 0);
+		CU_ASSERT(free_clusters - (2 * i + 1) == spdk_bs_free_cluster_count(bs));
+
+		CU_ASSERT(g_dev_read_bytes == read_bytes);
+		CU_ASSERT(g_dev_write_bytes == write_bytes);
+
+		/* Now write to another unallocated cluster that is part of the same extent page. */
+		g_bserrno = -1;
+		spdk_blob_io_write(blob, ch, payload_write, pages_per_extent_page * i + pages_per_cluster,
+				   1, blob_op_complete, NULL);
+		poll_threads();
+		CU_ASSERT(g_bserrno == 0);
+		CU_ASSERT(free_clusters - (2 * i + 2) == spdk_bs_free_cluster_count(bs));
+
+		CU_ASSERT(g_dev_read_bytes == read_bytes);
+		/*
+		 * For legacy metadata, we should have written the I/O and the primary metadata page.
+		 * For extent table metadata, we should have written the I/O and the extent metadata page.
+		 */
+		CU_ASSERT((g_dev_write_bytes - write_bytes) / page_size == 2);
+	}
+
+	ut_blob_close_and_delete(bs, blob);
+	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
+
+	spdk_bs_free_io_channel(ch);
+	poll_threads();
+	g_blob = NULL;
+	g_blobid = 0;
+
+	spdk_bs_unload(bs, bs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+}
+
+static void
 blob_thin_prov_rle(void)
 {
 	static const uint8_t zero[10 * 4096] = { 0 };
@@ -6784,6 +6917,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite_bs, blob_thin_prov_alloc);
 	CU_ADD_TEST(suite_bs, blob_insert_cluster_msg_test);
 	CU_ADD_TEST(suite_bs, blob_thin_prov_rw);
+	CU_ADD_TEST(suite, blob_thin_prov_write_count_io);
 	CU_ADD_TEST(suite_bs, blob_thin_prov_rle);
 	CU_ADD_TEST(suite_bs, blob_thin_prov_rw_iov);
 	CU_ADD_TEST(suite, bs_load_iter_test);
