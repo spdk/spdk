@@ -1275,15 +1275,17 @@ posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 	if (num_events == -1) {
 		return -1;
 	} else if (num_events == 0 && !TAILQ_EMPTY(&_group->socks)) {
-		uint8_t byte;
-
 		sock = TAILQ_FIRST(&_group->socks);
 		psock = __posix_sock(sock);
-		/* a recv is done here to busy poll the queue associated with
+		/* poll() is called here to busy poll the queue associated with
 		 * first socket in list and potentially reap incoming data.
 		 */
 		if (sock->opts.priority) {
-			recv(psock->fd, &byte, 1, MSG_PEEK);
+			struct pollfd pfd = {0, 0, 0};
+
+			pfd.fd = psock->fd;
+			pfd.events = POLLIN | POLLERR;
+			poll(&pfd, 1, 0);
 		}
 	}
 
