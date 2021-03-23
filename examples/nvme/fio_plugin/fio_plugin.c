@@ -1243,7 +1243,7 @@ spdk_fio_report_zones(struct thread_data *td, struct fio_file *f, uint64_t offse
 	report_nzones_max = (mdts_nbytes - sizeof(*report)) / sizeof(report->descs[0]);
 	report_nzones_max = spdk_min(spdk_min(report_nzones_max, nr_zones), ns_nzones);
 	report_nbytes = sizeof(report->descs[0]) * report_nzones_max + sizeof(*report);
-	report = spdk_dma_zmalloc(report_nbytes, NVME_IO_ALIGN, NULL);
+	report = calloc(1, report_nbytes);
 	if (!report) {
 		log_err("spdk/nvme: failed report_zones(): ENOMEM\n");
 		return -ENOMEM;
@@ -1310,7 +1310,7 @@ spdk_fio_report_zones(struct thread_data *td, struct fio_file *f, uint64_t offse
 	}
 
 exit:
-	spdk_dma_free(report);
+	free(report);
 
 	return err ? err : (int)report_nzones;
 }
