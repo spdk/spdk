@@ -1812,6 +1812,11 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 static int
 bdev_nvme_hotplug_probe(void *arg)
 {
+	if (g_hotplug_probe_ctx == NULL) {
+		spdk_poller_unregister(&g_hotplug_probe_poller);
+		return SPDK_POLLER_IDLE;
+	}
+
 	if (spdk_nvme_probe_poll_async(g_hotplug_probe_ctx) != -EAGAIN) {
 		g_hotplug_probe_ctx = NULL;
 		spdk_poller_unregister(&g_hotplug_probe_poller);
@@ -2276,6 +2281,7 @@ bdev_nvme_library_fini(void)
 
 	spdk_poller_unregister(&g_hotplug_poller);
 	free(g_hotplug_probe_ctx);
+	g_hotplug_probe_ctx = NULL;
 
 	TAILQ_FOREACH_SAFE(entry, &g_skipped_nvme_ctrlrs, tailq, entry_tmp) {
 		TAILQ_REMOVE(&g_skipped_nvme_ctrlrs, entry, tailq);
