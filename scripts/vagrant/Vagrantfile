@@ -130,6 +130,7 @@ def setup_nvme_disk(libvirt, disk, index)
 
   nvme_namespaces=(ENV['NVME_DISKS_NAMESPACES'] || "").split(',')
   nvme_cmbs=(ENV['NVME_CMB'] || "").split(',')
+  nvme_pmrs=(ENV['NVME_PMR'] || "").split(',')
 
   libvirt.qemuargs :value => "-drive"
   libvirt.qemuargs :value => "format=raw,file=#{nvme_disk},if=none,id=#{nvme_disk_id}"
@@ -139,11 +140,33 @@ def setup_nvme_disk(libvirt, disk, index)
     nvme_drive << ",namespaces=#{nvme_namespaces[index]}"
   end
 
+  cmb_set = "false"
+  pmr_cmdline =
+
   if !nvme_cmbs[index].nil? && nvme_cmbs[index] == "true"
     # Fix the size of the buffer to 128M
     nvme_drive << ",cmb_size_mb=128"
+    cmb_set = "true"
+  end
+  if !nvme_pmrs[index].nil?
+    if cmb_set == "true"
+      abort("CMB and PMR are mutually exclusive, aborting (#{nvme_disk})")
+    end
+    pmr_path, pmr_size = nvme_pmrs[index].split(':')
+    if !File.exist?(pmr_path)
+      abort("#{pmr_path} does not exist, aborting")
+    end
+    if pmr_size.nil?
+      pmr_size = "16M"
+    end
+    nvme_drive << ",pmrdev=pmr#{index}"
+    pmr_cmdline = "memory-backend-file,id=pmr#{index},share=on,mem-path=#{pmr_path},size=#{pmr_size}"
   end
   libvirt.qemuargs :value => nvme_drive
+  if !pmr_cmdline.nil?
+    libvirt.qemuargs :value => "-object"
+    libvirt.qemuargs :value => pmr_cmdline
+  end
 end
 
 def setup_ocssd_disk(libvirt, disk, index)

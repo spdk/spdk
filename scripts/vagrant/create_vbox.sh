@@ -30,8 +30,10 @@ display_help() {
 	echo "                                  If no -b option is specified then this option defaults to emulating single"
 	echo "                                  NVMe with 1 namespace and assumes path: /var/lib/libvirt/images/nvme_disk.img"
 	echo "                                  -b option can be used multiple times for attaching multiple files to the VM"
-	echo "                                  Parameters for -b option: <path>,<type>,<namespaces>,<cmb>"
+	echo "                                  Parameters for -b option: <path>,<type>,<namespaces>,<cmb>,<pmr_file[:pmr_size]>"
 	echo "                                  Available types: nvme, ocssd."
+	echo "                                  Default pmr size: 16M"
+	echo "                                  Default cmb: false"
 	echo "  -c                              Create all above disk, default 0"
 	echo "  -H                              Use hugepages for allocating VM memory. Only for libvirt provider. Default: false."
 	echo "  -u                              Use password authentication to the VM instead of SSH keys."
@@ -178,13 +180,16 @@ if [ -z "$NVME_FILE" ]; then
 else
 	TMP=""
 	for args in $NVME_FILE; do
-		while IFS=, read -r path type namespace cmb; do
+		while IFS=, read -r path type namespace cmb pmr; do
 			TMP+="$path,"
 			if [ -z "$type" ]; then
 				type="nvme"
 			fi
 			if [[ -n $cmb ]]; then
-				NVME_CMB=${NVME_CMB:+$NVME_CMB,}true
+				NVME_CMB=${NVME_CMB:+$NVME_CMB,}$cmb
+			fi
+			if [[ -n $pmr ]]; then
+				NVME_PMR=${NVME_PMR:+$NVME_PMR,}$pmr
 			fi
 			NVME_DISKS_TYPE+="$type,"
 			if [ -z "$namespace" ] && [ -n "$SPDK_QEMU_EMULATOR" ]; then
@@ -211,6 +216,7 @@ if [ ${VERBOSE} = 1 ]; then
 	echo NVME_AUTO_CREATE=$NVME_AUTO_CREATE
 	echo NVME_DISKS_NAMESPACES=$NVME_DISKS_NAMESPACES
 	echo NVME_CMB=$NVME_CMB
+	echo NVME_PMR=$NVME_PMR
 	echo SPDK_VAGRANT_DISTRO=$SPDK_VAGRANT_DISTRO
 	echo SPDK_VAGRANT_VMCPU=$SPDK_VAGRANT_VMCPU
 	echo SPDK_VAGRANT_VMRAM=$SPDK_VAGRANT_VMRAM
@@ -232,6 +238,7 @@ export COPY_SPDK_DIR
 export COPY_SPDK_ARTIFACTS
 export DEPLOY_TEST_VM
 export NVME_CMB
+export NVME_PMR
 export NVME_DISKS_TYPE
 export NVME_DISKS_NAMESPACES
 export NVME_FILE
