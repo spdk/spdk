@@ -190,6 +190,12 @@ function install_qat() {
 	if ((kernel_ver >= 0x050a01)); then
 		patch --dir="$GIT_REPOS/QAT" -p1
 	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-set-obj-m.patch"
+
+	# sha.h was split into two separate files, sha1.h and sha2.h in kernels >= 5.11
+	if ((kernel_ver >= 0x050b01)); then
+		# qat_algs_ablkcipher.c doesn't exist in older versions of the driver so simply force the patch
+		patch --force --dir="$GIT_REPOS/QAT" -p1
+	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-sha.patch" || :
 	(cd "$GIT_REPOS/QAT" && sudo ./configure --enable-icp-sriov=host && sudo make install)
 
 	if ! sudo service qat_service start; then

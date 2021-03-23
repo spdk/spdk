@@ -1,0 +1,66 @@
+sha.h was split in >= 5.11.x kernel into sha1.h and sha2.h via the following commit:
+
+git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=a24d22b225ce158651378869a6b88105c4bdb887
+
+
+---
+ quickassist/qat/drivers/crypto/qat/qat_common/qat_algs.c       | 2 +-
+ .../qat/drivers/crypto/qat/qat_common/qat_algs_ablkcipher.c    | 2 +-
+ quickassist/qat/drivers/crypto/qat/qat_common/qat_algs_old.c   | 2 +-
+ .../osal/src/linux/kernel_space/OsalCryptoInterface.c          | 3 ++-
+ 4 files changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/quickassist/qat/drivers/crypto/qat/qat_common/qat_algs.c b/quickassist/qat/drivers/crypto/qat/qat_common/qat_algs.c
+index 37ac11e..b07982c 100644
+--- a/quickassist/qat/drivers/crypto/qat/qat_common/qat_algs.c
++++ b/quickassist/qat/drivers/crypto/qat/qat_common/qat_algs.c
+@@ -52,7 +52,7 @@
+ #include <crypto/internal/aead.h>
+ #include <crypto/internal/skcipher.h>
+ #include <crypto/aes.h>
+-#include <crypto/sha.h>
++#include <crypto/sha2.h>
+ #include <crypto/hash.h>
+ #include <crypto/algapi.h>
+ #include <crypto/authenc.h>
+diff --git a/quickassist/qat/drivers/crypto/qat/qat_common/qat_algs_ablkcipher.c b/quickassist/qat/drivers/crypto/qat/qat_common/qat_algs_ablkcipher.c
+index 417e0db..0236d52 100644
+--- a/quickassist/qat/drivers/crypto/qat/qat_common/qat_algs_ablkcipher.c
++++ b/quickassist/qat/drivers/crypto/qat/qat_common/qat_algs_ablkcipher.c
+@@ -51,7 +51,7 @@
+ #include <linux/workqueue.h>
+ #include <crypto/internal/aead.h>
+ #include <crypto/aes.h>
+-#include <crypto/sha.h>
++#include <crypto/sha2.h>
+ #include <crypto/hash.h>
+ #include <crypto/algapi.h>
+ #include <crypto/authenc.h>
+diff --git a/quickassist/qat/drivers/crypto/qat/qat_common/qat_algs_old.c b/quickassist/qat/drivers/crypto/qat/qat_common/qat_algs_old.c
+index e30dead..5941f4c 100644
+--- a/quickassist/qat/drivers/crypto/qat/qat_common/qat_algs_old.c
++++ b/quickassist/qat/drivers/crypto/qat/qat_common/qat_algs_old.c
+@@ -53,7 +53,7 @@
+ #include <crypto/internal/aead.h>
+ #include <crypto/aes.h>
+ #include <crypto/hash.h>
+-#include <crypto/sha.h>
++#include <crypto/sha2.h>
+ #include <crypto/algapi.h>
+ #include <crypto/authenc.h>
+ #include <crypto/rng.h>
+diff --git a/quickassist/utilities/osal/src/linux/kernel_space/OsalCryptoInterface.c b/quickassist/utilities/osal/src/linux/kernel_space/OsalCryptoInterface.c
+index 9d2e85c..4088eda 100644
+--- a/quickassist/utilities/osal/src/linux/kernel_space/OsalCryptoInterface.c
++++ b/quickassist/utilities/osal/src/linux/kernel_space/OsalCryptoInterface.c
+@@ -69,7 +69,8 @@
+ #include <linux/version.h>
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29))
+ #include <crypto/internal/hash.h>
+-#include <crypto/sha.h>
++#include <crypto/sha1.h>
++#include <crypto/sha2.h>
+ 
+ #define OSAL_MAX_SHASH_DECSIZE 512
+ 
+-- 
