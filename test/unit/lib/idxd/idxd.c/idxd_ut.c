@@ -39,6 +39,9 @@
 #include "idxd/idxd.h"
 
 #define FAKE_REG_SIZE 0x800
+#define GRP_CFG_OFFSET 0x400
+#define MAX_TOKENS 0x40
+#define MAX_ARRAY_SIZE 0x20
 
 DEFINE_STUB(spdk_pci_idxd_get_driver, struct spdk_pci_driver *, (void), NULL);
 
@@ -102,6 +105,10 @@ test_idxd_wq_config(void)
 	idxd.reg_base = calloc(1, FAKE_REG_SIZE);
 	SPDK_CU_ASSERT_FATAL(idxd.reg_base != NULL);
 
+	SPDK_CU_ASSERT_FATAL(g_dev_cfg->num_groups <= MAX_ARRAY_SIZE);
+	idxd.groups = calloc(g_dev_cfg->num_groups, sizeof(struct idxd_group));
+	SPDK_CU_ASSERT_FATAL(idxd.groups != NULL);
+
 	idxd.registers.wqcap.total_wq_size = TOTAL_WQE_SIZE;
 	idxd.registers.wqcap.num_wqs = g_dev_cfg->total_wqs;
 	idxd.registers.gencap.max_batch_shift = LOG2_WQ_MAX_BATCH;
@@ -132,13 +139,10 @@ test_idxd_wq_config(void)
 
 	free(idxd.queues);
 	free(idxd.reg_base);
+	free(idxd.groups);
 
 	return 0;
 }
-
-#define GRP_CFG_OFFSET 0x400
-#define MAX_TOKENS 0x40
-#define MAX_ARRAY_SIZE 0x20
 
 static int
 test_idxd_group_config(void)
