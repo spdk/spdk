@@ -811,7 +811,7 @@ get_and_print_zns_zone_report(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 	outstanding_commands = 0;
 
 	report_bufsize = spdk_nvme_ns_get_max_io_xfer_size(ns);
-	report_buf = malloc(report_bufsize);
+	report_buf = calloc(1, report_bufsize);
 	if (!report_buf) {
 		printf("Zone report allocation failed!\n");
 		exit(1);
