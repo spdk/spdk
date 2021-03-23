@@ -38,13 +38,10 @@ idle() {
 	# The expectation here is that when SPDK app is idle the following is true:
 	# - all threads are assigned to main lcore
 	# - threads are not being moved between lcores
-	# - each thread has a mask pinned to a single cpu
-
-	local all_set
 
 	xtrace_disable
 	while ((samples++ < 5)); do
-		all_set=0 cpusmask=0
+		cpusmask=0
 		reactor_framework=$(rpc_cmd framework_get_reactors | jq -r '.reactors[]')
 		threads=($(
 			jq -r "select(.lcore == $spdk_main_core) | .lw_threads[].name" <<< "$reactor_framework"
@@ -56,10 +53,9 @@ idle() {
 		done
 
 		printf 'SPDK cpumask: %x Threads cpumask: %x\n' "$spdk_cpusmask" "$cpusmask"
-		thread_stats && ((cpusmask == spdk_cpusmask)) && all_set=1
+		thread_stats
 	done
 
-	((all_set == 1))
 	xtrace_restore
 }
 

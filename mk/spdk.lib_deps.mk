@@ -166,7 +166,7 @@ DEPDIRS-event_vmd := event vmd $(JSON_LIBS) log thread
 DEPDIRS-event_bdev := event bdev event_accel event_vmd event_sock
 
 DEPDIRS-event_nbd := event nbd event_bdev
-DEPDIRS-event_nvmf := event nvmf event_bdev event_sock $(BDEV_DEPS_THREAD)
+DEPDIRS-event_nvmf := event nvmf event_bdev event_sock thread log bdev $(JSON_LIBS)
 DEPDIRS-event_scsi := event scsi event_bdev
 
 DEPDIRS-event_iscsi := event iscsi event_scsi event_sock

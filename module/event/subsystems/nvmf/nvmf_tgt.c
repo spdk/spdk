@@ -38,7 +38,6 @@
 #include "spdk/log.h"
 #include "spdk/nvme.h"
 #include "spdk/nvmf_cmd.h"
-#include "spdk/util.h"
 
 enum nvmf_tgt_state {
 	NVMF_TGT_INIT_NONE = 0,
@@ -186,7 +185,6 @@ nvmf_tgt_create_poll_group(void *ctx)
 static void
 nvmf_tgt_create_poll_groups(void)
 {
-	struct spdk_cpuset tmp_cpumask = {};
 	uint32_t i;
 	char thread_name[32];
 	struct spdk_thread *thread;
@@ -195,11 +193,9 @@ nvmf_tgt_create_poll_groups(void)
 	assert(g_tgt_init_thread != NULL);
 
 	SPDK_ENV_FOREACH_CORE(i) {
-		spdk_cpuset_zero(&tmp_cpumask);
-		spdk_cpuset_set_cpu(&tmp_cpumask, i, true);
 		snprintf(thread_name, sizeof(thread_name), "nvmf_tgt_poll_group_%u", i);
 
-		thread = spdk_thread_create(thread_name, &tmp_cpumask);
+		thread = spdk_thread_create(thread_name, NULL);
 		assert(thread != NULL);
 
 		spdk_thread_send_msg(thread, nvmf_tgt_create_poll_group, NULL);
