@@ -119,6 +119,15 @@ nvme_bdev_unregister_cb(void *io_device)
 	struct nvme_bdev_ctrlr_trid *trid, *tmp_trid;
 	uint32_t i;
 
+	if (nvme_bdev_ctrlr->opal_dev) {
+		spdk_opal_dev_destruct(nvme_bdev_ctrlr->opal_dev);
+		nvme_bdev_ctrlr->opal_dev = NULL;
+	}
+
+	if (nvme_bdev_ctrlr->ocssd_ctrlr) {
+		bdev_ocssd_fini_ctrlr(nvme_bdev_ctrlr);
+	}
+
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_REMOVE(&g_nvme_bdev_ctrlrs, nvme_bdev_ctrlr, tailq);
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
@@ -154,15 +163,6 @@ void
 nvme_bdev_ctrlr_do_destruct(void *ctx)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = ctx;
-
-	if (nvme_bdev_ctrlr->opal_dev) {
-		spdk_opal_dev_destruct(nvme_bdev_ctrlr->opal_dev);
-		nvme_bdev_ctrlr->opal_dev = NULL;
-	}
-
-	if (nvme_bdev_ctrlr->ocssd_ctrlr) {
-		bdev_ocssd_fini_ctrlr(nvme_bdev_ctrlr);
-	}
 
 	spdk_io_device_unregister(nvme_bdev_ctrlr, nvme_bdev_unregister_cb);
 }
