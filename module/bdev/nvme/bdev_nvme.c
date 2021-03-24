@@ -378,6 +378,22 @@ err:
 	return rc;
 }
 
+static int
+bdev_nvme_destroy_qpair(struct nvme_io_channel *nvme_ch)
+{
+	int rc;
+
+	if (nvme_ch->qpair == NULL) {
+		return 0;
+	}
+
+	rc = spdk_nvme_ctrlr_free_io_qpair(nvme_ch->qpair);
+	if (!rc) {
+		nvme_ch->qpair = NULL;
+	}
+	return rc;
+}
+
 static void
 _bdev_nvme_check_pending_destruct(struct spdk_io_channel_iter *i, int status)
 {
@@ -534,10 +550,7 @@ _bdev_nvme_reset_destroy_qpair(struct spdk_io_channel_iter *i)
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
 	int rc;
 
-	rc = spdk_nvme_ctrlr_free_io_qpair(nvme_ch->qpair);
-	if (!rc) {
-		nvme_ch->qpair = NULL;
-	}
+	rc = bdev_nvme_destroy_qpair(nvme_ch);
 
 	spdk_for_each_channel_continue(i, rc);
 }
@@ -1038,9 +1051,7 @@ bdev_nvme_destroy_cb(void *io_device, void *ctx_buf)
 		bdev_ocssd_destroy_io_channel(nvme_ch);
 	}
 
-	if (nvme_ch->qpair != NULL) {
-		spdk_nvme_ctrlr_free_io_qpair(nvme_ch->qpair);
-	}
+	bdev_nvme_destroy_qpair(nvme_ch);
 
 	spdk_put_io_channel(spdk_io_channel_from_ctx(nvme_ch->group));
 }
