@@ -55,6 +55,17 @@ out=$("$rpc" nvmf_create_subsystem -s "$(gen_random_s 21)" "$nqn$RANDOM" 2>&1) &
 out=$("$rpc" nvmf_create_subsystem -d "$(gen_random_s 41)" "$nqn$RANDOM" 2>&1) && false
 [[ $out == *"Invalid MN"* ]]
 
+# Attempt to delete non-existing subsytem listener
+$rpc nvmf_create_transport --trtype "$TEST_TRANSPORT"
+$rpc nvmf_create_subsystem $nqn -s SPDK001 -a
+if [[ $TEST_TRANSPORT == "TCP" ]]; then
+	IP="127.0.0.1"
+else
+	IP=$(echo "$RDMA_IP_LIST" | head -n 1)
+fi
+out=$("$rpc" nvmf_subsystem_remove_listener "$nqn" -t "$TEST_TRANSPORT" -a "$IP" -s 4421 2>&1) && false
+[[ $out != *"Unable to stop listener."* ]]
+
 # Attempt to delete non-existing target
 out=$("$multi_target_rpc" nvmf_delete_target --name "$target" 2>&1) && false
 [[ $out == *"The specified target doesn't exist, cannot delete it."* ]]
