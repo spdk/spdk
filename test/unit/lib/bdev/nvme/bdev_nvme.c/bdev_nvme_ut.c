@@ -252,6 +252,7 @@ struct spdk_nvme_ctrlr {
 	struct spdk_nvme_qpair		adminq;
 	struct spdk_nvme_ctrlr_data	cdata;
 	bool				is_failed;
+	bool				fail_reset;
 	struct spdk_nvme_transport_id	trid;
 	TAILQ_HEAD(, spdk_nvme_qpair)	active_io_qpairs;
 	TAILQ_ENTRY(spdk_nvme_ctrlr)	tailq;
@@ -615,6 +616,10 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 int
 spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 {
+	if (ctrlr->fail_reset) {
+		return -EIO;
+	}
+
 	ctrlr->is_failed = false;
 
 	return 0;
@@ -1331,7 +1336,7 @@ test_pending_reset(void)
 
 	nvme_ch2 = spdk_io_channel_get_ctx(ch2);
 
-	/* The first abort request is submitted on thread 1, and the second abort request
+	/* The first reset request is submitted on thread 1, and the second reset request
 	 * is submitted on thread 0 while processing the first request.
 	 */
 	rc = bdev_nvme_reset(nvme_ch2, first_bio);
@@ -1350,6 +1355,33 @@ test_pending_reset(void)
 	CU_ASSERT(nvme_bdev_ctrlr->resetting == false);
 	CU_ASSERT(first_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(second_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/* The first reset request is submitted on thread 1, and the second reset request
+	 * is submitted on thread 0 while processing the first request.
+	 *
+	 * The difference from the above scenario is that the controller is removed while
+	 * processing the first request. Hence both reset requests should fail.
+	 */
+	set_thread(1);
+
+	rc = bdev_nvme_reset(nvme_ch2, first_bio);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(nvme_bdev_ctrlr->resetting == true);
+	CU_ASSERT(TAILQ_EMPTY(&nvme_ch2->pending_resets));
+
+	set_thread(0);
+
+	rc = bdev_nvme_reset(nvme_ch1, second_bio);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(TAILQ_FIRST(&nvme_ch1->pending_resets) == second_bdev_io);
+
+	ctrlr.fail_reset = true;
+
+	poll_threads();
+
+	CU_ASSERT(nvme_bdev_ctrlr->resetting == false);
+	CU_ASSERT(first_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_FAILED);
+	CU_ASSERT(second_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_FAILED);
 
 	spdk_put_io_channel(ch1);
 
