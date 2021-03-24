@@ -1716,11 +1716,11 @@ populate_namespaces_cb(struct nvme_async_probe_ctx *ctx, size_t count, int rc)
 }
 
 static int
-nvme_bdev_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
-		       const char *name,
-		       const struct spdk_nvme_transport_id *trid,
-		       uint32_t prchk_flags,
-		       struct nvme_bdev_ctrlr **_nvme_bdev_ctrlr)
+_nvme_bdev_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
+			const char *name,
+			const struct spdk_nvme_transport_id *trid,
+			uint32_t prchk_flags,
+			struct nvme_bdev_ctrlr **_nvme_bdev_ctrlr)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 	struct nvme_bdev_ctrlr_trid *trid_entry;
@@ -1838,15 +1838,38 @@ err_init_mutex:
 }
 
 static void
+nvme_bdev_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
+		       const char *name,
+		       const struct spdk_nvme_transport_id *trid,
+		       uint32_t prchk_flags,
+		       struct nvme_async_probe_ctx *ctx)
+{
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = NULL;
+	int rc;
+
+	rc = _nvme_bdev_ctrlr_create(ctrlr, name, trid, prchk_flags, &nvme_bdev_ctrlr);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to create new NVMe controller\n");
+		goto err;
+	}
+
+	nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr, ctx);
+	return;
+
+err:
+	if (ctx != NULL) {
+		populate_namespaces_cb(ctx, 0, rc);
+	}
+}
+
+static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 	struct nvme_probe_ctx *ctx = cb_ctx;
 	char *name = NULL;
 	uint32_t prchk_flags = 0;
 	size_t i;
-	int rc;
 
 	if (ctx) {
 		for (i = 0; i < ctx->count; i++) {
@@ -1866,14 +1889,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	SPDK_DEBUGLOG(bdev_nvme, "Attached to %s (%s)\n", trid->traddr, name);
 
-	rc = nvme_bdev_ctrlr_create(ctrlr, name, trid, prchk_flags, &nvme_bdev_ctrlr);
-	if (rc != 0) {
-		SPDK_ERRLOG("Failed to create new NVMe controller\n");
-		free(name);
-		return;
-	}
-
-	nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr, NULL);
+	nvme_bdev_ctrlr_create(ctrlr, name, trid, prchk_flags, NULL);
 
 	free(name);
 }
@@ -2193,21 +2209,12 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		rc = bdev_nvme_add_trid(nvme_bdev_ctrlr, ctrlr, &ctx->trid);
 
 		spdk_nvme_detach(ctrlr);
-		goto exit;
+
+		populate_namespaces_cb(ctx, 0, rc);
+		return;
 	}
 
-	rc = nvme_bdev_ctrlr_create(ctrlr, ctx->base_name, &ctx->trid, ctx->prchk_flags,
-				    &nvme_bdev_ctrlr);
-	if (rc) {
-		SPDK_ERRLOG("Failed to create new device\n");
-		goto exit;
-	}
-
-	nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr, ctx);
-	return;
-
-exit:
-	populate_namespaces_cb(ctx, 0, rc);
+	nvme_bdev_ctrlr_create(ctrlr, ctx->base_name, &ctx->trid, ctx->prchk_flags, ctx);
 }
 
 static int

@@ -962,8 +962,7 @@ test_create_ctrlr(void)
 
 	ut_init_trid(&trid);
 
-	rc = nvme_bdev_ctrlr_create(&ctrlr, "nvme0", &trid, 0, NULL);
-	CU_ASSERT(rc == 0);
+	nvme_bdev_ctrlr_create(&ctrlr, "nvme0", &trid, 0, NULL);
 
 	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") != NULL);
 
@@ -993,8 +992,9 @@ test_reset_ctrlr(void)
 
 	set_thread(0);
 
-	rc = nvme_bdev_ctrlr_create(&ctrlr, "nvme0", &trid, 0, &nvme_bdev_ctrlr);
-	CU_ASSERT(rc == 0);
+	nvme_bdev_ctrlr_create(&ctrlr, "nvme0", &trid, 0, NULL);
+
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr != NULL);
 
 	curr_trid = TAILQ_FIRST(&nvme_bdev_ctrlr->trids);
@@ -1097,8 +1097,9 @@ test_race_between_reset_and_destruct_ctrlr(void)
 
 	set_thread(0);
 
-	rc = nvme_bdev_ctrlr_create(&ctrlr, "nvme0", &trid, 0, &nvme_bdev_ctrlr);
-	CU_ASSERT(rc == 0);
+	nvme_bdev_ctrlr_create(&ctrlr, "nvme0", &trid, 0, NULL);
+
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr != NULL);
 
 	ch1 = spdk_get_io_channel(nvme_bdev_ctrlr);
@@ -1172,8 +1173,9 @@ test_failover_ctrlr(void)
 
 	set_thread(0);
 
-	rc = nvme_bdev_ctrlr_create(&ctrlr, "nvme0", &trid1, 0, &nvme_bdev_ctrlr);
-	CU_ASSERT(rc == 0);
+	nvme_bdev_ctrlr_create(&ctrlr, "nvme0", &trid1, 0, NULL);
+
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr != NULL);
 
 	ch1 = spdk_get_io_channel(nvme_bdev_ctrlr);
@@ -1320,8 +1322,9 @@ test_pending_reset(void)
 
 	set_thread(0);
 
-	rc = nvme_bdev_ctrlr_create(&ctrlr, "nvme0", &trid, 0, &nvme_bdev_ctrlr);
-	CU_ASSERT(rc == 0);
+	nvme_bdev_ctrlr_create(&ctrlr, "nvme0", &trid, 0, NULL);
+
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr != NULL);
 
 	ch1 = spdk_get_io_channel(nvme_bdev_ctrlr);
@@ -1560,8 +1563,9 @@ test_reconnect_qpair(void)
 	ut_init_trid(&trid);
 	TAILQ_INIT(&ctrlr.active_io_qpairs);
 
-	rc = nvme_bdev_ctrlr_create(&ctrlr, "nvme0", &trid, 0, &nvme_bdev_ctrlr);
-	CU_ASSERT(rc == 0);
+	nvme_bdev_ctrlr_create(&ctrlr, "nvme0", &trid, 0, NULL);
+
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr != NULL);
 
 	ch = spdk_get_io_channel(nvme_bdev_ctrlr);
@@ -1870,8 +1874,9 @@ test_remove_trid(void)
 
 	set_thread(0);
 
-	rc = nvme_bdev_ctrlr_create(&ctrlr, "nvme0", &trid1, 0, &nvme_bdev_ctrlr);
-	CU_ASSERT(rc == 0);
+	nvme_bdev_ctrlr_create(&ctrlr, "nvme0", &trid1, 0, NULL);
+
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr != NULL);
 
 	rc = bdev_nvme_add_trid(nvme_bdev_ctrlr, &ctrlr, &trid2);
@@ -1919,8 +1924,10 @@ test_remove_trid(void)
 
 	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == NULL);
 
-	rc = nvme_bdev_ctrlr_create(&ctrlr, "nvme0", &trid1, 0, &nvme_bdev_ctrlr);
-	CU_ASSERT(rc == 0);
+	nvme_bdev_ctrlr_create(&ctrlr, "nvme0", &trid1, 0, NULL);
+
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
+	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr != NULL);
 
 	rc = bdev_nvme_add_trid(nvme_bdev_ctrlr, &ctrlr, &trid2);
 	CU_ASSERT(rc == 0);
@@ -2121,8 +2128,9 @@ test_get_io_qpair(void)
 
 	set_thread(0);
 
-	rc = nvme_bdev_ctrlr_create(&ctrlr, "nvme0", &trid, 0, &nvme_bdev_ctrlr);
-	CU_ASSERT(rc == 0);
+	nvme_bdev_ctrlr_create(&ctrlr, "nvme0", &trid, 0, NULL);
+
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr != NULL);
 
 	ch = spdk_get_io_channel(nvme_bdev_ctrlr);
