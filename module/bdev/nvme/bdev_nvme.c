@@ -1698,6 +1698,23 @@ aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	}
 }
 
+static void
+populate_namespaces_cb(struct nvme_async_probe_ctx *ctx, size_t count, int rc)
+{
+	if (ctx->cb_fn) {
+		ctx->cb_fn(ctx->cb_ctx, count, rc);
+	}
+
+	ctx->namespaces_populated = true;
+	if (ctx->probe_done) {
+		/* The probe was already completed, so we need to free the context
+		 * here.  This can happen for cases like OCSSD, where we need to
+		 * send additional commands to the SSD after attach.
+		 */
+		free(ctx);
+	}
+}
+
 static int
 nvme_bdev_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 		       const char *name,
@@ -2017,23 +2034,6 @@ bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_msg_fn cb, void *cb
 
 	spdk_thread_send_msg(g_bdev_nvme_init_thread, set_nvme_hotplug_period_cb, ctx);
 	return 0;
-}
-
-static void
-populate_namespaces_cb(struct nvme_async_probe_ctx *ctx, size_t count, int rc)
-{
-	if (ctx->cb_fn) {
-		ctx->cb_fn(ctx->cb_ctx, count, rc);
-	}
-
-	ctx->namespaces_populated = true;
-	if (ctx->probe_done) {
-		/* The probe was already completed, so we need to free the context
-		 * here.  This can happen for cases like OCSSD, where we need to
-		 * send additional commands to the SSD after attach.
-		 */
-		free(ctx);
-	}
 }
 
 static void
