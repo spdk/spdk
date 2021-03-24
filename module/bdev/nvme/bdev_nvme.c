@@ -1092,7 +1092,7 @@ bdev_nvme_poll_group_destroy_cb(void *io_device, void *ctx_buf)
 
 	spdk_poller_unregister(&group->poller);
 	if (spdk_nvme_poll_group_destroy(group->group)) {
-		SPDK_ERRLOG("Unable to destroy a poll group for the NVMe bdev module.");
+		SPDK_ERRLOG("Unable to destroy a poll group for the NVMe bdev module.\n");
 		assert(false);
 	}
 }
@@ -1431,7 +1431,8 @@ nvme_abort_cpl(void *ctx, const struct spdk_nvme_cpl *cpl)
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = ctx;
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
-		SPDK_WARNLOG("Abort failed. Resetting controller.\n");
+		SPDK_WARNLOG("Abort failed. Resetting controller. sc is %u, sct is %u.\n", cpl->status.sc,
+			     cpl->status.sct);
 		_bdev_nvme_reset(nvme_bdev_ctrlr);
 	}
 }
@@ -1465,13 +1466,22 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 	switch (g_opts.action_on_timeout) {
 	case SPDK_BDEV_NVME_TIMEOUT_ACTION_ABORT:
 		if (qpair) {
+			/* Don't send abort to ctrlr when reset is running. */
+			pthread_mutex_lock(&nvme_bdev_ctrlr->mutex);
+			if (nvme_bdev_ctrlr->resetting) {
+				pthread_mutex_unlock(&nvme_bdev_ctrlr->mutex);
+				SPDK_NOTICELOG("Quit abort. Ctrlr is in the process of reseting.\n");
+				return;
+			}
+			pthread_mutex_unlock(&nvme_bdev_ctrlr->mutex);
+
 			rc = spdk_nvme_ctrlr_cmd_abort(ctrlr, qpair, cid,
 						       nvme_abort_cpl, nvme_bdev_ctrlr);
 			if (rc == 0) {
 				return;
 			}
 
-			SPDK_ERRLOG("Unable to send abort. Resetting.\n");
+			SPDK_ERRLOG("Unable to send abort. Resetting, rc is %d.\n", rc);
 		}
 
 	/* FALLTHROUGH */
