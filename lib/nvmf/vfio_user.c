@@ -1091,6 +1091,16 @@ memory_region_add_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 		      (uintptr_t)info->mapping.iov_base,
 		      (uintptr_t)info->mapping.iov_base + info->mapping.iov_len);
 
+	/* VFIO_DMA_MAP_FLAG_READ | VFIO_DMA_MAP_FLAG_WRITE are enabled when registering to VFIO, here we also
+	 * check the protection bits before registering.
+	 */
+	if ((info->prot == (PROT_WRITE | PROT_READ)) &&
+	    (spdk_mem_register(info->mapping.iov_base, info->mapping.iov_len))) {
+		SPDK_ERRLOG("Memory region register %#lx-%#lx failed\n",
+			    (uint64_t)(uintptr_t)info->mapping.iov_base,
+			    (uint64_t)(uintptr_t)info->mapping.iov_base + info->mapping.iov_len);
+	}
+
 	for (i = 0; i < NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR; i++) {
 		qpair = ctrlr->qp[i];
 		if (qpair == NULL) {
@@ -1156,6 +1166,13 @@ memory_region_remove_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 	SPDK_DEBUGLOG(nvmf_vfio, "%s: unmap IOVA %#lx-%#lx\n", ctrlr_id(ctrlr),
 		      (uintptr_t)info->mapping.iov_base,
 		      (uintptr_t)info->mapping.iov_base + info->mapping.iov_len);
+
+	if ((info->prot == (PROT_WRITE | PROT_READ)) &&
+	    (spdk_mem_unregister(info->mapping.iov_base, info->mapping.iov_len))) {
+		SPDK_ERRLOG("Memory region unregister %#lx-%#lx failed\n",
+			    (uint64_t)(uintptr_t)info->mapping.iov_base,
+			    (uint64_t)(uintptr_t)info->mapping.iov_base + info->mapping.iov_len);
+	}
 
 	map_start = info->mapping.iov_base;
 	map_end = info->mapping.iov_base + info->mapping.iov_len;
