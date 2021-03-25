@@ -252,7 +252,6 @@ struct spdk_nvmf_tcp_qpair {
 	 */
 	struct spdk_poller			*timeout_poller;
 
-	struct spdk_io_channel			*accel_channel;
 
 	TAILQ_ENTRY(spdk_nvmf_tcp_qpair)	link;
 };
@@ -273,6 +272,7 @@ struct spdk_nvmf_tcp_poll_group {
 	TAILQ_HEAD(, spdk_nvmf_tcp_qpair)	qpairs;
 	TAILQ_HEAD(, spdk_nvmf_tcp_qpair)	await_req;
 
+	struct spdk_io_channel			*accel_channel;
 	struct spdk_nvmf_tcp_control_msg_list	*control_msg_list;
 };
 
@@ -484,9 +484,6 @@ nvmf_tcp_qpair_destroy(struct spdk_nvmf_tcp_qpair *tqpair)
 		nvmf_tcp_dump_qpair_req_contents(tqpair);
 	}
 
-	if (tqpair->accel_channel) {
-		spdk_put_io_channel(tqpair->accel_channel);
-	}
 	spdk_dma_free(tqpair->pdus);
 	free(tqpair->reqs);
 	spdk_free(tqpair->bufs);
@@ -861,8 +858,9 @@ pdu_data_crc32_compute(struct nvme_tcp_pdu *pdu)
 	/* Data Digest */
 	if (pdu->data_len > 0 && g_nvme_tcp_ddgst[pdu->hdr.common.pdu_type] && tqpair->host_ddgst_enable) {
 		/* Only suport this limitated case for the first step */
-		if (spdk_likely(!pdu->dif_ctx && (pdu->data_len % SPDK_NVME_TCP_DIGEST_ALIGNMENT == 0))) {
-			spdk_accel_submit_crc32cv(tqpair->accel_channel, &pdu->data_digest_crc32,
+		if (spdk_likely(!pdu->dif_ctx && (pdu->data_len % SPDK_NVME_TCP_DIGEST_ALIGNMENT == 0)
+				&& tqpair->group)) {
+			spdk_accel_submit_crc32cv(tqpair->group->accel_channel, &pdu->data_digest_crc32,
 						  pdu->data_iov, pdu->data_iovcnt, 0, data_crc32_accel_done, pdu);
 			return;
 		}
@@ -909,8 +907,8 @@ nvmf_tcp_qpair_write_pdu(struct spdk_nvmf_tcp_qpair *tqpair,
 	pdu->iov[0].iov_len = hlen;
 
 	/* Header Digest */
-	if (g_nvme_tcp_hdgst[pdu->hdr.common.pdu_type] && tqpair->host_hdgst_enable) {
-		spdk_accel_submit_crc32cv(tqpair->accel_channel, &pdu->header_digest_crc32,
+	if (g_nvme_tcp_hdgst[pdu->hdr.common.pdu_type] && tqpair->host_hdgst_enable && tqpair->group) {
+		spdk_accel_submit_crc32cv(tqpair->group->accel_channel, &pdu->header_digest_crc32,
 					  pdu->iov, 1, 0, header_crc32_accel_done, pdu);
 		return;
 	}
@@ -1184,6 +1182,12 @@ nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport)
 		}
 	}
 
+	tgroup->accel_channel = spdk_accel_engine_get_io_channel();
+	if (spdk_unlikely(!tgroup->accel_channel)) {
+		SPDK_ERRLOG("Cannot create accel_channel for tgroup=%p\n", tgroup);
+		goto cleanup;
+	}
+
 	return &tgroup->group;
 
 cleanup:
@@ -1216,6 +1220,10 @@ nvmf_tcp_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 	spdk_sock_group_close(&tgroup->sock_group);
 	if (tgroup->control_msg_list) {
 		nvmf_tcp_control_msg_list_free(tgroup->control_msg_list);
+	}
+
+	if (tgroup->accel_channel) {
+		spdk_put_io_channel(tgroup->accel_channel);
 	}
 
 	free(tgroup);
@@ -1735,17 +1743,6 @@ nvmf_tcp_icreq_handle(struct spdk_nvmf_tcp_transport *ttransport,
 			     tqpair,
 			     tqpair->recv_buf_size);
 		/* Not fatal. */
-	}
-
-	if (tqpair->host_hdgst_enable || tqpair->host_ddgst_enable) {
-		tqpair->accel_channel = spdk_accel_engine_get_io_channel();
-		if (spdk_unlikely(!tqpair->accel_channel)) {
-			fes = SPDK_NVME_TCP_TERM_REQ_FES_HDGST_ERROR;
-			error_offset = offsetof(struct spdk_nvme_tcp_ic_req, dgst);
-			SPDK_ERRLOG("Unabled to get accel_channel for tqpair=%p, failed to enable digest for header or data\n",
-				    tqpair);
-			goto end;
-		}
 	}
 
 	tqpair->cpda = spdk_min(ic_req->hpda, SPDK_NVME_TCP_CPDA_MAX);

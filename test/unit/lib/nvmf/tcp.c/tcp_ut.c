@@ -55,6 +55,8 @@
 #define UT_SQ_HEAD_MAX 128
 #define UT_NUM_SHARED_BUFFERS 128
 
+static void *g_accel_p = (void *)0xdeadbeaf;
+
 SPDK_LOG_REGISTER_COMPONENT(nvmf)
 
 DEFINE_STUB(spdk_nvmf_qpair_get_listen_trid,
@@ -222,10 +224,14 @@ DEFINE_STUB(nvmf_transport_req_free,
 	    (struct spdk_nvmf_request *req),
 	    0);
 
-DEFINE_STUB(spdk_accel_engine_get_io_channel,
-	    struct spdk_io_channel *,
-	    (void),
-	    NULL);
+DEFINE_STUB(accel_engine_create_cb, int, (void *io_device, void *ctx_buf), 0);
+DEFINE_STUB_V(accel_engine_destroy_cb, (void *io_device, void *ctx_buf));
+
+struct spdk_io_channel *
+spdk_accel_engine_get_io_channel(void)
+{
+	return spdk_get_io_channel(g_accel_p);
+}
 
 DEFINE_STUB(spdk_accel_submit_crc32cv,
 	    int,
@@ -477,6 +483,19 @@ test_nvmf_tcp_destroy(void)
 }
 
 static void
+init_accel(void)
+{
+	spdk_io_device_register(g_accel_p, accel_engine_create_cb, accel_engine_destroy_cb,
+				sizeof(int), "accel_p");
+}
+
+static void
+fini_accel(void)
+{
+	spdk_io_device_unregister(g_accel_p, NULL);
+}
+
+static void
 test_nvmf_tcp_poll_group_create(void)
 {
 	struct spdk_nvmf_transport *transport;
@@ -489,6 +508,8 @@ test_nvmf_tcp_poll_group_create(void)
 	thread = spdk_thread_create(NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
 	spdk_set_thread(thread);
+
+	init_accel();
 
 	memset(&opts, 0, sizeof(opts));
 	opts.max_queue_depth = UT_MAX_QUEUE_DEPTH;
@@ -513,6 +534,7 @@ test_nvmf_tcp_poll_group_create(void)
 	nvmf_tcp_poll_group_destroy(group);
 	nvmf_tcp_destroy(transport, NULL, NULL);
 
+	fini_accel();
 	spdk_thread_exit(thread);
 	while (!spdk_thread_is_exited(thread)) {
 		spdk_thread_poll(thread, 0, 0);
@@ -720,7 +742,6 @@ test_nvmf_tcp_incapsule_data_handle(void)
 	CU_ASSERT(req_temp == NULL);
 	CU_ASSERT(tqpair.pdu_in_progress.req == (void *)&tcp_req2);
 }
-
 
 int main(int argc, char **argv)
 {
