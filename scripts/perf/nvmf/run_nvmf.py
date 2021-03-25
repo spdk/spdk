@@ -739,7 +739,7 @@ class SPDKTarget(Target):
             self.subsys_no = get_nvme_devices_count()
         self.log_print("Starting SPDK NVMeOF Target process")
         nvmf_app_path = os.path.join(self.spdk_dir, "build/bin/nvmf_tgt")
-        proc = subprocess.Popen([nvmf_app_path, "--wait-for-rpc", "-m", self.num_cores])
+        proc = subprocess.Popen([nvmf_app_path, "--wait-for-rpc", "-m", str(self.num_cores)])
         self.pid = os.path.join(self.spdk_dir, "nvmf.pid")
 
         with open(self.pid, "w") as fh:
