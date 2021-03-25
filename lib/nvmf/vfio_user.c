@@ -151,7 +151,7 @@ struct nvmf_vfio_user_ctrlr {
 	struct nvmf_vfio_user_endpoint		*endpoint;
 	struct nvmf_vfio_user_transport		*transport;
 
-	/* True when the admin queue is connected */
+	/* True when the socket connection is active */
 	bool					ready;
 	/* Number of connected queue pairs */
 	uint32_t				num_connected_qps;
@@ -1547,6 +1547,7 @@ nvmf_vfio_user_create_ctrlr(struct nvmf_vfio_user_transport *transport,
 		goto out;
 	}
 	endpoint->ctrlr = ctrlr;
+	ctrlr->ready = true;
 
 	/* Notify the generic layer about the new admin queue pair */
 	TAILQ_INSERT_TAIL(&ctrlr->transport->new_qps, ctrlr->qp[0], link);
@@ -1838,7 +1839,6 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 	pthread_mutex_lock(&endpoint->lock);
 	if (nvmf_qpair_is_admin_queue(&qpair->qpair)) {
 		ctrlr->cntlid = qpair->qpair.ctrlr->cntlid;
-		ctrlr->ready = true;
 	}
 	ctrlr->num_connected_qps++;
 	pthread_mutex_unlock(&endpoint->lock);
