@@ -63,10 +63,42 @@ scheduler_subsystem_fini(void)
 	spdk_subsystem_fini_next();
 }
 
+static void
+scheduler_write_config_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_scheduler *scheduler;
+	uint64_t scheduler_period;
+
+	assert(w != NULL);
+
+	scheduler = spdk_scheduler_get();
+	if (scheduler == NULL) {
+		SPDK_ERRLOG("Unable to get scheduler info\n");
+		return;
+	}
+
+	scheduler_period = spdk_scheduler_get_period();
+
+	spdk_json_write_array_begin(w);
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "method", "framework_set_scheduler");
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_string(w, "name", scheduler->name);
+	if (scheduler_period != 0) {
+		spdk_json_write_named_uint32(w, "period", scheduler_period);
+	}
+	spdk_json_write_object_end(w);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_array_end(w);
+}
+
 static struct spdk_subsystem g_spdk_subsystem_scheduler = {
 	.name = "scheduler",
 	.init = scheduler_subsystem_init,
 	.fini = scheduler_subsystem_fini,
+	.write_config_json = scheduler_write_config_json,
 };
 
 SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_scheduler);
