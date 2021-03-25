@@ -59,6 +59,25 @@ DEFINE_STUB_V(rdma_free_devices, (struct ibv_context **list));
 DEFINE_STUB(fcntl, int, (int fd, int cmd, ...), 0);
 DEFINE_STUB_V(rdma_destroy_event_channel, (struct rdma_event_channel *channel));
 
+DEFINE_STUB(ibv_dereg_mr, int, (struct ibv_mr *mr), 0);
+
+/* ibv_reg_mr can be a macro, need to undefine it */
+#ifdef ibv_reg_mr
+#undef ibv_reg_mr
+#endif
+
+DEFINE_RETURN_MOCK(ibv_reg_mr, struct ibv_mr *);
+struct ibv_mr *
+ibv_reg_mr(struct ibv_pd *pd, void *addr, size_t length, int access)
+{
+	HANDLE_RETURN_MOCK(ibv_reg_mr);
+	if (length > 0) {
+		return &g_rdma_mr;
+	} else {
+		return NULL;
+	}
+}
+
 struct nvme_rdma_ut_bdev_io {
 	struct iovec iovs[NVME_RDMA_MAX_SGL_DESCRIPTORS];
 	int iovpos;
@@ -860,6 +879,85 @@ test_nvme_rdma_req_init(void)
 	CU_ASSERT(rdma_req.send_sgl[0].length == sizeof(struct spdk_nvme_cmd));
 }
 
+static void
+test_nvme_rdma_validate_cm_event(void)
+{
+	enum rdma_cm_event_type expected_evt_type;
+	struct rdma_cm_event reaped_evt = {};
+	int rc;
+
+	/* case 1: expected_evt_type == reaped_evt->event, expect: pass */
+	expected_evt_type = RDMA_CM_EVENT_ADDR_RESOLVED;
+	reaped_evt.event = RDMA_CM_EVENT_ADDR_RESOLVED;
+
+	rc = nvme_rdma_validate_cm_event(expected_evt_type, &reaped_evt);
+	CU_ASSERT(rc == 0);
+
+	/* case 2: expected_evt_type != RDMA_CM_EVENT_ESTABLISHED and is not equal to reaped_evt->event, expect: fail */
+	reaped_evt.event = RDMA_CM_EVENT_CONNECT_RESPONSE;
+
+	rc = nvme_rdma_validate_cm_event(expected_evt_type, &reaped_evt);
+	CU_ASSERT(rc == -EBADMSG);
+
+	/* case 3: expected_evt_type == RDMA_CM_EVENT_ESTABLISHED */
+	expected_evt_type = RDMA_CM_EVENT_ESTABLISHED;
+	/* reaped_evt->event == RDMA_CM_EVENT_REJECTED and reaped_evt->status == 10, expect: fail */
+	reaped_evt.event = RDMA_CM_EVENT_REJECTED;
+	reaped_evt.status = 10;
+
+	rc = nvme_rdma_validate_cm_event(expected_evt_type, &reaped_evt);
+	CU_ASSERT(rc == -ESTALE);
+
+	/* reaped_evt->event == RDMA_CM_EVENT_CONNECT_RESPONSE, expect: pass */
+	reaped_evt.event = RDMA_CM_EVENT_CONNECT_RESPONSE;
+
+	rc = nvme_rdma_validate_cm_event(expected_evt_type, &reaped_evt);
+	CU_ASSERT(rc == 0);
+}
+
+static void
+test_nvme_rdma_register_and_unregister_reqs(void)
+{
+	struct nvme_rdma_qpair rqpair = {};
+	struct spdk_nvmf_cmd cmds = {};
+	struct rdma_cm_id cm_id = {};
+	struct spdk_nvme_rdma_req rdma_reqs[50] = {};
+	int rc;
+
+	rqpair.cm_id = &cm_id;
+	rqpair.cmds = &cmds;
+	g_nvme_hooks.get_rkey = NULL;
+	rqpair.rdma_reqs = rdma_reqs;
+	/* case 1: nvme_rdma_register_req: nvme_rdma_reg_mr fail, expect: fail */
+	rqpair.num_entries = 0;
+
+	rc = nvme_rdma_register_reqs(&rqpair);
+	CU_ASSERT(rc == -ENOMEM);
+	CU_ASSERT(rqpair.cmd_mr.mr == NULL);
+
+	/* case 2: nvme_rdma_register_req: single entry, expect: PASS */
+	rqpair.num_entries = 1;
+
+	rc = nvme_rdma_register_reqs(&rqpair);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(rqpair.cmd_mr.mr == &g_rdma_mr);
+	CU_ASSERT(rqpair.rdma_reqs[0].send_sgl[0].lkey == rqpair.cmd_mr.mr->lkey);
+
+	/* case 3: nvme_rdma_register_req: multiple entry, expect: PASS */
+	rqpair.num_entries = 50;
+
+	rc = nvme_rdma_register_reqs(&rqpair);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(rqpair.cmd_mr.mr == &g_rdma_mr);
+	for (int i = 0; i < rqpair.num_entries; i++) {
+		CU_ASSERT(rqpair.rdma_reqs[i].send_sgl[0].lkey == rqpair.cmd_mr.mr->lkey);
+	}
+
+	/* case4: nvme_rdma_unregister_reqs, expect: PASS */
+	nvme_rdma_unregister_reqs(&rqpair);
+	CU_ASSERT(rqpair.cmd_mr.mr == NULL);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -882,6 +980,8 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_rdma_ctrlr_construct);
 	CU_ADD_TEST(suite, test_nvme_rdma_req_put_and_get);
 	CU_ADD_TEST(suite, test_nvme_rdma_req_init);
+	CU_ADD_TEST(suite, test_nvme_rdma_validate_cm_event);
+	CU_ADD_TEST(suite, test_nvme_rdma_register_and_unregister_reqs);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
