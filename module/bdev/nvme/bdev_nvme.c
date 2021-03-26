@@ -412,7 +412,7 @@ _bdev_nvme_check_pending_destruct(struct spdk_io_channel_iter *i, int status)
 		assert(nvme_bdev_ctrlr->ref == 0 && nvme_bdev_ctrlr->destruct);
 		pthread_mutex_unlock(&nvme_bdev_ctrlr->mutex);
 
-		spdk_thread_send_msg(nvme_bdev_ctrlr->thread, nvme_bdev_ctrlr_do_destruct,
+		spdk_thread_send_msg(nvme_bdev_ctrlr->thread, nvme_bdev_ctrlr_unregister,
 				     nvme_bdev_ctrlr);
 	} else {
 		pthread_mutex_unlock(&nvme_bdev_ctrlr->mutex);
