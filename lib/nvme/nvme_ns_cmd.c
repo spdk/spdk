@@ -40,7 +40,6 @@ static inline struct nvme_request *_nvme_ns_cmd_rw(struct spdk_nvme_ns *ns,
 		void *cb_arg, uint32_t opc, uint32_t io_flags,
 		uint16_t apptag_mask, uint16_t apptag, bool check_sgl);
 
-
 static bool
 nvme_ns_check_request_length(uint32_t lba_count, uint32_t sectors_per_max_io,
 			     uint32_t sectors_per_stripe, uint32_t qdepth)
@@ -60,6 +59,17 @@ nvme_ns_check_request_length(uint32_t lba_count, uint32_t sectors_per_max_io,
 	SPDK_DEBUGLOG(nvme, "checking maximum i/o length %d\n", child_per_io);
 
 	return child_per_io >= qdepth;
+}
+
+static inline int
+nvme_ns_map_failure_rc(uint32_t lba_count, uint32_t sectors_per_max_io,
+		       uint32_t sectors_per_stripe, uint32_t qdepth, int rc)
+{
+	assert(!rc);
+	if (nvme_ns_check_request_length(lba_count, sectors_per_max_io, sectors_per_stripe, qdepth)) {
+		return -EINVAL;
+	}
+	return -ENOMEM;
 }
 
 static inline bool
@@ -466,6 +476,7 @@ spdk_nvme_ns_cmd_compare(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 {
 	struct nvme_request *req;
 	struct nvme_payload payload;
+	int rc = 0;
 
 	if (!_is_io_flags_valid(io_flags)) {
 		return -EINVAL;
@@ -479,13 +490,12 @@ spdk_nvme_ns_cmd_compare(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			      0, false);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
-	} else if (nvme_ns_check_request_length(lba_count,
-						ns->sectors_per_max_io,
-						ns->sectors_per_stripe,
-						qpair->ctrlr->opts.io_queue_requests)) {
-		return -EINVAL;
 	} else {
-		return -ENOMEM;
+		return nvme_ns_map_failure_rc(lba_count,
+					      ns->sectors_per_max_io,
+					      ns->sectors_per_stripe,
+					      qpair->ctrlr->opts.io_queue_requests,
+					      rc);
 	}
 }
 
@@ -499,6 +509,7 @@ spdk_nvme_ns_cmd_compare_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair
 {
 	struct nvme_request *req;
 	struct nvme_payload payload;
+	int rc = 0;
 
 	if (!_is_io_flags_valid(io_flags)) {
 		return -EINVAL;
@@ -512,13 +523,12 @@ spdk_nvme_ns_cmd_compare_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair
 			      apptag_mask, apptag, false);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
-	} else if (nvme_ns_check_request_length(lba_count,
-						ns->sectors_per_max_io,
-						ns->sectors_per_stripe,
-						qpair->ctrlr->opts.io_queue_requests)) {
-		return -EINVAL;
 	} else {
-		return -ENOMEM;
+		return nvme_ns_map_failure_rc(lba_count,
+					      ns->sectors_per_max_io,
+					      ns->sectors_per_stripe,
+					      qpair->ctrlr->opts.io_queue_requests,
+					      rc);
 	}
 }
 
@@ -531,6 +541,7 @@ spdk_nvme_ns_cmd_comparev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair
 {
 	struct nvme_request *req;
 	struct nvme_payload payload;
+	int rc = 0;
 
 	if (!_is_io_flags_valid(io_flags)) {
 		return -EINVAL;
@@ -547,13 +558,12 @@ spdk_nvme_ns_cmd_comparev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair
 			      io_flags, 0, 0, true);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
-	} else if (nvme_ns_check_request_length(lba_count,
-						ns->sectors_per_max_io,
-						ns->sectors_per_stripe,
-						qpair->ctrlr->opts.io_queue_requests)) {
-		return -EINVAL;
 	} else {
-		return -ENOMEM;
+		return nvme_ns_map_failure_rc(lba_count,
+					      ns->sectors_per_max_io,
+					      ns->sectors_per_stripe,
+					      qpair->ctrlr->opts.io_queue_requests,
+					      rc);
 	}
 }
 
@@ -567,6 +577,7 @@ spdk_nvme_ns_cmd_comparev_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpai
 {
 	struct nvme_request *req;
 	struct nvme_payload payload;
+	int rc = 0;
 
 	if (!_is_io_flags_valid(io_flags)) {
 		return -EINVAL;
@@ -582,13 +593,12 @@ spdk_nvme_ns_cmd_comparev_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpai
 			      SPDK_NVME_OPC_COMPARE, io_flags, apptag_mask, apptag, true);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
-	} else if (nvme_ns_check_request_length(lba_count,
-						ns->sectors_per_max_io,
-						ns->sectors_per_stripe,
-						qpair->ctrlr->opts.io_queue_requests)) {
-		return -EINVAL;
 	} else {
-		return -ENOMEM;
+		return nvme_ns_map_failure_rc(lba_count,
+					      ns->sectors_per_max_io,
+					      ns->sectors_per_stripe,
+					      qpair->ctrlr->opts.io_queue_requests,
+					      rc);
 	}
 }
 
@@ -600,6 +610,7 @@ spdk_nvme_ns_cmd_read(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, vo
 {
 	struct nvme_request *req;
 	struct nvme_payload payload;
+	int rc = 0;
 
 	if (!_is_io_flags_valid(io_flags)) {
 		return -EINVAL;
@@ -612,13 +623,12 @@ spdk_nvme_ns_cmd_read(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, vo
 			      0, false);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
-	} else if (nvme_ns_check_request_length(lba_count,
-						ns->sectors_per_max_io,
-						ns->sectors_per_stripe,
-						qpair->ctrlr->opts.io_queue_requests)) {
-		return -EINVAL;
 	} else {
-		return -ENOMEM;
+		return nvme_ns_map_failure_rc(lba_count,
+					      ns->sectors_per_max_io,
+					      ns->sectors_per_stripe,
+					      qpair->ctrlr->opts.io_queue_requests,
+					      rc);
 	}
 }
 
@@ -631,6 +641,7 @@ spdk_nvme_ns_cmd_read_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 {
 	struct nvme_request *req;
 	struct nvme_payload payload;
+	int rc = 0;
 
 	if (!_is_io_flags_valid(io_flags)) {
 		return -EINVAL;
@@ -643,13 +654,12 @@ spdk_nvme_ns_cmd_read_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 			      apptag_mask, apptag, false);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
-	} else if (nvme_ns_check_request_length(lba_count,
-						ns->sectors_per_max_io,
-						ns->sectors_per_stripe,
-						qpair->ctrlr->opts.io_queue_requests)) {
-		return -EINVAL;
 	} else {
-		return -ENOMEM;
+		return nvme_ns_map_failure_rc(lba_count,
+					      ns->sectors_per_max_io,
+					      ns->sectors_per_stripe,
+					      qpair->ctrlr->opts.io_queue_requests,
+					      rc);
 	}
 }
 
@@ -662,6 +672,7 @@ spdk_nvme_ns_cmd_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 {
 	struct nvme_request *req;
 	struct nvme_payload payload;
+	int rc = 0;
 
 	if (!_is_io_flags_valid(io_flags)) {
 		return -EINVAL;
@@ -677,13 +688,12 @@ spdk_nvme_ns_cmd_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			      io_flags, 0, 0, true);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
-	} else if (nvme_ns_check_request_length(lba_count,
-						ns->sectors_per_max_io,
-						ns->sectors_per_stripe,
-						qpair->ctrlr->opts.io_queue_requests)) {
-		return -EINVAL;
 	} else {
-		return -ENOMEM;
+		return nvme_ns_map_failure_rc(lba_count,
+					      ns->sectors_per_max_io,
+					      ns->sectors_per_stripe,
+					      qpair->ctrlr->opts.io_queue_requests,
+					      rc);
 	}
 }
 
@@ -697,6 +707,7 @@ spdk_nvme_ns_cmd_readv_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *
 {
 	struct nvme_request *req;
 	struct nvme_payload payload;
+	int rc = 0;
 
 	if (!_is_io_flags_valid(io_flags)) {
 		return -EINVAL;
@@ -712,13 +723,12 @@ spdk_nvme_ns_cmd_readv_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *
 			      io_flags, apptag_mask, apptag, true);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
-	} else if (nvme_ns_check_request_length(lba_count,
-						ns->sectors_per_max_io,
-						ns->sectors_per_stripe,
-						qpair->ctrlr->opts.io_queue_requests)) {
-		return -EINVAL;
 	} else {
-		return -ENOMEM;
+		return nvme_ns_map_failure_rc(lba_count,
+					      ns->sectors_per_max_io,
+					      ns->sectors_per_stripe,
+					      qpair->ctrlr->opts.io_queue_requests,
+					      rc);
 	}
 }
 
@@ -730,6 +740,7 @@ spdk_nvme_ns_cmd_write(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 {
 	struct nvme_request *req;
 	struct nvme_payload payload;
+	int rc = 0;
 
 	if (!_is_io_flags_valid(io_flags)) {
 		return -EINVAL;
@@ -741,13 +752,12 @@ spdk_nvme_ns_cmd_write(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			      io_flags, 0, 0, false);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
-	} else if (nvme_ns_check_request_length(lba_count,
-						ns->sectors_per_max_io,
-						ns->sectors_per_stripe,
-						qpair->ctrlr->opts.io_queue_requests)) {
-		return -EINVAL;
 	} else {
-		return -ENOMEM;
+		return nvme_ns_map_failure_rc(lba_count,
+					      ns->sectors_per_max_io,
+					      ns->sectors_per_stripe,
+					      qpair->ctrlr->opts.io_queue_requests,
+					      rc);
 	}
 }
 
@@ -779,7 +789,7 @@ nvme_ns_cmd_zone_append_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair 
 {
 	struct nvme_request *req;
 	struct nvme_payload payload;
-	int ret;
+	int ret = 0;
 
 	if (!_is_io_flags_valid(io_flags)) {
 		return -EINVAL;
@@ -809,13 +819,12 @@ nvme_ns_cmd_zone_append_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair 
 			return -EINVAL;
 		}
 		return nvme_qpair_submit_request(qpair, req);
-	} else if (nvme_ns_check_request_length(lba_count,
-						ns->sectors_per_max_io,
-						ns->sectors_per_stripe,
-						qpair->ctrlr->opts.io_queue_requests)) {
-		return -EINVAL;
 	} else {
-		return -ENOMEM;
+		return nvme_ns_map_failure_rc(lba_count,
+					      ns->sectors_per_max_io,
+					      ns->sectors_per_stripe,
+					      qpair->ctrlr->opts.io_queue_requests,
+					      ret);
 	}
 }
 
@@ -829,7 +838,7 @@ nvme_ns_cmd_zone_appendv_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair
 {
 	struct nvme_request *req;
 	struct nvme_payload payload;
-	int ret;
+	int ret = 0;
 
 	if (!_is_io_flags_valid(io_flags)) {
 		return -EINVAL;
@@ -868,13 +877,12 @@ nvme_ns_cmd_zone_appendv_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair
 			return -EINVAL;
 		}
 		return nvme_qpair_submit_request(qpair, req);
-	} else if (nvme_ns_check_request_length(lba_count,
-						ns->sectors_per_max_io,
-						ns->sectors_per_stripe,
-						qpair->ctrlr->opts.io_queue_requests)) {
-		return -EINVAL;
 	} else {
-		return -ENOMEM;
+		return nvme_ns_map_failure_rc(lba_count,
+					      ns->sectors_per_max_io,
+					      ns->sectors_per_stripe,
+					      qpair->ctrlr->opts.io_queue_requests,
+					      ret);
 	}
 }
 
@@ -886,6 +894,7 @@ spdk_nvme_ns_cmd_write_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *
 {
 	struct nvme_request *req;
 	struct nvme_payload payload;
+	int rc = 0;
 
 	if (!_is_io_flags_valid(io_flags)) {
 		return -EINVAL;
@@ -897,13 +906,12 @@ spdk_nvme_ns_cmd_write_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *
 			      io_flags, apptag_mask, apptag, false);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
-	} else if (nvme_ns_check_request_length(lba_count,
-						ns->sectors_per_max_io,
-						ns->sectors_per_stripe,
-						qpair->ctrlr->opts.io_queue_requests)) {
-		return -EINVAL;
 	} else {
-		return -ENOMEM;
+		return nvme_ns_map_failure_rc(lba_count,
+					      ns->sectors_per_max_io,
+					      ns->sectors_per_stripe,
+					      qpair->ctrlr->opts.io_queue_requests,
+					      rc);
 	}
 }
 
@@ -916,6 +924,7 @@ spdk_nvme_ns_cmd_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 {
 	struct nvme_request *req;
 	struct nvme_payload payload;
+	int rc = 0;
 
 	if (!_is_io_flags_valid(io_flags)) {
 		return -EINVAL;
@@ -931,13 +940,12 @@ spdk_nvme_ns_cmd_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			      io_flags, 0, 0, true);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
-	} else if (nvme_ns_check_request_length(lba_count,
-						ns->sectors_per_max_io,
-						ns->sectors_per_stripe,
-						qpair->ctrlr->opts.io_queue_requests)) {
-		return -EINVAL;
 	} else {
-		return -ENOMEM;
+		return nvme_ns_map_failure_rc(lba_count,
+					      ns->sectors_per_max_io,
+					      ns->sectors_per_stripe,
+					      qpair->ctrlr->opts.io_queue_requests,
+					      rc);
 	}
 }
 
@@ -951,6 +959,7 @@ spdk_nvme_ns_cmd_writev_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair 
 {
 	struct nvme_request *req;
 	struct nvme_payload payload;
+	int rc = 0;
 
 	if (!_is_io_flags_valid(io_flags)) {
 		return -EINVAL;
@@ -966,13 +975,12 @@ spdk_nvme_ns_cmd_writev_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair 
 			      io_flags, apptag_mask, apptag, true);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
-	} else if (nvme_ns_check_request_length(lba_count,
-						ns->sectors_per_max_io,
-						ns->sectors_per_stripe,
-						qpair->ctrlr->opts.io_queue_requests)) {
-		return -EINVAL;
 	} else {
-		return -ENOMEM;
+		return nvme_ns_map_failure_rc(lba_count,
+					      ns->sectors_per_max_io,
+					      ns->sectors_per_stripe,
+					      qpair->ctrlr->opts.io_queue_requests,
+					      rc);
 	}
 }
 
