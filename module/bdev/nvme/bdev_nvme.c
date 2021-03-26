@@ -2094,6 +2094,38 @@ nvme_ctrlr_populate_namespaces_done(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 	populate_namespaces_cb(ctx, j, 0);
 }
 
+static int
+bdev_nvme_compare_trids(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
+			struct spdk_nvme_ctrlr *new_ctrlr,
+			struct spdk_nvme_transport_id *trid)
+{
+	struct nvme_bdev_ctrlr_trid *tmp_trid;
+
+	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
+		SPDK_ERRLOG("PCIe failover is not supported.\n");
+		return -ENOTSUP;
+	}
+
+	/* Currently we only support failover to the same transport type. */
+	if (nvme_bdev_ctrlr->connected_trid->trtype != trid->trtype) {
+		return -EINVAL;
+	}
+
+	/* Currently we only support failover to the same NQN. */
+	if (strncmp(trid->subnqn, nvme_bdev_ctrlr->connected_trid->subnqn, SPDK_NVMF_NQN_MAX_LEN)) {
+		return -EINVAL;
+	}
+
+	/* Skip all the other checks if we've already registered this path. */
+	TAILQ_FOREACH(tmp_trid, &nvme_bdev_ctrlr->trids, link) {
+		if (!spdk_nvme_transport_id_compare(&tmp_trid->trid, trid)) {
+			return -EEXIST;
+		}
+	}
+
+	return 0;
+}
+
 static bool
 bdev_nvme_compare_ns(struct spdk_nvme_ns *ns1, struct spdk_nvme_ns *ns2)
 {
@@ -2106,47 +2138,15 @@ bdev_nvme_compare_ns(struct spdk_nvme_ns *ns1, struct spdk_nvme_ns *ns2)
 }
 
 static int
-bdev_nvme_add_trid(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct spdk_nvme_ctrlr *new_ctrlr,
-		   struct spdk_nvme_transport_id *trid)
+bdev_nvme_compare_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
+			     struct spdk_nvme_ctrlr *new_ctrlr)
 {
-	uint32_t			i, nsid;
-	struct nvme_bdev_ns		*nvme_ns;
-	struct spdk_nvme_ns		*new_ns;
-	struct nvme_bdev_ctrlr_trid	*new_trid, *tmp_trid;
-	int				rc = 0;
-
-	assert(nvme_bdev_ctrlr != NULL);
-
-	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
-		SPDK_ERRLOG("PCIe failover is not supported.\n");
-		return -ENOTSUP;
-	}
-
-	pthread_mutex_lock(&nvme_bdev_ctrlr->mutex);
-
-	/* Currently we only support failover to the same transport type. */
-	if (nvme_bdev_ctrlr->connected_trid->trtype != trid->trtype) {
-		rc = -EINVAL;
-		goto exit;
-	}
-
-	/* Currently we only support failover to the same NQN. */
-	if (strncmp(trid->subnqn, nvme_bdev_ctrlr->connected_trid->subnqn, SPDK_NVMF_NQN_MAX_LEN)) {
-		rc = -EINVAL;
-		goto exit;
-	}
-
-	/* Skip all the other checks if we've already registered this path. */
-	TAILQ_FOREACH(new_trid, &nvme_bdev_ctrlr->trids, link) {
-		if (!spdk_nvme_transport_id_compare(&new_trid->trid, trid)) {
-			rc = -EEXIST;
-			goto exit;
-		}
-	}
+	uint32_t i, nsid;
+	struct nvme_bdev_ns *nvme_ns;
+	struct spdk_nvme_ns *new_ns;
 
 	if (spdk_nvme_ctrlr_get_num_ns(new_ctrlr) != nvme_bdev_ctrlr->num_ns) {
-		rc = -EINVAL;
-		goto exit;
+		return -EINVAL;
 	}
 
 	for (i = 0; i < nvme_bdev_ctrlr->num_ns; i++) {
@@ -2161,15 +2161,22 @@ bdev_nvme_add_trid(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct spdk_nvme_ctr
 		assert(new_ns != NULL);
 
 		if (bdev_nvme_compare_ns(nvme_ns->ns, new_ns) != 0) {
-			rc = -EINVAL;
-			goto exit;
+			return -EINVAL;
 		}
 	}
 
+	return 0;
+}
+
+static int
+_bdev_nvme_add_secondary_trid(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
+			      struct spdk_nvme_transport_id *trid)
+{
+	struct nvme_bdev_ctrlr_trid *new_trid, *tmp_trid;
+
 	new_trid = calloc(1, sizeof(*new_trid));
 	if (new_trid == NULL) {
-		rc = -ENOMEM;
-		goto exit;
+		return -ENOMEM;
 	}
 	new_trid->trid = *trid;
 	new_trid->is_failed = false;
@@ -2177,11 +2184,36 @@ bdev_nvme_add_trid(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct spdk_nvme_ctr
 	TAILQ_FOREACH(tmp_trid, &nvme_bdev_ctrlr->trids, link) {
 		if (tmp_trid->is_failed) {
 			TAILQ_INSERT_BEFORE(tmp_trid, new_trid, link);
-			goto exit;
+			return 0;
 		}
 	}
 
 	TAILQ_INSERT_TAIL(&nvme_bdev_ctrlr->trids, new_trid, link);
+	return 0;
+}
+
+static int
+bdev_nvme_add_secondary_trid(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
+			     struct spdk_nvme_ctrlr *new_ctrlr,
+			     struct spdk_nvme_transport_id *trid)
+{
+	int rc;
+
+	assert(nvme_bdev_ctrlr != NULL);
+
+	pthread_mutex_lock(&nvme_bdev_ctrlr->mutex);
+
+	rc = bdev_nvme_compare_trids(nvme_bdev_ctrlr, new_ctrlr, trid);
+	if (rc != 0) {
+		goto exit;
+	}
+
+	rc = bdev_nvme_compare_namespaces(nvme_bdev_ctrlr, new_ctrlr);
+	if (rc != 0) {
+		goto exit;
+	}
+
+	rc = _bdev_nvme_add_secondary_trid(nvme_bdev_ctrlr, trid);
 
 exit:
 	pthread_mutex_unlock(&nvme_bdev_ctrlr->mutex);
@@ -2206,7 +2238,7 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		 * nvme_bdev_ctrlr for failover. After checking if it can access the same
 		 * namespaces as the primary path, it is disconnected until failover occurs.
 		 */
-		rc = bdev_nvme_add_trid(nvme_bdev_ctrlr, ctrlr, &ctx->trid);
+		rc = bdev_nvme_add_secondary_trid(nvme_bdev_ctrlr, ctrlr, &ctx->trid);
 
 		spdk_nvme_detach(ctrlr);
 

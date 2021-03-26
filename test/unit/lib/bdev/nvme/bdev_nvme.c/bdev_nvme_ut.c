@@ -1235,7 +1235,7 @@ test_failover_ctrlr(void)
 	set_thread(0);
 
 	/* Second, test two trids case. */
-	rc = bdev_nvme_add_trid(nvme_bdev_ctrlr, &ctrlr, &trid2);
+	rc = bdev_nvme_add_secondary_trid(nvme_bdev_ctrlr, &ctrlr, &trid2);
 	CU_ASSERT(rc == 0);
 
 	curr_trid = TAILQ_FIRST(&nvme_bdev_ctrlr->trids);
@@ -1879,7 +1879,7 @@ test_remove_trid(void)
 	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr != NULL);
 
-	rc = bdev_nvme_add_trid(nvme_bdev_ctrlr, &ctrlr, &trid2);
+	rc = bdev_nvme_add_secondary_trid(nvme_bdev_ctrlr, &ctrlr, &trid2);
 	CU_ASSERT(rc == 0);
 
 	/* trid3 is not in the registered list. */
@@ -1894,7 +1894,7 @@ test_remove_trid(void)
 		CU_ASSERT(spdk_nvme_transport_id_compare(&ctrid->trid, &trid2) != 0);
 	}
 
-	rc = bdev_nvme_add_trid(nvme_bdev_ctrlr, &ctrlr, &trid3);
+	rc = bdev_nvme_add_secondary_trid(nvme_bdev_ctrlr, &ctrlr, &trid3);
 	CU_ASSERT(rc == 0);
 
 	/* trid1 is currently used and trid3 is an alternative path.
@@ -1929,7 +1929,7 @@ test_remove_trid(void)
 	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr != NULL);
 
-	rc = bdev_nvme_add_trid(nvme_bdev_ctrlr, &ctrlr, &trid2);
+	rc = bdev_nvme_add_secondary_trid(nvme_bdev_ctrlr, &ctrlr, &trid2);
 	CU_ASSERT(rc == 0);
 
 	/* If trid is not specified, nvme_bdev_ctrlr itself is removed. */
