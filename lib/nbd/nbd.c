@@ -351,10 +351,8 @@ nbd_io_xmit_check(struct spdk_nbd_disk *nbd)
 static int
 nbd_cleanup_io(struct spdk_nbd_disk *nbd)
 {
-	int rc;
-
 	/* Try to read the remaining nbd commands in the socket */
-	while ((rc = nbd_io_recv_internal(nbd)) > 0);
+	while (nbd_io_recv_internal(nbd) > 0);
 
 	/* free io_in_recv */
 	if (nbd->io_in_recv != NULL) {
