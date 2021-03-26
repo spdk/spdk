@@ -445,17 +445,32 @@ function get_config_params() {
 
 function rpc_cmd() {
 	xtrace_disable
-	local rsp rc
+	local rsp rc=1
+	local stdin cmd cmds_number=0 status_number=0 status
 
-	echo "$@" >&$RPC_PIPE_INPUT
+	if (($#)); then
+		cmds_number=1
+		echo "$@" >&$RPC_PIPE_INPUT
+	elif [[ ! -t 0 ]]; then
+		mapfile -t stdin <&0
+		cmds_number=${#stdin[@]}
+		printf '%s\n' "${stdin[@]}" >&$RPC_PIPE_INPUT
+	else
+		return 0
+	fi
+
 	while read -t 5 -ru $RPC_PIPE_OUTPUT rsp; do
 		if [[ $rsp == "**STATUS="* ]]; then
-			break
+			status[${rsp#*=}]=$rsp
+			if ((++status_number == cmds_number)); then
+				break
+			fi
+			continue
 		fi
 		echo "$rsp"
 	done
 
-	rc=${rsp#*=}
+	rc=${!status[*]}
 	xtrace_restore
 	[[ $rc == 0 ]]
 }
