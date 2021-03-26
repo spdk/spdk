@@ -2204,6 +2204,30 @@ test_alloc_io_qpair_fail(void)
 	cleanup_qpairs(&ctrlr);
 }
 
+static void
+test_nvme_ctrlr_add_remove_process(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	void *devhandle = (void *)0xDEADBEEF;
+	struct spdk_nvme_ctrlr_process *proc = NULL;
+	int rc;
+
+	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	TAILQ_INIT(&ctrlr.active_procs);
+
+	rc = nvme_ctrlr_add_process(&ctrlr, devhandle);
+	CU_ASSERT(rc == 0);
+	proc = TAILQ_FIRST(&ctrlr.active_procs);
+	SPDK_CU_ASSERT_FATAL(proc != NULL);
+	CU_ASSERT(proc->is_primary == true);
+	CU_ASSERT(proc->pid == getpid());
+	CU_ASSERT(proc->devhandle == (void *)0xDEADBEEF);
+	CU_ASSERT(proc->ref == 0);
+
+	nvme_ctrlr_remove_process(&ctrlr, proc);
+	CU_ASSERT(TAILQ_EMPTY(&ctrlr.active_procs));
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -2243,6 +2267,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_ctrlr_init_set_num_queues);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_init_set_keep_alive_timeout);
 	CU_ADD_TEST(suite, test_alloc_io_qpair_fail);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_add_remove_process);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
