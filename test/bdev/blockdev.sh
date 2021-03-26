@@ -5,7 +5,7 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 source $testdir/nbd_common.sh
 
-rpc_py="$rootdir/scripts/rpc.py"
+rpc_py=rpc_cmd
 conf_file="$testdir/bdev.json"
 # Make sure the configuration is clean
 : > "$conf_file"
@@ -39,9 +39,9 @@ function setup_bdev_conf() {
 		bdev_malloc_create -b Malloc5 32 512
 		bdev_passthru_create -p TestPT -b Malloc3
 		bdev_raid_create -n raid0 -z 64 -r 0 -b "Malloc4 Malloc5"
+		bdev_set_qos_limit --rw_mbytes_per_sec 100 Malloc3
+		bdev_set_qos_limit --rw_ios_per_sec 20000 Malloc0
 	RPC
-	$rpc_py bdev_set_qos_limit --rw_mbytes_per_sec 100 Malloc3
-	$rpc_py bdev_set_qos_limit --rw_ios_per_sec 20000 Malloc0
 	if [[ $(uname -s) != "FreeBSD" ]]; then
 		dd if=/dev/zero of="$SPDK_TEST_STORAGE/aiofile" bs=2048 count=5000
 		"$rpc_py" bdev_aio_create "$SPDK_TEST_STORAGE/aiofile" AIO0 2048
@@ -49,7 +49,9 @@ function setup_bdev_conf() {
 }
 
 function setup_nvme_conf() {
-	"$rootdir/scripts/gen_nvme.sh" | "$rpc_py" load_subsystem_config
+	local json
+	mapfile -t json < <("$rootdir/scripts/gen_nvme.sh")
+	"$rpc_py" load_subsystem_config -j "'${json[*]}'"
 }
 
 function setup_gpt_conf() {
@@ -112,8 +114,8 @@ function setup_crypto_qat_conf() {
 		bdev_malloc_create -b Malloc1 16 512
 		bdev_crypto_create Malloc0 crypto_ram crypto_qat 0123456789123456
 		bdev_crypto_create -c AES_XTS -k2 0123456789123456 Malloc1 crypto_ram3 crypto_qat 0123456789123456
+		bdev_get_bdevs -b Malloc1
 	RPC
-	"$rpc_py" bdev_get_bdevs -b Malloc1
 }
 
 function setup_pmem_conf() {
