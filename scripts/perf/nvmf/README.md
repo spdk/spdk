@@ -159,7 +159,7 @@ There can be one or more `initiatorX` setting sections, depending on the test se
 "initiator1": {
   "ip": "10.0.0.1",
   "nic_ips": ["192.0.1.2"],
-  "remote_nic_ips": ["192.0.1.1"],
+  "target_nic_ips": ["192.0.1.1"],
   "mode": "spdk",
   "fio_bin": "/path/to/fio/bin",
   "nvmecli_bin": "/path/to/nvmecli/bin",
@@ -176,7 +176,7 @@ Required:
 - ip - management IP address of initiator system to set up SSH connection.
 - nic_ips - list of IP addresses of NIC ports to be used in test,
   local to given initiator system.
-- remote_nic_ips - list of IP addresses of Target NIC ports to which initiator
+- target_nic_ips - list of IP addresses of Target NIC ports to which initiator
   will attempt to connect to.
 - mode - initiator mode, "spdk" or "kernel". For SPDK, the bdev fio plugin
   will be used to connect to NVMe-oF subsystems and submit I/O. For "kernel",

@@ -637,7 +637,7 @@ class Initiator(Server):
 
         # Required fields
         self.ip = initiator_config["ip"]
-        self.remote_nic_ips = initiator_config["remote_nic_ips"]
+        self.target_nic_ips = initiator_config["target_nic_ips"]
 
         # Defaults
         self.cpus_allowed = None
@@ -1354,7 +1354,7 @@ if __name__ == "__main__":
         pass
 
     for i in initiators:
-        i.discover_subsystems(i.remote_nic_ips, target_obj.subsys_no)
+        i.discover_subsystems(i.target_nic_ips, target_obj.subsys_no)
         if i.enable_adq:
             i.adq_configure_tc()
 
@@ -1365,7 +1365,7 @@ if __name__ == "__main__":
         configs = []
         for i in initiators:
             if i.mode == "kernel":
-                i.kernel_init_connect(i.remote_nic_ips, target_obj.subsys_no)
+                i.kernel_init_connect(i.target_nic_ips, target_obj.subsys_no)
 
             cfg = i.gen_fio_config(rw, fio_rw_mix_read, block_size, io_depth, target_obj.subsys_no,
                                    fio_num_jobs, fio_ramp_time, fio_run_time)
@@ -1408,7 +1408,7 @@ if __name__ == "__main__":
 
         for i in initiators:
             if i.mode == "kernel":
-                i.kernel_init_disconnect(i.remote_nic_ips, target_obj.subsys_no)
+                i.kernel_init_disconnect(i.target_nic_ips, target_obj.subsys_no)
             i.copy_result_files(target_results_dir)
 
     target_obj.restore_governor()
