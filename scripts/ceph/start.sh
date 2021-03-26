@@ -15,6 +15,7 @@ mnt_dir=${base_dir}/mnt
 image=/var/tmp/ceph_raw.img
 dev=/dev/loop200
 
+modprobe loop
 umount ${dev}p2 || true
 losetup -d $dev || true
 
