@@ -1529,7 +1529,7 @@ nvme_ctrlr_depopulate_standard_namespace(struct nvme_bdev_ns *nvme_ns)
 {
 	struct nvme_bdev *bdev;
 
-	bdev = nvme_bdev_ns_to_bdev(nvme_ns);
+	bdev = nvme_ns->bdev;
 	if (bdev != NULL) {
 		spdk_bdev_unregister(&bdev->disk, NULL, NULL);
 	}
@@ -1607,7 +1607,7 @@ nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 			/* NS is still there but attributes may have changed */
 			ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
 			num_sectors = spdk_nvme_ns_get_num_sectors(ns);
-			bdev = nvme_bdev_ns_to_bdev(nvme_ns);
+			bdev = nvme_ns->bdev;
 			assert(bdev != NULL);
 			if (bdev->disk.blockcnt != num_sectors) {
 				SPDK_NOTICELOG("NSID %u is resized: bdev name %s, old size %" PRIu64 ", new size %" PRIu64 "\n",
@@ -2075,7 +2075,7 @@ nvme_ctrlr_populate_namespaces_done(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 			continue;
 		}
 		assert(nvme_ns->id == nsid);
-		nvme_bdev = nvme_bdev_ns_to_bdev(nvme_ns);
+		nvme_bdev = nvme_ns->bdev;
 		if (nvme_bdev == NULL) {
 			assert(nvme_ns->type == NVME_BDEV_NS_OCSSD);
 			continue;

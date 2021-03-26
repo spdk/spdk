@@ -1498,7 +1498,7 @@ test_attach_ctrlr(void)
 	CU_ASSERT(attached_names[0] != NULL && strcmp(attached_names[0], "nvme0n1") == 0);
 	attached_names[0] = NULL;
 
-	nbdev = nvme_bdev_ns_to_bdev(nvme_bdev_ctrlr->namespaces[0]);
+	nbdev = nvme_bdev_ctrlr->namespaces[0]->bdev;
 	SPDK_CU_ASSERT_FATAL(nbdev != NULL);
 	CU_ASSERT(bdev_nvme_get_ctrlr(&nbdev->disk) == ctrlr);
 
@@ -1651,7 +1651,7 @@ test_aer_cb(void)
 	CU_ASSERT(nvme_bdev_ctrlr->namespaces[2]->populated == true);
 	CU_ASSERT(nvme_bdev_ctrlr->namespaces[3]->populated == true);
 
-	bdev = nvme_bdev_ns_to_bdev(nvme_bdev_ctrlr->namespaces[3]);
+	bdev = nvme_bdev_ctrlr->namespaces[3]->bdev;
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
 	CU_ASSERT(bdev->disk.blockcnt == 1024);
 
@@ -1809,7 +1809,7 @@ test_submit_nvme_cmd(void)
 	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr != NULL);
 
-	bdev = nvme_bdev_ns_to_bdev(nvme_bdev_ctrlr->namespaces[0]);
+	bdev = nvme_bdev_ctrlr->namespaces[0]->bdev;
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
 
 	set_thread(0);
@@ -1978,7 +1978,7 @@ test_abort(void)
 	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr != NULL);
 
-	bdev = nvme_bdev_ns_to_bdev(nvme_bdev_ctrlr->namespaces[0]);
+	bdev = nvme_bdev_ctrlr->namespaces[0]->bdev;
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
 
 	set_thread(0);
@@ -2187,13 +2187,13 @@ test_bdev_unregister(void)
 	nvme_ns1 = nvme_bdev_ctrlr->namespaces[0];
 	SPDK_CU_ASSERT_FATAL(nvme_ns1 != NULL);
 
-	bdev1 = nvme_bdev_ns_to_bdev(nvme_ns1);
+	bdev1 = nvme_ns1->bdev;
 	SPDK_CU_ASSERT_FATAL(bdev1 != NULL);
 
 	nvme_ns2 = nvme_bdev_ctrlr->namespaces[1];
 	SPDK_CU_ASSERT_FATAL(nvme_ns2 != NULL);
 
-	bdev2 = nvme_bdev_ns_to_bdev(nvme_ns2);
+	bdev2 = nvme_ns2->bdev;
 	SPDK_CU_ASSERT_FATAL(bdev2 != NULL);
 
 	bdev_nvme_destruct(&bdev1->disk);
@@ -2201,8 +2201,8 @@ test_bdev_unregister(void)
 
 	poll_threads();
 
-	CU_ASSERT(nvme_bdev_ns_to_bdev(nvme_ns1) == NULL);
-	CU_ASSERT(nvme_bdev_ns_to_bdev(nvme_ns2) == NULL);
+	CU_ASSERT(nvme_ns1->bdev == NULL);
+	CU_ASSERT(nvme_ns2->bdev == NULL);
 
 	nvme_bdev_ctrlr->destruct = true;
 	_nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
