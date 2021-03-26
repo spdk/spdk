@@ -38,6 +38,13 @@
 
 #include "common/lib/test_env.c"
 
+#define UT_MAX_IOVS 2u
+
+struct nvme_ns_cmd_ut_cb_arg {
+	struct iovec iovs[UT_MAX_IOVS];
+	uint32_t iovpos;
+};
+
 static struct nvme_driver _g_nvme_driver = {
 	.lock = PTHREAD_MUTEX_INITIALIZER,
 };
@@ -718,19 +725,35 @@ test_nvme_ns_cmd_readv(void)
 	cleanup_after_test(&qpair);
 }
 
+static int nvme_request_next_sge_invalid_prp1(void *cb_arg, void **address, uint32_t *length)
+{
+	struct nvme_ns_cmd_ut_cb_arg *iovs = cb_arg;
+
+	CU_ASSERT(iovs->iovpos < UT_MAX_IOVS);
+	*address = iovs->iovs[iovs->iovpos].iov_base;
+	*length = iovs->iovs[iovs->iovpos].iov_len;
+	iovs->iovpos++;
+
+	return 0;
+}
+
 static void
 test_nvme_ns_cmd_writev(void)
 {
 	struct spdk_nvme_ns		ns;
 	struct spdk_nvme_ctrlr		ctrlr;
 	struct spdk_nvme_qpair		qpair;
+	struct nvme_ns_cmd_ut_cb_arg iovs_cb_arg = {
+		.iovs = {
+			{.iov_base = (void *)(uintptr_t)0x3E8000, .iov_len = 200},
+			{.iov_base = (void *)(uintptr_t)0x3E9000, .iov_len = 312}
+		},
+	};
 	int				rc = 0;
-	void				*cb_arg;
 	uint32_t			lba_count = 256;
 	uint32_t			sector_size = 512;
 	uint64_t			sge_length = lba_count * sector_size;
 
-	cb_arg = malloc(512);
 	prepare_for_test(&ns, &ctrlr, &qpair, sector_size, 0, 128 * 1024, 0, false);
 	rc = spdk_nvme_ns_cmd_writev(&ns, &qpair, 0x1000, lba_count, NULL, &sge_length, 0,
 				     nvme_request_reset_sgl, nvme_request_next_sge);
@@ -744,11 +767,31 @@ test_nvme_ns_cmd_writev(void)
 	CU_ASSERT(g_request->payload.contig_or_cb_arg == &sge_length);
 	CU_ASSERT(g_request->cmd.nsid == ns.id);
 
-	rc = spdk_nvme_ns_cmd_writev(&ns, &qpair, 0x1000, 256, NULL, cb_arg, 0,
+	/* Test case: NULL reset_sgl callback, expect fail */
+	rc = spdk_nvme_ns_cmd_writev(&ns, &qpair, 0x1000, 256, NULL, &sge_length, 0,
 				     NULL, nvme_request_next_sge);
-	CU_ASSERT(rc != 0);
+	CU_ASSERT(rc == -EINVAL);
 
-	free(cb_arg);
+	/* PRP1 start address is page aligned while end address is not. NVME driver
+	 * tries to split such a request but iov[0] length is not multiple of block size.
+	 * Expect fail */
+	rc = spdk_nvme_ns_cmd_writev(&ns, &qpair, 0x1000, 1, NULL, &iovs_cb_arg, 0,
+				     nvme_request_reset_sgl, nvme_request_next_sge_invalid_prp1);
+	SPDK_CU_ASSERT_FATAL(rc == -EINVAL);
+
+	/* PRP1 end address is page aligned while start address is not. Expect pass */
+	iovs_cb_arg.iovs[0].iov_base = (void *)(((uintptr_t)iovs_cb_arg.iovs[0].iov_base) + ctrlr.page_size
+						- iovs_cb_arg.iovs[0].iov_len);
+	iovs_cb_arg.iovpos = 0;
+	rc = spdk_nvme_ns_cmd_writev(&ns, &qpair, 0x1000, 1, NULL, &iovs_cb_arg, 0,
+				     nvme_request_reset_sgl, nvme_request_next_sge_invalid_prp1);
+	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_WRITE);
+	CU_ASSERT(nvme_payload_type(&g_request->payload) == NVME_PAYLOAD_TYPE_SGL);
+	CU_ASSERT(g_request->payload.reset_sgl_fn == nvme_request_reset_sgl);
+	CU_ASSERT(g_request->payload.next_sge_fn == nvme_request_next_sge_invalid_prp1);
+	CU_ASSERT(g_request->payload.contig_or_cb_arg == &iovs_cb_arg);
+	CU_ASSERT(g_request->cmd.nsid == ns.id);
+
 	nvme_free_request(g_request);
 	cleanup_after_test(&qpair);
 }
