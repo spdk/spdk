@@ -88,6 +88,7 @@ struct bdev_ocssd_ns {
 	struct spdk_ocssd_geometry_data			geometry;
 	struct bdev_ocssd_lba_offsets			lba_offsets;
 	bool						chunk_notify_pending;
+	bool						depopulate_pending;
 	uint64_t					chunk_notify_count;
 	uint64_t					num_outstanding;
 #define CHUNK_NOTIFICATION_ENTRY_COUNT 64
@@ -905,6 +906,8 @@ bdev_ocssd_free_namespace(struct nvme_bdev_ns *nvme_ns)
 	free(nvme_ns->type_ctx);
 	nvme_ns->type_ctx = NULL;
 
+	nvme_ns->populated = false;
+
 	nvme_ctrlr_depopulate_namespace_done(nvme_ns);
 }
 
@@ -975,9 +978,10 @@ bdev_ocssd_chunk_notification_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 
 	ocssd_ns->num_outstanding--;
 
-	/* The namespace could have been depopulated in the meantime */
-	if (!nvme_ns->populated) {
+	/* The namespace was being depopulated in the meantime. */
+	if (ocssd_ns->depopulate_pending) {
 		if (ocssd_ns->num_outstanding == 0) {
+			ocssd_ns->depopulate_pending = false;
 			bdev_ocssd_free_namespace(nvme_ns);
 		}
 
@@ -1485,14 +1489,15 @@ bdev_ocssd_depopulate_namespace(struct nvme_bdev_ns *nvme_ns)
 	ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ns);
 
 	/* If there are outstanding admin requests, we cannot free the context
-	 * here, as they'd write over deallocated memory.  Clear the populated
+	 * here, as they'd write over deallocated memory.  Set the populating
 	 * flag, so that the completion callback knows that the namespace is
 	 * being depopulated and finish its deallocation once all requests are
 	 * completed.
 	 */
-	nvme_ns->populated = false;
 	if (ocssd_ns->num_outstanding == 0) {
 		bdev_ocssd_free_namespace(nvme_ns);
+	} else {
+		ocssd_ns->depopulate_pending = true;
 	}
 }
 
