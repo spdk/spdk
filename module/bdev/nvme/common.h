@@ -191,6 +191,14 @@ bdev_nvme_find_io_path(struct nvme_bdev *nbdev, struct nvme_io_channel *nvme_ch,
 	return true;
 }
 
+static inline bool
+bdev_nvme_find_admin_path(struct nvme_io_channel *nvme_ch,
+			  struct nvme_bdev_ctrlr **_nvme_bdev_ctrlr)
+{
+	*_nvme_bdev_ctrlr = nvme_ch->ctrlr;
+	return true;
+}
+
 static inline struct nvme_bdev_ns *
 nvme_bdev_to_bdev_ns(struct nvme_bdev *nbdev)
 {

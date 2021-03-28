@@ -3206,7 +3206,14 @@ static int
 bdev_nvme_admin_passthru(struct nvme_io_channel *nvme_ch, struct nvme_bdev_io *bio,
 			 struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes)
 {
-	uint32_t max_xfer_size = spdk_nvme_ctrlr_get_max_xfer_size(nvme_ch->ctrlr->ctrlr);
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	uint32_t max_xfer_size;
+
+	if (!bdev_nvme_find_admin_path(nvme_ch, &nvme_bdev_ctrlr)) {
+		return -EINVAL;
+	}
+
+	max_xfer_size = spdk_nvme_ctrlr_get_max_xfer_size(nvme_bdev_ctrlr->ctrlr);
 
 	if (nbytes > max_xfer_size) {
 		SPDK_ERRLOG("nbytes is greater than MDTS %" PRIu32 ".\n", max_xfer_size);
@@ -3215,7 +3222,7 @@ bdev_nvme_admin_passthru(struct nvme_io_channel *nvme_ch, struct nvme_bdev_io *b
 
 	bio->orig_thread = spdk_get_thread();
 
-	return spdk_nvme_ctrlr_cmd_admin_raw(nvme_ch->ctrlr->ctrlr, cmd, buf,
+	return spdk_nvme_ctrlr_cmd_admin_raw(nvme_bdev_ctrlr->ctrlr, cmd, buf,
 					     (uint32_t)nbytes, bdev_nvme_admin_passthru_done, bio);
 }
 
