@@ -113,9 +113,8 @@ nvme_bdev_dump_trid_json(const struct spdk_nvme_transport_id *trid, struct spdk_
 }
 
 static void
-nvme_bdev_ctrlr_unregister_cb(void *io_device)
+nvme_bdev_ctrlr_delete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = io_device;
 	struct nvme_bdev_ctrlr_trid *trid, *tmp_trid;
 	uint32_t i;
 
@@ -147,6 +146,14 @@ nvme_bdev_ctrlr_unregister_cb(void *io_device)
 
 	free(nvme_bdev_ctrlr->namespaces);
 	free(nvme_bdev_ctrlr);
+}
+
+static void
+nvme_bdev_ctrlr_unregister_cb(void *io_device)
+{
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = io_device;
+
+	nvme_bdev_ctrlr_delete(nvme_bdev_ctrlr);
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	if (g_bdev_nvme_module_finish && TAILQ_EMPTY(&g_nvme_bdev_ctrlrs)) {
