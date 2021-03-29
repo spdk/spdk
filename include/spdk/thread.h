@@ -131,7 +131,7 @@ typedef int (*spdk_poller_fn)(void *ctx);
  * \param thread_ctx Context for the thread.
  * \param fn Callback function for a poller.
  * \param arg Argument passed to callback.
- * \param period Polling period in microseconds.
+ * \param period_microseconds Polling period in microseconds.
  *
  * \return a pointer to the poller on success, or NULL on failure.
  */
