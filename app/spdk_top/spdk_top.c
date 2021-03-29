@@ -98,6 +98,7 @@
 #define POLLER_WIN_HEIGHT 8
 #define POLLER_WIN_WIDTH 64
 #define POLLER_WIN_FIRST_COL 14
+#define FIRST_DATA_ROW 7
 
 enum tabs {
 	THREADS_TAB,
@@ -2492,9 +2493,36 @@ usage(const char *program_name)
 	printf(" -h         show this usage\n");
 }
 
+static int
+wait_init(void)
+{
+	struct spdk_jsonrpc_client_response *json_resp = NULL;
+	char *uninit_log = "Waiting for SPDK target application to initialize...",
+	      *uninit_error = "Unable to read SPDK application state!";
+	int c, max_col, rc = 0;
+
+	max_col = getmaxx(stdscr);
+	print_in_middle(stdscr, FIRST_DATA_ROW, 1, max_col, uninit_log, COLOR_PAIR(5));
+	rc = rpc_send_req("framework_wait_init", &json_resp);
+	if (rc) {
+		spdk_jsonrpc_client_free_response(json_resp);
+
+		while (1) {
+			print_in_middle(stdscr, FIRST_DATA_ROW, 1, max_col, uninit_error, COLOR_PAIR(8));
+			c = getch();
+			if (c == 'q') {
+				return -1;
+			}
+		}
+	}
+
+	spdk_jsonrpc_client_free_response(json_resp);
+	return 0;
+}
+
 int main(int argc, char **argv)
 {
-	int op;
+	int op, rc;
 	char *socket = SPDK_DEFAULT_RPC_ADDR;
 
 	while ((op = getopt(argc, argv, "r:h")) != -1) {
@@ -2518,7 +2546,11 @@ int main(int argc, char **argv)
 	init_str_len();
 	setup_ncurses();
 	draw_interface();
-	show_stats();
+
+	rc = wait_init();
+	if (!rc) {
+		show_stats();
+	}
 
 	finish(0);
 
