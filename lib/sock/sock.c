@@ -489,7 +489,7 @@ spdk_sock_group_create(void *ctx)
 	struct spdk_sock_group_impl *group_impl;
 	struct spdk_sock_impl_opts sock_opts = {};
 	size_t sock_len;
-	bool enable_incoming_cpu = 0;
+	bool enable_incoming_cpu = false;
 
 	group = calloc(1, sizeof(*group));
 	if (group == NULL) {
@@ -507,8 +507,8 @@ spdk_sock_group_create(void *ctx)
 
 			sock_len = sizeof(sock_opts);
 			spdk_sock_impl_get_opts(impl->name, &sock_opts, &sock_len);
-			if (sock_opts.enable_placement_id == 2) {
-				enable_incoming_cpu = 1;
+			if (sock_opts.enable_placement_id == PLACEMENT_CPU) {
+				enable_incoming_cpu = true;
 			}
 		}
 	}

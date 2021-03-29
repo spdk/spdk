@@ -102,7 +102,7 @@ static struct spdk_sock_impl_opts g_spdk_uring_sock_impl_opts = {
 	.send_buf_size = MIN_SO_SNDBUF_SIZE,
 	.enable_recv_pipe = true,
 	.enable_quickack = false,
-	.enable_placement_id = 0,
+	.enable_placement_id = PLACEMENT_NONE,
 };
 
 #define SPDK_URING_SOCK_REQUEST_IOV(req) ((struct iovec *)((uint8_t *)req + sizeof(struct spdk_sock_request)))
@@ -1098,9 +1098,9 @@ uring_sock_get_placement_id(struct spdk_sock *_sock, int *placement_id)
 		return rc;
 	}
 
-	if (g_spdk_uring_sock_impl_opts.enable_placement_id != 0) {
+	if (g_spdk_uring_sock_impl_opts.enable_placement_id != PLACEMENT_NONE) {
 		switch (g_spdk_uring_sock_impl_opts.enable_placement_id) {
-		case 1: {
+		case PLACEMENT_NAPI: {
 #if defined(SO_INCOMING_NAPI_ID)
 			struct spdk_uring_sock *sock = __uring_sock(_sock);
 			socklen_t len = sizeof(int);
@@ -1109,7 +1109,7 @@ uring_sock_get_placement_id(struct spdk_sock *_sock, int *placement_id)
 #endif
 			break;
 		}
-		case 2: {
+		case PLACEMENT_CPU: {
 #if defined(SO_INCOMING_CPU)
 			struct spdk_uring_sock *sock = __uring_sock(_sock);
 			socklen_t len = sizeof(int);

@@ -86,7 +86,7 @@ static struct spdk_sock_impl_opts g_spdk_posix_sock_impl_opts = {
 	.enable_recv_pipe = true,
 	.enable_zerocopy_send = true,
 	.enable_quickack = false,
-	.enable_placement_id = 0,
+	.enable_placement_id = PLACEMENT_NONE,
 };
 
 static int
@@ -1115,9 +1115,9 @@ posix_sock_get_placement_id(struct spdk_sock *_sock, int *placement_id)
 		return rc;
 	}
 
-	if (g_spdk_posix_sock_impl_opts.enable_placement_id != 0) {
+	if (g_spdk_posix_sock_impl_opts.enable_placement_id != PLACEMENT_NONE) {
 		switch (g_spdk_posix_sock_impl_opts.enable_placement_id) {
-		case 1: {
+		case PLACEMENT_NAPI: {
 #if defined(SO_INCOMING_NAPI_ID)
 			struct spdk_posix_sock *sock = __posix_sock(_sock);
 			socklen_t len = sizeof(int);
@@ -1126,7 +1126,7 @@ posix_sock_get_placement_id(struct spdk_sock *_sock, int *placement_id)
 #endif
 			break;
 		}
-		case 2: {
+		case PLACEMENT_CPU: {
 #if defined(SO_INCOMING_CPU)
 			struct spdk_posix_sock *sock = __posix_sock(_sock);
 			socklen_t len = sizeof(int);

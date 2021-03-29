@@ -80,6 +80,12 @@ struct spdk_sock_request {
 
 #define SPDK_SOCK_REQUEST_IOV(req, i) ((struct iovec *)(((uint8_t *)req + sizeof(struct spdk_sock_request)) + (sizeof(struct iovec) * i)))
 
+enum spdk_placement_mode {
+	PLACEMENT_NONE,
+	PLACEMENT_NAPI,
+	PLACEMENT_CPU,
+};
+
 /**
  * SPDK socket implementation options.
  *
@@ -115,6 +121,7 @@ struct spdk_sock_impl_opts {
 
 	/**
 	 * Enable or disable placement_id. Used by posix and uring socket modules.
+	 * Valid values in the enum spdk_placement_mode.
 	 */
 	uint32_t enable_placement_id;
 
