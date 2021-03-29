@@ -90,7 +90,7 @@ typedef void (*spdk_bdev_remove_cb_t)(void *remove_ctx);
 /**
  * Block device event callback.
  *
- * \param event Event details.
+ * \param type Event type.
  * \param bdev Block device that triggered event.
  * \param event_ctx Context for the block device event.
  */
