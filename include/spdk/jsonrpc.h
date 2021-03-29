@@ -82,7 +82,7 @@ struct spdk_jsonrpc_client_response {
  *
  * \param request JSON-RPC request to handle.
  * \param method Function to handle the request.
- * \param param Parameters passed to the function 'method'.
+ * \param params Parameters passed to the function 'method'.
  */
 typedef void (*spdk_jsonrpc_handle_request_fn)(
 	struct spdk_jsonrpc_request *request,
