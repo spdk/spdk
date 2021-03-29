@@ -127,7 +127,7 @@ typedef void (*spdk_blob_op_with_id_complete)(void *cb_arg, spdk_blob_id blobid,
  * Blob operation completion callback with handle.
  *
  * \param cb_arg Callback argument.
- * \param bs Handle to a blob.
+ * \param blb Handle to a blob.
  * \param bserrno 0 if it completed successfully, or negative errno if it failed.
  */
 typedef void (*spdk_blob_op_with_handle_complete)(void *cb_arg, struct spdk_blob *blb, int bserrno);
