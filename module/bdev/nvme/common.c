@@ -194,6 +194,9 @@ nvme_ctrlr_depopulate_namespace_done(struct nvme_bdev_ns *nvme_ns)
 	assert(nvme_bdev_ctrlr != NULL);
 
 	pthread_mutex_lock(&nvme_bdev_ctrlr->mutex);
+
+	nvme_ns->populated = false;
+
 	assert(nvme_ns->ref > 0);
 	nvme_ns->ref--;
 	if (nvme_ns->ref > 0) {
