@@ -1,4 +1,4 @@
-# Storage Performance Development Kit {#index}
+# Storage Performance Development Kit {#mainpage}
 
 # Introduction
 
