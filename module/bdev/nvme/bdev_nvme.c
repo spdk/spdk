@@ -1438,6 +1438,7 @@ nvme_ctrlr_populate_standard_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 
 	nvme_ns->ns = ns;
 	nvme_ns->ref = 1;
+	nvme_ns->populated = true;
 
 	rc = nvme_bdev_create(nvme_bdev_ctrlr, nvme_ns);
 done:
@@ -1565,7 +1566,6 @@ nvme_ctrlr_populate_namespace_done(struct nvme_async_probe_ctx *ctx,
 	assert(nvme_bdev_ctrlr != NULL);
 
 	if (rc == 0) {
-		nvme_ns->populated = true;
 		pthread_mutex_lock(&nvme_bdev_ctrlr->mutex);
 		nvme_bdev_ctrlr->ref++;
 		pthread_mutex_unlock(&nvme_bdev_ctrlr->mutex);
