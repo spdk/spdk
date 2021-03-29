@@ -258,15 +258,22 @@ function install_flamegraph() {
 function _install_qemu() {
 	local repo=$1
 	local branch=$2
+	local prefix=${3:-}
 
 	mkdir -p "$GIT_REPOS/qemu"
-	if [[ ! -d $GIT_REPOS/qemu/$branch ]]; then
-		git clone "$repo" -b "$branch" "$GIT_REPOS/qemu/$branch"
+
+	local repo_dir=$GIT_REPOS/qemu/$branch
+	if [[ -n $prefix ]]; then
+		repo_dir=$GIT_REPOS/qemu/$prefix-$branch
+	fi
+
+	if [[ ! -d $repo_dir ]]; then
+		git clone "$repo" -b "$branch" "$repo_dir"
 	else
 		echo "qemu already checked out. Skipping"
 	fi
 
-	declare -a opt_params=("--prefix=/usr/local/qemu/$branch")
+	declare -a opt_params=("--prefix=/usr/local/qemu/${repo_dir##*/}")
 	declare -a extra_cflags=()
 
 	opt_params+=("--disable-docs")
@@ -288,10 +295,10 @@ function _install_qemu() {
 	opt_params+=("--extra-cflags=${extra_cflags[*]}")
 
 	# The qemu configure script places several output files in the CWD.
-	(cd "$GIT_REPOS/qemu/$branch" && ./configure "${opt_params[@]}" --target-list="x86_64-softmmu" --enable-kvm --enable-linux-aio --enable-numa)
+	(cd "$repo_dir" && ./configure "${opt_params[@]}" --target-list="x86_64-softmmu" --enable-kvm --enable-linux-aio --enable-numa)
 
-	make -C "$GIT_REPOS/qemu/$branch" -j${jobs}
-	sudo make -C "$GIT_REPOS/qemu/$branch" install
+	make -C "$repo_dir" -j${jobs}
+	sudo make -C "$repo_dir" install
 }
 
 function install_qemu() {
@@ -309,9 +316,10 @@ function install_qemu() {
 	SPDK_QEMU_BRANCH=spdk-5.0.0
 	VFIO_QEMU_BRANCH=vfio-user-v0.6
 	VANILLA_QEMU_BRANCH=v5.1.0
+
 	_install_qemu $GIT_REPO_QEMU_SPDK $SPDK_QEMU_BRANCH
 	_install_qemu $GIT_REPO_QEMU_VFIO $VFIO_QEMU_BRANCH
-	_install_qemu "$GIT_REPO_QEMU" "$VANILLA_QEMU_BRANCH"
+	_install_qemu "$GIT_REPO_QEMU" "$VANILLA_QEMU_BRANCH" vanilla
 }
 
 function install_nvmecli() {
