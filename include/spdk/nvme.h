@@ -1168,21 +1168,21 @@ bool spdk_nvme_ctrlr_is_feature_supported(struct spdk_nvme_ctrlr *ctrlr, uint8_t
 /**
  * Signature for callback function invoked when a command is completed.
  *
- * \param spdk_nvme_cpl Completion queue entry that coontains the completion status.
+ * \param ctx Callback context provided when the command was submitted.
+ * \param cpl Completion queue entry that contains the completion status.
  */
-typedef void (*spdk_nvme_cmd_cb)(void *, const struct spdk_nvme_cpl *);
+typedef void (*spdk_nvme_cmd_cb)(void *ctx, const struct spdk_nvme_cpl *cpl);
 
 /**
  * Signature for callback function invoked when an asynchronous error request
  * command is completed.
  *
- * \param ctrlr Opaque handle to NVMe controller.
  * \param aer_cb_arg Context specified by spdk_nvme_register_aer_callback().
- * \param spdk_nvme_cpl Completion queue entry that contains the completion status
+ * \param cpl Completion queue entry that contains the completion status
  * of the asynchronous event request that was completed.
  */
 typedef void (*spdk_nvme_aer_cb)(void *aer_cb_arg,
-				 const struct spdk_nvme_cpl *);
+				 const struct spdk_nvme_cpl *cpl);
 
 /**
  * Register callback function invoked when an AER command is completed for the
