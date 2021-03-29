@@ -540,7 +540,7 @@ _sock_group(const char *ip, int port, char *impl_name)
 	/* try adding sock a second time */
 	rc = spdk_sock_group_add_sock(group, server_sock, read_data, server_sock);
 	CU_ASSERT(rc == -1);
-	CU_ASSERT(errno == EBUSY);
+	CU_ASSERT(errno == EINVAL);
 
 	g_read_data_called = false;
 	g_bytes_read = 0;

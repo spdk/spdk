@@ -547,10 +547,9 @@ spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 
 	if (sock->group_impl != NULL) {
 		/*
-		 * This sock is already part of a sock_group.  Currently we don't
-		 *  support this.
+		 * This sock is already part of a sock_group.
 		 */
-		errno = EBUSY;
+		errno = EINVAL;
 		return -1;
 	}
 
