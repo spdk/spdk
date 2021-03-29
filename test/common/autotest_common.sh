@@ -28,8 +28,6 @@ xtrace_disable
 set -e
 shopt -s expand_aliases
 
-source "$rootdir/test/common/applications.sh"
-source "$rootdir/scripts/common.sh"
 if [[ -e $rootdir/test/common/build_config.sh ]]; then
 	source "$rootdir/test/common/build_config.sh"
 elif [[ -e $rootdir/mk/config.mk ]]; then
@@ -38,6 +36,10 @@ elif [[ -e $rootdir/mk/config.mk ]]; then
 else
 	source "$rootdir/CONFIG"
 fi
+
+# Source scripts after the config so that the definitions are available.
+source "$rootdir/test/common/applications.sh"
+source "$rootdir/scripts/common.sh"
 
 # Dummy function to be called after restoring xtrace just so that it appears in the
 # xtrace log. This way we can consistently track when xtrace is enabled/disabled.
@@ -232,6 +234,11 @@ elif [ "$(uname -s)" = "FreeBSD" ]; then
 	MAKE="gmake"
 	MAKEFLAGS=${MAKEFLAGS:--j$(sysctl -a | grep -E -i 'hw.ncpu' | awk '{print $2}')}
 	# FreeBSD runs a much more limited set of tests, so keep the default 2GB.
+	export HUGEMEM=2048
+elif [ "$(uname -s)" = "Windows" ]; then
+	MAKE="make"
+	MAKEFLAGS=${MAKEFLAGS:--j$(nproc)}
+	# Keep the default 2GB for Windows.
 	export HUGEMEM=2048
 else
 	echo "Unknown OS \"$(uname -s)\""
