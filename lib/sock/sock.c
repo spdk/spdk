@@ -60,7 +60,7 @@ static pthread_mutex_t g_map_table_mutex = PTHREAD_MUTEX_INITIALIZER;
  * If the group is already in the map, take a reference.
  */
 static int
-sock_map_insert(int placement_id, struct spdk_sock_group *group, bool init)
+sock_map_insert(int placement_id, struct spdk_sock_group *group)
 {
 	struct spdk_sock_placement_id_entry *entry;
 
@@ -86,9 +86,7 @@ sock_map_insert(int placement_id, struct spdk_sock_group *group, bool init)
 
 	entry->placement_id = placement_id;
 	entry->group = group;
-	if (!init) {
-		entry->ref++;
-	}
+	entry->ref++;
 
 	STAILQ_INSERT_TAIL(&g_placement_id_map, entry, link);
 	pthread_mutex_unlock(&g_map_table_mutex);
@@ -96,12 +94,7 @@ sock_map_insert(int placement_id, struct spdk_sock_group *group, bool init)
 	return 0;
 }
 
-/* Release a reference to the group for a given placement_id.
- * We use lazy free method. If a placement_id with a sock is associated with the group,
- * it will possibly be associated again by another sock with the same placement_id. And
- * there will no memory leak, because if a polling group is destroyed, the
- * sock_remove_sock_group_from_map_table will be called to guarantee the mapping correctness.
- */
+/* Release a reference to the group for a given placement_id */
 static void
 sock_map_release(int placement_id)
 {
@@ -518,7 +511,7 @@ spdk_sock_group_create(void *ctx)
 
 	/* if any net_impl is configured to use SO_INCOMING_CPU, initialize the sock map */
 	if (enable_incoming_cpu) {
-		sock_map_insert(spdk_env_get_current_core(), group, 1);
+		sock_map_insert(spdk_env_get_current_core(), group);
 	}
 
 	return group;
@@ -577,7 +570,7 @@ spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 
 	placement_id = sock_get_placement_id(sock);
 	if (placement_id != -1) {
-		rc = sock_map_insert(placement_id, group, 0);
+		rc = sock_map_insert(placement_id, group);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to insert sock group into map: %d", rc);
 			/* Do not treat this as an error. The system will continue running. */
@@ -692,6 +685,9 @@ spdk_sock_group_close(struct spdk_sock_group **group)
 {
 	struct spdk_sock_group_impl *group_impl = NULL, *tmp;
 	int rc;
+	struct spdk_sock_impl_opts sock_opts = {};
+	size_t sock_len;
+	bool enable_incoming_cpu = false;
 
 	if (*group == NULL) {
 		errno = EBADF;
@@ -703,6 +699,19 @@ spdk_sock_group_close(struct spdk_sock_group **group)
 			errno = EBUSY;
 			return -1;
 		}
+	}
+
+	STAILQ_FOREACH_SAFE(group_impl, &(*group)->group_impls, link, tmp) {
+		sock_len = sizeof(sock_opts);
+		spdk_sock_impl_get_opts(group_impl->net_impl->name, &sock_opts, &sock_len);
+		if (sock_opts.enable_placement_id == PLACEMENT_CPU) {
+			enable_incoming_cpu = true;
+			break;
+		}
+	}
+
+	if (enable_incoming_cpu) {
+		sock_map_release(spdk_env_get_current_core());
 	}
 
 	STAILQ_FOREACH_SAFE(group_impl, &(*group)->group_impls, link, tmp) {
