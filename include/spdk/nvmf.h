@@ -407,7 +407,7 @@ void spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem);
 /**
  * Function to be called once the subsystem has changed state.
  *
- * \param subsytem NVMe-oF subsystem that has changed state.
+ * \param subsystem NVMe-oF subsystem that has changed state.
  * \param cb_arg Argument passed to callback function.
  * \param status 0 if it completed successfully, or negative errno if it failed.
  */
