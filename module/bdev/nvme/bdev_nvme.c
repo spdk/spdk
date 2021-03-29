@@ -318,7 +318,17 @@ bdev_nvme_destruct(void *ctx)
 
 	nvme_ns->bdev = NULL;
 
-	nvme_bdev_ns_detach(nvme_ns);
+	pthread_mutex_lock(&nvme_ns->ctrlr->mutex);
+
+	assert(nvme_ns->ref > 0);
+	nvme_ns->ref--;
+	if (nvme_ns->ref == 0) {
+		pthread_mutex_unlock(&nvme_ns->ctrlr->mutex);
+
+		nvme_bdev_ctrlr_destruct(nvme_ns->ctrlr);
+	} else {
+		pthread_mutex_unlock(&nvme_ns->ctrlr->mutex);
+	}
 
 	free(nvme_disk->disk.name);
 	free(nvme_disk);
