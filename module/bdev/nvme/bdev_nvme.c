@@ -2356,11 +2356,32 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	return 0;
 }
 
+static int
+bdev_nvme_delete_secondary_trid(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
+				const struct spdk_nvme_transport_id *trid)
+{
+	struct nvme_bdev_ctrlr_trid	*ctrlr_trid, *tmp_trid;
+
+	if (!spdk_nvme_transport_id_compare(trid, nvme_bdev_ctrlr->connected_trid)) {
+		return -EBUSY;
+	}
+
+	TAILQ_FOREACH_SAFE(ctrlr_trid, &nvme_bdev_ctrlr->trids, link, tmp_trid) {
+		if (!spdk_nvme_transport_id_compare(&ctrlr_trid->trid, trid)) {
+			TAILQ_REMOVE(&nvme_bdev_ctrlr->trids, ctrlr_trid, link);
+			free(ctrlr_trid);
+			return 0;
+		}
+	}
+
+	return -ENXIO;
+}
+
 int
 bdev_nvme_delete(const char *name, const struct spdk_nvme_transport_id *trid)
 {
 	struct nvme_bdev_ctrlr		*nvme_bdev_ctrlr;
-	struct nvme_bdev_ctrlr_trid	*ctrlr_trid, *tmp_trid;
+	struct nvme_bdev_ctrlr_trid	*ctrlr_trid;
 
 	if (name == NULL) {
 		return -EINVAL;
@@ -2386,20 +2407,12 @@ bdev_nvme_delete(const char *name, const struct spdk_nvme_transport_id *trid)
 			return _bdev_nvme_delete(nvme_bdev_ctrlr, false);
 		}
 
-		/* case 1B: there is an alternative path. */
+		/* case 2B: there is an alternative path. */
 		return bdev_nvme_failover(nvme_bdev_ctrlr, true);
 	}
-	/* case 3: We are not using the specified path. */
-	TAILQ_FOREACH_SAFE(ctrlr_trid, &nvme_bdev_ctrlr->trids, link, tmp_trid) {
-		if (!spdk_nvme_transport_id_compare(&ctrlr_trid->trid, trid)) {
-			TAILQ_REMOVE(&nvme_bdev_ctrlr->trids, ctrlr_trid, link);
-			free(ctrlr_trid);
-			return 0;
-		}
-	}
 
-	/* case 3A: The address isn't even in the registered list. */
-	return -ENXIO;
+	/* case 3: We are not using the specified path. */
+	return bdev_nvme_delete_secondary_trid(nvme_bdev_ctrlr, trid);
 }
 
 static int
