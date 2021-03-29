@@ -316,13 +316,11 @@ bdev_nvme_destruct(void *ctx)
 	struct nvme_bdev *nvme_disk = ctx;
 	struct nvme_bdev_ns *nvme_ns = nvme_disk->nvme_ns;
 
-	nvme_ns->bdev = NULL;
-
 	pthread_mutex_lock(&nvme_ns->ctrlr->mutex);
 
-	assert(nvme_ns->ref > 0);
-	nvme_ns->ref--;
-	if (nvme_ns->ref == 0) {
+	nvme_ns->bdev = NULL;
+
+	if (!nvme_ns->populated) {
 		pthread_mutex_unlock(&nvme_ns->ctrlr->mutex);
 
 		nvme_bdev_ctrlr_destruct(nvme_ns->ctrlr);
@@ -1415,7 +1413,6 @@ nvme_bdev_create(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_ns *n
 		return rc;
 	}
 
-	nvme_ns->ref++;
 	nvme_ns->bdev = bdev;
 
 	return 0;
@@ -1437,7 +1434,6 @@ nvme_ctrlr_populate_standard_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 	}
 
 	nvme_ns->ns = ns;
-	nvme_ns->ref = 1;
 	nvme_ns->populated = true;
 
 	rc = nvme_bdev_create(nvme_bdev_ctrlr, nvme_ns);

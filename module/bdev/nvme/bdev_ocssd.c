@@ -215,13 +215,11 @@ bdev_ocssd_destruct(void *ctx)
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
 	struct nvme_bdev_ns *nvme_ns = nvme_bdev->nvme_ns;
 
-	nvme_ns->bdev = NULL;
-
 	pthread_mutex_lock(&nvme_ns->ctrlr->mutex);
 
-	assert(nvme_ns->ref > 0);
-	nvme_ns->ref--;
-	if (nvme_ns->ref == 0) {
+	nvme_ns->bdev = NULL;
+
+	if (!nvme_ns->populated) {
 		pthread_mutex_unlock(&nvme_ns->ctrlr->mutex);
 
 		nvme_bdev_ctrlr_destruct(nvme_ns->ctrlr);
@@ -1115,7 +1113,6 @@ bdev_ocssd_register_bdev(void *ctx)
 
 	rc = spdk_bdev_register(&nvme_bdev->disk);
 	if (spdk_likely(rc == 0)) {
-		nvme_ns->ref++;
 		nvme_ns->bdev = nvme_bdev;
 	} else {
 		SPDK_ERRLOG("Failed to register bdev %s\n", nvme_bdev->disk.name);
@@ -1456,7 +1453,6 @@ bdev_ocssd_populate_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 
 	nvme_ns->type_ctx = ocssd_ns;
 	nvme_ns->ns = ns;
-	nvme_ns->ref = 1;
 	nvme_ns->populated = true;
 	ctx->nvme_ctx = nvme_ctx;
 	ctx->nvme_ns = nvme_ns;
