@@ -112,10 +112,10 @@ typedef void (*fs_request_fn)(void *arg);
  * This function will be invoked any time when the filesystem wants to pass a
  * message to the main dispatch thread.
  *
- * \param fs_request_fn A pointer to the request function.
+ * \param fn A pointer to the request function.
  * \param arg Argument to the request function.
  */
-typedef void (*fs_send_request_fn)(fs_request_fn, void *arg);
+typedef void (*fs_send_request_fn)(fs_request_fn fn, void *arg);
 
 /**
  * Initialize a spdk_blobfs_opts structure to the default option values.
