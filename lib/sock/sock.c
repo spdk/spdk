@@ -67,9 +67,10 @@ sock_map_insert(int placement_id, struct spdk_sock_group *group, bool init)
 	pthread_mutex_lock(&g_map_table_mutex);
 	STAILQ_FOREACH(entry, &g_placement_id_map, link) {
 		if (placement_id == entry->placement_id) {
-			/* The mapping already exists, it means that different sockets have
-			 * the same placement_ids.
-			 */
+			if (entry->group != group) {
+				pthread_mutex_unlock(&g_map_table_mutex);
+				return -EINVAL;
+			}
 			entry->ref++;
 			pthread_mutex_unlock(&g_map_table_mutex);
 			return 0;
