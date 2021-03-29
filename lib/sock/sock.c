@@ -554,14 +554,6 @@ spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 		return -1;
 	}
 
-	placement_id = sock_get_placement_id(sock);
-	if (placement_id != -1) {
-		rc = sock_map_insert(placement_id, group, 0);
-		if (rc < 0) {
-			return -1;
-		}
-	}
-
 	STAILQ_FOREACH_FROM(group_impl, &group->group_impls, link) {
 		if (sock->net_impl == group_impl->net_impl) {
 			break;
@@ -574,14 +566,25 @@ spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 	}
 
 	rc = group_impl->net_impl->group_impl_add_sock(group_impl, sock);
-	if (rc == 0) {
-		TAILQ_INSERT_TAIL(&group_impl->socks, sock, link);
-		sock->group_impl = group_impl;
-		sock->cb_fn = cb_fn;
-		sock->cb_arg = cb_arg;
+	if (rc != 0) {
+		return rc;
 	}
 
-	return rc;
+	TAILQ_INSERT_TAIL(&group_impl->socks, sock, link);
+	sock->group_impl = group_impl;
+	sock->cb_fn = cb_fn;
+	sock->cb_arg = cb_arg;
+
+	placement_id = sock_get_placement_id(sock);
+	if (placement_id != -1) {
+		rc = sock_map_insert(placement_id, group, 0);
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to insert sock group into map: %d", rc);
+			/* Do not treat this as an error. The system will continue running. */
+		}
+	}
+
+	return 0;
 }
 
 int
