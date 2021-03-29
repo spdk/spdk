@@ -3,15 +3,7 @@
 # can include whitespaces or other funny characters, and working
 # with those on the cmdline would be a nightmare. Use procfs for
 # the remaining pieces we want to gather:
-# |$rootdir/scripts/core-collector.sh %P %s %t $output_dir
-
-get_rlimit() {
-	local limit
-
-	while read -ra limit; do
-		[[ ${limit[1]} == core ]] && echo "${limit[4]}" # soft
-	done < "/proc/$core_pid/limits"
-}
+# |$rootdir/scripts/core-collector.sh %P %s %t %c $output_dir
 
 core_meta() {
 	jq . <<- CORE
@@ -38,6 +30,7 @@ stderr() {
 args+=(core_pid)
 args+=(core_sig)
 args+=(core_ts)
+args+=(rlimit)
 args+=(output_dir)
 
 read -r "${args[@]}" <<< "$*"
@@ -58,8 +51,7 @@ stderr
 # process to see if we need to make any adjustments.
 max_core=$((1024 * 1024 * 1024 * 2))
 
-rlimit=$(get_rlimit)
-if [[ $rlimit == unlimited ]] || ((rlimit > max_core)); then
+if ((rlimit == 0xffffffffffffffff || rlimit > max_core)); then
 	rlimit=$max_core
 fi
 

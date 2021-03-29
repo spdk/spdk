@@ -32,7 +32,7 @@ if [ $(uname -s) = Linux ]; then
 	old_core_pattern=$(< /proc/sys/kernel/core_pattern)
 	mkdir -p "$output_dir/coredumps"
 	# set core_pattern to a known value to avoid ABRT, systemd-coredump, etc.
-	echo "|$rootdir/scripts/core-collector.sh %P %s %t $output_dir/coredumps" > /proc/sys/kernel/core_pattern
+	echo "|$rootdir/scripts/core-collector.sh %P %s %t %c $output_dir/coredumps" > /proc/sys/kernel/core_pattern
 	echo 2 > /proc/sys/kernel/core_pipe_limit
 
 	# make sure nbd (network block device) driver is loaded if it is available
