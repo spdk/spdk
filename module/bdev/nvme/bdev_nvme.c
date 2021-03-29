@@ -1518,12 +1518,6 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 	}
 }
 
-void
-nvme_ctrlr_depopulate_namespace_done(struct nvme_bdev_ns *nvme_ns)
-{
-	nvme_bdev_ns_detach(nvme_ns);
-}
-
 static void
 nvme_ctrlr_depopulate_standard_namespace(struct nvme_bdev_ns *nvme_ns)
 {

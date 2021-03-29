@@ -197,12 +197,6 @@ nvme_ctrlr_populate_namespace_done(struct nvme_async_probe_ctx *ctx,
 	ns->ctrlr->ref++;
 }
 
-void
-nvme_ctrlr_depopulate_namespace_done(struct nvme_bdev_ns *ns)
-{
-	nvme_bdev_ns_detach(ns);
-}
-
 static struct nvme_bdev_ctrlr *
 create_nvme_bdev_controller(const struct spdk_nvme_transport_id *trid, const char *name)
 {

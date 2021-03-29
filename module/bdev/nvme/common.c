@@ -204,3 +204,9 @@ nvme_bdev_ns_detach(struct nvme_bdev_ns *nvme_ns)
 
 	nvme_bdev_ctrlr_destruct(nvme_ns->ctrlr);
 }
+
+void
+nvme_ctrlr_depopulate_namespace_done(struct nvme_bdev_ns *nvme_ns)
+{
+	nvme_bdev_ns_detach(nvme_ns);
+}
