@@ -1689,6 +1689,11 @@ ut_test_submit_nvme_cmd(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
 			enum spdk_bdev_io_type io_type)
 {
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
+	struct nvme_bdev *nbdev = (struct nvme_bdev *)bdev_io->bdev->ctxt;
+	struct nvme_bdev_ns *nvme_ns = NULL;
+	struct spdk_nvme_qpair *qpair = NULL;
+
+	CU_ASSERT(bdev_nvme_find_io_path(nbdev, nvme_ch, &nvme_ns, &qpair));
 
 	bdev_io->type = io_type;
 	bdev_io->internal.in_submit_request = true;
@@ -1696,13 +1701,13 @@ ut_test_submit_nvme_cmd(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
 	bdev_nvme_submit_request(ch, bdev_io);
 
 	CU_ASSERT(bdev_io->internal.in_submit_request == true);
-	CU_ASSERT(nvme_ch->qpair->num_outstanding_reqs == 1);
+	CU_ASSERT(qpair->num_outstanding_reqs == 1);
 
 	poll_threads();
 
 	CU_ASSERT(bdev_io->internal.in_submit_request == false);
 	CU_ASSERT(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
-	CU_ASSERT(nvme_ch->qpair->num_outstanding_reqs == 0);
+	CU_ASSERT(qpair->num_outstanding_reqs == 0);
 }
 
 static void
@@ -1710,6 +1715,11 @@ ut_test_submit_nop(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 		   enum spdk_bdev_io_type io_type)
 {
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
+	struct nvme_bdev *nbdev = (struct nvme_bdev *)bdev_io->bdev->ctxt;
+	struct nvme_bdev_ns *nvme_ns = NULL;
+	struct spdk_nvme_qpair *qpair = NULL;
+
+	CU_ASSERT(bdev_nvme_find_io_path(nbdev, nvme_ch, &nvme_ns, &qpair));
 
 	bdev_io->type = io_type;
 	bdev_io->internal.in_submit_request = true;
@@ -1718,7 +1728,7 @@ ut_test_submit_nop(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 
 	CU_ASSERT(bdev_io->internal.in_submit_request == false);
 	CU_ASSERT(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
-	CU_ASSERT(nvme_ch->qpair->num_outstanding_reqs == 0);
+	CU_ASSERT(qpair->num_outstanding_reqs == 0);
 }
 
 static void
@@ -1727,6 +1737,11 @@ ut_test_submit_fused_nvme_cmd(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
 	struct nvme_bdev_io *bio = (struct nvme_bdev_io *)bdev_io->driver_ctx;
 	struct ut_nvme_req *req;
+	struct nvme_bdev *nbdev = (struct nvme_bdev *)bdev_io->bdev->ctxt;
+	struct nvme_bdev_ns *nvme_ns = NULL;
+	struct spdk_nvme_qpair *qpair = NULL;
+
+	CU_ASSERT(bdev_nvme_find_io_path(nbdev, nvme_ch, &nvme_ns, &qpair));
 
 	/* Only compare and write now. */
 	bdev_io->type = SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE;
@@ -1735,7 +1750,7 @@ ut_test_submit_fused_nvme_cmd(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 	bdev_nvme_submit_request(ch, bdev_io);
 
 	CU_ASSERT(bdev_io->internal.in_submit_request == true);
-	CU_ASSERT(nvme_ch->qpair->num_outstanding_reqs == 2);
+	CU_ASSERT(qpair->num_outstanding_reqs == 2);
 	CU_ASSERT(bio->first_fused_submitted == true);
 
 	/* First outstanding request is compare operation. */
@@ -1748,7 +1763,7 @@ ut_test_submit_fused_nvme_cmd(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 
 	CU_ASSERT(bdev_io->internal.in_submit_request == false);
 	CU_ASSERT(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
-	CU_ASSERT(nvme_ch->qpair->num_outstanding_reqs == 0);
+	CU_ASSERT(qpair->num_outstanding_reqs == 0);
 }
 
 static void
