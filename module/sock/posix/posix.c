@@ -69,7 +69,6 @@ struct spdk_posix_sock {
 	int			recv_buf_sz;
 	bool			pending_recv;
 	bool			zcopy;
-	int			so_priority;
 
 	TAILQ_ENTRY(spdk_posix_sock)	link;
 };
@@ -567,9 +566,6 @@ retry:
 		return NULL;
 	}
 
-	if (opts != NULL) {
-		sock->so_priority = opts->priority;
-	}
 	return &sock->base;
 }
 
@@ -632,7 +628,6 @@ posix_sock_accept(struct spdk_sock *_sock)
 		close(fd);
 		return NULL;
 	}
-	new_sock->so_priority = sock->base.opts.priority;
 
 	return &new_sock->base;
 }
@@ -1286,7 +1281,7 @@ posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 		/* a recv is done here to busy poll the queue associated with
 		 * first socket in list and potentially reap incoming data.
 		 */
-		if (psock->so_priority) {
+		if (sock->opts.priority) {
 			recv(psock->fd, &byte, 1, MSG_PEEK);
 		}
 	}
