@@ -508,6 +508,7 @@ spdk_sock_group_create(void *ctx)
 			STAILQ_INSERT_TAIL(&group->group_impls, group_impl, link);
 			TAILQ_INIT(&group_impl->socks);
 			group_impl->net_impl = impl;
+			group_impl->group = group;
 
 			sock_len = sizeof(sock_opts);
 			spdk_sock_impl_get_opts(impl->name, &sock_opts, &sock_len);

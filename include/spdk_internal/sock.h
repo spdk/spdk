@@ -79,6 +79,7 @@ struct spdk_sock_group {
 
 struct spdk_sock_group_impl {
 	struct spdk_net_impl			*net_impl;
+	struct spdk_sock_group			*group;
 	TAILQ_HEAD(, spdk_sock)			socks;
 	STAILQ_ENTRY(spdk_sock_group_impl)	link;
 };
