@@ -149,21 +149,17 @@ sock_map_lookup(int placement_id, struct spdk_sock_group **group)
 	return rc;
 }
 
-/* Remove the socket group from the map table */
-static void
-sock_remove_sock_group_from_map_table(struct spdk_sock_group *group)
+__attribute((destructor)) static void
+sock_map_cleanup(void)
 {
 	struct spdk_sock_placement_id_entry *entry, *tmp;
 
 	pthread_mutex_lock(&g_map_table_mutex);
 	STAILQ_FOREACH_SAFE(entry, &g_placement_id_map, link, tmp) {
-		if (entry->group == group) {
-			STAILQ_REMOVE(&g_placement_id_map, entry, spdk_sock_placement_id_entry, link);
-			free(entry);
-		}
+		STAILQ_REMOVE(&g_placement_id_map, entry, spdk_sock_placement_id_entry, link);
+		free(entry);
 	}
 	pthread_mutex_unlock(&g_map_table_mutex);
-
 }
 
 static int
@@ -741,7 +737,6 @@ spdk_sock_group_close(struct spdk_sock_group **group)
 		}
 	}
 
-	sock_remove_sock_group_from_map_table(*group);
 	free(*group);
 	*group = NULL;
 
