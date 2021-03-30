@@ -2650,20 +2650,26 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                 print(ex.message)
                 exit(1)
 
-    # Create temporary parser, pull out the plugin parameter, load the module, and then run the real argument parser
-    plugin_parser = argparse.ArgumentParser(add_help=False)
-    plugin_parser.add_argument('--plugin', dest='rpc_plugin', help='Module name of plugin with additional RPC commands')
+    def load_plugin(args):
+        # Create temporary parser, pull out the plugin parameter, load the module, and then run the real argument parser
+        plugin_parser = argparse.ArgumentParser(add_help=False)
+        plugin_parser.add_argument('--plugin', dest='rpc_plugin', help='Module name of plugin with additional RPC commands')
 
-    rpc_module = plugin_parser.parse_known_args()[0].rpc_plugin
-    if rpc_module is not None:
-        try:
-            rpc_plugin = importlib.import_module(rpc_module)
+        rpc_module = plugin_parser.parse_known_args()[0].rpc_plugin
+        if args is not None:
+            rpc_module = plugin_parser.parse_known_args(args)[0].rpc_plugin
+
+        if rpc_module is not None:
             try:
-                rpc_plugin.spdk_rpc_plugin_initialize(subparsers)
-            except AttributeError:
-                print("Module %s does not contain 'spdk_rpc_plugin_initialize' function" % rpc_module)
-        except ModuleNotFoundError:
-            print("Module %s not found" % rpc_module)
+                rpc_plugin = importlib.import_module(rpc_module)
+                try:
+                    rpc_plugin.spdk_rpc_plugin_initialize(subparsers)
+                except AttributeError:
+                    print("Module %s does not contain 'spdk_rpc_plugin_initialize' function" % rpc_module)
+            except ModuleNotFoundError:
+                print("Module %s not found" % rpc_module)
+
+    load_plugin(None)
 
     args = parser.parse_args()
 
@@ -2675,6 +2681,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         for input in sys.stdin:
             cmd = shlex.split(input)
             try:
+                load_plugin(cmd)
                 tmp_args = parser.parse_args(cmd)
             except SystemExit as ex:
                 print("**STATUS=1", flush=True)
