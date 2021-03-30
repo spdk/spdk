@@ -1092,7 +1092,7 @@ spdk_pci_device_allow(struct spdk_pci_addr *pci_addr)
 		return -ENOMEM;
 	}
 
-	snprintf(devargs_str, sizeof(devargs_str), "pci:%04x:%02x:%02x:%x",
+	snprintf(devargs_str, sizeof(devargs_str), "pci:%04x:%02x:%02x.%x",
 		 pci_addr->domain, pci_addr->bus, pci_addr->dev, pci_addr->func);
 	if (rte_devargs_parse(da, devargs_str) != 0) {
 		SPDK_ERRLOG("rte_devargs_parse() failed on '%s'\n", devargs_str);
