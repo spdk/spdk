@@ -135,14 +135,14 @@ sock_map_release(struct spdk_sock_map *map, int placement_id)
 
 /* Look up the group for a placement_id. */
 static int
-sock_map_lookup(int placement_id, struct spdk_sock_group **group)
+sock_map_lookup(struct spdk_sock_map *map, int placement_id, struct spdk_sock_group **group)
 {
 	struct spdk_sock_placement_id_entry *entry;
 	int rc = -EINVAL;
 
 	*group = NULL;
-	pthread_mutex_lock(&g_map.mtx);
-	STAILQ_FOREACH(entry, &g_map.entries, link) {
+	pthread_mutex_lock(&map->mtx);
+	STAILQ_FOREACH(entry, &map->entries, link) {
 		if (placement_id == entry->placement_id) {
 			assert(entry->group != NULL);
 			*group = entry->group;
@@ -150,7 +150,7 @@ sock_map_lookup(int placement_id, struct spdk_sock_group **group)
 			break;
 		}
 	}
-	pthread_mutex_unlock(&g_map.mtx);
+	pthread_mutex_unlock(&map->mtx);
 
 	return rc;
 }
@@ -189,7 +189,7 @@ spdk_sock_get_optimal_sock_group(struct spdk_sock *sock, struct spdk_sock_group 
 
 	placement_id = sock_get_placement_id(sock);
 	if (placement_id != -1) {
-		sock_map_lookup(placement_id, group);
+		sock_map_lookup(&g_map, placement_id, group);
 		return 0;
 	} else {
 		return -1;
