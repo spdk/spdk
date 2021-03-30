@@ -43,6 +43,9 @@
 
 	# internal function in spdk_internal/sock.h
 	spdk_net_impl_register;
+	spdk_sock_map_insert;
+	spdk_sock_map_release;
+	spdk_sock_map_lookup;
 
 	local: *;
 };

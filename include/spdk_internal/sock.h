@@ -299,6 +299,27 @@ spdk_sock_get_placement_id(int fd, enum spdk_placement_mode mode, int *placement
 	}
 }
 
+extern struct spdk_sock_map g_map;
+
+/**
+ * Insert a group into the placement map.
+ * If the group is already in the map, take a reference.
+ */
+int spdk_sock_map_insert(struct spdk_sock_map *map, int placement_id,
+			 struct spdk_sock_group *group);
+
+/**
+ * Release a reference for the given placement_id. If the reference count goes to 0, the
+ * entry will no longer be associated with a group.
+ */
+void spdk_sock_map_release(struct spdk_sock_map *map, int placement_id);
+
+/**
+ * Look up the group for the given placement_id.
+ */
+int spdk_sock_map_lookup(struct spdk_sock_map *map, int placement_id,
+			 struct spdk_sock_group **group);
+
 #ifdef __cplusplus
 }
 #endif

@@ -57,16 +57,13 @@ struct spdk_sock_map {
 	pthread_mutex_t mtx;
 };
 
-static struct spdk_sock_map g_map = {
+struct spdk_sock_map g_map = {
 	.entries = STAILQ_HEAD_INITIALIZER(g_map.entries),
 	.mtx = PTHREAD_MUTEX_INITIALIZER
 };
 
-/* Insert a group into the placement map.
- * If the group is already in the map, take a reference.
- */
-static int
-sock_map_insert(struct spdk_sock_map *map, int placement_id, struct spdk_sock_group *group)
+int
+spdk_sock_map_insert(struct spdk_sock_map *map, int placement_id, struct spdk_sock_group *group)
 {
 	struct spdk_sock_placement_id_entry *entry;
 
@@ -111,9 +108,8 @@ sock_map_insert(struct spdk_sock_map *map, int placement_id, struct spdk_sock_gr
 	return 0;
 }
 
-/* Release a reference to the group for a given placement_id */
-static void
-sock_map_release(struct spdk_sock_map *map, int placement_id)
+void
+spdk_sock_map_release(struct spdk_sock_map *map, int placement_id)
 {
 	struct spdk_sock_placement_id_entry *entry;
 
@@ -133,9 +129,8 @@ sock_map_release(struct spdk_sock_map *map, int placement_id)
 	pthread_mutex_unlock(&map->mtx);
 }
 
-/* Look up the group for a placement_id. */
-static int
-sock_map_lookup(struct spdk_sock_map *map, int placement_id, struct spdk_sock_group **group)
+int
+spdk_sock_map_lookup(struct spdk_sock_map *map, int placement_id, struct spdk_sock_group **group)
 {
 	struct spdk_sock_placement_id_entry *entry;
 	int rc = -EINVAL;
@@ -189,7 +184,7 @@ spdk_sock_get_optimal_sock_group(struct spdk_sock *sock, struct spdk_sock_group 
 
 	placement_id = sock_get_placement_id(sock);
 	if (placement_id != -1) {
-		sock_map_lookup(&g_map, placement_id, group);
+		spdk_sock_map_lookup(&g_map, placement_id, group);
 		return 0;
 	} else {
 		return -1;
@@ -526,7 +521,7 @@ spdk_sock_group_create(void *ctx)
 
 	/* if any net_impl is configured to use SO_INCOMING_CPU, initialize the sock map */
 	if (enable_incoming_cpu) {
-		sock_map_insert(&g_map, spdk_env_get_current_core(), group);
+		spdk_sock_map_insert(&g_map, spdk_env_get_current_core(), group);
 	}
 
 	return group;
@@ -585,7 +580,7 @@ spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 
 	placement_id = sock_get_placement_id(sock);
 	if (placement_id != -1) {
-		rc = sock_map_insert(&g_map, placement_id, group);
+		rc = spdk_sock_map_insert(&g_map, placement_id, group);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to insert sock group into map: %d", rc);
 			/* Do not treat this as an error. The system will continue running. */
@@ -616,7 +611,7 @@ spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *soc
 
 	placement_id = sock_get_placement_id(sock);
 	if (placement_id != -1) {
-		sock_map_release(&g_map, placement_id);
+		spdk_sock_map_release(&g_map, placement_id);
 	}
 
 	rc = group_impl->net_impl->group_impl_remove_sock(group_impl, sock);
@@ -726,7 +721,7 @@ spdk_sock_group_close(struct spdk_sock_group **group)
 	}
 
 	if (enable_incoming_cpu) {
-		sock_map_release(&g_map, spdk_env_get_current_core());
+		spdk_sock_map_release(&g_map, spdk_env_get_current_core());
 	}
 
 	STAILQ_FOREACH_SAFE(group_impl, &(*group)->group_impls, link, tmp) {
