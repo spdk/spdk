@@ -66,7 +66,6 @@ struct spdk_sock {
 	int				cb_cnt;
 	spdk_sock_cb			cb_fn;
 	void				*cb_arg;
-	int				placement_id;
 	struct {
 		uint8_t		closed		: 1;
 		uint8_t		reserved	: 7;
@@ -269,6 +268,35 @@ spdk_sock_prep_reqs(struct spdk_sock *_sock, struct iovec *iovs, int index,
 
 end:
 	return iovcnt;
+}
+
+static inline void
+spdk_sock_get_placement_id(int fd, enum spdk_placement_mode mode, int *placement_id)
+{
+	*placement_id = -1;
+
+	switch (mode) {
+	case PLACEMENT_NONE:
+		break;
+	case PLACEMENT_NAPI: {
+#if defined(SO_INCOMING_NAPI_ID)
+		socklen_t len = sizeof(int);
+
+		getsockopt(fd, SOL_SOCKET, SO_INCOMING_NAPI_ID, placement_id, &len);
+#endif
+		break;
+	}
+	case PLACEMENT_CPU: {
+#if defined(SO_INCOMING_CPU)
+		socklen_t len = sizeof(int);
+
+		getsockopt(fd, SOL_SOCKET, SO_INCOMING_CPU, placement_id, &len);
+#endif
+		break;
+	}
+	default:
+		break;
+	}
 }
 
 #ifdef __cplusplus

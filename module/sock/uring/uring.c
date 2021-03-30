@@ -85,6 +85,7 @@ struct spdk_uring_sock {
 	int					recv_buf_sz;
 	bool					pending_recv;
 	int					connection_status;
+	int					placement_id;
 	TAILQ_ENTRY(spdk_uring_sock)		link;
 };
 
@@ -356,7 +357,11 @@ uring_sock_alloc(int fd)
 			SPDK_ERRLOG("quickack was failed to set\n");
 		}
 	}
+
+	spdk_sock_get_placement_id(sock->fd, g_spdk_uring_sock_impl_opts.enable_placement_id,
+				   &sock->placement_id);
 #endif
+
 	return sock;
 }
 
@@ -1092,41 +1097,13 @@ uring_sock_is_connected(struct spdk_sock *_sock)
 static int
 uring_sock_get_placement_id(struct spdk_sock *_sock, int *placement_id)
 {
-	int rc = -1;
+	struct spdk_uring_sock *sock = __uring_sock(_sock);
 
-	if (!g_spdk_uring_sock_impl_opts.enable_placement_id) {
-		return rc;
-	}
+	assert(placement_id);
 
-	if (g_spdk_uring_sock_impl_opts.enable_placement_id != PLACEMENT_NONE) {
-		switch (g_spdk_uring_sock_impl_opts.enable_placement_id) {
-		case PLACEMENT_NAPI: {
-#if defined(SO_INCOMING_NAPI_ID)
-			struct spdk_uring_sock *sock = __uring_sock(_sock);
-			socklen_t len = sizeof(int);
+	*placement_id = sock->placement_id;
 
-			rc = getsockopt(sock->fd, SOL_SOCKET, SO_INCOMING_NAPI_ID, placement_id, &len);
-#endif
-			break;
-		}
-		case PLACEMENT_CPU: {
-#if defined(SO_INCOMING_CPU)
-			struct spdk_uring_sock *sock = __uring_sock(_sock);
-			socklen_t len = sizeof(int);
-
-			rc = getsockopt(sock->fd, SOL_SOCKET, SO_INCOMING_CPU, placement_id, &len);
-#endif
-			break;
-		}
-		default:
-			break;
-		}
-	}
-
-	if (rc != 0) {
-		SPDK_ERRLOG("getsockopt() failed (errno=%d)\n", errno);
-	}
-	return rc;
+	return 0;
 }
 
 static struct spdk_sock_group_impl *

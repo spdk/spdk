@@ -166,16 +166,14 @@ static int
 sock_get_placement_id(struct spdk_sock *sock)
 {
 	int rc;
-	int placement_id = -1;
+	int placement_id;
 
-	if (sock->placement_id == -1) {
-		rc = sock->net_impl->get_placement_id(sock, &placement_id);
-		if (!rc && (placement_id != -1)) {
-			sock->placement_id = placement_id;
-		}
+	rc = sock->net_impl->get_placement_id(sock, &placement_id);
+	if (rc) {
+		placement_id = -1;
 	}
 
-	return sock->placement_id;
+	return placement_id;
 }
 
 int
@@ -278,8 +276,6 @@ spdk_sock_connect_ext(const char *ip, int port, char *_impl_name, struct spdk_so
 			/* Copy the contents, both the two structures are the same ABI version */
 			memcpy(&sock->opts, &opts_local, sizeof(sock->opts));
 			sock->net_impl = impl;
-			/* Set the placement_id to -1 explicitly */
-			sock->placement_id = -1;
 			TAILQ_INIT(&sock->queued_reqs);
 			TAILQ_INIT(&sock->pending_reqs);
 			return sock;
@@ -350,8 +346,6 @@ spdk_sock_accept(struct spdk_sock *sock)
 		new_sock->opts = sock->opts;
 		memcpy(&new_sock->opts, &sock->opts, sizeof(new_sock->opts));
 		new_sock->net_impl = sock->net_impl;
-		/* Set the placement_id to -1 explicitly */
-		new_sock->placement_id = -1;
 		TAILQ_INIT(&new_sock->queued_reqs);
 		TAILQ_INIT(&new_sock->pending_reqs);
 	}
