@@ -52,9 +52,15 @@ struct spdk_sock_placement_id_entry {
 	STAILQ_ENTRY(spdk_sock_placement_id_entry) link;
 };
 
-static STAILQ_HEAD(, spdk_sock_placement_id_entry) g_placement_id_map = STAILQ_HEAD_INITIALIZER(
-			g_placement_id_map);
-static pthread_mutex_t g_map_table_mutex = PTHREAD_MUTEX_INITIALIZER;
+struct spdk_sock_map {
+	STAILQ_HEAD(, spdk_sock_placement_id_entry) entries;
+	pthread_mutex_t mtx;
+};
+
+static struct spdk_sock_map g_map = {
+	.entries = STAILQ_HEAD_INITIALIZER(g_map.entries),
+	.mtx = PTHREAD_MUTEX_INITIALIZER
+};
 
 /* Insert a group into the placement map.
  * If the group is already in the map, take a reference.
@@ -64,24 +70,24 @@ sock_map_insert(int placement_id, struct spdk_sock_group *group)
 {
 	struct spdk_sock_placement_id_entry *entry;
 
-	pthread_mutex_lock(&g_map_table_mutex);
-	STAILQ_FOREACH(entry, &g_placement_id_map, link) {
+	pthread_mutex_lock(&g_map.mtx);
+	STAILQ_FOREACH(entry, &g_map.entries, link) {
 		if (placement_id == entry->placement_id) {
 			/* Can't set group to NULL if it is already not-NULL */
 			if (group == NULL) {
-				pthread_mutex_unlock(&g_map_table_mutex);
+				pthread_mutex_unlock(&g_map.mtx);
 				return (entry->group == NULL) ? 0 : -EINVAL;
 			}
 
 			if (entry->group == NULL) {
 				entry->group = group;
 			} else if (entry->group != group) {
-				pthread_mutex_unlock(&g_map_table_mutex);
+				pthread_mutex_unlock(&g_map.mtx);
 				return -EINVAL;
 			}
 
 			entry->ref++;
-			pthread_mutex_unlock(&g_map_table_mutex);
+			pthread_mutex_unlock(&g_map.mtx);
 			return 0;
 		}
 	}
@@ -89,7 +95,7 @@ sock_map_insert(int placement_id, struct spdk_sock_group *group)
 	entry = calloc(1, sizeof(*entry));
 	if (!entry) {
 		SPDK_ERRLOG("Cannot allocate an entry for placement_id=%u\n", placement_id);
-		pthread_mutex_unlock(&g_map_table_mutex);
+		pthread_mutex_unlock(&g_map.mtx);
 		return -ENOMEM;
 	}
 
@@ -99,8 +105,8 @@ sock_map_insert(int placement_id, struct spdk_sock_group *group)
 		entry->ref++;
 	}
 
-	STAILQ_INSERT_TAIL(&g_placement_id_map, entry, link);
-	pthread_mutex_unlock(&g_map_table_mutex);
+	STAILQ_INSERT_TAIL(&g_map.entries, entry, link);
+	pthread_mutex_unlock(&g_map.mtx);
 
 	return 0;
 }
@@ -111,8 +117,8 @@ sock_map_release(int placement_id)
 {
 	struct spdk_sock_placement_id_entry *entry;
 
-	pthread_mutex_lock(&g_map_table_mutex);
-	STAILQ_FOREACH(entry, &g_placement_id_map, link) {
+	pthread_mutex_lock(&g_map.mtx);
+	STAILQ_FOREACH(entry, &g_map.entries, link) {
 		if (placement_id == entry->placement_id) {
 			assert(entry->ref > 0);
 			entry->ref--;
@@ -124,7 +130,7 @@ sock_map_release(int placement_id)
 		}
 	}
 
-	pthread_mutex_unlock(&g_map_table_mutex);
+	pthread_mutex_unlock(&g_map.mtx);
 }
 
 /* Look up the group for a placement_id. */
@@ -135,8 +141,8 @@ sock_map_lookup(int placement_id, struct spdk_sock_group **group)
 	int rc = -EINVAL;
 
 	*group = NULL;
-	pthread_mutex_lock(&g_map_table_mutex);
-	STAILQ_FOREACH(entry, &g_placement_id_map, link) {
+	pthread_mutex_lock(&g_map.mtx);
+	STAILQ_FOREACH(entry, &g_map.entries, link) {
 		if (placement_id == entry->placement_id) {
 			assert(entry->group != NULL);
 			*group = entry->group;
@@ -144,7 +150,7 @@ sock_map_lookup(int placement_id, struct spdk_sock_group **group)
 			break;
 		}
 	}
-	pthread_mutex_unlock(&g_map_table_mutex);
+	pthread_mutex_unlock(&g_map.mtx);
 
 	return rc;
 }
@@ -154,12 +160,12 @@ sock_map_cleanup(void)
 {
 	struct spdk_sock_placement_id_entry *entry, *tmp;
 
-	pthread_mutex_lock(&g_map_table_mutex);
-	STAILQ_FOREACH_SAFE(entry, &g_placement_id_map, link, tmp) {
-		STAILQ_REMOVE(&g_placement_id_map, entry, spdk_sock_placement_id_entry, link);
+	pthread_mutex_lock(&g_map.mtx);
+	STAILQ_FOREACH_SAFE(entry, &g_map.entries, link, tmp) {
+		STAILQ_REMOVE(&g_map.entries, entry, spdk_sock_placement_id_entry, link);
 		free(entry);
 	}
-	pthread_mutex_unlock(&g_map_table_mutex);
+	pthread_mutex_unlock(&g_map.mtx);
 }
 
 static int
