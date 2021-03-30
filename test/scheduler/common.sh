@@ -4,8 +4,6 @@ declare -r sysfs_system=/sys/devices/system
 declare -r sysfs_cpu=$sysfs_system/cpu
 declare -r sysfs_node=$sysfs_system/node
 
-export PYTHONPATH=$rootdir/test/event/scheduler
-
 declare -r scheduler=$rootdir/test/event/scheduler/scheduler
 declare -r plugin=scheduler_plugin
 
@@ -385,13 +383,13 @@ get_cpu_stat() {
 }
 
 create_thread() {
-	"$rootdir/scripts/rpc.py" --plugin "$plugin" scheduler_thread_create "$@"
+	rpc_cmd --plugin "$plugin" scheduler_thread_create "$@"
 }
 
 destroy_thread() {
-	"$rootdir/scripts/rpc.py" --plugin "$plugin" scheduler_thread_delete "$@"
+	rpc_cmd --plugin "$plugin" scheduler_thread_delete "$@"
 }
 
 active_thread() {
-	"$rootdir/scripts/rpc.py" --plugin "$plugin" scheduler_thread_set_active "$@"
+	rpc_cmd --plugin "$plugin" scheduler_thread_set_active "$@"
 }

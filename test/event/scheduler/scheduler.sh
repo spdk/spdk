@@ -22,8 +22,7 @@ function scheduler_create_thread() {
 	$rpc --plugin scheduler_plugin scheduler_thread_delete $thread_id
 }
 
-export PYTHONPATH=$testdir
-rpc="$rootdir/scripts/rpc.py"
+rpc=rpc_cmd
 
 $testdir/scheduler -m 0xF -p 0x2 --wait-for-rpc &
 scheduler_pid=$!

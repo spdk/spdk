@@ -45,7 +45,7 @@ waitforlisten $spdk_pid
 export PYTHONPATH=$testdir
 
 # basic integrity test
-rpc="$rootdir/scripts/rpc.py"
+rpc=rpc_cmd
 run_test "rpc_integrity" rpc_integrity
 run_test "rpc_plugins" rpc_plugins
 # same integrity test, but with rpc_cmd() instead

@@ -244,7 +244,9 @@ done
 
 # start rpc.py coprocess if it's not started yet
 if [[ -z $RPC_PIPE_PID ]] || ! kill -0 "$RPC_PIPE_PID" &> /dev/null; then
-	coproc RPC_PIPE { "$rootdir/scripts/rpc.py" --server; }
+	# Include list to all known plugins we use in the tests
+	PYTHONPATH+=":$rootdir/test/rpc_plugins"
+	coproc RPC_PIPE { PYTHONPATH="$PYTHONPATH" "$rootdir/scripts/rpc.py" --server; }
 	exec {RPC_PIPE_OUTPUT}<&${RPC_PIPE[0]} {RPC_PIPE_INPUT}>&${RPC_PIPE[1]}
 	# all descriptors will automatically close together with this bash
 	# process, this will make rpc.py stop reading and exit gracefully
