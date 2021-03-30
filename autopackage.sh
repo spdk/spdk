@@ -28,7 +28,7 @@ if [ $(git status --porcelain --ignore-submodules | wc -l) -ne 0 ]; then
 fi
 timing_exit porcelain_check
 
-if [[ $RUN_NIGHTLY -eq 0 && $SPDK_TEST_RELEASE_BUILD -eq 0 ]]; then
+if [[ $RUN_NIGHTLY -eq 0 ]]; then
 	timing_finish
 	exit 0
 fi
