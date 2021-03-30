@@ -67,10 +67,19 @@ sock_map_insert(int placement_id, struct spdk_sock_group *group)
 	pthread_mutex_lock(&g_map_table_mutex);
 	STAILQ_FOREACH(entry, &g_placement_id_map, link) {
 		if (placement_id == entry->placement_id) {
-			if (entry->group != group) {
+			/* Can't set group to NULL if it is already not-NULL */
+			if (group == NULL) {
+				pthread_mutex_unlock(&g_map_table_mutex);
+				return (entry->group == NULL) ? 0 : -EINVAL;
+			}
+
+			if (entry->group == NULL) {
+				entry->group = group;
+			} else if (entry->group != group) {
 				pthread_mutex_unlock(&g_map_table_mutex);
 				return -EINVAL;
 			}
+
 			entry->ref++;
 			pthread_mutex_unlock(&g_map_table_mutex);
 			return 0;
@@ -85,8 +94,10 @@ sock_map_insert(int placement_id, struct spdk_sock_group *group)
 	}
 
 	entry->placement_id = placement_id;
-	entry->group = group;
-	entry->ref++;
+	if (group) {
+		entry->group = group;
+		entry->ref++;
+	}
 
 	STAILQ_INSERT_TAIL(&g_placement_id_map, entry, link);
 	pthread_mutex_unlock(&g_map_table_mutex);
@@ -105,6 +116,10 @@ sock_map_release(int placement_id)
 		if (placement_id == entry->placement_id) {
 			assert(entry->ref > 0);
 			entry->ref--;
+
+			if (entry->ref == 0) {
+				entry->group = NULL;
+			}
 			break;
 		}
 	}
@@ -113,10 +128,11 @@ sock_map_release(int placement_id)
 }
 
 /* Look up the group for a placement_id. */
-static void
+static int
 sock_map_lookup(int placement_id, struct spdk_sock_group **group)
 {
 	struct spdk_sock_placement_id_entry *entry;
+	int rc = -EINVAL;
 
 	*group = NULL;
 	pthread_mutex_lock(&g_map_table_mutex);
@@ -124,10 +140,13 @@ sock_map_lookup(int placement_id, struct spdk_sock_group **group)
 		if (placement_id == entry->placement_id) {
 			assert(entry->group != NULL);
 			*group = entry->group;
+			rc = 0;
 			break;
 		}
 	}
 	pthread_mutex_unlock(&g_map_table_mutex);
+
+	return rc;
 }
 
 /* Remove the socket group from the map table */
