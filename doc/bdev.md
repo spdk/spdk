@@ -369,15 +369,22 @@ This command will remove NVMe bdev named Nvme0.
 
 ## NVMe bdev character device {#bdev_config_nvme_cuse}
 
-This feature is considered as experimental.
+This feature is considered as experimental. You must configure with --with-nvme-cuse
+option to enable this RPC.
 
 Example commands
 
-`rpc.py bdev_nvme_cuse_register -n Nvme0 -p spdk/nvme0`
+`rpc.py bdev_nvme_cuse_register -n Nvme3
 
-This command will register /dev/spdk/nvme0 character device associated with Nvme0
-controller. If there are namespaces created on Nvme0 controller, for each namespace
-device /dev/spdk/nvme0nX is created.
+This command will register a character device under /dev/spdk associated with Nvme3
+controller. If there are namespaces created on Nvme3 controller, a namespace
+character device is also created for each namespace.
+
+For example, the first controller registered will have a character device path of
+/dev/spdk/nvmeX, where X is replaced with a unique integer to differentiate it from
+other controllers.  Note that this 'nvmeX' name here has no correlation to the name
+associated with the controller in SPDK.  Namespace character devices will have a path
+of /dev/spdk/nvmeXnY, where Y is the namespace ID.
 
 Cuse devices are removed from system, when NVMe controller is detached or unregistered
 with command:
