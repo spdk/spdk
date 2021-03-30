@@ -66,28 +66,28 @@ static struct spdk_sock_map g_map = {
  * If the group is already in the map, take a reference.
  */
 static int
-sock_map_insert(int placement_id, struct spdk_sock_group *group)
+sock_map_insert(struct spdk_sock_map *map, int placement_id, struct spdk_sock_group *group)
 {
 	struct spdk_sock_placement_id_entry *entry;
 
-	pthread_mutex_lock(&g_map.mtx);
-	STAILQ_FOREACH(entry, &g_map.entries, link) {
+	pthread_mutex_lock(&map->mtx);
+	STAILQ_FOREACH(entry, &map->entries, link) {
 		if (placement_id == entry->placement_id) {
 			/* Can't set group to NULL if it is already not-NULL */
 			if (group == NULL) {
-				pthread_mutex_unlock(&g_map.mtx);
+				pthread_mutex_unlock(&map->mtx);
 				return (entry->group == NULL) ? 0 : -EINVAL;
 			}
 
 			if (entry->group == NULL) {
 				entry->group = group;
 			} else if (entry->group != group) {
-				pthread_mutex_unlock(&g_map.mtx);
+				pthread_mutex_unlock(&map->mtx);
 				return -EINVAL;
 			}
 
 			entry->ref++;
-			pthread_mutex_unlock(&g_map.mtx);
+			pthread_mutex_unlock(&map->mtx);
 			return 0;
 		}
 	}
@@ -95,7 +95,7 @@ sock_map_insert(int placement_id, struct spdk_sock_group *group)
 	entry = calloc(1, sizeof(*entry));
 	if (!entry) {
 		SPDK_ERRLOG("Cannot allocate an entry for placement_id=%u\n", placement_id);
-		pthread_mutex_unlock(&g_map.mtx);
+		pthread_mutex_unlock(&map->mtx);
 		return -ENOMEM;
 	}
 
@@ -105,8 +105,8 @@ sock_map_insert(int placement_id, struct spdk_sock_group *group)
 		entry->ref++;
 	}
 
-	STAILQ_INSERT_TAIL(&g_map.entries, entry, link);
-	pthread_mutex_unlock(&g_map.mtx);
+	STAILQ_INSERT_TAIL(&map->entries, entry, link);
+	pthread_mutex_unlock(&map->mtx);
 
 	return 0;
 }
@@ -526,7 +526,7 @@ spdk_sock_group_create(void *ctx)
 
 	/* if any net_impl is configured to use SO_INCOMING_CPU, initialize the sock map */
 	if (enable_incoming_cpu) {
-		sock_map_insert(spdk_env_get_current_core(), group);
+		sock_map_insert(&g_map, spdk_env_get_current_core(), group);
 	}
 
 	return group;
@@ -585,7 +585,7 @@ spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 
 	placement_id = sock_get_placement_id(sock);
 	if (placement_id != -1) {
-		rc = sock_map_insert(placement_id, group);
+		rc = sock_map_insert(&g_map, placement_id, group);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to insert sock group into map: %d", rc);
 			/* Do not treat this as an error. The system will continue running. */
