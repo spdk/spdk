@@ -113,12 +113,12 @@ sock_map_insert(struct spdk_sock_map *map, int placement_id, struct spdk_sock_gr
 
 /* Release a reference to the group for a given placement_id */
 static void
-sock_map_release(int placement_id)
+sock_map_release(struct spdk_sock_map *map, int placement_id)
 {
 	struct spdk_sock_placement_id_entry *entry;
 
-	pthread_mutex_lock(&g_map.mtx);
-	STAILQ_FOREACH(entry, &g_map.entries, link) {
+	pthread_mutex_lock(&map->mtx);
+	STAILQ_FOREACH(entry, &map->entries, link) {
 		if (placement_id == entry->placement_id) {
 			assert(entry->ref > 0);
 			entry->ref--;
@@ -130,7 +130,7 @@ sock_map_release(int placement_id)
 		}
 	}
 
-	pthread_mutex_unlock(&g_map.mtx);
+	pthread_mutex_unlock(&map->mtx);
 }
 
 /* Look up the group for a placement_id. */
@@ -616,7 +616,7 @@ spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *soc
 
 	placement_id = sock_get_placement_id(sock);
 	if (placement_id != -1) {
-		sock_map_release(placement_id);
+		sock_map_release(&g_map, placement_id);
 	}
 
 	rc = group_impl->net_impl->group_impl_remove_sock(group_impl, sock);
@@ -726,7 +726,7 @@ spdk_sock_group_close(struct spdk_sock_group **group)
 	}
 
 	if (enable_incoming_cpu) {
-		sock_map_release(spdk_env_get_current_core());
+		sock_map_release(&g_map, spdk_env_get_current_core());
 	}
 
 	STAILQ_FOREACH_SAFE(group_impl, &(*group)->group_impls, link, tmp) {
