@@ -1856,6 +1856,8 @@ nvme_ctrlr_identify_active_ns_async(struct nvme_active_ns_ctx *ctx)
 		goto out;
 	}
 
+	assert(ctx->new_ns_list != NULL);
+
 	/*
 	 * If controller doesn't support active ns list CNS 0x02 dummy up
 	 * an active ns list, i.e. all namespaces report as active
