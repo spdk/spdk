@@ -887,6 +887,23 @@ spdk_thread_get_last_tsc(struct spdk_thread *thread)
 	return thread->tsc_last;
 }
 
+static inline int
+thread_send_msg_notification(const struct spdk_thread *target_thread)
+{
+	uint64_t notify = 1;
+	int rc;
+
+	if (target_thread->interrupt_mode) {
+		rc = write(target_thread->msg_fd, &notify, sizeof(notify));
+		if (rc < 0) {
+			SPDK_ERRLOG("failed to notify msg_queue: %s.\n", spdk_strerror(errno));
+			return -EIO;
+		}
+	}
+
+	return 0;
+}
+
 int
 spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx)
 {
@@ -931,17 +948,7 @@ spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx
 		return -EIO;
 	}
 
-	if (thread->interrupt_mode) {
-		uint64_t notify = 1;
-
-		rc = write(thread->msg_fd, &notify, sizeof(notify));
-		if (rc < 0) {
-			SPDK_ERRLOG("failed to notify msg_queue: %s.\n", spdk_strerror(errno));
-			return -EIO;
-		}
-	}
-
-	return 0;
+	return thread_send_msg_notification(thread);
 }
 
 int
@@ -949,23 +956,12 @@ spdk_thread_send_critical_msg(struct spdk_thread *thread, spdk_msg_fn fn)
 {
 	spdk_msg_fn expected = NULL;
 
-	if (__atomic_compare_exchange_n(&thread->critical_msg, &expected, fn, false, __ATOMIC_SEQ_CST,
-					__ATOMIC_SEQ_CST)) {
-		if (thread->interrupt_mode) {
-			uint64_t notify = 1;
-			int rc;
-
-			rc = write(thread->msg_fd, &notify, sizeof(notify));
-			if (rc < 0) {
-				SPDK_ERRLOG("failed to notify msg_queue: %s.\n", spdk_strerror(errno));
-				return -EIO;
-			}
-		}
-
-		return 0;
+	if (!__atomic_compare_exchange_n(&thread->critical_msg, &expected, fn, false, __ATOMIC_SEQ_CST,
+					 __ATOMIC_SEQ_CST)) {
+		return -EIO;
 	}
 
-	return -EIO;
+	return thread_send_msg_notification(thread);
 }
 
 #ifdef __linux__
