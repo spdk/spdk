@@ -719,6 +719,7 @@ destroy_qp(struct nvmf_vfio_user_ctrlr *ctrlr, uint16_t qid)
 
 	unmap_qp(qpair);
 	free(qpair->reqs_internal);
+	free(qpair);
 	ctrlr->qp[qid] = NULL;
 }
 
