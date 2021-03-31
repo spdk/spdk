@@ -36,6 +36,10 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 DIRS-y = idxd.c idxd_user.c
 
+ifeq ($(CONFIG_IDXD_KERNEL),y)
+DIRS-y += idxd_kernel.c
+endif
+
 .PHONY: all clean $(DIRS-y)
 
 all: $(DIRS-y)

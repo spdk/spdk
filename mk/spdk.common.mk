@@ -289,6 +289,10 @@ COMMON_CFLAGS += -pthread
 SYS_LIBS += -pthread
 endif
 
+ifeq ($(CONFIG_IDXD_KERNEL),y)
+SYS_LIBS += -laccel-config
+endif
+
 CFLAGS   += $(COMMON_CFLAGS) -Wno-pointer-sign -Wstrict-prototypes -Wold-style-definition -std=gnu99
 CXXFLAGS += $(COMMON_CFLAGS)
 

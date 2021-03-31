@@ -178,7 +178,12 @@ CONFIG_FUSE=n
 CONFIG_RAID5=n
 
 # Build with IDXD support
+# In this mode, SPDK fully controls the DSA device.
 CONFIG_IDXD=n
 
 # Build with USDT support
 CONFIG_USDT=n
+
+# Build with IDXD kernel support.
+# In this mode, SPDK shares the DSA device with the kernel.
+CONFIG_IDXD_KERNEL=n

@@ -468,6 +468,7 @@ for i in "$@"; do
 			;;
 		--with-idxd)
 			CONFIG[IDXD]=y
+			CONFIG[IDXD_KERNEL]=n
 			;;
 		--without-idxd)
 			CONFIG[IDXD]=n
@@ -528,6 +529,10 @@ if [[ "${CONFIG[IDXD]}" = "y" ]]; then
 		echo "ERROR: IDXD cannot be used due to CPU incompatiblity."
 		exit 1
 	fi
+	if [ -e /usr/include/accel-config/libaccel_config.h ]; then
+		CONFIG[IDXD_KERNEL]=y
+	fi
+
 fi
 
 # Detect architecture and force no ISA-L if non-x86 or non-aarch64 architecture

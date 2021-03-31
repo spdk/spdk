@@ -29,6 +29,12 @@ Added API `spdk_idxd_submit_copy_crc32c` to perform a CRC32C while copying data.
 Added API `spdk_idxd_batch_prep_copy_crc32c` to prepare a batch operation to perform
 a CRC32C while copying data.
 
+We have userspace idxd driver under accel_engine library (module/accel/idxd/accel_engine).
+And kernel idxd driver usage is also added under the accel_engine library. This approach
+implemented a wrapper library to use IDXD device by leveraging the kernel DSA driver in
+SPDK idxd library (lib/idxd). Then users can leverage the RPC later to configure how to
+use the DSA device by user space driver or kernel driver.
+
 ### iscsi
 
 New parameters, `pdu_pool_size`, `immediate_data_pool_size`, and `data_out_pool_size`,

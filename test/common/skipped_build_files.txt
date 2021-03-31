@@ -16,6 +16,9 @@ lib/util/base64_neon
 # Not configured for mlx5 dv testing
 lib/rdma/rdma_mlx5_dv
 
+# Not configured for kernel idxd
+lib/idxd/idxd_kernel
+
 # These files all represent c files that are only compiled by direct inclusion in other files.
 test/common/lib/test_env
 test/common/lib/test_sock
@@ -27,6 +30,7 @@ test/unit/lib/ftl/common/utils
 test/unit/lib/iscsi/common
 test/unit/lib/json_mock
 test/unit/lib/sock/uring.c/uring_ut
+test/unit/lib/idxd/idxd_kernel.c/idxd_kernel_ut
 
 # These files are in the external_code directory which doesn't get compiled with SPDK.
 test/external_code/hello_world/hello_bdev
