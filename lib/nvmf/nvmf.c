@@ -37,11 +37,10 @@
 #include "spdk/bit_array.h"
 #include "spdk/thread.h"
 #include "spdk/nvmf.h"
-#include "spdk/trace.h"
 #include "spdk/endian.h"
 #include "spdk/string.h"
-
 #include "spdk/log.h"
+#include "spdk_internal/usdt.h"
 
 #include "nvmf_internal.h"
 #include "transport.h"
@@ -114,7 +113,10 @@ nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 	struct spdk_nvmf_tgt *tgt = io_device;
 	struct spdk_nvmf_poll_group *group = ctx_buf;
 	struct spdk_nvmf_transport *transport;
+	struct spdk_thread *thread = spdk_get_thread();
 	uint32_t sid;
+
+	SPDK_DTRACE_PROBE1(nvmf_create_poll_group, spdk_thread_get_id(thread));
 
 	TAILQ_INIT(&group->tgroups);
 	TAILQ_INIT(&group->qpairs);
@@ -148,7 +150,7 @@ nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 	pthread_mutex_unlock(&tgt->mutex);
 
 	group->poller = SPDK_POLLER_REGISTER(nvmf_poll_group_poll, group, 0);
-	group->thread = spdk_get_thread();
+	group->thread = thread;
 
 	return 0;
 }
@@ -161,6 +163,8 @@ nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 	struct spdk_nvmf_transport_poll_group *tgroup, *tmp;
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
 	uint32_t sid, nsid;
+
+	SPDK_DTRACE_PROBE1(nvmf_destroy_poll_group, spdk_thread_get_id(group->thread));
 
 	pthread_mutex_lock(&tgt->mutex);
 	TAILQ_REMOVE(&tgt->poll_groups, group, link);
@@ -221,8 +225,9 @@ nvmf_tgt_destroy_poll_group_qpairs(struct spdk_nvmf_poll_group *group)
 {
 	struct nvmf_qpair_disconnect_many_ctx *ctx;
 
-	ctx = calloc(1, sizeof(struct nvmf_qpair_disconnect_many_ctx));
+	SPDK_DTRACE_PROBE1(nvmf_destroy_poll_group_qpairs, spdk_thread_get_id(group->thread));
 
+	ctx = calloc(1, sizeof(struct nvmf_qpair_disconnect_many_ctx));
 	if (!ctx) {
 		SPDK_ERRLOG("Failed to allocate memory for destroy poll group ctx\n");
 		return;
@@ -917,6 +922,7 @@ spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 
 	/* We add the qpair to the group only it is succesfully added into the tgroup */
 	if (rc == 0) {
+		SPDK_DTRACE_PROBE2(nvmf_poll_group_add_qpair, qpair, spdk_thread_get_id(group->thread));
 		TAILQ_INSERT_TAIL(&group->qpairs, qpair, link);
 		nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_ACTIVE);
 	}
@@ -978,6 +984,8 @@ spdk_nvmf_poll_group_remove(struct spdk_nvmf_qpair *qpair)
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
 	int rc;
 
+	SPDK_DTRACE_PROBE2(nvmf_poll_group_remove_qpair, qpair,
+			   spdk_thread_get_id(qpair->group->thread));
 	nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_ERROR);
 
 	/* Find the tgroup and remove the qpair from the tgroup */
@@ -1050,6 +1058,7 @@ _nvmf_qpair_disconnect_msg(void *ctx)
 int
 spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_cb cb_fn, void *ctx)
 {
+	struct spdk_nvmf_poll_group *group = qpair->group;
 	struct nvmf_qpair_disconnect_ctx *qpair_ctx;
 
 	if (__atomic_test_and_set(&qpair->disconnect_started, __ATOMIC_RELAXED)) {
@@ -1068,8 +1077,8 @@ spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_
 		return 0;
 	}
 
-	assert(qpair->group != NULL);
-	if (spdk_get_thread() != qpair->group->thread) {
+	assert(group != NULL);
+	if (spdk_get_thread() != group->thread) {
 		/* clear the atomic so we can set it on the next call on the proper thread. */
 		__atomic_clear(&qpair->disconnect_started, __ATOMIC_RELAXED);
 		qpair_ctx = calloc(1, sizeof(struct nvmf_qpair_disconnect_ctx));
@@ -1079,12 +1088,13 @@ spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_
 		}
 		qpair_ctx->qpair = qpair;
 		qpair_ctx->cb_fn = cb_fn;
-		qpair_ctx->thread = qpair->group->thread;
+		qpair_ctx->thread = group->thread;
 		qpair_ctx->ctx = ctx;
-		spdk_thread_send_msg(qpair->group->thread, _nvmf_qpair_disconnect_msg, qpair_ctx);
+		spdk_thread_send_msg(group->thread, _nvmf_qpair_disconnect_msg, qpair_ctx);
 		return 0;
 	}
 
+	SPDK_DTRACE_PROBE2(nvmf_qpair_disconnect, qpair, spdk_thread_get_id(group->thread));
 	assert(qpair->state == SPDK_NVMF_QPAIR_ACTIVE);
 	nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_DEACTIVATING);
 
@@ -1096,11 +1106,12 @@ spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_
 
 	qpair_ctx->qpair = qpair;
 	qpair_ctx->cb_fn = cb_fn;
-	qpair_ctx->thread = qpair->group->thread;
+	qpair_ctx->thread = group->thread;
 	qpair_ctx->ctx = ctx;
 
 	/* Check for outstanding I/O */
 	if (!TAILQ_EMPTY(&qpair->outstanding)) {
+		SPDK_DTRACE_PROBE2(nvmf_poll_group_drain_qpair, qpair, spdk_thread_get_id(group->thread));
 		qpair->state_cb = _nvmf_qpair_destroy;
 		qpair->state_cb_arg = qpair_ctx;
 		nvmf_qpair_free_aer(qpair);

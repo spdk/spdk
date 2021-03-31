@@ -42,6 +42,7 @@
 #include "spdk/nvmf_transport.h"
 #include "spdk/queue.h"
 #include "spdk/util.h"
+#include "spdk_internal/usdt.h"
 
 #define MAX_MEMPOOL_NAME_LENGTH 40
 #define NVMF_TRANSPORT_DEFAULT_ASSOCIATION_TIMEOUT_IN_MS 120000
@@ -532,6 +533,8 @@ nvmf_transport_qpair_fini(struct spdk_nvmf_qpair *qpair,
 			  spdk_nvmf_transport_qpair_fini_cb cb_fn,
 			  void *cb_arg)
 {
+	SPDK_DTRACE_PROBE1(nvmf_transport_qpair_fini, qpair);
+
 	qpair->transport->ops->qpair_fini(qpair, cb_fn, cb_arg);
 }
 

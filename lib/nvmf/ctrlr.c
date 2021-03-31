@@ -39,14 +39,13 @@
 #include "spdk/bit_array.h"
 #include "spdk/endian.h"
 #include "spdk/thread.h"
-#include "spdk/trace.h"
 #include "spdk/nvme_spec.h"
 #include "spdk/nvmf_cmd.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
 #include "spdk/version.h"
-
 #include "spdk/log.h"
+#include "spdk_internal/usdt.h"
 
 #define MIN_KEEP_ALIVE_TIMEOUT_IN_MS 10000
 #define NVMF_DISC_KATO_IN_MS 120000
@@ -253,6 +252,9 @@ ctrlr_add_qpair_and_update_rsp(struct spdk_nvmf_qpair *qpair,
 	rsp->status_code_specific.success.cntlid = ctrlr->cntlid;
 	SPDK_DEBUGLOG(nvmf, "connect capsule response: cntlid = 0x%04x\n",
 		      rsp->status_code_specific.success.cntlid);
+
+	SPDK_DTRACE_PROBE4(nvmf_ctrlr_add_qpair, qpair, qpair->qid, ctrlr->subsys->subnqn,
+			   ctrlr->hostnqn);
 }
 
 static void
