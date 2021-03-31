@@ -3235,7 +3235,7 @@ bdev_nvme_admin_passthru(struct nvme_io_channel *nvme_ch, struct nvme_bdev_io *b
 		return -EINVAL;
 	}
 
-	bio->orig_thread = spdk_io_channel_get_thread(spdk_io_channel_from_ctx(nvme_ch));
+	bio->orig_thread = spdk_get_thread();
 
 	return spdk_nvme_ctrlr_cmd_admin_raw(nvme_ch->ctrlr->ctrlr, cmd, buf,
 					     (uint32_t)nbytes, bdev_nvme_admin_passthru_done, bio);
@@ -3327,7 +3327,7 @@ bdev_nvme_abort(struct nvme_io_channel *nvme_ch, struct nvme_bdev_io *bio,
 {
 	int rc;
 
-	bio->orig_thread = spdk_io_channel_get_thread(spdk_io_channel_from_ctx(nvme_ch));
+	bio->orig_thread = spdk_get_thread();
 
 	rc = spdk_nvme_ctrlr_cmd_abort_ext(nvme_ch->ctrlr->ctrlr,
 					   nvme_ch->qpair,
