@@ -41,6 +41,7 @@
 #include "spdk/rpc.h"
 #include "spdk/string.h"
 #include "spdk/thread.h"
+#include "spdk/util.h"
 
 static bool g_is_running = true;
 pthread_mutex_t g_sched_list_mutex = PTHREAD_MUTEX_INITIALIZER;

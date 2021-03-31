@@ -40,6 +40,7 @@
 
 #include "spdk_internal/rdma.h"
 #include "spdk/log.h"
+#include "spdk/util.h"
 
 struct spdk_rdma_mlx5_dv_qp {
 	struct spdk_rdma_qp common;

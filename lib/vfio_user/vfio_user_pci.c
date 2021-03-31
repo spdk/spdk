@@ -39,6 +39,7 @@
 #include "spdk/log.h"
 #include "spdk/env.h"
 #include "spdk/queue.h"
+#include "spdk/util.h"
 #include "spdk/vfio_user_pci.h"
 
 #include "vfio_user_internal.h"

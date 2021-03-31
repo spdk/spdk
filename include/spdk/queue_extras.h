@@ -105,8 +105,6 @@
  *
  */
 
-#include "spdk/util.h"
-
 /*
  * Singly-linked Tail queue declarations.
  */

@@ -36,6 +36,7 @@
 #include "spdk/likely.h"
 #include "spdk/log.h"
 #include "spdk/stdinc.h"
+#include "spdk/util.h"
 #include "nvme.h"
 
 typedef void (*nvme_cmd_cb)(void *ctx, const struct spdk_nvme_cpl *cpl);

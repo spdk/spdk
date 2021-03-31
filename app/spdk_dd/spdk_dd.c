@@ -37,6 +37,7 @@
 #include "spdk/event.h"
 #include "spdk/fd.h"
 #include "spdk/string.h"
+#include "spdk/util.h"
 #include "spdk/vmd.h"
 
 #include <libaio.h>

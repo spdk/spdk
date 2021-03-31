@@ -38,6 +38,7 @@
 #include "vhost_user.h"
 #include "spdk/string.h"
 #include "spdk/config.h"
+#include "spdk/util.h"
 
 #include "spdk_internal/virtio.h"
 
