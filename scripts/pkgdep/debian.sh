@@ -27,6 +27,8 @@ fi
 apt-get install -y libnuma-dev
 # Additional dependencies for ISA-L used in compression
 apt-get install -y autoconf automake libtool help2man
+# Additional dependencies for USDT
+apt-get install -y systemtap-sdt-dev
 if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	# Tools for developers
 	apt-get install -y git astyle pep8 lcov clang sg3-utils pciutils shellcheck abigail-tools bash-completion

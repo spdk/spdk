@@ -172,3 +172,6 @@ CONFIG_RAID5=n
 
 # Build with IDXD support
 CONFIG_IDXD=n
+
+# Build with USDT support
+CONFIG_USDT=n

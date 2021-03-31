@@ -98,6 +98,8 @@ function usage() {
 	echo "                           No path required."
 	echo " wpdk                      Build using WPDK to provide support for Windows (experimental)."
 	echo "                           The argument must be a directory containing lib and include."
+	echo " usdt                      Build with userspace DTrace probes enabled."
+	echo "                           No path required."
 	echo ""
 	echo "Environment variables:"
 	echo ""
@@ -451,6 +453,12 @@ for i in "$@"; do
 			;;
 		--without-idxd)
 			CONFIG[IDXD]=n
+			;;
+		--with-usdt)
+			CONFIG[USDT]=y
+			;;
+		--without-usdt)
+			CONFIG[USDT]=n
 			;;
 		--)
 			break

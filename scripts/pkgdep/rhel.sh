@@ -104,6 +104,8 @@ fi
 yum install -y autoconf automake libtool help2man
 # Additional dependencies for DPDK
 yum install -y numactl-devel nasm
+# Additional dependencies for USDT
+yum install -y systemtap-sdt-devel
 if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	# Tools for developers
 	if echo "$ID $VERSION_ID" | grep -E -q 'centos 8'; then
