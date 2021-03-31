@@ -156,6 +156,9 @@ struct nvmf_vfio_user_ctrlr {
 	/* Number of connected queue pairs */
 	uint32_t				num_connected_qps;
 
+	struct spdk_thread			*thread;
+	struct spdk_poller			*mmio_poller;
+
 	uint16_t				cntlid;
 
 	struct nvmf_vfio_user_qpair		*qp[NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR];
@@ -1500,16 +1503,11 @@ vfio_user_dev_info_fill(struct nvmf_vfio_user_endpoint *endpoint)
 	return 0;
 }
 
-static int
-destroy_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
+static void
+_destroy_ctrlr(void *ctx)
 {
+	struct nvmf_vfio_user_ctrlr *ctrlr = ctx;
 	int i;
-
-	if (ctrlr == NULL) {
-		return 0;
-	}
-
-	SPDK_NOTICELOG("destroy %s\n", ctrlr_id(ctrlr));
 
 	for (i = 0; i < NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR; i++) {
 		destroy_qp(ctrlr, i);
@@ -1519,7 +1517,22 @@ destroy_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
 		ctrlr->endpoint->ctrlr = NULL;
 	}
 
+	spdk_poller_unregister(&ctrlr->mmio_poller);
 	free(ctrlr);
+}
+
+static int
+destroy_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
+{
+	assert(ctrlr != NULL);
+
+	SPDK_NOTICELOG("destroy %s\n", ctrlr_id(ctrlr));
+
+	if (ctrlr->thread == spdk_get_thread()) {
+		_destroy_ctrlr(ctrlr);
+	} else {
+		spdk_thread_send_msg(ctrlr->thread, _destroy_ctrlr, ctrlr);
+	}
 
 	return 0;
 }
@@ -1856,6 +1869,32 @@ vfio_user_stop_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
 }
 
 static int
+vfio_user_poll_mmio(void *ctx)
+{
+	struct nvmf_vfio_user_ctrlr *ctrlr = ctx;
+	int ret;
+
+	assert(ctrlr != NULL);
+
+	/* This will call access_bar0_fn() if there are any writes
+	 * to the portion of the BAR that is not mmap'd */
+	ret = vfu_run_ctx(ctrlr->endpoint->vfu_ctx);
+	if (spdk_unlikely(ret != 0)) {
+		spdk_poller_unregister(&ctrlr->mmio_poller);
+
+		/* initiator shutdown or reset, waiting for another re-connect */
+		if (errno == ENOTCONN) {
+			vfio_user_stop_ctrlr(ctrlr);
+			return SPDK_POLLER_BUSY;
+		}
+
+		fail_ctrlr(ctrlr);
+	}
+
+	return SPDK_POLLER_BUSY;
+}
+
+static int
 handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 {
 	struct nvmf_vfio_user_poll_group *vu_group;
@@ -1885,6 +1924,8 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 	pthread_mutex_lock(&endpoint->lock);
 	if (nvmf_qpair_is_admin_queue(&qpair->qpair)) {
 		ctrlr->cntlid = qpair->qpair.ctrlr->cntlid;
+		ctrlr->thread = spdk_get_thread();
+		ctrlr->mmio_poller = SPDK_POLLER_REGISTER(vfio_user_poll_mmio, ctrlr, 0);
 	}
 	ctrlr->num_connected_qps++;
 	pthread_mutex_unlock(&endpoint->lock);
@@ -2218,18 +2259,6 @@ handle_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 	return 0;
 }
 
-static int
-nvmf_vfio_user_ctrlr_poll(struct nvmf_vfio_user_ctrlr *ctrlr)
-{
-	if (ctrlr == NULL) {
-		return 0;
-	}
-
-	/* This will call access_bar0_fn() if there are any writes
-	 * to the portion of the BAR that is not mmap'd */
-	return vfu_run_ctx(ctrlr->endpoint->vfu_ctx);
-}
-
 static void
 nvmf_vfio_user_qpair_poll(struct nvmf_vfio_user_qpair *qpair)
 {
@@ -2262,7 +2291,6 @@ nvmf_vfio_user_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 {
 	struct nvmf_vfio_user_poll_group *vu_group;
 	struct nvmf_vfio_user_qpair *vu_qpair, *tmp;
-	struct nvmf_vfio_user_ctrlr *ctrlr;
 
 	assert(group != NULL);
 
@@ -2271,29 +2299,9 @@ nvmf_vfio_user_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	vu_group = SPDK_CONTAINEROF(group, struct nvmf_vfio_user_poll_group, group);
 
 	TAILQ_FOREACH_SAFE(vu_qpair, &vu_group->qps, link, tmp) {
-		ctrlr = vu_qpair->ctrlr;
-		assert(ctrlr != NULL);
-
-		if (spdk_unlikely(nvmf_qpair_is_admin_queue(&vu_qpair->qpair))) {
-			int err;
-
-			err = nvmf_vfio_user_ctrlr_poll(ctrlr);
-			if (spdk_unlikely(err) != 0) {
-				/* initiator shutdown or reset, waiting for another re-connect */
-				if (errno == ENOTCONN) {
-					vfio_user_stop_ctrlr(ctrlr);
-					continue;
-				}
-
-				fail_ctrlr(ctrlr);
-				return -1;
-			}
-		}
-
 		if (spdk_unlikely(vu_qpair->state != VFIO_USER_QPAIR_ACTIVE || !vu_qpair->sq.size)) {
 			continue;
 		}
-
 		nvmf_vfio_user_qpair_poll(vu_qpair);
 	}
 
