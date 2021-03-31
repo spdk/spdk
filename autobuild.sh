@@ -12,6 +12,7 @@ rootdir=$(readlink -f $(dirname $0))
 
 source "$1"
 source "$rootdir/test/common/autotest_common.sh"
+source "$rootdir/scripts/common.sh"
 
 out=$output_dir
 if [ -n "$SPDK_TEST_NATIVE_DPDK" ]; then
@@ -235,11 +236,15 @@ function test_make_uninstall() {
 }
 
 function build_doc() {
+	local doxygenv
+	doxygenv=$(doxygen --version)
+
 	$MAKE -C "$rootdir"/doc --no-print-directory $MAKEFLAGS &> "$out"/doxygen.log
 	if [ -s "$out"/doxygen.log ]; then
 		cat "$out"/doxygen.log
 		echo "Doxygen errors found!"
-		exit 1
+		eq "$doxygenv" 1.8.20 || exit 1
+		echo "Doxygen $doxygenv detected, all warnings are potentially false positives, continuing the test"
 	fi
 	if hash pdflatex 2> /dev/null; then
 		$MAKE -C "$rootdir"/doc/output/latex --no-print-directory $MAKEFLAGS &>> "$out"/doxygen.log
@@ -251,7 +256,8 @@ function build_doc() {
 	fi
 	$MAKE -C "$rootdir"/doc --no-print-directory $MAKEFLAGS clean &>> "$out"/doxygen.log
 	if [ -s "$out"/doxygen.log ]; then
-		rm "$out"/doxygen.log
+		# Save the log as an artifact in case we are working with potentially broken version
+		eq "$doxygenv" 1.8.20 || rm "$out"/doxygen.log
 	fi
 	rm -rf "$rootdir"/doc/output
 }
