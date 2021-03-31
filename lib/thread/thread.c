@@ -983,49 +983,6 @@ spdk_thread_send_critical_msg(struct spdk_thread *thread, spdk_msg_fn fn)
 
 #ifdef __linux__
 static int
-interrupt_timerfd_prepare(uint64_t period_microseconds)
-{
-	int timerfd;
-	int ret;
-	struct itimerspec new_tv;
-	uint64_t period_seconds;
-	uint64_t period_nanoseconds;
-
-	if (period_microseconds == 0) {
-		return -EINVAL;
-	}
-
-	period_seconds = period_microseconds / SPDK_SEC_TO_USEC;
-	period_nanoseconds = period_microseconds % SPDK_SEC_TO_USEC * 1000;
-
-	new_tv.it_value.tv_sec = period_seconds;
-	new_tv.it_value.tv_nsec = period_nanoseconds;
-
-	new_tv.it_interval.tv_sec = period_seconds;
-	new_tv.it_interval.tv_nsec = period_nanoseconds;
-
-	timerfd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK & TFD_CLOEXEC);
-	if (timerfd < 0) {
-		return -errno;
-	}
-
-	ret = timerfd_settime(timerfd, 0, &new_tv, NULL);
-	if (ret < 0) {
-		close(timerfd);
-		return -errno;
-	}
-
-	return timerfd;
-}
-#else
-static int
-interrupt_timerfd_prepare(uint64_t period_microseconds)
-{
-	return -ENOTSUP;
-}
-#endif
-
-static int
 interrupt_timerfd_process(void *arg)
 {
 	struct spdk_poller *poller = arg;
@@ -1045,17 +1002,25 @@ interrupt_timerfd_process(void *arg)
 	return poller->fn(poller->arg);
 }
 
+static void period_poller_interrupt_fini(struct spdk_poller *poller);
+
 static int
-thread_interrupt_register_timerfd(struct spdk_fd_group *fgrp,
-				  uint64_t period_microseconds,
-				  struct spdk_poller *poller)
+period_poller_interrupt_init(struct spdk_poller *poller)
 {
+	struct spdk_fd_group *fgrp = poller->thread->fgrp;
 	int timerfd;
 	int rc;
+	uint64_t now_tick = spdk_get_ticks();
+	uint64_t ticks = spdk_get_ticks_hz();
+	int ret;
+	struct itimerspec new_tv;
 
-	timerfd = interrupt_timerfd_prepare(period_microseconds);
+	assert(poller->period_ticks != 0);
+
+	SPDK_DEBUGLOG(thread, "timerfd init for period poller %s\n", poller->name);
+	timerfd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
 	if (timerfd < 0) {
-		return timerfd;
+		return -errno;
 	}
 
 	rc = spdk_fd_group_add(fgrp, timerfd,
@@ -1065,8 +1030,56 @@ thread_interrupt_register_timerfd(struct spdk_fd_group *fgrp,
 		return rc;
 	}
 
-	return timerfd;
+	poller->timerfd = timerfd;
+
+	/* Set repeated timer expirations */
+	new_tv.it_interval.tv_sec = poller->period_ticks / ticks;
+	new_tv.it_interval.tv_nsec = poller->period_ticks % ticks * SPDK_SEC_TO_NSEC / ticks;
+
+	/* Update next expiration */
+	if (poller->next_run_tick == 0) {
+		poller->next_run_tick = now_tick + poller->period_ticks;
+	} else if (poller->next_run_tick < now_tick) {
+		poller->next_run_tick = now_tick;
+	}
+
+	new_tv.it_value.tv_sec = (poller->next_run_tick - now_tick) / ticks;
+	new_tv.it_value.tv_nsec = (poller->next_run_tick - now_tick) % ticks * SPDK_SEC_TO_NSEC / ticks;
+
+	ret = timerfd_settime(timerfd, 0, &new_tv, NULL);
+	if (ret < 0) {
+		rc = -errno;
+		SPDK_ERRLOG("Failed to arm timerfd: error(%d)\n", errno);
+		period_poller_interrupt_fini(poller);
+		return rc;
+	}
+
+	return 0;
 }
+
+static void
+period_poller_interrupt_fini(struct spdk_poller *poller)
+{
+	SPDK_DEBUGLOG(thread, "timerfd fini for poller %s\n", poller->name);
+	assert(poller->timerfd >= 0);
+	spdk_fd_group_remove(poller->thread->fgrp, poller->timerfd);
+	close(poller->timerfd);
+	poller->timerfd = -1;
+}
+
+#else
+
+static int
+period_poller_interrupt_init(struct spdk_poller *poller)
+{
+	return -ENOTSUP;
+}
+
+static void
+period_poller_interrupt_fini(struct spdk_poller *poller)
+{
+}
+#endif
 
 static struct spdk_poller *
 poller_register(spdk_poller_fn fn,
@@ -1105,6 +1118,7 @@ poller_register(spdk_poller_fn fn,
 	poller->fn = fn;
 	poller->arg = arg;
 	poller->thread = thread;
+	poller->timerfd = -1;
 
 	if (period_microseconds) {
 		quotient = period_microseconds / SPDK_SEC_TO_USEC;
@@ -1116,17 +1130,15 @@ poller_register(spdk_poller_fn fn,
 		poller->period_ticks = 0;
 	}
 
-	if (spdk_interrupt_mode_is_enabled() && period_microseconds != 0) {
+	if (period_microseconds && spdk_interrupt_mode_is_enabled()) {
 		int rc;
 
-		poller->timerfd = -1;
-		rc = thread_interrupt_register_timerfd(thread->fgrp, period_microseconds, poller);
+		rc = period_poller_interrupt_init(poller);
 		if (rc < 0) {
 			SPDK_ERRLOG("Failed to register timerfd for periodic poller: %s\n", spdk_strerror(-rc));
 			free(poller);
 			return NULL;
 		}
-		poller->timerfd = rc;
 	}
 
 	thread_insert_poller(thread, poller);
@@ -1177,9 +1189,7 @@ spdk_poller_unregister(struct spdk_poller **ppoller)
 	}
 
 	if (spdk_interrupt_mode_is_enabled() && poller->timerfd >= 0) {
-		spdk_fd_group_remove(thread->fgrp, poller->timerfd);
-		close(poller->timerfd);
-		poller->timerfd = -1;
+		period_poller_interrupt_fini(poller);
 	}
 
 	/* If the poller was paused, put it on the active_pollers list so that
