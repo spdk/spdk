@@ -11,3 +11,4 @@
 - @subpage blobfs
 - @subpage jsonrpc
 - @subpage jsonrpc_proxy
+- @subpage usdt

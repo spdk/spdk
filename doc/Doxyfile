@@ -843,6 +843,7 @@ INPUT                  += \
                          spdk_top.md \
                          ssd_internals.md \
                          system_configuration.md \
+                         usdt.md \
                          userspace.md \
                          vagrant.md \
                          vhost.md \
