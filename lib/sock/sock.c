@@ -48,12 +48,13 @@ static struct spdk_net_impl *g_default_impl;
 struct spdk_sock_placement_id_entry {
 	int placement_id;
 	uint32_t ref;
-	struct spdk_sock_group *group;
+	struct spdk_sock_group_impl *group;
 	STAILQ_ENTRY(spdk_sock_placement_id_entry) link;
 };
 
 int
-spdk_sock_map_insert(struct spdk_sock_map *map, int placement_id, struct spdk_sock_group *group)
+spdk_sock_map_insert(struct spdk_sock_map *map, int placement_id,
+		     struct spdk_sock_group_impl *group)
 {
 	struct spdk_sock_placement_id_entry *entry;
 
@@ -120,7 +121,8 @@ spdk_sock_map_release(struct spdk_sock_map *map, int placement_id)
 }
 
 int
-spdk_sock_map_lookup(struct spdk_sock_map *map, int placement_id, struct spdk_sock_group **group)
+spdk_sock_map_lookup(struct spdk_sock_map *map, int placement_id,
+		     struct spdk_sock_group_impl **group)
 {
 	struct spdk_sock_placement_id_entry *entry;
 	int rc = -EINVAL;
@@ -156,9 +158,16 @@ spdk_sock_map_cleanup(struct spdk_sock_map *map)
 int
 spdk_sock_get_optimal_sock_group(struct spdk_sock *sock, struct spdk_sock_group **group)
 {
+	struct spdk_sock_group_impl *group_impl;
+
 	assert(group != NULL);
 
-	*group = sock->net_impl->group_impl_get_optimal(sock);
+	group_impl = sock->net_impl->group_impl_get_optimal(sock);
+
+	if (group_impl) {
+		*group = group_impl->group;
+	}
+
 	return 0;
 }
 

@@ -290,7 +290,7 @@ spdk_ut_sock_is_connected(struct spdk_sock *_sock)
 	return (sock->peer != NULL);
 }
 
-static struct spdk_sock_group *
+static struct spdk_sock_group_impl *
 spdk_ut_sock_group_impl_get_optimal(struct spdk_sock *_sock)
 {
 	return NULL;

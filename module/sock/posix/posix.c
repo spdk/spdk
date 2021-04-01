@@ -1110,15 +1110,15 @@ posix_sock_is_connected(struct spdk_sock *_sock)
 	return true;
 }
 
-static struct spdk_sock_group *
+static struct spdk_sock_group_impl *
 posix_sock_group_impl_get_optimal(struct spdk_sock *_sock)
 {
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
-	struct spdk_sock_group *group;
+	struct spdk_sock_group_impl *group_impl;
 
 	if (sock->placement_id != -1) {
-		spdk_sock_map_lookup(&g_map, sock->placement_id, &group);
-		return group;
+		spdk_sock_map_lookup(&g_map, sock->placement_id, &group_impl);
+		return group_impl;
 	}
 
 	return NULL;
@@ -1150,7 +1150,7 @@ posix_sock_group_impl_create(void)
 	TAILQ_INIT(&group_impl->pending_events);
 
 	if (g_spdk_posix_sock_impl_opts.enable_placement_id == PLACEMENT_CPU) {
-		spdk_sock_map_insert(&g_map, spdk_env_get_current_core(), group_impl->base.group);
+		spdk_sock_map_insert(&g_map, spdk_env_get_current_core(), &group_impl->base);
 	}
 
 	return &group_impl->base;
@@ -1190,7 +1190,7 @@ posix_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group, struct spdk_
 	}
 
 	if (sock->placement_id != -1) {
-		rc = spdk_sock_map_insert(&g_map, sock->placement_id, group->base.group);
+		rc = spdk_sock_map_insert(&g_map, sock->placement_id, &group->base);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to insert sock group into map: %d", rc);
 			/* Do not treat this as an error. The system will continue running. */
