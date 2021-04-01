@@ -156,6 +156,25 @@ spdk_sock_map_cleanup(struct spdk_sock_map *map)
 }
 
 int
+spdk_sock_map_find_free(struct spdk_sock_map *map)
+{
+	struct spdk_sock_placement_id_entry *entry;
+	int placement_id = -1;
+
+	pthread_mutex_lock(&map->mtx);
+	STAILQ_FOREACH(entry, &map->entries, link) {
+		if (entry->group == NULL) {
+			placement_id = entry->placement_id;
+			break;
+		}
+	}
+
+	pthread_mutex_unlock(&map->mtx);
+
+	return placement_id;
+}
+
+int
 spdk_sock_get_optimal_sock_group(struct spdk_sock *sock, struct spdk_sock_group **group)
 {
 	struct spdk_sock_group_impl *group_impl;

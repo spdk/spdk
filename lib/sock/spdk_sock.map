@@ -46,6 +46,7 @@
 	spdk_sock_map_insert;
 	spdk_sock_map_release;
 	spdk_sock_map_lookup;
+	spdk_sock_map_find_free;
 	spdk_sock_map_cleanup;
 
 	local: *;

@@ -325,6 +325,11 @@ int spdk_sock_map_lookup(struct spdk_sock_map *map, int placement_id,
 			 struct spdk_sock_group_impl **group_impl);
 
 /**
+ * Find a placement id with no associated group
+ */
+int spdk_sock_map_find_free(struct spdk_sock_map *map);
+
+/**
  * Clean up all memory associated with the given map
  */
 void spdk_sock_map_cleanup(struct spdk_sock_map *map);
