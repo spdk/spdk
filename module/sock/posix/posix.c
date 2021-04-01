@@ -45,6 +45,7 @@
 #include <linux/errqueue.h>
 #endif
 
+#include "spdk/env.h"
 #include "spdk/log.h"
 #include "spdk/pipe.h"
 #include "spdk/sock.h"
@@ -91,6 +92,17 @@ static struct spdk_sock_impl_opts g_spdk_posix_sock_impl_opts = {
 	.enable_quickack = false,
 	.enable_placement_id = PLACEMENT_NONE,
 };
+
+static struct spdk_sock_map g_map = {
+	.entries = STAILQ_HEAD_INITIALIZER(g_map.entries),
+	.mtx = PTHREAD_MUTEX_INITIALIZER
+};
+
+__attribute((destructor)) static void
+posix_sock_map_cleanup(void)
+{
+	spdk_sock_map_cleanup(&g_map);
+}
 
 static int
 get_addr_str(struct sockaddr *sa, char *host, size_t hlen)
@@ -1098,16 +1110,18 @@ posix_sock_is_connected(struct spdk_sock *_sock)
 	return true;
 }
 
-static int
-posix_sock_get_placement_id(struct spdk_sock *_sock, int *placement_id)
+static struct spdk_sock_group *
+posix_sock_group_impl_get_optimal(struct spdk_sock *_sock)
 {
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
+	struct spdk_sock_group *group;
 
-	assert(placement_id);
+	if (sock->placement_id != -1) {
+		spdk_sock_map_lookup(&g_map, sock->placement_id, &group);
+		return group;
+	}
 
-	*placement_id = sock->placement_id;
-
-	return 0;
+	return NULL;
 }
 
 static struct spdk_sock_group_impl *
@@ -1134,6 +1148,10 @@ posix_sock_group_impl_create(void)
 
 	group_impl->fd = fd;
 	TAILQ_INIT(&group_impl->pending_events);
+
+	if (g_spdk_posix_sock_impl_opts.enable_placement_id == PLACEMENT_CPU) {
+		spdk_sock_map_insert(&g_map, spdk_env_get_current_core(), group_impl->base.group);
+	}
 
 	return &group_impl->base;
 }
@@ -1171,6 +1189,14 @@ posix_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group, struct spdk_
 		TAILQ_INSERT_TAIL(&group->pending_events, sock, link);
 	}
 
+	if (sock->placement_id != -1) {
+		rc = spdk_sock_map_insert(&g_map, sock->placement_id, group->base.group);
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to insert sock group into map: %d", rc);
+			/* Do not treat this as an error. The system will continue running. */
+		}
+	}
+
 	return rc;
 }
 
@@ -1184,6 +1210,10 @@ posix_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group, struct sp
 	if (sock->pending_events) {
 		TAILQ_REMOVE(&group->pending_events, sock, link);
 		sock->pending_events = false;
+	}
+
+	if (sock->placement_id != -1) {
+		spdk_sock_map_release(&g_map, sock->placement_id);
 	}
 
 #if defined(SPDK_EPOLL)
@@ -1348,6 +1378,10 @@ posix_sock_group_impl_close(struct spdk_sock_group_impl *_group)
 	struct spdk_posix_sock_group_impl *group = __posix_group_impl(_group);
 	int rc;
 
+	if (g_spdk_posix_sock_impl_opts.enable_placement_id == PLACEMENT_CPU) {
+		spdk_sock_map_release(&g_map, spdk_env_get_current_core());
+	}
+
 	rc = close(group->fd);
 	free(group);
 	return rc;
@@ -1432,7 +1466,7 @@ static struct spdk_net_impl g_posix_net_impl = {
 	.is_ipv6	= posix_sock_is_ipv6,
 	.is_ipv4	= posix_sock_is_ipv4,
 	.is_connected	= posix_sock_is_connected,
-	.get_placement_id	= posix_sock_get_placement_id,
+	.group_impl_get_optimal	= posix_sock_group_impl_get_optimal,
 	.group_impl_create	= posix_sock_group_impl_create,
 	.group_impl_add_sock	= posix_sock_group_impl_add_sock,
 	.group_impl_remove_sock = posix_sock_group_impl_remove_sock,

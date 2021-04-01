@@ -290,10 +290,10 @@ spdk_ut_sock_is_connected(struct spdk_sock *_sock)
 	return (sock->peer != NULL);
 }
 
-static int
-spdk_ut_sock_get_placement_id(struct spdk_sock *_sock, int *placement_id)
+static struct spdk_sock_group *
+spdk_ut_sock_group_impl_get_optimal(struct spdk_sock *_sock)
 {
-	return -1;
+	return NULL;
 }
 
 static struct spdk_sock_group_impl *
@@ -371,7 +371,7 @@ static struct spdk_net_impl g_ut_net_impl = {
 	.is_ipv6	= spdk_ut_sock_is_ipv6,
 	.is_ipv4	= spdk_ut_sock_is_ipv4,
 	.is_connected	= spdk_ut_sock_is_connected,
-	.get_placement_id	= spdk_ut_sock_get_placement_id,
+	.group_impl_get_optimal	= spdk_ut_sock_group_impl_get_optimal,
 	.group_impl_create	= spdk_ut_sock_group_impl_create,
 	.group_impl_add_sock	= spdk_ut_sock_group_impl_add_sock,
 	.group_impl_remove_sock = spdk_ut_sock_group_impl_remove_sock,

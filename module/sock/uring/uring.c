@@ -38,6 +38,7 @@
 #include <liburing.h>
 
 #include "spdk/barrier.h"
+#include "spdk/env.h"
 #include "spdk/log.h"
 #include "spdk/pipe.h"
 #include "spdk/sock.h"
@@ -105,6 +106,17 @@ static struct spdk_sock_impl_opts g_spdk_uring_sock_impl_opts = {
 	.enable_quickack = false,
 	.enable_placement_id = PLACEMENT_NONE,
 };
+
+static struct spdk_sock_map g_map = {
+	.entries = STAILQ_HEAD_INITIALIZER(g_map.entries),
+	.mtx = PTHREAD_MUTEX_INITIALIZER
+};
+
+__attribute((destructor)) static void
+uring_sock_map_cleanup(void)
+{
+	spdk_sock_map_cleanup(&g_map);
+}
 
 #define SPDK_URING_SOCK_REQUEST_IOV(req) ((struct iovec *)((uint8_t *)req + sizeof(struct spdk_sock_request)))
 
@@ -1094,16 +1106,18 @@ uring_sock_is_connected(struct spdk_sock *_sock)
 	return true;
 }
 
-static int
-uring_sock_get_placement_id(struct spdk_sock *_sock, int *placement_id)
+static struct spdk_sock_group *
+uring_sock_group_impl_get_optimal(struct spdk_sock *_sock)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
+	struct spdk_sock_group *group;
 
-	assert(placement_id);
+	if (sock->placement_id != -1) {
+		spdk_sock_map_lookup(&g_map, sock->placement_id, &group);
+		return group;
+	}
 
-	*placement_id = sock->placement_id;
-
-	return 0;
+	return NULL;
 }
 
 static struct spdk_sock_group_impl *
@@ -1127,6 +1141,10 @@ uring_sock_group_impl_create(void)
 
 	TAILQ_INIT(&group_impl->pending_recv);
 
+	if (g_spdk_uring_sock_impl_opts.enable_placement_id == PLACEMENT_CPU) {
+		spdk_sock_map_insert(&g_map, spdk_env_get_current_core(), group_impl->base.group);
+	}
+
 	return &group_impl->base;
 }
 
@@ -1136,6 +1154,7 @@ uring_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group,
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
 	struct spdk_uring_sock_group_impl *group = __uring_group_impl(_group);
+	int rc;
 
 	sock->group = group;
 	sock->write_task.sock = sock;
@@ -1153,6 +1172,14 @@ uring_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group,
 		assert(sock->pending_recv == false);
 		sock->pending_recv = true;
 		TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
+	}
+
+	if (sock->placement_id != -1) {
+		rc = spdk_sock_map_insert(&g_map, sock->placement_id, group->base.group);
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to insert sock group into map: %d", rc);
+			/* Do not treat this as an error. The system will continue running. */
+		}
 	}
 
 	return 0;
@@ -1236,6 +1263,10 @@ uring_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group,
 	}
 	assert(sock->pending_recv == false);
 
+	if (sock->placement_id != -1) {
+		spdk_sock_map_release(&g_map, sock->placement_id);
+	}
+
 	sock->group = NULL;
 	return 0;
 }
@@ -1253,6 +1284,10 @@ uring_sock_group_impl_close(struct spdk_sock_group_impl *_group)
 	assert(group->io_avail == SPDK_SOCK_GROUP_QUEUE_DEPTH);
 
 	io_uring_queue_exit(&group->uring);
+
+	if (g_spdk_uring_sock_impl_opts.enable_placement_id == PLACEMENT_CPU) {
+		spdk_sock_map_release(&g_map, spdk_env_get_current_core());
+	}
 
 	free(group);
 	return 0;
@@ -1346,7 +1381,7 @@ static struct spdk_net_impl g_uring_net_impl = {
 	.is_ipv6	= uring_sock_is_ipv6,
 	.is_ipv4	= uring_sock_is_ipv4,
 	.is_connected   = uring_sock_is_connected,
-	.get_placement_id	= uring_sock_get_placement_id,
+	.group_impl_get_optimal	= uring_sock_group_impl_get_optimal,
 	.group_impl_create	= uring_sock_group_impl_create,
 	.group_impl_add_sock	= uring_sock_group_impl_add_sock,
 	.group_impl_remove_sock = uring_sock_group_impl_remove_sock,

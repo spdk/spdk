@@ -52,16 +52,6 @@ struct spdk_sock_placement_id_entry {
 	STAILQ_ENTRY(spdk_sock_placement_id_entry) link;
 };
 
-struct spdk_sock_map {
-	STAILQ_HEAD(, spdk_sock_placement_id_entry) entries;
-	pthread_mutex_t mtx;
-};
-
-struct spdk_sock_map g_map = {
-	.entries = STAILQ_HEAD_INITIALIZER(g_map.entries),
-	.mtx = PTHREAD_MUTEX_INITIALIZER
-};
-
 int
 spdk_sock_map_insert(struct spdk_sock_map *map, int placement_id, struct spdk_sock_group *group)
 {
@@ -150,45 +140,26 @@ spdk_sock_map_lookup(struct spdk_sock_map *map, int placement_id, struct spdk_so
 	return rc;
 }
 
-__attribute((destructor)) static void
-sock_map_cleanup(void)
+void
+spdk_sock_map_cleanup(struct spdk_sock_map *map)
 {
 	struct spdk_sock_placement_id_entry *entry, *tmp;
 
-	pthread_mutex_lock(&g_map.mtx);
-	STAILQ_FOREACH_SAFE(entry, &g_map.entries, link, tmp) {
-		STAILQ_REMOVE(&g_map.entries, entry, spdk_sock_placement_id_entry, link);
+	pthread_mutex_lock(&map->mtx);
+	STAILQ_FOREACH_SAFE(entry, &map->entries, link, tmp) {
+		STAILQ_REMOVE(&map->entries, entry, spdk_sock_placement_id_entry, link);
 		free(entry);
 	}
-	pthread_mutex_unlock(&g_map.mtx);
-}
-
-static int
-sock_get_placement_id(struct spdk_sock *sock)
-{
-	int rc;
-	int placement_id;
-
-	rc = sock->net_impl->get_placement_id(sock, &placement_id);
-	if (rc) {
-		placement_id = -1;
-	}
-
-	return placement_id;
+	pthread_mutex_unlock(&map->mtx);
 }
 
 int
 spdk_sock_get_optimal_sock_group(struct spdk_sock *sock, struct spdk_sock_group **group)
 {
-	int placement_id = -1;
+	assert(group != NULL);
 
-	placement_id = sock_get_placement_id(sock);
-	if (placement_id != -1) {
-		spdk_sock_map_lookup(&g_map, placement_id, group);
-		return 0;
-	} else {
-		return -1;
-	}
+	*group = sock->net_impl->group_impl_get_optimal(sock);
+	return 0;
 }
 
 int
@@ -488,9 +459,6 @@ spdk_sock_group_create(void *ctx)
 	struct spdk_net_impl *impl = NULL;
 	struct spdk_sock_group *group;
 	struct spdk_sock_group_impl *group_impl;
-	struct spdk_sock_impl_opts sock_opts = {};
-	size_t sock_len;
-	bool enable_incoming_cpu = false;
 
 	group = calloc(1, sizeof(*group));
 	if (group == NULL) {
@@ -506,21 +474,10 @@ spdk_sock_group_create(void *ctx)
 			TAILQ_INIT(&group_impl->socks);
 			group_impl->net_impl = impl;
 			group_impl->group = group;
-
-			sock_len = sizeof(sock_opts);
-			spdk_sock_impl_get_opts(impl->name, &sock_opts, &sock_len);
-			if (sock_opts.enable_placement_id == PLACEMENT_CPU) {
-				enable_incoming_cpu = true;
-			}
 		}
 	}
 
 	group->ctx = ctx;
-
-	/* if any net_impl is configured to use SO_INCOMING_CPU, initialize the sock map */
-	if (enable_incoming_cpu) {
-		spdk_sock_map_insert(&g_map, spdk_env_get_current_core(), group);
-	}
 
 	return group;
 }
@@ -540,7 +497,7 @@ spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 			 spdk_sock_cb cb_fn, void *cb_arg)
 {
 	struct spdk_sock_group_impl *group_impl = NULL;
-	int rc, placement_id = 0;
+	int rc;
 
 	if (cb_fn == NULL) {
 		errno = EINVAL;
@@ -576,15 +533,6 @@ spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 	sock->cb_fn = cb_fn;
 	sock->cb_arg = cb_arg;
 
-	placement_id = sock_get_placement_id(sock);
-	if (placement_id != -1) {
-		rc = spdk_sock_map_insert(&g_map, placement_id, group);
-		if (rc != 0) {
-			SPDK_ERRLOG("Failed to insert sock group into map: %d", rc);
-			/* Do not treat this as an error. The system will continue running. */
-		}
-	}
-
 	return 0;
 }
 
@@ -592,7 +540,7 @@ int
 spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *sock)
 {
 	struct spdk_sock_group_impl *group_impl = NULL;
-	int rc, placement_id = 0;
+	int rc;
 
 	STAILQ_FOREACH_FROM(group_impl, &group->group_impls, link) {
 		if (sock->net_impl == group_impl->net_impl) {
@@ -606,11 +554,6 @@ spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *soc
 	}
 
 	assert(group_impl == sock->group_impl);
-
-	placement_id = sock_get_placement_id(sock);
-	if (placement_id != -1) {
-		spdk_sock_map_release(&g_map, placement_id);
-	}
 
 	rc = group_impl->net_impl->group_impl_remove_sock(group_impl, sock);
 	if (rc == 0) {
@@ -693,9 +636,6 @@ spdk_sock_group_close(struct spdk_sock_group **group)
 {
 	struct spdk_sock_group_impl *group_impl = NULL, *tmp;
 	int rc;
-	struct spdk_sock_impl_opts sock_opts = {};
-	size_t sock_len;
-	bool enable_incoming_cpu = false;
 
 	if (*group == NULL) {
 		errno = EBADF;
@@ -707,19 +647,6 @@ spdk_sock_group_close(struct spdk_sock_group **group)
 			errno = EBUSY;
 			return -1;
 		}
-	}
-
-	STAILQ_FOREACH_SAFE(group_impl, &(*group)->group_impls, link, tmp) {
-		sock_len = sizeof(sock_opts);
-		spdk_sock_impl_get_opts(group_impl->net_impl->name, &sock_opts, &sock_len);
-		if (sock_opts.enable_placement_id == PLACEMENT_CPU) {
-			enable_incoming_cpu = true;
-			break;
-		}
-	}
-
-	if (enable_incoming_cpu) {
-		spdk_sock_map_release(&g_map, spdk_env_get_current_core());
 	}
 
 	STAILQ_FOREACH_SAFE(group_impl, &(*group)->group_impls, link, tmp) {

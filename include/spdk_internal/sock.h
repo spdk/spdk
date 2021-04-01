@@ -84,6 +84,11 @@ struct spdk_sock_group_impl {
 	STAILQ_ENTRY(spdk_sock_group_impl)	link;
 };
 
+struct spdk_sock_map {
+	STAILQ_HEAD(, spdk_sock_placement_id_entry) entries;
+	pthread_mutex_t mtx;
+};
+
 struct spdk_net_impl {
 	const char *name;
 	int priority;
@@ -109,7 +114,7 @@ struct spdk_net_impl {
 	bool (*is_ipv4)(struct spdk_sock *sock);
 	bool (*is_connected)(struct spdk_sock *sock);
 
-	int (*get_placement_id)(struct spdk_sock *sock, int *placement_id);
+	struct spdk_sock_group *(*group_impl_get_optimal)(struct spdk_sock *sock);
 	struct spdk_sock_group_impl *(*group_impl_create)(void);
 	int (*group_impl_add_sock)(struct spdk_sock_group_impl *group, struct spdk_sock *sock);
 	int (*group_impl_remove_sock)(struct spdk_sock_group_impl *group, struct spdk_sock *sock);
@@ -300,8 +305,6 @@ spdk_sock_get_placement_id(int fd, enum spdk_placement_mode mode, int *placement
 	}
 }
 
-extern struct spdk_sock_map g_map;
-
 /**
  * Insert a group into the placement map.
  * If the group is already in the map, take a reference.
@@ -320,6 +323,11 @@ void spdk_sock_map_release(struct spdk_sock_map *map, int placement_id);
  */
 int spdk_sock_map_lookup(struct spdk_sock_map *map, int placement_id,
 			 struct spdk_sock_group **group);
+
+/**
+ * Clean up all memory associated with the given map
+ */
+void spdk_sock_map_cleanup(struct spdk_sock_map *map);
 
 #ifdef __cplusplus
 }
