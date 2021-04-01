@@ -20,6 +20,6 @@ stonewall
 
 [randread]
 rw=randread
-runtime=10
+runtime=20
 time_based
 stonewall

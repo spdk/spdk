@@ -93,7 +93,7 @@ function migration_tc1() {
 	fi
 
 	notice "Waiting for fio to finish"
-	local timeout=40
+	local timeout=20
 	while is_fio_running $target_vm; do
 		sleep 1
 		echo -n "."

@@ -15,6 +15,6 @@ verify_backlog=8
 
 [randwrite]
 rw=randwrite
-runtime=15
+runtime=20
 time_based
 stonewall
