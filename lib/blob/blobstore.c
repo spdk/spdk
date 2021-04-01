@@ -2131,36 +2131,31 @@ blob_persist_write_extent_pages(spdk_bs_sequence_t *seq, void *cb_arg, int bserr
 		return;
 	}
 
-	/* Only write out changed extent pages */
-	for (i = ctx->next_extent_page; i < blob->active.num_extent_pages; i++) {
+	/* Only write out Extent Pages when blob was resized. */
+	for (i = ctx->next_extent_page; i < blob->active.extent_pages_array_size; i++) {
 		extent_page_id = blob->active.extent_pages[i];
 		if (extent_page_id == 0) {
 			/* No Extent Page to persist */
 			assert(spdk_blob_is_thin_provisioned(blob));
 			continue;
 		}
-		/* Writing out new extent page for the first time. Either active extent pages is larger
-		 * than clean extent pages or there was no extent page assigned due to thin provisioning. */
-		if (i >= blob->clean.extent_pages_array_size || blob->clean.extent_pages[i] == 0) {
-			blob->state = SPDK_BLOB_STATE_DIRTY;
-			assert(spdk_bit_array_get(blob->bs->used_md_pages, extent_page_id));
-			ctx->next_extent_page = i + 1;
-			rc = blob_serialize_add_page(ctx->blob, &ctx->extent_page, &page_count, &ctx->extent_page);
-			if (rc < 0) {
-				blob_persist_complete(seq, ctx, rc);
-				return;
-			}
-
-			blob_serialize_extent_page(blob, i * SPDK_EXTENTS_PER_EP, ctx->extent_page);
-
-			ctx->extent_page->crc = blob_md_page_calc_crc(ctx->extent_page);
-
-			bs_sequence_write_dev(seq, ctx->extent_page, bs_md_page_to_lba(blob->bs, extent_page_id),
-					      bs_byte_to_lba(blob->bs, SPDK_BS_PAGE_SIZE),
-					      blob_persist_write_extent_pages, ctx);
+		assert(spdk_bit_array_get(blob->bs->used_md_pages, extent_page_id));
+		ctx->next_extent_page = i + 1;
+		rc = blob_serialize_add_page(ctx->blob, &ctx->extent_page, &page_count, &ctx->extent_page);
+		if (rc < 0) {
+			blob_persist_complete(seq, ctx, rc);
 			return;
 		}
-		assert(blob->clean.extent_pages[i] != 0);
+
+		blob->state = SPDK_BLOB_STATE_DIRTY;
+		blob_serialize_extent_page(blob, i * SPDK_EXTENTS_PER_EP, ctx->extent_page);
+
+		ctx->extent_page->crc = blob_md_page_calc_crc(ctx->extent_page);
+
+		bs_sequence_write_dev(seq, ctx->extent_page, bs_md_page_to_lba(blob->bs, extent_page_id),
+				      bs_byte_to_lba(blob->bs, SPDK_BS_PAGE_SIZE),
+				      blob_persist_write_extent_pages, ctx);
+		return;
 	}
 
 	blob_persist_generate_new_md(ctx);
@@ -2180,6 +2175,20 @@ blob_persist_start(struct spdk_blob_persist_ctx *ctx)
 		blob_persist_zero_pages(seq, ctx, 0);
 		return;
 
+	}
+
+	if (blob->clean.num_clusters < blob->active.num_clusters) {
+		/* Blob was resized up */
+		assert(blob->clean.num_extent_pages <= blob->active.num_extent_pages);
+		ctx->next_extent_page = spdk_max(1, blob->clean.num_extent_pages) - 1;
+	} else if (blob->active.num_clusters < blob->active.cluster_array_size) {
+		/* Blob was resized down */
+		assert(blob->clean.num_extent_pages >= blob->active.num_extent_pages);
+		ctx->next_extent_page = spdk_max(1, blob->active.num_extent_pages) - 1;
+	} else {
+		/* No change in size occured */
+		blob_persist_generate_new_md(ctx);
+		return;
 	}
 
 	blob_persist_write_extent_pages(seq, ctx, 0);
@@ -2268,7 +2277,6 @@ blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 	ctx->seq = seq;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
-	ctx->next_extent_page = 0;
 
 	/* Multiple blob persists can affect one another, via blob->state or
 	 * blob mutable data changes. To prevent it, queue up the persists. */
@@ -7067,6 +7075,18 @@ blob_insert_cluster_msg_cb(void *arg, int bserrno)
 }
 
 static void
+blob_insert_new_ep_cb(void *arg, int bserrno)
+{
+	struct spdk_blob_insert_cluster_ctx *ctx = arg;
+	uint32_t *extent_page;
+
+	extent_page = bs_cluster_to_extent_page(ctx->blob, ctx->cluster_num);
+	*extent_page = ctx->extent_page;
+	ctx->blob->state = SPDK_BLOB_STATE_DIRTY;
+	blob_sync_md(ctx->blob, blob_insert_cluster_msg_cb, ctx);
+}
+
+static void
 blob_persist_extent_page_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_md_page        *page = cb_arg;
@@ -7133,13 +7153,11 @@ blob_insert_cluster_msg(void *arg)
 	extent_page = bs_cluster_to_extent_page(ctx->blob, ctx->cluster_num);
 	if (*extent_page == 0) {
 		/* Extent page requires allocation.
-		 * It was already claimed in the used_md_pages map and placed in ctx.
-		 * Blob persist will take care of writing out new extent page on disk. */
+		 * It was already claimed in the used_md_pages map and placed in ctx. */
 		assert(ctx->extent_page != 0);
 		assert(spdk_bit_array_get(ctx->blob->bs->used_md_pages, ctx->extent_page) == true);
-		*extent_page = ctx->extent_page;
-		ctx->blob->state = SPDK_BLOB_STATE_DIRTY;
-		blob_sync_md(ctx->blob, blob_insert_cluster_msg_cb, ctx);
+		blob_write_extent_page(ctx->blob, ctx->extent_page, ctx->cluster_num,
+				       blob_insert_new_ep_cb, ctx);
 	} else {
 		/* It is possible for original thread to allocate extent page for
 		 * different cluster in the same extent page. In such case proceed with
