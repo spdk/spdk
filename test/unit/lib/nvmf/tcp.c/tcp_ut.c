@@ -246,8 +246,6 @@ DEFINE_STUB(spdk_nvmf_bdev_ctrlr_nvme_passthru_admin,
 	     spdk_nvmf_nvme_passthru_cmd_cb cb_fn),
 	    0)
 
-struct spdk_trace_histories *g_trace_histories;
-
 struct spdk_bdev {
 	int ut_mock;
 	uint64_t blockcnt;
@@ -258,25 +256,6 @@ spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
 			       const struct spdk_nvme_transport_id *trid2)
 {
 	return 0;
-}
-
-void
-spdk_trace_register_object(uint8_t type, char id_prefix)
-{
-}
-
-void
-spdk_trace_register_description(const char *name,
-				uint16_t tpoint_id, uint8_t owner_type,
-				uint8_t object_type, uint8_t new_object,
-				uint8_t arg1_type, const char *arg1_name)
-{
-}
-
-void
-_spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
-		   uint32_t size, uint64_t object_id, uint64_t arg1)
-{
 }
 
 const char *
@@ -365,11 +344,6 @@ const char *
 spdk_nvmf_subsystem_get_mn(const struct spdk_nvmf_subsystem *subsystem)
 {
 	return subsystem->mn;
-}
-
-void
-spdk_trace_add_register_fn(struct spdk_trace_register_fn *reg_fn)
-{
 }
 
 static void

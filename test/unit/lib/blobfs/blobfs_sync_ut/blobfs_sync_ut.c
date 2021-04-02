@@ -49,14 +49,6 @@ struct spdk_filesystem *g_fs;
 struct spdk_file *g_file;
 int g_fserrno;
 struct spdk_thread *g_dispatch_thread = NULL;
-struct spdk_trace_histories *g_trace_histories;
-DEFINE_STUB_V(spdk_trace_add_register_fn, (struct spdk_trace_register_fn *reg_fn));
-DEFINE_STUB_V(spdk_trace_register_description, (const char *name,
-		uint16_t tpoint_id, uint8_t owner_type,
-		uint8_t object_type, uint8_t new_object,
-		uint8_t arg1_is_ptr, const char *arg1_name));
-DEFINE_STUB_V(_spdk_trace_record, (uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
-				   uint32_t size, uint64_t object_id, uint64_t arg1));
 
 struct ut_request {
 	fs_request_fn fn;

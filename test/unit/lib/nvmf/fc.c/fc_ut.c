@@ -92,19 +92,9 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp = {
 	.type = SPDK_NVME_TRANSPORT_TCP,
 };
 
-struct spdk_trace_histories *g_trace_histories;
-
-DEFINE_STUB_V(_spdk_trace_record, (uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
-				   uint32_t size, uint64_t object_id, uint64_t arg1));
 DEFINE_STUB(spdk_nvme_transport_id_compare, int,
 	    (const struct spdk_nvme_transport_id *trid1,
 	     const struct spdk_nvme_transport_id *trid2), 0);
-DEFINE_STUB_V(spdk_trace_register_object, (uint8_t type, char id_prefix));
-DEFINE_STUB_V(spdk_trace_register_description,
-	      (const char *name, uint16_t tpoint_id, uint8_t owner_type,
-	       uint8_t object_type, uint8_t new_object, uint8_t arg1_type,
-	       const char *arg1_name));
-DEFINE_STUB_V(spdk_trace_add_register_fn, (struct spdk_trace_register_fn *reg_fn));
 DEFINE_STUB(spdk_bdev_get_name, const char *, (const struct spdk_bdev *bdev), "fc_ut_test");
 DEFINE_STUB_V(nvmf_ctrlr_destruct, (struct spdk_nvmf_ctrlr *ctrlr));
 DEFINE_STUB_V(nvmf_qpair_free_aer, (struct spdk_nvmf_qpair *qpair));
