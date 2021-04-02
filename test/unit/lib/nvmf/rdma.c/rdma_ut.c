@@ -132,6 +132,7 @@ static void reset_nvmf_rdma_request(struct spdk_nvmf_rdma_request *rdma_req)
 	rdma_req->data.wr.num_sge = 0;
 	rdma_req->data.wr.wr.rdma.remote_addr = 0;
 	rdma_req->data.wr.wr.rdma.rkey = 0;
+	rdma_req->offset = 0;
 	memset(&rdma_req->req.dif, 0, sizeof(rdma_req->req.dif));
 
 	for (i = 0; i < SPDK_NVMF_MAX_SGL_ENTRIES; i++) {
@@ -162,6 +163,8 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	struct spdk_nvme_sgl_descriptor sgl_desc[SPDK_NVMF_MAX_SGL_ENTRIES] = {{0}};
 	struct spdk_nvmf_rdma_request_data data;
 	int rc, i;
+	uint32_t sgl_length;
+	uintptr_t aligned_buffer_address;
 
 	data.wr.sg_list = data.sgl;
 	STAILQ_INIT(&group.group.buf_cache);
@@ -362,7 +365,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(rdma_req.req.data_from_pool == true);
 	CU_ASSERT(rdma_req.req.length == rtransport.transport.opts.io_unit_size * 16);
-	CU_ASSERT(rdma_req.req.iovcnt == 17);
+	CU_ASSERT(rdma_req.req.iovcnt == 16);
 	CU_ASSERT(rdma_req.data.wr.num_sge == 16);
 	for (i = 0; i < 15; i++) {
 		CU_ASSERT(rdma_req.data.sgl[i].length == rtransport.transport.opts.io_unit_size);
@@ -377,6 +380,39 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	CU_ASSERT(data.sgl[0].length == rtransport.transport.opts.io_unit_size / 2);
 	CU_ASSERT(data.wr.num_sge == 1);
 	CU_ASSERT(data.wr.next == &rdma_req.rsp.wr);
+
+	/* part 4: 2 SGL descriptors, each length is transport buffer / 2
+	 * 1 transport buffers should be allocated */
+	reset_nvmf_rdma_request(&rdma_req);
+	aligned_buffer_address = ((uintptr_t)(&data) + NVMF_DATA_BUFFER_MASK) & ~NVMF_DATA_BUFFER_MASK;
+	sgl->unkeyed.length = 2 * sizeof(struct spdk_nvme_sgl_descriptor);
+	sgl_length = rtransport.transport.opts.io_unit_size / 2;
+	for (i = 0; i < 2; i++) {
+		sgl_desc[i].keyed.length = sgl_length;
+		sgl_desc[i].address = 0x4000 + i * sgl_length;
+	}
+
+	rc = nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
+
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(rdma_req.req.data_from_pool == true);
+	CU_ASSERT(rdma_req.req.length == rtransport.transport.opts.io_unit_size);
+	CU_ASSERT(rdma_req.req.iovcnt == 1);
+
+	CU_ASSERT(rdma_req.data.sgl[0].length == sgl_length);
+	/* We mocked mempool_get to return address of data variable. Mempool is used
+	 * to get both additional WRs and data buffers, so data points to &data */
+	CU_ASSERT(rdma_req.data.sgl[0].addr == aligned_buffer_address);
+	CU_ASSERT(rdma_req.data.wr.wr.rdma.rkey == 0x44);
+	CU_ASSERT(rdma_req.data.wr.wr.rdma.remote_addr == 0x4000);
+	CU_ASSERT(rdma_req.data.wr.num_sge == 1);
+	CU_ASSERT(rdma_req.data.wr.next == &data.wr);
+
+	CU_ASSERT(data.wr.wr.rdma.rkey == 0x44);
+	CU_ASSERT(data.wr.wr.rdma.remote_addr == 0x4000 + sgl_length);
+	CU_ASSERT(data.sgl[0].length == sgl_length);
+	CU_ASSERT(data.sgl[0].addr == aligned_buffer_address + sgl_length);
+	CU_ASSERT(data.wr.num_sge == 1);
 
 	/* Test 4: use PG buffer cache */
 	sgl->generic.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
@@ -1106,10 +1142,26 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	CU_ASSERT(rdma_req.data.wr.num_sge == 16);
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.rkey == 0xEEEE);
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.remote_addr == 0xFFFF);
+
+	for (i = 0; i < 15; ++i) {
+		CU_ASSERT(rdma_req.data.wr.sg_list[i].addr == (uintptr_t)aligned_buffer + i * (data_bs + md_size));
+		CU_ASSERT(rdma_req.data.wr.sg_list[i].length == data_bs);
+		CU_ASSERT(rdma_req.data.wr.sg_list[i].lkey == RDMA_UT_LKEY);
+	}
+
+	/* 8192 - (512 + 8) * 15 = 392 */
+	CU_ASSERT(rdma_req.data.wr.sg_list[i].addr == (uintptr_t)aligned_buffer + i * (data_bs + md_size));
+	CU_ASSERT(rdma_req.data.wr.sg_list[i].length == 392);
+	CU_ASSERT(rdma_req.data.wr.sg_list[i].lkey == RDMA_UT_LKEY);
+
 	/* additional wr from pool */
 	CU_ASSERT(rdma_req.data.wr.next == (void *)&data2->wr);
 	CU_ASSERT(rdma_req.data.wr.next->num_sge == 1);
 	CU_ASSERT(rdma_req.data.wr.next->next == &rdma_req.rsp.wr);
+	/* 2nd IO buffer */
+	CU_ASSERT(data2->wr.sg_list[0].addr == (uintptr_t)aligned_buffer);
+	CU_ASSERT(data2->wr.sg_list[0].length == 120);
+	CU_ASSERT(data2->wr.sg_list[0].lkey == RDMA_UT_LKEY);
 
 	/* Part 8: simple I/O, data with metadata do not fit to 1 io_buffer */
 	MOCK_SET(spdk_mempool_get, (void *)0x2000);

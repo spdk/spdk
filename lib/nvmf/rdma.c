@@ -267,6 +267,9 @@ struct spdk_nvmf_rdma_request {
 
 	enum spdk_nvmf_rdma_request_state	state;
 
+	/* Data offset in req.iov */
+	uint32_t				offset;
+
 	struct spdk_nvmf_rdma_recv		*recv;
 
 	struct {
@@ -1440,13 +1443,12 @@ nvmf_rdma_fill_wr_sgl(struct spdk_nvmf_rdma_poll_group *rgroup,
 		      uint32_t total_length,
 		      uint32_t num_extra_wrs)
 {
-	struct spdk_nvmf_request *req = &rdma_req->req;
 	struct spdk_rdma_memory_translation mem_translation;
 	struct spdk_dif_ctx *dif_ctx = NULL;
 	struct ibv_sge	*sg_ele;
 	struct iovec *iov;
 	uint32_t remaining_data_block = 0;
-	uint32_t offset = 0, lkey, remaining;
+	uint32_t lkey, remaining;
 	int rc;
 
 	if (spdk_unlikely(rdma_req->req.dif.dif_insert_or_strip)) {
@@ -1457,7 +1459,7 @@ nvmf_rdma_fill_wr_sgl(struct spdk_nvmf_rdma_poll_group *rgroup,
 	wr->num_sge = 0;
 
 	while (total_length && (num_extra_wrs || wr->num_sge < SPDK_NVMF_MAX_SGL_ENTRIES)) {
-		iov = &req->iov[rdma_req->iovpos];
+		iov = &rdma_req->req.iov[rdma_req->iovpos];
 		rc = spdk_rdma_get_translation(device->map, iov->iov_base, iov->iov_len, &mem_translation);
 		if (spdk_unlikely(rc)) {
 			return false;
@@ -1465,18 +1467,26 @@ nvmf_rdma_fill_wr_sgl(struct spdk_nvmf_rdma_poll_group *rgroup,
 
 		lkey = spdk_rdma_memory_translation_get_lkey(&mem_translation);
 		sg_ele = &wr->sg_list[wr->num_sge];
+		remaining = spdk_min((uint32_t)iov->iov_len - rdma_req->offset, total_length);
 
 		if (spdk_likely(!dif_ctx)) {
 			sg_ele->lkey = lkey;
-			sg_ele->addr = (uintptr_t)(iov->iov_base);
-			sg_ele->length = (uint32_t)iov->iov_len;
+			sg_ele->addr = (uintptr_t)iov->iov_base + rdma_req->offset;
+			sg_ele->length = remaining;
+			SPDK_DEBUGLOG(rdma, "sge[%d] %p addr 0x%"PRIx64", len %u\n", wr->num_sge, sg_ele, sg_ele->addr,
+				      sg_ele->length);
+			rdma_req->offset += sg_ele->length;
+			total_length -= sg_ele->length;
 			wr->num_sge++;
+
+			if (rdma_req->offset == iov->iov_len) {
+				rdma_req->offset = 0;
+				rdma_req->iovpos++;
+			}
 		} else {
 			uint32_t data_block_size = dif_ctx->block_size - dif_ctx->md_size;
 			uint32_t md_size = dif_ctx->md_size;
 			uint32_t sge_len;
-
-			remaining = (uint32_t)iov->iov_len - offset;
 
 			while (remaining) {
 				if (wr->num_sge >= SPDK_NVMF_MAX_SGL_ENTRIES) {
@@ -1490,19 +1500,23 @@ nvmf_rdma_fill_wr_sgl(struct spdk_nvmf_rdma_poll_group *rgroup,
 					}
 				}
 				sg_ele->lkey = lkey;
-				sg_ele->addr = (uintptr_t)((char *)iov->iov_base + offset);
+				sg_ele->addr = (uintptr_t)((char *)iov->iov_base + rdma_req->offset);
 				sge_len = spdk_min(remaining, remaining_data_block);
 				sg_ele->length = sge_len;
+				SPDK_DEBUGLOG(rdma, "sge[%d] %p addr 0x%"PRIx64", len %u\n", wr->num_sge, sg_ele, sg_ele->addr,
+					      sg_ele->length);
 				remaining -= sge_len;
 				remaining_data_block -= sge_len;
-				offset += sge_len;
+				rdma_req->offset += sge_len;
+				total_length -= sge_len;
 
 				sg_ele++;
 				wr->num_sge++;
 
 				if (remaining_data_block == 0) {
 					/* skip metadata */
-					offset += md_size;
+					rdma_req->offset += md_size;
+					total_length -= md_size;
 					/* Metadata that do not fit this IO buffer will be included in the next IO buffer */
 					remaining -= spdk_min(remaining, md_size);
 					remaining_data_block = data_block_size;
@@ -1511,13 +1525,11 @@ nvmf_rdma_fill_wr_sgl(struct spdk_nvmf_rdma_poll_group *rgroup,
 				if (remaining == 0) {
 					/* By subtracting the size of the last IOV from the offset, we ensure that we skip
 					   the remaining metadata bits at the beginning of the next buffer */
-					offset -= iov->iov_len;
+					rdma_req->offset -= spdk_min(iov->iov_len, rdma_req->offset);
+					rdma_req->iovpos++;
 				}
 			}
 		}
-
-		total_length -= req->iov[rdma_req->iovpos].iov_len;
-		rdma_req->iovpos++;
 	}
 
 	if (total_length) {
@@ -1621,7 +1633,7 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 	struct spdk_nvmf_request		*req = &rdma_req->req;
 	struct spdk_nvme_sgl_descriptor		*inline_segment, *desc;
 	uint32_t				num_sgl_descriptors;
-	uint32_t				lengths[SPDK_NVMF_MAX_SGL_ENTRIES];
+	uint32_t				lengths[SPDK_NVMF_MAX_SGL_ENTRIES], total_length = 0;
 	uint32_t				i;
 	int					rc;
 
@@ -1635,10 +1647,6 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 	num_sgl_descriptors = inline_segment->unkeyed.length / sizeof(struct spdk_nvme_sgl_descriptor);
 	assert(num_sgl_descriptors <= SPDK_NVMF_MAX_SGL_ENTRIES);
 
-	if (nvmf_request_alloc_wrs(rtransport, rdma_req, num_sgl_descriptors - 1) != 0) {
-		return -ENOMEM;
-	}
-
 	desc = (struct spdk_nvme_sgl_descriptor *)rdma_req->recv->buf + inline_segment->address;
 	for (i = 0; i < num_sgl_descriptors; i++) {
 		if (spdk_likely(!req->dif.dif_insert_or_strip)) {
@@ -1648,11 +1656,22 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 			lengths[i] = spdk_dif_get_length_with_md(desc->keyed.length, &req->dif.dif_ctx);
 			req->dif.elba_length += lengths[i];
 		}
+		total_length += lengths[i];
 		desc++;
 	}
 
-	rc = spdk_nvmf_request_get_buffers_multi(req, &rgroup->group, &rtransport->transport,
-			lengths, num_sgl_descriptors);
+	if (total_length > rtransport->transport.opts.max_io_size) {
+		SPDK_ERRLOG("Multi SGL length 0x%x exceeds max io size 0x%x\n",
+			    total_length, rtransport->transport.opts.max_io_size);
+		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
+		return -EINVAL;
+	}
+
+	if (nvmf_request_alloc_wrs(rtransport, rdma_req, num_sgl_descriptors - 1) != 0) {
+		return -ENOMEM;
+	}
+
+	rc = spdk_nvmf_request_get_buffers(req, &rgroup->group, &rtransport->transport, total_length);
 	if (rc != 0) {
 		nvmf_rdma_request_free_data(rdma_req, rtransport);
 		return rc;
@@ -1672,8 +1691,6 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 			rc = -EINVAL;
 			goto err_exit;
 		}
-
-		current_wr->num_sge = 0;
 
 		rc = nvmf_rdma_fill_wr_sgl(rgroup, device, rdma_req, current_wr, lengths[i], 0);
 		if (rc != 0) {
@@ -1851,6 +1868,7 @@ _nvmf_rdma_request_free(struct spdk_nvmf_rdma_request *rdma_req,
 	rdma_req->req.data = NULL;
 	rdma_req->rsp.wr.next = NULL;
 	rdma_req->data.wr.next = NULL;
+	rdma_req->offset = 0;
 	memset(&rdma_req->req.dif, 0, sizeof(rdma_req->req.dif));
 	rqpair->qd--;
 
