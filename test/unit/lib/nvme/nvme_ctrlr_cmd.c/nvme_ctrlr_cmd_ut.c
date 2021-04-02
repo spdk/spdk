@@ -356,9 +356,11 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 	return 0;
 }
 
+DEFINE_RETURN_MOCK(nvme_ctrlr_submit_admin_request, int);
 int
 nvme_ctrlr_submit_admin_request(struct spdk_nvme_ctrlr *ctrlr, struct nvme_request *req)
 {
+	HANDLE_RETURN_MOCK(nvme_ctrlr_submit_admin_request);
 	verify_fn(req);
 	/* stop analyzer from thinking stack variable addresses are stored in a global */
 	memset(req, 0, sizeof(*req));
@@ -823,6 +825,97 @@ test_directive(void)
 	test_directive_send();
 }
 
+static void
+test_nvme_request_add_abort(void)
+{
+	int rc;
+	struct nvme_request req = {};
+	struct nvme_request parent = {};
+	struct nvme_request child = {};
+	struct spdk_nvme_qpair qpair = {};
+	struct spdk_nvme_qpair admin_qpair = {};
+	struct spdk_nvme_ctrlr ctrlr = {};
+
+	parent.qpair = &qpair;
+	qpair.ctrlr = &ctrlr;
+	ctrlr.adminq = &admin_qpair;
+
+	parent.user_cb_arg = req.cb_arg;
+	parent.cmd.cdw10_bits.abort.sqid = 1;
+	req.cmd.cid = 2;
+
+	/* For allocating request */
+	TAILQ_INIT(&parent.children);
+	STAILQ_INIT(&admin_qpair.free_req);
+	STAILQ_INSERT_HEAD(&admin_qpair.free_req, &child, stailq);
+
+	rc = nvme_request_add_abort(&req, &parent);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(&child == TAILQ_FIRST(&parent.children));
+	CU_ASSERT(child.cb_arg == &child);
+	CU_ASSERT(child.cmd.opc == SPDK_NVME_OPC_ABORT);
+	CU_ASSERT(child.parent == &parent);
+	CU_ASSERT(child.cmd.cdw10_bits.abort.sqid == 1);
+	CU_ASSERT(child.cmd.cdw10_bits.abort.cid == 2);
+	CU_ASSERT(parent.num_children == 1);
+
+	nvme_request_remove_child(&parent, &child);
+	CU_ASSERT(STAILQ_EMPTY(&admin_qpair.free_req));
+	CU_ASSERT(TAILQ_EMPTY(&parent.children));
+	CU_ASSERT(parent.num_children == 0);
+	CU_ASSERT(child.parent == NULL);
+
+	/* Parent invalid */
+	req.cb_arg = (void *)0xDEADBEEF;
+	req.parent = NULL;
+	parent.user_cb_arg = (void *)0xDDADBEEF;
+	STAILQ_INSERT_HEAD(&admin_qpair.free_req, &child, stailq);
+
+	rc = nvme_request_add_abort(&req, &parent);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(!STAILQ_EMPTY(&admin_qpair.free_req));
+	STAILQ_REMOVE_HEAD(&admin_qpair.free_req, stailq);
+	CU_ASSERT(STAILQ_EMPTY(&admin_qpair.free_req));
+
+	/* Child request empty */
+	parent.user_cb_arg = req.cb_arg;
+
+	rc = nvme_request_add_abort(&req, &parent);
+	CU_ASSERT(rc == -ENOMEM);
+}
+
+static void
+test_spdk_nvme_ctrlr_cmd_abort(void)
+{
+	int rc;
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_qpair admin_qpair = {};
+	struct spdk_nvme_qpair *qpair = NULL;
+	struct nvme_request req = {};
+
+	/* For allocating request */
+	STAILQ_INIT(&admin_qpair.free_req);
+	STAILQ_INSERT_HEAD(&admin_qpair.free_req, &req, stailq);
+	ctrlr.adminq = &admin_qpair;
+	admin_qpair.id = 0;
+	MOCK_SET(nvme_ctrlr_submit_admin_request, 0);
+
+	rc = spdk_nvme_ctrlr_cmd_abort(&ctrlr, qpair, 2, (void *)0xDEADBEEF, (void *)0xDCADBEEF);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(req.cb_arg == &req);
+	CU_ASSERT(req.user_cb_fn == (void *)0xDEADBEEF);
+	CU_ASSERT(req.user_cb_arg == (void *)0xDCADBEEF);
+	CU_ASSERT(req.cmd.opc == SPDK_NVME_OPC_ABORT);
+	CU_ASSERT(req.cmd.cdw10_bits.abort.sqid == 0);
+	CU_ASSERT(req.cmd.cdw10_bits.abort.cid == 2);
+	CU_ASSERT(STAILQ_EMPTY(&admin_qpair.free_req));
+
+	/* Request empty */
+	rc = spdk_nvme_ctrlr_cmd_abort(&ctrlr, qpair, 2, (void *)0xDEADBEEF, (void *)0xDCADBEEF);
+	CU_ASSERT(rc == -ENOMEM);
+	MOCK_CLEAR(nvme_ctrlr_submit_admin_request);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -853,6 +946,8 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_fw_image_download);
 	CU_ADD_TEST(suite, test_sanitize);
 	CU_ADD_TEST(suite, test_directive);
+	CU_ADD_TEST(suite, test_nvme_request_add_abort);
+	CU_ADD_TEST(suite, test_spdk_nvme_ctrlr_cmd_abort);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
