@@ -6383,6 +6383,42 @@ blob_io_unit_compatiblity(void)
 }
 
 static void
+first_sync_complete(void *cb_arg, int bserrno)
+{
+	struct spdk_blob *blob = cb_arg;
+	int rc;
+
+	CU_ASSERT(bserrno == 0);
+	rc = spdk_blob_set_xattr(blob, "sync", "second", strlen("second") + 1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_bserrno == -1);
+
+	/* Keep g_bserrno at -1, only the
+	 * second sync completion should set it at 0. */
+}
+
+static void
+second_sync_complete(void *cb_arg, int bserrno)
+{
+	struct spdk_blob *blob = cb_arg;
+	const void *value;
+	size_t value_len;
+	int rc;
+
+	CU_ASSERT(bserrno == 0);
+
+	/* Verify that the first sync completion had a chance to execute */
+	rc = spdk_blob_get_xattr_value(blob, "sync", &value, &value_len);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(value != NULL);
+	CU_ASSERT(value_len == strlen("second") + 1);
+	CU_ASSERT_NSTRING_EQUAL_FATAL(value, "second", value_len);
+
+	CU_ASSERT(g_bserrno == -1);
+	g_bserrno = bserrno;
+}
+
+static void
 blob_simultaneous_operations(void)
 {
 	struct spdk_blob_store *bs = g_bs;
@@ -6390,6 +6426,7 @@ blob_simultaneous_operations(void)
 	struct spdk_blob *blob, *snapshot;
 	spdk_blob_id blobid, snapshotid;
 	struct spdk_io_channel *channel;
+	int rc;
 
 	channel = spdk_bs_alloc_io_channel(bs);
 	SPDK_CU_ASSERT_FATAL(channel != NULL);
@@ -6465,6 +6502,8 @@ blob_simultaneous_operations(void)
 	poll_threads();
 	CU_ASSERT(blob->locked_operation_in_progress == false);
 	/* Blob resized successfully */
+	spdk_blob_sync_md(blob, blob_op_complete, NULL);
+	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 
 	/* Issue two consecutive blob syncs, neither should fail.
@@ -6473,25 +6512,16 @@ blob_simultaneous_operations(void)
 	 * since disk I/O is required to complete it. */
 	g_bserrno = -1;
 
-	blob->state = SPDK_BLOB_STATE_DIRTY;
-	spdk_blob_sync_md(blob, blob_op_complete, NULL);
-	SPDK_CU_ASSERT_FATAL(g_bserrno == -1);
+	rc = spdk_blob_set_xattr(blob, "sync", "first", strlen("first") + 1);
+	CU_ASSERT(rc == 0);
+	spdk_blob_sync_md(blob, first_sync_complete, blob);
+	CU_ASSERT(g_bserrno == -1);
 
-	blob->state = SPDK_BLOB_STATE_DIRTY;
-	spdk_blob_sync_md(blob, blob_op_complete, NULL);
-	SPDK_CU_ASSERT_FATAL(g_bserrno == -1);
+	spdk_blob_sync_md(blob, second_sync_complete, blob);
+	CU_ASSERT(g_bserrno == -1);
 
-	uint32_t completions = 0;
-	while (completions < 2) {
-		SPDK_CU_ASSERT_FATAL(poll_thread_times(0, 1));
-		if (g_bserrno == 0) {
-			g_bserrno = -1;
-			completions++;
-		}
-		/* Never should the g_bserrno be other than -1.
-		 * It would mean that either of syncs failed. */
-		SPDK_CU_ASSERT_FATAL(g_bserrno == -1);
-	}
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
 
 	spdk_bs_free_io_channel(channel);
 	poll_threads();
