@@ -603,7 +603,7 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 			    "per-poll group caches for each thread. (%" PRIu32 ")"
 			    "supplied. (%" PRIu32 ") required\n", opts->num_shared_buffers, min_shared_buffers);
 		SPDK_ERRLOG("Please specify a larger number of shared buffers\n");
-		nvmf_tcp_destroy(&ttransport->transport, NULL, NULL);
+		free(ttransport);
 		return NULL;
 	}
 
