@@ -59,7 +59,7 @@ DEPDIRS-conf := log util
 DEPDIRS-json := log util
 DEPDIRS-rdma := log util
 DEPDIRS-reduce := log util
-DEPDIRS-thread := log util
+DEPDIRS-thread := log util trace
 
 DEPDIRS-nvme := log sock util
 ifeq ($(CONFIG_RDMA),y)

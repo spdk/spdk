@@ -38,6 +38,7 @@
 #include "spdk/queue.h"
 #include "spdk/string.h"
 #include "spdk/thread.h"
+#include "spdk/trace.h"
 #include "spdk/tree.h"
 #include "spdk/util.h"
 #include "spdk/fd_group.h"
@@ -200,6 +201,22 @@ static TAILQ_HEAD(, spdk_thread) g_threads = TAILQ_HEAD_INITIALIZER(g_threads);
 static uint32_t g_thread_count = 0;
 
 static __thread struct spdk_thread *tls_thread = NULL;
+
+#define TRACE_GROUP_THREAD		0xa
+#define TRACE_THREAD_IOCH_GET   SPDK_TPOINT_ID(TRACE_GROUP_THREAD, 0x0)
+#define TRACE_THREAD_IOCH_PUT   SPDK_TPOINT_ID(TRACE_GROUP_THREAD, 0x1)
+
+SPDK_TRACE_REGISTER_FN(thread_trace, "thread", TRACE_GROUP_THREAD)
+{
+	spdk_trace_register_description("THREAD_IOCH_GET",
+					TRACE_THREAD_IOCH_GET,
+					OWNER_NONE, OBJECT_NONE, 0,
+					SPDK_TRACE_ARG_TYPE_INT, "refcnt");
+	spdk_trace_register_description("THREAD_IOCH_PUT",
+					TRACE_THREAD_IOCH_PUT,
+					OWNER_NONE, OBJECT_NONE, 0,
+					SPDK_TRACE_ARG_TYPE_INT, "refcnt");
+}
 
 /*
  * If this compare function returns zero when two next_run_ticks are equal,
@@ -2041,6 +2058,8 @@ spdk_get_io_channel(void *io_device)
 			 *  thread, so return it.
 			 */
 			pthread_mutex_unlock(&g_devlist_mutex);
+			spdk_trace_record(TRACE_THREAD_IOCH_GET, 0, 0,
+					  (uint64_t)spdk_io_channel_get_ctx(ch), ch->ref);
 			return ch;
 		}
 	}
@@ -2076,6 +2095,7 @@ spdk_get_io_channel(void *io_device)
 		return NULL;
 	}
 
+	spdk_trace_record(TRACE_THREAD_IOCH_GET, 0, 0, (uint64_t)spdk_io_channel_get_ctx(ch), 1);
 	return ch;
 }
 
@@ -2141,6 +2161,9 @@ spdk_put_io_channel(struct spdk_io_channel *ch)
 {
 	struct spdk_thread *thread;
 	int rc __attribute__((unused));
+
+	spdk_trace_record(TRACE_THREAD_IOCH_PUT, 0, 0,
+			  (uint64_t)spdk_io_channel_get_ctx(ch), ch->ref);
 
 	thread = spdk_get_thread();
 	if (!thread) {
