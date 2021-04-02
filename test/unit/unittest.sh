@@ -171,6 +171,7 @@ if [ $(uname -m) = "aarch64" ]; then
 	export LD_HWCAP_MASK=1
 fi
 
+run_test "unittest_pci_event" $valgrind $testdir/lib/env_dpdk/pci_event.c/pci_event_ut
 run_test "unittest_include" $valgrind $testdir/include/spdk/histogram_data.h/histogram_ut
 run_test "unittest_bdev" unittest_bdev
 if grep -q '#define SPDK_CONFIG_CRYPTO 1' $rootdir/include/spdk/config.h; then
