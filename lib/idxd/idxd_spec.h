@@ -331,7 +331,8 @@ union idxd_wqcap_register {
 	struct {
 		uint64_t total_wq_size: 16;
 		uint64_t num_wqs: 8;
-		uint64_t rsvd: 24;
+		uint64_t wqcfg_size: 4;
+		uint64_t rsvd: 20;
 		uint64_t shared_mode: 1;
 		uint64_t dedicated_mode: 1;
 		uint64_t rsvd2: 1;
@@ -470,7 +471,8 @@ union idxd_wqcfg {
 		uint16_t rsvd1;
 		uint32_t mode: 1;
 		uint32_t bof: 1;
-		uint32_t rsvd2: 2;
+		uint32_t wq_ats_disable: 1;
+		uint32_t rsvd2: 1;
 		uint32_t priority: 4;
 		uint32_t pasid: 20;
 		uint32_t pasid_en: 1;
