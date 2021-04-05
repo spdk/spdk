@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2020, 2021 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -80,6 +81,14 @@ DEFINE_STUB(spdk_nvme_ctrlr_cmd_security_receive, int, (struct spdk_nvme_ctrlr *
 DEFINE_STUB(spdk_nvme_ctrlr_cmd_security_send, int, (struct spdk_nvme_ctrlr *ctrlr,
 		uint8_t secp, uint16_t spsp, uint8_t nssf, void *payload,
 		uint32_t payload_size, spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
+
+DEFINE_RETURN_MOCK(nvme_transport_ctrlr_get_memory_domain, struct spdk_memory_domain *);
+struct spdk_memory_domain *
+nvme_transport_ctrlr_get_memory_domain(const struct spdk_nvme_ctrlr *ctrlr)
+{
+	HANDLE_RETURN_MOCK(nvme_transport_ctrlr_get_memory_domain);
+	return NULL;
+}
 
 struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 		const struct spdk_nvme_ctrlr_opts *opts,
@@ -3067,6 +3076,21 @@ test_nvme_ctrlr_ana_resize(void)
 	nvme_ctrlr_destruct(&ctrlr);
 }
 
+static void
+test_nvme_ctrlr_get_memory_domain(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_memory_domain *domain = (struct spdk_memory_domain *)0xbaadbeef;
+
+	MOCK_SET(nvme_transport_ctrlr_get_memory_domain, domain);
+	CU_ASSERT(spdk_nvme_ctrlr_get_memory_domain(&ctrlr) == domain);
+
+	MOCK_SET(nvme_transport_ctrlr_get_memory_domain, NULL);
+	CU_ASSERT(spdk_nvme_ctrlr_get_memory_domain(&ctrlr) == NULL);
+
+	MOCK_CLEAR(nvme_transport_ctrlr_get_memory_domain);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -3119,6 +3143,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_ctrlr_set_supported_log_pages);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_parse_ana_log_page);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_ana_resize);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_get_memory_domain);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

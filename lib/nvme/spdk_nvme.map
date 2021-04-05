@@ -103,6 +103,7 @@
 	spdk_nvme_ctrlr_alloc_qid;
 	spdk_nvme_ctrlr_free_qid;
 	spdk_nvme_ctrlr_set_remove_cb;
+	spdk_nvme_ctrlr_get_memory_domain;
 
 	spdk_nvme_poll_group_create;
 	spdk_nvme_poll_group_add;

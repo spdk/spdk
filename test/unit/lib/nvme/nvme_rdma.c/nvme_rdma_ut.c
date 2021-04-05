@@ -1200,6 +1200,21 @@ test_nvme_rdma_memory_domain(void)
 	CU_ASSERT(dma_dev_count_start == dma_dev_count_end);
 }
 
+static void
+test_rdma_ctrlr_get_memory_domain(void)
+{
+	struct nvme_rdma_ctrlr rctrlr = {};
+	struct nvme_rdma_qpair rqpair = {};
+	struct spdk_memory_domain *domain = (struct spdk_memory_domain *)0xbaadbeef;
+	struct nvme_rdma_memory_domain rdma_domain = { .domain = domain };
+
+	rqpair.memory_domain = &rdma_domain;
+	rqpair.qpair.trtype = SPDK_NVME_TRANSPORT_RDMA;
+	rctrlr.ctrlr.adminq = &rqpair.qpair;
+
+	CU_ASSERT(nvme_rdma_ctrlr_get_memory_domain(&rctrlr.ctrlr) == domain);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1229,6 +1244,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_rdma_qpair_init);
 	CU_ADD_TEST(suite, test_nvme_rdma_qpair_submit_request);
 	CU_ADD_TEST(suite, test_nvme_rdma_memory_domain);
+	CU_ADD_TEST(suite, test_rdma_ctrlr_get_memory_domain);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

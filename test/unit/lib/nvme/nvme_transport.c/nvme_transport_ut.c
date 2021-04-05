@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -219,6 +220,38 @@ test_nvme_transport_poll_group_add_remove(void)
 	CU_ASSERT(rc == -ENOENT);
 }
 
+static struct spdk_memory_domain *g_ut_ctrlr_memory_domain = (struct spdk_memory_domain *)
+		0xfeedbeef;
+
+static struct spdk_memory_domain *
+g_ut_ctrlr_get_memory_domain(const struct spdk_nvme_ctrlr *ctrlr)
+{
+	return g_ut_ctrlr_memory_domain;
+}
+
+static void
+test_ctrlr_get_memory_domain(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {
+		.trid = {
+			.trstring = "new_transport"
+		}
+	};
+	struct spdk_nvme_transport new_transport = {
+		.ops = { .ctrlr_get_memory_domain = g_ut_ctrlr_get_memory_domain }
+	};
+
+	ut_construct_transport(&new_transport, "new_transport");
+
+	/* transport contains necessary op */
+	CU_ASSERT(nvme_transport_ctrlr_get_memory_domain(&ctrlr) == g_ut_ctrlr_memory_domain);
+
+	/* transport doesn't contain necessary op */
+	new_transport.ops.ctrlr_get_memory_domain = NULL;
+	CU_ASSERT(nvme_transport_ctrlr_get_memory_domain(&ctrlr) == NULL);
+
+	TAILQ_REMOVE(&g_spdk_nvme_transports, &new_transport, link);
+}
 
 int main(int argc, char **argv)
 {
@@ -233,6 +266,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_transport_poll_group_connect_qpair);
 	CU_ADD_TEST(suite, test_nvme_transport_poll_group_disconnect_qpair);
 	CU_ADD_TEST(suite, test_nvme_transport_poll_group_add_remove);
+	CU_ADD_TEST(suite, test_ctrlr_get_memory_domain);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

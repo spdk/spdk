@@ -15,6 +15,10 @@ the memory domains and request hardware perform DMA transfers between them.
 Added API `spdk_log_to_syslog_level` to return syslog level based on SPDK's
 log level.
 
+### nvme
+
+New API `spdk_nvme_ctrlr_get_memory_domain` has been added, it allows to get SPDK memory domain used by nvme controller.
+
 ## v21.07:
 
 ### accel_fw

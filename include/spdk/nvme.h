@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2019-2021 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -3642,6 +3643,14 @@ int spdk_nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr);
 int spdk_nvme_cuse_unregister(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
+ * Get SPDK memory domain used by the given nvme controller.
+ *
+ * \param ctrlr Opaque handle to the NVMe controller.
+ * \return Pointer to memory domain used by this controller or NULL
+ */
+struct spdk_memory_domain *spdk_nvme_ctrlr_get_memory_domain(const struct spdk_nvme_ctrlr *ctrlr);
+
+/**
  * Opaque handle for a transport poll group. Used by the transport function table.
  */
 struct spdk_nvme_transport_poll_group;
@@ -3745,6 +3754,8 @@ struct spdk_nvme_transport_ops {
 
 	void (*poll_group_free_stats)(struct spdk_nvme_transport_poll_group *tgroup,
 				      struct spdk_nvme_transport_poll_group_stat *stats);
+
+	struct spdk_memory_domain *(*ctrlr_get_memory_domain)(const struct spdk_nvme_ctrlr *ctrlr);
 };
 
 /**
