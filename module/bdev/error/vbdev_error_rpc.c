@@ -193,7 +193,7 @@ static void
 rpc_bdev_error_inject_error(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
-	struct rpc_error_information req = {};
+	struct rpc_error_information req = {.num = 1};
 	uint32_t io_type;
 	uint32_t error_type;
 	int rc = 0;
