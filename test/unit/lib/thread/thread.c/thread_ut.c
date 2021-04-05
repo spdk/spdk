@@ -702,12 +702,14 @@ channel(void)
 	ch1 = spdk_get_io_channel(&g_device1);
 	CU_ASSERT(g_create_cb_calls == 1);
 	SPDK_CU_ASSERT_FATAL(ch1 != NULL);
+	CU_ASSERT(spdk_io_channel_get_io_device(ch1) == &g_device1);
 
 	g_create_cb_calls = 0;
 	ch2 = spdk_get_io_channel(&g_device1);
 	CU_ASSERT(g_create_cb_calls == 0);
 	CU_ASSERT(ch1 == ch2);
 	SPDK_CU_ASSERT_FATAL(ch2 != NULL);
+	CU_ASSERT(spdk_io_channel_get_io_device(ch2) == &g_device1);
 
 	g_destroy_cb_calls = 0;
 	spdk_put_io_channel(ch2);
@@ -719,6 +721,7 @@ channel(void)
 	CU_ASSERT(g_create_cb_calls == 1);
 	CU_ASSERT(ch1 != ch2);
 	SPDK_CU_ASSERT_FATAL(ch2 != NULL);
+	CU_ASSERT(spdk_io_channel_get_io_device(ch2) == &g_device2);
 
 	ctx = spdk_io_channel_get_ctx(ch2);
 	CU_ASSERT(*(uint64_t *)ctx == g_ctx2);

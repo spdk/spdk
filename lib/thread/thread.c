@@ -1680,6 +1680,12 @@ spdk_io_channel_get_thread(struct spdk_io_channel *ch)
 	return ch->thread;
 }
 
+void *
+spdk_io_channel_get_io_device(struct spdk_io_channel *ch)
+{
+	return ch->dev->io_device;
+}
+
 struct spdk_io_channel_iter {
 	void *io_device;
 	struct io_device *dev;

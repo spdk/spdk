@@ -41,6 +41,7 @@
 	spdk_io_channel_get_ctx;
 	spdk_io_channel_from_ctx;
 	spdk_io_channel_get_thread;
+	spdk_io_channel_get_io_device;
 	spdk_for_each_channel;
 	spdk_io_channel_iter_get_io_device;
 	spdk_io_channel_iter_get_channel;

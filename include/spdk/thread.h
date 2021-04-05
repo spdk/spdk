@@ -722,6 +722,15 @@ struct spdk_io_channel *spdk_io_channel_iter_get_channel(struct spdk_io_channel_
 void *spdk_io_channel_iter_get_ctx(struct spdk_io_channel_iter *i);
 
 /**
+ * Get the io_device for the specified I/O channel.
+ *
+ * \param ch I/O channel.
+ *
+ * \return a pointer to the io_device for the I/O channel
+ */
+void *spdk_io_channel_get_io_device(struct spdk_io_channel *ch);
+
+/**
  * Helper function to iterate all channels for spdk_for_each_channel().
  *
  * \param i I/O channel iterator.
