@@ -1411,6 +1411,7 @@ vtophys_init(void)
 	g_vtophys_map = spdk_mem_map_alloc(SPDK_VTOPHYS_ERROR, &vtophys_map_ops, NULL);
 	if (g_vtophys_map == NULL) {
 		DEBUG_PRINT("vtophys map allocation failed\n");
+		spdk_mem_map_free(&g_phys_ref_map);
 		return -ENOMEM;
 	}
 	return 0;
