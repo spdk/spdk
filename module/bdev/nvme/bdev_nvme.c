@@ -564,7 +564,7 @@ _bdev_nvme_reset_destroy_qpair(struct spdk_io_channel_iter *i)
 }
 
 static int
-_bdev_nvme_reset_start(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
+_bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
 	pthread_mutex_lock(&nvme_bdev_ctrlr->mutex);
 	if (nvme_bdev_ctrlr->destruct) {
@@ -579,26 +579,15 @@ _bdev_nvme_reset_start(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 	}
 
 	nvme_bdev_ctrlr->resetting = true;
-
 	pthread_mutex_unlock(&nvme_bdev_ctrlr->mutex);
+
+	/* First, delete all NVMe I/O queue pairs. */
+	spdk_for_each_channel(nvme_bdev_ctrlr,
+			      _bdev_nvme_reset_destroy_qpair,
+			      nvme_bdev_ctrlr,
+			      _bdev_nvme_reset_ctrlr);
+
 	return 0;
-}
-
-static int
-_bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
-{
-	int rc;
-
-	rc = _bdev_nvme_reset_start(nvme_bdev_ctrlr);
-	if (rc == 0) {
-		/* First, delete all NVMe I/O queue pairs. */
-		spdk_for_each_channel(nvme_bdev_ctrlr,
-				      _bdev_nvme_reset_destroy_qpair,
-				      nvme_bdev_ctrlr,
-				      _bdev_nvme_reset_ctrlr);
-	}
-
-	return rc;
 }
 
 static int
@@ -607,16 +596,10 @@ bdev_nvme_reset(struct nvme_io_channel *nvme_ch, struct nvme_bdev_io *bio)
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 	int rc;
 
-	rc = _bdev_nvme_reset_start(nvme_ch->ctrlr);
+	rc = _bdev_nvme_reset(nvme_ch->ctrlr);
 	if (rc == 0) {
 		assert(nvme_ch->ctrlr->reset_bio == NULL);
 		nvme_ch->ctrlr->reset_bio = bio;
-
-		/* First, delete all NVMe I/O queue pairs. */
-		spdk_for_each_channel(nvme_ch->ctrlr,
-				      _bdev_nvme_reset_destroy_qpair,
-				      nvme_ch->ctrlr,
-				      _bdev_nvme_reset_ctrlr);
 	} else if (rc == -EBUSY) {
 		/* Don't bother resetting if the controller is in the process of being destructed. */
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
