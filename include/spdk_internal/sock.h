@@ -284,6 +284,7 @@ spdk_sock_get_placement_id(int fd, enum spdk_placement_mode mode, int *placement
 	switch (mode) {
 	case PLACEMENT_NONE:
 		break;
+	case PLACEMENT_MARK:
 	case PLACEMENT_NAPI: {
 #if defined(SO_INCOMING_NAPI_ID)
 		socklen_t len = sizeof(int);

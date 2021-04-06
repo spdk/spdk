@@ -82,6 +82,7 @@ struct spdk_posix_sock_group_impl {
 	struct spdk_sock_group_impl	base;
 	int				fd;
 	struct spdk_pending_events_list	pending_events;
+	int				placement_id;
 };
 
 static struct spdk_sock_impl_opts g_spdk_posix_sock_impl_opts = {
@@ -368,6 +369,11 @@ posix_sock_alloc(int fd, bool enable_zero_copy)
 
 	spdk_sock_get_placement_id(sock->fd, g_spdk_posix_sock_impl_opts.enable_placement_id,
 				   &sock->placement_id);
+
+	if (g_spdk_posix_sock_impl_opts.enable_placement_id == PLACEMENT_MARK) {
+		/* Save placement_id */
+		spdk_sock_map_insert(&g_map, sock->placement_id, NULL);
+	}
 #endif
 
 	return sock;
@@ -1148,12 +1154,67 @@ posix_sock_group_impl_create(void)
 
 	group_impl->fd = fd;
 	TAILQ_INIT(&group_impl->pending_events);
+	group_impl->placement_id = -1;
 
 	if (g_spdk_posix_sock_impl_opts.enable_placement_id == PLACEMENT_CPU) {
 		spdk_sock_map_insert(&g_map, spdk_env_get_current_core(), &group_impl->base);
+		group_impl->placement_id = spdk_env_get_current_core();
 	}
 
 	return &group_impl->base;
+}
+
+static void
+posix_sock_mark(struct spdk_posix_sock_group_impl *group, struct spdk_posix_sock *sock,
+		int placement_id)
+{
+#if defined(SO_MARK)
+	int rc;
+
+	rc = setsockopt(sock->fd, SOL_SOCKET, SO_MARK,
+			&placement_id, sizeof(placement_id));
+	if (rc != 0) {
+		/* Not fatal */
+		SPDK_ERRLOG("Error setting SO_MARK\n");
+		return;
+	}
+
+	rc = spdk_sock_map_insert(&g_map, placement_id, &group->base);
+	if (rc != 0) {
+		/* Not fatal */
+		SPDK_ERRLOG("Failed to insert sock group into map: %d\n", rc);
+		return;
+	}
+
+	sock->placement_id = placement_id;
+#endif
+}
+
+static void
+posix_sock_update_mark(struct spdk_sock_group_impl *_group, struct spdk_sock *_sock)
+{
+	struct spdk_posix_sock_group_impl *group = __posix_group_impl(_group);
+
+	if (group->placement_id == -1) {
+		group->placement_id = spdk_sock_map_find_free(&g_map);
+
+		/* If a free placement id is found, update existing sockets in this group */
+		if (group->placement_id != -1) {
+			struct spdk_sock  *sock, *tmp;
+
+			TAILQ_FOREACH_SAFE(sock, &_group->socks, link, tmp) {
+				posix_sock_mark(group, __posix_sock(sock), group->placement_id);
+			}
+		}
+	}
+
+	if (group->placement_id != -1) {
+		/*
+		 * group placement id is already determined for this poll group.
+		 * Mark socket with group's placement id.
+		 */
+		posix_sock_mark(group, __posix_sock(_sock), group->placement_id);
+	}
 }
 
 static int
@@ -1193,10 +1254,12 @@ posix_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group, struct spdk_
 		TAILQ_INSERT_TAIL(&group->pending_events, sock, link);
 	}
 
-	if (sock->placement_id != -1) {
+	if (g_spdk_posix_sock_impl_opts.enable_placement_id == PLACEMENT_MARK) {
+		posix_sock_update_mark(_group, _sock);
+	} else if (sock->placement_id != -1) {
 		rc = spdk_sock_map_insert(&g_map, sock->placement_id, &group->base);
 		if (rc != 0) {
-			SPDK_ERRLOG("Failed to insert sock group into map: %d", rc);
+			SPDK_ERRLOG("Failed to insert sock group into map: %d\n", rc);
 			/* Do not treat this as an error. The system will continue running. */
 		}
 	}

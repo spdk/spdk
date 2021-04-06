@@ -174,6 +174,11 @@ bool to int. We can use RPC to configure different value of `enable_placement_id
 Then we can leverage SO_INCOMING_CPU to get placement_id, which aims to utilize
 CPU cache locality, enabled by setting enable_placement_id=2.
 
+A new socket placement mode called PLACEMENT_MARK has been added. Some NICs allow
+sockets to be marked using the SO_MARK socket option as a hint for which hardware
+queue they should be associated with. This mode leverages that by setting the same
+value for all sockets within a poll group.
+
 ### thread
 
 A new API `spdk_io_channel_get_io_device` was added to get the io_device for the specified

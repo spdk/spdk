@@ -84,6 +84,7 @@ enum spdk_placement_mode {
 	PLACEMENT_NONE,
 	PLACEMENT_NAPI,
 	PLACEMENT_CPU,
+	PLACEMENT_MARK,
 };
 
 /**
