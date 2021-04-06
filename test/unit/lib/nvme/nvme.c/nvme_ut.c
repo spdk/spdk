@@ -1428,6 +1428,65 @@ test_nvme_ctrlr_probe_internal(void)
 	ut_test_probe_internal = false;
 }
 
+static void
+test_spdk_nvme_parse_func(void)
+{
+	struct spdk_nvme_host_id hostid = {};
+	char str[64] = {};
+	const char *rt_str = NULL;
+	uint32_t prchk_flags;
+	int rc;
+
+	/* Parse prchk flags. */
+	prchk_flags = 0;
+	rt_str = spdk_nvme_prchk_flags_str(SPDK_NVME_IO_FLAGS_PRCHK_REFTAG);
+	memcpy(str, rt_str, strlen(rt_str));
+
+	rc = spdk_nvme_prchk_flags_parse(&prchk_flags, str);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(prchk_flags & SPDK_NVME_IO_FLAGS_PRCHK_REFTAG);
+
+	prchk_flags = 0;
+	rt_str = spdk_nvme_prchk_flags_str(SPDK_NVME_IO_FLAGS_PRCHK_GUARD);
+	memcpy(str, rt_str, strlen(rt_str));
+
+	rc = spdk_nvme_prchk_flags_parse(&prchk_flags, str);
+	CU_ASSERT(prchk_flags & SPDK_NVME_IO_FLAGS_PRCHK_GUARD);
+	CU_ASSERT(rc == 0);
+
+	prchk_flags = 0;
+	rt_str = spdk_nvme_prchk_flags_str(SPDK_NVME_IO_FLAGS_PRCHK_REFTAG |
+					   SPDK_NVME_IO_FLAGS_PRCHK_GUARD);
+	memcpy(str, rt_str, strlen(rt_str));
+
+	rc = spdk_nvme_prchk_flags_parse(&prchk_flags, str);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(prchk_flags & SPDK_NVME_IO_FLAGS_PRCHK_REFTAG);
+	CU_ASSERT(prchk_flags & SPDK_NVME_IO_FLAGS_PRCHK_GUARD);
+
+	rc = spdk_nvme_prchk_flags_parse(NULL, NULL);
+	CU_ASSERT(rc == -EINVAL);
+
+	/* Parse host id. */
+	memcpy(str, "hostaddr:192.168.1.1", sizeof("hostaddr:192.168.1.1"));
+	rc = spdk_nvme_host_id_parse(&hostid, str);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(!strncmp(hostid.hostaddr, "192.168.1.1", sizeof("192.168.1.1")));
+
+	memset(&hostid, 0, sizeof(hostid));
+	memcpy(str, "hostsvcid:192.168.1.2", sizeof("hostsvcid:192.168.1.2"));
+	rc = spdk_nvme_host_id_parse(&hostid, str);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(!strncmp(hostid.hostsvcid, "192.168.1.2", sizeof("192.168.1.2")));
+
+	/* Unknown transport ID key */
+	memset(&hostid, 0, sizeof(hostid));
+	memcpy(str, "trtype:xxx", sizeof("trtype:xxx"));
+	rc = spdk_nvme_host_id_parse(&hostid, str);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(hostid.hostaddr[0] == '\0' && hostid.hostsvcid[0] == '\0');
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1460,6 +1519,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_robust_mutex_init_shared);
 	CU_ADD_TEST(suite, test_nvme_request_check_timeout);
 	CU_ADD_TEST(suite, test_nvme_wait_for_completion);
+	CU_ADD_TEST(suite, test_spdk_nvme_parse_func);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
