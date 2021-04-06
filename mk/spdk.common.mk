@@ -286,7 +286,7 @@ endif
 
 ifneq ($(OS),Windows)
 COMMON_CFLAGS += -pthread
-LDFLAGS += -pthread
+SYS_LIBS += -pthread
 endif
 
 CFLAGS   += $(COMMON_CFLAGS) -Wno-pointer-sign -Wstrict-prototypes -Wold-style-definition -std=gnu99
