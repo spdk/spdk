@@ -524,18 +524,6 @@ msg_queue_run_batch(struct spdk_thread *thread, uint32_t max_msgs)
 	} else {
 		max_msgs = SPDK_MSG_BATCH_SIZE;
 	}
-	if (spdk_unlikely(thread->in_interrupt)) {
-		assert(spdk_interrupt_mode_is_enabled());
-
-		/* There may be race between msg_acknowledge and another producer's msg_notify,
-		 * so msg_acknowledge should be applied ahead. And then check for self's msg_notify.
-		 * This can avoid msg notification missing.
-		 */
-		rc = read(thread->msg_fd, &notify, sizeof(notify));
-		if (rc < 0 && errno != EAGAIN) {
-			SPDK_ERRLOG("failed to acknowledge msg_queue: %s.\n", spdk_strerror(errno));
-		}
-	}
 
 	count = spdk_ring_dequeue(thread->messages, messages, max_msgs);
 	if (spdk_unlikely(thread->in_interrupt) &&
@@ -1875,6 +1863,18 @@ thread_interrupt_msg_process(void *arg)
 	uint32_t msg_count;
 	spdk_msg_fn critical_msg;
 	int rc = 0;
+	uint64_t notify = 1;
+
+	assert(spdk_interrupt_mode_is_enabled());
+
+	/* There may be race between msg_acknowledge and another producer's msg_notify,
+	 * so msg_acknowledge should be applied ahead. And then check for self's msg_notify.
+	 * This can avoid msg notification missing.
+	 */
+	rc = read(thread->msg_fd, &notify, sizeof(notify));
+	if (rc < 0 && errno != EAGAIN) {
+		SPDK_ERRLOG("failed to acknowledge msg event: %s.\n", spdk_strerror(errno));
+	}
 
 	critical_msg = thread->critical_msg;
 	if (spdk_unlikely(critical_msg != NULL)) {
