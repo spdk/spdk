@@ -48,7 +48,7 @@
 #define SPDK_NVMF_MAX_SGL_ENTRIES	16
 
 /* The maximum number of buffers per request */
-#define NVMF_REQ_MAX_BUFFERS	(SPDK_NVMF_MAX_SGL_ENTRIES * 2)
+#define NVMF_REQ_MAX_BUFFERS	(SPDK_NVMF_MAX_SGL_ENTRIES * 2 + 1)
 
 /* AIO backend requires block size aligned data buffers,
  * extra 4KiB aligned data buffer should work for most devices.
