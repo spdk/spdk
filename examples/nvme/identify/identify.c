@@ -2046,7 +2046,6 @@ usage(const char *program_name)
 	printf(" -g         use single file descriptor for DPDK memory segments\n");
 	printf(" -x         print hex dump of raw data\n");
 	printf(" -z         For NVMe Zoned Namespaces, dump the full zone report (-z) or the first N entries (-z N)\n");
-	printf(" -v         verbose (enable warnings)\n");
 	printf(" -V         enumerate VMD\n");
 	printf(" -H         show this usage\n");
 }
