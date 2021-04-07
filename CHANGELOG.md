@@ -119,6 +119,12 @@ I/O channel.
 New RPC `bdev_nvme_get_transport_statistics` was added, it allows to get transport statistics
 of nvme poll groups.
 
+### rpm
+
+Added support for new RPM spec, rpmbuild/spdk.spec, which can be used for packaging the
+SPDK. The pkg/spdk.spec is considered to be deprecated and scheduled for removal. See
+[RPM documentation](https://spdk.io/doc/rpm.html) for more details.
+
 ## v21.01:
 
 ### idxd
