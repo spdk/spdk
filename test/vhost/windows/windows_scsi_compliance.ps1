@@ -70,4 +70,6 @@ foreach($disk in $disks)
     .\scsicompliance.exe /Device \\.\$($vol.DriveLetter): /Operation Test /Scenario Common | tee "C:\SCSI\WIN_SCSI_2_$label.log"
     start-sleep 2
     mv .\scsicompliance.wtl ".\WIN_SCSI_2_$label.wtl"
+    # Cleanup the drive
+    Clear-Disk -Number $disk.Number -RemoveData -Confirm:$false
 }
