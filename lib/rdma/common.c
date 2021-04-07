@@ -248,6 +248,9 @@ spdk_rdma_srq_create(struct spdk_rdma_srq_init_attr *init_attr)
 
 	rdma_srq->srq = ibv_create_srq(init_attr->pd, &init_attr->srq_init_attr);
 	if (!rdma_srq->srq) {
+		if (!init_attr->stats) {
+			free(rdma_srq->stats);
+		}
 		SPDK_ERRLOG("Unable to create SRQ, errno %d (%s)\n", errno, spdk_strerror(errno));
 		free(rdma_srq);
 		return NULL;
