@@ -76,6 +76,7 @@ struct nvmf_qpair_disconnect_many_ctx {
 	struct spdk_nvmf_poll_group *group;
 	spdk_nvmf_poll_group_mod_done cpl_fn;
 	void *cpl_ctx;
+	uint32_t count;
 };
 
 static void
@@ -1361,6 +1362,18 @@ fini:
 }
 
 static void
+remove_subsystem_qpair_cb(void *ctx)
+{
+	struct nvmf_qpair_disconnect_many_ctx *qpair_ctx = ctx;
+
+	assert(qpair_ctx->count > 0);
+	qpair_ctx->count--;
+	if (qpair_ctx->count == 0) {
+		_nvmf_poll_group_remove_subsystem_cb(ctx, 0);
+	}
+}
+
+static void
 nvmf_poll_group_remove_subsystem_msg(void *ctx)
 {
 	struct spdk_nvmf_qpair *qpair, *qpair_tmp;
@@ -1368,29 +1381,30 @@ nvmf_poll_group_remove_subsystem_msg(void *ctx)
 	struct spdk_nvmf_poll_group *group;
 	struct nvmf_qpair_disconnect_many_ctx *qpair_ctx = ctx;
 	int rc = 0;
-	bool have_qpairs = false;
 
 	group = qpair_ctx->group;
 	subsystem = qpair_ctx->subsystem;
 
+	/* Initialize count to 1.  This acts like a ref count, to ensure that if spdk_nvmf_qpair_disconnect
+	 * immediately invokes the callback (i.e. the qpairs is already in process of being disconnected)
+	 * that we don't prematurely call _nvmf_poll_group_remove_subsystem_cb() before we've
+	 * iterated the full list of qpairs.
+	 */
+	qpair_ctx->count = 1;
 	TAILQ_FOREACH_SAFE(qpair, &group->qpairs, link, qpair_tmp) {
 		if ((qpair->ctrlr != NULL) && (qpair->ctrlr->subsys == subsystem)) {
-			/* Use another variable to check if there were any qpairs disconnected in this call since
-			 * we can loop over all qpairs and iterator will be NULL in the end */
-			have_qpairs = true;
-			rc = spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+			qpair_ctx->count++;
+			rc = spdk_nvmf_qpair_disconnect(qpair, remove_subsystem_qpair_cb, ctx);
 			if (rc) {
 				break;
 			}
 		}
 	}
+	qpair_ctx->count--;
 
-	if (!have_qpairs || rc) {
+	if (qpair_ctx->count == 0 || rc) {
 		_nvmf_poll_group_remove_subsystem_cb(ctx, rc);
-		return;
 	}
-
-	spdk_thread_send_msg(spdk_get_thread(), nvmf_poll_group_remove_subsystem_msg, ctx);
 }
 
 void
