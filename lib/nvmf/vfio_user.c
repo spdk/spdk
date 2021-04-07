@@ -55,8 +55,8 @@
 #define NVMF_VFIO_USER_DEFAULT_AQ_DEPTH 32
 #define NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR 64
 #define NVMF_VFIO_USER_DEFAULT_IN_CAPSULE_DATA_SIZE 0
-#define NVMF_VFIO_USER_DEFAULT_MAX_IO_SIZE 131072
-#define NVMF_VFIO_USER_DEFAULT_IO_UNIT_SIZE 131072
+#define NVMF_VFIO_USER_DEFAULT_MAX_IO_SIZE ((NVMF_REQ_MAX_BUFFERS - 1) << SHIFT_4KB)
+#define NVMF_VFIO_USER_DEFAULT_IO_UNIT_SIZE NVMF_VFIO_USER_DEFAULT_MAX_IO_SIZE
 #define NVMF_VFIO_USER_DEFAULT_NUM_SHARED_BUFFERS 512 /* internal buf size */
 #define NVMF_VFIO_USER_DEFAULT_BUFFER_CACHE_SIZE 0
 
@@ -73,8 +73,8 @@ struct nvmf_vfio_user_qpair;
 
 typedef int (*nvmf_vfio_user_req_cb_fn)(struct nvmf_vfio_user_req *req, void *cb_arg);
 
-#define NVMF_VFIO_USER_MDTS	32
-#define NVMF_VFIO_USER_MAX_IOVECS	(NVMF_VFIO_USER_MDTS + 1)
+/* 1 more for PRP2 list itself */
+#define NVMF_VFIO_USER_MAX_IOVECS	(NVMF_REQ_MAX_BUFFERS + 1)
 
 struct nvmf_vfio_user_req  {
 	struct spdk_nvmf_request		req;
@@ -85,6 +85,7 @@ struct nvmf_vfio_user_req  {
 	nvmf_vfio_user_req_cb_fn		cb_fn;
 	void					*cb_arg;
 
+	/* placeholder for gpa_to_vva memory map table, the IO buffer doesn't use it */
 	dma_sg_t				sg[NVMF_VFIO_USER_MAX_IOVECS];
 	struct iovec				iov[NVMF_VFIO_USER_MAX_IOVECS];
 	uint8_t					iovcnt;
