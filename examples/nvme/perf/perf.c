@@ -1669,14 +1669,16 @@ work_fn(void *arg)
 
 			if (ns_ctx->current_queue_depth > 0) {
 				ns_ctx->entry->fn_table->check_io(ns_ctx);
-				if (ns_ctx->current_queue_depth == 0) {
-					cleanup_ns_worker_ctx(ns_ctx);
-				} else {
+				if (ns_ctx->current_queue_depth > 0) {
 					unfinished_ns_ctx++;
 				}
 			}
 		}
 	} while (unfinished_ns_ctx > 0);
+
+	TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
+		cleanup_ns_worker_ctx(ns_ctx);
+	}
 
 	return 0;
 }
