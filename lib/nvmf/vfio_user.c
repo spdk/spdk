@@ -553,8 +553,8 @@ _map_one(void *prv, uint64_t addr, uint64_t len)
 }
 
 static int
-vfio_user_map_prps(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_request *req,
-		   struct iovec *iov, uint32_t length)
+vfio_user_map_cmd(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_request *req,
+		  struct iovec *iov, uint32_t length)
 {
 	/* Map PRP list to from Guest physical memory to
 	 * virtual memory address.
@@ -1759,7 +1759,8 @@ nvmf_vfio_user_cdata_init(struct spdk_nvmf_transport *transport,
 			  struct spdk_nvmf_subsystem *subsystem,
 			  struct spdk_nvmf_ctrlr_data *cdata)
 {
-	cdata->sgls.supported = SPDK_NVME_SGLS_NOT_SUPPORTED;
+	memset(&cdata->sgls, 0, sizeof(struct spdk_nvme_cdata_sgls));
+	cdata->sgls.supported = SPDK_NVME_SGLS_SUPPORTED_DWORD_ALIGNED;
 }
 
 static int
@@ -2217,8 +2218,9 @@ map_admin_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_request *
 	if (!cmd->dptr.prp.prp1 || !len) {
 		return 0;
 	}
-
-	iovcnt = vfio_user_map_prps(ctrlr, req, req->iov, len);
+	/* ADMIN command will not use SGL */
+	assert(req->cmd->nvme_cmd.psdt == 0);
+	iovcnt = vfio_user_map_cmd(ctrlr, req, req->iov, len);
 	if (iovcnt < 0) {
 		SPDK_ERRLOG("%s: map Admin Opc %x failed\n",
 			    ctrlr_id(ctrlr), cmd->opc);
@@ -2253,17 +2255,15 @@ map_io_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_request *req
 		return 0;
 	}
 
-	/* SGL isn't supported now */
-	assert(req->cmd->nvme_cmd.psdt == 0);
 	err = get_nvmf_io_req_length(req);
 	if (err < 0) {
 		return -EINVAL;
 	}
 
 	req->length = err;
-	err = vfio_user_map_prps(ctrlr, req, req->iov, req->length);
+	err = vfio_user_map_cmd(ctrlr, req, req->iov, req->length);
 	if (err < 0) {
-		SPDK_ERRLOG("%s: failed to map PRP: %d\n", ctrlr_id(ctrlr), err);
+		SPDK_ERRLOG("%s: failed to map IO OPC %u\n", ctrlr_id(ctrlr), cmd->opc);
 		return -EFAULT;
 	}
 
