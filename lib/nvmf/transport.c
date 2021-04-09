@@ -560,7 +560,9 @@ void
 nvmf_transport_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
 				   struct spdk_nvmf_request *req)
 {
-	qpair->transport->ops->qpair_abort_request(qpair, req);
+	if (qpair->transport->ops->qpair_abort_request) {
+		qpair->transport->ops->qpair_abort_request(qpair, req);
+	}
 }
 
 bool
