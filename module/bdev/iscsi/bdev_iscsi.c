@@ -623,7 +623,8 @@ static const struct spdk_bdev_fn_table iscsi_fn_table = {
 static int
 create_iscsi_lun(struct iscsi_context *context, int lun_id, char *url, char *initiator_iqn,
 		 char *name,
-		 uint64_t num_blocks, uint32_t block_size, struct spdk_bdev **bdev, bool unmap_supported)
+		 uint64_t num_blocks, uint32_t block_size, struct spdk_bdev **bdev, bool unmap_supported,
+		 uint8_t lbppbe)
 {
 	struct bdev_iscsi_lun *lun;
 	int rc;
@@ -645,6 +646,7 @@ create_iscsi_lun(struct iscsi_context *context, int lun_id, char *url, char *ini
 	lun->bdev.product_name = "iSCSI LUN";
 	lun->bdev.module = &g_iscsi_bdev_module;
 	lun->bdev.blocklen = block_size;
+	lun->bdev.phys_blocklen = block_size * (1 << lbppbe);
 	lun->bdev.blockcnt = num_blocks;
 	lun->bdev.ctxt = lun;
 	lun->unmap_supported = unmap_supported;
@@ -691,7 +693,8 @@ iscsi_readcapacity16_cb(struct iscsi_context *iscsi, int status,
 	}
 
 	status = create_iscsi_lun(req->context, req->lun, req->url, req->initiator_iqn, req->bdev_name,
-				  readcap16->returned_lba + 1, readcap16->block_length, &bdev, req->unmap_supported);
+				  readcap16->returned_lba + 1, readcap16->block_length, &bdev, req->unmap_supported,
+				  readcap16->lbppbe);
 	if (status) {
 		SPDK_ERRLOG("Unable to create iscsi bdev: %s (%d)\n", spdk_strerror(-status), status);
 	}
