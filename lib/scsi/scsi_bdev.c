@@ -1620,9 +1620,16 @@ bdev_scsi_process_block(struct spdk_scsi_task *task)
 		switch (cdb[1] & 0x1f) { /* SERVICE ACTION */
 		case SPDK_SBC_SAI_READ_CAPACITY_16: {
 			uint8_t buffer[32] = {0};
+			uint32_t lbppb;
 
 			to_be64(&buffer[0], spdk_bdev_get_num_blocks(bdev) - 1);
 			to_be32(&buffer[8], spdk_bdev_get_data_block_size(bdev));
+			lbppb = spdk_bdev_get_physical_block_size(bdev) / spdk_bdev_get_data_block_size(bdev);
+			if (spdk_u32log2(lbppb) > 0xf) {
+				SPDK_ERRLOG("lbppbe(0x%x) > 0xf\n", spdk_u32log2(lbppb));
+			} else {
+				buffer[13] = spdk_u32log2(lbppb);
+			}
 			/*
 			 * Set the TPE bit to 1 to indicate thin provisioning.
 			 * The position of TPE bit is the 7th bit in 14th byte
