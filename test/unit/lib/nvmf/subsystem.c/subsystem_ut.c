@@ -1362,6 +1362,29 @@ test_spdk_nvmf_ns_event(void)
 	free(tgt.subsystems);
 }
 
+static void
+test_nvmf_ns_reservation_add_remove_registrant(void)
+{
+	struct spdk_nvmf_ns ns = {};
+	struct spdk_nvmf_ctrlr ctrlr = {};
+	struct spdk_nvmf_registrant *reg = NULL;
+	int rc;
+
+	TAILQ_INIT(&ns.registrants);
+	spdk_uuid_generate(&ctrlr.hostid);
+
+	rc = nvmf_ns_reservation_add_registrant(&ns, &ctrlr, 0xa11);
+	CU_ASSERT(rc == 0);
+	reg = TAILQ_FIRST(&ns.registrants);
+	SPDK_CU_ASSERT_FATAL(reg != NULL);
+	CU_ASSERT(ns.gen == 1);
+	CU_ASSERT(reg->rkey == 0xa11);
+	CU_ASSERT(!strncmp((uint8_t *)&reg->hostid, (uint8_t *)&ctrlr.hostid, sizeof(ctrlr.hostid)));
+
+	nvmf_ns_reservation_remove_registrant(&ns, reg);
+	CU_ASSERT(TAILQ_EMPTY(&ns.registrants));
+	CU_ASSERT(ns.gen == 2);
+}
 
 int main(int argc, char **argv)
 {
@@ -1387,6 +1410,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_reservation_clear_notification);
 	CU_ADD_TEST(suite, test_reservation_preempt_notification);
 	CU_ADD_TEST(suite, test_spdk_nvmf_ns_event);
+	CU_ADD_TEST(suite, test_nvmf_ns_reservation_add_remove_registrant);
 
 	allocate_threads(1);
 	set_thread(0);
