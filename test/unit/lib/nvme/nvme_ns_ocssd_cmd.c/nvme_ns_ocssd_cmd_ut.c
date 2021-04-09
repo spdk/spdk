@@ -166,6 +166,7 @@ prepare_for_test(struct spdk_nvme_ns *ns, struct spdk_nvme_ctrlr *ctrlr,
 	uint32_t num_requests = 32;
 	uint32_t i;
 
+	memset(ctrlr, 0, sizeof(*ctrlr));
 	ctrlr->max_xfer_size = max_xfer_size;
 	/*
 	 * Clear the flags field - we especially want to make sure the SGL_SUPPORTED flag is not set

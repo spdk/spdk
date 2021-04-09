@@ -50,6 +50,7 @@ static struct nvme_driver _g_nvme_driver = {
 };
 
 static struct nvme_request *g_request = NULL;
+static uint32_t g_ctrlr_quirks;
 
 DEFINE_STUB_V(nvme_io_msg_ctrlr_detach, (struct spdk_nvme_ctrlr *ctrlr));
 
@@ -228,6 +229,8 @@ prepare_for_test(struct spdk_nvme_ns *ns, struct spdk_nvme_ctrlr *ctrlr,
 	uint32_t num_requests = 32;
 	uint32_t i;
 
+	memset(ctrlr, 0, sizeof(*ctrlr));
+	ctrlr->quirks = g_ctrlr_quirks;
 	ctrlr->max_xfer_size = max_xfer_size;
 	/*
 	 * Clear the flags field - we especially want to make sure the SGL_SUPPORTED flag is not set
@@ -272,6 +275,7 @@ static void
 cleanup_after_test(struct spdk_nvme_qpair *qpair)
 {
 	free(qpair->req_buf);
+	g_ctrlr_quirks = 0;
 }
 
 static void
@@ -1374,7 +1378,7 @@ test_nvme_ns_cmd_write_with_md(void)
 	 *
 	 * 256 blocks * 512 bytes per block = single 128 KB I/O (no splitting required)
 	 */
-	ctrlr.quirks = NVME_QUIRK_MDTS_EXCLUDE_MD;
+	g_ctrlr_quirks = NVME_QUIRK_MDTS_EXCLUDE_MD;
 	prepare_for_test(&ns, &ctrlr, &qpair, 512, 128, 128 * 1024, 0, true);
 
 	rc = spdk_nvme_ns_cmd_write_with_md(&ns, &qpair, buffer, NULL, 0x1000, 256, NULL, NULL, 0, 0,
@@ -1388,7 +1392,6 @@ test_nvme_ns_cmd_write_with_md(void)
 
 	nvme_free_request(g_request);
 	cleanup_after_test(&qpair);
-	ctrlr.quirks = 0;
 
 	/*
 	 * 512 byte data + 8 byte metadata
