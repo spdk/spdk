@@ -388,6 +388,8 @@ ut_attach_ctrlr(const struct spdk_nvme_transport_id *trid, uint32_t num_ns)
 		for (i = 0; i < num_ns; i++) {
 			ctrlr->ns[i].id = i + 1;
 			ctrlr->ns[i].ctrlr = ctrlr;
+			ctrlr->ns[i].is_active = true;
+			ctrlr->nsdata[i].nsze = 1024;
 		}
 	}
 
@@ -1501,7 +1503,6 @@ test_attach_ctrlr(void)
 	ctrlr = ut_attach_ctrlr(&trid, 1);
 	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
 
-	ctrlr->ns[0].is_active = true;
 	g_ut_attach_bdev_count = 1;
 
 	rc = bdev_nvme_create(&trid, &hostid, "nvme0", attached_names, 32, NULL, 0,
@@ -1536,7 +1537,6 @@ test_attach_ctrlr(void)
 	ctrlr = ut_attach_ctrlr(&trid, 1);
 	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
 
-	ctrlr->ns[0].is_active = true;
 	g_ut_register_bdev_status = -EINVAL;
 	g_ut_attach_bdev_count = 0;
 
@@ -1643,11 +1643,7 @@ test_aer_cb(void)
 	ctrlr = ut_attach_ctrlr(&trid, 4);
 	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
 
-	ctrlr->ns[1].is_active = true;
-	ctrlr->ns[2].is_active = true;
-	ctrlr->ns[3].is_active = true;
-
-	ctrlr->nsdata[3].nsze = 1024;
+	ctrlr->ns[0].is_active = false;
 
 	g_ut_attach_ctrlr_status = 0;
 	g_ut_attach_bdev_count = 3;
@@ -1825,7 +1821,6 @@ test_submit_nvme_cmd(void)
 	ctrlr = ut_attach_ctrlr(&trid, 1);
 	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
 
-	ctrlr->ns[0].is_active = true;
 	g_ut_attach_ctrlr_status = 0;
 	g_ut_attach_bdev_count = 1;
 
@@ -1990,7 +1985,6 @@ test_abort(void)
 	ctrlr = ut_attach_ctrlr(&trid, 1);
 	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
 
-	ctrlr->ns[0].is_active = true;
 	g_ut_attach_ctrlr_status = 0;
 	g_ut_attach_bdev_count = 1;
 
@@ -2195,8 +2189,6 @@ test_bdev_unregister(void)
 	ctrlr = ut_attach_ctrlr(&trid, 2);
 	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
 
-	ctrlr->ns[0].is_active = true;
-	ctrlr->ns[1].is_active = true;
 	g_ut_attach_ctrlr_status = 0;
 	g_ut_attach_bdev_count = 2;
 
