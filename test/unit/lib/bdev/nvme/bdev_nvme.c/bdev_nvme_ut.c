@@ -1445,12 +1445,14 @@ test_attach_ctrlr(void)
 	struct spdk_nvme_host_id hostid = {};
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
-	const char *attached_names[32] = {};
+	const int STRING_SIZE = 32;
+	const char *attached_names[STRING_SIZE];
 	struct nvme_bdev *nbdev;
 	int rc;
 
 	set_thread(0);
 
+	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&trid);
 
 	/* If ctrlr fails, no nvme_bdev_ctrlr is created. Failed ctrlr is removed
@@ -1463,7 +1465,7 @@ test_attach_ctrlr(void)
 	g_ut_attach_ctrlr_status = -EIO;
 	g_ut_attach_bdev_count = 0;
 
-	rc = bdev_nvme_create(&trid, &hostid, "nvme0", attached_names, 32, NULL, 0,
+	rc = bdev_nvme_create(&trid, &hostid, "nvme0", attached_names, STRING_SIZE, NULL, 0,
 			      attach_ctrlr_done, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
@@ -1478,7 +1480,7 @@ test_attach_ctrlr(void)
 
 	g_ut_attach_ctrlr_status = 0;
 
-	rc = bdev_nvme_create(&trid, &hostid, "nvme0", attached_names, 32, NULL, 0,
+	rc = bdev_nvme_create(&trid, &hostid, "nvme0", attached_names, STRING_SIZE, NULL, 0,
 			      attach_ctrlr_done, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
@@ -1505,7 +1507,7 @@ test_attach_ctrlr(void)
 
 	g_ut_attach_bdev_count = 1;
 
-	rc = bdev_nvme_create(&trid, &hostid, "nvme0", attached_names, 32, NULL, 0,
+	rc = bdev_nvme_create(&trid, &hostid, "nvme0", attached_names, STRING_SIZE, NULL, 0,
 			      attach_ctrlr_done, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
@@ -1540,7 +1542,7 @@ test_attach_ctrlr(void)
 	g_ut_register_bdev_status = -EINVAL;
 	g_ut_attach_bdev_count = 0;
 
-	rc = bdev_nvme_create(&trid, &hostid, "nvme0", attached_names, 32, NULL, 0,
+	rc = bdev_nvme_create(&trid, &hostid, "nvme0", attached_names, STRING_SIZE, NULL, 0,
 			      attach_ctrlr_done, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
@@ -1628,13 +1630,15 @@ test_aer_cb(void)
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 	struct nvme_bdev *bdev;
-	const char *attached_names[32] = {};
+	const int STRING_SIZE = 32;
+	const char *attached_names[STRING_SIZE];
 	union spdk_nvme_async_event_completion event = {};
 	struct spdk_nvme_cpl cpl = {};
 	int rc;
 
 	set_thread(0);
 
+	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&trid);
 
 	/* Attach a ctrlr, whose max number of namespaces is 4, and 2nd, 3rd, and 4th
@@ -1648,7 +1652,7 @@ test_aer_cb(void)
 	g_ut_attach_ctrlr_status = 0;
 	g_ut_attach_bdev_count = 3;
 
-	rc = bdev_nvme_create(&trid, &hostid, "nvme0", attached_names, 32, NULL, 0,
+	rc = bdev_nvme_create(&trid, &hostid, "nvme0", attached_names, STRING_SIZE, NULL, 0,
 			      attach_ctrlr_done, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
@@ -1808,12 +1812,14 @@ test_submit_nvme_cmd(void)
 	struct spdk_nvme_host_id hostid = {};
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
-	const char *attached_names[32] = {};
+	const int STRING_SIZE = 32;
+	const char *attached_names[STRING_SIZE];
 	struct nvme_bdev *bdev;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_io_channel *ch;
 	int rc;
 
+	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&trid);
 
 	set_thread(1);
@@ -1824,7 +1830,7 @@ test_submit_nvme_cmd(void)
 	g_ut_attach_ctrlr_status = 0;
 	g_ut_attach_bdev_count = 1;
 
-	rc = bdev_nvme_create(&trid, &hostid, "nvme0", attached_names, 32, NULL, 0,
+	rc = bdev_nvme_create(&trid, &hostid, "nvme0", attached_names, STRING_SIZE, NULL, 0,
 			      attach_ctrlr_done, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
@@ -1968,7 +1974,8 @@ test_abort(void)
 	struct spdk_nvme_host_id hostid = {};
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
-	const char *attached_names[32] = {};
+	const int STRING_SIZE = 32;
+	const char *attached_names[STRING_SIZE];
 	struct nvme_bdev *bdev;
 	struct spdk_bdev_io *write_io, *admin_io, *abort_io;
 	struct spdk_io_channel *ch;
@@ -1990,7 +1997,7 @@ test_abort(void)
 
 	set_thread(1);
 
-	rc = bdev_nvme_create(&trid, &hostid, "nvme0", attached_names, 32, NULL, 0,
+	rc = bdev_nvme_create(&trid, &hostid, "nvme0", attached_names, STRING_SIZE, NULL, 0,
 			      attach_ctrlr_done, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
@@ -2180,10 +2187,12 @@ test_bdev_unregister(void)
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 	struct nvme_bdev_ns *nvme_ns1, *nvme_ns2;
-	const char *attached_names[32] = {};
+	const int STRING_SIZE = 32;
+	const char *attached_names[STRING_SIZE];
 	struct nvme_bdev *bdev1, *bdev2;
 	int rc;
 
+	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&trid);
 
 	ctrlr = ut_attach_ctrlr(&trid, 2);
@@ -2192,7 +2201,7 @@ test_bdev_unregister(void)
 	g_ut_attach_ctrlr_status = 0;
 	g_ut_attach_bdev_count = 2;
 
-	rc = bdev_nvme_create(&trid, &hostid, "nvme0", attached_names, 32, NULL, 0,
+	rc = bdev_nvme_create(&trid, &hostid, "nvme0", attached_names, STRING_SIZE, NULL, 0,
 			      attach_ctrlr_done, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
